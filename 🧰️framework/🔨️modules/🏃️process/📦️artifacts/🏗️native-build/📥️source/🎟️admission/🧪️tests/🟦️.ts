@@ -15,7 +15,7 @@ test("neutral source admission fills every actual compiler unit even when packag
 }));
 
 const policy={version:1 as const,maxSourceBytes:65536,maxSourceFiles:64,maxActiveLines:100};
-function progressGraph(units:number){const raw=graphCorpus.cases[graphCorpus.identicalUnits.case]!.units[graphCorpus.identicalUnits.unit]!;return readCargoCompilationGraphV1({version:1,units:Array.from({length:units},()=>({...structuredClone(raw),dependencies:[]})),roots:Array.from({length:units},(_,index)=>index)},graphCorpus.metadata,"/repo");}
+function progressGraph(units:number){const raw=graphCorpus.cases[graphCorpus.identicalUnits.case]!.units[graphCorpus.identicalUnits.unit]!;return readCargoCompilationGraphV1({version:1,units:Array.from({length:units},()=>({...structuredClone(raw),dependencies:[]})),roots:Array.from({length:units},(_,index)=>index)},{...graphCorpus.metadata,packages:graphCorpus.metadata.packages.map(row=>({...row,metadata:{semio:{"rust-source-boundary":{maxSourceBytes:65536,maxSourceFiles:64,maxActiveLines:100}}}}))},"/repo");}
 function progressControl(signal:AbortSignal,publish:ResourceLeaseControl["publish"]):ResourceLeaseControl{return{signal,remainingMilliseconds:()=>60000,publish,async yieldContinuation(){}};}
 function progressEvent(event:LeaseWait){expect(event.mode).toBe("shared");expect(event.elapsedMs).toBe(0);expect(event.resource.startsWith("cargo:source-admission:")).toBe(true);return JSON.parse(event.resource.slice("cargo:source-admission:".length));}
 

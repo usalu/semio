@@ -788,6 +788,174 @@
    }
   },
   {
+   "name": "tools: wasm lock identity, one lock agrees, two differ, one unreadable",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "host": {
+     "cores": 10,
+     "totalMegabytes": 32768,
+     "availableMegabytes": 20000,
+     "floorMegabytes": 6553,
+     "pressure": "normal",
+     "swapUsedMegabytes": 0,
+     "swapOutMegabytesPerSecond": 0,
+     "load": 2.0,
+     "openFiles": 8000,
+     "openFilesMaximum": 245760,
+     "attachedImages": 10,
+     "governor": "on"
+    },
+    "storage": {
+     "hostFreeBytes": 107374182400,
+     "hostTotalBytes": 536870912000,
+     "partitions": [
+      {
+       "id": "graph",
+       "state": "mounted",
+       "capacityBytes": 4294967296,
+       "freeBytes": 2147483648,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      },
+      {
+       "id": "dependencies",
+       "state": "mounted",
+       "capacityBytes": 8589934592,
+       "freeBytes": 4294967296,
+       "imageBytes": 8589934592,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok"
+      }
+     ]
+    },
+    "tools": {
+     "rows": [
+      {
+       "id": "repo",
+       "state": "ok",
+       "pin": "1.0.0",
+       "found": "1.0.0"
+      },
+      {
+       "id": "git",
+       "state": "ok",
+       "pin": null,
+       "found": "2.50.0"
+      }
+     ],
+     "wasmLocks": [
+      {
+       "path": "Cargo.lock",
+       "version": "0.2.129",
+       "pinned": "0.2.129"
+      },
+      {
+       "path": "✏️s/🧑‍💻dev/📐️cad/Cargo.lock",
+       "version": "0.2.126",
+       "pinned": "0.2.129"
+      },
+      {
+       "path": "🌎️hub/Cargo.lock",
+       "version": "0.2.129",
+       "pinned": "0.2.129"
+      },
+      {
+       "path": "🧰️framework/Cargo.lock",
+       "version": null,
+       "pinned": "0.2.129"
+      }
+     ]
+    },
+    "leases": {
+     "holders": [],
+     "waiters": [],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    },
+    "capacity": {
+     "headroomMegabytes": 3000,
+     "grants": [],
+     "waiters": []
+    },
+    "sessions": {
+     "live": 1,
+     "idle": 0,
+     "gone": 0,
+     "damaged": 0
+    },
+    "graph": {
+     "pointer": "present",
+     "generation": 3,
+     "manifest": "present",
+     "owners": 3700,
+     "publishedAgeSeconds": 100,
+     "implementationNewerSeconds": 0
+    },
+    "dependencies": {
+     "pointers": "present",
+     "scopes": [
+      {
+       "scope": ".",
+       "generation": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8",
+       "directory": "ready",
+       "inputsNewer": null
+      }
+     ],
+     "orphans": 0,
+     "orphanEstimatedBytes": 0,
+     "unready": 0,
+     "unreadyOldestSeconds": null
+    },
+    "caches": {
+     "deadPublications": 0,
+     "deadPublicationBytes": 0,
+     "deadPublicationPartial": false,
+     "retired": [],
+     "undeclared": []
+    },
+    "processes": []
+   },
+   "expect": {
+    "findings": [
+     [
+      "tools.wasm-lock-drift",
+      "error",
+      "✏️s/🧑‍💻dev/📐️cad/Cargo.lock"
+     ],
+     [
+      "tools.wasm-lock-drift",
+      "error",
+      "🧰️framework/Cargo.lock"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 2,
+     "warn": 0,
+     "info": 0
+    }
+   }
+  },
+  {
    "name": "deadlock cycle, order violations, registry noise and dead tickets",
    "ordered": false,
    "facts": {

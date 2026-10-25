@@ -1,4 +1,4 @@
-//! 📏️ The taffy adapter: `LayoutCx` owns the per-frame `taffy::TaffyTree`, maps
+//! 🔌️ The taffy adapter: `LayoutCx` owns the per-frame `taffy::TaffyTree`, maps
 //! [`ui_contract::LayoutSpec`] onto taffy `Style`, and resolves intrinsic measurement + pixel
 //! snapping. **Taffy types never appear in a public signature here or anywhere else in this crate** —
 //! [`LayoutNodeId`] wraps `taffy::NodeId` with a private field for exactly that reason, and
@@ -33,7 +33,7 @@ pub struct LayoutNodeId(taffy::NodeId);
 
 //#region 📏️Measurement
 
-/// 📏️ This crate's own available-space vocabulary — never `taffy::AvailableSpace` (see this file's
+/// 🌌️ This crate's own available-space vocabulary — never `taffy::AvailableSpace` (see this file's
 /// docstring). Passed into a leaf's [`MeasureFn`] at layout time.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum AvailableSpace {
@@ -154,7 +154,7 @@ fn grid_track_to_taffy(track: &GridTrack) -> taffy::style::GridTemplateComponent
     }
 }
 
-/// 📦️ Maps the contract's renderer-neutral [`LayoutSpec`] onto a taffy `Style`. One arm per
+/// 🗺️ Maps the contract's renderer-neutral [`LayoutSpec`] onto a taffy `Style`. One arm per
 /// [`LayoutSpec`] variant; `Overlay`'s per-child anchor resolution is intentionally **not** attempted
 /// here — see this packet's report for why that is a deviation, not an oversight.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -296,7 +296,7 @@ impl<'a> LayoutCx<'a> {
         self.had_pending = had_pending;
     }
 
-    /// 📐️ `id`'s resolved rect, in its **parent-relative** coordinate space (taffy's own
+    /// 📍️ `id`'s resolved rect, in its **parent-relative** coordinate space (taffy's own
     /// `Layout::location` semantics — a caller accumulates ancestor offsets while walking down, the
     /// same way `paint_node`'s `origin_x + origin_y` accumulation did in the wgpu-old target), snapped
     /// to the nearest whole logical pixel.

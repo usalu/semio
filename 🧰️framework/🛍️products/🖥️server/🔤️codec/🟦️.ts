@@ -66,7 +66,7 @@ export function decodeActorKey(value: unknown, path = "actorKey"): ActorKey {
   return { tenant: asString(row.tenant, `${path}.tenant`), kind: asString(row.kind, `${path}.kind`), id: asString(row.id, `${path}.id`) };
 }
 
-/** 🎭️ Encode one [`ActorKey`]. */
+/** 🔑️ Encode one [`ActorKey`]. */
 export function encodeActorKey(value: ActorKey): unknown {
   return { tenant: value.tenant, kind: value.kind, id: value.id };
 }
@@ -87,7 +87,7 @@ export function decodePrincipal(value: unknown, path = "principal"): Principal {
   }
 }
 
-/** 🙋️ Encode one [`Principal`]. */
+/** 👤️ Encode one [`Principal`]. */
 export function encodePrincipal(value: Principal): unknown {
   return value.kind === "anonymous" ? { kind: "anonymous" } : { kind: value.kind, id: value.id };
 }
@@ -98,7 +98,7 @@ export function decodeHybridLogicalClock(value: unknown, path = "hlc"): HybridLo
   return { millis: asNumber(row.millis, `${path}.millis`), counter: asNumber(row.counter, `${path}.counter`) };
 }
 
-/** 🕰️ Encode one [`HybridLogicalClock`]. */
+/** ⏱️ Encode one [`HybridLogicalClock`]. */
 export function encodeHybridLogicalClock(value: HybridLogicalClock): unknown {
   return { millis: value.millis, counter: value.counter };
 }
@@ -109,7 +109,7 @@ export function decodeTraceContext(value: unknown, path = "trace"): TraceContext
   return { traceId: asString(row.trace_id, `${path}.trace_id`), spanId: asString(row.span_id, `${path}.span_id`) };
 }
 
-/** 🔍️ Encode one [`TraceContext`] into its snake_case wire shape. */
+/** 🕵️ Encode one [`TraceContext`] into its snake_case wire shape. */
 export function encodeTraceContext(value: TraceContext): unknown {
   return { trace_id: value.traceId, span_id: value.spanId };
 }
@@ -128,7 +128,7 @@ export function decodeFrontierSummary(value: unknown, path = "frontier"): Fronti
   };
 }
 
-/** 🏔️ Encode one [`FrontierSummary`] into its snake_case wire shape. */
+/** 🏁️ Encode one [`FrontierSummary`] into its snake_case wire shape. */
 export function encodeFrontierSummary(value: FrontierSummary): unknown {
   return {
     document_id: value.documentId,
@@ -151,7 +151,7 @@ export function decodeEventRecord(value: unknown, path = "event"): EventRecord {
   };
 }
 
-/** 📚️ Encode one [`EventRecord`]. */
+/** 📹️ Encode one [`EventRecord`]. */
 export function encodeEventRecord(value: EventRecord): unknown {
   return { stream: encodeActorKey(value.stream), seq: value.seq, hlc: encodeHybridLogicalClock(value.hlc), kind: value.kind, payload: bytesToWire(value.payload) };
 }
@@ -167,7 +167,7 @@ export function decodeEphemeralFrame(value: unknown, path = "ephemeralFrame"): E
   };
 }
 
-/** 💨️ Encode one [`EphemeralFrame`]. */
+/** 🎞️ Encode one [`EphemeralFrame`]. */
 export function encodeEphemeralFrame(value: EphemeralFrame): unknown {
   return { scope: value.scope, principal: encodePrincipal(value.principal), kind: value.kind, payload: bytesToWire(value.payload) };
 }
@@ -194,7 +194,7 @@ export function decodeCommandEnvelope(value: unknown, path = "commandEnvelope"):
   };
 }
 
-/** 📨️ Encode one [`CommandEnvelope`]. */
+/** ✉️ Encode one [`CommandEnvelope`]. */
 export function encodeCommandEnvelope(value: CommandEnvelope): unknown {
   return {
     commandId: value.commandId,
@@ -226,7 +226,7 @@ export function decodeCommandReceipt(value: unknown, path = "receipt"): CommandR
   };
 }
 
-/** 🧾️ Encode one [`CommandReceipt`]. */
+/** 🎫️ Encode one [`CommandReceipt`]. */
 export function encodeCommandReceipt(value: CommandReceipt): unknown {
   return { commandId: value.commandId, actor: encodeActorKey(value.actor), revision: value.revision, acceptedAt: encodeHybridLogicalClock(value.acceptedAt) };
 }
@@ -249,7 +249,7 @@ export function decodeRejection(value: unknown, path = "rejection"): Rejection {
   }
 }
 
-/** 🚫️ Encode one [`Rejection`]. */
+/** ⛔️ Encode one [`Rejection`]. */
 export function encodeRejection(value: Rejection): unknown {
   switch (value.kind) {
     case "revisionConflict":
@@ -295,7 +295,7 @@ export function decodeCommandOutcome(value: unknown, path = "outcome"): CommandO
   }
 }
 
-/** 🎯️ Encode one [`CommandOutcome`]. */
+/** 🏆️ Encode one [`CommandOutcome`]. */
 export function encodeCommandOutcome(value: CommandOutcome): unknown {
   const receipt = encodeCommandReceipt(value.receipt);
   switch (value.status) {
@@ -331,7 +331,7 @@ export function decodeQueryConsistency(value: unknown, path = "consistency"): Qu
   }
 }
 
-/** 🧭️ Encode one [`QueryConsistency`]. */
+/** ⚖️ Encode one [`QueryConsistency`]. */
 export function encodeQueryConsistency(value: QueryConsistency): unknown {
   return value.kind === "atFrontier" ? { kind: value.kind, frontier: encodeFrontierSummary(value.frontier) } : { kind: value.kind };
 }
@@ -351,7 +351,7 @@ export function decodeQueryEnvelope(value: unknown, path = "queryEnvelope"): Que
   };
 }
 
-/** ❓️ Encode one [`QueryEnvelope`]. */
+/** 📩️ Encode one [`QueryEnvelope`]. */
 export function encodeQueryEnvelope(value: QueryEnvelope): unknown {
   return {
     queryId: value.queryId,
@@ -382,7 +382,7 @@ export function decodeQueryResult(value: unknown, path = "queryResult"): QueryRe
   }
 }
 
-/** 📤️ Encode one [`QueryResult`]. */
+/** 📈️ Encode one [`QueryResult`]. */
 export function encodeQueryResult(value: QueryResult): unknown {
   switch (value.kind) {
     case "snapshot":
@@ -452,7 +452,7 @@ export function decodeServerInstanceDefinition(value: unknown, path = "instance"
   };
 }
 
-/** 🏛️ Encode one [`ServerInstanceDefinition`]. */
+/** ☁️ Encode one [`ServerInstanceDefinition`]. */
 export function encodeServerInstanceDefinition(value: ServerInstanceDefinition): unknown {
   return {
     id: value.id,
@@ -468,7 +468,7 @@ export function encodeServerInstanceDefinition(value: ServerInstanceDefinition):
   };
 }
 
-/** 🧾️ Decode one [`ErrorBody`]. */
+/** ❌️ Decode one [`ErrorBody`]. */
 export function decodeErrorBody(value: unknown, path = "error"): ErrorBody {
   const row = asObject(value, path);
   const body = { kind: asString(row.kind, `${path}.kind`), message: asString(row.message, `${path}.message`) };
@@ -476,12 +476,12 @@ export function decodeErrorBody(value: unknown, path = "error"): ErrorBody {
   return row.allowance === undefined || row.allowance === null ? waiting : { ...waiting, allowance: asString(row.allowance, `${path}.allowance`) };
 }
 
-/** 🧾️ Encode one [`ErrorBody`]. */
+/** ⚠️ Encode one [`ErrorBody`]. */
 export function encodeErrorBody(value: ErrorBody): unknown {
   return { kind: value.kind, message: value.message, ...(value.retryAfterMs === undefined ? {} : { retryAfterMs: value.retryAfterMs }), ...(value.allowance === undefined ? {} : { allowance: value.allowance }) };
 }
 
-/** 🧾️ Decode one [`BlobReceipt`]. */
+/** 🪪️ Decode one [`BlobReceipt`]. */
 export function decodeBlobReceipt(value: unknown, path = "blobReceipt"): BlobReceipt {
   const row = asObject(value, path);
   return { hash: asString(row.hash, `${path}.hash`), size: asNumber(row.size, `${path}.size`) };
@@ -546,7 +546,7 @@ function asInterval(value: unknown, path: string): number {
   return interval;
 }
 
-/** 👥️ Encode one [`PresenceFrame`] into its wire JSON (stringify it to send). */
+/** 👁️ Encode one [`PresenceFrame`] into its wire JSON (stringify it to send). */
 export function encodePresenceFrame(value: PresenceFrame): unknown {
   switch (value.type) {
     case "welcome":

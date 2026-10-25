@@ -73,7 +73,7 @@ export type ShellTerminology = (typeof SHELL_TERMINOLOGIES)[number];
 
 /** 🧭️ Membership guard — the runtime twin of the Rust \`Locale::parse\`/exhaustive-match guarantee. */
 export const isShellLocale = (value: string): value is ShellLocale => (SHELL_LOCALES as readonly string[]).includes(value);
-/** 🧭️ Membership guard — the runtime twin of the Rust \`Terminology::parse\`/exhaustive-match guarantee. */
+/** 🛂️ Membership guard — the runtime twin of the Rust \`Terminology::parse\`/exhaustive-match guarantee. */
 export const isShellTerminology = (value: string): value is ShellTerminology => (SHELL_TERMINOLOGIES as readonly string[]).includes(value);
 
 /** 🗺️ Full locale×terminology matrix for a manifest label, mirroring Rust \`LocalizedLabel\`. */

@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🪟️OverlayPlacement
-/// 🪟️ One open overlay, already placed against its window's viewport — see
+/// 🔓️ One open overlay, already placed against its window's viewport — see
 /// [`Ui::overlay_placements`]. `width`/`height` are the overlay subtree's own mounted layout, so a
 /// caller can draw the surface chrome (`paint::paint_overlay_surface`) without re-measuring.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -300,7 +300,7 @@ pub fn presented_caret(surface: UiSurfaceToken, tree: &UiTree, step: semio_frame
     })
 }
 
-/// 💬️ Presents the router's disabled row-action reason hint in place of any hover tooltip, re-stamped with the current interaction
+/// 🧠️ Presents the router's disabled row-action reason hint in place of any hover tooltip, re-stamped with the current interaction
 /// epoch; `None` while the router shows no hint. Answers whether the presented hint changed.
 fn synchronize_presented_row_reason(window: &mut UiWindow, surface: UiSurfaceToken) -> Option<bool> {
     let (row, index) = window.presented_router.revealed_row_reason()?;

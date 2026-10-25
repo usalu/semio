@@ -2,7 +2,7 @@
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {ensureWatcherV1} from "../🟨️.mjs";
-import {findToolV1,resolveToolV1,runToolV1,systemToolHostV1,toolRootV1,TOOL_REGISTRY_V1} from "../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🟦️.ts";
+import {findToolV1,resolveToolV1,runToolV1,systemToolHostV1,toolRootV1,TOOL_REGISTRY_V1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 const here=dirname(fileURLToPath(import.meta.url)),rust=join(here,"..","..","🦀️rust");
 

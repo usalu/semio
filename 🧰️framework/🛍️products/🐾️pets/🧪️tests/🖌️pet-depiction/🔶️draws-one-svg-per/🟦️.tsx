@@ -3,7 +3,7 @@ import { mat2d, vec2 } from "gl-matrix";
 import { expect, it } from "vitest";
 import { PAINTS, type Species } from "@semio-tech/pets";
 import { paint } from "@semio-tech/pets-react";
-import { OPEN, ROUNDING, SPECIMEN, css, cssMatrix, depicted, frameFor, groups, matrixOf, pieces, shapes, worlds, writes } from "../🟠️shared/🟦️.tsx";
+import { OPEN, ROUNDING, SPECIMEN, css, cssMatrix, depicted, frameFor, groups, matrixOf, pieces, shapes, worlds, writes } from "../🟠️harness/🟦️.tsx";
 
 /** 🔷 Registers the draws one svg per tests of the pet depiction suite. */
 export function registerDrawsOneSvgPerTests(): void {

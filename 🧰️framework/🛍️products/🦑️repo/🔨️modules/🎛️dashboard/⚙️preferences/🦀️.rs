@@ -205,7 +205,13 @@ pub fn shared_path(root: &Path) -> PathBuf { root.join(".🧬semio/🦑️repo/�
 
 /// 🗨️ The language a command speaks to the developer: the stored and environment preferences, or the system language and
 /// unresolved when no supported choice exists; callers must not invent a language.
-pub fn cli_locale(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> Option<ui_locale::Locale> { load_lenient(root, parsed).ok().and_then(|(preferences, _)| preferences.locale()) }
+pub fn cli_locale(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> Option<ui_locale::Locale> { cli_locale_in(root, parsed, &language::process_environment) }
+
+/// 💻️ [`cli_locale`] over an explicit environment. Only the flags that choose the language and the journal are read: the other flags belong to the verb (`--check`, `--json`, `--refresh`), not to the preferences.
+pub fn cli_locale_in(root: &Path, parsed: &dashboard_core::args::ParsedArgs, lookup: language::Lookup<'_>) -> Option<ui_locale::Locale> {
+    let choosing = dashboard_core::args::ParsedArgs { flags: parsed.flags.iter().filter(|(name, _)| ["language", "root", "config"].contains(&name.as_str())).map(|(name, value)| (name.clone(), value.clone())).collect(), ..Default::default() };
+    load_lenient_in(root, &choosing, lookup).ok().and_then(|(preferences, _)| preferences.locale())
+}
 
 /// 🥇️ Applies strict explicit flags last, with no startup questions.
 pub fn apply_arguments(preferences: &mut Preferences, parsed: &dashboard_core::args::ParsedArgs) -> io::Result<()> {

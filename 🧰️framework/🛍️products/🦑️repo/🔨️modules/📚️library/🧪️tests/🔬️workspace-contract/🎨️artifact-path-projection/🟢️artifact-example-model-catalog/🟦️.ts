@@ -10,7 +10,7 @@ import { type SemanticProjectionAuthorityNode } from "../../../../🔍️discove
 import { type Taxonomy } from "../../../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 import { ownedFilePaths } from "../../../🔍️filesystem/🟦️.ts";
 import { ARTIFACT_PROJECTION_GOLDEN, CAD_LIVE_BINDINGS, DRAW_SOURCE_SCENARIO, cadProjectionLiveSources, drawScenarioTaxonomy, projectionAuthorityNodes, projectionByteSort, projectionGolden } from "../../🏗️shared-fixtures/🟦️.ts";
-import { projectionAuthority } from "../🟣️shared/🟦️.ts";
+import { projectionAuthority } from "../🟣️harness/🟦️.ts";
 
 /** 🔵 Registers the artifact example model catalog tests of the artifact path projection authority suite. */
 export function registerArtifactExampleModelCatalogTests(): void {

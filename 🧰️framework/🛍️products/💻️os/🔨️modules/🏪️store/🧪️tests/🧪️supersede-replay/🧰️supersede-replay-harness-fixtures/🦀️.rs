@@ -33,7 +33,7 @@ fn fixture_planning_policy()->RetainedCloneGrant { RetainedCloneGrant { maximum_
 
 /// 🎟️ Finalizes the original replay through the fixture caller's existing identity authority.
 async fn fixture_finalize<P,M>(store:&mut ArtifactStore<P,M>,finished:EditReplayResult<P,M>,finalization:HistoryFinalization)->Result<CommandReceipt,VcsError>
-where P:Clone+ToValue+FromValue+ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot+Send+Sync+'static,M:Clone+ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+'static {
+where P:Clone+ToValue+FromValue+ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot+Send+Sync+'static,M:Clone+ToValue+FromValue+Mutation<P>+semio_framework_os_spr::ColdMutation<P>+OpBinary+OpText+Send+'static {
     let mut observed=0;
     let mut observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=FIXTURE_IDENTITY_BYTE_CEILING);observed=progress.owned_bytes;true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(FIXTURE_IDENTITY_BYTE_CEILING,&mut observer).expect("original fixture finalization identity authority");

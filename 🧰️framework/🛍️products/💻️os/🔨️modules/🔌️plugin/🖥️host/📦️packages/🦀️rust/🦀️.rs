@@ -12,7 +12,7 @@ pub use component::{activation, package_assets};
 pub use semio_framework_actor::{PackageHash, PackageId};
 pub use semio_framework_plugin_guest_contract::original_actor_context;
 pub use semio_framework_plugin_host_engine::{IsolatedCompileTarget, SharedEngineConfig, compile_component_isolated, compiled_cache_scratch_path, default_compiled_cache_root};
-pub use semio_framework_plugin_host_guest_runtime::{CompiledHandle, GuestActorOpening, GuestInstance, GuestRuntime, GuestRuntimes, OwnedComponentDocumentCodec, PackageRef, WasmtimeRuntime, retryable_lifecycle_turn};
+pub use semio_framework_plugin_host_guest_runtime::{CompiledHandle, GuestActorOpening, GuestInstance, GuestRuntime, GuestRuntimes, GUEST_CODEC_BUDGET, self_issued_budget, OwnedComponentDocumentCodec, PackageRef, WasmtimeRuntime, retryable_lifecycle_turn};
 pub use semio_framework_plugin_host_post_turn_relay::{GuestRelayWakeAuthority, PluginInstanceHandle};
 pub use semio_framework_plugin_host_routers::{AppRouter, ArtifactInferenceRouter, ArtifactMutationRouter, HostMutationInputs, HostMutationRosterEntry, HostTransactionCoordinator, InstanceDirectory, IoRouter, OpeningResolver, PluginGraph, TransactionError, TransactionMember, TransactionOutcome};
 pub use semio_framework_plugin_host_wake::{GuestRelayDriverPolicy, GuestRelayWakeDriver};

@@ -1,6 +1,7 @@
 //! 🌡️ Baseline, tick, sync and eval JSON of the evaluation session: the tick host, baseline capture, tick evaluation and display steps, repaint, the eval JSON lease and publication and the pending flag. See [`super`].
 
 use super::*;
+use neural_engine::ColdRetire;
 
 impl FlowEvalSession {
     /// 📥️ Retains the same admitted original Host across evaluation and publication turns.

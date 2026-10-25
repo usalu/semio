@@ -27,17 +27,17 @@ export type BazelHermeticReasonV1=keyof typeof reasons;
 export type BazelHermeticDecisionV1={hermetic:true;class?:string}|{hermetic:false;reason:BazelHermeticReasonV1};
 /** 🌍️ The parsed remote execution switch: endpoint, routed platform, extra worker properties and the concurrency bound. */
 export interface BazelRemoteExecutionV1{endpoint:string;instance:string;platform:string;properties:Readonly<Record<string,string>>;jobs:number}
-/** 🧭️ The platforms one generated workspace declares: the host, an optional remote pool and the provisioned bun executable of each. */
+/** 🗓️ The platforms one generated workspace declares: the host, an optional remote pool and the provisioned bun executable of each. */
 export interface BazelExecutionPlanV1{host:string;remote?:{platform:string;properties:Readonly<Record<string,string>>};tools:Readonly<Record<string,string>>}
 
-/** 🖥️ Selects the contract platform for Node's platform and arch names. */
+/** 💻️ Selects the contract platform for Node's platform and arch names. */
 export function bazelExecutionPlatformV1(platform:string,arch:string):BazelExecutionPlatformV1{
  const row=contract.platforms.find(row=>row.platform===platform&&row.arch===arch);
  if(!row)throw new Error(`Unsupported Bazel execution platform: ${platform}/${arch}`);
  return row;
 }
 
-/** 🖥️ Selects the contract platform by its id. */
+/** 🆔️ Selects the contract platform by its id. */
 export function bazelExecutionPlatformByIdV1(id:string):BazelExecutionPlatformV1{
  const row=contract.platforms.find(row=>row.id===id);
  if(!row)throw new Error(`Unknown Bazel execution platform: ${id}`);
@@ -47,7 +47,7 @@ export function bazelExecutionPlatformByIdV1(id:string):BazelExecutionPlatformV1
 /** 📛️ Names a platform's bun executable file: Windows executables carry `.exe`. */
 export function bazelBunExecutableNameV1(platform:BazelExecutionPlatformV1):string{return contract.toolchain.executable+(platform.platform==="win32"?".exe":"");}
 
-/** 🌍️ Reads the optional remote execution switch from the environment; unset or empty keeps every action local and a malformed value fails closed. */
+/** ☁️ Reads the optional remote execution switch from the environment; unset or empty keeps every action local and a malformed value fails closed. */
 export function bazelRemoteExecutionV1(environment:Readonly<Record<string,string|undefined>>):BazelRemoteExecutionV1|undefined{
  const names=contract.environment,selected:Record<string,string>={};
  for(const name of Object.values(names)){const value=environment[name];if(value!==undefined&&value!=="")selected[name]=value;}
@@ -71,7 +71,7 @@ export function bazelExecutionFlagsV1(options:Readonly<{host:{platform:string;ar
  return Object.freeze({...flags,command:Object.freeze(command)});
 }
 
-/** 🔗️ Reconciles the cache flags with a remote executor: Bazel refuses `--remote_executor` beside an HTTP `--remote_cache`, and the in-house executor serves the cache itself, so HTTP cache endpoints are dropped and the credential helper of the cache host is scoped to the executor host instead. */
+/** 🚩️ Reconciles the cache flags with a remote executor: Bazel refuses `--remote_executor` beside an HTTP `--remote_cache`, and the in-house executor serves the cache itself, so HTTP cache endpoints are dropped and the credential helper of the cache host is scoped to the executor host instead. */
 export function bazelExecutorCacheFlagsV1(flags:readonly string[],executorEndpoint:string):string[]{
  const host=new URL(executorEndpoint.replace(/^grpc(s?):/u,"http$1:")).hostname.replace(/^\[|\]$/gu,"")||"localhost";
  return flags.filter(flag=>!/^--remote_cache=(?!grpcs?:)/u.test(flag)).map(flag=>{const match=/^--credential_helper=[^=]+=(.+)$/u.exec(flag);return match?`--credential_helper=${host}=${match[1]}`:flag;});
@@ -94,10 +94,10 @@ export function bazelHermeticDecisionV1(task:BazelTaskV1,cache:{cache:boolean},i
  return selected?.kind==="class"?{hermetic:true,class:selected.class.id}:{hermetic:true};
 }
 
-/** 🧭️ What the generator derives for one hermetic action of a class: the declared environment values, the port replacements and the dependency rows with their content-addressed tree. */
+/** 🏭️ What the generator derives for one hermetic action of a class: the declared environment values, the port replacements and the dependency rows with their content-addressed tree. */
 export interface BazelHermeticPlanV1{readonly inputEnv:Readonly<Record<string,string>>;readonly providers:Readonly<Record<string,string>>;readonly dependencies:HermeticDependenciesV1}
 
-/** 🧭️ Derives the plan of one hermetic class member from its declared inputs: the environment values read now, the class's port replacements and the dependency selection of the installed generation; `undefined` keeps the task out of the hermetic classes because its host inputs or its installed dependencies cannot be declared. */
+/** 🧬️ Derives the plan of one hermetic class member from its declared inputs: the environment values read now, the class's port replacements and the dependency selection of the installed generation; `undefined` keeps the task out of the hermetic classes because its host inputs or its installed dependencies cannot be declared. */
 export function bazelHermeticPlanV1(options:Readonly<{root:string;task:BazelTaskV1;class:string;values:readonly unknown[];declared:readonly string[];environment:Readonly<Record<string,string|undefined>>;check?:()=>void}>):BazelHermeticPlanV1|undefined{
  const row=HERMETIC_TABLE_V1.classes.find(entry=>entry.id===options.class);if(!row)throw new Error(`Unknown hermetic class: ${options.class}`);
  const host=hermeticInputsV1(options.values,options.environment,row.toolchain);if("refused" in host)return undefined;
@@ -128,7 +128,7 @@ export function bazelHermeticModulesLabelV1(dependencies:Pick<HermeticDependenci
 /** 🔬️ One spawn of Bazel's JSON execution log: the fields the hermeticity law inspects. */
 export interface BazelExecutionSpawnV1{mnemonic:string;runner:string;commandArgs:readonly string[];environmentVariables:readonly {name:string;value:string}[];inputs:readonly {path:string;isTool?:boolean}[];platform?:{properties?:readonly {name:string;value:string}[]};targetLabel:string}
 
-/** 🔬️ Judges one logged hermetic spawn against what its action declared: an isolated runner, exactly the declared and tool inputs plus its dependency snapshots, the strict environment, no absolute argument and the platform's properties. Returns every violation; an empty list is a hermetic spawn. */
+/** 🚨️ Judges one logged hermetic spawn against what its action declared: an isolated runner, exactly the declared and tool inputs plus its dependency snapshots, the strict environment, no absolute argument and the platform's properties. Returns every violation; an empty list is a hermetic spawn. */
 export function bazelHermeticViolationsV1(spawn:BazelExecutionSpawnV1,expected:Readonly<{inputs:readonly string[];tool:string;properties:Readonly<Record<string,string>>;trees?:readonly string[]}>):string[]{
  const found:string[]=[],paths=spawn.inputs.map(input=>input.path),allowed=new Set([...expected.inputs,expected.tool]),tools=spawn.inputs.filter(input=>input.isTool).map(input=>input.path),pairs=(rows:readonly {name:string;value:string}[])=>JSON.stringify(rows.map(row=>[row.name,row.value]).sort());
  if(!/sandbox|remote/u.test(spawn.runner))found.push(`runner: ${spawn.runner}`);
@@ -144,7 +144,7 @@ export function bazelHermeticViolationsV1(spawn:BazelExecutionSpawnV1,expected:R
 /** 📑 Names the package-relative file a platform's bun executable is linked at. */
 export function bazelBunToolPathV1(platform:BazelExecutionPlatformV1):string{return `${contract.toolchain.directory}/${platform.id}/${bazelBunExecutableNameV1(platform)}`;}
 
-/** 📑 Renders the constraint universe, the platforms with their worker properties, the bun toolchain type and one toolchain per provisioned platform; the remote platforms carry the `remote` pool so hermetic targets route to them while host actions stay local. */
+/** 🔨️ Renders the constraint universe, the platforms with their worker properties, the bun toolchain type and one toolchain per provisioned platform; the remote platforms carry the `remote` pool so hermetic targets route to them while host actions stay local. */
 export function renderBazelExecutionBuildV1(plan:BazelExecutionPlanV1):string{
  const quote=(value:string)=>JSON.stringify(value),order=(left:string,right:string)=>left<right?-1:left>right?1:0,name=(id:string)=>id.replace("-","_"),settings=contract.settings,lines:string[]=[];
  const dictionary=(row:Readonly<Record<string,string>>)=>"{\n"+Object.entries(row).sort(([left],[right])=>order(left,right)).map(([key,value])=>`        ${quote(key)}: ${quote(value)},`).join("\n")+"\n    }";
@@ -190,7 +190,7 @@ def _hermetic_impl(ctx):
 repo_hermetic_task = rule(implementation = _hermetic_impl, toolchains = ["//:${contract.toolchain.type}"], attrs = {"manifest": attr.label(allow_single_file = True), "runner": attr.label(allow_single_file = True), "srcs": attr.label_list(allow_files = True), "deps": attr.label_list(), "modules": attr.label(), "identity": attr.string(mandatory = True)})
 `;
 
-/** 🌳️ The Starlark rule that builds one dependency tree: a host-state action by design, because it reads the installed dependency stores by the absolute paths of its manifest; its output tree is what hermetic actions take as an input by content, so the stores never enter a hermetic action key. */
+/** ⛓️ The Starlark rule that builds one dependency tree: a host-state action by design, because it reads the installed dependency stores by the absolute paths of its manifest; its output tree is what hermetic actions take as an input by content, so the stores never enter a hermetic action key. */
 export const BAZEL_HERMETIC_MODULES_STARLARK=`
 def _hermetic_modules_impl(ctx):
     bun = ctx.toolchains["//:${contract.toolchain.type}"].bun
@@ -210,7 +210,7 @@ export function bazelBunStorePathV1(toolsRoot:string,id:string):string{
  return join(requireNativeStoragePathV1(toolsRoot,join(toolsRoot,"bazel/bun")),pin.sha256.slice(0,16),bazelBunExecutableNameV1(row));
 }
 
-/** 🔐️ Verifies a downloaded archive against its pin before a byte is extracted and returns the executable's bytes. */
+/** 📌️ Verifies a downloaded archive against its pin before a byte is extracted and returns the executable's bytes. */
 export function verifyBazelBunArchiveV1(archive:Uint8Array,pin:Readonly<{bytes:number;sha256:string}>,member:string):Buffer{
  if(archive.length!==pin.bytes||createHash("sha256").update(archive).digest("hex")!==pin.sha256)throw new Error("Bun archive checksum mismatch");
  return bunArchiveExecutable(Buffer.from(archive),member);

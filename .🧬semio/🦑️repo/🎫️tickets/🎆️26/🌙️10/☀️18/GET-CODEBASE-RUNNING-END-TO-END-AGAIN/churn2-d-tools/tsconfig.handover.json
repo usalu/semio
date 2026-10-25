@@ -1,0 +1,26 @@
+{
+ "extends": "../../../../../../../../🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false,
+  "skipLibCheck": true,
+  "composite": false
+ },
+ "include": [],
+ "files": [
+  "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧭️ancestry/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🤝️handover/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🤝️handover/📜️child.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🤝️handover/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧪️tests/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🪵️failure-tail/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🧊️own-stamp/🟦️.ts"
+ ]
+}

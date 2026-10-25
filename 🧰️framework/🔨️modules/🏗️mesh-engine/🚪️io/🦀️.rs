@@ -20,7 +20,7 @@ pub trait MeshExporter: Send + Sync {
     fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String>;
 }
 
-/// 🔌️ Format-keyed mesh import codec; see `MeshExporter`.
+/// ⌨️ Format-keyed mesh import codec; see `MeshExporter`.
 pub trait MeshImporter: Send + Sync {
     fn format_kind(&self) -> &'static str;
     fn import(&self, bytes: &[u8]) -> Result<MeshData, String>;

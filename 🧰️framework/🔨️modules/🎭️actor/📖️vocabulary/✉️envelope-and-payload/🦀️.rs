@@ -1,4 +1,4 @@
-//! ✉️ Envelope and payload: the window identity, the origin, the payload, the coalesce key and the envelope. See [`super`].
+//! 📩️ Envelope and payload: the window identity, the origin, the payload, the coalesce key and the envelope. See [`super`].
 
 use super::*;
 
@@ -18,7 +18,7 @@ impl WindowId {
     }
 }
 
-/// ✉️ Who sent an [`Envelope`].
+/// 📍️ Who sent an [`Envelope`].
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::semio_framework_value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -26,7 +26,7 @@ pub enum Origin {
     Ui {
         window: WindowId,
     },
-    /// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-shard-grants, Part A): struct variant, not
+    /// 🔌️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-shard-grants, Part A): struct variant, not
     /// the newtype `Actor(ActorId)` this used to be — serde's internal tagging (`#[serde(tag =
     /// "kind")]`) cannot serialize a newtype variant whose payload is not itself a map (`ActorId` is
     /// a bare `u64` tuple struct). Latent, not live (this crate has no `serde_json` dependency and
@@ -71,7 +71,7 @@ impl Origin {
     }
 }
 
-/// ✉️ The message body an [`Envelope`] carries. `Event` is an opaque pack-encoded blob of the
+/// 🎒️ The message body an [`Envelope`] carries. `Event` is an opaque pack-encoded blob of the
 /// kernel crate's concrete `Event` type — see the module-level seam docstring.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
@@ -79,7 +79,7 @@ impl Origin {
 pub enum Payload {
     /// 🫴️ The Kernel supplies a new actual input for the Event held by the Shard.
     ContinueOriginalCall,
-    /// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-shard-grants, Part A): struct variant, not
+    /// ⚙️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-shard-grants, Part A): struct variant, not
     /// the newtype `Event(Vec<u8>)` this used to be — serde's internal tagging cannot serialize a
     /// newtype variant whose payload is a sequence (`serde_json` errors "cannot serialize tagged
     /// newtype variant ... containing a sequence", the exact defect `JobStep::Done`/`Failed` hit

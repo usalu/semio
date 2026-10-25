@@ -74,7 +74,7 @@ function apiCompact(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
 
-/** 🔑 Parses one documented key line of a `%region 🔖️Keys…` block into its four fields.
+/** ✂️ Parses one documented key line of a `%region 🔖️Keys…` block into its four fields.
  *
  * Three spellings are in use across the kernel packages and all three are accepted:
  * `name (type, default)  meaning`, `name  type  default <default>  meaning` and
@@ -154,7 +154,7 @@ function vizDocumentRegionScopes(source: string, start: number): readonly string
   return [...scopes];
 }
 
-/** 🧭️ Keeps repeated Keys region names bound to their own physical source position. */
+/** 📍️ Keeps repeated Keys region names bound to their own physical source position. */
 export function vizDocumentKeyRegions(source: string, model: KeysModel = vizKeysModel([source])): readonly { region: string; keys: readonly VizApiKey[]; scopes: readonly string[] }[] {
   const entries: { region: string; keys: readonly VizApiKey[]; scopes: readonly string[] }[] = [];
   let region: string | undefined, start = 0, offset = 0, keys: VizApiKey[] = [];
@@ -180,7 +180,7 @@ export function vizDocumentKeyRegions(source: string, model: KeysModel = vizKeys
   });
 }
 
-/** 🧭️ Selects complete rendered rows from one actual native owner scope. */
+/** 👓️ Selects complete rendered rows from one actual native owner scope. */
 export function vizDocumentKeyReader(reference: string, model: KeysModel): (scope: string) => ReadonlyMap<string, VizApiKey> {
   const text = vizPrintedSource(reference), tables = vizPrintedKeyRows(text), sections = vizPrintedSections(text);
   const declared = new Map([...text.matchAll(/\\ApiScopeSource\{([a-z0-9-]+)\}\{([^}]+)\}/g)].map(match => [match[1]!, match[2]!.replaceAll("\\_", "_")]));
@@ -213,7 +213,7 @@ export function vizDocumentKeyFamilies(implementation: string, reference: string
   return vizDocumentKeyFamilyProjection(implementation, model, vizDocumentKeyReader(reference, model), vizDocumentHelperScopes(reference));
 }
 
-/** 🧾️ Native public scopes include actual installed controls and explicitly documented helpers. */
+/** 🔭️ Native public scopes include actual installed controls and explicitly documented helpers. */
 export function vizDocumentKeyScopes(implementation: string, model: KeysModel, helpers: ReadonlySet<string>): ReadonlyMap<string, { region: string; names: ReadonlySet<string> }> {
   const entries = new Map<string, { region: string; names: Set<string> }>();
   const add = (scope: string, region: string, names: readonly string[]): void => {
@@ -234,7 +234,7 @@ export function vizDocumentKeyScopes(implementation: string, model: KeysModel, h
   return entries;
 }
 
-/** 🗝️ Shares the parsed reference across all physical packages in one collection. */
+/** 🧬️ Shares the parsed reference across all physical packages in one collection. */
 function vizDocumentKeyFamilyProjection(implementation: string, model: KeysModel, read: (scope: string) => ReadonlyMap<string, VizApiKey>, helpers: ReadonlySet<string>): readonly VizApiKeyFamily[] {
   const families: VizApiKeyFamily[] = [];
   const entries = vizDocumentKeyScopes(implementation, model, helpers);
@@ -250,7 +250,7 @@ function vizDocumentKeyFamilyProjection(implementation: string, model: KeysModel
   }
   return families;
 }
-/** 📖 The whole public API as data: every package with its commands and its documented key families,
+/** 📘️ The whole public API as data: every package with its commands and its documented key families,
  * plus the schema's family option vocabulary. This is the twin of `🔓️viz-api.tex` that tooling
  * reads; the document is what a person reads. */
 export function vizApiReference(): VizApiReference {

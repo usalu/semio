@@ -1,6 +1,6 @@
 /** 🏃️ Contract: the Bazel execution contract declares digest-pinned bun toolchains and exec platforms from the neutral schema, routes only hermetic actions to a remote pool, and its self-contained runner is deterministic and isolated. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {chmodSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readlinkSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";

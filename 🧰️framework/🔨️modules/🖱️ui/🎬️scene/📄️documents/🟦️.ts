@@ -1,6 +1,19 @@
 import type { IconName } from "@semio-tech/assets";
 import { type SceneLane, type SceneLaneRef, sceneFromLanes } from "../🚚️lane-contract/🟦️.ts";
 
+/** 🖼️ A 2D canvas surface scene payload — mirrors the wasm `componentScene` node's `canvas2d` field. */
+export type Canvas2dScene = {
+  readonly cameraX: number;
+  readonly cameraY: number;
+  readonly zoom: number;
+  readonly layersJson: string;
+  readonly framing?: import("../📷️framing/🟦️.ts").Canvas2dFraming | null;
+  /** ⏯️ The base64url `ToolRunTraceDelta` paged to this window — see `World3dScene.toolRunTrace`. */
+  readonly toolRunTrace?: string | null;
+  /** 🚚️ The spine's lane manifest — see `CANVAS2D_SCENE_LANES`. */
+  readonly lanes?: readonly SceneLaneRef[];
+};
+
 /** 📋️ A table surface scene payload — mirrors the wasm `componentScene` node's `table` field. */
 export type TableScene = {
   readonly lanes?: readonly SceneLaneRef[];
@@ -79,7 +92,7 @@ export type TiledMapScene = {
   readonly hoverJson: string;
   readonly selectionMethod: string;
   readonly selectionMode: string;
-  /** 🚚️ The spine's lane manifest — see {@link TILEDMAP_SCENE_LANES}. */
+  /** 🛤️ The spine's lane manifest — see {@link TILEDMAP_SCENE_LANES}. */
   readonly lanes?: readonly SceneLaneRef[];
 };
 
@@ -92,7 +105,7 @@ export type Board2dSuggestionCandidate = {
   readonly color?: string;
 };
 
-/** 💡️ The one-shot handle-suggestions popup a board window has open — the board twin of the world's suggestion menu. `pending` means the slot is still resolving; an empty `candidates` with `pending: false` is the polite refusal ("no placement available"). */
+/** 🪟️ The one-shot handle-suggestions popup a board window has open — the board twin of the world's suggestion menu. `pending` means the slot is still resolving; an empty `candidates` with `pending: false` is the polite refusal ("no placement available"). */
 export type Board2dSuggestionMenu = {
   readonly open: boolean;
   readonly x: number;
@@ -132,19 +145,19 @@ export type Board2dScene = {
   readonly transformFlags?: string;
   /** 🖍️ World extent one area-brush CLICK paints, as `{"width":number,"height":number}`; absent leaves the engine default. A click-drag states its own rectangle. */
   readonly areaBrushSize?: string;
-  /** 🎯️ The framework interaction domain this board's picks and hovers belong to; absent means the app declares none and the host publishes no `interactionHover`. */
+  /** 🧰️ The framework interaction domain this board's picks and hovers belong to; absent means the app declares none and the host publishes no `interactionHover`. */
   readonly domainId?: string;
   /** 🏷️ The owning domain's brush placement id prefixes in the board's wire form, `{"brushNodePrefix":string,"brushEdgePrefix":string}`, so every host mints the domain's ids; absent leaves the host's installed naming. */
   readonly placementNaming?: string;
-  /** 💡️ The one-shot handle-suggestions popup this window has open, as a {@link Board2dSuggestionMenu} JSON string; absent is the closed state. */
+  /** 📂️ The one-shot handle-suggestions popup this window has open, as a {@link Board2dSuggestionMenu} JSON string; absent is the closed state. */
   readonly suggestionMenuJson?: string;
   /** ⏯️ The base64url `ToolRunTraceDelta` paged to this board — carried outside the doc, see {@link BOARD2D_SCENE_LANES}. */
   readonly toolRunTrace?: string;
-  /** 🚚️ The spine's lane manifest — see {@link BOARD2D_SCENE_LANES}. */
+  /** 🧾️ The spine's lane manifest — see {@link BOARD2D_SCENE_LANES}. */
   readonly lanes?: readonly SceneLaneRef[];
 };
 
-/** 🎯️ A complete interaction publication address for an ink canvas. */
+/** 🏁️ A complete interaction publication address for an ink canvas. */
 export type InkCanvasInteractionDomain = {
   readonly id: string;
   readonly granularityId: string;
@@ -158,11 +171,11 @@ export type InkCanvasScene = {
   readonly activeUtility: string;
   readonly viewMode: string;
   readonly interactive: boolean;
-  /** 🎯️ The complete interaction publication address; absent on read-only/non-domain surfaces. */
+  /** ✅️ The complete interaction publication address; absent on read-only/non-domain surfaces. */
   readonly interactionDomain?: InkCanvasInteractionDomain;
 };
 
-/** 🖊️ Renderer-to-plugin action names for ink-canvas surfaces (modeled after {@link nodeGraphActions}/{@link textEditorActions}). */
+/** ✒️ Renderer-to-plugin action names for ink-canvas surfaces (modeled after {@link nodeGraphActions}/{@link textEditorActions}). */
 export const inkCanvasActions = {
   applyEvents: "inkApplyEvents",
   setCamera: "setCamera",
@@ -173,7 +186,7 @@ export type GraphTimelineScene = {
   readonly columnsJson: string;
 };
 
-/** 🧩️ A palette entry for a block kind insertable into a {@link BlockListScene}, contributed either by the host app's own built-ins or by a `playbookBlockKind` module contribution. */
+/** 🧱️ A palette entry for a block kind insertable into a {@link BlockListScene}, contributed either by the host app's own built-ins or by a `playbookBlockKind` module contribution. */
 export type BlockPaletteEntry = {
   readonly blockKind: string;
   readonly label: string;
@@ -198,7 +211,7 @@ export type EventFeedEntry = {
   readonly tone?: string;
 };
 
-/** 📰️ A scrolling event/log feed surface scene payload — mirrors the wasm `componentScene` node's `eventFeed` field. `entriesJson` is an {@link EventFeedEntry}`[]` array. */
+/** 📜️ A scrolling event/log feed surface scene payload — mirrors the wasm `componentScene` node's `eventFeed` field. `entriesJson` is an {@link EventFeedEntry}`[]` array. */
 export type EventFeedScene = {
   readonly entriesJson: string;
   readonly follow?: boolean;

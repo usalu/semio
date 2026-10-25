@@ -2045,10 +2045,14 @@
       "const": {
         "text": "{{stagedConfiguration}}",
         "purpose": "fixed-generation-local-isolated-layout",
-        "sourceBytes": "unchanged-if-authored",
+        "sourceBytes": "canonical-text-unless-exact-authored",
         "authoredEncodings": [
           "utf8-lf",
           "utf8-crlf"
+        ],
+        "runtimeKeys": [
+          "preload",
+          "test"
         ],
         "missing": "canonical-text"
       }
@@ -2568,6 +2572,8 @@
             "state",
             "list",
             "readText",
+            "membership",
+            "frontier",
             "selection",
             "publication"
           ]

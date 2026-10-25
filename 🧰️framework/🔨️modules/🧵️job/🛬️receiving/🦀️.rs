@@ -23,7 +23,7 @@ impl OriginalJobDecodeOwner{
  pub fn owned_bytes(&self)->usize{self.receipt.as_ref().map_or(0,NativeDetachedRetirementDecodeContinuation::owned_bytes)}
  /// 📏️ Quotes actual recipient closure before separately removing its scalar continuation.
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.recipient.terminal_is_empty(){return self.recipient.next_demand(body);}Ok(RetirementDemand{copy_bytes:if self.receipt.is_some(){size_of::<Option<NativeDetachedRetirementDecodeContinuation>>()}else{0},depth:usize::from(self.receipt.is_some()),..Default::default()})}
- /// ♻️ Closes original returned construction ownership under independent caller grants before deleting the consuming receipt.
+ /// 📪️ Closes original returned construction ownership under independent caller grants before deleting the consuming receipt.
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.closing=true;let d=self.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if !self.recipient.terminal_is_empty(){return self.recipient.close_step(grant);}if self.receipt.is_some(){self.receipt=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}Ok(RetainedCloneStep::Complete(Default::default()))}
  /// 🫙️ Every original decoder recipient has closed and its consuming receipt has been removed.
  pub fn terminal_is_empty(&self)->bool{self.receipt.is_none()&&self.recipient.terminal_is_empty()}

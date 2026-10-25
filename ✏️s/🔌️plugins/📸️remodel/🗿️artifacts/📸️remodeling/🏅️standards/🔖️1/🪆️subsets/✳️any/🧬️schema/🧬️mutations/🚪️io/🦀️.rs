@@ -5,7 +5,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 
 /// ▶️ Applies `mutation` via its diff — kept as a free-function wrapper (matching `🎬️sequence`'s `apply_sequence_mutation`) since external callers (the editor surface) still call it by this name.
 pub fn apply_remodeling_mutation(snapshot: &RemodelingSnapshot, mutation: &RemodelingMutation) -> protocol::MutationApplyResult<RemodelingSnapshot> {
-    protocol::apply_diff_cold(&protocol::Mutation::diff(mutation, snapshot).into_parts().0, snapshot)
+    protocol::apply_diff_cold(&protocol::ColdMutation::diff(mutation, snapshot).into_parts().0, snapshot)
 }
 
 /// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or

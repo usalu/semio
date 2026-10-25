@@ -8,7 +8,7 @@ use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::captur
 use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture::windows::frames::config::RemodelingFramesWindowConfigMutation;
 use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture::windows::frames::config::RemodelingFramesWindowConfigOwner;
 use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn block_on_remodel_windows<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);

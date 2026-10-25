@@ -26,8 +26,7 @@
           "name",
           "args",
           "mode",
-          "main",
-          "javascript"
+          "main"
         ],
         "additionalProperties": false,
         "properties": {
@@ -61,9 +60,6 @@
                 }
               }
             ]
-          },
-          "javascript": {
-            "type": "boolean"
           },
           "watch": {
             "type": "string"

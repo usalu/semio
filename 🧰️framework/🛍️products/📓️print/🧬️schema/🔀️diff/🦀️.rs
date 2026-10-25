@@ -112,7 +112,7 @@ impl ChartEdit {
         Ok((!presence_equal(before, value)).then(|| Self { path: path.to_vec(), before: before.cloned(), after: value.cloned() }))
     }
 
-    /// ↩️ The edits that undo `self`, read from `root`, the chart `self` is authored against, in application order. Removing an
+    /// ⏪️ The edits that undo `self`, read from `root`, the chart `self` is authored against, in application order. Removing an
     /// array element shifts its tail, so its undo restores every shifted slot (read from `root`) and re-appends the last one.
     pub fn undo_rows(&self, root: &DslValue) -> Vec<Self> {
         let parent_path = &self.path[..self.path.len().saturating_sub(1)];

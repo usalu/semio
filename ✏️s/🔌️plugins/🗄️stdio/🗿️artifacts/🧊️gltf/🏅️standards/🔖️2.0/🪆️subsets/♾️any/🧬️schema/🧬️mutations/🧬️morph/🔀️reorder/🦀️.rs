@@ -32,13 +32,13 @@ pub fn validate(payload: &GltfReorderMorphTargetsPayload, base: &GltfSnapshot) -
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plan(p: &GltfReorderMorphTargetsPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
     validate(p, base)?;
-    let rows = GltfTargetsDelta::rows(Vec::new(), Vec::new(), moves_to_order(&base.document.meshes[p.mesh].primitives[p.primitive].targets, &p.order));
+    let rows = GltfTargetsDelta::rows(Vec::new(), Vec::new(), moves_to_order_by::<GltfMorphTargetKeys, _>(&base.document.meshes[p.mesh].primitives[p.primitive].targets, &p.order));
     Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfReorderMorphTargetsPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::reorder_morph_targets::ReorderMorphTargetsMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();

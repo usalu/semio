@@ -1,4 +1,4 @@
-//! 🏷️ Record wire vocabulary: the field and element tags, shape navigation and the canonical schema graph hash every encoder, decoder and cursor of a Pack record shares.
+//! 📹️ Record wire vocabulary: the field and element tags, shape navigation and the canonical schema graph hash every encoder, decoder and cursor of a Pack record shares.
 
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_pack_error::PackRefusal;
@@ -316,7 +316,7 @@ impl PackSchemaShape {
 }
 
 impl PackSchemaGraph {
-    /// 🕸️ Builds the canonical graph of `spec`. Discovery follows each distinct
+    /// 📕️ Builds the canonical graph of `spec`. Discovery follows each distinct
     /// `RecordSpecProducer` once (so it terminates on recursive schemas), then Moore partition
     /// refinement merges every pair of structurally identical records, which makes the result
     /// independent of how often the compiler duplicated a spec function.
@@ -483,7 +483,7 @@ impl PackSchemaGraph {
 pub fn schema_hash(spec: &RecordSpec) -> [u8; 32] {
     *semio_framework_hash::hash(&PackSchemaGraph::of(spec).canonical_bytes()).as_bytes()
 }
-/// 🧮️ Preserves canonical graph identity under the declared metadata factories and one ownership ceiling.
+/// 🧬️ Preserves canonical graph identity under the declared metadata factories and one ownership ceiling.
 pub fn schema_hash_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(spec:&RecordSpec,control:&mut C)->Result<[u8;32],PackRefusal>{controlled_schema::hash(spec,control).map_err(PackRefusal::from)}
 
 //#endregion 🔖️SchemaHash

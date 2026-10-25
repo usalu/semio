@@ -1,9 +1,9 @@
 import {resetInactiveRepositoryCacheNamespaceV1,type RepositoryCacheResetProfileV1} from "./🟦️.ts";
 import {BundleScript,ScriptRouter,runScriptMain,receiveScriptProcessInvocation,requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,createIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import { isMainModuleV1 } from "../../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 /** 🎯️ Accepts one declared cache profile without caller-controlled paths or options. */
 export function readInactiveRepositoryCacheResetProfileV1(args:readonly string[]):RepositoryCacheResetProfileV1{if(args.length!==1||!schema.$defs.Profile.enum.includes(args[0] as RepositoryCacheResetProfileV1))throw Error("Exactly one declared repository cache reset profile required");return args[0] as RepositoryCacheResetProfileV1;}
 /** ♻️ Runs one fixed recomputable inactive repository namespace operation. */

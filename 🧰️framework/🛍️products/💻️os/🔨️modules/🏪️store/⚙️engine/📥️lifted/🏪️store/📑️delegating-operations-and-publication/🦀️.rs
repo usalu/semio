@@ -330,7 +330,7 @@ where
     #[inline] pub fn bump(&mut self) -> Result<(), VcsError> { self.replay.bump(&mut self.log, &mut self.owners, &mut self.cursor, &mut self.live) }
 
     /// 🪞️ Delegates to [`StoreReplay::assert_mirrors_are_live`].
-    #[cfg(test)] #[inline] pub fn assert_mirrors_are_live(&self) { self.replay.assert_mirrors_are_live(&self.log, &self.cursor, &self.live) }
+    #[doc(hidden)] #[inline] pub fn assert_mirrors_are_live(&self) { self.replay.assert_mirrors_are_live(&self.log, &self.cursor, &self.live) }
 }
 //#endregion 🔖️ArtifactStore
 //#endregion 🔖️ArtifactStore

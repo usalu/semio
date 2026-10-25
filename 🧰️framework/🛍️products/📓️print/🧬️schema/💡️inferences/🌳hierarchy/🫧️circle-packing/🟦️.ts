@@ -116,7 +116,7 @@ function extendBasis(basis: readonly Circle[], p: Circle): Circle[] {
   throw new Error("no enclosing basis");
 }
 
-/** 🫧 The smallest enclosing circle by Welzl's move-to-front, shuffled by the seeded generator. */
+/** ⭕️ The smallest enclosing circle by Welzl's move-to-front, shuffled by the seeded generator. */
 export function vizPackEnclose(circles: readonly Circle[], random: () => number = vizLcg()): Circle | undefined {
   const shuffled = shuffleWith([...circles], random);
   let i = 0;
@@ -134,7 +134,7 @@ export function vizPackEnclose(circles: readonly Circle[], random: () => number 
   return enclosing;
 }
 
-/** 🫧 The front-chain sibling packing; returns the radius of the enclosing circle. */
+/** ⛓️ The front-chain sibling packing; returns the radius of the enclosing circle. */
 export function vizPackSiblings(circles: readonly Circle[], random: () => number = vizLcg()): number {
   const n = circles.length;
   if (n === 0) return 0;
@@ -215,10 +215,10 @@ export function vizPackSiblings(circles: readonly Circle[], random: () => number
   return enclosing.r;
 }
 
-/** 🫧 Options of `\SemioVizLayout{pack}`. */
+/** ⚙️ Options of `\SemioVizLayout{pack}`. */
 export type VizPackOptions<T> = { readonly size?: readonly [number, number]; readonly padding?: number; readonly radius?: (node: VizHierarchyNode<T>) => number };
 
-/** 🫧 The enclosure diagram: nested circles proportional to `value`, packed deterministically. */
+/** 📦️ The enclosure diagram: nested circles proportional to `value`, packed deterministically. */
 export function vizPack<T>(root: VizHierarchyNode<T>, options: VizPackOptions<T> = {}): VizHierarchyNode<T> {
   const [dx, dy] = options.size ?? [1, 1];
   const padding = options.padding ?? 0;

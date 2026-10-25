@@ -1,13 +1,13 @@
 import {test,expect} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {spawnSync} from "node:child_process";
 import {dirname,join} from "node:path";
 import {type BigIntStats,lstatSync,lutimesSync,mkdirSync,mkdtempSync,readFileSync,readlinkSync,renameSync,rmSync,symlinkSync,unlinkSync,utimesSync,writeFileSync} from "node:fs";
-import {withBuildTestInvocationV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import * as issued from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import * as leases from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import * as leases from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {javascriptInstallSchemaV1 as installSchema} from "../../🧱️schemas/🟦️.ts";
 import {publishJavascriptDependencyPreservingSourceDescriptorV1,readJavascriptDependencyPreservationSourceV1,requireJavascriptDependencyEndpointFenceV1,requireJavascriptDependencyPreservationSourceUnchangedV1} from "../../🟦️.ts";
 import corpus from "./🔣️.json";

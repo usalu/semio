@@ -2,7 +2,7 @@ import { dirname, join, relative } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { cargoRepositoryPackages } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 interface CrateIndexRecord {
   dir: string;

@@ -32,7 +32,7 @@ impl DrawingRenameInverseCursor {
         Self { state: ManuallyDrop::new(DrawingRenameInverseState { preparation: DrawingOwnedRenamePreparationCursor::new(source), identifier: PagedUtf8::retained_clone_cursor(), name: PagedUtf8::retained_clone_cursor(), plan: None, pending: None, inverse: PagedList::default(), pending_close: None, inverse_close: None, phase: 0, closing: false }) }
     }
 
-    pub fn advance(&mut self, payload: RetainedCloneRef<'_, RenameLayer>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, payload: RetainedCloneRef<'_, RenameLayer>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 10 { return Err(refusal("Drawing rename inverse is closing or spent")); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(plan) = &mut self.plan { plan.check_original(payload)?; }
@@ -51,14 +51,14 @@ impl DrawingRenameInverseCursor {
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             2 => {
-                let step = self.identifier.advance(payload.project(1, |payload| &payload.layer_id), grant)?;
+                let step = self.identifier.advance(payload.project(1, |payload| &payload.layer_id), body, grant)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 3; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             3 => {
                 let state = &mut *self.state;
                 let source = state.plan.as_ref().ok_or_else(|| refusal("Drawing rename inverse has no retained plan"))?.inverse_name()?.ok_or_else(|| refusal("Drawing rename inverse has no original name"))?;
-                let step = state.name.advance(source, grant)?;
+                let step = state.name.advance(source, body, grant)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { state.phase = 4; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }

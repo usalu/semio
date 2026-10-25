@@ -87,7 +87,7 @@ function ladderOracle(Decimal: new (value: string) => DecimalValue, row: Fixture
   return Math.min(row.max ?? Number.POSITIVE_INFINITY, Math.max(row.min ?? Number.NEGATIVE_INFINITY, value));
 }
 
-/** 🎚️ Answers every shared fixture row, returning how many assertions the corpus carried. */
+/** 🎛️ Answers every shared fixture row, returning how many assertions the corpus carried. */
 export function numberControlsSelfTests(): number {
   const require = createRequire(import.meta.url);
   

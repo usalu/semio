@@ -14,7 +14,7 @@ const ORIGIN = physicalSourceOriginV1(import.meta.url, import.meta.semioPhysical
  * 🏊️ Plans the farm that pre-infers the projects of one graph construction in worker processes, or answers undefined when the work is small or the farm is switched off. Nothing is asked of the host before the work proves to be cold: the farm engages once at least `minimumProjects` projects had no valid record and they are a quarter of the projects seen so far, so a warm run costs nothing.
  * The farm then asks the host capacity governor for its workers in the fair machine-wide queue without waiting for the answer: the parent keeps inferring projects itself until the workers it was granted are ready. Each worker runs the real project inference into a staging directory of its own; the parent adopts the finished leaves under its writer custody (`prepare`) and then reads the record exactly as it would read one a previous run left, so the farm changes how fast a record appears, never what it holds.
  */
-export function openProjectFarmV1({ workspaceRoot, context, projects, commandInputs, projectsByRoot, componentRoots, environment = process.env, signal, processed = () => 0, command, commandArguments, spawnProcess, request = requestBuildFarmCapacityV1, cores = availableParallelism(), write = line => process.stderr.write(line + "\n") }) {
+export function openProjectFarmV1({ workspaceRoot, context, projects, commandInputs, lateClosures = false, projectsByRoot, componentRoots, environment = process.env, signal, processed = () => 0, command, commandArguments, spawnProcess, request = requestBuildFarmCapacityV1, cores = availableParallelism(), write = line => process.stderr.write(line + "\n") }) {
   const policy = GRAPH_FARM_POLICY_V1, say = (key, fields) => { for (const line of renderGraphFarmMessagesV1(key, fields, environment)) write(line); };
   const plan = planGraphFarmV1({ projects, environment, cores });
   if (plan.workers === 0) { if (plan.reason === "work" || plan.reason === "cpu") say("serial", { projects, reason: plan.reason }); return undefined; }
@@ -26,7 +26,7 @@ export function openProjectFarmV1({ workspaceRoot, context, projects, commandInp
     workers = granted.jobs;
     farm = createFarmV1({
       entry: ENTRY, service: SERVICE, workers, megabytes: granted.megabytes, environment, signal,
-      session: { version: 2, workspaceRoot, registry: context.registry ?? null, commandInputs: commandInputs ?? null, projectsByRoot: [...projectsByRoot], componentRoots, stagingBase: base },
+      session: { version: 2, workspaceRoot, registry: context.registry ?? null, commandInputs: commandInputs ?? null, lateClosures, projectsByRoot: [...projectsByRoot], componentRoots, stagingBase: base },
       accept: identity => identity === inferenceRecordIdentityV1(),
       report: (event, fields) => {
         if (event === "recycled") { counts.recycled++; say("recycled", fields); }

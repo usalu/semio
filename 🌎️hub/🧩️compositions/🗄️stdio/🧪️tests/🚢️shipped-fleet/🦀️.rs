@@ -415,7 +415,7 @@ async fn sqlite_snapshot_primary_declared_binding_census() {
         if expected_provider.snapshot_type.is_none() { failures.push(format!("{label}: declared provider erases concrete Snapshot TypeId")); }
         macro_rules! typed_snapshot_owner {
             ($snapshot:ty, $mutation:ty, $schema:literal) => {
-                (std::any::TypeId::of::<$snapshot>(), <$snapshot as semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA, semio_framework_os_kernel::bare_artifact_codec::<$snapshot, $mutation>($schema))
+                (std::any::TypeId::of::<$snapshot>(), <$snapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, semio_framework_os_kernel::bare_artifact_codec::<$snapshot, $mutation>($schema))
             };
         }
         let (expected_type, expected_sql, typed_codec) = match (declared.artifact_kind, declared.standard.0, declared.subset.0, codec.schema.as_str()) {

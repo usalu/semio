@@ -19,14 +19,14 @@ import { planTaxonomy } from "../../🧹️normalization/🧠️planning/🟦️
 /** 🧬️ A deeply mutable projection of one frozen contract record, for the `structuredClone`-then-mutate probe below. */
 type Mutable<T> = { -readonly [Key in keyof T]: T[Key] };
 
-/** 🧬️ The frozen taxonomy with exactly the two registries this probe rewrites opened for writing; every other field
+/** 📑️ The frozen taxonomy with exactly the two registries this probe rewrites opened for writing; every other field
  * keeps its declared shape, so the value stays assignable wherever a `Taxonomy` is expected. */
 type ProbeTaxonomy = Omit<Taxonomy, "generatorContracts" | "frozenCoordinateEvidenceContracts"> & {
   generatorContracts: Record<string, Mutable<GeneratorContract>>;
   frozenCoordinateEvidenceContracts: Record<string, Mutable<FrozenCoordinateEvidenceContract>>;
 };
 
-/** 🧬️ A structured deep copy is a fresh object graph, so the copy is safe to mutate even where the source type is frozen. */
+/** 🦜️ A structured deep copy is a fresh object graph, so the copy is safe to mutate even where the source type is frozen. */
 function probeClone(value: Taxonomy): ProbeTaxonomy {
   return structuredClone(value) as ProbeTaxonomy;
 }

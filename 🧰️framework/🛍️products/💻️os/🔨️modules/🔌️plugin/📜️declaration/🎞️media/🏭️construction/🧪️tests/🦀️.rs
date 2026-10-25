@@ -11,5 +11,4 @@ fn original_output_birth_quote_matches_neutral_slot_bounds(){
    assert_eq!(demand,RetirementDemand{copy_bytes:size_of::<ArtifactOutputChunks>(),capacity_bytes:slots*size_of::<Vec<u8>>()+semio_framework_value::shared_retirement_allocation_bytes::<ArtifactOutputChunksInner>(),depth:1,..Default::default()});
   }
  }
- eprintln!("[DEBUG] Native output quote follows all nine neutral slot bounds and actual platform layouts");
 }

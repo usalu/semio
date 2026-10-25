@@ -1,0 +1,272 @@
+{
+ "version": 1,
+ "vectors": [
+  {
+   "name": "idle sessions that a newer session supersedes go, the newest, the recent and the held stay",
+   "input": {
+    "volumeBytes": 10000000000,
+    "needBytes": 0,
+    "nowMs": 100000000,
+    "sessions": [
+     {
+      "path": "/m/b/p/prototype/incremental/a-1/s-1-a",
+      "bytes": 1000,
+      "lastUsedMs": 90000000,
+      "held": false,
+      "newest": false
+     },
+     {
+      "path": "/m/b/p/prototype/incremental/a-1/s-2-b",
+      "bytes": 2000,
+      "lastUsedMs": 95000000,
+      "held": false,
+      "newest": true
+     },
+     {
+      "path": "/m/b/p/prototype/incremental/c-1/s-3-c",
+      "bytes": 3000,
+      "lastUsedMs": 99900000,
+      "held": false,
+      "newest": false
+     },
+     {
+      "path": "/m/b/p/prototype/incremental/d-1/s-4-d",
+      "bytes": 4000,
+      "lastUsedMs": 90000000,
+      "held": true,
+      "newest": false
+     }
+    ]
+   },
+   "remove": [
+    {
+     "path": "/m/b/p/prototype/incremental/a-1/s-1-a",
+     "bytes": 1000,
+     "reason": "idle"
+    }
+   ]
+  },
+  {
+   "name": "over the budget the oldest sessions go first, newest ones included, until the total fits",
+   "input": {
+    "volumeBytes": 1000,
+    "needBytes": 0,
+    "nowMs": 100000000,
+    "sessions": [
+     {
+      "path": "/m/x/s-3-c",
+      "bytes": 60,
+      "lastUsedMs": 98800002,
+      "held": false,
+      "newest": true
+     },
+     {
+      "path": "/m/y/s-1-a",
+      "bytes": 60,
+      "lastUsedMs": 98800000,
+      "held": false,
+      "newest": true
+     },
+     {
+      "path": "/m/z/s-2-b",
+      "bytes": 60,
+      "lastUsedMs": 98800001,
+      "held": false,
+      "newest": true
+     }
+    ]
+   },
+   "remove": [
+    {
+     "path": "/m/y/s-1-a",
+     "bytes": 60,
+     "reason": "budget"
+    },
+    {
+     "path": "/m/z/s-2-b",
+     "bytes": 60,
+     "reason": "budget"
+    }
+   ]
+  },
+  {
+   "name": "under pressure the oldest unheld sessions go until the needed bytes are freed, held ones never",
+   "input": {
+    "volumeBytes": 10000000000,
+    "needBytes": 5000,
+    "nowMs": 100000000,
+    "sessions": [
+     {
+      "path": "/m/h/s-0-h",
+      "bytes": 9999,
+      "lastUsedMs": 98000000,
+      "held": true,
+      "newest": true
+     },
+     {
+      "path": "/m/p/s-1-a",
+      "bytes": 3000,
+      "lastUsedMs": 98800000,
+      "held": false,
+      "newest": true
+     },
+     {
+      "path": "/m/q/s-2-b",
+      "bytes": 3000,
+      "lastUsedMs": 98800001,
+      "held": false,
+      "newest": true
+     },
+     {
+      "path": "/m/r/s-3-c",
+      "bytes": 3000,
+      "lastUsedMs": 98800002,
+      "held": false,
+      "newest": true
+     }
+    ]
+   },
+   "remove": [
+    {
+     "path": "/m/p/s-1-a",
+     "bytes": 3000,
+     "reason": "pressure"
+    },
+    {
+     "path": "/m/q/s-2-b",
+     "bytes": 3000,
+     "reason": "pressure"
+    }
+   ]
+  },
+  {
+   "name": "idle removals count towards the pressure that is still needed",
+   "input": {
+    "volumeBytes": 10000000000,
+    "needBytes": 2500,
+    "nowMs": 100000000,
+    "sessions": [
+     {
+      "path": "/m/a/s-1-a",
+      "bytes": 2000,
+      "lastUsedMs": 80000000,
+      "held": false,
+      "newest": false
+     },
+     {
+      "path": "/m/a/s-2-b",
+      "bytes": 1000,
+      "lastUsedMs": 98800000,
+      "held": false,
+      "newest": true
+     },
+     {
+      "path": "/m/b/s-3-c",
+      "bytes": 1000,
+      "lastUsedMs": 98800001,
+      "held": false,
+      "newest": true
+     }
+    ]
+   },
+   "remove": [
+    {
+     "path": "/m/a/s-1-a",
+     "bytes": 2000,
+     "reason": "idle"
+    },
+    {
+     "path": "/m/a/s-2-b",
+     "bytes": 1000,
+     "reason": "pressure"
+    }
+   ]
+  },
+  {
+   "name": "nothing is removed when nothing is idle, over budget or needed",
+   "input": {
+    "volumeBytes": 10000000000,
+    "needBytes": 0,
+    "nowMs": 100000000,
+    "sessions": [
+     {
+      "path": "/m/a/s-1-a",
+      "bytes": 2000,
+      "lastUsedMs": 98800000,
+      "held": false,
+      "newest": true
+     },
+     {
+      "path": "/m/b/s-2-b",
+      "bytes": 1000,
+      "lastUsedMs": 99000000,
+      "held": false,
+      "newest": true
+     }
+    ]
+   },
+   "remove": []
+  },
+  {
+   "name": "sessions younger than the minimum age are never removed, even under pressure",
+   "input": {
+    "volumeBytes": 1000,
+    "needBytes": 500,
+    "nowMs": 100000000,
+    "sessions": [
+     {
+      "path": "/m/a/s-1-a",
+      "bytes": 600,
+      "lastUsedMs": 99900000,
+      "held": false,
+      "newest": true
+     },
+     {
+      "path": "/m/b/s-2-b",
+      "bytes": 600,
+      "lastUsedMs": 99800000,
+      "held": false,
+      "newest": true
+     }
+    ]
+   },
+   "remove": []
+  },
+  {
+   "name": "equal ages are ordered by path",
+   "input": {
+    "volumeBytes": 10000000000,
+    "needBytes": 1500,
+    "nowMs": 100000000,
+    "sessions": [
+     {
+      "path": "/m/b/s-2-b",
+      "bytes": 1000,
+      "lastUsedMs": 98800000,
+      "held": false,
+      "newest": true
+     },
+     {
+      "path": "/m/a/s-1-a",
+      "bytes": 1000,
+      "lastUsedMs": 98800000,
+      "held": false,
+      "newest": true
+     }
+    ]
+   },
+   "remove": [
+    {
+     "path": "/m/a/s-1-a",
+     "bytes": 1000,
+     "reason": "pressure"
+    },
+    {
+     "path": "/m/b/s-2-b",
+     "bytes": 1000,
+     "reason": "pressure"
+    }
+   ]
+  }
+ ]
+}

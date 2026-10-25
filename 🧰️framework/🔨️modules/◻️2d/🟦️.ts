@@ -128,7 +128,7 @@ function paintStroke(ctx: CanvasRenderingContext2D, stroke: StrokeStyle): void {
   ctx.setLineDash(stroke.dash ? [...stroke.dash] : []);
 }
 
-/** 🖼️ Rasterizes a {@link DrawingScene} to a PNG data URL. */
+/** 🔗️ Rasterizes a {@link DrawingScene} to a PNG data URL. */
 export function rasterizeDrawingSceneToPng(scene: DrawingScene): string {
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.ceil(scene.width));
@@ -181,14 +181,14 @@ export function paintDrawingScene(ctx: CanvasRenderingContext2D, scene: DrawingS
   }
 }
 
-/** 🖼️ {@link DrawingPngExportPort} backed by canvas readback. */
+/** ⏪️ {@link DrawingPngExportPort} backed by canvas readback. */
 export const canvasDrawingPngExportPort: DrawingPngExportPort = {
   exportPng(scene) {
     return rasterizeDrawingSceneToPng(scene);
   },
 };
 
-/** 🖼️ Rasterizes SVG markup to a PNG data URL in the browser. */
+/** 🌐️ Rasterizes SVG markup to a PNG data URL in the browser. */
 export async function rasterizeSvgMarkupToPngDataUrl(svg: string, width: number, height: number): Promise<string> {
   if (typeof document === "undefined") {
     return `data:image/png;base64,`;
@@ -212,7 +212,7 @@ export async function rasterizeSvgMarkupToPngDataUrl(svg: string, width: number,
   });
 }
 
-/** 📄️ Serializes path segments to an SVG `d` attribute. */
+/** 📂️ Serializes path segments to an SVG `d` attribute. */
 export function pathSegmentsToSvgD(segments: readonly PathSegment[]): string {
   let d = "";
   for (const segment of segments) {
@@ -226,7 +226,7 @@ export function pathSegmentsToSvgD(segments: readonly PathSegment[]): string {
   return d.trim();
 }
 
-/** 📄️ Serializes a {@link DrawingScene} to SVG markup. */
+/** 🖍️ Serializes a {@link DrawingScene} to SVG markup. */
 export function drawingSceneToSvgMarkup(scene: DrawingScene): string {
   const shapes = scene.nodes
     .map((entry) => {

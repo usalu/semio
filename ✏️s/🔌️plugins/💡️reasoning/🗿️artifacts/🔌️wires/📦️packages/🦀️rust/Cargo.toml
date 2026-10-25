@@ -70,6 +70,7 @@ semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️
 serde.workspace = true
 
 [dev-dependencies]
+semio-framework-plugin-reactor-app = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 serde_json.workspace = true
 semio-framework-graph-layout-run = { workspace = true, features = ["testing"] }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }

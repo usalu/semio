@@ -24,6 +24,8 @@ name = "editor_app_2"
 path = "../../🧪️tests/🔬️app-2/🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-plugin-retained-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust" }
 semio-s-artifact-fem-3d-mesh-solids = { workspace = true }
 semio-s-fem-analyses-model = { path = "../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust" }
 pack = { workspace = true }

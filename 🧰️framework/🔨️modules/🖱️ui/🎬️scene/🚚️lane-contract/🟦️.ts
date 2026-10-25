@@ -1,5 +1,5 @@
 /** 🚚️ Scene lane contract: the lane manifest entry, the lane descriptor and the spine-plus-lanes reassembly every scene document shares; a leaf, so scene types never import the lane tables that are typed by them. */
-/** 🚚️ One entry of a scene spine's lane manifest (`World3dScene.lanes`, `Canvas2dScene.lanes`).
+/** 📋️ One entry of a scene spine's lane manifest (`World3dScene.lanes`, `Canvas2dScene.lanes`).
  * `bytes` is what tells a fully arrived lane from one still spread across reconcile pages; `hash`
  * (FNV-1a/64, lowercase hex, computed by the producer) is what makes the spine itself differ exactly
  * when a lane's content differs. */
@@ -9,7 +9,7 @@ export type SceneLaneRef = {
   readonly hash: string;
 };
 
-/** 🚚️ One scene payload lane: which scene field it carries and which reserved node key its retained
+/** 🎒️ One scene payload lane: which scene field it carries and which reserved node key its retained
  * text carrier is rooted at. */
 export type SceneLane<S> = {
   readonly encoding?: "json";
@@ -19,7 +19,7 @@ export type SceneLane<S> = {
   readonly optional: boolean;
 };
 
-/** 🚚️ Reassembles a decoded scene spine and its lane carrier texts back into the scene every render
+/** 🧩️ Reassembles a decoded scene spine and its lane carrier texts back into the scene every render
  * host already knows how to read — the exact inverse of the Rust `SceneDoc::split_lanes`.
  *
  * `laneTexts` is keyed by reserved carrier key ({@link SceneLane.bodyKey}). A lane the spine declares

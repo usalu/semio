@@ -5,7 +5,7 @@
  */
 import { collectPresentationSlides, intro } from "@semio-tech/presentation";
 import { describe, expect, it } from "vitest";
-import { jsonPreview, readPresentationSlideIndicesFromUrl, renderJsonTree, syncPresentationSlideUrl } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { jsonPreview, readPresentationSlideIndicesFromUrl, renderJsonTree, syncPresentationSlideUrl } from "@semio-tech/presentation-react";
 
 describe("syncPresentationSlideUrl", () => {
   const sampleDeck = intro({

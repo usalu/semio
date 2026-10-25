@@ -31,6 +31,7 @@ dashboard_cli = { path = "../../../🧭️cli/📦️packages/🦀️rust", pack
 dashboard_daemon = { path = "../../../🌀️daemon/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-daemon" }
 dashboard_inventory = { path = "../../../📚️inventory/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-inventory" }
 dashboard_labels = { path = "../../🌐️labels/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-labels" }
+dashboard_language_choice = { path = "../../🌐️language-choice/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-language-choice" }
 dashboard_launcher = { path = "../../🚀️launcher/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launcher" }
 dashboard_launch = { path = "../../../🧾️launch/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launch" }
 dashboard_preferences = { path = "../../../⚙️preferences/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-preferences" }
@@ -45,8 +46,5 @@ semio-framework-ui-tui-terminal = { path = "../../../../../../../🔨️modules/
 semio-framework-ui-tui-vt = { path = "../../../../../../../🔨️modules/🖱️ui/⌨️tui/📟️vt/📦️packages/🦀️rust" }
 semio-framework-ui-tui-widgets = { path = "../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust" }
 
-[dev-dependencies]
-dashboard_source_view = { path = "../../../📂️workspace/🖥️view/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-source-view", features = ["testkit"] }
-dashboard_core = { path = "../../../🧱️invocation-catalog/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }
-semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-serde_json = { workspace = true }
+[features]
+testkit = []

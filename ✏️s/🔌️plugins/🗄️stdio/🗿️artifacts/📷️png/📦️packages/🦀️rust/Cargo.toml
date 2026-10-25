@@ -16,13 +16,13 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-stdio-png-editor = { path = "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🧬️publication/📦️packages/🦀️rust" }
 semio-framework-os-command = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-png-snapshot = { path = "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-png-diff = { path = "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-png-schema = { path = "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-png-mutations = { path = "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-png-tests = { path = "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-png-editor = { path = "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🧬️publication/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }

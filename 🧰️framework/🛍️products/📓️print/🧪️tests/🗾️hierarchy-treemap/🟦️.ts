@@ -121,7 +121,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     padding: {
-      /** 🔮️ The uniform padding and the header-row padding vector. */
+      /** 🧪️ The uniform padding and the header-row padding vector. */
       oracle: () => ({
         projection: {
           ...rects("padding", tiled(DEEP, { size: [100, 60], padding: 2 })),
@@ -133,7 +133,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     "ratio-and-round": {
-      /** 🔮️ A squarify ratio of one, and the rounded variant of the default. */
+      /** ➗️ A squarify ratio of one, and the rounded variant of the default. */
       oracle: () => ({
         projection: {
           ...rects("ratio", tiled(DEEP, { size: [100, 60], ratio: 1 })),
@@ -143,7 +143,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     unbalanced: {
-      /** 🔮️ Two tilings on the fixture whose branches differ in depth. */
+      /** 🆚️ Two tilings on the fixture whose branches differ in depth. */
       oracle: () => ({
         projection: {
           id: preorder(root(UNBALANCED)).map((each) => each.id!),

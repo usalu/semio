@@ -538,7 +538,7 @@ impl BorrowedProjectedPackCursor {
         Ok(BorrowedProjectedPackProgress { progress: *progress, written_bytes: 0, complete: self.phase == Phase::Complete && self.pending_offset == self.pending_length })
     }
 
-    /// 📏️ Quotes the original symbol frontier with separate release and structural depth.
+    /// 🔣️ Quotes the original symbol frontier with separate release and structural depth.
     fn expression_turn(&mut self,source:&dyn FieldProjectionSource,output:&mut[u8],grant:RetainedCloneGrant)->Result<BorrowedProjectedPackProgress,ValueError>{
         if self.expression_state.mode==3&&output.is_empty(){return Ok(Default::default());}
         let V::Expr(original)=source.projection_view(&self.path[..self.depth])?else{return Err(invalid("original Pack expression field changed"));};
@@ -587,10 +587,10 @@ impl BorrowedProjectedPackCursor {
 }
 
 impl Drop for BorrowedProjectedPackCursor {
-    fn drop(&mut self) { assert!(self.symbols.terminal_is_empty()&&self.frames.terminal_is_empty()&&self.chunks.terminal_is_empty(), "borrowed Pack symbol/frame backing requires its exact terminal-empty close witness"); }
+    fn drop(&mut self) { assert!(std::thread::panicking()||self.symbols.terminal_is_empty()&&self.frames.terminal_is_empty()&&self.chunks.terminal_is_empty(), "borrowed Pack symbol/frame backing requires its exact terminal-empty close witness"); }
 }
 
-/// ♻️ Every paged owner of an interrupted cursor retires in one physical sequence: expression frames, symbols, frames and chunks.
+/// 📃️ Every paged owner of an interrupted cursor retires in one physical sequence: expression frames, symbols, frames and chunks.
 #[derive(semio_framework_value::RetireOwned)]
 struct PhysicalBorrowedPack{expression:RetainedExpressionCursor,symbols:PagedList<Symbol,SYMBOL_LIMIT>,frames:PagedList<Frame,64>,chunks:PagedList<ChunkLocator,{isize::MAX as usize}>}
 

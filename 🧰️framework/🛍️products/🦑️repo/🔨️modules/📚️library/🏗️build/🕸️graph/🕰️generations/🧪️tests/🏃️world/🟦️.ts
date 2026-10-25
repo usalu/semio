@@ -1,4 +1,4 @@
-/** 🏃️ A synthetic multi-project workspace with its own tiny inference (nodes, import edges, an environment of owner roots and package names), the ports a generation store needs and a child entry point so several operating system processes can share one store. The same model is implemented independently in `🐍️oracle.py`. */
+/** 🏃️ A synthetic multi-project workspace with its own tiny inference (nodes, import edges, an environment of owner roots and package names), the ports a generation store needs and a child entry point so several operating system processes can share one store. The same model is implemented independently in `../🐍️.py`. */
 import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import {lstat,mkdir,readFile,readdir,rm,writeFile,utimes} from "node:fs/promises";
@@ -147,7 +147,7 @@ export function createMemoryFilePort(){
 /** 📁️ The files of the initial synthetic workspace described by a `{path: content}` table. */
 export async function seed(dir:string,files:Record<string,string>):Promise<void>{await applyOps(dir,Object.entries(files).map(([path,content])=>({op:"write" as const,path,content})));}
 
-/** 🧪️ Generates a workspace of `count` owners in a ring of imports: owner i imports owner i+1 by package and owner i+2 by relative path. */
+/** ⭕️ Generates a workspace of `count` owners in a ring of imports: owner i imports owner i+1 by package and owner i+2 by relative path. */
 export function ringFiles(count:number,prefix="p"):Record<string,string>{
  const files:Record<string,string>={"shared/common.json":"{\"v\":1}"};
  for(let i=0;i<count;i++){
@@ -192,21 +192,21 @@ export function createPartDiscover(dir:string,log:{full:string[];edges:string[];
 }
 
 /** 🏛️ A repository host over the synthetic workspace: custodies are recorded, a builder custody is exclusive and shared readers never wait for it. */
-export function createMockHost(dir:string,options:{signal?:AbortSignal;language?:"en"|"de";gate?:()=>Promise<void>;identity?:string;implementationFiles?:string[];stamps?:StampTableV1;ownerDelayMs?:number}={}){
+export function createMockHost(dir:string,options:{signal?:AbortSignal;language?:"en"|"de";gate?:()=>Promise<void>;identity?:string;implementationFiles?:string[];stamps?:StampTableV1;ownerDelayMs?:number;custody?:{tail:Promise<void>};stamp?:boolean;waitNoticeMilliseconds?:number}={}){
  const events:string[]=[],said:{key:string;text:string}[]=[],published:string[]=[],expanded:string[][]=[],log:{full:string[];edges:string[];cold:boolean}[]=[],holdsLog:{resource:string;heldMs:number;waitedMs:number;endedAt:number}[]=[];
- let building=Promise.resolve();
+ const custody=options.custody??{tail:Promise.resolve()};
  const implementationRows:(GenerationRowV1&{scope?:string})[]=[...(options.implementationFiles??[]).map(path=>{const bytes=readFileSync(join(dir,path));return{kind:"file",path,fact:{sha256:sha(bytes),size:bytes.length}};}),...Object.entries(options.stamps??{}).map(([path,row])=>({kind:"stamp",path,fact:row.stamp,scope:row.scope}))];
  const lease=createFileLeasePortV1(join(dir,".leases"),{onHold:row=>holdsLog.push({...row,endedAt:Date.now()})}),membership=createMembership(dir),discover=createPartDiscover(dir,log,options.ownerDelayMs,options.stamps),holds=createHolds(dir,options.stamps);
  const host={
-  workspaceRoot:dir,language:options.language??"en",namedInputs:{default:[]},registryDigest:sha("registry"),signal:options.signal,verbose:true,
+  workspaceRoot:dir,language:options.language??"en",namedInputs:{default:[]},registryDigest:sha("registry"),signal:options.signal,verbose:true,...(options.waitNoticeMilliseconds===undefined?{}:{waitNoticeMilliseconds:options.waitNoticeMilliseconds}),
   async identity(){return options.identity??IDENTITY;},
   async implementationRows(){return implementationRows;},
   async withShared<T>(body:(store:unknown,control:unknown)=>Promise<T>){events.push("shared");return body({root:join(dir,".gen")},{published});},
   async withBuilder<T>(body:(store:unknown,control:unknown)=>Promise<T>){
-   events.push("builder:wait");const previous=building;let release!:()=>void;building=new Promise<void>(resolve=>{release=resolve;});await previous;events.push("builder:held");
+   events.push("builder:wait");const previous=custody.tail;let release!:()=>void;custody.tail=new Promise<void>(resolve=>{release=resolve;});await previous;events.push("builder:held");
    try{await options.gate?.();return await body({root:join(dir,".gen")},{published});}finally{events.push("builder:released");release();}
   },
-  storeOptions:(store:{root:string})=>({root:store.root,lease,holds,resources:{facts:"repository-graph-facts:mock"}}),
+  storeOptions:(store:{root:string})=>({root:store.root,lease,holds,resources:{facts:"repository-graph-facts:mock"},...(options.stamp===undefined?{}:{stamp:options.stamp})}),
   membership,discoverPart:discover,
   async expand(projects:Record<string,unknown>){expanded.push(Object.keys(projects).sort());return projects;},
   readGraph:(value:unknown)=>value,

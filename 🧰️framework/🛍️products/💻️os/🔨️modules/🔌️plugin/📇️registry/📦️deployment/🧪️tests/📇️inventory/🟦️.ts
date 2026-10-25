@@ -54,15 +54,15 @@ describe("explicit deployment inventory", () => {
         });
       });
       const source = emitTypeScript(entries, entries.map(({pluginId,directoryName}) => ({pluginId,directoryName})));
-      const assertion = `\nif(JSON.stringify(COMPONENT_MODULE_DIRECTORIES)!==${JSON.stringify(JSON.stringify(row.input.modules))})throw Error("Inventory drift");\nlet actual=null;try{actual=pluginModuleUrl(${JSON.stringify(row.query)})}catch{}\nif(actual!==${JSON.stringify(row.expected === null ? null : `/🔌️plugin-modules/${row.expected}/🌉️bridge.js`)})throw Error("Owner route drift");\nconsole.log("[DEBUG] Independent generated inventory ${row.id}");`;
+      const assertion = `\nif(JSON.stringify(COMPONENT_MODULE_DIRECTORIES)!==${JSON.stringify(JSON.stringify(row.input.modules))})throw Error("Inventory drift");\nlet actual=null;try{actual=pluginModuleUrl(${JSON.stringify(row.query)})}catch{}\nif(actual!==${JSON.stringify(row.expected === null ? null : `/🔌️plugin-modules/${row.expected}/🌉️bridge.js`)})throw Error("Owner route drift");\nconsole.log("[TRACE] Independent generated inventory ${row.id}");`;
       const executable = source.replace('"../../📦️deployment/🟦️.ts"', JSON.stringify(runtimePath)).replace("\"../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts\"", JSON.stringify(resolve(resolveDir, "../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts"))) + assertion;
       const actual = spawnSync("bun", ["run", "-"], { input: executable, encoding: "utf8" });
       expect(actual.status, actual.stderr).toBe(0);
-      expect(actual.stdout).toContain(`[DEBUG] Independent generated inventory ${row.id}`);
+      expect(actual.stdout).toContain(`[TRACE] Independent generated inventory ${row.id}`);
       const independent = await build({ stdin: { contents: source + assertion, resolveDir, loader: "ts" }, bundle: true, platform: "node", format: "esm", write: false });
       const result = spawnSync("node", ["--input-type=module", "-e", independent.outputFiles![0]!.text], { encoding: "utf8" });
       expect(result.status, result.stderr).toBe(0);
-      expect(result.stdout).toContain(`[DEBUG] Independent generated inventory ${row.id}`);
+      expect(result.stdout).toContain(`[TRACE] Independent generated inventory ${row.id}`);
     }
   });
 });

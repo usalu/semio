@@ -8,5 +8,10 @@
     "host": "semio.iek.uni-hannover.de",
     "image": "ghcr.io/usalu/architecture-course-proctor",
     "port": 8791
+  },
+  "budget": {
+    "scriptGzipBytes": { "publish": 250000, "rehearsal": 250000 },
+    "styleGzipBytes": 60000,
+    "totalBytes": 5000000
   }
 }

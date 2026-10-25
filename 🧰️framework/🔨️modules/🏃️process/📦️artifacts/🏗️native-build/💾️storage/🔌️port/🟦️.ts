@@ -5,7 +5,7 @@ import type{NativeStorageAllocationV1,NativeStorageBackingV1,NativeStoragePolicy
 export type NativeStorageCleanupAccessV1=Readonly<{backing:NativeStorageBackingV1;recheck():void;syncMetadata(directory:string):Promise<void>}>;
 /** 🛟️ Exists only when privately captured from the original enforcing port before its body ends. */
 export interface NativeStorageCleanupPortV1{withOperation<T>(body:(access:NativeStorageCleanupAccessV1)=>Promise<T>):Promise<T>;close():Promise<void>;}
-/** 🔌️ Owns actual platform enforcement, identity revalidation and complete physical retirement. */
+/** 💻️ Owns actual platform enforcement, identity revalidation and complete physical retirement. */
 export interface NativeStoragePortV1{
  withJournal<T>(control:ResourceLeaseControl,run:(actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
  captureCleanup?(enrollment:AcceptedPhysicalCleanupV1,bodyControl:ResourceLeaseControl):NativeStorageCleanupPortV1;

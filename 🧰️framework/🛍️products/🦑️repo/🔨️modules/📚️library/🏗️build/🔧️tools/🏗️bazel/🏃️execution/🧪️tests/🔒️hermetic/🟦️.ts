@@ -1,6 +1,6 @@
 /** 🔒️ Law: a sample hermetic build, run through the generated workspace and the real Bazel with its execution log, reads only declared inputs, holds only the declared toolchain and the strict environment, writes only declared outputs, and produces byte-identical outputs from two clean builds under different umasks. */
 import {expect,test} from "bun:test";
-import {makeTestTreeWritableV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {makeTestTreeWritableV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {createHash} from "node:crypto";
 import {cpSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";

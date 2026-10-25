@@ -1,4 +1,4 @@
-/** 🎛️ Native grammar compilations, family customization and scientific controls: the family customization and its pdf shapes, the scientific defaults, control effects, canvas and mixed controls, mode defaults and the admissions of records, relations, scalars, modes and specialized placement.
+/** 🧲️ Native grammar compilations, family customization and scientific controls: the family customization and its pdf shapes, the scientific defaults, control effects, canvas and mixed controls, mode defaults and the admissions of records, relations, scalars, modes and specialized placement.
  *
  * @see ../🧰️grammar-kit/🟦️.ts — the equality check
  * @see ../🟦️.ts — the native grammar run that calls these compilations
@@ -185,7 +185,7 @@ function nativeFamilyPdfShapes(operators:PrintPdfPageV1["operators"],canvas:numb
 }
 
 
-/** 🧾️ Matches per-family native defaults to the canonical schema using neutral AJV vectors. */
+/** 🏠️ Matches per-family native defaults to the canonical schema using neutral AJV vectors. */
 export function compileNativeScientificDefaults():void{
   const control=fixture.scientificFamilyDefaults,ajv=new Ajv2020({strict:false}),failures:string[]=[];
   
@@ -475,7 +475,7 @@ export async function compileNativeScientificAdmission(execution:PrintExecutionV
   await Bun.write(join(workDir,"admission-results.json"),JSON.stringify(results,null,2));if(JSON.stringify(neutral)!==before)throw Error("Admission neutral changed");if(failures.length)throw Error("Scientific canonical admission:\n"+failures.join("\n"));
 });}
 
-/** 🧭 Compares specialized placement and fabric permutations with actual D3 closed-form and force outputs. */
+/** 🆚️ Compares specialized placement and fabric permutations with actual D3 closed-form and force outputs. */
 export async function compileNativeSpecializedPlacementControls(execution:PrintExecutionV1,owner?:string):Promise<void>{if(["PRINT_NATIVE_PLACEMENT_REPLAY"].some(key=>process.env[key]!==undefined))throw Error("Actual owned probe required; environment path replay refused");return withPrintScratchV1(execution,"native/specialized-placement-controls",async({directory:workDir,execution})=>{
   if(process.env.PRINT_NATIVE_PLACEMENT_PHASE==="guard"){await compileNativeSpecializedPlacementAdmission(execution);return;}
   if(!owner&&!process.env.PRINT_NATIVE_PLACEMENT_FAMILY&&!process.env.PRINT_NATIVE_PLACEMENT_REPLAY){for(const family of ["biofabric","data-structure","commit-graph"]){await compileNativeSpecializedPlacementControls(execution,family);}await compileNativeSpecializedPlacementAdmission(execution);return;}
@@ -586,7 +586,7 @@ export async function compileNativeScientificModeDomain(execution:PrintExecution
   if(JSON.stringify(control)!==original)throw Error("Native mode vector changed");
 });}
 
-/** 🛡️ Requires finite complete public force-start pairs before the existing native solver. */
+/** 🏁️ Requires finite complete public force-start pairs before the existing native solver. */
 export async function compileNativeSpecializedPlacementAdmission(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/specialized-placement-admission",async({directory:workDir,execution})=>{
   const contract=fixture.nativeSpecializedPlacementAdmission,{csvParse}=await import("d3-dsv"),failures:string[]=[];let executed=0;
   

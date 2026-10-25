@@ -1,0 +1,137 @@
+{
+ "version": 1,
+ "functions": {
+  "runBazelTasksInStorageV1": {
+   "file": "🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "start": "async function runBazelTasksInStorageV1(",
+   "end": "/** 📖️ Reads finite birth material"
+  },
+  "runBazelTasksV1": {
+   "file": "🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "start": "export async function runBazelTasksV1(",
+   "end": "/** 🚀 Names the startup options"
+  },
+  "bazelExecute": {
+   "file": "🏗️build/🔧️tools/🏗️bazel/🔌️backend/🟦️.ts",
+   "start": "async execute(context:BackendExecutionContextV1){",
+   "end": "\n }\n});"
+  },
+  "nxExecute": {
+   "file": "🏗️build/🔧️tools/🧶️nx/🔌️backend/🟦️.ts",
+   "start": "async execute(context:BackendExecutionContextV1){",
+   "end": "\n }"
+  },
+  "runtimeRun": {
+   "file": "🏗️build/⌨️command/⚙️runtime/🟦️.ts",
+   "start": "const baseline=await profilePhaseV1(\"graph.load\"",
+   "end": "/** ⚙️ Executes the existing graph"
+  },
+  "loadGenerationGraphV1": {
+   "file": "🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs",
+   "start": "export async function loadGenerationGraphV1(",
+   "end": "\n}\n"
+  },
+  "withSelectedRustBuildGraphV1": {
+   "file": "🏗️build/🕸️graph/🦀️rust/🟦️.ts",
+   "start": "export function withSelectedRustBuildGraphV1<",
+   "end": "\n}\n"
+  },
+  "withRepositoryBuildGraphArtifactV1": {
+   "file": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts",
+   "start": "export async function withRepositoryBuildGraphArtifactV1<",
+   "end": "\n}\n"
+  }
+ },
+ "order": [
+  {
+   "name": "Bazel plans from the graph, then drops it, then starts the first Bazel process",
+   "function": "runBazelTasksInStorageV1",
+   "before": "emitted=bazelActionsV1(graph,plan",
+   "after": "await planned?.();"
+  },
+  {
+   "name": "the planned hook runs before the first Bazel process",
+   "function": "runBazelTasksInStorageV1",
+   "before": "await planned?.();",
+   "after": "captureOwnedCommandV1(bazel,[...startup,\"info\""
+  },
+  {
+   "name": "the graph is released before the Bazel build starts",
+   "function": "runBazelTasksInStorageV1",
+   "before": "await planned?.();",
+   "after": "building=runOwnedCommand(bazel,[...startup,batch.verb"
+  },
+  {
+   "name": "the graph is released before a continuous task starts",
+   "function": "runBazelTasksInStorageV1",
+   "before": "await planned?.();",
+   "after": "const completion=runOwnedCommand(bazel,[...startup,\"run\""
+  },
+  {
+   "name": "the generation builder custody ends before the graph is returned",
+   "function": "loadGenerationGraphV1",
+   "before": "await host.withBuilder(",
+   "after": ".graph;"
+  },
+  {
+   "name": "the captured selection copy is released before the backend body runs",
+   "function": "withSelectedRustBuildGraphV1",
+   "before": "await releaseBuildGraphV1(capturedGraph!)",
+   "after": "return body(ready,current)"
+  },
+  {
+   "name": "the encoded records are dropped before the backend body runs",
+   "function": "withRepositoryBuildGraphArtifactV1",
+   "before": "encoded.records.clear()",
+   "after": "const value=await body("
+  },
+  {
+   "name": "Nx drops the graph before its child process starts",
+   "function": "nxExecute",
+   "before": "await context.release()",
+   "after": "nx(nxOperationArgumentsV1(resolved.args)!)"
+  }
+ ],
+ "present": [
+  {
+   "name": "the runtime hands the backend a release of every graph copy it holds",
+   "function": "runtimeRun",
+   "text": "release:()=>releaseGraph(graph,baseline)"
+  },
+  {
+   "name": "a run is released by the Bazel backend",
+   "function": "bazelExecute",
+   "text": "artifactPhase,undefined,context.release)"
+  },
+  {
+   "name": "a repair reads the pinned snapshot again",
+   "function": "bazelExecute",
+   "text": "withRepositoryBuildGraphPublicationV1(root,artifactPhase,pinned=>"
+  },
+  {
+   "name": "a released graph is refused by the Bazel entry point",
+   "function": "runBazelTasksV1",
+   "text": "requireLiveBuildGraphV1(graph)"
+  },
+  {
+   "name": "a graph without Rust changes is released too",
+   "function": "withSelectedRustBuildGraphV1",
+   "text": "if(capturedGraph)await releaseBuildGraphV1(capturedGraph)"
+  }
+ ],
+ "absent": [
+  {
+   "name": "a repair never reuses the released graph",
+   "function": "bazelExecute",
+   "text": "runBazelTasksV1(root,graph,{...request,tasks:[task.id]"
+  }
+ ],
+ "absentAfter": [
+  {
+   "name": "nothing reads the graph once Bazel has planned",
+   "function": "runBazelTasksInStorageV1",
+   "marker": "await planned?.();",
+   "text": "graph"
+  }
+ ]
+}

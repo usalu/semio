@@ -1,0 +1,19 @@
+import {existsSync,readFileSync,readdirSync} from "node:fs";
+import {join} from "node:path";
+import {setTimeout as sleep} from "node:timers/promises";
+import {newHostCapacityIdV1,readHostCapacityPolicyV1,withHostCapacityV1} from "../../../🟦️.ts";
+import fixture from "../../🧫️fixtures/🔣️.json";
+
+/** 🧪️ The child process of the handover laws (it sees the same fixed host as the test, so a loaded machine never changes a verdict): `claim` takes a grant over (or queues for `HC_TIMEOUT_MS`) and reports what it got. */
+const directory=process.env.HC_DIRECTORY!,mode=process.env.HC_MODE!,hold=Number(process.env.HC_HOLD_MS??"0"),timeout=Number(process.env.HC_TIMEOUT_MS??"20000");
+const policy=readHostCapacityPolicyV1({...fixture.policy,wait:{...fixture.policy.wait,pollMilliseconds:20,progressMilliseconds:50,lockStaleMilliseconds:5000}});
+const request={id:newHostCapacityIdV1(),operation:"run",priority:"batch" as const,minimumJobs:1,preferredJobs:1,fixedMegabytes:Number(process.env.HC_MEGABYTES??"64"),perJobMegabytes:0,cpuPerJob:1};
+const control={signal:AbortSignal.timeout(timeout),remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined};
+const host={version:1 as const,atMs:Date.now(),platform:"darwin" as const,cores:10,totalMegabytes:32768,availableMegabytes:20000,pressure:"normal" as const,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:0};
+const options={directory,policy,request,control,environment:process.env,sample:async()=>({host:{...host,atMs:Date.now()},swappedOutMegabytes:0}),write:(line:string)=>process.stderr.write(line+"\n")};
+const report=async(handle:{id:string;adopted:boolean;inherited:boolean})=>{
+ const row=JSON.parse(readFileSync(join(directory,"grants",handle.id+".json"),"utf8"));
+ process.stdout.write(JSON.stringify({adopted:handle.adopted,id:handle.id,pid:process.pid,ppid:process.ppid,grantPid:row.pid,hasHandover:row.handover!==undefined,queue:existsSync(join(directory,"queue"))?readdirSync(join(directory,"queue")).length:0,attempt:process.env.SEMIO_STALE_REEXEC??null})+"\n");
+ if(hold>0)await sleep(hold);
+};
+if(mode==="claim")await withHostCapacityV1(options,report).catch(error=>{process.stdout.write(JSON.stringify({failed:String((error as Error).message??error)})+"\n");process.exitCode=3;});

@@ -149,7 +149,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
         let mut turns = 0;
         let mut index = 0;
         while index < lanes.len() && stop.is_none_or(|stop| turns < stop) {
-            lanes[index].advance(&mut *apps[index].store, &visibility, grant).unwrap();
+            lanes[index].advance(&mut *apps[index].stores.store, &visibility, grant).unwrap();
             if lanes[index].prepared_for_staging() {
                 let identity = lanes[index].prepared_edit_id().unwrap();
                 assert!(!identity.is_empty());
@@ -166,7 +166,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
                 assert_eq!(same_pointer, pointer);
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 let paused = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..grant };
-                assert_eq!(lanes[index].advance(&mut apps[index].store, &visibility, paused).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+                assert_eq!(lanes[index].advance(&mut apps[index].stores.store, &visibility, paused).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
                 assert_eq!(lanes[index].prepared_edit_id().unwrap().as_ptr(), pointer);
             }
             assert_eq!(apps.iter().map(|app| app.stores.store.snapshot_ref().count).collect::<Vec<_>>(), vec![0; 3]);
@@ -180,9 +180,9 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
             let (_, decision_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
                 assert!(owner.commit());
                 for index in 0..3 {
-                    assert!(matches!(lanes[index].adopt(&mut apps[index].store, &visibility, grant).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(..)));
-                    assert_eq!(apps[index].store.generation_now(), 1);
-                    assert_eq!(apps[index].store.snapshot_ref().count, 1);
+                    assert!(matches!(lanes[index].adopt(&mut apps[index].stores.store, &visibility, grant).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(..)));
+                    assert_eq!(apps[index].stores.store.generation_now(), 1);
+                    assert_eq!(apps[index].stores.store.snapshot_ref().count, 1);
                 }
             });
             assert_eq!((decision_heap.requested_bytes, decision_heap.released_bytes), (0, 0));
@@ -192,12 +192,12 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
                 let demand = lanes[index].retirement_demands(grant.maximum_copy_bytes).unwrap();
                 assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
                 let exact = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-                let step = lanes[index].close_step(&mut *apps[index].store, exact).unwrap();
+                let step = lanes[index].close_step(&mut *apps[index].stores.store, exact).unwrap();
                 assert!(step.progress().fits(exact));
                 if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { break; }
             }
             assert!(lanes[index].terminal_is_empty());
-            assert_eq!(apps[index].store.snapshot_ref().count, i32::from(stop.is_none()));
+            assert_eq!(apps[index].stores.store.snapshot_ref().count, i32::from(stop.is_none()));
         }
         drop(lanes);
         for mut app in apps { close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close"); }

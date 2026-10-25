@@ -31,7 +31,7 @@ pub(super) enum ParserState {
     Paste,
 }
 
-/// 🔤️ Handcrafted incremental ANSI input decoder (keys, mouse, paste, focus, UTF-8).
+/// ⌨️ Handcrafted incremental ANSI input decoder (keys, mouse, paste, focus, UTF-8).
 pub struct AnsiParser {
     pub(super) state: ParserState,
     pub(super) params: [u16; MAX_PARAMS],

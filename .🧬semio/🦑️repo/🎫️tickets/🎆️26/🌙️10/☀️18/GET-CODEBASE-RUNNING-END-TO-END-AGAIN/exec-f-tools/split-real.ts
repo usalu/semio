@@ -1,0 +1,20 @@
+import {createHash} from "node:crypto";
+import {mkdtempSync,readFileSync,rmSync,writeFileSync,chmodSync} from "node:fs";
+import {join} from "node:path";
+import {spawnSync} from "node:child_process";
+const {buildSourceClosureLoaderV1,buildSourceClosureIdentityV1}=await import("/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts");
+const {splitBuildSourceClosureV1,buildSchedulingV1}=await import("/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🗓️scheduling/🟦️.ts");
+const sha=(v:string)=>createHash("sha256").update(v).digest("hex");
+const real=JSON.parse(readFileSync(process.argv[2]!,"utf8"));
+const ids=buildSchedulingV1().domains.map(d=>d.id);
+const {keyed,overlay}=splitBuildSourceClosureV1(real,ids);
+console.log("files",real.files.length,"keyed",keyed.files.length,"overlay",overlay?.files.length,"identity monolithic",buildSourceClosureIdentityV1(real).slice(0,12),"keyed",buildSourceClosureIdentityV1(keyed).slice(0,12));
+const dir=mkdtempSync("/private/tmp/exec-f-real-");
+const runner=join(dir,"📜️script.ts");writeFileSync(runner,buildSourceClosureLoaderV1);
+const run=(name:string,doc:object,over?:object)=>{const text=JSON.stringify(doc),snap=join(dir,name+".json");writeFileSync(snap,text);chmodSync(snap,0o400);if(over){const o=join(dir,name+".scheduling.json");writeFileSync(o,JSON.stringify(over));chmodSync(o,0o400);}
+ const t=Date.now();const r=spawnSync("bun",[runner,snap,sha(text),"nonsense"],{encoding:"utf8",cwd:dir});
+ const line=(r.stdout+r.stderr).split("\n").find(l=>/^error|^\s*error:|Error:/.test(l))??"(no message)";
+ console.log(name.padEnd(12),"rc",r.status,Date.now()-t,"ms",line.slice(0,200));};
+run("monolithic",real);
+run("split",keyed,overlay);
+rmSync(dir,{recursive:true,force:true});

@@ -21,7 +21,7 @@
     },
     {
       "id": "explicit-language-choice",
-      "command": "repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-repo-dashboard-preferences -p semio-framework-repo-dashboard-terminal --lib language -- --nocapture --test-threads=1"
+      "command": "repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-repo-dashboard-preferences -p semio-framework-repo-dashboard-language-choice -p semio-framework-repo-dashboard-terminal-laws --lib language -- --nocapture --test-threads=1"
     },
     {
       "id": "canonical-cold-lazy-launch",

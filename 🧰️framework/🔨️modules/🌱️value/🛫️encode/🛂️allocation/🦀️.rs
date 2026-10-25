@@ -41,7 +41,7 @@ impl<'a> NativeEncodeControl<'a>{
  pub fn new_forwarded(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool,allocate:&'a mut NativeEncodeAllocationPort<'a>)->NativeForwardedEncodeControl<'a>{let mut inner=Self::new(maximum_bytes,callback);inner.allocation=Binding::Forwarded(allocate);NativeForwardedEncodeControl{inner}}
 }
 impl<'a> NativeForwardedEncodeControl<'a>{
- /// ⏸️ Ends this import loan while retaining the actual recipient identity and consuming ledger.
+ /// ⏹️ Ends this import loan while retaining the actual recipient identity and consuming ledger.
  pub fn detach(self)->Result<NativeForwardedEncodeReceipt,(ValueError,Self)>{
   let receipt=match self.inner.continuation(){Ok(receipt)=>receipt,Err(error)=>return Err((error,self))};
   let Some(recipient)=self.inner.retirement.as_ref()else{return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"detached native receiving requires its original retained recipient"),self))};
@@ -54,7 +54,7 @@ impl<'a> NativeForwardedEncodeControl<'a>{
  }
  /// ⏸️ Moves the original allocation port together with its cumulative accounting.
  pub fn pause(mut self)->Result<NativeForwardedEncodeContinuation<'a>,ValueError>{let Binding::Forwarded(allocate)=std::mem::replace(&mut self.inner.allocation,Binding::Local)else{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"forwarded native continuation lacks original allocation port"))};let retirement=self.inner.retirement.take();let receipt=self.inner.pause()?;Ok(NativeForwardedEncodeContinuation{receipt:Some(receipt),allocate,retirement})}
- /// ▶️ Rebinds only progress while the original allocation port remains unchanged.
+ /// ⏳️ Rebinds only progress while the original allocation port remains unchanged.
  pub fn resume(mut receipt:NativeForwardedEncodeContinuation<'a>,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool)->Result<Self,(ValueError,NativeForwardedEncodeContinuation<'a>)>{if let Err(error)=receipt.validate(){return Err((error,receipt))}let mut inner=NativeEncodeControl::resume(receipt.receipt.take().expect("validated original forwarded receipt"),callback).expect("validated original forwarded accounting");inner.allocation=Binding::Forwarded(receipt.allocate);inner.retirement=receipt.retirement;Ok(Self{inner})}
 }
 impl<'a> NativeForwardedEncodeContinuation<'a>{
@@ -70,11 +70,11 @@ impl<'a> NativeForwardedEncodeContinuation<'a>{
  pub fn new(maximum_bytes:usize,allocate:&'a mut NativeEncodeAllocationPort<'a>)->Self{Self{receipt:Some(NativeEncodeContinuation{receiving:false,maximum_bytes,owned_bytes:0,completed:0,total:0,stage:0}),allocate,retirement:None}}
  /// 🔁️ Runs one synchronous hop under a shorter progress borrow and preserves the original port on refusal.
  pub fn encode<T>(&mut self,callback:&mut dyn FnMut(NativeEncodeProgress)->bool,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<T,ValueError>)->Result<T,ValueError>{self.validate()?;let receipt=self.receipt.take().expect("validated original forwarded receipt");let mut control=NativeEncodeControl::resume(receipt,callback).expect("validated original forwarded accounting");control.allocation=Binding::Forwarded(&mut *self.allocate);control.retirement=self.retirement.as_deref_mut();let result=control.scoped_stage(operation);self.receipt=Some(control.continuation()?);result}
- /// 🫴️ Installs the same caller return slot for every subsequent physical hop.
+ /// 🧷️ Installs the same caller return slot for every subsequent physical hop.
  pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeEncodeRetirementRecipient)->Result<(),ValueError>{if self.retirement.is_some()||!crate::ErasedSnapshotRetirement::terminal_is_empty(recipient){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"forwarded encoder requires one empty original retirement slot"))}self.retirement=Some(recipient);Ok(())}
- /// 📏️ Returns the same complete receiving ceiling.
+ /// 📬️ Returns the same complete receiving ceiling.
  pub fn maximum_bytes(&self)->usize{self.receipt.as_ref().expect("forwarded native receipt present outside receiving hop").maximum_bytes}
- /// 📊️ Returns ownership admitted by the original receiving port through every hop.
+ /// 📩️ Returns ownership admitted by the original receiving port through every hop.
  pub fn owned_bytes(&self)->usize{self.receipt.as_ref().expect("forwarded native receipt present outside receiving hop").owned_bytes}
 }
 impl<'a> std::ops::Deref for NativeForwardedEncodeControl<'a>{type Target=NativeEncodeControl<'a>;fn deref(&self)->&Self::Target{&self.inner}}

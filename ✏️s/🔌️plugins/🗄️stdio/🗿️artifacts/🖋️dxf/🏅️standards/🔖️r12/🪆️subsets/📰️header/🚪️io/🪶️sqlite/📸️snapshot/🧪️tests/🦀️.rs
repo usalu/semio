@@ -12,7 +12,7 @@ use semio_framework_test_fixtures::fixture_text;
     }
     #[test]
     fn sqlite_snapshot_dxf_controlled_native_owner_preserves_full_fixture_and_stops_inside_text(){
-        use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
+        use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
         let mut snapshot=fixture();snapshot.schema="DXF 世界\0".repeat(16384);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for payload in [IoPayload::Binary(snapshot.encode_pack()),IoPayload::Text(snapshot.print_dsl())]{
             assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| DxfSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|true,limits), native_owner)).unwrap(),snapshot);
@@ -52,7 +52,7 @@ use semio_framework_value::FromValue;
     }
     async fn erased_snapshot(snapshot:&DxfSnapshot,encoding:sqlite_snapshot::SnapshotEncoding)->DxfSnapshot{
         use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::io::io_mechanism::io_route};
-        use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};
+        use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};
         crate::register_sqlite_test_declaration();
         let dialect=ArtifactDialect{artifact_kind:"s.stdio.dxf".into(),standard:"r12".into(),subset:"*".into()};
         let sqlite:ArtifactDialect=semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT.into();

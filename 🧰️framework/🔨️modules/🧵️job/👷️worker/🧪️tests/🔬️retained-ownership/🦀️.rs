@@ -77,6 +77,7 @@ fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
         if phase==WorkerJobClosePhase::PreadmittedFault && demand.release_bytes==JOB_PAYLOAD_PAGE_BYTES{let denied=RetainedCloneGrant{maximum_release_bytes:grant,..caller};let step=issuer.close_owner(denied,&mut mounted).unwrap();assert_eq!(step.progress(),Default::default());assert_eq!(mounted.close_phase(),phase);}
         let release_grant=caller.maximum_release_bytes;
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||issuer.close_owner(caller,&mut mounted).unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));
+        assert_eq!(step.progress().copied_bytes,demand.copy_bytes,"a close turn charges exactly the metadata copy extent it quoted");
         let kind=if matches!(step,WorkerJobCloseStep::Complete{..}){"complete"}else{"pending"};
         let actual=serde_json::json!({"phase":format!("{phase:?}"),"next":format!("{:?}",mounted.close_phase()),"kind":kind,"receipt":step.progress()});
         observed.push(actual);
@@ -212,7 +213,7 @@ fn worker_authority_keeps_one_heap_identity_through_mounted_submit_and_checkout(
     issuer.retire(source);
 }
 
-/// 🔁️ `try_submit` never waits for queue ownership: a lane queue the pool's own worker holds for
+/// 🔏️ `try_submit` never waits for queue ownership: a lane queue the pool's own worker holds for
 /// a moment answers `Contended`, the session retains the exact rejected opportunity, and its owner
 /// takes it back and resumes before retrying. Tests that need an admitted opportunity follow exactly
 /// that protocol for exactly that answer, and consume the wake their own resume raised, so a test's

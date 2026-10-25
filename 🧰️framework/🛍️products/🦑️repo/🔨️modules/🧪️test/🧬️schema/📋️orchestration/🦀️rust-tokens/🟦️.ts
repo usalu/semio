@@ -25,7 +25,7 @@ function rustTrivia(source: string, start: number): number {
   }
 }
 
-/** 🔤️ Rust source as identifier, literal and punctuation tokens; comments are dropped and strings, raw strings and char literals stay whole. */
+/** 📖️ Rust source as identifier, literal and punctuation tokens; comments are dropped and strings, raw strings and char literals stay whole. */
 export function rustLex(source: string): RustToken[] {
   const tokens: RustToken[] = [];
   let index = 0;
@@ -78,7 +78,7 @@ export function rustGroupEnd(tokens: readonly RustToken[], open: number): number
  * the implementing type's last path segment, and the token range of its body (the braces included). */
 export type RustImplBlock = Readonly<{ trait: string; argument: string; implementor: string; open: number; close: number }>;
 
-/** 🧱️ Every trait impl block of `tokens`, nested ones included. */
+/** 🚧️ Every trait impl block of `tokens`, nested ones included. */
 export function rustImplBlocks(tokens: readonly RustToken[]): RustImplBlock[] {
   const blocks: RustImplBlock[] = [];
   for (let index = 0; index < tokens.length; index += 1) {
@@ -138,7 +138,7 @@ export function rustFunctions(tokens: readonly RustToken[], open: number, close:
   return functions;
 }
 
-/** ✂️ The arguments of the call whose `(` sits at `open`: one token run per top-level comma (a trailing comma adds none). */
+/** ☎️ The arguments of the call whose `(` sits at `open`: one token run per top-level comma (a trailing comma adds none). */
 export function rustCallArguments(tokens: readonly RustToken[], open: number): RustToken[][] {
   const close = rustGroupEnd(tokens, open);
   const args: RustToken[][] = [[]];

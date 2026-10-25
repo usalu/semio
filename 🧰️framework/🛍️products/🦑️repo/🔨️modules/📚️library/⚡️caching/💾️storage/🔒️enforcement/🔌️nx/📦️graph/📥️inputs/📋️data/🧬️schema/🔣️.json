@@ -12,10 +12,10 @@
         "maximumEnvironmentEntries": 262144,
         "maximumReceiptEntries": 16384,
         "maximumTaskNameBytes": 1024,
-        "maximumInstructionBytes": 8192,
+        "maximumInstructionBytes": 4194304,
         "maximumEnvironmentNameBytes": 1024,
         "maximumEnvironmentValueBytes": 65536,
-        "maximumAggregateBytes": 33554432,
+        "maximumAggregateBytes": 268435456,
         "maximumOutputEnvironmentEntriesPerTask": 67584,
         "maximumOutputEnvironmentEntries": 524288,
         "maximumOutputBytes": 100663296
@@ -37,7 +37,7 @@
         "maxItems": 65536,
         "items": {
           "type": "string",
-          "maxLength": 8192
+          "maxLength": 4194304
         }
       }
     },

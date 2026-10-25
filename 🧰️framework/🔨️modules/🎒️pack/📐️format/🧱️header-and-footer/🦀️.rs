@@ -12,13 +12,13 @@ pub const HEADER_SIZE: usize = 32;
 /// 🔢️ The container format version this crate writes and reads.
 pub const FORMAT_VERSION_MAJOR: u16 = 1;
 
-/// 🔢️ The container format minor version this crate writes.
+/// 📝️ The container format minor version this crate writes.
 pub const FORMAT_VERSION_MINOR: u16 = 0;
 
 /// 🗜️ Required flag bit: at least one segment/chunk in this file uses compression.
 pub const REQUIRED_COMPRESSED: u32 = 1 << 0;
 
-/// 🧱️ Required flag bit: this file contains a chunk table.
+/// 🚩️ Required flag bit: this file contains a chunk table.
 pub const REQUIRED_CHUNKED: u32 = 1 << 1;
 
 /// 🔒️ Required flag bit: reserved for encryption, never set by this crate.
@@ -99,10 +99,10 @@ impl Header {
 //#endregion 🔖️Header
 
 //#region 🔖️Footer
-/// 🧲️ The 8-byte magic the footer begins with.
+/// 🪄️ The 8-byte magic the footer begins with.
 pub const FOOTER_MAGIC: [u8; 8] = *b"SPKFOOT1";
 
-/// 📏️ Fixed wire size of the footer, in bytes, at the end of the file.
+/// ⏹️ Fixed wire size of the footer, in bytes, at the end of the file.
 /// See the module doc for why this is 84, not the contract prose's arithmetically-inconsistent
 /// "80" (the prose sum omits the trailing `footer_crc32` field's own 4 bytes).
 pub const FOOTER_SIZE: usize = 84;
@@ -122,7 +122,7 @@ pub struct Footer {
 }
 
 impl Footer {
-    /// ✍️ Serializes to the exact 84-byte wire form, computing `footer_crc32` over the
+    /// 💾️ Serializes to the exact 84-byte wire form, computing `footer_crc32` over the
     /// preceding 80 bytes.
     pub(super) async fn write_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(FOOTER_SIZE);
@@ -140,7 +140,7 @@ impl Footer {
         buf
     }
 
-    /// 📖️ Parses and validates an 84-byte footer: magic and self-CRC over the first 80
+    /// ✅️ Parses and validates an 84-byte footer: magic and self-CRC over the first 80
     /// bytes. Does not cross-check `file_len` against an actual source — callers that have one
     /// should do so themselves (see `PackFile::open_superblock`).
     pub(super) async fn parse(bytes: &[u8]) -> Result<Self, PackRefusal> {

@@ -47,6 +47,7 @@ semio-framework-os-command = { path = "../../../../../📡️spr/🎮️command/
 semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", features = ["entrypoint"], package = "semio-framework-async" }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }

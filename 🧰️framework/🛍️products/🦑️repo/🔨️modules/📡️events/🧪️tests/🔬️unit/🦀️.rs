@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 /// 📍️ The module's fixture directory, resolved relative to this crate's manifest.
 fn fixture_dir() -> PathBuf {
-    fixture_path!("..").join("..").join("🧫️fixtures")
+    fixture_path!("..").join("..").join("🧪️tests").join("🧫️fixtures")
 }
 
 /// 📥️ Reads and parses one fixture of this module.

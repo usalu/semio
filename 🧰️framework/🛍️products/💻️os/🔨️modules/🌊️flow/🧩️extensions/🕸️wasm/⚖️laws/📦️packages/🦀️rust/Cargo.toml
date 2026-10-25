@@ -35,4 +35,5 @@ semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-plugin = { path = "../../../../../../🔌️plugin/📦️packages/🦀️rust" }
 serde = { version = "1", features = ["derive"] }
+semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 serde_json = "1"

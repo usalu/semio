@@ -1,5 +1,5 @@
 {
-  "$comment": "🔮 Test-only third-party references of the presentation product. Every entry is a devDependency of 📦️packages/🟦️typescript/🎯️targets/⚛️react and is imported only from 🧪️tests/**; no runtime code may depend on one. `@oracle-<id>` tags in the Gherkin features name these ids.",
+  "$comment": "🔮 Test-only third-party references of the presentation product. Every entry is a devDependency of 🎯️targets/⚛️react/📦️packages/🟦️typescript and is imported only from 🧪️tests/**; no runtime code may depend on one. `@oracle-<id>` tags in the Gherkin features name these ids.",
   "schemaVersion": 1,
   "oracles": [
     {

@@ -23,7 +23,9 @@ semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }

@@ -43,7 +43,7 @@ pub use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 pub use semio_framework_os_store_backbone::{Backbone, BackboneChannelPort as _, BackboneMessage, BackbonePort as _, Backbones, ChannelBackbone, ChannelBackboneRemote, decode_hot_backbone_message_exact, LocalStorageBackbonePort, MemoryBackbone, MemoryBackbonePort};
 pub use semio_framework_os_store_blob_identity::BlobRef;
 pub use semio_framework_os_store_engine_owners::{bounded_artifact_store_owners, bounded_artifact_store_owners_birth_demand, BoundedArtifactRetirementFactory, DocumentStoreOwners, DocumentStoreOwnersAdmissionError, fund_document_store_owners};
-pub use semio_framework_os_store_command::{COMMAND_BINARY_FORMAT, CommandDecodeError, OpsAuthor, OpsHeaderLine, parse_command, print_command, retire_command};
+pub use semio_framework_os_store_command::{retire_scratch_edits, COMMAND_BINARY_FORMAT, CommandDecodeError, OpsAuthor, OpsHeaderLine, parse_command, print_command, retire_command};
 pub use semio_framework_os_store_composition::{ChildDispatch, ChildGenesis, CompositionCoordinator, CompositionGraph, fold_compensation_error, GroupMeta, TransactionCoordinator};
 pub use semio_framework_composition_admission::{ChildRestoreProjection, ChildRestoreProjectionError};
 pub use semio_framework_os_store_engine_core::lifted_store::{CommandReceipt, HistoryColumn};
@@ -53,7 +53,7 @@ pub use semio_framework_os_store_config::lifted_store::{ConfigRecord as _, creat
 pub use semio_framework_os_store_config::retained_config_hydration::{ConfigStoreHydrationStep, RetainedConfigStoreHydration};
 pub use serde::{Deserialize, Serialize};
 pub use semio_framework_dsl_record_derive::{DslEnum, DslRecord};
-pub use replay::{admit_replacement, EditReplay, EditReplayResult, EffectiveSupersessions, forward_prefix_digests, PairMerge, ReplayEdits, ReplayMode, ReplayOwnedState, ReplayProgress, ReplayStep};
+pub use replay::{fold_effective_edit, retire_shared_projection, admit_replacement, EditReplay, EditReplayResult, EffectiveSupersessions, forward_prefix_digests, PairMerge, ReplayEdits, ReplayMode, ReplayOwnedState, ReplayProgress, ReplayStep};
 pub use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 pub use semio_framework_os_store_composition::composition_group::{GroupOwnsError, GroupOwnsPreparation, GroupOwnsStep};
 pub use protocol::codec::HistoryReadLimits;

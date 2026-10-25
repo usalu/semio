@@ -29,7 +29,7 @@ pub struct ActionSemantics {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub description: Option<LocalizedLabel>,
-    /// 🎯️ Declared audience — see [`CapabilityAudience`]. `None` means "derive it", which
+    /// 👥️ Declared audience — see [`CapabilityAudience`]. `None` means "derive it", which
     /// [`resolve_audience`] does from `kind`/`in_palette`; only a verb the derivation would get wrong
     /// (a pointer gesture that commits a real operation, a palette verb that is pure chrome) declares
     /// one.

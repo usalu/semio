@@ -180,7 +180,7 @@ impl<M:AsRef<[u8]>+semio_framework_value::retirement::RetireOwned> semio_framewo
  fn controlled_retirement_supported()->bool{M::controlled_retirement_supported()}
 }
 impl<M:AsRef<[u8]>+semio_framework_value::retirement::RetireOwned> BitmapTraceJob<M>{
- /// 🧹️ Transfers genuine mask ownership to the caller and retains every private scratch page.
+ /// 🎭️ Transfers genuine mask ownership to the caller and retains every private scratch page.
  pub fn into_retirement(mut self)->(BitmapTraceRetirement<M>,Option<M>){self.cancelled=true;let mask=self.input.mask.take();(BitmapTraceRetirement{owner:semio_framework_value::retirement::controlled::ControlledRetirement::new(self).unwrap_or_else(|(error,_)|panic!("trace physical owner refused: {error}")),work:0},mask)}
 }
 semio_framework_value::artifact_retire_leaf!(BitmapTracePhase,BitmapTraceProgress,Edge,Range,Mode);

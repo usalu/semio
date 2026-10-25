@@ -16,7 +16,7 @@ pub static MAXIMUM_CHILD_CLONES: std::sync::atomic::AtomicUsize = std::sync::ato
 pub static MAXIMUM_CHILD_ENCODINGS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 #[doc(hidden)]
-#[derive(semio_framework_dsl_record_derive::DslRecord, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetainedClone, semio_framework_value::SnapshotProjection)]
 #[artifact(extension = "testkit-macro")]
 pub struct TestSnapshot {
     pub count: i32,
@@ -194,7 +194,7 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 
 //#region 🔺️Diff
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-pub(crate) struct TestDiff {
+pub struct TestDiff {
     pub count: Option<i32>,
     pub label: Option<String>,
     /// 🧒️ The whole declared membership of the `"slot"` child slot, as canonical `ArtifactRef`

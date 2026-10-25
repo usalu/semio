@@ -1,7 +1,7 @@
 //! 📦️ Chart inference transport binds binary admission, native text output and canonical publication.
 use crate::{ChartSnapshot,inferences,io};
 
-pub fn execute_chart_inference(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
+pub fn execute_chart_inference(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>, _cx: &mut semio_framework_plugin::ArtifactInferenceStepContext<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
     execute_chart_inference_controlled(request, &mut |_| {
         if semio_framework_plugin::app::inference_cancelled(request.cancellation_id)?{Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("artifact-inference.cancelled","chart inference cancelled"))}else{Ok(())}
     }).map(|execution|execution.into_step(true))

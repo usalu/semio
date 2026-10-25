@@ -14,16 +14,16 @@ impl RetainedCloneGrant {
     pub fn wire_fields(self)->[(&'static str,usize);5]{[("maximumItems",self.maximum_items),("maximumCopyBytes",self.maximum_copy_bytes),("maximumCapacityBytes",self.maximum_capacity_bytes),("maximumReleaseBytes",self.maximum_release_bytes),("maximumDepth",self.maximum_depth)]}
 }
 impl RetainedCloneGrant {
-    /// 🎟️ Admits one structural allocation while reserving no payload-copy credit.
+    /// 🦜️ Admits one structural allocation while reserving no payload-copy credit.
     pub fn one_capacity_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {
         Self { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: maximum_bytes, maximum_release_bytes: 0, maximum_depth }
     }
 
-    /// 🎟️ Admits one payload turn while reserving no allocation-capacity credit.
+    /// 🎒️ Admits one payload turn while reserving no allocation-capacity credit.
     pub fn one_payload_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {
         Self { maximum_items: 1, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth }
     }
-    /// ♻️ Admits one release turn without copy or allocation credit.
+    /// 📦️ Admits one release turn without copy or allocation credit.
     pub fn one_release_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {
         Self { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: maximum_bytes, maximum_depth }
     }
@@ -132,7 +132,7 @@ pub struct RetirementDemand {
     pub depth: usize,
 }
 
-/// 🎟️ Preserves the exact admitted original action across its enclosing clone frame.
+/// 🎬️ Preserves the exact admitted original action across its enclosing clone frame.
 pub fn retained_clone_grant_admits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool {
     grant.maximum_items>0 && grant.maximum_copy_bytes>=demand.copy_bytes && grant.maximum_capacity_bytes>=demand.capacity_bytes && grant.maximum_release_bytes>=demand.release_bytes && grant.maximum_depth>=demand.depth
 }

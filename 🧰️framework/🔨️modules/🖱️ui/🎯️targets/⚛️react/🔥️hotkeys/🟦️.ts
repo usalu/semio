@@ -30,7 +30,7 @@ export function useActionHotkey(
 /** ⌨️ Requires the actual declared chord for one authored panel anchor. */
 function requiredPanelToggleHotkey(anchor:Anchor):string{const chord=SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS[anchor]];if(chord===undefined)throw Error("Declared panel toggle chord required");return chord;}
 
-/** ⌨️ Chords for toggling each panel's fold/unfold state (derived from {@link SHELL_KEYBINDINGS}). */
+/** ⏯️ Chords for toggling each panel's fold/unfold state (derived from {@link SHELL_KEYBINDINGS}). */
 export const PANEL_TOGGLE_HOTKEYS: Record<Anchor, string> = {
   "top-left": requiredPanelToggleHotkey("top-left"),
   "top-middle": requiredPanelToggleHotkey("top-middle"),
@@ -43,7 +43,7 @@ export const PANEL_TOGGLE_HOTKEYS: Record<Anchor, string> = {
 };
 
 /**
- * ⌨️ Binds {@link PANEL_TOGGLE_HOTKEYS} for all eight anchors when a handler is provided.
+ * 🎛️ Binds {@link PANEL_TOGGLE_HOTKEYS} for all eight anchors when a handler is provided.
  **/
 export function usePanelChromeHotkeys(options: { readonly onToggle?: (anchor: Anchor) => void }): void {
   const { onToggle } = options;

@@ -42,7 +42,7 @@ pub trait SceneDoc: Clone + Serialize + serde::de::DeserializeOwned {
         to_bytes(self)
     }
 
-    /// 🧳️ Decodes the stable opaque scene payload independently of its human-readable JSON shape.
+    /// 🎁️ Decodes the stable opaque scene payload independently of its human-readable JSON shape.
     fn decode_pack(bytes: &[u8]) -> Result<Self, PackError> {
         from_bytes(bytes)
     }
@@ -67,7 +67,7 @@ pub trait SceneDoc: Clone + Serialize + serde::de::DeserializeOwned {
         (self.clone(), Vec::new())
     }
 
-    /// 🚚️ Re-attaches one lane's payload to a spine decoded from the surface doc — the exact inverse
+    /// 🔀️ Re-attaches one lane's payload to a spine decoded from the surface doc — the exact inverse
     /// of [`SceneDoc::split_lanes`]. Returns `false` for a key this doc does not own.
     fn merge_lane(&mut self, key: &str, payload: String) -> bool {
         let _ = (key, payload);
@@ -75,7 +75,7 @@ pub trait SceneDoc: Clone + Serialize + serde::de::DeserializeOwned {
     }
 }
 
-/// 🚚️ One scene lane on its way out of a [`SceneDoc`]: the reserved carrier key its retained subtree
+/// 🛫️ One scene lane on its way out of a [`SceneDoc`]: the reserved carrier key its retained subtree
 /// is rooted at, and the payload text that subtree's depth-first leaf concatenation reproduces.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SceneLanePayload {
@@ -129,7 +129,7 @@ pub fn value_decode<T: FromValue>(entries: &[(String, DslValue)], key: &str) -> 
     T::from_value(value_required(entries, key)?).map_err(|error| error.under(key))
 }
 
-/// 🌱️ Decodes an `Option<T>` field — a missing key or an explicit `null` both decode to `None`.
+/// ❔️ Decodes an `Option<T>` field — a missing key or an explicit `null` both decode to `None`.
 pub fn value_decode_option<T: FromValue>(entries: &[(String, DslValue)], key: &str) -> Result<Option<T>, ValueError> {
     match value_field(entries, key) {
         None | Some(DslValue::Null) => Ok(None),
@@ -137,7 +137,7 @@ pub fn value_decode_option<T: FromValue>(entries: &[(String, DslValue)], key: &s
     }
 }
 
-/// 🌱️ Decodes a field with a `#[serde(default = ...)]` fallback — a missing key calls `default`.
+/// 🔙️ Decodes a field with a `#[serde(default = ...)]` fallback — a missing key calls `default`.
 pub fn value_decode_default<T: FromValue>(entries: &[(String, DslValue)], key: &str, default: impl FnOnce() -> T) -> Result<T, ValueError> {
     match value_field(entries, key) {
         None => Ok(default()),
@@ -145,12 +145,12 @@ pub fn value_decode_default<T: FromValue>(entries: &[(String, DslValue)], key: &
     }
 }
 
-/// 🌱️ Pushes a field unconditionally — the twin of a plain (non-`skip_serializing_if`) struct field.
+/// ⬆️ Pushes a field unconditionally — the twin of a plain (non-`skip_serializing_if`) struct field.
 pub fn value_push<T: ToValue>(entries: &mut Vec<(String, DslValue)>, key: &str, value: &T) {
     entries.push((key.to_string(), value.to_value()));
 }
 
-/// 🌱️ Pushes an `Option<T>` field only when `Some` — mirrors `#[serde(skip_serializing_if =
+/// ❓️ Pushes an `Option<T>` field only when `Some` — mirrors `#[serde(skip_serializing_if =
 /// "Option::is_none")]`.
 pub fn value_push_option<T: ToValue>(entries: &mut Vec<(String, DslValue)>, key: &str, value: &Option<T>) {
     if let Some(value) = value {
@@ -158,7 +158,7 @@ pub fn value_push_option<T: ToValue>(entries: &mut Vec<(String, DslValue)>, key:
     }
 }
 
-/// 🌱️ Pushes a `Vec<T>` field only when non-empty — mirrors `#[serde(skip_serializing_if =
+/// 🧺️ Pushes a `Vec<T>` field only when non-empty — mirrors `#[serde(skip_serializing_if =
 /// "Vec::is_empty")]`.
 pub fn value_push_if_nonempty<T: ToValue>(entries: &mut Vec<(String, DslValue)>, key: &str, value: &[T]) {
     if !value.is_empty() {
@@ -168,7 +168,7 @@ pub fn value_push_if_nonempty<T: ToValue>(entries: &mut Vec<(String, DslValue)>,
 //#endregion 🔖️ValueCodecHelpers
 
 //#region 🔖️SceneLane
-/// 🚚️ One entry of a scene spine's lane manifest ([`World3dScene::lanes`], [`Canvas2dScene::lanes`]) — see
+/// 📋️ One entry of a scene spine's lane manifest ([`World3dScene::lanes`], [`Canvas2dScene::lanes`]) — see
 /// [`World3dScene::lanes`]' doc.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

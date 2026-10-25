@@ -9,7 +9,7 @@ import{mkdtempSync,rmSync,existsSync,readFileSync}from"node:fs";
 import{join,resolve}from"node:path";
 import{build}from"esbuild";
 import{withNxDaemonServiceBirthV1}from"../🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import{withRepositoryCacheStoreV1}from"../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import{withRepositoryNxStorageV1,nxDaemonNamespaceResourceV1}from"../../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import{nxToolingUseStorageV1}from"@semio-tech/nx-bootstrap-tools/use";
@@ -37,7 +37,7 @@ test("issued daemon service holds its actual images and SDK after finite parent 
   await expect(withResourceLeases(namespaceOptions,async()=>undefined)).rejects.toThrow("timed out");
   if(process.platform!=="win32")expect(Buffer.byteLength(observation.socketPath)).toBeLessThanOrEqual(95);
   const served=await new Promise<string>((accept,reject)=>{const socket=connect(observation.socketPath),chunks:Buffer[]=[];socket.once("error",reject);socket.on("data",bytes=>chunks.push(bytes));socket.once("end",()=>{socket.destroy();accept(Buffer.concat(chunks).toString());});});expect(served).toBe("held\n");
-  const closed=new Promise<void>(accept=>child!.on("message",message=>{if(message&&typeof message==="object"&&"type"in message&&message.type==="SOURCE_DAEMON_SERVER_CLOSED")accept();}));child!.send({type:"stop"});await closed;expect(child!.exitCode).toBeNull();await expect(withResourceLeases(namespaceOptions,async()=>undefined)).rejects.toThrow("timed out");child!.send({type:"worker-stop"});expect(await terminal).toBe(0);await withResourceLeases(namespaceOptions,async()=>undefined);expect(errors).toContain("[DEBUG] Actual installed Nx socket utility selected funded endpoint");console.log(errors.split("\n").filter(line=>line.startsWith("[DEBUG]")).join("\n"));expect(errors).toContain("[DEBUG] Actual Node service callback returns");expect(errors).toContain("[DEBUG] Actual shutdown request loan settled");console.log("[DEBUG] Actual Node service retained tools8/leases64/Rust16 + exact SDK after finite birth callback; funded Unix socket served actual bytes; namespace EX stayed refused after server close until exact worker exit and terminal0");
+  const closed=new Promise<void>(accept=>child!.on("message",message=>{if(message&&typeof message==="object"&&"type"in message&&message.type==="SOURCE_DAEMON_SERVER_CLOSED")accept();}));child!.send({type:"stop"});await closed;expect(child!.exitCode).toBeNull();await expect(withResourceLeases(namespaceOptions,async()=>undefined)).rejects.toThrow("timed out");child!.send({type:"worker-stop"});expect(await terminal).toBe(0);await withResourceLeases(namespaceOptions,async()=>undefined);expect(errors).toContain("[TRACE] Actual installed Nx socket utility selected funded endpoint");console.log(errors.split("\n").filter(line=>line.startsWith("[TRACE]")).join("\n"));expect(errors).toContain("[TRACE] Actual Node service callback returns");expect(errors).toContain("[TRACE] Actual shutdown request loan settled");
  }finally{if(timer)clearTimeout(timer);if(kill)clearTimeout(kill);if(child&&child.exitCode===null&&child.signalCode===null){child.kill("SIGTERM");const forced=setTimeout(()=>child?.kill("SIGKILL"),2000);try{await terminal;}finally{clearTimeout(forced);}}rmSync(directory,{recursive:true,force:true});}
  });
 }),240000);

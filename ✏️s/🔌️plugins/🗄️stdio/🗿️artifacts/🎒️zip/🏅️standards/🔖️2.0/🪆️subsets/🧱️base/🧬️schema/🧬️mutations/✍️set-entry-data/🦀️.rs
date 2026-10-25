@@ -8,9 +8,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-entry-data")]
 pub struct SetEntryData {
-    pub(crate) name: String,
+    pub name: String,
     #[dsl(base64)]
-    pub(crate) data: Vec<u8>,
+    pub data: Vec<u8>,
 }
 
 impl protocol::MutationKind<ZipSnapshot, ZipMutation> for SetEntryData {

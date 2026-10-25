@@ -10,6 +10,7 @@ import * as fs from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {resolve} from "node:path";
 import type {CurrentPhysicalOwnerV1} from "../📁️current/🟦️.ts";
+import {concurrentEditV1,retryOnConcurrentEditV1} from "../🔁️churn/🟦️.ts";
 
 /** 🧫️ Joins portable file cases to Noble SHA-256, WebCrypto and JSON Schema outputs. */
 export async function runFileObservationChecksV1():Promise<number>{
@@ -50,7 +51,7 @@ export async function runFileObservationChecksV1():Promise<number>{
 
 /** 🧵️ Executes the real current-file owner with measured system observers under two independent compilers. */
 export async function runCurrentFileRecheckChecksV1():Promise<number>{
- const fixture=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8"));
+ const fixture=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8"));
  const ajv=new Ajv({strict:true});ajv.addSchema(schema);assert(ajv.getSchema(schema.$id+"#/definitions/recheck")!(fixture.recheck));
  const file=join(import.meta.dir,"../📁️current/🟦️.ts"),source=readFileSync(file,"utf8"),parsed=ts.createSourceFile(file,source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
  const body=parsed.statements.filter(statement=>!ts.isImportDeclaration(statement)).map(statement=>statement.getFullText(parsed)).join("\n").replace(/\bexport\s+/g,"");
@@ -63,7 +64,7 @@ export async function runCurrentFileRecheckChecksV1():Promise<number>{
     active++;peak=Math.max(peak,active);if(rechecking){entered++;if(scenario==="cancel")cancelled=true;}
     try{await new Promise(done=>setTimeout(done,fixture.recheck.delayMs));return await observePhysicalFileV1(path,control);}finally{active--;}
    };
-   const Owner=new Function("lstat","opendir","readlink","createHash","join","resolve","readPhysicalFileV1","observePhysicalFileV1",code+"\nreturn CurrentPhysicalOwnerV1;")(fs.lstat,fs.opendir,fs.readlink,createHash,join,resolve,readPhysicalFileV1,observer) as typeof CurrentPhysicalOwnerV1;
+   const Owner=new Function("lstat","opendir","readlink","createHash","join","resolve","readPhysicalFileV1","observePhysicalFileV1","concurrentEditV1","retryOnConcurrentEditV1",code+"\nreturn CurrentPhysicalOwnerV1;")(fs.lstat,fs.opendir,fs.readlink,createHash,join,resolve,readPhysicalFileV1,observer,concurrentEditV1,retryOnConcurrentEditV1) as typeof CurrentPhysicalOwnerV1;
    const progress:FileObservationProgressV1[]=[],control:FileObservationControlV1={maxBytes:32*1024*1024,maxWork:65536,chunkBytes:1024,cancelled:()=>cancelled,remainingMs:()=>expired?0:60_000,onProgress:row=>{progress.push(row);if(starved)cancelled=true;}};
    try{
     const owner:CurrentPhysicalOwnerV1=new Owner(root,control);
@@ -75,7 +76,6 @@ export async function runCurrentFileRecheckChecksV1():Promise<number>{
     if(scenario==="success"){await owner.recheck();assert(peak>1,"current-byte transfer checks must overlap independent files");assert(peak<=fixture.recheck.maximumConcurrency);assert.equal(entered,fixture.recheck.files);}
     else await assert.rejects(()=>owner.recheck());
     assert.equal(active,0,"every admitted observer must finish before returning");assert(peak<=fixture.recheck.maximumConcurrency);assert(progress.every(row=>row.bytes<=control.maxBytes&&row.work<=control.maxWork));
-    console.log("[DEBUG] current-file recheck "+JSON.stringify({scenario,peak,entered,active}));
    }finally{rmSync(root,{recursive:true,force:true});}
   }
  }

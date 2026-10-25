@@ -76,7 +76,7 @@ fn the_command_ingress_authorities_are_derived_from_the_guest_memory_budget() {
     );
 }
 
-/// ⚖️ LAW: every fixture row splits into exactly the pages it declares and reassembles to the EXACT
+/// 🔪️ LAW: every fixture row splits into exactly the pages it declares and reassembles to the EXACT
 /// bytes it was cut from, with no page of a multi-page command left short of the page extent.
 #[test]
 fn every_command_ingress_row_reassembles_to_the_exact_bytes_it_was_cut_from() {
@@ -111,7 +111,7 @@ fn every_command_ingress_row_reassembles_to_the_exact_bytes_it_was_cut_from() {
     }
 }
 
-/// ⚖️ LAW: an over-declaration and an over-push are refused with a `Fault` the host can display, and
+/// 📃️ LAW: an over-declaration and an over-push are refused with a `Fault` the host can display, and
 /// the page a saturated authority refuses is handed BACK rather than dropped.
 #[test]
 fn every_command_ingress_refusal_answers_a_fault_and_keeps_its_page() {

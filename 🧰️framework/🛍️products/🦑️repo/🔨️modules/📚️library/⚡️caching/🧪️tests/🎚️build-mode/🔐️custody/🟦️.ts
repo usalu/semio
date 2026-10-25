@@ -38,7 +38,7 @@ if(process.argv[2]!=="build")throw Error("Expected build");
 writeFileSync("ready","ready");
 const deadline=Date.now()+30000;while(!existsSync("continue")){checkScriptInvocation(original);if(Date.now()>deadline)throw Error("Fixture deadline");await Bun.sleep(20);}
 checkScriptInvocation(original);const count=existsSync("count")?Number(readFileSync("count","utf8")):0;writeFileSync("count",String(count+1));
-mkdirSync(${JSON.stringify(productOutput)},{recursive:true});writeFileSync(${JSON.stringify(join(productOutput,"result.json"))},readFileSync("source.json"));console.log("[DEBUG] fixture compiler executed");
+mkdirSync(${JSON.stringify(productOutput)},{recursive:true});writeFileSync(${JSON.stringify(join(productOutput,"result.json"))},readFileSync("source.json"));console.log("[TRACE] fixture compiler executed");
 });
 `);
     const launch = (suffix: string) => {

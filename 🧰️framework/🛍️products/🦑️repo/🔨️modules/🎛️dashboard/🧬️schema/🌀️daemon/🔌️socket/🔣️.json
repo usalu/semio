@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/socket.json",
+  "title": "🔌️ Daemon Socket Path",
+  "$defs": {
+    "Bytes": { "type": "integer", "minimum": 1 },
+    "Capacities": { "type": "object", "required": ["macos", "linux"], "additionalProperties": false, "properties": { "macos": { "const": 104 }, "linux": { "const": 108 } } },
+    "Fit": { "type": "object", "required": ["macos", "linux"], "additionalProperties": false, "properties": { "macos": { "type": "boolean" }, "linux": { "type": "boolean" } } },
+    "Case": {
+      "type": "object",
+      "required": ["name", "runtime", "preferredBytes", "preferred", "fallbackFile"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "runtime": { "type": "string", "pattern": "^/" },
+        "preferredBytes": { "$ref": "#/$defs/Bytes" },
+        "preferred": { "$ref": "#/$defs/Fit" },
+        "fallbackFile": { "type": "string", "pattern": "^[0-9a-f]{16}\\.sock$" }
+      }
+    }
+  },
+  "type": "object",
+  "required": ["schemaVersion", "limits", "fallbackDirectory", "key", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "limits": { "$ref": "#/$defs/Capacities" },
+    "fallbackDirectory": { "type": "string", "pattern": "^/tmp/semio-dashboard-[0-9]+$" },
+    "key": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+    "cases": { "type": "array", "minItems": 5, "items": { "$ref": "#/$defs/Case" } }
+  },
+  "description": "🔌️ A daemon listens on <runtime>/<key>.sock while the platform's sun_path capacity (104 bytes on macOS, 108 on Linux, each including the terminating NUL) holds that path; otherwise on <per-user directory>/<XXH3-64 of the preferred path, 16 hex digits>.sock. The digest is the reference XXH3 with the default secret, so every implementation of the dashboard names the same socket. Windows listens on a named pipe and has no such limit."
+}

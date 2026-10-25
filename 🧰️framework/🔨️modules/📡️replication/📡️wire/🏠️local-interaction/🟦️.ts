@@ -38,7 +38,7 @@ export type LocalInteractionPage = {
   readonly bytes: readonly number[];
 };
 
-/** 🔐️ Runtime-lifetime query authority, separate from historical tutorial state. */
+/** 🎨️ Runtime-lifetime query authority, separate from historical tutorial state. */
 export type LocalInteractionQueryToken = Pick<LocalInteractionPage, "requestId" | "queryGeneration" | "identity" | "ordinal">;
 export const LOCAL_INTERACTION_CAPTURE_MAX_BYTES = 1_048_576;
 //#endregion 🧬️Contract
@@ -119,7 +119,7 @@ export function localInteractionIdentityEquals(left: LocalInteractionIdentity, r
   return left.appInstanceId === right.appInstanceId && left.generation === right.generation && left.revision === right.revision && left.documentRevision === right.documentRevision && left.topologyRevision === right.topologyRevision;
 }
 
-/** 🧊️ Composes an already validated tutorial state; does not perform live topology validation or publication. */
+/** ❄️ Composes an already validated tutorial state; does not perform live topology validation or publication. */
 export function applyLocalInteractionRestoreCold(before: LocalInteractionState, current: LocalInteractionIdentity, restore: LocalInteractionRestore): LocalInteractionState {
   if (!localInteractionIdentityEquals(current, restore.base)) throw new Error("stale-authority");
   if (restore.kind === "full") return restore.state;

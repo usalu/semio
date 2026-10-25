@@ -38,7 +38,7 @@ pub fn plan(p: &GltfReorderBufferViewsPayload, base: &GltfSnapshot) -> Result<Gl
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfReorderBufferViewsPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::reorder_buffer_views::ReorderBufferViewsMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();

@@ -180,7 +180,7 @@ pub(super) fn parse_expr(cursor: &mut Cursor, min_prec: u8) -> Result<ExprValue,
     parse_expr_continue(cursor, min_prec, lhs)
 }
 
-/// 🧮️ The loop body of `parse_expr`, factored out so the glued-negative-number case below
+/// 📖️ The loop body of `parse_expr`, factored out so the glued-negative-number case below
 /// can re-enter it with an ALREADY-PARSED left operand instead of calling `parse_expr_unary` again
 /// (which would re-consume nothing, since the token was already consumed to build that operand).
 fn parse_expr_continue(cursor: &mut Cursor, min_prec: u8, mut lhs: ExprValue) -> Result<ExprValue, TextError> {
@@ -260,7 +260,7 @@ fn parse_expr_primary(cursor: &mut Cursor) -> Result<ExprValue, TextError> {
     }
 }
 
-/// 🧮️ Standalone entry point for parsing a bare expression body (no surrounding `(`/`)`,
+/// 📄️ Standalone entry point for parsing a bare expression body (no surrounding `(`/`)`,
 /// unlike `Shape::Expr`'s own field-value grammar) — what `pack_value`'s decoder calls to turn the
 /// canonical string it stored back into an `ExprValue`, since decode has no `Cursor` of its own.
 pub fn parse_expr_text(text: &str) -> Result<ExprValue, TextError> {

@@ -4,7 +4,7 @@ import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {bunArchiveExecutable,bunDistribution} from "../🟦️.ts";
 import manifestSchema from "../🧬️schema/🔣️.json";
 import corpus from "./🔣️.json";

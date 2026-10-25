@@ -2,7 +2,7 @@ import type { ShellBrand } from "@semio-tech/framework";
 import type { OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
 import type { AssetDeliveryProviderV1, AssetDeliveryDeclarationV1 } from "../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import type { DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
-import type { PlaygroundEntry } from "../../../🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts";
+import type { PlaygroundEntry } from "../../../🔌️plugin/📇️registry/🎮️playground/📋️contract/🟦️.ts";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, componentOwnerRootV1, type ModuleDirectory } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";

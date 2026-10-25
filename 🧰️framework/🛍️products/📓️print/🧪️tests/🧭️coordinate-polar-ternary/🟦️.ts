@@ -77,11 +77,11 @@ export default defineTestAdapter({
           "coordinate/cartesian-domain": cartesian(0.25, 0.5, 80, 40),
         },
       }),
-      /** 🎯️ \SemioVizProject inside a compiled document. */
+      /** ➡️ \SemioVizProject inside a compiled document. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     polar: {
-      /** 📏️ The specification vectors of the polar and log-polar systems. */
+      /** 🪵️ The specification vectors of the polar and log-polar systems. */
       oracle: () => ({
         projection: {
           "coordinate/polar-quarter": polar(0.25, 1, 0, 20),
@@ -95,7 +95,7 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     ternary: {
-      /** 📏️ The specification vectors of the ternary triangle. */
+      /** 🔻️ The specification vectors of the ternary triangle. */
       oracle: () => ({
         projection: {
           "coordinate/ternary-a": ternary(1, 0, 60),
@@ -107,7 +107,7 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     parallel: {
-      /** 📏️ The specification vectors of the parallel axes. */
+      /** 🪓️ The specification vectors of the parallel axes. */
       oracle: () => ({
         projection: {
           "coordinate/parallel-first": parallel(1, 0, 4, 90, 50),
@@ -118,7 +118,7 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     geographic: {
-      /** 📏️ The equirectangular fallback the hook ships with. */
+      /** 🚢️ The equirectangular fallback the hook ships with. */
       oracle: () => ({
         projection: {
           "coordinate/geographic-null": geographic(0, 0, 360, 180),

@@ -1,0 +1,5 @@
+🛰️service/🟦️.ts -> 📤️child/🟦️.ts
+🛰️service/🟦️.ts -> 📥️caller/🟦️.ts
+📨️envelope/🟦️.ts -> 📥️caller/🟦️.ts
+⌨️cli/🟦️.ts -> 📤️child/🟦️.ts
+=L/📦️packages/🟦️typescript/🏗️build/🕸️graph/📥️inference/🟨️.mjs -> =L/🟨️.mjs

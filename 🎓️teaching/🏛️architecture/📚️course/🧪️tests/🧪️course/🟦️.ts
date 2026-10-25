@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import * as material from "../../📚️course/🟦️.ts";
 import courseContract from "../../🧫️fixtures/📚️course/🔣️.json";
-import { isCourseView } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/💾️persistence/🟦️.ts";
+import { isCourseView } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
 const siteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const coursePath = resolve(siteRoot, "🔣️.json");
@@ -136,9 +136,9 @@ describe("architecture course", () => {
     expect(perfect.filter(({ rule }) => rule.kind === "completed-quizzes" || rule.challenge === undefined || !challengeMeets(rule.challenge, "medium")).map(({ id }) => id)).toEqual([]);
   });
 
-  it("is what the site ships as its material: the module's static imports equal the documents on disk, in the course's order, and it exports nothing else", () => {
-    expect(material.ARCHITECTURE_COURSE_MATERIAL).toEqual({ course, quizzes: quizzes.map(({ quiz }) => quiz) });
-    expect(Object.keys(material)).toEqual(["ARCHITECTURE_COURSE_MATERIAL"]);
+  it("is what the site ships as its material: the module's lazy imports equal the documents on disk, in the course's order, and it exports nothing else", async () => {
+    expect(await material.loadArchitectureCourseMaterial()).toEqual({ course, quizzes: quizzes.map(({ quiz }) => quiz) });
+    expect(Object.keys(material)).toEqual(["loadArchitectureCourseMaterial"]);
   });
 
   for (const { path, quiz } of quizzes) {
@@ -232,10 +232,10 @@ describe("standalone ventilation quiz", () => {
   const fixture = read(resolve(siteRoot, "🧫️fixtures/🌬️ventilation/🔣️.json")) as { order: string[]; tasks: { id: string; kind: string }[]; statements: Record<string, string>; rates: Record<string, number>; axes: string[]; profiles: Record<string, Record<string, number>>; systems: Record<string, string> };
   const ventilation = quizzes.find(({ quiz }) => quiz.id === "ventilation")?.quiz;
 
-  it("places ventilation between physics and heating in the authored course and static material", () => {
+  it("places ventilation between physics and heating in the authored course and the lazy material", async () => {
     expect(quizzes.map(({ quiz }) => quiz.id)).toEqual(fixture.order);
     expect(course.topics![0]!.quizzes).toEqual(fixture.order);
-    expect(material.ARCHITECTURE_COURSE_MATERIAL.quizzes.map(({ id }) => id)).toEqual(fixture.order);
+    expect((await material.loadArchitectureCourseMaterial()).quizzes.map(({ id }) => id)).toEqual(fixture.order);
     expect(course.badges.find(({ id }) => id === "ventilation-expert")?.rule).toEqual({ kind: "perfect-quiz", quiz: "ventilation", challenge: "medium" });
   });
 

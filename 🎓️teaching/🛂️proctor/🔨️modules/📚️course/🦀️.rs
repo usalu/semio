@@ -1,4 +1,4 @@
-//! 📚️ The course a proctor serves: the course `🔣️.json`, every quiz it lists (resolved relative
+//! 🏫️ The course a proctor serves: the course `🔣️.json`, every quiz it lists (resolved relative
 //! to the course file), each quiz's revision (lowercase hex SHA-256 of the quiz file bytes as
 //! loaded) and the course fingerprint the projections were built against.
 //!

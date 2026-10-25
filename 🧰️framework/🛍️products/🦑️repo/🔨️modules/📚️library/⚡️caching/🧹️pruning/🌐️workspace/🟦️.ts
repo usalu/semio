@@ -16,8 +16,8 @@ export interface CacheAreaScanOperations {
 /** 🧪️ Delegates test evidence retention to the test domain that owns pinning and active runs. */
 export async function pruneTestEvidence(repoRoot: string, dry: boolean): Promise<string> {
   const [{ collectGarbage, formatGcReport }, { loadOracleRegistry }] = await Promise.all([
-    import("../../../../🧪️test/🗑️retention/🟦️.ts"),
-    import("../../../../🧪️test/🤝️contributions/🟦️.ts"),
+    import("../../../../🧪️test/📦️packages/🟦️typescript/🗑️retention/🟦️.ts"),
+    import("../../../../🧪️test/📦️packages/🟦️typescript/🤝️contributions/🟦️.ts"),
   ]);
   return formatGcReport(collectGarbage(repoRoot, loadOracleRegistry(repoRoot), { dry, olderThanMs: CACHE_POLICY.storage.tests.unusedAgeMs }));
 }

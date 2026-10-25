@@ -59,7 +59,7 @@ export default defineTestAdapter({
     },
     "voronoi-cells": {
       oracle: oracle("voronoi-cells"),
-      /** 🎯️ The twin's half-plane clipped cells, one lexicographically sorted vertex list per site. */
+      /** 📋️ The twin's half-plane clipped cells, one lexicographically sorted vertex list per site. */
       subject: (ctx: AdapterContext) => {
         const cells = vizVoronoi(points(ctx), BOUNDS).cells.map((cell) => {
           const vertices = cell.map(([x, y]) => [grid(x, DECIMALS_PLANE), grid(y, DECIMALS_PLANE)] as [number, number]);

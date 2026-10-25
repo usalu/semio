@@ -1,4 +1,4 @@
-//! 🌲️ Tree builders: the tree, tree section and tree item builders. See [`super`].
+//! 🌴️ Tree builders: the tree, tree section and tree item builders. See [`super`].
 
 use super::*;
 
@@ -12,7 +12,7 @@ pub struct TreeBuilder {
     interaction_domain: Option<crate::UiText>,
 }
 
-/// 🌲️ An empty tree, ready for [`tree_section`]/[`tree_item`] children.
+/// 🌱️ An empty tree, ready for [`tree_section`]/[`tree_item`] children.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn tree() -> TreeBuilder {
     TreeBuilder { base: NodeBase::stack(crate::Axis::Vertical), presentation: crate::TreePresentation::Standard, interaction_domain: None }
@@ -48,7 +48,7 @@ impl From<TreeBuilder> for BuiltNode {
     }
 }
 
-/// 🌲️ A labeled, collapsible grouping of tree items — `Component::TreeSection`. Build with
+/// 📑️ A labeled, collapsible grouping of tree items — `Component::TreeSection`. Build with
 /// [`tree_section`].
 pub struct TreeSectionBuilder {
     pub(super) base: NodeBase,
@@ -58,7 +58,7 @@ pub struct TreeSectionBuilder {
     header_toolbar: Option<crate::UiNodeId>,
 }
 
-/// 🌲️ A tree section reading `label`, ready for [`tree_item`] children.
+/// 📗️ A tree section reading `label`, ready for [`tree_item`] children.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn tree_section(label: crate::Label) -> TreeSectionBuilder {
     TreeSectionBuilder { base: NodeBase::stack(crate::Axis::Vertical), label, default_open: None, window: None, header_toolbar: None }
@@ -119,7 +119,7 @@ pub struct TreeItemBuilder {
     pub(super) target: Option<crate::RowTarget>,
 }
 
-/// 🌿️ A tree row reading `label`. Its accessible name defaults to `label`, the same "hard to omit"
+/// 🍃️ A tree row reading `label`. Its accessible name defaults to `label`, the same "hard to omit"
 /// derivation [`button`] applies.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn tree_item(label: crate::Label) -> TreeItemBuilder {
@@ -141,7 +141,7 @@ impl TreeItemBuilder {
         self
     }
 
-    /// 🔽️ Sets whether the row starts open (when it has nested items).
+    /// 📂️ Sets whether the row starts open (when it has nested items).
     pub fn default_open(mut self, default_open: bool) -> Self {
         self.default_open = Some(default_open);
         self
@@ -172,14 +172,14 @@ impl TreeItemBuilder {
         self
     }
 
-    /// 🪟️ Declares which slice of a longer logical child list the built children actually are — see
+    /// 🍕️ Declares which slice of a longer logical child list the built children actually are — see
     /// [`crate::TreeWindow`].
     pub fn window(mut self, window: crate::TreeWindow) -> Self {
         self.window = Some(window);
         self
     }
 
-    /// 🎯️ Makes the row a pick target of the tree's `interaction_domain` at this granularity, keyed
+    /// 🏹️ Makes the row a pick target of the tree's `interaction_domain` at this granularity, keyed
     /// by the row's own record key — no per-row binding and no argument map.
     pub fn granularity(mut self, granularity: crate::UiText) -> Self {
         self.granularity = Some(granularity);

@@ -1,5 +1,5 @@
-import type {RemoteCacheToolV1} from "../../../../🏗️build/🌐️remote-cache/⌨️command/🟦️.ts";
-import {readRemoteCacheTokenV1,remoteCacheBaseUrlV1,remoteCacheEffectiveUploadV1,REMOTE_CACHE_REDACTED_V1,type RemoteCacheContractV1,type RemoteCacheRenderingV1} from "../../../../🏗️build/🌐️remote-cache/🟦️.ts";
+import type {RemoteCacheToolV1} from "../../../../📦️packages/🟦️typescript/🏗️build/🌐️remote-cache/⌨️command/🟦️.ts";
+import {readRemoteCacheTokenV1,remoteCacheBaseUrlV1,remoteCacheEffectiveUploadV1,REMOTE_CACHE_REDACTED_V1,type RemoteCacheContractV1,type RemoteCacheRenderingV1} from "../../../../📦️packages/🟦️typescript/🏗️build/🌐️remote-cache/🟦️.ts";
 
 /** 🏷️ Names the two variables through which Nx 23 reads its self-hosted remote cache. */
 export const NX_REMOTE_CACHE_VARIABLES_V1=Object.freeze({server:"NX_SELF_HOSTED_REMOTE_CACHE_SERVER",token:"NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN"} as const);

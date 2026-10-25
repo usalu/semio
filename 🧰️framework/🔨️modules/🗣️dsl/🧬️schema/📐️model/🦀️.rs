@@ -218,7 +218,7 @@ pub struct GrammarSpec {
 // args); THIS is the fallback for `app_commands!` payload structs whose only declared shape is a
 // `RecordSpec` (`#[derive(dsl::DslRecord)]`) — the catalog compiler tags whatever it emits from here
 // `x-semio-confidence: "payload"`, not this module's concern.
-/// 📐️ JSON Schema 2020-12 for one `Shape` leaf/node — recurses through `Tuple`/`List`/
+/// 🧬️ JSON Schema 2020-12 for one `Shape` leaf/node — recurses through `Tuple`/`List`/
 /// `Record`/`Block`/`Statements`/`Map`/`Table`. `Quantity`/`Angle` carry their unit as
 /// `x-semio-unit`; `Ref(kind)` carries the referenced entity kind as `x-semio-ref`; every shape with
 /// no native JSON Schema vocabulary (`Bytes64`/`Wire`/`Coord`/`Dir`/`Dim`/`Range`/`Count`/`Expr`/
@@ -290,7 +290,7 @@ pub fn shape_json_schema(shape: &Shape) -> semio_framework_pack_json::Value {
     }
 }
 
-/// 📐️ JSON Schema 2020-12 object for one `RecordSpec` — one property per `FieldSpec.key`
+/// 📕️ JSON Schema 2020-12 object for one `RecordSpec` — one property per `FieldSpec.key`
 /// (positional-only fields, whose `key` is empty, are omitted — no name to key a JSON object
 /// property on), `flatten`ed nested-record fields splice their own fields into THIS SAME properties
 /// map rather than nesting, mirroring what `flatten` means at parse/print altitude. `required` lists
@@ -409,7 +409,7 @@ impl RecordValue {
     }
 }
 
-/// 🌳️ Alias naming the parse product per the engine's design vocabulary.
+/// ⚙️ Alias naming the parse product per the engine's design vocabulary.
 pub type Cst = RecordValue;
 //#endregion 🔖️Value
 
@@ -464,7 +464,7 @@ pub enum ExprValue {
 #[global_allocator]
 static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
-/// 🏷️ Original canonical physical shape vocabulary shared by parser and emitter.
+/// 🟢️ Original canonical physical shape vocabulary shared by parser and emitter.
 pub fn shape_type_name(shape: &Shape) -> &'static str {
     match shape {
         Shape::Bool => "BOOL",

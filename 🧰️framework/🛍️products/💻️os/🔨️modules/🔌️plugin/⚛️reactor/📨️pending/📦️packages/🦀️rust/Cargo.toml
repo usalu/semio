@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 [features]
 artifact-app-testing = ["original-actor-context-testing"]
 original-actor-context-testing = []
+cleanup-probes = []
 
 [dependencies]
 semio-framework-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }

@@ -113,5 +113,32 @@
         "coverage": null
       }
     }
+  ],
+  "processSuites": [
+    {
+      "suite": "exact-cargo-storage",
+      "reason": "compiles and runs a real Cargo test crate inside a disk image",
+      "minimum": "quick"
+    },
+    {
+      "suite": "cargo-build-lease",
+      "reason": "proves build leases across several processes",
+      "minimum": "quick"
+    },
+    {
+      "suite": "cargo-build-custody",
+      "reason": "queues real Cargo builds of one build directory across processes",
+      "minimum": "quick"
+    },
+    {
+      "suite": "cargo-overlap",
+      "reason": "runs two real Cargo builders at once",
+      "minimum": "quick"
+    },
+    {
+      "suite": "cargo-test-leases",
+      "reason": "holds leases across processes while Cargo tests run",
+      "minimum": "quick"
+    }
   ]
 }

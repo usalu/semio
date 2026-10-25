@@ -6,7 +6,7 @@ import {chmodSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdi
 import {tmpdir} from "node:os";
 import {rm} from "node:fs/promises";
 import {dirname,join,resolve} from "node:path";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
@@ -21,7 +21,7 @@ import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/
 import {runSemioTasksV1,semioInventoryV1,type SemioPortsV1} from "../🏁️scheduler/🟦️.ts";
 import {buildCacheDecisionV1,buildDryRunPlanV1,buildTaskInputsV1,planBuildTasksV1,type BuildTaskV1} from "../../../🧮️task-model/🟦️.ts";
 import {startRemoteCacheServerV1} from "../../../🌐️remote-cache/🖥️server/🟦️.ts";
-import type {BuildGraphV1} from "../../../🕸️graph/🟦️.ts";
+import type { BuildGraphV1 } from "../../../🕸️graph/📋️model/🟦️.ts";
 import {stubGlobV1,stubSelectV1} from "../../../📐️conformance/🎭️stub/🟦️.ts";
 
 const repositoryRoot=join(import.meta.dir,"../../../../../../../../../"),oracle=join(import.meta.dir,"../../../📐️conformance/🧪️tests/🐍️oracle/🐍️.py");

@@ -17,14 +17,14 @@ import "../../../🔗️graphql/🔤️types/🧪️tests/🔒️producer/🟦�
 import "../../⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🔁️lifecycle/🪝️automatic-hooks/🟦️.ts";
 import "../🎯️targets/🧪️tests/🟦️.ts";
 import "../🕸️graph/🕰️generations/🧪️tests/📦️document-size/🟦️.ts";
-import "../../../../../../🔨️modules/🌱️value/♻️retirement/🌀️support/🧪️tests/🟦️.ts";
+import "../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/♻️retirement/🌀️support/🧪️tests/🟦️.ts";
 import "../../🧪️testing/🐹️go-plan/💾️overlay/🧪️tests/🟦️.ts";
 import {ticketScopeVectorLawV1} from "../../../🔗️graphql/🧪️tests/🌿️tickets/📁️scope/🟦️.ts";
-import {withBuildTestInvocationV1} from "./../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {createIssuedResourceControlV1} from "./../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "@semio-tech/repo-test/storage";
-import {testResourceLeaseAdmissionTimeoutV1} from "./../../../../../../🔨️modules/🏃️process/🔒️leases/🧪️tests/🚪️admission/🟦️.ts";
+import {testResourceLeaseAdmissionTimeoutV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧪️tests/🚪️admission/🟦️.ts";
 import "../🕸️graph/🚪️admission/🧪️tests/🟦️.ts";
 import "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts";
 import "../📥️inputs/💾️storage/🧪️tests/🟦️.ts";

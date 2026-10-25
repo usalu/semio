@@ -16,7 +16,7 @@ import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 // #endregion 🧲️Header
-/** 🎪️ Adapter for `showcase-families`: the nine capability families of `semio-viz-showcase`.
+/** 🔌️ Adapter for `showcase-families`: the nine capability families of `semio-viz-showcase`.
  *
  * Subject: the LaTeX families, probed through `semio-viz-probe` with one scenario per catalogue
  * kind. Oracle: the catalogue itself — no third-party library draws a taxonomy of print
@@ -38,10 +38,10 @@ const CAPABILITY_FAMILIES = [
   "shape", "layout-algorithm", "transform-data", "transform-statistical",
 ] as const;
 
-/** 🗂️ The family that runs every other namespace's canonical family, and therefore the whole library. */
+/** ▶️ The family that runs every other namespace's canonical family, and therefore the whole library. */
 const NAMESPACE_FAMILIES = ["namespace"] as const;
 
-/** 🗂️ The catalogue variants of one showcase family, sorted. */
+/** 🔃️ The catalogue variants of one showcase family, sorted. */
 function catalogueVariants(family: string): readonly string[] {
   const variants = loadVizCatalog()
     .kinds.filter((entry) => entry.family === family)
@@ -49,7 +49,7 @@ function catalogueVariants(family: string): readonly string[] {
   return [...variants].sort();
 }
 
-/** 🎯️ The catalogue's own promise: every kind present, every kind drawing something of its own. */
+/** 📚️ The catalogue's own promise: every kind present, every kind drawing something of its own. */
 export function catalogueProjection(families: readonly string[]): ProbeProjection {
   const projection: Record<string, readonly (number | string)[]> = {};
   for (const family of families) {
@@ -105,15 +105,15 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     capabilities: {
-      /** 🗂️ The catalogue itself: every registered kind of the eight capability families. */
+      /** 📖️ The catalogue itself: every registered kind of the eight capability families. */
       oracle: () => ({ projection: catalogueProjection(CAPABILITY_FAMILIES) }),
-      /** 🎯️ Every capability kind drawn once, reduced to presence and pairwise distinctness. */
+      /** 🔂️ Every capability kind drawn once, reduced to presence and pairwise distinctness. */
       subject: async (ctx: AdapterContext) => await subject(ctx, "shared://🎪️showcase-families/showcase-capabilities.tex", CAPABILITY_FAMILIES),
     },
     namespaces: {
-      /** 🗂️ The catalogue itself: every registered §76 namespace. */
+      /** 🔮️ The catalogue itself: every registered §76 namespace. */
       oracle: () => ({ projection: catalogueProjection(NAMESPACE_FAMILIES) }),
-      /** 🎯️ Every namespace rendered by its own canonical family, reduced the same way. */
+      /** 🖌️ Every namespace rendered by its own canonical family, reduced the same way. */
       subject: async (ctx: AdapterContext) => await subject(ctx, "shared://🎪️showcase-families/showcase-namespaces.tex", NAMESPACE_FAMILIES),
     },
   },

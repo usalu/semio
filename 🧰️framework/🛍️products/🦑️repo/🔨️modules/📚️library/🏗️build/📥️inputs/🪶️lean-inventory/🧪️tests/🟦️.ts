@@ -1,6 +1,6 @@
 /** 🪶️ Contract: the lean reader returns exactly the leaves whose sha256 is their name (cross-checked against Python hashlib), refuses every other shape, and a remembered identity survives only while the leaf is untouched. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {linkSync,mkdirSync,mkdtempSync,realpathSync,rmSync,symlinkSync,unlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";

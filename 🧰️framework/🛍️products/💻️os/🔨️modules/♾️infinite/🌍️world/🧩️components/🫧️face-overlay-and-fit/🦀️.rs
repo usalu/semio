@@ -147,11 +147,8 @@ pub const WORLD_REFERENCE_SOURCE_PIXELS: u64 = 64 * 1024 * 1024 / 4;
 
 /// 🎨️ The existing owned image decoder preserves admitted mesh texture pixels without reference-image resizing.
 pub fn decode_mesh_surface_image_bytes(bytes:&[u8])->Option<semio_framework_pixels::RasterImage> {
-    use image::ImageDecoder as _;
-    let reader=image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok()?;let mut decoder=reader.into_decoder().ok()?;
-    let (width,height)=decoder.dimensions();if u64::from(width).checked_mul(u64::from(height))?>WORLD_REFERENCE_SOURCE_PIXELS{return None}
-    let orientation=decoder.orientation().unwrap_or(image::metadata::Orientation::NoTransforms);let mut image=image::DynamicImage::from_decoder(decoder).ok()?;image.apply_orientation(orientation);let rgba=image.to_rgba8();
-    Some(semio_framework_pixels::RasterImage{width:rgba.width(),height:rgba.height(),pixels:rgba.into_raw()})
+    let limits=semio_framework_pixels::image_decoding::EncodedDecodeLimits{max_pixels:WORLD_REFERENCE_SOURCE_PIXELS as usize,..semio_framework_pixels::image_decoding::EncodedDecodeLimits::MAXIMUM};
+    Some(semio_framework_pixels::image_decoding::decode_encoded_blocking(bytes.to_vec(),limits,&||false).ok()?.upright())
 }
 
 pub const FACE_OVERLAY_OFFSET: f32 = 0.003;

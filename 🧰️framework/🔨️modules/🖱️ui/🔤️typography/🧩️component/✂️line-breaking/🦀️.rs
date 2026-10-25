@@ -19,7 +19,7 @@ pub fn is_wrap_space(ch: char) -> bool {
     ch != '\n' && ch != '\u{00A0}' && ch.is_whitespace()
 }
 
-/// ✂️ A scalar a line may break AFTER even with no space — UAX#14 class `BA`/`ZW`/`BB`: the hyphen and
+/// ⏸️ A scalar a line may break AFTER even with no space — UAX#14 class `BA`/`ZW`/`BB`: the hyphen and
 /// dash family, the soft hyphen (`U+00AD`, which CSS breaks at and paints nothing here because the
 /// atlas rasterises it as a default-ignorable) and the zero-width space.
 fn breaks_after(ch: char) -> bool {
@@ -32,7 +32,7 @@ fn is_ideographic(ch: char) -> bool {
     matches!(ch as u32, 0x1100..=0x11FF | 0x2E80..=0x303E | 0x3041..=0x33FF | 0x3400..=0x4DBF | 0x4E00..=0x9FFF | 0xA000..=0xA4CF | 0xAC00..=0xD7AF | 0xF900..=0xFAFF | 0xFE30..=0xFE4F | 0xFF00..=0xFF60 | 0xFFE0..=0xFFE6 | 0x20000..=0x3FFFD)
 }
 
-/// 🀄️ UAX#14 `CL`/`NS` — a closing bracket, a full stop, a comma or a small kana never starts a line,
+/// 🚫️ UAX#14 `CL`/`NS` — a closing bracket, a full stop, a comma or a small kana never starts a line,
 /// so the ideographic break opportunity before it is suppressed.
 fn is_no_break_before(ch: char) -> bool {
     matches!(
@@ -81,13 +81,13 @@ fn is_no_break_before(ch: char) -> bool {
     )
 }
 
-/// 🀄️ UAX#14 `OP` — an opening bracket never ends a line, so the ideographic break opportunity after
+/// ⛔️ UAX#14 `OP` — an opening bracket never ends a line, so the ideographic break opportunity after
 /// it is suppressed.
 fn is_no_break_after(ch: char) -> bool {
     matches!(ch, '「' | '『' | '（' | '【' | '［' | '｛' | '〈' | '《' | '〔' | '〖' | '〘' | '〚')
 }
 
-/// ✂️ **THE** soft-wrap predicate of this target: may a line break between `prev` and `next`? It is
+/// ❓️ **THE** soft-wrap predicate of this target: may a line break between `prev` and `next`? It is
 /// CSS `word-break: normal` / `overflow-wrap: normal`, term for term — after a run of spaces, after a
 /// hyphen/dash/soft-hyphen/zero-width-space, and on either side of an ideograph except where a
 /// closing or opening bracket forbids it. NOTHING else breaks, which is what keeps a word whole.
@@ -115,7 +115,7 @@ pub fn may_break_between(prev: char, next: char) -> bool {
     false
 }
 
-/// ✂️ Whether a soft wrap may occur immediately BEFORE the scalar at `byte`. `byte` must be a char
+/// 🔍️ Whether a soft wrap may occur immediately BEFORE the scalar at `byte`. `byte` must be a char
 /// boundary; the start and the end of `text` are never break opportunities.
 pub fn is_break_opportunity(text: &str, byte: usize) -> bool {
     if byte == 0 || byte >= text.len() || !text.is_char_boundary(byte) {
@@ -125,7 +125,7 @@ pub fn is_break_opportunity(text: &str, byte: usize) -> bool {
     may_break_between(prev, next)
 }
 
-/// ✂️ The end of the unbreakable run starting at `byte` — the span a greedy wrap must fit WHOLE or
+/// 🏁️ The end of the unbreakable run starting at `byte` — the span a greedy wrap must fit WHOLE or
 /// move down. Stops at the next break opportunity, at a space (spaces hang, so they are priced on the
 /// line they end) and at a newline.
 pub fn unbreakable_run_end(text: &str, byte: usize) -> usize {

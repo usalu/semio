@@ -1,5 +1,5 @@
 import{test,expect}from"bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{mkdtemp,mkdir,writeFile,utimes,lstat,rm}from"node:fs/promises";
 import{join,isAbsolute}from"node:path";
 import fixture from"./🔣️.json"with{type:"json"};
@@ -9,7 +9,7 @@ import summarySchema from"../../⏱️recency/🧬️schema/🔣️.json"with{ty
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{scanCargoBuildUnits,scanCargoIncrementalUnits}from"../../🟦️.ts";
 import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 
 test("mixed timestamp maxima and backwards recency match independent physical SQLite oracle",async()=>{

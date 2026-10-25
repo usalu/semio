@@ -5,7 +5,7 @@ import ts from"typescript";
 import{readFile}from"node:fs/promises";
 import{isAbsolute,resolve}from"node:path";
 import{createHash}from"node:crypto";
-import{withBuildTestInvocationV1}from"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import{createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,requireIssuedScriptInvocationV1,requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,scriptResourceProcessEnvironmentV1,scriptInvocationBudget,scriptInvocationEnvironment,readScriptProcessEnvelope,readIssuedScriptProcessEnvelopeV1,SCRIPT_PROCESS_INVOCATION_ENV}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{physicalSourceOriginV1}from"../../../../📥️inputs/🔏️revision/🟨️.mjs";
 import{buildSourceClosureIdentityV1,buildSourceClosureStreamLoaderV1}from"../../🟦️.ts";

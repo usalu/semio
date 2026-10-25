@@ -16,7 +16,6 @@ fn lookup(key:&str,candidates:&[String],page:usize,expected:Option<usize>,cut:Op
 fn exact_key_lookup_matches_portable_opaque_identity_without_heap_work(){
  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔑️lookup/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){let key=row["key"].as_str().unwrap();let candidates:Vec<String>=row["candidates"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_owned()).collect();for page in[row["pageBytes"].as_u64().unwrap()as usize,1,32768]{lookup(key,&candidates,page,row["expected"].as_u64().map(|value|value as usize),None);}}
- eprintln!("[DEBUG] eight exact opaque UTF8 identities pass at three original page widths, denied item/copy/depth unchanged, empty key/missing/prefix/case/Unicode exact, native constructor/advance/drop zero heap");
 }
 /// 📦️ Long common prefixes remain resumable without copied source text or partial-key authority.
 #[test]
@@ -24,5 +23,4 @@ fn exact_key_lookup_long_prefixes_and_cancellation_preserve_originals(){
  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔑️lookup/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let row=&fixture["wide"];let prefix="p".repeat(row["prefixLength"].as_u64().unwrap()as usize);let key=format!("{prefix}{}",row["wanted"].as_str().unwrap());let candidates:Vec<String>=row["suffixes"].as_array().unwrap().iter().map(|value|format!("{prefix}{}",value.as_str().unwrap())).collect();
  for cut in std::iter::once(None).chain(row["cancelCuts"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){lookup(&key,&candidates,row["pageBytes"].as_u64().unwrap()as usize,row["expected"].as_u64().map(|value|value as usize),cut);}
  let mut cursor=ExactKeyCursor::new();let issued=grant(ExactKeyCursor::fixed_copy_bytes()+2);cursor.advance(b"same",Some(b"same"),issued).unwrap();assert!(cursor.demand(b"same",Some(b"xx"),4096).is_err());
- eprintln!("[DEBUG] actual65537-byte common prefix settles exact second original key under paged grants and preserves source/cursor custody at five cancellation frontiers; changed partial candidate refuses");
 }

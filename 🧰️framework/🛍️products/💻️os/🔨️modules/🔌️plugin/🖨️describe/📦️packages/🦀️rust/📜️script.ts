@@ -4,7 +4,7 @@ import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DescriptorBuildScript, DescriptorTestScript } from "../../🏗️component-build/🟦️.ts";
 import { DescribeScript } from "../../🛂️descriptor-emission/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 
 /** 🧪️ Runs the portable source, staging and actual process lifetime proofs for fresh producers. */

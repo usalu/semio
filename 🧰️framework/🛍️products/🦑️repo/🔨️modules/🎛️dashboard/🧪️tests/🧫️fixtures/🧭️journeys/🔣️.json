@@ -19,7 +19,7 @@
     ]
   },
   "widthProbe": {
-    "fixture": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧫️fixtures/📏️text-width/🪟️console/🔣️.json"
+    "fixture": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🧫️fixtures/📏️text-width/🪟️console/🔣️.json"
   },
   "tabPreview": {
     "label": "Commands",
@@ -216,7 +216,7 @@
     "path": "/health",
     "openPrefix": "u",
     "remappedOpenPrefix": "j",
-    "remappedCancelPrefix": "J",
+    "remappedCancelPrefix": "G",
     "restartPrefix": "r",
     "stopPrefix": "c",
     "openComplete": "Ready address opened",

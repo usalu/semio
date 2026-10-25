@@ -1,0 +1,66 @@
+# stage-clean orphan staged=storage-seam-tools/staged/files/w/f6592c22f641.ts map=None
+--- /dev/null
++++ b/staged/storage-seam-tools/staged/files/w/f6592c22f641.ts
+@@ -0,0 +1,34 @@
++import type {ResourceLeaseControl,ResourceLeaseWriterProofV1} from "../../../../../../🔒️leases/🟦️.ts";
++import type {AcceptedPhysicalCleanupV1} from "../../../../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
++import type {NativeFixedPlatformOptionsV1} from "../../../🔌️port/🟦️.ts";
++import type {NativeImageBorrowerV1} from "../../../📥️borrower/🟦️.ts";
++import type {NativeStorageChildFundingV1} from "../../../🌱️birth/🟦️.ts";
++import type {NativeStorageChildRequestV1} from "../../../📜️journal/🟦️.ts";
++import type {NativeStorageCleanupV1,NativeStorageReservationV1} from "../../../🟦️.ts";
++import type {NativeImageCleanupReadV1,NativeImageRetainedCleanupV1,NativeDisposableImageV1} from "../../../🧹️cleanup/♻️retirement/📋️contract/🟦️.ts";
++import type {NativeImageMaintenanceCustodyV1,NativeImageRetirementRequestV1,NativeImageStorageV1,NativeProtectedMaintenanceProviderV1,NativeProtectedParentReadV1} from "../../../🌐️platform/📋️contract/🟦️.ts";
++
++/** 📐️ The volume measurements one backend answers for its own backing file and mount root; the neutral helpers dispatch here by the backing file they are asked about. */
++export interface NativeStorageGeometryV1{
++ attached(image:string,root:string):boolean;
++ filesystemBytes(root:string,declared:number):number;
++ usedBytes(root:string):number;
++ space(root:string,declared:number):Readonly<{bsize:number;bavail:number}>;
++}
++
++/** 🔌️ Every operation the platform facade routes to one backend; both first-party backends implement the same closed list. */
++export interface NativeStorageOperationsV1{
++ open(options:NativeFixedPlatformOptionsV1):Promise<NativeImageStorageV1>;
++ retire(options:NativeFixedPlatformOptionsV1,request:NativeImageRetirementRequestV1):Promise<boolean>;
++ retireWithWriter(options:NativeFixedPlatformOptionsV1,request:NativeImageRetirementRequestV1,proof:ResourceLeaseWriterProofV1):Promise<boolean>;
++ captureCleanup(image:NativeImageStorageV1,body:ResourceLeaseControl,enrollment:AcceptedPhysicalCleanupV1):NativeImageRetainedCleanupV1;
++ withCleanupRead<T>(token:NativeImageRetainedCleanupV1,body:(read:NativeImageCleanupReadV1)=>Promise<T>):Promise<T>;
++ requireClose(image:NativeImageStorageV1):void;
++ withChild<T>(parent:NativeImageStorageV1,input:NativeFixedPlatformOptionsV1,body:(child:NativeImageStorageV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>;
++ withMaintenanceChild<T>(parent:NativeImageStorageV1,custody:NativeImageMaintenanceCustodyV1,input:NativeFixedPlatformOptionsV1,body:(child:NativeImageStorageV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>;
++ withDisposableChild<T>(parent:NativeImageStorageV1,input:NativeFixedPlatformOptionsV1,body:(child:NativeImageStorageV1,control:ResourceLeaseControl,owner:NativeDisposableImageV1)=>Promise<T>):Promise<T>;
++ withFundedChild<T>(parent:NativeImageStorageV1,input:NativeFixedPlatformOptionsV1,funding:NativeStorageChildFundingV1,body:(child:NativeImageStorageV1,reservation:NativeStorageReservationV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>;
++ retireFundedChild(image:NativeImageStorageV1,custody:NativeImageMaintenanceCustodyV1,cleanup:NativeStorageCleanupV1,enrollment:AcceptedPhysicalCleanupV1,request:NativeStorageChildRequestV1):Promise<void>;
++ captureProtectedParent(input:NativeFixedPlatformOptionsV1,value:unknown,owner:NativeImageBorrowerV1,proof:ResourceLeaseWriterProofV1):Promise<NativeProtectedParentReadV1>;
++ captureProtectedMaintenance(input:NativeFixedPlatformOptionsV1,value:unknown,owner:NativeImageBorrowerV1,proof:ResourceLeaseWriterProofV1):Promise<NativeProtectedMaintenanceProviderV1>;
++}
+# stage-clean orphan staged=storage-seam-tools/staged/files/w/map.json map=None
+--- /dev/null
++++ b/staged/storage-seam-tools/staged/files/w/map.json
+@@ -0,0 +1,24 @@
++{
++ "files": {
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧪️tests/🧭️dispatch/🟦️.ts": "3b1c9686b9df.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧪️tests/🧭️dispatch/🧫️fixtures/🔣️.json": "6eec2c9c2110.json",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🛠️hdiutil/🟦️.ts": "7f49b3f54e9a.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🍎️mounted-image/✍️sealing/🟦️.ts": "df6ce058c8a1.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🍎️mounted-image/📐️geometry/🟦️.ts": "64410f64cec8.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🍎️mounted-image/🟦️.ts": "ec4e5a22f425.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📁️directory-partition/🏠️host/🟦️.ts": "da789214f4a8.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📁️directory-partition/📐️geometry/🟦️.ts": "7762222d2b1f.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📁️directory-partition/🟦️.ts": "f435ce2fcdbf.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📋️contract/🔌️operations/🟦️.ts": "f6592c22f641.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📋️contract/🟦️.ts": "e7d01266c035.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧩️builtin/🟦️.ts": "a7bbd534a262.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/⚖️laws/🟦️.ts": "b6715eec25c9.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/⚖️laws/🧫️fixtures/🔣️.json": "f9a9225b07cd.json",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/✅️conformance/🟦️.ts": "71362aa01863.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/🧭️selection/🐍️oracle.py": "b67a32a67260.py",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/🧭️selection/🟦️.ts": "15fa4432e5e8.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧪️tests/🧭️selection/🧫️fixtures/🔣️.json": "4f67fab0118b.json",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧬️schema/🔣️.json": "8692e6d5c8d4.json",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/🧭️selection/🟦️.ts": "e858ad09ada8.ts"
++ }
++}

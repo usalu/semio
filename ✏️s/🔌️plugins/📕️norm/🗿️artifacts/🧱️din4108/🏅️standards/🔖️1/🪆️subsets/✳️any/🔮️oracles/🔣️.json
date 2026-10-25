@@ -69,32 +69,14 @@
       "license": "AGPL-3.0-only",
       "testOnly": true,
       "rationale": "🐍 In-repo Python second implementation of DIN 4108 evaluate numerics (U, S, R, f_Rsi, Glaser masses, n50) comparing Rust CheckReport JSON within ±0.5 %. Entry point: `🔮️oracles/🐍️.py --report`.",
-      "kind": "verified-native-second-implementation",
+      "kind": "cross-semio-implementation",
       "engine": {
         "family": "none",
         "implementation": "in-repository compliance oracle",
         "version": "1"
       },
       "productionReachable": false,
-      "networkDuringExecution": false,
-      "nativeSecondImplementation": {
-        "format": "s.norm.din4108.report",
-        "noThirdPartySurvey": {
-          "ecosystemsSearched": [
-            "python/pypi"
-          ],
-          "candidatesConsidered": []
-        },
-        "subjectImplementationLanguage": "rust",
-        "secondImplementationLanguage": "python",
-        "specificationSource": "DIN 4108-2/3/7; EN ISO 6946",
-        "fixtureCoverage": {
-          "vectors": 2,
-          "capabilitiesCovered": [
-            "din4108-1-compliance"
-          ]
-        }
-      }
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

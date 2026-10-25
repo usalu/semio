@@ -88,9 +88,9 @@ const compilerImports = (path: string, text: string): string[] => {
     if (ts.isIfStatement(node) && node.expression.getText(source) === "import.meta.vitest") { if (node.elseStatement) visit(node.elseStatement); return; }
     if (ts.isImportDeclaration(node) && !typeOnly(node.importClause)) add(node.moduleSpecifier, "static");
     else if (ts.isExportDeclaration(node) && !node.isTypeOnly && !(node.exportClause !== undefined && ts.isNamedExports(node.exportClause) && node.exportClause.elements.length > 0 && node.exportClause.elements.every((element) => element.isTypeOnly))) add(node.moduleSpecifier, "static");
-    else if (ts.isCallExpression(node) && node.arguments.length === 1) {
-      if (node.expression.kind === ts.SyntaxKind.ImportKeyword) add(node.arguments[0], "dynamic");
-      else if (ts.isIdentifier(node.expression) && node.expression.text === "require") add(node.arguments[0], "require");
+    else if (ts.isCallExpression(node)) {
+      if (node.expression.kind === ts.SyntaxKind.ImportKeyword && node.arguments.length >= 1 && node.arguments.length <= 2) add(node.arguments[0], "dynamic");
+      else if (node.arguments.length === 1 && ts.isIdentifier(node.expression) && node.expression.text === "require") add(node.arguments[0], "require");
     }
     ts.forEachChild(node, visit);
   };

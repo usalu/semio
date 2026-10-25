@@ -20,7 +20,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     format!("{}#{}", dialect.to_coordinate(), role.as_str())
 }
 
-/// 🪪️ Inverse of `surface_app_id`; rejects anything not matching the grammar.
+/// 📖️ Inverse of `surface_app_id`; rejects anything not matching the grammar.
 pub fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), String> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
@@ -38,7 +38,7 @@ pub struct AppDefinition {
     pub id: String,
     /// 👁️✏️ Whether this surface may mutate the artifact it is bound to — see `AppRole`.
     pub role: AppRole,
-    /// 🎯️ The dialect coordinate (artifact kind, standard, subset) this surface is bound to — see
+    /// 📕️ The dialect coordinate (artifact kind, standard, subset) this surface is bound to — see
     /// `ArtifactDialect`. Together with `role` this derives the canonical `id` via `surface_app_id`.
     pub dialect: ArtifactDialect,
     /// 🗣️ The app's own display name (e.g. "Puzzle 3D") — manifest-level, locale×terminology-checked,
@@ -55,7 +55,7 @@ pub struct AppDefinition {
     /// `NonEmptyVec` itself.
     pub modes: Modes,
     pub default_mode_id: String,
-    /// 🚧️ See `modes` above — `WindowKinds` is `NonEmptyVec<WindowKindDefinition>`.
+    /// 🪟️ See `modes` above — `WindowKinds` is `NonEmptyVec<WindowKindDefinition>`.
     pub window_kinds: WindowKinds,
     /// 🕹️ The app-wide action roster: every action dispatchable in ANY window of this app that no
     /// window kind claims as its own, including the framework-injected History/Clipboard verbs and
@@ -83,7 +83,7 @@ pub struct AppDefinition {
     #[serde(default)]
     #[value(default)]
     pub commands: Vec<CommandDefinition>,
-    /// 🕹️ The interaction domains (hover + selection) this app exposes (referenced by
+    /// 🖱️ The interaction domains (hover + selection) this app exposes (referenced by
     /// `WindowKindDefinition.interactions`) — see `crate::InteractionDefinition`.
     #[serde(default)]
     #[value(default)]
@@ -94,7 +94,7 @@ pub struct AppDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub default_layout: Option<WindowLayout>,
-    /// 🗣️ Terminology ids this app declares beyond the implicit "native" default.
+    /// 🔑️ Terminology ids this app declares beyond the implicit "native" default.
     #[serde(default)]
     #[value(default)]
     pub terminologies: Vec<String>,
@@ -120,7 +120,7 @@ pub struct AppDefinition {
     #[serde(default)]
     #[value(default)]
     pub media_inputs: Vec<MediaPortSpec>,
-    /// 🔌️ This app's workflow output ports — see `crate::MediaPortSpec`.
+    /// 🖨️ This app's workflow output ports — see `crate::MediaPortSpec`.
     #[serde(default)]
     #[value(default)]
     pub media_outputs: Vec<MediaPortSpec>,
@@ -134,12 +134,12 @@ pub struct AppDefinition {
     #[serde(default)]
     #[value(default)]
     pub config: ConfigSpec,
-    /// 🎛️ This app's typed binary command grammar — see `crate::CommandGrammar`. Empty until per-app
+    /// ⌨️ This app's typed binary command grammar — see `crate::CommandGrammar`. Empty until per-app
     /// waves populate it.
     #[serde(default)]
     #[value(default)]
     pub command_grammar: CommandGrammar,
-    /// 🔌️ This app's typed media I/O surface — see `crate::AppIo`. Not yet populated; `media_inputs`/
+    /// 📺️ This app's typed media I/O surface — see `crate::AppIo`. Not yet populated; `media_inputs`/
     /// `media_outputs`/`artifact_kinds` above remain the live source of truth until later waves migrate
     /// onto this.
     #[serde(default)]

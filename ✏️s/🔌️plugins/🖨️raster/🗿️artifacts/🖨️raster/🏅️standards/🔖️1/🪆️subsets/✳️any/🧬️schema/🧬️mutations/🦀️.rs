@@ -84,7 +84,7 @@ pub fn retire_raster_mutation(mutation: RasterMutation) {
 /// `Mutation::inverse`.
 pub fn inverse_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
     Ok({
-    protocol::Mutation::inverse(mutation, snapshot)?
+    protocol::ColdMutation::inverse(mutation, snapshot)?
 
     })
 }

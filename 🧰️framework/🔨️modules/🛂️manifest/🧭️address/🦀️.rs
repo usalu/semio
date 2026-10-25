@@ -31,7 +31,7 @@ pub enum Platform {
     Linux,
 }
 
-/// ⌨️ One command chord, optionally restricted to a host platform.
+/// 💻️ One command chord, optionally restricted to a host platform.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -141,7 +141,7 @@ impl From<String> for UtilityRef {
 
 //#endregion 🔖️Utilities
 //#region 🔖️Commands
-/// 📍️ Hierarchical owner of a command definition.
+/// 🏠️ Hierarchical owner of a command definition.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum CommandOwnerAddress {
@@ -151,7 +151,7 @@ pub enum CommandOwnerAddress {
     Mode { plugin_id: String, app_id: String, mode_id: String },
 }
 
-/// 📍️ Fully qualified address of one command.
+/// 📮️ Fully qualified address of one command.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct CommandAddress {
@@ -159,7 +159,7 @@ pub struct CommandAddress {
     pub command_id: String,
 }
 
-/// 📨️ One addressed command invocation with named DSL-value arguments — see
+/// 🌱️ One addressed command invocation with named DSL-value arguments — see
 /// `ActionInvocation`'s docstring for why `arguments` is keyed to `DslValue`, not
 /// `serde_json::Value`.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
@@ -226,7 +226,7 @@ pub fn is_element_id(id: &str) -> bool {
     })
 }
 
-/// 🆔️ Normalizes arbitrary input (a domain object's own id, a free-text label, an already
+/// 📥️ Normalizes arbitrary input (a domain object's own id, a free-text label, an already
 /// grammar-safe word) into a single camelCase element-id segment: splits on `-`/`_`/` `/`.`, lowercases
 /// the very first character, capitalizes the first character after each separator, and drops any other
 /// non-alphanumeric character. Idempotent on input that is already a valid segment. Used as the last
@@ -255,7 +255,7 @@ pub fn element_id_segment(raw: &str) -> String {
     segment
 }
 
-/// 🆔️ Derives a child element id by suffixing `parent` with one or more segments, each normalized
+/// 🧱️ Derives a child element id by suffixing `parent` with one or more segments, each normalized
 /// through `element_id_segment` — the hierarchical mechanism every composite element uses to name its
 /// parts instead of a context/registry: `child_element_id("ui.chat", &["send"])` → `"ui.chat.send"`.
 pub fn child_element_id(parent: &str, segments: &[&str]) -> String {
@@ -267,25 +267,25 @@ pub fn child_element_id(parent: &str, segments: &[&str]) -> String {
     id
 }
 
-/// 🆔️ Element id of the app shell's navbar — singular, shell-owned chrome.
+/// ⬆️ Element id of the app shell's navbar — singular, shell-owned chrome.
 pub const UI_NAVBAR_ELEMENT_ID: &str = "ui.navbar";
 
-/// 🆔️ Element id of the app shell's footer — singular, shell-owned chrome.
+/// ⬇️ Element id of the app shell's footer — singular, shell-owned chrome.
 pub const UI_FOOTER_ELEMENT_ID: &str = "ui.footer";
 
-/// 🆔️ Element id of a window kind's body — `framework.window.{camelCased kind id}`.
+/// 🪟️ Element id of a window kind's body — `framework.window.{camelCased kind id}`.
 pub fn window_element_id(kind_id: &str) -> String {
     child_element_id("framework.window", &[kind_id])
 }
 
-/// 🆔️ Element id of a panel tab's uncollapsed panel body. `tab_id` is already a dotted
+/// 📑️ Element id of a panel tab's uncollapsed panel body. `tab_id` is already a dotted
 /// `PanelTabDefinition.id()` (e.g. `puzzle.catalogue`) — appended verbatim rather than through
 /// `child_element_id`, which would collapse its dots into camelCase.
 pub fn panel_tab_element_id(tab_id: &str) -> String {
     format!("framework.panelTab.{tab_id}")
 }
 
-/// 🆔️ Alias id of the first draggable tree row inside a panel tab (document order within that
+/// ⏮️ Alias id of the first draggable tree row inside a panel tab (document order within that
 /// uncollapsed panel) — stamped via `data-element-alias` since no single tree row has a stable semantic
 /// id at authoring time. Used to teach catalogue drag-and-drop without hardcoding a kind id.
 pub fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {

@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
-import { basename, resolve } from "node:path";
+import { basename, dirname, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import * as TOML from "@iarna/toml";
 import { classifyPackageSource } from "../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
 import { semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
-type Move = Readonly<{ source: string; owner: string; kind: "rust" | "typescript"; anchor: string; consumer: string; reference: string }>;
+type Move = Readonly<{ source: string; owner: string; kind: "rust" | "typescript"; anchor: string; consumer: string; reference: string; referenceManifest?: string; referenceExport?: string }>;
 type NodePackage = Readonly<{ manifest: string; entry: string; name: string; maximumEntryLines: number; testOwner: string; vitestConfig: string }>;
 type Fixture = Readonly<{
   version: number;
@@ -38,7 +38,15 @@ describe("framework root source topology", () => {
       expect(existsSync(owner), row.owner).toBe(true);
       expect(basename(owner), row.owner).toBe(basenames[row.kind]);
       expect(readFileSync(owner, "utf8"), row.anchor).toContain(row.anchor);
-      expect(source, row.owner).toContain(row.reference);
+      if (row.referenceManifest) {
+        expect(row.referenceExport, row.owner).toBeDefined();
+        const manifestPath = resolve(repoRoot, row.referenceManifest), exported = (JSON.parse(readFileSync(manifestPath, "utf8")) as { readonly exports?: Readonly<Record<string, string>> }).exports?.[row.referenceExport!];
+        expect(exported, row.owner).toBeDefined();
+        const target = resolve(dirname(manifestPath), exported!);
+        expect(existsSync(target), row.owner).toBe(true);
+        expect(readFileSync(target, "utf8"), row.owner).toContain(relative(dirname(target), owner).replaceAll("\\", "/"));
+      }
+      else expect(source, row.owner).toContain(row.reference);
       expect(existsSync(resolve(repoRoot, row.consumer)), row.consumer).toBe(true);
     }
   });

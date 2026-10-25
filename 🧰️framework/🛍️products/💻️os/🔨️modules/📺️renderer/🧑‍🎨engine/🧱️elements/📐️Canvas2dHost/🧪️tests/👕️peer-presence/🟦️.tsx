@@ -87,7 +87,6 @@ describe("Canvas2dHost peer presence", () => {
     expect(right.view.container.querySelector('[data-peer-actor="peer-1"]')).toBeNull();
     right.view.unmount();
     for (const document of documents) { clearArtifactPresenceRosterV1(document); publishLocalPresenceActorV1(document, null); }
-    console.log("[DEBUG] mounted Canvas2d presence: exact document/window cameras and peer cursors isolated; foreign same-id owner survived first close; owner retirement cleared publication");
   });
 
   it("publishes the author's pointer at the fixture's drawing position with the author's camera", () => {

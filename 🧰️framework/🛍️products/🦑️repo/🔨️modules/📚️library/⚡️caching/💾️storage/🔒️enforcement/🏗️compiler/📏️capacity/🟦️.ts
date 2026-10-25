@@ -1,14 +1,14 @@
 import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withRetainedOperationsV1,withRetainedOperationV1,requireRetainedOperationLifetimeV1,requireRetainedOperationFrameV1,type RetainedOperationLifetimeV1}from"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🟦️.ts";
-import{withNativeImageTerminalCloseV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🟦️.ts";
+import{withRetainedOperationsV1,withRetainedOperationV1,requireRetainedOperationLifetimeV1,requireRetainedOperationFrameV1,type RetainedOperationLifetimeV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🟦️.ts";
+import{withNativeImageTerminalCloseV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🟦️.ts";
 import{AsyncLocalStorage}from"node:async_hooks";
 import{nativeStatfsV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{resolve}from"node:path";
 import{randomBytes}from"node:crypto";
 import{acquireQueuedResourceLease,acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import type{NativeImageStorageV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import type{NativeImageStorageV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import{setTimeout as sleepV1}from"node:timers/promises";
+import{waitingDelayV1 as sleepV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import{resolveLanguageV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
 import{CATALOG_LANGUAGES_V1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
@@ -53,18 +53,19 @@ export function withCompilerWorkspaceBorrowV1<T>(storage:NativeStorageReservatio
 /** 🎟️ Enrolls an existing writer before waiting, then checks real headroom for the exact retained allocation. */
 export function withCompilerWorkspaceWriteV1<T>(storage:NativeStorageReservationV1,leaseDirectory:string,control:ResourceLeaseControl,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{const owner=workspaceOwner(storage,control),current=writers.getStore(),write=(actual:ResourceLeaseControl)=>withCompilerWorkspaceBorrowV1(storage,actual,phase=>withCompilerInitialHeadroomV1({root:storage.backing.root,maximumPhysicalBytes:storage.backing.maximumPhysicalBytes,recheck:storage.recheck},leaseDirectory,phase,storage.allocation.bytes,{version:1,wait:true},body,owner.recover));return current?.root===owner.root?writerOperation(current,control,write):write(control);}
 
-/** 🏪️ Admits free headroom under a SHARED writer custody, so concurrent compiles never wait for each other, and escalates to an exclusive custody only to recover missing headroom; the body then runs shared. Cargo compiles use this; maintenance keeps the exclusive custody of `withCompilerInitialHeadroomV1`. */
+/** 🟢️ Admits free headroom under a SHARED writer custody, so concurrent compiles never wait for each other, and escalates to an exclusive custody only to recover missing headroom and only when it is free at once (never queued: a queued exclusive request in front of long shared holders convoyed the whole machine for an hour); otherwise the admission loop waits and retries; the body then runs shared. Cargo compiles use this; maintenance keeps the exclusive custody of `withCompilerInitialHeadroomV1`. */
 export async function withCompilerSharedHeadroomV1<T>(image:Pick<NativeImageStorageV1,"root"|"maximumPhysicalBytes"|"recheck">,leaseDirectory:string,control:ResourceLeaseControl,requiredBytes:number,request:Readonly<{version:1;wait:boolean}>,body:(control:ResourceLeaseControl)=>Promise<T>,recover?:()=>Promise<void>,measure?:()=>Promise<number>):Promise<T>{
  const available=measure??(async():Promise<number>=>{const fs=await nativeStatfsV1(image.root,{bigint:true});return Number(fs.bavail*fs.bsize);});
  await admitCompilerHeadroomV1(image,control,requiredBytes,request,async():Promise<HeadroomAdmissionV1<void>>=>{
   let availableBytes=0;const enough=await withCompilerWriterCustodyV1(image,leaseDirectory,control,{...request,mode:"shared"},async actual=>{checkResourceLeaseControl(actual);availableBytes=await available();return compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes});});
   if(enough)return{admitted:true,value:undefined};
-  const recovered=await withCompilerWriterCustodyV1(image,leaseDirectory,control,{...request,mode:"exclusive"},async actual=>{checkResourceLeaseControl(actual);availableBytes=await available();if(!compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes})&&recover){await recover();await image.recheck();availableBytes=await available();}checkResourceLeaseControl(actual);return compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes});});
+  let recovered=false;
+  try{recovered=await withCompilerWriterCustodyV1(image,leaseDirectory,control,{...request,wait:false,mode:"exclusive"},async actual=>{checkResourceLeaseControl(actual);availableBytes=await available();if(!compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes})&&recover){await recover();await image.recheck();availableBytes=await available();}checkResourceLeaseControl(actual);return compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes});});}catch(error){if(!(error instanceof Error)||!error.message.startsWith("Resource lease timed out: "))throw error;}
   return recovered?{admitted:true,value:undefined}:{admitted:false,availableBytes};
  });
  return withCompilerWriterCustodyV1(image,leaseDirectory,control,{...request,mode:"shared"},body);
 }
-/** 🎟️ Like `withCompilerWorkspaceWriteV1` for compilers that only grow private lanes and the content-addressed cache: concurrent compiles of one image hold the writer custody together. */
+/** 📝️ Like `withCompilerWorkspaceWriteV1` for compilers that only grow private lanes and the content-addressed cache: concurrent compiles of one image hold the writer custody together. */
 export function withCompilerWorkspaceSharedWriteV1<T>(storage:NativeStorageReservationV1,leaseDirectory:string,control:ResourceLeaseControl,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{const owner=workspaceOwner(storage,control),current=writers.getStore(),write=(actual:ResourceLeaseControl)=>withCompilerWorkspaceBorrowV1(storage,actual,phase=>withCompilerSharedHeadroomV1({root:storage.backing.root,maximumPhysicalBytes:storage.backing.maximumPhysicalBytes,recheck:storage.recheck},leaseDirectory,phase,storage.allocation.bytes,{version:1,wait:true},body,owner.recover));return current?.root===owner.root?writerOperation(current,control,write):write(control);}
 
 /** 🔏️ Requires the actual live shared compiler writer before automatic physical maintenance can start. */

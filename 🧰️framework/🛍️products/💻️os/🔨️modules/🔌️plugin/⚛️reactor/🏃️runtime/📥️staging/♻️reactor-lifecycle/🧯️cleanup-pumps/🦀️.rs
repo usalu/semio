@@ -289,7 +289,7 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
             }
         };
         runtime_close_phase(&state, 12);
-        #[cfg(test)]
+        #[cfg(any(test, feature = "cleanup-probes"))]
         state.physical_close_calls.fetch_add(1, Ordering::SeqCst);
         let progress = (|| -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
             let identity = MountedOwnerIdentityV1 { instance_id: state.instance_id, operation: cx.operation(), generation: cx.generation() };
@@ -375,11 +375,11 @@ fn runtime_close_pending_authority(reason: &'static str) {
 static RUNTIME_CLOSE_PENDING_AUTHORITY_TURNS: AtomicU64 = AtomicU64::new(0);
 #[doc(hidden)]
 pub fn runtime_close_phase<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, phase: usize) {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "cleanup-probes"))]
     if let Some(now) = semio_framework_job::default_now_us() {
         state.callback_phase_us[phase].store(now.saturating_sub(state.callback_phase_started_us.load(Ordering::SeqCst)), Ordering::SeqCst);
     }
-    #[cfg(not(test))]
+    #[cfg(not(any(test, feature = "cleanup-probes")))]
     let _ = (state, phase);
 }
 
@@ -431,15 +431,15 @@ pub fn plugin_begin_instance_close<PA: PluginApp + 'static>(runtime: &PluginRunt
         stall_since_us: AtomicU64::new(0),
         stall_credit_spent_us: AtomicU64::new(0),
         last_callback_elapsed_us: AtomicU64::new(0),
-        #[cfg(test)]
+        #[cfg(any(test, feature = "cleanup-probes"))]
         last_fault: std::sync::Mutex::new([0; 256]),
-        #[cfg(test)]
+        #[cfg(any(test, feature = "cleanup-probes"))]
         last_fault_origin: AtomicU8::new(0),
-        #[cfg(test)]
+        #[cfg(any(test, feature = "cleanup-probes"))]
         physical_close_calls: AtomicU64::new(0),
-        #[cfg(test)]
+        #[cfg(any(test, feature = "cleanup-probes"))]
         callback_phase_started_us: AtomicU64::new(0),
-        #[cfg(test)]
+        #[cfg(any(test, feature = "cleanup-probes"))]
         callback_phase_us: std::array::from_fn(|_| AtomicU64::new(0)),
     });
     #[cfg(test)]

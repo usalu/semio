@@ -172,7 +172,7 @@ fn parse_child_selection(field: &syn::Field) -> syn::Result<(syn::Ident, String)
     Err(syn::Error::new_spanned(field, "ArtifactChild field requires an explicit #[child(kind = \"…\")] or #[child(capability = \"…\")]"))
 }
 
-/// 📎️ `#[link_slot(roles("base", "material"))]` — OPTIONAL on `ArtifactLink` / `Vec<ArtifactLink>` fields,
+/// 🔗️ `#[link_slot(roles("base", "material"))]` — OPTIONAL on `ArtifactLink` / `Vec<ArtifactLink>` fields,
 /// empty when absent. Named `link_slot`, NOT `link` — `link` is a real Rust built-in attribute (extern
 /// block FFI linking) and colliding with it is a hard `E0659`/`E0539`/`E0459` compile error, not merely
 /// a lint, once the attribute is actually applied to a field.

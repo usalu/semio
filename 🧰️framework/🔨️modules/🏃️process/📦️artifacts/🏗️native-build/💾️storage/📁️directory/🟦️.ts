@@ -62,7 +62,7 @@ export function probeNativeDirectoryCaseSensitivityV1(directory:string):boolean{
  const base=join(directory,".case-"+randomBytes(4).toString("hex"));mkdirSync(base,{mode:0o700});
  try{writeFileSync(join(base,protocol.probe[0]!),"");try{writeFileSync(join(base,protocol.probe[1]!),"",{flag:"wx"});}catch(error){if((error as NodeJS.ErrnoException).code==="EEXIST")return false;throw error;}return readdirSync(base).length===2;}finally{rmSync(base,{recursive:true,force:true});}
 }
-/** 🔠️ Proves that a fresh volume directory beneath the host can hold case-sensitive content once the platform prepared it. */
+/** 📂️ Proves that a fresh volume directory beneath the host can hold case-sensitive content once the platform prepared it. */
 export function probeNativeDirectoryCaseCapabilityV1(directory:string,port:NativeDirectoryPlatformPortV1=nativeDirectorySystemPortV1()):boolean{
  const scratch=join(directory,".capability-"+randomBytes(4).toString("hex"));mkdirSync(scratch,{mode:0o700});
  try{port.prepareVolume(scratch);return probeNativeDirectoryCaseSensitivityV1(scratch);}finally{rmSync(scratch,{recursive:true,force:true});}
@@ -119,7 +119,7 @@ export function readNativeDirectoryAnchorFileV1(directory:string):Readonly<{file
 
 /** 🛟️ Reports whether a journaled swap was interrupted beside this partition. */
 export function nativeDirectorySwapPendingV1(directory:string,port:NativeDirectoryPlatformPortV1=nativeDirectorySystemPortV1()):boolean{return port.pending(nativeDirectoryLayoutV1(directory).directory);}
-/** 🛟️ Completes or rolls back an interrupted swap from its intent receipt; only the exclusive lease holder may call it. */
+/** 📁️ Completes or rolls back an interrupted swap from its intent receipt; only the exclusive lease holder may call it. */
 export function recoverNativeDirectoryV1(directory:string,port:NativeDirectoryPlatformPortV1=nativeDirectorySystemPortV1()):NativeDirectoryRecoveryV1{return port.recover(nativeDirectoryLayoutV1(directory).directory);}
 
 /** 🎯️ Derives the state from which of root and volume still holds the original empty placeholder named by the anchor. */

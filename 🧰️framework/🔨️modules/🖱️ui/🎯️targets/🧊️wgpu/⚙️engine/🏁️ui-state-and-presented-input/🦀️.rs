@@ -4,7 +4,7 @@ use super::*;
 
 // #region engine
 //#region 🔖️Ui
-/// 🧵️ Assembles the individually-milestoned retained modules into the one façade a host drives per
+/// 🖥️ Assembles the individually-milestoned retained modules into the one façade a host drives per
 /// tick: `apply_tree` runs `reconcile`, `frame` runs `flex` (dirty-gated) then `paint` then hands
 /// `scene_slots` to an optional `SceneHost`, `dispatch_event` runs `events::EventRouter`, and
 /// `needs_frame` reads the same dirty flags `frame` itself gates on. One `UiWindow` per window id
@@ -194,7 +194,7 @@ impl Ui {
         Some((node, self.windows.get(window_id)?.tree.absolute_rect(node)?))
     }
 
-    /// 🏁 Swaps bounded move-owned tree/router revisions only after the matching pixels are accepted.
+    /// ✅️ Swaps bounded move-owned tree/router revisions only after the matching pixels are accepted.
     pub fn acknowledge_presented_input(&mut self, witness: u64) -> bool {
         if self.windows.values().any(|window|window.presented_source.is_some()){return false}
         if !self.presented_input_candidate_matches(witness) {

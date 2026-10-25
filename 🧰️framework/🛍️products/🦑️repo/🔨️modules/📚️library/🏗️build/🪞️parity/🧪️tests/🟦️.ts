@@ -1,6 +1,6 @@
 /** 🪞️ Build parity: the fixture is the contract; Ajv, an independent Python implementation, Bun.Glob, diff and shasum are the oracles. */
 import {test,expect} from "bun:test";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";

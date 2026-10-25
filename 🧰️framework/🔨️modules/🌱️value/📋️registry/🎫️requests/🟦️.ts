@@ -41,7 +41,7 @@ export class ContentRequestKeyCursor{
  key():Readonly<Uint8Array>|undefined{return this.#key;}
  close(grant:RequestWorkGrant):{ready:boolean;progress:RequestWorkProgress}{if(!this.#hash)return{ready:true,progress:emptyProgress()};const bytes=2912+(this.#lengths?.byteLength??0)+(this.#prefix?.byteLength??0)+(this.#key?.byteLength??0);if(grant.maximumItems<1||grant.maximumDepth<1||grant.maximumReleaseBytes<bytes)return{ready:false,progress:emptyProgress()};this.#hash=undefined;this.#lengths=undefined;this.#prefix=undefined;this.#key=undefined;return{ready:true,progress:{...emptyProgress(),copiedItems:1,releasedBytes:bytes}};}
 }
-/** 🧾️ Source authority remains exact after progress presentation is acknowledged. */
+/** 🌿️ Source authority remains exact after progress presentation is acknowledged. */
 export type RequestSourceVersion={baseRevision:number;generation:number;canonicalRevision:string};
 /** 🚦️ Compact terminal metadata lends no worker fault payload. */
 export type RequestTerminalReceipt={source:RequestSourceVersion;job:number;kind:"validated"|"faulted"|"cancelled"};

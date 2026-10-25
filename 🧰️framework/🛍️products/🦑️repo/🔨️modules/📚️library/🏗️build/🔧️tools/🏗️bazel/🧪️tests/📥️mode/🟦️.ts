@@ -8,7 +8,7 @@ import schema from "./🧬️schema.json";
 import {createNativeBuildCallerCapabilitiesV1} from "../../../../📥️caller/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-const api=await import("../../📜️script.ts"),modeOf=(task:{definition:{execution:{env?:Record<string,string>}}})=>task.definition.execution.env?.SEMIO_BUILD_MODE??null;
+const executor=await import("../../🎬️executor/🟦️.ts"),api=await import("../../📜️script.ts"),modeOf=(task:{definition:{execution:{env?:Record<string,string>}}})=>task.definition.execution.env?.SEMIO_BUILD_MODE??null;
 
 test("Bazel mode fixtures are closed",()=>{
  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);
@@ -67,10 +67,10 @@ for(const row of corpus.authority)test(`Bazel task environment ${row.id}: the ca
  const root=process.cwd(),capabilities=createNativeBuildCallerCapabilitiesV1(root,["run","fixture:publish"],"bazel",{SEMIO_BUILD_MODE:row.caller}),task={id:"fixture:publish",project:"fixture",target:"publish",root:"fixture",label:"t_0000000000000000",dependencies:[],args:[],...(row.configuration===null?{}:{configuration:row.configuration}),definition:{execution:{kind:"command",command:"repo ./📜️script.ts publish"}}} as any;
  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:mode-axis",maximumElapsedMilliseconds:30000},capabilities,Date.now()),async invocation=>{
   if(row.refused){
-   expect(()=>api.issueBazelTaskEnvironmentV1(root,invocation,task,{})).toThrow("Conflicting build modes");
-   expect(()=>api.issueBazelTaskEnvironmentV1(root,invocation,task,{})).toThrow(corpus.refusals["Conflicting build modes"]);
+   expect(()=>executor.issueBazelTaskEnvironmentV1(root,invocation,task,{})).toThrow("Conflicting build modes");
+   expect(()=>executor.issueBazelTaskEnvironmentV1(root,invocation,task,{})).toThrow(corpus.refusals["Conflicting build modes"]);
    return;
   }
-  expect(api.issueBazelTaskEnvironmentV1(root,invocation,task,{}).SEMIO_BUILD_MODE).toBe(row.caller);
+  expect(executor.issueBazelTaskEnvironmentV1(root,invocation,task,{}).SEMIO_BUILD_MODE).toBe(row.caller);
  });
 });

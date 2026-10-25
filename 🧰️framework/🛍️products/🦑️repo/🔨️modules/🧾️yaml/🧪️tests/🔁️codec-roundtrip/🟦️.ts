@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import { parse, stringify } from "yaml";
-import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🎯️Canonical

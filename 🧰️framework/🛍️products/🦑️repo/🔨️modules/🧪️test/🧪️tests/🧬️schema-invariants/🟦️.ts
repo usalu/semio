@@ -75,7 +75,7 @@ function writeCatalog(root: string, scopes: Record<string, CatalogScopeRow>, dup
 
 const ARTIFACT_DEF = { type: "object", additionalProperties: false, required: ["title"], properties: { title: { type: "string" } } } as const;
 
-/** 🧪️ The repository every resolution case resolves against: one writer scope, four formats. */
+/** 🦑️ The repository every resolution case resolves against: one writer scope, four formats. */
 function resolutionRepo(options: { declareResolution?: boolean; omitCatalog?: boolean; duplicateScopeId?: string; aliasScopeId?: string; fixtureOwnedScope?: boolean; dropRustExport?: boolean; rootExport?: boolean } = {}): string {
   const root = scaffold(options.declareResolution !== false);
   if (options.fixtureOwnedScope === true) {
@@ -143,13 +143,13 @@ function graphqlModule(exported: string, keyword: CatalogCaseOptions["graphqlKey
   }
 }
 
-/** 🧬️ The `$id` of the one mutation leaf the aggregate cases reference, derived by the rule under test. */
+/** 🍁️ The `$id` of the one mutation leaf the aggregate cases reference, derived by the rule under test. */
 const LEAF_SEMANTIC_KIND = "create-artifact";
 const LEAF_SCOPE_ID = "s.writer.writer.mutation.create-artifact";
 const LEAF_OWNER = `${WRITER_OWNER}/🧬️schema/🧬️mutations/🌱️create`;
 const AGGREGATE_ID = "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutations.json";
 
-/** 🧪️ The repository every catalog case is judged against: two scopes, five formats each. */
+/** 📖️ The repository every catalog case is judged against: two scopes, five formats each. */
 function catalogRepo(options: CatalogCaseOptions = {}): string {
   const root = scaffold(true);
   const properties: Record<string, unknown> = { title: { type: "string" } };

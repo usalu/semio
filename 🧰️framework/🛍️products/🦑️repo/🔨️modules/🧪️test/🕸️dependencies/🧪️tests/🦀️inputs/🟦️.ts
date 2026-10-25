@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, rmSyn
 import { dirname, join, relative } from "node:path";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
-import { testMethodV1, testRecordV1 } from "@semio-tech/repo-lib/testing";
+import { testMethodV1, testRecordV1 } from "@semio-tech/repo-lib/test-values";
 
 /** 🦀️ Compares inferred test ownership with Cargo's local package graph and mounted compiler inputs. */
 export async function testInferredNativeInputs(workspace: string, output: string): Promise<void> {

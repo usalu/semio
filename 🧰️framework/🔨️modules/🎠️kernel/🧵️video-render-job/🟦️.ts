@@ -1,4 +1,4 @@
-/** 🧵️ The video render job: encoder tier, job events, outcomes and rows, and the ledger that applies them in order.
+/** 🎥️ The video render job: encoder tier, job events, outcomes and rows, and the ledger that applies them in order.
  *
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
@@ -16,7 +16,7 @@ export type VideoRenderJobOutcome =
   | { readonly status: "refused"; readonly code: string }
   | { readonly status: "failed"; readonly reason: string };
 
-/** 🧵️ One fact of a host video render job's life — Rust `kernel::VideoRenderJobEvent` (tagged by `kind`). The task list
+/** 📹️ One fact of a host video render job's life — Rust `kernel::VideoRenderJobEvent` (tagged by `kind`). The task list
  * is the fold of these ({@link VideoRenderJobLedger}); nothing mutates it directly. */
 export type VideoRenderJobEvent =
   | { readonly kind: "started"; readonly job: number; readonly owner: string; readonly filename: string; readonly frames: number; readonly atMs: number }
@@ -44,7 +44,7 @@ export class VideoRenderJobLedger {
   #lastJob = 0;
   #running: readonly VideoRenderJobRow[] = [];
 
-  /** 📒️ Folds a whole log; a refusal names the index of the first event refused. */
+  /** 🪵️ Folds a whole log; a refusal names the index of the first event refused. */
   static fold(events: readonly VideoRenderJobEvent[]): VideoRenderJobLedger | { readonly index: number; readonly error: VideoRenderJobEventErrorCode } {
     const ledger = new VideoRenderJobLedger();
     for (const [index, event] of events.entries()) {
@@ -79,7 +79,7 @@ export class VideoRenderJobLedger {
     return null;
   }
 
-  /** 🧵️ Every running job, in start order. */
+  /** ▶️ Every running job, in start order. */
   running(): readonly VideoRenderJobRow[] {
     return this.#running;
   }

@@ -7,11 +7,12 @@
   "taxonomy",
   "freeze",
   "freezeErrors",
+  "interfaceOwners",
   "classify",
   "testDomain",
   "composition",
   "goModule",
-  "lockMismatches"
+  "oracleClaims"
  ],
  "properties": {
   "version": {
@@ -510,69 +511,63 @@
    },
    "minItems": 1
   },
-  "lockMismatches": {
+  "oracleClaims": {
    "type": "array",
    "items": {
     "type": "object",
     "additionalProperties": false,
     "required": [
      "name",
-     "manifests",
-     "workspaces",
+     "manifest",
      "expected"
     ],
     "properties": {
      "name": {
       "type": "string"
      },
-     "manifests": {
-      "type": "array",
-      "items": {
-       "type": "array",
-       "items": {}
-      }
+     "manifest": {
+      "type": "string"
      },
-     "workspaces": {},
      "expected": {
       "type": "array",
       "items": {
-       "type": "object",
-       "additionalProperties": false,
-       "required": [
-        "kind",
-        "manifest"
-       ],
-       "properties": {
-        "dependency": {
-         "type": "string"
-        },
-        "kind": {
-         "enum": [
-          "invalid-lockfile",
-          "missing-in-lock",
-          "stale-in-lock",
-          "version-mismatch",
-          "workspace-missing"
-         ]
-        },
-        "lockVersion": {
-         "type": "string"
-        },
-        "manifest": {
-         "type": "string"
-        },
-        "manifestVersion": {
-         "type": "string"
-        },
-        "section": {
-         "type": "string"
-        }
-       }
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "minItems": 2,
+       "maxItems": 2
       }
      }
     }
    },
    "minItems": 1
+  },
+  "interfaceOwners": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "ecosystem",
+     "directory"
+    ],
+    "properties": {
+     "ecosystem": {
+      "enum": [
+       "rust",
+       "js",
+       "go",
+       "python",
+       "dotnet"
+      ]
+     },
+     "directory": {
+      "type": "string",
+      "minLength": 1
+     }
+    }
+   }
   }
  }
 }

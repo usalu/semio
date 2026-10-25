@@ -163,7 +163,7 @@ test("registers leading grapheme through its closed canonical route", async () =
   expect(project.targets[registration.target]).toBeDefined();
   expect(project.targets[registration.target]).toMatchObject({ executor: "repo:script", options: { cwd: packageRelative, command: `repo ./📜️script.ts test ${registration.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
-  expect(manifest.scripts[registration.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
+  expect(manifest.scripts[registration.target]).toBe(`repo run @semio-tech/repo-lib:${registration.target}`);
   const family = readRegisteredTestRoute(repoRoot, registration.command), syntax = ts.createSourceFile(family.path, family.text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), branches: ts.IfStatement[] = [];
   const visit = (node: ts.Node): void => { if (ts.isIfStatement(node) && node.expression.getText(syntax) === `segments[0] === "${registration.command}"`) branches.push(node); ts.forEachChild(node, visit); };
   visit(syntax);

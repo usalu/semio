@@ -21,36 +21,36 @@ pub struct DetectionVector {
     pub expected_argv: Option<Vec<String>>,
 }
 
-/// 🧭️ The runner-detection fixture.
+/// 🧫️ The runner-detection fixture.
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 pub struct DetectionVectors {
     /// 🌍️ The world the vectors probe.
     #[serde(default)]
     pub snapshot: FilesystemSnapshot,
-    /// 🧭️ The vectors.
+    /// 🧮️ The vectors.
     #[serde(default)]
     pub vectors: Vec<DetectionVector>,
 }
 
-/// 🗺️ One invocation-planning vector.
+/// 🧩️ One invocation-planning vector.
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 pub struct PlanningVector {
-    /// 🏷️ Scenario-local id.
+    /// 🌐️ Scenario-local id.
     pub id: String,
     /// 🔭️ The scope to plan.
     pub scope: TestScope,
-    /// 🗺️ The plan the scope must produce.
+    /// 🗓️ The plan the scope must produce.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expected: Option<InvocationPlan>,
 }
 
-/// 🗺️ The invocation-planning fixture.
+/// 🍱️ The invocation-planning fixture.
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 pub struct PlanningVectors {
-    /// 🌍️ The world the scopes are planned against.
+    /// 📸️ The world the scopes are planned against.
     #[serde(default)]
     pub snapshot: FilesystemSnapshot,
-    /// 🗺️ The vectors.
+    /// 🔢️ The vectors.
     #[serde(default)]
     pub vectors: Vec<PlanningVector>,
 }
@@ -58,7 +58,7 @@ pub struct PlanningVectors {
 /// 🧬️ The scope-identifier fixture.
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 pub struct SelectorVectors {
-    /// 🧬️ Raw selectors as a caller would type them.
+    /// ⌨️ Raw selectors as a caller would type them.
     #[serde(default)]
     pub selectors: Vec<String>,
 }
@@ -66,7 +66,7 @@ pub struct SelectorVectors {
 /// 📊️ One recorded runner report.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct TranscriptVector {
-    /// 🏷️ Scenario-local id.
+    /// 🆔️ Scenario-local id.
     pub id: String,
     /// 🏭️ The runner that produced it.
     pub runner: Runner,
@@ -74,10 +74,10 @@ pub struct TranscriptVector {
     pub output: ProcessOutput,
 }
 
-/// 📊️ The result-parsing fixture.
+/// 📈️ The result-parsing fixture.
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 pub struct TranscriptVectors {
-    /// 📊️ The vectors.
+    /// 📋️ The vectors.
     #[serde(default)]
     pub vectors: Vec<TranscriptVector>,
 }
@@ -91,32 +91,32 @@ pub struct CancellationVectors {
     /// 🎞️ The transcripts that answer it.
     #[serde(default)]
     pub transcripts: Vec<RecordedTranscript>,
-    /// 🛑️ Cancel once this many invocations have completed.
+    /// ✖️ Cancel once this many invocations have completed.
     #[serde(rename = "cancelAfter", default)]
     pub cancel_after: usize,
 }
 
-/// 🧭️ Reads a runner-detection fixture.
+/// 📖️ Reads a runner-detection fixture.
 pub fn parse_detection_vectors(bytes: &[u8]) -> Result<DetectionVectors, String> {
     serde_json::from_slice(bytes).map_err(|error| error.to_string())
 }
 
-/// 🗺️ Reads an invocation-planning fixture.
+/// 📥️ Reads an invocation-planning fixture.
 pub fn parse_planning_vectors(bytes: &[u8]) -> Result<PlanningVectors, String> {
     serde_json::from_slice(bytes).map_err(|error| error.to_string())
 }
 
-/// 🧬️ Reads a scope-identifier fixture.
+/// 🪪️ Reads a scope-identifier fixture.
 pub fn parse_selector_vectors(bytes: &[u8]) -> Result<SelectorVectors, String> {
     serde_json::from_slice(bytes).map_err(|error| error.to_string())
 }
 
-/// 📊️ Reads a result-parsing fixture.
+/// 📃️ Reads a result-parsing fixture.
 pub fn parse_transcript_vectors(bytes: &[u8]) -> Result<TranscriptVectors, String> {
     serde_json::from_slice(bytes).map_err(|error| error.to_string())
 }
 
-/// 🛑️ Reads a cancellation fixture.
+/// ⛔️ Reads a cancellation fixture.
 pub fn parse_cancellation_vectors(bytes: &[u8]) -> Result<CancellationVectors, String> {
     serde_json::from_slice(bytes).map_err(|error| error.to_string())
 }

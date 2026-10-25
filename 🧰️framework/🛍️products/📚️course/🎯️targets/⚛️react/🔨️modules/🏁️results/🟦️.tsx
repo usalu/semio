@@ -295,7 +295,7 @@ export function TaskResultView(props: { readonly name: string; readonly title: s
   );
 }
 
-/** 🔁 Whether a submitted score is under a perfect 1, so the results can start that quiz again in one click. */
+/** 🔄️ Whether a submitted score is under a perfect 1, so the results can start that quiz again in one click. */
 export function offersDirectRetry(score: number): boolean {
   return score < 1;
 }

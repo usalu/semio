@@ -3,6 +3,7 @@ import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {HERMETIC_TABLE_V1} from "../../../🏃️execution/🔒️hermetic/🟦️.ts";
 import {remoteExecutionBubblewrapArgumentsV1,remoteExecutionDarwinProfileV1,remoteExecutionSandboxOrderV1,selectRemoteExecutionSandboxV1} from "../🟦️.ts";
+import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 
 test("the strategies of every host come from the hermetic table: the host's own sandbox first, then the private root; remote belongs to the scheduler",()=>{
  expect(remoteExecutionSandboxOrderV1("darwin")).toEqual(["darwin-sandbox","isolated-root"]);
@@ -25,7 +26,7 @@ test("the macOS profile denies network and writes by default, escapes awkward pa
 });
 
 test.skipIf(process.platform!=="darwin")("the generated macOS profile is accepted by sandbox-exec for paths with emoji, quotes and spaces, and allows exactly the root",()=>{
- const parent=mkdtempSync("/private/tmp/rexec-inhouse/sbx-"),root=join(parent,'we"ird 🧬 root'),outside=join(parent,"outside.txt");
+ const parent=mkdtempSync(join(testScratchRootV1("rexec-inhouse"),"sbx-")),root=join(parent,'we"ird 🧬 root'),outside=join(parent,"outside.txt");
  try{
   mkdirSync(root);writeFileSync(join(parent,"secret.txt"),"s");
   const run=(script:string)=>Bun.spawnSync(["/usr/bin/sandbox-exec","-p",remoteExecutionDarwinProfileV1(realpathSync(root),false),"/bin/sh","-c",script],{cwd:root,stdout:"pipe",stderr:"pipe"});

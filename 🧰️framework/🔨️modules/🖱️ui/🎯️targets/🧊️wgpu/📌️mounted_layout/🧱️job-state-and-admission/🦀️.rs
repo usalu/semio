@@ -69,7 +69,6 @@ pub struct MountedLayoutJob {
     pub(super) measure_cursor: usize,
     pub(super) arrange_cursor: usize,
     pub(super) collect_cursor: usize,
-    pub(super) child_scratch: Vec<usize>,
     pub(super) flex: FlexTree,
     pub(super) preview_cursor: usize,
     pub(super) publish_cursor: usize,
@@ -138,7 +137,6 @@ impl MountedLayoutJob {
             measure_cursor: 0,
             arrange_cursor: 0,
             collect_cursor: 0,
-            child_scratch: Vec::new(),
             flex: FlexTree::new(),
             preview_cursor: 0,
             publish_cursor: 0,
@@ -172,9 +170,21 @@ impl MountedLayoutJob {
             return LayoutJobStep::Yield { stage: self.stage, nodes: 0, glyphs: 0 };
         }
         cx.set_stage("Layout.AdmitOne");
+        match self.fund_admission_slot(tree, cx) {
+            Ok(true) => {}
+            Ok(false) => {
+                cx.consume_fuel(1);
+                return LayoutJobStep::Yield { stage: self.stage, nodes: 0, glyphs: 0 };
+            }
+            Err(fault) => {
+                self.fault = Some(fault);
+                cx.consume_fuel(1);
+                return LayoutJobStep::Fault(fault.label());
+            }
+        }
         let progress = match self.admission {
-            AdmissionPhase::Visit => self.admit_node_one(tree, false),
-            AdmissionPhase::VisitReversed => self.admit_node_one(tree, true),
+            AdmissionPhase::Visit => self.admit_node_one(tree, false, cx),
+            AdmissionPhase::VisitReversed => self.admit_node_one(tree, true, cx),
             AdmissionPhase::Text => self.admit_text_one(tree),
             AdmissionPhase::Unwind => self.unwind_one(tree),
             AdmissionPhase::Ready => {
@@ -197,7 +207,7 @@ impl MountedLayoutJob {
     /// box at all. The host declares its band in the slot's own `params_json`
     /// (`{"hostContentHeight": <px>}`), so the reservation costs one node and no measurement,
     /// and every other panel's node credit is untouched.
-    fn admit_node_one(&mut self, tree: &UiTree, root_reversed: bool) -> (usize, usize) {
+    fn admit_node_one(&mut self, tree: &UiTree, root_reversed: bool, cx: &mut semio_framework_job::StepContext<'_>) -> (usize, usize) {
         let Some((id, parent)) = self.pending_node.take() else {
             self.admission = AdmissionPhase::Unwind;
             return (0, 0);
@@ -255,8 +265,12 @@ impl MountedLayoutJob {
             return (0, 0);
         }
         let metrics = retained_tree_row_metrics(tree, id, &self.row_metrics);
-        if !self.flex.push(kind, parent, node.layout_spec.as_ref(), &metrics, parent_kind, content) {
+        let Some(owned_bytes) = self.flex.push(kind, parent, node.layout_spec.as_ref(), &metrics, parent_kind, content) else {
             self.fault = Some(MountedLayoutFault::Solver);
+            return (0, 0);
+        };
+        if owned_bytes != 0 && cx.consume_retained(semio_framework_job::RetainedCloneProgress { retained_capacity_bytes: owned_bytes, ..Default::default() }).is_err() {
+            self.fault = Some(MountedLayoutFault::NodeCredits);
             return (0, 0);
         }
         if let Some(parent) = parent {

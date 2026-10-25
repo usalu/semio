@@ -91,6 +91,9 @@ test("every module and driver a row names exists, and the in-house backend loads
  expect(await buildBackendBootstrapV1(["run","a:b"],"semio")).toBeUndefined();
  expect(await buildBackendBootstrapV1(["tools","setup","semio"],"nx")).toBeUndefined();
  await expect(buildBackendBootstrapV1(["tools","setup","nobody"],"nx")).rejects.toThrow("Unknown build tool");
+ expect(await buildBackendBootstrapV1(["tools","setup","toolchains"],"nx")).toBeUndefined();
+ expect(await buildBackendBootstrapV1(["tools","verify","bun"],"semio")).toBeUndefined();
+ expect(await buildBackendBootstrapV1(["tools","exec","--light","bun","--","--version"],"semio")).toBeUndefined();
 });
 
 const NEUTRAL_CLEAN=["🔌️backends/🟦️.ts","⚙️operations/🟦️.ts","🌐️remote-cache/⌨️command/🟦️.ts","🌐️remote-cache/🟦️.ts","🔧️tools/💾️storage/🟦️.ts","📥️inputs/🎯️selected/📦️snapshot/🟦️.ts","📥️inputs/🎯️selected/🦀️rust/🟦️.ts","⚙️operations/📖️help/🟦️.ts","⚙️operations/🔣️catalog.json","🧬️schema/🔣️.json","⚙️operations/🧬️schema/🔣️.json","📏️incremental/⌨️command/🟦️.ts","📏️incremental/🤝️concurrent/⌨️command/🟦️.ts","📐️conformance/🟦️.ts","📐️conformance/🏃️runner/🟦️.ts","📐️conformance/⌨️command/🟦️.ts","🧮️task-model/🟦️.ts","🧭️invocation/🟦️.ts","📥️caller/🟦️.ts","📥️caller/📤️orchestration/🟨️.mjs","📥️caller/📤️child/🟦️.ts","🧾️ci-report/🟦️.ts","🧾️ci-report/📜️script.ts","🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs"];

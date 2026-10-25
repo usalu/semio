@@ -3,7 +3,7 @@ use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 fn fixture() -> serde_json::Value {
     serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }

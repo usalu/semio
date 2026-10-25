@@ -29,7 +29,7 @@ pub(crate) const DOCUMENT_BACKBONE_BINDING_GENERATION: u64 = 1;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn headless_codec_budget() -> semio_framework::kernel::Budget {
-    semio_framework::kernel::Budget { fuel: u64::MAX, deadline_ms: 60_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+    semio_framework::kernel::Budget { fuel: u64::MAX, deadline_us: 60_000_000, ..semio_framework_plugin_host::GUEST_CODEC_BUDGET }
 }
 
 /// 🌐️ The process's document-socket I/O reactor, for the hub DOCUMENT SOCKET and nothing else: the one [`store::sync::DocumentSocketReactor`] the native artifact actors poll their own socket against, so this gateway owns no runtime of its own.
@@ -133,13 +133,13 @@ pub fn guest_print_mirror<'a>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Bo
 /// 🧩️ `(pack, spr, encode_ops_vec) -> (pack, spr, ops text)` through the same route resolution.
 /// The ops text is the component's own print of the RESULT pair, never a host re-derivation.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn guest_apply_ops_binary<'a>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8]) -> store::os_store::serialization::ArtifactCodecApplyFuture<'a> {
+pub fn guest_apply_ops_binary<'a, 'b>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8], identity: &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> store::os_store::serialization::ArtifactCodecApplyFuture<'a> {
     Box::pin(async move {
         let routes = guest_codec_route_snapshot();
         let mut refusals: Vec<String> = Vec::new();
         for route in &routes {
             let budget = headless_codec_budget();
-            let applied = match route.runtime.codec_apply_ops(&route.compiled, &route.artifact_schema, pack, spr, ops, &budget).await {
+            let applied = match route.runtime.codec_apply_ops(&route.compiled, &route.artifact_schema, pack, spr, ops, &budget, &mut *identity).await {
                 Ok(applied) => applied,
                 Err(error) => {
                     refusals.push(format!("{}/{}: {error}", route.plugin_id, route.artifact_schema));
@@ -208,7 +208,7 @@ fn guest_sqlite_turn_error(error: semio_framework_plugin_guest_contract::TurnFau
     let kind = match &error {
         TurnFault::Cancelled => ValueRefusalKind::Canceled,
         TurnFault::Exhausted | TurnFault::DeadlineExceeded | TurnFault::FuelExhausted => ValueRefusalKind::WorkLimit,
-        TurnFault::Host(_) | TurnFault::Guest(_) | TurnFault::Trapped(_) => ValueRefusalKind::InvariantViolated,
+        TurnFault::ActorCall(_) | TurnFault::Host(_) | TurnFault::Guest(_) | TurnFault::Trapped(_) => ValueRefusalKind::InvariantViolated,
     };
     semio_framework::io_schema::IoError::from_value_error(ValueError::new(kind, error.to_string()))
 }
@@ -239,7 +239,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining,observer,allocate).map_err(IoError::from_value_error)?;
         semio_framework_async::block_on(route.runtime.codec_sqlite_export(&route.compiled,&dialect.to_coordinate(),encoding.as_str(),bytes,limits,&headless_codec_budget(),|_,_|{if let Err(cause)=control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0){if progress_refusal.is_none(){progress_refusal=Some(cause)}cancel.cancel();}},&cancel,grant,&mut identity)).map_err(|error|progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(||guest_sqlite_turn_error(error)))
     })?;
-    let file = match result { sqlite_wire::SnapshotFileResult::Done(file) => file, sqlite_wire::SnapshotFileResult::Rejected(rejection) => return Err(rejection.into_io_error().map_err(IoError::from_value_error)?) };
+    let file = match result { sqlite_wire::SnapshotFileResult::Done(file) => file, sqlite_wire::SnapshotFileResult::Rejected(rejection) => return Err(rejection.into_io_error().map_err(IoError::from_value_error)?), sqlite_wire::SnapshotFileResult::Pending(_) => return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "guest SQLite export remains in guest custody pending its funded retirement"))) };
     let mut database = sqlite_snapshot::import_sqlite_database_controlled(&file.bytes, control).map_err(IoError::from_value_error)?;
     let (actual, actual_encoding) = io::io_mechanism::take_sqlite_snapshot_metadata_controlled(&mut database,control).map_err(IoError::from_value_error)?;
     if actual != *dialect || actual_encoding != encoding { return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "guest SQLite export metadata disagrees with its exact requested snapshot"))); }

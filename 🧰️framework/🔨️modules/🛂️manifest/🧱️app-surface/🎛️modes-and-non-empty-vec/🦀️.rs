@@ -20,7 +20,7 @@ pub struct ModeDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub layout_id: Option<String>,
-    /// 🎛️ Commands owned by this mode and active only while it is active.
+    /// ⌨️ Commands owned by this mode and active only while it is active.
     #[serde(default)]
     #[value(default)]
     pub commands: Vec<CommandDefinition>,
@@ -152,12 +152,12 @@ impl<'de, T: serde::de::DeserializeOwned> Deserialize<'de> for NonEmptyVec<T> {
     }
 }
 
-/// 🚫️ Every app has at least one mode — `playbook/module/procedural` and any other single-purpose app
+/// 🧭️ Every app has at least one mode — `playbook/module/procedural` and any other single-purpose app
 /// must declare an explicit mode (e.g. `"default"`) instead of the zero-mode state the type system
 /// now makes unrepresentable.
 pub type Modes = NonEmptyVec<ModeDefinition>;
 
-/// 🚫️ Every app has at least one window kind — mirrors `Modes`, formerly a runtime `assert!` in
+/// 🪟️ Every app has at least one window kind — mirrors `Modes`, formerly a runtime `assert!` in
 /// `AppBuilder::build_definition`.
 pub type WindowKinds = NonEmptyVec<WindowKindDefinition>;
 //#endregion 🔖️Manifest

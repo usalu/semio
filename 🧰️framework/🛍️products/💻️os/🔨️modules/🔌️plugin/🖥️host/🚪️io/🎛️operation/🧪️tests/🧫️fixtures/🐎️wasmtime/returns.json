@@ -52,6 +52,11 @@
         "operation": 29,
         "generation": 31,
         "epoch": 37,
+        "work": {
+          "clockBinding": 41,
+          "absoluteDeadlineUs": 43,
+          "fuel": 47
+        },
         "grant": {
           "maximumItems": 5,
           "maximumCopyBytes": 0,
@@ -66,13 +71,15 @@
         "retainedCapacityBytes": 3,
         "releasedBytes": 5
       },
+      "workUnitsSpent": 5,
       "remaining": {
         "maximumItems": 3,
         "maximumCopyBytes": 0,
         "maximumCapacityBytes": 8,
         "maximumReleaseBytes": 8,
         "maximumDepth": 7
-      }
+      },
+      "remainingFuel": 42
     }
   },
   "reservation": {

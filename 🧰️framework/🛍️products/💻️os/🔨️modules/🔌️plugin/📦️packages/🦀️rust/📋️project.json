@@ -1125,10 +1125,7 @@
       },
       "metadata": {
         "semio": {
-          "workspaceCommand": [
-            "test-camera-presence",
-            "source"
-          ]
+          "workspaceCommand":["verify","camera-presence","source"]
         }
       }
     },
@@ -1149,10 +1146,7 @@
       },
       "metadata": {
         "semio": {
-          "workspaceCommand": [
-            "test-camera-presence",
-            "native"
-          ]
+          "workspaceCommand":["verify","camera-presence","native"]
         }
       }
     },
@@ -1208,10 +1202,7 @@
       },
       "metadata": {
         "semio": {
-          "workspaceCommand": [
-            "test-result-publication",
-            "source"
-          ]
+          "workspaceCommand":["verify","result-publication","source"]
         }
       }
     },
@@ -1233,10 +1224,7 @@
       },
       "metadata": {
         "semio": {
-          "workspaceCommand": [
-            "test-result-publication",
-            "native"
-          ]
+          "workspaceCommand":["verify","result-publication","native"]
         }
       }
     },

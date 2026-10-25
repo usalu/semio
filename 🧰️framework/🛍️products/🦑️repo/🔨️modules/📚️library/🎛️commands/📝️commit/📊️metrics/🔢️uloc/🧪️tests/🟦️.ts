@@ -1,9 +1,9 @@
-/** 🔢️ Contract: unified lines of code count JSON object keys, diff JSON by key units and count physical lines for everything else; the corpus is language-agnostic and `🐍️oracle.py` recounts with Python's `json` module. */
+/** 🔢️ Contract: unified lines of code count JSON object keys, diff JSON by key units and count physical lines for everything else; the corpus is language-agnostic and `🐍️.py` recounts with Python's `json` module. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {countJsonKeys,countUnifiedLocForFile,diffJsonUloc} from "../🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
@@ -17,6 +17,6 @@ for(const row of corpus.locDefects)test.failing("loc defect "+row.path+" "+JSON.
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

@@ -1,0 +1,26 @@
+00	✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/Cargo.toml	-p semio-s-artifact-block-2d -p semio-s-artifact-block-2d-model	--lib
+01	✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.toml	-p semio-s-artifact-flow-flow -p semio-s-artifact-flow-flow-schema	--lib
+02	✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/Cargo.toml	-p semio-s-artifact-wfc-grid2d -p semio-s-artifact-wfc-grid2d-snapshot	--lib
+03	✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.toml	-p semio-s-artifact-lowpoly-lowpoly-model	--lib
+04	✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.toml	-p semio-s-artifact-lowpoly-lowpoly-model	--test lowpoly_io_sqlite_snapshot
+05	✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/Cargo.toml	-p semio-s-artifact-wfc-2d -p semio-s-artifact-wfc-2d-schema	--lib
+06	✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/Cargo.toml	-p semio-s-artifact-block-5d -p semio-s-artifact-block-5d-model	--lib
+07	✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.toml	-p semio-s-artifact-raster-raster-model -p semio-s-artifact-raster-raster-tests	--lib
+08	✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml	-p semio-s-artifact-draw-drawing-model -p semio-s-artifact-draw-drawing-model-tests	--lib
+09	✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/Cargo.toml	-p semio-s-artifact-block-3d -p semio-s-artifact-block-3d-model	--lib
+10	✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/Cargo.toml	-p semio-s-artifact-wfc-bitmap -p semio-s-artifact-wfc-bitmap-snapshot	--lib
+11	✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/Cargo.toml	-p semio-s-artifact-wfc-grid3d -p semio-s-artifact-wfc-grid3d-snapshot	--lib
+12	✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.toml	-p semio-s-artifact-trinity-rewriting-v1 -p semio-s-artifact-trinity-rewriting-inferences	--lib
+13	✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/Cargo.toml	-p semio-s-artifact-wfc-3d -p semio-s-artifact-wfc-3d-snapshot	--lib
+14	✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.toml	-p semio-s-artifact-trinity-jack -p semio-s-artifact-trinity-jack-jack -p semio-s-artifact-trinity-jack-inferences	--lib
+15	✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.toml	-p semio-s-artifact-puzzle-2d -p semio-s-artifact-puzzle-2d-mut-any-10 -p semio-s-artifact-puzzle-2d-snapshot	--lib
+16	✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.toml	-p semio-s-artifact-layout-layout-model	--lib
+17	✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.toml	-p semio-s-artifact-procedural-2d-io-binary -p semio-s-artifact-procedural-2d-io-sqlite	--lib
+18	✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.toml	-p semio-s-artifact-puzzle-5d -p semio-s-artifact-puzzle-5d-diff -p semio-s-artifact-puzzle-5d-mut-any-5 -p semio-s-artifact-puzzle-5d-snapshot	--lib
+19	✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.toml	-p semio-s-artifact-procedural-3d-io-binary -p semio-s-artifact-procedural-3d-io-sqlite	--lib
+20	✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.toml	-p semio-s-artifact-space-space -p semio-s-artifact-space-space-schema	--lib
+21	✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.toml	-p semio-s-artifact-forms-forms -p semio-s-artifact-forms-forms-snapshot	--lib
+22	✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.toml	-p semio-s-artifact-puzzle-3d	--test snapshot-sqlite
+23	✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.toml	-p semio-s-artifact-space-home -p semio-s-artifact-space-home-inferences	--lib
+24	✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.toml	-p semio-s-artifact-puzzle-3d-editor-snapshot -p semio-s-artifact-puzzle-3d-model	--lib
+25	✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.toml	-p semio-s-artifact-note-note -p semio-s-artifact-note-note-schema	--lib

@@ -98,5 +98,5 @@ pub mod io {
         pub mod mutations;
     }
 }
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioTextSnapshot, schema::mutations::SemioTextMutation);
+semio_s_artifact_stdio_semio_base::semio_member_owner!(semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot, schema::mutations::SemioTextMutation);
 

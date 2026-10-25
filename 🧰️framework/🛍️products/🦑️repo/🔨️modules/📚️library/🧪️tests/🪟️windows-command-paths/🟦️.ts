@@ -5,7 +5,7 @@
  * @see ../../🧫️fixtures/🔐️owner-only/🔣️.json
  * @see ../../🧫️fixtures/📋️process-table/🔣️.json */
 import { describe, expect, test } from "bun:test";
-import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

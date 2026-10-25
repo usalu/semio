@@ -116,7 +116,7 @@ test("the shared namespace and the generation documents keep indexes of their ow
 
 test("the storage publication seals each published leaf into its group index after the commit and before it returns, and never fails the publication",()=>{
  const url=new URL("../../../../../../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs",import.meta.url),source=readFileSync(url,"utf8"),tree=ts.createSourceFile("storage.mjs",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
- expect(source).toContain("reservation.commit();recordBuildGraphOptionalMemberV1(scope.store.root,resolve(path));return true;");
+ expect(source).toContain("reservation.commit();for(const path of paths)recordBuildGraphOptionalMemberV1(scope.store.root,resolve(path));return true;");
  const node=tree.statements.find((value):value is ts.FunctionDeclaration=>ts.isFunctionDeclaration(value)&&value.name?.text==="recordBuildGraphOptionalMemberV1");expect(node).toBeDefined();
  const record=new Function("recordMemberLeafV1","openSync","fstatSync","readSync","writeSync","closeSync","lstatSync","readFileSync",ts.transpileModule(node!.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText+";return recordBuildGraphOptionalMemberV1;")(recordMemberLeafV1,openSync,fstatSync,readSync,writeSync,closeSync,lstatSync,readFileSync)as(root:string,path:string)=>void;
  const root=mkdtempSync(join(tmpdir(),"mi-")),id="f".repeat(64),leaf=join(root,"inference","selections",id,"ip","7".repeat(24)+".json");

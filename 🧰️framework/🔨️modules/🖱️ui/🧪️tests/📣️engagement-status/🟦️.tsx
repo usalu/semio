@@ -3,7 +3,7 @@ import * as React from "react";
 import {render} from "@testing-library/react";
 import {expect,it} from "vitest";
 import Ajv from "ajv";
-import {I18nextProvider} from "react-i18next";
+import {UiI18nProvider} from "@semio-tech/ui-react/source";
 import { createShellI18nInstance, disposeShellI18nInstance } from "@semio-tech/ui-react/source";
 import { Engagement } from "../../🧱️elements/🎮️Engagement/🟦️.tsx";
 import rows from "../🧫️fixtures/📣️engagement-status/🔣️.json";
@@ -12,7 +12,7 @@ it("keeps changing engagement status in one polite atomic accessible region",()=
  let transitions=0;
  for(const row of rows.cases){
   const instance=createShellI18nInstance(row.locale==="en"?"en":"de");
-  const tree=(content:string)=><I18nextProvider i18n={instance}><Engagement status={[{id:"selection-count",content}]}/></I18nextProvider>;
+  const tree=(content:string)=><UiI18nProvider instance={instance}><Engagement status={[{id:"selection-count",content}]}/></UiI18nProvider>;
   const view=render(tree(row.texts[0]!));
   try{
    const live=view.getByRole(rows.role);

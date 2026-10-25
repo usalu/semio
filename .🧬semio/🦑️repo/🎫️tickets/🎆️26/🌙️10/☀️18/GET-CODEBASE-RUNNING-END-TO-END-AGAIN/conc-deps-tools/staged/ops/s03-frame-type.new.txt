@@ -1,1 +1,0 @@
-type JavascriptDependencyStoreFrameV1={workspace:string;store:RepositoryCacheStoreV1;control:ResourceLeaseControl;build:ResourceLease;gate:ResourceLease|null;stop:AbortController;live:boolean;accepting:boolean;pending:Set<Promise<unknown>>;failures:unknown[]};

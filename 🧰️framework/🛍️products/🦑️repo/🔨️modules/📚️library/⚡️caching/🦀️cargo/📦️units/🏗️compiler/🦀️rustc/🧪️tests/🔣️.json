@@ -16,44 +16,54 @@
       "resourceClass": "jobserver-codegen",
       "request": {
         "kind": "available",
-        "maximumParallelism": 256
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
       }
     },
     {
       "codegen_backend": null,
       "codegen_units": 1,
       "lto": "false",
-      "resourceClass": "whole-host-backend",
+      "resourceClass": "counted-units",
       "request": {
-        "kind": "whole-host"
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
       }
     },
     {
       "codegen_backend": "unknown",
       "codegen_units": 256,
       "lto": "off",
-      "resourceClass": "whole-host-backend",
+      "resourceClass": "counted-units",
       "request": {
-        "kind": "whole-host"
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
       }
     },
     {
       "codegen_backend": null,
       "codegen_units": null,
       "lto": "false",
-      "resourceClass": "whole-host-backend",
+      "resourceClass": "counted-units",
       "request": {
-        "kind": "whole-host"
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
       }
     },
     {
       "codegen_backend": null,
       "codegen_units": 256,
       "lto": "thin",
-      "resourceClass": "whole-host-backend",
+      "resourceClass": "counted-units",
       "request": {
-        "kind": "whole-host"
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
       }
     }
-  ]
+  ],
+  "cores": 10
 }

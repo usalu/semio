@@ -348,7 +348,7 @@ mod tests {
 
     #[test]
     fn sqlite_snapshot_note_controlled_native_owner_preserves_full_fixture_and_stops_inside_text(){
-        use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
+        use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
         let plan:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🚦️control.json")).unwrap();let mut snapshot=fixture();snapshot.schema="owned Note 世界\0".into();snapshot.title=Some("x".repeat(plan["longTextBytes"].as_u64().unwrap()as usize));
         let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for payload in [IoPayload::Binary(snapshot.encode_pack()),IoPayload::Text(snapshot.print_dsl())]{

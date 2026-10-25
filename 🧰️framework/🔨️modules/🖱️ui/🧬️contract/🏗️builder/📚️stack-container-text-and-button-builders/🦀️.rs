@@ -4,25 +4,25 @@ use super::*;
 
 //#region 🔖️Builder
 //#region 📚️Stack
-/// 📚️ A one-axis flex-like container — `Component::Container(role: Plain)` over
+/// 🥞️ A one-axis flex-like container — `Component::Container(role: Plain)` over
 /// `LayoutSpec::Stack`. Build with [`stack`], [`column`], or [`row`].
 pub struct StackBuilder {
     pub(super) base: NodeBase,
 }
 
-/// 📚️ A stack laid out along `axis`. [`column`]/[`row`] are the common-case shorthands.
+/// 🪵️ A stack laid out along `axis`. [`column`]/[`row`] are the common-case shorthands.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn stack(axis: crate::Axis) -> StackBuilder {
     StackBuilder { base: NodeBase::stack(axis) }
 }
 
-/// 📚️ A vertical [`stack`].
+/// ↕️ A vertical [`stack`].
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn column() -> StackBuilder {
     stack(crate::Axis::Vertical)
 }
 
-/// 📚️ A horizontal [`stack`].
+/// ↔️ A horizontal [`stack`].
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn row() -> StackBuilder {
     stack(crate::Axis::Horizontal)
@@ -95,13 +95,13 @@ impl ContainerBuilder {
     }
 }
 
-/// 🗂️ A labeled, collapsible section — `Component::Container(role: Section)`.
+/// 📑️ A labeled, collapsible section — `Component::Container(role: Section)`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn section(label: crate::Label) -> ContainerBuilder {
     ContainerBuilder::new(crate::ContainerRole::Section, label)
 }
 
-/// 🗂️ A labeled form field — `Component::Container(role: Field)`.
+/// 🔖️ A labeled form field — `Component::Container(role: Field)`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn field(label: crate::Label) -> ContainerBuilder {
     ContainerBuilder::new(crate::ContainerRole::Field, label)
@@ -136,14 +136,14 @@ impl From<ContainerBuilder> for BuiltNode {
 //#endregion 🗂️Container
 
 //#region 📝️Text
-/// 📝️ Plain display text — `Component::Text`. Build with [`text`].
+/// 📖️ Plain display text — `Component::Text`. Build with [`text`].
 pub struct TextBuilder {
     pub(super) base: NodeBase,
     pub(super) value: crate::Label,
     pub(super) emphasize: Option<bool>,
 }
 
-/// 📝️ Display text reading `value`.
+/// 📺️ Display text reading `value`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn text(value: crate::Label) -> TextBuilder {
     TextBuilder { base: NodeBase::leaf(), value, emphasize: None }
@@ -178,7 +178,7 @@ pub struct ButtonBuilder {
     pub(super) icon: crate::UiText,
 }
 
-/// 🔘️ A button reading `label`. Its accessible name defaults to `label` — override with
+/// 🖱️ A button reading `label`. Its accessible name defaults to `label` — override with
 /// [`HasBase::label`] if the visible and accessible text should differ.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn button(label: crate::Label) -> ButtonBuilder {

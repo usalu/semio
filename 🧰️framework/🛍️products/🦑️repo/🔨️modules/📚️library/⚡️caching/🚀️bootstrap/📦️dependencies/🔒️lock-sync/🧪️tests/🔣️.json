@@ -1,0 +1,452 @@
+{
+ "version": 1,
+ "texts": [
+  {
+   "name": "a stale scope in English names the member and the command",
+   "kind": "stale",
+   "scope": "♻️mit-bestand",
+   "drift": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "../✏️s/x/package.json",
+     "frozen": true
+    }
+   ],
+   "languages": [
+    "en"
+   ],
+   "expected": "The lock file of dependency scope ♻️mit-bestand is out of date: Bun would refuse its frozen installation, but only after the build has waited in its queue. Changed: ../✏️s/x is a member the lock does not list. Regenerate the lock, review its diff and run the command again: repo dependencies lock --scope ♻️mit-bestand"
+  },
+  {
+   "name": "the same scope in German",
+   "kind": "stale",
+   "scope": "♻️mit-bestand",
+   "drift": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "../✏️s/x/package.json",
+     "frozen": true
+    }
+   ],
+   "languages": [
+    "de"
+   ],
+   "expected": "Die Lock-Datei des Abhängigkeits-Scopes ♻️mit-bestand ist veraltet: Bun würde ihre eingefrorene Installation verweigern, aber erst nachdem der Build in seiner Warteschlange gewartet hat. Geändert: ../✏️s/x ist ein Mitglied, das der Lock nicht führt. Lock neu erzeugen, den Diff prüfen und den Befehl erneut ausführen: repo dependencies lock --scope ♻️mit-bestand"
+  },
+  {
+   "name": "no language chosen offers both, English first",
+   "kind": "stale",
+   "scope": ".",
+   "drift": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "section": "devDependencies",
+     "dependency": "x",
+     "manifestVersion": "1",
+     "frozen": true
+    }
+   ],
+   "languages": [
+    "en",
+    "de"
+   ],
+   "expected": "The lock file of dependency scope . is out of date: Bun would refuse its frozen installation, but only after the build has waited in its queue. Changed: scope root declares devDependencies x 1, which the lock lacks. Regenerate the lock, review its diff and run the command again: repo dependencies lock --scope .\nDie Lock-Datei des Abhängigkeits-Scopes . ist veraltet: Bun würde ihre eingefrorene Installation verweigern, aber erst nachdem der Build in seiner Warteschlange gewartet hat. Geändert: Scope-Wurzel deklariert devDependencies x 1, was dem Lock fehlt. Lock neu erzeugen, den Diff prüfen und den Befehl erneut ausführen: repo dependencies lock --scope ."
+  },
+  {
+   "name": "every kind, the scope root label, absent values and the list limit",
+   "kind": "stale",
+   "scope": "✏️s",
+   "drift": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "../✏️s/x/package.json",
+     "frozen": true
+    },
+    {
+     "kind": "workspace-stale",
+     "manifest": "old/package.json",
+     "frozen": true
+    },
+    {
+     "kind": "identity-mismatch",
+     "manifest": "package.json",
+     "section": "name",
+     "manifestVersion": "r2",
+     "lockVersion": "r",
+     "frozen": false
+    },
+    {
+     "kind": "missing-in-lock",
+     "manifest": "a/package.json",
+     "section": "dependencies",
+     "dependency": "d",
+     "manifestVersion": "1",
+     "frozen": true
+    },
+    {
+     "kind": "stale-in-lock",
+     "manifest": "a/package.json",
+     "section": "devDependencies",
+     "dependency": "e",
+     "lockVersion": "2",
+     "frozen": false
+    },
+    {
+     "kind": "version-mismatch",
+     "manifest": "b/package.json",
+     "section": "dependencies",
+     "dependency": "f",
+     "manifestVersion": "3",
+     "lockVersion": "4",
+     "frozen": false
+    },
+    {
+     "kind": "invalid-lockfile",
+     "manifest": "bun.lock",
+     "frozen": true
+    },
+    {
+     "kind": "identity-mismatch",
+     "manifest": "c/package.json",
+     "section": "version",
+     "manifestVersion": "1.0.1",
+     "frozen": false
+    }
+   ],
+   "languages": [
+    "en"
+   ],
+   "expected": "The lock file of dependency scope ✏️s is out of date: Bun would refuse its frozen installation, but only after the build has waited in its queue. Changed: ../✏️s/x is a member the lock does not list; old is listed by the lock but is no member; scope root name is r2 but the lock says r; a declares dependencies d 1, which the lock lacks; a no longer declares devDependencies e, which the lock still lists; b declares dependencies f 3, the lock says 4; and 2 more. Regenerate the lock, review its diff and run the command again: repo dependencies lock --scope ✏️s"
+  },
+  {
+   "name": "every kind in German",
+   "kind": "stale",
+   "scope": "✏️s",
+   "drift": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "../✏️s/x/package.json",
+     "frozen": true
+    },
+    {
+     "kind": "workspace-stale",
+     "manifest": "old/package.json",
+     "frozen": true
+    },
+    {
+     "kind": "identity-mismatch",
+     "manifest": "package.json",
+     "section": "name",
+     "manifestVersion": "r2",
+     "lockVersion": "r",
+     "frozen": false
+    },
+    {
+     "kind": "missing-in-lock",
+     "manifest": "a/package.json",
+     "section": "dependencies",
+     "dependency": "d",
+     "manifestVersion": "1",
+     "frozen": true
+    },
+    {
+     "kind": "stale-in-lock",
+     "manifest": "a/package.json",
+     "section": "devDependencies",
+     "dependency": "e",
+     "lockVersion": "2",
+     "frozen": false
+    },
+    {
+     "kind": "version-mismatch",
+     "manifest": "b/package.json",
+     "section": "dependencies",
+     "dependency": "f",
+     "manifestVersion": "3",
+     "lockVersion": "4",
+     "frozen": false
+    },
+    {
+     "kind": "invalid-lockfile",
+     "manifest": "bun.lock",
+     "frozen": true
+    },
+    {
+     "kind": "identity-mismatch",
+     "manifest": "c/package.json",
+     "section": "version",
+     "manifestVersion": "1.0.1",
+     "frozen": false
+    }
+   ],
+   "languages": [
+    "de"
+   ],
+   "expected": "Die Lock-Datei des Abhängigkeits-Scopes ✏️s ist veraltet: Bun würde ihre eingefrorene Installation verweigern, aber erst nachdem der Build in seiner Warteschlange gewartet hat. Geändert: ../✏️s/x ist ein Mitglied, das der Lock nicht führt; old steht im Lock, ist aber kein Mitglied; Scope-Wurzel name ist r2, der Lock sagt r; a deklariert dependencies d 1, was dem Lock fehlt; a deklariert devDependencies e nicht mehr, der Lock führt es noch; b deklariert dependencies f 3, der Lock sagt 4; und 2 weitere. Lock neu erzeugen, den Diff prüfen und den Befehl erneut ausführen: repo dependencies lock --scope ✏️s"
+  },
+  {
+   "name": "a refusal without a static finding says a resolved package changed",
+   "kind": "refused",
+   "scope": "🌎️hub",
+   "drift": [],
+   "languages": [
+    "en",
+    "de"
+   ],
+   "expected": "Bun refused the frozen installation of dependency scope 🌎️hub: its lock file no longer matches its manifests. Static comparison: no manifest difference found, a resolved package changed. Regenerate the lock, review its diff and run the command again: repo dependencies lock --scope 🌎️hub\nBun hat die eingefrorene Installation des Abhängigkeits-Scopes 🌎️hub verweigert: Die Lock-Datei passt nicht mehr zu den Manifesten. Statischer Vergleich: kein Manifest-Unterschied gefunden, ein aufgelöstes Paket hat sich geändert. Lock neu erzeugen, den Diff prüfen und den Befehl erneut ausführen: repo dependencies lock --scope 🌎️hub"
+  },
+  {
+   "name": "a refusal with findings lists them",
+   "kind": "refused",
+   "scope": "🏢️semio-tech",
+   "drift": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "lockVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "languages": [
+    "en"
+   ],
+   "expected": "Bun refused the frozen installation of dependency scope 🏢️semio-tech: its lock file no longer matches its manifests. Static comparison: pkgs/a no longer declares dependencies ms, which the lock still lists. Regenerate the lock, review its diff and run the command again: repo dependencies lock --scope 🏢️semio-tech"
+  }
+ ],
+ "scopes": [
+  {
+   "name": "scopes are the root and every owner directory with a lock; members are normalized, globs and missing members skipped",
+   "files": {
+    "package.json": "{\"name\": \"r\", \"workspaces\": [\"pkgs/a\", \"pkgs/*\", \"gone\"], \"semio\": {\"workspace\": {\"owners\": [\"*/package.json\"]}}}",
+    "bun.lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"}},\"packages\":{}}",
+    "pkgs/a/package.json": "{\"name\": \"a\"}",
+    "s1/package.json": "{\"name\": \"s1\", \"workspaces\": [\"../pkgs/a\", \"m/\", \"./n\"]}",
+    "s1/bun.lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"}},\"packages\":{}}",
+    "s1/m/package.json": "{\"name\": \"m\"}",
+    "s1/n/package.json": "{\"name\":\"n\", // comment\n}",
+    "s2/package.json": "{\"name\": \"s2\"}",
+    "plain/readme.md": "x"
+   },
+   "expected": {
+    "scopes": [
+     {
+      "scope": ".",
+      "manifests": [
+       "package.json",
+       "pkgs/a/package.json"
+      ]
+     },
+     {
+      "scope": "s1",
+      "manifests": [
+       "package.json",
+       "../pkgs/a/package.json",
+       "m/package.json",
+       "n/package.json"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "an owner pattern deeper than one level is refused by name",
+   "files": {
+    "package.json": "{\"name\": \"r\", \"semio\": {\"workspace\": {\"owners\": [\"**/package.json\"]}}}",
+    "bun.lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"}},\"packages\":{}}"
+   },
+   "expected": {
+    "error": "bootstrap.dependencies.owner-pattern-required"
+   }
+  }
+ ],
+ "staged": [
+  {
+   "name": "a staged lock names the original member behind w/<index>",
+   "scope": "s1",
+   "members": [
+    "../a",
+    "b"
+   ],
+   "manifest": {
+    "name": "r",
+    "workspaces": [
+     "w/0",
+     "w/1"
+    ]
+   },
+   "projected": {
+    "w/0": {
+     "name": "a"
+    },
+    "w/1": {
+     "name": "b",
+     "dependencies": {
+      "x": "1"
+     }
+    }
+   },
+   "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"},\"w/0\":{\"name\":\"a\"},\"w/1\":{\"name\":\"b\"}},\"packages\":{\"a\":[\"a@workspace:w/0\"],\"b\":[\"b@workspace:w/1\"]}}",
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "b/package.json",
+     "section": "dependencies",
+     "dependency": "x",
+     "manifestVersion": "1",
+     "frozen": true
+    }
+   ]
+  },
+  {
+   "name": "a staged lock that lacks a member row is a workspace finding of that member",
+   "scope": ".",
+   "members": [
+    "pkgs/a",
+    "pkgs/b/"
+   ],
+   "manifest": {
+    "name": "r",
+    "workspaces": [
+     "w/0",
+     "w/1"
+    ]
+   },
+   "projected": {
+    "w/0": {
+     "name": "a"
+    },
+    "w/1": {
+     "name": "b"
+    }
+   },
+   "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"},\"w/0\":{\"name\":\"a\"}},\"packages\":{\"a\":[\"a@workspace:w/0\"]}}",
+   "expected": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "pkgs/b/package.json",
+     "frozen": true
+    }
+   ]
+  },
+  {
+   "name": "an in-sync staged lock has no finding",
+   "scope": ".",
+   "members": [
+    "pkgs/a"
+   ],
+   "manifest": {
+    "name": "r",
+    "workspaces": [
+     "w/0"
+    ]
+   },
+   "projected": {
+    "w/0": {
+     "name": "a"
+    }
+   },
+   "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"},\"w/0\":{\"name\":\"a\"}},\"packages\":{\"a\":[\"a@workspace:w/0\"]}}",
+   "expected": []
+  },
+  {
+   "name": "a staged lock whose package lost its last user is frozen, one that keeps a user is noise",
+   "scope": "s3",
+   "members": [
+    "pkgs/a",
+    "pkgs/b"
+   ],
+   "manifest": {
+    "name": "r",
+    "workspaces": [
+     "w/0",
+     "w/1"
+    ]
+   },
+   "projected": {
+    "w/0": {
+     "name": "a"
+    },
+    "w/1": {
+     "name": "b",
+     "dependencies": {
+      "y": "1"
+     }
+    }
+   },
+   "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"},\"w/0\":{\"name\":\"a\",\"dependencies\":{\"x\":\"1\",\"y\":\"1\"}},\"w/1\":{\"name\":\"b\",\"dependencies\":{\"y\":\"1\"}}},\"packages\":{\"a\":[\"a@workspace:w/0\"],\"b\":[\"b@workspace:w/1\"],\"x\":[\"x@1.0.0\",\"\",{\"dependencies\":{\"z\":\"1\"}},\"sha512-x\"],\"y\":[\"y@1.0.0\",\"\",{},\"sha512-y\"],\"z\":[\"z@1.0.0\",\"\",{},\"sha512-z\"]}}",
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "x",
+     "lockVersion": "1",
+     "frozen": true
+    },
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "y",
+     "lockVersion": "1",
+     "frozen": false
+    }
+   ]
+  }
+ ],
+ "frozen": [
+  {
+   "name": "Bun's own frozen refusal becomes the scope message",
+   "scope": "♻️mit-bestand",
+   "stderr": "Resolving dependencies\nerror: lockfile had changes, but lockfile is frozen\nnote: try re-running without --frozen-lockfile and commit the updated lockfile\n",
+   "expectedContains": [
+    "Bun refused the frozen installation of dependency scope ♻️mit-bestand",
+    "no manifest difference found, a resolved package changed",
+    "repo dependencies lock --scope ♻️mit-bestand"
+   ],
+   "environment": {
+    "SEMIO_LANGUAGE": "en"
+   }
+  },
+  {
+   "name": "the same refusal in German when German is chosen",
+   "scope": "♻️mit-bestand",
+   "stderr": "error: lockfile had changes, but lockfile is frozen\n",
+   "environment": {
+    "SEMIO_LANGUAGE": "de"
+   },
+   "expectedContains": [
+    "Bun hat die eingefrorene Installation des Abhängigkeits-Scopes ♻️mit-bestand verweigert",
+    "kein Manifest-Unterschied gefunden",
+    "repo dependencies lock --scope ♻️mit-bestand"
+   ],
+   "expectedAbsent": [
+    "Bun refused"
+   ]
+  },
+  {
+   "name": "an unresolvable language falls back to both languages",
+   "scope": "🌎️hub",
+   "stderr": "error: lockfile had changes, but lockfile is frozen\n",
+   "environment": {
+    "SEMIO_LANGUAGE": "fr"
+   },
+   "expectedContains": [
+    "Bun refused the frozen installation of dependency scope 🌎️hub",
+    "Bun hat die eingefrorene Installation des Abhängigkeits-Scopes 🌎️hub verweigert"
+   ]
+  },
+  {
+   "name": "another installer failure is not translated",
+   "scope": ".",
+   "stderr": "error: connect ECONNREFUSED\n",
+   "expectedContains": null,
+   "environment": {
+    "SEMIO_LANGUAGE": "en"
+   }
+  }
+ ]
+}

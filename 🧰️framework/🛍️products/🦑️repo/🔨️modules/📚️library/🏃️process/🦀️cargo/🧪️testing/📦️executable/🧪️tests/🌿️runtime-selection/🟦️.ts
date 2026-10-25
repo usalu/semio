@@ -26,7 +26,6 @@ test("Cargo test runtime projection agrees with shared vectors and independent S
   const protectedRows=database.query("select key,value from json_each(?1) where (case when ?2 then upper(key) else key end) not in ('SEMIO_TEST_CLI','SEMIO_TEST_ARTIFACT_DIR','SEMIO_KEEP_WORKSPACES','SEMIO_TYPE_BUDGET_MS')").all(JSON.stringify(row.compiler),row.windows?1:0)as{key:string,value:string}[];
   const independent={...Object.fromEntries(protectedRows.map(value=>[value.key,value.value])),...selected},actual=project(baseline,provided);expect(actual,row.name).toEqual(row.expected);expect(actual).toEqual(independent);expect(baseline).toEqual(row.compiler);
  }}finally{database.close();}
- console.log(`[DEBUG] actual Cargo runtime projection matched ${fixture.environment.length} SQL/Ajv cases, preserving compiler authority and Windows selector uniqueness`);
 });
 
 test("actual Cargo test runner retains current consumer selection and authoritative compiler custody",async()=>{
@@ -42,7 +41,7 @@ test("actual Cargo test runner retains current consumer selection and authoritat
    withRepositoryCompilerStoreV1:async(_root:unknown,_mode:unknown,_control:unknown,_environment:unknown,body:Function)=>body({root:storeRoot,environment:{...row.compiler},sourceBoundary:{maxSourceBytes:1024},storage:{allocation:{bytes:1024},recheck:async()=>{rechecks++;}},buildDirectory:join(storeRoot,"build")},control),
    lstatSync:(path:string)=>({isDirectory:()=>path!==product&&!path.endsWith("Cargo.toml"),isFile:()=>path===product||path.endsWith("Cargo.toml"),isSymbolicLink:()=>false,nlink:1,size:8}),
    withRepositoryCargoInputsV1:async(options:any,body:Function)=>{acquisitions++;expect(options.invocation).toBe(invocation);expect(options.control).toBe(control);expect(options.network).toBe(grant);expect(options.args).toContain("--locked");expect(options.args).not.toContain("--offline");expect(options.args).not.toContain("--frozen");expect(fetchArguments(options.manifest,options.args,options.network).includes("--offline"),network.name).toBe(network.fetchOffline);if(!network.ready||network.cancelled)throw refusal;return body({environment:options.environment,selections:[{arguments:options.args}],control});},
-   withCompilerWorkspaceWriteV1:async(_storage:unknown,_directory:unknown,_control:unknown,body:Function)=>body(),acquireCompilerCapacityLeaseV1:async()=>({parallelism:7,release:()=>{}}),admitCargoSelectionV1:async()=>{},acquireCargoBuildLeaseV1:async()=>({release:()=>{}}),requireNativeStoragePathV1:(_root:unknown,path:string)=>path,
+   withCompilerWorkspaceSharedWriteV1:async(_storage:unknown,_directory:unknown,_control:unknown,body:Function)=>body(),compileUnitsForHostV1:async()=>({request:{kind:"available",maximumParallelism:7,minimumParallelism:4}}),acquireCompilerCapacityLeaseV1:async()=>({parallelism:7,release:()=>{}}),admitCargoSelectionV1:async()=>{},acquireCargoBuildLeaseV1:async()=>({release:()=>{}}),requireNativeStoragePathV1:(_root:unknown,path:string)=>path,
    pinExecutableArtifact:async()=>executable,checkResourceLeaseControl:()=>{},withResourceLeases:async(options:any,body:Function)=>{expect(options.signal).toBe(control.signal);held=true;try{return await body();}finally{held=false;}},
    runOwnedCommand:async(command:string,_args:unknown,_cwd:unknown,stage:string,_budget:unknown,options:any)=>{commands.push({command,args:_args,stage,env:options.env});expect(options.signal).toBe(control.signal);if(stage==="cargo:test-executable-build")options.onLine(JSON.stringify({reason:"compiler-artifact",target:{name:fixture.request.test,kind:["test"]},executable:product}),"stdout");else{expect(held).toBe(true);executions++;}},
   };
@@ -57,5 +56,4 @@ test("actual Cargo test runner retains current consumer selection and authoritat
   expect(selected.SEMIO_SCRIPT_PROCESS_INVOCATION).toBe("port-current-original");expect(selected.UNDECLARED_CONSUMER).toBeUndefined();
  }
  }finally{database.close();}
- console.log(`[DEBUG] actual Cargo runner matched ${fixture.network.length} Original network/acquisition cases before locked offline compilation and retained consumer/artifact custody`);
 });

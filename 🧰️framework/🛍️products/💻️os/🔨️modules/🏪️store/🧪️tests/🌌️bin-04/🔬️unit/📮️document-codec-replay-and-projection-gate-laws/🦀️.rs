@@ -303,10 +303,9 @@ async fn reset_and_apply_reject_malformed_history_before_persisting() {
 async fn original_envelope_parse_preserves_genesis_without_a_discarded_projection_clone(){
  let law:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️one-item/🛤️lane/🔣️.json")).unwrap();
  for row in law["envelope"].as_array().unwrap(){
-  let value=row["initial"].as_i64().unwrap()as i32;let envelope=create_document_envelope::<DemoSnapshot,DemoMutation>("demo/v1",row["name"].as_str().unwrap(),DemoSnapshot{n:Some(value)},None);let files=print_document_pack(&envelope).await.unwrap();envelope.retire_unadopted();
+  let value=row["initial"].as_i64().unwrap()as i32;let envelope=create_document_envelope::<DemoSnapshot,DemoMutation>("demo/v1",row["name"].as_str().unwrap(),DemoSnapshot{n:Some(value)},None,&semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);let files=print_document_pack(&envelope).await.unwrap();envelope.retire_unadopted();
   DEMO_PROJECTION_CLONES.with(|count|count.set(0));
-  let parsed=text_format::parse_document_pack_envelope::<DemoSnapshot,DemoMutation>(&files.pack,&files.spr).await.unwrap();
+  let parsed=text_format::parse_document_pack::<DemoSnapshot,DemoMutation>(&files.pack,&files.spr,&semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap().into_envelope();
   assert_eq!(parsed.vcs.genesis.facts().snapshot().n,Some(row["expected"].as_i64().unwrap()as i32));assert_eq!(parsed.vcs.genesis.pack(),files.pack.as_slice());assert!(parsed.vcs.edits.is_empty());assert_eq!(DEMO_PROJECTION_CLONES.with(std::cell::Cell::get),row["discardedProjectionClones"].as_u64().unwrap()as usize);parsed.retire_unadopted();
  }
- println!("[DEBUG] original envelope parser: three neutral genesis cases retain pack facts and metadata validation with discardedProjectionClones0; semantic replay stays owned by receiving Store");
 }

@@ -11,8 +11,9 @@
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
-use crate::Puzzle3dSnapshot;
+pub use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use protocol::ColdMutation;
 use protocol::ColdDiffAlgebra;
 use protocol::{DiffAlgebra};

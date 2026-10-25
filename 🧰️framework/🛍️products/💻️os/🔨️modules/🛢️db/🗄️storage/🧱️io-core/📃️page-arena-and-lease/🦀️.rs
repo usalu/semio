@@ -76,7 +76,7 @@ pub(super) fn db_io_page_shell_credit() -> DbIoCredit {
 }
 
 #[derive(Debug)]
-pub(super) struct DbIoPageLease {
+pub struct DbIoPageLease {
     pub slot: u16,
     pub generation: u64,
     pub operation: u64,

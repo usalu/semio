@@ -14,7 +14,7 @@ const copyValue = (value: SqliteValue): SqliteValue => (value instanceof Uint8Ar
 const copyRow = (row: SqliteRow): MutableSqliteRow => ({ rowid: row.rowid, values: row.values.map(copyValue) });
 const copyTable = (table: SqliteTable): MutableSqliteTable => ({ name: table.name, sql: table.sql, rows: table.rows.map(copyRow) });
 
-/** 🔓️ Copies every table, row and byte cell, so a forged copy never aliases the database it came from. */
+/** 🦜️ Copies every table, row and byte cell, so a forged copy never aliases the database it came from. */
 export function mutableSqliteDatabase(database: SqliteDatabase): MutableSqliteDatabase {
   return { tables: database.tables.map(copyTable) };
 }

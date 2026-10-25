@@ -20,7 +20,7 @@ export function toolJobSourceMutation(source: string, owner: string, before: str
   return source.slice(0, at) + after + source.slice(at + before.length);
 }
 
-/** 🧵️ Reads the text of the mounted-instance family the typed-command publication laws bind: the composer and every use-case crate of the instance, the retained command shell and the lifted full-operation job, each crate family in path order. */
+/** 🔌️ Reads the text of the mounted-instance family the typed-command publication laws bind: the composer and every use-case crate of the instance, the retained command shell and the lifted full-operation job, each crate family in path order. */
 export function toolJobPluginInstanceSource(root: string): string {
   return ["🧵️instance", "🪜️maintenance-ladder", "♻️cancellation", "🧵️retained-command", "👷️job"].map((folder) => readSourceFamilySource(`${root}/${PLUGIN}/${folder}`)).join("\n");
 }
@@ -94,7 +94,7 @@ export function toolJobTypedCaptureBody(source: string): string | undefined {
   return body && body.replace(/\s+/gu, "") === expected.replace(/\s+/gu, "") ? body : undefined;
 }
 
-/** 🧵️ The typed-command seam: dispatch admits the verb into the latest-wins queue behind the full-operation gate and the fixed slot admission, and the latest-wins advance is the only caller of the setup that captures the roots, reserves the operation slot and mounts the worker. Returns the setup body. */
+/** ⌨️ The typed-command seam: dispatch admits the verb into the latest-wins queue behind the full-operation gate and the fixed slot admission, and the latest-wins advance is the only caller of the setup that captures the roots, reserves the operation slot and mounts the worker. Returns the setup body. */
 export function toolJobRetainedDispatchSetup(source: string): string | undefined {
   const body = (name: string): string | undefined => {
     const start = source.lastIndexOf(`async fn ${name}(`);
@@ -142,7 +142,7 @@ export function toolJobMountedDispatchOneTurnExact(raw: string): boolean {
     && drive.body.includes("cx.with_original_work_loan(step_fuel,step_deadline_us,") && !/\b(?:while|loop)\b/.test(withoutStrings(drive.body));
 }
 
-/** 🧵️ The typed-command full operation is bounded end to end: dispatch only admits, the roots are captured by the retained setup, the generic bounded job prepares its roots under cancellation and yield checks and then faults, because only an app-owned retained job owns a reducer, and the mounted operation publishes one funded unit per turn through its pending publication, its result page and its ACK. */
+/** 💯️ The typed-command full operation is bounded end to end: dispatch only admits, the roots are captured by the retained setup, the generic bounded job prepares its roots under cancellation and yield checks and then faults, because only an app-owned retained job owns a reducer, and the mounted operation publishes one funded unit per turn through its pending publication, its result page and its ACK. */
 export function toolJobFullOperationBounded(source: string): boolean {
   const start = source.lastIndexOf("async fn dispatch_typed_command_inner");
   const open = start < 0 ? -1 : source.indexOf("{", start);
@@ -244,7 +244,7 @@ export function toolJobPublicationFreshnessBeforeEveryTurn(source: string): bool
   );
 }
 
-/** 🧵️ Rejects the last generic typed-command false green: a batched publisher that
+/** 🗄️ Rejects the last generic typed-command false green: a batched publisher that
  * enters whole mutation replay, history construction, or outbound serialization in one turn.
  * ONE gesture stages N mutations into ONE `Edit` and ONE ledger slot, one fold per turn.
  * `storeSource` is the text of {@link toolJobStoreSource}: the item fold first, then the engine bundle, the publication owner and the cursor and log operations. */
@@ -406,7 +406,7 @@ export function toolJobTypedRouteFailsClosedBeforePreparation(source: string): b
     && !!rejection && rejection.body.includes('FaultCode::new("interactive-job.missing-owned-reducer")') && rejection.body.includes("Err(") && !rejection.body.includes("Ok(");
 }
 
-/** 🧵️ The typed-operation persistence seam: dispatch admits behind the full-operation gate and the fixed slot, the setup captures the roots before it mounts the pending worker session and the operation, the mounted operation steps its worker once per turn through the exact work loan, the maintenance ladder selects the next worker by a bounded fair scan, and one host turn spends its grant on a bounded number of worker steps. */
+/** 🧱️ The typed-operation persistence seam: dispatch admits behind the full-operation gate and the fixed slot, the setup captures the roots before it mounts the pending worker session and the operation, the mounted operation steps its worker once per turn through the exact work loan, the maintenance ladder selects the next worker by a bounded fair scan, and one host turn spends its grant on a bounded number of worker steps. */
 export function toolJobTypedPersistentFoundation(source: string): boolean {
   const blockOf = (needle: string) => {
     const start = source.lastIndexOf(needle);

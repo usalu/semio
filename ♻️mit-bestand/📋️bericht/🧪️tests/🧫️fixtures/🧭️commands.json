@@ -3,7 +3,26 @@
     "🔨️modules/📄️documents/📜️script.ts",
     "🔨️modules/👥️actor-network/📜️script.ts"
   ],
-  "maxSourceFiles": 25,
+  "sourceInputs": {
+    "🔨️modules/📄️documents/📜️script.ts": {
+      "sources": [
+        "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/📜️script.ts",
+        "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🟦️.ts"
+      ],
+      "owners": [
+        "🧰️framework/🔨️modules/🏃️process"
+      ]
+    },
+    "🔨️modules/👥️actor-network/📜️script.ts": {
+      "sources": [
+        "♻️mit-bestand/📋️bericht/🔨️modules/👥️actor-network/📜️script.ts",
+        "♻️mit-bestand/📋️bericht/🔨️modules/👥️actor-network/🟦️.ts"
+      ],
+      "owners": [
+        "🧰️framework/🔨️modules/🏃️process"
+      ]
+    }
+  },
   "forbidden": [
     "📚️library/📦️packages/🟦️typescript/🟦️.ts",
     "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📜️script.ts",

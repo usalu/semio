@@ -1,6 +1,6 @@
 import {isAbsolute,join,resolve} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import native from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import native from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️json/🟦️.ts";
 import budgetPolicy from "../🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import policy from "./🔣️policy.json" with {type:"json"};
@@ -56,7 +56,7 @@ export function readCacheLedgerV1(value:unknown,partitions:CachePartitionBudgets
   if(area.pattern!==undefined)try{new RegExp(area.pattern,"u");}catch{refuse("valid pattern required for "+area.id);}
   const remainder=area.budget!==undefined&&"remainder" in area.budget;
   if(area.kind==="nested"){
-   if(area.reclaim&&(area.reclaim.softAvailableBytes>=area.reclaim.targetAvailableBytes||area.reclaim.targetAvailableBytes>2684354560))refuse("reclaim needs soft below target and a target within the headroom schema: "+area.id);
+   if(area.reclaim&&(area.reclaim.softAvailableBytes>=area.reclaim.targetAvailableBytes||area.partition==="graph"&&area.reclaim.targetAvailableBytes>2684354560))refuse("reclaim needs soft below target and, in the graph partition, a target within the headroom schema: "+area.id);
    if(!area.partition||!Object.hasOwn(partitions,area.partition)||area.pattern!==undefined||area.collect!==undefined||!area.managed||!area.budget||remainder===(area.directory!==undefined))refuse("nested area "+area.id+" needs a declared partition, a manager and a budget");
    const row=nested.get(area.partition!)??{paths:[],explicit:0,remainders:0};nested.set(area.partition!,row);
    if(remainder)row.remainders++;else{const own=segments(area.directory!);if(row.paths.some(other=>inside(other,own)||inside(own,other)))refuse("overlapping nested areas in "+area.partition);row.paths.push(own);}
@@ -253,7 +253,7 @@ export function formatCacheReasonV1(language:CacheLanguageV1,reason:CacheRemoval
  return cacheTextV1(language,"reason."+reason,{days:Math.round((unusedAgeMs??0)/86400000)});
 }
 
-/** 🧮️ One recorded size: bytes, whether the walk that produced it was cut short, and when. */
+/** 📹️ One recorded size: bytes, whether the walk that produced it was cut short, and when. */
 export type CacheSizeRecordV1=Readonly<{usedBytes:number;partial:boolean;atMs:number}>;
 /** 📒️ The recorded sizes of areas, retired roots and undeclared entries, keyed `area`, `retired:<root>:<dir>`, `undeclared:<root>:<path>`. */
 export type CacheSizeLedgerV1=Readonly<{version:1;records:Readonly<Record<string,CacheSizeRecordV1>>}>;
@@ -266,7 +266,7 @@ export function readCacheSizeLedgerV1(value:unknown):CacheSizeLedgerV1{
  return value as CacheSizeLedgerV1;
 }
 
-/** 🧮️ The capacity a measured need demands: every part at its cap, plus headroom, plus the floor that must stay free. */
+/** ⚡️ The capacity a measured need demands: every part at its cap, plus headroom, plus the floor that must stay free. */
 export function cacheNeedRequiredBytesV1(ledger:CacheLedgerV1,need:CacheNeedV1,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions):number{
  const caps=need.components.reduce((sum,part)=>{
   if(part.area===undefined)return sum+(part.bytes??0);

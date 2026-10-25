@@ -1,7 +1,14 @@
 {
   "version": 1,
-  "buildModes": ["prototype", "release"],
-  "refusedBuildModes": [null, "dev", "dist"],
+  "buildModes": [
+    "prototype",
+    "release"
+  ],
+  "refusedBuildModes": [
+    null,
+    "dev",
+    "dist"
+  ],
   "requests": [
     {
       "id": "empty-arguments",
@@ -75,7 +82,7 @@
     "budgetMs": 0,
     "maximumOutputBytes": 536870912,
     "originalMaximumElapsedMilliseconds": 250,
-    "reason": "timeout",
+    "reason": "cancelled",
     "maximumObservedMilliseconds": 2000
   }
 }

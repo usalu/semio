@@ -11,7 +11,7 @@ import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 const policy=schema.definitions.Policy.const,marker=new RegExp(policy.markerPattern,"u");
 
-/** 🔗️ The two closure families a graph names: exact Source inventories and selected Cargo lock projections. */
+/** 📈️ The two closure families a graph names: exact Source inventories and selected Cargo lock projections. */
 export type BazelClosureKindV1="source"|"lock";
 
 /** 🔖️ One closure the graph references by the digest of its manifest. */

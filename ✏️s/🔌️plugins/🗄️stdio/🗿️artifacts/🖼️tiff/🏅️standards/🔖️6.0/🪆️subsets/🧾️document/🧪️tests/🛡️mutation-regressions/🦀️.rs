@@ -5,6 +5,7 @@ use crate::schema::snapshot::{TiffIfd,TiffSampleBlock,TiffWord64,TiffTag,TiffVal
 use crate::TiffSnapshot;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{ColdMutation, Mutation,MutationDiff};
+use protocol::ColdMutationDiff;
 
 fn tag(tag:u16,value:u16)->TiffTag{TiffTag{tag,values:TiffValues::Short(vec![value])}}
 fn snapshot()->TiffSnapshot{TiffSnapshot{ifds:vec![TiffIfd{entries:vec![tag(256,2),tag(257,1),tag(258,8),tag(262,2),tag(277,3),tag(500,1)],blocks:vec![TiffSampleBlock{x:0,y:0,width:2,height:1,channels:3,samples:(1..=6).map(TiffWord64::from_word).collect()}]}],..Default::default()}}

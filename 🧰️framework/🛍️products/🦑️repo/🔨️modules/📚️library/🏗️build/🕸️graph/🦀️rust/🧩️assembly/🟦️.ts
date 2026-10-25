@@ -1,4 +1,5 @@
 /** 🧩️ Assembly: module exporting `selectedRustGraphAssemblyLimitsV1`, `SelectedRustGraphAssemblyV1`, `SelectedRustGraphAssemblyFactsV1`, `SelectedRustGraphProjectV1` and more. */
+import{staleImplementationV1}from"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import{types}from"node:util";
 import{fileURLToPath}from"node:url";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -10,7 +11,7 @@ const sourcePath=fileURLToPath(physicalSourceOriginV1(import.meta.url,(import.me
 if(!Number.isSafeInteger(budget.maximumSnapshotBytes)||budget.maximumSnapshotBytes<2)throw Error("Finite selected Rust graph byte budget required");
 export const selectedRustGraphAssemblyLimitsV1=Object.freeze({...schema.definitions.Policy.const,maximumBytes:budget.maximumSnapshotBytes});
 const policy=selectedRustGraphAssemblyLimitsV1,seedContract=compileJsonSchemaSubset(schema.definitions.SeedEdge,schema),projectContract=compileJsonSchemaSubset(schema.definitions.Project,schema),outputContract=compileJsonSchemaSubset(schema,schema);
-function current():void{if(implementationPinnedV1())return;if(captureBoundedSourceRevisionV1(sourcePath,sourceRevision.byteLength).sha256!==sourceRevision.sha256||captureBoundedSourceRevisionV1(policyPath,policyRevision.byteLength).sha256!==policyRevision.sha256||captureBoundedSourceRevisionV1(budgetPath,budgetRevision.byteLength).sha256!==budgetRevision.sha256)throw Error("Stale loaded selected Rust graph assembly; restart required");}
+function current():void{if(implementationPinnedV1())return;if(captureBoundedSourceRevisionV1(sourcePath,sourceRevision.byteLength).sha256!==sourceRevision.sha256||captureBoundedSourceRevisionV1(policyPath,policyRevision.byteLength).sha256!==policyRevision.sha256||captureBoundedSourceRevisionV1(budgetPath,budgetRevision.byteLength).sha256!==budgetRevision.sha256)throw staleImplementationV1("Stale loaded selected Rust graph assembly; restart required");}
 /** 🪪️ Identifies one live private DATA index without granting Native or compiler authority. */
 export interface SelectedRustGraphAssemblyV1{readonly version:1}
 /** 🧮️ Reports actual bounded projection incidence, distinct from Native CPU or physical-cache measurements. */

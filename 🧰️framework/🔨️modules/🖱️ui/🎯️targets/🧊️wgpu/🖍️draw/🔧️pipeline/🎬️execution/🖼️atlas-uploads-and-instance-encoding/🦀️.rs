@@ -143,7 +143,7 @@ impl UiPipelines {
         Ok(())
     }
 
-    /// 🌑️ Clears the lazily enlarged directional depth map before this scene's bounded caster
+    /// 🧹️ Clears the lazily enlarged directional depth map before this scene's bounded caster
     /// scalars. Disabled shadows leave the one-pixel fallback resident and issue no GPU work.
     pub fn encode_prepared_world_shadow_begin(&mut self, device: &gpu_device::Device, encoder: &mut gpu_device::CommandEncoder, pass_owner: &ScenePass3d) {
         if !pass_owner.shadow.enabled {
@@ -162,7 +162,7 @@ impl UiPipelines {
         });
     }
 
-    /// 🌑️ Encodes one opaque caster into the scene's shadow map. One instance per call keeps
+    /// 🕯️ Encodes one opaque caster into the scene's shadow map. One instance per call keeps
     /// cancellation and replacement at the same scalar boundary as the color pass.
     #[allow(clippy::too_many_arguments, reason = "one fixed owner per GPU boundary")]
     pub fn encode_prepared_world_shadow_instance<'a>(
@@ -184,7 +184,7 @@ impl UiPipelines {
             return Err("prepared world shadow map was not begun");
         }
         let Some(mesh) = mesh_store.get_versioned(mesh_key, mesh_version) else { return Ok(false) };
-        if mesh.index_count == 0 { return Ok(false); }
+        let (Some(vertex_buffer), Some(index_buffer)) = (&mesh.vertex_buffer, &mesh.index_buffer) else { return Ok(false) };
         let globals = World3dGlobals::from_pass(pass_owner);
         self.resources.world_globals_ring.ensure_slots(device, &self.resources.world_bind_group_layout, 1);
         self.resources.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
@@ -203,9 +203,9 @@ impl UiPipelines {
         });
         pass.set_pipeline(&self.resources.world_shadow_pipeline);
         pass.set_bind_group(0, &self.resources.world_globals_ring.bind_group, &[self.resources.world_globals_ring.offset_for_slot(0)]);
-        pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+        pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         pass.set_vertex_buffer(1, instance_buffer);
-        pass.set_index_buffer(mesh.index_buffer.slice(..), gpu_device::IndexFormat::Uint32);
+        pass.set_index_buffer(index_buffer.slice(..), gpu_device::IndexFormat::Uint32);
         pass.draw_indexed(0..mesh.index_count, 0, 0..1);
         Ok(true)
     }
@@ -241,7 +241,7 @@ impl UiPipelines {
         height: f32,
     ) -> Result<bool, &'static str> {
         let Some(mesh) = mesh_store.get_versioned(mesh_key, mesh_version) else { return Ok(false) };
-        if mesh.index_count == 0 { return Ok(true); }
+        let (Some(vertex_buffer), Some(index_buffer)) = (&mesh.vertex_buffer, &mesh.index_buffer) else { return Ok(true) };
         let globals = World3dGlobals::from_pass(pass_owner);
         self.resources.world_globals_ring.ensure_slots(device, &self.resources.world_bind_group_layout, 1);
         self.resources.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
@@ -276,9 +276,9 @@ impl UiPipelines {
         }
         pass.set_bind_group(0, &self.resources.world_globals_ring.bind_group, &[self.resources.world_globals_ring.offset_for_slot(0)]);
         pass.set_bind_group(1, &self.resources.world_shadow_target.bind_group, &[]);
-        pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+        pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         pass.set_vertex_buffer(1, instance_buffer);
-        pass.set_index_buffer(mesh.index_buffer.slice(..), gpu_device::IndexFormat::Uint32);
+        pass.set_index_buffer(index_buffer.slice(..), gpu_device::IndexFormat::Uint32);
         pass.draw_indexed(0..mesh.index_count, 0, 0..1);
         pass.set_viewport(0.0, 0.0, width * scale, height * scale, 0.0, 1.0);
         Ok(true)

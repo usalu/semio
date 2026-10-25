@@ -5,7 +5,7 @@ import{randomUUID}from"node:crypto";
 import{mkdir,rm}from"node:fs/promises";
 import{join}from"node:path";
 import{planBazelTasksV1}from"../../📜️script.ts";
-import type{BuildGraphV1}from"../../../../🕸️graph/🟦️.ts";
+import type { BuildGraphV1 } from "../../../../🕸️graph/📋️model/🟦️.ts";
 import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import{createIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

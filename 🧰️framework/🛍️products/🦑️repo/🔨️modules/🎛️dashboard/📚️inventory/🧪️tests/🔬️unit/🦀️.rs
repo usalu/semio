@@ -99,7 +99,7 @@ fn a_second_project_with_a_taken_name_is_reported_and_never_replaces_the_first()
     let root = materialise("duplicate");
     write(&root, "🧰️tools/impostor/📋️project.json", &serde_json::json!({ "name": "workspace", "targets": { "alien": {} }, "metadata": { "semio": { "dashboard": { "tools": [{ "id": "alien-tool", "command": ["x"] }] } } } }).to_string());
     let registry = discover_with_catalog(&root,&never(),Some(&root.join("catalog")));
-    assert!(registry.problems().iter().any(|problem| problem.file == "🧰️tools/impostor/📋️project.json" && problem.message.contains("already used by the project in \".\"")), "{:?}", registry.problems());
+    assert!(registry.problems().iter().any(|problem| problem.file == "🧰️tools/impostor/📋️project.json" && problem.message.en.contains("already used by the project in \".\"")), "{:?}", registry.problems());
     let ids = ids(&registry);
     assert!(ids.contains(&"tool:workspace/inspector".to_string()) && !ids.contains(&"workspace:alien".to_string()) && !ids.contains(&"tool:workspace/alien-tool".to_string()));
     fs_remove(&root);
@@ -111,8 +111,10 @@ fn a_broken_manifest_is_a_problem_naming_its_file_and_costs_nothing_else() {
     write(&root, "🧰️tools/broken/📋️project.json", "{ \"name\": ");
     write(&root, "🧰️tools/odd/📋️project.json", &serde_json::json!({ "name": "odd", "targets": { "dev": { "metadata": { "semio": { "dashboard": { "ready": { "port": 99999 } } } } } } }).to_string());
     let registry = discover_with_catalog(&root,&never(),Some(&root.join("catalog")));
-    let problems: Vec<String> = registry.problems().iter().map(ToString::to_string).collect();
+    let problems: Vec<String> = registry.problems().iter().map(|problem| problem.render(dashboard_registry::Locale::En)).collect();
     assert!(problems.iter().any(|problem| problem.starts_with("🧰️tools/broken/📋️project.json")), "{problems:?}");
+    let german: Vec<String> = registry.problems().iter().map(|problem| problem.render(dashboard_registry::Locale::De)).collect();
+    assert!(german.iter().any(|problem| problem.starts_with("🧰️tools/broken/📋️project.json: Manifest nicht lesbar: ")) && problems.iter().any(|problem| problem.starts_with("🧰️tools/broken/📋️project.json: unreadable manifest: ")), "{german:?} {problems:?}");
     assert!(problems.iter().any(|problem| problem.starts_with("🧰️tools/odd/📋️project.json: targets.dev.metadata.semio.dashboard.ready: `port` must be between 1 and 65535")), "{problems:?}");
     assert!(ids(&registry).contains(&"hub:dev".to_string()));
     fs_remove(&root);
@@ -156,7 +158,8 @@ fn a_partially_published_graph_is_a_problem_per_recorded_plugin_error() {
     assert_eq!(problems.len(), 3, "{problems:?}");
     for (problem, (at, what)) in problems.iter().zip(wanted) {
         assert_eq!((problem.file.as_str(), problem.at.as_str()), (graph_file(), at));
-        assert_eq!(problem.message, what);
+        assert_eq!(problem.message.en, format!("build graph error: {what}"));
+        assert_eq!(problem.message.de, format!("Build-Graph-Fehler: {what}"));
     }
     fs_remove(&root);
 }

@@ -34,7 +34,7 @@ impl FlagValue {
     }
 }
 
-/// 🚩️ One declared flag.
+/// 🏁️ One declared flag.
 #[derive(Clone, Debug)]
 pub struct Flag {
     pub name: String,
@@ -64,12 +64,12 @@ impl Flag {
         Flag { name: name.to_string(), shorthand: String::new(), usage: usage.to_string(), default: FlagValue::Texts(default.iter().map(|item| (*item).to_string()).collect()) }
     }
 
-    /// 🔢️ A comma-separated integer list flag.
+    /// 🗒️ A comma-separated integer list flag.
     pub fn ints(name: &str, usage: &str) -> Flag {
         Flag { name: name.to_string(), shorthand: String::new(), usage: usage.to_string(), default: FlagValue::Ints(Vec::new()) }
     }
 
-    /// ⏱️ A duration flag, the default given in nanoseconds.
+    /// ⌛️ A duration flag, the default given in nanoseconds.
     pub fn duration(name: &str, default_nanoseconds: i64, usage: &str) -> Flag {
         Flag { name: name.to_string(), shorthand: String::new(), usage: usage.to_string(), default: FlagValue::Duration(default_nanoseconds) }
     }
@@ -102,7 +102,7 @@ impl Flag {
     }
 }
 
-/// 🔢️ Go's `strconv.Atoi`: an optional sign and decimal digits, nothing else.
+/// 🔠️ Go's `strconv.Atoi`: an optional sign and decimal digits, nothing else.
 fn go_atoi(raw: &str) -> Option<i64> {
     let digits = raw.strip_prefix(['+', '-']).unwrap_or(raw);
     if digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
@@ -149,7 +149,7 @@ pub fn parse_duration(raw: &str) -> Option<i64> {
     Some(if negative { -nanoseconds } else { nanoseconds })
 }
 
-/// 🧮️ How many operands a command accepts.
+/// 🎯️ How many operands a command accepts.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Arity {
     Any,
@@ -173,7 +173,7 @@ impl Arity {
     }
 }
 
-/// ▶️ What running a command does.
+/// 🎟️ What running a command does.
 pub type Action = fn(&mut Invocation<'_>) -> Result<(), CliError>;
 
 /// 🌳️ One declared command: an immutable spec, so a parse never leaks state into the next one.
@@ -196,13 +196,13 @@ impl Command {
         Command { use_line: use_line.to_string(), short: short.to_string(), arity: Arity::Any, aliases: Vec::new(), flags: Vec::new(), persistent: Vec::new(), raw: false, action: None, children: Vec::new() }
     }
 
-    /// 🧮️ Sets the accepted operand count.
+    /// 🪜️ Sets the accepted operand count.
     pub fn args(mut self, arity: Arity) -> Command {
         self.arity = arity;
         self
     }
 
-    /// 🚩️ Adds one local flag unless one of that name exists.
+    /// ➕️ Adds one local flag unless one of that name exists.
     pub fn flag(mut self, flag: Flag) -> Command {
         if !self.flags.iter().any(|existing| existing.name == flag.name) {
             self.flags.push(flag);
@@ -210,7 +210,7 @@ impl Command {
         self
     }
 
-    /// 🚩️ Adds many local flags.
+    /// ⛳️ Adds many local flags.
     pub fn flags(self, flags: Vec<Flag>) -> Command {
         flags.into_iter().fold(self, Command::flag)
     }
@@ -250,7 +250,7 @@ impl Command {
         self.use_line.split(' ').next().unwrap_or_default()
     }
 
-    /// 🔎️ The child a token names, by name or alias.
+    /// 🔑️ The child a token names, by name or alias.
     pub fn child(&self, name: &str) -> Option<&Command> {
         self.children.iter().find(|child| child.name() == name || child.aliases.iter().any(|alias| alias == name))
     }
@@ -268,7 +268,7 @@ impl Command {
     }
 }
 
-/// 🧾️ One parsed argv: the selected command chain, the operands, every visible flag with its
+/// 📃️ One parsed argv: the selected command chain, the operands, every visible flag with its
 /// effective value and whether the caller passed it, and whether `--help` short-circuited.
 pub struct Parsed<'a> {
     pub chain: Vec<&'a Command>,
@@ -278,7 +278,7 @@ pub struct Parsed<'a> {
 }
 
 impl<'a> Parsed<'a> {
-    /// 🌳️ The selected command.
+    /// 🌲️ The selected command.
     pub fn selected(&self) -> &'a Command {
         self.chain.last().copied().expect("a parse always selects the root")
     }
@@ -413,7 +413,7 @@ impl<'a> Invocation<'a> {
         Self { parsed, config, out, err, is_tty, repo_root }
     }
 
-    /// 🔤️ A string flag, empty when it is not visible.
+    /// 💬️ A string flag, empty when it is not visible.
     pub fn text(&self, name: &str) -> String {
         match self.parsed.flags.get(name) {
             Some((FlagValue::Text(text), _)) => text.clone(),
@@ -421,12 +421,12 @@ impl<'a> Invocation<'a> {
         }
     }
 
-    /// ☑️ A boolean flag, false when it is not visible.
+    /// 🔘️ A boolean flag, false when it is not visible.
     pub fn flag(&self, name: &str) -> bool {
         matches!(self.parsed.flags.get(name), Some((FlagValue::Bool(true), _)))
     }
 
-    /// 🔢️ An integer flag, zero when it is not visible.
+    /// 👁️ An integer flag, zero when it is not visible.
     pub fn int(&self, name: &str) -> i64 {
         match self.parsed.flags.get(name) {
             Some((FlagValue::Int(number), _)) => *number,
@@ -434,7 +434,7 @@ impl<'a> Invocation<'a> {
         }
     }
 
-    /// 📜️ A string list flag.
+    /// 📄️ A string list flag.
     pub fn texts(&self, name: &str) -> Vec<String> {
         match self.parsed.flags.get(name) {
             Some((FlagValue::Texts(items), _)) => items.clone(),
@@ -442,7 +442,7 @@ impl<'a> Invocation<'a> {
         }
     }
 
-    /// 🔢️ An integer list flag.
+    /// 📇️ An integer list flag.
     pub fn ints(&self, name: &str) -> Vec<i64> {
         match self.parsed.flags.get(name) {
             Some((FlagValue::Ints(items), _)) => items.clone(),
@@ -450,17 +450,17 @@ impl<'a> Invocation<'a> {
         }
     }
 
-    /// 🚩️ Whether the caller passed a flag.
+    /// 🔄️ Whether the caller passed a flag.
     pub fn changed(&self, name: &str) -> bool {
         self.parsed.flags.get(name).is_some_and(|(_, changed)| *changed)
     }
 
-    /// 📜️ The operands.
+    /// 📬️ The operands.
     pub fn args(&self) -> &[String] {
         &self.parsed.positional
     }
 
-    /// 🔤️ The operand at an index, empty when absent.
+    /// 🗂️ The operand at an index, empty when absent.
     pub fn arg(&self, index: usize) -> String {
         self.parsed.positional.get(index).cloned().unwrap_or_default()
     }
@@ -480,7 +480,7 @@ impl<'a> Invocation<'a> {
         let _ = self.out.write_all(text.as_bytes());
     }
 
-    /// ✍️ Writes one line to standard output.
+    /// 📝️ Writes one line to standard output.
     pub fn println(&mut self, text: &str) {
         self.print(&format!("{text}\n"));
     }

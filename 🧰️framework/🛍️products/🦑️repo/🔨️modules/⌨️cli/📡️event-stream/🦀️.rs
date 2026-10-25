@@ -11,15 +11,15 @@ use serde_json::{Map, Value as Json};
 
 /// 🏷️ The start event kind.
 pub const KIND_START: &str = "start";
-/// 🏷️ The log event kind.
+/// 🪵️ The log event kind.
 pub const KIND_LOG: &str = "log";
-/// 🏷️ The progress event kind.
+/// 📈️ The progress event kind.
 pub const KIND_PROGRESS: &str = "progress";
-/// 🏷️ The result event kind.
+/// 🏆️ The result event kind.
 pub const KIND_RESULT: &str = "result";
-/// 🏷️ The error event kind.
+/// ⚠️ The error event kind.
 pub const KIND_ERROR: &str = "error";
-/// 🏷️ The done event kind.
+/// ✔️ The done event kind.
 pub const KIND_DONE: &str = "done";
 
 /// ⏳️ How far a long operation has come.
@@ -59,7 +59,7 @@ pub struct ErrPayload {
     pub fatal: bool,
 }
 
-/// 🏁️ The terminal payload of a stream.
+/// ✅️ The terminal payload of a stream.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct DonePayload {
     #[serde(rename = "exit_code", default)]
@@ -68,7 +68,7 @@ pub struct DonePayload {
     pub status: String,
 }
 
-/// 📡️ One event of the stream every verb produces and every renderer consumes.
+/// 🌊️ One event of the stream every verb produces and every renderer consumes.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Event {
     #[serde(default)]
@@ -109,7 +109,7 @@ impl Event {
         Event { kind: KIND_LOG.to_string(), command: command.to_string(), message: message.into(), level: "info".to_string(), ..Event::default() }
     }
 
-    /// ❌️ One failure.
+    /// 🚨️ One failure.
     pub fn failure(command: &str, code: &str, message: impl Into<String>, detail: impl Into<String>) -> Event {
         Event { kind: KIND_ERROR.to_string(), command: command.to_string(), error: Some(ErrPayload { code: code.to_string(), message: message.into(), detail: detail.into(), fatal: true }), ..Event::default() }
     }
@@ -126,18 +126,18 @@ fn is_zero(value: &i64) -> bool {
 
 /// 🧯️ The error code of an internal failure.
 pub const ERR_INTERNAL: &str = "E_INTERNAL";
-/// 🧯️ The error code of an unreadable request.
+/// 📖️ The error code of an unreadable request.
 pub const ERR_PARSE: &str = "E_PARSE";
-/// 🧯️ The error code of a cancelled request.
+/// ✖️ The error code of a cancelled request.
 pub const ERR_CANCELED: &str = "E_CANCELED";
 
 /// 🚦️ The exit code of a successful stream.
 pub const EXIT_OK: i32 = 0;
-/// 🚦️ The exit code of a failed stream.
+/// 💥️ The exit code of a failed stream.
 pub const EXIT_ERROR: i32 = 1;
-/// 🚦️ The exit code of a misused command.
+/// ❓️ The exit code of a misused command.
 pub const EXIT_USAGE: i32 = 2;
-/// 🚦️ The exit code of a cancelled stream.
+/// 🛑️ The exit code of a cancelled stream.
 pub const EXIT_CANCELED: i32 = 130;
 
 /// 🕸️ Executes one GraphQL document as the `graphql` engine command: start, the result or the
@@ -175,7 +175,7 @@ fn go_json_float(value: f64) -> String {
     format!("{value}")
 }
 
-/// 🔢️ A float the way Go's `%v` verb prints it: shortest digits, exponent form outside `1e-4..1e6`.
+/// 📓️ A float the way Go's `%v` verb prints it: shortest digits, exponent form outside `1e-4..1e6`.
 fn go_float_v(value: f64) -> String {
     if value == 0.0 {
         return "0".to_string();
@@ -190,7 +190,7 @@ fn go_float_v(value: f64) -> String {
     format!("{value}")
 }
 
-/// 🔤️ A string literal the way Go's `encoding/json` writes it with HTML escaping switched off.
+/// 🔣️ A string literal the way Go's `encoding/json` writes it with HTML escaping switched off.
 fn go_json_string(text: &str, out: &mut String) {
     out.push('"');
     for character in text.chars() {
@@ -209,7 +209,7 @@ fn go_json_string(text: &str, out: &mut String) {
     out.push('"');
 }
 
-/// 🧾️ A value as compact JSON the way Go's `encoding/json` writes it: members sorted, no HTML
+/// 💾️ A value as compact JSON the way Go's `encoding/json` writes it: members sorted, no HTML
 /// escaping, Go's float spelling.
 pub fn go_json(value: &Json) -> String {
     let mut out = String::new();
@@ -280,7 +280,7 @@ pub fn go_sprint(value: &Json) -> String {
     }
 }
 
-/// 🖨️ A template field the way `text/template` prints it: `<no value>` for a missing member.
+/// 💬️ A template field the way `text/template` prints it: `<no value>` for a missing member.
 fn go_field(value: Option<&Json>) -> String {
     match value {
         None | Some(Json::Null) => "<no value>".to_string(),
@@ -338,7 +338,7 @@ fn paint(text: &str, colour: &str, is_tty: bool) -> String {
     ansi::colorize(text, colour, is_tty)
 }
 
-/// 🖨️ The three renderings a stream can take.
+/// 🔱️ The three renderings a stream can take.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Format {
     Json,
@@ -357,7 +357,7 @@ impl Format {
     }
 }
 
-/// 🖨️ What a renderer wrote and the exit code the terminal event carried.
+/// 💻️ What a renderer wrote and the exit code the terminal event carried.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Rendered {
     pub out: String,
@@ -365,7 +365,7 @@ pub struct Rendered {
     pub exit_code: i32,
 }
 
-/// 🖨️ Renders one stream in one format. The human renderer takes the terminal decision and the
+/// 🎞️ Renders one stream in one format. The human renderer takes the terminal decision and the
 /// elapsed time from the caller, so a recorded stream renders the same bytes on every host.
 pub fn render(events: &[Event], format: Format, is_tty: bool, verbose: bool, elapsed_ms: i64) -> Rendered {
     match format {
@@ -486,7 +486,7 @@ fn render_markdown_stream(events: &[Event]) -> Rendered {
     rendered
 }
 
-/// 📡️ The markdown a tool result carries for a stream: every result, every failure.
+/// 🔧️ The markdown a tool result carries for a stream: every result, every failure.
 pub fn events_to_markdown(events: &[Event]) -> String {
     let mut out = String::new();
     for event in events {
@@ -510,7 +510,7 @@ fn payload_of(data: &Json) -> Option<&Map<String, Json>> {
     Some(raw.get("data").and_then(Json::as_object).unwrap_or(raw))
 }
 
-/// 🔤️ The statute id a breach record names, whether its kind is a record or a bare id.
+/// 📋️ The statute id a breach record names, whether its kind is a record or a bare id.
 fn breach_kind(breach: &Map<String, Json>) -> String {
     match breach.get("kind") {
         Some(Json::Object(kind)) => go_field(kind.get("id")),

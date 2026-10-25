@@ -66,7 +66,7 @@ const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(er
 /** 🔐️ The outcome of asking for a lock: another living process holds it, or it is ours until `release`. */
 export type RemoteCacheLockV1=Readonly<{held:true;lock:string}>|Readonly<{held:false;release():Promise<void>}>;
 
-/** 🔐️ Takes a named lock of a store root: a file that appears atomically with the owner's process id and time already inside (written beside it and hard-linked into place, so no taker ever sees it empty). A lock of a dead process or older than six hours is taken over by renaming it away, which only one taker can do, and a lock held by a living process is reported instead of waited for. */
+/** 💾️ Takes a named lock of a store root: a file that appears atomically with the owner's process id and time already inside (written beside it and hard-linked into place, so no taker ever sees it empty). A lock of a dead process or older than six hours is taken over by renaming it away, which only one taker can do, and a lock held by a living process is reported instead of waited for. */
 export async function acquireRemoteCacheLockV1(root:string,name:string):Promise<RemoteCacheLockV1>{
  const lock=join(root,name),mine=join(root,`.${name}.${process.pid}.${randomUUID()}`),content=`${process.pid}\n${Date.now()}\n`;
  await writeFile(mine,content);
@@ -109,7 +109,7 @@ export type RemoteCacheCollectionRequestV1=Readonly<{root:string;maximumBytes:nu
 
 const fill=(rows:Iterable<{size:number}>):RemoteCacheFillV1=>{let entries=0,bytes=0;for(const row of rows){entries++;bytes+=row.size;}return {entries,bytes};};
 
-/** 🧹️ Collects a store directory the way a running server would, from outside: scans it, finds unusable action results, plans age and least-recently-used removals against the bound and, unless the request only plans, removes them. It holds the collector lock while removing and answers `locked` when another collector is running; removals are individually atomic, so cancelling leaves a consistent store. */
+/** ☁️ Collects a store directory the way a running server would, from outside: scans it, finds unusable action results, plans age and least-recently-used removals against the bound and, unless the request only plans, removes them. It holds the collector lock while removing and answers `locked` when another collector is running; removals are individually atomic, so cancelling leaves a consistent store. */
 export async function collectRemoteCacheDirectoryV1(request:RemoteCacheCollectionRequestV1):Promise<Readonly<{locked:true;lock:string}>|Readonly<{locked:false;value:RemoteCacheCollectionReportV1}>>{
  const run=async():Promise<RemoteCacheCollectionReportV1>=>{
   const hooks:RemoteCacheWalkHooksV1={...request.signal?{signal:request.signal}:{},...request.onProgress?{onProgress:request.onProgress}:{}};

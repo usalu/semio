@@ -15,7 +15,7 @@
 export const POLICY_LABELS_TWO_AXIS_ALLOWLIST = new Set<string>(["cad#CadLabels", "puzzle#Puzzle2dLabels", "puzzle#Puzzle3dLabels", "puzzle#Puzzle5dLabels"]);
 
 /**
- * 🎫️ Wave 4 V1 duplication audit: puzzle's 3d/5d `tree_item_with_action` redefinitions add an `icon_id`
+ * 🌳️ Wave 4 V1 duplication audit: puzzle's 3d/5d `tree_item_with_action` redefinitions add an `icon_id`
  * param the SDK's description-based primitive can't express (icon rendering) — documented real gap,
  * tracked here as a low-priority, non-failing breach rather than a should-fix duplicate. Keyed
  * `<pluginId>#<appId>` via `policyScopeKey` + `policyAppIdFromCrateDir` — the original `puzzle/plugin/rs#d3`
@@ -26,14 +26,14 @@ export const POLICY_LABELS_TWO_AXIS_ALLOWLIST = new Set<string>(["cad#CadLabels"
 export const POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST = new Set<string>(["puzzle#3d", "puzzle#5d"]);
 
 /**
- * 🎫️ Wave 4 V3 coupling audit (`.🧬semio/🦑️repo/🎫️tickets/26/07/18/WAVE-4-APP-TO-APP-COUPLING-AND-FRAMEWORK-IDENTITY-LEAK-AUDIT`):
+ * 🤝️ Wave 4 V3 coupling audit (`.🧬semio/🦑️repo/🎫️tickets/26/07/18/WAVE-4-APP-TO-APP-COUPLING-AND-FRAMEWORK-IDENTITY-LEAK-AUDIT`):
  * these crates are neutral shared domain/library crates that also happen to ship their own minimal
  * playground app (documented via each crate's `AGENTS.md`) — depending on them is not app-to-app coupling.
  */
 export const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow", "trinity_jack", "trinity_ram", "mathematical_graph_drawing", "mathematical_geometry", "infinite_board_port_directed", "infinite_board_port_directed_dag"]);
 
 /**
- * 🎫️ dsl/ derive-engine migration lock step: technologies whose example/*.json fixture has not yet
+ * 🧫️ dsl/ derive-engine migration lock step: technologies whose example/*.json fixture has not yet
  * been converted to its own DSL-text extension (e.g. `.puzzle2d`, `.flow`). Tracked here as a documented,
  * still-open follow-up rather than a silent exception — remove an entry once that technology's fixture
  * is migrated (see an already-migrated sibling crate's `*_fixture` round-trip test for the pattern).
@@ -44,7 +44,7 @@ export const POLICY_JSON_FIXTURE_ALLOWLIST = new Set<string>([]);
 export const POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST = ["coda/"];
 
 /**
- * 🎫️ pack/ binary-document-layer rollout lock step (`.🧬semio/🦑️repo/🎫️tickets/26/07/27/
+ * 🎒️ pack/ binary-document-layer rollout lock step (`.🧬semio/🦑️repo/🎫️tickets/26/07/27/
  * PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS`): every `*.rs` file below that already calls
  * `assert_dsl_round_trip(`/`assert_document_text_round_trip(` but does not yet ALSO call
  * `assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(` on the same fixtures — seeded at
@@ -59,7 +59,7 @@ export const POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST = ["coda/"];
 export const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([]);
 
 /**
- * 🎫️ CW7 command-envelope law lock step (`.🧬semio/🦑️repo/🎫️tickets/26/07/27/
+ * ✉️ CW7 command-envelope law lock step (`.🧬semio/🦑️repo/🎫️tickets/26/07/27/
  * INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING`): every `*.rs` file that already calls
  * `assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(` but does not yet ALSO call
  * `vcs::test_support::assert_command_envelope_round_trip` (added in CW7) on the same fixtures — seeded
@@ -88,7 +88,7 @@ export const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
 ]);
 
 /**
- * 🎫️ dsl/ derive-engine migration lock step: known generic bridges whose `DocumentDsl`/`OpText` coverage
+ * 🌉️ dsl/ derive-engine migration lock step: known generic bridges whose `DocumentDsl`/`OpText` coverage
  * cannot be seen as a `#[derive(dsl::Dsl...)]` attribute directly on the type (a blanket/generic impl
  * elsewhere covers them) — accepted as DSL-complete by `policyDslCompletenessBreaches` without a
  * hand-rolled-impl grep hit under that exact type name.
@@ -102,7 +102,7 @@ export const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
 export const POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST = new Set<string>(["Value", "SetDocumentMutation"]);
 
 /**
- * 🎫️ W1 grammar-engine wave (`.claude/plans/the-final-goal-for-jolly-spindle.md` `## Master wave
+ * 🆚️ W1 grammar-engine wave (`.claude/plans/the-final-goal-for-jolly-spindle.md` `## Master wave
  * plan` `W1 — Grammar engine`, design ruling B-R4): every `*.rs` file that defines a real
  * `impl protocol::MutationDiff<...>` diff type but does not yet ALSO give that type a
  * `protocol::DiffCodec` impl (via `#[derive(dsl::DslDiff)]` or a hand-rolled impl) — seeded at W1
@@ -190,7 +190,7 @@ export const POLICY_DIFF_COMPLETENESS_ALLOWLIST = new Set<string>([
 ]);
 
 /**
- * 🎫️ Handcrafted `.grammar.semio` / `.protocol.semio` specs per artifact facet (see ticket
+ * 📕️ Handcrafted `.grammar.semio` / `.protocol.semio` specs per artifact facet (see ticket
  * `26/08/03/HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT`). Paths listed here are still on generic/stub
  * specs; remove each entry once the facet's normative spec + recognizer sweep is committed.
  */
@@ -215,41 +215,41 @@ export const POLICY_TS_FACADE_CONSTITUTIONAL_FACETS = new Set<string>([
 export const POLICY_ENGINE_FACET = "⚙️engine";
 export const POLICY_OP_FACET = "🔧️op";
 /**
- * ⚖️P3/M4: colliding .grammar.semio/.protocol.semio after name/start normalization. Remove a path once its normalized hash is unique.
+ * 🪢️P3/M4: colliding .grammar.semio/.protocol.semio after name/start normalization. Remove a path once its normalized hash is unique.
  * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
 export const POLICY_SPEC_DISTINCTNESS_EXEMPTIONS = new Set<string>([]);
 
 /**
- * ⚖️P3/M4: generic catch-all grammar specs under ✏️s/. Remove once handcrafted.
+ * 🕳️P3/M4: generic catch-all grammar specs under ✏️s/. Remove once handcrafted.
  * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
 export const POLICY_GENERIC_SPEC_EXEMPTIONS = new Set<string>([]);
 
 /**
- * ⚖️P3/M4: grammars with use family-X that never reference a family production. Remove once wired.
+ * 🔖️P3/M4: grammars with use family-X that never reference a family production. Remove once wired.
  * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
 export const POLICY_DECLARED_USE_EXEMPTIONS = new Set<string>([]);
 
 /**
- * ⚖️P3/M4: facet 🦀️.rs missing include_str! of sibling spec. Remove once wired.
+ * 📎️P3/M4: facet 🦀️.rs missing include_str! of sibling spec. Remove once wired.
  * Seeded 220 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
 export const POLICY_SPEC_WIRING_INCLUDE_EXEMPTIONS = new Set<string>([]);
 
 /**
- * ⚖️P3/M4: artifacts with facet specs but no register_language under the artifact. Remove once engines register.
+ * 📇️P3/M4: artifacts with facet specs but no register_language under the artifact. Remove once engines register.
  * Seeded 44 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
 export const POLICY_SPEC_WIRING_REGISTER_EXEMPTIONS = new Set<string>([]);
 
 /**
- * ⚖️P3/M4: empty/stub `.semio` under `📚️examples/** /🖼️assets/` (size≤64). Kept empty — stubs are breaches.
+ * 🪫️P3/M4: empty/stub `.semio` under `📚️examples/** /🖼️assets/` (size≤64). Kept empty — stubs are breaches.
  */
 export const POLICY_EMPTY_EXAMPLE_EXEMPTIONS = new Set<string>([]);
 /**
- * ⚖️P6: empty — DocumentDsl/OpText/DocumentPack/OpBinary emission deleted from DslDocument/DslOps.
+ * 🧬️P6: empty — DocumentDsl/OpText/DocumentPack/OpBinary emission deleted from DslDocument/DslOps.
  * Scanner now flags residual __rt/op_rt codec calls (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
  */
 const POLICY_GENERIC_CODEC_DERIVE_EXEMPTIONS = new Set<string>([]);

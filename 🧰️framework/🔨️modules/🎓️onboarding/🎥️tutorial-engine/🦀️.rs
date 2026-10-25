@@ -1,4 +1,4 @@
-//! 🎥️ Tutorial engine: the start and record actions, the validation, the camera interpolation, the interface composition and the tutorial slice. See [`super`].
+//! ⚙️ Tutorial engine: the start and record actions, the validation, the camera interpolation, the interface composition and the tutorial slice. See [`super`].
 
 use super::*;
 
@@ -9,7 +9,7 @@ use super::*;
 /// `tutorialId` argument since an app may declare more than one.
 pub const START_TUTORIAL_ACTION_ID: &str = "startTutorial";
 
-/// 🎬️ The reserved `startTutorial` View action: fully shell-intercepted, it sandboxes
+/// ▶️ The reserved `startTutorial` View action: fully shell-intercepted, it sandboxes
 /// the live document, loads the selected tutorial's `base`, and starts playback from t=0.
 pub fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> ActionDefinition {
     let mut options = Vec::with_capacity(tutorials.len());
@@ -28,7 +28,7 @@ pub fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> Act
 /// EVERY `AppDefinition` (recording needs no app-side declaration at all).
 pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 
-/// ⏺️ The reserved `recordTutorial` View action: fully shell-intercepted, arms the
+/// 📹️ The reserved `recordTutorial` View action: fully shell-intercepted, arms the
 /// recorder against the live document (never a sandboxed copy — a recording IS the user's work).
 pub fn record_tutorial_action_definition() -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View, "eye") }
@@ -145,7 +145,7 @@ pub fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &Tutoria
     }
 }
 
-/// 🎥️ Finds the camera pose for `window_id` at `at_ms`: exact if `at_ms` lands on or before the
+/// 🔎️ Finds the camera pose for `window_id` at `at_ms`: exact if `at_ms` lands on or before the
 /// first keyframe (falling back to `base.cameras`), interpolated between the bracketing pair otherwise,
 /// held at the last pose past the final keyframe. `None` when the window has no camera keyframes at all.
 pub fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms: f64) -> Option<TutorialCameraState> {
@@ -250,7 +250,7 @@ pub struct TutorialSlice {
     pub ui_changes: Vec<TutorialUiChange>,
 }
 
-/// ✂️ Computes the `TutorialSlice` for advancing the playhead from `from_ms` to `to_ms` (`to_ms`
+/// 🍕️ Computes the `TutorialSlice` for advancing the playhead from `from_ms` to `to_ms` (`to_ms`
 /// may be less than `from_ms` when scrubbing backward).
 ///
 /// 🐢️ A `TutorialUiSample::Snapshot` crossed mid-slice is intentionally NOT flattened into deltas here:

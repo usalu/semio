@@ -9,7 +9,7 @@ import {mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:f
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResourceControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {buildExecPlanV1,runBuildCacheOperationV1,type BuildCacheToolV1} from "../🟦️.ts";
+import { buildExecPlanV1, runBuildCacheOperationV1 } from "../🟦️.ts"; import type { BuildCacheToolV1 } from "../📋️contract/🟦️.ts";
 import {buildHelpForArgumentsV1,readBuildHelpRequestV1,renderBuildHelpV1,resolveBuildHelpLanguageV1,type BuildHelpCatalogV1,type BuildHelpRequestV1} from "../📖️help/🟦️.ts";
 import {buildExecEnvironmentV1} from "../🌱️exec-environment/🟦️.ts";
 import {validateBuildTaskArgumentsV1} from "../../🧭️selection/🟦️.ts";

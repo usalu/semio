@@ -77,7 +77,7 @@ pub fn admit_original_tool_construction<O>(context:&mut StepContext<'_>,output:&
     admit_original_tool_construction_scoped(context,output,demand,|scope|construct(scope.identity()))
 }
 
-/// 🏗️ Original scope custody funds nested owner births before one actual candidate reaches its receipt boundary.
+/// 🔧️ Original scope custody funds nested owner births before one actual candidate reaches its receipt boundary.
 pub fn admit_original_tool_construction_scoped<O>(context:&mut StepContext<'_>,output:&mut Option<O>,demand:ToolJobAdmissionDemand,construct:impl FnOnce(&mut OriginalToolConstructionScope<'_>)->Result<(O,RetainedCloneProgress),ValueError>)->Result<bool,OriginalTurnFailure>{
     let source=OriginalToolSourceBinding::borrow(context);
     semio_framework_job::admit_original_construction(context,output,semio_framework_job::OriginalConstructionDemand{items:demand.items,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},|control|{

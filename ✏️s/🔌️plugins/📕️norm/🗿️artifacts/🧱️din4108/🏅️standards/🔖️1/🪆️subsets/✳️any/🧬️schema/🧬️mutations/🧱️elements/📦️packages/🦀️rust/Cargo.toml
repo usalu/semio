@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-s-artifact-norm-din4108-mut-elements-2 = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }

@@ -12,8 +12,7 @@
         "next": "^15.3.3",
         "pdfjs-dist": "^5.4.296",
         "pg-boss": "^10.3.2",
-        "sharp": "^0.34.5",
-        "three-mesh-bvh": "^0.9.14"
+        "sharp": "^0.34.5"
       },
       "devDependencies": {
         "@asamuzakjp/css-color": "3.2.0",
@@ -179,7 +178,7 @@
         "mdast-util-from-markdown": "2.1.0",
         "micromatch": "^4.0.8",
         "minimatch": "9.0.3",
-        "npm-run-path": "^6.0.0",
+        "nx": "23.2.0",
         "opentype.js": "1.3.4",
         "p-limit": "3.1.0",
         "p-map": "7.1.1",
@@ -215,6 +214,7 @@
         "suncalc": "1.9.0",
         "tailwindcss": "4.3.3",
         "three": "^0.182.0",
+        "three-mesh-bvh": "^0.9.14",
         "tree-kill": "^1.2.2",
         "tree-sitter-wasms": "0.1.13",
         "typescript": "^5.9.3",
@@ -762,19 +762,18 @@
       "name": "@semio-tech/repo-product",
       "version": "0.1.0",
       "dependencies": {
-        "@eslint/js": "^10.0.1",
         "@semio-tech/process": "workspace:*",
         "@semio-tech/repo-lib": "workspace:*",
-        "@semio-tech/schema-validator-ts": "workspace:*",
-        "eslint-plugin-storybook": "10.4.0",
-        "typescript-eslint": "^8.50.1"
+        "@semio-tech/schema-validator-ts": "workspace:*"
       },
       "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "@iarna/toml": "2.2.5",
         "@modelcontextprotocol/sdk": "1.32.1",
         "@semio-tech/ui": "workspace:*",
         "ajv": "8.20.0",
         "esbuild": "^0.27.2",
+        "eslint-plugin-storybook": "10.4.0",
         "fast-glob": "3.3.3",
         "find-up": "5.0.0",
         "graphql": "^17.0.2",
@@ -783,12 +782,12 @@
         "jsonc-parser": "3.3.1",
         "lodash": "4.18.1",
         "micromatch": "^4.0.8",
-        "nx": "23.2.0",
         "smart-buffer": "^4.2.0",
         "string-argv": "0.4.0",
         "string-width": "7.2.0",
         "strip-ansi": "^7.2.0",
         "typescript": "^5.9.3",
+        "typescript-eslint": "^8.50.1",
         "vitest": "^4.0.17",
         "yaml": "2.9.0"
       }
@@ -831,7 +830,7 @@
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers": {
       "name": "@semio-tech/build-parsers",
       "version": "0.1.0",
-      "dependencies": {
+      "devDependencies": {
         "@iarna/toml": "2.2.5",
         "typescript": "5.9.3"
       }
@@ -1282,10 +1281,8 @@
         "@semio-tech/schema-validator-ts": "workspace:*",
         "@semio-tech/ui-contract": "workspace:*",
         "@xyflow/react": "12.12.0",
-        "i18next": "25.10.10",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
-        "react-i18next": "16.6.6",
         "react-resizable-panels": "4.14.5",
         "three": "^0.182.0"
       },
@@ -1315,6 +1312,7 @@
         "fast-glob": "3.3.3",
         "fast-json-patch": "3.1.1",
         "graphlib": "2.1.8",
+        "i18next": "25.10.10",
         "lodash": "4.18.1",
         "playwright": "^1.57.0",
         "polygon-clipping": "0.15.7",
@@ -1382,15 +1380,12 @@
         "@semio-tech/ui": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
         "@xyflow/react": "^12.10.0",
-        "i18next": "^25.7.4",
         "pdfjs-dist": "^5.4.296",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
-        "react-i18next": "^16.5.2",
         "react-resizable-panels": "4.14.5",
         "three": "^0.182.0",
-        "three-mesh-bvh": "^0.9.14",
-        "xstate": "^5.25.0"
+        "three-mesh-bvh": "^0.9.14"
       },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
@@ -1410,7 +1405,6 @@
         "polygon-clipping": "0.15.7",
         "postcss": "8.5.30",
         "tailwindcss": "^4.0.0",
-        "terser": "5.49.1",
         "typescript": "^5.9.3",
         "vitest": "^4.0.17"
       }
@@ -1773,7 +1767,7 @@
         "vitest": "^4.0.17"
       }
     },
-    "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react": {
+    "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
       "name": "@semio-tech/presentation-react",
       "version": "0.1.0",
       "dependencies": {
@@ -4715,17 +4709,6 @@
       {},
       "sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw=="
     ],
-    "@jridgewell/source-map": [
-      "@jridgewell/source-map@0.3.11",
-      "",
-      {
-        "dependencies": {
-          "@jridgewell/gen-mapping": "^0.3.5",
-          "@jridgewell/trace-mapping": "^0.3.25"
-        }
-      },
-      "sha512-ZMp1V8ZFcPG5dIWnQLr3NSI1MiCU7UETdS/A0G8V/XWHvJv3ZsFqutJn1Y5RPmAPX6F3BiE397OqveU/9NCuIA=="
-    ],
     "@jridgewell/sourcemap-codec": [
       "@jridgewell/sourcemap-codec@1.6.0",
       "",
@@ -6811,7 +6794,7 @@
       "@semio-tech/presentation@workspace:🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript"
     ],
     "@semio-tech/presentation-react": [
-      "@semio-tech/presentation-react@workspace:🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react"
+      "@semio-tech/presentation-react@workspace:🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📦️packages/🟦️typescript"
     ],
     "@semio-tech/print": [
       "@semio-tech/print@workspace:🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript"
@@ -8671,10 +8654,10 @@
       "sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ=="
     ],
     "ansi-regex": [
-      "ansi-regex@6.4.0",
+      "ansi-regex@5.0.1",
       "",
       {},
-      "sha512-KzTVk2tCWAHtYrvvvaP8bJKJq2pVinhLcGEQdtLIYPbmNGNyYe8QwNaTUYQp2J7/vIsUKt5QCqAfUkYyG9DkOw=="
+      "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="
     ],
     "ansi-styles": [
       "ansi-styles@4.3.0",
@@ -13172,17 +13155,17 @@
       "sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg=="
     ],
     "open": [
-      "open@10.2.0",
+      "open@10.1.0",
       "",
       {
         "dependencies": {
           "default-browser": "^5.2.1",
           "define-lazy-prop": "^3.0.0",
           "is-inside-container": "^1.0.0",
-          "wsl-utils": "^0.1.0"
+          "is-wsl": "^3.1.0"
         }
       },
-      "sha512-YgBpdJHPyQ2UE5x+hlSXcnejzAvD0b22U2OuAP+8OnlJT+PjWPxtgmGqKKc+RgTM63U9gN0YzrYc71R2WT/hTA=="
+      "sha512-mnkeQ1qP5Ue2wd+aivTD3NHd/lZ96Lu0jgf0pwktLPtx6cTZiH7tyeGRRHs0zX0rbrahXPnXlUnbeXyaBBuIaw=="
     ],
     "opentype.js": [
       "opentype.js@1.3.4",
@@ -14979,22 +14962,6 @@
         }
       },
       "sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg=="
-    ],
-    "terser": [
-      "terser@5.49.1",
-      "",
-      {
-        "dependencies": {
-          "@jridgewell/source-map": "^0.3.3",
-          "acorn": "^8.15.0",
-          "commander": "^2.20.0",
-          "source-map-support": "~0.5.20"
-        },
-        "bin": {
-          "terser": "bin/terser"
-        }
-      },
-      "sha512-7A2xlQ5EnGT8KPA92dUh6RbRYTVw8hEaEN9L1K68l4UOXFuV511NnAqObGoRqGOQofQcMypisu1s3xawCEHrvA=="
     ],
     "text-decoder": [
       "text-decoder@1.2.7",
@@ -17381,12 +17348,6 @@
       {},
       "sha512-haREypq7xkM7ErfgIyA0z+Bj4AGKlMSdlQE2jvJo6huWD1EdkKYV+G/T4nq0YEF2vgTT8kqMFKo1uHn950r4SQ=="
     ],
-    "nx/ansi-regex": [
-      "ansi-regex@5.0.1",
-      "",
-      {},
-      "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="
-    ],
     "nx/argparse": [
       "argparse@2.0.1",
       "",
@@ -17472,19 +17433,6 @@
         }
       },
       "sha512-S48WzZW777zhNIrn7gxOlISNAqi9ZC/uQFnRdbeIHhZhCA6UqpkOT8T1G7BvfdgP4Er8gF4sUbaS0i7QvIfCWw=="
-    ],
-    "nx/open": [
-      "open@10.1.0",
-      "",
-      {
-        "dependencies": {
-          "default-browser": "^5.2.1",
-          "define-lazy-prop": "^3.0.0",
-          "is-inside-container": "^1.0.0",
-          "is-wsl": "^3.1.0"
-        }
-      },
-      "sha512-mnkeQ1qP5Ue2wd+aivTD3NHd/lZ96Lu0jgf0pwktLPtx6cTZiH7tyeGRRHs0zX0rbrahXPnXlUnbeXyaBBuIaw=="
     ],
     "nx/semver": [
       "semver@7.8.4",
@@ -17585,12 +17533,6 @@
       },
       "sha512-xglYA6q3XO5P3BNJYxVZ1IV7DLVjp1Py6nwag88YntrS+3vKHyYcMqXVS4ZztJmwz2uGvz1FWhI/4LgbR5uQDA=="
     ],
-    "pretty-format/ansi-regex": [
-      "ansi-regex@5.0.1",
-      "",
-      {},
-      "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="
-    ],
     "pretty-format/ansi-styles": [
       "ansi-styles@5.2.0",
       "",
@@ -17669,6 +17611,19 @@
       {},
       "sha512-FQK+LEpYc0fBD+J8g6oSEyyNzjp+Q7Ks1C568WWaoMRLW+TkNNWmenWeGgJjV105Gd+p/2ql1ZcjYvNiPZBhuQ=="
     ],
+    "storybook/open": [
+      "open@10.2.0",
+      "",
+      {
+        "dependencies": {
+          "default-browser": "^5.2.1",
+          "define-lazy-prop": "^3.0.0",
+          "is-inside-container": "^1.0.0",
+          "wsl-utils": "^0.1.0"
+        }
+      },
+      "sha512-YgBpdJHPyQ2UE5x+hlSXcnejzAvD0b22U2OuAP+8OnlJT+PjWPxtgmGqKKc+RgTM63U9gN0YzrYc71R2WT/hTA=="
+    ],
     "string-width-cjs/emoji-regex": [
       "emoji-regex@8.0.0",
       "",
@@ -17685,28 +17640,11 @@
       },
       "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A=="
     ],
-    "strip-ansi-cjs/ansi-regex": [
-      "ansi-regex@5.0.1",
+    "strip-ansi/ansi-regex": [
+      "ansi-regex@6.4.0",
       "",
       {},
-      "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="
-    ],
-    "terser/commander": [
-      "commander@2.20.3",
-      "",
-      {},
-      "sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ=="
-    ],
-    "terser/source-map-support": [
-      "source-map-support@0.5.21",
-      "",
-      {
-        "dependencies": {
-          "buffer-from": "^1.0.0",
-          "source-map": "^0.6.0"
-        }
-      },
-      "sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w=="
+      "sha512-KzTVk2tCWAHtYrvvvaP8bJKJq2pVinhLcGEQdtLIYPbmNGNyYe8QwNaTUYQp2J7/vIsUKt5QCqAfUkYyG9DkOw=="
     ],
     "three-stdlib/fflate": [
       "fflate@0.6.11",
@@ -18428,18 +18366,6 @@
       {},
       "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A=="
     ],
-    "cliui/strip-ansi/ansi-regex": [
-      "ansi-regex@5.0.1",
-      "",
-      {},
-      "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="
-    ],
-    "columnify/strip-ansi/ansi-regex": [
-      "ansi-regex@5.0.1",
-      "",
-      {},
-      "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="
-    ],
     "d3-sankey/d3-array/internmap": [
       "internmap@1.0.1",
       "",
@@ -18737,12 +18663,6 @@
       },
       "sha512-x76eH0vEiHlcMQu8Y8IenntaACtddpT6W0wmXtWrnKcnKI7ME5DdgqhAD6SEWOEl1v2zDvkZDhFA9KnURwpfqg=="
     ],
-    "ora/strip-ansi/ansi-regex": [
-      "ansi-regex@5.0.1",
-      "",
-      {},
-      "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="
-    ],
     "pdfjs-dist/@napi-rs/canvas/@napi-rs/canvas-android-arm64": [
       "@napi-rs/canvas-android-arm64@0.1.100",
       "",
@@ -18858,12 +18778,6 @@
       {},
       "sha512-aU5EJuIN2WDemCcAp2vFBfp/m4EAhWJnUNSSw0ixs7/kXbd6Pg64EmwJkNdFhB8aWt1sH2CTXrLxo/iAGV3oPQ=="
     ],
-    "string-width-cjs/strip-ansi/ansi-regex": [
-      "ansi-regex@5.0.1",
-      "",
-      {},
-      "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="
-    ],
     "type-is/mime-types/mime-db": [
       "mime-db@1.54.0",
       "",
@@ -18882,23 +18796,11 @@
       {},
       "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A=="
     ],
-    "wrap-ansi-cjs/strip-ansi/ansi-regex": [
-      "ansi-regex@5.0.1",
-      "",
-      {},
-      "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="
-    ],
     "wrap-ansi/string-width/emoji-regex": [
       "emoji-regex@8.0.0",
       "",
       {},
       "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A=="
-    ],
-    "wrap-ansi/strip-ansi/ansi-regex": [
-      "ansi-regex@5.0.1",
-      "",
-      {},
-      "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="
     ],
     "yargs/string-width/emoji-regex": [
       "emoji-regex@8.0.0",
@@ -18945,12 +18847,6 @@
       "",
       {},
       "sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ=="
-    ],
-    "yargs/string-width/strip-ansi/ansi-regex": [
-      "ansi-regex@5.0.1",
-      "",
-      {},
-      "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="
     ],
     "@bytecodealliance/componentize-js-0-19-3/oxc-parser/@oxc-parser/binding-wasm32-wasi/@napi-rs/wasm-runtime/@emnapi/core": [
       "@emnapi/core@1.11.3",

@@ -90,7 +90,6 @@ async fn pack_transport_conversion_preserves_source_identity_and_retry_authority
         assert_eq!(cause.retry(), retry);
         assert_eq!(cause.source_error().downcast_ref::<std::io::Error>().unwrap() as *const std::io::Error, pointer);
     }
-    eprintln!("[DEBUG] DB Pack transport preserves actual native source identity and both authored retry dispositions");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -104,5 +103,4 @@ async fn spr_writer_conversion_returns_original_database_sink_owner() {
     assert_eq!(serde_json::json!({"message":message}), serde_json::json!({"message":fixture["sink"]["message"]}));
     let error = protocol::ProtocolError::ChainMismatch { commit_seq: 42 };
     assert_eq!(DbError::from(protocol::SprWriteError::Protocol(error.clone())), DbError::Protocol(error));
-    eprintln!("[DEBUG] DB SPR writer returns the original sink allocation and typed protocol fields");
 }

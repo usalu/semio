@@ -4,9 +4,10 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::gis3d::modes::view::windows::terrain::config::{GisTerrainWindowConfig, GisTerrainWindowConfigDiff, GisTerrainWindowConfigMutation};
 use protocol::{ColdMutation, Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
+use protocol::ColdMutationDiff;
 use serde_json::Value;
 use std::fmt::Debug;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 //#region 🧫️NeutralFixture
 fn vectors() -> Value {

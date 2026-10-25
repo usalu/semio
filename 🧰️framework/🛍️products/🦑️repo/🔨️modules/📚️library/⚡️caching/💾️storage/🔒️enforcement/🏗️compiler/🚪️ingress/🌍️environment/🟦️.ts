@@ -1,4 +1,4 @@
-import {admitCargoCompilerFlagsV1} from "./../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🟦️.ts";
+import {admitCargoCompilerFlagsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 const protocol=schema.definitions.Protocol.const,whitespace=new RegExp(protocol.whitespace,"u"),target=new RegExp(protocol.targetPattern,"u");
 function encoded(name:string):boolean{return protocol.encoded.includes(name);}

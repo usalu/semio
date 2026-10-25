@@ -104,6 +104,7 @@ impl ShardLoop {
             }
         };
         let retry=turn_outcome.as_ref().is_ok_and(|result|matches!(result.status,semio_framework::kernel::TurnStatus::MoreWork));
+        let mut cancel_funds=self.job_funds(actor_id);
         let Some(instance)=self.instances.get_mut(&actor_id)else{return Err(PluginHostError::NativeIo(IssuedShardTurn::refusal("received original Event guest instance is absent")))};
         let outcome = match turn_outcome {
             Ok(mut result) => {
@@ -150,7 +151,11 @@ impl ShardLoop {
                             if let Some(index) = self.replay_seeds.iter().position(|seed| seed.as_ref().is_some_and(|seed| seed.actor == actor_id && seed.job == job && !matches!(seed.phase, ReplaySeedPhase::Retained))) {
                                 Self::begin_replay_seed_close_owned(&mut self.replay_seeds, &mut self.running_jobs, &mut self.job_turns, &mut self.job_authorities, &mut self.job_placement, index, ReplaySeedCloseReason::Cancelled);
                             } else if self.running_jobs.contains(&(actor_id, job)) {
-                                match self.runtime.cancel_job(instance, job).await {
+                                let cancelled = match cancel_funds.as_mut() {
+                                    Ok(funds) => self.runtime.cancel_job_funded(instance, funds, job).await,
+                                    Err(_) => Err(TurnFault::Trapped("cancel-job has no Kernel-issued actor batch".to_string())),
+                                };
+                                match cancelled {
                                     Ok(()) => {
                                         if let Some(index) = self.replay_seeds.iter().position(|seed| seed.as_ref().is_some_and(|seed| seed.actor == actor_id && seed.job == job)) {
                                             Self::begin_replay_seed_close_owned(&mut self.replay_seeds, &mut self.running_jobs, &mut self.job_turns, &mut self.job_authorities, &mut self.job_placement, index, ReplaySeedCloseReason::Cancelled);
@@ -387,8 +392,9 @@ impl ShardLoop {
         }
         let job = self.running_jobs.range((actor_id, cursor.after_job.map_or(0, |job| job.saturating_add(1)))..).next().copied().filter(|(job_actor, _)| *job_actor == actor_id).map(|(_, job)| job);
         if let Some(job) = job {
+            let funds = self.job_funds(actor_id);
             let result = match self.instances.get_mut(&actor_id) {
-                Some(instance) => self.runtime.cancel_job(instance, job).await,
+                Some(instance) => match funds { Ok(mut funds) => self.runtime.cancel_job_funded(instance, &mut funds, job).await, Err(fault) => Err(fault) },
                 None => {
                     self.retire_actor_replay_owners(actor_id);
                     self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Cancel for actor {actor_id} lost its registered instance") }).await?;

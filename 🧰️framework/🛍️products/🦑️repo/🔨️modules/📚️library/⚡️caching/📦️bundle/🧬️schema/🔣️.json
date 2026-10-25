@@ -39,7 +39,7 @@
     "runtime": {
       "enum": [
         "javascript",
-        "bun"
+        "runtime"
       ]
     }
   }

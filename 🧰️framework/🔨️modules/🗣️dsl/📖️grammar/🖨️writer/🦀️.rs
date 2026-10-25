@@ -1,4 +1,4 @@
-//! 🖨️ Canonical printers for grammar and protocol files, and the idempotent `canonicalize`.
+//! 🗃️ Canonical printers for grammar and protocol files, and the idempotent `canonicalize`.
 
 use crate::{CommentDialect, StringEscape, TextError};
 use super::{Alternative, Block, Cond, CondOp, Count, DispatchOrder, Field, Framing, GrammarFile, MacroArg, Prim, ProtocolFile, RepeatArm, SemioDialect, Symbol, is_protocol_source, parse_grammar, parse_protocol, prim_fixed_width};
@@ -292,7 +292,7 @@ fn header_fixed_size(fields: &[Field]) -> usize {
     total
 }
 
-/// 🖨️ Lossless protocol printer — `parse_protocol(print_protocol(p)) == p`.
+/// 📓️ Lossless protocol printer — `parse_protocol(print_protocol(p)) == p`.
 pub fn print_protocol(protocol: &ProtocolFile) -> String {
     let mut out = String::new();
     out.push_str("dialect protocol\nprotocol ");

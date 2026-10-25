@@ -58,7 +58,7 @@ pub use crate::test_app_mutation_fixture::config::mutations::TestConfigMutation;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(tag = "state", content = "value", rename_all = "camelCase")]
 #[value(tag = "state", content = "value", rename_all = "camelCase")]
-pub(crate) enum TestConfigDiff {
+pub enum TestConfigDiff {
     Identity,
     Clear,
     Set(String),

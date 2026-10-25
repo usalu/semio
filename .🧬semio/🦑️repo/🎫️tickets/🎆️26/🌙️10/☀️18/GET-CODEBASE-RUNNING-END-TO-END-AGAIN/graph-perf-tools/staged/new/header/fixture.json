@@ -1,6 +1,0 @@
-{
-  "file": "observed.txt",
-  "before": "first bytes\n",
-  "after": "second bytes, 🧵️\n",
-  "headerKeys": ["digest", "resultSha256", "authorityObservations", "observations"]
-}

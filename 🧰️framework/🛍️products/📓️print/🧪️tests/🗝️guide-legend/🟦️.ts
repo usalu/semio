@@ -43,22 +43,22 @@ export default defineTestAdapter({
     "categorical-entries": {
       /** 🔮️ d3-scale's ordinal scale: its domain is exactly the entry set a swatch legend shows. */
       oracle: (ctx: AdapterContext) => ({ projection: { "legend/entries": [...scaleOrdinal<string, string>().domain(rows(ctx)[0]!.domain!.split(",")).domain()] } }),
-      /** 🎯️ The entries the legend enumerated from the same scale. */
+      /** 📋️ The entries the legend enumerated from the same scale. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, "categorical.tex")),
     },
     "vertical-layout": {
       /** 📐️ The specified entry origins of a vertical legend. */
       oracle: (ctx: AdapterContext) => ({ projection: Object.fromEntries(rows(ctx).map((row) => [row.key!, row.values!.split(",").map(Number)])) }),
-      /** 🎯️ The origins the legend emitted while drawing. */
+      /** 📍️ The origins the legend emitted while drawing. */
       subject: async (ctx: AdapterContext) => {
         const projection = (await subject(ctx, "categorical.tex")).projection;
         return { projection: { "legend-origins": itemColumns(projection["geometry/legend-item"] ?? [], 3, [1, 2]) } };
       },
     },
     "size-entries": {
-      /** 📐️ The specified circle radii: the scale's mapping of its own ticks. */
+      /** 🟠️ The specified circle radii: the scale's mapping of its own ticks. */
       oracle: (ctx: AdapterContext) => ({ projection: Object.fromEntries(rows(ctx).map((row) => [row.key!, row.values!.split(",").map(Number)])) }),
-      /** 🎯️ The radii the size legend emitted while drawing. */
+      /** ⭕️ The radii the size legend emitted while drawing. */
       subject: async (ctx: AdapterContext) => {
         const projection = (await subject(ctx, "size.tex")).projection;
         return { projection: { "legend-radii": itemColumns(projection["geometry/legend-item"] ?? [], 3, [2]) } };

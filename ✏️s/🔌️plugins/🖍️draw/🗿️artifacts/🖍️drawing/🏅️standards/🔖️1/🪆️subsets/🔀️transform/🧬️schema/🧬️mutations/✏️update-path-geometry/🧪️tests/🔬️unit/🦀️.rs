@@ -28,7 +28,7 @@ fn path_geometry_mutation_roundtrip_fixture() {
     let layer = semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", before.into());
     let id = semio_s_artifact_draw_drawing_model::layer_id(&layer).to_string();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
-    let mutation = semio_s_artifact_draw_drawing_transform::update_path_geometry::mutation::update_path_geometry(id.into(), after.clone().into());
+    let mutation: semio_s_artifact_draw_drawing_mutations::DrawingMutation = semio_s_artifact_draw_drawing_transform::update_path_geometry::mutation::update_path_geometry(id.into(), after.clone().into());
     store::os_store::test_support::assert_op_line_round_trip(&mutation);
     store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
     let decoded: Vec<PathSegment> = semio_framework_pack_json::from_json_str(&fixture["after"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

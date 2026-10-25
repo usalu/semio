@@ -95,7 +95,7 @@ pub struct HistoryMutationMessage {
     pub op_index: Option<u32>,
 }
 
-/// ✏️ One applied mutation of a history row: its replica-independent id, applied position and index inside its edit,
+/// 📝️ One applied mutation of a history row: its replica-independent id, applied position and index inside its edit,
 /// its localized kind label, its outcome (the time-travel replay's while a session holds a report, else the durable
 /// one) and its editing state. `editable` = the op has an input schema and emits no foreign steps; `withdrawable` = the
 /// store's supersede law lets this actor withdraw it and it is not withdrawn yet (design §22.1); `pending` = it is
@@ -143,7 +143,7 @@ pub struct HistoryMutationEntry {
     pub store: Option<String>,
 }
 
-/// 🚦️ The stage of a live history-edit session (an inactive session is an absent `HistoryPatch.timeTravel`).
+/// 🕰️ The stage of a live history-edit session (an inactive session is an absent `HistoryPatch.timeTravel`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -220,7 +220,7 @@ pub struct HistoryTimeTravel {
     #[serde(default)]
     #[value(default)]
     pub accepted_count: u32,
-    /// 🧭️ While reviewing: what the review shows (absent in every other stage).
+    /// 👁️ While reviewing: what the review shows (absent in every other stage).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub review: Option<HistoryTimeTravelReview>,
@@ -249,7 +249,7 @@ pub struct HistoryEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub transaction: Option<HistoryTransaction>,
-    /// ✏️ The `Supersede` history transition this row is — a history edit, or the undo or redo of one.
+    /// 🆔️ The `Supersede` history transition this row is — a history edit, or the undo or redo of one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub transition_id: Option<String>,
@@ -264,7 +264,7 @@ pub struct HistoryEntry {
     pub label: semio_framework_ui_locale::LocalizedLabel,
     pub kind: String,
     pub timestamp: String,
-    /// 📜️ The newest forward operations of this row's edit, newest last — a bounded preview; `op_count` says how many the
+    /// ⏩️ The newest forward operations of this row's edit, newest last — a bounded preview; `op_count` says how many the
     /// edit holds.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -282,7 +282,7 @@ pub struct HistoryEntry {
     #[serde(default = "history_entry_count")]
     #[value(default = "history_entry_count")]
     pub count: u32,
-    /// 🚦️ The worst severity over `mutations`.
+    /// ⚖️ The worst severity over `mutations`.
     #[serde(default, skip_serializing_if = "Option::is_none", with = "history_severity_serde::option")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub worst: Option<Severity>,
@@ -309,7 +309,7 @@ impl HistoryEntry {
     }
 }
 
-/// 📡️ Which history change replays before this replica adopts it ([`HistoryReprojection`]): another replica's change
+/// 🎞️ Which history change replays before this replica adopts it ([`HistoryReprojection`]): another replica's change
 /// (`remote`), this replica's own deferred history step (`step`: an interior undo or redo, a checkout, an alternative
 /// switch) or a whole-document load (`load`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
@@ -322,7 +322,7 @@ pub enum HistoryReprojectionKind {
     Load,
 }
 
-/// 📡️ The replay a history change needs before this replica adopts it, stepped per reactor turn (design §16.6, gap N17),
+/// 🔄️ The replay a history change needs before this replica adopts it, stepped per reactor turn (design §16.6, gap N17),
 /// by `kind`: replayed operations of the total, whether the user paused a remote one (`historyEditCancelReplay` while no
 /// session is open; `historyEditRerun` resumes — cancelling a step or a load drops it with zero trace instead) and the code
 /// of a refused adoption.
@@ -346,7 +346,7 @@ pub struct HistoryReprojection {
     pub fault: Option<String>,
 }
 
-/// 🧾️ Ordered history delta returned in the same response as an accepted interaction.
+/// 🩹️ Ordered history delta returned in the same response as an accepted interaction.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -372,7 +372,7 @@ pub struct HistoryPatch {
     #[serde(default)]
     #[value(default)]
     pub command_filter: String,
-    /// ⏪️ The live history-edit session; absent while none is open. Every patch carries the current status in full.
+    /// 🧳️ The live history-edit session; absent while none is open. Every patch carries the current status in full.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub time_travel: Option<HistoryTimeTravel>,
@@ -380,7 +380,7 @@ pub struct HistoryPatch {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub reprojection: Option<HistoryReprojection>,
-    /// 🔢️ How many edits the document's history holds — the `{n}` of the `history.full` notice, carried as data so no host
+    /// 📄️ How many edits the document's history holds — the `{n}` of the `history.full` notice, carried as data so no host
     /// parses it from a fault message.
     #[serde(default)]
     #[value(default)]
@@ -537,7 +537,7 @@ pub fn fault_notice(fault: &Fault, notices: &[FaultNoticeDefinition], terminolog
 //#endregion 🔖️FaultNotices
 //#region 🔖️HistoryReprojectionStatus
 
-/// 📡️ Framework-owned EN/DE copy of a history change replaying before this replica adopts it ([`HistoryReprojection`]), by
+/// 🦜️ Framework-owned EN/DE copy of a history change replaying before this replica adopts it ([`HistoryReprojection`]), by
 /// `<kind>.<part>` key: every shell announces it in a polite status region outside the History panel and the history body
 /// titles its reprojection section with it (design §16.6, gap N17, audit W1E-3). `{done}`/`{total}` are replayed
 /// operations, `{reason}` a refusal's notice. Fixture `🧫️fixtures/🧫️history-reprojection/🔣️.json`; TS twin
@@ -557,7 +557,7 @@ pub const HISTORY_REPROJECTION_LABELS: [(&str, &str, &str); 12] = [
     ("work.processed", "Work completed: {processed}", "Arbeitsfortschritt: {processed}"),
 ];
 
-/// 📢️ What a shell announces while a history change replays before adoption ([`history_reprojection_status`]): the kind's
+/// 🚥️ What a shell announces while a history change replays before adoption ([`history_reprojection_status`]): the kind's
 /// title, one status line, replayed operations of the total, whether the user paused a remote change, and the code of a
 /// refused adoption (a shell's `data-notice-code`, never shown as text).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -570,7 +570,7 @@ pub struct HistoryReprojectionStatus {
     pub fault: Option<String>,
 }
 
-/// 📢️ The one status copy of a history change replaying before adoption, for both shells and the history body: a refused
+/// 📛️ The one status copy of a history change replaying before adoption, for both shells and the history body: a refused
 /// adoption (a fault with nothing left to replay) reads `<kind>.refused` with the fault's placeholder-free history notice
 /// ([`HISTORY_NOTICE_LABELS`]) or `reason.unnamed` — never a raw code; a paused remote change reads `remote.paused` (a step or
 /// a load is never paused); anything else its kind's progress. Labels [`HISTORY_REPROJECTION_LABELS`]; TS twin
@@ -604,7 +604,7 @@ pub fn history_reprojection_status(reprojection: &HistoryReprojection, terminolo
 //#region 🔖️Manifest
 //#region 🔖️FaultNotices
 
-/// 📢️ One app-declared fault notice (design §20.12): the `code` a guest refusal carries (`<app>.<area>.<name>`) and its
+/// 🎨️ One app-declared fault notice (design §20.12): the `code` a guest refusal carries (`<app>.<area>.<name>`) and its
 /// text in every shell locale × terminology, whose `{name}` placeholders are filled from the fault's `params` — never from
 /// its English `message`. Published in [`AppDefinition::fault_notices`]; schema `🛂️manifest/🧬️schema` `$defs.FaultNoticeDefinition`,
 /// TS twin `FaultNoticeDefinition` (`🤖️generated/🪪️manifest`), corpus `🧫️fixtures/🧫️fault-notices`.
@@ -627,7 +627,7 @@ pub enum FaultNoticeError {
 }
 
 impl FaultNoticeError {
-    /// 🏷️ The corpus/gate name of this rule (`syntax`, `duplicate`, `emptyText`, `placeholder`).
+    /// 🚪️ The corpus/gate name of this rule (`syntax`, `duplicate`, `emptyText`, `placeholder`).
     pub fn rule(&self) -> &'static str {
         match self {
             Self::Syntax { .. } => "syntax",

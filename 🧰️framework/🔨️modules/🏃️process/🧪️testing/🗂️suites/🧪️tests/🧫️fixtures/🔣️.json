@@ -1,0 +1,258 @@
+{
+ "version": 1,
+ "tree": {
+  "a/🧪️tests/🟦️.ts": "import{test}from\"bun:test\";",
+  "a/b/🧪️tests/🟦️.ts": "import { it } from \"bun:test\";",
+  "c/🧪️tests/helper.ts": "import { expect } from \"bun:test\";",
+  "c/🧪️tests/🟦️.ts": "import{describe}from'bun:test';",
+  "d/node_modules/x/🧪️tests/🟦️.ts": "import{test}from\"bun:test\";",
+  "e/🧪️tests/child.ts": "import{test}from\"bun:test\";",
+  "f/plain/🟦️.ts": "import{test}from\"bun:test\";",
+  "g/🧪️tests/🟦️.ts": "import{ afterAll, test } from \"../../🧪️test/🟦️.ts\";"
+ },
+ "cases": [
+  {
+   "name": "nearest tree wins and helpers are no suite files",
+   "table": {
+    "version": 1,
+    "suites": [
+     {
+      "id": "x",
+      "budgetMs": 1000,
+      "typecheck": "none",
+      "trees": [
+       "a"
+      ]
+     },
+     {
+      "id": "y",
+      "budgetMs": 1000,
+      "typecheck": "none",
+      "trees": [
+       "a/b"
+      ]
+     },
+     {
+      "id": "z",
+      "budgetMs": 1000,
+      "typecheck": "none",
+      "trees": [
+       "c",
+       "g"
+      ]
+     }
+    ],
+    "codeSuites": [],
+    "helpers": [
+     "e/🧪️tests/child.ts"
+    ]
+   },
+   "expected": {
+    "unrouted": [],
+    "duplicated": [],
+    "filtered": [],
+    "missing": [],
+    "staleHelpers": [],
+    "discovered": [
+     "a/🧪️tests/🟦️.ts",
+     "a/b/🧪️tests/🟦️.ts",
+     "c/🧪️tests/🟦️.ts",
+     "e/🧪️tests/child.ts",
+     "g/🧪️tests/🟦️.ts"
+    ]
+   }
+  },
+  {
+   "name": "a file below no tree is unrouted",
+   "table": {
+    "version": 1,
+    "suites": [
+     {
+      "id": "x",
+      "budgetMs": 1000,
+      "typecheck": "none",
+      "trees": [
+       "a"
+      ]
+     }
+    ],
+    "codeSuites": [],
+    "helpers": []
+   },
+   "expected": {
+    "unrouted": [
+     "c/🧪️tests/🟦️.ts",
+     "e/🧪️tests/child.ts",
+     "g/🧪️tests/🟦️.ts"
+    ],
+    "duplicated": [],
+    "filtered": [],
+    "missing": [],
+    "staleHelpers": [],
+    "discovered": [
+     "a/🧪️tests/🟦️.ts",
+     "a/b/🧪️tests/🟦️.ts",
+     "c/🧪️tests/🟦️.ts",
+     "e/🧪️tests/child.ts",
+     "g/🧪️tests/🟦️.ts"
+    ]
+   }
+  },
+  {
+   "name": "two suites running a file entirely duplicate it",
+   "table": {
+    "version": 1,
+    "suites": [
+     {
+      "id": "x",
+      "budgetMs": 1000,
+      "typecheck": "none",
+      "files": [
+       "a/🧪️tests/🟦️.ts"
+      ]
+     },
+     {
+      "id": "y",
+      "budgetMs": 1000,
+      "typecheck": "none",
+      "files": [
+       "a/🧪️tests/🟦️.ts"
+      ]
+     },
+     {
+      "id": "z",
+      "budgetMs": 1000,
+      "typecheck": "none",
+      "trees": [
+       "a/b",
+       "c",
+       "g"
+      ]
+     }
+    ],
+    "codeSuites": [],
+    "helpers": [
+     "e/🧪️tests/child.ts"
+    ]
+   },
+   "expected": {
+    "unrouted": [],
+    "duplicated": [
+     "a/🧪️tests/🟦️.ts -> x,y"
+    ],
+    "filtered": [],
+    "missing": [],
+    "staleHelpers": [],
+    "discovered": [
+     "a/🧪️tests/🟦️.ts",
+     "a/b/🧪️tests/🟦️.ts",
+     "c/🧪️tests/🟦️.ts",
+     "e/🧪️tests/child.ts",
+     "g/🧪️tests/🟦️.ts"
+    ]
+   }
+  },
+  {
+   "name": "only name-filtered suites leave a file filtered",
+   "table": {
+    "version": 1,
+    "suites": [
+     {
+      "id": "p",
+      "budgetMs": 1000,
+      "typecheck": "none",
+      "files": [
+       "a/🧪️tests/🟦️.ts"
+      ],
+      "testNamePattern": "one"
+     },
+     {
+      "id": "z",
+      "budgetMs": 1000,
+      "typecheck": "none",
+      "trees": [
+       "a/b",
+       "c",
+       "g"
+      ]
+     }
+    ],
+    "codeSuites": [],
+    "helpers": [
+     "e/🧪️tests/child.ts"
+    ]
+   },
+   "expected": {
+    "unrouted": [],
+    "duplicated": [],
+    "filtered": [
+     "a/🧪️tests/🟦️.ts"
+    ],
+    "missing": [],
+    "staleHelpers": [],
+    "discovered": [
+     "a/🧪️tests/🟦️.ts",
+     "a/b/🧪️tests/🟦️.ts",
+     "c/🧪️tests/🟦️.ts",
+     "e/🧪️tests/child.ts",
+     "g/🧪️tests/🟦️.ts"
+    ]
+   }
+  },
+  {
+   "name": "a missing file and a stale helper are named",
+   "table": {
+    "version": 1,
+    "suites": [
+     {
+      "id": "x",
+      "budgetMs": 1000,
+      "typecheck": "none",
+      "trees": [
+       "a",
+       "c",
+       "g"
+      ],
+      "files": [
+       "../nope.ts"
+      ]
+     }
+    ],
+    "codeSuites": [],
+    "helpers": [
+     "e/🧪️tests/child.ts",
+     "zz/🧪️tests/🟦️.ts"
+    ]
+   },
+   "expected": {
+    "unrouted": [],
+    "duplicated": [],
+    "filtered": [],
+    "missing": [
+     "x:../nope.ts"
+    ],
+    "staleHelpers": [
+     "zz/🧪️tests/🟦️.ts"
+    ],
+    "discovered": [
+     "a/🧪️tests/🟦️.ts",
+     "a/b/🧪️tests/🟦️.ts",
+     "c/🧪️tests/🟦️.ts",
+     "e/🧪️tests/child.ts",
+     "g/🧪️tests/🟦️.ts"
+    ]
+   }
+  }
+ ],
+ "aggregation": {
+  "tree": {
+   "h/🧪️tests/🟦️.ts": "import{test}from\"bun:test\";\nimport \"../../a/🧪️tests/🟦️.ts\";\nimport './sibling.ts'\nimport \"node:fs\";\nimport x from \"../../a/🧪️tests/🟦️.ts\";\n",
+   "h/🧪️tests/sibling.ts": "import{describe}from\"bun:test\";\n",
+   "a/🧪️tests/🟦️.ts": "import{test}from\"bun:test\";\n"
+  },
+  "expected": [
+   "h/🧪️tests/🟦️.ts -> a/🧪️tests/🟦️.ts",
+   "h/🧪️tests/🟦️.ts -> h/🧪️tests/sibling.ts"
+  ]
+ }
+}

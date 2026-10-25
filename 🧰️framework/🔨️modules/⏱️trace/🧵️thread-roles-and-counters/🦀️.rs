@@ -1,9 +1,9 @@
-//! 🧵️ Thread roles and counters of the trace primitives: the process-wide thread role registry and the worker, permit and queue counters. See [`super`].
+//! 🧱️ Thread roles and counters of the trace primitives: the process-wide thread role registry and the worker, permit and queue counters. See [`super`].
 
 use super::*;
 
 //#region 🧵️ThreadRole
-/// 🧵️ Which role the calling OS thread was registered under — [`ThreadRole::Unknown`] until
+/// 🎭️ Which role the calling OS thread was registered under — [`ThreadRole::Unknown`] until
 /// [`register_ui_thread`]/[`register_worker_thread`]/[`register_io_boundary_thread`] is called on
 /// that same thread. [`ThreadRole::IoBoundary`] (P1f) is a THIRD, deliberately distinct role from
 /// [`ThreadRole::Worker`]: a thread census must be able to tell "a `WorkerPool` worker, indexed and
@@ -45,17 +45,17 @@ pub fn current_role() -> ThreadRole {
     THREAD_ROLE.with(Cell::get)
 }
 
-/// 🔍️ Non-panicking query: is the calling thread the registered UI thread?
+/// 🖥️ Non-panicking query: is the calling thread the registered UI thread?
 pub fn is_ui_thread() -> bool {
     matches!(current_role(), ThreadRole::Ui)
 }
 
-/// 🔍️ Non-panicking query: is the calling thread a registered worker (any index)?
+/// 🐝️ Non-panicking query: is the calling thread a registered worker (any index)?
 pub fn is_worker_thread() -> bool {
     matches!(current_role(), ThreadRole::Worker(_))
 }
 
-/// 🔍️ Non-panicking query: is the calling thread a registered platform I/O boundary (any site)?
+/// 🌐️ Non-panicking query: is the calling thread a registered platform I/O boundary (any site)?
 pub fn is_io_boundary_thread() -> bool {
     matches!(current_role(), ThreadRole::IoBoundary(_))
 }
@@ -66,7 +66,7 @@ pub fn assert_ui_thread() {
     debug_assert!(is_ui_thread(), "assert_ui_thread: called from {:?}, not the UI thread", current_role());
 }
 
-/// 🚨️ Debug-only tripwire (`debug_assert!`, compiled to nothing in release): panics if the calling
+/// 🐞️ Debug-only tripwire (`debug_assert!`, compiled to nothing in release): panics if the calling
 /// thread is not a registered worker thread.
 pub fn assert_worker_thread() {
     debug_assert!(is_worker_thread(), "assert_worker_thread: called from {:?}, not a worker thread", current_role());
@@ -105,7 +105,7 @@ impl WorkerCounters {
     }
 }
 
-/// 📊️ Lock-free permit-ledger occupancy — same shape as [`WorkerCounters`], kept as a separate type so
+/// 🧾️ Lock-free permit-ledger occupancy — same shape as [`WorkerCounters`], kept as a separate type so
 /// a snapshot never conflates "how many workers are running" with "how many permits are checked out".
 #[derive(Debug, Default)]
 pub struct PermitLedger {
@@ -121,7 +121,7 @@ impl PermitLedger {
         self.occupied.fetch_add(1, Ordering::SeqCst) + 1
     }
 
-    /// ⚖️ Same overdraw tripwire as [`WorkerCounters::worker_finished`].
+    /// 📦️ Same overdraw tripwire as [`WorkerCounters::worker_finished`].
     pub fn release(&self) -> u32 {
         let previous = self.occupied.fetch_sub(1, Ordering::SeqCst);
         debug_assert!(previous >= 1, "PermitLedger::release: no permit to release");
@@ -140,7 +140,7 @@ pub struct QueueCounterSnapshot {
     pub bytes: u64,
 }
 
-/// 📊️ Lock-free per-queue item/byte counters. One instance per named queue — a caller owns a
+/// 🔢️ Lock-free per-queue item/byte counters. One instance per named queue — a caller owns a
 /// `static QUEUE: QueueCounter = QueueCounter::new();` per queue site, the same instantiate-per-site
 /// shape [`PercentileRing`]'s call sites use logically, except here the caller holds the instance
 /// directly rather than this crate keeping a name-keyed registry — a registry would need a lock, and
@@ -162,7 +162,7 @@ impl QueueCounter {
         self.snapshot()
     }
 
-    /// ⚖️ Same overdraw tripwire as [`WorkerCounters::worker_finished`] for `items`; `bytes` is left to
+    /// 🏁️ Same overdraw tripwire as [`WorkerCounters::worker_finished`] for `items`; `bytes` is left to
     /// wrap on its own since a byte count has no single-unit "overdraw" notion.
     pub fn dequeued(&self, bytes: u64) -> QueueCounterSnapshot {
         let previous_items = self.items.fetch_sub(1, Ordering::SeqCst);

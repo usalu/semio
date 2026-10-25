@@ -27,9 +27,9 @@ import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️ty
 import { blake3Hex } from "@semio-tech/framework-hash";
 
 import { resolveTypescriptCompilerV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { isMainModuleV1 } from "../../../⚙️runtime/🏁️main/🟦️.ts";
-import { runtimeTypeEnvironmentV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
-import { SqliteDatabaseV1 } from "../../../⚙️runtime/🗃️sqlite/🟦️.ts";
+import { isMainModuleV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
 /** 📡️ The replication packages bottom up: leaf contracts, wire core, format and mutation, edit and causal, history and frames, the message ledgers, then the façade every consumer links. */
 const REPLICATION_PACKAGES = ["semio-framework-replication-codec","semio-framework-replication-command-ingress","semio-framework-replication-history-index","semio-framework-replication-ids","semio-framework-replication-interaction","semio-framework-replication-local-interaction","semio-framework-replication-wire-core","semio-framework-replication-format","semio-framework-replication-mutation","semio-framework-replication-presence","semio-framework-replication-edit","semio-framework-replication-causal","semio-framework-replication-conflict","semio-framework-replication-frames","semio-framework-replication-history","semio-framework-replication-mutation-messages","semio-framework-replication"];
 
@@ -79,7 +79,7 @@ class RetainedFieldChangeScript extends BundleScript{
   assert.equal(receipts[0]!.assertions,laws.length);
  }
 }
-/** 🎚️ Proves one funded original record field frontier at a time. */
+/** 📹️ Proves one funded original record field frontier at a time. */
 class RetainedRecordChangeScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   assert(segments.length===1&&["source","native"].includes(segments[0]!),"test-retained-record-change requires source or native");
@@ -476,7 +476,7 @@ class CommandIngressNativeScript extends BundleScript {
  }
 }
 
-/** 🏛️ Runs the language-neutral crate-partition law of the replication crates against its independent TOML and graph oracles. */
+/** ⚖️ Runs the language-neutral crate-partition law of the replication crates against its independent TOML and graph oracles. */
 class CratePartitionLawScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-crate-partition accepts no arguments");
@@ -485,7 +485,7 @@ class CratePartitionLawScript extends BundleScript {
 }
 
 
-/** 🧾️ Compares shared portable field publication with an independent SQLite transaction. */
+/** 📜️ Compares shared portable field publication with an independent SQLite transaction. */
 class PreparedFieldsScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--native")) throw new Error("prepared-fields-check accepts only --native");

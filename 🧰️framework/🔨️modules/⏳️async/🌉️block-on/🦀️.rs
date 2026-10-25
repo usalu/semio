@@ -8,7 +8,7 @@ use std::task::Waker;
 use super::original_thread_wake;
 
 //#region 🌉️BlockOn
-/// 🌉️ Drives `fut` to completion on the calling thread — the boundary where a plain OS thread
+/// 🧱️ Drives `fut` to completion on the calling thread — the boundary where a plain OS thread
 /// BECOMES an executor.
 ///
 /// 🚫️async: E5 executor bridge — one of the few functions in the whole repo deliberately NOT

@@ -5,6 +5,8 @@ import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{SCRIPT_PROCESS_INVOCATION_ENV,createScriptProcessEnvelope,readScriptPolicy,scriptProcessEnvironment}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{withReceivedImplementationPinV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{implementationPinnedV1}from"../../🟨️.mjs";
 
 const routing=fileURLToPath(new URL("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",import.meta.url)),revision=fileURLToPath(new URL("../../🟨️.mjs",import.meta.url));
 const vectors=[
@@ -30,4 +32,11 @@ for(const vector of vectors)test(`a process that ${vector.receive?"receives":"do
  expect(observed.status).toBe(0);
  expect(observed.insidePinned).toBe(vector.insidePinned);
  expect(observed.afterPinned).toBe(vector.afterPinned);
+});
+
+test("work run under the received implementation pin is pinned for every reader and unpinned afterwards, also when its body fails",async()=>{
+ expect(implementationPinnedV1()).toBe(false);
+ const inside=await withReceivedImplementationPinV1(async()=>{await Promise.resolve();return implementationPinnedV1();});
+ expect(inside).toBe(true);expect(implementationPinnedV1()).toBe(false);
+ await expect(withReceivedImplementationPinV1(async()=>{throw Error("failed body");})).rejects.toThrow("failed body");expect(implementationPinnedV1()).toBe(false);
 });

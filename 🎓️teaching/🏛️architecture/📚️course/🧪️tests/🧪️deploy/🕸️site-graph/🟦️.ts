@@ -1,4 +1,4 @@
-/** 🕸️ The site build as graph tasks: `build` is a receipt-cached product of a complete key, `publish` only verifies and stages what `build` published, and `deploy-check` reaches the compiler and the site through the graph instead of repeating them.
+/** 🔗️ The site build as graph tasks: `build` is a receipt-cached product of a complete key, `publish` only verifies and stages what `build` published, and `deploy-check` reaches the compiler and the site through the graph instead of repeating them.
  * The manifest under test is the live one, or the file named by `COURSE_MANIFEST`. The key-completeness oracle is the third-party TypeScript module resolver with `picomatch` over the build inputs.
  * @see ./🧬️schema/🔣️.json — the contract of `🧫️fixtures/🕸️site-graph/🔣️.json` */
 import Ajv from "ajv";

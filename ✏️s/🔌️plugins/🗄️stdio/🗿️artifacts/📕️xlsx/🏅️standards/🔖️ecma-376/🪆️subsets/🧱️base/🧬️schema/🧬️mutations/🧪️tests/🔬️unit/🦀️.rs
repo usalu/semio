@@ -39,7 +39,7 @@ async fn insert_then_remove_sheet_apply_and_inverse() {
     assert_eq!(sheets.len(), 3);
     assert!(sheets.iter().any(|s| s.name == "New"));
 
-    for inv in Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture") {
         apply_xlsx_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
@@ -52,7 +52,7 @@ async fn remove_sheet_inverse_restores_removed_sheet() {
     let mut after = base.clone();
     apply_xlsx_mutation(&mut after, &remove);
     assert_eq!(workbook(&after).sheets.len(), 1);
-    for inv in Mutation::inverse(&remove, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&remove, &base).expect("valid retained mutation inverse fixture") {
         apply_xlsx_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
@@ -68,7 +68,7 @@ async fn rename_sheet_apply_and_inverse() {
     assert!(!sheets.iter().any(|s| s.name == "Sheet2"));
     let renamed = sheets.iter().find(|s| s.name == "Renamed").expect("renamed sheet present");
     assert!(renamed.cells.is_empty());
-    for inv in Mutation::inverse(&rename, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&rename, &base).expect("valid retained mutation inverse fixture") {
         apply_xlsx_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
@@ -81,7 +81,7 @@ async fn set_and_remove_cell_apply_and_inverse() {
     let mut after = base.clone();
     apply_xlsx_mutation(&mut after, &set_existing);
     assert_eq!(workbook(&after).sheets[0].cells[0].value, XlsxCellValue::Boolean(true));
-    for inv in Mutation::inverse(&set_existing, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&set_existing, &base).expect("valid retained mutation inverse fixture") {
         apply_xlsx_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
@@ -92,7 +92,7 @@ async fn set_and_remove_cell_apply_and_inverse() {
     let mut after3 = base.clone();
     apply_xlsx_mutation(&mut after3, &remove);
     assert!(workbook(&after3).sheets[0].cells.is_empty());
-    for inv in Mutation::inverse(&remove, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&remove, &base).expect("valid retained mutation inverse fixture") {
         apply_xlsx_mutation(&mut after3, &inv);
     }
     assert_eq!(after3, base);
@@ -105,7 +105,7 @@ async fn shared_string_mutations_apply_and_inverse() {
     let mut after = base.clone();
     apply_xlsx_mutation(&mut after, &insert);
     assert_eq!(workbook(&after).shared_strings, vec!["hello".to_string(), "world".to_string()]);
-    for inv in Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture") {
         apply_xlsx_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
@@ -114,7 +114,7 @@ async fn shared_string_mutations_apply_and_inverse() {
     let mut after2 = base.clone();
     apply_xlsx_mutation(&mut after2, &set);
     assert_eq!(workbook(&after2).shared_strings, vec!["changed".to_string()]);
-    for inv in Mutation::inverse(&set, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&set, &base).expect("valid retained mutation inverse fixture") {
         apply_xlsx_mutation(&mut after2, &inv);
     }
     assert_eq!(after2, base);
@@ -123,7 +123,7 @@ async fn shared_string_mutations_apply_and_inverse() {
     let mut after3 = base.clone();
     apply_xlsx_mutation(&mut after3, &remove);
     assert!(workbook(&after3).shared_strings.is_empty());
-    for inv in Mutation::inverse(&remove, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&remove, &base).expect("valid retained mutation inverse fixture") {
         apply_xlsx_mutation(&mut after3, &inv);
     }
     assert_eq!(after3, base);
@@ -149,7 +149,7 @@ async fn removing_unreferenced_shared_string_reindexes_later_references() {
 async fn mutation_diff_law() {
     for mutation in demo_mutation_cases() {
         let base = fixture();
-        let diff_direct = Mutation::diff(&mutation, &base);
+        let diff_direct = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let applied_via_diff = protocol::apply_diff_cold(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
@@ -174,7 +174,7 @@ async fn inverse_law() {
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
-        let diff = Mutation::diff(&mutation, &base);
+        let diff = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let next = protocol::apply_diff_cold(diff.diff(), &base).unwrap();
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
         let restored = protocol::apply_diff_cold(&inverse_diff, &next).unwrap();
@@ -221,9 +221,9 @@ async fn absorb_law() {
     {
         let base = two_cell_base();
         let sheet = address(&base, "Sheet1", 1, 0).part_path;
-        let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::Boolean(true)), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::Boolean(true)), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&remove_cell_at(&mid, "Sheet1", 1, 0), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&remove_cell_at(&mid, "Sheet1", 1, 0), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         assert_only_part_modified(&absorbed, &sheet);
         let result = protocol::apply_diff_cold(&absorbed, &base).unwrap();
@@ -234,9 +234,9 @@ async fn absorb_law() {
     {
         let base = two_cell_base();
         let sheet = address(&base, "Sheet1", 1, 0).part_path;
-        let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::InlineString("f".into())), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::InlineString("f".into())), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&set_cell_at(&mid, "Sheet1", 1, 1, XlsxCellValue::InlineString("g".into())), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&set_cell_at(&mid, "Sheet1", 1, 1, XlsxCellValue::InlineString("g".into())), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         assert_only_part_modified(&absorbed, &sheet);
         let result = protocol::apply_diff_cold(&absorbed, &base).unwrap();
@@ -246,9 +246,9 @@ async fn absorb_law() {
     {
         let base = two_cell_base();
         let sheet = address(&base, "Sheet1", 1, 0).part_path;
-        let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::InlineString("f".into())), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::InlineString("f".into())), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&set_cell_at(&mid, "Sheet1", 1, 0, XlsxCellValue::InlineString("patched".into())), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&set_cell_at(&mid, "Sheet1", 1, 0, XlsxCellValue::InlineString("patched".into())), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         assert_only_part_modified(&absorbed, &sheet);
         assert_eq!(cell_value(&protocol::apply_diff_cold(&absorbed, &base).unwrap(), 1, 0), Some(XlsxCellValue::InlineString("patched".into())));
@@ -256,11 +256,11 @@ async fn absorb_law() {
 
     {
         let base = two_cell_base();
-        let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::Number(10.0)), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::Number(10.0)), &base);
         let mid1 = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&set_cell_at(&mid1, "Sheet1", 1, 1, XlsxCellValue::Number(20.0)), &mid1);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&set_cell_at(&mid1, "Sheet1", 1, 1, XlsxCellValue::Number(20.0)), &mid1);
         let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).unwrap();
-        let d3 = Mutation::diff(&remove_cell_at(&mid2, "Sheet1", 1, 0), &mid2);
+        let d3 = ::semio_framework_os_kernel::ColdMutation::diff(&remove_cell_at(&mid2, "Sheet1", 1, 0), &mid2);
         let sequential = protocol::apply_diff_cold(d3.diff(), &mid2).unwrap();
 
         let mut left = d1.diff().clone();

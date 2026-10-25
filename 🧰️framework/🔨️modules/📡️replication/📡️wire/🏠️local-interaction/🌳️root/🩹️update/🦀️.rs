@@ -1,4 +1,4 @@
-//! 🩹️ Atomic three-map candidates retain first-party inputs and compose actual typed ownership.
+//! ⏮️ Atomic three-map candidates retain first-party inputs and compose actual typed ownership.
 
 use super::{DomainSelection,LocalInteractionRoot,SelectionMode};
 use super::super::LocalInteractionDomainPatch;

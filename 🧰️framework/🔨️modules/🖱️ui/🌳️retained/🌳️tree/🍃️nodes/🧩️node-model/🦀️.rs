@@ -11,7 +11,7 @@ pub enum NodeKey {
     Positional(u32, u32),
 }
 
-/// 🔑️ Borrows the original explicit text or copies a positional identity without heap effects.
+/// 🗝️ Borrows the original explicit text or copies a positional identity without heap effects.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum NodeKeyRef<'a> {
     Explicit(&'a str),
@@ -55,7 +55,7 @@ impl NodeFlags {
     /// `events::nearest_scrollable_ancestor` walks the bubble chain from a wheel event's hit target
     /// looking for this flag.
     pub const SCROLLABLE: NodeFlags = NodeFlags(1 << 12);
-    /// ⌨️ CSS `:focus-visible` in one bit: this node holds focus AND the gesture that gave it focus
+    /// 👁️ CSS `:focus-visible` in one bit: this node holds focus AND the gesture that gave it focus
     /// was a KEY, not a pointer. React gets the distinction free from the browser's own heuristic;
     /// `EventRouter` reproduces it by stamping this alongside [`NodeFlags::FOCUSED`] only while its
     /// `focus_visible` latch is set (set on `KeyDown`, cleared on `PointerDown`), so a clicked
@@ -80,7 +80,7 @@ impl NodeFlags {
     }
 }
 
-/// 🧩️ Retained per-node widget spec. For M2 a thin clone of the last-applied `UiNode` (used as the
+/// 📋️ Retained per-node widget spec. For M2 a thin clone of the last-applied `UiNode` (used as the
 /// reconcile diff baseline); refined into per-variant retained fields in M4.
 #[derive(Clone, Debug, PartialEq)]
 pub struct WidgetSpec(pub UiNode);
@@ -118,7 +118,7 @@ pub struct WidgetState {
     /// the `gesture` every tick and the release of that press carry — the scrub protocol, `📓️api-scrub-machine.md` of
     /// ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING. `None` while no press is open.
     pub scrub_gesture: Option<String>,
-    /// 🎚️ The value the open press last ticked: a blur releases the press on it when the field's draft is refused, as
+    /// 🧽️ The value the open press last ticked: a blur releases the press on it when the field's draft is refused, as
     /// React's lane releases on the value last offered. `None` while no press is open.
     pub scrub_offered: Option<semio_framework_value::DslValue>,
     pub slider_readout_click_at: Option<f64>,
@@ -127,7 +127,7 @@ pub struct WidgetState {
     /// the control paints the draft in the error colour and the refusal where it has room; the next edit clears it.
     pub number_refusal: Option<String>,
     pub stepper_hovered_segment: Option<i8>,
-    /// 🖱️ M5 `events` scroll routing's live offset for a `NodeFlags::SCROLLABLE` node.
+    /// 📜️ M5 `events` scroll routing's live offset for a `NodeFlags::SCROLLABLE` node.
     pub scroll_offset: (f32, f32),
     /// 🔽️ M5/W2 wiring: whether a `Select`'s synthesized popup (`reconcile::children_of`'s `Select`
     /// arm always builds the item rows unconditionally, per that module's own doc comment) is
@@ -145,7 +145,7 @@ pub struct WidgetState {
     pub select_popup: Option<semio_framework_ui_select_behavior::SelectPopupGeometry>,
 }
 
-/// 📐️ Resolved rect from the last taffy layout pass, in the node's **parent-relative** coordinate
+/// 📏️ Resolved rect from the last taffy layout pass, in the node's **parent-relative** coordinate
 /// space (taffy's own `Layout::location`/`Layout::size` semantics — no extra transform needed when
 /// consuming it; a later paint milestone accumulates ancestor offsets while walking the tree, same
 /// as it already walks parent/child links for painting). `cached_text_measure` mirrors the last

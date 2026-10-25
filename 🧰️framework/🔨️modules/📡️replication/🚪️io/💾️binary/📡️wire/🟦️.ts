@@ -266,7 +266,7 @@ export function decodeClientFrame(bytes: Uint8Array): { readonly lane: WireLane;
   return { lane, frame };
 }
 
-/** 📤️ Encodes one `ServerFrame` on the given lane: `lane u8 | tag u8 | fields` — the TS twin of
+/** 🎞️ Encodes one `ServerFrame` on the given lane: `lane u8 | tag u8 | fields` — the TS twin of
  * `protocol_wire::encode_server_frame`. */
 export function encodeServerFrame(frame: ServerFrame, lane: WireLane): Uint8Array {
   const out: number[] = [WIRE_LANE_BYTES[lane]];
@@ -335,7 +335,7 @@ export function encodeServerFrame(frame: ServerFrame, lane: WireLane): Uint8Arra
   return new Uint8Array(out);
 }
 
-/** 📥️ Decodes one `ServerFrame` — the TS twin of `protocol_wire::decode_server_frame`. */
+/** ☁️ Decodes one `ServerFrame` — the TS twin of `protocol_wire::decode_server_frame`. */
 export function decodeServerFrame(bytes: Uint8Array): { readonly lane: WireLane; readonly frame: ServerFrame } {
   if (bytes.length === 0) throw new Error("wire frame: empty frame");
   const lane = WIRE_BYTE_LANES[bytes[0]!];

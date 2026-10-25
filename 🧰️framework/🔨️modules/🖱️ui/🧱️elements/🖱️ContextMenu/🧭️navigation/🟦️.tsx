@@ -4,7 +4,7 @@ import { type ContextMenuItem, contextMenuOrdinalClassName } from "../🎨️ite
 /** ⌨️ Keyboard navigation direction parsed from a keydown key. */
 export type ContextMenuNavDirection = "up" | "down" | "left" | "right" | "activate" | "escape";
 
-/** 🔢️ Maps each enabled row id to its 1-based ordinal within `items` (separators skipped). */
+/** 🗺️ Maps each enabled row id to its 1-based ordinal within `items` (separators skipped). */
 export function contextMenuOrdinals(items: readonly ContextMenuItem[]): ReadonlyMap<string, number> {
   const map = new Map<string, number>();
   let ordinal = 0;
@@ -18,7 +18,7 @@ export function contextMenuOrdinals(items: readonly ContextMenuItem[]): Readonly
   return map;
 }
 
-/** ⌨️ The rows arrow keys reach: every row but separators — a disabled row is focusable and announces why it cannot run. */
+/** 🏹️ The rows arrow keys reach: every row but separators — a disabled row is focusable and announces why it cannot run. */
 function contextMenuFocusableIndices(items: readonly ContextMenuItem[]): number[] {
   return items.flatMap((item, index) => (!item.separator ? [index] : []));
 }
@@ -28,7 +28,7 @@ export function contextMenuReasonId(item: ContextMenuItem): string | undefined {
   return item.disabled && item.reason ? `${item.id}::reason` : undefined;
 }
 
-/** 💬️ A disabled row's reason, visible beside its label and named by the row's `aria-describedby`. */
+/** 🧠️ A disabled row's reason, visible beside its label and named by the row's `aria-describedby`. */
 export function renderContextMenuReason(item: ContextMenuItem): React.ReactNode {
   const id = contextMenuReasonId(item);
   return id ? (
@@ -38,7 +38,7 @@ export function renderContextMenuReason(item: ContextMenuItem): React.ReactNode 
   ) : null;
 }
 
-/** 📂️ Resolves the item list at `pathPrefix` (empty = top level). */
+/** 🪜️ Resolves the item list at `pathPrefix` (empty = top level). */
 export function contextMenuItemsAtLevel(root: readonly ContextMenuItem[], pathPrefix: readonly number[]): readonly ContextMenuItem[] {
   let level = root;
   for (const index of pathPrefix) {
@@ -91,7 +91,7 @@ export function findContextMenuCheckedPath(root: readonly ContextMenuItem[], pre
   return undefined;
 }
 
-/** ⌨️ Maps arrows, wasd, Enter, Space, and Escape to menu navigation. */
+/** 🧭️ Maps arrows, wasd, Enter, Space, and Escape to menu navigation. */
 export function contextMenuNavigationFromKey(key: string): ContextMenuNavDirection | undefined {
   switch (key) {
     case "ArrowUp":
@@ -120,7 +120,7 @@ export function contextMenuNavigationFromKey(key: string): ContextMenuNavDirecti
   }
 }
 
-/** ⌨️ Next active path when moving up or down within the current menu level. */
+/** ⬇️ Next active path when moving up or down within the current menu level. */
 export function moveContextMenuActivePath(root: readonly ContextMenuItem[], path: readonly number[], direction: "up" | "down"): number[] {
   const levelPrefix = path.length > 0 ? path.slice(0, -1) : [];
   const level = contextMenuItemsAtLevel(root, levelPrefix);

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/repo-dashboard-keymap-editor-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

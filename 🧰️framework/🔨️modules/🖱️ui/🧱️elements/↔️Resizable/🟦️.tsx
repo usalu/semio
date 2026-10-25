@@ -18,10 +18,10 @@ import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 /** ↔ Fine-pointer hit target for splitters and corner joins (VS Code–style). */
 export const RESIZABLE_HIT_TARGET_MIN_FINE_PX = 20;
 
-/** ↔ Coarse-pointer hit target for splitters and corner joins. */
+/** 🖱️ Coarse-pointer hit target for splitters and corner joins. */
 export const RESIZABLE_HIT_TARGET_MIN_COARSE_PX = 28;
 
-/** ↔ Corner grab square at perpendicular split intersections. */
+/** ◼️ Corner grab square at perpendicular split intersections. */
 export const RESIZABLE_CORNER_GRAB_PX = domSizePx("resizableCornerGrabUiSpacing");
 
 const RESIZABLE_HIT_TARGET_MINIMUM_SIZE = {
@@ -30,6 +30,12 @@ const RESIZABLE_HIT_TARGET_MINIMUM_SIZE = {
 } as const;
 
 export type ResizableJoinCornerResizeHandler = (spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number) => void;
+
+/** 🧷️ The imperative surface of a panel group that the canvas layout sync reads and writes: owned here so no consumer names a type of the primitive. */
+export interface ResizableGroupHandle {
+  readonly getLayout: () => Record<string, number>;
+  readonly setLayout: (layout: Record<string, number>) => Record<string, number>;
+}
 
 type ResizableJoinCornerElement = HTMLDivElement & {
   __composeResizableJoinCornerResize?: ResizableJoinCornerResizeHandler;
@@ -56,7 +62,7 @@ function writeResizableJoinCornerSpec(element: HTMLElement, spec: ResizableJoinC
 
 //#region ↔ResizableCornerInterceptor
 
-/** ↔ Window capture hook so corner grabs win over react-resizable-panels and survive hot reloads. */
+/** 🎣️ Window capture hook so corner grabs win over react-resizable-panels and survive hot reloads. */
 function installResizableCornerInterceptor(): void {
   if (typeof window === "undefined") return;
   const interceptorWindow = window as ResizableCornerWindow;
@@ -106,10 +112,10 @@ installResizableCornerInterceptor();
 
 //#endregion ↔ResizableCornerInterceptor
 
-/** ↔ Corner grab at a perpendicular split intersection (dual-axis resize). */
+/** ✂️ Corner grab at a perpendicular split intersection (dual-axis resize). */
 export type ResizableJoinEdgeSide = "leading" | "trailing";
 
-/** ↔ Corner join wiring for a main-axis separator and a cross-axis child split. */
+/** 📕️ Corner join wiring for a main-axis separator and a cross-axis child split. */
 export interface ResizableJoinCornerSpec {
   parentKind: "row" | "column";
   mainAxisPath: string;
@@ -120,7 +126,7 @@ export interface ResizableJoinCornerSpec {
   alongFraction: number;
 }
 
-/** ↔ Pixel placement for a corner grab on a separator strip. */
+/** 📍️ Pixel placement for a corner grab on a separator strip. */
 export function resizableJoinCornerPlacementStyle(orientation: "horizontal" | "vertical", edgeSide: ResizableJoinEdgeSide, alongFraction: number, sizePx = RESIZABLE_CORNER_GRAB_PX): React.CSSProperties {
   const along = `${Math.round(Math.min(1, Math.max(0, alongFraction)) * 100)}%`;
   if (orientation === "horizontal") {

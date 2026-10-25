@@ -50,11 +50,11 @@ export default defineTestAdapter({
           ...bandProjection("reversed", scaleBand<string>().domain(["A", "B", "C", "D"]).range([120, 0]).paddingInner(0.2), ["A", "B", "C", "D"]),
         },
       }),
-      /** 🎯️ The same band scales from the compiled probe. */
+      /** 🩹️ The same band scales from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     point: {
-      /** 🔮️ d3-scale's point scale with and without outer padding. */
+      /** 📌️ d3-scale's point scale with and without outer padding. */
       oracle: () => {
         const plain = scalePoint<string>().domain(["A", "B", "C", "D"]).range([0, 120]);
         const padded = scalePoint<string>().domain(["A", "B", "C", "D"]).range([0, 120]).padding(0.5);
@@ -67,20 +67,20 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same point scales from the compiled probe. */
+      /** 📍️ The same point scales from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     ordinal: {
-      /** 🔮️ d3-scale's ordinal scale cycling a shorter range. */
+      /** 🔄️ d3-scale's ordinal scale cycling a shorter range. */
       oracle: () => {
         const scale = scaleOrdinal<string, number>().domain(["A", "B", "C", "D", "E"]).range([10, 20, 30]);
         return { projection: { "ordinal/ord": ["A", "B", "C", "D", "E"].map((entry) => scale(entry)) } };
       },
-      /** 🎯️ The same ordinal scale from the compiled probe. */
+      /** ⚖️ The same ordinal scale from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     quantize: {
-      /** 🔮️ d3-scale's quantize scale and its derived thresholds. */
+      /** 🧬️ d3-scale's quantize scale and its derived thresholds. */
       oracle: () => {
         const plain = scaleQuantize<number>().domain([0, 1]).range([1, 2, 3, 4]);
         const wide = scaleQuantize<string>().domain([-10, 10]).range(["a", "b", "c"]);
@@ -93,11 +93,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same quantize scales from the compiled probe. */
+      /** 🔨️ The same quantize scales from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     quantile: {
-      /** 🔮️ d3-scale's quantile scale and its R-7 quantiles. */
+      /** 📐️ d3-scale's quantile scale and its R-7 quantiles. */
       oracle: () => {
         const scale = scaleQuantile<number>().domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).range([10, 20, 30, 40]);
         return {
@@ -107,11 +107,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same quantile scale from the compiled probe. */
+      /** 📏️ The same quantile scale from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     threshold: {
-      /** 🔮️ d3-scale's threshold scale over its explicit cuts. */
+      /** 🔪️ d3-scale's threshold scale over its explicit cuts. */
       oracle: () => {
         const scale = scaleThreshold<number, string>().domain([0, 1]).range(["low", "mid", "high"]);
         return {
@@ -121,7 +121,7 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same threshold scale from the compiled probe. */
+      /** 🪜️ The same threshold scale from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

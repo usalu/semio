@@ -1,5 +1,5 @@
 //#region 🔁️RetryWithJitteredBackoff
-/** 🔁️ Options for {@link retryWithJitteredBackoff}. */
+/** ⚙️ Options for {@link retryWithJitteredBackoff}. */
 export interface JitteredBackoffOptions {
   readonly minMs: number;
   readonly maxMs: number;

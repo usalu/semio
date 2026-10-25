@@ -184,7 +184,7 @@ pub fn object_controlled<'v>(&'v self,control:&mut NativeDecodeControl<'_>)->Res
             Ok(Self::Object(output.take()))
         })
     }
-    /// 🛡️ Rejects undeclared borrowed fields while retaining cancellation checkpoints.
+    /// 🚫️ Rejects undeclared borrowed fields while retaining cancellation checkpoints.
     pub fn deny_fields_controlled(entries:&[(String,DslValue)],allowed:&[&str],control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
         control.scoped_stage(|control|{control.begin_stage(entries.len())?;for(key,_)in entries{if !allowed.contains(&key.as_str()){return Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "unknown field"))}control.step()?;}Ok(())})
     }

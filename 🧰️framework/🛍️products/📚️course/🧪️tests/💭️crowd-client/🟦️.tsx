@@ -189,7 +189,7 @@ function scaled(count: number, full: number): number {
   return full > 0 ? scaleLinear().domain([0, full]).range([0, 1]).clamp(true)(count) : 0;
 }
 
-/** ⚖️ The thinkers of one cell recomputed from the raw drafts by lodash: one draft per tag (the last given), grouped by
+/** 🔖️ The thinkers of one cell recomputed from the raw drafts by lodash: one draft per tag (the last given), grouped by
  * what it gives the item — a category, a value, or the place a sorting position rounds half up to. */
 function draftedTags(vector: FigureVector, item: string, key: string, columns: number): readonly string[] {
   const latest = Object.values(groupBy(vector.thinking.map((index) => OTHERS[index]!), "tag")).map((drafts) => drafts.at(-1)!);

@@ -29,7 +29,7 @@ fn streams_fold_into_the_declared_task_list() {
     }
 }
 
-/// ⚖️ LAW: the last event of each refusal stream is refused with the declared code and leaves the ledger untouched.
+/// 🛑️ LAW: the last event of each refusal stream is refused with the declared code and leaves the ledger untouched.
 #[test]
 fn refused_events_leave_the_ledger_untouched() {
     for case in fixture()["refusals"].as_array().expect("refusals") {

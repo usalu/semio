@@ -9,7 +9,7 @@ use semio_framework_test_fixtures::fixture_path;
 //#region 🔖️Edge
 const EDGE_SITE: &str = "https://quizzes.example";
 
-/// 🛡️ The gate of a proctor behind its terminating proxy, with `limits` at the edge.
+/// 🚪️ The gate of a proctor behind its terminating proxy, with `limits` at the edge.
 fn proxied(limits: Limits) -> Gate {
     Gate { origins: CrossOriginPolicy::Allowlist(vec![EDGE_SITE.to_string()]), forwarding: Forwarding::TerminatingProxy, limits }
 }
@@ -319,7 +319,7 @@ fn sockets_are_counted_per_address_and_an_oversized_message_ends_the_socket() {
     running.shut_down();
 }
 
-/// 📨️ The head of a `POST` of `length` body bytes as the terminating proxy forwards it for `client`.
+/// 📮️ The head of a `POST` of `length` body bytes as the terminating proxy forwards it for `client`.
 fn posting(path: &str, client: &str, length: usize) -> String {
     format!("POST {path} HTTP/1.1\r\nHost: proctor\r\nContent-Type: application/json\r\nContent-Length: {length}\r\nX-Forwarded-Proto: https\r\nX-Forwarded-For: {client}\r\nOrigin: {EDGE_SITE}\r\n\r\n")
 }

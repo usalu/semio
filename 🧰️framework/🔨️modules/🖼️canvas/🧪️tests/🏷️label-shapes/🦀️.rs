@@ -49,7 +49,7 @@ mod label_shapes_laws {
         scene
     }
 
-    /// 🔮️ The oracle of `label_byte_world_x`: the line box and the prefix box measured by usvg directly.
+    /// 🔖️ The oracle of `label_byte_world_x`: the line box and the prefix box measured by usvg directly.
     fn usvg_direct_byte_x(line: &str, byte: usize, origin_x: f64, px: f64) -> f64 {
         let measure = |text: &str| {
             let tree = usvg::Tree::from_str(&label_measure_markup(text, px), usvg_options_map_labels()).expect("usvg measures the fixture markup");

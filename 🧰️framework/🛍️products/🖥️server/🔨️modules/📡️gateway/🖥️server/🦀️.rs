@@ -31,7 +31,7 @@ pub enum InstanceDisclosure {
     /// operators reach.
     #[default]
     Whole,
-    /// 🪟️ [`ServerInstanceDefinition::public`]: what a client needs to address the instance and
+    /// 🔓️ [`ServerInstanceDefinition::public`]: what a client needs to address the instance and
     /// nothing of how it authorizes.
     Public,
 }
@@ -85,13 +85,13 @@ impl<I: ServerInstance> ServerBuilder<I> {
         self
     }
 
-    /// 🛣️ Mount only these of the gateway's own route groups; every group unless stated.
+    /// 🛤️ Mount only these of the gateway's own route groups; every group unless stated.
     pub fn routes(mut self, groups: RouteGroups) -> Self {
         self.routes = groups;
         self
     }
 
-    /// 🪟️ Choose what `GET /instance` hands out; the whole definition unless stated.
+    /// 🔦️ Choose what `GET /instance` hands out; the whole definition unless stated.
     pub fn disclosure(mut self, disclosure: InstanceDisclosure) -> Self {
         self.disclosure = disclosure;
         self
@@ -110,7 +110,7 @@ impl<I: ServerInstance> ServerBuilder<I> {
         self
     }
 
-    /// 🧩️ Register one module. Its deciders, templates, resolvers and routes are collected at
+    /// 📦️ Register one module. Its deciders, templates, resolvers and routes are collected at
     /// [`build`](Self::build) time, in registration order.
     pub fn module(mut self, module: I::Modules) -> Self {
         self.modules.push(module);
@@ -257,12 +257,12 @@ impl<I: ServerInstance> ServerBuilder<I> {
     }
 }
 
-/// 🚦️ The admission question one command envelope asks of the policy engine.
+/// 📩️ The admission question one command envelope asks of the policy engine.
 pub(super) fn admission_request(envelope: &CommandEnvelope) -> PolicyRequest {
     PolicyRequest { point: PolicyPoint::CommandAdmission, principal: envelope.principal.clone(), scope: Some(envelope.scope.clone()), resource: format!("{}/{}", envelope.target.kind, envelope.target.id), action: envelope.kind.clone() }
 }
 
-/// 🛣️ Every route the framework itself owns, before any module adds its own. Each handler is
+/// 🏠️ Every route the framework itself owns, before any module adds its own. Each handler is
 /// instantiated at the instance being built, so a route is monomorphic even though the set of
 /// backends behind it is chosen downstream. The core is always mounted; each further group only for
 /// an instance that asked for it ([`RouteGroups`]), and the document socket only for an instance
@@ -298,7 +298,7 @@ async fn instance_body(definition: ServerInstanceDefinition) -> Json<ServerInsta
     Json(definition)
 }
 
-/// 🖥️ One built server: its shared state, its router and the definition it reports.
+/// ☁️ One built server: its shared state, its router and the definition it reports.
 pub struct Server<I: ServerInstance> {
     pub(super) state: ServerState<I>,
     pub(super) router: Router,
@@ -306,7 +306,7 @@ pub struct Server<I: ServerInstance> {
 }
 
 impl<I: ServerInstance> Server<I> {
-    /// 🏗️ Start assembling a server over one storage profile.
+    /// 👷️ Start assembling a server over one storage profile.
     pub fn builder(profile: StorageProfile) -> ServerBuilder<I> {
         ServerBuilder {
             profile,
@@ -329,14 +329,14 @@ impl<I: ServerInstance> Server<I> {
         }
     }
 
-    /// 🛣️ The wired router, ready to be mounted or wrapped: the routes, the body limit and the
+    /// ✅️ The wired router, ready to be mounted or wrapped: the routes, the body limit and the
     /// cross-origin grant. The throttle is not on it — whoever composes the final router puts
     /// [`throttled`](Self::throttled) around everything that does work per request.
     pub fn router(&self) -> Router {
         self.router.clone()
     }
 
-    /// 🚦️ `router` behind this instance's throttle ([`throttle_middleware`]): the layer a composer
+    /// 🐢️ `router` behind this instance's throttle ([`throttle_middleware`]): the layer a composer
     /// applies outside its own per-request layers and inside only what must answer even a refused
     /// request (a transport gate, the cross-origin grant of an edge that owns it).
     pub fn throttled(&self, router: Router) -> Router {

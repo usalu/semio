@@ -34,7 +34,7 @@ mod subject {
     //#endregion 🔖️Helpers
 
     //#region 🔖️Scenarios
-    /// 🖨️ Every vector renders exactly the stated bytes.
+    /// 🌊️ Every vector renders exactly the stated bytes.
     pub fn every_stream_renders_its_stated_bytes(ctx: &Context) -> Result<Outcome, String> {
         let mut rows: Vec<Json> = Vec::new();
         for vector in vectors(ctx)? {

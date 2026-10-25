@@ -11,7 +11,7 @@ export type LintScriptModule = {
   policy?: LintFn<never>;
 };
 
-/** 🔎️True when `script.ts` exports a repo policy lint callback. */
+/** 📜️True when `script.ts` exports a repo policy lint callback. */
 export function scriptExportsPolicy(scriptPath: string): boolean {
   const text = readFileSync(scriptPath, "utf8");
   return /\bexport\s+(?:(?:const|function)\s+policy\b|\{\s*policy\s*\}\s+from\b)/.test(text);

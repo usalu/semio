@@ -174,9 +174,25 @@ pub(super) fn mark_guest_cleanup_pending(slot: &Arc<Mutex<GuestInstanceSlot>>, d
     };
 }
 
+/// 💼️ Issues the standalone retained turn that funds every crossing of one relay request of `job`.
+fn relay_job_funds(job: u64) -> Result<JobFunds, TurnFault> {
+    JobFunds::self_issued(job, semio_framework_job::default_now_us, u64::from(RELAY_JOB_BUDGET.deadline_ms) * 1_000, RELAY_JOB_WORK_FUEL, RELAY_JOB_BUDGET.fuel).map_err(identity_turn_fault)
+}
+
+pub(super) async fn start_guest_job(runtime: &GuestRuntimes, instance: &mut GuestInstance, job: u64, kind: String, input: Vec<u8>) -> Result<(), TurnFault> {
+    let mut funds = relay_job_funds(job)?;
+    runtime.start_job_funded(instance, &mut funds, job, kind, input).await
+}
+
+pub(super) async fn step_guest_job(runtime: &GuestRuntimes, instance: &mut GuestInstance, job: u64) -> Result<JobStep, TurnFault> {
+    let mut funds = relay_job_funds(job)?;
+    runtime.step_job_funded(instance, &mut funds, job).await
+}
+
 pub(super) async fn cancel_guest_job_once(runtime: &GuestRuntimes, instance: &mut GuestInstance, job: u64, cancel_admitted: &AtomicBool) -> Result<bool, TurnFault> {
     if cancel_admitted.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok() {
-        runtime.cancel_job(instance, job).await?;
+        let mut funds = relay_job_funds(job)?;
+        runtime.cancel_job_funded(instance, &mut funds, job).await?;
         return Ok(true);
     }
     Ok(false)

@@ -11,6 +11,7 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import outputSchema from "../🧬️schema/📬️output.json" with {type:"json"};
 import channelSchema from "./📡️channel/🧬️schema/🔣️.json" with {type:"json"};
 import{isAbsolute}from"node:path";
+import{settleOwnedChildV1}from"../🏁️settlement/🟦️.ts";
 
 /** 📪️ Preserves both complete UTF8 streams and the actual native terminal values. */
 export type OwnedCommandCaptureV1=Readonly<{version:1;stdout:string;stderr:string;status:number|null;signal:string|null}>;
@@ -37,9 +38,9 @@ function channelEnd(owner:ChannelOwner,failure?:{error:unknown}):void{owner.ende
 function channelWork<T>(owner:ChannelOwner,run:()=>Promise<T>):Promise<T>{if(owner.pending.size>=channelPolicy.maximumPendingOperations)throw Error("Finite owned command channel pending limit exceeded");const work=withIssuedResourceOperationV1(owner.control,run);owner.pending.add(work);void work.then(()=>{owner.pending.delete(work);},error=>{owner.accepting=false;if(!owner.failures.length)owner.failures.push(error);owner.pending.delete(work);});return work;}
 /** 📥️ Enrolls one bounded line read before waiting on the same actual child. */
 export function readOwnedCommandChannelLineV1(channel:OwnedCommandChannelV1):Promise<string|null>{try{const owner=channelOf(channel);return channelWork(owner,async()=>{const line=owner.lines.length?owner.lines.shift()!:owner.ended?null:await new Promise<string|null>((resolve,reject)=>{owner.waiting.push({resolve,reject});});requireIssuedResourceControlV1(owner.control);return line;});}catch(error){return channelFailure(error);}}
-/** 📤️ Snapshots a finite immutable frame and retains its real stdin completion before returning. */
+/** 🎞️ Snapshots a finite immutable frame and retains its real stdin completion before returning. */
 export function writeOwnedCommandChannelV1(channel:OwnedCommandChannelV1,input:OwnedCommandInputV1):Promise<void>{try{const owner=channelOf(channel);if(owner.ended||owner.pending.size>=channelPolicy.maximumPendingOperations)throw Error("Finite live owned command channel required");const captured=readOwnedCommandInputV1(input),bytes="text"in captured?Buffer.byteLength(captured.text,"utf8"):captured.base64.length/4*3-(captured.base64.endsWith("==")?2:captured.base64.endsWith("=")?1:0);if(owner.inputFrames>=channelPolicy.maximumInputFrames||owner.inputBytes+bytes>channelPolicy.maximumInputBytes)throw Error("Owned command channel input frame or byte limit exceeded");const work=channelWork(owner,()=>owner.send(captured));owner.inputFrames++;owner.inputBytes+=bytes;return work;}catch(error){return channelFailure(error);}}
-/** 🏁️ Awaits actual child closure under its unchanged Original without terminating a live child. */
+/** 🖥️ Awaits actual child closure under its unchanged Original without terminating a live child. */
 export function readOwnedCommandChannelTerminalV1(channel:OwnedCommandChannelV1):Promise<OwnedCommandTerminalV1>{try{const owner=channelOf(channel);return channelWork(owner,owner.terminal);}catch(error){return channelFailure(error);}}
 /** 🧹️ Joins only this preaccepted child and its accepted operations without creating ordinary authority. */
 export function closeOwnedCommandChannelV1(channel:OwnedCommandChannelV1):Promise<OwnedCommandTerminalV1>{try{return channelOf(channel,true).close();}catch(error){return channelFailure(error);}}
@@ -53,10 +54,10 @@ export function readOwnedCommandCaptureV1(value:unknown):OwnedCommandCaptureV1{i
 
 /** 📤️ Accepts one already bounded captured payload without exposing a platform stream type. */
 export interface OwnedCommandOutputSinkV1{write(text:string,complete:(error?:Error|null)=>void):unknown}
-/** 🪢️ Awaits actual payload delivery under the same nonrenewable Original deadline and cancellation. */
+/** 🖨️ Awaits actual payload delivery under the same nonrenewable Original deadline and cancellation. */
 export async function writeOwnedCommandOutputV1(sink:OwnedCommandOutputSinkV1,text:string,control:ResourceLeaseControl):Promise<void>{
  checkResourceLeaseControl(control);if(typeof sink.write!=="function"||typeof text!=="string")throw Error("Actual owned output sink and payload required");const remaining=control.remainingMilliseconds();
- await new Promise<void>((accept,reject)=>{let settled=false,timer:ReturnType<typeof setTimeout>|undefined;const finish=(error?:unknown)=>{if(settled)return;settled=true;if(timer)clearTimeout(timer);control.signal.removeEventListener("abort",abort);error?reject(error):accept();},abort=()=>finish(control.signal.reason??Error("Original output cancelled"));control.signal.addEventListener("abort",abort,{once:true});if(remaining!==null)timer=setTimeout(()=>finish(Error("Original output deadline exhausted")),remaining);if(control.signal.aborted){abort();return;}try{sink.write(text,error=>finish(error));}catch(error){finish(error);}});
+ await new Promise<void>((accept,reject)=>{let settled=false,timer:ReturnType<typeof setTimeout>|undefined;const emitter=sink as Partial<NodeJS.EventEmitter>,refused=(error:unknown)=>finish(error),finish=(error?:unknown)=>{if(settled)return;settled=true;if(timer)clearTimeout(timer);control.signal.removeEventListener("abort",abort);if(!error)emitter.removeListener?.("error",refused);error?reject(error):accept();},abort=()=>finish(control.signal.reason??Error("Original output cancelled"));control.signal.addEventListener("abort",abort,{once:true});if(remaining!==null)timer=setTimeout(()=>finish(Error("Original output deadline exhausted")),remaining);if(control.signal.aborted){abort();return;}emitter.once?.("error",refused);try{sink.write(text,error=>finish(error));}catch(error){finish(error);}});
  checkResourceLeaseControl(control);
 }
 
@@ -72,7 +73,7 @@ async function captureOwnedCommandLiveV1(command:string,args:readonly string[],c
  const input=request?("text"in request?Buffer.from(request.text,"utf8"):Buffer.from(request.base64,"base64")):undefined;try{
  const routed=routeRegisteredCommandV1(command,argv,cwd,options.control?scriptResourceProcessEnvironmentV1(options.control,options.env??process.env):options.env??process.env),child=spawn(routed.command,[...routed.arguments],{cwd,env:routed.environment as NodeJS.ProcessEnv,shell:false,detached:process.platform!=="win32",stdio:[input||conversation?"pipe":"ignore","pipe","pipe"],windowsHide:true});
  let failed=false,stopped:unknown,closed=false,channel:ChannelOwner|undefined;const stop=(cause:unknown)=>{if(!failed){failed=true;stopped=cause;}if(channel){channel.accepting=false;channelEnd(channel,{error:stopped});}if(!closed)terminateOwnedChildTree(child);};
- const terminal=new Promise<OwnedCommandTerminalV1>(accept=>{child.once("error",stop);child.once("close",(status,signal)=>{closed=true;if(channel)channelEnd(channel,failed?{error:stopped}:undefined);accept(Object.freeze({status,signal}));});});
+ const terminal=new Promise<OwnedCommandTerminalV1>(accept=>{child.once("error",stop);void settleOwnedChildV1(child,command).then(row=>{closed=true;if(channel)channelEnd(channel,failed?{error:stopped}:undefined);accept(Object.freeze({status:row.code,signal:row.signal}));});});
  const started=performance.now(),streams={stdout:"",stderr:""},counters:CaptureOutputCountersV1={bytes:0,lines:0,open:{stdout:false,stderr:false}},decoders={stdout:new StringDecoder("utf8"),stderr:new StringDecoder("utf8")},strict={stdout:new TextDecoder("utf-8",{fatal:true}),stderr:new TextDecoder("utf-8",{fatal:true})};
  let tail="",timer:ReturnType<typeof setTimeout>|undefined,publication=Promise.resolve(),inputPublication=Promise.resolve(),result:{status:number|null;signal:string|null}|undefined;
  const abort=()=>stop(signal?.reason??Error("Original capture cancelled"));
@@ -95,5 +96,5 @@ async function captureOwnedCommandLiveV1(command:string,args:readonly string[],c
  }finally{input?.fill(0);}
 }
 
-/** 📥️ Captures finite separate streams while joining the actual child before every result or refusal. */
+/** 🎥️ Captures finite separate streams while joining the actual child before every result or refusal. */
 export function captureOwnedCommandResultV1(command:string,args:readonly string[],cwd:string,options:OwnedCommandCaptureOptionsV1):Promise<OwnedCommandCaptureV1>{const result=captureOwnedCommandBodyV1(command,args,cwd,options,true).then(row=>row.result);void result.catch(()=>{});return result;}

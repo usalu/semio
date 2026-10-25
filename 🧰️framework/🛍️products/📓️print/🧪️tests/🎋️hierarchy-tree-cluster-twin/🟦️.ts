@@ -19,7 +19,7 @@ const DECIMALS = 6;
 
 type Row = readonly [id: string, parent: string, value: number];
 
-/** 🌳️ `demo-hierarchy-deep` of `semio-viz-hierarchy.sty`, region 🔖️DemoData. */
+/** 🪜️ `demo-hierarchy-deep` of `semio-viz-hierarchy.sty`, region 🔖️DemoData. */
 const DEEP: readonly Row[] = [
   ["root", "", 0], ["a", "root", 0], ["b", "root", 0], ["c", "root", 0],
   ["a1", "a", 6], ["a2", "a", 3], ["a3", "a", 2],
@@ -109,7 +109,7 @@ export default defineTestAdapter({
     },
     "tree-node-size": {
       oracle: oracle("tree-node-size"),
-      /** 🎯️ The twin's `nodeSize` branch, which never normalises. */
+      /** 📏️ The twin's `nodeSize` branch, which never normalises. */
       subject: () => ({
         projection: {
           ...placed("deep", treeOf(DEEP, { nodeSize: [12, 20] }), false),
@@ -119,7 +119,7 @@ export default defineTestAdapter({
     },
     "tree-separation": {
       oracle: oracle("tree-separation"),
-      /** 🎯️ The twin's separation feeding both the first walk and the normalisation. */
+      /** ⏮️ The twin's separation feeding both the first walk and the normalisation. */
       subject: () => ({
         projection: {
           "x/deep": grid(preorder(treeOf(DEEP, { size: [100, 60], separation: [1, 2.5] })).map((each) => each.x)),
@@ -129,7 +129,7 @@ export default defineTestAdapter({
     },
     "cluster-size": {
       oracle: oracle("cluster-size"),
-      /** 🎯️ The twin's cluster normalised onto [100,60] on both fixtures. */
+      /** 🧫️ The twin's cluster normalised onto [100,60] on both fixtures. */
       subject: () => ({
         projection: {
           ...placed("deep", clusterOf(DEEP, { size: [100, 60] }), true),
@@ -139,7 +139,7 @@ export default defineTestAdapter({
     },
     "cluster-node-size": {
       oracle: oracle("cluster-node-size"),
-      /** 🎯️ The twin's cluster `nodeSize`, which anchors the whole tree on its root. */
+      /** ⚓️ The twin's cluster `nodeSize`, which anchors the whole tree on its root. */
       subject: () => ({
         projection: {
           ...placed("deep", clusterOf(DEEP, { nodeSize: [12, 20] }), false),

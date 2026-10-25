@@ -13,7 +13,7 @@ pub struct LayerState {
     pub overlay: bool,
 }
 
-/// 🎞️ One replayable draw call: a pipeline, the state to render under, an instance range into
+/// 🖍️ One replayable draw call: a pipeline, the state to render under, an instance range into
 /// [`RenderPacket::quad_instances`] or [`RenderPacket::vector_vertices`] (backend picks the array by
 /// `pipeline`), and an optional precomputed stencil-mask range (also into `quad_instances`) a backend
 /// paints with [`StencilPolicy::WriteMask`] before painting `instance_range` with
@@ -37,7 +37,7 @@ pub enum SceneError {
     NegativeRect,
 }
 
-/// 🎬️ Per-frame inputs that are not part of the builder's own accumulated state.
+/// 🧾️ Per-frame inputs that are not part of the builder's own accumulated state.
 pub struct FinishParams {
     pub viewport: [f32; 2],
     pub dpr: f32,
@@ -334,7 +334,7 @@ pub(super) fn content_hash(quad_instances: &[QuadInstance], vector_vertices: &[V
 //#endregion 🔖️Finish
 
 //#region 🔖️RenderPacket
-/// 📦️ Everything a [`crate::backend`] `GraphicsBackend` needs to paint one frame, and nothing it needs
+/// 🖼️ Everything a [`crate::backend`] `GraphicsBackend` needs to paint one frame, and nothing it needs
 /// a device to compute. Apply `resource_ops` before replaying `batches`; skip the whole submission
 /// when `content_hash` matches the previously submitted packet.
 #[derive(Debug)]

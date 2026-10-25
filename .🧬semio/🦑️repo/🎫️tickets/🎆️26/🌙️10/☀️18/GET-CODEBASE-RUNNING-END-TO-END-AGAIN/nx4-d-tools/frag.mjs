@@ -1,0 +1,11 @@
+import {readFileSync} from "node:fs";
+import {brotliDecompressSync} from "node:zlib";
+const g=".cache/b/g/m/generations/";
+const cur=JSON.parse(readFileSync(g+"current.json","utf8"));
+const man=JSON.parse(readFileSync(g+"m/"+cur.manifest+".json","utf8"));
+const [project]=process.argv.slice(2);
+const row=man.owners[project];
+console.log(JSON.stringify(row));
+const frag=JSON.parse(brotliDecompressSync(readFileSync(g+"o/"+row.fragment+".json.br")).toString("utf8"));
+const show=(o,d=0)=>{for(const [k,v] of Object.entries(o)){console.log(" ".repeat(d)+k, Array.isArray(v)?"[]"+v.length:typeof v==="object"&&v?"{}"+Object.keys(v).length:String(v).slice(0,80));if(d<2&&v&&typeof v==="object"&&!Array.isArray(v)&&Object.keys(v).length<30)show(v,d+2)}};
+show(frag);

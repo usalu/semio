@@ -5,6 +5,7 @@ use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
 
 /// ♻️ The owners one `Puzzle3dClipboardJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub(super) struct Puzzle3dClipboardOwners {
     pub args: Option<semio_framework_value::DslValue>,
     pub(super) interaction: Option<semio_framework::InteractionState>,

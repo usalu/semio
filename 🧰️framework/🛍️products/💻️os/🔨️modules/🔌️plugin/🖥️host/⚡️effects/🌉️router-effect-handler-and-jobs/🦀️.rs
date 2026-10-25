@@ -330,7 +330,7 @@ async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, run
         }
     };
     let mut admitted = false;
-    for attempt in 0..ROUTER_EFFECT_ADMISSION_TURNS {
+    for _ in 0..ROUTER_EFFECT_ADMISSION_TURNS {
         match compute
             .run_job(runtime, scope, ctx, retained, &mut job, &mut params, &mut control, wallet, &mut completion, |outcome| {
                 result = Some(match outcome {
@@ -366,7 +366,7 @@ async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, run
     };
     let compute_result = completion.result().clone();
     let faulted = completion.fault().is_some();
-    for turn in 0..ROUTER_EFFECT_CLOSE_TURNS {
+    for _ in 0..ROUTER_EFFECT_CLOSE_TURNS {
         if completion.terminal_is_empty() {
             break;
         }
@@ -376,11 +376,11 @@ async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, run
             let Ok(mut cx) = StepContext::with_payload_authority(operation, generation, StepBudget::new(1, u64::MAX, grant), &ctx.cancel, semio_framework_job::default_now_us, &mut sequence, &mut progress, authority) else { break };
             completion.close_step(&mut cx)
         };
-        if turn < 3 || turn % 8192 == 0 { eprintln!("[DEBUG] router completion close turn {turn}: step {:?} progress {progress:?} phase {:?} result {:?} fault {}", step.as_ref().ok(), completion.session().close_phase(), completion.result(), completion.fault().is_some()); }
+        let blocked = matches!(step, Ok(semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked));
         if step.is_err() || semio_framework_os_services::ComputeRetainedRecipient::record_progress(wallet, progress).is_err() {
             break;
         }
-        if progress == RetainedCloneProgress::default() {
+        if blocked {
             runtime.sleep_until(runtime.now_ms().await.saturating_add(1)).await;
         }
     }
@@ -415,10 +415,11 @@ async fn close_unadmitted_router_effect<R: HostAsyncRuntime>(runtime: &R, ctx: &
             let Ok(mut cx) = StepContext::with_payload_authority(operation, generation, StepBudget::new(1, u64::MAX, grant), &ctx.cancel, semio_framework_job::default_now_us, sequence, &mut progress, authority) else { break };
             original.close_step(&mut cx)
         };
+        let blocked = matches!(step, Ok(semio_framework_job::InteractiveJobCloseStep::Blocked));
         if step.is_err() || wallet.record_progress(progress).is_err() {
             break;
         }
-        if progress == RetainedCloneProgress::default() {
+        if blocked {
             runtime.sleep_until(runtime.now_ms().await.saturating_add(1)).await;
         }
     }

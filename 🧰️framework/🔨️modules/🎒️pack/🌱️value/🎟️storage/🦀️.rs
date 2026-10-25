@@ -15,7 +15,7 @@ impl RetainedValueCursor{
   let actual=self.stack_allocation_bytes();if actual>demand.capacity_bytes{let fault=PackRefusal::RetainedAllocation{kind:ValueRefusalKind::OwnershipLimit,allocated_bytes:actual,what:"retained-value-stack",offset:self.offset,detail:"retained value stack allocation overgrant"};self.fault.get_or_insert_with(||fault.clone());return Err(fault)}
   Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:actual,released_bytes:0})
  }
- /// 📏️ Quotes one actual pending owner, scalar frame, Vec header release, or terminal flags.
+ /// 🎞️ Quotes one actual pending owner, scalar frame, Vec header release, or terminal flags.
  pub fn storage_retirement_demands(&self)->Result<RetirementDemand,PackRefusal>{
   if self.closed{return Ok(Default::default())}
   let copy=if self.pending.is_some(){size_of::<Option<(u64,u8)>>()+size_of::<bool>()}else if !self.stack.is_empty(){size_of::<Expect>()+size_of::<usize>()+size_of::<u8>()+size_of::<bool>()}else if self.stack_allocation_bytes()!=0{size_of::<Vec<Expect>>()+size_of::<u8>()+size_of::<bool>()}else{size_of::<u8>()+2*size_of::<bool>()};
@@ -33,22 +33,22 @@ impl RetainedValueCursor{
  }
 }
 impl RetainedRecordBodyCursor{
- /// 📏️ Quotes the next symbol or value-stack backing separately from any metadata move.
+ /// 🗄️ Quotes the next symbol or value-stack backing separately from any metadata move.
  pub fn record_storage_admission_demands(&mut self)->Result<RetirementDemand,PackRefusal>{
   Ok(match self.next_allocation_bytes()?{Some(bytes)=>RetirementDemand{copy_bytes:0,capacity_bytes:bytes,release_bytes:0,depth:1},None=>Default::default()})
  }
- /// 📦️ Allocates exactly the quoted backing only after every independent currency is present.
+ /// 🎙️ Allocates exactly the quoted backing only after every independent currency is present.
  pub fn admit_record_storage(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,PackRefusal>{
   let demand=self.record_storage_admission_demands()?;if demand.capacity_bytes==0||!funded(grant,demand){return Ok(Default::default())}
   let step=self.reserve_allocation(demand.capacity_bytes).map_err(|error|error.fault)?;
   Ok(RetainedCloneProgress{copied_items:usize::from(step.progressed),retained_capacity_bytes:step.allocated_bytes,..Default::default()})
  }
- /// 📏️ Quotes one logical transition or one exact physical backing release of the record-body close.
+ /// 📹️ Quotes one logical transition or one exact physical backing release of the record-body close.
  pub fn record_storage_retirement_demands(&self,_maximum_body_bytes:usize)->Result<RetirementDemand,PackRefusal>{
   if self.terminal_is_empty(){return Ok(Default::default())}
   Ok(RetirementDemand{copy_bytes:0,capacity_bytes:0,release_bytes:self.next_release_allocation_bytes()?.unwrap_or(0),depth:1})
  }
- /// ♻️ Keeps every owner and phase unchanged on an unfunded grant; a funded turn is exactly one close transition.
+ /// ⏺️ Keeps every owner and phase unchanged on an unfunded grant; a funded turn is exactly one close transition.
  pub fn retire_record_storage(&mut self,maximum_body_bytes:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>{
   use semio_framework_pack_format_retained::RetainedPackCloseStep;
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}

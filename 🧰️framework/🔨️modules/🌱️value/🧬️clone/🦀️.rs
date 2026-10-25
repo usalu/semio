@@ -83,7 +83,7 @@ struct DslValueCloneState<R: DslValueSource> {
     phase: Phase,
 }
 
-/// 🧬️ Incrementally clones one frozen value and returns its source only through bounded close.
+/// 🖱️ Incrementally clones one frozen value and returns its source only through bounded close.
 #[must_use = "value clone cursors must transfer output and explicitly close or cancel and explicitly close"]
 pub struct DslValueCloneCursor<R: DslValueSource> {
     state: ManuallyDrop<DslValueCloneState<R>>,

@@ -26,14 +26,14 @@ import { type CourseSession } from "../🧭️session/🟦️.ts";
 /** 🗺️ The grid of an overview: three columns or two on a tablet. */
 export type HomeGrid = "desktop" | "tablet";
 
-/** 🗺️ How the overview is laid out: its grid, and whether its cards stand fixed on it (`strip`) or the learner swipes through it
+/** 🏡️ How the overview is laid out: its grid, and whether its cards stand fixed on it (`strip`) or the learner swipes through it
  * one page at a time (`swipe`). */
 export interface HomeLayout {
   readonly grid: HomeGrid;
   readonly mode: LayeredMode;
 }
 
-/** 🗺️ The layout the matched media queries of {@link homeLayoutQueries} give: the tablet grid between the breakpoints, the desktop grid
+/** 🔎️ The layout the matched media queries of {@link homeLayoutQueries} give: the tablet grid between the breakpoints, the desktop grid
  * on either side of them, swiping below the mobile breakpoint and wherever the grid's cards
  * would not fit their cells. */
 export function homeLayout(matched: { readonly narrow: boolean; readonly medium: boolean; readonly short: { readonly [G in HomeGrid]: boolean } }): HomeLayout {
@@ -138,7 +138,7 @@ function createPreviewPointerBus(): PreviewPointerBus {
   };
 }
 
-/** 🖱️ The pointer inherited from the active grid. The publisher, and an ancestor that already has a page open, ignore it. */
+/** 📺️ The pointer inherited from the active grid. The publisher, and an ancestor that already has a page open, ignore it. */
 function useInheritedPreview(ignore: boolean): PreviewCamera | undefined {
   const bus = useContext(PreviewPointerContext);
   const [camera, setCamera] = useState<PreviewCamera | undefined>(undefined);
@@ -188,7 +188,7 @@ interface HomeOverviewProps extends HomeProps {
   readonly act: Act;
 }
 
-/** 🌲️ Each container uses the same layered overview; only the current grid handles input. */
+/** 🥪️ Each container uses the same layered overview; only the current grid handles input. */
 function HomeOverview(props: HomeOverviewProps): ReactElement | null {
   const { session, state, text, locale, preferences, onPreferences, container, enabled, busy, act } = props;
   const course = state.course;

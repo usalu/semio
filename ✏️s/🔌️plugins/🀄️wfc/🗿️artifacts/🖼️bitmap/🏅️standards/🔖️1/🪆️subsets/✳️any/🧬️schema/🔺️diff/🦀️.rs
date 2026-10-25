@@ -62,8 +62,9 @@ wfc_patch!(/// 📌️ Field patch over a pinned pixel (its `x:y` key is the row
 
 protocol::list_delta! {
     /// 📂 Row delta over the pinned pixels.
-    pub BitmapPinnedDelta { removal: BitmapPinnedRemoval, insertion: BitmapPinnedInsertion, relocation: BitmapPinnedRelocation, modification: BitmapPinnedModification, row: BitmapPinnedPixel, patch: BitmapPinnedPatch, list: Vec<BitmapPinnedPixel>, key: String = |row| pin_key(row.x, row.y), values_only }
+    pub BitmapPinnedDelta { removal: BitmapPinnedRemoval, insertion: BitmapPinnedInsertion, relocation: BitmapPinnedRelocation, modification: BitmapPinnedModification, row: BitmapPinnedPixel, patch: BitmapPinnedPatch, list: Vec<BitmapPinnedPixel>, key: String = keyed, values_only }
 }
+
 //#endregion 🔖️RowTypes
 
 //#region 🔖️Region

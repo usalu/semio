@@ -1,0 +1,5 @@
+line lease
+ (globalThis as unknown as Record<string,((name:string)=>void)|undefined>).__spinCount?.("claimSweep");// [DEBUG] spin-hunt
+
+line lease
+      (globalThis as unknown as Record<string,((name:string)=>void)|undefined>).__spinCount?.("queuedTurn");// [DEBUG] spin-hunt

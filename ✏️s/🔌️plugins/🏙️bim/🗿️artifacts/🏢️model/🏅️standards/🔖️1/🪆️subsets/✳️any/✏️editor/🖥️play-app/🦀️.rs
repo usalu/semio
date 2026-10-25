@@ -168,49 +168,22 @@ impl ArtifactEditor for BimModelApp {
         Box::<semio_s_artifact_bim_model_gestures::editor::bim::gestures::GestureOwner>::default()
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !BIM_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !BIM_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id || bim_bounded_extent(&request.command).is_none() {
-            return Err(semio_s_artifact_bim_model_kit::editor::bim::kit::fault("app.command.tool-mismatch", "Bim command does not match its exact registered tool"));
+        if original.command.command_id() != original.tool_id || bim_bounded_extent(&original.command).is_none() {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Bim command does not match its exact registered tool").into());
         }
-        let tool_id = request.command.command_id();
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match &*request.command {
+        let tool_id = original.command.command_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, BimCommand::command_id, BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match &*request.command {
             BimCommand::ExportScheduleCsv(_) => Box::new(export_schedule_csv::ScheduleCsvWork::new(tool_id, request.instance_operation_owner.clone())),
             BimCommand::AnalyseModel(_) => Box::new(analyse_model::AnalyseWork::new(tool_id, request.instance_operation_owner.clone())),
             BimCommand::ExportModel(_) => Box::new(export_model::ModelExportWork::new(tool_id, request.instance_operation_owner.clone())),
             BimCommand::ExportSheets(_) => Box::new(export_sheets::SheetsExportWork::new(tool_id, request.instance_operation_owner.clone())),
             _ => Box::new(BimCommandWork::new(tool_id, request.instance_operation_owner.clone())),
-        };
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id,
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            BimCommand::command_id,
-            BIM_BOUNDED_RAW_BYTES,
-            BIM_BOUNDED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        } })
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -226,7 +199,7 @@ impl ArtifactEditor for BimModelApp {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+        Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {

@@ -16,7 +16,7 @@ import{type ResourceLeaseControl}from"../../../../🔨️modules/🏃️process/
 import { type ChildProcessByStdio, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { accessSync, constants as fsConstants, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, posix, win32 } from "node:path";
+import { join, posix, resolve, win32 } from "node:path";
 import { createInterface } from "node:readline";
 import { serveWarmMcpGateway } from "./📡️stdio/🚪️gateway/🟦️.ts";
 import type { Readable, Writable } from "node:stream";
@@ -169,6 +169,23 @@ export function ensureMcpBinary(repoRoot: string, env: NodeJS.ProcessEnv = proce
   return requireMcpBinary(repoRoot, env, platform);
 }
 
+/** 🏛️ The authored embedding policy of the host driver (finite wake, drive and operation currency plus the root turn limits) that `semio-os-mcp` requires through `--host-driver-policy`; schema: `🔌️plugin/🖥️host/🔔️wake/📃️policy/🧬️schema`. */
+export const MCP_HOST_DRIVER_POLICY_PATH = join(import.meta.dirname, "🎚️config", "🏛️host-driver-policy.json");
+
+/** 🧷️ Gives a `semio-os-mcp` argument list the authored host driver policy unless the caller names its own. */
+export function withMcpHostDriverPolicy(args: readonly string[]): string[] {
+  return args.includes("--host-driver-policy") ? [...args] : [...args, "--host-driver-policy", MCP_HOST_DRIVER_POLICY_PATH];
+}
+
+/** 📇️ Takes the one explicit `--catalog <root>` off a launch argument list: the plugin catalog publication (`🦀️catalog.json` + `🔌️plugins.json`) the gateway compiles its capabilities from. The binary infers none from the repository (without it the catalog holds only the gateway's own tools), so the composition names it; `SEMIO_PLUGIN_CATALOG` in the caller's environment is the same input and `--catalog` wins. */
+export function takeMcpPluginCatalog(args: readonly string[], repoRoot: string): { readonly args: string[]; readonly env: NodeJS.ProcessEnv } {
+  const at = args.indexOf("--catalog");
+  if (at < 0) return { args: [...args], env: {} };
+  const value = args[at + 1];
+  if (!value || value.startsWith("-") || args.indexOf("--catalog", at + 1) >= 0) throw new Error("--catalog takes exactly one plugin catalog root");
+  return { args: [...args.slice(0, at), ...args.slice(at + 2)], env: { SEMIO_PLUGIN_CATALOG: resolve(repoRoot, value) } };
+}
+
 /** 🔥️ Whether `initialize` can be answered by the real server immediately: an explicit override, or a staged binary whose sources are unchanged. */
 export function mcpBinaryIsStaged(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): boolean {
   return Boolean(env.SEMIO_OS_MCP_BIN) || mcpBinaryFreshness(resolveMcpBinaryPath(repoRoot, env, platform), platform).fresh;
@@ -176,7 +193,7 @@ export function mcpBinaryIsStaged(repoRoot: string, env: NodeJS.ProcessEnv = pro
 
 /** 🚪️ Serves `semio-os-mcp stdio …` for a client whose binary is missing or stale: the handshake is answered at once, staging runs in the background, and the real server takes over through `list_changed` notifications — so a cold build never lands inside the client's connect timeout. */
 export function serveWarmMcpStdio(repoRoot: string, extra: readonly string[], env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): Promise<number> {
-  return serveWarmMcpGateway({ stage: (progress, signal) => stageMcpBinaryAsync(repoRoot, progress, signal), command: () => requireMcpBinary(repoRoot, env, platform), args: ["stdio", ...extra], cwd: repoRoot, env, input: process.stdin, output: process.stdout });
+  return serveWarmMcpGateway({ stage: (progress, signal) => stageMcpBinaryAsync(repoRoot, progress, signal), command: () => requireMcpBinary(repoRoot, env, platform), args: withMcpHostDriverPolicy(["stdio", ...extra]), cwd: repoRoot, env, input: process.stdin, output: process.stdout });
 }
 //#endregion 🔖️BinaryPath
 
@@ -204,7 +221,7 @@ export type RawMcpProcess = {
  * JSON). Queue/waiter shape mirrors `os-hub-ts`'s `openFrameSocket` — the established pattern in
  * this repo for "await the next line from a live child process" over an event-based stream. */
 export function spawnRawMcp(bin: string, args: readonly string[] = ["stdio"]): RawMcpProcess {
-  const child = spawn(bin, [...args], { stdio: ["pipe", "pipe", "pipe"] }) as ChildProcessByStdio<Writable, Readable, Readable>;
+  const child = spawn(bin, withMcpHostDriverPolicy(args), { stdio: ["pipe", "pipe", "pipe"] }) as ChildProcessByStdio<Writable, Readable, Readable>;
   const allLines: string[] = [];
   const queue: string[] = [];
   let waiters: Array<(error: Error | null, line?: string) => void> = [];

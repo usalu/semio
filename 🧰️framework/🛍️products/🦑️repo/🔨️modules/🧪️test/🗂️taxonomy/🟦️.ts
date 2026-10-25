@@ -17,7 +17,7 @@ export const TAXONOMY_REL_PATH = "🧰️framework/🛍️products/🦑️repo/�
 /** 🧪️ Repo-relative root of the testing domain that owns this contract. */
 export const TEST_DOMAIN_REL_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test";
 
-/** 🧪️ Implementations a test case may claim an adapter for. */
+/** 📕️ Implementations a test case may claim an adapter for. */
 
 
 
@@ -37,7 +37,7 @@ export const TEST_DOMAIN_REL_PATH = "🧰️framework/🛍️products/🦑️rep
 
 
 /**
- * ⚖️ The declarative policy of one profile. Everything a profile can say is data, so a new profile is
+ * 🔏️ The declarative policy of one profile. Everything a profile can say is data, so a new profile is
  * a manifest entry — never new framework code.
  */
 export type ComparisonProfileSpec = Readonly<{
@@ -54,11 +54,11 @@ export type ComparisonProfileSpec = Readonly<{
   text?: "none" | "utf8";
   /** 💾️ Compare the whole projection as an opaque byte string. */
   bytes?: boolean;
-  /** ⚖️ The multi-artifact, externally-probed pipeline this profile delegates to. A profile that names one compares an artifact BUNDLE; the structural fields above then describe only its projection half. */
+  /** 🚂️ The multi-artifact, externally-probed pipeline this profile delegates to. A profile that names one compares an artifact BUNDLE; the structural fields above then describe only its projection half. */
   pipeline?: string;
 }>;
 
-/** ⚖️ The domain-neutral profiles the framework itself owns. Nothing here knows a file format. */
+/** 🏛️ The domain-neutral profiles the framework itself owns. Nothing here knows a file format. */
 export const CORE_COMPARISON_PROFILES: readonly ComparisonProfileSpec[] = [
   { id: "exact-bytes-v1", description: "Byte-for-byte identity — used only where byte determinism is itself the requirement.", bytes: true },
   { id: "utf8-text-v1", description: "Text identity after normalizing line endings, trailing whitespace and Unicode form.", text: "utf8" },
@@ -75,7 +75,7 @@ type TestPathExclusion = Readonly<{ path: string; mode: "opaque"; reason: string
 type TestLocation = Readonly<{ directoryPath: string; fileKindId: string }>;
 export type MutationCatalogAuthority = Pick<Taxonomy, "mutationDomainOwners" | "mutationCatalogSourceOwners" | "pathEmojiPolicy" | "schemaScopeOwnerLevels">;
 
-/** 🗂️ Canonical v7 test taxonomy, mirrored from `🔣️taxonomy.json` so drift fails closed. */
+/** 📑️ Canonical v7 test taxonomy, mirrored from `🔣️taxonomy.json` so drift fails closed. */
 export type TestTaxonomy = MutationCatalogAuthority & Readonly<{
   fileKinds: Readonly<Record<string, TestFileKind>>;
   pathExclusions: Readonly<Record<string, TestPathExclusion>>;
@@ -108,11 +108,11 @@ export type TestTaxonomy = MutationCatalogAuthority & Readonly<{
   testOracleRegistryLocation: TestLocation;
   testSchemaLocation: TestLocation;
   testContributionFileKindId: string;
-  /** 🔬️ Directory name of an owner's external measurement probes — test-owned by what it is. */
+  /** 📁️ Directory name of an owner's external measurement probes — test-owned by what it is. */
   testProbeDirName: string;
   /** 🏭️ Directory name of an owner's third-party fixture generator — test-owned by what it is. */
   testGeneratorDirName: string;
-  /** 🏭️ Directory name of an owner's production mutation bridge. Production-side by design: it links the real implementation so `listMutations` answers from dispatch. */
+  /** 🌉️ Directory name of an owner's production mutation bridge. Production-side by design: it links the real implementation so `listMutations` answers from dispatch. */
   testBridgeDirName: string;
   testDomainPath: string;
   testPhases: readonly string[];
@@ -122,7 +122,7 @@ export type TestTaxonomy = MutationCatalogAuthority & Readonly<{
 
 let taxonomyCache: { root: string; value: TestTaxonomy } | null = null;
 
-/** 🔣️ Loads the frozen test vocabulary out of the SSOT taxonomy. Never re-declare these strings locally. */
+/** ❄️ Loads the frozen test vocabulary out of the SSOT taxonomy. Never re-declare these strings locally. */
 export function testTaxonomy(repoRoot: string): TestTaxonomy {
   if (taxonomyCache && taxonomyCache.root === repoRoot) return taxonomyCache.value;
   const parsed = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
@@ -164,7 +164,7 @@ export function testAdapterFilenames(taxonomy: TestTaxonomy): Readonly<Record<st
   return Object.fromEntries(Object.entries(taxonomy.testAdapterFileKinds).map(([key, kindId]) => [key, testFilenameForKind(taxonomy, kindId)]));
 }
 
-/** 🚫️ Excluded paths come from the taxonomy and are applied HERE, in the discovery library — never
+/** 📂️ Excluded paths come from the taxonomy and are applied HERE, in the discovery library — never
  * only by a CI path filter. This function names no area; which ones are excluded is vocabulary. */
 export function isExcludedTestPath(repoRoot: string, relPath: string): boolean {
   const normalized = relPath.split(sep).join("/");

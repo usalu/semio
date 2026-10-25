@@ -1,0 +1,1 @@
+[{"name":"capabilities_describe","args":{"capabilityId":"note.s.note.note@1/*#editor.deleteBlock"}},{"name":"inference_list","args":{}},{"name":"action_prepare","args":{"capabilityId":"note.s.note.note@1/*#editor.deleteBlock","artifactId":"x","input":{}}},{"name":"ui_focus","args":{"artifactId":"x"}},{"name":"job_get","args":{"jobId":"nope"}}]

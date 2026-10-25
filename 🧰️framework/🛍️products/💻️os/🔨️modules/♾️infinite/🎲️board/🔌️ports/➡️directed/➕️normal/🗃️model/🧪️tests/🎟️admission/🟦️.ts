@@ -29,5 +29,4 @@ test("original board fill descriptor layouts and separate semantic serial agree 
  expect(parent.includes("Layout::array::<Option<BoardFillPage<T>>>(CAPACITY)")).toBe(true);
  expect(source.includes("pub fn next_close_demands(&self, _body: usize)")).toBe(true);
  expect(law.originalReceiptCount).toBe(1);
- console.log("[DEBUG] Ajv/SQLite Board original4+4 descriptor layouts, semantic73 differs physical11, original scoped birth and snapshot paid-close custody");
 });

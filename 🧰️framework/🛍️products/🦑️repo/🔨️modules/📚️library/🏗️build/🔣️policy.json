@@ -111,6 +111,37 @@
       "!{projectRoot}/**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
       "!{projectRoot}/.storybook/**"
     ],
+    "testSourceExclusions": [
+      "!{workspaceRoot}/**/🧪️tests/**/*",
+      "!{workspaceRoot}/**/*.feature",
+      "!{workspaceRoot}/**/*.stories.{ts,tsx}"
+    ],
+    "schedulingSourceExclusions": [
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/💾️state/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📖️texts/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/💾️state/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🔒️leases/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🪓️termination/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/**/*",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/**/*"
+    ],
     "cargoToolchain": [
       "{workspaceRoot}/rustfmt.toml",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/📜️script.ts"
@@ -180,7 +211,8 @@
       "maximumWaiters": 256,
       "bypassMilliseconds": 30000,
       "maximumBypasses": 6,
-      "agingMilliseconds": 300000
+      "agingMilliseconds": 300000,
+      "lendAfterMilliseconds": 30000
     },
     "kinds": {
       "test": {

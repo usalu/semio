@@ -1,5 +1,5 @@
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {spawn,spawnSync} from "node:child_process";

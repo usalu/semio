@@ -10,11 +10,11 @@ impl DrawingIdentity {
  pub fn key(&self)->&PagedUtf8<{usize::MAX}>{&self.key}
  pub fn into_key(self)->PagedUtf8<{usize::MAX}>{self.key}
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct DrawingIdentityWire {key:PagedUtf8<{usize::MAX}>}
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl TryFrom<DrawingIdentityWire> for DrawingIdentity {type Error=semio_framework_value::ValueError;fn try_from(value:DrawingIdentityWire)->Result<Self,Self::Error>{Self::admit(value.key)}}
 #[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::ToValue,semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]

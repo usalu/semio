@@ -36,7 +36,7 @@ export function keybindingPlatformUsesMetaV1(platform?: string): boolean {
   return /Mac|iPhone|iPod|iPad/i.test(navigator.platform);
 }
 
-/** ⌨️ Formats the first chord of a keybinding for inline or menu shortcut labels. `platform` is the caller's own reading where one is in hand, so the badge and {@link ariaKeyshortcutsText} can be proved to name the same physical key off a real machine. */
+/** 🏷️ Formats the first chord of a keybinding for inline or menu shortcut labels. `platform` is the caller's own reading where one is in hand, so the badge and {@link ariaKeyshortcutsText} can be proved to name the same physical key off a real machine. */
 export function formatKeybindingShortcut(keys: string, platform?: string): string {
   const chord = parseKeybindingChords(keys)[0];
   if (!chord) return "";
@@ -120,7 +120,7 @@ function ariaKeyToken(token: string, usesMeta: boolean): string {
   return ARIA_NAMED_KEYS[token] ?? token;
 }
 
-/** ⌨️ Rewrites this codebase's chord grammar (`"mod+alt+arrowright,ctrl+k"` — comma-separated
+/** ♿️ Rewrites this codebase's chord grammar (`"mod+alt+arrowright,ctrl+k"` — comma-separated
  * alternatives, lowercase tokens) into the `aria-keyshortcuts` grammar: space-separated chords,
  * `+`-joined, DOM `KeyboardEvent.key` spelling with capitalized modifier names. `mod` is resolved by
  * {@link keybindingPlatformUsesMetaV1}, the same predicate the dispatcher and the visual badge use,

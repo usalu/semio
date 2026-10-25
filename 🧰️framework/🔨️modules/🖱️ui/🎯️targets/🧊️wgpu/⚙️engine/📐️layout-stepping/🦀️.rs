@@ -434,7 +434,7 @@ impl Ui {
         &self.shell
     }
 
-    /// 🚦️ True when any window's retained tree still carries `DIRTY_LAYOUT`/`DIRTY_PAINT`/
+    /// 🖼️ True when any window's retained tree still carries `DIRTY_LAYOUT`/`DIRTY_PAINT`/
     /// `SUBTREE_DIRTY` on its root. No animation-clock scaffolding exists anywhere in this crate yet
     /// (nothing under `arena`/`tree`/`reconcile`/`flex`/`paint`/`events`/`scene_slots`/`shell`
     /// schedules a future wake), so this is purely dirty-flag-driven; wiring a real animation deadline

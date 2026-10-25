@@ -3,7 +3,7 @@ import { mat2d, vec2 } from "gl-matrix";
 import { expect, it } from "vitest";
 import type { ActorFrame, Species } from "@semio-tech/pets";
 import { CHUTE_DOME, CHUTE_RISE, CHUTE_SPAN, canopyRim, depict, equip, paint, tiltDegrees, tiltedPlacement } from "@semio-tech/pets-react";
-import { FEET, GRIP, HEIGHT, NEAR, SCRUFF, SPECIMEN, WIDTH, apart, bearing, carried, css, equipped, meant, numbersOf, placed, shown, through } from "../🟢️shared/🟦️.tsx";
+import { FEET, GRIP, HEIGHT, NEAR, SCRUFF, SPECIMEN, WIDTH, apart, bearing, carried, css, equipped, meant, numbersOf, placed, shown, through } from "../🟢️harness/🟦️.tsx";
 
 /** 🔷 Registers the builds tool once hidden tests of the gear depiction suite. */
 export function registerBuildsToolOnceHiddenTests(): void {

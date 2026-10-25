@@ -8,8 +8,8 @@ use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertSlide {
-    pub(crate) vacancy: PptxXmlVacancyAddress,
-    pub(crate) entry: XmlNode,
+    pub vacancy: PptxXmlVacancyAddress,
+    pub entry: XmlNode,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertSlide {

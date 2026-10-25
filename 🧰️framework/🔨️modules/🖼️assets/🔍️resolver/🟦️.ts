@@ -13,7 +13,7 @@ export interface CatalogThemeIconsV1 {
   readonly themedVariants?: Readonly<Partial<Record<string, string>>>;
 }
 
-/** 🖼️ Resolves catalog icon SVG markup with optional theme aliases and variants. */
+/** 🔎️ Resolves catalog icon SVG markup with optional theme aliases and variants. */
 export function resolveCatalogIconSvgFromTheme(name: IconName, icons: CatalogThemeIconsV1 | undefined): string {
   const variant = icons?.variants?.[name];
   if (variant) {
@@ -34,7 +34,7 @@ export function resolveCatalogIconNameFromTheme(name: IconName, icons: CatalogTh
 //#region 🔖️MetabolismIcons
 import { METABOLISM_ICONS, isMetabolismIconName, type MetabolismIconName } from "../🌱️metabolism/🔣️icons/🤖️generated/🖼️icons/🟦️.ts";
 
-/** 🖼️ Resolves metabolism icon SVG markup with optional theme aliases and variants. */
+/** 🎨️ Resolves metabolism icon SVG markup with optional theme aliases and variants. */
 export function resolveMetabolismIconSvgFromTheme(name: MetabolismIconName, icons: CatalogThemeIconsV1 | undefined): string {
   const variant = icons?.themedVariants?.[name];
   if (variant) {
@@ -45,7 +45,7 @@ export function resolveMetabolismIconSvgFromTheme(name: MetabolismIconName, icon
   return METABOLISM_ICONS[resolved];
 }
 
-/** 🔍️ Resolves a metabolism icon id through theme aliases to a compile-time {@link MetabolismIconName}. */
+/** 🔤️ Resolves a metabolism icon id through theme aliases to a compile-time {@link MetabolismIconName}. */
 export function resolveMetabolismIconNameFromTheme(name: MetabolismIconName, icons: CatalogThemeIconsV1 | undefined): MetabolismIconName {
   const alias = icons?.themedAliases?.[name];
   return alias && isMetabolismIconName(alias) ? alias : name;

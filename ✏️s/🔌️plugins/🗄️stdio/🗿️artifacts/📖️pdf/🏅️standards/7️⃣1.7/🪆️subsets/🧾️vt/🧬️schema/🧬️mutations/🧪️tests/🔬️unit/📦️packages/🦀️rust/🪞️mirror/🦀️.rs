@@ -73,10 +73,7 @@ pub mod standards {
                     #[path = "."]
                     pub mod text {
                         pub use semio_s_artifact_stdio_pdf_mut_family_11::standards::v1_7::subsets::base::io::text::*;
-                        #[path = "."]
-                        pub mod snapshot {
-                            pub use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::io::text::snapshot::date;
-                        }
+                        pub use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::io::text::snapshot;
                     }
                     pub use semio_s_artifact_stdio_pdf_graph_projection::standards::v1_7::subsets::base::io::sqlite;
                     #[path = "."]

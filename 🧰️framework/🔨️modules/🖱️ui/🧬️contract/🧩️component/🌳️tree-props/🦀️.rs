@@ -1,4 +1,4 @@
-//! 🌳️ Tree props: the tree props, presentation, window and row extent, the section props and the tree item props with their credited targets. See [`super`].
+//! 🌴️ Tree props: the tree props, presentation, window and row extent, the section props and the tree item props with their credited targets. See [`super`].
 
 use super::*;
 
@@ -49,7 +49,7 @@ pub enum TreeWindowRowExtent {
     CompactControl,
 }
 
-/// 🪟️ The materialised slice of a logically `total`-long child list: the record's `children` are the
+/// 🍕️ The materialised slice of a logically `total`-long child list: the record's `children` are the
 /// entries `[offset, offset + children.len())` of that list. `total > 0` with no materialised
 /// children means expandable-but-not-yet-loaded, never "empty"; a renderer pitches the unmaterialised
 /// rows as spacers so the scrollbar spans the whole document instead of the loaded window.
@@ -85,7 +85,7 @@ pub struct TreeWindow {
 /// refused at assembly (`ui.tree-window.separator-in-key`) so a path can never be ambiguous.
 pub const TREE_WINDOW_PATH_SEPARATOR: &str = "␟";
 
-/// 🌲️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
+/// 📑️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
@@ -100,7 +100,7 @@ pub struct TreeSectionProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub header_toolbar: Option<crate::UiNodeId>,
-    /// 🪟️ The materialised slice of this section's logical child list — see [`TreeWindow`].
+    /// 🔪️ The materialised slice of this section's logical child list — see [`TreeWindow`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub window: Option<TreeWindow>,
@@ -139,15 +139,15 @@ pub struct TreeItemProps {
     /// `aria-selected`, the wgpu ARIA mirror's `selected`) and paints the chosen row selected — never by its icon alone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selected: Option<bool>,
-    /// 🪟️ The materialised slice of this row's logical child list — see [`TreeWindow`].
+    /// 📇️ The materialised slice of this row's logical child list — see [`TreeWindow`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub window: Option<TreeWindow>,
-    /// 🎯️ The interaction granularity this row picks when the tree carries the domain binding: the
+    /// 🏹️ The interaction granularity this row picks when the tree carries the domain binding: the
     /// row is a pick target of the tree's `interaction_domain`, keyed by its own record key, so it
     /// needs no argument map and no per-row binding of its own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub granularity: Option<crate::UiText>,
-    /// 🎛️ A direct `ContainerRole::Toolbar` child laid out horizontally inside this row. The
+    /// 🧰️ A direct `ContainerRole::Toolbar` child laid out horizontally inside this row. The
     /// document validator requires the target to be one of this record's direct children and every
     /// toolbar child to be a real [`Component::Button`].
     #[serde(default, skip_serializing_if = "Option::is_none")]

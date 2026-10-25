@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../.."
+name = "semio-s-artifact-trinity-jack-lsp-component"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The browser module of semio-s-artifact-trinity-jack-lsp: the one cdylib wasm-bindgen links, owning its JackLspSession export."
+
+[package.metadata.semio]
+role = "library"
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-trinity-jack-lsp = { path = "../../../📦️packages/🦀️rust" }
+
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+wasm-bindgen = "0.2.106"

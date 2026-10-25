@@ -1,7 +1,7 @@
 /** 🟠️ The actor instance close receipts phase of registerTests1. */
 import type { ActorInstanceCloseRequest, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest } from "../../../🟦️.ts";
 import type { registerActorInstanceCloseFaultTests } from "../🔶️actor-instance-close-fault/🟦️.ts";
-import type { TestSource } from "../🟢️shared/🟦️.ts";
+import type { TestSource } from "../🟢️harness/🟦️.ts";
 
 /** 🟡 Registers the actor instance close receipts tests of registerTests1. */
 export function registerActorInstanceCloseReceiptsTests({ it, source, expect, actorInstanceLifetimeEquals, actorInstanceCloseReceiptMatches, actorInstanceCapturedReceiptMatches, actorInstanceLifecycleReceiptEquals }: Pick<ReturnType<typeof registerActorInstanceCloseFaultTests>, "it" | "expect" | "actorInstanceLifetimeEquals" | "actorInstanceCloseReceiptMatches" | "actorInstanceCapturedReceiptMatches" | "actorInstanceLifecycleReceiptEquals"> & { readonly source: TestSource }) {

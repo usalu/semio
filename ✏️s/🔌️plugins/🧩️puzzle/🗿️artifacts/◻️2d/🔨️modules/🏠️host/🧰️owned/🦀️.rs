@@ -17,7 +17,7 @@ pub type Puzzle2dStore = ArtifactStore<Puzzle2dSnapshot, Puzzle2dMutation>;
 /// `Puzzle2dPlayApp::build_document_store_owners` hands the host, so both entry points record edits
 /// under one authority instead of two.
 pub async fn puzzle2d_store(envelope: Puzzle2dEnvelope, actor: protocol::ActorId) -> Result<Puzzle2dStore, String> {
-    let mut store = Puzzle2dStore::new(envelope, actor).await.map_err(|error| format!("puzzle2d store construction refused: {error:?}"))?;
+    let mut store = Puzzle2dStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await.map_err(|error| format!("puzzle2d store construction refused: {error:?}"))?;
     let owners = puzzle2d_authoring_owners().map_err(semio_framework_value::ValueError::into_message)?;
     store.install_document_store_owners_exact(owners).map_err(|(error, _)| error.into_message())?;
     Ok(store)

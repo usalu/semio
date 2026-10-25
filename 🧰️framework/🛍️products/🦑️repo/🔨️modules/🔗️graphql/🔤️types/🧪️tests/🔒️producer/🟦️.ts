@@ -4,7 +4,7 @@ import ts from "typescript";
 import { isBuiltin } from "node:module";
 import { readFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
-import { readSourceInputContract, relativeSourceInputs } from "../../../../📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs";
+import { readSourceInputContract, relativeSourceInputs } from "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️typescript/🟨️.mjs";
 import schema from "./🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 

@@ -7,6 +7,7 @@ use semio_s_artifact_norm_din18599_mut_systems::update_renewables::UpdateRenewab
 use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
 use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
+use protocol::ColdMutationDiff;
 
 fn diff_of(mutation: &Din18599Mutation, base: &Din18599Snapshot) -> Din18599Diff {
     let raised = mutation.diff(base);

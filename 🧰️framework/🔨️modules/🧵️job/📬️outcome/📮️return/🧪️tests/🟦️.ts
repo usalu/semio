@@ -59,5 +59,4 @@ test("supplied pages preserve bounded return slots and the same source until act
  const receiver=world.slice(world.indexOf("pub fn try_from_original("),world.indexOf("pub fn bytes(&self)",world.indexOf("pub fn try_from_original(")));
  expect(receiver.includes("to_vec")).toBe(false);expect(receiver.includes("Original(page)")).toBe(true);
  expect(world.includes("pub fn push_page_at(")).toBe(true);expect(world.includes("self.received_pages != self.page_len")).toBe(true);
- console.log("[DEBUG] Ajv/SQLite bounded original page return, denial/pointer conservation, source-before-vacancy and authored oversize frontier verified");
 });

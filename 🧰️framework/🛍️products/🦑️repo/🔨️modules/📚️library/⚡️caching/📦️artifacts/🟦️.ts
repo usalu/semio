@@ -1,9 +1,9 @@
 import{repositoryCachePartitionRootDataV1}from"../💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import{requireRecomputableStatePathV1}from"../../../../../../🔨️modules/🏃️process/💾️state/📋️layout/🟦️.ts";
+import{requireRecomputableStatePathV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/💾️state/📋️layout/🟦️.ts";
 import{withArtifactStorageOperationV1}from"./💾️storage/🟦️.ts";
 import{resolve,join,dirname,isAbsolute,relative,sep}from"node:path";
 import{lstatSync}from"node:fs";
-import{stageOwnedArtifactsV1}from"../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
+import{stageOwnedArtifactsV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
 import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import{requireNativeStoragePathV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{requireIssuedScriptInvocationV1,requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,withAcceptedPhysicalCleanupV1,type ScriptInvocation}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

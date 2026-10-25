@@ -1,5 +1,5 @@
 import type {GenerationStaleReasonV1,GenerationComputeResultV1,GenerationComputeSpecV1,GenerationGraphPolicyV1,GenerationMembershipV1,GenerationRowV1,GenerationStoreOptionsV1,FrontierV1,GenerationManifestV1} from "../🟨️.mjs";
-export declare const GENERATION_MESSAGES_V1:Readonly<Record<"en"|"de",Readonly<Record<"current"|"verified"|"waiting"|"building"|"published"|"closure"|"cold"|"stale"|"reason"|"reasonStamp"|"reasonInput"|"reasonListing"|"reasonData"|"reasonAnalysis"|"reasonFact"|"reasonMembership"|"reasonMore"|"withheldDependency"|"withheldSource"|"changeAdded"|"changeRemoved"|"changeChanged",string>>>>;
+export declare const GENERATION_MESSAGES_V1:Readonly<Record<"en"|"de",Readonly<Record<"current"|"verified"|"waiting"|"covered"|"pinned"|"building"|"published"|"indexed"|"swept"|"closure"|"cold"|"stale"|"planned"|"summary"|"reason"|"reasonStamp"|"reasonInput"|"reasonListing"|"reasonData"|"reasonAnalysis"|"reasonFact"|"reasonMembership"|"reasonMore"|"withheldDependency"|"withheldSource"|"changeAdded"|"changeRemoved"|"changeChanged",string>>>>;
 export function renderGenerationMessageV1(key:keyof typeof GENERATION_MESSAGES_V1["en"],fields:Readonly<Record<string,string|number>>,language:"en"|"de"):string;
 /** 🚧️ One project the graph withholds: where it is declared, the digest of the observed bytes, the English reason and, for a test project that waits for projects the snapshot lacks, their names. */
 export interface WithheldProjectV1{readonly root:string;readonly project?:string;readonly source:string;readonly sha256:string;readonly reason:string;readonly missing?:readonly string[]}
@@ -21,7 +21,8 @@ export interface GenerationPartV1{owners:{name:string;root:string;nativeRoot?:st
 export function shapeComputeResultV1(input:{workspaceRoot:string;part:GenerationPartV1;stubs:GenerationComputeSpecV1["stubs"];separator?:string;implementation?:ScopedImplementationRowsV1}):GenerationComputeResultV1;
 export function createGenerationProgressV1(clock:{begin(phase:string,total:number):unknown;advance(phase:string,done:number):unknown;end(phase:string):unknown}):(event:{phase:string;done:number;total:number})=>Promise<void>;
 export interface GenerationHostV1{
- workspaceRoot:string;separator?:string;language:"en"|"de";namedInputs:unknown;registryDigest:string;signal?:AbortSignal;verbose?:boolean;
+ workspaceRoot:string;separator?:string;language:"en"|"de";namedInputs:unknown;registryDigest:string;signal?:AbortSignal;verbose?:boolean;waitNoticeMilliseconds?:number;
+ release?():Promise<void>;
  identity():Promise<string>;
  implementationRows():Promise<readonly GenerationRowV1[]>;
  withShared<T>(body:(store:unknown,control:unknown)=>Promise<T>):Promise<T>;
@@ -35,8 +36,10 @@ export interface GenerationHostV1{
  readGraph(value:unknown):unknown;
  clock(control:unknown):Parameters<typeof createGenerationProgressV1>[0];
  say(key:keyof typeof GENERATION_MESSAGES_V1["en"],fields:Readonly<Record<string,string|number>>):void;
+ /** 📌️ Told once a load served a graph: the sealed generation, its manifest digest, the owners of that manifest in code point order and the owners (every owner when undefined) the load served from it. */
+ sealed?(record:{generation:number;manifest:string;owners:readonly string[];covered:ReadonlySet<string>|undefined;atMs:number}):void;
 }
-export function loadGenerationGraphV1(host:GenerationHostV1,options?:{policy?:GenerationGraphPolicyV1;closure?:readonly string[];selection?:unknown;slice?:{selection:unknown;roots:readonly string[];providers?:readonly {consumerRoots:readonly string[];sourcePath:string}[]};lean?:boolean}):Promise<unknown>;
+export function loadGenerationGraphV1(host:GenerationHostV1,options?:{policy?:GenerationGraphPolicyV1;closure?:readonly string[];selection?:unknown;slice?:{selection:unknown;roots:readonly string[];providers?:readonly {consumerRoots:readonly string[];sourcePath:string}[]};lean?:boolean;pin?:import("../🧷️pin/🟨️.mjs").GenerationPinV1}):Promise<unknown>;
 /** 📦️ Expands compact inputs within the capacity of one capture. */
 export function expandInChunksV1(projects:Record<string,unknown>,expand:(chunk:Record<string,unknown>)=>Promise<Record<string,unknown>>,limits:{maximumProjects:number;maximumBytes:number}):Promise<Record<string,unknown>>;
 /** 🌊️ Expands compact inputs chunk by chunk while the nodes of the assembly arrive. */
@@ -47,3 +50,5 @@ export function sliceClosureV1(input:{owners:Readonly<Record<string,string>>;fra
 export function describeGenerationReasonV1(reason:GenerationStaleReasonV1,options:{workspaceRoot:string;separator?:string;current?:ReadonlyMap<string,unknown>;language:"en"|"de"}):{project:string;key:keyof typeof GENERATION_MESSAGES_V1["en"];fields:Record<string,string>;why:string;text:string};
 /** 📣️ Says why a build starts: the reason of a cold start, or the stale projects followed by the first stale inputs by name. */
 export function announceGenerationBuildV1(host:Pick<GenerationHostV1,"say"|"workspaceRoot"|"separator"|"language">,spec:GenerationComputeSpecV1,rows:readonly GenerationRowV1[]):void;
+/** 🪦️ The previous owners a build still knows: removed owners are never kept as stubs. */
+export function survivingStubsV1<T>(stubs:Readonly<Record<string,T>>,removed:Iterable<string>):Record<string,T>;

@@ -1,9 +1,9 @@
 {
-  "schema": "nextest-artifact-location/v1",
+  "schema": "nextest-artifact-location/v2",
   "cases": [
-    { "value": "", "relative": null, "retain": false },
-    { "value": "   ", "relative": null, "retain": false },
-    { "value": "ticket/nextest", "relative": "ticket/nextest", "retain": true },
-    { "value": "  ticket/🧪️native  ", "relative": "ticket/🧪️native", "retain": true }
+    { "value": "", "relative": null, "refused": true },
+    { "value": "   ", "relative": null, "refused": true },
+    { "value": "ticket/nextest", "relative": "ticket/nextest", "refused": false },
+    { "value": "  ticket/🧪️native  ", "relative": "ticket/🧪️native", "refused": false }
   ]
 }

@@ -403,3 +403,35 @@ pub type Grid3dSnapshotText = String;
 
 
 
+
+/// 🔑️ The identity of a `Grid3dTile` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for Grid3dTile {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+/// 🔑️ The identity of a `Grid3dRule` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for Grid3dRule {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+/// 🔑️ The identity of a `Grid3dPinnedCell` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for Grid3dPinnedCell {
+    type Key = String;
+    fn key(&self) -> String {
+        cell_key(self.x, self.y, self.z)
+    }
+}
+
+/// 🔑️ The identity of a `Grid3dCell` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for Grid3dCell {
+    type Key = String;
+    fn key(&self) -> String {
+        cell_key(self.x, self.y, self.z)
+    }
+}

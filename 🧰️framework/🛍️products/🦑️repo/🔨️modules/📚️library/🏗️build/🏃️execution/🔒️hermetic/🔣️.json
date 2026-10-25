@@ -8,7 +8,11 @@
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/**/*",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🔌️providers/**/*.ts",
       "package.json",
-      "bunfig.toml"
+      "bunfig.toml",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/**/*",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json",
+      "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🔣️.json"
     ],
     "markers": [
       "📋️project.json"

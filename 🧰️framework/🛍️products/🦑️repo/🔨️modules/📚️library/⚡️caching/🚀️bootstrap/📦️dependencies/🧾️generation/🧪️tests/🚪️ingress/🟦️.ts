@@ -1,5 +1,5 @@
 import {test,expect} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {spawn,spawnSync} from "node:child_process";
 import {lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,statSync,symlinkSync,writeFileSync} from "node:fs";
@@ -9,7 +9,8 @@ import {dirname,join} from "node:path";
 import {confirmGenerationWalkV1,generationAnchorV1,generationProtocolV1 as protocol,generationSha256V1,generationStampV1,publishGenerationBestEffortV1,runGenerationWriterV1} from "../../🟦️.ts";
 import * as glue from "../../💾️storage/🟦️.ts";
 import * as storage from "../../../💾️storage/🟦️.ts";
-import {acquireResourceLease,resourceLeasePathV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import * as readContext from "../../../💾️storage/📥️read-context/🟦️.ts";
+import {acquireResourceLease,resourceLeasePathV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import * as issued from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {createNativeBuildCallerCapabilitiesV1} from "../../../../../../🏗️build/📥️caller/🟦️.ts";
 import {withCurrentBunWorkspaceOwnershipV1} from "../../../../../../🗂️workspaces/🟦️bun/🟦️.ts";
@@ -17,7 +18,7 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
 import peer from "../🔣️.json" with {type:"json"};
 
-const oracle=(...args:string[])=>{const run=spawnSync(testPythonV1()??"python3",[fileURLToPath(new URL("./🐍️oracle.py",import.meta.url)),...args],{encoding:"utf8"});if(run.status!==0)throw Error("oracle failed: "+run.stderr);return run.stdout.trim();};
+const oracle=(...args:string[])=>{const run=spawnSync(testPythonV1()??"python3",[fileURLToPath(new URL("./🐍️.py",import.meta.url)),...args],{encoding:"utf8"});if(run.status!==0)throw Error("oracle failed: "+run.stderr);return run.stdout.trim();};
 const scratch=()=>realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"ingress-")));
 const pattern=(size:number)=>{const bytes=Buffer.alloc(size);for(let index=0;index<size;index++)bytes[index]=(index*31+7)&255;return bytes;};
 const text=(relative:string)=>readFileSync(new URL(relative,import.meta.url),"utf8");
@@ -69,7 +70,7 @@ test("ingress writer with the real lease: a foreign SQLite exclusive transaction
  try{
   const run=()=>runGenerationWriterV1({acquire:()=>acquireResourceLease({directory,resource,mode:"exclusive",signal:abort.signal,timeoutMs:0}),aborted:()=>abort.signal.aborted,body:async()=>"published"});
   expect(await run()).toBe("published");
-  const holder=spawn(testPythonV1()??"python3",[fileURLToPath(new URL("./🐍️oracle.py",import.meta.url)),"hold",resourceLeasePathV1(directory,resource)],{stdio:["pipe","pipe","inherit"]});
+  const holder=spawn(testPythonV1()??"python3",[fileURLToPath(new URL("./🐍️.py",import.meta.url)),"hold",resourceLeasePathV1(directory,resource)],{stdio:["pipe","pipe","inherit"]});
   const line=async()=>{let buffer="";for await(const chunk of holder.stdout){buffer+=chunk;if(buffer.includes("\n"))break;}return buffer.trim();};
   expect(await line()).toBe("held");
   const started=performance.now();expect(await run()).toBe("busy");expect(performance.now()-started).toBeLessThan(2000);
@@ -133,12 +134,12 @@ test("ingress replay: the walk's own recorded observations confirm an unchanged 
   for(const[path,target]of Object.entries(peer.workspace.links)){mkdirSync(dirname(join(root,path)),{recursive:true});symlinkSync(target.replaceAll("@STORE@",store),join(root,path));}
   const generation="e".repeat(64),directory=join(store,"j",generation.slice(0,20)),bindings=join(directory,"bindings.json"),target=join(directory,"node_modules");
   mkdirSync(target,{recursive:true});writeFileSync(bindings,"{\"ready\":true}\n");mkdirSync(join(root,"pkgs/a"),{recursive:true});rmSync(join(root,"pkgs/a/node_modules"),{force:true});symlinkSync(target,join(root,"pkgs/a/node_modules"));
-  const phase=issued.createIssuedResourceControlV1(original,"dependencies:generation-ingress",0),context:storage.JavascriptDependencyReadContextV1=Object.freeze({root:store,invocation:original,control:phase,check:(actual:storage.JavascriptDependencyReadContextV1["control"])=>issued.requireIssuedResourceControlRefinementV1(phase,actual),recheck:async(actual:storage.JavascriptDependencyReadContextV1["control"])=>{issued.requireIssuedResourceControlRefinementV1(phase,actual);}});
-  const pairs=[{sourceDirectory:join(root,"pkgs/a/node_modules"),targetDirectory:target}],observation=storage.observeJavascriptDependencyBindingsReadV1(context,pairs,phase),receipt=await storage.readJavascriptDependencyBindingReceiptReadV1(context,bindings,phase);
+  const phase=issued.createIssuedResourceControlV1(original,"dependencies:generation-ingress",0),context:readContext.JavascriptDependencyReadContextV1=Object.freeze({root:store,invocation:original,control:phase,check:(actual:readContext.JavascriptDependencyReadContextV1["control"])=>issued.requireIssuedResourceControlRefinementV1(phase,actual),recheck:async(actual:readContext.JavascriptDependencyReadContextV1["control"])=>{issued.requireIssuedResourceControlRefinementV1(phase,actual);}});
+  const pairs=[{sourceDirectory:join(root,"pkgs/a/node_modules"),targetDirectory:target}],observation=readContext.observeJavascriptDependencyBindingsReadV1(context,pairs,phase),receipt=await readContext.readJavascriptDependencyBindingReceiptReadV1(context,bindings,phase);
   const walked=await withCurrentBunWorkspaceOwnershipV1(root,{kind:"all"},{signal:new AbortController().signal,advance:async()=>{}},async custody=>custody.observed());
   const providers=[join(store,"j/g1/node_modules/dep/package.json"),join(store,"j/g1/node_modules/dep"),join(root,"node_modules")].map(path=>{const f=facts(path);return{path,stamp:f?JSON.stringify(protocol.stampFields.map((key:string)=>String(f[key as keyof typeof f]))):null,anchor:f?JSON.stringify(protocol.anchorFields.map((key:string)=>String(f[key as keyof typeof f]))):null,kind:f?f.isDirectory()?"directory":"file":"missing",target:null,full:path.endsWith("package.json")};});
   const scopes=[{scope:".",sha256:"f".repeat(64)}],receipts=[{scope:".",generation,fingerprint:receipt.fingerprint}],sha256=generationSha256V1(JSON.stringify([receipts,[[".",observation]],scopes])),f=lstatSync(join(root,"package.json"));
-  const walk={version:1 as const,required:["."],projection:{owners:{sha256:"d".repeat(64)},recipeSha256:"c".repeat(64),plans:[{scope:".",plan:{directory,generation,bindings:pairs,sources:[{path:join(root,"package.json"),kind:"file" as const,dev:String(f.dev),ino:String(f.ino),mode:f.mode,bytes:readFileSync(join(root,"package.json"))}]}}]},receipts,sha256,evidence:{scope:".",execution:{scopes,runtimeSha256:storage.javascriptDependencySourceOwnerRuntimeV1(),observations:providers},bindings:[[".",observation]]},observed:()=>walked};
+  const walk={version:1 as const,required:["."],projection:{owners:{sha256:"d".repeat(64)},recipeSha256:"c".repeat(64),plans:[{scope:".",plan:{directory,generation,bindings:pairs,sources:[{path:join(root,"package.json"),kind:"file" as const,dev:String(f.dev),ino:String(f.ino),mode:f.mode,bytes:readFileSync(join(root,"package.json"))}]}}]},receipts,sha256,evidence:{scope:".",execution:{scopes,runtimeSha256:readContext.javascriptDependencySourceOwnerRuntimeV1(),observations:providers},bindings:[[".",observation]]},observed:()=>walked};
   const subject=Object.freeze({ambient:Object.freeze({env:{},home:join(root,".ambient/home"),config:join(root,".ambient/xdg")})}),later=Date.now()+10000;
   const replay=(startedAt:number)=>glue.replayJavascriptDependencyGenerationWalkV1(root,context,phase,()=>{},walk as never,startedAt,walked,subject);
   expect(await replay(later)).toEqual({status:"match",sha256});

@@ -61,7 +61,7 @@ impl RetainedGlyphCursor {
         self.byte
     }
 
-    /// ✂️ The line box the pen is currently on — zero for the first. What the wrap law reads to
+    /// 🖊️ The line box the pen is currently on — zero for the first. What the wrap law reads to
     /// assert that the painter lands every scalar on the line `FontAtlas::wrap_lines` measured it onto.
     pub fn line(&self) -> usize {
         self.line
@@ -88,7 +88,7 @@ impl RetainedGlyphCursor {
 /// [`RetainedTextFlow::Wrap`], drops that glyph onto a second line.
 const RETAINED_TEXT_FIT_EPSILON: f32 = semio_framework_ui_text::LINE_BREAK_FIT_EPSILON;
 
-/// ✒️ Advances one UTF-8 scalar and at most one exactly admitted glyph, wrapping at `bounds.w`.
+/// 🪜️ Advances one UTF-8 scalar and at most one exactly admitted glyph, wrapping at `bounds.w`.
 pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rgba, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
     paint_retained_glyph_step_flowed(value, bounds, size, color, RetainedTextFlow::Wrap, atlas, draw, cursor)
 }
@@ -114,7 +114,7 @@ pub fn paint_retained_glyph_step_weighted(
     paint_retained_glyph_step_inner(value, bounds, size, color, flow, weight, atlas, draw, cursor)
 }
 
-/// ✒️ [`paint_retained_glyph_step`] with an explicit [`RetainedTextFlow`] — the entry chrome text
+/// 🌊️ [`paint_retained_glyph_step`] with an explicit [`RetainedTextFlow`] — the entry chrome text
 /// takes so a chip label can never break onto a second line.
 ///
 /// ✂️ **A [`RetainedTextFlow::Wrap`] run breaks where CSS breaks it.** Before the glyph at a

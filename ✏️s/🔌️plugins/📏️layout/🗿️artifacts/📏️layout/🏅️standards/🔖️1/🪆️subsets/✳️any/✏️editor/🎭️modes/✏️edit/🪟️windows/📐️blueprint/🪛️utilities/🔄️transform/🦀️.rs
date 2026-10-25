@@ -14,7 +14,7 @@ use semio_s_artifact_layout_layout_mutations_frames::rotate_frames::RotateFrames
 use semio_s_artifact_layout_layout_mutations_frames::scale_frames::ScaleFrames;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use crate::modes::edit::windows::blueprint::transform::machine::Command;
+use machine::Command;
 use semio_framework_plugin::Emit;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::NoConfigMutation;

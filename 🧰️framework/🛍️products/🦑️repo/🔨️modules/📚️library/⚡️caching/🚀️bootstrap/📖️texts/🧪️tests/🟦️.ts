@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import Ajv from "ajv";
 import { CATALOG_LANGUAGES_V1, defineCatalogV1, placeholdersV1, textV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
-import schema from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/📖️catalog/🧬️schema/🔣️.json" with { type: "json" };
+import schema from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🧬️schema/🔣️json/🟦️.ts";
 import catalog from "../🔣️.json" with { type: "json" };
 import { BOOTSTRAP_TEXTS_V1 } from "../🟦️.ts";
 

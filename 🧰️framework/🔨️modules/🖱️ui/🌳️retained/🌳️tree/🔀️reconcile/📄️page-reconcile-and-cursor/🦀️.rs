@@ -113,7 +113,7 @@ pub(super) struct PlannedNode {
     pub(super) node: Option<NodeId>,
 }
 
-/// 🌳️ One surface's resumable document→arena reconcile.
+/// 🧵️ One surface's resumable document→arena reconcile.
 ///
 /// Five phases, each advancing by exactly ONE unit per `step` so the whole pass fits inside the
 /// interactive turn the frame build already prices (`📓️wgpu-blank-paint-2026-09-12.md` §3.2): plan

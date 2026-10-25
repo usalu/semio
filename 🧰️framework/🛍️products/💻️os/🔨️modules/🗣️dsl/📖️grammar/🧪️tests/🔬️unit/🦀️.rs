@@ -1,4 +1,3 @@
-use semio_framework_test_fixtures::fixture_path;
 
 #[path = "../../../../../../../🔨️modules/📁️filesystem/🔎️discovery/🦀️.rs"]
 mod directory_discovery;
@@ -9,7 +8,7 @@ use super::*;
 /// 🌾️ Compiles every General-owned grammar; extension facets own their conformance laws.
 #[semio_framework_async_macros::async_test]
 async fn every_shipped_grammar_semio_parses_and_compiles() {
-        let root = fixture_path!("../../../../..");
+        let root = semio_framework_test_fixtures::repo_root!();
     let grammar_root = root.join("🧰️framework");
     let mut reported = usize::MAX;
     let discovery = directory_discovery::discover(

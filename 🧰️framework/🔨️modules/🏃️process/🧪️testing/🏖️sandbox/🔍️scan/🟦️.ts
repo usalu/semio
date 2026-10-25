@@ -3,16 +3,16 @@ import { readTestSandboxProtocolV1, type TestSandboxProtocolV1 } from "../📐�
 /** 🔍️ Names a language the scanner understands. */
 export type ScanLanguageV1 = "ts" | "go" | "rs" | "py" | "sh";
 
-/** 🔍️ One finding: where a test breaks the concurrency law. */
+/** 🔎️ One finding: where a test breaks the concurrency law. */
 export type ScanFindingV1 = Readonly<{ file: string; rule: string; severity: "error" | "warn"; line: number }>;
 
 type RuleV1 = TestSandboxProtocolV1["rules"][number];
 type CompiledRuleV1 = Readonly<{ rule: RuleV1; pattern?: RegExp; also: readonly RegExp[]; exempt: readonly RegExp[]; all: readonly RegExp[]; none: readonly RegExp[] }>;
 
-/** 🔍️ Carries the compiled rule table and path policy of one law. */
+/** ⚖️ Carries the compiled rule table and path policy of one law. */
 export type CompiledLawV1 = Readonly<{ declared: TestSandboxProtocolV1; rules: readonly CompiledRuleV1[]; comment: Readonly<Record<string, RegExp>>; suite: Readonly<Record<string, RegExp>>; extensions: ReadonlyMap<string, ScanLanguageV1> }>;
 
-/** 🔍️ Compiles the rule table once; every pattern must be valid in the JavaScript and the Python dialect the oracle replays. */
+/** 🔨️ Compiles the rule table once; every pattern must be valid in the JavaScript and the Python dialect the oracle replays. */
 export function compileLawV1(declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): CompiledLawV1 {
   const compile = (source: string, flags: string): RegExp => new RegExp(source, flags);
   const rules = declared.rules.map((rule): CompiledRuleV1 => {
@@ -25,25 +25,25 @@ export function compileLawV1(declared: TestSandboxProtocolV1 = readTestSandboxPr
   return { declared, rules, comment: mapped(declared.scan.commentLine), suite: mapped(declared.scan.suite), extensions };
 }
 
-/** 🔍️ Resolves the language of a path, or undefined when the scanner skips it. */
+/** ⏩️ Resolves the language of a path, or undefined when the scanner skips it. */
 export function scanLanguageV1(law: CompiledLawV1, path: string): ScanLanguageV1 | undefined {
   const base = path.split("/").pop() ?? "";
   return base.includes(".") ? law.extensions.get(base.slice(base.lastIndexOf(".") + 1)) : undefined;
 }
 
-/** 🔍️ Tells whether a tracked path is a test source: below the taxonomy test segment, a test-named file, and outside generated or fixture trees. */
+/** 🛤️ Tells whether a tracked path is a test source: below the taxonomy test segment, a test-named file, and outside generated or fixture trees. */
 export function scanIsTestPathV1(law: CompiledLawV1, path: string, declared: ReadonlySet<string> = new Set()): boolean {
   const parts = path.split("/"), base = parts[parts.length - 1] ?? "";
   if (parts.some(part => law.declared.scan.skipSegments.includes(part))) return false;
   return parts.slice(0, -1).includes(law.declared.scan.testSegment) || declared.has(path) || base.endsWith("_test.go") || /\.(test|spec)\.[a-z]+$/u.test(base);
 }
 
-/** 🔍️ Tells whether a source file is a runnable suite; provers and helpers that callers drive are not scanned. */
+/** 📄️ Tells whether a source file is a runnable suite; provers and helpers that callers drive are not scanned. */
 export function scanIsSuiteV1(law: CompiledLawV1, language: ScanLanguageV1, text: string): boolean {
   return law.suite[language]!.test(text);
 }
 
-/** 🔍️ Scans one source against the line and file rules of its language. */
+/** 🪵️ Scans one source against the line and file rules of its language. */
 export function scanSourceV1(law: CompiledLawV1, file: string, language: ScanLanguageV1, text: string): readonly ScanFindingV1[] {
   if (!scanIsSuiteV1(law, language, text)) return [];
   const rows: ScanFindingV1[] = [], lines = text.split("\n"), comment = law.comment[language]!, code = lines.map(line => comment.test(line) ? "" : line).join("\n");
@@ -63,7 +63,7 @@ export function scanSourceV1(law: CompiledLawV1, file: string, language: ScanLan
   return rows;
 }
 
-/** 🔍️ Scans the sources of one test owner as a unit: owner rules need a pattern somewhere and no sandbox pattern anywhere. */
+/** 🧪️ Scans the sources of one test owner as a unit: owner rules need a pattern somewhere and no sandbox pattern anywhere. */
 export function scanOwnerV1(law: CompiledLawV1, owner: string, sources: readonly Readonly<{ language: ScanLanguageV1; text: string }>[]): readonly ScanFindingV1[] {
   const rows: ScanFindingV1[] = [];
   for (const compiled of law.rules) {
@@ -74,7 +74,7 @@ export function scanOwnerV1(law: CompiledLawV1, owner: string, sources: readonly
   return rows;
 }
 
-/** 🔍️ Runs the whole scan over a listing; the caller supplies listing and reading so the scan stays tool-neutral. */
+/** ▶️ Runs the whole scan over a listing; the caller supplies listing and reading so the scan stays tool-neutral. */
 export function scanTestsV1(law: CompiledLawV1, listing: readonly string[], read: (path: string) => string | undefined, declared: ReadonlySet<string> = new Set()): Readonly<{ scanned: number; helpers: number; findings: readonly ScanFindingV1[] }> {
   const findings: ScanFindingV1[] = [], owners = new Map<string, { language: ScanLanguageV1; text: string }[]>();
   let scanned = 0, helpers = 0;

@@ -52,12 +52,12 @@ pub mod icon_codec {
         pack.themed(code).map(ShortcodeResolved::SvgThemed).or_else(|| pack.plain(code).map(ShortcodeResolved::SvgPlain))
     }
 
-    /// 🔍️ Optional lookup for domain-themed SVG icons (e.g. puzzle metabolism table).
+    /// 🔎️ Optional lookup for domain-themed SVG icons (e.g. puzzle metabolism table).
     pub type ThemedSvgLookup = fn(&str) -> Option<&'static str>;
 
     // #region 🏷️IconUnion
 
-    /// 🖼️ Canonical structured icon payload shared across canvases and UI chrome.
+    /// 🟢️ Canonical structured icon payload shared across canvases and UI chrome.
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     #[serde(tag = "kind", rename_all = "camelCase")]
     #[value(tag = "kind", rename_all = "camelCase")]
@@ -189,7 +189,7 @@ pub mod icon_codec {
         None
     }
 
-    /// 🔤️ Encodes a structured {@link Icon} into the canonical wire string.
+    /// 📡️ Encodes a structured {@link Icon} into the canonical wire string.
     ///
     /// Always canonical, even for a `src` that was decoded from `$…$` sugar — the `$`
     /// delimiters are input sugar only, never round-tripped back out.
@@ -277,22 +277,20 @@ pub mod icon_codec {
         raster_icon_bytes_to_rgba(&raw)
     }
 
-    /// 🖼️ Full pixel decode for icon *painting* — host/browser only. `IconPaintCache::get_or_build`
-    /// (the only caller that ever reads `RgbaImage::data`) is unconditionally `None` on
+    /// 🖌️ Full pixel decode for icon *painting* — host/browser only, PNG and JPEG through the owned `semio-framework-pixels` decoders; a GIF or WebP data URL still classifies as a raster icon but yields no pixels here (the browser paints those natively).
+    /// `IconPaintCache::get_or_build` (the only caller that ever reads `RgbaImage::data`) is unconditionally `None` on
     /// `wasm32-wasip2` (a WASI guest never paints pixels), so the real decode is never needed
     /// there. Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn raster_icon_bytes_to_rgba(raw: &[u8]) -> Option<RgbaImage> {
-        let img = image::load_from_memory(raw).ok()?;
-        let rgba = img.to_rgba8();
-        let (w, h) = rgba.dimensions();
-        if w == 0 || h == 0 {
+        let decoded = semio_framework_pixels::image_decoding::decode_encoded_blocking(raw.to_vec(), semio_framework_pixels::image_decoding::EncodedDecodeLimits::MAXIMUM, &|| false).ok()?.image;
+        if decoded.width == 0 || decoded.height == 0 {
             return None;
         }
-        Some(RgbaImage { data: Arc::from(rgba.into_raw().into_boxed_slice()), w, h })
+        Some(RgbaImage { data: Arc::from(decoded.pixels.into_boxed_slice()), w: decoded.width, h: decoded.height })
     }
 
-    /// 📐️ `wasm32-wasip2` arm: header-only dimension read (`semio-framework-intrinsic-size`),
+    /// 🖨️ `wasm32-wasip2` arm: header-only dimension read (`semio-framework-intrinsic-size`),
     /// never a full pixel decode. `data` is deliberately empty — the only consumer that would
     /// read real pixels (`IconPaintCache::get_or_build`, icon painting) is itself unconditionally
     /// `None` on this target, so nothing ever reads it; the only live consumer of this arm's
@@ -396,7 +394,7 @@ pub mod icon_codec {
         }
     }
 
-    /// 🔍️ Resolves an icon encoding to paintable content; `themed_lookup` marks SVG as themed when present.
+    /// 🎨️ Resolves an icon encoding to paintable content; `themed_lookup` marks SVG as themed when present.
     pub fn resolve_icon_kind(encoded: &str, themed_lookup: ThemedSvgLookup) -> ResolvedIcon {
         let Some(icon) = decode_icon(encoded) else {
             return ResolvedIcon::None;

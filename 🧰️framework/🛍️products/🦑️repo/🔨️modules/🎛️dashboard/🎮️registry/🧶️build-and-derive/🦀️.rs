@@ -4,7 +4,7 @@ use super::*;
 
 // #region 🔖️Registry
 impl Registry {
-    /// 🧶 Derives every command from what the sources state. Invalid declarations become
+    /// 🔨️ Derives every command from what the sources state. Invalid declarations become
     /// [`Registry::problems`] that name their file; everything valid stays runnable.
     pub fn build(root: &Path, facts: &Facts) -> Self {
         let mut problems = facts.problems.clone();
@@ -13,7 +13,7 @@ impl Registry {
         let source = |project: &ProjectFacts| if project.manifest.is_empty() { format!("{} (project {})", graph_file(), project.name) } else { project.manifest.clone() };
         for project in &facts.projects {
             let file = source(project);
-            if RESERVED_KINDS.contains(&project.name.as_str()) || project.name.contains(|c: char| c == ':' || c.is_whitespace()) { problems.push(Problem { file: file.clone(), at: "name".into(), message: format!("project name {:?} cannot be told from a command kind", project.name) }); continue; }
+            if RESERVED_KINDS.contains(&project.name.as_str()) || project.name.contains(|c: char| c == ':' || c.is_whitespace()) { problems.push(Problem { file: file.clone(), at: "name".into(), message: LocalizedText::of(format!("project name {:?} cannot be told from a command kind", project.name), format!("Projektname {:?} lässt sich nicht von einer Befehlsart unterscheiden", project.name)) }); continue; }
             let owner = owner_segments(&project.root);
             let keys: Vec<String> = owner.iter().map(|part| part.key.clone()).collect();
             for target in &project.targets {
@@ -34,7 +34,7 @@ impl Registry {
             let Some(declaration) = project.dashboard.as_ref().and_then(|value| decode::<ProjectDeclaration>(&file, "metadata.semio.dashboard", value, &mut problems)) else { continue };
             let mut scope = Scope { file: &file, at: "metadata.semio.dashboard".into(), problems: &mut problems };
             if !declaration.parameters.is_empty() {
-                if project.root == "." || project.root.is_empty() { axes = scope.parameters(&declaration.parameters, Origin::Axis); axes_source.clone_from(&file); } else { scope.report("`parameters` are the global axes and belong to the workspace root project"); }
+                if project.root == "." || project.root.is_empty() { axes = scope.parameters(&declaration.parameters, Origin::Axis); axes_source.clone_from(&file); } else { scope.report("`parameters` are the global axes and belong to the workspace root project", "`parameters` sind die globalen Achsen und gehören zum Wurzelprojekt des Arbeitsbereichs"); }
             }
             Self::tools(&mut scope, &mut entries, &declaration.tools, &owner, &keys, &|id| format!("tool:{}/{id}", project.name), Kind::Tool);
             Self::compounds(&mut scope, &mut entries, &declaration.compounds, &owner, &keys, &|id| format!("compound:{}/{id}", project.name), Kind::Compound);
@@ -42,10 +42,10 @@ impl Registry {
                 let mut scope = scope.within(format!("groups[{index}]"));
                 let valid = scope.id(&group.id);
                 let word = |text: &str| !text.is_empty() && !text.contains(|c: char| c.is_whitespace() || c == ',');
-                if group.targets.is_empty() { scope.report("a group needs `targets`"); }
-                for (position, name) in group.targets.iter().enumerate() { if !word(name) || group.targets[..position].contains(name) { scope.report(format!("target {name:?} must be one target name, listed once")); } }
-                if group.projects.is_empty() { scope.report("a group needs `projects`"); }
-                for (position, name) in group.projects.iter().enumerate() { if !word(name) || group.projects[..position].contains(name) { scope.report(format!("project {name:?} must be one project name, listed once")); } }
+                if group.targets.is_empty() { scope.report("a group needs `targets`", "eine Gruppe braucht `targets`"); }
+                for (position, name) in group.targets.iter().enumerate() { if !word(name) || group.targets[..position].contains(name) { scope.report(format!("target {name:?} must be one target name, listed once"), format!("Target {name:?} muss ein einzelner Target-Name sein, einmal aufgeführt")); } }
+                if group.projects.is_empty() { scope.report("a group needs `projects`", "eine Gruppe braucht `projects`"); }
+                for (position, name) in group.projects.iter().enumerate() { if !word(name) || group.projects[..position].contains(name) { scope.report(format!("project {name:?} must be one project name, listed once"), format!("Projekt {name:?} muss ein einzelner Projektname sein, einmal aufgeführt")); } }
                 if !valid || group.targets.is_empty() { continue; }
                 let first = group.targets[0].as_str();
                 let verb = verb_of(None, first);
@@ -95,13 +95,13 @@ impl Registry {
         let mut index = HashMap::with_capacity(entries.len());
         entries.retain(|entry| {
             let fresh = !index.contains_key(&entry.id);
-            if fresh { index.insert(entry.id.clone(), index.len()); } else { problems.push(Problem { file: entry.source.clone(), at: entry.id.clone(), message: "command id is declared twice".into() }); }
+            if fresh { index.insert(entry.id.clone(), index.len()); } else { problems.push(Problem { file: entry.source.clone(), at: entry.id.clone(), message: LocalizedText::of("command id is declared twice", "Befehls-ID ist doppelt deklariert") }); }
             fresh
         });
         let mut definitions: Vec<String> = facts.projects.iter().filter(|project| !project.manifest.is_empty()).map(|project| project.manifest.clone()).chain(GRAPH_OWNERS.iter().map(|owner| (*owner).to_string())).collect();
         definitions.sort(); definitions.dedup();
         let mut source_projects = facts.projects.iter().filter(|project| source_path(&project.root)).map(|project| (project.name.clone(), project.root.clone())).collect::<Vec<_>>(); source_projects.sort(); source_projects.dedup();
-        let mut registry = Self { root: root.to_path_buf(), source_projects, source_discovery: std::sync::Mutex::new(HashMap::new()), source_cancelled: std::sync::Mutex::new(HashSet::new()), entries, index, axes, axes_source, problems, definitions, basis: std::sync::Mutex::new(None) };
+        let mut registry = Self { root: root.to_path_buf(), source_projects, source_discovery: std::sync::Mutex::new(HashMap::new()), source_cancelled: std::sync::Mutex::new(HashSet::new()), entries, index, axes, axes_source, problems, catalog_configured: facts.catalog_configured || !facts.playgrounds.is_empty(), graph_unpublished: facts.graph_unpublished, definitions, basis: std::sync::Mutex::new(None) };
         registry.settle();
         registry
     }
@@ -111,9 +111,9 @@ impl Registry {
             let mut scope = scope.within(format!("tools[{index}]"));
             let valid = scope.id(&tool.id);
             scope.verb(tool.verb.as_ref());
-            if tool.command.is_empty() || tool.command[0].is_empty() { scope.report("a tool needs a `command`"); }
+            if tool.command.is_empty() || tool.command[0].is_empty() { scope.report("a tool needs a `command`", "ein Werkzeug braucht ein `command`"); }
             for word in &tool.command { scope.text("command word", word); }
-            if !is_relative(&tool.cwd) { scope.report(format!("cwd {:?} must be workspace-relative", tool.cwd)); }
+            if !is_relative(&tool.cwd) { scope.report(format!("cwd {:?} must be workspace-relative", tool.cwd), format!("cwd {:?} muss relativ zum Arbeitsbereich sein", tool.cwd)); }
             let requires = scope.members("requires", &tool.requires);
             let env = scope.env(&tool.env);
             let ready = scope.ready(tool.ready.as_ref());
@@ -132,7 +132,7 @@ impl Registry {
             let mut scope = scope.within(format!("compounds[{index}]"));
             let valid = scope.id(&compound.id);
             scope.verb(compound.verb.as_ref());
-            if compound.members.is_empty() { scope.report("a compound needs `members`"); }
+            if compound.members.is_empty() { scope.report("a compound needs `members`", "ein Verbund braucht `members`"); }
             let members = scope.members("members", &compound.members);
             if !valid || members.is_empty() { continue; }
             let mut path = owner.to_vec();
@@ -153,18 +153,19 @@ impl Registry {
         let names: Vec<&str> = names.iter().map(String::as_str).collect();
         for position in 0..self.entries.len() {
             let entry = &self.entries[position];
-            let mut report = |at: String, message: String| problems.push(Problem { file: entry.source.clone(), at, message });
+            let mut report = |at: String, message: LocalizedText| problems.push(Problem { file: entry.source.clone(), at, message });
             let mut update = None;
             match &entry.action {
                 Action::Compound { members, .. } => {
                     let found: Vec<Option<&Entry>> = members.iter().map(|member| self.member(&member.run).map(|(entry, _)| entry)).collect();
                     for (member, found) in members.iter().zip(&found) {
                         match found {
-                            None => report(entry.id.clone(), format!("member {:?} names no command", member.run)),
-                            Some(target) if matches!(target.action, Action::Compound { .. }) => report(entry.id.clone(), format!("member {:?} is a compound; compounds do not nest", member.run)),
-                            Some(target) => { let accepted = self.parameters(target); for (key, _) in &member.pins { if !accepted.iter().any(|parameter| &parameter.id == key) { report(entry.id.clone(), format!("member {:?} has no parameter {key:?}", member.run)); } } }
+                            None if member.run.starts_with("playground:") && !self.catalog_configured => {}
+                            None => report(entry.id.clone(), LocalizedText::of(format!("member {:?} names no command", member.run), format!("Mitglied {:?} nennt keinen Befehl", member.run))),
+                            Some(target) if matches!(target.action, Action::Compound { .. }) => report(entry.id.clone(), LocalizedText::of(format!("member {:?} is a compound; compounds do not nest", member.run), format!("Mitglied {:?} ist ein Verbund; Verbünde lassen sich nicht schachteln", member.run))),
+                            Some(target) => { let accepted = self.parameters(target); for (key, _) in &member.pins { if !accepted.iter().any(|parameter| &parameter.id == key) { report(entry.id.clone(), LocalizedText::of(format!("member {:?} has no parameter {key:?}", member.run), format!("Mitglied {:?} hat keinen Parameter {key:?}", member.run))); } } }
                         }
-                        for (_, value) in &member.env { for token in tokens(value) { if token != "workspace" { report(entry.id.clone(), format!("member {:?} environment token `{{{token}}}` is not `{{workspace}}`", member.run)); } } }
+                        for (_, value) in &member.env { for token in tokens(value) { if token != "workspace" { report(entry.id.clone(), LocalizedText::of(format!("member {:?} environment token `{{{token}}}` is not `{{workspace}}`", member.run), format!("Umgebungs-Token `{{{token}}}` von Mitglied {:?} ist nicht `{{workspace}}`", member.run))); } } }
                     }
                     let verb = if entry.verb.is_empty() { found.iter().flatten().next().map_or_else(|| FALLBACK_VERB.to_string(), |first| first.verb.clone()) } else { entry.verb.clone() };
                     update = Some((verb, found.iter().flatten().any(|member| member.long_running)));
@@ -174,10 +175,10 @@ impl Registry {
                     let mut continuous = false;
                     for pattern in projects {
                         let matched: Vec<&str> = names.iter().copied().filter(|name| glob(pattern.trim_start_matches('!'), name)).collect();
-                        if matched.is_empty() { report(entry.id.clone(), format!("project {pattern:?} names no project")); continue; }
+                        if matched.is_empty() { report(entry.id.clone(), LocalizedText::of(format!("project {pattern:?} names no project"), format!("Projekt {pattern:?} nennt kein Projekt"))); continue; }
                         if pattern.starts_with('!') { continue; }
                         let members: Vec<&Entry> = matched.iter().filter(|name| !excluded(name)).flat_map(|name| targets.iter().filter_map(|target| self.find(&format!("{name}:{target}"))).collect::<Vec<_>>()).collect();
-                        if members.is_empty() { report(entry.id.clone(), format!("project {pattern:?} has no target {}", targets.join(" or "))); }
+                        if members.is_empty() { report(entry.id.clone(), LocalizedText::of(format!("project {pattern:?} has no target {}", targets.join(" or ")), format!("Projekt {pattern:?} hat kein Target {}", targets.join(" oder ")))); }
                         continuous |= members.iter().any(|member| member.long_running);
                     }
                     update = Some((entry.verb.clone(), continuous));
@@ -185,27 +186,28 @@ impl Registry {
                 Action::Target { ready, requires, .. } | Action::Tool { ready, requires, .. } => {
                     for need in requires {
                         match self.member(&need.run) {
-                            None => report(entry.id.clone(), format!("requires {:?} names no command", need.run)),
-                            Some((target, _)) => { let accepted = self.parameters(target); for (key, _) in &need.pins { if !accepted.iter().any(|parameter| &parameter.id == key) { report(entry.id.clone(), format!("requires {:?} has no parameter {key:?}", need.run)); } } }
+                            None if need.run.starts_with("playground:") && !self.catalog_configured => {}
+                            None => report(entry.id.clone(), LocalizedText::of(format!("requires {:?} names no command", need.run), format!("requires {:?} nennt keinen Befehl", need.run))),
+                            Some((target, _)) => { let accepted = self.parameters(target); for (key, _) in &need.pins { if !accepted.iter().any(|parameter| &parameter.id == key) { report(entry.id.clone(), LocalizedText::of(format!("requires {:?} has no parameter {key:?}", need.run), format!("requires {:?} hat keinen Parameter {key:?}", need.run))); } } }
                         }
-                        for (_, value) in &need.env { for token in tokens(value) { if token != "workspace" { report(entry.id.clone(), format!("requires {:?} environment token `{{{token}}}` is not `{{workspace}}`", need.run)); } } }
+                        for (_, value) in &need.env { for token in tokens(value) { if token != "workspace" { report(entry.id.clone(), LocalizedText::of(format!("requires {:?} environment token `{{{token}}}` is not `{{workspace}}`", need.run), format!("Umgebungs-Token `{{{token}}}` von requires {:?} ist nicht `{{workspace}}`", need.run))); } } }
                     }
                     let accepted = self.parameters(entry);
                     let known = |name: &str| name == "workspace" || accepted.iter().any(|parameter| parameter.id == name);
                     let mut texts: Vec<&String> = accepted.iter().flat_map(|parameter| parameter.values.iter().map(|(_, effect)| effect).chain([&parameter.effect])).flat_map(|effect| effect.env.iter().map(|(_, value)| value).chain(&effect.args)).collect();
                     if let Action::Tool { command, cwd, env, .. } = &entry.action { texts.extend(command.iter().chain([cwd]).chain(env.iter().map(|(_, value)| value))); }
-                    for text in texts { for token in tokens(text) { if token == "port" { if ready.is_none() { report(entry.id.clone(), "`{port}` needs a `ready` declaration".into()); } } else if !known(token) { report(entry.id.clone(), format!("token `{{{token}}}` names no parameter of this command")); } } }
-                    for default in accepted.iter().filter_map(|parameter| parameter.default.as_ref()) { for token in tokens(default) { if !known(token) { report(entry.id.clone(), format!("token `{{{token}}}` in a default names no parameter of this command")); } } }
+                    for text in texts { for token in tokens(text) { if token == "port" { if ready.is_none() { report(entry.id.clone(), LocalizedText::of("`{port}` needs a `ready` declaration", "`{port}` braucht eine `ready`-Deklaration")); } } else if !known(token) { report(entry.id.clone(), LocalizedText::of(format!("token `{{{token}}}` names no parameter of this command"), format!("Token `{{{token}}}` nennt keinen Parameter dieses Befehls"))); } } }
+                    for default in accepted.iter().filter_map(|parameter| parameter.default.as_ref()) { for token in tokens(default) { if !known(token) { report(entry.id.clone(), LocalizedText::of(format!("token `{{{token}}}` in a default names no parameter of this command"), format!("Token `{{{token}}}` in einem Standardwert nennt keinen Parameter dieses Befehls"))); } } }
                     for parameter in entry.own.iter().filter(|parameter| parameter.kind == ParameterKind::Text && parameter.destination == Destination::Token) {
                         let mut places: Vec<&String> = accepted.iter().flat_map(|other| other.values.iter().map(|(_, effect)| effect).chain([&other.effect])).flat_map(|effect| effect.env.iter().map(|(_, value)| value).chain(&effect.args)).chain(accepted.iter().filter_map(|other| other.default.as_ref())).collect();
                         if let Action::Tool { command, cwd, env, .. } = &entry.action { places.extend(command.iter().chain([cwd]).chain(env.iter().map(|(_, value)| value))); }
                         let named = ready.as_ref().is_some_and(|ready| ready.port_env.as_deref() == Some(parameter.id.as_str()));
-                        if !named && !places.iter().any(|text| tokens(text).contains(&parameter.id.as_str())) { report(entry.id.clone(), format!("text parameter {:?} goes nowhere: declare `valueEnv`, `valueFlag`, `valuePositional` or use `{{{}}}`", parameter.id, parameter.id)); }
+                        if !named && !places.iter().any(|text| tokens(text).contains(&parameter.id.as_str())) { report(entry.id.clone(), LocalizedText::of(format!("text parameter {:?} goes nowhere: declare `valueEnv`, `valueFlag`, `valuePositional` or use `{{{}}}`", parameter.id, parameter.id), format!("Textparameter {:?} führt ins Leere: `valueEnv`, `valueFlag`, `valuePositional` deklarieren oder `{{{}}}` verwenden", parameter.id, parameter.id))); }
                     }
                     if let Some(ReadySpec { port: None, port_env: Some(name), .. }) = ready {
                         let produced = accepted.iter().any(|parameter| &parameter.id == name || parameter.destination == Destination::Env(name.clone()) || parameter.values.iter().map(|(_, effect)| effect).chain([&parameter.effect]).any(|effect| effect.env.iter().any(|(key, _)| key == name)));
                         let stated = matches!(&entry.action, Action::Tool { env, .. } if env.iter().any(|(key, _)| key == name));
-                        if !produced && !stated { report(entry.id.clone(), format!("ready.portEnv {name:?} names no parameter and no declared variable, and no `port` is given")); }
+                        if !produced && !stated { report(entry.id.clone(), LocalizedText::of(format!("ready.portEnv {name:?} names no parameter and no declared variable, and no `port` is given"), format!("ready.portEnv {name:?} nennt keinen Parameter und keine deklarierte Variable, und es ist kein `port` angegeben"))); }
                     }
                 }
                 _ => {}
@@ -216,7 +218,7 @@ impl Registry {
                 entry.long_running = long_running;
             }
         }
-        for axis in &self.axes { if PLAYGROUND_PARAMETERS.contains(&axis.id.as_str()) || axis.id == CONFIGURATION { problems.push(Problem { file: self.axes_source.clone(), at: format!("metadata.semio.dashboard.parameters.{}", axis.id), message: "the id is a built-in parameter".into() }); } }
+        for axis in &self.axes { if PLAYGROUND_PARAMETERS.contains(&axis.id.as_str()) || axis.id == CONFIGURATION { problems.push(Problem { file: self.axes_source.clone(), at: format!("metadata.semio.dashboard.parameters.{}", axis.id), message: LocalizedText::of("the id is a built-in parameter", "die ID ist ein eingebauter Parameter") }); } }
         self.problems.extend(problems);
         let order = |entry: &Entry| (verb_rank(&entry.verb), entry.verb.clone(), entry.label.clone(), entry.id.clone());
         if !self.entries.is_sorted_by_key(order) { self.entries.sort_by_key(order); self.index = self.entries.iter().enumerate().map(|(position, entry)| (entry.id.clone(), position)).collect(); }

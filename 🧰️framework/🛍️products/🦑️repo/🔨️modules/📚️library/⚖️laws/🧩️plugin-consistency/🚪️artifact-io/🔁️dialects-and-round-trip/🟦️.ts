@@ -89,7 +89,7 @@ export function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord
 }
 
 /**
- * 🎫 Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT, W1 Task 4
+ * 🪪️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT, W1 Task 4
  * blocking finding: `store::os_store::codec_registry::register_document_codec` (🧰️framework/…/🏪️store/🦀️.rs) is a
  * plain `HashMap::insert` keyed by the codec's schema id string — registering two DIFFERENT codecs
  * under the SAME id does not panic, it silently overwrites (last-registered-wins), with zero
@@ -162,7 +162,7 @@ export function policyStdioCodecIdUniquenessBreaches(repoRoot: string): BreachRe
 }
 
 /**
- * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 8:
+ * 🔁️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 8:
  * replaces the old `policyCodecFidelityBreaches` (a 5-string banned-marker grep — "does this file
  * avoid saying SRAS/IFCCARTOONMESH", a purely negative signal) with a positive one: every
  * standard-level `⚙️engine/🦀️.rs` must contain a real decode→encode→decode (or
@@ -278,7 +278,7 @@ export function policyRoundTripTestBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
- * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 6
+ * 🗣️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 6
  * (scoped): every derived composition hook declares its cross-artifact dependencies as `const DEP_<NAME>:
  * Dialect = Dialect { artifact_kind: "s.stdio.<dep>", standard: StandardId("<std>"), subset:
  * SubsetId(...) }` (confirmed the universal pattern across every stdio composer this session
@@ -341,7 +341,7 @@ export function policyComposerDependencyBreaches(repoRoot: string): BreachRecord
 }
 
 /**
- * 🎫 Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 5:
+ * 🚩️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, D6 rule 5:
  * flagship artifacts (svg/gltf/pdf/gif — the ones D2 explicitly names as getting real mutation
  * vocabularies, not just `{NoMutation, SetSnapshot}`) must have a mutation enum with more than
  * those two variants. Shrink-only allowlist for the flagships this hasn't reached yet.

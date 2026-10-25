@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️PresenceInteraction
-/// 📡️ One peer's interaction roster for one app instance, mirrored onto `PresencePeer.interaction`
+/// 🖱️ One peer's interaction roster for one app instance, mirrored onto `PresencePeer.interaction`
 /// (bit 5) on the heartbeat — typed (not app-opaque `presence_pack`) so the Shell renders every peer's
 /// selection/hover generically. Only explicit ids broadcast; receivers expand transitive closures via
 /// their own topology.
@@ -49,7 +49,7 @@ pub struct PresenceDomain {
     pub hovered: Vec<String>,
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// 🧰️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for PresenceDomain {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![
@@ -123,7 +123,7 @@ pub async fn encode_presence_interaction(interaction: &PresenceInteraction, out:
     }
 }
 
-/// 🎯️ Inverse of [`encode_presence_interaction`] — see its doc for why this is `pub`.
+/// ↩️ Inverse of [`encode_presence_interaction`] — see its doc for why this is `pub`.
 pub async fn decode_presence_interaction(bytes: &[u8], pos: &mut usize) -> Result<PresenceInteraction, semio_framework_replication_error::ProtocolError> {
     let app_id = semio_framework_replication_wire_core::read_str(bytes, pos)?;
     let count = semio_framework_replication_wire_core::read_varint_u64(bytes, pos)?;
@@ -136,7 +136,7 @@ pub async fn decode_presence_interaction(bytes: &[u8], pos: &mut usize) -> Resul
 //#endregion 🔖️PresenceInteractionCodec
 
 //#region 🔖️Assemble
-/// 📡️ Assembles `PresencePeer.interaction` from local `InteractionState` plus each domain's
+/// 🏗️ Assembles `PresencePeer.interaction` from local `InteractionState` plus each domain's
 /// declared hover/selection behavior — the ONE place this logic lives, so every app broadcasts
 /// selection+hover with ZERO app-side code (call this wherever a `PresenceHeartbeat`'s `peer` is
 /// built, right before `presence_to_bytes`/`encode_presence_peer`, at the same cadence cursor updates

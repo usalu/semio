@@ -40,7 +40,6 @@ async fn interaction_set_laws_follow_portable_vectors() {
         assert_eq!(validated.selection[domain].ids, ["n0"]);
         assert_eq!(validated.hover[domain].ids, ["n0"]);
     }
-    eprintln!("[DEBUG] Shared interaction set laws preserve ordered unions and terminate for {size} topology identities");
 }
 
 //#region 🔖️Fixtures

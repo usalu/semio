@@ -1,10 +1,13 @@
 //! 🗑️ `delete-generation` payload — removes an id-keyed [`FormGeneration`] entry.
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 //#region 🔖️DeleteGeneration
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct DeleteGeneration {
     pub id: String,
 }

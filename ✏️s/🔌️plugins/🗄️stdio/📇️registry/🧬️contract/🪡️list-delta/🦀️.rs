@@ -41,7 +41,8 @@ pub fn insertion_index(len: usize, index: Option<usize>) -> usize {
 
 /// 🧬️ Defines the concrete wire types of one positional list delta: `$delta` (the list), `$removal` (`{id, index}`), `$insertion` (`{index, row}`), `$relocation`
 /// (`{id, from, to}`) and `$modification` (`{id, patch}`), plus the [`kernel::list_delta::Keyed`] key of `$row`. Two key spellings: `key: field` (a `String` field of
-/// the row, the list a `Vec<$row>`), or `list: $list, key: $key_ty = |row| expr`. `$row` must be local to the invoking crate.
+/// the row, the list a `Vec<$row>`), or `list: $list, key: $key_ty = |row| expr`; both implement [`kernel::list_delta::Keyed`] for `$row`, so `$row` must be local to the
+/// invoking crate. A row defined in another crate implements `Keyed` where it is defined and is named with `list: $list, keyed: $key_ty`, which emits no key impl.
 #[macro_export]
 macro_rules! stdio_list_delta {
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, key: $key:ident $(,)? }) => {
@@ -56,6 +57,9 @@ macro_rules! stdio_list_delta {
             }
         }
 
+        $crate::stdio_list_delta! { $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, keyed: $key_ty } }
+    };
+    ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, list: $list:ty, keyed: $key_ty:ty $(,)? }) => {
         $(#[$meta])*
         #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase")]

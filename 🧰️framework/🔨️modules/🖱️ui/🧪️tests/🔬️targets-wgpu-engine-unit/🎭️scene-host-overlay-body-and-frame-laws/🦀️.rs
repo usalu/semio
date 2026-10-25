@@ -81,7 +81,7 @@ impl SceneHost for BackpressureSceneHost {
 }
 
 //#region 🖱️SceneAtTests
-/// 🖱️ `Ui::scene_at` answers the `ComponentScene` leaf under a window-local point with its identity
+/// 📍️ `Ui::scene_at` answers the `ComponentScene` leaf under a window-local point with its identity
 /// AND the absolute rect it was laid out at — the two things a right-click needs before any event is
 /// dispatched (see [`Ui::scene_at`]).
 #[test]
@@ -109,7 +109,7 @@ fn scene_at_answers_none_outside_every_scene() {
     assert!(ui.scene_at("missing-window", 10.0, 10.0).is_none());
 }
 
-/// 🖱️ The query must NOT move focus, arm a press capture or emit a command: a right-click resolving
+/// 👁️ The query must NOT move focus, arm a press capture or emit a command: a right-click resolving
 /// its surface is not a press, and React's `onContextMenu` calls `preventDefault()` rather than
 /// letting one through. A real `PointerDown` at the same point DOES emit one — that contrast is the
 /// whole reason `scene_at` exists instead of dispatching an event to find out.
@@ -142,13 +142,13 @@ fn first_component_scene_node(ui: &Ui, window_id: &str) -> semio_framework_ui_ar
     panic!("no ComponentScene leaf in {window_id}");
 }
 
-/// 🪟️ f32 round-trip tolerance: the walk origin is `placement - layout`, and the walk adds `layout`
+/// ⚖️ f32 round-trip tolerance: the walk origin is `placement - layout`, and the walk adds `layout`
 /// back, so the recovered coordinate is the placement to within one f32 rounding step.
 fn assert_close(left: (f32, f32), right: (f32, f32), what: &str) {
     assert!((left.0 - right.0).abs() < 0.01 && (left.1 - right.1).abs() < 0.01, "{what}: {left:?} != {right:?}");
 }
 
-/** 🪟️ An OPEN floating overlay's BODY is positioned at its resolved placement, not at the
+/** 🔓️ An OPEN floating overlay's BODY is positioned at its resolved placement, not at the
  * in-flow slot it was authored in — and the body's own content keeps painting through the normal node
  * pipeline, which is what `scene_at` resolving the scene INSIDE the overlay proves (the walk that
  * answers it is the paint walk's own geometry). React gets the same from a portal plus
@@ -173,7 +173,7 @@ fn an_open_overlays_body_is_positioned_at_its_resolved_placement() {
     assert!((in_flow.y - placement.y).abs() > 0.5, "this fixture must actually move the body, in-flow {in_flow:?} vs placement {placement:?}");
 }
 
-/// 🪟️ Closing the overlay returns its body to the in-flow position — the origin override is per
+/// 📪️ Closing the overlay returns its body to the in-flow position — the origin override is per
 /// frame, never a stored offset, so nothing has to be unwound.
 #[test]
 fn closing_an_overlay_returns_its_body_to_the_in_flow_position() {
@@ -193,7 +193,7 @@ fn closing_an_overlay_returns_its_body_to_the_in_flow_position() {
     assert_close((restored.x, restored.y), (in_flow.x, in_flow.y), "a closed overlay is back in flow");
 }
 
-/// 🪟️ A `Dialog`/`CommandPalette` is CENTERED rather than anchored, and its body follows the same
+/// 🎯️ A `Dialog`/`CommandPalette` is CENTERED rather than anchored, and its body follows the same
 /// one origin rule — `OverlayKind::default_placement`'s `Centered` branch.
 #[test]
 fn a_modal_overlays_body_is_centered_in_the_viewport() {
@@ -209,7 +209,7 @@ fn a_modal_overlays_body_is_centered_in_the_viewport() {
     let placed = ui.scene_at("w", placement.x + 2.0, placement.y + 2.0).expect("the modal body resolves at its placement");
     assert_close((placed.rect.x, placed.rect.y), (placement.x, placement.y), "a centered modal body sits at its placement");
 }
-/// 🪟️ W15a item 5. `paint_overlay_backdrop`/`paint_overlay_surface` existed but were reachable
+/// 🪜️ W15a item 5. `paint_overlay_backdrop`/`paint_overlay_surface` existed but were reachable
 /// only through the `🪟️OverlayApi` façade, which no host ever called — an open `Dialog`/`Popover`
 /// therefore painted its content with NO surface under it on every frame a host did not hand-pump
 /// (W1n gap 3). This law drives the production ladder (`frame_into_step`) and pins three things:

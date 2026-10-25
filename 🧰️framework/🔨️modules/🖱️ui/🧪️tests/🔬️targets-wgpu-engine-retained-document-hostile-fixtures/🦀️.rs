@@ -72,7 +72,8 @@ fn max_plus_one_stale_aba_interrupted_close_nested_depth_lost_handle_device_drop
     ui.apply_document_page("window", first.read_node_page(0).expect("first read").expect("first page"), &mut step(101, &mut preview,&mut actual_retained_progress)).expect("first apply");
     loop {
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-        match ui.finish_document("window", 101, &mut step(101, &mut preview,&mut actual_retained_progress)) {
+        let finished = ui.finish_document("window", 101, &mut step(101, &mut preview,&mut actual_retained_progress));
+        match finished {
             Ok(()) => break,
             Err(UiDocumentIngressFault::ValidationPending) => {}
             Err(fault) => panic!("first publish failed: {fault:?}"),

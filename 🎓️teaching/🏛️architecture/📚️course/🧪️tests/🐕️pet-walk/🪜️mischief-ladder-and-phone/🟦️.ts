@@ -4,7 +4,7 @@
  */
 import { HANG_ROD } from "@semio-tech/pets";
 import {QUIZZES, enter, expect, pane, playQuiz, swipeTo, test, type Device, activeOverview} from "../../../🎭️e2e/🚶️learner/🟦️.ts";
-import { ANSWER_MS, APPEAR_MS, bodies, type Body, CARD_PARTS, carry, castOf, choosePets, CONTROLS, enterWithPets, expectCast, expectPerched, floorSpot, framesPass, HASTE, hasten, HOME, hoverOf, instrumented, type Instruments, KINDS, LANDING_MS, layer, MISCHIEF_HASTE, MISCHIEF_QUIZ, misplaced, pets, reachable, RECAST_MS, ROPE_MS, ROPE_REACH, ROPE_ROUND_MS, standing, TEMPO, trailOf, WALK_MS } from "../🧰️pet-kit/🟦️.ts";
+import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, castOf, choosePets, CONTROLS, enterWithPets, expectCast, expectPerched, floorSpot, HASTE, hasten, HOME, hoverOf, instrumented, type Instruments, KINDS, LANDING_MS, layer, MISCHIEF_HASTE, MISCHIEF_QUIZ, misplaced, pets, reachable, RECAST_MS, ROPE_MS, ROPE_REACH, ROPE_ROUND_MS, stagePasses, standing, TEMPO, trailOf, WALK_MS } from "../🧰️pet-kit/🟦️.ts";
 
 for (const reclaim of ["hover", "focus"] as const) test(`a pet lifts a copy of a task of a quiz's page out of its place, beside its transparent original; the original is back at once on ${reclaim}, and the pet is thrown off`, async ({ device }) => {
   const learner = await device("en");
@@ -41,7 +41,7 @@ for (const reclaim of ["hover", "focus"] as const) test(`a pet lifts a copy of a
 });
 
 test("a pet that cannot hop to a perch above raises its ladder or shoots its grapple there: on a quiz's page a climber raises its ladder against the lowest card of the column, and on the home screen a grappler on the footer line reels itself up a rope to a card", async ({ device }) => {
-  test.setTimeout(WALK_MS + ROPE_MS + 4 * RECAST_MS);
+  test.setTimeout(30 * 60_000);
   const learner = await device("en");
   const page = learner.page;
   await page.addInitScript(hasten, { attribute: TEMPO, tempo: HASTE });
@@ -59,7 +59,7 @@ test("a pet that cannot hop to a perch above raises its ladder or shoots its gra
   await expectCast(learner, gutters!.id, true);
   await instrumented(page);
   const carried = (footing: string): Promise<readonly string[]> => page.evaluate((wanted) => Object.entries((window as unknown as { petWalk: Instruments }).petWalk.trails).flatMap(([id, trail]) => (trail.some((line) => line.split("/")[1] === wanted) ? [id] : [])), footing);
-  await expect.poll(() => carried("ladder"), { message: `a pet on a ladder on the page of ${gutters!.id}`, timeout: WALK_MS }).not.toEqual([]);
+  await eventually(page, () => carried("ladder"), (seen) => seen.length > 0, { stageMs: WALK_MS * HASTE, message: `a pet on a ladder on the page of ${gutters!.id}` });
   await page.keyboard.press("Escape");
   await expect(pane(page, gutters!.id)).not.toHaveAttribute("data-opened", "");
   await expectCast(learner, HOME, true);
@@ -67,7 +67,7 @@ test("a pet that cannot hop to a perch above raises its ladder or shoots its gra
   const grappling = (body: Body): boolean => KINDS[body.id]?.gear.includes("grapple") === true;
   const moved: string[] = [];
   const held: string[] = [];
-  await expect(async () => {
+  const ropeRound = async (): Promise<void> => {
     if ((await carried("rope")).length > 0) return;
     const footer = (await page.locator(".course-app > footer").boundingBox())!;
     const raised = (body: Body): number => footer.y - body.bottom - hoverOf(body.id);
@@ -89,10 +89,10 @@ test("a pet that cannot hop to a perch above raises its ladder or shoots its gra
     expect(grounded.length, `a grappler on the footer line among ${shown.map((body) => `${body.id} ${body.footing}`).join(", ")}`).toBeGreaterThan(0);
     const reach = Math.max(...grounded.map((body) => ROPE_REACH * KINDS[body.id]!.size.height));
     const sitting = (body: Body): boolean => !grappling(body) && raised(body) > 2 && raised(body) <= reach;
-    const until = Date.now() + ROPE_ROUND_MS;
+    let round = 0;
     let holding = false;
     try {
-      while (Date.now() < until && (await carried("rope")).length === 0) {
+      while (round < ROPE_ROUND_MS * HASTE && (await carried("rope")).length === 0) {
         const sitter = await reachable(page, sitting).catch(() => undefined);
         if (sitter !== undefined) {
           if (holding) await page.mouse.up();
@@ -100,13 +100,21 @@ test("a pet that cannot hop to a perch above raises its ladder or shoots its gra
           holding = true;
           held.push(sitter.id);
         }
-        await page.evaluate(framesPass, 30);
+        round += await page.evaluate(stagePasses, { milliseconds: 3_750, attribute: TEMPO });
       }
     } finally {
       if (holding) await page.mouse.up();
     }
     expect(await carried("rope"), "a grappler on the footer line reels itself up a rope").not.toEqual([]);
-  }).toPass({ timeout: ROPE_MS, intervals: [0] });
+  };
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await ropeRound();
+      break;
+    } catch (failure) {
+      if (attempt >= ROPE_MS / ROPE_ROUND_MS) throw failure;
+    }
+  }
   const [laddered, roped] = await Promise.all([carried("ladder"), carried("rope")]);
   test.info().annotations.push({ type: "gear", description: `on a ladder: ${laddered.join(", ")}; on a rope: ${roped.join(", ")}; taken to the footer line by the hand: ${moved.join(", ") || "nobody"}; held off a perch in reach of a rope: ${held.join(", ") || "nobody"}` });
   for (const id of roped) test.info().annotations.push({ type: "trail", description: `${id}: ${(await trailOf(page, id)).join(" → ")}` });

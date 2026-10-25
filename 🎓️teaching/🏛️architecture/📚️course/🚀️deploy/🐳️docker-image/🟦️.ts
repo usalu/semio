@@ -4,8 +4,8 @@
 
 import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { scriptInvocationEnvironment } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runOwnedCommand as runBoundedCommand } from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import { checkResourceLeaseControl } from "../../../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { runOwnedCommand as runBoundedCommand } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import { checkResourceLeaseControl } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { courseImageContent, courseImageContext, courseImageExecutable, courseImageFile, type CourseImageSource } from "../📦️image/🟦️.ts";
 import { courseRollbackTagV1 } from "../🏷️release/🟦️.ts";
 import { courseOriginalBuildModeV1 } from "../../🏗️builder/🎚️mode/🟦️.ts";

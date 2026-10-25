@@ -1,0 +1,6 @@
+test-storage-compiler-processes
+test-storage-opening-processes
+test-storage-opening
+test-storage-graph-processes
+test-checkout-scratch-processes
+test-storage-budgets-processes

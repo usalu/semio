@@ -6,14 +6,14 @@ import { runCmd } from "../🏃️process/🟦️.ts";
 import { defineLint, type BundleLinter } from "../🚨️policy/🧩️linters/🟦️.ts";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
 import { dependencyBoundaryBreachesForBundleDir } from "../🚨️policy/🛡️dependency-boundary/🟦️.ts";
-import { runtimeExecutableV1 } from "../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 const join = (...parts: string[]): string => systemJoin(...parts).replaceAll("\\", "/");
 export const policy = defineLint("@semio-tech/repo-ui", (_l: BundleLinter) => dependencyBoundaryBreachesForBundleDir(getWorkspaceRoot(), "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript"));
 const storybookEnv = (extra: Record<string, string | undefined> = {}) =>
   devToolingEnv({
-    WATCHPACK_POLLING: process.env.WATCHPACK_POLLING ?? "true",
-    CHOKIDAR_USEPOLLING: process.env.CHOKIDAR_USEPOLLING ?? "true",
+    WATCHPACK_POLLING: process.env.WATCHPACK_POLLING ?? (process.env.DEVCONTAINER === "true" ? "true" : "false"),
+    CHOKIDAR_USEPOLLING: process.env.CHOKIDAR_USEPOLLING ?? (process.env.DEVCONTAINER === "true" ? "true" : "false"),
     ...extra,
   });
 export const UI_PRIMITIVES_ALLOWLIST: readonly string[] = [
@@ -220,12 +220,12 @@ export async function runDevScript(context: Readonly<{ root: string; repoRoot: s
   runCmd(runtimeExecutableV1(), ["./📜️script.ts", "dev", "storybook", "ui", ...segments], { cwd: context.repoRoot, env: storybookEnv() });
 }
 
-/** 🏃️ Runs the `BuildScript` command under the caller's roots and invocation. */
+/** 🔨️ Runs the `BuildScript` command under the caller's roots and invocation. */
 export async function runBuildScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   runCmd(runtimeExecutableV1(), ["./📜️script.ts", "build", "storybook", ...segments], { cwd: context.repoRoot, env: storybookEnv({ STORYBOOK_SCOPE: "ui" }) });
 }
 
-/** 🏃️ Runs the `CheckUiPrimitivesScript` command under the caller's roots and invocation. */
+/** ✅️ Runs the `CheckUiPrimitivesScript` command under the caller's roots and invocation. */
 export function runCheckUiPrimitivesScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
   const hitsByFile = collectUiPrimitivesHits(context.repoRoot);
   const allowlist = new Set(UI_PRIMITIVES_ALLOWLIST);
@@ -259,7 +259,7 @@ export function runCheckUiPrimitivesScript(context: Readonly<{ root: string; rep
   process.exit(1);
 }
 
-/** 🏃️ Runs the `CheckChromeI18nScript` command under the caller's roots and invocation. */
+/** 🌐️ Runs the `CheckChromeI18nScript` command under the caller's roots and invocation. */
 export function runCheckChromeI18nScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
   const hitsByFile = collectChromeI18nHits(context.repoRoot);
   const allowlist = new Set(CHROME_I18N_ALLOWLIST);

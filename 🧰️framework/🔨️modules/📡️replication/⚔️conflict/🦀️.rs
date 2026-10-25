@@ -1,4 +1,4 @@
-//! ⚔️ Protocol conflict layer: first-class merge conflicts, replacing the deleted `protocol_crdt`
+//! 🎚️ Protocol conflict layer: first-class merge conflicts, replacing the deleted `protocol_crdt`
 //! blind-merge machinery. A conflict is data, not a silently-resolved absorb — either a whole
 //! remote batch gets *quarantined* (rejected outright, replayable later once an authority accepts
 //! it) or an accepted-but-messy merge gets flagged *degraded* (applied, but worth a human's
@@ -62,7 +62,7 @@ impl ConflictId {
 //#endregion 🔖️ConflictId
 
 //#region 🔖️ConflictKind
-/// 🚧️ What kind of conflict this is. `Quarantined`: a whole incoming batch was rejected
+/// 🏷️ What kind of conflict this is. `Quarantined`: a whole incoming batch was rejected
 /// outright by `policy.rejects(worst).await` — nothing in `envelopes` was applied; `resolve_conflict`'s
 /// `Accept` replays it under `LaissezFaire`, `Discard` seeds it into the causal DAG as already-seen
 /// without ever relaying it. `Degraded`: the batch WAS applied (its worst level was below the
@@ -74,7 +74,7 @@ pub enum ConflictKind {
     Degraded { edit_ids: Vec<String> },
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above. Internally tagged on
+/// 🧰️ Hand-written, not derived — same reason as `ConflictId` above. Internally tagged on
 /// `"kind"`, mirroring `#[serde(tag = "kind", rename_all = "camelCase")]`.
 impl semio_framework_value::ToValue for ConflictKind {
     fn to_value(&self) -> semio_framework_value::DslValue {
@@ -129,7 +129,7 @@ pub enum ConflictStatus {
     Discarded,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above. A tag-less, unit-only enum
+/// 💎️ Hand-written, not derived — same reason as `ConflictId` above. A tag-less, unit-only enum
 /// with `rename_all = "camelCase"` serializes as its bare lower-camelCase variant name.
 impl semio_framework_value::ToValue for ConflictStatus {
     fn to_value(&self) -> semio_framework_value::DslValue {
@@ -157,7 +157,7 @@ pub enum ConflictResolution {
     Discard,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `ConflictStatus` above.
+/// 🧬️ Hand-written, not derived — same reason as `ConflictStatus` above.
 impl semio_framework_value::ToValue for ConflictResolution {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::String(match self { ConflictResolution::Accept => "accept", ConflictResolution::Discard => "discard" }.to_string())
@@ -190,7 +190,7 @@ pub struct Conflict {
     pub timestamp: semio_framework_replication_ids::HybridLogicalTimestamp,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above.
+/// 🖋️ Hand-written, not derived — same reason as `ConflictId` above.
 impl semio_framework_value::ToValue for Conflict {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![
@@ -246,7 +246,7 @@ pub struct EditMessages {
     pub messages: Vec<semio_framework_replication_mutation::MutationMessage>,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above.
+/// 🪡️ Hand-written, not derived — same reason as `ConflictId` above.
 impl semio_framework_value::ToValue for EditMessages {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![("editId".to_string(), semio_framework_value::ToValue::to_value(&self.edit_id)), ("messages".to_string(), semio_framework_value::ToValue::to_value(&self.messages))])
@@ -282,7 +282,7 @@ pub struct DispatchReport {
     pub messages: Vec<semio_framework_replication_mutation::MutationMessage>,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above.
+/// ✋️ Hand-written, not derived — same reason as `ConflictId` above.
 impl semio_framework_value::ToValue for DispatchReport {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![
@@ -332,7 +332,7 @@ pub struct MergeReport {
     pub conflict: Option<ConflictId>,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `ConflictId` above.
+/// 🤲️ Hand-written, not derived — same reason as `ConflictId` above.
 impl semio_framework_value::ToValue for MergeReport {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![

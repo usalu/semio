@@ -111,7 +111,7 @@ pub(super) fn unshaped_drawing_label(text: &str, x: f32, y: f32) -> DisplayTextR
     DisplayTextRun { object_id: "drawing-label".into(), glyphs: Vec::new(), content: text.to_string(), origin_x: x, origin_y: y, font_size: 11.0, stack: 0, color: [0.0, 0.0, 0.0, 1.0] }
 }
 
-struct DrawingRaster {
+pub(super) struct DrawingRaster {
     pub(super) x: f32,
     pub(super) y: f32,
     pub(super) width: f32,

@@ -39,25 +39,25 @@
     {
       "name": "prepare-fixture-native-prototype",
       "outputs": [
-        "{projectRoot}/dist/runtime/native/prototype/fixture"
+        "{projectRoot}/.🧾️store/prepare-fixture-native-prototype.json"
       ]
     },
     {
       "name": "activate-fixture-wgpu-prototype",
       "outputs": [
-        "{projectRoot}/dist/runtime/wgpu/prototype/fixture"
+        "{workspaceRoot}/.cache/b/p/m/browser/prototype/runtime/wgpu/fixture"
       ]
     },
     {
       "name": "prepare-fixture-native-release",
       "outputs": [
-        "{projectRoot}/dist/runtime/native/release/fixture"
+        "{projectRoot}/.🧾️store/prepare-fixture-native-release.json"
       ]
     },
     {
       "name": "activate-fixture-wgpu-release",
       "outputs": [
-        "{projectRoot}/dist/runtime/wgpu/release/fixture"
+        "{workspaceRoot}/.cache/b/p/m/browser/release/runtime/wgpu/fixture"
       ]
     }
   ]

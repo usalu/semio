@@ -1,0 +1,20 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { dependencyDirectionResolverRules, dependencyDirectionStrictRules } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts";
+import { loadDependencyDirectionPolicy } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟦️.ts";
+const root = "/Users/ueli/Documents/semio";
+const [entriesPath, out] = process.argv.slice(2) as [string, string];
+const entries = readFileSync(entriesPath, "utf8").split("\n").filter(Boolean);
+const snapshot = loadDependencyDirectionPolicy(root);
+const rules = dependencyDirectionStrictRules(snapshot);
+const resolverRules = (dependencyDirectionResolverRules(rules) as any[]).filter((rule) => rule.name === "no-circular");
+console.log("circular rules", resolverRules.length, "entries", entries.length);
+const configPath = out + ".config.json", reportPath = out + ".graph.json";
+writeFileSync(configPath, JSON.stringify({ forbidden: resolverRules, options: snapshot.policy.options }));
+const run = spawnSync(process.execPath, ["--max-old-space-size=6144", root + "/node_modules/dependency-cruiser/bin/dependency-cruise.mjs", ...entries, "--config", configPath, "--output-type", "json", "--output-to", reportPath], { cwd: root, encoding: "utf8", maxBuffer: 1 << 28 });
+console.log("cruiser status", run.status, (run.stderr ?? "").slice(0, 400));
+const graph = JSON.parse(readFileSync(reportPath, "utf8"));
+let modules = 0, circular = 0; const rows: string[] = [];
+for (const module of graph.modules) { modules++; for (const dependency of module.dependencies ?? []) if (dependency.circular) { circular++; rows.push(module.source + " -> " + dependency.resolved); } }
+console.log("modules", modules, "circular dependencies", circular, "violations", (graph.summary?.violations ?? []).length);
+for (const row of rows.slice(0, 40)) console.log(row);

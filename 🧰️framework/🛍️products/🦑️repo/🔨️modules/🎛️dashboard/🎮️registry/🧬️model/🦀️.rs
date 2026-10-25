@@ -3,7 +3,7 @@
 use super::*;
 
 // #region 🔖️Model
-/// 🧬️ What kind of thing a command is.
+/// 🧩️ What kind of thing a command is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Kind { Target, Playground, Tool, Compound, Group, Ticket, Repo }
@@ -22,7 +22,7 @@ pub struct Effect { pub env: Vec<(String, String)>, pub build_flags: Vec<String>
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum Destination { #[default] Token, Env(String), Flag(String), Positional }
 
-/// 🌐️ A complete single-line text in each supported dashboard language.
+/// 💬️ A complete single-line text in each supported dashboard language.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct LocalizedText { pub en: String, pub de: String }
@@ -30,6 +30,9 @@ pub struct LocalizedText { pub en: String, pub de: String }
 pub(super) fn localized_declaration<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<LocalizedText>, D::Error> { LocalizedText::deserialize(deserializer).map(Some) }
 
 impl LocalizedText {
+    /// 🌐️ Both languages of one text.
+    pub fn of(en: impl Into<String>, de: impl Into<String>) -> Self { Self { en: en.into(), de: de.into() } }
+
     /// 🗣️ Selects the explicitly chosen dashboard language.
     pub fn get(&self, locale: Locale) -> &str { match locale { Locale::En => &self.en, Locale::De => &self.de } }
 

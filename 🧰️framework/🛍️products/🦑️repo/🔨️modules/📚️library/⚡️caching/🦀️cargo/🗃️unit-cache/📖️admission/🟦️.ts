@@ -45,7 +45,7 @@ export function rememberAdmissionV1(root:string,key:string,result:Readonly<{inpu
  try{mkdirSync(dirname(target),{recursive:true});writeFileSync(temporary,JSON.stringify({version:1,key,stamps,inputs:result.inputs,cfg:result.cfg,environment:result.environment,createdMs:nowMs}));rmSync(target,{force:true});renameSync(temporary,target);return true;}catch{rmSync(temporary,{force:true});return false;}
 }
 
-/** 🔌️ The memo port the source admission calls once per unit. */
+/** 📝️ The memo port the source admission calls once per unit. */
 export function unitAdmissionMemoV1(root:string,toolchain:string){
  return Object.freeze({
   recall(unit:AdmissionUnitV1,policy:unknown):Readonly<{inputs:AdmissionMemoV1["inputs"];cfg:readonly string[];environment:AdmissionMemoV1["environment"]}>|undefined{return recallAdmissionV1(root,admissionMemoKeyV1(unit,policy,toolchain));},

@@ -101,7 +101,7 @@ pub async fn outbox_delivers_each_entry_exactly_once(store: &mut impl AuthorityS
     assert_eq!(store.mark_outbox_delivered(&[99]).await, Err(StorageError::NotFound));
 }
 
-/// 🧾️ A batch of turns lands in order with everything each turn carries — events, outbox rows,
+/// 📦️ A batch of turns lands in order with everything each turn carries — events, outbox rows,
 /// receipt, snapshot — and a turn the store refuses leaves nothing of itself behind, whether the
 /// backend commits the batch atomically (every turn answers alike) or turn by turn.
 pub async fn a_committed_batch_lands_every_turn_whole_and_a_refused_turn_not_at_all(store: &mut impl AuthorityStore) {
@@ -250,13 +250,13 @@ pub async fn revoke_principal_removes_every_session_of_that_principal(store: &mu
     assert_eq!(store.get(&SessionId("s3".into())).await.map(|record| record.principal), Some(bob));
 }
 
-/// 🌱️ The state [`a_session_write_reports_a_failing_sink`] expects its store to arrive in: one live
+/// 🧫️ The state [`a_session_write_reports_a_failing_sink`] expects its store to arrive in: one live
 /// session `s1` of `alice`.
 pub async fn seed_session_fault_fixture(store: &mut impl SessionStore) {
     store.create(session_record("s1", Principal::User { id: "alice".into() })).await.unwrap();
 }
 
-/// 💥️ A session store whose sink has failed refuses to mint a session, and refuses to claim a
+/// 💾️ A session store whose sink has failed refuses to mint a session, and refuses to claim a
 /// revocation it did not carry out.
 ///
 /// **Precondition**: the store arrives seeded by [`seed_session_fault_fixture`] with its sink since

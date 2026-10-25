@@ -2,7 +2,7 @@ import {sha256V1} from "../🔏️key/🟦️.ts";
 import {compareCodePointsV1, sortedCodePointsV1, type UnitDependencyV1, type UnitGraphV1, type UnitsPolicyV1, type UnitV1} from "../🕸️graph/🟦️.ts";
 import type {ExecuteOutcomeV1, ExecuteRequestV1} from "../🏃️engine/🟦️.ts";
 
-/** 🕸️ Lexes WIT: line comments, doc comments and nested block comments dropped, identifiers (kebab case, `%` escapes), semantic versions after `@`, punctuation. Returns an error for an unterminated comment or an unknown character. */
+/** 🪵️ Lexes WIT: line comments, doc comments and nested block comments dropped, identifiers (kebab case, `%` escapes), semantic versions after `@`, punctuation. Returns an error for an unterminated comment or an unknown character. */
 export function lexWitV1(text: string): {readonly tokens: readonly string[]; readonly error: string | null} {
   const tokens: string[] = [];
   let at = 0, error: string | null = null;
@@ -30,9 +30,9 @@ export function lexWitV1(text: string): {readonly tokens: readonly string[]; rea
   return {tokens, error};
 }
 
-/** 🕸️ One top-level or nested item: its leading keyword, its name when it has one, and its canonical text. */
+/** 🪆️ One top-level or nested item: its leading keyword, its name when it has one, and its canonical text. */
 export type WitItemV1 = {readonly keyword: string; readonly name: string; readonly text: string; readonly names: readonly string[]; readonly references: readonly WitReferenceV1[]};
-/** 🕸️ A reference to a package from a `use`, `import`, `export` or `include`. */
+/** 🔗️ A reference to a package from a `use`, `import`, `export` or `include`. */
 export type WitReferenceV1 = {readonly package: string; readonly version: string | null; readonly interface: string; readonly imports: readonly string[]};
 const BLOCK_KEYWORDS = new Set(["record", "variant", "enum", "flags", "resource", "interface", "world"]);
 
@@ -68,7 +68,7 @@ const exportedNames = (keyword: string, tokens: readonly string[], inner: readon
   void keyword; void tokens;
   return names;
 };
-/** 🕸️ Parses the items of a token list (sorted by text inside interfaces and worlds: item order is not part of a WIT package, order inside records, variants, enums, flags and function signatures is kept). */
+/** 🔃️ Parses the items of a token list (sorted by text inside interfaces and worlds: item order is not part of a WIT package, order inside records, variants, enums, flags and function signatures is kept). */
 export function parseWitItemsV1(tokens: readonly string[], nested = false): readonly WitItemV1[] {
   const items: WitItemV1[] = [];
   for (let at = 0; at < tokens.length;) {
@@ -92,7 +92,7 @@ export function parseWitItemsV1(tokens: readonly string[], nested = false): read
   return items;
 };
 
-/** 🕸️ The canonical text of a package: the `package` declaration, then every item of every file sorted by canonical text. Files of a package are merged, their order is irrelevant. */
+/** 📦️ The canonical text of a package: the `package` declaration, then every item of every file sorted by canonical text. Files of a package are merged, their order is irrelevant. */
 export function canonicalWitV1(files: readonly string[]): {readonly package: string | null; readonly text: string; readonly items: readonly WitItemV1[]; readonly error: string | null} {
   const items: WitItemV1[] = [];
   let error: string | null = null, declaration: string | null = null;
@@ -108,9 +108,9 @@ export function canonicalWitV1(files: readonly string[]): {readonly package: str
   const sorted = [...items].sort((a, b) => compareCodePointsV1(a.text, b.text));
   return {package: declaration, text: [declaration === null ? "" : `package ${declaration} ;`, ...sorted.map(item => item.text)].filter(Boolean).join("\n"), items: sorted, error};
 }
-/** 🕸️ The interface digest of a package. */
+/** 📌️ The interface digest of a package. */
 export const witDigestV1 = (files: readonly string[]): string => sha256V1("polyglot-wit-world-v1\n" + canonicalWitV1(files).text);
-/** 🕸️ What dependents read of a package: its exported interfaces and worlds with the names they define. */
+/** 🏺️ What dependents read of a package: its exported interfaces and worlds with the names they define. */
 export function witArtifactV1(files: readonly string[]): string {
   const parsed = canonicalWitV1(files), exported: Record<string, {kind: string; names: string[]}> = {};
   for (const item of parsed.items) if ((item.keyword === "interface" || item.keyword === "world") && item.name) exported[item.name] = {kind: item.keyword, names: sortedCodePointsV1(item.names)};

@@ -1,23 +1,25 @@
+import{refuseCachingV1}from"../../../📖️texts/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {checkResourceLeaseControl,withResourceLeases,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,otherLeaseHoldersV1,withResourceLeases,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {createHash,randomBytes} from "node:crypto";
 import {connect} from "node:net";
 import {resolve,join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {readScriptProcessEnvelope,createScriptProcessEnvelope,withScriptProcessEnvelope,type ScriptProcessEnvelope,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {readScriptProcessEnvelope,createScriptProcessEnvelope,withScriptProcessEnvelope,withReceivedImplementationPinV1,type ScriptProcessEnvelope,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {readNxDaemonBirthV1,createNxDaemonLifetimeV1,type NxDaemonBirthV1} from "../🧬️lifetime/🟦️.ts";
+import {readNxDaemonBirthV1,createNxDaemonLifetimeV1,createNxDaemonReadinessV1,type NxDaemonBirthV1} from "../🧬️lifetime/🟦️.ts";
 import {withNxToolingUseV1,nxToolingUseStorageV1,type NxToolingUseWitnessV1} from "../../../🚀️bootstrap/🛠️tools/📥️use/🟦️.ts";
 import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {readPhysicalCargoSourceV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import {withRepositoryNxStorageV1,nxDaemonNamespaceResourceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
+import {nxGraphNamespaceResourceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
 import servicePolicy from "../🧬️lifetime/🧬️schema/📋️policy.json" with {type:"json"};
 import lifetimeSchema from "../🧬️lifetime/🧬️schema/🔣️.json" with {type:"json"};
 import witnessSchema from "../../../🚀️bootstrap/🛠️tools/📥️use/🧬️schema/📥️witness.json" with {type:"json"};
 
-import {acquireNxDaemonSlotV1,nxDaemonIdleV1,nxDaemonLimitsV1} from "../🚏️admission/🟦️.ts";
+import {acquireNxDaemonSlotV1,nxDaemonIdleV1,nxDaemonLimitsV1,nxDaemonYieldRequestedV1,nxDaemonYieldV1} from "../🚏️admission/🟦️.ts";
 export const NX_DAEMON_SERVICE_BIRTH_ENV_V1="SEMIO_NX_DAEMON_SERVICE_BIRTH";
 /** 📨️ Closed handoff data is authenticated through the existing live parent endpoint before service issuance. */
 export type NxDaemonServiceHandoffV1=Readonly<{birth:NxDaemonBirthV1;witness:NxToolingUseWitnessV1}>;
@@ -40,7 +42,7 @@ async function authenticatePhysicalWitnessV1(root:string,witness:NxToolingUseWit
  checkResourceLeaseControl(control);const after=await read();checkResourceLeaseControl(control);if(!after||Buffer.from(after).toString("utf8")!==expected)throw Error("Original daemon parent witness changed");await store.recheck();checkResourceLeaseControl(control);readScriptProcessEnvelope(original,Date.now());return response;
 }
 
-/** 🔐️ Service birth requires the same physical Original parent and its fresh authenticated response. */
+/** 🛎️ Service birth requires the same physical Original parent and its fresh authenticated response. */
 export async function authenticateNxDaemonServiceHandoffV1(handoff:NxDaemonServiceHandoffV1,store:RepositoryToolingStoreV1,control:ResourceLeaseControl):Promise<ScriptProcessEnvelope>{
  const response=await authenticatePhysicalWitnessV1(handoff.birth.repositoryRoot,handoff.witness,store,control);if(response!==JSON.stringify(handoff.witness))throw Error("Original daemon parent witness is not live");return readScriptProcessEnvelope(handoff.witness.original,Date.now());
 }
@@ -71,29 +73,31 @@ export async function withNxDaemonServiceV1<T>(environment:Readonly<Record<strin
   return withRepositoryNxStorageV1(birth.repositoryRoot,original,storePhase,async(bind,nxPhase)=>{
    const namespace=await bind(birth.toolingIdentity,birth.graphIdentity,birth.implementationIdentity,birth.workspaceRoot,birth.watcherIdentity??undefined);if(namespace.environment.NX_WORKSPACE_DATA_DIRECTORY!==birth.directory)throw Error("Original canonical daemon finite namespace required");lifetime.record({type:"acquire",resource:"rust"});
    let reader:((token:string)=>Promise<object|undefined>)|undefined;return withNxToolingUseV1(nxToolingUseStorageV1(birth.repositoryRoot),{identity:birth.toolingIdentity,toolkitRoot:birth.toolkitRoot,invocation:original,reader:token=>reader?.(token)??Promise.resolve(undefined)},nxPhase,async(witness,usePhase)=>{
-    return withResourceLeases({directory:repositoryLeaseDirectoryV1(birth.repositoryRoot),resources:[{resource:nxDaemonNamespaceResourceV1(birth.directory),mode:"exclusive"}],control:usePhase,signal:usePhase.signal},async()=>{await authenticateNxDaemonServiceHandoffV1(handoff,store,usePhase);lifetime.record({type:"acquire",resource:"sdk"});lifetime.record({type:"acquired"});let terminal!:()=>void,shutdown:((reason:string)=>Promise<void>)|undefined,closing:Promise<void>|undefined,stopped=false;
-    const activity={open:0,last:Date.now()};
-    const settled=new Promise<void>(accept=>{terminal=accept;}),recheck=async()=>{await store.recheck();await bind(birth.toolingIdentity,birth.graphIdentity,birth.implementationIdentity,birth.workspaceRoot,birth.watcherIdentity??undefined);},finish=()=>{const state=lifetime.snapshot();if(stopped&&state.phase==="draining"&&!state.server&&!state.workers.length&&!state.requests.length){lifetime.record({type:"terminal"});terminal();}},drain=(reason:string)=>{if(lifetime.snapshot().phase==="terminal")return;lifetime.record({type:"drain"});if(shutdown&&!closing)closing=Promise.resolve().then(()=>shutdown!(reason));if(closing)void closing.catch(error=>{});else{stopped=true;finish();}};
-    const session:NxDaemonServiceV1=Object.freeze({birth,witness,server(stop:(reason:string)=>Promise<void>){if(shutdown)throw Error("One original daemon server owner required");shutdown=stop;lifetime.record({type:"server-open"});},async ready(){await recheck();lifetime.record({type:"ready"});},waitForTerminal:()=>settled,serverClosed(){lifetime.record({type:"server-close"});finish();},async resourcesStopped(){stopped=true;finish();await released;}});
-    const context:OwnedDaemonV1={live:true,readers:new Map(),environment:Object.freeze({...namespace.environment,NX_WORKSPACE_ROOT_PATH:birth.workspaceRoot,SEMIO_NX_TOOLING_ROOT:birth.toolkitRoot,SEMIO_NX_TOOLING_IDENTITY:birth.toolingIdentity,SEMIO_NX_WATCHER_IDENTITY:birth.watcherIdentity??undefined,SEMIO_BUILD_GRAPH_DIGEST:birth.graphIdentity??undefined,SEMIO_NX_IMPLEMENTATION_IDENTITY:birth.implementationIdentity,NX_ISOLATE_PLUGINS:"false"}),session,recheck,shutdown:drain,async request(run){if(!context.live)throw Error("Original daemon root released");const id=randomBytes(16).toString("hex");lifetime.record({type:"request-open",id});activity.open++;activity.last=Date.now();try{return await run();}finally{activity.open--;activity.last=Date.now();lifetime.record({type:"request-close",id});finish();}},worker(id){if(!context.live)throw Error("Original daemon root released");lifetime.record({type:"worker-open",id});let live=true;return()=>{if(!live)return;live=false;lifetime.record({type:"worker-close",id});finish();};}};
+    return withResourceLeases({directory:repositoryLeaseDirectoryV1(birth.repositoryRoot),resources:[{resource:nxDaemonNamespaceResourceV1(birth.directory),mode:"exclusive"}],control:usePhase,signal:usePhase.signal},async()=>{await authenticateNxDaemonServiceHandoffV1(handoff,store,usePhase);lifetime.record({type:"acquire",resource:"sdk"});lifetime.record({type:"acquired"});let terminal!:()=>void,shutdown:((reason:string)=>Promise<void>)|undefined,closing:Promise<void>|undefined,stopped=false,watchdog:ReturnType<typeof setTimeout>|undefined;
+    const activity={open:0,last:Date.now()};const readiness=createNxDaemonReadinessV1();
+    const settled=new Promise<void>(accept=>{terminal=accept;}),recheck=async()=>{await store.recheck();await bind(birth.toolingIdentity,birth.graphIdentity,birth.implementationIdentity,birth.workspaceRoot,birth.watcherIdentity??undefined);},finish=()=>{const state=lifetime.snapshot();if(stopped&&state.phase==="draining"&&!state.server&&!state.workers.length&&!state.requests.length){lifetime.record({type:"terminal"});terminal();}},drain=(reason:string)=>{readiness.refuse(Error("Original daemon drained before readiness"));if(lifetime.snapshot().phase==="terminal")return;lifetime.record({type:"drain"});watchdog??=setTimeout(()=>{process.stderr.write(`Original daemon drain exceeded ${limits.drainMilliseconds}ms (${reason}); exiting\n`);process.exit(70);},limits.drainMilliseconds);watchdog.unref();if(shutdown&&!closing)closing=Promise.resolve().then(()=>shutdown!(reason));if(closing)void closing.catch(error=>{});else{stopped=true;finish();}};
+    const session:NxDaemonServiceV1=Object.freeze({birth,witness,server(stop:(reason:string)=>Promise<void>){if(shutdown)throw Error("One original daemon server owner required");shutdown=stop;lifetime.record({type:"server-open"});},async ready(){await recheck();lifetime.record({type:"ready"});readiness.ready();},waitForTerminal:()=>settled,serverClosed(){lifetime.record({type:"server-close"});finish();},async resourcesStopped(){stopped=true;finish();await released;}});
+    const context:OwnedDaemonV1={live:true,readers:new Map(),environment:Object.freeze({...namespace.environment,NX_WORKSPACE_ROOT_PATH:birth.workspaceRoot,SEMIO_NX_TOOLING_ROOT:birth.toolkitRoot,SEMIO_NX_TOOLING_IDENTITY:birth.toolingIdentity,SEMIO_NX_WATCHER_IDENTITY:birth.watcherIdentity??undefined,SEMIO_BUILD_GRAPH_DIGEST:birth.graphIdentity??undefined,SEMIO_NX_IMPLEMENTATION_IDENTITY:birth.implementationIdentity,NX_ISOLATE_PLUGINS:"false"}),session,recheck,shutdown:drain,async request(run){if(!context.live)throw refuseCachingV1("cancelled","daemon.root-released");await readiness.admit();if(!context.live)throw refuseCachingV1("cancelled","daemon.root-released");const id=randomBytes(16).toString("hex");lifetime.record({type:"request-open",id});activity.open++;activity.last=Date.now();try{return await run();}finally{activity.open--;activity.last=Date.now();lifetime.record({type:"request-close",id});finish();}},worker(id){if(!context.live)throw refuseCachingV1("cancelled","daemon.root-released");lifetime.record({type:"worker-open",id});let live=true;return()=>{if(!live)return;live=false;lifetime.record({type:"worker-close",id});finish();};}};
     reader=async token=>{const row=context.readers.get(token);if(!context.live||!row?.live||row.threadId<1)return;await recheck();if(!context.live||!row.live)return;return {version:1,kind:"daemon-worker",repositoryRoot:birth.repositoryRoot,workspaceRoot:birth.workspaceRoot,toolingIdentity:birth.toolingIdentity,generation:birth.generation,directory:birth.directory,watcherIdentity:birth.watcherIdentity,graphIdentity:birth.graphIdentity,implementationIdentity:birth.implementationIdentity,token,processId:process.pid,threadId:row.threadId};};ownedDaemon=context;for(const[key,value]of Object.entries(context.environment)){if(value===undefined)delete process.env[key];else process.env[key]=value;}const cancel=()=>drain("Original daemon service interrupted");original.control.signal.addEventListener("abort",cancel,{once:true});
-    const idleTimer=setInterval(()=>{if(nxDaemonIdleV1({kind,openRequests:activity.open,lastActivity:activity.last,now:Date.now(),idleMilliseconds:limits.idleMilliseconds}))drain(`Idle for ${limits.idleMilliseconds}ms`);},limits.checkMilliseconds);idleTimer.unref();
+    const attachedClients=()=>otherLeaseHoldersV1(repositoryLeaseDirectoryV1(birth.repositoryRoot),nxGraphNamespaceResourceV1(birth.directory)).length;
+    const idleTimer=setInterval(()=>{if(nxDaemonIdleV1({kind,openRequests:activity.open+attachedClients(),lastActivity:activity.last,now:Date.now(),idleMilliseconds:limits.idleMilliseconds}))drain(`Idle for ${limits.idleMilliseconds}ms`);},limits.checkMilliseconds);idleTimer.unref();
+    const yieldTimer=setInterval(()=>{if(kind!=="finite"||activity.open>0||attachedClients()>0||lifetime.snapshot().phase!=="ready")return;void nxDaemonYieldRequestedV1(repositoryLeaseDirectoryV1(birth.repositoryRoot),birth.directory,original.control.signal).then(requested=>{if(nxDaemonYieldV1({kind,openRequests:activity.open,requested}))drain("Yielded the namespace to an eviction");},()=>undefined);},limits.yieldCheckMilliseconds);yieldTimer.unref();
     try{original.control.signal.throwIfAborted();process.send!({type:"SEMIO_NX_DAEMON_ACQUIRED",generation:birth.generation,toolingIdentity:birth.toolingIdentity});let result:T;try{result=await body(session);}catch(error){drain(String(error));await settled;throw error;}await settled;return result;}
-    finally{clearInterval(idleTimer);context.live=false;ownedDaemon=undefined;original.control.signal.removeEventListener("abort",cancel);}
+    finally{clearInterval(idleTimer);clearInterval(yieldTimer);clearTimeout(watchdog);context.live=false;ownedDaemon=undefined;original.control.signal.removeEventListener("abort",cancel);}
     });
    });
   });
  }));}finally{release();slot.release();}
 }
 
-/** 📥️ Request work borrows the already acquired service root independently of mutable request authority. */
-export function withNxDaemonRequestV1<T>(body:()=>Promise<T>):Promise<T>{if(!ownedDaemon?.live)throw Error("Original acquired daemon service required");return ownedDaemon.request(body);}
+/** 📥️ Request work borrows the already acquired service root independently of mutable request authority and completes with the implementation the daemon loaded: a Source a peer edits meanwhile is left to the next request. */
+export function withNxDaemonRequestV1<T>(body:()=>Promise<T>):Promise<T>{if(!ownedDaemon?.live)throw refuseCachingV1("missing","daemon.service-required");return ownedDaemon.request(()=>withReceivedImplementationPinV1(body));}
 /** 🛑️ Signals the original server owner and retains its root loans through actual resource settlement. */
-export function requestNxDaemonShutdownV1(reason:string):void{if(!ownedDaemon?.live)throw Error("Original acquired daemon service required");ownedDaemon.shutdown(reason);}
+export function requestNxDaemonShutdownV1(reason:string):void{if(!ownedDaemon?.live)throw refuseCachingV1("missing","daemon.service-required");ownedDaemon.shutdown(reason);}
 /** 🧹️ Shutdown completion follows actual server and worker/request settlement, then awaits physical scope release. */
-export async function completeNxDaemonShutdownV1():Promise<void>{if(!ownedDaemon?.live)throw Error("Original acquired daemon service required");await ownedDaemon.session.resourcesStopped();}
+export async function completeNxDaemonShutdownV1():Promise<void>{if(!ownedDaemon?.live)throw refuseCachingV1("missing","daemon.service-required");await ownedDaemon.session.resourcesStopped();}
 /** 🔒️ Registers a real worker before its construction and keeps root custody until that owned thread exits. */
-export function retainNxDaemonWorkerV1(id:string):()=>void{if(!ownedDaemon?.live)throw Error("Original acquired daemon service required");return ownedDaemon.worker(id);}
+export function retainNxDaemonWorkerV1(id:string):()=>void{if(!ownedDaemon?.live)throw refuseCachingV1("missing","daemon.service-required");return ownedDaemon.worker(id);}
 
 /** 🧷️ The finite client issues service birth only while its actual images and fresh exact SDK witness are retained. */
 export function withNxDaemonServiceBirthV1<T>(original:ScriptInvocation,phaseControl:ResourceLeaseControl,directory:string,toolingIdentity:string,environment:Readonly<Record<string,string|undefined>>,body:(environment:Readonly<Record<string,string|undefined>>,actualPhase:ResourceLeaseControl)=>Promise<T>):Promise<T>{
@@ -107,12 +111,12 @@ export function withNxDaemonServiceBirthV1<T>(original:ScriptInvocation,phaseCon
  }));
 }
 /** 🚪️ Actual shutdown begins draining before server close; its existing owner still performs every close operation. */
-export function beginNxDaemonShutdownV1():void{if(!ownedDaemon?.live)throw Error("Original acquired daemon service required");ownedDaemon.shutdown("Original daemon shutdown");}
+export function beginNxDaemonShutdownV1():void{if(!ownedDaemon?.live)throw refuseCachingV1("missing","daemon.service-required");ownedDaemon.shutdown("Original daemon shutdown");}
 /** 🪟️ Records the real server close completion without releasing worker or request loans. */
-export function markNxDaemonServerClosedV1():void{if(!ownedDaemon?.live)throw Error("Original acquired daemon service required");ownedDaemon.session.serverClosed();}
+export function markNxDaemonServerClosedV1():void{if(!ownedDaemon?.live)throw refuseCachingV1("missing","daemon.service-required");ownedDaemon.session.serverClosed();}
 
 /** 🏗️ Binds the actual server resource and its existing shutdown owner after the service acquired all root loans. */
-export function registerNxDaemonServerV1(shutdown:(reason:string)=>Promise<void>):void{if(!ownedDaemon?.live)throw Error("Original acquired daemon service required");ownedDaemon.session.server(shutdown);}
+export function registerNxDaemonServerV1(shutdown:(reason:string)=>Promise<void>):void{if(!ownedDaemon?.live)throw refuseCachingV1("missing","daemon.service-required");ownedDaemon.session.server(shutdown);}
 /** 📌️ Client environment reflection cannot relocate any live service-owned writer or SDK reader. */
 export function nxDaemonPinnedEnvironmentV1():Readonly<Record<string,string|undefined>>|undefined{return ownedDaemon?.live?ownedDaemon.environment:undefined;}
 

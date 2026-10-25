@@ -4,7 +4,7 @@
 //!
 //! @see ../🧬️schema/✂️text-splice/🔣️.json
 
-/// ✂️ One range-text operation as its author saw it: at scalar `start` of the author's text, `deleted` was replaced by
+/// 🪚️ One range-text operation as its author saw it: at scalar `start` of the author's text, `deleted` was replaced by
 /// `insert`; `before`/`after` are up to [`TEXT_SPLICE_CONTEXT_SCALARS`] scalars around the replaced run.
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -26,7 +26,7 @@ pub struct LocatedTextSplice {
     pub clamped: bool,
 }
 
-/// 🧾️ A splice applied to a text: the new text, where it landed, and the inverse splice that restores the text.
+/// 🩹️ A splice applied to a text: the new text, where it landed, and the inverse splice that restores the text.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AppliedTextSplice {
     pub text: String,
@@ -70,7 +70,7 @@ fn joined(parts: &[&[char]]) -> Vec<char> {
 }
 
 impl TextSplice {
-    /// 📍️ Locates the splice in `text`, deterministically and identically to the TS twin:
+    /// 🔦️ Locates the splice in `text`, deterministically and identically to the TS twin:
     /// 1. the run with context on both sides, `k` = the longer side's length down to [`TEXT_SPLICE_MIN_TWO_SIDED_SCALARS`];
     /// 2. the run with context on one side, `k` = the longer side's length down to 1 (both sides of one `k` compete);
     /// 3. the run alone (only when it is not empty);
@@ -118,7 +118,7 @@ impl TextSplice {
         LocatedTextSplice { start: start.min(hay.len()) as u32, delete_length: 0, clamped: !deleted.is_empty() || !before.is_empty() || !after.is_empty() }
     }
 
-    /// ✂️ Applies the splice to `text` where it locates, answering the new text and the inverse splice (the removed run back in
+    /// ↩️ Applies the splice to `text` where it locates, answering the new text and the inverse splice (the removed run back in
     /// place of the inserted one, with `context` scalars of the new text around it).
     pub fn splice_into(&self, text: &str, context: usize) -> AppliedTextSplice {
         let located = self.locate(text);
@@ -141,7 +141,7 @@ impl TextSplice {
         }
     }
 
-    /// ⌨️ The ONE splice an editor sends for its own change `previous → next`: the common scalar prefix and suffix bound the
+    /// ✏️ The ONE splice an editor sends for its own change `previous → next`: the common scalar prefix and suffix bound the
     /// changed run, the context is what the author saw around it; `None` when nothing changed.
     pub fn from_edit(previous: &str, next: &str, context: usize) -> Option<Self> {
         let (a, b): (Vec<char>, Vec<char>) = (previous.chars().collect(), next.chars().collect());
@@ -167,7 +167,7 @@ impl TextSplice {
         Self { start: at as u32, deleted: String::new(), insert: String::new(), before: hay[at.saturating_sub(context)..at].iter().collect(), after: hay[at..(at + context).min(hay.len())].iter().collect() }
     }
 
-    /// 🔗️ The ONE splice of a typing run: `self` (the run so far) took the author's text `T0` to `T1`, `next` (an edit of `T1`,
+    /// 🧵️ The ONE splice of a typing run: `self` (the run so far) took the author's text `T0` to `T1`, `next` (an edit of `T1`,
     /// same author, same coordinates) takes `T1` to `T2`. `next` must lie inside the run's window `before + insert + after` of
     /// `T1` and agree with it wherever both carry text, and the two changes must touch once each is placed anywhere it may
     /// equivalently sit among repeated scalars (a canonical splice sits rightmost, the caret may sit further left). The run
@@ -241,7 +241,7 @@ fn placements(window: &[char], at: usize, inside: &[char], outside: &[char]) -> 
     ordered
 }
 
-/// 🔗️ How a typed splice joins its run ([`TextSplice::then`]): one net splice, a run that changed nothing, or a caret that
+/// 🧶️ How a typed splice joins its run ([`TextSplice::then`]): one net splice, a run that changed nothing, or a caret that
 /// jumped away (the run ends and a new one begins).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TextSpliceComposition {
@@ -260,7 +260,7 @@ pub fn rebase_text_edits(remote: &str, unapplied: &[TextSplice], local: &str, an
 }
 
 //#region ✂️DraftChangeSet
-/// ✂️ One range of an explicit draft's change set: in the coordinates of the text the draft STARTED from (ascending, never overlapping),
+/// 📙️ One range of an explicit draft's change set: in the coordinates of the text the draft STARTED from (ascending, never overlapping),
 /// `delete` scalars at `offset` were replaced by `insert`. Twin of the TS `DraftChangeV1`.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct DraftChange {
@@ -269,7 +269,7 @@ pub struct DraftChange {
     pub insert: String,
 }
 
-/// ✂️ The edit argument a window declares to receive the draft's change set (JSON list of [`DraftChange`]) instead of its text.
+/// 📩️ The edit argument a window declares to receive the draft's change set (JSON list of [`DraftChange`]) instead of its text.
 pub const DRAFT_SPLICES_ARGUMENT: &str = "splices";
 
 enum DraftPiece {
@@ -286,7 +286,7 @@ impl DraftPiece {
     }
 }
 
-/// ⌨️ The change set after one more editor step `previous -> next` (a typed run, a paste, an undo, a redo): the step is the editor's own
+/// ⏪️ The change set after one more editor step `previous -> next` (a typed run, a paste, an undo, a redo): the step is the editor's own
 /// change (the scalars both texts share at either end bound it), folded into the ranges so far; every range stays in the coordinates of the
 /// starting text. Twin of the TS `composeDraftStepV1`.
 pub fn compose_draft_step(changes: &[DraftChange], previous: &str, next: &str) -> Vec<DraftChange> {
@@ -454,7 +454,7 @@ impl DraftChangesJsonCursor{
     pub fn step(&mut self,maximum_units:usize,control:&mut protocol::value::NativeEncodeControl<'_>,grant:protocol::value::RetainedCloneGrant)->Result<Option<String>,protocol::value::ValueError>{if self.complete{return Ok(None);}let output=self.writer.step(maximum_units,control,grant)?;self.complete=output.is_some();Ok(output)}
     /// 🧾️ Returns the original writer's measured receipt without synthesizing progress.
     pub fn normal_step_progress(&self)->protocol::value::RetainedCloneProgress{self.writer.normal_step_progress()}
-    /// 📏️ Reports the original writer's ownership demand without increasing caller authority.
+    /// 🛂️ Reports the original writer's ownership demand without increasing caller authority.
     pub fn normal_step_demands(&self)->Result<protocol::value::RetirementDemand,protocol::value::ValueError>{if self.complete{Ok(Default::default())}else{self.writer.normal_step_demands()}}
     /// 📊️ Reports measured or emitted bytes without scanning retained source fields.
     pub fn progress(&self)->(usize,bool){self.writer.progress()}
@@ -467,7 +467,7 @@ impl protocol::value::retirement::RetireOwned for DraftChangesJsonCursor{
     fn controlled_retirement_supported()->bool{true}
 }
 
-/// ✂️ Applies a change set (ranges in the coordinates of `text`) to `text`; `None` when a range leaves the text or overlaps the previous one.
+/// 📝️ Applies a change set (ranges in the coordinates of `text`) to `text`; `None` when a range leaves the text or overlaps the previous one.
 pub fn apply_draft_changes(text: &str, changes: &[DraftChange]) -> Option<String> {
     let hay: Vec<char> = text.chars().collect();
     let mut out = String::new();

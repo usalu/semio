@@ -7,7 +7,7 @@
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Oracle
@@ -56,7 +56,7 @@ function compact(raw: string): string {
   return out;
 }
 
-/** 🔗️ Renders one `semio.mcp.event/1` record with the given hash value. */
+/** 🖌️ Renders one `semio.mcp.event/1` record with the given hash value. */
 function render(event: { sequence: number; kind: string; peer: string; generation: number; requestId: string; payload: string; previous: string }, hash: string): string {
   let out = `{"schema":${escaped("semio.mcp.event/1")},"sequence":${event.sequence},"kind":${escaped(event.kind)},"peer":${escaped(event.peer)},"generation":${event.generation}`;
   if (event.requestId !== "") out += `,"requestId":${escaped(event.requestId)}`;

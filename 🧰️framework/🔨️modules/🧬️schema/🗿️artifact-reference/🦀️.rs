@@ -59,7 +59,7 @@ impl ArtifactKindId {
         self.0.split('.').nth(1).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
     }
 
-    /// 🗿️ Third segment — the artifact slug within the plugin.
+    /// 📦️ Third segment — the artifact slug within the plugin.
     pub fn artifact(&self) -> &str {
         self.0.split('.').nth(2).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
     }
@@ -79,7 +79,7 @@ pub use semio_framework_artifact_reference_borrow::{BorrowedArtifactRef, is_cano
 pub struct ArtifactRef{pub artifact_id:String,pub dialect:ArtifactDialect}
 
 impl ArtifactRef {
-    /// 🔗️ Borrows the canonical target fields without cloning identity strings.
+    /// 🏹️ Borrows the canonical target fields without cloning identity strings.
     pub fn borrowed(&self) -> BorrowedArtifactRef<'_> {
         BorrowedArtifactRef { artifact_id: &self.artifact_id, artifact_kind: &self.dialect.artifact_kind, standard: &self.dialect.standard, subset: &self.dialect.subset }
     }

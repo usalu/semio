@@ -16,7 +16,7 @@ export interface ThemePaintRef {
   mix?: [string, string, number];
 }
 
-/** 🖌️ Resolved sRGB8888 color. */
+/** 🌈️ Resolved sRGB8888 color. */
 export type Rgba8 = [number, number, number, number];
 
 /** 🗂️ The six paint groups every appearance carries — `outcome` (error/warning/success/progress
@@ -64,7 +64,7 @@ export interface ThemeGeometry {
   readonly cssVars: Readonly<Record<string, string>>;
 }
 
-/** 📐️ Resolves authored geometry metrics once for all target projections. */
+/** 🧮️ Resolves authored geometry metrics once for all target projections. */
 export function resolveThemeGeometry(theme: Pick<UiTheme, "spacing" | "metrics">): ThemeGeometry {
   const rootValue = theme.metrics.dom?.rootRemPx ?? canonicalTokens.metrics.dom.rootRemPx;
   if (typeof rootValue !== "number") throw new Error("theme.metrics.dom.rootRemPx must be scalar");
@@ -127,7 +127,7 @@ function blendHex(a: string, b: string, ratioA: number): string {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${bl.toString(16).padStart(2, "0")}`;
 }
 
-/** 🖌️ Resolves a paint ref (token / hex / mix) against a theme's primitive colors to sRGB8888. */
+/** 🔀️ Resolves a paint ref (token / hex / mix) against a theme's primitive colors to sRGB8888. */
 export function resolveThemePaint(colors: Record<string, string>, ref: ThemePaintRef): Rgba8 {
   let hex: string;
   let alpha = ref.alpha ?? 1;
@@ -159,7 +159,7 @@ export function resolveThemeMetrics(metrics: UiTheme["metrics"]): UiTheme["metri
   return out;
 }
 
-/** 🎨️ Resolves every paint in one appearance of a theme to sRGB8888, grouped by palette. */
+/** 🧺️ Resolves every paint in one appearance of a theme to sRGB8888, grouped by palette. */
 export function resolveThemeAppearancePalettes(theme: UiTheme, appearance: ThemeAppearanceName): Record<ThemePaletteGroup, Record<string, Rgba8>> {
   const groups = theme.appearances[appearance];
   const out = {} as Record<ThemePaletteGroup, Record<string, Rgba8>>;

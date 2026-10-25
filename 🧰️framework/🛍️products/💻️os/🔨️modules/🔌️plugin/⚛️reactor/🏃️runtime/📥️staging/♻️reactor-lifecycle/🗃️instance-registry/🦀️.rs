@@ -30,15 +30,15 @@ pub struct RuntimeCloseWorkerState<PA: PluginApp> {
     /// fault quotes the measured stall instead of the last turn's unrelated cost.
     pub stall_credit_spent_us: AtomicU64,
     pub last_callback_elapsed_us: AtomicU64,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "cleanup-probes"))]
     pub last_fault: std::sync::Mutex<[u8; 256]>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "cleanup-probes"))]
     pub last_fault_origin: AtomicU8,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "cleanup-probes"))]
     pub physical_close_calls: AtomicU64,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "cleanup-probes"))]
     pub callback_phase_started_us: AtomicU64,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "cleanup-probes"))]
     pub callback_phase_us: [AtomicU64; 24],
 }
 #[doc(hidden)]

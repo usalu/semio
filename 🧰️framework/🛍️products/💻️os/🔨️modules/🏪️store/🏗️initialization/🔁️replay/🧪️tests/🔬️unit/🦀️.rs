@@ -140,7 +140,7 @@ fn turn(init:&mut Initializer,original:&mut ReplayOriginal,grant:RetainedCloneGr
     let ownership=original.receipt();
     assert!(ownership.fits(grant), "a turn never spends more than its wallet: {ownership:?} of {grant:?}");
     if accounted {
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (ownership.retained_capacity_bytes, ownership.released_bytes), "funded turn allocations match the receipt: [DEBUG] {before:?} quote {quote:?} -> {:?} receipt {ownership:?}", init.phase);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (ownership.retained_capacity_bytes, ownership.released_bytes), "funded turn allocations match the receipt: {before:?} quote {quote:?} -> {:?} receipt {ownership:?}", init.phase);
     }
     (outcome, ownership, accounted)
 }

@@ -1,9 +1,9 @@
-/** 📌️ Contract: marker-only folder discovery lists the topmost directories whose whole tree is zero-byte taxonomy markers, never a diff facet, a protected tree or a build directory; marker names are re-derived from the taxonomy file independently and the corpus is language-agnostic with `🐍️oracle.py` walking the same workspace. */
+/** 📌️ Contract: marker-only folder discovery lists the topmost directories whose whole tree is zero-byte taxonomy markers, never a diff facet, a protected tree or a build directory; marker names are re-derived from the taxonomy file independently and the corpus is language-agnostic with `🐍️.py` walking the same workspace. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {afterAll} from "bun:test";
 import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -34,6 +34,6 @@ test("a taxonomy without marker kinds only keeps the ticket important leaf",()=>
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

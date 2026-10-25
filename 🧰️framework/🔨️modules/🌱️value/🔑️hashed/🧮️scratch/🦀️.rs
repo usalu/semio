@@ -41,7 +41,7 @@ impl<K:RetireOwned,V:RetireOwned> RetireOwned for ScratchHashMap<K,V>{
  fn retirement_birth_bytes(&self)->Option<usize>{self.slots.retirement_birth_bytes()}
  fn controlled_retirement_supported()->bool{<Vec<Slot<K,V>>>::controlled_retirement_supported()}
 }
-/// 🧺️ A set shares the same one-vector admission and tombstone custody as its map.
+/// 🔏️ A set shares the same one-vector admission and tombstone custody as its map.
 #[derive(Debug)]
 pub struct ScratchHashSet<K>{map:ScratchHashMap<K,()>}
 impl<K> Default for ScratchHashSet<K>{fn default()->Self{Self{map:ScratchHashMap::default()}}}

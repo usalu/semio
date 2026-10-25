@@ -14,13 +14,13 @@ pub trait ArtifactReferenceText:Sized {
 }
 
 impl DialectCoordinateText for ArtifactDialect {
-    /// 🧵️ Canonical single-string coordinate form: `"s.stdio.gif@87a/*"`. The one format that
+    /// 🔂️ Canonical single-string coordinate form: `"s.stdio.gif@87a/*"`. The one format that
     /// crosses every boundary in the system — the only dialect-coordinate codec in the repo.
     fn to_coordinate(&self) -> String {
         format!("{}@{}/{}", self.artifact_kind, self.standard, self.subset)
     }
 
-    /// 🧵️ Inverse of `to_coordinate`. `@` separates artifact_kind from standard/subset; the LAST
+    /// 📖️ Inverse of `to_coordinate`. `@` separates artifact_kind from standard/subset; the LAST
     /// `/` separates standard from subset.
     fn parse_coordinate(s: &str) -> Result<Self, String> {
         let (kind, rest) = s.split_once('@').ok_or_else(|| format!("dialect coordinate {s:?} missing '@'"))?;
@@ -32,7 +32,7 @@ impl DialectCoordinateText for ArtifactDialect {
     }
 }
 impl ArtifactReferenceText for ArtifactRef {
-    /// 🧵️ Canonical wire form: `"<artifact_id>!<kind>@<standard>/<subset>"`.
+    /// 📡️ Canonical wire form: `"<artifact_id>!<kind>@<standard>/<subset>"`.
     fn to_uri(&self) -> String {
         format!("{}!{}", self.artifact_id, self.dialect.to_coordinate())
     }
@@ -48,7 +48,7 @@ impl ArtifactReferenceText for ArtifactRef {
         }).map_err(ValueError::into_message)
     }
 
-    /// 🧵️ Inverse of `to_uri`. Splits on the FIRST `!`.
+    /// ↩️ Inverse of `to_uri`. Splits on the FIRST `!`.
     fn parse_uri(s: &str) -> Result<Self, String> {
         let (artifact_id, coordinate) = s.split_once('!').ok_or_else(|| format!("artifact ref uri {s:?} missing '!'"))?;
         if artifact_id.is_empty() {

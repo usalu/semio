@@ -10,8 +10,8 @@ import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modul
 import { fixedFilenameContractIdsForPath } from "../../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
 import { readToml } from "../../🏗️shared-fixtures/🟦️.ts";
 import { contractRoot } from "../../🏗️shared-fixtures/🟦️.ts";
-import { inputRoot, routerInvocation, schema } from "../🟢️shared/🟦️.ts";
-import type { CargoWorkspaceManifest } from "../🟢️shared/🟦️.ts";
+import { inputRoot, routerInvocation, schema } from "../🟢️harness/🟦️.ts";
+import type { CargoWorkspaceManifest } from "../🟢️harness/🟦️.ts";
 
 /** 🔹 Registers the resident native metadata router tests of the package language semantic handoff suite. */
 export function registerResidentNativeMetadataRouterTests(): void {
@@ -21,7 +21,7 @@ export function registerResidentNativeMetadataRouterTests(): void {
     const packageRoot = join(root, expected.packagePath), sourcePath = join(packageRoot, "📜️script.ts");
     expect(existsSync(sourcePath)).toBe(true);
     const source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    expect(source.split(/\r?\n/u)[0]).toBe("#!/usr/bin/env bun");
+    expect(source.split(/\r?\n/u)[0]).toBe("#!/usr/bin/env repo");
     const imports = syntax.statements.filter(ts.isImportDeclaration);
     expect(imports.map(row => ({ module: (row.moduleSpecifier as import("typescript").StringLiteral).text, names: row.importClause?.namedBindings && ts.isNamedImports(row.importClause.namedBindings) ? row.importClause.namedBindings.elements.map(node => node.name.text).sort() : [] }))).toEqual(expected.moduleImports);
     expect(expected.moduleImports.flatMap((row: { names: string[] }) => row.names).sort()).toEqual(expected.imports);

@@ -12,7 +12,7 @@ use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, ValueRefus
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
-/// 🎗️ A display-ready UI string. No `From<&str>`/`From<String>` on purpose.
+/// 🔖️ A display-ready UI string. No `From<&str>`/`From<String>` on purpose.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
@@ -68,7 +68,7 @@ impl LabelText {
         self.0
     }
 
-    /// 🧵️ Named-placeholder runtime fill, e.g. `labels.selected_count.fill(&[("count", &n.to_string())])`
+    /// ✏️ Named-placeholder runtime fill, e.g. `labels.selected_count.fill(&[("count", &n.to_string())])`
     /// — substitution, not `format!`, so word order never has to match across locales.
     pub fn fill(self, args: &[(&str, &str)]) -> Label {
         let mut out = self.0.to_string();
@@ -98,7 +98,7 @@ pub struct LocalizedLabel {
 mod retirement;
 
 impl LocalizedLabel {
-    /// 🗺️ Builds the full matrix from a resolver called once per (terminology, locale) cell.
+    /// 🏭️ Builds the full matrix from a resolver called once per (terminology, locale) cell.
     pub fn from_fn(mut resolve: impl FnMut(Terminology, Locale) -> String) -> Self {
         let cells = std::array::from_fn(|ti| {
             let terminology = Terminology::ALL[ti];
@@ -107,7 +107,7 @@ impl LocalizedLabel {
         Self { cells }
     }
 
-    /// 📊️ Locale-invariant runtime data (fixture names, proper nouns) broadcast to every cell.
+    /// 📣️ Locale-invariant runtime data (fixture names, proper nouns) broadcast to every cell.
     pub fn data(value: impl Into<String>) -> Self {
         let value = value.into();
         Self::from_fn(|_, _| value.clone())
@@ -137,7 +137,7 @@ impl LocalizedLabel {
         self.cells.iter_mut().flatten().map(Cow::to_mut)
     }
 
-    /// ♻️ Returns one existing cell without materializing borrowed locale text.
+    /// 🔂️ Returns one existing cell without materializing borrowed locale text.
     pub fn close_owned_cell_one(&mut self,maximum_bytes:usize)->Result<Option<usize>,usize>{
         for cell in self.cells.iter_mut().flatten(){
             let bytes=match cell{Cow::Owned(text)=>text.capacity(),Cow::Borrowed(_)=>0};
@@ -167,7 +167,7 @@ impl LocalizedLabel {
         self.cells.iter().flatten().find_map(|cell|match cell{Cow::Owned(text) if text.capacity()!=0=>Some(text.capacity()),Cow::Borrowed(text) if !text.is_empty()=>Some(0),_=>None}).unwrap_or(0)
     }
 
-    /// 📏️ Retained bytes of the WHOLE matrix. A label is a locale × terminology matrix now, so an
+    /// 🧮️ Retained bytes of the WHOLE matrix. A label is a locale × terminology matrix now, so an
     /// artifact's fixed retained envelope pays for every cell, not for one string: a caller that
     /// used to admit `label.len()` admits this instead, and never under-counts the envelope by
     /// pricing one locale.
@@ -267,7 +267,7 @@ impl ToValue for LocalizedLabel {
     }
 }
 
-/// 🌱️ Admits exactly the declared complete matrix before copying any cells.
+/// ✅️ Admits exactly the declared complete matrix before copying any cells.
 impl FromValue for LocalizedLabel {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let cells = label_cells(&value)?;

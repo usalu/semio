@@ -21,7 +21,7 @@ pub fn snap_to_device_pixels(value: f32, dpr: f32) -> f32 {
     (value * dpr).round() / dpr
 }
 
-/// 🎯️ Snaps a `[x, y, w, h]` rect's edges (not its width/height) to the physical pixel grid at `dpr`.
+/// 🧲️ Snaps a `[x, y, w, h]` rect's edges (not its width/height) to the physical pixel grid at `dpr`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn snap_rect(rect: [f32; 4], dpr: f32) -> [f32; 4] {
     let x0 = snap_to_device_pixels(rect[0], dpr);
@@ -31,7 +31,7 @@ pub fn snap_rect(rect: [f32; 4], dpr: f32) -> [f32; 4] {
     [x0, y0, (x1 - x0).max(0.0), (y1 - y0).max(0.0)]
 }
 
-/// 🎯️ Snaps a `[x, y]` point to the physical pixel grid at `dpr` — used for vector vertices, which
+/// 📍️ Snaps a `[x, y]` point to the physical pixel grid at `dpr` — used for vector vertices, which
 /// have no width/height to preserve.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn snap_point(point: [f32; 2], dpr: f32) -> [f32; 2] {
@@ -192,7 +192,7 @@ pub fn union_scissors(scissors: &[ScissorRect]) -> Option<ScissorRect> {
     Some(ScissorRect { x: x0, y: y0, w: x1 - x0, h: y1 - y0 })
 }
 
-/// ⋃️ Unions two optional bounds, passing either through unchanged if the other is absent.
+/// 🔀️ Unions two optional bounds, passing either through unchanged if the other is absent.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn merge_scissor_bounds(a: Option<ScissorRect>, b: Option<ScissorRect>) -> Option<ScissorRect> {
     match (a, b) {

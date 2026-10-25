@@ -46,7 +46,7 @@ pub struct Edge {
 }
 
 /// 📷️ Camera for snapshot documents.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Camera {
@@ -125,4 +125,3 @@ pub enum GraphEffect {
     RemoveProperty { entity: EntityRef, key: String },
 }
 
-semio_framework_value::artifact_retire_struct!(Camera {x,y,zoom});

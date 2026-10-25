@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:script-process-watchdog",
+  "description": "Universal liveness law of every Script process: a process that holds leases but has no live child and made no progress (no output, no published progress, no settled accepted work) for the stall period reports in every selected language and exits, so its leases are released; a termination signal always ends the process within the grace.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "stallMilliseconds": 600000,
+        "stallEnvironment": "SEMIO_SCRIPT_STALL_MS",
+        "idleTreeMilliseconds": 1800000,
+        "idleTreeEnvironment": "SEMIO_SCRIPT_IDLE_TREE_MS",
+        "waitCeilingMilliseconds": 14400000,
+        "waitCeilingEnvironment": "SEMIO_SCRIPT_WAIT_CEILING_MS",
+        "waitEpisodeGapMilliseconds": 2000,
+        "checkMilliseconds": 30000,
+        "terminationGraceMilliseconds": 10000
+      }
+    },
+    "Decision": { "enum": ["healthy", "stalled", "tree-stalled"] },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["idleMilliseconds", "liveChildren", "treeIdleMilliseconds", "waiting"],
+      "properties": {
+        "idleMilliseconds": { "type": "integer", "minimum": 0 },
+        "liveChildren": { "type": "integer", "minimum": 0 },
+        "treeIdleMilliseconds": { "type": "integer", "minimum": 0 },
+        "waiting": { "type": "integer", "minimum": 0, "description": "Outstanding queue or capacity waits of the process; any wait makes it healthy." }
+      }
+    },
+    "Notice": {
+      "const": {
+        "stalled": {
+          "en": "This process ({owner}) made no progress for {minutes} min and has no live child: it exits now so that the leases it holds are released.",
+          "de": "Dieser Prozess ({owner}) hat seit {minutes} Min. keinen Fortschritt gemacht und hat kein lebendes Kind: er beendet sich jetzt, damit die von ihm gehaltenen Leases freigegeben werden."
+        },
+        "treeStalled": {
+          "en": "This process ({owner}) made no progress for {minutes} min and its {children} child process(es) used no CPU time for {treeMinutes} min: the children are stopped and this process exits now so that the leases it holds are released.",
+          "de": "Dieser Prozess ({owner}) hat seit {minutes} Min. keinen Fortschritt gemacht und seine {children} Kindprozess(e) haben seit {treeMinutes} Min. keine CPU-Zeit verbraucht: die Kinder werden beendet und dieser Prozess beendet sich jetzt, damit die von ihm gehaltenen Leases freigegeben werden."
+        },
+        "terminating": {
+          "en": "{signal} did not end this process within {seconds} s: it exits now.",
+          "de": "{signal} hat diesen Prozess nicht innerhalb von {seconds} s beendet: er beendet sich jetzt."
+        }
+      }
+    }
+  }
+}

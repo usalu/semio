@@ -1,14 +1,14 @@
-import continuationSchema from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🤲️continuations/🧬️schema/🔣️.json" with { type: "json" };
-import type {CargoCompilerInputsRequestV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts";
+import continuationSchema from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️inputs/🤲️continuations/🧬️schema/🔣️json/🟦️.ts";
+import type {CargoCompilerInputsRequestV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts";
 import{requireIssuedResourceControlRefinementV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{cargoConfigurationArgumentsV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import type{CargoCompilerInputsPortV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts";
+import type{CargoCompilerInputsPortV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts";
 import{repositoryCargoCommandV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📥️arguments/📤️forwarding/🟦️.ts";
 import cargoLaunchSchema from"../🚪️launcher/🧬️schema/🔣️.json" with { type: "json" };
 const cargoLaunchPolicy=cargoLaunchSchema.definitions.Configuration.const;
 import{readCargoProfileConsumptionV1,type CargoProfileConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withCompilerWorkspaceSharedWriteV1,withCompilerWorkspaceWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+import{withCompilerWorkspaceSharedWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {withRepositoryCargoConfigurationV1,repositoryCargoConfigurationArgumentsV1,type RepositoryCargoConfigurationViewV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts";
 import {withRepositoryCargoRegistryReadyV1} from "./🟢️ready/💾️storage/🟦️.ts";
 import type {CargoDependencyNetworkV1,RepositoryCargoInputsV1} from "./📋️contract/🟦️.ts";
@@ -32,7 +32,7 @@ import {cargoLockStaleFailureV1} from "../../../../../../../🔨️modules/🏃�
 export interface RepositoryCargoInputSelectionV1{readonly manifest:string;readonly cwd:string;readonly arguments:readonly string[];readonly configuration:RepositoryCargoConfigurationViewV1}
 export interface RepositoryCargoInputsViewV1{readonly environment:Readonly<Record<string,string|undefined>>;readonly control:ResourceLeaseControl;readonly selections:readonly RepositoryCargoInputSelectionV1[];recheck():Promise<void>}
 
-/** 🔐️ Projects only an actual native caller's authored network grant. */
+/** 🕸️ Projects only an actual native caller's authored network grant. */
 export function repositoryCargoNetworkV1(invocation:ScriptInvocation,workspace:string):CargoDependencyNetworkV1{const authority=readNativeCallerAuthorityV1(invocation.capabilities);if(resolve(authority.repositoryRoot)!==resolve(workspace))throw Error("Original Cargo network grant belongs to another workspace");return authority.network;}
 
 
@@ -59,16 +59,16 @@ async function ensureRepositoryCargoLocksV1(options:RepositoryCargoInputsV1,admi
  for(const request of admitted.requests){const manifest=resolve(request.manifest);if(seen.has(manifest))continue;seen.add(manifest);await ensureRepositoryCargoLockV1({workspaceRoot:options.workspace,cwd:request.cwd,program:"cargo",prefix:[],args:request.args,environment:admitted.environment,control:options.control,force:false});}
 }
 
-/** 🏪️ Holds genuine bounded registry writer/read custody across fetch, planning and terminal compiler settlement. */
+/** 🏪️ Holds genuine bounded registry writer/read custody across fetch, planning and terminal compiler settlement; the compiler writer custody is taken BEFORE the fetch lease, so the exclusive fetch lease is held only while the fetch itself runs and never while waiting for the writer. */
 async function withRepositoryCargoInputsOwnedV1<T>(options:RepositoryCargoInputsV1,view:RepositoryCargoInputsViewV1,body:(view:RepositoryCargoInputsViewV1)=>Promise<T>):Promise<T>{
  const {control,storage}=options,{requests,home,environment}=await admitRepositoryCargoInputsV1(options,view.selections);
- return withRepositoryCargoRegistryReadyV1({...options,requests,home,environment},()=>withCompilerWorkspaceSharedWriteV1(storage,join(options.workspace,".cache/b/l/m/data"),control,async()=>{await storage.recheck();try{for(const request of requests){await storage.recheck();const fetch=()=>captureOwnedCommandV1("cargo",request.args,request.cwd,{control,env:{...environment,CARGO_NET_OFFLINE:String(request.args.includes("--offline"))},output:{maximumBytes:16777216,maximumLines:65536}});let output:string;try{output=await fetch();}catch(error){if(!cargoLockStaleFailureV1(error))throw error;await ensureRepositoryCargoLockV1({workspaceRoot:options.workspace,cwd:request.cwd,program:"cargo",prefix:[],args:request.args,environment,control,force:true});output=await fetch();}if(output)process.stderr.write(output);}}catch(error){if(environment.CARGO_NET_OFFLINE==="true")throw Error("Original offline Cargo dependency acquisition refused: "+(error instanceof Error?error.message:String(error)));throw error;}await storage.recheck();}),()=>body(view));
+ return withRepositoryCargoRegistryReadyV1({...options,requests,home,environment},inner=>withCompilerWorkspaceSharedWriteV1(storage,join(options.workspace,".cache/b/l/m/data"),control,async()=>{await storage.recheck();await inner();await storage.recheck();}),async()=>{await storage.recheck();try{for(const request of requests){await storage.recheck();const fetch=()=>captureOwnedCommandV1("cargo",request.args,request.cwd,{control,env:{...environment,CARGO_NET_OFFLINE:String(request.args.includes("--offline"))},output:{maximumBytes:16777216,maximumLines:65536}});let output:string;try{output=await fetch();}catch(error){if(!cargoLockStaleFailureV1(error))throw error;await ensureRepositoryCargoLockV1({workspaceRoot:options.workspace,cwd:request.cwd,program:"cargo",prefix:[],args:request.args,environment,control,force:true});output=await fetch();}if(output)process.stderr.write(output);}}catch(error){if(environment.CARGO_NET_OFFLINE==="true")throw Error("Original offline Cargo dependency acquisition refused: "+(error instanceof Error?error.message:String(error)));throw error;}await storage.recheck();},()=>body(view));
 }
 
-/** 🔐️ Holds exclusive bounded registry writer custody for a lockfile resolution that must not first fetch its stale locked graph. */
+/** 📝️ Holds exclusive bounded registry writer custody for a lockfile resolution that must not first fetch its stale locked graph. */
 async function withRepositoryCargoResolutionOwnedV1<T>(options:RepositoryCargoInputsV1,view:RepositoryCargoInputsViewV1,body:(view:RepositoryCargoInputsViewV1)=>Promise<T>):Promise<T>{
  const {storage}=options,{environment,leaseOptions}=await admitRepositoryCargoInputsV1(options,view.selections),writer=await acquireQueuedResourceLease({...leaseOptions,owner:randomBytes(8).toString("base64url"),mode:"exclusive"});
- try{return await withCompilerWorkspaceWriteV1(storage,leaseOptions.directory,options.control,async()=>{await storage.recheck();return body(view);});}finally{writer.release();}
+ try{return await withCompilerWorkspaceSharedWriteV1(storage,leaseOptions.directory,options.control,async()=>{await storage.recheck();return body(view);});}finally{writer.release();}
 }
 
 async function withRepositoryCargoConfigurationViewsV1<T>(options:RepositoryCargoInputsV1,body:(view:RepositoryCargoInputsViewV1)=>Promise<T>):Promise<T>{
@@ -76,7 +76,7 @@ async function withRepositoryCargoConfigurationViewsV1<T>(options:RepositoryCarg
  const hold=(index:number,control:ResourceLeaseControl):Promise<T>=>index===selections.length?(async()=>{const first=views[0]!;for(const view of views)for(const name of["CARGO_ENCODED_RUSTFLAGS","CARGO_ENCODED_RUSTDOCFLAGS"])if(view.environment[name]!==first.environment[name])throw Error("Distinct Cargo target flag views require distinct compiler invocation scopes");const rows:RepositoryCargoInputSelectionV1[]=[];for(const[position,row]of selections.entries()){const configuration=views[position]!;rows.push(Object.freeze({manifest:resolve(row.manifest),cwd:resolve(row.cwd),arguments:await repositoryCargoConfigurationArgumentsV1(configuration,row.args),configuration}));}const environment=Object.freeze({...first.environment,SEMIO_CARGO_CONFIGURATION_DIGESTS:JSON.stringify(views.map(view=>view.digest))}),recheck=()=>withIssuedResourceOperationV1(control,async()=>{for(const view of views)await view.recheck();}),view:RepositoryCargoInputsViewV1=Object.freeze({environment,control,selections:Object.freeze(rows),recheck});await recheck();const result=await body(view);await recheck();return result;})():withRepositoryCargoConfigurationV1({...options,manifest:selections[index]!.manifest,cwd:selections[index]!.cwd,args:selections[index]!.args,control},async view=>{views.push(view);try{return await hold(index+1,view.control);}finally{views.pop();}});
  return hold(0,options.control);
 }
-/** 🧊️ Keeps admitted per-selection configuration bytes under exact reader custody through terminal consumption. */
+/** 📥️ Keeps admitted per-selection configuration bytes under exact reader custody through terminal consumption. */
 export async function withRepositoryCargoInputsV1<T>(options:RepositoryCargoInputsV1,body:(view:RepositoryCargoInputsViewV1)=>Promise<T>):Promise<T>{await ensureRepositoryCargoLocksV1(options,await admitRepositoryCargoInputsV1(options,null));return withRepositoryCargoConfigurationViewsV1(options,view=>withRepositoryCargoInputsOwnedV1({...options,control:view.control,environment:view.environment,args:view.selections[0]!.arguments,additionalManifests:view.selections.slice(1).map(row=>({manifest:row.manifest,cwd:row.cwd,args:row.arguments}))},view,body));}
 /** 🔒️ Keeps the same genuine configuration reader across an exclusive original lock/resolve producer. */
 export async function withRepositoryCargoResolutionV1<T>(options:RepositoryCargoInputsV1,body:(view:RepositoryCargoInputsViewV1)=>Promise<T>):Promise<T>{if(options.consumption.kind!=="resolution")throw Error("Explicit Cargo resolution consumption required");await admitRepositoryCargoInputsV1(options,null);return withRepositoryCargoConfigurationViewsV1(options,view=>withRepositoryCargoResolutionOwnedV1({...options,control:view.control,environment:view.environment},view,body));}

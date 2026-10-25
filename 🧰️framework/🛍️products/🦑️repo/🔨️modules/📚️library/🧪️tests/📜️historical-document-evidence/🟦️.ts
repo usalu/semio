@@ -94,7 +94,7 @@ function fixture() {
 
 test("ticket narrative, evidence and scratch never block a move, a production file still does, and a ticket-embedded package boundary is never swept in", () => {
   const { repoRoot, put, git } = fixture();
-  const scope = "🧪️tests/🧪️fixture", source = `${scope}/🦀️.rs`, final = `${scope}/🦀️.rs`;
+  const scope = "🧪️tests/🧪️fixture", source = `${scope}/🦀️component.rs`, final = `${scope}/🦀️.rs`;
   const prose = (owner: string) => `Earlier the component lived at ${source} before ${owner} moved it.\n`;
 
   const closedTicketDir = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/HISTREF-CLOSED-FIXTURE";
@@ -178,7 +178,7 @@ test("the exemption is driven entirely by the schema population, not hardcoded: 
   expect(historicalDocumentEvidence(promptLogPath, real, root), "after: the real registration exempts it").toBe(true);
 });
 
-/** 🧫️ Builds an isolated, git-free directory tree — `historicalDocumentEvidence`'s package-boundary check only calls `readdirSync`, so no repository is needed. */
+/** 📂️ Builds an isolated, git-free directory tree — `historicalDocumentEvidence`'s package-boundary check only calls `readdirSync`, so no repository is needed. */
 function looseFixture() {
   const parent = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🗑️temp/📜️historical-document-evidence-runs");
   mkdirSync(parent, { recursive: true });
@@ -206,3 +206,29 @@ test("dev-prompt-log honors both existing negatives: a fixedFilenameContracts ma
   expect(historicalDocumentEvidence(".🧬semio/🦑️repo/💬️prompts/🐙️ueli.md", taxonomy, repoRoot), "an ordinary prompt log with no package boundary above it stays exempted").toBe(true);
   rmSync(repoRoot, { recursive: true, force: true });
 });
+
+test("ticket workspace is exempt from path policy: scratch names, undeclared directories and same-kind siblings raise no finding and move nowhere, while a ticket-embedded package and the ticket's own fixed files stay governed", () => {
+  const { repoRoot, put, git } = fixture();
+  const closedTicketDir = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/PATHPOLICY-CLOSED-FIXTURE";
+  const schemaPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
+  const schema = structuredClone(loadCatalogTaxonomy()) as Record<string, any>;
+  delete schema.generatorContracts["plugin-registry"].inputDiscovery;
+  put(schemaPath, `${JSON.stringify(schema, null, 2)}\n`);
+  put(`${closedTicketDir}/🎫️ticket.json`, `${JSON.stringify({ title: "Pathpolicy Closed Fixture", status: "closed", description: "fixture" }, null, 2)}\n`);
+  const scratch = [`${closedTicketDir}/scratch_one.py`, `${closedTicketDir}/scratch_two.py`, `${closedTicketDir}/scratch-tools/helper.py`, `${closedTicketDir}/🗑️generated/run.log`, `${closedTicketDir}/no emoji notes.md`];
+  for (const path of scratch) put(path, "x = 1\n");
+  put(`${closedTicketDir}/embedded-pkg/Cargo.toml`, '[package]\nname = "pathpolicy-embedded"\nversion = "0.1.0"\n');
+  put(`${closedTicketDir}/embedded-pkg/loose_source.py`, "x = 1\n");
+  git("init", "-q");
+  put(".git/info/exclude", `${schemaPath}\n`);
+  git("add", "--all");
+  const inventory = inventoryTaxonomy({ repoRoot, scope: closedTicketDir, workers: 1 });
+  const entry = (path: string) => inventory.entries.find((row) => row.sourcePath === path)!;
+  for (const path of [...scratch, `${closedTicketDir}/scratch-tools`, `${closedTicketDir}/🗑️generated`]) {
+    expect(entry(path), path).toBeDefined();
+    expect(entry(path).violations, path).toEqual([]);
+    expect(entry(path).normalizedPath, path).toBe(path);
+  }
+  expect(entry(`${closedTicketDir}/embedded-pkg/loose_source.py`).violations.map((row) => row.code), "an embedded package stays live").toContain("taxonomy/kind-only-basename");
+  rmSync(repoRoot, { recursive: true, force: true });
+}, 60_000);

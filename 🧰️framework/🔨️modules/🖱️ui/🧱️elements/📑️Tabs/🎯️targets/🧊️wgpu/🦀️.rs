@@ -1,4 +1,4 @@
-//! 📑️ wgpu twin of the `Tabs` element — ticket `26/09/17/WGPU-RENDERER-REACT-PARITY` packet
+//! 🪞️ wgpu twin of the `Tabs` element — ticket `26/09/17/WGPU-RENDERER-REACT-PARITY` packet
 //! W2k. `Tabs` was one of the elements the plugin/react-only census flagged as "no confirmed product
 //! consumer"; the consumer-hunt this packet ran found a real one —
 //! `🌎️hub/🔨️modules/🛡️admin/🧱️elements/🛡️AdminApp/🟦️.tsx:64-91` renders a live
@@ -30,7 +30,7 @@ pub enum TabsOrientation {
     Vertical,
 }
 
-/// 📑️ Whether moving focus also activates the tab — React's `TabsActivationMode`. `Automatic` is
+/// ⏩️ Whether moving focus also activates the tab — React's `TabsActivationMode`. `Automatic` is
 /// React's default: arrowing to a tab selects it. Under `Manual`, `Enter`/`Space` selects.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum TabsActivationMode {
@@ -39,7 +39,7 @@ pub enum TabsActivationMode {
     Manual,
 }
 
-/// 📑️ One trigger in a tablist.
+/// 📋️ One trigger in a tablist.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TabRow {
     pub value: String,
@@ -73,7 +73,7 @@ pub enum TabsKey {
 
 //#region ⌨️Keyboard
 
-/// ⌨️ The key that steps BACKWARD through this tablist, and the one that steps forward — React's
+/// ↔️ The key that steps BACKWARD through this tablist, and the one that steps forward — React's
 /// `previousKey`/`nextKey` (`🟦️.tsx:164-168`). A vertical tablist uses `ArrowUp`/`ArrowDown` and
 /// carries no flow direction; a horizontal one mirrors its pair under [`FlowInline::Rtl`].
 pub fn tabs_step_keys(orientation: TabsOrientation, flow: FlowInline) -> (&'static str, &'static str) {
@@ -84,7 +84,7 @@ pub fn tabs_step_keys(orientation: TabsOrientation, flow: FlowInline) -> (&'stat
     }
 }
 
-/// ⌨️ One key against a tablist whose roving focus sits on `focused`. React skips DISABLED triggers
+/// 🔑️ One key against a tablist whose roving focus sits on `focused`. React skips DISABLED triggers
 /// entirely (`'[role="tab"]:not(:disabled)'`, `🟦️.tsx:170`), wraps at both ends, and answers
 /// `Home`/`End` with the first and last ENABLED trigger — so this indexes the enabled subsequence and
 /// maps back, rather than stepping the raw list.
@@ -120,17 +120,17 @@ pub fn tabs_key(rows: &[TabRow], focused: usize, key: &str, orientation: TabsOri
 
 //#region 📑️Build
 
-/// 📑️ The `role="tab"` id React stamps as `data-tabs-value` — the join a host addresses a trigger by.
+/// 🆔️ The `role="tab"` id React stamps as `data-tabs-value` — the join a host addresses a trigger by.
 pub fn tab_trigger_id(id: &str, value: &str) -> String {
     format!("{id}.trigger.{value}")
 }
 
-/// 📑️ The `role="tabpanel"` id.
+/// 🎭️ The `role="tabpanel"` id.
 pub fn tab_content_id(id: &str, value: &str) -> String {
     format!("{id}.content.{value}")
 }
 
-/// 📑️ The tablist as a declarative `UiNode` tree: a horizontal `Stack` of `Button` triggers, each
+/// 🔨️ The tablist as a declarative `UiNode` tree: a horizontal `Stack` of `Button` triggers, each
 /// carrying `on_activate`'s descriptor so a click reaches the same verb React's `context.activate`
 /// does. The SELECTED trigger is `UiState::Selected` and a disabled one `UiState::Disabled`, so paint
 /// resolves React's `data-state="active"` (`presence.selected`) and `disabled:opacity-50`
@@ -158,7 +158,7 @@ pub fn build_tabs(id: &str, rows: &[TabRow], value: &str, orientation: TabsOrien
     stack(id.to_string(), false, vec![list, panel])
 }
 
-/// 📑️ A plain `Stack` wrapper — `direction` is the string vocabulary the contract's own stack carries.
+/// 🥞️ A plain `Stack` wrapper — `direction` is the string vocabulary the contract's own stack carries.
 fn stack(id: String, horizontal: bool, children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
         direction: if horizontal { "row".to_string() } else { "column".to_string() },

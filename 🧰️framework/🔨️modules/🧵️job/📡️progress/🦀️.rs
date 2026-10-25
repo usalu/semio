@@ -186,7 +186,7 @@ pub enum ProgressChannelKind {
     PreviewGeometry,
     /// 🔒️ Commits and checkpoints — lossless, bounded (never dropped, backpressure instead).
     CommitAndCheckpoint,
-    /// 🩺️ Diagnostics — a bounded overwrite-oldest ring.
+    /// ⚠️ Diagnostics — a bounded overwrite-oldest ring.
     DiagnosticRing,
     /// 📉️ Telemetry — lossy, latest sample only.
     Telemetry,
@@ -194,7 +194,7 @@ pub enum ProgressChannelKind {
     LargeGeometry,
 }
 
-/// 🚰️ The recommended [`ChannelPolicy`] for one [`ProgressChannelKind`] — design ticket packet P2a
+/// 🔏️ The recommended [`ChannelPolicy`] for one [`ProgressChannelKind`] — design ticket packet P2a
 /// item 4's channel-policy matrix, made concrete. A host wiring an actual channel may widen these
 /// bounds for its own deployment; these are the floor every implementation should start from.
 pub fn channel_policy_for(kind: ProgressChannelKind) -> ChannelPolicy {

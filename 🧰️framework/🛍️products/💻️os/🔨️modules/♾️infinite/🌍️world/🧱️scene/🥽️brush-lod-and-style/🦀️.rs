@@ -307,17 +307,20 @@ pub fn world3d_brush_mesh_announce_pending(scene_state: &WorldSceneState, assets
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3a-asset-decoder-boot-fault.md`).
 pub const WORLD_REFERENCE_TEXTURE_BYTES: usize = semio_framework_ui_raster_owner::SCENE_RASTER_ITEM_BYTES;
 
-/// 🖼️ `image` scaled to at most [`WORLD_REFERENCE_TEXTURE_BYTES`] of RGBA, aspect preserved.
-pub fn bounded_reference_image(image: image::DynamicImage) -> image::DynamicImage {
-    let pixels = u64::from(image.width()).saturating_mul(u64::from(image.height()));
+/// 🖼️ `image` scaled to at most [`WORLD_REFERENCE_TEXTURE_BYTES`] of RGBA, aspect preserved, by the owned triangle filter.
+pub fn bounded_reference_image(image: semio_framework_pixels::RasterImage) -> semio_framework_pixels::RasterImage {
+    let pixels = u64::from(image.width).saturating_mul(u64::from(image.height));
     let budget = (WORLD_REFERENCE_TEXTURE_BYTES / 4) as u64;
     if pixels <= budget || pixels == 0 {
         return image;
     }
     let scale = ((budget as f64) / (pixels as f64)).sqrt();
-    let width = ((f64::from(image.width()) * scale) as u32).max(1);
-    let height = ((f64::from(image.height()) * scale) as u32).max(1);
-    image.resize(width, height, image::imageops::FilterType::Triangle)
+    let width = ((f64::from(image.width) * scale) as u32).max(1);
+    let height = ((f64::from(image.height) * scale) as u32).max(1);
+    let ratio = (f64::from(width) / f64::from(image.width)).min(f64::from(height) / f64::from(image.height));
+    let fitted_width = ((f64::from(image.width) * ratio).round() as u32).max(1);
+    let fitted_height = ((f64::from(image.height) * ratio).round() as u32).max(1);
+    semio_framework_pixels::resize_triangle(&image, fitted_width, fitted_height)
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -329,21 +332,12 @@ pub struct DecodedReferenceImage {
 }
 
 pub fn decode_reference_image_bytes(bytes: &[u8]) -> Option<DecodedReferenceImage> {
-    use image::ImageDecoder as _;
-
-    let reader = image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok()?;
-    let mut decoder = reader.into_decoder().ok()?;
-    let (source_width, source_height) = decoder.dimensions();
-    if u64::from(source_width).checked_mul(u64::from(source_height))? > WORLD_REFERENCE_SOURCE_PIXELS {
-        return None;
-    }
-    let orientation = decoder.orientation().unwrap_or(image::metadata::Orientation::NoTransforms);
-    let mut decoded = image::DynamicImage::from_decoder(decoder).ok()?;
-    decoded.apply_orientation(orientation);
-    let rgba = bounded_reference_image(decoded).to_rgba8();
+    let limits = semio_framework_pixels::image_decoding::EncodedDecodeLimits { max_pixels: WORLD_REFERENCE_SOURCE_PIXELS as usize, ..semio_framework_pixels::image_decoding::EncodedDecodeLimits::MAXIMUM };
+    let decoded = semio_framework_pixels::image_decoding::decode_encoded_blocking(bytes.to_vec(), limits, &|| false).ok()?;
+    let rgba = bounded_reference_image(decoded.upright());
     let digest = semio_framework_hash::Sha256::digest(bytes);
     let source_digest = [u64::from_be_bytes(digest[..8].try_into().ok()?), u64::from_be_bytes(digest[8..16].try_into().ok()?)];
-    Some(DecodedReferenceImage { width: rgba.width(), height: rgba.height(), source_digest, pixels: rgba.into_raw() })
+    Some(DecodedReferenceImage { width: rgba.width, height: rgba.height, source_digest, pixels: rgba.pixels })
 }
 
 /// 🔘️ The shell-owned placeholder plane the gumball's three drag quads are drawn with. Named here

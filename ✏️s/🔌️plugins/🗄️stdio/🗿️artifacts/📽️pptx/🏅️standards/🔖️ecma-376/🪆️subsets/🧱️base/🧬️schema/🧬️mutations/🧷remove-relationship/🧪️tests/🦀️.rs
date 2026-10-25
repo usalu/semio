@@ -15,6 +15,6 @@ async fn remove_relationship_restores_the_relationship_at_its_position() {
     let grown = protocol::apply_diff_cold(opc_layer::with_package(&base, |opc| opc_layer::relationship_write_diff(opc, &owner, &OpcRelationship { id: "rIdMiddleDemo".into(), ..external.clone() }, Some(1))).unwrap().as_ref().unwrap(), &base).expect("the middle relationship is added");
     laws(&PptxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { owner: owner.clone(), id: "rIdMiddleDemo".into() }), &grown).await;
     let single = PptxMutation::SetRelationship(set_relationship::SetRelationship { owner: fresh.clone(), id: "rId1".into(), rel_type: "http://example.invalid/relationships/solo".into(), target: "https://example.invalid/solo".into(), external: true, index: None });
-    let with_solo = protocol::apply_diff_cold(Mutation::diff(&single, &base).diff(), &base).expect("the single-relationship owner is added");
+    let with_solo = protocol::apply_diff_cold(::semio_framework_os_kernel::ColdMutation::diff(&single, &base).diff(), &base).expect("the single-relationship owner is added");
     laws(&PptxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { owner: fresh.clone(), id: "rId1".into() }), &with_solo).await;
 }

@@ -72,7 +72,7 @@ function grid(values: readonly number[]): number[] {
   return values.map((value) => Math.round(value * factor) / factor + 0);
 }
 
-/** 🧭️ The nodes in d3's preorder (`eachBefore`). */
+/** 🕸️ The nodes in d3's preorder (`eachBefore`). */
 function preorder(node: HierarchyNode<Row>): HierarchyNode<Row>[] {
   const nodes: HierarchyNode<Row>[] = [];
   node.eachBefore((each) => nodes.push(each));
@@ -126,7 +126,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     "depth-and-height": {
-      /** 🔮️ The depth, the height and the postorder d3 derives from the same structure. */
+      /** 📏️ The depth, the height and the postorder d3 derives from the same structure. */
       oracle: () => ({
         projection: {
           depth: preorder(root(DEEP)).map((each) => each.depth),
@@ -140,7 +140,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     sort: {
-      /** 🔮️ The five comparators, read back as the preorder they produce. */
+      /** ⏪️ The five comparators, read back as the preorder they produce. */
       oracle: () => ({
         projection: {
           "value-descending": preorder(sorted(DEEP, (a, b) => (b.value ?? 0) - (a.value ?? 0))).map((each) => each.id!),
@@ -153,7 +153,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     traversal: {
-      /** 🔮️ d3 `leaves()`, `ancestors()` and the breadth-first `links()`. */
+      /** 🔗️ d3 `leaves()`, `ancestors()` and the breadth-first `links()`. */
       oracle: () => ({
         projection: {
           leaves: root(DEEP).leaves().map((each) => each.id!),
@@ -166,7 +166,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     "path-stratify": {
-      /** 🔮️ The expanded path table, stratified and summed like any other hierarchy. */
+      /** 🗄️ The expanded path table, stratified and summed like any other hierarchy. */
       oracle: () => {
         const rows = pathRows();
         return {

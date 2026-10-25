@@ -21,6 +21,7 @@ semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-s-artifact-procedural-3d-terminology = { workspace = true }
 

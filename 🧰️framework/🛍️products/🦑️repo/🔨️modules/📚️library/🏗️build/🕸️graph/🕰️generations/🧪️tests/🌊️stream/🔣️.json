@@ -130,6 +130,64 @@
    "edges": []
   },
   {
+   "name": "f",
+   "root": "pkg/f",
+   "kind": "project",
+   "node": {
+    "name": "f",
+    "root": "pkg/f",
+    "targets": {
+     "build": {
+      "execution": {
+       "kind": "command",
+       "command": "run f build"
+      },
+      "inputs": [
+       "{projectRoot}/src.ts",
+       {
+        "externalDependencies": [
+         "npm:named",
+         "npm:missing"
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "edges": []
+  },
+  {
+   "name": "g",
+   "root": "pkg/g",
+   "kind": "project",
+   "node": {
+    "name": "g",
+    "root": "pkg/g",
+    "targets": {
+     "build": {
+      "execution": {
+       "kind": "command",
+       "command": "run g build"
+      },
+      "inputs": [
+       "commandSources0"
+      ]
+     }
+    },
+    "namedInputs": {
+     "commandSources0": [
+      "{workspaceRoot}/x.ts",
+      {
+       "externalDependencies": [
+        "npm:grouped"
+       ]
+      }
+     ]
+    }
+   },
+   "edges": []
+  },
+  {
    "name": "broken",
    "root": "pkg/broken",
    "kind": "unavailable",
@@ -169,6 +227,18 @@
    "npm:unused": {
     "type": "npm",
     "name": "npm:unused"
+   },
+   "npm:named": {
+    "type": "npm",
+    "name": "npm:named"
+   },
+   "npm:below": {
+    "type": "npm",
+    "name": "npm:below"
+   },
+   "npm:grouped": {
+    "type": "npm",
+    "name": "npm:grouped"
    }
   },
   "edges": [
@@ -190,6 +260,11 @@
    {
     "source": "npm:unused",
     "target": "c",
+    "type": "static"
+   },
+   {
+    "source": "npm:named",
+    "target": "npm:below",
     "type": "static"
    }
   ],
@@ -239,6 +314,18 @@
     "a",
     "a",
     "b"
+   ]
+  },
+  {
+   "name": "an-external-dependency-named-by-an-input-without-an-edge",
+   "names": [
+    "f"
+   ]
+  },
+  {
+   "name": "an-external-dependency-named-by-an-input-group-without-an-edge",
+   "names": [
+    "g"
    ]
   }
  ],
@@ -303,6 +390,52 @@
      "name": "e",
      "root": "pkg/e",
      "targets": {}
+    },
+    "f": {
+     "name": "f",
+     "root": "pkg/f",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run f build"
+       },
+       "inputs": [
+        "{projectRoot}/src.ts",
+        {
+         "externalDependencies": [
+          "npm:named",
+          "npm:missing"
+         ]
+        }
+       ]
+      }
+     }
+    },
+    "g": {
+     "name": "g",
+     "root": "pkg/g",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run g build"
+       },
+       "inputs": [
+        "commandSources0"
+       ]
+      }
+     },
+     "namedInputs": {
+      "commandSources0": [
+       "{workspaceRoot}/x.ts",
+       {
+        "externalDependencies": [
+         "npm:grouped"
+        ]
+       }
+      ]
+     }
     }
    },
    "dependencies": [
@@ -347,6 +480,11 @@
      "type": "static"
     },
     {
+     "source": "npm:named",
+     "target": "npm:below",
+     "type": "static"
+    },
+    {
      "source": "npm:right",
      "target": "npm:unused",
      "type": "static"
@@ -369,6 +507,18 @@
     "npm:unused": {
      "type": "npm",
      "name": "npm:unused"
+    },
+    "npm:named": {
+     "type": "npm",
+     "name": "npm:named"
+    },
+    "npm:below": {
+     "type": "npm",
+     "name": "npm:below"
+    },
+    "npm:grouped": {
+     "type": "npm",
+     "name": "npm:grouped"
     }
    },
    "unavailable": [
@@ -620,6 +770,86 @@
     "npm:unused": {
      "type": "npm",
      "name": "npm:unused"
+    }
+   },
+   "unavailable": []
+  },
+  {
+   "projects": {
+    "f": {
+     "name": "f",
+     "root": "pkg/f",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run f build"
+       },
+       "inputs": [
+        "{projectRoot}/src.ts",
+        {
+         "externalDependencies": [
+          "npm:named",
+          "npm:missing"
+         ]
+        }
+       ]
+      }
+     }
+    }
+   },
+   "dependencies": [
+    {
+     "source": "npm:named",
+     "target": "npm:below",
+     "type": "static"
+    }
+   ],
+   "externalNodes": {
+    "npm:named": {
+     "type": "npm",
+     "name": "npm:named"
+    },
+    "npm:below": {
+     "type": "npm",
+     "name": "npm:below"
+    }
+   },
+   "unavailable": []
+  },
+  {
+   "projects": {
+    "g": {
+     "name": "g",
+     "root": "pkg/g",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run g build"
+       },
+       "inputs": [
+        "commandSources0"
+       ]
+      }
+     },
+     "namedInputs": {
+      "commandSources0": [
+       "{workspaceRoot}/x.ts",
+       {
+        "externalDependencies": [
+         "npm:grouped"
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "dependencies": [],
+   "externalNodes": {
+    "npm:grouped": {
+     "type": "npm",
+     "name": "npm:grouped"
     }
    },
    "unavailable": []

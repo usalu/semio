@@ -54,8 +54,8 @@ test("the observed host satisfies the closed facts schema and Darwin needs no pr
 });
 
 test("tools setup bazel checks the platform before attaching stores and prepares the module catalog after the binary",async()=>{
- const entry=await readFile(resolve(import.meta.dir,"../../../../../../🏗️build/📜️script.ts"),"utf8"),branch=entry.slice(entry.indexOf('if(tools!=="nx"){'));
- const order=["requireBazelPlatformV1(root","withBazelStorageV1(root","bootstrap.prepareBazel(root","prepareBazelModulesV1(root","describeBazelReadinessV1({"].map(marker=>branch.indexOf(marker));
+ const entry=await readFile(resolve(import.meta.dir,"../../../../../../🏗️build/🔧️tools/🏗️bazel/🔌️backend/🟦️.ts"),"utf8"),branch=entry;
+ const order=["requireBazelPlatformV1(root","withBazelSetupStorageV1(root","bootstrap.prepareBazel(root","prepareBazelModulesV1(root","describeBazelReadinessV1({"].map(marker=>branch.indexOf(marker));
  expect(order.every(index=>index>0)).toBe(true);expect([...order].sort((a,b)=>a-b)).toEqual(order);
 });
 

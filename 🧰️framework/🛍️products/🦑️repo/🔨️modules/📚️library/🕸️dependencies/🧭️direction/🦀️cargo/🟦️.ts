@@ -1,7 +1,7 @@
 import { cargoRepositoryPackages, cargoWorkspaceForManifest } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 export type CargoDirectionDependency = Readonly<{ name: string; alias: string; owner: string | null; kind: "normal" | "dev" | "build"; optional: boolean; platform: string | null }>;
 export type CargoDirectionPackage = Readonly<{ name: string; owner: string; role: string | null; dependencies: readonly CargoDirectionDependency[] }>;

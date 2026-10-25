@@ -3,7 +3,7 @@ use crate::gis_terrain_mesh_child_handle;
 use crate::{GisTerrainDiff, GisTerrainSnapshot};
 use crate::schema::GisTerrainArtifact;
 use semio_framework_test_fixtures::fixture_text;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 #[test]
 fn terrain_document_contract_preserves_mesh_identity_through_conversion_and_codecs() {

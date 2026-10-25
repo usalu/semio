@@ -1,4 +1,4 @@
-//! ⌨️ Widget keyboard and commit: the inline key mirror, the scene command, the focused activation, the select and value keys and the pointer commit. See [`super`].
+//! 🐙️ Widget keyboard and commit: the inline key mirror, the scene command, the focused activation, the select and value keys and the pointer commit. See [`super`].
 
 use super::*;
 
@@ -152,7 +152,7 @@ impl EventRouter {
         query
     }
 
-    /// ⌨️ Writes the popup's highlighted row and repaints it — `paint`'s only input for the
+    /// 🔦️ Writes the popup's highlighted row and repaints it — `paint`'s only input for the
     /// keyboard-active row (`tree::WidgetState::highlighted`).
     fn set_select_highlight(&mut self, tree: &mut UiTree, id: NodeId, index: Option<usize>) {
         if let Some(node) = tree.node_mut(id) {

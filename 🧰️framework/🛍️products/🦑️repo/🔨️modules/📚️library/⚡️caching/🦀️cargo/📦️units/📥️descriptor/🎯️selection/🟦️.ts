@@ -13,8 +13,8 @@ import {checkScriptInvocation,scriptInvocationEnvironment,type ScriptInvocation}
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1,nativeImageRootV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {actualCargoCompilerPlanningPortV1,captureCargoCompilationGraphV1,cargoPlanningOutputBytesV1,type CargoCompilerPlanningPortV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
-import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceAdmissionPortV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import {actualCargoCompilerPlanningPortV1,captureCargoCompilationGraphV1,cargoPlanningOutputBytesV1,type CargoCompilerPlanningPortV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
+import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceAdmissionPortV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {requireRepositoryCompilerStoreV1,type RepositoryCompilerStoreV1} from "../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {repositoryStrictStorageV1} from "../../../../💾️storage/🔒️enforcement/🟦️.ts";

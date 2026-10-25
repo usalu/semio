@@ -9,11 +9,11 @@
 /** 📏️ Largest linear memory a plugin guest may grow to — `maximumBytes`. */
 export const GUEST_LINEAR_MEMORY_MAXIMUM_BYTES = 536_870_912;
 
-/** 📏️ Largest CONTIGUOUS block a routine per-command or per-turn guest path may request —
+/** 📦️ Largest CONTIGUOUS block a routine per-command or per-turn guest path may request —
  * `contiguousRequestCeilingBytes`, one wasm page and the guest allocator's growth granularity. */
 export const GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES = 65_536;
 
-/** 📏️ Largest ASSEMBLED answer the host may deliver into a guest for ONE outstanding request —
+/** 🚚️ Largest ASSEMBLED answer the host may deliver into a guest for ONE outstanding request —
  * `hostAnswerCeilingBytes`. Past this the guest answers with a typed fault instead of allocating. */
 export const GUEST_HOST_ANSWER_CEILING_BYTES = 8_388_608;
 

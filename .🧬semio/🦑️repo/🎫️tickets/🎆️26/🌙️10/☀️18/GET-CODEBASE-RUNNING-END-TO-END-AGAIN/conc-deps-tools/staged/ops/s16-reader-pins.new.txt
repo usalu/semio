@@ -1,2 +1,0 @@
-if(before.status!=="match")return complete();
- const result=await withConcurrentPinsV1(repositoryLeaseDirectoryV1(workspace),resolve(workspace),before.receipts.map(row=>row.generation),readerControl,readerControl.signal,()=>withJavascriptDependencyReaderScopeV1(readerControl,actualControl=>body(store,actualControl),stop));await store.recheck();

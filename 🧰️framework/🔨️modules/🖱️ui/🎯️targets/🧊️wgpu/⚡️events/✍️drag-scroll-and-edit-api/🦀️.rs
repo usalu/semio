@@ -37,7 +37,7 @@ impl EventRouter {
         self.drag = Some(DragSession { source: id, payload, ghost: None, pointer_x: x, pointer_y: y, drop_target: None });
     }
 
-    /// 🫳️ Live-updates the active `DragSession`'s pointer position and re-evaluates the drop target
+    /// 🔄️ Live-updates the active `DragSession`'s pointer position and re-evaluates the drop target
     /// under it.
     pub(super) fn update_drag(&mut self, tree: &UiTree, root: NodeId, x: f32, y: f32) {
         if let Some(drag) = self.drag.as_mut() {
@@ -207,7 +207,7 @@ impl EventRouter {
         edit_commit_action(node, &node.state.edit.as_ref()?.text).map(|fired| (id, fired))
     }
 
-    /// 🎬️ Wraps `changed_buffer_action` for a caller that already owns the command list.
+    /// 📋️ Wraps `changed_buffer_action` for a caller that already owns the command list.
     pub(super) fn push_buffer_change(&mut self, tree: &mut UiTree, out: &mut Vec<UiCommand>) {
         if let Some((id, fired)) = self.changed_buffer_action(tree) {
             let fired = if tree.node(id).is_some_and(|node| is_continuous_control(&node.spec.0)) { pressed(tree, &self.window_id, id, fired, false) } else { fired };

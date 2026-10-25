@@ -46,7 +46,7 @@ pub type Block3dSnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use crate::text::snapshot::*;
+use crate::text_snapshot::*;
 use semio_s_artifact_block_3d_model::*;
 use semio_s_artifact_block_3d_model::{Block3dVortexKindExtra, Block3dVortexTemplate, BLOCK_3D_SCHEMA};
 use semio_s_plugin_block::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
@@ -74,4 +74,4 @@ impl pack::snapshot::ArtifactDsl for Block3dSnapshot {
     }
 }
 }
-#[cfg(test)] pub use crate::text::snapshot::snapshot_codec::*;
+#[cfg(test)] pub use crate::text_snapshot::snapshot_codec::*;

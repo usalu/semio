@@ -32,18 +32,7 @@ impl semio_framework::ToolJobFactory for Wfc3dInferenceJobFactory {
         semio_framework::ToolExecutionContract::resumable(16 << 20, MAX_WFC3D_TILES + MAX_WFC3D_SLOTS + MAX_WFC3D_RULES + MAX_WFC3D_EDGES, 4_096, MAX_WFC3D_OUTPUT_BYTES, 7_500, 1, 1)
     }
 
-    fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Wfc3dInferenceJob::new(operation, payload).map_err(semio_framework::ToolJobFactoryError::new)
-    }
-
-    fn create_job_from_wire(&mut self, operation: semio_framework_job::Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        let payload_text = std::str::from_utf8(payload).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("wfc3d-inference-wire-decode:{error}")))?;
-        let mut request: Wfc3dInferenceRequest = crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value(payload_text).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("wfc3d-inference-wire-decode:{error}")))?;
-        if checkpoint.is_some() {
-            request.checkpoint = checkpoint;
-        }
-        Wfc3dInferenceJob::new(operation, request).map_err(semio_framework::ToolJobFactoryError::new)
-    }
+    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Wfc3dInferenceJob::new(operation, payload));
 }
 
 /// 💡️ Descriptor for the `s.wfc.wfc3d.solve` inference — five handcrafted facet leaves.

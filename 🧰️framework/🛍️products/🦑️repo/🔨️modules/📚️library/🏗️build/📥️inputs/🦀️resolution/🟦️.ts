@@ -10,7 +10,7 @@ export type CargoTomlV1 = {readonly [key: string]: unknown};
 export type CargoFileV1 = {readonly value: CargoTomlV1; readonly sha: string};
 /** 🧰️ The only I/O the resolution identity owns: read one repository-relative TOML file with the digest of its bytes (`null` when it does not exist) and digest a file without parsing it. */
 export type CargoReadHostV1 = {readonly read: (path: string) => Promise<CargoFileV1 | null>; readonly digest: (path: string) => Promise<string | null>};
-/** 🧾️ One file a derivation read and the digest of its bytes when it did (`null`: it did not exist). */
+/** 📖️ One file a derivation read and the digest of its bytes when it did (`null`: it did not exist). */
 export type CargoReadV1 = {readonly path: string; readonly sha: string | null};
 /** 🧬️ What one crate resolved to for one run kind (`b` build, `t` test root): the files it read, what it inherits, what its workspace fixes, the path dependencies with the identities they had and the folded identity. */
 export type CargoUnitV1 = {readonly id: string; readonly root: string | null; readonly reads: readonly CargoReadV1[]; readonly own: unknown; readonly fixed: unknown; readonly children: readonly {readonly path: string; readonly id: string}[]};
@@ -22,7 +22,7 @@ export type CargoLeafV1 = {readonly version: 1; readonly crate: string; readonly
 export type CargoReceiptStoreV1 = {readonly read: (crate: string) => CargoLeafV1 | undefined | Promise<CargoLeafV1 | undefined>; readonly write?: (leaf: CargoLeafV1) => void | Promise<void>};
 /** 🗣️ The refusal and finding texts in every language of the document. */
 export type CargoResolutionMessagesV1 = {readonly languages: readonly string[]; readonly texts: Readonly<Record<"workspaceKey" | "cycle" | "escape" | "workspace", Readonly<Record<string, string>>>>};
-/** 🧾️ The closed document: which toolchain files the identity digests semantically, which keys may never be whole-workspace and the reasons that exempt a target. */
+/** 📕️ The closed document: which toolchain files the identity digests semantically, which keys may never be whole-workspace and the reasons that exempt a target. */
 export type CargoResolutionPolicyV1 = {
   readonly version: 1;
   readonly toolchain: {readonly pin: string; readonly config: string; readonly configExcluded: readonly string[]};
@@ -73,14 +73,14 @@ export function readCargoResolutionPolicyV1(value: unknown): CargoResolutionPoli
   return value as CargoResolutionPolicyV1;
 }
 
-/** ✅️ Admits one persisted receipt against its closed schema. */
+/** 🍃️ Admits one persisted receipt against its closed schema. */
 export function readCargoLeafV1(value: unknown): CargoLeafV1 {
   const failures = validateJsonSchemaSubset(schema.definitions.Leaf as never, value as never);
   if (failures.length) throw new CargoResolutionErrorV1(`Cargo receipt refused: ${failures.slice(0, 3).join("; ")}`);
   return value as CargoLeafV1;
 }
 
-/** 🗣️ The text of one message in a language, with its `{name}` holes filled. */
+/** 💬️ The text of one message in a language, with its `{name}` holes filled. */
 export function cargoResolutionTextV1(policy: Pick<CargoResolutionPolicyV1, "messages">, key: keyof CargoResolutionMessagesV1["texts"], language: string, values: Readonly<Record<string, string>>): string {
   const texts = policy.messages.texts[key];
   return (texts[language] as string).replace(/\{(\w+)\}/gu, (_, name: string) => values[name] ?? "");
@@ -105,7 +105,7 @@ export async function locateWorkspaceV1(host: CargoReadHostV1, crate: string): P
   }
 }
 
-/** 🧱️ The Cargo workspace that owns a crate. */
+/** 📁️ The Cargo workspace that owns a crate. */
 export async function owningWorkspaceV1(host: CargoReadHostV1, crate: string): Promise<{readonly root: string; readonly manifest: CargoTomlV1} | null> {
   return (await locateWorkspaceV1(host, crate)).workspace;
 }
@@ -113,7 +113,7 @@ export async function owningWorkspaceV1(host: CargoReadHostV1, crate: string): P
 /** 📦️ One dependency declaration of a manifest: the table it sits in, its kind, its alias and the path it resolves to (relative to the repository) when it is a path dependency. */
 export type CargoDependencyV1 = {readonly table: string; readonly kind: (typeof DEPENDENCY_KINDS)[number]; readonly alias: string; readonly inherited: boolean; readonly path?: string};
 
-/** 📦️ Every table dependency of a crate in the order Cargo reads them; development dependencies only when the crate is the root of a test run. */
+/** ⛓️ Every table dependency of a crate in the order Cargo reads them; development dependencies only when the crate is the root of a test run. */
 export function cargoDependenciesV1(crate: string, manifest: CargoTomlV1, workspace: {readonly root: string; readonly manifest: CargoTomlV1} | null, tests: boolean): CargoDependencyV1[] {
   const rows: CargoDependencyV1[] = [], inherited = table(table(workspace?.manifest.workspace)?.dependencies) ?? {};
   const tables: [string, CargoTomlV1][] = [["", manifest], ...Object.entries(table(manifest.target) ?? {}).flatMap(([name, value]): [string, CargoTomlV1][] => (table(value) ? [[`target.${name}`, table(value)!]] : []))];
@@ -148,7 +148,7 @@ export function workspaceFixedV1(manifest: CargoTomlV1): Record<string, unknown>
   return {features: manifest["cargo-features"] ?? null, resolver: table(manifest.workspace)?.resolver ?? null, profile: manifest.profile ?? null, patch: manifest.patch ?? null, replace: manifest.replace ?? null};
 }
 
-/** 🧊️ The pinned toolchain without its comments and its ordering: the channel, profile, components and targets. */
+/** 📌️ The pinned toolchain without its comments and its ordering: the channel, profile, components and targets. */
 export function toolchainPinV1(pin: CargoTomlV1 | null): unknown {
   if (!pin) return "missing";
   const row = table(pin.toolchain) ?? {}, sorted = (value: unknown) => (Array.isArray(value) ? value.map(String).sort(bytes) : value);
@@ -182,7 +182,7 @@ export type CargoResolutionContextV1 = {
   toolchain?: Promise<{toolchain: string; config: string}>;
 };
 
-/** 🔑️ Opens a resolution run over a host and, optionally, a receipt store. */
+/** 🆕️ Opens a resolution run over a host and, optionally, a receipt store. */
 export function createCargoResolutionContextV1(host: CargoReadHostV1, policy: CargoResolutionPolicyV1, store?: CargoReceiptStoreV1): CargoResolutionContextV1 {
   const files = new Map<string, Promise<CargoFileV1 | null>>(), digests = new Map<string, Promise<string | null>>(), counts = {parsed: 0, digested: 0, reused: 0, derived: 0};
   const read = (path: string): Promise<CargoFileV1 | null> => {
@@ -221,7 +221,7 @@ const holds = async (context: CargoResolutionContextV1, reads: readonly CargoRea
 };
 const fold = (own: unknown, fixed: unknown, children: readonly string[]): string => sha(canonicalJsonV1({own, fixed, children: [...children].sort(bytes)}));
 
-/** 💾️ Writes the receipts this run created or changed through the store's writer, when it has one; a reader's changes stay in memory. */
+/** 📝️ Writes the receipts this run created or changed through the store's writer, when it has one; a reader's changes stay in memory. */
 export async function flushCargoReceiptsV1(context: CargoResolutionContextV1): Promise<number> {
   let written = 0;
   if (context.store?.write) for (const crate of [...context.dirty].sort(bytes)) { await context.store.write((await context.leaves.get(crate))!); written++; }
@@ -229,7 +229,7 @@ export async function flushCargoReceiptsV1(context: CargoResolutionContextV1): P
   return written;
 }
 
-/** 🧬️ The identity of one crate folded over its path-dependency closure: what each crate inherits from its own workspace, hashed with the identities of the crates it compiles with, so a change reaches exactly the crates that compile with the changed one. Development dependencies count only at the root of a test run; a path cycle is refused. A receipt whose recorded files still have their recorded digests answers without parsing anything: only the identities of the path dependencies are asked again, so the identity moves exactly with a dependency's. */
+/** 🪪️ The identity of one crate folded over its path-dependency closure: what each crate inherits from its own workspace, hashed with the identities of the crates it compiles with, so a change reaches exactly the crates that compile with the changed one. Development dependencies count only at the root of a test run; a path cycle is refused. A receipt whose recorded files still have their recorded digests answers without parsing anything: only the identities of the path dependencies are asked again, so the identity moves exactly with a dependency's. */
 export async function crateIdentityV1(context: CargoResolutionContextV1, crate: string, tests: boolean, stack: readonly string[] = []): Promise<string> {
   const flag = tests ? "t" : "b", key = `${flag}\0${crate}`;
   if (stack.includes(key)) throw new CargoResolutionErrorV1(`Cargo path dependency cycle at ${crate}`);
@@ -262,7 +262,7 @@ export async function crateIdentityV1(context: CargoResolutionContextV1, crate: 
   return run;
 }
 
-/** 🛠️ The toolchain and configuration digests of the repository, read once per run. */
+/** 🔧️ The toolchain and configuration digests of the repository, read once per run. */
 export function toolchainIdentityV1(context: CargoResolutionContextV1): Promise<{toolchain: string; config: string}> {
   return (context.toolchain ??= (async () => {
     const {pin, config, configExcluded} = context.policy.toolchain;
@@ -270,7 +270,7 @@ export function toolchainIdentityV1(context: CargoResolutionContextV1): Promise<
   })());
 }
 
-/** 🔒️ The locked slice of one crate: the digest of what the lock file records for the crate and everything it compiles with, reused while the lock file and the files the crate's identity read keep their digests; a missing lock file digests as such and a lock that refuses the crate throws. */
+/** 🍕️ The locked slice of one crate: the digest of what the lock file records for the crate and everything it compiles with, reused while the lock file and the files the crate's identity read keep their digests; a missing lock file digests as such and a lock that refuses the crate throws. */
 export async function cargoLockSliceV1(context: CargoResolutionContextV1, crate: string): Promise<string> {
   await crateIdentityV1(context, crate, true);
   const leaf = await leafOf(context, crate), unit = leaf!.t!;
@@ -294,7 +294,7 @@ export function composeCargoResolutionV1(parts: CargoResolutionPartsV1): string 
   return sha(canonicalJsonV1({version: 1, ...parts}));
 }
 
-/** 🧮️ The locked, workspace, toolchain and configuration parts of a crate; with `tolerant`, a crate whose lock refuses it keeps the refusal in its lock part instead of failing, because the action itself fails under `--locked`. Reads are strictly sequential: the live Source batch serializes descriptor operations. */
+/** 〽️ The locked, workspace, toolchain and configuration parts of a crate; with `tolerant`, a crate whose lock refuses it keeps the refusal in its lock part instead of failing, because the action itself fails under `--locked`. Reads are strictly sequential: the live Source batch serializes descriptor operations. */
 export async function cargoResolutionPartsV1(context: CargoResolutionContextV1, manifest: string, options: {readonly tolerant?: boolean} = {}): Promise<CargoResolutionPartsV1> {
   if (!manifest.endsWith("Cargo.toml")) throw new CargoResolutionErrorV1(`Cargo manifest path required: ${manifest}`);
   const crate = manifest === "Cargo.toml" ? "" : manifest.slice(0, -"/Cargo.toml".length), workspace = await crateIdentityV1(context, crate, true);
@@ -312,7 +312,7 @@ const expandBraces = (pattern: string): string[] => {
   return pattern.slice(open + 1, close).split(",").flatMap((choice) => expandBraces(pattern.slice(0, open) + choice + pattern.slice(close + 1)));
 };
 
-/** 🚫️ Whether one declared input is a whole-workspace Rust or schema key: a root manifest, lock or toolchain file named literally, or a pattern whose directory part is the whole workspace and whose tail names Cargo manifests, locks, Rust sources or schema trees. */
+/** 🗝️ Whether one declared input is a whole-workspace Rust or schema key: a root manifest, lock or toolchain file named literally, or a pattern whose directory part is the whole workspace and whose tail names Cargo manifests, locks, Rust sources or schema trees. */
 export function workspaceKeyViolationV1(policy: Pick<CargoResolutionPolicyV1, "workspaceKeys">, input: string): string | undefined {
   if (input.startsWith("!") || !input.startsWith("{workspaceRoot}/")) return undefined;
   const bare = normalizeKey(input);
@@ -321,7 +321,7 @@ export function workspaceKeyViolationV1(policy: Pick<CargoResolutionPolicyV1, "w
   return undefined;
 }
 
-/** 🚫️ Every whole-workspace Rust or schema key among the declared inputs of one target (`project:target`), unless a recorded reason exempts its command or the target itself. */
+/** ⌨️ Every whole-workspace Rust or schema key among the declared inputs of one target (`project:target`), unless a recorded reason exempts its command or the target itself. */
 export function workspaceKeyViolationsV1(policy: CargoResolutionPolicyV1, inputs: readonly unknown[], command?: string, id?: string): string[] {
   if (command !== undefined && policy.workspaceKeys.exempt.some((row) => command.includes(row.command))) return [];
   if (id !== undefined && policy.workspaceKeys.exemptTargets.some((row) => row.targets.includes(id))) return [];

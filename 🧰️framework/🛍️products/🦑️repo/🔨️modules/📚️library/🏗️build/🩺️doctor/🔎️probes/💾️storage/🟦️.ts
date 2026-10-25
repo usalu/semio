@@ -3,7 +3,7 @@ import {dirname,join} from "node:path";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import type {PartitionFactsV1} from "../../🟦️.ts";
 import {readJsonFileV1,type DoctorPortsV1} from "../../🔌️ports/🟦️.ts";
-import type {DoctorProbeV1} from "../🟦️.ts";
+import type {DoctorProbeV1} from "../📋️contract/🟦️.ts";
 
 const BACKING="fixed.dmg",MOUNT="m",PUBLICATION=".publication";
 const entry=(path:string)=>{try{return lstatSync(path);}catch{return undefined;}};

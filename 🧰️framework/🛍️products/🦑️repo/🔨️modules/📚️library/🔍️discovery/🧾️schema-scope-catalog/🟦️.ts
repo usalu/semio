@@ -9,7 +9,7 @@ import { type TaxonomyPathMatcher, createTaxonomyPathMatcher } from "../🎯️t
 import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, loadTaxonomy } from "../🔐️taxonomy-authority/🟦️.ts";
 import { resolveSchemaFacetKind } from "../⚖️fixed-contract-resolution/🟦️.ts";
 
-/** 🧾️ One machine-readable finding of the schema scope tooling; `code` is stable, `path` repository-relative. */
+/** 🩺️ One machine-readable finding of the schema scope tooling; `code` is stable, `path` repository-relative. */
 export interface SchemaScopeDiagnostic {
   readonly code: string;
   readonly path: string;
@@ -37,12 +37,12 @@ export interface SchemaScopeDocument {
   readonly facetFilename: string | null;
   readonly dialect: string | null;
   readonly exports: readonly string[];
-  /** 🗂️ Export id to the format ids its `x-semio-formats` annotation restricts it to; absent means every provided format. */
+  /** 🔑️ Export id to the format ids its `x-semio-formats` annotation restricts it to; absent means every provided format. */
   readonly exportFormats: Readonly<Record<string, readonly string[]>>;
   readonly references: readonly SchemaScopeReference[];
 }
 
-/** 🧬️ One `🧬️schema` module on disk together with the owner level that admits it. */
+/** 🎚️ One `🧬️schema` module on disk together with the owner level that admits it. */
 export interface SchemaScopeModule {
   readonly modulePath: string;
   readonly ownerPath: string;
@@ -54,11 +54,11 @@ export interface SchemaScopeModule {
   readonly hashes: Readonly<Record<string, string>>;
 }
 
-/** 🏷️ Where one export is declared: the module-relative file that carries it and the facet that file is. */
+/** 📚️ Where one export is declared: the module-relative file that carries it and the facet that file is. */
 export interface SchemaCatalogExport {
   /** 🗂️ Module-relative path including every nested facet directory (`🔺️diff/📝️text/🔣️.json`); join with the scope `path`. */
   readonly file: string;
-  /** 🏷️ Facet id derived from the declaring document's `$id` (`schema`, `snapshot`, `snapshot/text`, …). */
+  /** 💠️ Facet id derived from the declaring document's `$id` (`schema`, `snapshot`, `snapshot/text`, …). */
   readonly facet: string;
 }
 
@@ -67,14 +67,14 @@ export interface SchemaCatalogScope {
   readonly path: string;
   readonly level: string;
   readonly facetKind: string;
-  /** 🗂️ Format id to module-relative leaf filename; join with `path` for the repository-relative source. */
+  /** 🍃️ Format id to module-relative leaf filename; join with `path` for the repository-relative source. */
   readonly formats: Readonly<Record<string, string>>;
   readonly exports: Readonly<Record<string, SchemaCatalogExport>>;
   readonly dependsOn: readonly string[];
   readonly hashes: Readonly<Record<string, string>>;
 }
 
-/** 📇️ Provenance header plus the deterministic scope table. */
+/** ➕️ Provenance header plus the deterministic scope table. */
 export interface SchemaCatalog {
   readonly contractId: string;
   readonly catalogVersion: 1;
@@ -84,7 +84,7 @@ export interface SchemaCatalog {
   readonly scopes: Readonly<Record<string, SchemaCatalogScope>>;
 }
 
-/** 🧾️ Everything one repository walk produced: modules, catalog and every finding. */
+/** 📋️ Everything one repository walk produced: modules, catalog and every finding. */
 export interface SchemaScopeInventory {
   readonly modules: readonly SchemaScopeModule[];
   readonly catalog: SchemaCatalog;
@@ -171,7 +171,7 @@ export function schemaScopeModuleOwnerPath(modulePath: string, taxonomy: Taxonom
   return schemaScopeOwnerLevel(modulePath, taxonomy, matcher) ? modulePath : parent;
 }
 
-/** 🧩️ Splits one document `$id` into its scope path segments and its facet filename, or `null` when it is not addressable. */
+/** 🔩️ Splits one document `$id` into its scope path segments and its facet filename, or `null` when it is not addressable. */
 export function schemaDocumentIdParts(documentId: string, taxonomy: Taxonomy = loadTaxonomy()): { readonly scopePath: readonly string[]; readonly facet: string } | null {
   const resolution = taxonomy.schemaExportResolution;
   if (!documentId.startsWith(resolution.idBase)) return null;
@@ -187,7 +187,7 @@ export function schemaScopeIdFromDocumentId(documentId: string, taxonomy: Taxono
   return parts ? parts.scopePath.join(taxonomy.schemaExportResolution.scopeIdSeparator) : null;
 }
 
-/** 🔗️ Parses one `schema://<scope id>/<ExportId>` binding into its resolution key halves. */
+/** 📖️ Parses one `schema://<scope id>/<ExportId>` binding into its resolution key halves. */
 export function parseSchemaExportUri(uri: string, taxonomy: Taxonomy = loadTaxonomy()): { readonly scopeId: string; readonly exportId: string } | null {
   const match = new RegExp(taxonomy.schemaExportResolution.uriPattern, "u").exec(uri);
   const groups = match?.groups;
@@ -204,7 +204,7 @@ const GIT_SUBMODULE_PATHS = new Map<string, readonly string[]>();
 const GIT_SUBMODULE_PATH_DECLARATION = /^[\t ]*path[\t ]*=[\t ]*(.+?)[\t ]*$/gmu;
 
 /**
- * 🧩️ The repository-relative paths `.gitmodules` declares, memoised per repository root.
+ * 🐙️ The repository-relative paths `.gitmodules` declares, memoised per repository root.
  *
  * A submodule is a foreign repository tracked as one gitlink: its files are not this repository's sources
  * and every law that walks the tree would double-count them. Read from the declaration file, never from a
@@ -254,7 +254,7 @@ function walkRepositoryTree(repoRoot: string, taxonomy: Taxonomy): SchemaWalkRes
   return { directories, files };
 }
 
-/** 🔗️ Inspects the original taxonomy walk with explicit unavailable evidence, progress and cancellation. */
+/** 🛑️ Inspects the original taxonomy walk with explicit unavailable evidence, progress and cancellation. */
 export async function inventorySchemaValidationReads(repoRoot: string, taxonomy: Taxonomy = loadCatalogTaxonomy(), observer: SchemaReadObserver = {}): Promise<SchemaValidationReadIndex> {
   const root = resolve(repoRoot), files: string[] = [], unavailablePaths: string[] = [], opaque = [...Object.values(taxonomy.pathExclusions).map(exclusion => exclusion.path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/+$/u, "")), ...gitSubmodulePaths(root)].map(prefix => prefix.normalize("NFC"));
   let completed = 0;
@@ -304,7 +304,7 @@ function jsonRefOccurrences(value: unknown, pointer: string, out: { pointer: str
   }
 }
 
-/** 🚫️ Every pointer at which the document declares `enum: []`, a keyword no instance can ever satisfy. */
+/** 🕳️ Every pointer at which the document declares `enum: []`, a keyword no instance can ever satisfy. */
 function jsonEmptyEnumPointers(value: unknown, pointer: string, out: string[]): void {
   if (Array.isArray(value)) {
     value.forEach((item, index) => jsonEmptyEnumPointers(item, `${pointer}/${index}`, out));
@@ -337,7 +337,7 @@ function jsonPointerResolves(root: unknown, pointer: string): boolean {
   return true;
 }
 
-/** 🔎️ Whether one non-JSON format leaf declares the named export, by the declaration keywords of that language. */
+/** 🌿️ Whether one non-JSON format leaf declares the named export, by the declaration keywords of that language. */
 function schemaFormatDeclaresExport(formatId: string, source: string, exportId: string): boolean {
   const name = exportId.replaceAll(/[\\^$.*+?()[\]{}|]/gu, "\\$&");
   const keywords: Readonly<Record<string, readonly string[]>> = {
@@ -377,7 +377,7 @@ function schemaLiteralTrialEnvelope(value: unknown): boolean {
   return Object.entries(envelope).some(([key, rows]) => Array.isArray(rows) && rows.length > 0 && (rows.every(row => row && typeof row === "object" && !Array.isArray(row) && !Object.hasOwn(row, "actual") && ["input", "inputs", "operation", "setup", "grant"].some(field => Object.hasOwn(row, field)) && Object.keys(row).some(field => /^(?:expect$|expected(?:$|[A-Z]))/u.test(field))) || /(?:^refusals$|Refusals$)/u.test(key) && rows.length > 1 && authorities.some(authority => rows.every(row => row && typeof row === "object" && !Array.isArray(row) && Object.hasOwn(axes, row.axis) && Number.isInteger(row.value) && row.value >= 0 && row.value <= authority[axes[row.axis]!]! && typeof row.kind === "string"))));
 }
 
-/** 🧫️ Recognizes test corpus contracts from their examples and expectations independently of titles. */
+/** 📜️ Recognizes test corpus contracts from their examples and expectations independently of titles. */
 function schemaTestCorpusDefinition(exportId: string, subject: unknown, document: Record<string, unknown>): boolean {
   const producedRecord = /(?:Report|Result|Progress|Outcome|Diagnostic|Coverage)(?:V\d+)?$/u.test(exportId);
   const namedCorpus = /(?:Fixture|Corpus|Cases|(?:^|[A-Z])Vectors?(?:File)?$)/iu.test(exportId);
@@ -832,7 +832,7 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
   return { modules, catalog, diagnostics: diagnostics.slice().sort((left, right) => byteSort(left.path, right.path) || byteSort(left.code, right.code) || byteSort(left.detail, right.detail)), placement };
 }
 
-/** 📇️ Deterministic catalog bytes; the generated file is exactly this rendering. */
+/** 🖌️ Deterministic catalog bytes; the generated file is exactly this rendering. */
 export function renderSchemaCatalog(catalog: SchemaCatalog): string {
   return `${JSON.stringify(catalog, null, 2)}\n`;
 }
@@ -866,7 +866,7 @@ export interface SchemaRustEntry {
   readonly format: string;
 }
 
-/** 🦀️ The dump `schema verify` consumes; `contractId` is `schemaExportResolution.rustEntriesContractId`. */
+/** ✅️ The dump `schema verify` consumes; `contractId` is `schemaExportResolution.rustEntriesContractId`. */
 export interface SchemaRustEntryDump {
   readonly contractId: string;
   readonly generator: string;
@@ -874,7 +874,7 @@ export interface SchemaRustEntryDump {
 }
 
 /**
- * 🦀️ Cross-checks the generated catalog against the Rust registry dump on the `(scope, export, format)` key.
+ * ✖️ Cross-checks the generated catalog against the Rust registry dump on the `(scope, export, format)` key.
  * Only scopes the dump declares are compared in both directions; catalogued scopes the dump never mentions are
  * reported as `rust-scope-unregistered` when `complete` is set, so the gate is usable while registration lands.
  */

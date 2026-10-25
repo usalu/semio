@@ -96,7 +96,7 @@ export default defineTestAdapter({
     },
     sunburst: {
       oracle: oracle("sunburst"),
-      /** 🎯️ The same partition over a full turn: angles and radii of the twin. */
+      /** 💯️ The same partition over a full turn: angles and radii of the twin. */
       subject: () => {
         const nodes = preorder(banded(DEEP, [2 * Math.PI, 24]));
         return {
@@ -112,7 +112,7 @@ export default defineTestAdapter({
     },
     unbalanced: {
       oracle: oracle("unbalanced"),
-      /** 🎯️ The row count of the unbalanced fixture comes from the root height. */
+      /** 🏠️ The row count of the unbalanced fixture comes from the root height. */
       subject: () => ({
         projection: {
           id: preorder(root(UNBALANCED)).map((each) => each.id!),

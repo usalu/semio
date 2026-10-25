@@ -33,7 +33,6 @@ fn indexed_edit_plan_matches_portable_coordinates_and_original_custody(){
   }
   assert_eq!(pointers,(removed.as_ptr(),modified.as_ptr(),added.as_ptr()));let(close_born,released)=close(&mut plan);assert_eq!(born+close_born,released);assert_eq!(crate::observe_retirement_allocations(||drop(plan)).1,(0,0));
  }
- eprintln!("[DEBUG] fourteen strict indexed coordinate laws deny source reads and physical changes under absent grants; admitted streams preserve original payload ordinals; every paid directory birth is returned through original close receipts");
 }
 /// ✂️ Large index directories remain resumable and close original storage at every selected cancellation frontier.
 #[test]
@@ -45,5 +44,4 @@ fn indexed_edit_plan_wide_order_and_cancellation_remain_bounded(){
   if cut.is_none(){assert!(plan.ready());let rows=plan.entries(IndexedEditKind::Added).unwrap();for(index,row)in rows.iter().enumerate(){assert_eq!((row.index,row.ordinal),(index,count-1-index));}assert_eq!(plan.output_len().unwrap(),count);}
   let(close_born,released)=close(&mut plan);assert_eq!(born+close_born,released);assert_eq!(added.as_ptr(),pointer);assert_eq!(crate::observe_retirement_allocations(||drop(plan)).1,(0,0));
  }
- eprintln!("[DEBUG] actual 2049-entry indexed owner sorts through shared bounded heap actions and returns exact original backing at five cancellation frontiers plus completion");
 }

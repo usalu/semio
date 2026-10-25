@@ -55,7 +55,7 @@ impl SceneDoc for Paint2dScene {
     }
 }
 
-/// 🚚️ The paint-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the raster twin
+/// 🖌️ The paint-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the raster twin
 /// of [`Canvas2dSceneLane`]/[`Board2dSceneLane`], pinned against
 /// `🧪️tests/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json` on both sides.
 ///
@@ -68,19 +68,19 @@ pub enum Paint2dSceneLane {
     PixelSelection,
 }
 
-/// 🚚️ Reserved carrier-key namespace of the paint-2d lanes.
+/// 🔑️ Reserved carrier-key namespace of the paint-2d lanes.
 pub const PAINT2D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.paint2d.";
 
-/// 🚚️ Wire name of each [`Paint2dSceneLane`], in `Paint2dSceneLane::ALL` order.
+/// 🔤️ Wire name of each [`Paint2dSceneLane`], in `Paint2dSceneLane::ALL` order.
 pub const PAINT2D_SCENE_LANE_NAMES: [&str; 3] = ["documentSync", "assets", "pixelSelection"];
 
-/// 🚚️ [`Paint2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
+/// 📋️ [`Paint2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
 pub const PAINT2D_SCENE_LANE_FIELDS: [&str; 3] = ["documentSyncJson", "assetsJson", "pixelSelectionJson"];
 
-/// 🚚️ Reserved carrier key of each lane.
+/// 🗝️ Reserved carrier key of each lane.
 pub const PAINT2D_SCENE_LANE_BODY_KEYS: [&str; 3] = ["framework.scene.paint2d.documentSync", "framework.scene.paint2d.assets", "framework.scene.paint2d.pixelSelection"];
 
-/// 🚚️ Whether each lane's [`Paint2dScene`] field is an `Option<String>`.
+/// ❓️ Whether each lane's [`Paint2dScene`] field is an `Option<String>`.
 pub const PAINT2D_SCENE_LANE_OPTIONAL: [bool; 3] = [false, false, true];
 
 impl Paint2dSceneLane {
@@ -91,7 +91,7 @@ impl Paint2dSceneLane {
         PAINT2D_SCENE_LANE_NAMES[self as usize]
     }
 
-    /// 🏷️ See [`PAINT2D_SCENE_LANE_FIELDS`].
+    /// 🔖️ See [`PAINT2D_SCENE_LANE_FIELDS`].
     pub fn field(self) -> &'static str {
         PAINT2D_SCENE_LANE_FIELDS[self as usize]
     }
@@ -101,7 +101,7 @@ impl Paint2dSceneLane {
         PAINT2D_SCENE_LANE_BODY_KEYS[self as usize]
     }
 
-    /// 🏷️ See [`PAINT2D_SCENE_LANE_OPTIONAL`].
+    /// ❔️ See [`PAINT2D_SCENE_LANE_OPTIONAL`].
     pub fn optional(self) -> bool {
         PAINT2D_SCENE_LANE_OPTIONAL[self as usize]
     }
@@ -111,7 +111,7 @@ impl Paint2dSceneLane {
         Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
     }
 
-    /// 🔎️ Resolves a lane wire name back to its lane.
+    /// ↩️ Resolves a lane wire name back to its lane.
     pub fn from_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|lane| lane.name() == name)
     }

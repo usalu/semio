@@ -4,7 +4,7 @@ use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use crate::*;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 use semio_s_artifact_block_2d_model::Block2dPresentation;
 use semio_s_artifact_block_2d_model::Block2dHandleKind;
 use semio_s_artifact_block_2d_model::Block2dHandleTemplate;
@@ -39,7 +39,7 @@ fn assert_words(s: &Block2dSnapshot, w: u64) {
 }
 #[test]
 fn sqlite_snapshot_block2d_actual_bare_capability_is_present() {
-    assert!(<Block2dSnapshot as ArtifactPack>::sqlite_snapshot_codec().is_some());
+    assert!(<Block2dSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
 }
 #[test]
 fn sqlite_snapshot_block2d_actual_declared_codec_has_owned_sqlite_capability() {

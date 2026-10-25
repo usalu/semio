@@ -19,7 +19,7 @@ impl std::fmt::Debug for ShardIdentityIssueRefused{fn fmt(&self,f:&mut std::fmt:
 
 /// 🧾️ Consuming custody survives actor yields and failures without creating another authority.
 pub struct OriginalShardIdentity{birth:RetainedCloneProgress,policy:ShardIdentityPolicy,receipt:Option<NativeForwardedEncodeReceipt>,pub recipient:Pin<Box<NativeEncodeRetirementRecipient>>,pub observer:Box<Observer<'static>>,allocate:Box<NativeEncodeAllocationPort<'static>>}
-struct OriginalShardIdentityLoan<'a>{original:&'a mut Option<NativeForwardedEncodeReceipt>,identity:Option<EntityIdentityAuthority<'a>>}
+pub struct OriginalShardIdentityLoan<'a>{original:&'a mut Option<NativeForwardedEncodeReceipt>,identity:Option<EntityIdentityAuthority<'a>>}
 /// 📬️ The actual guest outcome and its original receiving decision remain available together.
 pub struct OriginalShardActorAdmission{pub call:Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>,pub receiving:Result<semio_framework_actor::RetainedTurnReceipt,ValueError>}
 impl<'a> std::ops::Deref for OriginalShardIdentityLoan<'a>{type Target=EntityIdentityAuthority<'a>;fn deref(&self)->&Self::Target{self.identity.as_ref().expect("original shard loan remains borrowed")}}

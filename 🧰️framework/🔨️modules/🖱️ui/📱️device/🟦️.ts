@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** 📱️ The ONE viewport-breakpoint policy of the shell, written once and read by every target.
+/** 🔏️ The ONE viewport-breakpoint policy of the shell, written once and read by every target.
  *
  * `AGENTS.md` orders the devices desktop → mobile → tablet, and the settings surface has always exposed
  * all three (`ElementsSurfaceDevice`); until this module the AUTOMATIC detection was binary, so `tablet`
@@ -16,30 +16,30 @@
 // #endregion 🧲️Header
 
 // #region 📱️Device
-/** 📱️ Document-level device chrome a shell paints for — the automatic value comes from
+/** 🖥️ Document-level device chrome a shell paints for — the automatic value comes from
  * {@link elementsSurfaceDeviceForWidth}, and a user may still pin one in settings. */
 export type ElementsSurfaceDevice = "desktop" | "tablet" | "mobile";
 
-/** 📱️ Widest viewport that is still a PHONE. One flat panel stack, no dock anchors, no tab drag.
+/** 📞️ Widest viewport that is still a PHONE. One flat panel stack, no dock anchors, no tab drag.
  * Byte-parity with `dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX` in
  * `📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs`. */
 export const UI_MOBILE_MAX_WIDTH_PX = 767;
 
-/** 📱️ Widest viewport that is still a TABLET: wide enough for the dock anchors a phone cannot carry,
+/** 📲️ Widest viewport that is still a TABLET: wide enough for the dock anchors a phone cannot carry,
  * too narrow for the desktop's simultaneous multi-panel layout. Byte-parity with
  * `dock::MODE_DOCK_TABLET_MAX_WIDTH_PX`. */
 export const UI_TABLET_MAX_WIDTH_PX = 1023;
 
-/** 📱️ Shared viewport breakpoint below which shells switch to the automatic mobile device. */
+/** ❓️ Shared viewport breakpoint below which shells switch to the automatic mobile device. */
 export const UI_MOBILE_MEDIA_QUERY = `(max-width: ${UI_MOBILE_MAX_WIDTH_PX}px)`;
 
-/** 📱️ Shared viewport band that is a tablet: above the phone breakpoint, at or below the tablet one.
+/** ❔️ Shared viewport band that is a tablet: above the phone breakpoint, at or below the tablet one.
  * Deliberately a BAND, not `(max-width: …)` — a phone also matches `max-width: 1023px`, and a query
  * that both devices match cannot decide between them. */
 export const UI_TABLET_MEDIA_QUERY = `(min-width: ${UI_MOBILE_MAX_WIDTH_PX + 1}px) and (max-width: ${UI_TABLET_MAX_WIDTH_PX}px)`;
 
 /**
- * 📱️ The device a viewport width IS. The ONE place the two thresholds are compared.
+ * 📏️ The device a viewport width IS. The ONE place the two thresholds are compared.
  *
  * Both bounds are inclusive maxima, matching the wgpu dock's `screen_w <= MAX_WIDTH_PX` and the CSS
  * `(max-width: Npx)` media feature — 767 is a phone, 768 is a tablet, 1023 is a tablet, 1024 is a
@@ -53,7 +53,7 @@ export const elementsSurfaceDeviceForWidth = (widthPx: number): ElementsSurfaceD
   return "desktop";
 };
 
-/** 📱️ The device two already-evaluated media-query matches imply — the React target's path, where the
+/** 🔎️ The device two already-evaluated media-query matches imply — the React target's path, where the
  * width itself is never read. `mobile` wins over `tablet` so a stale or overlapping pair of matches can
  * never resolve to the wider layout on a phone. */
 export const elementsSurfaceDeviceForMatches = (matches: { readonly mobile: boolean; readonly tablet: boolean }): ElementsSurfaceDevice =>
@@ -63,15 +63,15 @@ export const elementsSurfaceDeviceForMatches = (matches: { readonly mobile: bool
  * a tablet is wide enough to carry the anchors, which is the whole reason it is its own breakpoint. */
 export const elementsSurfaceDeviceIsMobile = (device: ElementsSurfaceDevice): boolean => device === "mobile";
 
-/** 📱️ Whether a device may drag tabs between dock anchors — false on a phone, where there is nothing to
+/** 🖱️ Whether a device may drag tabs between dock anchors — false on a phone, where there is nothing to
  * drop into (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `startTabDrag: mobile ? noopDrag : startTabDrag`). */
 export const elementsSurfaceDeviceSupportsTabDrag = (device: ElementsSurfaceDevice): boolean => device !== "mobile";
 
-/** 📱️ A layout a person can pin wherever the window is not a phone. */
+/** 📌️ A layout a person can pin wherever the window is not a phone. */
 export type ElementsSurfaceLayout = "desktop" | "tablet";
 
 /**
- * 📱️ The device painted once desktop and tablet are a choice.
+ * 🧱️ The device painted once desktop and tablet are a choice.
  *
  * A phone stays a phone: the choice is not offered there. On a wider window an explicit choice wins,
  * so a desktop-width window can be pinned to tablet (touch targets) and a tablet-width window can be
@@ -90,7 +90,7 @@ export const elementsSurfaceDeviceForLayout = (measured: ElementsSurfaceDevice, 
 export const UI_AVAILABLE_HEIGHT = "var(--ui-available-height, 100dvh)";
 
 /**
- * 📐 Pixels of the viewport the user can actually see.
+ * 👀️ Pixels of the viewport the user can actually see.
  *
  * `innerHeight` / `100vh` is the screen. `visualHeight` is `visualViewport.height` — the available
  * height under the browser toolbar. A missing or non-positive visual reading falls back to the screen

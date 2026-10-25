@@ -20,11 +20,11 @@ where
     M: protocol::Mutation<P> + protocol::OpBinary,
 {
     admit_forms_store_mutation::<P, M>(mutation)?;
-    let inverse = protocol::Mutation::inverse(mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
+    let inverse = protocol::ColdMutation::inverse(mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     if inverse.iter().any(|step| admit_forms_store_mutation::<P, M>(step).is_err()) {
         return Err("forms-store-inverse-mutation-envelope".into());
     }
-    let diff = protocol::Mutation::diff(mutation, base).into_parts().0;
+    let diff = protocol::ColdMutation::diff(mutation, base).into_parts().0;
     let post = protocol::apply_diff_cold(&diff, base).map_err(|_| "forms-store-diff-apply-failed".to_string())?;
     Ok((post, inverse))
 }

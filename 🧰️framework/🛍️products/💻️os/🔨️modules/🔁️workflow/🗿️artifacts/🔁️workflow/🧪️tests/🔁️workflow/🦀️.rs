@@ -1,5 +1,5 @@
 //! 🧪️ Workflow artifact replay, connection, and serialization laws.
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use semio_framework_dsl_record::DslField as _;
 fn assert_workflow_manual_binding<T:semio_framework_dsl_record::DslField+PartialEq+std::fmt::Debug>(value:&T,maximum:usize,tiny:usize){

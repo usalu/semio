@@ -120,7 +120,6 @@ fn a_plain_derived_vector_retires_in_pages_and_matches_the_leaf_macro_receipt_fo
             assert!(derived_receipt.turns - previous_turns <= extra_pages + 2, "turn growth is linear in pages, not in elements");
         }
         previous = Some((count, derived_receipt.turns));
-        eprintln!("[DEBUG] plain derived Vec count={count} pages={pages} turns={} copied={}", derived_receipt.turns, derived_receipt.copied);
     }
 }
 

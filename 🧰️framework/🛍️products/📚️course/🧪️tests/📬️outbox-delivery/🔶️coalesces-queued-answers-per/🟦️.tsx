@@ -1,7 +1,7 @@
 /** 🔶️ The coalesces queued answers per tests of the 📬️ answer outbox suite. */
 import { expect, it } from "vitest";
 import { ProctorClient, ProctorUnavailable, memoryStorageOrigin, type CommandVerdict, type OutboxActivity } from "@semio-tech/course-react";
-import { OTHER_RUN, RUN, answer, deduplicatingProctor, gate, outboxOver, tick } from "../🟢️shared/🟦️.tsx";
+import { OTHER_RUN, RUN, answer, deduplicatingProctor, gate, outboxOver, tick } from "../🟢️harness/🟦️.tsx";
 
 /** 🔷 Registers the coalesces queued answers per tests of the 📬️ answer outbox suite. */
 export function registerCoalescesQueuedAnswersPerTests(): void {

@@ -3,23 +3,23 @@ import { ephemeralMap } from "@semio-tech/framework-transient";
 import { currentStylingAppearanceName, stylingAppearanceRootElement } from "../🎛️active-theme/🟦️.ts";
 
 //#region 🔑️TokenRefs
-/** 🔑️ Builds a primitive palette CSS variable reference (`var(--color-<key>)`). */
+/** 🧱️ Builds a primitive palette CSS variable reference (`var(--color-<key>)`). */
 export function tokenVar(key: StylingTokenKey | string): string {
   return `var(--color-${key.replaceAll("_", "-")})`;
 }
 
-/** 🔑️ Builds a semantic UI CSS variable reference (`var(--<name>)`). */
+/** 📘️ Builds a semantic UI CSS variable reference (`var(--<name>)`). */
 export function semanticVar(name: string): string {
   const trimmed = name.startsWith("--") ? name.slice(2) : name;
   return `var(--${trimmed})`;
 }
 
-/** 🔑️ Builds a Tailwind `@theme inline` color alias (`var(--color-<name>)`). */
+/** 🌈️ Builds a Tailwind `@theme inline` color alias (`var(--color-<name>)`). */
 export function themeColorVar(name: string): string {
   return `var(--color-${name.replaceAll("_", "-")})`;
 }
 
-/** 🧭️ Permanent X/Y/Z paints for gumball and view/projection gizmos — primary / secondary / tertiary, never active/hover chrome. */
+/** 📐️ Permanent X/Y/Z paints for gumball and view/projection gizmos — primary / secondary / tertiary, never active/hover chrome. */
 export const SPATIAL_AXIS_COLOR_REFS = {
   x: tokenVar("primary"),
   y: tokenVar("secondary"),
@@ -215,7 +215,7 @@ function resolvePaintExpressionHex(trimmed: string, fallback: string, onResolved
   return fallback;
 }
 
-/** 🎨️ Resolves a CSS color expression or hex literal to `#rrggbb`, using palette fallback in headless mode. */
+/** 🔎️ Resolves a CSS color expression or hex literal to `#rrggbb`, using palette fallback in headless mode. */
 export function resolveColorHex(ref: string, fallbackKey: StylingTokenKey | string = "gray"): string {
   const cacheKey = `${currentStylingAppearanceName()}|${ref}|${fallbackKey}`;
   const cached = _resolveCache.get(cacheKey);
@@ -228,13 +228,13 @@ export function resolveColorHex(ref: string, fallbackKey: StylingTokenKey | stri
   });
 }
 
-/** 🎨️ Resolves a semantic CSS custom property (e.g. `--foreground`) to `#rrggbb`. */
+/** 🏷️ Resolves a semantic CSS custom property (e.g. `--foreground`) to `#rrggbb`. */
 export function resolveSemanticColorHex(cssVar: string, fallbackKey: StylingTokenKey | string = "gray"): string {
   const name = cssVar.startsWith("--") ? cssVar : `--${cssVar}`;
   return resolveBackgroundColorHex(`var(${name})`, fallbackKey);
 }
 
-/** 🎨️ Resolves a CSS background-color expression to `#rrggbb`. */
+/** 🖌️ Resolves a CSS background-color expression to `#rrggbb`. */
 export function resolveBackgroundColorHex(ref: string, fallbackKey: StylingTokenKey | string = "gray"): string {
   const cacheKey = `bg|${currentStylingAppearanceName()}|${ref}|${fallbackKey}`;
   const cached = _resolveCache.get(cacheKey);
@@ -247,20 +247,20 @@ export function resolveBackgroundColorHex(ref: string, fallbackKey: StylingToken
   });
 }
 
-/** 🎨️ Resolves a CSS color expression to RGBA8888 for canvas WASM theme payloads. */
+/** 📦️ Resolves a CSS color expression to RGBA8888 for canvas WASM theme payloads. */
 export function resolveColorRgba(ref: string, fallbackKey: StylingTokenKey | string = "gray", alpha = 255): [number, number, number, number] {
   const hex = normalizeHex(resolveColorHex(ref, fallbackKey));
   const a = hex.length === 9 ? Number.parseInt(hex.slice(7, 9), 16) : alpha;
   return [hexChannel(hex, 1), hexChannel(hex, 3), hexChannel(hex, 5), a];
 }
 
-/** 🎨️ Converts `#rrggbb` to a Three.js-friendly hex number (`0xrrggbb`). */
+/** ♻️ Converts `#rrggbb` to a Three.js-friendly hex number (`0xrrggbb`). */
 export function hexToThreeColor(hex: string): number {
   const norm = normalizeHex(hex);
   return Number.parseInt(norm.slice(1, 7), 16);
 }
 
-/** 🎨️ Resolves a CSS color expression to a Three.js-friendly hex number. */
+/** 🧊️ Resolves a CSS color expression to a Three.js-friendly hex number. */
 export function resolveThreeColor(ref: string, fallbackKey: StylingTokenKey | string = "gray"): number {
   return hexToThreeColor(resolveColorHex(ref, fallbackKey));
 }

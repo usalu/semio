@@ -64,7 +64,7 @@ impl NamedEditPlan{
  pub fn modified_index(&self,ordinal:usize)->Result<usize,ValueError>{if !self.ready(){return Err(invalid());}self.modified.as_ref().and_then(|values|values.get(ordinal)).copied().ok_or_else(invalid)}
  /// 📐️ Quotes the original authored ordinal and fixed coordinate directory observation.
  pub fn modified_index_demand(&self,ordinal:usize)->Result<RetirementDemand,ValueError>{if !self.ready()||ordinal>=self.shape.modified||self.modified.as_ref().is_none_or(|rows|ordinal>=rows.len()){return Err(invalid());}Ok(RetirementDemand{copy_bytes:size_of::<Vec<usize>>()+size_of::<Option<Vec<usize>>>()+size_of::<usize>()*3+size_of::<u8>()*2,depth:1,..Default::default()})}
- /// 👁️ Reads an admitted original coordinate only under its actual observation currencies.
+ /// 📇️ Reads an admitted original coordinate only under its actual observation currencies.
  pub fn observe_modified_index(&self,ordinal:usize,grant:RetainedCloneGrant)->Result<Option<(usize,RetainedCloneProgress)>,ValueError>{let demand=self.modified_index_demand(ordinal)?;if !retained_clone_grant_admits(grant,demand){return Ok(None);}Ok(Some((self.modified_index(ordinal)?,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}
  pub fn fixed_copy_bytes()->usize{size_of::<Self>()*2+size_of::<usize>()*6}
  fn scalar()->RetirementDemand{RetirementDemand{copy_bytes:Self::fixed_copy_bytes(),depth:1,..Default::default()}}

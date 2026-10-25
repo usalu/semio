@@ -612,7 +612,8 @@
    ],
    "heads": [
     "gen"
-   ]
+   ],
+   "exclusions": "testSourceExclusions"
   },
   {
    "decision": {
@@ -822,6 +823,323 @@
    ],
    "target": "bad-x",
    "error": "Repository target cache decision refused: martian/x"
+  }
+ ],
+ "exclusionCases": [
+  {
+   "name": "a head of a row that names exclusions",
+   "target": "gen-x",
+   "exclusions": "testSourceExclusions"
+  },
+  {
+   "name": "the head itself",
+   "target": "gen",
+   "exclusions": "testSourceExclusions"
+  },
+  {
+   "name": "an exact name of that row",
+   "target": "wasm",
+   "exclusions": "testSourceExclusions"
+  },
+  {
+   "name": "a row without exclusions",
+   "target": "test",
+   "exclusions": null
+  },
+  {
+   "name": "a live row",
+   "target": "acceptance",
+   "exclusions": null
+  },
+  {
+   "name": "an unclassified name",
+   "target": "unknown",
+   "exclusions": null
+  },
+  {
+   "name": "a name another row's head claims",
+   "target": "generator-x",
+   "exclusions": null
+  },
+  {
+   "name": "an emoji prefix never hides the row",
+   "target": "🏭️generator-x",
+   "exclusions": null
+  },
+  {
+   "name": "a longer word is no head",
+   "target": "generatorx",
+   "exclusions": null
+  },
+  {
+   "name": "a tail row",
+   "target": "x-check",
+   "exclusions": null
+  }
+ ],
+ "conflictCases": [
+  {
+   "name": "no explicit input names an excluded path",
+   "inputs": [
+    "default",
+    "^default",
+    "{workspaceRoot}/a/b/**/*.rs"
+   ],
+   "named": {
+    "default": []
+   },
+   "patterns": [
+    "**/🧪️tests/**/*",
+    "**/*.feature",
+    "**/*.stories.{ts,tsx}"
+   ],
+   "root": "x/y",
+   "conflict": false
+  },
+  {
+   "name": "a literal test file is a declared read",
+   "inputs": [
+    "{workspaceRoot}/a/🧪️tests/b/🟦️.ts"
+   ],
+   "named": {},
+   "patterns": [
+    "**/🧪️tests/**/*",
+    "**/*.feature",
+    "**/*.stories.{ts,tsx}"
+   ],
+   "root": "x/y",
+   "conflict": true
+  },
+  {
+   "name": "a glob that names a tests directory is a declared read",
+   "inputs": [
+    "{projectRoot}/🧪️tests/**/*"
+   ],
+   "named": {},
+   "patterns": [
+    "**/🧪️tests/**/*",
+    "**/*.feature",
+    "**/*.stories.{ts,tsx}"
+   ],
+   "root": "p",
+   "conflict": true
+  },
+  {
+   "name": "a named input is not an explicit input",
+   "inputs": [
+    "🧪️tests/x"
+   ],
+   "named": {
+    "🧪️tests/x": []
+   },
+   "patterns": [
+    "**/🧪️tests/**/*",
+    "**/*.feature",
+    "**/*.stories.{ts,tsx}"
+   ],
+   "root": "p",
+   "conflict": false
+  },
+  {
+   "name": "dependency groups, negations and objects are not explicit inputs",
+   "inputs": [
+    "^{workspaceRoot}/a/🧪️tests/x",
+    "!{workspaceRoot}/a/🧪️tests/x",
+    {
+     "env": "X"
+    }
+   ],
+   "named": {},
+   "patterns": [
+    "**/🧪️tests/**/*",
+    "**/*.feature",
+    "**/*.stories.{ts,tsx}"
+   ],
+   "root": "p",
+   "conflict": false
+  },
+  {
+   "name": "a feature file is a declared read",
+   "inputs": [
+    "{workspaceRoot}/a/b.feature"
+   ],
+   "named": {},
+   "patterns": [
+    "**/🧪️tests/**/*",
+    "**/*.feature",
+    "**/*.stories.{ts,tsx}"
+   ],
+   "root": "p",
+   "conflict": true
+  },
+  {
+   "name": "a story file is a declared read",
+   "inputs": [
+    "{workspaceRoot}/a/x.stories.tsx"
+   ],
+   "named": {},
+   "patterns": [
+    "**/🧪️tests/**/*",
+    "**/*.feature",
+    "**/*.stories.{ts,tsx}"
+   ],
+   "root": "p",
+   "conflict": true
+  },
+  {
+   "name": "a plain script named like a story is not",
+   "inputs": [
+    "{workspaceRoot}/a/x.stories.js"
+   ],
+   "named": {},
+   "patterns": [
+    "**/🧪️tests/**/*",
+    "**/*.feature",
+    "**/*.stories.{ts,tsx}"
+   ],
+   "root": "p",
+   "conflict": false
+  },
+  {
+   "name": "the workspace-root project resolves its own root to nothing",
+   "inputs": [
+    "{projectRoot}/🧪️tests/a"
+   ],
+   "named": {},
+   "patterns": [
+    "**/🧪️tests/**/*",
+    "**/*.feature",
+    "**/*.stories.{ts,tsx}"
+   ],
+   "root": ".",
+   "conflict": true
+  },
+  {
+   "name": "a path beside a tests directory is not excluded",
+   "inputs": [
+    "{workspaceRoot}/a/🧪️testing/b/🟦️.ts",
+    "{workspaceRoot}/a/tests/b.ts"
+   ],
+   "named": {},
+   "patterns": [
+    "**/🧪️tests/**/*",
+    "**/*.feature",
+    "**/*.stories.{ts,tsx}"
+   ],
+   "root": "p",
+   "conflict": false
+  }
+ ],
+ "selectionCases": [
+  {
+   "name": "a class target without the exclusions reads the tests of its project and of a shared tree",
+   "project": {
+    "root": "x/p",
+    "namedInputs": {
+     "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/x/shared/**/*.ts"
+     ]
+    }
+   },
+   "inputs": [
+    "default"
+   ],
+   "inventory": [
+    "x/p/🟦️.ts",
+    "x/p/📦️packages/🟦️typescript/src/🟦️.ts",
+    "x/p/🧪️tests/🟦️.ts",
+    "x/p/📦️packages/🟦️typescript/🧪️tests/unit/🟦️.ts",
+    "x/p/🧫️fixtures/data.json",
+    "x/p/feature/a.feature",
+    "x/p/ui/x.stories.tsx",
+    "x/p/ui/x.tsx",
+    "x/shared/🟦️.ts",
+    "x/shared/🧪️tests/🟦️.ts",
+    "x/shared/b.feature",
+    "y/other/🟦️.ts"
+   ],
+   "selected": [
+    "x/p/feature/a.feature",
+    "x/p/ui/x.stories.tsx",
+    "x/p/ui/x.tsx",
+    "x/p/📦️packages/🟦️typescript/src/🟦️.ts",
+    "x/p/📦️packages/🟦️typescript/🧪️tests/unit/🟦️.ts",
+    "x/p/🟦️.ts",
+    "x/p/🧪️tests/🟦️.ts",
+    "x/p/🧫️fixtures/data.json",
+    "x/shared/🟦️.ts",
+    "x/shared/🧪️tests/🟦️.ts"
+   ]
+  },
+  {
+   "name": "the exclusions remove every test, feature and story of the project and of the shared tree and keep every source",
+   "project": {
+    "root": "x/p",
+    "namedInputs": {
+     "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/x/shared/**/*.ts"
+     ]
+    }
+   },
+   "inputs": [
+    "default",
+    "testSourceExclusions"
+   ],
+   "inventory": [
+    "x/p/🟦️.ts",
+    "x/p/📦️packages/🟦️typescript/src/🟦️.ts",
+    "x/p/🧪️tests/🟦️.ts",
+    "x/p/📦️packages/🟦️typescript/🧪️tests/unit/🟦️.ts",
+    "x/p/🧫️fixtures/data.json",
+    "x/p/feature/a.feature",
+    "x/p/ui/x.stories.tsx",
+    "x/p/ui/x.tsx",
+    "x/shared/🟦️.ts",
+    "x/shared/🧪️tests/🟦️.ts",
+    "x/shared/b.feature",
+    "y/other/🟦️.ts"
+   ],
+   "selected": [
+    "x/p/ui/x.tsx",
+    "x/p/📦️packages/🟦️typescript/src/🟦️.ts",
+    "x/p/🟦️.ts",
+    "x/p/🧫️fixtures/data.json",
+    "x/shared/🟦️.ts"
+   ]
+  },
+  {
+   "name": "the exclusions never add a file the inputs do not select",
+   "project": {
+    "root": "x/p",
+    "namedInputs": {
+     "default": [
+      "{projectRoot}/ui/**/*"
+     ]
+    }
+   },
+   "inputs": [
+    "default",
+    "testSourceExclusions"
+   ],
+   "inventory": [
+    "x/p/🟦️.ts",
+    "x/p/📦️packages/🟦️typescript/src/🟦️.ts",
+    "x/p/🧪️tests/🟦️.ts",
+    "x/p/📦️packages/🟦️typescript/🧪️tests/unit/🟦️.ts",
+    "x/p/🧫️fixtures/data.json",
+    "x/p/feature/a.feature",
+    "x/p/ui/x.stories.tsx",
+    "x/p/ui/x.tsx",
+    "x/shared/🟦️.ts",
+    "x/shared/🧪️tests/🟦️.ts",
+    "x/shared/b.feature",
+    "y/other/🟦️.ts"
+   ],
+   "selected": [
+    "x/p/ui/x.tsx"
+   ]
   }
  ],
  "policy": {

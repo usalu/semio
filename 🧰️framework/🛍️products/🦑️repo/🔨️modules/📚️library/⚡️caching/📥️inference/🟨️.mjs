@@ -7,42 +7,58 @@ export const sourceHash = createHash("sha256").update(readFileSync(fileURLToPath
 const facts = new Map(), limit = 16 * 1024 * 1024;
 let bytes = 0, hits = 0, misses = 0;
 
-/** 🔗️ Returns immutable content-derived runtime module facts behind an owned string interface.
+/** 🧺️ Keeps one immutable fact under the bounded in-process budget, evicting the oldest first. */
+function remember(key, result) {
+  const size = Buffer.byteLength(key) + Buffer.byteLength(JSON.stringify(result)) + 192;
+  if (size > limit) return;
+  while (bytes + size > limit) { const oldest = facts.keys().next().value; bytes -= facts.get(oldest).bytes; facts.delete(oldest); }
+  facts.set(key, { imports: result, bytes: size }); bytes += size;
+}
+
+/** 🌳️ Collects the module specifiers one syntax tree names for a scope. */
+function scopedImports(compiler, tree, scope) {
+  const imports = new Set(), add = node => { if (node && compiler.isStringLiteralLike(node)) imports.add(node.text); };
+  const visit = node => {
+    if (scope !== "all" && compiler.isIfStatement(node) && compiler.isPropertyAccessExpression(node.expression) && node.expression.name.text === "vitest" && compiler.isMetaProperty(node.expression.expression) && node.expression.expression.keywordToken === compiler.SyntaxKind.ImportKeyword) { if (node.elseStatement) visit(node.elseStatement); return; }
+    if (compiler.isImportTypeNode(node)) { if(scope !== "command" && compiler.isLiteralTypeNode(node.argument))add(node.argument.literal); return; }
+    if (compiler.isImportDeclaration(node)) {
+      const clause = node.importClause, bindings = clause?.namedBindings;
+      if (scope !== "command" || !clause?.isTypeOnly && !(bindings && compiler.isNamedImports(bindings) && !clause.name && bindings.elements.length && bindings.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier);
+      return;
+    }
+    if (compiler.isExportDeclaration(node)) { const clause = node.exportClause; if (scope !== "command" || !node.isTypeOnly && !(clause && compiler.isNamedExports(clause) && clause.elements.length && clause.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier); return; }
+    if (compiler.isImportEqualsDeclaration(node)) { if ((scope !== "command" || !node.isTypeOnly) && compiler.isExternalModuleReference(node.moduleReference)) add(node.moduleReference.expression); return; }
+    if (compiler.isCallExpression(node)) {
+      const expression = node.expression;
+      if (expression.kind === compiler.SyntaxKind.ImportKeyword || compiler.isIdentifier(expression) && expression.text === "require" || compiler.isCallExpression(expression) && compiler.isIdentifier(expression.expression) && expression.expression.text === "createRequire") add(node.arguments[0]);
+    }
+    compiler.forEachChild(node, visit);
+  };
+  visit(tree);
+  return Object.freeze([...imports]);
+}
+
+const SCOPES = ["all", "command", "production"];
+
+/** 🔗️ Returns immutable content-derived runtime module facts behind an owned string interface; one parse answers every scope of the same content.
  * @param {string} path
  * @param {string} source
  * @returns {string[]}
  */
 function sourceImports(path, source, scope = "all") {
-  const key = createHash("sha256").update(JSON.stringify([path, source, scope])).digest("hex"), previous = facts.get(key);
+  const base = createHash("sha256").update(JSON.stringify([path, source])).digest("hex"), key = `${base}:${scope}`, previous = facts.get(key);
   if (previous) { hits++; facts.delete(key); facts.set(key, previous); return [...previous.imports]; }
   misses++;
-  const imports = new Set();
-  if (!/\.json$/.test(path) && !(scope === "command" && /\.d\.[cm]?ts$/.test(path))) {
-    const compiler = parserTypescriptV1(), add = node => { if (node && compiler.isStringLiteralLike(node)) imports.add(node.text); };
-    const visit = node => {
-      if (scope !== "all" && compiler.isIfStatement(node) && compiler.isPropertyAccessExpression(node.expression) && node.expression.name.text === "vitest" && compiler.isMetaProperty(node.expression.expression) && node.expression.expression.keywordToken === compiler.SyntaxKind.ImportKeyword) { if (node.elseStatement) visit(node.elseStatement); return; }
-      if (compiler.isImportTypeNode(node)) { if(scope !== "command" && compiler.isLiteralTypeNode(node.argument))add(node.argument.literal); return; }
-      if (compiler.isImportDeclaration(node)) {
-        const clause = node.importClause, bindings = clause?.namedBindings;
-        if (scope !== "command" || !clause?.isTypeOnly && !(bindings && compiler.isNamedImports(bindings) && !clause.name && bindings.elements.length && bindings.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier);
-        return;
-      }
-      if (compiler.isExportDeclaration(node)) { const clause = node.exportClause; if (scope !== "command" || !node.isTypeOnly && !(clause && compiler.isNamedExports(clause) && clause.elements.length && clause.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier); return; }
-      if (compiler.isImportEqualsDeclaration(node)) { if ((scope !== "command" || !node.isTypeOnly) && compiler.isExternalModuleReference(node.moduleReference)) add(node.moduleReference.expression); return; }
-      if (compiler.isCallExpression(node)) {
-        const expression = node.expression;
-        if (expression.kind === compiler.SyntaxKind.ImportKeyword || compiler.isIdentifier(expression) && expression.text === "require" || compiler.isCallExpression(expression) && compiler.isIdentifier(expression.expression) && expression.expression.text === "createRequire") add(node.arguments[0]);
-      }
-      compiler.forEachChild(node, visit);
-    };
-    visit(compiler.createSourceFile(path, source, compiler.ScriptTarget.Latest, false));
+  const declaration = /\.d\.[cm]?ts$/.test(path);
+  if (/\.json$/.test(path) || scope === "command" && declaration) { const result = Object.freeze([]); remember(key, result); return [...result]; }
+  const compiler = parserTypescriptV1(), tree = compiler.createSourceFile(path, source, compiler.ScriptTarget.Latest, false);
+  let answer;
+  for (const each of SCOPES) {
+    const result = each === "command" && declaration ? Object.freeze([]) : scopedImports(compiler, tree, each);
+    remember(`${base}:${each}`, result);
+    if (each === scope) answer = result;
   }
-  const result = Object.freeze([...imports]), size = Buffer.byteLength(key) + Buffer.byteLength(JSON.stringify(result)) + 192;
-  if (size <= limit) {
-    while (bytes + size > limit) { const oldest = facts.keys().next().value; bytes -= facts.get(oldest).bytes; facts.delete(oldest); }
-    facts.set(key, { imports: result, bytes: size }); bytes += size;
-  }
-  return [...result];
+  return [...answer];
 }
 
 

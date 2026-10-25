@@ -1,7 +1,7 @@
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 
 /// 🪟️ Two-dimensional navigation retained by one concrete window instance.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value_derive::NativeReceive)]
 pub struct Viewport2d {
     pub x: f64,
     pub y: f64,
@@ -47,6 +47,21 @@ impl<'de> serde::Deserialize<'de> for Viewport2d {
         }
 
         deserializer.deserialize_map(Viewport2dVisitor)
+    }
+}
+
+/// 🧲️ Missing native navigation is the identity view.
+impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for Viewport2d {
+    fn native_default_demand() -> semio_framework_value::RetirementDemand {
+        semio_framework_value_native_owned::native_decoding::owned::tree::fixed(2 * std::mem::size_of::<Self>())
+    }
+
+    fn native_default(grant: semio_framework_value::RetainedCloneGrant) -> Result<(Self, semio_framework_value::RetainedCloneProgress), ValueError> {
+        let demand = <Self as semio_framework_value_native_owned::native_decoding::owned::NativeDefault>::native_default_demand();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+            return Err(semio_framework_value_native_owned::native_decoding::owned::tree::invalid());
+        }
+        Ok((Self { x: 0.0, y: 0.0, zoom: 1.0 }, semio_framework_value_native_owned::native_decoding::owned::tree::receipt(demand)))
     }
 }
 

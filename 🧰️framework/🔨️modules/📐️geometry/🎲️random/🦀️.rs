@@ -1,17 +1,17 @@
 //! 🎲️ Seeded, reproducible pseudo-random generation: xoshiro256** core, distributions, and sequence samplers shared by every randomized graph algorithm.
 
 // #region 🔖️SplitMix64
-/// 🌱️ SplitMix64 seed-mixing step (Vigna's `splitmix64`): turns a `u64` seed into a well-mixed
+/// 🪜️ SplitMix64 seed-mixing step (Vigna's `splitmix64`): turns a `u64` seed into a well-mixed
 /// stream, used only to derive [`Rng`]'s initial state words — never as the generator itself.
 pub struct SplitMix64(u64);
 
 impl SplitMix64 {
-    /// 🌱️ Starts a mixing stream from a raw seed.
+    /// ▶️ Starts a mixing stream from a raw seed.
     pub fn new(seed: u64) -> Self {
         Self(seed)
     }
 
-    /// 🌱️ Advances the stream and returns the next mixed 64-bit word.
+    /// ➡️ Advances the stream and returns the next mixed 64-bit word.
     pub fn next_u64(&mut self) -> u64 {
         self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
         let mut z = self.0;
@@ -28,7 +28,7 @@ fn rotl(x: u64, k: u32) -> u64 {
     x.rotate_left(k)
 }
 
-/// 🎲️ xoshiro256** (Blackman & Vigna, public domain), a 256-bit-state generator with a 2^256-1
+/// 🔓️ xoshiro256** (Blackman & Vigna, public domain), a 256-bit-state generator with a 2^256-1
 /// period and excellent statistical quality; chosen over xorshift128+ for its stronger equidistribution
 /// and larger period margin, both useful once nested graph algorithms draw many correlated sub-sequences
 /// from independently-seeded generators. All arithmetic is `u64` wrapping — no floats in the core step —
@@ -48,7 +48,7 @@ impl Rng {
         Self { s }
     }
 
-    /// 🎲️ Next raw 64-bit word (the xoshiro256** `scramble` output), advancing the state.
+    /// ⏭️ Next raw 64-bit word (the xoshiro256** `scramble` output), advancing the state.
     pub fn next_u64(&mut self) -> u64 {
         let result = rotl(self.s[1].wrapping_mul(5), 7).wrapping_mul(9);
         let t = self.s[1] << 17;
@@ -66,7 +66,7 @@ impl Rng {
         (self.next_u64() >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
     }
 
-    /// 🎯️ Uniform `u64` in `[lo, hi)`. Rejects draws that fall in the trailing partial bucket of
+    /// 🔜️ Uniform `u64` in `[lo, hi)`. Rejects draws that fall in the trailing partial bucket of
     /// `u64::MAX / range` instead of using `% range` directly: naive modulo keeps that partial bucket,
     /// which over-weights the low end of the range by a hair — rejection sampling discards it so every
     /// remaining value maps to exactly the same number of raw draws.
@@ -99,7 +99,7 @@ impl Rng {
         }
     }
 
-    /// 🎯️ Picks one uniformly random element, or `None` for an empty slice.
+    /// ⚒️ Picks one uniformly random element, or `None` for an empty slice.
     pub fn choose<'a, T>(&mut self, items: &'a [T]) -> Option<&'a T> {
         if items.is_empty() {
             return None;
@@ -108,12 +108,12 @@ impl Rng {
         items.get(idx)
     }
 
-    /// 🎲️ Raw 256-bit state words, for external snapshot/restore of a generator mid-stream.
+    /// 📸️ Raw 256-bit state words, for external snapshot/restore of a generator mid-stream.
     pub fn state(&self) -> [u64; 4] {
         self.s
     }
 
-    /// 🌱️ Rebuilds a generator from previously captured state words (inverse of [`Rng::state`]).
+    /// 🏭️ Rebuilds a generator from previously captured state words (inverse of [`Rng::state`]).
     /// The all-zero state is xoshiro256**'s fixed point (every subsequent draw is also zero), so
     /// callers must never pass it; debug builds catch the mistake immediately.
     pub fn from_state(s: [u64; 4]) -> Self {
@@ -121,7 +121,7 @@ impl Rng {
         Self { s }
     }
 
-    /// 🎯️ `k` distinct indices drawn uniformly from `0..n`, via Floyd's O(k)-time, O(k)-space partial
+    /// 🧫️ `k` distinct indices drawn uniformly from `0..n`, via Floyd's O(k)-time, O(k)-space partial
     /// sampling algorithm — it never materializes the full `0..n` universe, which matters once `n` is a
     /// graph's node count and `k` is a small subsample. Order is not itself a uniform permutation.
     pub fn sample_without_replacement(&mut self, n: usize, k: usize) -> Vec<usize> {
@@ -149,7 +149,7 @@ pub struct AliasTable {
 }
 
 impl AliasTable {
-    /// ⚖️ Builds the table, normalizing `weights` internally. An empty slice or all-zero weights are
+    /// 🔨️ Builds the table, normalizing `weights` internally. An empty slice or all-zero weights are
     /// degenerate (no valid probability distribution exists), so both are defined to always sample
     /// index `0` rather than panic — callers that pass a plain degree/weight vector don't need to
     /// special-case the all-zero graph before building a table.
@@ -197,7 +197,7 @@ impl AliasTable {
         Self { prob, alias }
     }
 
-    /// ⚖️ Draws one index in O(1): pick a bucket uniformly, then coin-flip between its own item and its alias.
+    /// 🖍️ Draws one index in O(1): pick a bucket uniformly, then coin-flip between its own item and its alias.
     pub fn sample(&self, rng: &mut Rng) -> usize {
         let n = self.prob.len();
         let i = rng.next_range(0, n as u64) as usize;
@@ -220,7 +220,7 @@ pub fn normal(rng: &mut Rng, mean: f64, std_dev: f64) -> f64 {
     mean + std_dev * z0
 }
 
-/// 🎲️ Number of Bernoulli(`p`) trials up to and including the first success (support `1, 2, 3, ...`),
+/// ⏮️ Number of Bernoulli(`p`) trials up to and including the first success (support `1, 2, 3, ...`),
 /// sampled by inverse-CDF transform.
 pub fn geometric(rng: &mut Rng, p: f64) -> u64 {
     debug_assert!(p > 0.0 && p <= 1.0, "geometric: p must be in (0, 1]");
@@ -231,7 +231,7 @@ pub fn geometric(rng: &mut Rng, p: f64) -> u64 {
     (u.ln() / (1.0 - p).ln()).floor() as u64 + 1
 }
 
-/// 🎲️ Poisson(`lambda`) via Knuth's product-of-uniforms algorithm: O(lambda) draws per sample, so it
+/// 📉️ Poisson(`lambda`) via Knuth's product-of-uniforms algorithm: O(lambda) draws per sample, so it
 /// stays fast for moderate `lambda` (roughly up to a few dozen) but degrades for very large `lambda`,
 /// where a transformed-rejection method would be preferable.
 pub fn poisson(rng: &mut Rng, lambda: f64) -> u64 {
@@ -283,7 +283,7 @@ pub fn zipf(rng: &mut Rng, n: usize, exponent: f64) -> u64 {
     }
 }
 
-/// 🎯️ `n` draws from a discrete distribution given as a weight vector, matching NetworkX
+/// ⛓️ `n` draws from a discrete distribution given as a weight vector, matching NetworkX
 /// `utils.discrete_sequence`; builds one [`AliasTable`] and draws from it `n` times.
 pub fn discrete_sequence(rng: &mut Rng, n: usize, distribution: &[f64]) -> Vec<usize> {
     let table = AliasTable::new(distribution);

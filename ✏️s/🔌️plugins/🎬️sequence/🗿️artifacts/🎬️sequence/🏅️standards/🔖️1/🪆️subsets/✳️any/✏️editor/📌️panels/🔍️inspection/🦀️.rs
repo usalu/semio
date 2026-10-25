@@ -3,7 +3,7 @@
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::editor_vocabulary::ui_label;
 use crate::{SequenceHostSnapshot, SequenceStep};
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+use semio_framework_plugin::{Buildable, HasBase};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;

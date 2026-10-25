@@ -30,7 +30,6 @@ fn value_presence_ordinary_controlled_and_borrowed_boundaries_share_intent() {
             let record=ordinary.__dsl_to_record();let printed=print(&record,&spec,JoinMode::Inline);let decoded=Presence::__dsl_from_record(&parse_exact(&printed,&spec,&ParseOptions::default()).unwrap()).unwrap();assert_eq!(decoded,ordinary);
             let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut encode=NativeEncodeControl::new(32768,&mut observe);let producer=Presence::__dsl_spec_producer();let controlled_spec=(producer.encoding)(&mut encode).unwrap();assert!(!controlled_spec.fields[1].optional);assert!(controlled_spec.fields[2].optional);
             assert_eq!(ordinary.to_record_controlled(&mut encode).unwrap(),record);
-            eprintln!("[DEBUG] DSL presence case={} requiredNullableFactor=true indexSupplied={} roundtrip=true",case["id"],ordinary.index.is_some());
         }
     }
     let mut record=parse_exact("presence id=\"c1\" factor { }",&spec,&ParseOptions::default()).unwrap();record.fields.insert(1,FieldValue::Absent);assert!(Presence::__dsl_from_record(&record).is_err());

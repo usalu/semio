@@ -68,7 +68,7 @@ pub fn encode<T: SceneDoc>(kind: SurfaceKind, doc: &T) -> Result<SurfaceProps, S
     Ok(SurfaceProps { kind, doc_schema, doc: SurfaceDoc { bytes }, ..Default::default() })
 }
 
-/// 📦️ Verifies `props.doc_schema == T::SCHEMA` before attempting to decode — a stale/foreign schema
+/// 🧬️ Verifies `props.doc_schema == T::SCHEMA` before attempting to decode — a stale/foreign schema
 /// returns [`SurfaceDocError::SchemaMismatch`] rather than feeding mismatched bytes to `T`'s decoder
 /// (which could otherwise misparse rather than cleanly fail).
 pub fn decode<T: SceneDoc>(props: &SurfaceProps) -> Result<T, SurfaceDocError> {

@@ -2,7 +2,7 @@
 
 use super::*;
 
-pub(crate) struct ReplayLifecycleProjection {
+pub struct ReplayLifecycleProjection {
     pub state: &'static str,
     pub first_reason: Option<String>,
     pub release_opportunities: usize,

@@ -1,4 +1,5 @@
 //! 🔺️ Sparse diff builder for `ScaleObject` — patches the one addressed object in place.
+use protocol::list_delta::RowPatch;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectPatch;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectsDelta;

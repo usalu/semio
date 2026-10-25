@@ -84,7 +84,7 @@ use teaching_proctor_base::storage::{Database, SqliteAuthorityStore, SqliteBlobS
 
 /// 🏷️ The instance id `GET /instance` reports.
 pub const INSTANCE_ID: &str = "teaching-proctor";
-/// 🧩️ The id of the proctor's one module.
+/// 🆔️ The id of the proctor's one module.
 pub const MODULE_ID: &str = "teaching.proctor";
 /// 🎓️ The template every caller holds.
 pub const LEARNER_TEMPLATE: &str = "course-learner";
@@ -144,7 +144,7 @@ impl PrincipalResolver for ProctorResolvers {
     }
 }
 
-/// 🧩️ The quiz lifecycle module over one loaded course, its presence rooms and the admission its
+/// 🏫️ The quiz lifecycle module over one loaded course, its presence rooms and the admission its
 /// commands pass.
 pub struct ProctorModule {
     course: Arc<LoadedCourse>,
@@ -229,7 +229,7 @@ fn projection_of(kind: QueryKind) -> &'static str {
     }
 }
 
-/// 🎓️ The five command kinds — a registration on a handle or on the learner itself —, the six query
+/// 🎒️ The five command kinds — a registration on a handle or on the learner itself —, the six query
 /// kinds and the learner event streams. The handle streams are readable by nobody.
 pub fn learner_template(tenant: &str) -> PolicyTemplate {
     let grant = |point: PolicyPoint, resource: String, action: &str| PolicyGrant { point, resource, action: action.to_string() };
@@ -241,12 +241,12 @@ pub fn learner_template(tenant: &str) -> PolicyTemplate {
     PolicyTemplate { name: LEARNER_TEMPLATE.to_string(), auto_apply: true, grants }
 }
 
-/// 🤖️ The enrollment relay, for the proctor's own service account.
+/// 🛎️ The enrollment relay, for the proctor's own service account.
 pub fn proctor_template() -> PolicyTemplate {
     PolicyTemplate { name: PROCTOR_TEMPLATE.to_string(), auto_apply: false, grants: vec![PolicyGrant { point: PolicyPoint::CommandAdmission, resource: format!("{LEARNER}/*"), action: ENROLL.to_string() }] }
 }
 
-/// 👥️ Joining a presence room, sharing a state in it and watching it; assigned per room scope.
+/// 👀️ Joining a presence room, sharing a state in it and watching it; assigned per room scope.
 pub fn presence_template() -> PolicyTemplate {
     let grant = |action: &str| PolicyGrant { point: PolicyPoint::Subscription, resource: PRESENCE_RESOURCE.to_string(), action: action.to_string() };
     PolicyTemplate { name: PRESENCE_TEMPLATE.to_string(), auto_apply: false, grants: vec![grant(PRESENCE_JOIN), grant(PRESENCE_PUBLISH), grant(PRESENCE_WATCH)] }
@@ -449,7 +449,7 @@ impl Settler {
         Ok(None)
     }
 
-    /// 🔁️ Relay every handle registration whose learner stream is still empty; the count relayed.
+    /// 🔄️ Relay every handle registration whose learner stream is still empty; the count relayed.
     async fn reconcile(&self) -> Result<usize, StorageError> {
         let mut relayed = 0;
         for command in unrelayed(&self.log, &self.tenant).await? {
@@ -463,7 +463,7 @@ impl Settler {
     }
 }
 
-/// 🛂️ One assembled proctor: the framework server, its routes and its projector.
+/// 🏗️ One assembled proctor: the framework server, its routes and its projector.
 pub struct Proctor {
     server: Server<ProctorInstance>,
     settler: Settler,
@@ -557,19 +557,19 @@ impl Proctor {
         self.settler.projector.reset(&mut projections).await
     }
 
-    /// 🔁️ Relay every handle registration whose learner never received it; the count of relays that
+    /// ♻️ Relay every handle registration whose learner never received it; the count of relays that
     /// were missing.
     pub async fn reconcile(&self) -> Result<usize, StorageError> {
         self.settler.reconcile().await
     }
 
-    /// 🚰️ Run the sagas until the outbox is quiet and fold every committed event into the
+    /// 💧️ Run the sagas until the outbox is quiet and fold every committed event into the
     /// projections, reporting progress and stopping between batches once `cancel` fires.
     pub async fn settle(&self, cancel: &CancelToken, progress: impl FnMut(Progress)) -> Result<CatchUp, StorageError> {
         self.settler.settle(cancel, progress).await
     }
 
-    /// 🔌️ Bind `address` (port `0` picks a free port).
+    /// ⚓️ Bind `address` (port `0` picks a free port).
     pub async fn bind(self, address: SocketAddr) -> Result<BoundProctor, ProctorError> {
         let listener = tokio::net::TcpListener::bind(address).await.map_err(|error| ProctorError::Io(format!("cannot bind {address}: {error}")))?;
         let local = listener.local_addr().map_err(|error| ProctorError::Io(error.to_string()))?;
@@ -616,7 +616,7 @@ impl BoundProctor {
 //#endregion 🔖️Proctor
 
 //#region 🔖️Middleware
-/// 🔁️ Read-your-writes around the routes: a query is answered from read models that hold
+/// 🔗️ Read-your-writes around the routes: a query is answered from read models that hold
 /// everything committed before it arrived, and a command answers once what it queued for the sagas
 /// has run.
 async fn consistency(State(settler): State<Settler>, request: Request, next: Next) -> Response {

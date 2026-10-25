@@ -4,7 +4,7 @@ import {spawnSync} from "node:child_process";
 import {join} from "node:path";
 import Ajv from "ajv";
 import {minimatch} from "minimatch";
-import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {globRegexV1} from "../../../../🪞️parity/🟦️.ts";
 import {workspaceGlobRegExpV1} from "../../../../🟦️typescript/🧩️units/🟦️.ts";
 import {inputGlobRegExpV1} from "../../🟦️.ts";

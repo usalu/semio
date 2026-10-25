@@ -1,4 +1,4 @@
-//! 🪪️ Progress identities and faults: the progress capacities, the progress identity, kind and live authority, the progress faults and the rejected publication. See [`super`].
+//! ⏳️ Progress identities and faults: the progress capacities, the progress identity, kind and live authority, the progress faults and the rejected publication. See [`super`].
 
 use super::*;
 

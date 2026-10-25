@@ -434,7 +434,7 @@ impl RasterMutationCandidateAuthority {
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
-                let outcome = Mutation::diff(operation, &*snapshot);
+                let outcome = ::semio_framework_os_kernel::ColdMutation::diff(operation, &*snapshot);
                 let refused = outcome.messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
                 let (diff, _) = outcome.into_parts();
                 let painted = if refused { Err("raster-store.mutation-paint-refused") } else { protocol::apply_diff_cold(&diff, snapshot).map_err(|_| "raster-store.mutation-paint-apply") };

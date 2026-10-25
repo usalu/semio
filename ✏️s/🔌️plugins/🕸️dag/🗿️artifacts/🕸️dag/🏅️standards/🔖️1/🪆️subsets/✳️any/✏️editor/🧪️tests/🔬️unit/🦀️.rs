@@ -55,7 +55,7 @@ impl std::ops::DerefMut for DagApp {
     /// 🧸️ The live scene composed from the app's `content` member store (design §20.15: the parent holds no content).
     pub async fn live_scene(app: &DagApp) -> crate::DagScene {
         use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
-        use store::{pack::snapshot::ArtifactPack, SpaceMember};
+        use store::{snapshot::ArtifactPack, SpaceMember, ReferenceSpaceMember};
         let snapshot = app.snapshot().expect("DAG parent projection");
         let bytes = app.child_store("content", &snapshot.content.child_id).await.expect("DAG content child").document_pack_bytes().await.expect("DAG content child pack");
         crate::dag_scene_of_content(&SemioGraphSnapshot::decode_pack(&bytes).expect("DAG content child snapshot"))

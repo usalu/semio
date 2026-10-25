@@ -1,5 +1,5 @@
 import {commandRelevantV1,redactCommandV1,type ProcessFactsV1} from "../../🟦️.ts";
-import type {DoctorProbeV1} from "../🟦️.ts";
+import type {DoctorProbeV1} from "../📋️contract/🟦️.ts";
 
 /** 🏃️ The processes that matter to a stalled command: those matching the repo tool patterns, those that hold or wait for a lease or grant and all their descendants. */
 export const processesProbeV1:DoctorProbeV1=Object.freeze({

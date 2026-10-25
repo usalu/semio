@@ -25,8 +25,9 @@ extern crate semio_framework_os_kernel as store;
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 //#endregion 📖️SemioGrammar
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use semio_s_artifact_procedural_3d_model::widget_id;
+use semio_s_artifact_procedural_3d_model::{synapse_index, widget_id, widget_index};
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
@@ -37,8 +38,9 @@ use semio_framework_os_flow::FlowHost;
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the generation3d document, derived per
 /// `📓️derivation-rules.md` from `Generation3dSnapshot`'s shape.
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_value::RetireOwned)]
-#[mutations(snapshot = Generation3dSnapshot, diff = Generation3dDiff, schema = "generation.3d", reference = Generation3dSnapshot, reference_diff = Generation3dDiff)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[mutations(snapshot = Generation3dSnapshot, diff = Generation3dDiff, schema = "generation.2d", reference = Generation3dSnapshot, reference_diff = Generation3dDiff)]
 pub enum Generation3dMutation {
     CreateWidget(semio_s_artifact_procedural_3d_mut_widgets::create_widget::CreateWidget),
     UpdateWidget(semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget),
@@ -182,7 +184,7 @@ impl Generation3dMutation {
 
 pub fn inverse_generation3d_mutation(projection: &Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({
-    protocol::Mutation::inverse(mutation, projection)?
+    protocol::ColdMutation::inverse(mutation, projection)?
 
     })
 }
@@ -222,12 +224,12 @@ impl<'a> GraphEditor<'a> {
 
     /// 📐️ The rendered rectangles `[x, y, width, height]` of every node except `except` — what an automatic placement avoids.
     pub fn occupied(&self, except: &str) -> Vec<[f64; 4]> {
-        self.host.dag.host_snapshot.nodes.iter().filter(|node| node.id != except).map(|node| [node.x, node.y, node.width, node.height]).collect()
+        self.host.dag.graph.host_snapshot.nodes.iter().filter(|node| node.id != except).map(|node| [node.x, node.y, node.width, node.height]).collect()
     }
 
     /// 📐️ The rendered size `[width, height]` of node `id`.
     pub fn size_of(&self, id: &str) -> Option<[f64; 2]> {
-        self.host.dag.host_snapshot.nodes.iter().find(|node| node.id == id).map(|node| [node.width, node.height])
+        self.host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == id).map(|node| [node.width, node.height])
     }
 
     /// 🧾️ The leaves recorded, in replay order. The caller owns them and retires them cold.

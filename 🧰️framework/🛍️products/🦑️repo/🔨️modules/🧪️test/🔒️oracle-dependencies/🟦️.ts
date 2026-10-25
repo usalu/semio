@@ -19,18 +19,18 @@ import { loadOracleRegistry, type OracleRegistry } from "../🤝️contributions
 //#endregion 🔌️Adapters
 
 //#region 🔒️Dependencies
-/** 🔒️ Ecosystems the dependency classification covers — all five the repository actually ships. */
+/** 📔️ Ecosystems the dependency classification covers — all five the repository actually ships. */
 export const DEPENDENCY_ECOSYSTEMS = ["rust", "js", "go", "python", "dotnet"] as const;
 export type DependencyEcosystem = (typeof DEPENDENCY_ECOSYSTEMS)[number];
 
-/** 🔒️ Phase classification. Manifest placement is evidence, not proof — reachability decides. */
+/** 🏫️ Phase classification. Manifest placement is evidence, not proof — reachability decides. */
 export const DEPENDENCY_CLASSES = ["production-runtime", "production-build", "repository-tooling", "test-runner", "test-oracle"] as const;
 export type DependencyClass = (typeof DEPENDENCY_CLASSES)[number];
 
-/** 🔒️ One classified external dependency in the shrink-only baseline. */
+/** 📉️ One classified external dependency in the shrink-only baseline. */
 export type ClassifiedDependency = Readonly<{ ecosystem: DependencyEcosystem; name: string; version: string; kinds: readonly DependencyClass[]; users: readonly string[]; productionReachable: boolean; oracleIds?: readonly string[]; capabilities?: readonly string[] }>;
 
-/** 🔒️ Maps the legacy four-value `kinds` vocabulary onto the five phase classes. */
+/** 🦖️ Maps the legacy four-value `kinds` vocabulary onto the five phase classes. */
 export function classifyLegacyKind(kind: string, oracleIds: readonly string[]): DependencyClass {
   if (oracleIds.length > 0) return "test-oracle";
   switch (kind) {
@@ -45,23 +45,23 @@ export function classifyLegacyKind(kind: string, oracleIds: readonly string[]): 
   }
 }
 
-/** 🔒️ Whether a class can be reached from a production target — the only thing the gate cares about. */
+/** 🏭️ Whether a class can be reached from a production target — the only thing the gate cares about. */
 export function isProductionClass(kind: DependencyClass): boolean {
   return kind === "production-runtime" || kind === "production-build";
 }
 
-/** 🔒️ The classification ecosystem an implementation's packages belong to. */
+/** 📦️ The classification ecosystem an implementation's packages belong to. */
 export function dependencyEcosystemOf(implementation: Implementation): DependencyEcosystem {
   return implementation === "typescript" ? "js" : implementation;
 }
 
-/** 🔒️ The classification ecosystem a registry `ecosystem` string names. */
+/** 📚️ The classification ecosystem a registry `ecosystem` string names. */
 export function dependencyEcosystemOfRegistryValue(ecosystem: string): DependencyEcosystem {
   return (ecosystem === "javascript" ? "js" : ecosystem) as DependencyEcosystem;
 }
 
 /**
- * 🔒️ Every EXTERNAL distribution the contributed test hosts must provision — a contributed host
+ * 🖥️ Every EXTERNAL distribution the contributed test hosts must provision — a contributed host
  * package that carries no `path`. A Rust host reaches its reference libraries through a local crate
  * whose own manifest is already classified, but a Python or npm host names the distribution
  * directly, so without this the declaration would put a third-party library on a host's import path
@@ -105,11 +105,11 @@ export function importProbe(ecosystem: string, packageName: string): { pattern: 
   }
 }
 
-/** 🔒️ Gate verdict for a candidate baseline against the committed one. */
+/** ⛩️ Gate verdict for a candidate baseline against the committed one. */
 export type DependencyRatchet = Readonly<{ ok: boolean; newProduction: readonly string[]; unregisteredTestDeps: readonly string[]; removed: readonly string[]; productionCount: number; baselineProductionCount: number }>;
 
 /**
- * 🔒️ The shrink-only ratchet: a new production-reachable external dependency is always forbidden,
+ * 🔽️ The shrink-only ratchet: a new production-reachable external dependency is always forbidden,
  * a new test dependency is only permitted when an oracle registry entry claims it, and removing
  * dependencies always passes.
  */

@@ -194,7 +194,6 @@ fn parse_args() -> Result<Args, String> {
         }
     }
     let bundle = bundle.ok_or_else(|| "usage: os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param <parameter_id>=<value>]* [--policy <laissez-faire|normal|vigilant>]".to_string())?;
-    let direct_identity=semio_framework_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=direct_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
     let host_driver_policy = host_driver_policy.ok_or("--host-driver-policy is required")?;
     Ok(Args { host_driver_policy, bundle, dry, watch, only_node, params, policy })
 }
@@ -227,8 +226,9 @@ async fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn
     protocol::install_unscheduled_catalog(&mut document_store, protocol::os_store::document_store_owners::funded_bounded_artifact_store_owners::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>()).map_err(|error| error.to_string())?;
     let applied = async {
         if !sink.mutations.is_empty() {
-            let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-            let mut identity = protocol::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, &mut observer).map_err(|error| error.to_string())?;
+            let mut observer_function = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+            let observer: &mut protocol::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer_function;
+            let mut identity = protocol::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).map_err(|error| error.to_string())?;
             document_store.dispatch(protocol::os_store::store_schema::ArtifactCommand::Apply { mutations: sink.mutations.clone(), transaction: None }, &mut identity).await.map_err(|error| error.to_string())?;
             drop(identity.pause().map_err(|error| error.to_string())?);
         }
@@ -301,11 +301,12 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let plugin_paths = resolve_plugin_paths(&repo_root, relevant_plugin_ids.into_iter())?;
     let descriptor_paths = resolve_descriptor_paths(&repo_root)?;
     let blob_store = Arc::new(bundle.blob_store());
-    let identity_policy=semio_framework_pack_json::from_json_str(include_str!("../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
+    let identity_policy:semio_framework_plugin_host_shard::identity::ShardIdentityPolicy=serde_json::from_str(include_str!("../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json")).map_err(|error|error.to_string())?;
     let original_cancel=semio_framework_async::CancelToken::root_now();
     let identity_cancel=original_cancel.clone();
     let direct_cancel=original_cancel.clone();
     let identity=semio_framework_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=identity_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
+    let direct_identity=semio_framework_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=direct_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
     let host_driver_policy = semio_framework_pack_json::from_json_str(&std::fs::read_to_string(&args.host_driver_policy)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
     let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store),identity,host_driver_policy,semio_framework_job::default_now_us,original_cancel.clone(),direct_identity).await?;
     let mut runner = SpaceRunner::new(host, blob_store, args.policy,original_cancel).with_document_load_progress(document_load_reporter());

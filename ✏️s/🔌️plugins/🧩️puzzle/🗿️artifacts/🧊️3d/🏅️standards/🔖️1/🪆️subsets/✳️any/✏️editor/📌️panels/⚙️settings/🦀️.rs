@@ -6,6 +6,7 @@
 //! (modifier-driven) in the framework's model now, with no equivalent "default" setting.
 
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use {semio_s_artifact_puzzle_3d_editor_session::ui_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
 use {semio_framework_plugin::plugin_app_close_prelude::ActionBinding, semio_framework_plugin::plugin_app_close_prelude::BuiltNode, semio_framework_plugin::plugin_app_close_prelude::Component, semio_framework_plugin::plugin_app_close_prelude::NumberStepperProps, semio_framework_plugin::plugin_app_close_prelude::Trigger};
 use semio_framework_plugin::ActionFactory;

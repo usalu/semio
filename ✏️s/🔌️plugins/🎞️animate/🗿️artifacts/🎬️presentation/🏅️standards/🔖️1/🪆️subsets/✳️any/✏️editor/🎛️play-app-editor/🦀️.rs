@@ -56,7 +56,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// closed with `interactive-job.publication-authority-missing`, which is why this app could own
     /// no retained document verb at all (B1a: "promoting a document verb is a two-part change").
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+        Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -132,46 +132,19 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         registry.register(AnimatePresentationRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !ANIMATE_PRESENTATION_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !ANIMATE_PRESENTATION_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "animate-presentation-command-tool-mismatch"));
+        if original.command.command_id() != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "animate-presentation-command-tool-mismatch").into());
         }
-        if animate_presentation_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+        if animate_presentation_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
             return Err(Fault::from("animate-presentation-command-payload-too-large"));
         }
-        let tool_id = request.command.command_id();
-        let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, animate_presentation_retained_reduce, animate_presentation_retained_extent));
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: None,
-                operation: operation_context,
-                completion: request.completion,
-            },
-            PresentationCommand::command_id,
-            ANIMATE_PRESENTATION_RETAINED_RAW_BYTES,
-            ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        let tool_id = original.command.command_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, PresentationCommand::command_id, ANIMATE_PRESENTATION_RETAINED_RAW_BYTES, ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS, false, |request| semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, animate_presentation_retained_reduce, animate_presentation_retained_extent))
     }
 
     /// 🎞️ `import-media` is the only reserved route presentation owns: every inbound `frames:in`

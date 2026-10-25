@@ -86,7 +86,7 @@ function centeredLineClass(morphId: string, embodiment: TextEmbodiment, emphasis
 }
 
 /** 🎯️ Renders {@link TextEmbodiment}; `data-id` on leaf text unless the intro wrapper owns the morph anchor. */
-/** 🎯️ Stable reveal.js `data-id` for one text line; single-line blocks use the morph id, multi-line use `--index`. */
+/** ⚓️ Stable reveal.js `data-id` for one text line; single-line blocks use the morph id, multi-line use `--index`. */
 function textMorphAnchorId(anchorId: string, lineIndex: number, lineCount: number, _root: ReturnType<typeof resolveTextMorphRoot>): string {
   return lineCount === 1 ? anchorId : `${anchorId}--${lineIndex}`;
 }

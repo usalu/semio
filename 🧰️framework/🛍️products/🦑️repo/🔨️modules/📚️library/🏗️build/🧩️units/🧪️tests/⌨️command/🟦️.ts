@@ -47,7 +47,7 @@ describe("repo units: arguments", () => {
     if (!operation) return;
     const names = unitsOptionNamesV1(), accepted = new Set([...names.valued, ...names.plain].filter(name => name !== "--lang"));
     expect(new Set(operation.flags)).toEqual(accepted);
-    for (const flag of operation.flags) {const row = catalog.flags.find(candidate => candidate.name === flag)!; expect(row.operations).toContain("units"); expect(row.value === "none").toBe(names.plain.includes(flag));}
+    for (const flag of operation.flags) {const row = catalog.flags.find(candidate => candidate.name === flag && candidate.operations?.includes("units"))!; expect(row, flag).toBeDefined(); expect(row.value === "none").toBe(names.plain.includes(flag));}
     for (const subcommand of operation.subcommands ?? []) for (const flag of subcommand.flags) expect(accepted.has(flag)).toBe(true);
   });
 });

@@ -3,7 +3,7 @@ use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, se
 use crate::editor::bim::transient::*;
 use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
 use protocol::{ColdMutation, Mutation, OpBinary, OpText};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn busy() -> BimWindowTransient {
     BimWindowTransient { engagement_input: "Living".into(), pointer_generation: 4, preview: "{\"marks\":[]}".into() }

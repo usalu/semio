@@ -1,0 +1,31 @@
+{
+ "version": 1,
+ "owners": {
+  "base": [
+   {"name": "a", "root": "pkg/a", "manifest": "pkg/a/project.json", "packages": []},
+   {"name": "b", "root": "pkg/b", "manifest": "pkg/b/project.json", "packages": ["@s/b"]}
+  ],
+  "withNew": [
+   {"name": "a", "root": "pkg/a", "manifest": "pkg/a/project.json", "packages": []},
+   {"name": "b", "root": "pkg/b", "manifest": "pkg/b/project.json", "packages": ["@s/b", "@s/b2"]},
+   {"name": "n", "root": "pkg/n", "manifest": "pkg/n/project.json", "packages": []}
+  ],
+  "withoutA": [
+   {"name": "b", "root": "pkg/b", "manifest": "pkg/b/project.json", "packages": ["@s/b"]}
+  ],
+  "movedA": [
+   {"name": "a", "root": "pkg/a2", "manifest": "pkg/a2/project.json", "packages": []},
+   {"name": "b", "root": "pkg/b", "manifest": "pkg/b/project.json", "packages": ["@s/b"]}
+  ]
+ },
+ "recorded": [
+  {"name": "a", "from": "base"},
+  {"name": "n", "from": "base"}
+ ],
+ "steps": [
+  {"label": "an unrelated owner is added and a package list of another owner changes", "registry": "withNew", "holds": {"a": true, "n": false}},
+  {"label": "the asked owner disappears", "registry": "withoutA", "holds": {"a": false, "n": true}},
+  {"label": "the asked owner moves", "registry": "movedA", "holds": {"a": false, "n": true}},
+  {"label": "the registry file is unreadable", "registry": null, "holds": {"a": false, "n": false}}
+ ]
+}

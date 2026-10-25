@@ -26,7 +26,7 @@ import * as contractUrlModule from "node:url";
 export const contractRoot = contractPath.resolve(import.meta.dir, "..");
 export const contractUrl = contractUrlModule.pathToFileURL(contractPath.join(contractRoot, "🟦️.ts")).href;
 
-/** 🧾️ `@iarna/toml` declares every document as `AnyJson`; a TOML document is always a keyed table, and each
+/** 🔣️ `@iarna/toml` declares every document as `AnyJson`; a TOML document is always a keyed table, and each
  * reader below states the exact table shape it asserts against. */
 export function readToml<T>(text: string): T {
   return toml.parse(text) as unknown as T;
@@ -35,7 +35,7 @@ export function readToml<T>(text: string): T {
 /** 🧬️ A deeply mutable projection of one frozen contract record, for the `structuredClone`-then-mutate probes below. */
 type Mutable<T> = { -readonly [Key in keyof T]: T[Key] };
 
-/** 🧬️ The frozen taxonomy with exactly the registries these probes rewrite opened for writing; every other field
+/** 📑️ The frozen taxonomy with exactly the registries these probes rewrite opened for writing; every other field
  * keeps its declared shape, so the value stays assignable wherever a `Taxonomy` is expected. */
 type ProbeTaxonomy = Omit<Taxonomy, "fixedDirectoryContracts" | "fixedFilenameContracts" | "packageSourceDispositions" | "fixedDirectoryContractSets"> & {
   fixedDirectoryContracts: Record<string, Mutable<FixedDirectoryContract>>;
@@ -44,7 +44,7 @@ type ProbeTaxonomy = Omit<Taxonomy, "fixedDirectoryContracts" | "fixedFilenameCo
   fixedDirectoryContractSets: Record<string, readonly string[]>;
 };
 
-/** 🧬️ A structured deep copy is a fresh object graph, so the copy is safe to mutate even where the source type is frozen. */
+/** 🦜️ A structured deep copy is a fresh object graph, so the copy is safe to mutate even where the source type is frozen. */
 export function probeClone(value: Taxonomy): ProbeTaxonomy {
   return structuredClone(value) as ProbeTaxonomy;
 }
@@ -146,7 +146,7 @@ function drawSourceScenarioPreimage(destinationPath: string): string {
   return createHash("sha256").update(drawSourceScenarioContent(member.content, projection)).digest("hex");
 }
 
-/** 🧵️ Binds every frozen CAD scenario source to its exact current carrier: each declared live path is one owned file,
+/** 🪢️ Binds every frozen CAD scenario source to its exact current carrier: each declared live path is one owned file,
  * and every owned file carries exactly one scenario source. */
 export function cadProjectionLiveSources(projection: ArtifactProjectionGoldenEntry, paths = ownedFilePaths(join(getWorkspaceRoot(), projection.sourceRoot)).filter((path) => path.endsWith(".json")), live = CAD_LIVE_BINDINGS): ReadonlyMap<string, string> {
   if (projection.contractId !== live.projection) throw new Error("CAD source bindings require the exact catalog projection");
@@ -232,7 +232,7 @@ export const SCOPED_INVENTORY_PATHSPEC_GOLDEN = JSON.parse(readFileSync(join(con
   cases: readonly Readonly<{ id: string; inputScope: string | null; normalizedScope: string | null; conservativePrefix: string; positivePathspec: string; exclusionPathspecs: readonly string[] }>[];
 }>;
 
-/** 🧾️ Captures precisely the typed, digest-bound bytes that apply will authenticate. */
+/** 🗓️ Captures precisely the typed, digest-bound bytes that apply will authenticate. */
 export function artifactProjectionSubmittedPlanBytes(value: unknown): Buffer {
   const plan = parseTaxonomyPlan(value);
   if (taxonomyPlanDigest(plan) !== plan.planDigest) throw new Error("Submitted artifact plan has an invalid self digest");
@@ -462,7 +462,7 @@ export function retainArtifactProjectionFixture(fixture: NormalizationFixture, p
   writeFileSync(reportPath, `# Retained Artifact Projection Run\n\nScenario: ${record.name}\n\nStarted: ${record.startedAt}\n\nFinished: ${new Date().toISOString()}\n\nOutcome: ${passed ? "passed" : "failed or interrupted before completion"}\n\nAll authored inputs and generated/recovery evidence remain retained pending exact review. No output or fixture input was deleted by the finalizer.\n`);
 }
 
-/** 🗂️ Keeps the authored source owner distinct from its metadata transaction ticket. */
+/** 🧫️ Keeps the authored source owner distinct from its metadata transaction ticket. */
 export function artifactProjectionFixtureLocations(root: string): Readonly<{ ticketDir: string; workspace: string }> {
   return {
     ticketDir: join(root, ...DRAW_SOURCE_SCENARIO.retention.transactionTicketSegments),
@@ -550,12 +550,12 @@ export function inScopeForTest(path: string, scope: string): boolean {
   return normalizedPath === normalizedScope || normalizedPath.startsWith(`${normalizedScope}/`) || normalizedScope.startsWith(`${normalizedPath}/`);
 }
 
-/** 🧾️ Reduces inventory entries to the physical census fields governed by scoped admission. */
+/** 📊️ Reduces inventory entries to the physical census fields governed by scoped admission. */
 export function normalizationInventoryCensus(inventory: TaxonomyInventory): readonly Readonly<Record<string, unknown>>[] {
   return inventory.entries.filter(({ nodeKind }) => nodeKind !== "directory").map(({ sourcePath, nodeKind, mode, size, contentHash, symlinkTarget }) => ({ sourcePath, nodeKind, mode, size, contentHash, ...(symlinkTarget === undefined ? {} : { symlinkTarget }) }));
 }
 
-/** 📡️ Preserves the complete, duplicate-free inventory phase transition sequence. */
+/** 🎞️ Preserves the complete, duplicate-free inventory phase transition sequence. */
 export function normalizationPhaseSequence(events: readonly TaxonomyProgress[]): readonly string[] {
   return events.map(({ phase }) => phase).filter((phase, index, rows) => index === 0 || phase !== rows[index - 1]);
 }
@@ -601,7 +601,7 @@ export function artifactProjectionProducerInput(path: string): ArtifactProducerI
   return { content, mode: after.mode & 0o7777, sha256: createHash("sha256").update(bytes).digest("hex"), origin: "current-compiler-context" };
 }
 
-/** 📦️ Captures current producer inputs from exact contracts and static imports without repository traversal. */
+/** 🏺️ Captures current producer inputs from exact contracts and static imports without repository traversal. */
 export function artifactProjectionProducerInputs(taxonomy: Taxonomy, readInput: (path: string) => ArtifactProducerInput = artifactProjectionProducerInput, context: DrawSourceScenario["producerContext"] = DRAW_SOURCE_SCENARIO.producerContext) {
   const contract = taxonomy.generatorContracts[context.generatorId], authority = contract?.inputDiscovery;
   if (!contract?.ownerPath || !authority || authority.kind !== "registry-catalog") throw new Error("Authored Draw producer requires exact registry catalog authority");
@@ -798,7 +798,7 @@ function checkoutWalkPieces(root: string, scope: string, weights: ReadonlyMap<st
   return weight(scope) > budget ? split(scope) : [{ path: scope, weight: weight(scope) }];
 }
 
-/** 🪟️ Reads the tracked paths once and splits each requested scope into disjoint literal pathspecs balanced by tracked
+/** 🛤️ Reads the tracked paths once and splits each requested scope into disjoint literal pathspecs balanced by tracked
  * weight, so the untracked walk (the dominant cost of `git ls-files --others`) runs as parallel Git processes whose
  * union equals one unscoped walk. */
 export async function checkoutPathInventory(root: string, scopes: readonly string[], options: Readonly<{ parallelism?: number; budget?: number }> = {}): Promise<CheckoutPathInventory> {

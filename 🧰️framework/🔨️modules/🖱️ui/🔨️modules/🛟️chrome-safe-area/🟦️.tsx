@@ -32,7 +32,7 @@ export function useShellNavbarTrailingEndWidthPx(root?: HTMLElement): number {
   );
 }
 
-/** ↔ Inline cap-row reserve that clears trailing navbar controls for chrome-hosted right panels. */
+/** 🔚️ Inline cap-row reserve that clears trailing navbar controls for chrome-hosted right panels. */
 export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSProperties | undefined {
   if (widthPx <= 0) return undefined;
   return { paddingInlineStart: `${widthPx + uiSpacingPx(1)}px` };
@@ -57,7 +57,7 @@ export function chromeHostedPanelCapRowStyle(anchor: Anchor, trailingEndWidthPx:
   return { ...reserve, width: "max-content", minWidth: "100%" };
 }
 
-/** 🛟️ An axis-aligned viewport box in CSS pixels — the one geometry currency of the safe area,
+/** 📦️ An axis-aligned viewport box in CSS pixels — the one geometry currency of the safe area,
  * so a caller can state a box it has not laid out yet ({@link Window}'s right-edge chrome column) as
  * readily as one it measured ({@link safeAreaBoxFromRect}). */
 export interface SafeAreaBox {
@@ -67,18 +67,18 @@ export interface SafeAreaBox {
   readonly bottom: number;
 }
 
-/** 🛟️ One open anchored chrome {@link Panel}'s occupied viewport box, with the anchor it grew from. */
+/** 🎛️ One open anchored chrome {@link Panel}'s occupied viewport box, with the anchor it grew from. */
 export interface ChromePanelOccupancy {
   readonly key: string;
   readonly anchor: Anchor;
   readonly box: SafeAreaBox;
 }
 
-/** 🛟️ Which axis an in-window affordance is free to yield on. Floating panes and content overlays take
+/** 🆓️ Which axis an in-window affordance is free to yield on. Floating panes and content overlays take
  * `"either"`, i.e. whichever single axis clears the chrome panel with the smaller displacement. */
 export type SafeAreaYield = "inline" | "block" | "either";
 
-/** 🛟️ How far an affordance must move off its anchor's own two edges to clear the chrome panels
+/** ⚓️ How far an affordance must move off its anchor's own two edges to clear the chrome panels
  * over it — at most one axis is ever non-zero. */
 export interface ChromePanelSafeArea {
   readonly inlinePx: number;
@@ -89,7 +89,7 @@ const CHROME_PANEL_SAFE_AREA_CLEAR: ChromePanelSafeArea = Object.freeze({ inline
 
 const NO_CHROME_PANEL_OCCUPANCIES: readonly ChromePanelOccupancy[] = Object.freeze([]);
 
-/** 🛟️ A measured DOM rect as a {@link SafeAreaBox}, rounded to whole pixels so a sub-pixel
+/** 🗃️ A measured DOM rect as a {@link SafeAreaBox}, rounded to whole pixels so a sub-pixel
  * reflow of an unchanged panel never re-publishes and never re-renders its readers. */
 export function safeAreaBoxFromRect(rect: DOMRect): SafeAreaBox {
   return { left: Math.round(rect.left), top: Math.round(rect.top), right: Math.round(rect.right), bottom: Math.round(rect.bottom) };
@@ -112,7 +112,7 @@ const shellChromePanelSnapshotByRoot = ephemeralMap<HTMLElement, readonly Chrome
 
 const shellChromePanelListenersByRoot = ephemeralMap<HTMLElement, Set<() => void>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellChromePanelListenersByRoot");
 
-/** 🛟️ Publishes (or, with `box: null`, retracts) one open anchored chrome panel's occupied
+/** 📢️ Publishes (or, with `box: null`, retracts) one open anchored chrome panel's occupied
  * viewport box. An anchored panel floats OVER the canvas region in the app root's stacking context (see
  * {@link anchorPositionStyle} and `📐️Layout`), so it is the only party that knows the box it occupies —
  * window content painted under it cannot derive that from its own layout, and cannot win the corner back
@@ -138,7 +138,7 @@ export function publishShellChromePanelBox(root: HTMLElement | undefined, key: s
   for (const listener of shellChromePanelListenersByRoot.get(rootKey) ?? []) listener();
 }
 
-/** 🛟️ Every open anchored chrome panel of this shell, as the boxes they occupy — the single
+/** 🍱️ Every open anchored chrome panel of this shell, as the boxes they occupy — the single
  * observable any in-window affordance reserves itself against. */
 export function useShellChromePanelBoxes(root?: HTMLElement): readonly ChromePanelOccupancy[] {
   const rootKey = resolveElementsSurfaceChromeRoot(root);
@@ -179,7 +179,7 @@ function chromePanelAxisReserve(affordance: SafeAreaBox, host: SafeAreaBox, pane
   return offset > 0 && start >= h[0]! && end <= h[1]! ? offset : 0;
 }
 
-/** 🛟️ Clear every overlapping shell panel along one authored anchor axis, including panels reached after
+/** 🛡️ Clear every overlapping shell panel along one authored anchor axis, including panels reached after
  * moving. Preserve the axis gap, round outward, and stay entirely inside the actual host. The smallest
  * viable displacement wins; block wins ties. No overlap or no fit leaves placement unchanged.
  * {@link chromePanelSafeAreaStyle} applies this reserve; the native twin consumes the same Shell corpus. */
@@ -194,7 +194,7 @@ export function chromePanelSafeArea(affordance: SafeAreaBox, host: SafeAreaBox, 
   return CHROME_PANEL_SAFE_AREA_CLEAR;
 }
 
-/** 🛟️ {@link anchorPositionStyle}'s two edge insets, moved inward by a {@link chromePanelSafeArea}
+/** 🖌️ {@link anchorPositionStyle}'s two edge insets, moved inward by a {@link chromePanelSafeArea}
  * — the flush `var(--spacing-single)` inset (or the caller's own `base`, e.g. a window content rail's
  * {@link windowChromeClearedTopOffset}) when the safe area is clear, so a shell with no open panel lays
  * out byte-for-byte as authored. A middle anchor has no edge to reserve on that axis. */
@@ -209,7 +209,7 @@ export function chromePanelSafeAreaStyle(anchor: Anchor, safeArea: ChromePanelSa
   return style;
 }
 
-/** 🛟️ Live {@link chromePanelSafeArea} for one mounted affordance, measured against every open
+/** 📏️ Live {@link chromePanelSafeArea} for one mounted affordance, measured against every open
  * anchored chrome panel of the enclosing shell.
  *
  * The affordance is graded on its UNRESERVED box — its measured rect with the offset this hook currently

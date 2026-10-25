@@ -10,19 +10,21 @@ const sorted=(values:Iterable<string>):string[]=>[...new Set(values)].sort(parit
 const record=(value:unknown):Record<string,unknown>|undefined=>value!==null&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:undefined;
 const strings=(value:unknown):string[]=>Array.isArray(value)?value.filter((row):row is string=>typeof row==="string"):[];
 
-/** 🔦️ Reads every top-level JSON object that starts a line, skipping log lines before, between and after them. */
+/** 🔦️ Reads every top-level JSON object that starts a line or directly follows the previous object (Bazel writes pretty-printed spawns as `}{`), skipping log lines before, between and after them. */
 export function parseParityJsonObjectsV1(text:string):unknown[]{
- const found:unknown[]=[];
+ const found:unknown[]=[];let adjacent=false;
  for(let start=0;start<text.length;start++){
-  if(text[start]!=="{"||start>0&&text[start-1]!=="\n")continue;
+  const first=text[start]!;
+  if(first!=="{"||start>0&&text[start-1]!=="\n"&&!adjacent){if(adjacent&&first.trim()!=="")adjacent=false;continue;}
   let depth=0,inString=false,escaped=false,end=-1;
   for(let index=start;index<text.length;index++){
    const character=text[index]!;
    if(inString){if(escaped)escaped=false;else if(character==="\\")escaped=true;else if(character==="\"")inString=false;continue;}
    if(character==="\"")inString=true;else if(character==="{")depth++;else if(character==="}"&&--depth===0){end=index;break;}
   }
+  adjacent=false;
   if(end<0)continue;
-  try{found.push(JSON.parse(text.slice(start,end+1)));start=end;}catch{}
+  try{found.push(JSON.parse(text.slice(start,end+1)));start=end;adjacent=true;}catch{}
  }
  return found;
 }

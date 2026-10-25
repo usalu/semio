@@ -18,7 +18,7 @@ class StepInspector<M extends MachineSpec> implements Inspector<M> {
   }
 }
 
-/** 🔁 Everything a host needs to project one settled transition into its own state lanes.
+/** 🖥️ Everything a host needs to project one settled transition into its own state lanes.
  * `entered`/`exited` are the union across the macrostep's microsteps, in execution order — a node
  * touched twice within one macrostep appears twice, because that is what happened. `active` is the
  * settled configuration and is the field to project from. */
@@ -69,7 +69,7 @@ export function start<M extends MachineSpec>(machine: Machine<M>, input: M["Inpu
   return machineStepOf(machine, snapshot, [], [], commands, { microsteps: 0 });
 }
 
-/** 🔁 Restores from `prior`, runs one macrostep, and persists the result — the whole
+/** 🪜️ Restores from `prior`, runs one macrostep, and persists the result — the whole
  * read-transition-write cycle, with the live {@link Snapshot} confined to this call. */
 export function step<M extends MachineSpec>(
   machine: Machine<M>,

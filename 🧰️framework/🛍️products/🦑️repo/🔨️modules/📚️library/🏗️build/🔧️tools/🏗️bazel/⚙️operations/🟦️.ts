@@ -8,7 +8,7 @@ import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules
 import {withRepositoryCacheStoreV1,withRepositoryCacheStoreQueuedMaintenanceV1,withRepositoryCacheStoreMaintenanceTaskV1,requireRepositoryCacheStoreMaintenanceV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {repositoryCacheOrdinaryMaintenanceV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
-import type {BuildCacheActivityV1,BuildCacheContextV1,BuildCacheStatusV1,BuildCacheToolV1,BuildDryRunPlanV1,BuildTaskGraphV1} from "../../../⚙️operations/🟦️.ts";
+import type { BuildDryRunPlanV1, BuildTaskGraphV1 } from "../../../⚙️operations/🟦️.ts"; import type { BuildCacheActivityV1, BuildCacheContextV1, BuildCacheStatusV1, BuildCacheToolV1 } from "../../../⚙️operations/📋️contract/🟦️.ts";
 import {bazelCacheLayoutV1,bazelServerBaseV1} from "../💾️storage/🟦️.ts";
 import type {BazelTaskPlanV1} from "../📋️task-plan/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};

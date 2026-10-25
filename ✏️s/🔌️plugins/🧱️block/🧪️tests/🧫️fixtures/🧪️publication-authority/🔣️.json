@@ -51,13 +51,13 @@
         {
           "id": "setActiveExample",
           "lanes": [
-            "artifact"
+            "host-only"
           ]
         },
         {
           "id": "edit",
           "lanes": [
-            "artifact"
+            "host-only"
           ]
         }
       ],
@@ -128,13 +128,13 @@
         {
           "id": "setActiveExample",
           "lanes": [
-            "artifact"
+            "host-only"
           ]
         },
         {
           "id": "edit",
           "lanes": [
-            "artifact"
+            "host-only"
           ]
         },
         {
@@ -272,13 +272,13 @@
         {
           "id": "setActiveExample",
           "lanes": [
-            "artifact"
+            "host-only"
           ]
         },
         {
           "id": "edit",
           "lanes": [
-            "artifact"
+            "host-only"
           ]
         }
       ],

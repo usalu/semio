@@ -9,7 +9,7 @@ import type { LocalizedLabel } from "../🛂️manifest/🤖️generated/🎚️
 export type { IconName, LocalizedLabel };
 
 // #region 🔖️Definition
-/** 🕹️ One interaction domain an app declares (e.g. "graph", "mesh", "ast", "world"). */
+/** 📋️ One interaction domain an app declares (e.g. "graph", "mesh", "ast", "world"). */
 export type InteractionDefinition = {
   readonly id: string;
   readonly label: LocalizedLabel;
@@ -42,12 +42,12 @@ export type HoverSpec = {
   readonly broadcast: boolean;
 };
 
-/** 🐁️ `HoverSpec` with the same defaults as Rust's `impl Default for HoverSpec`. */
+/** 📕️ `HoverSpec` with the same defaults as Rust's `impl Default for HoverSpec`. */
 export const DEFAULT_HOVER_SPEC: HoverSpec = { enabled: true, transitive: false, channels: ["pointer"], broadcast: true };
 
 /** 🖱️ One domain's selection behavior. */
 export type SelectionSpec = {
-  /** 🪜️ Non-empty; the first entry is the domain's default mode. */
+  /** 🪫️ Non-empty; the first entry is the domain's default mode. */
   readonly modes: readonly SelectionMode[];
   readonly methods: readonly SelectionMethod[];
   readonly merges: readonly MergeMode[];
@@ -58,7 +58,7 @@ export type SelectionSpec = {
 /** 🔢️ How many targets may be selected at once within a domain. */
 export type SelectionMode = "single" | "multiple";
 
-/** 🎯️ How a surface gathers targets for one `interactionSelect` dispatch. */
+/** 🏹️ How a surface gathers targets for one `interactionSelect` dispatch. */
 export type SelectionMethod = "pick" | "rectangle" | "lasso";
 
 /** 🧮️ Set algebra applied when merging new targets into the current selection — see {@link nextSelection}. */
@@ -75,14 +75,14 @@ export type InteractionTarget = {
   readonly id: string;
 };
 
-/** 🖱️ One domain's current selection. */
+/** 🎚️ One domain's current selection. */
 export type DomainSelection = {
   readonly granularity: string;
   readonly ids: readonly string[];
   readonly anchorId?: string;
 };
 
-/** 🐁️ One domain's current hover on one channel. */
+/** 🌊️ One domain's current hover on one channel. */
 export type DomainHover = {
   readonly channel: string;
   readonly ids: readonly string[];
@@ -96,12 +96,12 @@ export type InteractionState = {
   readonly activeGranularity: Readonly<Record<string, string>>;
 };
 
-/** 🗺️ An empty `InteractionState` — the TS twin of Rust's `#[derive(Default)]`. */
+/** 🕳️ An empty `InteractionState` — the TS twin of Rust's `#[derive(Default)]`. */
 export const EMPTY_INTERACTION_STATE: InteractionState = { selection: {}, hover: {}, activeMode: {}, activeGranularity: {} };
 // #endregion 🔖️Runtime
 
 // #region 🔖️Topology
-/** 🌳️ One node of a domain's topology: its own granularity and its parent id (absent = a root). */
+/** 🌿️ One node of a domain's topology: its own granularity and its parent id (absent = a root). */
 export type TopologyNode = {
   readonly id: string;
   readonly granularity: string;
@@ -151,13 +151,13 @@ const expandTargets = (topo: DomainTopology, ids: readonly string[], transitive:
   return out;
 };
 
-/** 🌳️ `rootId` plus every descendant, pre-order (root first) — empty when `rootId` is absent from `topo`. */
+/** ➕️ `rootId` plus every descendant, pre-order (root first) — empty when `rootId` is absent from `topo`. */
 export const domainTopologyDescendantClosure = (topo: DomainTopology, rootId: string): string[] => {
   if (!domainTopologyContains(topo, rootId)) return [];
   return expandTargets(topo, [rootId], true);
 };
 
-/** 🪜️ `id`'s ancestor chain, nearest parent first, root last. */
+/** ⛓️ `id`'s ancestor chain, nearest parent first, root last. */
 export const domainTopologyAncestors = (topo: DomainTopology, id: string): string[] => {
   const out: string[] = [];
   const parents = new Map(topo.ordered.map(node => [node.id, node.parent]));
@@ -172,14 +172,14 @@ export const domainTopologyAncestors = (topo: DomainTopology, id: string): strin
   return out;
 };
 
-/** 🗺️ Every domain's topology for one app instance, keyed by domain id. */
+/** 🔐️ Every domain's topology for one app instance, keyed by domain id. */
 export type InteractionTopology = {
   readonly domains: Readonly<Record<string, DomainTopology>>;
 };
 // #endregion 🔖️Topology
 
 // #region 🔖️SelectionMachine
-/** 🖱️ One `nextSelection` call's input: the batch of targets, the merge mode, and the active selection mode. */
+/** ⌨️ One `nextSelection` call's input: the batch of targets, the merge mode, and the active selection mode. */
 export type SelectionInput = {
   readonly targets: readonly InteractionTarget[];
   readonly merge: MergeMode;
@@ -189,7 +189,7 @@ export type SelectionInput = {
 const dedupPreservingOrder = (ids: readonly string[]): string[] => [...new Set(ids)];
 
 /**
- * 🖱️ Computes the next `DomainSelection` for one domain — the TS twin of Rust's `next_selection`,
+ * ➡️ Computes the next `DomainSelection` for one domain — the TS twin of Rust's `next_selection`,
  * itself the generalization of Tree's `getTreeNextSelectionState`
  * (`🖱️ui/🧱️elements/🪵️Tree/🟦️.tsx:946-968`).
  *
@@ -252,14 +252,14 @@ export const nextSelection = (spec: SelectionSpec, current: DomainSelection, top
 // #endregion 🔖️SelectionMachine
 
 // #region 🔖️HoverMachine
-/** 🐁️ One `nextHover` call's input: the channel and the batch of hovered targets (empty = clear). */
+/** 📥️ One `nextHover` call's input: the channel and the batch of hovered targets (empty = clear). */
 export type HoverInput = {
   readonly channel: string;
   readonly targets: readonly InteractionTarget[];
 };
 
 /**
- * 🐁️ Computes the next `DomainHover` for one channel — the TS twin of Rust's `next_hover`: always
+ * ⏭️ Computes the next `DomainHover` for one channel — the TS twin of Rust's `next_hover`: always
  * REPLACES the channel's id list. When `spec.transitive`, each target expands to its descendant
  * closure with the hovered root first; multiple targets concatenate in input order, deduplicated.
  * Disabled specs and empty target batches both clear the channel.

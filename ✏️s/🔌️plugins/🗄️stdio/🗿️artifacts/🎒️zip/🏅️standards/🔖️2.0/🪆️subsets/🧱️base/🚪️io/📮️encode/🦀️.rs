@@ -151,7 +151,7 @@ pub fn encode_zip(snapshot: &ZipSnapshot) -> Result<Vec<u8>, ZipError> {
     encode_zip_ordered(snapshot, snapshot.entries.iter().collect())
 }
 
-pub(crate) fn encode_zip_with_entry_names(snapshot: &ZipSnapshot, names: &[String]) -> Result<Vec<u8>, ZipError> {
+pub fn encode_zip_with_entry_names(snapshot: &ZipSnapshot, names: &[String]) -> Result<Vec<u8>, ZipError> {
     if names.len() != snapshot.entries.len() {
         return Err(ZipError::Malformed("derived entry order does not cover every logical member".into()));
     }

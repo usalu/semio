@@ -7,9 +7,9 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct AddDeflatedEntry {
-    pub(crate) entry: ZipEntry,
+    pub entry: ZipEntry,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) before: Option<String>,
+    pub before: Option<String>,
 }
 
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for AddDeflatedEntry {

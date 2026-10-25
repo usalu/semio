@@ -1128,7 +1128,16 @@
         "implementation": "@semio-tech/print-viz-inference",
         "version": "workspace"
       },
-      "productionReachable": false,
+      "productionReachable": true,
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/📓️print/🔨️modules/🏠️host/💡️inferences/🟦️.ts",
+          "🧰️framework/🛍️products/📓️print/🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts",
+          "🧰️framework/🛍️products/📓️print/🚪️io/📝️text/💡️inferences/🟦️.ts"
+        ],
+        "owner": "🧰️framework/🛍️products/📓️print",
+        "plan": "The print host and its text I/O import the visualization inference package as types and run it as the product's own chart inference, so registering that package as the kernel twin records the debt instead of claiming a purity the imports contradict. The twin is already registered as a supplement, never as independent evidence, and d3 stays the independent reference. The debt retires when the inference engine the product ships and the twin compared against d3 are separated into two packages, so the comparison no longer judges the code the product runs."
+      },
       "networkDuringExecution": false
     },
     {

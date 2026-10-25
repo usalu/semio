@@ -16,6 +16,7 @@ use {semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, se
 use {semio_s_artifact_puzzle_3d_commands_document::add_target_volume, semio_s_artifact_puzzle_3d_commands_document::export_snapshot, semio_s_artifact_puzzle_3d_commands_runtime::set_fill_count};
 use {semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfig, semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfigMutation, semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfigSetFillCount};
 use semio_s_artifact_puzzle_3d_editor_panels::artifact;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dEditor;
 use {semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_labels, semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels};
 use semio_s_artifact_puzzle_3d_editor_window as window_ownership;
 use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
@@ -102,7 +103,6 @@ pub use self::window_command_work::*;
 
 #[path = "🔄️transform-work/🦀️.rs"]
 mod transform_work;
-#[derive(Clone)]
 pub use self::transform_work::*;
 
 #[path = "🖌️brush-object-work/🦀️.rs"]
@@ -115,7 +115,7 @@ pub use self::focus_selection_work::*;
 
 #[path = "💡️accept-suggestion-work/🦀️.rs"]
 mod accept_suggestion_work;
-pub use  pubself::accept_suggestion_work::*;
+pub use self::accept_suggestion_work::*;
 
 #[path = "🧠️precompute-command-work/🦀️.rs"]
 mod precompute_command_work;

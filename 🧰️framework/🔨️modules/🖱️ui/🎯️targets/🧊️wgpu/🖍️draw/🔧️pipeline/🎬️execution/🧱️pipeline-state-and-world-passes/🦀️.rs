@@ -152,7 +152,7 @@ pub fn physical_viewport_rect(viewport: [f32; 4], scale: f32) -> [f32; 4] {
     [viewport[0] * scale, viewport[1] * scale, viewport[2] * scale, viewport[3] * scale]
 }
 
-/// ✂️ `scissor` and `width`/`height` are LOGICAL pixels; `scale` turns them into the physical
+/// 🪚️ `scissor` and `width`/`height` are LOGICAL pixels; `scale` turns them into the physical
 /// rectangle `wgpu` clips against, so a clip lands on the same CSS box at any scale factor.
 pub(super) fn set_pass_scissor(pass: &mut gpu_device::RenderPass<'_>, scissor: Option<ScissorRect>, scale: f32, width: f32, height: f32) {
     if let Some(scissor) = scissor {
@@ -242,7 +242,7 @@ impl UiPipelines {
         }
     }
 
-    /// 📐️ One logical rectangle as the physical scissor `wgpu` takes. An empty logical rect stays
+    /// 📏️ One logical rectangle as the physical scissor `wgpu` takes. An empty logical rect stays
     /// empty — "clip everything away" must not become a one-pixel sliver at 2×.
     pub(super) fn physical_scissor(&self, scissor: ScissorRect) -> ScissorRect {
         physical_scissor_rect(scissor, self.resources.surface_scale)

@@ -10,7 +10,7 @@ use super::*;
 #[dsl(keyword = "set-global-color-table")]
 pub struct SetGlobalColorTable {
     #[dsl(block)]
-    pub(crate) gct: Option<GifColorTable>,
+    pub gct: Option<GifColorTable>,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetGlobalColorTable {

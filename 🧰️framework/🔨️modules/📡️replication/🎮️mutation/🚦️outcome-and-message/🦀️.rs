@@ -189,14 +189,14 @@ impl MutationMessage {
         self
     }
 
-    /// 🔢️ Stamps which op (within a batch) produced this message.
+    /// 💬️ Stamps which op (within a batch) produced this message.
     pub fn at_op(mut self, op_index: u32) -> Self {
         self.op_index = Some(op_index);
         self
     }
 }
 
-/// 🚦️ The worst (highest) [`crate::diagnostic::Severity`] across `messages`, or `None` if empty.
+/// 🩺️ The worst (highest) [`crate::diagnostic::Severity`] across `messages`, or `None` if empty.
 pub fn worst_level(messages: &[MutationMessage]) -> Option<semio_framework_diagnostic::Severity> {
     messages.iter().map(|message| message.level).max()
 }
@@ -287,7 +287,7 @@ impl<D: Default> MutationOutcome<D> {
 }
 
 impl<D> MutationOutcome<D> {
-        /// ⚖️ Error and Fatal refuse the whole semantic operation before any executable delta is used.
+        /// 🔏️ Error and Fatal refuse the whole semantic operation before any executable delta is used.
     pub fn admit(self) -> MutationAdmission<D> {
         if self.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
             MutationAdmission::Refused(self)
@@ -296,7 +296,7 @@ impl<D> MutationOutcome<D> {
         }
     }
 
-    /// 🛂️ Gates cold inverse candidates on semantic admission and actual participation, retiring the evaluated diff once.
+    /// ↩️ Gates cold inverse candidates on semantic admission and actual participation, retiring the evaluated diff once.
     pub fn admit_inverse<P>(self, foreign_steps: impl FnOnce() -> Result<bool, semio_framework_value::ValueError>) -> Result<bool, semio_framework_value::ValueError>
     where
         D: MutationDiff<P>,
@@ -311,7 +311,7 @@ impl<D> MutationOutcome<D> {
         executable
     }
 
-/// ✅️ A successful diff, no messages.
+/// 🆚️ A successful diff, no messages.
     pub fn new(diff: D) -> Self {
         Self { diff, messages: Vec::new() }
     }
@@ -335,13 +335,13 @@ impl<D> MutationOutcome<D> {
         self
     }
 
-    /// ➕️ Appends one `Warning`-level message.
+    /// ⚠️ Appends one `Warning`-level message.
     pub fn warning(mut self, code: impl Into<semio_framework_diagnostic::FaultCode>, message: impl Into<String>) -> Self {
         self.messages.push(MutationMessage::warning(code, message));
         self
     }
 
-    /// ➕️ Appends every message in `messages`, in order — the general escape hatch for a targeted
+    /// ✉️ Appends every message in `messages`, in order — the general escape hatch for a targeted
     /// message that the 2-arg `info`/`warning` builders can't express (see the naming note above).
     pub fn absorb_messages(mut self, messages: impl IntoIterator<Item = MutationMessage>) -> Self {
         self.messages.extend(messages);
@@ -357,7 +357,7 @@ impl<D> MutationOutcome<D> {
         self
     }
 
-    /// 🚦️ The worst level across `self.messages`, or `None` if there are none.
+    /// 🪜️ The worst level across `self.messages`, or `None` if there are none.
     pub fn worst_level(&self) -> Option<semio_framework_diagnostic::Severity> {
         worst_level(&self.messages)
     }

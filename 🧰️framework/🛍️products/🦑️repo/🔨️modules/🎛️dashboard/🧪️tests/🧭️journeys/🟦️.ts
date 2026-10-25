@@ -42,6 +42,8 @@ describe("cli journeys", () => {
     const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧭️journeys/🔣️.json"), "utf8"));
     const validate = new Ajv().compile(schema);
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const shipped = JSON.parse(readFileSync(join(import.meta.dir, "../../⚙️preferences/⌨️keymap/🔣️.json"), "utf8")).bindings.filter((binding: { scope: string }) => binding.scope === "prefix").flatMap((binding: { keys: string[] }) => binding.keys);
+    for (const key of [fixture.readyLifecycle.remappedOpenPrefix, fixture.readyLifecycle.remappedCancelPrefix]) expect(shipped, `remapped prefix key ${key} collides with a shipped binding and would be ignored`).not.toContain(key);
     expect(fixture.localizedForm.tool.parameters.map((parameter: { kind: string }) => parameter.kind)).toEqual(["text", "choice", "flag"]);
     expect(fixture.localizedForm.expected.args).toEqual(["--label", "wide value"]);
     for (const locale of ["en", "de"]) {

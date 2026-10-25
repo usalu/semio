@@ -190,7 +190,7 @@ fn a_focused_slider_steps_jumps_and_clamps_on_the_arrow_keys() {
     assert!(ignored.iter().all(|cmd| !matches!(cmd, UiCommand::App { .. })), "an unrelated key must not move the slider");
 }
 
-/// 🎚️ The values themselves: one step per arrow, ten per page key, clamped to the track's ends.
+/// 🔢️ The values themselves: one step per arrow, ten per page key, clamped to the track's ends.
 #[test]
 fn slider_key_values_match_reacts_step_multiplier_and_clamp() {
     let UiNode::Slider(slider) = slider_ui("s", 5.0) else { panic!("slider") };
@@ -229,7 +229,7 @@ fn slider_key_values_answer_the_shared_keyboard_law_rows() {
     }
 }
 
-/// 🎚️ The retained canvas consumes the same readout editing vectors as the mounted React Slider:
+/// ✏️ The retained canvas consumes the same readout editing vectors as the mounted React Slider:
 /// only a double-click in the readout opens its numeric buffer, Enter validates/snaps once, and
 /// the local controlled draft drives later keys while an older declaration is still visible.
 #[test]

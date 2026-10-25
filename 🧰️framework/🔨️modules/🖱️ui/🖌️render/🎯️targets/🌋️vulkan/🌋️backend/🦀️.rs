@@ -79,7 +79,7 @@ impl FrameSync {
 
 //#region 🌋️VulkanBackend
 
-/// 🌋️ The concrete Linux `GraphicsBackend`. Every `ash`/Vulkan type stays behind this crate's own
+/// 🐧️ The concrete Linux `GraphicsBackend`. Every `ash`/Vulkan type stays behind this crate's own
 /// interface — nothing here appears in a public signature outside this crate (CLAUDE.md's "external
 /// libraries behind an interface" rule; mirrors the Metal target's own framing).
 pub struct VulkanBackend {
@@ -582,7 +582,7 @@ impl GraphicsBackend for VulkanBackend {
         self.status = DeviceStatus::Lost(LossReason::Device);
     }
 
-    /// 🧪️ Not yet implemented for real — `render_inner` does not encode a copy of the presented image
+    /// ⏪️ Not yet implemented for real — `render_inner` does not encode a copy of the presented image
     /// into a host-visible staging image (that copy needs the swapchain image transitioned out of
     /// `PRESENT_SRC_KHR` before `queue_present`, which milestone 1's minimal render pass does not yet
     /// stage for). Reports `ZeroSizeSurface` on a parked surface (the one case this crate can answer

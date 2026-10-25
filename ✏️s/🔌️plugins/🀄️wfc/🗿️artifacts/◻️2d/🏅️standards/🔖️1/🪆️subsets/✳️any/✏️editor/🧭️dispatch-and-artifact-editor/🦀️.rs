@@ -211,7 +211,7 @@ impl ArtifactEditor for Wfc2dEditor {
     /// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract
     /// and stays dispatch-dead however it is classified.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+        Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     /// 📬️ The same, for the pane config the camera and armed-tile verbs publish into.
@@ -329,46 +329,19 @@ impl ArtifactEditor for Wfc2dEditor {
         registry.register(Wfc2dRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !WFC_2D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !WFC_2D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        let tool_id = wfc2d_command_id(&request.command);
-        if tool_id != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "WFC 2D command does not match its exact registered tool"));
+        let tool_id = wfc2d_command_id(&original.command);
+        if tool_id != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC 2D command does not match its exact registered tool").into());
         }
-        if wfc2d_retained_extent(&request.command, &request.snapshot).is_none() {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.retained.extent"), "WFC 2D bounded route exceeded its declared work extent"));
+        if wfc2d_retained_extent(&original.command, &original.snapshot).is_none() {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC 2D bounded route exceeded its declared work extent").into());
         }
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id,
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(Wfc2dCommandWork::new(tool_id));
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            wfc2d_command_id,
-            WFC_2D_RETAINED_RAW_BYTES,
-            WFC_2D_RETAINED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, wfc2d_command_id, WFC_2D_RETAINED_RAW_BYTES, WFC_2D_RETAINED_WORK_ITEMS, false, |request| Wfc2dCommandWork::new(tool_id))
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {

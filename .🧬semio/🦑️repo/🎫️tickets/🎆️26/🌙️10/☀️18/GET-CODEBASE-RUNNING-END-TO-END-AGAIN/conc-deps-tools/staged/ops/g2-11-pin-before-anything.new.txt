@@ -1,1 +1,0 @@
-await pinJavascriptDependencyGenerationsV1(frame,selected.map(row=>row.plan.generation));

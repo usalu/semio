@@ -115,7 +115,7 @@ async fn a_smuggled_contributions_field_reaches_no_guest_reader() {
     assert!(!reprojected.contains("contributionsJson"), "no guest reader may re-emit contributions from a view context: {reprojected}");
 }
 
-/// 📏️ The one long field the contract keeps, pinned at the schema capacity the TypeScript twin
+/// 🧬️ The one long field the contract keeps, pinned at the schema capacity the TypeScript twin
 /// asserts against Ajv — `panelJson` at capacity decodes, and one character past it is the row the
 /// host admission refuses.
 #[semio_framework_async_macros::async_test]

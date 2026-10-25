@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isBuiltin } from "node:module";
 import { join, posix, resolve } from "node:path";
-import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
-import { TranspilerV1 } from "../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
 
 /** 🛗️ One entry whose relative import closure must run on a checkout without installed dependencies; `static` follows only static imports, `full` also dynamic imports and requires. */
 export type ZeroTouchClosureV1 = Readonly<{ id: string; entry: string; mode: "full" | "static"; reason: string }>;
@@ -109,7 +109,7 @@ export function zeroTouchClosureFindingsV1(roster: ZeroTouchRosterV1, tree: Zero
   return { files, findings };
 }
 
-/** 📋️ Reads the roster authored in `🗂️closures/🔣️.json` and refuses any shape its schema does not describe. */
+/** 📖️ Reads the roster authored in `🗂️closures/🔣️.json` and refuses any shape its schema does not describe. */
 export function readZeroTouchRosterV1(text: string): ZeroTouchRosterV1 {
   const value = JSON.parse(text) as { version?: unknown; closures?: unknown; seams?: unknown };
   if (value.version !== 1 || !Array.isArray(value.closures) || value.closures.length === 0 || !Array.isArray(value.seams) || Object.keys(value).length !== 3) throw Error("Closed zero-touch closure roster required");
@@ -152,7 +152,7 @@ export function checkZeroTouchClosuresV1(root: string): ReturnType<typeof zeroTo
 /** 🧭️ One root command whose module closure the law holds to the registry's declaration. */
 export type ZeroTouchCommandV1 = Readonly<{ id: string; module: string; requires: "none" | "dependencies" }>;
 
-/** 🪜️ Walks the full closure of every command module: a workspace package specifier is refused for every command; an external package is refused for `none` and allowed for `dependencies`, whose module is only loaded after the router has provisioned the dependencies; a `none` command reaches a seam by a dynamic import only. */
+/** 📱️ Walks the full closure of every command module: a workspace package specifier is refused for every command; an external package is refused for `none` and allowed for `dependencies`, whose module is only loaded after the router has provisioned the dependencies; a `none` command reaches a seam by a dynamic import only. */
 export function zeroTouchCommandFindingsV1(commands: readonly ZeroTouchCommandV1[], seams: readonly string[], tree: ZeroTouchTreeV1): Readonly<{ files: Readonly<Record<string, number>>; findings: readonly ZeroTouchFindingV1[] }> {
   const findings: ZeroTouchFindingV1[] = [], files: Record<string, number> = {}, seamModules = new Set(seams);
   for (const command of commands) {
@@ -197,7 +197,7 @@ export function readZeroTouchCommandsV1(text: string): readonly ZeroTouchCommand
 
 export const ZERO_TOUCH_COMMANDS_FILE = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️registry/🔣️.json";
 
-/** ✅️ Checks every command of the root registry against the checkout on disk; the seams of the closure roster are the post-install modules. */
+/** ☑️ Checks every command of the root registry against the checkout on disk; the seams of the closure roster are the post-install modules. */
 export function checkZeroTouchCommandsV1(root: string): ReturnType<typeof zeroTouchCommandFindingsV1> {
   const tree = diskZeroTouchTreeV1(root), registry = tree.read(ZERO_TOUCH_COMMANDS_FILE), roster = tree.read(ZERO_TOUCH_CLOSURES_FILE);
   if (registry === undefined || roster === undefined) throw Error("Root command registry and closure roster required");

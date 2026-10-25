@@ -9,7 +9,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CORE_COMPARISON_PROFILES, profileTable, canonicalize, computeCoverageMetrics, enforceMetricGates, compareProjections, digest, testInputUrisIn, projectionHash, setDigest, executePipeline, pipelineRoleArtifacts, testCacheDir, validateResult } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { parseFeature } from "@semio-tech/framework/test/gherkin";
-import { contributed, repoCases, repoRegistry, repoRoot } from "../🧰️repository-scan/🟦️.ts";
+import { contributed, repoCases, repoRegistry, repoRoot, withTestArtifacts } from "../🧰️repository-scan/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧪️Tests
@@ -203,7 +203,7 @@ describe("📈️ non-aggregate metrics", () => {
 });
 
 describe("⚖️ comparison pipelines", () => {
-  test("a pipeline runs its probes over the pair's artifacts by role, and fails on an unproduced role or an invalid report", () => {
+  test("a pipeline runs its probes over the pair's artifacts by role, and fails on an unproduced role or an invalid report", () => withTestArtifacts(() => {
     const dir = join(testCacheDir(repoRoot, "work"), "⚖️pipeline-self-test");
     rmSync(dir, { recursive: true, force: true });
     mkdirSync(dir, { recursive: true });
@@ -232,7 +232,7 @@ describe("⚖️ comparison pipelines", () => {
     expect(invalid.problems.join("\n")).toContain("without a valid report");
     expect(pipelineRoleArtifacts([{ role: "oracle", artifacts: [{ role: "x", path: "a", mediaType: "text/plain", sha256: "0" }] }, { role: "subject", artifacts: [{ role: "x", path: "b", mediaType: "text/plain", sha256: "0" }] }]).problems).toEqual(["artifact role x is produced by more than one result"]);
     rmSync(dir, { recursive: true, force: true });
-  }, 120_000);
+  }), 120_000);
 });
 
 describe("⚖️ artifact comparison profiles", () => {

@@ -10,17 +10,17 @@ import { digest } from "../🔢️digests/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region ⚖️Comparison
-/** ⚖️ One field-level difference between an oracle projection and a subject projection. */
+/** 🆚️ One field-level difference between an oracle projection and a subject projection. */
 export type ComparisonDiff = Readonly<{ path: string; oracle: unknown; subject: unknown; reason: string }>;
 
-/** ⚖️ The verdict of one comparison profile over two projections. */
+/** ➡️ The verdict of one comparison profile over two projections. */
 export type ComparisonVerdict = Readonly<{ profile: ComparisonProfile; equal: boolean; diffs: readonly ComparisonDiff[] }>;
 
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** ⚖️ Sorts object keys recursively so serialization order is never mistaken for a semantic difference. */
+/** 🔃️ Sorts object keys recursively so serialization order is never mistaken for a semantic difference. */
 export function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (isPlainObject(value))
@@ -92,7 +92,7 @@ function diffValues(path: string, oracle: unknown, subject: unknown, out: Compar
   if (JSON.stringify(oracle) !== JSON.stringify(subject)) out.push({ path, oracle, subject, reason: "values differ" });
 }
 
-/** ⚖️ Applies a profile's declared policy to one projection, producing its canonical form. */
+/** 🔏️ Applies a profile's declared policy to one projection, producing its canonical form. */
 function projectUnder(spec: ComparisonProfileSpec, value: unknown): unknown {
   const stripped = stripKeys(value, new Set(spec.ignoreKeys ?? []));
   const rounded = roundFloats(stripped, spec.tolerance ?? 0);
@@ -122,7 +122,7 @@ export function compareProjections(profile: ComparisonProfile, oracle: unknown, 
   return { profile, equal: diffs.length === 0, diffs };
 }
 
-/** ⚖️ Digest of a projection under a profile's canonical form — the value results carry as `projectionHash`. */
+/** 📋️ Digest of a projection under a profile's canonical form — the value results carry as `projectionHash`. */
 export function projectionHash(profile: ComparisonProfile, projection: unknown, profiles: ReadonlyMap<string, ComparisonProfileSpec> = coreProfileTable()): string {
   const spec = profiles.get(profile);
   if (spec === undefined) return digest(JSON.stringify(canonicalize(projection)));
@@ -133,7 +133,7 @@ export function projectionHash(profile: ComparisonProfile, projection: unknown, 
 
 let coreProfileTableCache: ReadonlyMap<string, ComparisonProfileSpec> | null = null;
 
-/** ⚖️ The framework's own domain-neutral profile table, for callers with no contributions loaded. */
+/** 🏓️ The framework's own domain-neutral profile table, for callers with no contributions loaded. */
 export function coreProfileTable(): ReadonlyMap<string, ComparisonProfileSpec> {
   coreProfileTableCache ??= new Map(CORE_COMPARISON_PROFILES.map((spec) => [spec.id, spec]));
   return coreProfileTableCache;

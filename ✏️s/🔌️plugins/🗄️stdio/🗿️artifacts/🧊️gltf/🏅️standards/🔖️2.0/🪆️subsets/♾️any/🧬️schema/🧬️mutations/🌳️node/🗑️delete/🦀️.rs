@@ -31,7 +31,7 @@ pub fn plan(p: &GltfDeleteNodePayload, base: &GltfSnapshot) -> Result<GltfDiff, 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfDeleteNodePayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_node::CreateNodeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_scene_root_node::BindSceneRootNodeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_node_child::BindNodeChildMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -85,7 +85,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for DeleteNodeMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<DeleteNodeMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<DeleteNodeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::create_node::CreateNodeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_scene_root_node::BindSceneRootNodeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_node_child::BindNodeChildMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

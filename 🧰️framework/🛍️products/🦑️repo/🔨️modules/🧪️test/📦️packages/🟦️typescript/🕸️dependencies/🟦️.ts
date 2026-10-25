@@ -1,2 +1,2 @@
 /** 🕸️ Public entry `@semio-tech/repo-test/dependencies`: the test dependency selection helper. */
-export { packagesForOwner } from "../../../🕸️dependencies/🟨️.mjs";
+export { cargoPackage, localPackagePath, packagesForOwner, rustSubjectPackage } from "../../../🕸️dependencies/🟨️.mjs";

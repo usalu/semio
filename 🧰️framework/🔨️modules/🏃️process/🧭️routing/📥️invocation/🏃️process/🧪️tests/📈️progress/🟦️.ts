@@ -30,7 +30,6 @@ test("process progress uses neutral long-activity words and preserves the actual
       expect(writes).toEqual([`[script] ${JSON.stringify(progress)}\n`,...(row.expected===null?[]:[`[script] ${row.expected}\n`])]);
     }
   } finally { database.close(); }
-  console.log("[DEBUG] Actual Original publisher retains structured events and describes active work and contention with the same neutral words");
 });
 
 test("provider presentation follows neutral monotonic clock rows and independent SQLite scheduling",async()=>{
@@ -89,7 +88,6 @@ test("parser source work has localized bounded operation counters at the actual 
   try{for(const name of locale.systemVariables)delete process.env[name];Object.assign(process.env,row.environment);await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"parser-progress-fixture",maximumElapsedMilliseconds:0},{fixture:"parser-work"},Date.now()),async invocation=>{const signal=invocation.control.signal;await invocation.control.publish(progress);await invocation.control.yieldContinuation();requireIssuedScriptInvocationV1(invocation);expect(invocation.control.signal).toBe(signal);expect(signal.aborted).toBe(false);});}finally{spy.mockRestore();for(const[name,value]of Object.entries(before))if(value===undefined)delete process.env[name];else process.env[name]=value;}
   expect(writes,row.name).toEqual([`[script] ${JSON.stringify(progress)}\n`,...(row.expected===null?[]:[`[script] ${row.expected}\n`])]);
  }}finally{database.close();}
- console.log("[DEBUG] Actual Original writer localizes seven bounded parser-source counters and preserves every structured event");
 });
 
 

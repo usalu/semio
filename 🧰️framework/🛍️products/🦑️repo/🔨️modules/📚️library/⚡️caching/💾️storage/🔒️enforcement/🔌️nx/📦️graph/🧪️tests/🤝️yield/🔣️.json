@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "waitMilliseconds": 400,
+  "scenarios": [
+    {
+      "name": "a free namespace is acquired",
+      "daemon": null,
+      "loader": false,
+      "peerEviction": false,
+      "expected": true
+    },
+    {
+      "name": "an idle daemon drains and hands the namespace over",
+      "daemon": "idle",
+      "loader": false,
+      "peerEviction": false,
+      "expected": true
+    },
+    {
+      "name": "a daemon with an open request keeps its namespace",
+      "daemon": "active",
+      "loader": false,
+      "peerEviction": false,
+      "expected": false
+    },
+    {
+      "name": "a loader never yields",
+      "daemon": null,
+      "loader": true,
+      "peerEviction": false,
+      "expected": false
+    },
+    {
+      "name": "an idle daemon cannot hand over what a loader still holds",
+      "daemon": "idle",
+      "loader": true,
+      "peerEviction": false,
+      "expected": false
+    },
+    {
+      "name": "a second eviction of the same namespace is skipped at once",
+      "daemon": "idle",
+      "loader": false,
+      "peerEviction": true,
+      "expected": false
+    }
+  ],
+  "capacityWait": [
+    {
+      "name": "authored default",
+      "environment": {},
+      "expected": 900000
+    },
+    {
+      "name": "zero refuses at once",
+      "environment": {
+        "SEMIO_NX_GRAPH_CAPACITY_WAIT_MS": "0"
+      },
+      "expected": 0
+    },
+    {
+      "name": "override",
+      "environment": {
+        "SEMIO_NX_GRAPH_CAPACITY_WAIT_MS": "1500"
+      },
+      "expected": 1500
+    },
+    {
+      "name": "garbage is ignored",
+      "environment": {
+        "SEMIO_NX_GRAPH_CAPACITY_WAIT_MS": "-1"
+      },
+      "expected": 900000
+    },
+    {
+      "name": "fraction is ignored",
+      "environment": {
+        "SEMIO_NX_GRAPH_CAPACITY_WAIT_MS": "1.5"
+      },
+      "expected": 900000
+    }
+  ]
+}

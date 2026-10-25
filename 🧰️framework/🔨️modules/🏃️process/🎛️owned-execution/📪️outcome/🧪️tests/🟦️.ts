@@ -9,14 +9,14 @@ test("actual owned command failures retain canonical terminal outcomes against i
   const started = performance.now(), controller = new AbortController(), deadline = setTimeout(() => controller.abort(), 15000);
   const admits = new Ajv({ strict: true }).compile(schema);
   for (const row of corpus.cases) { expect(admits(row.value), row.id).toBe(row.accepted); expect(validateJsonSchemaSubset(schema, row.value).length === 0, row.id).toBe(row.accepted); }
-  const child = 'const row=JSON.parse(process.argv[1]);console.log("[DEBUG] original "+row.id);console.error("[DEBUG] original stderr "+row.id);row.signal?process.kill(process.pid,row.signal):process.exit(row.status)';
+  const child = 'const row=JSON.parse(process.argv[1]);console.log("[TRACE] original "+row.id);console.error("[TRACE] original stderr "+row.id);row.signal?process.kill(process.pid,row.signal):process.exit(row.status)';
   const oracleCode = 'const{spawn}=require("node:child_process"),row=JSON.parse(process.argv[1]);const child=spawn(process.execPath,["--eval",process.argv[2],JSON.stringify(row)],{stdio:["ignore","ignore","ignore"]});child.once("close",(status,signal)=>console.log(JSON.stringify({version:1,status,signal})))';
   const observations: { id: string; outcome: unknown; failed: boolean; failure: string; expected: unknown; lines: string[] }[] = [];
   try {
     for (const row of corpus.receivers) {
       const oracle = Bun.spawn(["node", "--eval", oracleCode, JSON.stringify(row), child], { stdout: "pipe", stderr: "pipe" });
       const lines: string[] = []; let failed = false, failure = "", outcome: unknown;
-      try { await owned.runOwnedCommand("node", ["--eval", child, JSON.stringify(row)], process.cwd(), "original-outcome", 15000 - (performance.now() - started), { signal: controller.signal, onLine: line => { lines.push(line); } }); }
+      try { await owned.runOwnedCommand("node", ["--eval", child, JSON.stringify(row)], process.cwd(), "original-outcome", Math.max(0, Math.floor(15000 - (performance.now() - started))), { signal: controller.signal, onLine: line => { lines.push(line); } }); }
       catch (error) { failed = true; failure = String(error); outcome = typeof error === "object" && error !== null && "outcome" in error ? error.outcome : undefined; }
       const [stdout, stderr, status] = await Promise.all([new Response(oracle.stdout).text(), new Response(oracle.stderr).text(), oracle.exited]);
       expect(status, stderr).toBe(0); const expected = JSON.parse(stdout);
@@ -27,7 +27,7 @@ test("actual owned command failures retain canonical terminal outcomes against i
     expect(typeof reader, "Canonical first-party outcome reader required").toBe("function");
     for (const row of corpus.cases) { if (row.accepted) expect(Object.is(reader(row.value), row.value)).toBe(true); else expect(() => reader(row.value)).toThrow(); }
     for (const row of observations) {
-      expect(row.lines).toContain("[DEBUG] original " + row.id); expect(row.lines).toContain("[DEBUG] original stderr " + row.id);
+      expect(row.lines).toContain("[TRACE] original " + row.id); expect(row.lines).toContain("[TRACE] original stderr " + row.id);
       expect(row.failed).toBe(row.id !== "complete");
       if (row.failed) { expect(admits(row.outcome), row.id).toBe(true); expect(row.outcome).toEqual(row.expected); }
     }

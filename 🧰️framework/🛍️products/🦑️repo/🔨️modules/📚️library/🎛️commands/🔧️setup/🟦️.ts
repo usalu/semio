@@ -2,7 +2,7 @@
  * @see 📜️script.ts
  */
 import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts";
-import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts";
 import { dispatchSubcommand } from "../../🚨️policy/🧭️entrypoints/🟦️.ts";
 import { runCmd } from "../../🏃️process/🟦️.ts";
 import { installMicroCommitGitHooks } from "../📝️commit/🪝️hooks/🟦️.ts";
@@ -10,7 +10,7 @@ import { Script } from "../../../../../../🔨️modules/🏃️process/📦️p
 import { spawnSync } from "node:child_process";
 import { existsSync, linkSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { runtimePackageCommandV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimePackageCommandV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 const NATIVE_BOOTSTRAP_DIR = "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap";
 

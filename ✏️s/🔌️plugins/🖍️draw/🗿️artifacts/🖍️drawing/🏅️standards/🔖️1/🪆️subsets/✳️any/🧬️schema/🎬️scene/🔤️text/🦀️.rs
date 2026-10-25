@@ -1,14 +1,16 @@
 //! 🔤️ Genuine semantic text and shipped font owners publish the shared resolved glyph path.
 use semio_s_artifact_draw_drawing_model::PathSegment;
 use crate::preparation::{DocumentScenePlan, DocumentSceneContent, DocumentSceneError};
-use semio_framework_2d::text::font::{FontOutlineLimits,AdmittedFont,StaticFontBytes,catalog::FontCatalogAdmissionJob,run::{FontOutlineRun,FontOutlineRunCursor,FontRunStyle}};
-use semio_framework_2d::text::font::shape::unicode::{UnicodeDataAdmissionJob,AdmittedUnicode,UNICODE_BYTES};
+use semio_framework_2d_text_font::{FontOutlineLimits,AdmittedFont,StaticFontBytes};
+use semio_framework_2d_text_font_catalog::FontCatalogAdmissionJob;
+use semio_framework_2d_text_font_run::{FontOutlineRun,FontOutlineRunCursor,FontRunStyle};
+use semio_framework_2d_text_font_shape_unicode::{UnicodeDataAdmissionJob,AdmittedUnicode,UNICODE_BYTES};
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 use semio_framework_value_persistent::list::PagedList;
 fn invalid(message:impl Into<String>)->DocumentSceneError{DocumentSceneError::Invalid(message.into())}
 #[derive(semio_framework_value::RetireOwned)]
 struct Owners{unicode_admission:Option<UnicodeDataAdmissionJob<StaticFontBytes>>,unicode:Option<AdmittedUnicode<StaticFontBytes>>,plan:Option<DocumentScenePlan>,catalog:[Option<FontCatalogAdmissionJob>;4],fonts:[Vec<AdmittedFont<StaticFontBytes>>;4],run:Option<FontOutlineRunCursor>,completed_runs:PagedList<FontOutlineRunCursor,{usize::MAX}>,outputs:PagedList<FontOutlineRun,{usize::MAX}>,geometry:Vec<PathSegment>,failure:Option<DocumentSceneError>}
-pub struct DocumentTextJob{owners:Owners,limits:FontOutlineLimits,at:usize,family:usize,phase:u8,segment:usize,total_segments:usize,work:u64,cancelled:bool}
+pub struct DocumentTextJob{pub owners:Owners,limits:FontOutlineLimits,at:usize,family:usize,phase:u8,segment:usize,total_segments:usize,work:u64,cancelled:bool}
 #[derive(Clone,Copy,Debug)]
 pub struct DocumentTextProgress{pub phase:&'static str,pub nodes:usize,pub work:u64,pub done:bool}
 impl RetireOwned for DocumentTextJob{fn retirement(self)->Box<dyn RetirementCursor>{self.owners.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.owners.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}

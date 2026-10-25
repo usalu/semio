@@ -1,4 +1,4 @@
-/** 📋️ Plan: module exporting `rustUnitPlanLimitsV1`, `captureRustUnitInputsV1`, `captureRustUnitPlanV1`, `requireRustUnitPlanV1` and more. */
+/** 🗓️ Plan: module exporting `rustUnitPlanLimitsV1`, `captureRustUnitInputsV1`, `captureRustUnitPlanV1`, `requireRustUnitPlanV1` and more. */
 import{types}from"node:util";
 import{compileJsonSchemaSubset,jsonSchemaSubsetValueEquals}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{readRustUnitV1,isRustUnitPathV1,type RustUnitV1}from"../🧬️definition/🟦️.ts";
@@ -31,7 +31,7 @@ export function bindRustUnitPlanArtifactsV1(plan:RustUnitPlanV1,value:unknown,ma
 
 /** 🧱️ Owns one finite immutable Unit before any asynchronous graph preparation. */
 export function captureRustUnitInputV1(value:unknown):RustUnitV1{if(value&&typeof value==="object"&&ownedInputs.has(value))return value as RustUnitV1;const captured=snapshot(value,policy.maximumInputBytes);if(unitContract.validate(captured.value).length)throw Error("Closed bounded Rust unit input required");const unit=readRustUnitV1(captured.value);ownedInputs.set(unit,captured.bytes);return unit;}
-/** 🪪️ Returns only the extent of an exact owned Unit DATA instance, without Native authority. */
+/** 🦀️ Returns only the extent of an exact owned Unit DATA instance, without Native authority. */
 export function requireRustUnitInputV1(value:RustUnitV1):number{const bytes=value&&typeof value==="object"?ownedInputs.get(value):undefined;if(bytes===undefined)throw Error("Owned immutable Rust unit input required");return bytes;}
 
 const normalizedInputs=new WeakMap<object,RustUnitV1>();

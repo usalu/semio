@@ -1,4 +1,5 @@
 {
+  "fixtureRoot": "temp/closure-fixtures",
   "cases": [
     {
       "id": "admitted-resolution-same",

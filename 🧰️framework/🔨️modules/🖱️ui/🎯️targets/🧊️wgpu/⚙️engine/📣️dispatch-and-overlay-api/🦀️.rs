@@ -24,7 +24,7 @@ impl Ui {
         window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY))
     }
 
-    /// 📐️ The bottom-up intrinsic height measured for one surface's root before the top-down viewport
+    /// 📏️ The bottom-up intrinsic height measured for one surface's root before the top-down viewport
     /// solve stretches it — the content extent a floating panel needs to HUG its content the way
     /// React's `<Panel>` does (`🖼️Panel/🟦️.tsx`: one bonded edge plus
     /// `maxHeight: calc(100% - 2 * --spacing-single)`, never a `top`+`bottom` pair). A root with no
@@ -77,13 +77,13 @@ impl Ui {
         )
     }
 
-    /// 🩺️ The source line of the synchronize arm that faulted this window's paint frame, `0` when the
+    /// 🔄️ The source line of the synchronize arm that faulted this window's paint frame, `0` when the
     /// walk never took one. See `🖌️paint`'s `retained_sync_fault`.
     pub fn paint_frame_sync_fault_line(&self, window_id: &str) -> u32 {
         self.windows.get(window_id).and_then(|window| window.paint_frame.as_ref()).map_or(0, |frame| frame.node_sync.fault_line)
     }
 
-    /// 🩺️ Monotonic scalar progress of the in-flight retained paint frame.
+    /// 🖌️ Monotonic scalar progress of the in-flight retained paint frame.
     pub fn paint_frame_progress(&self, window_id: &str) -> Option<u64> {
         self.windows.get(window_id)?.paint_frame.as_ref().map(|frame| frame.progress)
     }
@@ -133,7 +133,7 @@ impl Ui {
         let Some(surface) = self.windows.token(window_id) else { return Vec::new() };
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
         let presented = window.presented_ready;
-        #[cfg(not(test))]
+        #[cfg(not(any(test, feature = "testkit")))]
         if !presented {
             return Vec::new();
         }
@@ -172,7 +172,7 @@ impl Ui {
         let Some(surface) = self.windows.token(window_id) else { return Vec::new() };
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
         let presented = window.presented_ready;
-        #[cfg(not(test))]
+        #[cfg(not(any(test, feature = "testkit")))]
         if !presented {
             return Vec::new();
         }
@@ -210,7 +210,7 @@ impl Ui {
         let surface = self.windows.token(window_id)?;
         let window = self.windows.get_mut(window_id).filter(|window| window.closing.is_none())?;
         let presented = window.presented_ready;
-        #[cfg(not(test))]
+        #[cfg(not(any(test, feature = "testkit")))]
         if !presented {
             return None;
         }
@@ -264,7 +264,7 @@ impl Ui {
     }
 
     //#region 🪟️OverlayApi
-    /// 🪟️ Opens `root`'s subtree as a floating overlay of `kind`, anchored per `anchor` — the
+    /// 🔓️ Opens `root`'s subtree as a floating overlay of `kind`, anchored per `anchor` — the
     /// façade-level entry point for React's `Popover`/`Dialog`/`CommandPalette` portals
     /// (`🧱️elements/🗨️Popover/🟦️.tsx`, `🧱️elements/💬️Dialog/🟦️.tsx`). Placement, escape/outside-press
     /// dismissal and the `Dialog`/`CommandPalette` focus trap all come from `events`' own policy.
@@ -279,7 +279,7 @@ impl Ui {
         window.router.close_overlay(&mut window.tree, root)
     }
 
-    /// 🪟️ The open overlays whose surface chrome the RETAINED LADDER owns, in bottom-to-top order,
+    /// 🪜️ The open overlays whose surface chrome the RETAINED LADDER owns, in bottom-to-top order,
     /// capped at [`UI_FRAME_OVERLAY_CHROME`].
     ///
     /// Three of the six kinds are here. A `Dialog`, a `CommandPalette` and a `Popover` are React
@@ -410,7 +410,7 @@ impl Ui {
         Some((surface, router.next_clock_deadline()))
     }
 
-    /// ⏰️ Earliest finite clock deadline owned by an exact accepted surface roster.
+    /// ⏭️ Earliest finite clock deadline owned by an exact accepted surface roster.
     pub fn surfaces_next_clock_deadline(&self, surfaces: &[(String, UiSurfaceToken)]) -> Option<f64> {
         let mut earliest: Option<f64> = None;
         for (window_id, expected) in surfaces {
@@ -433,7 +433,7 @@ impl Ui {
     }
     //#endregion 🪟️OverlayApi
 
-    /// 🪟️ Routes `event` through the shared `🐚️Shell`'s own hit-testing, surfacing chrome-level
+    /// 🗺️ Routes `event` through the shared `🐚️Shell`'s own hit-testing, surfacing chrome-level
     /// `ShellEvent`s (tab activation today; drag/drop is `Shell::dispatch`'s own documented gap).
     pub fn dispatch_shell_event(&mut self, event: &UiEvent) -> Vec<ShellEvent> {
         self.shell.dispatch(event)

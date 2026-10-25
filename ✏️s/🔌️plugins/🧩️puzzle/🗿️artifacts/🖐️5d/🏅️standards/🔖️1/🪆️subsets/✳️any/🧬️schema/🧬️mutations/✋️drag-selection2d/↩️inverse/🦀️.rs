@@ -16,7 +16,7 @@ where
         return Ok(Vec::new());
     }
     let (dx, dy) = (payload.dx, payload.dy);
-    let mut inverse = selection.parts.iter().filter(|part| part.part_2d.x + dx != part.part_2d.x || part.part_2d.y + dy != part.part_2d.y).map(|part| move_part_2d(part.id.clone(), part.part_2d.x, part.part_2d.y)).collect::<Vec<_>>();
+    let mut inverse = selection.parts.iter().filter(|part| part.part_2d.x + dx != part.part_2d.x || part.part_2d.y + dy != part.part_2d.y).map(|part| move_part_2d::move_part_2d::<Op>(part.id.clone(), part.part_2d.x, part.part_2d.y)).collect::<Vec<_>>();
     inverse.reverse();
     Ok(inverse)
 }

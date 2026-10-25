@@ -31,7 +31,7 @@ function column(ctx: AdapterContext, name: string): number[] {
   });
 }
 
-/** 🔢️ Rounds an oracle's own numbers onto the same emission grid the probe writes on. */
+/** 🏠️ Rounds an oracle's own numbers onto the same emission grid the probe writes on. */
 function grid(values: readonly number[]): number[] {
   const factor = 10 ** DECIMALS;
   return values.map((value) => (value === 0 ? 0 : Math.round(value * factor) / factor));
@@ -67,9 +67,9 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await affineSubject(ctx)),
     },
     "power-mapping": {
-      /** 🔮️ d3-scale's square-root scale over the committed fixture's domain and range. */
+      /** 📐️ d3-scale's square-root scale over the committed fixture's domain and range. */
       oracle: (ctx: AdapterContext) => ({ projection: { "scale/pow": grid(column(ctx, "input").map(scalePow().exponent(0.5).domain([0, 16]).range([0, 100]))) } }),
-      /** 🎯️ The committed probe fixture, compiled with the repository tectonic. */
+      /** 🦑️ The committed probe fixture, compiled with the repository tectonic. */
       subject: async (ctx: AdapterContext) => (await powerSubject(ctx)),
     },
   },

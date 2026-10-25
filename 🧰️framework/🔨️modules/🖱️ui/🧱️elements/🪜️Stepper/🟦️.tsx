@@ -111,7 +111,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     [clampValue, onChange],
   );
 
-  /** ➕️➖️ Increment/decrement path: reports a relative delta via {@link onDelta} when provided (e.g. mixed-selection nudging), otherwise falls back to an absolute {@link onChange}. */
+  /** 🧮️➖️ Increment/decrement path: reports a relative delta via {@link onDelta} when provided (e.g. mixed-selection nudging), otherwise falls back to an absolute {@link onChange}. */
   const applyDelta = reactHostPort.useCallback(
     (increment: number) => {
       const clampedValue = clampValue(internalValue + increment);

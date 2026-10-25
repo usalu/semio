@@ -59,7 +59,7 @@ export function cleanIsCargoTargetDir(abs: string, name: string): boolean {
 /** 🧹 Rustc incremental profile caches larger than this are removed by `clean`. Smaller ones stay for the cache pruner. */
 export const CLEAN_RUST_INCREMENTAL_MAX_BYTES = 1024 * 1024 * 1024;
 
-/** 🦀️ One rustc incremental crate directory: `incremental/<crate>-<hash>/`. https://rustc-dev-guide.rust-lang.org/queries/incremental-compilation-in-detail.html */
+/** 🧼️ One rustc incremental crate directory: `incremental/<crate>-<hash>/`. https://rustc-dev-guide.rust-lang.org/queries/incremental-compilation-in-detail.html */
 export interface CleanRustIncrementalCrate {
   readonly name: string;
   readonly bytes: number;
@@ -72,7 +72,7 @@ export interface CleanRustIncrementalDirectory {
   readonly crates: readonly CleanRustIncrementalCrate[];
 }
 
-/** 🧹 Selects disposable rustc incremental directories once their profile cache exceeds `maxBytes`. A crate with a `-working` session stays. */
+/** 📂️ Selects disposable rustc incremental directories once their profile cache exceeds `maxBytes`. A crate with a `-working` session stays. */
 export function cleanSelectHugeRustIncremental(directory: CleanRustIncrementalDirectory, maxBytes: number): readonly string[] {
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) throw new Error("Rust incremental limit must be a non-negative safe integer");
   const base = directory.path.replaceAll("\\", "/").replace(/\/+$/u, "");
@@ -90,7 +90,7 @@ export function cleanSelectHugeRustIncremental(directory: CleanRustIncrementalDi
   return idle.map((crate) => `${base}/${crate.name}`).sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
 }
 
-/** 🗂️ Cargo output roots whose `incremental` directories clean may reclaim: the shared cargo cache, plus any configured build or target directory inside the workspace. */
+/** 🔎️ Cargo output roots whose `incremental` directories clean may reclaim: the shared cargo cache, plus any configured build or target directory inside the workspace. */
 export function cleanRustIncrementalSearchRoots(root: string): string[] {
   const workspace = resolve(root);
   const candidates = [repoCacheDirectory(workspace, "cargo"), cargoDirectories(workspace).build, cargoDirectories(workspace).target];
@@ -186,10 +186,10 @@ export function cleanIsWindowsIllegalName(name: string): boolean {
 /** 🏪️ Reserves authored enforcing stores for their original physical retirement owners. */
 export function cleanManagedStoragePrefixes(root:string):string[]{const budget=repositoryCacheBudgetV1(root);return [...Object.values(budget.partitions).map(partition=>partition.directory),budget.controlDirectory];}
 
-/** 🏪️ Native image backing names owned by the storage layer: only its canonical retirement may remove them. */
+/** 🖼️ Native image backing names owned by the storage layer: only its canonical retirement may remove them. */
 export const CLEAN_NATIVE_IMAGE_BACKING_NAMES: ReadonlySet<string> = new Set(["fixed.dmg", "fixed.dir"]);
 
-/** 🏪️ True when a path is a native image backing file, its receipt or mount directory, or any directory holding that pair, wherever it lives. */
+/** 🧲️ True when a path is a native image backing file, its receipt or mount directory, or any directory holding that pair, wherever it lives. */
 export function cleanIsNativeImagePath(abs: string): boolean {
   const resolved = resolve(abs);
   const holdsImage = (directory: string): boolean => existsSync(join(directory, "image.json")) && [...CLEAN_NATIVE_IMAGE_BACKING_NAMES].some((name) => existsSync(join(directory, name)));
@@ -241,7 +241,7 @@ export function cleanIsProtected(abs: string, protectedPrefixes: readonly string
 //#region 🛡️TicketProtection
 export type CleanProtectionNodeKind = "directory" | "file" | "symlink" | "missing" | "unreadable";
 
-/** 🪟️ Read-only filesystem projection used by the deletion gate and synthetic safety laws. */
+/** 👁️ Read-only filesystem projection used by the deletion gate and synthetic safety laws. */
 export interface CleanProtectionView {
   kind(path: string): CleanProtectionNodeKind;
   children(path: string): readonly string[] | undefined;
@@ -311,7 +311,7 @@ export function cleanTicketFolderForPath(root: string, abs: string): string | un
   }
 }
 
-/** 🛡️ Rejects a removal intersecting any non-closed ticket, unsafe path, or unreadable subtree without following symlinks. */
+/** 🗑️ Rejects a removal intersecting any non-closed ticket, unsafe path, or unreadable subtree without following symlinks. */
 export function cleanRemovalProtection(root: string, candidate: string, view: CleanProtectionView = CLEAN_PROTECTION_VIEW, allowedOpenTicket?: string): string[] {
   const workspace = resolve(root),
     target = resolve(workspace, candidate);

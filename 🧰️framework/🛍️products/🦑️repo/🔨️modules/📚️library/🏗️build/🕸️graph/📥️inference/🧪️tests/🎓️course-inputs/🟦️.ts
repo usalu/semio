@@ -1,12 +1,13 @@
 /** 🎓️ Contract: nothing a cached course target (`test`, `typecheck`, `check`) reads lies outside its declared inputs plus the command closure the inference derives. The read sets come from third-party oracles (esbuild's metafile for module imports, the TypeScript compiler's own program for `tsc`, the repository's proctor manifest closure for Rust) and from a recorded file-system trace of the vitest run; an independent Python implementation recomputes the same law with its own glob translator and import scanner. The scenario lives in `./🔣️.json` as language-agnostic data.
  * @see ./🐍️.py */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {existsSync,readdirSync,readFileSync,writeFileSync,mkdtempSync,rmSync,realpathSync} from "node:fs";
 import {createRequire} from "node:module";
 import {tmpdir} from "node:os";
 import {dirname,join,normalize,relative,resolve,sep} from "node:path";
 import Ajv from "ajv";
+import {buildSchedulingPrefixesV1} from "../../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
 import fixture from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 
@@ -15,6 +16,7 @@ await libraryBootstrap;
 const workspace=resolve(import.meta.dirname,"../../../../../../../../../..");
 const require=createRequire(join(workspace,"package.json"));
 const manifest=JSON.parse(readFileSync(join(workspace,fixture.project,"📋️project.json"),"utf8"));
+const scheduling=buildSchedulingPrefixesV1(),presentation=new Set<string>(JSON.parse(readFileSync(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json"),"utf8")).presentationResources);
 const skipped=new Set(["node_modules","target","dist",".git",".cache"]);
 const posix=(path:string)=>path.split(sep).join("/");
 const inventory=(()=>{const found=readdirSync(workspace,{withFileTypes:true}).filter(entry=>entry.isFile()).map(entry=>entry.name),walk=(directory:string)=>{for(const entry of readdirSync(join(workspace,directory),{withFileTypes:true})){const path=`${directory}/${entry.name}`;if(entry.isDirectory()){if(!skipped.has(entry.name))walk(path);}else if(entry.isFile())found.push(path);}};for(const top of fixture.inventory)walk(top);return found.sort();})();
@@ -32,10 +34,10 @@ const declaredInputs=(inputs:readonly unknown[]):Set<string>=>{
  return selected;
 };
 
-const esbuildReads=async(entries:readonly string[]):Promise<Set<string>>=>{
- const present=entries.filter(entry=>inInventory.has(entry));
- const result=await require("esbuild").build({entryPoints:present.map(entry=>join(workspace,entry)),absWorkingDir:workspace,bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent",outdir:join(tmpdir(),"course-inputs-law"),loader:{".json":"json"},define:{"import.meta.vitest":"undefined"},plugins:[{name:"workspace-only",setup(build:any){build.onResolve({filter:/^[^./]/},(args:any)=>/^(?:@semio-tech|@teaching)\//u.test(args.path)?undefined:{path:args.path,external:true});}}]});
- return new Set(Object.keys(result.metafile.inputs).map(path=>posix(relative(workspace,resolve(workspace,path)))).filter(path=>!path.startsWith("..")&&!path.split("/").includes("node_modules")));
+const esbuildReads=async(entries:readonly string[],specifiers?:readonly string[]):Promise<Set<string>>=>{
+ const present=entries.filter(entry=>inInventory.has(entry)),sliced=specifiers&&present.length?{contents:specifiers.map(specifier=>`import ${JSON.stringify(specifier)};`).join("\n"),resolveDir:dirname(join(workspace,present[0]!)),sourcefile:"router-command.ts"}:undefined;
+ const result=await require("esbuild").build({...(sliced?{stdin:sliced}:{entryPoints:present.map(entry=>join(workspace,entry))}),absWorkingDir:workspace,bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent",outdir:join(tmpdir(),"course-inputs-law"),loader:{".json":"json"},define:{"import.meta.vitest":"undefined"},plugins:[{name:"workspace-only",setup(build:any){build.onResolve({filter:/^[^./]/},(args:any)=>/^(?:@semio-tech|@teaching)\//u.test(args.path)?undefined:{path:args.path,external:true});}}]});
+ return new Set([...Object.keys(result.metafile.inputs).map(path=>posix(relative(workspace,resolve(workspace,path)))).filter(path=>!path.startsWith("..")&&!path.split("/").includes("node_modules")),...(sliced?present:[])]);
 };
 const vitestEntries=(config:string)=>{const text=readFileSync(join(workspace,config),"utf8"),block=/include:\s*\[(.*?)\]/su.exec(text)?.[1]??"";return[config,...[...block.matchAll(/"([^"]+)"/gu)].map(match=>posix(normalize(join(fixture.site,match[1]!))))];};
 const nearestTsconfig=(path:string)=>{let directory=dirname(path);while(directory&&directory!=="."){const candidate=`${directory}/tsconfig.json`;if(inInventory.has(candidate))return candidate;directory=dirname(directory);}return inInventory.has("tsconfig.json")?"tsconfig.json":undefined;};
@@ -56,14 +58,14 @@ const readsOf=async(spec:{reads:readonly any[]}):Promise<Set<string>>=>{
  const reads=new Set<string>();
  for(const read of spec.reads){
   if(read.kind==="vitest"){for(const path of await esbuildReads(vitestEntries(sub(read.config))))reads.add(path);}
-  else if(read.kind==="imports"){for(const path of await esbuildReads(read.entries.map(sub)))reads.add(path);}
+  else if(read.kind==="imports"){for(const path of await esbuildReads(read.entries.map(sub),read.specifiers))reads.add(path);}
   else if(read.kind==="workspace-manifests"){for(const path of workspaceManifests())reads.add(path);}
   else if(read.kind==="nearest-tsconfig"){for(const file of [...reads]){const path=/\.[cm]?[jt]sx?$/u.test(file)?nearestTsconfig(file):undefined;if(path)reads.add(path);}}
   else if(read.kind==="files"){for(const path of read.paths.map(sub)){if(inInventory.has(path))reads.add(path);}}
   else if(read.kind==="tsconfig"){for(const path of tscReads(sub(read.path)))reads.add(path);}
   else if(read.kind==="rust"){for(const path of await rustReads(read))reads.add(path);}
  }
- return new Set([...reads].filter(path=>inInventory.has(path)||existsSync(join(workspace,path))));
+ return new Set([...reads].filter(path=>(inInventory.has(path)||existsSync(join(workspace,path)))&&!presentation.has(path)&&!scheduling.some(prefix=>path.startsWith(prefix))));
 };
 
 test("course input law fixture is closed",()=>{expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);});
@@ -107,3 +109,14 @@ test("an independent Python implementation agrees on the glob selection and find
   }
  }finally{rmSync(temporary,{recursive:true,force:true});}
 },600_000);
+
+test("the specifiers a fixture read declares for a router command are exactly what the router analysis derives from the script",async()=>{
+ const {parserTypescriptV1}=await import("../../../../🚀️bootstrap/📦️parsers/🟨️.mjs"),{routerCommandSpecifiersV1}=await import("../../🧭️script-inputs/🔀️router/🟨️.mjs"),compiler=parserTypescriptV1();
+ for(const spec of Object.values(fixture.targets))for(const read of spec.reads as any[]){
+  if(read.kind!=="imports"||read.specifiers===undefined)continue;
+  for(const entry of read.entries.map(sub)){
+   const derived=routerCommandSpecifiersV1(compiler,entry,readFileSync(join(workspace,entry),"utf8"),read.command);
+   expect(derived===undefined?undefined:[...derived].sort()).toEqual([...read.specifiers].sort());
+  }
+ }
+});

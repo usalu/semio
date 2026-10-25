@@ -78,7 +78,7 @@ fn matches_rfc4648_base64url_vectors() {
     }
 }
 
-/// 🔬️ Differential oracle for base64url: the third-party `URL_SAFE_NO_PAD` engine both ways.
+/// 🔮️ Differential oracle for base64url: the third-party `URL_SAFE_NO_PAD` engine both ways.
 #[test]
 fn matches_third_party_base64url_oracle() {
     use base64::Engine as _;

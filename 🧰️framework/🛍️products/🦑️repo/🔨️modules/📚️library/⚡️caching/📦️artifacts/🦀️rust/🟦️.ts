@@ -17,7 +17,7 @@ export async function runArtifactRustTests(cargoName: string, repoRoot: string, 
   await runArtifactRustPackagesTests([cargoName], repoRoot, segments, invocation);
 }
 
-/** 🧪️ Runs one artifact's suites across every Cargo package it is cut into (a split artifact family), in one invocation. */
+/** 🦀️ Runs one artifact's suites across every Cargo package it is cut into (a split artifact family), in one invocation. */
 export async function runArtifactRustPackagesTests(cargoNames: readonly string[], repoRoot: string, segments: string[], invocation: ScriptInvocation): Promise<void> {
   const { runRepositoryCargoTests } = await import("../../../🏃️process/🦀️cargo/🎟️admission/🟦️.ts");
   const { rest } = resolveTestLevel(segments);

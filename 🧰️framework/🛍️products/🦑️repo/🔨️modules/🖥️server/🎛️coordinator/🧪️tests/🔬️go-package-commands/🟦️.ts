@@ -29,13 +29,13 @@ export async function runBuildScript(context: Readonly<{ root: string; repoRoot:
   await runCanonicalGoBuild(BINARY_DIR, ["-o", coordinatorBinaryPath(context.repoRoot), "."], { control: scriptCompilerAdmissionControlV1(context.invocation, "go:build", 0),  env: coordinatorGoEnvironment(context.repoRoot), budgetMs: buildBudgetMs(),  });
 }
 
-/** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
+/** ▶️ Runs the `TestScript` command under the caller's roots and invocation. */
 export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   const { level, rest } = resolveTestLevel(segments);
   await runCanonicalGoTests(PACKAGE_DIR, [...goLevelTestArgs(level), ...goCoverageArgs(context.repoRoot, PACKAGE_DIR), ...rest], context.invocation, { env: coordinatorGoEnvironment(context.repoRoot) });
 }
 
-/** 🏃️ Runs the `DevScript` command under the caller's roots and invocation. */
+/** 🛠️ Runs the `DevScript` command under the caller's roots and invocation. */
 export async function runDevScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
   const binary = coordinatorBinaryPath(context.repoRoot);
   await runOwnedCommand(binary, [], context.repoRoot, "repo-coordinator:serve", daemonBudgetMs(), { env: coordinatorGoEnvironment(context.repoRoot), signal: context.invocation.control.signal });

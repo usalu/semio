@@ -38,7 +38,7 @@
     },
     {
       "name": "relativeScriptInputs",
-      "parameters": 4,
+      "parameters": 5,
       "asynchronous": true
     },
     {

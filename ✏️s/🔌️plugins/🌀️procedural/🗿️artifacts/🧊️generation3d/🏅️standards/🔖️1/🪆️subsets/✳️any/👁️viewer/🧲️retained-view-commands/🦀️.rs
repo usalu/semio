@@ -108,7 +108,7 @@ fn generation3d_view_retained_reduce(
 fn generation3d_view_next_config(base: &Generation3dViewConfig, mutations: &[Generation3dViewConfigMutation]) -> Generation3dViewConfig {
     let mut next = base.clone();
     for mutation in mutations {
-        let diff = protocol::Mutation::diff(mutation, &next).into_parts().0;
+        let diff = protocol::ColdMutation::diff(mutation, &next).into_parts().0;
         let applied = protocol::apply_diff_cold(&diff, &next);
         if let Ok(post) = applied {
             next = post;

@@ -174,6 +174,7 @@ where
 /// The `NoMembers` spelling of [`assert_two_registered_instances_converge_with_members`].
 pub async fn assert_two_registered_instances_converge<A, P, Manifest, Build>(channel: &str, manifest: Build, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
+    A::Command: semio_framework_value::ToValue,
     A: ArtifactApp + Default,
     P: PartialEq + std::fmt::Debug,
     Manifest: std::future::Future<Output = App>,
@@ -280,6 +281,7 @@ where
 /// [`assert_registered_ingest_idempotent_with_members`].
 pub async fn assert_registered_ingest_idempotent<A, P, Manifest, Build>(manifest: Build, command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
+    A::Command: semio_framework_value::ToValue,
     A: ArtifactApp + Default,
     P: PartialEq + std::fmt::Debug,
     Manifest: std::future::Future<Output = App>,

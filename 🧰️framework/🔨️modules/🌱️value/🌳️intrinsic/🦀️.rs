@@ -4,7 +4,7 @@ use crate::{ValueError,ValueRefusalKind};
 mod codec;
 pub use codec::{path_index,controlled_sequence,edit_through_value,ControlledValueHasher,DecodedValue,IntrinsicRetirement,FromValue,ToValue,ValueEdit,ValueShape};
 //#region 🔖️Number
-/// 🔢️ A JSON-equivalent number that keeps the writer's-eye distinction a bare `f64` erases:
+/// 👁️ A JSON-equivalent number that keeps the writer's-eye distinction a bare `f64` erases:
 /// an integer literal (`UInt`/`Int`) round-trips without a decimal point, `Float` always keeps one
 /// (or an exponent). Mirrors [`pack::json::Number`]'s shape exactly so the wire bridge between them
 /// (`🎒️pack/🔤️json/🦀️.rs`) is a straight variant-to-variant map, never a widen-then-guess. See
@@ -29,7 +29,7 @@ impl Number {
         }
     }
 
-    /// 🔎️ Exact `i64`, only for the `Int` variant and `UInt` values that fit.
+    /// 🎯️ Exact `i64`, only for the `Int` variant and `UInt` values that fit.
     pub fn as_i64(&self) -> Option<i64> {
         match *self {
             Number::Int(v) => Some(v),
@@ -38,7 +38,7 @@ impl Number {
         }
     }
 
-    /// 🔎️ Exact `u64`, only for the `UInt` variant and non-negative `Int` values.
+    /// ❎️ Exact `u64`, only for the `UInt` variant and non-negative `Int` values.
     pub fn as_u64(&self) -> Option<u64> {
         match *self {
             Number::UInt(v) => Some(v),
@@ -47,7 +47,7 @@ impl Number {
         }
     }
 
-    /// 🔎️ Whether this literal was written without a decimal point or exponent.
+    /// 📍️ Whether this literal was written without a decimal point or exponent.
     pub fn is_integer(&self) -> bool {
         !matches!(self, Number::Float(_))
     }
@@ -88,7 +88,7 @@ pub enum JsonInteger {
     Signed(i64),
 }
 
-/// 🔢️ The integer an `f64` reads back as from its JSON text: `JSON.stringify(7.0)` is `"7"`, so a finite, integral number
+/// 📖️ The integer an `f64` reads back as from its JSON text: `JSON.stringify(7.0)` is `"7"`, so a finite, integral number
 /// within the safe integer range (`Number.isSafeInteger`, |v| ≤ 2^53 − 1) is an integer — unsigned unless negative — and
 /// anything else (a fraction, a non-finite value, an integral value past the safe range) is not. The ONE rule every Rust
 /// boundary that carries a JSON number as `f64` reads it by (`DslValue::json_number`, the UI contract's `UiValue` serializer).
@@ -128,23 +128,23 @@ impl DslValue {
         Self::Null
     }
 
-    /// 🔢️ Whole-number constructor — the fidelity-preserving choice for ids/counts/indices/ms.
+    /// ➕️ Whole-number constructor — the fidelity-preserving choice for ids/counts/indices/ms.
     pub fn uint(v: u64) -> Self {
         Self::Number(Number::UInt(v))
     }
 
-    /// 🔢️ Signed whole-number constructor.
+    /// 🖊️ Signed whole-number constructor.
     pub fn int(v: i64) -> Self {
         Self::Number(Number::Int(v))
     }
 
-    /// 🔢️ Fractional constructor — the wire always keeps an explicit `.0` for a whole float so it
+    /// 🌊️ Fractional constructor — the wire always keeps an explicit `.0` for a whole float so it
     /// never collapses onto its integer twin.
     pub fn float(v: f64) -> Self {
         Self::Number(Number::Float(v))
     }
 
-    /// 🔢️ A JSON number carried as `f64` (the UI contract's `UiValue::Number`), read the way its JSON text reads back
+    /// 💎️ A JSON number carried as `f64` (the UI contract's `UiValue::Number`), read the way its JSON text reads back
     /// ([`json_integer`]): an integer stays an integer, a non-finite value is `Null` (JSON text has neither NaN nor Infinity),
     /// anything else a float — so an integer argument a renderer hands back decodes as the integer React's wire delivers.
     pub fn json_number(v: f64) -> Self {
@@ -167,7 +167,7 @@ impl DslValue {
         }
     }
 
-    /// 🔎️ Widens to `f64` regardless of variant — lossy for `u64`/`i64` magnitudes beyond 2^53. Use
+    /// 📏️ Widens to `f64` regardless of variant — lossy for `u64`/`i64` magnitudes beyond 2^53. Use
     /// [`DslValue::as_i64`]/[`DslValue::as_u64`] when exactness matters.
     pub fn as_f64(&self) -> Option<f64> {
         match self {
@@ -176,7 +176,7 @@ impl DslValue {
         }
     }
 
-    /// 🔎️ Exact `i64`, only when the underlying [`Number`] is representable as one.
+    /// 🔬️ Exact `i64`, only when the underlying [`Number`] is representable as one.
     pub fn as_i64(&self) -> Option<i64> {
         match self {
             Self::Number(n) => n.as_i64(),
@@ -184,7 +184,7 @@ impl DslValue {
         }
     }
 
-    /// 🔎️ Exact `u64`, only when the underlying [`Number`] is representable as one.
+    /// 🔭️ Exact `u64`, only when the underlying [`Number`] is representable as one.
     pub fn as_u64(&self) -> Option<u64> {
         match self {
             Self::Number(n) => n.as_u64(),
@@ -304,14 +304,14 @@ impl From<serde_json::Value> for DslValue {
     }
 }
 
-/// 🌉️ Serializes an owned value through the explicitly exposed Serde boundary.
+/// 📤️ Serializes an owned value through the explicitly exposed Serde boundary.
 impl serde::Serialize for DslValue {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serde::Serialize::serialize(&serde_json::Value::from(self), serializer)
     }
 }
 
-/// 🌉️ Deserializes a Serde JSON boundary into an owned value tree.
+/// 📥️ Deserializes a Serde JSON boundary into an owned value tree.
 impl<'de> serde::Deserialize<'de> for DslValue {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         serde_json::Value::deserialize(deserializer).map(DslValue::from)

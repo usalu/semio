@@ -43,7 +43,7 @@ test("strict production selection enforces every present plugin pair and preserv
       expected.push(JSON.stringify([rule.name,entry,target]));
     }
     if(entries.length){
-      const result=await oracle.cruise(entries,{baseDir:root,validate:true,ruleSet:{forbidden:rules.map(rule=>({...rule,severity:"error" as const,from:{path:[...rule.from.path],...(rule.from.pathNot?{pathNot:[...rule.from.pathNot]}:{})},to:{path:[...rule.to.path],...(rule.to.pathNot?{pathNot:[...rule.to.pathNot]}:{})}}))},outputType:"json",tsPreCompilationDeps:true},{bustTheCache:true});
+      const result=await oracle.cruise(entries,{baseDir:root,validate:true,ruleSet:{forbidden:pairs.map(rule=>({...rule,severity:"error" as const,from:{path:[...rule.from.path],...(rule.from.pathNot?{pathNot:[...rule.from.pathNot]}:{})},to:{path:[...rule.to.path],...(rule.to.pathNot?{pathNot:[...rule.to.pathNot]}:{})}}))},outputType:"json",tsPreCompilationDeps:true},{bustTheCache:true});
       expect(result.exitCode,row.id).toBe(0);
       const graph=typeof result.output==="string"?JSON.parse(result.output):result.output;
       expect(graph.summary.violations.map((edge:{rule:{name:string};from:string;to:string})=>JSON.stringify([edge.rule.name,edge.from,edge.to])).sort(),row.id).toEqual(expected.sort());
@@ -59,7 +59,7 @@ test("strict production selection refuses incomplete or weakened rule authority"
     if(refusal==="missing-pair")rules.splice(index,1);
     if(refusal==="duplicate-pair")rules.push(structuredClone(rules[index]!));
     if(refusal==="weakened-pair")rules[index]!.severity="warn";
-    if(refusal==="extra-selector")rules[index]!.to.dependencyTypes=["local"];
+    if(refusal==="extra-selector")rules[index]!.to.license="MIT";
     if(refusal==="missing-framework-rule")rules.splice(rules.findIndex(rule=>rule.name==="framework-no-implementation"),1);
     if(refusal==="empty-selector")rules[index]!.to.path=[];
     expect(()=>dependencyDirectionStrictRules({...source,policy:{...source.policy,forbidden:rules as unknown as DependencyPolicySnapshot["policy"]["forbidden"]}}),refusal).toThrow();

@@ -114,7 +114,7 @@ export default defineTestAdapter({
     },
     padding: {
       oracle: oracle("padding"),
-      /** 🎯️ The uniform padding and the header-row padding vector. */
+      /** 🧪️ The uniform padding and the header-row padding vector. */
       subject: () => ({
         projection: {
           ...rects("padding", tiled(DEEP, { size: [100, 60], padding: 2 })),
@@ -126,7 +126,7 @@ export default defineTestAdapter({
     },
     unbalanced: {
       oracle: oracle("unbalanced"),
-      /** 🎯️ Two tilings on the fixture whose branches differ in depth. */
+      /** 🆚️ Two tilings on the fixture whose branches differ in depth. */
       subject: () => ({
         projection: {
           id: preorder(root(UNBALANCED)).map((each) => each.id!),

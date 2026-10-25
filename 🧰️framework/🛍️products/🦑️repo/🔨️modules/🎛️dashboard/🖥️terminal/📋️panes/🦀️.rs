@@ -12,11 +12,11 @@ use semio_framework_ui_tui_widgets::widget::WidgetState;
 
 /// 🎬️ What activating a row does.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) enum RowAction { None, Files, NewTask, Settings, Help, Refresh, CancelDiscovery, Session(String), OpenReady(String), CancelOpenReady, Language, Appearance, Terminology, Renderer, Layout, SaveScope, Diagnostics, Diagnostic(usize), EditKeymap, EditPrefix, Editor(dashboard_keymap_editor::Action), CancelPreference, Back }
+pub enum RowAction { None, Files, NewTask, Settings, Help, Refresh, CancelDiscovery, Session(String), OpenReady(String), CancelOpenReady, Language, Appearance, Terminology, Renderer, Layout, SaveScope, Diagnostics, Diagnostic(usize), EditKeymap, EditPrefix, Editor(dashboard_keymap_editor::Action), CancelPreference, Back }
 
 /// 🪧️ The rows of one list window and where the selection and the visible slice are.
 #[derive(Default)]
-pub(super) struct Pane { pub rows: Vec<(String, RowAction)>, pub selected: usize, pub offset: usize, pub page: usize }
+pub struct Pane { pub rows: Vec<(String, RowAction)>, pub selected: usize, pub offset: usize, pub page: usize }
 
 impl Pane {
     fn reveal(&mut self) {
@@ -32,7 +32,7 @@ impl Pane {
     pub fn current(&self) -> Option<&RowAction> { self.rows.get(self.selected).map(|(_, action)| action) }
 }
 
-pub(super) struct PreferenceJob { pub receiver:std::sync::mpsc::Receiver<(Change,std::io::Result<u64>)>, pub cancel:std::sync::Arc<std::sync::atomic::AtomicBool> }
+pub struct PreferenceJob { pub receiver:std::sync::mpsc::Receiver<(Change,std::io::Result<u64>)>, pub cancel:std::sync::Arc<std::sync::atomic::AtomicBool> }
 
 impl Dashboard {
     pub fn record_failure(&mut self,failure:dashboard_feedback::Failure) {

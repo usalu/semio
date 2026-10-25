@@ -1,4 +1,4 @@
-/** 🎧️ Console and page-error capture of every page and worker the run opens. */
+/** 📃️ Console and page-error capture of every page and worker the run opens. */
 import type { ConsoleMessage, Page } from "playwright";
 import { t0, currentLocale, currentStep } from "../🧠️state/🟦️.ts";
 import type { Locale } from "../🧠️state/🟦️.ts";

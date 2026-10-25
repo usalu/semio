@@ -7,7 +7,7 @@ use syn::LitStr;
 
 use semio_framework_native_build_compiler_resources as compiler_resources;
 
-/// 📚️ Compiles a package-relative source JSON asset into an owned intrinsic value.
+/// 📄️ Compiles a package-relative source JSON asset into an owned intrinsic value.
 #[proc_macro]
 pub fn owned_json_file(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     observe_compiler_resources(|| {

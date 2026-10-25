@@ -28,6 +28,7 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-job-payload = { workspace = true }
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }

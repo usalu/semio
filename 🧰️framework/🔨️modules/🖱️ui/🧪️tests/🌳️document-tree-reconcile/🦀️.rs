@@ -1,4 +1,4 @@
-//! 🌳️ LAW: a published `UiDocumentTree` becomes a paintable arena, and painting it emits draw work.
+//! 🖌️ LAW: a published `UiDocumentTree` becomes a paintable arena, and painting it emits draw work.
 //!
 //! `UiTree::publish_document` stored the document in a field whose only readers were a generation
 //! comparison and its own retirement — nothing ever walked its `UiNodeRecord`s into the arena, so
@@ -145,7 +145,7 @@ fn drive_layout(ui: &mut Ui, window_id: &str, width: f32, height: f32, atlas: &m
     panic!("layout did not settle");
 }
 
-/// 🌳️ The headline: the published document mounts, its surface consumes its own lane subtree, and the
+/// 🏁️ The headline: the published document mounts, its surface consumes its own lane subtree, and the
 /// arena it produces paints real instances — the exact chain that answered `Missing` before.
 #[test]
 fn a_published_document_mounts_its_records_and_the_arena_it_produces_paints() {
@@ -257,7 +257,7 @@ fn retiring_a_document_frees_every_node_it_mounted_one_step_at_a_time() {
     assert!(tree.root.is_none(), "a fully retired document leaves no paintable root behind");
 }
 
-/// 🎬️ A synthesized Select option is not itself a published record, so it dispatches through the
+/// ☑️ A synthesized Select option is not itself a published record, so it dispatches through the
 /// descriptor copied from its Select owner. That descriptor must retain the binding's action scope;
 /// the document controller identifies the live app session and is deliberately different here.
 #[test]
@@ -402,7 +402,7 @@ fn retire_lease(mut lease: UiDocumentLease) {
     panic!("document lease did not retire");
 }
 
-/// 📥️ Assembles one document, drives it through the engine's ingress ladder and returns the slot —
+/// 🪜️ Assembles one document, drives it through the engine's ingress ladder and returns the slot —
 /// the whole "one refresh publishes one document" cycle a shell frame performs.
 fn ingest_once(ui: &mut Ui, window_id: &str, law: &serde_json::Value, ids: &[u64], generation: u64, revision: u64, extra: Option<&serde_json::Value>) -> bool {
     let lease = lease_from(law, ids, generation, revision, extra);
@@ -454,7 +454,7 @@ fn a_surfaces_second_document_reaches_the_arena_and_a_constant_generation_never_
     assert!(!arena_keys(&refused, "constant").contains(&added_key), "…so the arena keeps the first tree, which is exactly what 6118 painted");
 }
 
-/// ⚖️ LAW: the ingress-generation rule itself — held still while a surface's own revision holds
+/// 🔢️ LAW: the ingress-generation rule itself — held still while a surface's own revision holds
 /// still (so an unchanged surface pays no ingress), moved forward whenever that revision moves, and
 /// never moved BACKWARD even when the revision does (a retired surface reopened under a fresh owner
 /// restarts at revision 1 and must still be admitted). Shared fixture with the TypeScript twin.
@@ -533,7 +533,7 @@ fn tiny_document(surface: &str, revision: u64, root: &serde_json::Value, child: 
     document
 }
 
-/// 🧹️ Hands every record and arena slot back before the test ends. The `UiNodeRecord` table draws on
+/// 🗑️ Hands every record and arena slot back before the test ends. The `UiNodeRecord` table draws on
 /// a PROCESS-WIDE fixed arena, so a law that merely drops its tree leaves those pages held until the
 /// allocator notices — and a neighbouring test running in parallel meets `ArenaFull` instead of its
 /// own law. Retiring explicitly is the same rule the runtime itself follows.
@@ -855,7 +855,7 @@ fn drive_window_to_painted(ui: &mut Ui, window_id: &str, viewport: semio_framewo
     None
 }
 
-/// 🗺️ LAW: a document whose ROOT is the engine surface itself reaches a painted frame.
+/// ⚙️ LAW: a document whose ROOT is the engine surface itself reaches a painted frame.
 ///
 /// 🩸️ What this pins: `FrameBuildPhase::Chrome` holds the WHOLE frame — navbar, dock, footer, every
 /// window — until the shell's chrome walk answers `true`, and that walk cannot leave a window whose

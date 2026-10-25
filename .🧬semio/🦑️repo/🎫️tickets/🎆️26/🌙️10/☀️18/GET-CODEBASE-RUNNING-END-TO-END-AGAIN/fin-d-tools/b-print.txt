@@ -1,0 +1,5 @@
+p1|@semio-tech/print-rs|test
+p2|@semio-tech/print|check,build,test
+p3|@semio-tech/presentation,@semio-tech/presentation-react|test
+p4|@semio-tech/mit-bestand-bericht|check-generated,akteursnetz-validate,build-kompaktbericht,build-zwischenbericht,build-forschungsbericht,test
+p5|@semio-tech/mit-bestand-praesentation-projektetage|build,test

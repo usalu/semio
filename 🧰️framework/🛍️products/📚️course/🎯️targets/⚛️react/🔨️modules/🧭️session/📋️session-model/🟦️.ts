@@ -47,6 +47,11 @@ export interface CourseSessionOptions {
   readonly now?: () => number;
 }
 
+/** 🪑️ Where one session keeps its deputy: seated when the session is made, or later once the site's material has arrived. */
+export interface DeputySeat {
+  current: Deputy | undefined;
+}
+
 /** ⏳️ How long a learner waits for the proctor to decide a command before the deputy decides it: long enough for a
  * proctor that answers at all, far shorter than the time a request to a silent host takes to give up. */
 export const DEPUTY_PATIENCE_MS = 3_000;

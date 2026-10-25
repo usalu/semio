@@ -1,6 +1,6 @@
 import declaration from "./🌱️sources/🔣️.json" with {type:"json"};
 import {bootstrapUiAxes} from "./🎚️ui-axes/🟦️.ts";
-import {bootstrapFlowCorePackage} from "../../../../../💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🌱️bootstrap/🟦️.ts";
+import {bootstrapFlowCorePackage} from "../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🌱️bootstrap/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {readFileSync,lstatSync,realpathSync,readdirSync} from "node:fs";
@@ -12,7 +12,7 @@ import {fileURLToPath} from "node:url";
 import buildPolicy from "../🔣️policy.json" with {type:"json"};
 import type {JavascriptDependencyStoreSelectionV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
 import {buildParserReceiptMatchesV1,readBuildParserInspectionV1,readInstalledBuildParserEntryPathV1,type BuildParserReceiptV1} from "./📦️parsers/🟦️.ts";
-import parserSchema from "./📦️parsers/🧬️schema/🔣️.json" with {type:"json"};
+import parserSchema from "./📦️parsers/🧬️schema/🔣️.json";
 import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🌱️ Publishes system-only source prerequisites before any graph or application import. */
@@ -21,7 +21,7 @@ export function publishBuildBootstrapSourcesV1(root:string):void {
   for(const source of declaration.sources){if(!Object.hasOwn(publishers,source.export))throw new Error("Declared captured bootstrap publisher required");publishers[source.export as keyof typeof publishers](root);}
 }
 
-/** 📦️ Supplies the only dependency preparation operation before build inference can run. */
+/** 🔨️ Supplies the only dependency preparation operation before build inference can run. */
 export type BuildEnvironmentInstallerV1=(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,recheck?:BuildEnvironmentRecheckV1)=>Promise<void>;
 
 /** 🧷️ The dependency store a task run holds while it decides whether to install. */
@@ -91,16 +91,25 @@ function parserSourceProgressV1(control:ResourceLeaseControl,check:()=>void):(pr
  };
 }
 
-/** 🥾️ Acquires missing or changed locked parser dependencies through the dependency-free owner. */
-export async function ensureBuildEnvironmentV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,install:BuildEnvironmentInstallerV1=async(root,original,phase,recheck)=>{
+/** 🏁️ Installs the complete locked JavaScript dependencies under the exclusive hold, once a peer has not already done it. */
+export const completeBuildEnvironmentInstallerV1:BuildEnvironmentInstallerV1=async(root,original,phase,recheck)=>{
   const {prepareJavascriptDependencies}=await import("../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts");
   const {withJavascriptDependencyStorageV1}=await import("../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts");checkResourceLeaseControl(phase);await withJavascriptDependencyStorageV1(root,original,phase,(store,control)=>installUnlessReadyV1(store,control,recheck,()=>prepareJavascriptDependencies("sync",root,store,control,{kind:"all"})).then(()=>undefined),{ready:recheck});checkResourceLeaseControl(phase);
-},publish:(root:string)=>void=publishBuildBootstrapSourcesV1,requestedScope?:string):Promise<void> {
+};
+
+/** 🎟️ The installer of `dependencies ensure`: the capacity grant is requested here, only when the receipt was stale and material must really be synchronised. */
+export const capacityBuildEnvironmentInstallerV1:BuildEnvironmentInstallerV1=async(root,original,phase,recheck)=>{
+  const {withBuildCapacityV1}=await import("../🌡️host-capacity/🟦️.ts");
+  await withBuildCapacityV1(["dependencies","ensure"],process.env,()=>completeBuildEnvironmentInstallerV1(root,original,phase,recheck),{control:phase,admitDeferred:true});
+};
+
+/** 🥾️ Acquires missing or changed locked parser dependencies through the dependency-free owner. */
+export async function ensureBuildEnvironmentV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,install:BuildEnvironmentInstallerV1=completeBuildEnvironmentInstallerV1,publish:(root:string)=>void=publishBuildBootstrapSourcesV1,requestedScope?:string):Promise<void> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);const check=()=>{checkScriptInvocation(invocation);checkResourceLeaseControl(phaseControl);};check();
   publish(root);check();
   const bootstrap=dependencyInstallSchema.$defs.SourceOwnerBootstrapProtocol.const,scope=requestedScope??bootstrap.scope,base=scope==="."?root:join(root,...scope.split("/")),workspace=(invocation.capabilities as {workspaceRoot?:unknown}).workspaceRoot;
   if(typeof workspace!=="string"||resolve(workspace)!==resolve(root))throw new Error("Original build bootstrap repository required");
-  const {withJavascriptDependencyStorageV1,withJavascriptDependencyReceiptStorageV1,requireJavascriptDependencyStorageV1,javascriptDependencyReadContextV1,readJavascriptDependencySourceOwnerScopeReadV1,readJavascriptDependencySourceOwnerReadyV1}=await import("../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts");
+  const {withJavascriptDependencyStorageV1,withJavascriptDependencyReceiptStorageV1,readJavascriptDependencySourceOwnerScopeReadV1,readJavascriptDependencySourceOwnerReadyV1}=await import("../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts"),{requireJavascriptDependencyStorageV1,javascriptDependencyReadContextV1}=await import("../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/📥️read-context/🟦️.ts");
   const {requireNativeStoragePathV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts");
   const bounded=(path:string,maximum:number,installed=false)=>withArtifactReadFileSyncV1(path,check,file=>{const before=file.stat();if((installed?before.nlink<1n:before.nlink!==1n)||before.size>BigInt(maximum))throw new Error("Bounded regular bootstrap input required");const bytes=Buffer.alloc(Number(before.size));let offset=0;while(offset<bytes.length){check();const count=file.read(bytes,offset,Math.min(65536,bytes.length-offset),offset);if(!count)throw new Error("Bootstrap input truncated");offset+=count;}const after=file.stat(),current=lstatSync(path,{bigint:true});check();if(file.read(Buffer.alloc(1),0,1,offset)||["dev","ino","mode","nlink","size","mtimeNs","ctimeNs"].some(key=>before[key as keyof typeof before]!==after[key as keyof typeof after]||before[key as keyof typeof before]!==current[key as keyof typeof current]))throw new Error("Bootstrap input changed during read");return bytes;});
   const manifestBytes=bounded(join(base,"package.json"),8388608),manifest=JSON.parse(manifestBytes.toString()),packageManager=selectPackageManagerV1("javascript"),packageHost=currentHostV1(),lock=bounded(join(root,packageManager.primaryLockName()),8388608),key=bootstrapKeyV1(packageManager,{manifest,host:packageHost,lock}),lockGraph=(()=>{let graph:LockGraphV1|undefined;return()=>graph??=packageManager.parseLock(lock);})();

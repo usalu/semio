@@ -421,7 +421,7 @@ impl MutationDag {
         self.envelopes.is_empty() && self.applied.is_empty() && self.pending.is_empty()
     }
 
-    /// 🪹️ Proves all causal payload pages and fixed metadata allocations have been funded and released.
+    /// 🪫️ Proves all causal payload pages and fixed metadata allocations have been funded and released.
     pub fn backing_is_empty(&self) -> bool {
         self.envelopes.backing_is_empty() && self.applied.backing_is_empty() && self.pending.backing_is_empty()
     }
@@ -576,7 +576,7 @@ pub struct FrontierSummary {
     pub chain_hash: [u8; 32],
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason `MutationEnvelope`'s hand-written twin above
+/// 🆚️ Hand-written, not derived — same DAG reason `MutationEnvelope`'s hand-written twin above
 /// documents. No `#[serde(rename_all = …)]` on the original, so field names stay snake_case.
 
 
@@ -590,7 +590,7 @@ pub enum FrontierComparison {
     Diverged { common_edit_count: u64 },
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `FrontierSummary` above. No `#[serde(tag = …)]`
+/// 🧬️ Hand-written, not derived — same reason as `FrontierSummary` above. No `#[serde(tag = …)]`
 /// on the original and one data-carrying variant, so serde's default representation applies:
 /// externally tagged, unit variants as bare strings, `Diverged` as a one-key object — and no
 /// `rename_all`, so both the outer key and `common_edit_count` stay exactly as declared.
@@ -629,7 +629,7 @@ pub enum TransformOutcome<Op> {
     Conflict(String),
 }
 
-/// 🧮️ Operational-transform hook: rewrites `self` so it applies cleanly after `against`
+/// 🪝️ Operational-transform hook: rewrites `self` so it applies cleanly after `against`
 /// (both assumed concurrent, same base). New trait — no prior `vcs`/`framework-core` equivalent.
 pub trait MutationTransform<P>: semio_framework_replication_mutation::Mutation<P> {
     fn transform(&self, against: &Self) -> TransformOutcome<Self>
@@ -665,7 +665,7 @@ pub trait MutationTransform<P>: semio_framework_replication_mutation::Mutation<P
 // (`{edit.id}#{i}` for the id, `edit.actor` or `"unknown"` for the actor,
 // `HybridLogicalTimestamp::new(0, 0).await` for the timestamp) so this function is total (modulo encode
 // failure) even for a bare-bones `Edit` with no explicit meta.
-/// 🪪️ The wire `MutationId` each of `edit.forwards` would get if fanned out through
+/// ✏️ The wire `MutationId` each of `edit.forwards` would get if fanned out through
 /// `mutation_envelope_from_edit` — same fallback chain (`mutation_meta[i]` field, else the `Op`
 /// trait method, else `{edit.id}#{i}`), extracted so callers that only need identity (e.g.
 /// snapshot-vs-operations-message dedup) don't have to pay for `encode_op`/`inverse` work, and so

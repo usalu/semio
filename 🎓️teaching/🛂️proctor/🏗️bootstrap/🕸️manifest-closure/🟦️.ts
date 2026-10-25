@@ -1,4 +1,4 @@
-/** 🕸️ Which crates of this repository a Cargo package is built from, read from the manifests with the repository's own
+/** 🦀️ Which crates of this repository a Cargo package is built from, read from the manifests with the repository's own
  * Cargo TOML parser — the launcher asks no `cargo metadata` for it, which the repository's Cargo ingress refuses outside
  * its own launchers.
  *
@@ -15,8 +15,8 @@
  * @see https://doc.rust-lang.org/cargo/reference/workspaces.html#the-dependencies-table */
 import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import type { CargoControl } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🟦️.ts";
-import { CargoTomlWorkspace, parseCargoToml, type CargoTomlTable, type CargoTomlValue } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📖️toml/🟦️.ts";
+import type { CargoControl } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🎛️control/🟦️.ts";
+import { CargoTomlWorkspace, parseCargoToml, type CargoTomlTable, type CargoTomlValue } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/📖️toml/🟦️.ts";
 
 /** 📦️ One crate of this repository the closure reached. */
 export interface CargoCrate {
@@ -225,7 +225,7 @@ function unify(members: readonly Crate[]): (crate: Crate, edge: Edge) => boolean
   return live;
 }
 
-/** 🕸️ The crates of this repository the package `packageName` of the workspace at `workspaceManifest` is built from, itself included. */
+/** 🔗️ The crates of this repository the package `packageName` of the workspace at `workspaceManifest` is built from, itself included. */
 export async function cargoPackageClosure(workspaceManifest: string, packageName: string, options: ManifestClosureOptions = {}): Promise<readonly CargoCrate[]> {
   const manifests = new Manifests(options);
   const document = await manifests.read(workspaceManifest);

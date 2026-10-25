@@ -6,6 +6,7 @@ extern crate semio_framework_os_kernel as protocol;
 pub mod transforms;
 
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use crate::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 
@@ -16,7 +17,8 @@ use semio_framework_plugin::ActionDescriptor;
 
 //#region 🔖️Generation3dArtifact
 /// 🧬️ Generation3dArtifact facet type.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.generation3d")]
 pub struct Generation3dArtifact {
     #[state(artifact)]

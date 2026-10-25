@@ -114,7 +114,7 @@ export const LEVELS_DEFAULT: StylingLevels = {
   zStep: 10,
 };
 
-/** 👥️ Fallback presence palette (contract freeze §C7.5) — used when a `*.theme.json` predates the
+/** ❄️ Fallback presence palette (contract freeze §C7.5) — used when a `*.theme.json` predates the
  * `presence` block; `🔣️.json` and every premade theme carry their own copy of these same values. */
 const PRESENCE_DEFAULT: StylingPresence = {
   hues: [0, 210, 120, 30, 270, 180, 330, 60, 240, 150, 300, 90],
@@ -122,7 +122,7 @@ const PRESENCE_DEFAULT: StylingPresence = {
   dark: { s: 0.72, l: 0.62 },
 };
 
-/** 🌓️ Injects the 6 formula-derived `level<Name>` background paints and `element<Name>` element paints
+/** 🪜️ Injects the 6 formula-derived `level<Name>` background paints and `element<Name>` element paints
  * (k=0..5, `base..menu`) into one appearance's `chrome` group, mutating it in place. `bg(k) = mix_oklab(base,
  * foreground, k*shadeStep)`, `element(k) = mix_oklab(gray, foreground, k*elementStep)` — see contract CSS MECHANISM. */
 function injectLevelPaints(levels: StylingLevels, gray: Rgba8, chrome: Record<string, Rgba8>): void {
@@ -148,7 +148,7 @@ function rustF64Lit(v: number): string {
   return Number.isInteger(v) ? `${v}.0` : String(v);
 }
 
-/** 🎨️ Resolves every appearance's paint refs to Rgba8, then injects the formula-derived level/element
+/** 🔗️ Resolves every appearance's paint refs to Rgba8, then injects the formula-derived level/element
  * paints (see {@link injectLevelPaints}) into each appearance's `chrome` group so every existing emitter
  * (TS/Rust/Python, keyed off object entries) carries them automatically. */
 export function resolveAppearances(tokens: Tokens): Record<string, Record<string, Record<string, Rgba8>>> {
@@ -180,11 +180,11 @@ function paletteGroupNames(resolvedAppearances: ReturnType<typeof resolveAppeara
 
 //#region 🌓️Premade
 
-/** 🌓️ One premade theme as the projection sees it: its `id` plus its own full token set. Read from
+/** 🎁️ One premade theme as the projection sees it: its `id` plus its own full token set. Read from
  * `🌓️theme/*.json`, the same files {@link validatePremadeThemes} parses. */
 type PremadeTheme = { id: string; tokens: Tokens };
 
-/** 🌓️ Every premade theme, id-sorted so the emitted constants are deterministic. */
+/** 📥️ Every premade theme, id-sorted so the emitted constants are deterministic. */
 function loadPremadeThemes(): readonly PremadeTheme[] {
   if (!existsSync(premadeThemeDir)) {
     return [];
@@ -201,7 +201,7 @@ function loadPremadeThemes(): readonly PremadeTheme[] {
   return themes.sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
 }
 
-/** 🌓️ Emits `<GROUP>_<THEME>_<APPEARANCE>` constants over the SAME `<Group>Palette` struct the
+/** 🦀️ Emits `<GROUP>_<THEME>_<APPEARANCE>` constants over the SAME `<Group>Palette` struct the
  * default theme produces. Requires key-set parity, which {@link validatePremadeThemes} enforces — a
  * premade that declares its own extra chrome keys could not share the struct, which is exactly the drift
  * that forced the os wgpu Shell to hand-port 20 literals (ticket 26/09/17 packet W2k). */
@@ -279,7 +279,7 @@ function pct(fraction: number): string {
   return String(Math.round(fraction * 10000) / 100);
 }
 
-/** 👥️ Emits `--presence-0..11` under `:root` (light) and `.dark`, plus their `--color-presence-N`
+/** 📤️ Emits `--presence-0..11` under `:root` (light) and `.dark`, plus their `--color-presence-N`
  * `@theme` aliases (contract freeze §C7.5) — the CSS half of the presence palette; `emitRust`/
  * `emitTypeScriptTokens` emit the pure-twin half consumed by `👥️PresenceBar`. Only the base cycle
  * (`index % 12`, i.e. `k = index / 12 === 0`) gets a CSS var; higher cycles render inline HSL via the
@@ -631,7 +631,7 @@ function validateStylingOutputManifest(artifacts: readonly StylingArtifact[]): v
 /** 🪶️ Port through which the composition root persists one planned styling artifact. */
 export type StylingArtifactWriterV1 = (path: string, content: string) => unknown;
 
-/** 🎨️ Writes all styling artifacts from the same byte plan used by the freshness check, through the supplied writer. */
+/** 🏺️ Writes all styling artifacts from the same byte plan used by the freshness check, through the supplied writer. */
 export function generateStylingArtifacts(write: StylingArtifactWriterV1): void {
   const artifacts = renderStylingArtifacts();
   validateStylingOutputManifest(artifacts);
@@ -648,7 +648,7 @@ export function generateStylingArtifacts(write: StylingArtifactWriterV1): void {
   validatePremadeThemes();
 }
 
-/** 🧾️ Emits the canonical multi-language styling byte plan and stale removals without writes. */
+/** 📺️ Emits the canonical multi-language styling byte plan and stale removals without writes. */
 export function previewStylingArtifacts(repoRoot: string): string {
     const artifacts = renderStylingArtifacts();
     validateStylingOutputManifest(artifacts);
@@ -696,7 +696,7 @@ function validatePremadeThemes(): void {
   }
 }
 
-/** 🔎️ A premade theme must declare EXACTLY the default theme's appearance paint keys, in the same
+/** ⚖️ A premade theme must declare EXACTLY the default theme's appearance paint keys, in the same
  * order: that is what lets one generated `<Group>Palette` struct carry every theme, and what stops a
  * renderer from hand-resolving a premade's palette because it cannot share the struct. `parseUiTheme`
  * only checks that the six GROUPS exist, never their keys, which is how mono drifted to 7 extra `chrome`

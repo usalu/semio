@@ -119,14 +119,14 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let mut viewer = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     editor
-        .instance_operation_owner
+        .tools.instance_operation_owner
         .with_mut::<MediaOwner, _>(|owner| {
             owner.label = "vcs-editor".into();
             Ok(())
         })
         .unwrap();
     viewer
-        .instance_operation_owner
+        .tools.instance_operation_owner
         .with_mut::<MediaOwner, _>(|owner| {
             owner.label = "vcs-viewer".into();
             Ok(())

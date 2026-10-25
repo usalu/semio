@@ -43,7 +43,7 @@ impl FromValue for DrawingClipboardAssets{
  fn from_value(value:DslValue)->Result<Self,ValueError>{let DslValue::Object(entries)=value else{return Err(invalid());};if entries.len()>MAX_NODES{return Err(invalid());}let mut output=Self::default();for(key,value)in entries{if key.is_empty()||key.len()>MAX_ID_BYTES||output.contains_key(&key){return Err(invalid());}output.insert(key,DrawingImageAsset::from_value(value)?);}Ok(output)}
  fn from_value_controlled(value:&DslValue,_control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{let DslValue::Object(entries)=value else{return Err(invalid());};if entries.is_empty(){Ok(Self::default())}else{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"nonempty packet assets require retained fragment hydration"))}}
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl serde::Serialize for DrawingClipboardAssets{fn serialize<S:serde::Serializer>(&self,serializer:S)->Result<S::Ok,S::Error>{use serde::ser::SerializeMap;let mut map=serializer.serialize_map(Some(self.len()))?;for(key,value)in self.iter(){map.serialize_entry(key,value)?;}map.end()}}
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl<'de> serde::Deserialize<'de> for DrawingClipboardAssets{fn deserialize<D:serde::Deserializer<'de>>(deserializer:D)->Result<Self,D::Error>{let entries=<std::collections::BTreeMap<String,DrawingImageAsset>as serde::Deserialize>::deserialize(deserializer)?;let mut output=Self::default();for(key,value)in entries{if key.is_empty()||key.len()>MAX_ID_BYTES||output.len()==MAX_NODES{return Err(serde::de::Error::custom("invalid packet asset capacity or identity"));}output.insert(key,value);}Ok(output)}}

@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 📄️Codec
@@ -39,7 +39,7 @@ function vectors(ctx: AdapterContext): { documents: Document[]; refused: string[
   return JSON.parse(readFileSync(ctx.input(VECTORS), "utf8")) as { documents: Document[]; refused: string[] };
 }
 
-/** 🔮️ Judges one document against `🧬️schema/🔣️.json` with a real draft 2020-12 validator. */
+/** 🧬️ Judges one document against `🧬️schema/🔣️.json` with a real draft 2020-12 validator. */
 function validator(ctx: AdapterContext): (value: unknown, source: string) => void {
   const schema = JSON.parse(readFileSync(ctx.input(SCHEMA), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
   const ajv = new Ajv2020({ strict: false, allErrors: true });
@@ -162,7 +162,7 @@ function render(members: Member[]): string {
   return `{\n${lines.join(",\n")}\n}`;
 }
 
-/** 🖨️ Writes a ticket back, in declaration order, omitting every empty member but title and status. */
+/** 📝️ Writes a ticket back, in declaration order, omitting every empty member but title and status. */
 function encode(ticket: Ticket): string {
   const members: Member[] = [{ name: "title", kind: "text", value: ticket.title }];
   if (ticket.emoji !== "") members.push({ name: "emoji", kind: "text", value: ticket.emoji });

@@ -37,7 +37,7 @@ function tokens(path: string | null): (number | string)[] {
   return out;
 }
 
-/** 🎯️ The SVG path the twin writes for one glyph of one area; the twin computes the geometry and
+/** 🛤️ The SVG path the twin writes for one glyph of one area; the twin computes the geometry and
  *  d3-path only formats it, so the two subjects differ in nothing but the geometry. */
 function glyph(kind: VizSymbolKind, size: number): (number | string)[] {
   const context = pathRound(15);

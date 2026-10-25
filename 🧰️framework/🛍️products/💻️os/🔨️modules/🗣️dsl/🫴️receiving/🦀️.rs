@@ -39,6 +39,10 @@ fn grant_child(grant:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{
 fn funded(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 fn receipt(demand:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes}}
 impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving<M>{
+ /// 🔭️ Observes the receiving phase without advancing it.
+ pub fn phase(&self)->u8{self.phase}
+ /// 🔭️ Borrows the generic field value once it has been received.
+ pub fn generic_value(&self)->Option<&FieldValue>{self.generic.value.as_ref()}
  /// 🎟️ Preserves the full original source and exact operation range without parsing or allocating.
  pub fn admit(source:&[u8],range:(usize,usize),grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
   if range.0>range.1||range.1>source.len(){return Err(invalid("original operation escaped its full source"))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}

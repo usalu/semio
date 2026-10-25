@@ -14,6 +14,9 @@ use semio_framework_artifact_flow_flow::*;
 
 /// 🧾️ Reads one file below the VCS node at test time instead of compiling it into the suite; the text lives for the whole test process.
 #[cfg(test)]
+fn read_node(path: &str) -> &'static str {
+    fixture_text!(format!("../../../{path}"))
+}
 
 // #region 🔖️Laws
 #[cfg(test)]

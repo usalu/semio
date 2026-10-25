@@ -28,7 +28,7 @@ const grid = (value: number): number => {
   return value === 0 ? 0 : Math.round(value * factor) / factor;
 };
 
-/** 🎯️ Every record of one compiled fixture that carries the given key. */
+/** 📹️ Every record of one compiled fixture that carries the given key. */
 async function records(ctx: AdapterContext, fixture: string, key: string): Promise<number[][]> {
   const parsed = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://🌌️charts-scatter-trend/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return roundProbeNumbers(parsed, DECIMALS)
@@ -54,14 +54,14 @@ export default defineTestAdapter({
       }),
     },
     "bubble-size": {
-      /** 🔮️ d3-scale's square-root scale from the size extent onto the radius range. */
+      /** 📏️ d3-scale's square-root scale from the size extent onto the radius range. */
       oracle: (ctx: AdapterContext) => {
         const row = rows(ctx)[0]!;
         const values = row.values!.split(",").map(Number);
         const scale = scaleSqrt().domain([Math.min(...values), Math.max(...values)]).range([Number(row.rmin), Number(row.rmax)]);
         return { projection: { "size/radius": values.map((value) => grid(scale(value))) } };
       },
-      /** 🎯️ The radii the scatter family drew, in row order. */
+      /** 🔃️ The radii the scatter family drew, in row order. */
       subject: async (ctx: AdapterContext) => ({
         projection: { "size/radius": (await records(ctx, "bubble-size.tex", "geometry/point")).map((values) => values[2] ?? 0) },
       }),

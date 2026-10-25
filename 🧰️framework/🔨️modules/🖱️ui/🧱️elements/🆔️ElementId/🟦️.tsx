@@ -15,12 +15,12 @@ import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
  * hotkeys, command origin tracking, tutorials, E2E selectors, and introduction anchors. */
 export const ELEMENT_ID_PATTERN = /^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)*$/;
 
-/** 🆔️ Whether `id` matches {@link ELEMENT_ID_PATTERN}. */
+/** ❓️ Whether `id` matches {@link ELEMENT_ID_PATTERN}. */
 export function isElementId(id: string): boolean {
   return ELEMENT_ID_PATTERN.test(id);
 }
 
-/** 🆔️ Normalizes arbitrary input (a domain object's own id, a free-text label) into a single camelCase
+/** 🐪️ Normalizes arbitrary input (a domain object's own id, a free-text label) into a single camelCase
  * element-id segment — mirrors `element_id_segment` in `framework/core/rs/lib.rs` byte-for-byte.
  * Idempotent on input that is already a valid segment. Prefer a real semantic key first, this second,
  * and a numeric index only as a last resort (see {@link childElementId}). */
@@ -45,14 +45,14 @@ export function elementIdSegment(raw: string): string {
   return segment;
 }
 
-/** 🆔️ Derives a child element id by suffixing `parent` with one or more segments, each normalized
+/** 🌱️ Derives a child element id by suffixing `parent` with one or more segments, each normalized
  * through {@link elementIdSegment} — the hierarchical mechanism every composite component uses to name
  * its parts instead of a context/registry: `childElementId("ui.chat", "send")` → `"ui.chat.send"`. */
 export function childElementId(parent: string, ...segments: (string | number)[]): string {
   return segments.reduce<string>((id, segment) => `${id}.${elementIdSegment(String(segment))}`, parent);
 }
 
-/** 🆔️ Dev-only console warning when `id` violates {@link ELEMENT_ID_PATTERN} — called by base components
+/** ⚠️ Dev-only console warning when `id` violates {@link ELEMENT_ID_PATTERN} — called by base components
  * so a malformed id surfaces immediately at the call site instead of silently breaking i18n/tooltip/
  * introduction resolution downstream. No-operation in production builds. */
 export function assertElementId(id: string, componentName: string): void {
@@ -60,7 +60,7 @@ export function assertElementId(id: string, componentName: string): void {
   if (!isElementId(id)) console.error(`${componentName} received id "${id}" which does not match the UI element id grammar (dot-separated camelCase, e.g. "framework.window.main.action.addLayer")`);
 }
 
-/** 🆔️ CSS selector matching the element whose DOM `id` is `id`, OR any element carrying `id` as a
+/** 🎯️ CSS selector matching the element whose DOM `id` is `id`, OR any element carrying `id` as a
  * secondary logical id via the space-separated `data-element-alias` attribute — the single logical-id →
  * element resolver every consumer (introductions, tests, tutorials) should use instead of hand-rolling
  * `[id=...]`/`[data-*=...]` selectors. */
@@ -68,7 +68,7 @@ export function elementIdSelector(id: string): string {
   return `[id="${id}"], [data-element-alias~="${id}"]`;
 }
 
-/** 🆔️ Adds `id` as a token to `element`'s space-separated `data-element-alias` attribute (idempotent). */
+/** ➕️ Adds `id` as a token to `element`'s space-separated `data-element-alias` attribute (idempotent). */
 function addElementAlias(element: Element, id: string): void {
   const existing = element.getAttribute("data-element-alias");
   const tokens = existing ? existing.split(" ").filter(Boolean) : [];
@@ -77,7 +77,7 @@ function addElementAlias(element: Element, id: string): void {
   element.setAttribute("data-element-alias", tokens.join(" "));
 }
 
-/** 🆔️ Removes `id` from `element`'s `data-element-alias` attribute, dropping the attribute entirely once empty. */
+/** ➖️ Removes `id` from `element`'s `data-element-alias` attribute, dropping the attribute entirely once empty. */
 function removeElementAlias(element: Element, id: string): void {
   const existing = element.getAttribute("data-element-alias");
   if (!existing) return;
@@ -86,7 +86,7 @@ function removeElementAlias(element: Element, id: string): void {
   else element.setAttribute("data-element-alias", tokens.join(" "));
 }
 
-/** 🆔️ Stamps `alias` (a logical element id) onto the first draggable tree row inside `containerRef`, in
+/** 🪝️ Stamps `alias` (a logical element id) onto the first draggable tree row inside `containerRef`, in
  * document order — the generic mechanism behind teaching catalogue drag-and-drop without any component
  * hardcoding "first draggable row" semantics: Panel and Layout's private mobile panel decide the alias value (their own tab
  * id + `.firstDraggable`), this hook just keeps it stamped on whichever row is first as the tree changes.

@@ -2,7 +2,7 @@
 import { mat2d, vec2 } from "gl-matrix";
 import { expect, it, vi } from "vitest";
 import { GUN_HEIGHT, GUN_MUZZLE, GUN_REACH, LADDER_CARRY, LADDER_RUNG, equip, paintLadders, paintTools, rackLadders, type GearLadder, type GearTool } from "@semio-tech/pets-react";
-import { FEET, GRIP, HEIGHT, NEAR, SPECIMEN, WIDTH, apart, bearing, carried, equipped, expectLadder, ladderGeometry, meant, numbersOf, shown, through, writes } from "../🟢️shared/🟦️.tsx";
+import { FEET, GRIP, HEIGHT, NEAR, SPECIMEN, WIDTH, apart, bearing, carried, equipped, expectLadder, ladderGeometry, meant, numbersOf, shown, through, writes } from "../🟢️harness/🟦️.tsx";
 
 /** 🔹 Registers the runs rope pivot actor tests of the gear depiction suite. */
 export function registerRunsRopePivotActorTests(): void {

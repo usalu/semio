@@ -1,4 +1,22 @@
 // 🔬️ Support module 1 of the split test module `🔬️plugin-runtime-plugin-builder-contract`: the fixtures that more than one piece uses, as real definitions the pieces import.
+use semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant;
+use semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
+use semio_framework_plugin_mounted_owner::MountedOwnerPhaseV1;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_decl_app::MediaArtifactError;
+use semio_framework_plugin_decl_app::EphemeralSnapshot;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_mounted_owner::MountedOwnerTurnV1;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_framework_plugin_decl_app::MediaConsumption;
+use semio_framework_plugin_decl_app::TransactionPrepareOutcome;
+use semio_framework_ui_layout::layout::WindowEngagement;
+use semio_framework_plugin_window_config::WindowConfigPack;
+use semio_framework_plugin_peer::PresenceRosterAdmission;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
 use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -102,11 +102,20 @@
     },
     "postCreateCommand": {
       "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "minItems": 4,
-      "maxItems": 4
+      "items": [
+        {
+          "const": "bash"
+        },
+        {
+          "type": "string",
+          "pattern": "/🐚️\\.sh$"
+        },
+        {
+          "const": "setup"
+        }
+      ],
+      "minItems": 3,
+      "maxItems": 3
     },
     "contexts": {
       "type": "array",

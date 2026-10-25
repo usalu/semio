@@ -31,7 +31,6 @@ test("plain composite retirement preserves full padded width and owning controls
   } finally {
     db.close();
   }
-  console.log(`[DEBUG] Plain retirement ${fixture.widthCases.length} padded-width vectors agree with independent SQLite; native actual-size/heap laws remain separate`);
 });
 
 /** 🪄️ Pins the stash behavior at the generalized defining derive owner. */

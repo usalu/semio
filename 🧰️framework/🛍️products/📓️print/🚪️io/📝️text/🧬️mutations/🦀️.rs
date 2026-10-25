@@ -5,6 +5,11 @@ semio_framework_dsl_record_derive::record_binding!{
  #[dsl(keyword="change-chart-value")]
  struct ChangeChartValue{pub path:Vec<String>,pub value:Option<DslValue>}
 }
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ChangeChartValue {
+ fn canonical_tree_node(&self)->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,semio_framework_value::ValueError>{Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(1+usize::from(self.value.is_some())))}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree,semio_framework_value::ValueError>{match(ordinal,&self.value){(0,_)=>Ok(&self.path),(1,Some(value))=>Ok(value),_=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"chart mutation canonical child ordinal is absent"))}}
+ fn canonical_tree_key(&self,ordinal:usize)->Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>,semio_framework_value::ValueError>{["path","value"].get(ordinal).filter(|_|ordinal==0||self.value.is_some()).map(|key|(*key).into()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"chart mutation canonical key ordinal is absent"))}
+}
 impl ToValue for ChangeChartValue {
  fn to_value(&self)->DslValue{let mut fields=vec![("path".into(),self.path.to_value())];if let Some(value)=&self.value{fields.push(("value".into(),value.clone()));}DslValue::object(fields)}
 }

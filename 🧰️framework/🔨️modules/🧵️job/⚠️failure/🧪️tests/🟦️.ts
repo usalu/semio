@@ -85,7 +85,6 @@ test("original receiving keeps all five simultaneous causes and actual effects",
  assert(jobFacade.includes("pub use semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary")&&!jobFacade.includes("pub struct OriginalReceivingPrimary"),"Job reexports the actual lower cause without duplicating its body");
  assert(invoke.includes("Some(receiving as &dyn FieldProjectionSource)"),"actual extension failure output borrows the defining Receiving source");
  assert(invoke.includes('("original.receiving",receiving.primary.as_ref()')&&invoke.includes('Self::Progress(error.retained_progress())'),"normal extension wire keeps Receiving code and its own physical effects");
- console.log("[DEBUG] receiving primaryQuoteAllocationReceiptContext=true distinctOriginalFields=true actualProgress=true independentSQLite=true");
 });
 
 /** 🧾️ A complete turn span stays independent of its last primary and both enclosing refusal owners. */
@@ -96,5 +95,4 @@ test("original turn effect span preserves last semantic receipt and cumulative a
  const fault=faultFromOriginalTurnFailure(failure);assert.equal(fault.retainedProgress,law.whole);assert.equal(primary.retainedProgress,law.last);assert.equal(failure.primary.value,primary);assert.deepEqual(fault.causes?.map(cause=>cause.message),[law.receipt,law.context]);
  const wire=JSON.parse(JSON.stringify(fault));assert.deepEqual(wire.retainedProgress,law.whole);assert.deepEqual(primary.retainedProgress,law.last);assert.notDeepEqual(wire.retainedProgress,primary.retainedProgress);
  const owner=readFileSync(resolve(import.meta.dirname,"../🦀️.rs"),"utf8"),projection=readFileSync(resolve(import.meta.dirname,"../🫴️projection/🦀️.rs"),"utf8");assert(owner.includes("pub effects:super::RetainedCloneProgress"));assert(owner.includes("pub fn retained_progress(&self)->super::RetainedCloneProgress{self.effects}"));assert(projection.includes('"effects"=>Self::Progress(f.effects)'));
- console.log("[DEBUG] same original primary owner and last receipt; cumulative turn effects independently projected; SQLite sum/subtract and JSON transport agree; native law separate");
 });

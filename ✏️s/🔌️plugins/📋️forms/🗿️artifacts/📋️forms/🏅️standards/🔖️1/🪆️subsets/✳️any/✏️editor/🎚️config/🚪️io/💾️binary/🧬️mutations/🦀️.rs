@@ -12,4 +12,5 @@ impl protocol::OpBinary for FormsConfigMutation {
         protocol::OpText::parse_op(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(FormsConfigMutation);
 }

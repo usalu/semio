@@ -77,7 +77,7 @@ pub trait FontSource {
     fn poll_font(&mut self, key: &str) -> FontFetch;
 }
 
-/// 🌐️ One host font fetch's current state, as `FontSource::poll_font` reports it.
+/// ☁️ One host font fetch's current state, as `FontSource::poll_font` reports it.
 #[derive(Clone, Debug, PartialEq)]
 pub enum FontFetch {
     Pending,
@@ -85,7 +85,7 @@ pub enum FontFetch {
     Failed,
 }
 
-/// 🖋️ Font registration/fallback, a shaped-layout cache and the glyph atlas — the whole CPU text
+/// 🔤️ Font registration/fallback, a shaped-layout cache and the glyph atlas — the whole CPU text
 /// pipeline for one window/surface. Every method is a plain sync `fn` (ruling U1): shaping and
 /// rasterizing have no suspension point, so making them `async` would buy nothing and would cost the
 /// frame its run-to-completion guarantee. A still-loading host font never blocks a call here — it
@@ -176,7 +176,7 @@ impl TextSystem {
         collection.register_fonts(Blob::new(Arc::new(bytes.to_vec())), Some(over)).into_iter().next().map(|(id, _)| id)
     }
 
-    /// 🔗️ Interns `(font, glyph_id)`'s font identity to a stable [`FontHandle`], allocating on first
+    /// 🪪️ Interns `(font, glyph_id)`'s font identity to a stable [`FontHandle`], allocating on first
     /// sight. `Blob::id()` is already a unique monotonic id per allocation, so `(id, index)` is a
     /// correct identity key without hashing font bytes or comparing pointers.
     pub(super) fn intern_font(&mut self, data: Blob<u8>, index: u32) -> FontHandle {
@@ -190,7 +190,7 @@ impl TextSystem {
         handle
     }
 
-    /// 🕓️ Idempotent: requesting the same `key` twice returns the same [`FontDependencyId`], same
+    /// 📬️ Idempotent: requesting the same `key` twice returns the same [`FontDependencyId`], same
     /// interning idiom `ResourceRegistry::intern_texture` uses for texture keys. Never blocks — the
     /// actual bytes arrive later via [`Self::provide_font_bytes`], driven by a host's [`FontSource`].
     pub fn request_font(&mut self, key: &str) -> FontDependencyId {

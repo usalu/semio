@@ -191,7 +191,7 @@ pub struct MutationMessagePublicationBatch { items: ManuallyDrop<Vec<MutationMes
 impl Default for MutationMessagePublicationBatch { fn default() -> Self { Self { items: ManuallyDrop::new(Vec::new()), closing: false } } }
 
 impl MutationMessagePublicationBatch {
-    /// 📦️ Admits the batch's final owner slots before the first original publication moves.
+    /// ⏮️ Admits the batch's final owner slots before the first original publication moves.
     pub fn reserve(&mut self, count: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
         if self.closing { return Err(fault("diagnostic batch reservation follows closure")); }
         if self.items.capacity() >= count { return Ok(Default::default()); }

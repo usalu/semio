@@ -2,7 +2,7 @@
 import { expect, it } from "vitest";
 import { type Command } from "@semio-tech/course";
 import { ProctorUnavailable, localStore, memoryStorageOrigin, newId, type CommandVerdict } from "@semio-tech/course-react";
-import { LEARNER, OTHER_RUN, RUN, answer, gate, opening, outboxOver, tick } from "../🟢️shared/🟦️.tsx";
+import { LEARNER, OTHER_RUN, RUN, answer, gate, opening, outboxOver, tick } from "../🟢️harness/🟦️.tsx";
 
 /** 🟡 Registers the re addresses queued commands tests of the 📬️ answer outbox suite. */
 export function registerReAddressesQueuedCommandsTests(): void {

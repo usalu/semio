@@ -323,7 +323,7 @@ pub use presence_peer_read::PresencePeersRead;
 mod presence_peer_rejection;
 pub use presence_peer_rejection::PresencePeerAdmissionRejected;
 
-pub use semio_framework_os_presence_native_snapshot::ArtifactPresenceSnapshot;
+pub use semio_framework_os_presence_native_snapshot::{decode_presence_json, ArtifactPresenceSnapshot};
 
 #[path = "♻️retirement/🦀️.rs"]
 mod presence_retirement;

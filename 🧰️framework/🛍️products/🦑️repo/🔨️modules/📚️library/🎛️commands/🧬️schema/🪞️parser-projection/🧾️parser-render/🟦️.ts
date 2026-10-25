@@ -28,16 +28,16 @@ export interface SourceReader {
 /** 🔗️ A parser named by the file that declares it. */
 export type ParserKey = string;
 
-/** 🔗️ The key of parser `name` declared (or promised) in `owner`. */
+/** 🗝️ The key of parser `name` declared (or promised) in `owner`. */
 export const parserKey = (owner: string, name: string): ParserKey => `${owner}\u0000${name}`;
 
-/** 🔗️ The owner and the name a parser key addresses. */
+/** 〽️ The owner and the name a parser key addresses. */
 export function parserKeyParts(key: ParserKey): [string, string] {
   const at = key.indexOf("\u0000");
   return [key.slice(0, at), key.slice(at + 1)];
 }
 
-/** 🧭️ What one parser rendering needs from its surroundings, and what it learned about its callees. */
+/** 🏫️ What one parser rendering needs from its surroundings, and what it learned about its callees. */
 export class Context {
   readonly local = new Set<string>();
   self: string | undefined;
@@ -57,7 +57,7 @@ export class Context {
     readonly redirect?: Owner,
   ) {}
 
-  /** 🔎️ The context in which the nodes of another document are rendered: it reads that document, names its parsers as imports of the referring leaf, and shares the callees and the cycle guard of this one. */
+  /** 👁️ The context in which the nodes of another document are rendered: it reads that document, names its parsers as imports of the referring leaf, and shares the callees and the cycle guard of this one. */
   viewOf(owner: Owner, document: Dict | undefined): Context {
     return new Context(this.helper, typeof document?.$id === "string" ? document.$id : undefined, this.index, owner.ts, [], this.sources, this.promised, this.closed, document, this.resolving, this.foreign, owner);
   }
@@ -71,7 +71,7 @@ export class Context {
   }
 }
 
-/** 🔎️ `parse<name>` as an in-scope call: this file first, then a sibling facet of the same module. */
+/** ☎️ `parse<name>` as an in-scope call: this file first, then a sibling facet of the same module. */
 function locateParser(name: string, context: Context): string | undefined {
   const own = context.own;
   if (definesParser(own, name) || importsParser(own, name) || context.promised.has(parserKey(context.target, name))) {
@@ -87,7 +87,7 @@ function locateParser(name: string, context: Context): string | undefined {
   return undefined;
 }
 
-/** 🔎️ The identifier a call of `parse<name>` uses inside this file: the local binding when the file exports it under an alias, `parse<name>` otherwise. */
+/** 📞️ The identifier a call of `parse<name>` uses inside this file: the local binding when the file exports it under an alias, `parse<name>` otherwise. */
 const calleeOf = (name: string, context: Context): string => reexportedBinding(context.own, `parse${name}`) ?? `parse${name}`;
 
 /** 🔎️ The document a reference addresses: by `$id`, or, for a relative file reference, by the file it resolves to from the folder of the leaf that refers to it. */
@@ -103,7 +103,7 @@ export function findOwner(index: ReadonlyMap<string, Owner>, document: string, l
 
 const ownerOf = (document: string, context: Context): Owner | undefined => findOwner(context.index, document, context.target);
 
-/** 🔎️ The node a JSON pointer addresses inside `document`, or `undefined`. */
+/** 📍️ The node a JSON pointer addresses inside `document`, or `undefined`. */
 export function pointed(pointer: string, document: Dict | undefined): Dict | undefined {
   let node: unknown = document;
   for (const segment of pointer.split("/").slice(1)) {
@@ -159,14 +159,14 @@ export function boundsText(node: Dict, keys: readonly string[]): string {
   return truthy(stated) ? `, ${jsonValue(stated, false)}` : "";
 }
 
-/** 🔎️ A schema node that states no structure (`{"type": "object"}` or an `array` without `items`); an object that is closed (`additionalProperties: false`) states its structure: nothing. */
+/** 🕳️ A schema node that states no structure (`{"type": "object"}` or an `array` without `items`); an object that is closed (`additionalProperties: false`) states its structure: nothing. */
 const opaque = (node: Dict): boolean =>
   !has(node, "$ref") && ((node.type === "object" && !truthy(node.properties) && !isDict(node.additionalProperties) && node.additionalProperties !== false) || (node.type === "array" && !truthy(node.items)));
 
 /** 🔒️ The property names a closed object states, as the array literal `<prefix>Closed` takes. */
 const keyList = (keys: readonly string[]): string => `[${keys.map((key) => jsonString(key, false)).join(", ")}]`;
 
-/** 🔒️ `read` wrapped in the refusal of unknown properties exactly where the schema says `additionalProperties: false`; `undefined` when the schema also states pattern properties, which the refusal cannot honour. */
+/** 📪️ `read` wrapped in the refusal of unknown properties exactly where the schema says `additionalProperties: false`; `undefined` when the schema also states pattern properties, which the refusal cannot honour. */
 function closedRead(node: Dict, read: string, at: string, keys: readonly string[], context: Context): string | undefined {
   if (!context.closed || node.additionalProperties !== false) return read;
   return has(node, "patternProperties") ? undefined : `${context.helper}Closed(${read}, ${at}, ${keyList(keys)})`;
@@ -174,10 +174,10 @@ function closedRead(node: Dict, read: string, at: string, keys: readonly string[
 
 const exactItems = (count: number): string => `, {"minItems": ${count}, "maxItems": ${count}}`;
 
-/** 📏️ True when the schema states both the element schema and a fixed length of an array: it states more than a declared tuple alias, so the schema renders the parser. */
+/** ⚓️ True when the schema states both the element schema and a fixed length of an array: it states more than a declared tuple alias, so the schema renders the parser. */
 const fixedItems = (node: Dict): boolean => isDict(node.items) && truthy(node.items) && node.minItems === node.maxItems && typeof node.minItems === "number" && node.minItems >= 1 && node.minItems <= MAX_TUPLE;
 
-/** 📏️ The longest fixed-size array a parser reads as a tuple. */
+/** 🔧️ The longest fixed-size array a parser reads as a tuple. */
 const MAX_TUPLE = 16;
 
 const itemBindings = (depth: number): [string, string] => (depth === 0 ? ["item", "index"] : [`item${depth}`, `index${depth}`]);
@@ -186,7 +186,7 @@ const stripQuotes = (text: string): string => text.replace(/^['"]+|['"]+$/gu, ""
 //#endregion 🔖️Fragments
 
 //#region 🔖️Declared
-/** 🧬️ A parser for a field whose type is only known from the interface that declares it (scalars, tuples, arrays, named types). The root value of an export never resolves to a parser of its own name, so an opaque export whose declared type names the export cannot call itself or import over its own declaration; a field of that type still recurses. */
+/** ⌨️ A parser for a field whose type is only known from the interface that declares it (scalars, tuples, arrays, named types). The root value of an export never resolves to a parser of its own name, so an opaque export whose declared type names the export cannot call itself or import over its own declaration; a field of that type still recurses. */
 function typedExpression(rawText: string, access: string, path: string, context: Context, depth: number): string | undefined {
   const helper = context.helper;
   const at = `\`${path}\``;
@@ -316,7 +316,7 @@ const CLASS_TESTS: Record<JsonClass, (value: string) => string> = {
 const classOfValue = (value: unknown): JsonClass | undefined =>
   value === null ? "null" : typeof value === "string" ? "string" : typeof value === "number" || typeof value === "bigint" ? "number" : typeof value === "boolean" ? "boolean" : Array.isArray(value) ? "array" : isDict(value) ? "object" : undefined;
 
-/** 🔎️ The one JSON class an alternative admits, when it states one (a reference states none). */
+/** 📘️ The one JSON class an alternative admits, when it states one (a reference states none). */
 function jsonClass(node: Dict): JsonClass | undefined {
   if (has(node, "$ref")) return undefined;
   if (has(node, "const")) return classOfValue(node.const);
@@ -329,7 +329,7 @@ function jsonClass(node: Dict): JsonClass | undefined {
   return kind === "string" || kind === "boolean" || kind === "null" || kind === "array" || kind === "object" ? kind : undefined;
 }
 
-/** 🧬️ A value that matches the first of several alternatives (`anyOf`, an untagged `oneOf`, a `type` list): each alternative whose JSON class fits is tried in order and its refusal is swallowed, and the value is refused when none accepts it. */
+/** 🆕️ A value that matches the first of several alternatives (`anyOf`, an untagged `oneOf`, a `type` list): each alternative whose JSON class fits is tried in order and its refusal is swallowed, and the value is refused when none accepts it. */
 function alternativesExpression(alternatives: readonly Dict[], access: string, path: string, context: Context, depth: number): string | undefined {
   const helper = context.helper;
   const input = `input${depth}`;
@@ -394,7 +394,7 @@ export function parserExpression(node: Dict, access: string, path: string, conte
   return undefined;
 }
 
-/** 🧬️ An object that satisfies every part of an `allOf` of objects: each part reads the same row and the parts are merged, so a field a later part states wins. */
+/** 🔀️ An object that satisfies every part of an `allOf` of objects: each part reads the same row and the parts are merged, so a field a later part states wins. */
 function mergedExpression(parts: readonly Dict[], access: string, path: string, context: Context, depth: number): string | undefined {
   const helper = context.helper;
   const at = `\`${path}\``;
@@ -408,7 +408,7 @@ function mergedExpression(parts: readonly Dict[], access: string, path: string, 
   return `((${row}) => ({ ${calls.join(", ")} }))(${helper}Object(${access}, ${at}))`;
 }
 
-/** 🧬️ A value equal to a constant that is no scalar: `null`, a tuple of constants or an object of constants (an object admits no other property). */
+/** 🗿️ A value equal to a constant that is no scalar: `null`, a tuple of constants or an object of constants (an object admits no other property). */
 function constantExpression(value: unknown, access: string, path: string, context: Context, depth: number): string | undefined {
   const helper = context.helper;
   const at = `\`${path}\``;
@@ -480,7 +480,7 @@ function objectExpression(node: Dict, access: string, path: string, context: Con
 //#endregion 🔖️Expressions
 
 //#region 🔖️Parsers
-/** 🧾️ The `export function parse<name>` source of one export, or `undefined` when the schema has a form no renderer covers. */
+/** 🖌️ The `export function parse<name>` source of one export, or `undefined` when the schema has a form no renderer covers. */
 export function renderParser(name: string, definition: Dict, context: Context, declared?: ReadonlyMap<string, boolean>): string | undefined {
   context.self = name;
   const discriminated = Array.isArray(definition.oneOf) || Array.isArray(definition.anyOf);

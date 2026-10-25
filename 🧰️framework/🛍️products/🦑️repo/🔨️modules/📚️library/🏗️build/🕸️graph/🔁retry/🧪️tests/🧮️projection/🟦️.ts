@@ -3,7 +3,7 @@ import {expect,test,setDefaultTimeout} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {join,relative,resolve,sep} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {buildGraphRetryDiagnosticV1} from "../../🟨️.mjs";
 import schema from "../../🧬️schema/🔣️.json";
 import own from "../🔣️.json";

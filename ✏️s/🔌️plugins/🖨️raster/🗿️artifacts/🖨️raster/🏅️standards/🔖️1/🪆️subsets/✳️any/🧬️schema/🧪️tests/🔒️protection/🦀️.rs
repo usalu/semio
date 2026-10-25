@@ -6,7 +6,7 @@ use semio_s_artifact_raster_raster_model::*;
 use semio_s_artifact_raster_raster_diff::diff_patch_layer;
 use semio_s_artifact_raster_raster_model::RasterLayerPatch;
 use semio_s_artifact_raster_raster_model::snapshot;
-use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};
 #[test]
 fn protection_vectors_and_document_round_trips() {
     let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
@@ -38,6 +38,7 @@ fn protection_mutations_preserve_inverse_and_refuse_stale_guards() {
 #[test]
 fn combined_patches_keep_the_last_protection_change() {
     use protocol::MutationDiff;
+    use protocol::ColdMutationDiff;
     let mut base=empty_raster_snapshot();base.layers.push(create_layer_of_kind("pixel"));let id=layer_node_id(&base.layers[0]).to_owned();
     let mut patch=diff_patch_layer(&id,RasterLayerPatch {name:Some("Renamed".into()),..Default::default()});
     patch.absorb(diff_patch_layer(&id,RasterLayerPatch {locked:Some(true),..Default::default()}));

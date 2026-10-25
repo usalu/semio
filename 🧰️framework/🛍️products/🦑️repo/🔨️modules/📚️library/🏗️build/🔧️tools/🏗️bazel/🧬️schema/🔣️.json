@@ -326,7 +326,8 @@
         "workspace",
         "graph",
         "request",
-        "implementation"
+        "implementation",
+        "adapter"
       ],
       "properties": {
         "version": {
@@ -446,6 +447,77 @@
               "pattern": "^[a-f0-9]{64}$"
             }
           }
+        },
+        "adapter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "snapshot",
+            "runner",
+            "sha256",
+            "loaderSha256"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "snapshot": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "runner": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "loaderSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "scopes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "version",
+              "snapshot",
+              "runner",
+              "sha256",
+              "loaderSha256"
+            ],
+            "properties": {
+              "version": {
+                "const": 1
+              },
+              "snapshot": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "runner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "loaderSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
         }
       },
       "definitions": {
@@ -461,7 +533,8 @@
           "required": [
             "workspace",
             "plan",
-            "implementation"
+            "implementation",
+            "adapter"
           ],
           "properties": {
             "workspace": {
@@ -596,6 +669,77 @@
                   }
                 }
               }
+            },
+            "adapter": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "snapshot",
+                "runner",
+                "sha256",
+                "loaderSha256"
+              ],
+              "properties": {
+                "version": {
+                  "const": 1
+                },
+                "snapshot": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "runner": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "loaderSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "scopes": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "version",
+                  "snapshot",
+                  "runner",
+                  "sha256",
+                  "loaderSha256"
+                ],
+                "properties": {
+                  "version": {
+                    "const": 1
+                  },
+                  "snapshot": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "runner": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "loaderSha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              }
             }
           }
         }
@@ -646,6 +790,7 @@
         "workspace",
         "outputs",
         "actions",
+        "pool",
         "server",
         "temporary"
       ],
@@ -679,6 +824,11 @@
           "maxLength": 256
         },
         "actions": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "pool": {
           "type": "string",
           "minLength": 1,
           "maxLength": 256

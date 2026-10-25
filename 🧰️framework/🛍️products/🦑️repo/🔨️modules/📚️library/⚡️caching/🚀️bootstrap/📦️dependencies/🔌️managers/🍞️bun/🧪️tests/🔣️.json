@@ -1,0 +1,2699 @@
+{
+ "version": 1,
+ "bun": {
+  "version": "1.4.2"
+ },
+ "cases": [
+  {
+   "name": "external packages: baseline",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: member version bump",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.9",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "identity-mismatch",
+     "manifest": "pkgs/b/package.json",
+     "section": "version",
+     "manifestVersion": "2.0.9",
+     "lockVersion": "2.0.0",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: workspace dep removed",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "b",
+     "lockVersion": "workspace:*",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: workspace dep added",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "a": "workspace:*"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "pkgs/b/package.json",
+     "section": "dependencies",
+     "dependency": "a",
+     "manifestVersion": "workspace:*",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: external dep removed (still used elsewhere)",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "lockVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: external dep removed (last user)",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {}
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "devDependencies",
+     "dependency": "is-number",
+     "lockVersion": "7.0.0",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: external dep added, already locked, same range",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "is-number": "7.0.0"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "pkgs/b/package.json",
+     "section": "dependencies",
+     "dependency": "is-number",
+     "manifestVersion": "7.0.0",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: external dep range changed, same resolution",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "^2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "version-mismatch",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "manifestVersion": "^2.1.3",
+     "lockVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: external dep range changed, other resolution",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.2",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "version-mismatch",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "manifestVersion": "2.1.2",
+     "lockVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: external dep added, never locked",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*",
+       "ansi-regex": "6.0.1"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "ansi-regex",
+     "manifestVersion": "6.0.1",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: dep moved dependencies to devDependencies",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0",
+       "ms": "2.1.3"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "lockVersion": "2.1.3",
+     "frozen": false
+    },
+    {
+     "kind": "missing-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "devDependencies",
+     "dependency": "ms",
+     "manifestVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: peerDependencies added",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      },
+      "peerDependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "peerDependencies",
+     "dependency": "ms",
+     "manifestVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: optionalDependencies added (locked)",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      },
+      "optionalDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "optionalDependencies",
+     "dependency": "is-number",
+     "manifestVersion": "7.0.0",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: member renamed",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a2",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "identity-mismatch",
+     "manifest": "pkgs/a/package.json",
+     "section": "name",
+     "manifestVersion": "a2",
+     "lockVersion": "a",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: member dropped from workspaces",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "workspace-stale",
+     "manifest": "pkgs/b/package.json",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: member added to workspaces",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b",
+       "pkgs/c"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ],
+    [
+     "pkgs/c/package.json",
+     {
+      "name": "c",
+      "version": "1.0.0"
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "pkgs/c/package.json",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: root dependency added (external, locked)",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {},
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "manifestVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: overrides added",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {
+       "ms": "2.1.3"
+      }
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "section": "overrides",
+     "dependency": "ms",
+     "manifestVersion": "2.1.3",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: trustedDependencies added",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {},
+      "trustedDependencies": [
+       "ms"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "section": "trustedDependencies",
+     "dependency": "ms",
+     "manifestVersion": "",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: scripts changed (inert)",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      },
+      "scripts": {
+       "x": "y"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: overrides removed",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"overrides\": {\n    \"ms\": \"2.1.3\",\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "package.json",
+     "section": "overrides",
+     "dependency": "ms",
+     "lockVersion": "2.1.3",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: overrides value changed",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"overrides\": {\n    \"ms\": \"2.1.3\",\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {
+       "ms": "2.1.2"
+      }
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "version-mismatch",
+     "manifest": "package.json",
+     "section": "overrides",
+     "dependency": "ms",
+     "manifestVersion": "2.1.2",
+     "lockVersion": "2.1.3",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: overrides unchanged",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"overrides\": {\n    \"ms\": \"2.1.3\",\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {
+       "ms": "2.1.3"
+      }
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: resolutions added",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {},
+      "resolutions": {
+       "ms": "2.1.3"
+      }
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "section": "overrides",
+     "dependency": "ms",
+     "manifestVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: trustedDependencies removed",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"trustedDependencies\": [\n    \"ms\",\n  ],\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {},
+      "trustedDependencies": []
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "package.json",
+     "section": "trustedDependencies",
+     "dependency": "ms",
+     "lockVersion": "",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: root name changed",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root2",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "identity-mismatch",
+     "manifest": "package.json",
+     "section": "name",
+     "manifestVersion": "root2",
+     "lockVersion": "root",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: peerDependencies added, never locked",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      },
+      "peerDependencies": {
+       "ansi-regex": "6.0.1"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "peerDependencies",
+     "dependency": "ansi-regex",
+     "manifestVersion": "6.0.1",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: optionalDependencies added, never locked",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      },
+      "optionalDependencies": {
+       "ansi-regex": "6.0.1"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "optionalDependencies",
+     "dependency": "ansi-regex",
+     "manifestVersion": "6.0.1",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: devDependencies added, never locked",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0",
+       "ansi-regex": "6.0.1"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "devDependencies",
+     "dependency": "ansi-regex",
+     "manifestVersion": "6.0.1",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: root devDependency added, never locked",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {},
+      "devDependencies": {
+       "ansi-regex": "6.0.1"
+      }
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "section": "devDependencies",
+     "dependency": "ansi-regex",
+     "manifestVersion": "6.0.1",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: external dep spec to git/tarball-free alias npm:",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n        \"ms\": \"2.1.3\",\n      },\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n      \"dependencies\": {\n        \"ms\": \"2.1.3\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "overrides": {}
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "npm:ms@2.1.3",
+       "b": "workspace:*"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "version-mismatch",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "manifestVersion": "npm:ms@2.1.3",
+     "lockVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "workspace members only: baseline",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "b": "workspace:*"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0"
+     }
+    ]
+   ],
+   "expected": [],
+   "bun": {
+    "refused": false,
+    "network": false
+   }
+  },
+  {
+   "name": "workspace members only: member version bump",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "b": "workspace:*"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.9"
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "identity-mismatch",
+     "manifest": "pkgs/b/package.json",
+     "section": "version",
+     "manifestVersion": "2.0.9",
+     "lockVersion": "2.0.0",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": false
+   }
+  },
+  {
+   "name": "workspace members only: workspace dep removed",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {}
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0"
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "b",
+     "lockVersion": "workspace:*",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": false
+   }
+  },
+  {
+   "name": "workspace members only: workspace dep added",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "b": "workspace:*"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0",
+      "dependencies": {
+       "a": "workspace:*"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "pkgs/b/package.json",
+     "section": "dependencies",
+     "dependency": "a",
+     "manifestVersion": "workspace:*",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": false
+   }
+  },
+  {
+   "name": "workspace members only: member renamed",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a2",
+      "version": "1.0.0",
+      "dependencies": {
+       "b": "workspace:*"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0"
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "identity-mismatch",
+     "manifest": "pkgs/a/package.json",
+     "section": "name",
+     "manifestVersion": "a2",
+     "lockVersion": "a",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": false
+   }
+  },
+  {
+   "name": "workspace members only: member dropped from workspaces",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "b": "workspace:*"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "workspace-stale",
+     "manifest": "pkgs/b/package.json",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": false
+   }
+  },
+  {
+   "name": "workspace members only: member added to workspaces",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b",
+       "pkgs/c"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "b": "workspace:*"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0"
+     }
+    ],
+    [
+     "pkgs/c/package.json",
+     {
+      "name": "c",
+      "version": "1.0.0"
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "pkgs/c/package.json",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": false
+   }
+  },
+  {
+   "name": "workspace members only: trustedDependencies added",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ],
+      "trustedDependencies": [
+       "ms"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "b": "workspace:*"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0"
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "section": "trustedDependencies",
+     "dependency": "ms",
+     "manifestVersion": "",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": false
+   }
+  },
+  {
+   "name": "workspace members only: scripts changed (inert)",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "b": "workspace:*"
+      },
+      "scripts": {
+       "x": "y"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0"
+     }
+    ]
+   ],
+   "expected": [],
+   "bun": {
+    "refused": false,
+    "network": false
+   }
+  },
+  {
+   "name": "workspace members only: root name changed",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"b\": \"workspace:*\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"2.0.0\",\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root2",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "b": "workspace:*"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "2.0.0"
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "identity-mismatch",
+     "manifest": "package.json",
+     "section": "name",
+     "manifestVersion": "root2",
+     "lockVersion": "root",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": false
+   }
+  },
+  {
+   "name": "every kind of drift in code-unit order across a sub-scope with a parent member and a backslash path",
+   "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"s\",\"dependencies\":{\"a\":\"1\",\"b\":\"3\",\"e\":\"9\"}},\"../up\":{\"name\":\"up\"},\"pkgs/x\":{\"name\":\"x\",\"version\":\"1.0.0\",\"dependencies\":{\"d\":\"1\"},\"devDependencies\":{\"z\":\"1\"}},\"gone\":{\"name\":\"gone\"}},\"packages\":{\"a\":[\"a@1.0.0\"],\"b\":[\"b@3.0.0\"],\"d\":[\"d@1.0.0\"],\"e\":[\"e@9.0.0\"],\"z\":[\"z@1.0.0\"],\"up\":[\"up@workspace:../up\"],\"x\":[\"x@workspace:pkgs/x\"]}}",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "s",
+      "dependencies": {
+       "a": "1",
+       "b": "2"
+      },
+      "devDependencies": {
+       "c": "3"
+      }
+     }
+    ],
+    [
+     "../up/package.json",
+     {
+      "name": "up"
+     }
+    ],
+    [
+     "pkgs\\x\\package.json",
+     {
+      "name": "x",
+      "version": "1.0.1",
+      "dependencies": {
+       "d": "1"
+      }
+     }
+    ],
+    [
+     "pkgs/y/package.json",
+     {
+      "name": "y"
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "workspace-stale",
+     "manifest": "gone/package.json",
+     "frozen": true
+    },
+    {
+     "kind": "version-mismatch",
+     "manifest": "package.json",
+     "section": "dependencies",
+     "dependency": "b",
+     "manifestVersion": "2",
+     "lockVersion": "3",
+     "frozen": false
+    },
+    {
+     "kind": "stale-in-lock",
+     "manifest": "package.json",
+     "section": "dependencies",
+     "dependency": "e",
+     "lockVersion": "9",
+     "frozen": true
+    },
+    {
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "section": "devDependencies",
+     "dependency": "c",
+     "manifestVersion": "3",
+     "frozen": true
+    },
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/x/package.json",
+     "section": "devDependencies",
+     "dependency": "z",
+     "lockVersion": "1",
+     "frozen": true
+    },
+    {
+     "kind": "identity-mismatch",
+     "manifest": "pkgs/x/package.json",
+     "section": "version",
+     "manifestVersion": "1.0.1",
+     "lockVersion": "1.0.0",
+     "frozen": false
+    },
+    {
+     "kind": "workspace-missing",
+     "manifest": "pkgs/y/package.json",
+     "frozen": true
+    }
+   ],
+   "bun": null
+  },
+  {
+   "name": "an unreadable lock is one frozen finding naming the lock file",
+   "lock": "{ not a lock",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "r"
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "invalid-lockfile",
+     "manifest": "bun.lock",
+     "frozen": true
+    }
+   ],
+   "bun": null
+  },
+  {
+   "name": "a lock without a workspace table lacks the root",
+   "lock": "{\"lockfileVersion\":1}",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "r"
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "package.json",
+     "frozen": true
+    }
+   ],
+   "bun": null
+  },
+  {
+   "name": "scoped and nested locked package names count as locked",
+   "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"}},\"packages\":{\"a\":[\"a@1.0.0\"],\"a/@s/p\":[\"@s/p@1.0.0\"]}}",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "r",
+      "dependencies": {
+       "@s/p": "1.0.0",
+       "@s/q": "1.0.0"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "section": "dependencies",
+     "dependency": "@s/p",
+     "manifestVersion": "1.0.0",
+     "frozen": false
+    },
+    {
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "section": "dependencies",
+     "dependency": "@s/q",
+     "manifestVersion": "1.0.0",
+     "frozen": true
+    }
+   ],
+   "bun": null
+  },
+  {
+   "name": "external packages: last-user baseline: locked package with a transitive user",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"debug\": \"4.4.1\",\n        \"ms\": \"2.1.3\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"1.0.0\",\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"debug\": [\"debug@4.4.1\", \"\", { \"dependencies\": { \"ms\": \"^2.1.3\" }, \"peerDependencies\": { \"supports-color\": \"*\" }, \"optionalPeers\": [\"supports-color\"] }, \"sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "debug": "4.4.1",
+       "ms": "2.1.3"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "1.0.0",
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ]
+   ],
+   "expected": [],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: last-user: declaration removed while a locked package still depends on it",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"debug\": \"4.4.1\",\n        \"ms\": \"2.1.3\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"1.0.0\",\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"debug\": [\"debug@4.4.1\", \"\", { \"dependencies\": { \"ms\": \"^2.1.3\" }, \"peerDependencies\": { \"supports-color\": \"*\" }, \"optionalPeers\": [\"supports-color\"] }, \"sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "debug": "4.4.1"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "1.0.0",
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "lockVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: last-user: declaration moved to another member of the scope",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"debug\": \"4.4.1\",\n        \"ms\": \"2.1.3\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"1.0.0\",\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"debug\": [\"debug@4.4.1\", \"\", { \"dependencies\": { \"ms\": \"^2.1.3\" }, \"peerDependencies\": { \"supports-color\": \"*\" }, \"optionalPeers\": [\"supports-color\"] }, \"sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "debug": "4.4.1"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      },
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "lockVersion": "2.1.3",
+     "frozen": false
+    },
+    {
+     "kind": "missing-in-lock",
+     "manifest": "pkgs/b/package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "manifestVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "bun": {
+    "refused": false,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: last-user: a package and its transitive dependency both removed",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"debug\": \"4.4.1\",\n        \"ms\": \"2.1.3\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"1.0.0\",\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"debug\": [\"debug@4.4.1\", \"\", { \"dependencies\": { \"ms\": \"^2.1.3\" }, \"peerDependencies\": { \"supports-color\": \"*\" }, \"optionalPeers\": [\"supports-color\"] }, \"sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0"
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "1.0.0",
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "debug",
+     "lockVersion": "4.4.1",
+     "frozen": true
+    },
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "lockVersion": "2.1.3",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: last-user: package removed while its transitive dependency stays declared",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"debug\": \"4.4.1\",\n        \"ms\": \"2.1.3\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"1.0.0\",\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"debug\": [\"debug@4.4.1\", \"\", { \"dependencies\": { \"ms\": \"^2.1.3\" }, \"peerDependencies\": { \"supports-color\": \"*\" }, \"optionalPeers\": [\"supports-color\"] }, \"sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "ms": "2.1.3"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "1.0.0",
+      "devDependencies": {
+       "is-number": "7.0.0"
+      }
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "debug",
+     "lockVersion": "4.4.1",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  },
+  {
+   "name": "external packages: last-user: a dependency removed from every member",
+   "lock": "{\n  \"lockfileVersion\": 2,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"root\",\n    },\n    \"pkgs/a\": {\n      \"name\": \"a\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"debug\": \"4.4.1\",\n        \"ms\": \"2.1.3\",\n      },\n    },\n    \"pkgs/b\": {\n      \"name\": \"b\",\n      \"version\": \"1.0.0\",\n      \"devDependencies\": {\n        \"is-number\": \"7.0.0\",\n      },\n    },\n  },\n  \"packages\": {\n    \"a\": [\"a@workspace:pkgs/a\"],\n\n    \"b\": [\"b@workspace:pkgs/b\"],\n\n    \"debug\": [\"debug@4.4.1\", \"\", { \"dependencies\": { \"ms\": \"^2.1.3\" }, \"peerDependencies\": { \"supports-color\": \"*\" }, \"optionalPeers\": [\"supports-color\"] }, \"sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==\"],\n\n    \"is-number\": [\"is-number@7.0.0\", \"\", {}, \"sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==\"],\n\n    \"ms\": [\"ms@2.1.3\", \"\", {}, \"sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==\"],\n  }\n}\n",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "root",
+      "private": true,
+      "workspaces": [
+       "pkgs/a",
+       "pkgs/b"
+      ]
+     }
+    ],
+    [
+     "pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0",
+      "dependencies": {
+       "debug": "4.4.1",
+       "ms": "2.1.3"
+      }
+     }
+    ],
+    [
+     "pkgs/b/package.json",
+     {
+      "name": "b",
+      "version": "1.0.0"
+     }
+    ]
+   ],
+   "expected": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/b/package.json",
+     "section": "devDependencies",
+     "dependency": "is-number",
+     "lockVersion": "7.0.0",
+     "frozen": true
+    }
+   ],
+   "bun": {
+    "refused": true,
+    "network": true
+   }
+  }
+ ]
+}

@@ -209,7 +209,7 @@ impl<T, const N: usize> PagedList<T, N> {
         Ok(output)
     }
 
-    /// 🌱️ Builds a paged owner from fallible domain conversion without an intermediate collection.
+    /// 🔨️ Builds a paged owner from fallible domain conversion without an intermediate collection.
     pub fn try_from_fallible_iter<E: From<PagedListError>>(values: impl IntoIterator<Item = Result<T, E>>) -> Result<Self, E> {
         let mut output = Self::default();
         for value in values {
@@ -263,7 +263,7 @@ impl<T, const N: usize> PagedList<T, N> {
     pub fn allocated_bytes(&self) -> usize {
         self.allocated
     }
-    /// 🧭️ Quotes the existing original page path before one logical slot is borrowed or changed.
+    /// ⏭️ Quotes the existing original page path before one logical slot is borrowed or changed.
     pub fn next_get_depth_demand(&self,index:usize)->Result<usize,PagedListError>{
         if index>=self.length{return Ok(0);}
         self.height().checked_add(1).ok_or(PagedListError {kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list lookup depth overflow"})
@@ -412,13 +412,13 @@ impl<T, const N: usize> PagedList<T, N> {
         if self.has_reserved_slot(){return Ok(0)}
         self.next_page_copy_byte_demand()
     }
-    /// 🧭️ Quotes original payload copies toward a declared capacity without copying owned page headers.
+    /// 🦜️ Quotes original payload copies toward a declared capacity without copying owned page headers.
     pub fn next_capacity_copy_byte_demand(&self,capacity:usize)->Result<usize,PagedListError>{
         if capacity>N{return Err(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list logical capacity exhausted"})}
         if capacity<=self.capacity{return Ok(0)}
         self.next_page_copy_byte_demand()
     }
-    /// 🪜️ Quotes the original page path of the next backing allocation toward a declared logical capacity.
+    /// 📄️ Quotes the original page path of the next backing allocation toward a declared logical capacity.
     pub fn next_capacity_depth_demand(&self,capacity:usize)->Result<usize,PagedListError>{
         if capacity>N{return Err(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list logical capacity exhausted"})}
         if capacity<=self.capacity{return Ok(0)}
@@ -429,7 +429,7 @@ impl<T, const N: usize> PagedList<T, N> {
         Ok(0)
     }
 
-    /// 🎟️ Returns the next single backing allocation needed to reach a requested logical capacity.
+    /// ↩️ Returns the next single backing allocation needed to reach a requested logical capacity.
     pub fn next_capacity_allocation_bytes(&self, capacity: usize) -> Result<Option<usize>, PagedListError> {
         if capacity > N {
             return Err(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list logical capacity exhausted" });
@@ -461,7 +461,7 @@ impl<T, const N: usize> PagedList<T, N> {
         Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list page authority is missing" })
     }
 
-    /// 🎟️ Reserves one original metadata or payload page only with independent structural funding.
+    /// 📃️ Reserves one original metadata or payload page only with independent structural funding.
     pub fn reserve_one_funded(&mut self, grant:semio_framework_value_control_contract::RetainedCloneGrant) -> Result<semio_framework_value_control_contract::RetainedCloneProgress,PagedListAllocationError> {
         if self.has_reserved_slot() { return Ok(Default::default()); }
         let copy=self.next_reserve_copy_byte_demand().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
@@ -471,7 +471,7 @@ impl<T, const N: usize> PagedList<T, N> {
         let progress=self.reserve_one(grant.maximum_capacity_bytes)?;
         Ok(semio_framework_value_control_contract::RetainedCloneProgress{copied_items:usize::from(progress.progressed),copied_bytes:if progress.progressed{copy}else{0},retained_capacity_bytes:progress.allocated_bytes,released_bytes:0})
     }
-    /// 🎟️ Reserves at most one original page toward a requested logical capacity only with independent structural funding.
+    /// 📬️ Reserves at most one original page toward a requested logical capacity only with independent structural funding.
     pub fn reserve_capacity_one_funded(&mut self, capacity:usize, grant:semio_framework_value_control_contract::RetainedCloneGrant) -> Result<semio_framework_value_control_contract::RetainedCloneProgress,PagedListAllocationError> {
         let refused=|error:PagedListError|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason};
         let copy=self.next_capacity_copy_byte_demand(capacity).map_err(refused)?;
@@ -512,7 +512,7 @@ impl<T, const N: usize> PagedList<T, N> {
         self.reserve_page_using::<A>(grant)
     }
 
-    /// 🎟️ Admits at most one backing allocation toward a requested logical capacity.
+    /// ⏪️ Admits at most one backing allocation toward a requested logical capacity.
     pub fn reserve_capacity_one(&mut self, capacity: usize, grant: usize) -> Result<PagedListProgress, PagedListAllocationError> {
         if capacity > N {
             return Err(PagedListAllocationError { allocated_bytes: 0, kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list logical capacity exhausted" });
@@ -604,7 +604,7 @@ impl<T, const N: usize> PagedList<T, N> {
         Err(rejected(PagedListRefusalKind::InvariantViolated, "fixed list page authority is missing"))
     }
 
-    /// 📏️ Quotes the original reserved node path before one owner enters its next slot.
+    /// ⏩️ Quotes the original reserved node path before one owner enters its next slot.
     pub fn next_push_depth_demand(&self)->Result<usize,PagedListError>{
         if !self.has_reserved_slot(){return Err(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list push requires its original reserved slot"});}
         self.height().checked_add(3).ok_or(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list push depth overflow"})
@@ -620,7 +620,7 @@ impl<T, const N: usize> PagedList<T, N> {
         Ok(())
     }
 
-    /// 🌱️ Appends one cold owner while admitting every backing allocation before it is made.
+    /// ❄️ Appends one cold owner while admitting every backing allocation before it is made.
     pub fn try_push(&mut self, value: T) -> Result<(), PagedListError> {
         while !self.has_reserved_slot() {
             let required = self.next_allocation_bytes()?;
@@ -688,13 +688,13 @@ impl<T, const N: usize> PagedList<T, N> {
         next(&self.root, self.root.capacity())
     }
 
-    /// 📏️ Quotes the actual node path followed by the next retained tail removal.
+    /// 🔚️ Quotes the actual node path followed by the next retained tail removal.
     pub fn next_pop_depth_demand(&self) -> Result<usize, PagedListError> {
         if self.is_empty() { return Ok(0); }
         self.height().checked_add(3).ok_or(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list tail depth overflow" })
     }
 
-    /// 📏️ Quotes the actual retained node path of the next whole empty backing release.
+    /// 📦️ Quotes the actual retained node path of the next whole empty backing release.
     pub fn next_release_depth_demand(&self) -> Result<usize, PagedListError> {
         fn next<T>(link: &[Page<T>], capacity: usize, depth: usize) -> Result<usize, PagedListError> {
             let Some(node) = link.first() else { return Ok(if capacity == 0 { 0 } else { depth }); };
@@ -893,7 +893,7 @@ impl<T, const N: usize> IntoIterator for PagedList<T, N> {
 }
 
 impl<T, const N: usize> PagedList<T, N> {
-    /// 🧊️ Constructs an empty native sequence; retained writes use explicit reserve and placement.
+    /// 🧲️ Constructs an empty native sequence; retained writes use explicit reserve and placement.
     pub fn new() -> Self { Self::default() }
     pub fn push(&mut self, value: T) { self.try_push(value).expect("cold list append must fit its declared capacity"); }
     pub fn insert(&mut self, index: usize, value: T) {

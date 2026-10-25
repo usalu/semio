@@ -71,7 +71,6 @@ fn retained_central_diff_preserves_original_serialization_and_refuses_fatal_pref
   if admitted{let quote=grant(owner.commit_demand(diff.borrow(),before.borrow(),&post,128).unwrap());let(step,heap)=observe(||commit_retained_diff(&mut owner,diff.borrow(),before.borrow(),&mut post,RetainedCloneGrant::default()).unwrap());assert_eq!(heap,(0,0));assert_eq!(step.progress(),Default::default());assert_eq!(post.value,case["before"].as_i64().unwrap());let(step,heap)=observe(||commit_retained_diff(&mut owner,diff.borrow(),before.borrow(),&mut post,quote).unwrap());assert!(step.progress().fits(quote));assert!(matches!(step,RetainedCloneStep::Complete(_)));assert_eq!(heap,(0,0));}else{assert!(commit_retained_diff(&mut owner,diff.borrow(),before.borrow(),&mut post,RetainedCloneGrant::default()).is_err());}
   assert_eq!(post.value,case["expected"].as_i64().unwrap());assert_eq!(post.untouched.as_ptr(),pointer);assert_eq!(diff.borrow().get(),&original_diff);assert_eq!(semio_framework_value::ToValue::to_value(diff.borrow().get()),semio_framework_value::ToValue::to_value(&original_diff));
   close(&mut owner);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));close_source(&mut diff);close_source(&mut before);
-  eprintln!("[DEBUG] central typed diff {:?}: readonly preflight, fatal override, original D serialization stable, staged scalar owned commit, terminalDrop0",case["id"]);
  }
 }
 

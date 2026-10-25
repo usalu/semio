@@ -8,7 +8,7 @@ import{MEMBER_INDEX_FILE_V1,appendMemberRowsV1,compactMemberIndexV1,encodeMember
 import closures from"../../🧬️schema/🔣️.json"with{type:"json"};
 import protocol from"../🧬️schema/🔣️.json"with{type:"json"};
 
-const P=closures.definitions.Protocol.const,M=protocol.definitions.Protocol.const,fs={openSync,fstatSync,readSync,writeSync,closeSync,lstatSync,readFileSync}as never,hex=/^[a-f0-9]{64}$/u,worker=fileURLToPath(new URL("../../👷️read.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL)));
+const P=closures.definitions.Protocol.const,M=protocol.definitions.Protocol.const,fs={openSync,fstatSync,readSync,writeSync,closeSync,lstatSync,readFileSync}as never,hex=/^[a-f0-9]{64}$/u,worker=fileURLToPath(new URL("../../👷️closure-read-worker/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL)));
 
 /** 🎚️ What a scan needs from its caller: whether to stop, and where to report progress. */
 export type MemberScanControlV1=Readonly<{cancelled():boolean;progress(label:string,done:number,total:number):void|Promise<void>}>;
@@ -107,6 +107,7 @@ async function rowsFor(root:string,group:string,pending:readonly Leaf[],leaves:r
  const directory=join(root,...directoryOf(group).split("/")),rows:MemberRowV1[]=[],requests:Request[]=[],byPath=new Map(leaves.map(leaf=>[leaf.path,leaf]));
  const full=(leaf:Leaf,hash:string,expanded:number,graph:string|null,references:readonly string[],links:readonly{p:string;m?:"block"}[])=>{const row=readMemberRowV1(JSON.parse(encodeMemberRowV1(fullMemberRowV1({n:leaf.name,b:leaf.bytes,h:hash,k:leaf.kind as never,s:leaf.stamp,x:expanded,g:graph,r:references,l:links}))));if(row)rows.push(row);else counters.refused++;};
  for(const leaf of pending){
+  if(leaf.kind==="observation"){try{const bytes=readFileSync(leaf.path);if(bytes.length===leaf.bytes)full(leaf,memberHashV1(bytes),bytes.length,null,[],[]);else counters.refused++;}catch(error){if(!absent(error))throw error;}continue;}
   if(leaf.kind==="index"){try{const bytes=readFileSync(leaf.path);if(bytes.length===leaf.bytes&&bytes.length<=P.maximumIndexBytes)full(leaf,memberHashV1(bytes),bytes.length,null,[],[]);else counters.refused++;}catch(error){if(!absent(error))throw error;}continue;}
   if(leaf.kind==="pack"){
    const idx=byPath.get(leaf.path.slice(0,-5)+".idx");if(!idx){counters.refused++;continue;}
@@ -150,6 +151,125 @@ export async function indexBuildGraphMembersV1(root:string,ports:MemberIndexPort
   }finally{lease.release();}
  }
  return Object.freeze({groups:seen,skipped,busy,indexed,refused:counters.refused,compacted,cancelled});
+}
+
+export type SupersedeReportV1=Readonly<{groups:number;busy:number;skipped:number;headers:number;removed:number;bytes:number;cancelled:boolean}>;
+const recordDirectoriesV1:readonly Readonly<{name:string;pattern?:RegExp}>[]=Object.freeze([{name:"np"},{name:"ip"},{name:"rr"},{name:"inference",pattern:/^(?:emoji-project-json|test-cases)\.json$/u}]);
+
+/** 🧹️ Removes, group by group, the observation blocks that no record header of the group names any more, each group under its non-blocking writer lease (a group a builder writes is skipped as busy): every re-inference writes new blocks and the superseded ones are never read again, so without this the finite inventory of the graph store fills up and no graph command can run. Reports progress per record directory and stops at the next checkpoint when cancelled; `dryRun` only counts. */
+export async function supersedeBuildGraphObservationBlocksV1(root:string,ports:Pick<MemberIndexPortsV1,"lease">,control:MemberScanControlV1,{dryRun=false,minimumBlocks=0,blocksPerHeader=0,graceMilliseconds,now}:Readonly<{dryRun?:boolean;minimumBlocks?:number;blocksPerHeader?:number;graceMilliseconds?:number;now?:number}>={}):Promise<SupersedeReportV1>{
+ const{sweepSupersededObservationBlocksV1}=await import("../../../../../../../../../🏗️build/👁️observation/🟨️.mjs"),groups=listBuildGraphMemberGroupsV1(root).filter(group=>group.startsWith("selections/")||group.startsWith("contexts/"));
+ let busy=0,skipped=0,headers=0,removed=0,bytes=0,cancelled=false,seen=0;
+ for(let at=0;at<groups.length;at++){
+  if(control.cancelled()){cancelled=true;break;}
+  const group=groups[at]!,[kind,identity]=group.split("/") as [string,string],lease=await ports.lease(kind==="contexts"?"dataset":"selection",identity);
+  if(!lease){busy++;continue;}
+  seen++;
+  try{
+   for(const directory of recordDirectoriesV1){
+    if(control.cancelled()){cancelled=true;break;}
+    const path=join(root,"inference",...group.split("/"),directory.name);if(!present(path))continue;
+    const report=await sweepSupersededObservationBlocksV1(path,{...(directory.pattern?{headerPattern:directory.pattern}:{}),dryRun,minimumBlocks,blocksPerHeader,...(graceMilliseconds!==undefined?{graceMilliseconds}:{}),...(now!==undefined?{now}:{}),progress:row=>control.progress(group+"/"+directory.name+":"+row.phase,row.done,row.total)});
+    if(report.skipped)skipped++;headers+=report.headers;removed+=report.removed;bytes+=report.bytes;
+   }
+  }finally{lease.release();}
+  if(cancelled)break;
+ }
+ return Object.freeze({groups:seen,busy,skipped,headers,removed,bytes,cancelled});
+}
+
+/** 📃️ What one closure sweep did: `unvouched` counts passes that refused to remove anything because a leaf's references could not be proven, `busy` the attempts that found a group writer taken. */
+export type ClosureSupersedeReportV1=Readonly<{groups:number;unvouched:number;busy:number;candidates:number;removed:number;bytes:number;cancelled:boolean}>;
+const closurePrefixV1:Readonly<Record<string,string>>=Object.freeze({"build-input-closures":"source:","build-lock-closures":"lock:"});
+
+/** 💀️ Whether a read refusal says the leaf can never be decoded: its observation blocks are gone, so no reader can follow it to a closure. */
+const deadLeafV1=(error:unknown)=>(error as {closureReadFailure?:{worker?:{failure?:{message?:unknown}}}}|undefined)?.closureReadFailure?.worker?.failure?.message==="Authenticated observation closure block required";
+/** 🧠️ What a sweep learned about a leaf by its path and physical stamp: the references it names, or null for a dead leaf; a leaf is read once per sweep, not once per pass. */
+/** 🔑️ One writer lease of a sweep: the namespace kind and its identity; groups that share a namespace (the shared one and the generations) share one lease, so it is taken once. */
+type LeaseKeyV1=readonly ["selection"|"dataset"|"canonical",string];
+type LeafKnowledgeV1=Map<string,readonly string[]|null>;
+
+/** 🪢️ Unions the closure references of every group: indexed leaves vouch for themselves, an observation block is never read on its own (the closure read child authenticates a block only through the record header that names it, and that header's references already include the block's),  the leaves without a full row are read once more by the closure read child (a dead leaf older than the grace names nothing); more than `maximumPending` of them, or one the child refuses for another reason, means the references are unproven. */
+async function referencedClosuresV1(root:string,groups:readonly string[],ports:Pick<MemberIndexPortsV1,"read">,control:MemberScanControlV1,maximumPending:number,known:LeafKnowledgeV1,settledBefore:number):Promise<Set<string>|undefined>{
+ const referenced=new Set<string>();
+ for(const group of groups){
+  if(control.cancelled())return undefined;
+  const leaves=leavesOf(root,group),proven=proveGroupV1(parseMemberIndexV1(indexText(root,group),group),leaves.map(leaf=>({name:leaf.name,kind:leaf.kind,bytes:leaf.bytes,stamp:leaf.stamp})));
+  for(const reference of proven.references)referenced.add(reference);
+  const pending=leaves.filter((_,at)=>proven.members[at]!.state!=="full"),unread:Leaf[]=[];
+  if(pending.length>maximumPending)return undefined;
+  for(const leaf of pending){
+   const cached=known.get(leaf.path+"\0"+leaf.proof);
+   if(cached!==undefined){for(const reference of cached??[])referenced.add(reference);continue;}
+   if(leaf.kind==="observation"){known.set(leaf.path+"\0"+leaf.proof,null);continue;}
+   unread.push(leaf);
+  }
+  if(unread.length){
+   const dead=new Set<string>(),read:MemberIndexPortsV1["read"]=async(requests,accept)=>{try{await ports.read(requests,accept);}catch(error){if(requests.length===1&&deadLeafV1(error)&&Number(BigInt(unread.find(leaf=>leaf.path===requests[0]!.path)!.stamp.split(":")[2]!)/1000000n)<=settledBefore){dead.add(requests[0]!.path);return;}throw error;}},counters={refused:0},rows=await rowsFor(root,group,unread,leaves,{lease:async()=>undefined,read},control,counters);
+   if(counters.refused||rows.length+dead.size!==unread.length)return undefined;
+   for(const leaf of unread)if(dead.has(leaf.path))known.set(leaf.path+"\0"+leaf.proof,null);
+   for(const row of rows){const leaf=unread.find(candidate=>candidate.name===row.n)!;known.set(leaf.path+"\0"+leaf.proof,row.r??[]);for(const reference of row.r??[])referenced.add(reference);}
+  }
+ }
+ return referenced;
+}
+
+/** 🏗️ Removes, under the shared hold of the graph image, the closure inventories no leaf of any group names: a leaf's references are proven by its index row (or read once more), an inventory younger than the grace may belong to a leaf still being written, and each batch is removed while every group's non-blocking writer lease is held and the references are proven again, so no writer can start naming an inventory that is being removed. Nothing is removed while any reference is unproven or a writer is busy. */
+export async function supersedeBuildGraphClosuresV1(root:string,ports:Pick<MemberIndexPortsV1,"lease"|"read">&Readonly<{queue?(kind:"selection"|"dataset"|"canonical",identity:string):Promise<Readonly<{release():void}>|undefined>}>,control:MemberScanControlV1,{dryRun=false,graceMilliseconds=3600000,now=Date.now(),maximumPending=65536,batch=256,attempts=8}:Readonly<{dryRun?:boolean;graceMilliseconds?:number;now?:number;maximumPending?:number;batch?:number;attempts?:number}>={}):Promise<ClosureSupersedeReportV1>{
+ const groups=listBuildGraphMemberGroupsV1(root),known:LeafKnowledgeV1=new Map(),keys=[...new Map(groups.map(group=>{const[kind,identity]=group.split("/") as [string,string],key:LeaseKeyV1=[kind==="contexts"?"dataset":kind==="selections"?"selection":"canonical",identity??""];return[key.join("\0"),key] as const;})).values()];let unvouched=0,busy=0,removed=0,bytes=0,cancelled=false,candidates=0;
+ const done=()=>Object.freeze({groups:groups.length,unvouched,busy,candidates,removed,bytes,cancelled});
+ const collect=(referenced:ReadonlySet<string>)=>{
+  const rows:{path:string;key:string;allocated:number;proof:string}[]=[];
+  for(const[namespace,prefix]of Object.entries(closurePrefixV1)){
+   let names:string[]=[];try{names=readdirSync(join(root,namespace));}catch(error){if(!absent(error))throw error;}
+   for(const name of names){
+    if(!/^[a-f0-9]{64}\.json$/u.test(name)||referenced.has(prefix+name.slice(0,64)))continue;
+    const path=join(root,namespace,name);let row:BigIntStats;try{row=lstatSync(path,{bigint:true});}catch(error){if(absent(error))continue;throw error;}
+    if(!row.isFile()||row.nlink!==1n||now-Number(row.mtimeNs/1000000n)<graceMilliseconds)continue;
+    rows.push({path,key:prefix+name.slice(0,64),allocated:Number(row.blocks)*512,proof:stamp7(row)});
+   }
+  }
+  return rows;
+ };
+ await control.progress("closures:references",0,groups.length);
+ const first=await referencedClosuresV1(root,groups,ports,control,maximumPending,known,now-graceMilliseconds);
+ if(!first){if(control.cancelled())cancelled=true;else unvouched++;return done();}
+ const list=collect(first);candidates=list.length;
+ if(dryRun){removed=list.length;bytes=list.reduce((sum,row)=>sum+row.allocated,0);return done();}
+ for(let from=0;from<list.length;from+=batch){
+  if(control.cancelled()){cancelled=true;break;}
+  await control.progress("closures:remove",from,list.length);await turn();
+  let held:Array<{release():void}>|undefined;
+  for(let attempt=0;attempt<attempts&&!held;attempt++){
+   if(control.cancelled()){cancelled=true;break;}
+   const taken:Array<{release():void}>=[];let blocked:LeaseKeyV1|undefined;
+   for(const key of keys){const lease=await ports.lease(key[0],key[1]);if(!lease){blocked=key;break;}taken.push(lease);}
+   if(blocked===undefined){held=taken;break;}
+   for(const lease of taken)lease.release();busy++;
+   if(ports.queue){
+    const first=await ports.queue(blocked[0],blocked[1]);
+    if(first){
+     const rest:Array<{release():void}>=[first];let all=true;
+     for(const key of keys){if(key===blocked)continue;const lease=await ports.lease(key[0],key[1]);if(!lease){all=false;break;}rest.push(lease);}
+     if(all){held=rest;break;}
+     for(const lease of rest)lease.release();
+    }
+   }else if(attempt+1<attempts)await new Promise<void>(resolve=>setTimeout(resolve,500));
+  }
+  if(!held)break;
+  try{
+   const referenced=await referencedClosuresV1(root,groups,ports,control,maximumPending,known,now-graceMilliseconds);
+   if(!referenced){if(control.cancelled())cancelled=true;else unvouched++;break;}
+   for(const row of list.slice(from,from+batch)){
+    if(referenced.has(row.key))continue;
+    let current:BigIntStats;try{current=lstatSync(row.path,{bigint:true});}catch(error){if(absent(error))continue;throw error;}
+    if(stamp7(current)!==row.proof)continue;
+    try{unlinkSync(row.path);}catch(error){if(absent(error))continue;throw error;}
+    removed++;bytes+=row.allocated;
+   }
+  }finally{for(const lease of held)lease.release();}
+ }
+ return done();
 }
 
 /** 🧒️ Binds the closure read child: the captured worker, heap and wire bounds the closure proof uses, one cohort of requests per child under the caller's lease control, each leaf its own request so that its answer is its own. */

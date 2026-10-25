@@ -1,6 +1,6 @@
 /** 🔧️ Law: real Bazel offloads hermetic actions to the in-house executor. With a worker in its own process, the generated hermetic workspace builds with zero local spawns of the hermetic mnemonic, the worker runs the actions inside its sandbox, the results land in the shared store and a build from a clean output base is answered by the action cache without any worker run, and the outputs equal those of a local build. */
 import {expect,test} from "bun:test";
-import {makeTestTreeWritableV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {makeTestTreeWritableV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {createHash} from "node:crypto";
 import {mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
@@ -10,6 +10,7 @@ import {createNativeBuildCallerCapabilitiesV1} from "../../../📥️caller/🟦
 import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import * as execution from "../../../🔧️tools/🏗️bazel/🏃️execution/🟦️.ts";
 import {eventuallyV1,startClusterV1} from "../🧰️cluster/🟦️.ts";
+import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 
 const binary=process.env.SEMIO_TEST_BAZEL_BINARY,sha=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex"),contract=schema.definitions.Contract.const,host=execution.bazelExecutionPlatformV1(process.platform,process.arch);
 
@@ -31,7 +32,7 @@ const readLog=(path:string):Spawn[]=>{const text=readFileSync(path,"utf8"),rows:
 const treeDigest=(directory:string):string=>{const rows:string[]=[],visit=(path:string)=>{for(const name of readdirSync(path).sort()){const full=join(path,name),info=statSync(full);if(info.isDirectory())visit(full);else rows.push(relative(directory,full)+"\0"+(info.mode&0o777).toString(8)+"\0"+sha(readFileSync(full)));}};visit(directory);return sha(rows.join("\n"));};
 
 test.skipIf(!binary)("law: real Bazel runs hermetic actions on a worker in its own process, caches the results in the shared store and spawns nothing locally",async()=>{
- const directory=mkdtempSync(join("/private/tmp/rexec-inhouse","bazel-")),checkout=join(directory,"checkout"),cluster=await startClusterV1({workers:0,root:directory}),entry=join(import.meta.dir,"..","..","🏃️entry","🟦️.ts");
+ const directory=mkdtempSync(join(testScratchRootV1("rexec-inhouse"),"bazel-")),checkout=join(directory,"checkout"),cluster=await startClusterV1({workers:0,root:directory}),entry=join(import.meta.dir,"..","..","🏃️entry","🟦️.ts");
  const environment=(extra:Record<string,string>={})=>({...process.env,...(process.platform==="darwin"?{LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8"}:{}),...extra});
  const common=(base:string)=>[`--output_base=${join(directory,base)}`,`--install_base=${join(directory,"install")}`,"--nosystem_rc","--nohome_rc",`--bazelrc=${join(process.cwd(),".bazelrc")}`,"--max_idle_secs=120"];
  let workerProcess:ReturnType<typeof Bun.spawn>|undefined;

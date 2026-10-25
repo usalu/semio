@@ -204,42 +204,15 @@ impl ArtifactEditor for WriterPlayApp {
         registry.register(WriterCommandJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !WRITER_COMMAND_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !WRITER_COMMAND_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Writer command does not match its exact registered tool"));
+        if original.command.command_id() != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Writer command does not match its exact registered tool").into());
         }
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(WriterRetainedCommandWork::new(request.command.command_id()));
-        let payload = ArtifactRetainedCommandPayload::new(
-            ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            WriterCommand::command_id,
-            MAX_WRITER_COMMAND_RAW_BYTES,
-            MAX_WRITER_COMMAND_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, WriterCommand::command_id, MAX_WRITER_COMMAND_RAW_BYTES, MAX_WRITER_COMMAND_WORK_ITEMS, false, |request| WriterRetainedCommandWork::new(request.command.command_id()))
     }
 
     fn handle(

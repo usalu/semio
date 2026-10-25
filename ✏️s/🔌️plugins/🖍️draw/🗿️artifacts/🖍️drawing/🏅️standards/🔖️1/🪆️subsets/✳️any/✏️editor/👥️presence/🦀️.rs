@@ -8,7 +8,7 @@ use pack::snapshot::ArtifactPack;
 /// selection/hover moved to the framework's typed `PresencePeer.interaction` broadcast (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); this facet keeps only genuinely
 /// drawing-specific presence.
-#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "drawing.presence")]
 #[dsl(layout = "lines")]
@@ -81,7 +81,11 @@ impl store::SnapshotRetirementFactory<DrawingPresence> for DrawingPresenceRetire
 }
 
 
-impl store::ArtifactPresenceSnapshot for DrawingPresence {}
+impl store::ArtifactPresenceSnapshot for DrawingPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl pack::snapshot::ArtifactDsl for DrawingPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;

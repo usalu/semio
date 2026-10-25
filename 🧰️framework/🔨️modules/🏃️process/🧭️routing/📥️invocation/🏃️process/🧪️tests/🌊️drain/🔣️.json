@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "scope": "process",
+      "hops": 0,
+      "expected": "joined"
+    },
+    {
+      "scope": "process",
+      "hops": 1,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "process",
+      "hops": 2,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "process",
+      "hops": 3,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "process",
+      "hops": 4,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "process",
+      "hops": 5,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "process",
+      "hops": 6,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "process",
+      "hops": 7,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "process",
+      "hops": 8,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "control",
+      "hops": 0,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "control",
+      "hops": 1,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "control",
+      "hops": 2,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "control",
+      "hops": 3,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "control",
+      "hops": 4,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "control",
+      "hops": 5,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "control",
+      "hops": 6,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "control",
+      "hops": 7,
+      "expected": "joined-or-refused"
+    },
+    {
+      "scope": "control",
+      "hops": 8,
+      "expected": "joined-or-refused"
+    }
+  ]
+}

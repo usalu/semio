@@ -41,7 +41,7 @@ fn descriptors_follow_the_canonical_workflow_roster() {
 #[semio_framework_async_macros::async_test]
 async fn every_workflow_kind_inverse_diffs_sum_to_the_negative_diff() {
     use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
-    use crate::tests::{sample_workflow_snapshot, stale_ports_snapshot, workflow_edge, workflow_node};
+    use crate::workflow_mutations::tests::{sample_workflow_snapshot, stale_ports_snapshot, workflow_edge, workflow_node};
     use crate::*;
     let document = sample_workflow_snapshot().await;
     let node_c = workflow_node("c", Vec::new(), Vec::new()).await;

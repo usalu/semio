@@ -22,12 +22,12 @@ use crate::schema::mutation_support::prior_attribute;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct StampBaseProfile {
-    pub(crate) base_profile: Option<String>,
-    pub(crate) version: Option<String>,
+    pub base_profile: Option<String>,
+    pub version: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) base_profile_index: Option<usize>,
+    pub base_profile_index: Option<usize>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) version_index: Option<usize>,
+    pub version_index: Option<usize>,
 }
 
 impl<Op> protocol::MutationKind<SvgSnapshot, Op> for StampBaseProfile

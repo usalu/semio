@@ -28,5 +28,5 @@ export function projectPackageLockV1(text:string,input:LockProjectionV1):string{
  lock.packages=rows;
  return JSON.stringify(lock,null,2)+"\n";
 }
-/** 📦️ The adapter: descriptor data plus the lock reader and its capabilities. */
+/** 🔧️ The adapter: descriptor data plus the lock reader and its capabilities. */
 export const npmPackageManagerV1=createPackageManagerV1(descriptor as unknown as ManagerDescriptorV1,readPackageLockV1,{document:text=>JSON.parse(text),project:projectPackageLockV1});

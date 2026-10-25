@@ -7,7 +7,7 @@ export function validateNativeCargoArguments(operation: "build" | "check" | "tes
       throw new Error(`Argument ${argument} changes the native input contract; use a dedicated Nx target for that selection`);
 }
 
-/** 🎯️ Normalizes an artifact router invocation before Cargo can observe caller-controlled selectors. */
+/** 🦀️ Normalizes an artifact router invocation before Cargo can observe caller-controlled selectors. */
 export function artifactRustCargoArguments(operation: "build" | "check" | "test", segments: readonly string[]): { cargoArgs: string[]; testLevel?: string } {
   const levels = new Set(["fundamental", "quick", "long", "exhaustive"]),
     [first, ...rest] = segments;

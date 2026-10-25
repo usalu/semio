@@ -15,3 +15,37 @@ test("neutral native cleanup retained EX requires exact accepted token and prese
 test("neutral native cleanup copied evidence and impossible command budgets refuse without effects",async()=>{const api=await import("../../📋️state/🟦️.ts"),base=corpus.cases[0]!.input;for(const value of[{...base,program:"hdiutil"},{...base,pending:33},{...base,observations:3},{...base,deactivations:2},{...base,platform:"android"},{...base,creator:"path-only"}])expect(()=>api.nativeImageCleanupActionV1(value)).toThrow();});
 
 test("canceled native cleanup retains actual EX and token without reviving its Original",async()=>{const leases=await import("../../../../../../🔒️leases/🟦️.ts"),issuer=await import("../../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts"),controller=new AbortController(),reason=Error("genuine Native body canceled");await mkdir(root,{recursive:true});const directory=await mkdtemp(join(root,"cleanup-cancel-"));let failed=false,failure:unknown,held=false,checked=false,free=false;try{try{await issuer.withScriptProcessEnvelope(issuer.createScriptProcessEnvelope({version:1,owner:"cleanup:command-law",maximumElapsedMilliseconds:0},{},Date.now()),async original=>issuer.withScriptInvocationSignalV1(original,controller.signal,async alias=>{const control=issuer.createIssuedResourceControlV1(alias,"native:cleanup-cancel",20000),resource="native-fixed-image:"+join(directory,"image");await issuer.withAcceptedPhysicalCleanupV1(control,{version:1,kind:"native-image",resource,reserveMilliseconds:5000},async(token,body)=>{const lease=await leases.acquireResourceLease({directory,resource,mode:"exclusive",control:body,signal:body.signal}),proof=leases.captureResourceLeaseWriterProofV1(lease,directory,resource,body),binding={directory,resource,path:leases.resourceLeasePathV1(directory,resource)},database=new Database(binding.path);try{database.exec("pragma busy_timeout=0");controller.abort(reason);await issuer.beginAcceptedPhysicalCleanupV1(token);expect(()=>leases.requireResourceLeaseWriterProofV1(proof,binding,body)).toThrow();expect(()=>leases.requireAcceptedPhysicalCleanupWriterProofV1(proof,binding,body,token)).not.toThrow();checked=true;try{database.exec("begin exclusive");}catch{held=true;}lease.release();database.exec("begin exclusive");database.exec("rollback");free=true;}finally{database.close();lease.release();}});}));}catch(error){failed=true;failure=error;}const contains=(value:unknown,depth=0):boolean=>Object.is(value,reason)||depth<8&&value instanceof AggregateError&&value.errors.some(error=>contains(error,depth+1));expect(failed).toBe(true);expect(contains(failure)).toBe(true);expect(checked).toBe(true);expect(held).toBe(true);expect(free).toBe(true);}finally{await rm(directory,{recursive:true,force:true});}});
+
+test("a verification fails over a sibling's retirement only: the retry law agrees with an independent Python classification and bounds the attempts",async()=>{
+ const api=await import("../🟦️.ts"),protocol=(await import("../../📥️receiver/🧬️schema/🔣️.json")).default.definitions.Protocol.const,rows=corpus.concurrentChange;
+ const model=`import json,re,sys
+patterns,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
+print(json.dumps({r["id"]:(r["code"]=="ENOENT" or any(re.search(p,r["message"]) for p in patterns)) for r in rows}))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(protocol.concurrentChangePatterns),JSON.stringify(rows)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
+ for(const row of rows){const error=Object.assign(Error(row.message),row.code===null?{}:{code:row.code});expect(api.concurrentChildChangeV1(error),row.id).toBe(row.transient);expect(independent[row.id],row.id).toBe(row.transient);}
+ const control={signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:async()=>undefined} as never,pauses:number[]=[],calls:Array<[boolean,boolean]>=[];
+ await api.retryConcurrentChildChangeV1(async(fresh,final)=>{calls.push([fresh,final]);if(calls.length<3)throw Object.assign(Error("gone"),{code:"ENOENT"});},control,async ms=>{pauses.push(ms);});
+ expect(calls).toEqual([[false,false],[true,false],[true,false]]);expect(pauses).toEqual([250,500]);
+ const last:Array<[boolean,boolean]>=[];let thrown:unknown;try{await api.retryConcurrentChildChangeV1(async(fresh,final)=>{last.push([fresh,final]);throw Object.assign(Error("gone"),{code:"ENOENT"});},control,async()=>undefined);}catch(error){thrown=error;}
+ expect(last.length).toBe(protocol.concurrentChangeAttempts);expect(last.at(-1)).toEqual([true,true]);expect(last.slice(0,-1).every(row=>row[1]===false)).toBe(true);expect((thrown as {code:string}).code).toBe("ENOENT");
+ const once:number[]=[];try{await api.retryConcurrentChildChangeV1(async()=>{once.push(1);throw Error("Actual parent-funded persistent child required");},control,async()=>undefined);}catch{}
+ expect(once.length).toBe(1);
+});
+
+
+test("a stable foreign mount is refused at once in both languages, naming mount, image, device and owner; the classification agrees with an independent Python replay",async()=>{
+ const api=await import("../🟦️.ts"),rows=corpus.foreignMount,pattern=(await import("../../📥️receiver/🧬️schema/🔣️.json")).default.definitions.Protocol.const.concurrentChangePatterns.at(-1)!;
+ const model=`import json,re,sys
+pattern,rows=sys.argv[1],json.loads(sys.argv[2])
+def decide(r):
+    if not (r["attached"] and re.search(pattern,r["message"])): return "other"
+    return "live" if r["live"] else "foreign"
+print(json.dumps({r["id"]:decide(r) for r in rows}))`,run=Bun.spawnSync(["python3","-I","-c",model,pattern,JSON.stringify(rows)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
+ for(const row of rows){expect(api.foreignChildMountV1(Error(row.message),row.attached),row.id).toBe(row.foreign);expect(api.unfundedChildDecisionV1(Error(row.message),row.attached,()=>row.live),row.id).toBe(row.decision);expect(independent[row.id],row.id).toBe(row.decision);}
+ const refusal=api.foreignChildMountRefusalV1({root:"/c/p/m/tmp/st/d/1/a/i/m",image:"/c/p/m/tmp/st/d/1/a/i/fixed.dmg",device:"/dev/disk23s1"});
+ const [en,de]=refusal.message.split("\n");
+ for(const text of[en,de]){expect(text).toContain("/c/p/m/tmp/st/d/1/a/i/m");expect(text).toContain("/c/p/m/tmp/st/d/1/a/i/fixed.dmg");expect(text).toContain("hdiutil detach /dev/disk23s1");expect(text).not.toContain("{");}
+ expect(en).toContain("Foreign native image");expect(de).toContain("Fremdes natives Abbild");
+ expect(api.concurrentChildChangeV1(refusal)).toBe(false);
+});

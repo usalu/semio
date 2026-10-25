@@ -70,7 +70,7 @@ macro_rules! framework_reserved_job {
 
         impl $job {
             #[allow(dead_code)]
-            pub(crate) fn new(raw: Vec<u8>, total_items: usize) -> Self {
+            pub fn new(raw: Vec<u8>, total_items: usize) -> Self {
                 Self {
                     raw,
                     envelope_cursor: 0,

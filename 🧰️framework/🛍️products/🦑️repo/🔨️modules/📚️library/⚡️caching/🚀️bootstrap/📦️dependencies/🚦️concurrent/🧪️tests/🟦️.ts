@@ -1,12 +1,12 @@
 import {test,expect} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {spawn,spawnSync} from "node:child_process";
 import {existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,renameSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import {join} from "node:path";
-import {acquireResourceLease,type ResourceLease} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {acquireResourceLease,type ResourceLease} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import * as core from "../🟦️.ts";
 import * as glue from "../💾️storage/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
@@ -16,7 +16,7 @@ import policy from "../../../../💾️storage/🔒️enforcement/📦️budget/
 import {readRepositoryCacheBudgetV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 
 const protocol=core.concurrentProtocolV1,here=(name:string)=>fileURLToPath(new URL(name,import.meta.url));
-const oracle=(command:string,cases:unknown):any=>{const run=spawnSync(testPythonV1()??"python3",["-I",here("./🐍️oracle.py"),command],{encoding:"utf8",input:JSON.stringify(cases),maxBuffer:1<<26});if(run.status!==0)throw Error("oracle failed: "+run.stderr);return JSON.parse(run.stdout);};
+const oracle=(command:string,cases:unknown):any=>{const run=spawnSync(testPythonV1()??"python3",["-I",here("./🐍️.py"),command],{encoding:"utf8",input:JSON.stringify(cases),maxBuffer:1<<26});if(run.status!==0)throw Error("oracle failed: "+run.stderr);return JSON.parse(run.stdout);};
 const scratch=()=>realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"conc-")));
 const sleep=(ms:number)=>new Promise<void>(accept=>setTimeout(accept,ms));
 const signal=new AbortController().signal,generation=(letter:string)=>letter.repeat(64);
@@ -126,7 +126,7 @@ test("concurrent pointer switch: a second-process reader sees only complete, sea
  const root=scratch(),file=join(root,protocol.pointer.directory,core.concurrentPointerNameV1(".")),stop=join(root,"stop");
  let pointer=core.sealConcurrentPointerV1(null,".",generation("0"),1,1);
  glue.writeConcurrentPointerV1(root,pointer);
- const reader=spawn(testPythonV1()??"python3",["-I",here("./🐍️switch.py"),file,stop,"20"],{stdio:["ignore","pipe","inherit"]});let out="";reader.stdout.on("data",chunk=>{out+=chunk;});
+ const reader=spawn(testPythonV1()??"python3",["-I",here("./🐍️switch/🐍️.py"),file,stop,"20"],{stdio:["ignore","pipe","inherit"]});let out="";reader.stdout.on("data",chunk=>{out+=chunk;});
  const done=new Promise<void>(accept=>reader.on("close",()=>accept()));
  await sleep(150);
  for(let index=1;index<=400;index++){pointer=core.sealConcurrentPointerV1(pointer,".",generation("0123456789abcdef"[index%16]!),index*10,index);glue.writeConcurrentPointerV1(root,pointer);if(index%20===0)await sleep(1);}
@@ -141,7 +141,7 @@ test("concurrent pointer switch: a second-process reader sees only complete, sea
 test("concurrent pointer switch: the independent reader detects a torn in-place write",async()=>{
  const root=scratch(),file=join(root,"pointer.json"),stop=join(root,"stop"),first=core.sealConcurrentPointerV1(null,".",generation("1"),1,1),second=core.sealConcurrentPointerV1(first,".",generation("2"),2,2),bytes=core.encodeConcurrentPointerV1(second);
  writeFileSync(file,core.encodeConcurrentPointerV1(first));
- const reader=spawn(testPythonV1()??"python3",["-I",here("./🐍️switch.py"),file,stop,"20"],{stdio:["ignore","pipe","inherit"]});let out="";reader.stdout.on("data",chunk=>{out+=chunk;});
+ const reader=spawn(testPythonV1()??"python3",["-I",here("./🐍️switch/🐍️.py"),file,stop,"20"],{stdio:["ignore","pipe","inherit"]});let out="";reader.stdout.on("data",chunk=>{out+=chunk;});
  const done=new Promise<void>(accept=>reader.on("close",()=>accept()));
  await sleep(150);
  for(let index=0;index<5;index++){writeFileSync(file,bytes.subarray(0,Math.floor(bytes.length*0.4)));await sleep(30);writeFileSync(file,bytes);await sleep(10);}
@@ -174,7 +174,7 @@ test("concurrent build: readers are never blocked during the build, only during 
  const directory=scratch(),workspace="/w/readers",pin=generation("a"),stamps:Record<string,number>={};
  const building=writer(directory,workspace,{build:async()=>{stamps.buildStart=Date.now();await sleep(1500);stamps.buildEnd=Date.now();},publish:async()=>{stamps.publishStart=Date.now();await sleep(400);stamps.publishEnd=Date.now();}});
  await sleep(150);
- const stop=join(directory,"stop"),child=spawn(process.execPath,[here("./📖️reader.ts"),directory,workspace,pin,stop,"2600"],{stdio:["ignore","pipe","inherit"]});let out="";child.stdout.on("data",chunk=>{out+=chunk;});
+ const stop=join(directory,"stop"),child=spawn(process.execPath,[here("./📖️reader/🟦️.ts"),directory,workspace,pin,stop,"2600"],{stdio:["ignore","pipe","inherit"]});let out="";child.stdout.on("data",chunk=>{out+=chunk;});
  const finished=new Promise<void>(accept=>child.on("close",()=>accept()));
  const local:{served:boolean;ms:number}[]=[];
  while(stamps.buildEnd===undefined){local.push(await probe(directory,workspace,pin));await sleep(25);}
@@ -194,7 +194,7 @@ test("concurrent build: readers are never blocked during the build, only during 
  rmSync(directory,{recursive:true,force:true});
 });
 
-/** 🧲️ Negative control of the reader measurement: a writer that keeps the bindings gate for its whole build is seen blocking readers by the same probe. */
+/** 🔬️ Negative control of the reader measurement: a writer that keeps the bindings gate for its whole build is seen blocking readers by the same probe. */
 test("concurrent build: the probe detects a writer that holds the bindings gate during its build",async()=>{
  const directory=scratch(),workspace="/w/blocking",pin=generation("a");
  const gate=await glue.acquireConcurrentLeaseV1("bindings",workspace,"exclusive",glue.concurrentLeasePortsV1(directory,undefined,signal,undefined,()=>{}),5000);
@@ -260,7 +260,7 @@ test("concurrent wiring laws: lock order build then bindings, shared image only,
  expect(text.match(/acquireConcurrentLeaseV1\("build"/gu)?.length).toBe(1);
  expect(text.match(/acquireConcurrentLeaseV1\("bindings"/gu)?.length).toBe(1);
  expect(text.match(/acquireConcurrentLeaseV1\("writer"/gu)?.length).toBe(2);
- const producer=slice(text,"async function runJavascriptDependencyStoreProducerV1(","/** 🧭 Matches an inactive candidate");
+ const producer=slice(text,"async function runJavascriptDependencyStoreProducerV1(","/** 📗️ Matches an inactive candidate");
  expect(producer).not.toContain("retire-obsolete");expect(producer).not.toContain("removeJavascriptDependencyTreeV1(join(container");
  expect(producer.indexOf('if(phase==="build")return;')).toBeGreaterThan(producer.indexOf("await verifyReady();"));
  expect(producer.indexOf('if(phase==="build")return;')).toBeLessThan(producer.indexOf("publishJavascriptDependencyPreservingSourceDescriptorV1(binding"));
@@ -282,13 +282,13 @@ test("concurrent wiring laws: lock order build then bindings, shared image only,
  expect(producer.indexOf("admitJavascriptDependencyGenerationV1(")).toBeGreaterThan(producer.indexOf("for(const row of fresh){"));
  expect(producer).toContain("sealConcurrentPointerV1(previous,scope,generation,switched,frame.built.get(scope)??previous?.bytes??0)");
  expect(orchestrator.indexOf("await collectJavascriptDependencyGenerationsV1(workspace")).toBeGreaterThan(orchestrator.indexOf("gate.release()"));
- const admit=slice(text,"async function admitJavascriptDependencyGenerationV1(","/** ♻️");
+ const admit=slice(text,"async function admitJavascriptDependencyGenerationV1(","/** 🏗️ Retires superseded gene");
  expect(admit.indexOf("concurrentAdmissionV1(")).toBeLessThan(admit.indexOf("collectJavascriptDependencyGenerationsV1("));
  expect(admit.lastIndexOf("concurrentAdmissionV1(")).toBeGreaterThan(admit.indexOf("collectJavascriptDependencyGenerationsV1("));
  expect(admit).toContain('concurrentTextV1(resolveLanguageV1(concurrentProtocolV1.languages,[],process.env).language,"admissionRefused"');expect(admit).toContain('event:"refused"');expect(admit).toContain("throw Error(");
  expect(slice(text,"async function readJavascriptDependencyGenerationElseV1<T>(","/** 📮️")).toContain("withConcurrentPinsV1(");
  expect(slice(text,"async function requireJavascriptDependencyBudgetV1(","/** 🛂️")).toContain("repositoryCacheBudgetV1(workspace).partitions.dependencies.usableBytes");
- expect(slice(text,"async function admitJavascriptDependencyGenerationV1(","/** ♻️").indexOf("requireJavascriptDependencyBudgetV1(workspace,control)")).toBeGreaterThan(0);
+ expect(slice(text,"async function admitJavascriptDependencyGenerationV1(","/** 🏗️ Retires superseded gene").indexOf("requireJavascriptDependencyBudgetV1(workspace,control)")).toBeGreaterThan(0);
  expect(collect.indexOf("sweepConcurrentTemporariesV1(")).toBeGreaterThan(0);expect(collect.indexOf("sweepConcurrentTemporariesV1(")).toBeLessThan(collect.indexOf("concurrentCollectionV1("));
  const boot=bootstrap();
  expect(boot).toContain("publishReceipt?withJavascriptDependencyReceiptStorageV1(workspace,invocation,phaseControl,body):withRepositoryCacheStoreV1(");

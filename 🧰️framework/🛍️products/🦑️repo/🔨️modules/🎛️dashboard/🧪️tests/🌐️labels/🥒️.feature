@@ -26,3 +26,8 @@ Feature: Every text of the dashboard is in the language of the developer
     Given a workspace without a stored preference
     When the language is chosen by an explicit flag
     Then the usage, status and failure messages of the daemon command are those of that language
+
+  Scenario: A document caption keeps its state and position when the path is long
+    Given a document whose path is longer than its caption
+    When the caption is fitted into a narrower width
+    Then the path gives way in its middle and the state and the position stay readable

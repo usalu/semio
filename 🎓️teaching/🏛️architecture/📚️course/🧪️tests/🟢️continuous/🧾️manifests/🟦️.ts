@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
 import contract from "../../../🧫️fixtures/🟢️continuous/🔣️.json" with { type: "json" };
 import contractSchema from "../../../🧫️fixtures/🟢️continuous/🧬️schema/🔣️.json" with { type: "json" };
-import { resolveReadinessV1 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟢️readiness/🟦️.ts";
+import { resolveReadinessV1 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟢️readiness/🟦️.ts";
 
 type Parameter = { id: string; kind: "flag" | "choice"; env?: Record<string, string>; values?: { id: string; env?: Record<string, string> }[] };
 type Target = { metadata?: { semio?: { dashboard?: { ready?: { port?: number; portEnv?: string }; parameters?: Parameter[] } } } };

@@ -3,7 +3,7 @@
 use super::{prim_fixed_width, Block, Cond, CondOp, Count, DispatchOrder, Field, Framing, NestedDispatch, Prim, ProtocolFile, ProtocolMismatch, ProtocolTrace, RepeatDispatch, parse_protocol, walk_literal_protocol_controlled};
 
 //#region 📡️ProtocolWalk
-/// 🧮️ P2-M2 items 3+6: walk-wide state threaded through the ENTIRE `walk_protocol` pass
+/// 🚶️ P2-M2 items 3+6: walk-wide state threaded through the ENTIRE `walk_protocol` pass
 /// (every block, in order) — not reset per block/call as the pre-M2 `walk_fields`-local `HashMap`
 /// was. `env` makes a LATER block's `Count::Field`/`Cond` resolve against a value decoded by any
 /// EARLIER block (las's VLR/point-record repeat counts from the header; gif89a's GCE state carried

@@ -28,7 +28,7 @@ pub fn plan(p: &GltfBindNodeSkinPayload, base: &GltfSnapshot) -> Result<GltfDiff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfBindNodeSkinPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_skin::UnbindNodeSkinMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_node_skin::BindNodeSkinMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -74,7 +74,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for BindNodeSkinMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<BindNodeSkinMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<BindNodeSkinMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_skin::UnbindNodeSkinMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

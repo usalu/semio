@@ -51,7 +51,7 @@ pub(super) fn encoding_record_codegen(fields:&Fields,bindings:bool)->Vec<proc_ma
     }).collect()
 }
 
-/// 🧹️ Delegates each completed field to its declared field or variant retirement.
+/// ✅️ Delegates each completed field to its declared field or variant retirement.
 pub(super) fn retire_field_codegen(plan:&FieldPlan,value:proc_macro2::TokenStream)->proc_macro2::TokenStream{
     let FieldPlan{kind,elem_ty,..}=plan;
     match kind {

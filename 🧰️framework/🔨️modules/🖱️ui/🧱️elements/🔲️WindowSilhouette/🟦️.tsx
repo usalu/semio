@@ -170,7 +170,7 @@ function windowSilhouetteRightEdgeAtY(rects: readonly WindowSilhouetteAxisRect[]
   return right;
 }
 
-/** 🖱️ Stepped rectilinear outline for a fused context menu (primary column + wing columns). */
+/** 🧱️ Stepped rectilinear outline for a fused context menu (primary column + wing columns). */
 export function windowSilhouetteOutlineWithContextMenuFusion(metrics: WindowSilhouetteMetrics, inset = WINDOW_SILHOUETTE_PATH_INSET): WindowSilhouettePoint[] {
   const fusion = metrics.contextMenuFusion;
   if (!fusion?.wings.length) return windowSilhouetteOutline(metrics, inset);

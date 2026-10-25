@@ -8,7 +8,7 @@ import { niceDomain, ticks } from "../📐scale/🟦️.ts";
 import type { VizPoint } from "@semio-tech/print/schema/snapshot/chart";
 
 //#region 🔖️Delaunay
-/** 🔺️ A triangulation: triples of point indices, plus the hull in counter-clockwise order. */
+/** 📐️ A triangulation: triples of point indices, plus the hull in counter-clockwise order. */
 export type VizTriangulation = { readonly triangles: readonly (readonly [number, number, number])[]; readonly hull: readonly number[]; readonly points: readonly VizPoint[] };
 
 function circumcircle(a: VizPoint, b: VizPoint, c: VizPoint): { x: number; y: number; r2: number } | null {
@@ -34,7 +34,7 @@ export function vizCircumcenter(a: VizPoint, b: VizPoint, c: VizPoint): VizPoint
   return circle === null ? null : [circle.x, circle.y];
 }
 
-/** 🔺️ The Delaunay triangulation by Bowyer–Watson incremental insertion. For points in general
+/** ➕️ The Delaunay triangulation by Bowyer–Watson incremental insertion. For points in general
  * position the triangulation is unique, so it agrees with any other correct implementation. */
 export function vizDelaunay(points: readonly VizPoint[]): VizTriangulation {
   const n = points.length;
@@ -138,7 +138,7 @@ function clipHalfPlane(polygon: readonly VizPoint[], inside: (point: VizPoint) =
   return out;
 }
 
-/** 🔶️ The Voronoi tessellation of a point set, clipped to `[xmin, ymin, xmax, ymax]`. */
+/** 🧩️ The Voronoi tessellation of a point set, clipped to `[xmin, ymin, xmax, ymax]`. */
 export function vizVoronoi(points: readonly VizPoint[], bounds: readonly [number, number, number, number]): VizVoronoi {
   const [x0, y0, x1, y1] = bounds;
   const cells = points.map((site) => {
@@ -163,7 +163,7 @@ export function vizVoronoi(points: readonly VizPoint[], bounds: readonly [number
   return { cells, bounds };
 }
 
-/** 🔶️ The signed area of a simple polygon; positive when it is counter-clockwise. */
+/** ◼️ The signed area of a simple polygon; positive when it is counter-clockwise. */
 export function vizPolygonArea(polygon: readonly VizPoint[]): number {
   let area = 0;
   for (let i = 0, n = polygon.length; i < n; i += 1) {
@@ -182,7 +182,7 @@ export type VizHexBin<T> = { readonly x: number; readonly y: number; readonly va
 const THIRD_PI = Math.PI / 3;
 const HEX_ANGLES = [0, THIRD_PI, 2 * THIRD_PI, 3 * THIRD_PI, 4 * THIRD_PI, 5 * THIRD_PI];
 
-/** 🐝 `\SemioVizLayout{hexbin}`: bins points onto a hexagonal lattice of the given radius. */
+/** 🍯️ `\SemioVizLayout{hexbin}`: bins points onto a hexagonal lattice of the given radius. */
 export function vizHexbin<T>(points: readonly T[], options: { radius?: number; x?: (row: T) => number; y?: (row: T) => number } = {}): VizHexBin<T>[] {
   const r = options.radius ?? 1;
   const dx = r * 2 * Math.sin(THIRD_PI);
@@ -223,7 +223,7 @@ export function vizHexbin<T>(points: readonly T[], options: { radius?: number; x
   return bins;
 }
 
-/** 🐝 The hexagon outline of one bin, centred on the origin. */
+/** 🔸️ The hexagon outline of one bin, centred on the origin. */
 export function vizHexagon(radius: number): VizPoint[] {
   return HEX_ANGLES.map((angle) => [radius * Math.sin(angle), -radius * Math.cos(angle)] as VizPoint);
 }
@@ -377,7 +377,7 @@ function smooth1(x: number, v0: number, v1: number, value: number): number {
   return Number.isNaN(d) ? x : x + d - 0.5;
 }
 
-/** 🗺️ Marching squares over a raster: one iso-contour per threshold. */
+/** ⛰️ Marching squares over a raster: one iso-contour per threshold. */
 export function vizContours(values: readonly number[], size: readonly [number, number], thresholds?: number | readonly number[]): VizContour[] {
   const [dx, dy] = size;
   const finite = values.filter((value) => Number.isFinite(value));
@@ -505,7 +505,7 @@ export function vizContours(values: readonly number[], size: readonly [number, n
 /** 🌫️ A density raster: values on a `width × height` grid at the given cell size. */
 export type VizDensityGrid = { readonly values: readonly number[]; readonly width: number; readonly height: number; readonly cellSize: number; readonly x0: number; readonly y0: number };
 
-/** 🌫️ Two-dimensional kernel density estimate on a regular grid. */
+/** 🏔️ Two-dimensional kernel density estimate on a regular grid. */
 export function vizDensity2d(points: readonly VizPoint[], options: { extent?: readonly [number, number, number, number]; cellSize?: number; bandwidth?: number; kernel?: VizKernel } = {}): VizDensityGrid {
   const xs = points.map((point) => point[0]);
   const ys = points.map((point) => point[1]);
@@ -529,7 +529,7 @@ export function vizDensity2d(points: readonly VizPoint[], options: { extent?: re
   return { values, width, height, cellSize, x0, y0 };
 }
 
-/** 🌫️ Iso-contours of a density raster, in the raster's own coordinates. */
+/** 🌋️ Iso-contours of a density raster, in the raster's own coordinates. */
 export function vizDensityContours(grid: VizDensityGrid, thresholds?: number | readonly number[]): VizContour[] {
   return vizContours(grid.values, [grid.width, grid.height], thresholds);
 }

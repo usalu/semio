@@ -7,11 +7,11 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertAlternateContent {
-    pub(crate) path: String,
+    pub path: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) node: Option<XmlNode>,
+    pub node: Option<XmlNode>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for InsertAlternateContent {

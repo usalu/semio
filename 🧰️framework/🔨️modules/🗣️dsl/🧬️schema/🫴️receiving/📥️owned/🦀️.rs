@@ -45,13 +45,13 @@ pub fn invariant()->ValueError{ValueError::literal(ValueRefusalKind::InvariantVi
 /// 🛂️ Closed authored record identities leave all rejected fields in their exact original source.
 pub fn declared_record(record:&RecordValue,declared:&[(u16,bool)],owner:&mut super::NativeSnapshotDecodeOwner<'_,'_>)->Result<(),ValueError>{let mut shape=DeclaredRecordShape::default();while !shape.is_ready(){let grant=owner.remaining_grant();if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"declared record shape requires original work authority"))}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"declared record shape requires original depth authority"))}match shape.step(record,declared,owner.native(),grant){Ok(progress)=>owner.record_progress(progress)?,Err(error)=>{owner.record_progress(error.retained_progress())?;return Err(error)}}}Ok(())}
 
-/// 🪜️ One funded declaration inspection retains the whole original record until shape admission completes.
+/// 📹️ One funded declaration inspection retains the whole original record until shape admission completes.
 #[derive(Default)]
 pub struct DeclaredRecordShape{declaration:usize,field:usize,ready:bool,refused:bool}
 impl DeclaredRecordShape{
  /// 👓️ Reports completed admission without traversing the original source.
  pub fn is_ready(&self)->bool{self.ready}
- /// 🎟️ Caps source count before constant-time slot inspection under one original metadata turn.
+ /// 📌️ Caps source count before constant-time slot inspection under one original metadata turn.
  pub fn step(&mut self,record:&RecordValue,declared:&[(u16,bool)],native:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   if self.ready{return Ok(Default::default())}let demand=metadata::<()>();if !funds(grant,demand){return Ok(Default::default())}native.checkpoint()?;if self.refused{return Err(invalid())}let progress=receipt(demand);let result=(||{if record.fields.len()>declared.len(){return Err(invalid())}if let Some(&(id,required))=declared.get(self.declaration){let value=record.fields.at(self.field);if value.is_some_and(|(field,_)|field<id){return Err(invalid())}let present=value.filter(|(field,_)|*field==id);if required&&present.is_none_or(|(_,value)|matches!(value,FieldValue::Absent)){return Err(invalid())}if present.is_some(){self.field+=1}self.declaration+=1}if self.declaration==declared.len(){if self.field!=record.fields.len(){return Err(invalid())}self.ready=true}Ok(progress)})();if result.is_err(){self.refused=true}result.map_err(|error|error.with_retained_progress(progress))
  }
@@ -72,7 +72,7 @@ impl<T:RetireOwned> Drop for OwnedSlot<T>{fn drop(&mut self){assert!(std::thread
 /// 🪙️ Decode-time source cleanup admits its exact metadata births on the same original native ledger.
 pub fn close_source<T:RetireOwned>(owner:&mut OwnedSlot<T>,native:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let demand=owner.close_demands(grant.maximum_copy_bytes)?;if !funds(grant,demand){return Ok(Default::default())}native.charge(demand.capacity_bytes)?;owner.close_step(grant)}
 
-/// 🪙️ Scalar implementations validate before taking the original source.
+/// ✅️ Scalar implementations validate before taking the original source.
 pub trait OwnedScalar:RetireOwned+Sized{fn take_source(source:&mut Option<FieldValue>)->Result<Self,ValueError>;}
 /// 📬️ Fixed scalar metadata retains its original text, bytes and semantic identity.
 pub struct ScalarReceiving<T:OwnedScalar>{output:OwnedSlot<T>,used:bool}
@@ -138,13 +138,13 @@ impl<T:DslOwnedReceivingField> OwnedFieldReceiving<Vec<T>> for VectorReceiving<T
 
 /// 🎁️ Nullable and boxed fields share one retained child without sharing a destination allocation.
 pub trait OwnedWrapping<T:RetireOwned>:Send+'static{type Output:RetireOwned;const OPTIONAL:bool;fn empty()->Option<Self::Output>;fn demand()->RetirementDemand;fn wrap(value:T)->Self::Output;}
-/// 🕳️ A nullable scalar distinguishes original absence from a pending child.
+/// ❓️ A nullable scalar distinguishes original absence from a pending child.
 pub enum OptionalWrapping{}
 impl<T:RetireOwned> OwnedWrapping<T> for OptionalWrapping{type Output=Option<T>;const OPTIONAL:bool=true;fn empty()->Option<Self::Output>{Some(None)}fn demand()->RetirementDemand{metadata::<Option<T>>()}fn wrap(value:T)->Self::Output{Some(value)}}
 /// 📦️ A required box admits its exact typed backing after its child completes.
 pub enum BoxWrapping{}
 impl<T:RetireOwned> OwnedWrapping<T> for BoxWrapping{type Output=Box<T>;const OPTIONAL:bool=false;fn empty()->Option<Self::Output>{None}fn demand()->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<T>(),..metadata::<T>()}}fn wrap(value:T)->Self::Output{Box::new(value)}}
-/// 🪆️ Partial child input and output remain distinct original roots throughout wrapping and cleanup.
+/// 📩️ Partial child input and output remain distinct original roots throughout wrapping and cleanup.
 pub struct WrappedReceiving<T:DslOwnedReceivingField,W:OwnedWrapping<T>>{source:OwnedSlot<FieldValue>,current:OwnedSlot<FieldValue>,child_output:OwnedSlot<T>,output:OwnedSlot<W::Output>,child:Option<Box<T::Cursor>>,initialized:bool,selected:bool,complete:bool,closing:bool,kind:std::marker::PhantomData<W>}
 impl<T:DslOwnedReceivingField,W:OwnedWrapping<T>> Default for WrappedReceiving<T,W>{fn default()->Self{Self{source:Default::default(),current:Default::default(),child_output:Default::default(),output:Default::default(),child:None,initialized:false,selected:false,complete:false,closing:false,kind:Default::default()}}}
 impl<T:DslOwnedReceivingField> DslOwnedReceivingField for Option<T>{type Cursor=WrappedReceiving<T,OptionalWrapping>;}
@@ -177,7 +177,7 @@ impl<T:DslOwnedReceivingField,W:OwnedWrapping<T>> OwnedFieldReceiving<W::Output>
  fn terminal_is_empty(&self)->bool{self.child.is_none()&&self.current.terminal_is_empty()&&self.child_output.terminal_is_empty()&&self.output.terminal_is_empty()&&self.source.terminal_is_empty()}
 }
 
-/// 🏷️ A declared tuple variant maps its completed typed record under a separate metadata turn.
+/// 🗺️ A declared tuple variant maps its completed typed record under a separate metadata turn.
 pub struct MappedReceiving<T:DslOwnedReceivingField,U:RetireOwned>{current:OwnedSlot<FieldValue>,child_output:OwnedSlot<T>,output:OwnedSlot<U>,child:Option<Box<T::Cursor>>,map:fn(T)->U,initialized:bool,complete:bool,closing:bool}
 impl<T:DslOwnedReceivingField,U:RetireOwned> MappedReceiving<T,U>{
  /// 🌿️ Captures the static variant constructor without allocating an owned variant roster.

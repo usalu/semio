@@ -108,7 +108,7 @@ fn apply_valid(diff: &SemioVideoDiff, base: &SemioVideoSnapshot) -> SemioVideoSn
 async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = fixture();
-        let diff_direct = Mutation::diff(&mutation, &base);
+        let diff_direct = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
         let mut via_apply = base.clone();
@@ -134,7 +134,7 @@ async fn inverse_law() {
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
-        let diff = Mutation::diff(&mutation, &base);
+        let diff = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let next = apply_valid(diff.diff(), &base);
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
         let restored = apply_valid(&inverse_diff, &next);
@@ -163,9 +163,9 @@ async fn absorb_law() {
     {
         let base = fixture();
         let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
-        let d1 = Mutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 2, stream: f.clone() }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 2, stream: f.clone() }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: 0 }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = streams_diff(&absorbed);
         assert_eq!(triple.removed, vec![0]);
@@ -178,9 +178,9 @@ async fn absorb_law() {
         let base = fixture();
         let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
         let g = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "g".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
-        let d1 = Mutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 2, stream: f.clone() }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 2, stream: f.clone() }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 2, stream: g.clone() }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 2, stream: g.clone() }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = streams_diff(&absorbed);
         assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
@@ -191,9 +191,9 @@ async fn absorb_law() {
     {
         let base = fixture();
         let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
-        let d1 = Mutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 1, stream: f.clone() }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 1, stream: f.clone() }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index: 1, kind: SemioVideoStreamKind::Audio, codec: "patched".into(), width: 1, height: 1, rate: SemioRational { num: 2, den: 1 } }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index: 1, kind: SemioVideoStreamKind::Audio, codec: "patched".into(), width: 1, height: 1, rate: SemioRational { num: 2, den: 1 } }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = streams_diff(&absorbed);
         assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
@@ -204,9 +204,9 @@ async fn absorb_law() {
 
     {
         let base = fixture();
-        let d1 = Mutation::diff(&SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index: 1, kind: SemioVideoStreamKind::Video, codec: "patched".into(), width: 1, height: 1, rate: SemioRational { num: 2, den: 1 } }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index: 1, kind: SemioVideoStreamKind::Video, codec: "patched".into(), width: 1, height: 1, rate: SemioRational { num: 2, den: 1 } }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: 1 }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: 1 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = streams_diff(&absorbed);
         assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
@@ -217,11 +217,11 @@ async fn absorb_law() {
         let base = fixture();
         let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
         let g = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "g".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
-        let d1 = Mutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 2, stream: f }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 2, stream: f }), &base);
         let mid1 = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 2, stream: g }), &mid1);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 2, stream: g }), &mid1);
         let mid2 = apply_valid(d2.diff(), &mid1);
-        let d3 = Mutation::diff(&SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: 0 }), &mid2);
+        let d3 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: 0 }), &mid2);
         let sequential = apply_valid(d3.diff(), &mid2);
 
         let mut left = d1.diff().clone();

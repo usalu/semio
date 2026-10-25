@@ -128,7 +128,6 @@ fn shared_map_controlled_codec_and_dsl() {
     let duplicate = DslValue::Object(vec![("entries".into(), entries)]);
     let mut yes = |_| true;
     assert!(<MapDelta<DslValue> as FromValue>::from_value_controlled(&duplicate, &mut NativeDecodeControl::new(1 << 20, &mut yes)).is_err());
-    eprintln!("[DEBUG] shared map DSL: neutral field identities, static borrowed metadata with zero owned bytes, controlled wire roundtrips");
 }
 
 /// 🧭️ Borrowed canonical fields reproduce the independently authored wire tree.

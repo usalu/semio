@@ -66,5 +66,403 @@
     "holderMode": "exclusive",
     "expectedPosition": 2,
     "expectedQueued": 2
+  },
+  "turns": {
+    "writerPreferenceMilliseconds": 120000,
+    "cases": [
+      {
+        "id": "empty-queue",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": true,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [],
+        "proceeds": true
+      },
+      {
+        "id": "shared-cohort-behind-shared-cohort",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": true,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "shared",
+            "sharedCohort": true,
+            "yielding": false,
+            "ageMilliseconds": 0,
+            "pid": 2
+          }
+        ],
+        "proceeds": true
+      },
+      {
+        "id": "shared-without-cohort-keeps-arrival-order",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": false,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "shared",
+            "sharedCohort": true,
+            "yielding": false,
+            "ageMilliseconds": 0,
+            "pid": 2
+          }
+        ],
+        "proceeds": false
+      },
+      {
+        "id": "young-writer-closes-the-queue-for-readers",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": true,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": false,
+            "ageMilliseconds": 0,
+            "pid": 2
+          }
+        ],
+        "proceeds": false
+      },
+      {
+        "id": "writer-just-below-the-bound-still-closes-it",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": true,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": false,
+            "ageMilliseconds": 119999,
+            "pid": 2
+          }
+        ],
+        "proceeds": false
+      },
+      {
+        "id": "writer-at-the-bound-stands-aside",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": true,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": false,
+            "ageMilliseconds": 120000,
+            "pid": 2
+          }
+        ],
+        "proceeds": true
+      },
+      {
+        "id": "yielding-writer-never-closes-the-queue",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": true,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": true,
+            "ageMilliseconds": 0,
+            "pid": 2
+          }
+        ],
+        "proceeds": true
+      },
+      {
+        "id": "old-writer-before-young-writer-keeps-arrival-order",
+        "requester": {
+          "mode": "exclusive",
+          "sharedCohort": false,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": false,
+            "ageMilliseconds": 500000,
+            "pid": 2
+          }
+        ],
+        "proceeds": false
+      },
+      {
+        "id": "writer-stands-aside-for-nothing-but-a-yielding-one",
+        "requester": {
+          "mode": "exclusive",
+          "sharedCohort": false,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": true,
+            "ageMilliseconds": 0,
+            "pid": 2
+          }
+        ],
+        "proceeds": true
+      },
+      {
+        "id": "yielding-writers-keep-arrival-order",
+        "requester": {
+          "mode": "exclusive",
+          "sharedCohort": false,
+          "yielding": true,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": true,
+            "ageMilliseconds": 0,
+            "pid": 2
+          }
+        ],
+        "proceeds": false
+      },
+      {
+        "id": "yielding-writer-waits-for-an-old-ordinary-writer",
+        "requester": {
+          "mode": "exclusive",
+          "sharedCohort": false,
+          "yielding": true,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": false,
+            "ageMilliseconds": 500000,
+            "pid": 2
+          }
+        ],
+        "proceeds": false
+      },
+      {
+        "id": "yielding-writer-waits-for-readers-ahead",
+        "requester": {
+          "mode": "exclusive",
+          "sharedCohort": false,
+          "yielding": true,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "shared",
+            "sharedCohort": true,
+            "yielding": false,
+            "ageMilliseconds": 0,
+            "pid": 2
+          }
+        ],
+        "proceeds": false
+      },
+      {
+        "id": "writer-waits-for-readers-ahead",
+        "requester": {
+          "mode": "exclusive",
+          "sharedCohort": false,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "shared",
+            "sharedCohort": true,
+            "yielding": false,
+            "ageMilliseconds": 0,
+            "pid": 2
+          }
+        ],
+        "proceeds": false
+      },
+      {
+        "id": "holder-of-the-resource-passes-its-own-tickets",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": false,
+          "yielding": false,
+          "holdsShared": true,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "shared",
+            "sharedCohort": false,
+            "yielding": false,
+            "ageMilliseconds": 0,
+            "pid": 1
+          }
+        ],
+        "proceeds": true
+      },
+      {
+        "id": "holder-of-the-resource-passes-shared-tickets-of-others",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": false,
+          "yielding": false,
+          "holdsShared": true,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "shared",
+            "sharedCohort": false,
+            "yielding": false,
+            "ageMilliseconds": 0,
+            "pid": 9
+          }
+        ],
+        "proceeds": true
+      },
+      {
+        "id": "holder-of-the-resource-waits-for-a-foreign-young-writer",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": false,
+          "yielding": false,
+          "holdsShared": true,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": false,
+            "ageMilliseconds": 0,
+            "pid": 9
+          }
+        ],
+        "proceeds": false
+      },
+      {
+        "id": "old-writer-between-readers-stands-aside",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": true,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": false,
+            "ageMilliseconds": 200000,
+            "pid": 2
+          },
+          {
+            "mode": "shared",
+            "sharedCohort": true,
+            "yielding": false,
+            "ageMilliseconds": 0,
+            "pid": 2
+          }
+        ],
+        "proceeds": true
+      },
+      {
+        "id": "young-writer-between-readers-closes-the-queue",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": true,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": false,
+            "ageMilliseconds": 10,
+            "pid": 2
+          },
+          {
+            "mode": "shared",
+            "sharedCohort": true,
+            "yielding": false,
+            "ageMilliseconds": 0,
+            "pid": 2
+          }
+        ],
+        "proceeds": false
+      },
+      {
+        "id": "yielding-writer-and-young-writer-close-it-together",
+        "requester": {
+          "mode": "shared",
+          "sharedCohort": true,
+          "yielding": false,
+          "holdsShared": false,
+          "pid": 1
+        },
+        "ahead": [
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": true,
+            "ageMilliseconds": 0,
+            "pid": 2
+          },
+          {
+            "mode": "exclusive",
+            "sharedCohort": false,
+            "yielding": false,
+            "ageMilliseconds": 5,
+            "pid": 2
+          }
+        ],
+        "proceeds": false
+      }
+    ]
   }
 }

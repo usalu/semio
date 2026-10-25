@@ -99,12 +99,12 @@ export default defineTestAdapter({
     },
     padding: {
       oracle: oracle("padding"),
-      /** 🎯️ Padding added to and taken off every child radius around the packing. */
+      /** ➕️ Padding added to and taken off every child radius around the packing. */
       subject: () => ({ projection: { ...circles("padded", packed(DEEP, { size: [100, 100], padding: 3 })) } }),
     },
     "explicit-radius": {
       oracle: oracle("explicit-radius"),
-      /** 🎯️ The single-pass branch the twin takes as soon as a radius accessor is given. */
+      /** 🔂️ The single-pass branch the twin takes as soon as a radius accessor is given. */
       subject: () => ({
         projection: {
           ...circles("value", packed(DEEP, { size: [100, 100], radius: "value" })),
@@ -114,7 +114,7 @@ export default defineTestAdapter({
     },
     unbalanced: {
       oracle: oracle("unbalanced"),
-      /** 🎯️ The unbalanced fixture, whose deeper branch draws more random numbers. */
+      /** 🎲️ The unbalanced fixture, whose deeper branch draws more random numbers. */
       subject: () => ({
         projection: {
           id: preorder(root(UNBALANCED)).map((each) => each.id!),

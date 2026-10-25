@@ -14,7 +14,7 @@ export function reexports(source: string, name: string): boolean {
   return false;
 }
 
-/** 🔎️ The local binding a file exports as `name` through an export list without `from` (`export { local as name }`), or `undefined`: a re-export under an alias creates no binding of that name inside the file, so a call must use the local one. */
+/** 🪢️ The local binding a file exports as `name` through an export list without `from` (`export { local as name }`), or `undefined`: a re-export under an alias creates no binding of that name inside the file, so a call must use the local one. */
 export function reexportedBinding(source: string, name: string): string | undefined {
   for (const list of source.matchAll(/^[ \t]*export\s*(?:type\s*)?\{([^}]*)\}(?!\s*from)/gmu)) {
     for (const element of list[1]!.split(",")) {
@@ -25,7 +25,7 @@ export function reexportedBinding(source: string, name: string): string | undefi
   return undefined;
 }
 
-/** 🔎️ True when `source` already declares `name` in the leaf language of `format`. */
+/** 🍃️ True when `source` already declares `name` in the leaf language of `format`. */
 export function declares(format: string, source: string, name: string): boolean {
   const escaped = escapeRegExp(name);
   if (format === "🛰️protobuf") return new RegExp(`^\\s*message\\s+${escaped}\\b`, "m").test(source);
@@ -34,16 +34,16 @@ export function declares(format: string, source: string, name: string): boolean 
   return new RegExp(`^\\s*(?:export\\s+)?(?:declare\\s+)?(?:interface|type|const|class)\\s+${escaped}\\b`, "m").test(source) || reexports(source, name);
 }
 
-/** 🔎️ True when the file exports `parse<name>`, declared there or re-exported under that name. */
+/** 📄️ True when the file exports `parse<name>`, declared there or re-exported under that name. */
 export const declaresParser = (source: string, name: string): boolean => new RegExp(`^\\s*export\\s+(?:(?:async\\s+)?function|const|let|declare\\s+function)\\s+parse${escapeRegExp(name)}\\b`, "m").test(source) || reexports(source, `parse${name}`);
 
-/** 🔎️ True when the file has `parse<name>` in scope: exported or private, hand-written or projected earlier, or re-exported under that name. */
+/** 🗂️ True when the file has `parse<name>` in scope: exported or private, hand-written or projected earlier, or re-exported under that name. */
 export const definesParser = (source: string, name: string): boolean => new RegExp(`^\\s*(?:export\\s+)?(?:(?:async\\s+)?function|const|let)\\s+parse${escapeRegExp(name)}\\b`, "m").test(source) || reexports(source, `parse${name}`);
 
-/** 🔎️ True when the file imports `parse<name>`. */
+/** 📥️ True when the file imports `parse<name>`. */
 export const importsParser = (source: string, name: string): boolean => new RegExp(`import\\s*(?:type\\s*)?\\{[^}]*\\bparse${escapeRegExp(name)}\\b[^}]*\\}\\s*from`, "u").test(source);
 
-/** 🔎️ The span `[start, end)` of `export function parse<name>` in `source`, from its first line through the line that closes it at column 0 (or its first line when it closes there). `undefined` when the function is missing or another declaration starts before it closes, so a splice can never swallow a neighbour. */
+/** 🏁️ The span `[start, end)` of `export function parse<name>` in `source`, from its first line through the line that closes it at column 0 (or its first line when it closes there). `undefined` when the function is missing or another declaration starts before it closes, so a splice can never swallow a neighbour. */
 export function parserRange(source: string, name: string): [number, number] | undefined {
   const head = new RegExp(`^export function parse${escapeRegExp(name)}\\(`, "m").exec(source);
   if (head === null) return undefined;
@@ -63,7 +63,7 @@ export function parserRange(source: string, name: string): [number, number] | un
   return undefined;
 }
 
-/** 🔎️ The guard prefix a file already states (`export class <prefix>Refusal`), which new parsers must call. */
+/** 🔒️ The guard prefix a file already states (`export class <prefix>Refusal`), which new parsers must call. */
 export function existingHelper(source: string): string | undefined {
   for (const found of source.matchAll(/^export class (\w+)Refusal extends Error/gm)) {
     if (new RegExp(`^export const ${escapeRegExp(found[1]!)}Object\\b`, "m").test(source)) return found[1];
@@ -74,7 +74,7 @@ export function existingHelper(source: string): string | undefined {
 //#endregion 🔖️Declarations
 
 //#region 🔖️TypeText
-/** ✂️ Removes block and line comments. */
+/** 🧱️ Removes block and line comments. */
 export const scrub = (text: string): string => text.replace(/\/\*[\s\S]*?\*\//gu, "").replace(/\/\/[^\n]*/gu, "");
 
 /** 🧽️ A field type as plain text: no `import(...)` qualifier, no trailing `| undefined`, no leading `readonly`. */
@@ -83,7 +83,7 @@ export function normalizeType(text: string): string {
   return unqualified.replace(/\s*\|\s*undefined\s*$/u, "").replace(/^readonly\s+/u, "").trim();
 }
 
-/** ✂️ The members of a union type at its top level (`A | B<C | D>` has two). */
+/** 🎚️ The members of a union type at its top level (`A | B<C | D>` has two). */
 export function unionMembers(text: string): string[] {
   const parts: string[] = [];
   let current = "";
@@ -137,7 +137,7 @@ export function instantiatesGeneric(text: string, aliasOf: (name: string) => str
   return false;
 }
 
-/** ✂️ The `name: type` members of an interface body or an inline object type, split at the separators outside every bracket pair. */
+/** 🔩️ The `name: type` members of an interface body or an inline object type, split at the separators outside every bracket pair. */
 function memberParts(body: string): string[] {
   const parts: string[] = [];
   let current = "";
@@ -166,7 +166,7 @@ export function memberTypes(body: string): Map<string, string> {
   return found;
 }
 
-/** 📋️ Which members of an interface body or an inline object type are marked optional (`name?: …`). */
+/** ❎️ Which members of an interface body or an inline object type are marked optional (`name?: …`). */
 export function memberOptionality(body: string): Map<string, boolean> {
   const found = new Map<string, boolean>();
   for (const part of memberParts(body)) {
@@ -176,7 +176,7 @@ export function memberOptionality(body: string): Map<string, boolean> {
   return found;
 }
 
-/** 🔎️ The body between the braces of an already-written `export interface <name>`, or `undefined`. */
+/** 🔤️ The body between the braces of an already-written `export interface <name>`, or `undefined`. */
 function interfaceBody(source: string, name: string): string | undefined {
   const match = new RegExp(`^export interface ${escapeRegExp(name)}\\b[^{]*\\{`, "m").exec(source);
   if (match === null) return undefined;
@@ -190,7 +190,7 @@ function interfaceBody(source: string, name: string): string | undefined {
   return source.slice(start, at - 1);
 }
 
-/** 🔎️ Which fields an already-written `export interface <name>` marks optional, or `undefined` when it declares none (one-line interfaces included). */
+/** ❓️ Which fields an already-written `export interface <name>` marks optional, or `undefined` when it declares none (one-line interfaces included). */
 export function declaredOptionalFields(source: string, name: string): Map<string, boolean> | undefined {
   const body = interfaceBody(source, name);
   if (body === undefined) return undefined;
@@ -198,19 +198,19 @@ export function declaredOptionalFields(source: string, name: string): Map<string
   return found.size === 0 ? undefined : found;
 }
 
-/** 📋️ The type text every field of an already-written `export interface <name>` declares, so a parser for a field the schema leaves opaque follows the type on disk. */
+/** ⌨️ The type text every field of an already-written `export interface <name>` declares, so a parser for a field the schema leaves opaque follows the type on disk. */
 export function declaredTypes(source: string, name: string): Map<string, string> {
   const body = interfaceBody(source, name);
   return body === undefined ? new Map() : memberTypes(body);
 }
 
-/** 📋️ The right-hand side of a one-line `type <name> = …;` alias, normalised. */
+/** ➡️ The right-hand side of a one-line `type <name> = …;` alias, normalised. */
 export function aliasText(source: string, name: string): string | undefined {
   const match = new RegExp(`^\\s*(?:export\\s+)?type\\s+${escapeRegExp(name)}\\s*=\\s*([^;\\n]+);?\\s*$`, "m").exec(source);
   return match ? normalizeType(match[1]!) : undefined;
 }
 
-/** 📋️ The scrubbed right-hand side of `type <name> = …`, up to its closing semicolon or the next unindented line. */
+/** 📕️ The scrubbed right-hand side of `type <name> = …`, up to its closing semicolon or the next unindented line. */
 function aliasBody(source: string, pattern: RegExp): string | undefined {
   const match = pattern.exec(source);
   if (match === null) return undefined;
@@ -219,7 +219,7 @@ function aliasBody(source: string, pattern: RegExp): string | undefined {
   return scrub(source.slice(from, from + (end ? end.index : source.length)));
 }
 
-/** 📋️ The top-level `{ … }` bodies of a scrubbed alias text. */
+/** 🔝️ The top-level `{ … }` bodies of a scrubbed alias text. */
 function objectBodies(text: string): string[] {
   const found: string[] = [];
   let nesting = 0;
@@ -236,13 +236,13 @@ function objectBodies(text: string): string[] {
   return found;
 }
 
-/** 📋️ For `export type <name> = | { … } | …`, the member types of every object variant, in order. */
+/** 🔃️ For `export type <name> = | { … } | …`, the member types of every object variant, in order. */
 export function aliasMembers(source: string, name: string): Map<string, string>[] {
   const text = aliasBody(source, new RegExp(`^\\s*(?:export\\s+)?type\\s+${escapeRegExp(name)}\\s*=\\s*`, "m"));
   return text === undefined ? [] : objectBodies(text).map(memberTypes);
 }
 
-/** 📋️ For `export type <name> = | { key: Type } | …`, the declared type of each single-field variant, by key. */
+/** 🗝️ For `export type <name> = | { key: Type } | …`, the declared type of each single-field variant, by key. */
 export function aliasVariants(source: string, name: string): Map<string, string> {
   const found = new Map<string, string>();
   const text = aliasBody(source, new RegExp(`^export type ${escapeRegExp(name)}\\s*=\\s*`, "m"));

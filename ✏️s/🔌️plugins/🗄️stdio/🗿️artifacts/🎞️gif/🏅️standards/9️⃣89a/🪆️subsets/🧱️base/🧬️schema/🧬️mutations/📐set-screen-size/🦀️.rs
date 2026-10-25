@@ -9,8 +9,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-screen-size")]
 pub struct SetScreenSize {
-    pub(crate) width: u32,
-    pub(crate) height: u32,
+    pub width: u32,
+    pub height: u32,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetScreenSize {

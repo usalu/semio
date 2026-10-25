@@ -43,12 +43,12 @@ pub enum LayoutNodeKind {
         expanded: bool,
         reversed: bool,
     },
-    /// 🎛️ A section header's related Toolbar, positioned at the logical end inside the header band.
+    /// 🔗️ A section header's related Toolbar, positioned at the logical end inside the header band.
     TreeHeaderToolbar {
         header: f32,
         reversed: bool,
     },
-    /// 🌳️ `row` is this row's own band (the y a nested row starts at) and `expanded` says whether
+    /// 🪆️ `row` is this row's own band (the y a nested row starts at) and `expanded` says whether
     /// its nested rows are REACHED at all — the arena mounts a collapsed branch's children, and the
     /// painter draws none of them, so an unreached row must resolve to nothing rather than overlap
     /// the row that visually follows it.
@@ -71,7 +71,7 @@ pub enum LayoutNodeKind {
     TableRow {
         height: f32,
         actions: f32,
-        /// 🪟️ The windowed table's leading spacer when this row is its first materialised row (else `0`).
+        /// ⏮️ The windowed table's leading spacer when this row is its first materialised row (else `0`).
         lead: f32,
     },
     /// 🎛️ A value-carrying control: one control row tall on its own, so a container that sizes its
@@ -97,7 +97,7 @@ pub enum LayoutNodeKind {
     OverlayRow {
         rect: FlexRect,
     },
-    /// 🧩️ HOST-PROVIDED content: a leaf whose pixels this engine does not author at all. It reserves
+    /// ☁️ HOST-PROVIDED content: a leaf whose pixels this engine does not author at all. It reserves
     /// the box its host declared and fills its parent's width, so an arbitrary host-painted surface
     /// (React's `Tree` `emptyState` escape hatch — an agent chat transcript, a marketplace list) can
     /// live inside an otherwise declarative document without the host having to express it as
@@ -107,7 +107,7 @@ pub enum LayoutNodeKind {
     HostContent {
         height: f32,
     },
-    /// 🎞️ An ENGINE surface (`UiNode::ComponentScene`): a leaf whose pixels an engine paints into the
+    /// ⚙️ An ENGINE surface (`UiNode::ComponentScene`): a leaf whose pixels an engine paints into the
     /// box this solver hands it. It has no content to measure and no intrinsic size, so as a plain
     /// [`LayoutNodeKind::Leaf`] it solved to height ZERO inside every authored container — an
     /// authored parent grows no child by itself, and a document that does not spell `grow` on its

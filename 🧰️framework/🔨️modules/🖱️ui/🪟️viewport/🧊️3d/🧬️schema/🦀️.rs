@@ -140,23 +140,23 @@ projection_string_enum!(Viewport3dProjectionFramePolicy, Viewport3dProjectionFra
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dOrthographicView { Plan, Top, Bottom, Front, Back, Left, Right }
 
-/// 📐️ Axonometric preset family.
+/// 🔷️ Axonometric preset family.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dAxonometricVariant { Isometric, Dimetric, Trimetric }
 
-/// 🧭️ Axonometric corner quadrant.
+/// 🔲️ Axonometric corner quadrant.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dAxonometricQuadrant { Ne, Nw, Se, Sw }
 
-/// 🌐️ Optional active corner hemisphere.
+/// 🌍️ Optional active corner hemisphere.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dAxonometricHemisphere { Upper, Lower }
 
-/// 📐️ Oblique projection preset family.
+/// 🔶️ Oblique projection preset family.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dObliqueVariant { Cabinet, Cavalier, Military }
 
-/// 🧭️ One-point perspective axis selection.
+/// 📍️ One-point perspective axis selection.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Viewport3dOnePointAxis { X, Y, Z }
 
@@ -212,7 +212,7 @@ projection_string_enum!(Viewport3dCurvilinearMapping,
     Viewport3dCurvilinearMapping::Panini => "panini",
 );
 
-/// 📐️ Complete editable projection preset bank retained by one viewport-owning window.
+/// 🏦️ Complete editable projection preset bank retained by one viewport-owning window.
 #[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Viewport3dProjectionPreferences {
@@ -374,7 +374,7 @@ impl FromValue for Viewport3dProjectionPreferences {
     }
 }
 
-/// 📐️ Active mathematical projection mode without renderer state.
+/// ➡️ Active mathematical projection mode without renderer state.
 #[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Viewport3dProjectionMode {
@@ -507,7 +507,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for NonNullOption<
     }
 }
 
-/// 🧭️ Active cardinal, corner, or free orientation independent of projection mode.
+/// 🆓️ Active cardinal, corner, or free orientation independent of projection mode.
 #[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum Viewport3dProjectionOrientation {

@@ -2,7 +2,7 @@ import {fileURLToPath} from "node:url";
 import {observeCargoPreparationSourceV1,observeCargoPreparationInputV1,observeCargoPreparationOutputV1} from "../🛠️preparation/🧾️custody/🟦️.ts";
 import { lstatSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 type TargetV1 = { package: string; owner: string; manifest: string; feature: string };
 type GroupV1 = { feature: string; requires: string[]; targets: TargetV1[] };

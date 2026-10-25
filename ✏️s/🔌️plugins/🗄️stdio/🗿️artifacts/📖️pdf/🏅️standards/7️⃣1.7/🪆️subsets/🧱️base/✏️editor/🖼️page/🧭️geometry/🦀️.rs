@@ -217,13 +217,13 @@ fn move_text(state: &mut Graphics, tx: f64, ty: f64, index: usize, set_leading: 
     state.position_op = Some(index);
 }
 
-struct Placed {
-    object: PageObject,
-    top: f64,
-    canvas_x: f64,
-    canvas_y: f64,
-    canvas_w: f64,
-    canvas_h: f64,
+pub(crate) struct Placed {
+    pub object: PageObject,
+    pub top: f64,
+    pub canvas_x: f64,
+    pub canvas_y: f64,
+    pub canvas_w: f64,
+    pub canvas_h: f64,
 }
 
 pub(super) fn placement(snapshot: &PdfSnapshot) -> Vec<Placed> {

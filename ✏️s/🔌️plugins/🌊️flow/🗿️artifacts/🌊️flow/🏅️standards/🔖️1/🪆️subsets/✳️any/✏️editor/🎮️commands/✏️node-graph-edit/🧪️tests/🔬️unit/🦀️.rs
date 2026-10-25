@@ -28,7 +28,7 @@ use crate::editor::flow::FlowCommand;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
 use semio_framework_plugin::{app::TypedOperationResultLane, PluginApp};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-use store::{pack::snapshot::ArtifactPack, SpaceMember};
+use store::{snapshot::ArtifactPack, SpaceMember, ReferenceSpaceMember};
 
 /// 🪟️ Reads the actual main window's public geometry after the owning app settles.
 async fn published_host_snapshot(app: &mut FlowAppFixture) -> serde_json::Value {

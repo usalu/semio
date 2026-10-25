@@ -1,0 +1,62 @@
+{
+ "preservationDiagnosticDelivery": [
+  {
+   "effect": "valid",
+   "reported": true
+  },
+  {
+   "effect": "error-proxy",
+   "reported": false
+  },
+  {
+   "effect": "cause-accessor",
+   "reported": false
+  },
+  {
+   "effect": "cause-proxy",
+   "reported": false
+  },
+  {
+   "effect": "nested-proxy",
+   "reported": false
+  },
+  {
+   "effect": "nested-accessor",
+   "reported": false
+  },
+  {
+   "effect": "symbol",
+   "reported": false
+  },
+  {
+   "effect": "inherited",
+   "reported": false
+  },
+  {
+   "effect": "unknown-field",
+   "reported": false
+  },
+  {
+   "effect": "overbounds",
+   "reported": false
+  },
+  {
+   "effect": "sink-failure",
+   "reported": false
+  },
+  {
+   "effect": "undefined-primary",
+   "reported": false
+  }
+ ],
+ "preparedParentFailure": [
+  {
+   "mode": "undefined",
+   "entry": "--service-parent-undefined-worker"
+  },
+  {
+   "mode": "frozen",
+   "entry": "--service-parent-frozen-worker"
+  }
+ ]
+}

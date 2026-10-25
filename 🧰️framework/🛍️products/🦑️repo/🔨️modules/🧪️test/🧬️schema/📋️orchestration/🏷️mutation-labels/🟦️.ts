@@ -15,23 +15,23 @@ import { mutationPayloadOwner, rustSources } from "../🌳️mutation-tree/🟦�
  * (`labelHandwritten`, design §20.4). */
 export type MutationLabelFindingClass = "labelOverride" | "labelLocaleInvariant" | "labelLocaleEmpty" | "labelOpText" | "labelUnresolved" | "labelHandwritten";
 
-/** 🏷️ How one label body names its operation: `LocalizedLabel::native(en, de)` (`native`), a forward to another label (`forward`), or a finding. */
+/** 🔖️ How one label body names its operation: `LocalizedLabel::native(en, de)` (`native`), a forward to another label (`forward`), or a finding. */
 export type MutationLabelVerdict = "native" | "forward" | MutationLabelFindingClass;
 
-/** 🏷️ One label site of a Rust source: the trait it implements (`MutationKind`, `CompositeMutationKind`, `SemanticMutation`, an app
+/** 🌐️ One label site of a Rust source: the trait it implements (`MutationKind`, `CompositeMutationKind`, `SemanticMutation`, an app
  * trait for an override, or `data` for a `LocalizedLabel::data` call), its implementor, the verdict and every `[en, de]` template read. */
 export type MutationLabelSite = Readonly<{ path: string; trait: string; implementor: string; verdict: MutationLabelVerdict; texts: readonly (readonly [string | null, string | null])[] }>;
 
 /** 📊️ One plugin's share of the label census: label bodies read, `native` and `forward` ones, and the findings per class. */
 export type MutationLabelCensusRow = { readonly owner: string; labels: number; native: number; forward: number; findings: number; readonly refused: Record<string, number> };
 
-/** 🏷️ The `schema-mutation-label` lint, its census and every label site read. */
+/** 🧬️ The `schema-mutation-label` lint, its census and every label site read. */
 export type MutationLabelReport = { readonly diagnostics: readonly SchemaDiagnostic[]; readonly census: readonly MutationLabelCensusRow[]; readonly sites: readonly MutationLabelSite[] };
 
 const MUTATION_LABEL_TRAITS = new Set(["MutationKind", "CompositeMutationKind", "SemanticMutation"]);
 export const MUTATION_LABEL_APP_TRAITS = new Set(["ArtifactApp", "ArtifactEditor", "ArtifactViewer"]);
 
-/** 🏷️ The verdict of one label body `tokens[start..end]`: every `LocalizedLabel::native` call must take two locale arguments, neither
+/** 🏁️ The verdict of one label body `tokens[start..end]`: every `LocalizedLabel::native` call must take two locale arguments, neither
  * the empty literal; `LocalizedLabel::data` and `print_op` are findings; a body without `native` must forward to a `label` call. */
 export function rustLabelVerdict(tokens: readonly RustToken[], start: number, end: number): { verdict: MutationLabelVerdict; texts: (readonly [string | null, string | null])[] } {
   const texts: (readonly [string | null, string | null])[] = [];
@@ -56,7 +56,7 @@ export function rustLabelVerdict(tokens: readonly RustToken[], start: number, en
   return { verdict: worst ?? (texts.length > 0 ? "native" : forward || uninhabited ? "forward" : "labelUnresolved"), texts };
 }
 
-/** 🏷️ Every label site of one Rust source: each `fn label` of a `MutationKind`/`CompositeMutationKind`/`SemanticMutation` impl, each
+/** 🦀️ Every label site of one Rust source: each `fn label` of a `MutationKind`/`CompositeMutationKind`/`SemanticMutation` impl, each
  * `fn mutation_label` of an app impl (an override, always a finding), and each `LocalizedLabel::data(…)` call fed by `print_op`. */
 export function rustMutationLabelSites(path: string, source: string): MutationLabelSite[] {
   const tokens = rustLex(source);
@@ -129,7 +129,7 @@ export function rustEmitLabelSites(path: string, tokens: readonly RustToken[]): 
 }
 
 /**
- * 🏷️ Reads every label site of every Rust source under `under` (design §16.2): a history row is labelled by its leaf in every shell
+ * 📖️ Reads every label site of every Rust source under `under` (design §16.2): a history row is labelled by its leaf in every shell
  * locale, so each leaf label is `LocalizedLabel::native(en, de)` or a forward to one, no app overrides the leaf label, no operation's
  * text line is ever a label, and no emission labels its row by hand (§20.4). Every other verdict is one `schema-mutation-label` diagnostic.
  */
@@ -160,7 +160,7 @@ export function mutationLabelReport(repoRoot: string, under = ""): MutationLabel
 }
 
 /**
- * 🏷️ `test schema mutation-labels` — the `schema-mutation-label` gate: every applied leaf of every plugin labels itself in every shell
+ * ▶️ `test schema mutation-labels` — the `schema-mutation-label` gate: every applied leaf of every plugin labels itself in every shell
  * locale, no app overrides that label, no emission labels its row by hand, no history row falls back to an operation's text line.
  * `--census` prints the per-plugin table
  * and always exits 0; without it any finding fails.

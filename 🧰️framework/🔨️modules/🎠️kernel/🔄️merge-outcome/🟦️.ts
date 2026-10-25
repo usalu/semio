@@ -16,19 +16,19 @@ import { type Severity } from "../🚨️fault/🟦️.ts";
  * `BackboneMessage`, never part of an artifact's shared history. */
 export type MergePolicy = "LaissezFaire" | "Normal" | "Vigilant";
 
-/** ⚖️ `#[default]` policy (Rust `MergePolicy::default()`) every fresh instance boots with
+/** 🏠️ `#[default]` policy (Rust `MergePolicy::default()`) every fresh instance boots with
  * until a persisted `🛡️change-merge-policy` config triad overrides it or a caller sends
  * `AppChannelClient.setMergePolicy`. */
 export const DEFAULT_MERGE_POLICY: MergePolicy = "Normal";
 
 const MERGE_POLICY_ORDER: readonly MergePolicy[] = ["LaissezFaire", "Normal", "Vigilant"];
 
-/** 🔢️ TS twin of Rust `MergePolicy::as_u8` — the ordinal `AppCommand::SetMergePolicy.policy` carries. */
+/** 🔏️ TS twin of Rust `MergePolicy::as_u8` — the ordinal `AppCommand::SetMergePolicy.policy` carries. */
 export function mergePolicyAsU8(policy: MergePolicy): number {
   return MERGE_POLICY_ORDER.indexOf(policy);
 }
 
-/** 🔢️ TS twin of Rust `MergePolicy::from_u8`; `undefined` for any value outside 0..2. */
+/** 🪞️ TS twin of Rust `MergePolicy::from_u8`; `undefined` for any value outside 0..2. */
 export function mergePolicyFromU8(value: number): MergePolicy | undefined {
   return MERGE_POLICY_ORDER[value];
 }
@@ -49,7 +49,7 @@ export function conflictResolutionFromU8(value: number): ConflictResolution | un
   return CONFLICT_RESOLUTION_ORDER[value];
 }
 
-/** 📨️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — TS twin of
+/** 💬️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — TS twin of
  * Rust `MutationMessage` (`📡️spr/🎮️command/🦀️.rs` region `🔖️Message`,
  * `#[serde(rename_all = "camelCase")]`). `level` reuses {@link Severity}; `code` is one of the
  * frozen nine `mutation.*` codes (contract-freeze §C2 plus the 2026-09-30 state-dependent Error codes — no per-plugin codes, ever); `message` is

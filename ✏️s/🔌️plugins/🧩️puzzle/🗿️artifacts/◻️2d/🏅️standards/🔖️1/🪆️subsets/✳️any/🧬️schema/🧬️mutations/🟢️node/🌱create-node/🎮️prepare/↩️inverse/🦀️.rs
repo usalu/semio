@@ -12,11 +12,6 @@ use semio_framework_value_persistent::list::PagedList;
 #[cfg(test)]
 use std::mem::size_of;
 
-impl Puzzle2dLiteralIdInverse for CreateNode {
-    fn inverse_id(&self) -> &PagedUtf8<{usize::MAX}> { &self.node.id }
-    fn inverse_payload(id: PagedUtf8<{usize::MAX}>) -> Puzzle2dMutation { Puzzle2dMutation::DeleteNode(crate::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode { id }) }
-}
-
 pub type Puzzle2dCreateNodeInverseCursor = Puzzle2dLiteralIdInverseCursor<CreateNode>;
 
 

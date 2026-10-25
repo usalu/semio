@@ -144,7 +144,6 @@
        "additionalProperties": false,
        "required": [
         "libRelPath",
-        "shape",
         "pluginId",
         "ownerRel",
         "dir",
@@ -152,9 +151,6 @@
        ],
        "properties": {
         "libRelPath": {
-         "type": "string"
-        },
-        "shape": {
          "type": "string"
         },
         "pluginId": {

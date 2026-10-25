@@ -1,5 +1,5 @@
-import { canonicalWasmBuildVitePlugin } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
-import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
+import { canonicalWasmBuildVitePlugin } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
+import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
 import { buildModePolicy, readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 // #region 🔌️Adapters
 import { createHash } from "node:crypto";
@@ -13,8 +13,8 @@ import { semioReferencedAssetsVitePlugin } from "../../../../../🧰️framework
 import { semioServeCloseVitePlugin, semioServeUpgradeVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
 import course from "../../🔣️.json" with { type: "json" };
 import deployment from "../../🚀️deploy/🔣️.json" with { type: "json" };
-import courseContract from "../../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json" with { type: "json" };
-import { projectContractDefinitions } from "../../../../../🧰️framework/🛍️products/📚️course/🧬️schema/📽️projection/🟦️.ts";
+import courseContract from "../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🧬️schema/🔣️json/🟦️.ts" with { type: "json" };
+import { projectContractDefinitions } from "../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🧬️schema/📽️projection/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const siteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -119,6 +119,28 @@ function courseReleaseDocumentVitePlugin(proctorOrigin: string): OwnedBuildPlugi
   };
 }
 
+/** 📥️ Vite: the release document hints, at low priority, the lazy chunks of the site's material (the course document and
+ * every quiz it names) — `modulepreload` with `fetchpriority="low"`, which the Content-Security-Policy governs as a script
+ * from the site's own origin, where a `prefetch` would need `connect-src` to admit the site — so they sit in the browser's
+ * cache when the client asks for them while it already shows. A low-priority hint runs nothing and waits behind the entry:
+ * the entry's size budget does not charge it. */
+export function courseMaterialPreloadVitePlugin(): OwnedBuildPlugin {
+  const documents = new Set([resolve(siteRoot, "🔣️.json"), ...course.quizzes.map((path) => resolve(siteRoot, path))]);
+  return {
+    name: "architecture-course-material-preload",
+    apply: "build",
+    enforce: "post",
+    transformIndexHtml: {
+      order: "post",
+      handler(_html, { bundle }) {
+        return Object.values(bundle ?? {})
+          .filter((output) => output.type === "chunk" && output.facadeModuleId != null && documents.has(output.facadeModuleId))
+          .map((output) => ({ tag: "link", attrs: { rel: "modulepreload", fetchpriority: "low", crossorigin: true, href: `/${output.fileName}` }, injectTo: "head" as const }));
+      },
+    },
+  };
+}
+
 /** 📚️ Vite configuration of `@teaching/architecture-course`, the course website the CDN serves at the site host of
  * `🚀️deploy/🔣️.json`, written against the owned build contract of the UI package (no type of the build tool appears
  * here; React's and Tailwind's adapters come from the package that declares them).
@@ -149,6 +171,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => ({
     ...uiTailwindBuildPlugins(),
     uiReactBuildPlugin(),
     courseReleaseDocumentVitePlugin(proctorOrigin),
+    courseMaterialPreloadVitePlugin(),
   ],
   build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(undefined, buildModePolicy(readBuildMode(mode))), outDir: resolve(bundleRoot, "dist", readBuildMode(mode)) }),
   define: { "import.meta.vitest": "undefined", ...(command === "build" ? { "import.meta.env.VITE_PROCTOR_URL": JSON.stringify(proctorOrigin) } : {}) },

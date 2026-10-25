@@ -173,7 +173,7 @@ impl WorkerPool {
         self.inner.deferred_wakes.pending(ticket, slot)
     }
 
-    /// 🧹️ Closes admission and removes a drained exact partition.
+    /// ➖️ Closes admission and removes a drained exact partition.
     pub fn remove_deferred_wake_partition(&self, ticket: WorkerDeferredWakeTicket) -> Result<bool, WorkerDeferredWakeError> {
         self.inner.deferred_wakes.remove(ticket)
     }
@@ -229,7 +229,7 @@ impl WorkerPool {
         }
     }
 
-    /// 🔔️ Cooperative counterpart of native [`WorkerPool::callback_at`].
+    /// 📞️ Cooperative counterpart of native [`WorkerPool::callback_at`].
     pub fn callback_at(&self, deadline_ms: u64, callback: impl FnOnce() + Send + 'static) {
         self.inner.wheel.schedule_callback(deadline_ms, Box::new(callback));
     }
@@ -331,7 +331,7 @@ impl WorkerPool {
         self.has_pending_work()
     }
 
-    /// 🔎️ Nonblocking six-lane observation; contention retains all scheduler owners untouched.
+    /// 📸️ Nonblocking six-lane observation; contention retains all scheduler owners untouched.
     pub fn try_cooperative_snapshot(&self) -> Option<CooperativePoolSnapshot> {
         let state = self.inner.state.try_lock().ok()?;
         Some(CooperativePoolSnapshot {

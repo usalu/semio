@@ -70,7 +70,7 @@ mod subject {
 }
 
 //#region 🔖️Registration
-/// 🪝️ Registration entry point the generated host calls.
+/// 🔌️ Registration entry point the generated host calls.
 pub fn adapter() -> semio_repo_test_host::Adapter {
     let adapter = semio_repo_test_host::Adapter::new("rust");
     #[cfg(feature = "sut")]

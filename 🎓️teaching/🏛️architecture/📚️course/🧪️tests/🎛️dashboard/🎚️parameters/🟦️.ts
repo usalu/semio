@@ -9,7 +9,7 @@ import { parseArgs } from "node:util";
 import { expect, it } from "vitest";
 import { endToEndPlan } from "../../../🎭️e2e/🟦️.ts";
 import { BundleScript, ScriptRouter, runScriptMain, createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { selectBuildTasksV1 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🟦️.ts";
+import { selectBuildTasksV1 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🧭️selection/🟦️.ts";
 import fixture from "../../../🧫️fixtures/🎛️dashboard/🎚️parameters/🔣️.json" with { type: "json" };
 import schema from "../../../🧫️fixtures/🎛️dashboard/🎚️parameters/🧬️schema/🔣️.json" with { type: "json" };
 

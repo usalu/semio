@@ -74,9 +74,9 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🔺️spatial-delaunay-voronoi/delaunay.tex", DECIMALS_INDEX)),
     },
     "voronoi-cells": {
-      /** 🔮️ `d3-delaunay`'s `voronoi(bounds).cellPolygon`, one sorted vertex list per site. */
+      /** 💠️ `d3-delaunay`'s `voronoi(bounds).cellPolygon`, one sorted vertex list per site. */
       oracle: (ctx: AdapterContext) => ({ projection: { "spatial/voronoi": cellVertices(points(ctx), [0, 0, 70, 50]).flat() } }),
-      /** 🎯️ `\SemioVizVoronoi` over the same sites and the same clip rectangle. */
+      /** ✂️ `\SemioVizVoronoi` over the same sites and the same clip rectangle. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🔺️spatial-delaunay-voronoi/voronoi.tex", DECIMALS_PLANE)),
     },
   },

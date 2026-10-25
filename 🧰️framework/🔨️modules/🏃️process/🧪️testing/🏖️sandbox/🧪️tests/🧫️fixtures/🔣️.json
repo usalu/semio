@@ -237,10 +237,22 @@
    ]
   },
   {
-   "id": "image-with-scratch-root",
+   "id": "image-with-mkdtemp-only",
    "path": "x/🧪️tests/a/🟦️.ts",
    "language": "ts",
    "text": "import {test} from \"bun:test\";\ntest(\"a\",async()=>{const root=mkdtempSync(join(tmpdir(),\"i-\"));await withNativeImageStorageV1(options,body);});\n",
+   "expected": [
+    {
+     "rule": "native-image-unsandboxed",
+     "line": 2
+    }
+   ]
+  },
+  {
+   "id": "image-with-scratch-root",
+   "path": "x/🧪️tests/a/🟦️.ts",
+   "language": "ts",
+   "text": "import {test} from \"bun:test\";\ntest(\"a\",async()=>{const root=mkdtempSync(join(testScratchRootV1(\"i\"),\"i-\"));await withNativeImageStorageV1(options,body);});\n",
    "expected": []
   },
   {

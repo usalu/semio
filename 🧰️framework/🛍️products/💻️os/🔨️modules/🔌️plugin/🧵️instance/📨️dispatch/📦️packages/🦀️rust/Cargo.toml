@@ -66,4 +66,5 @@ semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/�
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }
+semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust", features = ["reserved-producer-testing"] }
 semio-framework-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust" }

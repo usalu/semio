@@ -1,2 +1,0 @@
-if(before.status!=="match")return complete();
- const result=await withJavascriptDependencyReaderScopeV1(readerControl,actualControl=>body(store,actualControl),stop);await store.recheck();

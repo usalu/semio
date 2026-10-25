@@ -1,6 +1,6 @@
 /** 🦀️ The Cargo resolution identity agrees with its language-agnostic fixture, an independent Python implementation, two TOML parsers and the policy; a crate's key moves exactly with what the crate compiles with. */
 import {expect, test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {readFileSync} from "node:fs";
 import {dirname, join} from "node:path";
 import {spawnSync} from "node:child_process";

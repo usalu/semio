@@ -1,6 +1,8 @@
 //! 🏘️ Instance residency: the per-object instance record text, its fingerprints and delta, the scene geometry fingerprint and the world mesh lane.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::{object_scale_json, Puzzle3dKindMeshIndex};
+use std::hash::Hash;
 
 /// 🙈️ Hidden objects stay in the emitted array — `worldPick`'s `id` arg is the array index into it — but render at zero scale so they're effectively invisible without shifting any other object's index.
 /// Selection/hover paint is driven by `selectionJson` on the host — never baked here so instance geometry stays stable across picks.

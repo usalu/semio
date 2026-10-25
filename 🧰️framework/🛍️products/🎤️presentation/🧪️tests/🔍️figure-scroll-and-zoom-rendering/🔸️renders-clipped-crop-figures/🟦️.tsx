@@ -1,8 +1,8 @@
 /** 🔸️ The renders clipped crop figures tests of the PresentationDeck suite. */
-import type { Presentation } from "../../../🎯️targets/⚛️react/🟦️.tsx";
+import type { Presentation } from "@semio-tech/presentation-react";
 import { expect, it } from "vitest";
 import { act } from "@semio-tech/ui-react/test";
-import { figureCropBackgroundPosition, figureCropBackgroundSize, figureCropBackgroundVars, figureScrollOverlayThumbMetrics, mosaicWindowedCoverVars, mountPresentation } from "../../../🎯️targets/⚛️react/🟦️.tsx";
+import { figureCropBackgroundPosition, figureCropBackgroundSize, figureCropBackgroundVars, figureScrollOverlayThumbMetrics, mosaicWindowedCoverVars, mountPresentation } from "@semio-tech/presentation-react";
 import { globalsCssSource } from "../../🧰️presentation-deck-helpers/🟦️.tsx";
 
 /** 🔹 Registers the renders clipped crop figures tests of the PresentationDeck suite. */

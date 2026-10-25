@@ -36,8 +36,16 @@ pub fn serve(root: &Path, running: &AtomicBool) -> std::io::Result<()> {
     Ok(())
 }
 
+/// 🔌 Refuses an endpoint a unix socket cannot bind (a runtime directory deeper than the platform's `sun_path`) before a daemon is started for it, instead of waiting for a daemon that died on bind.
+#[cfg(unix)]
+pub fn usable_endpoint(path: &Path) -> std::io::Result<()> {
+    std::os::unix::net::SocketAddr::from_pathname(path).map(|_| ()).map_err(|error| std::io::Error::other(format!("dashboard socket {} is unusable: {error}", path.display())))
+}
+
 /// 🚀 Starts a detached daemon process (`repo dashboard daemon serve --root …`) and waits until it answers; the answer is its pid.
 pub fn spawn_daemon(root: &Path, executable: &Path) -> std::io::Result<u32> {
+    #[cfg(unix)]
+    usable_endpoint(&ipc::socket_path(root))?;
     let spawned = semio_framework_ui_tui_terminal::pty::spawn_detached(&executable.to_string_lossy(), &["daemon", "serve", "--root", &root.display().to_string()], &["SEMIO_BUILD_INVOCATION_PID"], root).map_err(|error| std::io::Error::other(error.message))?;
     let deadline = Instant::now() + Duration::from_secs(5);
     while Instant::now() < deadline {

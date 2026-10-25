@@ -32,17 +32,52 @@ pub fn admit_job<A:ArtifactApp>(context:&mut StepContext<'_>,operation:&Operatio
 #[macro_export]
 macro_rules! retained_command_factory_admission{
  (maximum_raw_bytes:|$payload:ident|$maximum:expr,checkpoint_resume:$resume:expr$(,)?)=>{
-  fn admission_demands(&self,_operation:&$crate::__job::Operation,payload:&Self::Payload,input:Option<&$crate::action_bus::RetainedToolWireInput>,checkpoint:Option<&$crate::action_bus::RetainedToolWireInput>)->Result<$crate::action_bus::ToolJobAdmissionDemand,$crate::__value::ValueError>{
+  fn admission_demands(&self,_operation:&$crate::__job::Operation,payload:&Self::Payload,input:Option<&$crate::__action_bus::RetainedToolWireInput>,checkpoint:Option<&$crate::__action_bus::RetainedToolWireInput>)->Result<$crate::__action_bus::ToolJobAdmissionDemand,$crate::__value::ValueError>{
    let maximum={let $payload=payload;$maximum};
-   $crate::retained_command::factory::admission_demands(payload,input,checkpoint,maximum,$resume)
+   $crate::factory::admission_demands(payload,input,checkpoint,maximum,$resume)
   }
-  fn admit_job(&mut self,context:&mut $crate::StepContext<'_>,operation:&$crate::__job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<$crate::action_bus::RetainedToolWireInput>,checkpoint:&mut Option<$crate::action_bus::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,$crate::__job::OriginalTurnFailure>{
+  fn admit_job(&mut self,context:&mut $crate::__job::StepContext<'_>,operation:&$crate::__job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<$crate::__action_bus::RetainedToolWireInput>,checkpoint:&mut Option<$crate::__action_bus::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,$crate::__job::OriginalTurnFailure>{
    let maximum={let $payload=payload.as_deref().ok_or_else(||$crate::__value::ValueError::literal($crate::__value::ValueRefusalKind::InvariantViolated,"retained command factory requires its original payload"))?;$maximum};
-   $crate::retained_command::factory::admit_job(context,operation,payload,input,checkpoint,output,maximum,$resume)
+   $crate::factory::admit_job(context,operation,payload,input,checkpoint,output,maximum,$resume)
   }
  };
  (maximum_raw_bytes:$maximum:expr,checkpoint_resume:$resume:expr$(,)?)=>{
   $crate::retained_command_factory_admission!(maximum_raw_bytes:|__original_payload|$maximum,checkpoint_resume:$resume);
+ };
+}
+
+/// 🪢️ A factory whose payload already is the erased reserved job refuses any wire or checkpoint replacement and hands the same job back after binding its operation.
+#[macro_export]
+macro_rules! reserved_tool_job_factory_admission{
+ ()=>{
+  fn admission_demands(&self,_operation:&$crate::__job::Operation,_payload:&Self::Payload,input:Option<&$crate::__action_bus::RetainedToolWireInput>,checkpoint:Option<&$crate::__action_bus::RetainedToolWireInput>)->Result<$crate::__action_bus::ToolJobAdmissionDemand,$crate::__value::ValueError>{
+   if input.is_some()||checkpoint.is_some(){return Err($crate::__value::ValueError::literal($crate::__value::ValueRefusalKind::UnsupportedOwner,"original typed job does not accept wire or checkpoint replacement"));}
+   Ok($crate::__action_bus::ToolJobAdmissionDemand::reused_job())
+  }
+  fn admit_job(&mut self,context:&mut $crate::__job::StepContext<'_>,operation:&$crate::__job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<$crate::__action_bus::RetainedToolWireInput>,checkpoint:&mut Option<$crate::__action_bus::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,$crate::__job::OriginalTurnFailure>{
+   let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||$crate::__value::ValueError::literal($crate::__value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;
+   $crate::__action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,_,_|{payload.as_mut().expect("retained original job").bind_operation(*operation)?;let job=payload.take().expect("admitted same original job");Ok((job,$crate::__value::RetainedCloneProgress{copied_items:1,..Default::default()}))})
+  }
+ };
+}
+
+/// 🪢️ A factory that builds its job from the already typed payload accepts neither a wire nor a checkpoint replacement; `|operation, payload| expr` answers the job or its refusal text.
+#[macro_export]
+macro_rules! typed_tool_job_factory_admission{
+ (|$operation:ident,$payload:ident|$construct:expr)=>{
+  fn admission_demands(&self,_operation:&$crate::__job::Operation,_payload:&Self::Payload,input:Option<&$crate::__action_bus::RetainedToolWireInput>,checkpoint:Option<&$crate::__action_bus::RetainedToolWireInput>)->Result<$crate::__action_bus::ToolJobAdmissionDemand,$crate::__value::ValueError>{
+   if input.is_some()||checkpoint.is_some(){return Err($crate::__value::ValueError::literal($crate::__value::ValueRefusalKind::UnsupportedOwner,"typed tool job factory accepts no wire or checkpoint replacement"));}
+   Ok($crate::__action_bus::ToolJobAdmissionDemand::boxed_job::<Self::Payload,Self::Job>())
+  }
+  fn admit_job(&mut self,context:&mut $crate::__job::StepContext<'_>,operation:&$crate::__job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<$crate::__action_bus::RetainedToolWireInput>,checkpoint:&mut Option<$crate::__action_bus::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,$crate::__job::OriginalTurnFailure>{
+   let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||$crate::__value::ValueError::literal($crate::__value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;
+   $crate::__action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,_,_|{
+    let $operation=*operation;
+    let $payload=*payload.take().expect("admitted original payload");
+    let job=$construct.map_err(|detail|$crate::__value::ValueError::new($crate::__value::ValueRefusalKind::InvalidValue,detail))?;
+    Ok((Box::new(job),$crate::__value::RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:std::mem::size_of::<Self::Job>(),released_bytes:std::mem::size_of::<Self::Payload>()}))
+   })
+  }
  };
 }
 

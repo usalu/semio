@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:bazel-scope-law-corpus:v1",
+  "title": "Bazel Implementation Scope Law Corpus",
+  "description": "Language-agnostic bounds of the trace-proven narrow implementation scopes: the largest closure a scope may have, the modules it must never reach, the trace fields that name a class, the largest dynamic edge every scope must carry anyway and files whose edits must leave a scoped action key unchanged. Also the scheduling split: the independent oracle, the largest keyed part, the modules that must stay keyed because they produce action bytes and samples that must be overlay.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "checkoutFromTests",
+    "entryFromTests",
+    "executorOracleFromTests",
+    "maximumFiles",
+    "lazyEdgeBound",
+    "traceFields",
+    "forbidden",
+    "unrelated",
+    "schedulingOracleFromTests",
+    "maximumKeyedFiles",
+    "keyedProducers",
+    "schedulingSamples"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "checkoutFromTests": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entryFromTests": {
+      "type": "string",
+      "minLength": 1
+    },
+    "executorOracleFromTests": {
+      "type": "string",
+      "minLength": 1
+    },
+    "maximumFiles": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "traceFields": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "forbidden": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reason",
+          "fragment"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fragment": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "unrelated": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "lazyEdgeBound": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 64
+    },
+    "schedulingOracleFromTests": {
+      "type": "string",
+      "minLength": 1
+    },
+    "maximumKeyedFiles": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "keyedProducers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reason",
+          "fragment"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fragment": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "schedulingSamples": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reason",
+          "fragment"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fragment": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

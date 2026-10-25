@@ -183,9 +183,13 @@ impl ArtifactOwnedToolJobFactory for Puzzle5dRetainedCommandJobFactory {
 /// 📜️ The retained command catalog's own bounded first-step proofs — one per
 /// `PUZZLE5D_RETAINED_TOOL_IDS` entry, all joined to the single concrete
 /// `Puzzle5dRetainedCommandJobFactory`.
-pub(super) struct Puzzle5dRetainedCommandProofs;
+pub struct Puzzle5dRetainedCommandProofs;
 
 impl Puzzle5dRetainedCommandProofs {
+    pub fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle5dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -283,9 +287,13 @@ impl Puzzle5dRetainedCommandProofs {
 /// host-configuration branch asks for before it applies `host_configuration_mutation`. Without them the
 /// shell's `setActiveTool`/`setActiveUtility` fall through to `admit_command_json` and fail closed with
 /// `interactive-job.missing-factory`, so the fill TOOL could not even be armed.
-pub(super) struct Puzzle5dHostConfigurationProofs;
+pub struct Puzzle5dHostConfigurationProofs;
 
 impl Puzzle5dHostConfigurationProofs {
+    pub fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle5dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",

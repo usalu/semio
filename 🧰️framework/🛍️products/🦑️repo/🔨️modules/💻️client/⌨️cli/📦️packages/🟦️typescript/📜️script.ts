@@ -13,7 +13,6 @@ import { readEntityCatalog } from "../../../../../../../🔨️modules/🧬️sc
 import { writeGeneratedFileIfChanged } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { REFRESH_COMMAND, REPO_CLI_GO, repoEntityKindTarget } from "../../🏷️entity-kinds/📽️projection/🟦️.ts";
 import { runTestScript, runPreviewEntityKindsScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 const REPO_CLI_MAIN = "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp";
 
@@ -84,4 +83,4 @@ const router = new ScriptRouter(import.meta.dirname).register("dev", DevScript).
   .register("check-entity-kinds", CheckEntityKindsScript)
   .register("test-entity-kinds", TestEntityKindsScript);
 
-if (isMainModuleV1(import.meta.url)) await runRepoScriptMain(router, import.meta.url);
+await runRepoScriptMain(router, import.meta.url);

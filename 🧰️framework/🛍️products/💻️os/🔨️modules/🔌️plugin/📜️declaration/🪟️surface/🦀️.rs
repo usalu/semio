@@ -50,7 +50,7 @@ use std::future::Future;
 #[allow(unused_imports)]
 use std::pin::Pin;
 use pack::snapshot::ArtifactPack;
-use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactEnvelope, ArtifactStore, ConfigStore, MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember};
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactEnvelope, ArtifactStore, ConfigStore, MemberFactory, Mutation, MutationDiff, NoMembers, ReferenceSpaceMember};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_layout::layout::ContextMenuItemSpec;
 use semio_framework_ui_layout::layout::ContextMenuRequest;

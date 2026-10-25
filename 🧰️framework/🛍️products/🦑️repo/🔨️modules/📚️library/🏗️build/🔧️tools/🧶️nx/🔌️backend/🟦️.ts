@@ -32,7 +32,7 @@ export const backend:BuildBackendV1=Object.freeze({
     publishBootstrapSources(root);
     const {storeReceiptTasksV1,withStoreReceiptsV1}=await import("../../../🧾️store-receipt/🟦️.ts"),{storeRepairNxArgumentsV1}=await import("../../../🧾️store-receipt/🟨️.mjs"),boundary=resolved.args.indexOf("--"),forwarded=boundary<0?[]:resolved.args.slice(boundary+1);
     const nx=async(nxArguments:string[])=>{const prior=process.exitCode;process.exitCode=undefined;try{await runOwnedNxInvocationV1(root,nxArguments,invocation,artifactPhase);if(process.exitCode)throw new Error(`Build invocation failed (${process.exitCode})`);}finally{process.exitCode=prior;}};
-    await withStoreReceiptsV1({root,tasks:await profilePhaseV1("receipts.tasks",()=>storeReceiptTasksV1(root,graph,resolved.args,invocation,readBuildMode(process.env.SEMIO_BUILD_MODE))),run:()=>profilePhaseV1("tool.nx",()=>nx(nxOperationArgumentsV1(resolved.args)!)),repair:task=>nx(storeRepairNxArgumentsV1(task.id,task.id===resolved.args[1]?forwarded:[]))});
+    await withStoreReceiptsV1({root,tasks:await profilePhaseV1("receipts.tasks",()=>storeReceiptTasksV1(root,graph,resolved.args,invocation,readBuildMode(process.env.SEMIO_BUILD_MODE))),run:()=>profilePhaseV1("tool.nx",async()=>{await context.release();return nx(nxOperationArgumentsV1(resolved.args)!);}),repair:task=>nx(storeRepairNxArgumentsV1(task.id,task.id===resolved.args[1]?forwarded:[]))});
     return;
  }
 });

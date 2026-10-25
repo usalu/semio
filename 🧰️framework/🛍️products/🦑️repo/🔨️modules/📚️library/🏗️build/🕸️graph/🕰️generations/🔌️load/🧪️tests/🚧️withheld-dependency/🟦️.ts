@@ -1,6 +1,6 @@
-/** 🚧️ Contract: a test project whose native sources name a project the graph snapshot does not hold is withheld alone, with a bilingual diagnostic naming its declaring file, the missing projects and the fix; the graph is still built, every other project stays, and the next run that holds the project brings the test project back. The model is the fixture, derived independently in Python by `🐍️oracle.py`. */
+/** 🚧️ Contract: a test project whose native sources name a project the graph snapshot does not hold is withheld alone, with a bilingual diagnostic naming its declaring file, the missing projects and the fix; the graph is still built, every other project stays, and the next run that holds the project brings the test project back. The model is the fixture, derived independently in Python by `🐍️.py`. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdtempSync,readFileSync,realpathSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
@@ -12,12 +12,12 @@ import fixtureSchema from "./🧬️schema/🔣️.json";
 import generationSchema from "../../../🧬️schema/🔣️.json";
 import graphSchema from "../../../../../🧬️schema/🔣️.json";
 import leanSchema from "../../../../../🧬️schema/🪶️lean.json";
-import {danglingTestDependenciesV1} from "../../../../../../../🧪️test/🟨️.mjs";
+import {danglingTestDependenciesV1} from "../../../../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs";
 import {announceWithheldProjectsV1,describeUnavailableProjectV1,loadGenerationGraphV1,withholdDanglingTestProjectsV1} from "../../🟨️.mjs";
 import {applyOps,createMockHost,ringFiles,seed} from "../../../🧪️tests/🏃️world/🟦️.ts";
 
 const source=readFileSync(new URL("../../../../🟦️.ts",import.meta.url),"utf8");
-const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️oracle.py"),fixturePath=join(here,"🔣️.json"),schemaPath=join(here,"..","..","..","🧬️schema","🔣️.json"),sourcePath=fileURLToPath(new URL("../../../../🟦️.ts",import.meta.url));
+const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️.py"),fixturePath=join(here,"🔣️.json"),schemaPath=join(here,"..","..","..","🧬️schema","🔣️.json"),sourcePath=fileURLToPath(new URL("../../../../🟦️.ts",import.meta.url));
 const scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"graph-withheld-"));
 const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
 const graphRow=new Ajv2020({strict:false}).addSchema(graphSchema,"graph").compile({$ref:"graph#/$defs/UnavailableProject"});

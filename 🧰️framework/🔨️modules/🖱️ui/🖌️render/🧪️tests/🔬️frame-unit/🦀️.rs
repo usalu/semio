@@ -113,7 +113,7 @@ impl<C: Element> Element for Wrap<C> {
     }
 }
 
-/// 🌳️ Two-child test container — `Wrap`'s sibling for the tests that need overlapping/adjacent
+/// 🥢️ Two-child test container — `Wrap`'s sibling for the tests that need overlapping/adjacent
 /// regions under one parent (an overlay over content, a container with more than one target).
 struct Pair<A: Element, B: Element> {
     flags: crate::DispatchFlags,

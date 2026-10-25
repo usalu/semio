@@ -1,6 +1,6 @@
 /** 🧪️ Contract: a selected, unconsumed, cached task named test that declares no outputs is a Bazel test target; everything else keeps its action kind. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {readFile} from "node:fs/promises";
 import ts from "typescript";
 import Ajv from "ajv";

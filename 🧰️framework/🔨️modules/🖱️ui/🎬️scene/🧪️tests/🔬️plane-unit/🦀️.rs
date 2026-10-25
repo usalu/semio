@@ -74,7 +74,7 @@ fn canvas2d_scene_splits_into_the_declared_lanes_and_merges_back() {
 //#endregion 🚚️Canvas2dSceneLanes
 
 //#region 🚚️Board2dSceneLanes
-/// 🚚️ The board-2d twin of [`CANVAS2D_SCENE_LANE_CONTRACT`].
+/// 📜️ The board-2d twin of [`CANVAS2D_SCENE_LANE_CONTRACT`].
 const BOARD2D_SCENE_LANE_CONTRACT: &str = include_str!("../🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
 
 fn board2d_lane_contract() -> Value {
@@ -139,7 +139,7 @@ fn board2d_scene_splits_into_the_declared_lanes_and_merges_back() {
 //#endregion 🚚️Board2dSceneLanes
 
 //#region 🚚️TiledMapSceneLanes
-/// 🚚️ The tiled-map twin of [`BOARD2D_SCENE_LANE_CONTRACT`].
+/// 🀄️ The tiled-map twin of [`BOARD2D_SCENE_LANE_CONTRACT`].
 const TILEDMAP_SCENE_LANE_CONTRACT: &str = include_str!("../🧫️fixtures/🚚️tiledmap-scene-lanes/🔣️.json");
 
 fn tiledmap_lane_contract() -> Value {
@@ -248,7 +248,7 @@ fn ink_canvas_document_payload_is_document_json_on_both_encoders() {
 }
 
 //#region 🚚️Paint2dSceneLanes
-/// 🚚️ The paint-2d twin of [`CANVAS2D_SCENE_LANE_CONTRACT`].
+/// 🖌️ The paint-2d twin of [`CANVAS2D_SCENE_LANE_CONTRACT`].
 const PAINT2D_SCENE_LANE_CONTRACT: &str = include_str!("../🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json");
 
 fn paint2d_lane_contract() -> Value {
@@ -301,7 +301,7 @@ fn paint2d_probe_scene() -> Paint2dScene {
     }
 }
 
-/// 🚚️ Document, assets and optional pixel coverage preserve their exact paged payloads.
+/// ✂️ Document, assets and optional pixel coverage preserve their exact paged payloads.
 #[test]
 fn paint2d_scene_splits_into_the_declared_lanes_and_merges_back() {
     let contract = paint2d_lane_contract();
@@ -327,7 +327,7 @@ fn paint2d_scene_splits_into_the_declared_lanes_and_merges_back() {
     assert_eq!(merged, assembled);
 }
 
-/// 🚚️ The defect this lane set closes: a raster document larger than the fixed surface doc used to
+/// 📕️ The defect this lane set closes: a raster document larger than the fixed surface doc used to
 /// refuse admission entirely, because `Paint2dScene` had no `split_lanes` override at all.
 #[test]
 fn paint2d_spine_stays_inside_the_fixed_surface_doc_for_an_oversized_document() {

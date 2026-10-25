@@ -293,7 +293,7 @@ impl ScalarRecordWireCursor {
 //#endregion 🧵️Witness
 
 //#region 🪪️FrozenOwner
-/// 🪪️ Captures one fixed scalar projection from its exact retained root and transfers that root for domain retirement after close.
+/// 📹️ Captures one fixed scalar projection from its exact retained root and transfers that root for domain retirement after close.
 /// Private string borrows are valid while the frozen Arc remains retained, never escape, and are cleared before any root transfer.
 /// Scalars are copied once, so even a source with atomic metadata cannot change an admitted wire projection between steps.
 pub struct ScalarRecordWireWitness<R: Send + Sync> {

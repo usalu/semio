@@ -1,0 +1,6 @@
+m1|@semio-tech/course-react,@semio-tech/pets,@semio-tech/pets-react,@semio-tech/framework|typecheck,test
+m2|@semio-tech/ui-react|typecheck,lint,test
+m3|@semio-tech/ui-rs,@semio-tech/ui-contract-rs,@semio-tech/course-rs,@semio-tech/pets-rs|check,test
+m4|@semio-tech/framework-server,@semio-tech/course,@semio-tech/framework-rs,@semio-tech/framework-actor-rs,@semio-tech/ui-styling-tokens|test
+m5|@semio-tech/ui-styling-tokens,@semio-tech/assets|check-generated
+m6|@teaching/proctor|build,test

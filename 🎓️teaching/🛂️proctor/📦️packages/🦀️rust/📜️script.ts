@@ -26,7 +26,7 @@ import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/�
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🎟️admission/🟦️.ts";
 
 import { join } from "node:path";
 import { PROCTOR_LIBRARY_PACKAGES, PROCTOR_PACKAGE, TEACHING_WORKSPACE, proctorBackupTarget, proctorCourse, proctorDevelopmentEnvironment, proctorSelection } from "../../🏗️bootstrap/🟦️.ts";

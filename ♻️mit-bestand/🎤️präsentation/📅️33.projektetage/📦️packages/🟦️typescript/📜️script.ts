@@ -6,6 +6,7 @@ import {resolveTestLevel} from "../../../../../🧰️framework/🔨️modules/�
 
 /** 🧭️ `@semio-tech/mit-bestand-praesentation-projektetage` task router: `repo ./📜️script.ts <dev|build|test> [args…]`. */
 import {BundleScript, ScriptRouter} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runScriptMain} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { playgroundDevPortString, playgroundPortEnv, runViteBunxDev, runViteBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 
@@ -38,6 +39,6 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dirname).register("dev", DevScript).register("build", BuildScript).register("test", TestScript);
 
-await receiveScriptProcessInvocation(process.env, original => router.run(process.argv.slice(2), original));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

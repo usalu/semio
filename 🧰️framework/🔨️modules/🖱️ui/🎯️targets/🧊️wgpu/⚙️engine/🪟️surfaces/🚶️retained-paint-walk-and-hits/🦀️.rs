@@ -46,7 +46,7 @@ impl RetainedPaintWalk {
         Self { visits, len: 1 }
     }
 
-    /// 🪟️ An OPEN floating overlay's content root ignores its in-flow parent offset and takes
+    /// 🪜️ An OPEN floating overlay's content root ignores its in-flow parent offset and takes
     /// the placement `events::resolve_overlay_placement_side` settled on — the SAME override
     /// `events::hit_test`/`absolute_rect` apply, so what is painted is what is hit
     /// (`UiTree::overlay_origins`). Everything below it accumulates from there as usual.
@@ -136,7 +136,7 @@ fn retained_first_child(tree: &UiTree, id: NodeId) -> Option<NodeId> {
 #[derive(Clone, Copy)]
 pub enum RetainedPaintPhase {
     Synchronize,
-    /// 🪟️ One open overlay's own chrome per step — the modal backdrop a `Dialog`/`CommandPalette`
+    /// 🔓️ One open overlay's own chrome per step — the modal backdrop a `Dialog`/`CommandPalette`
     /// sits behind and the glass surface every floating overlay sits on. React portals these and the
     /// browser paints them for free; this target has to, and until ticket 26/09/17 packet W15a it
     /// never did on the per-frame path: `paint_overlay_backdrop`/`paint_overlay_surface` existed but
@@ -146,7 +146,7 @@ pub enum RetainedPaintPhase {
     Paint,
     Scenes,
     Tooltip,
-    /// 🎯️ Re-derives this window's pointer registry from the SAME walk, and therefore the same
+    /// 📚️ Re-derives this window's pointer registry from the SAME walk, and therefore the same
     /// accumulated origin, the paint phase just drew from — one geometry for what is painted and
     /// what is hit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     Hits,
@@ -234,7 +234,7 @@ pub struct UiSceneHit {
     pub rect: semio_framework_ui_theme::geometry::Rect,
 }
 
-/// 🖱️ `node`'s own absolute rect plus its scene identity, when it IS a `ComponentScene` leaf — the
+/// 🔑️ `node`'s own absolute rect plus its scene identity, when it IS a `ComponentScene` leaf — the
 /// ONE geometry answer `UiTree::absolute_rect` gives, so a scene inside an open floating overlay
 /// resolves at that overlay's placement exactly as the paint and hit walks put it there.
 pub fn scene_slot_for_node_absolute(tree: &UiTree, id: NodeId) -> Option<UiSceneHit> {
@@ -242,7 +242,7 @@ pub fn scene_slot_for_node_absolute(tree: &UiTree, id: NodeId) -> Option<UiScene
     Some(UiSceneHit { node: id, surface_id: scene.surface_id.clone(), controller_id: scene.controller_id.clone(), kind: scene.component_kind, rect: tree.absolute_rect(id)? })
 }
 
-/// 🎯️ Appends `node`'s registry entry, if it has one, at the ABSOLUTE rect the paint walk just
+/// 📋️ Appends `node`'s registry entry, if it has one, at the ABSOLUTE rect the paint walk just
 /// painted it at — `origin` is that walk's own accumulated offset, so the two can never diverge.
 fn push_retained_hit(out: &mut Vec<RetainedHitRegistration>, overlay_hits: &mut usize, overlay: bool, mut registration: RetainedHitRegistration) {
     registration.overlay = overlay;
@@ -323,7 +323,7 @@ pub fn register_retained_hit(
     }
 }
 
-/// 🪟️ How many open overlays one frame paints chrome for. A fixed array, not a `Vec`: the ladder
+/// 🎞️ How many open overlays one frame paints chrome for. A fixed array, not a `Vec`: the ladder
 /// must not grow a per-frame working set, and a surface with more than this many simultaneously open
 /// floating overlays is already outside anything React's own shell produces.
 pub const UI_FRAME_OVERLAY_CHROME: usize = 8;
@@ -335,13 +335,13 @@ pub struct RetainedPaintFrame {
     pub sync_node: Option<NodeId>,
     pub node_sync: RetainedInteractiveSyncCursor,
     pub paint_node: Option<(NodeId, f32, f32)>,
-    /// 🪟️ Whether the node `paint_node` names paints into the overlay bucket — true exactly when it
+    /// 🪣️ Whether the node `paint_node` names paints into the overlay bucket — true exactly when it
     /// sits under one of `overlay_chrome`'s roots.
     pub paint_overlay: bool,
-    /// 🪟️ The overlays this frame owes chrome for, captured once when the frame opened so every
+    /// 🔂️ The overlays this frame owes chrome for, captured once when the frame opened so every
     /// step of the `Overlays` phase paints against the same placements the layout published.
     pub overlay_chrome: [Option<UiOverlayPlacement>; UI_FRAME_OVERLAY_CHROME],
-    /// 🪟️ How far the `Overlays` phase has walked `overlay_chrome`.
+    /// 🔢️ How far the `Overlays` phase has walked `overlay_chrome`.
     pub overlay_index: usize,
     pub node_paint: RetainedNodePaintCursor,
     pub scene_node: Option<(NodeId, f32, f32)>,

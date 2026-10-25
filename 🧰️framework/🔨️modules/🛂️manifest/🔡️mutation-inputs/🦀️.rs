@@ -45,7 +45,7 @@ pub enum InputSchemaErrorCode {
     WordOnlyFloat,
 }
 
-/// 🚫️ Why a mutation payload schema yields no input descriptors: the `code`, the RFC 6901 `pointer` of the input
+/// 📥️ Why a mutation payload schema yields no input descriptors: the `code`, the RFC 6901 `pointer` of the input
 /// in the payload (`""` for the payload itself, `-` for "every array item") and a human `detail`.
 #[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
@@ -67,7 +67,7 @@ impl std::error::Error for InputSchemaError {}
 /// locale for the most frequent mutation input names, the fallback when an input carries no `x-semio-ui.label`.
 const INPUT_LABEL_GLOSSARY_JSON: &str = include_str!("../🔣️input-labels.json");
 
-/// 📚️ The parsed [`INPUT_LABEL_GLOSSARY_JSON`], field name → label.
+/// 🔖️ The parsed [`INPUT_LABEL_GLOSSARY_JSON`], field name → label.
 pub fn input_label_glossary() -> &'static BTreeMap<String, LocalizedLabel> {
     static GLOSSARY: std::sync::OnceLock<BTreeMap<String, LocalizedLabel>> = std::sync::OnceLock::new();
     GLOSSARY.get_or_init(|| {
@@ -101,7 +101,7 @@ pub struct InputSchemaAudit {
     pub findings: Vec<InputSchemaError>,
 }
 
-/// 🧺️ Reads `schema_json` in collecting mode — see [`InputSchemaAudit`].
+/// 📖️ Reads `schema_json` in collecting mode — see [`InputSchemaAudit`].
 pub fn mutation_input_audit(schema_json: &str, resolver: &dyn InputSchemaResolver) -> InputSchemaAudit {
     let reader = match InputSchemaReader::parse(schema_json, resolver, true) {
         Ok(reader) => reader,
@@ -125,7 +125,7 @@ pub fn mutation_input_audit(schema_json: &str, resolver: &dyn InputSchemaResolve
     InputSchemaAudit { inputs, findings: distinct }
 }
 
-/// 🧭️ The [`InputSchemaResolver`] over every JSON Schema document registered in the OS-wide `schema://` export registry
+/// 📄️ The [`InputSchemaResolver`] over every JSON Schema document registered in the OS-wide `schema://` export registry
 /// (artifact facets and named scope exports) and every document a published mutation leaf references
 /// (`semio_framework_schema_registry::registered_referenced_schema_documents`), and the framework's own shared documents
 /// ([`FRAMEWORK_INPUT_SCHEMA_DOCUMENTS`], held without any registration): the document whose `$id` is `id`, or `None`
@@ -187,7 +187,7 @@ pub const FRAMEWORK_INPUT_SCHEMA_DOCUMENTS: [&str; 1] = [INPUT_NUMERIC_TRANSPORT
 /// 🏷️ Schema keys that annotate without constraining; a shape comparison ignores them (and every `x-` key).
 const INPUT_SHAPE_ANNOTATIONS: [&str; 6] = ["title", "description", "$comment", "examples", "default", "format"];
 
-/// 🧬️ The constraint shape of a schema node: annotations dropped, object keys sorted, `required` sorted — equal shapes
+/// 📐️ The constraint shape of a schema node: annotations dropped, object keys sorted, `required` sorted — equal shapes
 /// validate the same instances.
 fn input_shape(node: &DslValue) -> DslValue {
     match node {
@@ -212,7 +212,7 @@ fn input_shape(node: &DslValue) -> DslValue {
     }
 }
 
-/// 🔢️ The shapes of the framework's numeric transport: the binary64 word and the plain-number branch of the transport.
+/// 📡️ The shapes of the framework's numeric transport: the binary64 word and the plain-number branch of the transport.
 fn input_numeric_transport() -> &'static (DslValue, DslValue) {
     static SHAPES: std::sync::OnceLock<(DslValue, DslValue)> = std::sync::OnceLock::new();
     SHAPES.get_or_init(|| {
@@ -223,7 +223,7 @@ fn input_numeric_transport() -> &'static (DslValue, DslValue) {
     })
 }
 
-/// 🔀️ One variant of a discriminated payload union: the `const` its discriminator pins, the resolved member, and that
+/// 🔱️ One variant of a discriminated payload union: the `const` its discriminator pins, the resolved member, and that
 /// member's resolved discriminator property.
 struct InputVariant {
     value: String,
@@ -235,7 +235,7 @@ const INPUT_UI_KEYS: [&str; 19] = ["widget", "role", "label", "description", "st
 
 const INPUT_UI_NUMBER_KEYS: [&str; 9] = ["step", "precision", "softMin", "softMax", "snaps", "snapSource", "displayUnit", "displayFactor", "scale"];
 
-/// 🧭️ The number facets a vector shares across its components (every [`INPUT_UI_NUMBER_KEYS`] but the slider travel keys).
+/// ⌨️ The number facets a vector shares across its components (every [`INPUT_UI_NUMBER_KEYS`] but the slider travel keys).
 const INPUT_UI_VECTOR_KEYS: [&str; 6] = ["step", "precision", "snaps", "snapSource", "displayUnit", "displayFactor"];
 
 const INPUT_REF_DEPTH: usize = 32;
@@ -303,7 +303,7 @@ fn input_inferred_reference_kind(key: &str, many: bool) -> Option<String> {
     Some(first.to_ascii_lowercase().to_string() + characters.as_str())
 }
 
-/// 🧬️ A schema node with every `$ref` hop and nullable union resolved, the document it lives in (`None` = the leaf
+/// 🔎️ A schema node with every `$ref` hop and nullable union resolved, the document it lives in (`None` = the leaf
 /// itself), and the merged `x-semio-ui` annotation (outer keys win).
 struct ResolvedInput {
     document: Option<String>,
@@ -343,7 +343,7 @@ impl<'r> InputSchemaReader<'r> {
         })
     }
 
-    /// 🧺️ In collecting mode records `result`'s error and goes on with `fallback`; the fail-fast mode passes it through.
+    /// 📹️ In collecting mode records `result`'s error and goes on with `fallback`; the fail-fast mode passes it through.
     fn recover<T>(&self, result: Result<T, InputSchemaError>, fallback: impl FnOnce() -> T) -> Result<T, InputSchemaError> {
         match (result, &self.findings) {
             (Err(error), Some(findings)) => {
@@ -354,7 +354,7 @@ impl<'r> InputSchemaReader<'r> {
         }
     }
 
-    /// 🧬️ Every input of the payload: a discriminated union's selector and variant fields, else the object's fields.
+    /// 🎒️ Every input of the payload: a discriminated union's selector and variant fields, else the object's fields.
     fn inputs(&self) -> Result<Vec<ActionArgDef>, InputSchemaError> {
         let payload = self.resolve(None, self.root.clone(), "")?;
         if payload.node.get("properties").is_none() && payload.node.get("allOf").is_none() {
@@ -455,7 +455,7 @@ impl<'r> InputSchemaReader<'r> {
         Err(input_error(InputSchemaErrorCode::Malformed, pointer, "a $ref chain exceeds 32 hops"))
     }
 
-    /// 🔢️ Whether `node` (in `document`) is the framework's numeric transport ([`input_numeric_transport`]): the binary64 word
+    /// 🚚️ Whether `node` (in `document`) is the framework's numeric transport ([`input_numeric_transport`]): the binary64 word
     /// itself (read as a number but refused as `WordOnlyFloat`: the payload and every draft carry the plain number), or a
     /// two-branch union of that word and a plain number (each branch restated or referenced) with nothing but annotations
     /// beside it — an input edited as a number, its facets from the property's `x-semio-ui`.
@@ -496,7 +496,7 @@ impl<'r> InputSchemaReader<'r> {
         Ok(())
     }
 
-    /// 🔀️ A discriminated union's variants: the first property of the first member that every member pins to a
+    /// 🎛️ A discriminated union's variants: the first property of the first member that every member pins to a
     /// distinct string `const`, and per member that value, the member and its discriminator property.
     fn variants(&self, union: &ResolvedInput, pointer: &str) -> Result<(String, Vec<InputVariant>), InputSchemaError> {
         let mut members = Vec::new();
@@ -529,7 +529,7 @@ impl<'r> InputSchemaReader<'r> {
         Ok((key, variants))
     }
 
-    /// 🔀️ A discriminated union's inputs: one required variant selector (segmented up to four variants, else a select;
+    /// 🎚️ A discriminated union's inputs: one required variant selector (segmented up to four variants, else a select;
     /// each option labelled by its member's `x-semio-ui.label` or the glossary) followed by every member's fields, each
     /// grouped under its variant's value so an editor shows only the active variant's fields.
     fn variant_inputs(&self, union: &ResolvedInput, pointer: &str) -> Result<Vec<ActionArgDef>, InputSchemaError> {

@@ -26,7 +26,7 @@ pub struct GesturePointer {
     pub y: f64,
 }
 
-/// 🤏️ One two-contact frame.
+/// 🎞️ One two-contact frame.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PinchFrame {
     pub centroid_x: f64,
@@ -65,7 +65,7 @@ pub struct GestureRecognizer {
 }
 
 impl GestureRecognizer {
-    /// 👆️ Feeds one contact press.
+    /// 🔽️ Feeds one contact press.
     pub fn down(&mut self, pointer: GesturePointer) -> GestureVerdict {
         match self.pointers.iter().position(|candidate| candidate.id == pointer.id) {
             Some(index) => self.pointers[index] = pointer,

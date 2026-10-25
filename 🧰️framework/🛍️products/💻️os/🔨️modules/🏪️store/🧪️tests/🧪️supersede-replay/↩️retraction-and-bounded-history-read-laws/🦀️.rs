@@ -83,7 +83,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     loop {
         let mut work = 0;
         let grant=fixture_planning_policy();
-        let step = store.step_derived_history_preview(preview.as_mut().unwrap(), grant, &mut || { work += 1; true }).unwrap();
+        let step = semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_history_preview(preview.as_mut().unwrap(), grant, control, &mut || { work += 1; true })).unwrap();
         assert!(work <= law["maximumWorkPerStep"].as_u64().unwrap() as usize);
         assert_eq!(hot_path_census::take().digested, 0, "trusted prefixes need no history digest scan");
         assert_eq!(store.snapshot_ref().n, head);
@@ -106,7 +106,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     loop {
         let mut work = 0;
         let grant=fixture_planning_policy();
-        let step = store.step_derived_report_replay(replay.as_mut().unwrap(), grant, &mut || { work += 1; true }).unwrap();
+        let step = semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_report_replay(replay.as_mut().unwrap(), grant, control, &mut || { work += 1; true })).unwrap();
         assert!(work <= 1);
         assert_eq!(store.snapshot_ref().n, head);
         slices += 1;
@@ -153,7 +153,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
         let mut cancelled = Some(store.begin_derived_history_preview(target.clone(), accepted.clone()).unwrap());
         for _ in 0..stop.as_u64().unwrap() {
             let grant=fixture_planning_policy();
-            if matches!(store.step_derived_history_preview(cancelled.as_mut().unwrap(), grant, &mut || true).unwrap(), ReplayStep::Finished(_)) { break; }
+            if matches!(semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_history_preview(cancelled.as_mut().unwrap(), grant, control, &mut || true)).unwrap(), ReplayStep::Finished(_)) { break; }
         }
         let grant=physical_test_close_grant();
         let(mut retirement,birth)=store.retire_derived_history_preview(&mut cancelled,grant).unwrap().unwrap();assert!(birth.fits(grant));
@@ -174,7 +174,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
         let mut cancelled = Some(store.begin_derived_report_replay(accepted.clone(), Some(target.clone())).unwrap());
         for _ in 0..stop.as_u64().unwrap() {
             let grant=fixture_planning_policy();
-            if matches!(store.step_derived_report_replay(cancelled.as_mut().unwrap(), grant, &mut || true).unwrap(), ReplayStep::Finished(_)) { break; }
+            if matches!(semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_report_replay(cancelled.as_mut().unwrap(), grant, control, &mut || true)).unwrap(), ReplayStep::Finished(_)) { break; }
         }
         let grant=physical_test_close_grant();
         let(mut retirement,birth)=store.retire_derived_report_replay(&mut cancelled,grant).unwrap().unwrap();assert!(birth.fits(grant));
@@ -197,7 +197,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     let mut stale = store.begin_derived_history_preview(target, accepted).unwrap();
     apply(&mut store, vec![add(1)]).await;
     let grant=fixture_planning_policy();
-    assert!(store.step_derived_history_preview(&mut stale, grant, &mut || true).is_err());
+    assert!(semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(|control| store.step_derived_history_preview(&mut stale, grant, control, &mut || true)).is_err());
     let tail = operation_ids(&store).last().unwrap().clone();
     assert_eq!(store.mutation_position(&tail).unwrap(), (2, 0));
     fixture_author(&mut store, ArtifactCommand::Undo).await.unwrap();

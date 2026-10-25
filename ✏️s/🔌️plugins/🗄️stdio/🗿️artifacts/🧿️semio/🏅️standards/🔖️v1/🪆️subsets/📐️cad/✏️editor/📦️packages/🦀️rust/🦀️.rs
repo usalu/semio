@@ -85,3 +85,4 @@ pub mod viewer {
         }
     }
 }
+semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioCadSnapshot, schema::mutations::SemioCadMutation);

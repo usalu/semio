@@ -1,5 +1,5 @@
 import{withRequestedIssuedResourceControlV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../../../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../../../../../📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
 import{requireNxSdkSourceControlV1}from"../🔏️index/📂️tree/🟦️.ts";
 import{withNxSdkSourceTreeV1,withNxSdkSourceReadTreeV1}from"../🔏️index/📂️tree/🟦️.ts";
@@ -9,7 +9,7 @@ import{basename,dirname,join}from"node:path";
 import{validateJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireNativeStoragePathV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import type{RepositoryToolingStoreV1}from"../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import type{RepositoryToolingStoreV1}from"../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{nxToolingInstallIdentityV1}from"../../../🪪️identity/🟦️.ts";
 import{nxSdkSnapshotIdentityV1,nxSdkSnapshotReceiptHoldsV1}from"../../../📥️snapshot/🟦️.ts";
 import{nxAuthorizerReceiptHoldsV1}from"../../../../🔏️authorizers/📤️receipt/🟦️.ts";

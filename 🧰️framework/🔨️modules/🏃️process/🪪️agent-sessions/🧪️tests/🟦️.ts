@@ -12,7 +12,7 @@ import {
  renderAgentSessionListV1,renderAgentSessionStatusV1,resetAgentSessionsV1,systemAncestryV1,touchAgentSessionV1,windowsAncestryV1,writeAgentSessionTokenV1,WINDOWS_PROCESS_LISTING_V1,agentSessionRegistryRootV1,type AgentSeedV1,
 } from "../🟦️.ts";
 
-const scratch=mkdtempSync(join(tmpdir(),"as-core-")),python=testPythonV1(),oracle=python===null?undefined:JSON.parse(Bun.spawnSync([python,join(import.meta.dir,"🐍️oracle.py"),join(import.meta.dir,"🧫️fixtures","🔣️.json")],{stdout:"pipe",stderr:"pipe"}).stdout.toString());
+const scratch=mkdtempSync(join(tmpdir(),"as-core-")),python=testPythonV1(),oracle=python===null?undefined:JSON.parse(Bun.spawnSync([python,join(import.meta.dir,"🐍️.py"),join(import.meta.dir,"🧫️fixtures","🔣️.json")],{stdout:"pipe",stderr:"pipe"}).stdout.toString());
 afterAll(()=>rmSync(scratch,{recursive:true,force:true}));
 let counter=0;const registry=()=>join(scratch,"r"+counter++),store=(root=registry(),worktree="3c20d9163894")=>agentSessionStoreV1(root,worktree);
 const derive=(row:{seed:unknown})=>deriveAgentSessionV1(row.seed as AgentSeedV1);
@@ -87,6 +87,7 @@ test("the ancestry readers keep the vectors they moved with: /proc stat, the Lin
  expect(windowsAncestryV1(JSON.stringify(fixture.windows.single),77).map(row=>row.pid)).toEqual([77]);expect(windowsAncestryV1("not json",77)).toEqual([]);expect(windowsAncestryV1("[{\"pid\":\"x\"}]",77)).toEqual([]);
  for(const word of["Win32_Process","ConvertTo-Json -Compress","ToUniversalTime","CommandLine"])expect(WINDOWS_PROCESS_LISTING_V1).toContain(word);
  const ps=psAncestryV1(fixture.psListing.text,fixture.psListing.first);expect(ps.map(row=>row.pid)).toEqual(fixture.psListing.pids);expect(ps[0]!.started).toBe("Wed Oct  7 10:06:00 2026");expect(ps[1]!.command).toBe("/bin/zsh -l");
+ for(const limit of[1,2]){expect(linuxAncestryV1(path=>files[path]??null,fixture.linuxChain.first,limit)).toEqual(fixture.linuxChain.rows.slice(0,limit));expect(windowsAncestryV1(text,fixture.windows.first,limit).map(row=>row.pid)).toEqual(fixture.windows.pids.slice(0,limit));expect(psAncestryV1(fixture.psListing.text,fixture.psListing.first,limit).map(row=>row.pid)).toEqual(fixture.psListing.pids.slice(0,limit));}
  expect(psAncestryV1(fixture.psListing.text,fixture.psListing.orphanFirst).map(row=>row.pid)).toEqual([777]);expect(psAncestryV1("",5)).toEqual([]);expect(psAncestryV1("1 1 Mon Oct 20 08:00:00 2026 loop\n 2 3 Mon Oct 20 08:00:00 2026 a\n 3 2 Mon Oct 20 08:00:00 2026 b\n",2).length).toBe(2);
 });
 test.skipIf(process.platform==="win32")("on a real POSIX host the single ps listing starts at the parent process",()=>{

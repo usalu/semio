@@ -10,13 +10,13 @@ use super::*;
 /// encode/decode. Same shape `stdio.json`'s own upgrade introduced
 /// (`🔣️json/…/🔺️diff/🦀️.rs`'s `#region 🔖️BinaryPrimitives`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
@@ -32,7 +32,7 @@ pub fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String>
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl Fn(&T, &mut Vec<u8>)) {
+pub fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl Fn(&T, &mut Vec<u8>)) {
     match opt {
         None => out.push(0),
         Some(v) => {
@@ -43,7 +43,7 @@ pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
+pub fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(None),
@@ -59,41 +59,41 @@ pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl F
 /// `Replace`-arm payload below. Tag numbering mirrors each text codec's own letter-tag order
 /// (`0`=first letter, `1`=second, …), independent per type (not reused across unrelated shapes).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
+pub fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
     out.extend_from_slice(&v.to_le_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
+pub fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
     reader.read_f64_le().map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_point3_bin(out: &mut Vec<u8>, p: &[f64; 3]) {
+pub fn write_point3_bin(out: &mut Vec<u8>, p: &[f64; 3]) {
     write_f64_bin(out, p[0]);
     write_f64_bin(out, p[1]);
     write_f64_bin(out, p[2]);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_point3_bin(reader: &mut store::ByteReader<'_>) -> Result<[f64; 3], String> {
+pub fn read_point3_bin(reader: &mut store::ByteReader<'_>) -> Result<[f64; 3], String> {
     Ok([read_f64_bin(reader)?, read_f64_bin(reader)?, read_f64_bin(reader)?])
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_points4_bin(out: &mut Vec<u8>, p: &[[f64; 3]; 4]) {
+pub fn write_points4_bin(out: &mut Vec<u8>, p: &[[f64; 3]; 4]) {
     for pt in p {
         write_point3_bin(out, pt);
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_points4_bin(reader: &mut store::ByteReader<'_>) -> Result<[[f64; 3]; 4], String> {
+pub fn read_points4_bin(reader: &mut store::ByteReader<'_>) -> Result<[[f64; 3]; 4], String> {
     Ok([read_point3_bin(reader)?, read_point3_bin(reader)?, read_point3_bin(reader)?, read_point3_bin(reader)?])
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_dxf_value_bin(v: &DxfValue, out: &mut Vec<u8>) {
+pub fn enc_dxf_value_bin(v: &DxfValue, out: &mut Vec<u8>) {
     match v {
         DxfValue::Str { value } => {
             out.push(0);
@@ -115,7 +115,7 @@ pub(crate) fn enc_dxf_value_bin(v: &DxfValue, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_dxf_value_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfValue, String> {
+pub fn dec_dxf_value_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfValue, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(DxfValue::Str { value: read_str_lp(reader)? }),

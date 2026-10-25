@@ -30,7 +30,6 @@ export function verifyRetainedDenseOracle(): void {
  for(const bad of [NaN,Infinity,-Infinity]){const a=[bad],b=[2],cursor=new DenseSolveCursor(1,1,1);assert.equal(cursor.step(a,b,generous).status.kind,"fault");assert(Object.is(a[0],bad));assert.deepEqual(b,[2]);}
  const overflow=new DenseSolveCursor(1,1,1),a=[1e-308],b=[1e308];let final;do{final=overflow.step(a,b,generous);}while(final.status.kind==="pending");assert.deepEqual(final.status,{kind:"fault",fault:"non-finite-arithmetic"});assert.deepEqual(b,[1e308]);
  assert.throws(()=>DenseSolveCursor.fromSnapshot(Array(12).fill(0)));
- console.log("[DEBUG] shared dense solver "+fixture.cases.length+" portable cases, "+total+" bounded turns, all refusal axes, exact snapshots and original nonfinite sources verified against Mathjs");
 }
 
 test("verifyRetainedDenseOracle",()=>verifyRetainedDenseOracle(),30000);

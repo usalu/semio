@@ -7,15 +7,15 @@ pub struct DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, D
     pub parent: DurableStorePreparedOwnerV1<ParentP, ParentMutation>,
     pub drawing: DurableStorePreparedOwnerV1<DrawingP, DrawingMutation>,
     pub value: DurableStorePreparedOwnerV1<ValueP, ValueMutation>,
-    pub(super) decision: Option<Box<DurableOwnedThreeMemberDecisionV1>>,
-    pub(super) decision_pack: Option<Vec<u8>>,
-    pub(super) binding_step: u8,
+    pub decision: Option<Box<DurableOwnedThreeMemberDecisionV1>>,
+    pub decision_pack: Option<Vec<u8>>,
+    pub binding_step: u8,
     pub(super) decision_plan_phase: u8,
     pub(super) decision_identity:planning::DurableDecisionIdentityV1,
     pub(super) issuers_captured:bool,
     pub(super) decision_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Box<DurableOwnedThreeMemberDecisionV1>>>,
     pub(super) decision_pack_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>,
-    pub(super) retirement_progress:semio_framework_value::RetainedCloneProgress,
+    pub retirement_progress:semio_framework_value::RetainedCloneProgress,
     pub(super) decision_encoding: planning::DurablePackOutputV1,
 }
 
@@ -24,7 +24,7 @@ pub struct DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, Draw
     pub parent: DurableStoreBoundOutcomeV1<ParentP, ParentMutation>,
     pub drawing: DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>,
     pub value: DurableStoreBoundOutcomeV1<ValueP, ValueMutation>,
-    pub(super) decision_pack: Option<Vec<u8>>,
+    pub decision_pack: Option<Vec<u8>>,
 }
 
 #[expect(clippy::large_enum_variant, reason = "Recovery hands back all three exact preadmitted store outcomes without allocating at the ownership transition.")]
@@ -494,7 +494,7 @@ where
     }
 
     /// 🧪️ Drives the whole ladder under an unbounded grant for fixtures that bind without caring about turn boundaries.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "durable-group-testing"))]
     pub fn bind_store_owned(mut self, parent: &ArtifactStore<ParentP, ParentMutation>, drawing: &ArtifactStore<DrawingP, DrawingMutation>, value: &ArtifactStore<ValueP, ValueMutation>) -> Result<DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedGroupDecisionError> {
         let grant = semio_framework_os_store_one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: usize::MAX / 2, maximum_capacity_bytes: usize::MAX / 2, maximum_release_bytes: usize::MAX / 2, maximum_depth: 64 };
         while self.binding_step < 14 {

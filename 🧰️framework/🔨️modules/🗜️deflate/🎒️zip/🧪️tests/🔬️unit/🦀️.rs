@@ -84,7 +84,7 @@ fn the_zip_crate_reads_our_archives() {
     }
 }
 
-/// 🔮️ Oracle, other direction: this module reads what the `zip` crate writes (deflated and stored), so packages
+/// 📖️ Oracle, other direction: this module reads what the `zip` crate writes (deflated and stored), so packages
 /// published before this module existed keep opening.
 #[test]
 fn we_read_the_zip_crate_archives() {

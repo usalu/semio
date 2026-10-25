@@ -9,7 +9,6 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/*/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧬️typegen/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/🏃️execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📋️plan/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📤️publication/🟦️.ts",
@@ -102,6 +101,10 @@
       "executor": "repo:script",
       "metadata": {
         "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
           "sourceInputObservation": "freshness"
         }
       },
@@ -163,10 +166,7 @@
       },
       "metadata": {
         "semio": {
-          "workspaceCommand": [
-            "test-operation-diagnostics",
-            "source"
-          ]
+          "workspaceCommand":["verify","operation-diagnostics","source"]
         }
       },
       "dependsOn": []
@@ -188,10 +188,7 @@
       },
       "metadata": {
         "semio": {
-          "workspaceCommand": [
-            "test-operation-diagnostics",
-            "native"
-          ]
+          "workspaceCommand":["verify","operation-diagnostics","native"]
         }
       }
     },

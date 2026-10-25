@@ -60,6 +60,7 @@ mod map_assembly_commit_and_publication_steps;
 
 #[path = "🛠️map-assembly-recovery-completion/🦀️.rs"]
 mod map_assembly_recovery_completion;
+pub use map_assembly_recovery_completion::recover_decision_store_owned;
 
 #[path = "🪪️three-member-decision-operations-codecs-and-testing/🦀️.rs"]
 mod three_member_decision_operations_codecs_and_testing;

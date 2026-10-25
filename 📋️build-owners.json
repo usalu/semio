@@ -6073,8 +6073,8 @@
     },
     {
       "name": "@semio-tech/presentation-react",
-      "root": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react",
-      "manifest": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/📋️project.json",
+      "root": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "manifest": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
       "packages": [
         "@semio-tech/presentation-react"
       ]
@@ -6222,9 +6222,45 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/repo-dashboard-feedback-rs",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📣️feedback/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📣️feedback/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/repo-dashboard-keymap-editor-rs",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/⚙️settings/⌨️keymap/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/⚙️settings/⌨️keymap/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/repo-dashboard-language-choice-rs",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️language-choice/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️language-choice/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/repo-dashboard-source-view-rs",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📂️workspace/🖥️view/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📂️workspace/🖥️view/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/repo-dashboard-terminal-laws-rs",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🏛️laws/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🏛️laws/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/repo-developer-tools",
       "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/repo-launcher-go",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📋️project.json",
       "packages": []
     },
     {
@@ -10052,6 +10088,22 @@
       ]
     },
     {
+      "name": "@semio-tech/trinity-jack-lsp",
+      "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust/📋️project.json",
+      "packages": [
+        "@semio-tech/trinity-jack-lsp"
+      ]
+    },
+    {
+      "name": "@semio-tech/trinity-jack-lsp-worker",
+      "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🟦️typescript",
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🟦️typescript/📋️project.json",
+      "packages": [
+        "@semio-tech/trinity-jack-lsp-worker"
+      ]
+    },
+    {
       "name": "@semio-tech/trinity-jack-rs",
       "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/📋️project.json",
@@ -11637,12 +11689,6 @@
       "name": "semio-framework-3d-mesh-reconstruction",
       "root": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/🔁️reconstruction/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/🔁️reconstruction/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-framework-3d-mesh-surface",
-      "root": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🎨️surface/📦️packages/🦀️rust",
-      "manifest": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🎨️surface/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -21609,6 +21655,12 @@
       "name": "semio-s-artifact-trinity-jack-language-service",
       "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗣️language-service/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗣️language-service/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-trinity-jack-lsp-component",
+      "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/🧩️component/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {

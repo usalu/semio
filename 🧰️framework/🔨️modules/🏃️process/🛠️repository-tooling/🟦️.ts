@@ -2,7 +2,7 @@ import { defineScriptProviderV1, loadScriptProviderSyncV1, loadScriptProviderV1 
 import type { OwnedCommandOptions } from "../🎛️owned-execution/🟦️.ts";
 import type { CompilerAdmissionControl } from "../🏗️build/🎟️capacity/🟦️.ts";
 import type { ScriptInvocation } from "../🧭️routing/📥️invocation/🟦️.ts";
-import { runtimeResolveV1 } from "../../⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeResolveV1 } from "../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🏃️ Declares one subprocess run: working directory, environment, wall-clock budget and shell resolution. */
 export interface RunCmdOpts {
@@ -15,14 +15,14 @@ export interface RunCmdOpts {
 /** 🔍️ Carries the captured outcome of one probe subprocess. */
 export interface RunProbeResult { status: number | null; stdout: string; stderr: string; signal: NodeJS.Signals | null }
 /** 📋️ Declares original child time and independent bounded or explicitly ordinary output authority. */
-export type RepositoryCommandPolicyV1 = Readonly<{ version: 1; maximumElapsedMilliseconds: number; output: Readonly<{ maximumBytes: number; maximumLines: number }> | null }>;
+export type RepositoryCommandPolicyV1 = Readonly<{ version: 1; maximumElapsedMilliseconds: number; idleMilliseconds?: number; output: Readonly<{ maximumBytes: number; maximumLines: number }> | null }>;
 /** 📤️ Supplies passive transport choices without overriding original cancellation or publication. */
 export type RepositoryCommandOptionsV1 = Pick<OwnedCommandOptions, "stdout" | "env" | "onLine">;
 /** 🧪️ Supplies generic test command options without creating compiler authority. */
 export type RepositoryTestCommandOptionsV1 = Readonly<{ cwd?: string; env?: Readonly<Record<string, string | undefined>>; budgetMs?: number; signal?: AbortSignal; onTimeoutHint?: string; throwOnFailure?: boolean }>;
 /** 🎛️ Bounds runtime inventory work inside the same Original compiler operation. */
 export type RepositoryMutationCollectorV1 = Readonly<{ version: 1; maximumUnits: number; maximumOwnedBytes: number; maximumMilliseconds: number }>;
-/** 🧪️ Carries the options of a test command; a Cargo command also carries the actual owner invocation and phase control. */
+/** 🎒️ Carries the options of a test command; a Cargo command also carries the actual owner invocation and phase control. */
 export type RepositoryTestCommandArgumentsV1<Command extends string> = Command extends "cargo" ? [options: RepositoryTestCommandOptionsV1 & Readonly<{ invocation: ScriptInvocation; control: CompilerAdmissionControl }>] : [options?: RepositoryTestCommandOptionsV1];
 
 /** 🔌️ Runs the repository's budgeted commands and resolves its cache, metadata and Cargo locations for scripts that must stay independent of the repository product. */
@@ -61,9 +61,9 @@ const provider = (): Promise<RepositoryToolingProviderV1> => loadScriptProviderV
 
 /** 🧮️ Resolves the TypeScript compiler entry installed for the given directory. */
 export function resolveTypescriptCompilerV1(from: string): string { return runtimeResolveV1("typescript/bin/tsc", from); }
-/** 🏃️ Runs a subprocess with inherited stdio and a wall-clock budget; throws on a nonzero exit, a signal or an exceeded budget. */
+/** ⏰️ Runs a subprocess with inherited stdio and a wall-clock budget; throws on a nonzero exit, a signal or an exceeded budget. */
 export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void { sync().runCmd(cmd, args, opts); }
-/** 🔍️ Runs a subprocess and captures its outcome without throwing on a nonzero exit. */
+/** 📡️ Runs a subprocess and captures its outcome without throwing on a nonzero exit. */
 export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): RunProbeResult { return sync().runProbe(cmd, args, opts); }
 /** 🍞️ Runs Bun with inherited stdio in a working directory. */
 export function runBun(args: string[], cwd: string, env?: NodeJS.ProcessEnv): void { sync().runBun(args, cwd, env); }
@@ -81,11 +81,11 @@ export function cargoTargetDirectory(repoRoot: string, env?: NodeJS.ProcessEnv):
 export function getRepoMetaDir(repoRoot: string): string { return sync().repoMetaDirectory(repoRoot); }
 /** 🧾️ Resolves caller-owned test output or a neutral cache route. */
 export function repoTestArtifactEnvironment(repoRoot: string, route: string, env?: NodeJS.ProcessEnv): NodeJS.ProcessEnv { return sync().testArtifactEnvironment(repoRoot, route, env); }
-/** 🧪️ Runs the declared Vitest policy of a bundle through its owned process. */
+/** 📦️ Runs the declared Vitest policy of a bundle through its owned process. */
 export async function runVitest(bundleRoot: string, segments: string[], config: string): Promise<void> { return (await provider()).runVitest(bundleRoot, segments, config); }
-/** 🦀️ Executes preparation and command under the inherited signal, phase and awaited publication. */
+/** 📶️ Executes preparation and command under the inherited signal, phase and awaited publication. */
 export async function runRepositoryCommand(invocation: ScriptInvocation, command: string, args: string[], cwd: string, label: string, policy: RepositoryCommandPolicyV1, options: RepositoryCommandOptionsV1 = {}): Promise<void> { return (await provider()).runCommand(invocation, command, args, cwd, label, policy, options); }
-/** 🧪️ Runs a budgeted test command; a Cargo command carries its actual owner custody. */
+/** 💰️ Runs a budgeted test command; a Cargo command carries its actual owner custody. */
 export async function runRepositoryTestCommand<Command extends string>(command: Command, args: string[], ...provided: RepositoryTestCommandArgumentsV1<Command>): Promise<void> { return (await provider()).runTestCommand(command, args, provided[0]); }
 /** 🚪️ Receives the real parent invocation and delivers the production mutation inventory of a package. */
 export async function runRepositoryMutationBridgeScriptV1(packageRoot: string, binary: string, collector?: RepositoryMutationCollectorV1): Promise<void> { return (await provider()).runMutationBridgeScript(packageRoot, binary, collector); }

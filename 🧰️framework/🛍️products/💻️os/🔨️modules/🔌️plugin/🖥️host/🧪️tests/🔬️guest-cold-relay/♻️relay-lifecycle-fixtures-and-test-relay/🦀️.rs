@@ -123,7 +123,7 @@ fn admit_test_relay(relay: GuestColdRelayJob, params: semio_framework_job_worker
         Err(mut rejected) => {
             rejected.begin_close();
             while !rejected.terminal_is_empty() {
-                let _ = rejected.close_step(test_relay_drive_policy());
+                let _ = semio_framework_job::close_with_self_funded_context(test_relay_drive_policy(), |cx| rejected.close_step(cx));
             }
             panic!("relay test session admission");
         }

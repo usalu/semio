@@ -22,7 +22,7 @@ function grid(values: readonly number[]): number[] {
   return values.map((value) => Math.round(value * factor) / factor + 0);
 }
 
-/** 🔮️ The oracle's evaluator: `mathjs` parses and compiles the very expression string the fixture carries. */
+/** 🧮️ The oracle's evaluator: `mathjs` parses and compiles the very expression string the fixture carries. */
 function fn(expression: string): (x: number) => number {
   const code = compile(expression);
   return (x: number) => Number(code.evaluate({ x }));
@@ -52,7 +52,7 @@ function riemann(f: (x: number) => number, from: number, to: number, bins: numbe
   return total;
 }
 
-/** 📈️ One refinement pass: a midpoint wherever the chord sagitta exceeds `tolerance` of the y extent. */
+/** 🪜️ One refinement pass: a midpoint wherever the chord sagitta exceeds `tolerance` of the y extent. */
 function refine(points: readonly number[], f: (x: number) => number, tolerance: number): number[] {
   const pairs: Array<[number, number]> = [];
   for (let index = 0; index < points.length; index += 2) pairs.push([points[index]!, points[index + 1]!]);
@@ -95,7 +95,7 @@ export default defineTestAdapter({
       subject,
     },
     "riemann-rules": {
-      /** 🔮️ The four rules over integrand values `mathjs` supplies; the exact integrals are in the feature text. */
+      /** ⚖️ The four rules over integrand values `mathjs` supplies; the exact integrals are in the feature text. */
       oracle: () => ({
         projection: {
           "riemann/square": grid(["left", "right", "mid", "trapezoid"].map((rule) => riemann(fn("x^2"), 0, 1, 8, rule))),
@@ -106,7 +106,7 @@ export default defineTestAdapter({
       subject,
     },
     "adaptive-refinement": {
-      /** 🔮️ The documented refinement rule, over the same starting sample `mathjs` evaluates. */
+      /** 🔰️ The documented refinement rule, over the same starting sample `mathjs` evaluates. */
       oracle: () => {
         const f = fn("sin(4x)");
         const start = sample(f, 0, PI, 4);

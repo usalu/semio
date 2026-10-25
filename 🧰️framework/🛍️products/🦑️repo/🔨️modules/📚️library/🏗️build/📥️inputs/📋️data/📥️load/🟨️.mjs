@@ -1,4 +1,5 @@
-import { runtimeSourceUrlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import{staleImplementationV1}from"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import { runtimeSourceUrlV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
 import{captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1}from"../../🔏️revision/🟨️.mjs";
 import{createHash}from"node:crypto";
 import{fileURLToPath}from"node:url";
@@ -10,7 +11,7 @@ const sourceModule=runtimeSourceUrlV1(sourceBytes),target=sourceModule.url;
 let module;try{module=await import(target);}catch{throw Error("Captured inventory Source module load failed");}finally{sourceModule.release();}
 const loadedURL=module.loadedSourceInventoryURLV1,loaded=module.createSourceInventoryDataV1(JSON.parse(policyBytes.toString("utf8")).definitions.Policy.const);
 const loadedExact=loadedURL===target||loadedURL==="file:///"+target;
-function requireCurrentSourceInventoryV1(){if(implementationPinnedV1())return;if(!loadedExact||createHash("sha256").update(sourceBytes).digest("hex")!==sourceRevision||createHash("sha256").update(policyBytes).digest("hex")!==policyRevision||revision(sourceURL,65536)!==sourceRevision||revision(policyURL,65536)!==policyRevision||revision(ownerURL)!==ownerRevision)throw Error("Stale loaded inventory implementation; restart required");}
+function requireCurrentSourceInventoryV1(){if(implementationPinnedV1())return;if(!loadedExact||createHash("sha256").update(sourceBytes).digest("hex")!==sourceRevision||createHash("sha256").update(policyBytes).digest("hex")!==policyRevision||revision(sourceURL,65536)!==sourceRevision||revision(policyURL,65536)!==policyRevision||revision(ownerURL)!==ownerRevision)throw staleImplementationV1("Stale loaded inventory implementation; restart required");}
 requireCurrentSourceInventoryV1();
 return Object.freeze({data:loaded,requireCurrentSourceInventoryV1});
 }

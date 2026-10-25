@@ -1,4 +1,4 @@
-/** 📡️ The multicast queue of one instance's turn replies: the outcome type and `createTurnOutcomeBroadcast` with its own and force-close contract.
+/** ↩️ The multicast queue of one instance's turn replies: the outcome type and `createTurnOutcomeBroadcast` with its own and force-close contract.
  *
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */

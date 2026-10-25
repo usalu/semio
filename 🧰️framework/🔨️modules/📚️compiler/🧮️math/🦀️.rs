@@ -98,7 +98,7 @@ fn scale_down(percent: i16) -> f32 {
 //#endregion 🔖️Units
 
 //#region 🔖️Symbols
-/// 🔤️ Multi-letter identifiers that resolve to a single symbol glyph, shaped via the Math
+/// 🔣️ Multi-letter identifiers that resolve to a single symbol glyph, shaped via the Math
 /// font (so they render in the font's own italic/symbol design, matching `sin`-style upright names'
 /// *opposite* treatment below). Not exhaustive — grows as real usage needs more.
 fn named_symbol(name: &str) -> Option<char> {
@@ -229,7 +229,7 @@ fn quoted_text_box(fonts: &FontContext<'_>, text: &str) -> MathBox {
     text_box(fonts.serif, FontKind::Serif, text)
 }
 
-/// 🔤️ A `Symbol` atom: a single character always goes through the Math font (whose default
+/// 🔡️ A `Symbol` atom: a single character always goes through the Math font (whose default
 /// glyph shapes for Latin/Greek letters ARE italic — the standard OpenType MATH convention, not a
 /// synthetic slant); a known multi-letter name resolves via [`named_symbol`] (also Math font); a
 /// known function name renders upright via the Serif font; anything else falls back to the Math
@@ -270,7 +270,7 @@ fn emoji_box(fonts: &FontContext<'_>, name: &str) -> MathBox {
 //#endregion 🔖️Atoms
 
 //#region 🔖️Raw
-/// 🔤️ Shapes arbitrary `text` via the Serif font and lays it out left to right — for callers
+/// 📖️ Shapes arbitrary `text` via the Serif font and lays it out left to right — for callers
 /// rendering a plain caller-supplied string (e.g. an icon label), not parsed math notation. Unlike
 /// [`crate::syntax::parse_formula`]-driven layout, this never fails and never interprets `text`'s
 /// characters as notation syntax (`_ ; < > !` included) — appropriate since arbitrary text is not
@@ -285,7 +285,7 @@ pub fn layout_raw_code(fonts: &FontContext<'_>, text: &str) -> MathBox {
     text_box(fonts.mono, FontKind::Mono, text)
 }
 
-/// 😀️ Shapes arbitrary `text` (typically one emoji, possibly a multi-codepoint ZWJ/skin-tone
+/// 📄️ Shapes arbitrary `text` (typically one emoji, possibly a multi-codepoint ZWJ/skin-tone
 /// sequence — HarfBuzz shaping via [`crate::text::shape`] already collapses those into the
 /// sequence's own ligature glyph where the font supports it) against the Emoji font, laying out
 /// each resulting glyph as a raster image where the font provides one (every glyph in the vendored
@@ -454,7 +454,7 @@ fn pick_vertical_stretch(font: &Font<'_>, base_glyph_id: u16, target_extent: f32
     (base_glyph_id, scale)
 }
 
-/// 📏️ Places a vertically-stretched glyph so its own (possibly asymmetric — a radical sign
+/// 🔲️ Places a vertically-stretched glyph so its own (possibly asymmetric — a radical sign
 /// is almost all ascent, a paren has more ascent than descent too) bounding box is vertically
 /// CENTERED at `center_y`, deriving `height`/`depth` from that real bounding box rather than
 /// assuming the glyph splits evenly around its origin. Used for stretchy delimiters and radical
@@ -749,7 +749,7 @@ fn layout_sequence(fonts: &FontContext<'_>, items: &[crate::syntax::SeqItem]) ->
 //#endregion 🔖️Sequence
 
 //#region 🔖️Entry
-/// 🎯️ Lays out any [`MathNode`] into a [`MathBox`] — the crate's main entry point, called
+/// 🗃️ Lays out any [`MathNode`] into a [`MathBox`] — the crate's main entry point, called
 /// recursively by every structure above for sub-expressions.
 pub fn layout(fonts: &FontContext<'_>, node: &MathNode) -> MathBox {
     match node {

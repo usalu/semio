@@ -47,7 +47,7 @@ export function sourceWithoutDocComments(path: string, text: string): string {
  * reach it as declarations. Matched case-insensitively anywhere in a word (`Puzzle2dHost`, `PUZZLE2D_EVENTS`, `"vortex"`). */
 export const FRAMEWORK_ARTIFACT_NAMES: readonly string[] = ["puzzle", "vortex"];
 
-/** 🪢️ One line of framework code that carries an artifact name outside a doc comment. */
+/** 📦️ One line of framework code that carries an artifact name outside a doc comment. */
 export type ArtifactNameHit = Readonly<{ path: string; line: number; name: string; text: string }>;
 
 /** 🧲️ Every line of one source that carries one of `names` outside its doc comments ({@link sourceWithoutDocComments}) —

@@ -253,7 +253,6 @@ fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, Val
             for _ in 0..64 {if owner.terminal_is_empty(){break;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
             assert!(owner.terminal_is_empty());let shell=std::mem::size_of_val(owner.as_ref());assert!(grant.maximum_release_bytes>=shell);
             let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,shell));
-            eprintln!("[DEBUG] actual {name} terminal child extent={N} demand={demand} caller={caller} actual={actual} reported={reported}; original pointer retained on denial, outer frame={shell} separately funded");
             if demand!=N||actual!=expected||reported!=actual {failures.push((name.into(),demand,actual,reported));}
         }
     }

@@ -20,7 +20,7 @@ import { TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_
 // #endregion 🔌️Imports
 
 //#region 🔖️EffectWire
-/** 🪪️ Decodes the schema-owned nested request without narrowing its u64 identity or interpreting JSON as a pack. */
+/** 🔌️ Decodes the schema-owned nested request without narrowing its u64 identity or interpreting JSON as a pack. */
 export function wireExtensionInvocation(effect: WireVariant): Extract<Effect, { readonly invokeExtension: unknown }> {
   const value = effect.val as { readonly req?: unknown; readonly params?: { readonly extensionId?: unknown; readonly capability?: unknown; readonly payload?: unknown } } | undefined;
   const req = value?.req;
@@ -62,13 +62,13 @@ export function wireOptionValue(raw: unknown): unknown {
   return raw;
 }
 
-/** 🎁️ {@link wireOptionValue} narrowed to `option<string>` — anything that is not a string is absent. */
+/** 📖️ {@link wireOptionValue} narrowed to `option<string>` — anything that is not a string is absent. */
 export function wireOptionText(raw: unknown): string | undefined {
   const value = wireOptionValue(raw);
   return typeof value === "string" ? value : undefined;
 }
 
-/** ⬇️ The one reader of `download-media-export.encoding`, shared by the React `PluginRuntime` door and
+/** 🎞️ The one reader of `download-media-export.encoding`, shared by the React `PluginRuntime` door and
  * the wgpu `plugin-bridge` one. What the string MEANS is the kernel's contract
  * (`kernel::mediaExportBytes` / `kernel::media_export_bytes`); this only recovers it from the wire. */
 export const wireMediaExportEncoding = wireOptionText;
@@ -131,7 +131,7 @@ export function wireSpawnJob(effect: WireVariant): Extract<Effect, { readonly sp
   return { spawnJob: { job, kind, input: coerceWireBytes(wireOptionValue(value.input) ?? []), placement } };
 }
 
-/** 🧵️ Decodes `cancel-job-effect` — the same u64 identity, nothing else. */
+/** 🛑️ Decodes `cancel-job-effect` — the same u64 identity, nothing else. */
 export function wireCancelJob(effect: WireVariant): Extract<Effect, { readonly cancelJob: unknown }> {
   const value = (effect.val ?? {}) as Record<string, unknown>;
   return { cancelJob: { job: wireJobIdentity(value.job, "cancel-job") } };

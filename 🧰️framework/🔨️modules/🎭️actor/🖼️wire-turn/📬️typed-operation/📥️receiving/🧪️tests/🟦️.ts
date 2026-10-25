@@ -16,6 +16,5 @@ test("original host wire receiving matches Buffer ABI and SQLite custody at ever
    const decoded=scanTypedOperationPages([{tag:"send-message",val:{target:{tag:"shell",val:token.receiver},payload:wire}}]).pages[0]!;expect(decoded.token).toEqual(token);expect(decoded.lane).toBe(corpus.lane);expect(Buffer.compare(Buffer.from(decoded.payload),body)).toBe(0);
    for(let cut=0;cut<=corpus.steps.length;cut++){db.exec("DELETE FROM custody;INSERT INTO custody VALUES(1,0,0,0)");for(const step of corpus.steps.slice(0,cut)){if(step==="allocate-original-destination")db.exec("UPDATE custody SET destination=1");else if(step==="close-original-alias")db.exec("UPDATE custody SET source=0,closed=1");else if(step==="take-original-wire")expect(db.query("UPDATE custody SET destination=0,output=1 WHERE closed=1 AND source=0").run().changes).toBe(1);else expect(db.query("UPDATE custody SET output=1 WHERE closed=1").run().changes).toBe(0);}db.exec("UPDATE custody SET source=0,destination=0,closed=1");expect(db.query("SELECT source,destination FROM custody").get()).toEqual({source:0,destination:0});}
   }
-  console.log(`[DEBUG] actual Buffer/SQLite wire receiver oracle: ${corpus.cases.length} golden magic+30 headers and bodies, originalHost copy4096/cap65536, every cancellation prefix and no output before original alias close`);
  }finally{db.close();}
 });

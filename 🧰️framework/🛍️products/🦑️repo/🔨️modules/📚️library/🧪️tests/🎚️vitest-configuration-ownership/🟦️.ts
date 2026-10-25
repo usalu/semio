@@ -192,8 +192,8 @@ describe("Vitest configuration ownership", () => {
     
     expect(fixture["schemaVersion"]).toEqual(1);
     
-    expect(fixture.owners).toHaveLength(52);
-    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(52);
+    expect(fixture.owners).toHaveLength(53);
+    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(53);
     const taxonomy = loadCatalogTaxonomy();
     for (const row of fixture.directoryContexts) expect(semanticDirectoryKindId(row.name, taxonomy, { parentKindId: row.parentKind }), `${row.parentKind}/${row.name}`).toBe(row.kind);
   }, 30_000);
@@ -245,7 +245,7 @@ describe("Vitest configuration ownership", () => {
           else {
             const bundle = node.arguments[0];
             let bundleRoot: string | undefined;
-            if (bundle?.getText(source) === "this.root") bundleRoot = routerRoot(path);
+            if (["this.root", "context.root"].includes(bundle?.getText(source) ?? "")) bundleRoot = routerRoot(path);
             else if (bundle?.getText(source) === "this.repoRoot") bundleRoot = repoRoot;
             else if (bundle && ts.isCallExpression(bundle) && bundle.expression.getText(source) === "join" && ["this.root", "this.repoRoot"].includes(bundle.arguments[0]?.getText(source) ?? "") && ts.isStringLiteral(bundle.arguments[1])) bundleRoot = resolve(bundle.arguments[0]!.getText(source) === "this.repoRoot" ? repoRoot : routerRoot(path), bundle.arguments[1].text);
             else if (bundle && ts.isIdentifier(bundle)) bundleRoot = roots.get(bundle.text);
@@ -292,6 +292,6 @@ describe("Vitest configuration ownership", () => {
     const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
     expect(project.targets[fixture.registration.target]?.options?.command).toBe("repo ./📜️script.ts test vitest-configuration-ownership");
     const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
-    expect(manifest.scripts[fixture.registration.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
+    expect(manifest.scripts[fixture.registration.target]).toBe(`repo run @semio-tech/repo-lib:${fixture.registration.target}`);
   });
 });

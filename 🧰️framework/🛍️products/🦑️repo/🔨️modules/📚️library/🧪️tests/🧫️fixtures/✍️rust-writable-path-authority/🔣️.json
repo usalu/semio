@@ -16,7 +16,7 @@
     ],
     "preservedFiniteCheckpoint": {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts",
-      "sha256": "0df8125a8374c82d4407783070410cf99b06d626538c02088b300afcd67f5800",
+      "sha256": "0b8456e54120112c2861c073c61300f58d1e79c7081abc98c32df7f0640d49eb",
       "tests": 86,
       "assertions": 436
     }
@@ -151,7 +151,7 @@
       "id": "cancelled-symlink-join",
       "condition": "cancelled-symlink",
       "expected": "unsupported",
-      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../alias/../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
       "targets": [
         "foreign/item.json"
       ],
@@ -217,11 +217,11 @@
   ],
   "registration": {
     "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
-    "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🟦️.ts",
+    "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🔗️reference-authority-routes/🟦️.ts",
     "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
     "target": "test-rust-writable-path-authority",
     "command": "repo ./📜️script.ts test rust-writable-path-authority",
-    "packageCommand": "repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-writable-path-authority",
+    "packageCommand": "repo run @semio-tech/repo-lib:test-rust-writable-path-authority",
     "route": "rust-writable-path-authority",
     "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✍️rust-writable-path-authority/🟦️.ts"
   },

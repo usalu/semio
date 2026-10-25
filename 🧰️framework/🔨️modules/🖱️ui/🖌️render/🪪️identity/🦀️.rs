@@ -33,7 +33,7 @@ fn fxhash_word(hash: u64, word: u64) -> u64 {
     (hash.rotate_left(5) ^ word).wrapping_mul(FXHASH_SEED)
 }
 
-/// 🌀️ Folds `bytes` into `hash` eight bytes at a time (the tail chunk is zero-padded), matching
+/// 🧮️ Folds `bytes` into `hash` eight bytes at a time (the tail chunk is zero-padded), matching
 /// `rustc-hash`'s own byte-slice handling closely enough for this crate's purpose: a fast, stable,
 /// dependency-free identity hash — not a cryptographic or DoS-resistant one.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -47,7 +47,7 @@ fn fxhash_bytes(hash: u64, bytes: &[u8]) -> u64 {
     hash
 }
 
-/// 🪪️ A per-frame-rebuilt element's stable identity: `fxhash(parent ElementId, reconciliation key)`.
+/// 🧱️ A per-frame-rebuilt element's stable identity: `fxhash(parent ElementId, reconciliation key)`.
 /// Deliberately a **separate identity domain** from [`ui_contract::UiNodeId`] (a protocol identity for
 /// one row of a [`ui_contract::UiSnapshot`]'s flat node table) and from any entity id the headless
 /// runtime mints — the three never alias each other, even when, as is common, one `UiNodeRecord`

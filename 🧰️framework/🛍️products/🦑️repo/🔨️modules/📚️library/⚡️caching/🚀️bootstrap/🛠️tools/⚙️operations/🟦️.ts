@@ -2,8 +2,8 @@ import {lstat,readdir} from "node:fs/promises";
 import {join} from "node:path";
 import {checkResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {repositoryCachePartitionRootDataV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import {nxBuildArgumentsV1} from "../../../../🏗️build/🧭️invocation/🟦️.ts";
-import type {BuildCacheContextV1,BuildCacheStatusV1,BuildCacheToolV1} from "../../../../🏗️build/⚙️operations/🟦️.ts";
+import {nxBuildArgumentsV1} from "../../../../📦️packages/🟦️typescript/🏗️build/🧭️invocation/🟦️.ts";
+import type {BuildCacheContextV1,BuildCacheStatusV1,BuildCacheToolV1} from "../../../../📦️packages/🟦️typescript/🏗️build/⚙️operations/🟦️.ts";
 
 /** 🧬️ Aligns Nx `affected` with the portable changed-file rule: tracked changes against HEAD plus untracked files unless a base, head, file list or one change class is chosen. */
 export function nxAffectedArgumentsV1(translated:readonly string[]):string[] {

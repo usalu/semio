@@ -246,7 +246,7 @@ fn flood_selection_language_neutral_cases() {
     assert!(flood_selection(&image, 0, 0, 0, Some(&[255])).is_err(), "a selection of another extent");
 }
 
-/// 🪣️ The in-place region filler is byte-identical to the whole-image job under the same coverage: a colour fill and an
+/// 🖼️ The in-place region filler is byte-identical to the whole-image job under the same coverage: a colour fill and an
 /// alpha fill over a flood region and over a graded coverage; a coverage of another extent and a non-fill are refused.
 #[test]
 fn the_in_place_filler_equals_the_whole_image_job() {

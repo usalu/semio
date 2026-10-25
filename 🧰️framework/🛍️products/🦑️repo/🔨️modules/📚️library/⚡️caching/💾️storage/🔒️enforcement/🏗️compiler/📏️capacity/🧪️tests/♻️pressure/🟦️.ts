@@ -22,7 +22,7 @@ test("compact headroom recovery runs under the budgeted preparation control chai
    policy={version:1 as const,root:image.root,leaseDirectory,capacityBytes:image.maximumPhysicalBytes,maximumWorkspaceBytes:fixture.workspaceBytes,maximumArtifactBytes:1048576};
    storage=await acquireNativeStorageV1({policy,control,port:image.port,owner:"repo:compiler-pressure-chain-law",kind:"compiler-workspace",bytes:fixture.workspaceBytes});
    const layout=repositoryCompilerLayoutV1(image.root,"prototype"),profile=join(layout.buildDirectory,"prototype"),unit=(round:number)=>join(profile,"build/owned/hash-"+round);
-   mkdirSync(unit(0),{recursive:true});writeFileSync(join(unit(0),"output"),Buffer.alloc(fixture.unitBytes,7));writeFileSync(join(profile,".cargo-build-lock"),"");
+   mkdirSync(layout.targetDirectory,{recursive:true});mkdirSync(unit(0),{recursive:true});writeFileSync(join(unit(0),"output"),Buffer.alloc(fixture.unitBytes,7));writeFileSync(join(profile,".cargo-build-lock"),"");
    let effects=0;const held=storage,recover=()=>recovery.recoverCompactCompilerHeadroomV1(workspace,"prototype",original,control,held),write=()=>api.withCompilerWorkspaceLifetimeV1(held,control,()=>api.withCompilerWorkspaceWriteV1(held,leaseDirectory,control,async()=>{effects++;}),recover);
    for(let round=0;round<fixture.rounds;round++){await write();expect(existsSync(unit(round))).toBe(false);if(round+1<fixture.rounds){mkdirSync(unit(round+1),{recursive:true});writeFileSync(join(unit(round+1),"output"),Buffer.alloc(fixture.unitBytes,8));}}
    expect(effects).toBe(fixture.rounds);

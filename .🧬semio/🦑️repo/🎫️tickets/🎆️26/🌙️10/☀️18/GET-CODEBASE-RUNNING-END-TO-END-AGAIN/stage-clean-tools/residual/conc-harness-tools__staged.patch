@@ -1,0 +1,101 @@
+# stage-clean different staged=conc-harness-tools/staged/command.ts map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/⌨️command/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/⌨️command/🟦️.ts
+@@ -1,15 +1,14 @@
+-import {buildBackendAlternationV1,buildBackendIdsV1} from "../../../🔌️backends/🟦️.ts";
+ import {rm} from "node:fs/promises";
+ import {join} from "node:path";
+ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+ import workloads from "../🎬️workloads/🔣️.json" with {type:"json"};
+ import type {IncrementalHostV1} from "../../🏃️runner/🟦️.ts";
+ import type {IncrementalToolV1} from "../../🟦️.ts";
+-import {incrementalCommandPortsV1,incrementalDefaultRootV1,incrementalLanguageV1,type IncrementalCommandPortsV1} from "../../⌨️command/🟦️.ts";
++import {incrementalCommandPortsV1,incrementalDefaultRootV1,type IncrementalCommandPortsV1} from "../../⌨️command/🟦️.ts";
+ import {concurrentEvaluateV1,concurrentReportV1,concurrentSelectV1,concurrentWorkloadIssuesV1,renderConcurrentReportV1,renderConcurrentWorkloadsV1,type ConcurrentRunV1,type ConcurrentWorkloadSetV1,type ConcurrentWorkloadV1} from "../🟦️.ts";
+ import {concurrentCliPortsV1,concurrentPlanV1,concurrentRunWorkloadV1,type ConcurrentPlanV1} from "../🏃️runner/🟦️.ts";
+ 
+-const policy=schema.definitions.Policy.const,tools:readonly IncrementalToolV1[]=buildBackendIdsV1(),operations=["list","plan","run"] as const,script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";
++const policy=schema.definitions.Policy.const,tools:readonly IncrementalToolV1[]=["nx","bazel"],operations=["list","plan","run"] as const,script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";
+ 
+ /** 🗨️ The closed arguments of `repo concurrency`. */
+ export type ConcurrencyArgumentsV1=Readonly<{operation:typeof operations[number];workloads:readonly string[]|"all";sessions:number|undefined;criteria:string|undefined;tools:readonly IncrementalToolV1[];root:string|undefined;file:string|undefined;json:boolean;language:"en"|"de"|undefined}>;
+@@ -33,14 +32,14 @@
+   else throw Error(both(`Unknown concurrency option: ${argument}`,`Unbekannte Option für concurrency: ${argument}`));
+  }
+  const list=(name:string)=>values[name]?.split(",").filter(Boolean),chosen=list("--implementations")??[...tools],language=values["--lang"],picked=list("--workloads");
+- for(const tool of chosen)if(!tools.includes(tool as IncrementalToolV1))throw Error(both(`Unknown implementation: ${tool} (${buildBackendAlternationV1()})`,`Unbekannte Implementierung: ${tool} (${buildBackendAlternationV1()})`));
++ for(const tool of chosen)if(!tools.includes(tool as IncrementalToolV1))throw Error(both(`Unknown implementation: ${tool} (nx|bazel)`,`Unbekannte Implementierung: ${tool} (nx|bazel)`));
+  if(language!==undefined&&language!=="en"&&language!=="de")throw Error(both(`Unknown language: ${language} (en|de)`,`Unbekannte Sprache: ${language} (en|de)`));
+  const count=values["--sessions"]===undefined?undefined:Number(values["--sessions"]);
+  if(count!==undefined&&(!/^[1-9][0-9]*$/u.test(values["--sessions"]!)||count>policy.maximumSessions))throw Error(both(`Sessions must be a whole number from 1 to ${policy.maximumSessions}`,`Sitzungen müssen eine ganze Zahl von 1 bis ${policy.maximumSessions} sein`));
+  return Object.freeze({operation,workloads:picked===undefined||picked.includes("all")?"all":picked,sessions:count,criteria:values["--criteria"],tools:[...new Set(chosen)] as IncrementalToolV1[],root:values["--root"],file:values["--file"],json:flags.has("--json"),language:language as "en"|"de"|undefined});
+ }
+ 
+-const languageOf=(parsed:ConcurrencyArgumentsV1,ports:IncrementalCommandPortsV1):"en"|"de"=>incrementalLanguageV1(parsed.language,ports.environment);
++const languageOf=(parsed:ConcurrencyArgumentsV1,ports:IncrementalCommandPortsV1):"en"|"de"=>parsed.language??(/^de/iu.test(ports.environment.SEMIO_LANGUAGE??ports.environment.LC_ALL??ports.environment.LANG??"")?"de":"en");
+ 
+ /** 🗾️ Renders the plan of workloads: per workload and tool the sessions with their groups, the closure of every target, the tasks that always execute and every problem found. */
+ export function renderConcurrentPlanV1(set:ConcurrentWorkloadSetV1,rows:readonly Readonly<{workload:ConcurrentWorkloadV1;tool:IncrementalToolV1;plan:ConcurrentPlanV1}>[],language:"en"|"de"):string{
+@@ -59,7 +58,7 @@
+ export async function runConcurrencyCommandV1(live:string,args:readonly string[],ports:IncrementalCommandPortsV1):Promise<void>{
+  const parsed=concurrencyArgumentsV1(args.slice(args[0]==="concurrency"?1:0)),set=workloads as unknown as ConcurrentWorkloadSetV1,issues=concurrentWorkloadIssuesV1(set);
+  if(issues.length)throw Error(`Closed concurrent workloads required: ${issues.join("; ")}`);
+- const lang=languageOf(parsed,ports),root=parsed.root??incrementalDefaultRootV1(ports.platform,ports.tmpdir(),ports.home());
++ const lang=languageOf(parsed,ports),root=parsed.root??incrementalDefaultRootV1(ports.platform,ports.environment);
+  if(parsed.operation==="list"){ports.write(parsed.json?JSON.stringify(set.workloads.map(row=>({id:row.id,criteria:row.criteria,sessions:row.sessions.map(session=>({id:session.id,group:session.group}))})),null,2):renderConcurrentWorkloadsV1(set,lang));return;}
+  if(!await ports.exists(join(root,script)))throw Error(both(`Prepare the disposable root first: repo incremental prepare --root=${root}`,`Bereite zuerst das Wegwerf-Verzeichnis vor: repo incremental prepare --root=${root}`));
+  const selected=concurrentSelectV1(set,parsed.workloads,parsed.sessions),override=parsed.criteria;
+# stage-clean different staged=conc-harness-tools/staged/test.ts map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🧪️tests/🟦️.ts
+@@ -1,7 +1,5 @@
+-import {buildBackendIdsV1} from "../../../🔌️backends/🟦️.ts";
+ /** 🤹️ Concurrent session conformance: the wait derivation, attribution, criteria, edits, digests and workload admission are checked against language-agnostic fixtures, an independent Python oracle and Bazel's own elapsed time; the runner is exercised with real processes that contend for real leases of the lease module; the command through its ports. */
+ import {test,expect} from "bun:test";
+-import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+ import Ajv from "ajv";
+ import {spawnSync} from "node:child_process";
+ import {createHash} from "node:crypto";
+@@ -23,7 +21,7 @@
+ const root=process.env.SEMIO_TEST_REPO_ROOT??findRoot(import.meta.dir),set=workloads as unknown as ConcurrentWorkloadSetV1,policy=schema.definitions.Policy.const;
+ const ajv=new Ajv({strict:true,allowUnionTypes:true}),define=(name:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${name}`});
+ const oracle=join(import.meta.dir,"🐍️oracle/🐍️.py"),schemaPath=join(import.meta.dir,"../🧬️schema/🔣️.json");
+-const python=(op:string,cases:readonly unknown[]):any[]=>{const run=spawnSync(testPythonV1()??"python3",["-I",oracle],{input:JSON.stringify({op,schemaPath,cases}),encoding:"utf8",maxBuffer:64*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
++const python=(op:string,cases:readonly unknown[]):any[]=>{const run=spawnSync("python3",["-I",oracle],{input:JSON.stringify({op,schemaPath,cases}),encoding:"utf8",maxBuffer:64*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
+ const plain=(value:unknown):any=>JSON.parse(JSON.stringify(value));
+ const script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",leaseRoot=process.env.SEMIO_TEST_LEASE_ROOT??root,leasePath="🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",stubPath=join(import.meta.dir,"🎭️stub/🟦️.ts");
+ 
+@@ -390,7 +388,7 @@
+  bazelSourceIndexV1:(inventory:readonly string[])=>({files:[...inventory].sort(),selectAll:(inputs:readonly unknown[])=>({marks:Uint8Array.from([...inventory].sort().map(file=>inputs.includes(file)?1:0))})}),bazelTaskInputsV1:()=>[]
+ };
+ const commandPorts=(base:string,copy:string,out:string[],stages:string[],reports:unknown[],over:Partial<IncrementalCommandPortsV1>={}):IncrementalCommandPortsV1=>({
+- write:line=>out.push(line),progress:async stage=>{stages.push(stage);},check:()=>{},signal:new AbortController().signal,environment:{SEMIO_LANGUAGE:"en",PATH:process.env.PATH??"/usr/bin",HOME:process.env.HOME??tmpdir()},platform:"linux",tmpdir:()=>"/tmp/t",home:()=>"/home/t",now:()=>Date.now(),
++ write:line=>out.push(line),progress:async stage=>{stages.push(stage);},check:()=>{},signal:new AbortController().signal,environment:{SEMIO_LANGUAGE:"en",PATH:process.env.PATH??"/usr/bin",HOME:process.env.HOME??tmpdir()},platform:"linux",now:()=>Date.now(),
+  run:async(_command,args)=>{const rest=args.slice(args.indexOf("repo")+1).filter(argument=>!argument.startsWith("--tool="));if(rest[0]==="graph"){const file=rest[1]!.slice(7);writeFileSync(file,"{}");return file+"\n";}return JSON.stringify({tasks:{roots:[],tasks:{"lib:gen":{id:"lib:gen"}},dependencies:{"lib:gen":[]}}},null,2);},
+  report:async(file,value)=>{reports.push([file,value]);},files:async()=>[script],adapter:async()=>stubAdapter as never,nxRecord:directory=>join(directory,"run.json"),exists:async path=>existsSync(path),scratch:async()=>{const directory=join(base,"scratch-run");mkdirSync(directory,{recursive:true});return directory;},...over});
+ 
+@@ -424,7 +422,7 @@
+ },180000);
+ 
+ test("the command arguments are closed, bilingual in their errors and default to both implementations, every workload and three sessions",()=>{
+- expect(concurrencyArgumentsV1(["list"])).toMatchObject({operation:"list",workloads:"all",sessions:undefined,criteria:undefined,tools:buildBackendIdsV1(),json:false});
++ expect(concurrencyArgumentsV1(["list"])).toMatchObject({operation:"list",workloads:"all",sessions:undefined,criteria:undefined,tools:["nx","bazel"],json:false});
+  expect(concurrencyArgumentsV1(["run","--workloads=a,b","--sessions=4","--criteria=smoke","--implementations","bazel","--json","--root=/tmp/x","--file=r.json","--lang=de"])).toMatchObject({operation:"run",workloads:["a","b"],sessions:4,criteria:"smoke",tools:["bazel"],json:true,root:"/tmp/x",file:"r.json",language:"de"});
+  expect(concurrencyArgumentsV1(["plan","--workloads=all"]).workloads).toBe("all");
+  for(const[bad,message]of [[[],"Expected repo concurrency"],[["go"],"Expected repo concurrency"],[["run","extra"],"Expected repo concurrency"],[["run","--wat"],"Unknown concurrency option"],[["run","--json","--json"],"Repeated option"],[["run","--workloads"],"needs a value"],[["run","--sessions=0"],"Sessions must be a whole number"],[["run","--sessions=9"],"Sessions must be a whole number"],[["run","--sessions=1.5"],"Sessions must be a whole number"],[["run","--implementations=make"],"Unknown implementation"],[["run","--lang=fr"],"Unknown language"],[["run","--json=1"],"Unknown concurrency option"]] as const)
+@@ -434,7 +432,7 @@
+ 
+ test("the catalogue declares the concurrency operation with its subcommands, flags, bilingual texts and no dependency requirement, matching the parser",()=>{
+  const row=catalog.operations.find(entry=>entry.name==="concurrency") as unknown as {name:string;requires:string;implementations:Record<string,string>;progress:boolean;cancellable:boolean;subcommands:{name:string;summary:{en:string;de:string}}[];flags:string[];summary:{en:string;de:string};examples:{command:string;description:{en:string;de:string}}[]};
+- expect(row).toBeDefined();expect(row.requires).toBe("none");expect((row as {implementations?:unknown}).implementations).toBeUndefined();expect(row.progress&&row.cancellable).toBe(true);
++ expect(row).toBeDefined();expect(row.requires).toBe("none");expect(row.implementations).toEqual({nx:"neutral",bazel:"neutral"});expect(row.progress&&row.cancellable).toBe(true);
+  expect(row.subcommands.map(sub=>sub.name)).toEqual(["list","plan","run"]);
+  const names=concurrencyOptionNamesV1(),accepted=new Set([...names.valued,...names.plain].filter(name=>name!=="--lang"));
+  expect(new Set(row.flags)).toEqual(accepted);
+@@ -477,5 +475,5 @@
+   expect(firstDone.code).toBe(0);expect(second.code).toBe(0);
+   const waits=concurrentWaitsV1(second.lines.map(row=>({atMs:row.atMs-origin,line:row.line})),second.endMs-origin,set.classes);
+   expect(waits.length).toBe(1);expect(waits[0]).toMatchObject({class:"bazel-server",source:"bazel",precise:true});expect(waits[0]!.waitMs).toBeGreaterThan(3000);expect(waits[0]!.waitMs).toBeLessThan(second.endMs-origin+1);
+- }finally{spawnSync(binary!,[...flags,"shutdown"],{cwd:work});makeTestTreeWritableV1(base);rmSync(base,{recursive:true,force:true});}
++ }finally{spawnSync(binary!,[...flags,"shutdown"],{cwd:work});spawnSync("chmod",["-R","u+w",base]);rmSync(base,{recursive:true,force:true});}
+ },300000);

@@ -71,6 +71,11 @@
           "kind": "imports",
           "entries": [
             "{project}/📜️script.ts"
+          ],
+          "command": "check",
+          "specifiers": [
+            "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+            "../../🚀️deploy/🟦️.ts"
           ]
         }
       ]

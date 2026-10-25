@@ -48,7 +48,8 @@
         "compactSourceInputs",
         "cargoManifestInputV1",
         "cargoLockInput",
-        "deduplicateProjectInputs"
+        "deduplicateProjectInputs",
+        "buildInputPathMatchesV1"
       ]
     }
   }

@@ -159,7 +159,7 @@ impl SliderProps {
     }
 }
 
-/// 🔢️ Props for `Component::NumberStepper`. `on_absolute`/`on_delta` both moved to the record's
+/// ➕️ Props for `Component::NumberStepper`. `on_absolute`/`on_delta` both moved to the record's
 /// `bindings`, distinguished by `Trigger`. `precision` is the fraction digits it shows and commits (in display
 /// units); `snaps` are its detents under the slider's detent law against `min`/`max` (the page keys stop on them,
 /// [`ui_number_key_value`]); the display facets and `limits` read as on [`SliderProps`], `limits` refusing a typed
@@ -210,7 +210,7 @@ impl NumberStepperProps {
 }
 //#endregion 🎨️Props
 
-/// 🎚️ The number-range law every renderer shares (TS twin `numberRangeIsValid`): a display factor is positive; a
+/// ✅️ The number-range law every renderer shares (TS twin `numberRangeIsValid`): a display factor is positive; a
 /// `log` scale has a strictly positive travel; declared limits keep their lower bound below their upper one
 /// (equal only when both include it) and admit the key range `min..=max` and every detent — so a slider's travel
 /// is a soft range inside its hard one. The admission gate behind [`UiContractViolation::InvalidNumberRange`].

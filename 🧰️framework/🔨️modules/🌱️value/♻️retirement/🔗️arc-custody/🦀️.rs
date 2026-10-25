@@ -61,7 +61,7 @@ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Valu
 /// 📏️ Borrows the original shared-owner cursor frame before moving any lease.
 pub const fn shared_retirement_birth_bytes<T:RetireOwned+Sync>()->usize {size_of::<SharedControlledRetirement<T>>()}
 
-/// 🎟️ Admits one concrete shared frame and returns the same original lease on refusal.
+/// 🔏️ Admits one concrete shared frame and returns the same original lease on refusal.
 pub fn admit_shared_retirement<T:RetireOwned+Sync>(source:Arc<T>,grant:RetainedCloneGrant,lease_only:bool)->Result<(Box<dyn crate::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<T>)> {
     if !T::controlled_retirement_supported(){return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"shared payload has no controlled retirement authority"),source));}
     if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"shared frame requires one admitted item"),source));}
@@ -94,7 +94,7 @@ impl<T:RetireOwned+Sync> RetireOwned for SharedControlledRetirement<T> {
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
 }
-/// 📏️ Exact original shared backing demand used by the admitted shared retirement owners.
+/// 📦️ Exact original shared backing demand used by the admitted shared retirement owners.
 pub fn shared_retirement_allocation_bytes<T>()->usize {std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<T>()).expect("shared Arc allocation layout").0.pad_to_align().size()}
 pub fn arc_bytes<T>()->usize {shared_retirement_allocation_bytes::<T>()}
 

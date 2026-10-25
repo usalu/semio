@@ -3,10 +3,10 @@ import { dirname, join, resolve } from "node:path";
 import { addWorkspaceMembers, manifestRowKey, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest } from "../📝️render/🟦️.ts";
 import { BUILD_OWNER_REGISTRY_FILE, reconcileBuildOwnerRegistry } from "../../../🏗️build/🕸️graph/🧾️registry-consistency/🟦️.ts";
 
-/** 📦️ Result of scaffolding the crate boundaries of one subset. */
+/** 🏗️ Result of scaffolding the crate boundaries of one subset. */
 export type SubsetCrateScaffold = { created: string[]; skipped: string[]; updated: string[]; notes: string[] };
 
-/** 📦️ The crates every new subset starts with: a model crate (schema plus every io codec of its types), a viewer and an editor. */
+/** ▶️ The crates every new subset starts with: a model crate (schema plus every io codec of its types), a viewer and an editor. */
 export const SUBSET_CRATE_COMPONENTS: readonly { readonly slug: string; readonly directory: string; readonly mirror: boolean }[] = [
   { slug: "model", directory: "🧬️schema", mirror: true },
   { slug: "viewer", directory: "👁️viewer", mirror: false },

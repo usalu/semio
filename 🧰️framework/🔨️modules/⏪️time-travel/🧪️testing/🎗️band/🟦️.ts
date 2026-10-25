@@ -11,7 +11,7 @@ export type { Band };
 //#region 🔖️Band
 
 
-/** 🎗️ The time-travel band, or null when no session is live: React's `[data-semio-time-travel]`, wgpu's announced
+/** ⏱️ The time-travel band, or null when no session is live: React's `[data-semio-time-travel]`, wgpu's announced
  * `shell.time-travel.status` with its mirrored controls. */
 export const band = (): Promise<Band | null> => (renderer === "wgpu" ? wgpuBand() : reactBand());
 

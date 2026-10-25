@@ -1,3 +1,4 @@
+use crate::declaration_fixture_mutations::std1_any::Std1AnySnapshot;
 use crate::declaration_fixture_mutations::tests::{assert_codecs, assert_laws, assert_metadata};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value_derive::{FromValue, ToValue};

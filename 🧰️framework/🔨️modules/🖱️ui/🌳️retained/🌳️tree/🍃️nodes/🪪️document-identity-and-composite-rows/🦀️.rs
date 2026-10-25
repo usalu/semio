@@ -5,7 +5,7 @@ use super::*;
 // #region tree
 impl UiTree {
     //#region 🪪️DocumentIdentity
-    /// 🪪️ The arena node currently standing for `id`, if one is mounted.
+    /// 📄️ The arena node currently standing for `id`, if one is mounted.
     pub fn document_node(&self, id: UiNodeId) -> Option<NodeId> {
         self.document_nodes.binary_search_by_key(&id, |(document, _)| *document).ok().and_then(|index| self.document_nodes.get(index)).map(|(_, node)| *node)
     }
@@ -14,7 +14,7 @@ impl UiTree {
         self.node(node)?.document_id
     }
 
-    /// 🪪️ Binds `id` to `node`, replacing any previous binding for the same record.
+    /// 🪢️ Binds `id` to `node`, replacing any previous binding for the same record.
     pub fn bind_document_node(&mut self, id: UiNodeId, node: NodeId) {
         let previous = match self.document_nodes.binary_search_by_key(&id, |(document, _)| *document) {
             Ok(index) => {
@@ -41,7 +41,7 @@ impl UiTree {
         }
     }
 
-    /// 🪪️ The ledger in `UiNodeId` order — the retirement sweep's own iteration order.
+    /// 📒️ The ledger in `UiNodeId` order — the retirement sweep's own iteration order.
     pub fn document_bindings(&self) -> &[(UiNodeId, NodeId)] {
         &self.document_nodes
     }
@@ -107,7 +107,7 @@ impl UiTree {
         true
     }
 
-    /// 🧹️ Drops the binding at `index` and returns the arena node it named.
+    /// ✂️ Drops the binding at `index` and returns the arena node it named.
     pub fn unbind_document_node_at(&mut self, index: usize) -> Option<NodeId> {
         if index >= self.document_nodes.len() {
             return None;
@@ -133,7 +133,7 @@ impl UiTree {
         }
     }
 
-    /// 🔗️ Appends the already-inserted `child` as `parent`'s last child.
+    /// 📎️ Appends the already-inserted `child` as `parent`'s last child.
     pub fn attach_child(&mut self, parent: NodeId, child: NodeId) {
         let prev_last = self.arena.get(parent).and_then(|node| node.last_child);
         if let Some(node) = self.arena.get_mut(child) {
@@ -165,7 +165,7 @@ impl UiTree {
         Some(row)
     }
 
-    /// 🔽️ Retires ONE synthesized row — unlinked from its owner and freed. `true` once the ledger is
+    /// 👣️ Retires ONE synthesized row — unlinked from its owner and freed. `true` once the ledger is
     /// empty. Driven one row per step so a surface with a long popup open cannot spend a whole frame
     /// budget tearing it down.
     pub fn retire_composite_row_step(&mut self) -> bool {
@@ -175,7 +175,7 @@ impl UiTree {
         false
     }
 
-    /// 🔽️ Retires ONE synthesized row belonging to `owner`. `true` once that owner has none left —
+    /// 🪦️ Retires ONE synthesized row belonging to `owner`. `true` once that owner has none left —
     /// what a closing popup drives, so its rows go with it instead of waiting for the next document
     /// reconcile to sweep the whole ledger.
     pub fn retire_composite_row_of_step(&mut self, owner: NodeId) -> bool {
@@ -186,13 +186,13 @@ impl UiTree {
         false
     }
 
-    /// 🔽️ How many synthesized rows this tree holds — what a law reads to prove the working set is
+    /// 🔢️ How many synthesized rows this tree holds — what a law reads to prove the working set is
     /// bounded and that a closed popup left nothing behind.
     pub fn composite_row_count(&self) -> usize {
         self.composite_rows.len()
     }
 
-    /// 🔽️ Whether `row` is one synthesized option of a currently open Select popup. These rows
+    /// 📂️ Whether `row` is one synthesized option of a currently open Select popup. These rows
     /// remain children of their trigger so capture and keyed reconciliation share one owner, but
     /// their paint and pointer priority is overlay priority rather than ordinary child priority.
     pub fn is_open_select_popup_row(&self, row: NodeId) -> bool {
@@ -209,12 +209,12 @@ impl UiTree {
         self.document.as_ref().and_then(|document| document.record(document_id)).filter(|record| matches!(&record.component, ui_contract::Component::Select(_))).map(|_| owner)
     }
 
-    /// 🔽️ Whether `owner` already has its synthesized rows this generation.
+    /// ❔️ Whether `owner` already has its synthesized rows this generation.
     pub fn composite_rows_of(&self, owner: NodeId) -> usize {
         self.composite_rows.iter().filter(|(candidate, _)| *candidate == owner).count()
     }
 
-    /// 🔒️ Retires one synthesized row outside `preserved_owner`. `true` means only that captured
+    /// 🗑️ Retires one synthesized row outside `preserved_owner`. `true` means only that captured
     /// owner's rows remain, or the ledger is empty.
     pub fn retire_composite_row_except_step(&mut self, preserved_owner: Option<NodeId>) -> bool {
         let Some(index) = self.composite_rows.iter().rposition(|(owner, _)| Some(*owner) != preserved_owner) else { return true };
@@ -224,7 +224,7 @@ impl UiTree {
         false
     }
 
-    /// 🔗️ Restores a preserved owner's synthesized child chain after the document relink cleared
+    /// ⛓️ Restores a preserved owner's synthesized child chain after the document relink cleared
     /// its tree links. The fixed ledger order is the popup's existing row order.
     pub fn reattach_composite_rows(&mut self, owner: NodeId) {
         for index in 0..self.composite_rows.len() {
@@ -235,7 +235,7 @@ impl UiTree {
         }
     }
 
-    /// 🔗️ Unlinks `child` from `parent`'s sibling chain without touching `child`'s own subtree — the
+    /// 🔌️ Unlinks `child` from `parent`'s sibling chain without touching `child`'s own subtree — the
     /// inverse of [`UiTree::attach_child`], so a retired composite row leaves the chain it was
     /// appended to exactly as it found it.
     fn detach_child(&mut self, parent: NodeId, child: NodeId) {
@@ -289,7 +289,7 @@ impl UiTree {
         drop(self.arena.remove(id));
     }
 
-    /// 🧹️ Retires one document identity binding per call, freeing the arena slot it named — the
+    /// 🪜️ Retires one document identity binding per call, freeing the arena slot it named — the
     /// retirement half of the ledger, driven by `Ui::close_document_step` so a surface that drops its
     /// document does not keep its records' arena nodes alive. `true` once the ledger is empty.
     pub fn close_document_binding_step(&mut self, retire_scene: &mut impl FnMut(UiNodeId, NodeId, &Node) -> bool) -> bool {
@@ -309,7 +309,7 @@ impl UiTree {
         self.remove_detached(node);
         false
     }
-    /// 🧹️ Releases the empty tree's remaining indices after document retirement.
+    /// 📪️ Releases the empty tree's remaining indices after document retirement.
     pub fn close_storage_step(&mut self, retire_scene: &mut impl FnMut(NodeId, &Node) -> bool) -> bool {
         if self.document.is_some() || !self.document_nodes.is_empty() || !self.composite_rows.is_empty() {
             return false;

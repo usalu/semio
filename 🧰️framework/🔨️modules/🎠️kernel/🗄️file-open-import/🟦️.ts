@@ -16,7 +16,7 @@ import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../../⏱️trace/🧮�
  * ceiling. Half the ceiling leaves the other half for the invocation envelope the chunk rides in. */
 export const IMPORT_CHUNK_BYTES = GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / 2;
 
-/** 📥️ The argument names one import chunk is dispatched with — TS twins of Rust
+/** 🔤️ The argument names one import chunk is dispatched with — TS twins of Rust
  * `kernel::IMPORT_ARGUMENT_*`. Declared beside the effect so no shell invents a second spelling of
  * the same envelope: the wgpu shell used to send `{json, payload}` in one unchunked invocation while
  * React sent `{payload, name, chunk, chunkCount}` per chunk, and a plugin could satisfy only one
@@ -28,10 +28,10 @@ export const IMPORT_ARGUMENT_CHUNK_COUNT = "chunkCount";
 export const IMPORT_ARGUMENT_INDEX = "index";
 export const IMPORT_ARGUMENT_TOTAL = "total";
 
-/** 📥️ One chunk of one opened file, positioned in its own run — TS twin of Rust `kernel::ImportChunk`. */
+/** 📄️ One chunk of one opened file, positioned in its own run — TS twin of Rust `kernel::ImportChunk`. */
 export type ImportChunk = { readonly payload: string; readonly chunk: number; readonly chunkCount: number };
 
-/** 📥️ Slices one opened file's contents into the chunks a shell dispatches, so no single import
+/** 🍕️ Slices one opened file's contents into the chunks a shell dispatches, so no single import
  * invocation asks the guest for a contiguous block above its own per-request ceiling.
  *
  * 🔤️ Sliced by UTF-8 EXTENT, not by code units: the guest measures `text.len()` in bytes, so a slice
@@ -59,7 +59,7 @@ export function importPayloadChunks(payload: string): readonly ImportChunk[] {
   return pages.map((text, chunk) => ({ payload: text, chunk, chunkCount: pages.length }));
 }
 
-/** 📥️ The arguments ONE import chunk is dispatched with — `fanOut` is present only when the picker
+/** 🎒️ The arguments ONE import chunk is dispatched with — `fanOut` is present only when the picker
  * was opened with `multiple`, so a single-file pick's args stay byte-for-byte the pre-fan-out shape.
  * Twin of Rust `kernel::import_chunk_arguments`.
  *

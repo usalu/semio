@@ -1,26 +1,26 @@
-/** 🔌️ The presence socket of the quiz client: the frame rates and timings, the browser socket behind a port, and the room that joins, rejoins and leaves with jittered backoff. */
+/** 🔁️ The presence socket of the quiz client: the frame rates and timings, the browser socket behind a port, and the room that joins, rejoins and leaves with jittered backoff. */
 
 import { retryWithJitteredBackoff } from "@semio-tech/framework";
 import { PRESENCE_PROTOCOL, decodePresenceFrame, encodePresenceFrame, type PresenceEntry as SocketEntry } from "@semio-tech/framework-server";
 import { RETRY_TIMING, type RetryTiming } from "../../🛂️proctor/🟦️.ts";
 
 //#region 🔌️Socket
-/** ⏱️ The most state frames a room sends per second (design §15: pointer frames ≤ 15 Hz). */
+/** 🎞️ The most state frames a room sends per second (design §15: pointer frames ≤ 15 Hz). */
 export const PRESENCE_FRAME_HZ = 15;
 
 /** ⏱️ The least time between two state frames of one room. */
 export const PRESENCE_FRAME_INTERVAL_MS = Math.ceil(1000 / PRESENCE_FRAME_HZ);
 
-/** ⏱️ The least time between two thinking frames (design §17: drafts ≤ 2 Hz, coalesced). */
+/** 💭️ The least time between two thinking frames (design §17: drafts ≤ 2 Hz, coalesced). */
 export const THINKING_FRAME_INTERVAL_MS = 500;
 
-/** ⏱️ How often the watched rooms report their changes (design §17: about 4 Hz). */
+/** ⌚️ How often the watched rooms report their changes (design §17: about 4 Hz). */
 export const WATCH_INTERVAL_MS = 250;
 
 /** 🔢️ The most rooms one socket watches (the framework's bound). */
 export const MAX_WATCHED_ROOMS = 16;
 
-/** ⏱️ How long a joined session must last to count as stable; one that ends sooner is a flap. */
+/** ⚓️ How long a joined session must last to count as stable; one that ends sooner is a flap. */
 export const PRESENCE_STABLE_MS = 10_000;
 
 /** ⏳️ The pause before a room joins again after `flaps` short-lived sessions in a row (`random` in [0, 1]): a first loss
@@ -32,7 +32,7 @@ export function rejoinDelay(flaps: number, timing: RetryTiming, random: number):
   return timing.minMs + random * (Math.min(timing.maxMs, timing.minMs * 2 ** (flaps - 1)) - timing.minMs);
 }
 
-/** 🔌️ What a presence room needs of a WebSocket; the browser's `WebSocket` is one. */
+/** 🕸️ What a presence room needs of a WebSocket; the browser's `WebSocket` is one. */
 export interface PresenceSocket {
   readonly readyState: number;
   onopen: ((event: Event) => void) | null;
@@ -137,7 +137,7 @@ export class PresenceRoom<S, W = never> {
 
   readonly getSnapshot = (): RoomSnapshot<S, W> => this.snapshot;
 
-  /** 🚪️ Joins the room, and keeps joining until {@link stop}. */
+  /** ▶️ Joins the room, and keeps joining until {@link stop}. */
   start(): void {
     if (this.lifetime !== undefined) return;
     const lifetime = new AbortController();
@@ -146,7 +146,7 @@ export class PresenceRoom<S, W = never> {
     void this.run(lifetime.signal).catch(() => undefined);
   }
 
-  /** 👋️ Leaves the room: closes the socket, drops the members and forgets what was sent. */
+  /** 🛑️ Leaves the room: closes the socket, drops the members and forgets what was sent. */
   stop(): void {
     this.lifetime?.abort();
     this.lifetime = undefined;

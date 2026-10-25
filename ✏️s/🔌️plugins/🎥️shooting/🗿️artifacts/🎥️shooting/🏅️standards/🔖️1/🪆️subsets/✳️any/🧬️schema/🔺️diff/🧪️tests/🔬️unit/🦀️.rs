@@ -4,6 +4,7 @@ use protocol::DiffAlgebra;
 use crate::{ShootingAssigned, ShootingEmblemChild, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingShot, ShootingShotPatch};
 #[allow(unused_imports)]
 use protocol::{ApplyCapability, Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
+use protocol::ColdMutationDiff;
 #[allow(unused_imports)]
 use schema::ArtifactSchema;
 use crate::standards::v1::subsets::any::schema::diff::*;

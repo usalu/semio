@@ -1,5 +1,5 @@
 //! 📏️ Canonical typography and chrome metrics shared by all UI consumers.
-/// 📏️ The `(font size, line box)` ramp React's CSS declares as `--text-*` / `--text-*--line-height`
+/// 🪜️ The `(font size, line box)` ramp React's CSS declares as `--text-*` / `--text-*--line-height`
 /// (`🎨️styling/🖌️ui/🎨️.css`), read from the ONE generated token source both targets share
 /// (`ui_styling::metrics::typography`) — never a hand-picked multiplier. Ratios are
 /// `1.5 / 1.4286 / 1.5 / 1.5556 / 1.6`, so a single hardcoded factor cannot express them.
@@ -12,7 +12,7 @@ const LINE_HEIGHT_RAMP: [(f32, f32); 6] = [
     (ui_styling::metrics::typography::TEXT2XL_PX as f32, ui_styling::metrics::typography::TEXT2XL_LINE_HEIGHT_PX as f32),
 ];
 
-/// 📏️ The line box `size` occupies — the ONE formula wrapped and single-line text both go through
+/// 🧮️ The line box `size` occupies — the ONE formula wrapped and single-line text both go through
 /// (`measure_text`, `measure_text_wrapped`, `paint`'s per-line baseline advance,
 /// `mounted_layout`'s glyph preview), so wgpu can no longer disagree with itself the way the
 /// pre-parity `size * 1.35` (wrapped) versus raw-glyph-bbox (single line) pair did. A token size

@@ -40,16 +40,18 @@ pub fn reconstruct<P:ArtifactSqliteSnapshotHost>(database:&SqliteDatabase,contro
  receiving_allocation!(owner,control,|child| P::from_sqlite_database(database,child))
 }
 
-/// 🛡️ Applies the authored subset policy after the original decode owner observed cancellation.
+/// 🛡️ Applies the authored subset policy under the original decode owner, charging every allocation it admits to that owner; with no backing left it runs on the bare control, which refuses any allocation.
 pub fn validate_decoding<P:ArtifactSqliteSnapshotHost>(snapshot:&P,dialect:&ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->IoResult<()>{
  owner.native().checkpoint().map_err(IoError::from_value_error)?;
- snapshot.validate_sqlite_snapshot_subset(dialect,database,control)
+ if control.allocation_remaining_bytes()==0{return snapshot.validate_sqlite_snapshot_subset(dialect,database,control)}
+ (||->Result<IoResult<()>,ValueError>{receiving_allocation!(owner,control,|child| Ok::<IoResult<()>,ValueError>(snapshot.validate_sqlite_snapshot_subset(dialect,database,child)))})().map_err(IoError::from_value_error)?
 }
 
-/// 🛃️ Applies the authored subset policy after the original encode owner observed cancellation.
+/// 🛃️ Applies the authored subset policy under the original encode owner, charging every allocation it admits to that owner; with no backing left it runs on the bare control, which refuses any allocation.
 pub fn validate_encoding<P:ArtifactSqliteSnapshotHost>(snapshot:&P,dialect:&ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->IoResult<()>{
  owner.native().checkpoint().map_err(IoError::from_value_error)?;
- snapshot.validate_sqlite_snapshot_subset(dialect,database,control)
+ if control.allocation_remaining_bytes()==0{return snapshot.validate_sqlite_snapshot_subset(dialect,database,control)}
+ (||->Result<IoResult<()>,ValueError>{receiving_allocation!(owner,control,|child| Ok::<IoResult<()>,ValueError>(snapshot.validate_sqlite_snapshot_subset(dialect,database,child)))})().map_err(IoError::from_value_error)?
 }
 
 

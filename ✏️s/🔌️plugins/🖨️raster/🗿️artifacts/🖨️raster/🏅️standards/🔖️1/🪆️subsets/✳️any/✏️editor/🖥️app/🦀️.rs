@@ -127,7 +127,7 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(store::mutation_apply_preparation_factory::<RasterConfig, RasterConfigMutation>())
+        Some(store::cold_mutation_apply_preparation_factory::<RasterConfig, RasterConfigMutation>())
     }
 
     fn bounded_first_step_tool_proofs()->Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
@@ -141,19 +141,20 @@ impl ArtifactEditor for RasterPlayApp {
         registry.register(media_export::RasterDownloadJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if request.tool_id=="exportPng" {return media_export::build_download_job(request);}
-        if !RASTER_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if original.tool_id=="exportPng" {return media_export::build_download_job(request, output, cx);}
+        if !RASTER_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Raster command does not match its exact registered tool"));
+        if original.command.command_id() != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Raster command does not match its exact registered tool").into());
         }
-        if raster_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("raster.document.too-large"), "the raster document exceeds the retained command's work bound"));
+        if raster_retained_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the raster document exceeds the retained command's work bound").into());
         }
-        let tool_id = request.command.command_id();
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = if tool_id == "paintStroke" {
+        let tool_id = original.command.command_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, RasterCommand::command_id, RASTER_RETAINED_RAW_BYTES, RASTER_RETAINED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { if tool_id == "paintStroke" {
             Box::new(semio_s_artifact_raster_raster_editor_commands::commands::paint_stroke::PaintStrokeWork::default())
         } else if tool_id == "flattenLayers" {
             Box::new(flatten_layers::LayerBakeWork::<false>::default())
@@ -163,35 +164,7 @@ impl ArtifactEditor for RasterPlayApp {
             Box::new(mask_from_selection::MaskFromSelectionWork::default())
         } else {
             Box::new(BoundedArtifactCommandWork::new(tool_id, raster_retained_reduce, raster_retained_extent))
-        };
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            RasterCommand::command_id,
-            RASTER_RETAINED_RAW_BYTES,
-            RASTER_RETAINED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        } })
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {

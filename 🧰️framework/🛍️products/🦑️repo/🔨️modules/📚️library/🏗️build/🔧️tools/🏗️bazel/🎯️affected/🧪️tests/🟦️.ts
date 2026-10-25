@@ -1,6 +1,6 @@
 /** 🧪️ Bazel affected: the neutral rule, Bazel's own rdeps and the installed Nx's affected locators agree on every fixture case; a Python graph walk checks the generated package. */
 import {test,expect} from "bun:test";
-import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {existsSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
@@ -15,7 +15,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
 const findRoot=(from:string):string=>{for(let at=from;;at=dirname(at)){if(existsSync(join(at,"bunfig.toml"))&&existsSync(join(at,"bun.lock")))return at;if(dirname(at)===at)throw Error("repository root not found");}};
-const root=findRoot(import.meta.dir),installed=createRequire(join(root,"package.json")),ops=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🧪️tests/🧫️fixtures/🔣️.json"),"utf8")) as {cases:{name:string;projects:Record<string,{root:string;targets:Record<string,unknown>}>;edges:string[][];files:string[];namedInputs?:Record<string,unknown[]>;expected:{affected:string[]}}[]};
+const root=findRoot(import.meta.dir),installed=createRequire(join(root,".nx/installation/package.json")),ops=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🧪️tests/🧫️fixtures/🔣️.json"),"utf8")) as {cases:{name:string;projects:Record<string,{root:string;targets:Record<string,unknown>}>;edges:string[][];files:string[];namedInputs?:Record<string,unknown[]>;expected:{affected:string[]}}[]};
 type Row={name:string;projects:Record<string,{root:string;targets:Record<string,unknown>}>;edges:string[][];files:string[];namedInputs?:Record<string,unknown[]>;affected:string[];nx?:boolean};
 const rows:Row[]=[...ops.cases.map(row=>({name:row.name,projects:row.projects,edges:row.edges,files:row.files,namedInputs:row.namedInputs,affected:row.expected.affected})),...(fixture.cases as object[] as Row[])];
 const graphOf=(row:Row)=>({version:1 as const,projects:Object.fromEntries(Object.entries(row.projects).map(([name,project])=>[name,{name,root:project.root,targets:project.targets}])),dependencies:row.edges.map(([source,target])=>({source:source!,target:target!,type:"static"})),namedInputs:row.namedInputs??{}}) as never;

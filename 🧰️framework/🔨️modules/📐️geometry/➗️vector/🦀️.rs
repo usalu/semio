@@ -32,7 +32,7 @@ pub fn lerp(a: Point, b: Point, t: f64) -> Point {
     Point::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
 }
 
-/// 🧭️ Signed angle from `a` to `b` in `(-pi, pi]`.
+/// 🖊️ Signed angle from `a` to `b` in `(-pi, pi]`.
 pub fn angle_between(a: Vec2, b: Vec2) -> f64 {
     cross(a, b).atan2(a.dot(b))
 }
@@ -47,7 +47,7 @@ pub fn sub3(a: Xyz, b: Xyz) -> Xyz {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
-/// ✖️ 3D scale.
+/// ⚖️ 3D scale.
 pub fn scale3(a: Xyz, s: f64) -> Xyz {
     [a[0] * s, a[1] * s, a[2] * s]
 }
@@ -57,17 +57,17 @@ pub fn dot3(a: Xyz, b: Xyz) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-/// ✖️ 3D cross product.
+/// ❌️ 3D cross product.
 pub fn cross3(a: Xyz, b: Xyz) -> Xyz {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 
-/// 📏️ 3D Euclidean length.
+/// 🧊️ 3D Euclidean length.
 pub fn length3(a: Xyz) -> f64 {
     dot3(a, a).sqrt()
 }
 
-/// 🧲️ Unit 3D vector, or the zero vector when the length is zero.
+/// 🧹️ Unit 3D vector, or the zero vector when the length is zero.
 pub fn normalize3(a: Xyz) -> Xyz {
     let length = length3(a);
     if length > 0.0 {

@@ -20,7 +20,7 @@ export function isPanelTabInSubtree(node: PanelTabNode, id: string): boolean {
   return node.kind === "branch" && node.children.some((child) => isPanelTabInSubtree(child, id));
 }
 
-/** 🔀️ Locates a tab anywhere in `dock`, returning its home anchor and the node itself. */
+/** 🔎️ Locates a tab anywhere in `dock`, returning its home anchor and the node itself. */
 export function findPanelTabInDock(dock: PanelDock, id: string): { readonly anchor: Anchor; readonly node: PanelTabNode } | null {
   for (const anchor of ANCHORS) {
     const path = findPanelTabPath(dock.anchors[anchor], id);
@@ -36,18 +36,18 @@ function collectPanelTabSubtreeIds(node: PanelTabNode, into: Set<string>): void 
   if (node.kind === "branch") node.children.forEach((child) => collectPanelTabSubtreeIds(child, into));
 }
 
-/** 🔀️ Reassigns `order` to match array position — call after any transform that reorders a sibling array so the existing order-based sort renders the new arrangement. */
+/** 🔃️ Reassigns `order` to match array position — call after any transform that reorders a sibling array so the existing order-based sort renders the new arrangement. */
 export function normalizePanelTabOrder(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
   return tabs.map((tab, index) => (tab.order === index ? tab : { ...tab, order: index }));
 }
 
-/** 🔀️ Recursively drops branch tabs left with zero children. The complementary half of "deliberately emptied" — keeping such branches out of {@link applyDockSkeleton}'s auto-append — is handled there by its subtree-mention check, so an emptied branch never resurfaces with default children restored. */
+/** 🌿️ Recursively drops branch tabs left with zero children. The complementary half of "deliberately emptied" — keeping such branches out of {@link applyDockSkeleton}'s auto-append — is handled there by its subtree-mention check, so an emptied branch never resurfaces with default children restored. */
 export function pruneEmptyPanelBranches(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
   const pruned = tabs.map((tab) => (tab.kind === "branch" ? { ...tab, children: pruneEmptyPanelBranches(tab.children) } : tab)).filter((tab) => tab.kind !== "branch" || tab.children.length > 0);
   return pruned.length === tabs.length && pruned.every((tab, index) => tab === tabs[index]) ? tabs : pruned;
 }
 
-/** 🔀️ Removes `id` wherever it lives in `tabs` (searching recursively into branches), pruning any ancestor branch left empty by the removal. Removal-first: callers compute insertion indices against this result, never the pre-removal tree. */
+/** 🧹️ Removes `id` wherever it lives in `tabs` (searching recursively into branches), pruning any ancestor branch left empty by the removal. Removal-first: callers compute insertion indices against this result, never the pre-removal tree. */
 function removePanelTabFromSiblings(tabs: readonly PanelTabNode[], id: string): { readonly tabs: readonly PanelTabNode[]; readonly removed: PanelTabNode | null } {
   const directIndex = tabs.findIndex((tab) => tab.id === id);
   if (directIndex >= 0) {
@@ -88,7 +88,7 @@ function appendPanelTabAsChild(tabs: readonly PanelTabNode[], parentId: string, 
   });
 }
 
-/** 🎯️ A completed tab drag: move `tabId` (found via {@link findPanelTabInDock}, not `fromAnchor` alone) to `target`. */
+/** ♟️ A completed tab drag: move `tabId` (found via {@link findPanelTabInDock}, not `fromAnchor` alone) to `target`. */
 export interface PanelTabDockMove {
   readonly tabId: string;
   readonly fromAnchor: Anchor;
@@ -96,7 +96,7 @@ export interface PanelTabDockMove {
 }
 
 /**
- * 🎯️ Pure move transform: removes the dragged tab's subtree from wherever it lives and reinserts it at `target`.
+ * 🚚️ Pure move transform: removes the dragged tab's subtree from wherever it lives and reinserts it at `target`.
  * Dropping a subtree into itself (as a child of one of its own descendants, or among the children of one) is a
  * no-operation returning the exact same {@link PanelDock} reference. Visibility is never touched here — the shell unfolds
  * a folded target anchor on drop.
@@ -133,7 +133,7 @@ function replacePanelTabInDock(dock: PanelDock, id: string, nextNode: PanelTabNo
   return { anchors };
 }
 
-/** 🎯️ Pure move transform for tree units — reorders within a leaf's own unit list, or moves a unit from one leaf tab's list into another's. */
+/** 🌳️ Pure move transform for tree units — reorders within a leaf's own unit list, or moves a unit from one leaf tab's list into another's. */
 export function moveTreeUnitInDock(dock: PanelDock, move: PanelTreeUnitDockMove): PanelDock {
   const from = findPanelTabInDock(dock, move.fromTabId);
   if (!from || from.node.kind !== "leaf") return dock;
@@ -179,7 +179,7 @@ function panelDockRowTabButtons(rowElement: HTMLElement, excludedIds: ReadonlySe
 }
 
 /**
- * 🎯️ Resolves a tab-drag drop target from registered rows. A row hit lands on a branch button's 30–70% center
+ * 💧️ Resolves a tab-drag drop target from registered rows. A row hit lands on a branch button's 30–70% center
  * band as `"child"` (nest into it), elsewhere as a midpoint `"insert"`. {@link PanelTabRow} preserves declared
  * left-to-right order at every anchor, so physical and model insertion order always agree.
  **/
@@ -250,7 +250,7 @@ export interface PanelDockProviderProps {
   readonly children: React.ReactNode;
 }
 
-/** 🎛️ Wraps a layout's panels, wiring pointer-capture tab dragging (mirrors {@link Mode}'s window-tab drag) across all of them. Tree-unit drags are native HTML5 DnD and don't need this provider — see {@link beginPanelTreeUnitDrag}. */
+/** ⏺️ Wraps a layout's panels, wiring pointer-capture tab dragging (mirrors {@link Mode}'s window-tab drag) across all of them. Tree-unit drags are native HTML5 DnD and don't need this provider — see {@link beginPanelTreeUnitDrag}. */
 export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTabDockDrop, onTreeUnitDockDrop, children }) => {
   const panelGhost = usePanelGhost();
   const [pendingDrag, setPendingDrag] = reactHostPort.useState<PanelDockPendingDrag | null>(null);

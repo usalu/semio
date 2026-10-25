@@ -39,3 +39,4 @@ pub mod schema {
         pub use component::*;
     }
 }
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioBrepSnapshot);

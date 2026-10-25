@@ -70,7 +70,16 @@
       "const": {
         "version": 1,
         "exitCode": 75,
-        "maximumReexecutions": 1,
+        "maximumReexecutions": 3,
+        "progressMilliseconds": 600000,
+        "loadFailure": {
+          "names": ["BuildMessage", "ResolveMessage"],
+          "syntaxErrorPrefix": "Export named ",
+          "backoffMs": [2000, 8000, 30000]
+        },
+        "editFailure": {
+          "backoffMs": [2000, 8000, 30000]
+        },
         "reexecutionEnvironment": "SEMIO_STALE_REEXEC",
         "admissionGuardRegistry": "semio.resourceLeaseAdmissionGuards.v1",
         "maximumSchemaBytes": 1048576,
@@ -165,6 +174,8 @@
             "refuse": "It neither reads nor overwrites {resource}.",
             "more": "... and {count} more stamps moved.",
             "restart": "Restarting with the current implementation ({attempt} of {maximum}).",
+            "loadfailure": "A source file was edited by another process while this command loaded it ({reason}). Waiting {delay} ms, then restarting ({attempt} of {maximum}).",
+            "editfailure": "Another process kept editing {path} while this command read it ({reason}). Waiting {delay} ms, then starting the command again with a new snapshot ({attempt} of {maximum}).",
             "final": "The stamps moved again after the restart: run the command again.",
             "unreadable": "The declared stamp table cannot be read ({path}): {reason}.",
             "missing": "The declared stamp {id} is missing at {pointer} of {path}.",
@@ -176,6 +187,8 @@
             "refuse": "Er liest und überschreibt {resource} nicht.",
             "more": "... und {count} weitere Stempel wechselten.",
             "restart": "Neustart mit der aktuellen Implementierung ({attempt} von {maximum}).",
+            "loadfailure": "Eine Quelldatei wurde von einem anderen Prozess bearbeitet, während dieser Befehl sie lud ({reason}). Warte {delay} ms, dann Neustart ({attempt} von {maximum}).",
+            "editfailure": "Ein anderer Prozess bearbeitete {path} laufend, während dieser Befehl es las ({reason}). Warte {delay} ms, dann startet der Befehl mit einem neuen Schnappschuss erneut ({attempt} von {maximum}).",
             "final": "Die Stempel wechselten nach dem Neustart erneut: den Befehl noch einmal ausführen.",
             "unreadable": "Die deklarierte Stempeltabelle kann nicht gelesen werden ({path}): {reason}.",
             "missing": "Der deklarierte Stempel {id} fehlt bei {pointer} in {path}.",

@@ -18,15 +18,15 @@ impl OrderedSet {
     pub fn key_at_rank(&self, index: usize) -> Option<&String> { self.values.entry_at_rank(index).map(|(key, ())| key) }
     /// 🧊️ Cold synchronous lookup; retained membership uses begin_lookup.
     pub fn contains(&self, key: &str) -> bool { self.values.contains_key(key) }
-    /// 🧊️ Cold synchronous insertion; retained callers use begin_insert.
+    /// ❄️ Cold synchronous insertion; retained callers use begin_insert.
     pub fn insert(&mut self, key: String) -> bool { let fresh = !self.values.contains_key(&key); self.values.insert(key, ()); fresh }
-    /// 🧊️ Cold synchronous removal; retained callers use begin_remove.
+    /// ➖️ Cold synchronous removal; retained callers use begin_remove.
     pub fn remove(&mut self, key: &str) -> bool { self.values.remove(key).is_some() }
     pub fn begin_insert(&self, key: String) -> UpdateCursor<()> { self.values.begin_set(key, ()) }
     pub fn begin_remove(&self, key: String) -> UpdateCursor<()> { self.values.begin_remove(key) }
     pub fn begin_lookup(&self, key: String) -> LookupCursor<()> { self.values.begin_lookup(key) }
     pub fn retire(self) -> Retirement<()> { self.values.retire() }
-    /// 🧊️ Explicit cold cleanup; never called by retained advance or Drop.
+    /// 🧹️ Explicit cold cleanup; never called by retained advance or Drop.
     pub fn retire_cold(self) {
         let mut retirement = self.retire();
         loop {
@@ -54,7 +54,7 @@ impl<const N: usize> From<[String; N]> for OrderedSet { fn from(values: [String;
 
 
 //#region 🔀️ArrayWire
-/// 🧊️ Gated (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02): `ToValue`/
+/// 🔌️ Gated (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02): `ToValue`/
 /// `FromValue` above is the real wire codec every non-test caller uses. Plain `#[cfg(test)]`
 /// alone would only cover THIS crate's own `🧪️tests/🧺️set/🦀️.rs` differential proof against real
 /// `serde_json` — a downstream crate's `#[cfg(test)]` build (e.g. `os-flow`'s test target) never

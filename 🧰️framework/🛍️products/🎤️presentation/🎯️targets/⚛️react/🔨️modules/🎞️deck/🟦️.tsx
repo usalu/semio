@@ -44,7 +44,7 @@ import { parsePresentationSlideCssSize, PresentationSlideAspectContext, Presenta
 import { ArrangementSection, PresentationInteractionProvider, PresentationSlideInteractionBridge } from "../🧭️arrangement-section/🟦️.tsx";
 
 //#region 🔖️PresentationDeck
-/** 🎞️ Maps a {@link Presentation} to reveal.js DOM. */
+/** 🗺️ Maps a {@link Presentation} to reveal.js DOM. */
 export const PresentationDeck: FC<{
   readonly presentation: Presentation;
   readonly options?: PresentationMountOptions;

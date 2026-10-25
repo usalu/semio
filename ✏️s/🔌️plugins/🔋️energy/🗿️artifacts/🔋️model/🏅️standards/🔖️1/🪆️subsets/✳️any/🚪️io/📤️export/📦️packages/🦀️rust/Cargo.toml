@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 pack = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-pack-json = { workspace = true }
+semio-framework-pack-json-float = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/🎯️float-writer/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }

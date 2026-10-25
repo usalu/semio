@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "levels": {
+    "fundamental": 15000,
+    "quick": 300000
+  },
+  "spawnTokens": [
+    "spawn",
+    "execFile",
+    "execSync",
+    "captureOwned",
+    "runOwned",
+    "Bun.$",
+    "child_process",
+    "runRepositoryCommand"
+  ],
+  "vectors": [
+    {
+      "name": "a pure assertion file starts nothing",
+      "source": "import { test, expect } from \"bun:test\";\ntest(\"x\", () => expect(1).toBe(1));",
+      "spawns": false
+    },
+    {
+      "name": "a node child process import spawns",
+      "source": "import { test } from \"bun:test\";\nimport { execFile } from \"node:child_process\";",
+      "spawns": true
+    },
+    {
+      "name": "bun spawn spawns",
+      "source": "import { test } from \"bun:test\";\ntest(\"x\", () => { Bun.spawnSync([\"true\"]); });",
+      "spawns": true
+    },
+    {
+      "name": "an owned capture spawns",
+      "source": "import { test } from \"bun:test\";\nawait captureOwnedCommandV1(\"x\", [], \".\", {});",
+      "spawns": true
+    },
+    {
+      "name": "the shell template spawns",
+      "source": "import { test } from \"bun:test\";\nawait Bun.$`true`;",
+      "spawns": true
+    },
+    {
+      "name": "a word that merely contains no token starts nothing",
+      "source": "import { test } from \"bun:test\";\n// the cargo manifest is only read\ntest(\"manifest\", () => {});",
+      "spawns": false
+    }
+  ]
+}

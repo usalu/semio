@@ -42,6 +42,12 @@
           "type": "null"
         }
       ]
+    },
+    "idleMilliseconds": {
+      "type": "integer",
+      "minimum": 60000,
+      "maximum": 86400000,
+      "description": "Idle window of a renewable command: it is stopped after this long without observable progress (child CPU time, child output, declared waits, finished observation steps), never later than maximumElapsedMilliseconds, which stays its nonrenewable ceiling. Absent: the command is bounded by the fixed ceiling alone. Meaningful only with a positive ceiling."
     }
   },
   "anyOf": [

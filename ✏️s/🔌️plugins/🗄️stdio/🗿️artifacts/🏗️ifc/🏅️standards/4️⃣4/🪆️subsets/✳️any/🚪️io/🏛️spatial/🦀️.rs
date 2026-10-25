@@ -11,7 +11,7 @@ use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Model
 /// 🌳️ One node of the `IfcRelAggregates`/`IfcRelContainedInSpatialStructure` decomposition tree.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct SpatialNode {
     pub id: u64,
@@ -64,7 +64,7 @@ pub struct PropertyValue {
     pub value: Part21Value,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct PropertySet {
     pub id: u64,

@@ -25,7 +25,7 @@ function predicateImpliesTest(predicate: string): boolean {
   return call[1] === "all" ? real.some(predicateImpliesTest) : real.length > 0 && real.every(predicateImpliesTest);
 }
 
-/** 🌳️ One `mod` item of a Rust source file with exact character offsets. */
+/** 🦀️ One `mod` item of a Rust source file with exact character offsets. */
 export type RustModuleNode = {
   readonly name: string;
   readonly visibility: string;
@@ -237,7 +237,7 @@ export function useLeafNames(statement: string): string[] {
   return names.filter(Boolean);
 }
 
-/** 🔤️ All identifier texts of a source. */
+/** 🪪️ All identifier texts of a source. */
 export function identifierSet(source: string): Set<string> {
   const set = new Set<string>();
   for (const token of rustTokens(source)) if (token.kind === "identifier") set.add(token.text);

@@ -18,5 +18,4 @@ export function verifyRetainedRowPatchOracle():void{
   const inverse=Object.fromEntries(Object.keys(row.patch).map(key=>[key,row.before[key as keyof typeof row.before]]));assert.deepEqual(inverse,row.inverse,row.id+" inverse source fields");
   const undo=applyPatch(structuredClone(row.after),compare(row.after,row.before),true,false).newDocument;assert.deepEqual(undo,row.before,row.id+" independent undo");
  }
- console.log("[DEBUG] shared sparse row apply "+corpus.length+" portable original fields matched actual RFC6902 forward and inverse outputs");
 }

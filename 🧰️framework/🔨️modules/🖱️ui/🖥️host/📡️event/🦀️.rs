@@ -291,7 +291,7 @@ pub fn pointer_id_from_web(pointer_id: i32) -> PointerId {
     PointerId(pointer_id as u64)
 }
 
-/// 🌐️ Maps the DOM `PointerEvent.pointerType` string onto [`PointerKind`]. The Pointer Events spec
+/// 🕷️ Maps the DOM `PointerEvent.pointerType` string onto [`PointerKind`]. The Pointer Events spec
 /// has no `"eraser"` type of its own (an eraser contact is reported as `"pen"` with a side-button
 /// flag) — a caller with access to that flag should override the result rather than this fn guessing.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -314,7 +314,7 @@ pub fn pointer_info_for_mouse(registry: &mut PointerRegistry, device: winit::eve
     PointerInfo { id: registry.pointer_id_for_mouse(device), kind: PointerKind::Mouse, pressure: None, tilt: None }
 }
 
-/// 👆️ Native touch pointer — `force` is normalized to `0.0..=1.0` by winit's own
+/// 📱️ Native touch pointer — `force` is normalized to `0.0..=1.0` by winit's own
 /// [`winit::event::Force::normalized`] before it reaches us.
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -322,7 +322,7 @@ pub fn pointer_info_for_touch(registry: &mut PointerRegistry, touch: &winit::eve
     PointerInfo { id: registry.pointer_id_for_touch(touch), kind: PointerKind::Touch, pressure: touch.force.map(|f| f.normalized() as f32), tilt: None }
 }
 
-/// 🌐️ Browser pointer — `pressure`/tilt-x/tilt-y come straight off `PointerEvent`'s own fields; a
+/// ℹ️ Browser pointer — `pressure`/tilt-x/tilt-y come straight off `PointerEvent`'s own fields; a
 /// caller passes `0.0` pressure through as `None` since the DOM reports `0` for devices that don't
 /// support it at all (same convention winit uses for a mouse).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -337,7 +337,7 @@ pub fn pointer_info_from_web(pointer_id: i32, pointer_type: &str, pressure: f32,
 
 //#region 🖱️Buttons and modifiers
 
-/// 🖱️ Ported from `host.rs`'s old `mouse_button_to_i16` — [`PointerButton`] only distinguishes
+/// 🐭️ Ported from `host.rs`'s old `mouse_button_to_i16` — [`PointerButton`] only distinguishes
 /// primary/secondary/middle (`events.rs`'s own closed set), so `Back`/`Forward`/`Other` map to
 /// `None`: a caller drops those rather than inventing a fourth variant `ui_render` doesn't have.
 #[cfg(not(target_arch = "wasm32"))]
@@ -351,7 +351,7 @@ pub fn pointer_button_from_winit(button: winit::event::MouseButton) -> Option<Po
     }
 }
 
-/// 🌐️ The DOM's `MouseEvent.button` values (0/1/2 = primary/middle/secondary — note the DOM orders
+/// 🔘️ The DOM's `MouseEvent.button` values (0/1/2 = primary/middle/secondary — note the DOM orders
 /// middle before secondary, unlike winit's enum).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn pointer_button_from_web(button: i16) -> Option<PointerButton> {
@@ -363,7 +363,7 @@ pub fn pointer_button_from_web(button: i16) -> Option<PointerButton> {
     }
 }
 
-/// ⌨️ Ported from `host.rs::modifiers_from_winit` verbatim, made sync (ruling U1 — the old fn was
+/// 🔄️ Ported from `host.rs::modifiers_from_winit` verbatim, made sync (ruling U1 — the old fn was
 /// `async` for no reason, since nothing in it ever suspended).
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -371,7 +371,7 @@ pub fn modifiers_from_winit(state: winit::keyboard::ModifiersState) -> EventModi
     EventModifiers { shift: state.shift_key(), ctrl: state.control_key(), alt: state.alt_key(), meta: state.super_key() }
 }
 
-/// 🌐️ The DOM reports each modifier as its own boolean on every keyboard/mouse/pointer event — no
+/// 🔣️ The DOM reports each modifier as its own boolean on every keyboard/mouse/pointer event — no
 /// combined bitflag to unpack, so this is a plain field-for-field copy.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn modifiers_from_web(shift: bool, ctrl: bool, alt: bool, meta: bool) -> EventModifiers {
@@ -386,13 +386,13 @@ pub fn modifiers_from_web(shift: bool, ctrl: bool, alt: bool, meta: bool) -> Eve
 /// old `* 40.0` constant verbatim so wheel feel doesn't shift under the port.
 pub const WHEEL_LINE_HEIGHT_PX: f32 = 40.0;
 
-/// 🌐️ [`WheelEvent.deltaMode`](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode)
+/// 📖️ [`WheelEvent.deltaMode`](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode)
 /// values the browser disagrees with itself about depending on device and OS wheel settings.
 pub const DOM_DELTA_PIXEL: u32 = 0;
 pub const DOM_DELTA_LINE: u32 = 1;
 pub const DOM_DELTA_PAGE: u32 = 2;
 
-/// 🎡️ Ported from `host.rs::dispatch_window_event`'s `MouseWheel` arm, generalized to both axes
+/// 🧲️ Ported from `host.rs::dispatch_window_event`'s `MouseWheel` arm, generalized to both axes
 /// (the old port only normalized `delta_y`).
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -403,7 +403,7 @@ pub fn normalize_wheel_delta_native(delta: winit::event::MouseScrollDelta) -> (f
     }
 }
 
-/// 🌐️ Normalizes a `WheelEvent`'s delta to pixels across all three `deltaMode`s browsers disagree
+/// 🧹️ Normalizes a `WheelEvent`'s delta to pixels across all three `deltaMode`s browsers disagree
 /// about: `DOM_DELTA_PIXEL` passes through, `DOM_DELTA_LINE` scales by [`WHEEL_LINE_HEIGHT_PX`], and
 /// `DOM_DELTA_PAGE` scales by the caller's own `viewport` size (a "page" of scroll is one viewport).
 /// An unrecognized mode degrades to pixel passthrough rather than panicking.
@@ -490,7 +490,7 @@ pub enum PhysicalKeyCode {
     Unidentified,
 }
 
-/// ⌨️ Physical-key mapping — independent of active keyboard layout (ruling: "physical vs logical
+/// 🗝️ Physical-key mapping — independent of active keyboard layout (ruling: "physical vs logical
 /// distinction preserved"). `winit::keyboard::PhysicalKey::Unidentified` (a key winit couldn't
 /// translate to any `KeyCode` at all) degrades to [`PhysicalKeyCode::Unidentified`] the same as any
 /// `KeyCode` variant not yet listed above.
@@ -576,7 +576,7 @@ pub fn physical_key_from_winit(key: winit::keyboard::PhysicalKey) -> PhysicalKey
     }
 }
 
-/// 🌐️ The DOM `KeyboardEvent.code` string is already a stable physical identifier (`"KeyW"`,
+/// 🔑️ The DOM `KeyboardEvent.code` string is already a stable physical identifier (`"KeyW"`,
 /// `"ArrowLeft"`, `"F11"`, …) — this parses that same vocabulary winit's `KeyCode` variant names
 /// mirror, so native and web share one [`PhysicalKeyCode`] result for the same physical key.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

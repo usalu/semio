@@ -1,4 +1,4 @@
-//! ⏱️ Tooltip clock and overlay API: the retained caret, the clock deadlines and advance, the row reason hints and the overlay open, close and dismiss methods. See [`super`].
+//! ⏰️ Tooltip clock and overlay API: the retained caret, the clock deadlines and advance, the row reason hints and the overlay open, close and dismiss methods. See [`super`].
 
 use super::*;
 
@@ -113,7 +113,7 @@ impl EventRouter {
         self.row_reason.map(|hint| (hint.row, hint.index))
     }
 
-    /// 💬️ Shows `next`'s reason hint (or none), repainting the rows it leaves and enters; `true` when it changed.
+    /// 💡️ Shows `next`'s reason hint (or none), repainting the rows it leaves and enters; `true` when it changed.
     pub(super) fn set_row_reason(&mut self, tree: &mut UiTree, next: Option<RowReasonHint>) -> bool {
         let changed = self.revealed_row_reason() != next.map(|hint| (hint.row, hint.index));
         if changed {
@@ -125,12 +125,12 @@ impl EventRouter {
         changed
     }
 
-    /// 💬️ The hint of `row`'s `index`-th action when it is a disabled action naming its reason, else `None`.
+    /// 🧠️ The hint of `row`'s `index`-th action when it is a disabled action naming its reason, else `None`.
     pub(super) fn row_reason_hint(tree: &UiTree, row: NodeId, index: usize, hovered: bool) -> Option<RowReasonHint> {
         disabled_row_action_reason(tree, row, index).map(|_| RowReasonHint { row, index, hovered })
     }
 
-    /// 💬️ The pointer at `(x, y)` over `target`: entering a disabled action's icon shows its reason, leaving the icon hides a hint
+    /// 🏹️ The pointer at `(x, y)` over `target`: entering a disabled action's icon shows its reason, leaving the icon hides a hint
     /// the pointer revealed (a hint focus or a press revealed stays until blur or Escape).
     pub(super) fn hover_row_reason(&mut self, tree: &mut UiTree, target: Option<NodeId>, x: f32, y: f32) {
         let over = target.and_then(|row| self.pointer_row_action(tree, row, x, y).and_then(|index| Self::row_reason_hint(tree, row, index, true)));

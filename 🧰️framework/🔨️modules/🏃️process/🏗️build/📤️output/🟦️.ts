@@ -1,3 +1,4 @@
+import { Writable } from "node:stream";
 import protocol from "./🔣️.json" with { type: "json" };
 
 /** 🔌️ Accepts text for the result stream and reports when it was delivered; the shape of a Node stream without its type. */
@@ -34,6 +35,9 @@ export function restoreOutputContractV1(): void { holder[key]?.restore(); }
 
 /** 📤️ The only way to reach the result stream: the real standard output, also while the contract diverts every other writer. */
 export const machineOutputV1: MachineOutputSinkV1 = { write: (text, complete) => (holder[key]?.result ?? (process.stdout as unknown as MachineOutputSinkV1)).write(text, complete) };
+
+/** 🌊️ The result stream as a Node writable: a forwarded child result (`pipe`) reaches the real standard output also while the contract diverts `process.stdout.write`. */
+export function resultStreamV1(): Writable { return new Writable({ write(chunk, _encoding, done) { const real = process.stdout as NodeJS.EventEmitter; let settled = false; const finish = (error?: Error | null): void => { if (settled) return; settled = true; if (!error) real.removeListener("error", finish); done(error ?? undefined); }; real.once("error", finish); try { machineOutputV1.write(chunk, finish); } catch (error) { finish(error as Error); } } }); }
 
 /** 🧾️ Writes one line of the result to the result stream. */
 export function writeResultLineV1(line: string): void { machineOutputV1.write(line + "\n"); }

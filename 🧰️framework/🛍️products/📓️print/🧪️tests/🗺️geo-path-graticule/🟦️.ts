@@ -81,15 +81,15 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🗺️geo-path-graticule/path-none.tex")),
     },
     "path-with-resampling": {
-      /** 🔮️ d3-geo's own stream at its default precision, i.e. the adaptive resampler. */
+      /** 🌊️ d3-geo's own stream at its default precision, i.e. the adaptive resampler. */
       oracle: (ctx: AdapterContext) => ({
         projection: { "geo/path": rows(ctx).flatMap((row) => projectedVertices(KINDS[row.kind!]!())) },
       }),
-      /** 🎯️ `\semio_viz_geo_path:nn` at the same default precision. */
+      /** 📂️ `\semio_viz_geo_path:nn` at the same default precision. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🗺️geo-path-graticule/path-resampled.tex")),
     },
     "graticule-lines": {
-      /** 🔮️ `d3.geoGraticule().lines()` at the same minor step, before any projection. */
+      /** 🪜️ `d3.geoGraticule().lines()` at the same minor step, before any projection. */
       oracle: (ctx: AdapterContext) => ({
         projection: {
           "geo/graticule": rows(ctx).flatMap((row) =>
@@ -102,7 +102,7 @@ export default defineTestAdapter({
           ),
         },
       }),
-      /** 🎯️ `\semio_viz_geo_graticule_lines:n` at the same minor step. */
+      /** 👣️ `\semio_viz_geo_graticule_lines:n` at the same minor step. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🗺️geo-path-graticule/graticule.tex")),
     },
   },

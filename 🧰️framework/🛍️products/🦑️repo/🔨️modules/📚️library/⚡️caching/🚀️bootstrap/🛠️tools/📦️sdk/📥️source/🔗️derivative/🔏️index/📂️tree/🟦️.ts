@@ -1,4 +1,4 @@
-import type{ToolingRetirementReadContextV1}from"../../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import type{ToolingRetirementReadContextV1}from"../../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{requireIssuedResourceControlRefinementV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{forEachNxSdkSourceLayerV1}from"../../📚️layers/🟦️.ts";
 import{lstatSync,type BigIntStats}from"node:fs";
@@ -6,7 +6,7 @@ import{lstat}from"node:fs/promises";
 import{join,relative,sep}from"node:path";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireNativeStoragePathV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import type{RepositoryToolingStoreV1}from"../../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import type{RepositoryToolingStoreV1}from"../../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 const policy=schema.definitions.Policy.const;
 /** 🎛️ Keeps a real operation phase beneath its unchanged store owner. */
@@ -25,7 +25,7 @@ const same=(a:BigIntStats,b:BigIntStats)=>a.dev===b.dev&&a.ino===b.ino&&a.mode==
 export interface NxSdkSourceTreeV1{parent(path:string):Promise<string>;directory(path:string,facts:BigIntStats):void;recheck():Promise<void>}
 /** 🧷️ Retains every unique no-follow directory identity across one complete rooted read operation. */
 export function withNxSdkSourceTreeV1<T>(directory:string,store:RepositoryToolingStoreV1,body:(tree:NxSdkSourceTreeV1)=>Promise<T>,control:ResourceLeaseControl=store.control):Promise<T>{return withNxSdkSourceReadTreeV1(directory,{root:store.root,control:store.control,check:actual=>requireNxSdkSourceControlV1(store,actual)},body,control);}
-/** 🪢️ Drains every accepted read before invalidating this exact rooted verification lifetime. */
+/** 🌲️ Drains every accepted read before invalidating this exact rooted verification lifetime. */
 export async function withNxSdkSourceReadTreeV1<T>(directory:string,context:NxSdkSourceReadContextV1,body:(tree:NxSdkSourceTreeV1)=>Promise<T>,control:ResourceLeaseControl=context.control):Promise<T>{
  const checkRoot=nxSdkSourceReadRootGuardV1(directory,context,control);const root=await lstat(directory,{bigint:true});context.check(control);checkRoot();if(!root.isDirectory()||root.isSymbolicLink())throw Error("Original SDK source root required");const directories=new Map<string,BigIntStats>([["",root]]);let live=true,accepting=true;const pending=new Set<Promise<unknown>>(),failures:unknown[]=[];const track=<R>(run:()=>Promise<R>):Promise<R>=>{if(!live||!accepting)return Promise.reject(Error("SDK source traversal released"));if(pending.size>=policy.maximumEntries)return Promise.reject(Error("SDK source traversal continuation ceiling exceeded"));const work=run();pending.add(work);void work.then(()=>pending.delete(work),error=>{pending.delete(work);if(!failures.length)failures.push(error);});return work;};
  const absolute=(value:string)=>{context.check(control);if(!live)throw Error("SDK source traversal released");path(value);const absolute=join(directory,value);if(absolute.length>policy.maximumPath)throw Error("SDK source traversal path ceiling exceeded");return absolute;};

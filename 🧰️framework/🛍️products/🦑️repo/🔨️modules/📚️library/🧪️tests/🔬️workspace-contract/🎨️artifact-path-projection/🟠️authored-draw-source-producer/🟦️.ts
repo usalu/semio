@@ -12,7 +12,7 @@ import { semanticPathProjectionAuthority } from "../../../../🔍️discovery/�
 import { type Taxonomy } from "../../../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 import { ARTIFACT_PROJECTION_GOLDEN, ARTIFACT_PROJECTION_RUN_PARENT, type ArtifactProducerInput, DRAW_SOURCE_SCENARIO, DRAW_SOURCE_SCENARIO_ROOT, type DrawSourceScenario, NORMALIZATION_RUN_DIRECTORY, NORMALIZATION_RUN_ROOT, NORMALIZATION_SCHEMA_REL, artifactProjectionFixtureLocations, artifactProjectionFixturePath, artifactProjectionProducerInputs, artifactProjectionSourceFiles, drawSourceScenarioContent, normalizationRetainedRunParent, projectionAuthorityNodes, projectionGolden } from "../../🏗️shared-fixtures/🟦️.ts";
 import { contractRoot } from "../../🏗️shared-fixtures/🟦️.ts";
-import { projectionAuthority, projectionTaxonomy } from "../🟣️shared/🟦️.ts";
+import { projectionAuthority, projectionTaxonomy } from "../🟣️harness/🟦️.ts";
 
 /** 🟡 Registers the authored draw source producer tests of the artifact path projection authority suite. */
 export function registerAuthoredDrawSourceProducerTests(): void {

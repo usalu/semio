@@ -1,6 +1,6 @@
 #!/usr/bin/env repo
 /** 🧭️ `@repo` technology policy router: `repo ./📜️script.ts policy`. */
-import { defineLint, type TechnologyLinter } from "./🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts";
+import { defineLint, type TechnologyLinter } from "./🔨️modules/📚️library/📦️packages/🟦️typescript/🚨️policy/🧩️linters/🟦️.ts";
 import { runPolicyOnlyMain } from "./🔨️modules/📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
 
 export const policy = defineLint("repo-technology", (l: TechnologyLinter) => {

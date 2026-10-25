@@ -539,5 +539,4 @@ fn insertion_next_action_quotes_every_page_directory_and_move_receipt() {
         assert!(cursor.terminal_is_empty());
     }
     assert_eq!(map.iter().map(|(key, ())| *key).collect::<Vec<_>>(), (0..count).collect::<Vec<_>>());
-    println!("[DEBUG] Original ordered-map next-action quote laws cover {count} descending insertions");
 }

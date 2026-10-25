@@ -1,6 +1,6 @@
 import {spawn} from "node:child_process";
 import {formatHostCapacityV1,hostCapacityDirectoryV1,newHostCapacityIdV1,readHostCapacityStatusV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,sizeHostRequestV1,withHostCapacityV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
-import {agentSessionAddressV1,agentSessionCapacityRowsV1,agentSessionRegistryRootV1,currentAgentSessionV1,renderAgentSessionCapacityV1} from "../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts";
+import {agentSessionAddressV1,agentSessionCapacityRowsV1,agentSessionRegistryRootV1,currentAgentSessionV1,renderAgentSessionCapacityV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "../🟦️.ts";
 import {writeDiagnosticLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
@@ -26,7 +26,7 @@ async function status(head:readonly string[],context:CapacityCommandContextV1,po
   if(head.includes("--json")){context.write(JSON.stringify({...snapshot,sessions},null,2));return 0;}
   const language=resolveHostCapacityLanguageV1(context.environment),host=snapshot.host;
   context.write(formatHostCapacityV1(language,"status",{available:host.availableMegabytes,total:host.totalMegabytes,floor:snapshot.evaluation.floorMegabytes,spare:snapshot.evaluation.headroomMegabytes,pressure:host.pressure,swap:host.swapUsedMegabytes??"n/a",load:host.load??"n/a",files:host.openFiles??"n/a",images:host.attachedImages??"n/a",grants:snapshot.grants.length,waiters:snapshot.waiters.length}));
-  for(const grant of snapshot.grants)context.write(formatHostCapacityV1(language,"grant",{id:grant.id,operation:grant.operation,jobs:grant.jobs,reserved:grant.reservedMegabytes,observed:grant.observedMegabytes??"n/a",pid:grant.pid,seconds:Math.round((now()-grant.admittedAtMs)/1000)}));
+  for(const grant of snapshot.grants)context.write(formatHostCapacityV1(language,grant.lentSinceMs===undefined?"grant":"grantLent",{id:grant.id,operation:grant.operation,jobs:grant.jobs,cpu:grant.cpu,reserved:grant.reservedMegabytes,observed:grant.observedMegabytes??"n/a",pid:grant.pid,seconds:Math.round((now()-(grant.lentSinceMs??grant.admittedAtMs))/1000)}));
   for(const waiter of snapshot.waiters)context.write(formatHostCapacityV1(language,"waiter",{id:waiter.request.id,operation:waiter.request.operation,jobs:waiter.request.preferredJobs,need:waiter.request.fixedMegabytes+waiter.request.minimumJobs*waiter.request.perJobMegabytes,pid:waiter.pid,seconds:Math.round((now()-waiter.arrivedAtMs)/1000)}));
   for(const line of renderAgentSessionCapacityV1(sessions,language))context.write(line);
   return 0;

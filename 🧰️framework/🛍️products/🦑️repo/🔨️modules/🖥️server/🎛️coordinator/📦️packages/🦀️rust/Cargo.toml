@@ -13,11 +13,11 @@ role = "tool"
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [[bin]]
 name = "semio-repo-coordinator"
-path = "📦️main.rs"
+path = "../../🚪️entrypoint/🦀️.rs"
 
 [dependencies]
 serde = { workspace = true }

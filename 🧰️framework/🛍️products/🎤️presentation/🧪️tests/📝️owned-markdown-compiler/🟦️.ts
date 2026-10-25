@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { compileOwnedMarkdownToHtml } from "../../🎯️targets/⚛️react/🔨️modules/📝️markdown-html-compiler/🟦️.ts";
-import { compileMarkdownToHtml } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { compileOwnedMarkdownToHtml } from "@semio-tech/presentation-react/markdown-html-compiler";
+import { compileMarkdownToHtml } from "@semio-tech/presentation-react";
 
 const tick = "\x60";
 const fixtures = [

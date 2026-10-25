@@ -23,7 +23,6 @@ test("all26 Source target declarations and audited script literals retain runtim
   for(const data of row.dataEntries){expect(declaration.inputs).toContain(data);expect(semio.runtimeSourceEntries.map(expand)).not.toContain(expand(data));expect(expand(data).length).toBeLessThanOrEqual(256);expect(statSync(expand(data)).isFile()).toBe(true);}
   expect(entryValidator([...row.runtimeEntries,row.runtimeEntries[0]])).toBe(false);
  }}finally{database.close();}
- console.log("[DEBUG] All26 actual Source targets preserve32 selected runtime entry modules and independent SQLite manifest roles; freshness DATA never becomes runtime by spelling");
 });
 
 test("three supplemental Source declarations retain selected runtime and real typed compiler roots",()=>{

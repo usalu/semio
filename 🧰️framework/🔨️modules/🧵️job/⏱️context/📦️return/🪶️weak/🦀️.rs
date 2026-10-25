@@ -12,7 +12,7 @@ struct OriginalNativeWeakLoan<'context>{target:*mut StepContext<'context>,previo
 impl OriginalNativeWeakLoan<'_>{fn matches(&self)->bool{unsafe{let actual=&*self.target;self.identity.matches(actual)&&self.cancel==actual.original_cancel_token()as*const _ as usize&&self.epoch==actual.source_epoch}}}
 impl Drop for OriginalNativeWeakLoan<'_>{fn drop(&mut self){NATIVE_WEAK_SCOPES.with(|slots|{assert_eq!(slots[self.slot].replace(0),self.ticket,"original scoped Weak ticket has one return")});let restore=if self.matches(){self.previous}else{None};unsafe{(*self.target).native_weak_parent=restore}}}
 impl StepContext<'_>{
-    /// 🪶️ Borrows a still-live typed native parent without a new alias, source identity, budget, clock or recipient.
+    /// 🧲️ Borrows a still-live typed native parent without a new alias, source identity, budget, clock or recipient.
     pub fn with_original_native_weak_parent<T:'static,R:Copy>(&mut self,parent:&Arc<T>,run:impl FnOnce(&mut Self)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
         self.original_source_parent()?;
         let ticket=NEXT_NATIVE_WEAK_SCOPE.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original scoped Weak receiver epochs are exhausted"))?;

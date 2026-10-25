@@ -345,7 +345,7 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
 
 }
 
-/// 🖼️ LAW: the world textured pass is an UNDERLAY — it blends and never writes depth, and its quad
+/// 🧪️ LAW: the world textured pass is an UNDERLAY — it blends and never writes depth, and its quad
 /// is a centred unit XY plane whose first texture row is its TOP.
 ///
 /// A depth-writing underlay would punch its own semi-transparent quad through everything behind it,

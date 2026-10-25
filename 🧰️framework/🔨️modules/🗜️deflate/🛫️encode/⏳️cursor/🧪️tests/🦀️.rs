@@ -72,7 +72,6 @@ fn deflate_controlled_retained_exact_oracles_and_grants() {
         let oracle = child.wait_with_output().unwrap();
         assert!(oracle.status.success(), "{}", String::from_utf8_lossy(&oracle.stderr));
         assert_eq!(oracle.stdout, raw);
-        println!("[DEBUG] retained Deflate {} raw bytes -> {} canonical bytes; system zlib agrees", raw.len(), stored.len());
     }
 }
 
@@ -95,7 +94,6 @@ fn deflate_controlled_retained_cancellation_frontiers() {
         }
         close(&mut cursor);
         assert!(reached, "frontier {phase}");
-        println!("[DEBUG] retained Deflate cancellation frontier {phase} reached terminal emptiness");
     }
 }
 
@@ -104,6 +102,6 @@ fn deflate_controlled_retained_restart_preserves_canonical_independent_windows()
  let mut cursor=RetainedDeflateEncoder::default();let inputs=[b"A".repeat(40000),b"abc".repeat(10000),Vec::new(),b"A".repeat(60000)];
  for (index,raw) in inputs.iter().enumerate(){let mut pending=None;let mut read=0;let mut actual=Vec::new();let mut output=[0;1];let mut born=0;let mut turns=0;
   for _ in 0..1000000{if pending.is_none()&&read<raw.len(){pending=Some(raw[read]);read+=1;}let grant=exact(&cursor);let(step,birth,free)=super::tests::controlled::observe_backing(||cursor.advance(&mut pending,read==raw.len(),&mut output,grant).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));born+=birth;actual.extend_from_slice(&output[..step.written_bytes]);turns+=1;if step.complete{break;}}
-  let complete=cursor.is_complete();assert_eq!(actual,deflate(raw));assert_eq!(miniz_oxide::inflate::decompress_to_vec(&actual).unwrap(),*raw);if index!=0{assert_eq!(born,0);assert!(turns<300000);}if index+1<inputs.len(){cursor.restart().unwrap();assert_eq!(cursor.phase(),RetainedDeflatePhase::Input);}assert!(complete);eprintln!("[DEBUG] retained Deflate generation{index} exact{}bytes no extra backing after first generation, paidturns{turns}",actual.len());
+  let complete=cursor.is_complete();assert_eq!(actual,deflate(raw));assert_eq!(miniz_oxide::inflate::decompress_to_vec(&actual).unwrap(),*raw);if index!=0{assert_eq!(born,0);assert!(turns<300000);}if index+1<inputs.len(){cursor.restart().unwrap();assert_eq!(cursor.phase(),RetainedDeflatePhase::Input);}assert!(complete);
  }close(&mut cursor);
 }

@@ -33,8 +33,8 @@ const OFFICE_RELATIONSHIP_NAMESPACES: [&str; 2] = [R_NS, R_NS_STRICT];
 
 /// 🧩️ The sparse diff one leaf produces, with the concrete mutations that undo it.
 pub(crate) struct XlsxPlan {
-    pub(crate) diff: XlsxDiff,
-    pub(crate) inverse: Vec<XlsxMutation>,
+    pub diff: XlsxDiff,
+    pub inverse: Vec<XlsxMutation>,
 }
 
 type Planned = Result<XlsxPlan, String>;

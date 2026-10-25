@@ -1,9 +1,9 @@
-/** 🏷️ Contract: bundle scope labels are emoji clusters plus a lowercase area name; the label module counts clusters, strips reserved emojis, extracts ASCII path tokens and refuses paths, reserved emojis and malformed names with a fixed message; the corpus is language-agnostic and `🐍️oracle.py` classifies emoji by Unicode range and recomputes each verdict. */
+/** 🏷️ Contract: bundle scope labels are emoji clusters plus a lowercase area name; the label module counts clusters, strips reserved emojis, extracts ASCII path tokens and refuses paths, reserved emojis and malformed names with a fixed message; the corpus is language-agnostic and `🐍️.py` classifies emoji by Unicode range and recomputes each verdict. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {bundleScopeLabelError,emojiClusterCountInLine,isBundleScopeLine,labelPathTokens,leadingEmojiClusterCount,normalizeBundleScopeLabel} from "../🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
@@ -19,6 +19,6 @@ for(const row of corpus.scopeLine)test("scope line "+JSON.stringify(row.line),()
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

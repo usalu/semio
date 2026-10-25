@@ -123,11 +123,11 @@ impl ServerError {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ErrorBody {
-    /// 🏷️ The [`ServerError::kind`] tag.
+    /// 🔖️ The [`ServerError::kind`] tag.
     pub kind: String,
-    /// 💬️ The human-facing detail.
+    /// ✉️ The human-facing detail.
     pub message: String,
-    /// ⏳️ The wait in milliseconds after which the request is worth repeating, when it is. Carried
+    /// 🔁️ The wait in milliseconds after which the request is worth repeating, when it is. Carried
     /// in the body as well as in `Retry-After`, which a cross-origin page cannot read unless the
     /// response exposes it.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -1,3 +1,4 @@
+import {timingSafeEqual} from "node:crypto";
 import {validateJsonSchemaSubset} from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {resolveLanguageV1,type OsLanguageListV1} from "../../🗣️language/🟦️.ts";
@@ -9,15 +10,17 @@ export type HostResourceV1=Readonly<{cpu:number;megabytes:number}>;
 /** 🧭️ How one operation sizes its request: `tasks` multiplies per-job estimates by the job count, `fixed` reserves one block. */
 export type HostOperationV1=Readonly<{name:string;shape:"tasks"|"fixed";kind?:HostActionKindV1;fixedMegabytes:number;cpu:number;priority:"batch"|"interactive"}>;
 /** 📜️ The authored host capacity policy (`Policy` of the schema). */
-export type HostCapacityPolicyV1=Readonly<{version:1;enabled:boolean;memory:Readonly<{floorBasisPoints:number;floorMinimumMegabytes:number;floorMaximumMegabytes:number;budgetBasisPoints:number;rampMilliseconds:number}>;swap:Readonly<{ceilingBasisPoints:number;outMegabytesPerSecond:number}>;pressure:Readonly<{psiWarnPercent:number;psiCriticalPercent:number;availableWarnBasisPoints:number;availableCriticalBasisPoints:number}>;load:Readonly<{perCoreCeiling:number;overrideAfterMilliseconds:number}>;files:Readonly<{ceilingBasisPoints:number}>;attaches:Readonly<{maximum:number}>;wait:Readonly<{pollMilliseconds:number;progressMilliseconds:number;heartbeatMilliseconds:number;staleMilliseconds:number;lockStaleMilliseconds:number;sampleMaximumAgeMilliseconds:number;maximumWaiters:number;bypassMilliseconds:number;maximumBypasses:number;agingMilliseconds:number}>;kinds:Readonly<Record<HostActionKindV1,HostResourceV1>>;operations:readonly HostOperationV1[]}>;
+export type HostCapacityPolicyV1=Readonly<{version:1;enabled:boolean;memory:Readonly<{floorBasisPoints:number;floorMinimumMegabytes:number;floorMaximumMegabytes:number;budgetBasisPoints:number;rampMilliseconds:number}>;swap:Readonly<{ceilingBasisPoints:number;outMegabytesPerSecond:number}>;pressure:Readonly<{psiWarnPercent:number;psiCriticalPercent:number;availableWarnBasisPoints:number;availableCriticalBasisPoints:number}>;load:Readonly<{perCoreCeiling:number;overrideAfterMilliseconds:number}>;files:Readonly<{ceilingBasisPoints:number}>;attaches:Readonly<{maximum:number}>;wait:Readonly<{pollMilliseconds:number;progressMilliseconds:number;heartbeatMilliseconds:number;staleMilliseconds:number;lockStaleMilliseconds:number;sampleMaximumAgeMilliseconds:number;maximumWaiters:number;bypassMilliseconds:number;maximumBypasses:number;agingMilliseconds:number;lendAfterMilliseconds:number}>;kinds:Readonly<Record<HostActionKindV1,HostResourceV1>>;operations:readonly HostOperationV1[]}>;
 /** 🖥️ One sample of the host (`Host` of the schema); every platform reduces to these fields, `null` marking a counter the platform does not offer: the machine-wide open file table (used and maximum) and the number of attached disk images join memory, swap and load. */
 export type HostSampleV1=Readonly<{version:1;atMs:number;platform:"darwin"|"linux"|"win32";cores:number;totalMegabytes:number;availableMegabytes:number;pressure:"normal"|"warn"|"critical";swapUsedMegabytes:number|null;swapOutMegabytesPerSecond:number|null;load:number|null;openFiles:number|null;openFilesMaximum:number|null;attachedImages:number|null}>;
 /** 🎫️ What one operation asks for (`Request` of the schema). */
 export type HostRequestV1=Readonly<{id:string;operation:string;priority:"batch"|"interactive";minimumJobs:number;preferredJobs:number;fixedMegabytes:number;perJobMegabytes:number;cpuPerJob:number}>;
 /** ⏳️ A request in the queue (`Waiter` of the schema). */
 export type HostWaiterV1=Readonly<{request:HostRequestV1;arrivedAtMs:number;pid:number;session?:string;weight?:number}>;
-/** 🔐️ A live admission (`Grant` of the schema); `observedMegabytes` is what its process tree holds right now. */
-export type HostGrantV1=Readonly<{id:string;operation:string;jobs:number;cpu:number;reservedMegabytes:number;admittedAtMs:number;observedMegabytes:number|null;pid:number;bootAtMs:number;session?:string}>;
+/** 🔐️ A live admission (`Grant` of the schema); `observedMegabytes` is what its process tree holds right now; `lentSinceMs` marks a grant whose process only waits in a queue (its reservation and cores are lent back to the ledger); `resumedAtMs` restarts the ramp when that process continues. */
+export type HostGrantV1=Readonly<{id:string;operation:string;jobs:number;cpu:number;reservedMegabytes:number;admittedAtMs:number;observedMegabytes:number|null;pid:number;bootAtMs:number;session?:string;lentSinceMs?:number;resumedAtMs?:number;handover?:HostHandoverV1}>;
+/** 🤝️ The offer a process makes while its grant waits for the command that replaces it: a one-time token and the identity (id and start time) of the offering process, so only its own replacement can take the grant over. */
+export type HostHandoverV1=Readonly<{token:string;fromPid:number;fromStarted:string;offeredAtMs:number}>;
 /** 🧾️ Why a request was admitted or kept waiting. */
 export type HostReasonV1="fits"|"reduced"|"override"|"memory"|"swap"|"swap-activity"|"pressure-critical"|"pressure-warn"|"files"|"attaches"|"load"|"queue-order";
 /** ⚖️ The verdict for one request. */
@@ -27,7 +30,7 @@ export type HostEvaluationV1=Readonly<{floorMegabytes:number;unrealizedMegabytes
 /** 🧩️ The tool-neutral resource envelope a build tool renders into its own flags. */
 export type HostPlanV1=Readonly<{version:1;id:string;jobs:number;cpu:number;memoryMegabytes:number;fixedMegabytes:number;floorMegabytes:number}>;
 /** 🏷️ Names of the closed definitions a value can be required to match. */
-export type HostDefinitionV1="Policy"|"Host"|"Request"|"Waiter"|"Grant"|"Decision"|"Evaluation"|"Plan"|"GrantLiveness";
+export type HostDefinitionV1="Policy"|"Host"|"Request"|"Waiter"|"Grant"|"Decision"|"Evaluation"|"Plan"|"GrantLiveness"|"Handover"|"HandoverFacts";
 
 /** 🛂️ Requires a value to match one closed definition of the host capacity schema. */
 export function requireHostCapacityV1<T>(definition:HostDefinitionV1,value:unknown):T{
@@ -41,14 +44,40 @@ export function isHostCapacityV1(definition:HostDefinitionV1,value:unknown):bool
  return validateJsonSchemaSubset({definitions:schema.definitions,$ref:`#/definitions/${definition}`},value).length===0;
 }
 
-/** 🧭️ Closed liveness facts shared by ordinary accounting and inherited admission. */
+/** 📕️ Closed liveness facts shared by ordinary accounting and inherited admission. */
 export type HostGrantLivenessV1=Readonly<{grant:HostGrantV1;expectedId:string;pidAlive:boolean;nowMs:number;bootAtMs:number;modifiedAtMs:number}>;
 
-/** 🔐️ Requires the same live instance, boot and heartbeat before a grant can carry admission. */
+/** 🚀️ Requires the same live instance, boot and heartbeat before a grant can carry admission. */
 export function isCurrentHostGrantV1(value:unknown,policy:HostCapacityPolicyV1):boolean{
  if(!isHostCapacityV1("GrantLiveness",value))return false;
  const facts=value as HostGrantLivenessV1;
  return facts.pidAlive&&facts.grant.id===facts.expectedId&&Math.abs(facts.grant.bootAtMs-facts.bootAtMs)<=schema.definitions.Protocol.const.bootToleranceMilliseconds&&facts.nowMs-facts.modifiedAtMs<=policy.wait.staleMilliseconds;
+}
+
+/** 🛑️ Why a grant offered by a replaced command cannot be taken over. */
+export type HostHandoverRefusalV1="gone"|"token"|"expired"|"identity"|"operation";
+/** 🏭️ What a process knows when it is offered the grant of the command it replaces: the grant row it read (null when gone), whether that row is a current live grant, the offered text of its environment (`<id>.<token>`), the operation it asks for, the identity of its parent process and the clock. */
+export type HostHandoverFactsV1=Readonly<{grant:HostGrantV1|null;grantCurrent:boolean;offered:string;operation:string;parent:Readonly<{pid:number;started:string}>|null;nowMs:number}>;
+/** ☁️ The verdict on one offer: take the grant over or the first closed reason it is refused. */
+export type HostHandoverVerdictV1=Readonly<{adopt:true;id:string}>|Readonly<{adopt:false;reason:HostHandoverRefusalV1}>;
+
+/** ⚙️ Decides whether the offered grant may pass to this process: the offer must be well formed and name a current grant carrying exactly that one-time token, be younger than the declared bound, have been made by this process's own parent (id and start time, which a recycled id cannot fake) and be for the same operation; the first failing check names the reason, so an unrelated process never receives a grant. */
+export function decideHostHandoverV1(facts:HostHandoverFactsV1):HostHandoverVerdictV1{
+ const protocol=schema.definitions.Protocol.const,match=new RegExp(`^(${schema.definitions.Grant.properties.id.pattern.slice(1,-1)})\\.(${schema.definitions.Handover.properties.token.pattern.slice(1,-1)})$`,"u").exec(facts.offered);
+ if(!match)return{adopt:false,reason:"token"};
+ const grant=facts.grant,id=match[1]!,token=match[2]!;
+ if(grant===null||!facts.grantCurrent||grant.id!==id)return{adopt:false,reason:"gone"};
+ const offer=grant.handover,left=Buffer.from(token),right=Buffer.from(offer?.token??"");
+ if(offer===undefined||left.length!==right.length||!timingSafeEqual(left,right))return{adopt:false,reason:"token"};
+ if(facts.nowMs-offer.offeredAtMs>protocol.handoverMaximumAgeMilliseconds)return{adopt:false,reason:"expired"};
+ if(facts.parent===null||facts.parent.pid!==offer.fromPid||facts.parent.started!==offer.fromStarted||grant.pid!==offer.fromPid)return{adopt:false,reason:"identity"};
+ if(grant.operation!==facts.operation)return{adopt:false,reason:"operation"};
+ return{adopt:true,id};
+}
+
+/** 💬️ Names a handover refusal in the chosen language. */
+export function describeHostHandoverRefusalV1(language:"en"|"de",reason:HostHandoverRefusalV1):string{
+ return schema.definitions.Messages.const[language].handoverReasons[reason];
 }
 
 /** 📖️ Reads the authored policy and refuses anything the closed schema or its ordering rules reject. */
@@ -79,14 +108,14 @@ export function softHostReasonV1(policy:HostCapacityPolicyV1,host:HostSampleV1):
  return undefined;
 }
 
-/** 🧮️ Decides, for a host sample, the live grants and the queue, which requests start now and with how many jobs; a pure function of its arguments. Reservations count in full only while a grant ramps up (`memory.rampMilliseconds`), then the memory it really holds speaks for itself. A waiter refused for memory or load does not hold later ones back: they pass while they fit. It becomes a strict barrier only if finishing our own grants would admit it (foreign pressure never creates a barrier, draining cannot help it) and it has waited `wait.bypassMilliseconds` or been overtaken `wait.maximumBypasses` times, counting grants admitted since it arrived; so it cannot starve. A batch waiter older than `wait.agingMilliseconds` ranks as interactive, so a stream of interactive requests cannot starve it. The load only scales jobs down: foreign load (editors, indexers) never refuses a request whose memory fits, it is admitted with its minimum jobs; the cores of our own grants plus the request are what must stay under `load.perCoreCeiling` per core. */
+/** 🧮️ Decides, for a host sample, the live grants and the queue, which requests start now and with how many jobs; a pure function of its arguments. Reservations count in full only while a grant ramps up (`memory.rampMilliseconds`, restarted by `resumedAtMs`), then the memory it really holds speaks for itself. A lent grant (its process only waits in a queue) counts neither memory nor cores nor fair-share weight and does not count as running for the override. A waiter refused for memory or load does not hold later ones back: they pass while they fit. It becomes a strict barrier only if finishing our own grants would admit it (foreign pressure never creates a barrier, draining cannot help it) and it has waited `wait.bypassMilliseconds` or been overtaken `wait.maximumBypasses` times, counting grants admitted since it arrived; so it cannot starve. A batch waiter older than `wait.agingMilliseconds` ranks as interactive, so a stream of interactive requests cannot starve it. The load only scales jobs down: foreign load (editors, indexers) never refuses a request whose memory fits, it is admitted with its minimum jobs; the cores of our own grants plus the request are what must stay under `load.perCoreCeiling` per core. */
 export function evaluateHostCapacityV1(policy:HostCapacityPolicyV1,host:HostSampleV1,ledger:readonly HostGrantV1[],waiters:readonly HostWaiterV1[],nowMs:number):HostEvaluationV1{
  const floor=hostFloorMegabytesV1(policy,host),cap=Math.max(0,host.totalMegabytes-floor);
- const ramping=(grant:HostGrantV1)=>nowMs-grant.admittedAtMs<policy.memory.rampMilliseconds;
- const unrealized=ledger.reduce((sum,grant)=>sum+(ramping(grant)?Math.max(0,grant.reservedMegabytes-(grant.observedMegabytes??0)):0),0),committed=ledger.reduce((sum,grant)=>sum+(ramping(grant)?grant.reservedMegabytes:grant.observedMegabytes??grant.reservedMegabytes),0);
+ const ramping=(grant:HostGrantV1)=>nowMs-(grant.resumedAtMs??grant.admittedAtMs)<policy.memory.rampMilliseconds,active=ledger.filter(grant=>grant.lentSinceMs===undefined);
+ const unrealized=active.reduce((sum,grant)=>sum+(ramping(grant)?Math.max(0,grant.reservedMegabytes-(grant.observedMegabytes??0)):0),0),committed=active.reduce((sum,grant)=>sum+(ramping(grant)?grant.reservedMegabytes:grant.observedMegabytes??grant.reservedMegabytes),0);
  const observed=host.availableMegabytes-floor-unrealized,budget=Math.floor(cap*policy.memory.budgetBasisPoints/10000)-committed,binding=budget<observed?"budget" as const:"available" as const;
  let room=Math.min(observed,budget);
- const headroom=room,ledgerCpu=ledger.reduce((sum,grant)=>sum+grant.cpu,0),ceiling=policy.load.perCoreCeiling*host.cores;
+ const headroom=room,ledgerCpu=active.reduce((sum,grant)=>sum+grant.cpu,0),ceiling=policy.load.perCoreCeiling*host.cores;
  let loadRoom=host.load===null&&ledgerCpu===0?Infinity:ceiling-Math.max(host.load??0,ledgerCpu);
  const reportedLoadRoom=loadRoom===Infinity?null:loadRoom;
  const swapCeiling=Math.floor(host.totalMegabytes*policy.swap.ceilingBasisPoints/10000);
@@ -96,7 +125,7 @@ export function evaluateHostCapacityV1(policy:HostCapacityPolicyV1,host:HostSamp
  const drainedRoom=Math.min(host.availableMegabytes+ledger.reduce((sum,grant)=>sum+(grant.observedMegabytes??0),0),host.totalMegabytes)-floor,drainedBudget=Math.floor(cap*policy.memory.budgetBasisPoints/10000);
  const aged=waiters.map(waiter=>waiter.request.priority==="batch"&&nowMs-waiter.arrivedAtMs>=policy.wait.agingMilliseconds?Object.freeze({...waiter,request:Object.freeze({...waiter.request,priority:"interactive" as const})}):waiter);
  const decisions:HostDecisionV1[]=[],heads:{bypasses:number}[]=[];let blocked=false,admitted=0,own=ledgerCpu;
- for(const waiter of orderHostWaitersV1(aged,ledger)){
+ for(const waiter of orderHostWaitersV1(aged,active)){
   const request=waiter.request,need=(jobs:number)=>Math.min(request.fixedMegabytes+jobs*request.perJobMegabytes,cap),waited=nowMs-waiter.arrivedAtMs;
   const refuse=(reason:HostReasonV1):void=>{decisions.push(Object.freeze({id:request.id,verdict:"wait",jobs:0,reservedMegabytes:0,reason}));};
   const admit=(jobs:number,reason:HostReasonV1):void=>{const reserved=need(jobs);room-=reserved;if(loadRoom!==Infinity)loadRoom-=jobs*request.cpuPerJob;own+=jobs*request.cpuPerJob;admitted++;for(const head of heads){head.bypasses++;if(head.bypasses>=policy.wait.maximumBypasses)blocked=true;}decisions.push(Object.freeze({id:request.id,verdict:"admit",jobs,reservedMegabytes:reserved,reason}));};
@@ -108,7 +137,7 @@ export function evaluateHostCapacityV1(policy:HostCapacityPolicyV1,host:HostSamp
   if(jobs===0&&soft===undefined&&memoryFits&&own+request.minimumJobs*request.cpuPerJob<=ceiling)jobs=request.minimumJobs;
   if(jobs>0){admit(jobs,jobs<request.preferredJobs?"reduced":"fits");continue;}
   const reason:HostReasonV1=!memoryFits?"memory":soft??"load";
-  if(reason!=="memory"&&ledger.length===0&&admitted===0&&waited>=policy.load.overrideAfterMilliseconds)admit(request.minimumJobs,"override");
+  if(reason!=="memory"&&active.length===0&&admitted===0&&waited>=policy.load.overrideAfterMilliseconds)admit(request.minimumJobs,"override");
   else{
    refuse(reason);
    if(reason==="memory"||reason==="load"){
@@ -141,11 +170,11 @@ export function resolveHostCapacityLanguageV1(environment:Readonly<Record<string
 }
 
 /** 🖨️ Fills one catalogue message of the chosen language; unknown placeholders stay visible. */
-export function formatHostCapacityV1(language:"en"|"de",name:"waiting"|"admitted"|"reduced"|"override"|"bypassed"|"status"|"grant"|"waiter",values:Readonly<Record<string,string|number>>):string{
+export function formatHostCapacityV1(language:"en"|"de",name:"waiting"|"admitted"|"reduced"|"override"|"bypassed"|"status"|"grant"|"grantLent"|"waiter"|"handover"|"adopted"|"handoverRefused",values:Readonly<Record<string,string|number>>):string{
  return fillHostCapacityV1(schema.definitions.Messages.const[language][name],values);
 }
 
-/** 🧩️ Fills the placeholders of one catalogue text; unknown placeholders stay visible. */
+/** 🔤️ Fills the placeholders of one catalogue text; unknown placeholders stay visible. */
 function fillHostCapacityV1(text:string,values:Readonly<Record<string,string|number>>):string{
  return text.replace(/\{([a-z]+)\}/gu,(match,key:string)=>key in values?String(values[key]):match);
 }
@@ -153,17 +182,17 @@ function fillHostCapacityV1(text:string,values:Readonly<Record<string,string|num
 /** 🚨️ Names of the catalogue errors a refused host capacity value, plan or platform raises. */
 export type HostCapacityErrorV1=keyof typeof schema.definitions.Messages.const.en.errors;
 
-/** 🖨️ Fills one catalogue error of the chosen language; `{detail}` carries the first finding of the schema validator. */
+/** 🌐️ Fills one catalogue error of the chosen language; `{detail}` carries the first finding of the schema validator. */
 export function formatHostCapacityErrorV1(language:"en"|"de",name:HostCapacityErrorV1,values:Readonly<Record<string,string|number>>={}):string{
  return fillHostCapacityV1(schema.definitions.Messages.const[language].errors[name],values);
 }
 
-/** 🚨️ Builds the error of one refusal in the language of the environment, so every diagnostic of the gate speaks English or German like its progress lines. */
+/** ❌️ Builds the error of one refusal in the language of the environment, so every diagnostic of the gate speaks English or German like its progress lines. */
 export function hostCapacityErrorV1(name:HostCapacityErrorV1,values:Readonly<Record<string,string|number>>={},environment:Readonly<Record<string,string|undefined>>=process.env):Error{
  return Error(formatHostCapacityErrorV1(resolveHostCapacityLanguageV1(environment),name,values));
 }
 
-/** 💬️ Names a wait or override reason in the chosen language. */
+/** ⌛️ Names a wait or override reason in the chosen language. */
 export function describeHostReasonV1(language:"en"|"de",reason:Exclude<HostReasonV1,"fits"|"reduced"|"override">):string{
  return schema.definitions.Messages.const[language].reasons[reason];
 }

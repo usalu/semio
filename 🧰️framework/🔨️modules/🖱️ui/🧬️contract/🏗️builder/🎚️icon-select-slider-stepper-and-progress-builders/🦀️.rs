@@ -1,4 +1,4 @@
-//! 🎚️ Icon select, slider, stepper and progress builders: the icon select, slider, number stepper and progress builders. See [`super`].
+//! 🔨️ Icon select, slider, stepper and progress builders: the icon select, slider, number stepper and progress builders. See [`super`].
 
 use super::*;
 
@@ -12,7 +12,7 @@ pub struct IconSelectBuilder {
     pub(super) classifier_kind: crate::UiText,
 }
 
-/// 🖼️ An icon picker currently holding the icon id `value`, offering the icons its host classifies as `classifier_kind`
+/// ☑️ An icon picker currently holding the icon id `value`, offering the icons its host classifies as `classifier_kind`
 /// (`"icon"` is the whole catalogue — what a descriptor of format `iconId` asks for).
 pub fn icon_select(value: crate::UiText, classifier_kind: crate::UiText) -> IconSelectBuilder {
     IconSelectBuilder { base: NodeBase::leaf(), value, uniform: true, classifier_kind }
@@ -57,7 +57,7 @@ pub struct SliderBuilder {
     pub(super) limits: Option<crate::UiNumberLimits>,
 }
 
-/// 🎚️ A slider currently at `value`, defaulting to the `0.0..=1.0` normalized range with a `0.1`
+/// 🎛️ A slider currently at `value`, defaulting to the `0.0..=1.0` normalized range with a `0.1`
 /// step — the common case for an unlabeled proportion.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn slider(value: f64) -> SliderBuilder {
@@ -307,7 +307,7 @@ pub struct ProgressBuilder {
     value_text: crate::Label,
 }
 
-/// 📶️ An indeterminate bar at `completed` units announcing `value_text`; call [`ProgressBuilder::total`]
+/// ⏳️ An indeterminate bar at `completed` units announcing `value_text`; call [`ProgressBuilder::total`]
 /// once the amount of work is known.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn progress(completed: f64, value_text: crate::Label) -> ProgressBuilder {

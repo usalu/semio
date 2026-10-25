@@ -11,12 +11,12 @@ export function introductionRectRelativeToHost(rect: IntroductionRect, hostRect:
   return { top: rect.top - hostRect.top, left: rect.left - hostRect.left, width: rect.width, height: rect.height };
 }
 
-/** 🎓️ Viewport-pixel point → host-local point for absolute overlays inside a transformed shell. */
+/** 📍️ Viewport-pixel point → host-local point for absolute overlays inside a transformed shell. */
 export function introductionPointRelativeToHost(point: { readonly x: number; readonly y: number }, hostRect: IntroductionRect): { readonly x: number; readonly y: number } {
   return { x: point.x - hostRect.left, y: point.y - hostRect.top };
 }
 
-/** 🎓️ Live-tracks the union DOM rect of an introduction step's `introduce` element(s) (via
+/** ⚓️ Live-tracks the union DOM rect of an introduction step's `introduce` element(s) (via
  * {@link elementIdSelector}), stamping every match `data-introduced="true"` (pulsing the introduced border, see
  * `framework/ui/styling/js/🎨️ui.css`) for as long as they stay attached — cleared on unmount/selector change. A kind-level
  * window id that aliases every open instance (Top + Perspective) therefore pulses and anchors against the
@@ -123,7 +123,7 @@ export function useIntroductionAnchorRect(selector: string | null): Introduction
   return rect;
 }
 
-/** 🎓️ Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
+/** 🔝️ Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
  * veil, by stamping `data-introduction-elevated` (see `framework/ui/styling/js/🎨️ui.css`) on its nearest
  * `[data-slot="mode-dock-stack"]` (full window silhouette: tabs + gap + controls + body) or else its
  * nearest `[data-elevation-root]` ancestor — the panel/window/navbar/footer that owns a real, root-level
@@ -227,7 +227,7 @@ export function clampIntroductionInfoBoxPosition(
   };
 }
 
-/** 🎓️ Where the info box sits relative to its anchor. `auto` picks the side with the most free
+/** 🍱️ Where the info box sits relative to its anchor. `auto` picks the side with the most free
  * viewport space; `center` (and any anchor-less step) centers the box in the viewport.
  *
  * 🧲️ EVERY branch clamps, the centered one included: centering a box that is wider or taller than the
@@ -294,13 +294,13 @@ export type IntroductionSurfaceResolver = {
   readonly scenePoint?: (position: readonly [number, number, number]) => { readonly x: number; readonly y: number; readonly visible: boolean } | null;
   /** 🗺️ 2D world (camera x/y/zoom) position → viewport pixel. */
   readonly canvasPoint?: (x: number, y: number) => { readonly x: number; readonly y: number; readonly visible: boolean } | null;
-  /** 🏷️ A live entity by domain + id (`"*"` = any representative) → its resolved geometry. */
+  /** 🔎️ A live entity by domain + id (`"*"` = any representative) → its resolved geometry. */
   readonly entity?: (domain: string, entity: string) => IntroductionResolvedGeometry | null;
 };
 
 export const introductionSurfaceResolvers = ephemeralMap<string, IntroductionSurfaceResolver>("framework.modules.ui.packages.typescript.targets.react.index.tsx.introductionSurfaceResolvers");
 
-/** 🧭️ Registers the demonstration-targeting resolver for the surface shown by window element
+/** 🏹️ Registers the demonstration-targeting resolver for the surface shown by window element
  * `windowId` — call from the window's own host component (has the live camera/session/DOM refs),
  * unregister on unmount via the returned disposer. Multiple concurrently open instances of the same
  * window kind (split panes) last-write-wins; acceptable for a single demonstration target. */
@@ -311,7 +311,7 @@ export function registerIntroductionSurfaceResolver(windowId: string, resolver: 
   };
 }
 
-/** 🧊️ Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene resolver. */
+/** 🎬️ Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene resolver. */
 export function ndcToViewportPoint(ndc: { readonly x: number; readonly y: number }, rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): { readonly x: number; readonly y: number } {
   return { x: rect.left + ((ndc.x + 1) / 2) * rect.width, y: rect.top + ((1 - ndc.y) / 2) * rect.height };
 }

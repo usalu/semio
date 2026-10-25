@@ -9,7 +9,7 @@ export function extractBundleDateLineFromSubject(subject: string): string | null
   return m?.[0] ?? null;
 }
 
-/** 🎆️Calendar day from the micro-commit body timestamp line (`🎆️YY🌙️MM☀️DD⏰️…`). */
+/** 📅️Calendar day from the micro-commit body timestamp line (`🎆️YY🌙️MM☀️DD⏰️…`). */
 export function extractBundleDateLineFromCommitBody(body: string): string | null {
   for (const raw of body.split("\n")) {
     const line = raw.trim();
@@ -20,7 +20,7 @@ export function extractBundleDateLineFromCommitBody(body: string): string | null
   return null;
 }
 
-/** 🎆️Calendar day for bundle per-day uloc (body timestamp, else subject). */
+/** 📆️Calendar day for bundle per-day uloc (body timestamp, else subject). */
 export function extractBundleDateLineFromCommit(subject: string, body: string): string | null {
   return extractBundleDateLineFromCommitBody(body) ?? extractBundleDateLineFromSubject(subject);
 }
@@ -33,7 +33,7 @@ export function normalizeBundleDateLine(line: string): string {
     .trim();
 }
 
-/** 🎆️Bundle squash only: `🎆️YY🌙️MM☀️DD` + full per-day `📊️metric…` suffixes. */
+/** 🗓️Bundle squash only: `🎆️YY🌙️MM☀️DD` + full per-day `📊️metric…` suffixes. */
 export function formatBundleDateLine(dateLine: string, ulocDelta: GitDeltaSum, sizeDelta: GitDeltaSum, ulocBloc: number, sizeBloc: number): string {
   return `${normalizeBundleDateLine(dateLine)}${formatBundleMetricSuffixes(ulocDelta, sizeDelta, ulocBloc, sizeBloc)}`;
 }

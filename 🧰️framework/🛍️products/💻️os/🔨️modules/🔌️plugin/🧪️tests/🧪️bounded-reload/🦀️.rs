@@ -3,6 +3,11 @@
 //! law reads it here instead of widening it. Moved out of `🧾️document-archive-load-legs` (S3-W2A, 2026-10-02) when the test
 //! there stopped compiling against the private handoff; the law itself is S3-W1G's and unchanged.
 
+use semio_framework_value::ValueError;
+use semio_framework_value::RetainedCloneGrant;
+use semio_framework_value::RetainedCloneProgress;
+use semio_framework_value::RetainedCloneStep;
+use semio_framework_value::RetirementDemand;
 use semio_framework::kernel::ActorId;
 #[cfg(test)]
 use semio_framework_plugin_decl_app::ArtifactApp;
@@ -87,7 +92,6 @@ fn initializer_job_retains_terminal_authority_until_its_physical_box_is_funded()
         assert!(retained);
         assert_eq!(released, InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<Box<dyn ArtifactStoreInitializationAuthority<TestSnapshot,TestMutation>>>>(),released_bytes:box_bytes,..Default::default()}});
         original.finish();
-        eprintln!("[DEBUG] initializer job physical backing={extent} erased-authority-box={box_bytes} retained-denied-owner=true");
     }
 }
 

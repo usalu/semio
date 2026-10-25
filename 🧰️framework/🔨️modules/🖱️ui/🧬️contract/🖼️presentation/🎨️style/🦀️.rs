@@ -1,4 +1,4 @@
-//! 🎨️ Design-token `StyleSpec` — closed enums over ui_styling tokens, never raw values.
+//! 🔑️ Design-token `StyleSpec` — closed enums over ui_styling tokens, never raw values.
 //!
 //! ⚠️ SCAFFOLD — owned by packet `contract-layout`. Replace this placeholder wholesale; keep the region
 //! structure and the U1 sync rule (no `async fn` in this crate).
@@ -56,7 +56,7 @@ pub enum Density {
     Touch,
 }
 
-/// 🎨️ The semantic color role a renderer resolves against the active theme — named after
+/// 🌈️ The semantic color role a renderer resolves against the active theme — named after
 /// tokens.json's `colors` table's semantic entries (`primary`, `secondary`, `tertiary`, `danger`,
 /// `warning`, `info`, `success`). `Neutral` is the default: no explicit accent, inherit the
 /// surrounding surface/text color.

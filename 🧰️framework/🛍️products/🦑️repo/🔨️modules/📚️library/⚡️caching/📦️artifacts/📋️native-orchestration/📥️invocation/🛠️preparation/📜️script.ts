@@ -2,7 +2,7 @@
 import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BoundedPreparationScript, BoundedSynchronizeScript } from "./🧪️tests/🔬️script-commands/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 
 const router = new ScriptRouter(import.meta.dirname).register("prepare", BoundedPreparationScript).register("synchronize", BoundedSynchronizeScript);

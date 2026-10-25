@@ -10,9 +10,9 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "nod
 import { createHash } from "node:crypto";
 import { canonicalGoLanguageDirectoryV1, readCanonicalGoLayoutV1 as canonicalGoLayout, type CanonicalGoLayout } from "../../🔍️discovery/🐹️go-layout/🟦️.ts";
 import { runOwnedCommand, OwnedCommandFailure } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { prepareTestCommandV1 } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🚦️protocol/🟦️.ts";
+import { prepareTestCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🚦️protocol/🟦️.ts";
 import { type CompilerAdmissionControl, requestedCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { buildBudgetMs, buildPreparationBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { pinnedGoEnvironmentV1 } from "../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🟦️.ts";
 import { systemNativeToolPortV1 } from "../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🔌️port/🟦️.ts";
@@ -46,7 +46,7 @@ function goPackageClause(source: string): string | null {
   return /^package\s+([\p{L}_][\p{L}\p{N}_]*)/u.exec(rest)?.[1] ?? null;
 }
 
-/** 🧪️Resolves the language-neutral owner whose in-package cases target the Go module rooted at `<owner>/<packages>/<language>`. */
+/** 🔎️Resolves the language-neutral owner whose in-package cases target the Go module rooted at `<owner>/<packages>/<language>`. */
 function packageModuleOwner(root: string, layout: CanonicalGoLayout): string | null {
   const packages = dirname(root);
   return basename(root) === layout.languageDirectory && basename(packages) === layout.packagesDirectory ? dirname(packages) : null;
@@ -155,7 +155,7 @@ function localGoReplacementRoots(moduleRoot: string): readonly string[] {
   return [...new Set(replacements)].sort();
 }
 
-/** 🧭️Rejects Go compiler-input layouts whose names are not single path segments or overlap. */
+/** 📐️Rejects Go compiler-input layouts whose names are not single path segments or overlap. */
 function requireValidCanonicalGoLayout(layout: CanonicalGoLayout): void {
   const validSegment = (name: string): boolean => !!name && !name.includes("/") && !name.includes("\\");
   const validNames = (names: readonly string[]): boolean => names.length > 0 && new Set(names).size === names.length && names.every((name) => !!name && !name.includes("/") && !name.includes("\\"));
@@ -224,9 +224,12 @@ async function runCanonicalGoCommandV1(invocation:ScriptInvocation,control:Resou
  try{prepared.finish({code,signal,durationMs:performance.now()-started,...(reason===undefined?{}:{reason})});}catch(error){if(!failed){failed=true;primary=error;}}if(failed)throw primary;
 }
 
+/** ⏱️ The wall clock of one `go test` run: the level budget for the tests themselves (`-timeout` of the level arguments enforces it inside the binary) plus the build preparation budget for the compile, which a cold Go cache makes far longer than any test level. */
+export function canonicalGoTestBudgetMsV1(environment:Readonly<Record<string,string|undefined>>=process.env):number{return testLevelBudgetMs()+buildPreparationBudgetMs(environment);}
+
 /** 🧪️ Runs canonical Go cases under the caller's actual Original and issued artifact lifetime. */
 export async function runCanonicalGoTests(moduleRoot:string,args:string[],invocation:ScriptInvocation,opts:{env?:NodeJS.ProcessEnv;budgetMs?:number;packages?:readonly string[];signal?:AbortSignal}={}):Promise<void>{
- requireIssuedScriptInvocationV1(invocation);const environment=Object.freeze({...opts.env??process.env}),options=Object.freeze({budgetMs:opts.budgetMs,packages:opts.packages?[...opts.packages]:undefined,signal:opts.signal}),arguments_=[...args];if(options.signal?.aborted)throw Error("go cancelled");const workspace=getWorkspaceRoot(),phase=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(invocation,"go:test",options.budgetMs??testLevelBudgetMs()),0,options.signal);
+ requireIssuedScriptInvocationV1(invocation);const environment=Object.freeze({...opts.env??process.env}),options=Object.freeze({budgetMs:opts.budgetMs,packages:opts.packages?[...opts.packages]:undefined,signal:opts.signal}),arguments_=[...args];if(options.signal?.aborted)throw Error("go cancelled");const workspace=getWorkspaceRoot(),phase=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(invocation,"go:test",options.budgetMs??canonicalGoTestBudgetMsV1(environment)),0,options.signal);
  await withRepositoryTestArtifactsV1(workspace,invocation,phase,async actual=>{
   checkResourceLeaseControl(actual);const pinned=await pinnedGoEnvironmentV1(environment,repositoryCachePartitionRootV1(workspace,"tools"),systemNativeToolPortV1(workspace,environment.CARGO_NET_OFFLINE==="true"),actual.signal),plan=canonicalGoPlan(moduleRoot),packages=options.packages??plan.packages;if(!packages.length)throw Error("No canonical Go inputs found below "+moduleRoot);for(const selected of packages)if(!plan.packages.includes(selected))throw Error("Go compiler package is outside the canonical plan: "+selected);const root=repositoryTestArtifactRootV1(workspace),inherited=environment.SEMIO_GO_OVERLAY_OWNER,parent=canonicalGoOverlayParentV1(root,inherited),issued=repositoryTestArtifactEnvironmentV1(workspace,pinned);let owner:string|undefined,temporary:string|undefined,registered=false,failed=false;
   const cleanup=()=>{const path=inherited===undefined?owner:temporary;if(path)rmSync(path,{recursive:true,force:true});},exitCleanup=()=>{try{cleanup();}catch{}};

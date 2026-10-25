@@ -395,6 +395,30 @@ fn cursor_boundaries_step_over_whole_clusters() {
 }
 
 #[test]
+fn cursor_boundaries_across_lines_equal_the_independent_segmenter_at_every_offset() {
+    let texts = ["", "\n", "a\nb", "a\r\nb\r\n", "\n\n\n", "👩\u{200d}💻\nx\u{301}\ny", "line one\n🧰\u{fe0f}framework\r\n🇨🇭🇩🇪\ne\u{301}\u{301}\n", "ä\n한국어\n\u{1f468}\u{200d}\u{1f469}\u{200d}\u{1f467}\n"];
+    for text in texts {
+        let starts: Vec<usize> = text.grapheme_indices(true).map(|(index, _)| index).collect();
+        for byte in (0..=text.len()).filter(|byte| text.is_char_boundary(*byte)) {
+            let at_or_before = starts.iter().copied().filter(|start| *start <= byte).max().unwrap_or(0);
+            let before = starts.iter().copied().filter(|start| *start < byte).max().unwrap_or(0);
+            let after = starts.iter().copied().filter(|start| *start > byte).min().unwrap_or(text.len());
+            assert_eq!(boundary_at_or_before(text, byte), if byte == text.len() { byte } else { at_or_before }, "{text:?} at {byte}");
+            assert_eq!(previous_boundary(text, byte), before, "{text:?} before {byte}");
+            assert_eq!(next_boundary(text, byte), after, "{text:?} after {byte}");
+        }
+    }
+}
+
+#[test]
+fn a_cursor_boundary_in_a_megabyte_of_lines_costs_one_line() {
+    let text = "row é中\n".repeat(150_000);
+    let started = std::time::Instant::now();
+    for step in 0..200 { let byte = text.len() - 1 - step * 7; let _ = (boundary_at_or_before(&text, byte), previous_boundary(&text, byte), next_boundary(&text, byte)); }
+    assert!(started.elapsed() < std::time::Duration::from_millis(500), "{:?}", started.elapsed());
+}
+
+#[test]
 fn boundary_at_cell_maps_columns_to_clusters() {
     let text = "a🧰\u{fe0f}b";
     assert_eq!(boundary_at_cell(text, 0), 0);

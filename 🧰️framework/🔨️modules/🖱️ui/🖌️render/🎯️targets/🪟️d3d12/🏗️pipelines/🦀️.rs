@@ -89,7 +89,7 @@ fn blob_to_string(blob: &ID3DBlob) -> String {
     }
 }
 
-/// 🏗️ Compiles `source`'s `entry` function to `target` (`"vs_5_0"`/`"ps_5_0"`) via `D3DCompile` — the
+/// 🔨️ Compiles `source`'s `entry` function to `target` (`"vs_5_0"`/`"ps_5_0"`) via `D3DCompile` — the
 /// interim shader route this file's header describes. `D3DCompile` is part of this crate's already-
 /// declared `Win32_Graphics_Direct3D_Fxc` feature, so this needs no `Cargo.toml` change.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -488,7 +488,7 @@ fn build_pso(
 }
 
 impl Pipelines {
-    /// 🏗️ `surface_format` is the swapchain's RTV format (`scene_blit`, `glass` target it);
+    /// 🎬️ `surface_format` is the swapchain's RTV format (`scene_blit`, `glass` target it);
     /// `scene_format` is the offscreen scene color target's format (`blur_downsample` targets it, and
     /// every 2D/3D content pipeline targets it too — mirrors `GpuContext::render_frame`'s two-pass
     /// structure, same as the Metal backend's `Pipelines::new`).

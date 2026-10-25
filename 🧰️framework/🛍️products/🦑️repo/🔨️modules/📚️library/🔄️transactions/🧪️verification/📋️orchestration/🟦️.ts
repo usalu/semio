@@ -4,7 +4,7 @@ import { transactionV2BundleRoot } from "../📁️run-allocation/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { retainTransactionV2Record, transactionV2Identities, transactionV2IdentityPaths } from "../🧾️provenance/🟦️.ts";
 import { runTransactionV2Shards, TRANSACTION_V2_DEFAULT_FILTER_WAVES } from "../🏃️shard-execution/🟦️.ts";
-import { runtimeBundleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { runtimeBundleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
 
 /** 🔄️ Runs the bounded transaction verification aggregate and retains exact source/result identities. */
 export async function runTransactionV2(repoRoot: string, segments: string[]): Promise<void> {

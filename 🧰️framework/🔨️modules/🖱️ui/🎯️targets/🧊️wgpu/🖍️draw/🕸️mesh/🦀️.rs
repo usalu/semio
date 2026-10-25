@@ -88,10 +88,10 @@ impl World3dGridUniforms {
     }
 }
 
-/// ✂️ The one stencil bit the section cap borrows (the high bit; the UI clip masks use `0` and `1`): a cut solid's parity toggles it, the cap plane draws where it is set, and a second toggle pass restores it to zero.
+/// 🔢️ The one stencil bit the section cap borrows (the high bit; the UI clip masks use `0` and `1`): a cut solid's parity toggles it, the cap plane draws where it is set, and a second toggle pass restores it to zero.
 pub const SECTION_STENCIL_BIT: u32 = 0x80;
 
-/// ✂️ The policy bit of `World3dGpuInstance::flags.x` that makes the lit mesh shader test the fragment against `World3dGlobals::clip_plane`.
+/// 🚩️ The policy bit of `World3dGpuInstance::flags.x` that makes the lit mesh shader test the fragment against `World3dGlobals::clip_plane`.
 pub const SECTION_CLIP_FLAG: f32 = 32.0;
 
 #[repr(C)]
@@ -149,7 +149,7 @@ impl World3dGpuInstance {
         }
     }
 
-    /// ✂️ Flags the instance for the pass's section plane when its section role clips (policy bit [`SECTION_CLIP_FLAG`]).
+    /// 📑️ Flags the instance for the pass's section plane when its section role clips (policy bit [`SECTION_CLIP_FLAG`]).
     pub fn with_section(mut self, role: crate::kernel_3d_scene::SceneSectionRole3d) -> Self {
         if role.clips() {
             self.flags[0] += SECTION_CLIP_FLAG;
@@ -193,7 +193,7 @@ impl World3dTexturedGpuInstance {
     }
 }
 
-/// 🖼️ The one geometry every textured world draw uses: a unit XY quad centred on the model origin,
+/// 📐️ The one geometry every textured world draw uses: a unit XY quad centred on the model origin,
 /// with `v = 0` at `+y` so row 0 of the decoded image is its TOP — the orientation three.js gives a
 /// `PlaneGeometry` with a `flipY` texture, which is what React's reference underlay shows.
 pub const WORLD_PLANE_VERTICES: &[f32] = &[
@@ -206,8 +206,8 @@ pub const WORLD_PLANE_VERTICES: &[f32] = &[
 ];
 
 pub struct GpuMeshBuffers {
-    pub vertex_buffer: gpu_device::Buffer,
-    pub index_buffer: gpu_device::Buffer,
+    pub vertex_buffer: Option<gpu_device::Buffer>,
+    pub index_buffer: Option<gpu_device::Buffer>,
     pub index_count: u32,
     source: crate::kernel_3d_scene::Mesh3dLease,
 }
@@ -363,9 +363,9 @@ impl MeshGpuTable {
             let schema = lease.schema().map_err(|_| "mesh upload lease was stale")?;
             let vertex_bytes = u64::from(schema.vertices).checked_mul(size_of::<World3dVertex>() as u64).ok_or("mesh upload vertex byte credits overflowed")?;
             let index_bytes = u64::from(schema.indices).checked_mul(size_of::<u32>() as u64).ok_or("mesh upload index byte credits overflowed")?;
-            let vertex_buffer = device.create_buffer(&gpu_device::BufferDescriptor { label: Some("world3d_vertices"), size: vertex_bytes, usage: gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, mapped_at_creation: false });
-            let index_buffer = device.create_buffer(&gpu_device::BufferDescriptor { label: Some("world3d_indices"), size: index_bytes, usage: gpu_device::BufferUsages::INDEX | gpu_device::BufferUsages::COPY_DST, mapped_at_creation: false });
-            self.upload = Some(MeshGpuUploadCursor { key, version, lease, schema, vertex_buffer: Some(vertex_buffer), index_buffer: Some(index_buffer), vertex: 0, index: 0 });
+            let vertex_buffer = (vertex_bytes != 0).then(|| device.create_buffer(&gpu_device::BufferDescriptor { label: Some("world3d_vertices"), size: vertex_bytes, usage: gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, mapped_at_creation: false }));
+            let index_buffer = (index_bytes != 0).then(|| device.create_buffer(&gpu_device::BufferDescriptor { label: Some("world3d_indices"), size: index_bytes, usage: gpu_device::BufferUsages::INDEX | gpu_device::BufferUsages::COPY_DST, mapped_at_creation: false }));
+            self.upload = Some(MeshGpuUploadCursor { key, version, lease, schema, vertex_buffer, index_buffer, vertex: 0, index: 0 });
         }
         let cursor = self.upload.as_mut().expect("mesh upload cursor initialized above");
         if !cursor.key.matches(key) || cursor.version != version || cursor.lease != lease {
@@ -393,13 +393,13 @@ impl MeshGpuTable {
         let entry = MeshGpuEntry {
             key: cursor.key,
             version: cursor.version,
-            value: GpuMeshBuffers { vertex_buffer: cursor.vertex_buffer.take().expect("completed mesh vertex buffer"), index_buffer: cursor.index_buffer.take().expect("completed mesh index buffer"), index_count: cursor.schema.indices, source:cursor.lease },
+            value: GpuMeshBuffers { vertex_buffer: cursor.vertex_buffer.take(), index_buffer: cursor.index_buffer.take(), index_count: cursor.schema.indices, source:cursor.lease },
         };
         match self.meshes.insert(entry) {
             Ok(()) => Ok(true),
             Err(entry) => {
-                cursor.vertex_buffer = Some(entry.value.vertex_buffer);
-                cursor.index_buffer = Some(entry.value.index_buffer);
+                cursor.vertex_buffer = entry.value.vertex_buffer;
+                cursor.index_buffer = entry.value.index_buffer;
                 self.upload = Some(cursor);
                 Err("mesh GPU table capacity exhausted")
             }
@@ -464,7 +464,7 @@ impl MeshGpuTable {
         let selected = self.meshes.slots[index].as_ref().is_some_and(|entry| cursor.selector.selects(entry));
         if selected {
             let entry = self.meshes.take(index).expect("selected mesh GPU entry");
-            cursor.owner = Some(MeshGpuRetirementOwner { vertex_buffer: Some(entry.value.vertex_buffer), index_buffer: Some(entry.value.index_buffer) });
+            cursor.owner = Some(MeshGpuRetirementOwner { vertex_buffer: entry.value.vertex_buffer, index_buffer: entry.value.index_buffer });
         }
         false
     }

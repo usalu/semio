@@ -370,6 +370,7 @@ impl protocol::OpBinary for RasterConfigMutation {
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(RasterConfigMutation);
 
 //#endregion 🔖️OpCodec
 

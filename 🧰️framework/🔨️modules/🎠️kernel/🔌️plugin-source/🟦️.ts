@@ -1,4 +1,4 @@
-/** 🔌️ Plugin sources: the development, bundled and extension sources, their events, module acquisition and multiplexing.
+/** 🚰️ Plugin sources: the development, bundled and extension sources, their events, module acquisition and multiplexing.
  *
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
@@ -52,7 +52,7 @@ async function requireServedPluginModule(sourceId: string, pluginId: string, mod
 }
 
 /**
- * 🔌️ Where the shell's incremental plugin runtime (install/uninstall/reload — see the react
+ * 🔃️ Where the shell's incremental plugin runtime (install/uninstall/reload — see the react
  * renderer's plugin panel) gets its catalog, its modules and its availability notifications from. The
  * dev, bundled and extension sources serve modules staged beside the shell; the hub source
  * (`🔌️plugin/📇️registry/🌎️hub-source`) installs trusted catalog modules on first use. The shell only
@@ -88,7 +88,7 @@ const pluginSourceEventOf = (event: unknown): PluginSourceEvent | undefined => {
   return undefined;
 };
 
-/** 🔌️ `PluginSource` backed by an injected dev catalog and the availability stream its owner opens for it
+/** 🆕️ `PluginSource` backed by an injected dev catalog and the availability stream its owner opens for it
  * ({@link PluginSourceWatch}); every subscription is its own stream, and an event that is not an availability event is
  * refused with one warning. */
 export function createDevPluginSource(registry: readonly PluginRegistryEntry[], watch: PluginSourceWatch): PluginSource {
@@ -117,7 +117,7 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[], 
   };
 }
 
-/** 📦️ `PluginSource` for shipped static hosts: every registry entry is already materialized
+/** 🎁️ `PluginSource` for shipped static hosts: every registry entry is already materialized
  * beside the HTML bundle, so there is no dev-server SSE `/watch` endpoint to announce availability.
  * `subscribe` replays one immediate `snapshot` (same shape the dev endpoint sends on connect) so the
  * shell's install pump loads the full expanded registry — plugins and bundled flow extensions — without
@@ -151,7 +151,7 @@ type ExtensionSourceWireEvent =
   | { readonly kind: "installed"; readonly extensionId: string; readonly installedAt: number }
   | { readonly kind: "uninstalled"; readonly extensionId: string };
 
-/** 🔁️ Converts the extension store's install vocabulary into the runtime's plugin
+/** 🏪️ Converts the extension store's install vocabulary into the runtime's plugin
  * availability vocabulary. Uninstall events have no availability equivalent and are ignored. */
 export function extensionSourceEventToPluginSourceEvent(event: ExtensionSourceWireEvent): PluginSourceEvent | undefined {
   if (event.kind === "snapshot") {
@@ -175,7 +175,7 @@ export function extensionRegistryFromCatalog(catalog: PluginCatalog): readonly P
   }));
 }
 
-/** 🧩️ `PluginSource` backed by an extension catalog and the install stream its owner opens for it
+/** 📚️ `PluginSource` backed by an extension catalog and the install stream its owner opens for it
  * ({@link PluginSourceWatch}). Catalog rows come from the injected {@link PluginCatalog}'s `extensions`; runtime installs
  * add artifacts under each extension id without changing this list. `subscribe` normalizes the extension wire vocabulary
  * per listener. */
@@ -207,7 +207,7 @@ export function createExtensionSource(catalog: PluginCatalog, watch: PluginSourc
   };
 }
 
-/** 🔌️ Merges multiple {@link PluginSource} implementations into one catalog the shell's
+/** 🗂️ Merges multiple {@link PluginSource} implementations into one catalog the shell's
  * incremental runtime can treat as a single source. */
 export function multiplexPluginSources(...sources: readonly PluginSource[]): PluginSource {
   if (sources.length === 0) throw new Error("multiplexPluginSources requires at least one source");

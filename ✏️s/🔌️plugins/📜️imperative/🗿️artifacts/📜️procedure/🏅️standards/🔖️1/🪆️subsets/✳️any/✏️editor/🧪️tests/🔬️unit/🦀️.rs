@@ -10,7 +10,7 @@ use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::HierarchyProvider;
 use semio_framework_test_fixtures::fixture_text;
-use store::pack::snapshot::ArtifactPack;
+use store::snapshot::ArtifactPack;
 use crate::editor::procedure::commands::run;
 use crate::editor::procedure::commands::set_active_example;
 use crate::editor::procedure::commands::set_contributions;
@@ -51,7 +51,7 @@ pub(crate) mod context {
     pub async fn live_scene(app: &ImperativeApp) -> crate::ProcedureScene {
         use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
         use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
-        use store::{pack::snapshot::ArtifactPack, SpaceMember};
+        use store::{snapshot::ArtifactPack, SpaceMember, ReferenceSpaceMember};
         let snapshot = app.snapshot().expect("procedure parent projection");
         let flow = app.child_store("flow", &snapshot.flow.child_id).await.expect("procedure flow child").document_pack_bytes().await.expect("procedure flow child pack");
         let text = app.child_store("text", &snapshot.text.child_id).await.expect("procedure text child").document_pack_bytes().await.expect("procedure text child pack");

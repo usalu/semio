@@ -181,12 +181,36 @@ pub struct Puzzle3dMetaPatch {
 //#endregion 🔖️Patches
 
 //#region 🔖️Deltas
-protocol::list_delta! { pub Puzzle3dVorticesDelta { removal: Puzzle3dVortexRemoval, insertion: Puzzle3dVortexInsertion, relocation: Puzzle3dVortexRelocation, modification: Puzzle3dVortexModification, row: Puzzle3dVortex, patch: Puzzle3dVortexPatch, list: Vec<Puzzle3dVortex>, key: String = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle3dObjectsDelta { removal: Puzzle3dObjectRemoval, insertion: Puzzle3dObjectInsertion, relocation: Puzzle3dObjectRelocation, modification: Puzzle3dObjectModification, row: Puzzle3dObject, patch: Puzzle3dObjectPatch, list: Vec<Puzzle3dObject>, key: String = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle3dAttractionsDelta { removal: Puzzle3dAttractionRemoval, insertion: Puzzle3dAttractionInsertion, relocation: Puzzle3dAttractionRelocation, modification: Puzzle3dAttractionModification, row: Puzzle3dAttraction, patch: Puzzle3dAttractionPatch, list: Vec<Puzzle3dAttraction>, key: String = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle3dTargetVolumesDelta { removal: Puzzle3dTargetVolumeRemoval, insertion: Puzzle3dTargetVolumeInsertion, relocation: Puzzle3dTargetVolumeRelocation, modification: Puzzle3dTargetVolumeModification, row: Puzzle3dTargetVolume, patch: Puzzle3dTargetVolumePatch, list: Vec<Puzzle3dTargetVolume>, key: String = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle3dReferencesDelta { removal: Puzzle3dReferenceRemoval, insertion: Puzzle3dReferenceInsertion, relocation: Puzzle3dReferenceRelocation, modification: Puzzle3dReferenceModification, row: Puzzle3dReference, patch: Puzzle3dReferencePatch, list: Vec<Puzzle3dReference>, key: String = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle3dKindCompatibilityDelta { removal: Puzzle3dKindCompatibilityRemoval, insertion: Puzzle3dKindCompatibilityInsertion, relocation: Puzzle3dKindCompatibilityRelocation, modification: Puzzle3dKindCompatibilityModification, row: Puzzle3dKindCompatibility, patch: Puzzle3dKindCompatibilityPatch, list: Vec<Puzzle3dKindCompatibility>, key: Puzzle3dKindCompatibilityKey = |item| Puzzle3dKindCompatibilityKey { source: item.source.clone(), target: item.target.clone() } } }
+protocol::list_delta! { pub Puzzle3dVorticesDelta { removal: Puzzle3dVortexRemoval, insertion: Puzzle3dVortexInsertion, relocation: Puzzle3dVortexRelocation, modification: Puzzle3dVortexModification, row: Puzzle3dVortex, patch: Puzzle3dVortexPatch, list: Vec<Puzzle3dVortex>, key: String = by Puzzle3dVortexKeys } }
+protocol::list_delta! { pub Puzzle3dObjectsDelta { removal: Puzzle3dObjectRemoval, insertion: Puzzle3dObjectInsertion, relocation: Puzzle3dObjectRelocation, modification: Puzzle3dObjectModification, row: Puzzle3dObject, patch: Puzzle3dObjectPatch, list: Vec<Puzzle3dObject>, key: String = by Puzzle3dObjectKeys } }
+protocol::list_delta! { pub Puzzle3dAttractionsDelta { removal: Puzzle3dAttractionRemoval, insertion: Puzzle3dAttractionInsertion, relocation: Puzzle3dAttractionRelocation, modification: Puzzle3dAttractionModification, row: Puzzle3dAttraction, patch: Puzzle3dAttractionPatch, list: Vec<Puzzle3dAttraction>, key: String = by Puzzle3dAttractionKeys } }
+protocol::list_delta! { pub Puzzle3dTargetVolumesDelta { removal: Puzzle3dTargetVolumeRemoval, insertion: Puzzle3dTargetVolumeInsertion, relocation: Puzzle3dTargetVolumeRelocation, modification: Puzzle3dTargetVolumeModification, row: Puzzle3dTargetVolume, patch: Puzzle3dTargetVolumePatch, list: Vec<Puzzle3dTargetVolume>, key: String = by Puzzle3dTargetVolumeKeys } }
+protocol::list_delta! { pub Puzzle3dReferencesDelta { removal: Puzzle3dReferenceRemoval, insertion: Puzzle3dReferenceInsertion, relocation: Puzzle3dReferenceRelocation, modification: Puzzle3dReferenceModification, row: Puzzle3dReference, patch: Puzzle3dReferencePatch, list: Vec<Puzzle3dReference>, key: String = by Puzzle3dReferenceKeys } }
+protocol::list_delta! { pub Puzzle3dKindCompatibilityDelta { removal: Puzzle3dKindCompatibilityRemoval, insertion: Puzzle3dKindCompatibilityInsertion, relocation: Puzzle3dKindCompatibilityRelocation, modification: Puzzle3dKindCompatibilityModification, row: Puzzle3dKindCompatibility, patch: Puzzle3dKindCompatibilityPatch, list: Vec<Puzzle3dKindCompatibility>, key: Puzzle3dKindCompatibilityKey = by Puzzle3dKindCompatibilityKeys } }
+/// 🔑️ Keys the foreign `Puzzle3dVortex` rows of their list delta by `id`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle3dVortexKeys;
+impl protocol::list_delta::KeyOf<Puzzle3dVortex> for Puzzle3dVortexKeys { type Key = String; fn key_of(row: &Puzzle3dVortex) -> String { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle3dObject` rows of their list delta by `id`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle3dObjectKeys;
+impl protocol::list_delta::KeyOf<Puzzle3dObject> for Puzzle3dObjectKeys { type Key = String; fn key_of(row: &Puzzle3dObject) -> String { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle3dAttraction` rows of their list delta by `id`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle3dAttractionKeys;
+impl protocol::list_delta::KeyOf<Puzzle3dAttraction> for Puzzle3dAttractionKeys { type Key = String; fn key_of(row: &Puzzle3dAttraction) -> String { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle3dTargetVolume` rows of their list delta by `id`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle3dTargetVolumeKeys;
+impl protocol::list_delta::KeyOf<Puzzle3dTargetVolume> for Puzzle3dTargetVolumeKeys { type Key = String; fn key_of(row: &Puzzle3dTargetVolume) -> String { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle3dReference` rows of their list delta by `id`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle3dReferenceKeys;
+impl protocol::list_delta::KeyOf<Puzzle3dReference> for Puzzle3dReferenceKeys { type Key = String; fn key_of(row: &Puzzle3dReference) -> String { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle3dKindCompatibility` rows of their list delta by their kind pair.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle3dKindCompatibilityKeys;
+impl protocol::list_delta::KeyOf<Puzzle3dKindCompatibility> for Puzzle3dKindCompatibilityKeys { type Key = Puzzle3dKindCompatibilityKey; fn key_of(row: &Puzzle3dKindCompatibility) -> Puzzle3dKindCompatibilityKey { Puzzle3dKindCompatibilityKey { source: row.source.clone(), target: row.target.clone() } } }
 //#endregion 🔖️Deltas
 
 //#region 🔖️Algebra

@@ -11,7 +11,7 @@
 
 //#region 🔌️Adapters
 import { parse } from "graphql";
-import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Adapter

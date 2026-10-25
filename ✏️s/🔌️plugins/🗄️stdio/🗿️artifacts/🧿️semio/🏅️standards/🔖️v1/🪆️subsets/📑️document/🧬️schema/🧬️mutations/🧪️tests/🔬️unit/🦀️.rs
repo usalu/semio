@@ -6,7 +6,7 @@ use crate::io::text::mutations::print_document_mutation;
 use crate::schema::mutations::*;
 use crate::schema::snapshot::{DocListItem, DocTableCell, DocTableRow};
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{ColdMutationDiff, OpBinary as _, OpText as _};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioDocumentSnapshot {
@@ -32,7 +32,7 @@ async fn insert_then_remove_block_apply_and_inverse() {
     assert_eq!(after.blocks.len(), 3);
     assert_eq!(after.blocks[1], DocBlock::paragraph("inserted"));
 
-    let inverses = Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture");
+    let inverses = ::semio_framework_os_kernel::ColdMutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture");
     let mut restored = after.clone();
     for inv in &inverses {
         restored = semio_s_artifact_stdio_semio_base::applied(&restored, inv).0;
@@ -53,7 +53,7 @@ async fn nested_quote_and_list_path_addressing_apply_and_inverse() {
     let DocBlock::Quote { blocks } = &after.blocks[2] else { panic!("quote") };
     let DocBlock::Paragraph { runs, .. } = &blocks[0] else { panic!("paragraph") };
     assert_eq!(runs[0].text, "changed quote");
-    for inv in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         after = semio_s_artifact_stdio_semio_base::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
@@ -65,7 +65,7 @@ async fn nested_quote_and_list_path_addressing_apply_and_inverse() {
     let DocBlock::List { items, .. } = &after2.blocks[3] else { panic!("list") };
     let DocBlock::Paragraph { runs, .. } = &items[0].blocks[0] else { panic!("paragraph") };
     assert_eq!(runs[0].text, "changed item");
-    for inv in Mutation::inverse(&list_mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&list_mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         after2 = semio_s_artifact_stdio_semio_base::applied(&after2, &inv).0;
     }
     assert_eq!(after2, base);
@@ -81,7 +81,7 @@ async fn table_path_addressing_sets_nested_cell_content() {
     after = semio_s_artifact_stdio_semio_base::applied(&after, &mutation).0;
     let DocBlock::Table { rows } = &after.blocks[2] else { panic!("table") };
     assert_eq!(rows[0].cells[0].blocks[0], DocBlock::paragraph("changed cell"));
-    for inv in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         after = semio_s_artifact_stdio_semio_base::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
@@ -94,7 +94,7 @@ async fn style_and_image_mutations_apply_and_inverse() {
     let mut after = base.clone();
     after = semio_s_artifact_stdio_semio_base::applied(&after, &insert).0;
     assert_eq!(after.styles.len(), 2);
-    for inv in Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         after = semio_s_artifact_stdio_semio_base::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
@@ -107,7 +107,7 @@ async fn style_and_image_mutations_apply_and_inverse() {
     let mut after2 = with_img.clone();
     after2 = semio_s_artifact_stdio_semio_base::applied(&after2, &set_bytes).0;
     assert_eq!(after2.images[0].mime, "image/jpeg");
-    for inv in Mutation::inverse(&set_bytes, &with_img).expect("valid retained mutation inverse fixture").into_iter().rev() {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&set_bytes, &with_img).expect("valid retained mutation inverse fixture").into_iter().rev() {
         after2 = semio_s_artifact_stdio_semio_base::applied(&after2, &inv).0;
     }
     assert_eq!(after2, with_img);
@@ -205,7 +205,7 @@ fn law_fixture(mutation: &SemioDocumentMutation) -> SemioDocumentSnapshot {
 async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = law_fixture(&mutation);
-        let diff_direct = Mutation::diff(&mutation, &base);
+        let diff_direct = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
         let mut via_apply = base.clone();
@@ -231,7 +231,7 @@ async fn inverse_law() {
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
-        let diff = Mutation::diff(&mutation, &base);
+        let diff = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let next = apply_valid(diff.diff(), &base);
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
         let restored = apply_valid(&inverse_diff, &next);
@@ -245,7 +245,7 @@ async fn inverse_law() {
 fn assert_absorb_matches_sequential(base: &SemioDocumentSnapshot, d1: &SemioDocumentDiff, d2: &SemioDocumentDiff) -> SemioDocumentDiff {
     let sequential = apply_valid(d2, &apply_valid(d1, base));
     let mut absorbed = d1.clone();
-    MutationDiff::absorb(&mut absorbed, d2.clone());
+    ColdMutationDiff::absorb(&mut absorbed, d2.clone());
     assert_eq!(apply_valid(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
     absorbed
 }
@@ -259,9 +259,9 @@ fn blocks_diff(diff: &SemioDocumentDiff) -> &BlocksDiff {
 async fn absorb_law() {
     {
         let base = fixture();
-        let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path: DocBlockPath::top(0) }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path: DocBlockPath::top(0) }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = blocks_diff(&absorbed);
         assert_eq!(triple.removed, vec![0]);
@@ -272,9 +272,9 @@ async fn absorb_law() {
 
     {
         let base = fixture();
-        let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("g") }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("g") }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = blocks_diff(&absorbed);
         assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
@@ -284,9 +284,9 @@ async fn absorb_law() {
 
     {
         let base = fixture();
-        let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(1), block: DocBlock::paragraph("f") }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(1), block: DocBlock::paragraph("f") }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioDocumentMutation::SetRunText(set_run_text::SetRunText { path: DocBlockPath::top(1), run_index: 0, text: "patched".into() }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioDocumentMutation::SetRunText(set_run_text::SetRunText { path: DocBlockPath::top(1), run_index: 0, text: "patched".into() }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = blocks_diff(&absorbed);
         assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
@@ -296,9 +296,9 @@ async fn absorb_law() {
 
     {
         let base = fixture();
-        let d1 = Mutation::diff(&SemioDocumentMutation::SetRunText(set_run_text::SetRunText { path: DocBlockPath::top(1), run_index: 0, text: "patched".into() }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioDocumentMutation::SetRunText(set_run_text::SetRunText { path: DocBlockPath::top(1), run_index: 0, text: "patched".into() }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path: DocBlockPath::top(1) }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path: DocBlockPath::top(1) }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = blocks_diff(&absorbed);
         assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
@@ -307,21 +307,21 @@ async fn absorb_law() {
 
     {
         let base = fixture();
-        let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }), &base);
         let mid1 = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("g") }), &mid1);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("g") }), &mid1);
         let mid2 = apply_valid(d2.diff(), &mid1);
-        let d3 = Mutation::diff(&SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path: DocBlockPath::top(0) }), &mid2);
+        let d3 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path: DocBlockPath::top(0) }), &mid2);
         let sequential = apply_valid(d3.diff(), &mid2);
 
         let mut left = d1.diff().clone();
-        MutationDiff::absorb(&mut left, d2.diff().clone());
-        MutationDiff::absorb(&mut left, d3.diff().clone());
+        ColdMutationDiff::absorb(&mut left, d2.diff().clone());
+        ColdMutationDiff::absorb(&mut left, d3.diff().clone());
 
         let mut d2_then_d3 = d2.diff().clone();
-        MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
+        ColdMutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
         let mut right = d1.diff().clone();
-        MutationDiff::absorb(&mut right, d2_then_d3);
+        ColdMutationDiff::absorb(&mut right, d2_then_d3);
 
         assert_eq!(apply_valid(&left, &base), sequential, "absorb associativity (left) failed");
         assert_eq!(apply_valid(&right, &base), sequential, "absorb associativity (right) failed");

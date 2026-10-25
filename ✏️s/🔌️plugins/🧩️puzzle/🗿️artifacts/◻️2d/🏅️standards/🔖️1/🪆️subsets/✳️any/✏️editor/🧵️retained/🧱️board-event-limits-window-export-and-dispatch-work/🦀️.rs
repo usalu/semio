@@ -1,6 +1,8 @@
 //! 🧱️ Board event limits, window, export and dispatch work: the board event batch limit and extent, the window command work, the revision hex, the export work, the dispatch emit and the generic and active example extents. See [`super`].
 
 use super::*;
+use crate::editor::puzzle2d::terminology::puzzle2d_labels;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use std::cell::RefCell;
 use semio_framework_job::StepContext;
 

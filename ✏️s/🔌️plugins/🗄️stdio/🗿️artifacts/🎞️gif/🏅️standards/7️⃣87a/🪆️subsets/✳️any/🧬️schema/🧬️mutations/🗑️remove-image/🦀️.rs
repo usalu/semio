@@ -9,7 +9,7 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "remove-image")]
 pub struct RemoveImage {
-    pub(crate) index: usize,
+    pub index: usize,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveImage {

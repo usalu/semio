@@ -114,8 +114,8 @@ describe("validateTaxonomy", () => {
     expect(taxonomy.ioSemanticCollectionDirNames).toEqual(["📸️snapshot", "🔺️diff", "💡️inferences", "🧬️mutations"]);
     expect(artifactFacetPathIsDeclared("🚪️io/📝️text/🧬️mutations", taxonomy)).toBe(true);
     expect(artifactFacetPathIsDeclared("🚪️io/💾️binary/🧬️mutations", taxonomy)).toBe(true);
-    expect(artifactFacetPathIsDeclared("🚪️io/📝️text/🧬️mutations", taxonomy)).toBe(false);
-    expect(artifactFacetPathIsDeclared("🚪️io/💾️binary/🧬️mutations", taxonomy)).toBe(false);
+    expect(artifactFacetPathIsDeclared("🚪️io/📝️text/🧬️mutations/📝️text", taxonomy)).toBe(false);
+    expect(artifactFacetPathIsDeclared("🚪️io/💾️binary/🧬️mutations/💾️binary", taxonomy)).toBe(false);
     expect(taxonomy.ioSemanticCollectionDirNames).toContain("🧬️mutations");
   });
 

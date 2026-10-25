@@ -10,7 +10,7 @@ import { type OracleLinkedPackage } from "../🗃️oracle-registry/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔬️Probe
-/** 🔬️ One EXTERNAL measurement tool. The orchestrator invokes it and compares what it emits — never computes. */
+/** 🔧️ One EXTERNAL measurement tool. The orchestrator invokes it and compares what it emits — never computes. */
 export type ProbeEntry = Readonly<{
   id: string;
   kind: "external-process" | "external-library";
@@ -44,12 +44,12 @@ export type ProbeEntry = Readonly<{
  */
 export type ProbeQualification = Readonly<{ status: "qualified" | "provisional" | "rejected"; evidence: string; checkedAt?: string; criteria?: readonly { id: string; met: boolean; detail?: string }[] }>;
 
-/** 🎓️ Whether a probe's strongest guarantee may be claimed by a gate. */
+/** ⛩️ Whether a probe's strongest guarantee may be claimed by a gate. */
 export function isQualifiedProbe(probe: ProbeEntry | undefined): boolean {
   return probe !== undefined && probe.qualification?.status === "qualified";
 }
 
-/** 🔬️ The typed JSON one probe emits for one stage. `measurements` is probe-defined, by design. */
+/** 📊️ The typed JSON one probe emits for one stage. `measurements` is probe-defined, by design. */
 export type ProbeReport = Readonly<{
   schema: "semio.repository-test.probe-report/v2";
   probe: string;

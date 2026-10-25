@@ -15,7 +15,7 @@ export const VIZ_LEGEND_DEFAULTS: Readonly<{scale:string;kind:string;orient:stri
 /** 🌍️ A user-visible string in every language the print product ships; there is no default one. */
 export type VizLocalizedText = { readonly en: string; readonly de: string };
 
-/** 🌍️ The languages a kernel result may be labelled in. */
+/** 🗣️ The languages a kernel result may be labelled in. */
 export const VIZ_LANGUAGES = ["en", "de"] as const;
 
 export type VizLanguage = (typeof VIZ_LANGUAGES)[number];
@@ -31,7 +31,7 @@ export type VizExtent = { readonly x0: number; readonly y0: number; readonly x1:
 /** 🔢️ Any value a grammar option may carry. */
 export type VizOptionValue = string | number | boolean;
 
-/** 🗄️ One row of a data table; columns are addressed by name. */
+/** 🏓️ One row of a data table; columns are addressed by name. */
 export type VizRow = Readonly<Record<string, VizOptionValue | null>>;
 
 /** 🗄️ A named, column-oriented data table as `\SemioVizTable` declares it. */
@@ -46,12 +46,12 @@ export type VizTable = { readonly name: string; readonly columns: readonly strin
 //#endregion 🔖️Primitives
 
 //#region 🔖️Scale
-/** 📐️ Every scale kind the grammar exposes, mirroring `semio-viz-scale`. */
+/** ⚖️ Every scale kind the grammar exposes, mirroring `semio-viz-scale`. */
 export const VIZ_SCALE_KINDS = ["linear", "log", "pow", "sqrt", "symlog", "identity", "ordinal", "band", "point", "quantile", "quantize", "threshold", "sequential", "diverging", "temporal"] as const;
 
 export type VizScaleKind = (typeof VIZ_SCALE_KINDS)[number];
 
-/** 📐️ The option vocabulary of `\SemioVizScale`; every key is optional and documented by its default. */
+/** 🎛️ The option vocabulary of `\SemioVizScale`; every key is optional and documented by its default. */
 export type VizScaleOptions = {
   readonly nice?: boolean | number;
   readonly clamp?: boolean;
@@ -73,7 +73,7 @@ export type VizScaleOptions = {
   readonly unknown?: VizOptionValue | null;
 };
 
-/** 📐️ A scale declaration as the grammar records it, independent of the implementation that runs it. */
+/** 📕️ A scale declaration as the grammar records it, independent of the implementation that runs it. */
 export type VizScaleSpec = {
   readonly name: string;
   readonly kind: VizScaleKind;
@@ -89,7 +89,7 @@ export const VIZ_CURVE_KINDS = ["linear", "linear-closed", "step", "step-before"
 
 export type VizCurveKind = (typeof VIZ_CURVE_KINDS)[number];
 
-/** ✒️ The symbol glyphs `\SemioVizSymbol` draws, sized by area like d3. */
+/** 🔣️ The symbol glyphs `\SemioVizSymbol` draws, sized by area like d3. */
 export const VIZ_SYMBOL_KINDS = ["circle", "cross", "diamond", "square", "star", "triangle", "wye", "asterisk", "diamond2", "plus", "square2", "triangle2", "times"] as const;
 
 export type VizSymbolKind = (typeof VIZ_SYMBOL_KINDS)[number];
@@ -101,12 +101,12 @@ export type VizMarkKind = (typeof VIZ_MARK_KINDS)[number];
 //#endregion 🔖️Marks
 
 //#region 🔖️Coordinate
-/** 🧭️ The coordinate systems `\SemioVizCoordinate` installs inside a plot. */
+/** 🔭️ The coordinate systems `\SemioVizCoordinate` installs inside a plot. */
 export const VIZ_COORDINATE_KINDS = ["cartesian", "polar", "ternary", "barycentric", "parallel", "logpolar", "geographic"] as const;
 
 export type VizCoordinateKind = (typeof VIZ_COORDINATE_KINDS)[number];
 
-/** 🧭️ Option vocabulary shared by the coordinate systems; unused keys are ignored by a system. */
+/** ⚙️ Option vocabulary shared by the coordinate systems; unused keys are ignored by a system. */
 export type VizCoordinateOptions = {
   readonly startAngle?: number;
   readonly endAngle?: number;
@@ -126,12 +126,12 @@ export const VIZ_LAYOUT_ALGORITHMS = ["stack", "bin", "hexbin", "beeswarm", "jit
 
 export type VizLayoutAlgorithm = (typeof VIZ_LAYOUT_ALGORITHMS)[number];
 
-/** 🧮️ The treemap tilings, in the order `semio-viz-hierarchy` registers them. */
+/** 🀄️ The treemap tilings, in the order `semio-viz-hierarchy` registers them. */
 export const VIZ_TREEMAP_TILINGS = ["squarify", "slice", "dice", "slice-dice", "binary", "resquarify"] as const;
 
 export type VizTreemapTiling = (typeof VIZ_TREEMAP_TILINGS)[number];
 
-/** 🧮️ Stack orders and offsets, mirroring `\SemioVizLayout{stack}`. */
+/** 🥞️ Stack orders and offsets, mirroring `\SemioVizLayout{stack}`. */
 export const VIZ_STACK_ORDERS = ["none", "ascending", "descending", "inside-out", "reverse", "appearance"] as const;
 
 export const VIZ_STACK_OFFSETS = ["none", "expand", "diverging", "silhouette", "wiggle"] as const;
@@ -142,7 +142,7 @@ export type VizStackOffset = (typeof VIZ_STACK_OFFSETS)[number];
 //#endregion 🔖️Layout
 
 //#region 🔖️Geo
-/** 🌍️ The projections `semio-viz-geo` registers; each one is an exact d3-geo twin. */
+/** 🗺️ The projections `semio-viz-geo` registers; each one is an exact d3-geo twin. */
 export const VIZ_PROJECTIONS = ["equirectangular", "mercator", "transverse-mercator", "azimuthal-equal-area", "azimuthal-equidistant", "gnomonic", "orthographic", "stereographic", "conic-conformal", "conic-equal-area", "conic-equidistant", "albers", "equal-earth", "natural-earth"] as const;
 
 export type VizProjectionKind = (typeof VIZ_PROJECTIONS)[number];
@@ -152,7 +152,7 @@ export type VizProjectionKind = (typeof VIZ_PROJECTIONS)[number];
 /** 🎨️ A resolved encoding channel: the column it reads and the scale that maps it. */
 export type VizEncoding = { readonly column?: string; readonly scale?: string; readonly value?: VizOptionValue };
 
-/** 🎨️ Every encoding channel `\SemioVizPlot` accepts. */
+/** 📡️ Every encoding channel `\SemioVizPlot` accepts. */
 export const VIZ_CHANNELS = ["x", "y", "x2", "y2", "angle", "endAngle", "radius", "innerRadius", "size", "shape", "fill", "stroke", "strokeWidth", "opacity", "text", "dash", "width", "order", "detail", "rotation"] as const;
 
 export type VizChannel = (typeof VIZ_CHANNELS)[number];
@@ -162,7 +162,7 @@ export const VIZ_TRANSFORM_KINDS = ["filter","sort","group","aggregate","rollup"
 
 export type VizTransformKind = (typeof VIZ_TRANSFORM_KINDS)[number];
 
-/** 🧮️ One transform step of the §79 pipeline. */
+/** 🚂️ One transform step of the §79 pipeline. */
 export type VizTransformSpec = { readonly kind: VizTransformKind; readonly options?: Readonly<Record<string, VizOptionValue | null | readonly (VizOptionValue | null)[]>> };
 
 /** 🧱️ One layer of a chart: a mark, its encodings and the transform and layout feeding it. */
@@ -191,7 +191,7 @@ export type VizGuideSpec = {
   readonly options?: Readonly<Record<string, VizOptionValue>>;
 };
 
-/** 🏷️ A localized annotation positioned within an inferred chart. */
+/** 🔖️ A localized annotation positioned within an inferred chart. */
 export type VizAnnotationSpec = {
   readonly kind: "text" | "label" | "line" | "rule" | "rect" | "circle" | "point";
   readonly x: number;
@@ -205,7 +205,7 @@ export type VizAnnotationSpec = {
   readonly options?: Readonly<Record<string, VizOptionValue>>;
 };
 
-/** 📚️ One catalogue kind composed into a figure through the inference family. */
+/** 💡️ One catalogue kind composed into a figure through the inference family. */
 export type VizPresetSpec = {
   readonly kind: string;
   readonly data?: string;
@@ -247,7 +247,7 @@ export type VizCatalogEntry = {
 /** 🧪️ One numeric record of the probe protocol, shared by the LaTeX and the TypeScript subject. */
 export type VizProbeRecord = { readonly case: string; readonly scenario: string; readonly key: string; readonly values: readonly (number | string)[] };
 
-/** 🧪️ A probe stream grouped by key — the projection a differential comparison reads. */
+/** 🗝️ A probe stream grouped by key — the projection a differential comparison reads. */
 export type VizProbeProjection = Readonly<Record<string, readonly (number | string)[]>>;
 //#endregion 🔖️Catalogue
 

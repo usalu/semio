@@ -29,6 +29,8 @@ pub mod standards {
                     pub mod binary {
                         #[path = "../../../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;
+                        #[path = "../../../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+                        pub mod diff;
                         #[path = "../../../../../🚪️io/💾️binary/💡️inferences/🦀️.rs"]
                         pub mod inferences;
                     }
@@ -36,6 +38,8 @@ pub mod standards {
                     pub mod text {
                         #[path = "../../../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;
+                        #[path = "../../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+                        pub mod diff;
                         #[path = "../../../../../🚪️io/📝️text/💡️inferences/🦀️.rs"]
                         pub mod inferences;
                     }

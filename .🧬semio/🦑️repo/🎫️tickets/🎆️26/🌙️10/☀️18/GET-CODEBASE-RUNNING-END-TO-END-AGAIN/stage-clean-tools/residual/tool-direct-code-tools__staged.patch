@@ -1,0 +1,307 @@
+# stage-clean different staged=tool-direct-code-tools/staged/after/0000 map=ref:sha256
+--- a/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts
+@@ -1,5 +1,4 @@
+ import {CargoCompilationSnapshotPoolV1,type CargoCompilationRetentionContextV1,type PendingCargoCompilationSnapshotV1,type CompletedCargoCompilationViewV1} from "./🧾️receipt/📦️retention/📥️snapshot/🟦️.ts";
+-import { ensureCargoLockCurrentV1 } from "../../🦀️cargo-workspace/🟦️.ts";
+ import {completedCargoOutputClaimsV1} from "./🧾️receipt/📦️retention/📋️inventory/🟦️.ts";
+ import{withCargoCompilerInputsV1,type CargoCompilerInputsPortV1}from"./📥️inputs/🟦️.ts";
+ import {withIssuedResourceOperationV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1} from "../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+@@ -266,7 +265,7 @@
+ /** 🚦️ Retains exact recipe target and shared store custody through invocation capture and provenance under the original control. */
+ export async function buildCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1): Promise<void> {
+   const storage=requireNativeStorageReservationV1(options.storage,options.control);requireIssuedResourceControlV1(options.control);if(typeof options.consume!=="function"||!Number.isSafeInteger(options.maximumObservationBytes)||options.maximumObservationBytes<1||options.maximumObservationBytes>CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1)throw Error("Required finite completed Cargo consumer");if(storage.allocation.kind!=="compiler-workspace")throw Error("Original compiler workspace storage required");await storage.recheck();
+-  if(options.retainCompilationBytes!==undefined&&(!Number.isSafeInteger(options.retainCompilationBytes)||options.retainCompilationBytes<1||options.retainCompilationBytes>captureSourceSchema.properties.maximumRetainedCompilationBytes.const||options.retainCompilationBytes>storage.allocation.bytes))throw Error("Finite actual Native retained compilation extent required");
++  if(options.retainCompilationBytes!==undefined&&(!Number.isSafeInteger(options.retainCompilationBytes)||options.retainCompilationBytes<1||options.retainCompilationBytes>captureSourceSchema.properties.maximumBytes.const||options.retainCompilationBytes>storage.allocation.bytes))throw Error("Finite actual Native retained compilation extent required");
+   policy = admitArtifactPolicy(policy);
+   args = cargoArtifactArgumentsV1(args,policy);
+   if(options.observationOutput&&options.output)throw Error("Compiler observations and source deliverables require separate output ownership");
+@@ -284,7 +283,7 @@
+   let lease:CargoTargetRecipeLeaseV1|undefined;
+   try {
+     options = { ...options, control };
+-    const planning=await captureCargoCompilationGraphV1({workspaceRoot:policy.cwd,cwd:policy.cwd,program:"cargo",prefix:[],args:[options.command??"build","--locked","--manifest-path",manifest,...args],environment:options.environment??process.env,maximumOutputBytes:134217728},control,options.planningPort??actualCargoCompilerPlanningPortV1());
++    const planning=await captureCargoCompilationGraphV1({workspaceRoot:policy.cwd,cwd:policy.cwd,program:"cargo",prefix:[],args:[options.command??"build","--locked","--manifest-path",manifest,...args],environment:options.environment??process.env,maximumOutputBytes:16777216},control,options.planningPort??actualCargoCompilerPlanningPortV1());
+     await admitCargoSourceBoundariesV1(planning,policy.cwd,options.sourceBoundary,control,options.sourcePort??actualCargoSourceAdmissionPortV1(options.environment??process.env,policy.cwd,storage));await storage.recheck();
+     const recipe=await cargoArtifactTargetRecipeV1(manifest,args,policy,options);
+     lease=await acquireCargoTargetRecipeV1({directory:policy.leaseDirectory,recipe:recipe.recipe,control});
+@@ -859,7 +858,6 @@
+   await withCompilerCapacityScopeV1({request:{kind:"whole-host"},directory:policy.leaseDirectory,control:options.control,environment:options.environment},async(facts,control)=>{
+   const environment:Record<string,string|undefined>={...captureOptions.environment,SEMIO_COMPILER_PARALLELISM:String(facts.parallelism)};delete environment.SEMIO_COMPILER_CAPACITY_HELD;const options={...captureOptions,control,environment},granted=compilerAdmissionBudgetV1(control);
+   if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(facts.parallelism);
+-  await ensureCargoLockCurrentV1({ workspaceRoot: policy.cwd, cwd: policy.cwd, program: commandPort.command, prefix: commandPort.args, args: [options.command ?? "build", "--manifest-path", path], environment, control, force: false });
+   const child = spawn(commandPort.command, [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], {
+     cwd: policy.cwd,
+     env: { ...(options.environment ?? process.env), SEMIO_COMPILER_RESOURCE_ROOT: join(policy.buildDirectory, COMPILER_RESOURCE_DIRECTORY_V1), CARGO_TARGET_DIR:targetDirectory, CARGO_BUILD_BUILD_DIR: policy.buildDirectory },
+# stage-clean different staged=tool-direct-code-tools/staged/after/0004 map=ref:sha256
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts
+@@ -1,13 +1,13 @@
+ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+ import { basename, dirname, join, relative, resolve } from "node:path";
+ import { isDeepStrictEqual } from "node:util";
+-import { discoverPackages, inspectRustModuleGraph, inspectRustModuleGraphFacts, isDiscoverySkipDirectory, schemaFacetFormatEntries } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+-import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
++import { discoverPackages, inspectRustModuleGraph, inspectRustModuleGraphFacts, isDiscoverySkipDirectory, schemaFacetFormatEntries } from "@semio-tech/repo-lib/inventory";
++import { findWorkspaceRoot } from "@semio-tech/process/routing";
+ import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+ import { registrySchemaValidator } from "../✅️catalog-verification/🎯️native-selection/🟦️.ts";
+ import { EXAMPLES_DIRNAME, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_RUST_LEAF, EXAMPLE_TESTS_DIRNAME, EXAMPLE_TS_LEAF, FORBIDDEN_EXAMPLE_PLURAL_DIRS, PLUGIN_AREAS, RUST_LANG, TAXONOMY, isExampleSlugName, primaryFilenameForKind, requiredRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
+ import { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
+-import type { SemanticFacetPrimaryFileProjectionContract } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
++import type { SemanticFacetPrimaryFileProjectionContract } from "@semio-tech/repo-lib/inventory";
+ import { SqliteDatabaseV1 } from "../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
+ import { ToolErrorV1, runToolV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+ 
+# stage-clean different staged=tool-direct-code-tools/staged/after/0012 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🔷️configure-micro-commit/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🔷️configure-micro-commit/🐹️.go
+@@ -149,12 +149,12 @@
+ }
+ 
+ func runMicroCommitScript(ctx context.Context, repoRoot string, args []string) error {
+-	repo, err := repoExecutable()
++	bun, err := resolveBunBinary(repoRoot)
+ 	if err != nil {
+ 		return err
+ 	}
+ 	cmdArgs := append([]string{"./📜️script.ts", "micro-commit"}, args...)
+-	c := workspace.ToolCommandContext(ctx, repo, cmdArgs...)
++	c := workspace.ToolCommandContext(ctx, bun, cmdArgs...)
+ 	c.Dir = repoRoot
+ 	c.Stdout = os.Stdout
+ 	c.Stderr = os.Stderr
+@@ -169,5 +169,36 @@
+ 	return nil
+ }
+ 
+-// 🚀️repoExecutable is the running repo command: the micro-commit script starts through its script route, which provisions and runs the pinned runtime, so no runtime is looked up here.
+-func repoExecutable() (string, error) { return os.Executable() }
++func resolveBunBinary(repoRoot string) (string, error) {
++	if pinned := strings.TrimSpace(os.Getenv("COMPOSE_BUN")); pinned != "" {
++		if _, err := os.Stat(pinned); err == nil {
++			return pinned, nil
++		}
++	}
++	pinPath := filepath.Join(RepoMetaDirForRoot(repoRoot), "🐹️compose-micro-commit-bun")
++	if data, err := os.ReadFile(pinPath); err == nil {
++		if line := strings.TrimSpace(strings.Split(string(data), "\n")[0]); line != "" {
++			if _, statErr := os.Stat(line); statErr == nil {
++				return line, nil
++			}
++		}
++	}
++	if bunInstall := strings.TrimSpace(os.Getenv("BUN_INSTALL")); bunInstall != "" {
++		for _, name := range []string{"bun", "bun.exe"} {
++			candidate := filepath.Join(bunInstall, "bin", name)
++			if _, err := os.Stat(candidate); err == nil {
++				return candidate, nil
++			}
++		}
++	}
++	for _, rel := range []string{"node_modules/.bin/bun", "node_modules/.bin/bun.exe"} {
++		candidate := filepath.Join(repoRoot, rel)
++		if _, err := os.Stat(candidate); err == nil {
++			return candidate, nil
++		}
++	}
++	if path, err := exec.LookPath("bun"); err == nil {
++		return path, nil
++	}
++	return "", fmt.Errorf("bun not found — install bun or set COMPOSE_BUN")
++}
+# stage-clean different staged=tool-direct-code-tools/staged/after/0015 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️test-runners/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️test-runners/🐹️.go
+@@ -320,11 +320,7 @@
+ 	script := filepath.Join(toolchain, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "📦️packages", "🟦️typescript", "📜️script.ts")
+ 	args := []string{script, "go-test", moduleRoot, inputPath}
+ 	args = append(args, goArgs...)
+-	repo, err := os.Executable()
+-	if err != nil {
+-		return err
+-	}
+-	return runExternalCommand(toolchain, repo, args, cmd)
++	return runExternalCommand(toolchain, "bun", args, cmd)
+ }
+ 
+ // ⬛️testCommand holds the data fields for a testCommand record.
+# stage-clean different staged=tool-direct-code-tools/staged/after/0020 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/⌨️command/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🚷️raw-process-spawn/⌨️command/🟦️.ts
+@@ -1,6 +1,5 @@
+ import { runToolSpawnLawV1 } from "../../🧰️direct-tool-spawn/⌨️command/🟦️.ts";
+ import { judgeProcessStartsV1, listProcessSpawnFilesV1, processAllowlistProblemsV1, scanRepositoryProcessStartsV1, PROCESS_ALLOWLIST_V1, type ProcessAllowlistV1 } from "../🟦️.ts";
+-import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
+ 
+ /** 📋️ The machine-readable result of the raw-process-spawn law: scanned files, production sites per disposition, findings and stale allowlist rows. */
+ export type ProcessSpawnReportV1 = Readonly<{ scanned: number; sites: number; dispositions: Readonly<Record<string, number>>; findings: ReturnType<typeof judgeProcessStartsV1>["findings"]; problems: ReturnType<typeof processAllowlistProblemsV1>; stale: readonly string[] }>;
+@@ -13,7 +12,7 @@
+ }
+ 
+ /** 🚪️ Runs the raw-process-spawn law: `[--report] [--json] [--strict] [--sites]`. Findings are process starts outside the interface modules and literal programs the registry does not know, each without an allowlist row; stale rows only warn unless `--strict`. */
+-export function runProcessSpawnLawV1(root: string, args: readonly string[], write: (line: string) => void = writeResultLineV1, allowlist: ProcessAllowlistV1 = PROCESS_ALLOWLIST_V1): number {
++export function runProcessSpawnLawV1(root: string, args: readonly string[], write: (line: string) => void = line => console.log(line), allowlist: ProcessAllowlistV1 = PROCESS_ALLOWLIST_V1): number {
+   const { report, rows } = processSpawnReportV1(root, allowlist), failed = report.findings.length > 0 || report.problems.length > 0 || args.includes("--strict") && report.stale.length > 0;
+   if (args.includes("--json")) { write(JSON.stringify(report, null, 1)); return failed ? 1 : 0; }
+   write(`[verify raw-process-spawn] scanned ${report.scanned} files; ${report.sites} production process starts.`);
+@@ -30,7 +29,7 @@
+ }
+ 
+ /** 🧰️ Runs both spawn laws behind `repo verify tool-spawns`: registered tools started outside their adapter (with the test ledger) and every other process start outside the interface modules. With `--json` the two results are one document. */
+-export function runToolSpawnLawsV1(root: string, args: readonly string[], write: (line: string) => void = writeResultLineV1): number {
++export function runToolSpawnLawsV1(root: string, args: readonly string[], write: (line: string) => void = line => console.log(line)): number {
+   if (args.includes("--prune")) return runToolSpawnLawV1(root, args, write);
+   if (!args.includes("--json")) { const first = runToolSpawnLawV1(root, args, write), second = runProcessSpawnLawV1(root, args, write); return Math.max(first, second); }
+   const captured: string[] = [], first = runToolSpawnLawV1(root, args, line => { captured.push(line); }), { report } = processSpawnReportV1(root), second = report.findings.length > 0 || report.problems.length > 0 || args.includes("--strict") && report.stale.length > 0 ? 1 : 0;
+# stage-clean different staged=tool-direct-code-tools/staged/after/0031 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts
+@@ -69,11 +69,6 @@
+       this.runZeroTouch(segments.slice(1));
+       return;
+     }
+-    if (segments[0] === "tool-declarations") {
+-      const { runDirectToolDeclarationLawV1 } = await import("../../⚖️laws/🧰️direct-tool-declarations/⌨️command/🟦️.ts");
+-      process.exitCode = runDirectToolDeclarationLawV1(this.root, segments.slice(1));
+-      return;
+-    }
+     if (segments[0] === "tool-spawns") {
+       const { runToolSpawnLawsV1 } = await import("../../⚖️laws/🚷️raw-process-spawn/⌨️command/🟦️.ts");
+       process.exitCode = runToolSpawnLawsV1(this.root, segments.slice(1));
+# stage-clean different staged=tool-direct-code-tools/staged/after/0035 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts
+@@ -411,8 +411,8 @@
+ /** 🧭️ Reuses actual workspace selection with bounded original Source reads and retained callback observations. */
+ export async function withCargoWorkspaceSelectionV1<T>(root:string,manifest:string,control:ResourceLeaseControl,body:(view:CargoWorkspaceSelectionViewV1)=>Promise<T>):Promise<T>{
+  requireIssuedResourceControlV1(control);root=requireMaterializedPathV1(root);requireMaterializedPathV1(resolve(root,manifest));if(typeof body!=="function")throw Error("Actual bounded workspace selection body required");
+- const texts=new Map<string,Buffer>(),observations=new Map<string,{operation:"state"|"presence";path:string;value:string}>();let bytes=0,published=0,live=true,accepting=true,pending=0,refusal:Promise<never>|undefined;
+- const guard=(phase:ResourceLeaseControl)=>{if(!live)throw Error("Original Cargo workspace selection released");checkResourceLeaseControl(phase);},stamp=(value:ReturnType<typeof lstatSync>|boolean)=>{if(value===undefined)throw Error("Actual Cargo workspace Source observation required");return JSON.stringify(typeof value==="boolean"?value:[String(value.dev),String(value.ino),String(value.mode),value.isDirectory()?"directory":value.isFile()?"file":value.isSymbolicLink()?"symlink":"other",...(value.isDirectory()?[]:[String(value.nlink),String(value.size),String(value.mtimeMs),String(value.ctimeMs),String(value.birthtimeMs)])]);},advance=async(phase:ResourceLeaseControl)=>{const now=Date.now();if(now-published>=250){published=now;await phase.publish({resource:"cargo:workspace-selection",mode:"shared",elapsedMs:0});}await phase.yieldContinuation();guard(phase);};
++ const texts=new Map<string,Buffer>(),observations=new Map<string,{operation:"state"|"presence";path:string;value:string}>();let bytes=0,live=true,accepting=true,pending=0,refusal:Promise<never>|undefined;
++ const guard=(phase:ResourceLeaseControl)=>{if(!live)throw Error("Original Cargo workspace selection released");checkResourceLeaseControl(phase);},stamp=(value:ReturnType<typeof lstatSync>|boolean)=>{if(value===undefined)throw Error("Actual Cargo workspace Source observation required");return JSON.stringify(typeof value==="boolean"?value:[String(value.dev),String(value.ino),String(value.mode),value.isDirectory()?"directory":value.isFile()?"file":value.isSymbolicLink()?"symlink":"other",...(value.isDirectory()?[]:[String(value.nlink),String(value.size),String(value.mtimeMs),String(value.ctimeMs),String(value.birthtimeMs)])]);},advance=async(phase:ResourceLeaseControl)=>{await phase.publish({resource:"cargo:workspace-selection",mode:"shared",elapsedMs:0});await phase.yieldContinuation();guard(phase);};
+  const read=async(path:string,phase:ResourceLeaseControl)=>{guard(phase);const previous=texts.get(path);if(!previous&&texts.size>=selectionLimits.maximumDocuments)throw Error("Cargo workspace Source document capacity exceeded");const value=await readPhysicalCargoSourceV1(path,{version:1,root,expectedBytes:previous?.length??null,maximumBytes:Math.min(selectionLimits.maximumManifestBytes,selectionLimits.maximumAggregateBytes-bytes+(previous?.length??0)),remainingFiles:1},phase);guard(phase);if(!value)throw Error("Original Cargo workspace Source disappeared");const result=Buffer.from(value);if(previous&&!previous.equals(result))throw Error("Original Cargo workspace Source changed: "+path);if(!previous){texts.set(path,result);bytes+=result.length;}return result;};
+  const observe=(step:CargoPhysicalOperationV1)=>{if(step.operation!=="state"&&step.operation!=="presence")throw Error("Closed Cargo workspace selection observation required");requireMaterializedPathV1(step.path);const value=operate(step),key=step.operation+":"+step.path,identity=stamp(value),previous=observations.get(key);if(previous&&previous.value!==identity)throw Error("Original Cargo workspace topology changed: "+step.path);if(!previous){if(observations.size>=selectionLimits.maximumObservations)throw Error("Cargo workspace Source observation capacity exceeded");observations.set(key,{operation:step.operation,path:step.path,value:identity});}return value;};
+  const recheck=async(phase:ResourceLeaseControl)=>{guard(phase);for(const row of observations.values()){guard(phase);observe({...row,root});await advance(phase);}for(const path of texts.keys()){await read(path,phase);await advance(phase);}};
+# stage-clean different staged=tool-direct-code-tools/staged/after/0037 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🐹️go/🔖️micro-commit/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🐹️go/🔖️micro-commit/🐹️.go
+@@ -2,7 +2,7 @@
+ 
+ // 2026 Ueli Saluz <ueli@semio-tech.com>
+ 
+-// 🔖️micro-commit carries the micro-commit delegation, the git hook installation and the start of the script through the repo command.
++// 🔖️micro-commit carries the micro-commit delegation, the git hook installation and the bun resolution.
+ 
+ // #endregion 🧲️Header
+ 
+@@ -15,6 +15,7 @@
+ 	os "os"
+ 	exec "os/exec"
+ 	filepath "path/filepath"
++	strings "strings"
+ 
+ 	providers "github.com/usalu/semio/repo/providers"
+ 	workspace "github.com/usalu/semio/repo/workspace"
+@@ -22,20 +23,38 @@
+ 
+ // #region 🔖️MicroCommitDelegation
+ 
+-// 📜️MicroCommitArgv answers the argv the repo binary hands to its own script route for a micro-commit subcommand.
+-func MicroCommitArgv(repo string, args []string) []string {
+-	argv := []string{repo, "./📜️script.ts", "micro-commit"}
++// 📜️MicroCommitArgv answers the argv the repo binary hands to bun for a micro-commit subcommand.
++func MicroCommitArgv(bun string, args []string) []string {
++	argv := []string{bun, "./📜️script.ts", "micro-commit"}
+ 	return append(argv, args...)
+ }
+ 
++// 🕯️BunCandidates lists every place a bun binary is looked for, in order.
++func BunCandidates(repoRoot string, pinned string, bunInstall string) []string {
++	candidates := []string{}
++	if strings.TrimSpace(pinned) != "" {
++		candidates = append(candidates, strings.TrimSpace(pinned))
++	}
++	candidates = append(candidates, filepath.Join(workspace.RepoMetaDirForRoot(repoRoot), "🐹️compose-micro-commit-bun"))
++	if strings.TrimSpace(bunInstall) != "" {
++		for _, name := range []string{"bun", "bun.exe"} {
++			candidates = append(candidates, filepath.Join(strings.TrimSpace(bunInstall), "bin", name))
++		}
++	}
++	for _, relative := range []string{"node_modules/.bin/bun", "node_modules/.bin/bun.exe"} {
++		candidates = append(candidates, filepath.Join(repoRoot, relative))
++	}
++	return candidates
++}
++
+ // 🔖️RunMicroCommit delegates a micro-commit subcommand to the monorepo script through the process runner.
+-func RunMicroCommit(runner providers.ProcessRunner, repoRoot string, repo string, args []string) providers.ProcessOutcome {
+-	return runner.Run(providers.ProcessRequest{Argv: MicroCommitArgv(repo, args), Cwd: repoRoot})
++func RunMicroCommit(runner providers.ProcessRunner, repoRoot string, bun string, args []string) providers.ProcessOutcome {
++	return runner.Run(providers.ProcessRequest{Argv: MicroCommitArgv(bun, args), Cwd: repoRoot})
+ }
+ 
+ // ♻️RunMicroCommitReset is the `micro-commit reset` delegation every post-checkpoint git hook performs.
+-func RunMicroCommitReset(runner providers.ProcessRunner, repoRoot string, repo string) providers.ProcessOutcome {
+-	return RunMicroCommit(runner, repoRoot, repo, []string{"reset"})
++func RunMicroCommitReset(runner providers.ProcessRunner, repoRoot string, bun string) providers.ProcessOutcome {
++	return RunMicroCommit(runner, repoRoot, bun, []string{"reset"})
+ }
+ 
+ // #endregion 🔖️MicroCommitDelegation
+@@ -114,12 +133,12 @@
+ // #region 🔖️MicroCommit
+ 
+ func RunMicroCommitScript(ctx context.Context, repoRoot string, args []string) error {
+-	repo, err := repoExecutable()
++	bun, err := resolveBunBinary(repoRoot)
+ 	if err != nil {
+ 		return err
+ 	}
+ 	cmdArgs := append([]string{"./📜️script.ts", "micro-commit"}, args...)
+-	c := workspace.ToolCommandContext(ctx, repo, cmdArgs...)
++	c := workspace.ToolCommandContext(ctx, bun, cmdArgs...)
+ 	c.Dir = repoRoot
+ 	c.Stdout = os.Stdout
+ 	c.Stderr = os.Stderr
+@@ -134,7 +153,38 @@
+ 	return nil
+ }
+ 
+-// 🚀️repoExecutable is the running repo command: the micro-commit script starts through its script route, which provisions and runs the pinned runtime, so no runtime is looked up here.
+-func repoExecutable() (string, error) { return os.Executable() }
++func resolveBunBinary(repoRoot string) (string, error) {
++	if pinned := strings.TrimSpace(os.Getenv("COMPOSE_BUN")); pinned != "" {
++		if _, err := os.Stat(pinned); err == nil {
++			return pinned, nil
++		}
++	}
++	pinPath := filepath.Join(workspace.RepoMetaDirForRoot(repoRoot), "🐹️compose-micro-commit-bun")
++	if data, err := os.ReadFile(pinPath); err == nil {
++		if line := strings.TrimSpace(strings.Split(string(data), "\n")[0]); line != "" {
++			if _, statErr := os.Stat(line); statErr == nil {
++				return line, nil
++			}
++		}
++	}
++	if bunInstall := strings.TrimSpace(os.Getenv("BUN_INSTALL")); bunInstall != "" {
++		for _, name := range []string{"bun", "bun.exe"} {
++			candidate := filepath.Join(bunInstall, "bin", name)
++			if _, err := os.Stat(candidate); err == nil {
++				return candidate, nil
++			}
++		}
++	}
++	for _, rel := range []string{"node_modules/.bin/bun", "node_modules/.bin/bun.exe"} {
++		candidate := filepath.Join(repoRoot, rel)
++		if _, err := os.Stat(candidate); err == nil {
++			return candidate, nil
++		}
++	}
++	if path, err := exec.LookPath("bun"); err == nil {
++		return path, nil
++	}
++	return "", fmt.Errorf("bun not found — install bun or set COMPOSE_BUN")
++}
+ 
+ // #endregion 🔖️MicroCommit

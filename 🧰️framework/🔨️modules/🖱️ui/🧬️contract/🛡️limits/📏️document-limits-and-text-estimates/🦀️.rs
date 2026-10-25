@@ -1,4 +1,4 @@
-//! 📏️ Document limits and text estimates: the `UiDocumentLimits`, the intake step constants, the patch byte estimate, the text byte counts and the component, tree toolbar and row target validity checks. See [`super`].
+//! 📖️ Document limits and text estimates: the `UiDocumentLimits`, the intake step constants, the patch byte estimate, the text byte counts and the component, tree toolbar and row target validity checks. See [`super`].
 
 use super::*;
 
@@ -17,7 +17,7 @@ pub struct UiDocumentLimits {
     /// expanded product tree view or timeline) with headroom, while still bounding a malicious
     /// plugin's flood well below where a `HashMap<UiNodeId, UiNodeRecord>` becomes a memory concern.
     pub max_nodes: usize,
-    /// 📏️ Deepest legal node-to-root chain. 128 is far beyond any legitimate UI nesting (the deepest
+    /// 🏠️ Deepest legal node-to-root chain. 128 is far beyond any legitimate UI nesting (the deepest
     /// real shape, a `Tree`/`TreeSection`/`TreeItem` chain, rarely exceeds a few dozen) and doubles as
     /// the traversal's own recursion-depth bound, so it is also the security property that keeps
     /// `validate_snapshot`'s stack-free walk cheap even under adversarial input.
@@ -64,7 +64,7 @@ pub const RETAINED_UI_INTAKE_STEPS_PER_NODE: usize = 8_192;
 pub const RETAINED_UI_INTAKE_SLICE_STEPS: usize = 4_096;
 
 impl UiDocumentLimits {
-    /// 📏️ Liveness backstop for one surface patch: the steps a document at this quota may cost to mint.
+    /// 🪜️ Liveness backstop for one surface patch: the steps a document at this quota may cost to mint.
     /// It is NOT the progress guarantee — the intake rejects a phase reporting 32 consecutive steps that
     /// carry neither an item nor a byte, and that byte-aware rule is what catches a genuine stall.
     pub fn retained_ui_intake_step_ceiling(&self) -> usize {
@@ -95,7 +95,7 @@ pub(super) fn op_text_bytes(op: &crate::UiPatchOp) -> usize {
     }
 }
 
-/// 📝️ UTF-8 bytes of `spec`'s own text-bearing fields (`label`/`description`/`shortcut`) — mirrors
+/// ♿️ UTF-8 bytes of `spec`'s own text-bearing fields (`label`/`description`/`shortcut`) — mirrors
 /// [`component_text_bytes`]'s own scope-limited accounting for the same reason: these are the fields
 /// most likely to carry a large user-authored string.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -103,20 +103,20 @@ fn accessibility_text_bytes(spec: &crate::AccessibilitySpec) -> usize {
     label_bytes(&spec.label) + label_bytes(&spec.description) + spec.shortcut.as_deref().map_or(0, str::len)
 }
 
-/// 📝️ UTF-8 bytes of every binding's own `action` identity — `scope`/`name` are the only text an
+/// 🪢️ UTF-8 bytes of every binding's own `action` identity — `scope`/`name` are the only text an
 /// [`crate::ActionBinding`] carries outside its opaque, non-text-bearing `args`/`capability` payload.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn bindings_text_bytes(bindings: &crate::UiNodeBindings) -> usize {
     bindings.iter().map(|binding| binding.action.scope.len() + binding.action.name.len() + binding.capability.as_deref().map_or(0, str::len)).sum()
 }
 
-/// 📝️ UTF-8 bytes of `menu`'s own `id` — its only text-bearing field outside the opaque `args`.
+/// 📋️ UTF-8 bytes of `menu`'s own `id` — its only text-bearing field outside the opaque `args`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn menu_text_bytes(menu: &Option<crate::MenuRef>) -> usize {
     menu.as_ref().map_or(0, |menu_ref| menu_ref.id.len())
 }
 
-/// 📝️ UTF-8 bytes of `component`'s own text-bearing fields — the fields most likely to carry large
+/// 🧱️ UTF-8 bytes of `component`'s own text-bearing fields — the fields most likely to carry large
 /// user-authored strings (labels, descriptions, values, placeholders). Not exhaustive over every field
 /// of every variant; icon keys and other short identifiers are not text content this quota guards.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

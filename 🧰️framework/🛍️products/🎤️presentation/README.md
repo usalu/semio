@@ -13,7 +13,7 @@ mount it through the renderer.
 |---|---|
 | `📦️packages/🟦️typescript/` | The core: the declarative model, the slide-glob loader, resolution scopes, morph-run auto-animate id assignment and the deck templates. Zero runtime imports. |
 | `🎯️targets/⚛️react/` | The React + reveal.js renderer implementation: the public barrel `🟦️.tsx` (the single source of truth, consumed by plugins such as animate through `@semio-tech/presentation-react`) and `🔨️modules/` — the markdown → HTML compiler, the pdf.js canvas port and the renderer's internal modules (deck, reveal morph and auto-animate, figure scroll and zoom, morph views, interaction, arrangement section, json tree). |
-| `📦️packages/🟦️typescript/🎯️targets/⚛️react/` | The `@semio-tech/presentation-react` package: a thin entry `🟦️.tsx` that re-exports the target and loads the stylesheet `🎨️.css`, the manifest and the test script. |
+| `🎯️targets/⚛️react/📦️packages/🟦️typescript/` | The `@semio-tech/presentation-react` package: a thin entry `🟦️.tsx` that re-exports the target and loads the stylesheet `🎨️.css` (its sheets live in `🎯️targets/⚛️react/🎨️styles/`), the manifest and the test script. |
 | `🧪️tests/` | One directory per language-agnostic test case: `🥒️.feature`, `🟦️.ts`, `🧫️fixtures/`. |
 | `🔮️oracles/🔣️.json` | The owner oracle registry: the third-party packages the tests compare against, and the justified no-oracle decisions. |
 
@@ -32,6 +32,8 @@ repo run @semio-tech/mit-bestand-praesentation-projektetage:build
 
 The deck's task offers **Open ready address** (`Ctrl+B u`). Task overview retains
 output and its menu offers restart, stop and cancellation.
+
+The deck's own targets (port `6050`, `test`, `canonical-architecture`) are in the [Projektetage README](../../../♻️mit-bestand/🎤️präsentation/📅️33.projektetage/README.md).
 
 ## Domain model
 
@@ -153,3 +155,20 @@ A tile template produces from a source figure a new figure embodiments.
 #### Split
 
 A spit template produces a grid of tiles.
+
+## 🇩🇪️ Deutsch
+
+### Aufbau und Befehle
+
+Das Präsentationsprodukt ist ein deklaratives, renderunabhängiges Präsentationsmodell (Kapitel, Sequenzen, Gedanken, Teilnehmer, Verkörperungen, Dispositionen, Arrangements und Morphs) mit einem React-Renderer, der es über reveal.js abspielt. Das Modell kennt das DOM nicht; der Renderer ist ein Ziel unter möglichen anderen. Verbraucher wie `♻️mit-bestand/🎤️präsentation/📅️33.projektetage` ([README](../../../♻️mit-bestand/🎤️präsentation/📅️33.projektetage/README.md#-deutsch)) deklarieren ihre Präsentation als Glob von Folien-Dateien und binden sie über den Renderer ein. Die Ordner entsprechen der englischen Tabelle oben: `📦️packages/🟦️typescript/` (Kern), `🎯️targets/⚛️react/` (Renderer), `🧪️tests/` (sprachneutrale Testfälle) und `🔮️oracles/🔣️.json` (Orakel-Register).
+
+`repo dashboard` starten, **New Task** (`Ctrl+B n`) wählen und `presentation test` oder `projektetage dev/build` suchen. Jedes Owner-Target führt über den Build-Graphen zu seinem `📜️script.ts`:
+
+```bash
+repo run @semio-tech/presentation:test -- quick
+repo run @semio-tech/presentation-react:test -- quick
+repo run @semio-tech/mit-bestand-praesentation-projektetage:dev --detach --wait-ready
+repo run @semio-tech/mit-bestand-praesentation-projektetage:build
+```
+
+`test` kennt die Stufen `fundamental`, `quick`, `long` und `exhaustive`. Der Task der Präsentation bietet **Open ready address** (`Ctrl+B u`); die Task-Übersicht behält die Ausgabe, und ihr Menü bietet Neustart, Stopp und Abbruch. Alle Targets der Projektetage-Präsentation (Port `6050`, `test`, `canonical-architecture`) stehen in ihrem README.

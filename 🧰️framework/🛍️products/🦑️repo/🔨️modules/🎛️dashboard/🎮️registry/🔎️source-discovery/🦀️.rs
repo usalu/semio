@@ -189,7 +189,7 @@ impl Registry {
         hash.finish()
     }
 
-    /// 🔎️ Offers bounded editable values without changing command arguments or execution authority.
+    /// 💡️ Offers bounded editable values without changing command arguments or execution authority.
     pub fn suggestions(&self, parameter: &Parameter, chosen: &[(String, String)], query: &str, session: u64) -> Suggestions {
         let Some(spec) = &parameter.suggestions else { return Suggestions::default() };
         let maximum = source_policy().maximum_results;

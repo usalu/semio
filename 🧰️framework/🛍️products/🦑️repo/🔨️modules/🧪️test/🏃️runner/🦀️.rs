@@ -50,14 +50,14 @@ impl<'a> Context<'a> {
         self.plan.input(uri).map(|relative| self.repo_root.join(relative))
     }
 
-    /// 🔗️ Every fixture URI the scenario's steps name, in step order and whatever scheme the feature uses — the
+    /// 🪜️ Every fixture URI the scenario's steps name, in step order and whatever scheme the feature uses — the
     /// platform's one fixture-URI grammar (`TEST_INPUT_URI_RE`, `🧪️test/📥️fixture-inputs/🟦️.ts`). The feature is the single place a
     /// vector path is written down.
     pub fn step_input_uris(&self) -> Vec<String> {
         self.scenario.steps.iter().flat_map(|(_, text)| test_input_uris_in(text)).collect()
     }
 
-    /// 🧫️ Bytes of a resolved fixture.
+    /// ⌨️ Bytes of a resolved fixture.
     pub fn input_bytes(&self, uri: &str) -> Result<Vec<u8>, String> {
         std::fs::read(self.input(uri)?).map_err(|error| error.to_string())
     }
@@ -75,7 +75,7 @@ impl<'a> Context<'a> {
         std::fs::read(path).map_err(|error| format!("cannot read raw subject output {path}: {error}"))
     }
 
-    /// 🧫️ A resolved fixture parsed as JSON. Specification-vector cases — the ones resting on a
+    /// 🔣️ A resolved fixture parsed as JSON. Specification-vector cases — the ones resting on a
     /// recorded no-oracle decision — carry their vectors as committed JSON beside the implementation,
     /// and without this they had to be hand-transcribed into Rust literals, which is both laborious
     /// and a place for the transcription to drift away from the fixture it claims to mirror.
@@ -85,7 +85,7 @@ impl<'a> Context<'a> {
         crate::protocol::parse_json(&text).map_err(|error| format!("fixture {} is not valid JSON: {}", uri, error))
     }
 
-    /// 🧫️ Copies an immutable fixture into the work directory and returns the mutable copy's path.
+    /// 🦜️ Copies an immutable fixture into the work directory and returns the mutable copy's path.
     pub fn copy_input(&self, uri: &str, as_name: Option<&str>) -> Result<PathBuf, String> {
         let source = self.input(uri)?;
         let name = as_name.map(|value| value.to_string()).unwrap_or_else(|| source.file_name().map(|value| value.to_string_lossy().to_string()).unwrap_or_else(|| "fixture".to_string()));
@@ -100,7 +100,7 @@ impl<'a> Context<'a> {
         self.scenario.doc_strings.first().map(String::as_str).ok_or_else(|| format!("scenario {} carries no doc string", self.scenario.id))
     }
 
-    /// 📜️ The scenario's first doc string, parsed as the owned JSON value.
+    /// 📖️ The scenario's first doc string, parsed as the owned JSON value.
     pub fn doc_json(&self) -> Result<crate::protocol::Json, String> {
         crate::protocol::parse_json(self.doc_string()?)
     }
@@ -110,7 +110,7 @@ impl<'a> Context<'a> {
         self.scenario.data_tables.first().ok_or_else(|| format!("scenario {} carries no data table", self.scenario.id))
     }
 
-    /// 📦️ Absolute path to write one named result artifact to — `<artifact_dir>/<scenario id>/<role>/<filename>`, so a
+    /// 📝️ Absolute path to write one named result artifact to — `<artifact_dir>/<scenario id>/<role>/<filename>`, so a
     /// scenario's artifacts never overwrite another's — creating parent directories.
     pub fn artifact(&self, role: &str, filename: &str) -> Result<PathBuf, String> {
         let dir = self.artifact_dir.join(&self.scenario.id).join(role);
@@ -129,7 +129,7 @@ impl<'a> Context<'a> {
         self.scenario.seed.parse().unwrap_or(0)
     }
 
-    /// 🪆️ The Examples row id this scenario expands (`mutate-set-line` under `@id-mutate` is row
+    /// 🔢️ The Examples row id this scenario expands (`mutate-set-line` under `@id-mutate` is row
     /// `set-line`), or an error for a plain scenario — a handler registered under an outline's base id
     /// reads its row here instead of being registered once per row.
     pub fn row(&self) -> Result<&str, String> {
@@ -139,14 +139,14 @@ impl<'a> Context<'a> {
 
 type Handler = Box<dyn Fn(&Context) -> Result<Outcome, String>>;
 
-/// 🧭️ One implementation's registration for a case: which scenarios it serves, in which roles.
+/// 🔌️ One implementation's registration for a case: which scenarios it serves, in which roles.
 pub struct Adapter {
     pub implementation: &'static str,
     handlers: BTreeMap<(String, String), Handler>,
 }
 
 impl Adapter {
-    /// 🧭️ Starts a registration for the given implementation id (`rust`).
+    /// ▶️ Starts a registration for the given implementation id (`rust`).
     pub fn new(implementation: &'static str) -> Adapter {
         Adapter { implementation, handlers: BTreeMap::new() }
     }

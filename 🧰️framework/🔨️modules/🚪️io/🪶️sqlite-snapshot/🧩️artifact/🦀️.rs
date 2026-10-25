@@ -10,7 +10,7 @@ impl<'c, 'p> NativeEncodingBound<'c, 'p> {
 
     /// 🗃️ Pays actual borrowed forecast storage independently from the unpaid output bound.
     pub fn allocate_frontier<T>(&mut self,count:usize)->Result<Vec<T>,ValueError>{self.checkpoint()?;super::transfer::reserve(count,self.control)}
-    /// ➕️ Admits a forecast walk's actual replacement buffer before moving its references.
+    /// 🔏️ Admits a forecast walk's actual replacement buffer before moving its references.
     pub fn push_frontier<T>(&mut self,frontier:&mut Vec<T>,value:T)->Result<(),ValueError>{super::transfer::grow(frontier,SqliteSnapshotPhase::EncodeNative,self.control)?;frontier.push(value);Ok(())}
 
     /// 🏁️ Checks cancellation before the owner starts its borrowed field walk.
@@ -35,11 +35,11 @@ impl<'c, 'p> NativeEncodingBound<'c, 'p> {
     }
     /// 🎚️ Exposes caller limits before allocating an owner's traversal frontier.
     pub fn limits(&self) -> super::SqliteDatabaseLimits { self.control.limits() }
-    /// 🔢️ Bounds an owner's explicitly predicted entity count before traversal allocation.
+    /// ✅️ Bounds an owner's explicitly predicted entity count before traversal allocation.
     pub fn check_rows(&self, count: usize) -> Result<(), ValueError> { self.control.check_rows(count) }
     /// ⏱️ Checks cancellation during a borrowed walk before its next emitted estimate.
     pub fn checkpoint(&mut self) -> Result<(), ValueError> { self.control.checkpoint(SqliteSnapshotPhase::EncodeNative, self.units, 0) }
-    /// ⏱️ Checks cancellation immediately before returning admission to the encoder.
+    /// ✔️ Checks cancellation immediately before returning admission to the encoder.
     pub fn finish(self) -> Result<(), ValueError> { self.control.checkpoint(SqliteSnapshotPhase::EncodeNative, self.units, self.units) }
 }
 
@@ -91,9 +91,9 @@ pub fn project_text(control: &mut SqliteSnapshotControl<'_>, text: &str) -> Resu
 
 impl<'c, 'p> Projection<'c, 'p> {
 
-    /// 🗂️ Admits an owner's concrete borrowed frontier on the shared backing ledger.
+    /// 🟢️ Admits an owner's concrete borrowed frontier on the shared backing ledger.
     pub fn allocate_frontier<T>(&mut self,count:usize)->Result<Vec<T>,ValueError>{self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,count)?;super::transfer::reserve(count,self.control)}
-    /// ➕️ Pays complete replacement backing before growing an owner's traversal frontier.
+    /// ⏪️ Pays complete replacement backing before growing an owner's traversal frontier.
     pub fn push_frontier<T>(&mut self,frontier:&mut Vec<T>,value:T)->Result<(),ValueError>{super::transfer::grow(frontier,SqliteSnapshotPhase::ProjectSnapshot,self.control)?;frontier.push(value);Ok(())}
 
     /// 🔀️ Orders a paid frontier with the same bounded physical comparator authority.
@@ -112,7 +112,7 @@ impl<'c, 'p> Projection<'c, 'p> {
   Ok(Self{database,control,rows:0,bytes:0})
  }
 
-    /// 🔢️ Allocates the next surrogate identity in one declared entity table.
+    /// ⏭️ Allocates the next surrogate identity in one declared entity table.
     pub fn insert(&mut self, table: &str, cells: &[Cell<'_>]) -> Result<i64, ValueError> {
         let key = i64::try_from(self.database.table(table)?.rows.len() + 1).map_err(|_| ValueError::new(ValueRefusalKind::WorkLimit, "artifact row identity overflow"))?;
         self.insert_key(table, key, cells)?;
@@ -131,10 +131,10 @@ impl<'c, 'p> Projection<'c, 'p> {
   self.rows=rows;self.bytes=bytes;Ok(())
  }
 
-    /// 📏️ Exposes the caller's declared resource bounds before domain traversal allocation.
+    /// 🚧️ Exposes the caller's declared resource bounds before domain traversal allocation.
     pub fn limits(&self) -> super::SqliteDatabaseLimits { self.control.limits() }
 
-    /// 🔢️ Bounds the domain rows this projection actually materializes.
+    /// ☑️ Bounds the domain rows this projection actually materializes.
     pub fn check_rows(&self, count: usize) -> Result<(), ValueError> { self.control.check_rows(count) }
 
     /// 📦️ Bounds predicted aggregate storage-class bytes before allocation.
@@ -146,10 +146,10 @@ impl<'c, 'p> Projection<'c, 'p> {
     /// 🕸️ Publishes a bounded domain traversal independently of materialized row count.
     pub fn checkpoint_work(&mut self,completed:usize,total:usize)->Result<(),ValueError>{self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,completed,total)}
 
-    /// ⏱️ Checks cancellation around domain loops that do not emit a row immediately.
+    /// 🔁️ Checks cancellation around domain loops that do not emit a row immediately.
     pub fn checkpoint(&mut self) -> Result<(), ValueError> { self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, self.rows, 0) }
 
-    /// 🔢️ Reports actual inserted rows against the owner's borrowed preflight count.
+    /// 🧾️ Reports actual inserted rows against the owner's borrowed preflight count.
     pub fn checkpoint_total(&mut self, total_rows: usize) -> Result<(), ValueError> { if self.rows > total_rows { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "artifact projection exceeded its predicted row count")); } self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, self.rows, total_rows) }
 
     /// 📤️ Orders physical identities without copying rows and checks cancellation during ordering.
@@ -188,7 +188,7 @@ fn order_rows(rows: &mut [SqliteRow], work: &mut RowOrdering<'_, '_>) -> Result<
     Ok(())
 }
 
-/// 🔢️ An explicitly authored scalar column and its native IEEE width.
+/// 📝️ An explicitly authored scalar column and its native IEEE width.
 #[derive(Clone,Copy)]
 pub enum FloatColumn { Binary64(usize), Binary32(usize) }
 impl FloatColumn { fn index(self)->usize{match self{Self::Binary64(i)|Self::Binary32(i)=>i}} }
@@ -206,11 +206,11 @@ fn float_cells<'a>(cells:&[Cell<'a>],columns:&[FloatColumn],control:&mut SqliteS
   result[index]=if value.is_nan(){Cell::Null}else{Cell::Real(value)};result.extend([Cell::Integer(bits),Cell::Text(numeric_class(value))]);if(count+1)%256==0{control.checkpoint(phase,count+1,columns.len())?;}
  }Ok(result)
 }
-/// 🧮️ Inserts authored scalar fields with named numeric class and signed INTEGER bit companions.
+/// 🖊️ Inserts authored scalar fields with named numeric class and signed INTEGER bit companions.
 pub fn insert_ieee754(projection:&mut Projection<'_,'_>,table:&str,cells:&[Cell<'_>],columns:&[FloatColumn])->Result<i64,ValueError>{
  float_cell_limit(projection,cells.len(),columns.len())?;let cells=float_cells(cells,columns,projection.control)?;projection.insert(table,&cells)
 }
-/// 🔗️ Inserts authored one-to-one scalar fields with their exact native IEEE companions.
+/// ⌨️ Inserts authored one-to-one scalar fields with their exact native IEEE companions.
 pub fn insert_key_ieee754(projection:&mut Projection<'_,'_>,table:&str,key:i64,cells:&[Cell<'_>],columns:&[FloatColumn])->Result<(),ValueError>{
  float_cell_limit(projection,cells.len(),columns.len())?;let cells=float_cells(cells,columns,projection.control)?;projection.insert_key(table,key,&cells)
 }
@@ -224,9 +224,9 @@ fn check_float(row:&SqliteRow,index:usize,slot:usize,value:f64)->Result<(),Value
     let exact=match row.values.get(index){Some(SqliteValue::Real(query))=>*query==value,Some(SqliteValue::Integer(query))=>value>=i64::MIN as f64&&value < -(i64::MIN as f64)&&value.fract()==0.0&&value as i64==*query,_=>false};
     if !exact{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "query scalar disagrees with exact native IEEE value"));}Ok(())
 }
-/// 🧮️ Restores binary64, interpreting signed INTEGER bit storage as its exact unsigned bit pattern.
+/// 🖋️ Restores binary64, interpreting signed INTEGER bit storage as its exact unsigned bit pattern.
 pub fn read_binary64(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<f64,ValueError>{let(slot,column)=float_slot(row,index,columns)?;if !matches!(column,FloatColumn::Binary64(_)){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected an authored binary64 scalar"));}let value=f64::from_bits(row.integer(slot)? as u64);check_float(row,index,slot,value)?;Ok(value)}
-/// 🔢️ Restores binary32 directly from its own bits without quieting signaling NaNs through a binary64 cast.
+/// 🔈️ Restores binary32 directly from its own bits without quieting signaling NaNs through a binary64 cast.
 pub fn read_binary32(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<f32,ValueError>{let(slot,column)=float_slot(row,index,columns)?;if !matches!(column,FloatColumn::Binary32(_)){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected an authored binary32 scalar"));}let value=f32::from_bits(u32::try_from(row.integer(slot)?).map_err(|error| ValueError::new(ValueRefusalKind::InvalidValue, error.to_string()))?);check_float(row,index,slot,f64::from(value))?;Ok(value)}
 /// 🛡️ Validates authored scalar companions before restoring any owned native fields.
 pub fn validate_ieee754_row(row:&SqliteRow,original_columns:usize,columns:&[FloatColumn])->Result<(),ValueError>{if row.values.len()!=original_columns.checked_add(columns.len().checked_mul(2).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "IEEE column count overflow"))?).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "IEEE column count overflow"))?{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "authored IEEE row column count differs"));}for column in columns{if ieee754_is_null(row,column.index(),columns)?{continue;}match column{FloatColumn::Binary64(index)=>{read_binary64(row,*index,columns)?;},FloatColumn::Binary32(index)=>{read_binary32(row,*index,columns)?;}}}Ok(())}
@@ -236,21 +236,21 @@ pub fn validate_ieee754_row(row:&SqliteRow,original_columns:usize,columns:&[Floa
 pub struct FloatRow<'a> { pub rowid: i64, pub values: &'a [SqliteValue], row: &'a SqliteRow, columns: &'static [FloatColumn] }
 
 impl<'a> FloatRow<'a> {
-    /// 🧮️ Binds only the caller's declared native scalar columns and validates their companions.
+    /// 🧲️ Binds only the caller's declared native scalar columns and validates their companions.
     pub fn new(row:&'a SqliteRow,columns:&'static [FloatColumn])->Result<Self,ValueError>{let original=row.values.len().checked_sub(columns.len().checked_mul(2).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "IEEE column count overflow"))?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "missing IEEE companion columns"))?;validate_ieee754_row(row,original,columns)?;Ok(Self{rowid:row.rowid,values:&row.values[..original],row,columns})}
     /// 🔢️ Reads a native INTEGER field from the declared logical row.
     pub fn integer(self,index:usize)->Result<i64,ValueError>{self.row.integer(index)}
-    /// 🧮️ Reads a native binary64 field from exact bits and validates its query value.
+    /// 💎️ Reads a native binary64 field from exact bits and validates its query value.
     pub fn real(self,index:usize)->Result<f64,ValueError>{if self.columns.iter().any(|c|c.index()==index){read_binary64(self.row,index,self.columns)}else{self.row.real(index)}}
-    /// 🔢️ Reads a native binary32 field without intermediate NaN conversion.
+    /// 💻️ Reads a native binary32 field without intermediate NaN conversion.
     pub fn binary32(self,index:usize)->Result<f32,ValueError>{read_binary32(self.row,index,self.columns)}
-    /// 🔤️ Borrows one native text field without creating ownership.
+    /// 💬️ Borrows one native text field without creating ownership.
     pub fn text(self,index:usize)->Result<&'a str,ValueError>{self.row.text(index)}
-    /// 📦️ Borrows one native binary field without creating ownership.
+    /// 🆕️ Borrows one native binary field without creating ownership.
     pub fn blob(self,index:usize)->Result<&'a [u8],ValueError>{self.row.blob(index)}
-    /// 🫥️ Borrows an optional native text field with exact presence.
+    /// ❓️ Borrows an optional native text field with exact presence.
     pub fn optional_text(self,index:usize)->Result<Option<&'a str>,ValueError>{self.row.optional_text(index)}
-    /// 🫥️ Tests native optional presence independently of a NaN's NULL query scalar.
+    /// 🧪️ Tests native optional presence independently of a NaN's NULL query scalar.
     pub fn is_null(self,index:usize)->Result<bool,ValueError>{if self.columns.iter().any(|c|c.index()==index){ieee754_is_null(self.row,index,self.columns)}else{Ok(self.values.get(index)==Some(&SqliteValue::Null))}}
 }
 
@@ -263,14 +263,14 @@ pub enum RowIdentity{Signed,Positive}
 pub struct RowIndexStorage{indices:Vec<usize>,used:Vec<u8>,remaining:usize}
 impl RowIndexStorage{pub fn empty()->Self{Self{indices:Vec::new(),used:Vec::new(),remaining:0}}}
 
-/// 🪟️ Borrows a database and its original caller-owned scalar reconstruction storage.
+/// 📇️ Borrows a database and its original caller-owned scalar reconstruction storage.
 pub struct RowIndex<'a>{table:&'a super::SqliteTable,columns:&'static[FloatColumn],storage:&'a mut RowIndexStorage}
 impl std::ops::Deref for RowIndex<'_>{type Target=RowIndexStorage;fn deref(&self)->&RowIndexStorage{self.storage}}
 impl std::ops::DerefMut for RowIndex<'_>{fn deref_mut(&mut self)->&mut RowIndexStorage{self.storage}}
 impl<'a> RowIndex<'a>{
     /// 🛂️ Validates one authored row family and admits both scalar index buffers before allocation.
     pub fn new(storage:&'a mut RowIndexStorage,db:&'a SqliteDatabase,table_name:&str,logical_columns:usize,columns:&'static[FloatColumn],control:&mut SqliteSnapshotControl<'_>,message:&str)->Result<Self,ValueError>{Self::new_with_identity(storage,db,table_name,logical_columns,columns,RowIdentity::Positive,control,message)}
-    /// 🛂️ Applies the caller's actual signed or positive surrogate identity declaration.
+    /// 🔑️ Applies the caller's actual signed or positive surrogate identity declaration.
     pub fn new_with_identity(storage:&'a mut RowIndexStorage,db:&'a SqliteDatabase,table_name:&str,logical_columns:usize,columns:&'static[FloatColumn],identity:RowIdentity,control:&mut SqliteSnapshotControl<'_>,message:&str)->Result<Self,ValueError>{
         if storage.indices.capacity()!=0||storage.used.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"row index storage already owns backing"));}let table=db.table(table_name)?;let total=table.rows.len();let phase=SqliteSnapshotPhase::ReconstructSnapshot;control.check_rows(total)?;control.checkpoint(phase,0,total)?;
         storage.indices=super::transfer::reserve(total,control)?;storage.used=super::transfer::reserve(total,control)?;let(indices,used)=(&mut storage.indices,&mut storage.used);
@@ -279,19 +279,19 @@ impl<'a> RowIndex<'a>{
         for(index,pair)in indices.windows(2).enumerate(){control.checkpoint(phase,index,total)?;if table.rows[pair[0]].rowid==table.rows[pair[1]].rowid{return Err(ValueError::new(ValueRefusalKind::InvalidValue,message));}}
         control.checkpoint(phase,total,total)?;storage.remaining=total;Ok(Self{table,columns,storage})
     }
-    /// 🔢️ Reports the actual authored source row count.
+    /// ✏️ Reports the actual authored source row count.
     pub fn len(&self)->usize{self.indices.len()}
-    /// 📦️ Reports rows not yet consumed by explicit native ownership.
+    /// 📊️ Reports rows not yet consumed by explicit native ownership.
     pub fn remaining(&self)->usize{self.remaining}
-    /// 🪟️ Borrows paid row positions ordered by actual primary identity.
+    /// 🧭️ Borrows paid row positions ordered by actual primary identity.
     pub fn indices(&self)->&[usize]{&self.indices}
     /// 🔬️ Wraps one actual source row without allocating or owning its fields.
     pub fn row(&self,source_index:usize)->Result<FloatRow<'a>,ValueError>{FloatRow::new(self.table.rows.get(source_index).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"row index is outside its authored table"))?,self.columns)}
-    /// 🔎️ Resolves one authored identity through bounded scalar binary search.
+    /// 📍️ Resolves one authored identity through bounded scalar binary search.
     pub fn position(&self,id:i64,control:&mut SqliteSnapshotControl<'_>)->Result<Option<usize>,ValueError>{
         let(mut low,mut high)=(0,self.indices.len());while low<high{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,low,self.len())?;let middle=low+(high-low)/2;let position=self.indices[middle];match self.table.rows[position].rowid.cmp(&id){std::cmp::Ordering::Less=>low=middle+1,std::cmp::Ordering::Greater=>high=middle,std::cmp::Ordering::Equal=>return Ok(Some(position))}}Ok(None)
     }
-    /// 🫳️ Borrows a matching row independently of whether ownership was consumed.
+    /// 📖️ Borrows a matching row independently of whether ownership was consumed.
     pub fn get(&self,id:i64,control:&mut SqliteSnapshotControl<'_>)->Result<Option<FloatRow<'a>>,ValueError>{self.position(id,control)?.map(|index|self.row(index)).transpose()}
     /// 🫴️ Consumes a matching identity at most once without copying its source cells.
     pub fn take(&mut self,id:i64,control:&mut SqliteSnapshotControl<'_>)->Result<Option<FloatRow<'a>>,ValueError>{match self.position(id,control)?{Some(index)=>self.take_index(index,control),None=>Ok(None)}}
@@ -307,18 +307,18 @@ impl<'a> RowIndex<'a>{
     pub fn ordered_into(&self,result:&mut Vec<usize>,ordinal:usize,control:&mut SqliteSnapshotControl<'_>,message:&str)->Result<(),ValueError>{
         self.grouped_by_into(result,ordinal,control,message,|_|Ok((0,None)))
     }
-    /// 🧩️ Orders fixed scalar owner keys and validates contiguous ordinals within every group.
+    /// 👥️ Orders fixed scalar owner keys and validates contiguous ordinals within every group.
     pub fn grouped_by_into(&self,result:&mut Vec<usize>,ordinal:usize,control:&mut SqliteSnapshotControl<'_>,message:&str,key:impl Fn(FloatRow<'a>)->Result<(u8,Option<i64>),ValueError>)->Result<(),ValueError>{
         self.all_indices_into(result,control)?;let phase=SqliteSnapshotPhase::ReconstructSnapshot;
         super::transfer::heap_sort(result,phase,control,|a,b,_|{let left=self.row(*a)?;let right=self.row(*b)?;Ok(key(left)?.cmp(&key(right)?).then(left.integer(ordinal)?.cmp(&right.integer(ordinal)?)))})?;
         let mut previous=None;let mut expected=0i64;for(index,position)in result.iter().enumerate(){control.checkpoint(phase,index,result.len())?;let row=self.row(*position)?;let owner=key(row)?;if previous!=Some(owner){previous=Some(owner);expected=0;}if row.integer(ordinal)?!=expected{return Err(ValueError::new(ValueRefusalKind::InvalidValue,message));}expected=expected.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"relationship ordinal overflow"))?;}
         control.checkpoint(phase,result.len(),result.len())?;Ok(())
     }
-    /// 🔗️ Finds a previously ordered fixed scalar owner group without allocating.
+    /// 🔧️ Finds a previously ordered fixed scalar owner group without allocating.
     pub fn range_by(&self,indices:&[usize],owner:(u8,Option<i64>),control:&mut SqliteSnapshotControl<'_>,key:impl Fn(FloatRow<'a>)->Result<(u8,Option<i64>),ValueError>)->Result<std::ops::Range<usize>,ValueError>{
         let(mut low,mut high)=(0,indices.len());while low<high{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,low,indices.len())?;let middle=low+(high-low)/2;if key(self.row(indices[middle])?)?<owner{low=middle+1}else{high=middle}}let start=low;high=indices.len();while low<high{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,low,indices.len())?;let middle=low+(high-low)/2;if key(self.row(indices[middle])?)?<=owner{low=middle+1}else{high=middle}}Ok(start..low)
     }
-    /// 🔤️ Pays selected positions and compares full borrowed text keys through caller cancellation.
+    /// 🆚️ Pays selected positions and compares full borrowed text keys through caller cancellation.
     pub fn unique_text(&self,ordered:&mut Vec<usize>,indices:&[usize],column:usize,control:&mut SqliteSnapshotControl<'_>,message:&str)->Result<(),ValueError>{
         let phase=SqliteSnapshotPhase::ReconstructSnapshot;if ordered.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"row uniqueness storage already owns backing"));}*ordered=super::transfer::reserve(indices.len(),control)?;
         for(index,position)in indices.iter().enumerate(){control.checkpoint(phase,index,indices.len())?;self.row(*position)?.text(column)?;ordered.push(*position);}
@@ -336,15 +336,15 @@ impl<'a> RowIndex<'a>{
     }
 }
 
-/// 🫴️ Bounds explicitly restored native fields before creating owned copies.
+/// 🪄️ Bounds explicitly restored native fields before creating owned copies.
 #[doc(hidden)] pub struct Reconstruction<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, #[doc(hidden)] pub bytes: usize, units: usize }
 
-/// 🔤️ Copies one explicitly selected native text field within the transfer's ownership budget.
+/// ♻️ Copies one explicitly selected native text field within the transfer's ownership budget.
 pub fn reconstruct_text(control: &mut SqliteSnapshotControl<'_>, text: &str) -> Result<String, ValueError> {
     Reconstruction { control, bytes: 0, units: 0 }.text(text)
 }
 
-/// 📦️ Copies one explicitly selected native binary field within the transfer's ownership budget.
+/// 🦜️ Copies one explicitly selected native binary field within the transfer's ownership budget.
 pub fn reconstruct_blob(control: &mut SqliteSnapshotControl<'_>, blob: &[u8]) -> Result<Vec<u8>, ValueError> {
     Reconstruction { control, bytes: 0, units: 0 }.blob(blob)
 }
@@ -367,7 +367,7 @@ pub fn reconstruct_blob_into(output:&mut Vec<u8>,control:&mut SqliteSnapshotCont
     control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,blob.len(),blob.len())
 }
 
-/// 🔢️ Validates and orders authored ordinal relationships with bounded cancellation checkpoints.
+/// 🔃️ Validates and orders authored ordinal relationships with bounded cancellation checkpoints.
 pub fn ordered_row_refs<'a>(table:&'a super::SqliteTable,ordinal:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<&'a SqliteRow>,ValueError>{
  let phase=SqliteSnapshotPhase::ReconstructSnapshot;let total=table.rows.len();control.check_rows(total)?;control.checkpoint(phase,0,total)?;let mut rows=super::transfer::reserve(total,control)?;
  for(count,row)in table.rows.iter().enumerate(){let index=usize::try_from(row.integer(ordinal)?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;if index>=total{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"relationship ordinals must be contiguous and unique"));}rows.push(row);if(count+1)%256==0{control.checkpoint(phase,count+1,total)?;}}
@@ -377,7 +377,7 @@ pub fn ordered_row_refs<'a>(table:&'a super::SqliteTable,ordinal:usize,control:&
 }
 
 impl<'c, 'p> Reconstruction<'c, 'p> {
-    /// 🏁️ Starts native ownership accounting independently of database storage accounting.
+    /// 📒️ Starts native ownership accounting independently of database storage accounting.
     pub fn new(control: &'c mut SqliteSnapshotControl<'p>) -> Result<Self, ValueError> {
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0)?;
         Ok(Self { control, bytes: 0, units: 0 })
@@ -385,7 +385,7 @@ impl<'c, 'p> Reconstruction<'c, 'p> {
     fn reserve(&mut self, count: usize) -> Result<(), ValueError> {
         let(bytes,units)=self.control.reserve_reconstruction(count)?;self.bytes=bytes;self.units=units;Ok(())
     }
-    /// 🔤️ Checks the aggregate native byte bound before copying one borrowed text field.
+    /// 📄️ Checks the aggregate native byte bound before copying one borrowed text field.
     pub fn text(&mut self, text: &str) -> Result<String, ValueError> { self.reserve(text.len())?; copy_text(text, self.control, SqliteSnapshotPhase::ReconstructSnapshot) }
     /// 🧵️ Constructs native paged text with each actual chunk and backing page admitted independently.
     pub fn paged_text(&mut self, text: &str) -> Result<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, ValueError> {
@@ -397,10 +397,10 @@ impl<'c, 'p> Reconstruction<'c, 'p> {
             (result, native.owned_bytes())
         })?
     }
-    /// 📦️ Checks the aggregate native byte bound before copying one borrowed binary field.
+    /// 🎒️ Checks the aggregate native byte bound before copying one borrowed binary field.
     pub fn blob(&mut self, blob: &[u8]) -> Result<Vec<u8>, ValueError> { self.reserve(blob.len())?; copy_blob(blob, self.control, SqliteSnapshotPhase::ReconstructSnapshot) }
-    /// 🔢️ Accounts for one explicitly restored numeric or boolean field.
+    /// 👤️ Accounts for one explicitly restored numeric or boolean field.
     pub fn scalar(&mut self) -> Result<(), ValueError> { self.reserve(8) }
-    /// ⏱️ Checks cancellation around relationship traversal and prior to returning native ownership.
+    /// 🩺️ Checks cancellation around relationship traversal and prior to returning native ownership.
     pub fn checkpoint(&mut self) -> Result<(), ValueError> { self.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, self.units, 0) }
 }

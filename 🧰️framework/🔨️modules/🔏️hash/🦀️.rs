@@ -132,7 +132,7 @@ unsafe fn sha256_compress_aarch64(state: &mut [u32; 8], block: &[u8; 64]) {
     }
 }
 
-/// 🧮️ The compression on the x86 SHA extensions: two rounds per `SHA256RNDS2`, the message schedule on
+/// 🗜️ The compression on the x86 SHA extensions: two rounds per `SHA256RNDS2`, the message schedule on
 /// `SHA256MSG1`/`SHA256MSG2`, the state held as the `ABEF`/`CDGH` lane pairs those instructions use.
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sha,sse2,ssse3,sse4.1")]
@@ -261,7 +261,7 @@ impl HmacSha256 {
         self.outer_of(&inner.finalize())
     }
 
-    /// 🏎️ The MAC of one 32-byte message in exactly two compressions: both final blocks are the
+    /// 📨️ The MAC of one 32-byte message in exactly two compressions: both final blocks are the
     /// message or inner digest, the FIPS 180-4 padding and the fixed bit length of pad + 32 bytes.
     pub fn mac32(&self, message: &[u8; 32]) -> [u8; 32] {
         let mut state = self.inner;
@@ -292,12 +292,12 @@ fn sha256_state_bytes(state: &[u32; 8]) -> [u8; 32] {
     digest
 }
 
-/// 🧷️ HMAC-SHA256 (RFC 2104) of one message under one key.
+/// ⌨️ HMAC-SHA256 (RFC 2104) of one message under one key.
 pub fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
     HmacSha256::new(key).mac(message)
 }
 
-/// 🧮️ PBKDF2 (RFC 8018 §5.2) with HMAC-SHA256 and one 32-byte output block: the password is keyed
+/// 🖨️ PBKDF2 (RFC 8018 §5.2) with HMAC-SHA256 and one 32-byte output block: the password is keyed
 /// once and every further iteration costs two compressions.
 pub fn pbkdf2_sha256(password: &[u8], salt: &[u8], iterations: u32) -> [u8; 32] {
     let key = HmacSha256::new(password);
@@ -482,31 +482,31 @@ impl Blake3ChunkState {
     }
 }
 
-/// 🌳️ The 32-byte BLAKE3 digest of a complete input, with a `blake3`-crate-shaped surface
+/// 🏁️ The 32-byte BLAKE3 digest of a complete input, with a `blake3`-crate-shaped surface
 /// (`as_bytes`/`to_hex`) so downstream call sites needed only a crate-path rename.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Hash([u8; 32]);
 
 impl Hash {
-    /// 🔑️ Borrows the raw 32-byte digest.
+    /// 🧱️ Borrows the raw 32-byte digest.
     pub fn as_bytes(&self) -> &[u8; 32] {
         &self.0
     }
 
-    /// 🔡️ Renders the digest as lowercase hex.
+    /// 🖌️ Renders the digest as lowercase hex.
     pub fn to_hex(&self) -> String {
         hex_lower(&self.0)
     }
 }
 
-/// #️⃣ Hashes one complete byte slice with unkeyed BLAKE3.
+/// 🍕️ Hashes one complete byte slice with unkeyed BLAKE3.
 pub fn hash(bytes: &[u8]) -> Hash {
     let mut hasher = Hasher::new();
     hasher.update(bytes);
     hasher.finalize()
 }
 
-/// 🌳️ Incremental unkeyed BLAKE3 hasher — a chunked binary Merkle tree of 1024-byte chunks over
+/// 🔏️ Incremental unkeyed BLAKE3 hasher — a chunked binary Merkle tree of 1024-byte chunks over
 /// 64-byte compression blocks, with a stack of not-yet-merged subtree chaining values so
 /// `update` can be called with input of any shape without buffering the whole message.
 pub struct Hasher {
@@ -522,7 +522,7 @@ impl Default for Hasher {
 }
 
 impl Hasher {
-    /// 🆕️ Creates an empty BLAKE3 stream.
+    /// 🪫️ Creates an empty BLAKE3 stream.
     pub fn new() -> Self {
         Self { chunk_state: Blake3ChunkState::new(0), cv_stack: [[0; 8]; BLAKE3_MAX_STACK_DEPTH], cv_stack_len: 0 }
     }
@@ -546,7 +546,7 @@ impl Hasher {
         self.push_stack(new_cv);
     }
 
-    /// 📥️ Absorbs the next byte segment without retaining caller memory beyond the current chunk.
+    /// 🔄️ Absorbs the next byte segment without retaining caller memory beyond the current chunk.
     pub fn update(&mut self, mut input: &[u8]) -> &mut Self {
         while !input.is_empty() {
             if self.chunk_state.len() == BLAKE3_CHUNK_LEN {
@@ -562,7 +562,7 @@ impl Hasher {
         self
     }
 
-    /// ✅️ Finalizes the stream into the canonical 32-byte digest by folding the chunk stack.
+    /// 🌊️ Finalizes the stream into the canonical 32-byte digest by folding the chunk stack.
     pub fn finalize(&self) -> Hash {
         let mut output = self.chunk_state.output();
         let mut parent_nodes_remaining = self.cv_stack_len as usize;

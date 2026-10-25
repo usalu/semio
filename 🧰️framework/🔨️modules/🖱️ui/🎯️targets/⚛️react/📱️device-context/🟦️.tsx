@@ -21,7 +21,7 @@ export const UiDeviceProvider: React.FC<{
 );
 
 /**
- * 📱️ The device this subtree paints for: the nearest {@link UiDeviceProvider}, else the viewport
+ * 💻️ The device this subtree paints for: the nearest {@link UiDeviceProvider}, else the viewport
  * measured through the ONE policy `📱️device/🟦️.ts` shares with the wgpu dock.
  *
  * `AGENTS.md` orders the devices desktop → mobile → tablet and the settings surface has always offered

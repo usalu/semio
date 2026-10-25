@@ -17,7 +17,7 @@ export interface SealFactsV1 {
 const FACTS_PREFIX = "semio-graph-facts.", FACTS_SUFFIX = ".json.br", CONCURRENCY = 64;
 const CENSUS_TASK = Object.freeze({ module: new URL("../🧮️census/🟨️.mjs", import.meta.url).href, export: "censusInferenceRecordsV1" });
 
-/** 🏷️ One node's stamp. */
+/** 🔖️ One node's stamp. */
 export function factStamp(value: { dev: number; ino: number; size: number; mtimeMs: number; ctimeMs: number }): FactStamp {
   return [value.dev, value.ino, value.size, value.mtimeMs, value.ctimeMs];
 }
@@ -34,7 +34,7 @@ async function bounded<T>(rows: readonly T[], visit: (row: T) => Promise<void>, 
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, rows.length) }, async () => { while (next < rows.length) { signal?.throwIfAborted(); await visit(rows[next++]!); } }));
 }
 
-/** 🏷️ Stamps of the named files, or `null` when one is missing. */
+/** 🕳️ Stamps of the named files, or `null` when one is missing. */
 async function stamps(paths: readonly string[], signal?: AbortSignal): Promise<Map<string, FactStamp> | null> {
   const rows = new Map<string, FactStamp>();
   try { await bounded(paths, async (path) => { rows.set(path, factStamp(await lstat(path))); }, signal); } catch (error) { signal?.throwIfAborted(); return null; }

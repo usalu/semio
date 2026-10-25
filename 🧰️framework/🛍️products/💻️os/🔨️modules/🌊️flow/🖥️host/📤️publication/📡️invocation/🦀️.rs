@@ -19,6 +19,7 @@ pub struct FlowInvocationOrigin{
 }
 pub type FlowInvocationOriginLease=semio_framework_value_ordered::ordered::SharedOwner<FlowInvocationOrigin>;
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub(super) struct FlowInvocationEntry{pub origin:FlowInvocationOriginLease,pub reply:Option<String>}
 impl FlowInvocationOrigin{
  /// 🧊️ The diagnostic wire borrows the original source on initial dispatch and every retry.

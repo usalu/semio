@@ -28,7 +28,7 @@ fn p1_6_the_tasks_list_keeps_its_selection_on_the_same_task_and_shows_status_per
     dashboard.update_session(&mut tui, session("d", label("test", "quiz", ""), SessionStatus::Exited, Some(0)));
     dashboard.frame(&mut tui);
     let window = &dashboard.windows[overview];
-    assert!(matches!(window.pane.current(), Some(super::panes::RowAction::Session(id)) if id == "d"), "the selection stays on task d although a row appeared above it and its status changed");
+    assert!(matches!(window.pane.current(), Some(dashboard_terminal::testing::RowAction::Session(id)) if id == "d"), "the selection stays on task d although a row appeared above it and its status changed");
     let statuses = match &tui.scene.node(window.list).content { NodeContent::Widget(WidgetState::List(list)) => list.statuses.clone(), _ => Vec::new() };
     assert!(statuses.contains(&Some(Status::Success)) && statuses.contains(&Some(Status::Running)), "{statuses:?}");
 }
@@ -99,6 +99,13 @@ fn p1_11_hints_fit_whole_at_eighty_columns_in_both_languages() {
 
 
 #[test]
+fn p1_11_no_user_visible_text_is_hard_coded_outside_the_catalogue() {
+    for (name, source) in [("controls", semio_framework_test_fixtures::fixture_text!("../../../../⌨️controls/🦀️.rs")), ("sessions", semio_framework_test_fixtures::fixture_text!("../../../../📡️sessions/🦀️.rs")), ("panes", semio_framework_test_fixtures::fixture_text!("../../../../📋️panes/🦀️.rs")), ("windows", semio_framework_test_fixtures::fixture_text!("../../../../🪟️windows/🦀️.rs"))] {
+        for forbidden in ["\"connecting\"", "\"reconnecting\"", "\"daemon stopped\"", "\"Commands\"", "\"Tasks\"", "\"Settings\"", "commands are still being discovered", "daemon shutdown timed out"] { assert!(!source.contains(forbidden), "{name} spells {forbidden} itself"); }
+    }
+}
+
+#[test]
 fn p2_6_escape_then_prefix_is_two_presses_and_the_armed_prefix_gives_up() {
     let (mut dashboard, mut tui) = view();
     dashboard.update_session(&mut tui, session("a", label("test", "quiz", ""), SessionStatus::Running, None));
@@ -145,3 +152,23 @@ fn p2_7_reconnecting_backs_off_and_starts_over_after_a_success() {
     assert_eq!(link.backoff(), std::time::Duration::from_millis(500));
 }
 // #endregion 🔖️RuntimeAudit
+
+#[test]
+fn footer_hints_give_way_to_a_long_notice_up_to_two_thirds_of_the_row() {
+    use semio_framework_ui_tui_frame::chrome::KeyHint;
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧫️fixtures/⌨️footer-hints/🔣️.json")).unwrap();
+    let all: Vec<KeyHint> = fixture["hints"].as_array().unwrap().iter().map(|hint| KeyHint { key: hint["key"].as_str().unwrap().into(), label: hint["label"].as_str().unwrap().into() }).collect();
+    for row in fixture["cases"].as_array().unwrap() {
+        let notice = row["notice"].as_str().unwrap();
+        let kept = dashboard_terminal::testing::fit_hints(all.clone(), row["width"].as_u64().unwrap() as u16, semio_framework_ui_tui_core::text::display_width(notice));
+        assert_eq!(kept.len() as u64, row["kept"].as_u64().unwrap(), "{}", row["name"]);
+        assert!(kept.iter().zip(&all).all(|(kept, wanted)| kept.key == wanted.key && kept.label == wanted.label), "{}: the leading hints stay, in order", row["name"]);
+    }
+    let (mut dashboard, mut tui) = small_view("en");
+    let quiet = dashboard.footer_hints(&tui).len();
+    let notice = "n".repeat(50);
+    dashboard.notice = Some(notice.clone());
+    dashboard.frame(&mut tui);
+    assert!(dashboard.footer_hints(&tui).len() < quiet, "a long notice takes room from the hints");
+    assert!(tui.render_full().0.contains(&notice), "the whole notice reaches the footer of an 80 column row");
+}

@@ -119,7 +119,7 @@ fn presses_of(router: &mut EventRouter, tree: &mut UiTree, root: NodeId, track: 
     presses(&commands)
 }
 
-/// ⚖️ A lost pointer capture cancels the open press: `{gesture, abort: captureLost}`, no value, no release.
+/// 🛑️ A lost pointer capture cancels the open press: `{gesture, abort: captureLost}`, no value, no release.
 #[test]
 fn a_lost_capture_cancels_the_slider_press() {
     let mut tree = UiTree::new();
@@ -136,7 +136,7 @@ fn a_lost_capture_cancels_the_slider_press() {
     assert!(tree.node(control).expect("slider").state.scrub_gesture.is_none(), "the press is closed");
 }
 
-/// ⚖️ A keyboard step and a stepper click are one-shot presses: ONE dispatch that is its own release.
+/// ⌨️ A keyboard step and a stepper click are one-shot presses: ONE dispatch that is its own release.
 #[test]
 fn keyboard_steps_and_stepper_clicks_are_one_shot_presses() {
     let mut tree = UiTree::new();
@@ -155,7 +155,7 @@ fn keyboard_steps_and_stepper_clicks_are_one_shot_presses() {
     assert!(tree.node(count).expect("stepper").state.scrub_gesture.is_none(), "a one-shot press leaves nothing open");
 }
 
-/// ⚖️ A number field without a commit policy is a press while it is edited: every keystroke a tick of one gesture, its
+/// ✏️ A number field without a commit policy is a press while it is edited: every keystroke a tick of one gesture, its
 /// blur the release of the final number.
 #[test]
 fn a_typed_number_field_is_one_press_released_on_blur() {
@@ -173,7 +173,7 @@ fn a_typed_number_field_is_one_press_released_on_blur() {
     assert!(presses.iter().all(|press| press.1 == presses[0].1), "one gesture: {presses:?}");
 }
 
-/// ⚖️ A typed draft refused at blur (crossing a hard bound) is never dispatched, so the blur releases the press on the value
+/// 📙️ A typed draft refused at blur (crossing a hard bound) is never dispatched, so the blur releases the press on the value
 /// it last ticked — the value React's lane releases on — and leaves no press open.
 #[test]
 fn a_refused_draft_releases_the_press_on_the_value_last_ticked() {
@@ -198,7 +198,7 @@ fn ring() -> UiNode {
     UiNode::Ring(UiRingNode { id: "orbit".into(), orb_id: "sun".into(), t: 0.0, on_change: binding(), presence: UiPresence::default(), menu: None })
 }
 
-/// ⚖️ A ring drag is one press like a slider's: ticks while the pointer moves, ONE release where the pointer lets go —
+/// ⭕️ A ring drag is one press like a slider's: ticks while the pointer moves, ONE release where the pointer lets go —
 /// even off the control — under one gesture; a lost capture cancels it with no value.
 #[test]
 fn a_ring_drag_is_one_press_and_a_lost_capture_cancels_it() {
@@ -221,7 +221,7 @@ fn a_ring_drag_is_one_press_and_a_lost_capture_cancels_it() {
     assert!(tree.node(orbit).expect("ring").state.scrub_gesture.is_none(), "the press is closed");
 }
 
-/// ⚖️ A colour field without a commit policy is a press like a number field (React's colour `InputView` rides the same lane):
+/// 🎨️ A colour field without a commit policy is a press like a number field (React's colour `InputView` rides the same lane):
 /// every keystroke a tick of one gesture carrying the typed text, its blur the release.
 #[test]
 fn a_typed_colour_field_is_one_press_released_on_blur() {

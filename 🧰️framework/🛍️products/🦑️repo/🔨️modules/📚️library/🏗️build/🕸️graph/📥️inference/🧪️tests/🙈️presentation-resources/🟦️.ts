@@ -1,6 +1,6 @@
-/** 🙈️ Contract: a resource declared presentation-only in the build policy is not part of any command closure, every other resource the entry imports still is. The expectation list is generated from the entry's own import statements by an independent Python scan (`🐍️oracle.py`). */
+/** 🙈️ Contract: a resource declared presentation-only in the build policy is not part of any command closure, every other resource the entry imports still is. The expectation list is generated from the entry's own import statements by an independent Python scan (`🐍️.py`). */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {existsSync,readFileSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
@@ -29,6 +29,6 @@ test("the command closure of the entry omits presentation resources and keeps th
 
 test("python scan of the entry's import statements agrees with the fixture",()=>{
  const python=testPythonV1();if(!python)return;
- const result=Bun.spawnSync([python,"-I",fileURLToPath(new URL("./🐍️oracle.py",import.meta.url)),fileURLToPath(new URL("./🔣️.json",import.meta.url)),root]);
+ const result=Bun.spawnSync([python,"-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),fileURLToPath(new URL("./🔣️.json",import.meta.url)),root]);
  expect(result.stdout.toString().trim()).toBe("ok");
 });

@@ -8,7 +8,7 @@ impl UiPipelines {
         self.blit_sampled_color(device, encoder, view, scene.sample_view(), scene.sampler());
     }
 
-    /// 🖼️ Copies the accumulated composite into a backdrop snapshot or the terminal surface.
+    /// 📸️ Copies the accumulated composite into a backdrop snapshot or the terminal surface.
     pub fn blit_prepared_composite<'a>(&'a self, device: &gpu_device::Device, encoder: &mut gpu_device::CommandEncoder, view: &'a gpu_device::TextureView, composite: &'a PreparedCompositeTarget) {
         self.blit_sampled_color(device, encoder, view, &composite.view, &composite.sampler);
     }

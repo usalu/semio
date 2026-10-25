@@ -1,5 +1,5 @@
 import type {HostPlanV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
-import type {WorkerMappingV1} from "../../../../🏗️build/👷️workers/🟦️.ts";
+import type {WorkerMappingV1} from "../../../../📦️packages/🟦️typescript/🏗️build/👷️workers/🟦️.ts";
 
 /** 🧰️ What the host capacity plan becomes in Nx: environment variables and a report of how exactly each contract field is honoured. */
 export type NxHostResourceSettingsV1=Readonly<{environment:Readonly<Record<"NX_PARALLEL",string>>;mapping:readonly WorkerMappingV1[]}>;

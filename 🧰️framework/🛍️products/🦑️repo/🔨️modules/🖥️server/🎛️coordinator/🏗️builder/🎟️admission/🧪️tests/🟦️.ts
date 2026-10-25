@@ -5,9 +5,9 @@ import { createRequire } from "node:module";
 import { join, dirname } from "node:path";
 import { createNextRebuildAdmissionV1, nextRebuildPluginV1 } from "../🟦️.ts";
 import { acquireCompilerCapacityLeaseV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { createIssuedResourceControlV1 } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import type { ScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
-import { withBuildTestInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import { createIssuedResourceControlV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import type { ScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🟦️.ts";
+import { withBuildTestInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import vector from "./🧫️fixtures/🔣️.json" with { type: "json" };
 

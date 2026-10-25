@@ -1,0 +1,122 @@
+{
+ "version": 1,
+ "graceMilliseconds": 600000,
+ "nowMilliseconds": 1800000000000,
+ "scenarios": [
+  {
+   "name": "superseded blocks of a rewritten record are removed, shared and current ones stay",
+   "headers": {
+    "aaaaaaaaaaaaaaaaaaaaaaaa": [
+     "9a59c5f8229aab55e9f855173ef94485aab8497eea0588f365c871d6d0561722",
+     "6d0b07ee773591f2a1b492d3ca65afdefc90e1cadfcc542a74048bb0ae7daa27",
+     "7e56ddaff5ff44d9e1732b1fd138a2057df045b163385068988554f72047e272"
+    ],
+    "bbbbbbbbbbbbbbbbbbbbbbbb": [
+     "6d0b07ee773591f2a1b492d3ca65afdefc90e1cadfcc542a74048bb0ae7daa27",
+     "215008ba416eb06b8cfd53814660a43255e4ccc8703080af501ea0eaf7b7fdea"
+    ]
+   },
+   "blocks": [
+    {
+     "digest": "9a59c5f8229aab55e9f855173ef94485aab8497eea0588f365c871d6d0561722",
+     "ageMilliseconds": 3600000
+    },
+    {
+     "digest": "6d0b07ee773591f2a1b492d3ca65afdefc90e1cadfcc542a74048bb0ae7daa27",
+     "ageMilliseconds": 3600000
+    },
+    {
+     "digest": "7e56ddaff5ff44d9e1732b1fd138a2057df045b163385068988554f72047e272",
+     "ageMilliseconds": 3600000
+    },
+    {
+     "digest": "215008ba416eb06b8cfd53814660a43255e4ccc8703080af501ea0eaf7b7fdea",
+     "ageMilliseconds": 3600000
+    },
+    {
+     "digest": "2e134675975ce520a5b2f59a4a13846a399d73c3152647a6c1757842f8864f0b",
+     "ageMilliseconds": 3600000
+    },
+    {
+     "digest": "90e0b521b80e5dcee7b50428ee3d36da616df2f7921cb1df0414612d17caabe4",
+     "ageMilliseconds": 3600000
+    },
+    {
+     "digest": "929945245ae9e32e9aecf262642500fd0f01e41d8decef1c4ce223db73a82e74",
+     "ageMilliseconds": 3600000
+    }
+   ],
+   "expectedRemoved": [
+    "2e134675975ce520a5b2f59a4a13846a399d73c3152647a6c1757842f8864f0b",
+    "90e0b521b80e5dcee7b50428ee3d36da616df2f7921cb1df0414612d17caabe4",
+    "929945245ae9e32e9aecf262642500fd0f01e41d8decef1c4ce223db73a82e74"
+   ]
+  },
+  {
+   "name": "a young block may still be named by a header that is about to be written",
+   "headers": {
+    "cccccccccccccccccccccccc": [
+     "9a59c5f8229aab55e9f855173ef94485aab8497eea0588f365c871d6d0561722"
+    ]
+   },
+   "blocks": [
+    {
+     "digest": "9a59c5f8229aab55e9f855173ef94485aab8497eea0588f365c871d6d0561722",
+     "ageMilliseconds": 3600000
+    },
+    {
+     "digest": "6d0b07ee773591f2a1b492d3ca65afdefc90e1cadfcc542a74048bb0ae7daa27",
+     "ageMilliseconds": 1000
+    },
+    {
+     "digest": "7e56ddaff5ff44d9e1732b1fd138a2057df045b163385068988554f72047e272",
+     "ageMilliseconds": 590000
+    },
+    {
+     "digest": "215008ba416eb06b8cfd53814660a43255e4ccc8703080af501ea0eaf7b7fdea",
+     "ageMilliseconds": 610000
+    }
+   ],
+   "expectedRemoved": [
+    "215008ba416eb06b8cfd53814660a43255e4ccc8703080af501ea0eaf7b7fdea"
+   ]
+  },
+  {
+   "name": "no headers means every old block is superseded",
+   "headers": {},
+   "blocks": [
+    {
+     "digest": "9a59c5f8229aab55e9f855173ef94485aab8497eea0588f365c871d6d0561722",
+     "ageMilliseconds": 7200000
+    },
+    {
+     "digest": "6d0b07ee773591f2a1b492d3ca65afdefc90e1cadfcc542a74048bb0ae7daa27",
+     "ageMilliseconds": 10
+    }
+   ],
+   "expectedRemoved": [
+    "9a59c5f8229aab55e9f855173ef94485aab8497eea0588f365c871d6d0561722"
+   ]
+  },
+  {
+   "name": "foreign names in the block directory are never touched",
+   "headers": {
+    "dddddddddddddddddddddddd": [
+     "9a59c5f8229aab55e9f855173ef94485aab8497eea0588f365c871d6d0561722"
+    ]
+   },
+   "blocks": [
+    {
+     "digest": "9a59c5f8229aab55e9f855173ef94485aab8497eea0588f365c871d6d0561722",
+     "ageMilliseconds": 3600000
+    }
+   ],
+   "foreign": [
+    "notes.txt",
+    "UPPER.br",
+    "2866aa07b3724b1a8d4d43171ca1a2c5b4f7d258bb0e5f16b5e7ab7128ed08d5.br.1.2.tmp"
+   ],
+   "expectedRemoved": []
+  }
+ ]
+}

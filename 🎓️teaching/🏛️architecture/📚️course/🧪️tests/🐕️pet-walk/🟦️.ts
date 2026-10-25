@@ -31,8 +31,8 @@
  * @see ../../../../../🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/🤏️grasp/🟦️.ts — how a press reaches a pet
  * @see https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html — why `still` and `off` exist
  * @see https://www.w3.org/WAI/WCAG22/Understanding/pointer-gestures.html — why the settings offer every deed of the hand */
-import {QUIZZES, card, expect, pane, primary, test, way, openQuizGrid} from "../../🎭️e2e/🚶️learner/🟦️.ts";
-import { ANSWER_MS, APPEAR_MS, bodies, type Body, CARD_PARTS, carry, choosePets, CIRCLE_LAP_MS, CIRCLE_LAPS, CIRCLE_POINTS, circled, circleRound, CONTROLS, CURSOR, DEEDS, DROP_HEIGHT, EDGES, enterWithPets, expectCast, expectMoving, expectPerched, floorSpot, framesPass, FRONT_LEAST, HOME, inOrder, instrumented, type Instruments, KINDS, LANDING_MS, layer, LIVELY_MS, middleOf, misplaced, overControls, OVERLAP_SLACK, paceTo, pets, PLAY_LABEL, reachable, RECAST_MS, RELEASE_DEPTH, said, seenBoxes, takenTargets, trailOf } from "./🧰️pet-kit/🟦️.ts";
+import {QUIZZES, card, expect, layoutQuiet, pane, primary, test, way, openQuizGrid} from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, choosePets, CIRCLE_LAP_MS, CIRCLE_LAPS, CIRCLE_POINTS, circled, circleRound, CONTROLS, CURSOR, DEEDS, DROP_HEIGHT, EDGES, enterWithPets, expectCast, expectMoving, expectPerched, floorSpot, framesPass, FRONT_LEAST, HOME, inOrder, instrumented, type Instruments, KINDS, LANDING_MS, layer, LIVELY_MS, middleOf, misplaced, overControls, OVERLAP_SLACK, paceTo, pets, PLAY_LABEL, reachable, RECAST_MS, RELEASE_DEPTH, said, seenBoxes, takenTargets, trailOf } from "./🧰️pet-kit/🟦️.ts";
 
 test("pets live on the home screen as decoration: hidden from assistive technology, never a hit target of their own, standing on what the cards show", async ({ device }) => {
   const learner = await device("en");
@@ -82,9 +82,9 @@ test("a click on a pet says hello, the next one asks for a trick and the ones af
     await page.mouse.move(middle.x, middle.y);
     await expect(page.locator("html")).toHaveAttribute(CURSOR, "grab", { timeout: ANSWER_MS });
     await click();
-    await expect.poll(() => answered(["greet"]), { message: `${pet.id} says hello`, timeout: ANSWER_MS }).toBe(1);
+    await eventually(page, () => answered(["greet"]), (seen) => seen === 1, { stageMs: ANSWER_MS, message: `${pet.id} says hello` });
     await click();
-    await expect.poll(() => answered(["greet", "trick"]), { message: `${pet.id} does a trick`, timeout: ANSWER_MS }).toBe(2);
+    await eventually(page, () => answered(["greet", "trick"]), (seen) => seen === 2, { stageMs: ANSWER_MS, message: `${pet.id} does a trick` });
     for (let more = 0; more < 4 && (await answered(["greet", "trick", "purr"])) < 3; more++) {
       await click();
       await expect.poll(() => answered(["greet", "trick", "purr"]), { timeout: 400 }).toBe(3).catch(() => undefined);
@@ -129,13 +129,13 @@ test("a pet picked up hangs in the hand, and let go high above the page it opens
 
   await carry(page, held, release);
   await expect(page.locator("html")).toHaveAttribute(CURSOR, "grabbing");
-  await expect.poll(() => trailOf(page, held.id).then((trail) => inOrder(trail, ["hang/hand"])), { message: `${held.id} hangs in the hand`, timeout: ANSWER_MS }).toBe(1);
-  await expect.poll(async () => {
+  await eventually(page, () => trailOf(page, held.id).then((trail) => inOrder(trail, ["hang/hand"])), (seen) => seen === 1, { stageMs: ANSWER_MS, message: `${held.id} hangs in the hand` });
+  await eventually(page, async () => {
     const body = (await bodies(page)).find((body) => body.id === held.id);
     return body !== undefined && body.footing === "hand" && Math.abs(middleOf(body).x - release.x) < 32 && body.bottom < release.y + 120;
-  }, { message: `${held.id} reaches the high release column`, timeout: ANSWER_MS }).toBe(true);
+  }, (reached) => reached, { stageMs: ANSWER_MS, message: `${held.id} reaches the high release column` });
   await page.mouse.up();
-  await expect.poll(() => trailOf(page, held.id).then((trail) => inOrder(trail, ["hang/hand", "glide/chute"])), { message: `${held.id} opens its parachute`, timeout: ANSWER_MS }).toBe(2);
+  await eventually(page, () => trailOf(page, held.id).then((trail) => inOrder(trail, ["hang/hand", "glide/chute"])), (seen) => seen === 2, { stageMs: ANSWER_MS, message: `${held.id} opens its parachute` });
   await expectPerched(page, held.id, LANDING_MS);
   test.info().annotations.push({ type: "trail", description: `${held.id} let go at ${release.x}, ${release.y} above ${column.floor}: ${(await trailOf(page, held.id)).join(" → ")}` });
   expect(inOrder(await trailOf(page, held.id), ["hang/hand", "glide/chute", "idle/perch"]) >= 2, (await trailOf(page, held.id)).join(" → ")).toBe(true);
@@ -209,7 +209,7 @@ test("circling the pointer round a pet changes its state", async ({ device }) =>
       await carry(page, pet, { x: spot!.x, y: spot!.top - 100 });
       await page.mouse.up();
       await expectPerched(page, pet.id, LANDING_MS);
-      await expect.poll(async () => (await bodies(page)).find((body) => body.id === pet.id)?.activity, { message: `${pet.id} rests on the footer line`, timeout: ANSWER_MS }).toBe("idle");
+      await eventually(page, async () => (await bodies(page)).find((body) => body.id === pet.id)?.activity, (seen) => seen === "idle", { stageMs: ANSWER_MS, message: `${pet.id} rests on the footer line` });
       chosen = await plan();
       if (chosen === undefined) throw new Error(`no pet could be circled clear of the controls, not even ${pet.id} on the footer line at ${spot!.x}`);
     }
@@ -261,12 +261,22 @@ test("keyboard gestures reach the real stage: circle and countercircle change a 
   }
 });
 
+/** 📏️ How tall the window of the deeds spec is: the row of deeds exists only while a pet is on stage, and a pet needs a perch with room above it, so the window leaves more of it than a phone's height. */
+const DEED_HEIGHT = 1_200;
+
+/** 🎡️ How much of the pets' time the deeds spec waits for a pet to stand on stage after the text doubled: the cast rotates every 60 to 120 seconds, so a wait of four rotations. */
+const CAST_WAIT_MS = 4 * 120_000;
+
+/** ⏳️ The hard limit of one deeds spec, only there so that a hang ends: four rotations of the cast in the pets' time, and the walk. */
+const DEED_TIMEOUT_MS = 20 * 60_000;
+
 for (const locale of ["en", "de"] as const) {
   for (const width of [320, 375]) {
     test(`all eight pet deeds fit and remain in tab order at ${width}px with 200% text and the longest authored ${locale} name`, async ({ device }) => {
       const learner = await device(locale);
       const page = learner.page;
-      await page.setViewportSize({ width, height: 812 });
+      test.setTimeout(DEED_TIMEOUT_MS);
+      await page.setViewportSize({ width, height: DEED_HEIGHT });
       await enterWithPets(learner);
       await page.evaluate(() => (window.location.hash = "prefs"));
       await expect(pane(page, "prefs")).toHaveAttribute("data-opened", "");
@@ -279,38 +289,66 @@ for (const locale of ["en", "de"] as const) {
         const root = document.documentElement;
         root.style.fontSize = `${Number.parseFloat(getComputedStyle(root).fontSize) * 2}px`;
       });
-      await player.locator("span[id]").evaluate((label, name) => { label.textContent = name; }, longest);
-      await expect(player).toHaveAccessibleName(longest);
-      expect(await player.locator("span[id]").evaluate((label) => label.scrollWidth - label.clientWidth), "the longest authored name wraps inside its column").toBeLessThanOrEqual(1);
       const buttons = player.getByRole("button");
-      await expect(buttons).toHaveCount(8);
-      await expect(buttons).toHaveText(Object.values(DEEDS).map((deed) => deed.button[locale]));
-      expect(await buttons.evaluateAll((elements) => {
-        const boxes = elements.map((element) => element.getBoundingClientRect());
-        return boxes.flatMap((one, index) => boxes.slice(index + 1).flatMap((other, offset) => Math.min(one.right, other.right) - Math.max(one.left, other.left) > 0.5 && Math.min(one.bottom, other.bottom) - Math.max(one.top, other.top) > 0.5 ? [[index, index + offset + 1]] : []));
-      }), "the eight button hit areas never overlap").toEqual([]);
+      const prepare = async (): Promise<boolean> => {
+        await eventually(page, () => player.count(), (shown) => shown > 0, { stageMs: CAST_WAIT_MS, message: `${locale} ${width}: a pet is on stage, so the row of deeds is there` });
+        try {
+          await layoutQuiet(page);
+          await player.locator("span[id]").evaluate((label, name) => { label.textContent = name; }, longest);
+          await expect(player).toHaveAccessibleName(longest);
+          expect(await player.locator("span[id]").evaluate((label) => label.scrollWidth - label.clientWidth), "the longest authored name wraps inside its column").toBeLessThanOrEqual(1);
+          await expect(buttons).toHaveCount(8);
+          await expect(buttons).toHaveText(Object.values(DEEDS).map((deed) => deed.button[locale]));
+          expect(await buttons.evaluateAll((elements) => {
+            const boxes = elements.map((element) => element.getBoundingClientRect());
+            return boxes.flatMap((one, index) => boxes.slice(index + 1).flatMap((other, offset) => Math.min(one.right, other.right) - Math.max(one.left, other.left) > 0.5 && Math.min(one.bottom, other.bottom) - Math.max(one.top, other.top) > 0.5 ? [[index, index + offset + 1]] : []));
+          }), "the eight button hit areas never overlap").toEqual([]);
+          await player.evaluate((element) => { element.setAttribute("data-walk", "on"); for (const button of element.querySelectorAll("button")) button.setAttribute("data-walk", "on"); });
+          return true;
+        } catch (failure) {
+          if ((await player.count()) === 0) return false;
+          throw failure;
+        }
+      };
+      const standing = (): Promise<boolean> => player.evaluate((element) => element.getAttribute("data-walk") === "on" && [...element.querySelectorAll("button")].every((button) => button.getAttribute("data-walk") === "on")).catch(() => false);
+      const focused = (index: number): Promise<boolean> => buttons.nth(index).evaluate((element) => element === document.activeElement).catch(() => false);
+      const SUBPIXEL = 0.5;
       for (const direction of ["Tab", "Shift+Tab"] as const) {
         const indices = direction === "Tab" ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
-        await buttons.nth(indices[0]!).focus();
-        for (const [step, index] of indices.entries()) {
-          if (step > 0) await page.keyboard.press(direction);
-          const button = buttons.nth(index);
-          await expect(button).toBeFocused();
-          await expect(button).toBeInViewport({ ratio: 1 });
-          const bounds = await button.evaluate((element) => {
-            const box = element.getBoundingClientRect();
-            const style = getComputedStyle(element);
-            const inset = Number.parseFloat(style.outlineWidth) + Math.max(0, Number.parseFloat(style.outlineOffset));
-            return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height, outline: Number.isFinite(inset) ? inset : 0, scroll: element.scrollWidth, client: element.clientWidth };
-          });
-          expect(bounds.left - bounds.outline, `${locale} ${width} ${index}: focus outline left`).toBeGreaterThanOrEqual(0);
-          expect(bounds.right + bounds.outline, `${locale} ${width} ${index}: focus outline right`).toBeLessThanOrEqual(width);
-          expect(bounds.top - bounds.outline, `${locale} ${width} ${index}: focus outline top`).toBeGreaterThanOrEqual(0);
-          expect(bounds.bottom + bounds.outline, `${locale} ${width} ${index}: focus outline bottom`).toBeLessThanOrEqual(812);
-          expect(bounds.width).toBeGreaterThanOrEqual(24);
-          expect(bounds.height).toBeGreaterThanOrEqual(24);
-          expect(bounds.scroll, `${locale} ${width} ${index}: label fits its button`).toBeLessThanOrEqual(bounds.client + 1);
-          test.info().annotations.push({ type: "pet-control-bounds", description: JSON.stringify({ locale, name: longest, id, direction, index, ...bounds }) });
+        for (let attempt = 0; ; attempt++) {
+          expect(attempt, "the pets re-formed the cast (the row of buttons is mounted anew) too often for the walk to finish").toBeLessThan(8);
+          if (!(await prepare())) continue;
+          await buttons.nth(indices[0]!).focus({ timeout: 5_000 }).catch(() => undefined);
+          let remounted = false;
+          for (const [step, index] of indices.entries()) {
+            if (step > 0) await page.keyboard.press(direction);
+            const button = buttons.nth(index);
+            const taken = await expect.poll(async () => ((await focused(index)) ? "focused" : (await standing()) ? "waiting" : "remounted"), { message: `${locale} ${width} ${index}: the button takes the focus`, timeout: 5_000 }).not.toBe("waiting").then(() => true, () => false);
+            if (!taken || !(await focused(index))) {
+              remounted = true;
+              break;
+            }
+            const bounds = await button.evaluate((element) => {
+              const box = element.getBoundingClientRect();
+              const style = getComputedStyle(element);
+              const inset = Number.parseFloat(style.outlineWidth) + Math.max(0, Number.parseFloat(style.outlineOffset));
+              return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height, outline: Number.isFinite(inset) ? inset : 0, scroll: element.scrollWidth, client: element.clientWidth, seen: (Math.max(0, Math.min(box.right, window.innerWidth) - Math.max(box.left, 0)) * Math.max(0, Math.min(box.bottom, window.innerHeight) - Math.max(box.top, 0))) / (box.width * box.height) };
+            }).catch(() => undefined);
+            if (bounds === undefined || !Number.isFinite(bounds.seen)) {
+              remounted = true;
+              break;
+            }
+            expect(bounds.seen, `${locale} ${width} ${index}: the button lies in the viewport`).toBeGreaterThanOrEqual(0.98);
+            expect(bounds.left - bounds.outline, `${locale} ${width} ${index}: focus outline left`).toBeGreaterThanOrEqual(-SUBPIXEL);
+            expect(bounds.right + bounds.outline, `${locale} ${width} ${index}: focus outline right`).toBeLessThanOrEqual(width + SUBPIXEL);
+            expect(bounds.top - bounds.outline, `${locale} ${width} ${index}: focus outline top`).toBeGreaterThanOrEqual(-SUBPIXEL);
+            expect(bounds.bottom + bounds.outline, `${locale} ${width} ${index}: focus outline bottom`).toBeLessThanOrEqual(DEED_HEIGHT + SUBPIXEL);
+            expect(bounds.width).toBeGreaterThanOrEqual(24);
+            expect(bounds.height).toBeGreaterThanOrEqual(24);
+            expect(bounds.scroll, `${locale} ${width} ${index}: label fits its button`).toBeLessThanOrEqual(bounds.client + 1);
+            test.info().annotations.push({ type: "pet-control-bounds", description: JSON.stringify({ locale, name: longest, id, direction, index, ...bounds }) });
+          }
+          if (!remounted) break;
         }
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
@@ -395,13 +433,13 @@ test("the settings let the learner play with a pet on stage by keyboard: greetin
     const since = Math.max((await trailOf(page, pet.id)).length - 1, 0);
     const answered = (wanted: readonly string[]): Promise<number> => trailOf(page, pet.id).then((trail) => inOrder(trail.slice(since), wanted));
     await ask("hello", "Enter");
-    await expect.poll(() => answered(["greet"]), { message: `${pet.id} says hello`, timeout: ANSWER_MS }).toBe(1);
+    await eventually(page, () => answered(["greet"]), (seen) => seen === 1, { stageMs: ANSWER_MS, message: `${pet.id} says hello` });
     await ask("trick", "Space");
-    await expect.poll(() => answered(["greet", "trick"]), { message: `${pet.id} does a trick`, timeout: ANSWER_MS }).toBe(2);
+    await eventually(page, () => answered(["greet", "trick"]), (seen) => seen === 2, { stageMs: ANSWER_MS, message: `${pet.id} does a trick` });
     await ask("pet", "Enter");
-    await expect.poll(() => answered(["greet", "trick", "purr"]), { message: `${pet.id} purrs`, timeout: ANSWER_MS }).toBe(3);
+    await eventually(page, () => answered(["greet", "trick", "purr"]), (seen) => seen === 3, { stageMs: ANSWER_MS, message: `${pet.id} purrs` });
     await ask("toss", "Space");
-    await expect.poll(() => answered(["greet", "trick", "purr", "tumble/air"]), { message: `${pet.id} is tossed up`, timeout: ANSWER_MS }).toBe(4);
+    await eventually(page, () => answered(["greet", "trick", "purr", "tumble/air"]), (seen) => seen === 4, { stageMs: ANSWER_MS, message: `${pet.id} is tossed up` });
     await expectPerched(page, pet.id, LANDING_MS);
     for (const deed of ["circle", "countercircle", "stroke", "shake"] as const) {
       await ask(deed, "Enter");

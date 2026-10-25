@@ -9,8 +9,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "insert-comment")]
 pub struct InsertComment {
-    pub(crate) index: usize,
-    pub(crate) text: String,
+    pub index: usize,
+    pub text: String,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertComment {

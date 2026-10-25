@@ -35,7 +35,7 @@ export function semanticMemberPatternEmojiAdmitted(emoji: string): boolean {
   return verdict;
 }
 
-/** 🧷️ Whether one member row admits a canonical directory name exactly or through its slug pattern. */
+/** 🔏️ Whether one member row admits a canonical directory name exactly or through its slug pattern. */
 export function semanticDirectoryMemberAdmitsName(spec: SemanticDirectoryMemberKindSpec, name: string): boolean {
   if (spec.memberNames.includes(name)) return true;
   if (spec.memberSlugPattern === undefined) return false;

@@ -8,9 +8,8 @@ import chromeStacking from "../🧫️fixtures/🪜️chrome-stacking.json";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
-import { I18nextProvider } from "react-i18next";
 import { Mode } from "../../../🎨️Canvas/🟦️.tsx";
-import { createShellI18nInstance, disposeShellI18nInstance } from "@semio-tech/ui-react/source";
+import { UiI18nProvider, createShellI18nInstance, disposeShellI18nInstance } from "@semio-tech/ui-react/source";
 import dockNames from "../../../../🧪️tests/🧫️fixtures/🪟️dock-accessible-names/🔣️.json";
 import Ajv2020 from "ajv/dist/2020.js";
 import searchRouting from "../🧫️fixtures/🔎️search-fold-routing/🔣️.json";
@@ -116,14 +115,14 @@ describe("Dock accessible names", () => {
     it(`announces authored titles and localized dock actions in ${locale.id}, stacked=${stacked}`, () => {
       const i18n = createShellI18nInstance(locale.id as "en" | "de");
       const view = render(
-        <I18nextProvider i18n={i18n}>
+        <UiI18nProvider instance={i18n}>
           <Mode
             windows={dockNames.windows.map(window => ({ id: window.id, title: uiDataLabel(window.title), iconId: "app-window", children: <div>{window.title} body</div> }))}
             layout={stacked ? { kind: "stack", children: dockNames.windows.map(window => ({ kind: "window", id: window.id })), activeId: dockNames.stackedActiveId } : { kind: "row", children: dockNames.windows.map(window => ({ kind: "stack", children: [{ kind: "window", id: window.id }], activeId: window.id })) }}
             activeWindowId={dockNames.windows[0].id}
             onActiveWindowChange={() => {}}
           />
-        </I18nextProvider>,
+        </UiI18nProvider>,
       );
       try {
         for (const window of dockNames.windows) {

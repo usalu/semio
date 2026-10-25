@@ -17,7 +17,7 @@ fn base_document() -> DrawingSnapshot {
 async fn set_layer_visible_inverse_law() {
     let base = base_document();
     let layer_id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
-    let mutation = set_layer_visible(layer_id.into(), false);
+    let mutation: DrawingMutation = set_layer_visible(layer_id.into(), false);
     assert_mutation_inverse_law(&base, &mutation).await;
 }
 
@@ -25,14 +25,14 @@ async fn set_layer_visible_inverse_law() {
 async fn rename_layer_inverse_law() {
     let base = base_document();
     let layer_id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
-    let mutation = rename_layer(layer_id.into(), "Renamed".into());
+    let mutation: DrawingMutation = rename_layer(layer_id.into(), "Renamed".into());
     assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_layer_inverse_law() {
     let base = base_document();
-    let mutation = create_layer(None, None, create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("New")).to_string().into()).expect("nonempty authored identity"), "New", Vec::new().into()));
+    let mutation: DrawingMutation = create_layer(None, None, create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("New")).to_string().into()).expect("nonempty authored identity"), "New", Vec::new().into()));
     assert_mutation_inverse_law(&base, &mutation).await;
 }
 
@@ -40,7 +40,7 @@ async fn create_layer_inverse_law() {
 async fn delete_layer_inverse_law() {
     let base = base_document();
     let layer_id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
-    let mutation = delete_layer(layer_id.into());
+    let mutation: DrawingMutation = delete_layer(layer_id.into());
     assert_mutation_inverse_law(&base, &mutation).await;
 }
 
@@ -48,7 +48,7 @@ async fn delete_layer_inverse_law() {
 async fn duplicate_layer_inverse_law() {
     let base = base_document();
     let layer_id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
-    let mutation = duplicate_layer(layer_id.clone(),vec![semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment{source:layer_id.clone(),target:"duplicate-target".into()}].into());
+    let mutation: DrawingMutation = duplicate_layer(layer_id.clone(),vec![semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment{source:layer_id.clone(),target:"duplicate-target".into()}].into());
     assert_mutation_inverse_law(&base, &mutation).await;
 }
 
@@ -57,7 +57,7 @@ async fn reorder_layer_inverse_law() {
     let mut base = base_document();
     base.layers.push(create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second", Vec::new().into()));
     let layer_id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
-    let mutation = reorder_layer(layer_id.into(), None, 1);
+    let mutation: DrawingMutation = reorder_layer(layer_id.into(), None, 1);
     assert_mutation_inverse_law(&base, &mutation).await;
 }
 
@@ -65,9 +65,9 @@ async fn reorder_layer_inverse_law() {
 async fn set_layer_opacity_diff_absorb_law() {
     let base = base_document();
     let layer_id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
-    let d1 = set_layer_opacity(layer_id.clone().into(), 0.5).diff(&base).diff().clone();
+    let d1 = ColdMutation::diff(&set_layer_opacity::<DrawingMutation>(layer_id.clone().into(), 0.5), &base).diff().clone();
     let mid = protocol::apply_diff_cold(&d1, &base).expect("valid mutation diff");
-    let d2 = set_layer_opacity(layer_id.into(), 0.25).diff(&mid).diff().clone();
+    let d2 = ColdMutation::diff(&set_layer_opacity::<DrawingMutation>(layer_id.into(), 0.25), &mid).diff().clone();
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
@@ -78,25 +78,25 @@ async fn set_layer_opacity_diff_absorb_law() {
 #[semio_framework_async_macros::async_test]
 async fn delete_missing_layer_is_a_target_missing_error() {
     let base = base_document();
-    assert_missing_target_is_error(&base, &delete_layer("does-not-exist".into())).await;
+    assert_missing_target_is_error(&base, &delete_layer::<DrawingMutation>("does-not-exist".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_missing_layer_is_a_target_missing_error() {
     let base = base_document();
-    assert_missing_target_is_error(&base, &rename_layer("does-not-exist".into(), "New Name".into())).await;
+    assert_missing_target_is_error(&base, &rename_layer::<DrawingMutation>("does-not-exist".into(), "New Name".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_layer_opacity_missing_layer_is_a_target_missing_error() {
     let base = base_document();
-    assert_missing_target_is_error(&base, &set_layer_opacity("does-not-exist".into(), 0.5)).await;
+    assert_missing_target_is_error(&base, &set_layer_opacity::<DrawingMutation>("does-not-exist".into(), 0.5)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_layer_duplicate_id_never_applies() {
     let base = base_document();
-    let duplicate = create_layer(None, None, base.layers[0].clone());
+    let duplicate = create_layer::<DrawingMutation>(None, None, base.layers[0].clone());
     assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
 
@@ -104,27 +104,27 @@ async fn create_layer_duplicate_id_never_applies() {
 async fn delete_layer_outcome_obeys_the_policy_matrix() {
     let base = base_document();
     let layer_id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
-    assert_outcome_policy_matrix(&base, &delete_layer(layer_id.into())).await;
+    assert_outcome_policy_matrix(&base, &delete_layer::<DrawingMutation>(layer_id.into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_layer_outcome_obeys_the_policy_matrix() {
     let base = base_document();
     let layer_id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
-    assert_outcome_policy_matrix(&base, &rename_layer(layer_id.into(), "Renamed".into())).await;
+    assert_outcome_policy_matrix(&base, &rename_layer::<DrawingMutation>(layer_id.into(), "Renamed".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_layer_opacity_outcome_obeys_the_policy_matrix() {
     let base = base_document();
     let layer_id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
-    assert_outcome_policy_matrix(&base, &set_layer_opacity(layer_id.into(), 0.5)).await;
+    assert_outcome_policy_matrix(&base, &set_layer_opacity::<DrawingMutation>(layer_id.into(), 0.5)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_layer_outcome_obeys_the_policy_matrix() {
     let base = base_document();
-    assert_outcome_policy_matrix(&base, &create_layer(None, None, create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("New")).to_string().into()).expect("nonempty authored identity"), "New", Vec::new().into()))).await;
+    assert_outcome_policy_matrix(&base, &create_layer::<DrawingMutation>(None, None, create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("New")).to_string().into()).expect("nonempty authored identity"), "New", Vec::new().into()))).await;
 }
 //#endregion 🧪️OutcomeLaws
 
@@ -253,7 +253,7 @@ async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], in
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     assert_eq!(ids.len(), log.len(), "one applied operation per committed leaf");
-    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[index].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let drafts: protocol::HistoryInputDrafts = [(ids[index].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
     let mut prefix = base.clone();
     for mutation in &log[..index] {
         apply_drawing_mutation(&mut prefix, mutation).expect("the prefix folds");
@@ -317,7 +317,7 @@ fn layer_references_read_their_name_and_take_the_canvas_selection() {
     let mut base = base_document();
     semio_s_artifact_draw_drawing_model::layer_base_mut(&mut base.layers[0]).name="Rectangle <Name> & Ü".into();
     let id = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).to_string_owner();
-    let names = semio_framework_plugin::app::time_travel::time_travel_entity_names(&semio_framework_value::ToValue::to_value(&base), &[id.as_str()].into_iter().collect());
+    let names = semio_framework_plugin_time_travel_panel::panel_pointer::time_travel_entity_names(&semio_framework_value::ToValue::to_value(&base), &[id.as_str()].into_iter().collect());
     assert_eq!(names.get(&id).map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_owned()).as_deref(), Some("Rectangle <Name> & Ü"));
     fn references(value: &serde_json::Value, into: &mut Vec<serde_json::Value>) {
         match value {
@@ -334,7 +334,7 @@ fn layer_references_read_their_name_and_take_the_canvas_selection() {
         references(&serde_json::from_str(schema).expect("leaf schema"), &mut found);
         assert!(!found.is_empty(), "{schema}");
         for reference in found {
-            assert_eq!((reference["domain"].as_str(), reference["granularity"].as_str()), (Some(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN), Some(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_GRANULARITY)), "{reference}");
+            assert_eq!((reference["domain"].as_str(), reference["granularity"].as_str()), (Some("strokes"), Some("stroke")), "{reference}");
         }
     }
 }

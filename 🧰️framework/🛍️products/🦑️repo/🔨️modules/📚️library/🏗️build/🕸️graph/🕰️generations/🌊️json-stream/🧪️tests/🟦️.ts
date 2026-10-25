@@ -5,10 +5,10 @@ import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{heapStats}from"bun:jsc";
-import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{writeJsonStreamV1}from"../🟨️.mjs";
 
-const python=testPythonV1(),oracle=join(dirname(fileURLToPath(import.meta.url)),"🐍️oracle.py");
+const python=testPythonV1(),oracle=join(dirname(fileURLToPath(import.meta.url)),"🐍️.py");
 const cases=[
  {name:"scalars",indent:2,value:{a:1,b:"two",c:true,d:null,e:[],f:{},g:-7}},
  {name:"nested",indent:2,value:{projects:{"@semio/x":{name:"x",targets:{build:{execution:{kind:"command",command:"run \"x\"\n"},inputs:["{workspaceRoot}/a.ts",{env:"TOKEN"}]}}}},dependencies:[{source:"a",target:"b"}],unavailable:[]}},
@@ -32,8 +32,8 @@ test("the streamed text equals JSON.stringify and the independent model for ever
 test("serialisation rules of JSON.stringify are kept: omitted members, null elements, toJSON and rejected indents",async()=>{
  const value={kept:1,gone:undefined,fn:()=>1,list:[undefined,()=>1,Symbol("s"),2],date:new Date(0),custom:{toJSON:()=>({x:1})}};
  expect((await stream(value)).join("")).toBe(JSON.stringify(value,null,2));
- await expect(writeJsonStreamV1({},()=>undefined,{indent:11})).rejects.toThrow("Indent");
- await expect(writeJsonStreamV1(undefined,()=>undefined)).rejects.toThrow("JSON value");
+ await expect(writeJsonStreamV1({},()=>undefined,{indent:11})).rejects.toThrow("build.json.indent-out-of-range");
+ await expect(writeJsonStreamV1(undefined,()=>undefined)).rejects.toThrow("build.json.value-required");
 });
 
 test("pieces are bounded, written in order with backpressure, and an abort stops between pieces",async()=>{

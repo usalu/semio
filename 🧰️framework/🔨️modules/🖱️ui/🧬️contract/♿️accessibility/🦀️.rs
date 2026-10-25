@@ -2,14 +2,14 @@
 use crate::*;
 use serde::{Deserialize, Serialize};
 
-/// ♿️ Skips serializing a field that still equals its default.
+/// ⏭️ Skips serializing a field that still equals its default.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn is_default<T: Default + PartialEq>(value: &T) -> bool {
     *value == T::default()
 }
 
 //#region 🔖️AccessibilityProjection
-/// ♿️ The ARIA role a component IMPLIES. [`AccessibilitySpec`] carries no `role` on purpose — a
+/// 🎭️ The ARIA role a component IMPLIES. [`AccessibilitySpec`] carries no `role` on purpose — a
 /// `Component::Button` is a button on every renderer — so this is the one place that implication is
 /// written down, shared by every target instead of re-derived per renderer. React reaches the same
 /// roles implicitly, through the HTML element each component view renders (`<button>`, `<p>`,
@@ -113,7 +113,7 @@ pub fn liveness_name(live: Liveness) -> &'static str {
     }
 }
 
-/// ♿️ ONE node of the accessibility projection a renderer publishes for an assistive technology to
+/// 📮️ ONE node of the accessibility projection a renderer publishes for an assistive technology to
 /// read. Flat and ordered: `depth` carries the tree shape, so a consumer rebuilds nesting without
 /// the projection having to nest (the same flat-table discipline [`crate::UiSnapshot`] uses).
 ///
@@ -233,7 +233,7 @@ fn spoken_step(step: f64, precision: Option<u16>, factor: Option<f64>) -> Option
     precision.map(|precision| crate::round_ui_number(10f64.powi(-i32::from(precision.min(crate::UI_NUMBER_PRECISION_MAX))), precision))
 }
 
-/// 📶️ Projects [`AccessibilityValue`] out of a component; every non-range component answers the empty
+/// 💎️ Projects [`AccessibilityValue`] out of a component; every non-range component answers the empty
 /// default.
 pub fn accessibility_value(component: &crate::Component) -> AccessibilityValue {
     match component {
@@ -283,7 +283,7 @@ pub fn accessibility_tone(record: &crate::UiNodeRecord) -> Option<&'static str> 
     }
 }
 
-/// ♿️ Projects ONE published node record. Pure over the record — every renderer's own walk supplies
+/// 📹️ Projects ONE published node record. Pure over the record — every renderer's own walk supplies
 /// `depth`, and afterwards stamps whatever live state only it knows (`focused`, `rect`).
 pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize) -> AccessibilityProjectionNode {
     let activatable = record.bindings.iter().any(|binding| binding.trigger == crate::Trigger::Activate);

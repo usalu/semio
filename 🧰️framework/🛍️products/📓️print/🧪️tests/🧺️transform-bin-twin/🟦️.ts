@@ -57,17 +57,17 @@ export default defineTestAdapter({
     },
     "count-five": {
       oracle: oracle("count-five"),
-      /** 🎯️ The twin's bin with a requested count of five. */
+      /** 📬️ The twin's bin with a requested count of five. */
       subject: () => ({ projection: histogram("five", 5) }),
     },
     "count-twenty": {
       oracle: oracle("count-twenty"),
-      /** 🎯️ The twin's bin with a requested count of twenty. */
+      /** 🪞️ The twin's bin with a requested count of twenty. */
       subject: () => ({ projection: histogram("twenty", 20) }),
     },
     "explicit-thresholds": {
       oracle: oracle("explicit-thresholds"),
-      /** 🎯️ The twin's bin with an explicit threshold list. */
+      /** 📋️ The twin's bin with an explicit threshold list. */
       subject: () => ({ projection: histogram("explicit", [4, 6, 8]) }),
     },
   },

@@ -133,7 +133,7 @@ pub mod editor {
                     pub mod overview {
                         #[path = "."]
                         pub mod utilities {
-                            pub use semio_s_artifact_puzzle_2d_graph_manifest::editor::puzzle2d::modes::edit::windows::overview::utilities::brush;
+                            pub use semio_s_artifact_puzzle_2d_tests::editor::puzzle2d::modes::edit::windows::overview::utilities::brush;
                             #[path = "."]
                             pub mod select {
                                 pub use semio_s_artifact_puzzle_2d_tests::editor::puzzle2d::modes::edit::windows::overview::utilities::select::*;

@@ -59,7 +59,7 @@ impl OverlayStack {
         self.open.last()
     }
 
-    /// 🥞️ Bottom-to-top: the exact order a paint pass must draw them in.
+    /// 🔝️ Bottom-to-top: the exact order a paint pass must draw them in.
     pub(super) fn as_slice(&self) -> &[OpenOverlay] {
         &self.open
     }
@@ -73,7 +73,7 @@ impl OverlayStack {
         self.open.pop()
     }
 
-    /// 🔒️ The root of the topmost `focus_trap` overlay, if any — `Escape`/outside-press only ever
+    /// 🪤️ The root of the topmost `focus_trap` overlay, if any — `Escape`/outside-press only ever
     /// close the *topmost* overlay, but a focus trap set by a lower (still-open) trapping overlay
     /// stays in effect once a higher non-trapping overlay (e.g. a `Tooltip`) is on top of it, so this
     /// searches from the top down rather than just checking `topmost()`.
@@ -93,7 +93,7 @@ pub fn resolve_overlay_placement(tree: &UiTree, anchor: OverlayAnchor, content_s
     (resolved.x, resolved.y)
 }
 
-/// 📐️ [`resolve_overlay_placement`] plus the side a collision flip settled on — what a paint pass
+/// 💥️ [`resolve_overlay_placement`] plus the side a collision flip settled on — what a paint pass
 /// reads when it also wants React's `transformOrigin` equivalent. `flow` is React's own `rtl`
 /// argument, read from the window's [`ui_contract::UiFlow`] (`Ui::window_flow`).
 pub fn resolve_overlay_placement_side(tree: &UiTree, anchor: OverlayAnchor, content_size: (f32, f32), viewport: (f32, f32), placement: OverlayPlacement, flow: FlowInline) -> ResolvedOverlayPlacement {
@@ -104,7 +104,7 @@ pub fn resolve_overlay_placement_side(tree: &UiTree, anchor: OverlayAnchor, cont
     ui_contract::resolve_overlay_placement(overlay_rect(anchor_rect), content_size, viewport, placement, flow)
 }
 
-/// 📐️ This target's [`Rect`] as the contract's renderer-neutral [`OverlayRect`] — the ONE conversion
+/// 🧬️ This target's [`Rect`] as the contract's renderer-neutral [`OverlayRect`] — the ONE conversion
 /// site, so `ui_contract`'s positioner stays free of any target's geometry type.
 pub fn overlay_rect(rect: Rect) -> OverlayRect {
     OverlayRect::new(rect.x, rect.y, rect.w, rect.h)
@@ -127,7 +127,7 @@ pub struct RowReasonHint {
     pub hovered: bool,
 }
 
-/// 💬️ The reason of `row`'s `index`-th action while that action is disabled and names one — the contract's `RowAction.reason`,
+/// 🧠️ The reason of `row`'s `index`-th action while that action is disabled and names one — the contract's `RowAction.reason`,
 /// the text every renderer announces as its description and shows as its hint.
 pub fn disabled_row_action_reason(tree: &UiTree, row: NodeId, index: usize) -> Option<&str> {
     let action = tree.authored_tree_item(row)?.actions.as_deref()?.get(index)?;
@@ -147,7 +147,7 @@ pub fn disabled_row_action_reason(tree: &UiTree, row: NodeId, index: usize) -> O
 pub enum TooltipStep {
     /// 😴️ Nothing changed — no dwell elapsed, nothing to dismiss.
     Idle,
-    /// 💡️ `node` has been hovered for [`TOOLTIP_DWELL_SECONDS`]: reconcile its tooltip content in
+    /// 💭️ `node` has been hovered for [`TOOLTIP_DWELL_SECONDS`]: reconcile its tooltip content in
     /// and `open_overlay` it as an [`OverlayKind::Tooltip`] anchored on `node`.
     Reveal(NodeId),
     /// 🚪️ The armed hover-out delay elapsed — the caller closed the tooltip as part of this step.
@@ -237,7 +237,7 @@ pub(super) const DRAG_PROMOTE_THRESHOLD_SQ: f32 = 16.0;
 // `paint` paints the actual thumb node wherever it likes in the tree and registers it once via
 // `EventRouter::register_scroll_thumb`, decoupling thumb geometry from scrollable-content geometry.
 
-/// 🖱️ Walks `from`'s bubble chain (inclusive) for the nearest `NodeFlags::SCROLLABLE` node.
+/// ⛓️ Walks `from`'s bubble chain (inclusive) for the nearest `NodeFlags::SCROLLABLE` node.
 pub(super) fn nearest_scrollable_ancestor(tree: &UiTree, from: NodeId) -> Option<NodeId> {
     let mut found = None;
     bubble(tree, from, |id| {
@@ -311,19 +311,19 @@ pub enum UiCommand {
     App { window_id: String, intent: UiIntentCommand },
     /// 🔦️ Focus moved (or cleared) as a result of routing an event.
     FocusChanged { window_id: String, node: Option<NodeId> },
-    /// 🪟️ An overlay closed — either explicitly (`EventRouter::close_overlay`) or via dismissal
+    /// 📪️ An overlay closed — either explicitly (`EventRouter::close_overlay`) or via dismissal
     /// (outside-press swallow, `Escape`, tooltip hover-out).
     OverlayClosed { window_id: String, root: NodeId, kind: OverlayKind },
-    /// 🫳️ A `DragSession` released over an accepting drop target.
+    /// 🏹️ A `DragSession` released over an accepting drop target.
     DropCommitted { window_id: String, source: NodeId, target: NodeId, payload: DragPayload },
-    /// 🫳️ A `DragSession` released with no accepting drop target under the pointer.
+    /// 🗑️ A `DragSession` released with no accepting drop target under the pointer.
     DropCancelled { window_id: String, source: NodeId },
     /// 📋️ `Ctrl`/`Cmd`+`C` over a text selection — host copies `text` to the OS clipboard.
     ClipboardCopy { window_id: String, text: String },
-    /// 📋️ `Ctrl`/`Cmd`+`X` over a text selection — `text` is already removed from the `EditState`
+    /// ✂️ `Ctrl`/`Cmd`+`X` over a text selection — `text` is already removed from the `EditState`
     /// buffer; host copies it to the OS clipboard.
     ClipboardCut { window_id: String, text: String },
-    /// 📋️ `Ctrl`/`Cmd`+`V`: host must read the OS clipboard and feed the result back as
+    /// 📥️ `Ctrl`/`Cmd`+`V`: host must read the OS clipboard and feed the result back as
     /// `UiEvent::Paste` (the OS clipboard read itself is a `host`-region concern, not `events`').
     ClipboardPasteRequested { window_id: String },
     /// 🎬️ A real `PointerDown`/`PointerUp`/`PointerMove`/`Scroll` `event` that hit-tested to a
@@ -414,13 +414,13 @@ pub struct EventRouter {
     pub(super) control_border: f32,
     pub(super) control_gap: f32,
     pub(super) tree_drag_handle_press: Option<NodeId>,
-    /// 🫳️ Per-node `DragPayload` a `Press` capture on that node may promote into, set via
+    /// 🎒️ Per-node `DragPayload` a `Press` capture on that node may promote into, set via
     /// `set_drag_payload`.
     pub(super) drag_payloads: BTreeMap<NodeId, DragPayload>,
-    /// 🎯️ Per-node accept predicate refining plain `NodeFlags::DROP_TARGET` membership, set via
+    /// ✅️ Per-node accept predicate refining plain `NodeFlags::DROP_TARGET` membership, set via
     /// `set_drop_accept`. Absent from this map but flagged `DROP_TARGET` still accepts everything.
     pub(super) drop_accept: BTreeMap<NodeId, DropAcceptPredicate>,
-    /// 🖱️ Scrollbar-thumb node id → (its owning `NodeFlags::SCROLLABLE` node, drag axis), set via
+    /// 🏁️ Scrollbar-thumb node id → (its owning `NodeFlags::SCROLLABLE` node, drag axis), set via
     /// `register_scroll_thumb`.
     pub(super) scroll_thumbs: BTreeMap<NodeId, (NodeId, ScrollAxis)>,
     pub(super) retiring_payload: Option<RetiringDragPayload>,
@@ -430,13 +430,13 @@ pub struct EventRouter {
     /// ⏱️ Monotonic seconds, advanced once per frame by `advance_clock`. Every hover-reveal deadline
     /// is an absolute value on this clock, never a countdown, so a dropped frame cannot lose time.
     pub(super) clock_seconds: f64,
-    /// 💡️ When the current hover leaf was entered, and whether its dwell already fired — so a
+    /// 🍃️ When the current hover leaf was entered, and whether its dwell already fired — so a
     /// tooltip opens exactly once per hover, not every frame after the deadline.
     pub hover_since: Option<(NodeId, f64)>,
     pub hover_revealed: Option<NodeId>,
-    /// 💬️ The disabled row action whose reason hint is shown ([`RowReasonHint`], audit W1E-1).
+    /// 🕵️ The disabled row action whose reason hint is shown ([`RowReasonHint`], audit W1E-1).
     pub(super) row_reason: Option<RowReasonHint>,
-    /// 🚪️ Deadline armed by `maybe_dismiss_tooltip_on_hover_out` once the pointer leaves an open
+    /// ⌛️ Deadline armed by `maybe_dismiss_tooltip_on_hover_out` once the pointer leaves an open
     /// tooltip's anchor and bounds — see `DismissPolicy::hover_out_delay_seconds`.
     pub tooltip_dismiss_at: Option<f64>,
     /// 🔤️ The open `Select`'s live typeahead query and the `clock_seconds` of its last keystroke.
@@ -450,7 +450,7 @@ pub struct EventRouter {
     /// `UiDocumentStore`'s `seq` counter (`📃️UiDocumentStore/🟦️.tsx`'s `buildIntent`). Minted here,
     /// enforced at the queue (`BoundedActionQueue::admit_intent`).
     pub(super) intents: UiIntentSequencer,
-    /// 🧭️ This window's logical flow — the twin of React's `useFlow()`
+    /// 🌊️ This window's logical flow — the twin of React's `useFlow()`
     /// (`🔨️modules/🧭️flow-direction-context/🟦️.tsx:48`). `Rtl` mirrors the inline axis of every
     /// anchored overlay this router places and of every inline arrow key it routes; `Up` is read by
     /// paint, not here. Set from the window's dock anchor through `Ui::set_window_flow`, exactly as

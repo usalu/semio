@@ -163,7 +163,7 @@ pub async fn read_opt_bytes(bytes: &[u8], pos: &mut usize, what: &'static str) -
     if read_bool(bytes, pos, what).await? { Ok(Some(read_bytes(bytes, pos, what).await?)) } else { Ok(None) }
 }
 
-/// 🪡 Same rationale as `write_opt_bytes`/`read_opt_bytes`, for `Option<u64>` (deadlines/wake times).
+/// ⏱️ Same rationale as `write_opt_bytes`/`read_opt_bytes`, for `Option<u64>` (deadlines/wake times).
 pub async fn write_opt_u64(out: &mut Vec<u8>, v: &Option<u64>) {
     write_bool(out, v.is_some()).await;
     if let Some(x) = v {
@@ -174,7 +174,7 @@ pub async fn read_opt_u64(bytes: &[u8], pos: &mut usize, what: &'static str) -> 
     if read_bool(bytes, pos, what).await? { Ok(Some(read_u64(bytes, pos, what).await?)) } else { Ok(None) }
 }
 
-/// 🪡 `f` is a bare async fn item (`Type::pack_encode`), never a closure — fn items are
+/// 📦️ `f` is a bare async fn item (`Type::pack_encode`), never a closure — fn items are
 /// automatically higher-ranked over their argument lifetimes, so they don't hit the
 /// `write_opt_bytes` doc's HRTB rough edge. `(item, out)` order (not `(out, item)`) is what
 /// lets `T::pack_encode`'s own `(&self, out)` signature line up without an adapter closure.

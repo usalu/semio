@@ -6,7 +6,8 @@ pub use semio_s_artifact_puzzle_2d_tambour_end_storeys::editor::puzzle2d::engine
 
 pub use semio_s_artifact_puzzle_2d_tambour_single_storey::editor::puzzle2d::engine::icons::board_metabolism_icons::tambour_single_storey;
 
-pub use semio_s_artifact_puzzle_2d_graph_manifest::editor::puzzle2d::engine::icons::board_metabolism_icons::capsules;
+#[path = "💊️capsules/🦀️.rs"]
+pub mod capsules;
 
 pub use semio_s_artifact_puzzle_2d_tambour_single_storey::editor::puzzle2d::engine::icons::board_metabolism_icons::ellipsoid_capsules;
 

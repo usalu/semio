@@ -2,6 +2,7 @@ use protocol::{OpText,OpBinary};
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
+use protocol::ColdMutationDiff;
 #[cfg(test)] use semio_framework_replication_mutation::Mutation;
 #[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
 #[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
@@ -160,7 +161,7 @@ async fn block_run_style_and_part_mutations_apply_and_inverse() {
         let mut next = base.clone();
         apply(&mut next, &mutation);
         assert_ne!(next, base, "mutation must change authored state: {mutation:?}");
-        for inverse in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for inverse in ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply(&mut next, &inverse);
         }
         assert_eq!(next, base, "inverse must restore exact XML/OPC authority: {mutation:?}");
@@ -177,7 +178,7 @@ async fn block_run_style_and_part_mutations_apply_and_inverse() {
 async fn every_mutation_has_exact_diff_inverse_and_text_binary_replay() {
     for mutation in demo_mutation_cases() {
         let base = fixture();
-        let direct = Mutation::diff(&mutation, &base);
+        let direct = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let via_diff = protocol::apply_diff_cold(direct.diff(), &base).expect("diff applies");
         let mut via_mutation = base.clone();
         apply(&mut via_mutation, &mutation);
@@ -204,8 +205,8 @@ async fn canonical_xml_and_opc_diff_round_trip_and_absorb() {
     let binary_edit = DocxMutation::SetPart(set_part::SetPart { path: "word/media/final.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![9, 8, 7] }, index: None, override_index: None });
     apply(&mut final_snapshot, &binary_edit);
 
-    let first = Mutation::diff(&text_edit, &base).diff().clone();
-    let second = Mutation::diff(&binary_edit, &middle).diff().clone();
+    let first = ::semio_framework_os_kernel::ColdMutation::diff(&text_edit, &base).diff().clone();
+    let second = ::semio_framework_os_kernel::ColdMutation::diff(&binary_edit, &middle).diff().clone();
     assert!(first.xml_parts.is_some(), "text edit must be an XML-part diff");
     assert!(second.opc.is_some(), "binary part edit must be an OPC diff");
     let mut absorbed = first;

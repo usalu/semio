@@ -59,7 +59,7 @@ export async function measureNativeDirectoryUsageAsyncV1(root:string,options:Rea
  return Object.freeze({allocatedBytes,logicalBytes,entries});
 }
 
-/** 🧮️ Measures physical bytes below a root synchronously; reserved for callers that cannot await. */
+/** 📁️ Measures physical bytes below a root synchronously; reserved for callers that cannot await. */
 export function measureNativeDirectoryUsageV1(root:string,maximumEntries:number=protocol.maximumEntries):NativeDirectoryUsageRowV1{
  if(!Number.isSafeInteger(maximumEntries)||maximumEntries<1)throw Error("Positive entry bound required");
  const seen=new Set<string>(),stack:{path:string;depth:number}[]=[{path:resolve(root),depth:0}];let allocatedBytes=0,logicalBytes=0,entries=0;

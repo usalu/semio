@@ -40,7 +40,7 @@ impl Default for PackLimits {
 }
 //#endregion 🔖️Limits
 
-/// 🛡️ How much a read verifies as it goes: `Trusted` skips all checksums (fastest,
+/// 🎚️ How much a read verifies as it goes: `Trusted` skips all checksums (fastest,
 /// for already-verified local data), `Standard` (default) verifies every segment's CRC-32C as
 /// it's read, `Full` additionally re-hashes chunk/document content against the blake3 hashes in
 /// the chunk table and footer.
@@ -82,7 +82,7 @@ impl Default for PackEncodeOptions {
     }
 }
 
-/// ⚙️ Knobs for [`decode_document`].
+/// 🎒️ Knobs for [`decode_document`].
 #[derive(Clone, Debug)]
 pub struct PackDecodeOptions {
     pub verification: PackVerificationLevel,
@@ -147,12 +147,12 @@ pub fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, PackRefusal
     Err(PackRefusal::Malformed { kind:ValueRefusalKind::InvalidValue,what: "varint", offset: start as u64, detail: "overlong varint (exceeds 10 bytes)".to_string() })
 }
 
-/// ✏️ Writes `value` as a zigzag-encoded signed varint.
+/// 📝️ Writes `value` as a zigzag-encoded signed varint.
 pub fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
     write_varint_u64(out, zigzag_encode(value));
 }
 
-/// 📖️ Reads a zigzag-encoded signed varint starting at `*pos`.
+/// 🖊️ Reads a zigzag-encoded signed varint starting at `*pos`.
 pub fn read_varint_i64(bytes: &[u8], pos: &mut usize) -> Result<i64, PackRefusal> {
     let raw = read_varint_u64(bytes, pos)?;
     Ok(zigzag_decode(raw))
@@ -179,7 +179,7 @@ pub fn is_minimal_varint(bytes: &[u8]) -> bool {
 #[derive(Clone, Copy)]
 enum ByteStorage<'a> { Slice(&'a [u8]), Paged(&'a crate::io::binary::operation_bytes::OwnedOperationBytes) }
 
-/// 📏️ A checked finite range retains the exact borrowed source owner.
+/// ☑️ A checked finite range retains the exact borrowed source owner.
 #[derive(Clone, Copy)]
 pub struct ByteSpan<'a> { source: ByteStorage<'a>, offset: usize, length: usize }
 impl<'a> ByteSpan<'a> {
@@ -337,7 +337,7 @@ pub fn crc32c(bytes: &[u8]) -> u32 {
     crc ^ 0xFFFF_FFFF
 }
 
-/// 🧮️ Retained CRC-32C state for fixed-page readers that must yield between input pages.
+/// 📃️ Retained CRC-32C state for fixed-page readers that must yield between input pages.
 pub struct Crc32cCursor {
     crc: u32,
 }
@@ -403,7 +403,7 @@ impl CompressionCodec for NoCompression {
 //#endregion 🔖️Codec
 
 //#region 🔖️Deflate
-/// 🗜️ Deflate compression (first-party `semio-framework-deflate`, RFC 1951 raw DEFLATE) as
+/// ⏮️ Deflate compression (first-party `semio-framework-deflate`, RFC 1951 raw DEFLATE) as
 /// a `CodecId(1)` `CompressionCodec`.
 #[cfg(feature = "deflate")]
 pub struct DeflateCodec;
@@ -428,7 +428,7 @@ pub fn deflate_compress(raw: &[u8]) -> Result<Vec<u8>, PackRefusal> {
     }
 }
 
-/// 🗜️ Compresses under the same cumulative caller admission as native field emission.
+/// 🧲️ Compresses under the same cumulative caller admission as native field emission.
 pub fn deflate_compress_controlled(raw:&[u8],control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
     #[cfg(feature="deflate")]
     {
@@ -478,7 +478,7 @@ pub enum DeflateRetainedStep {
     Complete,
 }
 
-/// 🧵️ The retirement step [`DeflateRetainedCursor::close_step`] answers with, re-exported because it
+/// 🪜️ The retirement step [`DeflateRetainedCursor::close_step`] answers with, re-exported because it
 /// is part of this module's own public surface: a caller that drives the cursor to terminal must be
 /// able to name the answer without taking a second, direct dependency on `semio-framework-deflate`
 /// (CLAUDE.md — an exported API must not require an interface the client cannot reach through us).
@@ -486,7 +486,7 @@ pub enum DeflateRetainedStep {
 #[cfg(feature = "deflate")]
 pub use semio_framework_deflate::RetainedInflateCloseStep;
 
-/// 🧵️ Incremental raw-DEFLATE decoder with exact producer handback and one output byte per grant.
+/// 🖱️ Incremental raw-DEFLATE decoder with exact producer handback and one output byte per grant.
 #[cfg(feature = "deflate")]
 pub struct DeflateRetainedCursor {
     inflater: Option<semio_framework_deflate::Inflater>,
@@ -500,7 +500,7 @@ pub struct DeflateRetainedCursor {
 
 #[cfg(feature = "deflate")]
 impl DeflateRetainedCursor {
-    /// 📏️ Borrows the current retained decoder's independent physical close currencies.
+    /// 📪️ Borrows the current retained decoder's independent physical close currencies.
     pub fn retirement_demands(&self) -> semio_framework_value::RetirementDemand {
         use semio_framework_value::RetirementDemand;
         if self.closed { return Default::default(); }

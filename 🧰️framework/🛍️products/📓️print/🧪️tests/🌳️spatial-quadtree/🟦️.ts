@@ -1,5 +1,5 @@
 import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
-/** 🌳️ Adapter for `spatial-quadtree`: the spatial index the collision layouts stand on.
+/** 🔌️ Adapter for `spatial-quadtree`: the spatial index the collision layouts stand on.
  *
  * Subject: `semio-viz-spatial`'s quadtree, probed through `semio-viz-probe`.
  * Oracle: `d3-quadtree`, on the two things a quadtree makes observable — the square it covers and
@@ -28,7 +28,7 @@ function list(cell: string): number[] {
   return cell.split(";").map((item) => Number(item.trim()));
 }
 
-/** 🌳️ The point set the fixture's `qt-scatter` table holds, in its own row order. */
+/** 📍️ The point set the fixture's `qt-scatter` table holds, in its own row order. */
 const SCATTER: readonly Point[] = [
   [1, 1],
   [5, 2],
@@ -64,7 +64,7 @@ function found(built: ReturnType<typeof tree>, points: readonly Point[], x: numb
   return points.findIndex((point) => point[0] === hit[0] && point[1] === hit[1]) + 1;
 }
 
-/** 🎯️ Compiles the committed fixture and returns the records of one scenario. */
+/** 📹️ Compiles the committed fixture and returns the records of one scenario. */
 async function records(ctx: AdapterContext): Promise<ProbeRecord[]> {
   return roundProbeNumbers(await compileAdapterVizProbeV1(ctx,ctx.input(FIXTURE), { caseName: CASE, scenario: ctx.scenario.id }), DECIMALS);
 }
@@ -101,7 +101,7 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => ({ projection: projectionOf(await records(ctx)) }),
     },
     find: {
-      /** 🔮️ The point d3-quadtree's `find` returns for each unbounded query. */
+      /** ♾️ The point d3-quadtree's `find` returns for each unbounded query. */
       oracle: (ctx: AdapterContext) => {
         const built = tree(SCATTER);
         const projection: Record<string, readonly number[]> = {};
@@ -110,11 +110,11 @@ export default defineTestAdapter({
         });
         return { projection };
       },
-      /** 🎯️ The row index `\SemioVizQuadtreeFind` answers for the same queries. */
+      /** 🗂️ The row index `\SemioVizQuadtreeFind` answers for the same queries. */
       subject: async (ctx: AdapterContext) => ({ projection: projectionOf(await records(ctx)) }),
     },
     "find-radius": {
-      /** 🔮️ The point d3-quadtree's `find` returns inside each search radius, or none. */
+      /** ↩️ The point d3-quadtree's `find` returns inside each search radius, or none. */
       oracle: (ctx: AdapterContext) => {
         const built = tree(SCATTER);
         const projection: Record<string, readonly number[]> = {};
@@ -123,7 +123,7 @@ export default defineTestAdapter({
         });
         return { projection };
       },
-      /** 🎯️ The row index `\SemioVizQuadtreeFind` answers inside the same radii. */
+      /** 📇️ The row index `\SemioVizQuadtreeFind` answers inside the same radii. */
       subject: async (ctx: AdapterContext) => ({ projection: projectionOf(await records(ctx)) }),
     },
   },

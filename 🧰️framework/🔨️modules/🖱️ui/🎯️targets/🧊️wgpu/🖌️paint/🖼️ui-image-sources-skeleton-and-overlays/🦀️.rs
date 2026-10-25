@@ -1,4 +1,4 @@
-//! 🖼️ Ui image sources, skeleton and overlays: the image admission ledger and data url decoding, the skeleton blocks and the overlay backdrop, surface, chrome and tooltip painters. See [`super`].
+//! 💿️ Ui image sources, skeleton and overlays: the image admission ledger and data url decoding, the skeleton blocks and the overlay backdrop, surface, chrome and tooltip painters. See [`super`].
 
 use super::*;
 
@@ -22,17 +22,17 @@ use super::*;
 /// renderer's own `RETAINED_UI_IMAGE_SOURCE_BYTES` carries for a retained image source.
 pub const UI_IMAGE_SOURCE_MAX_BYTES: usize = 4 * 1024 * 1024;
 
-/// 🖼️ Largest decoded edge admitted, so one hostile source cannot claim an unbounded texture.
+/// 📏️ Largest decoded edge admitted, so one hostile source cannot claim an unbounded texture.
 pub const UI_IMAGE_MAX_DIMENSION: u32 = 4096;
 
-/// 🖼️ How many decoded sources the registry retains before refusing new ones — a fixed ledger, not
+/// 📒️ How many decoded sources the registry retains before refusing new ones — a fixed ledger, not
 /// an evicting cache, so a frame's draw never races a retirement it did not ask for.
 pub const UI_IMAGE_LEDGER_ENTRIES: usize = 64;
 
-/// 🖼️ React's `max-h-64` on the `<img>` (`🗣️Interpreter/🟦️.tsx:1974`): 16rem at the 16px root size.
+/// 🏔️ React's `max-h-64` on the `<img>` (`🗣️Interpreter/🟦️.tsx:1974`): 16rem at the 16px root size.
 pub const UI_IMAGE_MAX_BOX_HEIGHT: f32 = 256.0;
 
-/// 🖼️ What admitting one `src` did.
+/// 🔏️ What admitting one `src` did.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UiImageAdmission {
     /// ✅️ Already decoded (this call or an earlier one) — `ui_image_natural_size` answers its size.
@@ -46,7 +46,7 @@ pub enum UiImageAdmission {
     Refused,
 }
 
-/// 🖼️ One decoded source waiting for the host to hand it to `RasterTextureTable` — drained through
+/// 📤️ One decoded source waiting for the host to hand it to `RasterTextureTable` — drained through
 /// [`take_ui_image_upload`] and pushed as a `prepared::PreparedRasterProducer` under the same `key`
 /// the draw list's `KIND_RASTER` instance carries.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -70,7 +70,7 @@ fn ui_image_ledger<R>(read: impl FnOnce(&mut UiImageLedger) -> R) -> Option<R> {
     UI_IMAGE_LEDGER.lock().ok().map(|mut ledger| read(&mut ledger))
 }
 
-/// 🖼️ Decodes `src` if this process can, and publishes its natural size + one pending upload. Safe to
+/// 🛂️ Decodes `src` if this process can, and publishes its natural size + one pending upload. Safe to
 /// call every frame: an already-admitted `src` is a map lookup.
 pub fn admit_ui_image(src: &str) -> UiImageAdmission {
     if src.is_empty() || src.len() > UI_IMAGE_SOURCE_MAX_BYTES {
@@ -112,12 +112,12 @@ pub fn admit_ui_image(src: &str) -> UiImageAdmission {
     }
 }
 
-/// 🖼️ The decoded pixel size of an admitted `src`, or `None` while the host still owns it.
+/// 🔬️ The decoded pixel size of an admitted `src`, or `None` while the host still owns it.
 pub fn ui_image_natural_size(src: &str) -> Option<(u32, u32)> {
     ui_image_ledger(|ledger| ledger.entries.iter().find(|(key, _, _)| key == src).map(|(_, width, height)| (*width, *height)))?
 }
 
-/// 🖼️ Takes one decoded source off the upload queue — the host's per-frame drain.
+/// 📥️ Takes one decoded source off the upload queue — the host's per-frame drain.
 pub fn take_ui_image_upload() -> Option<UiImageUpload> {
     ui_image_ledger(|ledger| if ledger.pending.is_empty() { None } else { Some(ledger.pending.remove(0)) })?
 }
@@ -174,7 +174,7 @@ fn decode_base64(value: &str) -> Option<Vec<u8>> {
     Some(out)
 }
 
-/// 🔤️ Percent-decoding for a non-base64 `data:` payload, `+` meaning space.
+/// 🔡️ Percent-decoding for a non-base64 `data:` payload, `+` meaning space.
 fn percent_decode(value: &str) -> Vec<u8> {
     let bytes = value.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
@@ -226,7 +226,7 @@ pub fn ui_image_content_rect(bounds: Rect, natural_w: u32, natural_h: u32) -> Re
 /// 🦴️ How many blocks the widest skeleton draws — `group`/`section`'s three, plus the header line.
 pub const SKELETON_MAX_BLOCKS: usize = 4;
 
-/// 🦴️ The element-kind axis React's `ElementSkeletonKind` names, reduced to the shapes that differ.
+/// 🧩️ The element-kind axis React's `ElementSkeletonKind` names, reduced to the shapes that differ.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SkeletonKind {
     Line,
@@ -240,7 +240,7 @@ pub enum SkeletonKind {
     Fill,
 }
 
-/// 🦴️ `UiNode` → the skeleton React's `elementSkeleton` would pick for the same `Component::type`.
+/// 🔖️ `UiNode` → the skeleton React's `elementSkeleton` would pick for the same `Component::type`.
 pub fn skeleton_kind(node: &UiNode) -> SkeletonKind {
     match node {
         UiNode::Text(_) => SkeletonKind::Line,
@@ -257,7 +257,7 @@ pub fn skeleton_kind(node: &UiNode) -> SkeletonKind {
     }
 }
 
-/// 🦴️ The placeholder blocks one skeleton draws inside `bounds`, in paint order. Fixed-capacity: the
+/// 🧱️ The placeholder blocks one skeleton draws inside `bounds`, in paint order. Fixed-capacity: the
 /// retained pass admits `SKELETON_MAX_BLOCKS` items up front and never allocates mid-frame.
 pub fn skeleton_blocks(kind: SkeletonKind, bounds: Rect, theme: &Theme) -> ([Rect; SKELETON_MAX_BLOCKS], usize) {
     let mut blocks = [Rect::new(0.0, 0.0, 0.0, 0.0); SKELETON_MAX_BLOCKS];
@@ -316,13 +316,13 @@ pub fn skeleton_blocks(kind: SkeletonKind, bounds: Rect, theme: &Theme) -> ([Rec
     (blocks, count)
 }
 
-/// 🦴️ Whether this node's presence says React would have replaced it with a skeleton this frame —
+/// ♻️ Whether this node's presence says React would have replaced it with a skeleton this frame —
 /// `interpretUiNodeBusyShell`'s own predicate, `Progress` exemption included.
 pub fn skeleton_replaces_content(node: &UiNode, presence: &UiPresence) -> bool {
     !matches!(node, UiNode::Progress(_)) && matches!(presence.status, UiStatus::Loading | UiStatus::Waiting)
 }
 
-/// 🦴️ Draws the pulse blocks. Motionless (no animation clock in this pass), which is also the
+/// 🪜️ Draws the pulse blocks. Motionless (no animation clock in this pass), which is also the
 /// `motion-reduce:animate-none` rendering React falls back to.
 pub(super) fn retained_skeleton_step(node: &UiNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) -> RetainedNodePaintStep {
     let (blocks, count) = skeleton_blocks(skeleton_kind(node), bounds, theme);
@@ -350,7 +350,7 @@ pub(super) fn retained_skeleton_step(node: &UiNode, bounds: Rect, theme: &Theme,
 /// 🌫️ React's modal scrim alpha (`--veil-alpha` over the dialog level's own surface).
 pub const OVERLAY_BACKDROP_ALPHA: f32 = 0.55;
 
-/// 🌫️ Fills the whole viewport behind a modal overlay.
+/// 🎨️ Fills the whole viewport behind a modal overlay.
 pub fn paint_overlay_backdrop(draw: &mut DrawList, viewport: Rect, theme: &Theme) {
     draw.push_solid_overlay([viewport.x, viewport.y, viewport.w, viewport.h], theme.background.with_alpha(OVERLAY_BACKDROP_ALPHA));
 }
@@ -363,11 +363,11 @@ pub fn paint_overlay_surface(draw: &mut DrawList, bounds: Rect, theme: &Theme) {
     push_chrome_border(draw, bounds, theme.stroke_hairline, theme.border_normal, true, true, true, true);
 }
 
-/// 🪟️ How many quads one overlay's chrome step may emit: a backdrop, a drop shade, the surface
+/// 🎟️ How many quads one overlay's chrome step may emit: a backdrop, a drop shade, the surface
 /// fill, and the four hairline border edges, with slack.
 pub const RETAINED_OVERLAY_CHROME_ITEMS: usize = 16;
 
-/// 🪟️ One open overlay's chrome as ONE retained step — the modal backdrop (when its kind has one)
+/// 🔓️ One open overlay's chrome as ONE retained step — the modal backdrop (when its kind has one)
 /// and the floating surface it sits on, both into the overlay bucket so they composite above every
 /// panel this frame painted. `false` means the step overran its own retained grant, which the frame
 /// ladder turns into a fault exactly like any other retained output refusal.
@@ -396,7 +396,7 @@ pub fn tooltip_surface_size(label: &str, theme: &Theme, atlas: &mut FontAtlas) -
     (advance + theme.padding_standard * 2.0, theme.font_size_small + theme.padding_standard * 2.0)
 }
 
-/// 💡️ Draws one hover tooltip at an already-resolved origin.
+/// 🖍️ Draws one hover tooltip at an already-resolved origin.
 pub fn paint_tooltip(draw: &mut DrawList, atlas: &mut FontAtlas, label: &str, origin: (f32, f32), theme: &Theme) {
     let (width, height) = tooltip_surface_size(label, theme, atlas);
     let bounds = Rect::new(origin.0, origin.1, width, height);

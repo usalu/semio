@@ -1,4 +1,4 @@
-//! 🗂️ Font atlas state and setup: the atlas mode, the rasterized and resolved glyphs, the `FontAtlas`, its builtin and font-backed construction, dirty flags, shaping and the raster scale. See [`super`].
+//! 🛠️ Font atlas state and setup: the atlas mode, the rasterized and resolved glyphs, the `FontAtlas`, its builtin and font-backed construction, dirty flags, shaping and the raster scale. See [`super`].
 
 use super::*;
 
@@ -55,7 +55,7 @@ pub struct FontAtlas {
     /// 🤝️ Pair kerning per face and scalar pair, in em — [`PairKerning::em`]'s answers, bounded by [`KERNING_PAIR_CAPACITY`].
     pub(super) kerning: HashMap<(TextFace, char, char), f32>,
     pub(super) pair_kerning: PairKerning,
-    /// 📐️ Device pixels per logical pixel the atlas rasterises at — the ONLY place the surface
+    /// 🖨️ Device pixels per logical pixel the atlas rasterises at — the ONLY place the surface
     /// scale factor reaches the text stack. Everything a caller passes in or reads back stays
     /// logical; see [`Self::set_raster_scale`].
     pub(super) raster_scale: f32,
@@ -115,7 +115,7 @@ impl FontAtlas {
         dirty
     }
 
-    /// 🌈️ Same contract as `take_dirty` for the RGBA emoji atlas page (`color_pixels`). Wiring
+    /// 🎨️ Same contract as `take_dirty` for the RGBA emoji atlas page (`color_pixels`). Wiring
     /// this into an actual GPU upload is a `gpu`-region call site left as a wiring request — see
     /// `GpuContext::upload_font_atlas`/`upload_emoji_atlas` in the report.
     pub fn take_color_dirty(&mut self) -> bool {
@@ -195,7 +195,7 @@ impl FontAtlas {
         Ok(Self::shaped(Some(bytes)))
     }
 
-    /// 📐️ The surface scale factor the atlas rasterises at. Callers keep speaking logical pixels;
+    /// ⚖️ The surface scale factor the atlas rasterises at. Callers keep speaking logical pixels;
     /// only the swash raster size and the packed texel extents move. Changing it drops every cached
     /// glyph and rewinds both pages, so the next frame re-rasterises at the new density and the
     /// dirty flags force a full re-upload — this is what a window moved between a Retina and a
@@ -219,7 +219,7 @@ impl FontAtlas {
         self.color_dirty = !self.color_pixels.is_empty();
     }
 
-    /// 📐️ The scale the atlas currently rasterises at — device pixels per logical pixel.
+    /// 💻️ The scale the atlas currently rasterises at — device pixels per logical pixel.
     pub fn raster_scale(&self) -> f32 {
         self.raster_scale
     }
@@ -231,7 +231,7 @@ impl FontAtlas {
         (size_px * RASTER_GRID_STEPS_PER_PX).round().max(1.0) as u32
     }
 
-    /// 📐️ The device size one grid key rasterises at.
+    /// 📱️ The device size one grid key rasterises at.
     pub(super) fn grid_px(key: u32) -> f32 {
         key as f32 / RASTER_GRID_STEPS_PER_PX
     }

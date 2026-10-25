@@ -4,7 +4,8 @@
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use crate::terminology::Block2dLabels;
 use crate::ui_label;
-use semio_framework_plugin::plugin_app_close_prelude::{column, text, Buildable, HasBase, HasChildren};
+use semio_framework_plugin::plugin_app_close_prelude::{column, text};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PluginAssemblyError;

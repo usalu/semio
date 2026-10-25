@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** ⏱️ Browser twin of this module's Rust span vocabulary (`⏱️trace/🦀️.rs`), scoped to the ONE
+/** 📏️ Browser twin of this module's Rust span vocabulary (`⏱️trace/🦀️.rs`), scoped to the ONE
  * thing the native tracer cannot see: the renderer's per-hop round trip. A "hop" is one
  * guest-command dispatch and everything the host does with its answer — encode, worker crossing,
  * reply decode, ui refresh, React commit, and the arming of the next dispatch.
@@ -88,14 +88,14 @@ export function hopTraceEpochToTimeline(epochMs: number): number {
 export type HopTraceClose = (extraDetail?: HopTraceDetail) => void;
 
 export type HopTracer = Readonly<{
-  /** ⏱️ Opens `stage` now and returns its close. */
+  /** 🔓️ Opens `stage` now and returns its close. */
   open: (stage: HopTraceStage, detail?: HopTraceDetail) => HopTraceClose;
   /** 📮️ Publishes a span measured somewhere this realm's clock never ran — the shard worker's own
    * stages, handed back on the reply and placed on THIS timeline by {@link hopTraceEpochToTimeline}. */
   record: (stage: HopTraceStage, startMs: number, durationMs: number, detail?: HopTraceDetail) => void;
   /** ⏱️ Times a synchronous body, publishing `stage` whether it returns or throws. */
   time: <T>(stage: HopTraceStage, detail: HopTraceDetail | undefined, run: () => T) => T;
-  /** ⏱️ Times an awaited body, publishing `stage` whether it resolves or rejects. */
+  /** ⌛️ Times an awaited body, publishing `stage` whether it resolves or rejects. */
   timeAsync: <T>(stage: HopTraceStage, detail: HopTraceDetail | undefined, run: () => Promise<T>) => Promise<T>;
   /** 📖️ Everything still in the ring, oldest first. */
   spans: () => readonly HopTraceSpan[];
@@ -150,7 +150,7 @@ export function createHopTracer(ports: HopTracePorts = defaultHopTracePorts()): 
   };
 }
 
-/** 🌍️ The one tracer of a renderer realm — the hop crosses three modules (`PluginRuntime`,
+/** 🛤️ The one tracer of a renderer realm — the hop crosses three modules (`PluginRuntime`,
  * `ShellHost`, `ShellHelpers`) and they must publish onto ONE timeline for the breakdown to add up. */
 export const hopTrace: HopTracer = createHopTracer();
 //#endregion 🔖️Tracer

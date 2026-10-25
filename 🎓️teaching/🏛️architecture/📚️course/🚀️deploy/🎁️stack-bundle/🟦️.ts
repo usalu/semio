@@ -131,7 +131,7 @@ export function stackBundleReadme(tag: string, caddyImage: string, localCaddy: s
   ].join("\n");
 }
 
-/** 🚛️ `docker-stack-bundle [--tag <tag>] [--out <directory>]` — stages everything the proctor host needs without a
+/** 🥞️ `docker-stack-bundle [--tag <tag>] [--out <directory>]` — stages everything the proctor host needs without a
  * registry in `--out` (default the package's `dist/proctor`): `compose.yaml` and the `Caddyfile` copied out of the image
  * `--tag` (default `latest`, built beforehand with `docker-image-build`; an image whose stack files are not those of this
  * checkout is refused), the `certificates` directory (what it already holds stays), the `.env`

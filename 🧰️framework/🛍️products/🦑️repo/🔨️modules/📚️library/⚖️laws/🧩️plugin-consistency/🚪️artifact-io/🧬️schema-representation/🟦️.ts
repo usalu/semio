@@ -77,7 +77,7 @@ function policySchemaIsDelegatingPair(repoRoot: string, schemaRoot: string): boo
   return rsReexports && (tsLiteralReexport || tsHasMetaStamp);
 }
 
-/** 🏅 True when `schemaRoot` owns its schema (has a real `📸️snapshot/` on disk) — the generalized
+/** 📸️ True when `schemaRoot` owns its schema (has a real `📸️snapshot/` on disk) — the generalized
  * form of `policyListStdioSchemaOwningEntries`'s filter, inlined here because this rule also covers
  * unmigrated (pre-dialect) artifacts, which are always schema-owning by construction (no subset
  * concept to delegate from). See `policySchemaIsDelegatingPair` for the sibling shape. */

@@ -10,7 +10,7 @@
 
 const BASE64_STANDARD_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-/** 🔤️ Strict RFC 4648 standard-base64 decoding failure — the TS mirror of Rust's `Base64Error`. */
+/** ❌️ Strict RFC 4648 standard-base64 decoding failure — the TS mirror of Rust's `Base64Error`. */
 export type Base64Error =
   | { readonly kind: "invalidLength" }
   | { readonly kind: "invalidByte"; readonly index: number; readonly byte: number }
@@ -42,7 +42,7 @@ export function base64ErrorMessage(error: Base64Error): string {
   }
 }
 
-/** 🔤️ Encodes bytes with the padded RFC 4648 standard alphabet. */
+/** 📕️ Encodes bytes with the padded RFC 4648 standard alphabet. */
 export function base64StandardEncode(bytes:Uint8Array):string{return base64StandardEncodeControlled(bytes,{maximumOutputBytes:Number.MAX_SAFE_INTEGER,progress:()=>true});}
 
 function sextet(byte: number, index: number): number {
@@ -65,7 +65,7 @@ function standardQuadValue(first:number,second:number,third:number,fourth:number
   return (count<<24)|((a<<2)|(b>>>4))|((((b<<4)|(c>>>2))&255)<<8)|((((c<<6)|d)&255)<<16);
 }
 
-/** 🧮️ Validates a quartet before writing to caller storage, using only one packed scalar cell. */
+/** 💾️ Validates a quartet before writing to caller storage, using only one packed scalar cell. */
 export function decodeBase64Quad(quad:ArrayLike<number>,index:number,last:boolean,output:Uint8Array,at=0):number {
   if(quad.length!==4)throw new Base64DecodeError({kind:"invalidLength"});
   const value=standardQuadValue(quad[0]!,quad[1]!,quad[2]!,quad[3]!,index,last),count=value>>>24;
@@ -74,7 +74,7 @@ export function decodeBase64Quad(quad:ArrayLike<number>,index:number,last:boolea
   return count;
 }
 
-/** 🔤️ Decodes padded RFC 4648 standard base64 and rejects whitespace, misplaced padding and
+/** 🧱️ Decodes padded RFC 4648 standard base64 and rejects whitespace, misplaced padding and
  * non-canonical unused bits — throwing {@link Base64DecodeError}, never returning partial bytes. */
 export function base64StandardDecode(encoded:string):Uint8Array{return base64StandardDecodeControlled(encoded,{maximumOutputBytes:Number.MAX_SAFE_INTEGER,progress:()=>true});}
 
@@ -96,7 +96,7 @@ function admit(size:number,control:Base64Control):void{
 function checkpoint(control:Base64Control,phase:Base64Progress["phase"],completed:number,total:number):void{
   if(!control.progress({phase,completed,total}))throw Error("intrinsic bytes cancelled");
 }
-/** 🔤️ Produces canonical RFC4648 padding with no runtime library dependency. */
+/** 📚️ Produces canonical RFC4648 padding with no runtime library dependency. */
 export function base64StandardEncodeControlled(bytes:Uint8Array,control:Base64Control):string{
   admit(Math.ceil(bytes.length/3)*4,control);checkpoint(control,"encode",0,bytes.length);
   const chunks:string[]=[];
@@ -107,7 +107,7 @@ export function base64StandardEncodeControlled(bytes:Uint8Array,control:Base64Co
   }
   return chunks.join("");
 }
-/** 🔤️ Validates canonical padding and unused bits before allocating the owned result. */
+/** 🏠️ Validates canonical padding and unused bits before allocating the owned result. */
 export function base64StandardDecodeControlled(text:string,control:Base64Control):Uint8Array{
   const cursor=new Base64DecodeCursor(text);
   while(cursor.step(cursor.nextWorkDemand(),control)!=="complete"){}
@@ -172,7 +172,7 @@ export class Base64DecodeCursor {
     const bytes=Math.min(this.length-this.offset,4096);
     return bytes+(this.phase==="validate"&&this.offset+bytes<this.length?bytes:0);
   }
-  /** 📐️ Borrows the decoded extent; both strict passes must still complete. */
+  /** 🖨️ Borrows the decoded extent; both strict passes must still complete. */
   expectedOutputBytes():number{this.active();return this.outputLength;}
   /** 🎟️ Quotes the exact output ArrayBuffer before its only retained birth. */
   nextCapacityByteDemand():number{this.active();return !this.complete&&!this.refused&&this.phase==="decode"&&!this.started?this.outputLength:0;}
@@ -216,11 +216,11 @@ export class Base64DecodeCursor {
   cancel():boolean{this.active();if(this.complete||this.refused)return false;this.refused=true;this.refusal=Error("intrinsic bytes cancelled");return true;}
   /** ✅️ Completion is successful only after both strict passes finish. */
   isComplete():boolean{this.active();return this.complete;}
-  /** 📏️ Borrows exact retained typed-array storage without transferring its owner. */
+  /** ⌨️ Borrows exact retained typed-array storage without transferring its owner. */
   outputCapacity():number{this.active();return this.output?.byteLength??0;}
   /** 📤️ Moves the original result once after complete reconstruction. */
   takeOutput():Uint8Array|null{this.mutable();if(!this.complete||this.refused)return null;const output=this.output;this.output=null;return output;}
-  /** 🫴️ Consumes the handle and transfers the original typed array without slicing its prefix. */
+  /** 〽️ Consumes the handle and transfers the original typed array without slicing its prefix. */
   intoParts():Base64DecodeParts{
     this.mutable();const outcome:Base64DecodeOutcome=this.refused?{kind:"refused",refusal:this.refusal}:this.complete?{kind:"complete"}:{kind:"pending"};
     const parts={input:this.text,range:{start:this.start,end:this.end},output:this.output,written:this.written,outcome};
@@ -257,7 +257,7 @@ function urlSextet(byte: number, index: number): number {
   throw new Base64DecodeError({ kind: "invalidByte", index, byte });
 }
 
-/** 🔗️ Decodes unpadded RFC 4648 §5 base64url, rejecting padding, the standard-only `+`/`/`, a dangling
+/** 🌐️ Decodes unpadded RFC 4648 §5 base64url, rejecting padding, the standard-only `+`/`/`, a dangling
  * sextet and non-canonical unused bits — the twin of Rust `base64_url_decode`. */
 export function base64UrlDecode(encoded: string): Uint8Array {
   if (encoded.length % 4 === 1) throw new Base64DecodeError({ kind: "invalidLength" });

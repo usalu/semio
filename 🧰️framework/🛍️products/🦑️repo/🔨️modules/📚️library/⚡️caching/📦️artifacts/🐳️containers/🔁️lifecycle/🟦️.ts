@@ -46,7 +46,7 @@ export function processLifecycleHost(): LifecycleHost {
   };
 }
 
-/** 🗂️ The context of the running container: `containerWorkspaceFolder` (else the repository root), `$HOME`, `$USER`. */
+/** 🐳️ The context of the running container: `containerWorkspaceFolder` (else the repository root), `$HOME`, `$USER`. */
 export function processLifecycleContext(repoRoot: string): LifecycleContext {
   return { workspace: process.env.containerWorkspaceFolder ?? repoRoot, home: process.env.HOME ?? "/home/vscode", user: process.env.USER ?? "vscode", env: process.env, arch: process.arch };
 }
@@ -102,7 +102,7 @@ export const EMOJI_FONTCONFIG = `<?xml version="1.0" encoding="UTF-8"?>
 </fontconfig>
 `;
 
-/** 🔤️ Installs {@link EMOJI_FONTCONFIG} system-wide and rebuilds the font cache. */
+/** 🖋️ Installs {@link EMOJI_FONTCONFIG} system-wide and rebuilds the font cache. */
 export function configureEmojiFonts(host: LifecycleHost): boolean {
   const written = host.run("sudo", ["mkdir", "-p", "/etc/fonts"]).status === 0 && host.run("sudo", ["tee", "/etc/fonts/local.conf"], { input: EMOJI_FONTCONFIG }).status === 0;
   const cached = written && host.run("sudo", ["fc-cache", "-f"]).status === 0;
@@ -122,7 +122,7 @@ export function submodulePaths(host: LifecycleHost, workspace: string): string[]
   return answer.stdout.split("\n").map((line) => line.trim().split(/\s+/u).slice(1).join(" ")).filter(Boolean);
 }
 
-/** 🔒️ Hands every persisted home volume and every submodule checkout to the container user. */
+/** 🏠️ Hands every persisted home volume and every submodule checkout to the container user. */
 export function ownPersistedState(host: LifecycleHost, context: LifecycleContext): void {
   for (const directory of PERSISTED_HOME_DIRECTORIES) host.run("sudo", ["chown", "-R", `${context.user}:${context.user}`, join(context.home, directory)]);
   for (const path of submodulePaths(host, context.workspace)) host.run("sudo", ["chown", "-R", `${context.user}:${context.user}`, join(context.workspace, path)]);
@@ -164,7 +164,7 @@ export function missingSafeDirectories(listed: readonly string[], required: read
   return [...new Set(required)].filter((path) => !present.has(path));
 }
 
-/** 🛡️ Adds the missing `safe.directory` entries to the container user's global git configuration. */
+/** 📂️ Adds the missing `safe.directory` entries to the container user's global git configuration. */
 export function markSafeDirectories(host: LifecycleHost, context: LifecycleContext): void {
   const listed = host.run("git", ["config", "--global", "--get-all", "safe.directory"]).stdout.split("\n").filter(Boolean);
   const required = [context.workspace, ...submodulePaths(host, context.workspace).map((path) => join(context.workspace, path))];
@@ -183,12 +183,12 @@ fi
 #endregion 🔐️SemioSshAgent
 `;
 
-/** 🔐️ `rc` with {@link SSH_AGENT_SHELL_BLOCK} appended exactly once. */
+/** 🧱️ `rc` with {@link SSH_AGENT_SHELL_BLOCK} appended exactly once. */
 export function withSshAgentShellBlock(rc: string): string {
   return rc.includes("#region 🔐️SemioSshAgent") ? rc : `${rc}${SSH_AGENT_SHELL_BLOCK}`;
 }
 
-/** 🔐️ With `~/.ssh/id_ed25519_signing.pub` present: SSH commit/tag signing in the global git configuration, one agent on a
+/** 🔏️ With `~/.ssh/id_ed25519_signing.pub` present: SSH commit/tag signing in the global git configuration, one agent on a
  * fixed socket (its environment in an owner-only file) and the shell hook; the key itself is unlocked by the person. */
 export function configureSshSigning(host: LifecycleHost, context: LifecycleContext): boolean {
   const ssh = join(context.home, ".ssh"), key = join(ssh, "id_ed25519_signing"), publicKey = `${key}.pub`, socket = join(ssh, "semio-ssh-agent.sock"), environment = join(ssh, "semio-ssh-agent.env");
@@ -217,7 +217,7 @@ export function configureSshSigning(host: LifecycleHost, context: LifecycleConte
 //#endregion 🔐️SshSigning
 
 //#region 📦️Tools
-/** 🧭️ The Debian/GitHub architecture names of `arch` (Node's `process.arch`) per tool, or null where the tool has no build. */
+/** 🏛️ The Debian/GitHub architecture names of `arch` (Node's `process.arch`) per tool, or null where the tool has no build. */
 export function toolArchitectures(arch: string): Readonly<{ debian: string | null; f3d: string | null }> {
   if (arch === "x64") return { debian: "amd64", f3d: "x86_64" };
   if (arch === "arm64") return { debian: "arm64", f3d: "arm64" };
@@ -259,7 +259,7 @@ export async function installF3d(host: LifecycleHost, context: LifecycleContext)
 //#endregion 📦️Tools
 
 //#region 🔁️Lifecycle
-/** 🔁️ `setup devcontainer start`: fonts, ownership, Claude auth storage, git trust, commit signing. */
+/** ▶️ `setup devcontainer start`: fonts, ownership, Claude auth storage, git trust, commit signing. */
 export function devcontainerStart(host: LifecycleHost, context: LifecycleContext): void {
   ownPersistedState(host, context);
   configureEmojiFonts(host);
@@ -270,7 +270,7 @@ export function devcontainerStart(host: LifecycleHost, context: LifecycleContext
   host.log("✅️ Environment ready.");
 }
 
-/** 🔁️ Prepares the optional F3D viewer while developer control remains in the dashboard. */
+/** 📎️ Prepares the optional F3D viewer while developer control remains in the dashboard. */
 export async function devcontainerAttach(host: LifecycleHost, context: LifecycleContext): Promise<void> {
   const skipTools = Boolean(context.env.SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL);
   if (skipTools) host.log("ℹ  Tool installation skipped.");

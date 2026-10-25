@@ -43,16 +43,16 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
 /// filter — auto-injected unconditionally.
 pub const SET_HISTORY_COMMAND_FILTER_ACTION_ID: &str = "setHistoryCommandFilter";
 
-/// 🎚️ The `setHistoryCommandFilter` option (and `HistoryPatch.commandFilter` value) that shows every row.
+/// 🕰️ The `setHistoryCommandFilter` option (and `HistoryPatch.commandFilter` value) that shows every row.
 pub const HISTORY_COMMAND_FILTER_ALL: &str = "all";
 
-/// 🎚️ The option that hides the rows of document mutations.
+/// 📄️ The option that hides the rows of document mutations.
 pub const HISTORY_COMMAND_FILTER_WITHOUT_MUTATIONS: &str = "withoutMutations";
 
-/// 🎚️ The option that shows only the rows of document mutations.
+/// 📜️ The option that shows only the rows of document mutations.
 pub const HISTORY_COMMAND_FILTER_ONLY_MUTATIONS: &str = "onlyMutations";
 
-/// 🎚️ The framework-injected `setHistoryCommandFilter` View action (never in the palette):
+/// 🎬️ The framework-injected `setHistoryCommandFilter` View action (never in the palette):
 /// switches the history panel's tri-state operations filter. Ephemeral UI state, never an
 /// operation — `ActionKind::View`. Arg id is `"value"` (not `"filter"`) — a top-level `UiNode::Select`
 /// always dispatches its picked option merged into `args` under the `"value"` key (both renderers'
@@ -98,7 +98,7 @@ pub const HOST_EVENT_KIND_CAPTURE_LOST: &str = "captureLost";
 /// 🚪️ The window is about to close.
 pub const HOST_EVENT_KIND_RETIRING: &str = "retiring";
 
-/// 📨️ The framework-injected `hostEvent` input verb (never in the palette, never an agent verb, never a history row):
+/// 🖥️ The framework-injected `hostEvent` input verb (never in the palette, never an agent verb, never a history row):
 /// both hosts forward a window's blur and pointer-capture loss through it, and may announce its closing.
 pub fn host_event_action_definition() -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(HOST_EVENT_ACTION_ID, LocalizedLabel::native("Window Event", "Fensterereignis"), ActionKind::Interaction, "hand") }
@@ -122,7 +122,7 @@ pub fn host_event_action_definition() -> ActionDefinition {
 }
 //#endregion 🔖️HostEvent
 
-/// 🗒️ The framework-injected `noteShellCommand` Shell action (never in the palette): records a
+/// 📓️ The framework-injected `noteShellCommand` Shell action (never in the palette): records a
 /// shell-kind effect that already happened into the session command log, for effects dispatched
 /// outside the normal `ActionDescriptor` path. `commandId` and `label` are required; `detail` is an
 /// optional free-text elaboration shown in the history panel. A note is an UNDO TARGET only when the
@@ -146,7 +146,7 @@ pub fn note_shell_command_action_definition() -> ActionDefinition {
 }
 
 //#region 🔖️Clipboard
-/// 🕹️ The three framework-owned Clipboard actions, auto-injected into every `AppDefinition` —
+/// 📋️ The three framework-owned Clipboard actions, auto-injected into every `AppDefinition` —
 /// mirrors `history_action_definitions`. `paste` carries a staged `anchoring` choice (defaulting to
 /// `original`) plus an optional `position` override, both consumed as a `PastePlacement`.
 pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {

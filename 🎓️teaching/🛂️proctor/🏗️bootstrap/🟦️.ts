@@ -1,4 +1,4 @@
-/** 🏗️ Builds the proctor under original compiler authority and retains immutable executable custody through every child.
+/** 🔨️ Builds the proctor under original compiler authority and retains immutable executable custody through every child.
  * The digest copy stays inside the bounded compiler image, so Windows never locks Cargo's mutable executable.
  * {@link buildProctor} returns an owner that callers close after all consumers, including restarts, have drained.
  * {@link launchProctor} stages an explicitly supplied external executable for diagnostic runs.
@@ -15,21 +15,21 @@ import { constants } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptInvocationEnvironment, requireIssuedScriptInvocationV1, type ScriptInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { scriptCompilerAdmissionControlV1 } from "../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import { buildModeEnvironment, type BuildMode } from "../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { buildModeEnvironment, type BuildMode } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import { buildCargoArtifacts, withCapturedCargoArtifactsTaskV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
-import { CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
-import { requireNativeStoragePathV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import { pinExecutableArtifact } from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
-import { withResourceLeases, checkResourceLeaseControl } from "../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import { captureOwnedCommandV1 } from "../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import { withRepositoryCompilerStoreV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
-import { repositoryCargoArtifactBuildPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import { repositoryCargoPreparationStorageV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-import { readNativeCallerAuthorityV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import { cargoWorkspacePreparationInvocationV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
-import { repositoryCargoNetworkV1, repositoryCargoCompilerInputsV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import { buildCargoArtifacts, withCapturedCargoArtifactsTaskV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import { requireNativeStoragePathV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import { pinExecutableArtifact } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
+import { withResourceLeases, checkResourceLeaseControl } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { captureOwnedCommandV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import { withRepositoryCompilerStoreV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import { repositoryCargoArtifactBuildPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { repositoryCargoPreparationStorageV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { cargoWorkspacePreparationInvocationV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🗂️workspaces/🦀️cargo/🟦️.ts";
+import { repositoryCargoNetworkV1, repositoryCargoCompilerInputsV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/📥️dependencies/🟦️.ts";
 import buildSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { cargoPackageClosure, type ManifestClosureOptions } from "./🕸️manifest-closure/🟦️.ts";
 
@@ -211,7 +211,7 @@ export function proctorSelection(forwarded: readonly string[]): string[] {
   return selection;
 }
 
-/** 📚️ The course a `check` validates: the named one, else `PROCTOR_COURSE`, else the dev course. */
+/** 🏫️ The course a `check` validates: the named one, else `PROCTOR_COURSE`, else the dev course. */
 export function proctorCourse(repoRoot: string, named?: string, env: NodeJS.ProcessEnv = process.env): string {
   return resolve(named ?? env.PROCTOR_COURSE ?? join(repoRoot, ...PROCTOR_DEV_COURSE));
 }
@@ -350,14 +350,14 @@ export async function buildProctor(repoRoot: string, invocation: ScriptInvocatio
   return ready;
 }
 
-/** 🗂️ The directory a package's sources live in: the owner whose `📦️packages/<language>` folder holds the manifest
+/** 📁️ The directory a package's sources live in: the owner whose `📦️packages/<language>` folder holds the manifest
  * (the repository's taxonomy keeps sources beside the owner, not beside the manifest), else the manifest's own. */
 function packageRoot(manifest: string): string {
   const directory = dirname(manifest);
   return basename(dirname(directory)) === "📦️packages" ? dirname(dirname(directory)) : directory;
 }
 
-/** 🧾️ The Cargo metadata fields needed to project the local normal and build dependency owners. */
+/** 🦀️ The Cargo metadata fields needed to project the local normal and build dependency owners. */
 interface CargoPackage {
   readonly id: string;
   readonly name: string;
@@ -370,7 +370,7 @@ export interface CargoMetadata {
   readonly resolve: { readonly nodes: readonly { readonly id: string; readonly deps: readonly { readonly pkg: string; readonly dep_kinds: readonly { readonly kind: string | null }[] }[] }[] };
 }
 
-/** 🗂️ Projects local normal and build owners from an already prepared Cargo dependency graph. */
+/** 🌱️ Projects local normal and build owners from an already prepared Cargo dependency graph. */
 export function proctorSourceRoots(metadata: CargoMetadata): string[] {
   const packages = new Map(metadata.packages.map((cargoPackage) => [cargoPackage.id, cargoPackage]));
   const nodes = new Map(metadata.resolve.nodes.map((node) => [node.id, node]));
@@ -393,7 +393,7 @@ export async function proctorSourceDirectories(repoRoot: string, options: Manife
   return roots.filter((root, index) => !roots.slice(0, index).some((outer) => root.startsWith(`${outer}${sep}`) || root === outer));
 }
 
-/** 🗂️ Whether a changed file — `file` relative to a watched source directory — is one a build of the proctor reads: Rust
+/** 👀️ Whether a changed file — `file` relative to a watched source directory — is one a build of the proctor reads: Rust
  * sources and manifests, outside build output and installed packages. */
 export function proctorSourceChanged(file: string): boolean {
   const parts = file.split(/[\\/]/u);
@@ -430,7 +430,7 @@ export function proctorOrigin(env: NodeJS.ProcessEnv = process.env): string {
   return `http://127.0.0.1:${env.PROCTOR_PORT ?? PROCTOR_DEV_PORT}`;
 }
 
-/** 🩺️ Whether a proctor answers ready at `origin` within `timeoutMs`. */
+/** ✅️ Whether a proctor answers ready at `origin` within `timeoutMs`. */
 export async function proctorReady(origin: string, timeoutMs = 2_000): Promise<boolean> {
   try {
     const answer = await fetch(`${origin}${PROCTOR_READY_ROUTE}`, { signal: AbortSignal.timeout(timeoutMs) });
@@ -457,7 +457,7 @@ export function launchProctor(executable: string, repoRoot: string, args: readon
   return launchProctorProcess(copy, repoRoot, args, env, log, () => rmSync(copy, { force: true, maxRetries: 20, retryDelay: 100 }));
 }
 
-/** 🧵️ Drains a runtime process before releasing its executable or log descriptor. */
+/** ⚙️ Drains a runtime process before releasing its executable or log descriptor. */
 function launchProctorProcess(executable: string, repoRoot: string, args: readonly string[], env: NodeJS.ProcessEnv, log?: string, cleanup?: () => void): ProctorProcess {
   const sink = log === undefined ? undefined : openSync(log, "a");
   let child: ReturnType<typeof spawn>;

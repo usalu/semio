@@ -22,7 +22,7 @@ pub struct GestureSlot<M> {
 }
 
 #[derive(semio_framework_value::RetireOwned)]
-pub(crate) struct GestureSlotState<M> {
+pub struct GestureSlotState<M> {
     pub admitted: Option<GestureState<M>>,
     closed: Option<String>,
     pub decided: Option<Option<GestureState<M>>>,

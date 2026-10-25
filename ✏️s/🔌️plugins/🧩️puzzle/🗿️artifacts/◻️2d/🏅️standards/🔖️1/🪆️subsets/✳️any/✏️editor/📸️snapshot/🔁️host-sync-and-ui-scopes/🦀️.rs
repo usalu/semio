@@ -1,6 +1,8 @@
 //! 🔁️ Host sync and ui scopes: the board host content and runtime sync and the window and selection ui dirty scopes. See [`super`].
 
 use super::*;
+use semio_framework_os_infinite_board_normal_focus::set_selection_ids;
+use semio_framework_os_infinite_board_normal_gestures::set_transform_flags;
 
 /// 🧱️ The expensive half of syncing `host` from `envelope`: a full `clear_scene()` + rebuild of
 /// every node/handle/edge plus the kind-catalog/kind-compat re-push. Only needed when the snapshot

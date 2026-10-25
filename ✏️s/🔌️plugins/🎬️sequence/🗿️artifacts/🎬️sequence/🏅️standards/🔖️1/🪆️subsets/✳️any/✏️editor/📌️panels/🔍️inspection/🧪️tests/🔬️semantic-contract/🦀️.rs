@@ -7,7 +7,7 @@ use crate::editor::sequence::editor_vocabulary::ui_label;
 #[allow(unused_imports)]
 use crate::{SequenceHostSnapshot, SequenceStep};
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+use semio_framework_plugin::{Buildable, HasBase};
 #[allow(unused_imports)]
 use semio_framework_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]

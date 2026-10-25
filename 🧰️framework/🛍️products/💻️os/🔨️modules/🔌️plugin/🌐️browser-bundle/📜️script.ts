@@ -18,8 +18,8 @@ import { browserWasiInterfaces } from "./🌐️wasi/🟦️.ts";
 import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES as browserActorMaximumBytes } from "../../../../../📦️packages/🟦️typescript/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
 import { readStableBuildFile } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts";
 import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️authoring/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
-import { runtimeCommandNameV1, runtimeDetectKeyV1, runtimeIdentityV1 } from "../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeCommandNameV1, runtimeDetectKeyV1, runtimeIdentityV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { startToolV1, toolExitV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 export type BrowserComponentCore = Readonly<{ name: string; bytes: Uint8Array }>;

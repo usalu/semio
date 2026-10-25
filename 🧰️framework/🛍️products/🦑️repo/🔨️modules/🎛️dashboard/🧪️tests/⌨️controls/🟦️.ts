@@ -5,6 +5,7 @@ import "../../🖥️terminal/📣️feedback/🧪️tests/🟦️.ts";
 import "../../🖥️terminal/⚙️settings/⌨️keymap/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020";
 import { readFileSync } from "node:fs";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
@@ -154,7 +155,7 @@ test("registered window native selections retain source feedback settings and se
   expect(validate({ ...fixture, unknown: true })).toBe(false);
   const missing = structuredClone(fixture); missing.native[0].required.pop();
   expect(validate(missing)).toBe(false);
-  const source = readFileSync(new URL("../../📦️packages/🦀️rust/📜️script.ts", import.meta.url), "utf8");
+  const source = readFileSync(new URL("../../🛤️task-routes/🟦️.ts", import.meta.url), "utf8");
   const parsed = ts.createSourceFile("dashboard.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   expect((parsed as ts.SourceFile & { parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics).toEqual([]);
   const literals = new Map<string, string>();
@@ -197,7 +198,7 @@ test("registered window native selections retain source feedback settings and se
   const filters = [...expression.matchAll(/test\(([a-z0-9_]+)\)/g)].map((match) => match[1]!);
   const own = ts.createSourceFile("controls.ts", readFileSync(new URL(import.meta.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const imports = own.statements.filter(ts.isImportDeclaration).map((node) => (node.moduleSpecifier as ts.StringLiteral).text);
-  const roster = fixture.native.flatMap((owner: { package: string; source: string; required: string[] }) => [...readModuleTreeSource(new URL(owner.source, import.meta.url)).matchAll(/#\[test\]\s*fn\s+([a-z0-9_]+)\s*\(/g)].map((match) => ({ package: owner.package, name: match[1]! })));
+  const roster = fixture.native.flatMap((owner: { package: string; source: string; required: string[] }) => [...readModuleTreeSource(new URL(owner.source, import.meta.url), { tests: true }).matchAll(/#\[test\]\s*fn\s+([a-z0-9_]+)\s*\(/g)].map((match) => ({ package: owner.package, name: match[1]! })));
   const db = new Database(":memory:");
   try {
     const admit = (unitPackages: string[], packages: string[], tokens: string[], entries: string[]): boolean => {
@@ -215,4 +216,26 @@ test("registered window native selections retain source feedback settings and se
     const settlement = read("../../📂️workspace/🖥️view/🧪️tests/🧫️fixtures/🔣️.json");
     expect(settlement.cases.map((row: { name: string }) => row.name)).toEqual(fixture.settlementCases);
   } finally { db.close(); }
+});
+
+test("footer hints give way to a long notice up to two thirds of the row, and Bun's own cell widths reproduce every shared row", () => {
+  const fixture = read("../../🧫️fixtures/⌨️footer-hints/🔣️.json");
+  const validate = new Ajv2020({ strict: true }).compile(read("../../🧬️schema/⌨️footer-hints/🔣️.json"));
+  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+  expect(validate({ ...fixture, unknown: true })).toBe(false);
+  expect(validate({ ...fixture, cases: [{ ...fixture.cases[0], kept: -1 }] })).toBe(false);
+  const kept = (width: number, notice: string): number => {
+    const third = Math.floor(width / 3), reserved = Math.min(Math.max(Bun.stringWidth(notice) + 1, third), third * 2);
+    let room = width - reserved - 1, count = 0;
+    for (const hint of fixture.hints as { key: string; label: string }[]) {
+      room -= Bun.stringWidth(hint.key) + Bun.stringWidth(hint.label) + 3;
+      if (room < 0) break;
+      count++;
+    }
+    return count;
+  };
+  for (const row of fixture.cases as { name: string; width: number; notice: string; kept: number }[]) expect(kept(row.width, row.notice), row.name).toBe(row.kept);
+  expect(fixture.cases.some((row: { notice: string }) => Bun.stringWidth(row.notice) !== row.notice.length)).toBe(true);
+  const own = readModuleTreeSource(new URL("../../🖥️terminal/🧪️tests/🔬️unit/🦀️.rs", import.meta.url));
+  expect(own.slice(0, own.indexOf("fn footer_hints_give_way_to_a_long_notice_up_to_two_thirds_of_the_row(")).trimEnd().endsWith("#[test]")).toBe(true);
 });

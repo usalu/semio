@@ -183,7 +183,7 @@ export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):P
   const movedField=movedRuntime(input.runtime(),receipt.runtime);if(movedField!==undefined)return mismatch("runtime-changed",undefined,movedField);
   const producer=input.producer(),sealed=generationCanonicalJsonV1(receipt.producer);
   if(generationCanonicalJsonV1(producer)!==sealed){
-   const known=new Set([...receipt.producer.files.map(row=>generationCanonicalJsonV1(row)),...receipt.producer.environment.map(row=>generationCanonicalJsonV1(row))]),moved=[...producer.files,...producer.environment].find(row=>!known.has(generationCanonicalJsonV1(row)))??[...receipt.producer.files,...receipt.producer.environment][0];
+   const sealedRows=[...receipt.producer.files,...receipt.producer.environment],liveRows=[...producer.files,...producer.environment],known=new Set(sealedRows.map(row=>generationCanonicalJsonV1(row))),present=new Set(liveRows.map(row=>generationCanonicalJsonV1(row))),moved=liveRows.find(row=>!known.has(generationCanonicalJsonV1(row)))??sealedRows.find(row=>!present.has(generationCanonicalJsonV1(row)))??sealedRows[0];
    return mismatch("configuration-changed",moved?("path"in moved?moved.path:"env:"+moved.name):undefined);
   }
   if(!input.conditionsClosed())return mismatch("conditions-open");

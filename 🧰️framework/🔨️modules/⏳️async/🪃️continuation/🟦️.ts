@@ -56,7 +56,7 @@ const TIMER_EPSILON_MS = 1;
 
 let sharedMacrotaskPost: ((run: () => void) => void) | null = null;
 
-/** 📮️ The process-wide unthrottled macrotask port. Native hosts use their immediate queue so
+/** ⚙️ The process-wide unthrottled macrotask port. Native hosts use their immediate queue so
  * continuously posted messages cannot starve timers; browsers share one `MessageChannel`. Built lazily so
  * importing this module costs nothing. Only message ports are unref'd where supported; native
  * immediates keep an awaited continuation alive until it runs. */
@@ -98,18 +98,18 @@ const defaultContinuationPorts = (): ContinuationPorts => ({
 //#endregion 🔌️Ports
 
 //#region 🪃️Scheduler
-/** 🧹️ Undoes one {@link ContinuationScheduler.schedule}. Idempotent, and a no-op once the callback ran. */
+/** ✖️ Undoes one {@link ContinuationScheduler.schedule}. Idempotent, and a no-op once the callback ran. */
 export type ContinuationCancel = () => void;
 
 export type ContinuationScheduler = Readonly<{
-  /** 🪃️ Runs `run` after `delayMs` (`<= 0` = the next unthrottled macrotask). A `key` coalesces this
+  /** 📅️ Runs `run` after `delayMs` (`<= 0` = the next unthrottled macrotask). A `key` coalesces this
    * request with any still-pending request sharing it: one run, at the earliest deadline either asked
    * for, with the newest callback. */
   schedule: (run: () => void, delayMs: number, key?: string) => ContinuationCancel;
   /** ⏭️ Awaits one unthrottled macrotask — the yield every guest-driving loop uses to let the host
    * breathe without handing the browser an excuse to clamp it. */
   yieldContinuation: () => Promise<void>;
-  /** 🧹️ Cancels whatever is still pending under `key`. */
+  /** 🔑️ Cancels whatever is still pending under `key`. */
   cancelKey: (key: string) => void;
   /** 📏️ Requests still pending, both lanes. Diagnostics and tests only. */
   pending: () => number;
@@ -253,7 +253,7 @@ export const createContinuationScheduler = (ports: ContinuationPorts = defaultCo
   });
 };
 
-/** 🌐️ The host process's scheduler. Every renderer-side continuation goes through THIS instance so
+/** 🖥️ The host process's scheduler. Every renderer-side continuation goes through THIS instance so
  * "one implementation, not two" is a fact about the object graph and not only about the source. */
 export const hostContinuations: ContinuationScheduler = createContinuationScheduler();
 //#endregion 🪃️Scheduler

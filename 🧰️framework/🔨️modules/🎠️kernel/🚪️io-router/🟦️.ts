@@ -104,7 +104,7 @@ export class IoEntryGraph {
     return new IoEntryGraph(ownerByEntry);
   }
 
-  /** 🌉️ SAME deterministic ranking rule as Rust `resolve_io_route`/`io::io_mechanism::
+  /** 🛤️ SAME deterministic ranking rule as Rust `resolve_io_route`/`io::io_mechanism::
    * resolve_route`: breadth-bounded (`maxHops` clamped to ≤3), cycle-free simple-path enumeration,
    * ranked by (highest minimum fidelity, fewest hops, lexicographic joined `into` coordinate) —
    * the FULL candidate set is sorted at the END (never short-circuited), so the winner never
@@ -167,13 +167,13 @@ export class IoEntryGraph {
   }
 }
 
-/** 🌉️ Runs one hop of a resolved {@link IoRoute} — the caller's bridge into an actual loaded
+/** ▶️ Runs one hop of a resolved {@link IoRoute} — the caller's bridge into an actual loaded
  * plugin's `io-run` export (this domain-neutral framework module never calls a plugin worker
  * itself, same boundary {@link AppRouter}/{@link ArtifactMutationRouter} already draw). */
 export type IoHopRunner = (pluginId: string, from: ArtifactDialect, into: ArtifactDialect, payload: Uint8Array) => Promise<Uint8Array> | Uint8Array;
 
 /**
- * 🧭️ TS twin of Rust `IoRouter::run_io` — resolves the WHOLE `from -> into` route over `graph`,
+ * 🪞️ TS twin of Rust `IoRouter::run_io` — resolves the WHOLE `from -> into` route over `graph`,
  * then, BEFORE running any hop, refuses the ENTIRE route (no partial execution) if any hop is
  * owned by `callingPluginId` itself: executing that hop would call back into the calling plugin's
  * own in-flight worker call — the same reentrancy hazard the Rust guard exists to prevent. Each
@@ -198,12 +198,12 @@ export async function ioRun(graph: IoEntryGraph, callingPluginId: string, from: 
   return current;
 }
 
-/** 🔍️ Sniffs one plugin's `(from,into)` hop — the caller's bridge into an actual loaded plugin's
+/** 👃️ Sniffs one plugin's `(from,into)` hop — the caller's bridge into an actual loaded plugin's
  * `io-sniff` export, returning the raw `Confidence::rank()` byte. Same DI boundary as {@link IoHopRunner}. */
 export type IoSniffRunner = (pluginId: string, from: ArtifactDialect, into: ArtifactDialect, payload: Uint8Array) => Promise<number> | number;
 
 /**
- * 🧭️ TS twin of Rust `IoRouter::identify` — fans {@link IoSniffRunner} out across every OTHER
+ * 🕵️ TS twin of Rust `IoRouter::identify` — fans {@link IoSniffRunner} out across every OTHER
  * plugin's `carrier`-`from` entries (skipping `callingPluginId`'s own, same reentrancy reason
  * {@link ioRun} refuses a self-owned hop — a fan-out is best-effort, so this SKIPS rather than
  * refuses the whole call), merges by confidence descending then coordinate ascending.

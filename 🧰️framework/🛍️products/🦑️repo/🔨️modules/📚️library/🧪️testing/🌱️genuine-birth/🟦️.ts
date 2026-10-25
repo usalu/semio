@@ -1,7 +1,7 @@
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import { realpath } from "node:fs/promises";
 import { advanceScriptInvocation, createIssuedResourceControlV1, createScriptProcessEnvelope, scriptInvocationEnvironment, withScriptProcessEnvelope, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { createBuildBootstrapCapabilitiesV1 } from "../../🏗️build/📥️caller/📤️child/🟦️.ts";
 import { issueRepositoryScriptProvidersV1 } from "../../🏃️process/🔌️providers/🟦️.ts";
@@ -46,7 +46,7 @@ export function genuineTestNamePatternV1(name: string): string {
 /** 🧪️ Describes one test file run inside a genuine Original birth. */
 export type GenuineBunTestRequestV1 = Readonly<{ root: string; file: string; birth?: string; pattern?: string; environment?: NodeJS.ProcessEnv; signal?: AbortSignal }>;
 
-/** 🌱️ Births the repository process envelope with the real build capabilities and runs one bun test file beneath it; a failing file leaves the whole process birth consumed, so isolate further tests with `pattern`. */
+/** ▶️ Births the repository process envelope with the real build capabilities and runs one bun test file beneath it; a failing file leaves the whole process birth consumed, so isolate further tests with `pattern`. */
 export async function runGenuineBunTestV1(request: GenuineBunTestRequestV1): Promise<void> {
   const declared = readGenuineBirthPolicyV1(), birth = selectGenuineBirthV1(request.birth, declared), root = resolve(request.root);
   const source = isAbsolute(request.file) ? request.file : resolve(root, request.file), local = relative(root, source).replaceAll("\\", "/");

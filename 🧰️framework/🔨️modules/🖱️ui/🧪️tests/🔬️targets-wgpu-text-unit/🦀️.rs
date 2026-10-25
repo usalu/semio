@@ -29,7 +29,7 @@ fn shaped_mode_resolves_real_font_metrics_that_differ_from_the_bitmap_fallback()
     assert!(!glyph.is_color);
 }
 
-/// 🔤️ The bundled `ui/asset/font/noto-emoji/*.ttf` buckets are the monochrome "Noto Emoji"
+/// 🗃️ The bundled `ui/asset/font/noto-emoji/*.ttf` buckets are the monochrome "Noto Emoji"
 /// family (`glyf` outlines only — verified no `COLR`/`CPAL`/`CBDT`/`CBLC`/`sbix` table is
 /// present), not "Noto Color Emoji", so real emoji codepoints correctly resolve through the
 /// `GenericFamily::Emoji` fallback and rasterize successfully, but land on the alpha page
@@ -135,7 +135,7 @@ fn the_glyph_cache_key_is_the_device_size_on_the_quarter_pixel_grid() {
     assert!(wide > narrow, "yet each exact size keeps its own advance: {wide} vs {narrow}");
 }
 
-/// 📏️ LAW (ticket 26/09/23 session 14d, WG11 T7a): an advance is the face's own advance at the EXACT size — linear in it, never
+/// 🎯️ LAW (ticket 26/09/23 session 14d, WG11 T7a): an advance is the face's own advance at the EXACT size — linear in it, never
 /// read off a rounded raster size (9.6 px measured as 10 px before: text-2xs sat 4 % wide of React).
 #[test]
 fn advances_are_exact_at_fractional_sizes() {
@@ -146,7 +146,7 @@ fn advances_are_exact_at_fractional_sizes() {
     assert!((small - 62.75).abs() < 0.05, "Anta's own units put 'feature-editor' at 62.75 px at 9.6 px: {small}");
 }
 
-/// 📏️ LAW (WG11 T7a): the retained layout's text worker and the atlas pen by ONE advance source — `font_advance_em` from the
+/// ⏩️ LAW (WG11 T7a): the retained layout's text worker and the atlas pen by ONE advance source — `font_advance_em` from the
 /// face's units — so a label lays out exactly as wide as it paints.
 #[test]
 fn the_layout_advance_source_is_the_atlas_advance() {
@@ -160,7 +160,7 @@ fn the_layout_advance_source_is_the_atlas_advance() {
     }
 }
 
-/// 🔤️ LAW (WG11 T7a): the shared corpus — both faces, sizes 2xs…2xl, en + de strings — sums its ADVANCES within the fixture's
+/// 📚️ LAW (WG11 T7a): the shared corpus — both faces, sizes 2xs…2xl, en + de strings — sums its ADVANCES within the fixture's
 /// tolerance (0.5 px) of Chromium's UNKERNED DOM width (`🧪️tests/🧫️fixtures/🔤️text-advances`, re-measured in Chromium by the React-side law).
 #[test]
 fn the_shared_corpus_advances_sum_to_chromiums_unkerned_width() {
@@ -195,9 +195,9 @@ fn for_each_corpus_row(mut width: impl FnMut(&mut FontAtlas, super::TextFace, &s
     }
 }
 
-/// 🤝️ The corpus pangram — Anta kerns six of its pairs (−0.127 em in all).
+/// 🦊️ The corpus pangram — Anta kerns six of its pairs (−0.127 em in all).
 
-/// 🤝️ LAW (WG11 T7b): the atlas and the retained layout's text worker kern by ONE source — the face's own pair table read through
+/// 🪵️ LAW (WG11 T7b): the atlas and the retained layout's text worker kern by ONE source — the face's own pair table read through
 /// `PairKerning` — which Anta's `A`+`V` and `f`+`o` pin at Chromium's own −0.0928 and −0.0391 em; the monospace face does not
 /// kern, a scalar outside the authored face never kerns against its neighbour, and the fixed-pitch bitmap fallback never kerns.
 #[test]
@@ -233,7 +233,7 @@ fn original_borrowed_font_pair_reader_matches_swash_and_keeps_every_native_sourc
     assert!(pairs>1000);assert!(original.terminal_is_empty());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 
-/// 🤝️ LAW (WG11 T7b): pair kerning is ONE rule for measure, wrap and caret — a run measures as its advances plus each adjacent
+/// 🥢️ LAW (WG11 T7b): pair kerning is ONE rule for measure, wrap and caret — a run measures as its advances plus each adjacent
 /// pair's kerning, the per-scalar pen walk (`pen_advance`) lands every caret where `pen_at` puts it (a caret after a kerned pair
 /// includes the pair, as Chromium's does) and ends at the measured width, and a box exactly as wide as the kerned run holds it on
 /// one line where the unkerned sum would overflow.
@@ -261,7 +261,7 @@ fn pair_kerning_is_one_rule_for_measure_wrap_and_caret() {
     assert_eq!(atlas.pre_wrap_lines(super::TextFace::Sans, text, fits, size).len(), 1, "pre-wrap prices the same kerned run");
 }
 
-/// 🤝️ LAW (WG11 T7b): the retained painter pens every glyph at its kerned caret and breaks where the kerned wrap does — measure,
+/// 🖊️ LAW (WG11 T7b): the retained painter pens every glyph at its kerned caret and breaks where the kerned wrap does — measure,
 /// wrap, caret and paint read one pair-kerning table under one rule.
 
 
@@ -286,7 +286,7 @@ fn line_height_resolves_every_font_size_token_to_reacts_own_line_box() {
     }
 }
 
-/// 📏️ A size between ramp steps borrows the nearest step's ratio — the browser applies the
+/// 🪜️ A size between ramp steps borrows the nearest step's ratio — the browser applies the
 /// inherited unitless ratio to whatever `font-size` an element resolves to, so the answer stays
 /// proportional instead of snapping to a fixed pixel box.
 #[test]
@@ -297,7 +297,7 @@ fn line_height_scales_proportionally_for_sizes_off_the_ramp() {
     assert!(super::line_height(0.0).abs() < f32::EPSILON);
 }
 
-/// 📏️ Wrapped and single-line measurement now agree with each other: N lines are exactly N line
+/// 🔂️ Wrapped and single-line measurement now agree with each other: N lines are exactly N line
 /// boxes tall, and one line is exactly one — the internal contradiction (1.35 versus raw glyph
 /// bbox) the parity audit called out is gone.
 #[test]
@@ -347,7 +347,7 @@ async fn the_faux_bold_offset_scales_with_the_size_and_never_vanishes() {
 /// `formatKeybindingShortcut` spell them (`🐚️Shell/🧫️fixtures/⌨️keybinding-glyphs/🔣️.json`).
 const SHORTCUT_SYMBOLS: [char; 12] = ['\u{2318}', '\u{2325}', '\u{21E7}', '\u{2303}', '\u{238B}', '\u{21B5}', '\u{232B}', '\u{2326}', '\u{2190}', '\u{2192}', '\u{2191}', '\u{2193}'];
 
-/// 🔣️ **Every glyph of the shortcut table rasterises to a non-empty bitmap** — the law the boot
+/// ⌨️ **Every glyph of the shortcut table rasterises to a non-empty bitmap** — the law the boot
 /// screenshot broke, where `Editor ⌘️⌥️E` painted four `.notdef` boxes because no shipped face carries
 /// U+2318/U+2325 and the atlas scans no system fonts.
 #[semio_framework_async_macros::async_test]
@@ -386,7 +386,7 @@ async fn a_default_ignorable_codepoint_paints_nothing_and_moves_no_pen() {
     assert!((with_selector - without_selector).abs() < 1e-3, "the repo's ⌘️⌥️E spelling must measure exactly its ⌘⌥E ink");
 }
 
-/// 📐️ A symbol sits on the same baseline and inside the same line box as the shaped face beside it,
+/// 📌️ A symbol sits on the same baseline and inside the same line box as the shaped face beside it,
 /// and it scales with the raster scale like every other glyph.
 #[semio_framework_async_macros::async_test]
 async fn a_symbol_glyph_shares_the_faces_baseline_and_honours_the_raster_scale() {
@@ -457,7 +457,7 @@ fn a_break_opportunity_is_exactly_what_css_allows() {
 /// inside a word only when that word alone is wider than the whole box (`overflow-wrap`).
 
 
-/// ⚖️ LAW: the atlas wrap breaks at exactly the reference's indices, at every width from "one word
+/// 📜️ LAW: the atlas wrap breaks at exactly the reference's indices, at every width from "one word
 /// fits" to "the whole paragraph fits", and never inside a word that fits its own line.
 #[test]
 fn a_paragraph_wraps_at_the_reference_break_indices() {
@@ -481,7 +481,7 @@ fn a_paragraph_wraps_at_the_reference_break_indices() {
     assert!(widths > 10, "the sweep must cover a real range of box widths, covered {widths}");
 }
 
-/// ⚖️ LAW: the last-resort arm is the ONLY way a word is cut — one run wider than the whole box.
+/// 🔪️ LAW: the last-resort arm is the ONLY way a word is cut — one run wider than the whole box.
 #[test]
 fn only_a_word_wider_than_the_box_is_ever_cut() {
     let size = ui_styling::metrics::typography::TEXT_XS_PX as f32;
@@ -499,7 +499,7 @@ fn only_a_word_wider_than_the_box_is_ever_cut() {
     }
 }
 
-/// ⚖️ LAW: a hard newline always ends a line, and trailing spaces hang — they never push a line over
+/// ↩️ LAW: a hard newline always ends a line, and trailing spaces hang — they never push a line over
 /// its box and never open the next one.
 #[test]
 fn a_newline_always_breaks_and_a_trailing_space_hangs() {
@@ -513,7 +513,7 @@ fn a_newline_always_breaks_and_a_trailing_space_hangs() {
     assert!((width - exact).abs() < 0.001, "a hanging space is not priced into the line box, got {width}");
 }
 
-/// ⚖️ LAW (ticket 26/09/23 session 14d, WG11): `white-space: pre-wrap` keeps every space, and the spaces ending a line hang —
+/// 🔁️ LAW (ticket 26/09/23 session 14d, WG11): `white-space: pre-wrap` keeps every space, and the spaces ending a line hang —
 /// a line whose last word fits breaks AFTER its trailing spaces, never before that word (the DiffView presentation fixture's
 /// `preWrap` vector, `🧬️contract/🧪️tests/🧫️fixtures/🆚️diff-view-presentation/🔣️.json`). A hard newline still breaks, empty lines stay.
 #[test]
@@ -528,7 +528,7 @@ fn pre_wrap_keeps_repeated_spaces_and_hangs_the_ones_ending_a_line() {
     assert_eq!(atlas.pre_wrap_lines(TextFace::Mono, "one\n\ntwo", 1_000.0, size).len(), 3, "a hard newline breaks and an empty line is kept");
 }
 
-/// ⚖️ LAW: **the retained painter breaks where the measure says it does.** Driven glyph by glyph over
+/// 🔬️ LAW: **the retained painter breaks where the measure says it does.** Driven glyph by glyph over
 /// a real `DrawList`, the line each scalar lands on is exactly the line [`FontAtlas::wrap_lines`]
 /// assigns it. This is the law the tour card's `comp|osing` violated.
 

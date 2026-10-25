@@ -764,5 +764,56 @@
       "workspace": "/other/repo",
       "accepted": false
     }
+  ],
+  "regrowPlans": [
+    {
+      "name": "interrupted-retirement-resumes-first",
+      "record": true,
+      "due": false,
+      "verdict": "unreadable",
+      "plan": "resume"
+    },
+    {
+      "name": "interrupted-retirement-resumes-under-pressure",
+      "record": true,
+      "due": true,
+      "verdict": "persistent-state",
+      "plan": "resume"
+    },
+    {
+      "name": "no-pressure-skips",
+      "record": false,
+      "due": false,
+      "verdict": "admitted",
+      "plan": "skip"
+    },
+    {
+      "name": "pressed-admitted-resets",
+      "record": false,
+      "due": true,
+      "verdict": "admitted",
+      "plan": "reset"
+    },
+    {
+      "name": "products-with-persistent-charge-declined",
+      "record": false,
+      "due": true,
+      "verdict": "persistent-state",
+      "plan": "decline"
+    },
+    {
+      "name": "foreign-charge-declined",
+      "record": false,
+      "due": true,
+      "verdict": "foreign-charge",
+      "plan": "decline"
+    },
+    {
+      "name": "unreadable-journal-declined",
+      "record": false,
+      "due": true,
+      "verdict": "unreadable",
+      "plan": "decline"
+    }
   ]
 }

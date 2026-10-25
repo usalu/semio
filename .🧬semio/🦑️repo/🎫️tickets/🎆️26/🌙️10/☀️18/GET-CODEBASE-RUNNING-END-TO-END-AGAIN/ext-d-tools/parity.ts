@@ -1,0 +1,3 @@
+import { dependencyJsParity } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📇️inventory/🟦️.ts";
+const r = dependencyJsParity(process.cwd(), () => 0);
+console.log(JSON.stringify({ manifests: r.manifests, externalRows: r.externalRows, unowned: r.unownedRows.map((x) => `${x.manifest} :: ${x.dependency}`), undeclared: r.undeclaredImports.length, undeclaredSample: r.undeclaredImports.filter((x) => /i18next|xstate|nx/.test(x.dependency)).map((x) => `${x.file}:${x.line} ${x.dependency} (${x.manifest})`).slice(0, 40), lockMismatches: r.lockMismatches.length }, null, 1));

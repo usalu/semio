@@ -20,7 +20,7 @@ const temporary = (): string => mkdtempSync(join(tmpdir(), "units-languages-"));
 const write = (root: string, files: Readonly<Record<string, string>>): void => {for (const [path, text] of Object.entries(files)) {mkdirSync(dirname(join(root, path)), {recursive: true}); writeFileSync(join(root, path), text);}};
 const snapshotOf = (files: Readonly<Record<string, string>>) => ({files: Object.keys(files).sort(compareCodePointsV1), read: (path: string) => files[path]!});
 const noSignal = new AbortController().signal;
-const ORACLE = join(import.meta.dir, "../🐍️oracle/🌐️.py");
+const ORACLE = join(import.meta.dir, "../🐍️oracle/🌐️tex-aux-oracle/🐍️.py");
 const run = async (argv: readonly string[], options: {cwd: string; env: Readonly<Record<string, string>>}): Promise<{code: number; output: string}> => {
   const result = spawnSync(argv[0]!, argv.slice(1), {cwd: options.cwd, env: {...process.env, ...options.env}, encoding: "utf8", maxBuffer: 64 * 1024 * 1024});
   return {code: result.status ?? 1, output: (result.stdout ?? "") + (result.stderr ?? "")};

@@ -1,4 +1,4 @@
-//! 🎨️ Argument presentation, snap and option sources, number scale and the reference id type with its text form. See [`super`].
+//! 🎤️ Argument presentation, snap and option sources, number scale and the reference id type with its text form. See [`super`].
 
 use super::*;
 
@@ -56,7 +56,7 @@ pub enum NumberScale {
     Log,
 }
 
-/// 🔢️ The JSON type of a reference's ids: text ids (the default, left off the wire) or integer ids. A selection id is
+/// 📘️ The JSON type of a reference's ids: text ids (the default, left off the wire) or integer ids. A selection id is
 /// always text, so an integer reference stages the integer its selected text spells ([`ReferenceIdType::id_value`]).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]

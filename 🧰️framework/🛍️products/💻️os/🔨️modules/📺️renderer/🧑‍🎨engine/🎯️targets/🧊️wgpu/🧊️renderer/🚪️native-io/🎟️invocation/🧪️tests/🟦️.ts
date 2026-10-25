@@ -40,5 +40,4 @@ test("renderer invocation keeps its initiating source until producer and supplie
  const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");
  for(const text of ["OriginalCallerSourceLoan","admit_loan(cx)","validate_retirement_context(cx)","job.borrow_outcome(descriptor)","descriptor.close_step(grant)","supply_result_last_page","self.returns.retains_source(self.source_identity)","source.close_step(cx.original_source_parent()?,cx)"])expect(source).toContain(text);
  for(const text of ["StepContext::new","RetainedCloneGrant::default","path.clone()","to_vec()","take_result()","Box::new"] )expect(source).not.toContain(text);
- console.log("[DEBUG] Ajv/SQLite renderer original invocation source71, paid descriptor before reverse3-page supply, exact49152-byte return before original invocation loan; streamed256MiB remains distinct from live4MiB");
 });

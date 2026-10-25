@@ -1,5 +1,3 @@
-import "../../🧹️whole/🧪️tests/🟦️.ts";
-import "./🌱️birth/🟦️.ts";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import fixture from "./🔣️.json" with {type:"json"};

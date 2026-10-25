@@ -8,7 +8,7 @@ import{withCompiledPrintProbeV1}from"../../../🖨️tectonic-template-compilati
 import{withPrintScratchV1,withPrintStorageTaskV1,type PrintExecutionV1}from"../../../../📦️artifacts/🎛️operation/🟦️.ts";
 import{readPrintMaterialFileV1}from"../../../../📦️artifacts/📥️material/📤️producer/🟦️.ts";
 import{printArtifactLayoutV1}from"../../../../📦️artifacts/🟦️.ts";
-import { withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "@semio-tech/repo-lib/artifacts";
+import { withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "@semio-tech/repo-lib/artifacts/destination";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{checkResourceLeaseControl}from"@semio-tech/process/leases";
 import{measurePrintPdfV1}from"./📥️pdf/🟦️.ts";
@@ -18,7 +18,7 @@ const product="🧰️framework/🛍️products/📓️print",compilerPolicy=int
 /** 🧭️ One cell of the gallery matrix: a generated section rendered in one theme and one language. */
 export type PrintGalleryVariant = Readonly<{ id: string; section: string; texPath: string; theme: VizGalleryTheme; language: VizLanguage }>;
 
-/** 🧭️ Every generated gallery section x {light, dark} x {en, de}, optionally narrowed to the named sections. */
+/** 🧮️ Every generated gallery section x {light, dark} x {en, de}, optionally narrowed to the named sections. */
 export function printGalleryMatrix(sections?: readonly string[]): readonly PrintGalleryVariant[] {
   const definitions=visualizationTemplates();if(definitions.length>measurementPolicy.maximumSections||(sections?.length??0)>measurementPolicy.maximumSections)throw Error("Finite gallery matrix required");
   const galleries = definitions.filter(({ texPath }) => texPath.startsWith("🧾️template/📊️viz-gallery/"));

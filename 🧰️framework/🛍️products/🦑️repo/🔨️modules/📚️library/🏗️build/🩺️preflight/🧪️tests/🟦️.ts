@@ -25,7 +25,7 @@ test("authored policy needs no privilege on any platform and drives the neutral 
  for(const row of fixture.neutral)expect(buildPreflightProblemsV1(policy.platforms[row.platform as "darwin"|"win32"],row.facts),row.id).toEqual(row.problems);
 });
 test("the entry runs preflight before opening any store and takes no scope",()=>{
- const entry=readFileSync(resolve(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"),"utf8");
- expect(entry.indexOf("await runBuildPreflightV1")).toBeLessThan(entry.indexOf('const {openRepositoryCachePartitionV1}'));
+ const entry=readFileSync(resolve(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🩺️preflight/🟦️.ts"),"utf8");
+ expect(entry.indexOf("await runBuildPreflightV1")).toBeGreaterThan(-1);expect(entry.includes("openRepositoryCachePartitionV1")||entry.includes("withRepositoryCacheStoreV1")).toBe(false);
  expect(entry.includes("preflight --scope")).toBe(false);
 });

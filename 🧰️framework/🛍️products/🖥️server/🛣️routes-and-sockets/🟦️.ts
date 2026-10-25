@@ -1,4 +1,4 @@
-/** 🛣️ The sockets and routes of the server product: the event stream and document frames, the route table, the error kinds, the capability header, the lanes and the presence socket URL.
+/** 🛍️ The sockets and routes of the server product: the event stream and document frames, the route table, the error kinds, the capability header, the lanes and the presence socket URL.
  *
  * @see ../🟦️.ts — the TypeScript twin of the server product's wire contract
  */
@@ -17,12 +17,12 @@ export function decodeEventStreamFrame(text: string): EventRecord {
  * gateway reporting an error on that socket rather than closing it. */
 export type DocumentFrame = { readonly kind: "engine"; readonly bytes: Uint8Array } | { readonly kind: "error"; readonly message: string };
 
-/** 📄️ Classify one document-socket message. */
+/** 🎞️ Classify one document-socket message. */
 export function decodeDocumentFrame(message: string | Uint8Array): DocumentFrame {
   return typeof message === "string" ? { kind: "error", message } : { kind: "engine", bytes: message };
 }
 
-/** 📄️ Non-identity join hints for a document socket. Actor and session are bound server-side. */
+/** 💡️ Non-identity join hints for a document socket. Actor and session are bound server-side. */
 export interface DocumentJoin {
   readonly surface?: string;
   readonly resume?: string;
@@ -42,7 +42,7 @@ export interface ServerRoute {
   readonly group: ServerRouteGroup;
 }
 
-/** 🛣️ The routes `base_router` mounts, in its own order, each with its group.
+/** 🧭️ The routes `base_router` mounts, in its own order, each with its group.
  *
  * Held against the Rust source itself by this module's suite rather than trusted: the fixture
  * document carries the same table, and the test reads `base_router` out of `📡️gateway/🦀️.rs` and
@@ -98,12 +98,12 @@ export interface ServerCredential {
   readonly capability?: CapabilityProof;
 }
 
-/** 🗂️ The durable lane key of one actor, as the gateway names it. */
+/** 🌊️ The durable lane key of one actor, as the gateway names it. */
 export function streamLane(actor: ActorKey): string {
   return `stream:${actor.tenant}/${actor.kind}/${actor.id}`;
 }
 
-/** 📄️ The document lane key of one scope. */
+/** 🔑️ The document lane key of one scope. */
 export function documentLane(scope: Scope): string {
   return `document:${scope}`;
 }

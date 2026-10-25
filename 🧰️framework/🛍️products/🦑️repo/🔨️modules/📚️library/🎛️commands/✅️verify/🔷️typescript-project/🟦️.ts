@@ -10,10 +10,10 @@ import { totalmem } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type ts from "typescript";
-import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
-import { runtimeTypeEnvironmentV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeParseJsoncV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { GlobV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeTypeEnvironmentV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseJsoncV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import { runToolSyncV1, startToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import {sayVerifyV1,refuseVerifyV1} from "../📖️texts/🟦️.ts";
 
@@ -50,7 +50,7 @@ export type TypescriptSyntaxFile = {
   readonly first: string;
 };
 
-/** 🏷️ The first argument that makes this module act as the type-check child instead of a library. */
+/** ✅️ The first argument that makes this module act as the type-check child instead of a library. */
 const TYPESCRIPT_CHECK_FLAG = "--typescript-check";
 
 /** 🏷️ The tool prefix of every line this command prints. */
@@ -164,13 +164,13 @@ export function selectTypescriptRoots(sources: readonly string[], excludes: read
   return kept.sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
 }
 
-/** 🧭️ An application the workspace program leaves out because a generated ambient file would leak into every other package, checked by its own `tsconfig.json` instead. */
+/** 🟦️ An application the workspace program leaves out because a generated ambient file would leak into every other package, checked by its own `tsconfig.json` instead. */
 export type TypescriptAppProject = {
   readonly folder: string;
   readonly project: string;
 };
 
-/** 🏷️ The generated ambient declaration file of an application that is excluded from the workspace program (Next writes it next to the app's `tsconfig.json`). */
+/** 📄️ The generated ambient declaration file of an application that is excluded from the workspace program (Next writes it next to the app's `tsconfig.json`). */
 const TYPESCRIPT_APP_AMBIENT_FILE = "next-env.d.ts";
 
 /** 📱️ The applications whose ambient file is excluded from the workspace program: each must carry its own `tsconfig.json`, so no project stays silently unchecked. */
@@ -185,7 +185,7 @@ export function listTypescriptAppProjects(root: string, sources: readonly string
   return projects;
 }
 
-/** 🎯️ Whether a selection reaches an application: an unrestricted run always does; scopes, a root list and a changed-only run do when they touch its folder. */
+/** ☑️ Whether a selection reaches an application: an unrestricted run always does; scopes, a root list and a changed-only run do when they touch its folder. */
 export function selectsTypescriptAppProject(app: TypescriptAppProject, selection: TypescriptProjectSelection, changed: readonly string[]): boolean {
   const inside = (path: string): boolean => app.folder === "" || path === app.folder || path.startsWith(`${app.folder}/`);
   if (selection.listed !== undefined) return selection.listed.some(inside);

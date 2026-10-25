@@ -15,7 +15,7 @@ export let mintNativePatch: (state: NativeUiPatchState) => OwnedNativeUiPatchAut
 export let nativePatchState: (source: OwnedNativeUiPatchAuthority) => NativeUiPatchState;
 export let mintNativeSubmission: (source: OwnedNativeUiPatchAuthority, token: OwnedUiPatchAcknowledgement) => OwnedNativeUiPatchSubmissionReceipt;
 
-/** 🩹️ A private claim on one patch returned by the original instance turn. */
+/** 💊️ A private claim on one patch returned by the original instance turn. */
 export class OwnedNativeUiPatchAuthority implements UiPatchSource {
   readonly #state: NativeUiPatchState;
   private constructor(mint: object, state: NativeUiPatchState) { if (mint !== NATIVE_PATCH_MINT) throw new Error("actor-lifecycle.patch-mint"); this.#state = state; Object.freeze(this); }

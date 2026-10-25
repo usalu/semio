@@ -38,7 +38,7 @@ pub fn find_memory_type(memory_properties: &vk::PhysicalDeviceMemoryProperties, 
 
 //#region 📤️Bytes
 
-/// 📤️ `bytemuck::cast_slice`'s job without the dependency — this crate's `Cargo.toml` is
+/// 🔢️ `bytemuck::cast_slice`'s job without the dependency — this crate's `Cargo.toml` is
 /// registrar-only (ticket U7) and does not list `bytemuck`, unlike the Metal target's. Every caller
 /// passes a `#[repr(C)]` `Copy` type from `ui_render::scene` (`QuadInstance`/`VectorVertex`/
 /// `GlassInstance`, all also `bytemuck::Pod` there — that bound is stricter than what this function

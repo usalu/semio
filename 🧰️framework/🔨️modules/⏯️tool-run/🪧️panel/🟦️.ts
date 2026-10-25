@@ -1,10 +1,10 @@
 /** 🪧️ Tool run panel: the key scheme of the framework ToolRun panel and the diff of the runs a rendered panel holds. */
 
 //#region 🔖️Panel
-/** 🪧️ Key of the framework ToolRun panel root; each run is one child group {@link toolRunPanelGroupId}. */
+/** ⌨️ Key of the framework ToolRun panel root; each run is one child group {@link toolRunPanelGroupId}. */
 export const TOOL_RUN_PANEL_ID = "framework.toolRun";
 
-/** 🪧️ The key of run `run`'s group in the ToolRun panel. */
+/** 👥️ The key of run `run`'s group in the ToolRun panel. */
 export function toolRunPanelGroupId(run: bigint): string {
   return `${TOOL_RUN_PANEL_ID}.${run}`;
 }

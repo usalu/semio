@@ -1,7 +1,7 @@
 //! 🧪 Curation's native record and transports agree with neutral JSON inputs.
 use crate::{CurationSnapshot, schema::{CurationArtifact, diff::CurationDiff}};
 use semio_framework_test_fixtures::fixture_text;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 #[test]
 fn curation_document_contract_exact_children_and_native_transports() {

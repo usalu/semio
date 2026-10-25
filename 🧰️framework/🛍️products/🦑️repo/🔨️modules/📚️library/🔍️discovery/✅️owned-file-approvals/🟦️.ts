@@ -9,7 +9,7 @@ import type { CurrentSourceApproval, CurrentSourceApprovalResult, CurrentSourceA
 import { type GeneratorContract, type OwnerProjectionEntry, type OwnerProjectionPolicy, exactOwnerPath, semanticOwnedSourceBasename } from "../📦️package-projection-contracts/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 import { generatorPreviewScriptArguments, generatorPreviewScriptPath } from "../🛠️generator-commands/🟦️.ts";
-import { runtimeCommandNameV1, runtimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 📐️ Parses stable source identities in a closed current approval registry without reading any path. */
@@ -220,7 +220,7 @@ export function semanticOwnedInputFileSnapshot(repoRoot: string, path: string, c
   } finally { if (!complete) retained?.fill(0); closeSync(descriptor); }
 }
 
-/** 🔐️ Loads only the schema-registered catalog with exact bytes, paths, counts, and owner classifications. */
+/** 📖️ Loads only the schema-registered catalog with exact bytes, paths, counts, and owner classifications. */
 export function parseOwnerProjectionPolicy(input: unknown, taxonomy: Taxonomy, contract: SemanticExactOwnedFileProjectionContract): OwnerProjectionPolicy {
   const policyPath = (value: unknown): value is string => exactOwnerPath(value) && !/[:*?"<>|]/u.test(value) && Buffer.from(value, "utf8").toString("utf8") === value;
   const object = (value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, any> => {
@@ -241,7 +241,7 @@ export function parseOwnerProjectionPolicy(input: unknown, taxonomy: Taxonomy, c
   if (JSON.stringify(Object.keys(referenceOwners).sort()) !== JSON.stringify([...contract.referenceOwnerIds].sort()) || JSON.stringify(Object.keys(generatorOwners).sort()) !== JSON.stringify([...contract.generatorOwnerIds].sort())) throw new Error("Owner projection policy consumer registries drifted");
   for (const [id, input] of Object.entries(referenceOwners)) {
     const consumer = object(input, ["kind", "ownerPath"]);
-    if (typeof consumer.kind !== "string" || !consumer.kind || typeof consumer.ownerPath !== "string" || !consumer.ownerPath || ["repo-cli-dev-docs-go", "commonmark-scratch-rust-reader", "vscode-package-ignore"].includes(id) && !policyPath(consumer.ownerPath)) throw new Error("Owner projection policy consumer is invalid: " + id);
+    if (typeof consumer.kind !== "string" || !consumer.kind || typeof consumer.ownerPath !== "string" || !consumer.ownerPath || ["repo-cli-dev-docs-go", "commonmark-scratch-rust-reader"].includes(id) && !policyPath(consumer.ownerPath)) throw new Error("Owner projection policy consumer is invalid: " + id);
   }
   for (const input of Object.values(generatorOwners)) { const generator = object(input, ["ownerPath", "target", "currentOutputPath", "requiredOutputPath"]); if (!policyPath(generator.ownerPath) || typeof generator.target !== "string" || !generator.target || !policyPath(generator.currentOutputPath) || !policyPath(generator.requiredOutputPath)) throw new Error("Owner projection policy generator is invalid"); }
   const sources = new Set<string>(), destinations = new Set<string>();
@@ -272,7 +272,7 @@ export function ownerProjectionPolicyCensus(policy: OwnerProjectionPolicy): Read
   return counts;
 }
 
-/** 🔐️ Captures and parses only the declared policy through exact no-follow bytes. */
+/** 📚️ Captures and parses only the declared policy through exact no-follow bytes. */
 export function semanticExactOwnedFileCatalog(repoRoot: string, taxonomy: Taxonomy, observe?: (snapshot: SemanticOwnedInputFileSnapshot) => void): OwnerProjectionPolicy | null {
   const contract = taxonomy.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
   if (contract?.contractKind !== "exact-owner-path-catalog") return null;
@@ -288,7 +288,7 @@ export function semanticExactOwnedFileCatalog(repoRoot: string, taxonomy: Taxono
   return policy;
 }
 
-/** 🧭️ Resolves an exact owner leaf from language-neutral facts; raw-source bytes authorize projection once. */
+/** 🎯️ Resolves an exact owner leaf from language-neutral facts; raw-source bytes authorize projection once. */
 export function semanticExactOwnedFileProjectionAuthority(catalog: OwnerProjectionPolicy, facts: Readonly<{ path: string; nodeKind: string; contentHash: string; mode: number; size: number; sourcePresent: boolean; destinationPresent: boolean; destinationPreimage?: Readonly<{ contentHash: string; mode: number; size: number }>; occupiedPaths: readonly string[] }>, current?: Readonly<{ contract: Pick<SemanticExactOwnedFileProjectionContract, "authorityCatalogPath" | "authorityCatalogSha256">; revisions: unknown; expectations: readonly CurrentSourceApprovalSnapshot[] }>): Readonly<{ disposition: "none" | "fixed" | "project" | "regenerate" | "canonical" | "problem"; entry: OwnerProjectionEntry | null; problems: readonly string[]; currentSource?: CurrentSourceApprovalResult }> {
   const entry = catalog.entries.find((entry) => entry.sourcePath === facts.path || entry.destinationPath === facts.path);
   if (!entry) return { disposition: "none", entry: null, problems: [] };
@@ -318,19 +318,22 @@ export function exactOwnerGeneratorPrestate(repoRoot: string, outputPath: string
 
 const previewCommandRefusal = (cause: unknown): Error => new Error(`Generator target is not the exact owner JSON preview command: ${cause instanceof Error ? cause.message : String(cause)}`, { cause });
 
+/** 🚀️ The launcher word every declared generator preview command starts with, also the nested word after `--`; the spawned executable stays the hosting runtime. */
+const GENERATOR_LAUNCHER_V1 = "repo";
+
 /** 🚦 Resolves an exact preview invocation with its required native owner policy. */
 export function generatorPreviewExecution(contract: Pick<GeneratorContract, "ownership" | "ownerPath" | "target" | "previewTarget" | "previewArguments" | "previewScript">, target: { executor?: unknown; options?: Record<string, unknown> }): { command: string; args: string[]; cwd: string } {
   const owner = contract.ownerPath, options = target.options;
   if (!owner || target.executor !== "repo:script" || !options) throw new Error("Generator target is not the exact owner JSON preview command");
   let direct: string[];
   try { direct = ["./" + generatorPreviewScriptPath(contract), ...generatorPreviewScriptArguments(contract)]; } catch (cause) { throw previewCommandRefusal(cause); }
-  const native = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts", "native", "owner-command", "--manifest", `${owner}/Cargo.toml`, "--cwd", owner, "--", runtimeCommandNameV1(), ...direct];
+  const native = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts", "native", "owner-command", "--manifest", `${owner}/Cargo.toml`, "--cwd", owner, "--", GENERATOR_LAUNCHER_V1, ...direct];
   const framework = "🧰️framework", frameworkOwner = owner.startsWith(`${framework}/`) && !/[\\\s]/u.test(owner) && owner.split("/").every(part => part && part !== "." && part !== "..") ? owner.slice(framework.length + 1) : null;
-  const configured = frameworkOwner ? ["./🔨️modules/🏃️process/📜️script.ts", "command", "--config", "./⚙️configuration/🏃️process/🔣️.json", "--cwd", frameworkOwner, "--manifest", `${frameworkOwner}/Cargo.toml`, "--", runtimeCommandNameV1(), ...direct] : null;
+  const configured = frameworkOwner ? ["./🔨️modules/🏃️process/📜️script.ts", "command", "--config", "./⚙️configuration/🏃️process/🔣️.json", "--cwd", frameworkOwner, "--manifest", `${frameworkOwner}/Cargo.toml`, "--", GENERATOR_LAUNCHER_V1, ...direct] : null;
   const args = options.cwd === owner ? direct : options.cwd === "." ? native : options.cwd === framework ? configured : null;
   let declared: readonly string[];
   try { declared = parseGeneratorPreviewLiteralCommandV1(options.command); } catch (cause) { throw previewCommandRefusal(cause); }
-  const expected = [runtimeCommandNameV1(), ...(args ?? [])];
+  const expected = [GENERATOR_LAUNCHER_V1, ...(args ?? [])];
   if (!args || declared.length !== expected.length || declared.some((value, index) => value !== expected[index])) throw new Error("Generator target is not the exact owner JSON preview command");
   return { command: runtimeExecutableV1(), args, cwd: options.cwd as string };
 }

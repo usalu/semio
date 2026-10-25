@@ -9,6 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use protocol::list_delta::RowPatch;
 #[allow(unused_imports)]
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use crate::standards::v1::subsets::any::schema::diff::*;
 
 #[semio_framework_async_macros::async_test]

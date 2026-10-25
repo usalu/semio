@@ -19,7 +19,7 @@ import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/📦
 
 import bazelTestSchema from "./🔧️tools/🏗️bazel/🧪️tests/🧬️schema/📋️dispatch.json" with { type: "json" };
 import {compileJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 import {installOutputContractV1,machineOutputV1,writeResultLineV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 let bazelTestContractV1:ReturnType<typeof compileJsonSchemaSubset>|undefined;
 const bazelTestContract=()=>bazelTestContractV1??=compileJsonSchemaSubset(bazelTestSchema);
@@ -59,7 +59,7 @@ export class BuildScript extends Script {
   }
 }
 
-/** 🧪️ Runs the independently bundled workspace build ownership contract. */
+/** 📜️ Runs the independently bundled workspace build ownership contract. */
 class TestScript extends Script {
   async run(args: string[]): Promise<void> {
     if(args[0]==="bazel"){
@@ -86,7 +86,7 @@ class TestScript extends Script {
 
 /** 🧭️ Routes the repository's portable build commands to the selected implementation. */
 export class RepoScript extends Script {
-  async run(args:string[]):Promise<void> { const{forwardRepoCommandV1}=await import("./🏡️resident/🚪️client/🔁️repo/🟨️.mjs"),{resolveLanguageV1}=await import("../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🟦️.ts");const forwarded=await forwardRepoCommandV1({root:this.repoRoot,args,environment:process.env,stdout:machineOutputV1,languageOf:()=>resolveLanguageV1(["en","de"],args,process.env).language});if(forwarded!==undefined){process.exitCode=forwarded;return;} await runOwnedBuildInvocationV1(this.repoRoot,args,this.invocation,createIssuedResourceControlV1(this.invocation,"repository:command",0)); }
+  async run(args:string[]):Promise<void> { const{forwardRepoCommandV1}=await import("./🏡️resident/🚪️client/🔁️repo/🟨️.mjs"),{resolveLanguageV1}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts");const forwarded=await forwardRepoCommandV1({root:this.repoRoot,args,environment:process.env,stdout:machineOutputV1,languageOf:()=>resolveLanguageV1(["en","de"],args,process.env).language});if(forwarded!==undefined){process.exitCode=forwarded;return;} await runOwnedBuildInvocationV1(this.repoRoot,args,this.invocation,createIssuedResourceControlV1(this.invocation,"repository:command",0)); }
 }
 
 /** 🌳️ Preserves caller cancellation and deadline while selecting configured build resources. */
@@ -132,12 +132,18 @@ async function runAdmittedBuildCliV1(root:string,args:readonly string[],environm
 }
 
 
-/** ♻️ Re-executes the outermost command once with the current implementation when it yielded because a declared format stamp moved; a nested command only passes the exit code on. */
-export async function runBuildMainV1(root:string,argv:readonly string[],environment:NodeJS.ProcessEnv=process.env):Promise<void> {
-  installOutputContractV1(argv);
+/** ♻️ Runs the command line of one process as the unit a fresh process can run again: this process is one invocation unless it is the resident service, which runs invocations side by side and never opts in (so the pin of an admitted run covers the modules it loads), and when it yields because a declared format stamp moved, its loaded implementation was edited, a module was half edited or a concurrent edit escaped every layer, the outermost command starts again with the current implementation and a new snapshot, as often as the stamp table bounds it; a nested command only passes the exit code on. Every entry point of the command line, the door included, runs through here. */
+export async function runBuildCliWithRestartV1(root:string,argv:readonly string[],environment:NodeJS.ProcessEnv=process.env):Promise<void> {
+  if(!argv.slice(0,3).includes("service"))(await import("./📥️inputs/🔏️revision/🟨️.mjs")).useProcessWideImplementationPinV1();
   const{SCRIPT_PROCESS_INVOCATION_ENV}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
   const outcome=await runWithStaleReexecV1(()=>runBuildCliV1(root,argv,environment),{environment,outermost:environment[SCRIPT_PROCESS_INVOCATION_ENV]===undefined});
   if(outcome.status!=="completed")process.exit(outcome.code);
+}
+
+/** 🔨️ The command line entry that installs the output contract first. */
+export async function runBuildMainV1(root:string,argv:readonly string[],environment:NodeJS.ProcessEnv=process.env):Promise<void> {
+  installOutputContractV1(argv);
+  await runBuildCliWithRestartV1(root,argv,environment);
 }
 
 if(isMainModuleV1(import.meta.url)){profileMarkV1("boot.main");await profilePhaseV1("cli.run",()=>runBuildMainV1(findWorkspaceRoot(import.meta.dirname),process.argv.slice(2)).catch(async error=>{const{reportRepoErrorV1}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📣️progress/🟦️.ts");if(!reportRepoErrorV1(error))throw error;}));}

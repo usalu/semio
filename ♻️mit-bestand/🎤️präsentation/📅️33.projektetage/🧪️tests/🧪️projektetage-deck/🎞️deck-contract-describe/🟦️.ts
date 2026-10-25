@@ -6,6 +6,7 @@ import { registerToolSlideTests } from "../🧱️tool-slides/🟦️.ts";
 import { registerInputAndCheckSlideTests } from "../⌨️input-and-check-slides/🟦️.ts";
 import { registerImportAndTypologySlideTests } from "../📥️import-and-typology-slides/🟦️.ts";
 import { registerResearchAndComponentSlideTests } from "../🔎️research-and-component-slides/🟦️.ts";
+import { registerZukunftBauMirrorTests } from "../🪞️zukunft-bau-mirror/🟦️.ts";
 
 /** 🪄 Registers the projektetage deck describe block from its parts. */
 export function registerDeckContractTests(kit: ProjektetageDeckTestKit): void {
@@ -17,5 +18,6 @@ export function registerDeckContractTests(kit: ProjektetageDeckTestKit): void {
     registerInputAndCheckSlideTests(kit);
     registerImportAndTypologySlideTests(kit);
     registerResearchAndComponentSlideTests(kit);
+    registerZukunftBauMirrorTests(kit);
   });
 }

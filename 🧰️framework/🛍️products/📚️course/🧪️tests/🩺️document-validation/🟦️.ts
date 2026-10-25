@@ -143,7 +143,7 @@ function checkedQuiz(document: unknown): ValidationIssue[] {
   return issues;
 }
 
-/** 🧾️ The course issues, checked against ajv like {@link checkedQuiz}. */
+/** ✅️ The course issues, checked against ajv like {@link checkedQuiz}. */
 function checkedCourse(document: unknown, quizzes: readonly Quiz[]): ValidationIssue[] {
   const issues = courseIssues(document, quizzes);
   expect(AJV_COURSE(document), JSON.stringify(issues)).toBe(issues.every((issue) => !STRUCTURAL.has(issue.code)));

@@ -23,7 +23,7 @@ export type CollapsibleProps = Omit<React.HTMLAttributes<HTMLDivElement>, "onCha
   contentId?: string;
 };
 
-/** 🖱️ Owned trigger contract supporting the existing exactly-one-child composition boundary. */
+/** 🧬️ Owned trigger contract supporting the existing exactly-one-child composition boundary. */
 export type CollapsibleTriggerProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
   asChild?: boolean;
   children?: React.ReactNode;
@@ -154,7 +154,7 @@ const CollapsibleTrigger = React.forwardRef<HTMLElement, CollapsibleTriggerProps
 // #endregion 🖱️Trigger
 
 // #region 📂Content
-/** 📂 Keeps disclosure content mounted while hiding it from layout and accessibility when closed. */
+/** 📪️ Keeps disclosure content mounted while hiding it from layout and accessibility when closed. */
 const CollapsibleContent = React.forwardRef<HTMLDivElement, CollapsibleContentProps>(function CollapsibleContent(props, forwardedRef) {
   const context = useCollapsibleContext();
   return <div ref={forwardedRef} {...props} data-slot="collapsible-content" data-state={context.open ? "open" : "closed"} hidden={!context.open} id={context.contentId} />;

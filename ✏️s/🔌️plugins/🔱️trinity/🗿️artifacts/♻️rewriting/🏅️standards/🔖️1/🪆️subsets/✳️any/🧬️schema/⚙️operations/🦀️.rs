@@ -61,7 +61,7 @@ impl Drop for OwnedRewriteRuleStore {
 //#region 🔖️BatchHelpers
 /// ▶️ Applies one mutation to a snapshot through the central applier (`protocol::apply_diff`): the step of the editor's node-graph fold and of the mutation tests.
 pub fn apply_rewrite_rule_mutation(snapshot: &mut RewritingSnapshot, mutation: &RewriteRuleMutation) -> protocol::MutationApplyResult<()> {
-    let outcome = protocol::Mutation::diff(mutation, snapshot);
+    let outcome = protocol::ColdMutation::diff(mutation, snapshot);
     let next = protocol::apply_diff_cold(outcome.diff(), snapshot)?;
     *snapshot = next;
     Ok(())
@@ -69,7 +69,7 @@ pub fn apply_rewrite_rule_mutation(snapshot: &mut RewritingSnapshot, mutation: &
 
 pub fn inverse_rewrite_rule_mutation(snapshot: &RewritingSnapshot, mutation: &RewriteRuleMutation) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
     Ok({
-    protocol::Mutation::inverse(mutation, snapshot)?
+    protocol::ColdMutation::inverse(mutation, snapshot)?
 
     })
 }

@@ -2,7 +2,7 @@
 
 import type * as presentation from "@semio-tech/presentation";
 import type { Presentation, Thought } from "@semio-tech/presentation";
-import type * as spec from "../../../📦️packages/🟦️typescript/🔖️spec.ts";
+import type * as spec from "../../../🔖️spec/🟦️.ts";
 
 export type TestSource = { readonly directory: string; readonly url: string };
 
@@ -20,6 +20,6 @@ export function bauteilboersenThought(presentation: Presentation): Thought | und
 export function createProjektetageDeckTestKit(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: ProjektetageDeckDependencies, source: TestSource) {
   const { BAUKOMPONENTEN_ITEMS, CATALOGUE_COL1, CATALOGUE_COL2, CATALOGUE_COL3, INTRO_TITLE_MORPH_FRAME, PRESENTATION_DEFAULT_SLIDE_ASPECT, ZUKUNFT_BAU_EMBODIMENT, ZUKUNFT_BAU_FRAME, ZUKUNFT_BAU_PARTICIPANT, arrangementRestDispositions, buildResolutionScope, collectPresentationSlides, columnLabelMorphFrom, countArrangements, deck, expandThoughtSlides, inlineColumnLabelPosition, resolveArrangement } = dependencies;
   const { describe, expect, it } = vitest;
-  return { BAUKOMPONENTEN_ITEMS, CATALOGUE_COL1, CATALOGUE_COL2, CATALOGUE_COL3, INTRO_TITLE_MORPH_FRAME, PRESENTATION_DEFAULT_SLIDE_ASPECT, ZUKUNFT_BAU_EMBODIMENT, ZUKUNFT_BAU_FRAME, ZUKUNFT_BAU_PARTICIPANT, arrangementRestDispositions, buildResolutionScope, collectPresentationSlides, columnLabelMorphFrom, countArrangements, deck, describe, expandThoughtSlides, expect, inlineColumnLabelPosition, it, resolveArrangement };
+  return { BAUKOMPONENTEN_ITEMS, CATALOGUE_COL1, CATALOGUE_COL2, CATALOGUE_COL3, INTRO_TITLE_MORPH_FRAME, PRESENTATION_DEFAULT_SLIDE_ASPECT, ZUKUNFT_BAU_EMBODIMENT, ZUKUNFT_BAU_FRAME, ZUKUNFT_BAU_PARTICIPANT, arrangementRestDispositions, buildResolutionScope, collectPresentationSlides, columnLabelMorphFrom, countArrangements, deck, describe, expandThoughtSlides, expect, inlineColumnLabelPosition, it, resolveArrangement, source };
 }
 export type ProjektetageDeckTestKit = ReturnType<typeof createProjektetageDeckTestKit>;

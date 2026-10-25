@@ -117,7 +117,7 @@ pub fn kind_of(mutation: &SvgTinyMutation) -> &'static str {
 /// imperative apply path.
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_svg_tiny_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgTinyMutation) -> protocol::MutationOutcome<SvgDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
+    let outcome = ::semio_framework_os_kernel::ColdMutation::diff(mutation, snapshot);
     match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;

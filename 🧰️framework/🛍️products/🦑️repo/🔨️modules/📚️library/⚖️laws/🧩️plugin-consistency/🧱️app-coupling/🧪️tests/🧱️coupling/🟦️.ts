@@ -5,7 +5,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSyn
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
-import { testPythonV1 } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import { testPythonV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import { gitSpawnEnv } from "../../../../../🏃️process/🌿️environment/🌳️git/🟦️.ts";
 import { policyAppCouplingBreaches, policyCargoArtifactBreaches, policyJsonFixtureBreaches, policyOpsGrammarBreaches } from "../../🟦️.ts";
 import corpus from "./🔣️.json" with { type: "json" };
@@ -39,7 +39,7 @@ const run = (row: any) => {
   } finally { rmSync(root, { recursive: true, force: true }); }
 };
 const model = (() => {
-  const run = spawnSync(testPythonV1() ?? "python3", ["-I", resolve(import.meta.dir, "./🐍️oracle.py"), resolve(import.meta.dir, "./🔣️.json")], { encoding: "utf8" });
+  const run = spawnSync(testPythonV1() ?? "python3", ["-I", resolve(import.meta.dir, "./🐍️.py"), resolve(import.meta.dir, "./🔣️.json")], { encoding: "utf8" });
   expect(run.status, run.stderr).toBe(0);
   return JSON.parse(run.stdout) as Record<string, unknown>;
 })();

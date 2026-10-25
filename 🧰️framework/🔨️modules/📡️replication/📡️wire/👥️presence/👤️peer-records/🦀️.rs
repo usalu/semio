@@ -32,7 +32,7 @@ pub struct PresencePeer {
     pub interaction: Option<PresenceInteraction>,
     /// 🎨️ Hub-assigned palette index, normalized at authenticated presence ingress.
     pub color: Option<u8>,
-    /// 🪟️ Canonical plan-bound surface id, normalized by the Hub.
+    /// 🌎️ Canonical plan-bound surface id, normalized by the Hub.
     pub surface: Option<String>,
     /// 🪟️ Every open window/surface's live camera + in-view pointer (ARTIFACT scope), matched
     /// by `space`. Empty when the peer has no open windows for this document.
@@ -56,7 +56,7 @@ pub struct PresencePeer {
     pub typing: Vec<PresenceTyping>,
 }
 
-/// ⌨️ Ephemeral shared preview of one peer's pending typing run in one text window: what the run deleted and typed so far
+/// 🟢️ Ephemeral shared preview of one peer's pending typing run in one text window: what the run deleted and typed so far
 /// (excerpts of at most [`PRESENCE_TYPING_EXCERPT_BYTES`] bytes each, cut at a scalar boundary). Peers render it at the
 /// author's caret; the run itself lands as ONE edit when it commits, and the preview disappears.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -109,7 +109,7 @@ impl semio_framework_value::FromValue for PresenceTyping {
     }
 }
 
-/// 🤖️ Which kind of principal holds a presence slot. An `Agent` peer is an AI agent acting
+/// ⏸️ Which kind of principal holds a presence slot. An `Agent` peer is an AI agent acting
 /// under a credential a human delegated to it (`hub.auth`'s `AgentDelegationRecord`); it is a
 /// principal in its own right, never the delegating human, so a roster shows it as its own row.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -155,7 +155,7 @@ pub enum PresenceToolRunState {
 impl PresenceToolRunState {
     pub const ALL: [PresenceToolRunState; 9] = [Self::Starting, Self::Running, Self::Paused, Self::Complete, Self::Finalizing, Self::Finalized, Self::Aborting, Self::Aborted, Self::Faulted];
 
-    /// 🔤️ The camelCase wire spelling shared with `ToolRunState`.
+    /// 🔧️ The camelCase wire spelling shared with `ToolRunState`.
     pub fn wire_name(self) -> &'static str {
         match self {
             Self::Starting => "starting",
@@ -170,7 +170,7 @@ impl PresenceToolRunState {
         }
     }
 
-    /// 🔡️ Inverse of [`Self::wire_name`].
+    /// ↩️ Inverse of [`Self::wire_name`].
     pub fn from_wire_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|state| state.wire_name() == name)
     }
@@ -237,7 +237,7 @@ impl semio_framework_value::FromValue for PresenceToolRun {
     }
 }
 
-/// ⏪️ Stage of a peer's open history edit, spelled like `HistoryTimeTravelStage` on the history wire. The binary tag
+/// 🕰️ Stage of a peer's open history edit, spelled like `HistoryTimeTravelStage` on the history wire. The binary tag
 /// is the declaration order and the JSON value is the camelCase wire name.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PresenceHistoryEditStage {
@@ -251,7 +251,7 @@ pub enum PresenceHistoryEditStage {
 impl PresenceHistoryEditStage {
     pub const ALL: [PresenceHistoryEditStage; 5] = [Self::Editing, Self::Replaying, Self::Reviewing, Self::Choosing, Self::Finalizing];
 
-    /// 🔤️ The camelCase wire spelling shared with `HistoryTimeTravelStage`.
+    /// 🐪️ The camelCase wire spelling shared with `HistoryTimeTravelStage`.
     pub fn wire_name(self) -> &'static str {
         match self {
             Self::Editing => "editing",
@@ -262,13 +262,13 @@ impl PresenceHistoryEditStage {
         }
     }
 
-    /// 🔡️ Inverse of [`Self::wire_name`].
+    /// 🔙️ Inverse of [`Self::wire_name`].
     pub fn from_wire_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|stage| stage.wire_name() == name)
     }
 }
 
-/// 👥️ Ephemeral shared summary of a peer's open history edit ("Alice is editing history: Set count to 2"): the
+/// ✏️ Ephemeral shared summary of a peer's open history edit ("Alice is editing history: Set count to 2"): the
 /// replica-independent id of the mutation whose inputs it drafts — every replica labels it from its own history rows,
 /// in its own locale — the session stage and how many drafts it accepted.
 #[derive(Clone, Debug, PartialEq, Eq)]

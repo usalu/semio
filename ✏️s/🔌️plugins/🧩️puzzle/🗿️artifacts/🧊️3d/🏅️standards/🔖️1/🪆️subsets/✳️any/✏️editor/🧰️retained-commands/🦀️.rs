@@ -191,6 +191,10 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
 pub(super) struct Puzzle3dRetainedCommandProofs;
 
 impl Puzzle3dRetainedCommandProofs {
+    pub(crate) fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -216,6 +220,10 @@ impl Puzzle3dRetainedCommandProofs {
 pub(super) struct Puzzle3dHostConfigurationProofs;
 
 impl Puzzle3dHostConfigurationProofs {
+    pub(crate) fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",

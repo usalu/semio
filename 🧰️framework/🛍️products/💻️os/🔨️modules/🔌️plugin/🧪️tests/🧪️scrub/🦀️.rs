@@ -4,6 +4,7 @@
 //! bounded and taken once.
 
 use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ScrubTag;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::kernel::ActorId;
 use std::sync::Arc;

@@ -12,14 +12,14 @@ enum JsonRootState {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonArrayState {
+pub enum JsonArrayState {
     FirstValueOrEnd,
     Value,
     CommaOrEnd,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonObjectState {
+pub enum JsonObjectState {
     FirstKeyOrEnd,
     Key,
     Colon,
@@ -28,7 +28,7 @@ enum JsonObjectState {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonContainer {
+pub enum JsonContainer {
     Array(JsonArrayState),
     Object(JsonObjectState),
 }

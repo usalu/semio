@@ -1,6 +1,6 @@
 /** 🏊️ Contract: the project farm. The plan, the languages, the texts and the heap environment of the farm equal an independent model; a pool of real worker processes answers the same for any worker count, completion order and crash; the leaves staged by any number of workers are adopted into one tree whose digest is the same for every worker count, assignment and order (and the digest of the independent model), however many adopters race for the same leaf. */
 import {afterAll,expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join,relative,sep} from "node:path";
@@ -15,7 +15,7 @@ import {awaitGrowingV1,GRAPH_FARM_MESSAGES_V1,GRAPH_FARM_POLICY_V1,createFarmV1,
 import {adoptStagedGraphLeavesV1} from "../../../../../📥️inputs/🟨️.mjs";
 import {withBuildGraphStagingV1} from "../../../../../📥️inputs/💾️storage/🟨️.mjs";
 
-const here=dirname(fileURLToPath(import.meta.url)),python=testPythonV1(),oracle=join(here,"🐍️oracle.py"),fixturePath=join(here,"🔣️.json"),schemaPath=join(here,"..","🏊️pool","🧬️schema","🔣️.json");
+const here=dirname(fileURLToPath(import.meta.url)),python=testPythonV1(),oracle=join(here,"🐍️.py"),fixturePath=join(here,"🔣️.json"),schemaPath=join(here,"..","🏊️pool","🧬️schema","🔣️.json");
 const ask=(command:string)=>JSON.parse(Bun.spawnSync([python!,"-I",oracle,fixturePath,schemaPath,command]).stdout.toString());
 const roots:string[]=[],scratch=()=>{const root=mkdtempSync(join(realpathSync(tmpdir()),"graph-farm-law-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});

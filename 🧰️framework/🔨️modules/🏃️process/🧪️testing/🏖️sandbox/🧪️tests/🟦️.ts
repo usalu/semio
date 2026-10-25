@@ -11,8 +11,8 @@ import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import corpus from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import ledger from "./🧫️fixtures/📒️ledger.json" with { type: "json" };
 import {
-  abandonedTestSandboxV1, adoptedTestSandboxRootV1, attachedDiskImagesV1, mayHoldDiskImageV1, guardArgumentsV1, testCheckoutRootV1, compileLawV1, createTestSandboxV1, decideListenV1, decideSpawnV1, decideWriteV1, liveTestSandboxesV1, readTestPortLeaseV1,
-  reclaimAbandonedTestSandboxesV1, reclaimAgentSessionSandboxesV1, releaseTestPortV1, summarizeGuardReportV1, scanIsTestPathV1, scanLanguageV1, scanOwnerV1, scanSourceV1, testPathInsideV1, testSandboxEnvironmentV1, testScratchRootV1, withTestSandboxV1,
+  abandonedTestSandboxV1, adoptedTestSandboxRootV1, attachedDiskImagesV1, mayHoldDiskImageV1, guardArgumentsV1, testCheckoutRootV1, compileLawV1, createTestSandboxV1, decideListenV1, decideSpawnV1, decideWriteV1, liveTestSandboxesV1, managedNativeParentOfV1, requireArtifactOutsideManagedParentV1, safeTemporaryDirectoryV1, readTestPortLeaseV1,
+  reclaimAbandonedTestSandboxesV1, reclaimAgentSessionSandboxesV1, releaseTestPortV1, summarizeGuardReportV1, scanIsTestPathV1, scanLanguageV1, scanOwnerV1, scanSourceV1, testPathInsideV1, testSandboxParentV1, testSandboxEnvironmentV1, testScratchRootV1, withTestSandboxV1,
   type GuardContextV1, type GuardViolationKindV1, type ScanLanguageV1, type TestSandboxProtocolV1,
 } from "../🟦️.ts";
 
@@ -63,7 +63,7 @@ describe("protocol and corpus", () => {
     }
   });
   test.skipIf(!python)("the independent Python oracle replays the same corpus with the same outcome", () => {
-    const run = spawnSync(testPythonV1()??"python3", ["-I", join(import.meta.dir, "🐍️oracle.py"), join(root, "🔣️.json"), join(import.meta.dir, "🧫️fixtures/🔣️.json")], { encoding: "utf8" });
+    const run = spawnSync(testPythonV1()??"python3", ["-I", join(import.meta.dir, "🐍️.py"), join(root, "🔣️.json"), join(import.meta.dir, "🧫️fixtures/🔣️.json")], { encoding: "utf8" });
     expect(run.stdout + run.stderr).toContain("mismatches 0");
     expect(run.status).toBe(0);
   });
@@ -84,6 +84,82 @@ describe("protocol and corpus", () => {
       expect(checked).toBeGreaterThan(300);
     } finally { rmSync(directory, { recursive: true, force: true }); }
   }, 60000);
+});
+
+describe("sandbox parent", () => {
+  const agentSessions = JSON.parse(readFileSync(join(import.meta.dir, "../../../🪪️agent-sessions/🧬️schema/🔣️.json"), "utf8"));
+  const root90 = (parent: string): number => (parent + "/" + "s".repeat(declared.layout.sessionRootCharacters) + "/" + "0".repeat(declared.layout.idCharacters)).length;
+  test("the declared session segment equals the agent-session policy and the id segment equals the real id", () => {
+    expect(declared.layout.sessionRootCharacters).toBe(Number(/"testsRootCharacters":\s*(\d+)/u.exec(JSON.stringify(agentSessions))![1]));
+    expect(declared.layout.idCharacters).toBe(8);
+  });
+  test("a deep temporary directory moves the sandbox parent to the short host base; a short one and an explicit parent stay", () => {
+    const saved = process.env.TMPDIR, deep = mkdtempSync(join(tmpdir(), "d-")), long = join(deep, "x".repeat(declared.layout.maximumRootLength));
+    mkdirSync(long, { recursive: true });
+    try {
+      process.env.TMPDIR = long;
+      const moved = testSandboxParentV1(undefined, declared);
+      expect(root90(moved)).toBeLessThanOrEqual(declared.layout.maximumRootLength);
+      expect(moved.startsWith(realpathSync(long))).toBe(false);
+      expect(testSandboxParentV1(long, declared)).toBe(join(realpathSync(long), declared.layout.parent));
+      process.env.TMPDIR = deep;
+      const roomy = join(realpathSync(deep), declared.layout.parent);
+      expect(testSandboxParentV1(undefined, declared)).toBe(root90(roomy) <= declared.layout.maximumRootLength ? roomy : moved);
+    } finally { if (saved === undefined) delete process.env.TMPDIR; else process.env.TMPDIR = saved; rmSync(deep, { recursive: true, force: true }); }
+  });
+});
+
+describe("managed native parents", () => {
+  const oracle = `import json,os,sys
+mount,backings,paths=json.loads(sys.argv[1]),json.loads(sys.argv[2]),json.loads(sys.argv[3])
+def host(path):
+    current=os.path.abspath(path)
+    while True:
+        if os.path.basename(current)==mount and any(os.path.exists(os.path.join(os.path.dirname(current),name)) for name in backings): return current
+        if os.path.dirname(current)==current: return None
+        current=os.path.dirname(current)
+print(json.dumps([host(path) for path in paths]))`;
+  test("a temporary directory inside a managed native parent never hosts the sandbox parent: the products partition cannot verify a test image nested in it", () => {
+    const saved = process.env.TMPDIR, base = realpathSync(mkdtempSync(join(tmpdir(), "mp-"))), partition = join(base, "p"), plain = join(base, "q");
+    const inside = join(partition, "m", "tmp"), beside = join(plain, "m", "tmp"), directoryPartition = join(base, "r");
+    for (const directory of [inside, beside, join(directoryPartition, "m", "tmp")]) mkdirSync(directory, { recursive: true });
+    writeFileSync(join(partition, "fixed.dmg"), ""); writeFileSync(join(directoryPartition, "fixed.dir"), "");
+    try {
+      const paths = [inside, join(inside, "deeper"), beside, partition, base, join(directoryPartition, "m", "tmp")];
+      const mount = "m", backings = ["fixed.dmg", "fixed.dir"];
+      const expected = [join(partition, "m"), join(partition, "m"), undefined, undefined, undefined, join(directoryPartition, "m")];
+      expect(paths.map((path) => managedNativeParentOfV1(path))).toEqual(expected);
+      if (python) {
+        const run = spawnSync(testPythonV1() ?? "python3", ["-I", "-c", oracle, JSON.stringify(mount), JSON.stringify(backings), JSON.stringify(paths)], { encoding: "utf8" });
+        expect(run.status, run.stderr).toBe(0);
+        expect(JSON.parse(run.stdout).map((row: string | null) => row ?? undefined)).toEqual(expected);
+      }
+      process.env.TMPDIR = inside;
+      const moved = testSandboxParentV1(undefined, declared);
+      expect(moved.startsWith(partition)).toBe(false);
+      expect(managedNativeParentOfV1(moved)).toBeUndefined();
+      expect(testSandboxParentV1(inside, declared)).toBe(join(inside, declared.layout.parent));
+      process.env.TMPDIR = beside;
+      const stays = join(realpathSync(beside), declared.layout.parent);
+      expect(testSandboxParentV1(undefined, declared)).toBe(stays.length <= declared.layout.maximumRootLength - (declared.layout.sessionRootCharacters + declared.layout.idCharacters + 2) ? stays : moved);
+    } finally { if (saved === undefined) delete process.env.TMPDIR; else process.env.TMPDIR = saved; rmSync(base, { recursive: true, force: true }); }
+  });
+  test("a preset artifact directory inside a managed native parent is refused in both languages, and the inherited temporary directory is replaced", () => {
+    const base = realpathSync(mkdtempSync(join(tmpdir(), "mp-"))), partition = join(base, "p"), inside = join(partition, "m", "tmp", "art"), outside = join(base, "free");
+    mkdirSync(inside, { recursive: true }); mkdirSync(outside, { recursive: true });
+    writeFileSync(join(partition, "fixed.dmg"), "");
+    try {
+      let message = "";
+      try { requireArtifactOutsideManagedParentV1(inside, declared); } catch (error) { message = (error as Error).message; }
+      const [en, de] = message.split("\n");
+      expect(en).toContain(inside); expect(en).toContain(join(partition, "m")); expect(de).toContain(inside); expect(de).toContain("verwalteten");
+      expect(en).not.toContain("{"); expect(de).not.toContain("{");
+      expect(requireArtifactOutsideManagedParentV1(outside, declared)).toBe(outside);
+      expect(safeTemporaryDirectoryV1(join(partition, "m", "tmp"))).toBeDefined();
+      expect(managedNativeParentOfV1(safeTemporaryDirectoryV1(join(partition, "m", "tmp"))!)).toBeUndefined();
+      expect(safeTemporaryDirectoryV1(outside)).toBeUndefined();
+    } finally { rmSync(base, { recursive: true, force: true }); }
+  });
 });
 
 describe("per-run sandbox", () => {

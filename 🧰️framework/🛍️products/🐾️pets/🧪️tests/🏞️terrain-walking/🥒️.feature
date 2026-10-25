@@ -27,11 +27,20 @@ Feature: Pets stand and walk on the free stretches of the surveyed surfaces
   `perchAt`, `nearestPerch` and `strideTo` of `🔨️modules/🏞️terrain` in `@semio-tech/pets` and
   `perches_of`, `perch_at`, `nearest_perch`, `stride_to` of the `pets` crate.
 
-  The layouts cover surfaces partly and wholly outside the viewport, above the clearance line and on
-  it, on the floor and below it, keep-outs ending where the band begins and a quarter pixel inside it,
-  beginning on the surface and a quarter pixel above it, touching the ends and a quarter pixel over
-  them, nested, overlapping and abutting in three orders, without area, zero-width surfaces, stretches
-  of exactly the minimum, a stage without clearance, and twelve scattered layouts.
+  WHO STANDS TOGETHER. The perches are cut for a company with `clearance` = the tallest body plus its hover
+  and `minimum` = the widest, so a species too wide or too tall for every ground used to take the ground from
+  all the others. `standing(menagerie, ground, order)` lets the species of an order join one by one, each when
+  the perches cut for it and for everyone who joined before it still exist, and leaves the others out; the
+  first of them that fits alone always joins. `castOn(menagerie, ground, cast, troupe, epoch, holding, avoid)` holds the troupe a
+  scene cast to the ground: of those who held a seat the turn before and of the troupe (in this order, as many as
+  the troupe has seats) whoever fits alone and is not to be avoided stays, every other seat goes to the next species of the scene (core,
+  then rotation, none twice, none of the troupe) that fits alone, counted from the epoch and round and round; a
+  troupe that fits is cast as it is and whoever held a seat keeps it while it fits. The reference asks the lattice raster of `perches` again for every
+  question and derives nothing, and rolls the spare species with `numpy.roll`; the subjects are `standing` and
+  `castOn` of `🔨️modules/📏️spacing` and `standing` and `cast_on` of the `pets` crate, on the sample menagerie of
+  shared://🧬️schema-conformance/🔣️.json. The grounds cover wide ground, slivers a quarter of a pixel either side
+  of each body's width, a low shelf, species that fit alone but not together in every order, gaps between
+  keep-outs, no surface, an unknown and a repeated species, negative and large epochs, and twenty-four drawn grounds.
 
   The vectors shared://🏞️terrain-walking/🔣️.json are generated, never hand-edited, from the Python
   reference in this directory, from the repository root:
@@ -53,6 +62,14 @@ Feature: Pets stand and walk on the free stretches of the surveyed surfaces
     Given the committed vectors shared://🏞️terrain-walking/🔣️.json
     When every committed query is answered with perchAt
     Then every implementation projects the index of the perch that owns the lattice point of its surface, and none in a gap, beyond the ends or on an unknown surface
+
+  @id-company
+  @level-fundamental
+  @mode-differential
+  Scenario: A species that fits no ground never takes the ground from those that fit
+    Given the committed vectors shared://🏞️terrain-walking/🔣️.json and the sample menagerie shared://🧬️schema-conformance/🔣️.json
+    When standing is asked for the order and castOn for the troupe, the epoch, the holders and the species to avoid of every committed ground
+    Then every implementation projects the species the lattice raster seats together, in order, and the troupe with every seat of a species that finds no free run alone given to the next one of the scene that does
 
   @id-nearest
   @level-fundamental

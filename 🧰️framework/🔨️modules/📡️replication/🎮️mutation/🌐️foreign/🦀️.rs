@@ -10,7 +10,7 @@ pub struct ForeignTarget {
     pub dialect: Option<String>,
 }
 
-/// 🌉️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp`/`ids`/`UndoPolicy`
+/// 🧰️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp`/`ids`/`UndoPolicy`
 /// (this crate sits below `os-kernel`). Mirrors `#[serde(rename_all = "camelCase")]` field naming
 /// and the `dialect` sparse-emission by hand.
 impl semio_framework_value::ToValue for ForeignTarget {
@@ -140,7 +140,7 @@ impl ForeignStepOwner {
 }
 impl Drop for ForeignStepOwner {fn drop(&mut self){let empty=self.output.is_none();assert!(empty||std::thread::panicking(),"foreign output retains its original backings until paid closure or transfer");if empty{unsafe{ManuallyDrop::drop(&mut self.output);}}}}
 
-/// 🌐️ Reborrows exact immutable fields on each turn while retaining every partial output backing.
+/// 🦜️ Reborrows exact immutable fields on each turn while retaining every partial output backing.
 pub struct ForeignStepCopy {identity:[(usize,usize);6],owner:ForeignStepOwner,phase:u8,allocated:bool,cancelled:bool}
 impl ForeignStepCopy {
  /// 🎟️ Admits allocation-free source aliases and empty inline owners; no payload is copied.
@@ -227,7 +227,7 @@ impl ForeignStepsOwner {
   let mut original=std::mem::replace(&mut*self.values,next);unsafe{original.set_len(0);}drop(original);
   Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes})
  }
- /// 📬️ Moves the already paid original row sequence; no source encoding or allocation occurs.
+ /// ⛓️ Moves the already paid original row sequence; no source encoding or allocation occurs.
  pub fn take(&mut self,grant:RetainedCloneGrant)->Option<(Vec<ForeignStep>,RetainedCloneProgress)>{if self.closing||self.child.is_some()||!permits(grant,0,0){return None;}Some((std::mem::take(&mut*self.values),RetainedCloneProgress{copied_items:1,..Default::default()}))}
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn close_one(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
@@ -251,7 +251,7 @@ impl ErasedSnapshotRetirement for ForeignStepsOwner {
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
 }
 impl Drop for ForeignStepsOwner {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"foreign proposal sequence abandoned before paid close or transfer");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.values);}}}}
-/// 🪜️ Keeps each indexed borrowed row and every paid partial field until transfer or cancellation.
+/// 🗂️ Keeps each indexed borrowed row and every paid partial field until transfer or cancellation.
 pub struct ForeignStepsPreparation {
  index:usize,copy:Option<ForeignStepCopy>,copy_complete:bool,
  pending:ManuallyDrop<Option<ForeignStep>>,retiring:Option<ForeignStepRetirement>,
@@ -301,7 +301,7 @@ impl ForeignStepsPreparation {
   if let Some(source)=source{let(copy,p)=ForeignStepCopy::admit(source,child_grant).map_err(|(e,_)|e)?;self.copy=Some(copy);return Ok(RetainedCloneStep::Progress(p));}
   self.complete=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
  }
- /// 📬️ Transfers only an entirely prepared original sequence without allocating or encoding.
+ /// 🎞️ Transfers only an entirely prepared original sequence without allocating or encoding.
  pub fn take_prepared(&mut self,grant:RetainedCloneGrant)->Option<(Vec<ForeignStep>,RetainedCloneProgress)>{if !self.is_complete()||self.copy.is_some()||self.pending.is_some(){return None;}let child=Self::child_grant(grant).ok()?;self.values.take(child)}
  pub fn begin_close(&mut self){self.closing=true;if let Some(copy)=self.copy.as_mut(){copy.cancel();}self.values.begin_close();}
  pub fn terminal_is_empty(&self)->bool{self.copy.is_none()&&self.pending.is_none()&&self.retiring.is_none()&&self.values.terminal_is_empty()}

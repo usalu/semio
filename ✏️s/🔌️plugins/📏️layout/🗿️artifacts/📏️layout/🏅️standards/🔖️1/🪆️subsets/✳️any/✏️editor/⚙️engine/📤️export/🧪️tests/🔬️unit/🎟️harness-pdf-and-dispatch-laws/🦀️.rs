@@ -146,25 +146,21 @@ fn pdf_export_prints_a_placed_drawing_mark_and_its_kind() {
 
 //#endregion 📕️PdfDocument
 
-/// 🏃️ Dispatches one export through the exact factory and drives it on an original caller; the export is read at the terminal outcome, before the close ladder drains the shared queue.
+/// 🏃️ Builds one export job from its typed payload and drives it on an original caller; the export is read at the terminal outcome, before the close ladder drains the shared queue.
 fn drive_dispatched_worker(kind: LayoutExportKind, run: TestRun) -> (LayoutExportObserved, Result<LayoutExportCommit, String>) {
     let operation = operation();
-    let bus = semio_framework::ActionBus::new();
-    bus.register(LayoutExportJobFactory::new("layout-test")).expect("factory registration");
     let output_chunks = ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
     let request = request(kind);
     let snapshot_owner = Arc::clone(&request.snapshot);
-    let spec = semio_framework::ToolOperationSpec::new("layout-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, LayoutExportToolPayload { request, output_chunks: output_chunks.clone(), completion: None }, operation);
-    let dispatch = bus.dispatch(spec).expect("exact factory dispatch");
-    assert_eq!(bus.dispatch_count(), 1);
+    let job = LayoutExportToolJob::from_payload(operation, LayoutExportToolPayload { request, output_chunks: output_chunks.clone(), completion: None });
     let drained = output_chunks.clone();
-    let outcome = drive_job_batch(dispatch.job, operation, run.generation, run.cancelled, run.site, || LayoutExportCommit::from_chunks(kind, "test", &drained));
+    let outcome = drive_job_batch(job, operation, run.generation, run.cancelled, run.site, || LayoutExportCommit::from_chunks(kind, "test", &drained));
     drop(snapshot_owner);
     outcome
 }
 
 #[test]
-fn exact_factory_dispatch_is_deterministic_across_repeated_original_caller_drives() {
+fn typed_export_job_is_deterministic_across_repeated_original_caller_drives() {
     for kind in [LayoutExportKind::Png, LayoutExportKind::Svg, LayoutExportKind::Pdf, LayoutExportKind::Package] {
         let mut outputs = Vec::new();
         for _ in 0..4 {
@@ -180,33 +176,29 @@ fn exact_factory_dispatch_is_deterministic_across_repeated_original_caller_drive
 
 #[test]
 fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fault_and_success_owners() {
-    /// 🪪️ Answers the dispatch together with the host's snapshot witness, which must outlive the close.
-    fn dispatch(raw_verb: &str, kind: LayoutExportKind) -> (semio_framework::ToolJobDispatch, Arc<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot>) {
+    /// 🪪️ Answers the wire-decoded job together with the host's snapshot witness, which must outlive the close.
+    fn dispatch(raw_verb: &str, kind: LayoutExportKind) -> (LayoutExportToolJob, Arc<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot>) {
         let operation = operation();
-        let bus = semio_framework::ActionBus::new();
-        bus.register(LayoutExportJobFactory::new("layout-retained-test")).expect("retained factory registration");
-        assert!(bus.begin_exact_wire("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES + 1).is_err());
-        let (admission, mut input) = bus.begin_exact_wire("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES).expect("maximum extent before encoding");
         let command = match raw_verb {
             "exportSvg" => semio_s_artifact_layout_layout_editor::LayoutCommand::ExportSvg(semio_s_artifact_layout_layout_editor_commands::export_svg::ExportSvg { page_id: None }),
             "exportPdf" => semio_s_artifact_layout_layout_editor::LayoutCommand::ExportPdf(semio_s_artifact_layout_layout_editor_commands::export_pdf::ExportPdf { page_id: None }),
             other => panic!("fixture verb {other}"),
         };
         let raw = <semio_s_artifact_layout_layout_editor::LayoutCommand as protocol::OpBinary>::encode_op(&command).expect("fixture wire");
+        let mut input = semio_framework_action_bus::RetainedToolWireInput::try_new(raw.len(), raw.len()).expect("exact extent before encoding");
         for bytes in raw.chunks(semio_framework_action_bus::TOOL_WIRE_PAGE_BYTES) {
-            input.admit_page(semio_framework_action_bus::ToolWirePage::try_copy_from(bytes).expect("bounded raw page")).expect("preadmitted page");
+            input.admit_page(semio_framework_action_bus::ToolWirePage::try_copy_from(bytes).expect("bounded raw page")).ok().expect("preadmitted page");
         }
-        input.seal_admitted_prefix().expect("truthful encoded prefix");
+        input.seal().expect("truthful encoded prefix");
         let output_chunks = ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
         let request = request(kind);
         let witness = Arc::clone(&request.snapshot);
         let payload = LayoutExportToolPayload { request, output_chunks, completion: None };
-        let spec = semio_framework::ToolOperationSpec::new("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, payload, operation);
-        (bus.dispatch_wire_retained_with_spec(&admission, input, None, spec).unwrap_or_else(|_| panic!("retained production dispatch")), witness)
+        (LayoutExportToolJob::from_wire_payload(operation, payload, input).unwrap_or_else(|error| panic!("retained production job: {error}")), witness)
     }
-    fn drive(dispatched: (semio_framework::ToolJobDispatch, Arc<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot>), run: TestRun) -> LayoutExportObserved {
-        let (dispatch, witness) = dispatched;
-        let outcome = drive_test_job(dispatch.job, run);
+    fn drive(dispatched: (LayoutExportToolJob, Arc<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot>), run: TestRun) -> LayoutExportObserved {
+        let (job, witness) = dispatched;
+        let outcome = drive_test_job(job, run);
         drop(witness);
         outcome
     }
@@ -218,17 +210,11 @@ fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fau
 }
 
 #[test]
-fn exact_layout_out_media_factory_dispatches_a_real_reserved_job() {
+fn layout_out_media_export_job_completes_on_an_original_caller() {
     let operation = operation();
-    let bus = semio_framework::ActionBus::new();
-    bus.register(LayoutMediaExportJobFactory::new("layout-media-test")).expect("media factory registration");
     let request = request(LayoutExportKind::Svg);
     let snapshot_owner = Arc::clone(&request.snapshot);
-    let payload = ArtifactReservedToolJob::new(fixture_export_job(operation, request));
-    let spec = semio_framework::ToolOperationSpec::new("layout-media-test", LAYOUT_MEDIA_EXPORT_TOOL_ID, LAYOUT_MEDIA_EXPORT_PAYLOAD_SCHEMA, payload, operation);
-    let dispatch = bus.dispatch(spec).expect("exact media factory dispatch");
-    assert_eq!(bus.dispatch_count(), 1);
-    assert!(matches!(drive_test_job(dispatch.job, TestRun::new("layout.media-export.worker-test")), LayoutExportObserved::Complete { .. }));
+    assert!(matches!(drive_test_job(fixture_export_job(operation, request), TestRun::new("layout.media-export.worker-test")), LayoutExportObserved::Complete { .. }));
     drop(snapshot_owner);
 }
 

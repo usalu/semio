@@ -1,4 +1,4 @@
-//! 🖱️ Window metrics, cursor and clipboard: the window metrics, the redraw gating, the cursor icons and css, the clipboard host, the native clipboard job and the browser clipboard. See [`super`].
+//! 🪟️ Window metrics, cursor and clipboard: the window metrics, the redraw gating, the cursor icons and css, the clipboard host, the native clipboard job and the browser clipboard. See [`super`].
 
 use super::*;
 
@@ -68,7 +68,7 @@ pub fn cursor_css_for(cursor: CursorRequest) -> &'static str {
     }
 }
 
-/// 🖱️ Ported from `wgpu-old`'s `🦀️cursor.rs::apply_window_cursor`: a real OS cursor call is one of the
+/// 👆️ Ported from `wgpu-old`'s `🦀️cursor.rs::apply_window_cursor`: a real OS cursor call is one of the
 /// few things worth deduplicating by hand rather than trusting the platform, since a naive per-event
 /// caller would otherwise re-issue it on every single pointer-move tick.
 #[cfg(not(target_arch = "wasm32"))]
@@ -83,7 +83,7 @@ pub fn apply_window_cursor(window: &winit::window::Window, cursor: CursorRequest
 //#endregion 🖱️Cursor
 
 //#region 📋️Clipboard
-/// 📋️ Platform-neutral clipboard surface. Browser implementations stage asynchronous owned
+/// 📎️ Platform-neutral clipboard surface. Browser implementations stage asynchronous owned
 /// requests and expose only already-settled text through `read_text`.
 pub trait ClipboardHost {
     fn write_text(&mut self, text: &str);
@@ -192,7 +192,7 @@ impl semio_framework_job::InteractiveJob for NativeClipboardJob {
 
 }
 
-/// 📋️ Owned asynchronous clipboard mailbox. It never retains a platform promise or callback.
+/// 📫️ Owned asynchronous clipboard mailbox. It never retains a platform promise or callback.
 #[derive(Default)]
 pub struct BrowserClipboard {
     staged_write: Option<String>,

@@ -1,4 +1,4 @@
-/** 🪆️ Subset policy
+/** 🔏️ Subset policy
  *
  * Declared subsets, their policies and the surface coordinates of owners and targets.
  */
@@ -25,13 +25,13 @@ import { rawTaxonomy } from "../📐️schema-contracts/🟦️.ts";
 /** 🚫️ Subset ids that name "everything" rather than a semantic scope. */
 export const WILDCARD_SUBSET_IDS: readonly string[] = ["*", "any", "all", "unconstrained", ""];
 
-/** 🚫️ Whether a subset id SPELLS a wildcard. Whether it IS one depends on what else the artifact declares — see `isWildcardSubsetFor`. */
+/** 🃏️ Whether a subset id SPELLS a wildcard. Whether it IS one depends on what else the artifact declares — see `isWildcardSubsetFor`. */
 export function isWildcardSubset(subset: string): boolean {
   return WILDCARD_SUBSET_IDS.includes(subset.trim().toLowerCase());
 }
 
 /**
- * 🪆️ What subsets one artifact/standard actually declares, read from its own
+ * 📖️ What subsets one artifact/standard actually declares, read from its own
  * `🪆️subsets/<taxonomy filename>` component. Cached, because the gate asks per mutation.
  */
 const declaredSubsetsCache = new Map<string, ReadonlyMap<string, readonly string[]>>();
@@ -60,14 +60,14 @@ export function declaredSubsets(repoRoot: string): ReadonlyMap<string, readonly 
   return found;
 }
 
-/** 🪆️ Whether an artifact has RECORDED that it genuinely has one scope, rather than merely not having been split. */
+/** 🔂️ Whether an artifact has RECORDED that it genuinely has one scope, rather than merely not having been split. */
 export function subsetPolicyIsSingle(repoRoot: string, artifact: string, standard: string): boolean {
   return declaredSubsetPolicies(repoRoot).get(`${artifact}@${standard}`) === "single";
 }
 
 const declaredSubsetPolicyCache = new Map<string, ReadonlyMap<string, string>>();
 
-/** 🪆️ The `subsetPolicy` each artifact records beside its subsets, if any. */
+/** 📹️ The `subsetPolicy` each artifact records beside its subsets, if any. */
 export function declaredSubsetPolicies(repoRoot: string): ReadonlyMap<string, string> {
   const cached = declaredSubsetPolicyCache.get(repoRoot);
   if (cached !== undefined) return cached;
@@ -93,7 +93,7 @@ export function declaredSubsetPolicies(repoRoot: string): ReadonlyMap<string, st
 }
 
 /**
- * 🚫️ Whether a subset is a wildcard IN ITS ARTIFACT'S CONTEXT.
+ * 📦️ Whether a subset is a wildcard IN ITS ARTIFACT'S CONTEXT.
  *
  * `✳️any` means two different things depending on what sits beside it. For `s.stdio.step@ap214`, which
  * declares `cc1`…`cc6`, it lumps seven conformance classes into one bucket and hides which of them a
@@ -108,7 +108,7 @@ export function isWildcardSubsetFor(repoRoot: string, artifact: string, standard
   return siblings.filter((candidate) => !isWildcardSubset(candidate)).length > 0;
 }
 
-/** 🪆️ Renders a subset target as the stable coordinate every report row and cache key is keyed by. */
+/** 🎯️ Renders a subset target as the stable coordinate every report row and cache key is keyed by. */
 export function subsetCoordinate(target: SubsetTarget): string {
   const scope = target.compound !== undefined ? `(${[...target.compound].sort().join("+")})` : target.subset;
   return `${target.artifact}@${target.standard}/${scope}`;
@@ -117,13 +117,13 @@ export function subsetCoordinate(target: SubsetTarget): string {
 /** 🎚️ A subset target plus the state lane it measures; `surface` absent is the document dispatch. */
 export type SurfaceTarget = Readonly<Pick<SubsetTarget, "artifact" | "standard" | "subset" | "surface">>;
 
-/** 🎚️ The coordinate of a subset target on one surface: the subset coordinate, then `#<surface>` for a state lane. */
+/** 🏹️ The coordinate of a subset target on one surface: the subset coordinate, then `#<surface>` for a state lane. */
 export function surfaceCoordinate(target: SurfaceTarget): string {
   return `${subsetCoordinate(target)}${target.surface === undefined ? "" : `#${target.surface}`}`;
 }
 
 /**
- * 🎚️ Why a manifest's `surface` is not a state lane of its own owner, or `null` when it is. The value must be
+ * 🚦️ Why a manifest's `surface` is not a state lane of its own owner, or `null` when it is. The value must be
  * exactly the owner's path below its subset directory, spelled with the taxonomy's own directories:
  * `<subsetSurfaceDir>[/<modesDirName>/<mode>[/<windowsDirName>/<window>]]/<lane>`, where a lane is a directory
  * every surface, mode and window may hold (`surfaceChildDirs` ∩ `modeChildDirs` ∩ `windowChildDirs`).
@@ -141,7 +141,7 @@ export function surfaceProblem(repoRoot: string, owner: string, surface: string)
   return shapeOk ? null : `surface ${JSON.stringify(surface)} is not <${taxonomy.subsetSurfaceDirs.join("|")}>[/${taxonomy.modesDirName}/<mode>[/${taxonomy.windowsDirName}/<window>]]/<${lanes.join("|")}>`;
 }
 
-/** 🪆️ Reads the standards/subsets coordinates out of an owner path, or `null` when it carries none. */
+/** 📕️ Reads the standards/subsets coordinates out of an owner path, or `null` when it carries none. */
 export function subsetCoordinatesOfOwner(owner: string): { standardDirectoryName: string; subsetDirectoryName: string; standard: string; subset: string } | null {
   const match = owner.match(/\/🏅️standards\/([^/]+)\/🪆️subsets\/([^/]+)$/);
   if (match === null || !profileDirectoryIsCanonical(match[1]!) || !profileDirectoryIsCanonical(match[2]!)) return null;

@@ -13,7 +13,7 @@ role = "library"
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [dependencies]
 serde = { workspace = true }

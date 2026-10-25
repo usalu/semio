@@ -11,7 +11,7 @@ const RUST_FORMAT_FIELDS: Readonly<Record<string, ExternalizedLeaf["format"]>> =
 const FORMAT_VARIANTS: Readonly<Record<ExternalizedLeaf["format"], string>> = { typescript: "Typescript", graphql: "Graphql", protobuf: "Protobuf", jsonschema: "JsonSchema", rust: "Rust" };
 const FIXED_FACETS: ReadonlySet<string> = new Set(["artifact", "snapshot", "diff", "mutations", "inference", "config", "presence"]);
 
-/** 🧾️ The string literals of a field value that is one `include_str!("..")` or a `concat!` of several, in order; null for any other value. */
+/** 🔤️ The string literals of a field value that is one `include_str!("..")` or a `concat!` of several, in order; null for any other value. */
 function includedStrings(tokens: ReturnType<typeof rustTokens>, pairs: ReturnType<typeof rustTokenPairs>, from: number, to: number): string[] | null {
   const include = (a: number, b: number): string | null =>
     b - a === 5 && tokens[a]?.text === "include_str" && tokens[a + 1]?.text === "!" && tokens[a + 2]?.text === "(" && tokens[a + 3]?.kind === "string" && tokens[a + 4]?.text === ")" ? tokens[a + 3]!.text : null;
@@ -28,7 +28,7 @@ function includedStrings(tokens: ReturnType<typeof rustTokens>, pairs: ReturnTyp
   return literals.length ? literals : null;
 }
 
-/** 🧾️ Replaces the typescript, graphql and proto `include_str!` companions of every `ArtifactSchemaDescriptor` facet (one `include_str!` or a `concat!` of several, served in order) by empty bodies and registers the documents they came from, so the registering crate embeds only its Rust leaf and its normative JSON Schema. With `options.json` the JSON Schema leaf is served too, for a plugin whose guest receives the documents as package assets (`PackageAssetSchemaLeaves`). */
+/** 🍃️ Replaces the typescript, graphql and proto `include_str!` companions of every `ArtifactSchemaDescriptor` facet (one `include_str!` or a `concat!` of several, served in order) by empty bodies and registers the documents they came from, so the registering crate embeds only its Rust leaf and its normative JSON Schema. With `options.json` the JSON Schema leaf is served too, for a plugin whose guest receives the documents as package assets (`PackageAssetSchemaLeaves`). */
 export function externalizeFacetLeaves(text: string, fileAbs: string, repoRoot: string, options: Readonly<{ json?: boolean; rust?: boolean }> = {}): { text: string; leaves: ExternalizedLeaf[] } | null {
   const fields = { ...(options.json === true ? JSON_FORMAT_FIELDS : FORMAT_FIELDS), ...(options.rust === true ? RUST_FORMAT_FIELDS : {}) };
   const tokens = rustTokens(text);

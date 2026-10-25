@@ -33,12 +33,10 @@ pub async fn metadata(artifact_kind: &'static str, inference_schema: &'static st
         let source:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
         let axes=source["stock"].as_array().unwrap();
         let stock=semio_framework_value::RetainedCloneGrant{maximum_items:axes[0].as_u64().unwrap()as usize,maximum_copy_bytes:axes[1].as_u64().unwrap()as usize,maximum_capacity_bytes:axes[2].as_u64().unwrap()as usize,maximum_release_bytes:axes[3].as_u64().unwrap()as usize,maximum_depth:axes[4].as_u64().unwrap()as usize};
-        let (cancel,born)=semio_framework_job::CancelToken::admit_root(stock).unwrap().unwrap();
-        let (authority,ledger_born)=semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),stock).unwrap().unwrap();
-        let mut sequence=0;let mut receipt=born;receipt.copied_items+=ledger_born.copied_items;receipt.retained_capacity_bytes+=ledger_born.retained_capacity_bytes;
-        let mut cx=semio_framework_job::StepContext::with_payload_authority(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),semio_framework_job::StepBudget::new(source["fuel"].as_u64().unwrap(),source["deadlineUs"].as_u64().unwrap(),stock),&cancel,||Some(12000),&mut sequence,&mut receipt,&authority).unwrap();
+        let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),stock,||Some(12000),source["deadlineUs"].as_u64().unwrap(),source["fuel"].as_u64().unwrap());
         let alpha = ArtifactInferenceService::new(metadata("s.test.alpha", "s.test.alpha.inference").await, echo,completed_child_demands);
         let beta = ArtifactInferenceService::new(metadata("s.test.beta", "s.test.beta.inference").await, echo,completed_child_demands);
+        caller.turn(stock,|cx|{
         let mut forward = ArtifactInferenceServiceRegistry::new();
         forward.register(alpha).unwrap();
         forward.register(beta).unwrap();
@@ -49,7 +47,10 @@ pub async fn metadata(artifact_kind: &'static str, inference_schema: &'static st
         assert_eq!(forward.metadata(), reverse.metadata());
         let budget = WireArtifactInferenceBudget { allocation_bytes: 16, work_units: 1, recursion_depth: 1 };
         let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, policy: &[], budgets: &budget, retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 }, cancellation_id: "test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: b"pack", dependencies: &[] };
-        assert_eq!(forward.infer("s.test.alpha", "s.test.alpha.inference", &request,&mut cx).unwrap().execution.unwrap().canonical_payload, Some(b"pack".to_vec()));
+        assert_eq!(forward.infer("s.test.alpha", "s.test.alpha.inference", &request,cx).unwrap().execution.unwrap().canonical_payload, Some(b"pack".to_vec()));
+        Ok(())
+        }).unwrap();
+        let remaining=caller.stock();caller.retire(remaining);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -86,22 +87,23 @@ pub async fn metadata(artifact_kind: &'static str, inference_schema: &'static st
         let source:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
         let axes=source["stock"].as_array().unwrap();
         let stock=semio_framework_value::RetainedCloneGrant{maximum_items:axes[0].as_u64().unwrap()as usize,maximum_copy_bytes:axes[1].as_u64().unwrap()as usize,maximum_capacity_bytes:axes[2].as_u64().unwrap()as usize,maximum_release_bytes:axes[3].as_u64().unwrap()as usize,maximum_depth:axes[4].as_u64().unwrap()as usize};
-        let (cancel,born)=semio_framework_job::CancelToken::admit_root(stock).unwrap().unwrap();
-        let (authority,ledger_born)=semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),stock).unwrap().unwrap();
-        let mut sequence=0;let mut receipt=born;receipt.copied_items+=ledger_born.copied_items;receipt.retained_capacity_bytes+=ledger_born.retained_capacity_bytes;
-        let mut cx=semio_framework_job::StepContext::with_payload_authority(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),semio_framework_job::StepBudget::new(source["fuel"].as_u64().unwrap(),source["deadlineUs"].as_u64().unwrap(),stock),&cancel,||Some(12000),&mut sequence,&mut receipt,&authority).unwrap();
+        let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),stock,||Some(12000),source["deadlineUs"].as_u64().unwrap(),source["fuel"].as_u64().unwrap());
         let identity = metadata("s.test.context", "s.test.context.inference").await;
+        caller.turn(stock,|cx|{
         let service = ArtifactInferenceService::new_contextual(identity, contextual_echo,contextual_completed_child_demands);
         let budget = WireArtifactInferenceBudget { allocation_bytes: 16, work_units: 1, recursion_depth: 1 };
         let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, policy: &[], budgets: &budget, retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 }, cancellation_id: "context", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: b"pack", dependencies: &[] };
-        assert_eq!(service.infer(&request,&mut cx).err().unwrap().code, "artifact-inference.context-required");
-        assert_eq!(service.infer_with_context(&request, &b"pack".to_vec(),&mut cx).unwrap().execution.unwrap().canonical_payload, echo(&request,&mut cx).unwrap().execution.unwrap().canonical_payload);
+        assert_eq!(service.infer(&request,cx).err().unwrap().code, "artifact-inference.context-required");
+        assert_eq!(service.infer_with_context(&request, &b"pack".to_vec(),cx).unwrap().execution.unwrap().canonical_payload, echo(&request,cx).unwrap().execution.unwrap().canonical_payload);
         assert_eq!(service.executable_identity(), ArtifactInferenceService::new_contextual(identity, contextual_echo,contextual_completed_child_demands).executable_identity());
         let mut registry = ArtifactInferenceServiceRegistry::new();
         registry.register(service).unwrap();
         registry.register(service).unwrap();
         assert!(registry.register(ArtifactInferenceService::new(identity, echo,completed_child_demands)).is_err());
-        assert_eq!(registry.get(identity.artifact_kind, identity.inference_schema).unwrap().infer_with_context(&request, &b"pack".to_vec(),&mut cx).unwrap().execution.unwrap().canonical_payload, Some(b"pack".to_vec()));
+        assert_eq!(registry.get(identity.artifact_kind, identity.inference_schema).unwrap().infer_with_context(&request, &b"pack".to_vec(),cx).unwrap().execution.unwrap().canonical_payload, Some(b"pack".to_vec()));
+        Ok(())
+        }).unwrap();
+        let remaining=caller.stock();caller.retire(remaining);
     }
 
     /// 🪆️ LAW (design §20.15): an owned-child dependency key round-trips through its grammar, a malformed one is refused, and a

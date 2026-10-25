@@ -20,8 +20,8 @@ use crate::schema::snapshot::node_at;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetText {
-    pub(crate) path: NodePath,
-    pub(crate) text: String,
+    pub path: NodePath,
+    pub text: String,
 }
 
 impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetText

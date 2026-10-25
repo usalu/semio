@@ -19,7 +19,7 @@ impl Fanout {
         Self::default()
     }
 
-    /// 🔔️ Subscribe to `lane`, creating it if nobody holds it yet. The returned [`Subscription`] is
+    /// 🆕️ Subscribe to `lane`, creating it if nobody holds it yet. The returned [`Subscription`] is
     /// the lane's lifetime: dropping the last one removes the sender.
     pub fn subscribe(&self, lane: &str) -> Subscription {
         let sender = self.channels.get_or_insert_with_cloned(lane.to_string(), || broadcast::channel(FANOUT_CAPACITY).0);
@@ -63,7 +63,7 @@ impl Subscription {
         }
     }
 
-    /// 📬️ The next frame, or the fact that frames were missed, or the end of the lane — for a
+    /// ⏩️ The next frame, or the fact that frames were missed, or the end of the lane — for a
     /// subscriber whose protocol is a delta stream and must resynchronize rather than silently skip.
     pub async fn next(&mut self) -> Delivery {
         match self.receiver.recv().await {
@@ -126,7 +126,7 @@ pub struct KickMap {
 }
 
 impl KickMap {
-    /// 🌱️ An empty map.
+    /// 🗺️ An empty map.
     pub fn new() -> Self {
         Self::default()
     }
@@ -148,7 +148,7 @@ impl KickMap {
         self.signals.remove(session);
     }
 
-    /// 🔢️ How many sessions currently carry a signal.
+    /// 🚦️ How many sessions currently carry a signal.
     pub fn tracked(&self) -> usize {
         self.signals.len()
     }

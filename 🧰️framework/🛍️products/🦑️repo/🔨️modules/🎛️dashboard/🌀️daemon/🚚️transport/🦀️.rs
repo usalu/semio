@@ -108,6 +108,15 @@ use semio_framework_ui_tui_terminal::pty::readiness::Interest;
         Ok(None)
     }
 
+    /// 🚦 Serialises the daemons that bind in one runtime directory: a daemon claims its lock file and a sweeping daemon probes
+    /// every lock file with the same exclusive lock, so without this guard a probe that lands between the claim's open and its
+    /// lock refuses the starting daemon as "already listening". The guard is held for the whole bind, never while serving.
+    fn bind_guard(directory: &Path) -> std::io::Result<std::fs::File> {
+        let guard = std::fs::OpenOptions::new().create(true).read(true).write(true).truncate(false).open(directory.join("bind.guard"))?;
+        guard.lock()?;
+        Ok(guard)
+    }
+
     /// 🧹 Removes the sockets of daemons that no longer run: their lock is free.
     fn sweep(directory: &Path, own: &Path) {
         let Ok(entries) = std::fs::read_dir(directory) else { return };
@@ -138,6 +147,7 @@ use semio_framework_ui_tui_terminal::pty::readiness::Interest;
             let metadata = std::fs::symlink_metadata(&directory)?;
             if !metadata.is_dir() || metadata.uid() != semio_framework_ui_tui_terminal::pty::user_id() { return Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied, format!("{} is not a directory of this user", directory.display()))); }
             if metadata.mode() & 0o077 != 0 { std::fs::set_permissions(&directory, std::fs::Permissions::from_mode(0o700))?; }
+            let _guard = bind_guard(&directory)?;
             let lock = path.with_extension("lock");
             let held = lock_runtime_file(&lock)?.ok_or_else(|| std::io::Error::new(std::io::ErrorKind::AlreadyExists, "workspace dashboard daemon is already listening"))?;
             sweep(&directory, &lock);

@@ -34,7 +34,7 @@ export const MorphAnchorOnWrapperContext = createContext(false);
 /** ⛶️ When true, {@link PdfMorphView} measures against the enlarged slide content box, not the declared catalogue frame. */
 export const PresentationDispositionEnlargeContext = createContext(false);
 
-/** 📐️ Live slide frame for {@link FigureMorphView} cover math (drag/resize updates this). */
+/** 🖼️ Live slide frame for {@link FigureMorphView} cover math (drag/resize updates this). */
 export const PresentationFigureCropFrameContext = createContext<DispositionPosition | undefined>(undefined);
 
 /** 📐️ Slide width÷height for mosaic windowed-cover (`undefined` → use {@link FigureEmbodiment.sourceAspect}). */

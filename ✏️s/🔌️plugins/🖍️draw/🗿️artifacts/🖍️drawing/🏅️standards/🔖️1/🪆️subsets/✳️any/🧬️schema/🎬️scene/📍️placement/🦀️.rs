@@ -19,6 +19,7 @@ impl Sum{fn add(&mut self,value:f64){let adjusted=value-self.error;let total=sel
 semio_framework_value::artifact_retire_leaf!(PlacementBasis,DrawingScenePlacement,DrawingScenePlacementProgress,Sum);
 /// 🧱️ Completed vector, cache, union and length children remain owned until caller close.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct DrawingScenePlacementJob{
  vector:DocumentVectorPreparationJob,paint:Option<ScenePaintJob>,union:Option<BooleanJob>,flatten:Option<PathFlattenJob>,retired_flats:Vec<PathFlattenJob>,length_segments:Vec<PathSegment>,
  phase:&'static str,work:u64,node:usize,part:usize,contour:usize,point:usize,segment:usize,flatten_contour:usize,flatten_point:usize,operands:Vec<BooleanOperand>,operand:BooleanOperand,bounds:Option<Bounds>,origin:Point,ring:Point,pen:Point,anchored:bool,

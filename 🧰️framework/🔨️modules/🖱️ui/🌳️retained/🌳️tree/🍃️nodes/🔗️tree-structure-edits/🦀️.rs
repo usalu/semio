@@ -5,7 +5,7 @@ use super::*;
 // #region tree
 impl UiTree {
 
-    /// 🔗️ Inserts `node` as the last child of `parent` (or as a root if `parent` is `None` and no
+    /// 🌱️ Inserts `node` as the last child of `parent` (or as a root if `parent` is `None` and no
     /// root exists yet), threading the sibling links.
     pub fn insert_child(&mut self, parent: Option<NodeId>, mut node: Node) -> NodeId {
         node.parent = parent;

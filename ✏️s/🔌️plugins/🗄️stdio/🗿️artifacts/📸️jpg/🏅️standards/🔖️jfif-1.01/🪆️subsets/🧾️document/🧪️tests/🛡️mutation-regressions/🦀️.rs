@@ -2,6 +2,7 @@ use crate::{JpgSnapshot,JpgDiff,JpgMutation};
 use crate::schema::snapshot::{JfifDensityUnits,JfifThumbnail,JpgSegment};
 use crate::schema::mutations::*;
 use protocol::{ColdDiffAlgebra, DiffAlgebra,ColdMutation, Mutation,MutationDiff};
+use protocol::ColdMutationDiff;
 use semio_framework_test_fixtures::fixture_text;
 fn fixture()->JpgSnapshot{semio_framework_pack_json::from_json_str(fixture_text!("../../../../🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 #[test]

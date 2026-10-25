@@ -1,4 +1,6 @@
 import {test,expect} from "bun:test";
+import {withBuildTestInvocationV1} from "../../../../../../🧪️testing/📥️invocation/🟦️.ts";
+import {evaluateExtractedFunctionV1} from "../../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
@@ -23,15 +25,15 @@ test("actual platform maintenance methods preserve original values and refuse ca
  try{const image=methods[0]!;for(const row of corpus.callbacks){const abort=new AbortController(),failure=Error("original maintenance interruption"),value=Object.freeze({owner:Symbol("original")}),control={signal:abort.signal,remainingMilliseconds:()=>1000,publish:async()=>{},yieldContinuation:async()=>{}};let checks=0,calls=0;
   const recheck=async()=>{checks++;await Promise.resolve();if(checks===1&&row.interrupt==="precheck"||checks===2&&row.interrupt==="postcheck")abort.abort(failure);checkResourceLeaseControl(control);},
   bindings={withNativeImageBodyOperationV1:(_owner:unknown,operationControl:unknown,operation:(control:unknown)=>Promise<unknown>)=>operation(operationControl),actualOwner:Object.freeze({owner:Symbol("owner")}),bodyControl:control,proof:Object.freeze({fixtureOnly:true}),port:Object.freeze({owner:Symbol("port")}),recheck,readNativeImageMaintenanceRequestV1,checkResourceLeaseControl};
-  const source=ts.transpileModule("const maintenance="+image.getText()+";",{compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.None}}).outputText,run=new Function(...Object.keys(bindings),source+";return maintenance;")(...Object.values(bindings)) as (request:unknown,body:(port:unknown)=>Promise<unknown>)=>Promise<{acquired:boolean;value?:unknown}>;
+  const source=ts.transpileModule("const maintenance="+image.getText()+";",{compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.None}}).outputText,run=evaluateExtractedFunctionV1(source,"maintenance",bindings) as (request:unknown,body:(port:unknown)=>Promise<unknown>)=>Promise<{acquired:boolean;value?:unknown}>;
   let caught=false,actual:unknown,result:{acquired:boolean;value?:unknown}|undefined;try{result=await run({version:1,wait:true},async port=>{calls++;expect(port).toBe(bindings.port);await Promise.resolve();if(row.interrupt==="body")abort.abort(failure);if(row.interrupt==="failure")throw failure;if(row.interrupt==="undefined")throw undefined;return value;});}catch(error){caught=true;actual=error;}
   const oracle=db.query("SELECT ?1='none' AS accepted").get(row.interrupt) as {accepted:number};expect(Boolean(oracle.accepted)).toBe(row.accepted);expect(caught).toBe(!row.accepted);if(row.accepted){expect(result?.acquired).toBe(true);expect(result?.value).toBe(value);expect(checks).toBe(2);}else expect(actual).toBe(row.interrupt==="undefined"?undefined:failure);expect(calls).toBe(row.interrupt==="precheck"?0:1);
- }for(const method of methods.slice(1)){const text=method.getText(),body=text.search(/await (?:body|run)\(port,custody\)/);expect(body).toBeGreaterThanOrEqual(0);expect(text.slice(body)).toMatch(/await (?:recheckPhysical|physical)\(/);expect(text).toContain("captureResourceLeaseWriterProofV1(");expect(text).toContain("withNativeImageBorrowerOperationV1(");}}finally{db.close();}
+ }for(const method of methods.slice(1)){const text=method.getText(),body=text.search(/await (?:body|run)\(port,custody\)/);expect(body).toBeGreaterThanOrEqual(0);expect(text.slice(body)).toMatch(/await (?:recheckPhysical|physical|strict)\(/);expect(text).toContain("captureResourceLeaseWriterProofV1(");expect(text).toContain("withNativeImageBorrowerOperationV1(");}}finally{db.close();}
 });
 
 test("actual maintenance methods retain exclusion through final backing recheck",()=>{
  const methods=maintenanceMethods();expect(methods.length).toBe(3);
- for(const method of methods){const text=method.getText(),body=text.search(/await (?:body|run)\(port,/),after=text.slice(body),recheck=after.search(/await (?:recheck|recheckPhysical|physical)\(/);expect(body).toBeGreaterThanOrEqual(0);expect(recheck).toBeGreaterThanOrEqual(0);expect(after.indexOf("return{acquired:true")).toBeGreaterThan(recheck);expect(text).toContain('kind:"kernel-ex"');}
+ for(const method of methods){const text=method.getText(),body=text.search(/await (?:body|run)\(port,/),after=text.slice(body),recheck=after.search(/await (?:recheck|recheckPhysical|physical|strict)\(/);expect(body).toBeGreaterThanOrEqual(0);expect(recheck).toBeGreaterThanOrEqual(0);expect(after.indexOf("return{acquired:true")).toBeGreaterThan(recheck);expect(text).toContain('kind:"kernel-ex"');}
  for(const method of methods.slice(1)){const text=method.getText();expect(text).toContain("return{acquired:false as const}");expect(text).toContain("finally{held.live=false;}");expect(text).toContain("withNativeImageTerminalCloseV1(");}
 });
 
@@ -49,10 +51,10 @@ test("historical retirement request matches closed Ajv and SQLite images",async(
 });
 
 test("historical retirement binds queued exclusive acquisition to detached expected identity",async()=>{
- const {join}=await import("node:path"),fs=await import("node:fs"),crypto=await import("node:crypto"),root=findWorkspaceRoot(import.meta.dir),{withBuildTestInvocationV1}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts")),{scriptCompilerAdmissionControlV1}=await import("../../../../../../🏗️build/🎟️capacity/🟦️.ts"),leases=await import("../../../../../../🔒️leases/🟦️.ts"),{retireNativeImageStorageV1}=await import("../../../🍎️image/🟦️.ts");
+ const {join}=await import("node:path"),fs=await import("node:fs"),crypto=await import("node:crypto"),root=findWorkspaceRoot(import.meta.dir),{scriptCompilerAdmissionControlV1}=await import("../../../../../../🏗️build/🎟️capacity/🟦️.ts"),leases=await import("../../../../../../🔒️leases/🟦️.ts"),{retireNativeImageStorageV1}=await import("../../../🍎️image/🟦️.ts");const {readNativeBootSessionV1,readNativeImageAncestryV1}=await import("../../🥾️boot/🟦️.ts");
  if(process.platform!=="darwin")return;
  await withBuildTestInvocationV1(async(original:ScriptInvocation)=>{const control=scriptCompilerAdmissionControlV1(original,"test:historical-retirement",0),scope=fs.mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"ri-")),directory=join(scope,"i"),leaseDirectory=join(scope,"l"),image=join(directory,"fixed.dmg"),receipt=join(directory,"image.json"),resource="native-fixed-image:"+directory,options={directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,maximumLeaseDatabaseBytes:16384,control};let blocker:Awaited<ReturnType<typeof leases.acquireResourceLease>>|undefined,work:Promise<boolean>|undefined;
- const create=(byte:number)=>{fs.mkdirSync(join(directory,"m"),{recursive:true});fs.writeFileSync(image,Buffer.alloc(4096,byte),{flag:"wx"});const row=fs.lstatSync(image),mount=fs.lstatSync(join(directory,"m"),{bigint:true});fs.writeFileSync(receipt,JSON.stringify({version:1,filesystemBytes:options.filesystemBytes,maximumPhysicalBytes:row.size,dev:row.dev,ino:row.ino,size:row.size,mountDirectory:{dev:String(mount.dev),ino:String(mount.ino),mode:Number(mount.mode)}})+"\n",{flag:"wx"});return{receiptSha256:crypto.createHash("sha256").update(fs.readFileSync(receipt)).digest("hex"),dev:row.dev,ino:row.ino,size:row.size,allocatedBytes:row.blocks*512};};
+ const boot=await readNativeBootSessionV1(control,process.cwd()),create=(byte:number)=>{fs.mkdirSync(join(directory,"m"),{recursive:true});fs.writeFileSync(image,Buffer.alloc(4096,byte),{flag:"wx"});const row=fs.lstatSync(image),mount=fs.lstatSync(join(directory,"m"),{bigint:true});fs.writeFileSync(receipt,JSON.stringify({version:1,filesystemBytes:options.filesystemBytes,maximumPhysicalBytes:row.size,bootSession:boot,dev:row.dev,ino:row.ino,size:row.size,ancestry:readNativeImageAncestryV1(directory),mountDirectory:{dev:String(mount.dev),ino:String(mount.ino),mode:Number(mount.mode)}})+"\n",{flag:"wx"});return{receiptSha256:crypto.createHash("sha256").update(fs.readFileSync(receipt)).digest("hex"),dev:row.dev,ino:row.ino,size:row.size,allocatedBytes:row.blocks*512};};
  try{const first=create(1),request={version:1 as const,wait:true,expectedImage:{...first}};blocker=await leases.acquireResourceLease({directory:leaseDirectory,resource,mode:"exclusive",signal:control.signal,control,maximumDatabaseBytes:16384});let settled=false;work=retireNativeImageStorageV1(options,request);void work.then(()=>{settled=true;},()=>{settled=true;});await control.yieldContinuation();expect(settled).toBe(false);fs.renameSync(directory,join(scope,"old"));const replacement=create(2);Object.assign(request.expectedImage,replacement);blocker.release();blocker=undefined;await control.yieldContinuation();await expect(work).rejects.toThrow("Expected original image retirement identity changed");work=undefined;expect(fs.lstatSync(image).ino).toBe(replacement.ino);expect(fs.readFileSync(image)[0]).toBe(2);expect(fs.existsSync(join(scope,"old/fixed.dmg"))).toBe(true);
  for(const field of["dev","ino","size","allocatedBytes"] as const){await expect(retireNativeImageStorageV1(options,{version:1,wait:false,expectedImage:{...replacement,[field]:replacement[field]+1}})).rejects.toThrow("Expected original image retirement identity changed");expect(fs.readFileSync(image)[0]).toBe(2);}
  const exact={version:1 as const,wait:false,expectedImage:replacement};expect(await retireNativeImageStorageV1(options,exact)).toBe(true);expect(fs.existsSync(directory)).toBe(false);
@@ -60,11 +62,7 @@ test("historical retirement binds queued exclusive acquisition to detached expec
  });
 },30000);
 
-import "./📥️persistent/🟦️.ts";
 
-import "../../../🧹️cleanup/📥️receiver/🧪️tests/📥️release/🟦️.ts";
 
-import "../../../🧱️fixed/🧪️tests/📥️receipt/🟦️.ts";
 
-import "../../../🧱️fixed/🧪️tests/📥️paths/🟦️.ts";
 

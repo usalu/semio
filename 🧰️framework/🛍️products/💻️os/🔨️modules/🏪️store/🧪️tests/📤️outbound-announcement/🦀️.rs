@@ -87,7 +87,7 @@ async fn publish_outbound_gesture(store: &mut ArtifactStore<DemoSnapshot, DemoMu
         .unwrap_or_else(|rejected| panic!("outbound batch admission: {}", rejected.reason));
     let grant = batch_turn_grant();
     for _ in 0..1_048_576 {
-        if let ArtifactStoreOneItemAdvance::Published(_, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, grant,receiving)).expect("bounded batch step") {
+        if let ArtifactStoreOneItemAdvance::Published(_, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, semio_framework_value::testing::physical_test_close_grant().maximum_copy_bytes, grant, receiving)).expect("bounded batch step") {
             break;
         }
     }

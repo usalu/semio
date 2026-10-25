@@ -174,5 +174,4 @@ export async function testContainerRuntimeBootstrap(workspace: string,invocation
     }
     for (const architecture of fixture.rejectedArchitectures) assert.notEqual(spawnSync("sh", ["-ec", command], { env: { ...process.env, runtime_arch: architecture }, encoding: "utf8", timeout: 5000 }).status, 0);
   }
-  console.log("[DEBUG] Container runtime pins, checksums, original build-tool setup, source listener ports, volume ownership and JSONC/TOML/lodash oracles completed"+(process.platform==="win32"?"; native shell selector not executed on Windows":" with native shell selector"));
 }

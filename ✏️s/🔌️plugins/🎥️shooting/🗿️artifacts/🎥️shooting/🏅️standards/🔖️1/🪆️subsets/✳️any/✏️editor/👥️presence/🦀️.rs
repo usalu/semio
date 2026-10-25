@@ -5,7 +5,7 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of shooting selection and viewport camera state.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "shooting.presence")]
 #[dsl(layout = "lines")]
@@ -21,7 +21,11 @@ pub struct ShootingPresence {
     pub camera: ShootingCamera,
 }
 
-impl store::ArtifactPresenceSnapshot for ShootingPresence {}
+impl store::ArtifactPresenceSnapshot for ShootingPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 
 

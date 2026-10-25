@@ -3,12 +3,12 @@ use super::super::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,Sq
 use semio_framework_value::{ValueError, ValueRefusalKind, NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::{cmp::Ordering,mem::size_of};
-/// 🧾️ The original SQLite receiving scope adopts body, close and publication effects once.
+/// 📩️ The original SQLite receiving scope adopts body, close and publication effects once.
 pub struct ReceivingSettlement<'a,'b>{control:std::cell::RefCell<super::super::SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:std::cell::Cell<bool>,cause:std::cell::RefCell<Option<ValueError>>}
 impl<'a,'b> ReceivingSettlement<'a,'b>{
  /// 🎟️ Borrows the initiating scope and its independently remaining allocation authority.
  pub fn new(control:&'a mut SqliteSnapshotControl<'b>,before:usize,phase:SqliteSnapshotPhase)->Self{let remaining=control.allocation_remaining_bytes();Self{control:std::cell::RefCell::new(control.receiving_scope()),before,remaining,phase,post_body:std::cell::Cell::new(false),cause:std::cell::RefCell::new(None)}}
- /// 🫴️ Loans the real original scope while keeping its dynamic borrow private.
+ /// 🎛️ Loans the real original scope while keeping its dynamic borrow private.
  pub fn with_control<T>(&self,operation:impl FnOnce(&mut SqliteSnapshotControl<'b>)->T)->T{operation(&mut self.control.borrow_mut())}
  fn settle(&self,owned:usize)->Result<()>{settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)}
  /// 📤️ Adopts body effects before any owned frame status or output leaves receiving custody.
@@ -21,7 +21,7 @@ impl<'a,'b> ReceivingSettlement<'a,'b>{
 #[doc(hidden)] pub type Result<T>=std::result::Result<T,ValueError>;
 #[doc(hidden)] pub fn error(kind:ValueRefusalKind,message:&'static str)->ValueError{ValueError::literal(kind,message)}
 fn invalid(message:&'static str)->ValueError{error(ValueRefusalKind::InvalidValue,message)}
-/// 🎟️ Runs paid destination operations through an existing original wallet without creating authority.
+/// 📬️ Runs paid destination operations through an existing original wallet without creating authority.
 pub trait ReceivingWallet{
  fn admit_frontier(&self,demand:RetainedCloneGrant)->Result<()>;
  fn record_progress(&mut self,progress:RetainedCloneProgress)->Result<()>;
@@ -55,7 +55,7 @@ impl<B:ReceivingWallet> Port<'_,'_,'_,B>{
   };self.receipt(before)?;result.map_err(|error|cause.unwrap_or(error))
  }
 }
-/// 🫴️ Moves an original collection through two retained fields without dropping refused growth.
+/// 🧪️ Moves an original collection through two retained fields without dropping refused growth.
 pub fn relocate_vector<T,B:ReceivingWallet>(original:&mut Vec<T>,replacement:&mut Vec<T>,capacity:usize,depth:usize,port:&mut Port<'_,'_,'_,B>)->Result<()>{
  if capacity<original.len(){return Err(error(ValueRefusalKind::OwnershipLimit,"SQLite replacement cannot retain its original elements"))}port.vector(capacity,replacement,depth)?;while !original.is_empty(){port.work(depth,size_of::<T>())?;replacement.push(original.pop().unwrap());}let count=replacement.len();for index in 0..count/2{port.work(depth,2*size_of::<T>())?;replacement.swap(index,count-1-index);}port.work(depth,3*size_of::<Vec<T>>())?;std::mem::swap(original,replacement);Ok(())
 }
@@ -69,7 +69,9 @@ pub fn cell<B:ReceivingWallet>(frame:&mut Projection,value:Scalar,port:&mut Port
 pub fn text_cell<B:ReceivingWallet>(frame:&mut Projection,text:&str,port:&mut Port<'_,'_,'_,B>)->Result<()>{frame.value_bytes=frame.value_bytes.checked_add(text.len()).ok_or_else(||error(ValueRefusalKind::OwnershipLimit,"SQLite value extent overflow"))?;port.control.check_value_bytes(frame.value_bytes)?;port.work(4,size_of::<SqliteValue>())?;frame.row.values.push(SqliteValue::Text(String::new()));let Some(SqliteValue::Text(output))=frame.row.values.last_mut()else{unreachable!()};port.text(text,output,4)}
 pub fn row<B:ReceivingWallet>(frame:&mut Projection,id:i64,width:usize,port:&mut Port<'_,'_,'_,B>)->Result<()>{port.vector(width,&mut frame.row.values,3)?;frame.row.rowid=id;cell(frame,Scalar::Integer(id),port)}
 pub fn push_row<B:ReceivingWallet>(frame:&mut Projection,table:usize,port:&mut Port<'_,'_,'_,B>)->Result<()>{port.work(3,size_of::<SqliteRow>())?;frame.database.tables[table].rows.push(std::mem::replace(&mut frame.row,SqliteRow{rowid:0,values:Vec::new()}));Ok(())}
-pub fn sort<B:ReceivingWallet>(indices:&mut[usize],port:&mut Port<'_,'_,'_,B>,mut compare:impl FnMut(usize,usize)->Result<Ordering>)->Result<()>{fn sift<B:ReceivingWallet>(indices:&mut[usize],mut root:usize,end:usize,port:&mut Port<'_,'_,'_,B>,compare:&mut impl FnMut(usize,usize)->Result<Ordering>)->Result<()>{while root<end/2{port.work(1,0)?;let mut child=root*2+1;if child+1<end&&compare(indices[child],indices[child+1])?.is_lt(){child+=1}if !compare(indices[root],indices[child])?.is_lt(){break}port.work(1,2*size_of::<usize>())?;indices.swap(root,child);root=child;}Ok(())}for root in(0..indices.len()/2).rev(){sift(indices,root,indices.len(),port,&mut compare)?}for end in(1..indices.len()).rev(){port.work(1,2*size_of::<usize>())?;indices.swap(0,end);sift(indices,0,end,port,&mut compare)?}Ok(())}
+/// 🔀️ Heap sort of row indices whose comparison also charges the receiving port (the comparator borrows the port per call, never across the sort).
+pub fn sort_charged<B:ReceivingWallet>(indices:&mut[usize],port:&mut Port<'_,'_,'_,B>,mut compare:impl FnMut(usize,usize,&mut Port<'_,'_,'_,B>)->Result<Ordering>)->Result<()>{fn sift<B:ReceivingWallet>(indices:&mut[usize],mut root:usize,end:usize,port:&mut Port<'_,'_,'_,B>,compare:&mut impl FnMut(usize,usize,&mut Port<'_,'_,'_,B>)->Result<Ordering>)->Result<()>{while root<end/2{port.work(1,0)?;let mut child=root*2+1;if child+1<end&&compare(indices[child],indices[child+1],port)?.is_lt(){child+=1}if !compare(indices[root],indices[child],port)?.is_lt(){break}port.work(1,2*size_of::<usize>())?;indices.swap(root,child);root=child;}Ok(())}for root in(0..indices.len()/2).rev(){sift(indices,root,indices.len(),port,&mut compare)?}for end in(1..indices.len()).rev(){port.work(1,2*size_of::<usize>())?;indices.swap(0,end);sift(indices,0,end,port,&mut compare)?}Ok(())}
+pub fn sort<B:ReceivingWallet>(indices:&mut[usize],port:&mut Port<'_,'_,'_,B>,mut compare:impl FnMut(usize,usize)->Result<Ordering>)->Result<()>{sort_charged(indices,port,|a,b,_|compare(a,b))}
 pub fn identity_position<B:ReceivingWallet>(rows:&[SqliteRow],ids:&[usize],identity:i64,port:&mut Port<'_,'_,'_,B>)->Result<Option<usize>>{let(mut low,mut high)=(0,ids.len());while low<high{port.work(1,0)?;let middle=low+(high-low)/2;match rows[ids[middle]].rowid.cmp(&identity){Ordering::Less=>low=middle+1,Ordering::Greater=>high=middle,Ordering::Equal=>return Ok(Some(ids[middle]))}}Ok(None)}
 pub fn parent_range<B:ReceivingWallet>(rows:&[SqliteRow],indices:&[usize],identity:i64,parent_column:usize,port:&mut Port<'_,'_,'_,B>)->Result<std::ops::Range<usize>>{let(mut low,mut high)=(0,indices.len());while low<high{port.work(1,0)?;let middle=low+(high-low)/2;if integer(&rows[indices[middle]],parent_column)?<identity{low=middle+1}else{high=middle}}let start=low;high=indices.len();while low<high{port.work(1,0)?;let middle=low+(high-low)/2;if integer(&rows[indices[middle]],parent_column)?<=identity{low=middle+1}else{high=middle}}Ok(start..low)}
 /// 🧾️ Admits only the original native allocation delta absent from earlier SQL receipts.
@@ -88,7 +90,7 @@ fn identifier_matches<B:ReceivingWallet>(name:&str,token:&str,port:&mut Port<'_,
 }
 /// 📜️ Compares bounded borrowed SQL tokens, preserving exact bytes of quoted literals.
 fn same_token<B:ReceivingWallet>(left:&str,right:&str,port:&mut Port<'_,'_,'_,B>)->Result<bool>{if left.len()!=right.len(){return Ok(false)}let exact=left.starts_with(['\'','"'])||right.starts_with(['\'','"']);for(left,right)in left.as_bytes().chunks(256).zip(right.as_bytes().chunks(256)){port.work(1,0)?;let matches=if exact{left==right}else{left.eq_ignore_ascii_case(right)};if !matches{return Ok(false)}}Ok(true)}
-/// 📜️ Validates borrowed authored declarations with bounded scanning and comparison work.
+/// ✅️ Validates borrowed authored declarations with bounded scanning and comparison work.
 pub fn validate_declaration<B:ReceivingWallet>(source:&str,authored:&str,port:&mut Port<'_,'_,'_,B>)->Result<()>{let mut source=Tokens::new(source);let mut authored=Tokens::new(authored);loop{port.work(1,0)?;match(source.next(port)?,authored.next(port)?){(None,None)=>return Ok(()),(Some(a),Some(b))=>{if !same_token(a,b,port)?{return Err(invalid("SQLite declaration differs from the authored receiving schema"))}},(Some(";"),None)if source.next(port)?.is_none()=>return Ok(()),(None,Some(";"))if authored.next(port)?.is_none()=>return Ok(()),_=>return Err(invalid("SQLite declaration differs from the authored receiving schema"))}}}
 
 /// 📏️ Checks borrowed database extents using original paid work and literal refusals.

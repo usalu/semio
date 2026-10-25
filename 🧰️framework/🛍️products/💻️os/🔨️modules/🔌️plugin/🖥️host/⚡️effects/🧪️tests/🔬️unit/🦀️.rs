@@ -169,9 +169,16 @@ async fn revoked_capability_cancels_only_its_own_operations_and_actor_survives()
     executor.execute(&dispatch_kept, &[Effect::BlobLoad { req: RequestId(2), hash: "h2".to_string() }]).await;
 
     executor.revoke_capability(revoked_cap).await;
-    runtime.drive().await;
-
-    let recorded = injector.recorded().await;
+    let mut recorded = Vec::new();
+    for tick in 1..=5_000u64 {
+        runtime.drive().await;
+        recorded = injector.recorded().await;
+        if recorded.len() >= 2 {
+            break;
+        }
+        runtime.set_now_ms(tick).await;
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
     assert_eq!(recorded.len(), 2, "both operations must complete — one with an error, one normally");
     let find_result = |req: u64| -> RequestOutcome {
         let envelope = recorded.iter().find(|e| matches!(&e.payload, Payload::Event { bytes } if matches!(serde_json::from_slice::<Event>(bytes), Ok(Event::Completed { req: r, .. }) if r.0 == req))).expect("completion for req must exist");
@@ -488,7 +495,6 @@ fn router_effect_original_box_frame_has_a_separate_funded_terminal_turn(){
     }
     assert!(saw_frame&&owner.terminal_is_empty());assert_eq!(released,source_capacity+frame);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!(heap.released_bytes,0);
     original_source.finish();
-    eprintln!("[DEBUG] original router Box frame{frame} source{source_capacity} released{released} separate terminal frame funded drop0; factory birth unqualified");
 }
 
 #[test]

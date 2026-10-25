@@ -38,3 +38,7 @@ semio-s-artifact-layout-layout-engine = { workspace = true }
 semio-s-artifact-layout-layout-engine-json = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }
 semio-framework-pixels = { workspace = true }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-job-worker = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }

@@ -23,7 +23,7 @@ use crate::editor::flow::commands::add_widget::{child_add_widget_mutation_from_d
 use crate::editor::flow::commands::add_widget::*;
 use crate::editor::flow::unit_tests::context::{dispatch, flow_app, flow_main_window_meta};
 use crate::editor::flow::FlowCommand;
-use store::{pack::snapshot::ArtifactPack, SpaceMember};
+use store::{snapshot::ArtifactPack, SpaceMember, ReferenceSpaceMember};
 
 #[test]
 fn child_add_widget_uses_the_smallest_available_identity_and_the_descriptor_default_payload() {

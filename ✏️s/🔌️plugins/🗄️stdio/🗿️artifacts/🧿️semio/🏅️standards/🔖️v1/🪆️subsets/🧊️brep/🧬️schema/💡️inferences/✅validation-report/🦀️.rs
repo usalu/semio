@@ -14,7 +14,7 @@ use crate::schema::snapshot::SemioBrepSnapshot;
 /// bound now reads `ToValue + FromValue` (ticket
 /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`), so this leaf drops the
 /// serde half entirely.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BrepValidationDiagnostic {
     pub code: String,

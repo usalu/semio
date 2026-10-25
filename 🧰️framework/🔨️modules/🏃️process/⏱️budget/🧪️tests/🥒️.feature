@@ -25,3 +25,21 @@ Feature: Original process time limits and finite preparation
     And every check measures elapsed monotonic time from the same start
     And an early check never renews the deadline
     And cancellation retires every scheduled check
+
+  Scenario: A long native action outlives a fixed wall clock while it makes progress
+    Given a native action with an idle window and a maximum derived from its declared cost
+    When its child keeps using CPU time or writing output, or it sits in a declared lease or queue wait
+    Then the idle window is renewed each time
+    And the action is never stopped before the maximum for lack of time alone
+
+  Scenario: A native action that does nothing is stopped after its idle window
+    Given a native action whose child neither uses CPU time nor writes output nor waits in a declared wait
+    When the idle window passes
+    Then the action is stopped and the reason is written in every selected language
+    And a heartbeat that the waiting process writes about itself does not renew the window
+
+  Scenario: The maximum cannot be renewed
+    Given a native action that makes progress without end
+    When its declared maximum is reached
+    Then the action is stopped as having reached its maximum
+    And no progress, wait or environment setting moves that maximum

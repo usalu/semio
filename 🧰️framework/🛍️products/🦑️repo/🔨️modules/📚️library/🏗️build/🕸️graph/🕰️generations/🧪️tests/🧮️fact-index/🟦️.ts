@@ -4,10 +4,10 @@ import{mkdtempSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
-import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{canonicalJsonV1,createFactIndexV1}from"../../🟨️.mjs";
 
-const python=testPythonV1(),oracle=join(dirname(fileURLToPath(import.meta.url)),"🐍️oracle.py");
+const python=testPythonV1(),oracle=join(dirname(fileURLToPath(import.meta.url)),"🐍️.py");
 type Row={kind:string;path:string;fact:unknown};
 
 /** 🎲️ A deterministic generator (mulberry32) so the corpus is the same in every run and every language of the model. */

@@ -121,7 +121,6 @@ export async function runEmbeddedBrowserAcceptance(args: readonly string[]): Pro
       }
       receipts.push({ phase, before, after, workers: workers.size, input }); persist();
       await page.screenshot({ path: resolve(output, `${config.renderer}-${phase}.png`) });
-      console.log(`[DEBUG] embedded ${config.renderer} ${phase} accepted workers=${workers.size}`);
     };
     const suppress = async (id: string, value: boolean) => page.evaluate(({ id, value }) => (window as any).embeddedAcceptance.mounts[id].setIntroductionSuppressed(value), { id, value });
     await record("boot", async () => {}, (_, s) => s.every(s => s.ready) && !s[0]!.intro && s[1]!.intro);
@@ -153,10 +152,8 @@ export async function runEmbeddedBrowserAcceptance(args: readonly string[]): Pro
     await record("stale-retire-a", () => page.evaluate(async () => { const old = (window as any).embeddedAcceptance.stale["shell-a"]; await old(); if (old.introspection) { let code = ""; try { await old.introspection.dumpChrome(); } catch (e) { code = (e as Error).message; } if (code !== "wgpu-mount-retired") throw new Error("retired introspection remained live"); } }), (_, s) => s.every(s => s.ready));
     await record("retire-a", () => page.evaluate(async () => { const mount = (window as any).embeddedAcceptance.mounts["shell-a"]; await Promise.all([mount(), mount()]); }), (_, s) => !s[0]!.ready && s[0]!.canvases === 0 && s[1]!.ready);
     assert.equal(await page.locator("#shell-a").evaluate(e => e.children.length), 0); assert.equal(workers.size, config.renderer === "wgpu" ? 1 : 0);
-    console.log(`[DEBUG] embedded ${config.renderer} retire-a awaited worker-close and empty owner`);
     await record("retire-b", () => page.evaluate(async () => { await (window as any).embeddedAcceptance.mounts["shell-b"](); }), (_, s) => s.every(s => !s.ready && s.canvases === 0));
     assert.equal(await page.locator("#shell-b").evaluate(e => e.children.length), 0); assert.equal(workers.size, 0);
-    console.log(`[DEBUG] embedded ${config.renderer} retire-b awaited worker-close and empty owner`);
     await page.evaluate(harness => {
       const iframe = document.createElement("iframe"); iframe.id = "embedded-iframe"; iframe.allow = "webgpu"; iframe.src = harness;
       iframe.style.cssText = "position:absolute;left:20px;top:60px;width:760px;height:880px;border:0"; document.body.appendChild(iframe);
@@ -177,10 +174,9 @@ export async function runEmbeddedBrowserAcceptance(args: readonly string[]): Pro
     assert.equal(await iframe.locator("#iframe-shell").evaluate(e => e.children.length), 0); assert.equal(workers.size, 0);
     receipts.push({ phase: "iframe", before: [], after: [], workers: workers.size, input: [], evidence: { forcedIntroductionSuppression: !iframeIntro, awaitedRetirement: true } });
     assert.deepEqual(receipts.map(r => r.phase), fixture.phases);
-    console.log(`[DEBUG] embedded ${config.renderer} iframe forced suppression and awaited retirement accepted`);
     persist();
   } catch (error) {
-    log(`[DEBUG] embedded acceptance failed ${error instanceof Error ? error.stack : String(error)}`);
+    log(`embedded acceptance failed ${error instanceof Error ? error.stack : String(error)}`);
     await page.screenshot({ path: resolve(output, `embedded-${config.renderer}-fault.png`) }).catch(() => {});
     throw error;
   } finally { persist(); await browser.close(); }

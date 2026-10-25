@@ -2,15 +2,17 @@
   "schemaVersion": 1,
   "GiB": 1073741824,
   "limits": [
-    {"name": "defaults on 64 GiB", "environment": {}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000}},
-    {"name": "8 GiB host", "environment": {}, "memoryGiB": 8, "expected": {"finite": 1, "watch": 6, "idleMilliseconds": 600000}},
-    {"name": "4 GiB host has no finite daemon", "environment": {}, "memoryGiB": 4, "expected": {"finite": 0, "watch": 6, "idleMilliseconds": 600000}},
-    {"name": "256 GiB host stays at the authored maximum", "environment": {}, "memoryGiB": 256, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000}},
-    {"name": "override both", "environment": {"SEMIO_NX_DAEMONS": "4,3"}, "memoryGiB": 8, "expected": {"finite": 4, "watch": 3, "idleMilliseconds": 600000}},
-    {"name": "override off", "environment": {"SEMIO_NX_DAEMONS": "0"}, "memoryGiB": 64, "expected": {"finite": 0, "watch": 6, "idleMilliseconds": 600000}},
-    {"name": "override capped at 16", "environment": {"SEMIO_NX_DAEMONS": "99,99"}, "memoryGiB": 64, "expected": {"finite": 16, "watch": 16, "idleMilliseconds": 600000}},
-    {"name": "garbage ignored", "environment": {"SEMIO_NX_DAEMONS": "x,-1", "SEMIO_NX_DAEMON_IDLE_MS": "1.5"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000}},
-    {"name": "idle override", "environment": {"SEMIO_NX_DAEMON_IDLE_MS": "1000"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 1000}}
+    {"name": "defaults on 64 GiB", "environment": {}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
+    {"name": "8 GiB host", "environment": {}, "memoryGiB": 8, "expected": {"finite": 1, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
+    {"name": "4 GiB host has no finite daemon", "environment": {}, "memoryGiB": 4, "expected": {"finite": 0, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
+    {"name": "256 GiB host stays at the authored maximum", "environment": {}, "memoryGiB": 256, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
+    {"name": "override both", "environment": {"SEMIO_NX_DAEMONS": "4,3"}, "memoryGiB": 8, "expected": {"finite": 4, "watch": 3, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
+    {"name": "override off", "environment": {"SEMIO_NX_DAEMONS": "0"}, "memoryGiB": 64, "expected": {"finite": 0, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
+    {"name": "override capped at 16", "environment": {"SEMIO_NX_DAEMONS": "99,99"}, "memoryGiB": 64, "expected": {"finite": 16, "watch": 16, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
+    {"name": "garbage ignored", "environment": {"SEMIO_NX_DAEMONS": "x,-1", "SEMIO_NX_DAEMON_IDLE_MS": "1.5"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
+    {"name": "drain override", "environment": {"SEMIO_NX_DAEMON_DRAIN_MS": "2500"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 2500}},
+    {"name": "drain garbage ignored", "environment": {"SEMIO_NX_DAEMON_DRAIN_MS": "-3"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 600000, "drainMilliseconds": 60000}},
+    {"name": "idle override", "environment": {"SEMIO_NX_DAEMON_IDLE_MS": "1000"}, "memoryGiB": 64, "expected": {"finite": 2, "watch": 6, "idleMilliseconds": 1000, "drainMilliseconds": 60000}}
   ],
   "decisions": [
     {"name": "explicit false", "input": {"explicit": "false", "namespaceLive": true, "live": 0, "limit": 2}, "expected": {"enabled": false, "reason": "explicit"}},
@@ -26,5 +28,11 @@
     {"name": "finite with an open request", "state": {"kind": "finite", "openRequests": 1, "lastActivity": 0, "now": 9999999, "idleMilliseconds": 600000}, "expected": false},
     {"name": "watch never idles", "state": {"kind": "watch", "openRequests": 0, "lastActivity": 0, "now": 9999999, "idleMilliseconds": 600000}, "expected": false},
     {"name": "idle off", "state": {"kind": "finite", "openRequests": 0, "lastActivity": 0, "now": 9999999, "idleMilliseconds": 0}, "expected": false}
+  ],
+  "yield": [
+    {"name": "finite quiet and requested drains", "state": {"kind": "finite", "openRequests": 0, "requested": true}, "expected": true},
+    {"name": "finite quiet and not requested stays", "state": {"kind": "finite", "openRequests": 0, "requested": false}, "expected": false},
+    {"name": "finite with an open request keeps its namespace", "state": {"kind": "finite", "openRequests": 1, "requested": true}, "expected": false},
+    {"name": "watch daemons never yield", "state": {"kind": "watch", "openRequests": 0, "requested": true}, "expected": false}
   ]
 }

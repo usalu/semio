@@ -6,13 +6,13 @@
 import type { VizCoordinateKind, VizCoordinateOptions, VizExtent, VizPoint } from "@semio-tech/print/schema/snapshot/chart";
 
 //#region 🔖️Contract
-/** 🧭️ A coordinate system: a forward map, an optional inverse, and the frame it works in. */
+/** 🗺️ A coordinate system: a forward map, an optional inverse, and the frame it works in. */
 export type VizCoordinateSystem = {
   readonly kind: VizCoordinateKind;
   readonly frame: VizExtent;
   project(u: number, v: number): VizPoint;
   invert?(x: number, y: number): VizPoint;
-  /** 🧭️ The axes this system draws, as unit-interval anchors in its own space. */
+  /** ✏️ The axes this system draws, as unit-interval anchors in its own space. */
   axes(): readonly { readonly name: string; readonly from: VizPoint; readonly to: VizPoint }[];
 };
 
@@ -24,7 +24,7 @@ function span(frame: VizExtent): { width: number; height: number } {
 //#endregion 🔖️Contract
 
 //#region 🔖️Systems
-/** 🧭️ `cartesian`: the unit square onto the frame, `v` growing upward as a chart expects. */
+/** 🔲️ `cartesian`: the unit square onto the frame, `v` growing upward as a chart expects. */
 export function coordinateCartesian(frame: VizExtent, options: VizCoordinateOptions = {}): VizCoordinateSystem {
   const { width, height } = span(frame);
   const transpose = options.transpose === true;
@@ -40,7 +40,7 @@ export function coordinateCartesian(frame: VizExtent, options: VizCoordinateOpti
   };
 }
 
-/** 🧭️ `polar`: `u` is the angular fraction, `v` the radial fraction between the two radii. */
+/** ⭕️ `polar`: `u` is the angular fraction, `v` the radial fraction between the two radii. */
 export function coordinatePolar(frame: VizExtent, options: VizCoordinateOptions = {}): VizCoordinateSystem {
   const { width, height } = span(frame);
   const cx = frame.x0 + width / 2;
@@ -74,7 +74,7 @@ export function coordinatePolar(frame: VizExtent, options: VizCoordinateOptions 
   };
 }
 
-/** 🧭️ `logpolar`: the polar system with a logarithmic radius, for spiral and decade plots. */
+/** 🪵️ `logpolar`: the polar system with a logarithmic radius, for spiral and decade plots. */
 export function coordinateLogPolar(frame: VizExtent, options: VizCoordinateOptions = {}): VizCoordinateSystem {
   const polar = coordinatePolar(frame, options);
   const base = options.base ?? 10;
@@ -92,7 +92,7 @@ export function coordinateLogPolar(frame: VizExtent, options: VizCoordinateOptio
   };
 }
 
-/** 🧭️ `ternary`: three barycentric weights onto the equilateral triangle inscribed in the frame. */
+/** 🔺️ `ternary`: three barycentric weights onto the equilateral triangle inscribed in the frame. */
 export function coordinateTernary(frame: VizExtent): VizCoordinateSystem & { projectTernary(a: number, b: number, c: number): VizPoint } {
   const { width, height } = span(frame);
   const side = Math.min(width, height / (Math.sqrt(3) / 2));
@@ -118,7 +118,7 @@ export function coordinateTernary(frame: VizExtent): VizCoordinateSystem & { pro
   };
 }
 
-/** 🧭️ `barycentric`: weights over an arbitrary polygon of anchors, the generalised ternary plot. */
+/** ⚖️ `barycentric`: weights over an arbitrary polygon of anchors, the generalised ternary plot. */
 export function coordinateBarycentric(frame: VizExtent, anchorCount: number): VizCoordinateSystem & { projectWeights(weights: readonly number[]): VizPoint } {
   const { width, height } = span(frame);
   const cx = frame.x0 + width / 2;
@@ -149,7 +149,7 @@ export function coordinateBarycentric(frame: VizExtent, anchorCount: number): Vi
   };
 }
 
-/** 🧭️ `parallel`: one vertical axis per named dimension, `u` selecting the axis. */
+/** 🚥️ `parallel`: one vertical axis per named dimension, `u` selecting the axis. */
 export function coordinateParallel(frame: VizExtent, options: VizCoordinateOptions = {}): VizCoordinateSystem {
   const { width, height } = span(frame);
   const names = options.axes ?? [];
@@ -164,7 +164,7 @@ export function coordinateParallel(frame: VizExtent, options: VizCoordinateOptio
   };
 }
 
-/** 🧭️ `geographic`: the frame handed to a `🌍geo` projection, which owns the spherical mathematics. */
+/** 🌍️ `geographic`: the frame handed to a `🌍geo` projection, which owns the spherical mathematics. */
 export function coordinateGeographic(frame: VizExtent, project: (lon: number, lat: number) => VizPoint, invert?: (x: number, y: number) => VizPoint): VizCoordinateSystem {
   return {
     kind: "geographic",
@@ -180,7 +180,7 @@ export function coordinateGeographic(frame: VizExtent, project: (lon: number, la
 //#endregion 🔖️Systems
 
 //#region 🔖️Dispatch
-/** 🧭️ `\SemioVizCoordinate`: builds the named coordinate system for a plot rectangle. */
+/** 🔨️ `\SemioVizCoordinate`: builds the named coordinate system for a plot rectangle. */
 export function buildVizCoordinate(kind: VizCoordinateKind, frame: VizExtent, options: VizCoordinateOptions = {}): VizCoordinateSystem {
   switch (kind) {
     case "polar":

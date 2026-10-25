@@ -97,16 +97,17 @@ impl ArtifactEditor for EquationPlayApp {
         registry.register(EquationCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !EQUATION_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !EQUATION_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Equation command does not match its exact retained tool registration"));
+        if original.command.command_id() != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Equation command does not match its exact retained tool registration").into());
         }
-        let extent = equation_command_extent(&request.command, &request.snapshot).ok_or_else(|| Fault::from("equation-command-capacity"))?;
-        let tool_id = request.command.command_id();
-        let operation_context = AppOperationContext {
+        let extent = equation_command_extent(&original.command, &original.snapshot).ok_or_else(|| Fault::from("equation-command-capacity"))?;
+        let tool_id = original.command.command_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, EquationCommand::command_id, EQUATION_RETAINED_RAW_BYTES, EQUATION_RETAINED_WORK_ITEMS, false, |request| { let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,
@@ -114,27 +115,7 @@ impl ArtifactEditor for EquationPlayApp {
             canonical_base_revision: request.canonical_base_revision,
             retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
-        };
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(EquationRetainedCommandWork::new(tool_id, equation_operation_identity(tool_id, &operation_context), extent));
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            EquationCommand::command_id,
-            EQUATION_RETAINED_RAW_BYTES,
-            EQUATION_RETAINED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        }; EquationRetainedCommandWork::new(tool_id, equation_operation_identity(tool_id, &operation_context), extent) })
     }
 
     /// 🌱️ The derivable `notation`/`results`/`computed` members — see

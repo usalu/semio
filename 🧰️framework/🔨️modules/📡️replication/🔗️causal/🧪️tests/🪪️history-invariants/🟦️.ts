@@ -64,5 +64,4 @@ export function testHistoryInvariants(): void {
       assert.deepEqual(foldHistory([...row.edits].reverse(), [...row.transitions].reverse()), expected, row.id);
     }
   } finally { database.close(); }
-  console.log(`[DEBUG] ${fixture.cases.length} shared history vectors agree with Ajv and SQLite unique keys/binary collation`);
 }

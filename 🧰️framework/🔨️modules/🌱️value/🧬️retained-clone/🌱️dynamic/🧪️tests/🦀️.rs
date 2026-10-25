@@ -49,7 +49,7 @@ fn denied(grant:RetainedCloneGrant,demand:RetirementDemand)->Vec<RetainedCloneGr
 }
 
 fn check(result:Result<RetainedCloneStep,ValueError>,heap:(usize,usize),grant:RetainedCloneGrant)->RetainedCloneProgress {
-    let progress=result.unwrap_or_else(|error|panic!("[DEBUG] Original dynamic granted step refused {:?}: {}",error.kind,error)).progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));progress
+    let progress=result.unwrap_or_else(|error|panic!("Original dynamic granted step refused {:?}: {}",error.kind,error)).progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));progress
 }
 
 fn check_denied(result:Result<RetainedCloneStep,ValueError>,heap:(usize,usize),grant:RetainedCloneGrant,demand:RetirementDemand){
@@ -63,9 +63,9 @@ fn close_cursor(cursor:&mut DslValueRetainedCloneCursor,copy:usize,born:&mut usi
         let(demand,heap)=observe(||cursor.close_demands(copy).unwrap());assert_eq!(heap,(0,0));let admitted=grant(demand,copy);
         for denied in denied(admitted,demand){let(result,heap)=observe(||cursor.close_step(denied));check_denied(result,heap,denied,demand);assert_eq!(cursor.close_demands(copy).unwrap(),demand);}
         if demand.release_bytes>8 {let denied=RetainedCloneGrant {maximum_release_bytes:8,..admitted};let(result,heap)=observe(||cursor.close_step(denied));check_denied(result,heap,denied,demand);}
-        let(result,heap)=observe(||cursor.close_step(admitted));let progress=check(result,heap,admitted);*born+=heap.0;*freed+=heap.1;stalled=if progress==Default::default(){stalled+1}else{0};assert!(stalled<=143,"[DEBUG] Original dynamic cursor closure stalled copy={copy} demand={demand:?}");
+        let(result,heap)=observe(||cursor.close_step(admitted));let progress=check(result,heap,admitted);*born+=heap.0;*freed+=heap.1;stalled=if progress==Default::default(){stalled+1}else{0};assert!(stalled<=143,"Original dynamic cursor closure stalled copy={copy} demand={demand:?}");
     }
-    panic!("[DEBUG] Original dynamic cursor did not close its retained original graph");
+    panic!("Original dynamic cursor did not close its retained original graph");
 }
 
 fn close_source(source:&mut RetainedCloneSource<DslValue>,copy:usize,born:&mut usize,freed:&mut usize){
@@ -74,9 +74,9 @@ fn close_source(source:&mut RetainedCloneSource<DslValue>,copy:usize,born:&mut u
         if source.terminal_is_empty(){return;}
         let demand=source.next_close_demand(copy).unwrap();let admitted=grant(demand,0);assert_eq!(source.next_close_demand(admitted.maximum_copy_bytes).unwrap(),demand);
         if demand.release_bytes>8 {let denied=RetainedCloneGrant {maximum_release_bytes:8,..admitted};let(result,heap)=observe(||source.close_step(denied));check_denied(result,heap,denied,demand);}
-        let(result,heap)=observe(||source.close_step(admitted));let progress=check(result,heap,admitted);*born+=heap.0;*freed+=heap.1;stalled=if progress==Default::default(){stalled+1}else{0};assert!(stalled<=143,"[DEBUG] Original dynamic source closure stalled copy={copy} demand={demand:?}");
+        let(result,heap)=observe(||source.close_step(admitted));let progress=check(result,heap,admitted);*born+=heap.0;*freed+=heap.1;stalled=if progress==Default::default(){stalled+1}else{0};assert!(stalled<=143,"Original dynamic source closure stalled copy={copy} demand={demand:?}");
     }
-    panic!("[DEBUG] Original dynamic source graph remained live");
+    panic!("Original dynamic source graph remained live");
 }
 
 fn close_output(value:DslValue,copy:usize,born:&mut usize,freed:&mut usize){
@@ -85,9 +85,9 @@ fn close_output(value:DslValue,copy:usize,born:&mut usize,freed:&mut usize){
     for _ in 0..100000 {
         let Some(owner)=ticket.as_ref()else{assert_eq!(observe(||drop(ticket)).1,(0,0));return;};let demand=crate::factory_ticket_demands(owner,copy).unwrap();let admitted=grant(demand,copy);
         if demand.release_bytes>8 {let denied=RetainedCloneGrant {maximum_release_bytes:8,..admitted};let(result,heap)=observe(||crate::close_factory_ticket(&mut ticket,denied));check_denied(result,heap,denied,demand);}
-        let(result,heap)=observe(||crate::close_factory_ticket(&mut ticket,admitted));let progress=check(result,heap,admitted);*born+=heap.0;*freed+=heap.1;stalled=if progress==Default::default(){stalled+1}else{0};assert!(stalled<=143,"[DEBUG] Original dynamic output closure stalled copy={copy} demand={demand:?}");
+        let(result,heap)=observe(||crate::close_factory_ticket(&mut ticket,admitted));let progress=check(result,heap,admitted);*born+=heap.0;*freed+=heap.1;stalled=if progress==Default::default(){stalled+1}else{0};assert!(stalled<=143,"Original dynamic output closure stalled copy={copy} demand={demand:?}");
     }
-    panic!("[DEBUG] Original dynamic output graph remained live");
+    panic!("Original dynamic output graph remained live");
 }
 
 #[test]
@@ -107,9 +107,9 @@ fn original_dynamic_value_clone_fullgrant_and_original_custody(){
             let(result,heap)=observe(||cursor.advance(source.borrow(), 64, admitted));let done=matches!(result,Ok(RetainedCloneStep::Complete(_)));let progress=check(result,heap,admitted);assert_eq!(progress.copied_items,1);born+=heap.0;freed+=heap.1;turns+=1;
             if done {let(value,heap)=observe(||cursor.take());assert_eq!(heap,(0,0));let value=value.unwrap();assert_eq!(encode(&value),encoded);output=Some(value);break;}
         }
-        assert!(output.is_some()||cancelled==Some(turns),"[DEBUG] Original dynamic normal clone stalled {name} cancel={cancelled:?}");assert_eq!(encode(source.borrow().get()),encoded);observed.clear();pointers(source.borrow().get(),&mut observed);assert_eq!(observed,original);
+        assert!(output.is_some()||cancelled==Some(turns),"Original dynamic normal clone stalled {name} cancel={cancelled:?}");assert_eq!(encode(source.borrow().get()),encoded);observed.clear();pointers(source.borrow().get(),&mut observed);assert_eq!(observed,original);
         close_cursor(&mut cursor,copy,&mut born,&mut freed);assert_eq!(observe(||drop(cursor)).1,(0,0));
         if let Some(output)=output {close_output(output,copy,&mut born,&mut freed);}
-        close_source(&mut source,copy,&mut born,&mut freed);assert_eq!(observe(||drop(source)).1,(0,0));assert_eq!(born,freed,"[DEBUG] Original dynamic physical owner conservation {name} copy={copy} cancel={cancelled:?}");
+        close_source(&mut source,copy,&mut born,&mut freed);assert_eq!(observe(||drop(source)).1,(0,0));assert_eq!(born,freed,"Original dynamic physical owner conservation {name} copy={copy} cancel={cancelled:?}");
     }}}
 }

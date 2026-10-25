@@ -1,0 +1,125 @@
+# stage-clean head-live-changed staged=bzl-default-tools/staged/new/w/ed39b8f8688b.json map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🧪️tests/🧫️fixtures/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🧪️tests/🧫️fixtures/🔣️.json
+@@ -12,10 +12,10 @@
+   "files": {
+     "MODULE.bazel": "module(name = \"semio_tasks\", version = \"0.0.0\")\n",
+     "probe.bzl": "def _impl(ctx):\n    out = ctx.actions.declare_directory(ctx.label.name + \"_out\")\n    ctx.actions.run_shell(\n        mnemonic = \"CacheProbe\",\n        inputs = ctx.files.srcs + ctx.files.deps + [ctx.file.script],\n        outputs = [out],\n        command = \"sh \" + ctx.file.script.path + \" \" + out.path,\n        use_default_shell_env = True,\n        execution_requirements = ctx.attr.requirements,\n    )\n    return [DefaultInfo(files = depset([out]))]\n\nprobe_task = rule(\n    implementation = _impl,\n    attrs = {\n        \"srcs\": attr.label_list(allow_files = True),\n        \"deps\": attr.label_list(),\n        \"script\": attr.label(allow_single_file = True, mandatory = True),\n        \"requirements\": attr.string_dict(),\n    },\n)\n",
+-    "run/build.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nrepo ./📜️script.ts build\nmkdir -p \"$out\"\nif [ -e 'dist' ]; then mkdir -p \"$out\"/'dist' && cp -pR 'dist'/. \"$out\"/'dist'/; fi\n",
+-    "run/test.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nrepo ./📜️script.ts test\nmkdir -p \"$out\"\n",
+-    "run/validate.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nrepo ./📜️script.ts validate\nmkdir -p \"$out\"\n",
+-    "run/guarded.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nrepo ./📜️script.ts guarded\nmkdir -p \"$out\"\n",
++    "run/build.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nbun ./📜️script.ts build\nmkdir -p \"$out\"\nif [ -e 'dist' ]; then mkdir -p \"$out\"/'dist' && cp -pR 'dist'/. \"$out\"/'dist'/; fi\n",
++    "run/test.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nbun ./📜️script.ts test\nmkdir -p \"$out\"\n",
++    "run/validate.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nbun ./📜️script.ts validate\nmkdir -p \"$out\"\n",
++    "run/guarded.sh": "set -e\nout=\"$(cd \"$(dirname \"$1\")\" && pwd)/$(basename \"$1\")\"\ncd \"$(cat '/ws/fixture.path')\"\nbun ./📜️script.ts guarded\nmkdir -p \"$out\"\n",
+     "BUILD.bazel": "load(\":probe.bzl\", \"probe_task\")\n\nprobe_task(\n    name = \"build\",\n    srcs = [\"inputs/i-b681f8d4b468.txt\", \"inputs/i-884796679c4e.txt\", \"inputs/i-1d125ac07da4.txt\", \"inputs/i-b46981fbd3b2.txt\"],\n    deps = [],\n    script = \"run/build.sh\",\n    requirements = {\"local\": \"1\", \"no-sandbox\": \"1\"},\n)\n\nprobe_task(\n    name = \"test\",\n    srcs = [\"inputs/i-b681f8d4b468.txt\", \"inputs/i-884796679c4e.txt\", \"inputs/i-1d125ac07da4.txt\", \"inputs/i-b46981fbd3b2.txt\", \"inputs/i-3fec2f6253de.txt\"],\n    deps = [],\n    script = \"run/test.sh\",\n    requirements = {\"local\": \"1\", \"no-sandbox\": \"1\"},\n)\n\nprobe_task(\n    name = \"validate\",\n    srcs = [\"inputs/volatile.txt\"],\n    deps = [],\n    script = \"run/validate.sh\",\n    requirements = {\"local\": \"1\", \"no-sandbox\": \"1\", \"no-cache\": \"1\", \"no-remote\": \"1\"},\n)\n\nprobe_task(\n    name = \"guarded\",\n    srcs = [\"inputs/i-b681f8d4b468.txt\", \"inputs/i-884796679c4e.txt\", \"inputs/i-1d125ac07da4.txt\", \"inputs/i-b46981fbd3b2.txt\"],\n    deps = [\":validate\"],\n    script = \"run/guarded.sh\",\n    requirements = {\"local\": \"1\", \"no-sandbox\": \"1\"},\n)\n"
+   },
+   "leaves": {
+# stage-clean orphan staged=bzl-default-tools/staged/new/w/map.json map=None
+--- /dev/null
++++ b/staged/bzl-default-tools/staged/new/w/map.json
+@@ -0,0 +1,5 @@
++{
++ "files": {
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🧪️tests/🧫️fixtures/🔣️.json": "ed39b8f8688b.json"
++ }
++}
+# stage-clean different staged=bzl-default-tools/staged/new/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🏭️runner/🟦️.ts map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🏭️runner/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🏭️runner/🟦️.ts
+@@ -5,7 +5,6 @@
+ import {spawnSync} from "node:child_process";
+ import {bazelProbeArgumentsV1,bazelProbeDigestsV1,bazelProbeWorkspacePrefixV1,bazelProbeWorkspaceV1,renderBazelProbeV1,type BazelProbeOptionsV1} from "../🟦️.ts";
+ import type {CacheProbeSpecV1} from "../../../../⚙️operations/🟦️.ts";
+-import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+ 
+ /** 🏃️ The wire of one probe run, written by `bazelCacheProbeV1` and read here. */
+ export type BazelProbeRunV1=Readonly<{options:BazelProbeOptionsV1;specification:CacheProbeSpecV1;task:string;fixture:string;environment:Readonly<Record<string,string|undefined>>}>;
+@@ -39,4 +38,4 @@
+  return 0;
+ }
+ 
+-if(isMainModuleV1(import.meta.url))process.exit(runBazelProbeV1(JSON.parse(process.env.SEMIO_BAZEL_PROBE!) as BazelProbeRunV1));
++if(import.meta.main)process.exit(runBazelProbeV1(JSON.parse(process.env.SEMIO_BAZEL_PROBE!) as BazelProbeRunV1));
+# stage-clean different staged=bzl-default-tools/staged/new/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🧪️tests/🟦️.ts map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🧪️tests/🟦️.ts
+@@ -1,5 +1,4 @@
+ import {expect,test} from "bun:test";
+-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+ import {Database} from "bun:sqlite";
+ import {spawnSync} from "node:child_process";
+ import {createHash} from "node:crypto";
+@@ -13,7 +12,7 @@
+ import {bazelCacheProbeV1,bazelProbeArgumentsV1,bazelProbeDigestsV1,bazelProbeInputNameV1,bazelProbeLeavesV1,bazelProbeWorkspaceV1,renderBazelProbeV1} from "../🟦️.ts";
+ import type {CacheProbeSpecV1} from "../../../../⚙️operations/🟦️.ts";
+ 
+-const specification=probeDocument as CacheProbeSpecV1,python=spawnSync(testPythonV1()??"python3",["-c","import ast,hashlib"]).status===0;
++const specification=probeDocument as CacheProbeSpecV1,python=spawnSync("python3",["-c","import ast,hashlib"]).status===0;
+ const read=(file:string)=>(fixture.contents as Record<string,string>)[file]===undefined?undefined:new TextEncoder().encode((fixture.contents as Record<string,string>)[file]);
+ 
+ test("the neutral probe specification renders the exact ASCII Bazel workspace of the fixture, and nothing in it names a fixture file",()=>{
+@@ -30,7 +29,7 @@
+  try{
+   for(const[path,text]of Object.entries(fixture.files)){
+    const target=join(directory,path);mkdirSync(dirname(target),{recursive:true});writeFileSync(target,text);
+-   if(path.endsWith(".bzl")||path.endsWith(".bazel")){const result=spawnSync(testPythonV1()??"python3",["-c","import ast,sys;ast.parse(open(sys.argv[1],encoding='utf-8').read())",target]);expect(result.status,path+" "+result.stderr).toBe(0);}
++   if(path.endsWith(".bzl")||path.endsWith(".bazel")){const result=spawnSync("python3",["-c","import ast,sys;ast.parse(open(sys.argv[1],encoding='utf-8').read())",target]);expect(result.status,path+" "+result.stderr).toBe(0);}
+    if(path.endsWith(".sh")){const result=spawnSync("sh",["-n",target]);expect(result.status,path+" "+result.stderr).toBe(0);}
+   }
+  }finally{rmSync(directory,{recursive:true,force:true});}
+@@ -62,7 +61,7 @@
+  expect(JSON.parse(JSON.stringify(digests))).toEqual(fixture.digests);
+  const code="import hashlib,json,sys;print(json.dumps([hashlib.sha256(v.encode('utf-8')).hexdigest() for v in json.loads(sys.argv[1])]))";
+  const names=Object.keys(fixture.inputNames),sources=names.filter(name=>name.startsWith("file:")).map(name=>(fixture.contents as Record<string,string>)[name.slice(5)]!);
+- const expected=JSON.parse(spawnSync(testPythonV1()??"python3",["-c",code,JSON.stringify(sources)]).stdout.toString()) as string[];
++ const expected=JSON.parse(spawnSync("python3",["-c",code,JSON.stringify(sources)]).stdout.toString()) as string[];
+  sources.forEach((_,index)=>expect(digests[(fixture.inputNames as Record<string,string>)[names.filter(name=>name.startsWith("file:"))[index]!]!]).toBe(expected[index]+"\n"));
+  for(const[key,name]of Object.entries(fixture.inputNames))expect(name).toBe("inputs/i-"+createHash("sha256").update(key).digest("hex").slice(0,12)+".txt");
+  expect(Object.keys(fixture.inputNames).some(key=>key.includes("unrelated"))).toBe(false);
+# stage-clean different staged=bzl-default-tools/staged/new/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs
+@@ -1,6 +1,9 @@
+ import { createRequire } from "node:module";
+ 
+-const own = createRequire(import.meta.url);
+-
+-/** 📦️ Loads the TypeScript compiler API from the parser package: the node resolution starts in the parser package directory and, when its install is absent, continues in the checkout root install. */
+-export const parserTypescriptV1 = () => own("typescript");
++/** 📦️ Returns a `require` that loads from the declared parser package first; a checkout whose parser package is not installed yet falls back to the resolution of the requiring file, so the same code runs before and after the install. */
++export function parserRequireV1(from) {
++  const own = createRequire(new URL("./package.json", import.meta.url)), fallback = createRequire(from);
++  const attempt = (action) => (name) => { try { return own[action](name); } catch (error) { if (error?.code !== "MODULE_NOT_FOUND") throw error; return fallback[action](name); } };
++  const load = (name) => { try { return own(name); } catch (error) { if (error?.code !== "MODULE_NOT_FOUND") throw error; return fallback(name); } };
++  return Object.assign(load, { resolve: attempt("resolve") });
++}
+# stage-clean different staged=bzl-default-tools/staged/new/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🎯️closure/🟦️.ts map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🎯️closure/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🎯️closure/🟦️.ts
+@@ -7,9 +7,9 @@
+ import Ajv from "ajv";
+ import fixture from "./🔣️.json" with {type:"json"};
+ import policy from "../../../🔣️policy.json" with {type:"json"};
+-import {javascriptInstallSchemaV1 as installSchema} from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧱️schemas/🟦️.ts";
++import installSchema from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json" with {type:"json"};
+ import {buildEnvironmentPlanV1,buildParserScopeV1,javascriptInstallModeV1,javascriptScopeOwnersV1} from "../../🟦️.ts";
+-import {parserTypescriptV1} from "../../📦️parsers/🟨️.mjs";
++import {parserRequireV1} from "../../📦️parsers/🟨️.mjs";
+ 
+ const root=join(import.meta.dir,"../../../../../../../../..").replace(/[\\/]+$/u,"");
+ 
+@@ -56,7 +56,9 @@
+  for(const row of fixture.selections)expect(validate(row.value),JSON.stringify(row.value)).toBe(row.valid);
+ });
+ 
+-test("the parser accessor loads the TypeScript compiler of the parser package scope, resolving like the requiring file",()=>{
+- const direct=createRequire(import.meta.url);
+- expect(parserTypescriptV1().version).toBe(direct("typescript").version);
++test("the parser require loads the parser package first and falls back to the requiring file",()=>{
++ const load=parserRequireV1(import.meta.url),direct=createRequire(import.meta.url);
++ expect(load("typescript").version).toBe(direct("typescript").version);
++ expect(load.resolve("typescript/package.json")).toMatch(/typescript[\\/]package\.json$/u);
++ expect(()=>load("absent-parser-package-v1")).toThrow();
+ });

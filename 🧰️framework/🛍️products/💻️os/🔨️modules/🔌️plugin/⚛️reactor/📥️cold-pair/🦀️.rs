@@ -115,7 +115,7 @@ impl ColdDocumentPairOwner {
     }
 }
 
-pub(crate) struct ColdDocumentPairLoad {
+pub struct ColdDocumentPairLoad {
     pub owner: Rc<RefCell<ColdDocumentPairOwner>>,
     pub files: Rc<store::os_store::serialization::ArtifactPackFiles>,
     pub finished: bool,

@@ -1,6 +1,6 @@
 import {existsSync,readdirSync} from "node:fs";
 import type {DoctorPortsV1} from "../../🔌️ports/🟦️.ts";
-import type {DoctorProbeV1,DoctorRepairRunV1} from "../🟦️.ts";
+import type {DoctorProbeV1,DoctorRepairRunV1} from "../📋️contract/🟦️.ts";
 
 type SessionRow=Readonly<{state:"live"|"idle"|"gone"}>;
 type SessionStore=Readonly<{directory:string}>;

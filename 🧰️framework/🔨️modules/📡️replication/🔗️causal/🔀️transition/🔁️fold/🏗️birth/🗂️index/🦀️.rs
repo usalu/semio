@@ -121,7 +121,7 @@ impl HistoryFoldControl {
     /// 🔢️ Fixed Copy keys admit each bounded comparison, native page and structural commit separately.
     pub async fn insert_copy<K:Copy+Ord+RetireOwned,V:RetireOwned>(&self,index:&mut HistoryFoldIndex<K,V>,key:K,value:V)->Result<bool,semio_framework_replication_error::ProtocolError>{self.insert_original_index(index,key,value,true,compare_copy::<K>,copy_demand::<K>).await}
 
-    /// 🪹️ Fixed-key membership retains the first original value and closes an unused incoming row explicitly.
+    /// 🦜️ Fixed-key membership retains the first original value and closes an unused incoming row explicitly.
     pub async fn get_or_insert_copy<K:Copy+Ord+RetireOwned,V:RetireOwned>(&self,index:&mut HistoryFoldIndex<K,V>,key:K,value:V)->Result<bool,semio_framework_replication_error::ProtocolError>{self.insert_original_index(index,key,value,false,compare_copy::<K>,copy_demand::<K>).await}
 
     /// 🧭️ Ordered event keys compare their fixed clock prefix and bounded original UTF8 identity separately.

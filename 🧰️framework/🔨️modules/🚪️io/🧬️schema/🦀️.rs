@@ -16,7 +16,7 @@ pub use payload::IoPayload;
 /// 🗄️ Framework-owned carrier dialect `framework.io.binary@raw/*` for raw untyped bytes — the payload law's binary exception. Plugins reference this constant; none names it by literal.
 pub const CARRIER_BINARY: Dialect = Dialect { artifact_kind: "framework.io.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
-/// 🗄️ Framework-owned carrier dialect `framework.io.text@utf-8/*` for raw untyped UTF-8 text — the payload law's text exception. Plugins reference this constant; none names it by literal.
+/// 📖️ Framework-owned carrier dialect `framework.io.text@utf-8/*` for raw untyped UTF-8 text — the payload law's text exception. Plugins reference this constant; none names it by literal.
 pub const CARRIER_TEXT: Dialect = Dialect { artifact_kind: "framework.io.text", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
 /// 🪶️ Framework-owned dialect `framework.io.sqlite-snapshot@1/*` of the standalone SQLite container preserving one artifact's native snapshot and exact dialect.
@@ -62,7 +62,7 @@ pub enum IoFidelity {
 }
 
 impl IoFidelity {
-    /// 📏️ Ordered strength: Exact > Canonical > Semantic > Lossy — mirrors `IoFidelityClass::rank`.
+    /// 📶️ Ordered strength: Exact > Canonical > Semantic > Lossy — mirrors `IoFidelityClass::rank`.
     pub const fn rank(self) -> u8 {
         match self {
             Self::Exact => 3,
@@ -128,7 +128,7 @@ impl IoError {
         })
     }
 
-    /// 🚪️ Moves the complete owned Value refusal without text projection or allocation.
+    /// ❌️ Moves the complete owned Value refusal without text projection or allocation.
     pub fn from_value_error(cause: ValueError) -> Self { Self { cause, diagnostics: Vec::new() } }
 
     /// 📍️ Retains an authored text source through charged, cancelable diagnostic ownership.

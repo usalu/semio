@@ -94,7 +94,7 @@ export type IntroductionCursor = "default" | "pointer" | "grab" | "grabbing" | "
  */
 export type IntroductionDefinition = {
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * 🎚️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 title: unknown, steps: Array<IntroductionStepDefinition>, };"####,
         },
@@ -201,7 +201,7 @@ export type IntroductionPointerButton = "left" | "middle" | "right";"####,
  */
 export type IntroductionStepDefinition = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * ☑️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 title: unknown, body: unknown,
 /**
@@ -309,7 +309,7 @@ export type MergeMode = "replace" | "additive" | "subtractive" | "invertive" | "
             version: 1,
             typescript: r####"export type ModeDefinition = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * 🔖️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 label: unknown, iconId: IconName,
 /**
@@ -369,7 +369,7 @@ export type PackageRole = "plugin" | "extension";"####,
  */
 export type PanelTabDefinition = { kind: PanelTabKind,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * ✔️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 label: unknown, group: PanelGroup, bodyKey?: string, children: Array<PanelTabDefinition>, };"####,
         },
@@ -418,11 +418,11 @@ export type PluginDependency = { pluginId: string, version: string, };"####,
  */
 topicContributions: Array<TopicContribution>,
 /**
- * 🎛️ Plugin-scope commands this program exposes — apply whenever any of its apps is focused.
+ * 🔌️ Plugin-scope commands this program exposes — apply whenever any of its apps is focused.
  */
 commands: Array<CommandDefinition>,
 /**
- * 🗂️ Plugin-level artifact kinds (library plugins with zero apps declare kinds here).
+ * 📚️ Plugin-level artifact kinds (library plugins with zero apps declare kinds here).
  */
 artifactKinds: Array<ArtifactKindSpec>,
 /**
@@ -438,7 +438,7 @@ hostedArtifactKinds: Array<HostedArtifactKind>,
  */
 dependencies: Array<PluginDependency>,
 /**
- * 🗂️ Artifact-kind contributions (mutations/inferences) this plugin contributes onto artifact
+ * 📦️ Artifact-kind contributions (mutations/inferences) this plugin contributes onto artifact
  * kinds it depends on — see `ArtifactContributionDescriptor`.
  */
 contributions: Array<ArtifactContributionDescriptor>, };"####,
@@ -516,16 +516,16 @@ export type SelectionMode = "single" | "multiple";"####,
  */
 export type SelectionSpec = {
 /**
- * 🪜️ Non-empty; the first entry is the domain's default mode.
+ * 🪫️ Non-empty; the first entry is the domain's default mode.
  */
 modes: Array<SelectionMode>, methods: Array<SelectionMethod>, merges: Array<MergeMode>,
 /**
- * 🌳️ Whether selecting a target expands to its descendant closure — requires
+ * 🏹️ Whether selecting a target expands to its descendant closure — requires
  * `hierarchy != HierarchyProvider::Flat`.
  */
 transitive: boolean,
 /**
- * 📣️ Whether this domain's own selection mirrors into `PresenceInteraction` for peers.
+ * 📢️ Whether this domain's own selection mirrors into `PresenceInteraction` for peers.
  */
 broadcast: boolean, };"####,
         },
@@ -547,7 +547,7 @@ broadcast: boolean, };"####,
  */
 export type ToolDefinition = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * 🌐️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 label: unknown, iconId: IconName, keys?: string,
 /**
@@ -713,7 +713,7 @@ export type TutorialCameraState = { "kind": "orbit", position: [number, number, 
  */
 export type TutorialCaption = { at: bigint, durationMs: bigint,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * 📄️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 text: unknown, };"####,
         },
@@ -725,7 +725,7 @@ text: unknown, };"####,
  */
 export type TutorialChapter = { id: string, at: bigint,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * 🩺️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 title: unknown, body?: unknown, };"####,
         },
@@ -744,7 +744,7 @@ title: unknown, body?: unknown, };"####,
  */
 export type TutorialDefinition = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * 🔠️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 title: unknown, description?: unknown,
 /**
@@ -756,7 +756,7 @@ durationMs: bigint,
  */
 chapters: Array<TutorialChapter>,
 /**
- * 🎬️ Starting conditions the player restores into its sandbox before t=0.
+ * ▶️ Starting conditions the player restores into its sandbox before t=0.
  */
 base: TutorialBase, tracks: TutorialTracks,
 /**

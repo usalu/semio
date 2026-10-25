@@ -14,7 +14,7 @@ pub const UI_RESIDENT_SURFACE_BYTES: usize = 8 * 1024 * 1024;
 /// [`crate::ui_document_resident_limits`] prices a reservation including those additional owners.
 pub const UI_RESIDENT_DOCUMENT_BYTES: usize = super::UI_DOCUMENT_NODES * size_of::<super::UiNodeRecord>();
 
-/// 🎟️ The process-wide byte budget, derived from sixty-four full-document record baselines.
+/// 💰️ The process-wide byte budget, derived from sixty-four full-document record baselines.
 /// Static backing and each reservation's additional owners consume this budget too, so its byte
 /// ceiling and the slot ceiling remain independent.
 ///
@@ -208,7 +208,7 @@ impl UiResidentPermit {
         RETURNS.iter().any(|pending| pending.load(Ordering::Acquire) != 0)
     }
 
-    /// 🎟️ The fixed metadata reservation is admitted before mutating aggregate credit.
+    /// 🔏️ The fixed metadata reservation is admitted before mutating aggregate credit.
     pub fn try_reserve(limits: UiResidentLimits, target: &mut Option<Self>, admitted_bytes: usize) -> Result<bool, UiResidentFault> {
         if target.is_some() || admitted_bytes < Self::required_reservation_bytes() {
             return Ok(false);

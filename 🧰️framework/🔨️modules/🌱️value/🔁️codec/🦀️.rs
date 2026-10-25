@@ -26,7 +26,7 @@ pub use retirement::IntrinsicRetirement;
 #[path="🛫️controlled/🦀️.rs"]
 mod encoding;
 
-/// 🔑️ A hash-builder owner admits its own default state before controlled collection construction.
+/// 🏗️ A hash-builder owner admits its own default state before controlled collection construction.
 pub trait ControlledValueHasher: std::hash::BuildHasher + Default {
     fn from_value_controlled(control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError> where Self:Sized;
 }
@@ -35,7 +35,7 @@ impl ControlledValueHasher for std::collections::hash_map::RandomState {
 }
 
 //#region 🔖️Traits
-/// 🔁️ Converts `self` into a [`DslValue`] tree. First-party analog of `serde::Serialize`.
+/// 🌲️ Converts `self` into a [`DslValue`] tree. First-party analog of `serde::Serialize`.
 pub trait ToValue {
     fn to_value(&self) -> DslValue;
 
@@ -61,7 +61,7 @@ pub trait ToValue {
     }
 }
 
-/// 🔁️ Hydrates `Self` from a [`DslValue`] tree. First-party analog of
+/// 🌴️ Hydrates `Self` from a [`DslValue`] tree. First-party analog of
 /// `serde::de::DeserializeOwned`.
 pub trait FromValue: Sized {
     fn from_value(value: DslValue) -> Result<Self, ValueError>;
@@ -72,7 +72,7 @@ pub trait FromValue: Sized {
         Err(ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "value owner has no controlled native construction implementation"))
     }
 
-    /// 🔑️ Constructs a typed object key without an uncontrolled `FromStr` allocation.
+    /// 🗝️ Constructs a typed object key without an uncontrolled `FromStr` allocation.
     fn from_object_key_controlled(_key:&str,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{
         control.checkpoint()?;Err(ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "value key owner has no controlled construction implementation"))
     }
@@ -151,7 +151,7 @@ pub fn edit_through_value<T: ToValue + FromValue>(target: &mut T, path: &[&str],
     Ok(())
 }
 
-/// 🧭️ Resolves one path segment to a collection index for owners of other crates.
+/// 📇️ Resolves one path segment to a collection index for owners of other crates.
 pub fn path_index(segment: &str, length: usize, insert: bool) -> Result<usize, ValueError> {
     if insert && segment == "-" {
         return Ok(length);
@@ -210,7 +210,7 @@ macro_rules! impl_uint_codec {
 }
 impl_uint_codec!(u8, u16, u32, u64, usize);
 
-/// 🔢️ Signed integer scalars — round-trip through [`Number::Int`], same fidelity contract as the
+/// 🖊️ Signed integer scalars — round-trip through [`Number::Int`], same fidelity contract as the
 /// unsigned family above.
 macro_rules! impl_int_codec {
     ($($ty:ty),+ $(,)?) => {
@@ -243,7 +243,7 @@ macro_rules! impl_int_codec {
 }
 impl_int_codec!(i8, i16, i32, i64, isize);
 
-/// 🔢️ Fractional scalars — always encode/decode through [`Number::Float`]; a whole float keeps its
+/// 🌊️ Fractional scalars — always encode/decode through [`Number::Float`]; a whole float keeps its
 /// explicit `.0` on the wire so it never collapses onto its integer twin.
 macro_rules! impl_float_codec {
     ($($ty:ty),+ $(,)?) => {
@@ -347,7 +347,7 @@ fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueEr
     }
 }
 
-/// 🗂️ A path renders as its UTF-8 string form (lossy on the encode side — this is a local-only
+/// 📂️ A path renders as its UTF-8 string form (lossy on the encode side — this is a local-only
 /// config value, never a content-addressed hash input, so exact non-Unicode byte round-tripping
 /// is not required the way `serde`'s own `Path`/`PathBuf` impl demands it).
 impl ToValue for std::path::PathBuf {

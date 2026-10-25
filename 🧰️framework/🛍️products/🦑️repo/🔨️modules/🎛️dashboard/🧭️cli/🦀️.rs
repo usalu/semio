@@ -10,7 +10,8 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/🕹️control/🦀️.rs
 
 use dashboard_daemon::control::{self as daemon_control, Action, Followed, RunError, Wait};
-use dashboard_registry::{ParameterKind, Registry, Request, RunPolicy};
+use dashboard_labels::DashboardLabels;
+use dashboard_registry::{Locale, ParameterKind, Registry, Request, RunPolicy};
 use dashboard_repo_domain::RepoImplementation;
 use dashboard_wire::client::Connection;
 use dashboard_wire::ipc::{self, ClientMsg, SessionCommand, SessionInfo, SessionStatus, SpawnGroup};
@@ -21,6 +22,20 @@ use std::time::{Duration, Instant};
 
 #[path = "🌐️open/🦀️.rs"]
 pub mod browser;
+
+/// 🗣️ The languages the verbs speak to the developer: the explicitly chosen one, or every declared one while none is chosen (their texts are joined with ` / `).
+#[derive(Clone)]
+pub struct Voice { texts: Vec<&'static DashboardLabels>, language: Option<Locale> }
+
+impl Voice {
+    pub fn new(texts: Vec<&'static DashboardLabels>, language: Option<Locale>) -> Self { Self { texts, language } }
+
+    /// 🌐️ The environment that makes the tasks of this voice speak its language: none while no language is chosen.
+    pub fn task_environment(&self) -> Vec<(String, String)> { self.language.map(|language| ipc::task_language(language.as_str())).into_iter().collect() }
+
+    /// 💬 One catalogue text in each language of the voice.
+    pub fn say(&self, pick: impl Fn(&DashboardLabels) -> String) -> String { self.texts.iter().map(|text| pick(text)).collect::<Vec<_>>().join(" / ") }
+}
 
 // #region 🔖️Arguments
 /// ✂️ The arguments of one verb: words, switches, valued flags (repeatable) and everything after `--`.
@@ -35,7 +50,7 @@ pub struct Arguments {
 impl Arguments {
     /// 🪚️ Splits `argv` (without the verb): `--name value` and `--name=value` for the `valued` flags,
     /// bare `--name` for every other flag, `--` ends the flags and keeps the rest verbatim.
-    pub fn parse(argv: &[String], valued: &[&str]) -> Result<Self, String> {
+    pub fn parse(argv: &[String], valued: &[&str], voice: &Voice) -> Result<Self, String> {
         let mut parsed = Self::default();
         let mut iter = argv.iter();
         while let Some(word) = iter.next() {
@@ -43,8 +58,8 @@ impl Arguments {
             let Some(flag) = word.strip_prefix("--") else { parsed.words.push(word.clone()); continue };
             match flag.split_once('=') {
                 Some((name, value)) if valued.contains(&name) => parsed.values.push((name.into(), value.into())),
-                Some((name, _)) => return Err(format!("--{name} takes no value")),
-                None if valued.contains(&flag) => parsed.values.push((flag.into(), iter.next().ok_or_else(|| format!("--{flag} needs a value"))?.clone())),
+                Some((name, _)) => return Err(voice.say(|text| text.cli_flag_no_value.fill(&[("name", name)]).into_string())),
+                None if valued.contains(&flag) => parsed.values.push((flag.into(), iter.next().ok_or_else(|| voice.say(|text| text.cli_flag_needs_value.fill(&[("name", flag)]).into_string()))?.clone())),
                 None => parsed.switches.push(flag.into()),
             }
         }
@@ -55,22 +70,22 @@ impl Arguments {
     pub fn value(&self, name: &str) -> Option<&str> { self.values.iter().rev().find(|(known, _)| known == name).map(|(_, value)| value.as_str()) }
 
     /// 🔑️ Every `--<name> key=value` as a pair.
-    pub fn pairs(&self, name: &str) -> Result<Vec<(String, String)>, String> {
-        self.values.iter().filter(|(known, _)| known == name).map(|(_, text)| text.split_once('=').filter(|(key, _)| !key.is_empty()).map(|(key, value)| (key.to_string(), value.to_string())).ok_or_else(|| format!("--{name} {text:?} is not `key=value`"))).collect()
+    pub fn pairs(&self, name: &str, voice: &Voice) -> Result<Vec<(String, String)>, String> {
+        self.values.iter().filter(|(known, _)| known == name).map(|(_, text)| text.split_once('=').filter(|(key, _)| !key.is_empty()).map(|(key, value)| (key.to_string(), value.to_string())).ok_or_else(|| voice.say(|label| label.cli_pair_malformed.fill(&[("name", name), ("text", text)]).into_string()))).collect()
     }
 
     /// 🧾️ The registry request these arguments state: `--param`, `--env` and everything after `--`.
     /// `--param id` without a value switches a `flag` parameter on; `kind_of` tells what kind of parameter an id is.
-    pub fn request(&self, kind_of: &dyn Fn(&str) -> Option<ParameterKind>) -> Result<Request, String> {
+    pub fn request(&self, kind_of: &dyn Fn(&str) -> Option<ParameterKind>, voice: &Voice) -> Result<Request, String> {
         let parameters = self.all("param").map(|text| match text.split_once('=') {
             Some((key, value)) if !key.is_empty() => Ok((key.to_string(), value.to_string())),
-            Some(_) => Err(format!("--param {text:?} is not `id` or `id=value`")),
+            Some(_) => Err(voice.say(|label| label.cli_param_malformed.fill(&[("text", text)]).into_string())),
             None => match kind_of(text) {
                 Some(ParameterKind::Flag) | None => Ok((text.to_string(), "true".to_string())),
-                Some(kind) => Err(format!("--param {text}: a {} parameter needs a value, write `--param {text}=<value>`", match kind { ParameterKind::Choice => "choice", ParameterKind::Text => "text", ParameterKind::Flag => "flag" })),
+                Some(kind) => Err(voice.say(|label| label.cli_param_needs_value.fill(&[("text", text), ("kind", match kind { ParameterKind::Choice => "choice", ParameterKind::Text => "text", ParameterKind::Flag => "flag" })]).into_string())),
             },
         }).collect::<Result<_, _>>()?;
-        Ok(Request { parameters, args: self.rest.clone(), env: self.pairs("env")? })
+        Ok(Request { parameters, args: self.rest.clone(), env: self.pairs("env", voice)? })
     }
 
     fn all<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a str> { self.values.iter().filter(move |(known, _)| known == name).map(|(_, value)| value.as_str()) }
@@ -78,7 +93,7 @@ impl Arguments {
     fn seconds(&self, default: u64) -> Duration { Duration::from_secs(self.value("timeout").and_then(|text| text.parse().ok()).unwrap_or(default)) }
 }
 
-fn parse(argv: &[String], valued: &[&str]) -> Result<Arguments, i32> { Arguments::parse(argv, valued).map_err(|error| refuse(&error)) }
+fn parse(argv: &[String], valued: &[&str], voice: &Voice) -> Result<Arguments, i32> { Arguments::parse(argv, valued, voice).map_err(|error| refuse(&error)) }
 
 fn refuse(message: &str) -> i32 {
     eprintln!("[semio] {message}");
@@ -97,13 +112,15 @@ fn registry_of(root: &Path, arguments: &Arguments) -> Registry {
 /// ⌨️ `repo dashboard commands [words…] [--json] [--all] [--check] [--refresh] [--root PATH] [--snapshot PATH]`
 /// lists the registry commands whose label or id contains every word; `--check` proves every
 /// declaration of the workspace and exits non-zero on any problem.
-pub fn commands(root: &Path, argv: &[String]) -> i32 {
-    let arguments = match parse(argv, &["root", "snapshot"]) { Ok(arguments) => arguments, Err(code) => return code };
+pub fn commands(root: &Path, argv: &[String], locale: Option<Locale>, voice: &Voice) -> i32 {
+    let arguments = match parse(argv, &["root", "snapshot"], voice) { Ok(arguments) => arguments, Err(code) => return code };
     let registry = registry_of(&root_of(root, &arguments), &arguments);
     if arguments.has("check") {
+        let Some(locale) = locale else { return 2 };
         let problems = registry.check();
-        for problem in &problems { eprintln!("{problem}"); }
-        println!("{} commands, {} problems", registry.entries().len(), problems.len());
+        for problem in &problems { eprintln!("{}", problem.render(locale)); }
+        if registry.graph_unpublished() { eprintln!("{}", voice.say(|text| text.cli_graph_absent.as_str().to_string())); }
+        println!("{}", voice.say(|text| text.cli_check_summary.fill(&[("commands", &registry.entries().len().to_string()), ("problems", &problems.len().to_string())]).into_string()));
         return i32::from(!problems.is_empty());
     }
     let words: Vec<&str> = arguments.words.iter().map(String::as_str).collect();
@@ -151,18 +168,18 @@ const READY_TIMEOUT_SECONDS: u64 = 600;
 const QUERY: Duration = Duration::from_secs(5);
 static NEVER: AtomicBool = AtomicBool::new(false);
 
-fn connect(root: &Path) -> Result<Connection, String> {
-    Connection::connect(&ipc::canonical_path(root)).map_err(|error| format!("no dashboard daemon answers for this workspace ({error}); `repo dashboard run` starts one"))
+fn connect(root: &Path, voice: &Voice) -> Result<Connection, String> {
+    Connection::connect(&ipc::canonical_path(root)).map_err(|error| voice.say(|text| text.cli_no_daemon.fill(&[("error", &error.to_string())]).into_string()))
 }
 
-fn connect_or_start(root: &Path) -> Result<Connection, String> {
+fn connect_or_start(root: &Path, voice: &Voice) -> Result<Connection, String> {
     let executable = std::env::current_exe().map_err(|error| error.to_string())?;
-    dashboard_daemon::lifecycle::connect_or_start(&ipc::canonical_path(root), &executable).map_err(|error| format!("cannot reach the dashboard daemon: {error}"))
+    dashboard_daemon::lifecycle::connect_or_start(&ipc::canonical_path(root), &executable).map_err(|error| voice.say(|text| text.cli_daemon_unreachable.fill(&[("error", &error.to_string())]).into_string()))
 }
 
 /// 📋️ The sessions of a workspace: the daemon's when one answers, else the journal's.
-fn sessions_of(root: &Path) -> Vec<SessionInfo> {
-    match connect(root).and_then(|mut connection| daemon_control::tasks(&mut connection, QUERY).map_err(|error| error.to_string())) {
+fn sessions_of(root: &Path, voice: &Voice) -> Vec<SessionInfo> {
+    match connect(root, voice).and_then(|mut connection| daemon_control::tasks(&mut connection, QUERY).map_err(|error| error.to_string())) {
         Ok(sessions) => sessions,
         Err(_) => daemon_control::offline_tasks(&ipc::canonical_path(root)),
     }
@@ -194,8 +211,8 @@ pub struct Picked<'a> {
 fn listed(sessions: &[&SessionInfo]) -> String { sessions.iter().map(|session| format!("{} ({})", session.session_id, session.command.command_id)).collect::<Vec<_>>().join(", ") }
 
 /// 🧲️ Resolves a handle to sessions; an ambiguous handle is an error that lists the candidates.
-pub fn pick<'a>(sessions: &'a [SessionInfo], needle: &str) -> Result<Picked<'a>, String> {
-    if needle.is_empty() { return Err("a task handle is empty; `repo dashboard tasks` lists them".into()); }
+pub fn pick<'a>(sessions: &'a [SessionInfo], needle: &str, voice: &Voice) -> Result<Picked<'a>, String> {
+    if needle.is_empty() { return Err(voice.say(|text| text.cli_handle_empty.as_str().to_string())); }
     let single = |session: &'a SessionInfo| Ok(Picked { sessions: vec![session], group: None });
     if let Some(exact) = sessions.iter().find(|session| session.session_id == needle) { return single(exact); }
     let members: Vec<&SessionInfo> = sessions.iter().filter(|session| session.group.as_deref() == Some(needle) || session.session_id.strip_prefix(needle).is_some_and(|rest| rest.starts_with('.'))).collect();
@@ -203,9 +220,9 @@ pub fn pick<'a>(sessions: &'a [SessionInfo], needle: &str) -> Result<Picked<'a>,
     let of_command = |matching: Vec<&'a SessionInfo>| -> Result<Picked<'a>, String> {
         let live: Vec<&SessionInfo> = matching.iter().copied().filter(|session| session.status.live()).collect();
         match live.len() {
-            0 => matching.into_iter().max_by_key(|session| session.started_ms).map_or_else(|| Err(format!("no task matches {needle:?}; `repo dashboard tasks` lists them")), |latest| Ok(Picked { sessions: vec![latest], group: None })),
+            0 => matching.into_iter().max_by_key(|session| session.started_ms).map_or_else(|| Err(voice.say(|text| text.cli_no_task_matches.fill(&[("needle", needle)]).into_string())), |latest| Ok(Picked { sessions: vec![latest], group: None })),
             1 => Ok(Picked { sessions: live, group: None }),
-            _ => Err(format!("{needle:?} has {} live tasks: {}; name one session id", live.len(), listed(&live))),
+            _ => Err(voice.say(|text| text.cli_live_tasks.fill(&[("needle", needle), ("count", &live.len().to_string()), ("listed", &listed(&live))]).into_string())),
         }
     };
     let by_command: Vec<&SessionInfo> = sessions.iter().filter(|session| session.command.command_id == needle).collect();
@@ -214,24 +231,24 @@ pub fn pick<'a>(sessions: &'a [SessionInfo], needle: &str) -> Result<Picked<'a>,
     match by_prefix.len() {
         0 => {}
         1 => return single(by_prefix[0]),
-        _ => return Err(format!("{needle:?} matches {} tasks: {}; name one session id", by_prefix.len(), listed(&by_prefix))),
+        _ => return Err(voice.say(|text| text.cli_matches_tasks.fill(&[("needle", needle), ("count", &by_prefix.len().to_string()), ("listed", &listed(&by_prefix))]).into_string())),
     }
     let by_part: Vec<&SessionInfo> = sessions.iter().filter(|session| !session.command.command_id.is_empty() && session.command.command_id.contains(needle)).collect();
     let mut commands: Vec<&str> = by_part.iter().map(|session| session.command.command_id.as_str()).collect();
     commands.sort_unstable();
     commands.dedup();
     match commands.len() {
-        0 => Err(format!("no task matches {needle:?}; `repo dashboard tasks` lists them")),
+        0 => Err(voice.say(|text| text.cli_no_task_matches.fill(&[("needle", needle)]).into_string())),
         1 => of_command(by_part),
-        _ => Err(format!("{needle:?} matches several commands: {}; name one", commands.join(", "))),
+        _ => Err(voice.say(|text| text.cli_matches_commands.fill(&[("needle", needle), ("commands", &commands.join(", "))]).into_string())),
     }
 }
 
 /// 1️⃣ The one session a verb that needs exactly one works on.
-fn only<'a>(picked: &Picked<'a>, needle: &str) -> Result<&'a SessionInfo, String> {
+fn only<'a>(picked: &Picked<'a>, needle: &str, voice: &Voice) -> Result<&'a SessionInfo, String> {
     match picked.sessions.as_slice() {
         [session] => Ok(session),
-        many => Err(format!("{needle:?} names {} tasks of one launch: {}; name one session id", many.len(), listed(many))),
+        many => Err(voice.say(|text| text.cli_names_tasks.fill(&[("needle", needle), ("count", &many.len().to_string()), ("listed", &listed(many))]).into_string())),
     }
 }
 // #endregion 🔖️Handles
@@ -304,20 +321,20 @@ impl Write for Output {
 /// stop it with `repo dashboard stop`). `--detach` returns once the daemon accepted the launch; `--wait-ready`
 /// returns once every process that declares readiness printed its address (the addresses are the
 /// last lines of stdout); `--dry-run` prints the resolved launch as JSON and starts nothing.
-pub fn run(root: &Path, argv: &[String]) -> i32 {
-    let arguments = match parse(argv, &["param", "env", "root", "snapshot", "timeout"]) { Ok(arguments) => arguments, Err(code) => return code };
-    let [id] = arguments.words.as_slice() else { return refuse("usage: repo dashboard run <id> [--param k=v]… [--env K=V]… [--detach] [--wait-ready] [--dry-run] [-- args…]") };
+pub fn run(root: &Path, argv: &[String], voice: &Voice) -> i32 {
+    let arguments = match parse(argv, &["param", "env", "root", "snapshot", "timeout"], voice) { Ok(arguments) => arguments, Err(code) => return code };
+    let [id] = arguments.words.as_slice() else { return refuse(&voice.say(|text| text.cli_usage_run.as_str().to_string())) };
     let root = root_of(root, &arguments);
     let registry = registry_of(&root, &arguments);
     let accepted = registry.find(id).map(|entry| registry.parameters(entry)).unwrap_or_default();
-    let request = match arguments.request(&|name| accepted.iter().find(|parameter| parameter.id == name).map(|parameter| parameter.kind)) { Ok(request) => request, Err(error) => return refuse(&error) };
+    let request = match arguments.request(&|name| accepted.iter().find(|parameter| parameter.id == name).map(|parameter| parameter.kind), voice) { Ok(request) => request, Err(error) => return refuse(&error) };
     let launch = match registry.resolve(id, &request) { Ok(launch) => launch, Err(error) => return refuse(&error) };
     if arguments.has("dry-run") { println!("{}", registry.launch_plan_json(&launch)); return 0; }
-    let result = connect_or_start(&root).and_then(|mut connection| start(&mut connection, SpawnGroup::from_launch(&launch, &[]), &arguments));
+    let result = connect_or_start(&root, voice).and_then(|mut connection| start(&mut connection, SpawnGroup::from_launch(&launch, &voice.task_environment()), &arguments, voice));
     result.unwrap_or_else(|error| refuse(&error))
 }
 
-fn start(connection: &mut Connection, group: SpawnGroup, arguments: &Arguments) -> Result<i32, String> {
+fn start(connection: &mut Connection, group: SpawnGroup, arguments: &Arguments, voice: &Voice) -> Result<i32, String> {
     let (detach, wait_ready, json) = (arguments.has("detach"), arguments.has("wait-ready"), arguments.has("json"));
     let timeout = arguments.seconds(READY_TIMEOUT_SECONDS);
     let mut group = sized(group);
@@ -345,7 +362,7 @@ fn start(connection: &mut Connection, group: SpawnGroup, arguments: &Arguments) 
     if detach || wait_ready {
         print_sessions(&sessions, json);
         if !json { for url in &urls { println!("{url}"); } }
-        if wait_ready && urls.is_empty() { eprintln!("[semio] the command declares no ready address; it is started"); }
+        if wait_ready && urls.is_empty() { eprintln!("[semio] {}", voice.say(|text| text.cli_no_ready_declared.as_str().to_string())); }
         return Ok(0);
     }
     let Some(last) = sessions.last() else { return Ok(0) };
@@ -375,23 +392,23 @@ fn wait_for(connection: &mut Connection, ids: &[String], wait: Wait, timeout: Du
 
 // #region 🔖️Tasks
 /// 🗒️ `repo dashboard tasks [--json]` lists the tasks of the workspace: the daemon's, or the journal's while none runs.
-pub fn tasks(root: &Path, argv: &[String]) -> i32 {
-    let arguments = match parse(argv, &["root"]) { Ok(arguments) => arguments, Err(code) => return code };
-    print_sessions(&sessions_of(&root_of(root, &arguments)), arguments.has("json"));
+pub fn tasks(root: &Path, argv: &[String], voice: &Voice) -> i32 {
+    let arguments = match parse(argv, &["root"], voice) { Ok(arguments) => arguments, Err(code) => return code };
+    print_sessions(&sessions_of(&root_of(root, &arguments), voice), arguments.has("json"));
     0
 }
 
 /// 📜️ `repo dashboard logs <task> [--follow]` prints the output the daemon kept for a task; `--follow` keeps
 /// streaming until the task ends. A task is chosen by its session id (the handle every verb prints), a group
 /// id, a command id or a unique part of a session id or command id.
-pub fn logs(root: &Path, argv: &[String]) -> i32 {
-    let arguments = match parse(argv, &["root"]) { Ok(arguments) => arguments, Err(code) => return code };
-    let [needle] = arguments.words.as_slice() else { return refuse("usage: repo dashboard logs <task> [--follow]") };
+pub fn logs(root: &Path, argv: &[String], voice: &Voice) -> i32 {
+    let arguments = match parse(argv, &["root"], voice) { Ok(arguments) => arguments, Err(code) => return code };
+    let [needle] = arguments.words.as_slice() else { return refuse(&voice.say(|text| text.cli_usage_logs.as_str().to_string())) };
     let root = ipc::canonical_path(&root_of(root, &arguments));
-    let sessions = sessions_of(&root);
-    let session = match pick(&sessions, needle).and_then(|picked| only(&picked, needle)) { Ok(session) => session, Err(error) => return refuse(&error) };
+    let sessions = sessions_of(&root, voice);
+    let session = match pick(&sessions, needle, voice).and_then(|picked| only(&picked, needle, voice)) { Ok(session) => session, Err(error) => return refuse(&error) };
     let mut stdout = Output::new(arguments.has("raw"));
-    let result = match connect(&root) {
+    let result = match connect(&root, voice) {
         Ok(mut connection) => daemon_control::follow(&mut connection, &session.session_id, &mut stdout, arguments.has("follow"), &NEVER).map(|_| ()),
         Err(_) => daemon_control::logs_offline(&root, &session.session_id, &mut stdout).map(|_| ()),
     };
@@ -400,18 +417,18 @@ pub fn logs(root: &Path, argv: &[String]) -> i32 {
 
 /// 🛑️ `repo dashboard stop|restart|kill <task> [--group] [--timeout S]` asks the daemon and waits until the
 /// task has left the state it was in; `--group` stops or kills every member of the task's compound.
-pub fn act(root: &Path, verb: &str, argv: &[String]) -> i32 {
-    let arguments = match parse(argv, &["root", "timeout"]) { Ok(arguments) => arguments, Err(code) => return code };
-    let [needle] = arguments.words.as_slice() else { return refuse(&format!("usage: semio {verb} <task> [--group]")) };
+pub fn act(root: &Path, verb: &str, argv: &[String], voice: &Voice) -> i32 {
+    let arguments = match parse(argv, &["root", "timeout"], voice) { Ok(arguments) => arguments, Err(code) => return code };
+    let [needle] = arguments.words.as_slice() else { return refuse(&voice.say(|text| text.cli_usage_act.fill(&[("verb", verb)]).into_string())) };
     let root = root_of(root, &arguments);
     let result = (|| -> Result<i32, String> {
-        let mut connection = connect(&root)?;
+        let mut connection = connect(&root, voice)?;
         let sessions = daemon_control::tasks(&mut connection, QUERY).map_err(|error| error.to_string())?;
-        let picked = pick(&sessions, needle)?;
+        let picked = pick(&sessions, needle, voice)?;
         let wait = arguments.seconds(30);
-        let whole = if arguments.has("group") { Some(picked.sessions.first().and_then(|session| session.group.clone()).ok_or_else(|| format!("{needle:?} belongs to no compound"))?) } else { None };
+        let whole = if arguments.has("group") { Some(picked.sessions.first().and_then(|session| session.group.clone()).ok_or_else(|| voice.say(|text| text.cli_no_compound.fill(&[("needle", needle)]).into_string()))?) } else { None };
         if let Some(group) = whole {
-            connection.send(&match verb { "kill" => ClientMsg::KillGroup { group_id: group.clone() }, "stop" => ClientMsg::StopGroup { group_id: group.clone() }, _ => return Err("--group stops or kills; it does not restart".into()) }).map_err(|error| error.to_string())?;
+            connection.send(&match verb { "kill" => ClientMsg::KillGroup { group_id: group.clone() }, "stop" => ClientMsg::StopGroup { group_id: group.clone() }, _ => return Err(voice.say(|text| text.cli_group_not_restart.as_str().to_string())) }).map_err(|error| error.to_string())?;
             let deadline = Instant::now() + wait;
             loop {
                 let now = daemon_control::tasks(&mut connection, QUERY).map_err(|error| error.to_string())?;
@@ -423,7 +440,7 @@ pub fn act(root: &Path, verb: &str, argv: &[String]) -> i32 {
         }
         let action = match verb { "stop" => Action::Stop, "kill" => Action::Kill, _ => Action::Restart };
         let targets: Vec<&SessionInfo> = if action == Action::Restart { picked.sessions.clone() } else { picked.sessions.iter().copied().filter(|session| session.status.live()).collect() };
-        if targets.is_empty() { return Err(format!("{needle:?} has no live task to {verb}; {}", listed(&picked.sessions))); }
+        if targets.is_empty() { return Err(voice.say(|text| text.cli_no_live_task.fill(&[("needle", needle), ("verb", verb), ("listed", &listed(&picked.sessions))]).into_string())); }
         for session in targets {
             let after = daemon_control::act(&mut connection, &session.session_id, action, Some(wait), &NEVER).map_err(|error| error.to_string())?;
             println!("{}\t{}", after.session_id, status_text(&after));
@@ -433,16 +450,16 @@ pub fn act(root: &Path, verb: &str, argv: &[String]) -> i32 {
     result.unwrap_or_else(|error| refuse(&error))
 }
 
-/// 🌐️ `repo dashboard open <task> [--print]` opens the ready address of a task in the system browser.
-pub fn open(root: &Path, argv: &[String]) -> i32 {
-    let arguments = match parse(argv, &["root"]) { Ok(arguments) => arguments, Err(code) => return code };
-    let [needle] = arguments.words.as_slice() else { return refuse("usage: repo dashboard open <task> [--print]") };
-    let sessions = sessions_of(&root_of(root, &arguments));
-    let session = match pick(&sessions, needle).and_then(|picked| { let ready: Vec<&SessionInfo> = picked.sessions.iter().copied().filter(|session| session.ready_url.is_some()).collect(); only(&Picked { sessions: if ready.len() == 1 { ready } else { picked.sessions }, group: None }, needle) }) { Ok(session) => session, Err(error) => return refuse(&error) };
-    let Some(url) = browser::ready_url(session.status, session.ready_url.as_deref()) else { return refuse(&format!("{} has no ready address", label_text(session))) };
+/// 📂️ `repo dashboard open <task> [--print]` opens the ready address of a task in the system browser.
+pub fn open(root: &Path, argv: &[String], voice: &Voice) -> i32 {
+    let arguments = match parse(argv, &["root"], voice) { Ok(arguments) => arguments, Err(code) => return code };
+    let [needle] = arguments.words.as_slice() else { return refuse(&voice.say(|text| text.cli_usage_open.as_str().to_string())) };
+    let sessions = sessions_of(&root_of(root, &arguments), voice);
+    let session = match pick(&sessions, needle, voice).and_then(|picked| { let ready: Vec<&SessionInfo> = picked.sessions.iter().copied().filter(|session| session.ready_url.is_some()).collect(); only(&Picked { sessions: if ready.len() == 1 { ready } else { picked.sessions }, group: None }, needle, voice) }) { Ok(session) => session, Err(error) => return refuse(&error) };
+    let Some(url) = browser::ready_url(session.status, session.ready_url.as_deref()) else { return refuse(&voice.say(|text| text.cli_no_ready_address.fill(&[("task", &label_text(session))]).into_string())) };
     println!("{url}");
     if arguments.has("print") { return 0; }
-    match browser::open(url) { Ok(()) => 0, Err(error) => refuse(&format!("cannot open a browser: {error}")) }
+    match browser::open(url) { Ok(()) => 0, Err(error) => refuse(&voice.say(|text| text.cli_cannot_open_browser.fill(&[("error", &error.to_string())]).into_string())) }
 }
 // #endregion 🔖️Tasks
 

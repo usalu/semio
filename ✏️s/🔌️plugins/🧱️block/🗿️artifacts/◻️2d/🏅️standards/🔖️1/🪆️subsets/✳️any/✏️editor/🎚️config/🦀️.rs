@@ -137,6 +137,7 @@ impl protocol::OpBinary for Block2dConfigMutation {
         Err(protocol::ProtocolError::Malformed { what: "no-config-mutation", offset: 0, detail: "no config mutations exist".into() })
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(Block2dConfigMutation);
 //#endregion 🔖️ConfigOperations
 
 

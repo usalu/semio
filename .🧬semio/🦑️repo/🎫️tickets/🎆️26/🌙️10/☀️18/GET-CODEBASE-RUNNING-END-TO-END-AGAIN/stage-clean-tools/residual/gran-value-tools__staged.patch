@@ -1,0 +1,756 @@
+# stage-clean orphan staged=gran-value-tools/staged/repoint/lex.ts map=None
+--- /dev/null
++++ b/staged/gran-value-tools/staged/repoint/lex.ts
+@@ -0,0 +1,119 @@
++export type Kind = "id" | "p" | "s" | "c" | "w" | "n" | "l";
++export type Tok = { k: Kind; t: string; s: number; e: number };
++
++const IDSTART = /[\p{XID_Start}_]/u;
++const IDCONT = /[\p{XID_Continue}]/u;
++
++/** 🔤 Lexes Rust source into identifiers, punctuation, literals, comments and whitespace without losing a byte. */
++export function lex(src: string): Tok[] {
++  const out: Tok[] = [];
++  const n = src.length;
++  let i = 0;
++  const push = (k: Kind, s: number, e: number) => out.push({ k, t: src.slice(s, e), s, e });
++  while (i < n) {
++    const c = src[i];
++    const s = i;
++    if (c === " " || c === "\t" || c === "\n" || c === "\r") {
++      while (i < n && (src[i] === " " || src[i] === "\t" || src[i] === "\n" || src[i] === "\r")) i++;
++      push("w", s, i);
++      continue;
++    }
++    if (c === "/" && src[i + 1] === "/") {
++      while (i < n && src[i] !== "\n") i++;
++      push("c", s, i);
++      continue;
++    }
++    if (c === "/" && src[i + 1] === "*") {
++      let d = 1;
++      i += 2;
++      while (i < n && d > 0) {
++        if (src[i] === "/" && src[i + 1] === "*") {
++          d++;
++          i += 2;
++        } else if (src[i] === "*" && src[i + 1] === "/") {
++          d--;
++          i += 2;
++        } else i++;
++      }
++      push("c", s, i);
++      continue;
++    }
++    const raw = /^(?:br|cr|r)(#*)"/.exec(src.slice(i, i + 40));
++    if (raw) {
++      const close = '"' + raw[1];
++      const from = i + raw[0].length;
++      const at = src.indexOf(close, from);
++      i = at < 0 ? n : at + close.length;
++      push("s", s, i);
++      continue;
++    }
++    if (c === '"' || ((c === "b" || c === "c") && src[i + 1] === '"')) {
++      i += c === '"' ? 1 : 2;
++      while (i < n && src[i] !== '"') i += src[i] === "\\" ? 2 : 1;
++      i++;
++      push("s", s, Math.min(i, n));
++      i = Math.min(i, n);
++      continue;
++    }
++    if (c === "b" && src[i + 1] === "'") {
++      i += src[i + 2] === "\\" ? 4 : 2;
++      while (i < n && src[i] !== "'") i += src[i] === "\\" ? 2 : 1;
++      i++;
++      push("s", s, Math.min(i, n));
++      i = Math.min(i, n);
++      continue;
++    }
++    if (c === "'") {
++      if (src[i + 1] === "\\") {
++        i += 3;
++        while (i < n && src[i] !== "'") i += src[i] === "\\" ? 2 : 1;
++        i++;
++        push("s", s, Math.min(i, n));
++        i = Math.min(i, n);
++        continue;
++      }
++      const cp = src.codePointAt(i + 1);
++      const w = cp !== undefined && cp > 0xffff ? 2 : 1;
++      if (src[i + 1 + w] === "'") {
++        i += 2 + w;
++        push("s", s, i);
++        continue;
++      }
++      i++;
++      while (i < n && IDCONT.test(src[i])) i++;
++      push("l", s, i);
++      continue;
++    }
++    if (c === "r" && src[i + 1] === "#" && IDSTART.test(src[i + 2] ?? "")) {
++      i += 2;
++      while (i < n && IDCONT.test(src[i])) i++;
++      push("id", s, i);
++      continue;
++    }
++    if (IDSTART.test(c) || (c >= "\ud800" && c <= "\udbff" && IDSTART.test(src.slice(i, i + 2)))) {
++      i++;
++      while (i < n && (IDCONT.test(src[i]) || (src[i] >= "\ud800" && src[i] <= "\udbff" && IDCONT.test(src.slice(i, i + 2))))) i += src[i] >= "\ud800" && src[i] <= "\udbff" ? 2 : 1;
++      push("id", s, i);
++      continue;
++    }
++    if (c >= "0" && c <= "9") {
++      while (i < n && /[0-9a-zA-Z_]/.test(src[i])) i++;
++      push("n", s, i);
++      continue;
++    }
++    if (c === ":" && src[i + 1] === ":") {
++      i += 2;
++      push("p", s, i);
++      continue;
++    }
++    i++;
++    push("p", s, i);
++  }
++  return out;
++}
++
++export function lineOf(src: string, off: number): number {
++  let l = 1;
++  for (let i = src.indexOf("\n"); i >= 0 && i < off; i = src.indexOf("\n", i + 1)) l++;
++  return l;
++}
+# stage-clean orphan staged=gran-value-tools/staged/repoint/moved-tail.json map=None
+--- /dev/null
++++ b/staged/gran-value-tools/staged/repoint/moved-tail.json
+@@ -0,0 +1,12 @@
++{
++  "modules": {
++    "ordered": "semio_framework_value_ordered",
++    "snapshot_projection": "semio_framework_value_snapshot_projection",
++    "paged_text": "semio_framework_value_paged_text",
++    "retirement_queue": "semio_framework_value_retirement_queue"
++  },
++  "functions": { "OriginalAliasBatch": "semio_framework_value_original_aliases" },
++  "items": {},
++  "deriveMacroNames": [],
++  "crateAliases": ["retirement_queue"]
++}
+# stage-clean orphan staged=gran-value-tools/staged/repoint/repoint.ts map=None
+--- /dev/null
++++ b/staged/gran-value-tools/staged/repoint/repoint.ts
+@@ -0,0 +1,50 @@
++/** 🧭 Scoped facade-tail repoint planner: rewrites the listed consumer crates' facade paths of the tail modules to their owner crates and plans the owner dependencies. Writes a plan, never a source file.
++ *  usage: bun repoint.ts --consumers consumers.json --out plan.json [--moved moved-tail.json] [--root DIR] */
++import { readFileSync, writeFileSync, existsSync } from "node:fs";
++import { createHash } from "node:crypto";
++import { relative } from "node:path";
++import { initParser, findWasm } from "../../../rs-sweep-tools/parse.ts";
++import { loadPackage, Package } from "../../../rs-sweep-tools/cargo.ts";
++import { ROOT, loadOwners } from "./resolve-owner.ts";
++import { Moved, Note, transform } from "./transform.ts";
++import { planManifests } from "./manifests.ts";
++
++const args = process.argv.slice(2);
++const flag = (n: string) => (args.indexOf(n) >= 0 ? args[args.indexOf(n) + 1] : undefined);
++const consumersFile = flag("--consumers")!;
++const outFile = flag("--out")!;
++const moved: Moved = JSON.parse(readFileSync(flag("--moved") ?? `${import.meta.dir}/moved-tail.json`, "utf8"));
++const consumers: { dir: string; name: string; files: string[] }[] = JSON.parse(readFileSync(consumersFile, "utf8"));
++await initParser(findWasm("/Users/ueli/Documents/semio")!);
++const libs = [...new Set<string>([...Object.values(moved.modules), ...Object.values(moved.functions)])];
++const owners = loadOwners(libs);
++const ctx = { moved, facade: "semio_framework_value", verify: owners.verify, aliasHeads: ["pack", "protocol", "replication"], globHeads: ["protocol", "semio_framework_replication", "replication"] };
++const sha = (s: string) => createHash("sha256").update(s).digest("hex");
++const rel = (p: string) => relative(ROOT, p);
++const sources: { path: string; before: string; after: string }[] = [];
++const notes: { file: string; note: Note }[] = [];
++const libsByPkg = new Map<string, { pkg: Package; libs: Set<string> }>();
++let rewrites = 0;
++for (const c of consumers) {
++  const pkg = loadPackage(c.dir);
++  for (const f of c.files) {
++    const src = readFileSync(f, "utf8");
++    const r = transform(src, ctx);
++    for (const n of r.notes) notes.push({ file: rel(f), note: n });
++    if (r.out === src) continue;
++    sources.push({ path: rel(f), before: sha(src), after: r.out });
++    rewrites += r.rewrites;
++    if (pkg) {
++      const e = libsByPkg.get(pkg.dir) ?? { pkg, libs: new Set<string>() };
++      for (const l of r.libs) e.libs.add(l);
++      libsByPkg.set(pkg.dir, e);
++    }
++  }
++}
++const sink = new Map<string, { before: string; after: string }>();
++const man = planManifests(libsByPkg, owners, false, "", sink);
++const manifests = [...sink].map(([p, v]) => ({ path: rel(p), before: sha(v.before), after: v.after }));
++writeFileSync(outFile, JSON.stringify({ sources, manifests, notes, issues: man.issues, rewrites }, null, 1));
++const kinds: Record<string, number> = {};
++for (const n of notes) kinds[n.note.kind] = (kinds[n.note.kind] ?? 0) + 1;
++console.log(JSON.stringify({ consumers: consumers.length, sources: sources.length, rewrites, manifests: manifests.length, wsDecls: man.wsDecls, issues: man.issues.length, noteKinds: kinds }));
+# stage-clean orphan staged=gran-value-tools/staged/repoint/resolve-owner.ts map=None
+--- /dev/null
++++ b/staged/gran-value-tools/staged/repoint/resolve-owner.ts
+@@ -0,0 +1,79 @@
++import { existsSync } from "node:fs";
++import { dirname } from "node:path";
++import { buildTree, CrateTree, M, T, V } from "../../../rs-sweep-tools/tree.ts";
++import { Package, loadPackage } from "../../../rs-sweep-tools/cargo.ts";
++import { Def, lookup, setTreeBuilder, libTree } from "../../../rs-sweep-tools/resolve.ts";
++import { Verdict } from "./transform.ts";
++
++export const ROOT = process.env.GRAN_ROOT ?? "/Users/ueli/Documents/semio";
++export const FACADE_DIR = `${ROOT}/🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust`;
++
++const trees = new Map<string, CrateTree>();
++
++/** 🌳 Builds (once) the module tree of a package's lib target. */
++export function treeOf(pkg: Package): CrateTree | null {
++  const t = pkg.targets.find((x) => x.kind === "lib");
++  if (!t || !t.path || !existsSync(t.path)) return null;
++  const key = `${pkg.dir}|${t.path}`;
++  let tr = trees.get(key);
++  if (!tr) {
++    tr = buildTree(pkg, t, pkg.name);
++    trees.set(key, tr);
++  }
++  return tr;
++}
++setTreeBuilder(treeOf);
++
++export type Owners = { byLib: Map<string, Package>; facade: Package; verify: (lib: string, segs: string[]) => Verdict };
++
++/** 🧭 Loads the owning crates behind the facade and returns an outside-the-crate path verifier. */
++export function loadOwners(libs: string[]): Owners {
++  const facade = loadPackage(FACADE_DIR)!;
++  const byLib = new Map<string, Package>();
++  for (const d of facade.deps) {
++    if (!d.path) continue;
++    const p = loadPackage(d.path);
++    if (p?.libName && libs.includes(p.libName)) byLib.set(p.libName, p);
++  }
++  for (const l of libs) if (!byLib.has(l)) throw new Error(`owner crate ${l} is not a dependency of the facade manifest`);
++  const outside = treeOf(facade)!.root;
++  const memo = new Map<string, Verdict>();
++  const check = (lib: string, segs: string[], env: { test: boolean; wasm: boolean }): Verdict => {
++    const tree = treeOf(byLib.get(lib)!);
++    if (!tree) return "missing";
++    let cur: Def[] = [{ kind: "crate", ns: T, mod: tree.root }];
++    let unknown = false;
++    for (let i = 0; i < segs.length; i++) {
++      const mods = cur.filter((d) => d.mod);
++      if (!mods.length) return i > 0 ? "ok" : "missing";
++      const want = i === segs.length - 1 ? T | V | M : T | V;
++      const next: Def[] = [];
++      for (const d of mods) {
++        const r = lookup(d.mod!, segs[i], want, outside, { env, home: tree });
++        next.push(...r.defs);
++        if (r.err?.kind === "unknown") unknown = true;
++      }
++      if (!next.length) return unknown ? "unknown" : "missing";
++      cur = next;
++    }
++    return "ok";
++  };
++  const verify = (lib: string, segs: string[]): Verdict => {
++    const key = `${lib}::${segs.join("::")}`;
++    const hit = memo.get(key);
++    if (hit) return hit;
++    let v: Verdict = "missing";
++    for (const env of [{ test: false, wasm: false }, { test: true, wasm: false }, { test: false, wasm: true }]) {
++      const r = check(lib, segs, env);
++      if (r === "ok") {
++        v = "ok";
++        break;
++      }
++      if (r === "unknown") v = "unknown";
++    }
++    memo.set(key, v);
++    return v;
++  };
++  return { byLib, facade, verify };
++}
++export { dirname };
+# stage-clean orphan staged=gran-value-tools/staged/repoint/transform-tail.test.ts map=None
+--- /dev/null
++++ b/staged/gran-value-tools/staged/repoint/transform-tail.test.ts
+@@ -0,0 +1,16 @@
++/** 🧪 Language-agnostic cases (cases-tail.json) for the facade-tail table, including whole-crate module aliases; outputs are cross-checked with rustfmt. */
++import { expect, test } from "bun:test";
++import { readFileSync, mkdtempSync, writeFileSync } from "node:fs";
++import { tmpdir } from "node:os";
++import { join } from "node:path";
++import { transform, Moved } from "./transform.ts";
++
++const moved: Moved = JSON.parse(readFileSync(`${import.meta.dir}/moved-tail.json`, "utf8"));
++const cases: { name: string; input: string; expected: string }[] = JSON.parse(readFileSync(`${import.meta.dir}/cases-tail.json`, "utf8"));
++const ctx = { aliasHeads: ["protocol"], globHeads: [], moved, facade: "semio_framework_value", verify: () => "ok" as const };
++for (const c of cases) test(c.name, () => expect(transform(c.input, ctx).out).toBe(c.expected));
++test("third-party cross-check: rustfmt parses every output", () => {
++  const dir = mkdtempSync(join(tmpdir(), "gran-tail-"));
++  cases.forEach((c, i) => writeFileSync(join(dir, `c${i}.rs`), c.expected));
++  for (let i = 0; i < cases.length; i++) expect(Bun.spawnSync(["rustfmt", "--edition", "2021", "--check", "--config", "skip_children=true,disable_all_formatting=true", join(dir, `c${i}.rs`)]).stderr.toString()).not.toMatch(/^error/m);
++});
+# stage-clean orphan staged=gran-value-tools/staged/repoint/transform.ts map=None
+--- /dev/null
++++ b/staged/gran-value-tools/staged/repoint/transform.ts
+@@ -0,0 +1,399 @@
++import { lex, lineOf, Tok } from "./lex.ts";
++
++export type Moved = { modules: Record<string, string>; functions: Record<string, string>; items: Record<string, string>; deriveMacroNames: string[]; crateAliases?: string[] };
++export type Verdict = "ok" | "missing" | "unknown";
++export type Ctx = { moved: Moved; facade: string; verify: (lib: string, segs: string[]) => Verdict; aliasHeads?: string[]; globHeads?: string[] };
++export type Note = { kind: string; line: number; text: string };
++export type Result = { out: string; libs: Set<string>; notes: Note[]; rewrites: number };
++
++type UT = { lead: boolean; prefix: string[]; glob: boolean; group: UT[] | null; alias: string | null };
++type Leaf = { segs: string[]; glob: boolean; alias: string | null };
++type Stmt = { attrStart: number; useTok: number; semi: number; start: number; end: number; headerEnd: number; tree: UT };
++type Edit = { s: number; e: number; text: string };
++
++const ITEM_PREV = new Set([";", "}", "{", "]", ")", ","]);
++
++/** 🧭 Rewrites facade paths of moved modules to their owning crates in one Rust source; unresolved paths stay and are noted. */
++export function transform(src: string, ctx: Ctx): Result {
++  const res: Result = { out: src, libs: new Set(), notes: [], rewrites: 0 };
++  if (!src.includes(ctx.facade) && !(ctx.aliasHeads ?? []).some((h) => src.includes(`${h}::value::`) || src.includes(`${h}::__value::`)) && !(ctx.globHeads ?? []).some((h) => src.includes(`${h}::`))) return res;
++  const F = ctx.facade;
++  const { modules, items, functions } = ctx.moved;
++  const derive = new Set(ctx.moved.deriveMacroNames);
++  const aliasCrates = new Set(ctx.moved.crateAliases ?? []);
++  const heads = ctx.aliasHeads ?? [];
++  const gheads = ctx.globHeads ?? [];
++  const isMovedName = (n: string | undefined) => n !== undefined && (modules[n] !== undefined || items[n] !== undefined || functions[n] !== undefined);
++  const toks = lex(src);
++  const sig: number[] = [];
++  for (let i = 0; i < toks.length; i++) if (toks[i].k !== "w" && toks[i].k !== "c") sig.push(i);
++  const T = (j: number): Tok | undefined => (j >= 0 && j < sig.length ? toks[sig[j]] : undefined);
++  const isP = (j: number, t: string) => T(j)?.k === "p" && T(j)!.t === t;
++  const isId = (j: number, t?: string) => T(j)?.k === "id" && (t === undefined || T(j)!.t === t);
++  const note = (kind: string, off: number, text: string) => res.notes.push({ kind, line: lineOf(src, off), text });
++  const edits: Edit[] = [];
++
++  const deriveRanges: [number, number][] = [];
++  const deriveNames = new Set<string>();
++  for (let j = 0; j < sig.length; j++) {
++    if (!isId(j, "derive") || !isP(j + 1, "(")) continue;
++    let d = 0;
++    let k = j + 1;
++    for (; k < sig.length; k++) {
++      if (isP(k, "(")) d++;
++      else if (isP(k, ")") && --d === 0) break;
++      else if (isId(k)) deriveNames.add(T(k)!.t);
++    }
++    deriveRanges.push([T(j + 1)!.s, T(Math.min(k, sig.length - 1))!.e]);
++  }
++  const inDerive = (off: number) => deriveRanges.some(([a, b]) => off >= a && off < b);
++
++  function parseTree(j: number): { t: UT; j: number } | null {
++    const t: UT = { lead: false, prefix: [], glob: false, group: null, alias: null };
++    if (isP(j, "::")) {
++      t.lead = true;
++      j++;
++    }
++    for (;;) {
++      if (isP(j, "{")) {
++        j++;
++        t.group = [];
++        while (!isP(j, "}")) {
++          const c = parseTree(j);
++          if (!c) return null;
++          t.group.push(c.t);
++          j = c.j;
++          if (isP(j, ",")) j++;
++          else if (!isP(j, "}")) return null;
++        }
++        return { t, j: j + 1 };
++      }
++      if (isP(j, "*")) {
++        t.glob = true;
++        return { t, j: j + 1 };
++      }
++      if (!isId(j)) return null;
++      t.prefix.push(T(j)!.t);
++      j++;
++      if (isP(j, "::")) {
++        j++;
++        continue;
++      }
++      if (isId(j, "as") && (isId(j + 1) || T(j + 1)?.t === "_")) {
++        t.alias = T(j + 1)!.t;
++        j += 2;
++      }
++      return { t, j };
++    }
++  }
++
++  const stmts: Stmt[] = [];
++  const inStmt = (off: number) => stmts.some((s) => off >= s.start && off < s.end);
++  for (let j = 0; j < sig.length; j++) {
++    if (!isId(j, "use") || isP(j + 1, "<")) continue;
++    const prev = T(j - 1);
++    const okPrev = !prev || (prev.k === "p" && ITEM_PREV.has(prev.t)) || (prev.k === "id" && prev.t === "pub");
++    if (!okPrev) continue;
++    const pt = parseTree(j + 1);
++    if (!pt || !isP(pt.j, ";")) {
++      let k = j;
++      while (k < sig.length && !isP(k, ";")) k++;
++      const body = src.slice(T(j)!.s, T(Math.min(k, sig.length - 1))!.e);
++      if (body.includes(F)) note("use-parse-failure", T(j)!.s, body.slice(0, 120));
++      continue;
++    }
++    let a = j - 1;
++    if (isId(a, "pub")) a--;
++    else if (isP(a, ")")) {
++      let d = 0;
++      let b = a;
++      for (; b >= 0; b--) {
++        if (isP(b, ")")) d++;
++        else if (isP(b, "(") && --d === 0) break;
++      }
++      if (isId(b - 1, "pub")) a = b - 2;
++    }
++    for (;;) {
++      if (!isP(a, "]")) break;
++      let d = 0;
++      let b = a;
++      for (; b >= 0; b--) {
++        if (isP(b, "]")) d++;
++        else if (isP(b, "[") && --d === 0) break;
++      }
++      if (b >= 1 && isP(b - 1, "#")) a = b - 2;
++      else break;
++    }
++    const first = a + 1;
++    stmts.push({ attrStart: T(first)!.s, useTok: T(j)!.s, semi: T(pt.j)!.e, start: T(first)!.s, end: T(pt.j)!.e, headerEnd: T(j)!.s, tree: pt.t });
++    j = pt.j;
++  }
++
++  function leaves(t: UT, acc: string[], out: Leaf[]): void {
++    const p = [...acc, ...t.prefix];
++    if (t.group) for (const c of t.group) leaves(c, p, out);
++    else out.push({ segs: p, glob: t.glob, alias: t.alias });
++  }
++
++  const outsideUse = (tj: number) => !inStmt(T(tj)!.s);
++  const macroUsed = new Set<string>();
++  const traitUsed = new Set<string>();
++  const bound = new Set<string>();
++  const localDef = new Set<string>();
++  const bareUse = new Map<string, number>();
++  for (let j = 0; j < sig.length; j++) {
++    const t = T(j)!;
++    if (t.k !== "id") continue;
++    if ((t.t === "struct" || t.t === "enum" || t.t === "trait" || t.t === "fn" || t.t === "type" || t.t === "const" || t.t === "static" || t.t === "mod" || t.t === "union") && isId(j + 1)) localDef.add(T(j + 1)!.t);
++    if (!outsideUse(j) || t.t === F) continue;
++    const prevColons = isP(j - 1, "::") || isP(j - 1, ".");
++    if (derive.has(t.t) || modules[t.t] !== undefined || items[t.t] !== undefined || functions[t.t] !== undefined) {
++      if (inDerive(t.s)) macroUsed.add(t.t);
++      else if (!prevColons) {
++        traitUsed.add(t.t);
++        if (!isP(j + 1, "::")) bareUse.set(t.t, (bareUse.get(t.t) ?? 0) + 1);
++      }
++    }
++  }
++  for (const s of stmts) {
++    const ls: Leaf[] = [];
++    leaves(s.tree, [], ls);
++    for (const l of ls) if (!l.glob) bound.add(l.alias ?? l.segs[l.segs.length - 1]);
++  }
++
++  function classify(leaf: Leaf): { kind: "keep" } | { kind: "move"; segs: string[]; checkSegs: string[] } | { kind: "unresolved"; why: string } | { kind: "rootglob" } | { kind: "alias" } {
++    const l: Leaf = heads.includes(leaf.segs[0]) && (leaf.segs[1] === "value" || leaf.segs[1] === "__value") && leaf.segs.length > 2 ? { ...leaf, segs: [F, ...leaf.segs.slice(2)] } : gheads.includes(leaf.segs[0]) && isMovedName(leaf.segs[1]) ? { ...leaf, segs: [F, ...leaf.segs.slice(1)] } : leaf;
++    if (l.segs[0] !== F) return { kind: "keep" };
++    let r = l.segs.slice(1);
++    if (r.length === 0) return l.glob ? { kind: "rootglob" } : l.alias ? { kind: "alias" } : { kind: "keep" };
++    if (r[0] === "value" && r.length > 1 && (modules[r[1]] || items[r[1]] || functions[r[1]])) r = r.slice(1);
++    let lib: string;
++    let segs: string[];
++    if (modules[r[0]]) {
++      lib = modules[r[0]];
++      segs = aliasCrates.has(r[0]) ? [lib, ...r.slice(1)] : [lib, ...r];
++    } else if (items[r[0]]) {
++      lib = modules[items[r[0]]];
++      segs = [lib, items[r[0]], ...r];
++    } else if (functions[r[0]]) {
++      lib = functions[r[0]];
++      segs = [lib, ...r];
++    } else return { kind: "keep" };
++    const checkSegs = segs.slice(1).filter((x, i, a) => !(x === "self" && i === a.length - 1));
++    const v = ctx.verify(lib, checkSegs);
++    if (v !== "ok") return { kind: "unresolved", why: `${v}: ${segs.join("::")}${l.glob ? "::*" : ""}` };
++    return { kind: "move", segs, checkSegs };
++  }
++
++  function emit(t: UT, keep: (l: Leaf) => boolean, acc: string[]): string | null {
++    const p = [...acc, ...t.prefix];
++    const lead = t.lead ? "::" : "";
++    const pre = lead + t.prefix.join("::");
++    if (t.group) {
++      const parts = t.group.map((c) => emit(c, keep, p)).filter((x): x is string => x !== null);
++      if (!parts.length) return null;
++      if (parts.length === 1 && parts[0] !== "self" && !parts[0].startsWith("self ")) return pre ? `${pre}::${parts[0]}` : parts[0];
++      return pre ? `${pre}::{${parts.join(", ")}}` : `{${parts.join(", ")}}`;
++    }
++    const l: Leaf = { segs: p, glob: t.glob, alias: t.alias };
++    if (!keep(l)) return null;
++    return pre + (t.glob ? (pre ? "::*" : "*") : "") + (t.alias ? ` as ${t.alias}` : "");
++  }
++
++  const lineStartIndent = (off: number): string | null => {
++    const ls = src.lastIndexOf("\n", off - 1) + 1;
++    const seg = src.slice(ls, off);
++    return /^[ \t]*$/.test(seg) ? seg : null;
++  };
++
++  type TN = { kids: Map<string, TN>; ends: string[] };
++  const node = (): TN => ({ kids: new Map(), ends: [] });
++  function emitNode(name: string, n: TN): string[] {
++    if (!n.kids.size) return n.ends.map((e) => (e === "::*" ? `${name}::*` : `${name}${e}`));
++    const inner = [...n.ends.map((e) => (e === "" ? "self" : e === "::*" ? "*" : `self${e}`)), ...[...n.kids].flatMap(([k, v]) => emitNode(k, v))];
++    if (inner.length === 1 && inner[0] !== "self" && !inner[0].startsWith("self ")) return [`${name}::${inner[0]}`];
++    return [`${name}::{${inner.join(", ")}}`];
++  }
++  function newStatements(header: string, moves: { segs: string[]; glob: boolean; alias: string | null }[], sep: string): string {
++    const libs = new Map<string, TN>();
++    for (const m of moves) {
++      let segs = m.segs;
++      if (segs[segs.length - 1] === "self") segs = segs.slice(0, -1);
++      let cur = libs.get(segs[0]) ?? libs.set(segs[0], node()).get(segs[0])!;
++      for (const seg of segs.slice(1)) cur = cur.kids.get(seg) ?? cur.kids.set(seg, node()).get(seg)!;
++      const end = m.glob ? "::*" : m.alias ? ` as ${m.alias}` : "";
++      if (!cur.ends.includes(end)) cur.ends.push(end);
++    }
++    return [...libs].map(([lib, tn]) => {
++      const items = [...tn.kids].flatMap(([k, v]) => emitNode(k, v));
++      return `${header}use ${lib}::${items.length === 1 ? items[0] : `{${items.join(", ")}}`};`;
++    }).join(sep);
++  }
++
++  for (const s of stmts) {
++    const ls: Leaf[] = [];
++    leaves(s.tree, [], ls);
++    if (!ls.some((l) => l.segs[0] === F || (heads.includes(l.segs[0]) && (l.segs[1] === "value" || l.segs[1] === "__value")) || (gheads.includes(l.segs[0]) && isMovedName(l.segs[1])))) continue;
++    const lk = (l: Leaf) => `${l.segs.join("::")}|${l.glob}|${l.alias ?? ""}`;
++    const verdict = new Map<string, ReturnType<typeof classify>>();
++    const moves: { segs: string[]; glob: boolean; alias: string | null }[] = [];
++    const keepOld = new Set<string>();
++    const isPub = /\bpub\b/.test(src.slice(s.attrStart, s.useTok).replace(/#\[[^\]]*\]/g, ""));
++    for (const l of ls) {
++      const c = classify(l);
++      verdict.set(lk(l), c);
++      if (c.kind === "alias") note("alias", s.start, src.slice(s.start, s.end).slice(0, 120));
++      else if (c.kind === "rootglob") {
++        if (isPub) note("reexport-glob", s.start, "pub use facade::* re-exports moved items implicitly");
++      } else if (c.kind === "unresolved") note("unresolved-target", s.start, c.why);
++      else if (c.kind === "move") {
++        const name = l.segs[l.segs.length - 1];
++        const coll = !l.glob && derive.has(name) && (l.segs.length === 2 || (l.segs.length === 3 && l.segs[1] === "value"));
++        if (coll && !l.alias) {
++          const m = macroUsed.has(name);
++          const tr = traitUsed.has(name);
++          if (m) keepOld.add(lk(l));
++          if (m && !tr) continue;
++        }
++        moves.push({ segs: c.segs, glob: l.glob, alias: l.alias });
++      }
++    }
++    if (!moves.length) continue;
++    const kept = emit(s.tree, (l) => verdict.get(lk(l))?.kind !== "move" || keepOld.has(lk(l)), []);
++    const header = src.slice(s.attrStart, s.useTok);
++    const indent = lineStartIndent(s.attrStart);
++    const sep = indent === null ? " " : "\n" + indent;
++    const fresh = newStatements(header, moves, sep);
++    const root = s.tree.lead ? "::" : "";
++    const text = kept === null ? fresh : `${header}use ${kept.startsWith("::") ? "" : root}${kept};${sep}${fresh}`;
++    edits.push({ s: s.start, e: s.end, text });
++    for (const m of moves) res.libs.add(m.segs[0]);
++    res.rewrites += moves.length;
++  }
++
++  for (const s of stmts) {
++    const ls: Leaf[] = [];
++    leaves(s.tree, [], ls);
++    const hasRoot = ls.some((l) => l.segs.length === 1 && l.segs[0] === F && l.glob);
++    if (!hasRoot) continue;
++    const isPub = /\bpub\b/.test(src.slice(s.start, s.useTok).replace(/#\[[^\]]*\]/g, ""));
++    if (isPub) continue;
++    const need: { segs: string[]; glob: boolean; alias: string | null }[] = [];
++    const seen = new Set<string>();
++    for (let j = 0; j < sig.length; j++) {
++      const t = T(j)!;
++      if (t.k !== "id" || !outsideUse(j) || isP(j - 1, "::") || isP(j - 1, ".") || seen.has(t.t)) continue;
++      const mod = modules[t.t] !== undefined;
++      const item = items[t.t] !== undefined;
++      const fn = functions[t.t] !== undefined;
++      if (!mod && !item && !fn) continue;
++      if (mod && !isP(j + 1, "::")) continue;
++      if (inDerive(t.s) && derive.has(t.t)) continue;
++      seen.add(t.t);
++      if (bound.has(t.t) || localDef.has(t.t)) {
++        note("rootglob-name-clash", t.s, t.t);
++        continue;
++      }
++      const segs = mod ? [modules[t.t], t.t] : item ? [modules[items[t.t]], items[t.t], t.t] : [functions[t.t], t.t];
++      const v = ctx.verify(segs[0], segs.slice(1));
++      if (v !== "ok") {
++        note("unresolved-target", t.s, `${v}: ${segs.join("::")}`);
++        continue;
++      }
++      need.push({ segs, glob: false, alias: null });
++    }
++    if (!need.length) continue;
++    const header = src.slice(s.attrStart, s.useTok);
++    const indent = lineStartIndent(s.attrStart);
++    const sep = indent === null ? " " : "\n" + indent;
++    edits.push({ s: s.end, e: s.end, text: sep + newStatements(header, need, sep) });
++    for (const m of need) res.libs.add(m.segs[0]);
++    res.rewrites += need.length;
++  }
++
++  for (let j = 0; j < sig.length; j++) {
++    const t = T(j)!;
++    if (t.k !== "id" || (t.t !== F && !heads.includes(t.t) && !gheads.includes(t.t)) || !outsideUse(j) || isP(j - 1, ".") || isP(j + 1, "!") || !isP(j + 1, "::")) continue;
++    if (isP(j - 1, "::") && (isId(j - 2) || isP(j - 2, ">"))) continue;
++    if (isP(j - 1, "$")) continue;
++    let base = j;
++    if (t.t !== F) {
++      if (heads.includes(t.t) && (isId(j + 2, "value") || isId(j + 2, "__value")) && isP(j + 3, "::")) base = j + 2;
++      else if (!(gheads.includes(t.t) && isMovedName(T(j + 2)?.t))) continue;
++    }
++    const ids: number[] = [];
++    let k = base;
++    while (isP(k + 1, "::") && isId(k + 2)) {
++      ids.push(k + 2);
++      k += 2;
++    }
++    if (!ids.length) {
++      if (isP(j + 1, "::") && isP(j + 2, "{")) note("nonuse-brace-group", t.s, "facade brace group outside a use statement");
++      continue;
++    }
++    let first = 0;
++    if (T(ids[0])!.t === "value" && ids.length > 1 && (modules[T(ids[1])!.t] || items[T(ids[1])!.t] || functions[T(ids[1])!.t])) first = 1;
++    const name = T(ids[first])!.t;
++    if (derive.has(name) && inDerive(t.s)) continue;
++    const rest = ids.slice(first).map((x) => T(x)!.t);
++    let lib: string;
++    let verifyPath: string[];
++    let text: string;
++    let endTok: number;
++    if (modules[name]) {
++      lib = modules[name];
++      verifyPath = aliasCrates.has(name) ? rest.slice(1) : rest;
++      text = lib;
++      endTok = aliasCrates.has(name) ? ids[first] : first === 1 ? ids[0] : base !== j ? base : -1;
++    } else if (items[name]) {
++      lib = modules[items[name]];
++      verifyPath = [items[name], name];
++      text = `${lib}::${items[name]}::${name}`;
++      endTok = ids[first];
++    } else if (functions[name]) {
++      lib = functions[name];
++      verifyPath = [name];
++      text = `${lib}::${name}`;
++      endTok = ids[first];
++    } else continue;
++    const v = ctx.verify(lib, verifyPath);
++    if (v !== "ok") {
++      note("unresolved-target", t.s, `${v}: ${lib}::${verifyPath.join("::")}`);
++      continue;
++    }
++    edits.push({ s: t.s, e: endTok === -1 ? t.e : T(endTok)!.e, text });
++    res.libs.add(lib);
++    res.rewrites++;
++  }
++
++  for (const t of toks) {
++    if (t.k === "c" && t.t.includes(F)) {
++      const re = new RegExp(`${F}::(?:value::)?([A-Za-z_]+)`, "g");
++      const nt = t.t.replace(re, (m, n: string) => {
++        if (modules[n]) return `${modules[n]}::${n}`;
++        if (items[n]) return `${modules[items[n]]}::${items[n]}::${n}`;
++        if (functions[n]) return `${functions[n]}::${n}`;
++        return m;
++      });
++      if (nt !== t.t) edits.push({ s: t.s, e: t.e, text: nt });
++    } else if (t.k === "s" && t.t.includes(F + "::")) {
++      const re = new RegExp(`${F}::(?:value::)?([A-Za-z_]+)`, "g");
++      for (const m of t.t.matchAll(re)) if (modules[m[1]] || items[m[1]] || functions[m[1]]) note("string-mention", t.s, t.t.slice(0, 140));
++    }
++  }
++  if (/\bextern\s+crate\s+semio_framework_value\s+as\b/.test(src)) note("alias", 0, "extern crate alias");
++
++  edits.sort((a, b) => b.s - a.s || b.e - a.e);
++  let out = src;
++  let last = Infinity;
++  for (const e of edits) {
++    if (e.e > last) {
++      note("edit-overlap", e.s, "skipped overlapping edit");
++      continue;
++    }
++    out = out.slice(0, e.s) + e.text + out.slice(e.e);
++    last = e.s;
++  }
++  res.out = out;
++  return res;
++}
+# stage-clean orphan staged=gran-value-tools/staged/toml_keys.ts map=None
+--- /dev/null
++++ b/staged/gran-value-tools/staged/toml_keys.ts
+@@ -0,0 +1,4 @@
++/** 🔎️ Third-party oracle for the manifest cases: Bun's own TOML parser lists the dependency keys of a manifest. */
++import { readFileSync } from "node:fs";
++const doc = Bun.TOML.parse(readFileSync(process.argv[2]!, "utf8")) as Record<string, Record<string, unknown> | undefined>;
++console.log(JSON.stringify({ dependencies: Object.keys(doc["dependencies"] ?? {}), devDependencies: Object.keys(doc["dev-dependencies"] ?? {}) }));
+# stage-clean orphan staged=gran-value-tools/staged/verify_manifests2.ts map=None
+--- /dev/null
++++ b/staged/gran-value-tools/staged/verify_manifests2.ts
+@@ -0,0 +1,45 @@
++/** 🧾 Third-party (Bun TOML) differential of every changed Cargo.toml between two trees against the hygiene ledger and the facade-tail owner set.
++ *  usage: bun verify_manifests2.ts <pre-root> <post-root> */
++import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
++import { join, relative } from "node:path";
++
++const [pre, post] = process.argv.slice(2);
++const ledger: { crate: string; dir: string; dependency: string; verdict: string }[] = JSON.parse(readFileSync(`${import.meta.dir}/../data/hygiene-edges.json`, "utf8"));
++const byDir = new Map<string, Map<string, string>>();
++for (const e of ledger) (byDir.get(e.dir) ?? byDir.set(e.dir, new Map()).get(e.dir)!).set(e.dependency, e.verdict);
++const OWNERS = new Set(["semio-framework-value-ordered", "semio-framework-value-snapshot-projection", "semio-framework-value-paged-text", "semio-framework-value-retirement-queue", "semio-framework-value-original-aliases"]);
++const CARVE = new Set(["semio-framework-value-intrinsic", "semio-framework-value-derive-resources", "semio-framework-hash", "semio-framework-native-build-compiler-resources", "semio-framework-value-clone-source", "semio-framework-value-native-decoding", "semio-framework-value-paged-list", "semio-framework-value-allocation-return", "semio-framework-value-edit", "semio-framework-value-schema", "semio-framework-value-registry", "semio-framework-schema-registry", "semio-framework-value-native-encoding", "semio-framework-value-original-aliases", "semio-framework-value-ordered"]);
++function* walk(dir: string): Generator<string> {
++  for (const n of readdirSync(dir)) {
++    const p = join(dir, n);
++    if (statSync(p).isDirectory()) yield* walk(p);
++    else if (n === "Cargo.toml") yield p;
++  }
++}
++const keys = (t: any, k: string) => Object.entries<any>(t[k] ?? {}).map(([a, v]) => (v && typeof v === "object" && v.package) || a);
++let changed = 0, removedNormal = 0, demoted = 0, addedNormal = 0, bad = 0, parseFail = 0;
++const fail = (m: string) => { bad++; console.log("FAIL", m); };
++for (const p of walk(post)) {
++  const rel = relative(post, p);
++  const a = join(pre, rel);
++  if (!existsSync(a)) continue;
++  const ta = readFileSync(a, "utf8"), tb = readFileSync(p, "utf8");
++  if (ta === tb) continue;
++  changed++;
++  let A: any, B: any;
++  try { A = Bun.TOML.parse(ta); B = Bun.TOML.parse(tb); } catch { parseFail++; fail(`${rel} does not parse`); continue; }
++  const dir = rel.replace(/\/Cargo\.toml$/, "");
++  const led = byDir.get(dir) ?? new Map<string, string>();
++  const an = new Set(keys(A, "dependencies")), bn = new Set(keys(B, "dependencies")), ad = new Set(keys(A, "dev-dependencies")), bd = new Set(keys(B, "dev-dependencies"));
++  for (const k of an) if (!bn.has(k)) {
++    removedNormal++;
++    const v = led.get(k);
++    if (v === "unused") { if (bd.has(k) && !ad.has(k)) fail(`${rel}: unused ${k} reappeared in dev`); }
++    else if (v === "test-only") { if (bd.has(k)) demoted++; else fail(`${rel}: test-only ${k} vanished`); }
++    else if (!CARVE.has(k) && !(OWNERS.has(k) && rel.includes("🌱️value/📦️packages/🦀️rust"))) fail(`${rel}: unexpected removal of ${k}`);
++  }
++  for (const k of bn) if (!an.has(k)) { addedNormal++; if (!OWNERS.has(k) && !CARVE.has(k) && !["syn", "quote", "proc-macro2"].includes(k)) fail(`${rel}: unexpected addition of ${k}`); }
++  for (const k of bd) if (!ad.has(k) && !(an.has(k) && !bn.has(k)) && k !== "semio-framework-value-derive-resources") fail(`${rel}: dev addition ${k} is not a demotion`);
++}
++console.log(JSON.stringify({ changedManifests: changed, removedFromDependencies: removedNormal, demotedToDev: demoted, addedToDependencies: addedNormal, parseFailures: parseFail, failures: bad }));
++process.exit(bad ? 1 : 0);

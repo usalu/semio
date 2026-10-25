@@ -26,13 +26,13 @@ fn native_shared_original_receive_exact_prefix_cancellation_and_transfer(){
   }
   if receiver.output_ready(){complete=turns;assert!(receiver.child.is_none());assert!(receiver.raw.is_none());let pointer=receiver.output.as_ref().unwrap().get().as_ptr();let d=receiver.take_demand().unwrap();let g=funded(d);let mut denied=g;denied.maximum_items=0;let(value,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||receiver.take(denied).unwrap());assert!(value.is_none());assert_eq!(heap,(0,0));let(value,p)=receiver.take(g).unwrap().unwrap();assert!(p.fits(g));assert_eq!(value.get().as_ptr(),pointer);assert_eq!(value.get(),law["expected"].as_str().unwrap());drain(value);}
   close(&mut receiver);drain(original);drain(foreign);if complete>0&&cut>complete{break;}
- }assert!(complete>0);eprintln!("[DEBUG] shared native original {} completed {} turns with all prefix cancellation and exact heap receipts",law["id"],complete);}
+ }assert!(complete>0);}
 }
 #[test]
 fn native_shared_original_callback_refusal_retains_paid_child_authority(){
  let original=source(DslValue::String("authored original".to_owned()));let d=<SealedShared<String> as NativeReceive<DslValue>>::receive_birth_demand();let(mut receiver,_)=<SealedShared<String> as NativeReceive<DslValue>>::begin_receive(funded(d)).unwrap();let admitted=std::cell::Cell::new(true);let mut callback=|_|admitted.get();let mut control=NativeDecodeControl::new(1<<20,&mut callback);let mut construction=crate::native_decoding::owned::OriginalConstructionFixture;
  for _ in 0..100{if receiver.phase==Phase::Receive{break;}let g=funded(receiver.demands(original.borrow(),4096).unwrap());control.with_construction_recipient(&mut construction,|control|receiver.advance(original.borrow(),control,4096,g)).unwrap();}
- assert!(receiver.child.is_some());let pointer=receiver.child.as_deref().unwrap() as *const _;admitted.set(false);let g=funded(receiver.demands(original.borrow(),4096).unwrap());let(result,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||control.with_construction_recipient(&mut construction,|control|receiver.advance(original.borrow(),control,4096,g)));assert!(result.is_err());assert_eq!(heap,(0,0));assert_eq!(receiver.child.as_deref().unwrap() as *const _,pointer);assert!(!receiver.output_ready());close(&mut receiver);drain(original);eprintln!("[DEBUG] shared native callback refusal retained original child allocation until funded cancellation");
+ assert!(receiver.child.is_some());let pointer=receiver.child.as_deref().unwrap() as *const _;admitted.set(false);let g=funded(receiver.demands(original.borrow(),4096).unwrap());let(result,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||control.with_construction_recipient(&mut construction,|control|receiver.advance(original.borrow(),control,4096,g)));assert!(result.is_err());assert_eq!(heap,(0,0));assert_eq!(receiver.child.as_deref().unwrap() as *const _,pointer);assert!(!receiver.output_ready());close(&mut receiver);drain(original);
 }
 
 #[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]
@@ -59,7 +59,7 @@ fn native_record32_single_active_child_fits4096_and_preserves_every_original_pre
   if receiver.output_ready(){finished=turns;let g=funded(receiver.take_demand().unwrap());let(row,p)=receiver.take(g).unwrap().unwrap();assert!(p.fits(g));assert_eq!(row.a.get(),"original a 🏠️");assert_eq!(row.q.get(),"original q 🏠️");assert_eq!(row.af.get(),"original af 🏠️");drain(row);}
   receiver.begin_close();for _ in 0..100000{if receiver.terminal_is_empty(){break;}let g=close_funded(receiver.close_demands(4096).unwrap());let(step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||receiver.close_step(g).unwrap());assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(receiver.terminal_is_empty());drain(original);if finished>0&&cut>finished{break;}
  }
- assert!(finished>0);eprintln!("[DEBUG] original32-field shared record completed {finished} paid turns; one active child, every4096 prefix closed with exact physical receipts");
+ assert!(finished>0);
 }
 
 #[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]
@@ -94,7 +94,6 @@ fn native_declared_defaults_keep_missing_fields_original_and_heapless() {
  assert!(finished>0);
  use crate::native_decoding::owned::NativeDefault;
  let demand=Vec::<String>::native_default_demand();let grant=funded(demand);let((value,p),heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||Vec::<String>::native_default(grant).unwrap());assert_eq!(heap,(0,0));assert_eq!(value.capacity(),0);assert_eq!(p.retained_capacity_bytes,0);assert!(p.fits(grant));
- eprintln!("[DEBUG] native declared defaults completed={finished} turns; every prefix/zero grant retains original, schema defaults construct no heap backing");
 }
 #[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]
 struct FlattenedRecord{
@@ -112,5 +111,5 @@ fn native_flattened_original_record_preserves_source_schema_and_all_partial_cust
  }assert!(finished>0);
  for entries in [vec![("name",DslValue::String("a".into())),("volume",DslValue::Number(crate::Number::Float(1.0))),("unknown",DslValue::Null)],vec![("name",DslValue::String("a".into())),("name",DslValue::String("b".into())),("volume",DslValue::Number(crate::Number::Float(1.0)))],vec![("name",DslValue::String("a".into()))]]{
   let original=source(DslValue::Object(entries.into_iter().map(|(key,value)|(key.to_owned(),value)).collect()));let d=<FlattenedRecord as NativeReceive<DslValue>>::receive_birth_demand();let(mut receiver,_)=<FlattenedRecord as NativeReceive<DslValue>>::begin_receive(funded(d)).unwrap();let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<24,&mut callback);let mut refused=false;for _ in 0..2000{if receiver.output_ready(){break;}let g=funded(receiver.demands(original.borrow(),4096).unwrap());if advance_original(&mut receiver,original.borrow(),&mut control,g).is_err(){refused=true;break;}}assert!(refused);assert!(!receiver.output_ready());receiver.begin_close();for _ in 0..100000{if receiver.terminal_is_empty(){break;}let g=close_funded(receiver.close_demands(4096).unwrap());let(step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||receiver.close_step(g).unwrap());assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(receiver.terminal_is_empty());drain(original);
- }eprintln!("[DEBUG] original flattened record completed {finished} bounded turns; full schema rejects unknown, duplicate and missing fields, every prefix closes original typed custody");
+ }
 }

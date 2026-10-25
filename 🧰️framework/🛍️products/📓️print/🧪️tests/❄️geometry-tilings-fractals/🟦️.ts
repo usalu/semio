@@ -61,7 +61,7 @@ export default defineTestAdapter({
       subject,
     },
     "l-system-words": {
-      /** 🔮️ The rewritten words, counted symbol by symbol. */
+      /** 🔣️ The rewritten words, counted symbol by symbol. */
       oracle: () => ({
         projection: {
           "geometry/fractal/word": [
@@ -76,7 +76,7 @@ export default defineTestAdapter({
       subject,
     },
     "regular-lattice": {
-      /** 🔮️ A square tiling of side `size` packs its centres a `size·sqrt(3)` grid apart. */
+      /** 🀄️ A square tiling of side `size` packs its centres a `size·sqrt(3)` grid apart. */
       oracle: () => {
         const cells: number[] = [];
         for (let column = 0; column < 3; column += 1) {

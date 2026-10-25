@@ -10,7 +10,7 @@ use semio_framework_plugin::ConfigView;
 use semio_s_artifact_procedural_2d_editor::*;
 use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_plugin::WindowConfigOwner;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn block_on_generation2d_window_ownership<F: std::future::Future>(mut future: std::pin::Pin<Box<F>>) -> F::Output {
     let waker = std::task::Waker::noop();

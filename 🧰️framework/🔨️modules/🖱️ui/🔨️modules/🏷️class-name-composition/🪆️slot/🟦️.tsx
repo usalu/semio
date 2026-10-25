@@ -58,7 +58,7 @@ const mergeSlotProps = (wrapperProps: SlotChildProps, childProps: SlotChildProps
   return merged;
 };
 
-/** 🪆️ Clones exactly one element while preserving child precedence and composing wrapper behavior. */
+/** 🧩️ Clones exactly one element while preserving child precedence and composing wrapper behavior. */
 const Slot = React.forwardRef<HTMLElement, SlotProps>(function Slot({ children, ...wrapperProps }, forwardedRef) {
   if (React.Children.count(children) !== 1 || !React.isValidElement<SlotChildProps>(children)) {
     throw new Error("Slot requires exactly one valid React element child.");

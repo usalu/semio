@@ -92,13 +92,12 @@ test("cooperative reconnect preserves bounded follow and restores own task after
       if (open.length !== 1) throw new Error(`expected one observer roster socket, got ${open.length}`);
       gate.paused = true;
       open[0]!.close(1000, "test observer roster shortage");
-      console.debug("[DEBUG] Closed only observer course roster socket; reconnect gate paused");
       if (durationMs !== undefined) {
         setTimeout(() => {
           const stop = document.querySelector<HTMLButtonElement>("[data-follow-stop]");
           gate.retained = { tag: document.querySelector("[data-following]")?.getAttribute("data-following") ?? null, stop: stop !== null && !stop.disabled, board: document.querySelector('[data-follow-screen] [data-layered-pane="board"][data-opened]') !== null };
         }, durationMs / 2);
-        setTimeout(() => { gate.paused = false; console.debug("[DEBUG] Resumed observer roster reconnect after browser-timed shortage", durationMs); }, durationMs);
+        setTimeout(() => { gate.paused = false; }, durationMs);
       }
     } };
     (window as unknown as { quizRosterGate: RosterGate }).quizRosterGate = gate;
@@ -110,7 +109,7 @@ test("cooperative reconnect preserves bounded follow and restores own task after
         super(url, protocols);
         if (roster) {
           sockets.add(this);
-          this.addEventListener("open", () => { gate.opened += 1; console.debug("[DEBUG] Observer course roster socket opened", gate.opened); });
+          this.addEventListener("open", () => { gate.opened += 1; });
           this.addEventListener("close", () => sockets.delete(this));
         }
       }
@@ -154,7 +153,7 @@ test("cooperative reconnect preserves bounded follow and restores own task after
   expect(await shownItems(anna)).toEqual(ownItems);
   await expect(screen(anna.page, "task").locator(`[data-course-item="${item}"] select`)).toHaveValue(task.items.find((candidate) => candidate.id === item)!.category!);
   expect(await savedRuns(anna)).toEqual(before);
-  await anna.page.evaluate(() => { (window as unknown as { quizRosterGate: RosterGate }).quizRosterGate.paused = false; console.debug("[DEBUG] Resumed observer roster after bounded follow expired"); });
+  await anna.page.evaluate(() => { (window as unknown as { quizRosterGate: RosterGate }).quizRosterGate.paused = false; });
   await expectNamedRoster(anna, [annaName, benName]);
   await expectNamedRoster(ben, [annaName, benName]);
   await expect(anna.page.locator("[data-following]")).toHaveCount(0);
@@ -162,8 +161,10 @@ test("cooperative reconnect preserves bounded follow and restores own task after
   await expect.poll(() => shownTask(anna)).toBe(task.id);
   expect(await savedRuns(anna)).toEqual(before);
   expect(await anna.page.evaluate(() => (window as unknown as { quizRosterGate: RosterGate }).quizRosterGate.opened)).toBe(3);
-  console.log("[DEBUG] Actual observer roster outage retained cached follow and Stop; reconnect mirrored same target; timeout restored own saved task without restarting follow");
 });
+
+/** 🎲️ How often ben may redraw his sheet to meet anna's: two unrelated sheets miss each other about once in thirteen draws, the law 🤝️sheet-overlap bounds the redraws by 40. */
+const REDRAWS = 40;
 
 test("cooperative roster and answers", async ({ device }) => {
   const quiz = quizOf("physics");
@@ -198,9 +199,19 @@ test("cooperative roster and answers", async ({ device }) => {
   const alone = await itemBoxes(anna);
   await playQuiz(ben, quiz.id);
   await openTaskById(ben, task.id);
-  const drawnForBen = await shownItems(ben);
-  const item = (await shownItems(anna)).find((candidate) => drawnForBen.includes(candidate))!;
-  expect(item, `both sheets draw ${task.draw} of ${task.items.length} items, so they share one`).toBeDefined();
+  const sharedItem = async (): Promise<string | undefined> => {
+    const drawnForAnna = await shownItems(anna);
+    return (await shownItems(ben)).find((candidate) => drawnForAnna.includes(candidate));
+  };
+  let common = await sharedItem();
+  for (let redraw = 0; common === undefined && redraw < REDRAWS; redraw++) {
+    await playQuiz(ben, quiz.id, "easy");
+    await playQuiz(ben, quiz.id, "medium");
+    await openTaskById(ben, task.id);
+    common = await sharedItem();
+  }
+  expect(common, `the sheets of both devices draw ${task.draw} of ${task.items.length} items at random; ben redraws until they share one (law: 🤝️sheet-overlap)`).toBeDefined();
+  const item = common!;
 
   await screen(ben.page, "task").locator(`[data-presence-anchor="item:${item}"]`).hover();
   const onItem = peerCursor(anna, `item:${item}`);
@@ -316,7 +327,6 @@ test("cooperative footer, cursors and pages", async ({ device }) => {
   await expect.poll(() => online(anna)).toBe(1);
   await expect(anna.page.locator("[data-following]")).toHaveCount(0);
   await expect(anna.page.locator("[data-follow-screen]")).toHaveCount(0);
-  console.log("[DEBUG] Cooperative footer, gap/card cursors, page follow, cancellation and departure verified");
 });
 
 test("cooperative run, answers and results", async ({ device }) => {
@@ -370,7 +380,6 @@ test("cooperative run, answers and results", async ({ device }) => {
   await expect.poll(() => screen(anna.page, "results").locator(".course-summary p").allTextContents()).toEqual(await screen(ben.page, "results").locator(".course-summary p").allTextContents());
   await expect.poll(() => screen(anna.page, "task-result").evaluateAll((elements) => elements.map((element) => element.getAttribute("data-presence-anchor")))).toEqual(await screen(ben.page, "task-result").evaluateAll((elements) => elements.map((element) => element.getAttribute("data-presence-anchor"))));
   expect(await savedRuns(anna)).toEqual(before);
-  console.log("[DEBUG] Remote randomized sheet, task navigation, draft answer, results and observer persistence verified");
 });
 
 test("cooperative mobile swipe", async ({ device }) => {
@@ -401,8 +410,8 @@ test("cooperative mobile swipe", async ({ device }) => {
   await expect.poll(() => restingPage(ben.page)).toBe("learner");
   await expect.poll(observedPage).toBe("learner");
   await touchSwipe(ben.page, 0, 325);
-  await expect.poll(() => restingPage(ben.page)).toBe("board");
-  await expect.poll(observedPage).toBe("board");
+  await expect.poll(() => restingPage(ben.page)).toBe("badges");
+  await expect.poll(observedPage).toBe("badges");
   await ben.page.evaluate(() => { window.location.hash = "quizzes"; });
   await expect(ben.page.locator('[data-course-grid="quizzes"][data-grid-active]')).toBeVisible();
   await expect.poll(() => restingPage(ben.page)).not.toBeNull();
@@ -417,7 +426,6 @@ test("cooperative mobile swipe", async ({ device }) => {
   await anna.page.locator("[data-follow-stop]").click();
   await expect(anna.page.locator("[data-follow-screen]")).toHaveCount(0);
   expect(await savedRuns(anna)).toEqual(before);
-  console.log("[DEBUG] Phone swipe position and mode followed on a desktop across wrapped columns and rows");
 });
 
 test("cooperative card scroll", async ({ device }) => {
@@ -451,5 +459,4 @@ test("cooperative card scroll", async ({ device }) => {
   await expect.poll(() => observedBoard.evaluate((element) => element.scrollTop)).toBe(0);
   await anna.page.locator("[data-follow-stop]").click();
   await expect(anna.page.locator("[data-follow-screen]")).toHaveCount(0);
-  console.log("[DEBUG] Current phone card scroll mirrored across viewport sizes and recaptured after swipe");
 });

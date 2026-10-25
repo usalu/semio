@@ -155,7 +155,7 @@ export function computeWorkspaces(repoRoot: string, options: WorkspaceDiscoveryO
   return results.map((r) => r.relDir).sort((a, b) => a.localeCompare(b));
 }
 
-/** 🔎️ Diagnostic split for `--check`: entries `computeWorkspaces` wants that root `package.json` is
+/** 🩺️ Diagnostic split for `--check`: entries `computeWorkspaces` wants that root `package.json` is
  * missing, and entries root `package.json` still lists that no longer resolve to a real package. */
 export function diffWorkspaces(repoRoot: string, current: readonly string[], options: WorkspaceDiscoveryOptions = {}): { readonly expected: readonly string[]; readonly missing: readonly string[]; readonly stale: readonly string[] } {
   const expected = computeWorkspaces(repoRoot, options);

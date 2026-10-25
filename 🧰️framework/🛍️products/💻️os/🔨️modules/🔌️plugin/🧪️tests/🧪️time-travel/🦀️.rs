@@ -1,4 +1,15 @@
 // ⏪️ Support module 1 of the split test module `🧪️time-travel`: the fixtures that more than one piece uses, as real definitions the pieces import.
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_owners;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_framework_value::RetainedCloneProgress;
+use semio_framework_os_kernel::ArtifactStore;
+use semio_framework_os_kernel::ConfigStore;
+use serde_json::Value;
+use semio_framework_os_kernel::store_schema::ArtifactCommand;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_owners;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
 use semio_framework_plugin_decl_emission::{ActionMeta, AsyncTaskRun, AsyncTaskSource, Emit, HostEvent, ToolCommandCatalog};
 use semio_framework_plugin_app_builder::App;
 use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
@@ -383,7 +394,7 @@ pub async fn apply_long_edit(app: &mut ToyApp, count: i32, identity: &mut semio_
 /// 🪶️ Publishes one edit with an explicit author while preserving the opened instance actor.
 #[doc(hidden)]
 pub fn publish_as(app: &mut ToyApp, actor: &str, mutation: TestMutation) {
-    let mut receiving_job=semio_framework_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,grant:app.mounted_policy.close});
+    let mut receiving_job=semio_framework_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:app.mounted_policy.close});
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(app.mounted_policy.preparation);
     let mut publication = app
         .stores.store

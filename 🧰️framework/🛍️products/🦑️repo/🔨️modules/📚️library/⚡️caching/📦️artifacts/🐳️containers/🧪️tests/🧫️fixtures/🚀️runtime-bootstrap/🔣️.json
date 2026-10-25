@@ -122,12 +122,35 @@
       "label": "MCP Inspector",
       "manifest": "📋️project.json",
       "tool": "mcp-inspector-os"
+    },
+    {
+      "label": "Course site",
+      "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+      "target": "dev"
+    },
+    {
+      "label": "Course proctor",
+      "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+      "target": "dev"
+    },
+    {
+      "label": "Projektetage deck",
+      "manifest": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
+      "target": "dev"
     }
   ],
   "forwardedUndeclaredPorts": [
     {
       "label": "MCP Inspector Proxy",
       "port": 6277
+    },
+    {
+      "label": "Course site beside stack",
+      "port": 6063
+    },
+    {
+      "label": "Course proctor beside stack",
+      "port": 8793
     }
   ],
   "setupTarget": "setup",

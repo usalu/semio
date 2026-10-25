@@ -22,7 +22,7 @@ export type NativeBuildPlanV1 = Readonly<{ version: 1; passes: readonly NativeBu
 /** 🌡️ A warm generation reuses the shared compiler store and stage cache; a fresh one compiles cold into a new generation directory with its own stage cache. */
 export type NativeBuildGenerationKindV1 = "warm" | "fresh";
 
-/** 🗂️ Where one driver run compiles, logs, caches stages and reports. */
+/** 🔨️ Where one driver run compiles, logs, caches stages and reports. */
 export type NativeBuildGenerationV1 = Readonly<{ kind: NativeBuildGenerationKindV1; root: string; target: string; build: string; report: string; logs: string; jobserver: string; stages: string }>;
 
 /** 🛂️ Admits a native build pipeline declaration against the first-party schema, with unique job ids and lane jobs named only once. */
@@ -34,7 +34,7 @@ export function admitNativeBuildPipelineV1(value: unknown): NativeBuildPipelineV
   return pipeline;
 }
 
-/** 🛂️ Admits only a plan that satisfies the first-party schema and names every pass, package and job once. */
+/** 🧲️ Admits only a plan that satisfies the first-party schema and names every pass, package and job once. */
 export function admitNativeBuildPlanV1(value: unknown): NativeBuildPlanV1 {
   const errors = validateJsonSchemaSubset(schema, value);
   if (errors.length) throw Error(`Invalid native build plan: ${errors.join("; ")}`);

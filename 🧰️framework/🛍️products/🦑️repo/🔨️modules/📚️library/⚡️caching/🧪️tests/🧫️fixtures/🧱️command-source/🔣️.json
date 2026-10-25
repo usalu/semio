@@ -40,7 +40,9 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/✅️verification/🟦️.ts",
       "declarations": [
-        "GraphScript"
+        "GraphScript",
+        "javascriptLockV1",
+        "javascriptManagerV1"
       ]
     },
     {

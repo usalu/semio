@@ -13,6 +13,17 @@
       }
     },
     {
+      "id": "owned-build-mode",
+      "source": "pub static V:&str=env!(\"SEMIO_BUILD_MODE\");",
+      "cfg": [],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype"
+      },
+      "expected": {
+        "SEMIO_BUILD_MODE": "prototype"
+      }
+    },
+    {
       "id": "owned-absent",
       "source": "pub static V:Option<&str>=option_env!(\"RUST_MIN_STACK\");",
       "cfg": [],

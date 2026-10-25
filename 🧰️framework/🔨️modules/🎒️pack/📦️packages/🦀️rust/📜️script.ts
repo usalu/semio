@@ -71,7 +71,7 @@ class BorrowedPreflightSourceScript extends BundleScript {
   }
 }
 
-/** 🦀️ Selects both actual canonical Record forecast ownership laws. */
+/** 🧲️ Selects both actual canonical Record forecast ownership laws. */
 class BorrowedPreflightNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
@@ -180,7 +180,7 @@ class OriginalRecordReceivingScript extends BundleScript{
  }
 }
 router.register("test-original-record-receiving",OriginalRecordReceivingScript);
-/** 🎟️ Checks immutable append extents against the closed corpus and independent SQL. */
+/** 📚️ Checks immutable append extents against the closed corpus and independent SQL. */
 class CatalogReservationSourceScript extends BundleScript{
  async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-catalog-reservation-source");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../📐️format/🗂️catalog/🎟️reservation/🧪️tests/🟦️.ts")],this.repoRoot,"pack:catalog-reservation:source",scriptInvocationBudget(this.invocation,30_000),{signal:this.invocation.control.signal});}
 }

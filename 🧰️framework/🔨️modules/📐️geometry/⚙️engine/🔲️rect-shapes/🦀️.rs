@@ -76,12 +76,12 @@ pub struct RoundedRect {
 }
 
 impl RoundedRect {
-    /// 🧾️ The normalized body rectangle, for encoders that emit the primitive itself rather than
+    /// 📤️ The normalized body rectangle, for encoders that emit the primitive itself rather than
     /// its flattening (`canvas::draw_list`, whose `ctx.roundRect` twin needs the exact corners).
     pub fn rect(self) -> Rect {
         self.rect
     }
-    /// 🧾️ The four normalized corner radii, clockwise from top-left.
+    /// 🔃️ The four normalized corner radii, clockwise from top-left.
     pub fn radii(self) -> RoundedRectRadii {
         self.radii
     }

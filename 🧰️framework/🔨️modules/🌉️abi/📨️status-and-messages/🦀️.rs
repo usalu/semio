@@ -111,7 +111,7 @@ impl AbiStatus {
     pub const OK: Self = Self { code: AbiStatusCode::Ok, error: None };
 }
 
-/// 📨 Domain operation admission envelope.
+/// 📩️ Domain operation admission envelope.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AbiRequest {
     pub operation: AbiOperation,

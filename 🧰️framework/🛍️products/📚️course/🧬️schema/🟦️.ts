@@ -28,7 +28,7 @@ export const MAX_TIMESTAMP: Timestamp = Number.MAX_SAFE_INTEGER;
  * declares; raised with every change of the contract beyond its prose. */
 export type WireVersion = 8;
 
-/** 🤝️ The wire version of this contract (`$defs/WireVersion`). */
+/** 📡️ The wire version of this contract (`$defs/WireVersion`). */
 export const WIRE_VERSION: WireVersion = 8;
 
 /** 💯️ A score or credit in [0, 1]. */
@@ -75,7 +75,7 @@ export type Motion = (typeof MOTIONS)[number];
 /** ⚖️ A measured quantity: label (and its short form for hints), unit symbol, distance scale, whether display scales the unit with SI prefixes and whether amounts of it add up (powers, energies; not U-values, loads per m² or air change rates). */
 export type Quantity = { readonly label: Text; readonly short?: ShortText; readonly unit: string; readonly scale: Scale; readonly prefixed: boolean; readonly additive: boolean };
 
-/** 🧭️ One quantity a matching task asks for per item. */
+/** 🔎️ One quantity a matching task asks for per item. */
 export type Dimension = { readonly id: Slug; readonly quantity: Quantity; readonly icon?: Icon };
 
 /** 🕸️ One spoke of a profile (spider diagram); values normalise to (value − min) / (max − min). */
@@ -165,7 +165,7 @@ export type BadgeRule =
   | { readonly kind: "perfect-tasks"; readonly taskKind?: TaskKind; readonly quiz?: Slug; readonly challenge?: Challenge }
   | { readonly kind: "completed-quizzes" };
 
-/** 🏅️ A badge of a course. */
+/** 🔰️ A badge of a course. */
 export type Badge = { readonly id: Slug; readonly emoji: string; readonly label: Text; readonly description: Text; readonly rule: BadgeRule };
 
 /** 👋️ The introduction a learner reads on the first visit. */
@@ -174,7 +174,7 @@ export type Introduction = { readonly title: Text; readonly paragraphs: readonly
 /** 🧭️ Page names reserved for the course's root navigation. */
 export const COURSE_ROOT_IDS = ["home", "identity", "introduction", "learner", "intro", "board", "badges", "prefs", "quizzes", "run", "results"] as const;
 
-/** 🗂️ An ordered course group; an empty quiz list marks a placeholder. */
+/** 👥️ An ordered course group; an empty quiz list marks a placeholder. */
 export type Topic = { readonly id: Slug; readonly emoji: string; readonly title: Text; readonly quizzes: readonly Slug[] };
 
 /** 📚️ The quizzes one site offers, its introduction and the badges spanning its quizzes; quiz paths are relative to the course file. */
@@ -529,10 +529,10 @@ export type Cursor = { readonly anchor: Anchor; readonly x: number; readonly y: 
 /** 🟢️ Ephemeral shared presence in the course-wide room: who is online and where, by public tag, never by learner id. */
 export type PresenceState = { readonly tag: string; readonly identity: Identity; readonly place: Place; readonly active: boolean; readonly view?: PresencePresentation };
 
-/** 🪞️ A public run presentation carrying the exact shuffled sheet and answers without private learner or run ids. */
+/** 💎️ A public run presentation carrying the exact shuffled sheet and answers without private learner or run ids. */
 export type PresenceRun = Omit<RunView, "run" | "learner">;
 
-/** 📐️ A normalized scroll or camera position. */
+/** 🎥️ A normalized scroll or camera position. */
 export type PresencePoint = { readonly x: number; readonly y: number };
 
 /** 🎨️ Public display choices affecting the followed presentation. */
@@ -555,7 +555,7 @@ export type PresencePreferences = {
 /** 🏅️ The visible public profile, omitting learner ids and private run links from history and awards. */
 export type PresenceProfile = { readonly runs: readonly Omit<RunSummary, "run">[]; readonly badges: readonly Omit<BadgeAward, "run">[]; readonly best: Readonly<Record<Slug, Best>>; readonly total: number };
 
-/** 🪟️ Ephemeral shared screen presentation, rendered by followers without modifying their own saved state. */
+/** 🎤️ Ephemeral shared screen presentation, rendered by followers without modifying their own saved state. */
 export type PresencePresentation = {
   readonly locale?: "en" | "de";
   readonly home?: string;
@@ -607,7 +607,7 @@ export const CROWD_SCORE_BINS = 10;
 /** 📉️ How many scores fell into each of the {@link CROWD_SCORE_BINS} bins, lowest bin first. */
 export type CrowdScores = readonly number[];
 
-/** 🧺️ The crowd of one task (one per dimension for matching): the scores of the results that count for it (the dimension's scores for a matching), items in definition order, unanswered items left out. */
+/** 🐝️ The crowd of one task (one per dimension for matching): the scores of the results that count for it (the dimension's scores for a matching), items in definition order, unanswered items left out. */
 export type CrowdTask = { readonly task: Slug; readonly kind: TaskKind; readonly dimension?: Slug; readonly scores: CrowdScores; readonly items: readonly CrowdItem[] };
 
 /** 👪️ What the learners answered and scored in the submitted runs of one quiz — the run scores (summing to `runs`), then per task (and dimension) and item: a persisted shared projection of run-submitted events. */

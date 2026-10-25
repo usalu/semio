@@ -41,7 +41,7 @@ export function resolveElementsSurfaceChromeRoot(root?: HTMLElement): HTMLElemen
   return root ?? (typeof document !== "undefined" ? document.documentElement : undefined);
 }
 
-/** 🐚️ Paints a surface-chrome root's own background/foreground/color-scheme — every root, not
+/** 🖌️ Paints a surface-chrome root's own background/foreground/color-scheme — every root, not
  * just `documentElement`, so an embedded shell's own `.semio-scope` div is visually correct even before
  * any descendant renders. When the root IS `documentElement` (the page-owning case), also mirrors onto
  * `document.body` exactly as before this was made root-scoped — unchanged behavior for that case. */
@@ -67,7 +67,7 @@ function clearElementsSurfaceChromeBaseColors(root: HTMLElement): void {
   }
 }
 
-/** 🌓️ Resolves whether {@link ElementsSurfaceAppearance} is dark for the current system preference. */
+/** 🔎️ Resolves whether {@link ElementsSurfaceAppearance} is dark for the current system preference. */
 export function resolveElementsSurfaceChromeDark(appearance: ElementsSurfaceAppearance): boolean {
   if (appearance === "dark") return true;
   if (appearance === "light") return false;
@@ -75,7 +75,7 @@ export function resolveElementsSurfaceChromeDark(appearance: ElementsSurfaceAppe
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-/** 🌓️ True when a surface-chrome root (`document.documentElement` by default) currently carries
+/** 🌑️ True when a surface-chrome root (`document.documentElement` by default) currently carries
  * the dark surface chrome class. */
 export function isElementsSurfaceChromeDarkApplied(rootOverride?: HTMLElement): boolean {
   const root = resolveElementsSurfaceChromeRoot(rootOverride);
@@ -85,7 +85,7 @@ export function isElementsSurfaceChromeDarkApplied(rootOverride?: HTMLElement): 
 type ElementsSurfaceChromeLease = { readonly id: number; readonly input: ElementsSurfaceChromeInput };
 
 const elementsSurfaceChromeLeaseSeq = ephemeralBox("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeLeaseSeq", 0);
-/** 🐚️ One independent lease stack per surface-chrome root — was a single page-global stack, which
+/** 🔐️ One independent lease stack per surface-chrome root — was a single page-global stack, which
  * meant a second mounted shell's appearance/driver/device lease silently won (last-wins) over the
  * first's for the WHOLE page instead of just its own subtree. */
 const elementsSurfaceChromeLeasesByRoot = ephemeralMap<HTMLElement, ElementsSurfaceChromeLease[]>("framework.modules.ui.packages.typescript.targets.react.index.tsx.elementsSurfaceChromeLeasesByRoot");
@@ -130,10 +130,10 @@ function clearElementsSurfaceChromeDriverDom(root: HTMLElement): void {
 // #region 🫥️ChromeReveal
 /** 🫥️ Extra radius (px) around a reveal region's own rect that still counts as "inside" — makes the invisible-until-hovered bar reachable. */
 const CHROME_REVEAL_ACTIVATION_BAND_PX = 24;
-/** 🫥️ Screen-edge band (px) that reveals a region anchored to that edge (navbar top, footer bottom), even before the cursor reaches the region's own rect. */
+/** 📏️ Screen-edge band (px) that reveals a region anchored to that edge (navbar top, footer bottom), even before the cursor reaches the region's own rect. */
 const CHROME_REVEAL_EDGE_BAND_PX = 8;
 
-/** 🐚️ One independent reveal controller per surface-chrome root — was a single page-global
+/** 👑️ One independent reveal controller per surface-chrome root — was a single page-global
  * controller, which meant hovering ANY mounted shell revealed hover-reveal chrome for EVERY shell that
  * had opted into it (and a pointer-move over shell B's DOM would drive shell A's reveal state). */
 const chromeRevealBindingsByRoot = ephemeralMap<HTMLElement, ReturnType<typeof createDOMEventBinding>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.chromeRevealBindingsByRoot");
@@ -209,7 +209,7 @@ function teardownUiChromeRevealController(root: HTMLElement): void {
   root.querySelectorAll<HTMLElement>("[data-ui-reveal-region][data-ui-revealed]").forEach((region) => delete region.dataset.uiRevealed);
 }
 
-/** 🫥️ Ensures the pointer/focus reveal tracker is installed iff the driver wants hover-reveal chrome; called whenever driver DOM attrs are (re)applied. */
+/** 🖱️ Ensures the pointer/focus reveal tracker is installed iff the driver wants hover-reveal chrome; called whenever driver DOM attrs are (re)applied. */
 function syncUiChromeRevealController(root: HTMLElement, chrome: UiDriverReveal): void {
   if (chrome === "hover") ensureUiChromeRevealController(root);
   else teardownUiChromeRevealController(root);
@@ -234,7 +234,7 @@ function applyElementsSurfaceChromeAppearanceDom(root: HTMLElement, appearance: 
   setStylingAppearanceRoot(root);
 }
 
-/** 🌓️ Applies `.dark`/`color-scheme` to a root (`document.documentElement` by default) before
+/** 🚀️ Applies `.dark`/`color-scheme` to a root (`document.documentElement` by default) before
  * React/CSS load (play/static entries); does not register a surface-chrome lease. */
 export function bootstrapElementsSurfaceChromeDocument(appearance: ElementsSurfaceAppearance = "system", rootOverride?: HTMLElement): void {
   const root = resolveElementsSurfaceChromeRoot(rootOverride);
@@ -283,7 +283,7 @@ function syncElementsSurfaceChromeDomFromLeaseStack(root: HTMLElement): void {
   applyElementsSurfaceChromeDom(root, input);
 }
 
-/** 🐚️ One shared `matchMedia` listener re-applies EVERY root with an active `appearance: "system"`
+/** 📺️ One shared `matchMedia` listener re-applies EVERY root with an active `appearance: "system"`
  * lease when the OS preference flips — the media query itself is genuinely page-global (there is only
  * one system preference), but each root's lease stack (and therefore whether it even has a "system"
  * lease) stays independent. */
@@ -306,7 +306,7 @@ function ensureElementsSurfaceChromeSystemListeners(): void {
   bindings.listen(mq, "change", onSystemAppearanceChange);
 }
 
-/** 🚫️ Installs {@link installElementsSurfaceBrowserDefaultSuppression} once per page, the first time a lease
+/** 🔒️ Installs {@link installElementsSurfaceBrowserDefaultSuppression} once per page, the first time a lease
  * asks for app-shell browser defaults — a page whose every lease is `native` never loses its context menu. */
 function ensureElementsSurfaceBrowserDefaultSuppression(): void {
   if (elementsSurfaceBrowserDefaultBindings.current !== null || typeof document === "undefined") return;
@@ -316,7 +316,7 @@ function ensureElementsSurfaceBrowserDefaultSuppression(): void {
 }
 
 /**
- * 🌈️ Imperative surface chrome controller for class-based shells; returns a cleanup that reverts
+ * 🎨️ Imperative surface chrome controller for class-based shells; returns a cleanup that reverts
  * DOM state, browser default input, and the active driver. `rootOverride` scopes this lease to one
  * shell's own root (e.g. its `ShellScope.rootRef`) — omitted, it falls back to `document.documentElement`
  * (the single-shell-per-page case, unchanged from before this was made root-scoped).
@@ -348,7 +348,7 @@ export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput, ro
 }
 
 /**
- * 🌓️ Syncs a surface-chrome root (`dark`, `touch`, `data-ui-device`, `data-ui-driver` + axis
+ * 🔄️ Syncs a surface-chrome root (`dark`, `touch`, `data-ui-device`, `data-ui-driver` + axis
  * attrs), base colors, and {@link setUiDriverProvider}; returns `mobile` for {@link AppProps.mobile}.
  * `root` scopes this to one shell — omitted, targets `document.documentElement` as before. Callers reading
  * this from a ref (e.g. `ShellScope.rootRef.current`) must re-render once that ref attaches (`FrameworkOsShell`
@@ -362,7 +362,7 @@ export function useElementsSurfaceChrome({ appearance, device, driver, browserDe
 }
 
 /**
- * 🌓️ Observes a surface-chrome root's appearance attributes and runs `sync` on mount and whenever
+ * 📡️ Observes a surface-chrome root's appearance attributes and runs `sync` on mount and whenever
  * they change. Holds `sync` in a ref so callers can pass an inline arrow without retriggering the effect
  * every render (React 19: unstable `sync` identity → effect → `paintOverlays`/`setState` → re-render →
  * Maximum update depth). `root` scopes the observed element — omitted, observes `document.documentElement`;
@@ -401,10 +401,10 @@ export function resetElementsSurfaceChromeForTests(): void {
 // #endregion 🌈️SurfaceChrome
 
 // #region 🎛️UiChromePrefs
-/** 🌓️ Storage key for surface appearance (system/light/dark). */
+/** 🔑️ Storage key for surface appearance (system/light/dark). */
 export const UI_CHROME_APPEARANCE_STORAGE_KEY = "ui.chrome.appearance";
 
-/** 🌓️ Reads persisted surface appearance from the given shell's storage — a required param
+/** 💾️ Reads persisted surface appearance from the given shell's storage — a required param
  * (not a `localStorage` default) since two shells on one page must never read/write each other's
  * appearance through a shared key. */
 export function readStoredUiChromeAppearance(storage: StoragePort): ElementsSurfaceAppearance {
@@ -413,7 +413,7 @@ export function readStoredUiChromeAppearance(storage: StoragePort): ElementsSurf
   return "system";
 }
 
-/** 🌓️ Persists surface appearance to the given shell's storage. */
+/** 📝️ Persists surface appearance to the given shell's storage. */
 export function writeStoredUiChromeAppearance(storage: StoragePort, appearance: ElementsSurfaceAppearance): void {
   storage.set(UI_CHROME_APPEARANCE_STORAGE_KEY, appearance);
 }
@@ -421,15 +421,15 @@ export function writeStoredUiChromeAppearance(storage: StoragePort, appearance: 
 /** 📐️ User-selectable layout device; mobile is automatic and excluded here. */
 export type UiChromeLayout = "desktop" | "tablet";
 
-/** 📐️ Storage key for the user-selected desktop/tablet layout. */
+/** 🗝️ Storage key for the user-selected desktop/tablet layout. */
 export const UI_CHROME_LAYOUT_STORAGE_KEY = "ui.chrome.layout";
 
-/** 📐️ Reads the persisted layout preference from the given shell's storage, defaulting to desktop. */
+/** 📖️ Reads the persisted layout preference from the given shell's storage, defaulting to desktop. */
 export function readStoredUiChromeLayout(storage: StoragePort): UiChromeLayout {
   return storage.get(UI_CHROME_LAYOUT_STORAGE_KEY) === "tablet" ? "tablet" : "desktop";
 }
 
-/** 📐️ Persists the layout preference to the given shell's storage. */
+/** ✍️ Persists the layout preference to the given shell's storage. */
 export function writeStoredUiChromeLayout(storage: StoragePort, layout: UiChromeLayout): void {
   storage.set(UI_CHROME_LAYOUT_STORAGE_KEY, layout);
 }
@@ -471,7 +471,7 @@ export function useMediaQuery(query: string, defaultValue = false): boolean {
 // #endregion 📱️MediaQuery
 
 // #region 🚫️BrowserDefaults
-/** 🚫️ Capture-phase listeners: native context menu off everywhere; form-control browser defaults on focus.
+/** ⛔️ Capture-phase listeners: native context menu off everywhere; form-control browser defaults on focus.
  *
  * ⌨️ Tab focus traversal stays the browser's. It used to be suppressed everywhere outside a typing target, which left
  * every chrome control of the shell — navbar, Home, footer, panels, window chips — unreachable without a mouse

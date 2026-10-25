@@ -39,7 +39,7 @@ use semio_framework_os_mcp_tools_gateway::ui::{register_conversation_tools, regi
 use semio_framework_os_mcp_tools_inference::inference::{register_inference_job_tools, register_inference_tools};
 use semio_framework_os_mcp_wire::notify::notification_slot;
 use semio_framework_os_mcp_wire::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, NullBackend, PromptRegistry, ResourceRegistry, Tool, ToolRegistry};
-use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
+use semio_framework_os_mcp_workspace::gateway_backend::{GatewayBackends, SharedWorkspace};
 use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_mcp_hub_remote::remote::exchange_delegated_session_v1;
@@ -499,7 +499,7 @@ pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::
     let label = principal.label.clone();
     let tools = WorkspaceToolRegistry { workspace: workspace.clone(), actions, principal, bridge: runtime.bridge.clone(), channel_binding: runtime.channel_binding() };
     let resources = WorkspaceResourceRegistry::with_workspace(catalog, workspace.clone()).with_bridge(runtime.bridge.clone());
-    let server = McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::WorkspaceArc(workspace)));
+    let server = McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::WorkspaceArc(SharedWorkspace(workspace))));
     publishing_agent_conversation(server, runtime.bridge, &label)
 }
 

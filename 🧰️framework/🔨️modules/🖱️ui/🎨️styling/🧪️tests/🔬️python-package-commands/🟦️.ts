@@ -10,7 +10,7 @@ export function runStylingPythonGenerateScript(context: Readonly<{ root: string;
   console.log("[nx-generate] styling artifacts ready");
 }
 
-/** 🏃️ Runs the `StylingPythonTestScript` command under the caller's roots and invocation. */
+/** 🐍️ Runs the `StylingPythonTestScript` command under the caller's roots and invocation. */
 export async function runStylingPythonTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   resolveTestLevel(segments);
   const sourceAssertion = "from importlib import import_module; styling = import_module('🔤️tokens.🐍️'); assert styling.BOARD_LIGHT; assert styling.STYLING_TOKENS['primary']; print('styling Python source import resolved')";

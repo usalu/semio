@@ -23,6 +23,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
+semio-framework-actor = { workspace = true }
 semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing", "reserved-producer-testing"] }
 semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust", features = ["media-turn-testing"] }

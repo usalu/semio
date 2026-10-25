@@ -8,7 +8,7 @@ use std::task::{Context, Poll};
 use super::CancelWaiters;
 
 //#region 🛑️CancelToken
-/// 🛑️ Tri-state a [`CancelToken`] can be in. `Park` is the suspend state — in-flight operations
+/// ✖️ Tri-state a [`CancelToken`] can be in. `Park` is the suspend state — in-flight operations
 /// finish, new work is held — distinct from the terminal `Cancelled`. Ordered by severity
 /// (`Live < Park < Cancelled`) so a parent's state can be folded into a child's with a plain `max`.
 /// No `Serialize`/`Deserialize`: an in-process atomic state, never carried over any wire — repo-wide
@@ -85,17 +85,17 @@ impl CancelToken {
         CancelToken::root_now()
     }
 
-    /// 🌱️ Creates a live root from synchronous scheduler/bootstrap code.
+    /// 🏠️ Creates a live root from synchronous scheduler/bootstrap code.
     pub fn root_now() -> CancelToken {
         CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: None, waiters:CancelWaiters::new() }))
     }
 
-    /// 👶️ A descendant token: its effective state is never less severe than `self`'s.
+    /// 🎨️ A descendant token: its effective state is never less severe than `self`'s.
     pub async fn child(&self) -> CancelToken {
         self.child_now()
     }
 
-    /// 👶️ Creates a cancellable descendant from a synchronous finite turn.
+    /// 🆕️ Creates a cancellable descendant from a synchronous finite turn.
     pub fn child_now(&self) -> CancelToken {
         CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: Some(self.clone()), waiters:CancelWaiters::new() }))
     }
@@ -110,13 +110,13 @@ impl CancelToken {
         let _ = self.0.local.compare_exchange(CancelState::Park.to_u8().await, CancelState::Live.to_u8().await, Ordering::SeqCst, Ordering::SeqCst);
     }
 
-    /// 🛑️ Terminal: always wins over `Live`/`Park`, and over anything a later `park`/`unpark` on
+    /// ❌️ Terminal: always wins over `Live`/`Park`, and over anything a later `park`/`unpark` on
     /// this same token would attempt.
     pub async fn cancel(&self) {
         self.cancel_now();
     }
 
-    /// 🛑️ Cancels from a synchronous scheduler turn or `Drop` boundary without needing an executor.
+    /// 💧️ Cancels from a synchronous scheduler turn or `Drop` boundary without needing an executor.
     pub fn cancel_now(&self) {
         self.0.local.store(2, Ordering::SeqCst);
         let waiters = std::mem::take(&mut *self.0.waiters.lock());
@@ -164,7 +164,7 @@ impl CancelToken {
         Arc::ptr_eq(&self.0, &other.0)
     }
 
-    /// 🔍️ Reads cancellation from a finite synchronous scheduler turn.
+    /// 📖️ Reads cancellation from a finite synchronous scheduler turn.
     pub fn is_cancelled_now(&self) -> bool {
         let mut node = Some(self);
         while let Some(current) = node {
@@ -185,7 +185,7 @@ impl CancelToken {
     }
 }
 
-/// 🔔️ Future returned by [`CancelToken::cancelled`].
+/// ↩️ Future returned by [`CancelToken::cancelled`].
 pub struct Cancelled {
     pub(super) token: CancelToken,
     pub(super) id: u64,

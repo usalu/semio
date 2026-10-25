@@ -42,7 +42,7 @@ pub fn nudge(doc:&ArtifactView<'_,DrawingSnapshot>,session:&DrawingSession,verb:
 macro_rules! nudge_command {
     ($module:ident,$name:ident,$verb:literal,$keyword:literal,$dx:expr,$dy:expr)=>{
         pub mod $module {
-
+            use super::*;
             #[derive(Clone,Debug,PartialEq,semio_framework_value_derive::ToValue,semio_framework_value_derive::FromValue,semio_framework_dsl_record_derive::DslRecord,semio_framework_value::RetireOwned)]
             #[dsl(keyword=$keyword)]
             pub struct $name {}

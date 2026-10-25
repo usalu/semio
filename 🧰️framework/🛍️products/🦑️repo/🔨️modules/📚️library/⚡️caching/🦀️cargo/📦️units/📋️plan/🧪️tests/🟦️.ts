@@ -1,8 +1,6 @@
 /** 🧪️ Plan: 13 tests covering neutral immutable Rust plan vectors and finite policy stay closed; neutral immutable Rust plan owns ; neutral immutable Rust plan reduction and copied admission remain exact; and more. */
 import corpusSchema from"./🧬️schema/🔣️.json";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
-import"./🔗️binding/🟦️.ts";
-import"../🔏️identity/🧪️tests/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{test,expect}from"bun:test";
 import ts from"typescript";
 import{readFileSync}from"node:fs";

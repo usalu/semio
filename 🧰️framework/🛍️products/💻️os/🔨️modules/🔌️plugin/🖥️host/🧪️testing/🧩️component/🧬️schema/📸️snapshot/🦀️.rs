@@ -1,7 +1,7 @@
 //! 🧫️ Neutral document snapshot carried by the real host component fixture.
 use semio_framework_os_kernel::{os_store as store,os_pack as pack,os_dsl as dsl};
 use semio_framework_value_derive::{ToValue,FromValue};
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(deny_unknown_fields)]
 #[dsl(id="fixture.neutral-host-fixture.counter",layout="lines")]
 pub struct Snapshot {pub count:i32}

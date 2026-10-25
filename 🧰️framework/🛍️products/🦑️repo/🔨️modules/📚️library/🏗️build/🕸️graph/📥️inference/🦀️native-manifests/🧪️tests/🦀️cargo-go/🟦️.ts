@@ -6,7 +6,7 @@ import {tmpdir} from "node:os";
 import {dirname,join,relative,resolve} from "node:path";
 import Ajv from "ajv";
 import {parse} from "smol-toml";
-import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {goDependencies,nativeDependencies,nativeWorkspaceV1} from "../../🟨️.mjs";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";

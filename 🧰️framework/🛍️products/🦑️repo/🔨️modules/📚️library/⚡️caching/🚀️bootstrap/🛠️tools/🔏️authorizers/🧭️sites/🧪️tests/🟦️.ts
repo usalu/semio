@@ -23,7 +23,7 @@ test("literal sites equal the TypeScript parser and the Python token oracle",()=
  }
 });
 
-/** 🧪️ Every refusal code ships both languages and renders the named site. */
+/** 🌐️ Every refusal code ships both languages and renders the named site. */
 test("refusal texts exist in English and German and name the site and the fix",()=>{
  const validate=new Ajv({strict:true}).compile({...schema.$defs.Message,$defs:schema.$defs});for(const[code,row]of Object.entries(closureRefusalMessagesV1))expect(validate(row),code).toBe(true);
  for(const code of Object.keys(closureRefusalMessagesV1)){
@@ -34,7 +34,7 @@ test("refusal texts exist in English and German and name the site and the fix",(
  expect(closureRefusalTextV1(closureRefusalMessagesV1,"import",{specifier:"SITE-X",importer:"OWNER-Y"},{SEMIO_LANGUAGE:"en"})).toContain("SITE-X");
 });
 
-/** 🧪️ Specifier classes and package names follow Node's module addressing. */
+/** 📦️ Specifier classes and package names follow Node's module addressing. */
 test("specifier classes and package names",()=>{
  const rows:[string,string,string][]=[["node:fs","builtin","node:fs"],["fs/promises","builtin","fs"],["bun:sqlite","builtin","bun:sqlite"],["./a.ts","relative","."],["../b.json","relative",".."],["/abs/c.js","absolute","abs"],["file:///d.js","scheme","file:"],["typescript","package","typescript"],["typescript/lib/x.js","package","typescript"],["@iarna/toml","package","@iarna/toml"],["@scope/pkg/sub/file.js","package","@scope/pkg"]];
  for(const[specifier,kind,name]of rows){expect<string>(closureSpecifierKindV1(specifier),specifier).toBe(kind);if(kind==="package")expect(closurePackageNameV1(specifier),specifier).toBe(name);}

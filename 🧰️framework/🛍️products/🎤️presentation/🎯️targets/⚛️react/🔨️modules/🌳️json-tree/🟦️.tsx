@@ -126,7 +126,7 @@ export function setJsonTreeRenderer(renderer: JsonTreeRenderer): void {
   jsonTreeRenderer.current = renderer;
 }
 
-/** 🧬️ Renders JSON through the active {@link JsonTreeRenderer}. */
+/** 🌲️ Renders JSON through the active {@link JsonTreeRenderer}. */
 export function renderJsonTree(data: unknown): ReactNode {
   return jsonTreeRenderer.current.render(data);
 }

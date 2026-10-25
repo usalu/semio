@@ -1,0 +1,14 @@
+import { createRequire } from "node:module";
+const require = createRequire(process.argv[2] + "/");
+const { chromium } = require("playwright");
+const browser = await chromium.launch({ headless: true });
+const page = await (await browser.newContext({ viewport: { width: 320, height: 1200 } })).newPage();
+page.on("console", (m) => console.log("[console]", m.type(), m.text().slice(0, 300)));
+page.on("pageerror", (e) => console.log("[pageerror]", String(e).slice(0, 300)));
+page.on("response", async (r) => { const u = r.url(); if (/layer|spacing|pets/i.test(decodeURIComponent(u)) && /\.tsx?(\?|$)/.test(u)) { const t = await r.text().catch(() => ""); console.log("[module]", r.status(), decodeURIComponent(u).slice(-90), t.length, t.includes("castOn"), t.includes("held.turn")); } });
+page.on("requestfailed", (r) => console.log("[requestfailed]", r.url().slice(-120)));
+await page.goto("http://127.0.0.1:6061");
+await page.waitForTimeout(8000);
+await page.screenshot({ path: process.argv[3] });
+console.log(await page.locator(".pet-layer").count(), await page.title());
+await browser.close();

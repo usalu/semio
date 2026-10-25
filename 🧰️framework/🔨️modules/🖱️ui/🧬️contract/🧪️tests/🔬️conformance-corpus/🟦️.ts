@@ -5,11 +5,9 @@ import assert from "node:assert/strict";
 
 import { readFileSync, readdirSync } from "node:fs";
 
-const packageRoot = fileURLToPath(new URL("../../📦️packages/🦀️rust", import.meta.url));
-
 /** 🔍️ Validates the language-neutral corpus catalog with Ajv and exact filesystem ownership. */
 export function conformanceCorpusSelfTests(): number {
-  const root = join(packageRoot, "../🧫️fixtures/🧪️conformance");
+  const root = fileURLToPath(new URL("../🧫️fixtures/🧪️conformance", import.meta.url));
   const catalog = JSON.parse(readFileSync(join(root, "📇️catalog.json"), "utf8")) as { version: number; roles: { snapshot: string; expect: string; patch: string }; groups: Record<string, { patch: boolean; cases: Record<string, string> }> };
   
   

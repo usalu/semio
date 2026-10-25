@@ -9,15 +9,15 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {createHash,randomBytes} from "node:crypto";
 import {mkdirSync,writeFileSync,renameSync,rmSync} from "node:fs";
 import {join,resolve,relative} from "node:path";
-import {readCargoCompilerConfigurationV1,readCargoCompilerFlagTokensV1,admitCargoCompilerFlagsV1} from "./../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🟦️.ts";
-import {rustCfgMatchesV1} from "./../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
-import {readPhysicalCargoSourceV1} from "./../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
+import {readCargoCompilerConfigurationV1,readCargoCompilerFlagTokensV1,admitCargoCompilerFlagsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🟦️.ts";
+import {rustCfgMatchesV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import {readPhysicalCargoSourceV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {withResourceLeases,checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { runtimeExecutableV1 } from "../../../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 const protocol=Object.freeze({...schema.definitions.Protocol.const});
 export interface RepositoryCargoConfigurationRequestV1{readonly invocation:ScriptInvocation;readonly consumption:CargoProfileConsumptionV1;readonly manifest:string;readonly workspace:string;readonly cwd:string;readonly args:readonly string[];readonly environment:Readonly<Record<string,string|undefined>>;readonly storage:NativeStorageReservationV1;readonly control:ResourceLeaseControl}
 export interface RepositoryCargoConfigurationViewV1{readonly version:1;readonly digest:string;readonly directory:string;readonly control:ResourceLeaseControl;readonly arguments:readonly string[];readonly profile:CargoProfileRenderedConfigurationV1|null;readonly sourceInputs:readonly CargoConfigurationSourceV1[];readonly environment:Readonly<Record<string,string|undefined>>;recheck():Promise<void>}

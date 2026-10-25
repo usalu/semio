@@ -20,5 +20,5 @@ function withDotnet(invocation:ScriptInvocation,workspace:string,build:boolean):
 /** 🏃️ Runs the `DepsScript` command under the caller's roots and invocation. */
 export async function runDepsScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args:string[]): Promise<void> {if(args.length)throw new Error("The .NET support restore accepts no path or compiler arguments");await withDotnet(context.invocation,context.repoRoot,false);}
 
-/** 🏃️ Runs the `BuildScript` command under the caller's roots and invocation. */
+/** 🔨️ Runs the `BuildScript` command under the caller's roots and invocation. */
 export async function runBuildScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args:string[]): Promise<void> {if(args.length)throw new Error("The .NET support library accepts no output or compiler arguments");await withDotnet(context.invocation,context.repoRoot,true);}

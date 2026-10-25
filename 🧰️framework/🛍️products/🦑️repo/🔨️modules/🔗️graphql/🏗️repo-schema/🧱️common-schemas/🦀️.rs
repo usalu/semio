@@ -47,7 +47,7 @@ pub(super) fn schema_enums() -> Vec<NamedType> {
     ]
 }
 
-/// 🔢️ The metric objects every aggregate shares.
+/// 📏️ The metric objects every aggregate shares.
 pub(super) fn schema_metrics() -> Vec<NamedType> {
     vec![
         NamedType::Object(ObjectType {

@@ -17,7 +17,7 @@ export interface FetchTimeoutOptions {
 }
 
 /**
- * ⏱️ `fetch` composed with a timeout: the request aborts if it hasn't settled within
+ * ⌛️ `fetch` composed with a timeout: the request aborts if it hasn't settled within
  * `timeoutMs`, and separately aborts if the caller-supplied `signal` aborts — either can cancel it,
  * neither leaks its timer/listener past this call (both are cleaned up on every exit path: success,
  * timeout, external abort, and thrown `fetch` error alike).

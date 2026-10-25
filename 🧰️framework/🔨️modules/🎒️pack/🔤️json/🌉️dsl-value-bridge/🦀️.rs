@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️DslValueBridge
-/// 🌉️ Structural conversion from `semio_framework_value::DslValue` (the in-memory tree
+/// 🌱️ Structural conversion from `semio_framework_value::DslValue` (the in-memory tree
 /// `ToValue`/`FromValue` target onto — see `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/
 /// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/
 /// 📓️serde-replacement-surface.md` §"pack::json::Value ↔ DslValue conversion") into this crate's
@@ -29,7 +29,7 @@ pub fn from_dsl_value(value: &DslValue) -> Value {
     }
 }
 
-/// 🌉️ The reverse of [`from_dsl_value`] — maps numbers variant-for-variant, so an integer stays an
+/// ⏪️ The reverse of [`from_dsl_value`] — maps numbers variant-for-variant, so an integer stays an
 /// integer across the bridge instead of being widened to `f64` and printed back as `1.0`.
 pub fn to_dsl_value(value: &Value) -> DslValue {
     match value {

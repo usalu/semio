@@ -1,11 +1,11 @@
 //! 🗑️ `delete-selection` command.
 use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::puzzle5d_grip_full_id;
-use semio_s_artifact_puzzle_5d_mut_any_2::standards::v1::subsets::any::schema::mutations::disconnect_grips;
-use semio_s_artifact_puzzle_5d_mut_any_4::standards::v1::subsets::any::schema::mutations::remove_part_grip;
+use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schema::mutations::disconnect_grips;
+use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schema::mutations::remove_part_grip;
 use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 
 use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
-use semio_s_artifact_puzzle_5d_mut_any_4::standards::v1::subsets::any::schema::mutations::delete_part;
+use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schema::mutations::delete_part;
 use semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
 use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener};
 

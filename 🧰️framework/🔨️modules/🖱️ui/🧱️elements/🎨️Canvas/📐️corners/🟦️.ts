@@ -1,10 +1,10 @@
 import type { WindowStackCorner, WindowLayoutWindowNode, WindowLayoutNode, WindowLayoutAxisNode, WindowLayoutStackNode } from "../../../🔨️modules/🗺️window-layout/🟦️.ts";
-import * as ResizablePrimitive from "react-resizable-panels";
+import type { ResizableGroupHandle } from "../../↔️Resizable/🟦️.tsx";
 import { type ModeDockSide, type ModeLayoutPath, collapseLayout, modeJoinPath, modePathSegments, readLayoutAtPath, removeWindowFromLayout, setActiveWindowInLayout, updateLayoutAtPath } from "../🗺️layout/🟦️.ts";
 
 export const WINDOW_STACK_CORNERS: readonly WindowStackCorner[] = ["topLeft", "topRight", "bottomLeft", "bottomRight"];
 
-/** 🧭️ Resolves a window node's stack corner, defaulting to top-left. */
+/** 🔎️ Resolves a window node's stack corner, defaulting to top-left. */
 export function resolveWindowCorner(node: { corner?: WindowStackCorner }): WindowStackCorner {
   return node.corner ?? "topLeft";
 }
@@ -37,7 +37,7 @@ function insertWindowAsTab(layout: WindowLayoutNode, stackPath: ModeLayoutPath, 
   });
 }
 
-/** 🧭️ Inserts a window as a tab in a stack corner, mapping a corner-local index onto the flat children list. */
+/** 🗺️ Inserts a window as a tab in a stack corner, mapping a corner-local index onto the flat children list. */
 export function insertWindowAsTabAtCorner(layout: WindowLayoutNode, stackPath: ModeLayoutPath, windowId: string, corner: WindowStackCorner, index?: number): WindowLayoutNode {
   return updateLayoutAtPath(layout, stackPath, (node) => {
     if (node.kind !== "stack") return node;
@@ -48,7 +48,7 @@ export function insertWindowAsTabAtCorner(layout: WindowLayoutNode, stackPath: M
   });
 }
 
-/** 🧭️ Sets the chrome corner for a window node anywhere in the layout tree. */
+/** 📌️ Sets the chrome corner for a window node anywhere in the layout tree. */
 export function setWindowCornerInLayout(layout: WindowLayoutNode, windowId: string, corner: WindowStackCorner): WindowLayoutNode {
   if (layout.kind === "window") return layout.id === windowId ? { ...layout, corner } : layout;
   if (layout.kind === "stack") {
@@ -105,7 +105,7 @@ export function splitRootWithWindow(layout: WindowLayoutNode, windowId: string, 
   return { kind: horizontal ? "row" : "column", children: children as (WindowLayoutAxisNode | WindowLayoutStackNode)[] };
 }
 
-/** 🪟️ Detaches a tab stack from the layout tree for stack-level drag-dock. */
+/** ⛏️ Detaches a tab stack from the layout tree for stack-level drag-dock. */
 export function extractStackFromLayout(layout: WindowLayoutNode, stackPath: ModeLayoutPath): { layout: WindowLayoutNode | null; stack: WindowLayoutStackNode | null } {
   const stack = readLayoutAtPath(layout, stackPath);
   if (!stack || stack.kind !== "stack") return { layout, stack: null };
@@ -122,7 +122,7 @@ export function extractStackFromLayout(layout: WindowLayoutNode, stackPath: Mode
   return { layout: collapseLayout(without), stack };
 }
 
-/** 🪟️ Splits a stack with a dragged tab stack on the given side. */
+/** ✂️ Splits a stack with a dragged tab stack on the given side. */
 export function splitWithStack(layout: WindowLayoutNode, targetStackPath: ModeLayoutPath, stack: WindowLayoutStackNode, side: ModeDockSide): WindowLayoutNode {
   return updateLayoutAtPath(layout, targetStackPath, (node) => {
     if (node.kind !== "stack") return node;
@@ -132,15 +132,15 @@ export function splitWithStack(layout: WindowLayoutNode, targetStackPath: ModeLa
   });
 }
 
-/** 🪟️ Splits the mode root with a dragged tab stack on the given side. */
+/** 🏠️ Splits the mode root with a dragged tab stack on the given side. */
 export function splitRootWithStack(layout: WindowLayoutNode, stack: WindowLayoutStackNode, side: ModeDockSide): WindowLayoutNode {
   const horizontal = side === "left" || side === "right";
   const children = side === "left" || side === "top" ? [stack, layout] : [layout, stack];
   return { kind: horizontal ? "row" : "column", children: children as (WindowLayoutAxisNode | WindowLayoutStackNode)[] };
 }
 
-/** 🪟️ Writes resizable panel percentages back onto axis children. */
-export function safePanelGroupSetLayout(group: ResizablePrimitive.GroupImperativeHandle, layout: Record<string, number>): void {
+/** 📝️ Writes resizable panel percentages back onto axis children. */
+export function safePanelGroupSetLayout(group: ResizableGroupHandle, layout: Record<string, number>): void {
   try {
     group.setLayout(layout);
   } catch {}

@@ -70,7 +70,7 @@ const POLICY_FACET_MIRROR_DRIFT_SERDE_TAG_RE = /#\[serde\([^\]]*\btag\s*=\s*"([a
 const POLICY_FACET_MIRROR_DRIFT_SUBSTRING_MIN_LEN = 4;
 
 /**
- * 🔎️Serde internally-tagged-enum discriminant values (`#[serde(tag = "kind")]`) found in a schema
+ * 🏷️Serde internally-tagged-enum discriminant values (`#[serde(tag = "kind")]`) found in a schema
  * facet's Rust leaf. These are real fields every non-Rust mirror must carry (GraphQL/JSON-Schema/
  * proto have no native tagged-union sugar, so they always spell the discriminant out as an actual
  * field) even though `policyFacetRustFieldNames` never sees them — there is no `kind: SomeType`
@@ -89,7 +89,7 @@ function policyFacetRustTagFieldNames(content: string): string[] {
 const POLICY_FACET_MIRROR_DRIFT_VARIANT_RE = /^\s*([A-Z][A-Za-z0-9]*)\s*[{(]/gm;
 
 /**
- * 🔎️PascalCase enum variant names declared in a schema facet's Rust leaf (e.g. `enum BmpMutation {
+ * 🦀️PascalCase enum variant names declared in a schema facet's Rust leaf (e.g. `enum BmpMutation {
  * SetHeaderFields { .. }, SetPixelData { .. }, .. }`, or a plain `Rgb { r, g, b }` color variant).
  * `policyFacetRustFieldNames` only sees the FIELDS a struct/struct-variant declares, never the
  * variant name itself — but externally-tagged (the serde default, no `#[serde(tag = "…")]`) or
@@ -113,7 +113,7 @@ function policyFacetRustVariantFieldNames(content: string): string[] {
   return [...names];
 }
 
-/** 🔎️Field names a `.ts` sibling mirror leaf itself declares (interface/type member lines), for the reverse extra-field drift check. */
+/** 🍃️Field names a `.ts` sibling mirror leaf itself declares (interface/type member lines), for the reverse extra-field drift check. */
 function policyFacetTsFieldNames(content: string): string[] {
   const stripped = policyStripTsCommentsAndStrings(content);
   const names = new Set<string>();
@@ -127,7 +127,7 @@ function policyFacetTsFieldNames(content: string): string[] {
   return [...names].map(policySnakeToCamel).filter(Boolean);
 }
 
-/** 🔎️Field names a `.graphql` sibling mirror leaf itself declares (type/input field lines), for the reverse extra-field drift check. */
+/** 🕸️Field names a `.graphql` sibling mirror leaf itself declares (type/input field lines), for the reverse extra-field drift check. */
 function policyFacetGraphqlFieldNames(content: string): string[] {
   const noComments = content.replace(/#.*$/gm, "");
   const noArgs = noComments.replace(/\([^)]*\)/g, "");
@@ -138,7 +138,7 @@ function policyFacetGraphqlFieldNames(content: string): string[] {
   return [...names].map(policySnakeToCamel).filter(Boolean);
 }
 
-/** 🔎️Field names a `.json` sibling mirror leaf itself declares (every key under any `properties` object, including nested under `definitions`/`$defs`), for the reverse extra-field drift check. Throws if the file isn't valid JSON — callers must treat that as its own breach, not a crash. */
+/** 🔣️Field names a `.json` sibling mirror leaf itself declares (every key under any `properties` object, including nested under `definitions`/`$defs`), for the reverse extra-field drift check. Throws if the file isn't valid JSON — callers must treat that as its own breach, not a crash. */
 function policyFacetJsonFieldNames(content: string): string[] {
   const root: unknown = JSON.parse(content);
   const names = new Set<string>();
@@ -158,7 +158,7 @@ function policyFacetJsonFieldNames(content: string): string[] {
   return [...names].map(policySnakeToCamel).filter(Boolean);
 }
 
-/** 🔎️Field names a `.proto` sibling mirror leaf itself declares (numbered message fields, skipping enum/oneof/message/package/syntax/import lines), for the reverse extra-field drift check. */
+/** 📦️Field names a `.proto` sibling mirror leaf itself declares (numbered message fields, skipping enum/oneof/message/package/syntax/import lines), for the reverse extra-field drift check. */
 function policyFacetProtoFieldNames(content: string): string[] {
   const bodyLines = content.split(/\r?\n/).filter((line) => !POLICY_FACET_MIRROR_DRIFT_PROTO_SKIP_RE.test(line));
   const body = bodyLines.join("\n");
@@ -169,7 +169,7 @@ function policyFacetProtoFieldNames(content: string): string[] {
   return [...names].map(policySnakeToCamel).filter(Boolean);
 }
 
-/** 🔎️Dispatches to the right per-language harvester by the sibling's own filename suffix. Returns `[]` for a suffix none of the harvesters own (defensive; every current entry in `POLICY_FACET_MIRROR_DRIFT_SIBLINGS` is covered). */
+/** ➡️Dispatches to the right per-language harvester by the sibling's own filename suffix. Returns `[]` for a suffix none of the harvesters own (defensive; every current entry in `POLICY_FACET_MIRROR_DRIFT_SIBLINGS` is covered). */
 function policyFacetSiblingFieldNames(sib: string, content: string): string[] {
   if (sib.endsWith(".ts")) return policyFacetTsFieldNames(content);
   if (sib.endsWith(".graphql")) return policyFacetGraphqlFieldNames(content);

@@ -17,3 +17,6 @@ export class CargoInputContinuationTransactionV1{
  check():void{checkResourceLeaseControl(this.control);for(const control of this.views)checkResourceLeaseControl(control);if(this.failed)throw this.failure;}
  close():Promise<void>{if(this.closing)return this.closing;this.accepting=false;for(const release of this.releases)release();this.closing=(async()=>{while(this.work.size)await Promise.allSettled([...this.work]);if(this.failed)throw this.failure;})();return this.closing;}
 }
+/** 🔓️ Retires the input owners a body opened beneath its own view BEFORE a failure leaves that body: a view settles only once every view accepted beneath it has settled and a nested owner waits for exactly its own retirement, so rethrowing first parks the whole driver for good, holding its leases and capacity with no child and no wait.
+ * @see ../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts */
+export async function withNestedInputOwnersRetiredV1<T>(nested:Readonly<{close:()=>Promise<void>}>,body:()=>Promise<T>):Promise<T>{try{return await body();}catch(error){try{await nested.close();}catch{}throw error;}}

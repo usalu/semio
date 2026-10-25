@@ -37,7 +37,6 @@ test("fold backing birth preserves every independent refusal before allocating s
   expect(original).toContain("take_original_output");
   expect(original).toContain("native.ledger_identity(), native.retirement_recipient_identity()");
   expect(original).not.toContain("observe_heap_allocations_on_this_thread");
-  console.log("[DEBUG] Node Buffer and RFC6902 independently validate all fold backing extents and denied currencies; actual native allocator laws are separate");
 });
 
 test("streamed trunk framing preserves first-party and independent BLAKE3 identities", () => {
@@ -58,5 +57,4 @@ test("streamed trunk framing preserves first-party and independent BLAKE3 identi
     expect(actual).toBe(expected);
     expect(actual).toHaveLength(22);
   }
-  console.log("[DEBUG] first-party BLAKE3 and noble streaming agree on exact persisted trunk wire identities including Unicode and multipage input");
 });

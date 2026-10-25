@@ -252,7 +252,7 @@ impl ShardLoop {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message }).await?;
                 return Ok(1);
             }
-            let job_budget = job_budget_from_grant(&budget);
+            let funds = self.job_funds(actor_id);
             let actor_lane = self.actor_lane(actor_id);
             let watchdog_stage = interactive_stage_for(actor_lane);
             let replayable = self.replay_seeds.iter().flatten().any(|seed| seed.actor == actor_id && seed.job == job && seed.replayable);
@@ -263,7 +263,7 @@ impl ShardLoop {
             };
             let job_outcome = {
                 let _watchdog = Watchdog::start("plugin-host.shard.step_job", OperationId(actor_id), Generation(job), watchdog_stage);
-                self.runtime.step_job(instance, job, job_budget.await).await
+                match funds { Ok(mut funds) => self.runtime.step_job_funded(instance, &mut funds, job).await, Err(fault) => Err(fault) }
             };
             let outcome = match job_outcome {
                 Ok(step) => {

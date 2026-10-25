@@ -1,4 +1,4 @@
-//! 🗜️ RFC1950/RFC1951 zlib/DEFLATE — Adler32, bit I/O, canonical Huffman, greedy hash-chain
+//! 🔢️ RFC1950/RFC1951 zlib/DEFLATE — Adler32, bit I/O, canonical Huffman, greedy hash-chain
 //! LZ77, and the stored/fixed/dynamic inflate trio. Ported verbatim (algorithm-for-algorithm)
 //! from `semio-s-plugin-stdio`'s own `🗜️deflate` artifact codec, stripped of that artifact's
 //! interactive-job checkpointing and `DeflateSnapshot` typed-container framing — this module
@@ -257,7 +257,7 @@ fn distance_symbol(dist: usize) -> (usize, u32, u8) {
 //#endregion Lz77
 
 //#region Compress
-/// 🗜️ Batch fixed-Huffman DEFLATE compressor: greedy hash-chain LZ77 with lazy one-step
+/// 🎞️ Batch fixed-Huffman DEFLATE compressor: greedy hash-chain LZ77 with lazy one-step
 /// lookahead, emitted as a single final fixed-Huffman block (RFC1951 BTYPE=1).
 fn deflate_raw(data: &[u8]) -> Vec<u8> {
     let mut writer = BitWriter::new();
@@ -505,7 +505,7 @@ pub fn zlib_compress(data: &[u8]) -> Vec<u8> {
     out
 }
 
-/// 🗜️ Zlib unwrap + inflate + Adler32 verify.
+/// ✅️ Zlib unwrap + inflate + Adler32 verify.
 pub fn zlib_decompress(data: &[u8]) -> Result<Vec<u8>, String> {
     if data.len() < 6 {
         return Err("zlib stream too short".into());

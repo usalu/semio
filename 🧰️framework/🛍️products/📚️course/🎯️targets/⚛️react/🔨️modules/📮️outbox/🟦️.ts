@@ -1,4 +1,4 @@
-/** 📮️ The persisted local-only outbox of the commands the proctor has not decided yet, shared by every tab of the site.
+/** 📤️ The persisted local-only outbox of the commands the proctor has not decided yet, shared by every tab of the site.
  *
  * An answer applies locally at once and its `record-answer` command waits here until the proctor has decided it; so does
  * every command the device decided by itself while the proctor was away (a registration, a started run, an opened task,
@@ -105,7 +105,7 @@ export function coalesce(entries: readonly OutboxEntry[], keep?: Id): { readonly
   return { kept: ordered.filter(stays), superseded: ordered.filter((entry) => !stays(entry)) };
 }
 
-/** 📮️ The command outbox of one quiz client tab. */
+/** 📑️ The command outbox of one quiz client tab. */
 export class Outbox {
   private readonly options: OutboxOptions;
   private entries: readonly OutboxEntry[] = [];
@@ -128,7 +128,7 @@ export class Outbox {
     this.snapshot = this.freeze();
   }
 
-  /** 📊️ The current status; the same object until something changes. */
+  /** 🚥️ The current status; the same object until something changes. */
   status(): OutboxStatus {
     return this.snapshot;
   }
@@ -192,7 +192,7 @@ export class Outbox {
     this.remove((command) => commandRun(command) === run);
   }
 
-  /** 🗑️ Drops every command of `learner`, e.g. once the proctor no longer knows them (in flight: as {@link discard}). */
+  /** 📉️ Drops every command of `learner`, e.g. once the proctor no longer knows them (in flight: as {@link discard}). */
   forget(learner: Id): void {
     this.remove((command) => command.learner === learner);
   }
@@ -215,7 +215,7 @@ export class Outbox {
     void this.pump();
   }
 
-  /** ⏳️ Resolves once no command of `run` is queued, reporting `(delivered, total)`; rejects when `signal` aborts. */
+  /** 🔂️ Resolves once no command of `run` is queued, reporting `(delivered, total)`; rejects when `signal` aborts. */
   settled(run: Id, signal?: AbortSignal, onProgress?: (delivered: number, total: number) => void): Promise<void> {
     const remaining = (): number => this.entries.filter((entry) => commandRun(entry.command) === run).length;
     let total = remaining();

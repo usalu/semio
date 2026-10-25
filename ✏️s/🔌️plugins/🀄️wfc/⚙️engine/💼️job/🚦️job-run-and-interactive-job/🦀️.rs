@@ -88,7 +88,7 @@ impl<T: Topology + Clone> WfcJob<T> {
 
 impl<T: Topology + Clone + Send> WfcJob<T> {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    pub fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) && !context.is_cancelled() && context.operation() == self.operation.operation && context.generation() == self.operation.generation {
             return self.retire_delivered_publication(context);
         }

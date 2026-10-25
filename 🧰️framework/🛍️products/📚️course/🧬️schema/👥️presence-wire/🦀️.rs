@@ -169,7 +169,7 @@ pub struct PresenceSubmission {
     pub total: Option<u16>,
 }
 
-/// 🖥️ The public overview grid and navigation mode resolved on the publishing device.
+/// 🔭️ The public overview grid and navigation mode resolved on the publishing device.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PresenceLayout { pub grid: String, pub mode: String }

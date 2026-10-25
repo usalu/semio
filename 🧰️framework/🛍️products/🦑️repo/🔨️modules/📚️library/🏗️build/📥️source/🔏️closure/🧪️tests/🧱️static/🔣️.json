@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "named import",
+      "text": "import {a,b} from \"./x.ts\";",
+      "expected": [
+        "./x.ts"
+      ]
+    },
+    {
+      "name": "compact form without spaces",
+      "text": "import{a}from\"./x.ts\";import b from'./y.ts'",
+      "expected": [
+        "./x.ts",
+        "./y.ts"
+      ]
+    },
+    {
+      "name": "bare side-effect import",
+      "text": "import \"./side.ts\";",
+      "expected": [
+        "./side.ts"
+      ]
+    },
+    {
+      "name": "default namespace and json attribute",
+      "text": "import * as ns from \"./n.ts\";\nimport schema from \"./s.json\" with { type: \"json\" };",
+      "expected": [
+        "./n.ts",
+        "./s.json"
+      ]
+    },
+    {
+      "name": "multi line named import",
+      "text": "import {\n  a,\n  b,\n} from \"./m.ts\";",
+      "expected": [
+        "./m.ts"
+      ]
+    },
+    {
+      "name": "re-export from",
+      "text": "export {a} from \"./r.ts\";\nexport * from \"./s.ts\";\nexport * as t from \"./t.ts\";",
+      "expected": [
+        "./r.ts",
+        "./s.ts",
+        "./t.ts"
+      ]
+    },
+    {
+      "name": "type only forms are not loaded",
+      "text": "import type {A} from \"./a.ts\";\nimport type X from \"./x.ts\";\nexport type {B} from \"./b.ts\";\nexport type * from \"./c.ts\";",
+      "expected": []
+    },
+    {
+      "name": "calls are not static imports",
+      "text": "const m=await import(\"./d.ts\");const r=require(\"./e.ts\");createRequire(import.meta.url)(\"./f.ts\");",
+      "expected": []
+    },
+    {
+      "name": "string and comment mentions are not imports",
+      "text": "const text=\"import x from './g.ts'\";\n// import y from \"./h.ts\"\n/* export {z} from \"./i.ts\" */",
+      "expected": []
+    },
+    {
+      "name": "statement after another statement on one line",
+      "text": "const a=1;import {b} from \"./j.ts\";export{c}from\"./k.ts\"",
+      "expected": [
+        "./j.ts",
+        "./k.ts"
+      ]
+    },
+    {
+      "name": "package and builtin specifiers",
+      "text": "import {readFile} from \"node:fs/promises\";import Ajv from \"ajv\";",
+      "expected": [
+        "node:fs/promises",
+        "ajv"
+      ]
+    }
+  ]
+}

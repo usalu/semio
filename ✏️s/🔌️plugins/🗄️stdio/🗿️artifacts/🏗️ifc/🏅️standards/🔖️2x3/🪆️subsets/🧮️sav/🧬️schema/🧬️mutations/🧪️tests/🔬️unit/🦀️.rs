@@ -23,7 +23,7 @@ async fn round_trip(mutation: Ifc2x3SavMutation) {
     let outcome = apply_ifc2x3_sav_mutation(&mut mutated, &mutation);
     assert!(outcome.messages().is_empty(), "{mutation:?} was rejected: {:?}", outcome.messages());
     assert_ne!(mutated, start, "{mutation:?} changed nothing");
-    let inverse = Mutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture").into_iter().next().expect("one inverse");
+    let inverse = ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture").into_iter().next().expect("one inverse");
     apply_ifc2x3_sav_mutation(&mut mutated, &inverse);
     assert_eq!(mvd::canonical(&mutated), mvd::canonical(&start), "{mutation:?} then its inverse must restore the base exchange structure");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &start).await;
@@ -72,7 +72,7 @@ async fn removing_a_middle_row_is_restored_at_its_original_index() {
     assert!(outcome.messages().is_empty(), "{created:?} was rejected: {:?}", outcome.messages());
     assert_eq!(mvd::position(&start, 99), Some(1), "the creation honours its index");
     let removal = Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: 99, group: None, index: None, instance: None });
-    let inverse = Mutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
+    let inverse = ::semio_framework_os_kernel::ColdMutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: 99, group: Some(SavLoadGroup { global_id: "loads".into(), owner_history: None, name: "Self weight".into(), predefined_type: None, action_type: None, action_source: None }), index: Some(1), instance: None })], "the removal's inverse restores the row at its original index");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &start).await;
 }

@@ -22,7 +22,7 @@ export const RUNTIME_ASSET_CHANNELS: readonly RuntimeAssetChannel[] = [
 /** 📋️ Every asset file with the route it is served at, in `RuntimeAsset::ALL` order. */
 export const RUNTIME_ASSET_FILES: readonly { readonly channel: string; readonly route: string; readonly file: string }[] = RUNTIME_ASSET_CHANNELS.flatMap(({ id, route, files }) => files.map(file => ({ channel: id, route, file })));
 
-/** 📦️ The assets a `wasm32-wasip2` guest uses, the last three of {@link RUNTIME_ASSET_FILES} (the emoji face, the label face and the icon
+/** 🗃️ The assets a `wasm32-wasip2` guest uses, the last three of {@link RUNTIME_ASSET_FILES} (the emoji face, the label face and the icon
  * pack): what Rust's `RuntimeAsset::GUEST` names and `PluginBuilder::canvas_runtime_assets` declares as package assets. */
 export const GUEST_RUNTIME_ASSET_FILES: readonly { readonly channel: string; readonly route: string; readonly file: string }[] = RUNTIME_ASSET_FILES.slice(-3);
 
@@ -31,7 +31,7 @@ export function runtimeAssetDeliveries(): readonly { readonly kind: "static-dir"
   return RUNTIME_ASSET_CHANNELS.map(({ route, directory }) => ({ kind: "static-dir" as const, route, root: directory }));
 }
 
-/** 🔌️ The `semioSetRuntimeAssets` door, absent on wasm modules that do not link Canvas. */
+/** ⚙️ The `semioSetRuntimeAssets` door, absent on wasm modules that do not link Canvas. */
 export interface RuntimeAssetBindings {
   readonly semioSetRuntimeAssets?: (math: Uint8Array, serif: Uint8Array, serifItalic: Uint8Array, mono: Uint8Array, emoji: Uint8Array, labelFont: Uint8Array, iconPack: Uint8Array) => void;
 }

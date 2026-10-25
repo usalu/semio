@@ -2,6 +2,7 @@
 //! (or a text source's text) is set to: an inspector field committed on blur, or a parameter a mesh edit inserts its
 //! operator with. The intent IS the value, so editing it in history replays exactly that value on any base.
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use crate::generation3d_label_number;
 
@@ -27,7 +28,8 @@ pub const CHANGE_WIDGET_INPUT_MAXIMUM_CHANNEL: usize = 256;
 pub const CHANGE_WIDGET_INPUT_LABEL_TEXT: usize = 32;
 
 /// 📐️ A plane literal — an origin point and a normal vector.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WidgetInputPlane {
     pub origin: [f64; 3],
@@ -35,7 +37,8 @@ pub struct WidgetInputPlane {
 }
 
 /// 🔣️ One typed input literal — on the wire `{type, value}`, a point or a vector as `[x, y, z]`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "type", content = "value", rename_all = "camelCase")]
 pub enum WidgetInputValue {
     Number(f64),
@@ -180,8 +183,10 @@ impl WidgetInputValue {
 
 //#region 🔖️ChangeWidgetInput
 /// 🎛️ Sets input `channel` of operator `id` to the typed literal `input` (a text source's `text` to its text).
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeWidgetInput {
     pub id: String,
     pub channel: String,

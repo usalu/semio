@@ -222,7 +222,7 @@ impl Drop for DrawingMutationArenaOwnerBuilder {
     }
 }
 
-struct DrawingMutationArenaPoolSlot {
+pub struct DrawingMutationArenaPoolSlot {
     pub reverse: Option<Vec<DrawingLayerNode>>,
     pub output: Option<Vec<DrawingLayerNode>>,
     pub pages: Option<Vec<String>>,
@@ -255,7 +255,7 @@ impl DrawingMutationArenaPoolSlot {
     }
 }
 
-struct DrawingMutationArenaPoolState {
+pub struct DrawingMutationArenaPoolState {
     pub slots: [DrawingMutationArenaPoolSlot; DRAWING_MUTATION_ARENA_POOL_CAPACITY],
 }
 

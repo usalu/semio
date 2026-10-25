@@ -7,6 +7,7 @@
 
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dScale, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
 use {semio_framework_plugin::app::MeshView, semio_framework_plugin::app::MeshWindowKit};
+use semio_framework_plugin::WindowKit;
 use semio_framework_plugin::world3d_default_camera;
 use semio_framework_plugin::world3d_mesh_id_from_url;
 use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;

@@ -8,7 +8,7 @@ import { POLICY_LABELS_TWO_AXIS_ALLOWLIST, POLICY_TREE_ITEM_REDEFINITION_ALLOWLI
 import { policyAppIdFromCrateDir, type PolicyCrateRef, policyExtractFnBody, policyLabelName, policyModAtLine, policyPairRegionSpans, policyParseModSpans, policyParseRegionEvents, policyPascalAppStructName } from "../🏛️foundation/🟦️.ts";
 
 //#region 🔧️PolicyRuleRegionFormat
-/** 📏️V2 rule: `//#region 🔖️Name` / `//#endregion 🔖️Name` (no space after `//`), tests region must be `🧪️Tests`. */
+/** 📐️V2 rule: `//#region 🔖️Name` / `//#endregion 🔖️Name` (no space after `//`), tests region must be `🧪️Tests`. */
 export function policyRegionFormatBreaches(scope: string, lines: readonly string[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const events = policyParseRegionEvents(lines);
@@ -77,7 +77,7 @@ export function policyRegionFormatBreaches(scope: string, lines: readonly string
 //#endregion 🔧️PolicyRuleRegionFormat
 
 //#region 🔧️PolicyRuleManifestRegion
-/** 📏️V2 rule: every `App::builder(...)` call must be enclosed in a region labeled exactly `🔖️Manifest`. */
+/** 📋️V2 rule: every `App::builder(...)` call must be enclosed in a region labeled exactly `🔖️Manifest`. */
 export function policyManifestRegionBreaches(scope: string, lines: readonly string[]): BreachRecord[] {
   const spans = policyPairRegionSpans(policyParseRegionEvents(lines));
   const testSpans = policyTestModSpans(lines);
@@ -105,7 +105,7 @@ export function policyManifestRegionBreaches(scope: string, lines: readonly stri
 //#endregion 🔧️PolicyRuleManifestRegion
 
 //#region 🔧️PolicyRuleStructNaming
-/** 📏️V2 rule: the `DocumentApp` struct backing `<PREFIX>_APP_ID` must be named `PascalCase(id) + "App"`. */
+/** 🔤️V2 rule: the `DocumentApp` struct backing `<PREFIX>_APP_ID` must be named `PascalCase(id) + "App"`. */
 export function policyStructNamingBreaches(scope: string, content: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const idsByConst = new Map<string, string>();
@@ -174,7 +174,7 @@ function policyResolveImportAlias(content: string, importedName: string): string
   return content.match(new RegExp(`\\b${importedName}\\s+as\\s+(\\w+)\\b`))?.[1];
 }
 
-/** 📏️V1 rule: local `fn selection_ids` must delegate to `semio_framework_plugin::selection_ids` before adding a fallback key. */
+/** 🔑️V1 rule: local `fn selection_ids` must delegate to `semio_framework_plugin::selection_ids` before adding a fallback key. */
 export function policySelectionIdsBreaches(scope: string, content: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const alias = policyResolveImportAlias(content, "selection_ids");
@@ -198,7 +198,7 @@ export function policySelectionIdsBreaches(scope: string, content: string): Brea
   return breaches;
 }
 
-/** 📏️V1 rule: local `fn new_app`/`fn new_app_with_registry`/`fn meta` must stay thin typed delegates to the SDK artifact app laws (allowing a `::<Turbofish>` generic before the call's `(`). */
+/** 📦️V1 rule: local `fn new_app`/`fn new_app_with_registry`/`fn meta` must stay thin typed delegates to the SDK artifact app laws (allowing a `::<Turbofish>` generic before the call's `(`). */
 export function policyArtifactAppLawDelegateBreaches(scope: string, content: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const specs: readonly { re: RegExp; mustRe: RegExp; label: string }[] = [
@@ -227,7 +227,7 @@ export function policyArtifactAppLawDelegateBreaches(scope: string, content: str
   return breaches;
 }
 
-/** 📏️V1 rule: local `tree_item_with_action` redefinitions need an allowlisted SDK gap; other `tree_item_*` wrappers must delegate to it. */
+/** 🌳️V1 rule: local `tree_item_with_action` redefinitions need an allowlisted SDK gap; other `tree_item_*` wrappers must delegate to it. */
 export function policyTreeItemBreaches(crate: PolicyCrateRef, content: string, lines: readonly string[]): BreachRecord[] {
   const scope = crate.dir;
   const breaches: BreachRecord[] = [];
@@ -278,7 +278,7 @@ export function policyTreeItemBreaches(crate: PolicyCrateRef, content: string, l
   return breaches;
 }
 
-/** 📏️V1 rule: `struct XLabels` must be defined inside `semio_framework_plugin::app_labels! { ... }`, unless allowlisted as a documented SDK gap. */
+/** 🏷️V1 rule: `struct XLabels` must be defined inside `semio_framework_plugin::app_labels! { ... }`, unless allowlisted as a documented SDK gap. */
 export function policyLabelsStructBreaches(crate: PolicyCrateRef, content: string): BreachRecord[] {
   const scope = crate.dir;
   const breaches: BreachRecord[] = [];

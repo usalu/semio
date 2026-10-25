@@ -42,7 +42,7 @@ export function runTestScript(context: Readonly<{ root: string; repoRoot: string
   const policySchema = JSON.parse(readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json"), "utf8")).$defs.LowpolyPublicationPolicyV1;
   const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/🧪️interactive-job/🔣️.json"), "utf8")) as Fixture;
   const source = readModuleTreeSource(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"));
-  const schemaSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"), "utf8");
+  const subset = "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any", schemaSource = ["🧬️schema/🦀️.rs", "🚪️io/📝️text/📸️snapshot/🦀️.rs"].map(path => readFileSync(resolve(root, subset, path), "utf8")).join("\n");
   const sessionSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs"), "utf8");
   const sourceCollapsed = source.replace(/\s+/g, " ").replace(/,\s*\}/g, " }");
   const registered = [...source.matchAll(/\.action_interactive_job\("([^"]+)", InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => ({ toolId: match[1]!, classification: match[2]! }));
@@ -63,7 +63,7 @@ export function runTestScript(context: Readonly<{ root: string; repoRoot: string
     "context.identity_digest() != self.context_identity",
     "ArtifactCommandWorkStep::Progress",
     "ArtifactCommandWorkStep::Replay",
-    "copy_from_slice(b\"LPC3\")",
+    "0..=3 => Some(b\"LPC3\"[index])",
     "fn begin_close(&mut self)",
     "fn close_step(&mut self",
     "build_artifact_store_one_item_preparation_factory",
@@ -73,7 +73,7 @@ export function runTestScript(context: Readonly<{ root: string; repoRoot: string
     "const LOWPOLY_RETAINED_WORK_ITEMS: usize = 258",
     "const LOWPOLY_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 16 * 1024 * 1024",
     "const LOWPOLY_CONFIG_STORE_MAXIMUM_BYTES: usize = 16_384",
-    "paint::lowpoly_paint_step(",
+    "=> return lowpoly_paint_step(",
   ];
   for (const needle of structural) reject(source.includes(needle), `Lowpoly retained source missing ${needle}`);
   reject(!schemaSource.includes("OnceLock<(crate::artifacts::lowpoly::LowpolySnapshot"), "Lowpoly schema still owns a process-global ArtifactChild payload cache");

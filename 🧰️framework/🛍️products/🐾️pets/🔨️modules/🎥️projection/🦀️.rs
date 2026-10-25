@@ -344,7 +344,7 @@ fn pace_of<A: Borrow<Actor>>(stage: &Stage, actors: &[A], kinds: &[&Species], in
     }
 }
 
-/// 🪜️ Whether one actor is drawn before another: the one higher up (the smaller `y`) first, at the same height the species id that is smaller by UTF-16 code units, as the twin compares strings.
+/// ⬆️ Whether one actor is drawn before another: the one higher up (the smaller `y`) first, at the same height the species id that is smaller by UTF-16 code units, as the twin compares strings.
 fn behind(one: &ActorFrame, other: &ActorFrame) -> bool {
     let rise = one.y - other.y;
     if rise < 0.0 {

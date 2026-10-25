@@ -7,6 +7,9 @@ use super::*;
 /// persistent state; the host grants one `step-job` call per shared-pool closure.
 pub const RELAY_JOB_BUDGET: JobBudget = JobBudget { fuel: semio_framework_job::USER_VISIBLE_LANE_FUEL, deadline_ms: (semio_framework_job::USER_VISIBLE_LANE_WALL_US / 1_000) as u32 };
 
+/// 🧮️ The logical work units one relay request may spend across its crossings.
+pub(super) const RELAY_JOB_WORK_FUEL: u64 = 1 << 24;
+
 /// 🔁️ One retained-waker future polled once per finite shared-pool turn.
 type GuestRelayFailureHandler = Box<dyn FnOnce(GuestRelayPoolFailure) + Send + 'static>;
 

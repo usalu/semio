@@ -15,7 +15,7 @@ export interface CargoExecutionBackendV1 {readonly version:1;readonly program:st
 export interface CargoExecutionContinuationV1 {readonly program:string;readonly cwd:string;readonly arguments:readonly string[]}
 /** 📋️ Declares exact arguments and intentional forwarding for one authored process. */
 export interface CargoExecutionCommandV1 extends CargoExecutionContinuationV1 {readonly tail:"none"|"test-arguments"}
-/** 📋️ Binds an authored command to one test selection. */
+/** ⚙️ Binds an authored command to one test selection. */
 export interface CargoExecutionDeclarationV1 {readonly version:1;readonly operations:readonly Readonly<{command:CargoExecutionCommandV1;request:CargoExecutionRequestV1;continuation:CargoExecutionCommandV1|null}>[]}
 /** 🗂️ Couples every defining admission to its exact public result type. */
 export interface CargoExecutionContractsV1 {readonly request:CargoExecutionRequestV1;readonly backend:CargoExecutionBackendV1;readonly declaration:CargoExecutionDeclarationV1}

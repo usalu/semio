@@ -52,5 +52,4 @@ for(const row of fixture.cases)test(`original resource observer ${row.id}`,async
   const owned=relative(root,directory);if(!owned.startsWith("lw-")||owned.includes(sep)||resolve(root,owned)!==directory)throw Error("Owned ticket lease fixture directory required");
   rmSync(directory,{recursive:true});
  }
- console.log(`[DEBUG] Original SQLite lease ${row.id} settled without observer completion, acquired=${acquired}, exact signal/rejection and cleanup preserved`);
 });

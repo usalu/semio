@@ -1,4 +1,4 @@
-//! 🎬️ Scene and retirement: the recorded scene, the opaque scene retirement registry and its entry points, the canvas scene retirement custody and the parsed SVG document. See [`super`].
+//! 🗄️ Scene and retirement: the recorded scene, the opaque scene retirement registry and its entry points, the canvas scene retirement custody and the parsed SVG document. See [`super`].
 
 use super::*;
 
@@ -188,7 +188,7 @@ impl Scene {
     pub fn new() -> Self {
         Self(Vec::new())
     }
-    /// 🎬️ Transfers one exact command into the retained retirement cursor.
+    /// 🖱️ Transfers one exact command into the retained retirement cursor.
     fn take_retirement_command(&mut self) -> Option<SceneCommand> {
         self.0.pop()
     }
@@ -224,7 +224,7 @@ impl Scene {
         self.0.len()
     }
 
-    /// 🎬️ Copies `other[start..end]` into `self`, composing `transform` the same way [`Scene::append`] does.
+    /// 🏁️ Copies `other[start..end]` into `self`, composing `transform` the same way [`Scene::append`] does.
     pub fn append_range(&mut self, other: &Scene, start: usize, end: usize, transform: Option<Affine>) {
         let commands = &other.0[start..end];
         match transform {
@@ -277,7 +277,7 @@ impl SvgDocument {
         Self(tree)
     }
 
-    /// 🏷️ Appends the SVG tree into a scene. Builds a standalone real `vello::Scene`
+    /// ➕️ Appends the SVG tree into a scene. Builds a standalone real `vello::Scene`
     /// from the tree, then records it as one `SceneCommand::VelloFragment` — `Scene` itself
     /// stays a first-party command list even on this host/browser-only path.
     pub fn append_to_scene(&self, scene: &mut Scene) {
@@ -287,7 +287,7 @@ impl SvgDocument {
     }
 }
 
-/// 🏷️ Appends a parsed SVG document into a scene.
+/// 📄️ Appends a parsed SVG document into a scene.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn append_svg_document(scene: &mut Scene, doc: &SvgDocument) {
     doc.append_to_scene(scene);

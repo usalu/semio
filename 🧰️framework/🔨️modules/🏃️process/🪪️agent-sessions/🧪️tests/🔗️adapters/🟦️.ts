@@ -91,7 +91,7 @@ test("the admission queue serves the session holding the least memory per unit o
 });
 
 test("a session that already holds memory does not delay another session's equally sized request in the full decision",()=>{
- const policy={memory:{floorBasisPoints:0,floorMinimumMegabytes:0,floorMaximumMegabytes:0,budgetBasisPoints:10000,rampMilliseconds:0},load:{perCoreCeiling:99,overrideAfterMilliseconds:99999},swap:{ceilingBasisPoints:10000,outMegabytesPerSecond:99999},files:{ceilingBasisPoints:10000},attaches:{maximum:99},wait:{bypassMilliseconds:60000,maximumBypasses:99,agingMilliseconds:9999999}} as never;
+ const policy={memory:{floorBasisPoints:0,floorMinimumMegabytes:0,floorMaximumMegabytes:0,budgetBasisPoints:10000,rampMilliseconds:0},load:{perCoreCeiling:99,overrideAfterMilliseconds:99999},swap:{ceilingBasisPoints:10000,outMegabytesPerSecond:99999},files:{ceilingBasisPoints:10000},attaches:{maximum:99},wait:{bypassMilliseconds:60000,maximumBypasses:99,agingMilliseconds:9999999,lendAfterMilliseconds:30000}} as never;
  const host={atMs:0,totalMegabytes:1000,availableMegabytes:1000,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:0,cores:8,pressure:"normal",openFiles:null,openFilesMaximum:null,attachedImages:null} as never;
  const heavy="0123456789ab.sheavy",light="0123456789ab.slight",busy=[{...grant(heavy,700),observedMegabytes:700}];
  const queue=[waiter("first",heavy,1,1),waiter("second",light,1,2)].map(row=>({...row,request:request(row.request.id,250)}));
@@ -107,18 +107,4 @@ test("capacity rows group grants and waiters by session, add agent, weight and l
  const rows=agentSessionCapacityRowsV1({grants:[{session:a,reservedMegabytes:100},{session:a,reservedMegabytes:50},{session:ghost,reservedMegabytes:7},{reservedMegabytes:9}],waiters:[{session:b,weight:3},{session:a,weight:1}]},setup.sessions);
  expect(rows.map(row=>[row.address,row.agent,row.grants,row.reservedMegabytes,row.waiters,row.weight,row.shareBasisPoints])).toEqual([[a,"one",2,150,1,1,2500],[b,"three",0,0,1,3,7500],[ghost,ghost,1,7,0,1,0]].sort((x,y)=>String(x[0])<String(y[0])?-1:1));
  expect(renderAgentSessionCapacityV1(rows,"en")[0]).toBe("Agent sessions with capacity: 3.");expect(renderAgentSessionCapacityV1(rows,"de")[1]).toContain("Zusage(n)");expect(renderAgentSessionCapacityV1([],"en")).toEqual([]);
-});
-
-test("Bazel slot choice: concurrent agent sessions start on different slots, an edit loop keeps its slot, and the slot state records who used it",async()=>{
- const {rankBazelSlotsV1,acquireBazelSessionV1,bazelSlotIdsV1,nextBazelSlotStateV1}=await import("../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🟦️.ts");
- const slots=bazelSlotIdsV1({slots:3,services:0},"build"),key="0123456789abcdef";
- expect(rankBazelSlotsV1(slots,{},key)).toEqual(["s0","s1","s2"]);
- for(const preference of[0,1,2,3,4,5]){const ranked=rankBazelSlotsV1(slots,{},key,preference);expect(ranked[0]).toBe(slots[preference%3]);expect([...ranked].sort()).toEqual(["s0","s1","s2"]);}
- const states={s1:nextBazelSlotStateV1("s1",undefined,key,100)},kept=rankBazelSlotsV1(slots,states,key,2);expect(kept[0]).toBe("s1");
- const holds=new Set<string>(),written:Record<string,unknown>={};
- const port={async claim(slot:string){if(holds.has(slot))return undefined;holds.add(slot);return ()=>holds.delete(slot);},async gate(){return ()=>undefined;},async read(slot:string){return written[slot] as never;},async write(slot:string,state:unknown){written[slot]=state;},async sleep(){},now:()=>1000,progress(){}};
- const signal=new AbortController().signal,first=await acquireBazelSessionV1(port as never,{slots:3,services:0},{language:"en",key,signal,preference:1,owner:{session:"0123456789ab.sa",agent:"alpha"}}),second=await acquireBazelSessionV1(port as never,{slots:3,services:0},{language:"en",key:"fedcba9876543210",signal,preference:1,owner:{session:"0123456789ab.sb",agent:"beta"}});
- expect([first.slot,second.slot]).toEqual(["s1","s2"]);await first.release();await second.release();
- expect(written.s1).toMatchObject({session:"0123456789ab.sa",agent:"alpha",key});expect(written.s2).toMatchObject({agent:"beta"});
- const again=await acquireBazelSessionV1(port as never,{slots:3,services:0},{language:"en",key,signal,preference:2});expect(again.slot).toBe("s1");expect(again.mode).toBe("warm");await again.release();
 });

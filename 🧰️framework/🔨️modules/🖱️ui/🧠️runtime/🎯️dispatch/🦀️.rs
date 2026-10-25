@@ -22,7 +22,7 @@ use semio_framework_ui_runtime_exchange::Command;
 
 //#region 🔖️Intent
 
-/// 🎯️ A revision-guarded moment: a presenter's own type implements this once, and
+/// 🔒️ A revision-guarded moment: a presenter's own type implements this once, and
 /// [`crate::FrameTransaction::step`] routes every queued [`ui_contract::UiIntent`] addressed at that
 /// presenter's registered surface through it. `cx` is the same lease-scoped `crate::Context` any
 /// other entity mutation uses — `notify`/`emit`/`defer`/`spawn_local`, never an await, by the same
@@ -58,7 +58,7 @@ pub enum DispatchOutcome {
     /// ✅️ The intent was applied; no outward effect beyond whatever entity mutation the handler made
     /// (itself already reflected by the next present/reconcile pass).
     Handled,
-    /// ✅️ The intent was applied and additionally describes commands to submit and/or deferred work
+    /// 💼️ The intent was applied and additionally describes commands to submit and/or deferred work
     /// for the frame transaction to carry out.
     HandledWith { commands: Vec<Command>, deferred: Vec<DeferredOp> },
     /// 🕰️ Dropped: the handler itself recognizes this intent as targeting a stale moment, for a
@@ -73,7 +73,7 @@ pub enum DispatchOutcome {
 /// ⏭️ One outward effect a [`DispatchOutcome::HandledWith`] describes instead of performing inline.
 #[derive(Debug)]
 pub enum DeferredOp {
-    /// 📤️ Submit through `crate::UiRuntime`'s own `CommandGateway` — the same non-blocking, bounded
+    /// ⚙️ Submit through `crate::UiRuntime`'s own `CommandGateway` — the same non-blocking, bounded
     /// path any other command takes.
     SubmitCommand(Command),
     /// 👥️ Record onto `crate::UiRuntime`'s own `PresenceHub`, decomposed into `record_own`/

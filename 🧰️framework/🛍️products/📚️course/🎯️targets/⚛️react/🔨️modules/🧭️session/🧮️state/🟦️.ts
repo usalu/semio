@@ -260,7 +260,7 @@ function unasked(state: CourseState, run: Id): readonly Slug[] {
   return quiz === undefined || !state.asked.includes(quiz) ? state.asked : state.asked.filter((asked) => asked !== quiz);
 }
 
-/** 🧮️ Folds one client event into the state. Pure. */
+/** 🧬️ Folds one client event into the state. Pure. */
 export function evolveCourseState(state: CourseState, event: CourseClientEvent): CourseState {
   switch (event.type) {
     case "introduction-read":

@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️ToFromValueBridge
-/// 🔤️ `serde_json::to_string`/`from_str` analogs over [`ToValue`]/[`FromValue`] instead of
+/// 🔣️ `serde_json::to_string`/`from_str` analogs over [`ToValue`]/[`FromValue`] instead of
 /// `Serialize`/`DeserializeOwned` — layered on the structural [`from_dsl_value`]/[`to_dsl_value`]
 /// walk above (`//#region 🔖️DslValueBridge`) rather than a second one: a concurrent session
 /// landed that walk in this same file while this one was in flight, so this region only adds the
@@ -85,7 +85,7 @@ pub struct JsonBorrowedWriteCursor {
 }
 
 impl JsonBorrowedWriteCursor {
-    /// 🌱️ Starts without copying or scanning a source owner.
+    /// ▶️ Starts without copying or scanning a source owner.
     pub fn new() -> Self { Self { frames: Vec::new(), path: Vec::new(), writer: ControlledWriter { bytes: 0, output: None }, phase: 0, normal_step_progress:Default::default() } }
     /// 📍️ Returns the current canonical output byte count and measure/write phase.
     pub fn progress(&self) -> (usize, bool) { (self.writer.bytes, self.phase == 2) }

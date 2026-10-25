@@ -53,20 +53,6 @@ function typescriptCommentPathReferenceAuthority(content: string): readonly Read
   return rows;
 }
 
-/** 🚧️ Resolves quoted repository-relative path literals inside the dependency-boundary policy owner's arrays. */
-function dependencyCruiserBoundaryReferenceAuthority(content: string): ReferenceToken[] {
-  const rows: ReferenceToken[] = [];
-  for (const array of content.matchAll(/\bconst\s+[A-Za-z_$][\w$]*\s*=\s*\[([\s\S]*?)\]/gu)) {
-    if (array.index === undefined) continue;
-    const fragmentStart = array.index + array[0].indexOf(requireTaxonomyValue(array[1],"array[1]"));
-    for (const element of regexTokens(requireTaxonomyValue(array[1],"array[1]"), "typescript", "dependency-cruiser-boundary", [/["']([^"']+)["']/gu])) {
-      if (!element.value.includes("/")) continue;
-      rows.push({ ...element, start: fragmentStart + element.start, end: fragmentStart + element.end, structuredLocation: lineLocation(content, fragmentStart + element.start, "dependency-cruiser-boundary") });
-    }
-  }
-  return rows;
-}
-
 interface TypeScriptCollectionToken {
   readonly text: string;
   readonly start: number;
@@ -340,7 +326,7 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
   return rows.sort((left, right) => left.start - right.start);
 }
 
-/** 🧪️ `runVitest(bundleRoot, segments, config)`'s required third argument names a configuration owner
+/** ▶️ `runVitest(bundleRoot, segments, config)`'s required third argument names a configuration owner
  * resolved relative to `bundleRoot` at runtime (every `📜️script.ts` router's own `cwd`), not to
  * whatever else the call happens to quote first — `segments` is very often a literal array of
  * quoted canonical case paths (e.g. `runVitest(this.root, ["../../🧪️tests/🧩️case/🟦️.ts", …], "../../🧪️tests/🎚️config/🟦️.ts")`), so
@@ -400,7 +386,6 @@ export function typescriptTokens(path: string, content: string): ReferenceToken[
   ]);
   rows.push(...runVitestConfigArgumentTokens(content));
   if (basename(path) === "🟦️.ts" && basename(dirname(path)) === "🧪️tests") rows.push(...vitestConfigIncludeArrayTokens(content));
-  if (path.replaceAll("\\", "/").endsWith("/🧹️lint/🕸️dependency-boundaries/🟨️.cjs")) rows.push(...dependencyCruiserBoundaryReferenceAuthority(content));
   rows.push(...ticketImportantProseReferenceAuthority(content).map((entry) => ({ ...entry, adapter: "typescript" as const })));
   rows.push(...typescriptLeadingDocumentationReferenceAuthority(content).map((entry) => ({ ...entry, adapter: "typescript" as const })));
   rows.push(...typescriptCommentPathReferenceAuthority(content).map((entry) => ({ ...entry, adapter: "typescript" as const })));

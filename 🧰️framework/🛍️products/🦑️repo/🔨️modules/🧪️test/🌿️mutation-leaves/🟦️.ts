@@ -54,7 +54,7 @@ export function outcomeClassesOf(descriptor: MutationLeafDescriptor): MutationOu
   return [...descriptor.outcomeClasses];
 }
 
-/** 🪪️ Every mutation leaf descriptor beneath one owner, keyed by its semantic kind. */
+/** 📂️ Every mutation leaf descriptor beneath one owner, keyed by its semantic kind. */
 /**
  * 🦠️ Whether a directory under `🧬️mutations` is a MUTATION LEAF rather than a shared facet.
  *
@@ -148,7 +148,7 @@ export function readLeafDescriptors(repoRoot: string, owner: string): Map<string
   return found;
 }
 
-/** 🪪️ How many of an owner's mutation leaves carry a descriptor — the ratio that gates generation. */
+/** 🧶️ How many of an owner's mutation leaves carry a descriptor — the ratio that gates generation. */
 export function leafDescriptorCoverage(repoRoot: string, owner: string): { leaves: number; described: number; missing: string[] } {
   const taxonomy = testTaxonomy(repoRoot);
   const filename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
@@ -160,7 +160,7 @@ export function leafDescriptorCoverage(repoRoot: string, owner: string): { leave
 }
 
 /**
- * 🧬️ Builds a v2 mutation manifest for one owner FROM ITS LEAF DESCRIPTORS.
+ * 🔨️ Builds a v2 mutation manifest for one owner FROM ITS LEAF DESCRIPTORS.
  *
  * Returns `null` when any leaf lacks a descriptor. That refusal is the whole point: a manifest whose
  * outcome classes were guessed for even one mutation would report coverage of an outcome nobody can
@@ -218,7 +218,7 @@ export function artifactOfOwner(repoRoot: string, owner: string): string | null 
 //#endregion 🪪️LeafDescriptor
 
 //#region 🏗️LeafScaffold
-/** 🏗️ One derived descriptor field, with the file and line that justifies it. */
+/** 📄️ One derived descriptor field, with the file and line that justifies it. */
 export type DerivedField = Readonly<{ value: unknown; evidence: string }>;
 
 /** 🏗️ A scaffolded descriptor, or the exact reason one field could not be derived. */
@@ -245,7 +245,7 @@ function pascalCase(kind: string): string {
 }
 
 /**
- * 🏗️ Derives one mutation leaf's descriptor FROM THE LEAF ITSELF, and refuses any field it cannot
+ * 🛑️ Derives one mutation leaf's descriptor FROM THE LEAF ITSELF, and refuses any field it cannot
  * justify with a file and a line.
  *
  * The descriptor is the single source a v2 manifest is generated from, and its `outcomeClasses` is the
@@ -452,7 +452,7 @@ export function binaryProtocolDriftBreaches(repoRoot: string, registry: OracleRe
   return breaches;
 }
 
-/** 🏗️ Scaffolds every leaf of one owner, so roster-level uniqueness can be checked before anything is written. */
+/** ✅️ Scaffolds every leaf of one owner, so roster-level uniqueness can be checked before anything is written. */
 export function scaffoldOwnerDescriptors(repoRoot: string, ownerRel: string): LeafScaffold[] {
   const taxonomy = testTaxonomy(repoRoot);
   const vocabulary = join(repoRoot, ownerRel, schemaModuleDirName(repoRoot), taxonomy.testMutationVocabularyDirName);
@@ -467,7 +467,7 @@ export function scaffoldOwnerDescriptors(repoRoot: string, ownerRel: string): Le
 /** 🧬️ One mutation leaf's payload contract as the leaf DECLARES it, or the reason there is none. */
 export type PayloadSchemaResolution = Readonly<{ leaf: string; kind: string; declared: string; path: string | null; schema: Record<string, unknown> | null; refused: readonly string[] }>;
 
-/** 🧬️ The one place a mutation leaf's payload schema may live, straight out of the taxonomy. */
+/** 🛤️ The one place a mutation leaf's payload schema may live, straight out of the taxonomy. */
 export function payloadSchemaRelativePath(repoRoot: string): string {
   const taxonomy = testTaxonomy(repoRoot);
   const location = rawTaxonomy(repoRoot).mutationPayloadSchemaLocation as { directoryName?: unknown; fileKindId?: unknown } | undefined;
@@ -476,7 +476,7 @@ export function payloadSchemaRelativePath(repoRoot: string): string {
 }
 
 /**
- * 🧬️ Resolves one mutation leaf's payload schema THROUGH ITS DESCRIPTOR.
+ * 🔎️ Resolves one mutation leaf's payload schema THROUGH ITS DESCRIPTOR.
  *
  * The leaf is the declared authority for its payload (`mutationPayloadSchemaAuthority`), so the
  * descriptor's `payloadSchema` field is the whole resolution: one declared owner-relative path, read
@@ -503,7 +503,7 @@ export function resolvePayloadSchema(repoRoot: string, ownerRel: string, leafDir
   return { leaf: leafRel, kind, declared, path: rel, schema: document as Record<string, unknown>, refused: [] };
 }
 
-/** 🧬️ Resolves every leaf's declared payload schema for one owner. */
+/** 🎒️ Resolves every leaf's declared payload schema for one owner. */
 export function resolvePayloadSchemas(repoRoot: string, ownerRel: string): PayloadSchemaResolution[] {
   const taxonomy = testTaxonomy(repoRoot);
   const vocabulary = join(repoRoot, ownerRel, schemaModuleDirName(repoRoot), taxonomy.testMutationVocabularyDirName);

@@ -22,7 +22,7 @@ export function formatCommitPrepareCommands(opts: { tagName: string; wipSha: str
   return `${[tag, squash, push, all].map(formatCommitPrepareCommandBlock).join("\n\n")}\n`;
 }
 
-/** 📋️Prepare-only agent reply: four `git` blocks, then tag name, then full commit message. */
+/** 🤖️Prepare-only agent reply: four `git` blocks, then tag name, then full commit message. */
 export function formatCommitPrepareAgentReply(opts: { tagName: string; wipSha: string; messageFile?: string; commitMessage: string }): string {
   const commands = formatCommitPrepareCommands({
     tagName: opts.tagName,

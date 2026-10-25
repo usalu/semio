@@ -33,11 +33,11 @@ export interface PluginPackageDescriptor {
   readonly manifest: PluginManifest;
   readonly packageId: string;
   readonly componentSha256: string;
-  /** 📦️ The package assets the descriptor declares (name, exact size, SHA-256) for the kernel to deliver on `instance-open`. */
+  /** 🎁️ The package assets the descriptor declares (name, exact size, SHA-256) for the kernel to deliver on `instance-open`. */
   readonly assets?: readonly PackageAssetDeclaration[];
 }
 
-/** 🪪️ Binds {@link fetchDescriptorManifest} to a required receipt source naming the same plugin and package. */
+/** 🧾️ Binds {@link fetchDescriptorManifest} to a required receipt source naming the same plugin and package. */
 export async function fetchPackageDescriptor(pluginId: string, moduleUrl: string, receiptSource: PackageReceiptSource, signal?: AbortSignal, onProgress: DescriptorProgress = () => {}): Promise<PluginPackageDescriptor> {
   signal?.throwIfAborted();
   if (!receiptSource || typeof receiptSource.read !== "function") throw Error("Explicit package receipt source required");
@@ -74,14 +74,14 @@ export function descriptorPackageAssets(manifest: PluginManifest): readonly Pack
   return manifestPackageAssets.get(manifest) ?? [];
 }
 
-/** 📇️ The JSON descriptor a served plugin module carries beside its entry, read before any actor starts. */
+/** 🌐️ The JSON descriptor a served plugin module carries beside its entry, read before any actor starts. */
 export function pluginDescriptorUrl(moduleUrl: string): string {
   const path = moduleUrl.split(/[?#]/u)[0]!;
   return path.slice(0, path.lastIndexOf("/") + 1) + "🔣️.json";
 }
 
-/** 📇️ Reads and admits one served package descriptor: owner, app roster, bounded size. */
-/** 📥️ Fetches and admits one descriptor document: a JSON object whose manifest names the requested owner and an app roster, and whose example rows all name the dialect they were authored for. */
+/** 📖️ Reads and admits one served package descriptor: owner, app roster, bounded size. */
+/** 🔏️ Fetches and admits one descriptor document: a JSON object whose manifest names the requested owner and an app roster, and whose example rows all name the dialect they were authored for. */
 async function fetchDescriptorDocument(pluginId: string, moduleUrl: string, signal: AbortSignal | undefined, onProgress: DescriptorProgress): Promise<{ readonly descriptor: object; readonly manifest: PluginManifest }> {
   signal?.throwIfAborted();
   const descriptorUrl = pluginDescriptorUrl(moduleUrl);

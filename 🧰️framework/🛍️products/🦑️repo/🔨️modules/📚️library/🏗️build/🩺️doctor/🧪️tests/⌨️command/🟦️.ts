@@ -10,7 +10,7 @@ import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import {DOCTOR_PROTOCOL_V1,type DoctorFactsV1} from "../../🟦️.ts";
 import {doctorArgumentsV1,runDoctorCommandV1} from "../../⌨️command/🟦️.ts";
 import {doctorPortsV1} from "../../🔌️ports/🟦️.ts";
-import type {DoctorProbeV1} from "../../🔎️probes/🟦️.ts";
+import type {DoctorProbeV1} from "../../🔎️probes/📋️contract/🟦️.ts";
 
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),compile=(definition:string)=>ajv.compile({definitions:schema.definitions,$ref:`#/definitions/${definition}`});
 const roots:string[]=[];

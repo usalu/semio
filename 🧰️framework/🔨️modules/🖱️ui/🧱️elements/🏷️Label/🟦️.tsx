@@ -7,24 +7,25 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { useTranslation } from "react-i18next";
-import i18next from "i18next";
 import { sizeVar } from "@semio-tech/ui-styling";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { TreeContext, TreeRowAlignmentContext, TreeAlignedRow, PropertyValueColumnContext, detailPanelIndentPx, detailPanelIndentLen, detailPanelPropertyInlineGapPx, detailPanelPropertyStackedToInlineHysteresisPx, detailPanelPropertyRowClassName, detailPanelPropertyControlClassName, detailPanelHeaderLineCenterPx, treeItemLabelStyle, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeHeaderMainClassName } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { resolveUiLabel, type UiTranslationKey, type UiRegisteredTranslationKey, type UiTranslateFn } from "../📚️I18n/🟦️.tsx";
+import { useUiI18nInstance } from "../📚️I18n/⚛️context/🟦️.ts";
+import { type UiI18nCallOptions, type UiI18nInstance } from "../../🌐️i18n/🔡️instance/🟦️.ts";
 import { activeUiDriver, useUiDriver, isInternalChromeControlId, resolveControlLabelId, panelKindFromPanelToggleControlId, humanizeEngagementStepId, humanizeControlId } from "../🚗️UiDriver/🟦️.tsx";
 import { useControlHotkey } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { formatControlTooltipText } from "../../🔨️modules/💡️control-tooltip-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🏷️Label
-/** 🪁️ Typed {@link useTranslation} bound to {@link UiTranslationKey} and registered product bundles. */
-export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: typeof i18next } {
-  const { t, i18n } = useTranslation();
-  return { t: t as UiTranslateFn, i18n };
+/** 🪁️ Typed translate hook bound to {@link UiTranslationKey} and registered product bundles; `t` changes identity whenever the language or a bundle of the nearest instance changes. */
+export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: UiI18nInstance } {
+  const i18n = useUiI18nInstance();
+  const t = React.useMemo(() => ((key: string, options?: Record<string, unknown>) => i18n.t(key, options as UiI18nCallOptions | undefined)) as UiTranslateFn, [i18n, i18n.version]);
+  return { t, i18n };
 }
 /**
  * 📛️ React hook that resolves a localized label by i18n key and driver label tier. Strict: `id` must be a
@@ -73,11 +74,11 @@ export function useLabelFormatter(id: UiTranslationKey | UiRegisteredTranslation
   return React.useCallback((options?: Record<string, unknown>) => (resolveUiLabel(t(id as UiTranslationKey, options), labelTier) ?? id) as UiLabel, [t, id, labelTier]);
 }
 /**
- * 🏷️ Resolves a label only when `id` happens to be a registered translation key — the deliberate
+ * 🔑️ Resolves a label only when `id` happens to be a registered translation key — the deliberate
  * dynamic port for generic components whose `id` is not a key contract (e.g. resolved from an arbitrary
  * DOM/control id via `resolveControlLabelId`). Chrome call sites with a known key must use the strict
  * {@link useLabel} instead. Checks existence first, so it never echoes an unresolved id back as if it
- * were a translation — unlike i18next's default missing-key behavior.
+ * were a translation — unlike an engine's default missing-key behavior (answering the key itself).
  **/
 export function useIdLabel(id: string | undefined): UiLabel | undefined {
   const { t, i18n } = useUiTranslation();
@@ -117,7 +118,7 @@ export function useIdLabel(id: string | undefined): UiLabel | undefined {
 export function resolveTranslationLabel(value: unknown): string | undefined {
   return resolveUiLabel(value, activeUiDriver().labelTier);
 }
-/** 🏷️ Resolves the user-facing caption for a control (i18n, explicit text, or `ui.*` fallback). */
+/** ♿️ Resolves the user-facing caption for a control (i18n, explicit text, or `ui.*` fallback). */
 export function useControlAccessibleLabel(id: string | undefined, text?: string): string | undefined {
   if (text !== undefined && text !== "") return text;
   if (!id || isInternalChromeControlId(id)) return undefined;
@@ -133,7 +134,7 @@ export function useControlAccessibleLabel(id: string | undefined, text?: string)
   if (labelId.startsWith("ui.")) return humanizeControlId(labelId);
   return undefined;
 }
-/** 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when the driver hides labels. */
+/** 📄️ Resolves inline icon+label caption for buttons/toggles; omitted when the driver hides labels. */
 export function useControlInlineText(id: string | undefined, text?: string): string | undefined {
   const driver = useUiDriver();
   const accessibleLabel = useControlAccessibleLabel(id, text);
@@ -143,7 +144,7 @@ export function useControlInlineText(id: string | undefined, text?: string): str
 export interface ControlTooltipTextOptions {
   readonly always?: boolean;
 }
-/** 💬 Resolves native hover tooltip text for icon-only chrome controls, appending hotkeys when present. */
+/** 💡️ Resolves native hover tooltip text for icon-only chrome controls, appending hotkeys when present. */
 export function useControlTooltipText(id: string | undefined, text?: string, options?: ControlTooltipTextOptions): string | undefined {
   const driver = useUiDriver();
   const inlineText = useControlInlineText(id, text);

@@ -1,6 +1,6 @@
 /** 📚️ The course application shell, without the package's task and view reexports. */
 import { Component, StrictMode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import { presenceProfile, type PresencePreferences, type PresencePresentation } from "@semio-tech/course";
 import { retryWithJitteredBackoff } from "@semio-tech/framework/async";
 import {
@@ -18,15 +18,15 @@ import {
   useMediaQuery,
   type NavbarItem,
 } from "@semio-tech/ui-react/chrome";
-import { applyLocale, localized, preferredLocale, courseText, titled, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
+import { COURSE_LOCALES, applyLocale, courseLocaleLoaded, loadCourseLocales, localized, preferredLocale, courseText, titled, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { browserStorageArea, localStore, type LocalStore, type StorageArea } from "../💾️persistence/🟦️.ts";
 import { ProctorClient, RETRY_TIMING, proctorTransport, type ProctorConnect, type RetryTiming } from "../🛂️proctor/🟦️.ts";
-import { Deputy, type CourseMaterial } from "../🫡️deputy/🟦️.ts";
+import { Deputy, type CourseMaterial, type CourseMaterialSource } from "../🫡️deputy/🟦️.ts";
 import { CourseSession } from "../🧭️session/🟦️.ts";
 import { overallLeaderboard, runAwards, shownLeaderboard, type CourseNotice, type CourseState, type CourseStep } from "../🧭️session/🧮️state/🟦️.ts";
 import { type CourseConnection } from "../🧭️session/📋️session-model/🟦️.ts";
 import { LanguageChoice, LanguageSwitch, effectiveIconMotion, everyLanguage, readPreferences, textScale, withPets, writePreferences, type CoursePreferences } from "../🎛️preferences/🟦️.tsx";
-import { CourseIntroduction } from "../👋️introduction/🟦️.tsx";
+import { COURSE_LANGUAGE_ANCHOR, CourseIntroduction } from "../👋️introduction/🟦️.tsx";
 import { IdentityScreen, learnerName, noticeProblem } from "../🪪️identity/🟦️.tsx";
 import type { HomeScreen } from "../🏠️home/🟦️.tsx";
 import { pageLabel } from "../🏠️home/🗺️pages/🟦️.ts";
@@ -46,13 +46,14 @@ import "../../🎨️.css";
 //#region 📚️App
 /** ⚙️ What a course site passes in: the proctor base URL (`""` is the site's own origin), the course id as tenant, the
  * site's material (the course and its quizzes: with it the course shows at once and the device decides by itself
- * while the proctor is away), the site's logo URL for the navbar, the site's legal pages for the footer
+ * while the proctor is away; handed in as a {@link CourseMaterialSource} it is fetched while the client already shows,
+ * and the device decides by itself from the moment it has arrived), the site's logo URL for the navbar, the site's legal pages for the footer
  * and the site's pets (where its menagerie comes from; fetched only for a learner who wants pets). The optional seams
  * replace the network, the presence sockets, the storage, the browser's language list and the retry timing. */
 export interface CourseOptions {
   readonly proctor: string;
   readonly tenant: string;
-  readonly material?: CourseMaterial;
+  readonly material?: CourseMaterial | CourseMaterialSource;
   readonly logo?: string;
   readonly legal?: CourseLegal;
   readonly pets?: CoursePetsSource;
@@ -82,7 +83,7 @@ function away(connection: CourseConnection): boolean {
   return connection.reachability === "unreachable" || connection.reachability === "incompatible";
 }
 
-/** 📶️ The state of the connection as the indicator shows it: connecting until the proctor first answers, then saved,
+/** 🔌️ The state of the connection as the indicator shows it: connecting until the proctor first answers, then saved,
  * saving, a busy proctor (it answers, but asks to slow down), a page older than the proctor's contract (kept on the
  * device until it is reloaded), or answers held on the device while the proctor does not answer or speaks an older or
  * foreign contract — where a deputy decides meanwhile, everything is saved there. */
@@ -97,7 +98,7 @@ export function connectionState(connection: CourseConnection): ConnectionSentenc
   return { key: "course.connection.saved", tone: "calm" };
 }
 
-/** 📶️ What the connection indicator says and how urgently. */
+/** 📨️ What the connection indicator says and how urgently. */
 export function connectionMessage(connection: CourseConnection, text: CourseText): { readonly message: string; readonly tone: ConnectionTone } {
   const state = connectionState(connection);
   return { message: text(state.key, state.values), tone: state.tone };
@@ -292,7 +293,7 @@ function useRootTextScale(scale: number): void {
 
 const TONE_GLYPHS: { readonly [T in ConnectionTone]: string } = { alert: "⚠", busy: "↻", calm: "✓" };
 
-/** 📶️ The connection indicator: text to see — never a live region, because saving and saved alternate with every
+/** 🔗️ The connection indicator: text to see — never a live region, because saving and saved alternate with every
  * answer — and beside it one polite status that speaks only when the connection enters an alert state (once, however
  * the waiting count or the kind of outage changes meanwhile) and when it has recovered. */
 export function ConnectionStatus(props: { readonly connection: CourseConnection; readonly text: CourseText }): ReactElement {
@@ -358,7 +359,7 @@ function Client(props: ClientProps): ReactElement {
   const observedRef = useRef(observed);
   observedRef.current = observed;
   const observer = useMemo(() => observerSession(session, () => observedRef.current ?? state), [session]);
-  const remoteLocale = remote?.view?.locale ?? locale;
+  const remoteLocale = useLoadedLocale(remote?.view?.locale ?? locale, locale);
   const remoteText = useMemo(() => courseText(remoteLocale), [remoteLocale]);
   const remotePreferences = { ...followedPreferences(preferences, remote?.view?.preferences), locale: remoteLocale };
   const observedScene = useMemo(() => observed === undefined ? undefined : { state: observed, locale: remoteLocale }, [observed, remoteLocale]);
@@ -414,7 +415,7 @@ function Client(props: ClientProps): ReactElement {
     { key: "introduction", content: <CardAction aria-label={text("course.introduction.replay")} title={text("course.introduction.replay")} onClick={() => session.open({ screen: "introduction" })}><CardIcon icon="info" /><span className="hidden md:inline">{text("course.introduction.replay")}</span></CardAction> },
     navbarFillItem("fill"),
     { key: "connection", className: "min-w-0 shrink", content: <ConnectionStatus connection={connection} text={text} /> },
-    { key: "language", content: <LanguageSwitch compact locale={locale} text={text} onChange={(chosen) => onPreferences({ ...preferences, locale: chosen })} /> },
+    { key: "language", content: <span data-element-alias={COURSE_LANGUAGE_ANCHOR} className="flex"><LanguageSwitch compact locale={locale} text={text} onChange={(chosen) => onPreferences({ ...preferences, locale: chosen })} /></span> },
     { key: "brand", centered: true, className: "min-w-0 px-single", content: brand },
   ];
   return (
@@ -481,49 +482,97 @@ function Client(props: ClientProps): ReactElement {
   );
 }
 
-function useSetup(options: CourseOptions): { readonly store: LocalStore; readonly presence: CoursePresence; readonly session: CourseSession } {
+function useSetup(options: CourseOptions): { readonly store: LocalStore; readonly presence: CoursePresence; readonly session: CourseSession; readonly arriving: Promise<CourseMaterial | undefined> | undefined } {
   const [setup] = useState(() => {
     const store = localStore(options.storage ?? browserStorageArea(), options.tenant);
     const proctor = new ProctorClient(options.transport ?? proctorTransport(options.proctor), options.tenant);
     const presence = new CoursePresence({ proctor: options.proctor, connect: options.presence, timing: options.timing });
-    const deputy = options.material === undefined ? undefined : new Deputy(options.material);
-    return { store, presence, session: new CourseSession({ proctor, store, deputy, timing: options.timing }) };
+    const { material } = options;
+    const deputy = material === undefined || typeof material === "function" ? undefined : new Deputy(material);
+    const arriving = typeof material === "function" ? material().catch(() => undefined) : undefined;
+    return { store, presence, arriving, session: new CourseSession({ proctor, store, deputy, timing: options.timing }) };
   });
   return setup;
+}
+
+/** 🌐️ The language the client shows in, once its texts have arrived: `wanted` — every offered language while none is
+ * chosen — is fetched as chunks of its own; until they are here the language shown stays the one before, and at the very start
+ * nothing is ready. */
+function useCourseLocale(wanted: CourseLocale | undefined): { readonly ready: boolean; readonly locale: CourseLocale | undefined } {
+  const needed = wanted === undefined ? COURSE_LOCALES : [wanted];
+  const arrived = needed.every(courseLocaleLoaded);
+  const [, rerender] = useState(0);
+  const shown = useRef<{ readonly locale: CourseLocale | undefined } | undefined>(undefined);
+  if (arrived) shown.current = { locale: wanted };
+  useEffect(() => {
+    if (arrived) return;
+    let live = true;
+    void loadCourseLocales(needed).then(() => live && rerender((count) => count + 1));
+    return () => {
+      live = false;
+    };
+  }, [arrived, wanted]);
+  return shown.current === undefined ? { ready: false, locale: undefined } : { ready: true, locale: shown.current.locale };
+}
+
+/** 📖️ The language of another learner's screen, once its texts have arrived; the client's own language until then. */
+function useLoadedLocale(wanted: CourseLocale, fallback: CourseLocale): CourseLocale {
+  const arrived = courseLocaleLoaded(wanted);
+  const [, rerender] = useState(0);
+  useEffect(() => {
+    if (arrived) return;
+    let live = true;
+    void loadCourseLocales([wanted]).then(() => live && rerender((count) => count + 1));
+    return () => {
+      live = false;
+    };
+  }, [arrived, wanted]);
+  return arrived ? wanted : fallback;
 }
 
 /** ❓️ The whole course client for one proctor tenant. It speaks the language the learner stored, else the one the
  * browser's list preselects among the offered ones; while neither exists it shows only the language chooser. */
 export function CourseApp(options: CourseOptions): ReactElement {
-  const { session, store, presence } = useSetup(options);
+  const { session, store, presence, arriving } = useSetup(options);
   useLayoutEffect(() => {
     session.start();
     return () => session.stop();
   }, [session]);
+  useEffect(() => {
+    let live = true;
+    void arriving?.then((material) => {
+      if (live && material !== undefined) session.attachDeputy(new Deputy(material));
+    });
+    return () => {
+      live = false;
+    };
+  }, [arriving, session]);
   useEffect(() => () => presence.stop(), [presence]);
   const { state, connection } = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const [preferences, setPreferences] = useState<CoursePreferences>(() => readPreferences(store));
   const [observedPreferences, setObservedPreferences] = useState<PresencePreferences | undefined>();
   const [observedScene, setObservedScene] = useState<ObservedScene | undefined>();
   const shownPreferences = followedPreferences(preferences, observedPreferences);
-  const locale = preferences.locale ?? preferredLocale(options.languages ?? browserLanguages());
+  const wanted = preferences.locale ?? preferredLocale(options.languages ?? browserLanguages());
+  const { ready, locale } = useCourseLocale(wanted);
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const tablet = useMediaQuery(UI_TABLET_MEDIA_QUERY);
   useElementsSurfaceChrome({ appearance: shownPreferences.theme, device: elementsSurfaceDeviceForLayout(elementsSurfaceDeviceForMatches({ mobile, tablet }), shownPreferences.device), driver: DEFAULT_UI_DRIVER, browserDefaults: "native" });
   useRootTextScale(textScale(shownPreferences.textSize));
   useLayoutEffect(() => {
-    void applyLocale(locale);
-  }, [locale]);
-  const title = documentTitle(state, locale);
+    void applyLocale(locale ?? wanted);
+  }, [locale, wanted]);
+  const title = ready ? documentTitle(state, locale) : "";
   useEffect(() => {
-    if (locale === undefined) document.title = title;
-  }, [locale, title]);
+    if (ready && locale === undefined) document.title = title;
+  }, [ready, locale, title]);
   useEffect(() => store.watch((change) => (change.kind === "cleared" || (change.kind === "slice" && change.slice === "preferences")) && setPreferences(readPreferences(store))), [store]);
 
   const change = (next: CoursePreferences): void => {
     setPreferences(next);
     writePreferences(store, next);
   };
+  if (!ready) return <></>;
   if (locale !== undefined)
     return (
       <CoursePetsProvider source={options.pets} choice={shownPreferences.pets} chosen={shownPreferences.petsChosen} play={shownPreferences.petsPlay} mischief={shownPreferences.petsMischief} state={observedScene?.state ?? state} locale={observedScene?.locale ?? locale}>
@@ -543,17 +592,30 @@ export function CourseApp(options: CourseOptions): ReactElement {
 }
 
 /** 🚀️ Mounts the course client into `root` — with the stored theme and the known language applied to the document
- * before the first paint — and returns the function that unmounts it again. */
+ * before the first paint, the page's own loading text standing until the texts of that language (every offered one while
+ * none is known) have arrived — and returns the function that unmounts it again. */
 export function mountCourse(root: HTMLElement, options: CourseOptions): () => void {
   const preferences = readPreferences(localStore(options.storage ?? browserStorageArea(), options.tenant));
   bootstrapElementsSurfaceChromeDocument(preferences.theme);
-  void applyLocale(preferences.locale ?? preferredLocale(options.languages ?? browserLanguages()));
-  const reactRoot = createRoot(root);
-  reactRoot.render(
-    <StrictMode>
-      <CourseApp {...options} />
-    </StrictMode>,
-  );
-  return () => reactRoot.unmount();
+  const wanted = preferences.locale ?? preferredLocale(options.languages ?? browserLanguages());
+  void applyLocale(wanted);
+  let reactRoot: Root | undefined;
+  let live = true;
+  const render = (): void => {
+    if (!live) return;
+    reactRoot = createRoot(root);
+    reactRoot.render(
+      <StrictMode>
+        <CourseApp {...options} />
+      </StrictMode>,
+    );
+  };
+  const needed = wanted === undefined ? COURSE_LOCALES : [wanted];
+  if (needed.every(courseLocaleLoaded)) render();
+  else void loadCourseLocales(needed).then(render, render);
+  return () => {
+    live = false;
+    reactRoot?.unmount();
+  };
 }
 //#endregion 📚️App

@@ -1,4 +1,4 @@
-//! 🎞️ Kernel media and job programs: spawned job drive, media export encoding, video render program and ledger, file import staging.
+//! 💼️ Kernel media and job programs: spawned job drive, media export encoding, video render program and ledger, file import staging.
 
 use semio_framework_value::DslValue;
 use semio_framework_value::Number;
@@ -20,20 +20,20 @@ use semio_framework_kernel_identity::RequestOutcome;
 /// `FRAMEWORK_RESERVED_JOB_KIND` in `🎠️kernel/🛠️spawned-job/🟦️.ts`; both are read from `🧫️fixtures/🧵️spawned-job-drive`.
 pub const FRAMEWORK_RESERVED_JOB_KIND: &str = "framework.reserved.tool";
 
-/// 🧵 How many `step-job` observations ONE host admission of a spawned job may take before it gives
+/// 🏔️ How many `step-job` observations ONE host admission of a spawned job may take before it gives
 /// up. A framework reserved tool job (`interactionSelect`/`interactionHover`/`clearSelection`) reaches
 /// `Done` in two; the ceiling is the host's patience, not the job's expected cost.
 pub const SPAWNED_JOB_STEP_CEILING: u32 = 32;
 
-/// 🧵 The fuel one `step-job` is granted. Deliberately the host's STATIC budget rather than a lane
+/// ⛽️ The fuel one `step-job` is granted. Deliberately the host's STATIC budget rather than a lane
 /// grant: a reserved tool job is an interaction the user is waiting on, and a budget that varied per
 /// call would make "did the selection apply?" depend on scheduler weather.
 pub const SPAWNED_JOB_FUEL: u64 = 50_000_000;
 
-/// 🧵 The wall deadline one `step-job` is granted, in milliseconds.
+/// ⏰️ The wall deadline one `step-job` is granted, in milliseconds.
 pub const SPAWNED_JOB_DEADLINE_MS: u32 = 100;
 
-/// 🧵 One observation of the guest's `jobs::step-job` export, in the WIT `job-step` vocabulary.
+/// 👣️ One observation of the guest's `jobs::step-job` export, in the WIT `job-step` vocabulary.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "status")]
 pub enum SpawnedJobStep {
@@ -42,7 +42,7 @@ pub enum SpawnedJobStep {
     Failed { value: Vec<u8> },
 }
 
-/// 🧵 What the host owes the guest once a spawned job reached a terminal step: the `Event::JobCompleted`
+/// 🔂️ What the host owes the guest once a spawned job reached a terminal step: the `Event::JobCompleted`
 /// payload, plus how many steps it took to get there (the number a budget law reads).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SpawnedJobCompletion {
@@ -50,7 +50,7 @@ pub struct SpawnedJobCompletion {
     pub outcome: RequestOutcome,
 }
 
-/// 🧵 Why a spawned job produced no completion. Both are loud: a host that silently stopped pumping
+/// ❌️ Why a spawned job produced no completion. Both are loud: a host that silently stopped pumping
 /// is exactly the defect this contract closes — every `interactionSelect`/`interactionHover` on the
 /// wgpu target admitted its reserved tool job and then never ran it, so hover and selection were
 /// published perfectly and applied never (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
@@ -74,7 +74,7 @@ impl std::fmt::Display for SpawnedJobDriveError {
 
 impl std::error::Error for SpawnedJobDriveError {}
 
-/// 🧵 The ONE rule that turns a transcript of `step-job` observations into the `Event::JobCompleted`
+/// 🔄️ The ONE rule that turns a transcript of `step-job` observations into the `Event::JobCompleted`
 /// the host owes the guest. Every host on every renderer answers through this, and its TypeScript
 /// twin `spawnedJobCompletion` in `🎠️kernel/🛠️spawned-job/🟦️.ts` answers identically; both drive
 /// `🧫️fixtures/🧵️spawned-job-drive/🔣️.json`.
@@ -98,7 +98,7 @@ pub fn spawned_job_completion(steps: &[SpawnedJobStep]) -> Result<SpawnedJobComp
 
 //#endregion 🧵️SpawnedJobDrive
 
-/// 🖼️ One icon-render export request: the destination filename plus the opaque icon-scene
+/// 🎒️ One icon-render export request: the destination filename plus the opaque icon-scene
 /// render request forwarded to the shell's `iconRenderPort`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -114,13 +114,13 @@ pub struct IconRenderExportItem {
 /// Declared here, beside the effect it qualifies, so no shell can invent a second spelling.
 pub const MEDIA_EXPORT_BASE64_ENCODING: &str = "base64";
 
-/// ⬇️ The textual encoding a producer may state EXPLICITLY — `puzzle3d`'s `exportSnapshot` does
+/// 🔡️ The textual encoding a producer may state EXPLICITLY — `puzzle3d`'s `exportSnapshot` does
 /// (`✏️s/🔌️plugins/🧩️puzzle/…/📤️export-snapshot/🦀️.rs`). It means exactly what an absent `encoding`
 /// means: `data` IS the file. Named rather than left to fall through an "anything that is not
 /// base64 is text" branch, which is how a genuinely unknown encoding used to be saved as text.
 pub const MEDIA_EXPORT_UTF8_ENCODING: &str = "utf-8";
 
-/// ⬇️ Why a `DownloadMediaExport` envelope could not become bytes. Both are loud on purpose: a shell
+/// ⛔️ Why a `DownloadMediaExport` envelope could not become bytes. Both are loud on purpose: a shell
 /// that quietly saved the envelope's `data` as text is exactly the defect this contract closes —
 /// every binary export in the repo reached disk as base64 TEXT under a binary file name
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️io-surface-2026-09-13.md` §7.3).
@@ -145,7 +145,7 @@ impl std::fmt::Display for MediaExportEncodingError {
 
 impl std::error::Error for MediaExportEncodingError {}
 
-/// ⬇️ The ONE rule that turns a [`Effect::DownloadMediaExport`] envelope into the bytes the user
+/// 📩️ The ONE rule that turns a [`Effect::DownloadMediaExport`] envelope into the bytes the user
 /// saves — no `encoding` (or [`MEDIA_EXPORT_UTF8_ENCODING`]) means `data` IS the file, and
 /// [`MEDIA_EXPORT_BASE64_ENCODING`] means `data` carries the bytes. Every shell on every renderer answers through this, and its
 /// TypeScript twin `mediaExportBytes` in `🎠️kernel/🎬️media-export/🟦️.ts` answers identically; both drive
@@ -166,17 +166,17 @@ pub fn media_export_bytes(data: &str, encoding: Option<&str>) -> Result<Vec<u8>,
 /// answers every other plugin with the `capability` refusal of `🧫️fixtures/🎞️video-render-job/🔣️.json`.
 pub const MEDIA_VIDEO_RENDER_CAPABILITY: &str = "media.video-render";
 
-/// 🎞️ The schema id every [`VideoRenderProgram`] states; `🧫️fixtures/🎞️video-render-program/🔣️.json` is its
+/// 🧬️ The schema id every [`VideoRenderProgram`] states; `🧫️fixtures/🎞️video-render-program/🔣️.json` is its
 /// language-agnostic law, `videoRenderProgramProblem` in `🎠️kernel/🎥️video-render-program/🟦️.ts` its TypeScript twin.
 pub const VIDEO_RENDER_PROGRAM_SCHEMA: &str = "semio.video-render.program.v1";
 
-/// 📏️ The largest picture edge a program may ask for (the raster video tier's own ceiling).
+/// 🔲️ The largest picture edge a program may ask for (the raster video tier's own ceiling).
 pub const VIDEO_RENDER_PROGRAM_MAXIMUM_EDGE: u32 = 4096;
 
-/// 🎞️ The fastest frame rate a program may ask for.
+/// ⚡️ The fastest frame rate a program may ask for.
 pub const VIDEO_RENDER_PROGRAM_MAXIMUM_FPS: u32 = 120;
 
-/// ⏱️ The most frames one program may render (ten minutes at 60 fps).
+/// ⌛️ The most frames one program may render (ten minutes at 60 fps).
 pub const VIDEO_RENDER_PROGRAM_MAXIMUM_FRAMES: u64 = 36_000;
 
 /// ✏️ One path in a program's shared path table: `verbs` is one letter per segment (`M` move, `L` line,
@@ -215,7 +215,7 @@ pub enum VideoRenderOp {
     Image { image: u32, crop: [f64; 4], transform: [f64; 6], opacity: f64 },
 }
 
-/// 🖼️ One distinct picture: its paint operations over the program background.
+/// 🌄️ One distinct picture: its paint operations over the program background.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -234,7 +234,7 @@ pub struct VideoRenderRun {
     pub frames: u32,
 }
 
-/// 🎞️ Everything a host needs to render a video without asking the guest again: picture size, frame rate,
+/// 📹️ Everything a host needs to render a video without asking the guest again: picture size, frame rate,
 /// background, a shared path table, the pictures it draws from, the distinct scenes and the run-length timeline that
 /// plays them. Identical consecutive frames are one run, so a still slide costs one scene however long it plays.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -270,7 +270,7 @@ pub enum VideoRenderProgramError {
 }
 
 impl VideoRenderProgramError {
-    /// 🔤️ The fixture's error code for this refusal.
+    /// 🔑️ The fixture's error code for this refusal.
     pub fn code(&self) -> &'static str {
         match self {
             Self::Schema { .. } => "schema",
@@ -377,7 +377,7 @@ fn video_render_unit(value: f64) -> bool {
     value.is_finite() && (0.0..=1.0).contains(&value)
 }
 
-/// ✏️ A path's verbs consume exactly its points, start with a move and every coordinate is finite.
+/// 🛤️ A path's verbs consume exactly its points, start with a move and every coordinate is finite.
 pub fn video_render_path_is_well_formed(path: &VideoRenderPath) -> bool {
     let mut needed = 0usize;
     for (index, verb) in path.verbs.chars().enumerate() {
@@ -396,7 +396,7 @@ pub fn video_render_path_is_well_formed(path: &VideoRenderPath) -> bool {
     needed == path.points.len() && path.points.iter().all(|value| value.is_finite())
 }
 
-/// 🖼️ An image URL a host may fetch for a program: a same-origin absolute path (`/…`, never the protocol-relative
+/// 🔗️ An image URL a host may fetch for a program: a same-origin absolute path (`/…`, never the protocol-relative
 /// `//…`) or an inline `data:image/…` URL.
 pub fn video_render_image_url_is_admitted(url: &str) -> bool {
     (url.starts_with('/') && !url.starts_with("//")) || url.starts_with("data:image/")
@@ -432,7 +432,7 @@ pub enum VideoRenderJobOutcome {
     Failed { reason: String },
 }
 
-/// 🧵️ One fact of a host video render job's life — ephemeral, local-only state of the host that renders it. A host
+/// 🎬️ One fact of a host video render job's life — ephemeral, local-only state of the host that renders it. A host
 /// never mutates its task list: it appends one of these and the task list is the fold of the log
 /// ([`VideoRenderJobLedger`]); a cancel is a command that appends [`Self::CancelRequested`], which the render loop reads
 /// back from the ledger before its next frame. `🧫️fixtures/🎞️video-render-job/🔣️.json` is the law both twins fold.
@@ -459,7 +459,7 @@ pub struct VideoRenderJobRow {
     pub started_at_ms: u64,
 }
 
-/// 🚨️ Why a [`VideoRenderJobLedger`] refuses an event; `code()` is the fixture's vocabulary.
+/// 🧯️ Why a [`VideoRenderJobLedger`] refuses an event; `code()` is the fixture's vocabulary.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum VideoRenderJobEventError {
     StaleJob { job: u64, last: u64 },
@@ -470,7 +470,7 @@ pub enum VideoRenderJobEventError {
 }
 
 impl VideoRenderJobEventError {
-    /// 🔤️ The fixture's error code for this refusal.
+    /// 🗝️ The fixture's error code for this refusal.
     pub fn code(&self) -> &'static str {
         match self {
             Self::StaleJob { .. } => "staleJob",
@@ -504,7 +504,7 @@ pub struct VideoRenderJobLedger {
 }
 
 impl VideoRenderJobLedger {
-    /// 📒️ Folds a whole log; the error names the index of the first event the ledger refused.
+    /// 📜️ Folds a whole log; the error names the index of the first event the ledger refused.
     pub fn fold<'a>(events: impl IntoIterator<Item = &'a VideoRenderJobEvent>) -> Result<Self, (usize, VideoRenderJobEventError)> {
         let mut ledger = Self::default();
         for (index, event) in events.into_iter().enumerate() {
@@ -548,7 +548,7 @@ impl VideoRenderJobLedger {
         Ok(())
     }
 
-    /// 🧵️ Every running job, in start order.
+    /// ▶️ Every running job, in start order.
     pub fn running(&self) -> &[VideoRenderJobRow] {
         &self.running
     }
@@ -576,7 +576,7 @@ impl VideoRenderJobLedger {
 /// the chunk rides in.
 pub const IMPORT_CHUNK_BYTES: usize = semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / 2;
 
-/// 📥️ The argument names one import chunk is dispatched with. Declared here, beside
+/// 🧲️ The argument names one import chunk is dispatched with. Declared here, beside
 /// [`Effect::RequestFileOpen`], so no shell can invent a second spelling of the same envelope —
 /// the wgpu shell used to send `{json, payload}` and React `{payload, name, chunk, chunkCount}`,
 /// and a plugin could satisfy only one of them.
@@ -592,7 +592,7 @@ pub const IMPORT_ARGUMENT_INDEX: &str = "index";
 
 pub const IMPORT_ARGUMENT_TOTAL: &str = "total";
 
-/// 📥️ One chunk of one opened file, positioned in its own run.
+/// 🍕️ One chunk of one opened file, positioned in its own run.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ImportChunk {
     pub payload: String,
@@ -600,7 +600,7 @@ pub struct ImportChunk {
     pub chunk_count: usize,
 }
 
-/// 📥️ Slices one opened file's contents into the chunks a shell dispatches, so no single import
+/// 🔪️ Slices one opened file's contents into the chunks a shell dispatches, so no single import
 /// invocation asks the guest for a contiguous block above its own per-request ceiling.
 ///
 /// 🔤️ Sliced by UTF-8 EXTENT, not by code units: the guest measures `text.len()` in bytes, so a
@@ -626,7 +626,7 @@ pub fn import_payload_chunks(payload: &str) -> Vec<ImportChunk> {
     pages.into_iter().enumerate().map(|(chunk, payload)| ImportChunk { payload, chunk, chunk_count }).collect()
 }
 
-/// 📥️ The arguments ONE import chunk is dispatched with — `fan_out` is `Some((index, total))` only
+/// 🔖️ The arguments ONE import chunk is dispatched with — `fan_out` is `Some((index, total))` only
 /// when the picker was opened with `multiple`, exactly as React's `dispatchOpenedFiles` extends a
 /// multi-file pick. Integers are minted as [`Number::UInt`] carriers, never floats: the guest's
 /// [`ImportStaging`] reads `chunk`/`chunkCount` with `DslValue::as_u64`, which a `Float` never answers.
@@ -650,11 +650,11 @@ pub fn import_chunk_arguments(name: &str, chunk: &ImportChunk, fan_out: Option<(
 /// document archive — the largest thing a person opens from a file — so no staged run outgrows one document.
 pub const IMPORT_STAGING_MAXIMUM_CHUNKS: usize = 128;
 
-/// 📦️ The bytes one staged run may hold, implied by [`IMPORT_STAGING_MAXIMUM_CHUNKS`] chunks of at most
+/// 🧳️ The bytes one staged run may hold, implied by [`IMPORT_STAGING_MAXIMUM_CHUNKS`] chunks of at most
 /// [`IMPORT_CHUNK_BYTES`] each.
 pub const IMPORT_STAGING_MAXIMUM_BYTES: usize = IMPORT_STAGING_MAXIMUM_CHUNKS * IMPORT_CHUNK_BYTES;
 
-/// 🧵️ Runs one app instance stages at once — one per file a person is picking into this document. A new pick takes
+/// 🔃️ Runs one app instance stages at once — one per file a person is picking into this document. A new pick takes
 /// the slot of the least recently advanced run, so an abandoned or cancelled pick holds memory only until then:
 /// at most `IMPORT_STAGING_RUNS × IMPORT_STAGING_MAXIMUM_BYTES` per instance.
 pub const IMPORT_STAGING_RUNS: usize = 2;
@@ -677,7 +677,7 @@ impl ImportStagingRefusal {
         }
     }
 
-    /// 🗣️ What a person is told.
+    /// 💬️ What a person is told.
     pub fn message(self) -> &'static str {
         match self {
             Self::Envelope => "The file arrived with an invalid chunk envelope, or is larger than one document may be.",
@@ -687,7 +687,7 @@ impl ImportStagingRefusal {
     }
 }
 
-/// 📥️ What one action's arguments are to the staging: not an import chunk at all, a chunk of a run that is still open
+/// 🎁️ What one action's arguments are to the staging: not an import chunk at all, a chunk of a run that is still open
 /// (`next_chunk` of `chunk_count` is its progress), or the whole file — as the arguments the app's action decodes:
 /// `payload` and `name` (plus `index`/`total` of a multi-file pick and every other argument the invocation carried),
 /// never the chunk envelope.
@@ -707,7 +707,7 @@ struct ImportRun {
     touched: u64,
 }
 
-/// 🧵️ One app instance's open file-import runs: the framework half of every [`Effect::RequestFileOpen`] import, so no
+/// 📂️ One app instance's open file-import runs: the framework half of every [`Effect::RequestFileOpen`] import, so no
 /// app stages chunks itself. Instance-scoped, never process-global — two people importing into two documents of the
 /// same component never see each other's bytes, and an instance that closes takes its runs with it. Pages stay
 /// chunk-sized until the run closes.
@@ -718,7 +718,7 @@ pub struct ImportStaging {
 }
 
 impl ImportStaging {
-    /// 📥️ Admits the arguments one import action was dispatched with ([`import_chunk_arguments`]). A run is keyed by
+    /// 🔏️ Admits the arguments one import action was dispatched with ([`import_chunk_arguments`]). A run is keyed by
     /// `(name, fan-out, chunk_count)`: a re-pick restarts its run at chunk 0, a chunk the run already admitted is a
     /// retransmission acknowledged at the cursor, any other out-of-order chunk drops the run as a gap.
     pub fn admit_args(&mut self, args: Option<&DslValue>) -> Result<ImportArguments, ImportStagingRefusal> {
@@ -806,7 +806,7 @@ impl ImportStaging {
         self.runs.clear();
     }
 
-    /// 🔎️ Open runs as `(name, next_chunk, chunk_count, bytes)` — the progress census the laws read.
+    /// 🔓️ Open runs as `(name, next_chunk, chunk_count, bytes)` — the progress census the laws read.
     pub fn open_runs(&self) -> Vec<(String, usize, usize, usize)> {
         self.runs.iter().map(|run| (run.name.clone(), run.next_chunk, run.chunk_count, run.pages.iter().map(String::len).sum())).collect()
     }

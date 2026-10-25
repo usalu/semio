@@ -110,7 +110,7 @@ impl SurfaceReconcileRetained {
         (true, 1)
     }
 
-    /// 🧹️ Retires this retained surface for a bounded RUN priced by the caller's page grant instead
+    /// 🪦️ Retires this retained surface for a bounded RUN priced by the caller's page grant instead
     /// of the single owner per call [`Self::close_step`] retires. Every unit the reactor cannot
     /// finish this turn is answered as `MoreWork` and costs the host one round trip, so a
     /// document-scaled retained surface must not be retired one value per turn (ticket 26/09/02,

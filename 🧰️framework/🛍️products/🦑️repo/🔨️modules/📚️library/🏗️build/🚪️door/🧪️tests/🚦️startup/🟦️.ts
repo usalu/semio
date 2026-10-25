@@ -10,15 +10,16 @@ import fixture from "./🔣️.json" with {type:"json"};
 const scratch=mkdtempSync(join(tmpdir(),"startup-law-"));
 afterAll(()=>rmSync(scratch,{recursive:true,force:true}));
 const entry=resolve(import.meta.dir,"../../📜️script.ts"),doorCore=resolve(import.meta.dir,"../../🟦️.ts"),groups=fixture.groups;
-const plugin=join(scratch,"loaded-modules.ts"),driver=join(scratch,"import-driver.ts");
+const plugin=join(scratch,"loaded-modules.ts"),driver=join(scratch,"import-driver.ts"),bare=join(scratch,"bunfig.toml");
+writeFileSync(bare,"");
 writeFileSync(plugin,'import {readFileSync,writeFileSync} from "node:fs";const seen:string[]=[];Bun.plugin({name:"loaded-modules",setup(build){build.onLoad({filter:/\\.(ts|mjs)$/},args=>{seen.push(args.path);return {contents:readFileSync(args.path,"utf8"),loader:args.path.endsWith(".ts")?"ts":"js"};});}});process.on("exit",()=>{writeFileSync(process.env.LOADED_MODULES_OUT!,JSON.stringify(seen));});\n');
 writeFileSync(driver,'await import(process.argv[2]!);\n');
 
 /** 🚦️ Names the heavy groups a loaded module list reaches, by path substring. */
-const reached=(loaded:readonly string[],selected:readonly string[]):Record<string,string[]>=>Object.fromEntries(groups.filter(group=>selected.includes(group.id)).map(group=>[group.id,loaded.filter(path=>group.match.some(part=>path.includes(part)))]).filter(([,paths])=>(paths as string[]).length>0));
+const reached=(loaded:readonly string[],selected:readonly string[]):Record<string,string[]>=>Object.fromEntries(groups.filter(group=>selected.includes(group.id)).map(group=>[group.id,loaded.filter(path=>group.match.some(part=>path.includes(part))&&!((group as {except?:string[]}).except??[]).some(part=>path.includes(part)))]).filter(([,paths])=>(paths as string[]).length>0));
 
 const load=(row:{id:string;kind:string;args?:readonly string[];module?:string}):string[]=>{
- const out=join(scratch,`${row.id}.json`),arguments_=row.kind==="door"?[entry,...row.args!]:[driver,resolve(import.meta.dir,row.module!)],result=spawnSync(process.execPath,["--preload",plugin,...arguments_],{encoding:"utf8",timeout:60_000,env:{...process.env,SEMIO_LANGUAGE:"en",LOADED_MODULES_OUT:out}});
+ const out=join(scratch,`${row.id}.json`),arguments_=row.kind==="door"?[entry,...row.args!]:[driver,resolve(import.meta.dir,row.module!)],result=spawnSync(process.execPath,["--config="+bare,"--preload",plugin,...arguments_],{encoding:"utf8",timeout:60_000,env:{...process.env,SEMIO_LANGUAGE:"en",LOADED_MODULES_OUT:out}});
  if(result.status!==0&&result.status!==2)throw Error(`${row.id}: exit ${result.status}: ${result.stderr.slice(0,400)}`);
  return JSON.parse(readFileSync(out,"utf8")) as string[];
 };

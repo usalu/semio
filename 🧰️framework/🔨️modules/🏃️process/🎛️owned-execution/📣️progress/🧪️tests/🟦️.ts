@@ -18,7 +18,7 @@ for (const row of corpus.cases) test(row.id, async () => {
   };
   try {
     let terminal = "completed", failure = "";
-    try { await runOwnedCommand(process.execPath, ["--eval", `setTimeout(()=>{},${corpus.childMilliseconds})`], process.cwd(), row.id, corpus.callerCeilingMilliseconds - (performance.now() - started), { stdout: "ignore", signal: controller.signal, onProgress: publish }); }
+    try { await runOwnedCommand(process.execPath, ["--eval", `setTimeout(()=>{},${corpus.childMilliseconds})`], process.cwd(), row.id, Math.max(0, Math.floor(corpus.callerCeilingMilliseconds - (performance.now() - started))), { stdout: "ignore", signal: controller.signal, onProgress: publish }); }
     catch (error) { terminal = "rejected"; failure = String(error); }
     const actual = { terminal, publishedBeforeTerminal: published };
     const [oracleStdout, oracleStderr, oracleCodeValue] = await Promise.all([new Response(oracle.stdout).text(), new Response(oracle.stderr).text(), oracle.exited]);

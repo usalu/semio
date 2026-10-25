@@ -258,7 +258,6 @@ test("actual ownership frontier avoids rediscovery and retains physical mutation
   if(["none","source","output","final-output"].includes(kind))await operation;else{let rejected=false,error:unknown;try{await operation;}catch(failure){rejected=true;error=failure;}expect(rejected,kind).toBe(true);if(kind==="cancel")expect(error).toBe(reason);else expect(String(error),kind).toMatch(/changed|drift|real directory/u);}
   expect(body,kind).toBe(true);
   const oracle=glob.sync("members/**/package.json",{cwd:root,followSymbolicLinks:false}).map(path=>path.slice(0,-13)).sort();if(kind==="none")expect(oracle).toEqual(["members/a"]);
-  console.log("[DEBUG] ownership frontier "+JSON.stringify({kind,elapsedMs:Math.round(performance.now()-start),discoveryStates:events.filter(value=>value==="state").length,replayedStates:events.filter(value=>value==="frontier").length}));
  }
 });
 

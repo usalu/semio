@@ -8,14 +8,14 @@ use super::*;
 /// presence byte, the binary twin of the text codec's `encode_option`/`decode_option` `[0]`/
 /// `[1,<value>]` pair.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_header_var_diff_bin(d: &DxfHeaderVarDiff, out: &mut Vec<u8>) {
+pub fn enc_header_var_diff_bin(d: &DxfHeaderVarDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.group_code, |v, out| store::write_varint_i64(out, *v as i64));
     write_option_bin(out, &d.value, enc_dxf_value_bin);
     write_option_bin(out, &d.extra_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_header_var_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfHeaderVarDiff, String> {
+pub fn dec_header_var_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfHeaderVarDiff, String> {
     let group_code = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
     let value = read_option_bin(reader, dec_dxf_value_bin)?;
     let extra_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
@@ -23,7 +23,7 @@ pub(crate) fn dec_header_var_diff_bin(reader: &mut store::ByteReader<'_>) -> Res
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_layer_diff_bin(d: &DxfLayerDiff, out: &mut Vec<u8>) {
+pub fn enc_layer_diff_bin(d: &DxfLayerDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.color, |v, out| store::write_varint_i64(out, *v as i64));
     write_option_bin(out, &d.linetype, |v, out| write_str_lp(out, v));
     write_option_bin(out, &d.flags, |v, out| store::write_varint_i64(out, *v as i64));
@@ -31,7 +31,7 @@ pub(crate) fn enc_layer_diff_bin(d: &DxfLayerDiff, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_layer_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLayerDiff, String> {
+pub fn dec_layer_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLayerDiff, String> {
     let color = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
     let linetype = read_option_bin(reader, read_str_lp)?;
     let flags = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
@@ -40,14 +40,14 @@ pub(crate) fn dec_layer_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<D
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_style_diff_bin(d: &DxfStyleDiff, out: &mut Vec<u8>) {
+pub fn enc_style_diff_bin(d: &DxfStyleDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.flags, |v, out| store::write_varint_i64(out, *v as i64));
     write_option_bin(out, &d.font_name, |v, out| write_str_lp(out, v));
     write_option_bin(out, &d.unknown_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfStyleDiff, String> {
+pub fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfStyleDiff, String> {
     let flags = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
     let font_name = read_option_bin(reader, read_str_lp)?;
     let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
@@ -55,14 +55,14 @@ pub(crate) fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<D
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_linetype_diff_bin(d: &DxfLinetypeDiff, out: &mut Vec<u8>) {
+pub fn enc_linetype_diff_bin(d: &DxfLinetypeDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.flags, |v, out| store::write_varint_i64(out, *v as i64));
     write_option_bin(out, &d.description, |v, out| write_str_lp(out, v));
     write_option_bin(out, &d.unknown_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_linetype_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLinetypeDiff, String> {
+pub fn dec_linetype_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLinetypeDiff, String> {
     let flags = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
     let description = read_option_bin(reader, read_str_lp)?;
     let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
@@ -73,7 +73,7 @@ pub(crate) fn dec_linetype_diff_bin(reader: &mut store::ByteReader<'_>) -> Resul
 /// [`enc_dxf_entity_bin`]'s own per-kind numbering (kind-specific field diff), `8`=`Replace`
 /// (carries a whole binary-encoded `DxfEntity`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_entity_diff_bin(d: &DxfEntityDiff, out: &mut Vec<u8>) {
+pub fn enc_entity_diff_bin(d: &DxfEntityDiff, out: &mut Vec<u8>) {
     match d {
         DxfEntityDiff::Replace { entity } => {
             out.push(8);
@@ -140,7 +140,7 @@ pub(crate) fn enc_entity_diff_bin(d: &DxfEntityDiff, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfEntityDiff, String> {
+pub fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfEntityDiff, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         8 => Ok(DxfEntityDiff::Replace { entity: dec_dxf_entity_bin(reader)? }),
@@ -206,7 +206,7 @@ pub(crate) fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block_diff_bin(d: &DxfBlockDiff, out: &mut Vec<u8>) {
+pub fn enc_block_diff_bin(d: &DxfBlockDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.name, |v, out| write_str_lp(out, v));
     write_option_bin(out, &d.base_point, |v, out| write_point3_bin(out, v));
     write_option_bin(out, &d.entities, enc_entities_diff_bin);
@@ -214,7 +214,7 @@ pub(crate) fn enc_block_diff_bin(d: &DxfBlockDiff, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfBlockDiff, String> {
+pub fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfBlockDiff, String> {
     let name = read_option_bin(reader, read_str_lp)?;
     let base_point = read_option_bin(reader, read_point3_bin)?;
     let entities = read_option_bin(reader, dec_entities_diff_bin)?;
@@ -223,14 +223,14 @@ pub(crate) fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<D
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_tables_diff_bin(t: &DxfTablesDiff, out: &mut Vec<u8>) {
+pub fn enc_tables_diff_bin(t: &DxfTablesDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &t.layers, enc_layers_diff_bin);
     write_option_bin(out, &t.styles, enc_styles_diff_bin);
     write_option_bin(out, &t.linetypes, enc_linetypes_diff_bin);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTablesDiff, String> {
+pub fn dec_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTablesDiff, String> {
     let layers = read_option_bin(reader, dec_layers_diff_bin)?;
     let styles = read_option_bin(reader, dec_styles_diff_bin)?;
     let linetypes = read_option_bin(reader, dec_linetypes_diff_bin)?;

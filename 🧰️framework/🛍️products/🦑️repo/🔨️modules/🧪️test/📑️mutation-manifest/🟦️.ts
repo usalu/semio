@@ -14,7 +14,7 @@ import { subsetCoordinatesOfOwner, surfaceCoordinate, type SurfaceTarget } from 
 //#endregion 🔌️Adapters
 
 //#region 🧬️Manifest
-/** 🎯️ The semantic class a fixture DECLARES for its mutation. "Any non-crash result" is not a class. */
+/** 🏁️ The semantic class a fixture DECLARES for its mutation. "Any non-crash result" is not a class. */
 
 
 
@@ -46,7 +46,7 @@ export type SupplementalOracleKind = (typeof SUPPLEMENTAL_ORACLE_KINDS)[number];
 
 export type OracleKind = QualifyingOracleKind | SupplementalOracleKind;
 
-/** ✅️ Whether an oracle kind discharges an external-oracle requirement. */
+/** 🔬️ Whether an oracle kind discharges an external-oracle requirement. */
 export function isQualifyingOracleKind(kind: OracleKind | undefined): kind is QualifyingOracleKind {
   return kind !== undefined && (QUALIFYING_ORACLE_KINDS as readonly string[]).includes(kind);
 }
@@ -71,13 +71,13 @@ export function isSemioNativeArtifact(artifact: string): boolean {
  * exactly the failure this rule family exists to prevent.
  */
 export type NativeSecondImplementationEvidence = Readonly<{
-  /** 🎯️ The `mutationManifests[].artifact` id this claims native status for — cross-checked against `isSemioNativeArtifact` and against a real manifest this same contribution owns. */
+  /** 📦️ The `mutationManifests[].artifact` id this claims native status for — cross-checked against `isSemioNativeArtifact` and against a real manifest this same contribution owns. */
   format: string;
   /** 🔍️ The recorded negative search: what was checked, and why each candidate considered was declined. */
   noThirdPartySurvey: Readonly<{ ecosystemsSearched: readonly string[]; candidatesConsidered: readonly Readonly<{ package: string; reason: string }>[] }>;
   /** 🗣️ The production subject's own implementation language — this reference is checked to differ from it. */
   subjectImplementationLanguage: string;
-  /** 🗣️ The language this reference is actually written in. */
+  /** 🌐️ The language this reference is actually written in. */
   secondImplementationLanguage: string;
   /** 📖️ The written specification this was authored FROM — never the subject's own source. */
   specificationSource: string;
@@ -88,12 +88,12 @@ export type NativeSecondImplementationEvidence = Readonly<{
 /** ⚙️ The kernel a reference or a probe actually sits on — the unit independence is accounted in. */
 
 
-/** ⚙️ Stable identity of one engine family, ignoring the wrapper that exposes it. */
+/** 🪪️ Stable identity of one engine family, ignoring the wrapper that exposes it. */
 export function engineFamilyId(engine: EngineFamily | undefined): string {
   return engine === undefined ? "unknown" : engine.family;
 }
 
-/** 🎯️ What a mutation needs from an external reference before it may be registered or released. */
+/** 🔮️ What a mutation needs from an external reference before it may be registered or released. */
 export type OracleRequirement = Readonly<{ capability: string; qualifyingKind: QualifyingOracleKind; distinctEngineFamilies?: number; oracle?: string }>;
 
 /** 🦠️ One mutation as its domain owner declares it — the single source feeding production and tests. */
@@ -146,7 +146,7 @@ export type RuntimeMutationInventory = Readonly<{
 export const MANIFEST_MUTATION_ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const CAPABILITY_ID_RE = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
 
-/** 🧾️ Validates one manifest strictly. A manifest is the authority, so a malformed one is fatal. */
+/** 📋️ Validates one manifest strictly. A manifest is the authority, so a malformed one is fatal. */
 export function mutationManifestProblems(value: unknown, owner?: string): string[] {
   if (!isPlainObject(value)) return ["manifest is not an object"];
   const problems: string[] = [];
@@ -216,7 +216,7 @@ export function mutationManifestDigest(manifest: MutationManifest): string {
 }
 
 /**
- * 🏭️ Where a generated runtime inventory is cached. A subset's inventory is produced by RUNNING the
+ * 📂️ Where a generated runtime inventory is cached. A subset's inventory is produced by RUNNING the
  * production bridge; it is cache state, never committed source, so a stale checked-in copy can never
  * be mistaken for what the runtime offers today.
  */
@@ -224,7 +224,7 @@ export function runtimeInventoryPath(repoRoot: string, target: SurfaceTarget): s
   return join(testCacheDir(repoRoot, "results"), "🏭️inventory", `${target.artifact}@${target.standard}@${target.subset}${target.surface === undefined ? "" : `@${target.surface}`}.json`.replace(/[^A-Za-z0-9@._-]+/g, "_"));
 }
 
-/** 🏭️ Reads a generated runtime inventory, or `null` when the bridge has not been run for that subset. */
+/** ▶️ Reads a generated runtime inventory, or `null` when the bridge has not been run for that subset. */
 export function readRuntimeInventory(repoRoot: string, target: SurfaceTarget): RuntimeMutationInventory | null {
   const path = runtimeInventoryPath(repoRoot, target);
   if (!existsSync(path)) return null;
@@ -236,7 +236,7 @@ export function readRuntimeInventory(repoRoot: string, target: SurfaceTarget): R
   }
 }
 
-/** 🏭️ Writes a bridge-produced runtime inventory into the cache. */
+/** 💾️ Writes a bridge-produced runtime inventory into the cache. */
 export function writeRuntimeInventory(repoRoot: string, inventory: RuntimeMutationInventory): string {
   const path = runtimeInventoryPath(repoRoot, inventory);
   mkdirSync(dirname(path), { recursive: true });
@@ -256,7 +256,7 @@ export type InventoryEquality = Readonly<{
 }>;
 
 /**
- * 🧾️ Compares production dispatch, the owner manifest and the claimed test inventory EXACTLY. This is
+ * 🆚️ Compares production dispatch, the owner manifest and the claimed test inventory EXACTLY. This is
  * what closes v1's blind spot: a mutation can be reachable in production and absent from the catalog
  * without any v1 gate proving the omission, because v1 never consulted dispatch at all.
  */

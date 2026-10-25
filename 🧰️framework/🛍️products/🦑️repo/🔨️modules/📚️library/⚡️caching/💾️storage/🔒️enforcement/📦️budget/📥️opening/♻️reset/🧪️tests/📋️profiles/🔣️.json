@@ -16,6 +16,13 @@
       "retiredImages": 1
     },
     {
+      "id": "rust",
+      "profile": "rust",
+      "scenario": "success",
+      "accepted": true,
+      "retiredImages": 1
+    },
+    {
       "id": "absent",
       "profile": "graph",
       "scenario": "absent",
@@ -31,7 +38,7 @@
     },
     {
       "id": "foreign-profile",
-      "profile": "products",
+      "profile": "tools",
       "scenario": "success",
       "accepted": false,
       "retiredImages": 0
@@ -82,6 +89,34 @@
       "id": "exclusive-refused",
       "profile": "graph",
       "scenario": "exclusive-refused",
+      "accepted": false,
+      "retiredImages": 0
+    },
+    {
+      "id": "rust-absent",
+      "profile": "rust",
+      "scenario": "absent",
+      "accepted": true,
+      "retiredImages": 0
+    },
+    {
+      "id": "products",
+      "profile": "products",
+      "scenario": "success",
+      "accepted": true,
+      "retiredImages": 1
+    },
+    {
+      "id": "products-persistent-declined",
+      "profile": "products",
+      "scenario": "declined",
+      "accepted": true,
+      "retiredImages": 0
+    },
+    {
+      "id": "foreign-dependencies",
+      "profile": "dependencies",
+      "scenario": "success",
       "accepted": false,
       "retiredImages": 0
     }

@@ -6,7 +6,7 @@ import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../../
 import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {globMatchV1,parityNormalizedDigestsV1,parityTaskKeyV1,resolveParityOutputPatternsV1,type ParityFileV1,type ParityNxInputsV1,type ParityObservationV1,type ParityOutputsV1,type ParityPlanV1,type ParityResolvedSampleV1,type ParityRulesV1,type ParityRunV1,type ParityRunnerV1,type ParityToolV1} from "../🟦️.ts";
 import {groupParityBazelSpawnsV1,parseParityBazelEventsV1,parseParityBazelExecutionLogV1,parseParityJsonObjectsV1,parseParityNxInputsV1,parseParityPlanV1,parityBazelRunV1,parityNxRunV1} from "../📥️evidence/🟦️.ts";
-import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import { GlobV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
 import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🧰️ Everything the live runner needs: the checkout, the caller's authority, where evidence goes and how results are read. */

@@ -34,9 +34,9 @@ const observing = (): boolean => process.env[SCRIPT_PROVIDERS_ENV] !== undefined
 
 /** 👁️ Records source programs of a running preparation; a process without a designated repository observes nothing. */
 export function observeCargoPreparationSourceV1(...paths: string[]): void { if (observing()) sync().observeSource(...paths); }
-/** 👁️ Records one input of a running preparation; a process without a designated repository observes nothing. */
+/** 📥️ Records one input of a running preparation; a process without a designated repository observes nothing. */
 export function observeCargoPreparationInputV1(path: string, kind: CargoPreparationInputKindV1 = "file", bytes?: string | Buffer): void { if (observing()) sync().observeInput(path, kind, bytes); }
-/** 👁️ Records one output of a running preparation; a process without a designated repository observes nothing. */
+/** 📹️ Records one output of a running preparation; a process without a designated repository observes nothing. */
 export function observeCargoPreparationOutputV1(path: string, bytes: string | Buffer): void { if (observing()) sync().observeOutput(path, bytes); }
 /** ✅️ Completes the observation of a running preparation. */
 export function completeCargoPreparationObservationV1(): void { if (observing()) sync().completeObservation(); }
@@ -44,14 +44,14 @@ export function completeCargoPreparationObservationV1(): void { if (observing())
 export function prepareCargoCapabilityLinksV1(repoRoot: string, ownerRoot: string, manifestRelative: string, linksRelative: string): number { return sync().prepareCapabilityLinks(repoRoot, ownerRoot, manifestRelative, linksRelative); }
 /** 🧪️ Checks the capability contributions and returns how many checks passed. */
 export function runCargoCapabilityContributionChecks(): number { return sync().runCapabilityContributionChecks(); }
-/** 📦️ Inventories all current repository member packages. */
+/** 🦑️ Inventories all current repository member packages. */
 export function cargoRepositoryPackages(root: string): readonly CargoWorkspacePackageV1[] { return sync().repositoryPackages(root); }
-/** 🧭️ Selects the nearest Cargo workspace for a package manifest. */
+/** 🦀️ Selects the nearest Cargo workspace for a package manifest. */
 export function cargoWorkspaceForManifest(root: string, manifest: string): CargoWorkspaceScopeV1 { return sync().workspaceForManifest(root, manifest); }
 /** 🛠️ Runs the preparation programs a Cargo invocation needs before it starts. */
 export async function prepareCargoWorkspaceInvocation(root: string, args: readonly string[], cwd: string, environment: Readonly<Record<string, string | undefined>>, control: ResourceLeaseControl): Promise<void> { return (await loadScriptProviderV1(CARGO_WORKSPACE_PROVIDER_V1)).prepareInvocation(root, args, cwd, environment, control); }
 let lockEnsurer: ((request: CargoLockEnsureRequestV1) => Promise<CargoLockOutcomeV1>) | undefined;
-/** 🔐️ Registers the in-process implementation that brings a workspace lockfile up to date; the implementing module registers itself when it loads, so captured closures need no computed import. */
+/** 🔒️ Registers the in-process implementation that brings a workspace lockfile up to date; the implementing module registers itself when it loads, so captured closures need no computed import. */
 export function registerCargoLockEnsurerV1(ensurer: (request: CargoLockEnsureRequestV1) => Promise<CargoLockOutcomeV1>): void { lockEnsurer = ensurer; }
-/** 🔐️ Brings the lockfile of the selected workspace up to date with its manifests before a locked Cargo command; a process whose repository layer is not loaded has nothing to refresh. */
+/** 🔏️ Brings the lockfile of the selected workspace up to date with its manifests before a locked Cargo command; a process whose repository layer is not loaded has nothing to refresh. */
 export async function ensureCargoLockCurrentV1(request: CargoLockEnsureRequestV1): Promise<CargoLockOutcomeV1 | "absent"> { return lockEnsurer ? lockEnsurer(request) : "absent"; }

@@ -40,5 +40,5 @@ fn native_record_receive_constructs_original_text_members_and_closes_every_front
   }
   if receiver.output_ready(){finished=turns;let g=funded(receiver.take_demand().unwrap());let(row,p)=receiver.take(g).unwrap().unwrap();assert!(p.fits(g));assert_eq!(row.id.as_str(),law["expected"]["id"].as_str().unwrap());assert_eq!(row.name.as_str(),law["expected"]["name"].as_str().unwrap());assert_eq!(row.value,law["expected"]["value"].as_i64().unwrap());drain(row);}
   receiver.begin_close();for _ in 0..10000{if receiver.terminal_is_empty(){break;}let g=funded(receiver.close_demands(4096).unwrap());let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receiver.close_step(g).unwrap());let p=step.progress();assert!(p.fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));}assert!(receiver.terminal_is_empty());drain(source);drain(foreign);if finished>0&&cut>finished{break;}
- }assert!(finished>0);eprintln!("[DEBUG] text NativeReceive original record: {finished} normal turns, every frontier and all physical denial axes");
+ }assert!(finished>0);
 }

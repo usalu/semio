@@ -18,6 +18,8 @@
         "mcp",
         "stdio",
         "os",
+        "--catalog",
+        "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated",
         "--folder",
         ".🧬semio/🔗space/os-mcp",
         "--scopes",

@@ -1,4 +1,4 @@
-//! 🧭️ Model-based testing — reachability exploration, invariants, and inline conformance fixtures.
+//! 🧪️ Model-based testing — reachability exploration, invariants, and inline conformance fixtures.
 //!
 //! Fixtures are plain Rust structs/consts rather than a separate JSON format or
 //! separate test files, per this workspace's "extend existing test files" rule.
@@ -8,13 +8,13 @@ use crate::{Configuration, Machine, NullInspector, Snapshot};
 
 //#region 🔖️Model
 
-/// 🧭️ A set of representative events tried from every reachable configuration.
+/// 🎛️ A set of representative events tried from every reachable configuration.
 pub struct Model<M: Machine> {
     events: Vec<M::Event>,
 }
 
 impl<M: Machine> Model<M> {
-    /// 🧭️ A model that explores with exactly these representative events.
+    /// 🆕️ A model that explores with exactly these representative events.
     pub fn new(events: Vec<M::Event>) -> Self {
         Self { events }
     }
@@ -33,7 +33,7 @@ fn active_stable_ids<M: Machine>(snapshot: &Snapshot<M>) -> Vec<&'static str> {
 
 //#region 🔖️Coverage
 
-/// 🧭️ What a BFS [`explore`] found: distinct configurations visited and every stable
+/// 📊️ What a BFS [`explore`] found: distinct configurations visited and every stable
 /// state id reached across them.
 #[derive(Debug, Default)]
 pub struct Coverage {
@@ -84,7 +84,7 @@ where
 /// ⚠️ Why an [`Invariant`] check or [`run_conformance`] fixture failed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FsmError {
-    /// 🧭️ A model-checked invariant or conformance step reported a violation.
+    /// 🚨️ A model-checked invariant or conformance step reported a violation.
     Violation(String),
 }
 
@@ -102,13 +102,13 @@ impl std::error::Error for FsmError {}
 
 //#region 🔖️Invariants
 
-/// 🧭️ A named property that must hold of every [`Snapshot`] visited during exploration.
+/// 📸️ A named property that must hold of every [`Snapshot`] visited during exploration.
 pub struct Invariant<M: Machine> {
     pub name: &'static str,
     pub check: fn(&Snapshot<M>) -> Result<(), FsmError>,
 }
 
-/// 🧭️ Runs every invariant against `snapshot`, returning one formatted message per violation.
+/// ✅️ Runs every invariant against `snapshot`, returning one formatted message per violation.
 pub fn check_invariants<M: Machine>(snapshot: &Snapshot<M>, invariants: &[Invariant<M>]) -> Vec<String> {
     invariants.iter().filter_map(|inv| (inv.check)(snapshot).err().map(|reason| format!("{}: {}", inv.name, reason))).collect()
 }
@@ -117,14 +117,14 @@ pub fn check_invariants<M: Machine>(snapshot: &Snapshot<M>, invariants: &[Invari
 
 //#region 🔖️Conformance
 
-/// 🧭️ One step of an inline conformance fixture: send `event`, then assert every
+/// 🪜️ One step of an inline conformance fixture: send `event`, then assert every
 /// stable id in `expect_active` is part of the settled configuration.
 pub struct ConformanceStep<M: Machine> {
     pub event: M::Event,
     pub expect_active: &'static [&'static str],
 }
 
-/// 🧭️ Runs `steps` against a freshly-initialized machine, failing fast with a
+/// ▶️ Runs `steps` against a freshly-initialized machine, failing fast with a
 /// descriptive message naming the offending step and the actual active configuration.
 pub fn run_conformance<M: Machine>(input: M::Input, steps: &[ConformanceStep<M>]) -> Result<(), FsmError> {
     let mut sink: Vec<Command<M>> = Vec::new();

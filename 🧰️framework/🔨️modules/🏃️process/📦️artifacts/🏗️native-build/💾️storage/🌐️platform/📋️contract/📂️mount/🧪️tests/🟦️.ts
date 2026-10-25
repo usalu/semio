@@ -12,8 +12,5 @@ test("observation tolerates boot scoped device reassignment without publishing a
 
 test("observation tolerates published device changes while live inode replacement still refuses",async()=>{const api=mount as unknown as Record<string,unknown>,bind=api.bindPublishedNativeImageMountDirectoryV1;expect(typeof bind).toBe("function");const base=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!base)throw Error("Original test artifact directory required");await mkdir(base,{recursive:true});const area=await mkdtemp(join(resolve(base),"mount-binding-")),directory=join(area,"m"),previous=join(area,"previous");try{await mkdir(directory);const facts=lstatSync(directory,{bigint:true}),published={dev:String(facts.dev+1n),ino:String(facts.ino),mode:Number(facts.mode)},bound=(bind as Function)({published,publishedBackingDevice:published.dev,currentBackingDevice:String(facts.dev)});expect(Object.isFrozen(bound)).toBe(true);mount.requireNativeImageMountDirectoryV1(directory,bound);await rename(directory,previous);await mkdir(directory);expect(()=>mount.requireNativeImageMountDirectoryV1(directory,bound)).toThrow("changed");expect(published.dev).toBe(String(facts.dev+1n));}finally{await rm(area,{recursive:true,force:true});}});
 
-import "../../../🥾️boot/🧪️tests/🟦️.ts";
 
-import "./📥️inspection.ts";
 
-import "./♻️retirement.ts";

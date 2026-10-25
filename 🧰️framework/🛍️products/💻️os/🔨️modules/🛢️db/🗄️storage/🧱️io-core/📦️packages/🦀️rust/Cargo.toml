@@ -24,7 +24,7 @@ path = "../../🦀️.rs"
 
 [features]
 claimed-backend-laws = []
-testkit = []
+testkit = ["claimed-backend-laws"]
 
 [dependencies]
 protocol = { path = "../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }

@@ -286,3 +286,11 @@ pub fn write_region(buffer: &mut [u8], buffer_width: u32, buffer_height: u32, x:
     }
     true
 }
+
+/// 🔑️ The identity of a `BitmapPinnedPixel` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for BitmapPinnedPixel {
+    type Key = String;
+    fn key(&self) -> String {
+        pin_key(self.x, self.y)
+    }
+}

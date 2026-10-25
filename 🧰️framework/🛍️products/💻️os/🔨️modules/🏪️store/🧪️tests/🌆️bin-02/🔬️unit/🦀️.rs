@@ -264,7 +264,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
 #[semio_framework_async_macros::async_test]
 async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_without_commit() {
     let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() };
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES, ..one_item_test_policy() };
     let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     let mut wrong = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
@@ -314,7 +314,7 @@ async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_w
 #[semio_framework_async_macros::async_test]
 async fn retained_member_group_preparation_reserves_real_history_without_partial_visibility_and_aborts_stale_owners() {
     let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() };
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES, ..one_item_test_policy() };
     let mut members = [
         ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-first", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
         ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-second", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,

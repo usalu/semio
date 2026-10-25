@@ -39,7 +39,7 @@ export interface TreeSectionProps {
   isDropReady?: boolean;
   /** 🫳️ When true, renders a trailing {@link DragHandle} for reorder (with handle-only initiation unless {@link dragInitiation} is `"surface"`). */
   isDragHandle?: boolean;
-  /** 🫳️ `"handle"` restricts native drag start to the trailing grip; `"surface"` keeps the whole section header draggable. Defaults to `"handle"` when {@link isDragHandle} or {@link draggable} is set. */
+  /** 🧲️ `"handle"` restricts native drag start to the trailing grip; `"surface"` keeps the whole section header draggable. Defaults to `"handle"` when {@link isDragHandle} or {@link draggable} is set. */
   dragInitiation?: "handle" | "surface";
   /** 🪟️ Window mirror stamped on this section's branch content element — build it with {@link treeWindowDomAttributes}. */
   windowAttributes?: TreeWindowDomAttributes;
@@ -130,17 +130,17 @@ export interface TreeItemProps {
   /** 💬️ A property row's description (a refused value's reason, the unit, an item count): always shown beside the label and
    * named by the row's control through `aria-describedby` ({@link useTreeRowDescribedControls}). */
   description?: React.ReactNode;
-  /** 🫳️ `"handle"` restricts native drag start to the trailing grip (arms `draggable` only while the grip is pressed); `"surface"` keeps the whole row draggable. */
+  /** 🔰️ `"handle"` restricts native drag start to the trailing grip (arms `draggable` only while the grip is pressed); `"surface"` keeps the whole row draggable. */
   dragInitiation?: "handle" | "surface";
-  /** 🫳️ Explicit drag handles for sort vs palette transfer; overrides {@link dragInitiation} when set. */
+  /** 🔃️ Explicit drag handles for sort vs palette transfer; overrides {@link dragInitiation} when set. */
   dragRoles?: readonly TreeDragRole[];
-  /** 🫳️ Pointer-down handler for palette transfer drags — wired to the transfer handle only. */
+  /** ⬇️ Pointer-down handler for palette transfer drags — wired to the transfer handle only. */
   transferPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
   /** 📮️ The row's transfer payload by MIME, mirrored onto the row as `data-drag-mime`/`data-drag-payload` so the transferred bytes are readable from the DOM without opening a real drag. */
   dragData?: Record<string, string>;
-  /** 🎯️ Passive drop-zone highlight while a compatible tree drag is in flight. */
+  /** 💧️ Passive drop-zone highlight while a compatible tree drag is in flight. */
   isDropReady?: boolean;
-  /** 🪟️ Window mirror stamped on this group's branch content element — build it with {@link treeWindowDomAttributes}. */
+  /** 🪞️ Window mirror stamped on this group's branch content element — build it with {@link treeWindowDomAttributes}. */
   windowAttributes?: TreeWindowDomAttributes;
   /** 📐️ This row's own entry index inside its PARENT's window, stamped as `data-tree-window-row` so the
    * host observer can read the real top of every materialised row instead of assuming a uniform row pitch
@@ -190,11 +190,11 @@ export interface TreeRootProps {
   onOpenStateChange?: (id: string, open: boolean) => void;
   /** ↕️ When true, every section header renders a drag handle and sibling sections can be reordered. Defaults to true when there are two or more sections. */
   sortableSections?: boolean;
-  /** ↕️ Fires after a section-handle reorder with the new section-id order (host may persist; Tree also keeps an internal merge so program re-renders do not snap order back). */
+  /** 🔀️ Fires after a section-handle reorder with the new section-id order (host may persist; Tree also keeps an internal merge so program re-renders do not snap order back). */
   onSectionsReorder?: (orderedIds: readonly string[]) => void;
 }
 
-/** ↕️ Merges a remembered section-id order with the latest section list — keeps prior relative order for surviving ids and
+/** 📑️ Merges a remembered section-id order with the latest section list — keeps prior relative order for surviving ids and
  * inserts a newly appeared section where the source puts it: right after the nearest earlier source section already
  * placed, else first. Appending it instead sank a section a program leads with (the history-edit band and draft editor)
  * below every section the tree already showed. */
@@ -229,7 +229,7 @@ export interface TreeDataRenderingContextValue {
   readonly draggedIds: readonly string[];
   readonly dropPreview: { readonly targetId: string; readonly position: TreeDropPosition } | null;
   readonly buildPalettePointerProps: (item: TreeDataItem, section: TreeDataSection) => Pick<TreeItemProps, "onPointerDown">;
-  /** ↕️ Section headers render reorder grips and accept sibling-section drops. */
+  /** ✅️ Section headers render reorder grips and accept sibling-section drops. */
   readonly sortableSections: boolean;
   readonly draggedSectionId: string | null;
   readonly handleSectionDragStart: (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => void;

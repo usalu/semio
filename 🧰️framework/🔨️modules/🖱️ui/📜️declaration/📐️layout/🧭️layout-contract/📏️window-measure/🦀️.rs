@@ -31,7 +31,7 @@ pub enum WindowMeasure {
         min: f64,
         max: f64,
         step: Option<f64>,
-        /// 🎚️ Absolute value on the fixed `[min, max]` range that is already preloaded/ready.
+        /// ✅️ Absolute value on the fixed `[min, max]` range that is already preloaded/ready.
         /// Renderers keep `max` stable and draw a highlight from the knob to this extent.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
@@ -40,7 +40,7 @@ pub enum WindowMeasure {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         loading: Option<bool>,
-        /// 🌀️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
+        /// ⏸️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         waiting: Option<bool>,
@@ -68,19 +68,19 @@ pub enum WindowMeasure {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         step: Option<f64>,
-        /// 🎚️ Absolute value already prepared/committed, drawn as a soft extent behind the entry.
+        /// 📗️ Absolute value already prepared/committed, drawn as a soft extent behind the entry.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         ready: Option<f64>,
-        /// 🌀️ When true, the measure tree leaf shows a loading ring while work continues.
+        /// ⭕️ When true, the measure tree leaf shows a loading ring while work continues.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         loading: Option<bool>,
-        /// 🌀️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
+        /// ⌛️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         waiting: Option<bool>,
-        /// 🚫️ When true, the entry is inert.
+        /// ⛔️ When true, the entry is inert.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         disabled: Option<bool>,
@@ -151,7 +151,7 @@ pub struct WindowMeasurePartition<'a> {
     pub utility_options: UiFixedList<&'a WindowMeasure, WINDOW_MEASURE_PARTITION_CAPACITY>,
 }
 
-/// 🎯️ Splits a window's top-level measures into `(general, utility_options)`.
+/// ✂️ Splits a window's top-level measures into `(general, utility_options)`.
 ///
 /// A top-level [`WindowMeasure::Group`] tagged with `active_utility_id: Some(id)` is *utility-scoped chrome*:
 /// its **children** land in `utility_options` **only** when `id == active_utility_id`, and the tagged wrapper

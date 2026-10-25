@@ -25,7 +25,7 @@ pub struct CompilerFonts<'a> {
     emoji: Font<'a>,
 }
 
-/// 🌍️ `wasm32-wasip2` arm: no glyph engine is linked on this target, so there is nothing to
+/// 🔨️ `wasm32-wasip2` arm: no glyph engine is linked on this target, so there is nothing to
 /// parse; [`CompilerFonts::estimate_only`] is the only value and the `compile_*_to_svg` arms
 /// estimate size from character count.
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -49,7 +49,7 @@ impl std::error::Error for FontParseError {}
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 impl<'a> CompilerFonts<'a> {
-    /// 🔤️ Parses the Math, Serif, Mono and Emoji faces out of `set`; the host keeps the bytes alive.
+    /// 📖️ Parses the Math, Serif, Mono and Emoji faces out of `set`; the host keeps the bytes alive.
     pub fn parse(set: &FontSet<'a>) -> Result<Self, FontParseError> {
         let face = |role: FontRole| Font::from_bytes(set.get(role), 0).ok_or(FontParseError { role });
         Ok(Self { math: face(FontRole::Math)?, serif: face(FontRole::Serif)?, mono: face(FontRole::Mono)?, emoji: face(FontRole::Emoji)? })
@@ -62,7 +62,7 @@ impl<'a> CompilerFonts<'a> {
 
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 impl<'a> CompilerFonts<'a> {
-    /// 🔤️ Accepts any set and parses nothing — this target never paints glyphs.
+    /// ✅️ Accepts any set and parses nothing — this target never paints glyphs.
     pub fn parse(_set: &FontSet<'a>) -> Result<Self, FontParseError> {
         Ok(Self::estimate_only())
     }

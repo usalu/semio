@@ -117,7 +117,7 @@ impl DrawingStoreInitializationAuthority {
                 let grant = cx.retained_grant();
                 let source = self.initial_clone_source.as_ref().expect("retained Drawing snapshot clone source");
                 let clone = self.initial_snapshot_clone.as_mut().expect("retained native Drawing snapshot clone");
-                match clone.advance(source.borrow(), grant).and_then(|step| { cx.consume_retained(step.progress())?; Ok(step) }) {
+                match clone.advance(source.borrow(), grant.maximum_copy_bytes, grant).and_then(|step| { cx.consume_retained(step.progress())?; Ok(step) }) {
                     Ok(step) => {
                         cx.consume_fuel(step.progress().copied_items.max(1) as u64);
                         if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = DrawingStoreInitializationPhase::TakeInitialSnapshot; }

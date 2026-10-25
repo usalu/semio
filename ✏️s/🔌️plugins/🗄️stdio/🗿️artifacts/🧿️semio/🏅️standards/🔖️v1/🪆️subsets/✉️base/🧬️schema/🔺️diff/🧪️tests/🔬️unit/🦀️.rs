@@ -39,6 +39,7 @@ use semio_s_artifact_stdio_semio_video_model::{schema::diff::SemioVideoDiff, sch
 use protocol::command::DiffAlgebra;
 #[allow(unused_imports)]
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 #[allow(unused_imports)]
 use protocol::{DiffBinary, DiffText};
 use crate::schema::diff::*;

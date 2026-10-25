@@ -1,4 +1,4 @@
-//! 📏️ Glyph packing, measure and kerning: the atlas packing, the text and range measurement, the kerning lookups and the pen advance. See [`super`].
+//! 📦️ Glyph packing, measure and kerning: the atlas packing, the text and range measurement, the kerning lookups and the pen advance. See [`super`].
 
 use super::*;
 
@@ -58,7 +58,7 @@ impl FontAtlas {
         self.measure_text_face(TextFace::Sans, text, size)
     }
 
-    /// 📏️ Measures one run with the same face-specific advances and pair kerning its painter pens.
+    /// 📖️ Measures one run with the same face-specific advances and pair kerning its painter pens.
     pub fn measure_text_face(&mut self, face: TextFace, text: &str, size: f32) -> (f32, f32) {
         let mut width = 0.0f32;
         let mut max_height = 0.0f32;
@@ -73,13 +73,13 @@ impl FontAtlas {
         (width, max_height.max(line_height(size)))
     }
 
-    /// 📏️ The advance sum of one run of `text`, from `byte` up to `end` — the width a greedy wrap
+    /// ➕️ The advance sum of one run of `text`, from `byte` up to `end` — the width a greedy wrap
     /// prices an unbreakable run at, off the very advances the painter then pens.
     pub fn measure_range(&mut self, text: &str, byte: usize, end: usize, size: f32) -> f32 {
         self.measure_range_face(TextFace::Sans, text, byte, end, size)
     }
 
-    /// 📏️ Measures a byte range with one face-specific glyph stream, kerned within the range only — the range's own width.
+    /// 🔣️ Measures a byte range with one face-specific glyph stream, kerned within the range only — the range's own width.
     pub fn measure_range_face(&mut self, face: TextFace, text: &str, byte: usize, end: usize, size: f32) -> f32 {
         let Some(run) = text.get(byte..end) else { return 0.0 };
         self.measure_text_face(face, run, size).0
@@ -106,7 +106,7 @@ impl FontAtlas {
         em * size
     }
 
-    /// 🤝️ The kerning a line pens before `ch`: its pair with the `previous` scalar once the pen has left the line start, nothing
+    /// 🖊️ The kerning a line pens before `ch`: its pair with the `previous` scalar once the pen has left the line start, nothing
     /// at a line start — the ONE rule measure, wrap, caret and paint all apply.
     pub fn pen_kerning(&mut self, face: TextFace, previous: Option<char>, pen: f32, ch: char, size: f32) -> f32 {
         match previous {
@@ -115,7 +115,7 @@ impl FontAtlas {
         }
     }
 
-    /// 🤝️ The pair kerning at `byte` of `text`: between the scalar ending there and the scalar starting there, nothing at either
+    /// 🥢️ The pair kerning at `byte` of `text`: between the scalar ending there and the scalar starting there, nothing at either
     /// end of the text.
     pub fn kerning_at(&mut self, text: &str, byte: usize, size: f32) -> f32 {
         let (Some(before), Some(after)) = (text.get(..byte), text.get(byte..)) else { return 0.0 };

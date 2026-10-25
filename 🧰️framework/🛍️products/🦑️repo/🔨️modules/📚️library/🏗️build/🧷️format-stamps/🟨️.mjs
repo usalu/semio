@@ -3,8 +3,9 @@ import{closeSync,constants,fstatSync,openSync,readSync,writeSync}from"node:fs";
 import{join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
+import{STALE_IMPLEMENTATION_CODE_V1,STALE_IMPLEMENTATION_CODES_V1,churnReasonTextV1,concurrentEditOfV1,installRestartableFailureHandlerV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 const protocol=JSON.parse(JSON.stringify(schemaContract.$defs.Protocol.const));
-const staleCode="SEMIO_STALE_IMPLEMENTATION",tableCode="SEMIO_STAMP_TABLE_INVALID";
+const staleCode=STALE_IMPLEMENTATION_CODE_V1,tableCode="SEMIO_STAMP_TABLE_INVALID";
 /** 📖️ The closed protocol of the stamp table exactly as the schema declares it. */
 export function formatStampProtocolV1(){return JSON.parse(JSON.stringify(protocol));}
 /** 🌐️ The languages a message is rendered in: the chosen one (`SEMIO_LANGUAGE`, `LC_ALL`, `LANG`), both declared languages when none is chosen. */
@@ -90,23 +91,36 @@ export function registerFormatStampGuardV1(registry,target=globalThis){
  const key=Symbol.for(protocol.admissionGuardRegistry),guards=target[key]??=new Set();guards.add(registry.guard);
  return()=>guards.delete(registry.guard);
 }
-/** 🔎️ Finds a stale-implementation failure in an error, its causes and aggregated errors, also when only the exit code of a captured child crossed the process boundary. */
+/** 🧱️ Whether an error is the load failure of a module another process was editing: a file that no longer parses, resolves or exports what its importer names. The next process loads the finished edit. A failure aggregated by a bundler (`Bun.build`) is a product Source problem, never this class. */
+export function isHalfEditedModuleLoadV1(error){
+ if(error===null||typeof error!=="object")return false;
+ const policy=protocol.loadFailure;
+ return policy.names.includes(error.name)||error.name==="SyntaxError"&&String(error.message).startsWith(policy.syntaxErrorPrefix);
+}
+/** 🔎️ Finds a stale-implementation, half-edited-module or escaped concurrent-edit failure in an error, its causes and aggregated errors, also when only the exit code of a captured child crossed the process boundary. */
 export function staleImplementationOfV1(error){
- const seen=new Set(),walk=(value,depth)=>{
+ const seen=new Set(),walk=(value,depth,bundled=false)=>{
   if(value===null||typeof value!=="object"||seen.has(value)||depth>8)return undefined;seen.add(value);
-  if(value.code===staleCode)return{origin:"error",moved:value.moved??[],message:String(value.message)};
+  if(STALE_IMPLEMENTATION_CODES_V1.has(value.code))return{origin:"error",moved:value.moved??[],message:String(value.message)};
+  if(!bundled&&isHalfEditedModuleLoadV1(value))return{origin:"load",moved:[],message:String(value.message).split("\n")[0].slice(0,300)+(typeof value.position?.file==="string"?" ("+value.position.file+(Number.isInteger(value.position.line)?":"+value.position.line:"")+")":"")};
   if(value.name==="OwnedCommandFailure"&&value.outcome?.status===protocol.exitCode)return{origin:"exit",moved:[],message:""};
-  for(const inner of[value.cause,...(Array.isArray(value.errors)?value.errors:[])]){const found=walk(inner,depth+1);if(found)return found;}
+  for(const inner of[value.cause,...(Array.isArray(value.errors)?value.errors:[])]){const found=walk(inner,depth+1,bundled||Array.isArray(value.errors));if(found)return found;}
   return undefined;
  };
- return walk(error,0);
+ const found=walk(error,0);if(found)return found;
+ const edit=concurrentEditOfV1(error);if(edit===undefined)return undefined;
+ return{origin:"edit",moved:[],message:String(error?.message??error).split("\n")[0].slice(0,300),edit};
 }
-/** 🚪️ Ends a captured command process with the declared exit code when its failure is a stale implementation; any other failure is left to the caller. */
-export function exitIfStaleImplementationV1(error,{write=text=>{try{writeSync(2,text);}catch{}},exit=code=>process.exit(code)}={}){
+/** 💬️ The announcement of a restart after a concurrent edit escaped every layer of the process, one text per selected language, each with the wording of the reason in that language. */
+export function renderEditRestartV1(languages,edit,values){return languages.map(language=>formatStampTextV1(language,"editfailure",{path:edit.path,reason:churnReasonTextV1(language,edit.reason),...values})).join("\n");}
+/** 🚪️ Ends a captured command process with the declared exit code when its failure is a stale implementation, a half-edited module or a concurrent edit that escaped every layer (that one first waits the declared pause, so the restart finds the edit settled); any other failure is left to the caller. */
+export function exitIfStaleImplementationV1(error,{write=text=>{try{writeSync(2,text);}catch{}},exit=code=>process.exit(code),sleepSync=pause,environment=process.env}={}){
  const stale=staleImplementationOfV1(error);if(!stale)return;
- if(stale.origin==="error")write(stale.message+"\n");
+ if(stale.origin==="edit"){const attempt=Number.parseInt(environment[protocol.reexecutionEnvironment]??"0",10)||0,delays=protocol.editFailure.backoffMs,delay=delays[Math.min(attempt,delays.length-1)];write(renderEditRestartV1(formatStampLanguagesV1(environment),stale.edit,{delay,attempt:attempt+1,maximum:protocol.maximumReexecutions})+"\n");sleepSync(delay);}
+ else if(stale.origin!=="exit")write(stale.message+"\n");
  exit(protocol.exitCode);
 }
+installRestartableFailureHandlerV1(error=>exitIfStaleImplementationV1(error));
 const origin=physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL);
 /** 🏷️ The registry of this process, rooted at the live library tree; it guards the exclusive resources it has declared stamps for. */
 export const formatStampsV1=createFormatStampsV1({base:fileURLToPath(new URL("../../",origin))});

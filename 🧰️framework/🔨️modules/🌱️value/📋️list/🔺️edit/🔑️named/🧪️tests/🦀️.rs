@@ -46,7 +46,6 @@ fn named_edit_plan_matches_portable_keys_and_physical_custody(){
   }else{assert!(plan.fault().is_some());}
   assert_eq!(pointers(&source),original);close(&mut plan,born);assert_eq!(crate::observe_retirement_allocations(||drop(plan)).1,(0,0));assert_eq!(pointers(&source),original);
  }
- eprintln!("[DEBUG] shared named planner matches15 portable exact UTF8/key/coordinate laws; real paid directories close with equal physical receipts and original text identity at every refusal");
 }
 /// ✂️ Long common prefixes compare only granted pages and close actual coordinates at every selected frontier.
 #[test]
@@ -59,5 +58,4 @@ fn named_edit_plan_long_prefixes_and_cancellation_are_bounded(){
   close(&mut plan,born);assert_eq!(crate::observe_retirement_allocations(||drop(plan)).1,(0,0));assert_eq!(pointers(&source),original);
  }
  let mut compare=Compare::default();let demand=compare.demand("a","b",0).unwrap();assert!(demand.copy_bytes>Compare::fixed());let(step,heap)=crate::observe_retirement_allocations(||compare.advance("a","b",RetainedCloneGrant{maximum_copy_bytes:Compare::fixed(),..grant(demand)}).unwrap());assert_eq!(step.1,RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(compare.offset,0);
- eprintln!("[DEBUG] shared named planner compares65537-byte UTF8 prefixes in funded3-byte pages, preserves positive work demand and original strings, and returns every directory at five cancellation cuts plus completion");
 }

@@ -438,7 +438,7 @@ impl DatabaseSyncHelloFollowUp {
     }
 }
 
-struct DatabaseSyncHelloPrepared {
+pub(super) struct DatabaseSyncHelloPrepared {
     pub(super) welcome: Option<protocol::ServerFrame>,
     pub(super) welcome_close: Option<DatabaseSyncHelloFrameClose>,
     pub(super) follow_up: DatabaseSyncHelloFollowUp,
@@ -587,7 +587,7 @@ pub(super) async fn database_sync_hello_execute(
 
 pub type DatabaseSyncHelloExecutionFuture = std::pin::Pin<Box<dyn std::future::Future<Output = DatabaseSyncHelloExecution> + Send + 'static>>;
 
-struct DatabaseSyncHelloFollowUpCloseFault {
+pub(super) struct DatabaseSyncHelloFollowUpCloseFault {
     pub error: Option<DbError>,
     pub attempts: u8,
 }

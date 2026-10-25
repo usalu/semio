@@ -70,7 +70,7 @@ function freshLaneCounts(): Record<Lane, number> {
 //#endregion 🏗️LaneCounts
 
 //#region 🧵️TurnScheduler
-/** 🧵️ Cross-actor turn dispatcher. See this file's own header doc for the full design; in short:
+/** ⏱️ Cross-actor turn dispatcher. See this file's own header doc for the full design; in short:
  * bounded-mailbox-per-actor + microtask-batched, lane-priority cross-actor pick + strict per-actor
  * serialization. */
 export class TurnScheduler<TPayload, TBudget = unknown> {

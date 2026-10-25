@@ -3,7 +3,6 @@
 //! channel literal in a wgpu target is the only way the two renderers can silently drift apart, so
 //! it fails here instead of at a screenshot diff.
 
-use semio_framework_test_fixtures::manifest_dir;
 use semio_framework_ui_theme::theme::*;
 use ui_styling::levels;
 use semio_framework_ui_testing_paint_policy as paint_policy;
@@ -11,27 +10,22 @@ use semio_framework_ui_testing_paint_policy as paint_policy;
 use std::fs;
 use std::path::PathBuf;
 
-/// 📂️ Repo root, five levels above `semio-framework-ui`'s manifest
-/// (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust`).
+/// 📂️ Repo root, found from the manifest of the crate that compiles this law.
 fn repo_root() -> PathBuf {
-    let mut root = manifest_dir!();
-    for _ in 0..5 {
-        root = root.parent().expect("manifest dir has five ancestors up to the repo root").to_path_buf();
-    }
-    root
+    semio_framework_test_fixtures::repo_root!()
 }
 
 /// 🔎️ General UI target and element source trees owned by this package.
 const SCAN_ROOTS: &[&str] = &["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu", "🧰️framework/🔨️modules/🖱️ui/🧱️elements"];
 
-/// 🎨️ The two constructors that turn raw channels into paint. Every other colour must be a
+/// 🖌️ The two constructors that turn raw channels into paint. Every other colour must be a
 /// `Rgba::from_token` lift of a generated palette entry, or derived from an existing `Rgba`.
 
 /// 🪪️ Renderer-internal paints that are deliberately not tokens, each with the reason it stays a
 /// literal. Anything not listed here must come from `ui_styling`.
 const ALLOWLIST: &[(&str, &str, &str)] = &[
     (
-        "🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🦀️.rs",
+        "🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/🧱️pipeline-state-and-world-passes/🦀️.rs",
         "let white = Rgba::new(1.0, 1.0, 1.0, 1.0);",
         "🎭️ Scissor-mask identity in a `#[cfg(test)]` helper — opaque white is the stencil's \"keep\" value, not a colour anybody sees.",
     ),

@@ -21,7 +21,7 @@ use syn::DeriveInput;
 
 //#region 🔖️Entry
 
-/// 🪄️ Compiles a `machine <name> { .. }` declaration into a `pub mod <name> { .. }`
+/// 🖥️ Compiles a `machine <name> { .. }` declaration into a `pub mod <name> { .. }`
 /// with a dense static [`machine::MachineDefinition`], a generated event enum, and a
 /// `states` module of `NodeId` consts.
 pub fn expand_statechart(input: proc_macro2::TokenStream) -> syn::Result<proc_macro2::TokenStream> {
@@ -30,7 +30,7 @@ pub fn expand_statechart(input: proc_macro2::TokenStream) -> syn::Result<proc_ma
     Ok(codegen::emit(&ir))
 }
 
-/// 🪄️ Implements `machine::StatechartEvent` for a consumer-authored enum, for use with
+/// 📝️ Implements `machine::StatechartEvent` for a consumer-authored enum, for use with
 /// hand-authored `MachineDefinition` tables (i.e. without the `statechart!` DSL).
 pub fn expand_statechart_event(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
@@ -73,7 +73,7 @@ pub fn expand_statechart_event(input: &DeriveInput) -> syn::Result<proc_macro2::
     })
 }
 
-/// 🪄️ Implements `machine::StatechartSchema` for a consumer-authored context struct —
+/// 🧬️ Implements `machine::StatechartSchema` for a consumer-authored context struct —
 /// embeds a field name/type manifest consumed by TypeScript generation tooling.
 pub fn expand_statechart_schema(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
@@ -112,7 +112,7 @@ impl syn::parse::Parse for ExportWasmMachineAst {
     }
 }
 
-/// 🪄️ wasm-bindgen can't export generics, so a concrete consumer machine invokes this
+/// ⚙️ wasm-bindgen can't export generics, so a concrete consumer machine invokes this
 /// in its own `🔖️WasmBridge` region to emit a `#[wasm_bindgen]`-exported class wrapping
 /// one `<machine_path>` instance: `new/sendJson/tick/snapshotJson/restoreJson/manifestJson/onEffect`.
 pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Result<proc_macro2::TokenStream> {

@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "checkoutFromTests": "../../../../../../../../../..",
+  "entryFromTests": "../🟦️.ts",
+  "adapter": "../../📜️script.ts",
+  "maximumFiles": 450,
+  "forbidden": [
+    {
+      "reason": "the graph reader belongs to planning",
+      "fragment": "/🏗️build/🕸️graph/🟦️.ts"
+    },
+    {
+      "reason": "task execution policy belongs to planning",
+      "fragment": "/🏗️bazel/🏃️execution/🟦️.ts"
+    },
+    {
+      "reason": "operations reporting belongs to the launcher",
+      "fragment": "/🏗️bazel/⚙️operations/🟦️.ts"
+    },
+    {
+      "reason": "the Bazel storage layout belongs to the launcher",
+      "fragment": "/🏗️bazel/💾️storage/🟦️.ts"
+    },
+    {
+      "reason": "the Cargo lock reader belongs to planning",
+      "fragment": "/🏗️build/📥️inputs/🔒️lock/"
+    },
+    {
+      "reason": "the Bazel bootstrap tool belongs to the launcher",
+      "fragment": "/🚀️bootstrap/🛠️tools/🏗️bazel/"
+    },
+    {
+      "reason": "Bazel closure markers belong to planning",
+      "fragment": "/🏗️bazel/🔗️closure/"
+    },
+    {
+      "reason": "the adapter itself is the wide implementation",
+      "fragment": "/🏗️bazel/📜️script.ts"
+    },
+    {
+      "reason": "invocation resolution belongs to the door",
+      "fragment": "/🏗️build/🧭️invocation/"
+    },
+    {
+      "reason": "task selection belongs to the door",
+      "fragment": "/🏗️build/🧭️selection/"
+    },
+    {
+      "reason": "the build door is the launcher",
+      "fragment": "/🏗️build/🚪️door/"
+    },
+    {
+      "reason": "the build command layer is the launcher",
+      "fragment": "/🏗️build/⌨️command/"
+    }
+  ],
+  "required": [
+    {
+      "reason": "actions run under the caller's capabilities",
+      "fragment": "/🏗️build/📥️caller/🟦️.ts"
+    },
+    {
+      "reason": "failures keep their tail",
+      "fragment": "/🏗️bazel/🪵️failure-tail/🟦️.ts"
+    },
+    {
+      "reason": "actions settle their store receipt",
+      "fragment": "/🏗️build/🧾️store-receipt/🟨️.mjs"
+    },
+    {
+      "reason": "every captured entry binds the shared loader",
+      "fragment": "/🏗️build/📥️source/🔏️closure/🟦️.ts"
+    }
+  ]
+}

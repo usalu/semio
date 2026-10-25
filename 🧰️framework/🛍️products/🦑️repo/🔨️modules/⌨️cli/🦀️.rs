@@ -8,7 +8,7 @@
 
 //#region 🧭️RepoCli
 
-/// 🧭️ The repo command line: the event stream, its three renderers, the declared command tree and
+/// 💻️ The repo command line: the event stream, its three renderers, the declared command tree and
 /// one handler per verb, each a thin front for the domain crate that owns the aggregate. Twin of the
 /// Go `cli` package.
 ///
@@ -23,7 +23,7 @@ pub mod repo_cli;
 /// 🔌️ The production repository the repo MCP server serves: every tool reaches the domain owner the
 /// matching verb reaches, every resource reads through the repository's GraphQL surface.
 ///
-/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🦀️.rs
+/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🦀️.rs
 pub use semio_framework_repo_cli_mcp_verb as mcp_verb;
 
 //#endregion 🔌️McpVerb

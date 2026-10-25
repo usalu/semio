@@ -1,7 +1,7 @@
 //! 👓️ Borrowed JSON octets feed the existing retained grammar without source materialization.
 use super::JsonError;
 
-/// 🪪️ Binds the retained grammar to one exact immutable source borrow until result or retirement handoff.
+/// 🔣️ Binds the retained grammar to one exact immutable source borrow until result or retirement handoff.
 pub type JsonBorrowedParseCursor<'source,S> = JsonBorrowedCursor<'source,S,super::Value>;
 pub type JsonBorrowedDslCursor<'source,S> = JsonBorrowedCursor<'source,S,semio_framework_value::DslValue>;
 pub type JsonBorrowedCursor<'source,S,V>=JsonSourceCursor<&'source S,V>;
@@ -141,7 +141,7 @@ impl JsonParsedValue for semio_framework_value::DslValue{
     fn json_object(values:Vec<(String,Self)>)->Self{Self::Object(values)}
 }
 
-/// 🛂️ Original caller policy bounds the complete source, cumulative storage and each declared collection extent.
+/// 📖️ Original caller policy bounds the complete source, cumulative storage and each declared collection extent.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct JsonReadLimits{
     pub maximum_bytes:u64,

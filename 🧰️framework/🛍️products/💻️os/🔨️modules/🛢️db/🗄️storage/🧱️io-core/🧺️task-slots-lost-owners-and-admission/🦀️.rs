@@ -88,7 +88,7 @@ impl DbIoTaskSlot {
 
 pub static DB_IO_TASK_SLOTS: [std::sync::Mutex<DbIoTaskSlot>; DB_IO_OPERATION_ITEMS] = [const { std::sync::Mutex::new(DbIoTaskSlot::empty()) }; DB_IO_OPERATION_ITEMS];
 
-struct DbIoTaskArena {
+pub struct DbIoTaskArena {
     pub free: [u16; DB_IO_OPERATION_ITEMS],
     pub free_read: usize,
     pub free_len: usize,

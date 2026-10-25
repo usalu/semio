@@ -317,11 +317,10 @@ impl ActiveArtifactEnvelopeIngress {
         if let Some(page) = pages.close_take_page() {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: page.len(), ..empty }));
         }
-        let released_bytes = pages.allocation_byte_demand();
-        let pages = self.pages.take().expect("terminal ingress pages remain retained");
+        let progress = pages.close_backing_step(grant).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.pages-close"), "ingress decode directory refused its admitted release"))?.progress();
         assert!(pages.terminal_is_empty());
-        drop(pages);
-        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..empty }))
+        drop(self.pages.take());
+        Ok(RetainedCloneStep::Progress(progress))
     }
     pub fn terminal_is_empty(&self) -> bool {
         self.pages.is_none()

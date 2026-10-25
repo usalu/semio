@@ -19,13 +19,13 @@ where
     let mut steps = Vec::new();
     for part in &selection.parts {
         if part.part_2d.x + dx / PUZZLE5D_FLAT_TO_WORLD != part.part_2d.x || part.part_2d.y - dy / PUZZLE5D_FLAT_TO_WORLD != part.part_2d.y {
-            steps.push(move_part_2d(part.id.clone(), part.part_2d.x, part.part_2d.y));
+            steps.push(move_part_2d::move_part_2d::<Op>(part.id.clone(), part.part_2d.x, part.part_2d.y));
         }
         if moved(part.part_3d.origin) != part.part_3d.origin {
-            steps.push(move_part_3d(part.id.clone(), part.part_3d.origin));
+            steps.push(move_part_3d::move_part_3d::<Op>(part.id.clone(), part.part_3d.origin));
         }
     }
-    steps.extend(selection.volumes.iter().filter(|volume| moved(volume.origin) != volume.origin).map(|volume| move_target_volume(volume.id.clone(), volume.origin)));
+    steps.extend(selection.volumes.iter().filter(|volume| moved(volume.origin) != volume.origin).map(|volume| move_target_volume::move_target_volume::<Op>(volume.id.clone(), volume.origin)));
     steps.reverse();
     Ok(steps)
 }

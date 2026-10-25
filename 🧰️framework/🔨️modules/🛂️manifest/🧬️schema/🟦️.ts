@@ -9,7 +9,7 @@ export function surfaceAppId(dialect: ArtifactDialect, role: AppRole): string {
   return `${dialectCoordinate(dialect)}#${role}`;
 }
 
-/** 🪟️ Resolves the final role separator against the canonical IO coordinate. */
+/** 📖️ Resolves the final role separator against the canonical IO coordinate. */
 export function parseSurfaceAppId(id: string): { dialect: ArtifactDialect; role: AppRole } {
   const separator = id.lastIndexOf("#");
   if (separator < 0) throw new Error("surface id is missing '#'");
@@ -20,7 +20,7 @@ export function parseSurfaceAppId(id: string): { dialect: ArtifactDialect; role:
 
 /** 🌐️ One non-empty text per shell locale — the `InputLabelLocales` export. */
 export interface InputLabelLocales { readonly en: string; readonly de: string }
-/** 🌐️ A localized input label: one text per locale, or the full terminology × locale matrix — the `InputLabel` export. */
+/** 🔖️ A localized input label: one text per locale, or the full terminology × locale matrix — the `InputLabel` export. */
 export type InputLabel = InputLabelLocales | { readonly native: InputLabelLocales; readonly reuse: InputLabelLocales };
 /** 🎛️ The value of one `x-semio-ui` annotation — the `InputUi` export (UI facts only; hard bounds stay in the standard keywords). */
 export interface InputUi {
@@ -47,7 +47,7 @@ export interface InputUi {
 }
 /** 🧷️ One payload-intrinsic invariant a schema states that JSON Schema draft-07 cannot express — the `SchemaInvariant` export. */
 export interface SchemaInvariant { readonly id: string; readonly description: InputLabelLocales }
-/** 🧷️ The value of one `x-semio-invariant` annotation — the `SchemaInvariants` export. */
+/** 🧬️ The value of one `x-semio-invariant` annotation — the `SchemaInvariants` export. */
 export type SchemaInvariants = readonly SchemaInvariant[];
 /** 📚️ The framework input-label glossary document — the `InputLabelGlossary` export. */
 export interface InputLabelGlossary { readonly schema: "semio.manifest.input-label-glossary/v1"; readonly labels: Readonly<Record<string, InputLabelLocales>> }
@@ -69,14 +69,14 @@ const inputOnly = (record: Record<string, unknown>, keys: readonly string[], wha
   if (extra !== undefined) throw new Error(`${what} carries the undeclared key ${extra}`);
 };
 
-/** 🌐️ Parses an `InputLabelLocales` value. */
+/** 📥️ Parses an `InputLabelLocales` value. */
 export function parseInputLabelLocales(value: unknown): InputLabelLocales {
   const record = inputRecord(value, "InputLabelLocales");
   inputOnly(record, ["en", "de"], "InputLabelLocales");
   return { en: inputText(record.en, "InputLabelLocales.en"), de: inputText(record.de, "InputLabelLocales.de") };
 }
 
-/** 🧷️ Parses an `x-semio-invariant` value: a non-empty list of invariants, each a unique kebab-case id with a description per locale. */
+/** 💎️ Parses an `x-semio-invariant` value: a non-empty list of invariants, each a unique kebab-case id with a description per locale. */
 export function parseSchemaInvariants(value: unknown): SchemaInvariants {
   if (!Array.isArray(value) || value.length === 0) throw new Error("SchemaInvariants must be a non-empty array");
   const ids = new Set<string>();
@@ -91,7 +91,7 @@ export function parseSchemaInvariants(value: unknown): SchemaInvariants {
   });
 }
 
-/** 🌐️ Parses an `InputLabel` value. */
+/** ⌨️ Parses an `InputLabel` value. */
 export function parseInputLabel(value: unknown): InputLabel {
   const record = inputRecord(value, "InputLabel");
   if ("native" in record || "reuse" in record) {
@@ -101,7 +101,7 @@ export function parseInputLabel(value: unknown): InputLabel {
   return parseInputLabelLocales(record);
 }
 
-/** 🎛️ Parses an `InputUi` value. */
+/** 🌱️ Parses an `InputUi` value. */
 export function parseInputUi(value: unknown): InputUi {
   const record = inputRecord(value, "InputUi");
   inputOnly(record, ["widget", "role", "label", "description", "step", "precision", "softMin", "softMax", "snaps", "snapSource", "optionSource", "unit", "displayUnit", "displayFactor", "scale", "group", "order", "options", "ref"], "InputUi");
@@ -154,7 +154,7 @@ export function parseInputUi(value: unknown): InputUi {
   return ui as InputUi;
 }
 
-/** 📚️ Parses an `InputLabelGlossary` document. */
+/** 📄️ Parses an `InputLabelGlossary` document. */
 export function parseInputLabelGlossary(value: unknown): InputLabelGlossary {
   const record = inputRecord(value, "InputLabelGlossary");
   inputOnly(record, ["schema", "labels"], "InputLabelGlossary");

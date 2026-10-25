@@ -6,7 +6,7 @@ import {appendFileSync,mkdirSync,mkdtempSync,realpathSync,rmSync,symlinkSync,tru
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {readStableBuildFile} from "../🟦️.ts";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";

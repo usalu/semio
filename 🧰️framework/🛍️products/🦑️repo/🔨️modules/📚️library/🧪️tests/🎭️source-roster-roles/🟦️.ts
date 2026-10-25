@@ -33,7 +33,7 @@ function sourceRecordRoles(source: string): readonly string[] {
   }).sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
 }
 
-/** 🧭️ Replaces one roster record without widening the actual output envelope. */
+/** 📋️ Replaces one roster record without widening the actual output envelope. */
 function rosterInventory(mutator: (record: Record<string, unknown>) => Record<string, unknown>): Record<string, unknown> {
   const roster = vectors.validInventory.sourceRoster;
   if (!Array.isArray(roster)) throw new Error("neutral source roster is absent");

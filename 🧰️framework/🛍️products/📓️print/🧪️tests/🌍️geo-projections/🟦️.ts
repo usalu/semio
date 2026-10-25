@@ -53,7 +53,7 @@ function rows(ctx: AdapterContext): Record<string, string>[] {
   return body.map((row) => Object.fromEntries(header!.map((name, index) => [name, row[index] ?? ""])));
 }
 
-/** 🗺️ The d3 projection of a table row's `kind` column. */
+/** ➡️ The d3 projection of a table row's `kind` column. */
 function projectionOf(kind: string): geo.GeoProjection {
   const make = KINDS[kind];
   if (make === undefined) throw new Error(`no d3-geo constructor is registered for the kind ${JSON.stringify(kind)}`);
@@ -87,17 +87,17 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🌍️geo-projections/forward.tex")),
     },
     "inverse-projection": {
-      /** 🔮️ d3-geo's `invert` on the same plane point. */
+      /** 📍️ d3-geo's `invert` on the same plane point. */
       oracle: (ctx: AdapterContext) => ({
         projection: {
           "geo/inverse": grid(rows(ctx).flatMap((row) => projectionOf(row.kind!).invert!([Number(row.x), Number(row.y)]) as [number, number])),
         },
       }),
-      /** 🎯️ `\SemioVizGeoInvert` on the same fourteen kinds. */
+      /** ↩️ `\SemioVizGeoInvert` on the same fourteen kinds. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🌍️geo-projections/inverse.tex")),
     },
     "fit-extent": {
-      /** 🔮️ d3-geo's `fitSize`, `fitExtent` and `fitWidth` over the same landmass. */
+      /** 📏️ d3-geo's `fitSize`, `fitExtent` and `fitWidth` over the same landmass. */
       oracle: (ctx: AdapterContext) => {
         const size: number[] = [];
         const extent: number[] = [];
@@ -114,7 +114,7 @@ export default defineTestAdapter({
         }
         return { projection: { "geo/fit-size": grid(size), "geo/fit-extent": grid(extent), "geo/fit-width": grid(width) } };
       },
-      /** 🎯️ `\SemioVizGeoFitSize`, `\SemioVizGeoFit` and `\SemioVizGeoFitWidth` over `demo-geo-regions`. */
+      /** 🔲️ `\SemioVizGeoFitSize`, `\SemioVizGeoFit` and `\SemioVizGeoFitWidth` over `demo-geo-regions`. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🌍️geo-projections/fit.tex")),
     },
   },

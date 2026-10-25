@@ -1,0 +1,260 @@
+# stage-clean orphan staged=own-crash-tools/staged/w/5386c98f4193.json map=None
+--- /dev/null
++++ b/staged/own-crash-tools/staged/w/5386c98f4193.json
+@@ -0,0 +1,184 @@
++{
++  "schemaVersion": 1,
++  "contractId": "package-implementation-admission-v1",
++  "semantics": {
++    "admissionCases": "Whether a package file at relativePath (below the language package root) may hold implementation under the rule's implementationAdmission. directoryFiles lists the file names next to it.",
++    "sourceCases": "The glue-grammar role of a package source. Every source parses with the language's own formatter (gofmt -e, rustfmt)."
++  },
++  "manifestFilenames": {
++    "cargo-manifest": "Cargo.toml"
++  },
++  "admissionCases": [
++    {
++      "id": "go-subpackage-admitted",
++      "admission": {
++        "form": "nested-source-unit",
++        "unitSourceFileKindId": "go-source"
++      },
++      "relativePath": "🐚️unix-durability/🐹️.go",
++      "kindId": "go-source",
++      "directoryFiles": [],
++      "expected": true
++    },
++    {
++      "id": "go-root-file-not-admitted",
++      "admission": {
++        "form": "nested-source-unit",
++        "unitSourceFileKindId": "go-source"
++      },
++      "relativePath": "🐹️.go",
++      "kindId": "go-source",
++      "directoryFiles": [],
++      "expected": false
++    },
++    {
++      "id": "go-nested-non-source-not-admitted",
++      "admission": {
++        "form": "nested-source-unit",
++        "unitSourceFileKindId": "go-source"
++      },
++      "relativePath": "🪟️windows-durability/📋️project.json",
++      "kindId": "json",
++      "directoryFiles": [],
++      "expected": false
++    },
++    {
++      "id": "cargo-crate-with-own-manifest-admitted",
++      "admission": {
++        "form": "nested-manifest-unit",
++        "unitManifestContractId": "cargo-manifest"
++      },
++      "relativePath": "🧩️crate/🦀️.rs",
++      "kindId": "rust-source",
++      "directoryFiles": [
++        "Cargo.toml",
++        "🦀️.rs"
++      ],
++      "expected": true
++    },
++    {
++      "id": "cargo-module-directory-without-manifest-not-admitted",
++      "admission": {
++        "form": "nested-manifest-unit",
++        "unitManifestContractId": "cargo-manifest"
++      },
++      "relativePath": "🪞️mirror/🦀️.rs",
++      "kindId": "rust-source",
++      "directoryFiles": [
++        "🦀️.rs"
++      ],
++      "expected": false
++    },
++    {
++      "id": "cargo-root-crate-file-not-admitted",
++      "admission": {
++        "form": "nested-manifest-unit",
++        "unitManifestContractId": "cargo-manifest"
++      },
++      "relativePath": "🦀️.rs",
++      "kindId": "rust-source",
++      "directoryFiles": [
++        "Cargo.toml",
++        "🦀️.rs"
++      ],
++      "expected": false
++    },
++    {
++      "id": "no-admission-never-admits",
++      "admission": null,
++      "relativePath": "🧩️crate/🦀️.rs",
++      "kindId": "rust-source",
++      "directoryFiles": [
++        "Cargo.toml"
++      ],
++      "expected": false
++    },
++    {
++      "id": "omitted-admission-never-admits",
++      "relativePath": "🧩️crate/🦀️.rs",
++      "kindId": "rust-source",
++      "directoryFiles": [
++        "Cargo.toml"
++      ],
++      "expected": false
++    }
++  ],
++  "sourceCases": [
++    {
++      "id": "go-raw-string-with-backslash-is-balanced",
++      "language": "go",
++      "source": [
++        "package files",
++        "",
++        "var separators = `/\\`"
++      ],
++      "expectedRole": "implementation"
++    },
++    {
++      "id": "go-method-is-implementation",
++      "language": "go",
++      "source": [
++        "package graphql",
++        "",
++        "import (",
++        "\tmodel \"github.com/usalu/semio/repo/model\"",
++        ")",
++        "",
++        "func (c *RepoContext) scanTodos() []*model.Todo {",
++        "\treturn model.Scan(c.rootDir)",
++        "}"
++      ],
++      "expectedRole": "implementation"
++    },
++    {
++      "id": "go-aliased-single-import-declaration",
++      "language": "go",
++      "source": [
++        "package x",
++        "",
++        "import model \"github.com/usalu/semio/repo/model\""
++      ],
++      "expectedRole": "declaration"
++    },
++    {
++      "id": "go-main-delegates",
++      "language": "go",
++      "source": [
++        "package main",
++        "",
++        "import \"github.com/usalu/semio/repo/run\"",
++        "",
++        "func main() {",
++        "\trun.Run()",
++        "}"
++      ],
++      "expectedRole": "bootstrap"
++    },
++    {
++      "id": "rust-module-names-containing-keywords",
++      "language": "rust",
++      "source": [
++        "#[path = \".\"]",
++        "pub mod house {",
++        "    #[path = \"../../🧪️/🦀️.rs\"]",
++        "    pub mod tests;",
++        "}",
++        "pub mod reuse;",
++        "pub mod bimodal {",
++        "    pub mod prototype;",
++        "}"
++      ],
++      "expectedRole": "declaration"
++    },
++    {
++      "id": "rust-struct-is-implementation",
++      "language": "rust",
++      "source": [
++        "pub struct Mirror {",
++        "    pub id: u32,",
++        "}"
++      ],
++      "expectedRole": "implementation"
++    }
++  ]
++}
+# stage-clean orphan staged=own-crash-tools/staged/w/map.json map=None
+--- /dev/null
++++ b/staged/own-crash-tools/staged/w/map.json
+@@ -0,0 +1,5 @@
++{
++ "files": {
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️package-implementation-admission/🔣️.json": "5386c98f4193.json"
++ }
++}
+# stage-clean different staged=own-crash-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧱️package-implementation-admission/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧱️package-implementation-admission/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧱️package-implementation-admission/🟦️.ts
+@@ -12,8 +12,8 @@
+ }
+ 
+ /** 🧱️ Whether a package file inside a nested unit directory may hold implementation. The package root itself is never a nested unit. */
+-export function packageImplementationAdmitted(admission: PackageImplementationAdmission | null, input: PackageImplementationAdmissionInput): boolean {
+-  if (admission === null || !input.relativePath.includes("/")) return false;
++export function packageImplementationAdmitted(admission: PackageImplementationAdmission | null | undefined, input: PackageImplementationAdmissionInput): boolean {
++  if (admission == null || !input.relativePath.includes("/")) return false;
+   if (admission.form === "nested-source-unit") return input.kindId === admission.unitSourceFileKindId;
+   const manifest = input.manifestFilename(admission.unitManifestContractId);
+   return manifest !== null && input.directoryHasFile(manifest);
+# stage-clean different staged=own-crash-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️package-implementation-admission/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️package-implementation-admission/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️package-implementation-admission/🟦️.ts
+@@ -5,9 +5,6 @@
+ import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+ import { packageImplementationAdmitted, type PackageImplementationAdmission } from "../../🔍️discovery/🧱️package-implementation-admission/🟦️.ts";
+ import { classifyPackageSource } from "../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
+-
+-/** 🧷️ A source fixture row whose authored `expectedRole` is read as the closed role the classifier returns. */
+-type SourceCaseRow = Omit<(typeof fixture.sourceCases)[number], "expectedRole"> & { readonly expectedRole: ReturnType<typeof classifyPackageSource>["role"] };
+ 
+ const formatterParses = (language: string, source: string): boolean | null => {
+   const run = language === "go" ? spawnSync("gofmt", ["-e"], { input: source, encoding: "utf8" }) : spawnSync("rustfmt", ["--edition", "2021", "--emit", "stdout"], { input: source, encoding: "utf8" });
+@@ -18,7 +15,7 @@
+   for (const row of fixture.admissionCases) {
+     test(`${row.id}`, () => {
+       const names = new Set(row.directoryFiles);
+-      expect(packageImplementationAdmitted(row.admission as PackageImplementationAdmission | null, { relativePath: row.relativePath, kindId: row.kindId, directoryHasFile: (name) => names.has(name), manifestFilename: (id) => (fixture.manifestFilenames as Record<string, string>)[id] ?? null })).toBe(row.expected);
++      expect(packageImplementationAdmitted(row.admission as PackageImplementationAdmission | null | undefined, { relativePath: row.relativePath, kindId: row.kindId, directoryHasFile: (name) => names.has(name), manifestFilename: (id) => (fixture.manifestFilenames as Record<string, string>)[id] ?? null })).toBe(row.expected);
+     });
+   }
+ 
+@@ -26,22 +23,21 @@
+     const rules = loadCatalogTaxonomy().packageBoundaryRules;
+     expect(rules["🐹️go"]!.implementationAdmission).toEqual({ form: "nested-source-unit", unitSourceFileKindId: "go-source" });
+     expect(rules["🦀️rust"]!.implementationAdmission).toEqual({ form: "nested-manifest-unit", unitManifestContractId: "cargo-manifest" });
+-    for (const [id, rule] of Object.entries(rules)) if (id !== "🐹️go" && id !== "🦀️rust") expect(rule.implementationAdmission).toBeNull();
++    for (const [id, rule] of Object.entries(rules)) if (id !== "🐹️go" && id !== "🦀️rust") expect(rule.implementationAdmission ?? null).toBeNull();
+   });
+ 
+-  test("the taxonomy reader normalises an absent implementationAdmission to null and every rule answers the admission", () => {
++  test("every rule of the unparsed taxonomy document answers the admission, whether or not it declares one", () => {
+     const rules = JSON.parse(readFileSync(new URL("../../🔣️taxonomy.json", import.meta.url), "utf8")).packageBoundaryRules as Record<string, { implementationAdmission?: PackageImplementationAdmission | null }>;
+     const input = { relativePath: "🧩️unit/🦀️.rs", kindId: "rust-source", directoryHasFile: () => false, manifestFilename: () => null };
+     for (const [id, rule] of Object.entries(loadCatalogTaxonomy().packageBoundaryRules)) {
+       const declared = rules[id]!.implementationAdmission;
+-      expect(rule.implementationAdmission).toEqual(declared ?? null);
++      expect(rule.implementationAdmission ?? null).toEqual(declared ?? null);
+       expect(() => packageImplementationAdmitted(rule.implementationAdmission, input)).not.toThrow();
+-      if (declared === undefined) expect(rule.implementationAdmission).toBeNull();
+       if (declared === undefined || declared === null) expect(packageImplementationAdmitted(rule.implementationAdmission, input)).toBe(false);
+     }
+   });
+ 
+-  for (const row of fixture.sourceCases as readonly SourceCaseRow[]) {
++  for (const row of fixture.sourceCases) {
+     const source = row.source.join("\n") + "\n";
+     test(`${row.id}: role`, () => {
+       const grammar = loadCatalogTaxonomy().packageGlueGrammar[row.language]!;

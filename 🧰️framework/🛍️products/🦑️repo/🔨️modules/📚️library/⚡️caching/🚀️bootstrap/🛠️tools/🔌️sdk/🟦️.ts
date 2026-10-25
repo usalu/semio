@@ -1,6 +1,6 @@
 import {createRequire} from "node:module";
 import {dirname} from "node:path";
-import type {SelectedTaskPlannerV1} from "../../../🕸️graph/🔏️seal/🎯️selection/📥️scope/🟦️.ts";
+import type {SelectedTaskPlannerV1} from "../../../../📦️packages/🟦️typescript/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🟦️.ts";
 import policy from "./🔣️policy.json" with {type:"json"};
 
 const admitted:ReadonlySet<string>=new Set(policy.modules);

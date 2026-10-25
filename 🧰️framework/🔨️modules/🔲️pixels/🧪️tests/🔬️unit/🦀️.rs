@@ -164,6 +164,45 @@ fn resize_bilinear_solid_color_stays_solid() {
 }
 //#endregion OwnRoundTrip
 
+//#region TriangleResize
+fn rgba_image_from_oracle(image: &RasterImage) -> image::RgbaImage {
+    image::RgbaImage::from_raw(image.width, image.height, image.pixels.clone()).unwrap()
+}
+
+#[test]
+fn resize_triangle_matches_the_shared_independent_float32_vectors() {
+    let cases: serde_json::Value = serde_json::from_str(text("🧪️tests/🧫️fixtures/📉️triangle-resize/🔣️.json")).unwrap();
+    for case in cases.as_array().unwrap() {
+        let bytes = |key: &str| -> Vec<u8> { case[key].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect() };
+        let dimension = |key: &str| case[key].as_u64().unwrap() as u32;
+        let source = RasterImage { width: dimension("width"), height: dimension("height"), pixels: bytes("pixels") };
+        let resized = resize_triangle(&source, dimension("targetWidth"), dimension("targetHeight"));
+        assert_eq!((resized.width, resized.height), (dimension("targetWidth"), dimension("targetHeight")), "{}", case["name"]);
+        assert_eq!(resized.pixels, bytes("expected"), "{}", case["name"]);
+    }
+}
+
+#[test]
+fn resize_triangle_matches_the_image_crate_filter_for_every_random_shape() {
+    for (seed, (width, height, target_width, target_height)) in [(11, (64, 48, 17, 13)), (12, (33, 71, 40, 9)), (13, (5, 5, 5, 5)), (14, (100, 3, 7, 3)), (15, (2, 90, 2, 11)), (16, (48, 48, 96, 96))] {
+        let source = RasterImage { width, height, pixels: lcg_bytes(seed, (width * height * 4) as usize) };
+        let ours = resize_triangle(&source, target_width, target_height);
+        let oracle = image::imageops::resize(&rgba_image_from_oracle(&source), target_width, target_height, image::imageops::FilterType::Triangle);
+        assert_eq!((ours.width, ours.height), oracle.dimensions());
+        assert_eq!(ours.pixels, oracle.into_raw(), "seed {seed}");
+    }
+}
+
+#[test]
+fn resize_triangle_degenerate_targets_copy_or_blank() {
+    let image = gradient_checkerboard(4, 3);
+    assert_eq!(resize_triangle(&image, 4, 3), image);
+    assert_eq!(resize_triangle(&image, 0, 3), RasterImage::new(0, 3));
+    assert_eq!(resize_triangle(&RasterImage::new(0, 0), 2, 2), RasterImage::new(2, 2));
+}
+//#endregion TriangleResize
+
+
 //#region OracleDifferential
 /// 🔬️ Differential oracle: encode with OUR codec, decode with the third-party `png` crate
 /// (dev-dependency only — never a runtime dependency of this crate or any plugin), and vice

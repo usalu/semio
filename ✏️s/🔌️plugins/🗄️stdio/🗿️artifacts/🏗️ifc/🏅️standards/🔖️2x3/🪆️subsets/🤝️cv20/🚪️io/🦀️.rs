@@ -187,7 +187,7 @@ use semio_framework_diagnostic::Severity;
                 id,
                 entities: vec![(type_name.to_string(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string()), Part21Value::Unset, Part21Value::Unset, Part21Value::Ref(PLACEMENT_ID)])],
             };
-            let (next, outcome) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::Mutation::diff(&Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance, index: None }), &self.snapshot));
+            let (next, outcome) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::ColdMutation::diff(&Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance, index: None }), &self.snapshot));
             self.snapshot = next;
             stage_mutation_errors(&mut self.diagnostics, &outcome);
             self
@@ -225,7 +225,7 @@ use semio_framework_diagnostic::Severity;
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (next, diff) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            let (next, diff) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::ColdMutation::diff(&mutation, &self.snapshot));
             self.snapshot = next;
             (self, diff)
         }

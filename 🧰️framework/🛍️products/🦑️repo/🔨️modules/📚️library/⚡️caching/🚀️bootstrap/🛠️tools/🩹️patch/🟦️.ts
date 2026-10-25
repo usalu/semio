@@ -60,7 +60,7 @@ export function toolPatchReceipt(directory:string,patch:string):{version:1;files
   return{version:1,files};
 }
 
-/** 🩹️ Emits independently owned exact post-images for the admitted package patch. */
+/** 🖼️ Emits independently owned exact post-images for the admitted package patch. */
 export function applyToolingPatchImagesV1(source:ReadonlyMap<string,Uint8Array>,patch:string):ReadonlyMap<string,Uint8Array>{
  const policy=patchSchema.definitions.Protocol.const;if(Buffer.byteLength(patch)>policy.maximumBytes)throw Error("SDK patch input byte ceiling exceeded");assertToolingPatchV1(patch);const rows=patch.split("\n"),output=new Map<string,Uint8Array>(),decoder=new TextDecoder("utf-8",{fatal:true,ignoreBOM:true});let path="",original:{text:string;newline:boolean}[]=[],result:{text:string;newline:boolean}[]=[],cursor=0,total=0;
  const finish=()=>{if(!path)return;result.push(...original.slice(cursor));const bytes=Buffer.from(result.map(row=>row.text+(row.newline?"\n":"")).join(""));total+=bytes.byteLength;if(total>policy.maximumBytes||output.size>=policy.maximumFiles)throw Error("SDK patch output byte or file ceiling exceeded");output.set(path,bytes);};

@@ -106,7 +106,7 @@ export type World3dScene = {
   readonly domainId?: string;
   /** 🎯️ `domainId`'s bound domain granularity id for a plain (non-component) instance pick/hover hit. */
   readonly domainGranularityId?: string;
-  /** 🚚️ On a scene SPINE (what arrives inside `SurfaceProps.doc`) this names every payload lane that
+  /** 🛤️ On a scene SPINE (what arrives inside `SurfaceProps.doc`) this names every payload lane that
    * rides OUTSIDE it, with the byte length and content hash of each — see {@link WORLD3D_SCENE_LANES}
    * and the Rust `World3dScene::lanes` doc. Absent on an assembled scene built by hand. */
   readonly lanes?: readonly SceneLaneRef[];
@@ -116,7 +116,7 @@ export type World3dScene = {
 export type World3dComputeLabelV1 = { readonly en: string; readonly de: string };
 
 /**
- * ⏳️ The declared shape of {@link World3dScene.statusJson} — what a surface may render and
+ * 🚥️ The declared shape of {@link World3dScene.statusJson} — what a surface may render and
  * what a producer must therefore fill.
  *
  * 🛑️ `cancellable` + `cancelAction` are the CANCEL CONTRACT, and they are deliberately part of the
@@ -126,14 +126,14 @@ export type World3dComputeLabelV1 = { readonly en: string; readonly de: string }
  * and gets no button (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
  */
 export type World3dComputeStatusV1 = {
-  /** ⏳️ Whether work is still resolving — the spinner's own predicate. */
+  /** 🌀️ Whether work is still resolving — the spinner's own predicate. */
   readonly computing: boolean;
   /** 🏷️ A stable wire tag for the current phase (`idle`, `meshingFaces`, `cancelled`, `faulted`, …). */
   readonly phase: string;
-  /** 🌍️ The phase's own English/German label, when the producer supplies one. */
+  /** 🔖️ The phase's own English/German label, when the producer supplies one. */
   readonly phaseLabel: World3dComputeLabelV1 | null;
   /**
-   * 🕳️ Why this surface has nothing to show, in the producer's own words — already localized by the
+   * 💡️ Why this surface has nothing to show, in the producer's own words — already localized by the
    * producer, exactly as `phaseLabel` is.
    *
    * The generation3d generate preview publishes `labels.preview_hint` here whenever it delivered no
@@ -153,9 +153,9 @@ export type World3dComputeStatusV1 = {
   readonly ratio: number;
   /** 🛑️ Whether a cancel would stop anything RIGHT NOW. */
   readonly cancellable: boolean;
-  /** 🛑️ The action id a cancel affordance dispatches; empty when the producer declares none. */
+  /** ✖️ The action id a cancel affordance dispatches; empty when the producer declares none. */
   readonly cancelAction: string;
-  /** 🛑️ The arguments the affordance dispatches `cancelAction` with — string and number values only (a
+  /** 🧾️ The arguments the affordance dispatches `cancelAction` with — string and number values only (a
    * tool run's `{runId, generation}`); empty when the producer declares none. */
   readonly cancelArgs: Readonly<Record<string, string | number>>;
 };
@@ -196,7 +196,7 @@ function world3dComputeNumber(value: unknown): number {
 }
 
 /**
- * ⏳️ The ONE reader of {@link World3dScene.statusJson}. Total: malformed JSON, a missing
+ * 📖️ The ONE reader of {@link World3dScene.statusJson}. Total: malformed JSON, a missing
  * field or a hostile type degrades to the neutral status rather than throwing inside a render — a
  * status overlay must never be able to blank the viewport it annotates.
  *

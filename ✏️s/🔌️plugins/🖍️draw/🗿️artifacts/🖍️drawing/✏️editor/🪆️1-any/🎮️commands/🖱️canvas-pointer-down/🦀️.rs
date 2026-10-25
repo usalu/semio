@@ -45,7 +45,7 @@ use semio_s_artifact_draw_drawing_model::{create_drawing_trace_layer, layer_id};
 use semio_s_artifact_draw_drawing_model::create_drawing_path_layer;
 use semio_s_artifact_draw_drawing_model::{PathSegment};
 use semio_s_artifact_draw_drawing_geometry::editing::{PathPoint, path_point_hit};
-use crate::machine::Command;
+use machine::Command;
 use semio_framework_plugin::{kernel::Effect, AppOperationContext, RequestId, UiFixedList};
 use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolYield};
 use std::sync::atomic::{AtomicU64, Ordering};

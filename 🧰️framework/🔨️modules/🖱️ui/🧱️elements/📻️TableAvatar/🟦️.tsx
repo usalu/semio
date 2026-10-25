@@ -23,7 +23,7 @@ export interface TableAvatarProps extends Omit<React.HTMLAttributes<HTMLSpanElem
   fallbackStyle?: React.CSSProperties;
 }
 
-/** 📻️ Renders a native image with an immediate fallback until the current source loads. */
+/** 🖼️ Renders a native image with an immediate fallback until the current source loads. */
 export const TableAvatar = reactHostPort.forwardRef<HTMLSpanElement, TableAvatarProps>(function TableAvatar({ id, icon, name, className, isSelected, isHovered, style, fallbackStyle, ...props }, ref) {
   const normalizedName = (name ?? "").trim();
   const initials = normalizedName

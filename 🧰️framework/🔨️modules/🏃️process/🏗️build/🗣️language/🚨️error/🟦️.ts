@@ -5,7 +5,7 @@ import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 export const REPO_ERROR_CODES_V1: readonly string[] = Object.freeze(schema.properties.code.enum);
 
 /** 🏷️ One refusal class. */
-export type RepoErrorCodeV1 = "usage" | "invalid" | "missing" | "refused" | "failed" | "breach" | "stale" | "unsupported";
+export type RepoErrorCodeV1 = "usage" | "invalid" | "missing" | "refused" | "failed" | "breach" | "stale" | "unsupported" | "cancelled";
 
 /**
  * 📦️ The wire form of a refusal.
@@ -62,7 +62,7 @@ export function renderRepoErrorV1(error: Pick<RepoErrorV1, "key" | "values">, la
   return handleTextV1(handle, key, language, error.values);
 }
 
-/** 🚪️ The exit status of a refusal class: usage mistakes are 2, everything else 1. */
+/** 🚪️ The exit status of a refusal class: usage mistakes are 2, a cancellation by the developer is 130 (the status of an interrupt), everything else 1. */
 export function repoErrorExitCodeV1(code: RepoErrorCodeV1): number {
-  return code === "usage" ? 2 : 1;
+  return code === "usage" ? 2 : code === "cancelled" ? 130 : 1;
 }

@@ -34,7 +34,8 @@
             ]
           },
           "wire": {
-            "type": "string"
+            "type": "string",
+            "description": "generation-frontier: the JSON text of the document (streamed as bytes); generation-index: the JSON text of the LOGICAL index, which the test encodes with the binary codec (a case the encoder refuses is a refused document)"
           },
           "accepted": {
             "type": "boolean"

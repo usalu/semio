@@ -1,10 +1,10 @@
-import{withBuildTestInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {join} from "node:path";
 import {mkdirSync,mkdtempSync,rmSync,symlinkSync,unlinkSync,writeFileSync} from "node:fs";
 import * as issued from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import * as leases from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import * as leases from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {readJavascriptDependencySourceOwnerExecutionV1} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
 

@@ -6,6 +6,7 @@
     "maximumLines": 1000000
   },
   "child": {
-    "maximumElapsedMilliseconds": 3600000
+    "maximumElapsedMilliseconds": 14400000,
+    "idleMilliseconds": 3600000
   }
 }

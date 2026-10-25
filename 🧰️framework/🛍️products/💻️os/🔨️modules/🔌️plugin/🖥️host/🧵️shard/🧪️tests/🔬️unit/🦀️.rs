@@ -1,6 +1,6 @@
-fn fixture_issued_turn(budget: semio_framework_actor::Budget) -> IssuedShardTurn { IssuedShardTurn::new(budget, original_retained_turn(), 1).expect("declared original single envelope") }
+fn fixture_issued_turn(budget: semio_framework_actor::Budget) -> IssuedShardTurn { IssuedShardTurn::whole(budget, original_retained_turn(), 1).expect("declared original single envelope") }
 pub(super) fn original_retained_turn() -> semio_framework_actor::RetainedTurnInput { let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json")).unwrap(); serde_json::from_value(law["input"].clone()).unwrap() }
-fn idle_receipt() -> semio_framework_actor::RetainedTurnReceipt { original_retained_turn().return_original(semio_framework_value::RetainedCloneProgress::default()).expect("idle turn spends nothing") }
+fn idle_receipt() -> semio_framework_actor::RetainedTurnReceipt { original_retained_turn().return_original(semio_framework_value::RetainedCloneProgress::default(), 0).expect("idle turn spends nothing") }
 
 use std::sync::Mutex;
 use semio_framework_actor::{ActorId, Envelope, JobCheckpoint, JobOperation, JobPublication, JobReplayRequest, JobStepOutcome, JobTurn, PackageHash, PackageId, Payload};

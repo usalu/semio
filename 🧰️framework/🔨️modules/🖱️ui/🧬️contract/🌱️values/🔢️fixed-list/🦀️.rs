@@ -46,7 +46,7 @@ impl<T, const N: usize> UiFixedList<T, N> {
     pub const fn empty() -> Self {
         Self { storage: fixed_list_storage::PagedList::empty() }
     }
-    /// 🧊️ Cold full-capacity reservation; interactive owners admit one page with try_reserve_one.
+    /// ❄️ Cold full-capacity reservation; interactive owners admit one page with try_reserve_one.
     pub fn try_reserve(&mut self) -> Result<bool, PagedListError> {
         self.storage.reserve_full()
     }
@@ -63,13 +63,21 @@ impl<T, const N: usize> UiFixedList<T, N> {
     pub fn try_reserve_one(&mut self, bytes: usize) -> Result<PagedListProgress, PagedListAllocationError> {
         self.storage.reserve_one(bytes)
     }
+    /// 🎟️ Admits at most one backing page under the caller's own grant and returns the exact funded receipt; a grant that cannot carry the page leaves the list untouched and returns the empty receipt.
+    pub fn try_reserve_one_funded(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, PagedListAllocationError> {
+        self.storage.reserve_one_funded(grant)
+    }
+    /// ↩️ Admits at most one backing page toward `capacity` slots under the caller's own grant and returns the exact funded receipt, whether or not a slot is already free; a list that already holds `capacity` slots, or a grant that cannot carry the page, returns the empty receipt and leaves the list untouched.
+    pub fn try_reserve_capacity_one_funded(&mut self, capacity: usize, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, PagedListAllocationError> {
+        self.storage.reserve_capacity_one_funded(capacity, grant)
+    }
     pub fn try_place_reserved(&mut self, source: &mut Option<T>, bytes: usize) -> Result<PagedListProgress, PagedListError> {
         self.storage.place_reserved(source, bytes)
     }
     pub fn next_release_allocation_bytes(&self)->Result<usize,PagedListError>{self.storage.next_release_allocation_bytes()}
     /// 🪜️ Borrows the original native page path depth before logical removal.
     pub fn next_pop_depth_demand(&self)->Result<usize,PagedListError>{self.storage.next_pop_depth_demand()}
-    /// 🪜️ Borrows the original native page path depth before physical release.
+    /// 👣️ Borrows the original native page path depth before physical release.
     pub fn next_release_depth_demand(&self)->Result<usize,PagedListError>{self.storage.next_release_depth_demand()}
     pub fn release_empty_page(&mut self, maximum_bytes: usize) -> Result<PagedListProgress, PagedListError> {
         self.storage.release_empty_page(maximum_bytes)
@@ -83,7 +91,7 @@ impl<T, const N: usize> UiFixedList<T, N> {
         self.storage.push_reserved(value)
     }
 
-    /// 🎟️ Admits backing pages until one slot is free — the page-exact reservation every retained
+    /// ⏭️ Admits backing pages until one slot is free — the page-exact reservation every retained
     /// builder performs by hand (`UiPatchOps::try_push`), so a cold push never owns more than the next
     /// page. A full-capacity reservation here priced one `ActionBinding` at 32 slots × 2 KiB × 3 census
     /// copies (~240 KiB) and one `RowAction` at ~300 KiB, which capped a surface at ~16 actionable rows
@@ -99,7 +107,7 @@ impl<T, const N: usize> UiFixedList<T, N> {
         Ok(())
     }
 
-    /// 🧊️ Cold convenience combining page-exact allocation admission and one write; retained builders
+    /// 📃️ Cold convenience combining page-exact allocation admission and one write; retained builders
     /// split them.
     pub fn try_push(&mut self, value: T) -> Result<(), T> {
         if self.len() == N || self.reserve_next_slot().is_err() {
@@ -136,6 +144,10 @@ impl<T, const N: usize> UiFixedList<T, N> {
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         self.storage.get_mut(index)
+    }
+
+    pub fn last(&self) -> Option<&T> {
+        self.get(self.len().checked_sub(1)?)
     }
 
     pub fn last_mut(&mut self) -> Option<&mut T> {

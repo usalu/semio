@@ -5,6 +5,8 @@
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
+pub use semio_s_artifact_draw_drawing_scene::{draw_scene_physical_close, draw_scene_physical_turn};
+
 #[path = "."]
 pub mod booleans {
     #[path = "../../🔀️booleans/🧪️tests/🔬️unit/🦀️.rs"]

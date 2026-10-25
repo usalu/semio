@@ -2,7 +2,7 @@
 import { rustFindTopLevel, rustTokenSegments } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import type { buildTokensState } from "../🔶️tokens/🟦️.ts";
 import type { buildResolveQualifiedFunctionState } from "../🔸️resolve-qualified-function/🟦️.ts";
-import type { Binding } from "../🟢️shared/🟦️.ts";
+import type { Binding } from "../🟢️harness/🟦️.ts";
 
 /** 🟡 Builds visit of inspectRustNonRepoJoinBaseSpans. */
 export function buildVisit({ tokens, pairs, tupleCallNonRepoPositions, rootEnd, walkJoinChain }: Pick<ReturnType<typeof buildTokensState>, "tokens" | "pairs" | "rootEnd" | "walkJoinChain"> & Pick<ReturnType<typeof buildResolveQualifiedFunctionState>, "tupleCallNonRepoPositions">) {

@@ -121,8 +121,7 @@ pub mod editor {
         }
         #[path = "."]
         pub mod engine {
-            #[path = "../../../../✏️editor/⚙️engine/🔣️icons/🦀️.rs"]
-            pub mod icons;
+            pub use semio_s_artifact_puzzle_2d_board_host::editor::puzzle2d::engine::icons;
         }
     }
 }

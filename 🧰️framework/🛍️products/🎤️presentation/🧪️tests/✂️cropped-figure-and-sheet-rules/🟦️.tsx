@@ -1,8 +1,8 @@
 /** ✂️ The presentation react deck, rendering of cropped figure dispositions and the auto-animate style sheet rules: uniform scale, ghost opacity, anisotropic scale and run slides. */
-import type { Presentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import type { Presentation } from "@semio-tech/presentation-react";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { act } from "@semio-tech/ui-react/test";
-import { mountPresentation, patchAutoAnimateUniformScale, patchPresentationAutoAnimateRunStyleSheet, patchPresentationAutoAnimateStyleSheet, resolvePresentationAutoAnimateRunSlides, unmountPresentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { mountPresentation, patchAutoAnimateUniformScale, patchPresentationAutoAnimateRunStyleSheet, patchPresentationAutoAnimateStyleSheet, resolvePresentationAutoAnimateRunSlides, unmountPresentation } from "@semio-tech/presentation-react";
 import { globalsCssSource } from "../🧰️presentation-deck-helpers/🟦️.tsx";
 
 describe("PresentationDeck", () => {

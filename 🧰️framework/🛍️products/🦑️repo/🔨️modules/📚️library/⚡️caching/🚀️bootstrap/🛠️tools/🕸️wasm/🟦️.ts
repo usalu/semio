@@ -6,14 +6,14 @@ import { dirname, join, resolve } from "node:path";
 import { Script } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../📦️packages/🟦️typescript/📇️inventory/🗂️workspaces/🟦️.ts";
 import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import { runTool } from "../../📦️dependencies/🟦️.ts";
+import { runTool } from "../../../../📦️packages/🟦️typescript/💾️storage/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts";
 import { repositoryCargoPreparationStorageV1 } from "../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import binaryenSchema from "./🧬️schema/🔣️.json" with { type: "json" };
-import { withRepositoryToolingStoreV1, type RepositoryToolingStoreV1 } from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import { withRepositoryToolingStoreV1, type RepositoryToolingStoreV1 } from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import { repositoryCachePartitionRootV1 } from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import { requireNativeStorageReservationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import { requireNativeStoragePathV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import { runtimeWhichV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeWhichV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 
 const binaryenManifest=binaryenSchema.definitions.Release.const;

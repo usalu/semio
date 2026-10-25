@@ -1,4 +1,4 @@
-//! 📶️ Progress, celebrate and widget painters: the presence overlay, the progress bars, the celebrate strokes and the focus ring, loading border, stack frame, separator, checkbox and slider painters. See [`super`].
+//! ⏳️ Progress, celebrate and widget painters: the presence overlay, the progress bars, the celebrate strokes and the focus ring, loading border, stack frame, separator, checkbox and slider painters. See [`super`].
 
 use super::*;
 
@@ -40,13 +40,13 @@ pub fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presen
     }
 }
 
-/// ☑️ Checkbox selection represents checkedness, which is painted by the compact control itself.
+/// 🔲️ Checkbox selection represents checkedness, which is painted by the compact control itself.
 pub fn node_selection_outline(node: &UiNode) -> bool {
     node.presence().selected && !matches!(node, UiNode::Toggle(toggle) if toggle.appearance == ui_contract::ToggleAppearance::Checkbox)
 }
 
 //#region 📶️Progress
-/// 📶️ The share of the track an indeterminate sweep covers. The sweep is painted centred and still:
+/// 🛤️ The share of the track an indeterminate sweep covers. The sweep is painted centred and still:
 /// this target's CPU paint pass carries no motion clock and no reduced-motion signal, so a motionless
 /// busy band is the one indeterminate rendering that honours `prefers-reduced-motion: reduce` by
 /// construction — the bar never animates on a host that asked it not to.
@@ -62,7 +62,7 @@ pub fn progress_bar_rects(node: &UiProgressNode, bounds: Rect, theme: &Theme) ->
     progress_bar_rects_of(node.completed, node.total, bounds, theme)
 }
 
-/// 📶️ [`progress_bar_rects`] keyed by the two numbers it actually reads, so the `🪀️widgets` kit's
+/// 🍫️ [`progress_bar_rects`] keyed by the two numbers it actually reads, so the `🪀️widgets` kit's
 /// own `Progress` arm (ticket 26/09/17 packet W15a) prices the identical geometry without having to
 /// build a whole `UiProgressNode` — one bar law covers both kits.
 pub fn progress_bar_rects_of(completed: f64, total: Option<f64>, bounds: Rect, _theme: &Theme) -> ([f32; 4], [f32; 4]) {
@@ -96,14 +96,14 @@ pub fn celebrate_turns(seconds: f32, duration: f32) -> f32 {
     turns - turns.floor()
 }
 
-/// 🎉️ The ring thickness at `turns` — React's `celebrate-border-burst`: hairline at 0 % and 100 %,
+/// 💍️ The ring thickness at `turns` — React's `celebrate-border-burst`: hairline at 0 % and 100 %,
 /// `--stroke-focus` at 50 %, eased in and out (the raised cosine `ease-in-out` traces).
 pub fn celebrate_stroke(theme: &Theme, turns: f32) -> f32 {
     let eased = 0.5 - 0.5 * (turns * std::f32::consts::TAU).cos();
     theme.stroke_hairline + (theme.stroke_focus - theme.stroke_hairline) * eased
 }
 
-/// 🎉️ The conic gradient sampled at `turns` — React's `--celebrate-conic` cycles
+/// 🌈️ The conic gradient sampled at `turns` — React's `--celebrate-conic` cycles
 /// primary → secondary → tertiary → primary, so three equal thirds with a wrap back to the first.
 pub fn celebrate_color(theme: &Theme, turns: f32) -> Rgba {
     let stops = theme.celebrate;
@@ -127,7 +127,7 @@ pub fn focus_ring_visible(flags: NodeFlags) -> bool {
     flags.contains(NodeFlags::FOCUSED) && flags.contains(NodeFlags::FOCUS_VISIBLE)
 }
 
-/// 📶️ Paints a progress bar from theme tokens only: `muted` track, `accent` fill at the theme's own
+/// 🖌️ Paints a progress bar from theme tokens only: `muted` track, `accent` fill at the theme's own
 /// corner radius — React's `ProgressView` is `bg-muted` + `bg-accent` (`🗣️Interpreter/🟦️.tsx:
 /// 2114-2116`), and its `rounded-full` resolves to `--radius-full`, which this design system pins to
 /// `0` like every other radius, so a hardcoded pill shape was wgpu-only. The track stood in with
@@ -154,7 +154,7 @@ pub fn paint_loading_border(draw: &mut DrawList, bounds: Rect, color: Rgba, them
     draw.push_loading_border([bounds.x, bounds.y, bounds.w, bounds.h], color, theme.border_radius, theme.stroke_hairline);
 }
 
-/// 🌀️ Shared "this node is waiting" affordance mirroring `paint_loading_border`: dashed, slower ring
+/// ⌛️ Shared "this node is waiting" affordance mirroring `paint_loading_border`: dashed, slower ring
 /// via `draw::DrawList::push_waiting_border` (`UI_SHADER`'s `kind == 7` branch). Callers dispatch
 /// `loading` before `waiting` so the more active state wins when both flags are set.
 pub fn paint_waiting_border(draw: &mut DrawList, bounds: Rect, color: Rgba, theme: &Theme) {

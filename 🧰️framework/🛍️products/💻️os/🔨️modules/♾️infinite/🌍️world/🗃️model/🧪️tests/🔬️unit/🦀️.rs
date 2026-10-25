@@ -331,20 +331,15 @@ fn an_appended_world_scene_raster_keeps_its_exact_pool_lease() {
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     let mut job = semio_framework_ui_prepared::PreparedRenderJob::try_new(input).ok().expect("prepared job admitted");
     let mut preview = 0;
-    let (outcome,receipt) = semio_framework_job::drive_step(
-        &mut job,
-        "world.prepare",
-        semio_framework_job::OperationId(1),
-        semio_framework_job::Generation(2),
-        semio_framework_job::InteractiveStage::BackgroundStep,
-        semio_framework_job::StepBudget::new(4, u64::MAX,world_original_fixture_grant()),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_us,
-        &mut preview,
-        &mut None,
-    );
+    let mut receipt = semio_framework_value::retained_clone::RetainedCloneProgress::default();
+    let descriptor = {
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(2), semio_framework_job::StepBudget::new(4, u64::MAX, world_original_fixture_grant()), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut preview, &mut receipt);
+        semio_framework_job::drive_step(&mut job, &mut cx, "world.prepare", semio_framework_job::InteractiveStage::BackgroundStep, &mut None).expect("the prepared job never refuses this lane's own producer").map(semio_framework_job::JobOutcomeBorrow::into_descriptor)
+    };
     assert!(receipt.fits(world_original_fixture_grant()));
-    assert!(matches!(outcome, semio_framework_job::StepOutcome::Yield), "a bound producer keeps the preparation alive");
+    let mut descriptor = descriptor.expect("a bound producer keeps the preparation alive with a yield outcome");
+    assert!(matches!(descriptor.kind(), semio_framework_job::JobOutcomeKind::Yield), "a bound producer keeps the preparation alive");
+    assert!(descriptor.acknowledge(world_original_fixture_grant()).progress().fits(world_original_fixture_grant()));
     assert_eq!(job.fault(), None, "the prepared job never refuses this lane's own producer");
     job.begin_close();
     while !matches!(semio_framework_job::close_with_self_funded_context(world_original_fixture_grant(), |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {}

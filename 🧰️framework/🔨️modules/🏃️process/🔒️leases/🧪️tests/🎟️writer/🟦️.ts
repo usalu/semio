@@ -17,6 +17,8 @@ import{acquireResourceLease,requireResourceLeaseCustodyV1,resourceLeasePathV1}fr
 import{createIssuedResourceControlV1,createRequestedIssuedResourceControlV1}from"../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import interleaving from"./🎟️interleaving.json"with{type:"json"};
 import{captureOwnedCommandV1}from"../../../🎛️owned-execution/🟦️.ts";
+import componentSchema from"../../🧬️schema/📜️ticket.json"with{type:"json"};
+import{withBuildTestInvocationV1}from"../../../🧪️testing/📥️invocation/🟦️.ts";
 
 test("actual shared lease public promotion cannot prove exclusive writer custody",async()=>{
  expect(new Ajv({strict:true}).validate({$schema:componentSchema.$schema,definitions:componentSchema.definitions,$ref:"#/definitions/WriterIssuanceCorpus"},fixture)).toBe(true);expect(validateJsonSchemaSubset(schema,fixture,componentSchema)).toEqual([]);
@@ -30,8 +32,6 @@ test("actual shared lease public promotion cannot prove exclusive writer custody
  });
 },120000);
 
-import{withBuildTestInvocationV1}from"../../../🧪️testing/📥️invocation/🟦️.ts";
-import componentSchema from"../../🧬️schema/📜️ticket.json";
 import ownership from"../🧫️fixtures/📜️queue.json";
 import{createHash}from"node:crypto";
 import{captureOwnedCommandResultV1}from"../../../🎛️owned-execution/🟦️.ts";

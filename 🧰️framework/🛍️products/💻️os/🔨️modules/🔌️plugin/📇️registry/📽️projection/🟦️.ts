@@ -15,7 +15,8 @@ import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, compon
 import { validateDescriptors } from "../🛂️descriptor-verification/🟦️.ts";
 import { ON_ARTIFACT_KIND_PREFIX, PLUGIN_AREAS, PLUGIN_AREAS_STATE, DeployedRegistryEntryV1, REGISTRY_DIAGNOSTICS_FILE, type RegistryChannelDiagnosticV1, REGISTRY_INPUT_DISCOVERY, TAXONOMY, generateComponentSourceRegistry, generatePluginRegistry, generatePluginRegistryReport } from "../🔎️discovery/🟦️.ts";
 import { FrameworkPackageEntry, emitFrameworkPackagesTypeScript, generateFrameworkPackageRegistry } from "../🧰️framework-catalog/🟦️.ts";
-import { AssetSpecRow, PlaygroundEntry, generatePlaygroundRegistry, generateWithheldPlaygroundRegistry } from "../🎮️playground/🔎️discovery/🟦️.ts";
+import type { AssetSpecRow, PlaygroundEntry } from "../🎮️playground/📋️contract/🟦️.ts";
+import { generatePlaygroundRegistry, generateWithheldPlaygroundRegistry } from "../🎮️playground/🔎️discovery/🟦️.ts";
 import { buildPlaygroundSession } from "../🎮️playground/🧭️session/🟦️.ts";
 import { type GeneratedCatalogProjection, filterProjectedPluginRegistry, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
 import { findNewContractPluginRoots, validatePlaygroundRegistry, validateTaxonomyTree } from "../🗿️taxonomy-validation/🟦️.ts";

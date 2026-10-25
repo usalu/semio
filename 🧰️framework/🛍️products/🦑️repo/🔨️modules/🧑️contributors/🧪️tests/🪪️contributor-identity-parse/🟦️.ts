@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
-import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔮️Oracle

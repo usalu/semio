@@ -67,7 +67,7 @@ pub struct State {
     hook_first: [bool; LANE_COUNT],
 }
 
-/// 🔔️ Per lane, how many hooks are requested and neither running, closing nor closed: written
+/// 🪪️ Per lane, how many hooks are requested and neither running, closing nor closed: written
 /// under the state lock after every transition, read without it, so an idle worker's scan never
 /// contends for the registry.
 #[doc(hidden)] pub struct WorkerMaintenanceRegistry {

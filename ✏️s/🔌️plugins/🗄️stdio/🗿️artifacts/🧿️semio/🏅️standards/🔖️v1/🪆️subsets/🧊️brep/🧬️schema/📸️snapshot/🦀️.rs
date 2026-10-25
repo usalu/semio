@@ -144,7 +144,7 @@ impl Default for BrepSurface {
 //#region 🔖️Topology
 /// 📍️ A b-rep vertex — corresponds to STEP's `VERTEX_POINT`/`CARTESIAN_POINT` pair collapsed
 /// into one id-keyed entity.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepVertex {
@@ -155,7 +155,7 @@ pub struct BrepVertex {
 }
 
 /// ➡️ A b-rep edge — corresponds to STEP's `EDGE_CURVE`, always resolved between two vertices.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepEdge {
@@ -169,7 +169,7 @@ pub struct BrepEdge {
 
 /// 🔁️ A loop-member reference to an edge, carrying the traversal orientation — STEP's
 /// `ORIENTED_EDGE.orientation`. A named weak struct, never a bare `(String, bool)` tuple.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepLoopEdge {
@@ -178,7 +178,7 @@ pub struct BrepLoopEdge {
 }
 
 /// ⭕️ A closed edge loop — corresponds to STEP's `EDGE_LOOP`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepLoop {
@@ -196,7 +196,7 @@ pub struct BrepLoop {
 /// (`pcurve`/`prange`, `None`/`(0.0, 0.0)` when the producer has not stored one) and the coedge's
 /// position in its loop's ring (`loop_id`, `next`, `prev` — ids into this same collection,
 /// matching native `Coedge::{loop_id,next,prev}`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepCoedge {
@@ -214,7 +214,7 @@ pub struct BrepCoedge {
 
 /// 🔺️ A b-rep face — corresponds to STEP's `ADVANCED_FACE`, bounded by one outer loop and zero
 /// or more inner (hole) loops, over a typed surface.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepFace {
@@ -229,7 +229,7 @@ pub struct BrepFace {
 }
 
 /// 🔁️ A shell-member reference to a face, carrying orientation — STEP's face-in-shell sense.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepShellFace {
@@ -238,7 +238,7 @@ pub struct BrepShellFace {
 }
 
 /// 🐚️ A closed (or open) shell — corresponds to STEP's `CLOSED_SHELL`/`OPEN_SHELL`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepShell {
@@ -249,7 +249,7 @@ pub struct BrepShell {
 
 /// 🔁️ A solid-member reference to a shell, flagging whether it bounds a void (an internal
 /// cavity) rather than the solid's outer boundary — STEP's `MANIFOLD_SOLID_BREP.voids`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepSolidShell {
@@ -258,7 +258,7 @@ pub struct BrepSolidShell {
 }
 
 /// 🧊️ A manifold solid — corresponds to STEP's `MANIFOLD_SOLID_BREP`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepSolid {
@@ -269,7 +269,7 @@ pub struct BrepSolid {
 //#endregion 🔖️Topology
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.brep")]

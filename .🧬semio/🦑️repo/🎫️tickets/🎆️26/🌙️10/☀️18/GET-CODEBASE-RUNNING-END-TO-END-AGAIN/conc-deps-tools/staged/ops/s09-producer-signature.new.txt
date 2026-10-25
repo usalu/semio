@@ -1,3 +1,0 @@
-async function runJavascriptDependencyStoreProducerV1(workspace:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl,selection:JavascriptDependencyStoreSelectionV1,phase:"build"|"publish"):Promise<JavascriptDependencyProducedV1>{
- let produced:JavascriptDependencyProducedV1=Object.freeze({state:"ready",currents:[],targets:[]});
- const frame=requireJavascriptDependencyStoreFrameV1(workspace,store,control),checkpoint=

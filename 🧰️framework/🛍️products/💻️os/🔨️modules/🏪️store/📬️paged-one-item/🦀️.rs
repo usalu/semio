@@ -25,6 +25,9 @@ use std::{marker::PhantomData, mem::{size_of, ManuallyDrop}, sync::Arc};
 #[path = "🧬️mutation-apply/🦀️.rs"]
 mod mutation_apply;
 pub use mutation_apply::{mutation_apply_preparation_factory, MutationApplyEdit};
+#[path = "❄️cold-apply/🦀️.rs"]
+mod cold_apply;
+pub use cold_apply::{cold_mutation_apply_preparation_factory, ColdMutationApplyFactory};
 
 
 fn original_mutation_factory<'a, M: Send + Sync + 'static>(

@@ -40,7 +40,7 @@ function rows(ctx: AdapterContext): Record<string, string>[] {
   return body.map((row) => Object.fromEntries(header!.map((name, index) => [name, row[index] ?? ""])));
 }
 
-/** 🎯️ Compiles a probe document built here and projects its records. */
+/** 📄️ Compiles a probe document built here and projects its records. */
 async function probe(ctx: AdapterContext, packages: readonly string[], body: readonly VizProbeStatement[], preamble?: readonly string[]): Promise<{ projection: ProbeProjection }> {
   const records = await compileVizProbeDocumentInContext(ctx,
     { case: CASE, scenario: ctx.scenario.id, packages: [...packages], preamble: preamble === undefined ? undefined : [...preamble], body: [...body] }
@@ -135,12 +135,12 @@ export default defineTestAdapter({
         ], SCALE_PREAMBLE)),
     },
     "geo-mercator": {
-      /** 🔮️ The twin's Mercator projection at the library's default scale and translation. */
+      /** 📚️ The twin's Mercator projection at the library's default scale and translation. */
       oracle: (ctx: AdapterContext) => {
         const projection = vizGeoProjection("mercator");
         return { projection: { "geo/mercator": grid(geoPoints(ctx).flatMap((point) => projection(point))) } };
       },
-      /** 🎯️ `\SemioVizProjection{mercator}` and `\SemioVizGeoProject` in a compiled document. */
+      /** ➡️ `\SemioVizProjection{mercator}` and `\SemioVizGeoProject` in a compiled document. */
       subject: async (ctx: AdapterContext) => (await probe(ctx, ["semio-viz-geo"], [
           { precision: DECIMALS },
           { raw: "\\ExplSyntaxOn" },
@@ -152,12 +152,12 @@ export default defineTestAdapter({
         ])),
     },
     "spatial-hull": {
-      /** 🔮️ The twin's monotone chain over the same points, one-based and rotated to the same start. */
+      /** ⛓️ The twin's monotone chain over the same points, one-based and rotated to the same start. */
       oracle: (ctx: AdapterContext) => {
         const points = hullPoints(ctx);
         return { projection: { "spatial/hull": rotated(vizConvexHull(points).map((index) => index + 1), points) } };
       },
-      /** 🎯️ `\SemioVizHull` over `demo-points`, the same twelve points the table writes out. */
+      /** 🔲️ `\SemioVizHull` over `demo-points`, the same twelve points the table writes out. */
       subject: async (ctx: AdapterContext) => {
         const points = hullPoints(ctx);
         const raw = (await probe(ctx, ["semio-viz-spatial"], [

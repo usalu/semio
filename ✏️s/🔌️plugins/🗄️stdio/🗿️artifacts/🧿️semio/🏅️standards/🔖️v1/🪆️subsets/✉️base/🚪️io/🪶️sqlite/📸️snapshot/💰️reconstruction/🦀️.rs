@@ -3,6 +3,7 @@ use super::*;
 use store::sqlite_snapshot::{artifact::reconstruct_text_into,transfer::{SchemaValidationStorage,validate_database_into}};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Prefix{snapshot:Option<SemioSnapshot>,validation:SchemaValidationStorage,child:NativeDecodeRetirementRecipient}
 fn empty()->Prefix{Prefix{snapshot:None,validation:SchemaValidationStorage::empty(),child:NativeDecodeRetirementRecipient::new()}}
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}

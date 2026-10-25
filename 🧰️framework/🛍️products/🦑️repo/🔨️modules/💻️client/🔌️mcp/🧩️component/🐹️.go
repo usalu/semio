@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
  cli "github.com/usalu/semio/repo/cli"
@@ -41,8 +42,19 @@ func resolveMCPProfile(arguments []string, lookupEnvironment func(string) (strin
 	return providers.ParseMcpClientKind(raw)
 }
 
+// 🎯️hasNativeMCPRootOption is true for the one explicit repository-root option an `mcp` invocation may carry: `--repo <directory>` or `--repo=<directory>`.
+func hasNativeMCPRootOption(arguments []string) bool {
+	switch len(arguments) {
+	case 1:
+		return strings.HasPrefix(arguments[0], "--repo=") && len(arguments[0]) > len("--repo=")
+	case 2:
+		return arguments[0] == "--repo" && arguments[1] != "" && !strings.HasPrefix(arguments[1], "-")
+	}
+	return false
+}
+
 func main() {
- if len(os.Args) < 2 || os.Args[1] != "mcp" {
+ if len(os.Args) < 2 || os.Args[1] != "mcp" || hasNativeMCPRootOption(os.Args[2:]) {
   if err := cli.RunCLI(); err != nil { var exited workspace.ExitError; if errors.As(err, &exited) { os.Exit(exited.Code) }; fmt.Fprintln(os.Stderr, err); os.Exit(1) }; return
  }
 	profile, err := resolveMCPProfile(os.Args[1:], os.LookupEnv)

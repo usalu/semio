@@ -1,15 +1,17 @@
-/** 🔌️ Law of provider-aware build inputs: a command whose script loads framework script providers hashes the designation, its schema and the import closure of every designated provider module, so editing a provider invalidates exactly those commands. The scenario lives in `./🔣️.json` as language-agnostic data; the real repository is checked against the independent esbuild import oracle. */
+/** 🔌️ Law of provider-aware build inputs: a command whose closure defines framework script provider ports hashes the designation, its schema and the import closure of the designated module of every port it defines (every designated module when a port is defined by a name no literal states), never the modules of other ports, so editing a provider invalidates exactly the commands that can load it. The scenario lives in `./🔣️.json` as language-agnostic data; the real repository is checked against independent TypeScript-compiler and esbuild oracles. */
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import { build } from "esbuild";
+import ts from "typescript";
 import { findWorkspaceRoot } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { cacheInternals, createScriptInputCache } from "../../🟨️.mjs";
 import repositoryDesignation from "../../../../../🏃️process/🔌️providers/🔣️.json" with { type: "json" };
 import corpus from "./🔣️.json" with { type: "json" };
 import corpusSchema from "./🧬️schema/🔣️.json" with { type: "json" };
+import { buildSchedulingPrefixesV1 } from "../../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
 
 const workspace = findWorkspaceRoot(import.meta.dir);
 const library = resolve(import.meta.dir, "../../../../..");
@@ -17,6 +19,8 @@ const designationPath = join(library, "🏃️process/🔌️providers/🔣️.j
 const schemaPath = join(library, "🏃️process/🔌️providers/🧬️schema/🔣️.json");
 const loaderPath = resolve(library, "../../../../🔨️modules/🏃️process/🔌️providers/🟦️.ts");
 const prefix = "{workspaceRoot}/";
+const presentation = new Set<string>(JSON.parse(readFileSync(join(library, "🏗️build/🔣️policy.json"), "utf8")).presentationResources);
+const scheduling = buildSchedulingPrefixesV1();
 
 const inputsOf = async (directory: string, cache = createScriptInputCache()): Promise<readonly string[]> => {
   const target = { options: { cwd: relative(workspace, directory), command: "repo ./📜️script.ts run" } };
@@ -51,8 +55,8 @@ test("editing a designated provider module changes the input hash of exactly the
       const inputs = baseline[row.id]!;
       for (const name of row.includes) expect(inputs, `${row.id} includes ${name}`).toContain(`${relativeRoot}/${name}`);
       for (const name of row.excludes) expect(inputs, `${row.id} excludes ${name}`).not.toContain(`${relativeRoot}/${name}`);
-      expect(inputs.includes(relative(workspace, schemaPath)), `${row.id} designation schema`).toBe(row.loadsProviders);
-      expect(inputs.includes(relative(workspace, loaderPath)), `${row.id} loader`).toBe(row.loadsProviders);
+      expect(inputs.includes(relative(workspace, schemaPath)), `${row.id} designation schema`).toBe(row.definesPorts);
+      expect(inputs.includes(relative(workspace, loaderPath)), `${row.id} loader`).toBe(row.importsLoader);
     }
     for (const edit of corpus.edits) {
       const original = readFileSync(join(root, edit.file), "utf8");
@@ -68,19 +72,50 @@ test("editing a designated provider module changes the input hash of exactly the
   } finally { rmSync(root, { recursive: true, force: true }); }
 }, 120_000);
 
-test("every real command that loads providers hashes the import closure of every designated repository provider module", async () => {
-  const modules = Object.values(repositoryDesignation.providers).map(path => resolve(dirname(designationPath), path));
-  expect(modules.length).toBe(Object.keys(repositoryDesignation.providers).length);
-  const scripts = ["🔨️modules/🎭️actor/📦️packages/🦀️rust", "🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript", "📦️packages/🟦️typescript"].map(path => join(workspace, "🧰️framework", path));
-  const cache = createScriptInputCache();
-  for (const directory of scripts) {
-    const inputs = await inputsOf(directory, cache);
-    for (const file of [designationPath, schemaPath, loaderPath, ...modules]) expect(inputs, `${relative(workspace, directory)} -> ${relative(workspace, file)}`).toContain(relative(workspace, file));
+const definedPorts = (file: string): readonly string[] => {
+  const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true), names = new Set<string>();
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "defineScriptProviderV1") names.add(node.arguments[0] !== undefined && ts.isStringLiteralLike(node.arguments[0]) ? node.arguments[0].text : "*");
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return [...names].sort();
+};
+
+test("the provider port scan never misses a port an independent TypeScript compiler scan finds and equals it in every designated provider-port module", async () => {
+  const { scriptProviderPortsV1 } = await import("../../🧭️script-inputs/🟨️.mjs");
+  const owners = [...new Bun.Glob("🧰️framework/🔨️modules/**/*.ts").scanSync({ cwd: workspace, absolute: true })].filter(path => !path.includes("node_modules") && readFileSync(path, "utf8").includes("defineScriptProviderV1"));
+  const defining = owners.filter(path => definedPorts(path).length > 0);
+  expect(defining.length).toBeGreaterThanOrEqual(Object.keys(repositoryDesignation.providers).length - 1);
+  for (const file of defining) {
+    const scanned = [...scriptProviderPortsV1(readFileSync(file, "utf8"))], oracle = definedPorts(file);
+    expect(scanned.includes("*") || oracle.every(name => scanned.includes(name)), relative(workspace, file)).toBe(true);
   }
-  for (const module of modules) {
+  for (const file of owners.filter(path => /\/🔌️provider\/🟦️\.ts$/u.test(path))) expect([...scriptProviderPortsV1(readFileSync(file, "utf8"))], relative(workspace, file)).toEqual([...definedPorts(file)]);
+});
+
+test("every real command hashes the designation and the closure of exactly the designated repository provider modules whose ports its closure defines", async () => {
+  const designated = Object.entries(repositoryDesignation.providers).map(([name, path]) => [name, resolve(dirname(designationPath), path)] as const);
+  expect(designated.length).toBe(Object.keys(repositoryDesignation.providers).length);
+  const scripts = ["🔨️modules/🎭️actor/📦️packages/🦀️rust", "🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript", "📦️packages/🟦️typescript", "🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation"].map(path => join(workspace, "🧰️framework", path));
+  const cache = createScriptInputCache();
+  let requestedSomewhere = false, skippedSomewhere = false;
+  for (const directory of scripts) {
+    const inputs = await inputsOf(directory, cache), requested = new Set(inputs.filter(path => /\.[cm]?[jt]sx?$/u.test(path)).flatMap(path => definedPorts(join(workspace, path))));
+    for (const [name, module] of designated) {
+      const wanted = requested.has("*") || requested.has(name), included = inputs.includes(relative(workspace, module));
+      if (wanted) expect(included, `${relative(workspace, directory)} -> ${name}`).toBe(true);
+      requestedSomewhere ||= wanted; skippedSomewhere ||= !included;
+    }
+    if (requested.size) for (const file of [designationPath, schemaPath]) expect(inputs, `${relative(workspace, directory)} -> ${relative(workspace, file)}`).toContain(relative(workspace, file));
+  }
+  expect(requestedSomewhere && skippedSomewhere).toBe(true);
+  for (const [name, module] of designated) {
     const bundle = await build({ absWorkingDir: workspace, entryPoints: [module], bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
     const closure = Object.keys(bundle.metafile!.inputs).map(path => relative(workspace, resolve(workspace, path.replace(/ with \{.*\}$/u, ""))));
-    const inputs = await inputsOf(scripts[0]!, cache);
-    for (const file of closure) expect(inputs, `${relative(workspace, module)} closure member ${file}`).toContain(file);
+    for (const directory of scripts) {
+      const inputs = await inputsOf(directory, cache);
+      if (inputs.includes(relative(workspace, module))) for (const file of closure.filter(path => !presentation.has(path) && !scheduling.some(prefix => path.startsWith(prefix)))) expect(inputs, `${name} closure member ${file}`).toContain(file);
+    }
   }
-}, 120_000);
+}, 240_000);

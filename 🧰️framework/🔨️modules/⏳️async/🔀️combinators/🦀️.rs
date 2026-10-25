@@ -4,13 +4,13 @@ use std::future::Future;
 use std::task::Poll;
 
 //#region 🔀️Select2
-/// 🔀️ Which branch of a [`select2`] race resolved first.
+/// 🌿️ Which branch of a [`select2`] race resolved first.
 pub enum Either<A, B> {
     Left(A),
     Right(B),
 }
 
-/// 🔀️ Races exactly two futures, returning whichever resolves first and dropping the other — the
+/// 🏎️ Races exactly two futures, returning whichever resolves first and dropping the other — the
 /// repo-owned two-branch replacement for `tokio::select!` (INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 9
 /// packet P9a). Every real race in this repo (a result vs. a deadline, a sleep vs. an early-wake
 /// notification) has exactly two arms, so no N-arm macro was built — build only what has a consumer.
@@ -33,7 +33,7 @@ where
     .await
 }
 
-/// 🔀️ Races two futures with the same output type and returns the winner directly.
+/// 🏁️ Races two futures with the same output type and returns the winner directly.
 pub async fn race2<A, B, T>(left: A, right: B) -> T
 where
     A: Future<Output = T>,
@@ -63,7 +63,7 @@ pub async fn yield_once() {
     .await;
 }
 
-/// 🤝️ Drives two futures concurrently on the current executor and returns both outputs after
+/// 🪢️ Drives two futures concurrently on the current executor and returns both outputs after
 /// both resolve. Poll order is stable (`left`, then `right`) on every turn.
 pub async fn join2<A, B>(left: A, right: B) -> (A::Output, B::Output)
 where

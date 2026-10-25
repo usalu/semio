@@ -265,6 +265,7 @@ where
     fn begin_batch_digest(&self,edit:&mut Option<Box<semio_framework_plugin::plugin_app_close_prelude::store::Edit<M>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreBatchDigest<M>>,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{self.fallback.begin_batch_digest(edit,grant)}
 
     fn begin_demand(&self,mutation:&M,lane:semio_framework_plugin::plugin_app_close_prelude::store::os_store::store_schema::HistoryLane)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,semio_framework_value::ValueError>{if(self.route.recognizes)(mutation){self.route.factory.begin_demand(mutation,lane)}else{self.fallback.begin_demand(mutation,lane)}}
+    fn begin_copy_byte_demand(&self,mutation:&M,lane:semio_framework_plugin::plugin_app_close_prelude::store::os_store::store_schema::HistoryLane)->Result<usize,semio_framework_value::ValueError>{if(self.route.recognizes)(mutation){self.route.factory.begin_copy_byte_demand(mutation,lane)}else{self.fallback.begin_copy_byte_demand(mutation,lane)}}
     fn begin(
         &self,
         request: semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<S, M, M>,

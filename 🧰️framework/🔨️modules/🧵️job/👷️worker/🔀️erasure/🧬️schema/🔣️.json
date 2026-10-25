@@ -6,6 +6,7 @@
     "version",
     "schema",
     "grant",
+    "closeGrant",
     "metadataCopyBytes",
     "originalIdentity",
     "phases",
@@ -26,6 +27,15 @@
       "const": [
         1,
         17,
+        8192,
+        65536,
+        64
+      ]
+    },
+    "closeGrant": {
+      "const": [
+        1,
+        4096,
         8192,
         65536,
         64

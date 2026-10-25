@@ -1,0 +1,12 @@
+import { type NativeImageStorageV1 } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import { type ResourceLeaseControl } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { type BuildGraphHeadroomResultV1, readBuildGraphHeadroomRequestV1, recoverBuildGraphSelectedHeadroomV1 } from "../../🕸️graph/📏️headroom/🟦️.ts";
+import type { BuildGraphScopedOptionalRecoveryResultV1 } from "../../../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs";
+import { validateJsonSchemaSubset } from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import storageSchema from "../../../../../../🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import { withRepositoryPartitionOperationV1 } from "../🟦️.ts";
+
+/** 🔏️ Runs selected retirement through the genuine partition enrollment without exposing its retained canonical image. */
+export function recoverRepositoryCachePartitionSelectedHeadroomV1(workspace:string,partition:NativeImageStorageV1,control:ResourceLeaseControl,value:unknown):Promise<BuildGraphHeadroomResultV1>{const request=readBuildGraphHeadroomRequestV1(value);return withRepositoryPartitionOperationV1(partition,control,(image,actual)=>recoverBuildGraphSelectedHeadroomV1(workspace,image,actual,request));}
+/** 🧹️ Enrolls idle optional graph reclamation through the actual retained partition owner. */
+export function recoverRepositoryCachePartitionOptionalHeadroomV1(workspace:string,partition:NativeImageStorageV1,control:ResourceLeaseControl,value:unknown):Promise<BuildGraphScopedOptionalRecoveryResultV1>{const request=Object.freeze({minimumAvailableBytes:(value as Readonly<{minimumAvailableBytes:number}>|null|undefined)?.minimumAvailableBytes});if(validateJsonSchemaSubset(storageSchema.definitions.OptionalQuota.definitions.Headroom,value,storageSchema).length||validateJsonSchemaSubset(storageSchema.definitions.OptionalQuota.definitions.Headroom,request,storageSchema).length)throw Error("Closed scoped optional headroom required");return withRepositoryPartitionOperationV1(partition,control,async(image,actual)=>{const {recoverBuildGraphOptionalScopesHeadroomV1}=await import("../../../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs");return recoverBuildGraphOptionalScopesHeadroomV1(workspace,image,actual,request as Readonly<{minimumAvailableBytes:number}>);});}

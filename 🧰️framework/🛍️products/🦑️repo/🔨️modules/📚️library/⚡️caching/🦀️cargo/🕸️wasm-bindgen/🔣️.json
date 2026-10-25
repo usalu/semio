@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "wasmLocks": [
+    "Cargo.lock",
+    "🧰️framework/Cargo.lock",
+    "🌎️hub/Cargo.lock",
+    "✏️s/🧑‍💻dev/📐️cad/Cargo.lock",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.lock"
+  ]
+}

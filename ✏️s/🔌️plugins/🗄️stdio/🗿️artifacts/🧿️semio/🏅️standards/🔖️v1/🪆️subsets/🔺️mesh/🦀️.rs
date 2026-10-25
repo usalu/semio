@@ -88,13 +88,3 @@ pub mod viewer {
         }
     }
 }
-
-semio_framework_value::artifact_retire_leaf!(schema::snapshot::SemioTopology);
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioPrimitive { id, topology, positions, normals, uvs, colors, indices, material_id });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioMesh { id, primitives });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioMaterial { id, base_color, metallic, roughness, base_color_texture, metallic_roughness_texture, normal_texture, occlusion_texture, emissive_texture });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioTexture { id, mime, bytes });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioMeshSnapshot { schema, meshes, materials, textures });
-
-semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioMeshSnapshot);
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioMeshSnapshot, schema::mutations::SemioMeshMutation);

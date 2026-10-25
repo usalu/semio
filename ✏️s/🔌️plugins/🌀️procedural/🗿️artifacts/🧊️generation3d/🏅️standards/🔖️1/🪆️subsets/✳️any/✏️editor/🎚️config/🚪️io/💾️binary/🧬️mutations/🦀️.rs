@@ -16,4 +16,5 @@ impl protocol::OpBinary for Generation3dConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(Generation3dConfigMutation);
 }

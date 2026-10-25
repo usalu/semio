@@ -147,7 +147,7 @@ pub struct World3dScene {
     /// hit — `None` when `domain_id` is `None` or the domain has no plain-hit granularity.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub domain_granularity_id: Option<String>,
-    /// 🚚️ On a scene SPINE (what [`SceneDoc::split_lanes`] leaves inside the fixed-capacity surface
+    /// 🛤️ On a scene SPINE (what [`SceneDoc::split_lanes`] leaves inside the fixed-capacity surface
     /// doc) this names every payload lane that rides outside it, with the byte length and content
     /// hash of each. Empty on an assembled scene — a renderer that reassembles the lanes back into
     /// their `*_json` fields leaves the list in place, and a producer that never publishes through a
@@ -361,7 +361,7 @@ impl FromValue for World3dScene {
 //#endregion 🔖️World3dScene
 
 //#region 🔖️World3dSceneLanes
-/// 🚚️ The twenty-five world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
+/// 🎒️ The twenty-five world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
 /// its own retained, individually paged text carrier rooted at [`World3dSceneLane::body_key`].
 ///
 /// Everything NOT in this list stays in the spine: `camera_json` (a ~120-byte per-frame descriptor
@@ -404,11 +404,11 @@ pub enum World3dSceneLane {
     ModellingOptions,
 }
 
-/// 🚚️ Reserved carrier-key namespace. Dotted and `framework.`-prefixed so a lane root can never
+/// 🔑️ Reserved carrier-key namespace. Dotted and `framework.`-prefixed so a lane root can never
 /// collide with an app-authored node id, exactly like `UI_REFRESH_SECTION_BODY_KEYS`.
 pub const WORLD3D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.world3d.";
 
-/// 🚚️ Wire name of each [`World3dSceneLane`], in `World3dSceneLane::ALL` order.
+/// 🔤️ Wire name of each [`World3dSceneLane`], in `World3dSceneLane::ALL` order.
 pub const WORLD3D_SCENE_LANE_NAMES: [&str; 25] = [
     "meshes",
     "instances",
@@ -437,7 +437,7 @@ pub const WORLD3D_SCENE_LANE_NAMES: [&str; 25] = [
     "modellingOptions",
 ];
 
-/// 🚚️ [`World3dScene`] field each lane carries, spelled as its serialized (camelCase) name.
+/// 📋️ [`World3dScene`] field each lane carries, spelled as its serialized (camelCase) name.
 pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 25] = [
     "meshesJson",
     "instancesJson",
@@ -466,7 +466,7 @@ pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 25] = [
     "modellingOptions",
 ];
 
-/// 🚚️ Reserved carrier key of each lane — `WORLD3D_SCENE_LANE_KEY_PREFIX` + its name, spelled out
+/// 🗝️ Reserved carrier key of each lane — `WORLD3D_SCENE_LANE_KEY_PREFIX` + its name, spelled out
 /// so the constant is greppable and pinnable rather than assembled at runtime.
 pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 25] = [
     "framework.scene.world3d.meshes",
@@ -496,7 +496,7 @@ pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 25] = [
     "framework.scene.world3d.modellingOptions",
 ];
 
-/// 🚚️ Whether each lane's [`World3dScene`] field is an `Option<String>` (`true`) rather than a plain
+/// ❓️ Whether each lane's [`World3dScene`] field is an `Option<String>` (`true`) rather than a plain
 /// required `String` (`false`). A required lane always publishes — its empty payload is still a lane
 /// — while an absent optional lane publishes no carrier at all.
 pub const WORLD3D_SCENE_LANE_OPTIONAL: [bool; 25] = [false, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
@@ -535,7 +535,7 @@ impl World3dSceneLane {
         WORLD3D_SCENE_LANE_NAMES[self as usize]
     }
 
-    /// 🏷️ See [`WORLD3D_SCENE_LANE_FIELDS`].
+    /// 🔖️ See [`WORLD3D_SCENE_LANE_FIELDS`].
     pub fn field(self) -> &'static str {
         WORLD3D_SCENE_LANE_FIELDS[self as usize]
     }
@@ -545,7 +545,7 @@ impl World3dSceneLane {
         WORLD3D_SCENE_LANE_BODY_KEYS[self as usize]
     }
 
-    /// 🏷️ See [`WORLD3D_SCENE_LANE_OPTIONAL`].
+    /// ❔️ See [`WORLD3D_SCENE_LANE_OPTIONAL`].
     pub fn optional(self) -> bool {
         WORLD3D_SCENE_LANE_OPTIONAL[self as usize]
     }
@@ -555,7 +555,7 @@ impl World3dSceneLane {
         Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
     }
 
-    /// 🔎️ Resolves a lane wire name back to its lane.
+    /// ↩️ Resolves a lane wire name back to its lane.
     pub fn from_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|lane| lane.name() == name)
     }
@@ -640,28 +640,28 @@ impl World3dSceneLane {
 
 //#region 🔖️ModellingBuilders
 impl World3dScene {
-    /// 📏️ Sets the annotation layer lane; refuses an invalid layer.
+    /// 🥪️ Sets the annotation layer lane; refuses an invalid layer.
     pub fn with_annotations(mut self, layer: World3dAnnotationLayer) -> Result<Self, ValueError> {
         layer.validate()?;
         self.annotations = Some(layer);
         Ok(self)
     }
 
-    /// 🌡️ Sets the scalar field lane; refuses an invalid field.
+    /// 🎚️ Sets the scalar field lane; refuses an invalid field.
     pub fn with_scalar_field(mut self, field: World3dScalarField) -> Result<Self, ValueError> {
         field.validate()?;
         self.scalar_field = Some(field);
         Ok(self)
     }
 
-    /// ⚙️ Replaces the modelling options lane; refuses invalid options.
+    /// 🔧️ Replaces the modelling options lane; refuses invalid options.
     pub fn with_modelling_options(mut self, options: World3dModellingOptions) -> Result<Self, ValueError> {
         options.validate()?;
         self.modelling_options = Some(options);
         Ok(self)
     }
 
-    /// 🎯️ Restricts hover and selection to one granularity.
+    /// 🔦️ Restricts hover and selection to one granularity.
     pub fn with_pick_filter(mut self, filter: World3dPickGranularity) -> Self {
         self.modelling_options.get_or_insert_with(Default::default).pick_filter = Some(filter);
         self

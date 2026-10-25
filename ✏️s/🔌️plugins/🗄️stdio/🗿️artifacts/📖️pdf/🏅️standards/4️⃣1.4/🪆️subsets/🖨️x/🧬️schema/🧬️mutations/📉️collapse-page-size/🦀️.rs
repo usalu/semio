@@ -36,11 +36,11 @@ where
 
 impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for CollapsePageSize
 where
-    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<CollapsePageSize> + From<crate::standards::v1_4::subsets::x::schema::mutations::set_page_size::SetPageSize>,
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<CollapsePageSize> + From<crate::standards::v1_4::subsets::x::schema::mutations::set_page_size::SetPageSize> + protocol::Mutation<PdfSnapshot, Diff = PdfDiff>,
 {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         if !self.valid(base) {
-            return MutationOutcome::error("mutation.target-missing", "Page target or geometry is outside the PDF 1.4 domain", self.target());
+            return MutationOutcome::error("mutation.target-missing", "Page target or geometry is outside the PDF 1.4 domain", <Self as protocol::MutationKind<PdfSnapshot, Op>>::target(self));
         }
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { width: Some(0.0), ..Default::default() } }], ..Default::default() }) })
     }

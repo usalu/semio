@@ -15,7 +15,7 @@ export async function runTestScript(context: Readonly<{ root: string; repoRoot: 
   await executeCargoRequestV1({version:1,kind:"tests",manifest:relative(context.repoRoot,resolve(context.root,"Cargo.toml")).replaceAll("\\","/"),cwd:relative(context.repoRoot,context.root).replaceAll("\\","/"),packages:["semio-framework-value-derive","semio-framework-value-derive-expansion"],arguments:segments},context.invocation);
 }
 
-/** 🏃️ Runs the `ValueAdmissionScript` command under the caller's roots and invocation. */
+/** 🔏️ Runs the `ValueAdmissionScript` command under the caller's roots and invocation. */
 export async function runValueAdmissionScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   if (segments.length > 1 || segments.length === 1 && segments[0] !== "--native") throw Error("value-admission-check accepts only --native");
   const source = resolve(context.root, "../../🧬️admission/🧪️tests/🟦️.ts");

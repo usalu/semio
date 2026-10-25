@@ -282,7 +282,7 @@ pub(super) fn watch(socket: &mut Socket, scopes: &[&str], interval_ms: u64) {
     socket.send(Message::text(json!({ "type": "watch", "scopes": scopes, "intervalMs": interval_ms }).to_string())).expect("sent");
 }
 
-/// 📦️ Whether `frame` is a `watched` frame of `scope` carrying `session` with `state`.
+/// 👁️ Whether `frame` is a `watched` frame of `scope` carrying `session` with `state`.
 pub(super) fn sees(frame: &Value, scope: &str, session: &str, state: &Value) -> bool {
     frame["type"] == "watched" && frame["scope"] == scope && frame["entries"].as_array().expect("entries").iter().any(|entry| entry["session"] == session && &entry["state"] == state)
 }

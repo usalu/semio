@@ -27,7 +27,7 @@ fn original_member_history_receiving_reborrows_actual_caller_retains_pages_and_p
   assert_eq!(page_bytes,receiving_law["sourceReceiving"]["originalPageBytes"].as_u64().unwrap()as usize);
   let(mut pages,input_born,input_released)=measure(||{let mut pages=OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits{maximum_pages:bytes.len().div_ceil(page_bytes),maximum_bytes:bytes.len()}).unwrap();for chunk in bytes.chunks(page_bytes){pages.admit_page(OwnedSchemaDecodePage::try_from_slice(chunk).unwrap()).unwrap()}pages.seal().unwrap();pages});
   assert_eq!(input_released,0);
-  let source=OriginalPages{identity:OriginalWireSourceIdentity{address:pages.slots.as_ptr()as usize,extent:pages.byte_count(),authority:Some((1,1))},pages:&pages};
+  let source=OriginalPages{identity:OriginalWireSourceIdentity{address:pages.slot_address(),extent:pages.byte_count(),authority:Some((1,1))},pages:&pages};
   let original=source.original_source_identity();
   let((loan,receipt),born,released)=measure(||caller.run(grant,|parent,cx|parent.admit_loan(cx).unwrap().unwrap()));exact(grant,receipt,born,released);assert_eq!((born,released),(0,0));let mut loan=loan;
   let mut receiving=MemberHistoryReceiving::new((0,bytes.len()),limits,maximum);let mut history=None;

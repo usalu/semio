@@ -24,6 +24,12 @@ fn wait_json(path: &std::path::Path, what: &str) -> serde_json::Value {
     }
 }
 
+fn on_screen(text: &str) -> String {
+    let fixture = workspace::journey_fixture();
+    let widths: serde_json::Value = serde_json::from_slice(&std::fs::read(repo_root!().join(fixture["widthProbe"]["fixture"].as_str().unwrap())).unwrap()).unwrap();
+    widths["cases"].as_array().unwrap().iter().filter(|case| case["text"] != case["scalarText"]).fold(text.to_string(), |shown, case| shown.replace(case["text"].as_str().unwrap(), case["scalarText"].as_str().unwrap()))
+}
+
 fn process_alive(pid: u64) -> bool {
     let pid = pid.to_string();
     if cfg!(windows) {
@@ -88,7 +94,6 @@ fn a_draft_starts_and_is_discarded_after_visible_confirmation() {
     assert_eq!(tasks(&ws).len(), 2);
     term.checkpoint("draft-discarded");
     ws.assert_paths();
-    println!("[DEBUG] visible draft confirmations created and discarded the exact isolated directory");
 }
 
 fn domain_form(term: &mut terminal::Terminal, command: &str, label: &str) {
@@ -144,7 +149,6 @@ fn a_closed_ticket_reopens_with_the_required_durable_human_prompt() {
     assert_eq!(tasks(&ws).len(), 1);
     term.checkpoint("ticket-reopened");
     ws.assert_paths();
-    println!("[DEBUG] visible ticket reopen retained history and persisted the exact required human prompt without management");
 }
 
 #[test]
@@ -185,7 +189,6 @@ fn a_workspace_terminal_streams_shell_input_and_exits_inside_the_dashboard() {
     assert_eq!(tasks(&ws).iter().filter(|task| command_id(task) == flow["commandId"].as_str().unwrap()).count(), 1);
     term.checkpoint("workspace-terminal");
     ws.assert_paths();
-    println!("[DEBUG] production workspace shell received echo and exit through PTY, logged the exact probe line and exited 0");
 }
 
 #[test]
@@ -229,7 +232,6 @@ fn a_german_form_submits_choices_flags_quoted_arguments_and_environment() {
     assert_eq!(tasks(&ws).iter().filter(|task| command_id(task) == form["commandId"].as_str().unwrap()).count(), 1);
     term.checkpoint("form-received");
     ws.assert_paths();
-    println!("[DEBUG] German PTY form received exact independent JSON receipt {actual}");
 }
 
 #[test]
@@ -263,7 +265,6 @@ fn settings_changes_persist_when_the_view_is_reopened() {
     assert_eq!(std::fs::read_to_string(ws.preference_path()).unwrap(), journal);
     reopened.checkpoint("preferences-reopened");
     ws.assert_paths();
-    println!("[DEBUG] visible settings wrote consecutive events and reopened German light preferences without environment overrides");
 }
 
 #[test]
@@ -329,7 +330,6 @@ fn a_ready_server_opens_its_address_restarts_and_stops_from_the_view() {
     }
     term.checkpoint("ready-stopped");
     ws.assert_paths();
-    println!("[DEBUG] UI ready opener received {url}; restart changed pid {} -> {} and UI stop released its endpoint", before["pid"], after["pid"]);
 }
 
 #[test]
@@ -359,7 +359,6 @@ fn a_read_only_repository_action_runs_from_the_launcher() {
     assert!(log.lines().any(|line| line.trim_end() == flow["expectedLine"].as_str().unwrap()));
     term.checkpoint("repository-action");
     ws.assert_paths();
-    println!("[DEBUG] read-only repo action showed {:?}, exited 0 and preserved the goal bytes", flow["expectedLine"]);
 }
 
 #[test]
@@ -392,7 +391,6 @@ fn tabs_occupy_every_corner_and_own_fullscreen_and_close_controls() {
         for control in preview["controls"].as_array().unwrap() { assert!(chip.2[1].contains(control.as_str().unwrap()), "missing preview control: {proposed}"); }
         term.send(format!("\x1b[<0;{x};{y}m").as_bytes());
         term.wait_until("the committed corner tab agrees with its preview", SLOW, |text| !text.contains("Esc cancels") && tab_chip(text, preview["label"].as_str().unwrap(), right, bottom).as_ref() == Some(&chip)).unwrap();
-        println!("[DEBUG] independent VT100 committed {label} tab after its visible slot preview");
     }
     let (x, y) = locate(&term, "Tasks", None);
     term.send(format!("\x1b[<0;{x};{y}M\x1b[<0;{x};{y}m").as_bytes());
@@ -416,7 +414,6 @@ fn tabs_occupy_every_corner_and_own_fullscreen_and_close_controls() {
     term.send(format!("\x1b[<0;{x};{y}M\x1b[<0;{x};{y}m").as_bytes());
     term.wait_until("only the neighbouring overview remains", SLOW, |text| text.contains("Tasks") && !text.contains("Commands") && !command_body(text)).unwrap();
     assert_repaint_consistent(&mut term, &["connect", "running", "◐", "◑", "◒", "◓"]);
-    println!("[DEBUG] per-tab fullscreen focused the inactive command body; restore retained it and close removed only its identity");
 }
 
 #[test]
@@ -456,7 +453,6 @@ fn tabs_dock_with_a_preview_and_escape_cancels_the_drag() {
     }
     term.send(format!("\x1b[<0;{};17m", divider + 5).as_bytes());
     assert_repaint_consistent(&mut term, &["connect", "running", "◐", "◑", "◒", "◓"]);
-    println!("[DEBUG] independent VT100 screen confirmed preview, cancellation, committed side-by-side windows and continuous divider resizing");
 }
 
 #[test]
@@ -497,7 +493,6 @@ fn a_live_server_moves_between_split_axes_and_tabs_without_restarting() {
     assert_eq!(tasks(&ws).iter().filter(|task| command_id(task) == "tool:journey-fixture/serve-a").count(), 1);
     assert!(ws.ok(&["logs", after["session"].as_str().unwrap()]).contains("journey server listening"));
     assert_repaint_consistent(&mut term, &["connect", "running", "◐", "◑", "◒", "◓"]);
-    println!("[DEBUG] independent VT100, daemon task list and logs confirmed a live process survived right/top/tab docking");
 }
 
 #[test]
@@ -537,7 +532,6 @@ fn the_terminal_driver_reports_physical_emoji_widths() {
             assert_eq!(u64::from(column), native["x"].as_u64().unwrap());
             let mut measured = native;
             measured["vt100X"] = column.into();
-            println!("[DEBUG] actual ConPTY cursor {measured}");
             measurements.push(measured);
             term.send(terminal::ENTER);
         }
@@ -576,6 +570,7 @@ fn launcher_text_editing_follows_the_visible_hardware_cursor() {
     term.wait_for("A界e\u{301}", SLOW).unwrap();
     std::thread::sleep(Duration::from_millis(250));
     let (shown, end) = term.cursor();
+    term.checkpoint("text-caret");
     assert!(shown, "a text editor must show its hardware cursor: {}", term.text());
     let row = &term.rows()[usize::from(end.0)];
     let (prefix, _) = row.split_once("A界e\u{301}").expect("the visible input row contains the typed text");
@@ -585,7 +580,7 @@ fn launcher_text_editing_follows_the_visible_hardware_cursor() {
     let combining = widths["cases"].as_array().unwrap().iter().find(|sample| sample["id"] == "combining").unwrap();
     let combining_cells = combining[if cfg!(windows) { "windowsScalarCells" } else { "scalarCells" }].as_u64().unwrap() as u16;
     let start_column = prefix.chars().count() as u16;
-    assert_eq!(end.1, start_column + 3 + combining_cells, "the hardware caret follows the independently measured text columns");
+    assert_eq!(end.1, start_column + 3 + combining_cells, "the hardware caret follows the independently measured text columns: row {row:?} caret {end:?} combining cells {combining_cells}");
     term.send(b"\x1b[D");
     term.wait_until("the caret crossing one combining cluster", Duration::from_millis(1500), |_| term.cursor() == (true, (end.0, start_column + 3))).unwrap();
     let (shown, left) = term.cursor();
@@ -612,6 +607,37 @@ fn launcher_text_editing_follows_the_visible_hardware_cursor() {
     let task = wait_task(&ws, "edited text task", |task| command_id(task) == "tool:journey-fixture/text");
     let logs = ws.ok(&["logs", task["session"].as_str().unwrap()]);
     assert!(logs.contains("ENV mark=!Z QA界"), "the process received another value: {logs}");
+}
+
+#[test]
+fn a_task_speaks_the_language_the_command_line_speaks() {
+    let ws = Workspace::new("task-language-cli");
+    for language in ["de", "en"] {
+        let output = ws.ok(&["run", "tool:journey-fixture/env", "--language", language]);
+        assert!(output.contains(&format!("lang={language}")), "the task did not speak {language}: {output}");
+    }
+}
+
+#[test]
+fn a_task_speaks_the_language_the_dashboard_speaks() {
+    let ws = Workspace::new("task-language-view");
+    for (language, search, confirm, marker) in [("de", "tool:journey-fixture/env", "Befehle", "lang=de"), ("en", "tool:journey-fixture/env", "commands", "lang=en")] {
+        let mut env = ws.env();
+        env.retain(|(key, _)| key != "SEMIO_LOCALE");
+        env.push(("SEMIO_LOCALE".into(), language.into()));
+        let mut term = terminal::Terminal::spawn(&workspace::binary(), &[], &ws.root, &env, steps::ROWS, steps::COLS);
+        term.wait_for(if language == "de" { "Neue Aufgabe" } else { "New task" }, SLOW).unwrap_or_else(|screen| panic!("{language}: no first frame: {screen}"));
+        term.leader("n");
+        term.wait_for(confirm, SLOW).unwrap_or_else(|screen| panic!("{language}: no launcher: {screen}"));
+        term.type_text(search);
+        std::thread::sleep(Duration::from_millis(1200));
+        term.send(terminal::ENTER);
+        std::thread::sleep(Duration::from_millis(600));
+        if term.text().contains("[ Start ]") || term.text().contains("[ Starten ]") { term.send(terminal::ENTER); }
+        term.wait_for(marker, SLOW).unwrap_or_else(|screen| panic!("{language}: the task did not speak {language}: {screen}"));
+        term.leader("d");
+        assert_eq!(term.exit_code(SLOW), Some(0));
+    }
 }
 
 #[test]
@@ -871,7 +897,8 @@ fn native_files_browse_edit_unicode_save_reopen_conflict_and_discard_without_an_
     term.type_text(vector["input"].as_str().unwrap());
     term.send(b"\x1b[D\x7f"); term.type_text("中"); term.send(terminal::ENTER);
     let screen = term.wait_for(vector["labels"]["en"]["dirty"].as_str().unwrap(), SLOW).unwrap();
-    assert!(screen.contains("中") && screen.contains("👩‍💻"));
+    term.checkpoint("native-editor-unicode-screen");
+    assert!(screen.contains("中") && screen.contains(&on_screen("👩‍💻")), "the dirty editor shows the typed Unicode as its scalar width model draws it:\n{screen}");
     assert!(term.cursor().0, "native document caret must be visible");
     term.checkpoint("native-editor-unicode-dirty");
     term.leader("S"); wait_document_bytes(&path, vector["saved"].as_str().unwrap());
@@ -895,7 +922,6 @@ fn native_files_browse_edit_unicode_save_reopen_conflict_and_discard_without_an_
     term.checkpoint("native-editor-foreign-reopened");
     term.leader("d"); assert_eq!(term.exit_code(SLOW), Some(0));
     ws.assert_paths();
-    println!("[DEBUG] native editor browsed Unicode file, saved exact bytes, retained conflict and reopened foreign document");
 }
 
 #[test]
@@ -920,7 +946,6 @@ fn german_native_files_use_customized_controls_and_retain_unsaved_changes_on_clo
     term.leader("D"); term.wait_for(file, SLOW).unwrap();
     term.leader("d"); assert_eq!(term.exit_code(SLOW), Some(0));
     ws.assert_paths();
-    println!("[DEBUG] German native editor retained localized dirty-close decision and customized browse/save keys");
 }
 
 fn unresolved_language_environment(ws:&Workspace)->Vec<(String,String)>{let mut environment=ws.env();for(name,value)in[("SEMIO_LOCALE",""),("LC_ALL","C"),("LC_MESSAGES","POSIX"),("LANG","fr_FR.UTF-8")]{environment.retain(|(key,_)|key!=name);environment.push((name.into(),value.into()));}environment}
@@ -928,17 +953,17 @@ fn unresolved_language_environment(ws:&Workspace)->Vec<(String,String)>{let mut 
 fn an_unresolved_language_has_no_preselection_and_cancels_without_a_preference_event(){
  let ws=Workspace::new("language-cancel");let environment=unresolved_language_environment(&ws);let mut term=terminal::Terminal::spawn(&workspace::binary(),&[],&ws.root,&environment,steps::ROWS,steps::COLS);
  term.wait_for("Choose language / Sprache wählen",SLOW).unwrap();let initial=term.text();assert!(initial.contains("English")&&initial.contains("Deutsch"));assert!(!initial.contains("> 1")&&!initial.contains("> 2"));assert!(!ws.preference_path().exists());
- term.send(terminal::ENTER);assert_eq!(term.exit_code(Duration::from_millis(250)),None);assert!(!ws.preference_path().exists());term.send(b"2");term.wait_for("> 2 Deutsch",SLOW).unwrap();assert!(!ws.preference_path().exists());term.checkpoint("language-choice-uncommitted");term.send(terminal::ESCAPE);assert_eq!(term.exit_code(SLOW),Some(0));assert!(!ws.preference_path().exists());println!("[DEBUG] first language choice had no selection, Enter published nothing and cancel created no preference journal");
+ term.send(terminal::ENTER);assert_eq!(term.exit_code(Duration::from_millis(250)),None);assert!(!ws.preference_path().exists());term.send(b"2");term.wait_for("> 2 Deutsch",SLOW).unwrap();assert!(!ws.preference_path().exists());term.checkpoint("language-choice-uncommitted");term.send(terminal::ESCAPE);assert_eq!(term.exit_code(SLOW),Some(0));assert!(!ws.preference_path().exists());
 }
 #[test]
 fn an_explicit_language_choice_reopens_from_its_durable_event(){
  let ws=Workspace::new("language-reopen");let environment=unresolved_language_environment(&ws);let mut term=terminal::Terminal::spawn(&workspace::binary(),&[],&ws.root,&environment,steps::ROWS,steps::COLS);
- term.wait_for("Choose language / Sprache wählen",SLOW).unwrap();term.send(b"2\r");term.wait_for("Neue Aufgabe",SLOW).unwrap();let bytes=std::fs::read(ws.preference_path()).unwrap();let events:Vec<serde_json::Value>=std::str::from_utf8(&bytes).unwrap().lines().map(|line|serde_json::from_str(line).unwrap()).collect();assert_eq!(events.len(),1);assert_eq!(events[0]["change"]["language"],"de");term.checkpoint("language-choice-durable");term.leader("q");assert_eq!(term.exit_code(SLOW),Some(0));
- let mut reopened=terminal::Terminal::spawn(&workspace::binary(),&[],&ws.root,&environment,steps::ROWS,steps::COLS);let screen=reopened.wait_for("Neue Aufgabe",SLOW).unwrap();assert!(!screen.contains("Choose language / Sprache wählen"));assert_eq!(std::fs::read(ws.preference_path()).unwrap(),bytes);reopened.checkpoint("language-choice-reopened");reopened.leader("q");assert_eq!(reopened.exit_code(SLOW),Some(0));println!("[DEBUG] explicit Deutsch choice persisted one normal event and reopened without a hidden language fallback");
+ term.wait_for("Choose language / Sprache wählen",SLOW).unwrap();term.send(b"2\r");term.wait_for("Neue Aufgabe",SLOW).unwrap();let bytes=std::fs::read(ws.preference_path()).unwrap();let events:Vec<serde_json::Value>=std::str::from_utf8(&bytes).unwrap().lines().map(|line|serde_json::from_str(line).unwrap()).collect();assert_eq!(events.len(),1);assert_eq!(events[0]["change"]["language"],"de");term.checkpoint("language-choice-durable");term.leader("d");assert_eq!(term.exit_code(SLOW),Some(0));
+ let mut reopened=terminal::Terminal::spawn(&workspace::binary(),&[],&ws.root,&environment,steps::ROWS,steps::COLS);let screen=reopened.wait_for("Neue Aufgabe",SLOW).unwrap();assert!(!screen.contains("Choose language / Sprache wählen"));assert_eq!(std::fs::read(ws.preference_path()).unwrap(),bytes);reopened.checkpoint("language-choice-reopened");reopened.leader("d");assert_eq!(reopened.exit_code(SLOW),Some(0));
 }
 
 #[test]
-fn maximum_native_document_keeps_navigation_unicode_repaint_and_dirty_close_responsive() {
+fn maximum_native_document_stays_responsive() {
     let fixture = workspace::journey_fixture(); let vector = &fixture["nativeEditor"]["performance"];
     let maximum = vector["bytes"].as_u64().unwrap() as usize; let entries = vector["entries"].as_u64().unwrap() as usize;
     let prefix = vector["prefix"].as_str().unwrap(); let line = vector["line"].as_str().unwrap(); let marker = vector["tail"].as_str().unwrap(); let removed = vector["removedAscii"].as_u64().unwrap() as usize;
@@ -947,14 +972,13 @@ fn maximum_native_document_keeps_navigation_unicode_repaint_and_dirty_close_resp
     let load = Duration::from_millis(vector["loadMilliseconds"].as_u64().unwrap()); let interaction = Duration::from_millis(vector["interactionMilliseconds"].as_u64().unwrap());
     let ws = Workspace::new("maximum-native-document"); let directory = vector["directory"].as_str().unwrap(); let file = vector["file"].as_str().unwrap(); let folder = ws.root.join(directory); let path = folder.join(file);
     std::fs::create_dir_all(&folder).unwrap(); std::fs::write(&path, &original).unwrap(); for index in 1..entries { std::fs::write(folder.join(format!("row-{index:04}.txt")), "").unwrap(); } assert_eq!(std::fs::read_dir(&folder).unwrap().count(), entries);
-    let mut term = open(&ws); term.leader("F"); term.wait_for(&format!("{directory}/"), SLOW).unwrap(); term.type_text(directory); let listing = std::time::Instant::now(); term.send(terminal::ENTER); term.wait_for(file, load).unwrap(); let listing_ms = listing.elapsed().as_millis(); assert!(listing.elapsed() <= load);
-    term.type_text(file); let loading = std::time::Instant::now(); term.send(terminal::ENTER); term.wait_for("START_OF_MAXIMUM", load).unwrap(); let loading_ms = loading.elapsed().as_millis(); assert!(loading.elapsed() <= load);
-    let navigation = std::time::Instant::now(); term.send(b"\x1b[1;5F"); term.wait_for(&tail, interaction).unwrap(); let navigation_ms = navigation.elapsed().as_millis(); assert!(navigation.elapsed() <= interaction);
-    let editing = std::time::Instant::now(); term.send(&vec![0x7f; removed]); let inserted = vector["insert"].as_str().unwrap(); term.send(format!("\x1b[200~{inserted}\x1b[201~").as_bytes()); let expected = format!("{marker}{inserted}"); term.wait_for(&expected, interaction).unwrap(); assert!(term.cursor().0); let editing_ms = editing.elapsed().as_millis(); assert!(editing.elapsed() <= interaction);
-    let repaint = std::time::Instant::now(); term.send(b"\x1b[1;5H"); term.wait_for("START_OF_MAXIMUM", interaction).unwrap(); term.send(b"\x1b[1;5F"); term.wait_for(&expected, interaction).unwrap(); let repaint_ms = repaint.elapsed().as_millis(); assert!(repaint.elapsed() <= interaction * 2);
-    let closing = std::time::Instant::now(); term.leader("x"); term.wait_for("Unsaved changes retained", interaction).unwrap(); assert!(term.text().contains(&expected)); let closing_ms = closing.elapsed().as_millis(); assert!(closing.elapsed() <= interaction); let resuming = std::time::Instant::now(); term.send(terminal::ESCAPE); term.send(b"\x1b[200~!\x1b[201~"); term.wait_for(&format!("{expected}!"), interaction).unwrap(); assert!(term.text().contains("unsaved")); let resuming_ms = resuming.elapsed().as_millis(); assert!(resuming.elapsed() <= interaction); assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
+    let mut term = open(&ws); term.leader("F"); term.wait_for(&format!("{directory}/"), SLOW).unwrap(); term.type_text(directory); let listing = std::time::Instant::now(); term.send(terminal::ENTER); term.wait_for(file, load).unwrap(); assert!(listing.elapsed() <= load);
+    term.type_text(file); let loading = std::time::Instant::now(); term.send(terminal::ENTER); term.wait_for("START_OF_MAXIMUM", load).unwrap(); assert!(loading.elapsed() <= load);
+    let navigation = std::time::Instant::now(); term.send(b"\x1b[1;5F"); term.wait_for(&tail, interaction).unwrap(); assert!(navigation.elapsed() <= interaction);
+    let editing = std::time::Instant::now(); term.send(&vec![0x7f; removed]); let inserted = vector["insert"].as_str().unwrap(); term.send(format!("\x1b[200~{inserted}\x1b[201~").as_bytes()); let expected = format!("{marker}{}", on_screen(inserted)); term.wait_for(&expected, interaction).unwrap(); assert!(term.cursor().0); assert!(editing.elapsed() <= interaction);
+    let repaint = std::time::Instant::now(); term.send(b"\x1b[1;5H"); term.wait_for("START_OF_MAXIMUM", interaction).unwrap(); term.send(b"\x1b[1;5F"); term.wait_for(&expected, interaction).unwrap(); assert!(repaint.elapsed() <= interaction * 2);
+    let closing = std::time::Instant::now(); term.leader("x"); term.wait_for("Unsaved changes retained", interaction).unwrap(); assert!(term.text().contains(&expected)); assert!(closing.elapsed() <= interaction); let resuming = std::time::Instant::now(); term.send(terminal::ESCAPE); term.send(b"\x1b[200~!\x1b[201~"); term.wait_for(&format!("{expected}!"), interaction).unwrap(); assert!(term.text().contains("unsaved")); assert!(resuming.elapsed() <= interaction); assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
     term.checkpoint("maximum-native-document-responsive"); term.leader("x"); term.wait_for("Unsaved changes retained", SLOW).unwrap(); term.leader("D"); term.wait_until("explicit discard returned to Files", SLOW, |text| text.contains(&format!("{directory} · Filter:")) && !text.contains(&format!("{expected}!")) && !text.contains("unsaved")).unwrap(); term.leader("d"); assert_eq!(term.exit_code(SLOW), Some(0)); ws.assert_paths();
-    println!("[DEBUG] maximum native editor bytes={maximum} entries={entries} listingMs={listing_ms} loadingMs={loading_ms} endNavigationMs={navigation_ms} unicodeEditMs={editing_ms} twoViewportMs={repaint_ms} dirtyCloseRetainMs={closing_ms} resumeEditingMs={resuming_ms} diskUnchanged=true");
 }
 
 
@@ -963,11 +987,11 @@ fn guided_files_create_rename_confirm_retained_removal_and_cancel_folder_command
     let ws=Workspace::new("guided-files");let mut term=open(&ws);term.leader("F");term.wait_for("Filter:",SLOW).unwrap();term.leader("N");term.wait_for("new file",SLOW).unwrap();term.type_text("fresh 🧪.txt");term.send(terminal::ENTER);term.wait_until("created document is editable",SLOW,|screen|screen.contains("fresh 🧪.txt · saved")).unwrap();term.paste("Grüße 🦑");term.wait_for("unsaved",SLOW).unwrap();term.leader("S");term.wait_until("saved new bytes",SLOW,|screen|screen.contains("saved")&&!screen.contains("unsaved")).unwrap();assert_eq!(std::fs::read_to_string(ws.root.join("fresh 🧪.txt")).unwrap(),"Grüße 🦑");term.leader("D");term.wait_for("Filter:",SLOW).unwrap();
     term.type_text("fresh 🧪.txt");term.leader("E");term.wait_for("rename entry",SLOW).unwrap();term.send(b"\x15");term.type_text("renamed 🦑.txt");term.send(terminal::ENTER);term.wait_until("renamed file list",SLOW,|screen|screen.contains("Filter:")&&screen.contains("renamed 🦑.txt")).unwrap();assert!(!ws.root.join("fresh 🧪.txt").exists());assert_eq!(std::fs::read_to_string(ws.root.join("renamed 🦑.txt")).unwrap(),"Grüße 🦑");
     term.type_text("renamed 🦑.txt");term.leader("X");term.wait_for("Type renamed 🦑.txt exactly",SLOW).unwrap();term.send(terminal::ENTER);assert!(ws.root.join("renamed 🦑.txt").exists());term.send(terminal::ESCAPE);term.wait_for("Filter:",SLOW).unwrap();assert!(ws.root.join("renamed 🦑.txt").exists());term.leader("X");term.wait_for("Type renamed 🦑.txt exactly",SLOW).unwrap();term.type_text("renamed 🦑.txt");term.send(terminal::ENTER);term.wait_for("Entry retained at",SLOW).unwrap();assert!(!ws.root.join("renamed 🦑.txt").exists());term.leader("V");term.wait_for("read only",SLOW).unwrap();term.wait_for("Grüße 🦑",SLOW).unwrap();term.leader("D");term.wait_for("Filter:",SLOW).unwrap();
-    term.leader("M");term.wait_for("new folder",SLOW).unwrap();term.type_text("empty folder");term.send(terminal::ESCAPE);assert!(!ws.root.join("empty folder").exists());term.leader("M");term.wait_for("new folder",SLOW).unwrap();term.type_text("empty folder");term.send(terminal::ENTER);term.wait_until("created folder",SLOW,|screen|screen.contains("Filter:")&&screen.contains("empty folder/")).unwrap();assert!(ws.root.join("empty folder").is_dir());term.checkpoint("guided-files-retained-and-empty-folder");term.leader("d");assert_eq!(term.exit_code(SLOW),Some(0));ws.assert_paths();println!("[DEBUG] installed guided file creation Unicode save rename confirmed retained removal recovery and folder cancellation completed");
+    term.leader("M");term.wait_for("new folder",SLOW).unwrap();term.type_text("empty folder");term.send(terminal::ESCAPE);assert!(!ws.root.join("empty folder").exists());term.leader("M");term.wait_for("new folder",SLOW).unwrap();term.type_text("empty folder");term.send(terminal::ENTER);term.wait_until("created folder",SLOW,|screen|screen.contains("Filter:")&&screen.contains("empty folder/")).unwrap();assert!(ws.root.join("empty folder").is_dir());term.checkpoint("guided-files-retained-and-empty-folder");term.leader("d");assert_eq!(term.exit_code(SLOW),Some(0));ws.assert_paths();
 }
 
 #[test]
 fn nonempty_directory_commands_browse_authenticated_retained_descendants_read_only(){
  let ws=Workspace::new("guided-tree");std::fs::create_dir_all(ws.root.join("bundle/nested")).unwrap();std::fs::write(ws.root.join("bundle/nested/file 🧪.txt"),"RETAINED_TREE_CONTENT").unwrap();let mut term=open(&ws);term.leader("F");term.wait_for("bundle/",SLOW).unwrap();term.type_text("bundle");term.leader("E");term.wait_for("rename entry",SLOW).unwrap();term.send(b"\x15");term.type_text("moved");term.send(terminal::ENTER);term.wait_until("committed tree rename",SLOW,|screen|screen.contains("Filter:")&&screen.contains("moved/")).unwrap();assert!(!ws.root.join("bundle").exists());assert_eq!(std::fs::read_to_string(ws.root.join("moved/nested/file 🧪.txt")).unwrap(),"RETAINED_TREE_CONTENT");
- term.type_text("moved");term.leader("X");term.wait_for("Type moved exactly",SLOW).unwrap();term.send(terminal::ENTER);assert!(ws.root.join("moved/nested/file 🧪.txt").is_file());term.type_text("moved");term.send(terminal::ENTER);term.wait_for("Entry retained at",SLOW).unwrap();assert!(!ws.root.join("moved").exists());term.leader("V");term.wait_until("readonly retained tree",SLOW,|screen|screen.contains("nested/")&&screen.contains("read only")).unwrap();term.send(terminal::ESCAPE);term.wait_for("retained history",SLOW).unwrap();let segments=ws.root.join(".workspace-events/segments");let before=std::fs::read_dir(&segments).unwrap().count();let retained=std::fs::read_dir(&segments).unwrap().flat_map(|entry|std::fs::read_dir(entry.unwrap().path()).unwrap()).map(|entry|entry.unwrap().path()).find(|path|path.extension().is_some_and(|value|value=="retained")).unwrap();term.leader("A");term.wait_for("Archive history segment",SLOW).unwrap();term.send(terminal::ENTER);term.wait_for("Enter the exact inspected selection identifier",SLOW).unwrap();term.send(terminal::ESCAPE);term.wait_for("Filter:",SLOW).unwrap();assert_eq!(std::fs::read_dir(&segments).unwrap().count(),before);term.leader("A");term.wait_for("type ",SLOW).unwrap();let screen=term.text();let token=screen.rsplit("selection ").next().unwrap().chars().take(8).collect::<String>();assert_eq!(token.len(),8);assert!(token.bytes().all(|byte|byte.is_ascii_hexdigit()));term.type_text(&token);term.send(terminal::ENTER);term.wait_until("archived history keeps retained index",SLOW,|screen|screen.contains("Filter:")&&screen.contains("moved/")).unwrap();assert_eq!(std::fs::read_dir(&segments).unwrap().count(),before+1);assert_eq!(std::fs::read_to_string(retained.join("nested/file 🧪.txt")).unwrap(),"RETAINED_TREE_CONTENT");term.leader("K");term.wait_for("Reconcile history",SLOW).unwrap();term.send(terminal::ESCAPE);term.wait_for("Filter:",SLOW).unwrap();term.type_text("moved");term.send(terminal::ENTER);term.wait_for("nested/",SLOW).unwrap();term.type_text("nested");term.send(terminal::ENTER);term.wait_for("file 🧪.txt",SLOW).unwrap();term.type_text("file 🧪.txt");term.send(terminal::ENTER);term.wait_for("RETAINED_TREE_CONTENT",SLOW).unwrap();term.paste("FORBIDDEN_EDIT");assert!(term.text().contains("read only"));assert!(!term.text().contains("FORBIDDEN_EDIT"));term.checkpoint("nonempty-retained-tree-readonly");term.leader("D");term.wait_for("Filter:",SLOW).unwrap();term.leader("d");assert_eq!(term.exit_code(SLOW),Some(0));ws.assert_paths();println!("[DEBUG] installed nonempty tree rename confirmed retention history index descendant load and readonly refusal completed");
+ term.type_text("moved");term.leader("X");term.wait_for("Type moved exactly",SLOW).unwrap();term.send(terminal::ENTER);assert!(ws.root.join("moved/nested/file 🧪.txt").is_file());term.type_text("moved");term.send(terminal::ENTER);term.wait_for("Entry retained at",SLOW).unwrap();assert!(!ws.root.join("moved").exists());term.leader("V");term.wait_until("readonly retained tree",SLOW,|screen|screen.contains("nested/")&&screen.contains("read only")).unwrap();term.send(terminal::ESCAPE);term.wait_for("retained history",SLOW).unwrap();let segments=ws.root.join(".workspace-events/segments");let before=std::fs::read_dir(&segments).unwrap().count();let retained=std::fs::read_dir(&segments).unwrap().flat_map(|entry|std::fs::read_dir(entry.unwrap().path()).unwrap()).map(|entry|entry.unwrap().path()).find(|path|path.extension().is_some_and(|value|value=="retained")).unwrap();term.leader("A");term.wait_for("Archive history segment",SLOW).unwrap();term.send(terminal::ENTER);term.wait_for("Enter the exact inspected selection identifier",SLOW).unwrap();term.send(terminal::ESCAPE);term.wait_for("Filter:",SLOW).unwrap();assert_eq!(std::fs::read_dir(&segments).unwrap().count(),before);term.leader("A");term.wait_for("type ",SLOW).unwrap();let screen=term.text();let token=screen.rsplit("selection ").next().unwrap().chars().take(8).collect::<String>();assert_eq!(token.len(),8);assert!(token.bytes().all(|byte|byte.is_ascii_hexdigit()));term.type_text(&token);term.send(terminal::ENTER);term.wait_until("archived history keeps retained index",SLOW,|screen|screen.contains("Filter:")&&screen.contains("moved/")).unwrap();assert_eq!(std::fs::read_dir(&segments).unwrap().count(),before+1);assert_eq!(std::fs::read_to_string(retained.join("nested/file 🧪.txt")).unwrap(),"RETAINED_TREE_CONTENT");term.leader("K");term.wait_for("Reconcile history",SLOW).unwrap();term.send(terminal::ESCAPE);term.wait_for("Filter:",SLOW).unwrap();term.type_text("moved");term.send(terminal::ENTER);term.wait_for("nested/",SLOW).unwrap();term.type_text("nested");term.send(terminal::ENTER);term.wait_for("file 🧪.txt",SLOW).unwrap();term.type_text("file 🧪.txt");term.send(terminal::ENTER);term.wait_for("RETAINED_TREE_CONTENT",SLOW).unwrap();term.paste("FORBIDDEN_EDIT");assert!(term.text().contains("read only"));assert!(!term.text().contains("FORBIDDEN_EDIT"));term.checkpoint("nonempty-retained-tree-readonly");term.leader("D");term.wait_for("Filter:",SLOW).unwrap();term.leader("d");assert_eq!(term.exit_code(SLOW),Some(0));ws.assert_paths();
 }

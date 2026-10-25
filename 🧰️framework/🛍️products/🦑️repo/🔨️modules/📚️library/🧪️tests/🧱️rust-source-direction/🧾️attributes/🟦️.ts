@@ -61,7 +61,7 @@ for (const row of corpus.cases) test(row.id, async () => {
     const runtime = Bun.spawn([binary], { cwd: root, stdout: "pipe", stderr: "pipe" });
     const [runtimeOut, runtimeErr, runtimeStatus] = await Promise.all([new Response(runtime.stdout).text(), new Response(runtime.stderr).text(), runtime.exited]);
     expect(runtimeStatus, runtimeErr).toBe(0);
-    expect(runtimeOut.replaceAll("\r\n", "\n")).toBe("[DEBUG] attribute oracle\n");
+    expect(runtimeOut.replaceAll("\r\n", "\n")).toBe("[TRACE] attribute oracle\n");
     if (row.result.state === "unsupported-expression") {
       expect(() => inspectRustCompileReferences(row.source), row.id).toThrow("Unsupported Rust compile attribute expression");
     } else {

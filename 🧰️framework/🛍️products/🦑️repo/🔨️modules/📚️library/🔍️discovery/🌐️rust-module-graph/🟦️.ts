@@ -206,7 +206,7 @@ export function inspectRustModuleGraph(files: readonly string[], readSource: (pa
   return { targets, ambiguousTargets, unresolvedTargets, contexts, namedCrates, dependencies, invalidManifests, participations: participations.sort((a, b) => compare(JSON.stringify(a), JSON.stringify(b))) };
 }
 
-/** 🕸️ Extracts mounted modules, use items and `include!` expansions with lexical Rust scope, excluding decoys. */
+/** 🔎️ Extracts mounted modules, use items and `include!` expansions with lexical Rust scope, excluding decoys. */
 export function inspectRustModuleGraphFacts(source: string): RustModuleGraphFacts {
   const tokens = rustTokens(source);
   const pairs = rustTokenPairs(tokens);

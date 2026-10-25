@@ -1,0 +1,1055 @@
+# stage-clean orphan staged=env-pass2-tools/staged/patches/R.json map=None
+--- /dev/null
++++ b/staged/env-pass2-tools/staged/patches/R.json
+@@ -0,0 +1,893 @@
++[
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🧪️tests/⚡️inputs/🟦️.ts",
++  "edits": [
++   {
++    "start": 4555,
++    "end": 4599,
++    "old": "receiveScriptProcessInvocation(process.env, ",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 223,
++    "end": 356,
++    "old": "import { receiveScriptProcessInvocation } from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 1385,
++    "end": 1428,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 10414,
++    "end": 10457,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 12276,
++    "end": 12319,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 15683,
++    "end": 15726,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 1001,
++    "end": 1171,
++    "old": "import {createRequestedIssuedResourceControlV1,receiveScriptProcessInvocation} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {createRequestedIssuedResourceControlV1} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️closure/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 858,
++    "end": 901,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 4506,
++    "end": 4549,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 350,
++    "end": 520,
++    "old": "import {createRequestedIssuedResourceControlV1,receiveScriptProcessInvocation} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {createRequestedIssuedResourceControlV1} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 1538,
++    "end": 1581,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 0,
++    "end": 34,
++    "old": "import{test,expect}from\"bun:test\";",
++    "new": "import{test,expect}from\"bun:test\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 870,
++    "end": 913,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 2761,
++    "end": 2804,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 539,
++    "end": 670,
++    "old": "import {receiveScriptProcessInvocation} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 1395,
++    "end": 1438,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 188,
++    "end": 319,
++    "old": "import {receiveScriptProcessInvocation} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/📦️snapshot/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 2110,
++    "end": 2153,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 519,
++    "end": 720,
++    "old": "import {createRequestedIssuedResourceControlV1,receiveScriptProcessInvocation,scriptInvocationEnvironment} from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {createRequestedIssuedResourceControlV1,scriptInvocationEnvironment} from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/💾️storage/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 1771,
++    "end": 1814,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 3044,
++    "end": 3087,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 370,
++    "end": 501,
++    "old": "import {receiveScriptProcessInvocation} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 1589,
++    "end": 1632,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 2794,
++    "end": 2837,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 3948,
++    "end": 3991,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 291,
++    "end": 419,
++    "old": "import {receiveScriptProcessInvocation} from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts",
++  "edits": [
++   {
++    "start": 8614,
++    "end": 8657,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 12139,
++    "end": 12182,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 16130,
++    "end": 16173,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 17792,
++    "end": 17835,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 580,
++    "end": 739,
++    "old": "import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {scriptInvocationEnvironment} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts",
++  "edits": [
++   {
++    "start": 7654,
++    "end": 7697,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 11411,
++    "end": 11454,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 792,
++    "end": 951,
++    "old": "import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {scriptInvocationEnvironment} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 2126,
++    "end": 2169,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 439,
++    "end": 573,
++    "old": "import {receiveScriptProcessInvocation} from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 4942,
++    "end": 4985,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 5644,
++    "end": 5687,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 788,
++    "end": 919,
++    "old": "import {receiveScriptProcessInvocation} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏭️inventory/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 5252,
++    "end": 5295,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 0,
++    "end": 37,
++    "old": "import {test,expect} from \"bun:test\";",
++    "new": "import {test,expect} from \"bun:test\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🧪️tests/⏱️recency/🟦️.ts",
++  "edits": [
++   {
++    "start": 945,
++    "end": 988,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 608,
++    "end": 766,
++    "old": "import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from\"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {createIssuedResourceControlV1} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 3246,
++    "end": 3289,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 230,
++    "end": 444,
++    "old": "import {receiveScriptProcessInvocation,withIssuedResourceOperationV1,scriptInvocationEnvironment,type ScriptInvocation} from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withIssuedResourceOperationV1,scriptInvocationEnvironment,type ScriptInvocation} from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌍️caller-environment/🟦️.ts",
++  "edits": [
++   {
++    "start": 1587,
++    "end": 1630,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 4081,
++    "end": 4124,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 6599,
++    "end": 6642,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 9068,
++    "end": 9111,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 13539,
++    "end": 13582,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 16762,
++    "end": 16805,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 20306,
++    "end": 20349,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 392,
++    "end": 548,
++    "old": "import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {scriptInvocationEnvironment} from \"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 6511,
++    "end": 6554,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 9188,
++    "end": 9231,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 10957,
++    "end": 11000,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 13849,
++    "end": 13892,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 19088,
++    "end": 19131,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 20498,
++    "end": 20541,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 21337,
++    "end": 21380,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 28276,
++    "end": 28319,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 34054,
++    "end": 34097,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 35831,
++    "end": 35874,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 44675,
++    "end": 44718,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 56809,
++    "end": 56852,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 61422,
++    "end": 61465,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 65318,
++    "end": 65361,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 68555,
++    "end": 68598,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 1966,
++    "end": 2147,
++    "old": "import {receiveScriptProcessInvocation,scriptInvocationEnvironment,type ScriptInvocation} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {scriptInvocationEnvironment,type ScriptInvocation} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 15350,
++    "end": 15401,
++    "old": "routing.receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 0,
++    "end": 27,
++    "old": "import \"./🧹️cleanup/🟦️.ts\";",
++    "new": "import \"./🧹️cleanup/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 2308,
++    "end": 2351,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 0,
++    "end": 133,
++    "old": "import{createIssuedResourceControlV1}from\"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import{createIssuedResourceControlV1}from\"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📬️task-child/🟦️.ts",
++  "edits": [
++   {
++    "start": 1265,
++    "end": 1308,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 4968,
++    "end": 5011,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 347,
++    "end": 512,
++    "old": "import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from \"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {scriptInvocationEnvironment} from \"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️admission/💾️storage/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 1381,
++    "end": 1424,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 2786,
++    "end": 2829,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 346,
++    "end": 480,
++    "old": "import {receiveScriptProcessInvocation} from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏇️waiter/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 3221,
++    "end": 3264,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 230,
++    "end": 485,
++    "old": "import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from \"../../../../../../../../\\ud83d\\udd28\\ufe0fmodules/\\ud83c\\udfc3\\ufe0fprocess/\\ud83d\\udce6\\ufe0fpackages/\\ud83d\\udfe6\\ufe0ftypescript/\\ud83e\\udded\\ufe0frouting/\\ud83d\\udfe6\\ufe0f.ts\";",
++    "new": "import {scriptInvocationEnvironment} from \"../../../../../../../../\\ud83d\\udd28\\ufe0fmodules/\\ud83c\\udfc3\\ufe0fprocess/\\ud83d\\udce6\\ufe0fpackages/\\ud83d\\udfe6\\ufe0ftypescript/\\ud83e\\udded\\ufe0frouting/\\ud83d\\udfe6\\ufe0f.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 1327,
++    "end": 1370,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 681,
++    "end": 812,
++    "old": "import{receiveScriptProcessInvocation}from\"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 10375,
++    "end": 10418,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 405,
++    "end": 635,
++    "old": "import {receiveScriptProcessInvocation,scriptInvocationEnvironment,createIssuedResourceControlV1,requireIssuedResourceControlRefinementV1} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {scriptInvocationEnvironment,createIssuedResourceControlV1,requireIssuedResourceControlRefinementV1} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
++  "edits": [
++   {
++    "start": 32435,
++    "end": 32478,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 32601,
++    "end": 32644,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 37,
++    "end": 171,
++    "old": "import {receiveScriptProcessInvocation} from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧪️tests/📥️physical/🟦️.ts",
++  "edits": [
++   {
++    "start": 3642,
++    "end": 3685,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 6466,
++    "end": 6509,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 8277,
++    "end": 8320,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 10006,
++    "end": 10049,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 12771,
++    "end": 12814,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 16098,
++    "end": 16141,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 17352,
++    "end": 17395,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 18474,
++    "end": 18517,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 23430,
++    "end": 23473,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 26855,
++    "end": 26898,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 28828,
++    "end": 28871,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 341,
++    "end": 561,
++    "old": "import{receiveScriptProcessInvocation,scriptInvocationEnvironment,createRequestedIssuedResourceControlV1,type ScriptInvocation}from\"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {scriptInvocationEnvironment,createRequestedIssuedResourceControlV1,type ScriptInvocation} from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 1616,
++    "end": 1659,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 187,
++    "end": 321,
++    "old": "import {receiveScriptProcessInvocation} from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 1663,
++    "end": 1706,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 3098,
++    "end": 3141,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 304,
++    "end": 441,
++    "old": "import {receiveScriptProcessInvocation} from \"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 2307,
++    "end": 2350,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 650,
++    "end": 818,
++    "old": "import {scriptInvocationEnvironment,receiveScriptProcessInvocation} from \"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {scriptInvocationEnvironment} from \"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
++  "edits": [
++   {
++    "start": 4951,
++    "end": 4994,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 9755,
++    "end": 9798,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 13549,
++    "end": 13592,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 15481,
++    "end": 15524,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 17942,
++    "end": 17985,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 3458,
++    "end": 3623,
++    "old": "import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from \"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {scriptInvocationEnvironment} from \"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 18964,
++    "end": 19007,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 331,
++    "end": 487,
++    "old": "import{receiveScriptProcessInvocation,type ScriptInvocation}from\"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {type ScriptInvocation} from \"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "start": 3040,
++    "end": 3083,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 4073,
++    "end": 4116,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 5312,
++    "end": 5355,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 8465,
++    "end": 8508,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 10240,
++    "end": 10283,
++    "old": "receiveScriptProcessInvocation(process.env,",
++    "new": "withBuildTestInvocationV1("
++   },
++   {
++    "start": 639,
++    "end": 770,
++    "old": "import {receiveScriptProcessInvocation} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";"
++   }
++  ]
++ }
++]
+\ No newline at end of file
+# stage-clean orphan staged=env-pass2-tools/staged/patches/T.json map=None
+--- /dev/null
++++ b/staged/env-pass2-tools/staged/patches/T.json
+@@ -0,0 +1,152 @@
++[
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🟦️.ts",
++  "edits": [
++   {
++    "old": "taskInputs:(_graph:unknown",
++    "new": "bazelTaskInputsV1:(_graph:unknown",
++    "count": 1
++   },
++   {
++    "old": "taskInputs:()=>task.definition.inputs",
++    "new": "bazelTaskInputsV1:()=>task.definition.inputs",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️phase/🟦️.ts",
++  "edits": [
++   {
++    "old": "directory=process.env.SEMIO_CACHE_PHASE_OUTPUT;if(!directory)throw Error(\"Authored phase fixture output required\")",
++    "new": "directory=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!directory)throw Error(\"Original test artifact directory required\")",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/⏱️continuation/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "old": "import {phaseCompilerAdmissionControlV1} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts\";",
++    "new": "import {createIssuedResourceControlV1} from \"../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";",
++    "count": 1
++   },
++   {
++    "old": "test(\"Cooperative scanners retain every existing portable pruning and physical byte law\",async()=>{\n const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error(\"Original ticket artifact directory required\");\n const control=phaseCompilerAdmissionControlV1(new AbortController().signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done)));await testCachePrune(output,control);\n},30000);",
++    "new": "test(\"Cooperative scanners retain every existing portable pruning and physical byte law\",()=>withBuildTestInvocationV1(async original=>{\n const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error(\"Original ticket artifact directory required\");\n const control=createIssuedResourceControlV1(original,\"cache:prune-law\",30000);await testCachePrune(output,control);\n}),30000);",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🔒️incremental/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "old": "import {phaseCompilerAdmissionControlV1} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts\";",
++    "new": "import {createIssuedResourceControlV1} from \"../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";",
++    "count": 1
++   },
++   {
++    "old": "test(\"Incremental compaction rescans under compiler ownership and preserves current, working and foreign-profile sessions\",async()=>{",
++    "new": "test(\"Incremental compaction rescans under compiler ownership and preserves current, working and foreign-profile sessions\",()=>withBuildTestInvocationV1(async original=>{",
++    "count": 1
++   },
++   {
++    "old": "\n},30000);",
++    "new": "\n}),30000);",
++    "count": 1
++   },
++   {
++    "old": "control:phaseCompilerAdmissionControlV1(controller.signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done)))",
++    "new": "control:createIssuedResourceControlV1(original,\"cache:incremental-law\",30000,controller.signal)",
++    "count": 1
++   },
++   {
++    "old": "control:phaseCompilerAdmissionControlV1(cancelled.signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done)))",
++    "new": "control:createIssuedResourceControlV1(original,\"cache:incremental-cancel\",30000,cancelled.signal)",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🔒️store/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "old": "import {phaseCompilerAdmissionControlV1} from \"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts\";",
++    "new": "import {createIssuedResourceControlV1} from \"../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts\";\nimport {withBuildTestInvocationV1} from \"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts\";",
++    "count": 1
++   },
++   {
++    "old": "test(\"Cargo cache maintenance excludes every live compiler profile and preserves cancellation\",async()=>{",
++    "new": "test(\"Cargo cache maintenance excludes every live compiler profile and preserves cancellation\",()=>withBuildTestInvocationV1(async original=>{",
++    "count": 1
++   },
++   {
++    "old": "\n},30000);",
++    "new": "\n}),30000);",
++    "count": 1
++   },
++   {
++    "old": "const control=(signal:AbortSignal)=>phaseCompilerAdmissionControlV1(signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done)));",
++    "new": "const control=(signal:AbortSignal)=>createIssuedResourceControlV1(original,\"cache:store-law\",30000,signal),lease=()=>{const issued=control(controller.signal);return{signal:issued.signal,control:issued};};",
++    "count": 1
++   },
++   {
++    "old": "signal:controller.signal,control:control(controller.signal)",
++    "new": "...lease()",
++    "count": 2
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧪️tests/📥️consumption/🟦️.ts",
++  "edits": [
++   {
++    "old": "},root,original,row.kind===\"lint\")",
++    "new": "},root,original,routing.createIssuedResourceControlV1(original,\"cargo:caller\",0),row.kind===\"lint\")",
++    "count": 1
++   },
++   {
++    "old": "bindings={join,relative,resolve,basename,process,scriptCompilerAdmissionControlV1,",
++    "new": "bindings={join,relative,resolve,basename,process,checkResourceLeaseControl,createRequestedIssuedResourceControlV1:routing.createRequestedIssuedResourceControlV1,requireIssuedResourceControlRefinementV1:routing.requireIssuedResourceControlRefinementV1,scriptCompilerAdmissionControlV1,",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts",
++  "edits": [
++   {
++    "old": "import {findWorkspaceRoot} from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "new": "import {findWorkspaceRoot,createScriptProcessEnvelope,withScriptProcessEnvelope} from \"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts\";",
++    "count": 1
++   },
++   {
++    "old": " const started=performance.now(),controller=new AbortController(),invocation:ScriptInvocation={policy:{version:1,...fixture.originalCaller},capabilities:{owner:fixture.originalCaller.owner,command:row.selected},control:{signal:controller.signal,remainingMilliseconds:()=>fixture.originalCaller.maximumElapsedMilliseconds-(performance.now()-started),publish(){},async yieldContinuation(){await setImmediate();}}};\n",
++    "new": " await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,...fixture.originalCaller},{owner:fixture.originalCaller.owner,command:row.selected},Date.now()),async invocation=>{\n",
++    "count": 1
++   },
++   {
++    "old": " if(row.error)expect(result.stderr).toContain(row.error);else expect(JSON.parse(result.stdout)).toEqual({selected:positional[0],args:positional.slice(1)});\n});",
++    "new": " if(row.error)expect(result.stderr).toContain(row.error);else expect(JSON.parse(result.stdout)).toEqual({selected:positional[0],args:positional.slice(1)});\n });\n});",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
++  "edits": [
++   {
++    "old": "🏗️native-build/💾️storage\"+file,import.meta.url)",
++    "new": "🏗️native-build/💾️storage/\"+file,import.meta.url)",
++    "count": 1
++   },
++   {
++    "old": "ports={openNativeImageStorageV1:async()=>parent,",
++    "new": "ports={...require(fileURLToPath(new URL(\"../🍎️image/📥️information/🟦️.ts\",file))),openNativeImageStorageV1:async()=>parent,",
++    "count": 1
++   }
++  ]
++ }
++]
+\ No newline at end of file

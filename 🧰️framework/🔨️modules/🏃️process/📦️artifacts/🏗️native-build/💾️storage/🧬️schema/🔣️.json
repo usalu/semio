@@ -237,6 +237,10 @@
         },
         "wait": {
           "type": "boolean"
+        },
+        "yielding": {
+          "description": "A queued writer that never closes the queue for later readers: optional maintenance waits for the holders in the background and is served only in a gap.",
+          "const": true
         }
       }
     },
@@ -1006,7 +1010,7 @@
         "maximumElapsedMilliseconds": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 3600000
+          "maximum": 86400000
         },
         "maximumBytes": {
           "type": "integer",

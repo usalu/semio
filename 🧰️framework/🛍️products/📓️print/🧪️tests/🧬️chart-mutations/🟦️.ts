@@ -1,6 +1,7 @@
 /** 🧪️ Schema-first chart replay checks with independent AJV and D3 output oracles. */
 import { scaleLinear } from "d3-scale";
 import { color as d3Color } from "d3-color";
+import { join } from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 import fixture from "../🧫️fixtures/🧬️chart-mutations/🔣️.json";
 import nativeGrammar from "../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json";
@@ -10,6 +11,7 @@ import paintFixture from "../🧫️fixtures/🧬️chart-mutations/🎨️paint
 import { changeVizChartValue } from "../../🧬️schema/🧬️mutations/🟦️.ts";
 import { applyVizChartDiff, absorbVizChartDiff, inverseVizChartDiff, equalVizChartValue, type VizChartDiff } from "../../🧬️schema/🔀️diff/🟦️.ts";
 import {inferVizChart} from "../../🔨️modules/🏠️host/💡️inferences/🟦️.ts";
+import { repoCacheDirectory } from "@semio-tech/process/execution";
 import { validateVizChartSpecification } from "@semio-tech/print-viz-inference";
 import type { VizChartSnapshot } from "../../🧬️schema/📸️snapshot/🟦️.ts";
 
@@ -28,7 +30,7 @@ function replay(): { snapshot: VizChartSnapshot; diff: VizChartDiff } {
   return { snapshot, diff };
 }
 
-/** 🌐️ Exercises the real browser worker with first-party inference bundles and an independent timer. */
+/** 🌐️ Exercises the real browser worker with first-party inference bundles and an independent timer; the controller always uses the repository browser cache that `repo tools setup playwright` populates, never a caller-global path that may point at a discarded dependency generation. */
 async function browserInference(): Promise<readonly unknown[]> {
   const entries = [new URL("../../🔨️modules/🏠️host/💡️inferences/🟦️.ts", import.meta.url).pathname, new URL("../../🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts", import.meta.url).pathname];
   const bundles = await Promise.all(entries.map(entry => Bun.build({ entrypoints: [decodeURIComponent(entry).replace(/^\/(?=[A-Za-z]:)/, "")], target: "browser" })));
@@ -48,7 +50,7 @@ async function browserInference(): Promise<readonly unknown[]> {
   };
   const source = `(async()=>{const {chromium}=await import("playwright"),browser=await chromium.launch({headless:true,timeout:30000});try{const page=await browser.newPage();await page.goto(${JSON.stringify(server.url.href)});const result=await page.evaluate(async({source,input})=>await(0,eval)("("+source+")")(input),${JSON.stringify({ source: replay.toString(), input: { url: new URL("main.js", server.url).href, snapshot: base } })});console.log(JSON.stringify(result));}finally{await browser.close();}})().catch(error=>{console.error(error);process.exitCode=1;});`;
   try {
-    const controller = Bun.spawn(["node", "-e", source], { cwd: import.meta.dir, stdout: "pipe", stderr: "pipe" });
+    const controller = Bun.spawn(["node", "-e", source], { cwd: import.meta.dir, env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(join(import.meta.dir, "../../../../.."), "tools", "ms-playwright") }, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, status] = await Promise.all([new Response(controller.stdout).text(), new Response(controller.stderr).text(), controller.exited]);
     if (status !== 0) throw new Error(`browser controller exited ${status}: ${stderr}`);
     return JSON.parse(stdout.trim());

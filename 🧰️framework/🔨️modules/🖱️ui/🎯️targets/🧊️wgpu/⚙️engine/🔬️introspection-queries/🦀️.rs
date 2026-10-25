@@ -4,7 +4,7 @@ use super::*;
 
 // #region engine
 //#region 🔬️Introspection
-/// 🔬️ Read-only accessors for the wgpu↔React parity structural-dump harness (see
+/// 📖️ Read-only accessors for the wgpu↔React parity structural-dump harness (see
 /// `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY` and `framework/renderer/wgpu`'s own
 /// `🔬️Introspection` region, which is the actual JSON-building caller): exposes just enough of
 /// `Ui`'s private `windows`/`theme` state for a caller to walk a window's retained `UiTree` (via
@@ -18,7 +18,7 @@ impl Ui {
         self.windows.ids().map(AsRef::as_ref)
     }
 
-    /// 🪟️ Resolves one stable registry slot for a caller-owned `0..UI_LAYOUT_SURFACE_SLOTS` cursor.
+    /// ⏰️ Resolves one stable registry slot for a caller-owned `0..UI_LAYOUT_SURFACE_SLOTS` cursor.
     pub fn clock_surface_at(&self, slot: usize) -> Option<(&str, UiSurfaceToken)> {
         let token = self.windows.token_at(slot)?;
         self.windows.get_token(token).filter(|window| window.closing.is_none())?;
@@ -30,7 +30,7 @@ impl Ui {
         self.windows.get(window_id).map(|window| window.viewport)
     }
 
-    /// 🪟️ Every windowed Tree container `window_id` presents, measured against the scroll viewport it paints in — the host half
+    /// 🌴️ Every windowed Tree container `window_id` presents, measured against the scroll viewport it paints in — the host half
     /// of the tree window observer (`mounted_layout::tree_window_measures`, the twin of React's `treeWindowContainersUnder`):
     /// `(viewport height, containers)`, or `None` when the surface presents no windowed container.
     pub fn tree_window_measures(&self, window_id: &str) -> Option<(f64, Vec<semio_framework_ui_wgpu_light::tree_window::TreeWindowContainerMeasure>)> {
@@ -84,7 +84,7 @@ impl Ui {
         Some((tree.document_id(row)?, index, semio_framework_ui_wgpu_events::disabled_row_action_reason(tree, row, index)?.to_string()))
     }
 
-    /// 💬️ The absolute rect of `row`'s `index`-th action icon in `window_id` — where a pointer fires or hovers it and its reason
+    /// 🗂️ The absolute rect of `row`'s `index`-th action icon in `window_id` — where a pointer fires or hovers it and its reason
     /// hint anchors.
     pub fn row_action_icon_rect(&self, window_id: &str, row: UiNodeId, index: usize) -> Option<semio_framework_ui_theme::geometry::Rect> {
         let window = self.windows.get(window_id)?;
@@ -109,7 +109,7 @@ impl Ui {
         window.presented_tree=original.take().unwrap();window.presented_revision=window.presented_tree.document().map_or(1,|document|document.revision().0);window.presented_accessibility_generation=1;window.presented_ready=true;
         cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
-    /// 🧪️ Returns that same original fixture owner only after every actual accepted-source loan was returned.
+    /// 🧫️ Returns that same original fixture owner only after every actual accepted-source loan was returned.
     #[cfg(any(test,feature="testkit"))]
     pub fn take_original_presented_fixture_tree(&mut self,surface:UiSurfaceToken,target:&mut Option<UiTree>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
@@ -148,7 +148,7 @@ impl Ui {
         self.windows.get_token(surface).filter(|window| window.closing.is_none() && window.presented_ready).map(|window| &window.presented_tree)
     }
 
-    /// 🎨️ Read-only candidate tree for the paint/hit-registration owner before presentation.
+    /// 🖌️ Read-only candidate tree for the paint/hit-registration owner before presentation.
     pub fn candidate_tree(&self, window_id: &str) -> Option<&UiTree> {
         self.windows.get(window_id).map(|window| &window.tree)
     }
@@ -191,7 +191,7 @@ impl Ui {
         self.windows.get(window_id).map(|window| window.accessibility_generation)
     }
 
-    /// 🖱️ The `ComponentScene` leaf under a WINDOW-LOCAL point, resolved through the same
+    /// 📍️ The `ComponentScene` leaf under a WINDOW-LOCAL point, resolved through the same
     /// reverse-paint-order walk a real press uses (`events::hit_test`) and the same ancestor-offset
     /// accumulation `scene_slots` does — but WITHOUT mutating focus, capture, hover or the tree.
     /// This is the read-only query a right-click needs: the host has to know which surface (and with

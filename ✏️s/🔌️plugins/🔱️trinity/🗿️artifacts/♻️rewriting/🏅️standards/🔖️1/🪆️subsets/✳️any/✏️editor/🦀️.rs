@@ -72,8 +72,8 @@ use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::{BTreeMap, HashMap};
 use semio_framework_2d_compute::EngineHandles;
-use store::{pack::snapshot::ArtifactPack};
-#[cfg(test)] use store::{pack::snapshot::ArtifactDsl};
+use store::{snapshot::ArtifactPack};
+#[cfg(test)] use store::{snapshot::ArtifactDsl};
 
 
 

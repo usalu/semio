@@ -28,7 +28,7 @@ export function createGraphPhaseClockV1({publish,write,now=()=>performance.now()
 
 /** 🖨️ Writes one machine readable timing row to stderr when the profile switch is on. */
 export function writeGraphPhaseRowV1(row){
- if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.SEMIO_GRAPH_PHASES==="1")process.stderr.write("[graph-phase] "+JSON.stringify(row)+"\n");
+ if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.SEMIO_GRAPH_PHASES==="1")process.stderr.write("[graph-phase] "+JSON.stringify({...row,rssMegabytes:Math.round(process.memoryUsage().rss/1048576)})+"\n");
 }
 
 /** 🔁️ Writes one machine readable row per repeated settlement round: the round, the first conflicting source or the failure (message, code, project) that made the whole inference start over; never silent, at most one row per round. */

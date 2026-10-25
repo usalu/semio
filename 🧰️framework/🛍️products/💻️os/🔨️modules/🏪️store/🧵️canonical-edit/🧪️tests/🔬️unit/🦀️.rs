@@ -233,7 +233,7 @@ fn finish(sealer: &mut ArtifactStoreOneItemSealer<u64, FixtureMutation>, bytes: 
     let mut previous = sealer.completed_bytes;
     for _ in 0..100_000 {
         let grant = funded(sealer, bytes);
-        let step = sealer.advance(grant).unwrap();
+        let step = with_receiving(|receiving| sealer.advance(grant, receiving)).unwrap();
         assert!(sealer.completed_bytes - previous <= (grant.maximum_copy_bytes + grant.maximum_capacity_bytes + grant.maximum_release_bytes) as u64);
         previous = sealer.completed_bytes;
         if matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(..)) {
@@ -249,15 +249,15 @@ fn canonical_sealer_tiny_grants_replay_and_cross_worker_transfer_preserve_exact_
     for bytes in [1, 2, 7, 256, 4096] {
         let authority = authority();
         let mut owner = sealer(&authority);
-        assert!(matches!(owner.advance(ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
-        owner.advance(funded(&owner, bytes)).unwrap();
+        assert!(matches!(with_receiving(|receiving| owner.advance(ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }, receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
+        with_receiving(|receiving| owner.advance(funded(&owner, bytes), receiving)).unwrap();
         for _ in 0..19 {
-            owner.advance(funded(&owner, bytes)).unwrap();
+            with_receiving(|receiving| owner.advance(funded(&owner, bytes), receiving)).unwrap();
         }
         let checkpoint: ArtifactStoreOneItemSealCheckpoint = serde_json::from_slice(&serde_json::to_vec(&owner.checkpoint()).unwrap()).unwrap();
         let mut replay = sealer(&authority);
         replay.restore_checkpoint(checkpoint).unwrap();
-        let refused = replay.advance(funded(&replay, 7)).unwrap_err();
+        let refused = with_receiving(|receiving| replay.advance(funded(&replay, 7), receiving)).unwrap_err();
         assert_eq!(refused.message, "canonical-edit.native-checkpoint-unsupported", "a native source cannot resume a serialized prefix");
         assert!(replay.prepared().is_none());
         close(&mut replay, 1);
@@ -278,7 +278,7 @@ fn canonical_sealer_rejects_stale_checkpoint_forged_prefix_and_rebound_owners() 
     let authority = authority();
     let mut owner = sealer(&authority);
     for _ in 0..4 {
-        owner.advance(funded(&owner, 7)).unwrap();
+        with_receiving(|receiving| owner.advance(funded(&owner, 7), receiving)).unwrap();
     }
     let checkpoint = owner.checkpoint();
     for hostile in 0..5 {
@@ -300,7 +300,7 @@ fn canonical_sealer_rejects_stale_checkpoint_forged_prefix_and_rebound_owners() 
     replay.restore_checkpoint(altered).unwrap();
     let mut rejected = false;
     for _ in 0..100 {
-        if replay.advance(funded(&replay, 1)).is_err() {
+        if with_receiving(|receiving| replay.advance(funded(&replay, 1), receiving)).is_err() {
             rejected = true;
             break;
         }
@@ -330,11 +330,11 @@ fn canonical_sealer_cancellation_at_every_phase_retires_exact_owners_and_allows_
     for phase in 0..=6 {
         let mut owner = sealer(&authority);
         while owner.phase < phase {
-            owner.advance(funded(&owner, 4096)).unwrap();
+            with_receiving(|receiving| owner.advance(funded(&owner, 4096), receiving)).unwrap();
         }
         owner.cancel();
         let checkpoint = owner.checkpoint();
-        assert!(matches!(owner.advance(funded(&owner, 4096)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
+        assert!(matches!(with_receiving(|receiving| owner.advance(funded(&owner, 4096), receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
         assert_eq!(owner.checkpoint(), checkpoint);
         close(&mut owner, 1);
     }
@@ -514,3 +514,5 @@ fn canonical_json_original_supplied_depth_and_prefix_conserve_every_real_turn() 
         else { assert!(!refused && encoder.is_complete()); assert_eq!(actual, expected); }
     }
 }
+
+fn with_receiving<R>(operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R { semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(operation) }

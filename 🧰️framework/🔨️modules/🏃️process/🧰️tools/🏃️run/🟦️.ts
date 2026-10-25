@@ -5,6 +5,7 @@ import { isAbsolute, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { OwnedCommandFailure, runOwnedCommand, type OwnedCommandOptions, type OwnedCommandStreamV1 } from "../../🎛️owned-execution/🟦️.ts";
 import { terminateOwnedChildTree } from "../../🪓️termination/🟦️.ts";
+import { settleOwnedChildV1 } from "../../🎛️owned-execution/🏁️settlement/🟦️.ts";
 import { hostCapacityDirectoryV1, newHostCapacityIdV1, sizeHostRequestV1, withHostCapacityV1, type HostActionKindV1, type HostCapacityPolicyV1 } from "../../🏗️build/🌡️host-capacity/🟦️.ts";
 import { findToolV1, toolCallerAllowedV1, toolLanguageV1, toolMessageV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
 import { resolveToolV1, systemToolHostV1, toolRootV1, type ToolHostV1, type ToolResolutionV1 } from "../🔎️resolve/🟦️.ts";
@@ -135,7 +136,7 @@ const capture = (command: string, args: readonly string[], cwd: string, environm
   child.stderr?.on("data", (bytes: Buffer) => { if (errBytes < limit) err.push(bytes); errBytes += bytes.length; });
   if (options.input !== undefined) child.stdin?.end(options.input);
   child.once("error", error => { clearTimeout(timer); options.signal?.removeEventListener("abort", abort); reject(error); });
-  child.once("close", (status, signal) => {
+  void settleOwnedChildV1(child, label).then(({ code: status, signal }) => {
     clearTimeout(timer);
     options.signal?.removeEventListener("abort", abort);
     if (stopped === "cancelled") { reject(new ToolErrorV1("cancelled", label, `${label}: cancelled`)); return; }

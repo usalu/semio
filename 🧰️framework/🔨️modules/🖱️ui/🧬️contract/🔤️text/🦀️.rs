@@ -83,7 +83,7 @@ impl UiText {
         Some(text)
     }
 
-    /// ✂️ Display copy that must never fail admission: the whole value when it fits, otherwise the
+    /// 📺️ Display copy that must never fail admission: the whole value when it fits, otherwise the
     /// longest char-boundary prefix leaving room for [`UI_TEXT_CLIP_MARK`], which is appended so a
     /// reader sees the text was clipped. Use it only for descriptions and summaries whose full text
     /// stays reachable elsewhere (e.g. the history view), never for identifiers or values.
@@ -185,7 +185,7 @@ impl ::semio_framework_value::FromValue for UiText {
 impl UiText {
  /// 🔎️ Borrows the admitted bytes for bounded native comparisons.
  pub fn comparison_bytes(&self)->&[u8]{&self.bytes[..self.len()]}
- /// 🫴️ Copies one exact source prefix under the caller's byte grant.
+ /// 🦜️ Copies one exact source prefix under the caller's byte grant.
  pub fn copy_prefix_from(&mut self,source:&Self,maximum_bytes:usize)->Result<(bool,usize),&'static str>{let start=self.len();if start>source.len(){return Err("original UI text copy prefix changed")}let copied=(source.len()-start).min(maximum_bytes);self.bytes[start..start+copied].copy_from_slice(&source.bytes[start..start+copied]);self.len+=copied as u16;Ok((self.len==source.len,copied))}
  /// ♻️ Retires at most the caller's admitted number of inline bytes.
  pub fn retire_bytes(&mut self,maximum_bytes:usize)->usize{let bytes=self.len().min(maximum_bytes);self.len-=bytes as u16;bytes}

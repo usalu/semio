@@ -14,7 +14,7 @@ import {runBudgetedTestCommand} from "../../🔨️modules/🏃️process/📦�
 import {runVitestV1,readVitestPolicyV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import { captureOwnedProcess, resolveTypescriptCompilerV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {startNativeProgress} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, findWorkspaceRoot } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { seedGeneratedFile } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
@@ -35,7 +35,7 @@ function cargoPolicy(root:string,manifest:string){
 async function testCargo(original:ScriptInvocation,phaseControl:ResourceLeaseControl,root:string,manifest:string,packages:string[],args:string[]){
  requireIssuedResourceControlInvocationV1(phaseControl,original);checkResourceLeaseControl(phaseControl);
  const policy=cargoPolicy(root,manifest);
- await runCargoTestsV1({manifestPath:policy.manifestPath,packages,cwd:root,extraArgs:args,environment:{...process.env,CARGO_TARGET_DIR:policy.targetDirectory}},policy,root,original,phaseControl);
+ await runCargoTestsV1({manifestPath:policy.manifestPath,packages,cwd:root,extraArgs:args,environment:{...process.env,CARGO_TARGET_DIR:policy.targetDirectory}},policy,findWorkspaceRoot(root),original,phaseControl);
  checkResourceLeaseControl(phaseControl);
 }
 /** 📥️ Captures one owned compiler operation with bounded evidence, progress and cancellation. */

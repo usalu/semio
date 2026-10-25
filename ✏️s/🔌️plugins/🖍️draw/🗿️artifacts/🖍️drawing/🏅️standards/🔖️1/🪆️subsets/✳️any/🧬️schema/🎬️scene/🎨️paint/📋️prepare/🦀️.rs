@@ -25,8 +25,9 @@ fn rectangle(x:f64,y:f64,w:f64,h:f64,m:[f64;6])->Result<PreparedGeometry,String>
 semio_framework_2d::physical_work_retirement!(PreparedSceneCloseJob,PreparedScene,&'static str,|_:&str|"Prepared scene physical close refused");
 /// 🧱️ Constructor adoption preserves refused owned input for work-granted retirement.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct ScenePaintJob{
- pub plan:Option<DocumentScenePlan>,limits:PaintedSceneLimits,flatness:f64,geometry:Vec<PreparedGeometry>,counts:PreparedSceneCounts,phase:&'static str,work:u64,validated:bool,index:usize,segment:usize,pen:Point,origin:Point,bounds:Option<Bounds>,
+ pub plan:Option<DocumentScenePlan>,limits:PaintedSceneLimits,flatness:f64,geometry:Vec<PreparedGeometry>,counts:PreparedSceneCounts,pub phase:&'static str,work:u64,validated:bool,index:usize,segment:usize,pen:Point,origin:Point,bounds:Option<Bounds>,
  pub path:Option<PaintedPathPrepareJob>,retired_paths:Vec<PaintedPreparationRetirement>,path_retirement:Option<PaintedPreparationRetirement>,pending:Option<PreparedGeometry>,output:Option<PreparedScene>,cancelled:bool,failure:Option<String>,
 }
 impl ScenePaintJob{

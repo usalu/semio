@@ -11,7 +11,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 import { digest } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -20,67 +20,99 @@ type Person = { name: string; email: string };
 type Change = { path: string; content?: string; bytes?: number[]; rename?: string; delete?: boolean };
 type Recipe = {
   branch: string;
+  git: { environment: Record<string, string>; config: Record<string, string>; hostile: { config: string; environment: Record<string, string> } };
   commits: { message: string; when: number; author: Person; changes: Change[] }[];
   side: { from: number; branch: string; path: string; content: string; message: string; when: number; author: Person; mergeMessage: string; mergeWhen: number; mergeAuthor: Person };
 };
 
-/** 🖥️ Runs the real `git` binary and fails loudly — an oracle that silently degrades proves nothing. */
-function git(cwd: string, args: string[], author?: Person, when?: number): string {
-  const stamp = when === undefined ? {} : { GIT_AUTHOR_DATE: `${when} +0000`, GIT_COMMITTER_DATE: `${when} +0000` };
-  const identity = author === undefined ? {} : { GIT_AUTHOR_NAME: author.name, GIT_AUTHOR_EMAIL: author.email, GIT_COMMITTER_NAME: author.name, GIT_COMMITTER_EMAIL: author.email };
-  const result = spawnSync("git", args, { cwd, env: { ...process.env, ...identity, ...stamp }, encoding: "buffer", maxBuffer: 64 * 1024 * 1024 });
-  if (result.status !== 0) throw new Error(`git ${args.join(" ")} failed: ${result.stderr?.toString("utf8")}`);
-  return result.stdout.toString("utf8");
+type Git = (args: string[], author?: Person, when?: number) => string;
+
+/** 🔒️ The ambient a run starts from: the process environment plus whatever the caller layers on top of it. */
+type Ambient = Record<string, string>;
+
+/** 🐙️ A git environment that cannot see the machine: no inherited GIT_* variable, a private empty HOME and global config, the recipe's pinned environment. */
+function hermeticEnvironment(recipe: Recipe, home: string, ambient: Ambient): NodeJS.ProcessEnv {
+  const inherited = Object.entries({ ...process.env, ...ambient }).filter(([key]) => !key.startsWith("GIT_") || key === "GIT_EXEC_PATH");
+  mkdirSync(home, { recursive: true });
+  writeFileSync(join(home, "gitconfig"), "");
+  return { ...Object.fromEntries(inherited), HOME: home, USERPROFILE: home, XDG_CONFIG_HOME: home, GIT_CONFIG_GLOBAL: join(home, "gitconfig"), ...recipe.git.environment };
+}
+
+/** 🖥️ Runs the real `git` binary hermetically and fails loudly — an oracle that silently degrades proves nothing. */
+function gitIn(recipe: Recipe, cwd: string, ambient: Ambient): Git {
+  const home = `${cwd}.home`;
+  const config = Object.entries(recipe.git.config).flatMap(([key, value]) => ["-c", `${key}=${value}`]);
+  return (args, author, when) => {
+    const stamp = when === undefined ? {} : { GIT_AUTHOR_DATE: `${when} +0000`, GIT_COMMITTER_DATE: `${when} +0000` };
+    const identity = author === undefined ? {} : { GIT_AUTHOR_NAME: author.name, GIT_AUTHOR_EMAIL: author.email, GIT_COMMITTER_NAME: author.name, GIT_COMMITTER_EMAIL: author.email };
+    const result = spawnSync("git", [...config, ...args], { cwd, env: { ...hermeticEnvironment(recipe, home, ambient), ...identity, ...stamp }, encoding: "buffer", maxBuffer: 64 * 1024 * 1024 });
+    if (result.status !== 0) throw new Error(`git ${args.join(" ")} failed: ${result.stderr?.toString("utf8")}`);
+    return result.stdout.toString("utf8");
+  };
+}
+
+/** 😈️ An ambient that would change every commit id if it ever reached git: signing, CRLF, another identity and encoding, GIT_CONFIG_COUNT, a bogus GIT_DIR. */
+function hostileAmbient(recipe: Recipe, root: string): Ambient {
+  const home = join(root, "hostile-home");
+  mkdirSync(home, { recursive: true });
+  writeFileSync(join(home, ".gitconfig"), recipe.git.hostile.config);
+  writeFileSync(join(home, "global"), recipe.git.hostile.config);
+  return { HOME: home, USERPROFILE: home, XDG_CONFIG_HOME: home, GIT_CONFIG_GLOBAL: join(home, "global"), ...recipe.git.hostile.environment };
 }
 
 /** 🏗️ Rebuilds the recorded repository from its committed recipe, byte for byte and date for date. */
-function buildRepository(recipe: Recipe): string {
+function buildRepository(recipe: Recipe, ambient: Ambient): { dir: string; git: Git; shas: string[] } {
   const dir = mkdtempSync(join(tmpdir(), "semio-metrics-oracle-"));
-  git(dir, ["init", "--quiet", `--initial-branch=${recipe.branch}`]);
-  git(dir, ["config", "user.name", recipe.commits[0]!.author.name]);
-  git(dir, ["config", "user.email", recipe.commits[0]!.author.email]);
-  git(dir, ["config", "core.quotepath", "true"]);
-  git(dir, ["config", "diff.renames", "true"]);
+  const git = gitIn(recipe, dir, ambient);
+  git(["init", "--quiet"]);
+  git(["symbolic-ref", "HEAD", `refs/heads/${recipe.branch}`]);
+  git(["config", "user.name", recipe.commits[0]!.author.name]);
+  git(["config", "user.email", recipe.commits[0]!.author.email]);
+  git(["config", "core.quotepath", "true"]);
+  git(["config", "diff.renames", "true"]);
   const shas: string[] = [];
   for (const commit of recipe.commits) {
     for (const change of commit.changes) {
       if (change.delete) {
-        git(dir, ["rm", "--quiet", "--", change.path]);
+        git(["rm", "--quiet", "--", change.path]);
         continue;
       }
       const target = join(dir, change.path);
       mkdirSync(dirname(target), { recursive: true });
-      if (change.rename !== undefined) git(dir, ["mv", change.rename, change.path]);
+      if (change.rename !== undefined) git(["mv", change.rename, change.path]);
       if (change.bytes !== undefined) writeFileSync(target, Buffer.from(change.bytes));
       else writeFileSync(target, change.content ?? "", "utf8");
-      git(dir, ["add", "--", change.path]);
+      git(["add", "--", change.path]);
     }
-    git(dir, ["commit", "--quiet", "-m", commit.message], commit.author, commit.when);
-    shas.push(git(dir, ["rev-parse", "HEAD"]).trim());
+    git(["commit", "--quiet", "-m", commit.message], commit.author, commit.when);
+    shas.push(git(["rev-parse", "HEAD"]).trim());
   }
-  git(dir, ["checkout", "--quiet", "-b", recipe.side.branch, shas[recipe.side.from]!]);
+  git(["checkout", "--quiet", "-b", recipe.side.branch, shas[recipe.side.from]!]);
   writeFileSync(join(dir, recipe.side.path), recipe.side.content, "utf8");
-  git(dir, ["add", "--", recipe.side.path]);
-  git(dir, ["commit", "--quiet", "-m", recipe.side.message], recipe.side.author, recipe.side.when);
-  git(dir, ["checkout", "--quiet", recipe.branch]);
-  git(dir, ["merge", "--quiet", "--no-ff", "-m", recipe.side.mergeMessage, recipe.side.branch], recipe.side.mergeAuthor, recipe.side.mergeWhen);
-  return dir;
+  git(["add", "--", recipe.side.path]);
+  git(["commit", "--quiet", "-m", recipe.side.message], recipe.side.author, recipe.side.when);
+  git(["checkout", "--quiet", recipe.branch]);
+  git(["merge", "--quiet", "--no-ff", "--no-edit", "-m", recipe.side.mergeMessage, recipe.side.branch], recipe.side.mergeAuthor, recipe.side.mergeWhen);
+  return { dir, git, shas: [...shas, git(["rev-parse", "HEAD"]).trim()] };
 }
 
 const PRETTY = "COMMIT%x09%H%x09%aN%x09%aE%x09%at";
 const TAIL = ["--numstat", "--first-parent", "--reverse", `--pretty=format:${PRETTY}`];
 
-/** 🎞️ The two log streams and the tracked path list, straight from the git binary. */
+/** 🎞️ The two log streams and the tracked path list, straight from the git binary — after proving the commit ids do not depend on the ambient configuration. */
 function record(recipe: Recipe): { noMerges: string; withMerges: string; tracked: string[] } {
-  const dir = buildRepository(recipe);
+  const quiet = buildRepository(recipe, {});
+  const root = mkdtempSync(join(tmpdir(), "semio-metrics-hostile-"));
+  const hostile = buildRepository(recipe, hostileAmbient(recipe, root));
   try {
+    if (quiet.shas.join() !== hostile.shas.join()) throw new Error(`the recipe is not hermetic: ${quiet.shas.join()} != ${hostile.shas.join()}`);
     return {
-      noMerges: git(dir, ["log", "--no-merges", ...TAIL]),
-      withMerges: git(dir, ["log", ...TAIL, recipe.branch]),
-      tracked: git(dir, ["ls-files", "-z"]).split("\0").filter(Boolean),
+      noMerges: quiet.git(["log", "--no-merges", ...TAIL]),
+      withMerges: quiet.git(["log", ...TAIL, recipe.branch]),
+      tracked: quiet.git(["ls-files", "-z"]).split("\0").filter(Boolean),
     };
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    for (const path of [quiet.dir, `${quiet.dir}.home`, hostile.dir, `${hostile.dir}.home`, root]) rmSync(path, { recursive: true, force: true });
   }
 }
 //#endregion 🧪️Oracle repository
@@ -209,7 +241,7 @@ function parseNumstat(stdout: string): CommitRow[] {
 //#endregion 🔬️Reference parser
 
 //#region 🧭️Adapter
-/** 🎞️ Recording the repository is the expensive half, so one run serves every scenario. */
+/** 📹️ Recording the repository is the expensive half, so one run serves every scenario. */
 let recorded: { noMerges: string; withMerges: string; tracked: string[] } | null = null;
 
 function live(ctx: { inputBytes(uri: string): Uint8Array }): { noMerges: string; withMerges: string; tracked: string[] } {

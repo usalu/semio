@@ -16,7 +16,7 @@ impl<T:RetireOwned+Sync> LeaseView for ReadLease<T> {
     fn matches(&self,generation:u64,revision:[u8;32])->bool {self.commit_authority_matches(generation,revision)}
 }
 
-/// 🪪️ One admitted concrete lease frame retains its original root, registry and closing cursor.
+/// 🔒️ One admitted concrete lease frame retains its original root, registry and closing cursor.
 pub struct ErasedReadLease {lease:ManuallyDrop<Option<Box<dyn LeaseView>>>}
 impl ErasedReadLease {
     pub fn terminal_is_empty(&self)->bool {self.lease.is_none()}

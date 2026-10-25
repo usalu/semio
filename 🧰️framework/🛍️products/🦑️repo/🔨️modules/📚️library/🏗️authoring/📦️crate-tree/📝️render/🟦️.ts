@@ -1,8 +1,8 @@
 import { dirname, posix, relative, resolve } from "node:path";
 import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import type { RustModuleNode } from "../🌳️module-tree/🟦️.ts";
-import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { GlobV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 🧭️ Repo-relative path between two absolute paths, always with forward slashes. */
 export function relativePosix(from: string, to: string): string {
@@ -72,7 +72,7 @@ export function rewriteMountPaths(source: string, node: RustModuleNode, oldScope
   return text.split("\n").map((line, index) => (index === 0 ? line : line.replace(new RegExp(`^[ \\t]{0,${column}}`, "u"), ""))).join("\n");
 }
 
-/** 🪞️ Renders the lib root of a carved crate: header, moved root items, and the mirrored module nest. */
+/** 🏠️ Renders the lib root of a carved crate: header, moved root items, and the mirrored module nest. */
 export function renderMirrorRoot(spec: MirrorSpec): string {
   return renderMirrorFiles(spec).root;
 }
@@ -81,7 +81,7 @@ const mirrorText = (unit: MirrorUnit, nestDir: string): string => rebaseRustIncl
 
 const closesWithBrace = (text: string): boolean => text.trimEnd().endsWith("}");
 
-/** 🪞️ Renders the mirror root and, when the nest is too long or carries authored items, moves the nest into `🪞️mirror/🦀️.rs` so the lib root stays pure wiring. */
+/** 🖌️ Renders the mirror root and, when the nest is too long or carries authored items, moves the nest into `🪞️mirror/🦀️.rs` so the lib root stays pure wiring. */
 export function renderMirrorFiles(spec: MirrorSpec): { root: string; body: string | null } {
   const nestDir = spec.hoist ? `${spec.newRootDir}/🪞️mirror` : spec.newRootDir;
   const root: TrieNode = { name: "", children: new Map(), owned: null, component: null, imported: null, globs: [], order: 0 };
@@ -178,7 +178,7 @@ export function readManifestDependencyRows(manifestText: string): ManifestDepend
   return { dependencies, devDependencies, targetSections, unsupported };
 }
 
-/** 🛤️ Re-bases every relative `path = "…"` of manifest rows from one directory to another. */
+/** 📂️ Re-bases every relative `path = "…"` of manifest rows from one directory to another. */
 export function rebaseManifestRow(row: string, fromDir: string, toDir: string): string {
   return row.replace(/path\s*=\s*"([^"]*)"/gu, (_, value: string) => `path = "${relativePosix(toDir, resolve(fromDir, value))}"`);
 }
@@ -241,13 +241,13 @@ export function hidingExcludePattern(member: string, patterns: readonly string[]
   return undefined;
 }
 
-/** 🚪️ Reads the exclusion list the repository's native discovery applies to a workspace manifest: `exclude-patterns` of `[workspace.metadata.semio.repository]`, else Cargo's `exclude`. */
+/** 📋️ Reads the exclusion list the repository's native discovery applies to a workspace manifest: `exclude-patterns` of `[workspace.metadata.semio.repository]`, else Cargo's `exclude`. */
 function admittedExclusions(workspace: { exclude?: string[]; metadata?: { semio?: { repository?: { "exclude-patterns"?: string[] } } } }): string[] {
   const admission = workspace.metadata?.semio?.repository;
   return admission === undefined ? workspace.exclude ?? [] : admission["exclude-patterns"] ?? [];
 }
 
-/** 🚪️ Lists workspace members that the repository's native discovery cannot see because an `exclude-patterns` entry hides them; an empty list means Cargo and the launcher agree on the member set. */
+/** 🔏️ Lists workspace members that the repository's native discovery cannot see because an `exclude-patterns` entry hides them; an empty list means Cargo and the launcher agree on the member set. */
 export function workspaceAdmissionProblems(manifestText: string): string[] {
   const workspace = (runtimeParseTomlV1(manifestText) as { workspace?: { members?: string[]; exclude?: string[]; metadata?: { semio?: { repository?: { "exclude-patterns"?: string[] } } } } }).workspace;
   if (!workspace) return ["manifest has no [workspace] table"];
@@ -255,7 +255,7 @@ export function workspaceAdmissionProblems(manifestText: string): string[] {
   return (workspace.members ?? []).flatMap((member) => { const hit = hidingExcludePattern(member, patterns); return hit === undefined ? [] : [`member ${member} is hidden from repository discovery by exclude pattern ${hit}`]; });
 }
 
-/** 🚪️ Removes from an array literal under `[workspace]` or its repository metadata every entry the predicate rejects, keeping the rest of the text untouched. */
+/** 🗑️ Removes from an array literal under `[workspace]` or its repository metadata every entry the predicate rejects, keeping the rest of the text untouched. */
 function dropArrayEntries(manifestText: string, key: string, hidden: (entry: string) => boolean): string {
   const origin = Math.max(manifestText.indexOf("[workspace]"), 0);
   const found = new RegExp(`(\\n[ \\t]*${key}\\s*=\\s*)\\[([\\s\\S]*?)\\]`, "u").exec(manifestText.slice(origin));
@@ -348,7 +348,7 @@ export function rebaseRustIncludes(text: string, fromDirectory: string, toDirect
   return out;
 }
 
-/** 🧲️ Rebases the string literals that are joined onto `env!("CARGO_MANIFEST_DIR")` (in `concat!` or in `Path::join`) or passed to the shared fixture reader (`fixture_path!`, `fixture_text!`, `fixture_bytes!`) from the manifest directory a file was written for to the one it now compiles under. */
+/** 📁️ Rebases the string literals that are joined onto `env!("CARGO_MANIFEST_DIR")` (in `concat!` or in `Path::join`) or passed to the shared fixture reader (`fixture_path!`, `fixture_text!`, `fixture_bytes!`) from the manifest directory a file was written for to the one it now compiles under. */
 export function rebaseManifestDirPaths(text: string, fromManifestDirectory: string, toManifestDirectory: string): string {
   if (fromManifestDirectory === toManifestDirectory || !(text.includes("CARGO_MANIFEST_DIR") || text.includes("fixture_"))) return text;
   const tokens = rustTokens(text);

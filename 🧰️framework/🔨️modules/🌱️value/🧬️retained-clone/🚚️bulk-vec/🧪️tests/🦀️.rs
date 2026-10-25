@@ -175,7 +175,7 @@ fn bulk_vector_clone_turn_count_is_bytes_over_page() {
     let source = Held::new(four_mebibytes);
     let (output, turns, mut cursor) = drive(&source, 1 << 20);
     assert_eq!(turns.len(), number(&law, "maximumTurnsForFourMebibytes"));
-    assert!(turns.len() * 1000 < output.len(), "[DEBUG] 4 MiB vec clone took {} turns for {} elements", turns.len(), output.len());
+    assert!(turns.len() * 1000 < output.len(), "4 MiB vec clone took {} turns for {} elements", turns.len(), output.len());
     drop(output);
     close_all(&mut cursor);
 }
@@ -338,7 +338,6 @@ fn bulk_array_zero_sized_work_is_bounded_and_every_prefix_closes() {
         }
         assert!(cursor.terminal_is_empty());assert_eq!(observe(||drop(cursor)).1,(0,0));assert_eq!(source.borrow().get(),&oracle);
     }
-    eprintln!("[DEBUG] Zero-sized array elements={N} maximumRowsPerTurn={} normalTurns={expected} allPrefixesClosed=true",RETAINED_CLONE_BULK_PAGE_ITEMS);
 }
 
 
@@ -359,5 +358,4 @@ fn bulk_clone_logical_body_survives_expanded_physical_headers() {
         let mut output=crate::retirement::controlled::ControlledRetirement::retain(output.take().unwrap());while !output.terminal_is_empty(){let demand=output.selected_demand(body).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:8192.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe(||output.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
     }
     for body in [1,7,4096] {drive("α🙂abc".to_owned(),body);drive((0..257u16).collect::<Vec<_>>(),body);drive([37u8;257],body);}
-    eprintln!("[DEBUG] original clone logical1/7/4096 physical8192 StringVecArray=true sameSource=true denied0heap=true exactQuotedWork=true paidAllOwners=true");
 }

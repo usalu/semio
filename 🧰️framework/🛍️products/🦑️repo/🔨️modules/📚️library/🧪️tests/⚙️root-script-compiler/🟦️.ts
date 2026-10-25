@@ -8,6 +8,7 @@ import { policySnakeToCamel } from "../../🧬️schema/🔍️field-discovery/�
 import { rootScriptSources } from "../📎️root-script-sources/🟦️.ts";
 import { policyExtractRustSchemaFields } from "../../🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts";
 import { policyExtractProtobufSchemaFields } from "../../🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts";
+import { taxonomyFileKindFilenamesV1, taxonomySingleFileKindFilenameV1 } from "../../🔍️discovery/📄️file-kind-query/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
@@ -73,7 +74,7 @@ test("eager policy vocabulary avoids workspace output reads while default lookup
   for (const compiled of [new Bun.Transpiler({ loader: "ts" }).transformSync(input), transformSync(input, { loader: "ts", target: "es2022" }).code]) {
     let workspaceReads = 0, lookups = 0;
     const catalog = { ...taxonomy, fileKinds: new Proxy(taxonomy.fileKinds, { get: (target, key) => { lookups++; return Reflect.get(target, key); } }) };
-    const actual = new Function("loadCatalogTaxonomy", "loadTaxonomy", `${compiled}\nreturn { values: {${names.join(",")}}, strictLookup: () => canonicalPrimaryFilenameForKind("json") };`)(() => catalog, () => { workspaceReads++; throw new Error(expected.missingActiveOutput); });
+    const actual = new Function("loadCatalogTaxonomy", "loadTaxonomy", "taxonomyFileKindFilenamesV1", "taxonomySingleFileKindFilenameV1", `${compiled}\nreturn { values: {${names.join(",")}}, strictLookup: () => canonicalPrimaryFilenameForKind("json") };`)(() => catalog, () => { workspaceReads++; throw new Error(expected.missingActiveOutput); }, taxonomyFileKindFilenamesV1, taxonomySingleFileKindFilenameV1);
     expect(actual.values).toEqual(expected.values);
     expect(lookups).toBe(expected.lookupCount);
     expect(workspaceReads).toBe(0);

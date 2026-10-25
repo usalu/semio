@@ -20,7 +20,7 @@ export interface EmbeddedChildSlotV1<Content> {
   readonly codec: () => EmbeddedChildCodecV1<Content>;
 }
 
-/** 🧩️ Declares an unbound slot; binding the same codec again is idempotent and binding a different codec is refused. */
+/** ♾️ Declares an unbound slot; binding the same codec again is idempotent and binding a different codec is refused. */
 export function embeddedChildSlotV1<Content>(id: string): EmbeddedChildSlotV1<Content> {
   let bound: EmbeddedChildCodecV1<Content> | undefined;
   return Object.freeze({

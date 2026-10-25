@@ -1,0 +1,11 @@
+import { logCargoPreparationDiagnosticV1 } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+const lines: string[] = [];
+const original = console.error;
+console.error = (...values: unknown[]) => { lines.push(values.join(" ")); };
+logCargoPreparationDiagnosticV1("scan" as never, "owner-a", 12, 3);
+console.error = original;
+const prefix = "[cargo-preparation-timing] ";
+if (lines.length !== 1 || !lines[0]!.startsWith(prefix)) throw Error("emitter did not print one prefixed line: " + JSON.stringify(lines));
+const record = JSON.parse(lines[0]!.slice(prefix.length));
+if (JSON.stringify(Object.keys(record)) !== JSON.stringify(["phase", "owner", "elapsedMs", "items"]) || record.owner !== "owner-a" || record.elapsedMs !== 12 || record.items !== 3) throw Error("record mismatch " + JSON.stringify(record));
+console.log("emitter-probe ok " + lines[0]);

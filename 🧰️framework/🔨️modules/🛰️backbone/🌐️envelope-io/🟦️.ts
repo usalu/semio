@@ -2,7 +2,7 @@
 
 import type { FetchTimeoutResponse } from "@semio-tech/framework";
 import { fetchWithTimeout } from "../../🚪️io/🌐️fetch-timeout/🟦️.ts";
-import { retryWithJitteredBackoff } from "../../⏳️async/🔁️jittered-backoff/🟦️.ts";
+import { retryWithJitteredBackoff } from "../../⏳️async/📦️packages/🟦️typescript/🔁️jittered-backoff/🟦️.ts";
 import { BACKBONE_ENDPOINT_PATH, BACKBONE_OCTET_STREAM, parseRemoteBackboneUri, remoteEnvelopeUrl } from "../🟦️.ts";
 
 //#region 🔖️Backbone

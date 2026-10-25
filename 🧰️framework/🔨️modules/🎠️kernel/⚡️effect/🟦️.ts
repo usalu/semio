@@ -69,7 +69,7 @@ export type Effect =
   | { readonly dispatchAction: { readonly req: number; readonly action: string; readonly args?: unknown; readonly delayMs: number } }
   | { readonly clipboardWrite: { readonly fragment: unknown } }
   | { readonly replayShellCommand: { readonly actionId: string; readonly args?: unknown } }
-  /** 🔁️ Asks the shell to invoke an extension capability — the SDK resumes the awaiting
+  /** 📞️ Asks the shell to invoke an extension capability — the SDK resumes the awaiting
    * future on a `completed` event carrying the same `req` instead of a `responseAction` redispatch. */
   | {
       readonly invokeExtension: {

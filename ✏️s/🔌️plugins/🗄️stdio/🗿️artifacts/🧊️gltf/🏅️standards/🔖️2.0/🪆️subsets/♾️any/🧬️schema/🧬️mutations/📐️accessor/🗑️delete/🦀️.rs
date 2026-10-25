@@ -30,7 +30,7 @@ pub fn plan(p: &GltfDeleteAccessorPayload, base: &GltfSnapshot) -> Result<GltfDi
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfDeleteAccessorPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_accessor::CreateAccessorMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_indices::BindPrimitiveIndicesMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_attribute::BindPrimitiveAttributeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::move_primitive_attribute::MovePrimitiveAttributeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_morph_target_attribute::BindMorphTargetAttributeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::move_morph_target_attribute::MoveMorphTargetAttributeMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -99,7 +99,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for DeleteAccessorMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<DeleteAccessorMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<DeleteAccessorMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::create_accessor::CreateAccessorMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_indices::BindPrimitiveIndicesMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_attribute::BindPrimitiveAttributeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::move_primitive_attribute::MovePrimitiveAttributeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_morph_target_attribute::BindMorphTargetAttributeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::move_morph_target_attribute::MoveMorphTargetAttributeMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

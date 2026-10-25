@@ -62,7 +62,7 @@ export function semioHostBootHeadTags(): { readonly tag: string; readonly attrs?
   ];
 }
 
-/** 🎬️ Vite: inject early appearance + theme + stylesheet link into play `🌐️.html` to avoid unstyled flashes — additive tag injection onto each play's own hand-authored `🌐️.html`, sharing its boot-head fragment ({@link semioHostBootHeadTags}) with {@link semioHostHtmlVitePlugin} instead of duplicating the style/script assembly. */
+/** 🎮️ Vite: inject early appearance + theme + stylesheet link into play `🌐️.html` to avoid unstyled flashes — additive tag injection onto each play's own hand-authored `🌐️.html`, sharing its boot-head fragment ({@link semioHostBootHeadTags}) with {@link semioHostHtmlVitePlugin} instead of duplicating the style/script assembly. */
 export function playgroundPlayBootHtmlPlugin(): OwnedBuildPlugin {
   return {
     name: "playground-play-boot-html",

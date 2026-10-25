@@ -113,7 +113,7 @@ export type CanvasPickInteraction = {
   readonly onMenuPick: (target: CanvasPickTarget) => void;
 };
 
-/** 🎯️ Shared pointer routing for canvas hover (most-specific) and click disambiguation menus. */
+/** 🧭️ Shared pointer routing for canvas hover (most-specific) and click disambiguation menus. */
 export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus, onSelectTarget, clickThresholdPx = 4 }: UseCanvasPickInteractionOptions): CanvasPickInteraction {
   const [pickMenu, setPickMenu] = React.useState<CanvasPickRequest | null>(null);
   const [menuHoveredKey, setMenuHoveredKey] = React.useState<string | null>(null);

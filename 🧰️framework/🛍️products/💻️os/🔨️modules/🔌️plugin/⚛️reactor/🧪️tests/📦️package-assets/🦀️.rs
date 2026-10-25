@@ -1,4 +1,6 @@
 
+use semio_framework_plugin_reactor_core::package_asset;
+
 #[test]
 fn an_asset_the_host_delivered_on_open_is_readable_by_name() {
     admit_package_assets(vec![("package-assets-test/first.bin".to_string(), vec![1, 2, 3]), ("package-assets-test/second.bin".to_string(), vec![9])]);

@@ -5,7 +5,7 @@ import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{heapStats}from"bun:jsc";
 import Ajv from"ajv";
-import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import fixture from"./🔣️.json";
 import fixtureSchema from"./🧬️schema/🔣️.json";
 import portable from"../../../🧪️tests/📤️portable/🔣️.json";
@@ -13,7 +13,7 @@ import{canonicalJsonV1,createFrontierV1,createGenerationStoreV1}from"../../🟨�
 import{expandInChunksV1,expandStreamV1}from"../../🔌️load/🟨️.mjs";
 import{createMemoryFilePort}from"../🏃️world/🟦️.ts";
 
-const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️oracle.py"),sha=(text:string)=>createHash("sha256").update(text).digest("hex");
+const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️.py"),sha=(text:string)=>createHash("sha256").update(text).digest("hex");
 const IDENTITY=sha("assembly-identity"),IMPLEMENTATION=sha("assembly-implementation");
 type Owner={name:string;root:string;kind:"project"|"unavailable";node:unknown;edges:unknown[]};
 type Corpus={owners:Owner[];global:{externalNodes:Record<string,unknown>;edges:unknown[];unavailable:unknown[]}};

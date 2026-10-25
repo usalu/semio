@@ -1,7 +1,9 @@
-import {join,resolve} from "node:path";
+import {statSync,statfsSync} from "node:fs";
+import {dirname,join,resolve} from "node:path";
+import {effectiveCapacityV1,elasticCapacityV1,type ElasticPartitionIdV1,type ElasticRuleV1} from "./📐️elastic/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {requireMaterializedPathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {nativeImageUsableBytesV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📏️capacity/🟦️.ts";
+import {nativeImageUsableBytesV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📏️capacity/🟦️.ts";
 import {repositoryStrictStorageV1} from "../🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import policy from "./🔣️policy.json" with {type:"json"};
@@ -28,9 +30,20 @@ export function readRepositoryCacheBudgetV1(value:unknown):RepositoryCacheBudget
 }
 /** 🚦️ Declares the one bounded queued whole-image maintenance wait that ordinary commands use instead of refusing concurrent invocations; callers start it before taking their own shared pin on that partition because later readers queue behind it. */
 export function repositoryCacheOrdinaryMaintenanceV1():Readonly<{version:1;mode:"queued";maximumWaitMilliseconds:number}>{const row=schema.$defs.ordinaryMaintenance.const;return Object.freeze({version:1 as const,mode:"queued" as const,maximumWaitMilliseconds:row.maximumWaitMilliseconds});}
-/** 🧭️ Resolves one finite repository budget without substituting an ordinary filesystem for admission. */
+export {effectiveCapacityV1,elasticCapacityV1,type ElasticPartitionIdV1,type ElasticRuleV1} from "./📐️elastic/🟦️.ts";
+/** 🌱️ Whether an elastic image should be recreated larger now: its rule is automatic, the mounted image has less free space than the pressure floor and the elastic size the host allows exceeds its capacity. */
+export function repositoryPartitionRegrowDueV1(workspace:string,partition:ElasticPartitionIdV1):boolean{
+ const rule=policy.elastic?.[partition];if(!rule?.automatic)return false;
+ try{const declared=policy.partitions[partition],directory=join(requireMaterializedPathV1(resolve(workspace)),declared.directory),mount=join(directory,"m"),image=statfsSync(mount);if(statSync(mount).dev===statSync(directory).dev||image.bavail*image.bsize>=rule.pressureFreeBytes)return false;const host=statfsSync(dirname(directory));return elasticCapacityV1(rule,declared.capacityBytes,host.bavail*host.bsize)>effectiveCapacityV1(directory,declared.capacityBytes,rule);}catch{return false;}
+}
+/** 🧭️ Resolves one finite repository budget without substituting an ordinary filesystem for admission; every elastic partition keeps the capacity its image was created with, and a new one is sized from need and host. */
 export function repositoryCacheBudgetV1(workspace:string):RepositoryCacheBudgetV1&{readonly controlDirectory:string}{
- const root=requireMaterializedPathV1(resolve(workspace)),budget=readRepositoryCacheBudgetV1(policy),partitions=Object.fromEntries(Object.entries(budget.partitions).map(([id,partition])=>[id,Object.freeze({...partition,directory:requireMaterializedPathV1(join(root,partition.directory))})])) as Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>,rust=repositoryStrictStorageV1(root);
- if(partitions.rust.directory!==rust.directory||partitions.rust.capacityBytes!==rust.capacityBytes||partitions.rust.filesystemBytes!==rust.filesystemBytes)throw Error("Rust cache envelope disagrees with repository total budget");
- return Object.freeze({...budget,partitions:Object.freeze(partitions),controlDirectory:requireMaterializedPathV1(join(root,".cache/b/c"))});
+ const root=requireMaterializedPathV1(resolve(workspace));let maximumBytes=policy.maximumBytes;const partitions:Record<string,unknown>={...policy.partitions};
+ if(policy.elastic)for(const[id,rule]of Object.entries(policy.elastic) as [ElasticPartitionIdV1,ElasticRuleV1][]){
+  const declared=policy.partitions[id],capacity=effectiveCapacityV1(join(root,declared.directory),declared.capacityBytes,rule);
+  if(capacity!==declared.capacityBytes){maximumBytes+=capacity-declared.capacityBytes;partitions[id]={...declared,capacityBytes:capacity,maximumLogicalBytes:declared.maximumLogicalBytes+capacity-declared.capacityBytes};}
+ }
+ const budget=readRepositoryCacheBudgetV1(maximumBytes===policy.maximumBytes?policy:{...policy,maximumBytes,partitions}),resolved=Object.fromEntries(Object.entries(budget.partitions).map(([id,partition])=>[id,Object.freeze({...partition,directory:requireMaterializedPathV1(join(root,partition.directory))})])) as Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>,rust=repositoryStrictStorageV1(root);
+ if(resolved.rust.directory!==rust.directory||resolved.rust.capacityBytes!==rust.capacityBytes||resolved.rust.filesystemBytes!==rust.filesystemBytes)throw Error("Rust cache envelope disagrees with repository total budget");
+ return Object.freeze({...budget,partitions:Object.freeze(resolved),controlDirectory:requireMaterializedPathV1(join(root,".cache/b/c"))});
 }

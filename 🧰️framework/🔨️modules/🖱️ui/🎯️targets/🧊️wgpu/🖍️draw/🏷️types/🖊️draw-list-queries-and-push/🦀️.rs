@@ -18,7 +18,7 @@ impl DrawList {
         }
     }
 
-    /// ⏱️ This list's frame clock in monotonic seconds.
+    /// ⏰️ This list's frame clock in monotonic seconds.
     pub fn clock_seconds(&self) -> f32 {
         self.clock_seconds
     }
@@ -47,18 +47,18 @@ impl DrawList {
         self.overlay_route = self.overlay_route.saturating_add(1);
     }
 
-    /// 🪟️ Closes the innermost overlay-routed region. Saturating, so an unbalanced `end` cannot
+    /// ⏹️ Closes the innermost overlay-routed region. Saturating, so an unbalanced `end` cannot
     /// wrap the counter and silently route the rest of the frame into the overlay bucket.
     pub fn end_overlay_route(&mut self) {
         self.overlay_route = self.overlay_route.saturating_sub(1);
     }
 
-    /// 🪟️ Whether pushes are currently routed into the overlay bucket.
+    /// 🧭️ Whether pushes are currently routed into the overlay bucket.
     pub fn overlay_routed(&self) -> bool {
         self.overlay_route > 0
     }
 
-    /// 🪟️ The quad bucket an ordinary `push_*` lands in: the overlay one inside an overlay-routed
+    /// 🪣️ The quad bucket an ordinary `push_*` lands in: the overlay one inside an overlay-routed
     /// region, the layer's own one otherwise.
     fn active_ui_instances(&mut self) -> &mut Vec<UiInstance> {
         let overlay = self.overlay_route > 0;
@@ -70,7 +70,7 @@ impl DrawList {
         }
     }
 
-    /// 🪟️ [`DrawList::active_ui_instances`] for vector geometry.
+    /// 🖍️ [`DrawList::active_ui_instances`] for vector geometry.
     fn active_vector_vertices(&mut self) -> &mut Vec<VectorVertex> {
         let overlay = self.overlay_route > 0;
         let layer = self.active_layer();
@@ -124,7 +124,7 @@ impl DrawList {
         self.layers.push(DrawLayer { scissor: parent, clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
     }
 
-    /// 🪟️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
+    /// ✂️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
     pub fn begin_silhouette_clip(&mut self, rects: &[semio_framework_ui_theme::geometry::Rect]) {
         if ClipRegion::source_pieces_overlap(rects) {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
@@ -209,7 +209,7 @@ impl DrawList {
         self.active_ui_instances().push(UiInstance::loading_border(rect, color, radius, stroke));
     }
 
-    /// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
+    /// ⌛️ Dashed, slow-spinning + gently pulsing waiting ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
     pub fn push_waiting_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;

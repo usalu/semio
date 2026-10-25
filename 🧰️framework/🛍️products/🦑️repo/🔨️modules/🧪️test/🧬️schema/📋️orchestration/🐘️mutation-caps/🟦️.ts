@@ -9,7 +9,7 @@ import { isRecord, readJsonObject } from "../📚️schema-documents/🟦️.ts"
 import { mutationArtifactScope, mutationTree, sharedSegments } from "../🌳️mutation-tree/🟦️.ts";
 
 //#region 🐘️MutationCaps
-/** 🐘️ One mutation leaf whose payload schema caps its inverse rows (`x-semio-inverse-rows.bounded`): its directory, the aggregate
+/** 🍃️ One mutation leaf whose payload schema caps its inverse rows (`x-semio-inverse-rows.bounded`): its directory, the aggregate
  * variant its descriptor names and the cap. */
 export type MutationCapLeaf = Readonly<{ directory: string; variant: string; bounded: number }>;
 

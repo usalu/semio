@@ -65,10 +65,8 @@ fn decode_canvas_image_source(data_url: &str) -> Option<Vec<u8>> {
 }
 
 fn decode_canvas_image_bytes(bytes: &[u8]) -> Option<(Vec<u8>, u32, u32)> {
-    let image = image::load_from_memory(&bytes).ok()?;
-    let rgba = image.to_rgba8();
-    let (width, height) = rgba.dimensions();
-    Some((rgba.into_raw(), width, height))
+    let decoded = semio_framework_pixels::image_decoding::decode_encoded_blocking(bytes.to_vec(), semio_framework_pixels::image_decoding::EncodedDecodeLimits::MAXIMUM, &|| false).ok()?.image;
+    Some((decoded.pixels, decoded.width, decoded.height))
 }
 
 pub fn queue_canvas_image_upload_sized(surface_id: &str, layer_id: &str, data_url: &str) -> (Result<String, RasterUploadRefusal>, Option<(u32, u32)>) {
@@ -79,7 +77,7 @@ pub fn queue_canvas_image_upload_sized(surface_id: &str, layer_id: &str, data_ur
         data_url.as_bytes(),
         || {
             let bytes = decode_canvas_image_source(data_url).ok_or_else(Vec::new)?;
-            let measured = match image::ImageReader::new(std::io::Cursor::new(bytes.as_slice())).with_guessed_format().ok().and_then(|reader| reader.into_dimensions().ok()) {
+            let measured = match semio_framework_intrinsic_size::raster_dimensions(bytes.as_slice()).ok() {
                 Some(measured) => measured,
                 None => return Err(bytes),
             };

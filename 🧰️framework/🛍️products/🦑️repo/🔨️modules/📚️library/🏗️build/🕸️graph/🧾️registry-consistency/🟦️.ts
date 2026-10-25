@@ -51,7 +51,7 @@ const compareBytes = (left: string, right: string): number => Buffer.compare(Buf
 const scopesOf = (scope?: OwnerScope): readonly string[] | undefined => (scope === undefined ? undefined : typeof scope === "string" ? [scope] : scope);
 const within = (path: string, scope?: OwnerScope): boolean => scopesOf(scope)?.some((prefix) => prefix === "." || path === prefix || path.startsWith(`${prefix}/`)) ?? true;
 
-/** 🚫️ Mirrors the discovery exclusions: the ticket tree, generated directories and example collections outside a module member. */
+/** 🪞️ Mirrors the discovery exclusions: the ticket tree, generated directories and example collections outside a module member. */
 export function excludedFromOwners(path: string, policy: OwnerTreePolicy): boolean {
   const parts = path.split("/");
   return path.startsWith(".🧬semio/") || parts.some((part, index) => policy.generated.includes(part) || (policy.collections.includes(part) && parts[index - 1] !== policy.moduleMember));
@@ -113,7 +113,7 @@ export function findOwnerFindings(registry: BuildOwnerRegistryV1, tree: OwnerTre
   return out;
 }
 
-/** 🔧️ Brings the rows below `scope` in line with the tree: rows of vanished modules are dropped only when no manifest exists and git tracks no file at the missing path (a tracked path that is merely absent is a concurrent move in progress), the Cargo packages under their native roots become rows of their own, rows whose module moved follow it, rows take the name and package list their manifest declares, Cargo rows beside a project manifest hand over to it, and every unregistered module gets a row at its byte-order position. */
+/** 📚️ Brings the rows below `scope` in line with the tree: rows of vanished modules are dropped only when no manifest exists and git tracks no file at the missing path (a tracked path that is merely absent is a concurrent move in progress), the Cargo packages under their native roots become rows of their own, rows whose module moved follow it, rows take the name and package list their manifest declares, Cargo rows beside a project manifest hand over to it, and every unregistered module gets a row at its byte-order position. */
 export function syncOwnerRegistry(registry: BuildOwnerRegistryV1, tree: OwnerTree, policy: OwnerTreePolicy, scope?: OwnerScope): OwnerSync {
   const findings = findOwnerFindings(registry, tree, policy, scope);
   const owners = structuredClone(registry.owners);

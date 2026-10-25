@@ -8,10 +8,10 @@
  * @see ../../🎯️targets/⚛️react/🟦️.tsx — the module under test
  */
 import { split } from "@semio-tech/presentation";
-import type { Presentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import type { Presentation } from "@semio-tech/presentation-react";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { act } from "@semio-tech/ui-react/test";
-import { mountPresentation, resetPdfCanvasPort, setPdfCanvasPort, unmountPresentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { mountPresentation, resetPdfCanvasPort, setPdfCanvasPort, unmountPresentation } from "@semio-tech/presentation-react";
 import { pointerClick, positionedDeck, testPdfCanvasPort } from "../🧱️interaction-dom-kit/🟦️.ts";
 
 describe("presentation interaction dom", () => {

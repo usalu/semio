@@ -30,7 +30,7 @@ impl<T:Send+Sync+'static> CapturedSnapshotSource<T>{
 }
 impl<T:Send+Sync+'static> CapturedSnapshotRetirement<T>{
  fn new(mut source:CapturedSnapshotSource<T>)->Self{Self{read:ManuallyDrop::new(source.read.take()),registry:ManuallyDrop::new(None),active:ManuallyDrop::new(None),factory:ManuallyDrop::new(source.factory.take()),factory_close:None}}
- /// 📏️ Quotes exact read return, last-registry typed pumping, and installed issuer closure.
+ /// 📪️ Quotes exact read return, last-registry typed pumping, and installed issuer closure.
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.read.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<SnapshotReadReturn>()+size_of::<SnapshotRead<T>>()+size_of::<u64>()+size_of::<usize>(),depth:2,..Default::default()});}
   if let Some(active)=self.active.as_ref(){return nested(artifact_retirement_box_demands(active,body)?);}

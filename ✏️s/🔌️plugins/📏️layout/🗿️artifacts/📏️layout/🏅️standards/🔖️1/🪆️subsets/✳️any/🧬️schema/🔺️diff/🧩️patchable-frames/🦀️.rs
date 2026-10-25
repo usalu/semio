@@ -256,7 +256,7 @@ pub struct FramePatch {
 /// locked targets are skipped with one Warning `mutation.partial` per reason; a transform that moves nothing is the
 /// Warning `mutation.no-op`.
 pub fn layout_frame_selection_diff(base: &LayoutSnapshot, page_id: &str, targets: &[String], transform: impl Fn(&semio_s_artifact_layout_layout_model::LayoutBounds) -> semio_s_artifact_layout_layout_model::LayoutBounds, fields: impl Fn(&semio_s_artifact_layout_layout_model::LayoutBounds) -> crate::FramePatch) -> protocol::MutationOutcome<LayoutDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+    use crate::LayoutPagesModification;
     if let Err(reason) = layout_frame_targets_invariant(targets) {
         return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
     }

@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️Limits
-pub(super) struct DbIoBackendRegistrySlot {
+pub struct DbIoBackendRegistrySlot {
     pub generation: u64,
     pub kind: DbIoBackendKind,
     pub executor: Option<Box<dyn DbIoTaskExecutor>>,
@@ -11,7 +11,7 @@ pub(super) struct DbIoBackendRegistrySlot {
     pub close_requested: bool,
     pub leased_operation: u64,
     pub admitted_operation: u64,
-    pub(super) executing_steps: u32,
+    pub executing_steps: u32,
     pub pending_operations: usize,
     pub owner_operation: u64,
     pub owner_credit: DbIoCredit,
@@ -22,7 +22,7 @@ pub(super) struct DbIoBackendRegistrySlot {
     pub cleanup_fault: Option<DbIoFault>,
 }
 
-struct DbIoBackendRegistry {
+pub struct DbIoBackendRegistry {
     pub slots: [DbIoBackendRegistrySlot; DB_IO_BACKEND_CONTROLS],
     pub free: [u16; DB_IO_BACKEND_CONTROLS],
     pub free_read: usize,
@@ -152,12 +152,12 @@ impl Drop for DbIoBackendRollbackReservation {
     }
 }
 
-struct DbIoBackendRegistrationRetirement {
+pub struct DbIoBackendRegistrationRetirement {
     pub index: usize,
     pub generation: u64,
 }
 
-pub(super) struct DbIoBackendAdmittedFailure {
+pub struct DbIoBackendAdmittedFailure {
     pub cause: DbError,
     pub retirement: DbIoBackendRegistrationRetirement,
 }

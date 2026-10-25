@@ -31,9 +31,9 @@ use crate::standards::v1_1::subsets::tiny::schema::mutations::support::subtree_p
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertTinyElement {
-    pub(crate) parent: NodePath,
-    pub(crate) index: usize,
-    pub(crate) node: SvgNode,
+    pub parent: NodePath,
+    pub index: usize,
+    pub node: SvgNode,
 }
 
 impl<Op> protocol::MutationKind<SvgSnapshot, Op> for InsertTinyElement

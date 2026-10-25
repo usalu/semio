@@ -7,7 +7,7 @@ use super::*;
 /// number of open handles it streamed.
 pub(super) struct FillCapture {
     pub(super) capture: ArtifactFillCaptureCursor,
-    ingress: Option<BoardFillSnapshotIngress>,
+    pub(super) ingress: Option<BoardFillSnapshotIngress>,
     pub(super) suggestion_offset: f64,
     pub(super) serial: u64,
     pub(super) open_handles: u64,

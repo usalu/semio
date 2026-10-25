@@ -9,7 +9,7 @@ import {withRepositoryCacheStoreV1} from "../🏪️store/🟦️.ts";
 import {withRepositoryToolingStoreV1} from "../../../🛠️tools/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {repositoryCacheBudgetV1} from "../../🟦️.ts";
-import {openRepositoryCachePartitionV1,repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1} from "../🟦️.ts";
+import { repositoryCachePartitionRootV1, repositoryLeaseDirectoryV1 } from "../🟦️.ts"; import { openRepositoryCachePartitionV1 } from "../♻️reset/🟦️.ts";
 import {acquireResourceLease,resourceLeasePathV1,type ResourceLeaseControl} from "@semio-tech/process/leases";
 
 /** 🗜️ Qualifies the authored production tools partition and two actual concurrent opens, without adopting old cache trees. */
@@ -35,7 +35,7 @@ export async function proveRepositoryLeasePartitionV1(workspace:string,control:R
 /** ⏹️ An escaped async context cannot reopen the outer Original scope after its body settles. */
 export async function proveRepositoryCacheScopeLifetimeV1(workspace:string,invocation:ScriptInvocation):Promise<void>{const control=createIssuedResourceControlV1(invocation,"cache:scope-lifetime",0);let resume!:()=>void,escaped!:Promise<unknown>;await withRepositoryCacheStoreV1(workspace,"tools",invocation,control,async()=>{const pending=new Promise<void>(accept=>{resume=accept;});escaped=pending.then(()=>withRepositoryCacheStoreV1(workspace,"tools",invocation,control,async()=>{throw Error("Escaped callback entered after release");}));});resume();let refused=false;try{await escaped;}catch(error){if(!String(error).includes("Original cache callback scope released"))throw error;refused=true;}if(!refused)throw Error("Escaped cache callback was admitted");}
 
-/** 🧱️ Exhausts a real isolated fixed filesystem and replays actual process-crash metadata headroom. */
+/** 🏝️ Exhausts a real isolated fixed filesystem and replays actual process-crash metadata headroom. */
 export async function proveRepositoryQueueMetadataHeadroomV1(workspace:string,invocation:ScriptInvocation,control:ResourceLeaseControl):Promise<void>{
  await withRepositoryCacheStoreV1(workspace,"diagnostics",invocation,createIssuedResourceControlV1(invocation,"cache:store-entry",0),async store=>{
   const {openNativePlatformStorageV1}=await import("@semio-tech/process/artifacts/native-build/storage/platform"),{retireNativeImageStorageV1:retireMac}=await import("@semio-tech/process/artifacts/native-build/storage/image"),leases=await import("@semio-tech/process/leases"),metadata=await import("@semio-tech/process/routing"),directory=join(store.root,"qm-"+randomUUID().slice(0,8)),options={directory,leaseDirectory:repositoryLeaseDirectoryV1(workspace),filesystemBytes:33554432,maximumPhysicalBytes:34603008,control};const image=await openNativePlatformStorageV1(options),data=join(image.root,"data");mkdirSync(data);

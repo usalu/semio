@@ -31,7 +31,7 @@ pub struct DrawingContainerRebuildAuthority {
     pub terminal: bool,
 }
 
-struct DrawingContainerRebuildRejected {
+pub struct DrawingContainerRebuildRejected {
     pub source: DrawingNativeLayers,
     pub pending: Option<DrawingLayerNode>,
     pub reverse: Vec<DrawingLayerNode>,

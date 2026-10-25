@@ -77,7 +77,7 @@ impl FlowDomainAdapter {
         self.host.sync_dag_ghost();
         let mut scene = canvas::Scene::new();
         self.host.paint_scene(&mut scene, self.width, self.height, self.dpr);
-        let clear = self.host.dag.canvas_theme.raster_clear;
+        let clear = self.host.dag.viewport.canvas_theme.raster_clear;
         let presented = surface_canvas::present_surface_scene(surface.id.get(), &scene, clear, self.dpr);
         let fixture = self.host.host_snapshot_json().map_err(domain_error)?;
         let labels = self.host.label_overlay_paint_state_json().map_err(domain_error)?;

@@ -22,13 +22,13 @@ impl PreparedRasterRejected {
         self.fault
     }
 
-    /// 🖼️ Whether this refusal is the source's own — undecodable or oversized, a typed per-image outcome its host retires
+    /// 🛑️ Whether this refusal is the source's own — undecodable or oversized, a typed per-image outcome its host retires
     /// silently — rather than a raster-authority fault.
     pub fn is_content_refusal(&self) -> bool {
         self.content
     }
 
-    /// 🖼️ This refusal classified as the source's own ([`Self::is_content_refusal`]) — what a host does with a refusal its
+    /// 🪵️ This refusal classified as the source's own ([`Self::is_content_refusal`]) — what a host does with a refusal its
     /// measured source caused.
     pub fn into_content_refusal(mut self) -> Self {
         self.content = true;

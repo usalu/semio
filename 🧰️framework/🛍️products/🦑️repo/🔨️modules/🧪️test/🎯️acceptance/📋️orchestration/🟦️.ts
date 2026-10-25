@@ -36,7 +36,7 @@ export type LocalizedText = Readonly<{ en: string; de: string }>;
 /** 🚦️ The outcome of one check, step or run. */
 export type AcceptanceStatus = "pass" | "fail" | "blocked" | "skipped";
 
-/** 🧾️ `semio.acceptance.check-result/v1` — what one acceptance harness measured. */
+/** ✅️ `semio.acceptance.check-result/v1` — what one acceptance harness measured. */
 export type AcceptanceCheckResult = Readonly<{
   schema: "semio.acceptance.check-result/v1";
   check: string;
@@ -72,7 +72,7 @@ export type GoalPlanStep = Readonly<{ id: string; title: LocalizedText; mode: "s
  * (acceptance ledger numbering: 1 frontend, 2 hub, 3 collaboration, 4 AI over the semio MCP, 5 AGENTS.md). */
 export type GoalPlanOutcome = Readonly<{ id: "1" | "2" | "3" | "4" | "5"; title: LocalizedText }>;
 
-/** 🧩️ The requirements a provider can stand up when the command line does not name them. */
+/** 🔤️ The requirements a provider can stand up when the command line does not name them. */
 export type ProvidedRequirement = "hub" | "serve" | "localServe";
 
 /** 🏗️ How the gate stands up one requirement zero-touch: a build target it holds for the whole run, answering at
@@ -82,10 +82,10 @@ export type ProvidedRequirement = "hub" | "serve" | "localServe";
  * checks when the command line names none. */
 export type GoalPlanProvider = Readonly<{ url: string; readyPath: string; readyBoundMs: number; project: string; target: string; args: readonly string[]; env?: Readonly<Record<string, string>>; requires: readonly "hub"[]; adminCapability?: string }>;
 
-/** 🗺️ `semio.acceptance.goal-plan/v1`. */
+/** ⛳️ `semio.acceptance.goal-plan/v1`. */
 export type GoalPlan = Readonly<{ schema: "semio.acceptance.goal-plan/v1"; id: string; title: LocalizedText; outcomes: readonly GoalPlanOutcome[]; providers?: Readonly<Partial<Record<ProvidedRequirement, GoalPlanProvider>>>; steps: readonly GoalPlanStep[] }>;
 
-/** 🏁️ The verdict of one outcome over every selected check that serves it. */
+/** ☑️ The verdict of one outcome over every selected check that serves it. */
 export type GoalSummaryOutcome = Readonly<{ id: GoalPlanOutcome["id"]; status: AcceptanceStatus; totals: Readonly<Record<AcceptanceStatus, number>>; checks: readonly string[] }>;
 
 /** 📊️ `semio.acceptance.goal-summary/v1`. */
@@ -167,7 +167,7 @@ export function acceptanceSchemaViolations(repoRoot: string, definition: "checkR
   return violations;
 }
 
-/** 🗺️ Reads and validates a goal plan. */
+/** 📖️ Reads and validates a goal plan. */
 export function readGoalPlan(repoRoot: string, path = join(repoRoot, GOAL_PLAN_REL_PATH)): GoalPlan {
   const plan = JSON.parse(readFileSync(path, "utf8")) as unknown;
   const violations = acceptanceSchemaViolations(repoRoot, "goalPlan", plan);

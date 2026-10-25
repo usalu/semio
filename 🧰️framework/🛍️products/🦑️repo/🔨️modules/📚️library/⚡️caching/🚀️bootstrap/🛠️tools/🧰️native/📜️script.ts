@@ -3,13 +3,13 @@ import {createIssuedResourceControlV1, receiveScriptProcessInvocation, Script, S
 import {withResourceLeases} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {NATIVE_TOOLCHAINS_V1, NATIVE_TOOL_IDS_V1, pythonEnvironmentOfProjectV1, pythonProjectForRootV1, toolchainIdentityV1, toolchainHostV1, toolchainMessageV1, type ToolchainKindV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {getWorkspaceRoot} from "../../../../📦️packages/🟦️typescript/📇️inventory/🗂️workspaces/🟦️.ts";
-import {withRepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import {withRepositoryToolingStoreV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {provisionNativeToolsV1} from "./🟦️.ts";
 import {systemNativeToolPortV1} from "./🔌️port/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 const kinds: readonly ToolchainKindV1[] = ["python", "dotnet", "cmake", "go"];
 

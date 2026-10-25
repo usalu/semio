@@ -255,6 +255,31 @@ dashboard_labels! {
     cli_dashboard_unexpected_arguments: "[dashboard] unexpected arguments: {arguments}", "[dashboard] unerwartete Argumente: {arguments}";
     cli_dashboard_attach_failed: "[dashboard] failed to attach to the terminal", "[dashboard] das Terminal konnte nicht übernommen werden";
     cli_unknown_verb: "[semio] unknown verb {verb}", "[semio] unbekannter Befehl {verb}";
+    cli_usage_run: "usage: repo dashboard run <id> [--param k=v]… [--env K=V]… [--detach] [--wait-ready] [--dry-run] [-- args…]", "Verwendung: repo dashboard run <id> [--param k=v]… [--env K=V]… [--detach] [--wait-ready] [--dry-run] [-- Argumente…]";
+    cli_usage_logs: "usage: repo dashboard logs <task> [--follow]", "Verwendung: repo dashboard logs <Aufgabe> [--follow]";
+    cli_usage_act: "usage: semio {verb} <task> [--group]", "Verwendung: semio {verb} <Aufgabe> [--group]";
+    cli_usage_open: "usage: repo dashboard open <task> [--print]", "Verwendung: repo dashboard open <Aufgabe> [--print]";
+    cli_flag_no_value: "--{name} takes no value", "--{name} nimmt keinen Wert";
+    cli_flag_needs_value: "--{name} needs a value", "--{name} braucht einen Wert";
+    cli_pair_malformed: "--{name} \"{text}\" is not `key=value`", "--{name} \"{text}\" ist nicht `Schlüssel=Wert`";
+    cli_param_malformed: "--param \"{text}\" is not `id` or `id=value`", "--param \"{text}\" ist weder `id` noch `id=Wert`";
+    cli_param_needs_value: "--param {text}: a {kind} parameter needs a value, write `--param {text}=<value>`", "--param {text}: ein Parameter der Art {kind} braucht einen Wert, schreibe `--param {text}=<Wert>`";
+    cli_handle_empty: "a task handle is empty; `repo dashboard tasks` lists them", "Ein Aufgabenname ist leer; `repo dashboard tasks` listet sie auf";
+    cli_no_task_matches: "no task matches \"{needle}\"; `repo dashboard tasks` lists them", "Keine Aufgabe passt zu \"{needle}\"; `repo dashboard tasks` listet sie auf";
+    cli_live_tasks: "\"{needle}\" has {count} live tasks: {listed}; name one session id", "\"{needle}\" hat {count} laufende Aufgaben: {listed}; nenne eine Sitzungs-ID";
+    cli_matches_tasks: "\"{needle}\" matches {count} tasks: {listed}; name one session id", "\"{needle}\" passt zu {count} Aufgaben: {listed}; nenne eine Sitzungs-ID";
+    cli_matches_commands: "\"{needle}\" matches several commands: {commands}; name one", "\"{needle}\" passt zu mehreren Befehlen: {commands}; nenne einen";
+    cli_names_tasks: "\"{needle}\" names {count} tasks of one launch: {listed}; name one session id", "\"{needle}\" benennt {count} Aufgaben eines Starts: {listed}; nenne eine Sitzungs-ID";
+    cli_no_compound: "\"{needle}\" belongs to no compound", "\"{needle}\" gehört zu keinem Verbund";
+    cli_group_not_restart: "--group stops or kills; it does not restart", "--group hält an oder beendet; es startet nicht neu";
+    cli_no_live_task: "\"{needle}\" has no live task to {verb}; {listed}", "\"{needle}\" hat keine laufende Aufgabe für {verb}; {listed}";
+    cli_no_ready_address: "{task} has no ready address", "{task} hat keine bereite Adresse";
+    cli_cannot_open_browser: "cannot open a browser: {error}", "Ein Browser lässt sich nicht öffnen: {error}";
+    cli_no_daemon: "no dashboard daemon answers for this workspace ({error}); `repo dashboard run` starts one", "Kein Dashboard-Dienst antwortet für diesen Arbeitsbereich ({error}); `repo dashboard run` startet einen";
+    cli_daemon_unreachable: "cannot reach the dashboard daemon: {error}", "Der Dashboard-Dienst ist nicht erreichbar: {error}";
+    cli_no_ready_declared: "the command declares no ready address; it is started", "Der Befehl erklärt keine bereite Adresse; er ist gestartet";
+    cli_check_summary: "{commands} commands, {problems} problems", "{commands} Befehle, {problems} Probleme";
+    cli_graph_absent: "build graph publication absent: targets inferred by the graph are not checked", "Build-Graph-Veröffentlichung fehlt: vom Graphen abgeleitete Targets werden nicht geprüft";
     cli_run_failed: "[semio] failed to run {command}: {error}", "[semio] {command} konnte nicht gestartet werden: {error}";
     prefs_journal_problem: "preferences journal ignored: {problem}", "Einstellungsjournal ignoriert: {problem}";
     hint_activate: "select", "wählen";
@@ -322,6 +347,11 @@ dashboard_labels! {
     action_last: "last", "letzte";
     action_delete_word: "delete word", "Wort löschen";
     action_back: "back", "zurück";
+    action_suggest_previous: "previous suggestion", "vorheriger Vorschlag";
+    action_suggest_next: "next suggestion", "nächster Vorschlag";
+    action_suggest_accept: "accept suggestion", "Vorschlag übernehmen";
+    action_suggest_refresh: "refresh suggestions", "Vorschläge aktualisieren";
+    action_suggest_cancel: "cancel suggestions", "Vorschläge abbrechen";
 }
 
 /// 🔤️ The catalogue for a language.
@@ -368,6 +398,7 @@ impl DashboardLabels {
             "detach" => self.action_detach, "shutdown" => self.action_shutdown, "cancel-prefix" => self.action_cancel_prefix, "send-prefix" => self.action_send_prefix,
             "up" => self.action_up, "down" => self.action_down, "left" => self.action_left, "right" => self.action_right, "page-up" => self.action_page_up, "page-down" => self.action_page_down,
             "first" => self.action_first, "last" => self.action_last, "delete-word" => self.action_delete_word, "activate" => self.action_activate, "clear" => self.action_clear, "back" => self.action_back,
+            "suggest-previous" => self.action_suggest_previous, "suggest-next" => self.action_suggest_next, "suggest-accept" => self.action_suggest_accept, "suggest-refresh" => self.action_suggest_refresh, "suggest-cancel" => self.action_suggest_cancel,
             _ => return None,
         };
         Some(text.as_str())
@@ -379,7 +410,7 @@ impl DashboardLabels {
 pub const TAB_CELLS: usize = 24;
 const TAIL_CELLS: usize = 6;
 
-/// 🗣️ The word a verb is shown as; identifiers stay language-neutral.
+/// 💬️ The word a verb is shown as; identifiers stay language-neutral.
 pub fn verb_text(verb: &str, locale: Locale) -> &str {
     if locale != Locale::De { return verb; }
     match verb {
@@ -455,14 +486,14 @@ impl DashboardLabels {
     pub fn source_management_caption(&self,kind:EntryAction,path:&str)->String{let label=match kind{EntryAction::CreateFile=>self.action_create_file,EntryAction::CreateDirectory=>self.action_create_directory,EntryAction::Rename=>self.action_rename_entry,EntryAction::Retain=>self.action_retain_entry};if kind==EntryAction::Retain{self.source_confirm_retain.fill(&[("path",path),("name",path.rsplit('/').next().unwrap_or(path))]).into_string()}else{self.source_management_form.fill(&[("action",label.as_str()),("path",path)]).into_string()}}
     /// 📈️ One bounded progress record renders without exposing a host implementation type.
     pub fn source_progress(&self,progress:&Progress,cancel:&str)->String{self.source_loading.fill(&[("stage",&self.source_stage(&progress.stage)),("completed",&progress.completed.to_string()),("total",&progress.total.map_or_else(||"?".into(),|total|total.to_string())),("cancel",cancel)]).into_string()}
-    /// 📄️ Document captions distinguish saved drafts, pending reload and authenticated readonly content.
-    pub fn source_document_caption(&self,current:&semio_framework_filesystem_workspace::commands::DocumentBuffer,position:&str)->String{let state=if current.read_only{if std::path::Path::new(&current.document.path).is_absolute(){self.source_read_only}else{self.source_reload_read_only}}else if current.dirty{self.source_dirty}else{self.source_saved};format!("{} · {} · {position}",current.document.path,state.as_str())}
+    /// 📄️ Document captions distinguish saved drafts, pending reload and authenticated readonly content; within `width` cells (0 = unbounded) the path gives way in its middle so the state and the position stay visible.
+    pub fn source_document_caption(&self,current:&semio_framework_filesystem_workspace::commands::DocumentBuffer,position:&str,width:u16)->String{let state=if current.read_only{if std::path::Path::new(&current.document.path).is_absolute(){self.source_read_only}else{self.source_reload_read_only}}else if current.dirty{self.source_dirty}else{self.source_saved};let rest=format!(" · {} · {position}",state.as_str());let budget=width.saturating_sub(cells(&rest) as u16);let path=if width==0||cells(&current.document.path)<=usize::from(budget){std::borrow::Cow::Borrowed(current.document.path.as_str())}else{elide_middle(&current.document.path,budget.max(1),budget*2/3)};format!("{path}{rest}")}
     /// ⚠️ Management failures expose actual uncertain locations without claiming successful publication.
     pub fn source_failure(&self,error:&Error,management:bool)->String{let problem=if management{error.recovery_path.as_ref().map_or_else(||self.source_error(error,management),|path|self.source_management_partial.fill(&[("path",path)]).into_string())}else{self.source_error(error,management)};self.source_failed.fill(&[("problem",&problem)]).into_string()}
 
     /// 🚦️ Browser refusals render from closed domain categories in the chosen language.
     pub fn source_browser_error(&self,error:semio_framework_filesystem_workspace::commands::BrowserError,path:Option<&str>)->String{use semio_framework_filesystem_workspace::commands::BrowserError as E;match error{E::ConfirmRetain=>{let path=path.unwrap_or("");self.source_confirm_retain.fill(&[("path",path),("name",path.rsplit('/').next().unwrap_or(path))]).into_string()},_=>match error{E::ReadOnly=>self.source_read_only,E::Busy=>self.source_busy,E::InvalidPath=>self.source_path_error,E::MissingObservation=>self.source_conflict,E::EmptyHistory=>self.source_history_empty,E::PendingHistory=>self.source_history_pending,E::ConfirmHistory=>self.source_history_confirm_error,E::NoPage=>self.source_history_end,E::ConfirmRetain=>unreachable!()}.as_str().into()}}
-    /// 🧮️ History summaries expose observed counts without inventing work or reclamation totals.
+    /// 🪵️ History summaries expose observed counts without inventing work or reclamation totals.
     pub fn source_history_notice(&self,inspection:Option<&semio_framework_filesystem_workspace::HistoryInspection>,keys:&[(&str,&str)])->String{let summary=inspection.map(|value|self.source_history_inspection(value)).unwrap_or_default();format!("{summary} {}",self.source_history_keys.fill(keys).as_str())}
     pub fn source_history_inspection(&self,value:&semio_framework_filesystem_workspace::HistoryInspection)->String{self.source_history_summary.fill(&[("active",&value.active),("segments",&value.segments.to_string()),("names",&value.names.to_string()),("bytes",&value.bytes.to_string()),("unresolved",&value.unresolved.to_string()),("quarantined",&value.quarantined.to_string()),("rollover",if value.rollover{self.form_on.as_str()}else{self.form_off.as_str()}),("pending",value.pending.as_deref().unwrap_or("—"))]).into_string()}
     /// 🗃️ Browser captions keep confirmation and readonly navigation wording together.

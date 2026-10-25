@@ -21,7 +21,7 @@ pub struct RecordSlice<'a> {
     pub count: u64,
 }
 
-/// 🔗️ Extracts the minimal contiguous byte span (over the file's trusted, recovered prefix) that
+/// 📄️ Extracts the minimal contiguous byte span (over the file's trusted, recovered prefix) that
 /// starts at the first `REC_EDIT` frame with ordinal `ordinals.start` and ends right after the
 /// `REC_EDIT` frame with ordinal `ordinals.end - 1`. Any non-edit frames physically interleaved
 /// between those two edits (dictionary deltas, commits, ...) are included verbatim since the
@@ -79,7 +79,7 @@ pub async fn verify_slice(slice: &[u8], expected_chain: &[u8; 32]) -> Result<(),
     }
 }
 
-/// 🔐️ Shared by `verify_slice` and this crate's own tests: folds every frame's `blake3(full frame
+/// ⛓️ Shared by `verify_slice` and this crate's own tests: folds every frame's `blake3(full frame
 /// bytes)` digest in `slice` into one combined digest, in frame order.
 async fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
     let hasher = semio_framework_replication_wire_core::Blake3Hasher;

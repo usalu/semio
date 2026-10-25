@@ -152,21 +152,21 @@ async function serve(stream:http2.ServerHttp2Stream,headers:http2.IncomingHttpHe
  }
 }
 
-/** 🚀️ Serves gRPC over HTTP/2 (cleartext, or TLS when a certificate is given) with Node's own `http2` module: unary, server-streaming and client-streaming calls for every method the wire schema declares, request framing with gzip/deflate decompression, deadlines, cancellation, status trailers, flow control and per-call authorization. */
+/** 🚀️ Serves gRPC over HTTP/2 (cleartext, or TLS when a certificate is given) with Node's own `http2` module (the 1 MiB per-stream flow-control window is announced per session after it opens: declared in the server options it makes Bun's in-process client RST_STREAM unseen by the server from the second session on, so a cancelled call would run on): unary, server-streaming and client-streaming calls for every method the wire schema declares, request framing with gzip/deflate decompression, deadlines, cancellation, status trailers, flow control and per-call authorization. */
 export async function startGrpcServerV1(options:GrpcServerOptionsV1):Promise<GrpcServerV1>{
  for(const key of Object.keys(options.handlers))if(!METHODS.has(key))throw Error(`Declared method required: ${key}`);
- const limit=options.maximumMessageBytes??33554432,settings={maxConcurrentStreams:1024,initialWindowSize:1048576},
+ const limit=options.maximumMessageBytes??33554432,settings={maxConcurrentStreams:1024},
   server=options.tls?http2.createSecureServer({cert:readFileSync(options.tls.certificate),key:readFileSync(options.tls.key),settings}):http2.createServer({settings});
  server.on("stream",(stream,headers)=>{void serve(stream,headers,options,limit).catch(()=>{stream.destroy();});});
  server.on("sessionError",()=>{});
  await new Promise<void>((resolve,reject)=>{server.once("error",reject);server.listen(options.port,options.host,()=>{server.off("error",reject);resolve();});});
  const port=(server.address() as {port:number}).port,host=options.host.includes(":")&&!options.host.startsWith("[")?`[${options.host}]`:options.host,sessions=new Set<http2.ServerHttp2Session>();
- server.on("session",session=>{sessions.add(session);session.once("close",()=>{sessions.delete(session);});});
+ server.on("session",session=>{session.settings({initialWindowSize:1048576});sessions.add(session);session.once("close",()=>{sessions.delete(session);});});
  let closing:Promise<void>|undefined;
  return Object.freeze({url:`${options.tls?"grpcs":"grpc"}://${host}:${port}`,port,stop:()=>closing??=new Promise<void>(resolve=>{for(const session of sessions)session.destroy();server.close(()=>{resolve();});})});
 }
 
-/** 📞️ Options of one client call. */
+/** ☎️ Options of one client call. */
 export type GrpcClientCallV1=Readonly<{metadata?:Readonly<Record<string,string>>;signal?:AbortSignal;timeoutMilliseconds?:number}>;
 
 /** 🔌️ A small gRPC client over one HTTP/2 connection, for health probes, tests and tools. */

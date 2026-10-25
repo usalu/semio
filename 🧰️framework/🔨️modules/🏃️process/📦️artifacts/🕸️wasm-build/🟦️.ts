@@ -82,7 +82,7 @@ export function wasmCompilerSelectionArgumentsV1(value:unknown):Readonly<{cargo:
  if(validateJsonSchemaSubset(wasmPolicySchema.definitions.CompilerSelection,value,wasmPolicySchema).length)throw Error("Closed finite WASM compiler selection required");const row=value as WasmCompilerSelectionV1,flags=[...(row.configuration?["--config",row.configuration]:[]),...(row.noDefaultFeatures?["--no-default-features"]:[]),...row.features.flatMap(value=>["--features",value])],cargo=appendCargoProfileConfigurationArgumentsV1(["build","--locked","--lib","--manifest-path",row.manifest,"--profile",row.mode,"--target","wasm32-unknown-unknown",...(row.threads?["-Z","build-std=std,panic_abort"]:[]),...flags],row.mode,row.selectors),wasmPackCargo=appendCargoProfileConfigurationArgumentsV1(["--locked","--manifest-path",row.manifest,"--target","wasm32-unknown-unknown",...flags],row.mode,row.selectors);return Object.freeze({cargo,wasmPackCargo});
 }
 
-/** 📦️`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
+/** 🔨️`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
 export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: WasmBuildPolicyV1, port: WasmBuildExecutionPortV1 = { run: async (command, args, options) => { await captureOwnedCommandV1(command,args,options.cwd,{env:options.environment,control:requestedCompilerAdmissionControlV1(options.control,options.budgetMs)}); }, admit: admitWasmCargoSourcesV1 }): Promise<void> {
   requireIssuedResourceControlV1(opts.control);requireNativeStorageReservationV1(opts.storage,opts.control);if(opts.storage.allocation.kind!=="compiler-workspace"||typeof opts.consume!=="function")throw Error("Actual compiler store and completed WASM consumer required");policy=admitWasmPolicy(policy);opts=Object.freeze({...opts,pkg:Object.freeze({...opts.pkg,files:Object.freeze([...opts.pkg.files])}),cargoConfigurationSelectors:Object.freeze([...opts.cargoConfigurationSelectors]),cargoFeatures:Object.freeze([...(opts.cargoFeatures??[])])});for(const path of[policy.artifactDirectory,policy.buildDirectory])requireNativeStoragePathV1(opts.storage.backing.root,path);if(relative(policy.workspaceRoot,resolve(opts.rsDir)).replaceAll("\\","/")!==policy.sourceOwner)throw Error("Exact declared WASM source owner required");if(opts.pkg.files.length>sourceSchema.properties.maximumFiles.const||opts.pkg.files.some(name=>validateJsonSchemaSubset(sourceSchema.definitions.SourceName,name).length))throw Error("Finite canonical declared package files required");
   const control = requestedCompilerAdmissionControlV1(opts.control, policy.budgetMs), signal = control.signal;
@@ -93,7 +93,7 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
   mkdirSync(captureRoot, { recursive: true });
   const cargoOutput = mkdtempSync(join(captureRoot, "wasm-cargo-"));
   const packageOutput = mkdtempSync(join(captureRoot, "wasm-package-"));
-  let primaryFailed=false;
+  let primaryFailed=false,leased:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
   try {
     const pkgDir=packageOutput;
     const profile = buildModePolicy(policy.mode).cargoProfile;
@@ -105,10 +105,11 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
     const buildLabel = threads ? "cargo build (threaded) + wasm-bindgen" : "wasm-pack build";
     console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${pkgDir} --out-name ${wasmBaseName} --no-pack`);
     const t0 = Date.now();
+    leased=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:policy.buildDirectory,targetDirectory:cargoOutput,args:selection.cargo,signal,control});
     await withCargoCompilerInputsV1({manifest:join(componentDir,"Cargo.toml"),cwd:componentDir,arguments:selection.cargo,environment:buildEnv,control},opts.withCargoInputs,async actual=>{
-    let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined,lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined,bodyFailed=false;
+    let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined,bodyFailed=false;
     try{
-    const signal=actual.control.signal;lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:policy.buildDirectory,targetDirectory:cargoOutput,args:actual.arguments,signal:actual.control.signal,control:actual.control});capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"available",maximumParallelism:Math.max(1,Math.min(availableParallelism(),4))},directory:policy.leaseDirectory,control:actual.control});checkResourceLeaseControl(actual.control);
+    const signal=actual.control.signal;capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"available",maximumParallelism:Math.max(1,Math.min(availableParallelism(),4))},directory:policy.leaseDirectory,control:actual.control});checkResourceLeaseControl(actual.control);
     const environment:Record<string,string|undefined>={...actual.environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)};if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(capacity.parallelism);
     const invoke=async(command:string,args:readonly string[])=>{checkResourceLeaseControl(actual.control);await port.run(command,args,{cwd:componentDir,environment,budgetMs:compilerAdmissionBudgetV1(actual.control),label:logPrefix,signal:actual.control.signal,control:actual.control});checkResourceLeaseControl(actual.control);};
     await port.admit(actual.arguments,{cwd:componentDir,environment,policy,storage:opts.storage,control:actual.control});checkResourceLeaseControl(actual.control);
@@ -150,11 +151,11 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
       throw new Error(`[${logPrefix}] expected wasm output missing: ${wasmPath}`);
     }
     }catch(error){bodyFailed=true;throw error;}finally{
-      let failed=false,failure:unknown;for(const cleanup of[()=>{const held=lease;lease=undefined;held?.release();},()=>{const held=capacity;capacity=undefined;held?.release();}])try{cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!bodyFailed&&failed)throw failure;
+      let failed=false,failure:unknown;for(const cleanup of[()=>{const held=capacity;capacity=undefined;held?.release();}])try{cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!bodyFailed&&failed)throw failure;
     }
     });
   }catch(error){primaryFailed=true;throw error;}finally{
-    let failed=false,failure:unknown;for(const cleanup of[()=>rmSync(cargoOutput,{recursive:true,force:true}),()=>rmSync(packageOutput,{recursive:true,force:true})])try{cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!primaryFailed&&failed)throw failure;
+    let failed=false,failure:unknown;for(const cleanup of[async()=>{const held=leased;leased=undefined;try{held?.release();}catch(error){try{await withIssuedResourceOperationV1(opts.control,async()=>{throw error;});}catch{}throw error;}},async()=>rmSync(cargoOutput,{recursive:true,force:true}),async()=>rmSync(packageOutput,{recursive:true,force:true})])try{await cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!primaryFailed&&failed)throw failure;
   }
 }
 

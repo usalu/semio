@@ -4,7 +4,7 @@ import { discoverTestCases, testCacheDir, testTaxonomy } from "../../📦️pack
 import { runProbe } from "@semio-tech/repo-lib/process";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, relative, sep } from "node:path";
-import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🕸️ Emits the per-case Nx project graph the plugin generates, for inspection and for CI. */
 export class NxScript extends Script {

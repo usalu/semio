@@ -185,12 +185,32 @@ pub struct Puzzle2dMetaPatch {
 //#endregion 🔖️Patches
 
 //#region 🔖️Deltas
-protocol::list_delta! { pub Puzzle2dHandlesDelta { removal: Puzzle2dHandleRemoval, insertion: Puzzle2dHandleInsertion, relocation: Puzzle2dHandleRelocation, modification: Puzzle2dHandleModification, row: Puzzle2dHandle, patch: Puzzle2dHandlePatch, list: PagedList<Puzzle2dHandle, { usize::MAX }>, key: PagedUtf8<{ usize::MAX }> = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle2dNodesDelta { removal: Puzzle2dNodeRemoval, insertion: Puzzle2dNodeInsertion, relocation: Puzzle2dNodeRelocation, modification: Puzzle2dNodeModification, row: Puzzle2dNode, patch: Puzzle2dNodePatch, list: PagedList<Puzzle2dNode, { usize::MAX }>, key: PagedUtf8<{ usize::MAX }> = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle2dEdgesDelta { removal: Puzzle2dEdgeRemoval, insertion: Puzzle2dEdgeInsertion, relocation: Puzzle2dEdgeRelocation, modification: Puzzle2dEdgeModification, row: Puzzle2dEdge, patch: Puzzle2dEdgePatch, list: PagedList<Puzzle2dEdge, { usize::MAX }>, key: PagedUtf8<{ usize::MAX }> = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle2dTargetRegionsDelta { removal: Puzzle2dTargetRegionRemoval, insertion: Puzzle2dTargetRegionInsertion, relocation: Puzzle2dTargetRegionRelocation, modification: Puzzle2dTargetRegionModification, row: Puzzle2dTargetRegion, patch: Puzzle2dTargetRegionPatch, list: PagedList<Puzzle2dTargetRegion, { usize::MAX }>, key: PagedUtf8<{ usize::MAX }> = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle2dKindCompatibilityDelta { removal: Puzzle2dKindCompatibilityRemoval, insertion: Puzzle2dKindCompatibilityInsertion, relocation: Puzzle2dKindCompatibilityRelocation, modification: Puzzle2dKindCompatibilityModification, row: Puzzle2dKindCompatibility, patch: Puzzle2dKindCompatibilityPatch, list: PagedList<Puzzle2dKindCompatibility, { usize::MAX }>, key: Puzzle2dKindCompatibilityKey = |item| Puzzle2dKindCompatibilityKey { source: item.source.clone(), target: item.target.clone() } } }
+protocol::list_delta! { pub Puzzle2dHandlesDelta { removal: Puzzle2dHandleRemoval, insertion: Puzzle2dHandleInsertion, relocation: Puzzle2dHandleRelocation, modification: Puzzle2dHandleModification, row: Puzzle2dHandle, patch: Puzzle2dHandlePatch, list: PagedList<Puzzle2dHandle, { usize::MAX }>, key: PagedUtf8<{ usize::MAX }> = by Puzzle2dHandleKeys } }
+protocol::list_delta! { pub Puzzle2dNodesDelta { removal: Puzzle2dNodeRemoval, insertion: Puzzle2dNodeInsertion, relocation: Puzzle2dNodeRelocation, modification: Puzzle2dNodeModification, row: Puzzle2dNode, patch: Puzzle2dNodePatch, list: PagedList<Puzzle2dNode, { usize::MAX }>, key: PagedUtf8<{ usize::MAX }> = by Puzzle2dNodeKeys } }
+protocol::list_delta! { pub Puzzle2dEdgesDelta { removal: Puzzle2dEdgeRemoval, insertion: Puzzle2dEdgeInsertion, relocation: Puzzle2dEdgeRelocation, modification: Puzzle2dEdgeModification, row: Puzzle2dEdge, patch: Puzzle2dEdgePatch, list: PagedList<Puzzle2dEdge, { usize::MAX }>, key: PagedUtf8<{ usize::MAX }> = by Puzzle2dEdgeKeys } }
+protocol::list_delta! { pub Puzzle2dTargetRegionsDelta { removal: Puzzle2dTargetRegionRemoval, insertion: Puzzle2dTargetRegionInsertion, relocation: Puzzle2dTargetRegionRelocation, modification: Puzzle2dTargetRegionModification, row: Puzzle2dTargetRegion, patch: Puzzle2dTargetRegionPatch, list: PagedList<Puzzle2dTargetRegion, { usize::MAX }>, key: PagedUtf8<{ usize::MAX }> = by Puzzle2dTargetRegionKeys } }
+protocol::list_delta! { pub Puzzle2dKindCompatibilityDelta { removal: Puzzle2dKindCompatibilityRemoval, insertion: Puzzle2dKindCompatibilityInsertion, relocation: Puzzle2dKindCompatibilityRelocation, modification: Puzzle2dKindCompatibilityModification, row: Puzzle2dKindCompatibility, patch: Puzzle2dKindCompatibilityPatch, list: PagedList<Puzzle2dKindCompatibility, { usize::MAX }>, key: Puzzle2dKindCompatibilityKey = by Puzzle2dKindCompatibilityKeys } }
 //#endregion 🔖️Deltas
+/// 🔑️ Keys the foreign `Puzzle2dHandle` rows of their list delta.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle2dHandleKeys;
+impl protocol::list_delta::KeyOf<Puzzle2dHandle> for Puzzle2dHandleKeys { type Key = PagedUtf8<{ usize::MAX }>; fn key_of(row: &Puzzle2dHandle) -> PagedUtf8<{ usize::MAX }> { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle2dNode` rows of their list delta.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle2dNodeKeys;
+impl protocol::list_delta::KeyOf<Puzzle2dNode> for Puzzle2dNodeKeys { type Key = PagedUtf8<{ usize::MAX }>; fn key_of(row: &Puzzle2dNode) -> PagedUtf8<{ usize::MAX }> { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle2dEdge` rows of their list delta.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle2dEdgeKeys;
+impl protocol::list_delta::KeyOf<Puzzle2dEdge> for Puzzle2dEdgeKeys { type Key = PagedUtf8<{ usize::MAX }>; fn key_of(row: &Puzzle2dEdge) -> PagedUtf8<{ usize::MAX }> { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle2dTargetRegion` rows of their list delta.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle2dTargetRegionKeys;
+impl protocol::list_delta::KeyOf<Puzzle2dTargetRegion> for Puzzle2dTargetRegionKeys { type Key = PagedUtf8<{ usize::MAX }>; fn key_of(row: &Puzzle2dTargetRegion) -> PagedUtf8<{ usize::MAX }> { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle2dKindCompatibility` rows of their list delta.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle2dKindCompatibilityKeys;
+impl protocol::list_delta::KeyOf<Puzzle2dKindCompatibility> for Puzzle2dKindCompatibilityKeys { type Key = Puzzle2dKindCompatibilityKey; fn key_of(row: &Puzzle2dKindCompatibility) -> Puzzle2dKindCompatibilityKey { Puzzle2dKindCompatibilityKey { source: row.source.clone(), target: row.target.clone() } } }
 
 //#region 🔖️Algebra
 /// 🕳️ Tri-state decode of every `Option<Option<T>>` patch slot: a missing key is the unchanged slot (`None`) and a PRESENT

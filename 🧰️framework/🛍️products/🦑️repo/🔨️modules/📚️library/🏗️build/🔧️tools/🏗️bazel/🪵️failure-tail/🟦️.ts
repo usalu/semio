@@ -3,6 +3,8 @@ import {createHash} from "node:crypto";
 import {join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {retryOnConcurrentEditV1,type ChurnOptionsV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import {failureChurnOfTailsV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts";
 
 const policy=schema.definitions.Policy.const;
 /** 🪵️ The authored numbers of the failed action output tail. */
@@ -73,4 +75,14 @@ export function renderBazelFailureTailV1(row:BazelFailureTailRowV1,language:Baze
 /** 📣️ Prints the tails a failed build left, each preceded by its authored heading; returns how many were reported. */
 export async function reportBazelFailureTailsV1(directory:string,language:BazelFailureTailLanguageV1,write:(text:string)=>void):Promise<number>{
  const rows=await readBazelFailureTailsV1(directory);for(const row of rows)write(renderBazelFailureTailV1(row,language));return rows.length;
+}
+
+/** 🔁️ Classifies a failed build by the output of its failed tasks: a task that yielded because its implementation is outdated makes the outermost command start again with the current one (`reexec`), a task whose input an edit kept moving makes the lane run the build again (`reobserve`, the `build` layer of the churn policy); `undefined` when no failed task names such a class, so the failure stands. */
+export async function bazelFailureChurnV1(directory:string):Promise<Error|undefined>{
+ return failureChurnOfTailsV1(await readBazelFailureTailsV1(directory).catch(()=>[] as readonly BazelFailureTailRowV1[]));
+}
+
+/** 🏃️ Runs one Bazel build batch under the churn policy: before every attempt the failure directory is emptied, and a batch that fails because tasks yielded for an outdated implementation ends with the stale implementation error (the outermost command starts again), one that fails because task inputs were edited meanwhile runs again, bounded by the `build` layer, with the announcements and cancellation of the policy; any other failure is the original error. */
+export function runBazelBatchWithChurnV1<T>(directory:string,run:()=>Promise<T>,options:ChurnOptionsV1={}):Promise<T>{
+ return retryOnConcurrentEditV1("build",async()=>{await clearBazelFailureTailsV1(directory);try{return await run();}catch(error){throw await bazelFailureChurnV1(directory)??error;}},options);
 }

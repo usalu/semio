@@ -1,4 +1,4 @@
-//! 🪑️ Unit suite of the clearance twin, seating and heads: the nearest valid seating of pooled neighbours, landings on heads and slides off them, held bodies pushed out of obstacles and the last resort of a pet without a clear plan.
+//! 🪞️ Unit suite of the clearance twin, seating and heads: the nearest valid seating of pooled neighbours, landings on heads and slides off them, held bodies pushed out of obstacles and the last resort of a pet without a clear plan.
 //!
 //! @see ../🧰️clearance-tools/🦀️.rs — the tools of the cases
 

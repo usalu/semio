@@ -21,7 +21,7 @@ fn sqlite_snapshot_run_trigger_binds_literal_values_and_cancels_owned_utf8(){
 use protocol::MutationDiff;
 
 pub(crate) fn apply_run_operation(document: &RunArtifact, operation: &RunMutation) -> RunArtifact {
-    protocol::apply_diff_cold(protocol::Mutation::diff(operation, document).diff(), document).expect("a valid run operation applies")
+    protocol::apply_diff_cold(protocol::ColdMutation::diff(operation, document).diff(), document).expect("a valid run operation applies")
 }
 fn assert_run_native_status<T:semio_framework_dsl_record::DslField+PartialEq+std::fmt::Debug>(value:&T,index:u32,invalid:u32){
  let mut admitted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(0,&mut admitted);let native=value.to_value_controlled(&mut encoding).expect("owned declared status ordinal");assert_eq!(native,semio_framework_dsl_record::FieldValue::Enum(index));assert_eq!(encoding.owned_bytes(),0);
@@ -177,7 +177,7 @@ async fn checked_run_admission_matches_the_typed_diff_rejection() {
         trigger: RunTrigger::Manual { actor: "operator".into() },
     });
     let started = apply_run_operation_checked(&empty_run_document().await, start.clone()).await.expect("first start applies");
-    let outcome = protocol::Mutation::diff(&start, &started);
+    let outcome = protocol::ColdMutation::diff(&start, &started);
     let rejection = protocol::apply_diff_cold(outcome.diff(), &started).expect_err("the direct diff rejects a second start");
     let mut expected = outcome.messages().to_vec();
     expected.push(protocol::MutationMessage::fatal(rejection.code, rejection.message).at(rejection.target));
@@ -217,11 +217,11 @@ async fn apply_run_operation_checked_rejects_everything_after_seal() {
 async fn run_diff_absorb_preserves_each_append_in_order() {
     let document = empty_run_document().await;
     let first = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "first".into(), at: "1".into() });
-    let first_diff = protocol::Mutation::diff(&first, &document).diff().clone();
+    let first_diff = protocol::ColdMutation::diff(&first, &document).diff().clone();
     let middle = protocol::apply_diff_cold(&first_diff, &document).expect("first append applies");
     let second = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "second".into(), at: "2".into() });
     let mut combined = first_diff;
-    combined.absorb(protocol::Mutation::diff(&second, &middle).diff().clone());
+    combined.absorb(protocol::ColdMutation::diff(&second, &middle).diff().clone());
     let after = protocol::apply_diff_cold(&combined, &document).expect("combined appends apply");
     assert_eq!(after.logs.iter().map(|line| line.message.as_str()).collect::<Vec<_>>(), vec!["first", "second"]);
 }
@@ -238,11 +238,11 @@ async fn run_diff_absorb_preserves_start_before_later_log() {
         output_collection_ref: "outputs".into(),
         trigger: RunTrigger::Manual { actor: "operator".into() },
     });
-    let start_diff = protocol::Mutation::diff(&start, &document).diff().clone();
+    let start_diff = protocol::ColdMutation::diff(&start, &document).diff().clone();
     let middle = protocol::apply_diff_cold(&start_diff, &document).expect("start applies");
     let append = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "started".into(), at: "1".into() });
     let mut combined = start_diff;
-    combined.absorb(protocol::Mutation::diff(&append, &middle).diff().clone());
+    combined.absorb(protocol::ColdMutation::diff(&append, &middle).diff().clone());
     let after = protocol::apply_diff_cold(&combined, &document).expect("combined start and append apply");
     assert_eq!(after.workflow_ref, "workflow-selected");
     assert_eq!(after.status, RunStatus::Running);
@@ -307,7 +307,7 @@ async fn finish_run_node_replacement_inverse_restores_the_original_node_order() 
     let mut document = empty_run_document().await;
     document.node_records = vec![sample_run_node_record("a", RunNodeStatus::CacheHit).await, sample_run_node_record("b", RunNodeStatus::CacheHit).await, sample_run_node_record("c", RunNodeStatus::CacheHit).await];
     let operation = RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("b", RunNodeStatus::Computed).await, index: None });
-    let inverse = protocol::Mutation::inverse(&operation, &document).expect("valid retained mutation inverse fixture");
+    let inverse = protocol::ColdMutation::inverse(&operation, &document).expect("valid retained mutation inverse fixture");
     let mut restored = apply_run_operation(&document, &operation);
     assert_eq!(restored.node_records.iter().map(|record| record.node_id.as_str()).collect::<Vec<_>>(), vec!["a", "b", "c"]);
     for step in inverse.iter().rev() {
@@ -380,7 +380,7 @@ async fn composed_run_diff_inverse_reads_rows_and_restores_the_base() {
     };
     let after = protocol::apply_diff_cold(&diff, &base).expect("composed run diff applies");
     assert!(after.sealed);
-    let inverse = protocol::DiffAlgebra::<RunArtifact>::inverse(&diff, &base);
+    let inverse = protocol::ColdDiffAlgebra::<RunArtifact>::inverse(&diff, &base);
     let restored = protocol::apply_diff_cold(&inverse, &after).expect("the row-read inverse applies");
     assert_eq!(restored, base);
 }

@@ -42,7 +42,7 @@ mod subject {
         mutation: bool,
     }
 
-    /// 📥️ Reads the refusal corpus.
+    /// 📚️ Reads the refusal corpus.
     fn corpus(ctx: &Context) -> Result<Vec<Refusal>, String> {
         let parsed = fixture(ctx, "shared://❌️execution-errors/🔣️refusals.json")?;
         let rows = parsed.get("refusals").and_then(SerdeJson::as_array).ok_or("corpus has no refusals array")?;

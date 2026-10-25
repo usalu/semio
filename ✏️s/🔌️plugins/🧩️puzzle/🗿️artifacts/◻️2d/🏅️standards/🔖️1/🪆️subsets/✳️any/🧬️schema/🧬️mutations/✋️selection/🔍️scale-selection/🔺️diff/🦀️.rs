@@ -9,6 +9,7 @@ use crate::standards::v1::subsets::any::schema::diff::Puzzle2dTargetRegionModifi
 use protocol::list_delta::RowPatch;
 use {crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection_outcome};
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_scaled;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ScaleSelection, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

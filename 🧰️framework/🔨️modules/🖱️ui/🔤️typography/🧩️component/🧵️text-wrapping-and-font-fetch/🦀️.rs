@@ -66,7 +66,7 @@ impl FontAtlas {
         self.wrap_lines_face(TextFace::Sans, text, max_width, size)
     }
 
-    /// 🧵️ Applies the shared greedy wrap using the selected face's glyph advances.
+    /// 🌊️ Applies the shared greedy wrap using the selected face's glyph advances.
     pub fn wrap_lines_face(&mut self, face: TextFace, text: &str, max_width: f32, size: f32) -> Vec<std::ops::Range<usize>> {
         let limit = max_width.max(1.0);
         let mut lines = Vec::new();

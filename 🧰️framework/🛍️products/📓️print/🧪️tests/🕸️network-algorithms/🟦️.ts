@@ -219,7 +219,7 @@ export default defineTestAdapter({
       },
     },
     "lcg-stream": {
-      /** 📋️ The stream the feature writes out; it is d3-force's generator, seeded with one. */
+      /** 🌊️ The stream the feature writes out; it is d3-force's generator, seeded with one. */
       oracle: (ctx: AdapterContext) => ({ projection: { random: namedStream(ctx) } }),
       subject: async (ctx: AdapterContext) => (await records(ctx, [
           { precision: DECIMALS },

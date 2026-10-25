@@ -1,4 +1,4 @@
-//! 📄️ Document producer and patches: the job step, the document fault, the document producer and outcome, and the ready, published and acknowledged patches. See [`super`].
+//! 🩹️ Document producer and patches: the job step, the document fault, the document producer and outcome, and the ready, published and acknowledged patches. See [`super`].
 
 use super::*;
 
@@ -155,7 +155,7 @@ impl SurfaceReconcileReadyPatch {
 
     pub const fn required_publish_bytes() -> usize { size_of::<SurfaceReconcilePublishedPatch>() + size_of::<ui_contract::UiPatch>() + size_of::<ui_contract::SurfaceId>() }
 
-    /// 📬️ Both destination slots and fixed initialization/moves are admitted before detaching the source.
+    /// 📢️ Both destination slots and fixed initialization/moves are admitted before detaching the source.
     pub fn publish_into(&mut self, payload: &mut ui_contract::UiPendingPatch, published: &mut Option<SurfaceReconcilePublishedPatch>, admitted_bytes: usize) -> Result<usize, &'static str> {
         if admitted_bytes < Self::required_publish_bytes() || published.is_some() || !payload.terminal_is_empty() { return Ok(0); }
         if payload.source_mut()?.is_some() { return Ok(0); }
@@ -251,7 +251,7 @@ impl SurfaceReconcilePublishedPatch {
     }
 }
 
-/// ✅️ Unforgeable ACK authority produced only by consuming the exact published patch owner.
+/// ✔️ Unforgeable ACK authority produced only by consuming the exact published patch owner.
 pub struct SurfaceReconcilePublishedAck {
     pub(super) owner: SurfaceReconcilePublishedPatch,
 }

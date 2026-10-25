@@ -33,77 +33,108 @@
     {
       "id": "rust-source",
       "emoji": "🦀️",
-      "extensionChains": [".rs"],
+      "extensionChains": [
+        ".rs"
+      ],
       "role": "source",
       "implementation": true
     },
     {
       "id": "typescript-source",
       "emoji": "🟦️",
-      "extensionChains": [".ts", ".tsx", ".mts", ".cts", ".d.ts", ".d.mts", ".d.cts"],
+      "extensionChains": [
+        ".ts",
+        ".tsx",
+        ".mts",
+        ".cts",
+        ".d.ts",
+        ".d.mts",
+        ".d.cts"
+      ],
       "role": "source",
       "implementation": true
     },
     {
       "id": "javascript-source",
       "emoji": "🟨️",
-      "extensionChains": [".js", ".mjs", ".cjs"],
+      "extensionChains": [
+        ".js",
+        ".mjs",
+        ".cjs"
+      ],
       "role": "source",
       "implementation": true
     },
     {
       "id": "go-source",
       "emoji": "🐹️",
-      "extensionChains": [".go"],
+      "extensionChains": [
+        ".go"
+      ],
       "role": "source",
       "implementation": true
     },
     {
       "id": "python-source",
       "emoji": "🐍️",
-      "extensionChains": [".py"],
+      "extensionChains": [
+        ".py"
+      ],
       "role": "source",
       "implementation": true
     },
     {
       "id": "dotnet-source",
       "emoji": "🔷️",
-      "extensionChains": [".cs"],
+      "extensionChains": [
+        ".cs"
+      ],
       "role": "source",
       "implementation": true
     },
     {
       "id": "css",
       "emoji": "🎨️",
-      "extensionChains": [".css"],
+      "extensionChains": [
+        ".css"
+      ],
       "role": "asset",
       "implementation": true
     },
     {
       "id": "html",
       "emoji": "🌐️",
-      "extensionChains": [".html", ".htm"],
+      "extensionChains": [
+        ".html",
+        ".htm"
+      ],
       "role": "configuration",
       "implementation": true
     },
     {
       "id": "story",
       "emoji": "🧪️",
-      "extensionChains": [".story.tsx"],
+      "extensionChains": [
+        ".story.tsx"
+      ],
       "role": "source",
       "implementation": true
     },
     {
       "id": "grammar-semio",
       "emoji": "📖️",
-      "extensionChains": [".grammar.semio"],
+      "extensionChains": [
+        ".grammar.semio"
+      ],
       "role": "specification",
       "implementation": false
     },
     {
       "id": "png",
       "emoji": "🖼️",
-      "extensionChains": [".png"],
+      "extensionChains": [
+        ".png"
+      ],
       "role": "asset",
       "implementation": false
     }
@@ -405,6 +436,37 @@
       "breachId": "taxonomy/kind-only-basename",
       "fileKindId": "story",
       "expectedBasename": "🧪️.story.tsx"
+    }
+  ],
+  "declarationCompanionsSemantics": "A declaration file pairs with its JavaScript module by stem (the TypeScript compiler resolves `./🟨️.cjs` to `🟨️.d.cts` only), so the companion keeps the JavaScript leaf's own kind emoji and is a fixed contract; the compiler's TS7016 is the independent oracle. `resolves` is whether the compiler finds the declaration; `finding` is the expected basename the leaf law demands, null for none.",
+  "declarationCompanions": [
+    {
+      "id": "commonjs-declaration-keeps-the-javascript-emoji",
+      "javascript": "🟨️.cjs",
+      "declaration": "🟨️.d.cts",
+      "resolves": true,
+      "finding": null
+    },
+    {
+      "id": "module-declaration-keeps-the-javascript-emoji",
+      "javascript": "🟨️.mjs",
+      "declaration": "🟨️.d.mts",
+      "resolves": true,
+      "finding": null
+    },
+    {
+      "id": "commonjs-declaration-with-the-typescript-emoji-is-unpaired",
+      "javascript": "🟨️.cjs",
+      "declaration": "🟦️.d.cts",
+      "resolves": false,
+      "finding": null
+    },
+    {
+      "id": "named-commonjs-declaration-is-an-implementation-leaf",
+      "javascript": "📣️contract.cjs",
+      "declaration": "📣️contract.d.cts",
+      "resolves": true,
+      "finding": "🟦️.d.cts"
     }
   ]
 }

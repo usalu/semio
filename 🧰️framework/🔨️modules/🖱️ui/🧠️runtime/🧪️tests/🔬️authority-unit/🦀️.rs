@@ -431,10 +431,10 @@ fn resident_aggregate_admits_every_reconcile_slot() {
 /// attractions — the puzzle3d artifact panel whose stale `PANEL_RECONCILE_NODE_BUDGET = 16` this law
 /// replaces).
 const TREE_WINDOW_LAW_SECTIONS: usize = 4;
-/// 🪟️ Rows one section's `TreeWindow.total` declares: one full built child list
+/// 📑️ Rows one section's `TreeWindow.total` declares: one full built child list
 /// ([`ui_contract::UI_BUILT_CHILDREN_MAX`]).
 const TREE_WINDOW_LAW_SECTION_TOTAL: usize = ui_contract::UI_BUILT_CHILDREN_MAX;
-/// 🪟️ The per-section slice one presented document could carry if the RECORD arena were the only
+/// 📄️ The per-section slice one presented document could carry if the RECORD arena were the only
 /// bound: a surface document is [`ui_contract::UI_DOCUMENT_NODES`] records wide IN TOTAL
 /// (`UiSnapshotNodes`), and the tree root plus one record per section are spent before a single row
 /// is materialised, so `(128 − 1 − 4) / 4 = 30` — never the 128 a `BuiltChildren` list can hold. The
@@ -476,7 +476,7 @@ fn tree_window_law_args(key: &str) -> Option<ui_contract::UiMap> {
     }
     Some(builder.finish())
 }
-/// 🪟️ One presented document of the paged tree: every section stamps its FULL `total`, materialises
+/// 🌳️ One presented document of the paged tree: every section stamps its FULL `total`, materialises
 /// only `[offset, offset + rows)`, and never mints a continuation row.
 fn tree_window_law_document(offset: usize, rows_per_section: usize) -> crate::ComponentTree {
     let mut sections = Vec::with_capacity(TREE_WINDOW_LAW_SECTIONS);
@@ -494,7 +494,7 @@ fn tree_window_law_document(offset: usize, rows_per_section: usize) -> crate::Co
     let root = crate::TreeNode::try_new("artifact-tree", ui_contract::Component::Tree(ui_contract::TreeProps { presentation: Default::default(), interaction_domain: Some(ui_text("object")) })).expect("bounded fixture tree");
     tree(root.try_with_children(sections).unwrap_or_else(|_| panic!("bounded fixture tree children")))
 }
-/// 📏️ Drives one whole resumable reconciliation and hands back either the credits it consumed or the
+/// ⏪️ Drives one whole resumable reconciliation and hands back either the credits it consumed or the
 /// exact refusal, releasing the cursor's own reservations either way.
 fn tree_window_law_reconcile(current: &SurfaceReconciler, component_tree: crate::ComponentTree) -> Result<(SurfaceReconciler, SurfaceReconcileUsage), SurfaceReconcileFault> {
     let mut cursor = SurfaceReconcileCursor::new(component_tree, &current.shadow);
@@ -522,7 +522,7 @@ fn tree_window_law_reconcile(current: &SurfaceReconciler, component_tree: crate:
         }
     }
 }
-/// 📏️ The reconcile SIZE law, replacing `PANEL_RECONCILE_NODE_BUDGET = 16` and the inherited
+/// 🌲️ The reconcile SIZE law, replacing `PANEL_RECONCILE_NODE_BUDGET = 16` and the inherited
 /// "~0.46 MiB per presented node" docstring it carried (puzzle3d artifact panel, 2026-09-10) — a
 /// number 📓️audit-surface-budgets.md §3 showed was never a measured host-side
 /// `size_of::<FlatPresentedNode>()`, and which predates the page-exact `UiFixedList` reservation fix
@@ -618,7 +618,7 @@ fn four_section_full_window_tree_reconciles_under_the_surface_byte_ceiling() {
 fn census_law_table_row(index: usize) -> crate::TreeNode {
     census_law_table_row_shaped(index, true)
 }
-/// 📊️ A light table row: two cells and one row action on an argument-free target, no row activation.
+/// 🕯️ A light table row: two cells and one row action on an argument-free target, no row activation.
 fn census_law_light_table_row(index: usize) -> crate::TreeNode {
     census_law_table_row_shaped(index, false)
 }

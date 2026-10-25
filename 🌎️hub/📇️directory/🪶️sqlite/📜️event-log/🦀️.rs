@@ -22,7 +22,7 @@ impl EventLog for SqliteDirectory {
             persisted.push(full);
         }
         tx.commit().map_err(backend)?;
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if self.append_commit_ack_failure.swap(false, std::sync::atomic::Ordering::SeqCst) {
             return Err(DirectoryError::Backend("injected uncertain append commit acknowledgement".into()));
         }
@@ -56,7 +56,7 @@ impl EventLog for SqliteDirectory {
         if tx.commit().is_err() {
             return AdminEffectCommitV1::Indeterminate;
         }
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if self.append_commit_ack_failure.swap(false, std::sync::atomic::Ordering::SeqCst) {
             return AdminEffectCommitV1::Indeterminate;
         }
@@ -64,7 +64,7 @@ impl EventLog for SqliteDirectory {
     }
 
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>> {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if self.event_read_failure.swap(false, std::sync::atomic::Ordering::SeqCst) {
             return Err(DirectoryError::Backend("injected directory event read failure".into()));
         }

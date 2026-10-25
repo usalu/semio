@@ -41,12 +41,12 @@ mod subject {
         parse_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://🎯️goal-statute-territory.json")?))
     }
 
-    /// 📥️ The committed expectations.
+    /// 🆚️ The committed expectations.
     fn expected(ctx: &Context) -> Result<Json, String> {
         parse_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://📤️goal-statute-territory-expectations.json")?))
     }
 
-    /// 📥️ The record set the goals and tickets come from.
+    /// 📹️ The record set the goals and tickets come from.
     fn records(ctx: &Context) -> Result<tree::MemoryTreeSource, String> {
         tree::MemoryTreeSource::from_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://🌳️tree-source.json")?))
     }
@@ -76,7 +76,7 @@ mod subject {
             .collect()
     }
 
-    /// 📃️ Renders a string list as the host's JSON.
+    /// 🖥️ Renders a string list as the host's JSON.
     fn rows(values: &[String]) -> Json {
         Json::Array(values.iter().map(|value| Json::String(value.clone())).collect())
     }
@@ -99,7 +99,7 @@ mod subject {
         forest.iter().flat_map(|node| tree::tree_outline(node)).collect()
     }
 
-    /// 🎯️ The outline of a goal forest, goals before their tickets.
+    /// ⛳️ The outline of a goal forest, goals before their tickets.
     fn goal_outline(goals: &[tree::GoalNode], depth: usize, out: &mut Vec<String>) {
         for goal in goals {
             out.push(format!("{depth}|goal|{}|{}", goal.id, goal.title));

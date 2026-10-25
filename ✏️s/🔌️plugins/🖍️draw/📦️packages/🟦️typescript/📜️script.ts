@@ -262,7 +262,7 @@ async function proveDrawPublicationAuthority(packageRoot: string, subset: string
     const admissionFixture = await Bun.file(resolve(admission, "🔣️.json")).json() as { cases: unknown[]; bootstrapYield: BootstrapYield };
     bootstrapYieldOracle(admissionFixture.bootstrapYield);
     const sources = new Map<string, string>();
-    for (const app of fixture.apps) {sources.set(app.owner, readModuleTreeSource(resolve(plugin, app.source)));const producer=await Bun.file(resolve(plugin,app.reservedProducerSource)).text();for(const anchor of ["source:request.snapshot_read","NativeEncodeControl::resume","NativeDecodeControl::resume","DrawingLayerCloneWorkAuthority","fn next_close_capacity_byte_demand","fn terminal_is_empty"]){if(!producer.includes(anchor))throw new Error(`Draw reserved producer lost ${anchor}`);}}
+    for (const app of fixture.apps) {sources.set(app.owner, readModuleTreeSource(resolve(plugin, app.source)));const producer=await Bun.file(resolve(plugin,app.reservedProducerSource)).text();for(const anchor of ["unsealed:Some(request.snapshot_read)","NativeEncodeControl::resume","NativeDecodeControl::resume","DrawingLayerCloneWorkAuthority","fn next_close_capacity_byte_demand","fn terminal_is_empty"]){if(!producer.includes(anchor))throw new Error(`Draw reserved producer lost ${anchor}`);}}
     if (!oracle(fixture, sources)) throw new Error("Draw publication-authority oracle rejected production");
     let hostile = 0;
     for (const app of fixture.apps) {

@@ -202,6 +202,23 @@ fn the_language_resolves_explicit_layers_and_system_without_a_default() {
 }
 
 #[test]
+fn a_verb_flag_never_hides_the_language_of_a_command_line_verb() {
+    let root = scratch("verb-language");
+    fs::create_dir_all(&root).unwrap();
+    let config = root.join("local.jsonl").display().to_string();
+    let config = config.as_str();
+    let none = |_: &str| -> Option<String> { None };
+    let asked = |words: &[&str]| dashboard_core::args::parse(&words.iter().map(|word| word.to_string()).collect::<Vec<_>>());
+    for (words, expected) in [
+        (vec!["commands", "--check", "--json", "--refresh", "--config", config, "--language", "de"], Some(ui_locale::Locale::De)),
+        (vec!["commands", "--check", "--config", config, "--language", "en"], Some(ui_locale::Locale::En)),
+        (vec!["commands", "--check", "--config", config], None),
+    ] { assert_eq!(cli_locale_in(&root, &asked(&words), &none), expected, "{words:?}"); }
+    assert!(load_in(&root, &asked(&["commands", "--check", "--config", config]), &none).is_err(), "the dashboard itself still refuses a flag it does not know");
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
 fn compaction_keeps_the_system_language_free_unless_the_journal_chose_one() {
     let preferences = Preferences {language:Some("de".into()),..Default::default()};
     assert_eq!(snapshot(&preferences, false).language, None);
@@ -213,6 +230,7 @@ fn every_scenario_of_the_preferences_feature_is_proved_by_a_test() {
     dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/⚙️preferences/🥒️.feature"), &[
         include_str!("🦀️.rs"),
         include_str!("../../../🖥️terminal/🧪️tests/🔬️unit/🦀️.rs"),
+        include_str!("../../../🖥️terminal/🧪️tests/🔬️unit/🩺️runtime-audit/🦀️.rs"),
         include_str!("../../../🖥️terminal/🚀️launcher/🧪️tests/🔬️unit/🦀️.rs"),
         include_str!("../../../🖥️terminal/🌐️labels/🧪️tests/🔬️unit/🦀️.rs"),
         include_str!("../../../📚️inventory/🧪️tests/🔬️unit/🦀️.rs"),

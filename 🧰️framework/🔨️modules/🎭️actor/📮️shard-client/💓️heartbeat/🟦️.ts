@@ -91,7 +91,7 @@ export function isShardLostError(error: unknown): boolean {
   return /shard \d+ (?:terminated|worker crashed)/.test(message);
 }
 
-/** 🩺️ A `Worker`'s `onerror` hands the main thread an `ErrorEvent`, and `console.error`-ing that
+/** 🐝️ A `Worker`'s `onerror` hands the main thread an `ErrorEvent`, and `console.error`-ing that
  * object prints `Event` and nothing else — which is all the boot log said while four shards died on a
  * top-of-file `throw` inside the worker script. Reads the three fields that actually name the cause
  * (`message`/`filename`/`lineno`) and degrades explicitly when the event is the redacted, message-less
@@ -110,7 +110,7 @@ export function describeShardWorkerError(event: unknown): string {
   return `${message} at ${record.filename}:${typeof record.lineno === "number" ? record.lineno : "?"}:${typeof record.colno === "number" ? record.colno : "?"}`;
 }
 
-/** 🩺️ What one shard was doing when the watchdog gave up on it. Every field is state `ShardClient`
+/** 🔇️ What one shard was doing when the watchdog gave up on it. Every field is state `ShardClient`
  * already holds; the point is that `shard 0 terminated` on its own names neither the actor, the
  * phase, nor how long the silence actually lasted — which is precisely how a boot-time termination
  * reaches a console looking like a spontaneous, causeless worker death. */
@@ -122,7 +122,7 @@ export type ShardSilenceReport = {
   readonly inFlight: readonly { readonly kind: string; readonly actorId: string; readonly startedAtMs: number; readonly firstTurn: boolean }[];
 };
 
-/** 🩺️ Composes {@link ShardSilenceReport} into the one line the terminated shard's rejections carry.
+/** 🧾️ Composes {@link ShardSilenceReport} into the one line the terminated shard's rejections carry.
  * Keeps the `shard <n> terminated` prefix {@link isShardLostError} matches, then says how long the
  * silence lasted, what the worker last reported, and every request that was still outstanding — so a
  * host-side kill can never again be mistaken for a guest trap (or for nothing at all). */
@@ -152,7 +152,7 @@ export async function settleFailedInstanceOpen(error: unknown, cleanup: () => Pr
   throw error;
 }
 
-/** 🩺️ A `messageerror` is the one worker event that is NEITHER a fault in the worker NOR a fault in
+/** 💬️ A `messageerror` is the one worker event that is NEITHER a fault in the worker NOR a fault in
  * this client: a message crossed the boundary and could not be deserialized, so a request silently
  * never arrives (or a result silently never lands) and the shard simply goes quiet. Naming it is the
  * whole fix — it was not observed at all before. */
@@ -162,7 +162,7 @@ export function describeShardMessageError(shardIndex: number, event: unknown): s
   return `shard ${shardIndex} worker message error: a structured-clone message could not be deserialized${shape} — the request or result it carried is lost`;
 }
 
-/** 🩺️ One readable line out of a `worker-fault` payload — phase, actor, module URL and location, in
+/** 👷️ One readable line out of a `worker-fault` payload — phase, actor, module URL and location, in
  * that order, so a boot log names WHERE inside the worker it died rather than only THAT it did. */
 export function formatShardWorkerFault(shardIndex: number, fault: { readonly source: string; readonly phase: string; readonly actorId: string | null; readonly moduleUrl: string | null; readonly message: string; readonly filename?: string; readonly lineno?: number }): string {
   const where = fault.filename ? ` at ${fault.filename}:${fault.lineno ?? "?"}` : "";
@@ -193,7 +193,7 @@ export function shardJspiAvailable(scope: ShardJspiScope = globalThis as ShardJs
   return typeof runtime === "object" && runtime !== null && typeof runtime.Suspending === "function" && typeof runtime.promising === "function";
 }
 
-/** 🩺️ Typed, bilingual, fail-fast form of the probe above — `code` is what `windowFaultFromError`
+/** ⚡️ Typed, bilingual, fail-fast form of the probe above — `code` is what `windowFaultFromError`
  * reads off the shell's error surface, `text` is what a human reads. */
 export class ShardJspiUnavailableError extends Error {
   readonly code = SHARD_JSPI_FAULT_CODE;

@@ -1,4 +1,4 @@
-import{readNativeArtifactCachePolicyV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/💾️cache/⚙️policy/🟦️.ts";
+import{readNativeArtifactCachePolicyV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/⚙️policy/🟦️.ts";
 import rawPolicy from"../🔣️policy.json" with { type: "json" };
 import rawSchema from"../🧬️schema/🔣️.json" with { type: "json" };
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";

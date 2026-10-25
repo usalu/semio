@@ -8,7 +8,7 @@ import{withBuildTestInvocationV1,registerBuildTestCleanupV1,registerBuildTestLaw
 import corpus from"../🔣️.json"with{type:"json"};
 const requested=process.env.SEMIO_RECEIVER_CASE,kind=requested?.replace(/^registered-/u,""),directory=process.env.SEMIO_RECEIVER_DIRECTORY,marker=Error("receiver primary marker");
 if(!corpus.cases.some(row=>row.name===requested)||!directory)throw Error("Exact owned receiver child fixture required");
-const emit=(phase:string,facts:object={})=>console.log("[DEBUG] Receiver event "+JSON.stringify({phase,...facts})),sleep=(ms:number)=>new Promise<void>(done=>setTimeout(done,ms));let released=false,firstPolicy:unknown,firstSignal:unknown;
+const emit=(phase:string,facts:object={})=>console.log("[TRACE] Receiver event "+JSON.stringify({phase,...facts})),sleep=(ms:number)=>new Promise<void>(done=>setTimeout(done,ms));let released=false,firstPolicy:unknown,firstSignal:unknown;
 const suite=process.env.SEMIO_RECEIVER_SUITE;let shared:{settled:Promise<void>;run:<T>(body:(value:{calls:number})=>Promise<T>)=>Promise<T>}|undefined;
 registerBuildTestCleanupV1(async()=>{emit("cleanup",{released});let refused=false;try{await withBuildTestInvocationV1(async()=>{emit("late-effect");});}catch{refused=true;}emit(refused?"late-birth-refused":"late-birth-accepted");if(suite){const api=await import("../../🟦️.ts");let late=false;try{api.registerBuildTestFixtureV1(async()=>{emit("late-effect");});}catch{late=true;}emit(late?"late-suite-refused":"late-effect");}});
 for(let index=0;index<(kind==="normal"?2:1);index++){const name="actual receiver "+kind+" "+index,law=(supplied?:ScriptInvocation)=>{

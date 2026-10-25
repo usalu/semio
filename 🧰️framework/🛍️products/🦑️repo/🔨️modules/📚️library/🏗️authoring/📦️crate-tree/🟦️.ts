@@ -12,7 +12,7 @@ import { buildTestkitCrate, cfgFeatures, declaredNames, externalDependencies, op
 import { addWorkspaceMembers, manifestRowKey, rebaseManifestDirPaths, renderMirrorFiles, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest, renderMirrorRoot, type ManifestDependencyRows, type MirrorSpec, type MirrorUnit } from "./📝️render/🟦️.ts";
 import { demoteDanglingOuterDocs, parseRustSourceTree, rustOuterDocStart } from "./🌳️module-tree/🟦️.ts";
 import { FIXTURE_READER_CRATE, FIXTURE_READER_PACKAGE_DIR, resolveFixturePlaceholders } from "./🧪️test-closure/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 export { planArtifactCrates } from "./🗺️plan/🧮️pack/🟦️.ts";
 export type { ArtifactCratePlan, PlannedCrate } from "./🗺️plan/🧾️model/🟦️.ts";
@@ -39,7 +39,7 @@ export function mirrorSpecOf(plan: ArtifactCratePlan, crate: PlannedCrate): Mirr
   };
 }
 
-/** 🪞️ The complete mirror root text of one planned crate. */
+/** 🏠️ The complete mirror root text of one planned crate. */
 export function carveCrateRootText(plan: ArtifactCratePlan, crate: PlannedCrate): string {
   return renderMirrorRoot(mirrorSpecOf(plan, crate));
 }
@@ -103,18 +103,18 @@ function prunedUseText(statement: string, leaves: readonly string[]): string {
 /** 🚩️ A feature of a package manifest with the entries it enables, which every carved crate declares again and forwards to the carved crates it depends on, so a consumer that enables the feature on the artifact reaches every crate. */
 export type ManifestFeature = Readonly<{ name: string; entries: readonly string[] }>;
 
-/** 🚩️ The features of a package manifest in declaration order; a feature that enables optional dependencies (`testkit = ["dep:serde_json"]`) keeps those entries in every carved crate, which carries the same dependency rows. */
+/** ⭐️ The features of a package manifest in declaration order; a feature that enables optional dependencies (`testkit = ["dep:serde_json"]`) keeps those entries in every carved crate, which carries the same dependency rows. */
 export function forwardableFeatures(manifestText: string): ManifestFeature[] {
   const table = (runtimeParseTomlV1(manifestText) as { features?: Record<string, unknown> }).features ?? {};
   return Object.entries(table).filter(([, entries]) => Array.isArray(entries)).map(([name, entries]) => ({ name, entries: (entries as unknown[]).map(String) }));
 }
 
-/** 🚩️ The rendered entries of a carved feature: the original entries, then the same feature of every carved crate it forwards to. */
+/** 🖌️ The rendered entries of a carved feature: the original entries, then the same feature of every carved crate it forwards to. */
 export function featureRow(feature: ManifestFeature, forwardTo: readonly string[]): string {
   return `${feature.name} = [${[...feature.entries, ...forwardTo.map((crate) => `${crate}/${feature.name}`)].map((entry) => JSON.stringify(entry)).join(", ")}]`;
 }
 
-/** 🚩️ Extends the features of the artifact package manifest with the carved crates' feature of the same name, keeping the original entries. */
+/** ⏩️ Extends the features of the artifact package manifest with the carved crates' feature of the same name, keeping the original entries. */
 export function forwardFeatures(manifestText: string, features: readonly ManifestFeature[], crateNames: readonly string[]): string {
   let out = manifestText;
   for (const feature of features) out = out.replace(new RegExp(`^${feature.name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\s*=\\s*\\[[^\\]]*\\]`, "mu"), () => featureRow(feature, crateNames));
@@ -151,7 +151,7 @@ export function insertDevDependencyRow(manifestText: string, row: string): strin
   return lines.join("\n");
 }
 
-/** 🧲️ Gives a manifest the shared fixture reader as dev-dependency, with the path computed from the manifest's own directory. */
+/** 🧫️ Gives a manifest the shared fixture reader as dev-dependency, with the path computed from the manifest's own directory. */
 export function withFixtureReaderDevDependency(manifestText: string, manifestDirectory: string, repoRoot: string): string {
   return insertDevDependencyRow(manifestText, `${FIXTURE_READER_CRATE} = { path = "${relativePosix(manifestDirectory, resolve(repoRoot, FIXTURE_READER_PACKAGE_DIR))}" }`);
 }
@@ -164,7 +164,7 @@ function carvedText(repoRoot: string, overlay: ReadonlyMap<string, string>, repo
   try { return readFileSync(absolute, "utf8"); } catch { return null; }
 }
 
-/** 🧰️ Builds the wiring analysis input of one crate (or of the facade) from its library and test closures, with the closure that each test-support feature adds. */
+/** 📚️ Builds the wiring analysis input of one crate (or of the facade) from its library and test closures, with the closure that each test-support feature adds. */
 async function testkitCrateOf(plan: ArtifactCratePlan, overlay: ReadonlyMap<string, string>, spec: Readonly<{ name: string; dependsOn: readonly string[]; entry: string; manifestDir: string; lib: CrateMeasure | null; test: CrateMeasure | null; extra: ReadonlyMap<string, string>; ownedFiles?: ReadonlySet<string> }>): Promise<TestkitCrate> {
   const files = new Map<string, string>();
   for (const path of [...(spec.lib?.paths ?? []), ...(spec.test?.paths ?? [])]) {
@@ -315,7 +315,7 @@ function dependencyDirectory(manifestPath: string, key: string): string | null {
   }
 }
 
-/** 🔍️ The names a crate declares behind one of its features: the features it implies in the same crate, the dependency features it forwards (followed through the dependency's sources), the files only those features compile, and the exported items under their gates. */
+/** 🚦️ The names a crate declares behind one of its features: the features it implies in the same crate, the dependency features it forwards (followed through the dependency's sources), the files only those features compile, and the exported items under their gates. */
 async function featureGatedNames(repoRoot: string, dir: string, feature: string, seen: Set<string>): Promise<Set<string> | null> {
   const key = `${dir}\0${feature}`;
   if (seen.has(key)) return new Set();
@@ -357,7 +357,7 @@ async function featureGatedNames(repoRoot: string, dir: string, feature: string,
   }
 }
 
-/** 🔍️ Where an external dependency of the artifact package lives: the `path` of its row, or the `path` of the workspace dependency its row inherits. */
+/** 📦️ Where an external dependency of the artifact package lives: the `path` of its row, or the `path` of the workspace dependency its row inherits. */
 function externalCrateDir(external: ExternalDependency, artifactPackageDir: string, artifactDir: string, workspaceDependencies: Record<string, { path?: string }>): string | null {
   const own = /path\s*=\s*"([^"]*)"/u.exec(external.row ?? "")?.[1];
   if (own !== undefined) return resolve(artifactPackageDir, own);
@@ -365,7 +365,7 @@ function externalCrateDir(external: ExternalDependency, artifactPackageDir: stri
   return inherited === undefined ? null : resolve(artifactDir, inherited);
 }
 
-/** 🔍️ Reads, for every feature that a dev-dependency row adds to an external dependency, the names the dependency declares behind that feature (the features it implies and the dependency features it forwards), so the wiring forwards a feature only when the gated code names something the feature adds. A dependency whose sources cannot be read maps to `null` and its features are forwarded. */
+/** 📖️ Reads, for every feature that a dev-dependency row adds to an external dependency, the names the dependency declares behind that feature (the features it implies and the dependency features it forwards), so the wiring forwards a feature only when the gated code names something the feature adds. A dependency whose sources cannot be read maps to `null` and its features are forwarded. */
 export async function loadExternalGates(repoRoot: string, artifactPackageDir: string, artifactDir: string, externals: readonly ExternalDependency[]): Promise<ExternalGateReader> {
   const workspace = (runtimeParseTomlV1(readFileSync(join(artifactDir, "Cargo.toml"), "utf8")) as { workspace?: { dependencies?: Record<string, { path?: string }> } }).workspace?.dependencies ?? {};
   const found = new Map<string, ReadonlySet<string> | null>();
@@ -376,7 +376,7 @@ export async function loadExternalGates(repoRoot: string, artifactPackageDir: st
   return (external, feature) => found.get(`${external.key}\0${feature}`) ?? null;
 }
 
-/** 🧰️ The test-support wiring of a whole carve: per crate (and for the facade, under the artifact crate's name) the gate features, optional dependencies and consumed features, the external dependencies they refer to, and the `required-features` of the facade's `[[test]]` targets. */
+/** 🪢️ The test-support wiring of a whole carve: per crate (and for the facade, under the artifact crate's name) the gate features, optional dependencies and consumed features, the external dependencies they refer to, and the `required-features` of the facade's `[[test]]` targets. */
 export type CarveWiring = Readonly<{ crates: ReadonlyMap<string, CrateWiring>; externals: readonly ExternalDependency[]; requiredFeatures: ReadonlyMap<string, readonly string[]> }>;
 
 async function planCarveWiring(plan: ArtifactCratePlan, originalManifest: string, rows: ManifestDependencyRows, features: readonly ManifestFeature[], mirrors: ReadonlyMap<string, { root: string; body: string | null }>, overlay: ReadonlyMap<string, string>, rootText: string, rootLib: CrateMeasure, rootTest: CrateMeasure): Promise<CarveWiring> {
@@ -415,7 +415,7 @@ async function planCarveWiring(plan: ArtifactCratePlan, originalManifest: string
   return { crates, externals, requiredFeatures };
 }
 
-/** 🧲️ Adds dependency rows to the `[dependencies]` section of a manifest, after the rows it has. */
+/** ➕️ Adds dependency rows to the `[dependencies]` section of a manifest, after the rows it has. */
 function insertDependencyRows(manifestText: string, rows: readonly string[]): string {
   const lines = manifestText.split("\n");
   lines.splice(lines.findIndex((line) => /^\[dependencies\]\s*$/u.test(line)) + 1, 0, ...rows);

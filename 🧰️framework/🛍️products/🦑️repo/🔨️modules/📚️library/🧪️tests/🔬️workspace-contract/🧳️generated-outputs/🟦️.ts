@@ -39,7 +39,7 @@ describe("current JCO destination authority", () => {
   test("preserves tool-owned declaration pairing and the exact vendored shim payloads", async () => {
     const ts = await import("typescript");
     const root = findWorkspaceRoot(contractRoot);
-    const fixtureRoot = join(root, "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/🧩️jcoprobe"), host = join(fixtureRoot, "🌐️browser-host"), bundles = join(fixtureRoot, "🌐️browser-bundles");
+    const fixtureRoot = join(root, "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe"), host = join(fixtureRoot, "🌐️browser-host"), bundles = join(fixtureRoot, "🌐️browser-bundles");
     const options = { allowJs: true, moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext };
     const taxonomy = loadTaxonomy();
     const fixed = Object.entries(taxonomy.fixedFilenameContracts).filter(([id]) => id.startsWith("jco-"));
@@ -78,7 +78,7 @@ describe("current JCO destination authority", () => {
     const { parseCurrentJcoPackageDestination } = await import("../../../🔍️discovery/📦️package-projection-contracts/🟦️.ts"), { semanticPackageAdapterPreview } = await import("../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts");
     const taxonomy = JSON.parse(readFileSync(join(contractRoot, "../../🔣️taxonomy.json"), "utf8"));
     const root = findWorkspaceRoot(contractRoot);
-    const inputRoot = join(root, "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/🧩️jcoprobe");
+    const inputRoot = join(root, "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe");
     const current = taxonomy.generatorContracts["jco-package-adapter"].currentPackageDestination;
     expect(parseCurrentJcoPackageDestination(current)).toEqual(current);
     for (const row of JSON.parse(readFileSync(join(inputRoot, "🧪️destination-cases.json"), "utf8")).invalid) {

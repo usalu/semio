@@ -5,7 +5,7 @@ import {cacheLedgerV1,cacheRootDirectoryV1} from "../../../../⚡️caching/💾
 import {undeclaredEntriesV1} from "../../../🧹️cache-gc/🏃️runner/🟦️.ts";
 import type {DoctorPolicyV1} from "../../🟦️.ts";
 import type {DoctorPortsV1} from "../../🔌️ports/🟦️.ts";
-import type {DoctorProbeV1,DoctorRepairRunV1} from "../🟦️.ts";
+import type {DoctorProbeV1,DoctorRepairRunV1} from "../📋️contract/🟦️.ts";
 
 type Declaration=DoctorPolicyV1["caches"]["deadPublications"][number];
 type Candidate=Readonly<{path:string;pid:number;partition:string}>;

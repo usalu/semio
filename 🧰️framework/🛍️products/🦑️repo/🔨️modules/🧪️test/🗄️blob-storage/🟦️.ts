@@ -14,7 +14,7 @@ import { contentDigest, SHA256_RE } from "../🧷️fixture-evidence/🟦️.ts"
 
 //#region 🗄️Storage
 /**
- * 🗄️ Content-addressed fixture storage. Every agent and every run would otherwise take its own copy of
+ * 🧫️ Content-addressed fixture storage. Every agent and every run would otherwise take its own copy of
  * a megabyte-scale STEP and mesh corpus, so blobs are stored ONCE by digest and referenced into run
  * directories by the cheapest safe mechanism the filesystem offers.
  */
@@ -22,12 +22,12 @@ export function fixtureBlobRoot(repoRoot: string): string {
   return join(testCacheRoot(repoRoot), "fixtures", "blobs", "sha256");
 }
 
-/** 🗄️ Where fixture manifests are cached by id, for GC's mark phase and for cross-run reuse. */
+/** 🏠️ Where fixture manifests are cached by id, for GC's mark phase and for cross-run reuse. */
 export function testEvidenceRoot(repoRoot: string): string {
   return join(testCacheRoot(repoRoot), "fixtures", "manifests");
 }
 
-/** 🗄️ Absolute path of one blob. Sharded by the first two hex digits so a directory never grows unbounded. */
+/** 📂️ Absolute path of one blob. Sharded by the first two hex digits so a directory never grows unbounded. */
 export function fixtureBlobPath(repoRoot: string, sha256: string): string {
   if (!SHA256_RE.test(sha256)) throw new Error(`not a content digest: ${JSON.stringify(sha256)}`);
   const hex = sha256.slice("sha256:".length);
@@ -35,7 +35,7 @@ export function fixtureBlobPath(repoRoot: string, sha256: string): string {
 }
 
 /**
- * 🗄️ Installs bytes under their digest, atomically. Two agents generating the same fixture concurrently
+ * 📥️ Installs bytes under their digest, atomically. Two agents generating the same fixture concurrently
  * is the normal case, not the exception: each writes a private temporary file and renames it into
  * place, so a reader never observes a partial blob and neither writer clobbers the other.
  */
@@ -54,16 +54,16 @@ export function installFixtureBlob(repoRoot: string, bytes: Uint8Array): string 
   return sha256;
 }
 
-/** 🗄️ Installs a file from disk under its digest without reading it twice into memory when possible. */
+/** 📄️ Installs a file from disk under its digest without reading it twice into memory when possible. */
 export function installEvidenceFile(repoRoot: string, absPath: string): string {
   return installFixtureBlob(repoRoot, readFileSync(absPath));
 }
 
-/** 🗄️ How one blob was materialized into a run directory, so the report can show what the cache saved. */
+/** 📁️ How one blob was materialized into a run directory, so the report can show what the cache saved. */
 export type MaterializeMode = "reflink" | "hardlink" | "copy";
 
 /**
- * 🗄️ References a blob into a run directory: copy-on-write clone first, hard link second, plain copy
+ * 🛠️ References a blob into a run directory: copy-on-write clone first, hard link second, plain copy
  * last. A hard link is only safe for a file the consumer will not write through — `mutable: true`
  * forces a real copy, because a mutation scenario handed a link would write into shared storage.
  */
@@ -86,7 +86,7 @@ export function materializeFixtureBlob(repoRoot: string, sha256: string, targetP
   return "copy";
 }
 
-/** 🗄️ Publishes a fixture manifest into the cache so GC can mark its blobs as referenced. */
+/** 📮️ Publishes a fixture manifest into the cache so GC can mark its blobs as referenced. */
 export function publishTestEvidence(repoRoot: string, manifest: TestEvidence): string {
   const path = join(testEvidenceRoot(repoRoot), `${manifest.id}.json`);
   mkdirSync(dirname(path), { recursive: true });

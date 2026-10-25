@@ -4,7 +4,7 @@ import {lstatSync,readFileSync} from "node:fs";
 import {canonicalRootV1,endpointsV1} from "../📨️protocol/📍️endpoint/🟨️.mjs";
 import {createFrameDecoderV1,encodeFrameV1} from "../📨️protocol/🟨️.mjs";
 import {mintCapabilityV1} from "../📨️protocol/🔑️capability/🟨️.mjs";
-import {agentSessionEnvironmentV1,agentSessionRegistryRootV1,agentSessionStoreV1,currentAgentSessionV1,readAgentSessionTokenV1} from "../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts";
+import {agentSessionEnvironmentV1,agentSessionRegistryRootV1,agentSessionStoreV1,currentAgentSessionV1,readAgentSessionTokenV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 
 /** 🔐 True when the runtime directory is private and ours; a hijacked predictable path must never receive a capability. */
 function trustedDirectory(path){

@@ -61,7 +61,7 @@ impl AbiEventCode {
     }
 }
 
-/// 🪪 Correlates one request/reply family without borrowing host objects.
+/// 🔗️ Correlates one request/reply family without borrowing host objects.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct AbiRequestId(pub u64);
 

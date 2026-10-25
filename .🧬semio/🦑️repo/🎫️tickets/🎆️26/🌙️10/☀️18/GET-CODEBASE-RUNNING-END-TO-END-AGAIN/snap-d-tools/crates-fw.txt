@@ -1,0 +1,11 @@
+-	semio-framework-os-store-sync
+-	semio-framework-os-store-testing-fixtures
+-	semio-framework-os-store-codec-registry
+-	semio-framework-os-renderer-wgpu
+-	semio-framework-os-mcp
+-	semio-framework-os-io
+-	semio-framework-plugin
+-	semio-framework-plugin-builder
+-	semio-framework-plugin-host-test-component-refusal
+-	semio-framework-plugin-host-test-component
+-	semio-framework-print

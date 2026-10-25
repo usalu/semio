@@ -2,14 +2,15 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv/dist/2020.js";
 import {Database} from "bun:sqlite";
 import {spawn} from "node:child_process";
-import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync,utimesSync,writeFileSync} from "node:fs";
+import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json";
 import fixtureSchema from "./🧫️fixtures/🧬️schema.json";
 import componentSchema from "../🧬️schema/🔣️.json";
 import {BAZEL_SESSION_POLICY_V1 as policy,acquireBazelSessionV1,bazelNestedServersV1,bazelRepositoryContentsV1,bazelRestoreResourcesV1,bazelServerOverrideV1,bazelSessionCommandV1,bazelSessionMessageV1,bazelSessionResourcesV1,bazelSessionStartupV1,bazelSessionStatusV1,bazelSessionWorkspaceV1,bazelSlotIdsV1,nextBazelSlotStateV1,planBazelServersV1,planBazelSessionGarbageV1,rankBazelSlotsV1,renderBazelSessionStatusV1,withBazelSessionV1,type BazelSlotPortV1,type BazelSlotStateV1} from "../🟦️.ts";
-import {bazelSlotPortV1,collectBazelSessionsV1,readBazelInventoryV1,removeBazelTreeV1,stopBazelServerV1} from "../🔌️port/🟦️.ts";
+import {bazelFreeBytesV1,bazelSlotPortV1,collectBazelPoolV1,dedupeBazelLaunchersV1,collectBazelSessionsV1,measureBazelTreeBytesV1,readBazelInventoryV1,removeBazelTreeV1,stopBazelServerV1} from "../🔌️port/🟦️.ts";
+import {startScriptProcessWatchdogV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
@@ -18,17 +19,21 @@ const key=(index:number)=>index.toString(16).padStart(16,"0"),abort=()=>new Abor
 
 /** 🧪️ The port in memory: claims are a set, the gate is a first-in-first-out mutex, time is a counter the sleep advances, and a hook lets other sessions act while one waits. */
 function memoryPort(onSleep:(count:number)=>void|Promise<void>=()=>undefined){
- const held=new Set<string>(),states=new Map<string,BazelSlotStateV1>(),lines:string[]=[],writes:string[]=[],tails=new Map<string,Promise<void>>();let time=0,sleeps=0,gates=0;
+ const held=new Set<string>(),states=new Map<string,BazelSlotStateV1>(),lines:string[]=[],writes:string[]=[],tails=new Map<string,Promise<void>>(),queues=new Map<string,number[]>(),events:string[]=[];const idle={megabytes:0},image={bytes:Infinity};let time=0,sleeps=0,gates=0,tickets=0;
  const port:BazelSlotPortV1={
   async claim(slot){if(held.has(slot))return undefined;held.add(slot);return()=>{held.delete(slot);};},
-  async gate(signal,kind){signal.throwIfAborted();const previous=tails.get(kind)??Promise.resolve();let open!:()=>void;tails.set(kind,new Promise<void>(done=>{open=done;}));await previous;gates++;return()=>{gates--;open();};},
+  async gate(signal,kind){signal.throwIfAborted();const previous=tails.get(kind)??Promise.resolve();let open!:()=>void;tails.set(kind,new Promise<void>(done=>{open=done;}));await previous;gates++;events.push('gate');return()=>{gates--;events.push('open');open();};},
+  async spare(){return idle.megabytes;},
+  async imageFree(){return image.bytes;},
+  queued:kind=>(queues.get(kind)??[]).length,
+  enqueue:kind=>{const id=++tickets,list=queues.get(kind)??[];list.push(id);queues.set(kind,list);return {first:()=>list[0]===id,leave:()=>{const at=list.indexOf(id);if(at>=0)list.splice(at,1);}};},
   async read(slot){return states.get(slot);},
   async write(slot,state){writes.push(slot);states.set(slot,state);},
-  async sleep(milliseconds,signal){signal.throwIfAborted();time+=milliseconds;sleeps++;await new Promise(done=>setImmediate(done));await onSleep(sleeps);signal.throwIfAborted();},
+  async sleep(milliseconds,signal){signal.throwIfAborted();events.push(gates>0?'sleep-under-gate':'sleep');time+=milliseconds;sleeps++;await new Promise(done=>setImmediate(done));await onSleep(sleeps);signal.throwIfAborted();},
   now:()=>time,
   progress:line=>{lines.push(line);},
  };
- return {port,held,states,lines,writes,gates:()=>gates};
+ return {port,held,states,lines,writes,events,idle,image,gates:()=>gates};
 }
 
 test("the closed fixture agrees with its closed schema and the component schema",()=>{
@@ -72,8 +77,9 @@ test("long-running service sessions pin service slots only: any number of dev se
  expect(builds.map(row=>row.slot)).toEqual(["s0","s1","s2"]);expect(memory.lines.some(line=>line.includes("waiting"))).toBe(false);
  const controller=new AbortController(),fifth=acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(20),signal:controller.signal,kind:"service"});void fifth.catch(()=>undefined);
  await builds[0]!.release();const next=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(21),signal:abort(),timeoutMilliseconds:0});expect(next.slot).toBe("s0");
+ for(let turn=0;turn<20;turn++)await new Promise(done=>setImmediate(done));
  expect(memory.lines.some(line=>line==="[bazel] all 4 Bazel service slots are in use; waiting for one (0 s)")).toBe(true);expect(bazelSessionMessageV1("waiting-service",{slots:4,seconds:1},"de")).toBe("[bazel] alle 4 Bazel-Dienst-Slots sind belegt; warte auf einen freien Slot (1 s)");
- controller.abort(Error("stop waiting"));await expect(fifth).rejects.toThrow("stop waiting");expect(memory.gates()).toBe(0);
+ controller.abort(Error("stop waiting"));await new Promise(done=>setTimeout(done,20));await expect(fifth).rejects.toThrow("stop waiting");expect(memory.gates()).toBe(0);
  await services[0]!.release();const sixth=await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(22),signal:abort(),kind:"service",timeoutMilliseconds:0});expect(sixth.slot).toBe("d0");
  for(const row of [...services.slice(1),...builds.slice(1),next,sixth])await row.release();expect(memory.held.size).toBe(0);
  expect(new Set([...bazelSlotIdsV1(plan,"build"),...bazelSlotIdsV1(plan,"service")]).size).toBe(plan.slots+plan.services);
@@ -156,8 +162,107 @@ test("progress lines are German when the language says so and the status table l
 });
 
 test("garbage collection decisions agree with an independent Python implementation",()=>{
- for(const row of fixture.garbage)expect(planBazelSessionGarbageV1(row.inventory as never,{slots:row.slots,services:row.services},row.now,new Set(row.held)) as unknown,row.name).toEqual(row.expected);
+ for(const row of fixture.garbage)expect(planBazelSessionGarbageV1(row.inventory as never,{slots:row.slots,services:row.services},row.now,new Set(row.held),policy,(row as {pressure?:{freeBytes:number;softBytes:number;targetBytes:number}}).pressure) as unknown,row.name).toEqual(row.expected);
  expect(()=>planBazelSessionGarbageV1({slots:[{slot:"x",outputBase:true,packages:[]}],foreign:[]} as never,{slots:1,services:4},0)).toThrow("Closed Bazel session inventory required");
+});
+
+const oracle=(rows:readonly unknown[]):unknown[]=>{const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️.py")],{stdin:new TextEncoder().encode(JSON.stringify({policy,rows}))});expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);return JSON.parse(new TextDecoder().decode(run.stdout));};
+
+test("the garbage plan equals the independent Python oracle on every fixture row and on 400 seeded random inventories with pressure, sizes, held slots and leftover capture folders",()=>{
+ const rows=fixture.garbage.map(row=>({inventory:row.inventory,slots:row.slots,services:row.services,now:row.now,held:row.held,...(row as {pressure?:unknown}).pressure?{pressure:(row as {pressure?:unknown}).pressure}:{}}));
+ expect(oracle(rows)).toEqual(fixture.garbage.map(row=>row.expected));
+ let seed=20261024;const next=(limit:number)=>{seed=(seed*1103515245+12345)%2147483648;return seed%limit;},pick=<T,>(values:readonly T[])=>values[next(values.length)]!,now=86400000*200,random:Record<string,unknown>[]=[];
+ for(let index=0;index<400;index++){
+  const slots=pick(["s0","s1","s2","s3","s7","s14","d0","d1","d3","d9"] as const),used=new Set<string>(),entries=[];
+  for(const slot of ["s0","s1","s2","s5","s14","d0","d2","d9"].filter(()=>next(4)>0)){
+   const keys=Array.from({length:next(6)},()=>key(next(8)+1)).filter((value,at,all)=>all.indexOf(value)===at),sized=next(2)===0,withBase=next(2)===0;used.add(slot);
+   entries.push({slot,outputBase:withBase,...(sized&&withBase?{outputBaseBytes:next(4000)*1048576}:{}),...next(3)>0&&keys.length?{state:{version:1,slot,key:pick(keys),keys:[...keys],usedAt:now-next(30*24)*3600000}}:{},packages:keys.map(value=>({key:value,modifiedAt:now-next(12*24*60)*60000,...(sized?{bytes:next(3000)*1048576}:{}),...next(4)===0?{temporary:true}:{}}))});
+  }
+  random.push({inventory:{slots:entries,foreign:next(2)?[]:["server/"+key(99)]},slots:next(4)+1,services:next(4)+1,now,held:[...used].filter(()=>next(5)===0),...next(3)>0?{pressure:{freeBytes:next(8192)*1048576,softBytes:3221225472,targetBytes:6442450944}}:{}});
+  void slots;
+ }
+ const expected=oracle(random);
+ random.forEach((row,at)=>expect(planBazelSessionGarbageV1(row.inventory as never,{slots:row.slots as number,services:row.services as number},now,new Set(row.held as string[]),policy,row.pressure as never) as unknown,JSON.stringify(row)).toEqual(expected[at]));
+});
+
+test("under pressure a real collection measures the trees, frees the oldest unprotected packages and leftover capture folders, and never touches a claimed slot",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-pressure-")),directories={leases:join(root,"l"),server:join(root,"o"),workspaces:join(root,"w"),pool:join(root,"p")};
+ try{
+  const port=bazelSlotPortV1(directories),write=(path:string,bytes:number)=>{mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,Buffer.alloc(bytes,1));};
+  write(join(root,"p/ab/"+"a".repeat(62)),1000);
+  mkdirSync(join(directories.server,"s0/execroot"),{recursive:true});mkdirSync(join(directories.server,"s1/execroot"),{recursive:true});
+  await port.write("s0",nextBazelSlotStateV1("s0",undefined,key(1),Date.now()));await port.write("s1",nextBazelSlotStateV1("s1",undefined,key(4),Date.now()));
+  for(const[slot,name,bytes]of[["s0",key(1),65536],["s0",key(2),262144],["s0",key(3),131072],["s1",key(4),65536],["s1",key(5),262144]] as const)write(join(directories.workspaces,slot,name,"a/file"),bytes);
+  mkdirSync(join(directories.workspaces,"s0",key(1),"snapshot-tmp"),{recursive:true});writeFileSync(join(directories.workspaces,"s0",key(1),"snapshot-tmp/0"),"half");
+  const old=(Date.now()-3*3600000)/1000;for(const[slot,name]of[["s0",key(2)],["s0",key(3)],["s1",key(5)]] as const)utimesSync(join(directories.workspaces,slot,name),old,old);
+  expect(await measureBazelTreeBytesV1(join(directories.workspaces,"s0",key(2)),abort())).toBeGreaterThanOrEqual(262144);
+  const signal=abort(),claimed=await port.claim("s1",signal),lines:string[]=[],reclaim={softAvailableBytes:3221225472,targetAvailableBytes:6442450944},free=reclaim.softAvailableBytes-1;
+  const result=await collectBazelSessionsV1(directories,port,{slots:3,services:4},signal,async()=>undefined,{freeBytes:()=>free,reclaim,language:"de",progress:line=>lines.push(line)});
+  expect(result.packages.map(row=>row.slot+row.key+row.reason)).toEqual(["s0"+key(2)+"pressure","s0"+key(3)+"pressure"]);expect(result.temporaries).toEqual([{slot:"s0",key:key(1)}]);expect(result.outputBases).toEqual([]);
+  expect(readdirSync(join(directories.workspaces,"s0"))).toEqual([key(1)]);expect(existsSync(join(directories.workspaces,"s0",key(1),"snapshot-tmp"))).toBe(false);expect(readdirSync(join(directories.workspaces,"s1")).sort()).toEqual([key(4),key(5)]);
+  expect(existsSync(join(root,"p/ab/"+"a".repeat(62)))).toBe(true);
+  expect(lines[0]).toContain("das Produkt-Image hat");expect(lines.some(line=>line.includes("Paket "+key(2)))).toBe(true);expect(lines.at(-1)).toContain("freigegeben");claimed!();
+  const quiet=await collectBazelSessionsV1(directories,port,{slots:3,services:4},signal,async()=>undefined,{language:"en",freeBytes:()=>reclaim.softAvailableBytes*2,reclaim,progress:line=>lines.push(line)});
+  expect(quiet.packages).toEqual([]);expect(readdirSync(join(directories.workspaces,"s1")).sort()).toEqual([key(4),key(5)]);
+  expect(bazelFreeBytesV1(join(root,"absent/deeper"))).toBeGreaterThan(0);
+ }finally{await removeBazelTreeV1(root);}
+},60000);
+
+test("under pressure the plan counts only what a free slot can give: candidates of a claimed slot never use up the need",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-claimed-")),directories={leases:join(root,"l"),server:join(root,"o"),workspaces:join(root,"w")};
+ try{
+  const port=bazelSlotPortV1(directories),write=(path:string,bytes:number)=>{mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,Buffer.alloc(bytes,1));};
+  for(const slot of["s0","s1"]){mkdirSync(join(directories.server,slot,"execroot"),{recursive:true});await port.write(slot,nextBazelSlotStateV1(slot,undefined,key(slot==="s0"?1:4),Date.now()));}
+  for(const[slot,name,bytes,age]of[["s0",key(1),65536,0],["s0",key(2),262144,3],["s0",key(3),262144,5],["s1",key(4),65536,0],["s1",key(5),262144,8]] as const){write(join(directories.workspaces,slot,name,"a/file"),bytes);const when=(Date.now()-age*3600000)/1000;utimesSync(join(directories.workspaces,slot,name),when,when);}
+  const signal=abort(),claimed=await port.claim("s1",signal),free=1000000,reclaim={softAvailableBytes:free+1,targetAvailableBytes:free+100000};
+  const result=await collectBazelSessionsV1(directories,port,{slots:3,services:4},signal,async()=>undefined,{language:"en",freeBytes:()=>free,reclaim});
+  expect(result.packages.map(row=>row.slot+row.key)).toEqual(["s0"+key(3)]);expect(readdirSync(join(directories.workspaces,"s1")).sort()).toEqual([key(4),key(5)]);expect(readdirSync(join(directories.workspaces,"s0")).sort()).toEqual([key(1),key(2)]);claimed!();
+ }finally{await removeBazelTreeV1(root);}
+},60000);
+
+test("the session that collects keeps its own selection's package under pressure, however old it is",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-keep-")),directories={leases:join(root,"l"),server:join(root,"o"),workspaces:join(root,"w")};
+ try{
+  const port=bazelSlotPortV1(directories),write=(path:string,bytes:number)=>{mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,Buffer.alloc(bytes,1));};
+  mkdirSync(join(directories.server,"s0/execroot"),{recursive:true});await port.write("s0",nextBazelSlotStateV1("s0",undefined,key(1),Date.now()));
+  for(const[name,age]of[[key(1),0],[key(2),3],[key(3),5]] as const){write(join(directories.workspaces,"s0",name,"a/file"),65536);const when=(Date.now()-age*3600000)/1000;utimesSync(join(directories.workspaces,"s0",name),when,when);}
+  const signal=abort(),reclaim={softAvailableBytes:1000001,targetAvailableBytes:2000000},held=await port.claim("s0",signal);
+  const result=await collectBazelSessionsV1(directories,port,{slots:3,services:4},signal,async()=>undefined,{language:"en",holding:"s0",keep:key(2),freeBytes:()=>1000,reclaim});
+  expect(result.packages.map(row=>row.slot+row.key)).toEqual(["s0"+key(3)]);expect(readdirSync(join(directories.workspaces,"s0")).sort()).toEqual([key(1),key(2)]);held!();
+ }finally{await removeBazelTreeV1(root);}
+},60000);
+
+test("under pressure an unheld growth slot is retired whole, its idle server stopped first, while a younger growth slot, a planned slot and a claimed growth slot stay",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-growth-")),directories={leases:join(root,"l"),server:join(root,"o"),workspaces:join(root,"w")};
+ try{
+  const port=bazelSlotPortV1(directories),write=(path:string,bytes:number)=>{mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,Buffer.alloc(bytes,1));},now=Date.now();
+  for(const[slot,id,idleMinutes]of[["s0",1,0],["s3",2,60],["s4",3,2],["s5",4,90]] as const){
+   write(join(directories.server,slot,"execroot/file"),131072);write(join(directories.workspaces,slot,key(id),"a/file"),262144);await port.write(slot,{...nextBazelSlotStateV1(slot,undefined,key(id),now),usedAt:now-idleMinutes*60000});
+  }
+  const signal=abort(),claimed=await port.claim("s5",signal),stopped:string[]=[],lines:string[]=[],reclaim={softAvailableBytes:1000001,targetAvailableBytes:100000000};
+  const result=await collectBazelSessionsV1(directories,port,{slots:3,services:4},signal,async base=>{stopped.push(base.slice(directories.server.length+1));expect(existsSync(base)).toBe(true);},{language:"en",freeBytes:()=>1000,reclaim,progress:line=>lines.push(line)});
+  expect(result.packages.map(row=>row.slot+row.reason)).toEqual(["s3growth"]);expect(result.outputBases.map(row=>row.slot+row.reason)).toEqual(["s3growth"]);expect(stopped).toEqual(["s3"]);
+  expect(existsSync(join(directories.server,"s3"))).toBe(false);expect(existsSync(join(directories.server,"s3.session.json"))).toBe(false);expect(readdirSync(join(directories.workspaces,"s3"))).toEqual([]);
+  for(const slot of["s0","s4","s5"])expect(existsSync(join(directories.server,slot)),slot).toBe(true);expect(readdirSync(join(directories.workspaces,"s4")).length).toBe(1);claimed!();
+ }finally{await removeBazelTreeV1(root);}
+},60000);
+
+test("the content pool evicts entries by the time they entered it, keeps younger ones, removes emptied folders and leaves everything in a dry run",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-pool-")),pool=join(root,"pool");
+ try{
+  for(const name of["ab/"+"1".repeat(62),"ab/"+"2".repeat(62)+".x","cd/"+"3".repeat(62)]){mkdirSync(join(pool,name,".."),{recursive:true});writeFileSync(join(pool,name),Buffer.alloc(4096,1));}
+  const hour=3600000,maximumAgeMs=policy.pool.maximumAgeHours*hour,signal=abort();
+  expect(await collectBazelPoolV1(pool,signal,{now:Date.now(),maximumAgeMs})).toEqual({entries:0,bytes:0});
+  const dry=await collectBazelPoolV1(pool,signal,{now:Date.now()+maximumAgeMs+hour,maximumAgeMs,dryRun:true});expect(dry.entries).toBe(3);expect(dry.bytes).toBeGreaterThanOrEqual(3*4096);expect(readdirSync(join(pool,"ab")).length).toBe(2);
+  const real=await collectBazelPoolV1(pool,signal,{now:Date.now()+maximumAgeMs+hour,maximumAgeMs});expect(real).toEqual(dry);expect(readdirSync(pool)).toEqual([]);
+  expect(await collectBazelPoolV1(join(root,"absent"),signal,{now:0,maximumAgeMs:0})).toEqual({entries:0,bytes:0});
+  const stopped=new AbortController();stopped.abort();mkdirSync(join(pool,"ef"),{recursive:true});await expect(collectBazelPoolV1(pool,stopped.signal,{now:0,maximumAgeMs:0})).rejects.toThrow();
+ }finally{await removeBazelTreeV1(root);}
+});
+
+test("every session message exists in both languages with the same placeholders",()=>{
+ const english=componentSchema.definitions.Messages.const.en as Record<string,string>,german=componentSchema.definitions.Messages.const.de as Record<string,string>,holes=(text:string)=>[...text.matchAll(/\{(\w+)\}/gu)].map(row=>row[1]).sort();
+ expect(Object.keys(german).sort()).toEqual(Object.keys(english).sort());for(const id of Object.keys(english))expect(holes(german[id]!),id).toEqual(holes(english[id]!));
 });
 
 test("restore locks are hierarchical: two restores conflict exactly when one tree contains the other, against a brute-force path oracle",()=>{
@@ -171,9 +276,9 @@ test("restore locks are hierarchical: two restores conflict exactly when one tre
  const unrelated=[bazelRestoreResourcesV1(["a/b/c"]),bazelRestoreResourcesV1(["f/g/h"])];expect(unrelated[0]!.filter(a=>unrelated[1]!.some(b=>b.resource===a.resource&&(a.mode==="exclusive"||b.mode==="exclusive")))).toEqual([]);
 });
 
-/** 🧪️ Starts a child process that claims a slot through the production port and holds it until its input closes. */
+/** 🔰️ Starts a child process that claims a slot through the production port and holds it until its input closes. */
 function holder(directories:{leases:string;server:string;workspaces:string},slot:string):Promise<{kill:()=>void;exited:Promise<void>}>{
- const code=`import {bazelSlotPortV1} from ${JSON.stringify(join(import.meta.dir,"../🔌️port/🟦️.ts"))};const port=bazelSlotPortV1(${JSON.stringify(directories)});const claim=await port.claim(${JSON.stringify(slot)},new AbortController().signal);console.log(claim?"held":"busy");if(claim)await new Promise(done=>process.stdin.on("close",done).resume());`;
+ const code=`import {bazelSlotPortV1} from ${JSON.stringify(join(import.meta.dir,"../🔌️port/🟦️.ts"))};const port=bazelSlotPortV1(${JSON.stringify(directories)});const claim=await port.claim(${JSON.stringify(slot)},new AbortController().signal);console.log(claim?"held":"busy");if(claim){await new Promise(done=>process.stdin.on("close",done).resume());claim();}`;
  const script=join(directories.server,"..","holder.ts");mkdirSync(join(directories.server,".."),{recursive:true});writeFileSync(script,code);
  const child=spawn(process.execPath,[script],{stdio:["pipe","pipe","inherit"]}),exited=new Promise<void>(done=>child.on("exit",()=>done()));
  return new Promise((resolve,reject)=>{child.stdout.setEncoding("utf8");child.stdout.on("data",text=>{if(text.includes("held"))resolve({kill:()=>child.kill("SIGKILL"),exited});else reject(Error("child did not claim "+text));});child.on("error",reject);});
@@ -219,19 +324,19 @@ test("the inventory reads slots, packages and foreign entries and the collector 
  const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-slots-")),directories={leases:join(root,"leases"),server:join(root,"p/server"),workspaces:join(root,"p/workspaces")},day=86400000;
  try{
   const port=bazelSlotPortV1(directories),stopped:string[]=[],layout=(path:string,files:string[])=>{for(const file of files){mkdirSync(join(path,file,".."),{recursive:true});writeFileSync(join(path,file),"x");}};
-  layout(directories.server,["s0/execroot/x","s2/execroot/x","s0.events.json","metrics.json","0123456789abcdef/execroot/x","0123456789abcdef.events.json"]);
-  await port.write("s2",nextBazelSlotStateV1("s2",undefined,key(5),Date.now()));await port.write("s0",nextBazelSlotStateV1("s0",undefined,key(1),Date.now()));
+  layout(directories.server,["s0/execroot/x","s14/execroot/x","s0.events.json","metrics.json","0123456789abcdef/execroot/x","0123456789abcdef.events.json"]);
+  await port.write("s14",nextBazelSlotStateV1("s14",undefined,key(5),Date.now()));await port.write("s0",nextBazelSlotStateV1("s0",undefined,key(1),Date.now()));
   for(const name of [key(1),key(2),key(3)]){layout(join(directories.workspaces,"s0"),[name+"/MODULE.bazel"]);}
-  layout(join(directories.workspaces),["0123456789abcdef/MODULE.bazel","s2/"+key(5)+"/MODULE.bazel"]);
+  layout(join(directories.workspaces),["0123456789abcdef/MODULE.bazel","s14/"+key(5)+"/MODULE.bazel"]);
   const old=(Date.now()-20*day)/1000;utimesSync(join(directories.workspaces,"s0",key(2)),old,old);utimesSync(join(directories.workspaces,"s0",key(3)),old,old);utimesSync(join(directories.workspaces,"s0",key(1)),Date.now()/1000,Date.now()/1000);
-  mkdirSync(join(directories.server,"s2/execroot/locked"),{recursive:true});writeFileSync(join(directories.server,"s2/execroot/locked/ro"),"x");if(process.platform!=="win32"){chmodSync(join(directories.server,"s2/execroot/locked/ro"),0o444);chmodSync(join(directories.server,"s2/execroot/locked"),0o555);}
+  mkdirSync(join(directories.server,"s14/execroot/locked"),{recursive:true});writeFileSync(join(directories.server,"s14/execroot/locked/ro"),"x");if(process.platform!=="win32"){chmodSync(join(directories.server,"s14/execroot/locked/ro"),0o444);chmodSync(join(directories.server,"s14/execroot/locked"),0o555);}
   const inventory=await readBazelInventoryV1(directories,port);
-  expect(inventory.slots.map(row=>row.slot)).toEqual(["s0","s2"]);expect(inventory.slots[0]!.packages.length).toBe(3);expect(inventory.foreign).toEqual(["server/0123456789abcdef","workspaces/0123456789abcdef"]);
-  const signal=abort(),dry=await collectBazelSessionsV1(directories,port,{slots:2,services:4},signal,async()=>undefined,{dryRun:true});expect(dry.outputBases).toEqual([{slot:"s2",reason:"capacity"}]);expect(existsSync(join(directories.server,"s2"))).toBe(true);
-  const heldZero=await port.claim("s0",signal),heldTwo=await port.claim("s2",signal),skipped=await collectBazelSessionsV1(directories,port,{slots:2,services:4},signal,async base=>{stopped.push(base);});
-  expect(skipped.outputBases).toEqual([]);expect(skipped.packages).toEqual([]);expect(skipped.foreign).toEqual(["server/0123456789abcdef","workspaces/0123456789abcdef"]);expect(stopped).toEqual([join(directories.server,"0123456789abcdef")]);expect(existsSync(join(directories.server,"s2"))).toBe(true);expect(readdirSync(join(directories.workspaces,"s0")).length).toBe(3);heldZero!();heldTwo!();
-  stopped.length=0;const removed=await collectBazelSessionsV1(directories,port,{slots:2,services:4},signal,async base=>{stopped.push(base.slice(directories.server.length+1));expect(existsSync(base)).toBe(true);});
-  expect(removed.outputBases).toEqual([{slot:"s2",reason:"capacity"}]);expect(removed.packages.map(row=>row.slot+row.key)).toEqual(["s0"+key(2),"s0"+key(3),"s2"+key(5)]);expect(removed.foreign).toEqual([]);expect(stopped).toEqual(["s2"]);
+  expect(inventory.slots.map(row=>row.slot)).toEqual(["s0","s14"]);expect(inventory.slots[0]!.packages.length).toBe(3);expect(inventory.foreign).toEqual(["server/0123456789abcdef","workspaces/0123456789abcdef"]);
+  const signal=abort(),dry=await collectBazelSessionsV1(directories,port,{slots:2,services:4},signal,async()=>undefined,{language:"en",dryRun:true});expect(dry.outputBases).toEqual([{slot:"s14",reason:"capacity"}]);expect(existsSync(join(directories.server,"s14"))).toBe(true);
+  const heldZero=await port.claim("s0",signal),heldTwo=await port.claim("s14",signal),skipped=await collectBazelSessionsV1(directories,port,{slots:2,services:4},signal,async base=>{stopped.push(base);},{language:"en"});
+  expect(skipped.outputBases).toEqual([]);expect(skipped.packages).toEqual([]);expect(skipped.foreign).toEqual(["server/0123456789abcdef","workspaces/0123456789abcdef"]);expect(stopped).toEqual([join(directories.server,"0123456789abcdef")]);expect(existsSync(join(directories.server,"s14"))).toBe(true);expect(readdirSync(join(directories.workspaces,"s0")).length).toBe(3);heldZero!();heldTwo!();
+  stopped.length=0;const removed=await collectBazelSessionsV1(directories,port,{slots:2,services:4},signal,async base=>{stopped.push(base.slice(directories.server.length+1));expect(existsSync(base)).toBe(true);},{language:"en"});
+  expect(removed.outputBases).toEqual([{slot:"s14",reason:"capacity"}]);expect(removed.packages.map(row=>row.slot+row.key)).toEqual(["s0"+key(2),"s0"+key(3),"s14"+key(5)]);expect(removed.foreign).toEqual([]);expect(stopped).toEqual(["s14"]);
   expect(readdirSync(directories.server).sort()).toEqual(["metrics.json","s0","s0.events.json","s0.session.json"]);expect(readdirSync(join(directories.workspaces,"s0"))).toEqual([key(1)]);expect(existsSync(join(directories.workspaces,"0123456789abcdef"))).toBe(false);
   if(process.platform!=="win32"){mkdirSync(join(root,"ro/inner"),{recursive:true});writeFileSync(join(root,"ro/inner/f"),"x");chmodSync(join(root,"ro/inner/f"),0o444);chmodSync(join(root,"ro/inner"),0o555);await removeBazelTreeV1(join(root,"ro"));expect(existsSync(join(root,"ro"))).toBe(false);}
  }finally{await removeBazelTreeV1(root);}
@@ -251,7 +356,154 @@ test("a server is stopped by removing its pid file, without the Bazel binary, an
 test("the adapter holds a slot instead of a per-selection lease and no other Bazel code names the old scheme",()=>{
  const script=readFileSync(join(import.meta.dir,"../../📜️script.ts"),"utf8"),storage=readFileSync(join(import.meta.dir,"../../💾️storage/🟦️.ts"),"utf8");
  expect(script).toContain("withBazelSlotV1(root,bazelSelectionV1(graph,request),phaseControl,hold=>withBazelStorageV1(");expect(script).toContain("withBazelSlotV1(root,{key,kind:\"build\"},phaseControl,hold=>withBazelStorageV1(");expect(script).toContain("task.definition.continuous");
- expect(script).not.toContain('"bazel-workspace-"');expect(script).not.toContain('"bazel-snapshot-restore"');expect(script).not.toContain("-Xmx2048m");expect(script).toContain("bazelRestoreResourcesV1(");
+ expect(script).not.toContain('"bazel-workspace-"');expect(script).not.toContain('"bazel-snapshot-restore"');expect(script).not.toContain("-Xmx2048m");expect(readFileSync(join(import.meta.dir,"../../🎬️executor/🟦️.ts"),"utf8")).toContain("bazelRestoreResourcesV1(");
  expect(script).toContain("bazelSessionWorkspaceV1(storage.paths.workspace,slot,namespace)");expect(script).not.toContain("join(storage.paths.workspace,namespace)");expect(storage).not.toContain("createHash");
  expect(script).toContain("session.slot");expect(policy.leases.restorePrefix.startsWith("bazel-restore")).toBe(true);
 });
+
+
+/** 🧮️ Independent first-in-first-out model of the waiter queue: the order in which `sessions` arrivals take `slots` slots when one slot is freed per round. */
+function claimOrderOracle(arrivals:number,slots:number):number[]{
+ const order:number[]=[],queue:number[]=[];
+ for(let arrival=0;arrival<arrivals;arrival++){if(arrival<slots&&queue.length===0)order.push(arrival);else queue.push(arrival);}
+ while(queue.length)order.push(queue.shift()!);
+ return order;
+}
+
+test("the picker is a short critical section: nobody sleeps under it, and waiters are served first come first served exactly like an independent queue model",async()=>{
+ const memory=memoryPort(),plan={slots:2,services:1},releases:Array<()=>Promise<void>>=[],claimed:number[]=[];
+ const start=(index:number)=>acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(index),signal:abort(),timeoutMilliseconds:86_400_000}).then(session=>{claimed.push(index);releases.push(()=>session.release());return session;});
+ const pending:Promise<unknown>[]=[];
+ for(let index=0;index<6;index++){pending.push(start(index));for(let turn=0;turn<30;turn++)await new Promise(done=>setImmediate(done));}
+ for(let round=0;round<4;round++){await new Promise(done=>setTimeout(done,20));const release=releases.shift();expect(release).toBeDefined();await release!();}
+ await Promise.all(pending);
+ expect(claimed).toEqual(claimOrderOracle(6,2));
+ expect(memory.events.includes("sleep-under-gate")).toBe(false);expect(memory.events.includes("sleep")).toBe(true);expect(memory.gates()).toBe(0);
+ for(const release of releases)await release();expect(memory.held.size).toBe(0);
+});
+
+
+/** ⏸️ Starts a child process that waits for a build slot through the production port and a real session, reports `claimed` and holds the slot until its input closes. */
+function waiter(directories:{leases:string;server:string;workspaces:string},index:number):{lines:string[];kill:()=>void;release:()=>void;claimed:()=>Promise<void>}{
+ const code=`import {bazelSlotPortV1} from ${JSON.stringify(join(import.meta.dir,"../🔌️port/🟦️.ts"))};import {acquireBazelSessionV1} from ${JSON.stringify(join(import.meta.dir,"../🟦️.ts"))};const port=bazelSlotPortV1(${JSON.stringify(directories)},{write:()=>undefined});const session=await acquireBazelSessionV1(port,{slots:2,services:1},{language:"en",key:${JSON.stringify(key(index))},signal:new AbortController().signal,growth:false,timeoutMilliseconds:120000});console.log("claimed");await new Promise(done=>process.stdin.on("close",done).resume());await session.release();`;
+ const script=join(directories.server,"..",`waiter-${index}.ts`);writeFileSync(script,code);
+ const child=spawn(process.execPath,[script],{stdio:["pipe","pipe","inherit"]}),lines:string[]=[];child.stdout.setEncoding("utf8");child.stdout.on("data",text=>{lines.push(text.trim());});
+ return {lines,kill:()=>child.kill("SIGKILL"),release:()=>child.stdin.end(),claimed:async()=>{for(let attempt=0;attempt<300&&lines.length===0;attempt++)await new Promise(done=>setTimeout(done,50));expect(lines,"waiter "+index+" claimed").toEqual(["claimed"]);}};
+}
+
+test("real processes waiting for a Bazel slot never hold the picker: the gate stays free for others, a killed waiter is skipped and the others are served in arrival order",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-slots-")),directories={leases:join(root,"leases"),server:join(root,"p/server"),workspaces:join(root,"p/workspaces")},children:{kill:()=>void}[]=[];
+ try{
+  mkdirSync(directories.server,{recursive:true});const port=bazelSlotPortV1(directories,{write:()=>undefined}),waiting=()=>readdirSync(directories.server).filter(name=>name.startsWith("waiter-build-")).length;
+  const first=await holder(directories,"s0"),second=await holder(directories,"s1");children.push(first,second);
+  const arrivals:ReturnType<typeof waiter>[]=[];
+  for(const index of [0,1,2,3]){const row=waiter(directories,index);arrivals.push(row);children.push(row);for(let attempt=0;attempt<300&&waiting()<=index;attempt++)await new Promise(done=>setTimeout(done,50));expect(waiting(),"arrival "+index).toBe(index+1);}
+  for(let probe=0;probe<8;probe++){const begun=Date.now(),release=await port.gate(AbortSignal.timeout(2000),"build");release();expect(Date.now()-begun,"the gate is free while four runs wait").toBeLessThan(1000);await new Promise(done=>setTimeout(done,100));}
+  arrivals[1]!.kill();
+  first.kill();await arrivals[0]!.claimed();expect(arrivals.map(row=>row.lines.length)).toEqual([1,0,0,0]);
+  second.kill();await arrivals[2]!.claimed();expect(arrivals.map(row=>row.lines.length)).toEqual([1,0,1,0]);
+  arrivals[0]!.release();await arrivals[3]!.claimed();expect(arrivals.map(row=>row.lines.length)).toEqual([1,0,1,1]);
+  for(const row of arrivals)row.release();for(let attempt=0;attempt<100&&waiting()>0;attempt++)await new Promise(done=>setTimeout(done,50));expect(waiting()).toBe(0);
+ }finally{for(const child of children)try{child.kill();}catch{}rmSync(root,{recursive:true,force:true});}
+},120000);
+
+test("slot growth follows the live host: with every planned slot in use a build opens an extra slot only while idle memory reaches the authored margin, up to the authored maximum, and never for services or when the caller pinned the count",async()=>{
+ const memory=memoryPort(),plan={slots:3,services:2},sessions:Awaited<ReturnType<typeof acquireBazelSessionV1>>[]=[];
+ for(let index=0;index<3;index++)sessions.push(await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(index),signal:abort(),timeoutMilliseconds:0}));
+ expect(sessions.map(row=>row.slot)).toEqual(["s0","s1","s2"]);
+ await expect(acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(10),signal:abort(),timeoutMilliseconds:0})).rejects.toThrow("timed out");
+ memory.idle.megabytes=policy.servers.growthSpareMegabytes-1;
+ await expect(acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(11),signal:abort(),timeoutMilliseconds:0})).rejects.toThrow("timed out");
+ memory.idle.megabytes=policy.servers.growthSpareMegabytes;memory.image.bytes=policy.servers.growthImageFreeBytes-1;
+ await expect(acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(13),signal:abort(),timeoutMilliseconds:0})).rejects.toThrow("timed out");
+ expect(memory.lines.filter(line=>line.includes("products image")).length,"reported once per acquisition").toBe(1);memory.image.bytes=Infinity;
+ await expect(acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(12),signal:abort(),timeoutMilliseconds:0,growth:false})).rejects.toThrow("timed out");
+ const grown:Awaited<ReturnType<typeof acquireBazelSessionV1>>[]=[];
+ for(let index=0;index<policy.servers.growthMaximum-plan.slots;index++)grown.push(await acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(20+index),signal:abort(),timeoutMilliseconds:0}));
+ expect(grown.map(row=>row.slot)).toEqual(Array.from({length:policy.servers.growthMaximum-plan.slots},(_,index)=>"s"+(plan.slots+index)));
+ expect(memory.lines.filter(line=>line.includes("extra slot")).length).toBe(grown.length);
+ await expect(acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(40),signal:abort(),timeoutMilliseconds:0})).rejects.toThrow("timed out");
+ const services=await Promise.all(Array.from({length:plan.services},(_,index)=>acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(50+index),signal:abort(),kind:"service",timeoutMilliseconds:0})));
+ await expect(acquireBazelSessionV1(memory.port,plan,{language:"en",key:key(60),signal:abort(),kind:"service",timeoutMilliseconds:0})).rejects.toThrow("timed out");
+ for(const row of [...sessions,...grown,...services])await row.release();expect(memory.held.size).toBe(0);
+ expect(bazelSessionMessageV1("grown",{slot:"s3",spare:5000},"de")).toContain("zusätzlichen Slot s3");
+});
+
+test("slot growth equals an independent Python model of the decision for every combination of used slots and idle memory",()=>{
+ const rows:Array<{used:number;idle:number;image:number;kind:string;growth:boolean;slots:number}>=[];
+ for(const used of [0,1,2,3,4,8,11,12])for(const idle of [0,2559,4095,4096,20000])for(const kind of ["build","service"])for(const image of [0,6442450943,6442450944,10**12])for(const growth of [true,false])rows.push({used,idle,image,kind,growth,slots:3});
+ const program="import json,sys\nrows=json.load(sys.stdin)\nout=[]\nfor r in rows:\n  base=r['slots'];maximum=12;margin=4096;room=6442450944\n  if r['kind']!='build':out.append('wait' if r['used']>=2 else 'base')\n  elif r['used']<base:out.append('base')\n  elif r['growth'] and r['idle']>=margin and r['image']>=room and r['used']<maximum:out.append('growth')\n  else:out.append('wait')\nprint(json.dumps(out))";
+ const run=Bun.spawnSync(["python3","-I","-c",program],{stdin:new TextEncoder().encode(JSON.stringify(rows))});expect(run.exitCode).toBe(0);
+ const expected=JSON.parse(new TextDecoder().decode(run.stdout)) as string[];
+ const decide=(row:typeof rows[number])=>{
+  const ids=row.kind==="build"?Array.from({length:row.slots},(_,index)=>"s"+index):Array.from({length:2},(_,index)=>"d"+index);
+  if(row.used<ids.length)return "base";
+  if(row.kind==="build"&&row.growth&&row.idle>=policy.servers.growthSpareMegabytes&&row.image>=policy.servers.growthImageFreeBytes&&row.used<policy.servers.growthMaximum)return "growth";
+  return "wait";
+ };
+ rows.forEach((row,index)=>expect(decide(row),JSON.stringify(row)).toBe(expected[index]));
+ expect(policy.servers.growthMaximum).toBe(12);expect(policy.servers.growthSpareMegabytes).toBe(4096);
+});
+
+/** ⌛️ A child that holds the only slot, waits for it through the production port with the real stall watchdog on (stall 1 s, exit 124 like the envelope) and releases the slot after 3.5 s; `plain` swaps the port's wait for an undeclared timer. */
+function slotWaitChild(directories:{leases:string;server:string;workspaces:string},plain:boolean):string{
+ const script=join(directories.server,"..",plain?"wait-plain.ts":"wait-declared.ts"),module=JSON.stringify(join(import.meta.dir,"../🔌️port/🟦️.ts")),sessions=JSON.stringify(join(import.meta.dir,"../🟦️.ts")),watchdog=JSON.stringify(join(import.meta.dir,"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts"));
+ mkdirSync(join(directories.server,".."),{recursive:true});
+ writeFileSync(script,`import {bazelSlotPortV1} from ${module};import {acquireBazelSessionV1} from ${sessions};import {observeScriptProcessOutputV1,startScriptProcessWatchdogV1} from ${watchdog};
+const signal=new AbortController().signal,declared=bazelSlotPortV1(${JSON.stringify(directories)}),plan={slots:1,services:1},port=${plain?"{...declared,sleep:(milliseconds)=>new Promise<void>(done=>setTimeout(done,milliseconds))}":"declared"};
+observeScriptProcessOutputV1();startScriptProcessWatchdogV1({children:()=>[],checkMilliseconds:100,onStall:()=>process.exit(124)});
+const holder=await acquireBazelSessionV1(declared,plan,{language:"en",key:"0000000000000001",signal,growth:false});
+const waiting=acquireBazelSessionV1(port,plan,{language:"en",key:"0000000000000002",signal,growth:false,timeoutMilliseconds:20000}).then(session=>session.release());
+setTimeout(()=>void holder.release(),3500);await waiting;process.exit(0);`);
+ return script;
+}
+
+test("a wait for a Bazel server slot is a declared queue wait: the stall watchdog never stops it, and the same wait on an undeclared timer is stopped (exit codes observed by an independent Python process)",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-slots-")),directories={leases:join(root,"leases"),server:join(root,"p/server"),workspaces:join(root,"p/workspaces")};
+ try{
+  const scripts={declared:slotWaitChild(directories,false),plain:slotWaitChild(directories,true)};
+  const program="import json,os,subprocess,sys\nscripts=json.load(sys.stdin)\nout={}\nfor name,path in scripts.items():\n  env=dict(os.environ,SEMIO_SCRIPT_STALL_MS='1000')\n  out[name]=subprocess.run([sys.argv[1],path],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=60).returncode\nprint(json.dumps(out))";
+  const run=Bun.spawnSync(["python3","-I","-c",program,process.execPath],{stdin:new TextEncoder().encode(JSON.stringify(scripts))});expect(run.exitCode).toBe(0);
+  expect(JSON.parse(new TextDecoder().decode(run.stdout))).toEqual({declared:0,plain:124});
+ }finally{rmSync(root,{recursive:true,force:true});}
+},120000);
+
+test("the slot wait of the production port is declared in process: the watchdog sees no stall while sessions queue for a slot",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"bazel-slots-")),directories={leases:join(root,"leases"),server:join(root,"p/server"),workspaces:join(root,"p/workspaces")};
+ let stalls=0;const stop=startScriptProcessWatchdogV1({children:()=>[],stallMilliseconds:100,checkMilliseconds:10,onStall:()=>{stalls++;}});
+ try{
+  const port=bazelSlotPortV1(directories,{write:()=>undefined}),plan={slots:1,services:1},signal=abort(),holding=await acquireBazelSessionV1(port,plan,{language:"en",key:key(1),signal,growth:false});
+  const waiting=acquireBazelSessionV1(port,plan,{language:"en",key:key(2),signal,growth:false,timeoutMilliseconds:20000}).then(session=>session.release());
+  await new Promise(done=>setTimeout(done,1200));expect(stalls).toBe(0);await holding.release();await waiting;
+ }finally{stop();rmSync(root,{recursive:true,force:true});}
+},60000);
+
+test("Bazel slot choice: concurrent agent sessions start on different slots, an edit loop keeps its slot, and the slot state records who used it",async()=>{
+ const slots=bazelSlotIdsV1({slots:3,services:0},"build"),key="0123456789abcdef";
+ expect(rankBazelSlotsV1(slots,{},key)).toEqual(["s0","s1","s2"]);
+ for(const preference of[0,1,2,3,4,5]){const ranked=rankBazelSlotsV1(slots,{},key,preference);expect(ranked[0]).toBe(slots[preference%3]);expect([...ranked].sort()).toEqual(["s0","s1","s2"]);}
+ const states={s1:nextBazelSlotStateV1("s1",undefined,key,100)},kept=rankBazelSlotsV1(slots,states,key,2);expect(kept[0]).toBe("s1");
+ const holds=new Set<string>(),written:Record<string,unknown>={};
+ const port={async claim(slot:string){if(holds.has(slot))return undefined;holds.add(slot);return ()=>holds.delete(slot);},async gate(){return ()=>undefined;},queued(){return 0;},async spare(){return 0;},enqueue(){return {first:()=>true,leave(){}};},async read(slot:string){return written[slot] as never;},async write(slot:string,state:unknown){written[slot]=state;},async sleep(){},now:()=>1000,progress(){}};
+ const signal=new AbortController().signal,first=await acquireBazelSessionV1(port as never,{slots:3,services:0},{language:"en",key,signal,preference:1,owner:{session:"0123456789ab.sa",agent:"alpha"}}),second=await acquireBazelSessionV1(port as never,{slots:3,services:0},{language:"en",key:"fedcba9876543210",signal,preference:1,owner:{session:"0123456789ab.sb",agent:"beta"}});
+ expect([first.slot,second.slot]).toEqual(["s1","s2"]);await first.release();await second.release();
+ expect(written.s1).toMatchObject({session:"0123456789ab.sa",agent:"alpha",key});expect(written.s2).toMatchObject({agent:"beta"});
+ const again=await acquireBazelSessionV1(port as never,{slots:3,services:0},{language:"en",key,signal,preference:2});expect(again.slot).toBe("s1");expect(again.mode).toBe("warm");await again.release();
+});
+
+test("launcher dedupe turns identical large launcher copies of an idle output base into clones of one file, leaves everything else alone and does not repeat, agreeing with an independent Python sha256",async()=>{
+ const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"dedupe-")),base=join(root,"s0"),bin=join(base,"execroot","_main","bazel-out","darwin_arm64-fastbuild","bin"),size=policy.dedupe.minimumBytes+4096,same=Buffer.alloc(size,7),other=Buffer.alloc(size,9),place=(name:string,bytes:Buffer,mode=0o555)=>{const path=join(bin,name);writeFileSync(path,bytes);chmodSync(path,mode);utimesSync(path,new Date(1_700_000_000_000),new Date(1_700_000_000_000));return path;};
+ mkdirSync(join(bin,"t_h.runfiles"),{recursive:true});
+ const copies=["t_a","t_b","t_c","t_d","t_e"].map(name=>place(name,same)),different=place("t_f",other),small=place("t_g",Buffer.alloc(1<<20,7)),nested=join(bin,"t_h.runfiles","t_i");writeFileSync(nested,same);
+ const before=new Map([...copies,different,small,nested].map(path=>[path,statSync(path).ino])),digest=(paths:string[])=>{const run=Bun.spawnSync(["python3","-I","-c","import hashlib,sys\nfor path in sys.argv[1:]:\n print(hashlib.sha256(open(path,'rb').read()).hexdigest())",...paths]);expect(run.exitCode).toBe(0);return run.stdout.toString().trim().split("\n");};
+ const expected=digest([...copies,different,small,nested]),first=await dedupeBazelLaunchersV1(base,abort());
+ expect(first).toEqual({files:copies.length,bytes:copies.length*size});
+ expect(digest([...copies,different,small,nested])).toEqual(expected);
+ for(const path of copies){expect(statSync(path).ino,path).not.toBe(before.get(path)!);expect(statSync(path).mode&0o777,path).toBe(0o555);expect(statSync(path).mtimeMs,path).toBe(1_700_000_000_000);}
+ for(const path of[different,small,nested])expect(statSync(path).ino,path).toBe(before.get(path)!);
+ const shared=readdirSync(join(base,policy.dedupe.directory)).filter(name=>name!==policy.dedupe.stamp);expect(shared.length).toBe(1);expect(shared[0]).toMatch(/^[0-9a-f]{32}$/u);
+ const inodes=new Map([...copies].map(path=>[path,statSync(path).ino]));expect(await dedupeBazelLaunchersV1(base,abort())).toEqual({files:0,bytes:0});
+ for(const path of copies)expect(statSync(path).ino,path).toBe(inodes.get(path)!);
+ expect(await dedupeBazelLaunchersV1(join(root,"absent"),abort())).toEqual({files:0,bytes:0});
+});
+test("launcher dedupe messages exist in every language and the pressure collector reports them",()=>{for(const language of["en","de"] as const)expect(bazelSessionMessageV1("deduped",{slot:"s0",files:69,megabytes:4100},language)).toContain("69");});

@@ -23,7 +23,7 @@ fn sqlite_snapshot_pdf_native_factories_publish_exact_structural_hashes() {
 
 #[test]
 fn sqlite_snapshot_pdf_owned_assets_describe_each_exact_record() {
-    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+    use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
     let snapshot14 = standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot { schema: "owned-fields".into(), pages: vec![standards::v1_4::subsets::base::schema::snapshot::PageDoc { width: f64::INFINITY, height: f64::from_bits(0x7ff0000000000001), text: "a\"b\nUnicode 🗄️".into() }] };
     let snapshot17 = PdfSnapshot { schema: "owned-fields".into(), declared_version: "1.7-extension".into(), ..Default::default() };
     let cases = [
@@ -46,7 +46,7 @@ fn sqlite_snapshot_pdf_owned_assets_describe_each_exact_record() {
 /// 📖️ Proves PDF 1.7 logical carriers, independent content oracles and exact protocol custody.
 #[test]
 fn owned_fixture_publication_reports_canonical_logical_carriers() {
-    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+    use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
     let snapshot = crate::standards::v1_7::subsets::base::io::export::text_document(&[(300.0, 400.0, "Native PDF 1.7 receipt")]);
     let text = snapshot.print_dsl();
     let binary = snapshot.encode_pack_with(&Default::default()).unwrap();

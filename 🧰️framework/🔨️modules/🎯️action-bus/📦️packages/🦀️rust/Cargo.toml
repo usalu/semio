@@ -29,6 +29,7 @@ semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️r
 semio-framework-value-native-owned = { path = "../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-manifest-arg-schema = { path = "../../../🛂️manifest/🧮️arg-schema/📦️packages/🦀️rust" }

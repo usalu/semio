@@ -69,7 +69,7 @@ function addSizeRowToBundleDateMap(map: BundleDateDeltasMap, row: { path: string
   bundleMap.set(dateLine, addGitDeltaSums(prev, chunk));
 }
 
-/** 📊️Per-bundle per-day byte deltas from micro-commit parent..sha rows. */
+/** 📦️Per-bundle per-day byte deltas from micro-commit parent..sha rows. */
 export function buildBundleDateSizeDeltasMap(root: string, base: string, head: string, bundles: CommitBundleSection[]): BundleDateDeltasMap {
   root = gitRepoRoot(root);
   const map: BundleDateDeltasMap = new Map();
@@ -112,7 +112,7 @@ export function formatBundleHeaderLine(label: string, ulocTotal: GitDeltaSum, si
   return `${normalizeBundleScopeLabel(label)}${formatBundleMetricSuffixes(ulocTotal, sizeTotal, ulocBloc, sizeBloc)}`;
 }
 
-/** 📊️Orders bundles by descending 🟰️ (➕️+✏️+➖️) from assigned path diffs. */
+/** 🔃️Orders bundles by descending 🟰️ (➕️+✏️+➖️) from assigned path diffs. */
 export function sortCommitBundlesByEditTotal(root: string, base: string, head: string, bundles: CommitBundleSection[], pathAssignments: string[][]): { bundles: CommitBundleSection[]; pathAssignments: string[][]; pathPrefixSets: string[][] } {
   const prefixSets = buildBundlePathPrefixSets(root, base, head, bundles);
   const ranked = bundles.map((bundle, i) => ({
@@ -142,7 +142,7 @@ export function rangeGitDeltaTotal(root: string, base: string, head: string): Gi
   return sumGitLangDeltas(accumulateRangeUlocDeltas(root, base, head));
 }
 
-/** 📊️Partition WIP-range numstat across bundles (one bundle per row). */
+/** 🎁️Partition WIP-range numstat across bundles (one bundle per row). */
 export function partitionRangeDeltasByBundle(root: string, base: string, head: string, bundles: CommitBundleSection[], prefixSets: string[][]): { bundleTotals: GitDeltaSum[]; rangeTotal: GitDeltaSum } {
   const bundleTotals = bundles.map(() => ({ added: 0, removed: 0, edited: 0 }));
   let rangeTotal: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
@@ -168,7 +168,7 @@ export function partitionRangeDeltasByBundle(root: string, base: string, head: s
   return { bundleTotals, rangeTotal };
 }
 
-/** 📊️Partition WIP-range byte deltas across bundles (one bundle per row). */
+/** 🧰️Partition WIP-range byte deltas across bundles (one bundle per row). */
 export function partitionRangeSizeDeltasByBundle(root: string, base: string, head: string, bundles: CommitBundleSection[], prefixSets: string[][]): { bundleTotals: GitDeltaSum[]; rangeTotal: GitDeltaSum } {
   const bundleTotals = bundles.map(() => ({ added: 0, removed: 0, edited: 0 }));
   let rangeTotal: GitDeltaSum = { added: 0, removed: 0, edited: 0 };

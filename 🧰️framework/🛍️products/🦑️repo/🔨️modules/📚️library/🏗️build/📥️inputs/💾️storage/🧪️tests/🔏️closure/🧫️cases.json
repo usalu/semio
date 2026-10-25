@@ -3,105 +3,105 @@
     {
       "role": "owner",
       "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
-      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
+      "storage": "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
       "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
       "maximumBytes": 65536
     },
     {
       "role": "schema",
       "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json",
-      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json",
+      "storage": "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json",
       "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json",
       "maximumBytes": 65536
     },
     {
       "role": "worker",
-      "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs",
-      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs",
-      "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs",
+      "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs",
+      "storage": "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs",
+      "graph": "../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs",
       "maximumBytes": 65536
     },
     {
       "role": "precision-schema",
       "path": "🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json",
-      "storage": "../🎯️precision/🧬️schema/🔣️.json",
+      "storage": "../../🎯️precision/🧬️schema/🔣️.json",
       "graph": "../📥️inputs/🎯️precision/🧬️schema/🔣️.json",
       "maximumBytes": 65536
     },
     {
       "role": "resolution-owner",
       "path": "🏗️build/📥️inputs/🦀️resolution/🟦️.ts",
-      "storage": "../🦀️resolution/🟦️.ts",
+      "storage": "../../🦀️resolution/🟦️.ts",
       "graph": "../📥️inputs/🦀️resolution/🟦️.ts",
       "maximumBytes": 65536
     },
     {
       "role": "resolution-schema",
       "path": "🏗️build/📥️inputs/🦀️resolution/🧬️schema/🔣️.json",
-      "storage": "../🦀️resolution/🧬️schema/🔣️.json",
+      "storage": "../../🦀️resolution/🧬️schema/🔣️.json",
       "graph": "../📥️inputs/🦀️resolution/🧬️schema/🔣️.json",
       "maximumBytes": 65536
     },
     {
       "role": "cargo-receipt",
       "path": "🏗️build/📥️inputs/🦀️resolution/💾️receipt/🟨️.mjs",
-      "storage": "../🦀️resolution/💾️receipt/🟨️.mjs",
+      "storage": "../../🦀️resolution/💾️receipt/🟨️.mjs",
       "graph": "../📥️inputs/🦀️resolution/💾️receipt/🟨️.mjs",
       "maximumBytes": 65536
     },
     {
       "role": "generation-owner",
       "path": "🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
-      "storage": "../../🕸️graph/🕰️generations/🟨️.mjs",
+      "storage": "../../../🕸️graph/🕰️generations/🟨️.mjs",
       "graph": "./🕰️generations/🟨️.mjs",
       "maximumBytes": 65536
     },
     {
       "role": "generation-schema",
       "path": "🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json",
-      "storage": "../../🕸️graph/🕰️generations/🧬️schema/🔣️.json",
+      "storage": "../../../🕸️graph/🕰️generations/🧬️schema/🔣️.json",
       "graph": "./🕰️generations/🧬️schema/🔣️.json",
       "maximumBytes": 65536
     },
     {
       "role": "session-owner",
       "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",
-      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",
+      "storage": "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",
       "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",
       "maximumBytes": 65536
     },
     {
       "role": "session-protocol",
       "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs",
-      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs",
+      "storage": "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs",
       "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs",
       "maximumBytes": 65536
     },
     {
       "role": "immutable-node-loader",
       "path": "🏗️build/📥️source/🔏️closure/🟢️node/🟨️.mjs",
-      "storage": "../../📥️source/🔏️closure/🟢️node/🟨️.mjs",
+      "storage": "../../../📥️source/🔏️closure/🟢️node/🟨️.mjs",
       "graph": "../📥️source/🔏️closure/🟢️node/🟨️.mjs",
       "maximumBytes": 65536
     },
     {
       "role": "source-capture-owner",
       "path": "🏗️build/📥️source/🔏️closure/🟦️.ts",
-      "storage": "../../📥️source/🔏️closure/🟦️.ts",
+      "storage": "../../../📥️source/🔏️closure/🟦️.ts",
       "graph": "../📥️source/🔏️closure/🟦️.ts",
       "maximumBytes": 65536
     },
     {
       "role": "source-capture-schema",
       "path": "🏗️build/📥️source/🔏️closure/🧬️schema/🔣️.json",
-      "storage": "../../📥️source/🔏️closure/🧬️schema/🔣️.json",
+      "storage": "../../../📥️source/🔏️closure/🧬️schema/🔣️.json",
       "graph": "../📥️source/🔏️closure/🧬️schema/🔣️.json",
       "maximumBytes": 65536
     },
     {
       "role": "store-format-schema",
       "path": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧬️schema/🔣️.json",
-      "storage": "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧬️schema/🔣️.json",
+      "storage": "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧬️schema/🔣️.json",
       "graph": "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧬️schema/🔣️.json",
       "maximumBytes": 65536
     }

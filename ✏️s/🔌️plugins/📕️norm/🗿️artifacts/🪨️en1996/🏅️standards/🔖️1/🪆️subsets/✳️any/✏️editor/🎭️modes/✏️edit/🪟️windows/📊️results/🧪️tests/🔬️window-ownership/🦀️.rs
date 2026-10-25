@@ -2,7 +2,7 @@ use crate::modes::edit::windows::results::*;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_plugin_norm_results_config::{addressed, ChangeSelectedCheckIndex, NormResultsWindowConfig, NormResultsWindowConfigMutation};
 use protocol::{ColdMutation, Mutation, OpBinary, OpText};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn block_on_norm_results_windows<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);

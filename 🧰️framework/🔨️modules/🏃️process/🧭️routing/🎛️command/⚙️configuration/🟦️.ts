@@ -7,8 +7,8 @@ import {isTestLevel,type TestLevel} from "../../../🧪️testing/🎚️budget/
 import {admitCommandRequestV1,type CommandRequestV1,type CommandPolicyV1} from "../🟦️.ts";
 import {inheritedCargoExecutionCustodyV1} from "../🎟️custody/🟦️.ts";
 import {checkScriptInvocation,type ScriptInvocation} from "../../📥️invocation/🟦️.ts";
-import { runtimeProgramV1 } from "../../../../⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeProgramV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 /** ⚙️ Declares workspace, system tools, bounded execution and persistent stores. */
 export type CommandConfigurationV1=Readonly<{version:1;workspace:string;workspaceManifest:string;store:string;vitest:string;runtime:string;coverageRuntime:string;python:string;nextest:boolean;nextestConfig:string;buildBudgetMs:number;commandBudgetMs:number;maximumOutputBytes:number;assertionBudgets:Readonly<Record<TestLevel,number>>;assertionThreads:number|"available-minus-quarter";rustMinStack:string}>;

@@ -85,7 +85,7 @@ function interactivityAllAppExtensionBundleId(source: string): string {
   return source.match(new RegExp(`const\\s+${argument}\\s*:\\s*&str\\s*=\\s*"([^"]+)"`, "u"))?.[1]?.trim() ?? "";
 }
 
-/** 🧩️Parses one schema-first descriptor through an owned primitive-only discovery boundary. */
+/** 🪵️Parses one schema-first descriptor through an owned primitive-only discovery boundary. */
 export function interactivityAllAppDescriptorFromSource(file: string, source: string, extensionSource = ""): { row?: InteractivityAllAppDescriptor; failures: string[] } {
   const failures: string[] = [];
   let descriptor: Record<string, unknown>;
@@ -157,7 +157,7 @@ export function interactivityAllAppDescriptorFromSource(file: string, source: st
   return { row: { file, kind: "app", pluginId, appIds, actions }, failures };
 }
 
-/** 🎛️Fails every UI-declared action that has not joined the bounded production job migration. */
+/** 🚨️Fails every UI-declared action that has not joined the bounded production job migration. */
 export function interactivityAllAppActionDispositionFailures(descriptors: InteractivityAllAppDescriptor[]): string[] {
   return descriptors.flatMap((descriptor) => descriptor.actions
     .filter((action) => action.disposition !== "migrated")
@@ -176,7 +176,7 @@ export function interactivityAllAppActionProductionFailures(descriptors: Interac
   });
 }
 
-/** 🎮️Reads the generated playground catalog the dashboard registry lists as `playground:<variant>` commands. */
+/** 📚️Reads the generated playground catalog the dashboard registry lists as `playground:<variant>` commands. */
 export function interactivityAllAppPlaygroundsFromSource(source: string): { rows: InteractivityAllAppPlayground[]; failures: string[] } {
   const failures: string[] = [];
   let catalog: unknown;
@@ -207,7 +207,7 @@ export function interactivityAllAppPlaygroundsFromSource(source: string): { rows
   return { rows, failures };
 }
 
-/** 🎛️Reads the renderer axis every dashboard playground command offers from the registry source that owns it. */
+/** 📖️Reads the renderer axis every dashboard playground command offers from the registry source that owns it. */
 export function interactivityAllAppRenderersFromSource(source: string): { renderers: string[]; failures: string[] } {
   const list = source.match(/\bconst\s+RENDERERS\s*:\s*&\[&str\]\s*=\s*&\[([^\]]*)\]/u)?.[1];
   const renderers = list === undefined ? [] : [...list.matchAll(/"([^"]+)"/gu)].map((match) => match[1]!);
@@ -223,7 +223,7 @@ export function interactivityAllAppPlaygroundSurfaces(playground: InteractivityA
   return renderers.filter((renderer) => (renderer === "react" ? playground.react : playground.wgpu) > 0);
 }
 
-/** 🚀️Proves every owner-qualified app context has a playground command that starts on every renderer (React, Wasm, native). */
+/** ▶️Proves every owner-qualified app context has a playground command that starts on every renderer (React, Wasm, native). */
 export function interactivityAllAppSurfaceCoverageFailures(descriptors: readonly InteractivityAllAppDescriptor[], playgrounds: readonly InteractivityAllAppPlayground[], renderers: readonly string[]): string[] {
   const completeVariants = new Set(playgrounds.filter((playground) => interactivityAllAppPlaygroundSurfaces(playground, renderers).length === renderers.length).map((playground) => playground.variant));
   const roleNeutral = (id: string) => id.replace(/#(?:editor|viewer)$/u, "#surface");
@@ -235,7 +235,7 @@ export function interactivityAllAppSurfaceCoverageFailures(descriptors: readonly
   return failures;
 }
 
-/** ⚖️Proves every required verification gate is startable from the dashboard: the workspace `verify` build task forwards free arguments to `📜️script.ts verify` and declares one positional text parameter. */
+/** 🚪️Proves every required verification gate is startable from the dashboard: the workspace `verify` build task forwards free arguments to `📜️script.ts verify` and declares one positional text parameter. */
 export function interactivityAllAppGateFailures(manifestSource: string, schemaSource: string, gates: readonly { readonly id: string; readonly check: readonly string[] }[] = INTERACTIVITY_ALL_APP_REQUIRED_GATES): string[] {
   const failures: string[] = [];
   const record = (value: unknown): Record<string, unknown> => (value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {});

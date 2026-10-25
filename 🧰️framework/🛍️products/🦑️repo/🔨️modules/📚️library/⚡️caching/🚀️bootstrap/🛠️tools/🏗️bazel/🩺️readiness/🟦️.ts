@@ -4,7 +4,7 @@ import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {probeNativeDirectoryCaseCapabilityV1,probeNativeDirectoryExchangeV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
+import {probeNativeDirectoryCaseCapabilityV1,probeNativeDirectoryExchangeV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 

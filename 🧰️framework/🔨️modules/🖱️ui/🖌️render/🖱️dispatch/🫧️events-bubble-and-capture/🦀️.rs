@@ -18,7 +18,7 @@ pub enum PointerKind {
     Eraser,
 }
 
-/// 🖊️ Per-pointer identity plus whatever the device reports beyond x/y — `pressure`/`tilt` are `None`
+/// ℹ️ Per-pointer identity plus whatever the device reports beyond x/y — `pressure`/`tilt` are `None`
 /// for a mouse or a touch point that doesn't report them.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PointerInfo {
@@ -109,7 +109,7 @@ pub(super) fn event_pointer(event: &DispatchEvent) -> Option<PointerId> {
 //#endregion 📥️DispatchEvent
 
 //#region 🫧️Bubble
-/// 🫧️ Ported from `events.rs::bubble` verbatim: walks from `from` up through `parent` links
+/// 🗨️ Ported from `events.rs::bubble` verbatim: walks from `from` up through `parent` links
 /// (including `from` itself), calling `handler(id)` for each ancestor until it returns `true`
 /// ("handled, stop bubbling — this is the cancellation ticket U1/U2 ask for") or the root is reached.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

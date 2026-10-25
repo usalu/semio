@@ -1,0 +1,8 @@
+//:t_2b47068189231fe7 inputs 10658 test-like 0
+//:t_4703339af2ed8950 inputs 1957 test-like 0
+//:t_7cecd39a0d01ac2b inputs 3060 test-like 0
+//:t_89494d21613948da inputs 11352 test-like 0
+//:t_e54168b23fa2faa7 inputs 2890 test-like 0
+//:t_f20801f21818a81f inputs 3211 test-like 0
+//:t_ed9c20287d15abca inputs 10669 test-like 0
+INFO: 8 processes: 1 internal, 7 local.

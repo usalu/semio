@@ -21,10 +21,10 @@ use crate::schema::mutation_support::prior_attribute;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetViewBox {
-    pub(crate) path: NodePath,
-    pub(crate) view_box: Option<ViewBox>,
+    pub path: NodePath,
+    pub view_box: Option<ViewBox>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
 }
 
 impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetViewBox

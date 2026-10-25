@@ -14,8 +14,8 @@ import { loadCatalogTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-a
 import { resolveFixturePlaceholders } from "../🧪️test-closure/🟦️.ts";
 import { relativePosix } from "../📝️render/🟦️.ts";
 import { buildSandbox, checkCrossCrateVisibility, checkOrphanRules, compareModuleTrees, diffDiagnostics, patchSandboxSources, resolveCrateModules, runResolutionOracle, rustcUnresolvedCrates } from "../🔬️verify/🟦️.ts";
-import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { GlobV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🧫️ Everything a carve is checked against inside a sandbox copy of the plugin. */
@@ -90,7 +90,7 @@ export function unresolvedSubjects(line: string): string[] {
   return [...subject.matchAll(/`([^`]+)`/gu)].map((entry) => entry[1]!.split("::").pop()!);
 }
 
-/** 🧩️ Drops the carved diagnostics that only re-word an unresolved name the base tree already fails to resolve: a name an unexpanded macro defines is reported as `unresolved import` in one layout and as `cannot find .. in this scope` in the other, so the two spellings must not count as a regression. */
+/** 💧️ Drops the carved diagnostics that only re-word an unresolved name the base tree already fails to resolve: a name an unexpanded macro defines is reported as `unresolved import` in one layout and as `cannot find .. in this scope` in the other, so the two spellings must not count as a regression. */
 export function dropBaseUnresolvedNames(baseLines: readonly string[], carvedLines: readonly string[]): string[] {
   const known = new Set(baseLines.flatMap(unresolvedSubjects));
   return carvedLines.filter((line) => { const subjects = unresolvedSubjects(line); return !subjects.length || !subjects.every((name) => known.has(name)); });
@@ -105,10 +105,10 @@ export function rewriteCrateAliases(text: string, module: string, crateModules: 
   return out;
 }
 
-/** 🔗️ A path dependency of an artifact crate that lives in the same plugin outside the artifact, with the extern identifiers the dependents use for it. */
+/** 🔌️ A path dependency of an artifact crate that lives in the same plugin outside the artifact, with the extern identifiers the dependents use for it. */
 export type SiblingCrate = Readonly<{ name: string; dir: string; entry: string; idents: readonly string[] }>;
 
-/** 🔗️ Collects the path dependencies of the given crate manifests that live outside the artifact: plugin-local ones transitively, any other repository crate only as a direct dependency. These are the sibling crates an artifact crate may now depend on instead of mounting their sources; the caller keeps the ones whose sources the base tree compiled in-crate. */
+/** 📦️ Collects the path dependencies of the given crate manifests that live outside the artifact: plugin-local ones transitively, any other repository crate only as a direct dependency. These are the sibling crates an artifact crate may now depend on instead of mounting their sources; the caller keeps the ones whose sources the base tree compiled in-crate. */
 export function siblingPathCrates(repoRoot: string, pluginDir: string, artifactDir: string, manifests: readonly string[], workspaceDir: string = artifactDir): SiblingCrate[] {
   const found = new Map<string, { name: string; entry: string; idents: Set<string> }>();
   const inherited = (runtimeParseTomlV1(readFileSync(join(repoRoot, workspaceDir, "Cargo.toml"), "utf8")) as { workspace?: { dependencies?: Record<string, { path?: string }> } }).workspace?.dependencies ?? {};
@@ -139,7 +139,7 @@ export function siblingPathCrates(repoRoot: string, pluginDir: string, artifactD
   return [...found].map(([dir, row]) => ({ name: row.name, dir, entry: row.entry, idents: [...row.idents] }));
 }
 
-/** 🧫️ Applies a planned carve to a sandbox copy of the plugin and runs every static check and, optionally, the full-resolution differential of the test rewrites. */
+/** ✅️ Applies a planned carve to a sandbox copy of the plugin and runs every static check and, optionally, the full-resolution differential of the test rewrites. */
 export async function verifyCarveInSandbox(plan: ArtifactCratePlan, sandboxRoot: string, options: { oracle: boolean; keep?: boolean }): Promise<CarveVerification> {
   const repoRoot = plan.repoRoot;
   const pluginDir = plan.packageDir.split("/").slice(0, 3).join("/");
@@ -324,7 +324,7 @@ export function mountedPathFiles(file: string, text: string): string[] {
   return [...text.matchAll(/#\[path\s*=\s*"([^"]+\.rs)"\]/gu)].map((match) => posix.normalize(posix.join(posix.dirname(file), match[1]!)));
 }
 
-/** 🧩️ One crate of the synthetic layout: the module that mounts it, the repository paths of its sources and its library root. */
+/** 📏️ One crate of the synthetic layout: the module that mounts it, the repository paths of its sources and its library root. */
 export type OwnedCrate = Readonly<{ module: string; paths: readonly string[]; root: string }>;
 
 /** 🪢️ Mounts every crate as a module of `__combined.rs` below `root` and rewrites each source file for the owner that reaches it first. The pre-carve archive and the carved tree go through this one function, so both sides of the differential see their crates the same way. */
@@ -365,7 +365,7 @@ export function pruneNonBaseFiles(repoRoot: string, sandbox: string, artifactDir
 /** 🧾️ Result of the layout differential of an applied carve: diagnostics only the mounted crates have, per cfg. */
 export type AppliedLayoutReport = { crates: number; baseCrates: number; siblings: string[]; healedBase: string[]; layout: Record<string, { base: number; combined: number; onlyCombined: number; sampleOnlyCombined: string[] }> };
 
-/** 🧾️ Gate for an applied carve: mounts the crates of the working tree as modules of one synthetic crate and compares the rustc resolution diagnostics (lib and test) with the pre-carve tree of `baseRef`. Zero `onlyCombined` means the carve introduced no unresolved name. */
+/** 🚪️ Gate for an applied carve: mounts the crates of the working tree as modules of one synthetic crate and compares the rustc resolution diagnostics (lib and test) with the pre-carve tree of `baseRef`. Zero `onlyCombined` means the carve introduced no unresolved name. */
 export async function verifyAppliedLayout(repoRoot: string, artifactDir: string, sandboxRoot: string, baseRef = "HEAD", keep = false, sampleLimit = 12): Promise<AppliedLayoutReport> {
   const baseDirectory = baseRef.startsWith("dir:") ? resolve(baseRef.slice("dir:".length)) : null;
   const pluginDir = artifactDir.split("/").length >= 3 ? artifactDir.split("/").slice(0, 3).join("/") : artifactDir;

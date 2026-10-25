@@ -86,7 +86,7 @@ pub struct ApplyCapability {
     _sealed: (),
 }
 
-/// 🎯️ THE central applier: the only mint point of [`ApplyCapability`] and the one callable entry that turns a diff into a
+/// 🆚️ THE central applier: the only mint point of [`ApplyCapability`] and the one callable entry that turns a diff into a
 /// snapshot. Store lanes, replay, merge, backbone, plugin transaction folds, tool folds, the db and composite planners all
 /// route through it; mutation leaves never call [`ColdMutationDiff::apply`].
 pub fn apply_diff_cold_into<P, D: ColdMutationDiff<P>>(diff: &D, unpublished: &mut P) -> MutationApplyResult<()> {
@@ -103,7 +103,7 @@ pub fn apply_diff_cold<P: Clone, D: ColdMutationDiff<P>>(diff: &D, base: &P) -> 
     Ok(unpublished)
 }
 
-/// 🔑️ The one place the sealed capability is constructed; private, so only [`commit_retained_diff`] reaches it.
+/// 🔏️ The one place the sealed capability is constructed; private, so only [`commit_retained_diff`] reaches it.
 fn mint_capability() -> ApplyCapability {
     ApplyCapability { _sealed: () }
 }
@@ -161,7 +161,7 @@ impl<T> Drop for PreparedField<T> {
     }
 }
 
-/// 📦️ Typed persisted delta vocabulary shared by retained native application and explicit wire reference algebra.
+/// 🟢️ Typed persisted delta vocabulary shared by retained native application and explicit wire reference algebra.
 ///
 /// 🛬️ Typed delta admission belongs to its funded native receiver; stored diff ownership does not require a synchronous decoder.
 pub trait MutationDiff<P>: Default + PartialEq + semio_framework_value_intrinsic::ToValue + DiffAlgebra<P> {
@@ -180,7 +180,7 @@ pub trait MutationDiff<P>: Default + PartialEq + semio_framework_value_intrinsic
     {
     }
 
-    /// 🧊️ Explicit cold disposal of a SCRATCH projection the replay arithmetic built and displaced.
+    /// ➡️ Explicit cold disposal of a SCRATCH projection the replay arithmetic built and displaced.
     /// A history fold walks `base → mid₁ → mid₂ → … → head`, and every intermediate is an owned `P`
     /// the next step's assignment throws away; when `P` owns a fail-closed root that bare drop aborts
     /// the process, so `undo`/`redo` and every `.pack`/`.spr` reload aborted the app for any artifact
@@ -201,9 +201,9 @@ pub trait DiffAlgebra<P>: Sized {
     fn is_empty(&self) -> bool;
 }
 
-/// 🧮️ Wire values provide reference inversion without sharing or allocating retained native row authorities.
+/// 🔗️ Wire values provide reference inversion without sharing or allocating retained native row authorities.
 pub trait ColdDiffAlgebra<P>:DiffAlgebra<P>{fn inverse(&self,base:&P)->Self;}
-/// ❄️ Reference projections apply synchronously only when callers select this distinct wire-value contract.
+/// 📘️ Reference projections apply synchronously only when callers select this distinct wire-value contract.
 pub trait ColdMutationDiff<P>:MutationDiff<P>+semio_framework_value_intrinsic::FromValue{
     /// ➕️ Composes `self` (base→mid) with `other` (mid→after) into base→after, in place.
     /// Normative absorb contract (`.claude/plans/the-current-schemas-are-scalable-journal.md`
@@ -223,14 +223,14 @@ pub trait ColdMutationDiff<P>:MutationDiff<P>+semio_framework_value_intrinsic::F
     fn apply(&self,unpublished:&mut P,capability:ApplyCapability)->MutationApplyResult<()>;
 }
 
-/// 🎟️ Authorizes one typed original retained commit after its caller admitted the finite work grant.
+/// 💼️ Authorizes one typed original retained commit after its caller admitted the finite work grant.
 pub fn with_retained_apply_capability<D,T>(diff:semio_framework_value_clone_source::RetainedCloneRef<'_,D>,grant:semio_framework_value_intrinsic::RetainedCloneGrant,commit:impl FnOnce(ApplyCapability)->Result<T,ValueError>)->Result<T,ValueError>{
     if grant.maximum_items==0||grant.maximum_copy_bytes<std::mem::size_of::<bool>()||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"retained diff capability requires original source and admitted commit grant"));}
     let _original=diff;
     commit(mint_capability())
 }
 
-/// 🧬️ One keyed row of a map-valued field's sparse diff: insert a new key, replace an existing key's value, or remove an existing
+/// 🗝️ One keyed row of a map-valued field's sparse diff: insert a new key, replace an existing key's value, or remove an existing
 /// key. Rows are the unit of change for keyed collections (a per-window camera, a per-id record), never the whole map.
 #[derive(Clone, Debug, PartialEq)]
 pub enum KeyedRow<V> {
@@ -240,7 +240,7 @@ pub enum KeyedRow<V> {
 }
 
 impl<V> KeyedRow<V> {
-    /// ➕️ Composes this row (applied first) with a `later` row of the same key into the single row of the pair, `None` when they
+    /// ⏮️ Composes this row (applied first) with a `later` row of the same key into the single row of the pair, `None` when they
     /// cancel (insert then remove): replace∘replace is one replace, insert∘replace is one insert, remove∘insert is a replace.
     pub fn then(self, later: Self) -> Option<Self> {
         match (self, later) {
@@ -289,7 +289,7 @@ impl<V: FromValue> FromValue for KeyedRow<V> {
 /// 🗂️ The keyed rows of one map-valued field.
 pub type KeyedRows<V> = BTreeMap<String, KeyedRow<V>>;
 
-/// ▶️ The map after `rows`: an insert of an existing key, or a replace/remove of a missing one, is refused (`field` names it).
+/// ⌨️ The map after `rows`: an insert of an existing key, or a replace/remove of a missing one, is refused (`field` names it).
 pub fn keyed_rows_apply<V: Clone>(base: &BTreeMap<String, V>, rows: &KeyedRows<V>, field: &str) -> MutationApplyResult<BTreeMap<String, V>> {
     let mut next = base.clone();
     for (key, row) in rows {
@@ -351,7 +351,7 @@ pub fn keyed_rows_changing<V: Clone + PartialEq>(base: &BTreeMap<String, V>, nex
     rows
 }
 
-/// ➕️ Composes `later` rows into `rows` key by key through [`KeyedRow::then`], dropping rows that cancel.
+/// 🔐️ Composes `later` rows into `rows` key by key through [`KeyedRow::then`], dropping rows that cancel.
 pub fn keyed_rows_absorb<V>(rows: &mut KeyedRows<V>, later: KeyedRows<V>) {
     for (key, row) in later {
         match rows.remove(&key) {
@@ -477,7 +477,7 @@ fn inverse(&self, base: &$record) -> Self {
     };
 }
 
-/// 🧬️ The `whole` arm of [`sparse_record_diff!`] for a record that is one indivisible entity (an `Arc`-shared root, an opaque
+/// 📹️ The `whole` arm of [`sparse_record_diff!`] for a record that is one indivisible entity (an `Arc`-shared root, an opaque
 /// engine state): a single `replacement` slot, set exactly when the requested record differs from the base.
 #[doc(hidden)]
 #[macro_export]

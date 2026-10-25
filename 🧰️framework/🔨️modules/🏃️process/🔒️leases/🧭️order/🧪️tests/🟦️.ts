@@ -112,7 +112,7 @@ for(const row of fixture.messages)test(`diagnostic ${row.id}`,()=>{
 });
 
 test("the environment switch overrides every rule and rejects unknown values",()=>{
- expect(leaseOrderPolicyV1({SEMIO_LEASE_ORDER:"off"}).rules).toEqual({outOfOrder:"off",holdAndWait:"off",selfDeadlock:"off",cycle:"off"});
+ expect(leaseOrderPolicyV1({SEMIO_LEASE_ORDER:"off"}).rules).toEqual({outOfOrder:"off",holdAndWait:"off",selfDeadlock:"off",cycle:"off",strictWait:"off"});
  expect(leaseOrderPolicyV1({SEMIO_LEASE_ORDER:"enforce"}).rules.outOfOrder).toBe("enforce");
  expect(String(leaseOrderPolicyV1({}).rules.outOfOrder)).toBe(String(authored.rules.outOfOrder));
  expect(()=>leaseOrderPolicyV1({SEMIO_LEASE_ORDER:"sometimes"})).toThrow("must be off, observe or enforce");
@@ -166,4 +166,13 @@ test("the toolchain and Cargo readers precede compiler capacity, which precedes 
  expect(capacity).toBeLessThan(rank("repository-graph-facts:/w"));
  expect(live.allowed.some(edge=>edge.from==="compiler-capacity"&&edge.to==="tool-singleton")).toBe(true);
  expect(live.allowed.some(edge=>edge.from==="compiler-capacity"&&(edge.to==="toolchain"||edge.to==="cargo-coordination"))).toBe(false);
+});
+
+test("the authored policy lets a graph holder wait for the pinned graph snapshot, and still refuses an unrelated exclusive hold", () => {
+  const authoredPolicy = leaseOrderPolicyV1(), directory = "/repo/.cache/b/l/m/data", held = (resource: string) => ({ directory, resource, mode: "exclusive" as const, atMs: 0, task: 1 });
+  const request = { directory, resource: "build-graph:/repo/.cache/b/g/m/snapshots/" + "a".repeat(64) + ".json", mode: "shared" as const, nonblocking: false };
+  expect(classifyLeaseResourceV1(authoredPolicy, request.resource).id).toBe("graph");
+  expect(checkHoldAndWaitV1(authoredPolicy, [held("nx:daemon-service:" + "b".repeat(64))], request, 60000)).toBeUndefined();
+  expect(checkHoldAndWaitV1(authoredPolicy, [held("artifact:/repo/out")], request, 60000)?.kind).toBe("hold-and-wait");
+  expect(checkHoldAndWaitV1(authoredPolicy, [held("artifact:/repo/out")], request, 1000)).toBeUndefined();
 });

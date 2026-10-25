@@ -63,7 +63,6 @@ fn retained_mutation_yields_typed_diff_before_preflight_inverse_and_commit(){
    assert_eq!(post.value,case["expected"].as_i64().unwrap());assert_eq!(post.untouched.as_ptr(),pointer);close_owner(&mut o,c);close_diff(&mut apply);close_source(&mut d);
   }else{assert!(case["refused"].as_bool().unwrap());assert_eq!(post.value,base);close_owner(&mut o,c);}
   close_source(&mut p);close_source(&mut m);
-  eprintln!("[DEBUG] typed semantic {:?}: original decision/base immutable, central preflight before inverse, central commit only",case["id"]);
  }
 }
 #[derive(Default,semio_framework_value::FactoryPayloadRetirement)]
@@ -117,5 +116,5 @@ fn retained_mutation_rejects_same_data_different_method_table_inverse_issuer(){
  for turn in 0..1000{if o.preparation.as_ref().unwrap().inverse_close.as_ref().is_some_and(|v|v.pending().is_some()){break;}let g=grant(o.close_demand(c,4096).unwrap());o.close_step(c,g).unwrap();assert!(turn<999);}
  let pending=o.preparation.as_ref().unwrap().inverse_close.as_ref().unwrap();assert_eq!(pending.pending().unwrap().set,law["pendingId"].as_i64().unwrap());assert_eq!(pending.allocation_address(),pointer);
  let g=grant(o.close_demand(c,4096).unwrap());let(result,heap)=observe(||o.close_step(RetainedMutationCloseContext{mutations:foreign},g));assert!(result.is_err());assert_eq!(heap,(0,0));assert_eq!(OTHER_INVERSE_CALLS.get(),law["providerCalls"].as_u64().unwrap()as usize);let pending=o.preparation.as_ref().unwrap().inverse_close.as_ref().unwrap();assert_eq!(pending.pending().unwrap().set,law["pendingId"].as_i64().unwrap());assert_eq!(pending.allocation_address(),pointer);assert_eq!(post.value,law["pendingId"].as_i64().unwrap());
- close_owner(&mut o,c);close_diff(&mut apply);close_source(&mut d);close_source(&mut p);close_source(&mut m);eprintln!("[DEBUG] shared retained inverse sameData=true/sameVtable=false refuses before pending row, foreign provider calls0");
+ close_owner(&mut o,c);close_diff(&mut apply);close_source(&mut d);close_source(&mut p);close_source(&mut m);
 }

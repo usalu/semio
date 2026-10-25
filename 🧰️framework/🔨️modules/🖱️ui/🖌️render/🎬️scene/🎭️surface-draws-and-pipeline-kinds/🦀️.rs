@@ -17,7 +17,7 @@ pub struct MeshInstance {
     pub roughness: f32,
 }
 
-/// 🧊️ One mesh's instances within a [`SurfacePass`].
+/// 🕸️ One mesh's instances within a [`SurfacePass`].
 #[derive(Clone, Debug)]
 pub struct SurfaceMeshDraw {
     pub mesh: MeshId,
@@ -31,7 +31,7 @@ pub struct LineVertex3 {
     pub color: [f32; 4],
 }
 
-/// ➖️ A batch of 3D line-list vertices within a [`SurfacePass`].
+/// 📏️ A batch of 3D line-list vertices within a [`SurfacePass`].
 #[derive(Clone, Debug, Default)]
 pub struct SurfaceLineDraw {
     pub vertices: Vec<LineVertex3>,
@@ -45,7 +45,7 @@ pub struct TexturedMeshInstance {
     pub tint: [f32; 4],
 }
 
-/// 🖼️ A batch of textured-mesh instances within a [`SurfacePass`].
+/// 🎨️ A batch of textured-mesh instances within a [`SurfacePass`].
 #[derive(Clone, Debug, Default)]
 pub struct SurfaceTexturedDraw {
     pub instances: Vec<TexturedMeshInstance>,

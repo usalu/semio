@@ -17,13 +17,13 @@ use windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT;
 
 //#region 🔖️SceneTarget
 
-/// 🌫️ `SCENE_MIP_LEVELS` in the wgpu target's `draw.rs` — five mip levels of box-downsample give the
+/// 🪜️ `SCENE_MIP_LEVELS` in the wgpu target's `draw.rs` — five mip levels of box-downsample give the
 /// glass backdrop's blur radius range. Identical to the Metal backend's constant of the same name.
 pub const SCENE_MIP_LEVELS: u32 = 5;
 
 type Device = ID3D12Device;
 
-/// 🌫️ Owns the two textures the blur/glass composite pass needs: the scene's own full-mip-chain color
+/// 🎯️ Owns the two textures the blur/glass composite pass needs: the scene's own full-mip-chain color
 /// target, and a same-shaped scratch texture the blur downsample copies into before reading from it
 /// (D3D12, like Metal/wgpu, cannot bind a texture as both a render-target attachment and a shader-read
 /// source within the same draw — hence the scratch copy, ported from `SceneColorTarget::
@@ -84,18 +84,18 @@ impl SceneTarget {
         &self.blur_scratch
     }
 
-    /// 🖼️ The RTV for `texture`'s mip `level` (`0..SCENE_MIP_LEVELS`).
+    /// 🎬️ The RTV for `texture`'s mip `level` (`0..SCENE_MIP_LEVELS`).
     pub fn rtv(&self, level: u32) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         let start = unsafe { self.rtv_heap.GetCPUDescriptorHandleForHeapStart() };
         D3D12_CPU_DESCRIPTOR_HANDLE { ptr: start.ptr + (level as usize) * (self.rtv_stride as usize) }
     }
 
-    /// 🔎️ The resident (non-shader-visible) SRV for `texture`'s whole mip chain.
+    /// 👁️ The resident (non-shader-visible) SRV for `texture`'s whole mip chain.
     pub fn texture_srv_handle(&self, device: &Device) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         srv_handle_at(device, &self.srv_heap, 0)
     }
 
-    /// 🔎️ The resident (non-shader-visible) SRV for `blur_scratch`'s whole mip chain.
+    /// 🧽️ The resident (non-shader-visible) SRV for `blur_scratch`'s whole mip chain.
     pub fn blur_scratch_srv_handle(&self, device: &Device) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         srv_handle_at(device, &self.srv_heap, 1)
     }

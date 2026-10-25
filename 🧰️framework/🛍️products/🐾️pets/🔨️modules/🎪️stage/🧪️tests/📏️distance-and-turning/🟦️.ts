@@ -1,4 +1,4 @@
-/** 📏️ Unit suite of the stage, spacing: keeping their distance, hopping between perches and turning round.
+/** 🎪️ Unit suite of the stage, spacing: keeping their distance, hopping between perches and turning round.
  *
  * @see ../🧰️stage-helpers/🟦️.ts — the shared kit; ../../🟦️.ts — the façade under test
  */

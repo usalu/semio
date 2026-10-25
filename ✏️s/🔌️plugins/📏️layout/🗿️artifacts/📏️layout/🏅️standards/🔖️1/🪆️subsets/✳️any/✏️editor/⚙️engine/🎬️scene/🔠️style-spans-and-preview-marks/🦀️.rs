@@ -26,7 +26,7 @@ pub(super) fn story_run_glyphs(engine: &mut LayoutEngine, doc: &LayoutSnapshot, 
     glyphs
 }
 
-struct StyleSpan {
+pub(super) struct StyleSpan {
     pub(super) start: usize,
     pub(super) end: usize,
     pub(super) font_size: f32,

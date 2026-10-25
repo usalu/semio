@@ -112,7 +112,7 @@ impl PartialEq for SnapshotChunkBytes {
 
 impl Eq for SnapshotChunkBytes {}
 
-/// 🧱️ Artifact-bootstrap name for the same fixed-capacity wire backing, without changing private snapshot bytes.
+/// 📦️ Artifact-bootstrap name for the same fixed-capacity wire backing, without changing private snapshot bytes.
 pub type ArtifactBootstrapChunkBytes = SnapshotChunkBytes;
 
 /// 📬️ One frame the semio_hub sends to a client.

@@ -27,13 +27,13 @@ import type { SliderAppearance, UiNumberLimits, UiNumberScale } from "@semio-tec
 /** 🎚️ Slider filled range presentation. */
 const sliderRangeClassName = cn("bg-element absolute transition-[background-color] data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full", "group-hover:bg-emphasized", "data-[dragging=true]:bg-active-base");
 
-/** 🎚️ Slider ready extent presentation. */
+/** ✅️ Slider ready extent presentation. */
 const sliderReadyClassName = cn("bg-[var(--accent-secondary)] pointer-events-none absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full");
 
 /** 🧲️ Slider detent tick presentation — one per snap, never interactive, never announced. */
 const sliderTickClassName = cn("bg-element pointer-events-none absolute w-px data-[orientation=horizontal]:top-1/2 data-[orientation=horizontal]:h-small data-[orientation=horizontal]:-translate-x-1/2 data-[orientation=horizontal]:-translate-y-1/2 data-[orientation=vertical]:left-1/2 data-[orientation=vertical]:h-px data-[orientation=vertical]:w-small data-[orientation=vertical]:-translate-x-1/2 data-[orientation=vertical]:translate-y-1/2 opacity-60");
 
-/** 🎚️ Slider thumb presentation (extent token applied per instance). */
+/** 🔘️ Slider thumb presentation (extent token applied per instance). */
 const sliderThumbBaseClassName = cn(
   "block shrink-0 rounded-full bg-element transition-[background-color] outline-hidden",
   "hover:bg-emphasized group-hover:bg-emphasized",
@@ -48,7 +48,7 @@ const sliderDialClassName = cn("relative aspect-square h-medium shrink-0 rounded
 /** ⛔️ Typed-value refusal presentation: the producer's localized message naming the crossed bound. */
 const sliderRefusalClassName = cn("text-destructive block text-xs leading-tight");
 
-/** 🎚️ Slider numeric readout presentation. */
+/** 🔢️ Slider numeric readout presentation. */
 const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2");
 
 // #region 📐️Contract
@@ -56,7 +56,7 @@ export type SliderOrientation = "horizontal" | "vertical";
 export type SliderDirection = "ltr" | "rtl";
 export type SliderValue = number[];
 
-/** 🎚️ Owned slider root, tuple, interaction, and presentation contract. */
+/** ⚙️ Owned slider root, tuple, interaction, and presentation contract. */
 export interface SliderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "id" | "defaultValue" | "dir" | "onChange" | "onPointerDown" | "onPointerUp" | "onPointerCancel" | "onKeyDown" | "onKeyUp">, ElementProps {
   defaultValue?: SliderValue;
   value?: SliderValue;
@@ -168,7 +168,7 @@ export function sliderKeyOf(key: string, dir: SliderDirection, inverted: boolean
   return key === "Home" ? "home" : key === "End" ? "end" : null;
 }
 
-/** 🎚️ Renders an owned pointer- and keyboard-operable slider tuple. */
+/** 🖱️ Renders an owned pointer- and keyboard-operable slider tuple. */
 const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
   {
     className,

@@ -22,7 +22,6 @@ fn shared_selection_geometry_matches_language_neutral_cases() {
             assert_eq!(geom_sel::polygon_contains_world_box(&selection, geom_sel::world_box_from_points(&entity).expect("box")), actual, "{} box", case["id"]);
         }
     }
-    eprintln!("[DEBUG] Shared selection geometry reproduced {} language-neutral cases", fixture["cases"].as_array().expect("cases").len());
 }
 
 struct Lcg(u64);

@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🛡️PresentationGate
-/// 🛡️ Candidate rejection returned before GPU state can change.
+/// ↩️ Candidate rejection returned before GPU state can change.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum PreparedRenderRejection {
     StaleRevision { live: u64, packet: u64 },

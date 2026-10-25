@@ -29,5 +29,5 @@ pub mod schema {
         pub use component::*;
     }
 }
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioValueSnapshot, schema::mutations::SemioValueMutation);
+semio_s_artifact_stdio_semio_base::semio_member_owner!(semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot, schema::mutations::SemioValueMutation);
 

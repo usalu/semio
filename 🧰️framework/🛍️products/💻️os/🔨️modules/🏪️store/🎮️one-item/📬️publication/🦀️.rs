@@ -66,13 +66,13 @@ mod publication_authority_retirement;
 /// 🪪 Exact live publication metadata minted by the Store and shared immutably with the
 /// domain preparation owner. Apps cannot invent cursor position, sequence, clock, or actor.
 pub struct ArtifactStoreOneItemLiveAuthority {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
-    pub base_revision: [u8; 32],
-    pub base_applied_edit_count: usize,
-    pub next_sequence_number: i32,
-    pub next_clock: HybridLogicalTimestamp,
-    pub actor: semio_framework_value::SharedUtf8,
+    operation: semio_framework_job::OperationId,
+    generation: semio_framework_job::Generation,
+    base_revision: [u8; 32],
+    base_applied_edit_count: usize,
+    next_sequence_number: i32,
+    next_clock: HybridLogicalTimestamp,
+    actor: semio_framework_value::SharedUtf8,
     pub line: Option<String>,
     pub group_id: Option<String>,
     pub stamped_edit_id: Option<String>,

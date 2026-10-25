@@ -117,7 +117,7 @@ impl protocol::ColdMutation<LayoutWindowConfig> for LayoutWindowConfigMutation {
     fn inverse(&self, base: &LayoutWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         let Self::Update { patch } = self;
         let changed = patch.against(base);
-        Ok(if changed == LayoutWindowConfigPatch::default() { Vec::new() } else { vec![Self::Update { patch: protocol::DiffAlgebra::inverse(&changed, base) }] })
+        Ok(if changed == LayoutWindowConfigPatch::default() { Vec::new() } else { vec![Self::Update { patch: protocol::ColdDiffAlgebra::inverse(&changed, base) }] })
     }
 }
 
@@ -216,7 +216,8 @@ macro_rules! config_owner {
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
                 std::sync::Arc::new(store::snapshot_clone_preparation::ConfigApplyEdit::new())
             }
-            fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
+            fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+    fn build_store_owners(grant: semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
             fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
         }

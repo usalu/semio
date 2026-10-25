@@ -10,7 +10,7 @@ import { validateTaxonomy, canonicalPrimaryFilenameForKind } from "../../../../�
 import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 import { normalizationEngineDeclarations } from "../../../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { contractRoot } from "../../🏗️shared-fixtures/🟦️.ts";
-import { inputRoot, schema } from "../🟢️shared/🟦️.ts";
+import { inputRoot, schema } from "../🟢️harness/🟦️.ts";
 
 /** 🔷 Registers the schema first six language tests of the package language semantic handoff suite. */
 export function registerSchemaFirstSixLanguageTests(): void {

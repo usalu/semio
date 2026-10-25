@@ -44,7 +44,6 @@ test("actual Rust journey fixture source resolves the shared authored script", (
     const boundary = run.stdout.indexOf("\n"), actual = run.stdout.slice(0,boundary).trim(), expected = join(dashboard, fixture.nativeSources.script), portable = (value: string) => value.replace(/^\\\\\?\\/, "").replaceAll("\\", "/");
     expect(portable(actual)).toBe(portable(expected)); expect(readFileSync(actual)).toEqual(readFileSync(expected));
     expect(JSON.parse(run.stdout.slice(boundary+1))).toEqual(fixture);
-    console.log("[DEBUG] exact Rust journey source function compiled with its actual std imports and resolved the independently globbed fixture");
   });
 });
 
@@ -57,6 +56,5 @@ test("actual Rust journey binary selection requires the owner-supplied executabl
       expect(run.status === 0, run.stderr).toBe(row.accepted);
       if (row.accepted) expect(run.stdout.trim()).toBe(row.value!); else expect(run.stderr).toContain(fixture.nativeSources.binaryEnvironment);
     }
-    console.log("[DEBUG] exact Rust journey selector refused absent/empty ownership and retained the explicit selected path without reading installation records");
   });
 });

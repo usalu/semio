@@ -41,7 +41,7 @@ pub(super) async fn run_guest_relay_request(attempt: GuestRelayAttempt, cancel: 
     };
     let mut cleanup_pending = false;
     let completion = match request {
-        GuestRelayRequest::Start { kind, input } => match semio_framework_async::select2(runtime.start_job(guest.guest(), job, &kind, input), cancel.cancelled()).await {
+        GuestRelayRequest::Start { kind, input } => match semio_framework_async::select2(start_guest_job(&runtime, guest.guest(), job, kind, input), cancel.cancelled()).await {
             semio_framework_async::Either::Left(Ok(())) => {
                 guest.available();
                 GuestRelayCompletion::Started(Ok(()))
@@ -56,7 +56,7 @@ pub(super) async fn run_guest_relay_request(attempt: GuestRelayAttempt, cancel: 
                 foreground_cancel_completion(result, &mut guest)
             }
         },
-        GuestRelayRequest::Step => match semio_framework_async::select2(runtime.step_job(guest.guest(), job, RELAY_JOB_BUDGET), cancel.cancelled()).await {
+        GuestRelayRequest::Step => match semio_framework_async::select2(step_guest_job(&runtime, guest.guest(), job), cancel.cancelled()).await {
             semio_framework_async::Either::Left(Ok(step)) => {
                 guest.available();
                 GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::from_guest(step)))

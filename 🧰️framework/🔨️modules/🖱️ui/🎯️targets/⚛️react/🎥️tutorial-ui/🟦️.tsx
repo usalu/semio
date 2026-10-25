@@ -23,7 +23,7 @@ export type TutorialCameraDriver = {
 
 const tutorialCameraDrivers = ephemeralMap<string, TutorialCameraDriver>("framework.modules.ui.packages.typescript.targets.react.index.tsx.tutorialCameraDrivers");
 
-/** 🎥️ Registers the tutorial camera driver for window instance `windowId` — call from the window's own host component (e.g. `World3dHost`), unregister on unmount via the returned disposer. */
+/** 📘️ Registers the tutorial camera driver for window instance `windowId` — call from the window's own host component (e.g. `World3dHost`), unregister on unmount via the returned disposer. */
 export function registerTutorialCameraDriver(windowId: string, driver: TutorialCameraDriver): () => void {
   tutorialCameraDrivers.set(windowId, driver);
   return () => {
@@ -31,7 +31,7 @@ export function registerTutorialCameraDriver(windowId: string, driver: TutorialC
   };
 }
 
-/** 🎥️ Looks up a registered {@link TutorialCameraDriver}, or `undefined` if that window hasn't mounted/registered one yet. */
+/** 👀️ Looks up a registered {@link TutorialCameraDriver}, or `undefined` if that window hasn't mounted/registered one yet. */
 export function getTutorialCameraDriver(windowId: string): TutorialCameraDriver | undefined {
   return tutorialCameraDrivers.get(windowId);
 }
@@ -69,7 +69,7 @@ export type TutorialBarProps = {
   readonly onAddChapter: () => void;
 };
 
-/** 🎥️ Navbar-style timeline/controls row shown as {@link LayoutProps.subnavbar} whenever a tutorial is active — markup mirrors `Navbar`/`Footer` (`id="ui.tutorial.bar"`, `data-slot="tutorial-bar"`, `data-ui-reveal-region`, `data-elevation-root`). Only this component subscribes to the per-frame `clock` (see {@link useTutorialClock}), so the 60fps scrubber/time readout never re-renders the rest of the shell. */
+/** 🎛️ Navbar-style timeline/controls row shown as {@link LayoutProps.subnavbar} whenever a tutorial is active — markup mirrors `Navbar`/`Footer` (`id="ui.tutorial.bar"`, `data-slot="tutorial-bar"`, `data-ui-reveal-region`, `data-elevation-root`). Only this component subscribes to the per-frame `clock` (see {@link useTutorialClock}), so the 60fps scrubber/time readout never re-renders the rest of the shell. */
 export const TutorialBar: React.FC<TutorialBarProps> = ({
   title,
   durationMs,

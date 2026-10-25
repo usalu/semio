@@ -23,8 +23,8 @@ fn admit_generation2d_artifact_mutation(mutation: &Generation2dMutation) -> Resu
 fn prepare_generation2d_artifact(base: &Generation2dSnapshot, mutation: &Generation2dMutation) -> Result<(Generation2dSnapshot, Vec<Generation2dMutation>), semio_framework_value::ValueError> {
     use semio_framework_value::{ValueError, ValueRefusalKind};
     admit_generation2d_artifact_mutation(mutation).map_err(|_| ValueError::literal(ValueRefusalKind::OwnershipLimit, "generation2d-artifact-mutation-envelope"))?;
-    let inverse = protocol::Mutation::inverse(mutation, base)?;
-    let diff = protocol::Mutation::diff(mutation, base).into_parts().0;
+    let inverse = protocol::ColdMutation::inverse(mutation, base)?;
+    let diff = protocol::ColdMutation::diff(mutation, base).into_parts().0;
     let applied = protocol::apply_diff_cold(&diff, base);
     diff.retire_cold();
     match applied {

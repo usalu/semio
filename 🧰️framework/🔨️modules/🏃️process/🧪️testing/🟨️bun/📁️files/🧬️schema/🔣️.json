@@ -76,6 +76,24 @@
             "maxLength": 2048,
             "pattern": "^--test-name-pattern=.+$"
           }
+        },
+        "timeoutMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1800000
+        },
+        "capabilities": {
+          "type": "object",
+          "maxProperties": 8,
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z][A-Za-z0-9]{0,31}$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
         }
       }
     },

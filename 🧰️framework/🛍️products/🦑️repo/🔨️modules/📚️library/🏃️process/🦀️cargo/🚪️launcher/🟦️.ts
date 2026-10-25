@@ -4,28 +4,29 @@ import{withCompilerWorkspaceSharedWriteV1}from"../../../⚡️caching/💾️sto
 import {acquireLaneV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
 import {agentSessionAddressV1,currentAgentSessionV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 import {gcOutOfSpaceV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";
-import {collectAfterOutOfSpaceV1,focusFromCargoArgumentsV1,retryWhenFullV1,laneMessageV1,relieveUnitCachePressureV1,reportUnitCacheStillFullV1,unitCacheEnvironmentV1,unitCacheRootV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
+import {collectAfterOutOfSpaceV1,focusFromCargoArgumentsV1,retryWhenFullV1,laneMessageV1,relieveUnitCachePressureV1,withUnitPressureRecheckV1,reportUnitCacheStillFullV1,unitCacheEnvironmentV1,unitCacheRootV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import {unitAdmissionMemoV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptInvocationEnvironment,scriptResourceProcessEnvironmentV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {randomBytes} from "node:crypto";
-import {withNativeRecheckWindowV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📡️roster/🟦️.ts";
+import {withNativeRecheckWindowV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📡️roster/🟦️.ts";
 import {copyFileSync,mkdirSync,readdirSync,rmSync} from "node:fs";
 import {availableParallelism,constants} from "node:os";
 import {dirname,join,resolve} from "node:path";
-import {checkResourceLeaseControl,acquireResourceLease,retireResourceLeaseV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,acquireResourceLease,retireResourceLeaseV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {captureOwnedCommandResultV1,runOwnedCommand,OwnedCommandFailure,type OwnedCommandCaptureV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import type {BuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {withCompilerCapacityConsumptionV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts";
+import {compileUnitsForHostV1,describeCompileUnitsV1,requireGrantedCompileUnitsV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {cargoArtifactArgumentsV1,cargoConfigurationArgumentsV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {acquireCargoBuildLeaseV1,cargoRequestedProfileV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
-import {ADMISSION_POLICY_V1,admissionMemoryBytesV1,admissionMemoryShareV1,buildSchedulerV1,readUnitHistoryV1,startAdmissionBrokerV1,unitHistoryPathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts";
-import {createJobserverV1,defaultJobserverStyleV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts";
-import {memoryCountersV1,startTelemetrySamplerV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts";
-import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,cargoPlanningOutputBytesV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
-import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
-import {readPhysicalCargoSourceV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
+import {ADMISSION_POLICY_V1,admissionMemoryBytesV1,admissionMemoryShareV1,buildSchedulerV1,readUnitHistoryV1,startAdmissionBrokerV1,unitHistoryPathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts";
+import {createJobserverV1,defaultJobserverStyleV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts";
+import {memoryCountersV1,startTelemetrySamplerV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts";
+import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,cargoPlanningOutputBytesV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
+import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import {readPhysicalCargoSourceV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import {requireNativeStorageReservationV1,readNativeStorageReservationPolicyV1,type NativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -39,7 +40,7 @@ import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️p
 const authored=schema.definitions.Configuration.const;
 
 /** 🧾️ One admitted ad-hoc Cargo command: its explicit store, build configuration, core share and closed subcommand class. */
-export type RepositoryCargoLaunchV1=Readonly<{version:1;store:"shared"|"isolated";configuration:BuildMode;parallelism:number;kind:"compile"|"resolve"|"lock";cargo:readonly string[]}>;
+export type RepositoryCargoLaunchV1=Readonly<{version:1;store:"shared"|"isolated";configuration:BuildMode;parallelism:number|"planned";kind:"compile"|"resolve"|"lock";cargo:readonly string[]}>;
 /** 🧺️ Names one invocation's private target, build and temporary namespaces inside the issued compiler store. */
 export type RepositoryCargoIsolatedStoreV1=Readonly<{root:string;target:string;build:string;temporary:string}>;
 /** 📐️ The authored launcher policy. */
@@ -65,7 +66,7 @@ export function readRepositoryCargoLaunchV1(argv:readonly string[],environment:R
  const kinds=Object.keys(policy.subcommands) as RepositoryCargoLaunchV1["kind"][],kind=kinds.find(key=>policy.subcommands[key].includes(cargo[0]??""));
  if(!kind)throw Error(`Repository Cargo launch admits only ${kinds.flatMap(key=>policy.subcommands[key]).join(", ")} as its first Cargo argument`);
  if(cargo.length>policy.maximumArguments||cargo.some(argument=>argument.length>policy.maximumArgumentLength||argument.includes("\0")))throw Error("Repository Cargo launch arguments exceed their declared bounds");
- return Object.freeze(admit<RepositoryCargoLaunchV1>("Request",{version:1,store,configuration,parallelism:parallelism===undefined?availableParallelism():Number(parallelism),kind,cargo:Object.freeze([...cargo])}));
+ return Object.freeze(admit<RepositoryCargoLaunchV1>("Request",{version:1,store,configuration,parallelism:parallelism===undefined?policy.parallelism:Number(parallelism),kind,cargo:Object.freeze([...cargo])}));
 }
 
 /** 🔏️ Holds a kernel-released exclusive claim on one private store, removes it on every settlement and first sweeps stores whose owner died. */
@@ -82,21 +83,32 @@ export async function withRepositoryCargoIsolatedStoreV1<T>(options:Readonly<{st
 /** 🧮️ The unit cache may fill the image only up to what the compiler workspace leaves free, so a cold writer is always admitted. */
 const unitCacheBudgetBytesV1=(policy:Readonly<{capacityBytes:number;maximumWorkspaceBytes:number}>):number=>Math.max(0,policy.capacityBytes-policy.maximumWorkspaceBytes);
 
-/** 🧵️ One Cargo command's lane: a private target and build directory of its agent inside the issued compiler store. A lane is held by one Cargo process at a time, so Cargo's unit locks never span two processes; the first free lane of the agent is used and a busy one overflows into a sibling that fills from the shared content-addressed unit cache. Cleanup of idle lanes and cold cache objects is a niced, single-flight background collector that starts when the image passes its high-water mark (or every ten minutes of use), and a command that finds less free space than one compile needs collects before it starts. */
-export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;capacityBytes:number;emergencyBytes:number;environment:Readonly<Record<string,string|undefined>>;temporary:string;control:ResourceLeaseControl}>,body:(store:Readonly<{target:string;build:string;temporary:string;lane:Readonly<{id:string;root:string}>}>)=>Promise<T>):Promise<T>{
+/** 🛤️ One private lane of an agent inside the issued compiler store: a target and build directory held by one process at a time, so no two Cargo processes ever share a build directory and Cargo's unit locks can never form a cycle between processes. The first free lane of the agent is entered and a busy one overflows into a sibling that fills from the shared content-addressed unit cache. */
+export type RepositoryCargoAgentLaneV1=Readonly<{target:string;build:string;lane:Readonly<{id:string;root:string}>}>;
+type AgentLaneOptionsV1=Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>;
+
+async function withAgentLaneV1<T>(options:AgentLaneOptionsV1,body:(lane:RepositoryCargoAgentLaneV1)=>Promise<T>):Promise<T>{
  requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();
  const root=options.storage.backing.root;requireNativeStoragePathV1(root,options.cacheRoot);mkdirSync(options.cacheRoot,{recursive:true});
  const session=currentAgentSessionV1({environment:options.environment}),base=session.resources.cargo.lane,lane=acquireLaneV1(options.cacheRoot,base,{session:agentSessionAddressV1(session),agent:session.agent.id});
  try{
   for(const path of[lane.paths.target,lane.paths.build])requireNativeStoragePathV1(root,path);
-  const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,report=(line:string)=>{process.stderr.write(line+"\n");},relieve=()=>relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:options.emergencyBytes,environment:options.environment,language,report});
-  if(lane.overflow>0)report(laneMessageV1("overflow",{base,lane:lane.paths.id},language));
-  await relieve();
-  return await body(Object.freeze({target:lane.paths.target,build:lane.paths.build,temporary:options.temporary,lane:Object.freeze({id:lane.paths.id,root:lane.paths.base})}));
- }finally{
-  lane.release();
-  await relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:0,environment:options.environment,language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,report:line=>{process.stderr.write(line+"\n");}});
- }
+  if(lane.overflow>0)process.stderr.write(laneMessageV1("overflow",{base,lane:lane.paths.id},resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language)+"\n");
+  return await body(Object.freeze({target:lane.paths.target,build:lane.paths.build,lane:Object.freeze({id:lane.paths.id,root:lane.paths.base})}));
+ }finally{lane.release();}
+}
+
+/** 🧵️ One Cargo command's lane (see {@link RepositoryCargoAgentLaneV1}). Cleanup of idle lanes and cold cache objects is a niced, single-flight background collector that starts when the image passes its high-water mark (or every ten minutes of use), and a command that finds less free space than one compile needs collects before it starts. */
+export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;capacityBytes:number;emergencyBytes:number;environment:Readonly<Record<string,string|undefined>>;temporary:string;control:ResourceLeaseControl}>,body:(store:Readonly<{target:string;build:string;temporary:string;lane:Readonly<{id:string;root:string}>}>)=>Promise<T>):Promise<T>{
+ const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,report=(line:string)=>{process.stderr.write(line+"\n");},relieve=()=>relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:options.emergencyBytes,environment:options.environment,language,report});
+ try{return await withAgentLaneV1(options,async lane=>{await relieve();return withUnitPressureRecheckV1(relieve,()=>body(Object.freeze({...lane,temporary:options.temporary})));});}
+ finally{await relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:0,environment:options.environment,language,report});}
+}
+
+/** 🧱️ Runs one component build driver in a private lane of its agent inside the issued compiler store, the same lane discipline as `repo cargo`: two drivers never wait for each other's build directory, and a fresh lane fills from the unit cache.
+ * @see ../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts */
+export function withRepositoryComponentLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;root:string;environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>,body:(lane:RepositoryCargoAgentLaneV1)=>Promise<T>):Promise<T>{
+ return withAgentLaneV1({storage:options.storage,cacheRoot:unitCacheRootV1(options.root),environment:options.environment,control:options.control},body);
 }
 
 /** 📍️ Selects the manifest Cargo itself would read: `--manifest-path` or the working directory's `Cargo.toml`. */
@@ -108,7 +120,7 @@ function cargoManifestV1(args:readonly string[],cwd:string):string{
 /** 🎯️ The compilation target a broker pass is keyed by: the first `--target`, else the host. */
 function cargoTargetV1(args:readonly string[]):string{const delimiter=args.indexOf("--"),head=delimiter<0?args:args.slice(0,delimiter),index=head.indexOf("--target"),inline=head.find(argument=>argument.startsWith("--target="));return(index>=0?head[index+1]:inline?.slice("--target=".length))??"host";}
 
-/** 📐️ Declares finite separated Cargo output, independently of passive stream execution. */
+/** 📸️ Declares finite separated Cargo output, independently of passive stream execution. */
 export type RepositoryCargoCapturePolicyV1=Readonly<{maximumBytes:number;maximumLines:number}>;
 /** 🪢️ Carries the actual retained compiler store and Original control through result consumption. */
 export type RepositoryCargoCaptureContextV1=Readonly<{store:RepositoryCompilerStoreV1;environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl;generated?:Uint8Array}>;
@@ -136,7 +148,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
  const control=admission,network=repositoryCargoNetworkV1(invocation,workspace),configuration=join(workspace,".cargo/config.toml");
  const timing=environment.SEMIO_CARGO_TIMING==="1",scope=timing?++cargoTimingSequence:0,started=timing?performance.now():0;let timingEvents=0,resourceEvents=0;
  const clock=()=>{const now=Math.floor(performance.now());let remaining:number|null;try{const value=control.remainingMilliseconds();remaining=value===null?null:Math.max(0,Math.floor(value));}catch{remaining=0;}return{at:now,elapsed:Math.max(0,Math.floor(now-started)),remaining};};
- const emit=(kind:string,event:object)=>{const line="[DEBUG] Original Cargo owned timing "+JSON.stringify({pid:process.pid,scope,command:label,kind,...event})+"\n",bytes=Buffer.byteLength(line);if(bytes>cargoTimingPolicyV1.maximumRecordBytes||bytes>cargoTimingPolicyV1.maximumLogBytes-cargoTimingBytes)return;cargoTimingBytes+=bytes;process.stderr.write(line);};
+ const emit=(kind:string,event:object)=>{const line="[cargo-timing] "+JSON.stringify({pid:process.pid,scope,command:label,kind,...event})+"\n",bytes=Buffer.byteLength(line);if(bytes>cargoTimingPolicyV1.maximumRecordBytes||bytes>cargoTimingPolicyV1.maximumLogBytes-cargoTimingBytes)return;cargoTimingBytes+=bytes;process.stderr.write(line);};
  const mark=(phase:string,point:string)=>{if(!timing||timingEvents>=cargoTimingPolicyV1.maximumPhaseEvents||cargoTimingBytes>=cargoTimingPolicyV1.maximumLogBytes)return;const value=clock();timingEvents++;emit("phase",cargoTimingEventV1(phase,point,value.at,value.elapsed,value.remaining));};
  const reportResource=(progress:Parameters<ResourceLeaseControl["publish"]>[0])=>{if(!timing||resourceEvents>=cargoTimingPolicyV1.maximumResourceEvents||cargoTimingBytes>=cargoTimingPolicyV1.maximumLogBytes)return;const value=clock();resourceEvents++;let event:object;try{event=cargoResourceWaitEventV1(progress.resource,progress.mode,Math.floor(progress.elapsedMs));}catch{event={version:1,status:"unavailable",reason:"unsupported progress data"};}emit("resource",{...event,atMonotonicMilliseconds:value.at,elapsedMilliseconds:value.elapsed,remainingMilliseconds:value.remaining});};mark("store","begin");
  return withRepositoryCompilerStoreV1(workspace,request.configuration,control,scriptInvocationEnvironment(invocation,{...environment,SEMIO_BUILD_MODE:request.configuration}),async (store,control)=>{
@@ -156,11 +168,10 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
    await control.publish({resource:"cargo:consume",mode:"shared",elapsedMs:0});await control.yieldContinuation();const generated=generatedPolicy&&success&&generatedFile?await readPhysicalCargoSourceV1(generatedFile,{expectedBytes:null,version:1,root:store.root,maximumBytes:generatedPolicy.maximumBytes,remainingFiles:1},control):undefined;if(generatedPolicy&&success&&!generated)throw Error("Actual generated Cargo output absent");
    const value=await options.consume(execution.result,Object.freeze({store,environment:Object.freeze({...env}),control,...(generated?{generated}:{})}));checkResourceLeaseControl(control);await store.storage.recheck();checkScriptInvocation(invocation);return value;
   });
-  const admitted=async(compilerArgs:readonly string[],env:Readonly<Record<string,string|undefined>>,selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string;lane?:Readonly<{id:string;root:string}>}>,control:ResourceLeaseControl,beforeConsume?:()=>void,generatedFile?:string):Promise<number|T>=>{mark("writer","begin");return withCompilerWorkspaceSharedWriteV1(store.storage,leaseDirectory,control,async()=>{
-   mark("writer","ready");mark("profile","begin");
+  const admitted=async(compilerArgs:readonly string[],env:Readonly<Record<string,string|undefined>>,selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string;lane?:Readonly<{id:string;root:string}>}>,control:ResourceLeaseControl,beforeConsume?:()=>void,generatedFile?:string):Promise<number|T>=>{mark("profile","begin");return (async()=>{
    const lease=await acquireCargoBuildLeaseV1({directory:leaseDirectory,buildDirectory:selected.build,targetDirectory:selected.target,args:compilerArgs,signal:control.signal,control});mark("profile","ready");let profileFailed=false,profileFailure:unknown;
    try{
-    mark("capacity","begin");return await withCompilerCapacityConsumptionV1({directory:leaseDirectory,control,environment:env,request:{kind:"exact",parallelism:request.parallelism}},async(capacity,cpuControl)=>{mark("capacity","ready");mark("scheduler","begin");
+    mark("capacity","begin");const units=request.parallelism==="planned"?await compileUnitsForHostV1({environment:env,signal:control.signal}):undefined,waitStart=Date.now(),operation="cargo "+(args[0]??"");if(units)spaceReport(describeCompileUnitsV1(spaceLanguage,"planned",{operation,preferred:units.decision.preferred,minimum:units.decision.minimum,cores:units.host.cores,reason:units.decision.reason}));return await withCompilerWorkspaceSharedWriteV1(store.storage,leaseDirectory,control,writer=>withCompilerCapacityConsumptionV1({directory:leaseDirectory,control:writer,environment:env,request:units?.request??{kind:"exact",parallelism:request.parallelism as number}},async(capacity,cpuControl)=>{mark("capacity","ready");if(units){requireGrantedCompileUnitsV1(units.decision,capacity.parallelism);spaceReport(describeCompileUnitsV1(spaceLanguage,"granted",{operation,granted:capacity.parallelism,cores:units.host.cores,seconds:Math.round((Date.now()-waitStart)/1000)}));}mark("writer","begin");const compiled=await(async()=>{mark("writer","ready");mark("scheduler","begin");
      const scheduler=(await buildSchedulerV1({cwd:workspace,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,environment:store.environment,toolchain:store.toolchain.digest,control:cpuControl,storage:store.storage,sourceBoundary:store.sourceBoundary})).get("semio-build-scheduler")!,tokens=capacity.parallelism;mark("scheduler","ready");
      const history=await readUnitHistoryV1(unitHistoryPathV1(join(store.root,"components"))),jobserverDirectory=join(store.environment.TMPDIR!,policy.jobserverDirectoryPrefix+randomBytes(6).toString("hex")),jobserver=await createJobserverV1({version:1,tokens,style:defaultJobserverStyleV1()},jobserverDirectory);let jobserverFailed=false,jobserverFailure:unknown;
      try{
@@ -168,13 +179,14 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
       try{
       sampler=startTelemetrySamplerV1(cpuControl,async sampleControl=>{const counters=await memoryCountersV1(sampleControl),atMs=Date.now(),rate=previous&&counters.swappedOutBytes!==null?Math.max(0,(counters.swappedOutBytes-previous.bytes)*1000/Math.max(1,atMs-previous.atMs)):null;if(counters.swappedOutBytes!==null)previous={atMs,bytes:counters.swappedOutBytes};broker.observe({nonRustcBytes:0,swapOutBytesPerSecond:rate});},policy.swapSampleMilliseconds);
 
-      broker.registerPass({id:policy.pass,profile:cargoRequestedProfileV1(compilerArgs)!,target:cargoTargetV1(compilerArgs)});process.stderr.write(`[repo cargo] ${request.store} store, ${tokens} of ${availableParallelism()} cores admitted, rustc memory budget ${(broker.stats().budgetBytes/1024**3).toFixed(1)} GiB\n`);mark("scheduler","end");await ensureRepositoryCargoLockV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args:compilerArgs,environment:env,control:cpuControl,force:false});const execution=await retryingFullImage(()=>execute(compilerArgs,{...env,...jobserver.environment(),RUSTC_WRAPPER:scheduler,...("lane"in selected&&selected.lane?unitCacheEnvironmentV1({cacheRoot:unitCacheRootV1(store.root),lane:selected.lane.id,laneRoot:selected.lane.root,scheduler,compiler:env.RUSTC??"rustc",toolchain:store.toolchain.digest,focus:focusFromCargoArgumentsV1(compilerArgs),features:{buildScripts:true}}):{}),[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:policy.pass,SEMIO_COMPILER_PARALLELISM:String(tokens)},cpuControl));return()=>consumeExecution(execution,env,control,beforeConsume,generatedFile);}
+      broker.registerPass({id:policy.pass,profile:cargoRequestedProfileV1(compilerArgs)!,target:cargoTargetV1(compilerArgs)});process.stderr.write(`[repo cargo] ${request.store} store, ${tokens} of ${availableParallelism()} cores admitted, rustc memory budget ${(broker.stats().budgetBytes/1024**3).toFixed(1)} GiB\n`);mark("scheduler","end");await ensureRepositoryCargoLockV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args:compilerArgs,environment:env,control:cpuControl,force:false});const execution=await retryingFullImage(()=>execute(compilerArgs,{...env,...jobserver.environment(),RUSTC_WRAPPER:scheduler,...("lane"in selected&&selected.lane?unitCacheEnvironmentV1({cacheRoot:unitCacheRootV1(store.root),lane:selected.lane.id,laneRoot:selected.lane.root,scheduler,compiler:env.RUSTC??"rustc",toolchain:store.toolchain.digest,focus:focusFromCargoArgumentsV1(compilerArgs),features:{buildScripts:true}}):{}),[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:policy.pass,SEMIO_COMPILER_PARALLELISM:String(tokens),CARGO_BUILD_JOBS:String(tokens)},cpuControl));return()=>consumeExecution(execution,env,control,beforeConsume,generatedFile);}
       catch(error){executionFailed=true;executionFailure=error;throw error;}
       finally{const secondary:unknown[]=[];try{await sampler?.stop();}catch(error){if(!executionFailed||error!==executionFailure)secondary.push(error);}try{await broker.close();}catch(error){secondary.push(error);}if(secondary.length)throw executionFailed?new AggregateError([executionFailure,...secondary],"Compiler and telemetry retirement failed"):secondary.length===1?secondary[0]:new AggregateError(secondary,"Compiler telemetry retirement failed");}
      }catch(error){jobserverFailed=true;jobserverFailure=error;throw error;}finally{const secondary:unknown[]=[];try{jobserver.close();}catch(error){secondary.push(error);}try{rmSync(jobserverDirectory,{recursive:true,force:true});}catch(error){secondary.push(error);}if(secondary.length)throw jobserverFailed?new AggregateError([jobserverFailure,...secondary],"Compiler and jobserver retirement failed"):secondary.length===1?secondary[0]:new AggregateError(secondary,"Jobserver retirement failed");}
-    });
+    })();return compiled;
+    }));
    }catch(error){profileFailed=true;profileFailure=error;throw error;}finally{try{lease.release();}catch(secondary){if(profileFailed)throw new AggregateError([profileFailure,secondary],"Compiler consumption and profile retirement failed");throw secondary;}}
-  });};
+  })();};
   const run=async(selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string;temporary:string;lane?:Readonly<{id:string;root:string}>}>):Promise<number|T>=>{
    const inputs={invocation,consumption:request.kind==="compile"?cargoProfileCompilerConsumptionV1("artifact",args[0]??""):{kind:"resolution" as const},workspace,cwd,manifest:cargoManifestV1(args,cwd),args,network,control,storage:store.storage,environment:{...store.environment,CARGO_TARGET_DIR:selected.target,CARGO_BUILD_BUILD_DIR:selected.build,TMPDIR:selected.temporary,TMP:selected.temporary,TEMP:selected.temporary}};
    const resolved=async(input:import("../📥️dependencies/🟦️.ts").RepositoryCargoInputsViewV1):Promise<number|T>=>{const control=input.control,env=input.environment,command=cargoConfigurationArgumentsV1(input.selections[0]!.arguments,configuration,selected.build),lease=await acquireCargoBuildLeaseV1({directory:leaseDirectory,buildDirectory:selected.build,targetDirectory:selected.target,args:command,signal:control.signal,control});try{return await consumeExecution(await execute(command,env,control),env,control,undefined,undefined);}finally{lease.release();}};

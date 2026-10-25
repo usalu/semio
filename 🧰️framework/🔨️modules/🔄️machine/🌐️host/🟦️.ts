@@ -3,14 +3,14 @@
 import { ActorId, InvokeId, type MachineSpec, TimerId } from "../🟦️.ts";
 
 //#region 🌐️Host
-/** 🌐 Executes the side effects a {@link Command} describes. No async method — hosts own their own
+/** ☁️ Executes the side effects a {@link Command} describes. No async method — hosts own their own
  * tasks/timers and report completion back as ordinary events. */
 export interface Host<M extends MachineSpec> {
   /** 🎇 Executes a consumer-defined effect requested by a running actor. */
   executeEffect(actor: ActorId, effect: M["Effect"]): void;
-  /** ⏱ Schedules a delayed-transition timer for the given actor. */
+  /** ⏰️ Schedules a delayed-transition timer for the given actor. */
   schedule(actor: ActorId, timer: TimerId, delayMs: number): void;
-  /** ⏱ Cancels a previously scheduled timer (invoked when its owning state exits). */
+  /** ✖️ Cancels a previously scheduled timer (invoked when its owning state exits). */
   cancelTimer(actor: ActorId, timer: TimerId): void;
   /** 🚀 Starts the task/actor backing an `invoke` declaration. */
   startTask(actor: ActorId, invoke: InvokeId): void;
@@ -29,22 +29,22 @@ export class NativeHost<M extends MachineSpec> implements Host<M> {
   readonly #pendingTimers: Array<[ActorId, TimerId, number]> = [];
   readonly #startedTasks: Array<[ActorId, InvokeId]> = [];
 
-  /** 🎇 Effects recorded so far, in emission order. */
+  /** 📹️ Effects recorded so far, in emission order. */
   effects(): ReadonlyArray<readonly [ActorId, M["Effect"]]> {
     return this.#effects;
   }
 
-  /** 🎇 Drains and returns every recorded effect. */
+  /** 🎙️ Drains and returns every recorded effect. */
   drainEffects(): Array<[ActorId, M["Effect"]]> {
     return this.#effects.splice(0, this.#effects.length);
   }
 
-  /** 🚀 Tasks started via `invoke`, still pending cancellation. */
+  /** ▶️ Tasks started via `invoke`, still pending cancellation. */
   startedTasks(): ReadonlyArray<readonly [ActorId, InvokeId]> {
     return this.#startedTasks;
   }
 
-  /** ⏱ Removes and returns every timer whose deadline has passed. */
+  /** ⏲️ Removes and returns every timer whose deadline has passed. */
   dueTimers(): Array<[ActorId, TimerId]> {
     const now = this.nowMs();
     const due: Array<[ActorId, TimerId]> = [];
@@ -95,17 +95,17 @@ export class TestHost<M extends MachineSpec> implements Host<M> {
   readonly #startedTasks: Array<[ActorId, InvokeId]> = [];
   readonly #cancelledTasks: Array<[ActorId, InvokeId]> = [];
 
-  /** 🎇 Effects recorded so far, in emission order. */
+  /** ⏺️ Effects recorded so far, in emission order. */
   effects(): ReadonlyArray<readonly [ActorId, M["Effect"]]> {
     return this.#effects;
   }
 
-  /** 🚀 Tasks currently started (not yet cancelled), for invoke-lifecycle assertions. */
+  /** 🔰️ Tasks currently started (not yet cancelled), for invoke-lifecycle assertions. */
   startedTasks(): ReadonlyArray<readonly [ActorId, InvokeId]> {
     return this.#startedTasks;
   }
 
-  /** 🛑 Tasks that have been cancelled, for invoke-lifecycle assertions. */
+  /** 🧵️ Tasks that have been cancelled, for invoke-lifecycle assertions. */
   cancelledTasks(): ReadonlyArray<readonly [ActorId, InvokeId]> {
     return this.#cancelledTasks;
   }

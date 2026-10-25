@@ -120,7 +120,7 @@ pub(super) const UI_NODE_RECORD: SchemaMetadata = SchemaMetadata {
  */
 export type UiNodeRecord = { id: UiNodeId,
 /**
- * 🔑️ Reconciliation key, unique only among this node's own siblings (not surface-wide).
+ * 🦄️ Reconciliation key, unique only among this node's own siblings (not surface-wide).
  */
 key: string, component: Component, layout: LayoutSpec, style: StyleSpec, activity: Activity, disabled: boolean, transition: TransitionHint | null, accessibility: AccessibilitySpec, bindings: Array<ActionBinding>, menu: MenuRef | null, children: Array<UiNodeId>, };"####,
 };

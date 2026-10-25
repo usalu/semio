@@ -3,8 +3,8 @@ import {constants} from "node:fs";
 import {delimiter,dirname,join,resolve} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import policy from "./🔣️policy.json" with { type: "json" };
-import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import {nativeDirectoryHostAvailableBytesV1,probeNativeDirectoryCaseCapabilityV1,probeNativeDirectoryExchangeV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {nativeDirectoryHostAvailableBytesV1,probeNativeDirectoryCaseCapabilityV1,probeNativeDirectoryExchangeV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {checkScriptInvocation,requireIssuedScriptInvocationV1,advanceScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🩺️ Declares the finite per-platform requirements of the whole workspace before any store is provisioned. */

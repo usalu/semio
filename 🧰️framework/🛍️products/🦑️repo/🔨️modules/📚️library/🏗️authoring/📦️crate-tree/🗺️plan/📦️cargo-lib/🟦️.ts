@@ -1,7 +1,7 @@
 import { dirname, join, resolve } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 import { type RustSourceItem, useLeafNames } from "../../🌳️module-tree/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 🔍️ Finds the Cargo package whose library owns a directory: the nearest ancestor package, or the artifact package of the nearest workspace root. */
 export function resolveOwningCrate(repoRoot: string, directoryRel: string): { manifest: string; name: string; entry: string } | null {
@@ -22,7 +22,7 @@ export function resolveOwningCrate(repoRoot: string, directoryRel: string): { ma
   return null;
 }
 
-/** 🔍️ Reads the lib package name and entry file of a Cargo manifest. */
+/** 📖️ Reads the lib package name and entry file of a Cargo manifest. */
 export function readCargoLib(manifestPath: string): { name: string; entry: string } {
   const parsed = runtimeParseTomlV1(readFileSync(manifestPath, "utf8")) as { package?: { name?: string }; lib?: { path?: string } };
   if (!parsed.package?.name) throw new Error(`Cargo manifest has no package name: ${manifestPath}`);

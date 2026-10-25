@@ -7,7 +7,7 @@
  * receives none of them: `switchAlternative` and `checkoutCheckpoint` commit a shared `Checkout` transition, and its
  * manifest never declares a verb its guard rejects. */
 export const HISTORY_ACTION_IDS = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"] as const;
-/** 🪪️ `switchAlternative`'s alternative id argument — mirrors Rust `SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID`. */
+/** 🔛️ `switchAlternative`'s alternative id argument — mirrors Rust `SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID`. */
 export const SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID = "alternativeId";
 
 /** 📨️ The host-forwarded window fact `hostEvent{windowId, kind}` — mirrors Rust `HOST_EVENT_ACTION_ID`: a pane's focus loss,
@@ -22,7 +22,7 @@ export type PluginViewState = {
   readonly activeWindowKindId?: string;
   /** 🧰️ Per-call overlay: host-owned active utility for the window targeted by this render/action (`windowId`). */
   readonly activeUtilityId?: string;
-  /** 🧰️ Host-owned active utility per window instance (never a document field, never a VCS operation). */
+  /** 🖥️ Host-owned active utility per window instance (never a document field, never a VCS operation). */
   readonly activeUtilityByWindowId?: Readonly<Record<string, string | null>>;
   /** 🛠️ Host-owned active tool of the active mode (never a document field, never a VCS operation) — mutually
    * exclusive with `activeUtilityId`: activating one clears the other. */
@@ -46,18 +46,18 @@ export type PluginViewState = {
    * (`windowId` is); it is what lets an app-level panel that authors per-window settings address the
    * pane the user last touched instead of the roster's first entry. */
   readonly focusedWindowId?: string;
-  /** 🪟️ The live set of open window instances (base + spawned/split), so `windowMeasures`/`windowEngagements` can return one entry per instance. */
+  /** 🔓️ The live set of open window instances (base + spawned/split), so `windowMeasures`/`windowEngagements` can return one entry per instance. */
   readonly windowInstances?: readonly { readonly id: string; readonly windowKindId: string }[];
   /** ⏯️ The tool run trace cursor each window instance's renderer echoes, keyed by window instance id: the
    * next trace page it expects of `run` at `generation`. The guest answers the pages after it inside the
    * scene's `toolRunTrace` lane (`📋️tool-run-contract.md` §3.2). */
   readonly toolRunTraceCursorByWindowId?: Readonly<Record<string, ViewToolRunTraceCursor>>;
-  /** 🪟️ Every tree container the host holds state for, flattened over all panel bodies — the ONE
+  /** 🌳️ Every tree container the host holds state for, flattened over all panel bodies — the ONE
    * source of truth for which containers are open and which rows are on screen. A guest materialises
    * exactly the named windows and keeps no expansion state of its own, which is what lets an open
    * container survive a refresh. */
   readonly treeWindows?: readonly ViewTreeWindowRequest[];
-  /** 🪟️ Rows the tallest visible panel body fits — the shared first-paint budget a guest spends in
+  /** 🌲️ Rows the tallest visible panel body fits — the shared first-paint budget a guest spends in
    * document order over containers the host has not yet seen. */
   readonly treeViewportRows?: number;
 };
@@ -65,7 +65,7 @@ export type PluginViewState = {
 /** 🧭️ View-context form of the tool run `ToolRunTraceCursor` — `run` bounded to exact JavaScript integers. */
 export type ViewToolRunTraceCursor = { readonly run: number; readonly generation: number; readonly page: number };
 
-/** 🪟️ One tree container's host-known state: whether the user opened or closed it (absent = the
+/** 📬️ One tree container's host-known state: whether the user opened or closed it (absent = the
  * author's own default still stands) and the row window on screen, overscan included. The exact twin
  * of `TreeWindowRequest` (`🛂️manifest/🦀️.rs`). */
 export type ViewTreeWindowRequest = { readonly bodyKey: string; readonly nodeKey: string; readonly open?: boolean; readonly offset: number; readonly rows: number };
@@ -73,12 +73,12 @@ export type ViewTreeWindowRequest = { readonly bodyKey: string; readonly nodeKey
 export type ResolvedPluginViewState = PluginViewState & { readonly locale: "en" | "de"; readonly terminology: "native" | "reuse" };
 
 //#region 📏️PublicInvocationCapacity
-/** 📏️ Largest UTF-8 body one structurally addressed action/command JSON invocation may occupy
+/** 🎬️ Largest UTF-8 body one structurally addressed action/command JSON invocation may occupy
  * on the way into a plugin process — `🎛️public-invocation/🧬️schema/🔣️.json`'s `maxBodyBytes`, the
  * Rust mirror being `PUBLIC_INVOCATION_BODY_BYTES` (`🛂️manifest/🦀️.rs`). */
 export const PUBLIC_INVOCATION_BODY_BYTES = 262_144;
 
-/** 📏️ Largest single JSON string one invocation may carry — `maxStringBytes`, counted as
+/** 🔂️ Largest single JSON string one invocation may carry — `maxStringBytes`, counted as
  * escaped bytes minus their leading backslashes.
  *
  * This is the bound that actually sizes a host→guest push, and NO tool execution contract can widen
@@ -87,7 +87,7 @@ export const PUBLIC_INVOCATION_BODY_BYTES = 262_144;
  * {@link publicInvocationStringPages}. */
 export const PUBLIC_INVOCATION_STRING_BYTES = 4_096;
 
-/** 📏️ Deepest object/array nesting one invocation may reach — `maxDepth`. */
+/** ⏬️ Deepest object/array nesting one invocation may reach — `maxDepth`. */
 export const PUBLIC_INVOCATION_DEPTH = 64;
 
 /** 📐️ What ONE character of a raw string costs against {@link PUBLIC_INVOCATION_STRING_BYTES}
@@ -130,7 +130,7 @@ export function publicInvocationStringPages(text: string): readonly string[] {
 
 //#endregion 📏️PublicInvocationCapacity
 //#region 📏️ViewContextCapacity
-/** 📏️ `panelJson` capacity in Unicode characters — the TypeScript mirror of the ONE neutral
+/** 🔣️ `panelJson` capacity in Unicode characters — the TypeScript mirror of the ONE neutral
  * declaration `🪟️view-context/🧬️schema/🔣️.json` (`maxLength`), twinned in Rust by
  * `VIEW_CONTEXT_LONG_STRING_CHARS` (`🛂️manifest/🦀️.rs`) and pinned against the schema by
  * `🧪️tests/🔬️view-context-capacity/🦀️.rs`. */
@@ -139,7 +139,7 @@ export const VIEW_CONTEXT_LONG_STRING_CHARS = 65_536;
 export const VIEW_CONTEXT_LONG_STRING_FIELDS = ["panelJson", "extensionInputJson"] as const;
 
 //#endregion 📏️ViewContextCapacity
-/** 🪟️ Admits an explicit host projection before it crosses a process boundary. */
+/** 🔌️ Admits an explicit host projection before it crosses a process boundary. */
 export function parseResolvedPluginViewState(value: unknown): ResolvedPluginViewState {
   const object = (input: unknown): Record<string, unknown> => {
     if (input === null || typeof input !== "object" || Array.isArray(input)) throw new Error("view context: expected object");
@@ -246,7 +246,7 @@ export function viewContextWithIntegerCarriers(view: PluginViewState, mint: (val
   return projected;
 }
 
-/** 🎯️ Projects host-owned context onto one concrete window, preserving its own utility selection. */
+/** ➡️ Projects host-owned context onto one concrete window, preserving its own utility selection. */
 export function windowViewContext(view: PluginViewState, windowId: string): PluginViewState | undefined {
   const window = view.windowInstances?.find((window) => window.id === windowId);
   if (!window) return undefined;
@@ -254,7 +254,7 @@ export function windowViewContext(view: PluginViewState, windowId: string): Plug
   return { ...view, windowId: window.id, activeWindowKindId: window.windowKindId ?? undefined, activeUtilityId: utility && Object.hasOwn(utility, windowId) ? utility[windowId] ?? undefined : undefined };
 }
 
-/** 📌️ Projects app-level panels without binding their controls to a window. `focusedWindowId`
+/** 🎛️ Projects app-level panels without binding their controls to a window. `focusedWindowId`
  * deliberately survives: the panel is not RENDERED FOR a window, but a panel that authors per-window
  * settings still has to know which pane the user is looking at, or its controls silently retune the
  * roster's first entry (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12 §5.1 measured exactly that).
@@ -270,7 +270,7 @@ export function panelViewContext(view: PluginViewState): PluginViewState {
   return { ...view, windowId: undefined, activeWindowKindId: undefined, activeUtilityId: undefined, focusedWindowId: focused };
 }
 
-/** 🛠️ Overlays the host-owned mode tool, then binds the view to a window or the panel.
+/** 🔧️ Overlays the host-owned mode tool, then binds the view to a window or the panel.
  * Windowed `handleAction` must use this — {@link windowViewContext} alone keeps a stale/absent
  * session `activeToolId`, so retained tool jobs (`fillBuildTick`) never see the armed tool. */
 export function hostArmedViewContext(view: PluginViewState, hostActiveToolId: string | null | undefined, windowId?: string): PluginViewState | undefined {
@@ -282,7 +282,7 @@ export function hostArmedViewContext(view: PluginViewState, hostActiveToolId: st
 //#endregion 🔌️PluginAndAppContract
 // #endregion 🛂️Manifest
 
-/** 🧰️ Resolves utilities through exact window ownership; kind requests need an addressed or unique live instance. */
+/** 🎚️ Resolves utilities through exact window ownership; kind requests need an addressed or unique live instance. */
 export function windowUtility(view: PluginViewState, windowId?: string): string | undefined {
   const requested = windowId ?? view.windowId;
   if (requested === undefined) return view.activeUtilityId || undefined;

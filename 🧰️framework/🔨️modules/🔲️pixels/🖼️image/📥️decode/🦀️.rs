@@ -47,3 +47,31 @@ impl ImageDecodeJob{
  pub fn result(&self)->Result<&RasterImage,ImageDecodeError>{self.check()?;if self.phase!="complete"{return Err(ImageDecodeError::Incomplete);}Ok(&self.output)}
  pub fn take_result(&mut self,grant:RetainedCloneGrant)->Result<Option<(RasterImage,RetainedCloneProgress)>,ImageDecodeError>{self.result()?;if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<RasterImage>()||grant.maximum_depth==0{return Ok(None);}self.phase="transferred";Ok(Some((std::mem::take(&mut self.output),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RasterImage>(),..Default::default()})))}
 }
+/// 🚰️ Admission limits of [`decode_encoded_blocking`]: the encoded source and the decoded pixel count are both refused above their cap.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct EncodedDecodeLimits{pub max_source_bytes:usize,pub max_pixels:usize}
+impl EncodedDecodeLimits{pub const MAXIMUM:Self=Self{max_source_bytes:67108864,max_pixels:16777216};}
+/// 📬️ A blocking decode result: the pixels exactly as stored and the EXIF orientation the encoded source declares.
+#[derive(Clone,Debug,PartialEq,Eq)]
+pub struct DecodedEncodedImage{pub image:RasterImage,pub orientation:crate::Orientation}
+impl DecodedEncodedImage{
+ /// 🔄️ The display-upright pixels.
+ pub fn upright(self)->RasterImage{if self.orientation==crate::Orientation::NoTransforms{self.image}else{crate::apply_orientation(&self.image,self.orientation)}}
+}
+/// 🧱️ Drives the owned PNG or JPEG job (chosen by signature, never by media type) to completion on the calling worker or startup
+/// lane under unbounded-for-this-call grants, polling `cancelled` between 4096-step turns, and returns the stored straight RGBA
+/// pixels with the orientation the source declares; [`DecodedEncodedImage::upright`] applies it. The cooperative [`ImageDecodeJob`]
+/// stays the owner for interactive lanes.
+pub fn decode_encoded_blocking(bytes:Vec<u8>,limits:EncodedDecodeLimits,cancelled:&dyn Fn()->bool)->Result<DecodedEncodedImage,ImageDecodeError>{
+ let orientation=crate::encoded_orientation(&bytes);
+ let image=if bytes.starts_with(&[137,80,78,71,13,10,26,10]){
+  let mut job=PngDecodeJob::new(PngDecodeInput{data:bytes,max_pixels:limits.max_pixels,max_bytes:limits.max_source_bytes,max_chunks:65536}).map_err(|_|ImageDecodeError::Invalid("PNG input admission refused"))?;
+  let mut work=0;loop{if cancelled(){job.cancel();return Err(ImageDecodeError::Cancelled);}let grant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:job.next_copy_byte_demand().map_err(|_|ImageDecodeError::Invalid("PNG work demand refused"))?.max(32)*4096,maximum_capacity_bytes:job.next_capacity_byte_demand().map_err(|_|ImageDecodeError::Invalid("PNG capacity demand refused"))?,maximum_release_bytes:0,maximum_depth:1};let(progress,receipt)=job.advance(grant).map_err(|_|ImageDecodeError::Invalid("PNG reconstruction refused"))?;if !receipt.fits(grant){return Err(ImageDecodeError::Invalid("PNG reconstruction exceeded its grant"));}if progress.done{break;}if progress.work==work{return Err(ImageDecodeError::Invalid("PNG reconstruction stalled"));}work=progress.work;}
+  job.take_result(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>(),maximum_depth:1,..Default::default()}).map_err(|_|ImageDecodeError::Invalid("PNG image handoff refused"))?.ok_or(ImageDecodeError::Incomplete)?.0
+ }else if bytes.starts_with(&[255,216,255]){
+  let mut job=JpegDecodeJob::new(JpegDecodeInput{data:bytes,max_pixels:limits.max_pixels,max_bytes:limits.max_source_bytes,max_segments:65536,max_working_bytes:536870912}).map_err(|_|ImageDecodeError::Invalid("JPEG input admission refused"))?;
+  let mut work=0;loop{if cancelled(){job.cancel();return Err(ImageDecodeError::Cancelled);}let grant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:job.next_copy_byte_demand().max(32)*4096,maximum_capacity_bytes:job.next_capacity_byte_demand(),maximum_release_bytes:0,maximum_depth:1};let(progress,receipt)=job.advance(grant).map_err(|_|ImageDecodeError::Invalid("JPEG reconstruction refused"))?;if !receipt.fits(grant){return Err(ImageDecodeError::Invalid("JPEG reconstruction exceeded its grant"));}if progress.done{break;}if progress.work==work{return Err(ImageDecodeError::Invalid("JPEG reconstruction stalled"));}work=progress.work;}
+  job.take_result(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>(),maximum_depth:1,..Default::default()}).map_err(|_|ImageDecodeError::Invalid("JPEG image handoff refused"))?.ok_or(ImageDecodeError::Incomplete)?.0
+ }else{return Err(ImageDecodeError::UnsupportedMime);};
+ Ok(DecodedEncodedImage{image,orientation})
+}

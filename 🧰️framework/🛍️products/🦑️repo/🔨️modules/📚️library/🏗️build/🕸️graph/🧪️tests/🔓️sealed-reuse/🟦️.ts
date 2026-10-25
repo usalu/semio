@@ -1,4 +1,4 @@
-/** 🔓️ Contract: a current sealed all-workspace graph is served by a shared cache-store reader and never by the graph writer; inference, publication and input expansion keep their order. The model is the fixture's ordered text laws, checked here against the graph source and in Python by `🐍️oracle.py`. */
+/** 🔓️ Contract: a current sealed all-workspace graph is served by a shared cache-store reader and never by the graph writer; inference, publication and input expansion keep their order. The model is the fixture's ordered text laws, checked here against the graph source and in Python by `🐍️.py`. */
 import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
 import Ajv from "ajv";

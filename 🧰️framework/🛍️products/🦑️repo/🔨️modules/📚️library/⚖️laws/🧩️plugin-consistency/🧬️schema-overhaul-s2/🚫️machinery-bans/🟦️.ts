@@ -59,7 +59,7 @@ export function policyStdioVcsMachineryBanBreaches(repoRoot: string): BreachReco
 }
 
 /**
- * 📏️S-8 rule 3 (`POLICY_DIFF_ALGEBRA`): every stdio artifact-standard's `🔺️diff/🦀️.rs` must
+ * 🆚️S-8 rule 3 (`POLICY_DIFF_ALGEBRA`): every stdio artifact-standard's `🔺️diff/🦀️.rs` must
  * carry a real `impl DiffAlgebra<...> for ...` block (S1 added the trait, deliberately implemented it
  * for nothing — see `s1-spine-report.md`). Seeded with all 31 current standards; F-wave agents shrink
  * this to zero as they land real diffs with handcrafted `inverse`/`is_empty`.

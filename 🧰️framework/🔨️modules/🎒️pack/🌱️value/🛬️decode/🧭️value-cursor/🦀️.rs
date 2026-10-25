@@ -586,7 +586,7 @@ impl RetainedValueCursor {
         !self.closed && !self.closing && self.fault.is_none() && !self.sealed && self.initialized_roots == 2 && !self.stack.is_empty() && self.pending.is_none()
     }
 
-    /// 📏️ Reports validated bytes independently of admitted pending ingress.
+    /// ⏳️ Reports validated bytes independently of admitted pending ingress.
     pub fn consumed_bytes(&self)->u64{self.offset}
 
     pub fn progress(&self) -> RetainedValueProgress {

@@ -30,7 +30,7 @@ macro_rules! puzzle2d_command_variants {
                 }
             }
 
-            fn window_id(&self) -> Option<&str> {
+            pub fn window_id(&self) -> Option<&str> {
                 match self {
                     $(Puzzle2dCommand::$Variant { window_id, .. } => window_id.as_deref()),*
                 }
@@ -42,7 +42,7 @@ macro_rules! puzzle2d_command_variants {
                 }
             }
 
-            fn try_from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Option<Self> {
+            pub fn try_from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Option<Self> {
                 match action {
                     $($id => Some(Puzzle2dCommand::$Variant { window_id, args })),*,
                     _ => None,

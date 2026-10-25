@@ -239,22 +239,7 @@ impl semio_framework::ToolJobFactory for DrawingBoundedCommandJobFactory {
         drawing_bounded_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
-    }
-
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if checkpoint.is_some() || input.declared_bytes() > DRAWING_BOUNDED_RAW_BYTES {
-            return Err((semio_framework::ToolJobFactoryError::new("bounded Drawing command ingress rejects a checkpoint or oversized wire owner"), input, checkpoint));
-        }
-        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: DRAWING_BOUNDED_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingBoundedCommandJobFactory {
@@ -266,39 +251,12 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingBoundedComma
 
 /// 🏗️ The bounded half of `DrawingPlayApp::build_tool_job` — one `BoundedArtifactCommandWork` per
 /// non-gesture route, refused outright when the id, the typed command and the live extent disagree.
-pub(super) fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<DrawingPlayApp>>) -> Result<semio_framework::ToolOperationSpec, Fault> {
-    if request.command.command_id() != request.tool_id || drawing_bounded_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "bounded Drawing command does not match its exact registered tool or exceeds its declared extent"));
+pub(super) fn drawing_bounded_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<DrawingPlayApp>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    if original.command.command_id() != original.tool_id || drawing_bounded_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
+        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "bounded Drawing command does not match its exact registered tool or exceeds its declared extent").into());
     }
-    let tool_id = request.command.command_id();
-    let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>>> = Box::new(DrawingWindowCommandWork::new(tool_id));
-    let operation_context = semio_framework_plugin::AppOperationContext {
-        app_instance_id: request.app_instance_id,
-        parent_document_id: request.parent_document_id.clone(),
-        operation_id: request.operation.operation.0,
-        generation: request.operation.generation.0,
-        canonical_base_revision: request.canonical_base_revision,
-        retained: request.retained,
-        authoring_seed: request.authoring_seed.clone(),
-    };
-    let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
-        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-            command: *request.command,
-            snapshot: request.snapshot,
-            snapshot_read: request.snapshot_read,
-            config: request.config,
-            history: request.history,
-            interaction_state: request.interaction_state,
-            interaction_hover: request.interaction_hover,
-            context: Some(request.context),
-            operation: operation_context,
-            completion: request.completion,
-        },
-        DrawingCommand::command_id,
-        DRAWING_BOUNDED_RAW_BYTES,
-        DRAWING_BOUNDED_WORK_ITEMS,
-        work,
-    );
-    Ok(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation))
+    let tool_id = original.command.command_id();
+    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, DrawingCommand::command_id, DRAWING_BOUNDED_RAW_BYTES, DRAWING_BOUNDED_WORK_ITEMS, false, |_| DrawingWindowCommandWork::new(tool_id))
 }
 //#endregion 🧵️BoundedCommands

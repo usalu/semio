@@ -1,4 +1,4 @@
-//! 🔖️ Mesh lease and cursors: the `Mesh3dLease` reads and retirement, the item and page cursors and the mesh items. See [`super`].
+//! 🔒️ Mesh lease and cursors: the `Mesh3dLease` reads and retirement, the item and page cursors and the mesh items. See [`super`].
 
 use super::*;
 

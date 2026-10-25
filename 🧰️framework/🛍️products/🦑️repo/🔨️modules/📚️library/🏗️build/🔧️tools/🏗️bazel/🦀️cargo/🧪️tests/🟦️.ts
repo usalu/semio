@@ -1,6 +1,6 @@
 /** 🏷️ Contract: typed Cargo actions render the exact ingress argv, a closed host-independent manifest, deterministic BUILD text and a spawn-free toolchain identity; native Cargo tasks are the only exclusive actions. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";

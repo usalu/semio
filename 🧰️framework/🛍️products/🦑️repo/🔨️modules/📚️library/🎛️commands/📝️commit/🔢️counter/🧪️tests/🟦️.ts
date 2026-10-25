@@ -1,9 +1,9 @@
-/** 🔢️ Contract: the micro-commit counter reads `…🚩️NNN` subjects and bundle tags, continues the highest counter of the contributor on the right epoch and refuses to reset on an unparsable prior; the corpus is language-agnostic and `🐍️oracle.py` recomputes every verdict on selector-stripped text. */
+/** 🔢️ Contract: the micro-commit counter reads `…🚩️NNN` subjects and bundle tags, continues the highest counter of the contributor on the right epoch and refuses to reset on an unparsable prior; the corpus is language-agnostic and `🐍️.py` recomputes every verdict on selector-stripped text. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdtempSync,realpathSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {bumpCounterFromHistory,bumpCounterFromSubject,canonicalWipLine1Base,contributorWipLine1Base,extractCounterFromSubject,extractNumericCounterFromSubject,formatSecond,line1BaseFromBundleTag,nextCounter,pad2} from "../🟦️.ts";
@@ -36,6 +36,6 @@ test("the repository log and tags drive the persisted epoch and the next counter
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

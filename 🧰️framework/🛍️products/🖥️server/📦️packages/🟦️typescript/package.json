@@ -6,7 +6,11 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./wire-types": "./🧬️wire-types/🟦️.ts",
+    "./codec": "./🔤️codec/🟦️.ts",
+    "./routes-and-sockets": "./🛣️routes-and-sockets/🟦️.ts",
+    "./transport": "./🚚️transport/🟦️.ts"
   },
   "scripts": {
     "test": "repo run @semio-tech/framework-server:test"

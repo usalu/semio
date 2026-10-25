@@ -3,7 +3,7 @@
 use crate::tasks_fixed_slots::REACTOR_TASK_SLOTS;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct JobRenderBinding {
+pub struct JobRenderBinding {
     pub job: u64,
     pub instance: u32,
     pub generation: u64,

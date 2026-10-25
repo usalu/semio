@@ -71,7 +71,7 @@ export class ShardUiAcknowledgements {
     return { kind: "patch-ack", payload: { receipt: state.value.receipt, surface: { instance: owner.lifetime!.instanceId, surface: state.value.surface }, revision: BigInt(state.value.revision) } };
   }
 
-  /** 📥️ Acknowledges a whole turn's patch BATCH in ONE lifecycle crossing.
+  /** 💊️ Acknowledges a whole turn's patch BATCH in ONE lifecycle crossing.
    *
    * 🐛️ A turn result may now carry every surface that was ready, and acknowledging them one at a time
    * put the N host round trips the guest had just stopped paying straight back on the inbound side —
@@ -105,7 +105,7 @@ export class ShardUiAcknowledgements {
     }
   }
 
-  /** 📥️ The one-patch case of [`submitInstanceUiAcknowledgements`] — a batch of one, so both paths
+  /** 🩹️ The one-patch case of [`submitInstanceUiAcknowledgements`] — a batch of one, so both paths
    * admit, cross and memoize through exactly the same code. */
   async submitInstanceUiAcknowledgement(owner: ShardInstanceOwner, source: OwnedNativeUiPatchAuthority, token: OwnedUiPatchAcknowledgement, budget: ShardBudget): Promise<{ readonly receipt: OwnedNativeUiPatchSubmissionReceipt; readonly result: unknown }> {
     const batch = await this.submitInstanceUiAcknowledgements(owner, [{ source, token }], budget);

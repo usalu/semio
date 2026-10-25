@@ -5,7 +5,7 @@
 use crate::vector::{add3, cross3, dot3, normalize3, scale3, Xyz};
 use crate::Point;
 
-/// 🧭️ Affine map `p -> M p + t` in 3D.
+/// 🗺️ Affine map `p -> M p + t` in 3D.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Affine3 {
     pub m: [[f64; 4]; 3],
@@ -29,7 +29,7 @@ impl Affine3 {
         Self::rotation_axis([0.0, 0.0, 1.0], angle)
     }
 
-    /// 🔄️ Rodrigues rotation about a (not necessarily unit) axis through the origin.
+    /// 🌱️ Rodrigues rotation about a (not necessarily unit) axis through the origin.
     pub fn rotation_axis(axis: Xyz, angle: f64) -> Self {
         let [x, y, z] = normalize3(axis);
         let (s, c) = angle.sin_cos();
@@ -37,7 +37,7 @@ impl Affine3 {
         Self { m: [[c + x * x * k, x * y * k - z * s, x * z * k + y * s, 0.0], [y * x * k + z * s, c + y * y * k, y * z * k - x * s, 0.0], [z * x * k - y * s, z * y * k + x * s, c + z * z * k, 0.0]] }
     }
 
-    /// 🧭️ Frame mapping the local axes `x`, `y`, `z` (columns) and origin into world space.
+    /// 🎞️ Frame mapping the local axes `x`, `y`, `z` (columns) and origin into world space.
     pub fn from_frame(origin: Xyz, x: Xyz, y: Xyz, z: Xyz) -> Self {
         Self { m: [[x[0], y[0], z[0], origin[0]], [x[1], y[1], z[1], origin[1]], [x[2], y[2], z[2], origin[2]]] }
     }
@@ -59,7 +59,7 @@ impl Affine3 {
         [row(0), row(1), row(2)]
     }
 
-    /// ➡️ Image of a direction (translation ignored).
+    /// 🖼️ Image of a direction (translation ignored).
     pub fn apply_vector(&self, v: Xyz) -> Xyz {
         let row = |r: usize| self.m[r][0] * v[0] + self.m[r][1] * v[1] + self.m[r][2] * v[2];
         [row(0), row(1), row(2)]
@@ -102,7 +102,7 @@ impl ZPlane {
         Self { a, b, c: z - a * anchor.x - b * anchor.y }
     }
 
-    /// 📍️ Height at `p`.
+    /// 📏️ Height at `p`.
     pub fn at(&self, p: Point) -> f64 {
         self.a * p.x + self.b * p.y + self.c
     }

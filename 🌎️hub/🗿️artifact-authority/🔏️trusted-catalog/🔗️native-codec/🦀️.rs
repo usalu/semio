@@ -41,7 +41,7 @@ impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
         context.checkpoint()?;
         let maximum=usize::try_from(context.limits().max_pair_bytes).ok().and_then(|bytes|bytes.checked_mul(16)).and_then(|bytes|bytes.checked_add(operation.encoded.len().checked_mul(16)?)).ok_or(AuthorityError::ResourceLimit("identity source capacity"))?;
         let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|{context.report(semio_hub_artifact_authority::AuthorityProgress{stage:semio_hub_artifact_authority::AuthorityProgressStage::ApplyingOperations,completed_units:operation.sequence,total_units:context.limits().max_operations as u64}).is_ok()};
-        let mut identity=directory::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum,&mut observer).map_err(|error|AuthorityError::Codec{stage:ArtifactValidationStage::Input,message:bounded_message(error)})?;
+        let observer:&mut directory::os_vcs::io::binary::entity_identity::control::Observer<'_>=&mut observer;let mut identity=directory::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum,observer).map_err(|error|AuthorityError::Codec{stage:ArtifactValidationStage::Input,message:bounded_message(error)})?;
         let encoded=identity.encode(|control|directory::os_spr::io::binary::operation_sequence::encode(std::slice::from_ref(&operation.encoded),control)).map_err(|error|AuthorityError::Codec{stage:ArtifactValidationStage::Input,message:bounded_message(error)})?;
         let Some(codec) = &self.codec else {
             let next = self.guest.apply_ops(pair, encoded, context).await?;

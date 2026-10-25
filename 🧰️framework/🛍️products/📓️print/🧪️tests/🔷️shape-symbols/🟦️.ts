@@ -76,7 +76,7 @@ export default defineTestAdapter({
         }
         return { projection };
       },
-      /** 🎯️ The same thirteen routines, transcribed into expl3. */
+      /** 🧩️ The same thirteen routines, transcribed into expl3. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

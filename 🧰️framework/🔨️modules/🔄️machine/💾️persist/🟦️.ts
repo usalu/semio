@@ -1,4 +1,4 @@
-/** 💾️ Statechart persistence: persisted snapshots, migrations, `persist` and `restore`. TypeScript twin of `💾️persist/🦀️.rs`. */
+/** 🗄️ Statechart persistence: persisted snapshots, migrations, `persist` and `restore`. TypeScript twin of `💾️persist/🦀️.rs`. */
 
 import { BitSet, type Machine, type MachineSpec, type NodeDef, NodeId, Snapshot } from "../🟦️.ts";
 
@@ -13,20 +13,20 @@ export interface PersistedSnapshot {
   readonly done: boolean;
 }
 
-/** 💾 Why {@link restore} could not rebuild a {@link Snapshot}. */
+/** ♻️ Why {@link restore} could not rebuild a {@link Snapshot}. */
 export type RestoreError =
   /** 🔗️ No {@link Migration} bridges the persisted fingerprint to the current machine. */
   | { readonly kind: "fingerprintMismatch" }
   /** 📸️ A persisted stable id no longer exists in the current machine. */
   | { readonly kind: "unknownStableId"; readonly stableId: string };
 
-/** 💾 Migrates a {@link PersistedSnapshot} captured under an older machine fingerprint. */
+/** 📷️ Migrates a {@link PersistedSnapshot} captured under an older machine fingerprint. */
 export interface Migration {
   readonly sourceFingerprint: bigint;
   migrate(snapshot: PersistedSnapshot): PersistedSnapshot;
 }
 
-/** 💾 Captures a running {@link Snapshot} as a portable, stable-id-addressed value. */
+/** ▶️ Captures a running {@link Snapshot} as a portable, stable-id-addressed value. */
 export function persist<M extends MachineSpec>(machine: Machine<M>, snapshot: Snapshot<M>): PersistedSnapshot {
   const nodes = machine.definition.nodes;
   const states = [...snapshot.configuration.iterOnes()].map((id) => nodes[id]!.stableId);
@@ -39,7 +39,7 @@ function stableIdToNode(nodes: readonly NodeDef[], stableId: string): NodeId | u
   return idx === -1 ? undefined : NodeId(idx);
 }
 
-/** 💾 Rebuilds a {@link Snapshot} from a {@link PersistedSnapshot}, applying `migrations` in sequence
+/** ⛓️ Rebuilds a {@link Snapshot} from a {@link PersistedSnapshot}, applying `migrations` in sequence
  * until the fingerprint matches the current machine, then re-resolving stable ids back to dense
  * {@link NodeId}s. `context` is supplied by the caller since the consumer's context may itself need
  * domain-specific deserialization. */

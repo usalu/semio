@@ -69,7 +69,7 @@ pub enum UiDirtySection {
     Labels,
 }
 
-/// 🐢️ The selection law both shells answer to, and the union one coalesced refresh pass owes.
+/// ⚖️ The selection law both shells answer to, and the union one coalesced refresh pass owes.
 ///
 /// The React shell has always read a scope (`🛠️ShellHelpers/🟦️.tsx`'s `uiRefreshWants*` +
 /// `buildUiRefreshRequest`); the wgpu shell's `refresh_ui` walked EVERY window and panel on every
@@ -151,7 +151,7 @@ impl UiDirtyScope {
     }
 }
 
-/// 🤝️ First-seen order, no duplicates — the `[...new Set([...first, ...second])]` the TypeScript
+/// 🔑️ First-seen order, no duplicates — the `[...new Set([...first, ...second])]` the TypeScript
 /// twin builds, spelled without a hash set so the two orders cannot drift.
 fn union_body_keys(first: Vec<String>, second: Vec<String>) -> Vec<String> {
     let mut union = first;
@@ -194,14 +194,14 @@ pub const UI_TURN_PATCH_OWNER_BYTES: usize = 4_096;
 /// [`UI_TURN_PATCH_OWNER_BYTES`] per publication.
 pub const UI_TURN_PATCHES_MAXIMUM: usize = semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / UI_TURN_PATCH_OWNER_BYTES;
 
-/// 📏️ Ceiling every lane's `Budget::max_patch_bytes` declaration must stay under — a turn result is
+/// 💰️ Ceiling every lane's `Budget::max_patch_bytes` declaration must stay under — a turn result is
 /// an ASSEMBLED answer crossing the boundary, and a single assembled answer may claim a quarter of
 /// what the declared budget admits (`🧮️memory/🦀️.rs`'s `GUEST_HOST_ANSWER_CEILING_BYTES`). The floor
 /// is the contiguous ceiling itself: a lane that declared less than one contiguous page could not
 /// carry one document-scaled publication at all.
 pub const UI_TURN_PATCH_BUDGET_BYTES: usize = semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES / 4;
 
-/// 📏️ Fixed wire envelope of one patch, and of one of its operations — the same two numbers the
+/// ✉️ Fixed wire envelope of one patch, and of one of its operations — the same two numbers the
 /// native host's own `patch_wire_bytes` charges (`🔌️plugin/🖥️host/📥️ui-patch/🦀️.rs`), so the guest
 /// that admits a batch and the host that refuses one price the envelope identically.
 pub const UI_TURN_PATCH_WIRE_ENVELOPE_BYTES: usize = 32;
@@ -262,7 +262,7 @@ struct UiTurnPatchHandback {
     owner: std::cell::UnsafeCell<std::mem::MaybeUninit<(UiTurnPatchRetireKey, UiTurnPatchContents)>>,
 }
 
-/// 🔒️ A reserved key has one non-cloneable producer; its slot cannot be reused before the sole arena consumer retires the returned owner.
+/// 🔐️ A reserved key has one non-cloneable producer; its slot cannot be reused before the sole arena consumer retires the returned owner.
 unsafe impl Sync for UiTurnPatchHandback {}
 
 impl UiTurnPatchHandback {
@@ -708,7 +708,7 @@ pub fn close_ui_turn_patch_transport_one() -> Result<UiTurnPatchTransportProgres
     close_ui_turn_patch_transport_with_grant(1, 4096)
 }
 
-/// ♻️ One retirement unit of a closing turn-patch transport, against the caller's PAGE grant.
+/// 📪️ One retirement unit of a closing turn-patch transport, against the caller's PAGE grant.
 ///
 /// The transport owns the patch the turn hands to the host, so a document-scaled publication parks a
 /// document-scaled owner here; retiring it one item per unit is one host round trip per item, because
@@ -768,7 +768,7 @@ struct UiTurnPatchEntry {
     retirement: Option<UiTurnPatchRetireKey>,
 }
 
-/// 🧰️ The fixed exact-owner patch page emitted by one turn — every patch that was ready when the turn
+/// 💊️ The fixed exact-owner patch page emitted by one turn — every patch that was ready when the turn
 /// assembled its result, in publication order, bounded by [`UI_TURN_PATCHES_MAXIMUM`] slots and by the
 /// caller's own byte budget.
 ///
@@ -842,7 +842,7 @@ impl UiTurnPatches {
         self.len() == 0
     }
 
-    /// 📏️ What this page costs its turn's byte budget — the sum every admitting caller compares.
+    /// 📃️ What this page costs its turn's byte budget — the sum every admitting caller compares.
     pub fn turn_bytes(&self) -> usize {
         self.iter().fold(0usize, |total, patch| total.saturating_add(ui_patch_turn_bytes(patch)))
     }
@@ -903,7 +903,7 @@ impl UiTurnPatches {
     }
 }
 
-/// 📤️ Drains the page in publication order; whatever the reader leaves behind retires through the
+/// 🚰️ Drains the page in publication order; whatever the reader leaves behind retires through the
 /// page's own [`Drop`], exactly as a partially transferred page does.
 pub struct UiTurnPatchesIntoIter {
     owner: UiTurnPatches,

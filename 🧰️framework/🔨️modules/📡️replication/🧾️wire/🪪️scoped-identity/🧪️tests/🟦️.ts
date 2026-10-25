@@ -43,6 +43,4 @@ export function testScopedIdentities(): void {
   callbacks = 0;
   assert.throws(() => visitScopedIdentitySegments("scope:1:" + "1:x".repeat(SCOPED_IDENTITY_MAX_SEGMENTS + 1), () => callbacks++));
   assert.equal(callbacks, visitorFixture.overflowCallbacks);
-  console.log("[DEBUG] Scoped identity visitor validates whole input before callbacks; Buffer agrees with every ordered UTF8 segment and32segment boundary");
-  console.log("[DEBUG] Scoped identity portable vectors agree with Ajv admission and independent Buffer UTF8 byte-length oracle");
 }

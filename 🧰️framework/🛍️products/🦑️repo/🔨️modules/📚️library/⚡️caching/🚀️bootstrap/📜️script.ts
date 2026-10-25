@@ -1,9 +1,7 @@
 #!/usr/bin/env repo
-import {selectedGraphSdkPortsV1} from "../🕸️graph/🔏️seal/🎯️selection/🔌️sdk/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {createNxBootstrapCapabilitiesV1,readNxBootstrapAuthoringCapabilitiesV1,nxBootstrapJavascriptEnvironmentV1} from "./📥️caller/🟦️.ts";
+import {createNxBootstrapCapabilitiesV1,readNxBootstrapAuthoringCapabilitiesV1} from "./📥️caller/🟦️.ts";
 import{isToolingHeadroomRefusalV1,type ToolingHeadroomRefusalV1}from"./🛠️tools/🧹️retention/📏️headroom/🟦️.ts";
-import {writeSelectedGraphHandoffV1} from "../🕸️graph/🔏️seal/🎯️selection/📥️handoff/🟦️.ts";
 import {withNxCollectionAdmissionStoreV1,NX_COLLECTION_ADMISSION_MAXIMUM_BYTES_V1} from "./📥️admission/💾️storage/🟦️.ts";
 import {repositoryCacheBudgetV1} from "../💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
@@ -19,7 +17,8 @@ import {readWorkerPolicyV1,planWorkersV1,currentWorkerHostV1,readWorkerSwitchV1}
 import {nxBatchCapableV1,nxWorkerSettingsV1} from "./🛠️tools/👷️workers/🟦️.ts";
 import {resolveRemoteCacheContractV1} from "../../🏗️build/🌐️remote-cache/🟦️.ts";
 import {nxRemoteCacheV1} from "./🛠️tools/🌐️remote-cache/🟦️.ts";
-import {withRepositoryNxStorageV1,boundedNxNamespaceV1,boundedNxSocketNamespaceV1,type BoundedNxNamespaceV1} from "../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
+import {createNxFailureTailV1,settleNxRunV1,type NxFailureTailV1} from "../../🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts";
+import {withRepositoryNxStorageV1,boundedNxNamespaceV1,boundedNxSocketNamespaceV1,type BoundNxNamespaceV1} from "../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { createScriptProcessEnvelope, readScriptProcessEnvelope, scriptProcessEnvironment, SCRIPT_PROCESS_INVOCATION_ENV, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:child_process";
@@ -34,9 +33,10 @@ import { orchestratorBudgetMs } from "../../../../../../🔨️modules/🏃️pr
 import { devToolingEnv, semioBuildParallelFlag } from "../../🏃️process/🌿️environment/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 
+import {NX_DAEMON_SLOTS_EXHAUSTED_KEY_V1} from "../🕸️graph/🏁️startup/🚏️admission/🟦️.ts";
 import { boundedAdmissionWalkV1 as boundedWalk, gitCollectionManifests, moduleCollectionAncestry } from "./📥️admission/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,leaseInvocationChainV1,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { resolveNxBuildMode } from "./🎚️mode/🟦️.ts";
@@ -63,8 +63,8 @@ function nxBootstrapServices(): typeof import("./🛠️tools/🟦️.ts") {
 
 export {publishBuildBootstrapSourcesV1 as publishBootstrapSources} from "../../🏗️build/🚀️bootstrap/🟦️.ts";
 import {publishBuildBootstrapSourcesV1 as publishBootstrapSources} from "../../🏗️build/🚀️bootstrap/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
-import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import {sayBootstrapV1} from "./📖️texts/🟦️.ts";
 
 /** 📂️ One directory the admission walk descended into: its identity stamp, the child directories it queues and the admitted manifest names it holds. */
@@ -120,8 +120,8 @@ export async function verifyNxAdmissionDirectoriesV1(root:string,visited:readonl
  * whose identity stamp (dev, inode, mtime, ctime) matches the previous snapshot reuses its recorded children and manifests instead of being
  * re-read, because adding, removing or renaming an entry always restamps its directory; every visited directory and admitted manifest is
  * still re-proven real and unchanged before publication. */
-export async function publishNxCollectionBoundary(root:string,invocation:ScriptInvocation,progress?:(directories:number)=>void):Promise<void>{
- checkScriptInvocation(invocation);return withNxCollectionAdmissionStoreV1(root,invocation,directory=>publishNxCollectionBoundaryV1(root,directory,invocation.control.signal,progress));
+export async function publishNxCollectionBoundary(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,progress?:(directories:number)=>void):Promise<void>{
+ checkScriptInvocation(invocation);return withNxCollectionAdmissionStoreV1(root,invocation,phaseControl,directory=>publishNxCollectionBoundaryV1(root,directory,invocation.control.signal,progress));
 }
 
 async function publishNxCollectionBoundaryV1(root: string,directory:string, signal?: AbortSignal, progress?: (directories: number) => void): Promise<void> {
@@ -266,7 +266,7 @@ export function nxToolingEnvironmentV1(environment:NodeJS.ProcessEnv,toolingIden
 /** 🔗️ Retains each watcher binding with its concrete graph and socket locations. */
 export type NxWatcherEnvironment = Readonly<Record<string, string | undefined>> & Readonly<{ NX_WORKSPACE_DATA_DIRECTORY: string; NX_SOCKET_DIR: string; NX_DAEMON_SOCKET_DIR: undefined }>;
 
-/** 🧷️ Gives an activation binding its own watcher graph and short portable daemon socket path. */
+/** 🪢️ Gives an activation binding its own watcher graph and short portable daemon socket path. */
 export function nxWatcherEnvironment(root: string, environment: Record<string, string | undefined>, activation: string): NxWatcherEnvironment {
   const binding = Object.entries(environment).filter(([key]) => /^(?:S_|VITE_|PLAYGROUND_|SEMIO_(?:PLUGIN|RENDERER|BUILD_MODE|NX_TOOLING_IDENTITY|LOCALE|LOCKED_LOCALE|LOCKED_TERMINOLOGY)$)/.test(key)).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);
   const identity = createHash("sha256").update(JSON.stringify([resolve(root).replaceAll("\\", "/"), activation, binding])).digest("hex").slice(0, 24);
@@ -303,12 +303,12 @@ export function activateWhenNxWatcherReady(watcher: ReturnType<typeof spawnNxPro
   void Promise.all([waitForNxWatcher(watcher), prepared]).then(() => { if (active()) activate(); }).catch(error => { if (active()) failed(error); });
 }
 
-/** 🛡️ Registers automatic source callbacks after the initial prerequisite graph has settled. */
+/** 🆕️ Registers automatic source callbacks after the initial prerequisite graph has settled. */
 export async function startNxWatcherAfterPreparation(prepared:Promise<void>,active:()=>boolean,start:()=>ReturnType<typeof spawnNxProcess>|Promise<ReturnType<typeof spawnNxProcess>|undefined>):Promise<ReturnType<typeof spawnNxProcess>|undefined> {
   await prepared;return active()?start():undefined;
 }
 
-/** ⏳️ Observes Nx starting the serving target after its prerequisite graph completes. */
+/** ⌛️ Observes Nx starting the serving target after its prerequisite graph completes. */
 export function waitForNxTargetStart(child: ReturnType<typeof spawnNxProcess>, target: string): Promise<void> {
   return new Promise((accept,reject) => {
     let pending="";
@@ -374,11 +374,6 @@ export class NxOutputSpoolV1 {
 }
 
 export class NxScript extends Script {
-  /** 📦️ The locked JavaScript environment every workspace script task imports from. On a fresh clone (no
-   * `node_modules/nx`) it runs to completion before the requested graph: Nx schedules sibling setup tasks in parallel,
-   * and without this every generator, `setup-git`, `cpp-setup` and `deps-browsers` started before `bun install` finished
-   * (measured on a clean Linux container, ticket 26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP `📓️wp-z2.md`). */
-
   /** 🧿️ A watch invocation starts its configured daemon without deleting namespace failure state. */
   static async ensureDaemon(runtime: string, nxCli: string, root: string, env: NodeJS.ProcessEnv,control:ResourceLeaseControl): Promise<void> {
     const selected=["daemon","--start"],original=readScriptProcessEnvelope(JSON.parse(env[SCRIPT_PROCESS_INVOCATION_ENV]!),Date.now()),owned=nativeNxChildEnvironmentV1(root,issueSelectedNxCallerEnvelopeV1(root,original,selected),selected,env);process.stdout.write(await captureOwnedCommandV1(runtime,[nxCli,...selected],root,{env:owned,control}));
@@ -403,20 +398,20 @@ export class NxScript extends Script {
     const {prepareNxGraphCacheStorageV1}=await import("../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts");await prepareNxGraphCacheStorageV1(this.root,this.invocation,phaseControl,0,process.env.SEMIO_BUILD_GRAPH_PATH?"inherited":"queued");
     return withRepositoryNxStorageV1(this.root,this.invocation,phaseControl,(bind,actualPhase)=>this.runInStorage(segments,actualPhase,bind));
   }
-  private async runInStorage(segments:string[],phaseControl:ResourceLeaseControl,bind?:(toolingIdentity:string,graphIdentity:string|null,implementationIdentity:string)=>Promise<BoundedNxNamespaceV1>):Promise<void>{return nxBootstrapServices().withNxToolingHeadroomRecoveryV1(this.root,this.invocation,phaseControl,actualPhase=>withRepositoryToolingStoreV1(this.root,this.invocation,actualPhase,(store,storePhase)=>this.runWithToolingStore(segments,store,storePhase,bind)));}
-  private async runWithToolingStore(segments:string[],store:RepositoryToolingStoreV1,phaseControl:ResourceLeaseControl,bind?:(toolingIdentity:string,graphIdentity:string|null,implementationIdentity:string)=>Promise<BoundedNxNamespaceV1>):Promise<void|ToolingHeadroomRefusalV1>{
+  private async runInStorage(segments:string[],phaseControl:ResourceLeaseControl,bind?:(toolingIdentity:string,graphIdentity:string|null,implementationIdentity:string)=>Promise<BoundNxNamespaceV1>):Promise<void>{return nxBootstrapServices().withNxToolingHeadroomRecoveryV1(this.root,this.invocation,phaseControl,actualPhase=>withRepositoryToolingStoreV1(this.root,this.invocation,actualPhase,(store,storePhase)=>this.runWithToolingStore(segments,store,storePhase,bind)));}
+  private async runWithToolingStore(segments:string[],store:RepositoryToolingStoreV1,phaseControl:ResourceLeaseControl,bind?:(toolingIdentity:string,graphIdentity:string|null,implementationIdentity:string)=>Promise<BoundNxNamespaceV1>):Promise<void|ToolingHeadroomRefusalV1>{
     const graphConsumer=!segments.some(argument=>["--version","-v","--help","-h"].includes(argument))&&!["reset","daemon"].includes(segments[0]??"");
     if (graphConsumer&&!process.env.SEMIO_BUILD_GRAPH_PATH) {
       const {loadBuildGraphV1}=await import("../../🏗️build/🕸️graph/🟦️.ts"),{withRepositoryBuildGraphArtifactV1}=await import("../💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts");
       const {buildInvocationGraphSelectionV1}=await import("../../🏗️build/🕸️graph/🚪️admission/🟦️.ts"),baseline = await loadBuildGraphV1(this.root,this.invocation,phaseControl,{selection:buildInvocationGraphSelectionV1(segments)}),{withSelectedRustBuildGraphV1}=await import("../../🏗️build/🕸️graph/🦀️rust/🟦️.ts");return withSelectedRustBuildGraphV1(this.root,baseline,segments,this.invocation,phaseControl,async(prepared,rustPhase)=>{const graph=prepared.graph;
-      const {withSelectedNextBuildGraphV1,nextCacheEnabledV1}=await import("../../../🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts");
+      const {withSelectedNextBuildGraphV1,nextCacheEnabledV1}=await import("../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🏗️builder/📥️inputs/🔌️nx/🟦️.ts");
       const useNext=nextCacheEnabledV1()?withSelectedNextBuildGraphV1:async<T>(_workspace:string,value:typeof graph,_args:readonly string[],_invocation:ScriptInvocation,actualPhase:ResourceLeaseControl,body:(value:typeof graph,phase:ResourceLeaseControl)=>Promise<T>)=>body(value,actualPhase);
       return useNext(this.root,graph,segments,this.invocation,rustPhase,(nextGraph,nextPhase)=>withRepositoryBuildGraphArtifactV1(this.root,nextGraph,this.invocation,nextPhase,async(pinned,artifactPhase)=>{const patch={...prepared.environment,SEMIO_BUILD_GRAPH_PATH:pinned.path,SEMIO_BUILD_GRAPH_DIGEST:pinned.digest,SEMIO_BUILD_REUSE_GRAPH:"true"},previous=Object.fromEntries(Object.keys(patch).map(key=>[key,process.env[key]]));Object.assign(process.env,patch);try{await this.runWithToolingStore(segments,store,artifactPhase,bind);}finally{for(const[key,value]of Object.entries(previous))if(value===undefined)delete process.env[key];else process.env[key]=value;}}));
       });
     }
     const {withSelectedRustNativeSnapshotV1}=await import("../../🏗️build/📥️inputs/🎯️selected/🦀️rust/🟦️.ts");return withSelectedRustNativeSnapshotV1(this.root,segments,this.invocation,phaseControl,async(environment,actualPhase)=>{const previous=Object.fromEntries(Object.keys(environment??{}).map(key=>[key,process.env[key]]));Object.assign(process.env,environment);try{return await this.runWithPreparedToolingStore(segments,store,actualPhase,bind,graphConsumer);}finally{for(const[key,value]of Object.entries(previous))if(value===undefined)delete process.env[key];else process.env[key]=value;}});
   }
-  private async runWithPreparedToolingStore(segments:string[],store:RepositoryToolingStoreV1,phaseControl:ResourceLeaseControl,bind:((toolingIdentity:string,graphIdentity:string|null,implementationIdentity:string)=>Promise<BoundedNxNamespaceV1>)|undefined,graphConsumer:boolean):Promise<void|ToolingHeadroomRefusalV1>{
+  private async runWithPreparedToolingStore(segments:string[],store:RepositoryToolingStoreV1,phaseControl:ResourceLeaseControl,bind:((toolingIdentity:string,graphIdentity:string|null,implementationIdentity:string)=>Promise<BoundNxNamespaceV1>)|undefined,graphConsumer:boolean):Promise<void|ToolingHeadroomRefusalV1>{
     const check=()=>checkResourceLeaseControl(phaseControl);check();
     const outputLog = process.env[NX_OUTPUT_LOG_ENV];
     delete process.env[NX_OUTPUT_LOG_ENV];
@@ -431,7 +426,7 @@ export class NxScript extends Script {
       originalSignal.throwIfAborted();
       process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
       try {
-        if(graphConsumer)await publishNxCollectionBoundary(this.root, this.invocation, directories => {check();if (directories === 1 || directories % 1024 === 0) sayBootstrapV1("nx.admitting-current-real-project-owners",{directories:String(directories)}); });check();
+        if(graphConsumer)await publishNxCollectionBoundary(this.root, this.invocation, phaseControl, directories => {check();if (directories === 1 || directories % 1024 === 0) sayBootstrapV1("nx.admitting-current-real-project-owners",{directories:String(directories)}); });check();
         admissionFinished=performance.now();
         const api = nxBootstrapServices();
         const provisioned=await api.provisionNxTools(this.root,store,phaseControl);check();if(isToolingHeadroomRefusalV1(provisioned))return provisioned;tooling=provisioned;
@@ -445,14 +440,15 @@ export class NxScript extends Script {
     const invocation = resolveNxInvocation(segments,{...process.env,SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode},this.root), children: ReturnType<typeof spawnNxProcess>[] = [], spooling: Promise<void>[] = [];
     const toolingIdentity=basename(dirname(tooling.modulePath));if(!/^[a-f0-9]{64}$/u.test(toolingIdentity))throw new Error("Original loaded Nx tooling receipt required");
     return withNxToolingUseV1(nxToolingUseStorageV1(this.root),{identity:toolingIdentity,toolkitRoot:dirname(tooling.modulePath),invocation:this.invocation},phaseControl,async(_witness,actualPhase)=>{
+    const hold:{release?:()=>Promise<void>}={};
+    try{
     const check=()=>checkResourceLeaseControl(actualPhase);check();
     const implementationIdentity=createRequire(import.meta.url)("../../🟨️.mjs").nxBuildDependencyImplementationV1();
     const env = await nxCacheEnvironmentV1(this.root,pinnedNxRuntimeEnvironment(nxToolingEnvironmentV1(nxBuildEnvironmentV1(this.root,devToolingEnv({ ...invocation.env, SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode,CARGO_NET_OFFLINE:String(readNativeCallerAuthorityV1(this.invocation.capabilities).network.offline), NX_ISOLATE_PLUGINS: process.env.NX_ISOLATE_PLUGINS ?? "false", NODE_PATH: tooling.modulePath, SEMIO_NX_TOOLING_ROOT: dirname(tooling.modulePath), SEMIO_NX_IMPLEMENTATION_IDENTITY: implementationIdentity, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY, NX_SOCKET_DIR: invocation.env.NX_SOCKET_DIR || process.env.NX_SOCKET_DIR, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined })),toolingIdentity), tooling.bun));
-    if(bind)Object.assign(env,(await bind(toolingIdentity,env.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity)).environment);
+    if(bind){const namespace=await bind(toolingIdentity,env.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity);hold.release=namespace.release;Object.assign(env,namespace.environment);}
     if(env.NX_DAEMON===undefined&&!invocation.watch&&invocation.args[0]!=="watch"){const admission=await import("../🕸️graph/🏁️startup/🚏️admission/🟦️.ts").then(owner=>owner.nxDaemonAdmissionV1(this.root,env,actualPhase.signal)).catch(()=>({enabled:false,reason:"refused"}));env.NX_DAEMON=admission.enabled?"true":"false";if(profileBootstrap)console.log(`[nx] Daemon ${admission.enabled?"enabled":"off"} (${admission.reason})`);}
     const{projectOwnedNxProcessEnvelopeV1}=await import("../../🏗️build/🔧️tools/🧶️nx/📨️envelope/🟦️.ts"),carried=projectOwnedNxProcessEnvelopeV1(this.root,this.invocation,invocation.args);env[SCRIPT_PROCESS_INVOCATION_ENV]=scriptProcessEnvironment(carried,env)[SCRIPT_PROCESS_INVOCATION_ENV];
     let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false;
-    let sourceHandoff:Readonly<{environment:string;close():Promise<void>}>|undefined;
     let pendingGeneration:import("../🕸️graph/🔏️seal/📌️generation/🟦️.ts").NxGenerationClaimV1|undefined;
     let force: ReturnType<typeof setTimeout> | undefined, watcher: ReturnType<typeof spawnNxProcess> | undefined;
     const descendants = new Set<number>();
@@ -487,23 +483,24 @@ export class NxScript extends Script {
       force = setTimeout(() => killAll("SIGKILL"), 5000);
       force.unref();
     };
-    const graphChanges = new WeakMap<ReturnType<typeof spawnNxProcess>, { changed: boolean; executing: boolean; tail: string }>();
+    const graphChanges = new WeakMap<ReturnType<typeof spawnNxProcess>, { changed: boolean; slotsTaken: boolean; executing: boolean; tail: string; output: NxFailureTailV1 }>();
     const launch = (args: string[], capture = false, environment = env): ReturnType<typeof spawnNxProcess> => {
       check();
       const original=readScriptProcessEnvelope(JSON.parse(environment[SCRIPT_PROCESS_INVOCATION_ENV]!),Date.now()),ownedEnvironment=nativeNxChildEnvironmentV1(this.root,issueSelectedNxCallerEnvelopeV1(this.root,original,args),args,environment);
       const spooled = Boolean(outputLog) && !capture && !invocation.watch;
       const monitored = !invocation.watch;
-      const child = spawnNxProcess(tooling.bun, [nxCli, ...args], { cwd: this.root, env: nxChildEnvironment(ownedEnvironment, args, Boolean(invocation.watch)), stdio: spooled || monitored ? ["inherit", "pipe", "pipe"] : capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
+      const child = spawnNxProcess(tooling.bun, [nxCli, ...args], { cwd: this.root, env: {...nxChildEnvironment(ownedEnvironment, args, Boolean(invocation.watch)),SEMIO_BUILD_INVOCATION_PIDS:leaseInvocationChainV1(ownedEnvironment)}, stdio: spooled || monitored ? ["inherit", "pipe", "pipe"] : capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
       if (monitored) {
-        const state = { changed: false, executing: false, tail: "" }; graphChanges.set(child, state);
+        const state = { changed: false, slotsTaken: false, executing: false, tail: "", output: createNxFailureTailV1() }; graphChanges.set(child, state);
         const started = Date.now(), progress = setInterval(() => { if (!state.executing) sayBootstrapV1("nx.graph-and-hash-preparation-running",{elapsedMs:String(Date.now() - started)}); }, 10000);
         progress.unref();
         child.once("close", () => clearInterval(progress));
         child.once("error", () => clearInterval(progress));
         for (const [input, output] of [[child.stdout!, process.stdout], [child.stderr!, process.stderr]] as const) input.on("data", chunk => {
-          state.tail = (state.tail + String(chunk)).slice(-4096);
+          state.output.push(chunk, output === process.stderr ? "stderr" : "stdout"); state.tail = (state.tail + String(chunk)).slice(-4096);
           state.executing ||= />\s+nx run\s/.test(state.tail) || state.tail.includes("[script]");
           state.changed ||= state.tail.includes("Dependency resolution authority changed during graph construction");
+           state.slotsTaken ||= state.tail.includes(NX_DAEMON_SLOTS_EXHAUSTED_KEY_V1);
           if (!spooled) output.write(chunk);
         });
       }
@@ -523,31 +520,15 @@ export class NxScript extends Script {
     const remaining=checkResourceLeaseControl(actualPhase),originalBudget=scriptInvocationBudget(this.invocation,requestedBudget??0),budget=remaining===null?originalBudget:originalBudget===0?Math.floor(remaining):Math.min(originalBudget,Math.floor(remaining));
     const timeout = budget > 0 ? setTimeout(() => { console.error(`[budget] Nx exceeded ${budget}ms`); stop("SIGTERM"); }, budget) : undefined;
     try {
-      if (graphConsumer&&!existsSync(join(this.root, "node_modules/nx/package.json")) && !invocation.args.includes(nxBootstrapJavascriptEnvironmentV1)) {
-        const install = launch(["run", nxBootstrapJavascriptEnvironmentV1, "--output-style=stream"]);
-        const installed = await new Promise<number>((accept, reject) => { install.once("error", reject); install.once("close", (code) => accept(code ?? 1)); });
-        if (installed !== 0 || cancelled) { process.exitCode = cancelled ? cancelled === "SIGINT" ? 130 : 143 : installed; return; }
-      }
       if (!cancelled) {
         if(graphConsumer){
         const generationOwner = await import("../🕸️graph/🔏️seal/📌️generation/🟦️.ts"), graphSeal = await import("../🕸️graph/🔏️seal/🟦️.ts"), workspaceData = env.NX_WORKSPACE_DATA_DIRECTORY!, inheritedReuse = env.NX_FORCE_REUSE_CACHED_GRAPH === "true" && env.SEMIO_NX_GRAPH_SEAL_REUSE === undefined;
         const sealStarted=performance.now();
-        delete env.SEMIO_NX_SELECTED_GRAPH_RECEIPT;
-        let selected=false;
-        if(!inheritedReuse&&!invocation.watch&&nxChildEnvironment(env,invocation.args,false).NX_DAEMON!=="false"){
-          for(const key of ["NX_WORKSPACE_DATA_DIRECTORY","NX_PROJECT_GRAPH_CACHE_DIRECTORY","NX_CACHE_DIRECTORY","NX_NATIVE_FILE_CACHE_DIRECTORY","SEMIO_NX_FIXED_STORAGE","SEMIO_NX_SOCKET_STORAGE","TMPDIR","TMP","TEMP","NX_SOCKET_DIR","NX_DAEMON_SOCKET_DIR","NX_DAEMON"]){const value=key==="NX_DAEMON"?nxChildEnvironment(env,invocation.args,false).NX_DAEMON:env[key];if(value===undefined)delete process.env[key];else process.env[key]=value;}
-          const frozen=await createRequire(nxCli)("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();
-          if(!frozen||frozen.toolingIdentity!==toolingIdentity)throw new Error("Original immutable graph authorizers required");
-          if(frozen.authorizers.selectedTaskSelectionV1(invocation.args,readBuildMode(env.SEMIO_BUILD_MODE??"prototype"))){
-            const control=actualPhase,ports=await selectedGraphSdkPortsV1(this.root,nxCli,invocation.args,readBuildMode(env.SEMIO_BUILD_MODE),control,nxChildEnvironment(nativeNxChildEnvironmentV1(this.root,issueSelectedNxCallerEnvelopeV1(this.root,readScriptProcessEnvelope(JSON.parse(env[SCRIPT_PROCESS_INVOCATION_ENV]!),Date.now()),invocation.args),invocation.args,env),invocation.args,false)),proof=await frozen.authorizers.captureSelectedGraphReuseReceiptV1(this.root,workspaceData,ports,actualPhase.signal);check();
-            if(proof){sourceHandoff=await writeSelectedGraphHandoffV1(this.root,workspaceData,proof,env,actualPhase.signal);env.SEMIO_NX_SELECTED_GRAPH_RECEIPT=sourceHandoff!.environment;selected=true;}
-          }
-        }
-        const sourceMembership=selected||env.SEMIO_BUILD_GRAPH_DIGEST?undefined:await graphSeal.nxGraphSourceMembershipV2(this.root,actualPhase.signal).catch(error=>{if(profileBootstrap)sayBootstrapV1("nx.graph-membership-fallback",{reason:String(error instanceof Error?error.message:String(error))});return undefined;});
-        const generationClaim=!selected&&env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch?await generationOwner.nxGenerationClaimV1(this.root,env).catch(()=>undefined):undefined,generation=generationClaim!==undefined&&await generationOwner.nxGenerationHoldsV1(this.root,workspaceData,generationClaim,actualPhase.signal).catch(()=>false);
+        const sourceMembership=env.SEMIO_BUILD_GRAPH_DIGEST?undefined:await graphSeal.nxGraphSourceMembershipV2(this.root,actualPhase.signal).catch(error=>{if(profileBootstrap)sayBootstrapV1("nx.graph-membership-fallback",{reason:String(error instanceof Error?error.message:String(error))});return undefined;});
+        const generationClaim=env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch?await generationOwner.nxGenerationClaimV1(this.root,env).catch(()=>undefined):undefined,generation=generationClaim!==undefined&&await generationOwner.nxGenerationHoldsV1(this.root,workspaceData,generationClaim,actualPhase.signal).catch(()=>false);
         pendingGeneration=generationClaim!==undefined&&!generation?generationClaim:undefined;
-        const sealed=selected||generation||!env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch&&env.NX_DAEMON!=="true"&&await graphSeal.nxGraphSealHolds(this.root,workspaceData,actualPhase.signal,sourceMembership?.digest).catch(()=>false);
-        if(profileBootstrap)sayBootstrapV1("nx.graph-observation-selected-sealed-elapsedms",{selected:String(selected),sealed:String(sealed),elapsedMs:String(Math.round(performance.now()-sealStarted))});
+        const sealed=generation||!env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch&&env.NX_DAEMON!=="true"&&await graphSeal.nxGraphSealHolds(this.root,workspaceData,actualPhase.signal,sourceMembership?.digest).catch(()=>false);
+        if(profileBootstrap)sayBootstrapV1("nx.graph-observation-selected-sealed-elapsedms",{sealed:String(sealed),elapsedMs:String(Math.round(performance.now()-sealStarted))});
         if(!inheritedReuse){env.NX_FORCE_REUSE_CACHED_GRAPH=sealed?"true":"false";env.SEMIO_NX_GRAPH_SEAL_REUSE=sealed?"true":"false";}
         check();
         env.SEMIO_NX_GRAPH_SOURCE_MEMBERSHIP=sourceMembership?.digest;
@@ -579,13 +560,22 @@ export class NxScript extends Script {
         for (let attempt = 1; code !== 0 && !cancelled && !invocation.watch && graphChanges.get(completed)?.changed && !graphChanges.get(completed)?.executing && attempt <= 3; attempt++) {
           check();
           sayBootstrapV1("nx.source-authority-changed-admitting-the",{attempt:String(attempt)});
-          await publishNxCollectionBoundary(this.root,this.invocation,()=>check());check();
-          await sourceHandoff?.close();sourceHandoff=undefined;delete env.SEMIO_NX_SELECTED_GRAPH_RECEIPT;
+          await publishNxCollectionBoundary(this.root,this.invocation,phaseControl,()=>check());check();
           env.NX_FORCE_REUSE_CACHED_GRAPH = "false";
           env.SEMIO_NX_GRAPH_SEAL_REUSE = "false";
           attemptStart = Date.now(); completed = launch(invocation.args);
           code = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", value => accept(value ?? 1)); });
         }
+        if (code !== 0 && !cancelled && !invocation.watch && env.NX_DAEMON === "true" && graphChanges.get(completed)?.slotsTaken) {
+          check(); sayBootstrapV1("nx.daemon-slots-taken-running-without",{});
+          env.NX_DAEMON = "false"; attemptStart = Date.now(); completed = launch(invocation.args);
+          code = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", value => accept(value ?? 1)); });
+        }
+        if (code !== 0 && !cancelled && !invocation.watch) code = await settleNxRunV1({ code, tail: graphChanges.get(completed)?.output.text() ?? "" }, invocation.args.join(" "), async () => {
+          check(); attemptStart = Date.now(); completed = launch(invocation.args);
+          const next = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", value => accept(value ?? 1)); });
+          return { code: next, tail: graphChanges.get(completed)?.output.text() ?? "" };
+        }, { signal: actualPhase.signal });
         if(pendingGeneration!==undefined&&code===0&&!cancelled&&!invocation.watch){
           const{withNxGraphAuxiliaryCapacityV1}=await import("../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts"),generationOwner=await import("../🕸️graph/🔏️seal/📌️generation/🟦️.ts"),claim=pendingGeneration;
           const written=await withNxGraphAuxiliaryCapacityV1(this.root,env,{version:1,extraBytes:8192},()=>generationOwner.writeNxGenerationReceiptV1(this.root,env.NX_WORKSPACE_DATA_DIRECTORY!,claim,actualPhase.signal)).catch(error=>{if(profileBootstrap)sayBootstrapV1("nx.generation-receipt-refused",{reason:String(error instanceof Error?error.message:String(error))});return false;});
@@ -598,7 +588,6 @@ export class NxScript extends Script {
       if (cancelled) process.exitCode = cancelled === "SIGINT" ? 130 : 143;
       else throw error;
     } finally {
-      await sourceHandoff?.close();
       finishing = true;
       if (invocation.watch && children.length && !cancelled) stop("SIGTERM");
       if (cancelled && process.platform !== "win32") {
@@ -615,6 +604,7 @@ export class NxScript extends Script {
       process.removeListener("SIGINT", interrupt);
       process.removeListener("SIGTERM", terminate);
     }
+    }finally{await hold.release?.();}
     });
   }
 }

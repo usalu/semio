@@ -8,9 +8,9 @@ import{chmod,copyFile,link,lstat,mkdir,readlink,realpath,symlink}from"node:fs/pr
 import{basename,dirname,join}from"node:path";
 import{requireNativeStorageReservationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import{acquireResourceLease,checkResourceLeaseControl,requireResourceLeaseReadCustodyV1,requireResourceLeaseCustodyV1,type ResourceLease,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{acquireResourceLease,checkResourceLeaseControl,requireResourceLeaseReadCustodyV1,requireResourceLeaseCustodyV1,type ResourceLease,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import type{RepositoryToolingStoreV1}from"../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import type{RepositoryToolingStoreV1}from"../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1}from"../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{nxSdkSnapshotIdentityV1,type NxSdkSnapshotCloneV1}from"../../📥️snapshot/🟦️.ts";
 import{nxSdkBinaryReceiptV1}from"../../🧊️binary/🟦️.ts";

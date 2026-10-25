@@ -248,7 +248,7 @@ class DiagramLayoutWireJob implements DiagramLayoutWorkerJob {
   }
 }
 
-/** 🧬️ Bounded worker-registry authority for the owned directed-layout codec. */
+/** 🐝️ Bounded worker-registry authority for the owned directed-layout codec. */
 export interface DiagramLayoutWorkerJob {
   readonly descriptor: DiagramLayoutDescriptor;
   readonly reason: string | undefined;
@@ -262,7 +262,7 @@ export interface DiagramLayoutWorkerJob {
   terminal(): DiagramLayoutTerminal | undefined;
 }
 
-/** 🧬️ Creates the sole registry-owned concrete layout authority. */
+/** 🆕️ Creates the sole registry-owned concrete layout authority. */
 export function createDiagramLayoutWorkerJob(descriptor: DiagramLayoutDescriptor): DiagramLayoutWorkerJob {
   return new DiagramLayoutWireJob(descriptor);
 }
@@ -272,7 +272,7 @@ export function createDiagramLayoutBatchTestJob(nodes: readonly Node[], edges: r
   return DiagramLayoutJob.fromBatchTest(nodes, edges, options, generation);
 }
 
-/** 🧪️ Batch adapter that drives the exact persistent job used by the React hook. */
+/** 🎞️ Batch adapter that drives the exact persistent job used by the React hook. */
 export function calculateDiagramLayoutForBatchTest(nodes: Node[], edges: Edge[], options: DiagramLayoutOptions = {}): { nodes: Node[]; edges: Edge[] } {
   const job = DiagramLayoutJob.fromBatchTest(nodes, edges, options);
   let status: DiagramLayoutJobStatus = "running";

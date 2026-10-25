@@ -5,7 +5,7 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 pub use semio_framework_mutation_diff::ApplyCapability;
 
-/// 🪡️ Sparse and record field changes under central grant admission.
+/// 📹️ Sparse and record field changes under central grant admission.
 #[path = "../../🦀️.rs"]
 pub mod field;
 pub use field::{RetainedFieldPreparation, RetainedFieldChange, RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field};

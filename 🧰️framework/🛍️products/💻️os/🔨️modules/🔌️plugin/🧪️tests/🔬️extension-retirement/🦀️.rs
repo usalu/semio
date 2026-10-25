@@ -1,5 +1,13 @@
 mod extension_retirement_tests {
-    use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionInvokeStep;
+    use semio_framework_plugin_extension::extension_runtime_lift::extension_terminal_is_empty;
+use semio_framework_plugin_extension::extension_runtime_lift::extension_cancel_close;
+use semio_framework_plugin_extension::extension_runtime_lift::extension_activate;
+use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement_demands;
+use semio_framework_plugin_extension::extension_runtime_lift::extension_resume_close;
+use semio_framework_plugin_extension::extension_runtime_lift::install_extension_bundle;
+use semio_framework_plugin_extension::extension_runtime_lift::extension_close_step;
+use semio_framework_plugin_extension::extension_runtime_lift::extension_invoke;
+use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionInvokeStep;
     use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
     use semio_framework_plugin_extension::extension_runtime_lift::ExtensionBundle;
     use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionBundleRegistry;
@@ -335,7 +343,7 @@ pub fn close_registry(registry:&mut ExtensionBundleRegistry,cx:&mut semio_framew
     }
 
     async fn poll_extension_response(runtime: &PluginRuntime<semio_framework_plugin_reactor_app::NoPluginApp>, mut events: Vec<semio_framework::kernel::Event>, request: u64,cx:&mut semio_framework_job::StepContext<'_>) -> bool {
-        let budget = semio_framework::kernel::Budget { retained: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), fuel: 1, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 };
+        let budget = semio_framework::kernel::Budget::from_retained(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 1, 16, 65536, 16);
         for _ in 0..64 {
             let turn = semio_framework_plugin_reactor_turn::poll_kernel(runtime, std::mem::take(&mut events), None, None, budget, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             if turn.effects.iter().any(|effect| matches!(effect, semio_framework::kernel::Effect::Respond { req, result: semio_framework::kernel::RequestOutcome::Ok(bytes) } if req.0 == request && bytes.is_empty())) { return true; }
@@ -353,7 +361,7 @@ pub fn close_registry(registry:&mut ExtensionBundleRegistry,cx:&mut semio_framew
             assert!(install_extension_bundle(&mut candidate).await.unwrap());
             extension_activate().await.unwrap();
             let runtime = PluginRuntime::<semio_framework_plugin_reactor_app::NoPluginApp>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-            let budget = semio_framework::kernel::Budget { retained: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), fuel: 0, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 };
+            let budget = semio_framework::kernel::Budget::from_retained(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 0, 16, 65536, 16);
             for change in fixture["nonClosingChanges"].as_array().unwrap() {
                 use semio_framework::kernel::{BrokerCapabilityGrant, CapabilityChange, CapabilityId, CapabilityToken, Event, QuotaSchema};
                 let grant = BrokerCapabilityGrant { id: CapabilityId("echo".into()), token: CapabilityToken(42), scope: "fixture".into(), expires_ms: None };
@@ -378,7 +386,7 @@ pub fn close_registry(registry:&mut ExtensionBundleRegistry,cx:&mut semio_framew
             assert!(!terminal.load(Ordering::SeqCst));
             assert!(poll_extension_response(&runtime, vec![control(2,fixture["controls"]["resume"].as_str().unwrap())], 2,cx).await, "the retained invocation answers the resumed control request within its bounded turns");
             for _ in 0..10000 {
-                let turn = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, None, None, semio_framework::kernel::Budget { retained: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), fuel: 1, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
+                let turn = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, None, None, semio_framework::kernel::Budget::from_retained(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 1, 16, 65536, 16), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
                 if extension_terminal_is_empty() { assert_eq!(turn.status, semio_framework::kernel::TurnStatus::Idle); assert!(terminal.load(Ordering::SeqCst)); break; }
             }
             assert!(extension_terminal_is_empty(),"exported polling did not retire extension resources");

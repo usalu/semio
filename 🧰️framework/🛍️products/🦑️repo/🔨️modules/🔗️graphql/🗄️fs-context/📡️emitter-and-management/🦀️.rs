@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🗄️FsRepoContext
-/// 📡️ The emitter that forwards an aggregate event to the repository coordinator.
+/// 🦑️ The emitter that forwards an aggregate event to the repository coordinator.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CoordinatorEmitter;
 

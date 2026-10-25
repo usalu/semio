@@ -10,7 +10,7 @@ use pack::snapshot::ArtifactPack;
 /// 👥️ Shareable live subset of gis3d view state — just the camera now; pin selection broadcasts
 /// automatically via the framework's typed `PresenceInteraction` (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no longer mirrored here.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -21,7 +21,11 @@ pub struct Gis3dPresence {
     pub camera_json: String,
 }
 
-impl store::ArtifactPresenceSnapshot for Gis3dPresence {}
+impl store::ArtifactPresenceSnapshot for Gis3dPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl Default for Gis3dPresence {
     fn default() -> Self {

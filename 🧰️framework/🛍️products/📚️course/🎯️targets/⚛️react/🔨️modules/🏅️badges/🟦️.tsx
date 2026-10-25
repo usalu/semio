@@ -40,7 +40,7 @@ function BadgeMark(props: { readonly earned: boolean; readonly size?: "tiny" | "
   );
 }
 
-/** 🏅️ The badges card of the overview; its heading and "All badges" open the badges page (`#badges`). */
+/** 🎖️ The badges card of the overview; its heading and "All badges" open the badges page (`#badges`). */
 export function BadgesCard(props: { readonly state: CourseState; readonly text: CourseText; readonly locale: CourseLocale; readonly revealed: boolean; readonly onOpen: () => void }): ReactElement {
   const { state, text, locale, revealed, onOpen } = props;
   const id = useId();
@@ -88,7 +88,7 @@ export function BadgesCard(props: { readonly state: CourseState; readonly text: 
   );
 }
 
-/** 🏅️ The badges page behind the badges card: every badge with its description, earned (with the day) or not yet. */
+/** 🥇️ The badges page behind the badges card: every badge with its description, earned (with the day) or not yet. */
 export function BadgesPage(props: { readonly state: CourseState; readonly text: CourseText; readonly locale: CourseLocale; readonly view: PaneView }): ReactElement {
   const { state, text, locale, view } = props;
   const id = useId();

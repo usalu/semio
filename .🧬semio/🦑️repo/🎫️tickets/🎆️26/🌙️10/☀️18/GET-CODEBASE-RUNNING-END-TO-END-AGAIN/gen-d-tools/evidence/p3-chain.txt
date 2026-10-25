@@ -1,0 +1,281 @@
+file 🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🎞️icon-motion/🎨️.css sha256 952e39470f610735c0c43024a9b9a2118aeceb0a11ccf91d6287bbe2c583ea26 bytes 2807
+run A rc 0 3452s started 05:58:02
+edited sha256 2f70437ffb856df0ce990da6debf96096dbb886e1fdfe3b29de804552c4b18b4
+run B rc 0 426s started 06:55:34
+restored sha256 952e39470f610735c0c43024a9b9a2118aeceb0a11ccf91d6287bbe2c583ea26 (original 952e39470f610735c0c43024a9b9a2118aeceb0a11ccf91d6287bbe2c583ea26)
+run C rc 0 334s started 07:02:40
+## A to B edit
+### verdicts.ts
+//:t_2b47068189231fe7 key-changed changed 5 derived true source 3 args true outputsIdentical true
+//:t_4703339af2ed8950 hit changed 0 derived false source 0 args false outputsIdentical null
+//:t_7cecd39a0d01ac2b key-changed changed 5 derived true source 3 args true outputsIdentical true
+//:t_89494d21613948da key-changed changed 5 derived true source 3 args true outputsIdentical true
+//:t_e54168b23fa2faa7 key-changed changed 5 derived true source 3 args true outputsIdentical true
+//:t_ed9c20287d15abca key-changed changed 11 derived true source 11 args true outputsIdentical false
+//:t_f20801f21818a81f key-changed changed 6 derived true source 4 args true outputsIdentical true
+
+### diff-execlogs.py
+== //:t_2b47068189231fe7 RepoScript A spawn 6bfb0746397f B spawn d66e51285bc2 B cacheHit False B runner local
+   inputs 2834 2834 changed 5 only A 0 only B 0
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed implementation.executor-command.json
+   changed t_2b47068189231fe7.input
+   changed t_2b47068189231fe7.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_2b47068189231fe7.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_2b47068189231fe7.snapshot-0.params']
+   outputs 2 2 differing 0 onlyA 0 onlyB 0
+== //:t_4703339af2ed8950 RepoGenerate A spawn 8c9daf98d3a5 B spawn ffffa2b9b2fd B cacheHit True B runner disk cache hit
+   inputs 1959 1959 changed 5 only A 0 only B 0
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed implementation.executor-command.json
+   changed t_4703339af2ed8950.input
+   changed t_4703339af2ed8950.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_4703339af2ed8950.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_4703339af2ed8950.snapshot-0.params']
+   outputs 9 9 differing 0 onlyA 0 onlyB 0
+== //:t_7cecd39a0d01ac2b RepoBuild A spawn 5862f54a7031 B spawn 41a7dc3c0762 B cacheHit False B runner local
+   inputs 3062 3062 changed 5 only A 0 only B 0
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed implementation.executor-command.json
+   changed t_7cecd39a0d01ac2b.input
+   changed t_7cecd39a0d01ac2b.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_7cecd39a0d01ac2b.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_7cecd39a0d01ac2b.snapshot-0.params']
+   outputs 260 260 differing 0 onlyA 0 onlyB 0
+== //:t_89494d21613948da RepoGenerate A spawn 152a563b54ed B spawn 4c2bc971d43f B cacheHit False B runner local
+   inputs 3380 3380 changed 5 only A 0 only B 0
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed implementation.executor-command.json
+   changed t_89494d21613948da.input
+   changed t_89494d21613948da.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_89494d21613948da.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_89494d21613948da.snapshot-0.params']
+   outputs 2 2 differing 0 onlyA 0 onlyB 0
+== //:t_e54168b23fa2faa7 RepoGenerate A spawn 4f1b49776fd6 B spawn 6f2450e0a9aa B cacheHit False B runner local
+   inputs 2603 2603 changed 5 only A 0 only B 0
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed implementation.executor-command.json
+   changed t_e54168b23fa2faa7.input
+   changed t_e54168b23fa2faa7.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_e54168b23fa2faa7.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_e54168b23fa2faa7.snapshot-0.params']
+   outputs 2 2 differing 0 onlyA 0 onlyB 0
+== //:t_ed9c20287d15abca RepoBuild A spawn e3ec213858aa B spawn 02229c6445d7 B cacheHit False B runner local
+   inputs 10677 10677 changed 11 only A 1 only B 1
+   changed a/0515c10254/ð¦ï¸.ts
+   changed a/1063dc8a7c/ð¨ï¸.css
+   changed a/20e1a9137c/ð¦ï¸.ts
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/6df103fa6d/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed a/aaaadea6ff/ð£ï¸.json
+   changed a/f0fa41e617/ðï¸project.json
+   changed implementation.executor-command.json
+   changed t_ed9c20287d15abca.input
+   changed t_ed9c20287d15abca.json
+   onlyA a/c2eed5e917/ð¨ï¸.cjs
+   onlyB a/714ab9340d/ð£ï¸.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_ed9c20287d15abca.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_ed9c20287d15abca.snapshot-0.params']
+   outputs 2 2 differing 2 onlyA 0 onlyB 0
+== //:t_f20801f21818a81f RepoGenerate A spawn a4c4610f6363 B spawn 5ceadca04637 B cacheHit False B runner local
+   inputs 3219 3219 changed 6 only A 0 only B 0
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed a/c712097562/ð£ï¸.json
+   changed implementation.executor-command.json
+   changed t_f20801f21818a81f.input
+   changed t_f20801f21818a81f.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_f20801f21818a81f.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_f20801f21818a81f.snapshot-0.params']
+   outputs 3 3 differing 0 onlyA 0 onlyB 0
+
+### moved inputs (aliases resolved)
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧷️typescript-reference-authority/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧹️code-style/🟦️.ts
+🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🎞️icon-motion/🎨️.css
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🏁️gate-lanes/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/📖️texts/🔣️.json
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json
+🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json
+
+## B to C restore
+### verdicts.ts
+//:t_2b47068189231fe7 key-changed changed 5 derived false source 5 args false outputsIdentical true
+//:t_4703339af2ed8950 key-changed changed 2 derived false source 2 args false outputsIdentical true
+//:t_7cecd39a0d01ac2b key-changed changed 2 derived false source 2 args false outputsIdentical true
+//:t_89494d21613948da key-changed changed 4 derived false source 4 args false outputsIdentical true
+//:t_e54168b23fa2faa7 key-changed changed 3 derived false source 3 args false outputsIdentical true
+//:t_ed9c20287d15abca key-changed changed 3 derived false source 3 args false outputsIdentical false
+//:t_f20801f21818a81f key-changed changed 2 derived false source 2 args false outputsIdentical true
+
+### diff-execlogs.py
+== //:t_2b47068189231fe7 RepoScript A spawn d66e51285bc2 B spawn aaa31a58f05b B cacheHit False B runner local
+   inputs 2834 2834 changed 5 only A 0 only B 0
+   changed a/02e62b730f/ð¦ï¸.rs
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/ac1bd61a57/ð¦ï¸.rs
+   changed a/bee05262b7/ð¦ï¸.ts
+   changed a/f181aee83f/ð¦ï¸.ts
+   outputs 2 2 differing 0 onlyA 0 onlyB 0
+== //:t_4703339af2ed8950 RepoGenerate A spawn ffffa2b9b2fd B spawn 78ac65c8f8f4 B cacheHit False B runner local
+   inputs 1959 1959 changed 2 only A 0 only B 0
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/bee05262b7/ð¦ï¸.ts
+   outputs 9 9 differing 0 onlyA 0 onlyB 0
+== //:t_7cecd39a0d01ac2b RepoBuild A spawn 41a7dc3c0762 B spawn c8276859eea2 B cacheHit False B runner local
+   inputs 3062 3062 changed 2 only A 0 only B 0
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/bee05262b7/ð¦ï¸.ts
+   outputs 260 260 differing 0 onlyA 0 onlyB 0
+== //:t_89494d21613948da RepoGenerate A spawn 4c2bc971d43f B spawn 9e0281948fa1 B cacheHit False B runner local
+   inputs 3380 3380 changed 4 only A 0 only B 0
+   changed a/02e62b730f/ð¦ï¸.rs
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/bee05262b7/ð¦ï¸.ts
+   changed a/f181aee83f/ð¦ï¸.ts
+   outputs 2 2 differing 0 onlyA 0 onlyB 0
+== //:t_e54168b23fa2faa7 RepoGenerate A spawn 6f2450e0a9aa B spawn 801f8f8ce5b4 B cacheHit False B runner local
+   inputs 2603 2603 changed 3 only A 0 only B 0
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/bee05262b7/ð¦ï¸.ts
+   changed a/f181aee83f/ð¦ï¸.ts
+   outputs 2 2 differing 0 onlyA 0 onlyB 0
+== //:t_ed9c20287d15abca RepoBuild A spawn 02229c6445d7 B spawn 07b3d34aab7d B cacheHit False B runner local
+   inputs 10677 10677 changed 3 only A 0 only B 0
+   changed a/1063dc8a7c/ð¨ï¸.css
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/bee05262b7/ð¦ï¸.ts
+   outputs 2 2 differing 2 onlyA 0 onlyB 0
+== //:t_f20801f21818a81f RepoGenerate A spawn 5ceadca04637 B spawn 9a82bf997b7a B cacheHit False B runner local
+   inputs 3219 3219 changed 2 only A 0 only B 0
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/bee05262b7/ð¦ï¸.ts
+   outputs 3 3 differing 0 onlyA 0 onlyB 0
+
+### moved inputs (aliases resolved)
+🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts
+🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🛬️decoder/🦀️.rs
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/🕸️resolution/🟦️.ts
+🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🎞️icon-motion/🎨️.css
+
+## A to C
+### verdicts.ts
+//:t_2b47068189231fe7 key-changed changed 10 derived true source 8 args true outputsIdentical true
+//:t_4703339af2ed8950 key-changed changed 7 derived true source 5 args true outputsIdentical true
+//:t_7cecd39a0d01ac2b key-changed changed 7 derived true source 5 args true outputsIdentical true
+//:t_89494d21613948da key-changed changed 9 derived true source 7 args true outputsIdentical true
+//:t_e54168b23fa2faa7 key-changed changed 8 derived true source 6 args true outputsIdentical true
+//:t_ed9c20287d15abca key-changed changed 12 derived true source 12 args true outputsIdentical true
+//:t_f20801f21818a81f key-changed changed 8 derived true source 6 args true outputsIdentical true
+
+### diff-execlogs.py
+== //:t_2b47068189231fe7 RepoScript A spawn 6bfb0746397f B spawn aaa31a58f05b B cacheHit False B runner local
+   inputs 2834 2834 changed 10 only A 0 only B 0
+   changed a/02e62b730f/ð¦ï¸.rs
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed a/ac1bd61a57/ð¦ï¸.rs
+   changed a/bee05262b7/ð¦ï¸.ts
+   changed a/f181aee83f/ð¦ï¸.ts
+   changed implementation.executor-command.json
+   changed t_2b47068189231fe7.input
+   changed t_2b47068189231fe7.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_2b47068189231fe7.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_2b47068189231fe7.snapshot-0.params']
+   outputs 2 2 differing 0 onlyA 0 onlyB 0
+== //:t_4703339af2ed8950 RepoGenerate A spawn 8c9daf98d3a5 B spawn 78ac65c8f8f4 B cacheHit False B runner local
+   inputs 1959 1959 changed 7 only A 0 only B 0
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed a/bee05262b7/ð¦ï¸.ts
+   changed implementation.executor-command.json
+   changed t_4703339af2ed8950.input
+   changed t_4703339af2ed8950.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_4703339af2ed8950.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_4703339af2ed8950.snapshot-0.params']
+   outputs 9 9 differing 0 onlyA 0 onlyB 0
+== //:t_7cecd39a0d01ac2b RepoBuild A spawn 5862f54a7031 B spawn c8276859eea2 B cacheHit False B runner local
+   inputs 3062 3062 changed 7 only A 0 only B 0
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed a/bee05262b7/ð¦ï¸.ts
+   changed implementation.executor-command.json
+   changed t_7cecd39a0d01ac2b.input
+   changed t_7cecd39a0d01ac2b.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_7cecd39a0d01ac2b.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_7cecd39a0d01ac2b.snapshot-0.params']
+   outputs 260 260 differing 0 onlyA 0 onlyB 0
+== //:t_89494d21613948da RepoGenerate A spawn 152a563b54ed B spawn 9e0281948fa1 B cacheHit False B runner local
+   inputs 3380 3380 changed 9 only A 0 only B 0
+   changed a/02e62b730f/ð¦ï¸.rs
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed a/bee05262b7/ð¦ï¸.ts
+   changed a/f181aee83f/ð¦ï¸.ts
+   changed implementation.executor-command.json
+   changed t_89494d21613948da.input
+   changed t_89494d21613948da.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_89494d21613948da.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_89494d21613948da.snapshot-0.params']
+   outputs 2 2 differing 0 onlyA 0 onlyB 0
+== //:t_e54168b23fa2faa7 RepoGenerate A spawn 4f1b49776fd6 B spawn 801f8f8ce5b4 B cacheHit False B runner local
+   inputs 2603 2603 changed 8 only A 0 only B 0
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed a/bee05262b7/ð¦ï¸.ts
+   changed a/f181aee83f/ð¦ï¸.ts
+   changed implementation.executor-command.json
+   changed t_e54168b23fa2faa7.input
+   changed t_e54168b23fa2faa7.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_e54168b23fa2faa7.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_e54168b23fa2faa7.snapshot-0.params']
+   outputs 2 2 differing 0 onlyA 0 onlyB 0
+== //:t_ed9c20287d15abca RepoBuild A spawn e3ec213858aa B spawn 07b3d34aab7d B cacheHit False B runner local
+   inputs 10677 10677 changed 12 only A 1 only B 1
+   changed a/0515c10254/ð¦ï¸.ts
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/20e1a9137c/ð¦ï¸.ts
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/6df103fa6d/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed a/aaaadea6ff/ð£ï¸.json
+   changed a/bee05262b7/ð¦ï¸.ts
+   changed a/f0fa41e617/ðï¸project.json
+   changed implementation.executor-command.json
+   changed t_ed9c20287d15abca.input
+   changed t_ed9c20287d15abca.json
+   onlyA a/c2eed5e917/ð¨ï¸.cjs
+   onlyB a/714ab9340d/ð£ï¸.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_ed9c20287d15abca.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_ed9c20287d15abca.snapshot-0.params']
+   outputs 2 2 differing 0 onlyA 0 onlyB 0
+== //:t_f20801f21818a81f RepoGenerate A spawn a4c4610f6363 B spawn 9a82bf997b7a B cacheHit False B runner local
+   inputs 3219 3219 changed 8 only A 0 only B 0
+   changed a/1be3a5c948/ð¦ï¸.ts
+   changed a/47570ff41a/ð¦ï¸.ts
+   changed a/72428377fe/ð¦ï¸.ts
+   changed a/bee05262b7/ð¦ï¸.ts
+   changed a/c712097562/ð£ï¸.json
+   changed implementation.executor-command.json
+   changed t_f20801f21818a81f.input
+   changed t_f20801f21818a81f.json
+   args differ ['128e5de19a6a19b12e908fea2c0285a86c01efa610731bf76124c87134a296d2', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_f20801f21818a81f.snapshot-0.params'] ['b121e24af2e37f12aec8038e82b910610260e24b759326451732179bda16a280', 'work-action', '@bazel-out/darwin_arm64-fastbuild/bin/t_f20801f21818a81f.snapshot-0.params']
+   outputs 3 3 differing 0 onlyA 0 onlyB 0
+
+### moved inputs (aliases resolved)
+🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧷️typescript-reference-authority/🟦️.ts
+🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🛬️decoder/🦀️.rs
+🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/🕸️resolution/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧹️code-style/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🏁️gate-lanes/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/📖️texts/🔣️.json
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json
+🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json
+

@@ -20,6 +20,9 @@ use std::sync::Arc;
 use super::ComputeJobParamsPreparation;
 use super::host_runtime::global_worker_pool;
 
+/// 🔁️ Consecutive progressing job steps the driver runs before it sleeps one poll interval.
+const COMPUTE_IMMEDIATE_STEPS_PER_YIELD: u32 = 256;
+
 //#region 🧮️ComputePool
 /// 🚫️ [`ComputePool`]'s dispatch failure modes.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -133,6 +136,7 @@ impl ComputePool {
         if completion.session.checked_out_outcome().ok().flatten().is_some_and(|view|view.is_terminal()){return Ok(true)}
         if completion.permit.is_none(){match self.acquire_job_permit(runtime,ctx).await{Ok(Some(permit))=>completion.permit=Some(permit),Ok(None)=>{completion.result=Err(ComputeError::Cancelled);return Ok(true)},Err(error)=>{completion.result=Err(error);return Ok(true)}}}
         let mut recipient=Some(recipient);
+        let mut immediate=0u32;
         loop{
             let now=runtime.now_ms().await;
             if ctx.deadline_ms.is_some_and(|deadline|now>=deadline){ctx.cancel.cancel().await;completion.result=Err(ComputeError::DeadlineExceeded);return Ok(true)}
@@ -144,16 +148,18 @@ impl ComputePool {
                     if let Err(error)=retained_recipient.record_progress(progress){*completion.fault=Some(error);completion.result=Err(ComputeError::WorkerLost);return Ok(true)}
                     match completion.session.checked_out_outcome(){
                         Ok(Some(view))if view.is_terminal()=>{recipient.take().expect("original compute terminal recipient")(view);return Ok(true)},
-                        Ok(Some(_))=>{},
+                        Ok(Some(_))|Ok(None)=>{},
                         _=>{completion.result=Err(ComputeError::WorkerLost);return Ok(true)},
                     }
                     while completion.session.checked_out_outcome_descriptor().is_some(){let retained=retained_recipient.remaining_grant()?;let step=completion.session.acknowledge_checked_out_outcome(retained);if let Err(error)=retained_recipient.record_progress(step.progress()){*completion.fault=Some(error);completion.result=Err(ComputeError::WorkerLost);return Ok(true)}if step.progress()==Default::default(){completion.result=Err(ComputeError::WorkerLost);return Ok(true)}}
                     if completion.session.resume().is_err(){completion.result=Err(ComputeError::WorkerLost);return Ok(true)}
+                    immediate+=1;if immediate<COMPUTE_IMMEDIATE_STEPS_PER_YIELD{continue}
                 },
                 Ok(_)=>{},
                 Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Pool(WorkerSubmitErrorKind::Contended|WorkerSubmitErrorKind::Saturated)))=>{},
                 Err(_)=>{completion.result=Err(ComputeError::WorkerLost);return Ok(true)},
             }
+            immediate=0;
             runtime.sleep_until(ctx.deadline_ms.map_or(now.saturating_add(1),|deadline|deadline.min(now.saturating_add(1)))).await;
         }
     }

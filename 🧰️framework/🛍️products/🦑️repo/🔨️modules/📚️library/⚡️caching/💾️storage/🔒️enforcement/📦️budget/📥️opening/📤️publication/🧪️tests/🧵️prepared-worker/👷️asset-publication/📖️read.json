@@ -1,0 +1,72 @@
+[
+  {
+    "id": "regular",
+    "body": "none",
+    "close": "none",
+    "mutation": "none",
+    "expected": "success"
+  },
+  {
+    "id": "throw-undefined",
+    "body": "undefined",
+    "close": "none",
+    "mutation": "none",
+    "expected": "primary"
+  },
+  {
+    "id": "frozen-primary",
+    "body": "frozen",
+    "close": "none",
+    "mutation": "none",
+    "expected": "primary"
+  },
+  {
+    "id": "successful-close-failure",
+    "body": "none",
+    "close": "after",
+    "mutation": "none",
+    "expected": "close"
+  },
+  {
+    "id": "failed-close-retained",
+    "body": "none",
+    "close": "before",
+    "mutation": "none",
+    "expected": "close"
+  },
+  {
+    "id": "undefined-plus-close",
+    "body": "undefined",
+    "close": "after",
+    "mutation": "none",
+    "expected": "combined"
+  },
+  {
+    "id": "frozen-plus-close",
+    "body": "frozen",
+    "close": "after",
+    "mutation": "none",
+    "expected": "combined"
+  },
+  {
+    "id": "aggregate-cleanup",
+    "body": "aggregate",
+    "close": "aggregate",
+    "mutation": "none",
+    "expected": "expanded"
+  },
+  {
+    "id": "short-read",
+    "body": "none",
+    "close": "none",
+    "mutation": "short",
+    "expected": "primary"
+  },
+  {
+    "id": "growth-tail",
+    "body": "none",
+    "close": "none",
+    "mutation": "growth",
+    "expected": "primary"
+  }
+]

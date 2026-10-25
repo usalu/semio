@@ -14,5 +14,4 @@ test("original shared receive neutral text matches independent SQLite JSON decod
   expect(JSON.parse(encoded)).toBe(law.expected);
   expect(law.original).toBe(original);
  }}finally{db.close();}
- console.log(`[DEBUG] shared original receiving ${fixture.cases.length} language-neutral UTF-8 vectors match independent SQLite JSON and Ajv schema`);
 });

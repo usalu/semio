@@ -60,7 +60,7 @@ impl ClockStride {
         self.last_read_us
     }
 
-    /// 🪜️ How many calls the next real read is apart — the law's observable.
+    /// 📖️ How many calls the next real read is apart — the law's observable.
     pub fn stride(&self) -> u32 {
         self.stride
     }
@@ -85,7 +85,7 @@ pub struct Checkpoint {
     pub applied_progress: u64,
 }
 
-/// 🏁️ Terminal success payload: the job's final persisted `state` plus its `output` — both opaque
+/// 🖥️ Terminal success payload: the job's final persisted `state` plus its `output` — both opaque
 /// bytes, so the runtime stays completely job-agnostic (design doc Decision 2).
 #[derive(Debug, PartialEq, Eq)]
 pub struct CommitCandidate {
@@ -100,7 +100,7 @@ pub struct JobFault {
     pub detail: RetainedJobPayload,
 }
 
-/// 🚦️ What one [`InteractiveJob::step`] call reports. [`StepOutcome::Yield`]/[`StepOutcome::PreviewReady`]/
+/// ☎️ What one [`InteractiveJob::step`] call reports. [`StepOutcome::Yield`]/[`StepOutcome::PreviewReady`]/
 /// [`StepOutcome::CheckpointReady`] all mean "call `step` again"; [`StepOutcome::is_terminal`] marks
 /// the other three.
 #[derive(Debug, PartialEq, Eq)]
@@ -160,7 +160,7 @@ pub trait JobThreadTransfer: Send {}
 #[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
 impl<T: Send + ?Sized> JobThreadTransfer for T {}
 
-/// 🧵️ Browser twin of the marker above — see its docstring.
+/// 💼️ Browser twin of the marker above — see its docstring.
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub trait JobThreadTransfer {}
 
@@ -183,7 +183,7 @@ pub trait InteractiveJob: JobThreadTransfer {
     fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes:usize) -> Result<usize,ValueError> {self.close_demand_without_owner()}
     /// ♻️ Requests complete physical backing release independently of payload copying.
     fn next_close_release_byte_demand(&self) -> Result<usize,ValueError> {self.close_demand_without_owner()}
-    /// 🪜️ Requests the exact original frontier depth without enlarging the caller's limit.
+    /// 📪️ Requests the exact original frontier depth without enlarging the caller's limit.
     fn next_close_depth_demand(&self) -> Result<usize,ValueError> {self.close_demand_without_owner()}
     /// 🔎️ Refuses undeclared retained demand instead of guessing a zero-credit owner.
     fn close_demand_without_owner(&self)->Result<usize,ValueError>{if self.terminal_is_empty(){Ok(0)}else{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"interactive job retained close demand is undeclared"))}}

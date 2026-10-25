@@ -199,7 +199,7 @@ impl Kernel {
         }
     }
 
-    /// 🖼️ Routes an actor's `TurnResult.ui_patches`/estimated node-delta into its window's
+    /// 🩹️ Routes an actor's `TurnResult.ui_patches`/estimated node-delta into its window's
     /// [`SceneStore`], enforcing quota. No-op (Ok) when the actor has no associated window.
     pub async fn apply_scene_patch(&mut self, actor: ActorId, patch_bytes: Vec<u8>, node_delta: u32) -> Result<(), FailureSignal> {
         let Some(meta) = self.actors.get(&actor) else { return Ok(()) };
@@ -263,7 +263,7 @@ impl Kernel {
         self.actors.iter().map(|(id, meta)| ActorMetricsSample { id: *id, package: meta.package.clone(), lane: self.scheduler.lane_of(*id).unwrap_or(Lane::Background), status: meta.status.clone(), metrics: meta.metrics.clone() }).collect()
     }
 
-    /// 📈️ One [`ShardMetricsSample`] per shard holding at least one actor. `busy_ratio` is the
+    /// 📊️ One [`ShardMetricsSample`] per shard holding at least one actor. `busy_ratio` is the
     /// fraction of that shard's actors currently [`ActorStatus::Active`] — computable purely from
     /// kernel-tracked status, no clock needed. `heartbeat_age_ms` is left at 0; see
     /// [`ShardMetricsSample`]'s own doc comment for why a host must overlay it.
@@ -280,7 +280,7 @@ impl Kernel {
         per_shard.into_iter().map(|(shard, (active, total))| ShardMetricsSample { shard, metrics: ShardMetrics { actors: total, busy_ratio: if total > 0 { active as f32 / total as f32 } else { 0.0 }, heartbeat_age_ms: 0 } }).collect()
     }
 
-    /// 📈️ Assembles the full `os.runtime.metrics` payload — [`Kernel::metrics`] plus every actor's and
+    /// 📸️ Assembles the full `os.runtime.metrics` payload — [`Kernel::metrics`] plus every actor's and
     /// shard's sample — for a host to pack-encode and publish. `sampled_at_ms` is the caller's clock
     /// reading, never read internally (this crate's purity rule: transports and time are injected).
     pub async fn runtime_metrics_snapshot(&self, sampled_at_ms: u64) -> RuntimeMetricsSnapshot {

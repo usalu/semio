@@ -1,6 +1,6 @@
 /** 🧮️ Contract: the seal's fact table holds exactly the distinct facts of every inference record and receipt (a naive serial set and Python agree on the count), its check passes only while the table is intact, every record keeps its stamp and every fact still holds, and the capture refuses records whose header digest the receipt does not name. The scenarios live in `./🔣️.json` as language-agnostic data. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {createHash} from "node:crypto";
 import {mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";

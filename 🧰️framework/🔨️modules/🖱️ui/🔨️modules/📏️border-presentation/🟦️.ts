@@ -8,9 +8,9 @@
 /** 📏️ Subtle normal control and divider stroke. */
 export const borderNormalClass = "!border-normal";
 
-/** 📏️ Normal bottom divider stroke. */
+/** ⬇️ Normal bottom divider stroke. */
 export const borderNormalBottomClass = `border-b ${borderNormalClass}`;
 
-/** 📏️ Implicit element border color. */
+/** 🌈️ Implicit element border color. */
 export const borderElementClass = "border-element";
 // #endregion 📏️BorderPresentation

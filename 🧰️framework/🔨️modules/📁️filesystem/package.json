@@ -7,12 +7,15 @@
   "private": true,
   "exports": {
     "./observation": "./🧾️observation/🟦️.ts",
+    "./observation/churn": "./🧾️observation/🔁️churn/🟦️.ts",
     "./observation/current": "./🧾️observation/📁️current/🟦️.ts",
     "./observation/descriptor": "./🧾️observation/📁️descriptor/🟦️.ts",
     "./observation/journal": "./🧾️observation/📥️journal/🟦️.ts",
     "./observation/journal/schema.json": "./🧾️observation/📥️journal/🧬️schema/🔣️.json",
     "./testing/fixtures": "./🧪️tests/🧫️fixtures/🟦️.ts",
-    "./workspace": "./📝️workspace/🟦️.ts"
+    "./workspace": "./📝️workspace/🟦️.ts",
+    "./observation/churn/refusals": "./🧾️observation/🔁️churn/🧾️refusals/🟦️.ts",
+    "./observation/churn/schema.json": "./🧾️observation/🔁️churn/🧬️schema/🔣️.json"
   },
   "license": "LGPL-3.0-or-later",
   "bundleKind": "library",

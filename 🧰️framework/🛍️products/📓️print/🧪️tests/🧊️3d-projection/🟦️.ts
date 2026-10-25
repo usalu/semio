@@ -36,14 +36,14 @@ function cameraMatrix(camera: Camera): mat4 {
   return matrix;
 }
 
-/** 🎥️ The cabinet shear as one `gl-matrix` `mat4`, the oblique camera's whole geometry. */
+/** 🗄️ The cabinet shear as one `gl-matrix` `mat4`, the oblique camera's whole geometry. */
 function obliqueMatrix(camera: Camera): mat4 {
   const angle = ((camera.obliqueAngle ?? 45) * Math.PI) / 180;
   const scale = camera.obliqueScale ?? 0.5;
   return mat4.fromValues(1, 0, 0, 0, 0, 1, 0, 0, scale * Math.cos(angle), scale * Math.sin(angle), 1, 0, 0, 0, 0, 1);
 }
 
-/** 🔮️ One world point through the oracle's matrices: screen x, screen y and the camera depth. */
+/** 📍️ One world point through the oracle's matrices: screen x, screen y and the camera depth. */
 function project(camera: Camera, point: readonly [number, number, number]): [number, number, number] {
   const transformed = vec3.create();
   const source = vec3.fromValues(point[0], point[1], point[2]);
@@ -88,7 +88,7 @@ export default defineTestAdapter({
       subject,
     },
     axonometric: {
-      /** 🔮️ A general axonometric camera and the orthographic preset. */
+      /** 🎬️ A general axonometric camera and the orthographic preset. */
       oracle: () => ({
         projection: {
           "project/axonometric": grid(
@@ -104,7 +104,7 @@ export default defineTestAdapter({
       subject,
     },
     "perspective-and-oblique": {
-      /** 🔮️ The perspective divide and the cabinet shear. */
+      /** ➗️ The perspective divide and the cabinet shear. */
       oracle: () => ({
         projection: {
           "project/perspective": grid(

@@ -1,6 +1,6 @@
 /** 🔶️ The tokens phase of inspectRustNonRepoJoinBaseSpans. */
 import { type RustToken, rustFindTopLevel, rustTokenPairs, rustTokenSegments, rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
-import type { Binding } from "../🟢️shared/🟦️.ts";
+import type { Binding } from "../🟢️harness/🟦️.ts";
 
 /** 🔷 Builds tokens, pairs, rows, literal of inspectRustNonRepoJoinBaseSpans. Unlike the CARGO_MANIFEST_DIR provers it has no whole-file unpaired-bracket bail: the function only ever SUPPRESSES a block and never emits a rewrite, and `inspectRustJoinArgumentSpans` - which shares this exact tokenizer and pairer and already runs unguarded on every file this feeds - proves the risk is contained; every match still requires the exact adjacent-token shape to fire. */
 export function buildTokensState({ source }: { readonly source: string }) {

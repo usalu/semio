@@ -7,16 +7,19 @@
     "messages": {
       "usage.verb": { "en": "usage: verify {verb} <path>", "de": "Aufruf: verify {verb} <Pfad>" },
       "breach.count": { "en": "{count} breach(es) in {scope}", "de": "{count} Verstoß/Verstöße in {scope}" },
-      "stale": { "en": "The receipt is stale.", "de": "Die Quittung ist veraltet." }
+      "stale": { "en": "The receipt is stale.", "de": "Die Quittung ist veraltet." },
+      "cancelled.wait": { "en": "Waiting was cancelled by {signal}", "de": "Das Warten wurde durch {signal} abgebrochen" }
     }
   },
   "errors": [
     { "name": "a usage refusal", "code": "usage", "key": "usage.verb", "values": { "verb": "agnostic" }, "exitCode": 2, "en": "usage: verify agnostic <path>", "de": "Aufruf: verify agnostic <Pfad>" },
     { "name": "a breach with numbers", "code": "breach", "key": "breach.count", "values": { "count": 3, "scope": "taxonomy" }, "exitCode": 1, "en": "3 breach(es) in taxonomy", "de": "3 Verstoß/Verstöße in taxonomy" },
-    { "name": "a refusal without values", "code": "stale", "key": "stale", "values": {}, "exitCode": 1, "en": "The receipt is stale.", "de": "Die Quittung ist veraltet." }
+    { "name": "a refusal without values", "code": "stale", "key": "stale", "values": {}, "exitCode": 1, "en": "The receipt is stale.", "de": "Die Quittung ist veraltet." },
+    { "name": "a cancellation by the developer", "code": "cancelled", "key": "cancelled.wait", "values": { "signal": "SIGINT" }, "exitCode": 130, "en": "Waiting was cancelled by SIGINT", "de": "Das Warten wurde durch SIGINT abgebrochen" }
   ],
   "wire": [
     { "name": "a valid wire form", "valid": true, "data": { "version": 1, "code": "usage", "key": "faults.usage.verb", "values": { "verb": "x" } } },
+    { "name": "the cancelled code", "valid": true, "data": { "version": 1, "code": "cancelled", "key": "faults.cancelled.wait", "values": { "signal": "SIGTERM" } } },
     { "name": "an unknown code", "valid": false, "data": { "version": 1, "code": "oops", "key": "faults.stale", "values": {} } },
     { "name": "a key without a namespace", "valid": false, "data": { "version": 1, "code": "usage", "key": "stale", "values": {} } },
     { "name": "a nested value", "valid": false, "data": { "version": 1, "code": "usage", "key": "faults.stale", "values": { "a": { "b": 1 } } } },

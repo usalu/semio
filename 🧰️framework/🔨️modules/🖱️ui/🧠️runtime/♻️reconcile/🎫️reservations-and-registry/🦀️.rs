@@ -20,7 +20,7 @@ pub(super) fn register_surface_reconcile_backing(admitted_bytes: usize) -> Resul
     ui_contract::UiResidentPermit::try_register_runtime_backing(size_of::<LazyLock<Mutex<SurfaceReconcileHandbackRegistry>>>() + SurfaceReconcileOutputs::static_backing_bytes(), admitted_bytes)
 }
 
-/// 🎫️ Pre-materialization aggregate reservation transferred into exactly one live job.
+/// 💼️ Pre-materialization aggregate reservation transferred into exactly one live job.
 pub struct SurfaceReconcileReservation {
     pub(super) generation: u64,
     pub(super) limits: SurfaceReconcileLimits,
@@ -66,7 +66,7 @@ pub struct SurfaceReconcileRegistryCensus {
     pub handback_slots: usize,
 }
 
-/// 📊️ Reads both reconcile registries without reserving anything, so a refusal can be priced
+/// 📚️ Reads both reconcile registries without reserving anything, so a refusal can be priced
 /// against what is actually held rather than guessed at. Answers the zero census when either table is
 /// contended — a read that must never itself block a turn.
 pub fn surface_reconcile_registry_census() -> SurfaceReconcileRegistryCensus {

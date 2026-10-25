@@ -106,12 +106,13 @@ pub(super) struct TicketDeclaration { #[serde(rename = "$schema")] _schema: Opti
 
 /// 🚨️ One defect of a declaration or of a reference, with the file that declares it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Problem { pub file: String, pub at: String, pub message: String }
+pub struct Problem { pub file: String, pub at: String, pub message: LocalizedText }
 
-impl std::fmt::Display for Problem {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let parts = [self.file.as_str(), self.at.as_str(), self.message.as_str()];
-        formatter.write_str(&parts.iter().filter(|part| !part.is_empty()).copied().collect::<Vec<_>>().join(": "))
+impl Problem {
+    /// 🗣️ The defect in the explicitly chosen language, prefixed by the file and the place that declare it.
+    pub fn render(&self, locale: Locale) -> String {
+        let parts = [self.file.as_str(), self.at.as_str(), self.message.get(locale)];
+        parts.iter().filter(|part| !part.is_empty()).copied().collect::<Vec<_>>().join(": ")
     }
 }
 // #endregion 🔖️Declarations

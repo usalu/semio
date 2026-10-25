@@ -31,7 +31,7 @@ export type UiTestEventInit = Readonly<Record<string, unknown>>;
 //#region 🔌️TestingLibraryAdapter
 import { act as testingAct, cleanup as testingCleanup, fireEvent as testingFireEvent, render as testingRender, screen as testingScreen, waitFor as testingWaitFor, within as testingWithin } from "@testing-library/react";
 
-/** 🖱️ jsdom ships no `PointerEvent`, and the adapter below picks its constructor by event-type name — so
+/** 🔌️ jsdom ships no `PointerEvent`, and the adapter below picks its constructor by event-type name — so
  * without this every `pointerDown`/`pointerMove`/`pointerUp`/`pointerCancel` degrades to a bare `Event`
  * that carries no `button`, `clientX`/`clientY` or `pointerId`. A host that opens a gesture on
  * `event.button === 0` then reads `undefined` and silently takes no press, so a pointer-driven law reads
@@ -80,12 +80,12 @@ export function cleanup(): void {
  * alongside the element rather than forcing a caller to reach past it. */
 type UiTestEventTarget = Element | Document | Window;
 
-/** 🖱️ Dispatches owned semantic DOM events without exposing the underlying test adapter. */
+/** 🔥️ Dispatches owned semantic DOM events without exposing the underlying test adapter. */
 export const fireEvent = {
   change(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.change(target, init);
   },
-  /** 🖱️ `init` carries the modifier state a selection law turns on — a click boundary that dropped it
+  /** 🎒️ `init` carries the modifier state a selection law turns on — a click boundary that dropped it
    * could only ever prove the unmodified `replace` branch. */
   click(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.click(target, init);
@@ -157,7 +157,7 @@ export const screen: UiTestScreen = {
   queryByText: (value, options) => testingScreen.queryByText(value, options as Parameters<typeof testingScreen.queryByText>[1]),
 };
 
-/** 🎯️ Scopes owned semantic queries to one fixture subtree. */
+/** 🧫️ Scopes owned semantic queries to one fixture subtree. */
 export function within(container: HTMLElement): UiTestWithin {
   const queries = testingWithin(container);
   return {

@@ -162,7 +162,7 @@ impl Wfc3dInferenceJob {
             Wfc3dInferenceJobRun::Yield | Wfc3dInferenceJobRun::Staged => Ok(None),
             Wfc3dInferenceJobRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
             Wfc3dInferenceJobRun::StepRestore => {
-                let result = self.restore.as_mut().expect("restore job").step(context)?;
+                let result = self.restore.as_mut().expect("restore job").step_value(context)?;
                 if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
                     self.restore_done = true;
                     return Ok(None);
@@ -171,7 +171,7 @@ impl Wfc3dInferenceJob {
                 Ok(result)
             }
             Wfc3dInferenceJobRun::StepChild => {
-                let result = self.child.as_mut().expect("WFC child").step(context)?;
+                let result = self.child.as_mut().expect("WFC child").step_value(context)?;
                 let end = if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
                     Some(InferenceChildEnd::Complete)
                 } else {

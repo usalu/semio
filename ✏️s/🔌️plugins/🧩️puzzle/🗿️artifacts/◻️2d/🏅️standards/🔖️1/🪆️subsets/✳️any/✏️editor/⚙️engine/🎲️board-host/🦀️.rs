@@ -2,6 +2,7 @@
 //! 🎲️ Puzzle 2d app engine — the themed board hosts: `BoardHost` constructors wired to this
 //! area-select laws they must satisfy.
 
+use crate::editor::puzzle2d::engine::icons::puzzle_themed_icon_lookup;
 use crate::editor::puzzle2d::engine::{BoardFillStage, BoardHost, BoardNaming};
 
 /// 🪧️ The ids this plugin's boards mint and the labels its fill job reports: persisted document ids

@@ -33,6 +33,8 @@ SLOT = re.compile(r"\bslot ([sd]\d+)\b")
 WAIT = re.compile(r"(?i)(slots? (?:are|is) in use|waiting for access|waiting for one|position \d+ of \d+|\[capacity\].*(?:waiting|queue)|host capacity.*(?:wait|queue))")
 EVIDENCE = re.compile(r"^\s*(Compiling \S+ v\d|.*\bBundling\b)")
 PLAYWRIGHT_RESULT = re.compile(r"^\s*(\d+) (passed|failed|flaky|skipped)\b")
+STALE_RC = 75
+STALE_TEXT = "runs an outdated implementation"
 CACHED_RUNNERS = ("disk cache hit", "remote cache hit")
 INTERNAL_RUNNER = "internal"
 
@@ -126,6 +128,36 @@ def plain_verdict(rc: int, parsed: dict):
     if parsed["tests"].get("failed", 0):
         return "FAIL", "%d test(s) failed" % parsed["tests"]["failed"]
     return "PASS", ""
+
+
+NEUTRAL = re.compile(r"^(\s*$|#|\[repository:command\] running elapsedMs=)")
+
+
+class QueueClock:
+    """⏳ Seconds a step spent queued (capacity, lease or Bazel slot waits): a wait line opens the credit, any other output closes it, and a silent queue expires after `grace` seconds. Step timeouts count from admission: deadline = start + timeout + credit."""
+
+    def __init__(self, grace: float = 60.0):
+        self.grace, self.credit, self.tick, self.since, self.last = grace, 0.0, 0.0, None, None
+
+    def feed(self, text: str, now: float) -> None:
+        """📥 Reads new log text."""
+        for raw in text.splitlines():
+            line = strip_ansi(raw)
+            if NEUTRAL.match(line):
+                continue
+            if WAIT.search(line):
+                self.since = now if self.since is None else self.since
+                self.last = now
+            else:
+                self.update(now)
+                self.since = self.last = None
+
+    def update(self, now: float) -> float:
+        """🕰️ Accrues the waiting time since the previous call and returns the total credit."""
+        if self.since is not None:
+            self.credit += max(0.0, min(now, self.last + self.grace) - max(self.tick, self.since))
+        self.tick = now
+        return self.credit
 
 
 def counters(text: str) -> dict:
@@ -380,7 +412,7 @@ class Orchestrator:
 
     def substitute(self, text: str) -> str:
         """🔤 Fills {courseMode} and {courseTopology}."""
-        return text.replace("{courseMode}", self.args.course_mode).replace("{courseTopology}", self.args.course_topology)
+        return text.replace("{courseMode}", self.args.course_mode).replace("{courseTopology}", self.args.course_topology or "")
 
     def command_for(self, step: dict) -> list:
         """🧩 argv of a step."""
@@ -392,9 +424,11 @@ class Orchestrator:
         first = read_text(script).splitlines()[:1]
         interpreter = "sh" if first and first[0].strip().endswith("/sh") else "bash"
         extra = []
-        if step["script"].endswith("run-e2e.sh") and step["args"][0] == "course" and self.args.course_topology != "dev":
+        declared = step["script"].endswith("run-e2e.sh") and step["args"][0] == "course"
+        if declared and self.args.course_topology != "dev":
             extra.append("--release")
-        return [interpreter, str(script)] + [self.substitute(a) for a in step["args"]] + extra
+        arguments = [a for a in step["args"] if not (declared and "{courseTopology}" in a and not self.args.course_topology)]
+        return [interpreter, str(script)] + [self.substitute(a) for a in arguments] + extra
 
     def steps_of(self, product: str, phase: str) -> list:
         """📋 Steps of a product phase (warm repeats cold)."""
@@ -424,6 +458,7 @@ class Orchestrator:
         command = self.command_for(step)
         log_path = self.dir / product / ("%s-%d-%s.log" % (phase, index, step["id"]))
         log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_base = log_path.stat().st_size if log_path.exists() else 0
         entry = {"product": product, "phase": phase, "id": step["id"], "group": step["group"], "cmd": command, "start": now_iso(), "end": None, "seconds": None, "rc": None, "status": "RUNNING", "note": "", "log": self.rel(log_path), "bazel": {}, "slots": [], "waits": [], "evidence": [], "tests": {}}
         self.record(entry)
         env = self.child_env(product, step.get("env"))
@@ -443,17 +478,24 @@ class Orchestrator:
             if process is not None:
                 with self.lock:
                     self.running[key] = {"started": started, "log": log_path, "pid": process.pid}
-                deadline = started + step["timeoutSeconds"]
+                queue, offset = QueueClock(self.th.get("queueGraceSeconds", 60)), log_base
                 while True:
                     try:
                         rc = process.wait(timeout=1)
                         break
                     except subprocess.TimeoutExpired:
                         pass
+                    with open(log_path, "rb") as reader:
+                        reader.seek(offset)
+                        fresh = reader.read()
+                    offset += len(fresh)
+                    clock = time.time()
+                    queue.feed(fresh.decode("utf-8", "replace"), clock)
+                    waited = queue.update(clock)
                     if self.cancel.is_set():
                         stopped = "cancelled: " + (self.cancel_reason or "requested")
-                    elif time.time() > deadline:
-                        stopped = "timeout after %s" % fmt_seconds(step["timeoutSeconds"])
+                    elif clock > started + step["timeoutSeconds"] + waited:
+                        stopped = "timeout after %s of work (+ %s queued)" % (fmt_seconds(step["timeoutSeconds"]), fmt_seconds(waited))
                     if stopped:
                         self.log("%s: stopping (%s)" % (key, stopped))
                         kill_group(process, self.th["terminateGraceSeconds"])
@@ -462,7 +504,7 @@ class Orchestrator:
                 with self.lock:
                     self.running.pop(key, None)
         seconds = time.time() - started
-        parsed = parse_log("\n".join(read_text(log_path).splitlines()[2:]))
+        parsed = parse_log("\n".join(log_path.read_bytes()[log_base:].decode("utf-8", "replace").splitlines()[2:]))
         entry.update({"end": now_iso(), "seconds": round(seconds, 1), "rc": rc, "bazel": {k: parsed[k] for k in ("summaries", "processes", "spawns", "cacheHits", "internal", "runners")}, "slots": parsed["slots"], "waits": parsed["waits"], "evidence": parsed["evidence"], "tests": parsed["tests"]})
         if stopped:
             entry["status"] = "CANCELLED" if stopped.startswith("cancelled") else "FAIL"
@@ -484,8 +526,35 @@ class Orchestrator:
         self.log("%s: %s rc=%s %s %s" % (key, entry["status"], rc, fmt_seconds(seconds), entry["note"]))
         return entry
 
+    def execute_retrying(self, product, phase, step, index) -> dict:
+        """🔁 Runs a step again (at most `staleRetries` times) while it exits 75 because a peer moved a declared format stamp under it (the process ran an outdated implementation: a retry, not a failure); a warm step that passed but did work is settled by `warmSettleRuns` further runs, because inputs edited between the cold and the warm run are rebuilt once and cached afterwards."""
+        entry = self.execute(product, phase, step, index)
+        for attempt in range(1, self.th.get("staleRetries", 2) + 1):
+            if entry["rc"] != STALE_RC or self.cancel.is_set() or STALE_TEXT not in read_text(self.root / entry["log"]):
+                break
+            self.log("%s:%s:%s: outdated implementation (a peer moved a format stamp); retry %d" % (product, phase, step["id"], attempt))
+            entry = self.execute(product, phase, step, index)
+            entry["note"] = (entry["note"] + "; " if entry["note"] else "") + "retried %d time(s) after an outdated-implementation exit" % attempt
+            self.record(entry)
+        for settle in range(1, self.th.get("warmSettleRuns", 1) + 1):
+            if phase != "warm" or entry["status"] != "FAIL" or entry["rc"] != 0 or self.cancel.is_set():
+                break
+            first = entry["note"]
+            self.log("%s:%s:%s: warm run executed work (%s): the inputs moved after the cold run; settle run %d decides" % (product, phase, step["id"], first, settle))
+            entry = self.execute(product, phase, step, index)
+            entry["note"] = (entry["note"] + "; " if entry["note"] else "") + "settle run %d after a first warm run with work (%s)" % (settle, first)
+            self.record(entry)
+        return entry
+
+    def forget_unfinished(self, product: str, phases: list) -> None:
+        """♻️ Continuing a run id retries what did not pass: the records of failed, cancelled, skipped and interrupted steps of the selected phases are dropped so they neither skip their group nor show stale verdicts."""
+        with self.lock:
+            self.state["steps"] = [r for r in self.state["steps"] if not (r["product"] == product and r["phase"] in phases and r["status"] in ("FAIL", "CANCELLED", "SKIP-FAILED", "RUNNING"))]
+        self.save()
+
     def pipeline(self, product: str, phases: list) -> None:
         """🚦 Runs the selected phases of one product sequentially; failed groups skip their dependants."""
+        self.forget_unfinished(product, phases)
         delay = self.plan["products"][product]["order"] - 1
         if self.args.stagger and delay > 0:
             for _ in range(int(delay * self.th["staggerSeconds"])):
@@ -514,7 +583,7 @@ class Orchestrator:
                     self.record({"product": product, "phase": phase, "id": step["id"], "group": step["group"], "cmd": self.command_for(step), "start": now_iso(), "end": now_iso(), "seconds": 0, "rc": None, "status": "SKIP-FAILED", "note": reason, "log": "", "bazel": {}, "slots": [], "waits": [], "evidence": [], "tests": {}})
                     self.log("%s:%s:%s: skipped, %s" % (product, phase, step["id"], reason))
                     continue
-                self.execute(product, phase, step, index)
+                self.execute_retrying(product, phase, step, index)
 
     def run_pipelines(self, products: list, phases: list) -> None:
         """🧵 Product pipelines in parallel, longest first, bounded by --parallel."""
@@ -731,7 +800,7 @@ class Orchestrator:
 
         for _ in range(3):
             rc, out = capture(cli + ["targets", "--json"], self.th["verifyTargetSeconds"], cwd=str(self.root), env=env, machine=True)
-            if rc == 0 and candidates(json_part(strip_ansi(out))):
+            if self.cancel.is_set() or (rc == 0 and candidates(json_part(strip_ansi(out)))):
                 break
         if rc != 0:
             tail = " ".join(l.strip() for l in strip_ansi(out).splitlines() if l.strip() and not l.startswith("[script]") and not l.startswith("[capacity]"))[-240:]
@@ -740,7 +809,7 @@ class Orchestrator:
         if rows and not any(":" in r for r in rows):
             for _ in range(3):
                 rc, out = capture(cli + ["projects", "--json"], self.th["verifyTargetSeconds"], cwd=str(self.root), env=env, machine=True)
-                if rc == 0 and candidates(json_part(strip_ansi(out))):
+                if self.cancel.is_set() or (rc == 0 and candidates(json_part(strip_ansi(out)))):
                     break
             if rc != 0:
                 return self.check(checks, "WARN", "graph targets", "could not read the published projects (exit %d); target names not verified" % rc)
@@ -754,6 +823,36 @@ class Orchestrator:
             return self.check(checks, "FAIL", "graph targets", "%d of %d target(s) missing from the generation: %s" % (len(missing), sum(len(v) for v in wanted.values()), ", ".join(missing)))
         self.check(checks, "OK", "graph targets", "%d target(s) of %d project(s) found in one `show targets --json` (SEMIO_BUILD_GRAPH_POLICY=current)" % (sum(len(v) for v in wanted.values()), len(wanted)))
 
+    def runtime_checks(self, checks: list) -> None:
+        """📌 The pinned Bun (packageManager) is the one that runs: asked of the repo launcher (it owns the provisioning), then proved by a host Bun that starts in the checkout (the bunfig guard re-runs it as the pinned one)."""
+        try:
+            package = json.loads(read_text(self.root / "package.json"))
+        except ValueError:
+            package = {}
+        wanted = str(package.get("packageManager", "")).split("@")[-1]
+        launcher = shutil.which("repo")
+        if not launcher:
+            self.check(checks, "FAIL", "pinned bun", "the repo launcher is not on PATH; install it once (it provisions bun %s): bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🐚️.sh" % (wanted or "-"))
+            return
+        rc, out = capture([launcher, "--version", "--lang=en"], 60, cwd=str(self.root), env=self.child_env(""))
+        found = re.search(r"^runtime bun (\S+): (ready, (.+)|not provisioned yet)", out, re.M)
+        if rc != 0 or not found:
+            self.check(checks, "FAIL", "pinned bun", "`repo --version` exit %d: %s" % (rc, out.strip()[:160]))
+            return
+        pinned = found.group(1)
+        if wanted and pinned != wanted:
+            self.check(checks, "FAIL", "pinned bun", "launcher registry pins %s, packageManager %s" % (pinned, wanted))
+        elif found.group(3):
+            self.check(checks, "OK", "pinned bun", "%s provisioned: %s" % (pinned, found.group(3).strip()))
+        else:
+            self.check(checks, "WARN", "pinned bun", "%s is not provisioned yet; the first repo command downloads it (SHA-256 pinned)" % pinned)
+        host = shutil.which("bun")
+        if host:
+            rc, out = capture([host, "-e", "console.log(process.versions.bun)"], 60, cwd=str(self.root), env=self.child_env(""))
+            ran = out.strip().splitlines()[-1] if out.strip() else ""
+            started = capture([host, "--version"], 20)[1].strip()
+            self.check(checks, "OK" if rc == 0 and ran == pinned else "FAIL", "bun runs pinned", "bun on PATH is %s (%s) and runs the checkout as %s (pinned %s)" % (started, host, ran or "nothing: exit %d" % rc, pinned))
+
     def preflight(self, products: list, phases: list) -> dict:
         """🛫 Prerequisite checks: tools, pins, ports, disk, memory, load, capacity, slots, applied sets."""
         checks = []
@@ -764,16 +863,7 @@ class Orchestrator:
         for tool in ("python3", "bun", "node", "git"):
             found = shutil.which(tool) or (sys.executable if tool == "python3" else None)
             self.check(checks, "OK" if found else ("FAIL" if tool in ("bun",) or (tool == "node" and "node" in needs) else "WARN"), "tool " + tool, found or "not on PATH")
-        if shutil.which("bun"):
-            rc, out = capture(["bun", "--version"], 20)
-            package = {}
-            try:
-                package = json.loads(read_text(self.root / "package.json"))
-            except ValueError:
-                pass
-            wanted = str(package.get("packageManager", "")).split("@")[-1]
-            have = out.strip()
-            self.check(checks, "OK" if not wanted or have == wanted else "WARN", "bun version", "%s (packageManager %s)" % (have, wanted or "-"))
+        self.runtime_checks(checks)
         version_file = self.root / ".bazelversion"
         wanted_bazel = read_text(version_file).strip()
         binaries = sorted((self.root / ".cache" / "b" / "t" / "m" / "bazel" / "bin").glob("*/bazel*")) if (self.root / ".cache" / "b" / "t" / "m" / "bazel" / "bin").is_dir() else []
@@ -970,7 +1060,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--force-lock", action="store_true")
     parser.add_argument("--warm-slack", type=int, default=0, help="extra uncached probes tolerated per warm step that allows some")
     parser.add_argument("--course-mode", choices=["release", "dev"], default="release", help="configuration of the course and proctor build steps")
-    parser.add_argument("--course-topology", choices=["dev", "rehearsal", "both"], default="dev")
+    parser.add_argument("--course-topology", choices=["dev", "rehearsal", "both"], default=None, help="narrow the course e2e gate to one topology; absent, the gate runs the topologies its target declares (both)")
     parser.add_argument("--plan", default=str(HERE / "plan.json"))
     parser.add_argument("--ticket", default=str(TICKET))
     parser.add_argument("--root", default=None)

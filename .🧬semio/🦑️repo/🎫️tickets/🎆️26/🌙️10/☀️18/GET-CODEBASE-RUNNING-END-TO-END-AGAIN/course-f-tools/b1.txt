@@ -1,0 +1,11 @@
+k1|@teaching/architecture-course|typecheck,test,check,build
+k2|@semio-tech/ui-react|typecheck,lint,test
+k3|@semio-tech/ui-styling|test
+k4|@semio-tech/course-react,@semio-tech/pets,@semio-tech/pets-react|typecheck,test
+k5|@semio-tech/ui-styling-tokens|check-generated,test
+k6|@semio-tech/ui-rs,@semio-tech/ui-contract-rs,@semio-tech/course-rs,@semio-tech/pets-rs|check,test
+k7|@semio-tech/framework|typecheck,test
+k8|@semio-tech/framework-server,@semio-tech/course,@semio-tech/framework-rs,@semio-tech/framework-actor-rs|test
+k9|@teaching/proctor|build,test
+k10|@semio-tech/assets|check-generated
+k2b|@semio-tech/ui-react|typecheck,lint,test

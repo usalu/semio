@@ -47,14 +47,14 @@ impl semio_framework_value::ToValue for MutationLeafDescriptor {
     }
 }
 
-/// 🧷️ Identifies a static descriptor field that violates the language-neutral schema contract.
+/// ❌️ Identifies a static descriptor field that violates the language-neutral schema contract.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MutationLeafDescriptorValidationError {
     pub field: &'static str,
     pub requirement: &'static str,
 }
 
-/// 🧷️ Identifies a same-owner static roster violation and its duplicate positions.
+/// 📍️ Identifies a same-owner static roster violation and its duplicate positions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MutationLeafDescriptorRosterValidationError {
     pub owner: &'static str,
@@ -64,13 +64,13 @@ pub struct MutationLeafDescriptorRosterValidationError {
 }
 
 impl MutationLeafDescriptor {
-    /// 🧷️ Validates this exact static descriptor against the fourteen-field schema contract.
+    /// ✅️ Validates this exact static descriptor against the fourteen-field schema contract.
     pub const fn validate(&self) -> Result<(), MutationLeafDescriptorValidationError> {
         validate_mutation_leaf_descriptor(self)
     }
 }
 
-/// 🧷️ Validates one static descriptor without introducing defaults or partial metadata.
+/// 🌿️ Validates one static descriptor without introducing defaults or partial metadata.
 pub const fn validate_mutation_leaf_descriptor(descriptor: &MutationLeafDescriptor) -> Result<(), MutationLeafDescriptorValidationError> {
     if descriptor.schema_version != 1 {
         return Err(MutationLeafDescriptorValidationError { field: "schemaVersion", requirement: "must equal 1" });
@@ -107,7 +107,7 @@ pub const fn validate_mutation_leaf_descriptor(descriptor: &MutationLeafDescript
     Ok(())
 }
 
-/// 🧷️ Validates exact descriptor uniqueness within one explicit owner roster.
+/// 🔍️ Validates exact descriptor uniqueness within one explicit owner roster.
 pub const fn validate_mutation_leaf_descriptor_roster(mutation_root: &'static str, descriptors: &'static [MutationLeafDescriptor], owner_layout: MutationOwnerLayout) -> Result<(), MutationLeafDescriptorRosterValidationError> {
     if !mutation_leaf_descriptor_root(mutation_root) {
         return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: 0, index: 0 });

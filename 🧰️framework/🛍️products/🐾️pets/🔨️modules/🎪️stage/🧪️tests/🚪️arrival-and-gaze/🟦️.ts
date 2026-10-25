@@ -3,10 +3,12 @@
  * @see ../🧰️stage-helpers/🟦️.ts — the shared kit; ../../🟦️.ts — the façade under test
  */
 import { describe, expect, it } from "vitest";
-import { ACTIVITIES, type Actor, type Menagerie, type PetMode, type Rect, type Slug, type Stage, type StageEvent, type Surface } from "../../../../🧬️schema/🟦️.ts";
+import { ACTIVITIES, type Actor, type Cast, type Menagerie, type PetMode, type Rect, type Slug, type Species, type Stage, type StageEvent, type Surface } from "../../../../🧬️schema/🟦️.ts";
 import { sampled } from "../../../../🧪️tests/🎚️config/🟦️.ts";
 import { BLINK_TICKS } from "../../../🎞️animation/🟦️.ts";
 import { perchAt } from "../../../🏞️terrain/🟦️.ts";
+import { castOn, standing } from "../../../📏️spacing/🟦️.ts";
+import { randomWords, unitOf } from "../../../🎲️randomness/🟦️.ts";
 import { lookOffset } from "../../../🦴️rig/🟦️.ts";
 import { menagerieIssues } from "../../../✅️validation/🟦️.ts";
 import { MODE_LIMITS, followersOf } from "../../../🧠️behavior/🟦️.ts";
@@ -403,3 +405,147 @@ describe.each(COMPANIES)("blinking in $name", (company) => {
     for (const id of everyone) expect(rhythms[id]!.length).toBeGreaterThan(5);
   });
 });
+
+//#region 🔖️Standing ground
+type Ground = { readonly width: number; readonly height: number; readonly surfaces: readonly Surface[]; readonly keepouts: readonly Rect[] };
+
+const QUARTER = 0.25;
+
+/** 🎲️ A quarter-pixel number in `[low, high]` the seed draws for the `index`th time. */
+function drawn(seed: number, index: number, low: number, high: number): number {
+  return low + Math.floor((unitOf(randomWords([seed, 0x6f756e64, index], 1)[0]!) * (high - low)) / QUARTER) * QUARTER;
+}
+
+/** 🏜️ A narrow ground of the seed: one or two shelves that headroom keep-outs cut into stretches of a few species' widths, the way a phone's page leaves ground between its cards and its text. */
+function groundOf(seed: number): Ground {
+  const width = drawn(seed, 0, 120, 400);
+  const surfaces: Surface[] = [];
+  const keepouts: Rect[] = [];
+  const shelves = 1 + (seed % 2);
+  for (let shelf = 0; shelf < shelves; shelf++) {
+    const y = drawn(seed, 10 + shelf, 80, 560);
+    surfaces.push({ id: `shelf-${shelf}`, x0: drawn(seed, 20 + shelf, 0, 40), x1: width - drawn(seed, 30 + shelf, 0, 40), y });
+    let at = drawn(seed, 40 + shelf, 0, 40);
+    for (let block = 0; block < 4; block++) {
+      const gap = drawn(seed, 50 + 4 * shelf + block, 20, 60);
+      const length = drawn(seed, 60 + 4 * shelf + block, 20, 140);
+      keepouts.push({ x: at + gap, y: y - drawn(seed, 70 + 4 * shelf + block, 8, 40), width: length, height: 20 });
+      at = at + gap + length;
+    }
+  }
+  return { width, height: 600, surfaces, keepouts };
+}
+
+/** 🧮️ The oracle of standing: the ground cut into cells of a quarter pixel; a species stands on a shelf where a run of whole free columns is as wide as its body, a column being free when its centre lies on the shelf inside the stage and under no keep-out that reaches into the headroom band above it. Nothing is subtracted, no interval is kept. */
+function roomFor(ground: Ground, kinds: readonly Species[]): boolean {
+  const clearance = Math.max(0, ...kinds.map((kind) => kind.size.height + hoverOf(kind)));
+  const minimum = Math.max(0, ...kinds.map((kind) => kind.size.width));
+  for (const surface of ground.surfaces) {
+    if (surface.y < clearance || surface.y > ground.height) continue;
+    let run = 0;
+    let longest = 0;
+    for (let cell = 0; cell < ground.width / QUARTER; cell++) {
+      const centre = (cell + 0.5) * QUARTER;
+      const blocked = ground.keepouts.some((keepout) => keepout.width > 0 && centre > keepout.x && centre < keepout.x + keepout.width && Math.max(surface.y - clearance, keepout.y) < Math.min(surface.y, keepout.y + keepout.height));
+      run = centre > surface.x0 && centre < surface.x1 && !blocked ? run + QUARTER : 0;
+      longest = Math.max(longest, run);
+    }
+    if (longest >= minimum) return true;
+  }
+  return false;
+}
+
+/** 🔬️ The company the oracle expects: the species in the order given that join when everyone before them who joined still has room together with them. */
+function expectedOn(ground: Ground, kinds: readonly Species[]): Slug[] {
+  const joined: Species[] = [];
+  for (const kind of kinds) if (roomFor(ground, [...joined, kind])) joined.push(kind);
+  return joined.map((kind) => kind.id);
+}
+
+/** 🔭️ The troupe the oracle expects: whoever of it has a free run alone stays; each seat of the others goes to the next species of the scene (core, then rotation, none twice, none of the troupe) that has one, counted from the `epoch`th. */
+function castExpectedOn(menagerie: Menagerie, ground: Ground, cast: Cast, troupe: readonly Slug[], epoch: number, holding: readonly Slug[], avoid: readonly Slug[]): Slug[] {
+  const alone = (id: Slug): boolean => !avoid.includes(id) && roomFor(ground, [kindOf(menagerie, id)]);
+  const kept = [...new Set([...holding, ...troupe])].filter(alone).slice(0, troupe.length);
+  const spare = [...new Set([...cast.core, ...cast.rotation])].filter((id) => !kept.includes(id) && !troupe.includes(id) && alone(id));
+  const seats = Math.min(troupe.length - kept.length, spare.length);
+  return [...kept, ...Array.from({ length: seats }, (_, seat) => spare[(epoch + seat) % spare.length]!)];
+}
+
+describe.each(COMPANIES)("standing on narrow ground in $name", (company) => {
+  const menagerie = company.menagerie;
+  const everyone = menagerie.species.map((kind) => kind.id);
+  const seeds = Array.from({ length: sampled(40, 200, 800) }, (_, index) => index + 1);
+  const stageOn = (ground: Ground, seed: number, species: readonly Slug[]): Stage => advance(menagerie, openStage(seed), [{ kind: "tuned", mode: "calm" }, surveyed(ground.surfaces, ground.keepouts, ground.width, ground.height), { kind: "summoned", species }]);
+
+  it("agrees with the lattice oracle on who stands alone and who stands together, and keeps a cast to the species that stand alone", () => {
+    let alone = 0;
+    let none = 0;
+    for (const seed of seeds) {
+      const ground = groundOf(seed);
+      for (const kind of menagerie.species) {
+        const fits = roomFor(ground, [kind]);
+        expect(standing(menagerie, ground, [kind.id]).length === 1, `seed ${seed} ${kind.id} alone`).toBe(fits);
+        if (fits) alone++;
+      }
+      expect(standing(menagerie, ground, everyone).map((kind) => kind.id), `seed ${seed} together`).toEqual(expectedOn(ground, menagerie.species));
+      const cast: Cast = { scene: "s", core: everyone.slice(0, 2), rotation: everyone.slice(2) };
+      const troupe = everyone.filter((_, index) => (index + seed) % 2 === 0);
+      const holding = everyone.filter((_, index) => (index + seed) % 3 === 0).reverse();
+      const avoid = everyone.filter((_, index) => (index + seed) % 4 === 0);
+      expect(castOn(menagerie, ground, cast, troupe, seed, holding, avoid), `seed ${seed} cast`).toEqual(castExpectedOn(menagerie, ground, cast, troupe, seed, holding, avoid));
+      if (!menagerie.species.some((kind) => roomFor(ground, [kind]))) none++;
+    }
+    expect(alone, "the grounds leave some species room").toBeGreaterThan(0);
+    expect(none, "and some none at all").toBeGreaterThan(0);
+  });
+
+  it("stands the species of the cast that fit on a ground that is too narrow or too low for the others, at once, and nobody else", () => {
+    let someone = 0;
+    for (const seed of seeds) {
+      const ground = groundOf(seed);
+      const stage = stageOn(ground, seed, everyone);
+      const expected = expectedOn(ground, menagerie.species);
+      const stood = stage.actors.map((actor) => actor.species);
+      expect(stood.filter((id) => !expected.includes(id)), `seed ${seed}: nobody stands where there is no room for it`).toEqual([]);
+      if (expected.length > 0) {
+        expect(stood.length, `seed ${seed}: somebody stands when anybody can`).toBeGreaterThan(0);
+        someone++;
+      } else expect(stood, `seed ${seed}`).toEqual([]);
+      expect(stage.perches.length > 0, `seed ${seed}: perches exist exactly when somebody can stand`).toBe(expected.length > 0);
+      run(menagerie, stage, 2 * SECOND);
+    }
+    expect(someone).toBeGreaterThan(0);
+  });
+
+  it("re-forms the cast after a resurvey: from wide ground to a narrow one, the pets that fit are on stage within a second and the others are gone or wait", () => {
+    for (const seed of seeds) {
+      const narrow = groundOf(seed);
+      let stage = run(menagerie, stageOn({ width: 400, height: 600, surfaces: [{ id: "floor", x0: 0, x1: 400, y: 600 }], keepouts: [] }, seed, everyone), 3 * SECOND);
+      expect(stage.actors.length, `seed ${seed}: the wide ground holds a cast`).toBeGreaterThan(0);
+      stage = advance(menagerie, stage, [surveyed(narrow.surfaces, narrow.keepouts, narrow.width, narrow.height)]);
+      stage = run(menagerie, stage, SECOND);
+      const expected = expectedOn(narrow, menagerie.species);
+      const present = stage.actors.filter((actor) => !actor.leaving).map((actor) => actor.species);
+      if (expected.length > 0) expect(present.length, `seed ${seed}: somebody is on stage after the resurvey when anybody can stand`).toBeGreaterThan(0);
+      expect(present.filter((id) => !expected.includes(id)), `seed ${seed}: only those that fit stand`).toEqual([]);
+    }
+  });
+
+  it("does not let one species that fits no ground take the ground from the others: the lost-pet case", () => {
+    const widest = menagerie.species.reduce((one, other) => (other.size.width > one.size.width ? other : one));
+    const slim = menagerie.species.reduce((one, other) => (other.size.width < one.size.width ? other : one));
+    expect(slim.size.width).toBeLessThan(widest.size.width);
+    const sliver = (slim.size.width + widest.size.width) / 2;
+    const ground: Ground = { width: 400, height: 600, surfaces: [{ id: "sliver", x0: 0, x1: sliver, y: 300 }], keepouts: [] };
+    for (const order of [[widest.id, slim.id], [slim.id, widest.id]]) {
+      const stage = run(menagerie, stageOn(ground, 1, order), 5 * SECOND);
+      expect(stage.actors.map((actor) => actor.species), order.join(" then ")).toEqual([slim.id]);
+      expect(stage.actors[0]!.perch).toBe("sliver");
+      expect(stage.wanted).toEqual(order);
+    }
+    const none = run(menagerie, stageOn({ ...ground, surfaces: [{ ...ground.surfaces[0]!, x1: slim.size.width - 1 }] }, 1, [widest.id, slim.id]), 5 * SECOND);
+    expect(none.actors).toEqual([]);
+    expect(frameOf(menagerie, none)).toMatchObject({ rate: 0, wake: null });
+  });
+});
+//#endregion 🔖️Standing ground

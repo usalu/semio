@@ -3,6 +3,8 @@
 use super::*;
 
 impl TerminalBackend for NativeTerminal {
+    fn width_mode(&self) -> semio_framework_ui_tui_core::text::WidthMode { semio_framework_ui_tui_core::text::WidthMode::WindowsConsole }
+
     fn size(&self) -> io::Result<Size> {
         unsafe {
             let mut info: CONSOLE_SCREEN_BUFFER_INFO = std::mem::zeroed();

@@ -33,7 +33,7 @@ export function declaredSchemaFormatIds(repoRoot: string): ReadonlySet<string> {
 export const SCHEMA_EXPORT_FORMATS_KEYWORD = "x-semio-formats";
 
 /**
- * 🏷️ The formats one export claims, or `null` when it claims all of them.
+ * ⛔️ The formats one export claims, or `null` when it claims all of them.
  *
  * An export with no annotation must exist in EVERY format its scope provides. An annotated export
  * must exist in EXACTLY the formats it names — a law or contract export that is only ever validated

@@ -6,6 +6,15 @@
 //! label live, after a text reload and after a pack reload, because the projection only reads persisted facts (the edit's
 //! locale-neutral `verb` and its operations; an edit's description is never a label, design §20.6).
 
+use semio_framework_diagnostic::TextError;
+use semio_framework_diagnostic::TextSpan;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
+use semio_framework_diagnostic::TextSpan;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_framework_diagnostic::TextError;
+use semio_framework_artifact_reference::StandardId;
+use semio_framework_plugin_window_transient::built_text_to_component_tree;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_one_item_preparation_factory;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework::kernel::ActorId;

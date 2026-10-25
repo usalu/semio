@@ -129,7 +129,7 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
 #[test]
 fn procedural_grid_uniforms_are_dpr_invariant_while_viewport_and_scissor_scale_physically() {
     let _guard = prepared_process_guard();
-    use semio_framework_ui_draw_contract::{physical_scissor_rect, physical_viewport_rect, World3dGridUniforms};
+    use semio_framework_ui_wgpu_render::{physical_scissor_rect, physical_viewport_rect, World3dGridUniforms};
     use semio_framework_ui_draw_contract::ScissorRect;
     use ui_scene::math::ProceduralGrid3d;
     let grid = ProceduralGrid3d { plane_z: 2.001, camera_plane_projection: [7.0, -4.0, 2.001], cell_size: 2.5, fade_distance: 18.0, cell_color: [0.2, 0.3, 0.4] };

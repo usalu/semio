@@ -1,9 +1,9 @@
-/** 🗂️ Contract: the collection catalog generator admits only a complete `x-semio-collection-catalog` schema, renders the Rust modules and the TypeScript catalog from it deterministically, finds the module that owns each row type without closing an import cycle, and detects stale generated files; the corpus is language-agnostic, the TypeScript compiler API parses the generated TypeScript and `🐍️oracle.py` re-renders the catalog independently. */
+/** 🗂️ Contract: the collection catalog generator admits only a complete `x-semio-collection-catalog` schema, renders the Rust modules and the TypeScript catalog from it deterministically, finds the module that owns each row type without closing an import cycle, and detects stale generated files; the corpus is language-agnostic, the TypeScript compiler API parses the generated TypeScript and `🐍️.py` re-renders the catalog independently. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import ts from "typescript";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -62,6 +62,6 @@ test("the generator writes every output once, then reports a stale one",()=>{
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

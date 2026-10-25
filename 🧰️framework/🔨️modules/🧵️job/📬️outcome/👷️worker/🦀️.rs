@@ -14,6 +14,7 @@ pub struct OriginalWorkerPayload{ledger:Option<Arc<JobPayloadOperationLedger>>,f
 impl OriginalWorkerPayload{
  pub fn allocation_bytes()->usize{semio_framework_value::shared_retirement_allocation_bytes::<JobPayloadOperationLedger>()+JOB_PAYLOAD_PAGE_BYTES}
  pub fn ledger_release_bytes()->usize{semio_framework_value::shared_retirement_allocation_bytes::<JobPayloadOperationLedger>()}
+ pub fn ledger_demands(&self)->RetirementDemand{payload_retirement::ledger_demands(&self.ledger)}
  pub fn initialization_copy_bytes()->usize{JOB_PAYLOAD_OPERATION_PAGES*size_of::<Option<JobPayloadPage>>()+size_of::<usize>()}
  /// 🖋️ Initializes only the already-admitted worker payload fields in their final native storage.
  /// # Safety

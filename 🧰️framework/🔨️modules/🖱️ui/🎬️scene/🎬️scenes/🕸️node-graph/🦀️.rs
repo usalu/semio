@@ -59,7 +59,7 @@ pub struct NodeGraphNodeRecord {
     pub icon: Option<String>,
 }
 
-/// 🕸️ One node-graph edge between two node/port endpoints.
+/// 🔗️ One node-graph edge between two node/port endpoints.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeGraphEdgeRecord {
@@ -87,7 +87,7 @@ pub struct NodeGraphFindItem {
 pub struct NodeGraphHover {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub node_id: Option<String>,
-    /// 🔌️ When set, the graph paints the hovered channel (port) on `node_id`, matching the
+    /// 🔆️ When set, the graph paints the hovered channel (port) on `node_id`, matching the
     /// `"{nodeId}@{portId}"` pick id (see `nodeGraphPickChannel`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub port_id: Option<String>,
@@ -103,7 +103,7 @@ pub struct NodeGraphOperatorVariadicRecord {
     pub max: Option<usize>,
 }
 
-/// 🔌️ Declared operator channel (input or output).
+/// 📡️ Declared operator channel (input or output).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeGraphOperatorChannelRecord {
@@ -290,7 +290,7 @@ impl FromValue for NodeGraphOperatorRecord {
 //#endregion 🔖️NodeGraphRecordsFromValue
 
 //#region 🔖️NodeGraphRecordsToValue
-/// 🌱️ Hand-written `ToValue` (the encode direction — see `🔖️NodeGraphRecordsFromValue` above for
+/// ✍️ Hand-written `ToValue` (the encode direction — see `🔖️NodeGraphRecordsFromValue` above for
 /// why this is hand-written rather than derived) for the same record types, plus both directions
 /// for `NodeGraphHover`, which had neither before this pass.
 impl ToValue for NodeGraphPortRecord {
@@ -477,7 +477,7 @@ pub struct NodeGraphScene {
     pub editable: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interaction_domain: Option<NodeGraphInteractionDomain>,
-    /// 🔌️ DOCUMENT-DERIVED operator records only — one per node this very graph holds, the way the OS
+    /// ⚙️ DOCUMENT-DERIVED operator records only — one per node this very graph holds, the way the OS
     /// workflow window derives a record per workflow node so the canvas can lay its ports out. The
     /// app's REGISTERED operator catalogue is NOT carried here: it is app-static, ~100 KB with the real
     /// `brep`/`math` sets installed against a 32 KiB fixed per-surface admission, and rides the reserved
@@ -540,7 +540,7 @@ impl SceneDoc for NodeGraphScene {
 }
 
 impl NodeGraphScene {
-    /** 🕸️ Builds a node-graph scene with optional extensions unset. */
+    /** 🧱️ Builds a node-graph scene with optional extensions unset. */
     pub fn base(nodes: Vec<NodeGraphNodeRecord>, edges: Vec<NodeGraphEdgeRecord>, viewport: Viewport2d) -> Self {
         Self {
             lanes: Vec::new(),
@@ -666,7 +666,7 @@ pub const NODE_GRAPH_SCENE_LANE_NAMES: [&str; 16] = [
     "eval",
 ];
 
-/// 🪧️ Node graph lane fields.
+/// 📋️ Node graph lane fields.
 pub const NODE_GRAPH_SCENE_LANE_FIELDS: [&str; 16] = [
     "nodes",
     "edges",
@@ -686,7 +686,7 @@ pub const NODE_GRAPH_SCENE_LANE_FIELDS: [&str; 16] = [
     "evalJson",
 ];
 
-/// 🪧️ Node graph lane body keys.
+/// 🔐️ Node graph lane body keys.
 pub const NODE_GRAPH_SCENE_LANE_BODY_KEYS: [&str; 16] = [
     "framework.scene.nodeGraph.nodes",
     "framework.scene.nodeGraph.edges",
@@ -729,11 +729,11 @@ impl NodeGraphSceneLane {
 
     /// 🏷️ Serialized lane name.
     pub fn name(self) -> &'static str { NODE_GRAPH_SCENE_LANE_NAMES[self as usize] }
-    /// 🪧️ Serialized scene field.
+    /// 🔖️ Serialized scene field.
     pub fn field(self) -> &'static str { NODE_GRAPH_SCENE_LANE_FIELDS[self as usize] }
     /// 🔑️ Reserved carrier key.
     pub fn body_key(self) -> &'static str { NODE_GRAPH_SCENE_LANE_BODY_KEYS[self as usize] }
-    /// 🔎️ Resolves reserved carrier keys.
+    /// 🗝️ Resolves reserved carrier keys.
     pub fn from_body_key(key: &str) -> Option<Self> { Self::ALL.into_iter().find(|lane| lane.body_key() == key) }
     /// 📤️ Moves a document-sized payload out of its fixed scene spine.
     pub fn take(self, scene: &mut NodeGraphScene) -> Option<String> {

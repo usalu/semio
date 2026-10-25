@@ -28,7 +28,9 @@
 //! for enums, `name{[removed];[modified];[added]}` for collection triples) — see
 //! `f6-recon-report.md` in this ticket folder.
 
-pub(crate) use semio_s_artifact_stdio_dxf_diff_algebra::{IndexedDiffParts, NamedDiffParts};
+#[path = "🧮️collection-algebra-core/🦀️.rs"]
+pub mod algebra;
+pub use algebra::{IndexedDiffParts, NamedDiffParts};
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
@@ -38,7 +40,7 @@ use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
-use semio_s_artifact_stdio_dxf_diff_algebra::{generic_absorb_pair, generic_apply, generic_inverse, named_absorb_pair, named_apply, named_inverse, DxfIndexElem, DxfNamedElem};
+use algebra::{generic_absorb_pair, generic_apply, generic_inverse, named_absorb_pair, named_apply, named_inverse, DxfIndexElem, DxfNamedElem};
 
 #[path = "🏷️header-and-layer-diffs/🦀️.rs"]
 mod header_and_layer_diffs;

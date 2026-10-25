@@ -60,7 +60,7 @@ function read(row: SqliteRow, index: number, columns: readonly Ieee754Column[], 
 }
 /** 📥️ Restore binary64 identity independently of JavaScript NaN canonicalization. */
 export function readBinary64(row: SqliteRow, index: number, columns: readonly Ieee754Column[]): Binary64 { return { bits: read(row,index,columns,64) }; }
-/** 📥️ Restore binary32 identity without widening through a JavaScript number. */
+/** 📖️ Restore binary32 identity without widening through a JavaScript number. */
 export function readBinary32(row: SqliteRow, index: number, columns: readonly Ieee754Column[]): Binary32 { return { bits: Number(read(row,index,columns,32)) }; }
 /** 🫥️ Distinguish absent optional identity from NaN's NULL numeric query. */
 export function ieee754IsNull(row: SqliteRow,index: number,columns: readonly Ieee754Column[]): boolean {

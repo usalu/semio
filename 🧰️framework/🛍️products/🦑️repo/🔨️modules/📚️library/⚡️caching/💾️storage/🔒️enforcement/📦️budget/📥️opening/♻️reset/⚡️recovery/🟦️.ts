@@ -1,6 +1,6 @@
 import {requireIssuedResourceControlV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import type {NativeUnsupportedPublicationV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/❓️unsupported/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import type {NativeUnsupportedPublicationV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📤️publication/❓️unsupported/🟦️.ts";
 /** 🔎️ Records only bounded observations; the reset owner independently rechecks exact physical custody. */
 export type InactiveRecoveryReasonV1=NativeUnsupportedPublicationV1|Readonly<{version:1;kind:"current-reset-intent";directory:string;receiptStamp:string;receiptSha256:string}>;
 /** 🔌️ Inspects DATA before any rejecting Native open lifetime is enrolled. */

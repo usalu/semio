@@ -24,7 +24,9 @@
     "./acceptance/orchestration/placeholder-and-job-census": "./🎯️acceptance/📋️orchestration/🧮️placeholder-and-job-census/🟦️.ts",
     "./acceptance/orchestration/artifact-neutrality": "./🎯️acceptance/📋️orchestration/🪢️artifact-neutrality/🟦️.ts",
     "./inventory/schema.json": "./🏭️inventory/🧬️schema/🔣️json/🟦️.ts",
-    "./tooling": "./🟨️.mjs"
+    "./tooling": "./🟨️.mjs",
+    "./storage/policy.json": "./💾️storage/🔣️policy/🔣️json/🟦️.ts",
+    "./retention": "./🗑️retention/🟦️.ts"
   },
   "scripts": {
     "lint": "repo run @semio-tech/repo-test:lint",

@@ -36,5 +36,4 @@ export function verifyRetainedIndexSortOracle(): void {
     assert.deepEqual(order, row.order, row.id);
     assert.deepEqual(order, orderBy(row.keys.map((key, index) => ({ key, index })), [value => value.key[0]!, value => value.key[1]!, value => value.key[2]!], ["asc", "asc", "asc"]).map(value => value.index), `${row.id} lodash`);
   }
-  console.log(`[DEBUG] shared heap-sort ${fixture.cases.length} portable cases and ${actions} bounded actions match independent lodash orderBy`);
 }

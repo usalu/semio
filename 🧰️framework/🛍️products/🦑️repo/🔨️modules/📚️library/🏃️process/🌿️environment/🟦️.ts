@@ -11,7 +11,7 @@ export function semioBuildParallel(): number {
   return Math.max(1, availableParallelism());
 }
 
-/** 🧵️ Neutral task parallelism sized for this machine. */
+/** 🚩️ Neutral task parallelism sized for this machine. */
 export function semioBuildParallelFlag(): readonly [parallel: string, count: string] {
   return ["--parallel", String(semioBuildParallel())];
 }

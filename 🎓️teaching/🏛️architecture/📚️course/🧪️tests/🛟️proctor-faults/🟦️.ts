@@ -2,7 +2,8 @@
  * expert run and once more in the very moment the run is submitted: the clock keeps running on the device, the
  * submission is decided wherever it can be, nothing is lost and nothing is told — and a fresh device finds the run.
  * A proctor of another contract is sent nothing: while it is older the device decides everything, while it is newer the
- * page says it is out of date and offers a reload, and once the two agree everything arrives. The contract is changed
+ * page says it is out of date and offers a reload, and once the two agree everything arrives — while the hand-over runs, the
+ * proctor may not have projected a view yet and answers 404, which the device asks for again. The contract is changed
  * by answering the proctor's `GET /instance` in the browser with every version one lower or higher; the deaths go
  * through the gate's control endpoint, so the specs run alone; whatever a spec does, the proctor runs again once it
  * ends.
@@ -112,11 +113,13 @@ test("a proctor of another contract is sent nothing: the device decides while it
   expect(sent, "nothing goes to a proctor of a newer contract").toEqual([]);
 
   await contractAway(learner, 0);
-  await outdated.getByRole("button", { name: "Seite neu laden" }).click();
-  await expect(connection(learner)).toHaveAttribute("data-tone", "calm", { timeout: 120_000 });
-  await expect(learner.page.locator("#course-outdated")).toHaveCount(0);
-  await expect(learner.page.getByRole("alert")).toHaveCount(0);
-  expect(sent.length, "once they agree the device hands everything over").toBeGreaterThan(0);
+  await learner.expectingFailures(async () => {
+    await outdated.getByRole("button", { name: "Seite neu laden" }).click();
+    await expect(connection(learner)).toHaveAttribute("data-tone", "calm", { timeout: 120_000 });
+    await expect(learner.page.locator("#course-outdated")).toHaveCount(0);
+    await expect(learner.page.getByRole("alert")).toHaveCount(0);
+    expect(sent.length, "once they agree the device hands everything over").toBeGreaterThan(0);
+  });
 
   const elsewhere = await device("de");
   await enter(elsewhere, { kind: "pseudonym", handle: name });

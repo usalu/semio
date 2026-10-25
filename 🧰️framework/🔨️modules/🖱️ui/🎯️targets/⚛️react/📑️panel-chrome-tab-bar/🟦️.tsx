@@ -20,7 +20,7 @@ export interface PanelChromeTabBarProps extends PanelTabSelectionOptions {
 }
 
 /**
- * 🎛️ Hosts an anchor's root tab row inline in the navbar/footer chrome while the floating panel is
+ * 📑️ Hosts an anchor's root tab row inline in the navbar/footer chrome while the floating panel is
  * folded — the SAME {@link PanelTabBar} mechanism (progressive reveal, drill-down memory, drag-and-drop)
  * as a panel-hosted bar, just placed elsewhere. When the panel is open (`visible`), the floating
  * {@link Panel}'s {@link WindowChrome} owns the tab chips; this host keeps a width-matched placeholder so
@@ -101,7 +101,7 @@ export interface ModeDockChromeGrid {
   readonly tabCol: (tabIndex: number) => number;
 }
 
-/** 📐️ Computes {@link ModeDockChromeGrid} column indices for a tab stack. */
+/** 🥞️ Computes {@link ModeDockChromeGrid} column indices for a tab stack. */
 export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: string }[], activeId: string | undefined): ModeDockChromeGrid {
   const activeTabIndex = Math.max(
     0,

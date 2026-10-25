@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020";
 import { Database } from "bun:sqlite";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -9,7 +9,7 @@ import fixture from "./🧫️fixtures/🔣️.json";
 const root = resolve(import.meta.dir, "../../../../../../../..");
 
 test("the active owner catalog has canonical dashboard controls and no IDE extension product", () => {
-  const validate = new Ajv().compile(schema);
+  const validate = new Ajv2020().compile(schema);
   expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   const catalog = JSON.parse(readFileSync(resolve(root, "📋️build-owners.json"), "utf8"));
   const rows = Array.isArray(catalog) ? catalog : catalog.owners;
@@ -29,6 +29,6 @@ test("the active owner catalog has canonical dashboard controls and no IDE exten
 
 
 test("the workspace package has no retired IDE authoring tool dependencies",()=>{
-  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);const workspace=JSON.parse(readFileSync(resolve(root,"package.json"),"utf8")),db=new Database(":memory:"),count=(value:unknown,name:string)=>(db.query("WITH dependencies AS (SELECT key FROM json_each(?1,'$.dependencies') UNION ALL SELECT key FROM json_each(?1,'$.devDependencies') UNION ALL SELECT key FROM json_each(?1,'$.optionalDependencies') UNION ALL SELECT key FROM json_each(?1,'$.peerDependencies')) SELECT count(*) n FROM dependencies WHERE key=?2").get(JSON.stringify(value),name)as{n:number}).n;
+  const validate=new Ajv2020({strict:true}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);const workspace=JSON.parse(readFileSync(resolve(root,"package.json"),"utf8")),db=new Database(":memory:"),count=(value:unknown,name:string)=>(db.query("WITH dependencies AS (SELECT key FROM json_each(?1,'$.dependencies') UNION ALL SELECT key FROM json_each(?1,'$.devDependencies') UNION ALL SELECT key FROM json_each(?1,'$.optionalDependencies') UNION ALL SELECT key FROM json_each(?1,'$.peerDependencies')) SELECT count(*) n FROM dependencies WHERE key=?2").get(JSON.stringify(value),name)as{n:number}).n;
   try{for(const name of fixture.retiredDependencies){expect(fixture.dependencySections.some(section=>Object.hasOwn(workspace[section]??{},name)),name).toBe(false);expect(count(workspace,name),name).toBe(0);for(const section of fixture.dependencySections){const counterexample={...workspace,[section]:{...(workspace[section]??{}),[name]:"fixture"}};expect(fixture.dependencySections.some(key=>Object.hasOwn(counterexample[key]??{},name))).toBe(true);expect(count(counterexample,name)).toBe(1);}}}finally{db.close();}
 });

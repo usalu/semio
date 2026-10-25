@@ -1,4 +1,4 @@
-/** 🗄️ Tool run trace: columnar trace pages, deltas, cursors and the resident `ToolRunTraceStore`. TypeScript twin of `🗄️trace-store/🦀️.rs`. */
+/** 🕵️ Tool run trace: columnar trace pages, deltas, cursors and the resident `ToolRunTraceStore`. TypeScript twin of `🗄️trace-store/🦀️.rs`. */
 
 import { TOOL_RUN_STEP_RING_CAPACITY, TOOL_RUN_TRACE_LOG_COMPACT_FLOOR, TOOL_RUN_TRACE_PAGE_OPS_MAX, TOOL_RUN_TRACE_PAGE_OVERHEAD_BYTES, TOOL_RUN_TRACE_RESIDENT_RECORDS, type ToolRunIdentity } from "../🟦️.ts";
 import { isToolRunVerdictRejected, type ToolRunVerdict } from "../📊️progress/🟦️.ts";

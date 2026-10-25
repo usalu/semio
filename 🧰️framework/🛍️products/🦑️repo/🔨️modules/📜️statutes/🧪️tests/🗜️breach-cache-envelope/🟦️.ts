@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
-import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔏️Reference

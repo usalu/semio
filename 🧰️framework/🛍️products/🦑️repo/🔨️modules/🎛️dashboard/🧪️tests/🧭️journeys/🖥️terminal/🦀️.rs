@@ -79,6 +79,11 @@ impl Terminal {
         }
     }
 
+    /// 📋️ Pastes text as one bracketed-paste event, the way a terminal delivers a clipboard.
+    pub fn paste(&mut self, text: &str) {
+        self.send(format!("\x1b[200~{text}\x1b[201~").as_bytes());
+    }
+
     /// 🔣 `Ctrl+B` then one key.
     pub fn leader(&mut self, key: &str) {
         self.send(CTRL_B);
@@ -102,7 +107,7 @@ impl Terminal {
         (0..cols).map(|col| screen.screen().cell(row, col).map_or('?', |cell| if cell.inverse() { 'I' } else if !matches!(cell.bgcolor(), vt100::Color::Default) { 'b' } else if cell.bold() { 'B' } else { '.' })).collect()
     }
 
-    /// 🎨️ Exact independent cell attributes for a row, encoded without exposing the oracle's types.
+    /// 💎️ Exact independent cell attributes for a row, encoded without exposing the oracle's types.
     pub fn attributes(&self, row: u16, cols: u16) -> Vec<String> {
         let screen = self.screen.lock().unwrap();
         (0..cols).map(|col| screen.screen().cell(row, col).map_or_else(String::new, |cell| format!("{:?}/{:?}/{}/{}", cell.fgcolor(), cell.bgcolor(), cell.inverse(), cell.bold()))).collect()
@@ -124,7 +129,6 @@ impl Terminal {
         std::fs::write(directory.join(format!("{name}-input.json")), serde_json::to_vec(&self.inputs).unwrap()).unwrap();
         std::fs::write(directory.join(format!("{name}-screen.txt")), self.text()).unwrap();
         std::fs::write(directory.join(format!("{name}-output.bin")), self.raw_bytes()).unwrap();
-        println!("[DEBUG] recorded {name}: {} input events and {} output bytes", self.inputs.len(), self.raw_bytes().len());
     }
 
     /// 🔡 Every byte received so far, lossily decoded.

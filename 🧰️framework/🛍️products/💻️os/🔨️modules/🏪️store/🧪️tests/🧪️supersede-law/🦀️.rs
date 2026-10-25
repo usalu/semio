@@ -100,8 +100,8 @@ impl semio_framework_os_spr::ColdMutation<DemoSnapshot> for LawOp {
     }
 }
 
-impl MemberStoreOwner<LawOp> for DemoSnapshot {
-    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+impl MemberStoreProducer<DemoSnapshot, LawOp> for semio_framework_os_store_testing_doubles::DemoMemberStoreProducer<LawOp> {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         super::fixture_authoring_birth_demand::<LawOp>()
@@ -296,10 +296,10 @@ async fn every_unit_row_names_its_unit_and_refuses_its_supersession_as_the_table
         };
         apply(&mut store, operation, &mut identity).await;
         if row["group"].as_bool().expect("group") {
-            SpaceMember::stamp_tail_group_id(&mut store, "gesture-1").await.expect("a group stamp");
+            ReferenceSpaceMember::stamp_tail_group_id(&mut store, "gesture-1").await.expect("a group stamp");
         }
         if row["origin"].as_str() == Some("transaction") {
-            SpaceMember::stamp_tail_origin(&mut store, semio_framework_os_spr::MutationOrigin::Transaction { initiator: elsewhere() }).await.expect("an origin stamp");
+            ReferenceSpaceMember::stamp_tail_origin(&mut store, semio_framework_os_spr::MutationOrigin::Transaction { initiator: elsewhere() }).await.expect("an origin stamp");
         }
         let target = operation_ids(&store)[1].clone();
         let unit = match row["unit"].as_str().expect("a unit") {

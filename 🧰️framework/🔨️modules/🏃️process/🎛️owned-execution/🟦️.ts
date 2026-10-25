@@ -1,6 +1,7 @@
 import{readOwnedCommandAuxiliaryInputV1,publishOwnedAuxiliaryInputV1,type OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
 export type{OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
 import {captureOwnedCommandBodyV1,writeOwnedCommandOutputV1} from "./📥️capture/🟦️.ts";
+import {resultStreamV1} from "../🏗️build/📤️output/🟦️.ts";
 import {routeRegisteredCommandV1} from "../🧰️tools/🔌️funnel/🟦️.ts";
 import {tmpdir} from "node:os";
 import {prepareTestCommandV1,testProtocolMessageV1} from "../🧪️testing/🚦️protocol/🟦️.ts";
@@ -9,12 +10,15 @@ import { terminateOwnedChildTree } from "../🪓️termination/🟦️.ts";
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
 import { StringDecoder } from "node:string_decoder";
 import { spawn } from "node:child_process";
+import { settleOwnedChildV1 } from "./🏁️settlement/🟦️.ts";
 import { OwnedCommandFailure } from "./📪️outcome/🟦️.ts";
 import stdoutDestination from "./🧬️schema/📤️stdout.json" with { type: "json" };
 import outputSchema from "./🧬️schema/📬️output.json" with { type: "json" };
 import processBudgetSchema from "../⏱️budget/🧬️schema/🔣️.json" with { type: "json" };
 import {Transform} from "node:stream";
 import{requireIssuedResourceControlV1}from"../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{noteScriptProcessActivityV1}from"../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+import{ProgressDeadlineExpiredV1}from"../⏱️budget/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 export { OwnedCommandFailure, readOwnedCommandOutcome, type OwnedCommandOutcome } from "./📪️outcome/🟦️.ts";
 /** 🌓️ Names the closed stdout and stderr roles declared by the owned output stream schema. */
@@ -24,6 +28,7 @@ export type OwnedCommandStreamV1="stdout"|"stderr";
 export interface OwnedCommandOptions {
   readonly stdout?: "inherit" | "ignore" | "stderr";
   readonly outputStyle?: "stream" | "stream-without-prefixes" | "static";
+  readonly progressIntervalMs?: number;
   readonly control?: ResourceLeaseControl;
   readonly input?: string | Uint8Array;
   readonly auxiliaryInput?: OwnedCommandAuxiliaryInputV1;
@@ -87,7 +92,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     interruptPublication();
     if (!closed) terminateOwnedChildTree(child);
   };
-  const abort = (): void => terminate("cancelled");
+  const abort = (): void => terminate(commandSignal?.reason instanceof ProgressDeadlineExpiredV1 ? commandSignal.reason.message : "cancelled");
   const observe = (stream: NodeJS.ReadableStream,source:OwnedCommandStreamV1): void => {
     const decoder = new StringDecoder("utf8");
     let pending = "";
@@ -122,7 +127,8 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     else if(destination)admitted.pipe(destination,{end:false});else (admitted as Transform).resume();
     if(limits)stream.pipe(admitted as Transform);
   };
-  if(child.stdout)forward(child.stdout,options.stdout==="ignore"?undefined:options.stdout==="stderr"?process.stderr:process.stdout,options.stdout!=="ignore","stdout");
+  for(const stream of[child.stdout,child.stderr])stream?.on("data",()=>noteScriptProcessActivityV1());
+  if(child.stdout)forward(child.stdout,options.stdout==="ignore"?undefined:options.stdout==="stderr"?process.stderr:resultStreamV1(),options.stdout!=="ignore","stdout");
   forward(child.stderr!,process.stderr,true,"stderr");
   commandSignal?.addEventListener("abort", abort, { once: true });
   if (commandSignal?.aborted) abort();
@@ -131,7 +137,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", stop);
   const publish = (line: string): void => {
-    const publication = Promise.resolve().then(() => options.onProgress ? options.onProgress(line) : console.log(line));
+    const publication = Promise.resolve().then(() => options.onProgress ? options.onProgress(line) : options.stdout === "stderr" ? console.error(line) : console.log(line));
     pending.add(publication);
     publication.then(() => { pending.delete(publication); }, error => {
       publicationRefused = true;
@@ -140,7 +146,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
       terminate("progress publication refused");
     });
   };
-  const stopProgress = startNativeProgress(label, 10_000, publish);
+  const stopProgress = startNativeProgress(label, options.progressIntervalMs ?? 10_000, publish);
   const stopTimeout = startOwnedCommandTimeoutV1(timeoutMs,() => terminate(`timeout ${timeoutMs}ms`));
   let auxiliaryFailed=false,auxiliaryFailure:unknown;
   try {
@@ -152,7 +158,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     });
     const status = await new Promise<{code:number|null;signal:string|null}>((accept) => {
       child.once("error", error => console.error(error.message));
-      child.once("close", (code, signal) => { closed = true; accept({code,signal}); });
+      void settleOwnedChildV1(child, label).then(row => { closed = true; accept({code:row.code,signal:row.signal}); });
     });
     await Promise.all([inputPublication,auxiliaryPublication]);
     stopProgress();

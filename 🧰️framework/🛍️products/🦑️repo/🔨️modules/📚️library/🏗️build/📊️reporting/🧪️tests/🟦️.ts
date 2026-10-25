@@ -3,7 +3,7 @@ import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-cap
 import {readFileSync,rmSync,readdirSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {randomBytes} from "node:crypto";
-import {withBuildTestInvocationV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";

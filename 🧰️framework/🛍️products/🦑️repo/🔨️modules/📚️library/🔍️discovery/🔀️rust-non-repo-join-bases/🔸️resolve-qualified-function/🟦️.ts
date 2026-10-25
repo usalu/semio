@@ -1,7 +1,7 @@
 /** 🔸️ The resolve qualified function phase of inspectRustNonRepoJoinBaseSpans. */
 import { rustFindTopLevel, rustTokenSegments } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import type { buildTokensState } from "../🔶️tokens/🟦️.ts";
-import type { Binding } from "../🟢️shared/🟦️.ts";
+import type { Binding } from "../🟢️harness/🟦️.ts";
 
 /** 🔹 Builds resolveQualifiedFunctionBody, tupleTailPositions, tupleCallNonRepoPositions of inspectRustNonRepoJoinBaseSpans. */
 export function buildResolveQualifiedFunctionState({ tokens, pairs, rootEnd, literal }: Pick<ReturnType<typeof buildTokensState>, "tokens" | "pairs" | "rootEnd" | "literal">) {

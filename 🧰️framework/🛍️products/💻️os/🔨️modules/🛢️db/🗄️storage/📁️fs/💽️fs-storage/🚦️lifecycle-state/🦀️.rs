@@ -44,13 +44,13 @@ pub(super) struct FsLifecycle {
 /// that starts after a member's `fsync` returned covers that member, so two dozen documents
 /// committing at once pay a few cache flushes instead of one each, all serialised by the drive.
 #[derive(Default)]
-struct FsFullSyncGroup {
+pub(super) struct FsFullSyncGroup {
     pub(super) epochs: Mutex<FsFullSyncEpochs>,
     pub(super) flushed: std::sync::Condvar,
 }
 
 #[derive(Default)]
-struct FsFullSyncEpochs {
+pub(super) struct FsFullSyncEpochs {
     pub(super) requested: u64,
     pub(super) completed: u64,
     pub(super) flushing: bool,
@@ -65,7 +65,7 @@ pub(super) const FS_DURABLE_DIRECTORIES: usize = 4_096;
 /// synced): a WAL sync or run replacement in one of them skips the whole-ancestry fsync walk,
 /// which cost one directory fsync per path component on every durable write.
 #[derive(Default)]
-struct FsDurableDirectories {
+pub(super) struct FsDurableDirectories {
     pub(super) paths: std::collections::HashSet<PathBuf>,
 }
 

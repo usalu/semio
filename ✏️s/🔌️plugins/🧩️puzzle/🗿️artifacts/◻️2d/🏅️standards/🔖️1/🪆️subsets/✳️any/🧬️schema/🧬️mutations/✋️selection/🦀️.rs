@@ -102,3 +102,9 @@ pub fn puzzle2d_selection_items(count: usize) -> (String, String) {
         count => (format!("{count} items"), format!("{count} Elemente")),
     }
 }
+
+/// 🔍️ One coordinate scaled about a pivot. The unit factor is the identity exactly (`pivot + (value - pivot)` alone lands a ulp off
+/// for an awkward pivot), so an identity scaling states no row.
+pub fn puzzle2d_scaled(pivot: f64, value: f64, factor: f64) -> f64 {
+    if factor == 1.0 { value } else { pivot + (value - pivot) * factor }
+}

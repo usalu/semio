@@ -4,7 +4,7 @@ use crate::{lex_with as core_lex_with, Limits, TextError, TextSpan, TokenKind as
 use super::{GrammarFile, Production, Symbol};
 
 //#region 🔖️Recognizer
-/// 🧭️ Recognizer with explicit terminal predicates, family fragment merge, and macro matchers.
+/// 🖥️ Recognizer with explicit terminal predicates, family fragment merge, and macro matchers.
 pub struct MacroMatcher {
     pub name: &'static str,
     pub try_match: fn(&str) -> bool,
@@ -200,7 +200,7 @@ impl Recognizer {
     }
 }
 
-/// 📏️ Which delimiter ends a P2-M1 "raw span" terminal capture.
+/// ⏹️ Which delimiter ends a P2-M1 "raw span" terminal capture.
 enum RawSpanEnd {
     /// 🧾️ `LINE` — rest of the current physical line (up to the next `\n`, or EOF if none) — obj's
     /// `o`/`g` names, stl's `solid <name>`/`endsolid <name>`, dxf's opaque group-code value lines.

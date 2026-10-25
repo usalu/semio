@@ -13,7 +13,7 @@ import fixture from "./🔣️.json" with {type:"json"};
 import installSchema from "../../💾️storage/🧬️schema/📥️install.json" with {type:"json"};
 
 const protocol=core.adoptProtocolV1;
-const oracle=(args:string[],input?:string,raw=false):any=>{const run=spawnSync("python3",["-I",fileURLToPath(new URL("./🐍️oracle.py",import.meta.url)),...args],{encoding:"utf8",input,maxBuffer:1<<28});if(run.status!==0)throw Error("oracle failed: "+run.stderr);return raw?run.stdout.trim():JSON.parse(run.stdout);};
+const oracle=(args:string[],input?:string,raw=false):any=>{const run=spawnSync("python3",["-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),...args],{encoding:"utf8",input,maxBuffer:1<<28});if(run.status!==0)throw Error("oracle failed: "+run.stderr);return raw?run.stdout.trim():JSON.parse(run.stdout);};
 const scratch=()=>realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"adopt-")));
 const bytes=(text:string)=>Buffer.from(text);
 const toFiles=(files:Record<string,string>):core.AdoptFileV1[]=>Object.entries(files).map(([path,text])=>({path,bytes:bytes(text)}));
@@ -117,7 +117,7 @@ test("adopt clone: the platform command yields an exact copy without shared inod
  }finally{rmSync(root,{recursive:true,force:true});}
 },240000);
 
-/** 🧬️ Runs the adoption flow over a real store directory and real clones: the newest qualifying donor with the identical projection and runtime whose ledger verifies and whose clone has the donor's exact shape donates its trees; every other case reports that an installation is needed and leaves no partial clone. */
+/** 🔄️ Runs the adoption flow over a real store directory and real clones: the newest qualifying donor with the identical projection and runtime whose ledger verifies and whose clone has the donor's exact shape donates its trees; every other case reports that an installation is needed and leaves no partial clone. */
 test("adopt flow: donors are chosen by projection, runtime, verification and shape",async()=>{
  for(const row of fixture.donors){
   const store=scratch();try{
@@ -195,7 +195,7 @@ test("adopt wiring laws over the storage module",async()=>{
  expect(lstatSync(fileURLToPath(new URL("../💾️storage/🟦️.ts",import.meta.url))).isFile()).toBe(true);
 });
 
-/** 🔑️ Pins the generation key and the ready receipt by source and schema law: staged manifests drop the inert fields before they are hashed and written, the ready receipt is version 3 without any execution fingerprint, and the donor is pinned before it is verified. */
+/** 🧾️ Pins the generation key and the ready receipt by source and schema law: staged manifests drop the inert fields before they are hashed and written, the ready receipt is version 3 without any execution fingerprint, and the donor is pinned before it is verified. */
 test("adopt key and ready laws: the generation key is install-relevant and the ready receipt carries no execution",async()=>{
  const ts=await import("typescript"),path=new URL("../../💾️storage/🟦️.ts",import.meta.url),source=readFileSync(path,"utf8"),tree=ts.createSourceFile(path.pathname,source,ts.ScriptTarget.Latest,true);
  const text=(name:string)=>{const node=tree.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text===name);expect(node,name).toBeDefined();return node!.getText(tree);};

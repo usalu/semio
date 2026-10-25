@@ -1,4 +1,4 @@
-/** 🪜️ Locomotion, outings: every outing a pet with gear can take from a stand — the climb onto a wall, the ladder and the rope, the slide and the rests on the way — and the legs of a trip assembled from them.
+/** 🧗️ Locomotion, outings: every outing a pet with gear can take from a stand — the climb onto a wall, the ladder and the rope, the slide and the rests on the way — and the legs of a trip assembled from them.
  *
  * @see ../⚓️footing/🟦️.ts — the release of gear
  * @see ../🦀️.rs — the Rust twin

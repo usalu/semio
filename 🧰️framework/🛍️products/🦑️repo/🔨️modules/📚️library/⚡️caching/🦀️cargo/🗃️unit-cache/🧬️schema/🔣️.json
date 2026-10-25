@@ -48,10 +48,10 @@
           "recallAttempts": 20, "recallPauseMilliseconds": 50, "timeoutMilliseconds": 5000
         },
         "gc": {
-          "casShare": 0.25, "laneShare": 0.2, "incrementalShare": 0.1,
-          "highWaterShare": 0.8, "lowWaterShare": 0.6, "collectorIntervalMilliseconds": 300000, "maintenanceIntervalMilliseconds": 600000, "collectorClaim": "gc",
+          "casShare": 0.25, "casProtectedShare": 0.1, "laneShare": 0.2, "incrementalShare": 0.1,
+          "highWaterShare": 0.875, "lowWaterShare": 0.75, "collectorIntervalMilliseconds": 300000, "maintenanceIntervalMilliseconds": 600000, "collectorClaim": "gc",
           "outOfSpacePatterns": ["\\(os error (28|112)\\)", "No space left on device", "ENOSPC", "There is not enough space on the disk"], "outOfSpaceRetries": 1,
-          "laneIdleMilliseconds": 86400000, "liveMarkerStaleMilliseconds": 30000, "eventLogMaximumBytes": 4194304
+          "laneIdleMilliseconds": 86400000, "liveMarkerStaleMilliseconds": 30000, "eventLogMaximumBytes": 4194304, "emergencyFreeBytes": 4294967296, "watchClaim": "watch", "watchPollMilliseconds": 30000, "watchQuietMilliseconds": 600000, "watchMaximumMilliseconds": 7200000, "watchStalledRounds": 10, "watchScanMilliseconds": 900000, "recheckMilliseconds": 60000, "unitStamp": "units.stamp", "unitIntervalMilliseconds": 21600000
         }
       }
     },
@@ -62,8 +62,8 @@
           "de": "[repo cargo] Lane {base} ist von einem anderen Cargo-Prozess belegt; verwende Überlauf-Lane {lane} (startet leer und füllt sich aus dem gemeinsamen Unit-Cache)"
         },
         "collected": {
-          "en": "[repo cargo] unit cache cleanup removed {lanes} lane(s), {incremental} incremental set(s) and {objects} object(s)",
-          "de": "[repo cargo] Unit-Cache-Bereinigung entfernte {lanes} Lane(s), {incremental} Inkrementell-Satz/Sätze und {objects} Objekt(e)"
+          "en": "[repo cargo] unit cache cleanup removed {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s), {units} build unit(s) and {objects} object(s)",
+          "de": "[repo cargo] Unit-Cache-Bereinigung entfernte {lanes} Lane(s), {incremental} Inkrementell-Satz/Sätze, {sessions} Inkrementell-Sitzung(en), {units} Build-Einheit(en) und {objects} Objekt(e)"
         },
         "collector": {
           "en": "[repo cargo] the compiler image is {usedPercent} % full (high-water mark {highPercent} %); a low-priority unit cache collector was started in the background",
@@ -74,8 +74,8 @@
           "de": "[repo cargo] Der Unit-Cache-Collector im Hintergrund konnte nicht gestartet werden: {reason}"
         },
         "outOfSpace": {
-          "en": "[repo cargo] the compiler image ran out of space ({freeGib} GiB free of {volumeGib} GiB); cleaned up {lanes} lane(s), {incremental} incremental set(s) and {objects} object(s) and retrying the command once",
-          "de": "[repo cargo] Im Compiler-Image ist der Platz ausgegangen ({freeGib} GiB frei von {volumeGib} GiB); {lanes} Lane(s), {incremental} Inkrementell-Satz/Sätze und {objects} Objekt(e) bereinigt, der Befehl wird einmal wiederholt"
+          "en": "[repo cargo] the compiler image ran out of space ({freeGib} GiB free of {volumeGib} GiB); cleaned up {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s), {units} build unit(s) and {objects} object(s) and retrying the command once",
+          "de": "[repo cargo] Im Compiler-Image ist der Platz ausgegangen ({freeGib} GiB frei von {volumeGib} GiB); {lanes} Lane(s), {incremental} Inkrementell-Satz/Sätze, {sessions} Inkrementell-Sitzung(en), {units} Build-Einheit(en) und {objects} Objekt(e) bereinigt, der Befehl wird einmal wiederholt"
         },
         "stillFull": {
           "en": "[repo cargo] the compiler image is still full after the cleanup ({freeGib} GiB free of {volumeGib} GiB): the running lanes of other commands hold the space; wait for them or raise the rust partition in the budget policy",
@@ -288,7 +288,7 @@
             "lastLaunchMs": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] }
           }
         },
-        "decision": { "enum": ["enough", "maintain", "launch", "throttled", "collect-now"] }
+        "decision": { "enum": ["enough", "maintain", "watch", "launch", "throttled", "collect-now"] }
       }
     },
     "OutOfSpaceVector": {

@@ -17,7 +17,7 @@ const apply=(change:string,root:string,backing:string)=>{
 
 /** 🆔️ The constant-time recheck of a cache store refuses a replaced mount root or backing file and accepts content changes, in agreement with an independent Python oracle over the same corpus. */
 test("the cache store identity corpus is decided the same way in TypeScript and Python",()=>{
- const oracle=JSON.parse(spawnSync("python3",["-I",join(import.meta.dir,"🐍️oracle.py"),join(import.meta.dir,"🧫️fixtures/🔣️.json")],{encoding:"utf8"}).stdout) as Record<string,boolean>;
+ const oracle=JSON.parse(spawnSync("python3",["-I",join(import.meta.dir,"🐍️.py"),join(import.meta.dir,"🧫️fixtures/🔣️.json")],{encoding:"utf8"}).stdout) as Record<string,boolean>;
  for(const row of fixture.rows){
   const base=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir(),"ci-")),root=join(base,"m"),backing=join(base,"fixed.img");
   try{

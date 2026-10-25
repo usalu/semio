@@ -3,7 +3,7 @@ import { ValueError, type SqliteDatabaseOptions, type SqliteDatabaseProgress } f
 
 /** 🚦️ Semantic entity progress plus physical page progress. */
 export interface ArtifactSqliteProgress { readonly phase: SqliteDatabaseProgress["phase"] | "projectSnapshot" | "reconstructSnapshot"; readonly completed: number; readonly total: number }
-/** 🛑️ Shared cancellation, bounds and progress for typed snapshot projections. */
+/** 📸️ Shared cancellation, bounds and progress for typed snapshot projections. */
 export interface ArtifactSqliteOptions extends Omit<SqliteDatabaseOptions, "onProgress"> { readonly onProgress?: (progress: ArtifactSqliteProgress) => void }
 
 /** ⏱️ Publish semantic entity progress and yield to cancellation at bounded intervals. */

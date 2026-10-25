@@ -1,13 +1,13 @@
 import "../../🎛️control-policy/🧩️products/🧪️tests/🟦️.ts";
 import "../🔎️source-discovery/🟦️.ts";
 import "../🧭️journeys/🧩️sources/🟦️.ts";
-import "../../../📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️runtime-selection/🟦️.ts";
+import "../../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️runtime-selection/🟦️.ts";
 import "../🎛️dispatch/🟦️.ts";
 import "../🧊️execution/🚀️launch/🟦️.ts";
 import "../🧊️execution/🛠️bootstrap/🟦️.ts";
 import "../♻️reuse/🟦️.ts";
 import { expect, test } from "bun:test";
-import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020";
 import Ajv from "ajv";
 import { parse as parseJsonc } from "jsonc-parser";
@@ -18,7 +18,7 @@ import stringWidth from "string-width";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
-import { installedDashboard } from "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
+import { installedDashboard } from "../../../📚️library/📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
 import { spawnSync } from "node:child_process";
 
 const root = resolve(import.meta.dir, "../../../../../../.."), dashboard = resolve(import.meta.dir, "../..");
@@ -48,10 +48,8 @@ const inventory = (workspace: string, policy: unknown, list = (path: string) => 
     if (!inventoryPolicy(policy)) throw Error(`Invalid active inventory policy: ${oracle.errorsText(inventoryPolicy.errors)}`);
     const rules = policy as { boundaryDirectories: string[]; excludedRoots: string[] }, paths: InventoryEntry[] = [], pending = [workspace];
     const excluded = new Set(rules.excludedRoots), boundaries = new Set(rules.boundaryDirectories);
-    let visited = 0;
     while (pending.length) {
       const directory = pending.pop()!;
-      if (++visited % 10000 === 0) console.log(`[DEBUG] authority gate inspected ${visited} source directories`);
       for (const entry of list(directory)) {
         const absolute = join(directory, entry.name), path = relative(workspace, absolute).replaceAll("\\", "/");
         if (entry.isDirectory() && (boundaries.has(entry.name) || excluded.has(path))) continue;
@@ -86,7 +84,7 @@ test("active inventory fails closed and only excludes declared generated roots a
     }
     let fail = true;
     const scan = inventory(workspace, fixture.inventoryPolicy, path => {
-      if (path === join(workspace, "domain") && fail) { fail = false; throw Error("[DEBUG] fixture traversal denied"); }
+      if (path === join(workspace, "domain") && fail) { fail = false; throw Error("fixture traversal denied"); }
       return readdirSync(path, { withFileTypes: true });
     });
     expect(scan).toThrow("fixture traversal denied");
@@ -97,7 +95,6 @@ test("active inventory fails closed and only excludes declared generated roots a
     expect(paths.filter(entry => !entry.directory).map(entry => entry.path).sort()).toEqual(independent.sort());
     for (const row of fixture.inventoryCases) expect(paths.some(entry => entry.path === row.path), row.path).toBe(row.inspected);
     expect(paths.filter(entry => !allowedPath(entry.path)).length).toBeGreaterThan(0);
-    console.log(`[DEBUG] authority inventory recovered after failed traversal and checked ${fixture.inventoryCases.length} path boundaries twice`);
   } finally { rmSync(workspace, { recursive: true, force: true }); }
 });
 
@@ -126,7 +123,6 @@ test("every owner command and target agrees with the independent schema validato
     expect(acceptsOwnerTarget(row.target), JSON.stringify(row.target)).toBe(row.accepted);
     expect(validateTarget(row.target), JSON.stringify(row.target)).toBe(row.accepted);
   }
-  console.log(`[DEBUG] authority checked ${fixture.ownerCommandCases.length} command vectors and ${fixture.ownerTargetCases.length} owner target vectors`);
 });
 
 test("runtime devcontainer lifecycle uses build owners and provisions no IDE customization", () => {
@@ -146,7 +142,6 @@ test("runtime devcontainer lifecycle uses build owners and provisions no IDE cus
   expect(lifecycle).not.toContain('".codeium"');
   const owner = read(join(root, "📋️project.json"));
   for (const phase of ["start", "attach"]) expect(owner.targets[`setup-devcontainer-${phase}`]?.options.command).toBe(`repo ./📜️script.ts setup devcontainer ${phase}`);
-  console.log(`[DEBUG] authority checked ${fixture.devcontainerCases.length} runtime container vectors and all three build lifecycle owners`);
 });
 test("exclusive dashboard paths agree with the independent schema validator", () => {
   const schema = read(join(dashboard, "🧬️schema/🧭️authority/🔣️.json"));
@@ -172,7 +167,6 @@ test("developer instructions agree with the independent schema validator and ret
     expect(acceptsInstructions(text), path).toBe(true);
     expect(validateInstructions(text.toLowerCase()), path).toBe(true);
   }
-  console.log(`[DEBUG] authority checked ${documents.size} developer documents and ${fixture.instructionCases.length} shared instruction vectors`);
 }, 300_000);
 
 test("localized command metadata follows shared language-neutral vectors and independent schema validation", () => {
@@ -195,7 +189,6 @@ test("localized command metadata follows shared language-neutral vectors and ind
       expect(validate({ ...base, ...row.metadata }), `${row.name}: ${definition}`).toBe(row.accepted);
     }
   }
-  console.log(`[DEBUG] authority checked ${vectors.cases.length} localized metadata vectors across seven declarations and outputs`);
 });
 
 test("launcher input batches and viewport bounds match independent DOM and clamp oracles", () => {
@@ -252,7 +245,6 @@ test("launcher input batches and viewport bounds match independent DOM and clamp
     expect(args.value).toBe(row.initialArgs);
     dom.window.close();
   }
-  console.log(`[DEBUG] launcher batch oracle checked ${vectors.cases.length} input sequences, ${vectors.defaultTextCases.length} defaults, ${vectors.viewportCases.length} growing viewports and ${vectors.pointerCases.length} described pointer fields`);
 });
 
 test("typed repo actions agree with shared vectors and independent schema validation", () => {
@@ -286,12 +278,11 @@ test("typed repo actions agree with shared vectors and independent schema valida
     expect(validateAction(action), JSON.stringify(action)).toBe(false);
   }
   expect(oracle.getSchema(`${registry.$id}#/$defs/ParameterInfo`)!({ id: "title", kind: "text", values: [], required: true, origin: "repo" })).toBe(true);
-  console.log(`[DEBUG] repo action schema oracle checked ${vectors.valid.length} accepted and ${vectors.invalid.length} refused shared actions`);
 });
 
 test("native console width profiles match the shared schema and independent cursor model", () => {
   const ui = join(root, "🧰️framework/🔨️modules/🖱️ui/⌨️tui");
-  const vectors = read(join(ui, "🧫️fixtures/📏️text-width/🪟️console/🔣️.json"));
+  const vectors = read(join(ui, "🧪️tests/🧫️fixtures/📏️text-width/🪟️console/🔣️.json"));
   const validate = new Ajv2020({ strict: false, allErrors: true }).compile(read(join(ui, "🧬️schema/📏️text-width/🪟️console/🔣️.json")));
   expect(validate(vectors), JSON.stringify(validate.errors)).toBe(true);
   const dependency = createRequire(createRequire(import.meta.url).resolve("string-width")), { eastAsianWidth } = dependency("get-east-asian-width");
@@ -305,7 +296,6 @@ test("native console width profiles match the shared schema and independent curs
     expect(stringWidth(row.text), `${row.id}: independent string-width cells`).toBe(row.stringWidthCells);
   }
   expect(vectors.cases.find((row: { id: string }) => row.id === "canonical-argument")).toMatchObject({ scalarCells: 107, clusterCells: 110, windowsScalarCells: 110, windowsClusterCells: 119 });
-  console.log(`[DEBUG] independent string-width and East-Asian-width/UTF16 oracles checked ${vectors.cases.length} measured native cursor vectors; formal widths retain their native unicode-width 0.2.2 oracle`);
 });
 
 test("the Go repository implementation has a dashboard-owned source build", () => {
@@ -321,10 +311,9 @@ test("the Go repository implementation has a dashboard-owned source build", () =
   expect(owner.targets.build?.metadata.semio.dashboard).toEqual(vector.declaration);
   expect(owner.targets.build?.outputs).toEqual(Object.values(vector.artifacts));
   const entry = readFileSync(join(cli, "📦️packages/🐹️go/📜️script.ts"), "utf8");
-  expect(entry).toContain(`resolve(import.meta.dir, "${vector.module}")`);
+  expect(entry).toContain(`resolve(import.meta.dirname, "${vector.module}")`);
   expect(entry).toContain(`"-o", binary, "${vector.entryPoint}"`);
   expect(oracle.getSchema(`${schema.$id}#/$defs/TargetDeclaration`)!(owner.targets.build?.metadata.semio.dashboard)).toBe(true);
-  console.log("[DEBUG] canonical Go repository build target agrees with its shared build/registry schemas");
 });
 
 test("the bootstrap decision matches the independent schema validator for every shared vector", () => {
@@ -372,7 +361,7 @@ test("root runnable commands remain owned by build targets and dashboard declara
 test("the dashboard has no editor projection route or implementation", () => {
   const manifest = read(join(dashboard, "📦️packages/🦀️rust/📋️project.json"));
   expect(manifest.targets.launch).toBeUndefined();
-  const script = readFileSync(join(dashboard, "📦️packages/🦀️rust/📜️script.ts"), "utf8");
+  const script = readFileSync(join(dashboard, "🛤️task-routes/🟦️.ts"), "utf8");
   for (const name of ["LaunchScript", "projectDashboardLaunch", "launchParameterArguments", 'register("launch"']) expect(script).not.toContain(name);
   expect(existsSync(join(dashboard, "🌳️command-tree/🚀️launch/🟦️.ts"))).toBe(false);
   expect(readFileSync(join(dashboard, "README.md"), "utf8")).not.toContain("VSCode Launch Projection");
@@ -383,11 +372,12 @@ test("authored scripts use one declarative build entry", () => {
   const manifest = read(join(root, "📋️project.json"));
   const tool = manifest.metadata.semio.dashboard.tools.find((tool: { id: string }) => tool.id === "run-script");
   expect(tool).toBeDefined();
-  expect(tool.command).toEqual(["repo", "exec", "--projects={project}", "--", "bun", "{workspace}/{script}"]);
+  expect(tool.command).toEqual(["repo", "exec", "--projects={project}", "--dry-run={dry-run}", "--", "repo", "{workspace}/{script}"]);
   expect(tool.cwd).toBe("{directory}");
   expect(tool.parameters.find((parameter: { id: string }) => parameter.id === "script")).toMatchObject({ id: "script", kind: "text", required: true });
   expect(tool.parameters.find((parameter: { id: string }) => parameter.id === "project")).toMatchObject({ required: true, default: "", suggestions: { source: "projects" } });
   expect(tool.parameters.find((parameter: { id: string }) => parameter.id === "script").suggestions).toEqual({ source: "scripts", projectParameter: "project", directoryParameter: "directory" });
+  expect(tool.parameters.find((parameter: { id: string }) => parameter.id === "dry-run")).toMatchObject({ id: "dry-run", kind: "choice" });
   const schema = read(join(dashboard, "🧬️schema/🎮️registry/🔣️.json"));
   const oracle = new Ajv2020({ strict: false, allErrors: true }); oracle.addSchema(schema);
   const declaration = oracle.getSchema(`${schema.$id}#/$defs/ProjectManifest`)!;
@@ -432,7 +422,7 @@ test("Bazel runtime controls retain typed dashboard phases and both locales", as
   const definition = tree.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "bazelTestCommandsV1");
   expect(definition).toBeDefined();
   const body = ts.transpileModule(definition!.getText(tree).replace(/^export /u, "") + ";return bazelTestCommandsV1;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-  const dispatch = new Function("bazelTestSchema", "bazelTestContract", body)(dispatchSchema, compileJsonSchemaSubset(dispatchSchema));
+  const dispatch = new Function("bazelTestSchema", "bazelTestContract", body)(dispatchSchema, () => compileJsonSchemaSubset(dispatchSchema));
   const independent = new Ajv({ strict: true }).compile(dispatchSchema);
   for (const row of [...bazel.testDispatch.cases, ...parameter.values.map((value: { id: string; args: string[] }) => ({ arguments: value.args, phases: [value.id] }))]) {
     expect(independent({ phase: row.arguments[0] ?? null })).toBe(true);
@@ -442,27 +432,27 @@ test("Bazel runtime controls retain typed dashboard phases and both locales", as
     expect(independent({ phase: args[0] ?? null }) && args.length < 2).toBe(false);
     expect(() => dispatch(args)).toThrow();
   }
-  console.log(`[DEBUG] authority validated ${bazel.integrationPhases.length} Bazel phase declarations, bilingual metadata and native dry-run vectors`);
 });
 
 test("the native dashboard resolves retained live controls with typed inputs and explicit argument vectors", () => {
   const binary = process.env.SEMIO_DASHBOARD_BIN ?? installedDashboard(root, "prototype", root);
+  const catalog = process.env.SEMIO_PLUGIN_CATALOG ?? join(root, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated");
+  if (!existsSync(catalog)) throw Error(`Generated S playground catalog required at ${catalog}: run repo run @semio-tech/s-dev-composition:generate`);
   const schema = read(join(dashboard, "🧬️schema/🎮️registry/🔣️.json"));
   const oracle = new Ajv2020({ strict: false, allErrors: true }); oracle.addSchema(schema);
   const validateLaunch = oracle.getSchema(`${schema.$id}#/$defs/Launch`)!;
   for (const row of fixture.liveControls) {
     const expand = (value: string) => value.replaceAll("{workspace}", root);
-    const args = ["run", row.id, "--root", root, "--dry-run", ...Object.entries(row.parameters).flatMap(([key, value]) => ["--param", `${key}=${expand(String(value))}`]), ...Object.entries(row.env).flatMap(([key, value]) => ["--env", `${key}=${value}`]), ...(row.args.length ? ["--", ...row.args] : [])];
-    const run = Bun.spawnSync([binary, ...args], { cwd: root, env: { ...process.env, SEMIO_DASHBOARD_GRAPH: "fresh" }, stdout: "pipe", stderr: "pipe" });
+    const args = ["run", row.id, "--root", root, "--dry-run", ...Object.entries(row.parameters).flatMap(([key, value]) => ["--param", `${key}=${expand(String(value))}`]), ...Object.entries(row.env).flatMap(([key, value]) => ["--env", `${key}=${value}`]), ...(row.args.length ? ["--", ...row.args.map(expand)] : [])];
+    const run = Bun.spawnSync([binary, ...args], { cwd: root, env: { ...process.env, SEMIO_DASHBOARD_GRAPH: "fresh", SEMIO_PLUGIN_CATALOG: catalog }, stdout: "pipe", stderr: "pipe" });
     expect(run.exitCode, `${row.id}: ${run.stderr}`).toBe(0);
     const launch = JSON.parse(run.stdout.toString());
     expect(validateLaunch(launch), `${row.id}: ${oracle.errorsText(validateLaunch.errors)}`).toBe(true);
     expect(launch.processes.map((process: { commandId: string }) => process.commandId), row.id).toEqual(row.commandIds);
-    if (row.words) expect(launch.processes[0].args, row.id).toEqual(row.words.map(expand));
+    if (row.words) expect([launch.processes[0].cmd, ...launch.processes[0].args], row.id).toEqual(row.words.map(expand));
     if (row.stop) expect(launch.stop, row.id).toBe(row.stop);
     if (row.ports) expect(launch.processes.map((process: { ready: { port: number } }) => process.ready.port), row.id).toEqual(row.ports);
     for (const process of launch.processes) for (const [key, value] of Object.entries(row.env)) expect(Object.fromEntries(process.env)[key], `${row.id}: ${key}`).toBe(value);
-    console.log(`[DEBUG] native dashboard resolved ${row.id}: ${launch.processes.map((process: { commandId: string }) => process.commandId).join(", ")}`);
   }
 }, 120_000);
 
@@ -491,6 +481,26 @@ test("ready-address opening has a customizable binding and independent schema ve
   }
   const keymap = read(join(dashboard, "⚙️preferences/⌨️keymap/🔣️.json"));
   expect(keymap.bindings.find((binding: { action: string }) => binding.action === vectors.action)).toEqual({ scope: "prefix", action: vectors.action, keys: [vectors.key] });
+});
+
+test("a daemon socket path always fits the platform with vectors an independent xxh3 confirms", () => {
+  const vectors = read(join(dashboard, "🧫️fixtures/🌀️daemon/🔌️socket/🔣️.json"));
+  const schema = read(join(dashboard, "🧬️schema/🌀️daemon/🔌️socket/🔣️.json"));
+  const validate = new Ajv2020({ strict: false }).compile(schema);
+  expect(validate(vectors), JSON.stringify(validate.errors)).toBe(true);
+  const encoder = new TextEncoder();
+  const outcomes = new Set<string>();
+  for (const row of vectors.cases) {
+    const preferred = encoder.encode(`${row.runtime}/${vectors.key}.sock`);
+    expect(preferred.length).toBe(row.preferredBytes);
+    for (const platform of ["macos", "linux"] as const) expect(preferred.length < vectors.limits[platform]).toBe(row.preferred[platform]);
+    expect(`${Bun.hash.xxHash3(preferred).toString(16).padStart(16, "0")}.sock`).toBe(row.fallbackFile);
+    const fallback = encoder.encode(`${vectors.fallbackDirectory}/${row.fallbackFile}`);
+    expect(fallback.length).toBeLessThan(vectors.limits.macos);
+    outcomes.add(`${row.preferred.macos}/${row.preferred.linux}`);
+  }
+  expect([...outcomes].sort()).toEqual(["false/false", "false/true", "true/true"]);
+  expect(new Set(vectors.cases.map((row: { fallbackFile: string }) => row.fallbackFile)).size).toBe(vectors.cases.length);
 });
 
 test("every active source directory is free of IDE configuration and workspace files", () => {
@@ -528,6 +538,5 @@ test("all active owner manifests retain executable canonical scripts and valid d
   expect(owners.size).toBeGreaterThan(100);
   expect(targets).toBeGreaterThan(3000);
   expect(failures.sort(), "every owner must resolve commands through its permanent scripts and dashboard declarations").toEqual([]);
-  console.log(`[DEBUG] authority checked ${owners.size} owners, ${targets} targets and ${commands} existing canonical script invocations`);
 }, 300_000);
 

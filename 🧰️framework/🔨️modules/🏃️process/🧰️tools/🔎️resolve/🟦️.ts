@@ -2,7 +2,7 @@ import { accessSync, constants, existsSync, readdirSync, statSync } from "node:f
 import { homedir } from "node:os";
 import { delimiter, dirname, isAbsolute, join, basename } from "node:path";
 import { findToolV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolLocatorV1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
-import { runtimeCommandNameV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { readToolPinV1, systemToolPinPortV1, toolDigestForHostV1, type ToolPinPortV1, type ToolPinV1 } from "../📌️pin/🟦️.ts";
 
 /** 🔌️ What resolving a tool touches on the host; tests replace it so every platform is testable on any host. */

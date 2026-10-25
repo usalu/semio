@@ -336,7 +336,7 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         let success_twins: Vec<[f32; 2]> = primaries.iter().filter(|(_, verdict, _, _)| *verdict == ToolRunVerdict::Success).map(|(key, _, _, _)| twins[&(key | twin_bit)].2).collect();
         assert_eq!(success_twins, placed_centers, "{id}: a placed part's board twin sits on the part");
 
-        let planner = fill3d::build_run_job(ToolRunJobRequest::<EditorApp<Puzzle3dPlayApp>> {
+        let planner = fill3d::build_run_job::<semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp>(ToolRunJobRequest::<EditorApp<Puzzle3dPlayApp>> {
             tool_id: semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::modes::edit::tools::fill::TOOL_ID,
             definition: &fill3d::run_definition(),
             purpose: ToolRunJobPurpose::Run,

@@ -56,7 +56,7 @@ pub enum UiContractViolation {
         node: crate::UiNodeId,
         toolbar: crate::UiNodeId,
     },
-    /// 🎛️ A Tree section's `header_toolbar` is not its direct horizontal Toolbar child, or the
+    /// 🧰️ A Tree section's `header_toolbar` is not its direct horizontal Toolbar child, or the
     /// Toolbar does not own one to four direct leaf Buttons.
     InvalidTreeSectionHeaderToolbar {
         node: crate::UiNodeId,
@@ -115,7 +115,7 @@ fn to_result(violations: UiContractViolations) -> Result<(), UiContractViolation
     }
 }
 
-/// 🌲️ One stack frame of the iterative preorder walk `validate_core` runs — explicit, not recursive,
+/// 🥞️ One stack frame of the iterative preorder walk `validate_core` runs — explicit, not recursive,
 /// so a pathological (but within-quota) tree cannot exhaust the native stack; `Exit` pops the node back
 /// off the ancestor path once its subtree is fully processed, which is what makes [`Cycle`] detection
 /// (a back-edge into a node still on that path) distinguishable from a node merely visited twice.
@@ -127,7 +127,7 @@ enum WalkFrame {
     Exit(crate::UiNodeId),
 }
 
-/// 🌲️ The shared traversal behind [`validate_snapshot`] and [`apply_patch`]'s post-op check — generic
+/// 🚶️ The shared traversal behind [`validate_snapshot`] and [`apply_patch`]'s post-op check — generic
 /// over `V: Borrow<UiNodeRecord>` so it runs unmodified against a [`crate::UiSnapshot`]'s borrowed
 /// `HashMap<UiNodeId, &UiNodeRecord>` and a [`crate::UiSnapshotState`]'s owned
 /// `HashMap<UiNodeId, UiNodeRecord>` alike — one algorithm, never two copies to keep in sync.

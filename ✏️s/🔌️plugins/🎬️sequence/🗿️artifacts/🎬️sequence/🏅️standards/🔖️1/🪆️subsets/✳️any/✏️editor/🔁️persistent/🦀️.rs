@@ -955,24 +955,7 @@ impl semio_framework::ToolJobFactory for SequencePersistentJobFactory {
     fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
         semio_framework::ToolExecutionContract::resumable(SEQUENCE_RETAINED_RAW_BYTES, SEQUENCE_PERSISTENT_MAXIMUM_UNITS, 1, SEQUENCE_STORE_MAXIMUM_BYTES, 7_500, 1, 1)
     }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > SEQUENCE_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
-            return Err((semio_framework::ToolJobFactoryError::new("Sequence persistent command wire or checkpoint exceeds cap"), input, checkpoint));
-        }
-        Ok(match checkpoint {
-            Some(checkpoint) => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
-            None => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input),
-        })
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: SEQUENCE_RETAINED_RAW_BYTES, checkpoint_resume: true);
 }
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SequencePersistentJobFactory {
     type Owner = semio_framework_plugin::EditorApp<SequencePlayApp>;

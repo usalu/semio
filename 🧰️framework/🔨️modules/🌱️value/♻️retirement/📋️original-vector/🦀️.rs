@@ -19,13 +19,13 @@ impl<T:RetireOwned> OriginalVectorCursor<T>{
  }
  /// 👁️ Borrows the unchanged remaining original payloads without constructing a projection.
  pub fn remaining(&self)->&[T]{self.original.as_ref().map_or(&[],std::vec::IntoIter::as_slice)}
- /// 📏️ Quotes the native payload transfer and iterator-position update before returning an item.
+ /// 🧲️ Quotes the native payload transfer and iterator-position update before returning an item.
  pub fn next_take_demand(&self)->RetirementDemand{if self.closing||self.active.is_some()||self.remaining().is_empty(){return Default::default();}RetirementDemand{copy_bytes:size_of::<T>()+size_of::<usize>(),depth:1,..Default::default()}}
  /// 🤝️ Returns the exact next native owner only under the unchanged independent caller grant.
  pub fn take_front(&mut self,grant:RetainedCloneGrant)->Result<Option<(T,RetainedCloneProgress)>,ValueError>{if self.closing||self.active.is_some()||self.remaining().is_empty(){return Ok(None);}let d=self.next_take_demand();if !permits(d,grant){return Ok(None);}Ok(self.original.as_mut().unwrap().next().map(|value|(value,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
  /// 🛑️ Switches to original payload closure while retaining the same vector allocation.
  pub fn begin_close(&mut self){self.closing=true;}
- /// 📏️ Quotes the actual next child, native payload handoff, or final backing release.
+ /// 🔜️ Quotes the actual next child, native payload handoff, or final backing release.
  pub fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(active)=self.active.as_ref(){if active.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<T>>>(),depth:1,..Default::default()});}let mut d=active.next_demand(body)?;d.depth=d.depth.checked_add(1).ok_or_else(||refuse("original vector child depth overflow"))?;return Ok(d);}
   if self.pending.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<T>()+size_of::<ControlledRetirement<T>>(),depth:1,..Default::default()});}

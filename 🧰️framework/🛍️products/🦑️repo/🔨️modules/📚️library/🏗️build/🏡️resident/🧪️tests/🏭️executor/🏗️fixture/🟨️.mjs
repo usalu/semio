@@ -15,6 +15,7 @@ const result=await serveExecutorV1({
   if(command==="echo"){console.log(JSON.stringify({rest,env:process.env.FIXTURE_VAR??null,leaked:process.env.FIXTURE_LEAK??null,cwd:process.cwd(),runs:control.runs,opens:control.opens}));console.error("err "+rest.join(" "));}
   else if(command==="set"){process.env.FIXTURE_LEAK="leaked";process.chdir("/");process.exitCode=4;console.log("set");}
   else if(command==="sleep"){await new Promise((resolve,reject)=>{const timer=setTimeout(resolve,Number(rest[0]));signal.addEventListener("abort",()=>{clearTimeout(timer);reject(signal.reason);},{once:true});});}
+  else if(command==="refuse-key")throw Object.assign(new Error("refused build.nx.child-selection-undeclared {}"),{key:"build.nx.child-selection-undeclared"});
   else if(command==="refuse")throw new Error("Undeclared original Repo build selection");
   else if(command==="service-refuse")throw Object.assign(new Error("Service request refused (expired)"),{name:"ServiceRefusalV1",code:"expired",fields:{reason:"x"}});
   else if(command==="throw")throw new Error("boom");

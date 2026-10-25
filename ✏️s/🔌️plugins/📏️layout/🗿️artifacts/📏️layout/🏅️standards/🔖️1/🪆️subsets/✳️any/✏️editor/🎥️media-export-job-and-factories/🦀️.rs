@@ -109,9 +109,7 @@ impl ToolJobFactory for LayoutMediaExportJobFactory {
         ToolExecutionContract::resumable(MAX_LAYOUT_EXPORT_RAW_BYTES, MAX_LAYOUT_EXPORT_DECODED_ITEMS, 1, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, 2_000, 64, 1)
     }
 
-    fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(payload)
-    }
+    semio_framework_plugin::retained_command::reserved_tool_job_factory_admission!();
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutMediaExportJobFactory {
@@ -147,67 +145,7 @@ impl ToolJobFactory for LayoutExportJobFactory {
         ToolExecutionContract::resumable(MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES, MAX_LAYOUT_EXPORT_DECODED_ITEMS, 1, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, 2_000, 64, 1)
     }
 
-    fn create_job(&mut self, operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        let kind = payload.request.kind;
-        let name = output_name(&payload.request);
-        let inner = LayoutExportJob::from_admitted(operation,(operation.operation,operation.generation),payload.request,payload.output_chunks);
-        Ok(LayoutExportToolJob {
-            inner: Some(inner),
-            rejected_download:None,
-            pending_download: None,
-            slot: LayoutPublicationSlot::default(),
-            pending_operation: None,
-            pending_request: None,
-            pending_output_chunks: None,
-            completion: payload.completion,
-            kind,
-            name,
-            raw_input: None,
-            raw_bytes: Vec::new(),
-            raw_page_cursor: 0,
-            raw_validated: true,
-            completed: false,
-        })
-    }
-
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        operation: Operation,
-        payload: Self::Payload,
-        input: RetainedToolWireInput,
-        checkpoint: Option<RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
-        if checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("layout export retained ingress does not accept an unvalidated checkpoint owner"), input, checkpoint));
-        }
-        let declared_bytes = input.declared_bytes();
-        if declared_bytes > MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES {
-            return Err((ToolJobFactoryError::new("layout export retained ingress exceeds its command byte envelope"), input, None));
-        }
-        let kind = payload.request.kind;
-        let mut job = LayoutExportToolJob {
-            inner: None,
-            rejected_download:None,
-            pending_download: None,
-            slot: LayoutPublicationSlot::default(),
-            pending_operation: Some(operation),
-            pending_request: Some(payload.request),
-            pending_output_chunks: Some(payload.output_chunks),
-            completion: payload.completion,
-            kind,
-            name: String::new(),
-            raw_input: None,
-            raw_bytes: Vec::new(),
-            raw_page_cursor: 0,
-            raw_validated: false,
-            completed: false,
-        };
-        if job.raw_bytes.try_reserve_exact(declared_bytes).is_err() {
-            return Err((ToolJobFactoryError::new("layout export retained decoder capacity was not admitted"), input, None));
-        }
-        job.raw_input = Some(input);
-        Ok(job)
-    }
+    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Ok::<_, String>(LayoutExportToolJob::from_payload(operation, payload)));
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutExportJobFactory {

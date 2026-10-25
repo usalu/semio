@@ -18,7 +18,7 @@ pub trait ActorLogic {
     type Snapshot;
 }
 
-/// 🎭️ Blanket [`ActorLogic`] for any compiled [`Machine`].
+/// 🤖️ Blanket [`ActorLogic`] for any compiled [`Machine`].
 pub struct MachineLogic<M: Machine>(core::marker::PhantomData<M>);
 
 impl<M: Machine> ActorLogic for MachineLogic<M> {
@@ -32,7 +32,7 @@ impl<M: Machine> ActorLogic for MachineLogic<M> {
 
 //#region 🔖️Actor
 
-/// 🎬️ One running machine instance: its snapshot plus a serial mailbox.
+/// 🖥️ One running machine instance: its snapshot plus a serial mailbox.
 struct Actor<M: Machine> {
     id: ActorId,
     snapshot: Snapshot<M>,
@@ -43,7 +43,7 @@ struct Actor<M: Machine> {
 
 //#region 🔖️System
 
-/// 🎬️ Owns every spawned [`Actor`] for one machine type and routes their [`Command`]s
+/// ⚙️ Owns every spawned [`Actor`] for one machine type and routes their [`Command`]s
 /// to a [`Host`]. Mailboxes drain in round-robin order until quiescent.
 pub struct ActorSystem<M: Machine, H: Host<M>> {
     pub host: H,
@@ -52,12 +52,12 @@ pub struct ActorSystem<M: Machine, H: Host<M>> {
 }
 
 impl<M: Machine, H: Host<M>> ActorSystem<M, H> {
-    /// 🎬️ A fresh system with no actors yet, owning `host`.
+    /// 🆕️ A fresh system with no actors yet, owning `host`.
     pub fn new(host: H) -> Self {
         Self { host, actors: Vec::new(), next_id: 0 }
     }
 
-    /// 🎬️ Initializes and registers a root actor, routing its initial commands immediately.
+    /// 🏠️ Initializes and registers a root actor, routing its initial commands immediately.
     pub fn spawn_root(&mut self, input: M::Input) -> ActorId {
         let id = ActorId(self.next_id);
         self.next_id += 1;
@@ -68,19 +68,19 @@ impl<M: Machine, H: Host<M>> ActorSystem<M, H> {
         id
     }
 
-    /// 🎬️ The current [`Snapshot`] of an actor, if it exists.
+    /// 📸️ The current [`Snapshot`] of an actor, if it exists.
     pub fn snapshot(&self, id: ActorId) -> Option<&Snapshot<M>> {
         self.actors.iter().find(|a| a.id == id).map(|a| &a.snapshot)
     }
 
-    /// 🎬️ Enqueues an event for delivery on the next [`ActorSystem::drain`].
+    /// 📮️ Enqueues an event for delivery on the next [`ActorSystem::drain`].
     pub fn send(&mut self, to: ActorId, event: M::Event) {
         if let Some(actor) = self.actors.iter_mut().find(|a| a.id == to) {
             actor.mailbox.push_back(event);
         }
     }
 
-    /// 🎬️ Delivers a [`TimerId`](crate::TimerId) elapsed notification straight to `macrostep`'s
+    /// ⏰️ Delivers a [`TimerId`](crate::TimerId) elapsed notification straight to `macrostep`'s
     /// timer entry point for `to`.
     pub fn timer_elapsed(&mut self, to: ActorId, timer: crate::TimerId) -> Option<StepReport> {
         let idx = self.actors.iter().position(|a| a.id == to)?;
@@ -91,7 +91,7 @@ impl<M: Machine, H: Host<M>> ActorSystem<M, H> {
         Some(report)
     }
 
-    /// 🎬️ Drains every actor's mailbox to quiescence, running one macrostep per delivered event.
+    /// 📫️ Drains every actor's mailbox to quiescence, running one macrostep per delivered event.
     pub fn drain(&mut self) -> Vec<StepReport> {
         let mut reports = Vec::new();
         loop {
@@ -130,7 +130,7 @@ impl<M: Machine, H: Host<M>> ActorSystem<M, H> {
     }
 }
 
-/// 🎬️ Applies one [`Command`] to `host`/`snapshot`; returns a `Send` command's
+/// 🗺️ Applies one [`Command`] to `host`/`snapshot`; returns a `Send` command's
 /// `(to, event)` pair for the caller to route on, since a lone [`Host`]+[`Snapshot`]
 /// pair (e.g. a single `export_wasm_machine!` instance) has no other actor to deliver it to.
 pub fn route_command<M: Machine>(host: &mut impl Host<M>, snapshot: &mut Snapshot<M>, actor: ActorId, command: Command<M>) -> Option<(ActorId, M::Event)> {

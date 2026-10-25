@@ -255,6 +255,7 @@ async fn artifact_store_batch_rejection_mid_batch_leaves_no_partial_edit_and_sti
 /// running post root one owner per bounded turn, and never publishes.
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_without_publishing() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-cancel", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
@@ -279,6 +280,7 @@ async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_witho
 
 #[semio_framework_async_macros::async_test]
 async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for_next_publication() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔌️plugin/🧪️tests/🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "cold-retained-rebase", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
@@ -305,6 +307,7 @@ async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_forged_cursor_history() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-digest-authority", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
@@ -314,7 +317,7 @@ async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_fo
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(11), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 12 })], HistoryLane::Document, Some(&forged), None)
         .expect("Store-minted immutable authority admits the domain owner");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: 4096,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
     while publication.preparation.as_ref().and_then(|owner| owner.prepared()).is_none() {
         assert!(matches!(receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)), Ok(ArtifactStoreOneItemAdvance::Progress(_) | ArtifactStoreOneItemAdvance::PreparationProgress(..))));
     }
@@ -378,6 +381,7 @@ async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generati
 /// of the Store's own clock is refused before any owner is reserved.
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_behind() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-clock", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
@@ -387,7 +391,7 @@ async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(11), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 5 })], HistoryLane::Document, Some(&ahead), None)
         .expect("a stamped clock strictly ahead of the Store clock admits");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: 4096,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
     let receipt = loop {
         if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("one bounded stamped step") {
             break receipt;
@@ -433,6 +437,7 @@ async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_
 /// the document never saw.
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behind_its_construction_seed() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-genesis-clock", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
@@ -442,7 +447,7 @@ async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behi
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(21), generation, store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 3 })], HistoryLane::Document, Some(&genesis), None)
         .expect("a genesis document is after nothing, so the minted stamp admits");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: 4096,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
     loop {
         if let ArtifactStoreOneItemAdvance::Published(_, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("one bounded genesis step") {
             break;
@@ -472,10 +477,11 @@ async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behi
 /// after it, audit W1G-8).
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_stamped_publication_carries_its_committed_identity_into_the_published_edit() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-identity", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: 4096,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
 
     let approval = "7d6bd4f3246ae47f074ed7a02011c0cf";
     let stamp = HybridLogicalTimestamp { actor: 1, physical_ms: 1_004, logical: 0 };

@@ -1,7 +1,7 @@
 //! 🧩️ Ui graph module: the node, control, tree, inspector, surface, scene and status declarations with the shared imports of the former inline module. See [`super`].
 
 // #region ui
-//! 🧩 Declarative UI graph types shared by kernel, plugins, and renderers.
+//! 🕸️ Declarative UI graph types shared by kernel, plugins, and renderers.
 
 use crate::IconName;
 use semio_framework_ui_locale::Label;

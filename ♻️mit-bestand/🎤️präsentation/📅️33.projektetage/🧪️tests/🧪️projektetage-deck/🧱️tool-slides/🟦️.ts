@@ -4,7 +4,7 @@ import type { ProjektetageDeckTestKit } from "../🧰️deck-test-kit/🟦️.ts
 /** 🛠 Registers the slide path loading, puzzle, entwurfswerkzeug catalog, bauteillogik and modell iframe tests. */
 export function registerToolSlideTests(kit: ProjektetageDeckTestKit): void {
   const { deck, expect, it } = kit;
-  it("loads every slide from slide/<chapter>/<sequence>/<thought>/<slide>.ts paths", () => {
+  it("loads every slide from slide/<chapter>/<sequence>/<thought>/<slide>/🟦️.ts paths", () => {
     expect(deck.chapters).toHaveLength(4);
     expect(deck.chapters.map((chapter) => chapter.name)).toEqual(["Einführung", "Recherche", "Bauteilportal", "Entwurfswerkzeug"]);
     const einführung = deck.chapters.find((chapter) => chapter.name === "Einführung");

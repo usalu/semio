@@ -67,7 +67,7 @@ impl CancellationToken {
         self.0.lock().unwrap().cancelled
     }
 
-    /// 👀️ Checks cancellation and, if not yet cancelled, registers `waker` to be woken by the
+    /// ☑️ Checks cancellation and, if not yet cancelled, registers `waker` to be woken by the
     /// next `cancel()` — both under one lock, so this can never race a concurrent `cancel()` into
     /// missing the registration.
     fn poll_cancelled(&self, waker: &Waker) -> bool {
@@ -220,7 +220,7 @@ impl<S: AsyncPackSource> ReadScheduler<S> {
         Self::with_capacity(source, 4)
     }
 
-    /// 🆕️ A scheduler that admits at most `max_concurrent_reads` physical reads at once.
+    /// 🔏️ A scheduler that admits at most `max_concurrent_reads` physical reads at once.
     pub fn with_capacity(source: S, max_concurrent_reads: usize) -> Self {
         Self { source, groups: Mutex::new(Vec::new()), demand: BoundedDemand::new(max_concurrent_reads) }
     }
@@ -388,7 +388,7 @@ impl BoundedDemand {
     }
 }
 
-/// 🎟️ An RAII hold on one of `BoundedDemand`'s slots; releasing (via `Drop`) frees it.
+/// 📏️ An RAII hold on one of `BoundedDemand`'s slots; releasing (via `Drop`) frees it.
 pub struct DemandPermit<'a> {
     demand: &'a BoundedDemand,
 }

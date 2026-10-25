@@ -514,7 +514,7 @@ fn compact_layout(layout: &mut WindowLayout) {
     };
 }
 
-/// 🚚️ Commits one docking command atomically, preserving the held window and pruning its vacated group.
+/// 🧲️ Commits one docking command atomically, preserving the held window and pruning its vacated group.
 pub fn dock_window(layout: &mut WindowLayout, source: &str, target: &str, placement: DockPlacement, tab_index: Option<usize>) -> bool {
     if stack_hosting(layout, target).is_none() { return false; }
     if source == target {

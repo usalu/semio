@@ -41,7 +41,7 @@ function nxNamedInputs(inputs: Readonly<Record<string, readonly unknown[]>>): Na
 /** 🔐️ Publishes through the caller-owned process authority the production Script entrypoint issues, with the test's own narrowed cancellation. */
 function publish(workspace: string, signal: AbortSignal = new AbortController().signal, progress?: (directories: number) => void): Promise<void> {
   const envelope = createScriptProcessEnvelope({ version: 1, owner: "repository:nx:collection-boundary-test", maximumElapsedMilliseconds: 0 }, {}, Date.now());
-  return withScriptProcessEnvelope(envelope, (original) => withScriptInvocationSignalV1(original, signal, (invocation) => bootstrap.publishNxCollectionBoundary(workspace, invocation, progress)));
+  return withScriptProcessEnvelope(envelope, (original) => withScriptInvocationSignalV1(original, signal, (invocation) => bootstrap.publishNxCollectionBoundary(workspace, invocation, createIssuedResourceControlV1(invocation, "test:collection-boundary", 0), progress)));
 }
 
 const root = resolve(import.meta.dir, "../../../../../../..");
@@ -50,7 +50,7 @@ const vector = JSON.parse(readFileSync(join(root, library, "🧪️tests/🧫️
 
 const nxJson = JSON.parse(readFileSync(join(root, "nx.json"), "utf8"));
 
-/** 🧭️ Applies file-set precedence independently with minimatch. */
+/** 🔮️ Applies file-set precedence independently with minimatch. */
 function oracle(path: string, patterns: readonly string[], projectRoot = vector.projectRoot): boolean {
   const normalized = patterns.map((pattern) => pattern.replaceAll("{workspaceRoot}", ".").replaceAll("{projectRoot}", projectRoot).replace(/^(!?)\.\//, "$1"));
   const positives = normalized.filter((pattern) => !pattern.startsWith("!"));

@@ -176,7 +176,7 @@ fn the_corpus_ranges_reach_exactly_the_source_they_mean_and_undo() {
         assert_eq!(base.to_text(), case["before"].as_str().expect("before"), "{id}: the corpus source is the source the window shows");
         let ranges = case["splices"].as_array().expect("splices").iter().map(|range| splice_source::SourceSplice { offset: range["offset"].as_u64().expect("offset") as u32, delete: range["delete"].as_u64().expect("delete") as u32, insert: range["insert"].as_str().expect("insert").into() }).collect();
         let leaf = MdMutation::SpliceSource(splice_source::SpliceSource { splices: ranges });
-        let inverse = protocol::Mutation::inverse(&leaf, &base).expect("valid retained mutation inverse fixture");
+        let inverse = protocol::ColdMutation::inverse(&leaf, &base).expect("valid retained mutation inverse fixture");
         let mut state = base.clone();
         assert!(crate::apply_mutation(&mut state, &leaf).messages().iter().all(|message| message.level != semio_framework_diagnostic::Severity::Fatal), "{id}: the ranges apply");
         assert_eq!(state, MdSnapshot::from_text(case["after"].as_str().expect("after")), "{id}: the ranges reach exactly the source they mean");

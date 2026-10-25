@@ -384,7 +384,7 @@ fn sample_mutations() -> Vec<MdMutation> {
 async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = sample_snapshot();
-        let diff_direct = Mutation::diff(&mutation, &base);
+        let diff_direct = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let applied_via_diff = protocol::apply_diff_cold(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
@@ -409,7 +409,7 @@ async fn inverse_law() {
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
-        let diff = Mutation::diff(&mutation, &base);
+        let diff = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let next = protocol::apply_diff_cold(diff.diff(), &base).unwrap();
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
         let restored = protocol::apply_diff_cold(&inverse_diff, &next).unwrap();
@@ -442,9 +442,9 @@ fn root_blocks_diff(diff: &MdDiff) -> &MdBlocksDiff {
 async fn absorb_law() {
     {
         let base = two_para_root("a", "b");
-        let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
         assert_eq!(triple.removed, vec![0]);
@@ -455,9 +455,9 @@ async fn absorb_law() {
 
     {
         let base = two_para_root("a", "b");
-        let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
         assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
@@ -465,9 +465,9 @@ async fn absorb_law() {
 
     {
         let base = two_para_root("a", "b");
-        let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "f".into() }] } }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "f".into() }] } }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
         assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
@@ -480,9 +480,9 @@ async fn absorb_law() {
 
     {
         let base = two_para_root("a", "b");
-        let d1 = Mutation::diff(&MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 1 }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 1 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
         assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
@@ -491,11 +491,11 @@ async fn absorb_law() {
 
     {
         let base = two_para_root("a", "b");
-        let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
         let mid1 = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }), &mid1);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }), &mid1);
         let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).unwrap();
-        let d3 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }), &mid2);
+        let d3 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }), &mid2);
         let sequential = protocol::apply_diff_cold(d3.diff(), &mid2).unwrap();
 
         let mut left = d1.diff().clone();
@@ -517,9 +517,9 @@ async fn absorb_law() {
             blocks: vec![MdBlock::BlockQuote { blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "qa".into() }] }, MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "qb".into() }] }] }],
         };
         let path = [MdPathStep::BlockQuote { index: 0 }];
-        let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: path.to_vec(), index: 2, block: MdBlock::ThematicBreak }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::InsertBlock(InsertBlock { path: path.to_vec(), index: 2, block: MdBlock::ThematicBreak }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: path.to_vec(), index: 0 }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: path.to_vec(), index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let MdBlockDiff::BlockQuote { blocks: Some(inner) } = &absorbed.blocks.as_ref().unwrap().modified[0].diff else {
             panic!("expected nested block-quote diff");

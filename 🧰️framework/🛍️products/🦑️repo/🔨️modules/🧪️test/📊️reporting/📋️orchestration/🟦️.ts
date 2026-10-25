@@ -60,7 +60,7 @@ export function readImplementationCoverage(repoRoot: string): ImplementationCove
   return out;
 }
 
-/** 📊️ Re-renders the report artifacts from the last run's result stream. */
+/** 📜️ Re-renders the report artifacts from the last run's result stream. */
 export class ReportScript extends Script {
   run(): void {
     const dir = reportsDir(this.repoRoot);

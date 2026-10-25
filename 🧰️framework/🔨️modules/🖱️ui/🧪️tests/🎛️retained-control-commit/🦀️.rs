@@ -142,7 +142,7 @@ fn root_stack() -> UiNode {
     UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None })
 }
 
-/// 🎬️ Every `UiCommand::App` one fixture gesture produced, driven through the real router.
+/// 📬️ Every `UiCommand::App` one fixture gesture produced, driven through the real router.
 fn dispatched(case: &Value) -> Vec<ActionDescriptor> {
     let bounds = case["bounds"].as_array().expect("fixture bounds");
     let rect = (bounds[0].as_f64().expect("x") as f32, bounds[1].as_f64().expect("y") as f32, bounds[2].as_f64().expect("w") as f32, bounds[3].as_f64().expect("h") as f32);
@@ -192,7 +192,7 @@ fn dispatched(case: &Value) -> Vec<ActionDescriptor> {
         .collect()
 }
 
-/// 🎚️ The press keys one dispatch carries (`continuousPress`): its gesture and commit flag, split off the value args.
+/// ✂️ The press keys one dispatch carries (`continuousPress`): its gesture and commit flag, split off the value args.
 fn split_press(action: &ActionDescriptor) -> (ActionDescriptor, Option<(String, bool)>) {
     let entries: Vec<(String, DslValue)> = match action.args.as_ref() {
         Some(DslValue::Object(entries)) => entries.clone(),

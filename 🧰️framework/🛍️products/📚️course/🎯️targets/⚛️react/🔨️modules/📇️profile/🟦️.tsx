@@ -1,4 +1,4 @@
-/** 📇️ The learner on home: the card with the totals, who else is online and the way to switch identity, and the
+/** 🏫️ The learner on home: the card with the totals, who else is online and the way to switch identity, and the
  * profile page behind it — totals and the rank on the all-time leaderboard of every quiz, every run with its status, challenge, score, points and dates (the result of a submitted run,
  * the way back into an open one), and the badges earned with their days. Both are pure views over session state; the
  * profile shares its public presentation and presence cursors. Switching identity always asks first: an anonymous learner

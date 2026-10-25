@@ -74,7 +74,7 @@ function oracle(id: string): (ctx: AdapterContext) => AdapterOutcome | Promise<A
 // #endregion 🧫️Vectors
 
 // #region 🎯️Subject
-/** 🎯️ The twin's `vizChord` over the same matrix and the same padding and sorting. */
+/** 🔃️ The twin's `vizChord` over the same matrix and the same padding and sorting. */
 function twinProjection(ctx: AdapterContext): { projection: Record<string, number[]> } {
   const config = options(ctx);
   const layout = vizChord(matrix(ctx), {

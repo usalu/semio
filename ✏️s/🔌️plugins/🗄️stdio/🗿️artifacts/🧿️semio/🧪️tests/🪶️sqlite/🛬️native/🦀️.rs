@@ -1,6 +1,6 @@
 //! 🛬️ Explicit concrete Semio declaration owners and controlled native construction.
 use semio_framework_test_fixtures::fixture_text;
-use store::{os_store::serialization::ArtifactSqliteSnapshotHost,pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack,os_store::serialization::ArtifactCodec};
+use store::{bare_artifact_codec,os_store::serialization::ArtifactSqliteSnapshotHost,snapshot::ArtifactDsl,snapshot::ArtifactPack,os_store::serialization::ArtifactCodec};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding};
 
 fn check<P:ArtifactSqliteSnapshotHost+ArtifactDsl+ArtifactPack+Default+PartialEq+std::fmt::Debug+'static>(name:&str,subset:&str,codec:ArtifactCodec,failures:&mut Vec<String>){

@@ -5,7 +5,7 @@ use super::*;
 //#region 🔖️Header
 /// 📇️ The three standard `HEADER;` records (`FILE_DESCRIPTION`/`FILE_NAME`/`FILE_SCHEMA`),
 /// each a parenthesized tuple of typed values — kept verbatim, not schema-interpreted.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields )]
 pub struct Part21Header {
@@ -72,7 +72,7 @@ impl Default for Part21Header {
 
 //#region 🔖️Document
 /// 📦️ The full, lossless generic Part-21 graph: header + every `DATA;` instance.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(deny_unknown_fields )]
 pub struct Part21Document {

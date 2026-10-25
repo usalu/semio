@@ -6,7 +6,7 @@ import {createScriptProcessEnvelope,scriptProcessEnvironment} from "../../../../
 /** 🚪️ What the runner hands the entry: the isolated workspace, the framework ports whose implementation the class replaces, the time bound of the original process and the build mode. */
 export interface HermeticEntryOptionsV1{readonly workspace:string;readonly providers:Readonly<Record<string,string>>;readonly maximumElapsedMilliseconds:number;readonly buildMode:string}
 
-/** 🚪️ Issues, inside a hermetic action, the original process authority a repository script receives from its caller: the repository provider designation with the class replacements, and a fresh original envelope bounded in time whose only capability is the isolated workspace; scripts that need native build authority refuse loudly. The runner overlays the returned values on its strict environment. Owner of the wire formats: [providers](../../../../🏃️process/🔌️providers/🟦️.ts) and the routing envelope. */
+/** 🎬️ Issues, inside a hermetic action, the original process authority a repository script receives from its caller: the repository provider designation with the class replacements, and a fresh original envelope bounded in time whose only capability is the isolated workspace; scripts that need native build authority refuse loudly. The runner overlays the returned values on its strict environment. Owner of the wire formats: [providers](../../../../🏃️process/🔌️providers/🟦️.ts) and the routing envelope. */
 export function hermeticEnvironmentV1(options:HermeticEntryOptionsV1):Record<string,string>{
  const environment:Record<string,string|undefined>={};
  issueRepositoryScriptProvidersV1(environment as NodeJS.ProcessEnv);

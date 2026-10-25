@@ -21,6 +21,9 @@ impl ExtensionEvaluationResources {
         Self { invoke: std::sync::Mutex::new(None), original_registry: Some(registry), registry_issuer: neural_engine::SharedRegistryIssuer::new(), registry_source_close: None, registry: None, lease: None, retirement: None, close_failure: None, closing: false }
     }
     pub fn registry(&self) -> Option<&neural_engine::SharedRegistry> { self.registry.as_ref() }
+    /// 🧪️ Names the fields that still hold a value.
+    #[cfg(test)]
+    pub fn debug_live_fields(&self)->String{format!("invoke={} original_registry={} issuer_empty={} source_close={} registry={} lease={} retirement={} failure={}",self.invoke.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),self.original_registry.is_some(),self.registry_issuer.terminal_is_empty(),self.registry_source_close.is_some(),self.registry.is_some(),self.lease.is_some(),self.retirement.is_some(),self.close_failure.is_some())}
     pub fn admit_registry_on_original(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<bool>, semio_framework_job::OriginalTurnFailure> {
         if self.registry.is_some() { return Ok(Some(true)); }
         if self.closing { return Ok(None); }

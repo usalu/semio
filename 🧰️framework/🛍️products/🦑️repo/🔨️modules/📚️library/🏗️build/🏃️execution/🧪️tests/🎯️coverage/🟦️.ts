@@ -1,6 +1,6 @@
 /** 🎯️ Contract: every task has exactly one tool family and one disposition, agreed by the neutral classifier, an independent Python rule evaluator and a SQLite census. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import coverageSchema from "../../🧬️schema/🎯️coverage.json";

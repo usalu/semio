@@ -271,27 +271,8 @@ impl<A: NormRetainedEditor> semio_framework::ToolJobFactory for NormBoundedComma
         norm_bounded_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: NORM_RETAINED_RAW_BYTES, checkpoint_resume: true);
 
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > NORM_RETAINED_RAW_BYTES
-            || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES)
-        {
-            return Err((semio_framework::ToolJobFactoryError::new("norm retained command rejects oversized wire or checkpoint"), input, checkpoint));
-        }
-        match checkpoint {
-            Some(checkpoint) => Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint)),
-            None => Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input)),
-        }
-    }
 }
 
 impl<A: NormRetainedEditor> semio_framework_plugin::ArtifactOwnedToolJobFactory for NormBoundedCommandJobFactory<A> {
@@ -311,51 +292,24 @@ where
     A::Snapshot: semio_framework_value::retained_clone::RetainedClone,
     A::Mutation: Sync + store::ArtifactCanonicalJsonTree,
 {
-    Some(store::mutation_apply_preparation_factory::<A::Snapshot, A::Mutation>())
+    Some(store::cold_mutation_apply_preparation_factory::<A::Snapshot, A::Mutation>())
 }
 
 /// 🧵️ `ArtifactEditor::build_tool_job` for every norm editor.
-pub fn build_norm_tool_job<A: NormRetainedEditor>(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<A>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-    if !NORM_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-        return Ok(None);
+pub fn build_norm_tool_job<A: NormRetainedEditor>(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<A>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    if !NORM_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+        return Ok(false);
     }
-    let tool_id = A::command_id(&request.command);
-    if tool_id != request.tool_id {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "norm-command-tool-mismatch"));
+    let tool_id = A::command_id(&original.command);
+    if tool_id != original.tool_id {
+        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "norm-command-tool-mismatch").into());
     }
-    let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<A>>> = if tool_id == "evaluate" {
+    let maximum_work_items = if tool_id == "evaluate" { 3 } else { 1 };
+    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, A::command_id, NORM_RETAINED_RAW_BYTES, maximum_work_items, true, |request| -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<A>>> { if tool_id == "evaluate" {
         Box::new(NormEvaluateCommandWork::<A>::new(tool_id))
     } else {
         Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, norm_retained_reduce::<A>, norm_bounded_extent::<A>))
-    };
-    let maximum_work_items = if tool_id == "evaluate" { 3 } else { 1 };
-    let operation = semio_framework_plugin::AppOperationContext {
-        app_instance_id: request.app_instance_id,
-        parent_document_id: request.parent_document_id.clone(),
-        operation_id: request.operation.operation.0,
-        generation: request.operation.generation.0,
-        canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-        authoring_seed: request.authoring_seed.clone(),
-    };
-    let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
-        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-            command: *request.command,
-            snapshot: request.snapshot,
-            snapshot_read: request.snapshot_read,
-            config: request.config,
-            history: request.history,
-            interaction_state: request.interaction_state,
-            interaction_hover: request.interaction_hover,
-            context: Some(request.context),
-            operation,
-            completion: request.completion,
-        },
-        A::command_id,
-        NORM_RETAINED_RAW_BYTES,
-        maximum_work_items,
-        work,
-    );
-    Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    } })
 }
 //#endregion 🔌️EditorOverrides

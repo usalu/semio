@@ -3,5 +3,8 @@
     "✏️s",
     "🌎️hub",
     "🧰️framework/🛍️products"
-  ]
+  ],
+  "packages": {
+    "@semio-tech/framework-async": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript"
+  }
 }

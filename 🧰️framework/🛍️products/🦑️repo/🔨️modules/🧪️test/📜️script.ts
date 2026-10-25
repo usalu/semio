@@ -37,7 +37,7 @@ class DslScript extends Script {
   }
 }
 
-/** 🧪️ `cases <owner> [quick|long|exhaustive] [--facet run|contract|oracle|subject|parity] [--case <slug>] [selectors…]`: the one argument-driven test entry
+/** 📜️ `cases <owner> [quick|long|exhaustive] [--facet run|contract|oracle|subject|parity] [--case <slug>] [selectors…]`: the one argument-driven test entry
  * of an owner's Nx test project. The level and facet are arguments, never separate targets; Nx caches every argument combination on its own. */
 class CasesScript extends Script {
   async run(segments: string[]): Promise<void> {

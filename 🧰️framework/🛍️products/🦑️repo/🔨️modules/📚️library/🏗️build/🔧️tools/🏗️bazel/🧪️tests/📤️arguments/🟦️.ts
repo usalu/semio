@@ -14,7 +14,7 @@ import{mkdir,readFile,rm}from"node:fs/promises";
 import{join,resolve,relative}from"node:path";
 import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import{buildExecutionArgumentsV1}from"../../../../📥️caller/🟦️.ts";
-import type{BuildExecutionV1}from"../../../../🕸️graph/🟦️.ts";
+import type { BuildExecutionV1 } from "../../../../🕸️graph/📋️model/🟦️.ts";
 import*as routing from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import{compilerAdmissionBudgetV1}from"@semio-tech/process/compiler-capacity";

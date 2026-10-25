@@ -32,7 +32,8 @@ pub fn build_run_job<A: Puzzle5dEditor>(request: ToolRunJobRequest<'_, EditorApp
     let document: Puzzle5dDocument = crate::editor::puzzle5d::entities::puzzle5d_document_from_snapshot(request.snapshot.typed()).map_err(|error| Fault::from(format!("puzzle5d-brush-run-document: {error}")))?;
     let board = Puzzle5dPlannerBoard::new(&document, &[])?;
     let snapshot = Arc::new(puzzle3d_snapshot(&document, puzzle5d_authored_kind_catalogs(&request.snapshot)?)?);
-    let inner = brush3d::build_run_job(ToolRunJobRequest {
+    let inner = brush3d::build_run_job::<semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp>(ToolRunJobRequest {
+        receiving: request.receiving,
         tool_id: brush3d::UTILITY_ID,
         definition: request.definition,
         purpose: request.purpose,

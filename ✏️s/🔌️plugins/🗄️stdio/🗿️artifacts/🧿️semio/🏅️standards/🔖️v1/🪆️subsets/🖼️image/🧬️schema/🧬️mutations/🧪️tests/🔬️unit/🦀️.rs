@@ -38,7 +38,7 @@ fn sample_mutations() -> Vec<SemioImageMutation> {
 async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = fixture();
-        let diff_direct = Mutation::diff(&mutation, &base);
+        let diff_direct = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let applied_via_diff = protocol::apply_diff_cold(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
         let mut via_apply = base.clone();
@@ -64,7 +64,7 @@ async fn inverse_law() {
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
-        let diff = Mutation::diff(&mutation, &base);
+        let diff = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let next = protocol::apply_diff_cold(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
         let restored = protocol::apply_diff_cold(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");

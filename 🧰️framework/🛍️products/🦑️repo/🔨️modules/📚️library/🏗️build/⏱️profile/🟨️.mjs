@@ -121,6 +121,6 @@ export function installRepoProfileSpawnCensusV1(profile){
   const require=createRequire(import.meta.url),cp=require("node:child_process");
   for(const name of ["spawnSync","execFileSync","execSync"])wrapSync(cp,name,args=>args[0]);
   for(const name of ["spawn","execFile","exec"])wrapAsync(cp,name,args=>args[0]);
-  require("../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts").runtimeObserveSpawnV1((command,milliseconds)=>{try{profile.event(repoProfileSpawnLabelV1(command),milliseconds);}catch{}});
+  require("../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts").runtimeObserveSpawnV1((command,milliseconds)=>{try{profile.event(repoProfileSpawnLabelV1(command),milliseconds);}catch{}});
  }catch{}
 }

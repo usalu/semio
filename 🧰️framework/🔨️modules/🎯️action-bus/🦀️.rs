@@ -118,7 +118,8 @@ pub struct RetainedToolWireInput {
 }
 
 impl RetainedToolWireInput {
-    fn try_new(declared_bytes: usize, maximum_bytes: usize) -> Result<Self, ToolJobFactoryError> {
+    /// 📥️ Opens the empty page owner of one declared wire extent; refused when the extent exceeds its admitted maximum.
+    pub fn try_new(declared_bytes: usize, maximum_bytes: usize) -> Result<Self, ToolJobFactoryError> {
         if declared_bytes > maximum_bytes {
             return Err(ToolJobFactoryError::new("declared tool wire extent exceeds its admitted contract"));
         }
@@ -292,10 +293,10 @@ pub struct ErasedToolJob {
 }
 
 impl ErasedToolJob {
-/// 🎒️ Receives a preborn typed job allocation without cloning or allocating another wrapper.
+/// 📩️ Receives a preborn typed job allocation without cloning or allocating another wrapper.
     pub fn from_owned(inner: Box<dyn InteractiveJob + Send>) -> Self { Self { inner: std::mem::ManuallyDrop::new(Some(inner)) } }
 
-    /// 👁️ Borrows the exact original erased allocation while its physical owner remains retained.
+    /// 💼️ Borrows the exact original erased allocation while its physical owner remains retained.
     pub fn retained_job(&self) -> Option<&(dyn InteractiveJob + Send)> { self.inner.as_deref() }
 
     fn inner(&self) -> Result<&(dyn InteractiveJob + Send), semio_framework_value::ValueError> {
@@ -382,7 +383,7 @@ pub trait ToolJobFactory: Send + 'static {
     /// 📏️ Quotes actual construction from borrowed original sources before any transfer.
     fn admission_demands(&self,operation:&Operation,payload:&Self::Payload,input:Option<&RetainedToolWireInput>,checkpoint:Option<&RetainedToolWireInput>)->Result<ToolJobAdmissionDemand,semio_framework_value::ValueError>;
 
-    /// 🧳️ The caller retains all denied sources and any born unpublished candidate on refusal.
+    /// ⛔️ The caller retains all denied sources and any born unpublished candidate on refusal.
     fn admit_job(&mut self,context:&mut StepContext<'_>,operation:&Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
 
 }
@@ -615,7 +616,7 @@ impl ActionBus {
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).dispatch_count
     }
 
-    /// 🛡️ Reserves the exact raw extent before any caller-specific decoder, command identity,
+    /// 📡️ Reserves the exact raw extent before any caller-specific decoder, command identity,
     /// or application allocation runs.
     pub fn begin_exact_wire(&self, controller_id: impl Into<String>, tool_id: impl Into<String>, schema_id: impl Into<String>, declared_bytes: usize) -> Result<(ToolWireAdmission, RetainedToolWireInput), ToolDispatchError> {
         let controller_id = controller_id.into();
@@ -635,15 +636,15 @@ impl ActionBus {
         Ok((ToolWireAdmission { key, factory_type_id: *factory_type_id, factory_type_name, schema_id, contract }, input))
     }
 
-    /// 🛡️ Admits an exact owner/tool/schema wire envelope before any caller-specific decoder runs.
+    /// 🛠️ Admits an exact owner/tool/schema wire envelope before any caller-specific decoder runs.
     pub fn admit_exact_wire(&self, controller_id: impl Into<String>, tool_id: impl Into<String>, schema_id: impl Into<String>, payload: &[u8]) -> Result<ToolWireAdmission, ToolDispatchError> {
         self.begin_exact_wire(controller_id, tool_id, schema_id, payload.len()).map(|(admission, _)| admission)
     }
 
-    /// 🧬️ Moves one sealed raw-page owner into the exact registered application factory.
+    /// 📃️ Moves one sealed raw-page owner into the exact registered application factory.
     /// No generic command or serialization value exists before this boundary.
     #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
-    /// 📏️ Borrows the exact registered factory and original input owners without allocating a lookup key.
+    /// 🏭️ Borrows the exact registered factory and original input owners without allocating a lookup key.
     pub fn admission_demands(&self,spec:&ToolOperationSpec,input:Option<&RetainedToolWireInput>,checkpoint:Option<&RetainedToolWireInput>)->Result<ToolJobAdmissionDemand,semio_framework_value::ValueError>{
         use semio_framework_value::{ValueError,ValueRefusalKind};
         let inner=self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);

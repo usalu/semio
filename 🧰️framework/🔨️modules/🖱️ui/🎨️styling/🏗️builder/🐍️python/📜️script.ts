@@ -5,7 +5,7 @@ import{defineScriptProviderV1,loadScriptProviderV1}from"../../../../🏃️proce
 import type{ResourceLeaseControl}from"../../../../🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type{StylingPythonOperationV1,StylingPythonProviderV1,StylingPythonWheelViewV1}from"./🔌️provider/🟦️.ts";
 import{resolve}from"node:path";
-import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 /** 🧷️ Names the port and the exact functions its repository implementation must expose. */
 export const STYLING_PYTHON_PROVIDER_V1=defineScriptProviderV1<StylingPythonProviderV1<ScriptInvocation,ResourceLeaseControl>>("styling-python",["run","withWheel"]);
 /** 🏗️ Runs one producer operation under the provider's storage and custody. */

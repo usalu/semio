@@ -4,7 +4,8 @@
     "outOfOrder": "observe",
     "holdAndWait": "enforce",
     "selfDeadlock": "enforce",
-    "cycle": "enforce"
+    "cycle": "enforce",
+    "strictWait": "enforce"
   },
   "holdAndWait": {
     "graceMilliseconds": 15000,
@@ -19,7 +20,8 @@
     "maximumViolations": 200
   },
   "fairness": {
-    "queuedWithResourceLeases": true
+    "queuedWithResourceLeases": true,
+    "writerPreferenceMilliseconds": 120000
   },
   "gate": {
     "releaseWhileWaiting": true,
@@ -212,6 +214,10 @@
         },
         {
           "kind": "prefix",
+          "value": "build-graph:"
+        },
+        {
+          "kind": "prefix",
           "value": "runtime-graph:"
         },
         {
@@ -355,9 +361,49 @@
           "value": "repo:compiler-writer:"
         }
       ]
+    },
+    {
+      "id": "registry-fetch",
+      "rank": 8,
+      "scope": "checkout",
+      "owner": "build-tools",
+      "title": {
+        "en": "Exclusive Cargo registry fetch, taken after the compiler writer custody and held only while the fetch itself runs",
+        "de": "Exklusiver Cargo-Registry-Abruf, nach der Compiler-Schreiber-Obhut genommen und nur gehalten, solange der Abruf selbst läuft"
+      },
+      "match": [
+        {
+          "kind": "prefix",
+          "value": "cargo:registry-fetch:"
+        }
+      ]
+    },
+    {
+      "id": "cargo-custody",
+      "rank": 2,
+      "scope": "crate",
+      "owner": "cargo",
+      "title": {
+        "en": "Cargo build-directory custody: the one process tree that compiles into a build directory and profile",
+        "de": "Cargo-Build-Verzeichnis-Obhut: der eine Prozessbaum, der in ein Build-Verzeichnis und Profil kompiliert"
+      },
+      "match": [
+        {
+          "kind": "prefix",
+          "value": "[\"semio.cargo.custody-lease/"
+        }
+      ]
     }
   ],
   "allowed": [
+    {
+      "from": "graph",
+      "to": "graph",
+      "reason": {
+        "en": "A graph holder keeps its namespace or daemon service lease for its whole life and reads the pinned graph snapshot under a shared lease; only graph writers hold that snapshot exclusively, and they never wait for a namespace or daemon holder, so the wait cannot close a cycle (the cycle detector still enforces that).",
+        "de": "Ein Graph-Inhaber hält seine Namensraum- oder Daemon-Dienst-Lease sein ganzes Leben lang und liest den angehefteten Graph-Schnappschuss unter einer geteilten Lease; nur Graph-Schreiber halten diesen Schnappschuss exklusiv, und sie warten nie auf einen Namensraum- oder Daemon-Inhaber, daher kann das Warten keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin)."
+      }
+    },
     {
       "from": "tool-singleton",
       "to": "toolchain",
@@ -386,16 +432,16 @@
       "from": "cargo-coordination",
       "to": "compiler-capacity",
       "reason": {
-        "en": "A cargo build lease and a registry fetch are taken first, then the whole-host capacity gate; every compiling process takes them in this order, so no capacity holder waits for the lease of a target whose builder waits for capacity.",
-        "de": "Eine Cargo-Build-Lease und ein Registry-Abruf werden zuerst genommen, danach das Gesamt-Host-Kapazitätstor; jeder kompilierende Prozess nimmt sie in dieser Reihenfolge, daher wartet kein Kapazitätsinhaber auf die Lease eines Ziels, dessen Bauer auf Kapazität wartet."
+        "en": "A cargo build lease and a registry fetch are taken first, then the counted compile-unit capacity gate (a share of the cores, never the exclusive whole host); every compiling process takes them in this order, so no capacity holder waits for the lease of a target whose builder waits for capacity.",
+        "de": "Eine Cargo-Build-Lease und ein Registry-Abruf werden zuerst genommen, danach das Kapazitätstor der gezählten Compile-Einheiten (ein Anteil der Kerne, nie der ganze Host exklusiv); jeder kompilierende Prozess nimmt sie in dieser Reihenfolge, daher wartet kein Kapazitätsinhaber auf die Lease eines Ziels, dessen Bauer auf Kapazität wartet."
       }
     },
     {
       "from": "cargo-coordination",
       "to": "image",
       "reason": {
-        "en": "A registry fetch holds its fetch lease while it takes the compiler workspace writer custody of the image; no writer holder waits for a fetch lease.",
-        "de": "Ein Registry-Abruf hält seine Abruf-Lease, während er die Schreiber-Obhut des Compiler-Arbeitsbereichs im Image nimmt; kein Schreiberinhaber wartet auf eine Abruf-Lease."
+        "en": "A registry resolution holds its exclusive registry lease while it takes the compiler workspace writer custody of the image; no writer holder waits for the exclusive registry lease because every writer path takes the registry first.",
+        "de": "Eine Registry-Auflösung hält ihre exklusive Registry-Lease, während sie die Schreiber-Obhut des Compiler-Arbeitsbereichs im Image nimmt; kein Schreiberinhaber wartet auf die exklusive Registry-Lease, weil jeder Schreiberpfad zuerst die Registry nimmt."
       }
     },
     {
@@ -409,6 +455,135 @@
       "reason": {
         "en": "A whole retirement retains its per-image coordinator while the same canonical image closes, reopens through its Native factory, verifies its journal, and reacquires image custody.",
         "de": "Eine vollständige Stilllegung behält ihren Image-Koordinator, während dasselbe kanonische Image geschlossen, über seine native Fabrik geöffnet, im Journal geprüft und erneut gesperrt wird."
+      }
+    },
+    {
+      "from": "image",
+      "to": "compiler-capacity",
+      "reason": {
+        "en": "A compile takes the shared writer custody of its image first and the counted cpu units last, only around the compiler child itself: the cpu units are the innermost lease, so a writer holder may wait for cores (they free as compiles finish) while nobody holding cores ever waits for the writer (see the strict wait below).",
+        "de": "Ein Compile nimmt zuerst die geteilte Schreiber-Obhut seines Images und zuletzt die gezählten CPU-Einheiten, nur um das Compiler-Kind selbst: die CPU-Einheiten sind die innerste Lease, ein Schreiberinhaber darf auf Kerne warten (sie werden mit jedem fertigen Compile frei), während niemand, der Kerne hält, je auf den Schreiber wartet (siehe die strikte Wartepflicht unten)."
+      }
+    },
+    {
+      "from": "cargo-custody",
+      "to": "toolchain",
+      "reason": {
+        "en": "The build-directory custody is taken innermost of the build lease and held for the whole compile of its holder; it is the one lease others wait for, and a holder waits only for what no path requests while waiting for the custody itself, so its waits for the writer, the cores, the registry or an artifact cannot close a cycle (the cycle detector still enforces that).",
+        "de": "Die Build-Verzeichnis-Obhut wird innerhalb der Build-Lease als innerste genommen und für den ganzen Build ihres Inhabers gehalten; auf sie warten die anderen, und ein Inhaber wartet nur auf das, was kein Pfad anfordert, während er auf die Obhut selbst wartet, daher können seine Wartezeiten auf den Schreiber, die Kerne, die Registry oder ein Artefakt keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin)."
+      }
+    },
+    {
+      "from": "cargo-custody",
+      "to": "compiler-capacity",
+      "reason": {
+        "en": "The build-directory custody is taken innermost of the build lease and held for the whole compile of its holder; it is the one lease others wait for, and a holder waits only for what no path requests while waiting for the custody itself, so its waits for the writer, the cores, the registry or an artifact cannot close a cycle (the cycle detector still enforces that).",
+        "de": "Die Build-Verzeichnis-Obhut wird innerhalb der Build-Lease als innerste genommen und für den ganzen Build ihres Inhabers gehalten; auf sie warten die anderen, und ein Inhaber wartet nur auf das, was kein Pfad anfordert, während er auf die Obhut selbst wartet, daher können seine Wartezeiten auf den Schreiber, die Kerne, die Registry oder ein Artefakt keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin)."
+      }
+    },
+    {
+      "from": "cargo-custody",
+      "to": "tool-singleton",
+      "reason": {
+        "en": "The build-directory custody is taken innermost of the build lease and held for the whole compile of its holder; it is the one lease others wait for, and a holder waits only for what no path requests while waiting for the custody itself, so its waits for the writer, the cores, the registry or an artifact cannot close a cycle (the cycle detector still enforces that).",
+        "de": "Die Build-Verzeichnis-Obhut wird innerhalb der Build-Lease als innerste genommen und für den ganzen Build ihres Inhabers gehalten; auf sie warten die anderen, und ein Inhaber wartet nur auf das, was kein Pfad anfordert, während er auf die Obhut selbst wartet, daher können seine Wartezeiten auf den Schreiber, die Kerne, die Registry oder ein Artefakt keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin)."
+      }
+    },
+    {
+      "from": "cargo-custody",
+      "to": "cargo-coordination",
+      "reason": {
+        "en": "The build-directory custody is taken innermost of the build lease and held for the whole compile of its holder; it is the one lease others wait for, and a holder waits only for what no path requests while waiting for the custody itself, so its waits for the writer, the cores, the registry or an artifact cannot close a cycle (the cycle detector still enforces that).",
+        "de": "Die Build-Verzeichnis-Obhut wird innerhalb der Build-Lease als innerste genommen und für den ganzen Build ihres Inhabers gehalten; auf sie warten die anderen, und ein Inhaber wartet nur auf das, was kein Pfad anfordert, während er auf die Obhut selbst wartet, daher können seine Wartezeiten auf den Schreiber, die Kerne, die Registry oder ein Artefakt keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin)."
+      }
+    },
+    {
+      "from": "cargo-custody",
+      "to": "graph",
+      "reason": {
+        "en": "The build-directory custody is taken innermost of the build lease and held for the whole compile of its holder; it is the one lease others wait for, and a holder waits only for what no path requests while waiting for the custody itself, so its waits for the writer, the cores, the registry or an artifact cannot close a cycle (the cycle detector still enforces that).",
+        "de": "Die Build-Verzeichnis-Obhut wird innerhalb der Build-Lease als innerste genommen und für den ganzen Build ihres Inhabers gehalten; auf sie warten die anderen, und ein Inhaber wartet nur auf das, was kein Pfad anfordert, während er auf die Obhut selbst wartet, daher können seine Wartezeiten auf den Schreiber, die Kerne, die Registry oder ein Artefakt keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin)."
+      }
+    },
+    {
+      "from": "cargo-custody",
+      "to": "namespace",
+      "reason": {
+        "en": "The build-directory custody is taken innermost of the build lease and held for the whole compile of its holder; it is the one lease others wait for, and a holder waits only for what no path requests while waiting for the custody itself, so its waits for the writer, the cores, the registry or an artifact cannot close a cycle (the cycle detector still enforces that).",
+        "de": "Die Build-Verzeichnis-Obhut wird innerhalb der Build-Lease als innerste genommen und für den ganzen Build ihres Inhabers gehalten; auf sie warten die anderen, und ein Inhaber wartet nur auf das, was kein Pfad anfordert, während er auf die Obhut selbst wartet, daher können seine Wartezeiten auf den Schreiber, die Kerne, die Registry oder ein Artefakt keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin)."
+      }
+    },
+    {
+      "from": "cargo-custody",
+      "to": "artifact",
+      "reason": {
+        "en": "The build-directory custody is taken innermost of the build lease and held for the whole compile of its holder; it is the one lease others wait for, and a holder waits only for what no path requests while waiting for the custody itself, so its waits for the writer, the cores, the registry or an artifact cannot close a cycle (the cycle detector still enforces that).",
+        "de": "Die Build-Verzeichnis-Obhut wird innerhalb der Build-Lease als innerste genommen und für den ganzen Build ihres Inhabers gehalten; auf sie warten die anderen, und ein Inhaber wartet nur auf das, was kein Pfad anfordert, während er auf die Obhut selbst wartet, daher können seine Wartezeiten auf den Schreiber, die Kerne, die Registry oder ein Artefakt keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin)."
+      }
+    },
+    {
+      "from": "cargo-custody",
+      "to": "native-whole-retirement",
+      "reason": {
+        "en": "The build-directory custody is taken innermost of the build lease and held for the whole compile of its holder; it is the one lease others wait for, and a holder waits only for what no path requests while waiting for the custody itself, so its waits for the writer, the cores, the registry or an artifact cannot close a cycle (the cycle detector still enforces that).",
+        "de": "Die Build-Verzeichnis-Obhut wird innerhalb der Build-Lease als innerste genommen und für den ganzen Build ihres Inhabers gehalten; auf sie warten die anderen, und ein Inhaber wartet nur auf das, was kein Pfad anfordert, während er auf die Obhut selbst wartet, daher können seine Wartezeiten auf den Schreiber, die Kerne, die Registry oder ein Artefakt keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin)."
+      }
+    },
+    {
+      "from": "cargo-custody",
+      "to": "image",
+      "reason": {
+        "en": "The build-directory custody is taken innermost of the build lease and held for the whole compile of its holder; it is the one lease others wait for, and a holder waits only for what no path requests while waiting for the custody itself, so its waits for the writer, the cores, the registry or an artifact cannot close a cycle (the cycle detector still enforces that).",
+        "de": "Die Build-Verzeichnis-Obhut wird innerhalb der Build-Lease als innerste genommen und für den ganzen Build ihres Inhabers gehalten; auf sie warten die anderen, und ein Inhaber wartet nur auf das, was kein Pfad anfordert, während er auf die Obhut selbst wartet, daher können seine Wartezeiten auf den Schreiber, die Kerne, die Registry oder ein Artefakt keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin)."
+      }
+    },
+    {
+      "from": "cargo-custody",
+      "to": "cargo-custody",
+      "reason": {
+        "en": "A component build driver compiles one pass per distinct Cargo profile and takes the custody of each profile's build directory in ascending profile order, holding the earlier ones while it queues for the next; every driver takes them in that one order, so the wait cannot close a cycle (the cycle detector still enforces that), and a build with a single profile never holds one custody while waiting for another.",
+        "de": "Ein Komponenten-Build-Treiber kompiliert je Cargo-Profil einen Durchgang und nimmt die Obhut des Build-Verzeichnisses jedes Profils in aufsteigender Profilreihenfolge, die früheren hält er, während er auf die nächste ansteht; jeder Treiber nimmt sie in dieser einen Reihenfolge, daher kann das Warten keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin), und ein Build mit nur einem Profil hält nie eine Obhut, während er auf eine andere wartet."
+      }
+    }
+  ],
+  "strictWaits": [
+    {
+      "held": [
+        "repo:compiler-writer:"
+      ],
+      "requested": [
+        "cargo:registry:",
+        "cargo:configuration-",
+        "rustup:"
+      ],
+      "reason": {
+        "en": "A task that holds the compiler writer custody of an image never waits for the Cargo registry reader or the toolchain: every path takes them first, so a writer holder that waits for them is a hold-and-wait that convoys the whole machine behind a queued exclusive writer.",
+        "de": "Eine Aufgabe, die die Compiler-Schreiber-Obhut eines Images hält, wartet nie auf den Cargo-Registry-Leser oder die Toolchain: jeder Pfad nimmt sie zuerst, ein Schreiberinhaber, der auf sie wartet, ist ein Hold-and-Wait, das die ganze Maschine hinter einem wartenden exklusiven Schreiber aufstaut."
+      }
+    },
+    {
+      "held": [
+        "cargo:registry-fetch:"
+      ],
+      "requested": [
+        "repo:compiler-writer:"
+      ],
+      "reason": {
+        "en": "The exclusive registry fetch lease is taken after the compiler writer custody and held only while the fetch runs; a task that holds it never waits for the writer.",
+        "de": "Die exklusive Registry-Abruf-Lease wird nach der Compiler-Schreiber-Obhut genommen und nur gehalten, solange der Abruf läuft; eine Aufgabe, die sie hält, wartet nie auf den Schreiber."
+      }
+    },
+    {
+      "held": [
+        "semio.compiler.host-capacity/v1",
+        "semio.compiler.cpu/v1/"
+      ],
+      "requested": [
+        "repo:compiler-writer:"
+      ],
+      "reason": {
+        "en": "A task that holds compiler cpu units never waits for the compiler writer custody: every compile path takes the shared writer first and the cpu units last, because cores held while queueing for a writer behind a maintenance request starve every other compile.",
+        "de": "Eine Aufgabe, die CPU-Einheiten des Compilers hält, wartet nie auf die Compiler-Schreiber-Obhut: jeder Compile-Pfad nimmt zuerst den geteilten Schreiber und zuletzt die CPU-Einheiten, denn Kerne, die beim Anstehen hinter einer Wartungsanfrage gehalten werden, lassen jeden anderen Compile verhungern."
       }
     }
   ]

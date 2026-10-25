@@ -6,7 +6,7 @@ import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {captureNxAuthorizerSourcesV1,nxAuthorizerCapturedBytesV1} from "../../🟦️.ts";
 import {compileNxAuthorizerSnapshotV1,readNxAuthorizerSnapshotV1,snapshotNxAuthorizerSourcesV1} from "../🟦️.ts";
 import unitSchema from "../🧬️schema/🔣️.json";

@@ -1,0 +1,41 @@
+{
+ "version": 1,
+ "classification": [
+  {"id": "stale-code", "error": {"code": "SEMIO_STALE_IMPLEMENTATION", "message": "Stale loaded Source revision reader; restart required"}, "origin": "error"},
+  {"id": "authority-changed-code", "error": {"code": "BUILD_AUTHORITY_CHANGED", "message": "Stale loaded observation implementation; restart required"}, "origin": "error"},
+  {"id": "captured-child-exit-75", "error": {"name": "OwnedCommandFailure", "message": "repository:command failed (75)", "outcome": {"status": 75}}, "origin": "exit"},
+  {"id": "captured-child-exit-1", "error": {"name": "OwnedCommandFailure", "message": "repository:command failed (1)", "outcome": {"status": 1}}, "origin": null},
+  {"id": "syntax-error-of-a-module", "error": {"name": "BuildMessage", "message": "Unexpected ;"}, "origin": "load"},
+  {"id": "unresolvable-import", "error": {"name": "ResolveMessage", "code": "ERR_MODULE_NOT_FOUND", "message": "Cannot find module './x.mjs' imported from /a/b.mjs"}, "origin": "load"},
+  {"id": "export-missing", "error": {"name": "SyntaxError", "message": "Export named 'x' not found in module '/a/b.mjs'."}, "origin": "load"},
+  {"id": "json-syntax-error-is-a-read", "error": {"name": "SyntaxError", "message": "JSON Parse error: Unexpected EOF"}, "origin": null},
+  {"id": "bundler-failure-is-a-product-source-problem", "error": {"name": "AggregateError", "message": "Bundle failed", "errors": [{"name": "BuildMessage", "message": "Unexpected ;"}]}, "origin": null},
+  {"id": "cause-chain", "error": {"message": "outer", "cause": {"code": "SEMIO_STALE_IMPLEMENTATION", "message": "inner"}}, "origin": "error"},
+  {"id": "ordinary", "error": {"message": "ordinary failure"}, "origin": null},
+  {"id": "escaped-concurrent-edit", "error": {"code": "SEMIO_CONCURRENT_EDIT", "reason": "bytes", "path": "/w/a.tex", "rank": 1, "message": "Consumed Print Source bytes changed: /w/a.tex"}, "origin": "edit"},
+  {"id": "closed-owner-names-the-edit-as-its-cause", "error": {"name": "OriginalAdmissionClosed", "message": "Original process admission closed - first failure: Consumed Print Source bytes changed", "cause": {"code": "SEMIO_CONCURRENT_EDIT", "reason": "roster", "path": "/w/d", "rank": 2, "message": "d kept changing"}}, "origin": "edit"},
+  {"id": "the-primary-failure-of-a-settlement-aggregate-is-the-edit", "error": {"name": "AggregateError", "message": "Original physical body, drain and cleanup settlement failed", "errors": [{"code": "SEMIO_CONCURRENT_EDIT", "reason": "bytes", "path": "/w/a.tex", "rank": 1, "message": "Consumed Print Source bytes changed"}, {"message": "scratch cleanup failed"}]}, "origin": "edit"},
+  {"id": "an-ordinary-primary-failure-of-a-settlement-aggregate-is-none", "error": {"name": "AggregateError", "message": "Original physical body, drain and cleanup settlement failed", "errors": [{"message": "compile failed"}, {"code": "SEMIO_CONCURRENT_EDIT", "reason": "bytes", "path": "/w/a.tex", "rank": 1, "message": "later"}]}, "origin": null},
+  {"id": "a-batch-with-one-ordinary-member-is-none", "error": {"name": "AggregateError", "message": "batch", "errors": [{"code": "SEMIO_CONCURRENT_EDIT", "reason": "bytes", "path": "/w/a", "message": "e"}, {"message": "disk"}]}, "origin": null},
+  {"id": "an-edit-with-an-undeclared-reason-is-none", "error": {"code": "SEMIO_CONCURRENT_EDIT", "reason": "nonsense", "path": "/w/a.tex", "message": "x"}, "origin": null},
+  {"id": "a-stale-implementation-wins-over-an-edit", "error": {"message": "both", "errors": [{"code": "SEMIO_CONCURRENT_EDIT", "reason": "bytes", "path": "/w/a", "message": "e"}, {"code": "BUILD_AUTHORITY_CHANGED", "message": "s"}]}, "origin": "error"}
+ ],
+ "policy": [
+  {"id": "first-restart", "origin": "error", "attempt": 0, "ranMilliseconds": 1000, "outermost": true},
+  {"id": "last-restart", "origin": "error", "attempt": 2, "ranMilliseconds": 1000, "outermost": true},
+  {"id": "exhausted", "origin": "error", "attempt": 3, "ranMilliseconds": 1000, "outermost": true},
+  {"id": "a-run-that-made-progress-starts-a-new-count", "origin": "error", "attempt": 3, "ranMilliseconds": 600000, "outermost": true},
+  {"id": "a-run-just-below-the-progress-threshold-continues-the-count", "origin": "exit", "attempt": 3, "ranMilliseconds": 599999, "outermost": true},
+  {"id": "nested-command-yields", "origin": "error", "attempt": 0, "ranMilliseconds": 1000, "outermost": false},
+  {"id": "half-edit-first-pause", "origin": "load", "attempt": 0, "ranMilliseconds": 300, "outermost": true},
+  {"id": "half-edit-second-pause", "origin": "load", "attempt": 1, "ranMilliseconds": 300, "outermost": true},
+  {"id": "half-edit-third-pause", "origin": "load", "attempt": 2, "ranMilliseconds": 300, "outermost": true},
+  {"id": "half-edit-exhausted", "origin": "load", "attempt": 3, "ranMilliseconds": 300, "outermost": true},
+  {"id": "half-edit-after-progress", "origin": "load", "attempt": 3, "ranMilliseconds": 700000, "outermost": true},
+  {"id": "escaped-edit-first-pause", "origin": "edit", "attempt": 0, "ranMilliseconds": 40000, "outermost": true},
+  {"id": "escaped-edit-second-pause", "origin": "edit", "attempt": 1, "ranMilliseconds": 40000, "outermost": true},
+  {"id": "escaped-edit-third-pause", "origin": "edit", "attempt": 2, "ranMilliseconds": 40000, "outermost": true},
+  {"id": "escaped-edit-exhausted", "origin": "edit", "attempt": 3, "ranMilliseconds": 40000, "outermost": true},
+  {"id": "escaped-edit-nested-yields", "origin": "edit", "attempt": 0, "ranMilliseconds": 40000, "outermost": false}
+ ]
+}

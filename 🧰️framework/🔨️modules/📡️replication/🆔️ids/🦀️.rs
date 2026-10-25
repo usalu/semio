@@ -4,7 +4,7 @@
 // Moved from framework/core/rs/lib.rs 🔖️Identifiers (L5768-5838). Serde-transparent newtypes,
 // shapes unchanged from their framework-core originals.
 
-/// 🆔️ A stable identifier for one operation instance (an `Edit`'s forward/backward op).
+/// ✏️ A stable identifier for one operation instance (an `Edit`'s forward/backward op).
 /// 🌱️ Serde's derives are kept ALONGSIDE the hand-written `ToValue`/`FromValue` twin below
 /// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02): `🎠️kernel`/`🛂️manifest`
 /// (off-limits, owned by another agent) still fan out through this id via their own serde derives,
@@ -38,7 +38,7 @@ pub struct ArtifactVersion(pub u64);
 #[serde(transparent)]
 pub struct SchemaId(pub String);
 
-/// 🔢️ A schema's version number.
+/// 🌿️ A schema's version number.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SchemaVersion(pub u32);
 
@@ -115,7 +115,7 @@ impl semio_framework_value::FromValue for SchemaVersion {
     }
 }
 
-/// 🌉️ `[u8; 32]` has no blanket `ToValue`/`FromValue` (unlike serde, which supports fixed arrays
+/// 🧰️ `[u8; 32]` has no blanket `ToValue`/`FromValue` (unlike serde, which supports fixed arrays
 /// natively) — encoded/decoded element-by-element as a `DslValue::Array`, matching serde's default
 /// `[u8; N]` wire shape (a plain JSON array of numbers) byte for byte.
 impl semio_framework_value::ToValue for PayloadHash {
@@ -198,7 +198,7 @@ impl PartialOrd for HybridLogicalTimestamp {
     }
 }
 
-/// 🌉️ Hand-written, not derived: `#[derive(ToValue, FromValue)]` (`semio-framework-value-derive`)
+/// 💎️ Hand-written, not derived: `#[derive(ToValue, FromValue)]` (`semio-framework-value-derive`)
 /// roots its generated code at `::semio_framework_os_kernel::…`, which this crate sits BELOW in
 /// the dependency DAG (os-kernel depends on replication, not the reverse) — the path could never
 /// resolve here. `crate::value` is the raw first-party value module mounted directly by `#[path]`

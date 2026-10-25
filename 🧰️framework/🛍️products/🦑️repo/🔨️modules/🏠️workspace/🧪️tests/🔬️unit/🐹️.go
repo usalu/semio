@@ -261,7 +261,7 @@ func TestBuildBinaryArtifactsGitIgnored(t *testing.T) {
 		"modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server.exe",
 		"coda/example/.coda/validators/programming.exe",
 	}
-	ignored := GetGitIgnoredSet(append(artifacts, "src/kept.go"))
+	ignored := GetGitIgnoredSet(root, append(artifacts, "src/kept.go"))
 	for _, path := range artifacts {
 		if !ignored[path] {
 			t.Errorf("expected build artifact %q to be gitignored", path)
@@ -455,7 +455,6 @@ func TestIdeConfigurationPaths(t *testing.T) {
 	if _, err := IdeConfigurationPaths(root, "missing"); err == nil {
 		t.Fatal("Missing inventory root must fail closed")
 	}
-	t.Logf("[DEBUG] Go authority inspected %d shared path vectors in both path forms and %d inventory boundaries twice", len(fixture.PathCases), len(fixture.InventoryCases))
 }
 
 func TestRunToolRunsRegisteredToolsAndRefusesUnknownOnes(t *testing.T) {

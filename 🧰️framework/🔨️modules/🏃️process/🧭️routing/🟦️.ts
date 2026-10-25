@@ -28,7 +28,7 @@ export abstract class BundleScript<Capabilities extends object = object> extends
 export type ScriptCommand<Capabilities extends object = object> = new (root: string, repoRoot: string, invocation: ScriptInvocation<Capabilities>) => Script<Capabilities>;
 export type ScriptCommandLoader<Capabilities extends object = object> = (invocation: ScriptInvocation<Capabilities>) => Promise<ScriptCommand<Capabilities>>;
 
-/** 🧭️Declarative subcommand registry for a single `script.ts`. */
+/** 📜️Declarative subcommand registry for a single `script.ts`. */
 export class ScriptRouter<Capabilities extends object = object> {
   private readonly commands = new Map<string, (invocation: ScriptInvocation<Capabilities>) => ScriptCommand<Capabilities> | Promise<ScriptCommand<Capabilities>>>();
   readonly bundleRoot: string;
@@ -45,7 +45,7 @@ export class ScriptRouter<Capabilities extends object = object> {
     return this;
   }
 
-  /** 🔎️Whether a subcommand name is registered. */
+  /** 🔤️Whether a subcommand name is registered. */
   has(name: string): boolean {
     return this.commands.has(name);
   }

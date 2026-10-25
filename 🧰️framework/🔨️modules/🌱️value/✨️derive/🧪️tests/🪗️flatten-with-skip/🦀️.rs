@@ -296,7 +296,7 @@ fn missing_option_variant_field_defaults_to_none_like_serde() {
 mod byte_len_bridge {
     use semio_framework_value::{DslValue, ValueError};
 
-    /// 🔟 Stand-in for a hand-written wire bridge, shaped like 🏪️store's real
+    /// 🌉️ Stand-in for a hand-written wire bridge, shaped like 🏪️store's real
     /// `operation_envelope_serde`/`envelope_serde` modules backing `ArtifactActorMsg::
     /// LocalMutations`/`ArtifactEvent::RemoteMutations`/`ArtifactMutationsSaved.envelope` — encodes
     /// as the byte LENGTH instead of the bytes themselves, so silently falling back to the default

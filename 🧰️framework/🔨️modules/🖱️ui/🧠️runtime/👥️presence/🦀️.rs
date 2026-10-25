@@ -29,7 +29,7 @@ struct PresenceKey {
     node_key: String,
 }
 
-/// 👥️ One OTHER peer's currently-live mark plus the deadline at which [`PresenceHub::expire`] drops it.
+/// ⏰️ One OTHER peer's currently-live mark plus the deadline at which [`PresenceHub::expire`] drops it.
 struct PeerEntry {
     mark: PeerMark,
     expires_at_ms: u64,
@@ -53,7 +53,7 @@ impl PresenceEntry {
     }
 }
 
-/// 👥️ The keyed `(SurfaceId, node_key) → entry` presence channel. Own presence is set by
+/// 🌎️ The keyed `(SurfaceId, node_key) → entry` presence channel. Own presence is set by
 /// [`Self::record_own`] and never expires; peer marks are set by [`Self::record_peer`] and age out via
 /// [`Self::expire`]; [`Self::flush`] drains every key touched since the last flush into one coalesced
 /// [`PresenceUpdate`] each.
@@ -80,7 +80,7 @@ impl PresenceHub {
         self.dirty.insert(key);
     }
 
-    /// 👥️ Records or refreshes one OTHER peer's mark for `(surface, node_key)`, keyed by
+    /// 📝️ Records or refreshes one OTHER peer's mark for `(surface, node_key)`, keyed by
     /// [`PeerMark::actor`] — a second call for the same actor overwrites the first and resets its
     /// expiry to `now_ms + ttl_ms`, which is how a peer's live cursor keeps renewing itself as long as
     /// that peer keeps sending updates.

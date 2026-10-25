@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "idleMilliseconds": 900000,
+  "cases": [
+    { "name": "idle-database", "state": "idle", "ageMilliseconds": 3600000, "databaseRetired": true, "queueRetired": false, "ticketsReaped": false, "eventuallyRetired": true },
+    { "name": "idle-database-and-empty-queue", "state": "idle-queue", "ageMilliseconds": 3600000, "databaseRetired": true, "queueRetired": true, "ticketsReaped": false, "eventuallyRetired": true },
+    { "name": "orphan-empty-queue", "state": "orphan-queue", "ageMilliseconds": 3600000, "databaseRetired": false, "queueRetired": true, "ticketsReaped": false, "eventuallyRetired": true },
+    { "name": "fresh-orphan-queue", "state": "orphan-queue", "ageMilliseconds": 60000, "databaseRetired": false, "queueRetired": false, "ticketsReaped": false, "eventuallyRetired": true },
+    { "name": "shared-holder", "state": "held-shared", "ageMilliseconds": 3600000, "databaseRetired": false, "queueRetired": false, "ticketsReaped": false, "eventuallyRetired": false },
+    { "name": "exclusive-holder", "state": "held-exclusive", "ageMilliseconds": 3600000, "databaseRetired": false, "queueRetired": false, "ticketsReaped": false, "eventuallyRetired": false },
+    { "name": "waiter-with-live-claim", "state": "live-ticket", "ageMilliseconds": 3600000, "databaseRetired": false, "queueRetired": false, "ticketsReaped": false, "eventuallyRetired": false },
+    { "name": "crashed-waiter-reaped-then-retired", "state": "dead-ticket", "ageMilliseconds": 3600000, "databaseRetired": false, "queueRetired": false, "ticketsReaped": true, "eventuallyRetired": true },
+    { "name": "queue-is-a-file", "state": "foreign-queue", "ageMilliseconds": 3600000, "databaseRetired": false, "queueRetired": false, "ticketsReaped": false, "eventuallyRetired": false },
+    { "name": "queue-is-a-link", "state": "foreign-queue-directory-link", "ageMilliseconds": 3600000, "databaseRetired": false, "queueRetired": false, "ticketsReaped": false, "eventuallyRetired": false },
+    { "name": "used-a-minute-ago", "state": "fresh", "ageMilliseconds": 60000, "databaseRetired": false, "queueRetired": false, "ticketsReaped": false, "eventuallyRetired": true },
+    { "name": "database-idle-queue-used-a-minute-ago", "state": "fresh-queue", "ageMilliseconds": 60000, "databaseRetired": false, "queueRetired": false, "ticketsReaped": false, "eventuallyRetired": true }
+  ],
+  "nested": [
+    { "name": "killed-test-store", "state": "abandoned", "ageMilliseconds": 7200000, "retired": true },
+    { "name": "killed-test-store-with-crashed-waiter", "state": "dead-ticket", "ageMilliseconds": 7200000, "retired": true },
+    { "name": "store-with-a-holder", "state": "held", "ageMilliseconds": 7200000, "retired": false },
+    { "name": "store-with-a-waiter", "state": "live-ticket", "ageMilliseconds": 7200000, "retired": false },
+    { "name": "store-used-ten-minutes-ago", "state": "fresh", "ageMilliseconds": 600000, "retired": false },
+    { "name": "directory-with-a-foreign-file", "state": "foreign-file", "ageMilliseconds": 7200000, "retired": false }
+  ],
+  "modes": [
+    { "freeRatio": 1, "pressure": false, "idleMilliseconds": 900000, "candidates": 64 },
+    { "freeRatio": 0.2, "pressure": false, "idleMilliseconds": 900000, "candidates": 64 },
+    { "freeRatio": 0.1999, "pressure": true, "idleMilliseconds": 60000, "candidates": 256 },
+    { "freeRatio": 0.16, "pressure": true, "idleMilliseconds": 60000, "candidates": 256 },
+    { "freeRatio": 0, "pressure": true, "idleMilliseconds": 60000, "candidates": 256 }
+  ],
+  "interleaving": { "resources": 2, "workers": 3, "queuedWorkers": 1, "rounds": 20, "sweeps": 40 }
+}

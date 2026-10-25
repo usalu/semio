@@ -44,7 +44,7 @@ function isPromiseLike(value: unknown): value is PromiseLike<void> {
   return typeof (value as { readonly then?: unknown } | null | undefined)?.then === "function";
 }
 
-/** 🎚️ At most ONE send in flight and at most ONE owed value — always the latest.
+/** 🛣️ At most ONE send in flight and at most ONE owed value — always the latest.
  *
  * A 60 Hz drag over a round trip that costs more than 16 ms has exactly two honest answers: queue
  * every value (the user then watches a backlog of stale geometry drain after they let go) or keep

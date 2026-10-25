@@ -9,7 +9,7 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of architect view state (active register, adjacency filter, graph camera).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
@@ -24,7 +24,11 @@ pub struct ArchitectPresence {
     pub graph_camera_zoom: f64,
 }
 
-impl store::ArtifactPresenceSnapshot for ArchitectPresence {}
+impl store::ArtifactPresenceSnapshot for ArchitectPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl Default for ArchitectPresence {
     fn default() -> Self {

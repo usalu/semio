@@ -44,7 +44,7 @@ impl<'a> TryFrom<&'a str> for SurfaceId {
 #[value(crate = "::semio_framework_value", transparent)]
 pub struct UiNodeId(pub u64);
 
-/// 🔢️ A snapshot's wire revision — advances by one per accepted [`UiPatch`]; a patch whose
+/// 📸️ A snapshot's wire revision — advances by one per accepted [`UiPatch`]; a patch whose
 /// `base_revision` does not match the receiver's current revision is rejected whole.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
@@ -64,7 +64,7 @@ impl UiRevision {
 pub struct UiNodeIdAllocator(u64);
 
 impl UiNodeIdAllocator {
-    /// 🏭️ Mints the next unused [`UiNodeId`] for this surface.
+    /// 🌱️ Mints the next unused [`UiNodeId`] for this surface.
     pub fn try_allocate(&mut self) -> Option<UiNodeId> {
         let id = UiNodeId(self.0);
         self.0 = self.0.checked_add(1)?;

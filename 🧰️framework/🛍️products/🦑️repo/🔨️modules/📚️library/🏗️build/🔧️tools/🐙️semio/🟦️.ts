@@ -1,4 +1,4 @@
-import {GlobV1} from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import {GlobV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
 import {createHash} from "node:crypto";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 

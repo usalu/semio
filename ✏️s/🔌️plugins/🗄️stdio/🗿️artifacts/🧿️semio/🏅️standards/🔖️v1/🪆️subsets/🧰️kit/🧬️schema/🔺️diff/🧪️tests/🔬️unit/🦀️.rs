@@ -22,6 +22,7 @@ use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapsh
 use framework_schema::ArtifactSchema;
 #[allow(unused_imports)]
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use crate::schema::diff::*;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use crate::schema::snapshot::demo_kit_snapshot;

@@ -449,7 +449,7 @@ pub mod editor {
             pub use semio_s_artifact_puzzle_2d_board_host::editor::puzzle2d::engine::board_host;
 
             pub use semio_s_artifact_puzzle_2d_inferences::editor::puzzle2d::engine::icons;
-            pub use semio_s_artifact_puzzle_2d_graph_manifest::editor::puzzle2d::engine::layout;
+            pub use semio_s_artifact_puzzle_2d_engine::editor::puzzle2d::engine::layout;
 
         }
 
@@ -496,7 +496,7 @@ pub mod editor {
             pub use semio_s_artifact_puzzle_2d_mut_any_6::editor::puzzle2d::commands::translate_selection;
             pub use semio_s_artifact_puzzle_2d_mut_any_6::editor::puzzle2d::commands::rotate_selection;
             pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::commands::scale_selection;
-            pub use semio_s_artifact_puzzle_2d_graph_manifest::editor::puzzle2d::commands::export_snapshot;
+            pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::commands::export_snapshot;
             pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::commands::import_snapshot;
             pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::commands::open_import_snapshot;
             pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::commands::set_selection_flag;
@@ -542,7 +542,7 @@ pub mod editor {
 
                         #[path = "."]
                         pub mod utilities {
-                            pub use semio_s_artifact_puzzle_2d_graph_manifest::editor::puzzle2d::modes::edit::windows::overview::utilities::brush;
+                            pub use semio_s_artifact_puzzle_2d_tests::editor::puzzle2d::modes::edit::windows::overview::utilities::brush;
                             pub use semio_s_artifact_puzzle_2d_tests::editor::puzzle2d::modes::edit::windows::overview::utilities::area_brush;
                             pub use semio_s_artifact_puzzle_2d_tests::editor::puzzle2d::modes::edit::windows::overview::utilities::select;
                         }
@@ -561,9 +561,6 @@ pub mod viewer {
     #[path = "."]
     pub mod puzzle2d {
         pub use semio_s_artifact_puzzle_2d_mut_any_9::viewer::puzzle2d::*;
-
-        pub use semio_s_artifact_puzzle_2d_graph_manifest::viewer::puzzle2d::presence;
-        pub use semio_s_artifact_puzzle_2d_graph_manifest::viewer::puzzle2d::config;
 
         #[path = "."]
         pub mod modes {

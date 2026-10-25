@@ -27,9 +27,10 @@ async function physicalFileObservationV1(path:string,control:FileObservationCont
  const check=()=>{if(cancelled.call(control))refuse("cancelled");const remaining=remainingMs.call(control);if(!Number.isFinite(remaining))refuse("invalid-control");if(remaining<=0)refuse("deadline");};
  const admit=()=>{check();if(work>=maxWork)refuse("work-capacity");work++;};
  const progress=(phase:FileObservationProgressV1["phase"])=>{onProgress.call(control,Object.freeze({phase,bytes:length,totalBytes:total,work}));check();};
- const filesystem=async<T>(body:()=>Promise<T>):Promise<T>=>{try{return await body();}catch{return refuse("io");}};
+ let present=false;
+ const filesystem=async<T>(body:()=>Promise<T>):Promise<T>=>{try{return await body();}catch(error){return refuse(present&&["ENOENT","ENOTDIR"].includes((error as {code?:string}|null)?.code??"")?"changed":"io");}};
  try{
-  admit();const before=await filesystem(()=>lstat(path));check();
+  admit();const before=await filesystem(()=>lstat(path));present=true;check();
   if(!before.isFile()||before.isSymbolicLink()||!integer(before.size,0))refuse("not-regular");total=before.size;if(total>maxBytes)refuse("byte-capacity");if(Math.ceil(total/chunkBytes)+5>maxWork)refuse("work-capacity");progress("admit");
   const same=(stat:typeof before)=>stat.isFile()&&!stat.isSymbolicLink()&&stat.dev===before.dev&&stat.ino===before.ino&&stat.size===before.size&&stat.mtimeMs===before.mtimeMs&&stat.ctimeMs===before.ctimeMs;
   admit();const claim=await withArtifactDescriptorV1(async()=>{const file=await filesystem(()=>open(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0)));return{file,close:()=>filesystem(()=>file.close())};},async({file})=>{
@@ -51,5 +52,4 @@ export async function observePhysicalFileV1(path:string,control:FileObservationC
  * @see ./🧫️fixtures/🔣️.json
  */
 export async function readPhysicalFileV1(path:string,control:FileObservationControlV1):Promise<PhysicalFileReadV1>{const observed=await physicalFileObservationV1(path,control,true);if(observed.bytes===null)throw new FileObservationErrorV1("io",path);return Object.freeze({claim:observed.claim,bytes:observed.bytes});}
-export { CurrentPhysicalOwnerV1 } from "./📁️current/🟦️.ts";
-export type { CurrentPhysicalEntryV1, CurrentPhysicalPortV1 } from "./📁️current/🟦️.ts";
+

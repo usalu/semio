@@ -5,7 +5,7 @@ use std::mem::size_of;
 //#region 🔖️PagedCommandIngress
 pub const COMMAND_PAGE_MAXIMUM_BYTES: usize = 4_096;
 
-/// 📥️ Largest ASSEMBLED command the host may deliver into a guest.
+/// 🚚️ Largest ASSEMBLED command the host may deliver into a guest.
 ///
 /// 🧊️ A command is a host answer like any other, so it is bound by the one declared budget for an
 /// assembled host answer rather than by a transport constant of its own. Nothing here chooses a
@@ -13,7 +13,7 @@ pub const COMMAND_PAGE_MAXIMUM_BYTES: usize = 4_096;
 /// be handed for ONE outstanding request before it answers with a typed fault instead of allocating.
 pub const COMMAND_MAXIMUM_BYTES: usize = semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES;
 
-/// 📄️ Pages that budget occupies — the assembled ceiling over the page extent, not a chosen number.
+/// 📃️ Pages that budget occupies — the assembled ceiling over the page extent, not a chosen number.
 ///
 /// 🧊️ A page authority's spine is `COMMAND_MAXIMUM_PAGES * size_of::<FixedCommandPage>()`, and a
 /// page slot is a POINTER to its own 4 KiB block (see [`FixedCommandPage`]), never the block itself
@@ -57,7 +57,7 @@ pub struct FixedCommandPage {
 
 struct FixedCommandPageRetirement{bytes:std::mem::ManuallyDrop<Option<Box<[u8;COMMAND_PAGE_MAXIMUM_BYTES]>>>}
 
-/// 📄️ One command's page authority, reserved ONCE for exactly the pages that command DECLARES.
+/// 🔂️ One command's page authority, reserved ONCE for exactly the pages that command DECLARES.
 ///
 /// 🧊️ The reservation is `declared * size_of::<FixedCommandPage>()` contiguous bytes and it is taken
 /// on the guest's own fixed linear memory, once per command, on the reactor's command-ingress
@@ -217,7 +217,7 @@ pub struct CommandPageCursor {
     pub metadata: u32,
 }
 
-/// 🪢️ `serde` kept alongside `ToValue`/`FromValue` — same wire-sharing reason as
+/// 🚥️ `serde` kept alongside `ToValue`/`FromValue` — same wire-sharing reason as
 /// `CommandPageCursor` above. No `#[serde(tag = …)]`: `#[value(rename_all = "camelCase")]` with no
 /// `tag` derives externally-tagged (`✨️derive/🦀️.rs`'s documented default for a tag-less,
 /// mixed-variant enum), which is also serde's own default enum representation — the two already

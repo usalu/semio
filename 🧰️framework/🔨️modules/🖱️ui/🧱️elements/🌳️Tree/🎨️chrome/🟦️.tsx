@@ -112,7 +112,7 @@ export function treeRowChromeShellClasses(isSelected: boolean, isHighlighted: bo
   return cn("group/tree-row", "text-element", interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, hiddenClass);
 }
 
-/** 🎨️ Tree row content fill: backgrounds apply only on the label column, not the guide gutter. */
+/** 🪣️ Tree row content fill: backgrounds apply only on the label column, not the guide gutter. */
 export function treeRowChromeContentFillClasses(isSelected: boolean, isHighlighted: boolean, isLoading = false, isWaiting = false): string {
   const ringClass = loadingBorderStateClass(isLoading, isSelected) || waitingBorderStateClass(isWaiting, isSelected);
   if (isSelected) {
@@ -124,7 +124,7 @@ export function treeRowChromeContentFillClasses(isSelected: boolean, isHighlight
   return cn(interactiveControlTransitionClass, groupHoverExcludingHandleBgFillClass, ringClass);
 }
 
-/** 🎨️ Tree row chrome: element gray at rest; hover highlight; selected primary + emphasized (no hover fill override). */
+/** 🌲️ Tree row chrome: element gray at rest; hover highlight; selected primary + emphasized (no hover fill override). */
 export function treeRowChromeClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false, isLoading = false, isWaiting = false): string {
   return cn(treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), treeRowChromeContentFillClasses(isSelected, isHighlighted, isLoading, isWaiting));
 }

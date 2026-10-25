@@ -11,7 +11,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { ListPromptsRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Oracle
@@ -38,7 +38,7 @@ export async function referenceServer(): Promise<ReferenceChannel> {
   };
 }
 
-/** 🤝️ Performs the fixture's handshake against the reference server and returns the raw envelope. */
+/** 🧫️ Performs the fixture's handshake against the reference server and returns the raw envelope. */
 async function handshake(ctx: AdapterContext): Promise<{ envelope: Record<string, unknown>; requested: string }> {
   const fixture = JSON.parse(readFileSync(ctx.input("shared://🤝️initialize-lenient.json"), "utf8")) as Record<string, unknown>;
   const channel = await referenceServer();
@@ -103,7 +103,7 @@ function pipelinedBurstProjection(replies: Record<string, unknown>[]): { answere
   return { answered, followingRequestServed, notInitializedRefusals };
 }
 
-/** 🧾️ Reduces the replies to the request ids answered and the closed-session refusals among them. */
+/** 💥️ Reduces the replies to the request ids answered and the closed-session refusals among them. */
 function burstProjection(replies: Record<string, unknown>[]): { answered: string[]; sessionClosedRefusals: number } {
   const answered = replies.map((reply) => JSON.stringify(reply.id)).sort();
   const sessionClosedRefusals = replies.filter((reply) => ((reply.error ?? {}) as Record<string, unknown>).code === -32004).length;

@@ -14,7 +14,10 @@
         "manifest": "snapshot.json",
         "temporary": "snapshot-tmp",
         "fileMode": 420,
-        "executableMode": 493
+        "executableMode": 493,
+        "poolProbe": "clone-probe",
+        "poolFanout": 2,
+        "poolExecutableSuffix": ".x"
       }
     },
     "Row": {

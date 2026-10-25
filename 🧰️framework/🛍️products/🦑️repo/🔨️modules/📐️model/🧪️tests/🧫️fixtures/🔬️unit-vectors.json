@@ -1,0 +1,1025 @@
+{
+  "schema": "semio.repo.model.unit-vectors/1",
+  "$comment": "🔬️ Expected answers for the cargo unit tests, computed by an independent Python model (regular expressions and the standard library; no code shared with the Rust or Go implementation) over the inputs of 🔤️slug-normalisation, 🧬️definition-kind-derivation and the vectors below. `resolved: null` means the input is refused. Regenerate with the model; never edit by hand.",
+  "oracle": {
+    "script": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/rtest-d-tools/oracle_model.py",
+    "tool": "python3",
+    "libraries": [
+      "re",
+      "json"
+    ],
+    "model": "slug vocabulary, kind derivations, section and definition ids"
+  },
+  "slugs": {
+    "llm": {
+      "normalise": [
+        {
+          "input": "opus-4-7",
+          "slug": "opus-4-7"
+        },
+        {
+          "input": "Opus 4.7",
+          "slug": "opus-4-7"
+        },
+        {
+          "input": "claude-opus-4-7",
+          "slug": "claude-opus-4-7"
+        },
+        {
+          "input": "Claude Sonnet 4.5",
+          "slug": "claude-sonnet-4-5"
+        },
+        {
+          "input": "GPT-5.1-Codex",
+          "slug": "gpt-5-1-codex"
+        },
+        {
+          "input": "gpt5",
+          "slug": "gpt5"
+        },
+        {
+          "input": "  gemini 3 pro  ",
+          "slug": "gemini-3-pro"
+        },
+        {
+          "input": "SWE-1.5",
+          "slug": "swe-1-5"
+        },
+        {
+          "input": "cursor-grok-4-5",
+          "slug": "cursor-grok-4-5"
+        },
+        {
+          "input": "composerTwo",
+          "slug": "composer-two"
+        },
+        {
+          "input": "XMLHttpRequest",
+          "slug": "xml-http-request"
+        },
+        {
+          "input": "aBcDeF",
+          "slug": "a-bc-de-f"
+        },
+        {
+          "input": "Grüße",
+          "slug": "gr-e"
+        },
+        {
+          "input": "ß",
+          "slug": ""
+        },
+        {
+          "input": "",
+          "slug": ""
+        },
+        {
+          "input": "---",
+          "slug": ""
+        },
+        {
+          "input": "42",
+          "slug": "42"
+        }
+      ],
+      "resolve": [
+        {
+          "input": "opus-4-7",
+          "resolved": "opus-4-7"
+        },
+        {
+          "input": "Opus 4.7",
+          "resolved": "opus-4-7"
+        },
+        {
+          "input": "anthropic/claude-opus-4-1",
+          "resolved": "opus-4-1"
+        },
+        {
+          "input": "gpt-5-1-codex",
+          "resolved": "gpt-5-1-codex"
+        },
+        {
+          "input": "gpt-5-1",
+          "resolved": "gpt-5-1"
+        },
+        {
+          "input": "gpt-5",
+          "resolved": "gpt-5"
+        },
+        {
+          "input": "o3-pro",
+          "resolved": "o3-pro"
+        },
+        {
+          "input": "gemini-3-7-flash",
+          "resolved": "gemini-3-7-flash"
+        },
+        {
+          "input": "sonnet-5",
+          "resolved": "sonnet-5"
+        },
+        {
+          "input": "haiku-3-5",
+          "resolved": "haiku-3-5"
+        },
+        {
+          "input": "swe-1-5",
+          "resolved": "swe-1-5"
+        },
+        {
+          "input": "grok-4-5",
+          "resolved": "grok-4-5"
+        },
+        {
+          "input": "deepseek-coder",
+          "resolved": "deepseek-coder"
+        },
+        {
+          "input": "llama-3-1",
+          "resolved": "llama-3-1"
+        }
+      ],
+      "reject": [
+        {
+          "input": "",
+          "resolved": null
+        },
+        {
+          "input": "   ",
+          "resolved": null
+        },
+        {
+          "input": "not-a-model",
+          "resolved": null
+        },
+        {
+          "input": "gpt",
+          "resolved": null
+        },
+        {
+          "input": "42",
+          "resolved": null
+        },
+        {
+          "input": "🎫️",
+          "resolved": null
+        }
+      ]
+    },
+    "effort": {
+      "normalise": [
+        {
+          "input": "low",
+          "slug": "low"
+        },
+        {
+          "input": "Medium",
+          "slug": "medium"
+        },
+        {
+          "input": "HIGH",
+          "slug": "high"
+        },
+        {
+          "input": "max",
+          "slug": "max"
+        },
+        {
+          "input": "Very High",
+          "slug": "very-high"
+        },
+        {
+          "input": "",
+          "slug": ""
+        },
+        {
+          "input": "  ",
+          "slug": ""
+        }
+      ],
+      "resolve": [
+        {
+          "input": "low",
+          "resolved": "low"
+        },
+        {
+          "input": "Medium",
+          "resolved": "medium"
+        },
+        {
+          "input": "HIGH",
+          "resolved": "high"
+        },
+        {
+          "input": "max",
+          "resolved": "max"
+        },
+        {
+          "input": "reasoning-high",
+          "resolved": "high"
+        },
+        {
+          "input": "",
+          "resolved": ""
+        },
+        {
+          "input": "   ",
+          "resolved": ""
+        }
+      ],
+      "reject": [
+        {
+          "input": "extreme",
+          "resolved": null
+        },
+        {
+          "input": "none",
+          "resolved": null
+        },
+        {
+          "input": "0",
+          "resolved": null
+        }
+      ]
+    },
+    "client": {
+      "normalise": [
+        {
+          "input": "claude-code",
+          "slug": "claude-code"
+        },
+        {
+          "input": "Claude Code",
+          "slug": "claude-code"
+        },
+        {
+          "input": "copilot-chat",
+          "slug": "copilot-chat"
+        },
+        {
+          "input": "VSCode",
+          "slug": "vs-code"
+        },
+        {
+          "input": "kiro-cli",
+          "slug": "kiro-cli"
+        },
+        {
+          "input": "antigravity-chat",
+          "slug": "antigravity-chat"
+        },
+        {
+          "input": "windsurf",
+          "slug": "windsurf"
+        },
+        {
+          "input": "",
+          "slug": ""
+        },
+        {
+          "input": "Cursor Chat",
+          "slug": "cursor-chat"
+        }
+      ],
+      "resolve": [
+        {
+          "input": "claude-code",
+          "resolved": "claude-code"
+        },
+        {
+          "input": "Claude Code",
+          "resolved": "claude-code"
+        },
+        {
+          "input": "copilot-chat",
+          "resolved": "copilot-chat"
+        },
+        {
+          "input": "vscode-insiders",
+          "resolved": "vscode"
+        },
+        {
+          "input": "kiro-cli",
+          "resolved": "kiro-cli"
+        },
+        {
+          "input": "antigravity-chat",
+          "resolved": "antigravity-chat"
+        },
+        {
+          "input": "windsurf-chat",
+          "resolved": "windsurf-chat"
+        },
+        {
+          "input": "cursor-chat",
+          "resolved": "cursor-chat"
+        }
+      ],
+      "reject": [
+        {
+          "input": "",
+          "resolved": null
+        },
+        {
+          "input": "emacs",
+          "resolved": null
+        },
+        {
+          "input": "sublime",
+          "resolved": null
+        },
+        {
+          "input": "42",
+          "resolved": null
+        }
+      ]
+    }
+  },
+  "definitionKinds": [
+    {
+      "keyword": "interface",
+      "kind": "interface"
+    },
+    {
+      "keyword": "type",
+      "kind": "interface"
+    },
+    {
+      "keyword": "trait",
+      "kind": "interface"
+    },
+    {
+      "keyword": "abstract",
+      "kind": "interface"
+    },
+    {
+      "keyword": "extend type",
+      "kind": "interface"
+    },
+    {
+      "keyword": "extend interface",
+      "kind": "interface"
+    },
+    {
+      "keyword": "extend enum",
+      "kind": "interface"
+    },
+    {
+      "keyword": "extend union",
+      "kind": "interface"
+    },
+    {
+      "keyword": "extend input",
+      "kind": "interface"
+    },
+    {
+      "keyword": "input",
+      "kind": "interface"
+    },
+    {
+      "keyword": "union",
+      "kind": "interface"
+    },
+    {
+      "keyword": "scalar",
+      "kind": "interface"
+    },
+    {
+      "keyword": "delegate",
+      "kind": "interface"
+    },
+    {
+      "keyword": "record",
+      "kind": "interface"
+    },
+    {
+      "keyword": "const",
+      "kind": "constant"
+    },
+    {
+      "keyword": "constant",
+      "kind": "constant"
+    },
+    {
+      "keyword": "enum",
+      "kind": "constant"
+    },
+    {
+      "keyword": "var",
+      "kind": "constant"
+    },
+    {
+      "keyword": "let",
+      "kind": "constant"
+    },
+    {
+      "keyword": "static",
+      "kind": "constant"
+    },
+    {
+      "keyword": "test",
+      "kind": "test"
+    },
+    {
+      "keyword": "func",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "function",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "class",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "struct",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "impl",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "def",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "INTERFACE",
+      "kind": "interface"
+    },
+    {
+      "keyword": "Type",
+      "kind": "interface"
+    },
+    {
+      "keyword": "CONST",
+      "kind": "constant"
+    },
+    {
+      "keyword": "Enum",
+      "kind": "constant"
+    },
+    {
+      "keyword": "Test",
+      "kind": "test"
+    },
+    {
+      "keyword": "TeSt",
+      "kind": "test"
+    },
+    {
+      "keyword": "EXTEND TYPE",
+      "kind": "interface"
+    },
+    {
+      "keyword": "Extend Enum",
+      "kind": "interface"
+    },
+    {
+      "keyword": " interface",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "interface ",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "interfaces",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "typedef",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "  ",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "🎫️",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "42",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "Interface",
+      "kind": "interface"
+    },
+    {
+      "keyword": "TYPE",
+      "kind": "interface"
+    },
+    {
+      "keyword": "Trait",
+      "kind": "interface"
+    },
+    {
+      "keyword": "EXTEND TYPE",
+      "kind": "interface"
+    },
+    {
+      "keyword": "Const",
+      "kind": "constant"
+    },
+    {
+      "keyword": "ENUM",
+      "kind": "constant"
+    },
+    {
+      "keyword": "Test",
+      "kind": "test"
+    },
+    {
+      "keyword": "TEST",
+      "kind": "test"
+    },
+    {
+      "keyword": "fn",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "macro",
+      "kind": "implementation"
+    },
+    {
+      "keyword": "",
+      "kind": "implementation"
+    }
+  ],
+  "fileKinds": [
+    {
+      "name": "main.rs",
+      "kind": "code"
+    },
+    {
+      "name": "index.ts",
+      "kind": "code"
+    },
+    {
+      "name": "App.tsx",
+      "kind": "code"
+    },
+    {
+      "name": "script.py",
+      "kind": "code"
+    },
+    {
+      "name": "tool.GO",
+      "kind": "code"
+    },
+    {
+      "name": "build.sh",
+      "kind": "script"
+    },
+    {
+      "name": "run.ps1",
+      "kind": "script"
+    },
+    {
+      "name": "setup.BAT",
+      "kind": "script"
+    },
+    {
+      "name": "package.json",
+      "kind": "config"
+    },
+    {
+      "name": "Cargo.toml",
+      "kind": "config"
+    },
+    {
+      "name": "ci.yml",
+      "kind": "config"
+    },
+    {
+      "name": "settings.YAML",
+      "kind": "config"
+    },
+    {
+      "name": "README.md",
+      "kind": "docs"
+    },
+    {
+      "name": "notes.txt",
+      "kind": "docs"
+    },
+    {
+      "name": "guide.rst",
+      "kind": "docs"
+    },
+    {
+      "name": "page.hbs",
+      "kind": "template"
+    },
+    {
+      "name": "mail.j2",
+      "kind": "template"
+    },
+    {
+      "name": "logo.png",
+      "kind": "resource"
+    },
+    {
+      "name": "font.woff2",
+      "kind": "resource"
+    },
+    {
+      "name": "bundle.wasm",
+      "kind": "resource"
+    },
+    {
+      "name": "archive.tar",
+      "kind": "resource"
+    },
+    {
+      "name": "Makefile",
+      "kind": "config"
+    },
+    {
+      "name": "Dockerfile",
+      "kind": "config"
+    },
+    {
+      "name": "Dockerfile.dev",
+      "kind": "config"
+    },
+    {
+      "name": "LICENSE",
+      "kind": "license"
+    },
+    {
+      "name": "LICENSE.md",
+      "kind": "license"
+    },
+    {
+      "name": "licence.txt",
+      "kind": "license"
+    },
+    {
+      "name": "widget.test.ts",
+      "kind": "lab"
+    },
+    {
+      "name": "widget.spec.js",
+      "kind": "lab"
+    },
+    {
+      "name": "api_test.go",
+      "kind": "lab"
+    },
+    {
+      "name": "api_tests.py",
+      "kind": "lab"
+    },
+    {
+      "name": "bench_spec.rb",
+      "kind": "lab"
+    },
+    {
+      "name": "perf.benchmark.ts",
+      "kind": "lab"
+    },
+    {
+      "name": "button.stories.tsx",
+      "kind": "lab"
+    },
+    {
+      "name": "test_models.py",
+      "kind": "lab"
+    },
+    {
+      "name": "test.json",
+      "kind": "lab"
+    },
+    {
+      "name": "conftest.py",
+      "kind": "lab"
+    },
+    {
+      "name": "vite.config.ts",
+      "kind": "config"
+    },
+    {
+      "name": "tool.conf",
+      "kind": "config"
+    },
+    {
+      "name": "app.rc",
+      "kind": "resource"
+    },
+    {
+      "name": "app.cfg",
+      "kind": "config"
+    },
+    {
+      "name": ".gitignore",
+      "kind": "config"
+    },
+    {
+      "name": ".editorconfig",
+      "kind": "config"
+    },
+    {
+      "name": ".babelrc",
+      "kind": "config"
+    },
+    {
+      "name": ".nvmrc",
+      "kind": "config"
+    },
+    {
+      "name": "nx.json",
+      "kind": "config"
+    },
+    {
+      "name": "Cargo.lock",
+      "kind": "config"
+    },
+    {
+      "name": "pnpm-lock.yaml",
+      "kind": "config"
+    },
+    {
+      "name": "styles.css",
+      "kind": "code"
+    },
+    {
+      "name": "query.sql",
+      "kind": "code"
+    },
+    {
+      "name": "schema.graphql",
+      "kind": "code"
+    },
+    {
+      "name": "service.proto",
+      "kind": "code"
+    },
+    {
+      "name": "unknown.xyz",
+      "kind": "resource"
+    },
+    {
+      "name": "noextension",
+      "kind": "resource"
+    },
+    {
+      "name": "archive.tar.gz",
+      "kind": "resource"
+    },
+    {
+      "name": "a.b.c.d",
+      "kind": "code"
+    },
+    {
+      "name": "UPPER.RS",
+      "kind": "code"
+    },
+    {
+      "name": "Test.java",
+      "kind": "lab"
+    },
+    {
+      "name": "x.test",
+      "kind": "resource"
+    },
+    {
+      "name": ".env",
+      "kind": "config"
+    },
+    {
+      "name": "justfile",
+      "kind": "config"
+    },
+    {
+      "name": "image.SVG",
+      "kind": "resource"
+    }
+  ],
+  "technologyKinds": [
+    {
+      "name": "compose",
+      "kind": "user"
+    },
+    {
+      "name": "repo",
+      "kind": "infrastructure"
+    },
+    {
+      "name": "coda",
+      "kind": "research"
+    },
+    {
+      "name": "@compose",
+      "kind": "user"
+    },
+    {
+      "name": "@repo",
+      "kind": "infrastructure"
+    },
+    {
+      "name": "@coda",
+      "kind": "research"
+    },
+    {
+      "name": "@@repo",
+      "kind": "infrastructure"
+    },
+    {
+      "name": "@unknown",
+      "kind": "user"
+    },
+    {
+      "name": "semio",
+      "kind": "user"
+    },
+    {
+      "name": "",
+      "kind": "user"
+    },
+    {
+      "name": "@",
+      "kind": "user"
+    },
+    {
+      "name": "Repo",
+      "kind": "user"
+    }
+  ],
+  "testFunctionNames": [
+    {
+      "name": "TestFoo",
+      "test": true
+    },
+    {
+      "name": "Testfoo",
+      "test": false
+    },
+    {
+      "name": "Test",
+      "test": false
+    },
+    {
+      "name": "BenchmarkSort",
+      "test": true
+    },
+    {
+      "name": "FuzzParse",
+      "test": true
+    },
+    {
+      "name": "Fuzzy",
+      "test": false
+    },
+    {
+      "name": "test_foo",
+      "test": true
+    },
+    {
+      "name": "testFoo",
+      "test": false
+    },
+    {
+      "name": "TestÄpfel",
+      "test": false
+    },
+    {
+      "name": "helper",
+      "test": false
+    },
+    {
+      "name": "TEST_UPPER",
+      "test": false
+    }
+  ],
+  "sectionIds": [
+    {
+      "fileId": "FILE",
+      "path": [],
+      "id": "FILE"
+    },
+    {
+      "fileId": "FILE",
+      "path": [
+        "",
+        ""
+      ],
+      "id": "FILE"
+    },
+    {
+      "fileId": "FILE",
+      "path": [
+        "Intro"
+      ],
+      "id": "FILE🔖intro"
+    },
+    {
+      "fileId": "FILE",
+      "path": [
+        "Intro",
+        "Deep Section",
+        "Third-Level"
+      ],
+      "id": "FILE🔖intro🔖deepsection🔖thirdlevel"
+    },
+    {
+      "fileId": "FILE",
+      "path": [
+        "💡Idea",
+        "Plain"
+      ],
+      "id": "FILE💡idea🔖plain"
+    },
+    {
+      "fileId": "FILE",
+      "path": [
+        "💡️Idea"
+      ],
+      "id": "FILE💡idea"
+    },
+    {
+      "fileId": "FILE",
+      "path": [
+        "Ünï Cödé 42"
+      ],
+      "id": "FILE🔖ünïcödé42"
+    }
+  ],
+  "definitionIds": [
+    {
+      "fileId": "F",
+      "path": [],
+      "name": "Main",
+      "kind": "implementation",
+      "id": "F🛠️main"
+    },
+    {
+      "fileId": "F",
+      "path": [
+        "S"
+      ],
+      "name": "Alpha Beta",
+      "kind": "interface",
+      "id": "F🔖s✂️alphabeta"
+    },
+    {
+      "fileId": "F",
+      "path": [],
+      "name": "LIMIT",
+      "kind": "constant",
+      "id": "F🪨limit"
+    },
+    {
+      "fileId": "F",
+      "path": [],
+      "name": "TestThing",
+      "kind": "implementation",
+      "id": "F🛠️testthing"
+    },
+    {
+      "fileId": "F🥼",
+      "path": [],
+      "name": "TestThing",
+      "kind": "implementation",
+      "id": "F🥼🧪testthing"
+    },
+    {
+      "fileId": "F🥼",
+      "path": [],
+      "name": "test_thing",
+      "kind": "implementation",
+      "id": "F🥼🧪testthing"
+    },
+    {
+      "fileId": "F🥼",
+      "path": [],
+      "name": "helper",
+      "kind": "implementation",
+      "id": "F🥼🛠️helper"
+    },
+    {
+      "fileId": "F🥼",
+      "path": [],
+      "name": "TestThing",
+      "kind": "interface",
+      "id": "F🥼✂️testthing"
+    },
+    {
+      "fileId": "F🥼",
+      "path": [
+        "Sec"
+      ],
+      "name": "BenchmarkIt",
+      "kind": "implementation",
+      "id": "F🥼🔖sec🧪benchmarkit"
+    }
+  ]
+}

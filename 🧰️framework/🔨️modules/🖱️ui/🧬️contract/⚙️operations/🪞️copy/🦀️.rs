@@ -95,7 +95,7 @@ impl UiComponentCopy {
         }
         self.owned.source.take()
     }
-    /// 📤️ Candidate transfer leaves the source owner available for a separate return or retirement.
+    /// 🍃️ Candidate transfer leaves the source owner available for a separate return or retirement.
     pub fn take_completed_candidate_with_grant(&mut self, bytes: usize) -> Option<Component> {
         if !self.complete || self.closing || bytes < size_of::<Component>() {
             return None;

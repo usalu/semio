@@ -1,5 +1,5 @@
 import{observeWindowsCargoUnitsV1,retireWindowsCargoUnitsV1,type CargoWindowsConditionalSummaryV1}from"../🪟️conditional/🟦️.ts";
-import descriptorSchema from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/💾️cache/🧬️schema/🔣️.json" with {type:"json"};
+import descriptorSchema from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/🧬️schema/🔣️json/🟦️.ts";
 import{cargoMaintenanceObservationPlanV1,cargoMaintenanceAvailableBytesV1}from"../👁️observation/🟦️.ts";
 import{cacheScanTimingEnabledV1}from"../../⏱️measurement/🟦️.ts";
 import{describeCacheRecencyChangeV1}from"../../⏱️recency/🟦️.ts";
@@ -10,8 +10,8 @@ import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"..
 import {join,resolve} from "node:path";
 import {mkdir,mkdtemp,writeFile} from "node:fs/promises";
 import {withCargoCacheMaintenanceV1,scanCargoBuildUnits,scanCargoIncrementalUnits,deleteUnit,type CacheUnit} from "../../🟦️.ts";
-import {assertNativeCacheDescriptorCustodyV1,planNativeCompilerDescriptorObservationV1,withNativeCompilerDescriptorWitnessesV1,assertNativeCompilerMountScopeV1,assertNativeCompilerSelectedDescriptorNamesV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts";
-import {acquirePhysicalFileLocksV1} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts";
+import {assertNativeCacheDescriptorCustodyV1,planNativeCompilerDescriptorObservationV1,withNativeCompilerDescriptorWitnessesV1,assertNativeCompilerMountScopeV1,assertNativeCompilerSelectedDescriptorNamesV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts";
+import {acquirePhysicalFileLocksV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📁️physical/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {captureOwnedProcess} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -36,7 +36,7 @@ export function planInactiveCargoRetirementV1(units:readonly CacheUnit[],policy:
 }
 
 /** ♻️ Retires only inactive owned compiler units after complete process, descriptor and physical-lock custody. */
-type CargoRetirementRequestV1=Readonly<{workspace:string;buildDirectory:string;relatedDirectories:readonly string[];leaseDirectory:string;artifactDirectory:string;invocation:ScriptInvocation;control:ResourceLeaseControl;policy:CargoRetirementPolicyV1;preview:boolean;wait:boolean;compilerStorage?:NativeStorageReservationV1;compilerMode?:"prototype"|"release"}>;
+type CargoRetirementRequestV1=Readonly<{workspace:string;buildDirectory:string;relatedDirectories:readonly string[];leaseDirectory:string;artifactDirectory:string;invocation:ScriptInvocation;control:ResourceLeaseControl;policy:CargoRetirementPolicyV1;preview:boolean;wait:boolean;compilerStorage?:NativeStorageReservationV1;compilerMode?:"prototype"|"release";onCustodyHeld?:()=>void|Promise<void>}>;
 /** 🛟️ Registers authenticated historical work before effects so image custody drains every accepted child. */
 export async function retireInactiveCargoStoreV1(options:CargoRetirementRequestV1):Promise<CargoRetirementResultV1>{
  options=Object.freeze({...options,relatedDirectories:Object.freeze([...options.relatedDirectories]),policy:Object.freeze({...options.policy})});
@@ -55,7 +55,7 @@ async function retireInactiveCargoStoreOwnedV1(options:CargoRetirementRequestV1)
   const paths=[...new Set(plan.units.map(unit=>join(root,unit.path.slice(0,unit.path.search(/\/(?:build|incremental)\//u)),".cargo-build-lock")))].sort(),guard=await acquirePhysicalFileLocksV1(paths,control,{version:1,wait:options.wait});
   try{return await withNativeCompilerDescriptorWitnessesV1(descriptorPlan.directories,()=>guard.check(),async witnesses=>{
    const mountScope=async(role:string)=>{if(process.platform==="darwin"){const port=descriptorSchema.definitions.CompilerMountPolicy.const,mounted=await capture(port.command,[...port.args],role);assertNativeCompilerMountScopeV1(mounted,filesystemRoot,descriptorPlan.directories);}};await mountScope("mounts-before");await witnesses.check();guard.check();const opened=await capture(descriptorPlan.command,[...descriptorPlan.args],"descriptors");await writeFile(join(output,"descriptors.result.json"),JSON.stringify({version:1,status:opened.status,signal:opened.signal,reason:opened.reason??null,stdoutBytes:Buffer.byteLength(opened.stdout),stderrBytes:Buffer.byteLength(opened.stderr)}));await mountScope("mounts-after");await witnesses.check();assertNativeCompilerSelectedDescriptorNamesV1(opened.stdout);for(const directory of descriptorPlan.directories)assertNativeCacheDescriptorCustodyV1(opened,resolve(directory),{pid:guard.pid,paths:[directory,...guard.paths.filter(path=>path.startsWith(resolve(directory)+"/"))]},"newline-pn");
-   const current=new Map((await scan("recensus")).map(unit=>[unit.path,unit]));for(const unit of plan.units){const row=current.get(unit.path);if(!row||row.bytes!==unit.bytes||row.recencyMs!==unit.recencyMs||row.lockHeld){throw Error("Inactive Cargo unit changed under physical custody");}}
+   await options.onCustodyHeld?.();const current=new Map((await scan("recensus")).map(unit=>[unit.path,unit]));for(const unit of plan.units){const row=current.get(unit.path);if(!row||row.bytes!==unit.bytes||row.recencyMs!==unit.recencyMs||row.lockHeld){throw Error("Inactive Cargo unit changed under physical custody",{cause:describeCacheRecencyChangeV1(root,unit,row)});}}
    await mountScope("mounts-before-delete");let bytes=0,count=0;for(const unit of plan.units){await witnesses.check();guard.check();if(unit.lockHeld||bytes+unit.bytes>policy.maximumDeletionBytes)throw Error("Inactive retirement ownership changed");await deleteUnit(root,unit,control);bytes+=unit.bytes;count++;}
    guard.check();return{units:count,logicalBytes:bytes,availableBytes:await available(),...planned};
   });}finally{guard.close();}

@@ -14,37 +14,37 @@ import { activeShellRoot, useShellScopeOptional } from "../../🧱️elements/�
 // #endregion 🔌️Adapters
 
 // #region ⌨️ControlKeybindingContext
-/** ⌨️ Action reference accepted by a control keybinding definition. */
+/** 🎬️ Action reference accepted by a control keybinding definition. */
 export interface ControlKeybindingAction {
   readonly action: string;
 }
 
-/** ⌨️ Application keybinding declaration merged into the control registry. */
+/** 📋️ Application keybinding declaration merged into the control registry. */
 export interface ControlKeybindingDefinition {
   readonly action: ControlKeybindingAction;
   readonly keys: string;
 }
 
-/** ⌨️ Opaque provider children rendered by the React adapter. */
+/** 🌳️ Opaque provider children rendered by the React adapter. */
 type UiKeybindingsProviderChildren = unknown;
 
-/** ⌨️ Props supplied to the control keybinding context provider. */
+/** ⚙️ Props supplied to the control keybinding context provider. */
 interface UiKeybindingsProviderProps {
   readonly bindings: ReadonlyMap<string, string>;
   readonly children: UiKeybindingsProviderChildren;
 }
 
-/** ⌨️ Callback invoked for a matched control keybinding. */
+/** 📞️ Callback invoked for a matched control keybinding. */
 export type ControlKeybindingCallback = () => void;
 
-/** ⌨️ Supported control-keybinding hook options. */
+/** 🎛️ Supported control-keybinding hook options. */
 export interface ControlKeybindingOptions {
   readonly enabled?: boolean;
   readonly enableOnFormTags?: boolean;
   readonly preventDefault?: boolean;
 }
 
-/** ⌨️ Dependency values that keep a control-keybinding callback current. */
+/** ⛓️ Dependency values that keep a control-keybinding callback current. */
 export type ControlKeybindingDependencies = ReadonlyArray<unknown>;
 
 interface OwnedHotkeyChord {
@@ -154,7 +154,7 @@ export function buildKeysByActionId(keybindings: readonly ControlKeybindingDefin
   return map;
 }
 
-/** ⌨️ Shell chrome control ids mapped to default chords.
+/** 🗺️ Shell chrome control ids mapped to default chords.
  *
  * Every row here is a FRAMEWORK verb, reachable through {@link useControlKeybinding}/`useActionHotkey`,
  * listed by the Settings → Keybindings tree and overridable per user — an app's own
@@ -204,7 +204,7 @@ export const SHELL_KEYBINDINGS: Readonly<Record<string, string>> = {
   "ui.timeTravel.exit": "alt+shift+backspace",
 };
 
-/** ⌨️ Merges shell defaults, app action bindings, and user overrides. */
+/** 🔀️ Merges shell defaults, app action bindings, and user overrides. */
 export function composeControlKeybindings(keysByActionId: ReadonlyMap<string, string>, overrides: Readonly<Record<string, string>>): ReadonlyMap<string, string> {
   const map = new Map<string, string>(Object.entries(SHELL_KEYBINDINGS));
   for (const [actionId, keys] of keysByActionId) {
@@ -220,18 +220,18 @@ const EMPTY_CONTROL_KEYBINDINGS = ephemeralMap<string, string>("framework.module
 
 const UiKeybindingsContext = reactHostPort.createContext<ReadonlyMap<string, string>>(EMPTY_CONTROL_KEYBINDINGS);
 
-/** ⌨️ Supplies merged control-id-to-chords bindings to a subtree. */
+/** 🏠️ Supplies merged control-id-to-chords bindings to a subtree. */
 export function UiKeybindingsProvider({ bindings, children }: UiKeybindingsProviderProps) {
   const content = children as React.ReactNode;
   return <UiKeybindingsContext.Provider value={bindings}>{content}</UiKeybindingsContext.Provider>;
 }
 
-/** ⌨️ Resolves the nearest control-id-to-chords binding map. */
+/** 🪝️ Resolves the nearest control-id-to-chords binding map. */
 export function useUiKeybindingsByControlId(): ReadonlyMap<string, string> {
   return reactHostPort.useContext(UiKeybindingsContext);
 }
 
-/** ⌨️ Resolves a raw chord string for a control id. */
+/** 🔎️ Resolves a raw chord string for a control id. */
 export function resolveControlKeybindingRaw(id: string | undefined, bindings: ReadonlyMap<string, string>): string | undefined {
   if (!id) return undefined;
   const direct = bindings.get(id);
@@ -241,7 +241,7 @@ export function resolveControlKeybindingRaw(id: string | undefined, bindings: Re
   return undefined;
 }
 
-/** ⌨️ Resolves a platform-formatted shortcut label for a control id. */
+/** 🔖️ Resolves a platform-formatted shortcut label for a control id. */
 export function useControlHotkey(id: string | undefined): string | undefined {
   const bindings = useUiKeybindingsByControlId();
   const raw = id
@@ -250,7 +250,7 @@ export function useControlHotkey(id: string | undefined): string | undefined {
   return raw ? formatKeybindingShortcut(raw) : undefined;
 }
 
-/** ⌨️ Binds the active chord for a control id. */
+/** 🪢️ Binds the active chord for a control id. */
 export function useControlKeybinding(controlId: string, callback: ControlKeybindingCallback, options?: ControlKeybindingOptions, dependencies?: ControlKeybindingDependencies): void {
   const bindings = useUiKeybindingsByControlId();
   const keys = reactHostPort.useMemo(() => resolveControlKeybindingRaw(controlId, bindings) ?? SHELL_KEYBINDINGS[controlId] ?? SHELL_KEYBINDINGS[resolveControlLabelId(controlId)], [bindings, controlId]);

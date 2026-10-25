@@ -3,7 +3,7 @@
 use super::*;
 
 //#region PngCodec
-/// 📤️ Encodes an 8-bit RGBA image as a minimal, spec-conformant PNG: IHDR (color type 6 / bit
+/// 📕️ Encodes an 8-bit RGBA image as a minimal, spec-conformant PNG: IHDR (color type 6 / bit
 /// depth 8 / interlace 0), one adaptively-filtered IDAT, IEND. No ancillary chunks — none of this
 /// crate's callers need gAMA/cHRM/sRGB/pHYs/tIME/bKGD/text metadata round-tripped.
 pub fn encode_png(image: &RasterImage) -> Result<Vec<u8>, RasterError> {
@@ -16,7 +16,7 @@ pub fn encode_png(image: &RasterImage) -> Result<Vec<u8>, RasterError> {
     Ok(assemble_png(image.width, image.height, 6, 8, &compressed))
 }
 
-/// 📤️ Encodes row-major big-endian 16-bit grayscale samples as a 16-bit grayscale PNG (color
+/// 🎨️ Encodes row-major big-endian 16-bit grayscale samples as a 16-bit grayscale PNG (color
 /// type 0), for lossless heightfield/DSM-style export.
 pub fn encode_png_gray16(width: u32, height: u32, samples: &[u16]) -> Result<Vec<u8>, RasterError> {
     let expected_len = (width as usize).checked_mul(height as usize).ok_or_else(|| RasterError::Codec("dimensions overflow".into()))?;

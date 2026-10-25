@@ -1,3 +1,4 @@
+use semio_framework_plugin_extension::describe::describe_plugin;
 use semio_framework::{IoEntryDescriptor, IoEntryDirection, PackageDescriptor};
 use semio_framework_os_kernel::io;
 

@@ -10,6 +10,7 @@ import schema from "./🧬️schema/🔣️.json";
 
 const subject=resolve(import.meta.dir,corpus.subject);
 const read=(path:string)=>ts.createSourceFile(path,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true);
+const origin=(path:string,symbol:string):string=>{const forward=read(path).statements.find((node):node is ts.ExportDeclaration=>ts.isExportDeclaration(node)&&!node.isTypeOnly&&node.moduleSpecifier!==undefined&&node.exportClause!==undefined&&ts.isNamedExports(node.exportClause)&&node.exportClause.elements.some(element=>element.name.text===symbol));return forward?origin(resolve(dirname(path),(forward.moduleSpecifier as ts.StringLiteral).text),symbol):path;};
 
 test("production cache retention imports only canonical evidence owners",()=>{
  const ajv=new Ajv({strict:false});
@@ -50,7 +51,7 @@ test("production cache retention imports only canonical evidence owners",()=>{
  for(const row of corpus.routes){
   const resolved=ts.resolveModuleName(row.owner,subject,{moduleResolution:ts.ModuleResolutionKind.Bundler,allowImportingTsExtensions:true},ts.sys).resolvedModule;
   expect(resolved?.resolvedFileName).toBe(resolve(dirname(subject),row.owner));
-  const declarations=read(resolved!.resolvedFileName).statements.filter((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===row.symbol);
+  const declarations=read(origin(resolved!.resolvedFileName,row.symbol)).statements.filter((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===row.symbol);
   expect(declarations).toHaveLength(1);
   expect(declarations[0]!.modifiers?.some(modifier=>modifier.kind===ts.SyntaxKind.ExportKeyword)).toBe(true);
  }

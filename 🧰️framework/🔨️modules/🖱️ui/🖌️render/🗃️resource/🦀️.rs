@@ -79,7 +79,7 @@ pub struct ResourceError {
 
 //#region Ops
 
-/// 📤️ One instruction for a backend to apply before it replays a [`crate::scene::RenderPacket`]. The
+/// 🎬️ One instruction for a backend to apply before it replays a [`crate::scene::RenderPacket`]. The
 /// registry decides *what* changed; a backend decides *how* to move bytes to a device — this crate
 /// never does the latter.
 #[derive(Clone, Debug, PartialEq)]
@@ -235,7 +235,7 @@ impl ResourceRegistry {
         self.textures.set_state(id, ResourceState::Failed(ResourceError { message: message.into() }))
     }
 
-    /// 🧨️ Retires `id` and queues [`ResourceOp::EvictTexture`]. A later request under the same key
+    /// 🪦️ Retires `id` and queues [`ResourceOp::EvictTexture`]. A later request under the same key
     /// allocates a fresh id — `id` itself never resolves again.
     pub fn evict_texture(&mut self, id: TextureId) {
         if self.textures.evict(id) {
@@ -265,7 +265,7 @@ impl ResourceRegistry {
         id
     }
 
-    /// ✅️ Marks an atlas resident and drops any still-queued upload for it — same invariant as
+    /// 🚩️ Marks an atlas resident and drops any still-queued upload for it — same invariant as
     /// [`Self::mark_texture_resident`].
     pub fn mark_atlas_resident(&mut self, id: AtlasId) -> bool {
         self.ops.retain(|op| !matches!(op, ResourceOp::UploadAtlas { id: queued, .. } if *queued == id));
@@ -292,7 +292,7 @@ impl ResourceRegistry {
         hash
     }
 
-    /// 📤️ Interns `key` content-versioned by [`Self::mesh_content_hash`] and queues
+    /// 🔑️ Interns `key` content-versioned by [`Self::mesh_content_hash`] and queues
     /// [`ResourceOp::CreateOrUpdateMesh`] on first sight of that exact content; an unchanged mesh
     /// resolves to the same id with no new op, exactly like the ported `MeshGpuTable::ensure_mesh`.
     pub fn request_mesh_upload(&mut self, key: &str, positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> MeshId {
@@ -306,7 +306,7 @@ impl ResourceRegistry {
         id
     }
 
-    /// ✅️ Marks a mesh resident and drops any still-queued upload for it — same invariant as
+    /// 📍️ Marks a mesh resident and drops any still-queued upload for it — same invariant as
     /// [`Self::mark_texture_resident`].
     pub fn mark_mesh_resident(&mut self, id: MeshId) -> bool {
         self.ops.retain(|op| !matches!(op, ResourceOp::CreateOrUpdateMesh { id: queued, .. } if *queued == id));

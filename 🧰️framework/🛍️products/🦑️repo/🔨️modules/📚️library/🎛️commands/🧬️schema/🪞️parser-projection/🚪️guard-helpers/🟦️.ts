@@ -3,13 +3,13 @@
  */
 
 //#region 🔖️GuardHelpers
-/** 🚪️ The region marker that opens the helper block of a projected file. */
+/** 🧱️ The region marker that opens the helper block of a projected file. */
 export const PARSER_REGION = "//#region 🚪️Parsers";
 
 /** 🔒️ The end marker of the helper block of a projected file. */
 export const PARSER_REGION_END = "//#endregion 🚪️Parsers";
 
-/** 🔒️ `<prefix>Closed`: refuses every property of an object that the schema does not declare, where the schema states `additionalProperties: false`. */
+/** 📕️ `<prefix>Closed`: refuses every property of an object that the schema does not declare, where the schema states `additionalProperties: false`. */
 export function closedHelper(helper: string): string {
   return `export const ${helper}Closed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
   for (const key of Object.keys(row)) if (!keys.includes(key)) ${helper}Reject(\`\${at}.\${key}\`, "unknown property");
@@ -18,7 +18,7 @@ export function closedHelper(helper: string): string {
 `;
 }
 
-/** 🔒️ Adds `<prefix>Closed` to the helper block of a file that predates it, in front of the array reader (or at the end of the block); a file that has it is returned as it is. */
+/** ➕️ Adds `<prefix>Closed` to the helper block of a file that predates it, in front of the array reader (or at the end of the block); a file that has it is returned as it is. */
 export function withClosedHelper(source: string, helper: string): string {
   if (new RegExp(`^export const ${helper}Closed\\b`, "m").test(source)) return source;
   const array = source.indexOf(`export const ${helper}Array`);
@@ -28,10 +28,10 @@ export function withClosedHelper(source: string, helper: string): string {
   return `${source.slice(0, at)}${closedHelper(helper)}${source.slice(at)}`;
 }
 
-/** 🚪️ The helper block for one guard prefix: `<prefix>Refusal`, `<prefix>Object`, `<prefix>Closed`, `<prefix>Array`, `<prefix>String`, `<prefix>Boolean`, `<prefix>Number`, `<prefix>Integer`, `<prefix>Member` and `<prefix>Constant`. */
+/** 🚧️ The helper block for one guard prefix: `<prefix>Refusal`, `<prefix>Object`, `<prefix>Closed`, `<prefix>Array`, `<prefix>String`, `<prefix>Boolean`, `<prefix>Number`, `<prefix>Integer`, `<prefix>Member` and `<prefix>Constant`. */
 export function helpersBlock(helper: string): string {
   return `//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every \`parse<Export>\` below rejects with. */
+/** 🛑️ Refusal of one instance position, the shape every \`parse<Export>\` below rejects with. */
 export class ${helper}Refusal extends Error {
   constructor(readonly at: string, readonly why: string) {
     super(\`\${at}: \${why}\`);

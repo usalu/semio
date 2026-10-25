@@ -424,25 +424,8 @@ impl semio_framework::ToolJobFactory for NoteCommandJobFactory {
         note_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: NOTE_RETAINED_RAW_BYTES, checkpoint_resume: true);
 
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > NOTE_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
-            return Err((ToolJobFactoryError::new("Note retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(match checkpoint {
-            Some(checkpoint) => ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
-            None => ArtifactRetainedCommandJob::from_wire(payload, input),
-        })
-    }
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for NoteCommandJobFactory {
@@ -457,43 +440,28 @@ pub fn register(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<NotePla
     registry.register(NoteCommandJobFactory::new(&controller))
 }
 
-pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-    if !NOTE_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-        return Ok(None);
+pub fn build(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    if !NOTE_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+        return Ok(false);
     }
-    if request.command.command_id() != request.tool_id {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "Note command does not match its exact registered tool"));
+    if original.command.command_id() != original.tool_id {
+        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Note command does not match its exact registered tool").into());
     }
-    let operation = AppOperationContext {
-        app_instance_id: request.app_instance_id,
-        parent_document_id: request.parent_document_id,
-        operation_id: request.operation.operation.0,
-        generation: request.operation.generation.0,
-        canonical_base_revision: request.canonical_base_revision,
-        retained: request.retained,
-        authoring_seed: request.authoring_seed.clone(),
-    };
-    let tool_id = request.command.command_id();
-    let work = Box::new(NoteCommandWork::new(tool_id, &request.command, &request.snapshot, &request.interaction_state, &operation)?);
-    let payload = ArtifactRetainedCommandPayload::new(
-        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-            command: *request.command,
-            snapshot: request.snapshot,
-            snapshot_read: request.snapshot_read,
-            config: request.config,
-            history: request.history,
-            interaction_state: request.interaction_state,
-            interaction_hover: request.interaction_hover,
-            context: Some(request.context),
-            operation,
-            completion: request.completion,
-        },
-        NoteCommand::command_id,
-        NOTE_RETAINED_RAW_BYTES,
-        NOTE_RETAINED_MAXIMUM_UNITS,
-        work,
-    );
-    Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    let tool_id = original.command.command_id();
+    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request, output, cx, NoteCommand::command_id, NOTE_RETAINED_RAW_BYTES, NOTE_RETAINED_MAXIMUM_UNITS, true, Default::default(), |request, _identity| {
+        let operation = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
+            authoring_seed: request.authoring_seed.clone(),
+        };
+        let work = NoteCommandWork::new(tool_id, &request.command, &request.snapshot, &request.interaction_state, &operation).map_err(|fault| semio_framework_plugin::__value::ValueError::new(semio_framework_plugin::__value::ValueRefusalKind::InvalidValue, fault.message.to_string()))?;
+        Ok((work, Default::default()))
+    })
 }
 //#endregion 🏭️Factory
 
@@ -502,7 +470,7 @@ pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Re
 /// the bespoke root-scalar factory admitted only grid mutations, so `addBlock`/`inkApplyEvents`/`patchBlocks`
 /// failed `admits only exact retained root-scalar mutations` in the running app.
 pub fn artifact_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<NoteSnapshot, crate::op::NoteMutation>> {
-    store::mutation_apply_preparation_factory::<NoteSnapshot, crate::op::NoteMutation>()
+    store::cold_mutation_apply_preparation_factory::<NoteSnapshot, crate::op::NoteMutation>()
 }
 
 //#endregion 📬️StorePreparation

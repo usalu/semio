@@ -9,7 +9,7 @@ const base=join(import.meta.dir,"..");
 const fixture=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
 const varint=(value:bigint)=>{const bytes=[];do{const byte=Number(value&127n);value>>=7n;bytes.push(byte|(value?128:0));}while(value);return Buffer.from(bytes);};
 test("original arithmetic expression corpus matches independent Buffer UTF8 and mathjs evaluation",()=>{
- const rows=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🧮️expression/🔣️.json"),"utf8"));for(const row of rows.cases){const bytes=Buffer.from(row.text);const body=Buffer.concat([Buffer.from([0,1,rows.fieldId,rows.tag,rows.inlineTag]),varint(BigInt(bytes.length)),bytes]);expect(body.toString("hex")).toBe(row.bodyHex);if(row.value!==undefined)expect(parseMath(row.text).compile().evaluate(row.scope??{})).toBe(row.value);}console.log(`[DEBUG] independent Buffer and mathjs verified${rows.cases.length}original expression grammar vectors`);
+ const rows=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🧮️expression/🔣️.json"),"utf8"));for(const row of rows.cases){const bytes=Buffer.from(row.text);const body=Buffer.concat([Buffer.from([0,1,rows.fieldId,rows.tag,rows.inlineTag]),varint(BigInt(bytes.length)),bytes]);expect(body.toString("hex")).toBe(row.bodyHex);if(row.value!==undefined)expect(parseMath(row.text).compile().evaluate(row.scope??{})).toBe(row.value);}
 });
 const text=(node:any)=>node.value.repeat(node.repeat??1);
 const symbols=(node:any,counts:Map<string,number>,forced:Set<string>,force=false)=>{

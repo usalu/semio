@@ -49,7 +49,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<SemioModelSnapshot, Op> for ScaleElements
 where
-    Op: protocol::ColdMutation<SemioModelSnapshot, ReferenceDiff = SemioModelDiff> + From<ScaleElements>,
+    Op: protocol::ColdMutation<SemioModelSnapshot, ReferenceDiff = SemioModelDiff> + From<ScaleElements> + From<crate::schema::mutations::set_element::SetElement>,
 {
     fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
         if !self.admissible() {

@@ -8,7 +8,7 @@ import { policyExtractTypescriptSchemaFields } from "../../../🧬️schema/🔍
 import { policyExtractTypescriptSchemaFile } from "../../../🧬️schema/🔍️field-discovery/🟦️typescript/📂️module-resolution/🟦️.ts";
 import { abstractionOwnershipSchema, abstractionOwnershipViolations, type AbstractionOwnership } from "../🧱️contract/🟦️.ts";
 import { abstractionOwnershipRustCommands, abstractionOwnershipSchemaFields } from "../🔍️source-projection/🟦️.ts";
-import { TranspilerV1 } from "../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
 
 /** 🧪️ Compares language-independent ownership vectors with Ajv and real schema representations. */
 export function abstractionOwnershipChecks(root: string, operations: PolicySourceOperations = POLICY_SOURCE_OPERATIONS): number {

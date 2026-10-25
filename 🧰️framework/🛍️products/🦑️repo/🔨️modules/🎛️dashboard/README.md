@@ -36,7 +36,7 @@ prints the executable path for direct native invocation.
 
 The first view immediately shows task controls. Dark appearance, native terminology,
 React and tabbed output are opinionated defaults; the language is the one the system names (`LC_ALL`,
-`LC_MESSAGES`, `LANG`). When no supported system or explicit preference resolves a language, startup shows English and Deutsch with no selected choice. Select and confirm a language to publish a preference event; cancellation exits without creating one. The choices and bilingual prompt are authored in `⚙️preferences/🌐️language/🔣️.json`. Command discovery
+`LC_MESSAGES`, `LANG`). When no supported system or explicit preference resolves a language, startup shows English and Deutsch with no selected choice. Select and confirm a language to publish a preference event; cancellation exits without creating one. The choices and bilingual prompt are authored in `⚙️preferences/🌐️language/🔣️.json`. The language the dashboard speaks is the language of every task it starts: the TUI and `repo dashboard run` hand it to the task as `SEMIO_LANGUAGE` (the variable the repo CLI reads before every system setting), never a default while no language is chosen, and two dashboards of different languages still share one running task. Command discovery
 and daemon connection run in the background. Choose New Task and type search terms to select a
 dev server, build, test, renderer or example directly. Settings are optional and persistent.
 A selection made while the workspace daemon connects remains pending and can be cancelled with
@@ -390,8 +390,8 @@ content hash), `🧾️launch` (the launch contract), `🏛️repo-domain` (the 
 `📚️inventory` (reads the sources, keeps the snapshot, runs the background discovery; it also mounts `🌳️command-tree`, the registry
 projected as launcher rows and wizard steps, and runs the laws of the registry through a real discovery), `🌀️daemon/🧵️wire` (the frames,
 the transport, readiness, replay, journal, lease and `📎️connection`), `🌀️daemon` (the views, groups, supervisor, control surface and
-lifecycle), `⚙️preferences`, `🖥️terminal/🌐️labels` (every string, the tab texts and the window titles), `🖥️terminal` (the launcher, windows,
-panes, sessions and controls) and `🧭️cli` (the verbs above). The package of `📦️packages/🦀️rust` keeps the dispatch of `semio`,
+lifecycle), `⚙️preferences`, `🖥️terminal/🌐️labels` (every string, the tab texts and the window titles), `🖥️terminal/🌐️language-choice` (the explicit first-run language screen), `🖥️terminal` (the launcher, windows,
+panes, sessions and controls; its laws are the crate `🖥️terminal/🧪️tests/🏛️laws`, which drives the view through the `testkit` feature) and `🧭️cli` (the verbs above). The package of `📦️packages/🦀️rust` keeps the dispatch of `semio`,
 `📇️playground-catalog`, `🔌️plugin-registry`, `⌨️usage`, the `🌀️daemon/⌨️command` verb and `🚪️entrypoint`.
 
 ## 🧪️ Tests
@@ -429,3 +429,44 @@ The test bridge captures its process search path before Cargo adds test DLL path
 
 Shared preference and launcher fixtures are checked by Rust, existing Ajv and independent
 JavaScript projections. Native first-frame timing is measured through an actual pseudo-terminal.
+
+## 🇩🇪️ Deutsch
+
+### Entwicklerkonsole
+
+Das Dashboard ist die einzige Steuerungsebene für menschliche Entwickler. Alles Ausführbare ist ein Registerbefehl; die interaktive Ansicht und ihr nativer Kommandozeilenclient starten Befehle auf demselben Weg über denselben Workspace-Daemon, sodass ein in der einen gestarteter Task der Task ist, den die andere zeigt. Mit **New Task** wählt man einen deklarierten Befehl, füllt sein typisiertes Formular aus und prüft die Vorschau vor dem Start.
+
+Start mit `repo dashboard`; es baut und installiert bei Bedarf die native Programmdatei `semio`. Der erste Start baut und installiert sie einmal sichtbar und abbrechbar (`Ctrl+C`); danach prüft der Start nur noch den Quellen-Digest der Installation. Weicht er ab, wird mit sichtbarem Fortschritt neu gebaut und der Grund genannt; ein fehlgeschlagener oder abgebrochener Neubau stoppt den Start, außer bei den Verben, die nur beobachten oder Laufendes beenden (`tasks`, `logs`, `stop`, `kill`, `open`, `daemon stop`, `daemon status`). `repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream` veröffentlicht auf Abruf neu und gibt den Pfad der Programmdatei aus.
+
+Die Sprache ist die vom System genannte (`LC_ALL`, `LC_MESSAGES`, `LANG`). Löst weder System noch ausdrückliche Einstellung eine unterstützte Sprache auf, zeigt der Start Englisch und Deutsch ohne vorgewählte Auswahl; erst die bestätigte Auswahl veröffentlicht ein Einstellungsereignis, ein Abbruch beendet das Programm ohne eines. Die Sprache des Dashboards ist die Sprache jedes Tasks, den es startet (`SEMIO_LANGUAGE`). Ein bereiter Task bietet **Open ready address** (`Ctrl+B u`; `Ctrl+B U` bricht das Öffnen ab).
+
+### Kommandozeile
+
+Menschen nutzen `repo dashboard [Argumente]` für Register, Daemon und Ansicht; ohne Argumente öffnet sich die interaktive Ansicht, `repo dashboard --help` zeigt die Hilfe. Agenten nutzen deklarierte Owner-Tests und Befehle über `repo run` und starten `repo dashboard` nie.
+
+| Verb | Wirkung |
+| --- | --- |
+| `repo dashboard commands [Wörter…] [--json] [--all] [--check]` | Register auflisten oder durchsuchen; `--check` prüft jede Deklaration und Referenz |
+| `repo dashboard run <id> [--param k=v\|flag]… [--env K=V]… [--detach] [--wait-ready] [--dry-run] [-- Argumente…]` | einen Befehl als Daemon-Task starten |
+| `repo dashboard tasks [--json]` | die Tasks des Daemons auflisten |
+| `repo dashboard logs <task> [--follow]` | die Ausgabe eines Tasks ausgeben, optional weiterverfolgen |
+| `repo dashboard stop\|restart\|kill <task>` | einen Task steuern und warten, bis er den Zustand verlassen hat |
+| `repo dashboard open <task>` | die bereite Adresse eines Tasks im System-Browser öffnen |
+| `repo dashboard daemon start\|status\|stop\|attach\|serve` | den Workspace-Daemon verwalten |
+| `repo dashboard preferences show\|set` | Einstellungen lesen oder festhalten |
+| `repo dashboard catalog`, `repo dashboard command-tree` | Playground-Katalog und Befehlsbaum ausgeben |
+
+`run` streamt angehängt die Ausgabe des letzten Prozesses und endet mit dessen Exit-Code (Ctrl-C lässt den Task weiterlaufen); `--detach` kehrt zurück, sobald der Daemon den Start angenommen hat; `--wait-ready` kehrt zurück, sobald jeder Prozess mit deklarierter Bereitschaft seine Adresse ausgegeben hat; `--dry-run` gibt den aufgelösten Start als JSON aus und startet nichts. Ein bereits laufender Task desselben Befehls wird wiederverwendet. Ein Task hat ein Handle, seine Sitzungs-ID, die `run`, `tasks`, `logs`, `stop`, `restart`, `kill` und `open` ausgeben und annehmen. Eine nicht erlaubte Auswahl endet mit Status 2 und nennt das Problem auf stderr. Automatisierte Tests starten Server mit `repo run @semio-tech/repo-dashboard-rs:run --output=stream -- run <id> --detach --wait-ready`.
+
+### Tests
+
+Alle Prüfungen laufen als Targets des Projekts `@semio-tech/repo-dashboard-rs` über den werkzeugneutralen Build-Einstieg; im Dashboard unter **New Task** wählbar:
+
+```bash
+repo run @semio-tech/repo-dashboard-rs:test -- quick
+repo run @semio-tech/repo-dashboard-rs:test-execution
+repo run @semio-tech/repo-dashboard-rs:test-journeys
+repo run @semio-tech/repo-dashboard-rs:test-smoke
+```
+
+`test` baut die Debug-Programmdatei und führt die Register-, Kontrollebenen- und Protokollfälle aus (`-- quick` enthält echte Bun-PTYs, Abbruch, Neustart, Prozessbaum-Beendigung, Singleton und Wiederanbindung). `test-execution` prüft die nativen Startvektoren und den Quellen-Digest der Installation. `test-journeys` prüft nativen Start, Anhängen/Lösen und den Launcher, `test-smoke` den Build- und Dienst-Lebenszyklus; beide bauen die Programmdatei selbst und wählen sie aus. Jeder Fall ist ein `🥒️.feature` mit einem Adapter je Implementierung; `SEMIO_TEST_ARTIFACT_DIR` hält temporäre Fixture-Workspaces im generierten Verzeichnis des Tickets.

@@ -242,7 +242,7 @@ fn drive(ui: &mut Ui, window_id: &str, body: Rect, atlas: &mut FontAtlas) {
     panic!("{window_id}: retained paint never completed, parked in {:?} with {} targets", ui.paint_frame_phase(window_id), ui.window_hit_targets(window_id).len());
 }
 
-/// 🎯️ The registry a host actually scans: the window's own `ScrollRegion` first (the chrome
+/// 📚️ The registry a host actually scans: the window's own `ScrollRegion` first (the chrome
 /// registers it before the body paints), then every entry the body published.
 fn load_registry(ui: &Ui, window_id: &str, body: Rect) -> InputState<ActionDescriptor> {
     let mut input = InputState::<ActionDescriptor>::default();
@@ -265,7 +265,7 @@ fn mount(case: &Value) -> (Ui, InputState<ActionDescriptor>, String, Rect) {
     (ui, input, window_id, body)
 }
 
-/// 🎯️ One replay over the whole oracle: every case's authored document is mounted, laid out and
+/// 🧫️ One replay over the whole oracle: every case's authored document is mounted, laid out and
 /// painted by the REAL pipeline, its registry is compared entry by entry against the fixture, every
 /// fixture point is resolved on that registry, and the ordering rule is checked on the same load.
 ///
@@ -341,7 +341,7 @@ fn the_defect_point_no_longer_answers_the_window() {
     assert_eq!(hit.event.as_ref().map(|action| action.action.as_str()), Some("addGeneration"));
 }
 
-/// 🎯️ The oracle's own registry for one case, loaded straight from its declared entries instead of
+/// 📋️ The oracle's own registry for one case, loaded straight from its declared entries instead of
 /// from a live `Ui`. The buffering law is about WHEN an entry is resolvable, not about how it is
 /// minted — the replay above owns that, against the real pipeline — and `Ui`'s layout surface slots
 /// are a fixed process-wide aggregate, so a third live mount in this binary would starve itself.
@@ -364,7 +364,7 @@ fn fixture_registry(case: &Value) -> Vec<HitTarget<ActionDescriptor>> {
     targets
 }
 
-/// 🩸️ LAW: a frame build never empties what the pointer reads.
+/// 🔒️ LAW: a frame build never empties what the pointer reads.
 ///
 /// The whole production cycle is replayed on the REAL `InputState`: `FrameBuildPhase::InputFrame`
 /// retires the previous generation one entry per boundary step, the chrome walk re-mints the next

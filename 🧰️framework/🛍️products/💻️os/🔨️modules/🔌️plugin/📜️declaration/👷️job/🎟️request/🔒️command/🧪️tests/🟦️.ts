@@ -19,5 +19,4 @@ test("sealed original command wire accounts for wrapper bytes and rejects donor 
  const owner=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");
  for(const required of ["pub struct ArtifactOriginalToolCommand","pub(crate) fn from_admitted_op_binary","pub fn admitted_encoded_bytes","first_page","source_binding.matches(cx)","impl<C> std::ops::Deref","impl<C:semio_framework_value::retirement::RetireOwned>"])expect(owner).toContain(required);
  expect(owner).not.toContain("DerefMut");expect(owner).not.toContain("#[derive(Clone");
- console.log("[DEBUG] Four original command encodings and sixteen exact-limit/source-substitution laws match independent Buffer/UTF-8/JSONPatch oracles; source API is immutable");
 });

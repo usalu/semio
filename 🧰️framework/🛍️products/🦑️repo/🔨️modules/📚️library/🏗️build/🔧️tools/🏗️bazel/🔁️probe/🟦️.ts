@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
-import type {CacheProbeInputV1,CacheProbeSpecV1,CacheProbeTargetV1,CacheProbeToolV1} from "../../../⚙️operations/🟦️.ts";
+import type { CacheProbeInputV1, CacheProbeSpecV1, CacheProbeTargetV1, CacheProbeToolV1 } from "../../../⚙️operations/📋️contract/🟦️.ts";
 
 /** 🔬️ What the Bazel side of the cache probe needs from the provisioned tool: the executable, its install base and the fixed module catalogue. */
 export type BazelProbeOptionsV1=Readonly<{version:string;executable:string;installBase:string;module:string;lock:string;repository:string}>;
@@ -31,7 +31,7 @@ export const bazelProbeInputNameV1=(leaf:BazelProbeLeafV1):string=>"inputs/i-"+s
 /** 🆔️ The ASCII scratch workspace of one fixture instance: Bazel never sees the fixture path as a label or a workspace root, and a recreated fixture starts from a cold action cache. */
 export const bazelProbeWorkspaceV1=(fixture:string,instance:string,base:string=tmpdir()):string=>join(base,bazelProbeWorkspacePrefixV1(fixture)+sha(instance).slice(0,8));
 
-/** 🏷️ The name prefix that groups every instance of one fixture path, so stale scratch workspaces of that path can be swept. */
+/** 🧫️ The name prefix that groups every instance of one fixture path, so stale scratch workspaces of that path can be swept. */
 export const bazelProbeWorkspacePrefixV1=(fixture:string):string=>"semio-bzl-probe-"+sha(fixture).slice(0,8)+"-";
 
 const quote=(value:string)=>"'"+value.replaceAll("'","'\\''")+"'";

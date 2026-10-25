@@ -56,7 +56,7 @@ jobs:
         env:
           SEMIO_TEST_ARTIFACT_DIR: ${{ runner.temp }}/dashboard-artifacts
           SEMIO_BUILD_TEST_RESULTS_DIR: ${{ runner.temp }}/dashboard-results
-        run: repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-repo-dashboard-preferences -p semio-framework-repo-dashboard-terminal --lib language -- --nocapture --test-threads=1
+        run: repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml --locked -p semio-framework-repo-dashboard-preferences -p semio-framework-repo-dashboard-language-choice -p semio-framework-repo-dashboard-terminal-laws --lib language -- --nocapture --test-threads=1
       - name: Canonical Cold Lazy Launch
         id: canonical-cold-lazy-launch
         env:

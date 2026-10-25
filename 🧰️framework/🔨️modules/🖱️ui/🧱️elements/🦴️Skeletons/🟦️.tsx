@@ -21,7 +21,7 @@ import { SceneSkeleton } from "../🎬️Scene/🟦️.tsx";
 /** 🦴 Shared pulse fill for declarative and chrome skeleton placeholders. */
 export const skeletonPulseClass = "animate-pulse rounded bg-muted-foreground/20 motion-reduce:animate-none";
 
-/** 🦴 One rectangular skeleton block. */
+/** 🧱️ One rectangular skeleton block. */
 export const SkeletonBlock: React.FC<{ className?: string }> = ({ className = "" }) => <div className={cn(skeletonPulseClass, className)} aria-hidden />;
 
 const SkeletonLoadingRow: React.FC<{ readonly name: string }> = ({ name }) => (
@@ -51,7 +51,7 @@ export type ElementSkeletonKind =
   | "componentScene"
   | "externalSlot";
 
-/** 🦴 Picks a skeleton placeholder for a declarative {@link UiNode} kind. */
+/** ⚒️ Picks a skeleton placeholder for a declarative {@link UiNode} kind. */
 export function elementSkeleton(kind: ElementSkeletonKind): React.ReactElement {
   switch (kind) {
     case "text":
@@ -114,7 +114,7 @@ export function elementSkeleton(kind: ElementSkeletonKind): React.ReactElement {
   }
 }
 
-/** 🦴 Mimics a mode-dock window body while plugin UI is still loading. */
+/** 🪟️ Mimics a mode-dock window body while plugin UI is still loading. */
 export const WindowBodySkeleton: React.FC<{ className?: string }> = ({ className = "" }) => (
   <div className={cn("flex h-full min-h-0 w-full flex-col gap-double p-double", className)} role="status" aria-busy="true">
     <SkeletonBlock className="h-4 w-48" />
@@ -122,7 +122,7 @@ export const WindowBodySkeleton: React.FC<{ className?: string }> = ({ className
   </div>
 );
 
-/** 🦴 Panel tree placeholder while a tab body is refreshing. */
+/** 🌳️ Panel tree placeholder while a tab body is refreshing. */
 export const PanelTreeSkeleton: React.FC<{ className?: string }> = ({ className = "" }) => (
   <div className={cn("flex flex-col gap-single p-single w-full", className)} role="status" aria-busy="true">
     <SkeletonLoadingRow name="…" />
@@ -158,7 +158,7 @@ const CanvasSkeletonWindow: React.FC<{ active?: boolean }> = ({ active = false }
   </SurfaceScope>
 );
 
-/** 🦴 Full canvas placeholder while the primary plugin session boots — two even mode-dock windows with U-cutout silhouettes. */
+/** 🚀️ Full canvas placeholder while the primary plugin session boots — two even mode-dock windows with U-cutout silhouettes. */
 export const CanvasSkeleton: React.FC<{ className?: string; label?: string }> = ({ className = "", label }) => {
   const parent = useSurface();
   const floorClass = shellFloorFillClass(parent);

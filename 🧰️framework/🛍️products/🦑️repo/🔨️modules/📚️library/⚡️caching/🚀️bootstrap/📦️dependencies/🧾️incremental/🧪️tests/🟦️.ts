@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import {javascriptInstallSchemaV1 as materializedInstallSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {chmodSync,existsSync,linkSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,renameSync,rmSync,statSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
@@ -17,7 +17,7 @@ import {javascriptInstallSchemaV1 as installSchema} from "../../💾️storage/�
 
 const protocol=core.incrementalProtocolV1,idle={check:()=>{},tick:async()=>{}};
 const recipeBackends=()=>(installSchema.$defs.ProducerRecipeProtocol.const as unknown as {backends:Record<string,string>}).backends;
-const oracle=(args:string[],input?:string,raw=false):any=>{const run=spawnSync(testPythonV1()??"python3",["-I",fileURLToPath(new URL("./🐍️oracle.py",import.meta.url)),...args],{encoding:"utf8",input,maxBuffer:1<<28});if(run.status!==0)throw Error("oracle failed: "+run.stderr);return raw?run.stdout.trim():JSON.parse(run.stdout);};
+const oracle=(args:string[],input?:string,raw=false):any=>{const run=spawnSync(testPythonV1()??"python3",["-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),...args],{encoding:"utf8",input,maxBuffer:1<<28});if(run.status!==0)throw Error("oracle failed: "+run.stderr);return raw?run.stdout.trim():JSON.parse(run.stdout);};
 const scratch=()=>realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"inc-")));
 const sleep=(ms:number)=>new Promise<void>(accept=>setTimeout(accept,ms));
 type Mutation={op:string;path:string;text?:string;target?:string;mode?:number};
@@ -202,7 +202,7 @@ test("incremental recipe law: the producer installs by clone or copy on every pl
  expect(source).toContain('backend==="hardlink")throw Error("Supported non-linking Bun install backend required")');
 });
 
-/** 🔗️ Walks every tracked package and project manifest of the checkout and requires a single name each, exactly like the Source revision reader, against the independent Python walk. */
+/** 🆔️ Walks every tracked package and project manifest of the checkout and requires a single name each, exactly like the Source revision reader, against the independent Python walk. */
 test("incremental tracked manifests carry exactly one name",()=>{
  const root=spawnSync("git",["-C",dirname(fileURLToPath(import.meta.url)),"rev-parse","--show-toplevel"],{encoding:"utf8"});
  if(root.status!==0)return;
@@ -279,7 +279,7 @@ test("incremental receipts survive the Store writer, supersede cleanly and retir
 
 /** 🧱️ Executes the patched installed-paths scan itself with a ledger sink and requires its rows and shape to equal the independent Python walk. */
 test("incremental scan ledger: the production scan emits the rows of the Python walk",async()=>{
- const{withBuildTestInvocationV1}=await import("../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts"),ts=await import("typescript"),routing=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),leases=await import("../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts"),descriptors=await import("@semio-tech/framework-filesystem/observation/descriptor");
+ const{withBuildTestInvocationV1}=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts"),ts=await import("typescript"),routing=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),leases=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),descriptors=await import("@semio-tech/framework-filesystem/observation/descriptor");
  const path=new URL("../../💾️storage/🟦️.ts",import.meta.url),source=readFileSync(path,"utf8"),tree=ts.createSourceFile(path.pathname,source,ts.ScriptTarget.Latest,true),fn=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="scanJavascriptDependencyInstalledPathsV1");
  expect(fn).toBeDefined();
  const code=ts.transpileModule(fn!.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,scan=new Function("installSchema","createHash","lstatSync","withArtifactReadDirectoryV1","join","requireIssuedResourceControlV1","checkResourceLeaseControl",code+";return scanJavascriptDependencyInstalledPathsV1;")(installSchema,createHash,lstatSync,descriptors.withArtifactReadDirectoryV1,join,routing.requireIssuedResourceControlV1,leases.checkResourceLeaseControl)as (root:string,control:unknown,check:()=>void,sink?:unknown)=>Promise<{entries:number;directories:number;files:number;links:number}>;

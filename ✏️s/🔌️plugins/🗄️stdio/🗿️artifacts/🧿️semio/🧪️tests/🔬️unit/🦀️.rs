@@ -1,7 +1,7 @@
 use super::*;
 use ::semio_framework_os_kernel::os_store::document_store_owners::MemberStoreProducer as _;
 use semio_framework_test_fixtures::fixture_text;
-use {semio_framework_artifact_reference::ArtifactDialect,crate::dsl::ArtifactPack,crate::dsl::SpaceMember};
+use {semio_framework_artifact_reference::ArtifactDialect,crate::dsl::ArtifactPack,crate::dsl::SpaceMember,crate::dsl::ReferenceSpaceMember};
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_s_artifact_stdio_semio_base::SemioSnapshotRetirementFactory;
@@ -161,7 +161,7 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
         semio_framework_plugin::with_authoring_identity!(|identity| store.apply_one(store.generation(), SemioValueMutation::SetValue(SetValue { path: Vec::new(), value: SemioValue::Str { value: step.into() } }), dsl::os_store::store_schema::HistoryLane::Document, &mut identity).await).expect("one-item commit");
     }
 
-    semio_framework_plugin::with_authoring_identity!(|identity| SpaceMember::undo(&mut store, &mut identity).await).expect("derived undo of the last commit");
+    semio_framework_plugin::with_authoring_identity!(|identity| ReferenceSpaceMember::undo(&mut store, &mut identity).await).expect("derived undo of the last commit");
 
     let outstanding = store.snapshot_read().expect("third snapshot read lease");
     assert!(store.close_owned_phase_witness().starts_with("semio/ReturnedLeases/"), "the close cursor must open on the lease registry, got {}", store.close_owned_phase_witness());

@@ -9,6 +9,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { loadTaxonomy, validateTaxonomy, validateGeneratorContractsAgainstWorkspace } from "../../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { generatorBuildPreviewCommand } from "../../../../🔍️discovery/🛠️generator-commands/🟦️.ts";
 import { type Taxonomy } from "../../../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
@@ -106,11 +107,11 @@ export function registerRequiresOwnedGeneratorExposeTests(): void {
       const invocations: unknown[] = [];
       const invoke = new Function("buildTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "repo:script", options: { cwd, command } }), requireRecord, generatorPreviewExecution, (generatorPreviewResourceLimits), (await import("../../../../🏭️generator/👁️preview/📈️progress/🟦️.ts")).receiveGeneratorPreviewProgressV1, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
       invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] });
-      expect(invocations).toMatchObject([{ executable: "bun", args: ["./📜️script.ts", "browser", "preview"], options: { cwd: "/neutral/compiler", maxBuffer: 268435456, timeout: 240000 } }]);
+      expect(invocations).toMatchObject([{ executable: runtimeExecutableV1(), args: ["./📜️script.ts", "browser", "preview"], options: { cwd: "/neutral/compiler", maxBuffer: 268435456, timeout: 240000 } }]);
       command = fixture.ownerExecutionRoutes.find((row: { id: string }) => row.id === "native-owner").command.replace("preview-generated", "browser preview");
       cwd = ".";
       invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] });
-      expect(invocations[1]).toMatchObject({ executable: "bun", args: command.split(" ").slice(1), options: { cwd: "/neutral", maxBuffer: 268435456, timeout: 240000 } });
+      expect(invocations[1]).toMatchObject({ executable: runtimeExecutableV1(), args: command.split(" ").slice(1), options: { cwd: "/neutral", maxBuffer: 268435456, timeout: 240000 } });
       command = "repo ./📜️script.ts preview-generated";
       expect(() => invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] })).toThrow("exact owner JSON preview");
       expect(invocations).toHaveLength(2);
@@ -144,9 +145,10 @@ export function registerRequiresOwnedGeneratorExposeTests(): void {
       if (!row.valid) expect(() => discovery.generatorPreviewExecution(contract, target)).toThrow("exact owner JSON preview");
       else {
         const route = discovery.generatorPreviewExecution(contract, target);
-        expect([route.command, ...route.args].join(" "), row.id).toBe(row.command);
+        expect(route.command, row.id).toBe(runtimeExecutableV1());
+        expect(["repo", ...route.args].join(" "), row.id).toBe(row.command);
         expect(route.cwd, row.id).toBe(row.cwd);
-        expect(parseArgv([route.command, ...route.args], { configuration: { "populate--": true, "camel-case-expansion": false, "parse-numbers": false } }), row.id).toEqual(parseArgv(row.command, { configuration: { "populate--": true, "camel-case-expansion": false, "parse-numbers": false } }));
+        expect(parseArgv(["repo", ...route.args], { configuration: { "populate--": true, "camel-case-expansion": false, "parse-numbers": false } }), row.id).toEqual(parseArgv(row.command, { configuration: { "populate--": true, "camel-case-expansion": false, "parse-numbers": false } }));
       }
     }
   });

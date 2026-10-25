@@ -24,7 +24,7 @@ class CheckUiPrimitivesScript extends BundleScript {
   }
 }
 
-/** 🚫️ Fails when a scanned chrome file has an untranslated-English hit outside the allowlist, or when the
+/** ✅️ Fails when a scanned chrome file has an untranslated-English hit outside the allowlist, or when the
  * allowlist carries a stale entry for a file that no longer has any hits. */
 class CheckChromeI18nScript extends BundleScript {
   async run(): Promise<void> {

@@ -1,6 +1,7 @@
 //! 🧪️ Unit 1 of the facade test host of `reactor-core`: out of line because its `#[path]` mounts must not pass through a module directory that does not exist.
 
 use semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE;
+use semio_framework_plugin_reactor_core::{admit_package_assets,reconcile_step_opportunities,terminal_command_ingress,REACTOR_TIMER_SLOTS,RECONCILE_STEP_OPPORTUNITY_LIMIT};
 use semio_framework::kernel::Effect;
 use semio_framework::kernel::Event;
 use semio_framework_plugin_reactor_tasks::INSTANCE_METADATA;

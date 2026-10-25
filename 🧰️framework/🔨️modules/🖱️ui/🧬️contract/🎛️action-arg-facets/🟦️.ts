@@ -1,10 +1,10 @@
-/** 🎛️ The number facets of an action argument as the UI contract needs them: the one mapping every renderer shares, projected from the manifest's argument definition. */
+/** 🌐️ The number facets of an action argument as the UI contract needs them: the one mapping every renderer shares, projected from the manifest's argument definition. */
 import { type ShellLocale } from "@semio-tech/framework-manifest/generated/ui-axes";
 import { argControl, type ActionArgDef } from "../../../🛂️manifest/🎬️action-types-and-semantics/🟦️.ts";
 import type { SliderAppearance, UiNumberBound, UiNumberLimits, UiNumberScale } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplayText } from "../🧩️component/🟦️.ts";
 
-/** 🎛️ The UI-contract number facets of one input — the Rust `ActionArgNumberFacets` twin, the single mapping every renderer
+/** 🔢️ The UI-contract number facets of one input — the Rust `ActionArgNumberFacets` twin, the single mapping every renderer
  * of an `ActionArgDef` shares: key range (a slider's or dial's travel; a stepper's, number field's or vector axis' hard
  * bounds, an excluded bound absent), step, look, axis, unit symbols, display factor, precision, the admitted detents and
  * the schema's hard limits with refusals naming the bound in display units. Fixture `🧫️fixtures/🧫️number-facets`. */

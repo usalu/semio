@@ -1,6 +1,6 @@
-/** 📌️ Pinned generation laws over `./🧫️fixtures/🔣️.json`: a receipt holds exactly while the three graph files and every identity file are unchanged and the claim is the same, every receipt satisfies `../🧬️schema/🔣️.json` (Ajv, third party) and the identity digest equals an independent Python hashlib model (`./🐍️oracle.py`). */
+/** 📌️ Pinned generation laws over `./🧫️fixtures/🔣️.json`: a receipt holds exactly while the three graph files and every identity file are unchanged and the claim is the same, every receipt satisfies `../🧬️schema/🔣️.json` (Ajv, third party) and the identity digest equals an independent Python hashlib model (`./🐍️.py`). */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {appendFileSync,linkSync,mkdirSync,mkdtempSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -24,7 +24,7 @@ function build():{root:string;data:string;environment:Record<string,string>}{
 test("identity digest equals the independent model",async()=>{
  const {root}=build();
  try{
-  const model=spawnSync(testPythonV1()??"python3",["-I",resolve(import.meta.dir,"./🐍️oracle.py"),root,resolve(import.meta.dir,"./🧫️fixtures/🔣️.json")],{encoding:"utf8"});
+  const model=spawnSync(testPythonV1()??"python3",["-I",resolve(import.meta.dir,"./🐍️.py"),root,resolve(import.meta.dir,"./🧫️fixtures/🔣️.json")],{encoding:"utf8"});
   expect(model.error).toBeUndefined();expect(model.status).toBe(0);
   expect(await nxGenerationIdentityV1(root)).toBe(model.stdout.trim());
  }finally{rmSync(root,{recursive:true,force:true});}

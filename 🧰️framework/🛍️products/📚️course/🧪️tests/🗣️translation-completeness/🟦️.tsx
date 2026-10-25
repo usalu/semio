@@ -3,11 +3,11 @@
  * both used by the client and the only kind of key the client uses.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { REJECTIONS, TASK_KINDS } from "@semio-tech/course";
 import { quizStylesheet } from "@semio-tech/course-react/stylesheet";
 import { resolveUiLabel, uiI18n } from "@semio-tech/ui-react/i18n";
-import { COURSE_BUNDLE_DE, COURSE_BUNDLE_EN, COURSE_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, preferredLocale, courseText, type CourseLabelKey } from "@semio-tech/course-react";
+import { COURSE_BUNDLE_DE, COURSE_BUNDLE_EN, COURSE_LANGUAGE_ANCHOR, COURSE_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, preferredLocale, courseText, type CourseLabelKey } from "@semio-tech/course-react";
 
 type Leaf = { readonly label: { readonly normal: string; readonly beginner: string } };
 
@@ -32,6 +32,25 @@ const english = leaves(COURSE_BUNDLE_EN);
 const german = leaves(COURSE_BUNDLE_DE);
 
 describe("🗣️ translation completeness", () => {
+  it("fetches each language as a chunk of its own: one language never brings the other", async () => {
+    vi.resetModules();
+    const fresh = await import("../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx");
+    const loaded = (): boolean[] => COURSE_LOCALES.map((locale) => fresh.courseLocaleLoaded(locale));
+    expect(loaded()).toEqual([false, false]);
+    await fresh.loadCourseLocales(["en"]);
+    expect(loaded()).toEqual([true, false]);
+    await fresh.loadCourseLocales();
+    expect(loaded()).toEqual([true, true]);
+    expect(await Promise.all([fresh.loadCourseLocales(["de"]), fresh.loadCourseLocales(["de"])])).toEqual([undefined, undefined]);
+  });
+
+  it("names no bundle in a static import: only the loaders do, each language by a dynamic import of its own", () => {
+    const source = Object.entries(SOURCES).find(([path]) => path.endsWith("/🌐️i18n/🟦️.ts"))?.[1];
+    expect(source).toBeDefined();
+    expect(source).not.toMatch(/^import [^\n]*-bundle\//mu);
+    expect(source!.match(/(?<!typeof )import\("\.\/[^"]*-bundle\/🟦️\.ts"\)/gu)).toHaveLength(COURSE_LOCALES.length);
+  });
+
   it("has the same keys in English and German", () => {
     expect([...german.keys()]).toEqual([...english.keys()]);
     expect(english.size).toBeGreaterThan(150);
@@ -67,6 +86,7 @@ describe("🗣️ translation completeness", () => {
   it("uses exactly the registered keys in the client sources", () => {
     expect(Object.keys(SOURCES).length).toBeGreaterThan(15);
     const used = new Set(Object.values(SOURCES).flatMap((source) => [...source.matchAll(/"(course\.[a-zA-Z]+\.[a-zA-Z]+)"/gu)].map((match) => match[1] ?? "")));
+    used.delete(COURSE_LANGUAGE_ANCHOR);
     expect([...used].filter((key) => !english.has(key))).toEqual([]);
     expect([...english.keys()].filter((key) => !used.has(key))).toEqual([]);
   });

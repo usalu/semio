@@ -1,0 +1,6 @@
+{
+  "exhausted": "/w/a.txt kept changing in all 6 attempts (its bytes changed): another process edits it continuously. Run the command again once the edits have stopped.",
+  "staleEn": "Stale loaded Source revision reader; restart required",
+  "staleDe": "Dieser Befehl führt eine veraltete Implementierung aus: der deklarierte Formatstempel x wechselte von 1 zu 2.",
+  "plain": "error TS2322: nope"
+}

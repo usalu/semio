@@ -17,7 +17,7 @@ export function selectCases(repoRoot: string, segments: readonly string[]): Disc
   return all.filter((entry) => matchesOwner(entry) && (ownerRoot === null || entry.owner === ownerRoot) && (caseSlug === null || entry.case === caseSlug) && (project === null || entry.projectName === project));
 }
 
-/** 🎛️ Implementations a command should exercise: every claimed adapter unless `--implementation` narrows it. */
+/** ☑️ Implementations a command should exercise: every claimed adapter unless `--implementation` narrows it. */
 export function selectImplementations(discovered: DiscoveredCase, segments: readonly string[]): Implementation[] {
   const index = segments.indexOf("--implementation");
   const requested = index === -1 ? null : segments[index + 1];
@@ -26,7 +26,7 @@ export function selectImplementations(discovered: DiscoveredCase, segments: read
 }
 
 /**
- * 🎛️ The full v2 selector set. Every phase accepts every selector, so a CI shard is expressible at
+ * 💯️ The full v2 selector set. Every phase accepts every selector, so a CI shard is expressible at
  * the exact coordinate a report row is keyed by — never merely at artifact level.
  */
 export type Selectors = Readonly<{

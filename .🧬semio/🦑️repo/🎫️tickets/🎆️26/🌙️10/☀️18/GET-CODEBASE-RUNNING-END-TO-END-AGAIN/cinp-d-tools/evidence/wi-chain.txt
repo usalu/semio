@@ -1,0 +1,17 @@
+## wi1 started 03:39:27 rc 0 1022s vs -
+## wi2 started 03:56:33 rc 0 915s vs wi1
+//:t_2b47068189231fe7 key-changed changed 7 derived true source 5 args true outputsIdentical true
+//:t_4703339af2ed8950 key-changed changed 3 derived true source 1 args true outputsIdentical true
+//:t_7cecd39a0d01ac2b key-changed changed 3 derived true source 1 args true outputsIdentical true
+//:t_89494d21613948da key-changed changed 7 derived true source 5 args true outputsIdentical true
+//:t_e54168b23fa2faa7 key-changed changed 3 derived true source 1 args true outputsIdentical true
+//:t_ed9c20287d15abca key-changed changed 8 derived true source 6 args true outputsIdentical false
+//:t_f20801f21818a81f key-changed changed 3 derived true source 1 args true outputsIdentical true
+## wi3 started 04:11:54 rc 0 256s vs wi2
+//:t_2b47068189231fe7 key-changed changed 5 derived false source 5 args false outputsIdentical true
+//:t_89494d21613948da key-changed changed 5 derived false source 5 args false outputsIdentical true
+//:t_ed9c20287d15abca key-changed changed 5 derived false source 5 args false outputsIdentical false
+//:t_f20801f21818a81f hit changed 0 derived false source 0 args false outputsIdentical null
+## wi4 started 04:16:16 rc 0 165s vs wi3
+//:t_f20801f21818a81f hit changed 0 derived false source 0 args false outputsIdentical null
+ZERO re-executions

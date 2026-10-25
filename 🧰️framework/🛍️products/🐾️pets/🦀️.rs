@@ -45,6 +45,7 @@ pub use semio_framework_pets_kinematics::terrain::{
 };
 pub use semio_framework_pets_kinematics::trigonometry::{atan_turns, clamp, cos_turns, fast_neg_exp, lerp, sin_turns, smoothstep};
 pub use semio_framework_pets_staging::stage::{advance, frame_of, open_stage};
+pub use semio_framework_pets_staging_draft::spacing::{cast_on, standing, Ground};
 pub use semio_framework_pets_traversal::climbing::{
     chain_of, climb_phase, climb_step, climb_ticks, cling_of, crossable, foot_of, grip_for, grip_step, haul_of, hoist_path, hook_step, hook_ticks, ladder_at, ladder_exit, ladder_for, ladder_holds, ladder_landing, ladder_lean, ladder_length,
     ladder_phase, ladder_rungs, ladder_step, landing_for, ledge_of, mantle_path, miss_of, rim_for, rim_of, route_of, shot_for, shot_holds, slide_step, slip_of, spill_of, sway_step, wall_cost, wall_holds, wall_path, zip_step, Effort, Entry, Haul,

@@ -20,7 +20,6 @@ async fn original_shard_native_wire_preserves_one_source_and_its_distinct_bounde
  let mut position=0;let decoded=super::super::ShardFrame::pack_decode(&bytes,&mut position).await.unwrap();assert_eq!(position,bytes.len());
  let super::super::ShardFrame::Grant{actor,budget,retained,retained_policy,work_fuel,deadline_us,envelopes}=decoded else{panic!("expected original Grant")};
  assert_eq!(actor,grant.actor);assert_eq!(budget,after);assert_eq!(retained,input);assert_eq!(retained_policy,loan.retained_policy);assert_eq!(work_fuel,loan.work_fuel);assert_eq!(deadline_us,loan.deadline_us);assert!(envelopes.is_empty());assert_eq!(grant.budget,before);assert_eq!(*grant.original_input(),input);assert_eq!(grant.loan,loan);
- eprintln!("[DEBUG] Actual native original Grant192 bytes equals neutral Python struct/Node Buffer vector; one source identity/clock/deadline/fuel and distinct bounded loan preserved through resource override, preallocated wire heap0");
 }
 
 
@@ -36,5 +35,4 @@ async fn original_shard_raw_loan_refusal_precedes_all_wire_effects_and_envelope_
   let offset=match axis{"maximumItems"=>135,"maximumCopyBytes"=>143,"maximumCapacityBytes"=>151,"maximumReleaseBytes"=>159,"maximumDepth"=>167,"workFuel"=>175,"deadlineUs"=>183,_=>panic!("unknown original loan axis")};let mut incoming=wire.clone();incoming[offset..offset+8].copy_from_slice(&row["value"].as_u64().unwrap().to_le_bytes());let pointer=incoming.as_ptr();let mut position=0;
   let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(super::super::ShardFrame::pack_decode(&incoming,&mut position)));assert_eq!(result.unwrap_err(),refusal);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(pointer,incoming.as_ptr());assert_eq!(position,191);
  }
- eprintln!("[DEBUG] Actual native raw Grant nine bounded-loan cases validate all5physical/work/deadline axes before any write or envelope decode; denial keeps original preallocated bytes and heap0, independent SQLite vectors");
 }

@@ -10,6 +10,7 @@ use framework_schema::ArtifactSchema;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 #[allow(unused_imports)]
 use protocol::{ApplyCapability, MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::ColdMutationDiff;
 #[allow(unused_imports)]
 use std::collections::{HashMap, HashSet};
 use crate::standards::v1_7::subsets::base::schema::diff::*;

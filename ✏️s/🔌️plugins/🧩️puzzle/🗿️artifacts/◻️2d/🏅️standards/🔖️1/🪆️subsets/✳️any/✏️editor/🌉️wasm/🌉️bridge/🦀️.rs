@@ -16,6 +16,9 @@ use crate::editor::puzzle2d::engine::{
     BoardHost, CubicBez, Point,
 };
 use crate::Puzzle2dSnapshot;
+use semio_framework_os_infinite_board_normal_focus::{wheel_screen, clear_external_link_preview, set_camera_silent, set_preselect_state_silent, set_selection_ids, set_selection_ids_silent};
+use semio_framework_os_infinite_board_normal_gestures::{defers_descriptor_sync_from_js, interaction_json, set_drop_preview_json, set_transform_flags, target_regions_json};
+use semio_framework_os_infinite_board_normal_scene::{handle_positions_json, overlay_paint_state_json};
 
 // #region 🔖️WasmHost
 use wasm_bindgen::prelude::*;

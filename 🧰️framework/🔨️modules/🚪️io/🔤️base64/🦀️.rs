@@ -17,7 +17,7 @@ pub use cursor::{Base64DecodeCursor, Base64DecodeOutcome, Base64DecodeParts, Bas
 /// 📍️ Bounded base64 work uses bytes for Encode and ASCII characters for Validate or Decode.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum Base64Phase{Encode,Validate,Decode}
-/// 📍️ Monotonic input units within one base64 phase.
+/// 📥️ Monotonic input units within one base64 phase.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct Base64Progress{pub phase:Base64Phase,pub completed:usize,pub total:usize}
 /// 🎟️ Caller-owned output allowance and bounded cancellation callback.
@@ -34,19 +34,19 @@ impl Base64Control<'_>{
     fn admit(&self,length:usize)->Result<(),Base64ControlError>{if length>self.maximum_output_bytes{Err(Base64ControlError::OutputLimit)}else{Ok(())}}
     fn checkpoint(&mut self,phase:Base64Phase,completed:usize,total:usize)->Result<(),Base64ControlError>{if(self.progress)(Base64Progress{phase,completed,total}){Ok(())}else{Err(Base64ControlError::Cancelled)}}
 }
-/// 🔤️ Bounds output before allocation and cancellation before each at-most4095-byte encoding chunk.
+/// 📕️ Bounds output before allocation and cancellation before each at-most4095-byte encoding chunk.
 pub fn base64_standard_encode_controlled(bytes:&[u8],control:&mut Base64Control<'_>)->Result<String,Base64ControlError>{
     let length=bytes.len().div_ceil(3).checked_mul(4).ok_or(Base64ControlError::OutputLimit)?;control.admit(length)?;control.checkpoint(Base64Phase::Encode,0,bytes.len())?;
     let mut output=String::new();output.try_reserve_exact(length).map_err(|_|Base64ControlError::OutputLimit)?;
     for(offset,chunk)in bytes.chunks(4095).enumerate(){append_encoded_bytes(chunk,BASE64_STANDARD_ALPHABET,true,&mut output);control.checkpoint(Base64Phase::Encode,(offset*4095+chunk.len()).min(bytes.len()),bytes.len())?;}Ok(output)
 }
-/// 🔤️ Validates strict padding before allocating the result; each pass checks at most4096 input bytes.
+/// 🧱️ Validates strict padding before allocating the result; each pass checks at most4096 input bytes.
 pub fn base64_standard_decode_controlled(encoded:&[u8],control:&mut Base64Control<'_>)->Result<Vec<u8>,Base64ControlError>{
     let mut cursor=Base64DecodeCursor::new(Base64Input::Borrowed(encoded));
     loop{if cursor.step(cursor.next_work_demand(),control)?==Base64DecodeState::Complete{return Ok(cursor.take_output().unwrap());}}
 }
 
-/// 🔤️ Strict RFC 4648 base64 decoding failure, shared by the standard and URL-safe codecs.
+/// ❌️ Strict RFC 4648 base64 decoding failure, shared by the standard and URL-safe codecs.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Base64Error {
     InvalidLength,
@@ -94,7 +94,7 @@ fn encode_bytes(bytes: &[u8], alphabet: &[u8; 64], padded: bool) -> String {
     encoded
 }
 
-/// 🔤️ Encodes bytes with the padded RFC 4648 standard alphabet. Generic over `AsRef<[u8]>` (so a
+/// 🏠️ Encodes bytes with the padded RFC 4648 standard alphabet. Generic over `AsRef<[u8]>` (so a
 /// bare `&str` works too) purely as an ergonomic front door onto [`encode_bytes`].
 pub fn base64_standard_encode(bytes: impl AsRef<[u8]>) -> String {
     encode_bytes(bytes.as_ref(), BASE64_STANDARD_ALPHABET, true)
@@ -138,14 +138,14 @@ fn decode_bytes(encoded: &[u8]) -> Result<Vec<u8>, Base64Error> {
     Ok(decoded)
 }
 
-/// 🔤️ Decodes padded RFC 4648 standard base64 and rejects whitespace, misplaced padding, and
+/// 🚫️ Decodes padded RFC 4648 standard base64 and rejects whitespace, misplaced padding, and
 /// non-canonical unused bits. Generic over `AsRef<[u8]>` for the same reason as
 /// [`base64_standard_encode`] — one algorithm, [`decode_bytes`], behind an ergonomic front door.
 pub fn base64_standard_decode(encoded: impl AsRef<[u8]>) -> Result<Vec<u8>, Base64Error> {
     decode_bytes(encoded.as_ref())
 }
 
-/// 🔗️ Decodes unpadded RFC 4648 §5 base64url and rejects padding, whitespace, the standard-only `+`/`/`,
+/// 🌐️ Decodes unpadded RFC 4648 §5 base64url and rejects padding, whitespace, the standard-only `+`/`/`,
 /// a dangling single sextet, and non-canonical unused bits.
 pub fn base64_url_decode(encoded: impl AsRef<[u8]>) -> Result<Vec<u8>, Base64Error> {
     let encoded = encoded.as_ref();

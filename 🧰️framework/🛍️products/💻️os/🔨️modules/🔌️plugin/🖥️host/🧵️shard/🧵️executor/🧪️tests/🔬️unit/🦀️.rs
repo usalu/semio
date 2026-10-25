@@ -51,7 +51,7 @@ async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners
         let actor = ActorId(717);
         let package = PackageRef { package: PackageId("registration-owner".into()), hash: PackageHash([0; 32]) };
         let compiled = mock.compile(&package, &[]).await.unwrap();
-        let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.unwrap();
         if stage == "wrong-actor" {
             let RegistrationAdmission::Refused(owner) = executor.register(ActorId(718), instance).await else { panic!("mismatched guest identity must return its exact owner") };
             assert_eq!(owner.actor, ActorId(718));
@@ -125,7 +125,7 @@ async fn terminal_registration_reply_wakes_outside_the_state_lock() {
     let actor = ActorId(718);
     let package = PackageRef { package: PackageId("registration-wake".into()), hash: PackageHash([0; 32]) };
     let compiled = mock.compile(&package, &[]).await.unwrap();
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.unwrap();
     let probe = Arc::new(Probe { executor: Arc::downgrade(&executor), lockable: AtomicBool::new(false), woke: AtomicBool::new(false) });
     let waker = std::task::Waker::from(Arc::clone(&probe));
     let mut context = std::task::Context::from_waker(&waker);
@@ -163,7 +163,7 @@ async fn admitted_registration_reply_wakes_outside_the_state_lock() {
     let actor = ActorId(718);
     let package = PackageRef { package: PackageId("registration-wake".into()), hash: PackageHash([0; 32]) };
     let compiled = mock.compile(&package, &[]).await.unwrap();
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.unwrap();
     let probe = Arc::new(Probe { executor: Arc::downgrade(&executor), lockable: AtomicBool::new(false), woke: AtomicBool::new(false) });
     let waker = std::task::Waker::from(Arc::clone(&probe));
     let mut context = std::task::Context::from_waker(&waker);
@@ -199,7 +199,7 @@ async fn shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool
     let actor = ActorId(101);
     let package = PackageRef { package: PackageId("executor-smoke".to_string()), hash: PackageHash([30u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
     let mut scripted = MockGuestRuntime::idle_turn(original_retained_turn()).await;
     scripted.fuel_used = 77;
     mock.script_turn(actor, scripted).await;
@@ -219,7 +219,7 @@ async fn shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool
         payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework_plugin_host_shard::fixture_instance_close_event()).unwrap() },
     };
     let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
-    let bytes = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![envelope] }).await;
+    let bytes = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget, envelopes: vec![envelope] }).await;
     executor.send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
 
     match wait_for_one(&outcomes) {
@@ -249,7 +249,7 @@ async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbo
     let interactive = ActorId::new(0, 0, actor_number(1), 0).await;
     let package = PackageRef { package: PackageId("executor-lane-priority".to_string()), hash: PackageHash([31u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instantiate_budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let instantiate_budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
     let background_instance = mock.instantiate(&compiled, background, &[], &instantiate_budget).await.expect("background instance");
     let interactive_instance = mock.instantiate(&compiled, interactive, &[], &instantiate_budget).await.expect("interactive instance");
     let mut background_turn = MockGuestRuntime::idle_turn(original_retained_turn()).await;
@@ -285,12 +285,12 @@ async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbo
     };
     let background_lane = lane(0);
     let interactive_lane = lane(1);
-    let background_frame = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(),         actor: background,
+    let background_frame = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us,         actor: background,
         budget: semio_framework_actor::lane_defaults::budget_for(background_lane),
         envelopes: vec![envelope(background, background_lane, frames[0]["sequence"].as_u64().expect("background sequence"))],
     })
     .await;
-    let interactive_frame = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(),         actor: interactive,
+    let interactive_frame = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us,         actor: interactive,
         budget: semio_framework_actor::lane_defaults::budget_for(interactive_lane),
         envelopes: vec![envelope(interactive, interactive_lane, frames[1]["sequence"].as_u64().expect("interactive sequence"))],
     })
@@ -321,7 +321,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
         let request = JobReplayRequest::from_spawn(&kind, &input);
         let package = PackageRef { package: PackageId(format!("replay-workers-{worker_count}")), hash: PackageHash([worker_count as u8; 32]) };
         let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-        let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
         let mut scripted = MockGuestRuntime::idle_turn(original_retained_turn()).await;
         scripted.effects.push(Effect::SpawnJob { job, kind, input, placement: JobPlacement::Inline });
         mock.script_turn(actor, scripted).await;
@@ -341,7 +341,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
             payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework::kernel::Event::Wake).expect("wake") },
         };
         let submit_started = std::time::Instant::now();
-        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![event] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget, envelopes: vec![event] }).await, semio_framework_actor::Lane::Interactive).await;
         assert!(submit_started.elapsed() < Duration::from_millis(8), "one mounted replay ingress opportunity exceeded 8ms");
         assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Turn { actor: reported, .. } if reported == actor.0));
 
@@ -359,7 +359,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
         let turn = JobTurn { job, operation, step_sequence: 0 };
         mock.script_job_step(actor, JobStep::Running { progress: Some(vec![11, 13]) }).await;
         let step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
-        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![step] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget, envelopes: vec![step] }).await, semio_framework_actor::Lane::Interactive).await;
         let original = wait_for_one(&outcomes);
         assert!(matches!(&original, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::PreviewReady { preview } if *preview == [11, 13])));
 
@@ -373,12 +373,12 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
             cancel_of: None,
             payload: Payload::JobReplay { turn, request, worker_count: u16::try_from(worker_count).expect("worker count"), worker_slot: 0 },
         };
-        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![replay] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget, envelopes: vec![replay] }).await, semio_framework_actor::Lane::Interactive).await;
         assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Resumed { actor: reported, operation: observed } if reported == actor.0 && observed == operation));
         mock.script_job_step(actor, JobStep::Done { output: vec![11, 13] }).await;
         mock.script_turn(actor, MockGuestRuntime::idle_turn(original_retained_turn()).await).await;
         let replay_step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 4, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
-        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
         let replayed = outcomes.wait_for(2, Duration::from_secs(2));
         assert!(
                 replayed.iter().any(|outcome| matches!(outcome, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { candidate } if candidate.output == [11, 13]))),
@@ -423,7 +423,7 @@ async fn every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_sha
     let mut shards = ShardTable::new(ShardKind::Native, SHARDS, 0).await;
     let package = PackageRef { package: PackageId("grant-routing-property".to_string()), hash: PackageHash([55u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instantiate_budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let instantiate_budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
     let grant_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
 
     for i in 0..ACTORS {
@@ -442,7 +442,7 @@ async fn every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_sha
             cancel_of: None,
             payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework_plugin_host_shard::fixture_instance_close_event()).unwrap() },
         };
-        let bytes = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget: grant_budget, envelopes: vec![envelope] }).await;
+        let bytes = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget: grant_budget, envelopes: vec![envelope] }).await;
         executors[shard_id.0 as usize].send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
     }
 
@@ -473,7 +473,7 @@ async fn suspend_then_resume_round_trip_lands_on_a_shard_where_the_actor_is_regi
     let mut shards = ShardTable::new(ShardKind::Native, SHARDS, 0).await;
     let package = PackageRef { package: PackageId("suspend-resume-property".to_string()), hash: PackageHash([77u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instantiate_budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let instantiate_budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
 
     for i in 0..ACTORS {
         let actor = ActorId::new(0, 0, i as u32, 0).await;
@@ -533,7 +533,7 @@ async fn concurrent_send_frame_bursts_never_drop_an_outcome() {
     let outcomes = OutcomeSink::new();
     let package = PackageRef { package: PackageId("burst-property".to_string()), hash: PackageHash([9u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instantiate_budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let instantiate_budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
     let mut initial = Vec::new();
     let mut actors = Vec::new();
     for i in 0..ACTORS {
@@ -560,7 +560,7 @@ async fn concurrent_send_frame_bursts_never_drop_an_outcome() {
                 cancel_of: None,
                 payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework_plugin_host_shard::fixture_instance_close_event()).unwrap() },
             };
-            let bytes = semio_framework_async::block_on(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![envelope] }));
+            let bytes = semio_framework_async::block_on(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget, envelopes: vec![envelope] }));
             semio_framework_async::block_on(executor.send_frame(bytes, semio_framework_actor::Lane::Interactive));
         }));
     }

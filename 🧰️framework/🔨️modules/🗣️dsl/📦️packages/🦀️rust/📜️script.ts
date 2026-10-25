@@ -22,7 +22,7 @@ class OwnershipScript extends BundleScript {
   }
 }
 
-/** 🗣️ Executes the complete actual neutral lexical, grammar, literal and idiom cohorts. */
+/** 🧲️ Executes the complete actual neutral lexical, grammar, literal and idiom cohorts. */
 class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);

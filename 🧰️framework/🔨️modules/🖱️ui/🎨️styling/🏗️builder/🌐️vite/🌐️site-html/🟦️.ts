@@ -63,10 +63,10 @@ function semioEmojiIndexHtmlSpaFallbackRewrite(entry: string): OwnedBuildMiddlew
   };
 }
 
-/** 📄️ Conventional static-host entry filenames emitted beside the constitutional emoji HTML entry. */
+/** 📃️ Conventional static-host entry filenames emitted beside the constitutional emoji HTML entry. */
 export const STATIC_SITE_HTML_ALIASES = ["index.html", "404.html"] as const;
 
-/** 🌐️ Vite: treat hand-authored `🌐️.html` as the app index (`/` + build input). Vite's default
+/** 🏠️ Vite: treat hand-authored `🌐️.html` as the app index (`/` + build input). Vite's default
  * `index.html` name does not match the constitutional emoji entry filename. */
 export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐️.html"): OwnedBuildPlugin {
   const entry = `/${fileName}`;
@@ -112,7 +112,7 @@ export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐�
   };
 }
 
-/** 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/🛡️favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
+/** 🔌️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/🛡️favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
 export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHostChrome | undefined): OwnedBuildPlugin[] {
   if (!brand) return [...semioFaviconVitePlugin(repoRoot), ...staticDeployMarkerVitePlugins(undefined)];
   return [
@@ -131,7 +131,7 @@ export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHos
 /** 🗣️ One text of a host document in one language: a BCP 47 tag and the text in that language. */
 export type SemioHostHtmlText = { readonly lang: string; readonly text: string };
 
-/** 🗣️ A text of a host document: one string in the document's language, or — for a document that assumes no
+/** 💬️ A text of a host document: one string in the document's language, or — for a document that assumes no
  * language — the same text once per offered language, in the order the languages are offered. */
 export type SemioHostHtmlTexts = string | readonly SemioHostHtmlText[];
 
@@ -149,7 +149,7 @@ export type SemioHostHtmlSpec = {
   readonly csp?: string;
   readonly loading?: { readonly title: SemioHostHtmlTexts };
   readonly noscript?: SemioHostHtmlTexts;
-  /** 🌐️ Custom domain this app's static build deploys to (e.g. GitHub Pages) — written verbatim into a
+  /** 🌍️ Custom domain this app's static build deploys to (e.g. GitHub Pages) — written verbatim into a
    * `CNAME` file at the build root, alongside the always-written `.nojekyll` marker. */
   readonly cnameHost?: string;
 };
@@ -160,12 +160,12 @@ function semioHostEscapedText(text: string): string {
   return text.replace(/&/gu, "&amp;").replace(/</gu, "&lt;").replace(/>/gu, "&gt;").replace(/"/gu, "&quot;");
 }
 
-/** 🏷️ The title of a host document as plain text: the one string, or every language's title joined. */
+/** 📰️ The title of a host document as plain text: the one string, or every language's title joined. */
 export function semioHostTitleText(title: SemioHostHtmlTexts): string {
   return typeof title === "string" ? title : title.map((part) => semioHostEscapedText(part.text)).join(SEMIO_HOST_TEXT_SEPARATOR);
 }
 
-/** 🗣️ A text as markup: the one string as it is, or one element per language carrying its `lang`. */
+/** 📝️ A text as markup: the one string as it is, or one element per language carrying its `lang`. */
 function semioHostTextsHtml(texts: SemioHostHtmlTexts, tag: "span" | "p", attributes = ""): string {
   if (typeof texts === "string") return tag === "span" ? texts : `<${tag}${attributes}>${texts}</${tag}>`;
   return texts.map((part) => `<${tag} lang="${semioHostEscapedText(part.lang)}"${attributes}>${semioHostEscapedText(part.text)}</${tag}>`).join(tag === "span" ? SEMIO_HOST_TEXT_SEPARATOR : "");
@@ -180,7 +180,7 @@ function semioHostLoadingHtml(loading: SemioHostHtmlSpec["loading"]): string {
   return `<div style="display:flex;align-items:center;justify-content:center;height:100%;font:14px system-ui,sans-serif">${semioHostTextsHtml(loading.title, "span")}</div>`;
 }
 
-/** 🚫️ What a reader without scripts gets: the boot style keeps `<body>` hidden until a script reveals it, so each
+/** 🔕️ What a reader without scripts gets: the boot style keeps `<body>` hidden until a script reveals it, so each
  * paragraph makes itself visible. */
 function semioHostNoscriptHtml(noscript: SemioHostHtmlSpec["noscript"]): string {
   if (!noscript) {

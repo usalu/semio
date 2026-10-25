@@ -1,9 +1,9 @@
 import{receiveScriptProcessInvocation,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,requireIssuedScriptInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
 import{openNativeImageStorageV1,retireNativeImageStorageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
 import{acquireNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1,type NativeStorageReservationV1}from"@semio-tech/process/artifacts/native-build/storage";
-import{openRepositoryCachePartitionV1,repositoryLeaseDirectoryV1}from"../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import{openRepositoryCachePartitionV1,repositoryLeaseDirectoryV1}from"../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{resourceLeasePathV1}from"@semio-tech/process/leases";
 import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import{observeToolingHeadroomV1,isToolingHeadroomRefusalV1,type ToolingHeadroomRefusalV1,withToolingHeadroomRecoveryV1}from"../🟦️.ts";

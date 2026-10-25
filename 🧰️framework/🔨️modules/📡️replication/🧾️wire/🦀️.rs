@@ -43,7 +43,7 @@ pub const REC_FRONTIER: u8 = 0x09;
 pub const REC_PROJECTION: u8 = 0x0A;
 /// 🔎️ An advisory, rebuildable offset index.
 pub const REC_INDEX: u8 = 0x0B;
-/// ⛓️ The commit frame: hash-chains everything written since the previous commit.
+/// 🔲️ The commit frame: hash-chains everything written since the previous commit.
 pub const REC_COMMIT: u8 = 0x0C;
 /// ✍️ A detached signature over a commit's chain hash.
 pub const REC_SIGNATURE: u8 = 0x0D;
@@ -72,25 +72,25 @@ pub fn is_critical_kind(kind: u8) -> bool {
 // Header required/optional flags (32-byte header, see protocol_format).
 /// ⛓️ Required flag bit: every commit frame's `chain_hash` must verify.
 pub const REQUIRED_HASH_CHAIN: u32 = 1 << 0;
-/// ✍️ Required flag bit: every commit frame must carry a valid `REC_SIGNATURE`.
+/// 🖊️ Required flag bit: every commit frame must carry a valid `REC_SIGNATURE`.
 pub const REQUIRED_SIGNED: u32 = 1 << 1;
 /// 🔒️ Required flag bit: reserved for encryption, never set by this crate family.
 pub const REQUIRED_ENCRYPTED: u32 = 1 << 2;
 /// 🧮️ Optional flag bit: the document body was encoded in canonical form.
 pub const OPTIONAL_CANONICAL: u32 = 1 << 0;
-/// 📸️ Optional flag bit: this file contains at least one `REC_PROJECTION`.
+/// ❓️ Optional flag bit: this file contains at least one `REC_PROJECTION`.
 pub const OPTIONAL_HAS_PROJECTIONS: u32 = 1 << 1;
-/// 🔎️ Optional flag bit: this file contains at least one `REC_INDEX`.
+/// 🗂️ Optional flag bit: this file contains at least one `REC_INDEX`.
 pub const OPTIONAL_HAS_INDEX: u32 = 1 << 2;
-/// 🕳️ Optional flag bit: this file contains at least one `REC_REDACTION`.
+/// 🚩️ Optional flag bit: this file contains at least one `REC_REDACTION`.
 pub const OPTIONAL_REDACTED: u32 = 1 << 3;
 // Frame flags byte (per-record, not header): bit0 compressed, bit1 critical, bits2..4 = codec id (0..=7).await.
 /// 🗜️ Frame flags bit: the payload is compressed (see `frame_codec_id`).
 pub const FRAME_FLAG_COMPRESSED: u8 = 1 << 0;
-/// ❗️ Frame flags bit: an unrecognized `kind` carrying this bit aborts the reader.
+/// 🔳️ Frame flags bit: an unrecognized `kind` carrying this bit aborts the reader.
 pub const FRAME_FLAG_CRITICAL: u8 = 1 << 1;
 
-/// 🗜️ Extracts the 3-bit codec id (bits 2..4).await from a frame flags byte.
+/// 🖼️ Extracts the 3-bit codec id (bits 2..4).await from a frame flags byte.
 pub fn frame_codec_id(flags: u8) -> u8 {
     (flags >> 2) & 0b111
 }
@@ -163,7 +163,7 @@ pub enum MergePolicy {
     Vigilant,
 }
 
-/// 🌉️ Hand-written, not derived — same DAG reason as `UndoPolicy` above. A fieldless enum with no
+/// 🧰️ Hand-written, not derived — same DAG reason as `UndoPolicy` above. A fieldless enum with no
 /// `#[serde(...)]` tag attribute serializes as its bare variant name string; mirrored here exactly.
 impl semio_framework_value::ToValue for MergePolicy {
     fn to_value(&self) -> semio_framework_value::DslValue {
@@ -213,7 +213,7 @@ impl MergePolicy {
         }
     }
 
-    /// 🔢️ Inverse of [`as_u8`](Self::as_u8); `None` for any value outside 0..2.
+    /// 🔙️ Inverse of [`as_u8`](Self::as_u8); `None` for any value outside 0..2.
     pub fn from_u8(value: u8) -> Option<Self> {
         match value {
             0 => Some(MergePolicy::LaissezFaire),
@@ -258,7 +258,7 @@ pub fn read_u8(bytes: &[u8], pos: &mut usize) -> Result<u8, ProtocolError> {
     Ok(byte)
 }
 
-/// 🔤️ `varint len + utf8 bytes`.
+/// 📝️ `varint len + utf8 bytes`.
 pub fn write_str(out: &mut Vec<u8>, s: &str) {
     write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
@@ -313,7 +313,7 @@ pub fn read_bool(bytes: &[u8], pos: &mut usize) -> Result<bool, ProtocolError> {
     Ok(byte != 0)
 }
 
-/// 🔢️ `f64` as 8 little-endian bytes — for wire fields with no varint-friendly shape
+/// 💾️ `f64` as 8 little-endian bytes — for wire fields with no varint-friendly shape
 /// (coordinates, zoom levels).
 pub fn write_f64(out: &mut Vec<u8>, value: f64) {
     out.extend_from_slice(&value.to_le_bytes());

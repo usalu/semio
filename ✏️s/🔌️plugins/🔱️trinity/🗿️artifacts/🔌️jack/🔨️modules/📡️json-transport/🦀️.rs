@@ -4,11 +4,20 @@ use semio_framework_value::DslValue;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use crate::standards::v1::subsets::any::schema::graph::Camera;
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
-pub fn convert(mut value: DslValue, decode: bool) -> Result<DslValue, ValueError> {
+pub fn convert(value: DslValue, decode: bool) -> Result<DslValue, ValueError> {
+    convert_document(value, decode, "parent", &["schema", "name", "manifestId", "manifest", "camera", "content", "rootNodeId", "query"], &["schema", "name", "manifest", "camera", "content", "query"])
+}
+
+/// 🎬️ The self-contained scene document: the parent fields with the nodes and edges inline instead of the content address.
+pub fn convert_scene(value: DslValue, decode: bool) -> Result<DslValue, ValueError> {
+    convert_document(value, decode, "scene", &["schema", "name", "manifestId", "manifest", "camera", "nodes", "edges", "rootNodeId", "query"], &["schema", "name", "manifest", "camera", "nodes", "edges", "query"])
+}
+
+fn convert_document(mut value: DslValue, decode: bool, subject: &str, allowed: &[&str], required: &[&str]) -> Result<DslValue, ValueError> {
     let DslValue::Object(fields) = &mut value else { return Err(invalid("Jack JSON object required")) };
     if decode {
-        if fields.iter().any(|(key, _)| !["schema", "name", "manifestId", "manifest", "camera", "content", "rootNodeId", "query"].contains(&key.as_str())) { return Err(invalid("Jack JSON parent has unknown fields")); }
-        for key in ["schema", "name", "manifest", "camera", "content", "query"] { if !fields.iter().any(|(name, _)| name == key) { return Err(invalid(format!("Jack JSON parent requires {key}"))); } }
+        if fields.iter().any(|(key, _)| !allowed.contains(&key.as_str())) { return Err(invalid(format!("Jack JSON {subject} has unknown fields"))); }
+        for key in required { if !fields.iter().any(|(name, _)| name == key) { return Err(invalid(format!("Jack JSON {subject} requires {key}"))); } }
     }
     if let Some((_, camera)) = fields.iter_mut().find(|(key, _)| key == "camera") {
         let DslValue::Object(axes) = camera else { return Err(invalid("Jack JSON camera object required")) };

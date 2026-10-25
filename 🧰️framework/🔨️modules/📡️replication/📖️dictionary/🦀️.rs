@@ -1,4 +1,4 @@
-//! 📖 Deterministic string dictionary builder and reader.
+//! 🔨️ Deterministic string dictionary builder and reader.
 
 use semio_framework_replication_error::ProtocolError;
 #[path="🛬️decode/🦀️.rs"]
@@ -20,7 +20,7 @@ impl DictBuilder {
         Self::default()
     }
 
-    /// ➕️ Returns `s`'s existing index, or appends it and returns the new index.
+    /// 🗂️ Returns `s`'s existing index, or appends it and returns the new index.
     pub fn intern(&mut self, s: &str) -> u32 {
         if let Some(&idx) = self.index.get(s) {
             return idx;

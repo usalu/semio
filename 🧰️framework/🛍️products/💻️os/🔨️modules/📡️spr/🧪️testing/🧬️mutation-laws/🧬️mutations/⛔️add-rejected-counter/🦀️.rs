@@ -14,6 +14,9 @@ pub struct AddRejectedCounter {}
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddRejectedCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "rejected-counter", kind: "add-rejected-counter", record: "AddedRejectedCounter" };
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add rejected counter", "Abgelehnten Zähler hinzufügen")
+    }
 
 
 }
@@ -28,9 +31,6 @@ impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddRejec
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add rejected counter", "Abgelehnten Zähler hinzufügen")
-    }
 }
 //#endregion ⚙️Behavior
 

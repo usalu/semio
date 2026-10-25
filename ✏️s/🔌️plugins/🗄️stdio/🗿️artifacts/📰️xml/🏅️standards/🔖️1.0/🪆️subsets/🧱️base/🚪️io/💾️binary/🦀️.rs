@@ -4,12 +4,6 @@ pub use semio_s_artifact_stdio_xml_snapshot::standards::v1_0::subsets::base::io:
 
 pub mod mutations {
     pub use semio_s_artifact_stdio_xml_mutations::standards::v1_0::subsets::base::io::binary::mutations::*;
-    pub use crate::standards::v1_0::subsets::base::io::binary::mutations::insert_element;
-    pub use crate::standards::v1_0::subsets::base::io::binary::mutations::remove_element;
-    pub use crate::standards::v1_0::subsets::base::io::binary::mutations::set_attribute;
-    pub use crate::standards::v1_0::subsets::base::io::binary::mutations::set_declaration;
-    pub use crate::standards::v1_0::subsets::base::io::binary::mutations::set_doctype;
-    pub use crate::standards::v1_0::subsets::base::io::binary::mutations::set_text;
 }
 
 pub use semio_s_artifact_stdio_xml_schema::standards::v1_0::subsets::base::io::binary::diff;

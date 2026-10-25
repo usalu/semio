@@ -85,7 +85,7 @@ function assertMatches(expected: Record<string, number[]>, actual: Record<string
   return Object.fromEntries(Object.entries(actual).map(([key, values]) => [key, values.map(round)]));
 }
 
-/** 📊️ The scene's node kinds, counted. */
+/** 🔢️ The scene's node kinds, counted. */
 function sceneCounts(): Record<string, number> {
   const scene = renderVizScene(DEMO_SPEC);
   const counts: Record<string, number> = {};
@@ -111,7 +111,7 @@ export default defineTestAdapter({
       },
     },
     "scene-graph-primitives": {
-      /** 📐️ The specified scene: the frame, the primitive census and the two structural invariants. */
+      /** 🎬️ The specified scene: the frame, the primitive census and the two structural invariants. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),
       /** 🎯️ What the TypeScript kernel actually rendered. */
       subject: (ctx: AdapterContext) => {
@@ -131,9 +131,9 @@ export default defineTestAdapter({
       },
     },
     "bar-rectangles": {
-      /** 📐️ The rectangles the band and linear scales imply, written out. */
+      /** 🔮️ The rectangles the band and linear scales imply, written out. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),
-      /** 🎯️ The rectangles the scene graph carries, in node order. */
+      /** 🕸️ The rectangles the scene graph carries, in node order. */
       subject: (ctx: AdapterContext) => {
         const scene = renderVizScene(DEMO_SPEC);
         const rects = scene.nodes.filter((node) => node.node.kind === "rect").map((node) => node.node as { x: number; y: number; width: number; height: number });
@@ -142,9 +142,9 @@ export default defineTestAdapter({
       },
     },
     "tikz-mirrors-the-scene": {
-      /** 📐️ One TikZ statement per resolved item, in a millimetre-scaled picture. */
+      /** 🧾️ One TikZ statement per resolved item, in a millimetre-scaled picture. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),
-      /** 🎯️ The emitted picture, measured against the same resolved item list. */
+      /** 🖼️ The emitted picture, measured against the same resolved item list. */
       subject: (ctx: AdapterContext) => {
         const tikz = renderVizTikz(DEMO_SPEC);
         const plan = planVizChart(DEMO_SPEC);
@@ -160,9 +160,9 @@ export default defineTestAdapter({
       },
     },
     "options-change-the-projection": {
-      /** 📐️ Two option sets of one mark must not render identically. */
+      /** 🚩️ Two option sets of one mark must not render identically. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),
-      /** 🎯️ The same chart at a wider band padding. */
+      /** 🗺️ The same chart at a wider band padding. */
       subject: (ctx: AdapterContext) => {
         const widths = (spec: VizChartSpecification): number[] => planVizChart(spec).items.filter((item) => item.kind === "rect").map((item) => (item as { width: number }).width);
         const narrow = widths(DEMO_SPEC);

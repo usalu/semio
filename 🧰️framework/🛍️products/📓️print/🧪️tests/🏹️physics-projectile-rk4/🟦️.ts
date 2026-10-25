@@ -113,7 +113,7 @@ export default defineTestAdapter({
       subject,
     },
     "harmonic-orbit": {
-      /** 🔮️ The same tableau in JavaScript; the analytic circle is cos t, -sin t. */
+      /** 📜️ The same tableau in JavaScript; the analytic circle is cos t, -sin t. */
       oracle: () => ({
         projection: {
           "rk4/orbit": grid(rungeKutta((_x, y) => y, (x) => -x, 1, 0, 0.1, 20)),
@@ -123,7 +123,7 @@ export default defineTestAdapter({
       subject,
     },
     "damped-decay": {
-      /** 🔮️ The damped system integrated the same way; energy must never increase. */
+      /** 📉️ The damped system integrated the same way; energy must never increase. */
       oracle: () => ({
         projection: {
           "rk4/damped": grid(rungeKutta((_x, y) => y, (x, y) => -x - 0.4 * y, 1, 0, 0.1, 30)),
@@ -134,7 +134,7 @@ export default defineTestAdapter({
   },
 });
 
-/** 🚀️ The horizontal position the integrator has reached when it stops, which the family reports. */
+/** 🏁️ The horizontal position the integrator has reached when it stops, which the family reports. */
 function lastRange(speed: number, angle: number, gravity: number, step: number, steps: number): number {
   const radians = (angle * Math.PI) / 180;
   return step * speed * Math.cos(radians) * (steps + 1);

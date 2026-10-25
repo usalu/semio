@@ -1,7 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { identifierSet, parseRustSourceTree, type RustModuleNode, type RustSourceItem } from "../🌳️module-tree/🟦️.ts";
-import { declaredNames, hostPrivate } from "../🧪️test-closure/🟢️shared/🟦️.ts";
+import { declaredNames, hostPrivate } from "../🧪️test-closure/🟢️harness/🟦️.ts";
 
 /** 🧩️ One module declaration of a crate, reached through the root file and every mounted file. */
 export type ModuleDecl = {
@@ -25,7 +25,7 @@ export type ModuleDecl = {
 /** 🌳️ All declarations of one crate keyed by raw module path. */
 export type DeclTree = { readonly decls: Map<string, ModuleDecl>; readonly roots: string[] };
 
-/** 🌳️ Walks every module declaration of a crate; text of mounted files comes from `readText`. */
+/** 📦️ Walks every module declaration of a crate; text of mounted files comes from `readText`. */
 export function collectDecls(rootFile: string, rootText: string, readText: (absolute: string) => string | null): DeclTree {
   const decls = new Map<string, ModuleDecl>();
   const roots: string[] = [];
@@ -101,7 +101,7 @@ export type CarveSlice = {
   readonly attach: readonly ModuleDecl[];
 };
 
-/** 🍰️ Groups declarations into slices: coupled children (via `super::`), tests, and component siblings stay together; a test module that needs no `super::` item and names one of the detaching types becomes a slice of its own, so it can live in the crate of that type instead of cycling back to the module it tests. */
+/** 🔨️ Groups declarations into slices: coupled children (via `super::`), tests, and component siblings stay together; a test module that needs no `super::` item and names one of the detaching types becomes a slice of its own, so it can live in the crate of that type instead of cycling back to the module it tests. */
 export function buildSlices(tree: DeclTree, readonlyFileTexts: (absolute: string) => string | null, trace: (message: string) => void = () => undefined, options: { readonly detachTestsMentioning?: ReadonlySet<string>; readonly detachAllTests?: boolean } = {}): { slices: CarveSlice[]; namespaces: Set<string> } {
   const union = new UnionFind();
   const reachOf = new Map<string, number>();

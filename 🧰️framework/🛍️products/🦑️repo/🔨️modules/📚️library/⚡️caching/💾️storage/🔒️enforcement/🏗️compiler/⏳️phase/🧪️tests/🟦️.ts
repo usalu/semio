@@ -1,4 +1,4 @@
-import {testScratchRootV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🟦️.ts";
+import {testScratchRootV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";

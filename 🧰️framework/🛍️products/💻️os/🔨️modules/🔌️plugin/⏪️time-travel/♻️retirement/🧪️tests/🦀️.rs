@@ -1,4 +1,6 @@
 //! 🕰️ The actual ledger transfers its original session inline and measures every child frontier.
+use crate::MemberKey;
+use semio_framework::ArtifactDialect;
 use semio_framework::{ActionArgDef, ArgSchema, FaultFrom};
 use semio_framework_plugin_decl_app::ArtifactApp;
 #[cfg(test)]

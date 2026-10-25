@@ -1,4 +1,4 @@
-/** 🔢️ Number and time formatting: the TypeScript twin of `semio-viz-format`. The full d3-format
+/** 🧮️ Number and time formatting: the TypeScript twin of `semio-viz-format`. The full d3-format
  * specifier grammar (`fill align sign symbol zero width comma precision ~ type`), the SI prefix
  * table, and the d3-time-format directives, each in the document languages `en` and `de` — there
  * is no default language.
@@ -7,7 +7,7 @@
 import type { VizLanguage } from "@semio-tech/print/schema/snapshot/chart";
 
 //#region 🔖️Specifier
-/** 🔢️ A parsed format specifier, every field carrying the default d3 assigns when it is absent. */
+/** 🪪️ A parsed format specifier, every field carrying the default d3 assigns when it is absent. */
 export type VizFormatSpecifier = {
   readonly fill: string;
   readonly align: "<" | ">" | "=" | "^";
@@ -23,7 +23,7 @@ export type VizFormatSpecifier = {
 
 const SPECIFIER_PATTERN = /^(?:(.)?([<>=^]))?([+\-( ])?([$#])?(0)?(\d+)?(,)?(\.\d+)?(~)?([a-z%])?$/i;
 
-/** 🔢️ Parses a d3-format specifier; an unparsable one is an error, never a silent default. */
+/** 📖️ Parses a d3-format specifier; an unparsable one is an error, never a silent default. */
 export function parseVizFormatSpecifier(specifier: string): VizFormatSpecifier {
   const match = SPECIFIER_PATTERN.exec(specifier);
   if (match === null) throw new Error(`invalid format specifier: ${specifier}`);
@@ -42,7 +42,7 @@ export function parseVizFormatSpecifier(specifier: string): VizFormatSpecifier {
   };
 }
 
-/** 🔢️ Renders a specifier back to its canonical text, the way d3's `formatSpecifier` prints. */
+/** ↩️ Renders a specifier back to its canonical text, the way d3's `formatSpecifier` prints. */
 export function formatVizSpecifier(spec: VizFormatSpecifier): string {
   return `${spec.fill}${spec.align}${spec.sign}${spec.symbol}${spec.zero ? "0" : ""}${spec.width === undefined ? "" : Math.max(1, Math.min(21, spec.width))}${spec.comma ? "," : ""}${spec.precision === undefined ? "" : `.${Math.max(0, Math.min(20, spec.precision))}`}${spec.trim ? "~" : ""}${spec.type}`;
 }
@@ -60,13 +60,13 @@ export type VizNumberLocale = {
   readonly nan: string;
 };
 
-/** 🌍️ Number locales for every language the print product ships. */
+/** 🌐️ Number locales for every language the print product ships. */
 export const VIZ_NUMBER_LOCALES: Readonly<Record<VizLanguage, VizNumberLocale>> = {
   en: { decimal: ".", thousands: ",", grouping: [3], currency: ["$", ""], minus: "−", percent: "%", nan: "NaN" },
   de: { decimal: ",", thousands: ".", grouping: [3], currency: ["", " €"], minus: "−", percent: "%", nan: "NaN" },
 };
 
-/** 🌍️ The calendar names of one document language. */
+/** 🗓️ The calendar names of one document language. */
 export type VizTimeLocale = {
   readonly dateTime: string;
   readonly date: string;
@@ -78,7 +78,7 @@ export type VizTimeLocale = {
   readonly shortMonths: readonly string[];
 };
 
-/** 🌍️ Time locales for every language the print product ships. */
+/** 📅️ Time locales for every language the print product ships. */
 export const VIZ_TIME_LOCALES: Readonly<Record<VizLanguage, VizTimeLocale>> = {
   en: {
     dateTime: "%x, %X",
@@ -186,7 +186,7 @@ function grouper(grouping: readonly number[], thousands: string): (value: string
 
 const NUMERIC_TYPES = new Set(["%", "b", "c", "d", "e", "f", "g", "o", "p", "r", "s", "X", "x"]);
 
-/** 🔢️ Builds a number formatter for one specifier in one language. */
+/** 🔨️ Builds a number formatter for one specifier in one language. */
 export function vizFormat(specifier: string, language: VizLanguage): (value: number) => string {
   const locale = VIZ_NUMBER_LOCALES[language];
   const parsed = parseVizFormatSpecifier(specifier);
@@ -290,12 +290,12 @@ export function vizFormat(specifier: string, language: VizLanguage): (value: num
   };
 }
 
-/** 🔢️ The decimal exponent of a value, d3's internal `exponent`. */
+/** ⬆️ The decimal exponent of a value, d3's internal `exponent`. */
 export function vizExponent(value: number): number {
   return decimalParts(Math.abs(value))?.[1] ?? Number.NaN;
 }
 
-/** 🔢️ The SI-prefixed formatter pinned to one reference value, d3's `formatPrefix`. */
+/** 📌️ The SI-prefixed formatter pinned to one reference value, d3's `formatPrefix`. */
 export function vizFormatPrefix(specifier: string, value: number, language: VizLanguage): (input: number) => string {
   const parsed = parseVizFormatSpecifier(specifier);
   const exponent = Math.max(-8, Math.min(8, Math.floor(vizExponent(value) / 3))) * 3;
@@ -305,18 +305,18 @@ export function vizFormatPrefix(specifier: string, value: number, language: VizL
   return (input: number) => `${base(k * input)}${prefix}`;
 }
 
-/** 🔢️ Suggested decimal precision for a fixed-notation step, d3's `precisionFixed`. */
+/** 📏️ Suggested decimal precision for a fixed-notation step, d3's `precisionFixed`. */
 export function vizPrecisionFixed(step: number): number {
   return Math.max(0, -vizExponent(step));
 }
 
-/** 🔢️ Suggested significant digits for a rounded step over a span, d3's `precisionRound`. */
+/** 🪜️ Suggested significant digits for a rounded step over a span, d3's `precisionRound`. */
 export function vizPrecisionRound(step: number, max: number): number {
   const magnitude = Math.abs(step);
   return Math.max(0, vizExponent(Math.abs(max) - magnitude) - vizExponent(magnitude)) + 1;
 }
 
-/** 🔢️ Suggested significant digits for an SI-prefixed value, d3's `precisionPrefix`. */
+/** 🔬️ Suggested significant digits for an SI-prefixed value, d3's `precisionPrefix`. */
 export function vizPrecisionPrefix(step: number, value: number): number {
   return Math.max(0, Math.max(-8, Math.min(8, Math.floor(vizExponent(value) / 3))) * 3 - vizExponent(step));
 }
@@ -438,12 +438,12 @@ export function vizTimeFormat(specifier: string, language: VizLanguage): (date: 
 //#endregion 🔖️TimeEngine
 
 //#region 🔖️Dispatch
-/** 🔢️ `\SemioVizFormat`: one value through one specifier in the document language. */
+/** 🖨️ `\SemioVizFormat`: one value through one specifier in the document language. */
 export function formatVizValue(specifier: string, value: number, language: VizLanguage): string {
   return vizFormat(specifier, language)(value);
 }
 
-/** 🕰️ `\SemioVizTimeFormat`: one instant through one specifier in the document language. */
+/** ⏱️ `\SemioVizTimeFormat`: one instant through one specifier in the document language. */
 export function formatVizTime(specifier: string, value: Date | number, language: VizLanguage): string {
   return vizTimeFormat(specifier, language)(value instanceof Date ? value : new Date(value));
 }

@@ -10,8 +10,8 @@ use super::*;
 #[dsl(keyword = "set-frame-user-input")]
 #[value(rename_all = "camelCase")]
 pub struct SetFrameUserInput {
-    pub(crate) index: usize,
-    pub(crate) user_input: bool,
+    pub index: usize,
+    pub user_input: bool,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameUserInput {

@@ -1,1 +1,0 @@
-if(fresh.length&&readNativeCallerAuthorityV1(store.invocation.capabilities).network.offline)throw Error("Original offline producer requires current exact ready generations");

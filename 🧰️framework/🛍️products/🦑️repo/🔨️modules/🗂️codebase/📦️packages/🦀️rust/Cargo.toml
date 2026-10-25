@@ -13,7 +13,7 @@ role = "library"
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [dependencies]
 serde = { workspace = true }
@@ -23,3 +23,6 @@ semio-framework-repo-identity = { path = "../../../🪪️identity/📦️packag
 semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
 semio-framework-repo-languages = { path = "../../../🗣️languages/📦️packages/🦀️rust" }
 semio-framework-repo-yaml = { path = "../../../🧾️yaml/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

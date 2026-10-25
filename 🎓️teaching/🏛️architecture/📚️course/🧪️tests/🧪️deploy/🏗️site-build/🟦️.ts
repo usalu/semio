@@ -3,11 +3,11 @@
 import Ajv from "ajv";
 import ts from "typescript";
 import { readFileSync, readdirSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { expect, it } from "vitest";
 import budgetSchema from "../../../🏗️builder/⏱️budget/🧬️schema/🔣️.json" with { type: "json" };
 import budgetFixture from "../../../🏗️builder/⏱️budget/🧫️fixtures/🔣️.json" with { type: "json" };
-import processBudget from "../../../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🧬️schema/🔣️.json" with { type: "json" };
+import processBudget from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🧬️schema/🔣️json/🟦️.ts" with { type: "json" };
 import { courseBudgetRequestMs } from "../../../🏗️builder/⏱️budget/🟦️.ts";
 import { repoRoot, site } from "../🧰️deploy-fixtures/🟦️.ts";
 
@@ -72,6 +72,20 @@ export function registerSiteBuildTests(): void {
       if (before === undefined) delete process.env.SEMIO_VITE_CACHE_DIRECTORY;
       else process.env.SEMIO_VITE_CACHE_DIRECTORY = before;
     }
+  });
+  it("hints at low priority exactly the lazy chunks of the course document and the quizzes it names, and nothing the entry runs", async () => {
+    const { courseMaterialPreloadVitePlugin } = await import("../../../🏗️builder/🌐️vite/🟦️.ts");
+    const plugin = courseMaterialPreloadVitePlugin();
+    type Tag = { readonly tag: string; readonly attrs: Record<string, string | boolean>; readonly injectTo: string };
+    type Output = { readonly type: string; readonly fileName: string; readonly facadeModuleId?: string | null };
+    const hook = plugin.transformIndexHtml as unknown as { readonly handler: (html: string, context: { readonly path: string; readonly filename: string; readonly bundle?: Record<string, Output> }) => readonly Tag[] };
+    const course = JSON.parse(readFileSync(join(site, "🔣️.json"), "utf8")) as { readonly quizzes: readonly string[] };
+    const documents = ["🔣️.json", ...course.quizzes].map((path) => resolve(site, path));
+    const chunks = documents.map((id, index) => [`assets/m${index}`, { type: "chunk", fileName: `assets/material-${index}.js`, facadeModuleId: id }] as const);
+    const bundle = { "assets/entry": { type: "chunk", fileName: "assets/entry.js", facadeModuleId: join(site, "🟦️.ts") }, ...Object.fromEntries(chunks), "assets/style": { type: "asset", fileName: "assets/style.css" }, "assets/pets": { type: "chunk", fileName: "assets/pets.js", facadeModuleId: join(site, "../🐾️pets/🟦️.ts") } };
+    expect(plugin.apply).toBe("build");
+    expect(hook.handler("", { path: "/index.html", filename: "index.html", bundle })).toEqual(chunks.map(([, chunk]) => ({ tag: "link", attrs: { rel: "modulepreload", fetchpriority: "low", crossorigin: true, href: `/${chunk.fileName}` }, injectTo: "head" })));
+    expect(hook.handler("", { path: "/index.html", filename: "index.html" })).toEqual([]);
   });
   it("keeps the source revision out of the site build and its artifact", () => {
     const readers = sources(site).filter(path => /\bsourceRevision\b/u.test(readFileSync(path, "utf8")) && !path.includes("🧪️tests")).map(path => relative(site, path).split("\\").join("/")).sort();

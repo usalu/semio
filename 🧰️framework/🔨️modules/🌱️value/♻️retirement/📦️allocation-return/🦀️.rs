@@ -24,7 +24,7 @@ impl<const N:usize> ParentAllocationReturn<N>{
     pub fn retained_bytes(&self)->usize{self.retained_bytes}
     /// 👓️ Tests physical terminal-empty independently from logical child handback.
     pub fn terminal_is_empty(&self)->bool{self.slots.iter().all(Option::is_none)}
-    /// 🎟️ Receives only an empty typed Vec's genuine global allocation; refusal leaves its owner unchanged.
+    /// 🪫️ Receives only an empty typed Vec's genuine global allocation; refusal leaves its owner unchanged.
     pub fn return_empty_vec<T>(&mut self,owner:&mut Vec<T>,maximum_items:usize)->Result<bool,ValueError>{
         if maximum_items==0{return Ok(false);}if !owner.is_empty(){return Err(refusal(ValueRefusalKind::InvariantViolated,"parent can only receive vector backing after every typed element is returned"));}
         let layout=Layout::array::<T>(owner.capacity()).map_err(|_|refusal(ValueRefusalKind::OwnershipLimit,"returned vector allocation layout is invalid"))?;
@@ -47,7 +47,7 @@ impl<const N:usize> ParentAllocationReturn<N>{
         self.slots[slot]=Some(ReturnedAllocation{pointer,layout});self.retained_bytes+=layout.size();Ok(true)
     }
 
-    /// 🛂️ Checks the actual parent's empty vector backing authority before its inline cells are retired.
+    /// 📥️ Checks the actual parent's empty vector backing authority before its inline cells are retired.
     pub fn can_receive_vec_backing<T>(&self,capacity:usize)->Result<bool,ValueError>{
         let layout=Layout::array::<T>(capacity).map_err(|_|refusal(ValueRefusalKind::OwnershipLimit,"returned vector allocation layout is invalid"))?;
         if layout.size()==0{return Ok(true);}

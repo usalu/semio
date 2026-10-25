@@ -30,7 +30,7 @@ pub fn root_cancel_token()->CancelToken{poll_ready_now(CancelToken::root())}
 /// 👶️ Creates a child cancellation authority through the same synchronous primitive seam.
 pub fn child_cancel_token(parent:&CancelToken)->CancelToken{poll_ready_now(parent.child())}
 
-/// 🕰️ Coarse scheduler clock, never used to measure an interactive step deadline.
+/// ⏰️ Coarse scheduler clock, never used to measure an interactive step deadline.
 pub fn default_now_ms() -> Option<u64> {
     default_now_us().map(|now_us| now_us / 1_000)
 }
@@ -82,7 +82,7 @@ pub struct Operation {
 }
 
 impl Operation {
-    /// 🌱️ A fresh [`Operation`] with its preview-sequence cursor at zero.
+    /// ⛓️ A fresh [`Operation`] with its preview-sequence cursor at zero.
     pub fn new(operation: OperationId, base_revision: RevisionId, generation: Generation, seed: u64) -> Operation {
         Operation { operation, base_revision, generation, preview_sequence: 0, seed }
     }
@@ -105,7 +105,7 @@ pub enum JobSequenceExhausted {
     Wake,
 }
 
-/// ✅️ Result of [`validate_commit`]: whether a [`CommitCandidate`]'s base revision/generation still
+/// ✔️ Result of [`validate_commit`]: whether a [`CommitCandidate`]'s base revision/generation still
 /// match the live document, or the live values it was found stale against — a stale candidate must be
 /// explicitly rebased or discarded by the caller, NEVER silently applied (design ticket's governing
 /// commit-validation rule).

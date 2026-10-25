@@ -19,7 +19,7 @@ impl<const HIGH: bool> Tree for Limb<HIGH> {
     }
 }
 
-/// 🔢️ A signed word is spelled as its two's-complement bits.
+/// 🖊️ A signed word is spelled as its two's-complement bits.
 #[repr(transparent)]
 struct SignedLimb<const HIGH: bool>(i64);
 
@@ -30,7 +30,7 @@ impl<const HIGH: bool> Tree for SignedLimb<HIGH> {
     }
 }
 
-/// 🔢️ A binary64 is spelled as its bit pattern limbs.
+/// 🌊️ A binary64 is spelled as its bit pattern limbs.
 #[repr(transparent)]
 struct FloatLimb<const HIGH: bool>(f64);
 

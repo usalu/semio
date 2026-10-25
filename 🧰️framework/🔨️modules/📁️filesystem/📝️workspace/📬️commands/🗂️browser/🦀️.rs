@@ -17,7 +17,7 @@ pub fn history_selection<'a>(active:&'a str,pending:Option<&'a str>,action:Histo
 pub fn history_confirmation(active:&str,pending:Option<&str>,action:HistoryAction,value:&str,busy:bool)->Result<(),BrowserError>{if busy{return Err(BrowserError::Busy);}if value!=history_selection(active,pending,action)?{return Err(BrowserError::ConfirmHistory);}Ok(())}
 impl HistoryForm{pub fn confirmation(&self)->Result<&str,BrowserError>{history_selection(&self.expected.active,self.expected.pending.as_deref(),self.action)}}
 impl BrowserState{
- /// 🗂️ Listing projection retains canonical query matches independently of device widget state.
+ /// 🔎️ Listing projection retains canonical query matches independently of device widget state.
  pub fn rows(&mut self)->Vec<String>{let query=self.query.to_lowercase();self.visible=self.entries.iter().enumerate().filter(|(_,entry)|entry.name.to_lowercase().contains(&query)).map(|(index,_)|index).collect();let mut rows=self.visible.iter().map(|index|{let entry=&self.entries[*index];format!("{}{}",entry.name,if entry.directory{"/"}else{""})}).collect::<Vec<_>>();if !self.directory.is_empty()&&self.query.is_empty(){rows.insert(0,"../".into());}rows}
  /// 📃️ Paged history replaces only local query state while retaining the real backend cursor.
  pub fn adopt_page(&mut self,page:crate::HistoryPage){self.history=true;self.directory.clear();self.query.clear();self.entries=page.entries;self.next=page.next;self.form=None;self.history_form=None;self.history_root=None;}

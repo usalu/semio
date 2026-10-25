@@ -39,7 +39,7 @@ async function bars(ctx: AdapterContext, fixture: string): Promise<number[]> {
     .flatMap((record) => record.values.map(Number));
 }
 
-/** 📐️ The specification vectors of the scenario, flattened the same way. */
+/** 📕️ The specification vectors of the scenario, flattened the same way. */
 const specified = (ctx: AdapterContext): number[] =>
   rows(ctx).flatMap((row) => [Number(row.x), Number(row.y), Number(row.w), Number(row.h)].map(grid));
 // #endregion 🧫️Vectors
@@ -55,7 +55,7 @@ export default defineTestAdapter({
   scenarios: {
     /** 📐️/🎯️ Interval bars against the specified lane geometry. */
     "interval": laneScenario("interval.tex"),
-    /** 📐️/🎯️ Swimlane bars against the same spans in a thinner lane fill. */
+    /** 🌊️/🎯️ Swimlane bars against the same spans in a thinner lane fill. */
     "swimlane": laneScenario("swimlane.tex"),
   },
 });

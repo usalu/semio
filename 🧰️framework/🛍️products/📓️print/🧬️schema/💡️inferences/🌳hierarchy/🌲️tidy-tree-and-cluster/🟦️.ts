@@ -95,7 +95,7 @@ function nextAncestor<T>(vim: TreeShadow<T>, v: TreeShadow<T>, ancestor: TreeSha
 /** 🌳 Options of `\SemioVizLayout{tree}`; `nodeSize` switches from a normalised to an absolute layout. */
 export type VizTreeOptions<T> = { readonly size?: readonly [number, number]; readonly nodeSize?: readonly [number, number]; readonly separation?: (a: VizHierarchyNode<T>, b: VizHierarchyNode<T>) => number };
 
-/** 🌳 The tidy tree layout of Reingold, Tilford and Buchheim. */
+/** 🌴️ The tidy tree layout of Reingold, Tilford and Buchheim. */
 export function vizTree<T>(root: VizHierarchyNode<T>, options: VizTreeOptions<T> = {}): VizHierarchyNode<T> {
   const separation = options.separation ?? ((a: VizHierarchyNode<T>, b: VizHierarchyNode<T>) => (a.parent === b.parent ? 1 : 2));
   const [dx, dy] = options.nodeSize ?? options.size ?? [1, 1];
@@ -185,7 +185,7 @@ export function vizTree<T>(root: VizHierarchyNode<T>, options: VizTreeOptions<T>
   return root;
 }
 
-/** 🌳 The dendrogram cluster layout: every leaf on the same baseline. */
+/** 📏️ The dendrogram cluster layout: every leaf on the same baseline. */
 export function vizCluster<T>(root: VizHierarchyNode<T>, options: VizTreeOptions<T> = {}): VizHierarchyNode<T> {
   const separation = options.separation ?? ((a: VizHierarchyNode<T>, b: VizHierarchyNode<T>) => (a.parent === b.parent ? 1 : 2));
   const [dx, dy] = options.nodeSize ?? options.size ?? [1, 1];

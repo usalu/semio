@@ -126,7 +126,7 @@ export abstract class VerifyInteractivityLanes extends VerifyTaxonomyLanes {
     sayVerifyV1("interactivity.p1w-live-source-and-hostile");
   }
 
-  /** 🌱️ Runs the isolated P1x retained create-document catalog CAS source and hostile-mutation gate. */
+  /** ▶️ Runs the isolated P1x retained create-document catalog CAS source and hostile-mutation gate. */
   protected runInteractivityP1x(): void {
     this.lanes.interactivityDatabaseCreateCatalogSelfTests();
     const failures = interactivityDatabaseCreateCatalogFailures(

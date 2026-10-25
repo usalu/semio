@@ -7,12 +7,12 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct UpsertMember {
-    pub(crate) path: JsonPath,
-    pub(crate) key: String,
-    pub(crate) value: JsonValue,
+    pub path: JsonPath,
+    pub key: String,
+    pub value: JsonValue,
     /// 🧭️ Where a newly added member lands among its object's members; `None` appends.
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for UpsertMember {

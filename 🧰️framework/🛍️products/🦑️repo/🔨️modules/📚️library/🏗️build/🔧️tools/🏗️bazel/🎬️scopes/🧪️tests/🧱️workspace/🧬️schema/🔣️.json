@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:bazel-scope-workspace-corpus:v1",
+  "title": "Bazel Scope Workspace Corpus",
+  "description": "Language-agnostic fixture of the scope plumbing: a two-project checkout whose generator declares the source execution kind, the task whose action class a scope serves and the task that keeps the full executor closure.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "files",
+    "graph",
+    "request",
+    "scoped",
+    "unscoped",
+    "scopeId",
+    "identity"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "graph": {
+      "type": "object"
+    },
+    "request": {
+      "type": "object"
+    },
+    "scoped": {
+      "type": "string",
+      "minLength": 1
+    },
+    "unscoped": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scopeId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "identity": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

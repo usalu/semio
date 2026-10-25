@@ -1,7 +1,7 @@
 /** 🏭 Resident executor: one process that keeps its lease/image custody open and runs one repo command after another inside it, with the process-wide state (environment, directory, exit code) restored after every command. */
 import {createInterface} from "node:readline";
 
-const AUTHORITY=/Undeclared original Repo build selection|Original Repo build caller required|Undeclared original Repo-to-Nx child selection|Undeclared original Nx child selection/u;
+const AUTHORITY=/Undeclared original Repo build selection|Original Repo build caller required/u,AUTHORITY_KEY=/^build\.nx\.(?:caller-required|child-selection-undeclared|original-child-selection-undeclared)$/u;
 
 /** 🧽 Runs `body` with the request's environment patch and directory applied and restores everything afterwards; resolves the exit code the body left in `process.exitCode`. */
 export async function isolateRequestV1(request,body,state=process){
@@ -57,7 +57,7 @@ export async function serveExecutorV1({lines,write,openSession,run,limits,now=()
    const message=String(error?.message??error);
    if(controller.signal.aborted)exit=130;
    else if(error?.name==="ServiceRefusalV1"){exit=70;refusal="service";refusalCode=error.code;refusalFields=error.fields;}
-   else if(AUTHORITY.test(message)){exit=70;refusal="authority";}
+   else if(AUTHORITY.test(message)||AUTHORITY_KEY.test(String(error?.key??""))){exit=70;refusal="authority";}
    else{exit=1;state.stderr?.write?.(message+"\n");}
   }finally{current=undefined;}
   served++;

@@ -23,7 +23,7 @@
   "targets": {
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "default",
         "^default",

@@ -221,7 +221,6 @@ fn empty_fill_capture_and_ingress_keep_every_original_descriptor_until_admitted(
     assert!(ingress.terminal_is_empty());
     assert_eq!(released,birth.requested_bytes);
     original.finish();
-    eprintln!("[DEBUG] empty fill ingress and capture retain all descriptor custody until exact physical release");
 }
 
 #[cfg(test)]
@@ -323,5 +322,4 @@ fn board_fill_capture_original_page_births_keep_pending_on_each_denied_axis() {
     while !capture.terminal_is_empty() { original.close_capture(&mut capture, BoardFillOriginalFixture::stock()); }
     drop(capture);
     original.finish();
-    eprintln!("[DEBUG] original Board capture page boundaries preserve pending source on all denied axes and reconcile actual allocator bytes once");
 }

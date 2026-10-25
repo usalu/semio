@@ -33,10 +33,10 @@ class TypecheckScript extends BundleScript {
   }
 }
 
-/** 📖️ `dev` — the stories gallery on `PETS_STORIES_PORT` (default 6069) for the menagerie named by `PETS_MENAGERIE`. */
+/** 📖️ `dev` — the stories gallery on `PETS_STORIES_PORT` (default 6069) for the menagerie named by `PETS_MENAGERIE` (default: the architecture course menagerie). */
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, { runtimeChannels:[], config: "../../🏗️builder/🌐️vite/🟦️.ts", portEnv: "PETS_STORIES_PORT", defaultPort: "6069", fixedPort: true });
+    await runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, { runtimeChannels:[], config: "../../🏗️builder/🌐️vite/🟦️.ts", portEnv: "PETS_STORIES_PORT", defaultPort: "6069", fixedPort: true, env: { PETS_MENAGERIE: process.env.PETS_MENAGERIE || "🎓️teaching/🏛️architecture/🐾️pets/🔣️.json" } });
   }
 }
 

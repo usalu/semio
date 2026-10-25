@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️Riff
-struct RiffEntry<'a> {
+pub(super) struct RiffEntry<'a> {
     pub(super) fourcc: [u8; 4],
     pub(super) payload: &'a [u8],
 }

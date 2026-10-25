@@ -12,7 +12,7 @@ pub enum OverlayAnchor {
     Point { x: f32, y: f32 },
 }
 
-/// 🪟️ Ported from `events.rs::OpenOverlay`, `root`/`anchor` swapped to [`ElementId`] for the same
+/// 🔓️ Ported from `events.rs::OpenOverlay`, `root`/`anchor` swapped to [`ElementId`] for the same
 /// cross-frame-survival reason as [`OverlayAnchor`].
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct OpenOverlay {
@@ -64,7 +64,7 @@ pub fn resolve_overlay_placement(tree: &DispatchTree, anchor: OverlayAnchor, con
     (resolved.x, resolved.y)
 }
 
-/// 📐️ [`resolve_overlay_placement`] plus the side a collision flip settled on, for a caller that
+/// 💥️ [`resolve_overlay_placement`] plus the side a collision flip settled on, for a caller that
 /// also wants React's `transformOrigin`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn resolve_overlay_placement_side(tree: &DispatchTree, anchor: OverlayAnchor, content_size: (f32, f32), viewport: (f32, f32), placement: OverlayPlacement, flow: FlowInline) -> ResolvedOverlayPlacement {
@@ -106,7 +106,7 @@ pub struct EditState {
     pub composition: Option<String>,
 }
 
-/// ✍️ Ported from `events.rs::prev_char_boundary` verbatim.
+/// ⏮️ Ported from `events.rs::prev_char_boundary` verbatim.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub(super) fn prev_char_boundary(text: &str, index: usize) -> usize {
     if index == 0 {
@@ -119,7 +119,7 @@ pub(super) fn prev_char_boundary(text: &str, index: usize) -> usize {
     candidate
 }
 
-/// ✍️ Ported from `events.rs::next_char_boundary` verbatim.
+/// ⏭️ Ported from `events.rs::next_char_boundary` verbatim.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub(super) fn next_char_boundary(text: &str, index: usize) -> usize {
     if index >= text.len() {
@@ -138,7 +138,7 @@ pub(super) fn selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
     (anchor.min(caret), anchor.max(caret))
 }
 
-/// ✍️ Ported from `events.rs::insert_at_caret` verbatim.
+/// ✏️ Ported from `events.rs::insert_at_caret` verbatim.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub(super) fn insert_at_caret(edit: &mut EditState, text: &str) {
     let (start, end) = selection_bounds(edit.anchor, edit.caret);

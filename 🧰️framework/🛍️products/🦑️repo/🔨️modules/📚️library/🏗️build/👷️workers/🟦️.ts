@@ -2,28 +2,28 @@ import {availableParallelism,totalmem} from "node:os";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
-/** 👷️ What a task does, derived from its target name and continuity, never from a build tool. */
+/** 🎯️ What a task does, derived from its target name and continuity, never from a build tool. */
 export type WorkerActionKindV1="test"|"check"|"generate"|"build"|"script"|"service";
 
-/** 👷️ How one action kind uses persistent workers. */
+/** 🔏️ How one action kind uses persistent workers. */
 export type WorkerKindPolicyV1=Readonly<{workers:boolean;maxInstances:number;multiplex:boolean;inProcess:boolean}>;
 
-/** 👷️ The authored tool-neutral worker pool policy, stored with the neutral build policy. */
+/** 🔧️ The authored tool-neutral worker pool policy, stored with the neutral build policy. */
 export type WorkerPolicyV1=Readonly<{version:1;enabled:boolean;protocol:"json";localJobs:Readonly<{maximum:number}>;memory:Readonly<{hostShareBasisPoints:number;perWorkerMegabytes:number}>;sandboxing:boolean;cancellation:boolean;resetAfterRequests:number;classification:readonly Readonly<{kind:WorkerActionKindV1;continuous?:boolean;pattern?:string}>[];defaultKind:Exclude<WorkerActionKindV1,"service">;kinds:Readonly<Record<WorkerActionKindV1,WorkerKindPolicyV1>>}>;
 
-/** 👷️ A policy resolved against one host and one invocation. */
+/** 🗓️ A policy resolved against one host and one invocation. */
 export type WorkerPlanV1=Readonly<{version:1;enabled:boolean;protocol:"json";localJobs:number;memory:Readonly<{totalMegabytes:number;perWorkerMegabytes:number;instances:number}>;sandboxing:boolean;cancellation:boolean;resetAfterRequests:number;kinds:Readonly<Record<WorkerActionKindV1,WorkerKindPolicyV1>>}>;
 
-/** 👷️ The host facts a plan depends on. */
+/** ☁️ The host facts a plan depends on. */
 export type WorkerHostV1=Readonly<{cores:number;memoryBytes:number}>;
 
-/** 👷️ What the caller may override: the local job count and whether workers run at all. */
+/** 🧵️ What the caller may override: the local job count and whether workers run at all. */
 export type WorkerOverridesV1=Readonly<{jobs?:number;workers?:boolean}>;
 
 /** 👷️ How exactly a build tool honours one contract field. */
 export type WorkerSupportV1="exact"|"approximate"|"unsupported";
 
-/** 👷️ What one build tool does with one contract field. */
+/** 🗺️ What one build tool does with one contract field. */
 export type WorkerMappingV1=Readonly<{field:string;support:WorkerSupportV1;setting:string}>;
 
 export const WORKER_ACTION_KINDS_V1=Object.freeze(["test","check","generate","build","script","service"] as const);

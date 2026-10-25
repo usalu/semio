@@ -28,7 +28,7 @@ function rows(ctx: AdapterContext): Record<string, string>[] {
   return body.map((row) => Object.fromEntries(header!.map((name, index) => [name, row[index] ?? ""])));
 }
 
-/** 🗂️ The catalogue entries of the families the table names, ordered by family and then by kind id. */
+/** 📚️ The catalogue entries of the families the table names, ordered by family and then by kind id. */
 function kinds(families: readonly string[]): CatalogKind[] {
   const catalog = JSON.parse(readFileSync(CATALOG, "utf8")) as { kinds: CatalogKind[] };
   const wanted = new Set(families);
@@ -76,7 +76,7 @@ function signatures(records: readonly ProbeRecord[]): Map<string, string[]> {
   return streams;
 }
 
-/** 🎯️ Kind count, distinct-signature count and empty-stream count of every family, in table order. */
+/** 🧶️ Kind count, distinct-signature count and empty-stream count of every family, in table order. */
 async function coverage(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
   const families = rows(ctx).map((row) => row.family!);
   const entries = kinds(families);
@@ -93,7 +93,7 @@ async function coverage(ctx: AdapterContext): Promise<{ projection: ProbeProject
   return { projection: { "catalog/domain-families": measured } };
 }
 
-/** 🧪️ The §13 reading-order grid over the table's own term frequencies, one column wide. */
+/** 📖️ The §13 reading-order grid over the table's own term frequencies, one column wide. */
 function termStatements(ctx: AdapterContext): VizProbeStatement[] {
   const table = rows(ctx);
   const first = table[0]!;
@@ -112,7 +112,7 @@ function termStatements(ctx: AdapterContext): VizProbeStatement[] {
   return body;
 }
 
-/** 🎯️ The glyph body height of every placed word, in placement order. */
+/** 📏️ The glyph body height of every placed word, in placement order. */
 async function termSizes(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
   const records = await compileVizProbeDocumentInContext(ctx,
     { case: CASE, scenario: ctx.scenario.id, packages: PACKAGES, body: termStatements(ctx) }
@@ -132,7 +132,7 @@ function specifiedCoverage(ctx: AdapterContext): ProbeProjection {
   return { "catalog/domain-families": flat };
 }
 
-/** 🔮️ d3-array: the frequency extent is the scale domain, `descending` is the placement order. */
+/** 🔤️ d3-array: the frequency extent is the scale domain, `descending` is the placement order. */
 function d3TermSizes(ctx: AdapterContext): ProbeProjection {
   const table = rows(ctx);
   const first = table[0]!;
@@ -151,7 +151,7 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     "every-domain-kind-draws-its-own-geometry": {
-      /** 📋️ The counts the feature specifies for every family it names. */
+      /** 🔢️ The counts the feature specifies for every family it names. */
       oracle: (ctx: AdapterContext) => ({ projection: specifiedCoverage(ctx) }),
       /** 🎯️ The same counts measured from the compiled catalogue kinds. */
       subject: async (ctx: AdapterContext) => await coverage(ctx),
@@ -159,7 +159,7 @@ export default defineTestAdapter({
     "term-glyph-size-follows-the-frequency-extent": {
       /** 🔮️ d3-array's extent and descending order over the same frequencies. */
       oracle: (ctx: AdapterContext) => ({ projection: d3TermSizes(ctx) }),
-      /** 🎯️ The glyph body heights the §13 grid layout writes. */
+      /** 📐️ The glyph body heights the §13 grid layout writes. */
       subject: async (ctx: AdapterContext) => await termSizes(ctx),
     },
   },

@@ -14,8 +14,11 @@ if (!output) throw Error("Workspace identity tests require explicit SEMIO_TEST_A
 const generated = resolve(output, `wi-${process.pid}`);
 mkdirSync(generated, { recursive: true });
 
+const hostEnvironment: NodeJS.ProcessEnv = { ...process.env };
+delete hostEnvironment.SEMIO_WORKSPACE_ROOT;
+
 function run(command: string, args: string[], cwd = generated): string {
-  const result = spawnSync(command, args, { cwd, encoding: "utf8", timeout: 120_000, env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1", GOWORK: "off", DOTNET_NOLOGO: "1", DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1" } });
+  const result = spawnSync(command, args, { cwd, encoding: "utf8", timeout: 120_000, env: { ...hostEnvironment, PYTHONDONTWRITEBYTECODE: "1", GOWORK: "off", DOTNET_NOLOGO: "1", DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1" } });
   if (result.error || result.status !== 0) throw Error(`${command}: ${result.error ?? result.status}\n${result.stdout}\n${result.stderr}`);
   return result.stdout.trim();
 }
@@ -61,9 +64,11 @@ test("workspace identity schema and independent ancestry oracle agree", () => {
 
 test("native Rust, Python, Go and C# hosts resolve the same neutral workspace vectors", () => {
   const rustLibrary = join(generated, "libworkspace_host.rlib"), rustMain = join(generated, "main.rs"), rustBinary = join(generated, process.platform === "win32" ? "rust.exe" : "rust");
-  run("rustc", ["--edition=2021", "--crate-type=rlib", "--crate-name=workspace_host", join(host, "🦀️.rs"), "-o", rustLibrary]);
+  const workspaceLibrary = join(generated, "libsemio_framework_process_routing_workspace.rlib");
+  run("rustc", ["--edition=2021", "--crate-type=rlib", "--crate-name=semio_framework_process_routing_workspace", resolve(import.meta.dir, "../🦀️.rs"), "-o", workspaceLibrary]);
+  run("rustc", ["--edition=2021", "--crate-type=rlib", "--crate-name=workspace_host", join(host, "🦀️.rs"), "--extern", `semio_framework_process_routing_workspace=${workspaceLibrary}`, "-o", rustLibrary]);
   writeFileSync(rustMain, 'fn main()->std::process::ExitCode {workspace_host::run_main(workspace_host::Adapter::new("rust").subject("workspace", |context| Ok(workspace_host::Outcome::projection(workspace_host::Json::String(context.repo_root.to_string_lossy().into_owned())))))}');
-  run("rustc", ["--edition=2021", "--crate-name=workspace_probe", rustMain, "--extern", `workspace_host=${rustLibrary}`, "-o", rustBinary]);
+  run("rustc", ["--edition=2021", "--crate-name=workspace_probe", rustMain, "--extern", `workspace_host=${rustLibrary}`, "-L", `dependency=${generated}`, "-o", rustBinary]);
   const goDirectory = join(generated, "go");
   mkdirSync(goDirectory, { recursive: true });
   writeFileSync(join(goDirectory, "go.mod"), `module workspace-probe\n\ngo 1.25\n\nrequire semio.tech/repo/test v0.0.0\nreplace semio.tech/repo/test => ${JSON.stringify(join(host, "📦️packages/🐹️go"))}\n`);
@@ -89,7 +94,7 @@ test("native Rust, Python, Go and C# hosts resolve the same neutral workspace ve
     writeFileSync(plan, JSON.stringify({ schemaVersion: 2, owner: "workspace", case: row.id, role: "subject", implementation: "workspace", workDir: start, outputDir: directory, artifactDir: directory, inputs: [], scenarios: [{ id: "workspace", name: "workspace", level: "fundamental", mode: "batch" }] }));
     for (const [language, executable] of [["Rust", rustBinary], ["Go", goBinary]]) {
       const resultPath = join(directory, `${language}.jsonl`);
-      const result = spawnSync(executable!, ["--plan", plan, "--out", resultPath], { encoding: "utf8", timeout: 10_000 });
+      const result = spawnSync(executable!, ["--plan", plan, "--out", resultPath], { encoding: "utf8", timeout: 10_000, env: hostEnvironment });
       expect(result.error, `${language} ${row.id}`).toBeUndefined();
       if (expected === null) expect(result.status, `${language} ${row.id}`).toBe(2);
       else {
@@ -101,7 +106,6 @@ test("native Rust, Python, Go and C# hosts resolve the same neutral workspace ve
 }, 120_000);
 
 test("workspace identity production consumers mount their actual neutral helper",()=>{
- const source=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs"),"utf8");
- expect(source).toContain("workspace_identity::is_workspace_root(path,");expect(source).toContain("mod workspace_identity;");expect(source).not.toMatch(/#\[cfg\(test\)\]\s*#\[path\s*=\s*"[^"\n]+workspace\/🦀️\.rs"\]\s*mod workspace_identity;/);
- console.log("[DEBUG] MCP production path admission mounts the defining tool-neutral workspace identity outside test-only cfg; native compilation remains separate");
+ const source=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧭️plugin-paths-and-descriptor/🦀️.rs"),"utf8");
+ expect(source).toContain("workspace_identity::is_workspace_root(path,");expect(source).toContain("use semio_framework_process_routing_workspace as workspace_identity;");expect(source).not.toMatch(/#\[cfg\(test\)\]\s*#\[path\s*=\s*"[^"\n]+workspace\/🦀️\.rs"\]\s*mod workspace_identity;/);
 });

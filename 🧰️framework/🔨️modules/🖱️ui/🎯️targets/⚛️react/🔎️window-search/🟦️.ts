@@ -21,7 +21,7 @@ function searchSuggestionPointerTarget(event: Pick<PointerEvent, "target">): Ele
   return null;
 }
 
-/** 🎯️ True when a pointer event targets a search suggestion action row. */
+/** 🔎️ True when a pointer event targets a search suggestion action row. */
 export function isSearchSuggestionActionTarget(event: Pick<PointerEvent, "target">): boolean {
   return Boolean(searchSuggestionPointerTarget(event)?.closest('[data-slot="command-item"]'));
 }
@@ -31,7 +31,7 @@ export function searchCompletionSuffix(query: string, item: SearchPossible | und
   return searchInlineCompletion(query, item)?.suffix ?? "";
 }
 
-/** ⌨️ First non-empty inline completion suffix across ranked {@link SearchPossible} matches. */
+/** ⏭️ First non-empty inline completion suffix across ranked {@link SearchPossible} matches. */
 export function searchActiveCompletionSuffix(query: string, matches: readonly SearchPossible[], index: number): string {
   return searchActiveInlineCompletion(query, matches, index)?.suffix ?? "";
 }

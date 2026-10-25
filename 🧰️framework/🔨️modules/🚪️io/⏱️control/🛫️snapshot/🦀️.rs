@@ -7,7 +7,7 @@ impl<'owner,'control> NativeSnapshotEncodeOwner<'owner,'control>{
  pub(super) fn borrowed_pending(native:&'owner mut NativeEncodeControl<'control>,grant:RetainedCloneGrant,wallet:&'owner mut RetainedCloneProgress,pending:Option<&'owner mut Option<Box<dyn ErasedSnapshotRetirement>>>)->Self{let mut owner=Self::borrowed(native,grant,wallet);owner.pending=pending;owner}
  pub(super) fn with_io<T>(&mut self,operation:impl FnOnce(&mut super::IoRunControl<'_,'control>)->Result<T,ValueError>)->Result<T,ValueError>{let mut run=super::IoRunControl::borrowed_encoding(self.native,self.grant,&mut self.progress,self.pending.as_deref_mut());operation(&mut run)}
  pub(super) fn with_io_companion<T>(&mut self,decode:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'control>,operation:impl FnOnce(&mut super::IoRunControl<'_,'control>)->Result<T,ValueError>)->Result<T,ValueError>{let mut run=super::IoRunControl::borrowed_native(decode,self.native,self.grant,&mut self.progress,self.pending.as_deref_mut(),super::IoNativeDirection::Encode);operation(&mut run)}
- /// 🫴️ Requires original native authority and an independently supplied full physical grant.
+ /// 🧲️ Requires original native authority and an independently supplied full physical grant.
  pub fn new(native:&'owner mut NativeEncodeControl<'control>,grant:RetainedCloneGrant)->Self{Self{native,grant,progress:RetainedCloneProgress::default(),wallet:None,pending:None}}
  /// 🔗️ Reborrows the caller's existing physical wallet without resetting its accepted receipts.
  pub(super) fn borrowed(native:&'owner mut NativeEncodeControl<'control>,grant:RetainedCloneGrant,wallet:&'owner mut RetainedCloneProgress)->Self{let progress=*wallet;Self{native,grant,progress,wallet:Some(wallet),pending:None}}
@@ -22,7 +22,7 @@ impl<'owner,'control> NativeSnapshotEncodeOwner<'owner,'control>{
 
  /// 🔭️ Reborrows the same original callback, allocation port and cumulative native receipt.
  pub fn native(&mut self)->&mut NativeEncodeControl<'control>{self.native}
- /// 🔗️ Keeps actual parent custody and accepted receipts through original native scopes.
+ /// 💻️ Keeps actual parent custody and accepted receipts through original native scopes.
  pub fn scoped_native<O>(&mut self,maximum:usize,observer:&mut dyn FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool,operation:impl FnOnce(&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<O,ValueError>)->Result<O,ValueError>{let grant=self.remaining_grant();let pending=self.pending.as_deref_mut();let mut performed=RetainedCloneProgress::default();let result=self.native.scoped_maximum(maximum,|native|native.scoped_observer(observer,|native|{let mut original=NativeSnapshotEncodeOwner{native,grant,progress:Default::default(),wallet:None,pending};let result=operation(&mut original);performed=original.progress();result}));self.record_progress(performed).map_err(|error|error.with_retained_progress(performed))?;result.map_err(|error|error.with_retained_progress(performed))}
 
 }
@@ -72,7 +72,7 @@ impl<'owner,'control> NativeSnapshotEncodeOwner<'owner,'control>{
   result.map_err(|error|error.with_retained_progress(performed))
  }
 
- /// 🫴️ Commits output only after exact original grants retire the admitted intermediate frame.
+ /// 📩️ Commits output only after exact original grants retire the admitted intermediate frame.
  pub fn receive<T:RetireOwned,O:RetireOwned>(&mut self,operation:impl FnOnce(&mut Option<T>,&mut NativeEncodeControl<'_>,&mut NativeSnapshotBodyWallet)->Result<O,ValueError>)->Result<O,ValueError>{let remaining=self.remaining_grant();let mut performed=RetainedCloneProgress::default();let result=receive(self.native,remaining,&mut performed,self.pending.as_deref_mut(),|slot,native,body,_pending|operation(slot,native,body));self.record_progress(performed).map_err(|error|error.with_retained_progress(performed))?;result.map_err(|error|error.with_retained_progress(performed))}
  /// 🪆️ Composes a child's real receiving frame under the same original recipient and physical wallet.
  pub fn receive_nested<T:RetireOwned,O:RetireOwned>(&mut self,operation:impl FnOnce(&mut Option<T>,&mut NativeSnapshotEncodeOwner<'_, 'control>)->Result<O,ValueError>)->Result<O,ValueError>{let remaining=self.remaining_grant();let mut performed=RetainedCloneProgress::default();let result=receive(self.native,remaining,&mut performed,self.pending.as_deref_mut(),|slot,native,body,pending|{let mut original=NativeSnapshotEncodeOwner{native,grant:body.remaining_grant(),progress:Default::default(),wallet:None,pending:Some(pending)};let result=operation(slot,&mut original);let progress=original.progress();drop(original);body.record_progress(progress)?;result});self.record_progress(performed).map_err(|error|error.with_retained_progress(performed))?;result.map_err(|error|error.with_retained_progress(performed))}
@@ -129,7 +129,7 @@ pub(super) fn receive<T:RetireOwned,O:RetireOwned,N:SnapshotAdmission>(native:&m
   if let Some(parent)=parent{native.charge(frame_bytes)?;native.checkpoint()?;let(result,pending)=construct(native);*parent=pending;result}else{native.with_retirement_owner(frame_bytes,construct)}
 }
 
-/// 🪑️ Retains the exact typed cursor and output through either original native direction.
+/// 🖱️ Retains the exact typed cursor and output through either original native direction.
 pub(super) fn drive_cursor<T:RetireOwned,O:RetireOwned,N:SnapshotAdmission>(native:&mut N,original_grant:RetainedCloneGrant,performed:&mut RetainedCloneProgress,parent:Option<&mut Option<Box<dyn ErasedSnapshotRetirement>>>,cursor:&mut Option<T>,mut advance:impl FnMut(&mut T,&mut N,RetainedCloneGrant)->(Result<Option<O>,ValueError>,RetainedCloneProgress))->Result<O,ValueError>{
   let remaining=original_grant;let frame_bytes=size_of::<NativeSnapshotReceiving<T,O>>();
   if cursor.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot cursor original is absent"))}

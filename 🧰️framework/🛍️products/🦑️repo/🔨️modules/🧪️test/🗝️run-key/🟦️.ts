@@ -1,4 +1,4 @@
-/** 🗝️ Run keys
+/** ⌨️ Run keys
  *
  * The content-addressed key and manifest of one run.
  */
@@ -34,16 +34,16 @@ export type RunKeyComponents = Readonly<{
   level: TestLevel;
 }>;
 
-/** 🗝️ The run key itself — a digest over the ordered component record. */
+/** 🔑️ The run key itself — a digest over the ordered component record. */
 export function runKey(components: RunKeyComponents): string {
   return digest(JSON.stringify(canonicalize(components)));
 }
 
-/** 🗝️ The full run manifest written beside a published run directory. */
+/** 📮️ The full run manifest written beside a published run directory. */
 export type RunManifest = Readonly<{ schema: "semio.repository-test.run-manifest/v2"; runId: string; runKey: string; baselineSha: string; startedAt?: string; finishedAt?: string; retention: RetentionClass; components: RunKeyComponents; artifacts?: readonly ResultArtifact[] }>;
 
 /**
- * 🗝️ Assembles the run key of one execution. The TOLERANCE PROFILE is folded into
+ * 🧮️ Assembles the run key of one execution. The TOLERANCE PROFILE is folded into
  * `comparisonProfileDigest` deliberately: a loosened tolerance that reused an earlier parity verdict
  * would report a pass nobody ever measured.
  */

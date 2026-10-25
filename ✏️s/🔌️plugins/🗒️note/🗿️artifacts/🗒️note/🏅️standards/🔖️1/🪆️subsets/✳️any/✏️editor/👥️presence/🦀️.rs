@@ -9,7 +9,7 @@ use pack::snapshot::ArtifactPack;
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: peer selection/hover no longer live here —
 /// they broadcast automatically via the framework's typed `PresenceInteraction` (assembled from the
 /// "blocks" domain's `InteractionState`, zero app code).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
@@ -21,7 +21,11 @@ pub struct NotePresence {
     pub camera_zoom: f64,
 }
 
-impl store::ArtifactPresenceSnapshot for NotePresence {}
+impl store::ArtifactPresenceSnapshot for NotePresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl Default for NotePresence {
     fn default() -> Self {

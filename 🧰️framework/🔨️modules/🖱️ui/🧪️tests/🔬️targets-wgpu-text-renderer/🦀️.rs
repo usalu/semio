@@ -2,6 +2,8 @@
 use semio_framework_ui_text::*;
 use semio_framework_ui_text::text_reference::KERNED_PANGRAM;
 
+const TOUR_BODY: &str = "A quick tour of the viewport, utilities, and panels before you start composing.";
+
 #[test]
 fn the_retained_painter_pens_the_kerned_caret_and_breaks_where_the_kerned_wrap_does() {
     use semio_framework_ui_draw_contract::{DrawList, KIND_GLYPH};

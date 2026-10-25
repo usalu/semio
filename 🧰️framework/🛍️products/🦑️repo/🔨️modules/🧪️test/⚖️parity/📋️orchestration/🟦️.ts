@@ -11,7 +11,7 @@ import { type TestLevel } from "../../../../../../🔨️modules/🏃️process/
 import { Script,withIssuedResourceControlV1,type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { runtimeWhichV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeWhichV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 /**
  * 🎭️ The case's oracle decision: which implementation serves the oracle role, or the recorded no-oracle decision. A
@@ -45,7 +45,7 @@ export function subjectImplementations(repoRoot: string, discovered: DiscoveredC
   return candidates.filter((candidate) => ownerShipsImplementation(repoRoot, discovered, candidate) && !(decision.implementation === candidate && (decision.hostedByCase || !adapterRegistersSubject(repoRoot, discovered, candidate))));
 }
 
-/** 🎯️ The declared execution mode of one planned scenario — what a no-oracle substitute must match. */
+/** 🗓️ The declared execution mode of one planned scenario — what a no-oracle substitute must match. */
 export function planModeOf(repoRoot: string, discovered: DiscoveredCase, level: TestLevel, scenarioId: string): string {
   return buildCasePlan(repoRoot, discovered, level).plan.scenarios.find((scenario) => scenario.id === scenarioId)?.mode ?? "differential";
 }

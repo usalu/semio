@@ -20,7 +20,7 @@ pub mod retirement;
 //#region 🔖️Presence
 /// 👥️ Shareable live CAD view state — camera and engagement step. Peer mesh
 /// selection/hover now broadcasts via the framework's typed `PresenceInteraction`, not here.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "cad.presence")]
@@ -34,7 +34,11 @@ pub struct CadPresence {
     pub engagement_pane: Option<String>,
 }
 
-impl store::ArtifactPresenceSnapshot for CadPresence {}
+impl store::ArtifactPresenceSnapshot for CadPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl Default for CadPresence {
     fn default() -> Self {

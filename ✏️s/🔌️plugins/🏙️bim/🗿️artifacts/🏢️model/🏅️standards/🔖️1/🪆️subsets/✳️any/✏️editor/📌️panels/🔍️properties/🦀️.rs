@@ -13,7 +13,8 @@ use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_wit
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{InputKind, Trigger};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::BuiltNode;

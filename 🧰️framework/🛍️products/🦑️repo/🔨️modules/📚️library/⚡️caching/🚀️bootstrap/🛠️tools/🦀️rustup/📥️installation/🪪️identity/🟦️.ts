@@ -1,9 +1,9 @@
 import{lstat}from"node:fs/promises";
 import type{BigIntStats}from"node:fs";
 import{join,relative,sep}from"node:path";
-import{withRepositoryToolingOperationV1,type RepositoryToolingStoreV1}from"../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import{withRepositoryToolingOperationV1,type RepositoryToolingStoreV1}from"../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{requireNativeStorageReservationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};

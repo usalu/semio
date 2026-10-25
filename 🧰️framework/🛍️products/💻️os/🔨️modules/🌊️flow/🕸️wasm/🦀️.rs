@@ -1,5 +1,6 @@
 //! 🌉️ Flow editor owned byte/message bridge and primitive linear-memory exports.
 
+#[cfg(test)]
 use semio_framework_test_fixtures::fixture_path;
 
 use semio_framework_abi::{

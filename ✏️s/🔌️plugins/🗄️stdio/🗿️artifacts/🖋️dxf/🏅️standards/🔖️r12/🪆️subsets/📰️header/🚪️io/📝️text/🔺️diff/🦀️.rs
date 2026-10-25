@@ -23,24 +23,24 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use crate::standards::v_r12::subsets::any::io::text::snapshot::entity_codec::*;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_header_var_diff(d: &DxfHeaderVarDiff) -> String {
+pub fn enc_header_var_diff(d: &DxfHeaderVarDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.group_code, |v| v.to_string()), encode_option(&d.value, enc_dxf_value), encode_option(&d.extra_group_codes, |v| enc_group_codes(v)),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_header_var_diff(s: &str) -> Result<DxfHeaderVarDiff, String> {
+pub fn dec_header_var_diff(s: &str) -> Result<DxfHeaderVarDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [group_code, value, extra] = parts.as_slice() else { return Err(format!("header var diff: expected 3 fields, got {}", parts.len())) };
     Ok(DxfHeaderVarDiff { group_code: decode_option(group_code, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, value: decode_option(value, dec_dxf_value)?, extra_group_codes: decode_option(extra, dec_group_codes)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_layer_diff(d: &DxfLayerDiff) -> String {
+pub fn enc_layer_diff(d: &DxfLayerDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.color, |v| v.to_string()), encode_option(&d.linetype, |v| enc_str(v)), encode_option(&d.flags, |v| v.to_string()), encode_option(&d.unknown_group_codes, |v| enc_group_codes(v)),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_layer_diff(s: &str) -> Result<DxfLayerDiff, String> {
+pub fn dec_layer_diff(s: &str) -> Result<DxfLayerDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [color, linetype, flags, unknown] = parts.as_slice() else { return Err(format!("layer diff: expected 4 fields, got {}", parts.len())) };
     Ok(DxfLayerDiff {
@@ -52,24 +52,24 @@ pub(crate) fn dec_layer_diff(s: &str) -> Result<DxfLayerDiff, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_style_diff(d: &DxfStyleDiff) -> String {
+pub fn enc_style_diff(d: &DxfStyleDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.flags, |v| v.to_string()), encode_option(&d.font_name, |v| enc_str(v)), encode_option(&d.unknown_group_codes, |v| enc_group_codes(v)),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_style_diff(s: &str) -> Result<DxfStyleDiff, String> {
+pub fn dec_style_diff(s: &str) -> Result<DxfStyleDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [flags, font_name, unknown] = parts.as_slice() else { return Err(format!("style diff: expected 3 fields, got {}", parts.len())) };
     Ok(DxfStyleDiff { flags: decode_option(flags, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, font_name: decode_option(font_name, dec_str)?, unknown_group_codes: decode_option(unknown, dec_group_codes)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_linetype_diff(d: &DxfLinetypeDiff) -> String {
+pub fn enc_linetype_diff(d: &DxfLinetypeDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.flags, |v| v.to_string()), encode_option(&d.description, |v| enc_str(v)), encode_option(&d.unknown_group_codes, |v| enc_group_codes(v)),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_linetype_diff(s: &str) -> Result<DxfLinetypeDiff, String> {
+pub fn dec_linetype_diff(s: &str) -> Result<DxfLinetypeDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [flags, description, unknown] = parts.as_slice() else { return Err(format!("linetype diff: expected 3 fields, got {}", parts.len())) };
     Ok(DxfLinetypeDiff { flags: decode_option(flags, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, description: decode_option(description, dec_str)?, unknown_group_codes: decode_option(unknown, dec_group_codes)? })
@@ -81,7 +81,7 @@ pub(crate) fn dec_linetype_diff(s: &str) -> Result<DxfLinetypeDiff, String> {
 /// — a tag-inside-a-tag, unambiguous since the outer bracket always closes the inner one first),
 /// else one letter per typed entity kind (same letters `enc_dxf_entity` uses).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_entity_diff(d: &DxfEntityDiff) -> String {
+pub fn enc_entity_diff(d: &DxfEntityDiff) -> String {
     match d {
         DxfEntityDiff::Replace { entity } => format!("R[{}]", enc_dxf_entity(entity)),
         DxfEntityDiff::Line(x) => format!("L[{},{},{},{}]", encode_option(&x.start, enc_point3), encode_option(&x.end, enc_point3), encode_option(&x.layer, |v| enc_str(v)), encode_option(&x.unknown_group_codes, |v| enc_group_codes(v))),
@@ -125,7 +125,7 @@ pub(crate) fn enc_entity_diff(d: &DxfEntityDiff) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_entity_diff(s: &str) -> Result<DxfEntityDiff, String> {
+pub fn dec_entity_diff(s: &str) -> Result<DxfEntityDiff, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -196,24 +196,24 @@ pub(crate) fn dec_entity_diff(s: &str) -> Result<DxfEntityDiff, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block_diff(d: &DxfBlockDiff) -> String {
+pub fn enc_block_diff(d: &DxfBlockDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.name, |v| enc_str(v)), encode_option(&d.base_point, enc_point3), encode_option(&d.entities, enc_entities_diff), encode_option(&d.unknown_group_codes, |v| enc_group_codes(v)),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block_diff(s: &str) -> Result<DxfBlockDiff, String> {
+pub fn dec_block_diff(s: &str) -> Result<DxfBlockDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, base_point, entities, unknown] = parts.as_slice() else { return Err(format!("block diff: expected 4 fields, got {}", parts.len())) };
     Ok(DxfBlockDiff { name: decode_option(name, dec_str)?, base_point: decode_option(base_point, dec_point3)?, entities: decode_option(entities, dec_entities_diff)?, unknown_group_codes: decode_option(unknown, dec_group_codes)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_tables_diff(t: &DxfTablesDiff) -> String {
+pub fn enc_tables_diff(t: &DxfTablesDiff) -> String {
     format!("[{},{},{}]", encode_option(&t.layers, enc_layers_diff), encode_option(&t.styles, enc_styles_diff), encode_option(&t.linetypes, enc_linetypes_diff),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_tables_diff(s: &str) -> Result<DxfTablesDiff, String> {
+pub fn dec_tables_diff(s: &str) -> Result<DxfTablesDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [layers, styles, linetypes] = parts.as_slice() else { return Err(format!("tables diff: expected 3 fields, got {}", parts.len())) };
     Ok(DxfTablesDiff { layers: decode_option(layers, dec_layers_diff)?, styles: decode_option(styles, dec_styles_diff)?, linetypes: decode_option(linetypes, dec_linetypes_diff)? })
@@ -226,7 +226,7 @@ pub(crate) fn dec_tables_diff(s: &str) -> Result<DxfTablesDiff, String> {
 /// preceding the first colon, unambiguous since no payload anywhere in this grammar emits a
 /// literal `:`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_name_triple<T, D>(removed: &[String], modified: &[(String, D)], added: &[(usize, T)], enc_diff: impl Fn(&D) -> String, enc_item: impl Fn(&T) -> String) -> String {
+pub fn enc_name_triple<T, D>(removed: &[String], modified: &[(String, D)], added: &[(usize, T)], enc_diff: impl Fn(&D) -> String, enc_item: impl Fn(&T) -> String) -> String {
     let removed_s = removed.iter().map(|n| enc_str(n)).collect::<Vec<_>>().join(",");
     let modified_s = modified.iter().map(|(n, d)| format!("{}:{}", enc_str(n), enc_diff(d))).collect::<Vec<_>>().join(",");
     let added_s = added.iter().map(|(i, t)| format!("{i}:{}", enc_item(t))).collect::<Vec<_>>().join(",");
@@ -234,7 +234,7 @@ pub(crate) fn enc_name_triple<T, D>(removed: &[String], modified: &[(String, D)]
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_name_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<NamedDiffParts<D, T>, String> {
+pub fn dec_name_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<NamedDiffParts<D, T>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("name triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
@@ -260,7 +260,7 @@ pub(crate) fn dec_name_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Resul
 /// 🧮 Generic index-keyed twin of [`enc_name_triple`]/[`dec_name_triple`] — used by
 /// `entities`/`blocks` (both top-level and, for `entities`, nested inside a block diff).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_index_triple<T, D>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], enc_diff: impl Fn(&D) -> String, enc_item: impl Fn(&T) -> String) -> String {
+pub fn enc_index_triple<T, D>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], enc_diff: impl Fn(&D) -> String, enc_item: impl Fn(&T) -> String) -> String {
     let removed_s = removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified_s = modified.iter().map(|(i, d)| format!("{i}:{}", enc_diff(d))).collect::<Vec<_>>().join(",");
     let added_s = added.iter().map(|(i, t)| format!("{i}:{}", enc_item(t))).collect::<Vec<_>>().join(",");
@@ -268,7 +268,7 @@ pub(crate) fn enc_index_triple<T, D>(removed: &[usize], modified: &[(usize, D)],
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_index_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<IndexedDiffParts<D, T>, String> {
+pub fn dec_index_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<IndexedDiffParts<D, T>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("index triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -292,85 +292,85 @@ pub(crate) fn dec_index_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Resu
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_header_vars_diff(d: &DxfHeaderVarsDiff) -> String {
+pub fn enc_header_vars_diff(d: &DxfHeaderVarsDiff) -> String {
     let modified: Vec<(String, DxfHeaderVarDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
     let added: Vec<(usize, DxfHeaderVar)> = d.added.iter().map(|a| (a.index, a.header_var.clone())).collect();
     enc_name_triple(&d.removed, &modified, &added, enc_header_var_diff, enc_header_var)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_header_vars_diff(s: &str) -> Result<DxfHeaderVarsDiff, String> {
+pub fn dec_header_vars_diff(s: &str) -> Result<DxfHeaderVarsDiff, String> {
     let (removed, modified, added) = dec_name_triple(s, dec_header_var_diff, dec_header_var)?;
     Ok(DxfHeaderVarsDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfHeaderVarModified { name, diff }).collect(), added: added.into_iter().map(|(index, header_var)| DxfHeaderVarAdded { index, header_var }).collect() })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_layers_diff(d: &DxfLayersDiff) -> String {
+pub fn enc_layers_diff(d: &DxfLayersDiff) -> String {
     let modified: Vec<(String, DxfLayerDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
     let added: Vec<(usize, DxfLayer)> = d.added.iter().map(|a| (a.index, a.layer.clone())).collect();
     enc_name_triple(&d.removed, &modified, &added, enc_layer_diff, enc_layer)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_layers_diff(s: &str) -> Result<DxfLayersDiff, String> {
+pub fn dec_layers_diff(s: &str) -> Result<DxfLayersDiff, String> {
     let (removed, modified, added) = dec_name_triple(s, dec_layer_diff, dec_layer)?;
     Ok(DxfLayersDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfLayerModified { name, diff }).collect(), added: added.into_iter().map(|(index, layer)| DxfLayerAdded { index, layer }).collect() })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_styles_diff(d: &DxfStylesDiff) -> String {
+pub fn enc_styles_diff(d: &DxfStylesDiff) -> String {
     let modified: Vec<(String, DxfStyleDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
     let added: Vec<(usize, DxfStyle)> = d.added.iter().map(|a| (a.index, a.style.clone())).collect();
     enc_name_triple(&d.removed, &modified, &added, enc_style_diff, enc_style)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_styles_diff(s: &str) -> Result<DxfStylesDiff, String> {
+pub fn dec_styles_diff(s: &str) -> Result<DxfStylesDiff, String> {
     let (removed, modified, added) = dec_name_triple(s, dec_style_diff, dec_style)?;
     Ok(DxfStylesDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfStyleModified { name, diff }).collect(), added: added.into_iter().map(|(index, style)| DxfStyleAdded { index, style }).collect() })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_linetypes_diff(d: &DxfLinetypesDiff) -> String {
+pub fn enc_linetypes_diff(d: &DxfLinetypesDiff) -> String {
     let modified: Vec<(String, DxfLinetypeDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
     let added: Vec<(usize, DxfLinetype)> = d.added.iter().map(|a| (a.index, a.linetype.clone())).collect();
     enc_name_triple(&d.removed, &modified, &added, enc_linetype_diff, enc_linetype)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_linetypes_diff(s: &str) -> Result<DxfLinetypesDiff, String> {
+pub fn dec_linetypes_diff(s: &str) -> Result<DxfLinetypesDiff, String> {
     let (removed, modified, added) = dec_name_triple(s, dec_linetype_diff, dec_linetype)?;
     Ok(DxfLinetypesDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfLinetypeModified { name, diff }).collect(), added: added.into_iter().map(|(index, linetype)| DxfLinetypeAdded { index, linetype }).collect() })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_entities_diff(d: &DxfEntitiesDiff) -> String {
+pub fn enc_entities_diff(d: &DxfEntitiesDiff) -> String {
     let modified: Vec<(usize, DxfEntityDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let added: Vec<(usize, DxfEntity)> = d.added.iter().map(|a| (a.index, a.entity.clone())).collect();
     enc_index_triple(&d.removed, &modified, &added, enc_entity_diff, enc_dxf_entity)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_entities_diff(s: &str) -> Result<DxfEntitiesDiff, String> {
+pub fn dec_entities_diff(s: &str) -> Result<DxfEntitiesDiff, String> {
     let (removed, modified, added) = dec_index_triple(s, dec_entity_diff, dec_dxf_entity)?;
     Ok(DxfEntitiesDiff { removed, modified: modified.into_iter().map(|(index, diff)| DxfEntityModified { index, diff }).collect(), added: added.into_iter().map(|(index, entity)| DxfEntityAdded { index, entity }).collect() })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_blocks_diff(d: &DxfBlocksDiff) -> String {
+pub fn enc_blocks_diff(d: &DxfBlocksDiff) -> String {
     let modified: Vec<(usize, DxfBlockDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let added: Vec<(usize, DxfBlock)> = d.added.iter().map(|a| (a.index, a.block.clone())).collect();
     enc_index_triple(&d.removed, &modified, &added, enc_block_diff, enc_block)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_blocks_diff(s: &str) -> Result<DxfBlocksDiff, String> {
+pub fn dec_blocks_diff(s: &str) -> Result<DxfBlocksDiff, String> {
     let (removed, modified, added) = dec_index_triple(s, dec_block_diff, dec_block)?;
     Ok(DxfBlocksDiff { removed, modified: modified.into_iter().map(|(index, diff)| DxfBlockModified { index, diff }).collect(), added: added.into_iter().map(|(index, block)| DxfBlockAdded { index, block }).collect() })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn print_dxf_diff(d: &DxfDiff) -> String {
+pub fn print_dxf_diff(d: &DxfDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.header_vars {
         tokens.push(format!("header-vars={}", enc_header_vars_diff(v)));
@@ -391,7 +391,7 @@ pub(crate) fn print_dxf_diff(d: &DxfDiff) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_dxf_diff(line: &str) -> Result<DxfDiff, String> {
+pub fn parse_dxf_diff(line: &str) -> Result<DxfDiff, String> {
     let mut d = DxfDiff::default();
     if line.is_empty() {
         return Ok(d);

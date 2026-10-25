@@ -1,0 +1,1893 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "every action restored from the cache is a hit",
+   "cold": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    }
+   ],
+   "warm": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "disk cache hit",
+     "cacheHit": true,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    }
+   ],
+   "expected": [
+    {
+     "label": "//:t_ab12",
+     "verdict": "hit",
+     "changedInputs": [],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": null,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 0
+    }
+   ]
+  },
+  {
+   "name": "an action absent from the cold run is new",
+   "cold": [],
+   "warm": [
+    {
+     "targetLabel": "//:t_cd34",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": []
+    }
+   ],
+   "expected": [
+    {
+     "label": "//:t_cd34",
+     "verdict": "new",
+     "changedInputs": [],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": null,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 0
+    }
+   ]
+  },
+  {
+   "name": "an identical key that still executed is the hermeticity defect",
+   "cold": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    }
+   ],
+   "warm": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    }
+   ],
+   "expected": [
+    {
+     "label": "//:t_ab12",
+     "verdict": "executed-with-stable-key",
+     "changedInputs": [],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": true,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 0
+    }
+   ]
+  },
+  {
+   "name": "a moved source input names its path",
+   "cold": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    }
+   ],
+   "warm": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h2"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    }
+   ],
+   "expected": [
+    {
+     "label": "//:t_ab12",
+     "verdict": "key-changed",
+     "changedInputs": [
+      "a/1/source.ts"
+     ],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": true,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 1
+    }
+   ]
+  },
+  {
+   "name": "a moved tool implementation moves the derived inputs and the argument vector only",
+   "cold": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    }
+   ],
+   "warm": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@q"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i2"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f2"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m2"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    }
+   ],
+   "expected": [
+    {
+     "label": "//:t_ab12",
+     "verdict": "key-changed",
+     "changedInputs": [
+      "implementation.json",
+      "t_ab12.input",
+      "t_ab12.json"
+     ],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": true,
+     "environmentChanged": [],
+     "outputsIdentical": true,
+     "derivedInputsChanged": true,
+     "sourceInputsChanged": 0
+    }
+   ]
+  },
+  {
+   "name": "added and removed inputs, a changed environment value and different outputs",
+   "cold": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      },
+      {
+       "name": "HOME",
+       "value": "/h"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    }
+   ],
+   "warm": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/usr/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      },
+      {
+       "path": "a/2/extra.ts",
+       "digest": {
+        "hash": "h3"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o2"
+       }
+      }
+     ]
+    }
+   ],
+   "expected": [
+    {
+     "label": "//:t_ab12",
+     "verdict": "key-changed",
+     "changedInputs": [],
+     "addedInputs": [
+      "a/2/extra.ts"
+     ],
+     "removedInputs": [
+      "a/1/source.ts"
+     ],
+     "argumentsChanged": false,
+     "environmentChanged": [
+      "HOME",
+      "PATH"
+     ],
+     "outputsIdentical": false,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 2
+    }
+   ]
+  },
+  {
+   "name": "an action without outputs has no output verdict and several actions are ordered by label",
+   "cold": [
+    {
+     "targetLabel": "//:t_z",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": []
+    },
+    {
+     "targetLabel": "//:t_a",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": []
+    }
+   ],
+   "warm": [
+    {
+     "targetLabel": "//:t_z",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": true,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": []
+    },
+    {
+     "targetLabel": "//:t_a",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": []
+    }
+   ],
+   "expected": [
+    {
+     "label": "//:t_a",
+     "verdict": "executed-with-stable-key",
+     "changedInputs": [],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": null,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 0
+    },
+    {
+     "label": "//:t_z",
+     "verdict": "hit",
+     "changedInputs": [],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": null,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 0
+    }
+   ]
+  },
+  {
+   "name": "an action that opts out of every cache is uncached, whatever its key did",
+   "cold": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": false,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    }
+   ],
+   "warm": [
+    {
+     "targetLabel": "//:t_ab12",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": false,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/source.ts",
+       "digest": {
+        "hash": "h1"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ab12.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ab12.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ab12.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    }
+   ],
+   "expected": [
+    {
+     "label": "//:t_ab12",
+     "verdict": "uncached",
+     "changedInputs": [],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": null,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 0
+    }
+   ]
+  },
+  {
+   "name": "an unrelated framework production edit leaves the keys of the generators that do not read it unchanged: they are hits, and only the build that reads the edited file moves, by that path",
+   "cold": [
+    {
+     "targetLabel": "//:t_ty01",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/🎭️actor/🧪️tests/🧬️typegen/🦀️.rs",
+       "digest": {
+        "hash": "e1"
+       }
+      },
+      {
+       "path": "a/1/🎭️actor/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "e2"
+       }
+      },
+      {
+       "path": "a/2/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "e3"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ty01.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ty01.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ty01.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    },
+    {
+     "targetLabel": "//:t_fw02",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/3/🧬️schema/📽️projection/🧪️tests/🦀️.rs",
+       "digest": {
+        "hash": "g1"
+       }
+      },
+      {
+       "path": "a/3/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "g2"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_fw02.input",
+       "digest": {
+        "hash": "f2"
+       }
+      },
+      {
+       "path": "t_fw02.json",
+       "digest": {
+        "hash": "m2"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_fw02.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o2"
+       }
+      }
+     ]
+    },
+    {
+     "targetLabel": "//:t_cb03",
+     "mnemonic": "RepoBuild",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/4/📚️course/⚛️react/app/🟦️.tsx",
+       "digest": {
+        "hash": "c1"
+       }
+      },
+      {
+       "path": "a/4/📚️course/⚛️react/🎨️css/🔣️.css",
+       "digest": {
+        "hash": "c2"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_cb03.input",
+       "digest": {
+        "hash": "f3"
+       }
+      },
+      {
+       "path": "t_cb03.json",
+       "digest": {
+        "hash": "m3"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_cb03.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o3"
+       }
+      }
+     ]
+    }
+   ],
+   "warm": [
+    {
+     "targetLabel": "//:t_ty01",
+     "mnemonic": "RepoGenerate",
+     "runner": "disk cache hit",
+     "cacheHit": true,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/🎭️actor/🧪️tests/🧬️typegen/🦀️.rs",
+       "digest": {
+        "hash": "e1"
+       }
+      },
+      {
+       "path": "a/1/🎭️actor/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "e2"
+       }
+      },
+      {
+       "path": "a/2/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "e3"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ty01.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ty01.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ty01.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    },
+    {
+     "targetLabel": "//:t_fw02",
+     "mnemonic": "RepoGenerate",
+     "runner": "disk cache hit",
+     "cacheHit": true,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/3/🧬️schema/📽️projection/🧪️tests/🦀️.rs",
+       "digest": {
+        "hash": "g1"
+       }
+      },
+      {
+       "path": "a/3/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "g2"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_fw02.input",
+       "digest": {
+        "hash": "f2"
+       }
+      },
+      {
+       "path": "t_fw02.json",
+       "digest": {
+        "hash": "m2"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_fw02.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o2"
+       }
+      }
+     ]
+    },
+    {
+     "targetLabel": "//:t_cb03",
+     "mnemonic": "RepoBuild",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/4/📚️course/⚛️react/app/🟦️.tsx",
+       "digest": {
+        "hash": "c1"
+       }
+      },
+      {
+       "path": "a/4/📚️course/⚛️react/🎨️css/🔣️.css",
+       "digest": {
+        "hash": "c9"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_cb03.input",
+       "digest": {
+        "hash": "f3"
+       }
+      },
+      {
+       "path": "t_cb03.json",
+       "digest": {
+        "hash": "m3"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_cb03.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o9"
+       }
+      }
+     ]
+    }
+   ],
+   "expected": [
+    {
+     "label": "//:t_cb03",
+     "verdict": "key-changed",
+     "changedInputs": [
+      "a/4/📚️course/⚛️react/🎨️css/🔣️.css"
+     ],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": false,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 1
+    },
+    {
+     "label": "//:t_fw02",
+     "changedInputs": [],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": null,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 0,
+     "verdict": "hit"
+    },
+    {
+     "label": "//:t_ty01",
+     "changedInputs": [],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": null,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 0,
+     "verdict": "hit"
+    }
+   ]
+  },
+  {
+   "name": "an edit of the parsed exporter moves the key of its generator by that path alone, and the regenerated output is identical",
+   "cold": [
+    {
+     "targetLabel": "//:t_ty01",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/🎭️actor/🧪️tests/🧬️typegen/🦀️.rs",
+       "digest": {
+        "hash": "e1"
+       }
+      },
+      {
+       "path": "a/1/🎭️actor/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "e2"
+       }
+      },
+      {
+       "path": "a/2/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "e3"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ty01.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ty01.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ty01.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    },
+    {
+     "targetLabel": "//:t_fw02",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/3/🧬️schema/📽️projection/🧪️tests/🦀️.rs",
+       "digest": {
+        "hash": "g1"
+       }
+      },
+      {
+       "path": "a/3/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "g2"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_fw02.input",
+       "digest": {
+        "hash": "f2"
+       }
+      },
+      {
+       "path": "t_fw02.json",
+       "digest": {
+        "hash": "m2"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_fw02.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o2"
+       }
+      }
+     ]
+    },
+    {
+     "targetLabel": "//:t_cb03",
+     "mnemonic": "RepoBuild",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/4/📚️course/⚛️react/app/🟦️.tsx",
+       "digest": {
+        "hash": "c1"
+       }
+      },
+      {
+       "path": "a/4/📚️course/⚛️react/🎨️css/🔣️.css",
+       "digest": {
+        "hash": "c2"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_cb03.input",
+       "digest": {
+        "hash": "f3"
+       }
+      },
+      {
+       "path": "t_cb03.json",
+       "digest": {
+        "hash": "m3"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_cb03.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o3"
+       }
+      }
+     ]
+    }
+   ],
+   "warm": [
+    {
+     "targetLabel": "//:t_ty01",
+     "mnemonic": "RepoGenerate",
+     "runner": "local",
+     "cacheHit": false,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/1/🎭️actor/🧪️tests/🧬️typegen/🦀️.rs",
+       "digest": {
+        "hash": "e9"
+       }
+      },
+      {
+       "path": "a/1/🎭️actor/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "e2"
+       }
+      },
+      {
+       "path": "a/2/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "e3"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_ty01.input",
+       "digest": {
+        "hash": "f1"
+       }
+      },
+      {
+       "path": "t_ty01.json",
+       "digest": {
+        "hash": "m1"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_ty01.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o1"
+       }
+      }
+     ]
+    },
+    {
+     "targetLabel": "//:t_fw02",
+     "mnemonic": "RepoGenerate",
+     "runner": "disk cache hit",
+     "cacheHit": true,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/3/🧬️schema/📽️projection/🧪️tests/🦀️.rs",
+       "digest": {
+        "hash": "g1"
+       }
+      },
+      {
+       "path": "a/3/📦️packages/🦀️rust/🦀️.rs",
+       "digest": {
+        "hash": "g2"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_fw02.input",
+       "digest": {
+        "hash": "f2"
+       }
+      },
+      {
+       "path": "t_fw02.json",
+       "digest": {
+        "hash": "m2"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_fw02.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o2"
+       }
+      }
+     ]
+    },
+    {
+     "targetLabel": "//:t_cb03",
+     "mnemonic": "RepoBuild",
+     "runner": "disk cache hit",
+     "cacheHit": true,
+     "cacheable": true,
+     "commandArgs": [
+      "bun",
+      "runner",
+      "work-action",
+      "@p"
+     ],
+     "environmentVariables": [
+      {
+       "name": "PATH",
+       "value": "/bin"
+      }
+     ],
+     "inputs": [
+      {
+       "path": "a/4/📚️course/⚛️react/app/🟦️.tsx",
+       "digest": {
+        "hash": "c1"
+       }
+      },
+      {
+       "path": "a/4/📚️course/⚛️react/🎨️css/🔣️.css",
+       "digest": {
+        "hash": "c2"
+       }
+      },
+      {
+       "path": "implementation.json",
+       "digest": {
+        "hash": "i1"
+       }
+      },
+      {
+       "path": "t_cb03.input",
+       "digest": {
+        "hash": "f3"
+       }
+      },
+      {
+       "path": "t_cb03.json",
+       "digest": {
+        "hash": "m3"
+       }
+      }
+     ],
+     "actualOutputs": [
+      {
+       "path": "t_cb03.snapshot/snapshot.json",
+       "digest": {
+        "hash": "o3"
+       }
+      }
+     ]
+    }
+   ],
+   "expected": [
+    {
+     "label": "//:t_cb03",
+     "changedInputs": [],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": null,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 0,
+     "verdict": "hit"
+    },
+    {
+     "label": "//:t_fw02",
+     "changedInputs": [],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": null,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 0,
+     "verdict": "hit"
+    },
+    {
+     "label": "//:t_ty01",
+     "verdict": "key-changed",
+     "changedInputs": [
+      "a/1/🎭️actor/🧪️tests/🧬️typegen/🦀️.rs"
+     ],
+     "addedInputs": [],
+     "removedInputs": [],
+     "argumentsChanged": false,
+     "environmentChanged": [],
+     "outputsIdentical": true,
+     "derivedInputsChanged": false,
+     "sourceInputsChanged": 1
+    }
+   ]
+  }
+ ]
+}

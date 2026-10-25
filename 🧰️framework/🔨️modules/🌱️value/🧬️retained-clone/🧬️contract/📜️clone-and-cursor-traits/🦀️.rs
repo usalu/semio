@@ -13,7 +13,7 @@ pub trait RetainedClone: RetireOwned + Send + Sync + Sized + 'static {
     fn bitwise_extend(_target: &mut Vec<Self>, _source: &[Self]) -> bool { false }
 }
 
-/// 🚚️ The largest payload one bulk vector copy turn moves, equal to the ABI page so a bitwise run is never longer than one page of work.
+/// 📃️ The largest payload one bulk vector copy turn moves, equal to the ABI page so a bitwise run is never longer than one page of work.
 pub const RETAINED_CLONE_BULK_PAGE_BYTES: usize = 64 * 1024;
 
 /// 📏️ The number of `width`-byte elements one bulk turn may process under `grant`: one item and at most one page of payload, zero when the grant admits neither one item nor one element.
@@ -38,7 +38,7 @@ pub trait RetainedCloneCursor<T: RetainedClone>: Send {
     fn close_started(&self)->bool{false}
     /// 🎟️ Quotes one close action from the actual paid currencies.
     fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>;
-/// 🎟️ Quotes the actual next immutable-source turn before any work or allocation.
+/// ⏩️ Quotes the actual next immutable-source turn before any work or allocation.
     fn advance_demands(&self, _source: RetainedCloneRef<'_, T>, _maximum_body_bytes: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
         Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner, "clone cursor lacks an original-source advance quote"))
     }
@@ -57,7 +57,7 @@ pub trait RetainedCloneCursor<T: RetainedClone>: Send {
     fn next_close_capacity_byte_demand(&self, _maximum_release_bytes: usize) -> Result<usize, crate::ValueError> {
         Err(crate::ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "clone cursor has no controlled close birth demand"))
     }
-    /// 📐️ Observes the next body or scaffold release independently of payload copying.
+    /// 📪️ Observes the next body or scaffold release independently of payload copying.
     fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
         Err(crate::ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "clone cursor has no controlled close release demand"))
     }

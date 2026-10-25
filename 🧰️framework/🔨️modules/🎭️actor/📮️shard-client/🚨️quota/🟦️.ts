@@ -29,7 +29,7 @@ export function formatQuotaBreachMessage(breach: ShardQuotaBreach): string {
 export type HostEffectHandler = (actorId: string, effect: string, params: unknown, signal: AbortSignal) => Promise<unknown>;
 //#endregion 🌉️HostEffect
 
-/** 🌉️ The slice of `Worker` `ShardClient` depends on — lets tests (and any non-browser host) inject a
+/** 👷️ The slice of `Worker` `ShardClient` depends on — lets tests (and any non-browser host) inject a
  * fake without a real `Worker`/`MessagePort`. A real browser `Worker` satisfies this structurally. */
 export interface ShardWorkerLike {
   postMessage(message: unknown, transfer?: readonly Transferable[]): void;

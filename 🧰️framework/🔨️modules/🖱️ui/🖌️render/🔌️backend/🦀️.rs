@@ -163,7 +163,7 @@ pub enum BackendError {
     ZeroSizeSurface,
     CanvasReplaced,
     ShaderCompilationFailed(String),
-    /// 🕳️ `apply_resources` was never called (or never called with this id) before a `render` whose
+    /// ❓️ `apply_resources` was never called (or never called with this id) before a `render` whose
     /// packet references it — a clean, matchable error, never a panic.
     UnknownResource(ResourceKind),
 }
@@ -248,7 +248,7 @@ pub struct ReadbackImage {
 
 //#region 🔌️GraphicsBackendTrait
 
-/// 🔌️ The seam every hand-written GPU backend implements so four independently written
+/// 🪢️ The seam every hand-written GPU backend implements so four independently written
 /// implementations (browser webgpu, macOS Metal, Windows D3D12, Linux Vulkan) replay the exact same
 /// [`crate::scene::RenderPacket`] into pixel-identical (within conformance tolerance) frames.
 ///
@@ -287,12 +287,12 @@ pub trait GraphicsBackend {
 
     fn recover(&mut self) -> Result<RecoveredResources, BackendError>;
 
-    /// 🧪️ Forces the next [`Self::device_status`] to report `Lost`, for the cross-backend
+    /// 🐞️ Forces the next [`Self::device_status`] to report `Lost`, for the cross-backend
     /// conformance suite to exercise recovery without waiting on a real GPU fault.
     #[cfg(feature = "backend-testing")]
     fn debug_force_device_loss(&mut self);
 
-    /// 🧪️ Reads back the last presented frame for pixel comparison across backends.
+    /// ⏪️ Reads back the last presented frame for pixel comparison across backends.
     #[cfg(feature = "backend-testing")]
     fn read_back(&mut self) -> Result<ReadbackImage, BackendError>;
 }
@@ -301,7 +301,7 @@ pub trait GraphicsBackend {
 
 //#region 🕳️NullBackend
 
-/// 🕳️ A real, working no-op [`GraphicsBackend`]: it tracks resource residency and surface size
+/// 💤️ A real, working no-op [`GraphicsBackend`]: it tracks resource residency and surface size
 /// exactly like a device-backed backend would, validates every id a packet references, and reports
 /// stats — it simply never touches a GPU. This is [`ActiveBackend`]'s target until a real backend
 /// crate lands, and stays permanently useful afterward for headless tests and the conformance
@@ -333,7 +333,7 @@ impl Default for NullBackend {
 }
 
 impl NullBackend {
-    /// 🕳️ Plain sync constructor — unlike a real backend's `async fn new(window) -> Result<Self,
+    /// 🆕️ Plain sync constructor — unlike a real backend's `async fn new(window) -> Result<Self,
     /// BackendError>` (device/adapter construction is the one async exception this trait's
     /// invariants call out), there is no device here to await.
     pub fn new() -> Self {

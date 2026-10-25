@@ -1,4 +1,4 @@
-import{nativeArtifactCacheLayoutV1,nativeArtifactCacheProducerLayoutV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/💾️cache/📍️layout/🟦️.ts";
+import{nativeArtifactCacheLayoutV1,nativeArtifactCacheProducerLayoutV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/📍️layout/🟦️.ts";
 import{resolve,isAbsolute}from"node:path";
 import{repositoryCachePartitionRootDataV1}from"../../../../../💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import{compilerStatePolicyV1 as policy}from"../⚙️policy/🟦️.ts";

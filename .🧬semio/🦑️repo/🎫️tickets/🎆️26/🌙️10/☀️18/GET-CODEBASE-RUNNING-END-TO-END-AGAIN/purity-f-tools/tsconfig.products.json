@@ -1,0 +1,15 @@
+{
+  "extends": "../../../../../../../../tsconfig.json",
+  "compilerOptions": { "noEmit": true, "incremental": false, "types": ["bun", "node", "react", "react-dom"] },
+  "include": [
+    "../../../../../../../../🧰️framework/🛍️products/🎤️presentation/**/*.ts",
+    "../../../../../../../../🧰️framework/🛍️products/🎤️presentation/**/*.tsx",
+    "../../../../../../../../♻️mit-bestand/🎤️präsentation/**/*.ts",
+    "../../../../../../../../♻️mit-bestand/📋️bericht/**/*.ts",
+    "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🛤️task-routes/🟦️.ts",
+    "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🛤️task-routes/🟦️.ts",
+    "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/**/*.ts",
+    "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌿️ambient/**/*.d.ts"
+  ],
+  "exclude": ["**/node_modules/**", "**/dist/**", "**/🗑️generated/**"]
+}

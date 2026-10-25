@@ -11,7 +11,8 @@ use crate::editor::puzzle5d::interaction::ui_label;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::entities::{find_part_by_grip_full_id, Puzzle5dDocument, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_CONTROLLER_ID};
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, RowActionPlacement};
+use semio_framework_plugin::plugin_app_close_prelude::{RowActionPlacement};
+use semio_framework_plugin::{Buildable, HasBase};
 #[allow(unused_imports)]
 use semio_framework_plugin::row_action;
 #[allow(unused_imports)]

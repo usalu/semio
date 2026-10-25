@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetInternalSubset {
-    pub(crate) declarations: Vec<XmlDtdDeclaration>,
+    pub declarations: Vec<XmlDtdDeclaration>,
 }
 
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetInternalSubset {

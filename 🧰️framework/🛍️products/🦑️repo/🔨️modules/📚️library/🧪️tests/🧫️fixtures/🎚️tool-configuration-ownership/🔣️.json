@@ -83,15 +83,6 @@
       "mode": "lint"
     },
     {
-      "id": "dependency-boundaries",
-      "tool": "dependency-cruiser",
-      "previousPath": ".dependency-cruiser.cjs",
-      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
-      "effectiveRoot": ".",
-      "loader": "dependency-cruiser",
-      "mode": "verify"
-    },
-    {
       "id": "ui-react-postcss",
       "tool": "postcss",
       "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/postcss.config.ts",
@@ -110,8 +101,7 @@
     "eslint-config",
     "postcss-config",
     "root-eslint-config",
-    "tailwind-config",
-    "vscode-test-cli-config"
+    "tailwind-config"
   ],
   "registration": {
     "target": "test-tool-configuration-ownership"
@@ -193,21 +183,9 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧹️code-style/🟦️.ts",
-      "tokens": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"
-      ]
-    },
-    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
       "tokens": [
         "config: string;"
-      ]
-    },
-    {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧷️typescript-reference-authority/🟦️.ts",
-      "tokens": [
-        "/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"
       ]
     },
     {

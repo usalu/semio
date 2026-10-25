@@ -8,7 +8,7 @@ use super::*;
 /// action into any `AppDefinition` that declares utilities (mirrors `history_action_definitions`).
 pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 
-/// 🧰️ The framework-injected `setActiveUtility` View action (never in the palette): switches the
+/// 👁️ The framework-injected `setActiveUtility` View action (never in the palette): switches the
 /// host-owned active utility of a window kind. `utilityId` is required; `windowKindId` is contextual (the
 /// shell fills it from the focused window when absent).
 pub fn set_active_utility_action_definition() -> ActionDefinition {
@@ -20,7 +20,7 @@ pub fn set_active_utility_action_definition() -> ActionDefinition {
 /// as a View action into any `AppDefinition` that declares tools (mirrors `SET_ACTIVE_UTILITY_ACTION_ID`).
 pub const SET_ACTIVE_TOOL_ACTION_ID: &str = "setActiveTool";
 
-/// 🛠️ The framework-injected `setActiveTool` View action (never in the palette): switches the
+/// 🔧️ The framework-injected `setActiveTool` View action (never in the palette): switches the
 /// host-owned active tool of the active mode. Unlike `setActiveUtility` this takes no `windowKindId` —
 /// tools are windowless, scoped to the whole mode.
 pub fn set_active_tool_action_definition() -> ActionDefinition {
@@ -50,7 +50,7 @@ pub const OPEN_ARTIFACT_FILE_ACTION_ID: &str = "openArtifactFile";
 /// 📄️ The ABI media port reserved for an editor's declared natural-file representation.
 pub const NATURAL_FILE_PORT_ID: &str = "artifact:native";
 
-/// 🗃️ The framework-injected Export/Import Document pair: `Shell` verbs in the palette and the `transfer` ribbon
+/// 🎬️ The framework-injected Export/Import Document pair: `Shell` verbs in the palette and the `transfer` ribbon
 /// category, shell chrome ([`CapabilityAudience::Chrome`]) — agents export through the MCP's own artifact export.
 pub fn document_transfer_action_definitions() -> [ActionDefinition; 2] {
     [

@@ -5,8 +5,8 @@ import { createHash } from "node:crypto";
 import { scanRegistryCompilerImports } from "../📇️registry-catalog-inputs/🟦️.ts";
 import { ecmaTokens, ecmaStringValue } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/📦️packages/🟦️typescript/🟦️.ts";
 import { rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustToken } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
-import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
-import { TranspilerV1 } from "../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
 
 export interface RuntimeGraphContextV1 {
   readonly read: (path: string) => string | undefined;

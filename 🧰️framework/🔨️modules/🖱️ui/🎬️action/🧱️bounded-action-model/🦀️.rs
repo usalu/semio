@@ -68,7 +68,7 @@ pub enum ActionQueueReceiptSource {
     RetainedInput,
 }
 
-/// 🧾️ Identifies one member of an admitted renderer emission without changing its wire payload.
+/// 🎫️ Identifies one member of an admitted renderer emission without changing its wire payload.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ActionQueueReceipt {
     pub source: ActionQueueReceiptSource,

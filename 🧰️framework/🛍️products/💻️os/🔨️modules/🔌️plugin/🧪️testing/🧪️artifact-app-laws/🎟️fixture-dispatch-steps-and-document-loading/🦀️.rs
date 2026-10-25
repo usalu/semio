@@ -136,7 +136,7 @@ pub fn fixture_mounted_policy() -> semio_framework_plugin_mounted_owner::Mounted
 
 /// 🎟️ One valid original retained turn input for a fixture `Budget`.
 pub fn fixture_retained_turn() -> semio_framework::kernel::RetainedTurnInput {
-    semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: fixture_mounted_policy().maintenance }
+    semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework::kernel::OriginalActorTurnWork { clock_binding: 1, absolute_deadline_us: u64::MAX, fuel: 1_000_000 }, grant: fixture_mounted_policy().maintenance }
 }
 
 /// 🧮️ One fresh unfunded-by-default step context carrying exactly the operation, generation and grant of [`fixture_retained_turn`] (a kernel turn refuses a context its retained input does not name); its sequence and progress cells are leaked, which costs a few bytes per call.
@@ -274,7 +274,7 @@ pub async fn plugin_load_document_text<PA, S, Mutation>(runtime: &semio_framewor
 where
     PA: PluginApp,
     S: Clone + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-    Mutation: store::OpText + store::OpBinary + store::Mutation<S> + 'static,
+    Mutation: store::OpText + store::OpBinary + store::Mutation<S> + store::ColdMutation<S> + 'static,
 {
     let parsed: store::os_store::text_format::ParsedDocumentText<S, Mutation> = store::os_store::text_format::parse_document_text(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
     let envelope = parsed.into_envelope();
@@ -463,8 +463,6 @@ pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_su
         let law:serde_json::Value=serde_json::from_str(include_str!("../../🎟️caller/🧪️tests/🧫️fixtures/📨️command.json")).unwrap();
 
         for row in law["cases"].as_array().unwrap(){let command=match row["variant"].as_str().unwrap(){"Noop"=>Command::Noop,"Set"=>Command::Set{value:row["value"].as_u64().unwrap()},_=>panic!("closed fixture command variant")};let actual=original_fixture_command_arguments(&command).unwrap();if row["variant"]=="Noop"{assert!(actual.is_none());assert!(row["expectedArgs"].is_null());}else{assert_eq!(actual,Some(semio_framework_value::DslValue::object([("value".to_owned(),semio_framework_value::ToValue::to_value(&row["expectedArgs"]["value"].as_u64().unwrap()))])));}}
-
-        println!("[DEBUG] actual derived external unit/data fixture command projection preserves authored arguments");
 
     }
 

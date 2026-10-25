@@ -9,6 +9,7 @@ use crate::NoteTextChild;
 use framework_schema::ArtifactSchema;
 #[allow(unused_imports)]
 use protocol::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::ColdMutationDiff;
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)]

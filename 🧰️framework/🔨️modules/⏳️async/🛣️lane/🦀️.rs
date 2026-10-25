@@ -28,10 +28,10 @@ pub fn worker_count_for(process_kind: ProcessKind, cores: usize) -> usize {
 //#endregion 🏭️ProcessKind
 
 //#region 🛣️Lane
-/// 🛣️ How many [`Lane`] variants exist — the fixed width of every per-worker queue array.
+/// 🧮️ How many [`Lane`] variants exist — the fixed width of every per-worker queue array.
 pub(super) const LANE_COUNT: usize = 6;
 
-/// 🛣️ Logical scheduling lane on [`WorkerPool`], replacing the old per-role OS threads
+/// 🧵️ Logical scheduling lane on [`WorkerPool`], replacing the old per-role OS threads
 /// (`ThreadPlan`'s `kernel`/`shards`/`io_workers`/`compute`/`epoch_ticker`, deleted in this packet).
 /// `Interactive`/`UserVisible`/`Background`/`Maintenance` mirror `🎭️actor::Lane`'s discriminant
 /// order and [`Lane::weight`] verbatim (this crate must not depend on the actor crate — see
@@ -54,7 +54,7 @@ pub enum Lane {
 }
 
 impl Lane {
-    /// 🛣️ Every lane, in a fixed order used both for per-worker queue storage indexing (`as usize`)
+    /// 🗂️ Every lane, in a fixed order used both for per-worker queue storage indexing (`as usize`)
     /// and as the deficit-round-robin scan order — DRR fairness does not depend on this order being
     /// priority-sorted, only on it being STABLE across scans.
     pub const ALL: [Lane; LANE_COUNT] = [Lane::Interactive, Lane::UserVisible, Lane::Background, Lane::Maintenance, Lane::Io, Lane::Timer];
@@ -76,7 +76,7 @@ impl Lane {
         }
     }
 
-    /// 🔢️ Storage index into a `[T; LANE_COUNT]` per-worker queue array.
+    /// 🗄️ Storage index into a `[T; LANE_COUNT]` per-worker queue array.
     #[doc(hidden)] pub const fn index(self) -> usize {
         self as usize
     }
@@ -128,7 +128,7 @@ impl std::fmt::Display for PermitError {
 
 impl std::error::Error for PermitError {}
 
-/// ⚖️ Checked permit accounting, replacing `ThreadBudget`. Unlike the old per-role `ThreadBudget`
+/// 📒️ Checked permit accounting, replacing `ThreadBudget`. Unlike the old per-role `ThreadBudget`
 /// (five separate counters, one per OS-thread role), a [`PermitLedger`] tracks ONE pool of permits —
 /// [`WorkerPool`] owns one sized to its worker count, and any other subsystem that wants a bounded
 /// concurrent-admission gate (a future I/O connection pool, a plugin blocking-call limiter) can size
@@ -147,7 +147,7 @@ impl PermitLedger {
         PermitLedger { remaining: AtomicU32::new(total), trace_permits: semio_framework_trace::PermitLedger::new() }
     }
 
-    /// ⚖️ Draws `n` permits, returning a [`PermitGuard`] that returns them on drop, or `Err` if
+    /// ✏️ Draws `n` permits, returning a [`PermitGuard`] that returns them on drop, or `Err` if
     /// fewer than `n` remain. A checked compare-exchange loop: a release build gets the exact same
     /// `Err` a debug build would, never a silently wrapped counter.
     pub fn checkout(&self, n: u32) -> Result<PermitGuard<'_>, PermitError> {
@@ -178,7 +178,7 @@ impl PermitLedger {
     }
 }
 
-/// ⚖️ RAII guard returned by [`PermitLedger::checkout`] — returns its `n` permits to the ledger
+/// 🔒️ RAII guard returned by [`PermitLedger::checkout`] — returns its `n` permits to the ledger
 /// (and releases the matching trace occupancy) on drop, whether that drop is an ordinary scope exit
 /// or unwinding past a panic.
 #[derive(Debug)]

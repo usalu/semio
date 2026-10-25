@@ -51,7 +51,7 @@ function formatter(locale: CourseLocale, options: Intl.NumberFormatOptions): Int
   return created;
 }
 
-/** ✂️ The shortest decimal that round-trips `magnitude` (> 0), rounded half away from zero to `digits` significant
+/** 🪙️ The shortest decimal that round-trips `magnitude` (> 0), rounded half away from zero to `digits` significant
  * digits: the digit string and the power of ten of its first digit. */
 function roundedDecimal(magnitude: number, digits: number): { readonly digits: string; readonly power: number } {
   const [coefficient = "0", exponent = "0"] = magnitude.toExponential().split("e");
@@ -112,7 +112,7 @@ const PREFIX_EXPONENTS: ReadonlyMap<string, number> = new Map([
   ["K", 3],
 ]);
 
-/** 📏 One unit a learner can pick for a quantity: its power of ten and the symbol that names it (`kW`, `MW`). */
+/** ⚒️ One unit a learner can pick for a quantity: its power of ten and the symbol that names it (`kW`, `MW`). */
 export interface QuantityUnit {
   readonly exponent: number;
   readonly symbol: string;
@@ -133,12 +133,12 @@ export function quantityUnits(quantity: Pick<Quantity, "unit" | "prefixed">): re
   return prefixes.sort((left, right) => left[0] - right[0]).map(([exponent, symbol]) => ({ exponent, symbol: `${symbol}${quantity.unit}` }));
 }
 
-/** 🏷️ The symbol of `exponent` among {@link quantityUnits}, or nothing when the quantity has no such unit. */
+/** 🪪️ The symbol of `exponent` among {@link quantityUnits}, or nothing when the quantity has no such unit. */
 export function quantitySymbol(quantity: Pick<Quantity, "unit" | "prefixed">, exponent: number): string {
   return quantityUnits(quantity).find((unit) => unit.exponent === exponent)?.symbol ?? "";
 }
 
-/** 🔢 How `value` is shown apart from its unit: the mantissa and the prefix exponent {@link formatQuantity} would use. */
+/** 📖️ How `value` is shown apart from its unit: the mantissa and the prefix exponent {@link formatQuantity} would use. */
 export function quantityReading(value: number, quantity: Pick<Quantity, "unit" | "prefixed">, locale: CourseLocale): { readonly number: string; readonly exponent: number } {
   if (!quantity.prefixed) return { number: formatNumber(value, locale), exponent: 0 };
   const { mantissa, exponent } = engineering(value);
@@ -172,7 +172,7 @@ function plainMantissa(typed: string, locale: CourseLocale): string | undefined 
   return fraction === "" ? digits : `${digits}.${fraction}`;
 }
 
-/** 🔤 The one power of ten whose prefix spells `head` ignoring case, when exactly one does. */
+/** 🔋️ The one power of ten whose prefix spells `head` ignoring case, when exactly one does. */
 function foldedExponent(head: string): number | undefined {
   const exponents = [...new Set([...PREFIX_EXPONENTS.entries()].filter(([symbol]) => symbol.toLowerCase() === head.toLowerCase()).map(([, exponent]) => exponent))];
   return exponents.length === 1 ? exponents[0] : undefined;

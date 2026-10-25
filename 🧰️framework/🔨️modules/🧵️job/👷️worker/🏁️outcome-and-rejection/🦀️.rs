@@ -18,7 +18,7 @@ impl<J> WorkerJobOutcome<J> {
 
     /// 🧾️ Returns the exact latest actual worker turn receipt without changing its outcome owner.
     pub fn retained_step_progress(&self)->RetainedCloneProgress{self.authority.as_ref().expect("original outcome retains its authority").retained_step_progress()}
-    /// 📒️ Returns the actual physical receipt accumulated by this original worker authority.
+    /// ↩️ Returns the actual physical receipt accumulated by this original worker authority.
     pub fn retained_progress(&self)->RetainedCloneProgress{self.authority.as_ref().expect("original outcome retains its authority").retained_progress()}
 
     pub fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {

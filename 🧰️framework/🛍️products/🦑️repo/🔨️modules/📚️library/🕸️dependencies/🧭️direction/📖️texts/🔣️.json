@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "id": "direction",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "rule.selects-nothing": {
+      "en": "Dependency direction cannot enforce a rule that selects nothing.",
+      "de": "Die Abhängigkeitsrichtung kann keine Regel durchsetzen, die nichts auswählt."
+    },
+    "rule.circular-boolean": {
+      "en": "Dependency direction requires a boolean circular selector.",
+      "de": "Die Abhängigkeitsrichtung verlangt für den Zyklen-Selektor einen Wahrheitswert."
+    },
+    "rule.dependency-types-readable": {
+      "en": "Dependency direction requires readable dependency types.",
+      "de": "Die Abhängigkeitsrichtung verlangt lesbare Abhängigkeitsarten."
+    },
+    "graph.dependency-types-required": {
+      "en": "Dependency direction graph requires dependency types: {from} → {specifier}",
+      "de": "Der Abhängigkeitsgraph verlangt Abhängigkeitsarten: {from} → {specifier}"
+    },
+    "graph.cycle-not-in-source": {
+      "en": "Dependency direction resolver reports a cycle the source graph does not contain: {rule} {from} → {to}",
+      "de": "Der Auflöser meldet einen Zyklus, den der Quellgraph nicht enthält: {rule} {from} → {to}"
+    },
+    "graph.cycle-uncovered": {
+      "en": "Dependency direction graph has circular dependencies no reported cycle covers: {rule} {edges}",
+      "de": "Der Abhängigkeitsgraph hat zirkuläre Abhängigkeiten, die kein gemeldeter Zyklus abdeckt: {rule} {edges}"
+    }
+  }
+}

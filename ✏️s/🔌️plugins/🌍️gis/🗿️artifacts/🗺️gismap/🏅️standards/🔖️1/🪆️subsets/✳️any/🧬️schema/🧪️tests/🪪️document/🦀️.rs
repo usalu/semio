@@ -2,7 +2,7 @@
 use crate::{GisMapSnapshot, MapFeature};
 use crate::schema::{GisMapArtifact, diff::{GisMapDiff, GisMapFeaturesDelta}};
 use semio_framework_test_fixtures::fixture_text;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 #[test]
 fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {

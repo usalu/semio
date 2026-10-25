@@ -67,7 +67,9 @@
             "typescriptText",
             "typescriptRealpath",
             "analysis",
-            "stamp"
+            "stamp",
+            "closure",
+            "registry"
           ]
         },
         "path": {
@@ -476,7 +478,7 @@
     "record": {
       "description": "The format and meaning of a persisted project record. Bump the stamp when the rows, the digest or the validation of a record change for the same inputs; a record written under another stamp is a miss.",
       "const": {
-        "stamp": "semio.graph-record/1"
+        "stamp": "semio.graph-record/2"
       }
     }
   }

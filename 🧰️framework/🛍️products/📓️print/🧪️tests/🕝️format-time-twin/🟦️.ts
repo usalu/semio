@@ -65,7 +65,7 @@ function reference(language: "en" | "de"): { projection: Record<string, string[]
   };
 }
 
-/** 🎯️ The twin's renderings in the probe protocol's string transport: a leading pipe, spaces as underscores. */
+/** 🚚️ The twin's renderings in the probe protocol's string transport: a leading pipe, spaces as underscores. */
 function twin(language: "en" | "de"): { projection: Record<string, string[]> } {
   return {
     projection: Object.fromEntries(
@@ -86,7 +86,7 @@ export default defineTestAdapter({
     },
     "de-locale": {
       oracle: () => reference("de"),
-      /** 🎯️ The twin's German calendar names and directive expansion. */
+      /** 🗓️ The twin's German calendar names and directive expansion. */
       subject: () => twin("de"),
     },
   },

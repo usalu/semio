@@ -437,7 +437,7 @@ impl RetainedPackCatalogCursor {
         self.symbols.symbol_char(symbol, character).map_err(|mut fault|{fault.code="retained-pack.catalog-symref";fault})
     }
 
-    /// 📏️ Returns the scalar count of one retained symbol in constant indexed work.
+    /// 🔣️ Returns the scalar count of one retained symbol in constant indexed work.
     pub fn symbol_chars(&self, symbol: u64) -> Result<usize, RetainedPackCatalogFault> {
         self.symbols.symbol_chars(symbol).map_err(|mut fault|{fault.code="retained-pack.catalog-symref";fault})
     }

@@ -136,7 +136,7 @@ test("an application whose ambient file is excluded is listed with its own proje
     const sources = ["web/next-env.d.ts", "web/app/page.tsx", "lib/next-env.ts", "other/types.d.ts"];
     expect(listTypescriptAppProjects(scratch, sources, ["**/next-env.d.ts"])).toEqual([{ folder: "web", project: "web/tsconfig.json" }]);
     expect(listTypescriptAppProjects(scratch, sources, ["**/dist/**"])).toEqual([]);
-    expect(() => listTypescriptAppProjects(scratch, [...sources, "orphan/next-env.d.ts"], ["**/next-env.d.ts"])).toThrow("orphan/tsconfig.json does not exist");
+    expect(() => listTypescriptAppProjects(scratch, [...sources, "orphan/next-env.d.ts"], ["**/next-env.d.ts"])).toThrow("verify.typescript.is-excluded-from-the-workspace");
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }

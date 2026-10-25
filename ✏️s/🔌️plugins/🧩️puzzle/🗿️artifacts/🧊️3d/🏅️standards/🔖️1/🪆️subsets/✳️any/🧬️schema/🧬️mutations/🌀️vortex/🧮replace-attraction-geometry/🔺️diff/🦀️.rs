@@ -1,4 +1,5 @@
 //! 🔺️ Sparse diff builder for `ReplaceAttractionGeometry` — patches the one addressed attraction in place.
+use protocol::list_delta::RowPatch;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dAttractionPatch;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dAttractionsDelta;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;

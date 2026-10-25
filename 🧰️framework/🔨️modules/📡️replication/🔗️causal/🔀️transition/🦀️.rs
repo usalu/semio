@@ -22,7 +22,7 @@ pub use input_drafts::HistoryInputDrafts;
 use semio_framework_replication_ids::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId};
 
 //#region 🔖️Vocabulary
-/// 🏷️ `diff.schema` of every transition envelope. Operation envelopes carry their
+/// 🧬️ `diff.schema` of every transition envelope. Operation envelopes carry their
 /// artifact's own schema, so the tag alone routes an envelope to the transition fold.
 pub const HISTORY_TRANSITION_SCHEMA: &str = "semio.history.transition";
 
@@ -75,7 +75,7 @@ pub struct SupersededInput {
     pub replacement: InputReplacement,
 }
 
-/// ✏️ An atomic batch of input replacements, effective in every alternative (`scope: None`) or only
+/// 📥️ An atomic batch of input replacements, effective in every alternative (`scope: None`) or only
 /// while the alternative named `scope` is the fold's final alternative.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TransitionSupersede {
@@ -85,7 +85,7 @@ pub struct TransitionSupersede {
 
 /// 📏️ Codec ceiling of [`TransitionSupersede::scope`] in UTF-8 bytes.
 pub const SUPERSEDE_SCOPE_MAX_BYTES: usize = 256;
-/// 📏️ Codec ceiling of one [`InputReplacement::Input`] payload in bytes.
+/// 🎒️ Codec ceiling of one [`InputReplacement::Input`] payload in bytes.
 pub const SUPERSEDE_PAYLOAD_MAX_BYTES: usize = 262_144;
 
 impl TransitionSupersede {
@@ -117,7 +117,7 @@ impl TransitionSupersede {
     }
 }
 
-/// 🔀️ One structural history step. Every variant is a pure function of the fold state it
+/// 🕰️ One structural history step. Every variant is a pure function of the fold state it
 /// lands on, so replicas holding the same event set converge regardless of arrival order.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HistoryTransition {
@@ -125,15 +125,15 @@ pub enum HistoryTransition {
     Revert { mutation_ids: Vec<MutationId> },
     /// ⏩️ The author restores operations it reverted earlier (redo).
     Reinstate { mutation_ids: Vec<MutationId> },
-    /// 🚩️ A checkpoint commit.
+    /// ✔️ A checkpoint commit.
     Commit(TransitionCheckpoint),
-    /// 🌿️ A new alternative rooted at `checkpoint_id`. Registration is shared; it does not select any viewer's head.
+    /// 🏠️ A new alternative rooted at `checkpoint_id`. Registration is shared; it does not select any viewer's head.
     Branch { alternative_id: String, name: String, checkpoint_id: String },
-    /// 🎯️ Names `checkpoint_id` (and `alternative_id`, if any). A viewer head is local; this event selects none.
+    /// 📍️ Names `checkpoint_id` (and `alternative_id`, if any). A viewer head is local; this event selects none.
     Checkout { checkpoint_id: String, alternative_id: Option<String> },
     /// 🧩️ Re-identifies `checkpoint_id` as `pinned_checkpoint_id` once its composed children's pins are known.
     Repin { checkpoint_id: String, pinned_checkpoint_id: String, pins: Vec<TransitionPin> },
-    /// ✏️ Replaces the effective input of existing operations, non-destructively (history editing).
+    /// ⌨️ Replaces the effective input of existing operations, non-destructively (history editing).
     Supersede(TransitionSupersede),
 }
 
@@ -261,7 +261,7 @@ impl HistoryTransitionKind {
 }
 
 impl HistoryTransition {
-    /// 🏷️ This transition's kind.
+    /// 🔖️ This transition's kind.
     pub fn kind(&self) -> HistoryTransitionKind {
         match self {
             Self::Revert { .. } => HistoryTransitionKind::Revert,
@@ -287,7 +287,7 @@ pub enum HistoryShape {
 semio_framework_value::artifact_retire_leaf!(HistoryShape,HistoryTransitionKind);
 
 impl HistoryShape {
-    /// 🛂️ Whether a history of this shape holds a transition of `kind`.
+    /// 🔏️ Whether a history of this shape holds a transition of `kind`.
     pub fn admits(self, kind: HistoryTransitionKind) -> bool {
         match self {
             Self::Document => true,
@@ -295,7 +295,7 @@ impl HistoryShape {
         }
     }
 
-    /// 🔤️ The shape's name, as the transition corpus and every twin spell it.
+    /// 🪞️ The shape's name, as the transition corpus and every twin spell it.
     pub fn name(self) -> &'static str {
         match self {
             Self::Document => "document",
@@ -333,7 +333,7 @@ fn write_ids(out: &mut Vec<u8>, ids: &[MutationId]) {
     }
 }
 
-/// 🎯️ `tag varint | variant fields in declaration order` — the transition payload bytes. A
+/// 🔃️ `tag varint | variant fields in declaration order` — the transition payload bytes. A
 /// `Supersede` (tag 6) writes `scope option | input count varint | (target str | replacement u8
 /// (0 = input: schema str, payload bytes; 1 = withdrawn))*` and must satisfy
 /// [`TransitionSupersede::validate`], which [`decode_history_transition`] enforces.
@@ -407,7 +407,7 @@ pub fn encode_history_transition(transition: &HistoryTransition) -> Vec<u8> {
     out
 }
 
-/// 🎯️ Inverse of [`encode_history_transition`]; refuses trailing bytes.
+/// ↩️ Inverse of [`encode_history_transition`]; refuses trailing bytes.
 pub fn decode_history_transition(bytes: &[u8]) -> Result<HistoryTransition, semio_framework_replication_error::ProtocolError> {
     HistoryFoldJob::new(|control| async move { decode_history_transition_controlled(bytes, &control).await }).finish_cold()
 }
@@ -494,7 +494,7 @@ pub struct FoldEdit {
     pub actor: Option<semio_framework_value::SharedUtf8>,
     pub timestamp: HybridLogicalTimestamp,
     pub mutation_ids: Vec<MutationId>,
-    /// 🌿️ The alternative this edit was authored on. `None` and the trunk id are the trunk.
+    /// 📝️ The alternative this edit was authored on. `None` and the trunk id are the trunk.
     pub line: Option<String>,
 }
 
@@ -507,7 +507,7 @@ pub struct FoldChange {
     pub saved_at: String,
 }
 
-/// 🚩️ A checkpoint fact the fold materialized, with its full change chain and pins.
+/// ⛓️ A checkpoint fact the fold materialized, with its full change chain and pins.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FoldCheckpoint {
     pub id: String,
@@ -519,7 +519,7 @@ pub struct FoldCheckpoint {
     pub pins: Vec<TransitionPin>,
 }
 
-/// 🌿️ An alternative fact with the checkpoint chain the fold grew it to.
+/// 🔱️ An alternative fact with the checkpoint chain the fold grew it to.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FoldAlternative {
     pub id: String,
@@ -562,20 +562,20 @@ pub struct ViewerHead {
 }
 
 impl ViewerHead {
-    /// 🌳️ The trunk of `document_id` at its tip. [`fold_history`] and hub Check In project this head.
+    /// 📄️ The trunk of `document_id` at its tip. [`fold_history`] and hub Check In project this head.
     pub fn canonical_trunk(document_id: &ArtifactId) -> Self {
         Self { line_id: trunk_alternative_id(document_id), checkpoint_id: None }
     }
 }
 
-/// 🧮️ Folds `edits` and the transition envelopes in `transitions` in `(hlc, id)` order into the
+/// 🪢️ Folds `edits` and the transition envelopes in `transitions` in `(hlc, id)` order into the
 /// canonical trunk projection: the trunk at its tip. A pure function of the event set plus that head.
 /// See [`fold_history_for`].
 pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[semio_framework_replication_causal::MutationEnvelope], excluded: &std::collections::HashSet<String>) -> Result<HistoryFold, semio_framework_replication_error::ProtocolError> {
     fold_history_for(document_id, edits, transitions, excluded, &ViewerHead::canonical_trunk(document_id))
 }
 
-/// 👁 [`fold_history`] for one viewer's [`ViewerHead`]. Branch registration, commits, repins, reverts
+/// 📜️ [`fold_history`] for one viewer's [`ViewerHead`]. Branch registration, commits, repins, reverts
 /// and supersessions are shared. The head selects `applied`, `checkpoint`, `alternative` and which
 /// scoped supersessions are effective. A `Checkout` refuses an unknown checkpoint and otherwise
 /// changes nothing. A `Branch` registers the alternative and does not select the head. An uncommitted

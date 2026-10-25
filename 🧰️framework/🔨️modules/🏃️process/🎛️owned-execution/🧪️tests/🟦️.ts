@@ -1,5 +1,3 @@
-import"../📥️auxiliary/🧪️tests/🟦️.ts";
-import"../📥️capture/📡️channel/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
@@ -54,7 +52,7 @@ test("owned command cancellation and UTF-8 reports match independent Node execut
   const root = mkdtempSync(resolve(artifactParent, "owned-reports-")), module = resolve(root, "owner.mjs");
   const { createRequire } = await import("node:module"), { spawnSync } = await import("node:child_process");
   const bundled = await createRequire(import.meta.url)("esbuild").build({entryPoints:[owner],bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent"});
-  const neutralValidator="🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";expect(Object.keys(bundled.metafile.inputs)).toContain(neutralValidator);const neutralOwners=["🧰️framework/🔨️modules/🧬️schema/✅️validator/","🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/","🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/"];expect(Object.keys(bundled.metafile.inputs).every((path:string)=>path.startsWith("🧰️framework/🔨️modules/🏃️process/")||neutralOwners.some(prefix=>path.startsWith(prefix)))).toBe(true);
+  const neutralValidator="🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";expect(Object.keys(bundled.metafile.inputs)).toContain(neutralValidator);const neutralOwners=["🧰️framework/🔨️modules/🧬️schema/✅️validator/","🧰️framework/🔨️modules/⚙️runtime/","🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/","🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/","🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/"];expect(Object.keys(bundled.metafile.inputs).every((path:string)=>path.startsWith("🧰️framework/🔨️modules/🏃️process/")||neutralOwners.some(prefix=>path.startsWith(prefix)))).toBe(true);
   writeFileSync(module, bundled.outputFiles[0].text);
   const run = async (api: any, executable: string, row: any): Promise<any> => {
     const marker = resolve(root, row.mode + ".txt"), controller = new AbortController(), lines: string[] = [];
@@ -87,6 +85,17 @@ test("progress remains observable until explicitly stopped", async () => {
   const count=lines.length;await Bun.sleep(fixture.progress.intervalMs*4);expect(lines.length).toBe(count);
 });
 
+test("the progress heartbeat follows the stdout destination, so stderr routing keeps stdout machine-clean", () => {
+  const owner = resolve(import.meta.dir, "../🟦️.ts");
+  const script = `import {runOwnedCommand} from ${JSON.stringify(owner)};await runOwnedCommand(process.execPath,["--eval","setTimeout(()=>{},600)"],process.cwd(),"heartbeat",0,{stdout:process.argv[1],progressIntervalMs:50});`;
+  for (const mode of ["stderr", "inherit"] as const) {
+    const actual = Bun.spawnSync([process.execPath, "--eval", script, mode], { cwd: process.cwd(), env: process.env, stdout: "pipe", stderr: "pipe" });
+    expect(actual.exitCode, actual.stderr.toString()).toBe(0);
+    const heartbeat = /\[heartbeat\] running elapsedMs=\d+/u, out = actual.stdout.toString(), err = actual.stderr.toString();
+    expect(heartbeat.test(mode === "stderr" ? err : out)).toBe(true);
+    expect(heartbeat.test(mode === "stderr" ? out : err)).toBe(false);
+  }
+});
 
 test("owned timeout and stop drain descendant-created groups and inherited pipes", async () => {
   const { spawn, spawnSync } = await import("node:child_process"), { default: treeKill } = await import("tree-kill");

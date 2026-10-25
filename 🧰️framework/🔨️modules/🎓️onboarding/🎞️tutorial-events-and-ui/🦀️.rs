@@ -35,7 +35,7 @@ pub struct TutorialEvent {
     pub kind: TutorialEventKind,
 }
 
-/// 🏷️ What one `TutorialEvent` annotates.
+/// 📘️ What one `TutorialEvent` annotates.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
@@ -70,7 +70,7 @@ pub struct TutorialUiKeyframe {
     pub sample: TutorialUiSample,
 }
 
-/// 🧮️ See `TutorialUiKeyframe`.
+/// 🧫️ See `TutorialUiKeyframe`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
@@ -80,7 +80,7 @@ pub enum TutorialUiSample {
     Delta { changes: Vec<TutorialUiChange> },
 }
 
-/// 🧮️ Renderer-neutral restore point for chrome/UI state — a superset of `ViewModel` plus the
+/// 📸️ Renderer-neutral restore point for chrome/UI state — a superset of `ViewModel` plus the
 /// dock/panel/dialog state neither shell serializes today. Deliberately NOT a serialization of either
 /// shell's internal store: each shell implements its own `captureUiSnapshot`/`applyUiSnapshot` against
 /// this shape. Locale/terminology are excluded on purpose — a tutorial plays in the viewer's own locale.
@@ -145,7 +145,7 @@ pub enum TutorialUiChange {
         #[value(default, skip_serializing_if = "Option::is_none")]
         id: Option<String>,
     },
-    /// 🧰️ `utility_id: None` deactivates — mirrors `SetActiveUtility` semantics.
+    /// 🛠️ `utility_id: None` deactivates — mirrors `SetActiveUtility` semantics.
     ActiveUtility {
         window_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -160,7 +160,7 @@ pub enum TutorialUiChange {
     Layout {
         layout: WindowLayout,
     },
-    /// 📑️ `group` carries the concrete anchor id; `tab_id: None` closes that anchor.
+    /// 🎒️ `group` carries the concrete anchor id; `tab_id: None` closes that anchor.
     PanelTab {
         group: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -170,7 +170,7 @@ pub enum TutorialUiChange {
     PanelState {
         panel_json: String,
     },
-    /// 🕹️ Drives one interaction domain's selection during replay — carries the resolved
+    /// 🖱️ Drives one interaction domain's selection during replay — carries the resolved
     /// `DomainSelection` directly rather than re-dispatching `interactionSelect` (a raw pointer/keyboard
     /// event would be non-deterministic on replay). `ids: []` clears the domain's selection.
     Selection {
@@ -211,7 +211,7 @@ pub struct TutorialDocumentEvent {
     pub kind: TutorialDocumentEventKind,
 }
 
-/// 🖋️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
+/// 📄️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
 /// verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -267,7 +267,7 @@ pub struct TutorialCameraKeyframe {
     pub easing: TutorialEasing,
 }
 
-/// 🎥️ A camera pose — `Orbit` mirrors `World3dScene.camera_json`/`OrbitController`, `Canvas`
+/// 🎬️ A camera pose — `Orbit` mirrors `World3dScene.camera_json`/`OrbitController`, `Canvas`
 /// mirrors `Canvas2dScene`'s `cameraX`/`cameraY`/`zoom`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -291,7 +291,7 @@ pub enum TutorialCameraState {
     },
 }
 
-/// 🪄️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
+/// 📈️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]

@@ -3,6 +3,7 @@ use crate::apply_mutation;
 use crate::standards::energyplus::subsets::any::schema::mutations::*;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 
 //#region 🔖️Fixtures
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -3,11 +3,11 @@
 import type { IntroductionCursor as GeneratedIntroductionCursor, IntroductionDefinition as GeneratedIntroductionDefinition, IntroductionDemonstration as GeneratedIntroductionDemonstration, IntroductionGesture as GeneratedIntroductionGesture, IntroductionInteraction as GeneratedIntroductionInteraction, IntroductionInteractionKind as GeneratedIntroductionInteractionKind, IntroductionKeyModifier as GeneratedIntroductionKeyModifier, IntroductionLogo as GeneratedIntroductionLogo, IntroductionPlacement as GeneratedIntroductionPlacement, IntroductionPoint as GeneratedIntroductionPoint, IntroductionPointerButton as GeneratedIntroductionPointerButton, IntroductionStepDefinition as GeneratedIntroductionStepDefinition, TutorialAssetSrc as GeneratedTutorialAssetSrc, TutorialBase as GeneratedTutorialBase, TutorialCameraKeyframe as GeneratedTutorialCameraKeyframe, TutorialCameraState as GeneratedTutorialCameraState, TutorialCaption as GeneratedTutorialCaption, TutorialChapter as GeneratedTutorialChapter, TutorialDefinition as GeneratedTutorialDefinition, TutorialDocumentEvent as GeneratedTutorialDocumentEvent, TutorialDocumentEventKind as GeneratedTutorialDocumentEventKind, TutorialEasing as GeneratedTutorialEasing, TutorialEvent as GeneratedTutorialEvent, TutorialEventKind as GeneratedTutorialEventKind, TutorialGestureCue as GeneratedTutorialGestureCue, TutorialNarrationCue as GeneratedTutorialNarrationCue, TutorialOverlayRect as GeneratedTutorialOverlayRect, TutorialUiChange as GeneratedTutorialUiChange, TutorialUiKeyframe as GeneratedTutorialUiKeyframe, TutorialUiSnapshot as GeneratedTutorialUiSnapshot, TutorialVideoCue as GeneratedTutorialVideoCue } from "../../🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts";
 import type { WindowLayout } from "../🗺️window-layout/🟦️.ts";
 
-/** 🎓️ The reserved action id apps dispatch (or the shell auto-injects into the command palette)
+/** 🚀️ The reserved action id apps dispatch (or the shell auto-injects into the command palette)
  * to (re)start an app's introduction — mirrors Rust `START_INTRODUCTION_ACTION_ID`. */
 export const START_INTRODUCTION_ACTION_ID = "startIntroduction";
 
-/** 🎓️ Generated from Rust `Introduction*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
+/** 🧬️ Generated from Rust `Introduction*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type IntroductionDefinition = GeneratedIntroductionDefinition;
 export type IntroductionStepDefinition = GeneratedIntroductionStepDefinition;
 export type IntroductionPlacement = GeneratedIntroductionPlacement;
@@ -115,7 +115,7 @@ export type TutorialBase = Omit<GeneratedTutorialBase, "ui" | "cameras"> & {
   readonly cameras: readonly TutorialCameraKeyframe[];
 };
 
-/** 🎬️ A recorded, timed, replayable walkthrough — the timeline sibling of `IntroductionDefinition`. A
+/** 📹️ A recorded, timed, replayable walkthrough — the timeline sibling of `IntroductionDefinition`. A
  * *recording* IS a `TutorialDefinition`; the recorder simply produces a densely-sampled one. */
 export type TutorialDefinition = Omit<GeneratedTutorialDefinition, "durationMs" | "chapters" | "base" | "tracks"> & {
   readonly durationMs: number;

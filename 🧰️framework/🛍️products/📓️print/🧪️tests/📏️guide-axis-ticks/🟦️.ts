@@ -67,19 +67,19 @@ export default defineTestAdapter({
       oracle: (ctx: AdapterContext) => ({
         projection: Object.fromEntries(rows(ctx).map((row, index) => [`ticks/${index}`, grid(ticks(Number(row.start), Number(row.stop), Number(row.count)))])),
       }),
-      /** 🎯️ The compiled probe of \semio_viz_guide_ticks_linear:nnnN on the same domains. */
+      /** 📘️ The compiled probe of \semio_viz_guide_ticks_linear:nnnN on the same domains. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, "linear-ticks.tex")),
     },
     "log-ticks": {
-      /** 🔮️ d3-scale's log scale ticks over the same domains. */
+      /** 🪵️ d3-scale's log scale ticks over the same domains. */
       oracle: (ctx: AdapterContext) => ({
         projection: Object.fromEntries(rows(ctx).map((row, index) => [`ticks/${index}`, grid(scaleLog().domain([Number(row.start), Number(row.stop)]).ticks(Number(row.count)))])),
       }),
-      /** 🎯️ The compiled probe of \semio_viz_guide_ticks_log:nnnnN. */
+      /** 📗️ The compiled probe of \semio_viz_guide_ticks_log:nnnnN. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, "log-ticks.tex")),
     },
     "band-ticks": {
-      /** 🔮️ d3-scale's band scale: one tick per domain entry, at the band's centre. */
+      /** 🩹️ d3-scale's band scale: one tick per domain entry, at the band's centre. */
       oracle: (ctx: AdapterContext) => {
         const row = rows(ctx)[0]!;
         const domain = row.domain!.split(",");
@@ -91,7 +91,7 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The compiled probe of the guide's own band tick positions. */
+      /** ✔️ The compiled probe of the guide's own band tick positions. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, "band-ticks.tex")),
     },
     "axis-geometry": {
@@ -99,7 +99,7 @@ export default defineTestAdapter({
       oracle: (ctx: AdapterContext) => ({
         projection: Object.fromEntries(rows(ctx).map((row) => [row.key!, row.values!.split(",").map(Number)])),
       }),
-      /** 🎯️ The geometry the renderer emitted while drawing that axis. */
+      /** 🖍️ The geometry the renderer emitted while drawing that axis. */
       subject: async (ctx: AdapterContext) => {
         const projection = (await subject(ctx, "axis-geometry.tex")).projection;
         const gridLines = projection["geometry/grid-line"] ?? [];
@@ -113,7 +113,7 @@ export default defineTestAdapter({
       },
     },
     "tick-format-labels": {
-      /** 🔮️ d3-format's own locale definitions rendering the same tick values. */
+      /** 🖌️ d3-format's own locale definitions rendering the same tick values. */
       oracle: (ctx: AdapterContext) => {
         const row = rows(ctx)[0]!;
         const values = ticks(Number(row.start), Number(row.stop), Number(row.count));
@@ -127,7 +127,7 @@ export default defineTestAdapter({
         }
         return { projection };
       },
-      /** 🎯️ The labels the guide wrote through semio-viz-format for each locale. */
+      /** 🔖️ The labels the guide wrote through semio-viz-format for each locale. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, "tick-format-labels.tex")),
     },
   },

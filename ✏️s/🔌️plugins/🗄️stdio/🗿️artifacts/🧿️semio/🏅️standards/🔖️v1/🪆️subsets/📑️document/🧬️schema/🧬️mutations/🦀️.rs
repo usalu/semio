@@ -159,7 +159,7 @@ pub fn diff_semio_document_mutation(mutation: &SemioDocumentMutation, base: &Sem
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_document_mutation(mutation: &SemioDocumentMutation, base: &SemioDocumentSnapshot) -> Result<Vec<SemioDocumentMutation>, semio_framework_value::ValueError> {
     Ok({
-    Mutation::inverse(mutation, base)?
+    ::semio_framework_os_kernel::ColdMutation::inverse(mutation, base)?
 
     })
 }

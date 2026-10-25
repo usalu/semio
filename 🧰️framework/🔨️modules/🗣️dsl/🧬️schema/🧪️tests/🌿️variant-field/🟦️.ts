@@ -23,6 +23,5 @@ export function testDeclaredVariantFieldOracle(): void {
     assert(reference(named), JSON.stringify(reference.errors));
     for (const count of fixture.refusedStatementCounts) assert(!reference(Array.from({ length: count }, () => named[0])));
   }
-  console.log("[DEBUG] independent Ajv variant field oracle: three named records and zero/two statement refusals");
 }
 

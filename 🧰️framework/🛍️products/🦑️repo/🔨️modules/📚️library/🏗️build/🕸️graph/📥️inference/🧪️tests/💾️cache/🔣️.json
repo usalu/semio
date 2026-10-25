@@ -443,8 +443,8 @@
     {
       "name": "prepare-prototype",
       "decision": [
-        "driver-owned",
-        "freshness-owned-by-driver"
+        "unclassified",
+        "no-cache-classification"
       ],
       "cache": false
     },

@@ -552,7 +552,7 @@ impl<V, const N: usize> PagedMap<V, N> {
         Ok(Self { entries })
     }
 
-    /// 🗂️ Adopts sorted unique admitted entries without allocating duplicate-key scratch.
+    /// 🔃️ Adopts sorted unique admitted entries without allocating duplicate-key scratch.
     pub fn from_sorted_retained_entries_controlled(entries: PagedList<(PagedUtf8<{usize::MAX}>, V), N>, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         control.scoped_stage(|control| {
             let total = entries.iter().try_fold(entries.len(), |total, (key, _)| total.checked_add(key.len()).ok_or_else(|| ValueError::new(crate::ValueRefusalKind::WorkLimit, "paged map ordered validation workload overflow")))?;

@@ -35,7 +35,7 @@ impl FontAtlas {
         self.sized.get(&exact).expect("sized glyph inserted")
     }
 
-    /// 🔍️ Resolution order, and the ONE place it is written down: a default-ignorable format control
+    /// 🪜️ Resolution order, and the ONE place it is written down: a default-ignorable format control
     /// is blank and zero-advance; a [`SYMBOL_FACE`] codepoint is drawn from this crate's own outlines
     /// (no shipped face carries one, in EITHER mode, on native or wasm); everything else goes to the
     /// atlas mode's own pipeline.

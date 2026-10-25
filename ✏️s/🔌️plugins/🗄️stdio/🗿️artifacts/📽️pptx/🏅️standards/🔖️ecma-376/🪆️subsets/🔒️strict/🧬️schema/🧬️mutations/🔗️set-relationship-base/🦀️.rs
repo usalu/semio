@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetRelationshipBase {
-    pub(crate) base: String,
+    pub base: String,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for SetRelationshipBase {

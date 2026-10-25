@@ -45,5 +45,4 @@ test("original artifact document pair base64 stages match independent codec and 
  expect(source.includes("parts.output")).toBe(true);
  expect(source.includes("settled_snapshot")).toBe(false);
  expect(source.includes("artifact_pair_snapshot")).toBe(false);
- console.log("[DEBUG] original document strict base64 pair outputs equal base64-js; SQLite independently rejects each deficient currency; exact capacity, original text and partial owners remain retained");
 });

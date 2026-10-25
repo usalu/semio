@@ -16,7 +16,7 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
         if self.checked_out.is_some() { WorkerJobPoll::CheckedOut } else { self.session.poll() }
     }
 
-    /// 🧵️ `J: Send` for the same reason as [`WorkerJobSession::try_submit_step`] — this is the
+    /// ⛽️ `J: Send` for the same reason as [`WorkerJobSession::try_submit_step`] — this is the
     /// pool-submitting half of the mounted session, not the single-threaded drive path.
     pub fn pump_one(&mut self, pool: &WorkerPool, lane: Lane,retained:RetainedCloneGrant) -> Result<WorkerJobPoll, MountedWorkerJobPumpFault>
     where
@@ -170,7 +170,7 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
         self.session.has_original_cancel_alias_witness(witness)
     }
 
-    /// 🪢️ Preserves checkout ownership while forwarding the caller's borrowed original cancellation root.
+    /// ✖️ Preserves checkout ownership while forwarding the caller's borrowed original cancellation root.
     pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,WorkerJobDemandError>{
         if self.checked_out.is_some(){return Ok(None);}
         self.session.return_original_cancel_alias_step(witness,grant)
@@ -313,16 +313,16 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
         self.session.close_step(cx)
     }
 
-    /// 🪢️ Preserves checkout custody before inspecting the original borrowed cancellation witness.
+    /// ❌️ Preserves checkout custody before inspecting the original borrowed cancellation witness.
     pub fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->Result<bool,WorkerJobDemandError>{if self.checked_out.is_some(){return Ok(false)}self.session.has_original_cancel_alias_witness(witness)}
-    /// 🪢️ Returns the original alias through its sole session after checkout custody has returned.
+    /// 🪜️ Returns the original alias through its sole session after checkout custody has returned.
     pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,WorkerJobDemandError>{if self.checked_out.is_some(){return Ok(None)}self.session.return_original_cancel_alias_step(witness,grant)}
 
     pub fn terminal_is_empty(&self) -> bool {
         self.checked_out.is_none() && self.session.terminal_is_empty()
     }
 
-    /// 🔭️ Observe the actual batch checkout or original worker retirement phase without effects.
+    /// 📪️ Observe the actual batch checkout or original worker retirement phase without effects.
     pub fn close_phase(&self)->WorkerJobClosePhase{if self.checked_out.is_some(){WorkerJobClosePhase::CheckedOut}else{self.session.close_phase()}}
 }
 //#endregion 🏭️RetainedSessions

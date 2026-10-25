@@ -68,7 +68,7 @@ where
 /// 🔖️ Where a durable-lane subscriber resumes from.
 #[derive(Clone, Copy, Debug, Default, Deserialize)]
 pub struct EventStreamQuery {
-    /// 🚩️ The last sequence the client already holds; `0` replays the whole stream.
+    /// ⛓️ The last sequence the client already holds; `0` replays the whole stream.
     #[serde(default)]
     pub since: u64,
 }

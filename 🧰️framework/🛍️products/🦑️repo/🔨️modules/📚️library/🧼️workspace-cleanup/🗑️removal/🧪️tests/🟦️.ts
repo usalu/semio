@@ -1,9 +1,9 @@
-/** 🗑️ Contract: the workspace cleaner removes exactly the discovered misplaced folders, root transients, Cargo targets, closed-ticket output and illegal names, and refuses open tickets, managed storage, native images and protected prefixes in dry and applied runs; the corpus is language-agnostic and `🐍️oracle.py` replays the expected survivors on a rebuilt workspace. */
+/** 🗑️ Contract: the workspace cleaner removes exactly the discovered misplaced folders, root transients, Cargo targets, closed-ticket output and illegal names, and refuses open tickets, managed storage, native images and protected prefixes in dry and applied runs; the corpus is language-agnostic and `🐍️.py` replays the expected survivors on a rebuilt workspace. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {afterAll} from "bun:test";
 import {closeSync,existsSync,ftruncateSync,mkdirSync,mkdtempSync,openSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -66,6 +66,6 @@ test("a protected prefix blocks removal of everything inside it",()=>{
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

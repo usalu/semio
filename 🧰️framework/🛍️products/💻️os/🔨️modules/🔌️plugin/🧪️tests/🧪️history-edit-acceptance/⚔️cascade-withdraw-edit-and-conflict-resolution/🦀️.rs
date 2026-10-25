@@ -156,7 +156,7 @@ where
     };
     let inverse = match probe.stores.store.snapshot() {
         Ok(before) => {
-            let inverse = ::protocol::Mutation::<A::Snapshot>::inverse(&case.op, &before).map_err(|error| format!("its operation states no inverse on its document: {error:?}"));
+            let inverse = <A::Mutation as ::protocol::ColdMutation<A::Snapshot>>::inverse(&case.op, &before).map_err(|error| format!("its operation states no inverse on its document: {error:?}"));
             std::mem::forget(before);
             inverse
         }

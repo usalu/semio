@@ -75,7 +75,7 @@ function checkAppTailwindEntries(repoRoot: string, offenders: string[]): void {
   }
 }
 
-/** 🎨️ App / storybook / product Tailwind entry CSS files that must inherit the shared UI sources. */
+/** 📋️ App / storybook / product Tailwind entry CSS files that must inherit the shared UI sources. */
 function listAppTailwindEntries(repoRoot: string): string[] {
   const found: string[] = [];
   const visit = (dir: string, depth: number): void => {
@@ -109,7 +109,7 @@ function listAppTailwindEntries(repoRoot: string): string[] {
   });
 }
 
-/** 🎨️ Relative path of the shared UI `🎨️.css` from the workspace root. */
+/** 🔎️ Relative path of the shared UI `🎨️.css` from the workspace root. */
 function findSharedUiGlobalsRel(repoRoot: string): string | null {
   const candidates = [
     "🧰️framework/🔨️modules/🖱️ui/🧵️styles/🎨️.css",
@@ -120,7 +120,7 @@ function findSharedUiGlobalsRel(repoRoot: string): string | null {
   return null;
 }
 
-/** 🎨️ Walks relative `@import "..."` edges (skipping package specifiers) until `targetAbs` is reached. */
+/** 🔗️ Walks relative `@import "..."` edges (skipping package specifiers) until `targetAbs` is reached. */
 function cssImportChainReaches(fromAbs: string, targetAbs: string, seen: Set<string>): boolean {
   const normalizedFrom = resolve(fromAbs);
   const normalizedTarget = resolve(targetAbs);

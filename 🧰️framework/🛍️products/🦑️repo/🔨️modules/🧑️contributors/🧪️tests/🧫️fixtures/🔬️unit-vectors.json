@@ -1,0 +1,522 @@
+{
+ "schema": "semio.repo.contributors.unit-vectors/1",
+ "$comment": "🔬️ Expected answers for the cargo unit tests, computed by an independent Python model (a regular expression for the identity rule, the standard library otherwise; no code shared with the Rust or Go implementation) over the real contributor documents, the real checkpoint log and the session vectors. Regenerate with the model; never edit by hand.",
+ "oracle": {
+  "script": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/rtest-d-tools/oracle_contributors.py",
+  "tool": "python3",
+  "libraries": [
+   "re",
+   "json"
+  ],
+  "model": "identity lines, author lines, alias resolution, checkpoint log, session kinds and ids"
+ },
+ "identities": [
+  {
+   "line": "2026 Ueli Saluz <ueli@semio-tech.com>",
+   "parsed": [
+    "Ueli Saluz",
+    "ueli@semio-tech.com"
+   ]
+  },
+  {
+   "line": "   599\tUeli Saluz <ueli@semio-tech.com>",
+   "parsed": null
+  },
+  {
+   "line": "     5\tKinan Sarakbi <kinan.sarak@gmail.com>",
+   "parsed": null
+  },
+  {
+   "line": "",
+   "parsed": null
+  },
+  {
+   "line": "no separators at all",
+   "parsed": null
+  },
+  {
+   "line": "sha|author",
+   "parsed": null
+  },
+  {
+   "line": "sha|author|date",
+   "parsed": null
+  },
+  {
+   "line": "|||",
+   "parsed": null
+  },
+  {
+   "line": "1999 no angle brackets",
+   "parsed": null
+  },
+  {
+   "line": "Ueli Saluz <ueli@semio-tech.com>",
+   "parsed": null
+  },
+  {
+   "line": "12345 Too Many Digits <a@b.c>",
+   "parsed": null
+  },
+  {
+   "line": "2026 <a@b>",
+   "parsed": null
+  },
+  {
+   "line": "2026   <a@b>",
+   "parsed": null
+  },
+  {
+   "line": "2026 Name <>",
+   "parsed": null
+  },
+  {
+   "line": "2026 Name   <a@b>  ",
+   "parsed": [
+    "Name",
+    "a@b"
+   ]
+  },
+  {
+   "line": "x 2026 Name <a@b> y",
+   "parsed": [
+    "Name",
+    "a@b"
+   ]
+  },
+  {
+   "line": "1999 A <b@c> 2026 D <d@e>",
+   "parsed": [
+    "A",
+    "b@c"
+   ]
+  },
+  {
+   "line": "2026 Ünï Çödé <ü@ex.org>",
+   "parsed": [
+    "Ünï Çödé",
+    "ü@ex.org"
+   ]
+  },
+  {
+   "line": "2026\tTab\t<t@ex.org>",
+   "parsed": [
+    "Tab",
+    "t@ex.org"
+   ]
+  },
+  {
+   "line": "12026 Name <a@b>",
+   "parsed": null
+  },
+  {
+   "line": "2026Name <a@b>",
+   "parsed": null
+  },
+  {
+   "line": "2026 Name (x) <a@b>",
+   "parsed": [
+    "Name (x)",
+    "a@b"
+   ]
+  },
+  {
+   "line": "2026 Name < b > <c>",
+   "parsed": [
+    "Name",
+    "b"
+   ]
+  },
+  {
+   "line": "99 Name <a@b>",
+   "parsed": null
+  },
+  {
+   "line": "0001 First <f@x>",
+   "parsed": [
+    "First",
+    "f@x"
+   ]
+  },
+  {
+   "line": "2026 Name <a@b",
+   "parsed": null
+  },
+  {
+   "line": "2026 Name a@b>",
+   "parsed": null
+  },
+  {
+   "line": "   599\tUeli Saluz <ueli@semio-tech.com>",
+   "parsed": null
+  }
+ ],
+ "authors": [
+  {
+   "line": "Ueli Saluz <ueli@semio-tech.com>",
+   "name": "Ueli Saluz",
+   "email": "ueli@semio-tech.com",
+   "alias": "ueli"
+  },
+  {
+   "line": "Kinan Sarakbi <>",
+   "name": "Kinan Sarakbi",
+   "email": "",
+   "alias": "kinan"
+  },
+  {
+   "line": "Adrian Schäfer <>",
+   "name": "Adrian Schäfer",
+   "email": "",
+   "alias": "adrian"
+  },
+  {
+   "line": "Jonathan Kaatz <>",
+   "name": "Jonathan Kaatz",
+   "email": "",
+   "alias": "jonathan"
+  },
+  {
+   "line": "Christian Hödtke <>",
+   "name": "Christian Hödtke",
+   "email": "",
+   "alias": "christian"
+  },
+  {
+   "line": "Ueli Saluz <ueli.saluz@iek.uni-hannover.de>",
+   "name": "Ueli Saluz",
+   "email": "ueli.saluz@iek.uni-hannover.de",
+   "alias": "ueli"
+  },
+  {
+   "line": "Kinan Sarakbi <kinan.sarak@gmail.com>",
+   "name": "Kinan Sarakbi",
+   "email": "kinan.sarak@gmail.com",
+   "alias": "kinan"
+  },
+  {
+   "line": "Unknown Person <nobody@example.org>",
+   "name": "Unknown Person",
+   "email": "nobody@example.org",
+   "alias": "Unknown Person <nobody@example.org>"
+  },
+  {
+   "line": "UELI SALUZ <UELI@SEMIO-TECH.COM>",
+   "name": "UELI SALUZ",
+   "email": "UELI@SEMIO-TECH.COM",
+   "alias": "ueli"
+  },
+  {
+   "line": "ueli.saluz",
+   "name": "ueli.saluz",
+   "email": "",
+   "alias": "ueli.saluz"
+  },
+  {
+   "line": "Nobody",
+   "name": "Nobody",
+   "email": "",
+   "alias": "Nobody"
+  },
+  {
+   "line": "",
+   "name": "",
+   "email": "",
+   "alias": "unknown"
+  },
+  {
+   "line": " <only@email>",
+   "name": "",
+   "email": "only@email",
+   "alias": "only@email"
+  },
+  {
+   "line": "Name <e@x> <y>",
+   "name": "Name",
+   "email": "e@x> <y",
+   "alias": "Name <e@x> <y>"
+  },
+  {
+   "line": "  Padded Name  <e@x>",
+   "name": "Padded Name",
+   "email": "e@x",
+   "alias": "Padded Name <e@x>"
+  },
+  {
+   "line": "Name <e@x",
+   "name": "Name",
+   "email": "e@x",
+   "alias": "Name <e@x>"
+  },
+  {
+   "line": "Name<e@x>",
+   "name": "Name<e@x>",
+   "email": "",
+   "alias": "Name<e@x>"
+  },
+  {
+   "line": "UELI SALUZ",
+   "name": "UELI SALUZ",
+   "email": "",
+   "alias": "ueli"
+  },
+  {
+   "line": "KINAN SARAKBI",
+   "name": "KINAN SARAKBI",
+   "email": "",
+   "alias": "kinan"
+  },
+  {
+   "line": "ADRIAN SCHÄFER",
+   "name": "ADRIAN SCHÄFER",
+   "email": "",
+   "alias": "adrian"
+  },
+  {
+   "line": "JONATHAN KAATZ",
+   "name": "JONATHAN KAATZ",
+   "email": "",
+   "alias": "jonathan"
+  },
+  {
+   "line": "CHRISTIAN HÖDTKE",
+   "name": "CHRISTIAN HÖDTKE",
+   "email": "",
+   "alias": "christian"
+  }
+ ],
+ "contributors": [
+  {
+   "alias": "ueli",
+   "github": "https://github.com/usalu",
+   "name": "Ueli Saluz",
+   "names": [],
+   "email": "ueli@semio-tech.com",
+   "emails": [
+    "ueli.saluz@iek.uni-hannover.de"
+   ]
+  },
+  {
+   "alias": "kinan",
+   "github": "kinansarak",
+   "name": "Kinan Sarakbi",
+   "names": [],
+   "email": "",
+   "emails": [
+    "kinan.sarak@gmail.com"
+   ]
+  },
+  {
+   "alias": "adrian",
+   "github": "AdrianoCelentano",
+   "name": "Adrian Schäfer",
+   "names": [],
+   "email": "",
+   "emails": []
+  },
+  {
+   "alias": "jonathan",
+   "github": "kaatzjo",
+   "name": "Jonathan Kaatz",
+   "names": [],
+   "email": "",
+   "emails": []
+  },
+  {
+   "alias": "christian",
+   "github": "EinMysterium",
+   "name": "Christian Hödtke",
+   "names": [],
+   "email": "",
+   "emails": []
+  }
+ ],
+ "checkpointLog": "5e03e56997ce369da4d8873d8004bb1947f6816b|Ueli Saluz|2026-09-06T03:51:24+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️592\n3a6a9d6bfc12ceb9e7fc06a830b960b3cd660f99|Ueli Saluz|2026-09-05T22:02:04+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️591\nb0dfa0f09b23a4561222316ff057c19995a0a054|Ueli Saluz|2026-09-05T19:04:38+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️590\nfe7c8a8f8bd96c6c97e559525c64b0445898c1fa|Ueli Saluz|2026-09-05T03:53:30+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️589\n0a908f6c661c75b0bba19fc99334edcfb064171c|Ueli Saluz|2026-09-04T01:18:32+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️588\n03100691d5eed403cd3bf330d330577e9a43b672|Ueli Saluz|2026-09-03T18:13:43+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️587\n7ad363fd1ec91cb0c83cf716bc66522be99a4785|Ueli Saluz|2026-09-03T12:49:41+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️586\n96aa4f8c1211f8f9645b8c7d06c48afec6d95972|Ueli Saluz|2026-09-02T17:38:16+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️585\na807c0706c63eb4527de4541173d4f8fd704471f|Ueli Saluz|2026-09-02T15:18:09+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️584\ne5465a2c1ce7d7eb6e9e87d529e1f1099717c7b8|Ueli Saluz|2026-09-02T13:31:56+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️583\n21fbcd3538ff7d2dae0a91554f6f056318c50569|Ueli Saluz|2026-09-02T12:19:02+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️582\nf15dbf0d83a08efb2eb46bca2d61c57ff0d05c31|Ueli Saluz|2026-09-01T22:47:40+02:00|🐙️ueli🎆️26🌙️06☀️04🚩️581\nabc123|Pipe Author|2026-01-02T03:04:05+00:00|title | with | pipes\nabc124||2026-01-02T03:04:06+00:00|no author\n\nshort|line\nabc125|A|d|",
+ "checkpoints": [
+  {
+   "id": "5e03e56997ce369da4d8873d8004bb1947f6816b",
+   "sha": "5e03e56997ce369da4d8873d8004bb1947f6816b",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️592",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-06T03:51:24+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀5e03e56997ce369da4d8873d8004bb1947f6816b"
+  },
+  {
+   "id": "3a6a9d6bfc12ceb9e7fc06a830b960b3cd660f99",
+   "sha": "3a6a9d6bfc12ceb9e7fc06a830b960b3cd660f99",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️591",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-05T22:02:04+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀3a6a9d6bfc12ceb9e7fc06a830b960b3cd660f99"
+  },
+  {
+   "id": "b0dfa0f09b23a4561222316ff057c19995a0a054",
+   "sha": "b0dfa0f09b23a4561222316ff057c19995a0a054",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️590",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-05T19:04:38+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀b0dfa0f09b23a4561222316ff057c19995a0a054"
+  },
+  {
+   "id": "fe7c8a8f8bd96c6c97e559525c64b0445898c1fa",
+   "sha": "fe7c8a8f8bd96c6c97e559525c64b0445898c1fa",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️589",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-05T03:53:30+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀fe7c8a8f8bd96c6c97e559525c64b0445898c1fa"
+  },
+  {
+   "id": "0a908f6c661c75b0bba19fc99334edcfb064171c",
+   "sha": "0a908f6c661c75b0bba19fc99334edcfb064171c",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️588",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-04T01:18:32+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀0a908f6c661c75b0bba19fc99334edcfb064171c"
+  },
+  {
+   "id": "03100691d5eed403cd3bf330d330577e9a43b672",
+   "sha": "03100691d5eed403cd3bf330d330577e9a43b672",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️587",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-03T18:13:43+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀03100691d5eed403cd3bf330d330577e9a43b672"
+  },
+  {
+   "id": "7ad363fd1ec91cb0c83cf716bc66522be99a4785",
+   "sha": "7ad363fd1ec91cb0c83cf716bc66522be99a4785",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️586",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-03T12:49:41+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀7ad363fd1ec91cb0c83cf716bc66522be99a4785"
+  },
+  {
+   "id": "96aa4f8c1211f8f9645b8c7d06c48afec6d95972",
+   "sha": "96aa4f8c1211f8f9645b8c7d06c48afec6d95972",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️585",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-02T17:38:16+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀96aa4f8c1211f8f9645b8c7d06c48afec6d95972"
+  },
+  {
+   "id": "a807c0706c63eb4527de4541173d4f8fd704471f",
+   "sha": "a807c0706c63eb4527de4541173d4f8fd704471f",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️584",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-02T15:18:09+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀a807c0706c63eb4527de4541173d4f8fd704471f"
+  },
+  {
+   "id": "e5465a2c1ce7d7eb6e9e87d529e1f1099717c7b8",
+   "sha": "e5465a2c1ce7d7eb6e9e87d529e1f1099717c7b8",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️583",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-02T13:31:56+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀e5465a2c1ce7d7eb6e9e87d529e1f1099717c7b8"
+  },
+  {
+   "id": "21fbcd3538ff7d2dae0a91554f6f056318c50569",
+   "sha": "21fbcd3538ff7d2dae0a91554f6f056318c50569",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️582",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-02T12:19:02+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀21fbcd3538ff7d2dae0a91554f6f056318c50569"
+  },
+  {
+   "id": "f15dbf0d83a08efb2eb46bca2d61c57ff0d05c31",
+   "sha": "f15dbf0d83a08efb2eb46bca2d61c57ff0d05c31",
+   "title": "🐙️ueli🎆️26🌙️06☀️04🚩️581",
+   "authorId": "Ueli Saluz",
+   "date": "2026-09-01T22:47:40+02:00",
+   "identifier": "🧑‍💻uelisaluz🔀f15dbf0d83a08efb2eb46bca2d61c57ff0d05c31"
+  },
+  {
+   "id": "abc123",
+   "sha": "abc123",
+   "title": "title | with | pipes",
+   "authorId": "Pipe Author",
+   "date": "2026-01-02T03:04:05+00:00",
+   "identifier": "🧑‍💻pipeauthor🔀abc123"
+  },
+  {
+   "id": "abc124",
+   "sha": "abc124",
+   "title": "no author",
+   "authorId": null,
+   "date": "2026-01-02T03:04:06+00:00",
+   "identifier": "🔀abc124"
+  },
+  {
+   "id": "abc125",
+   "sha": "abc125",
+   "title": "",
+   "authorId": "A",
+   "date": "d",
+   "identifier": "🧑‍💻a🔀abc125"
+  }
+ ],
+ "sessions": [
+  {
+   "uuid": "0000-completed-by-event",
+   "kind": "completed",
+   "client": "claude-code",
+   "second": "2026-09-06T04:20:00Z",
+   "checkpoint": "5e03e56997ce369da4d8873d8004bb1947f6816b",
+   "id": "🔀5e03e56997ce369da4d8873d8004bb1947f6816b⚪0000completedbyevent",
+   "uri": "repo://session/⚪0000completedbyevent"
+  },
+  {
+   "uuid": "1111-running-recent-write",
+   "kind": "running",
+   "client": "codex",
+   "second": "2026-09-06T04:30:00Z",
+   "checkpoint": "",
+   "id": "🎆26🌙09☀️06⚪1111runningrecentwrite",
+   "uri": "repo://session/⚪1111runningrecentwrite"
+  },
+  {
+   "uuid": "2222-interrupted-went-silent",
+   "kind": "interrupted",
+   "client": "",
+   "second": "2026-09-05T22:02:04Z",
+   "checkpoint": "",
+   "id": "🎆26🌙09☀️05⚪2222interruptedwentsilent",
+   "uri": "repo://session/⚪2222interruptedwentsilent"
+  },
+  {
+   "uuid": "3333-unreadable-meta",
+   "kind": "running",
+   "client": "cursor-chat",
+   "second": "2026-09-05T19:04:38Z",
+   "checkpoint": "",
+   "id": "🎆26🌙09☀️05⚪3333unreadablemeta",
+   "uri": "repo://session/⚪3333unreadablemeta"
+  },
+  {
+   "uuid": "4444-completed-by-file-name",
+   "kind": "completed",
+   "client": "droid",
+   "second": "2026-09-04T01:18:32Z",
+   "checkpoint": "",
+   "id": "🎆26🌙09☀️04⚪4444completedbyfilename",
+   "uri": "repo://session/⚪4444completedbyfilename"
+  },
+  {
+   "uuid": "5555-empty-directory",
+   "kind": "interrupted",
+   "client": "",
+   "second": "",
+   "checkpoint": "",
+   "id": "🎆26🌙09☀️04⚪5555emptydirectory",
+   "uri": "repo://session/⚪5555emptydirectory"
+  },
+  {
+   "uuid": "6666-second-from-event-files",
+   "kind": "interrupted",
+   "client": "windsurf-chat",
+   "second": "2026-09-03T08:00:00Z",
+   "checkpoint": "",
+   "id": "🎆26🌙09☀️03⚪6666secondfromeventfiles",
+   "uri": "repo://session/⚪6666secondfromeventfiles"
+  }
+ ]
+}

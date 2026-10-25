@@ -94,7 +94,7 @@ type RetainedRootFixture = {
   readonly zeroGrantChangesOwner: boolean;
   readonly coldDecodeEarnsInteractiveCredit: boolean;
 };
-/** 🧫️ Shape of `../../🌳️root/🩹️update/🧪️tests/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+/** 🧪️ Shape of `../../🌳️root/🩹️update/🧪️tests/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
 type RetainedUpdateFixture = {
   readonly version: number;
   readonly cases: readonly string[];
@@ -111,7 +111,7 @@ type RetainedUpdateFixture = {
   readonly absentFieldsRemoveOnlyTargetDomain: boolean;
   readonly publishedCandidateUsesOriginalPayloadPointers: boolean;
 };
-/** 🧫️ Shape of `../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json`, the document its JSON Schema validates at load. */
+/** 🛠️ Shape of `../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json`, the document its JSON Schema validates at load. */
 type RetirementFixture = {
   readonly version: number;
   readonly grants: readonly number[];
@@ -124,7 +124,7 @@ type RetirementFixture = {
   readonly zeroItemMutates: boolean;
   readonly terminalOwners: number;
 };
-/** 🧫️ Shape of `../../🧪️tests/🧫️fixtures/📃️query/🔣️.json`, the document its JSON Schema validates at load. */
+/** 📄️ Shape of `../../🧪️tests/🧫️fixtures/📃️query/🔣️.json`, the document its JSON Schema validates at load. */
 type QueryFixture = {
   readonly version: number;
   readonly pageBytes: number;
@@ -143,7 +143,7 @@ type QueryFixture = {
     readonly error: string;
   };
 };
-/** 🧫️ Shape of `../../🧪️tests/🧫️fixtures/🔐️topology-authority/🔣️.json`, the document its JSON Schema validates at load. */
+/** 🏛️ Shape of `../../🧪️tests/🧫️fixtures/🔐️topology-authority/🔣️.json`, the document its JSON Schema validates at load. */
 type TopologyAuthorityFixture = {
   readonly version: number;
   readonly domain: string;
@@ -159,7 +159,7 @@ type TopologyAuthorityFixture = {
   readonly closedAuthorityReadable: boolean;
   readonly canonicalTopologyHash: boolean;
 };
-/** 🧫️ Shape of `../../📡️transport/🧪️tests/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+/** 📡️ Shape of `../../📡️transport/🧪️tests/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
 type TransportFixture = {
   readonly version: number;
   readonly appCommandTag: number;

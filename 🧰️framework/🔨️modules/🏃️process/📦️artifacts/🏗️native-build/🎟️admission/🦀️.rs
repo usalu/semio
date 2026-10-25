@@ -226,7 +226,7 @@ impl ProcessProbe {
         }
     }
 
-    /// 🧮️ The live resident bytes, `None` when the platform refuses the query.
+    /// 💻️ The live resident bytes, `None` when the platform refuses the query.
     fn resident_bytes(&self) -> Option<u64> {
         #[cfg(target_os = "macos")]
         {
@@ -344,7 +344,7 @@ fn await_admission(mut verdict: impl FnMut() -> Result<bool, String>) -> Result<
     Ok(())
 }
 
-/// 🎟️ Admits, runs and reports one rustc unit through the broker.
+/// 🔏️ Admits, runs and reports one rustc unit through the broker.
 fn scheduled(rustc: &OsString, args: &[OsString], unit: &Unit, endpoint: &str, pass: &str) -> Result<ExitCode, String> {
     let broker = Arc::new(Broker::connect(endpoint).map_err(|error| format!("build broker unreachable at {endpoint}: {error}"))?);
     broker.send(&admit_request(unit, pass, std::process::id())).map_err(|error| format!("broker admission request failed: {error}"))?;
@@ -429,7 +429,7 @@ mod tests {
         assert!(!unit.primary);
     }
 
-    /// 🧪️ Version and print probes are never admitted.
+    /// 🚫️ Version and print probes are never admitted.
     #[test]
     fn refuses_probes() {
         let env = |_: &str| None;
@@ -438,7 +438,7 @@ mod tests {
         }
     }
 
-    /// 🧪️ Admission waits through any number of refusals without asking for or giving back a token, and reports a broker fault.
+    /// ⏸️ Admission waits through any number of refusals without asking for or giving back a token, and reports a broker fault.
     #[test]
     fn waits_through_refusals() {
         for refusals in [0usize, 1, 7] {
@@ -450,7 +450,7 @@ mod tests {
         assert_eq!(await_admission(|| Err("broker closed".to_string())), Err("broker closed".to_string()));
     }
 
-    /// 🧪️ Strings escape exactly the JSON control set.
+    /// 🔣️ Strings escape exactly the JSON control set.
     #[test]
     fn escapes_json() {
         assert_eq!(json_string("a\"b\\c\n🎟️"), "\"a\\\"b\\\\c\\n🎟️\"");

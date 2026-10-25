@@ -29,7 +29,7 @@ export function setMarkdownHtmlCompiler(compiler: MarkdownHtmlCompiler): void {
   markdownHtmlCompiler.current = compiler;
 }
 
-/** 📝️ Compiles markdown through the active {@link MarkdownHtmlCompiler}. */
+/** 🔨️ Compiles markdown through the active {@link MarkdownHtmlCompiler}. */
 export function compileMarkdownToHtml(markdown: string): Promise<string> {
   return markdownHtmlCompiler.current.compile(markdown);
 }
@@ -40,7 +40,7 @@ export function compileMarkdownToHtml(markdown: string): Promise<string> {
 export interface PresentationMountOptions {
   readonly surfaceChrome?: ElementsSurfaceChromeInput | false;
   readonly transition?: "fade" | "slide" | "convex" | "concave" | "zoom" | "none";
-  /** 🔗️ Sync slide position to the URL hash; defaults to true. */
+  /** 📍️ Sync slide position to the URL hash; defaults to true. */
   readonly hash?: boolean;
   readonly slideNumber?: boolean;
   readonly width?: number;
@@ -64,7 +64,7 @@ export function syncPresentationSlideUrl(presentation: Presentation, indices: { 
   history.replaceState(null, "", url);
 }
 
-/** 🔗️ Reads reveal.js slide indices from the URL hash; trailing bookmark query params are ignored. */
+/** 🎤️ Reads reveal.js slide indices from the URL hash; trailing bookmark query params are ignored. */
 export function readPresentationSlideIndicesFromUrl(hash: string = typeof window !== "undefined" ? window.location.hash : ""): { readonly h: number; readonly v: number } | null {
   return parsePresentationSlideHash(hash);
 }

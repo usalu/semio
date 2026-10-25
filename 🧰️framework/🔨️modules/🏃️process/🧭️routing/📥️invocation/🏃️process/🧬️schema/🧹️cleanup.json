@@ -127,6 +127,45 @@
         }
       }
     },
+    "ProgressProtocol": {
+      "const": {
+        "version": 1,
+        "appliesTo": "ordinary-body",
+        "renewal": "observable-progress",
+        "events": [
+          "control-publish",
+          "control-yield",
+          "owned-work-settled",
+          "lease-wait"
+        ],
+        "maximumMilliseconds": 300000
+      }
+    },
+    "RenewalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reserveMilliseconds",
+        "elapsedMilliseconds",
+        "windowMilliseconds"
+      ],
+      "properties": {
+        "reserveMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        },
+        "elapsedMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "windowMilliseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000
+        }
+      }
+    },
     "EnrollmentObservations": {
       "type": "object",
       "additionalProperties": false,
@@ -139,7 +178,9 @@
         "sameBeginPromise",
         "retiredTokenRefused",
         "insufficientFundingBeforeEffects",
-        "ordinaryAcceptedWithFixedReserve"
+        "ordinaryAcceptedWithFixedReserve",
+        "ordinaryProgressRenewal",
+        "ordinaryIdleExpiry"
       ],
       "properties": {
         "privateToken": {
@@ -167,6 +208,12 @@
           "type": "boolean"
         },
         "ordinaryAcceptedWithFixedReserve": {
+          "type": "boolean"
+        },
+        "ordinaryProgressRenewal": {
+          "type": "boolean"
+        },
+        "ordinaryIdleExpiry": {
           "type": "boolean"
         }
       }

@@ -2,7 +2,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute } from "node:path";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import { renderTestReportV1, syntheticTestSuiteV1, TEST_PROTOCOL_NAMES_V1 } from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🚦️protocol/🟦️.ts";
+import { renderTestReportV1, syntheticTestSuiteV1, TEST_PROTOCOL_NAMES_V1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🚦️protocol/🟦️.ts";
 import table from "./🔣️.json" with { type: "json" };
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 

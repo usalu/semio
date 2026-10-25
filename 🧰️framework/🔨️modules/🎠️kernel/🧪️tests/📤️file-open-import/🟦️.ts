@@ -76,7 +76,7 @@ function payloadOf(row: ChunkCase): string {
   return row.payloadRepeat.character.repeat(row.payloadRepeat.count);
 }
 
-/** 📤️ The whole law, callable without vitest so the nx lane runs it as a plain oracle. */
+/** 🧪️ The whole law, callable without vitest so the nx lane runs it as a plain oracle. */
 export function testFileOpenImportContract(): void {
   const fixture = loadFixture();
   assert.equal(IMPORT_CHUNK_BYTES, GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / 2, "the chunk extent is derived from the guest ceiling, never a literal");

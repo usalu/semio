@@ -307,7 +307,7 @@ function faultNoticeDefinition(row: Readonly<{ code: string; en: string; de: str
 }
 
 /**
- * 📢️ Reads every guest fault code and every declared notice table of every plugin under `under` (design §20.12): each code a guest
+ * 📊️ Reads every guest fault code and every declared notice table of every plugin under `under` (design §20.12): each code a guest
  * emits is labelled by the framework's tables ({@link FAULT_NOTICE_FRAMEWORK_TABLES}) or by one of its plugin's `fault_notices`
  * tables in every locale; every declared table is valid (`validateFaultNotices`) and names only emitted codes; every committed
  * descriptor (`🌎️hub/🧩️compositions/<plugin>/🔣️.json`) publishes exactly the declared codes, each table valid. Every other verdict

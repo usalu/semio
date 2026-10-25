@@ -5,7 +5,7 @@ import { EventEmitter } from "node:events";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import ts from "typescript";
-import schema from "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🚀️launch/🔣️.json" with { type: "json" };
+import schema from "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🚀️launch/🔣️json/🟦️.ts";
 import fixture from "../../🧫️fixtures/🧊️execution/🔣️.json" with { type: "json" };
 
 test("dashboard controls install missing modes once and retain stale installed control access", async () => {
@@ -19,7 +19,7 @@ test("dashboard controls install missing modes once and retain stale installed c
   expect(compiled.diagnostics).toEqual([]);
   const database = new Database(":memory:");
   try { for (const row of fixture.launch) {
-    const original = new AbortController(), control = Object.freeze({ signal: original.signal }), preparation = Object.freeze({ signal: AbortSignal.any([original.signal]) }), invocation = Object.freeze({ fixture: "received" }), options = Object.freeze({ mode: row.mode, control, invocation, workspace: process.cwd() });
+    const original = new AbortController(), control = Object.freeze({ signal: original.signal }), preparation = Object.freeze({ signal: AbortSignal.any([original.signal]) }), invocation = Object.freeze({ fixture: "received" }), policy = Object.freeze({ fixture: "policy" }), options = Object.freeze({ mode: row.mode, control, invocation, workspace: process.cwd() });
     const events: string[] = [], failures = new Error(row.name), dashboardPackageRoot = resolve(import.meta.dir, "../../../📦️packages/🦀️rust");
     let leased = false, checks = 0, rebuilds = 0, launches = 0, timers = 0, retiredTimers = 0;
     const ports = {
@@ -29,7 +29,8 @@ test("dashboard controls install missing modes once and retain stale installed c
       compilerAdmissionBudgetV1: (value: unknown) => { expect<unknown>([control, preparation]).toContain(value); return value === preparation ? row.preparationBudget : row.originalBudget; },
       startOwnedCommandTimeoutV1: (budget:number,expire:()=>void) => { expect(budget).toBe(row.originalBudget); expect(typeof expire).toBe("function"); timers++; return()=>{retiredTimers++;}; },
       buildPreparationBudgetMs: () => 21600000,
-      withRequestedIssuedResourceControlV1: async (value: unknown, budget: number, body: (phase: unknown) => Promise<void>) => { expect(value).toBe(control); expect(budget).toBe(21600000); events.push("phase"); try { await body(preparation); } finally { events.push("phase-settled"); } },
+      progressDeadlinePolicyV1: (kind: string, units: number, env: unknown, limits: unknown) => { expect([kind, units, env, limits]).toEqual(["native-child", 0, { SEMIO_BUILD_MODE: "ambient-other-mode" }, { maximumMilliseconds: 21600000 }]); return policy; },
+      withRenewableIssuedResourceControlV1: async (value: unknown, received: unknown, units: number, body: (phase: unknown) => Promise<void>) => { expect(value).toBe(control); expect(received).toBe(policy); expect(units).toBe(0); events.push("phase"); try { await body(preparation); } finally { events.push("phase-settled"); } },
       scriptResourceProcessEnvironmentV1: (value: unknown, env: object) => { expect(value).toBe(preparation); return { ...env, preparation }; },
       dashboardInstalled: (root: string, mode: string) => { expect(root).toBe(process.cwd()); expect(mode).toBe(row.mode); events.push("exists"); return row.installed; },
       staleDashboard: async (root: string, mode: string) => { expect(root).toBe(process.cwd()); expect(mode).toBe(row.mode); checks++; events.push("stale"); await Promise.resolve(); return row.stale ?? undefined; },
@@ -65,5 +66,4 @@ test("dashboard controls install missing modes once and retain stale installed c
     if (rebuilds && launches) expect(events.indexOf("rebuild")).toBeLessThan(events.indexOf("reader"));
     expect(leased).toBe(false); expect([timers,retiredTimers]).toEqual([launches,launches]);
   } } finally { database.close(); }
-  console.log(`[DEBUG] Actual launch and rebuild bodies matched ${fixture.launch.length} shared installation vectors and independent SQLite/Ajv decisions; no native process was launched`);
 });

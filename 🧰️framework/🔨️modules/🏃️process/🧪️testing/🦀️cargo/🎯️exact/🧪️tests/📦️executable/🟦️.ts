@@ -54,5 +54,4 @@ test("exact Cargo runtime discovery consumes the retained descriptor in the actu
       expect(actual).toEqual(row.runtime ? rustCompilerLoaderEnvironment(process.platform as "win32" | "linux" | "darwin", {}, directory) : {});
     }
   } finally { rmSync(root, { recursive: true, force: true }); }
-  console.log("[DEBUG] Cargo metadata kinds and actual procedural-macro loader branch agree with SQLite without compiler allocation");
 });

@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
-import {createNxDaemonLifetimeV1,type NxDaemonLifetimeEventV1} from "../🟦️.ts";
+import {createNxDaemonLifetimeV1,createNxDaemonReadinessV1,type NxDaemonLifetimeEventV1} from "../🟦️.ts";
 
 function sqliteOracle(events:readonly Readonly<{type:string;resource?:string;id?:string}>[]){
  const db=new Database(":memory:");db.exec("create table state(phase text, parentHeld integer, server integer);insert into state values('awaiting-acquisition',1,0);create table loans(name text primary key);create table children(kind text,id text,primary key(kind,id));");let accepted=true;
@@ -84,4 +84,16 @@ test("public daemon start and stop preserve original service ownership",()=>{
  const patch=readFileSync(resolve(import.meta.dir,"../../../../🩹️patches/nx@23.2.0.patch"),"utf8"),client=patch.split("diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js\n")[1]!.split("diff --git ")[0]!,entry=patch.split("diff --git a/dist/src/command-line/daemon/daemon.js b/dist/src/command-line/daemon/daemon.js\n")[1]?.split("diff --git ")[0];
  expect(entry).toBeDefined();expect(client).toContain("await this.requestShutdown()");expect(client).toContain("-                process.kill(pid, 'SIGTERM');");expect(entry).toContain("+        await daemonClient.startDaemonIfNecessary();");
  const body=client.split("+    async stop() {")[1]?.split("\n+    }")[0];expect(body).toBeDefined();const ast=parse("async function stop(){"+body!.split("\n").filter(line=>line.startsWith("+")).map(line=>line.slice(1)).join("\n")+"}",{sourceType:"script"});expect(JSON.stringify(ast)).toContain("withNxDaemonStartupV1");
+});
+
+/** 🚦️ A client that connects the moment the socket listens must wait for readiness instead of being refused: the daemon log of run 10 shows listen at .925, request at .126+1 s, ready later. */
+test("a request that arrives before readiness is admitted only after the ready event and the replayed events agree with SQLite",async()=>{
+ const lifetime=createNxDaemonLifetimeV1(fixture.birth),readiness=createNxDaemonReadinessV1(),events:NxDaemonLifetimeEventV1[]=[];const record=(event:NxDaemonLifetimeEventV1):void=>{lifetime.record(event);events.push(event);};
+ for(const resource of ["leases","tools","rust","sdk"] as const)record({type:"acquire",resource});record({type:"acquired"});record({type:"server-open"});
+ const request=(async()=>{await readiness.admit();record({type:"request-open",id:"a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4"});record({type:"request-close",id:"a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4"});})();
+ await new Promise(done=>setTimeout(done,20));expect(events.some(event=>event.type==="request-open")).toBe(false);expect(()=>lifetime.record({type:"request-open",id:"e1b2c3d4e1b2c3d4e1b2c3d4e1b2c3d4"})).toThrow();
+ record({type:"ready"});readiness.ready();await request;
+ expect(events.map(event=>event.type)).toEqual(["acquire","acquire","acquire","acquire","acquired","server-open","ready","request-open","request-close"]);
+ expect(sqliteOracle(events)).toEqual({accepted:true,phase:"ready",parentHeld:true,loans:4,workers:0,requests:0});
+ const drained=createNxDaemonReadinessV1(),waiting=drained.admit().then(()=>"admitted",error=>String((error as Error).message));drained.refuse(Error("drained first"));expect(await waiting).toBe("drained first");
 });

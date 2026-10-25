@@ -164,7 +164,7 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
 
   function fixtureResidentLedger(): OwnedResidentLedger { return new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }); }
 
-  /** 🧪️ Advances `n` real microtask ticks with no real timer/sleep involved — enough hops for a
+  /** ⏱️ Advances `n` real microtask ticks with no real timer/sleep involved — enough hops for a
    * `TurnScheduler` pump + a fake-worker's `queueMicrotask` reply + this registry's own
    * `runQueuedTurn` await chain to settle deterministically. */
   async function flushMicrotasks(n = 10): Promise<void> {
@@ -268,7 +268,7 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
   });
 
   //#region 🧪️ExtensionCascadeTests
-  /** 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): a minimal `PluginCatalog`
+  /** 📚️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): a minimal `PluginCatalog`
    * with ONE plugin (`p1`) and ONE extension (`p1-ext`) whose `dependsOn: ["p1"]` names it as the
    * parent — exactly the shape `registerCatalog`'s own `extensionsByParent` index groups by. */
   function catalogWithOneExtension(): PluginCatalog {

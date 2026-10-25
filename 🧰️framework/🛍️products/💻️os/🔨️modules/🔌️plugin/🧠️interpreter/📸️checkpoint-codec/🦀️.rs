@@ -5,7 +5,7 @@ use super::*;
 //#region 💾️CheckpointCodec
 impl CoreInstance {
     /// 👓️ Visits original borrowed checkpoint fields without creating intermediate storage.
-    pub(crate) fn visit_checkpoint(&self,visitor:&mut dyn FnMut(&[u8])->Result<(),semio_framework_value::ValueError>)->Result<(),semio_framework_value::ValueError>{
+    pub fn visit_checkpoint(&self,visitor:&mut dyn FnMut(&[u8])->Result<(),semio_framework_value::ValueError>)->Result<(),semio_framework_value::ValueError>{
         let mut writer=CheckpointWriter{sink:Some(visitor),..Default::default()};self.write_checkpoint(&mut writer);writer.error.map_or(Ok(()),Err)
     }
 

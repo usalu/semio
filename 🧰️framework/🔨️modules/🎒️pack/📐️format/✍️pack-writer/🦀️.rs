@@ -200,7 +200,7 @@ let base = self.sink.position().await;
         Ok(())
     }
 
-    /// 🧱️ Writes a `KIND_CHUNK` segment and records its offset/lengths/hashes for the
+    /// 📝️ Writes a `KIND_CHUNK` segment and records its offset/lengths/hashes for the
     /// chunk table `finish` will emit.
     #[cfg(any(test, feature = "testkit"))]
     pub async fn write_chunk(&mut self, payload: &[u8]) -> Result<ChunkId, S::Error> {

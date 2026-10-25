@@ -24,7 +24,7 @@ function paths(directory:string,journal:Journal,row:Row){const file=join(directo
 function allocation(path:string):{bytes:number;identity:string}{
  const stat=lstatSync(path,{bigint:true});if(!stat.isFile()||stat.isSymbolicLink()||stat.nlink<1n||stat.nlink>2n)throw Error("Graph publication allocation refused");if(stat.nlink===2n){const directory=dirname(path),read=journalRead(directory);if(!read)throw Error("Graph publication hardlink journal required");const row=read.journal.files.find(row=>{const p=paths(directory,read.journal,row);return path===p.file||path===p.prior;});if(!row?.prior)throw Error("Graph publication prior pair required");const p=paths(directory,read.journal,row),a=regular(p.file,policy.maximumFileBytes,2),b=regular(p.prior,policy.maximumFileBytes,2);if(identity(a)!==identity(b)||identity(a)!==row.prior.identity)throw Error("Graph publication hardlink identity refused");}return{bytes:Math.max(Number(stat.blocks)*512,Math.ceil(Number(stat.size)/4096)*4096),identity:identity(stat)};
 }
-/** 🧮️ Inventory holds original pool custody while validating journal-authenticated links. */
+/** 📄️ Inventory holds original pool custody while validating journal-authenticated links. */
 export function graphPublicationFileAllocationV1(path:string,control:ResourceLeaseControl):{bytes:number;identity:string}{return checks.run(()=>checkResourceLeaseControl(control),()=>allocation(path));}
 /** 🔒️ Runs one body under the original transaction scope check. */
 export function withGraphPublicationChecksV1<T>(current:()=>void,body:()=>T):T{return checks.run(current,body);}

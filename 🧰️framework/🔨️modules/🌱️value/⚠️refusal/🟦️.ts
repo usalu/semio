@@ -7,7 +7,7 @@ export interface ValueErrorRetainedProgress { readonly copiedItems: number; read
 /** 🚨️ An owned typed refusal retains authority through every parent field or ordinal. */
 export class ValueError extends Error {
   private retainedReceipt: ValueErrorRetainedProgress = { copiedItems: 0, copiedBytes: 0, retainedCapacityBytes: 0, releasedBytes: 0 };
-  /** 🧾️ Preserve original failure effects without creating a replacement wallet. */
+  /** 🆕️ Preserve original failure effects without creating a replacement wallet. */
   get retainedProgress(): ValueErrorRetainedProgress { return this.retainedReceipt; }
   /** 📥️ Attach the receipt of this original failed turn. */
   withRetainedProgress(progress: ValueErrorRetainedProgress): this { this.retainedReceipt = progress; return this; }

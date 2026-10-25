@@ -10,9 +10,15 @@ pub struct Facts {
     pub playgrounds: Vec<PlaygroundFacts>,
     pub tickets: Vec<TicketFacts>,
     pub problems: Vec<Problem>,
+    /// 📇️ Whether the caller supplied a playground catalog publication; without one a `playground:` reference cannot be proved wrong.
+    #[serde(default)]
+    pub catalog_configured: bool,
+    /// 🕸️ Set when no build graph publication could be read: the targets the graph infers are then unknown, not missing.
+    #[serde(default)]
+    pub graph_unpublished: bool,
 }
 
-/// 📋️ One build project: its root, the file that declares it and its targets.
+/// 🏢️ One build project: its root, the file that declares it and its targets.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ProjectFacts {
     pub name: String,

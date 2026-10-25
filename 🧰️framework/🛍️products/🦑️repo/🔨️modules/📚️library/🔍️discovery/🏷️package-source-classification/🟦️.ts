@@ -131,6 +131,11 @@ function ecmaDelegatedBody(body: string, imports: ReadonlySet<string>, max: numb
   });
 }
 
+/** 📇️ A CommonJS module that only re-exports another module (`module.exports = require(…)` or `Object.assign(module.exports, require(…))`): the require form of an `export … from`. */
+function ecmaCommonJsReexport(row: string): boolean {
+  return /^(?:module\.exports\s*=\s*|Object\.assign\(\s*module\.exports\s*,\s*)require\(\s*(["'`])[^"'`]*\1\s*\)\s*\)?$/u.test(row.trim());
+}
+
 function ecmaDataModule(source: string): boolean {
   const functions = packageFunctionBodies(source, /\b(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)[^{}]*\{/gu);
   if (functions.length > 0 || !/\bexport\s+default\b/u.test(source) || /\b(?:class|namespace|enum|if|for|while|switch|try|throw)\b|=>|\bexport\s+(?:const|let|var)\b/u.test(source)) return false;
@@ -159,7 +164,7 @@ function classifyEcmaPackageSource(content: string, grammar: PackageGlueGrammarS
   if (ecmaDataModule(source)) return { role: "thin-delegation", evidence: "data-only default export module" };
   const rows = packageStatements(rest.replace(/^export\s+default\s+/gmu, ""));
   if (rows.length > 0 && rows.length <= grammar.maxDelegationStatements && rows.every((row) => {
-    if (/^[A-Za-z_$][\w$]*$/u.test(row)) return true;
+    if (/^[A-Za-z_$][\w$]*$/u.test(row) || ecmaCommonJsReexport(row)) return true;
     const root = ecmaCallRoot(row);
     return root !== null && imports.has(root) && !/[+*/%]|\s-\s/u.test(row);
   })) {
@@ -262,6 +267,46 @@ function classifyTexPackageSource(content: string, grammar: PackageGlueGrammarSp
   return { role: "unresolved", evidence: "unsupported TeX package shim form" };
 }
 
+/** 🎨️ Strips CSS comments and string/url bodies' delimiters-free text so statement splitting sees only structure; `balanced` is false for an unterminated comment, string or block. */
+function cssStructuralSource(content: string): { readonly source: string; readonly balanced: boolean } {
+  let out = "", depth = 0;
+  for (let index = 0; index < content.length; index++) {
+    const char = content[index]!;
+    if (char === "/" && content[index + 1] === "*") {
+      const end = content.indexOf("*/", index + 2);
+      if (end < 0) return { source: out, balanced: false };
+      index = end + 1;
+      out += " ";
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      let end = index + 1;
+      while (end < content.length && content[end] !== char) end += content[end] === "\\" ? 2 : 1;
+      if (end >= content.length) return { source: out, balanced: false };
+      out += content.slice(index, end + 1);
+      index = end;
+      continue;
+    }
+    if (char === "{") depth++;
+    if (char === "}") depth--;
+    out += char;
+  }
+  return { source: out, balanced: depth === 0 };
+}
+
+/** 🎨️ A stylesheet is package glue only when it wires other stylesheets: `@import` of a literal path or url() and the Tailwind `@source` path registration; every rule, declaration or other at-rule is authored implementation. */
+function classifyCssPackageSource(content: string, grammar: PackageGlueGrammarSpec): PackageSourceDecision {
+  const structural = cssStructuralSource(content), source = structural.source.trim();
+  if (!structural.balanced) return { role: "unresolved", evidence: "unbalanced lexical structure" };
+  if (!source) return { role: "declaration", evidence: "trivia-only stylesheet" };
+  const statements = source.split(";").map((row) => row.trim()).filter(Boolean);
+  if (statements.some((row) => row.includes("{") || row.includes("}"))) return { role: "implementation", evidence: "authored stylesheet rule" };
+  const wiring = (row: string): boolean => /^@import\s+(?:url\(\s*(["']?)[^"')\s]+\1\s*\)|(["'])[^"']+\2)(?:\s+[^;{}]*)?$/u.test(row) || /^@source\s+(?:not\s+)?(["'])[^"']+\1$/u.test(row);
+  if (statements.length <= grammar.maxDelegationStatements && statements.every(wiring)) return { role: "declaration", evidence: "stylesheet import and source wiring only" };
+  if (statements.some((row) => !row.startsWith("@"))) return { role: "implementation", evidence: "authored stylesheet declaration" };
+  return { role: "unresolved", evidence: "unsupported stylesheet package form" };
+}
+
 /** 📚️ Requires the declared grammar at semantic projection boundaries before inspecting source. */
 export function requiredPackageGlueGrammar(taxonomy: Taxonomy, id: string): PackageGlueGrammarSpec { const grammar = taxonomy.packageGlueGrammar[id]; if (!grammar) throw new Error("Package source grammar required: " + id); return grammar; }
 
@@ -271,6 +316,7 @@ export function classifyPackageSource(content: string, grammar: PackageGlueGramm
   if (grammar.analyzer === "typescript" || grammar.analyzer === "javascript") return classifyEcmaPackageSource(content, grammar);
   if (grammar.analyzer === "go") return classifyGoPackageSource(content, grammar);
   if (grammar.analyzer === "tex") return classifyTexPackageSource(content, grammar);
+  if (grammar.analyzer === "css") return classifyCssPackageSource(content, grammar);
   const structural = packageStructuralSource(content, grammar.analyzer), source = structural.source.trim();
   if (!structural.balanced) return { role: "unresolved", evidence: "unbalanced lexical structure" };
   if (!source) return { role: "declaration", evidence: "trivia-only source" };
@@ -323,7 +369,6 @@ function packageToolMetadata(content: string, validator: PackageSourceDispositio
       return target !== undefined && referenced.has(target);
     });
   };
-  if (validator === "vscode-test-configuration") return configuration(/from\s+["']@vscode\/test-cli["']/u);
   if (validator === "eslint-configuration") return ecmaDataModule(source) && /\beslint\b/iu.test(content);
   if (validator === "vitest-configuration" || validator === "tool-config-vitest") return configuration(/from\s+["']vitest\/config["']/u);
   const token: Readonly<Record<string, RegExp>> = {
@@ -335,7 +380,7 @@ function packageToolMetadata(content: string, validator: PackageSourceDispositio
   return ecmaDataModule(source) && (token[validator]?.test(content) ?? false);
 }
 
-/** 🧾️ Classifies an explicitly dispositioned source-format fixed/configurable package entry. */
+/** 💊️ Classifies an explicitly dispositioned source-format fixed/configurable package entry. */
 export function classifyPackageSourceDisposition(content: string, disposition: PackageSourceDisposition, grammar: PackageGlueGrammarSpec): PackageSourceRole {
   if (disposition.validator === "package-glue") return classifyPackageSource(content, grammar).role;
   return packageToolMetadata(content, disposition.validator, grammar) ? "tool-metadata" : "unresolved";

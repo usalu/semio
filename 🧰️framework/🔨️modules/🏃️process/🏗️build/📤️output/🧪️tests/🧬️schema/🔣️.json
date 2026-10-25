@@ -24,7 +24,7 @@
         "required": ["name", "mode", "args", "environment", "stdout", "stderr"],
         "properties": {
           "name": { "type": "string" },
-          "mode": { "enum": ["noise", "progress"] },
+          "mode": { "enum": ["noise", "progress", "forward"] },
           "args": { "type": "array", "items": { "type": "string" } },
           "environment": { "type": "object", "additionalProperties": { "type": "string" } },
           "stdout": { "type": "array", "items": { "type": "string" } },

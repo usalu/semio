@@ -1,9 +1,6 @@
 //! 🧪️ Original shared semantic source identity, denial and actual catalog cancellation frontiers.
 use super::*;
-impl ArtifactReplayPreparationFactory<DemoSnapshot, DemoMutation> for FixtureAuthoringFactory<DemoMutation> {
- fn preparation_birth_demand(&self)->semio_framework_value::RetirementDemand{Default::default()}
- fn begin(&self,request:ArtifactReplayPreparationRequest<DemoSnapshot,DemoMutation>,_:RetainedCloneGrant)->Result<(Box<dyn ArtifactReplayPreparation<DemoSnapshot,DemoMutation>>,RetainedCloneProgress),(ValueError,ArtifactReplayPreparationRequest<DemoSnapshot,DemoMutation>)>{Err((ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"catalog identity fixture prepares no semantic replay"),request))}
-}
+use semio_framework_os_store_replay_operation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationRequest};
 #[test]
 fn original_shared_semantic_source_constructs_one_paired_issuer_and_closes_all_actual_frontiers(){
  type Owners=DocumentStoreOwners<DemoSnapshot,DemoMutation>;

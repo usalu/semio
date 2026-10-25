@@ -1,4 +1,4 @@
-//! 🧬️ Generic record, scalar and tagged-variant compilation under explicit owned composition.
+//! 📹️ Generic record, scalar and tagged-variant compilation under explicit owned composition.
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{Data, DeriveInput, Fields, Type, parse_macro_input};

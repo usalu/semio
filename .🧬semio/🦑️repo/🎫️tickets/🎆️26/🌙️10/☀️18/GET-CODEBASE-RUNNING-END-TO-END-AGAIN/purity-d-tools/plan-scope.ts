@@ -1,0 +1,12 @@
+import { writeFileSync } from "node:fs";
+import { verifyTaxonomy } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/✅️verification/🟦️.ts";
+const scope = process.argv[2]!;
+const started = Date.now();
+const v = verifyTaxonomy({ repoRoot: "/Users/ueli/Documents/semio", scope });
+const plan: any = v.plan;
+console.log("clean", v.clean, "violations", v.violations.length, "ms", Date.now() - started);
+console.log(Object.keys(plan));
+const counts: Record<string, number> = {};
+for (const x of v.violations) counts[x.code] = (counts[x.code] ?? 0) + 1;
+console.log(JSON.stringify(counts));
+writeFileSync(process.argv[3]!, JSON.stringify({ violations: v.violations, plan }, null, 1));

@@ -1,6 +1,7 @@
 //! 📇️ Kind catalogs and shipped kinds: the manifest and document kind catalogs, the inferred kind entries and the shipped node kinds with their options. See [`super`].
 
 use super::*;
+use semio_s_artifact_puzzle_2d_snapshot::editor::puzzle2d::terminology::puzzle2d_localized;
 use std::collections::BTreeSet;
 
 fn manifest_catalog_rows(kinds: &[semio_framework_graph_manifest::KindDef]) -> Value {

@@ -67,5 +67,4 @@ test("the live local asset route keeps one original source and one received path
  const bridge=readModuleTreeSource(new URL("../../../../../../🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs",import.meta.url));for(const token of ["native_observed_mtime:Option<std::time::SystemTime>","if wasm_path.as_path()!=path{return false}","self.native_observed_mtime.is_some_and(|previous|previous!=time)","self.native_observed_mtime=Some(time)"])expect(bridge).toContain(token);
  for(const text of ["open_renderer_source_io","next_page()","original_page_index()","push_page_at"])expect(local).toContain(text);
  for(const text of ["run_renderer_io(","path.clone()","source.to_vec()","payload.close_step(1"])expect(local).not.toContain(text);
- console.log("[DEBUG] Ajv/SQLite/path independent original asset registry: one source/path birth, zero-capture actual worker,4096 actual live-page return slots, reverse World ordinals, source retained through detach and49152-byte paid return; exact selected-path pointer/denied release/loan-before-vacancy and matching-path scalar mtime transitions");
 });

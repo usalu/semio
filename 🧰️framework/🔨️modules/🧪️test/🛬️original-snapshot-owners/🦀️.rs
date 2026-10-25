@@ -21,7 +21,7 @@ pub const fn original_grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4_096 }
 }
 
-/// 🛬️ Runs `operation` under an original native decode owner and closes every retired owner afterwards.
+/// 🧲️ Runs `operation` under an original native decode owner and closes every retired owner afterwards.
 pub fn with_decoding<T>(operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_, '_>) -> T) -> T {
     let grant = original_grant();
     let mut callback = |_| true;

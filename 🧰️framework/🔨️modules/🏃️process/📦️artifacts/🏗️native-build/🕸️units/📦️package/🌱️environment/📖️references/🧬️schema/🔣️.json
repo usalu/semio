@@ -64,7 +64,8 @@
           "PATHEXT",
           "RUSTUP_HOME",
           "RUSTC_BOOTSTRAP",
-          "RUST_MIN_STACK"
+          "RUST_MIN_STACK",
+          "SEMIO_BUILD_MODE"
         ]
       }
     }

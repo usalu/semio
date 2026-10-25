@@ -12,7 +12,7 @@ use std::collections::VecDeque;
 /// (added for 💡️inference, ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING):
 /// this is the `Value` type of the `Puzzle3dFlatPlane` `InferredField`, cached by
 /// `InferenceCache` as its own canonical bytes.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct FlattenPlane {
     pub origin: [f64; 3],

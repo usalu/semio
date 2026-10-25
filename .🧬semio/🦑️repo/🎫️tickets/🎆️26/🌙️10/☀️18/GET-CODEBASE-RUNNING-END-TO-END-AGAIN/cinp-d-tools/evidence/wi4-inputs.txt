@@ -1,0 +1,2 @@
+//:t_f20801f21818a81f inputs 3211 test-like 0
+INFO: 2 processes: 6 action cache hit, 1 disk cache hit, 1 internal.

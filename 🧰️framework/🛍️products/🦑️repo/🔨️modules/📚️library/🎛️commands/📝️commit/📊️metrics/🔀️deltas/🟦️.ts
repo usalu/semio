@@ -68,7 +68,7 @@ export function gitRangeNumstat(root: string, base: string, head: string): { pat
   return parseGitNumstatZ(r.stdout);
 }
 
-/** ➕️Accumulates per-language git deltas from numstat rows (optional path prefixes). */
+/** 🐙️Accumulates per-language git deltas from numstat rows (optional path prefixes). */
 export function accumulateGitDeltasFromNumstat(root: string, rows: { path: string; added: number; removed: number }[], pathPrefixes?: string[]): Map<string, { added: number; removed: number; edited: number }> {
   const m = new Map<string, { added: number; removed: number; edited: number }>();
   for (const { path, added, removed } of rows) {
@@ -262,7 +262,7 @@ export function accumulateUlocDeltasFromPaths(root: string, rows: { path: string
   return deltas;
 }
 
-/** ➕️Accumulates per-language byte deltas from path size changes between two git revisions. */
+/** 📏️Accumulates per-language byte deltas from path size changes between two git revisions. */
 export function accumulateSizeDeltasFromPaths(root: string, rows: { path: string }[], oldRev: string, newRev: string, pathPrefixes?: string[]): Map<string, { added: number; removed: number; edited: number }> {
   const m = new Map<string, { added: number; removed: number; edited: number }>();
   const paths = rows.flatMap((row) => pathsFromNumstatRow(row.path)).filter((path) => !shouldSkipPathForUloc(root, path) && (!pathPrefixes || pathUnderPrefixes(path, pathPrefixes)));
@@ -321,7 +321,7 @@ export function gitDeltaLineTotal(d: { added: number; removed: number; edited: n
   return d.added + d.edited + d.removed;
 }
 
-/** 📂️Paths from one numstat row (rename rows may join old/new with tabs or `=>`). */
+/** 🛤️Paths from one numstat row (rename rows may join old/new with tabs or `=>`). */
 export function pathsFromNumstatRow(pathField: string): string[] {
   const parts = pathField
     .split("\t")

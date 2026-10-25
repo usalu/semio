@@ -50,21 +50,21 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     "concat-horizontal": {
-      /** 📐️ The specified item rectangles: index, x, y, width, height. */
+      /** 🔮️ The specified item rectangles: index, x, y, width, height. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),
-      /** 🎯️ The rectangles the concatenation handed to its items. */
+      /** 🔗️ The rectangles the concatenation handed to its items. */
       subject: async (ctx: AdapterContext) => ({ projection: chunks((await subject(ctx, "concat.tex")).projection["geometry/concat-item"] ?? [], 5, "item") }),
     },
     "inset-rectangle": {
-      /** 📐️ The specified inset rectangle, unchanged from its keys. */
+      /** 🔑️ The specified inset rectangle, unchanged from its keys. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),
-      /** 🎯️ The rectangle the inset handed to its body. */
+      /** 🖼️ The rectangle the inset handed to its body. */
       subject: async (ctx: AdapterContext) => ({ projection: { inset: ((await subject(ctx, "inset.tex")).projection["geometry/inset"] ?? []).map(Number) } }),
     },
     "dashboard-span": {
-      /** 📐️ The specified cell rectangles, including the slot skipped by the spanning cell. */
+      /** 🧩️ The specified cell rectangles, including the slot skipped by the spanning cell. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),
-      /** 🎯️ The rectangles the dashboard handed to its cells. */
+      /** 🎛️ The rectangles the dashboard handed to its cells. */
       subject: async (ctx: AdapterContext) => ({ projection: chunks((await subject(ctx, "dashboard.tex")).projection["geometry/dashboard-cell"] ?? [], 5, "cell") }),
     },
   },

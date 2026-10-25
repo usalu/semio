@@ -4,6 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { BundleScript, createIssuedResourceControlV1, type ScriptInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runAdmittedCargoCommandV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { seedGeneratedFile } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { actorTypegenPlan, actorTypegenTarget } from "../📋️plan/🟦️.ts";
 import { publishActorTypegen } from "../📤️publication/🟦️.ts";
@@ -50,11 +51,8 @@ function cancellationRequested(): boolean {
 /** 🦀️ Executes the authoritative native exporter into an isolated output path through the repository Cargo launcher, never a raw `cargo`. */
 export async function exportActorTypegen(invocation: ScriptInvocation, repoRoot: string, packageRoot: string, outputPath: string, privateStore = false, deadlineMs = buildBudgetMs()): Promise<void> {
   if (cancellationRequested()) throw new Error("actor typegen export cancelled");
-  const { launchRepositoryCargoV1, readRepositoryCargoLaunchV1 } = await import("../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts");
   const mode = readBuildMode(process.env.SEMIO_BUILD_MODE ?? "prototype"), environment = { ...process.env, SEMIO_BUILD_MODE: mode, SEMIO_TYPEGEN_OUT: outputPath };
-  const request = readRepositoryCargoLaunchV1([`--store=${privateStore ? "isolated" : "shared"}`, `--configuration=${mode}`, "--", "test", "--locked", "--manifest-path", join(packageRoot, "Cargo.toml"), "--test", "typegen", TYPEGEN_TEST_FILTER], environment);
-  const code = await launchRepositoryCargoV1(invocation, createIssuedResourceControlV1(invocation, "actor:typegen-export", 0), repoRoot, request, packageRoot, environment, { maximumMilliseconds: deadlineMs, output: "stream" });
-  if (code !== 0) throw new Error(`framework-actor typegen exporter exited with status ${code}`);
+  await runAdmittedCargoCommandV1(invocation, createIssuedResourceControlV1(invocation, "actor:typegen-export", 0), repoRoot, ["test", "--locked", "--manifest-path", join(packageRoot, "Cargo.toml"), "--test", "typegen", TYPEGEN_TEST_FILTER], packageRoot, environment, deadlineMs, true, privateStore ? "isolated" : "shared");
   if (!existsSync(outputPath)) throw new Error(`framework-actor typegen exporter did not write ${outputPath}`);
 }
 

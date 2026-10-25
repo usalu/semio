@@ -4,7 +4,7 @@ export { createNativeBuildCallerCapabilitiesV1, readBuildAuthoringCapabilitiesV1
 export { withBuildFileMembershipV1 } from "../../../🏗️build/📥️inputs/📂️membership/🟦️.ts";
 export { readStableBuildFile } from "../../../🏗️build/📥️inputs/🧊️stable-file/🟦️.ts";
 export { buildGraphPathV1, readBuildGraphV1, withRepositoryBuildGraphPublicationV1, resolveBuildInputsV1 } from "../../../🏗️build/🕸️graph/🟦️.ts";
-export type { BuildGraphV1, BuildTargetV1 } from "../../../🏗️build/🕸️graph/🟦️.ts";
+export type { BuildGraphV1, BuildTargetV1 } from "../../../🏗️build/🕸️graph/📋️model/🟦️.ts";
 export { default as buildPinSchema } from "../../../🏗️build/🧬️schema/📥️pin.json" with { type: "json" };
 export { selectedBuildPrerequisitesV1 } from "../../../🏗️build/🧭️selection/📥️closure/🟦️.ts";
 export { selectBuildTasksV1 } from "../../../🏗️build/🧭️selection/🟦️.ts";

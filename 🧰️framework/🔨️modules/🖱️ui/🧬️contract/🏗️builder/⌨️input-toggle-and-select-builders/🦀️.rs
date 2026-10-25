@@ -1,4 +1,4 @@
-//! ⌨️ Input, toggle and select builders: the input builder with its text constraints, the toggle builder and the select builder. See [`super`].
+//! 🏗️ Input, toggle and select builders: the input builder with its text constraints, the toggle builder and the select builder. See [`super`].
 
 use super::*;
 
@@ -23,7 +23,7 @@ pub struct InputBuilder {
     pub(super) publication_revision: Option<crate::UiPublicationRevision>,
 }
 
-/// ⌨️ An input of `kind`, initially empty.
+/// 🕳️ An input of `kind`, initially empty.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn input(kind: crate::InputKind) -> InputBuilder {
     InputBuilder { base: NodeBase::leaf(), kind, value: crate::UiText::default(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, precision: None, snaps: crate::UiFixedList::default(), display_factor: None, limits: None, draft_target: None, publication_revision: None }
@@ -152,7 +152,7 @@ pub struct ToggleBuilder {
     pub(super) text: Option<crate::Label>,
 }
 
-/// 🔀️ A toggle currently `on` or off.
+/// ⏯️ A toggle currently `on` or off.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn toggle(on: bool) -> ToggleBuilder {
     ToggleBuilder { base: NodeBase::leaf(), appearance: crate::ToggleAppearance::Button, on, icon: crate::UiText::default(), text: None }
@@ -203,7 +203,7 @@ pub struct SelectBuilder {
     pub(super) appearance: crate::SelectAppearance,
 }
 
-/// 🔽️ A select currently holding `value`.
+/// ⏸️ A select currently holding `value`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn select(value: crate::UiText) -> SelectBuilder {
     SelectBuilder { base: NodeBase::leaf(), value, items: crate::UiFixedList::default(), placeholder: None, appearance: crate::SelectAppearance::Menu }
@@ -220,7 +220,7 @@ impl SelectBuilder {
         }
     }
 
-    /// 💬️ Sets placeholder copy shown while no option is selected.
+    /// 🦜️ Sets placeholder copy shown while no option is selected.
     pub fn placeholder(mut self, placeholder: crate::Label) -> Self {
         self.placeholder = Some(placeholder);
         self

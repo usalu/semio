@@ -12,7 +12,7 @@ pub mod retirement;
 /// `selected_edge_ids`/`selected_handle_ids` deleted — the "graph" interaction domain's selection is
 /// now broadcast generically by the framework (`PresenceInteraction`/`PresenceDomain`), for every peer,
 /// with no per-app mirror needed.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "flow.presence")]
 #[dsl(layout = "lines")]
@@ -22,7 +22,11 @@ pub struct FlowPresence {
     pub camera: CameraJson,
 }
 
-impl store::ArtifactPresenceSnapshot for FlowPresence {}
+impl store::ArtifactPresenceSnapshot for FlowPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl Default for FlowPresence {
     fn default() -> Self {

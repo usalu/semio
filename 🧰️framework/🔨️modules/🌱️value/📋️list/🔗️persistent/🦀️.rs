@@ -87,7 +87,7 @@ pub struct PersistentSet<T:crate::retirement::RetireOwned+Send+Sync+'static>{
  index:usize,len:usize,height:u8,level:u8,slot:usize,phase:u8,closing:bool,
 }
 impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentSet<T>{
- /// 🌱️ The fixed cursor has no heap birth and captures neither row nor original root.
+ /// 🖱️ The fixed cursor has no heap birth and captures neither row nor original root.
  pub fn new(index:usize)->Self{Self{original:None,authored:None,page:std::mem::ManuallyDrop::new(None),candidate:std::mem::ManuallyDrop::new(None),retirement:Default::default(),index,len:0,height:0,level:0,slot:0,phase:0,closing:false}}
  fn metadata(&self)->usize{size_of::<usize>()*(usize::from(self.height)*2+5)+size_of::<u8>()*3}
  fn page_at<'a>(&self,list:&'a PersistentList<T>)->Result<(&'a Page<T>,usize),ValueError>{
@@ -125,7 +125,7 @@ impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentSet<T>{
   }
   let p=admit_retained_clone_progress(grant,p,"immutable shared changed page")?;Ok(if self.phase==4{RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})
  }
- /// 🪪️ Preparation readiness is independent of zero-valued numeric work quotes.
+ /// 📗️ Preparation readiness is independent of zero-valued numeric work quotes.
  pub fn output_ready(&self)->bool{!self.closing&&self.phase==4&&self.candidate.is_some()}
  /// 📤️ A funded fixed-header transfer yields the immutable prepared candidate root once.
  pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"immutable candidate root is not ready"));}Ok(RetirementDemand{copy_bytes:size_of::<PersistentList<T>>()*2+size_of::<SealedShared<Page<T>>>(),depth:1,..Default::default()})}

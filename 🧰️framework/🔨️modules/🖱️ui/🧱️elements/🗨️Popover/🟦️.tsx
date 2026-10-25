@@ -88,7 +88,7 @@ function usePopoverContext(): PopoverContextValue {
   return context;
 }
 
-/** 🛑️ Creates a small owned preventable event without exposing a third-party event type. */
+/** 🔔️ Creates a small owned preventable event without exposing a third-party event type. */
 function preventableEvent<TEvent extends Event>(originalEvent?: TEvent): PopoverPreventableEvent<TEvent> {
   let prevented = false;
   return {

@@ -12,6 +12,9 @@
     "snapshotTimeoutSeconds": 900,
     "staggerSeconds": 20,
     "terminateGraceSeconds": 30,
+    "queueGraceSeconds": 60,
+    "staleRetries": 2,
+    "warmSettleRuns": 1,
     "deadlineHours": 14,
     "cliProbeSeconds": 120,
     "failAvailableMemoryGb": 2,
@@ -303,7 +306,7 @@
               "@teaching/proctor:build",
               "--configuration={courseMode}"
             ],
-            "timeoutSeconds": 7200,
+            "timeoutSeconds": 21600,
             "warm": {
               "mode": "zero",
               "maxSeconds": 600
@@ -317,7 +320,7 @@
               "run",
               "@teaching/architecture-course:typecheck"
             ],
-            "timeoutSeconds": 3600,
+            "timeoutSeconds": 10800,
             "warm": {
               "mode": "zero",
               "maxSeconds": 600
@@ -333,7 +336,7 @@
               "--",
               "quick"
             ],
-            "timeoutSeconds": 5400,
+            "timeoutSeconds": 10800,
             "warm": {
               "mode": "zero",
               "maxSeconds": 600
@@ -348,7 +351,7 @@
               "@teaching/architecture-course:build",
               "--configuration={courseMode}"
             ],
-            "timeoutSeconds": 5400,
+            "timeoutSeconds": 10800,
             "warm": {
               "mode": "zero",
               "maxSeconds": 600
@@ -362,7 +365,7 @@
               "run",
               "@teaching/architecture-course:check"
             ],
-            "timeoutSeconds": 3600,
+            "timeoutSeconds": 10800,
             "warm": {
               "mode": "zero",
               "maxSeconds": 600
@@ -376,7 +379,7 @@
               "run",
               "@teaching/proctor:test"
             ],
-            "timeoutSeconds": 5400,
+            "timeoutSeconds": 10800,
             "warm": {
               "mode": "zero",
               "maxSeconds": 600
@@ -401,7 +404,7 @@
             "ports": [
               6061
             ],
-            "timeoutSeconds": 7200
+            "timeoutSeconds": 21600
           }
         ],
         "probe": []

@@ -1,4 +1,4 @@
-//! 🖱️ Click counter: the multi-click window and the `ClickCounter`. See [`super`].
+//! 🎯️ Click counter: the multi-click window and the `ClickCounter`. See [`super`].
 
 use super::*;
 

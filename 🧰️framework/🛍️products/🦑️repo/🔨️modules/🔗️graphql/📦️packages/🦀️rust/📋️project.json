@@ -45,7 +45,8 @@
                 "foreign-source",
                 "proc-macro",
                 "build-script",
-                "build-script-run"
+                "build-script-run",
+                "effective-profile"
               ]
             }
           }
@@ -96,13 +97,18 @@
               "en": "Use canonical GraphQL documents and the served schema independently of editor integrations.",
               "de": "Nutzt kanonische GraphQL-Dokumente und das bereitgestellte Schema unabhängig von Editorintegrationen."
             }
+          },
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
           }
         }
       }
     },
     "check-types": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "{projectRoot}/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/{📖️parse,📽️projection,📥️source,📋️plan,🏃️execution,⌛️queries}/**/*",
@@ -135,7 +141,7 @@
     },
     "preview-types": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "{projectRoot}/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/{📖️parse,📽️projection,📥️source,📋️plan,🏃️execution,⌛️queries}/**/*",
@@ -165,7 +171,7 @@
     },
     "test-types-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "{projectRoot}/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🔤️types/{📖️parse,📽️projection,📥️source,📋️plan,🏃️execution,⌛️queries}/**/*",

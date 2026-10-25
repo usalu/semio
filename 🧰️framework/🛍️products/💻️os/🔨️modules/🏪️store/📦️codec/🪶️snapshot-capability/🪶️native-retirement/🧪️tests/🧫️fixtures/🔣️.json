@@ -298,5 +298,52 @@
       "ownedBytes": 0,
       "causeStorage": "borrowedLiteral"
     }
+  ],
+  "validationAllocationCases": [
+    {
+      "id": "default-validator-allocates-through-the-receiving-port",
+      "entry": "default",
+      "limitBytes": 1048576,
+      "validatorBytes": 64,
+      "accepted": true,
+      "chargedBytes": 64,
+      "kind": null
+    },
+    {
+      "id": "validator-allocation-outside-the-receiving-port-is-refused",
+      "entry": "direct",
+      "limitBytes": 1048576,
+      "validatorBytes": 64,
+      "accepted": false,
+      "chargedBytes": 0,
+      "kind": "unsupportedOwner"
+    },
+    {
+      "id": "validator-allocation-beyond-the-remaining-backing-is-refused",
+      "entry": "default",
+      "limitBytes": 32,
+      "validatorBytes": 64,
+      "accepted": false,
+      "chargedBytes": 0,
+      "kind": "ownershipLimit"
+    },
+    {
+      "id": "allocation-free-validator-needs-no-remaining-backing",
+      "entry": "default",
+      "limitBytes": 0,
+      "validatorBytes": 0,
+      "accepted": true,
+      "chargedBytes": 0,
+      "kind": null
+    },
+    {
+      "id": "allocating-validator-without-remaining-backing-is-refused",
+      "entry": "default",
+      "limitBytes": 0,
+      "validatorBytes": 64,
+      "accepted": false,
+      "chargedBytes": 0,
+      "kind": "ownershipLimit"
+    }
   ]
 }

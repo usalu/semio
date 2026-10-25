@@ -19,6 +19,11 @@ export function readTypeScriptCheckArgumentsV1(value:readonly string[]):readonly
 /** 🧯️ Disables independent process bytecode stores before the compiler child is born. */
 export function typeScriptCheckEnvironmentV1(mode:BuildMode,environment:Readonly<Record<string,string|undefined>>):Readonly<Record<string,string|undefined>>{const captured=buildModeEnvironment(mode,{...environment,...schema.definitions.CompilerEnvironment.const});delete captured.NODE_COMPILE_CACHE;return Object.freeze(captured);}
 
+/** ⏱️ The compile budget starts at admission: queueing for compiler state and host capacity never consumes the requested milliseconds (0 on either side means no limit). */
+export function typecheckBudgetMillisecondsV1(requested: number, admitted: number): number {
+ return requested === 0 ? admitted : admitted === 0 ? requested : Math.min(requested, admitted);
+}
+
 /** 🔍️ Checks one project while preserving compiler-state exclusion and original cancellation, deadline and progress. */
 export async function typecheckProject(options: TypeScriptCheckOptions): Promise<void> {
   const incoming=options.control,invocation=options.invocation;requireIssuedResourceControlInvocationV1(incoming,invocation);
@@ -26,14 +31,14 @@ export async function typecheckProject(options: TypeScriptCheckOptions): Promise
   const failures = validateJsonSchemaSubset(schema, Object.fromEntries(Object.entries(options).filter(([key, value]) => !["invocation", "execution", "control", "storage", "storageControl"].includes(key) && value !== undefined)));
   if (failures.length) throw Error("Invalid TypeScript check: " + failures.join("; "));
   if (options.execution && Object.keys(options.execution).some(key => !["stdout", "output", "env", "onLine", "onProgress"].includes(key))) throw Error("TypeScript output options cannot replace original control");
-  return withRequestedIssuedResourceControlV1(incoming,options.timeoutMs,async control=>{
+  return withRequestedIssuedResourceControlV1(incoming,0,async control=>{
   await advanceScriptInvocation(options.invocation, "typecheck", "running");
   const environment = options.execution?.env ?? process.env, mode = options.mode, project = resolve(options.cwd, options.project);
   const require = createRequire(join(options.cwd, "package.json")), compiler = require.resolve("typescript/bin/tsc"), version = require("typescript/package.json").version;
   const args = readTypeScriptCheckArgumentsV1(options.args??[]);
   await withCompilerState({ root: options.stateRoot, owner: options.owner, compiler: `typescript:${version}`, configuration: JSON.stringify([relative(options.workspace, project), args]), mode, control,storage,storageControl,files: ["state.tsbuildinfo"], environment, capacity:{kind:"exact",parallelism:1} }, async (directory, compilerEnvironment,actualControl) => {
     await advanceScriptInvocation(options.invocation, "typecheck", "running");
-    await runOwnedCommand(process.execPath, [compiler, "--noEmit", "-p", project, ...args, "--incremental", "true", "--tsBuildInfoFile", join(directory, "state.tsbuildinfo")], options.cwd, options.owner, compilerAdmissionBudgetV1(actualControl), { ...options.execution, env: typeScriptCheckEnvironmentV1(mode, compilerEnvironment), signal:actualControl.signal });
+    await runOwnedCommand(process.execPath, [compiler, "--noEmit", "-p", project, ...args, "--incremental", "true", "--tsBuildInfoFile", join(directory, "state.tsbuildinfo")], options.cwd, options.owner, typecheckBudgetMillisecondsV1(options.timeoutMs, compilerAdmissionBudgetV1(actualControl)), { ...options.execution, env: typeScriptCheckEnvironmentV1(mode, compilerEnvironment), signal:actualControl.signal });
   });
   await advanceScriptInvocation(options.invocation, "typecheck", "complete");
   });

@@ -150,7 +150,7 @@ impl UiPatchOps {
         self.storage.pages[..self.storage.length].iter().map(|page| &page[0])
     }
 
-    /// 🧊️ Cold owned extraction may move the full operation and release its page; never a retained close step.
+    /// ❄️ Cold owned extraction may move the full operation and release its page; never a retained close step.
     pub fn pop(&mut self) -> Option<UiPatchOp> {
         assert!(!self.closing, "closing patch payload cannot be extracted");
         if self.storage.pages.len() > self.storage.length {
@@ -163,7 +163,7 @@ impl UiPatchOps {
         page.pop()
     }
 
-    /// 🧊️ Cold empty-backing release; retained owners release one page through close_step instead.
+    /// 🪫️ Cold empty-backing release; retained owners release one page through close_step instead.
     pub fn release_empty_allocation(&mut self) -> Result<bool, &'static str> {
         if !self.is_empty() {
             return Err("patch payload must retire before backing release");
@@ -221,7 +221,7 @@ impl<'a> IntoIterator for &'a UiPatchOps {
     }
 }
 
-/// 🧊️ Owned iteration is synchronous cold traversal, including any unconsumed descendants on Drop.
+/// 🔁️ Owned iteration is synchronous cold traversal, including any unconsumed descendants on Drop.
 impl IntoIterator for UiPatchOps {
     type Item = UiPatchOp;
     type IntoIter = std::iter::Flatten<std::vec::IntoIter<Vec<UiPatchOp>>>;
@@ -245,7 +245,7 @@ impl Serialize for UiPatchOps {
     }
 }
 
-/// 🧊️ Cold decoding admits each page synchronously; it is not an interactive decoder.
+/// 📃️ Cold decoding admits each page synchronously; it is not an interactive decoder.
 impl<'de> Deserialize<'de> for UiPatchOps {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor;

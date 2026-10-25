@@ -14,7 +14,7 @@ use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::support::{forms_action, ui_label, FORMS_INTERACTION_FIELDS, FORMS_INTERACTION_GRANULARITY_FIELD, FORMS_INTERACTION_GRANULARITY_SECTION, FORMS_PLAY_APP_ID};
 use crate::schema::forms_play_step_tree_id;
 use crate::{forms_steps, FormQuestion, FormStep, FormsSnapshot};
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+use semio_framework_plugin::{Buildable, HasBase};
 use semio_framework_plugin::tree_window_item;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

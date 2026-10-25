@@ -7,7 +7,7 @@ import { vizPathRecorder, type VizPathCommand, type VizPathContext } from "../�
 import { curveBumpX } from "../✒️mark/🏔️curves-monotone-natural-and-bump/🟦️.ts";
 
 //#region 🔖️Model
-/** 🌊 One Sankey node after layout. */
+/** 🔵️ One Sankey node after layout. */
 export type VizSankeyNode = {
   readonly name: string;
   index: number;
@@ -24,15 +24,15 @@ export type VizSankeyNode = {
   targetLinks: VizSankeyLink[];
 };
 
-/** 🌊 One Sankey link after layout: its endpoints, its value and the ribbon it occupies. */
+/** 🔗️ One Sankey link after layout: its endpoints, its value and the ribbon it occupies. */
 export type VizSankeyLink = { source: VizSankeyNode; target: VizSankeyNode; value: number; index: number; width: number; y0: number; y1: number };
 
-/** 🌊 The alignments `\SemioVizLayout{sankey}` accepts. */
+/** ✅️ The alignments `\SemioVizLayout{sankey}` accepts. */
 export const VIZ_SANKEY_ALIGNMENTS = ["left", "right", "center", "justify"] as const;
 
 export type VizSankeyAlignment = (typeof VIZ_SANKEY_ALIGNMENTS)[number];
 
-/** 🌊 Options of `\SemioVizLayout{sankey}`; the defaults are d3-sankey's. */
+/** ⚙️ Options of `\SemioVizLayout{sankey}`; the defaults are d3-sankey's. */
 export type VizSankeyOptions = {
   readonly extent?: readonly [readonly [number, number], readonly [number, number]];
   readonly nodeWidth?: number;
@@ -41,7 +41,7 @@ export type VizSankeyOptions = {
   readonly iterations?: number;
 };
 
-/** 🌊 The Sankey result: the same node and link objects, positioned. */
+/** 📐️ The Sankey result: the same node and link objects, positioned. */
 export type VizSankeyLayout = { readonly nodes: VizSankeyNode[]; readonly links: VizSankeyLink[] };
 //#endregion 🔖️Model
 
@@ -71,7 +71,7 @@ function alignmentOf(align: VizSankeyAlignment): (node: VizSankeyNode, n: number
   }
 }
 
-/** 🌊 `\SemioVizLayout{sankey}`: positions nodes in layers and links as ribbons between them. */
+/** 🚿️ `\SemioVizLayout{sankey}`: positions nodes in layers and links as ribbons between them. */
 export function vizSankey(input: { nodes: readonly { name: string; fixedValue?: number }[]; links: readonly { source: string | number; target: string | number; value: number }[] }, options: VizSankeyOptions = {}): VizSankeyLayout {
   const [[x0, y0], [x1, y1]] = options.extent ?? [
     [0, 0],
@@ -271,7 +271,7 @@ export function vizSankey(input: { nodes: readonly { name: string; fixedValue?: 
   return { nodes, links };
 }
 
-/** 🌊 The horizontal ribbon centreline of one Sankey link, ready to be stroked at `link.width`. */
+/** ↔️ The horizontal ribbon centreline of one Sankey link, ready to be stroked at `link.width`. */
 export function vizSankeyLinkHorizontal(link: VizSankeyLink, context?: VizPathContext): VizPathCommand[] {
   const recorder = context === undefined ? vizPathRecorder() : undefined;
   const sink = context ?? recorder!;
@@ -288,7 +288,7 @@ export function vizSankeyLinkHorizontal(link: VizSankeyLink, context?: VizPathCo
 /** 🏞️ One observation moving through the ordered stages of an alluvial diagram. */
 export type VizAlluvialRow = { readonly stages: readonly string[]; readonly value: number };
 
-/** 🏞️ `\SemioVizLayout{alluvial}`: a Sankey over ordered categorical stages, where a category may
+/** 🌄️ `\SemioVizLayout{alluvial}`: a Sankey over ordered categorical stages, where a category may
  * recur in several stages and is therefore keyed by `stage/category`. */
 export function vizAlluvial(rows: readonly VizAlluvialRow[], options: VizSankeyOptions & { stageNames?: readonly string[] } = {}): VizSankeyLayout & { readonly stages: readonly (readonly string[])[] } {
   const depth = Math.max(0, ...rows.map((row) => row.stages.length));

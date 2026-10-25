@@ -21,6 +21,13 @@ use semio_framework_plugin_decl_app::ArtifactOwnedContextHandle;
 use std::mem::MaybeUninit;
 
 #[doc(hidden)]
+pub use semio_framework::action_bus as __action_bus;
+#[doc(hidden)]
+pub use semio_framework_job as __job;
+#[doc(hidden)]
+pub use semio_framework_value as __value;
+
+#[doc(hidden)]
 #[path="♻️metadata/🦀️.rs"]
 pub mod metadata_retirement;
 #[doc(hidden)]

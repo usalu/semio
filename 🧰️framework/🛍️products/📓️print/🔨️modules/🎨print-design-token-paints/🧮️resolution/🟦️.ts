@@ -1,4 +1,4 @@
-/** 🎨️ Pure canonical print paints shared by browsers, workers and LaTeX generation. */
+/** 🌈️ Pure canonical print paints shared by browsers, workers and LaTeX generation. */
 import { stylingSchema as authoredTokens } from "@semio-tech/ui-styling";
 import { oklabMix } from "@semio-tech/ui-styling/mixing";
 //#region 🎨️DesignTokenPaints
@@ -75,7 +75,7 @@ export function loadPrintDesignTokens(): PrintDesignTokens {
   return authoredTokens as unknown as PrintDesignTokens;
 }
 
-/** 🎨️ Renders the canonical LaTeX stylesheet text from framework design-token paints. */
+/** 📜️ Renders the canonical LaTeX stylesheet text from framework design-token paints. */
 export function renderPrintLatexTokenStylesheet(tokens: PrintDesignTokens = loadPrintDesignTokens()): string {
   const lines: string[] = ["% Generated from framework/ui/styling/🔣️.json — run `repo ./📜️script.ts generate`.", "\\NeedsTeXFormat{LaTeX2e}", "\\ProvidesPackage{semio-tokens}[2026/07/06 v0.1.0 semio design tokens]", "\\RequirePackage{xcolor}", ""];
   for (const [key, hex] of Object.entries(tokens.colors)) lines.push(`\\definecolor{${latexColorKey(key)}}{HTML}{${hex.replace(/^#/, "")}}`);

@@ -42,12 +42,12 @@ const basenames: Readonly<Record<Entry["kind"], string>> = {
 const wrappers = new Set<Entry["boundary"]>(["package-reexport", "next-route", "next-layout", "next-page"]);
 
 describe("repository source ownership", () => {
-  test("validates the exact portable 21-entry projection", () => {
+  test("validates the exact portable 19-entry projection", () => {
     
     expect(fixture["version"]).toEqual(1);
-    expect(fixture.entries).toHaveLength(21);
-    expect(new Set(fixture.entries.map(({ legacy }) => legacy))).toHaveProperty("size", 21);
-    expect(new Set(fixture.entries.map(({ owner }) => owner))).toHaveProperty("size", 21);
+    expect(fixture.entries).toHaveLength(19);
+    expect(new Set(fixture.entries.map(({ legacy }) => legacy))).toHaveProperty("size", 19);
+    expect(new Set(fixture.entries.map(({ owner }) => owner))).toHaveProperty("size", 19);
   });
 
   test("owns implementation bytes at anonymous semantic leaves and only retains required glue", () => {
@@ -114,7 +114,7 @@ describe("repository source ownership", () => {
 
   test("classifies retained TypeScript package entries as declarations", () => {
     const packageEntries = fixture.entries.filter(({ boundary, kind }) => boundary === "package-reexport" && kind === "typescript");
-    expect(packageEntries).toHaveLength(2);
+    expect(packageEntries).toHaveLength(1);
     for (const row of packageEntries) {
       const source = readFileSync(resolve(repoRoot, row.legacy), "utf8");
       expect(classifyPackageSource(source, taxonomy.packageGlueGrammar.typescript!).role, row.legacy).toBe("declaration");

@@ -3,10 +3,10 @@
 use super::*;
 
 // #region text
-/// 🔤️ Raster grid steps per device pixel — glyph bitmaps snap to a quarter pixel, advances never do.
+/// 🧮️ Raster grid steps per device pixel — glyph bitmaps snap to a quarter pixel, advances never do.
 pub(super) const RASTER_GRID_STEPS_PER_PX: f32 = 4.0;
 
-/// 🔤️ Exact-size glyph entries kept before the derived map is rebuilt — a continuous zoom must not grow it without bound.
+/// 🗄️ Exact-size glyph entries kept before the derived map is rebuilt — a continuous zoom must not grow it without bound.
 pub(super) const SIZED_GLYPH_CAPACITY: usize = 16_384;
 
 /// 🤝️ Kerned scalar pairs cached before the pair map is rebuilt — no document may grow it without bound.
@@ -82,10 +82,10 @@ pub fn font_advance_em(face: TextFace, ch: char) -> f32 {
     advance(authored_face_bytes(face)).or_else(|| NOTO_EMOJI_BUCKETS.iter().find_map(|bytes| advance(bytes))).unwrap_or(BITMAP_ADVANCE_EM)
 }
 
-/// 📏️ The bitmap fallback's advance per logical pixel of font size.
+/// ⏩️ The bitmap fallback's advance per logical pixel of font size.
 const BITMAP_ADVANCE_EM: f32 = 0.625;
 
-/// 🔤️ The embedded font file an authored face is drawn from — Anta for [`TextFace::Sans`] (React's `--font-sans`, and the file
+/// 📄️ The embedded font file an authored face is drawn from — Anta for [`TextFace::Sans`] (React's `--font-sans`, and the file
 /// every host's atlas fetches), Share Tech Mono for [`TextFace::Mono`].
 pub(super) fn authored_face_bytes(face: TextFace) -> &'static [u8] {
     match face {
@@ -96,7 +96,7 @@ pub(super) fn authored_face_bytes(face: TextFace) -> &'static [u8] {
     }
 }
 
-/// 🤝️ Reads the authored faces through borrowed font IO without retaining a shaping cache.
+/// 🪢️ Reads the authored faces through borrowed font IO without retaining a shaping cache.
 #[derive(Clone,Copy)]
 pub struct PairKerning {
     pub(super) sans: Option<SwashFontRef<'static>>,
@@ -123,7 +123,7 @@ impl Default for PairKerning {
 impl PairKerning {
     /// 👓️ Borrowed font views own no physical allocation requiring retirement.
     pub fn terminal_is_empty(&self)->bool {true}
-    /// 📏️ Projects the original glyph pair's design-unit adjustment to logical em units.
+    /// 📐️ Projects the original glyph pair's design-unit adjustment to logical em units.
     pub fn em(&mut self, face: TextFace, left: char, right: char) -> f32 {
         if is_zero_width_format_char(left) || is_zero_width_format_char(right) { return 0.0; }
         let (font,pairs)=match face {TextFace::Sans=>(self.sans,&self.sans_pairs),TextFace::Serif=>(self.serif,&self.serif_pairs),TextFace::Mono=>(self.mono,&self.mono_pairs),TextFace::Emoji=>return 0.0};

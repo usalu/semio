@@ -11,7 +11,7 @@ use serde_json::{json, Map, Value as Json};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-/// 🔌️ The repository of one repo root, answering as one MCP profile.
+/// 🦑️ The repository of one repo root, answering as one MCP profile.
 pub struct RepoRepository {
     root: PathBuf,
     profile: Profile,
@@ -52,7 +52,7 @@ impl RepoRepository {
         Executor::new(&context).execute(query, &Map::new()).map_err(|error| HandlerError::tool(&error.message))
     }
 
-    /// 📚️ Renders the resource's established YAML projection.
+    /// 📜️ Renders the resource's established YAML projection.
     fn yaml_of_query(&self, query: &str) -> Result<String, HandlerError> {
         semio_framework_repo_yaml::marshal(&self.query(query)?).map_err(|error| HandlerError::tool(&error))
     }
@@ -72,7 +72,7 @@ fn optional(arguments: &Json, key: &str) -> Result<String, HandlerError> {
     }
 }
 
-/// 🎼️ A required string argument.
+/// ❗️ A required string argument.
 fn required(arguments: &Json, key: &str) -> Result<String, HandlerError> {
     if arguments.get(key).is_none() {
         return Err(HandlerError::tool(&format!("missing {key}")));
@@ -80,7 +80,7 @@ fn required(arguments: &Json, key: &str) -> Result<String, HandlerError> {
     optional(arguments, key)
 }
 
-/// 🎼️ An optional boolean argument.
+/// 🔛️ An optional boolean argument.
 fn switch(arguments: &Json, key: &str) -> Result<bool, HandlerError> {
     match arguments.get(key) {
         None => Ok(false),
@@ -89,7 +89,7 @@ fn switch(arguments: &Json, key: &str) -> Result<bool, HandlerError> {
     }
 }
 
-/// 🎼️ An optional string list argument.
+/// 📋️ An optional string list argument.
 fn strings(arguments: &Json, key: &str) -> Result<Vec<String>, HandlerError> {
     match arguments.get(key) {
         None => Ok(Vec::new()),
@@ -116,12 +116,12 @@ fn entity_result(key: &str, entity: Json, extra: &[String]) -> RepositoryResult 
     RepositoryResult { text: lines.join("\n"), structured: None, is_error: false }
 }
 
-/// 🧰️ A tool result carrying plain lines.
+/// 🔧️ A tool result carrying plain lines.
 fn lines_result(lines: Vec<String>) -> RepositoryResult {
     RepositoryResult { text: lines.join("\n"), structured: None, is_error: false }
 }
 
-/// 🎫️ Serializes the shared canonical ticket outcome without ambient identity.
+/// 🎟️ Serializes the shared canonical ticket outcome without ambient identity.
 fn ticket_result(ticket: &Ticket) -> Result<RepositoryResult, HandlerError> {
     let path = semio_framework_repo_tickets::TicketId::new(ticket.year, ticket.month, ticket.day, ticket.slug.clone()).id();
     let text = serde_json::to_string(&json!({ "path": path, "ticket": ticket })).map_err(|error| HandlerError::tool(&error.to_string()))?;

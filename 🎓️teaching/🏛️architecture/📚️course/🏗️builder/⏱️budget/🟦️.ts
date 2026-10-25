@@ -7,7 +7,7 @@ export function courseBudgetRequestMs(environment: Readonly<Record<string, strin
   return buildBudgetMs(environment);
 }
 
-/** ⏱️ The budget of one course compiler step: the request intersected with the original operation's remaining time. */
+/** ⏳️ The budget of one course compiler step: the request intersected with the original operation's remaining time. */
 export function courseBudgetMs(invocation: ScriptInvocation, environment: Readonly<Record<string, string | undefined>> = process.env): number {
   return scriptInvocationBudget(invocation, courseBudgetRequestMs(environment));
 }

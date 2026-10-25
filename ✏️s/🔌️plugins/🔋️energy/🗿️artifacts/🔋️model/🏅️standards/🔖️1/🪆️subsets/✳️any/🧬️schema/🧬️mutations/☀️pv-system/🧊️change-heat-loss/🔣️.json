@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-pv-heat-loss",
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🧊️change-heat-loss",
   "semanticKind": "change-pv-system-faiman-heat-loss-constant",
   "displayName": "Change Photovoltaic Heat Loss Constant",
   "emoji": "🧊️",

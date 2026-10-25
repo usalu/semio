@@ -2,16 +2,16 @@ import { type RustMutationMetadataFacts, inspectRustMutationMetadataFacts, inspe
 import { type CargoProviderBinding, projectCargoProviderManifest, resolveCargoProviderBinding } from "../🚚️cargo-provider/🟦️.ts";
 import { type RustModuleContext, type RustModuleGraph, inspectRustModuleGraph } from "../🌐️rust-module-graph/🟦️.ts";
 
-/** 🧬️ One frozen local provider identity required by metadata source proof. */
+/** 🪪️ One frozen local provider identity required by metadata source proof. */
 export interface MutationMetadataProviderIdentity { readonly role: "lower-contract" | "os-facade" | "metadata-derive"; readonly manifestLocator: string; readonly packageName: string; readonly libraryName: string; readonly procMacro: boolean; }
 
-/** 🧬️ FND21's already-proven wrapped declaration origin without a root-script dependency. */
+/** 📍️ FND21's already-proven wrapped declaration origin without a root-script dependency. */
 export interface MutationMetadataSourceOrigin { readonly sourcePath: string; readonly declarationName: string; readonly modulePath: readonly string[]; }
 
-/** 🧬️ Bounded caller-owned evidence used to prove one metadata provider route. */
+/** 📥️ Bounded caller-owned evidence used to prove one metadata provider route. */
 export interface MutationMetadataSourceInput { readonly repositoryRoot: string; readonly consumerManifestLocator: string; readonly origin: MutationMetadataSourceOrigin; readonly files: readonly string[]; readonly readSource: (path: string) => string | undefined; readonly checkCancellation?: () => void; }
 
-/** 🧬️ Exact accepted/rejected metadata source evidence; this does not activate policy. */
+/** 🧾️ Exact accepted/rejected metadata source evidence; this does not activate policy. */
 export interface MutationMetadataSourceProof { readonly accepted: boolean; readonly diagnostics: readonly string[]; readonly consumerContext: RustModuleContext | null; readonly deriveProvider: MutationMetadataProviderIdentity | null; readonly contractProvider: MutationMetadataProviderIdentity | null; readonly facadeProvider: MutationMetadataProviderIdentity | null; }
 
 const MUTATION_METADATA_PROVIDERS: readonly MutationMetadataProviderIdentity[] = [

@@ -29,9 +29,9 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
  pub fn source_identity(self)->u64{self.lease.get().id}
  pub fn project<U:?Sized,F>(self,discriminator:usize,project:F)->RetainedCloneRef<'a,U>where F:for<'source>FnOnce(&'source T)->&'source U{let value=project(self.value);RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}}}
  pub fn binding_copy_bytes(self)->usize{0}
- /// 🪪️ Checks the original issued source and exact projected path without granting a new alias.
+ /// ✅️ Checks the original issued source and exact projected path without granting a new alias.
  pub fn check_binding(self,binding:&Option<RetainedCloneBinding>)->Result<bool,crate::ValueError>{self.binding_demand(binding).map(|demand|demand.is_none())}
- /// 🪪️ Validates one original lease and projected path without exposing private custody.
+ /// 🔒️ Validates one original lease and projected path without exposing private custody.
  pub fn matches_binding(self,binding:&RetainedCloneBinding)->bool{binding.lease.as_ref().is_some_and(|lease|lease.get().id==self.lease.get().id)&&binding.projection==self.projection}
  pub fn binding_demand(self,binding:&Option<RetainedCloneBinding>)->Result<Option<crate::RetirementDemand>,crate::ValueError>{if let Some(expected)=binding{if expected.lease.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}Ok(None)}else{Ok(Some(crate::RetirementDemand{copy_bytes:self.binding_copy_bytes(),depth:1,..Default::default()}))}}
  pub fn bind(self,binding:&mut Option<RetainedCloneBinding>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,crate::ValueError>{

@@ -7,7 +7,7 @@ import{withRustTestCompilerV1}from"./🏗️compiler/🟦️.ts";
 import{rustCompilerExecutionV2}from"../🏗️compiler/💾️state/📍️layout/🟦️.ts";
 import{createRequestedIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{projectCargoRlibProfileV1,readCargoEffectiveProfileV1}from"@semio-tech/process/artifacts/native-build/units/profile";
-import {openRepositoryCachePartitionV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import { openRepositoryCachePartitionV1 } from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
 import compilerObservationSchema from "../📥️descriptor/🕸️graph/🧬️schema/📥️compiler.json";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
@@ -23,7 +23,7 @@ import { readRustUnitV1, type RustUnitV1 } from "../🧬️definition/🟦️.ts
 import{rustUnitNxProjectsV1,rustUnitDigestEnvironmentV1}from"../🔌️nx/🟦️.ts";
 import {selectedCargoBuildOwnerV1,withSelectedRustBuildGraphV1} from "../../../../🏗️build/🕸️graph/🦀️rust/🟦️.ts";
 import {scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {captureOwnedCommandV1,captureOwnedCommandResultV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import receiptSchema from "../📤️receipt/🧬️schema/🔣️.json";
@@ -47,7 +47,7 @@ test("incomplete, cyclic, oversized and ambiguous crate boundaries refuse before
 });
 test("installed Nx schedules exact crate predecessor receipts and never caches a mutable Cargo tree",async()=>{
  const units=fixture.units.map(readRustUnitV1),projects=rustUnitNxProjectsV1(units,"📜️script.ts","units.json",false,outputRoot),nodes=Object.fromEntries(Object.entries(projects).map(([name,data])=>[name,{name,type:"lib",data}])),dependencies=Object.fromEntries(Object.keys(nodes).map(name=>[name,[]]));
- await withBuildTestInvocationV1(original=>withRepositoryNxStorageV1(process.cwd(),original,scriptCompilerAdmissionControlV1(original,"rust:nx-fixture",0),async(bind,nxPhase)=>{const identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!identity)throw Error("Original Nx SDK required");const namespace=await bind(identity,null,implementationIdentity()),source="const {createTaskGraph}=require('node:module').createRequire(process.env.SDK)('nx/src/tasks-runner/create-task-graph');console.log('[DEBUG] predecessors '+JSON.stringify(createTaskGraph(JSON.parse(process.env.GRAPH),{},['rust-unit-consumer'],['compile'],undefined,{},false).dependencies['rust-unit-consumer:compile']));",output=await captureOwnedCommandV1("node",["-e",source],process.cwd(),{control:createRequestedIssuedResourceControlV1(nxPhase,30000),env:{...process.env,...namespace.environment,SDK:join(process.cwd(),".cache/b/t/m/nx",identity,"package.json"),GRAPH:JSON.stringify({nodes,dependencies,externalNodes:{}})}}),row=output.split("\n").find(line=>line.startsWith("[DEBUG] predecessors "));if(!row)throw Error("Actual Nx predecessors required");expect(JSON.parse(row.slice("[DEBUG] predecessors ".length))).toEqual(["rust-unit-base:compile"]);}));for(const project of Object.values(projects)){expect(project.targets.compile.cache).toBe(false);expect(project.targets.compile.outputs).toEqual(["{workspaceRoot}/"+project.targets.compile.options.env.SEMIO_RUST_UNIT_OUTPUT]);expect(project.targets.compile.inputs.every(input=>typeof input!=="string"||!input.includes("**"))).toBe(true);}
+ await withBuildTestInvocationV1(original=>withRepositoryNxStorageV1(process.cwd(),original,scriptCompilerAdmissionControlV1(original,"rust:nx-fixture",0),async(bind,nxPhase)=>{const identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!identity)throw Error("Original Nx SDK required");const namespace=await bind(identity,null,implementationIdentity()),source="const {createTaskGraph}=require('node:module').createRequire(process.env.SDK)('nx/src/tasks-runner/create-task-graph');console.log('[TRACE] predecessors '+JSON.stringify(createTaskGraph(JSON.parse(process.env.GRAPH),{},['rust-unit-consumer'],['compile'],undefined,{},false).dependencies['rust-unit-consumer:compile']));",output=await captureOwnedCommandV1("node",["-e",source],process.cwd(),{control:createRequestedIssuedResourceControlV1(nxPhase,30000),env:{...process.env,...namespace.environment,SDK:join(process.cwd(),".cache/b/t/m/nx",identity,"package.json"),GRAPH:JSON.stringify({nodes,dependencies,externalNodes:{}})}}),row=output.split("\n").find(line=>line.startsWith("[TRACE] predecessors "));if(!row)throw Error("Actual Nx predecessors required");expect(JSON.parse(row.slice("[TRACE] predecessors ".length))).toEqual(["rust-unit-base:compile"]);}));for(const project of Object.values(projects)){expect(project.targets.compile.cache).toBe(false);expect(project.targets.compile.outputs).toEqual(["{workspaceRoot}/"+project.targets.compile.options.env.SEMIO_RUST_UNIT_OUTPUT]);expect(project.targets.compile.inputs.every(input=>typeof input!=="string"||!input.includes("**"))).toBe(true);}
 });
 test("actual Cargo recompiles a changed crate and its consumer while retaining an unchanged sibling",async()=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original ticket output required");const root=mkdtempSync(join(output,"ru-")),mode=process.env.SEMIO_BUILD_MODE;if(mode!=="prototype"&&mode!=="release")throw Error("Original build mode required");
@@ -123,7 +123,7 @@ import chargeSchema from "../📤️publication/🧬️schema/🔣️.json";
 test("closed unit output charge binds its actual allocation and semantic owner",()=>{const row={version:1 as const,unit:"base",semanticDigest:"a".repeat(64),allocation:"b".repeat(32),owner:"rust-unit:base:"+"a".repeat(64),bytes:262144,output:"/bounded/units/base"};expect(new Ajv({strict:true}).compile(chargeSchema)(row)).toBe(true);expect(readRustUnitChargeV1(row,"base",row.output)).toEqual(row);expect(()=>readRustUnitChargeV1({...row,owner:"foreign"},"base",row.output)).toThrow();expect(()=>readRustUnitChargeV1(row,"consumer",row.output)).toThrow();expect(()=>readRustUnitChargeV1(row,"base","/bounded/units/other")).toThrow();});
 
 
-import {type BuildGraphV1} from "../../../../🏗️build/🕸️graph/🟦️.ts";
+import type { BuildGraphV1 } from "../../../../🏗️build/🕸️graph/📋️model/🟦️.ts";
 import {runOwnedNxInvocationV1,NX_OUTPUT_LOG_ENV} from "../../../🚀️bootstrap/📜️script.ts";
 import {repositoryStrictStorageV1} from "../../../💾️storage/🔒️enforcement/🟦️.ts";
 import {boundedNxNamespaceV1,withRepositoryNxStorageV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";

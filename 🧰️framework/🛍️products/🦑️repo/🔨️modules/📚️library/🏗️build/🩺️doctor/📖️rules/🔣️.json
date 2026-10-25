@@ -1285,5 +1285,33 @@
         "de": "Das Öffnen der Partitionen lässt die Speicherschicht verlassene Scratch-Abbilder aushängen."
       }
     }
+  },
+  "tools.wasm-lock-drift": {
+    "area": "tools",
+    "owner": "tool-registry",
+    "severities": [
+      "error"
+    ],
+    "data": [
+      "path",
+      "found",
+      "pinned"
+    ],
+    "title": {
+      "en": "{path} locks wasm-bindgen {found}, the pinned binding generator is {pinned}",
+      "de": "{path} sperrt wasm-bindgen {found}, der gepinnte Binding-Generator ist {pinned}"
+    },
+    "detail": {
+      "en": "A wasm build refuses a lock whose wasm-bindgen crate differs from the pinned binding generator, but only after the build waited for capacity and the graph; every command that provisions the wasm tools (repo tools setup all, repo incremental prepare) stops on it.",
+      "de": "Ein Wasm-Build verweigert einen Lock, dessen wasm-bindgen-Crate vom gepinnten Binding-Generator abweicht, aber erst nachdem der Build auf Kapazität und Graph gewartet hat; jeder Befehl, der die Wasm-Werkzeuge bereitstellt (repo tools setup all, repo incremental prepare), bricht daran ab."
+    },
+    "fix": {
+      "kind": "command",
+      "command": "repo cargo --store=shared --configuration=prototype -- update --offline -p wasm-bindgen -p js-sys -p web-sys -p wasm-bindgen-futures",
+      "note": {
+        "en": "Add --manifest-path <directory of the lock>/Cargo.toml for a lock below the root; the lock and the manifest stay in sync.",
+        "de": "Für einen Lock unterhalb der Wurzel --manifest-path <Verzeichnis des Locks>/Cargo.toml ergänzen; Lock und Manifest bleiben im Gleichklang."
+      }
+    }
   }
 }

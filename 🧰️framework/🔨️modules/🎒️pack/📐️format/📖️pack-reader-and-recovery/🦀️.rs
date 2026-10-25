@@ -241,10 +241,10 @@ let manifest = resolve_manifest(&raw, &symbols)?;
         self.chunk_table.get(id.0 as usize).map(|entry| ByteRange { offset: entry.offset, len: entry.stored_len }).ok_or(PackRefusal::Malformed{kind:ValueRefusalKind::InvalidValue,what:"chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })
     }
 
-    /// 📏️ Declared decoded bytes let callers admit ownership before reading or decompressing a chunk.
+    /// 🔏️ Declared decoded bytes let callers admit ownership before reading or decompressing a chunk.
     pub fn chunk_decoded_len(&self,id:ChunkId)->Result<u64,PackRefusal>{self.chunk_table.get(id.0 as usize).map(|entry|entry.raw_len).ok_or(PackRefusal::Malformed{kind:ValueRefusalKind::InvalidValue,what:"chunk_id",offset:id.0 as u64,detail:"unknown chunk id".into()})}
 
-    /// 🧩️ Opens an identity chunk without allocating or materializing its payload.
+    /// 🖱️ Opens an identity chunk without allocating or materializing its payload.
     pub fn identity_chunk_cursor(&self, id: ChunkId, verification: VerificationLevel) -> Result<PackIdentityChunkCursor<'_, S>, S::Error> {
         let entry = self.chunk_table.get(id.0 as usize).cloned().ok_or(PackRefusal::Malformed{kind:ValueRefusalKind::InvalidValue,what:"chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })?;
         if entry.stored_len != entry.raw_len {
@@ -256,7 +256,7 @@ let manifest = resolve_manifest(&raw, &symbols)?;
         Ok(PackIdentityChunkCursor { source: &self.source, entry, verification, offset: 0, crc: semio_framework_replication_codec::Crc32cCursor::new(), hash: semio_framework_hash::Hasher::new(), terminal: false })
     }
 
-    /// 🧩️ Appends one verified chunk into a previously admitted output buffer with interior source and inflation control.
+    /// ➕️ Appends one verified chunk into a previously admitted output buffer with interior source and inflation control.
     pub async fn append_chunk_controlled(&self,id:ChunkId,verification:VerificationLevel,output:&mut Vec<u8>,control:&mut NativeDecodeControl<'_>)->Result<(),S::Error>{
         control.checkpoint().map_err(PackRefusal::ValueRefusal)?;let entry=self.chunk_table.get(id.0 as usize).ok_or(PackRefusal::Malformed{kind:ValueRefusalKind::InvalidValue,what:"chunk_id",offset:id.0 as u64,detail:"unknown chunk id".into()})?;
         if entry.stored_len>self.limits.max_segment_len||entry.raw_len>self.limits.max_segment_len{return Err((PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,limit:"controlled chunk exceeds max_segment_len"}).into());}let end=entry.offset.checked_add(entry.stored_len).filter(|end|*end<=self.superblock.footer.file_len).ok_or(PackRefusal::Truncated(entry.offset))?;if end>self.source.len().await{return Err((PackRefusal::Truncated(entry.offset)).into());}
@@ -301,7 +301,7 @@ let manifest = resolve_manifest(&raw, &symbols)?;
         Ok(raw)
     }
 
-    /// 📄️ Level 3: reads and concatenates the `doc_frame_count` `KIND_DOCUMENT` segments
+    /// 🎚️ Level 3: reads and concatenates the `doc_frame_count` `KIND_DOCUMENT` segments
     /// starting at `manifest().doc_span.offset`; at `Full` also verifies the result's blake3
     /// hash against the footer's `content_hash`.
     pub async fn body_bytes(&self, verification: VerificationLevel) -> Result<Vec<u8>, S::Error> {

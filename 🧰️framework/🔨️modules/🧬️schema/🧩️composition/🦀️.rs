@@ -8,7 +8,7 @@ pub enum ChildSlotSelection {
 }
 
 impl ChildSlotSelection {
-    /// 🪪️ Borrows the authored kind or capability identifier.
+    /// 📝️ Borrows the authored kind or capability identifier.
     pub const fn id(self) -> &'static str { match self { Self::ArtifactKind(id) | Self::Capability(id) => id } }
     /// 🔎️ Checks a concrete-kind constraint; a capability is admitted by its runtime composition.
     pub fn accepts_kind(self, kind: &str) -> bool { match self { Self::ArtifactKind(id) => id == kind, Self::Capability(_) => true } }

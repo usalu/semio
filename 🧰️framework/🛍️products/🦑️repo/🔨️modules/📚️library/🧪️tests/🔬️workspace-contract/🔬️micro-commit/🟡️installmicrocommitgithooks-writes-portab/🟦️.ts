@@ -5,7 +5,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, wr
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gitSpawnEnv } from "../../../../🏃️process/🌿️environment/🌳️git/🟦️.ts";
-import { gitDirFor } from "../🔵️shared/🟦️.ts";
+import { gitDirFor } from "../🔵️harness/🟦️.ts";
 
 /** 🟢 Registers the installmicrocommitgithooks writes portable hooks tests of the micro-commit suite. */
 export function registerInstallmicrocommitgithooksWritesPortableHooksTests(): void {

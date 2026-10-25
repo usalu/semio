@@ -171,6 +171,11 @@
         "present": false
       },
       {
+        "name": "nx",
+        "directory": "/workspace/.cache/nx",
+        "present": false
+      },
+      {
         "name": "products",
         "directory": "/workspace/.cache/products",
         "present": false

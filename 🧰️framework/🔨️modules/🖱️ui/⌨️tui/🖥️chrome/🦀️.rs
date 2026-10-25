@@ -288,7 +288,7 @@ impl ChromeState {
         tabs.iter().find(|tab| pos.x >= tab.x && pos.x <= tab.x + tab.interior_width + 1).map(|tab| tab.index).or(Some(last.index))
     }
 
-    /// 🧭️ Resolves occupied strips before empty corner pads, using the same geometry as painting.
+    /// 📐️ Resolves occupied strips before empty corner pads, using the same geometry as painting.
     pub fn window_drop_corner(&self, rect: Rect, pos: Pos) -> Option<WindowStackCorner> {
         if !rect.contains(pos) { return None; }
         let ChromeState::Window(w) = self else { return None };
@@ -389,7 +389,7 @@ pub enum ChromeMode {
     Compact,
 }
 
-/// 🧭️ Canonical window geometry returned by [window_chip_layout].
+/// 🍱️ Canonical window geometry returned by [window_chip_layout].
 pub struct WindowChipLayout {
     pub mode: ChromeMode,
     pub groups: Vec<WindowCornerChipGroup>,
@@ -417,7 +417,7 @@ pub(crate) fn window_drag_glyph(set: GlyphSet) -> &'static str {
     match set { GlyphSet::Unicode => "\u{283f}", GlyphSet::Ascii => ":" }
 }
 
-/// 🧭️ The concrete tab box including its seam, clipped by the same chip layout used for painting.
+/// 🗃️ The concrete tab box including its seam, clipped by the same chip layout used for painting.
 pub fn window_tab_rect(w: &WindowState, rect: Rect, index: usize) -> Option<Rect> {
     let layout = window_chip_layout(w, rect);
     layout.groups.iter().find_map(|group| group.tabs.iter().find(|tab| tab.kind == TabKind::Tab && tab.index == index).map(|tab| {
@@ -484,7 +484,7 @@ struct Strip {
     chips: Vec<WindowCornerTab>,
 }
 
-/// 🧮️ The `[start, end)` slice of `widths` that fits `budget` and keeps `active` in view, preferring to extend to the right.
+/// ✂️ The `[start, end)` slice of `widths` that fits `budget` and keeps `active` in view, preferring to extend to the right.
 fn fit_window(widths: &[u16], active: usize, budget: u16, chip_overhead: u16, count_chip: impl Fn(usize, bool) -> u16) -> (usize, usize) {
     let n = widths.len();
     if n == 0 {
@@ -884,7 +884,7 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
 }
 
 impl Shell {
-    /// 📍 Sets the task status of window `id` and mirrors it into the tab strip of every window that shows it as a tab.
+    /// 🪞️ Sets the task status of window `id` and mirrors it into the tab strip of every window that shows it as a tab.
     pub fn set_status(&self, scene: &mut Scene, id: &str, status: Option<Status>) {
         for (_, node) in &self.windows {
             if let Some(ChromeState::Window(state)) = scene.node_mut(*node).chrome() {

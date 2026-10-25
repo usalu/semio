@@ -150,7 +150,8 @@ pub mod editor {
                     pub mod overview {
                         #[path = "."]
                         pub mod utilities {
-                            pub use semio_s_artifact_puzzle_2d_graph_manifest::editor::puzzle2d::modes::edit::windows::overview::utilities::brush;
+                            #[path = "../../../../../../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/👁️overview/🪛️utilities/🖌️brush/🦀️.rs"]
+                            pub mod brush;
                             #[path = "../../../../../../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/👁️overview/🪛️utilities/🖍️area-brush/🦀️.rs"]
                             pub mod area_brush;
                             #[path = "../../../../../../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/👁️overview/🪛️utilities/🖱️select/🦀️.rs"]

@@ -16,10 +16,10 @@ export type InteractivityToolRunRequirement = {
   readonly inventory: string;
 };
 
-/** ⏯️ A repo-relative source handed to the tool-run policy predicates. */
+/** 🪵️ A repo-relative source handed to the tool-run policy predicates. */
 export type InteractivityToolRunSource = { readonly path: string; readonly text: string };
 
-/** ⏯️ A tool-run policy violation anchored to a file and a 1-based line (0 when a whole file or table row is at fault). */
+/** 📄️ A tool-run policy violation anchored to a file and a 1-based line (0 when a whole file or table row is at fault). */
 export type InteractivityToolRunFinding = { readonly file: string; readonly line: number; readonly text: string };
 
 type InteractivityToolRunDeclaration = { readonly id: string; readonly kind: "Tool" | "Utility"; readonly file: string; readonly line: number; readonly run: boolean };
@@ -52,7 +52,7 @@ export function interactivityToolRunWithin(path: string, prefix: string): boolea
   return path === prefix || path.startsWith(`${prefix}/`);
 }
 
-/** 📍️ A requirement scope entry as a repo-relative path. */
+/** 📂️ A requirement scope entry as a repo-relative path. */
 export function interactivityToolRunScopePath(root: string, entry: string): string {
   return entry.startsWith("✏️s/") || entry.startsWith("🧰️framework/") ? entry : `${root}/${entry}`;
 }
@@ -174,7 +174,7 @@ function interactivityToolRunTools(sources: readonly InteractivityToolRunSource[
   return [...rows, ...discovered];
 }
 
-/** 📍️ True when `path` belongs to the tool's own files. */
+/** 🎯️ True when `path` belongs to the tool's own files. */
 function interactivityToolRunInScope(tool: InteractivityToolRunTool, path: string): boolean {
   return tool.scope.some((entry) => (tool.flat ? path.slice(0, path.lastIndexOf("/")) === entry : interactivityToolRunWithin(path, entry)));
 }
@@ -184,7 +184,7 @@ function interactivityToolRunToken(token: string): RegExp {
   return new RegExp(`(?<![\\w-])${token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`);
 }
 
-/** ⏯️ (1) Once a tool declares `run`, no per-plugin run verb, lifecycle state or plugin-local progress/cancel measure survives (`📋️tool-run-contract.md` §2.5, §3.6). */
+/** 🔌️ (1) Once a tool declares `run`, no per-plugin run verb, lifecycle state or plugin-local progress/cancel measure survives (`📋️tool-run-contract.md` §2.5, §3.6). */
 export function interactivityToolRunLocalLifecycleFailures(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunFinding[] {
   const { code } = interactivityToolRunIndex(sources);
   const findings: InteractivityToolRunFinding[] = [];
@@ -205,7 +205,7 @@ export function interactivityToolRunLocalLifecycleFailures(sources: readonly Int
   return findings;
 }
 
-/** ⏯️ (2) No tried-candidate ring, `fillBuildPreview` tail or fill preview JSON cap survives anywhere; tested candidates travel only as trace pages (`📋️tool-run-contract.md` §3.2, §3.6). */
+/** 🕵️ (2) No tried-candidate ring, `fillBuildPreview` tail or fill preview JSON cap survives anywhere; tested candidates travel only as trace pages (`📋️tool-run-contract.md` §3.2, §3.6). */
 export function interactivityToolRunLegacyTraceFailures(sources: readonly InteractivityToolRunSource[]): InteractivityToolRunFinding[] {
   const { code } = interactivityToolRunIndex(sources);
   const findings: InteractivityToolRunFinding[] = [];
@@ -218,7 +218,7 @@ export function interactivityToolRunLegacyTraceFailures(sources: readonly Intera
   return findings;
 }
 
-/** ⏯️ (3) Every `algorithmic-mutating` tool of [[INTERACTIVITY_TOOL_RUN_REQUIREMENTS]] declares `run: Some(ToolRunDefinition)` on its Tool/UtilityDefinition, and every table row still points at real sources (`📋️tool-run-contract.md` §2.4, §3.7). */
+/** 📋️ (3) Every `algorithmic-mutating` tool of [[INTERACTIVITY_TOOL_RUN_REQUIREMENTS]] declares `run: Some(ToolRunDefinition)` on its Tool/UtilityDefinition, and every table row still points at real sources (`📋️tool-run-contract.md` §2.4, §3.7). */
 export function interactivityToolRunDeclarationFailures(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunFinding[] {
   const { code, declarations } = interactivityToolRunIndex(sources);
   const paths = [...code.keys()];
@@ -242,7 +242,7 @@ export function interactivityToolRunDeclarationFailures(sources: readonly Intera
   return findings;
 }
 
-/** ⏯️ (4) `toolRun*` action ids are framework-reserved: plugins never declare, literal-copy or route them (`📋️tool-run-contract.md` §2.5). */
+/** 🎬️ (4) `toolRun*` action ids are framework-reserved: plugins never declare, literal-copy or route them (`📋️tool-run-contract.md` §2.5). */
 export function interactivityToolRunReservedActionFailures(sources: readonly InteractivityToolRunSource[]): InteractivityToolRunFinding[] {
   const { code } = interactivityToolRunIndex(sources);
   const findings: InteractivityToolRunFinding[] = [];

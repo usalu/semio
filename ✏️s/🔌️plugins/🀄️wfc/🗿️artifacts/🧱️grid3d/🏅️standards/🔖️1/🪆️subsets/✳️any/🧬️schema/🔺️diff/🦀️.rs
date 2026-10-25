@@ -141,7 +141,7 @@ wfc_patch!(/// 🀄️ Field patch over a tile (its id is the row identity).
 
 protocol::list_delta! {
     /// 📂 Row delta over the tiles.
-    pub Grid3dTilesDelta { removal: Grid3dTilesRemoval, insertion: Grid3dTilesInsertion, relocation: Grid3dTilesRelocation, modification: Grid3dTilesModification, row: Grid3dTile, patch: Grid3dTilePatch, key: id, values_only }
+    pub Grid3dTilesDelta { removal: Grid3dTilesRemoval, insertion: Grid3dTilesInsertion, relocation: Grid3dTilesRelocation, modification: Grid3dTilesModification, row: Grid3dTile, patch: Grid3dTilePatch, list: Vec<Grid3dTile>, key: String = keyed, values_only }
 }
 
 impl Grid3dRow for Grid3dRule {
@@ -155,7 +155,7 @@ wfc_patch!(/// ⛓️ Field patch over an adjacency rule (its id is the row iden
 
 protocol::list_delta! {
     /// 📂 Row delta over the rules.
-    pub Grid3dRulesDelta { removal: Grid3dRulesRemoval, insertion: Grid3dRulesInsertion, relocation: Grid3dRulesRelocation, modification: Grid3dRulesModification, row: Grid3dRule, patch: Grid3dRulePatch, key: id, values_only }
+    pub Grid3dRulesDelta { removal: Grid3dRulesRemoval, insertion: Grid3dRulesInsertion, relocation: Grid3dRulesRelocation, modification: Grid3dRulesModification, row: Grid3dRule, patch: Grid3dRulePatch, list: Vec<Grid3dRule>, key: String = keyed, values_only }
 }
 
 impl Grid3dRow for Grid3dPinnedCell {
@@ -169,7 +169,7 @@ wfc_patch!(/// 📌️ Field patch over a pinned cell (its `x:y:z` key is the ro
 
 protocol::list_delta! {
     /// 📂 Row delta over the pinned.
-    pub Grid3dPinnedDelta { removal: Grid3dPinnedRemoval, insertion: Grid3dPinnedInsertion, relocation: Grid3dPinnedRelocation, modification: Grid3dPinnedModification, row: Grid3dPinnedCell, patch: Grid3dPinnedPatch, list: Vec<Grid3dPinnedCell>, key: String = |row| cell_key(row.x, row.y, row.z), values_only }
+    pub Grid3dPinnedDelta { removal: Grid3dPinnedRemoval, insertion: Grid3dPinnedInsertion, relocation: Grid3dPinnedRelocation, modification: Grid3dPinnedModification, row: Grid3dPinnedCell, patch: Grid3dPinnedPatch, list: Vec<Grid3dPinnedCell>, key: String = keyed, values_only }
 }
 
 impl Grid3dRow for Grid3dCell {
@@ -183,7 +183,7 @@ wfc_patch!(/// 🕳️ Field patch over a masked cell (a masked cell has no fiel
 
 protocol::list_delta! {
     /// 📂 Row delta over the masked.
-    pub Grid3dMaskedDelta { removal: Grid3dMaskedRemoval, insertion: Grid3dMaskedInsertion, relocation: Grid3dMaskedRelocation, modification: Grid3dMaskedModification, row: Grid3dCell, patch: Grid3dMaskedPatch, list: Vec<Grid3dCell>, key: String = |row| cell_key(row.x, row.y, row.z), values_only }
+    pub Grid3dMaskedDelta { removal: Grid3dMaskedRemoval, insertion: Grid3dMaskedInsertion, relocation: Grid3dMaskedRelocation, modification: Grid3dMaskedModification, row: Grid3dCell, patch: Grid3dMaskedPatch, list: Vec<Grid3dCell>, key: String = keyed, values_only }
 }
 
 //#endregion 🔖️RowTypes

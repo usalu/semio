@@ -1,9 +1,8 @@
 import { cleanup, fireEvent, render as renderReact, screen, waitFor } from "@testing-library/react";
-import { uiI18n, createShellI18nInstance, createShellScope, ShellScopeProvider, useHotkeys } from "@semio-tech/ui-react";
+import { uiI18n, UiI18nProvider, createShellI18nInstance, createShellScope, ShellScopeProvider, useHotkeys } from "@semio-tech/ui-react";
 import { createBrowserStoragePort, isShellLocale } from "@semio-tech/framework";
 import Ajv2020 from "ajv/dist/2020";
 import { useEffect, useState, type ReactNode } from "react";
-import { I18nextProvider } from "react-i18next";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import { UIFind, UIFindProvider, UISearch, useUIFind } from "../../🟦️.tsx";
@@ -12,7 +11,7 @@ import { buildOsCommands } from "../../../🛠️ShellHelpers/🎛️command-reg
 type FixtureItem = (typeof fixture.items)[number];
 
 const standaloneI18n = createShellI18nInstance("en");
-const render = (children: ReactNode) => renderReact(<I18nextProvider i18n={standaloneI18n}>{children}</I18nextProvider>);
+const render = (children: ReactNode) => renderReact(<UiI18nProvider instance={standaloneI18n}>{children}</UiI18nProvider>);
 
 afterEach(async () => {
   cleanup();

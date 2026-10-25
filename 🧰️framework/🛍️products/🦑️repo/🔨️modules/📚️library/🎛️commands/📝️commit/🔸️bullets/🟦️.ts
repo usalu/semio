@@ -23,7 +23,7 @@ export function bulletLeadEmoji(line: string): string {
   return m?.[1] ?? "";
 }
 
-/** 📝️Formats one bullet as `{emoji}{description}` (line starts with emoji, no leading `-`). */
+/** 🔸️Formats one bullet as `{emoji}{description}` (line starts with emoji, no leading `-`). */
 export function formatMicroCommitBulletLine(line: string): string {
   let body = line.trim().replace(/^-+\s*/, "");
   return body.replace(new RegExp(`^${EMOJI_LEAD_RE.source}\\s+`, "u"), "$1");

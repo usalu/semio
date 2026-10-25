@@ -15,12 +15,12 @@ pub struct Vertex {
 }
 
 impl Vertex {
-    /// 📍️ Vertex with an explicit bulge.
+    /// 🌙️ Vertex with an explicit bulge.
     pub fn new(point: Point, bulge: f64) -> Self {
         Self { point, bulge }
     }
 
-    /// 📍️ Vertex leaving along a straight segment.
+    /// 📌️ Vertex leaving along a straight segment.
     pub fn corner(x: f64, y: f64) -> Self {
         Self { point: Point::new(x, y), bulge: 0.0 }
     }
@@ -54,7 +54,7 @@ pub fn signed_area(vertices: &[Vertex]) -> f64 {
     segments(vertices).iter().map(|s| 0.5 * (s.start.x * s.end.y - s.end.x * s.start.y) + s.segment_area()).sum()
 }
 
-/// 📐️ Absolute area.
+/// ▭️ Absolute area.
 pub fn area(vertices: &[Vertex]) -> f64 {
     signed_area(vertices).abs()
 }
@@ -91,7 +91,7 @@ pub fn bounds(vertices: &[Vertex]) -> Option<Rect> {
     segments(vertices).iter().map(BulgeSeg::bounds).reduce(|a, b| Rect::new(a.x0().min(b.x0()), a.y0().min(b.y0()), a.x1().max(b.x1()), a.y1().max(b.y1())))
 }
 
-/// 🧭️ `true` for counter-clockwise loops (positive signed area).
+/// 🖊️ `true` for counter-clockwise loops (positive signed area).
 pub fn is_ccw(vertices: &[Vertex]) -> bool {
     signed_area(vertices) > 0.0
 }
@@ -102,7 +102,7 @@ pub fn reversed(vertices: &[Vertex]) -> Vec<Vertex> {
     (0..n).map(|i| Vertex { point: vertices[(n - i) % n].point, bulge: -vertices[(n - i - 1) % n].bulge }).collect()
 }
 
-/// 🧭️ The loop itself when counter-clockwise, otherwise its reverse.
+/// 🔃️ The loop itself when counter-clockwise, otherwise its reverse.
 pub fn ccw(vertices: &[Vertex]) -> Vec<Vertex> {
     if is_ccw(vertices) {
         vertices.to_vec()
@@ -136,7 +136,7 @@ fn chord_winding(points: &[Point], p: Point) -> i32 {
     winding
 }
 
-/// 🧭️ Winding number of the loop around `p` (exact for arcs); a point exactly on a chord is resolved as if nudged infinitesimally towards +y. Meaningful when `p` is not on the boundary.
+/// ➿️ Winding number of the loop around `p` (exact for arcs); a point exactly on a chord is resolved as if nudged infinitesimally towards +y. Meaningful when `p` is not on the boundary.
 pub fn winding(vertices: &[Vertex], p: Point) -> i32 {
     let points: Vec<Point> = vertices.iter().map(|v| v.point).collect();
     let mut total = chord_winding(&points, p);
@@ -154,7 +154,7 @@ pub fn winding(vertices: &[Vertex], p: Point) -> i32 {
     total
 }
 
-/// 🧭️ Containment with an explicit boundary tolerance.
+/// 🎯️ Containment with an explicit boundary tolerance.
 pub fn locate(vertices: &[Vertex], p: Point, eps: f64) -> Containment {
     if segments(vertices).iter().any(|s| s.closest(p).distance <= eps) {
         return Containment::Boundary;
@@ -166,12 +166,12 @@ pub fn locate(vertices: &[Vertex], p: Point, eps: f64) -> Containment {
     }
 }
 
-/// 🧭️ `true` when `p` is strictly inside (boundary within 1 nm counts as outside).
+/// 🔢️ `true` when `p` is strictly inside (boundary within 1 nm counts as outside).
 pub fn contains(vertices: &[Vertex], p: Point) -> bool {
     locate(vertices, p, LENGTH_EPS) == Containment::Inside
 }
 
-/// 🔷️ Polygon approximation (no repeated closing point) whose arcs deviate at most `tolerance` from the true curve.
+/// 📕️ Polygon approximation (no repeated closing point) whose arcs deviate at most `tolerance` from the true curve.
 pub fn flatten(vertices: &[Vertex], tolerance: f64) -> Vec<Point> {
     let mut out = Vec::new();
     for s in segments(vertices) {

@@ -26,7 +26,7 @@ export function canonicalWipLine1Base(line1Base: string, contributor: Contributo
   return `${contributor.emoji}${contributor.alias}🎆️${match[1]}🌙️${match[2]}☀️${match[3]}`;
 }
 
-/** 🔢️Reads micro-commit counter from subject line `…🚩️NNN`. */
+/** ⛏️Reads micro-commit counter from subject line `…🚩️NNN`. */
 export function extractCounterFromSubject(subject: string): { nnn: number; line1Base: string } | null {
   const s = subject.trim();
   const formatted = COUNTER_RE.exec(s);
@@ -66,7 +66,7 @@ export function contributorWipLine1Base(root: string, contributor: Contributor):
   return null;
 }
 
-/** 🎆️Bumps counter from recent `…🚩️NNN` or numeric GitKraken subjects (newest first). */
+/** 🕰️Bumps counter from recent `…🚩️NNN` or numeric GitKraken subjects (newest first). */
 export function bumpCounterFromHistory(subjectsNewestFirst: string[], contributor: Contributor, now = new Date(), wipLine1Base: string | null = null): { line1Base: string; nnn: string } {
   const yy = pad2(now.getFullYear() % 100);
   const mm = pad2(now.getMonth() + 1);

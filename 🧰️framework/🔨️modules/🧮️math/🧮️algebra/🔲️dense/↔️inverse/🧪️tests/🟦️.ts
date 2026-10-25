@@ -16,7 +16,6 @@ export function verifyRetainedInverseOracle():void{
  const forged=new DenseInverseCursor(2,4,4).snapshot();forged[7]=12n;assert.throws(()=>DenseInverseCursor.fromSnapshot(forged),/invalid-snapshot/);forged[7]=6n;assert.throws(()=>DenseInverseCursor.fromSnapshot(forged),/invalid-snapshot/);
  const law=corpus.large,n=law.order,matrix=Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?law.diagonal:Math.abs(i-j)===1?law.adjacent:0)),result=retained(n,matrix.flat(),false),independent=inv(matrix) as number[][];assert.equal(result.status.kind,"complete");turns+=result.turns;for(let i=0;i<n;i++){relative(result.inverse[i*n+i]!,law.samples.diagonal[i]!);relative(result.inverse[i]!,law.samples.first[i]!);relative(result.inverse[(n-1)*n+i]!,law.samples.last[i]!);for(let j=0;j<n;j++)relative(result.inverse[i*n+j]!,independent[i]![j]!);}
  for(let i=0;i<n;i++)for(let j=0;j<n;j++){let residual=-(i===j?1:0);for(let k=0;k<n;k++)residual+=matrix[i]![k]!*result.inverse[k*n+j]!;assert(Math.abs(residual)<=law.residualTolerance);}
- console.log("[DEBUG] shared retained inverse "+corpus.cases.length+" portable cases and49x49 full Mathjs inverse/identity residuals matched across "+turns+" scalar turns");
 }
 
 test("verifyRetainedInverseOracle",()=>verifyRetainedInverseOracle(),30000);

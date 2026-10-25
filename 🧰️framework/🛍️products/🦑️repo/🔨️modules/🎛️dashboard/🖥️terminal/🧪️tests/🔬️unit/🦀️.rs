@@ -1,6 +1,4 @@
-use super::controls::{Action, Flow};
-use super::sessions::Link;
-use super::windows::{Body, Dashboard, Effect, LinkState};
+use dashboard_terminal::testing::{Action, Body, Dashboard, Effect, Flow, Link, LinkState};
 use dashboard_launch::TaskLabel;
 use dashboard_preferences::{Change, Preferences};
 use dashboard_registry::{Facts, Registry};
@@ -15,7 +13,7 @@ use semio_framework_ui_tui_core::event::{mods, Event, Key, KeyEvent, MouseButton
 use semio_framework_ui_tui_core::geometry::{Pos, Size};
 use semio_framework_ui_tui_core::theme::{Status, Theme};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
 
 fn registry() -> Arc<Registry> {
     let facts: Facts = serde_json::from_value(fixture()["workspace"].clone()).unwrap();
@@ -98,6 +96,9 @@ fn spawned(dashboard: &Dashboard) -> Vec<(String, SessionCommand)> {
     }).collect()
 }
 
+#[path = "📂️sources/🦀️.rs"]
+mod sources;
+
 include!("🔗️open-ready/🦀️.rs");
 
 include!("🧲️docking/🦀️.rs");
@@ -137,14 +138,14 @@ impl semio_framework_ui_tui_terminal::backend::TerminalBackend for FeedbackBacke
 
 #[test]
 fn terminal_backend_failures_preserve_primary_and_cleanup_from_portable_cases(){
-    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../📣️feedback/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../📣️feedback/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["terminalCases"].as_array().unwrap(){
         let failure=match row["fail"].as_str(){Some("enter")=>Some("enter"),Some("present")=>Some("present"),Some("wait")=>Some("wait"),_=>None};
         let mut backend=FeedbackBackend::new(failure,row["leaveFails"].as_bool().unwrap());
         let (mut dashboard,mut tui)=view();
         dashboard.link.online_for_test=true;
         dashboard.link.fail_sends=row["detachFails"].as_bool().unwrap();
-        let outcome=dashboard_feedback::terminal_session(&mut backend,|backend|super::run_view(backend,&mut dashboard,&mut tui));
+        let outcome=dashboard_feedback::terminal_session(&mut backend,|backend|dashboard_terminal::testing::run_view(backend,&mut dashboard,&mut tui));
         assert_eq!(backend.entered,1);
         assert_eq!(backend.left,1);
         assert_eq!(outcome.is_err(),row["expected"]["exit"]==1);
@@ -156,7 +157,7 @@ fn terminal_backend_failures_preserve_primary_and_cleanup_from_portable_cases(){
     }
     let (mut dashboard,mut tui)=view();dashboard.link.fail_sends=true;
     let mut backend=FeedbackBackend::new(None,false);
-    assert!(dashboard_feedback::terminal_session(&mut backend,|backend|super::run_view(backend,&mut dashboard,&mut tui)).is_ok());
+    assert!(dashboard_feedback::terminal_session(&mut backend,|backend|dashboard_terminal::testing::run_view(backend,&mut dashboard,&mut tui)).is_ok());
     assert!(!dashboard.link.outbox.iter().any(|message|matches!(message,ClientMsg::Detach{})));
 }
 
@@ -176,21 +177,21 @@ fn clipboard_failure_is_recoverable_and_diagnostics_remain_inspectable_and_copya
     let (mut dashboard,mut tui)=view();
     dashboard.effects.push(Effect::Copy("fixture".into()));
     let mut backend=FeedbackBackend::new(None,false);backend.copy_fails=true;
-    assert!(dashboard_feedback::terminal_session(&mut backend,|backend|super::run_view(backend,&mut dashboard,&mut tui)).is_ok());
+    assert!(dashboard_feedback::terminal_session(&mut backend,|backend|dashboard_terminal::testing::run_view(backend,&mut dashboard,&mut tui)).is_ok());
     assert_eq!(backend.left,1);assert_eq!(dashboard.diagnostics.len(),1);
     assert_eq!(dashboard.diagnostics.get(0).unwrap().operation,dashboard_feedback::Operation::Copy);
     press(&mut dashboard,&mut tui,&[ctrl('b'),key('!')]);
     let index=dashboard.focused_index(&tui);
     assert!(matches!(dashboard.windows[index].body,Body::Diagnostics));
     dashboard.refresh_pane(&mut tui,index);
-    dashboard.windows[index].pane.selected=dashboard.windows[index].pane.rows.iter().position(|(_,action)|matches!(action,super::panes::RowAction::Diagnostic(0))).unwrap();
+    dashboard.windows[index].pane.selected=dashboard.windows[index].pane.rows.iter().position(|(_,action)|matches!(action,dashboard_terminal::testing::RowAction::Diagnostic(0))).unwrap();
     dashboard.activate_row(&mut tui,index);
     assert!(dashboard.effects.iter().any(|effect|matches!(effect,Effect::Copy(text) if text.contains("fixture clipboard"))));
 }
 
 #[test]
 fn local_control_failures_are_typed_translated_and_retained_under_a_bounded_history(){
-    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../📣️feedback/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../📣️feedback/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for locale in fixture["locales"].as_array().unwrap(){
         let (mut dashboard,mut tui)=small_view(locale["language"].as_str().unwrap());
         let info=session("failed-control",label("run","fixture",""),SessionStatus::Running,None);
@@ -212,7 +213,7 @@ fn local_control_failures_are_typed_translated_and_retained_under_a_bounded_hist
 
 #[test]
 fn settings_keymap_drafts_match_portable_save_cancel_and_refusal_cases(){
-    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../⚙️settings/⌨️keymap/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../⚙️settings/⌨️keymap/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let original=Preferences{language:Some("en".into()),..Default::default()};
         let mut editor=dashboard_keymap_editor::Editor::new(&original);
@@ -229,7 +230,7 @@ fn settings_prefix_is_editable_by_real_keys_and_cancel_never_queues_an_event(){
     let (mut dashboard,mut tui)=view();
     press(&mut dashboard,&mut tui,&[ctrl('b'),key('p')]);
     let index=dashboard.focused_index(&tui);
-    dashboard.windows[index].pane.selected=dashboard.windows[index].pane.rows.iter().position(|(_,action)|*action==super::panes::RowAction::EditPrefix).unwrap();
+    dashboard.windows[index].pane.selected=dashboard.windows[index].pane.rows.iter().position(|(_,action)|*action==dashboard_terminal::testing::RowAction::EditPrefix).unwrap();
     dashboard.activate_row(&mut tui,index);
     press(&mut dashboard,&mut tui,&[ctrl('u')]);
     press(&mut dashboard,&mut tui,&type_text("ctrl+e"));
@@ -253,10 +254,10 @@ fn keymap_alias_reset_and_durable_save_results_preserve_other_preferences(){
     let (mut dashboard,mut tui)=dashboard_with(original);
     let (send,receiver)=std::sync::mpsc::channel();
     let cancel=Arc::new(std::sync::atomic::AtomicBool::new(false));
-    dashboard.saving_preferences=Some(super::panes::PreferenceJob{receiver,cancel:cancel.clone()});
-    dashboard.set_body(&mut tui,0,super::windows::Kind::Settings,None);
+    dashboard.saving_preferences=Some(dashboard_terminal::testing::PreferenceJob{receiver,cancel:cancel.clone()});
+    dashboard.set_body(&mut tui,0,dashboard_terminal::testing::Kind::Settings,None);
     dashboard.refresh_pane(&mut tui,0);
-    dashboard.windows[0].pane.selected=dashboard.windows[0].pane.rows.iter().position(|(_,action)|*action==super::panes::RowAction::CancelPreference).unwrap();
+    dashboard.windows[0].pane.selected=dashboard.windows[0].pane.rows.iter().position(|(_,action)|*action==dashboard_terminal::testing::RowAction::CancelPreference).unwrap();
     dashboard.activate_row(&mut tui,0);
     assert!(cancel.load(std::sync::atomic::Ordering::Acquire));
     send.send((change.clone(),Ok(1))).unwrap();
@@ -266,7 +267,7 @@ fn keymap_alias_reset_and_durable_save_results_preserve_other_preferences(){
     assert_eq!(dashboard.preferences.appearance,"light");
     let (send,receiver)=std::sync::mpsc::channel();
     let cancel=Arc::new(std::sync::atomic::AtomicBool::new(false));
-    dashboard.saving_preferences=Some(super::panes::PreferenceJob{receiver,cancel});
+    dashboard.saving_preferences=Some(dashboard_terminal::testing::PreferenceJob{receiver,cancel});
     send.send((Change{prefix:Some("ctrl+a".into()),..Default::default()},Err(std::io::Error::from(std::io::ErrorKind::Interrupted)))).unwrap();
     dashboard.poll_background(&mut tui);
     assert_eq!(dashboard.keymap.prefix().to_string(),"ctrl+e");

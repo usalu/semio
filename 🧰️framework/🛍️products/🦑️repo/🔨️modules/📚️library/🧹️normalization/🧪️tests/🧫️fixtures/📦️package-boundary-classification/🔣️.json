@@ -1090,7 +1090,7 @@
       "maxDelegationStatements": 8,
       "content": "package adapter\n\ntype Ticket struct { ID string }\n",
       "expectedRole": "implementation",
-      "expectedEvidence": "Go runtime declaration remains",
+      "expectedEvidence": "Go method, type or runtime declaration remains",
       "oracle": "go-parser"
     },
     {
@@ -1155,6 +1155,114 @@
       "expectedRole": "declaration",
       "expectedEvidence": "C or C++ declarations only",
       "oracle": "c-compiler"
+    },
+    {
+      "id": "javascript-commonjs-module-exports-reexport",
+      "analyzer": "javascript",
+      "maxDelegationStatements": 32,
+      "content": "module.exports = require(\"./🟨️.cjs\");\n",
+      "expectedRole": "thin-delegation",
+      "expectedEvidence": "top-level delegation to imported owners",
+      "oracle": "typescript-compiler"
+    },
+    {
+      "id": "javascript-commonjs-object-assign-reexport",
+      "analyzer": "javascript",
+      "maxDelegationStatements": 32,
+      "content": "Object.assign(module.exports, require(\"../../🕸️graph/🟨️.cjs\"));\n",
+      "expectedRole": "thin-delegation",
+      "expectedEvidence": "top-level delegation to imported owners",
+      "oracle": "typescript-compiler"
+    },
+    {
+      "id": "javascript-commonjs-computed-export-is-implementation",
+      "analyzer": "javascript",
+      "maxDelegationStatements": 32,
+      "content": "const owner = require(\"./🟨️.cjs\");\nmodule.exports = owner;\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "runtime declaration or computation remains",
+      "oracle": "typescript-compiler"
+    },
+    {
+      "id": "css-trivia-only-stylesheet",
+      "analyzer": "css",
+      "maxDelegationStatements": 64,
+      "content": "/* only a comment */\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "trivia-only stylesheet",
+      "oracle": "postcss-parser"
+    },
+    {
+      "id": "css-import-facade",
+      "analyzer": "css",
+      "maxDelegationStatements": 64,
+      "content": "@import \"./🎨️styles/🎨️.css\";\n@import url(\"../../🎨️.css\") layer(base);\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "stylesheet import and source wiring only",
+      "oracle": "postcss-parser"
+    },
+    {
+      "id": "css-import-and-source-registration",
+      "analyzer": "css",
+      "maxDelegationStatements": 64,
+      "content": "@import \"./🎨️.css\";\n\n@source \".\";\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "stylesheet import and source wiring only",
+      "oracle": "postcss-parser"
+    },
+    {
+      "id": "css-authored-rule-is-implementation",
+      "analyzer": "css",
+      "maxDelegationStatements": 64,
+      "content": "@import \"./🎨️.css\";\n.card { color: red; }\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "authored stylesheet rule",
+      "oracle": "postcss-parser"
+    },
+    {
+      "id": "css-theme-block-is-implementation",
+      "analyzer": "css",
+      "maxDelegationStatements": 64,
+      "content": "@theme { --color-brand: red; }\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "authored stylesheet rule",
+      "oracle": "postcss-parser"
+    },
+    {
+      "id": "css-top-level-declaration-is-implementation",
+      "analyzer": "css",
+      "maxDelegationStatements": 64,
+      "content": "color: red;\n",
+      "expectedRole": "implementation",
+      "expectedEvidence": "authored stylesheet declaration",
+      "oracle": "postcss-parser"
+    },
+    {
+      "id": "css-unsupported-at-rule-is-unresolved",
+      "analyzer": "css",
+      "maxDelegationStatements": 64,
+      "content": "@charset \"utf-8\";\n",
+      "expectedRole": "unresolved",
+      "expectedEvidence": "unsupported stylesheet package form",
+      "oracle": "postcss-parser"
+    },
+    {
+      "id": "css-commented-rule-is-trivia",
+      "analyzer": "css",
+      "maxDelegationStatements": 64,
+      "content": "/* .card { color: red; } */\n@import \"./🎨️.css\";\n",
+      "expectedRole": "declaration",
+      "expectedEvidence": "stylesheet import and source wiring only",
+      "oracle": "postcss-parser"
+    },
+    {
+      "id": "css-unterminated-comment-is-unresolved",
+      "analyzer": "css",
+      "maxDelegationStatements": 64,
+      "content": "/* open\n@import \"./🎨️.css\";\n",
+      "expectedRole": "unresolved",
+      "expectedEvidence": "unbalanced lexical structure",
+      "oracle": "postcss-parser"
     }
   ],
   "fixedScriptCases": [

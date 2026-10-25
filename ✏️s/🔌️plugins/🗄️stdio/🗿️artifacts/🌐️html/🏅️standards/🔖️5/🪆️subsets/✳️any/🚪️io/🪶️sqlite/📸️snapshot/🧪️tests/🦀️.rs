@@ -92,7 +92,7 @@ fn sqlite_snapshot_html_independent_queries_edits_and_html_parser_oracle() {
 fn sqlite_snapshot_html_erased_native_preflight_admission_and_limits() {
     let snapshot = fixture();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.html".into(), standard: "5".into(), subset: "*".into() };
-    let codec = <HtmlSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let codec = <HtmlSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
         let actual = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)("html preflight", &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;

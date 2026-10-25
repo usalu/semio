@@ -69,6 +69,7 @@ mod gateway_backend_impl;
 
 #[path = "🪪️arc-delegate/🦀️.rs"]
 mod arc_delegate;
+pub use arc_delegate::SharedWorkspace;
 
 // 🔀️ dedyn-fw-os-misc, O1/R11: closes `GatewayBackend`'s 3-implementor set (both impls above, plus
 // `NullBackend` — `🧭️protocol`'s own placeholder backend). Replaces `Box<dyn GatewayBackend>`.
@@ -76,6 +77,6 @@ dyn_enum_close! {
     pub enum GatewayBackends: GatewayBackend {
         Null(NullBackend),
         Workspace(HeadlessWorkspace),
-        WorkspaceArc(Arc<HeadlessWorkspace>),
+        WorkspaceArc(SharedWorkspace),
     }
 }

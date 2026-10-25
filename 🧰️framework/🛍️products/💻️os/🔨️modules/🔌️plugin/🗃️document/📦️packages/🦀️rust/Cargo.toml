@@ -46,7 +46,6 @@ semio-framework-value-native-owned = { path = "../../../../../../../🔨️modul
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-trace = { workspace = true }
-serde_json = "1.0.140"
 semio_framework_ui_contract = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 
 [dev-dependencies]

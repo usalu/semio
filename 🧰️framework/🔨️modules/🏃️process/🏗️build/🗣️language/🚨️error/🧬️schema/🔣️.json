@@ -7,7 +7,7 @@
   "required": ["version", "code", "key", "values"],
   "properties": {
     "version": { "const": 1 },
-    "code": { "enum": ["usage", "invalid", "missing", "refused", "failed", "breach", "stale", "unsupported"] },
+    "code": { "enum": ["usage", "invalid", "missing", "refused", "failed", "breach", "stale", "unsupported", "cancelled"] },
     "key": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*\\.[A-Za-z][A-Za-z0-9]*(?:[.-][A-Za-z0-9]+)*$" },
     "values": {
       "type": "object",

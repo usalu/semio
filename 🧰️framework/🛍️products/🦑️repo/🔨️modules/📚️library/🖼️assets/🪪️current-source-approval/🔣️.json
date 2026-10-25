@@ -4,7 +4,7 @@
   "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
   "policy": {
     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🏠️owner-projection-policy/🔣️.json",
-    "sha256": "82d188a512e0051d2a9435715cd62d851911081b07294f81f64c287fe88e8333"
+    "sha256": "3d6c1020182558c76367098fe9ec02c91fd90c675e06a29ab5ecb217d6600271"
   },
   "baseline": {
     "commit": "9f449b10659b95148c8bcb3f91ce583bf7446973",
@@ -16,8 +16,8 @@
     }
   },
   "currentPreimage": {
-    "sha256": "7e449d5e5d9e867f2f78cfecbf9d2dc45f80c90622a1fb6e388197d100069ca5",
-    "size": 15997,
+    "sha256": "557c74080164289626760edb0fba4c6a86f3ac506122d6d48cb4045eb65243f6",
+    "size": 15733,
     "mode": "0644"
   }
 }

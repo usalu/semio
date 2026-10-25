@@ -11,8 +11,8 @@ use semio_framework_plugin::MediaPayload;
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::NoConfigMutation;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use store::pack::snapshot::ArtifactPack;
-use store::pack::snapshot::ArtifactDsl;
+use store::snapshot::ArtifactPack;
+use store::snapshot::ArtifactDsl;
 use crate::editor::rewriting::modes::edit;
 #[allow(unused_imports)]
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::JackWorkingScene;
@@ -518,7 +518,7 @@ async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_his
 /// 🧸️ The live `workingGraph` member — the working graph's single truth (design §20.15), never the parent's genesis owner.
 async fn live_working(app: &RewritingTestApp) -> semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot {
     use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
-    use store::{pack::snapshot::ArtifactPack, SpaceMember};
+    use store::{snapshot::ArtifactPack, SpaceMember};
     let snapshot = app.snapshot().expect("rewriting parent projection");
     let bytes = app.child_store(crate::standards::v1::subsets::any::content::WORKING_CHILD_SLOT, &snapshot.working_graph.content.child_id).await.expect("working child").document_pack_bytes().await.expect("working child pack");
     SemioGraphSnapshot::decode_pack(&bytes).expect("working child snapshot")

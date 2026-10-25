@@ -9,7 +9,7 @@ import {withRepositoryCacheStoreV1} from "../../../../⚡️caching/💾️stora
 import budgetPolicy from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import ledgerPolicy from "../../../../⚡️caching/💾️storage/🧾️ledger/🔣️policy.json" with {type:"json"};
 import type {BackendContextV1,BackendExecutionContextV1,BuildBackendV1} from "../../../🔌️backends/🟦️.ts";
-import type {BuildCacheContextV1,BuildCacheToolV1} from "../../../⚙️operations/🟦️.ts";
+import type { BuildCacheContextV1, BuildCacheToolV1 } from "../../../⚙️operations/📋️contract/🟦️.ts";
 import type {RemoteCacheToolV1} from "../../../🌐️remote-cache/⌨️command/🟦️.ts";
 import {readRemoteCacheTokenV1,remoteCacheBaseUrlV1,remoteCacheEffectiveUploadV1,resolveRemoteCacheContractV1} from "../../../🌐️remote-cache/🟦️.ts";
 import {buildOptionV1,affectedBuildProjectsV1,selectBuildTasksV1} from "../../../🧭️selection/🟦️.ts";
@@ -20,6 +20,8 @@ import {semioHttpRemoteV1,type SemioRemoteV1} from "../🌐️remote/🟦️.ts"
 import {semioLocalExecutorV1,semioRuntimeOutputV1,type SemioEnvironmentScopeV1} from "../🚀️exec/🟦️.ts";
 import {runSemioTasksV1,semioInventoryV1} from "../🏁️scheduler/🟦️.ts";
 import {SEMIO_POLICY_V1 as policy} from "../🟦️.ts";
+import{formatStampProtocolV1}from"../../../🧷️format-stamps/🟨️.mjs";
+import{staleImplementationV1}from"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 
 const both=(en:string,de:string)=>`${en}\n${de}`,CARGO_DIRECTORIES=["CARGO_TARGET_DIR","CARGO_BUILD_TARGET_DIR","CARGO_BUILD_BUILD_DIR"],hash=(value:string)=>createHash("sha256").update(value).digest("hex");
 
@@ -110,6 +112,8 @@ async function run(context:BackendExecutionContextV1,request:BuildTaskRequestV1,
    await advanceScriptInvocation(invocation,`build:semio:${event.kind}`,"running");
    if(event.kind==="end")console.log(`[semio] ${event.status} ${event.task} (${event.done}/${event.total})`);
   },...(startWatch?{onSettled:startWatch}:{})});
+  const yielded=record.exitCode===0?undefined:record.tasks.find(task=>task.status==="failed"&&task.exitCode===formatStampProtocolV1().exitCode);
+  if(yielded)throw staleImplementationV1(both(`Task ${yielded.id} yielded: its process needs a fresh start (exit ${yielded.exitCode})`,`Aufgabe ${yielded.id} gab ab: ihr Prozess braucht einen frischen Start (Exit ${yielded.exitCode})`));
   if(record.exitCode!==0)throw Error(both(`Build invocation failed (${record.exitCode}): ${record.tasks.filter(task=>task.status==="failed").map(task=>task.id).join(", ")||"cancelled"}`,`Build-Aufruf fehlgeschlagen (${record.exitCode}): ${record.tasks.filter(task=>task.status==="failed").map(task=>task.id).join(", ")||"abgebrochen"}`));
  };
  if(watch===undefined){await openStore(context,async store=>execute(store,new AbortController()));return;}

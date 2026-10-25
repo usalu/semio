@@ -74,7 +74,7 @@ impl SchemaCatalog {
 //#endregion 🔖️SchemaCatalog
 
 //#region 🔖️GraphQlStatePreamble
-/// 🔗 Shared GraphQL `@state`/`@derived` SDL preamble — declared once, never repeated per artifact.
+/// 🕸️ Shared GraphQL `@state`/`@derived` SDL preamble — declared once, never repeated per artifact.
 /// `@state` names one of the four state lanes; `@derived` is the ORTHOGONAL derivation marker, never
 /// a fifth lane — a derived field is computed from a snapshot, so it is not state at all.
 /// `Long` is the 64-bit integer lane: GraphQL's built-in `Int` is 32-bit by specification, so a Rust
@@ -124,7 +124,7 @@ directive @link(roles: [String!]) on FIELD_DEFINITION\
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct SchemaVersion(pub ContentHash);
 
-/// 🧬️ Computes a whitespace-independent version from an owned-parser canonical JSON leaf.
+/// 🌿️ Computes a whitespace-independent version from an owned-parser canonical JSON leaf.
 pub fn schema_version(body: &str) -> Result<SchemaVersion, JsonError> {
     let canonical = if body.trim().is_empty() { String::new() } else { json_to_string(&canonical_schema_value(parse_json(body, semio_framework_pack_json::JsonMemberPolicy::Reject)?)) };
     Ok(SchemaVersion(content_hash(canonical.as_bytes())))
@@ -143,22 +143,22 @@ fn canonical_schema_value(value: Value) -> Value {
 }
 
 
-/// 🧬️ Computes the canonical artifact schema version.
+/// 📦️ Computes the canonical artifact schema version.
 pub fn artifact_schema_version(descriptor: &ArtifactSchemaDescriptor) -> Result<SchemaVersion, JsonError> { schema_version(descriptor.artifact.json_schema) }
 
-/// 🧬️ Computes the canonical snapshot schema version.
+/// 📸️ Computes the canonical snapshot schema version.
 pub fn snapshot_schema_version(descriptor: &ArtifactSchemaDescriptor) -> Result<SchemaVersion, JsonError> { schema_version(descriptor.snapshot.json_schema) }
 
-/// 🧬️ Computes the canonical diff schema version.
+/// 🆚️ Computes the canonical diff schema version.
 pub fn diff_schema_version(descriptor: &ArtifactSchemaDescriptor) -> Result<SchemaVersion, JsonError> { schema_version(descriptor.diff.json_schema) }
 
-/// 🧬️ Computes the canonical mutations schema version.
+/// 🔢️ Computes the canonical mutations schema version.
 pub fn mutations_schema_version(descriptor: &ArtifactSchemaDescriptor) -> Result<SchemaVersion, JsonError> { schema_version(descriptor.mutations.json_schema) }
 
-/// 🧬️ Computes the canonical config schema version.
+/// 🎛️ Computes the canonical config schema version.
 pub fn config_schema_version(descriptor: &AppSchemaDescriptor) -> Result<SchemaVersion, JsonError> { schema_version(descriptor.config.json_schema) }
 
-/// 🧬️ Computes the canonical presence schema version.
+/// 👥️ Computes the canonical presence schema version.
 pub fn presence_schema_version(descriptor: &AppSchemaDescriptor) -> Result<SchemaVersion, JsonError> { schema_version(descriptor.presence.json_schema) }
 
 fn parse_normative_json_leaf(descriptor_id: &str, facet: &str, body: &str) -> Value {
@@ -298,7 +298,7 @@ pub fn structural_validator_in(registry: &SchemaExportRegistry, scope: &str, exp
     crate::OwnedJsonSchemaValidator::compile_with_documents(body, &bodies).map_err(SchemaBoundaryError::Schema)
 }
 
-/// ✅ Compiles the OS-wide structural validator for one export — the application boundary entry
+/// 🏗️ Compiles the OS-wide structural validator for one export — the application boundary entry
 /// point for validating serialized input before domain rules.
 pub fn structural_validator_for(scope: &str, export: &str) -> Result<crate::OwnedJsonSchemaValidator, SchemaBoundaryError> {
     with_schema_export_registry(|registry| structural_validator_in(registry, scope, export))
@@ -320,7 +320,7 @@ const FRAMEWORK_SCHEMA_LEAVES: FacetLeaves = FacetLeaves {
 /// export — the source every projection in `🤖️generated/🏷️entity-kinds/🦀️.rs`, `🤖️generated/🏷️entity-kinds/🟦️.ts` is emitted from by the `schema-entity-catalog` generator.
 pub const ENTITY_KIND_CATALOG_JSON: &str = include_str!("../🏷️entity-kinds/🔣️.json");
 
-/// 🏷️ The named exports of `framework.schema`, one per `$defs` key of the module's `🔣️.json`.
+/// ⌨️ The named exports of `framework.schema`, one per `$defs` key of the module's `🔣️.json`.
 pub const FRAMEWORK_SCHEMA_EXPORTS: [SchemaExport; 10] = [
     SchemaExport { id: "SchemaFormat", leaves: FRAMEWORK_SCHEMA_LEAVES },
     SchemaExport { id: "FacetLeaves", leaves: FRAMEWORK_SCHEMA_LEAVES },
@@ -334,7 +334,7 @@ pub const FRAMEWORK_SCHEMA_EXPORTS: [SchemaExport; 10] = [
     SchemaExport { id: "EntityKindCatalog", leaves: FRAMEWORK_SCHEMA_LEAVES },
 ];
 
-/// 📥 Registers this module's own scope into the OS-wide catalog, the way every other scope owner
+/// 🧰️ Registers this module's own scope into the OS-wide catalog, the way every other scope owner
 /// registers its exports beside [`register_artifact_schema_descriptor`].
 pub fn register_framework_schema_exports() -> Result<(), SchemaExportRegistryError> {
     register_scope_schema_exports(ScopeSchemaExports { scope: FRAMEWORK_SCHEMA_SCOPE, exports: &FRAMEWORK_SCHEMA_EXPORTS })

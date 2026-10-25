@@ -1,5 +1,5 @@
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import protobuf from "protobufjs";
 import descriptor from "protobufjs/ext/descriptor";
 import {mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";

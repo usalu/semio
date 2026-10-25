@@ -62,7 +62,7 @@ pub fn parse_state_class_kebab(value: &str) -> Option<StateClass> {
     }
 }
 
-/// 🏷️ Canonical kebab spelling of a [`StateClass`] for JSON Schema `x-semio-state`.
+/// 🧬️ Canonical kebab spelling of a [`StateClass`] for JSON Schema `x-semio-state`.
 pub async fn state_class_kebab(class: StateClass) -> &'static str {
     match class {
         StateClass::Artifact => "artifact",

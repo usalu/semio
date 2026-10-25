@@ -8,14 +8,14 @@
 
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🎞️Recorder
 /** 🎞️ What a scripted tracker answers. */
 type Script = { createdIssueUrl?: string; issueState?: string; milestone?: number | null; milestoneTitle?: string; failures?: string[] };
 
-/** 🎞️ The vector file of this case. */
+/** 🧪️ The vector file of this case. */
 type Vectors = { goal: string; issueUrl: string; title: string; prompt: string; summary: string; labels: string[]; scripts: Record<string, Script> };
 
 const VECTORS = "shared://🐙️issue-sync-transcripts/🐙️transcripts.json";
@@ -24,7 +24,7 @@ function vectors(ctx: AdapterContext): Vectors {
   return JSON.parse(readFileSync(ctx.input(VECTORS), "utf8")) as Vectors;
 }
 
-/** 🎞️ A second recorder of the same scripts, written from the port's contract. */
+/** 📜️ A second recorder of the same scripts, written from the port's contract. */
 class Recorder {
   readonly calls: string[] = [];
 

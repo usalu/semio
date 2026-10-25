@@ -17,6 +17,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-os-flow = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

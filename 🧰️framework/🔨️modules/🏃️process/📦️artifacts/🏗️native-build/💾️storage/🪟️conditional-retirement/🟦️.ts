@@ -4,14 +4,14 @@ import{win32}from"node:path";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{openConditionalWindowsSystemPortV1,type ConditionalWindowsPinV1,type ConditionalWindowsIdentityV1}from"./🔌️port/🟦️.ts";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 const policy=schema.$defs.Policy.const;
 /** 🧮️ Distinguishes accepted kernel effects from observed namespace settlement. */
 export function conditionalWindowsOutcomeV1(accepted:number,removed:number,refused:boolean):"complete"|"pending"|"refused"|"partial"{if(!Number.isSafeInteger(accepted)||!Number.isSafeInteger(removed)||accepted<0||removed<0||removed>accepted)throw Error("Exact conditional retirement counters required");return refused?accepted===0?"refused":"partial":removed===accepted?"complete":"pending";}
 /** 🧾️ Records only conditional kernel acceptance and observed names, never a census or reclaimed-byte estimate. */
 export type ConditionalWindowsReceiptV1=Readonly<{kind:"windows-kernel-conditional";acceptedEntries:number;removedEntries:number;acceptedLogicalBytes:number;removedLogicalBytes:number;handlesSettled:boolean;outcome:"complete"|"pending"|"refused"|"partial"}>;
 /** 🚧️ Carries every accepted effect through refusal and cancellation. */
-export class ConditionalWindowsRetirementFailureV1 extends Error{constructor(readonly receipt:ConditionalWindowsReceiptV1,cause:unknown){super("Windows conditional retirement "+receipt.outcome,{cause});}}
+export class ConditionalWindowsRetirementFailureV1 extends Error{readonly receipt:ConditionalWindowsReceiptV1;constructor(receipt:ConditionalWindowsReceiptV1,cause:unknown){super("Windows conditional retirement "+receipt.outcome,{cause});this.receipt=receipt;}}
 /** 📂️ Keeps namespace observations behind the same firstparty system boundary as the kernel calls. */
 export type ConditionalWindowsTreeIOV1=Readonly<{forEachChild(path:string,consume:(name:string)=>Promise<void>):Promise<void>;exists(path:string):Promise<boolean>}>;
 const systemIO:ConditionalWindowsTreeIOV1={forEachChild:async(path,consume)=>{const directory=await opendir(path,{bufferSize:32});let primary:unknown,failed=false;try{for(let entry=await directory.read();entry;entry=await directory.read())await consume(entry.name);}catch(error){failed=true;primary=error;}try{await directory.close();}catch(error){if(failed)throw new AggregateError([primary,error],"Conditional directory iteration and close failed",{cause:primary});throw error;}if(failed)throw primary;},exists:async path=>{try{await lstat(path);return true;}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return false;throw error;}}};

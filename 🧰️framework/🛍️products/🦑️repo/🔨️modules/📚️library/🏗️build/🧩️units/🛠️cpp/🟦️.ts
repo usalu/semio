@@ -15,7 +15,7 @@ export type CppWorkspaceSnapshotV1 = {readonly files: readonly string[]; readonl
 const HEADER = /\.(h|hh|hpp|hxx|h\+\+|inl|ipp|tpp)$/i, SOURCE = /\.(c|cc|cpp|cxx|c\+\+|m|mm)$/i;
 const normalize = (path: string): string => {const out: string[] = []; for (const part of path.split("\\").join("/").split("/")) {if (part === "" || part === ".") continue; if (part === "..") out.pop(); else out.push(part);} return out.join("/");};
 
-/** 🛠️ Strips comments and canonicalizes the token layout: outside string and character literals every line becomes its tokens joined by single spaces (so `f( int x )` equals `f(int x)`), blank lines vanish, and the one place where whitespace changes meaning is kept: `#define NAME(` with the parenthesis glued to the name is a function-like macro. The result is the form a header's interface digest hashes: a comment or formatting edit leaves it unchanged. Raw strings are kept verbatim. */
+/** 🧹️ Strips comments and canonicalizes the token layout: outside string and character literals every line becomes its tokens joined by single spaces (so `f( int x )` equals `f(int x)`), blank lines vanish, and the one place where whitespace changes meaning is kept: `#define NAME(` with the parenthesis glued to the name is a function-like macro. The result is the form a header's interface digest hashes: a comment or formatting edit leaves it unchanged. Raw strings are kept verbatim. */
 export function normalizeCppV1(text: string): string {
   const lines: string[] = [];
   let line: string[] = [], index = 0;
@@ -50,10 +50,10 @@ export function normalizeCppV1(text: string): string {
   flush();
   return lines.join("\n");
 }
-/** 🛠️ The interface digest of a header set: SHA-256 over sorted rows of path and normalized text. */
+/** 🔢️ The interface digest of a header set: SHA-256 over sorted rows of path and normalized text. */
 export const cppHeadersDigestV1 = (headers: Readonly<Record<string, string>>): string => sha256V1(sortedCodePointsV1(Object.keys(headers)).map(path => `${path}\0${sha256V1(normalizeCppV1(headers[path]!))}`).join("\n"));
 
-/** 🛠️ The `#include` directives of a source or header (comments ignored; conditional compilation is not evaluated, so the result is a superset of what a preprocessor reads). */
+/** 📝️ The `#include` directives of a source or header (comments ignored; conditional compilation is not evaluated, so the result is a superset of what a preprocessor reads). */
 export function scanCppIncludesV1(text: string): readonly {readonly path: string; readonly system: boolean}[] {
   const found: {path: string; system: boolean}[] = [];
   let clean = "", index = 0;
@@ -68,7 +68,7 @@ export function scanCppIncludesV1(text: string): readonly {readonly path: string
   for (const line of clean.split("\n")) {const match = /^\s*#\s*(?:include|import)\s*([<"])([^>"]+)[>"]/.exec(line); if (match) found.push({path: match[2]!, system: match[1] === "<"});}
   return found;
 }
-/** 🛠️ The workspace files a source includes, transitively: quoted includes against the including file's directory then the include directories, angle includes against the include directories only; files outside the workspace are not followed. */
+/** 🔎️ The workspace files a source includes, transitively: quoted includes against the including file's directory then the include directories, angle includes against the include directories only; files outside the workspace are not followed. */
 export function resolveCppIncludesV1(source: string, snapshot: CppWorkspaceSnapshotV1, includeDirectories: readonly string[]): readonly string[] {
   const files = new Set(snapshot.files), seen = new Set<string>(), queue = [source];
   while (queue.length) {
@@ -83,7 +83,7 @@ export function resolveCppIncludesV1(source: string, snapshot: CppWorkspaceSnaps
   return sortedCodePointsV1(seen);
 }
 
-/** 🛠️ Reads a CMake file API reply (`codemodel-v2` plus its target files) into the planner's model. `read` returns the text of a file below the reply directory; `root` is the absolute source root. Public include directories of a library are the ones its dependents also compile with. */
+/** 📖️ Reads a CMake file API reply (`codemodel-v2` plus its target files) into the planner's model. `read` returns the text of a file below the reply directory; `root` is the absolute source root. Public include directories of a library are the ones its dependents also compile with. */
 export function cmakeReplyToCppProjectV1(reply: {readonly codemodel: any; readonly targets: readonly any[]}, root: string, compiler: CppProjectV1["compiler"]): CppProjectV1 {
   const prefix = root.endsWith("/") ? root : root + "/", relative = (path: string): string => normalize(path.startsWith(prefix) ? path.slice(prefix.length) : path);
   const byId = new Map<string, any>(reply.targets.map(target => [target.id as string, target] as const)), kinds: Record<string, CppTargetV1["type"]> = {STATIC_LIBRARY: "static", SHARED_LIBRARY: "shared", MODULE_LIBRARY: "shared", EXECUTABLE: "executable", OBJECT_LIBRARY: "object", INTERFACE_LIBRARY: "interface"};
@@ -115,11 +115,11 @@ export function cmakeReplyToCppProjectV1(reply: {readonly codemodel: any; readon
   return {compiler, targets};
 }
 
-/** 🛠️ The plan the executor reads from a unit's environment. */
+/** 🗓️ The plan the executor reads from a unit's environment. */
 export type CppPlanV1 = {readonly kind: "static" | "shared" | "executable" | "object" | "interface"; readonly compiler: string; readonly cCompiler: string; readonly sources: readonly {readonly path: string; readonly language: "c" | "c++" | "objc" | "objc++"}[]; readonly flags: readonly string[]; readonly defines: readonly string[]; readonly includeDirectories: readonly string[]; readonly publicIncludeDirectories: readonly string[]; readonly dependencyIncludeDirectories: readonly string[]; readonly dependencySources: readonly string[]};
 const languageOf = (path: string): "c" | "c++" | "objc" | "objc++" => /\.c$/i.test(path) && !/\.C$/.test(path) ? "c" : /\.mm$/i.test(path) ? "objc++" : /\.m$/i.test(path) ? "objc" : "c++";
 
-/** 🛠️ Plans the unit graph of a C or C++ project: one unit per target. A library owns its sources and its public headers (the interface: normalized header digest, artifact = the normalized headers), private headers that sources include enter as inputs, dependents consume the interface of libraries; an executable compiles its own and its libraries' sources (`implementation` edges, sources read in the build tool). */
+/** 🕸️ Plans the unit graph of a C or C++ project: one unit per target. A library owns its sources and its public headers (the interface: normalized header digest, artifact = the normalized headers), private headers that sources include enter as inputs, dependents consume the interface of libraries; an executable compiles its own and its libraries' sources (`implementation` edges, sources read in the build tool). */
 export function planCppUnitsV1(project: CppProjectV1, snapshot: CppWorkspaceSnapshotV1, options: {readonly policy: UnitsPolicyV1}): UnitGraphV1 {
   const files = new Set(snapshot.files), targets = new Map(project.targets.map(target => [target.name, target] as const));
   const headersUnder = (dir: string): string[] => snapshot.files.filter(path => HEADER.test(path) && (dir === "." || dir === "" || path.startsWith(dir + "/")));
@@ -167,7 +167,7 @@ export function planCppUnitsV1(project: CppProjectV1, snapshot: CppWorkspaceSnap
 
 /** 🏭️ The process effect of the C/C++ executor. */
 export type CppRunnerV1 = (argv: readonly string[], options: {readonly cwd: string; readonly env: Readonly<Record<string, string>>; readonly signal: AbortSignal}) => Promise<{readonly code: number; readonly output: string}>;
-/** 🏭️ Executes a C/C++ unit: every source is compiled with the target's flags, defines and include directories (a library against the normalized public headers of its dependencies when the request carries them, else against the workspace) and archived deterministically (`libtool -static -D` on macOS, `ar rcsD` elsewhere); an executable compiles its dependencies' sources too and links. The interface digest is that of the normalized public headers, the artifact the headers themselves with their include directories. */
+/** ⚙️ Executes a C/C++ unit: every source is compiled with the target's flags, defines and include directories (a library against the normalized public headers of its dependencies when the request carries them, else against the workspace) and archived deterministically (`libtool -static -D` on macOS, `ar rcsD` elsewhere); an executable compiles its dependencies' sources too and links. The interface digest is that of the normalized public headers, the artifact the headers themselves with their include directories. */
 export function cppUnitExecutorV1(options: {readonly workspace: string; readonly outputRoot: string; readonly run: CppRunnerV1; readonly platform: string}): (request: ExecuteRequestV1) => Promise<ExecuteOutcomeV1> {
   return async request => {
     const {unit} = request, plan = JSON.parse(unit.action.env.SEMIO_CPP_PLAN ?? "{}") as CppPlanV1, out = join(options.outputRoot, sha256V1(unit.id).slice(0, 24));

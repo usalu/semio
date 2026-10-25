@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { resolveBuildInputsV1, type BuildGraphV1 } from "../../../🏗️build/🕸️graph/🟦️.ts";
+import { resolveBuildInputsV1 } from "../../../🏗️build/🕸️graph/🟦️.ts"; import type { BuildGraphV1 } from "../../../🏗️build/🕸️graph/📋️model/🟦️.ts";
 import { storeReceiptOutputV1 } from "../../../🏗️build/🧾️store-receipt/🟨️.mjs";
 import { CACHE_POLICY, slash } from "../../🔍️discovery/📂️source/🟦️.ts";
-import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import { GlobV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
 
 export type ArtifactPackageRecord = {
   root: string;

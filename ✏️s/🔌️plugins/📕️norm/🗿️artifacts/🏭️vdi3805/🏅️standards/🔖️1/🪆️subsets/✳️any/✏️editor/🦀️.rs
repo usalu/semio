@@ -131,8 +131,8 @@ impl ArtifactEditor for Vdi3805PlayApp {
         Vdi3805BoundedCommandJobFactory::register(registry)
     }
 
-    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        semio_s_plugin_norm_app_surface::build_norm_tool_job::<Self>(request)
+    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        semio_s_plugin_norm_app_surface::build_norm_tool_job::<Self>(request, output, cx)
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -246,18 +246,12 @@ impl semio_framework::ToolJobFactory for Vdi3805BoundedCommandJobFactory {
         semio_s_plugin_norm_app_surface::norm_bounded_contract()
     }
 
-    fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        semio_framework::ToolJobFactory::create_job(&mut self.0, operation, payload)
+    fn admission_demands(&self, operation: &semio_framework_job::Operation, payload: &Self::Payload, input: Option<&semio_framework_action_bus::RetainedToolWireInput>, checkpoint: Option<&semio_framework_action_bus::RetainedToolWireInput>) -> Result<semio_framework_action_bus::ToolJobAdmissionDemand, semio_framework_value::ValueError> {
+        semio_framework::ToolJobFactory::admission_demands(&self.0, operation, payload, input, checkpoint)
     }
 
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        semio_framework::ToolJobFactory::create_job_from_wire_pages_with_payload(&mut self.0, operation, payload, input, checkpoint)
+    fn admit_job(&mut self, context: &mut semio_framework_job::StepContext<'_>, operation: &semio_framework_job::Operation, payload: &mut Option<Box<Self::Payload>>, input: &mut Option<semio_framework_action_bus::RetainedToolWireInput>, checkpoint: &mut Option<semio_framework_action_bus::RetainedToolWireInput>, output: &mut Option<Box<Self::Job>>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        semio_framework::ToolJobFactory::admit_job(&mut self.0, context, operation, payload, input, checkpoint, output)
     }
 }
 

@@ -28,14 +28,14 @@ import { resolveTestInputs, testInputUrisIn } from "../📥️fixture-inputs/�
  */
 
 
-/** 📥️ Routes every passed subject result that produced raw bytes to its own scenario id. */
+/** ⌨️ Routes every passed subject result that produced raw bytes to its own scenario id. */
 export function subjectRawInputsByScenario(results: readonly TestResult[]): SubjectRawInputs {
   const routed: Record<string, Partial<Record<Implementation, string>>> = {};
   for (const result of results) if (result.role === "subject" && result.status === "passed" && result.output.rawPath !== undefined) (routed[result.scenario] ??= {})[result.implementation] = result.output.rawPath;
   return routed;
 }
 
-/** 📋️ The owned execution plan one native host receives — hosts never re-parse the feature. */
+/** 🧲️ The owned execution plan one native host receives — hosts never re-parse the feature. */
 
 
 /** 🎚️ Levels at or below `level` — running a level runs every lower level, cumulatively. */
@@ -142,7 +142,7 @@ export function evaluateParity(profile: ComparisonProfile, results: readonly Tes
   return { verdicts, unmatched };
 }
 
-/** 🧮️ Pairwise subject equivalence, so two implementations cannot exploit different oracle ambiguities. */
+/** ✖️ Pairwise subject equivalence, so two implementations cannot exploit different oracle ambiguities. */
 export function evaluateCrossSubjectParity(profile: ComparisonProfile, results: readonly TestResult[], profiles: ReadonlyMap<string, ComparisonProfileSpec> = coreProfileTable()): { pair: string; equal: boolean; diffs: number }[] {
   const byScenario = new Map<string, TestResult[]>();
   for (const result of results) {

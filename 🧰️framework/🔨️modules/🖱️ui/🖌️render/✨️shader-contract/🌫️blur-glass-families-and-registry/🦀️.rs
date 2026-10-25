@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️ShaderContract
 //#region 🌫️BlurFamily
-/// 🌫️ One mip level of a 5-tap box downsample (`SCENE_MIP_LEVELS = 5` in `draw.rs`), sampled at
+/// 🔽️ One mip level of a 5-tap box downsample (`SCENE_MIP_LEVELS = 5` in `draw.rs`), sampled at
 /// `blur_globals.src_mip` to build the glass backdrop's mip chain. Repaired from the `async`
 /// corruption; no other damage found.
 pub const BLUR_DOWNSAMPLE_SHADER: &str = r#"
@@ -114,7 +114,7 @@ return textureSampleLevel(scene_tex, scene_samp, in.uv, 0.0);
 const SCENE_SAMPLE_BIND_GROUP: BindGroupSpec =
     BindGroupSpec { group_index: 0, entries: &[BindGroupEntrySpec { binding: 0, visibility: FRAGMENT_STAGE, kind: BindingKind::Texture2D }, BindGroupEntrySpec { binding: 1, visibility: FRAGMENT_STAGE, kind: BindingKind::Sampler }] };
 
-/// 🎞️ Fullscreen triangle-pair, no vertex buffers, same shape as `BLUR_DOWNSAMPLE_PIPELINE`.
+/// 🚂️ Fullscreen triangle-pair, no vertex buffers, same shape as `BLUR_DOWNSAMPLE_PIPELINE`.
 pub const SCENE_BLIT_PIPELINE: PipelineSpec = PipelineSpec {
     label: "scene_blit_pipeline",
     vertex_entry: "vs_main",
@@ -208,7 +208,7 @@ return vec4<f32>(rgb, fill_alpha);
 }
 "#;
 
-/// 🥂️ Group 0 reuses `UI_GLOBALS_BIND_GROUP`'s layout (same as `VECTOR_PIPELINE`, unused glyph/icon
+/// 🔍️ Group 0 reuses `UI_GLOBALS_BIND_GROUP`'s layout (same as `VECTOR_PIPELINE`, unused glyph/icon
 /// entries included) since that is the layout `draw.rs` actually builds; group 1 is the scene
 /// sample layout shared with `SCENE_BLIT_PIPELINE`.
 pub const GLASS_PIPELINE: PipelineSpec = PipelineSpec {

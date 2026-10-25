@@ -429,5 +429,4 @@ async fn writer_preserves_original_sink_refusal_and_wire_chain() {
     assert_eq!(chain, *oracle.finalize().as_bytes());
     let recovered = recover(&bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit).await.unwrap();
     assert_eq!(recovered.bytes_recovered as usize, bytes.len());
-    eprintln!("[DEBUG] neutral writer refusals preserve original producer identity and canonical BLAKE3 chain");
 }

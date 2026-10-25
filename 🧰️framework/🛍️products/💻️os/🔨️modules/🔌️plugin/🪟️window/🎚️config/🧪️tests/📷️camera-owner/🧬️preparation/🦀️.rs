@@ -8,8 +8,8 @@ use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneRef, Ret
 use std::mem::size_of;
 impl RetainedClone for State{type Cursor=ScalarCursor<Self>;fn retained_clone_cursor()->Self::Cursor{Default::default()}}
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub(crate) struct CameraRetainedEdit;
-pub(crate) struct CameraRetainedEditCursor{pub stage:u8,pub cancelled:bool,pub custody:RetainedEditCustody<(Option<Box<State>>,Option<Vec<Mutation>>)>}
+pub struct CameraRetainedEdit;
+pub struct CameraRetainedEditCursor{pub stage:u8,pub cancelled:bool,pub custody:RetainedEditCustody<(Option<Box<State>>,Option<Vec<Mutation>>)>}
 impl RetainedCloneEdit<State,Mutation> for CameraRetainedEdit{
  type Cursor=CameraRetainedEditCursor;
  fn preflight(&self,mutation:&Mutation,lane:store::os_store::store_schema::HistoryLane)->Result<store::os_store::one_item::ArtifactStoreOneItemFootprint,String>{let Mutation::Snapshot{config}=mutation;if lane!=store::os_store::store_schema::HistoryLane::Document||![config.viewport.x,config.viewport.y,config.viewport.zoom].into_iter().chain(config.eye).all(f64::is_finite)||config.viewport.zoom<=0.0{return Err("original camera mutation has invalid lane or finite viewport authority".into());}Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint{work_items:2,retained_bytes:65536})}

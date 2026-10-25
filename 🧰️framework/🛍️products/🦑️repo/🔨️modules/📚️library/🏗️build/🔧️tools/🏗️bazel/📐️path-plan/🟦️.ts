@@ -12,13 +12,13 @@ if (validateJsonSchemaSubset(schema.definitions.PolicyShape, policy, schema).len
 export const BAZEL_PATH_PLAN_V1 = policy;
 /** 📏️ One declared target the law measures: its kind, its declared source paths (repository relative, slash separated) and, for a hermetic target, the longest paths inside its dependency tree. */
 export interface BazelPathTargetV1 {readonly id: string; readonly kind: "hermetic" | "host"; readonly sources: readonly string[]; readonly tree?: readonly string[]}
-/** 📏️ The host facts the law needs; `outputBase` and `checkout` may be absent when the caller cannot know them, which skips the families that depend on them. */
+/** 🖥️ The host facts the law needs; `outputBase` and `checkout` may be absent when the caller cannot know them, which skips the families that depend on them. */
 export interface BazelPathHostV1 {readonly platform: "darwin" | "linux" | "win32"; readonly arch: "arm64" | "x64"; readonly longPaths: "enabled" | "disabled" | "unprobed"; readonly outputBase?: string; readonly checkout?: string}
 export interface BazelPathFamilyV1 {readonly name: string; readonly units: number}
 export interface BazelPathRowV1 {readonly id: string; readonly kind: "hermetic" | "host"; readonly families: readonly BazelPathFamilyV1[]; readonly worst: BazelPathFamilyV1 | null; readonly limit: number; readonly slack: number; readonly fits: boolean}
 export interface BazelPathLawV1 {readonly limit: number; readonly rows: readonly BazelPathRowV1[]; readonly over: readonly string[]; readonly fits: boolean}
 
-/** 📏️ Counts UTF-16 code units, the unit Windows MAX_PATH and the repository's 256 rule are stated in. */
+/** 🔢️ Counts UTF-16 code units, the unit Windows MAX_PATH and the repository's 256 rule are stated in. */
 export const bazelPathUnitsV1 = (text: string): number => text.length;
 
 /** 🧭️ Names the short fixed output root of one checkout on a host whose path limit needs it, or nothing: `--output_user_root` is the root, `--output_base` is `<root><separator><slot>`, and the directory holding the real output bases is linked at the root so the data stays inside the finite products partition. The name is the first hex digits of the SHA-256 of the checkout path, so it is short, ASCII, stable and distinct per checkout. */

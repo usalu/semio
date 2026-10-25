@@ -5,7 +5,7 @@ import { type ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { PET_CHOICES, PreferencesPanel, COURSE_LOCALES, petNames, courseText, type PetChoice } from "@semio-tech/course-react";
 import { MENAGERIE, PREFERENCES, Pets, REDUCED_MOTION, fakeSource, fakeStage, layer, motionPreference, settle } from "../../🪛️pet-companions-kit/🟦️.tsx";
-import { SAMPLE } from "../🟠️shared/🟦️.tsx";
+import { SAMPLE } from "../🟠️harness/🟦️.tsx";
 
 /** 🔷 Registers the pets stage tests of the 🐾️ pet companions suite. */
 export function registerPetsStageTests(): void {

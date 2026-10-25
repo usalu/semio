@@ -10,7 +10,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { installedDashboard } from "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
+import { installedDashboard } from "../../../📚️library/📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
 
 const dashboard = resolve(import.meta.dir, "../..");
 const repo = resolve(dashboard, "../../../../..");
@@ -23,7 +23,7 @@ let root = "";
 let port = 0;
 let daemon: ReturnType<typeof Bun.spawn> | undefined;
 const instance = `cli-${process.pid}-${Date.now()}`;
-const environment = { ...process.env, SEMIO_DASHBOARD_INSTANCE: instance, SEMIO_SCRIPT_PROCESS_INVOCATION:"view-envelope", SEMIO_SCRIPT_CAPABILITIES:"view-capabilities", SEMIO_SCRIPT_POLICY:"view-policy" } as Record<string, string>;
+const environment = { ...process.env, SEMIO_DASHBOARD_INSTANCE: instance, SEMIO_LOCALE: "en", SEMIO_SCRIPT_PROCESS_INVOCATION:"view-envelope", SEMIO_SCRIPT_CAPABILITIES:"view-capabilities", SEMIO_SCRIPT_POLICY:"view-policy" } as Record<string, string>;
 
 function semio(args: string[]): { code: number; out: string; err: string; lines: string[] } {
   const run = Bun.spawnSync([binary(), ...args, "--root", root], { cwd: root, env: environment, stdout: "pipe", stderr: "pipe" });
@@ -71,7 +71,6 @@ test("a dashboard task owns process authority independently of the requesting vi
   const declared = semio(["run", "tool:w/authority", "--env", "SEMIO_SCRIPT_POLICY=task-policy"]);
   expect(declared.code, declared.err).toBe(0);
   expect(declared.out).toContain('"SEMIO_SCRIPT_POLICY":"task-policy"');
-  console.log("[DEBUG] independently launched dashboard tasks discard view process authority and retain explicitly selected task policy");
 });
 
 test("run, tasks, logs, open and stop all use the one handle a task is printed with, or its command or group", () => {

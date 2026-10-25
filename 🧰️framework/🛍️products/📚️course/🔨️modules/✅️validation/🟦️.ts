@@ -344,7 +344,7 @@ function icon(value: unknown, path: string, report: Report): void {
 }
 
 /** 🧺️ Every item belongs to one slot, and every slot contributes exactly one question variant. */
-/** 🧺️ A complete partition into balanced variant slots and a finite time budget. */
+/** 💰️ A complete partition into balanced variant slots and a finite time budget. */
 function questionPool(task: Json, path: string, report: Report): void {
   const base = at(path, "pool");
   const pool = object(task.pool, base, report, ["seconds", "slots"]);

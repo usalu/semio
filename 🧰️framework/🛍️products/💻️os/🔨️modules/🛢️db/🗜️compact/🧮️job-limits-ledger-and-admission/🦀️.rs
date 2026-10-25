@@ -149,18 +149,18 @@ impl DatabaseCompactionProgress {
 }
 
 #[derive(Clone, Copy)]
-struct DatabaseCompactionAdmissionSlot {
+pub(super) struct DatabaseCompactionAdmissionSlot {
     pub(super) generation: u64,
     pub(super) occupied: bool,
 }
 
 const EMPTY_DATABASE_COMPACTION_SLOT: DatabaseCompactionAdmissionSlot = DatabaseCompactionAdmissionSlot { generation: 0, occupied: false };
 
-struct DatabaseCompactionAdmissionState {
+pub(super) struct DatabaseCompactionAdmissionState {
     pub(super) slots: [DatabaseCompactionAdmissionSlot; DATABASE_COMPACTION_SLOTS],
     pub(super) items: u64,
     pub(super) bytes: u64,
-    next_generation: u64,
+    pub(super) next_generation: u64,
 }
 
 impl DatabaseCompactionAdmissionState {

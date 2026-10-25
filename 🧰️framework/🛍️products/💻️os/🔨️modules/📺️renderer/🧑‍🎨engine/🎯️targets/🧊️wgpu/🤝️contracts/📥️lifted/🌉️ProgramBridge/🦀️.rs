@@ -16,7 +16,22 @@ pub struct ProgramFault {
     #[cfg(not(target_arch = "wasm32"))]
     pub actor_call:Option<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) create_app_source:Option<crate::kernel_runtime::CreateAppSourceFailure>,
+    pub create_app_source:Option<CreateAppSourceRefusal>,
+}
+
+/// 🚪️ The rendered text of a refused CreateApp source open, captured while its request owner was still live; the shell reads only its presence and text.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CreateAppSourceRefusal(String);
+
+#[cfg(not(target_arch = "wasm32"))]
+impl CreateAppSourceRefusal {
+    pub fn new(text: String) -> Self { Self(text) }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl std::fmt::Display for CreateAppSourceRefusal {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.write_str(&self.0) }
 }
 
 impl From<String> for ProgramFault {
@@ -40,8 +55,6 @@ impl From<semio_framework_actor::pack::PackError> for ProgramFault {
 impl From<semio_framework_actor::KernelError> for ProgramFault{fn from(error:semio_framework_actor::KernelError)->Self{Self{fault:None,text:String::new(),frame:None,kernel:Some(error),actor_call:None,#[cfg(not(target_arch = "wasm32"))] create_app_source:None}}}
 #[cfg(not(target_arch="wasm32"))]
 impl From<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall> for ProgramFault{fn from(call:semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall)->Self{Self{fault:None,text:String::new(),frame:None,kernel:None,actor_call:Some(call),create_app_source:None}}}
-#[cfg(not(target_arch="wasm32"))]
-impl From<crate::kernel_runtime::CreateAppSourceFailure> for ProgramFault{fn from(error:crate::kernel_runtime::CreateAppSourceFailure)->Self{Self{fault:None,text:String::new(),frame:None,kernel:None,actor_call:None,create_app_source:Some(error)}}}
 impl std::fmt::Display for ProgramFault {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         #[cfg(not(target_arch = "wasm32"))]

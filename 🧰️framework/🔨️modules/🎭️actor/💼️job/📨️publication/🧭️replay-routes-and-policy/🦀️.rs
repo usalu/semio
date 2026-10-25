@@ -1,4 +1,4 @@
-//! 🧭️ Replay routes and policy: the fixed replay capacities, the mounted route identity, the publication policy and kind, the replay faults, steps and close steps and the replay page. See [`super`].
+//! 🎞️ Replay routes and policy: the fixed replay capacities, the mounted route identity, the publication policy and kind, the replay faults, steps and close steps and the replay page. See [`super`].
 
 use super::*;
 

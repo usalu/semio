@@ -198,7 +198,7 @@ pub fn decode_presence_tool_run(bytes: &[u8]) -> Result<PresenceToolRun, semio_f
     Ok(tool_run)
 }
 
-/// 🎞️ Exact inverse of [`encode_presence_history_edit`] over a standalone body: the peer decoder's limits (stage tag,
+/// ✏️ Exact inverse of [`encode_presence_history_edit`] over a standalone body: the peer decoder's limits (stage tag,
 /// `u32` drafts) and no trailing bytes.
 pub fn decode_presence_history_edit(bytes: &[u8]) -> Result<PresenceHistoryEdit, semio_framework_replication_error::ProtocolError> {
     let limits = PRESENCE_PEER_WIRE_LIMITS_V1;

@@ -3,7 +3,7 @@ import {sha256V1} from "../🔏️key/🟦️.ts";
 import {sortedCodePointsV1, type UnitGraphV1, type UnitV1} from "../🕸️graph/🟦️.ts";
 import type {ExecuteOutcomeV1} from "../🏃️engine/🟦️.ts";
 
-/** 🟦️ The id a TypeScript check unit has in the neutral graph. */
+/** 🆔️ The id a TypeScript check unit has in the neutral graph. */
 export const typeScriptNeutralIdV1 = (unit: Pick<TypeScriptUnitV1, "id">): string => "typescript:" + unit.id;
 
 /** 🟦️ Wraps the TypeScript unit plan (the live engine in `🏗️build/🟦️typescript/🧩️units`) into the neutral graph without re-deriving anything: files become sources, JSON, ambient and manifest files inputs, dependencies `interface` edges, a leaf unit (nobody consumes it, no declaration emit) has no interface. The TypeScript engine stays the executor; this graph is what the Nx and Bazel emitters consume. */
@@ -17,7 +17,7 @@ export function typeScriptPlanToUnitsV1(plan: TypeScriptUnitPlanV1, host: {reado
   }));
   return {version: 1, units};
 }
-/** 🟦️ Maps a finished TypeScript unit check onto the neutral executor outcome: errors fail the unit, the declaration tree digest is both output and interface (a leaf has none). */
+/** ✅️ Maps a finished TypeScript unit check onto the neutral executor outcome: errors fail the unit, the declaration tree digest is both output and interface (a leaf has none). */
 export function typeScriptOutcomeV1(receipt: Pick<TypeScriptUnitReceiptV1, "errors" | "boundary" | "diagnostics" | "declarations" | "milliseconds">, unit: Pick<TypeScriptUnitV1, "leaf">): ExecuteOutcomeV1 {
   return {ok: receipt.errors === 0, diagnostics: receipt.diagnostics, outputs: sha256V1(receipt.declarations), interface: unit.leaf ? null : receipt.declarations, milliseconds: receipt.milliseconds};
 }

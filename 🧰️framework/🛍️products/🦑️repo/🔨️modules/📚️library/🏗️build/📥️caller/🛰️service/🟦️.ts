@@ -7,7 +7,7 @@ import catalog from "../../⚙️operations/🔣️catalog.json" with {type:"jso
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readIssuedScriptProcessEnvelopeV1,checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {authorizeCapabilityV1,canonicalJsonV1,appendAuditV1,canonicalRootV1,capabilityIdV1,endpointsV1,keyDigestV1,readServiceKeyV1,verifyCapabilityV1,worktreeIdV1,type RevocationRegistryV1} from "./🔑️session/🟨️.mjs";
-import type {NativeBuildCallerCapabilitiesV1} from "../🟦️.ts";
+import type { NativeBuildCallerCapabilitiesV1 } from "../📋️contract/🟦️.ts";
 
 /** 📜 The authored admission constants and their English and German refusal texts. */
 export const serviceInvocationPolicyV1=schema.definitions.Policy.const;
@@ -173,16 +173,18 @@ export function createServiceAuditV1(invocation:ScriptInvocation,file:string):Se
  }};
 }
 
+/** 🚪 The door computation the admission asks of the layer above it: the declared bootstrap capabilities of one plain command, injected by the composition root so the admission never imports the build bootstrap. */
+export type ServiceBootstrapPortV1=(root:string,args:readonly string[],environment:NodeJS.ProcessEnv)=>Promise<object>;
+
 /** 🛰 Holds the issued invocation: reads its grant from the private envelope, binds the door computation to the caller facts of that envelope, and returns the admission. */
-export function holdServiceInvocationV1(root:string,invocation:ScriptInvocation,options:{readonly key:Uint8Array;readonly revocations:Pick<RevocationRegistryV1,"has"|"hasAgent">;readonly audit:ServiceAuditV1;readonly closure?:ServiceAdmissionOptionsV1["closure"];readonly now?:()=>number;readonly environment?:()=>NodeJS.ProcessEnv}){
+export function holdServiceInvocationV1(root:string,invocation:ScriptInvocation,options:{readonly key:Uint8Array;readonly revocations:Pick<RevocationRegistryV1,"has"|"hasAgent">;readonly audit:ServiceAuditV1;readonly bootstrap:ServiceBootstrapPortV1;readonly closure?:ServiceAdmissionOptionsV1["closure"];readonly now?:()=>number;readonly environment?:()=>NodeJS.ProcessEnv}){
  checkScriptInvocation(invocation);
  const held=readIssuedScriptProcessEnvelopeV1(invocation).capabilities as NativeBuildCallerCapabilitiesV1&{service?:unknown};
  if(held.service===undefined)throw refuse("grant");
  if(validateJsonSchemaSubset(callerSchema,held).length||resolve(held.workspaceRoot)!==resolve(root))throw refuse("grant");
  const grant=readServiceGrantV1(held.service),caller=declaredCapabilitiesV1(held),environment=options.environment??(()=>process.env);
  const declare=async(args:readonly string[])=>{
-  const{createBuildBootstrapCapabilitiesV1}=await import("../📤️child/🟦️.ts");
-  const door=await createBuildBootstrapCapabilitiesV1(root,["repo",...args],{...environment(),SEMIO_SCRIPT_CAPABILITIES:undefined,SEMIO_BUILD_TOOL:caller.tool,SEMIO_BUILD_MODE:caller.buildMode,CARGO_NET_OFFLINE:String(caller.native.network.offline),CARGO_TARGET_DIR:caller.native.artifactDirectory}) as NativeBuildCallerCapabilitiesV1&{service?:unknown};
+  const door=await options.bootstrap(root,["repo",...args],{...environment(),SEMIO_SCRIPT_CAPABILITIES:undefined,SEMIO_BUILD_TOOL:caller.tool,SEMIO_BUILD_MODE:caller.buildMode,CARGO_NET_OFFLINE:String(caller.native.network.offline),CARGO_TARGET_DIR:caller.native.artifactDirectory}) as NativeBuildCallerCapabilitiesV1&{service?:unknown};
   if(door.service!==undefined||door.tool!==caller.tool||door.buildMode!==caller.buildMode||JSON.stringify(door.native)!==JSON.stringify(caller.native))throw refuse("tool");
   return door.launches;
  };

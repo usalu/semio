@@ -131,7 +131,6 @@ export async function compileNativeGeoPlanarGuard(execution:PrintExecutionV1):Pr
   const body=fixture.nativeGeoPlanar.evaluatedCases.map(entry=>({raw:"\\SemioVizProbeBegin{geo-planar-domain}{"+entry.id+"}\\ExplSyntaxOn\\semio_viz_geosym_reset:\\keys_set:nn{semio/viz/geo/planar}{width=60,height=30,lineWidth=.3mm,"+entry.options+"}\\keys_set:nn{semio/viz/family/geo-hexbin}{"+entry.options+"}\\semio_viz_geosym_validate:\\semio_viz_probe_values:nx{native/valid}{\\bool_if:NTF\\l_semio_viz_geosym_valid_bool{1}{0}}\\ExplSyntaxOff"}));
   const records=await compileVizProbeDocument({case:"geo-planar-domain",scenario:"predicates",documentClass:"semio",documentClassOptions:"type=paper,language=en,theme=light",packages:["semio-viz"],preamble:["\\title{Native Planar Predicates}","\\author{Semio}","\\date{}","\\ExplSyntaxOn\\msg_redirect_name:nnn{semio-viz}{planar-domain}{warning}\\ExplSyntaxOff"],body},{execution,scenario:undefined});
   for(const entry of fixture.nativeGeoPlanar.evaluatedCases)equal(records.find(record=>record.scenario===entry.id&&record.key==="native/valid")!.values.map(Number),[entry.valid?1:0],entry.id+" independent evaluated finite/domain predicate");
-  console.log("[DEBUG] Native "+fixture.nativeGeoPlanar.evaluatedCases.length+" evaluated finite/positive/physical-stroke predicates and actual hard compiler rejection PASS");
 });}
 
 /** 🧊️ Compares complete native exterior and hole rings to independent D3 contour vertices. */

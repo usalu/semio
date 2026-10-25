@@ -34,7 +34,7 @@ function admitBuildAssetSpecV1<K extends keyof typeof providerSchema.definitions
 }
 
 //#region 🔖️ViteElementsAssets
-/** 📦️ Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
+/** 🔨️ Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
 export function playgroundStaticSiteBuildOptions(overrides?: OwnedBuildConfig["build"]): NonNullable<OwnedBuildConfig["build"]> {
   return {
     target: "esnext",
@@ -75,7 +75,7 @@ export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases:
   };
 }
 
-/** 🗂️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
+/** 📁️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
 function createStaticDirMiddleware(repoRoot: string, spec: StaticDirectoryAssetSpecV1): OwnedBuildMiddleware {
   const fixtureRoot = resolve(repoRoot, spec.root);
   const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
@@ -235,14 +235,14 @@ export const TILE_PROXY_ASSET_PROVIDER_V1: AssetDeliveryProviderV1 = Object.free
   plugins: (context, declaration) => tileProxyVitePlugin(context.root, parseTileProxyAssetSpecV1(declaration), context.mode),
 });
 
-/** 🥽️ Contributes catalog transport only when the caller explicitly registers it. */
+/** 🕸️ Contributes catalog transport only when the caller explicitly registers it. */
 export const MESH_COLLECTION_ASSET_PROVIDER_V1: AssetDeliveryProviderV1 = Object.freeze<AssetDeliveryProviderV1>({
   kind: "mesh-collection",
   middleware: (context, declaration) => createMeshCollectionMiddleware(context.root, admitBuildAssetSpecV1(declaration, "MeshCollectionAssetSpecV1")),
   plugins: (context, declaration) => meshCollectionVitePlugin(context.root, admitBuildAssetSpecV1(declaration, "MeshCollectionAssetSpecV1")),
 });
 
-/** 🗂️ Contributes directory transport only when the caller explicitly registers it. */
+/** 📂️ Contributes directory transport only when the caller explicitly registers it. */
 export const STATIC_DIRECTORY_ASSET_PROVIDER_V1: AssetDeliveryProviderV1 = Object.freeze<AssetDeliveryProviderV1>({
   kind: "static-dir",
   middleware: (context, declaration) => createStaticDirMiddleware(context.root, admitBuildAssetSpecV1(declaration, "StaticDirectoryAssetSpecV1")),
@@ -256,7 +256,7 @@ type ProxiedBrowserSocket = {
   unpipe?(destination?: unknown): void;
 };
 
-/** 🧦️ The socket the proxy opened to the upstream. */
+/** 🔓️ The socket the proxy opened to the upstream. */
 type ProxiedUpstreamSocket = {
   destroyed: boolean;
   destroy(): void;

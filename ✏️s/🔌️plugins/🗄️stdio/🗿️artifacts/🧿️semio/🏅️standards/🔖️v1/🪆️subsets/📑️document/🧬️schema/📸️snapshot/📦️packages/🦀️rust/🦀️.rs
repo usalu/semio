@@ -34,3 +34,12 @@ pub mod schema {
         pub use component::*;
     }
 }
+semio_framework_value::artifact_retire_struct!(schema::snapshot::RunStyle { bold, italic, underline, size, font, color, link });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::DocRun { text, style });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::DocStyle { id, name, based_on });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::DocImage { id, mime, bytes });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::DocListItem { blocks });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::DocTableCell { blocks });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::DocTableRow { cells });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioDocumentSnapshot { schema, styles, images, blocks });
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioDocumentSnapshot);

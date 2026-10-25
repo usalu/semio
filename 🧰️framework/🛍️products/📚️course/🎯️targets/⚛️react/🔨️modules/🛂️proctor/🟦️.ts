@@ -76,7 +76,7 @@ export class ProctorThrottled extends ProctorUnavailable {
  * kinds disagree among themselves. */
 export type ProctorContract = "newer" | "older" | "foreign";
 
-/** 🧩️ The proctor speaks another contract than this client ({@link ProctorContract}): nothing is sent to it. Transient
+/** 🧬️ The proctor speaks another contract than this client ({@link ProctorContract}): nothing is sent to it. Transient
  * like silence — what waits keeps waiting, a deputy decides meanwhile — since the proctor or the page may be replaced
  * by one that agrees. */
 export class ProctorIncompatible extends ProctorUnavailable {
@@ -100,13 +100,13 @@ export function signUpsSpent(error: unknown): error is ProctorThrottled {
   return error instanceof ProctorThrottled && error.allowance === SIGN_UP_ALLOWANCE;
 }
 
-/** ⏳️ The longest wait a `Retry-After` may ask for; a longer one is cut, so a wrong header never parks the client. */
+/** ⌛️ The longest wait a `Retry-After` may ask for; a longer one is cut, so a wrong header never parks the client. */
 export const RETRY_AFTER_MAX_MS = 120_000;
 
 const DELAY_SECONDS = /^[0-9]+$/u;
 const HTTP_DATE = /^[A-Za-z]{3}, [0-9]{2} [A-Za-z]{3} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT$/u;
 
-/** ⏳️ The wait a `Retry-After` header asks for at `now`: delay-seconds (a non-negative integer) or an HTTP-date, at most
+/** ⏲️ The wait a `Retry-After` header asks for at `now`: delay-seconds (a non-negative integer) or an HTTP-date, at most
  * {@link RETRY_AFTER_MAX_MS}; `undefined` for a missing header or anything else. */
 export function retryAfterMs(header: string | null, now: number): number | undefined {
   const value = header?.trim() ?? "";
@@ -174,7 +174,7 @@ export function isNotFound(error: unknown): boolean {
   return error instanceof ServerCallError && error.status === 404;
 }
 
-/** ⏳️ Whether `error` is a connection shortage worth retrying rather than a definitive answer; a spent sign-up
+/** 🔄️ Whether `error` is a connection shortage worth retrying rather than a definitive answer; a spent sign-up
  * allowance is an answer. */
 export function isTransient(error: unknown): boolean {
   if (signUpsSpent(error)) return false;
@@ -183,7 +183,7 @@ export function isTransient(error: unknown): boolean {
   return false;
 }
 
-/** 🚦️ Whether `error` is the proctor asking this client to slow down (a rate limit) — not a spent sign-up allowance,
+/** 🐢️ Whether `error` is the proctor asking this client to slow down (a rate limit) — not a spent sign-up allowance,
  * which no slower sending cures. */
 export function isThrottled(error: unknown): boolean {
   return !signUpsSpent(error) && (error instanceof ProctorThrottled || (error instanceof ServerCallError && error.status === 429));
@@ -243,10 +243,10 @@ export interface RetryTiming {
   readonly maxMs: number;
 }
 
-/** 🔁️ The production backoff: half a second, growing to fifteen seconds. */
+/** 🏭️ The production backoff: half a second, growing to fifteen seconds. */
 export const RETRY_TIMING: RetryTiming = { minMs: 500, maxMs: 15_000 };
 
-/** 🔁️ Runs `call` until it answers, retrying transient failures with jittered backoff — after a rate limit not before
+/** ☎️ Runs `call` until it answers, retrying transient failures with jittered backoff — after a rate limit not before
  * the wait the proctor asked for; a definitive failure or an abort of `signal` ends it at once. */
 export async function retryTransient<T>(call: () => Promise<T>, timing: RetryTiming, signal?: AbortSignal): Promise<T> {
   const outcome = await retryWithJitteredBackoff<{ readonly value: T } | { readonly error: unknown }>(
@@ -354,7 +354,7 @@ function rejectionIn(texts: readonly string[]): Rejection | undefined {
   return undefined;
 }
 
-/** 🚫️ The quiz rejection a framework rejection carries in its notices or detail, if any. */
+/** 🧯️ The quiz rejection a framework rejection carries in its notices or detail, if any. */
 export function courseRejection(reason: ServerRejection, notices: readonly Notice[]): Rejection | undefined {
   return rejectionIn([...notices.flatMap((notice) => [notice.code, notice.message]), "detail" in reason ? reason.detail : ""]);
 }
@@ -368,7 +368,7 @@ function courseEvents(records: readonly EventRecord[]): Event[] {
   return records.filter((record) => record.kind.startsWith("course.")).map((record) => JSON.parse(decoder.decode(record.payload)) as Event);
 }
 
-/** ⚖️ The quiz verdict of a framework outcome; a busy actor or a revision race is {@link ProctorUnavailable}. */
+/** 🧰️ The quiz verdict of a framework outcome; a busy actor or a revision race is {@link ProctorUnavailable}. */
 export function commandVerdict(outcome: CommandOutcome): CommandVerdict {
   switch (outcome.status) {
     case "accepted":
@@ -399,10 +399,10 @@ function viewOf<V>(result: QueryResult): V {
  * proctor of another contract, which is not asked anything. */
 export type ProctorReachability = "unknown" | "reachable" | "throttled" | "unreachable" | "incompatible";
 
-/** ⏳️ How long a proctor of another contract is left alone before it is asked again whether it agrees now. */
+/** ⏰️ How long a proctor of another contract is left alone before it is asked again whether it agrees now. */
 export const AGREEMENT_RECHECK_MS = 30_000;
 
-/** 🤝️ What the client knows of the proctor's contract: nothing yet, that it agrees, or since when it does not. */
+/** 📃️ What the client knows of the proctor's contract: nothing yet, that it agrees, or since when it does not. */
 type Agreement = { readonly kind: "unknown" } | { readonly kind: "agreed" } | { readonly kind: "incompatible"; readonly contract: ProctorContract; readonly at: number };
 
 /** 📜️ Whether `error` says that an answer of the proctor could not be read: no JSON, or not the shape of the contract. */
@@ -410,7 +410,7 @@ function unreadable(error: unknown): error is Error {
   return error instanceof WireError || error instanceof SyntaxError;
 }
 
-/** 🛂️ Quiz commands and queries against one proctor tenant, observing whether the proctor is reachable and agrees
+/** 🎓️ Quiz commands and queries against one proctor tenant, observing whether the proctor is reachable and agrees
  * with this client on the contract. */
 export class ProctorClient {
   readonly tenant: string;
@@ -427,12 +427,12 @@ export class ProctorClient {
     this.now = now;
   }
 
-  /** 📶️ The reachability observed by the latest call. */
+  /** 📞️ The reachability observed by the latest call. */
   reachability(): ProctorReachability {
     return this.reachable;
   }
 
-  /** 🧩️ How the proctor's contract stands to this client's while the two do not agree; `undefined` otherwise. */
+  /** 📕️ How the proctor's contract stands to this client's while the two do not agree; `undefined` otherwise. */
   contract(): ProctorContract | undefined {
     return this.agreement.kind === "incompatible" ? this.agreement.contract : undefined;
   }
@@ -449,7 +449,7 @@ export class ProctorClient {
     this.mark("unreachable");
   }
 
-  /** 📨️ Submits one command once (callers retry transient failures with the same command id). A refusal is only
+  /** 📮️ Submits one command once (callers retry transient failures with the same command id). A refusal is only
    * answered once the proctor still agrees on the contract. */
   command(command: Command, signal?: AbortSignal): Promise<CommandVerdict> {
     return this.observe(async () => {
@@ -459,7 +459,7 @@ export class ProctorClient {
     }, signal);
   }
 
-  /** ❓️ Answers one query from the proctor's read models; a view that is not of the `shaped` the client renders cannot
+  /** 📖️ Answers one query from the proctor's read models; a view that is not of the `shaped` the client renders cannot
    * be read. A malformed request is only answered once the proctor still agrees on the contract. */
   query<V>(query: Query, learner: Id | undefined, signal?: AbortSignal, shaped?: (value: unknown) => boolean): Promise<V> {
     return this.observe(async () => {
@@ -521,7 +521,7 @@ export class ProctorClient {
     }
   }
 
-  /** 🤝️ Resolves once the proctor agrees on the contract — asking it (`anew` even when it agreed before) unless that is
+  /** 🔎️ Resolves once the proctor agrees on the contract — asking it (`anew` even when it agreed before) unless that is
    * known — and fails with {@link ProctorIncompatible} while it does not; a proctor found incompatible is asked again
    * only after {@link AGREEMENT_RECHECK_MS}. Concurrent callers share one question. */
   private async agreed(signal: AbortSignal | undefined, anew = false): Promise<void> {

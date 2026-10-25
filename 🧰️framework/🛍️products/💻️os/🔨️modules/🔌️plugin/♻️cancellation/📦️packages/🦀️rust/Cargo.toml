@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 media-turn-testing = []
 
 [dependencies]
+serde_json = { workspace = true }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
@@ -33,7 +34,6 @@ semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust
 semio-framework-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
 
 [dev-dependencies]

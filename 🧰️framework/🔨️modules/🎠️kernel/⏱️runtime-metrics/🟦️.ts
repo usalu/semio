@@ -17,7 +17,7 @@ export interface RuntimeMetricsActorRow {
   readonly shard: number | null;
 }
 
-/** 📈️ Mirrors `semio_framework_actor::RuntimeMetricsSnapshot`'s shape — `kernel` (the aggregate
+/** 📸️ Mirrors `semio_framework_actor::RuntimeMetricsSnapshot`'s shape — `kernel` (the aggregate
  * `KernelMetrics`) is omitted here since this registry never holds a `Kernel` to sample it from.
  * `shards` is spelled as `ShardClient["shardMetricsSamples"]`'s own return type rather than importing
  * `ShardMetricsSample` by name — this file's `path_scope` is the `🐚️ActivationRegistry` region only,
@@ -28,10 +28,10 @@ export interface RuntimeMetricsSnapshot {
   readonly sampledAtMs: number;
 }
 
-/** ⏱️ 2Hz, matching `semio_framework_actor::RUNTIME_METRICS_PUBLISH_INTERVAL_MS`. */
+/** ⏲️ 2Hz, matching `semio_framework_actor::RUNTIME_METRICS_PUBLISH_INTERVAL_MS`. */
 export const RUNTIME_METRICS_PUBLISH_INTERVAL_MS = 500;
 
-/** ⏱️ Pure cadence gate — the exact TS mirror of `semio_framework_actor::runtime_metrics_due`, kept
+/** ⏰️ Pure cadence gate — the exact TS mirror of `semio_framework_actor::runtime_metrics_due`, kept
  * as its own exported function (not inlined into `startRuntimeMetricsPublisher`) so it is testable
  * without fake timers, same reasoning as the Rust side's own doc comment. */
 export function runtimeMetricsDue(lastPublishedMs: number | null, nowMs: number): boolean {

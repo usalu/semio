@@ -49,11 +49,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same scales declared with \SemioVizScale inside a compiled document. */
+      /** 📄️ The same scales declared with \SemioVizScale inside a compiled document. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     log: {
-      /** 🔮️ d3-scale's log scale and its decade ticks. */
+      /** 🪵️ d3-scale's log scale and its decade ticks. */
       oracle: () => {
         const lg = scaleLog().domain([1, 1000]).range([0, 300]);
         const small = scaleLog().domain([0.001, 1]).range([0, 100]);
@@ -66,11 +66,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same logarithmic scales from the compiled probe. */
+      /** 🔨️ The same logarithmic scales from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     pow: {
-      /** 🔮️ d3-scale's power and square-root scales. */
+      /** 🔋️ d3-scale's power and square-root scales. */
       oracle: () => {
         const pw = scalePow().exponent(2).domain([0, 10]).range([0, 100]);
         const half = scalePow().exponent(0.5).domain([0, 16]).range([0, 64]);
@@ -85,11 +85,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same power scales from the compiled probe. */
+      /** ⚡️ The same power scales from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     symlog: {
-      /** 🔮️ d3-scale's symmetric-logarithmic scale at two linear-region constants. */
+      /** 📌️ d3-scale's symmetric-logarithmic scale at two linear-region constants. */
       oracle: () => {
         const sl = scaleSymlog().domain([-100, 100]).range([0, 200]);
         const constant = scaleSymlog().constant(10).domain([-100, 100]).range([0, 200]);
@@ -102,11 +102,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same symlog scales from the compiled probe. */
+      /** 🎒️ The same symlog scales from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     nice: {
-      /** 🔮️ d3-scale's nice() over four domains and tick counts. */
+      /** 🪄️ d3-scale's nice() over four domains and tick counts. */
       oracle: () => ({
         projection: {
           "nice/n1": grid(scaleLinear().domain([0.1, 0.9]).nice(10).domain()),
@@ -115,7 +115,7 @@ export default defineTestAdapter({
           "nice/n4": grid(scaleLinear().domain([12, 87]).nice(4).domain()),
         },
       }),
-      /** 🎯️ The domains the probe's scales carry after their `nice` option ran. */
+      /** ✨️ The domains the probe's scales carry after their `nice` option ran. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

@@ -7,7 +7,7 @@ import { parseRustSourceTree, type RustSourceItem } from "../../🌳️module-tr
 /** 🔭️ One name an aggregate module puts in scope: an import, a public child module or an item of its own. */
 export type AggregateName = { readonly kind: "import" | "module"; readonly statement: string } | { readonly kind: "item" };
 
-/** 🔭️ What the namespace of an aggregate module offers to a leaf below it: its imports (as absolute statements), its public child modules and its own items. */
+/** 🍃️ What the namespace of an aggregate module offers to a leaf below it: its imports (as absolute statements), its public child modules and its own items. */
 export type AggregateScope = { readonly names: ReadonlyMap<string, AggregateName>; readonly glob: boolean };
 
 /** 🧰️ A support module cut out of an aggregate file: the new aggregate text, the new file and the names it now hosts. */
@@ -58,7 +58,7 @@ function dropEmptyRegions(text: string): string {
   return text.replace(/^[ \t]*\/\/#region[ \t]+([^\n]*?)[ \t]*\n(?:[ \t]*\n)*[ \t]*\/\/#endregion[ \t]+\1[ \t]*\n?/gmu, "");
 }
 
-/** 🧰️ Moves the helper functions and constants of an aggregate module that its mutation leaves call into a `support` child module, so the leaves can import them from below the aggregate instead of reaching up into it. Items that mention the aggregate, one of its child modules or a test-only item stay where they are and keep their leaves coupled. */
+/** 📌️ Moves the helper functions and constants of an aggregate module that its mutation leaves call into a `support` child module, so the leaves can import them from below the aggregate instead of reaching up into it. Items that mention the aggregate, one of its child modules or a test-only item stay where they are and keep their leaves coupled. */
 export function hoistAggregateSupport(input: { readonly aggregateFile: string; readonly aggregateText: string; readonly aggregateName: string; readonly leafTexts: readonly string[]; readonly scope: AggregateScope }): SupportHoist | null {
   const { aggregateFile, aggregateText: text, aggregateName, scope } = input;
   if (scope.glob || parseRustSourceTree(text).modules.some((node) => node.name === "support")) return null;

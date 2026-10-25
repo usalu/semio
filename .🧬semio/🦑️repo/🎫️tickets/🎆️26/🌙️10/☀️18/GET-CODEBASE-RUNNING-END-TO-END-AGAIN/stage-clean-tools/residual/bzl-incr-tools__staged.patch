@@ -1,0 +1,4170 @@
+# stage-clean different staged=bzl-incr-tools/staged/command.ts map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/⌨️command/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/⌨️command/🟦️.ts
+@@ -1,17 +1,13 @@
+-import {buildBackendAlternationV1,buildBackendIdsV1} from "../../🔌️backends/🟦️.ts";
+-
+-import {access,mkdir,mkdtemp,readdir,rm} from "node:fs/promises";
+-import {homedir,tmpdir} from "node:os";
+-import {join,posix,win32} from "node:path";
+-import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
++import {spawn} from "node:child_process";
++import {access,mkdir,mkdtemp,rm} from "node:fs/promises";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
+ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+ import scenarios from "../📋️scenarios/🔣️.json" with {type:"json"};
+ import {incrementalExpectedV1,incrementalReportV1,incrementalScenarioIssuesV1,renderIncrementalReportV1,renderIncrementalScenariosV1,type IncrementalExpectedV1,type IncrementalPhaseV1,type IncrementalScenarioSetV1,type IncrementalToolV1} from "../🟦️.ts";
+-import {incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalCliPortsV1,incrementalCloneV1,incrementalDiscardV1,incrementalRefreshV1,incrementalRunV1,incrementalSelectV1,type IncrementalAdapterV1,type IncrementalHostV1} from "../🏃️runner/🟦️.ts";
+-import { startToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+-import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
++import {incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalCliPortsV1,incrementalCloneV1,incrementalDiscardV1,incrementalRunV1,incrementalSelectV1,type IncrementalAdapterV1,type IncrementalHostV1} from "../🏃️runner/🟦️.ts";
+ 
+-const policy=schema.definitions.Policy.const,tools:readonly IncrementalToolV1[]=buildBackendIdsV1(),operations=["list","plan","prepare","run","discard"] as const,script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";
++const policy=schema.definitions.Policy.const,tools:readonly IncrementalToolV1[]=["nx","bazel"],operations=["list","plan","prepare","run","discard"] as const,script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";
+ 
+ /** 📝️ The closed arguments of `repo incremental`. */
+ export type IncrementalArgumentsV1=Readonly<{operation:typeof operations[number];scenarios:readonly string[]|"all";tools:readonly IncrementalToolV1[];root:string|undefined;phases:readonly IncrementalPhaseV1[];file:string|undefined;json:boolean;fresh:boolean;language:"en"|"de"|undefined}>;
+@@ -36,17 +32,16 @@
+  }
+  const list=(name:string)=>values[name]?.split(",").filter(Boolean);
+  const chosen=list("--implementations")??[...tools],phases=list("--phases")??[...policy.phases],language=values["--lang"];
+- for(const tool of chosen)if(!tools.includes(tool as IncrementalToolV1))throw Error(both(`Unknown implementation: ${tool} (${buildBackendAlternationV1()})`,`Unbekannte Implementierung: ${tool} (${buildBackendAlternationV1()})`));
++ for(const tool of chosen)if(!tools.includes(tool as IncrementalToolV1))throw Error(both(`Unknown implementation: ${tool} (nx|bazel)`,`Unbekannte Implementierung: ${tool} (nx|bazel)`));
+  for(const phase of phases)if(!policy.phases.includes(phase))throw Error(both(`Unknown phase: ${phase} (${policy.phases.join("|")})`,`Unbekannte Phase: ${phase} (${policy.phases.join("|")})`));
+  if(language!==undefined&&language!=="en"&&language!=="de")throw Error(both(`Unknown language: ${language} (en|de)`,`Unbekannte Sprache: ${language} (en|de)`));
+  const picked=list("--scenario");
+  return Object.freeze({operation,scenarios:picked===undefined||picked.includes("all")?"all":picked,tools:[...new Set(chosen)] as IncrementalToolV1[],root:values["--root"],phases:[...new Set(phases)] as IncrementalPhaseV1[],file:values["--file"],json:flags.has("--json"),fresh:flags.has("--fresh"),language:language as "en"|"de"|undefined});
+ }
+ 
+-/** 📍️ The default location of the disposable root: the folder `.sinc` in the home directory (outside the scratch directories whose idle cache images the boot recovery detaches), else the folder `sinc` in the temporary directory of the process (inside a test sandbox that is the sandbox directory), each while its path keeps `maximumRootLength` units so the longest product path still fits the 255-unit budget; otherwise the short `sinc` folder at the top of the temporary volume (`/tmp`, or the drive root of the temporary directory on Windows). */
+-export function incrementalDefaultRootV1(platform:string,temporaryDirectory:string,home:string):string{
+- const flavour=platform==="win32"?win32:posix,candidates=platform==="win32"?[flavour.join(temporaryDirectory,"sinc")]:[flavour.join(home,".sinc"),flavour.join(temporaryDirectory,"sinc")];
+- return candidates.find(root=>root.length<=policy.maximumRootLength)??flavour.join(platform==="win32"?flavour.parse(temporaryDirectory).root||"C:\\":"/tmp","sinc");
++/** 📍️ The short default location of the disposable root: the 255-character path budget leaves no room for a long prefix. */
++export function incrementalDefaultRootV1(platform:string,environment:Readonly<Record<string,string|undefined>>):string{
++ return platform==="win32"?`${environment.SystemDrive??"C:"}\\sinc`:"/tmp/sinc";
+ }
+ 
+ /** 🎛️ Everything the command needs from the host process, so the command itself is testable without a build CLI. */
+@@ -57,8 +52,6 @@
+  signal:AbortSignal;
+  environment:Readonly<Record<string,string|undefined>>;
+  platform:string;
+- tmpdir():string;
+- home():string;
+  now():number;
+  run(command:string,args:readonly string[],cwd:string,env:Readonly<Record<string,string>>,signal:AbortSignal):Promise<string>;
+  report(file:string,value:unknown):Promise<void>;
+@@ -70,10 +63,7 @@
+ }>;
+ 
+ const text=(set:IncrementalScenarioSetV1,key:string,language:"en"|"de")=>set.labels[key]![language];
+-/** 🗣️ The language of the output: the requested one, else the shared rule of the CLI; no language is assumed. */
+-export function incrementalLanguageV1(requested:"en"|"de"|undefined,environment:Readonly<Record<string,string|undefined>>):"en"|"de"{return requested??resolveLanguageV1(["en","de"],[],environment).language as "en"|"de";}
+-
+-const languageOf=(parsed:IncrementalArgumentsV1,ports:IncrementalCommandPortsV1):"en"|"de"=>incrementalLanguageV1(parsed.language,ports.environment);
++const languageOf=(parsed:IncrementalArgumentsV1,ports:IncrementalCommandPortsV1):"en"|"de"=>parsed.language??(/^de/iu.test(ports.environment.SEMIO_LANGUAGE??ports.environment.LC_ALL??ports.environment.LANG??"")?"de":"en");
+ 
+ /** 🗺️ Renders the expected re-execution sets of a plan, one block per scenario and tool. */
+ export function renderIncrementalPlanV1(set:IncrementalScenarioSetV1,rows:readonly Readonly<{scenario:string;tool:IncrementalToolV1;expected:IncrementalExpectedV1}>[],lang:"en"|"de"):string{
+@@ -82,26 +72,27 @@
+  return out.join("\n");
+ }
+ 
+-const bootstrap:readonly (readonly string[])[]=[["preflight"],["tools","setup","all"],["dependencies","sync","--all"],["tools","setup","all"]];
++const bootstrap:readonly (readonly string[])[]=[["preflight"],["tools","setup","all"],["dependencies","sync","--all"]];
+ 
+ /** 🚀️ Runs `repo incremental`: lists the scenarios, plans their expected sets, prepares the disposable root, runs the scenarios in it with every implementation and judges minimality, or discards the root. Progress is published per stage and every stage checks for cancellation. */
+ export async function runIncrementalCommandV1(live:string,args:readonly string[],ports:IncrementalCommandPortsV1):Promise<void>{
+  const parsed=incrementalArgumentsV1(args.slice(args[0]==="incremental"?1:0)),set=scenarios as IncrementalScenarioSetV1,issues=incrementalScenarioIssuesV1(set);
+  if(issues.length)throw Error(`Closed incremental scenarios required: ${issues.join("; ")}`);
+- const lang=languageOf(parsed,ports),root=parsed.root??incrementalDefaultRootV1(ports.platform,ports.tmpdir(),ports.home());
++ const lang=languageOf(parsed,ports),root=parsed.root??incrementalDefaultRootV1(ports.platform,ports.environment);
+  if(parsed.operation==="list"){ports.write(renderIncrementalScenariosV1(set,lang));return;}
+- if(parsed.operation==="discard"){await ports.progress("discard");await incrementalDiscardV1(live,root,ports.signal);ports.write(`${text(set,"progress",lang)}: ${root}`);return;}
++ if(parsed.operation==="discard"){await ports.progress("discard");await incrementalDiscardV1(live,root);ports.write(`${text(set,"progress",lang)}: ${root}`);return;}
+  const scratch=await ports.scratch(),exists=await ports.exists(join(root,script));
+  const host=(files?:readonly string[]):IncrementalHostV1=>({live,root,script,executable:process.execPath,scratch,signal:ports.signal,environment:ports.environment,run:ports.run,nxRecord:ports.nxRecord,adapter:ports.adapter,inventory:async()=>files??await ports.files(live,ports.signal),now:ports.now,check:ports.check,progress:ports.progress});
+  try{
+   if(parsed.operation==="prepare"){
+    ports.check();
+-   if(parsed.fresh)await incrementalDiscardV1(live,root,ports.signal);
+-   const files=await ports.files(live,ports.signal);
+-   if(!exists||parsed.fresh)await incrementalCloneV1(live,root,files,{signal:ports.signal,progress:async(done,total)=>{await ports.progress(`clone:${done}/${total}`);}});
+-   else await incrementalRefreshV1(live,root,files,{signal:ports.signal,progress:async(done,total)=>{await ports.progress(`refresh:${done}/${total}`);}});
++   if(parsed.fresh)await incrementalDiscardV1(live,root);
++   if(!exists||parsed.fresh){
++    const files=await ports.files(live,ports.signal);
++    await incrementalCloneV1(live,root,files,{signal:ports.signal,progress:async(done,total)=>{await ports.progress(`clone:${done}/${total}`);}});
++   }
+    const pre=host();
+-   for(const step of bootstrap){ports.check();await ports.progress(`bootstrap:${step.join(" ")}`);const cli=incrementalCliArgumentsV1(pre.executable,root,script,tools[0]!,step);await ports.run(cli.command,cli.args,root,incrementalChildEnvironmentV1(ports.environment,{}),ports.signal);}
++   for(const step of bootstrap){ports.check();await ports.progress(`bootstrap:${step.join(" ")}`);const cli=incrementalCliArgumentsV1(pre.executable,root,script,"nx",step);await ports.run(cli.command,cli.args,root,incrementalChildEnvironmentV1(ports.environment,{}),ports.signal);}
+    ports.write(`${text(set,"progress",lang)}: ${root}`);
+    return;
+   }
+@@ -128,17 +119,15 @@
+ export async function incrementalCommandPortsV1(root:string,invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<IncrementalCommandPortsV1>{
+  const nx=await import("../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts"),routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),execution=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
+  return Object.freeze({
+-  write:writeResultLineV1,
++  write:line=>console.log(line),
+   progress:stage=>routing.advanceScriptInvocation(invocation,"incremental:"+stage,"running"),
+   check:()=>routing.checkScriptInvocation(invocation),
+   signal:invocation.control.signal,
+   environment:process.env,
+   platform:process.platform,
+-  tmpdir:()=>tmpdir(),
+-  home:()=>homedir(),
+   now:()=>Date.now(),
+   run:(command,args,cwd,env,signal)=>execution.captureOwnedCommandV1(command,args,cwd,{env,signal}),
+-  report:async(file,value)=>{const{withRepositoryBuildReportV1}=await import("../../📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,file,value,invocation,async artifact=>{writeResultLineV1(artifact.path);});},
++  report:async(file,value)=>{const{withRepositoryBuildReportV1}=await import("../../📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,file,value,invocation,async artifact=>{console.log(artifact.path);});},
+   files:(directory,signal)=>incrementalTrackedFilesV1(directory,signal),
+   adapter:async()=>await import("../../🔧️tools/🏗️bazel/📜️script.ts") as unknown as IncrementalAdapterV1,
+   nxRecord:directory=>join(nx.nxCacheDirectoryV1(directory),"run.json"),
+@@ -147,33 +136,16 @@
+  });
+ }
+ 
+-/** 📜️ Runs one read-only, bounded and cancellable `git ls-files` and returns its NUL separated paths. */
+-function incrementalGitListV1(directory:string,arguments_:readonly string[],signal:AbortSignal):Promise<readonly string[]>{
++/** 📜️ Lists the tracked and untracked, non-ignored files of a checkout, read-only, bounded and cancellable. */
++export function incrementalTrackedFilesV1(directory:string,signal:AbortSignal):Promise<readonly string[]>{
+  return new Promise((accept,reject)=>{
+-  const child=startToolV1("git",["-C",directory,"ls-files","-z",...arguments_],{stdio:["ignore","pipe","pipe"],windowsHide:true,signal}),chunks:Buffer[]=[];let bytes=0;
++  const child=spawn("git",["-C",directory,"ls-files","-z","-co","--exclude-standard"],{stdio:["ignore","pipe","pipe"],windowsHide:true,signal}),chunks:Buffer[]=[];let bytes=0;
+   child.stdout.on("data",(chunk:Buffer)=>{bytes+=chunk.length;if(bytes>policy.maximumLogBytes){child.kill();reject(Error("Bounded file inventory required"));}else chunks.push(chunk);});
+   child.on("error",reject);
+   child.on("close",code=>code===0?accept(Buffer.concat(chunks).toString("utf8").split("\0").filter(Boolean)):reject(Error(`git ls-files failed (${code})`)));
+  });
+ }
+ 
+-/** 🤖️ Expands the ignored entries a copy still needs (generated outputs the build graph reads) into files: a listed directory is walked, a link stays a link. */
+-async function incrementalIgnoredFilesV1(directory:string,entries:readonly string[]):Promise<readonly string[]>{
+- const rule=policy.includedIgnored,found:string[]=[],walk=async(relativePath:string):Promise<void>=>{for(const entry of await readdir(join(directory,relativePath),{withFileTypes:true})){const child=posix.join(relativePath,entry.name);if(entry.isDirectory())await walk(child);else found.push(child);}};
+- for(const entry of entries){
+-  const directoryEntry=entry.endsWith("/"),name=posix.basename(directoryEntry?entry.slice(0,-1):entry);
+-  if(directoryEntry?rule.directoryNames.includes(name):rule.filePrefixes.some(prefix=>name.startsWith(prefix))||rule.files.includes(entry))directoryEntry?await walk(entry.slice(0,-1)):found.push(entry);
+- }
+- return found;
+-}
+-
+-/** 📜️ Lists the tracked and untracked, non-ignored files of a checkout plus its ignored generated outputs, without the ticket workspace, read-only, bounded and cancellable. */
+-export async function incrementalTrackedFilesV1(directory:string,signal:AbortSignal):Promise<readonly string[]>{
+- const [listed,ignored]=await Promise.all([incrementalGitListV1(directory,["-co","--exclude-standard"],signal),incrementalGitListV1(directory,["-o","-i","--exclude-standard","--directory"],signal)]);
+- const files=new Set([...listed,...await incrementalIgnoredFilesV1(directory,ignored)]);
+- return [...files].filter(file=>!policy.excludedPrefixes.some(prefix=>file.startsWith(prefix))).sort();
+-}
+-
+ /** 🚪️ The entry the build CLI calls for `repo incremental`. */
+ export async function runIncrementalV1(root:string,args:readonly string[],invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<void>{
+  await runIncrementalCommandV1(root,args,await incrementalCommandPortsV1(root,invocation));
+# stage-clean orphan staged=bzl-incr-tools/staged/fixture.json map=None
+--- /dev/null
++++ b/staged/bzl-incr-tools/staged/fixture.json
+@@ -0,0 +1,2267 @@
++{
++ "version": 1,
++ "sensitivity": [
++  {
++   "family": "bun-script",
++   "kind": "comment-only",
++   "effect": "identical"
++  },
++  {
++   "family": "bun-script",
++   "kind": "body-change",
++   "effect": "changed"
++  },
++  {
++   "family": "bun-script",
++   "kind": "config",
++   "effect": "identical"
++  },
++  {
++   "family": "tsc",
++   "kind": "comment-only",
++   "effect": "identical"
++  },
++  {
++   "family": "tsc",
++   "kind": "body-change",
++   "effect": "identical"
++  },
++  {
++   "family": "tsc",
++   "kind": "config",
++   "effect": "identical"
++  },
++  {
++   "family": "tsc",
++   "kind": "signature-change",
++   "effect": "changed"
++  },
++  {
++   "family": "vite",
++   "kind": "comment-only",
++   "effect": "identical"
++  },
++  {
++   "family": "vite",
++   "kind": "body-change",
++   "effect": "changed"
++  },
++  {
++   "family": "vite",
++   "kind": "config",
++   "effect": "identical"
++  },
++  {
++   "family": "vitest",
++   "kind": "body-change",
++   "effect": "identical"
++  },
++  {
++   "family": "cargo",
++   "kind": "signature-change",
++   "effect": "changed"
++  },
++  {
++   "family": "cargo",
++   "kind": "unrelated-sibling",
++   "effect": "identical"
++  }
++ ],
++ "evaluation": [
++  {
++   "name": "comment in a generator is cut off before its dependents (bazel)",
++   "tool": "bazel",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "shell:activate",
++     "other:build"
++    ],
++    "tasks": {
++     "lib:generate": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "lib/gen.ts",
++       "lib/src.ts"
++      ]
++     },
++     "lib:typecheck": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "lib/src.ts"
++      ]
++     },
++     "app:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "app/main.ts",
++       "app/vite.config.ts"
++      ]
++     },
++     "app:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "app:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "app/main.test.ts",
++       "app/main.ts"
++      ]
++     },
++     "shell:activate": {
++      "family": "bun-script",
++      "cache": false,
++      "outputs": true,
++      "dependsOn": [
++       "app:build",
++       "app:test"
++      ],
++      "consumes": [
++       "app:build"
++      ],
++      "inputs": []
++     },
++     "other:build": {
++      "family": "cargo",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "other/lib.rs"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "comment-only",
++    "files": [
++     "lib/gen.ts"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "lib:generate"
++    ],
++    "must": [
++     "lib:generate",
++     "shell:activate"
++    ],
++    "may": [
++     "lib:generate",
++     "shell:activate"
++    ],
++    "cutoff": [
++     "app:build",
++     "lib:typecheck"
++    ]
++   }
++  },
++  {
++   "name": "comment in a generator is cut off before its dependents (nx)",
++   "tool": "nx",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "shell:activate",
++     "other:build"
++    ],
++    "tasks": {
++     "lib:generate": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "lib/gen.ts",
++       "lib/src.ts"
++      ]
++     },
++     "lib:typecheck": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "lib/src.ts"
++      ]
++     },
++     "app:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "app/main.ts",
++       "app/vite.config.ts"
++      ]
++     },
++     "app:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "app:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "app/main.test.ts",
++       "app/main.ts"
++      ]
++     },
++     "shell:activate": {
++      "family": "bun-script",
++      "cache": false,
++      "outputs": true,
++      "dependsOn": [
++       "app:build",
++       "app:test"
++      ],
++      "consumes": [
++       "app:build"
++      ],
++      "inputs": []
++     },
++     "other:build": {
++      "family": "cargo",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "other/lib.rs"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "comment-only",
++    "files": [
++     "lib/gen.ts"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "lib:generate"
++    ],
++    "must": [
++     "lib:generate",
++     "shell:activate"
++    ],
++    "may": [
++     "lib:generate",
++     "shell:activate"
++    ],
++    "cutoff": [
++     "app:build",
++     "lib:typecheck"
++    ]
++   }
++  },
++  {
++   "name": "body change in a generator reaches every dependent whose output follows (bazel)",
++   "tool": "bazel",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "shell:activate",
++     "other:build"
++    ],
++    "tasks": {
++     "lib:generate": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "lib/gen.ts",
++       "lib/src.ts"
++      ]
++     },
++     "lib:typecheck": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "lib/src.ts"
++      ]
++     },
++     "app:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "app/main.ts",
++       "app/vite.config.ts"
++      ]
++     },
++     "app:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "app:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "app/main.test.ts",
++       "app/main.ts"
++      ]
++     },
++     "shell:activate": {
++      "family": "bun-script",
++      "cache": false,
++      "outputs": true,
++      "dependsOn": [
++       "app:build",
++       "app:test"
++      ],
++      "consumes": [
++       "app:build"
++      ],
++      "inputs": []
++     },
++     "other:build": {
++      "family": "cargo",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "other/lib.rs"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "body-change",
++    "files": [
++     "lib/gen.ts"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "lib:generate"
++    ],
++    "must": [
++     "app:build",
++     "app:test",
++     "lib:generate",
++     "lib:typecheck",
++     "shell:activate"
++    ],
++    "may": [
++     "app:build",
++     "app:test",
++     "lib:generate",
++     "lib:typecheck",
++     "shell:activate"
++    ],
++    "cutoff": []
++   }
++  },
++  {
++   "name": "body change in a generator reaches only the consumers of outputs (nx)",
++   "tool": "nx",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "shell:activate",
++     "other:build"
++    ],
++    "tasks": {
++     "lib:generate": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "lib/gen.ts",
++       "lib/src.ts"
++      ]
++     },
++     "lib:typecheck": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "lib/src.ts"
++      ]
++     },
++     "app:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "app/main.ts",
++       "app/vite.config.ts"
++      ]
++     },
++     "app:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "app:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "app/main.test.ts",
++       "app/main.ts"
++      ]
++     },
++     "shell:activate": {
++      "family": "bun-script",
++      "cache": false,
++      "outputs": true,
++      "dependsOn": [
++       "app:build",
++       "app:test"
++      ],
++      "consumes": [
++       "app:build"
++      ],
++      "inputs": []
++     },
++     "other:build": {
++      "family": "cargo",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "other/lib.rs"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "body-change",
++    "files": [
++     "lib/gen.ts"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "lib:generate"
++    ],
++    "must": [
++     "app:build",
++     "lib:generate",
++     "lib:typecheck",
++     "shell:activate"
++    ],
++    "may": [
++     "app:build",
++     "lib:generate",
++     "lib:typecheck",
++     "shell:activate"
++    ],
++    "cutoff": []
++   }
++  },
++  {
++   "name": "body change in a file only the builder reads reaches the test through its dependency snapshot (bazel)",
++   "tool": "bazel",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "shell:activate",
++     "other:build"
++    ],
++    "tasks": {
++     "lib:generate": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "lib/gen.ts",
++       "lib/src.ts"
++      ]
++     },
++     "lib:typecheck": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "lib/src.ts"
++      ]
++     },
++     "app:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "app/main.ts",
++       "app/vite.config.ts"
++      ]
++     },
++     "app:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "app:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "app/main.test.ts",
++       "app/main.ts"
++      ]
++     },
++     "shell:activate": {
++      "family": "bun-script",
++      "cache": false,
++      "outputs": true,
++      "dependsOn": [
++       "app:build",
++       "app:test"
++      ],
++      "consumes": [
++       "app:build"
++      ],
++      "inputs": []
++     },
++     "other:build": {
++      "family": "cargo",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "other/lib.rs"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "body-change",
++    "files": [
++     "app/vite.config.ts"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "app:build"
++    ],
++    "must": [
++     "app:build",
++     "app:test",
++     "shell:activate"
++    ],
++    "may": [
++     "app:build",
++     "app:test",
++     "shell:activate"
++    ],
++    "cutoff": []
++   }
++  },
++  {
++   "name": "body change in a file only the builder reads leaves the test alone (nx)",
++   "tool": "nx",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "shell:activate",
++     "other:build"
++    ],
++    "tasks": {
++     "lib:generate": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "lib/gen.ts",
++       "lib/src.ts"
++      ]
++     },
++     "lib:typecheck": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "lib/src.ts"
++      ]
++     },
++     "app:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "app/main.ts",
++       "app/vite.config.ts"
++      ]
++     },
++     "app:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "app:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "app/main.test.ts",
++       "app/main.ts"
++      ]
++     },
++     "shell:activate": {
++      "family": "bun-script",
++      "cache": false,
++      "outputs": true,
++      "dependsOn": [
++       "app:build",
++       "app:test"
++      ],
++      "consumes": [
++       "app:build"
++      ],
++      "inputs": []
++     },
++     "other:build": {
++      "family": "cargo",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "other/lib.rs"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "body-change",
++    "files": [
++     "app/vite.config.ts"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "app:build"
++    ],
++    "must": [
++     "app:build",
++     "shell:activate"
++    ],
++    "may": [
++     "app:build",
++     "shell:activate"
++    ],
++    "cutoff": []
++   }
++  },
++  {
++   "name": "an unrelated sibling re-runs only the uncached task (bazel)",
++   "tool": "bazel",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "shell:activate",
++     "other:build"
++    ],
++    "tasks": {
++     "lib:generate": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "lib/gen.ts",
++       "lib/src.ts"
++      ]
++     },
++     "lib:typecheck": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "lib/src.ts"
++      ]
++     },
++     "app:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "app/main.ts",
++       "app/vite.config.ts"
++      ]
++     },
++     "app:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "app:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "app/main.test.ts",
++       "app/main.ts"
++      ]
++     },
++     "shell:activate": {
++      "family": "bun-script",
++      "cache": false,
++      "outputs": true,
++      "dependsOn": [
++       "app:build",
++       "app:test"
++      ],
++      "consumes": [
++       "app:build"
++      ],
++      "inputs": []
++     },
++     "other:build": {
++      "family": "cargo",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "other/lib.rs"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "unrelated-sibling",
++    "files": [
++     "unrelated/x.ts"
++    ]
++   },
++   "expected": {
++    "direct": [],
++    "must": [
++     "shell:activate"
++    ],
++    "may": [
++     "shell:activate"
++    ],
++    "cutoff": []
++   }
++  },
++  {
++   "name": "an unrelated sibling re-runs only the uncached task (nx)",
++   "tool": "nx",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "shell:activate",
++     "other:build"
++    ],
++    "tasks": {
++     "lib:generate": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "lib/gen.ts",
++       "lib/src.ts"
++      ]
++     },
++     "lib:typecheck": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "lib/src.ts"
++      ]
++     },
++     "app:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "app/main.ts",
++       "app/vite.config.ts"
++      ]
++     },
++     "app:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "app:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "app/main.test.ts",
++       "app/main.ts"
++      ]
++     },
++     "shell:activate": {
++      "family": "bun-script",
++      "cache": false,
++      "outputs": true,
++      "dependsOn": [
++       "app:build",
++       "app:test"
++      ],
++      "consumes": [
++       "app:build"
++      ],
++      "inputs": []
++     },
++     "other:build": {
++      "family": "cargo",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "other/lib.rs"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "unrelated-sibling",
++    "files": [
++     "unrelated/x.ts"
++    ]
++   },
++   "expected": {
++    "direct": [],
++    "must": [
++     "shell:activate"
++    ],
++    "may": [
++     "shell:activate"
++    ],
++    "cutoff": []
++   }
++  },
++  {
++   "name": "an additive signature change in a crate re-runs the crate and the uncached task",
++   "tool": "bazel",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "shell:activate",
++     "other:build"
++    ],
++    "tasks": {
++     "lib:generate": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "lib/gen.ts",
++       "lib/src.ts"
++      ]
++     },
++     "lib:typecheck": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "lib/src.ts"
++      ]
++     },
++     "app:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "app/main.ts",
++       "app/vite.config.ts"
++      ]
++     },
++     "app:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "app:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "app/main.test.ts",
++       "app/main.ts"
++      ]
++     },
++     "shell:activate": {
++      "family": "bun-script",
++      "cache": false,
++      "outputs": true,
++      "dependsOn": [
++       "app:build",
++       "app:test"
++      ],
++      "consumes": [
++       "app:build"
++      ],
++      "inputs": []
++     },
++     "other:build": {
++      "family": "cargo",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "other/lib.rs"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "signature-change",
++    "files": [
++     "other/lib.rs"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "other:build"
++    ],
++    "must": [
++     "other:build",
++     "shell:activate"
++    ],
++    "may": [
++     "other:build",
++     "shell:activate"
++    ],
++    "cutoff": []
++   }
++  },
++  {
++   "name": "a config edit read by two tasks is cut off before the builder (bazel)",
++   "tool": "bazel",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "shell:activate",
++     "other:build"
++    ],
++    "tasks": {
++     "lib:generate": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "lib/gen.ts",
++       "lib/src.ts"
++      ]
++     },
++     "lib:typecheck": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "lib/src.ts"
++      ]
++     },
++     "app:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "app/main.ts",
++       "app/vite.config.ts"
++      ]
++     },
++     "app:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "app:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "app/main.test.ts",
++       "app/main.ts"
++      ]
++     },
++     "shell:activate": {
++      "family": "bun-script",
++      "cache": false,
++      "outputs": true,
++      "dependsOn": [
++       "app:build",
++       "app:test"
++      ],
++      "consumes": [
++       "app:build"
++      ],
++      "inputs": []
++     },
++     "other:build": {
++      "family": "cargo",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "other/lib.rs"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "config",
++    "files": [
++     "lib/src.ts"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "lib:generate",
++     "lib:typecheck"
++    ],
++    "must": [
++     "lib:generate",
++     "lib:typecheck",
++     "shell:activate"
++    ],
++    "may": [
++     "lib:generate",
++     "lib:typecheck",
++     "shell:activate"
++    ],
++    "cutoff": [
++     "app:build"
++    ]
++   }
++  },
++  {
++   "name": "an unknown output effect widens may but not must",
++   "tool": "bazel",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "shell:activate",
++     "other:build"
++    ],
++    "tasks": {
++     "lib:generate": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "lib/gen.ts",
++       "lib/src.ts"
++      ]
++     },
++     "lib:typecheck": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "lib/src.ts"
++      ]
++     },
++     "app:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "lib:generate"
++      ],
++      "consumes": [
++       "lib:generate"
++      ],
++      "inputs": [
++       "app/main.ts",
++       "app/vite.config.ts"
++      ]
++     },
++     "app:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "app:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "app/main.test.ts",
++       "app/main.ts"
++      ]
++     },
++     "shell:activate": {
++      "family": "bun-script",
++      "cache": false,
++      "outputs": true,
++      "dependsOn": [
++       "app:build",
++       "app:test"
++      ],
++      "consumes": [
++       "app:build"
++      ],
++      "inputs": []
++     },
++     "other:build": {
++      "family": "cargo",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "other/lib.rs"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "signature-change",
++    "files": [
++     "lib/src.ts"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "lib:generate",
++     "lib:typecheck"
++    ],
++    "must": [
++     "lib:generate",
++     "lib:typecheck",
++     "shell:activate"
++    ],
++    "may": [
++     "app:build",
++     "app:test",
++     "lib:generate",
++     "lib:typecheck",
++     "shell:activate"
++    ],
++    "cutoff": []
++   }
++  },
++  {
++   "name": "a diamond follows changed outputs once (bazel)",
++   "tool": "bazel",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "d:test"
++    ],
++    "tasks": {
++     "a:gen": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "a/a.ts"
++      ]
++     },
++     "b:build": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "a:gen"
++      ],
++      "consumes": [
++       "a:gen"
++      ],
++      "inputs": [
++       "b/b.ts"
++      ]
++     },
++     "c:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "a:gen",
++       "b:build"
++      ],
++      "consumes": [
++       "a:gen",
++       "b:build"
++      ],
++      "inputs": [
++       "c/c.ts"
++      ]
++     },
++     "d:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "c:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "d/d.ts"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "body-change",
++    "files": [
++     "a/a.ts"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "a:gen"
++    ],
++    "must": [
++     "a:gen",
++     "b:build",
++     "c:build",
++     "d:test"
++    ],
++    "may": [
++     "a:gen",
++     "b:build",
++     "c:build",
++     "d:test"
++    ],
++    "cutoff": []
++   }
++  },
++  {
++   "name": "a diamond is cut where the middle output is identical (bazel)",
++   "tool": "bazel",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "d:test"
++    ],
++    "tasks": {
++     "a:gen": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "a/a.ts"
++      ]
++     },
++     "b:build": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "a:gen"
++      ],
++      "consumes": [
++       "a:gen"
++      ],
++      "inputs": [
++       "b/b.ts"
++      ]
++     },
++     "c:build": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "a:gen",
++       "b:build"
++      ],
++      "consumes": [
++       "a:gen",
++       "b:build"
++      ],
++      "inputs": [
++       "c/c.ts"
++      ]
++     },
++     "d:test": {
++      "family": "vitest",
++      "cache": true,
++      "outputs": false,
++      "dependsOn": [
++       "c:build"
++      ],
++      "consumes": [],
++      "inputs": [
++       "d/d.ts"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "comment-only",
++    "files": [
++     "a/a.ts"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "a:gen"
++    ],
++    "must": [
++     "a:gen"
++    ],
++    "may": [
++     "a:gen"
++    ],
++    "cutoff": [
++     "b:build",
++     "c:build"
++    ]
++   }
++  },
++  {
++   "name": "an edit nothing declares re-runs nothing",
++   "tool": "bazel",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "x:tail"
++    ],
++    "tasks": {
++     "x:head": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "x/head.ts"
++      ]
++     },
++     "x:tail": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "x:head"
++      ],
++      "consumes": [
++       "x:head"
++      ],
++      "inputs": [
++       "x/tail.ts"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "unrelated-sibling",
++    "files": [
++     "y/other.ts"
++    ]
++   },
++   "expected": {
++    "direct": [],
++    "must": [],
++    "may": [],
++    "cutoff": []
++   }
++  },
++  {
++   "name": "an edit read by the tail re-runs only the tail",
++   "tool": "nx",
++   "slice": {
++    "version": 1,
++    "selected": [
++     "x:tail"
++    ],
++    "tasks": {
++     "x:head": {
++      "family": "bun-script",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": [
++       "x/head.ts"
++      ]
++     },
++     "x:tail": {
++      "family": "vite",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "x:head"
++      ],
++      "consumes": [
++       "x:head"
++      ],
++      "inputs": [
++       "x/tail.ts"
++      ]
++     }
++    }
++   },
++   "edit": {
++    "kind": "body-change",
++    "files": [
++     "x/tail.ts"
++    ]
++   },
++   "expected": {
++    "direct": [
++     "x:tail"
++    ],
++    "must": [
++     "x:tail"
++    ],
++    "may": [
++     "x:tail"
++    ],
++    "cutoff": []
++   }
++  }
++ ],
++ "verdicts": [
++  {
++   "name": "exact run passes",
++   "expected": {
++    "direct": [],
++    "must": [
++     "a:x"
++    ],
++    "may": [
++     "a:x"
++    ],
++    "cutoff": []
++   },
++   "executed": [
++    "a:x"
++   ],
++   "verdict": {
++    "status": "pass",
++    "stale": [],
++    "excess": [],
++    "exact": true
++   }
++  },
++  {
++   "name": "a run inside may passes but is not exact",
++   "expected": {
++    "direct": [],
++    "must": [
++     "a:x"
++    ],
++    "may": [
++     "a:x",
++     "b:x"
++    ],
++    "cutoff": []
++   },
++   "executed": [
++    "a:x"
++   ],
++   "verdict": {
++    "status": "pass",
++    "stale": [],
++    "excess": [],
++    "exact": false
++   }
++  },
++  {
++   "name": "a run covering may passes",
++   "expected": {
++    "direct": [],
++    "must": [
++     "a:x"
++    ],
++    "may": [
++     "a:x",
++     "b:x"
++    ],
++    "cutoff": []
++   },
++   "executed": [
++    "a:x",
++    "b:x"
++   ],
++   "verdict": {
++    "status": "pass",
++    "stale": [],
++    "excess": [],
++    "exact": false
++   }
++  },
++  {
++   "name": "a missing must task is stale",
++   "expected": {
++    "direct": [],
++    "must": [
++     "a:x",
++     "b:x"
++    ],
++    "may": [
++     "a:x",
++     "b:x"
++    ],
++    "cutoff": []
++   },
++   "executed": [
++    "a:x"
++   ],
++   "verdict": {
++    "status": "stale",
++    "stale": [
++     "b:x"
++    ],
++    "excess": [],
++    "exact": false
++   }
++  },
++  {
++   "name": "a task beyond may is excess",
++   "expected": {
++    "direct": [],
++    "must": [
++     "a:x"
++    ],
++    "may": [
++     "a:x"
++    ],
++    "cutoff": []
++   },
++   "executed": [
++    "a:x",
++    "c:x"
++   ],
++   "verdict": {
++    "status": "excess",
++    "stale": [],
++    "excess": [
++     "c:x"
++    ],
++    "exact": false
++   }
++  },
++  {
++   "name": "stale and excess together",
++   "expected": {
++    "direct": [],
++    "must": [
++     "a:x"
++    ],
++    "may": [
++     "a:x"
++    ],
++    "cutoff": []
++   },
++   "executed": [
++    "c:x"
++   ],
++   "verdict": {
++    "status": "stale-excess",
++    "stale": [
++     "a:x"
++    ],
++    "excess": [
++     "c:x"
++    ],
++    "exact": false
++   }
++  },
++  {
++   "name": "nothing expected and nothing run is exact",
++   "expected": {
++    "direct": [],
++    "must": [],
++    "may": [],
++    "cutoff": []
++   },
++   "executed": [],
++   "verdict": {
++    "status": "pass",
++    "stale": [],
++    "excess": [],
++    "exact": true
++   }
++  }
++ ],
++ "mutations": [
++  {
++   "name": "ts comment",
++   "op": "comment",
++   "language": "ts",
++   "nonce": "k3j9x2a",
++   "before": "const a = 1;\n",
++   "after": "const a = 1;\n// [incremental] k3j9x2a\n"
++  },
++  {
++   "name": "ts comment appends the missing newline",
++   "op": "comment",
++   "language": "ts",
++   "nonce": "k3j9x2a",
++   "before": "const a = 1;",
++   "after": "const a = 1;\n// [incremental] k3j9x2a\n"
++  },
++  {
++   "name": "ts private body",
++   "op": "private-body",
++   "language": "ts",
++   "nonce": "zz00aa11",
++   "before": "export {};\n",
++   "after": "export {};\nvoid 96565;\n"
++  },
++  {
++   "name": "ts public api",
++   "op": "public-api",
++   "language": "ts",
++   "nonce": "zz00aa11",
++   "before": "export {};\n",
++   "after": "export {};\nexport const __incrementalzz00aa11=96565 as const;\n"
++  },
++  {
++   "name": "rs comment",
++   "op": "comment",
++   "language": "rs",
++   "nonce": "abc123xyz",
++   "before": "fn main() {}\n",
++   "after": "fn main() {}\n// [incremental] abc123xyz\n"
++  },
++  {
++   "name": "rs private body",
++   "op": "private-body",
++   "language": "rs",
++   "nonce": "abc123xyz",
++   "before": "fn main() {}\n",
++   "after": "fn main() {}\nconst _: u32 = 696910;\n"
++  },
++  {
++   "name": "rs public api",
++   "op": "public-api",
++   "language": "rs",
++   "nonce": "abc123xyz",
++   "before": "fn main() {}\n",
++   "after": "fn main() {}\n/// [incremental] public probe abc123xyz\npub const __INCREMENTAL_ABC123XYZ: u32 = 696910;\n"
++  },
++  {
++   "name": "py comment",
++   "op": "comment",
++   "language": "py",
++   "nonce": "m1n2o3",
++   "before": "x = 1\n",
++   "after": "x = 1\n# [incremental] m1n2o3\n"
++  },
++  {
++   "name": "py private body",
++   "op": "private-body",
++   "language": "py",
++   "nonce": "m1n2o3",
++   "before": "x = 1\n",
++   "after": "x = 1\n_incremental_m1n2o3 = 8036\n"
++  },
++  {
++   "name": "py public api",
++   "op": "public-api",
++   "language": "py",
++   "nonce": "m1n2o3",
++   "before": "x = 1\n",
++   "after": "x = 1\nINCREMENTAL_M1N2O3 = 8036\n"
++  },
++  {
++   "name": "text comment",
++   "op": "comment",
++   "language": "text",
++   "nonce": "q9w8e7",
++   "before": "a = 1\n",
++   "after": "a = 1\n# [incremental] q9w8e7\n"
++  },
++  {
++   "name": "whitespace on a lock file",
++   "op": "whitespace",
++   "language": "text",
++   "nonce": "q9w8e7",
++   "before": "{\"lockfileVersion\": 1}\n",
++   "after": "{\"lockfileVersion\": 1}\n\n"
++  },
++  {
++   "name": "comment on an empty file",
++   "op": "comment",
++   "language": "ts",
++   "nonce": "k3j9x2a",
++   "before": "",
++   "after": "// [incremental] k3j9x2a\n"
++  }
++ ],
++ "labels": [
++  {
++   "task": "@semio-tech/framework-graph:test",
++   "label": "t_19b6d94c3d033114"
++  },
++  {
++   "task": "@teaching/proctor:build",
++   "label": "t_a79dab98de7f2b7d"
++  },
++  {
++   "task": "os-hub-ts:test",
++   "label": "t_c5675af649e00751"
++  },
++  {
++   "task": "@semio-tech/mit-bestand-demonstrator:activate-prototype",
++   "label": "t_db50876d31dcb37a"
++  },
++  {
++   "task": "a:b:c",
++   "label": "t_b0ee04f880c4ff42"
++  }
++ ],
++ "environments": [
++  {
++   "name": "invocation and Nx state are dropped, the language and tools stay",
++   "parent": {
++    "PATH": "/usr/bin",
++    "HOME": "/home/a",
++    "SEMIO_SCRIPT_PROCESS_INVOCATION": "{}",
++    "SEMIO_BUILD_TOOL": "bazel",
++    "NX_DAEMON": "false",
++    "SEMIO_LANGUAGE": "de",
++    "LANG": "en_US.UTF-8"
++   },
++   "extra": {},
++   "child": {
++    "PATH": "/usr/bin",
++    "HOME": "/home/a",
++    "SEMIO_LANGUAGE": "de",
++    "LANG": "en_US.UTF-8"
++   }
++  },
++  {
++   "name": "explicit additions win",
++   "parent": {
++    "PATH": "/usr/bin",
++    "SEMIO_BUILD_TASK_REPORT": "/old"
++   },
++   "extra": {
++    "SEMIO_BUILD_TASK_REPORT": "/new/log.zst"
++   },
++   "child": {
++    "PATH": "/usr/bin",
++    "SEMIO_BUILD_TASK_REPORT": "/new/log.zst"
++   }
++  }
++ ],
++ "refusals": [
++  {
++   "name": "a dependency cycle",
++   "value": {
++    "version": 1,
++    "selected": [],
++    "tasks": {
++     "a:x": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "b:x"
++      ],
++      "consumes": [],
++      "inputs": []
++     },
++     "b:x": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "a:x"
++      ],
++      "consumes": [],
++      "inputs": []
++     }
++    }
++   }
++  },
++  {
++   "name": "an unknown dependency",
++   "value": {
++    "version": 1,
++    "selected": [],
++    "tasks": {
++     "a:x": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [
++       "zzz:x"
++      ],
++      "consumes": [],
++      "inputs": []
++     }
++    }
++   }
++  },
++  {
++   "name": "a consumed task that is not a dependency",
++   "value": {
++    "version": 1,
++    "selected": [],
++    "tasks": {
++     "a:x": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": []
++     },
++     "b:x": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [
++       "a:x"
++      ],
++      "inputs": []
++     }
++    }
++   }
++  },
++  {
++   "name": "an unknown selected task",
++   "value": {
++    "version": 1,
++    "selected": [
++     "nope:x"
++    ],
++    "tasks": {
++     "a:x": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": []
++     }
++    }
++   }
++  },
++  {
++   "name": "a task id without a colon",
++   "value": {
++    "version": 1,
++    "selected": [],
++    "tasks": {
++     "plain": {
++      "family": "tsc",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": []
++     }
++    }
++   }
++  },
++  {
++   "name": "an unknown family",
++   "value": {
++    "version": 1,
++    "selected": [],
++    "tasks": {
++     "a:x": {
++      "family": "make",
++      "cache": true,
++      "outputs": true,
++      "dependsOn": [],
++      "consumes": [],
++      "inputs": []
++     }
++    }
++   }
++  }
++ ],
++ "bazelLogs": [
++  {
++   "name": "cold build (3 darwin-sandbox, 1 internal)",
++   "tasks": [
++    "lib:generate",
++    "app:build",
++    "app:test"
++   ],
++   "compact": "KLUv/QBYhSYAulCoD0IAk9MGqV7qAKrr0H5BFUCr6K86ANoBQNNShvqWoOr23fZoc+W0bPxfSu9v9Ze4srt7cwuRXvwZQfD3aQ5FiojNtTnoAP0A5gBSyldvpNGlqpCSnUokkbXwSHSyGeY5BOXM5TAkUYnLsZWdSqEHVabioWo6nM6KpwNQVMmPj3z068faN+InIW7s7zrboMM/cfTcKszxRWlths2bfoWwNWsbfhC/dakspMhgLKZT9ljoR6eL9DEWNiqVMpjRm3BrjZx0fVbzrzqh0qE4NwU+XVvOVr5bi902nfY6KnGbL1dX+2G7CLF/fQpprtG+5iquLy3Mt6m7VBVSbEwspI+xrGhUVRtUONQHa1t27SV+3SHcmoeivDAU64UhJ2duryMDBSSRz8CQpMjYoRcMHEwqmUIDIS6YTLhPa8M1SnetzNXCZC2WZaDF46DTAUAAVH5kMr1YNpdfVpTBlkYxFg3prRgSJquFJCKJ/MqwrFSyGEvN49K18GWxyUTX6T7G8iOTyVlmStcinS7rchrMZHqxsK/5zGRzUbBmPsNsOFgXdsqelJVwKebySzrZEn/ZnynJWJmpZLWQRNYa+S2NWCzR6E8Wdj3mwfLcSMHQ4UWDp/LkSPnTlYFOnACBIoBADWBGnpF+5q9LEsE0WDCiAehDIJoQyPRXDAgC6O91KmEcFtUNdSoZzK2AyuRFi4mM6iMprR5x3zfpV+f2WehN32Fs+rzdu/Wbnh+Gsu20EjZ7c01zrvi9jVViJ1um7dluykGnTUCZXxgzWkxoHPi8tRDT/F9rT9gyje5VO/01da9hGfvjvxrbdAk9P+harbNN+M9BOJ+lolGhKBMdzkoJR0FJm1CVh6Sz4ukSihrwodM9J597r7W1FDZ+rR9tMDfMGVrp5LdML67V5e+MKXTr7rp3HH9akc9YJpOfVBxUSCgQnCA+atj4lPQIkkIHhcJpMUHEESI2PiRVAo4KzorPnLfvlXj+i06+hiW2ueLpmjobL4W2Z4ufJ7wwupardb8PXwjvm/dOl8oCBwWnhmPiyNSULCY5FiIQGVzwuNlBnXBaPCNDnpEhCGRszStssMr2ZqYXd7QdLXbucv2X6eue0Hbs9k8jfj8rxvm6+WT+RzHFVUr3bqI46PRJjAWf2R9zlW3Ca2meMLvYYOt/8kI5++XqsMytHU/os7mU3q50tjb1l60LVScVFMqmw1mpTqiKElBRFMrnwur04uZgSxnhrB6bThndnFT6wyjxve+fTwm/Qnf2bc2OZXRH4WsZ9pkACkQAHECE3EyQUATIjVuau3/ix3/9XXuzTqFttDvfzvOdxm89qXSvz+c/dTTXF1GosZFBRhEZCSSQQEYkjYJ8gCIaoap1EuBA0RyKcswIkNAggTFGPCOGyAIKQzYHjGfABfCL7iSbI1pZC04+aVdgplBy30i6YaWWkI7gyRpkIkHqDKTHWDSRstIGUkkgibSs004+aU/grZRCtqO8dICtrmI8XGL6xB53Pp80hpYPFXvO4BMBPVV6vplJTwlYGFo3384DJCIdkQqzUUkcttxOmhAmndxVnOif0eWB4XBiq/KtnGUwgLQbK/6vT2AQhGrURXNmNIZV3cvbLs5KuWQ7dOyGuMFvQDBIAJwWx1aIrwo=",
++   "spawns": [
++    {
++     "label": "//:t_b9f6bc1659d098ec",
++     "mnemonic": "Genrule",
++     "runner": "darwin-sandbox",
++     "cacheHit": false
++    },
++    {
++     "label": "//:t_22b308f061d695be",
++     "mnemonic": "Genrule",
++     "runner": "darwin-sandbox",
++     "cacheHit": false
++    },
++    {
++     "label": "//:t_71eb00441669d8d8",
++     "mnemonic": "Genrule",
++     "runner": "darwin-sandbox",
++     "cacheHit": false
++    }
++   ],
++   "observation": {
++    "executed": [
++     "app:build",
++     "app:test",
++     "lib:generate"
++    ],
++    "restored": [],
++    "cached": [],
++    "unmapped": []
++   }
++  },
++  {
++   "name": "warm rebuild ()",
++   "tasks": [
++    "lib:generate",
++    "app:build",
++    "app:test"
++   ],
++   "compact": "KLUv/QBYyQEAOBI2CgdTSEEtMjU2EgVfbWFpbiIkYTM1ZDkzMzAtNDNiMi00ODM4LWIxMDktNTJjZjYxOGVkNTBl",
++   "spawns": [],
++   "observation": {
++    "executed": [],
++    "restored": [],
++    "cached": [
++     "app:build",
++     "app:test",
++     "lib:generate"
++    ],
++    "unmapped": []
++   }
++  },
++  {
++   "name": "comment edit (1 action cache hit, 1 darwin-sandbox, 1 internal)",
++   "tasks": [
++    "lib:generate",
++    "app:build",
++    "app:test"
++   ],
++   "compact": "KLUv/QBYPRcAdm+cPyBx2gYADABkiEGg4IoKREgBlQaWSjoMGNhiownJo6GllHJHr+HL6eXijDuu9Mru9hbzYXPGXQgt2UDU++1ORocAggCRAJcRDZNt+7XorU1fr3GahWE7Y/2I6866l/5d8vE58eCoOCQcWCzOP1HP4ufSxFY+PP/GjCF8SaI0QulOE5z/3lqq5kilx9M7Ba2kk94PeShcTDLM9RrnlfU8Gjycigc60WpxfGmiH02Ka+SSyuhC6hHNdaL24QUJrupuMgIudMJI5MKGjodeao+F1mrvzBDHqb6VrkeXF9a/csIaL7wXPhinS8UsKfTJqXyOKUpptHjWGfJQuOwNuyp32ao239qlIkk3+mauSoS+2e0Nix4824NSKeFwOBpQYIBKZUANC4317U8L8cyRygzzjVjyJ6X8U56XelZSM07qTsl3YX0r5XvuL0eZ30OeCgElnzHsMsaY7Epv+DXMW1l2MRsMu2vTTl8SLctEnPYlvzMTPcFtfmsmG5zWtv3XxjKm0Rdfm4t47b/BRtzOMAdyVe6sizEL4yrrN6fp1zo4SozLBQ4iGSgPRcblN72hkxMIigBBHxnr7us3r/FVZT4UgPiAPoJIIih7rYEgQI/1hmmOigdHHM+Idp3A08ECpKNFzgsaLmBYBtCwcWJGpYCzQgIDEzdIWAQ8CBwUTgpLjFO+dbqVYn4r3+Nbc/Uc/SnHEqZOSZTKPh99kqT8I1W/UpOVWMp8P+Sp4JRwSpzMGSnBPF9Xiwx8sNAhAX+1L9tJJeyUsp7ZIM4dAKEw4IABIAAeb2WZiDPRV3uFwTFL40iud5oQmQO5qqu6emsbw1zDBCsgEDRm7G4DoWBEznJgEdB4VQ/wjQL0EQAL8OuOt/LsIXEhIlIU2CwhIQNKDJ5uHCaH5wPtXqAELVj6AaeNtY50R4MFFAxj0CNhxTDcBzAoF52nUb1hcoCFAZbfDM6B9cIAdORYiFviBj4HCTezv90KVqQ=",
++   "spawns": [
++    {
++     "label": "//:t_b9f6bc1659d098ec",
++     "mnemonic": "Genrule",
++     "runner": "darwin-sandbox",
++     "cacheHit": false
++    }
++   ],
++   "observation": {
++    "executed": [
++     "lib:generate"
++    ],
++    "restored": [],
++    "cached": [
++     "app:build",
++     "app:test"
++    ],
++    "unmapped": []
++   }
++  },
++  {
++   "name": "body edit (3 darwin-sandbox, 1 internal)",
++   "tasks": [
++    "lib:generate",
++    "app:build",
++    "app:test"
++   ],
++   "compact": "KLUv/QBYbSYAmlCcD0IQddIGAFABCJVCOiIsz/SVEjcArAWRGnoKYSOIIEQMt81ubrk+VIClugy48WW7u7u7e5Ni9XhsRQa/ROxkUFsbjKDmAPoA5QAOz+jSurtCUTjZRpcV8kqLQiPfNLw/ksZk2MUKjciwrrbR9XlAbSibSUYjaVI2MMA0lQzp0Gj//rwwTx2p1FDjmJ87+fRXPfF2V+4ZJ3Xf0mFo/0rpnLvTUer3FarlBEYDYaPttc+LRpn1L5Umuq7NRfQksFcibGW/yXykSqBoJsnE7LjnKH7vXY76WkrtjtS9CmfMF89bJXZYr9wP7iyrv0x/4kn/xofuEK9QFE5mMJD1L5WHRBSVAUWaOkgMX3aHv7P9OHX28/LLj3YWf16UDsd3GSiwQjjGheSETvhhsaCBQ9ETGx8qcCTkt9fpO+nLTvd1l02lqg6obBxoYAAPAJQXYRhLNZPhzEMX/BK9VCKsr15CYJWKFbJCONu07bpcA8m8vnKlM2hmC2Wj/BroRRiGQTFXrqxRVmVYhIZhLJX2Mr9hM9mEKuY3bUZDlWmj7a3t0tdLhrM18hGf+cdcMNWGXZWKFfJKhPMlAlUh0Y8qLXuNQ7XpcWJhAwuGDbXxcfKjbPOUKOHxRPB4GriI8GZ9zGfZCrk0WACigec/HhEfD/bZiweC53M2ujSpBZU/GgpGwy6A4sBQ4cww0Nl5b6vrjv/xKZTuNdYvf28rpe99M9VYVuw2hfXpGaXzny45Ul2dvs9L9aNuWxcdwsmBBnI8G84xaqhwbiTouF3x29tSaS21GNb3mrqbs7T7r3y3+rYbZ3khhbRK+6TfGqO008GfDkSJQJkmEhoppURSUAI5E7Uh0aRsYMk0EejY+uKj8cXooLuVUEcHo3VyQ7m3dProu22zvvfth1tbiR2//B7r+dVDOKbCMDyA0oBCMnmQjszIsaNTIoRICiCTieRCQg5CY0eHhEIgqZBYdCiF87NzS6uL0GWvztnnHo4aO3+W5ggxpZD+1DHbqv3iO91+2CH17CtUi3RCkpEwCUbmcm1h7VMgAXgEWRFBx48IOn5c6fxR9wghjHE7t69i/y3x09X/o5Y6P13ftU4+el276nbmCX/m/VZbfSl9/6qJAw0cIMOGCgfHp2OzW+zYVavx3Ftqvd9pKOnT1OoL5Y1TO78U6o3dzoyl3m/PCv36b/qhRigm04xGSqEGTNQkgJomk06WF9us3ZOQ0inrxRPaSuer1VL8clKdc/yIK5V/JX7+fjfWdOJnZXSb9puAyYOmyAsjJlpUoGhRgeKtta+1jO7dKOXcE058JYS0zvn77dOy2jgxjNZhCONrGu19OFGosY1hBhEZCSSQQEYkjcJugCIaoap1EuAguRxMopgRICFCAiMwwjNihrGAwtiaA5hi+yq7neQyog2w7eSTagX+FEr0G6krVndPREB0McCVSQaCNRzPLAU/a6bstR+AiykF0HfyCXXCVKVQ2Q7apfMIqtqQv6T7SS90PgNVDFUOhaSczycCBqpifcuQXhywKLRuzc5zQjQ5Ih6y0Za4qxzyNCFMOnlK8UZnJi8PAIcptsrcmi4DA8S7seLneq+DVKymF80powdWJSzvWZyVcql36NgN4ta5AX8gAXxaHFshvio=",
++   "spawns": [
++    {
++     "label": "//:t_b9f6bc1659d098ec",
++     "mnemonic": "Genrule",
++     "runner": "darwin-sandbox",
++     "cacheHit": false
++    },
++    {
++     "label": "//:t_22b308f061d695be",
++     "mnemonic": "Genrule",
++     "runner": "darwin-sandbox",
++     "cacheHit": false
++    },
++    {
++     "label": "//:t_71eb00441669d8d8",
++     "mnemonic": "Genrule",
++     "runner": "darwin-sandbox",
++     "cacheHit": false
++    }
++   ],
++   "observation": {
++    "executed": [
++     "app:build",
++     "app:test",
++     "lib:generate"
++    ],
++    "restored": [],
++    "cached": [],
++    "unmapped": []
++   }
++  },
++  {
++   "name": "rebuild after clean (3 disk cache hit, 1 internal)",
++   "tasks": [
++    "lib:generate",
++    "app:build",
++    "app:test"
++   ],
++   "compact": "KLUv/QBYjScAylJAEEQAddMG/PdL3872+U7+yhuWIaIHxkF5B81NAHy5EVTdzfNGJLnyTGcmwnseAW/W393d3d1LDh8mD/md+h78IUeN3SjCAu0ABgHtADNKh3865zNiad19uSCobKmTiYQxXSKl8Kb5FklKk3mMiSQic41tqZNowbWtdKwaTsVp6UATyzo5AqLR/v15YZ46Uqmh9pgfdvLpr3r6dlfuGSfFeEvn0P6V0jmMnY5SP365IqjMaCNUantN9KVUZnoZTCudTltM6Uc4xkpuyn6r+XiRWOFYVYkJcs9Rf+9djvpaSu2O1L0KZ8zX563SMaxX7gd3lhW/TH/6pH/jQ4yhv1wQVGxQI9PLYJhUui4LK5Wl4d1Lpc36bklFTj8ssrJKkWeXokfznHJvBCwmktPEeFTohCKYCRc+F1WxAR820kzoZ7LnEAiNpAd0kPBxkN9ep++kL2O6L47ZXDCsgEtHAQeahACsfAmFgsFsMs8wiQI+lWSwEKbHZECgMBcTyUTybNO20wlro5rXp4zpPLLZSFkqvzb6EgrlI5pTxkypDMs8hIZCwWDa1/yGsskeYDS/aTYXsExLbW/aTvokk3k2pbCIz/DTnGawDXXCXEwkjJU8n0ojjFT6FKZlr2XAOkJUJmCAqdC5OkNUPpVtIRIkQqEGoVCCmJJvpqf5LJtIMQkOeEgQelEohCiE+kwmxCD0OUudtArGlUWca0ZzHOD65HD57CAA2nlvq+uO//EplO6165e/t5US730z1S6ru01hfTrR3uc5Ul0xfTwv1Y+6bV3EEFoKOPAT2jzb4OHy8WEA5Hb1t7el0lpqHdb3mrqbs7T7r3y34m23Z3khhbRK+yS+NUZpp4M/3egKsWJZIzhVy0nFcgI/1tXxcFo68MSyBIBsffHR+GJ0EGMroY4ORuvkhnJviemj77bN+t63H25tpWN/+b3r+RWTnAZDoRzlurDisTZUS3D4uAGdGEGSgoiVUsXgfEAhwmEAjRMlQB4WrAWQG5DnYqlUVCxAlML52WFLq4vQZVyds889j9odfpbmCJ1SSH/qmG3V+Pqdbj/HkOKMX64IlYmqpkJVM1UmQYqsuHnBoeKB4gbkYenIqHGlw49iHCGEMW6H7auOf0t/uuL/qKXOT9d3rZOPXqxdxXbmCX/m/VZbfSl9/2qKAg5EudHD5fNDBLIZW8fuqtU+95Za73caSvo0tfpCeePUDl8K9XZsZ3ap99uzQnzxbyq6Uisplg2narlQrMsKcFlWCijL6zZr9ySkdMp6fUJb6Xy1WuovJ9U5x49eqfwr/eHHd7um05+V0W3abwGsDZwkM5SUMPkwQAUHExwubkAeFo8LHW+tfa1ldO9GKeeecPqVENI65++3T8tq43QYrXMI42saTahxEUEIEYJIICLBkEg0CrsBcCJCQmXqEoAwwRxMopgxSIiQwAiMeEacuYDC2JoDpnD340VSRPejwgSBE1M4CsqFioIdTqJYJ0oBgeZqgA+ULAQshhyaFZwp6EoQBBhHii7RiSn8BF1YmfI+ZkGH8WIVo+YJhymEuGP6iCYTTVUETKvS+H0WfR5gwbLusVCef6IxEXE6G7nEheW40xRm0kS5YhkGFF5CAA7ftArcal82BmC2mRUvZxAYhoJ2s2hOGTFg2Uj5kzqr5MIh6IgvxGm6QRyQUPGXsVZmqgo=",
++   "spawns": [
++    {
++     "label": "//:t_b9f6bc1659d098ec",
++     "mnemonic": "Genrule",
++     "runner": "disk cache hit",
++     "cacheHit": true
++    },
++    {
++     "label": "//:t_22b308f061d695be",
++     "mnemonic": "Genrule",
++     "runner": "disk cache hit",
++     "cacheHit": true
++    },
++    {
++     "label": "//:t_71eb00441669d8d8",
++     "mnemonic": "Genrule",
++     "runner": "disk cache hit",
++     "cacheHit": true
++    }
++   ],
++   "observation": {
++    "executed": [],
++    "restored": [
++     "app:build",
++     "app:test",
++     "lib:generate"
++    ],
++    "cached": [],
++    "unmapped": []
++   }
++  }
++ ],
++ "nxRecords": [
++  {
++   "name": "hits, a miss and a task outside the selection",
++   "tasks": [
++    "a:build",
++    "b:build",
++    "c:build"
++   ],
++   "record": {
++    "run": {
++     "command": "nx run-many -t build",
++     "startTime": "2026-10-20T00:00:00.000Z",
++     "endTime": "2026-10-20T00:00:00.000Z",
++     "inner": false
++    },
++    "tasks": [
++     {
++      "taskId": "a:build",
++      "target": "build",
++      "projectName": "a",
++      "hash": "h1",
++      "startTime": "1970-01-01T00:00:00.001Z",
++      "endTime": "1970-01-01T00:00:00.002Z",
++      "params": "",
++      "cacheStatus": "local-cache-hit",
++      "status": 0
++     },
++     {
++      "taskId": "b:build",
++      "target": "build",
++      "projectName": "b",
++      "hash": "h2",
++      "startTime": "1970-01-01T00:00:00.001Z",
++      "endTime": "1970-01-01T00:00:00.002Z",
++      "params": "",
++      "cacheStatus": "cache-miss",
++      "status": 0
++     },
++     {
++      "taskId": "c:build",
++      "target": "build",
++      "projectName": "c",
++      "hash": "h3",
++      "startTime": "1970-01-01T00:00:00.001Z",
++      "endTime": "1970-01-01T00:00:00.002Z",
++      "params": "",
++      "cacheStatus": "remote-cache-hit",
++      "status": 0
++     },
++     {
++      "taskId": "z:other",
++      "target": "other",
++      "projectName": "z",
++      "hash": "h4",
++      "startTime": "1970-01-01T00:00:00.001Z",
++      "endTime": "1970-01-01T00:00:00.002Z",
++      "params": "",
++      "cacheStatus": "local-cache-hit",
++      "status": 0
++     }
++    ]
++   },
++   "observation": {
++    "executed": [
++     "b:build"
++    ],
++    "restored": [
++     "a:build",
++     "c:build"
++    ],
++    "cached": [],
++    "unmapped": [
++     "z:other"
++    ]
++   }
++  }
++ ]
++}
+\ No newline at end of file
+# stage-clean orphan staged=bzl-incr-tools/staged/model.ts map=None
+--- /dev/null
++++ b/staged/bzl-incr-tools/staged/model.ts
+@@ -0,0 +1,221 @@
++import {createHash} from "node:crypto";
++import schema from "./🧬️schema/🔣️.json" with {type:"json"};
++import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
++
++/** 🛠️ The build implementations behind the tool-neutral interface that the harness judges. */
++export type IncrementalToolV1="nx"|"bazel";
++/** 🚦️ The phases of one scenario run: a warm re-run, the edited run and the reverted run. */
++export type IncrementalPhaseV1="warm"|"edit"|"revert";
++/** ✏️ The six kinds of edit every scenario applies. */
++export type IncrementalEditKindV1="comment-only"|"body-change"|"signature-change"|"lockfile"|"unrelated-sibling"|"config";
++/** 🧰️ The text mutations that realise an edit kind in a disposable copy. */
++export type IncrementalEditOpV1="comment"|"private-body"|"public-api"|"whitespace";
++/** 🌐️ The source languages a mutation can be rendered for. */
++export type IncrementalLanguageV1="ts"|"rs"|"py"|"text";
++/** 🧬️ Whether the output of a task changes for an edit kind: the basis of early cutoff. */
++export type IncrementalEffectV1="changed"|"identical"|"unknown";
++/** 🏷️ The tool family of a task, as the coverage classifier names it. */
++export type IncrementalFamilyV1="bun-script"|"tsc"|"vitest"|"bun-test"|"vite"|"playwright"|"go"|"python"|"dotnet"|"latex"|"docker"|"wasm"|"cargo"|"aggregate";
++/** 🧾️ One task of a slice: what it declares, not what it did. */
++export type IncrementalSliceTaskV1=Readonly<{family:IncrementalFamilyV1;cache:boolean;outputs:boolean;dependsOn:readonly string[];consumes:readonly string[];inputs:readonly string[]}>;
++/** 🍰️ The closure of a selection with the declared input files that matter to an evaluation. */
++export type IncrementalSliceV1=Readonly<{version:1;selected:readonly string[];tasks:Readonly<Record<string,IncrementalSliceTaskV1>>}>;
++/** ✂️ A change to files, named by its kind. */
++export type IncrementalEditV1=Readonly<{kind:IncrementalEditKindV1;files:readonly string[]}>;
++/** 🗂️ One row of the effect table: the output effect of an edit kind on a task family. */
++export type IncrementalSensitivityRowV1=Readonly<{family:IncrementalFamilyV1;kind:IncrementalEditKindV1;effect:IncrementalEffectV1}>;
++/** 🎯️ The tasks a tool must, may and must not re-execute, plus the dependents early cutoff spares. */
++export type IncrementalExpectedV1=Readonly<{direct:readonly string[];must:readonly string[];may:readonly string[];cutoff:readonly string[]}>;
++/** 👁️ What one run did per task, in the neutral vocabulary of both tools. */
++export type IncrementalObservationV1=Readonly<{tool:IncrementalToolV1;executed:readonly string[];restored:readonly string[];cached:readonly string[];unmapped:readonly string[]}>;
++/** ⚖️ The judgement of an observation against its expectation. */
++export type IncrementalVerdictV1=Readonly<{status:"pass"|"stale"|"excess"|"stale-excess"|"failed"|"skipped";stale:readonly string[];excess:readonly string[];exact:boolean}>;
++/** 🧪️ One authored scenario of the permanent conformance data. */
++export type IncrementalScenarioV1=Readonly<{id:string;title:Readonly<{en:string;de:string}>;area:string;target:string;kind:IncrementalEditKindV1;mutation:Readonly<{op:IncrementalEditOpV1;language:IncrementalLanguageV1;file:string}>;tools?:readonly IncrementalToolV1[];effects?:readonly IncrementalSensitivityRowV1[]}>;
++/** 📚️ The authored scenario data: texts, the effect table and the scenarios. */
++export type IncrementalScenarioSetV1=Readonly<{version:1;labels:Readonly<Record<string,Readonly<{en:string;de:string}>>>;sensitivity:readonly IncrementalSensitivityRowV1[];scenarios:readonly IncrementalScenarioV1[]}>;
++/** 📋️ One judged run of a scenario, tool and phase. */
++export type IncrementalRowV1=Readonly<{scenario:string;tool:IncrementalToolV1;phase:IncrementalPhaseV1;expected:IncrementalExpectedV1;observation:IncrementalObservationV1;verdict:IncrementalVerdictV1;milliseconds:number;note?:string}>;
++/** 📊️ All judged runs with their tally. */
++export type IncrementalReportV1=Readonly<{version:1;rows:readonly IncrementalRowV1[];passed:number;failed:number;skipped:number}>;
++
++/** ⚔️ The executed tasks of both implementations for one scenario and phase, side by side. */
++export type IncrementalComparisonV1=Readonly<{scenario:string;phase:IncrementalPhaseV1;same:boolean;onlyNx:readonly string[];onlyBazel:readonly string[]}>;
++
++const policy=schema.definitions.Policy.const,order=(left:string,right:string)=>left<right?-1:left>right?1:0,sorted=(values:Iterable<string>)=>[...new Set(values)].sort(order);
++const closed=(name:keyof typeof schema.definitions,value:unknown,message:string):void=>{if(validateJsonSchemaSubset(schema.definitions[name],value,schema).length)throw Error(message);};
++
++/** 🔗️ Names a task or a file with an ASCII Bazel label: tasks use the adapter's own `t_<16 hex of sha256(id)>` scheme. */
++export function incrementalLabelV1(kind:"t"|"f",value:string):string{return `${kind}_${createHash("sha256").update(value).digest("hex").slice(0,16)}`;}
++
++/** 🛡️ Admits a slice only when it is closed, references only its own tasks, stays within the bound and has no dependency cycle. */
++export function incrementalSliceV1(value:unknown):IncrementalSliceV1{
++ closed("Slice",value,"Closed incremental slice required");
++ const slice=value as IncrementalSliceV1,ids=Object.keys(slice.tasks);
++ if(ids.length>policy.maximumTasks)throw Error("Bounded incremental slice required");
++ for(const id of ids){
++  if(!new RegExp(policy.taskId,"u").test(id))throw Error(`Closed incremental task id required: ${id}`);
++  const task=slice.tasks[id]!;
++  for(const other of [...task.dependsOn,...task.consumes])if(!slice.tasks[other])throw Error(`Unknown incremental dependency ${other} of ${id}`);
++  for(const other of task.consumes)if(!task.dependsOn.includes(other)&&!reaches(slice,id,other))throw Error(`Consumed task ${other} is not a dependency of ${id}`);
++ }
++ for(const id of slice.selected)if(!slice.tasks[id])throw Error(`Unknown selected incremental task ${id}`);
++ const state=new Map<string,1|2>();
++ const visit=(id:string):void=>{if(state.get(id)===2)return;if(state.get(id)===1)throw Error(`Incremental dependency cycle at ${id}`);state.set(id,1);for(const other of slice.tasks[id]!.dependsOn)visit(other);state.set(id,2);};
++ for(const id of ids)visit(id);
++ return slice;
++}
++
++function reaches(slice:IncrementalSliceV1,from:string,target:string):boolean{
++ const seen=new Set<string>(),pending=[from];
++ while(pending.length){const id=pending.pop()!;for(const other of slice.tasks[id]!.dependsOn){if(other===target)return true;if(!seen.has(other)){seen.add(other);pending.push(other);}}}
++ return false;
++}
++
++/** 🔬️ Looks up the output effect of an edit kind on a task family: authored rows win in order, anything unlisted is unknown. */
++export function incrementalEffectV1(rows:readonly IncrementalSensitivityRowV1[],family:IncrementalFamilyV1,kind:IncrementalEditKindV1,outputs:boolean):IncrementalEffectV1{
++ if(!outputs)return "identical";
++ return rows.find(row=>row.family===family&&row.kind===kind)?.effect??"unknown";
++}
++
++/** 🧮️ Evaluates the tasks a tool re-executes after an edit, as a pure function of the slice: declared inputs decide which tasks run, outputs decide who follows. Bazel follows every dependency whose output changed (early cutoff on output digests); Nx follows only the tasks that consume outputs. Uncached tasks always run. */
++export function incrementalExpectedV1(sliceValue:unknown,tool:IncrementalToolV1,edit:IncrementalEditV1,sensitivity:readonly IncrementalSensitivityRowV1[]):IncrementalExpectedV1{
++ const slice=incrementalSliceV1(sliceValue);closed("Edit",edit,"Closed incremental edit required");
++ const ids=sorted(Object.keys(slice.tasks)),files=new Set(edit.files),dependents=new Map<string,string[]>();
++ for(const id of ids)for(const other of tool==="bazel"?slice.tasks[id]!.dependsOn:slice.tasks[id]!.consumes)dependents.set(other,[...dependents.get(other)??[],id]);
++ const direct=ids.filter(id=>slice.tasks[id]!.inputs.some(file=>files.has(file))),always=ids.filter(id=>!slice.tasks[id]!.cache);
++ const effect=(id:string)=>incrementalEffectV1(sensitivity,slice.tasks[id]!.family,edit.kind,slice.tasks[id]!.outputs);
++ const closure=(follows:(id:string)=>boolean):Set<string>=>{
++  const ran=new Set([...direct,...always]),changed=new Set(direct),pending=[...direct];
++  while(pending.length){const id=pending.pop()!;if(!follows(id))continue;for(const other of dependents.get(id)??[])if(!changed.has(other)){changed.add(other);ran.add(other);pending.push(other);}}
++  return ran;
++ };
++ const must=closure(id=>effect(id)==="changed"),may=closure(id=>effect(id)!=="identical");
++ const cutoff=ids.filter(id=>!may.has(id)&&(tool==="bazel"?slice.tasks[id]!.dependsOn:slice.tasks[id]!.consumes).some(other=>may.has(other)));
++ return Object.freeze({direct:sorted(direct),must:sorted(must),may:sorted(may),cutoff});
++}
++
++/** 🌫️ The expectation of a run that follows no edit: only uncached tasks execute. */
++export function incrementalQuiescentV1(sliceValue:unknown):IncrementalExpectedV1{
++ const slice=incrementalSliceV1(sliceValue),always=sorted(Object.keys(slice.tasks).filter(id=>!slice.tasks[id]!.cache));
++ return Object.freeze({direct:[],must:always,may:always,cutoff:[]});
++}
++
++/** 🔦️ Judges the executed tasks of a run: a task that must run but did not is stale, a task that ran beyond every allowed task is excess. */
++export function incrementalVerdictV1(expected:IncrementalExpectedV1,executed:readonly string[]):IncrementalVerdictV1{
++ closed("Expected",expected,"Closed incremental expectation required");
++ const ran=new Set(executed),allowed=new Set(expected.may),stale=expected.must.filter(id=>!ran.has(id)),excess=sorted(executed.filter(id=>!allowed.has(id)));
++ const status=stale.length&&excess.length?"stale-excess":stale.length?"stale":excess.length?"excess":"pass";
++ return Object.freeze({status,stale:sorted(stale),excess,exact:!stale.length&&!excess.length&&expected.must.length===expected.may.length});
++}
++
++const number=(nonce:string)=>Number.parseInt(nonce.slice(0,6),36)%1000003;
++const templates:Readonly<Record<IncrementalLanguageV1,Readonly<Partial<Record<IncrementalEditOpV1,(nonce:string)=>string>>>>>=Object.freeze({
++ ts:{comment:nonce=>`// [incremental] ${nonce}\n`,"private-body":nonce=>`void ${number(nonce)};\n`,"public-api":nonce=>`export const __incremental${nonce}=${number(nonce)} as const;\n`},
++ rs:{comment:nonce=>`// [incremental] ${nonce}\n`,"private-body":nonce=>`const _: u32 = ${number(nonce)};\n`,"public-api":nonce=>`/// [incremental] public probe ${nonce}\npub const __INCREMENTAL_${nonce.toUpperCase()}: u32 = ${number(nonce)};\n`},
++ py:{comment:nonce=>`# [incremental] ${nonce}\n`,"private-body":nonce=>`_incremental_${nonce} = ${number(nonce)}\n`,"public-api":nonce=>`INCREMENTAL_${nonce.toUpperCase()} = ${number(nonce)}\n`},
++ text:{comment:nonce=>`# [incremental] ${nonce}\n`}
++});
++
++/** 🖋️ Renders one mutation of a source text: appended at the end, so no existing line moves; `whitespace` adds one newline for configuration and lock files. The same input always gives the same output and the result always differs from the input. */
++export function incrementalMutateV1(text:string,op:IncrementalEditOpV1,language:IncrementalLanguageV1,nonce:string):string{
++ if(!new RegExp(policy.nonce,"u").test(nonce))throw Error("Closed incremental nonce required");
++ if(op==="whitespace")return text+"\n";
++ const render=templates[language]?.[op];
++ if(!render)throw Error(`Incremental mutation ${op} is unsupported for ${language}`);
++ return (text.endsWith("\n")||text===""?text:text+"\n")+render(nonce);
++}
++
++const kindOps:Readonly<Record<IncrementalEditKindV1,readonly IncrementalEditOpV1[]>>=Object.freeze({"comment-only":["comment"],"body-change":["private-body"],"signature-change":["public-api"],lockfile:["whitespace"],config:["whitespace"],"unrelated-sibling":["comment","whitespace"]});
++
++/** 🔍️ Admits the authored scenario data and lists every inconsistency: duplicate ids, an op that does not realise its kind, an op without a template, an over-long path, a duplicate tool. */
++export function incrementalScenarioIssuesV1(value:unknown):string[]{
++ const issues=validateJsonSchemaSubset(schema.definitions.ScenarioSet,value,schema).map(String);
++ if(issues.length)return issues;
++ const set=value as IncrementalScenarioSetV1,seen=new Set<string>(),found:string[]=[];
++ for(const scenario of set.scenarios){
++  if(seen.has(scenario.id))found.push(`duplicate scenario ${scenario.id}`);
++  seen.add(scenario.id);
++  if(!kindOps[scenario.kind].includes(scenario.mutation.op))found.push(`${scenario.id}: ${scenario.mutation.op} does not realise ${scenario.kind}`);
++  if(scenario.mutation.op!=="whitespace"&&!templates[scenario.mutation.language]?.[scenario.mutation.op])found.push(`${scenario.id}: ${scenario.mutation.op} is unsupported for ${scenario.mutation.language}`);
++  if(scenario.mutation.file.length>policy.maximumPathLength)found.push(`${scenario.id}: path exceeds ${policy.maximumPathLength}`);
++ }
++ return found;
++}
++
++/** 🔢️ Tallies judged rows: a pass is a pass, a skip is a skip, everything else is a failure. */
++export function incrementalReportV1(rows:readonly IncrementalRowV1[]):IncrementalReportV1{
++ const passed=rows.filter(row=>row.verdict.status==="pass").length,skipped=rows.filter(row=>row.verdict.status==="skipped").length;
++ const report={version:1 as const,rows,passed,failed:rows.length-passed-skipped,skipped};
++ closed("Report",report,"Closed incremental report required");
++ return Object.freeze(report);
++}
++
++/** 🤝️ Pairs the rows of Nx and Bazel for the same scenario and phase and lists the tasks only one of them executed; rows that failed or were skipped carry no observation and are left out. */
++export function incrementalComparisonsV1(rows:readonly IncrementalRowV1[]):IncrementalComparisonV1[]{
++ const usable=(row:IncrementalRowV1|undefined)=>row!==undefined&&row.verdict.status!=="failed"&&row.verdict.status!=="skipped",found:IncrementalComparisonV1[]=[];
++ for(const nx of rows.filter(row=>row.tool==="nx"&&usable(row))){
++  const bazel=rows.find(row=>row.tool==="bazel"&&row.scenario===nx.scenario&&row.phase===nx.phase&&usable(row));
++  if(!bazel)continue;
++  const onlyNx=nx.observation.executed.filter(id=>!bazel.observation.executed.includes(id)),onlyBazel=bazel.observation.executed.filter(id=>!nx.observation.executed.includes(id));
++  found.push(Object.freeze({scenario:nx.scenario,phase:nx.phase,same:!onlyNx.length&&!onlyBazel.length,onlyNx:sorted(onlyNx),onlyBazel:sorted(onlyBazel)}));
++ }
++ return found;
++}
++
++/** 🕸️ Writes the generated Bazel package that answers the dependents question with Bazel's own `rdeps`: a filegroup per task naming its dependencies and the edited files it declares. */
++export function incrementalRdepsPackageV1(sliceValue:unknown,tool:IncrementalToolV1,files:readonly string[]):string{
++ const slice=incrementalSliceV1(sliceValue),quote=(value:string)=>JSON.stringify(value),edited=new Set(files),lines:string[]=[];
++ for(const id of sorted(Object.keys(slice.tasks))){
++  const task=slice.tasks[id]!,sources=sorted([...(tool==="bazel"?task.dependsOn:task.consumes).map(other=>":"+incrementalLabelV1("t",other)),...task.inputs.filter(file=>edited.has(file)).map(file=>":"+incrementalLabelV1("f",file))]);
++  lines.push(`filegroup(name = ${quote(incrementalLabelV1("t",id))}, srcs = [${sources.map(quote).join(", ")}])`);
++ }
++ for(const file of sorted(edited))lines.push(`filegroup(name = ${quote(incrementalLabelV1("f",file))})`);
++ return lines.join("\n")+"\n";
++}
++
++/** 🔎️ The one `rdeps` expression over the generated package that returns every task reachable from the edited files. */
++export function incrementalRdepsExpressionV1(files:readonly string[]):string{
++ if(!files.length)throw Error("Edited files required");
++ return `rdeps(//:all, set(${sorted(files).map(file=>"//:"+incrementalLabelV1("f",file)).join(" ")}))`;
++}
++
++/** 📥️ Reads the `rdeps` output back into sorted task ids, ignoring the file nodes. */
++export function incrementalRdepsTasksV1(sliceValue:unknown,output:string):string[]{
++ const slice=incrementalSliceV1(sliceValue),names=new Map(Object.keys(slice.tasks).map(id=>["//:"+incrementalLabelV1("t",id),id]));
++ return sorted(output.split("\n").map(line=>line.trim()).filter(Boolean).flatMap(line=>names.has(line)?[names.get(line)!]:[]));
++}
++
++const localized=(set:IncrementalScenarioSetV1,key:string,language:"en"|"de"):string=>{const row=set.labels[key];if(!row)throw Error(`Unknown incremental label ${key}`);return row[language];};
++
++/** 🖨️ Renders a report as an aligned table in the chosen language, followed by the stale and excess tasks of every failed row. */
++export function renderIncrementalReportV1(report:IncrementalReportV1,set:IncrementalScenarioSetV1,language:"en"|"de"):string{
++ const text=(key:string)=>localized(set,key,language),status=(row:IncrementalRowV1)=>row.verdict.status==="stale-excess"?`${text("stale")}+${text("excess")}`:text(row.verdict.status);
++ const head=["scenario","tool","phase","must","may","executed","restored","cutoff","verdict","milliseconds"].map(text),
++  body=report.rows.map(row=>[row.scenario,row.tool,text(row.phase),String(row.expected.must.length),String(row.expected.may.length),String(row.observation.executed.length),String(row.observation.restored.length),String(row.expected.cutoff.length),status(row),String(row.milliseconds)]);
++ const widths=head.map((cell,column)=>Math.max(cell.length,...body.map(row=>row[column]!.length))),line=(cells:readonly string[])=>cells.map((cell,column)=>column===0||column===1||column===2||column===8?cell.padEnd(widths[column]!):cell.padStart(widths[column]!)).join("  ").trimEnd();
++ const out=[text("title"),"",line(head),...body.map(line),"",`${text("summary")}: ${text("pass")} ${report.passed}, ${text("failed")} ${report.failed}, ${text("skipped")} ${report.skipped}`];
++ for(const row of report.rows)if(row.verdict.status!=="pass"&&row.verdict.status!=="skipped"){
++  out.push("",`${row.scenario} / ${row.tool} / ${text(row.phase)}`);
++  if(row.verdict.stale.length)out.push(`  ${text("stale")}: ${row.verdict.stale.join(", ")}`);
++  if(row.verdict.excess.length)out.push(`  ${text("excess")}: ${row.verdict.excess.join(", ")}`);
++  if(row.note)out.push(`  ${row.note}`);
++ }
++ const compared=incrementalComparisonsV1(report.rows);
++ if(compared.length){
++  out.push("",`${text("comparison")}: nx / bazel`);
++  for(const row of compared){
++   out.push(`  ${row.scenario} / ${text(row.phase)}: ${row.same?text("agree"):text("differ")}`);
++   if(row.onlyNx.length)out.push(`    ${text("only")} nx: ${row.onlyNx.join(", ")}`);
++   if(row.onlyBazel.length)out.push(`    ${text("only")} bazel: ${row.onlyBazel.join(", ")}`);
++  }
++ }
++ return out.join("\n");
++}
++
++/** 📑️ Renders the scenario list as an aligned table in the chosen language. */
++export function renderIncrementalScenariosV1(set:IncrementalScenarioSetV1,language:"en"|"de"):string{
++ const text=(key:string)=>localized(set,key,language),head=[text("scenario"),text("area"),text("kind"),text("target"),text("title")],body=set.scenarios.map(row=>[row.id,row.area,row.kind,row.target,row.title[language]]);
++ const widths=head.map((cell,column)=>Math.max(cell.length,...body.map(row=>row[column]!.length)));
++ return [head,...body].map(cells=>cells.map((cell,column)=>cell.padEnd(widths[column]!)).join("  ").trimEnd()).join("\n");
++}
+# stage-clean orphan staged=bzl-incr-tools/staged/observers.ts map=None
+--- /dev/null
++++ b/staged/bzl-incr-tools/staged/observers.ts
+@@ -0,0 +1,84 @@
++import * as zlib from "node:zlib";
++import schema from "../🧬️schema/🔣️.json" with {type:"json"};
++import {incrementalLabelV1,type IncrementalObservationV1} from "../🟦️.ts";
++
++const policy=schema.definitions.Policy.const,order=(left:string,right:string)=>left<right?-1:left>right?1:0,sorted=(values:Iterable<string>)=>[...new Set(values)].sort(order);
++
++/** 🧵️ One executed or restored Bazel action as the compact execution log records it. */
++export type IncrementalSpawnV1=Readonly<{label:string;mnemonic:string;runner:string;cacheHit:boolean}>;
++
++/** 🗜️ Decompresses a zstd stream with the decoder the runtime provides and refuses output beyond the bound. */
++export function incrementalZstdV1(bytes:Uint8Array):Uint8Array{
++ const bun=(globalThis as {Bun?:{zstdDecompressSync?:(input:Uint8Array)=>Uint8Array}}).Bun,node=(zlib as unknown as {zstdDecompressSync?:(input:Uint8Array)=>Uint8Array}).zstdDecompressSync,decode=bun?.zstdDecompressSync??node;
++ if(!decode)throw Error("A zstd decoder is required to read the Bazel execution log");
++ const output=decode(bytes);
++ if(output.length>policy.maximumLogBytes)throw Error("Bounded Bazel execution log required");
++ return output;
++}
++
++function varint(bytes:Uint8Array,at:{position:number}):number{
++ let value=0,scale=1;
++ for(let count=0;count<8;count++){
++  if(at.position>=bytes.length)throw Error("Truncated Bazel execution log");
++  const byte=bytes[at.position++]!;value+=(byte&0x7f)*scale;scale*=128;
++  if(!(byte&0x80))return value;
++ }
++ throw Error("Oversized varint in Bazel execution log");
++}
++
++type Field=Readonly<{number:number;wire:number;value:number;bytes:Uint8Array}>;
++
++function fields(bytes:Uint8Array):Field[]{
++ const at={position:0},found:Field[]=[],none=new Uint8Array();
++ while(at.position<bytes.length){
++  const key=varint(bytes,at),wire=key%8,number=Math.floor(key/8);
++  if(wire===0)found.push({number,wire,value:varint(bytes,at),bytes:none});
++  else if(wire===2){const length=varint(bytes,at);if(at.position+length>bytes.length)throw Error("Truncated Bazel execution log");found.push({number,wire,value:0,bytes:bytes.subarray(at.position,at.position+length)});at.position+=length;}
++  else if(wire===1){at.position+=8;}
++  else if(wire===5){at.position+=4;}
++  else throw Error("Unsupported wire type in Bazel execution log");
++ }
++ return found;
++}
++
++const text=new TextDecoder("utf-8",{fatal:true});
++
++/** 🪡️ Reads the spawns of a compact Bazel execution log (zstd of length-delimited entries; entry field 7 is the spawn; spawn fields 7 label, 8 mnemonic, 11 runner, 12 cache hit). */
++export function incrementalBazelSpawnsV1(compact:Uint8Array):IncrementalSpawnV1[]{
++ const bytes=incrementalZstdV1(compact),at={position:0},spawns:IncrementalSpawnV1[]=[];
++ let entries=0;
++ while(at.position<bytes.length){
++  if(++entries>policy.maximumLogEntries)throw Error("Bounded Bazel execution log required");
++  const length=varint(bytes,at);
++  if(at.position+length>bytes.length)throw Error("Truncated Bazel execution log");
++  const entry=bytes.subarray(at.position,at.position+length);at.position+=length;
++  const spawn=fields(entry).find(field=>field.number===7&&field.wire===2);
++  if(!spawn)continue;
++  const row=fields(spawn.bytes),string=(number:number)=>{const field=row.find(candidate=>candidate.number===number&&candidate.wire===2);return field?text.decode(field.bytes):"";};
++  spawns.push({label:string(7),mnemonic:string(8),runner:string(11),cacheHit:row.some(field=>field.number===12&&field.wire===0&&field.value===1)});
++ }
++ return spawns;
++}
++
++/** 🔭️ Maps Bazel spawns to tasks: a task with a spawn that did not hit a cache executed, a task whose spawns all hit a cache was restored, a task without a spawn was an action cache hit; unmapped labels are support actions. */
++export function incrementalBazelObservationV1(spawns:readonly IncrementalSpawnV1[],taskIds:readonly string[]):IncrementalObservationV1{
++ const tasks=new Map(taskIds.map(id=>[`//:${incrementalLabelV1("t",id)}`,id])),executed=new Set<string>(),hit=new Set<string>(),unmapped=new Set<string>();
++ for(const spawn of spawns){
++  const label=spawn.label.replace(/^@@?\/\//u,"//"),id=tasks.get(label);
++  if(!id){if(label)unmapped.add(label);continue;}
++  if(spawn.cacheHit)hit.add(id);else executed.add(id);
++ }
++ const restored=[...hit].filter(id=>!executed.has(id));
++ return Object.freeze({tool:"bazel" as const,executed:sorted(executed),restored:sorted(restored),cached:sorted(taskIds.filter(id=>!executed.has(id)&&!hit.has(id))),unmapped:sorted(unmapped)});
++}
++
++type NxTask=Readonly<{taskId:string;cacheStatus:string;status:number}>;
++
++/** 🗒️ Maps the run record Nx stores after every run (task id, cache status, exit code) to the neutral observation: a cache miss executed, a local or remote hit restored. */
++export function incrementalNxObservationV1(record:unknown,taskIds:readonly string[]):IncrementalObservationV1{
++ const tasks=(record as {tasks?:unknown})?.tasks;
++ if(!Array.isArray(tasks))throw Error("Closed Nx run record required");
++ for(const task of tasks as NxTask[])if(typeof task?.taskId!=="string"||!["local-cache-hit","remote-cache-hit","cache-miss"].includes(task.cacheStatus))throw Error("Closed Nx run record required");
++ const known=new Set(taskIds),rows=(tasks as NxTask[]).filter(task=>known.has(task.taskId));
++ return Object.freeze({tool:"nx" as const,executed:sorted(rows.filter(task=>task.cacheStatus==="cache-miss").map(task=>task.taskId)),restored:sorted(rows.filter(task=>task.cacheStatus!=="cache-miss").map(task=>task.taskId)),cached:[],unmapped:sorted((tasks as NxTask[]).filter(task=>!known.has(task.taskId)).map(task=>task.taskId))});
++}
+# stage-clean orphan staged=bzl-incr-tools/staged/runner.ts map=None
+--- /dev/null
++++ b/staged/bzl-incr-tools/staged/runner.ts
+@@ -0,0 +1,216 @@
++import {constants} from "node:fs";
++import {copyFile,lstat,mkdir,readFile,readlink,readdir,realpath,rm,symlink,writeFile} from "node:fs/promises";
++import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
++import schema from "../🧬️schema/🔣️.json" with {type:"json"};
++import {incrementalBazelObservationV1,incrementalBazelSpawnsV1,incrementalNxObservationV1} from "../👁️observers/🟦️.ts";
++import {incrementalExpectedV1,incrementalMutateV1,incrementalQuiescentV1,incrementalSliceV1,incrementalVerdictV1,type IncrementalExpectedV1,type IncrementalFamilyV1,type IncrementalObservationV1,type IncrementalPhaseV1,type IncrementalRowV1,type IncrementalScenarioSetV1,type IncrementalScenarioV1,type IncrementalSliceV1,type IncrementalSliceTaskV1,type IncrementalToolV1} from "../🟦️.ts";
++
++const policy=schema.definitions.Policy.const,order=(left:string,right:string)=>left<right?-1:left>right?1:0;
++
++/** 🔌️ Everything a scenario run needs from the outside: the disposable copy, the closure of a target, one execution with its observation, the clock and cooperative cancellation. */
++export type IncrementalPortsV1=Readonly<{
++ read(path:string):Promise<string>;
++ write(path:string,text:string):Promise<void>;
++ slice(scenario:IncrementalScenarioV1,tool:IncrementalToolV1):Promise<IncrementalSliceV1>;
++ execute(tool:IncrementalToolV1,target:string,slice:IncrementalSliceV1):Promise<IncrementalObservationV1>;
++ now():number;
++ nonce():string;
++ check():void;
++ progress(stage:string):Promise<void>;
++}>;
++
++const row=(scenario:string,tool:IncrementalToolV1,phase:IncrementalPhaseV1,expected:IncrementalExpectedV1,observation:IncrementalObservationV1,milliseconds:number,note?:string):IncrementalRowV1=>
++ Object.freeze({scenario,tool,phase,expected,observation,verdict:incrementalVerdictV1(expected,observation.executed),milliseconds,...(note?{note}:{})});
++
++const empty=(tool:IncrementalToolV1):IncrementalObservationV1=>Object.freeze({tool,executed:[],restored:[],cached:[],unmapped:[]});
++const nothing:IncrementalExpectedV1=Object.freeze({direct:[],must:[],may:[],cutoff:[]});
++const outcome=(scenario:string,tool:IncrementalToolV1,phase:IncrementalPhaseV1,status:"failed"|"skipped",note:string):IncrementalRowV1=>
++ Object.freeze({scenario,tool,phase,expected:nothing,observation:empty(tool),verdict:Object.freeze({status,stale:[],excess:[],exact:false}),milliseconds:0,note});
++
++/** 🎬️ Runs one scenario for one tool in the disposable copy: prime the cache, re-run warm, apply the edit, run, then revert the edit and run again. The original text is restored whatever happens, and a cancellation stops after the restore. */
++export async function incrementalRunScenarioV1(set:IncrementalScenarioSetV1,scenario:IncrementalScenarioV1,tool:IncrementalToolV1,phases:readonly IncrementalPhaseV1[],ports:IncrementalPortsV1):Promise<IncrementalRowV1[]>{
++ if(scenario.tools&&!scenario.tools.includes(tool))return phases.map(phase=>outcome(scenario.id,tool,phase,"skipped",`${tool} is not part of ${scenario.id}`));
++ const rows:IncrementalRowV1[]=[],sensitivity=[...(scenario.effects??[]),...set.sensitivity],file=scenario.mutation.file;
++ ports.check();await ports.progress(`${scenario.id}:${tool}:slice`);
++ let slice:IncrementalSliceV1;
++ try{slice=incrementalSliceV1(await ports.slice(scenario,tool));}catch(error){ports.check();return phases.map(phase=>outcome(scenario.id,tool,phase,"failed",`slice: ${(error as Error).message}`));}
++ const run=async(phase:IncrementalPhaseV1,expected:IncrementalExpectedV1,note?:string):Promise<void>=>{
++  ports.check();await ports.progress(`${scenario.id}:${tool}:${phase}`);
++  const started=ports.now();
++  try{const observation=await ports.execute(tool,scenario.target,slice);rows.push(row(scenario.id,tool,phase,expected,observation,Math.max(0,Math.round(ports.now()-started)),note));}
++  catch(error){ports.check();rows.push(outcome(scenario.id,tool,phase,"failed",(error as Error).message));}
++ };
++  ports.check();await ports.progress(`${scenario.id}:${tool}:prime`);
++  try{await ports.execute(tool,scenario.target,slice);}catch(error){ports.check();return phases.map(phase=>outcome(scenario.id,tool,phase,"failed",`prime: ${(error as Error).message}`));}
++  if(phases.includes("warm"))await run("warm",incrementalQuiescentV1(slice));
++  if(phases.includes("edit")){
++   const original=await ports.read(file);
++   try{
++    await ports.write(file,incrementalMutateV1(original,scenario.mutation.op,scenario.mutation.language,ports.nonce()));
++    await run("edit",incrementalExpectedV1(slice,tool,{kind:scenario.kind,files:[file]},sensitivity));
++   }finally{await ports.write(file,original);}
++   if(phases.includes("revert"))await run("revert",incrementalQuiescentV1(slice));
++  }
++ return rows;
++}
++
++/** 🏁️ Runs every selected scenario with every selected tool in order and returns all judged rows. */
++export async function incrementalRunV1(set:IncrementalScenarioSetV1,scenarios:readonly IncrementalScenarioV1[],tools:readonly IncrementalToolV1[],phases:readonly IncrementalPhaseV1[],ports:IncrementalPortsV1):Promise<IncrementalRowV1[]>{
++ const rows:IncrementalRowV1[]=[];
++ for(const scenario of scenarios)for(const tool of tools)rows.push(...await incrementalRunScenarioV1(set,scenario,tool,phases,ports));
++ return rows;
++}
++
++/** 🧹️ Builds the environment of a child CLI: the parent's environment without any inherited invocation, capability, build or Nx state, plus the explicit additions. */
++export function incrementalChildEnvironmentV1(parent:Readonly<Record<string,string|undefined>>,extra:Readonly<Record<string,string>>):Record<string,string>{
++ const kept:Record<string,string>={};
++ for(const[key,value]of Object.entries(parent))if(value!==undefined&&(key==="SEMIO_LANGUAGE"||!/^(SEMIO_|NX_)/u.test(key)))kept[key]=value;
++ return {...kept,...extra};
++}
++
++/** 🧭️ The command line of one `repo` invocation inside the disposable root: its own copy of the build CLI, never the live one. */
++export function incrementalCliArgumentsV1(executable:string,root:string,script:string,tool:IncrementalToolV1,args:readonly string[]):{command:string;args:string[]}{
++ return {command:executable,args:[join(root,script),"repo",`--tool=${tool}`,...args]};
++}
++
++/** 🚧️ Refuses a disposable root that is, contains or lies inside the live checkout, so no edit can ever reach the live tree. */
++export async function incrementalDisposableV1(live:string,disposable:string):Promise<void>{
++ const real=async(path:string):Promise<string>=>{let at=resolve(path);const tail:string[]=[];for(;;){try{return join(await realpath(at),...tail.reverse());}catch{const parent=dirname(at);if(parent===at)return resolve(path);tail.push(at.slice(parent.length+1));at=parent;}}};
++ const a=await real(live),b=await real(disposable),inside=(inner:string,outer:string)=>inner===outer||inner.startsWith(outer.endsWith(sep)?outer:outer+sep);
++ if(inside(b,a)||inside(a,b))throw Error(`The disposable root must be separate from the live checkout: ${disposable}\nDas Wegwerf-Verzeichnis muss vom lebenden Checkout getrennt sein: ${disposable}`);
++}
++
++/** 📏️ Resolves a repository-relative file inside the disposable root and refuses anything that leaves it. */
++export function incrementalInsideV1(root:string,path:string):string{
++ if(isAbsolute(path)||path.split(/[\\/]/u).includes(".."))throw Error(`A repository-relative path inside the disposable root is required: ${path}`);
++ const resolved=resolve(root,path),inner=relative(resolve(root),resolved);
++ if(inner===""||inner.startsWith("..")||isAbsolute(inner))throw Error(`A repository-relative path inside the disposable root is required: ${path}`);
++ if(resolved.length>policy.maximumPathLength)throw Error(`Path exceeds ${policy.maximumPathLength} characters: ${resolved}`);
++ return resolved;
++}
++
++/** 🪞️ Copies tracked files into an empty disposable root with copy-on-write where the filesystem offers it, keeping symbolic links as links; progress every thousand files, cancellation between batches. */
++export async function incrementalCloneV1(source:string,destination:string,files:readonly string[],hooks:Readonly<{signal:AbortSignal;progress(done:number,total:number):Promise<void>}>):Promise<number>{
++ await incrementalDisposableV1(source,destination);
++ try{if((await readdir(destination)).length)throw Error(`The disposable root must be empty: ${destination}\nDas Wegwerf-Verzeichnis muss leer sein: ${destination}`);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
++ for(const file of files)incrementalInsideV1(destination,file);
++ const made=new Set<string>(),ensure=async(directory:string)=>{if(!made.has(directory)){await mkdir(directory,{recursive:true});made.add(directory);}};
++ await ensure(destination);
++ let done=0;
++ for(let start=0;start<files.length;start+=policy.copyConcurrency){
++  if(hooks.signal.aborted)throw Error("Cancelled\nAbgebrochen");
++  await Promise.all(files.slice(start,start+policy.copyConcurrency).map(async file=>{
++   const from=join(source,file),to=join(destination,file),meta=await lstat(from);
++   await ensure(dirname(to));
++   if(meta.isSymbolicLink())await symlink(await readlink(from),to);
++   else if(meta.isFile())await copyFile(from,to,constants.COPYFILE_FICLONE);
++  }));
++  const before=done;done=Math.min(files.length,start+policy.copyConcurrency);
++  if(Math.floor(done/1000)!==Math.floor(before/1000))await hooks.progress(done,files.length);
++ }
++ await hooks.progress(files.length,files.length);
++ return files.length;
++}
++
++/** 🗑️ Removes a disposable root after a run unless it is kept; it refuses the live checkout. */
++export async function incrementalDiscardV1(live:string,disposable:string):Promise<void>{await incrementalDisposableV1(live,disposable);await rm(disposable,{recursive:true,force:true});}
++
++type AdapterTaskV1=Readonly<{id:string;dependencies:readonly string[];definition:Readonly<{inputs?:readonly unknown[];outputs?:unknown}>}>;
++/** 🧩️ The part of the Bazel adapter the slice builder reads: the planner, the cache decision, the coverage classifier, the source index and the input expansion. */
++export type IncrementalAdapterV1=Readonly<{
++ planBazelTasksV1(graph:never,request:never):{selected:readonly string[];tasks:Readonly<Record<string,AdapterTaskV1>>};
++ bazelCacheDecisionV1(task:never,skipCache:boolean):{cache:boolean};
++ bazelTaskCoverageV1(task:never,decision:never,script?:string):{family:string};
++ bazelSourceIndexV1(inventory:readonly string[]):{files:readonly string[];selectAll(inputs:readonly unknown[]):{marks:Uint8Array}};
++ bazelTaskInputsV1(graph:never,task:never,closures:"ignore"):unknown[];
++}>;
++
++const families=new Set<string>(schema.definitions.Family.enum);
++
++/** 🔪️ Builds the slice of a target from the neutral graph with the adapter's own planner and input expansion, keeping only the declared inputs that name the files an edit touches. Tasks that consume dependency outputs through `dependentTasksOutputFiles` are recorded, transitively when the input says so. */
++export function incrementalSliceFromGraphV1(adapter:IncrementalAdapterV1,graph:unknown,target:string,relevant:readonly string[],inventory:readonly string[]):IncrementalSliceV1{
++ const plan=adapter.planBazelTasksV1(graph as never,{tasks:[target],args:[]} as never),index=adapter.bazelSourceIndexV1(inventory),position=new Map(index.files.map((file,at)=>[file,at])),wanted=relevant.filter(file=>position.has(file));
++ const reach=(id:string,transitive:boolean):string[]=>{const seen=new Set<string>(),pending=[...plan.tasks[id]!.dependencies];while(pending.length){const next=pending.pop()!;if(seen.has(next)||!plan.tasks[next])continue;seen.add(next);if(transitive)pending.push(...plan.tasks[next]!.dependencies);}return [...seen].sort(order);};
++ const tasks:Record<string,IncrementalSliceTaskV1>={};
++ for(const id of Object.keys(plan.tasks).sort(order)){
++  const task=plan.tasks[id]!,decision=adapter.bazelCacheDecisionV1(task as never,false),family=adapter.bazelTaskCoverageV1(task as never,decision as never).family;
++  if(!families.has(family))throw Error(`Unknown task family ${family} for ${id}`);
++  const marks=decision.cache?index.selectAll(adapter.bazelTaskInputsV1(graph as never,task as never,"ignore")).marks:new Uint8Array(),declared=task.definition.inputs??[];
++  const consumers=declared.filter((value):value is {dependentTasksOutputFiles:unknown;transitive?:boolean}=>typeof value==="object"&&value!==null&&"dependentTasksOutputFiles" in value);
++  const consumes=consumers.length?reach(id,consumers.some(value=>value.transitive===true)):[];
++  tasks[id]={family:family as IncrementalFamilyV1,cache:decision.cache,outputs:Array.isArray(task.definition.outputs)&&task.definition.outputs.length>0,dependsOn:[...task.dependencies].filter(other=>plan.tasks[other]).sort(order),consumes,inputs:wanted.filter(file=>marks[position.get(file)!]===1)};
++ }
++ return incrementalSliceV1({version:1,selected:[...plan.selected].sort(order),tasks});
++}
++
++/** 📃️ Reads a dry-run plan printed by `repo run --dry-run` into the sorted task ids and their dependency map. */
++export function incrementalPlanTasksV1(output:string):{ids:string[];dependencies:Record<string,string[]>}{
++ const lines=output.split("\n"),start=lines.findIndex(line=>line==="{");
++ if(start<0)throw Error("A dry-run plan is required");
++ const plan=JSON.parse(lines.slice(start).join("\n")) as {tasks?:{tasks?:Record<string,unknown>;dependencies?:Record<string,string[]>}};
++ if(!plan.tasks?.tasks||!plan.tasks.dependencies)throw Error("A dry-run plan is required");
++ return {ids:Object.keys(plan.tasks.tasks).sort(order),dependencies:plan.tasks.dependencies};
++}
++
++/** 🏠️ Everything the real ports need that differs between hosts: where the copy lives, how to run the CLI, where Nx records its run. */
++export type IncrementalHostV1=Readonly<{
++ live:string;
++ root:string;
++ script:string;
++ executable:string;
++ scratch:string;
++ signal:AbortSignal;
++ environment:Readonly<Record<string,string|undefined>>;
++ run(command:string,args:readonly string[],cwd:string,env:Readonly<Record<string,string>>,signal:AbortSignal):Promise<string>;
++ nxRecord(root:string):string;
++ adapter():Promise<IncrementalAdapterV1>;
++ inventory():Promise<readonly string[]>;
++ now():number;
++ check():void;
++ progress(stage:string):Promise<void>;
++}>;
++
++/** 🏭️ The real ports: reads and writes inside the disposable root, slices from the CLI's own graph and plan, executions through the disposable root's own CLI observed through Bazel's compact execution log or Nx's run record. */
++export function incrementalCliPortsV1(host:IncrementalHostV1):IncrementalPortsV1{
++ let sequence=0,graph:unknown,graphPath:string|undefined;
++ const cli=(tool:IncrementalToolV1,args:readonly string[],extra:Readonly<Record<string,string>>={})=>{const command=incrementalCliArgumentsV1(host.executable,host.root,host.script,tool,args);return host.run(command.command,command.args,host.root,incrementalChildEnvironmentV1(host.environment,extra),host.signal);};
++ const lastLine=(output:string)=>output.trim().split("\n").at(-1)!.trim();
++ return Object.freeze({
++  read:async path=>readFile(incrementalInsideV1(host.root,path),"utf8"),
++  write:async(path,text)=>{await writeFile(incrementalInsideV1(host.root,path),text);},
++  now:host.now,
++  nonce:()=>host.now().toString(36).slice(-8).padStart(8,"0")+(++sequence).toString(36),
++  check:host.check,
++  progress:host.progress,
++  slice:async(scenario,tool)=>{
++   if(graph===undefined){const output=await cli(tool,["graph",`--file=${join(host.scratch,"graph.json")}`]);graphPath=lastLine(output);graph=JSON.parse(await readFile(graphPath,"utf8"));}
++   const planned=incrementalPlanTasksV1(await cli(tool,["run",scenario.target,"--dry-run"])),slice=incrementalSliceFromGraphV1(await host.adapter(),graph,scenario.target,[scenario.mutation.file],await host.inventory());
++   const missing=planned.ids.filter(id=>!slice.tasks[id]);
++   if(missing.length)throw Error(`The graph planner and ${tool} disagree about the closure of ${scenario.target}: ${missing.join(", ")}`);
++   return slice;
++  },
++  execute:async(tool,target,slice)=>{
++   const ids=Object.keys(slice.tasks);
++   if(tool==="bazel"){
++    const report=join(host.scratch,`bazel-${++sequence}.zst`);
++    await rm(report,{force:true});
++    await cli("bazel",["run",target],{[policy.bazelReport]:report});
++    const observation=incrementalBazelObservationV1(incrementalBazelSpawnsV1(await readFile(report)),ids);
++    await rm(report,{force:true});
++    return observation;
++   }
++   const record=host.nxRecord(host.root);
++   await rm(record,{force:true});
++   await cli("nx",["run",target]);
++   return incrementalNxObservationV1(JSON.parse(await readFile(record,"utf8")),ids);
++  }
++ });
++}
++
++/** 🔖️ Selects scenarios by id; `all` selects every scenario, an unknown id is refused. */
++export function incrementalSelectV1(set:IncrementalScenarioSetV1,ids:readonly string[]|"all"):IncrementalScenarioV1[]{
++ if(ids==="all")return [...set.scenarios];
++ const unknown=ids.filter(id=>!set.scenarios.some(row=>row.id===id));
++ if(unknown.length)throw Error(`Unknown scenario: ${unknown.join(", ")} (${set.scenarios.map(row=>row.id).join("|")})`);
++ return ids.map(id=>set.scenarios.find(row=>row.id===id)!);
++}
+# stage-clean orphan staged=bzl-incr-tools/staged/schema.json map=None
+--- /dev/null
++++ b/staged/bzl-incr-tools/staged/schema.json
+@@ -0,0 +1,995 @@
++{
++  "$schema": "http://json-schema.org/draft-07/schema#",
++  "title": "Incremental Build Conformance",
++  "description": "Scenarios, task slices, expectations, observations and verdicts of the incremental-build conformance harness; every build implementation behind the tool-neutral interface is judged by the same contract.",
++  "type": "object",
++  "additionalProperties": false,
++  "required": [
++    "version"
++  ],
++  "properties": {
++    "version": {
++      "const": 1
++    }
++  },
++  "definitions": {
++    "Policy": {
++      "const": {
++        "version": 1,
++        "taskId": "^\\S+:\\S+$",
++        "scenarioId": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
++        "nonce": "^[0-9a-z]{6,32}$",
++        "maximumTasks": 20000,
++        "maximumLogBytes": 268435456,
++        "maximumLogEntries": 5000000,
++        "maximumPathLength": 255,
++        "phases": [
++          "warm",
++          "edit",
++          "revert"
++        ],
++        "label": "^t_[0-9a-f]{16}$",
++        "bazelReport": "SEMIO_BUILD_TASK_REPORT",
++        "copyConcurrency": 32
++      }
++    },
++    "Tool": {
++      "enum": [
++        "nx",
++        "bazel"
++      ]
++    },
++    "Phase": {
++      "enum": [
++        "warm",
++        "edit",
++        "revert"
++      ]
++    },
++    "EditKind": {
++      "enum": [
++        "comment-only",
++        "body-change",
++        "signature-change",
++        "lockfile",
++        "unrelated-sibling",
++        "config"
++      ]
++    },
++    "EditOp": {
++      "enum": [
++        "comment",
++        "private-body",
++        "public-api",
++        "whitespace"
++      ]
++    },
++    "EditLanguage": {
++      "enum": [
++        "ts",
++        "rs",
++        "py",
++        "text"
++      ]
++    },
++    "Family": {
++      "enum": [
++        "bun-script",
++        "tsc",
++        "vitest",
++        "bun-test",
++        "vite",
++        "playwright",
++        "go",
++        "python",
++        "dotnet",
++        "latex",
++        "docker",
++        "wasm",
++        "cargo",
++        "aggregate"
++      ]
++    },
++    "Effect": {
++      "enum": [
++        "changed",
++        "identical",
++        "unknown"
++      ]
++    },
++    "Status": {
++      "enum": [
++        "pass",
++        "stale",
++        "excess",
++        "stale-excess",
++        "failed",
++        "skipped"
++      ]
++    },
++    "TaskId": {
++      "type": "string",
++      "pattern": "^\\S+:\\S+$"
++    },
++    "TaskIds": {
++      "type": "array",
++      "uniqueItems": true,
++      "items": {
++        "$ref": "#/definitions/TaskId"
++      }
++    },
++    "Path": {
++      "type": "string",
++      "minLength": 1,
++      "maxLength": 255
++    },
++    "LocalizedText": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "en",
++        "de"
++      ],
++      "properties": {
++        "en": {
++          "type": "string",
++          "minLength": 1
++        },
++        "de": {
++          "type": "string",
++          "minLength": 1
++        }
++      }
++    },
++    "SliceTask": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "family",
++        "cache",
++        "outputs",
++        "dependsOn",
++        "consumes",
++        "inputs"
++      ],
++      "properties": {
++        "family": {
++          "$ref": "#/definitions/Family"
++        },
++        "cache": {
++          "type": "boolean"
++        },
++        "outputs": {
++          "type": "boolean"
++        },
++        "dependsOn": {
++          "$ref": "#/definitions/TaskIds"
++        },
++        "consumes": {
++          "$ref": "#/definitions/TaskIds"
++        },
++        "inputs": {
++          "type": "array",
++          "uniqueItems": true,
++          "items": {
++            "$ref": "#/definitions/Path"
++          }
++        }
++      }
++    },
++    "Slice": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "version",
++        "selected",
++        "tasks"
++      ],
++      "properties": {
++        "version": {
++          "const": 1
++        },
++        "selected": {
++          "$ref": "#/definitions/TaskIds"
++        },
++        "tasks": {
++          "type": "object",
++          "additionalProperties": {
++            "$ref": "#/definitions/SliceTask"
++          }
++        }
++      }
++    },
++    "Edit": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "kind",
++        "files"
++      ],
++      "properties": {
++        "kind": {
++          "$ref": "#/definitions/EditKind"
++        },
++        "files": {
++          "type": "array",
++          "minItems": 1,
++          "uniqueItems": true,
++          "items": {
++            "$ref": "#/definitions/Path"
++          }
++        }
++      }
++    },
++    "SensitivityRow": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "family",
++        "kind",
++        "effect"
++      ],
++      "properties": {
++        "family": {
++          "$ref": "#/definitions/Family"
++        },
++        "kind": {
++          "$ref": "#/definitions/EditKind"
++        },
++        "effect": {
++          "$ref": "#/definitions/Effect"
++        }
++      }
++    },
++    "Expected": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "direct",
++        "must",
++        "may",
++        "cutoff"
++      ],
++      "properties": {
++        "direct": {
++          "$ref": "#/definitions/TaskIds"
++        },
++        "must": {
++          "$ref": "#/definitions/TaskIds"
++        },
++        "may": {
++          "$ref": "#/definitions/TaskIds"
++        },
++        "cutoff": {
++          "$ref": "#/definitions/TaskIds"
++        }
++      }
++    },
++    "Observation": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "tool",
++        "executed",
++        "restored",
++        "cached",
++        "unmapped"
++      ],
++      "properties": {
++        "tool": {
++          "$ref": "#/definitions/Tool"
++        },
++        "executed": {
++          "$ref": "#/definitions/TaskIds"
++        },
++        "restored": {
++          "$ref": "#/definitions/TaskIds"
++        },
++        "cached": {
++          "$ref": "#/definitions/TaskIds"
++        },
++        "unmapped": {
++          "type": "array",
++          "uniqueItems": true,
++          "items": {
++            "type": "string",
++            "minLength": 1
++          }
++        }
++      }
++    },
++    "Verdict": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "status",
++        "stale",
++        "excess",
++        "exact"
++      ],
++      "properties": {
++        "status": {
++          "$ref": "#/definitions/Status"
++        },
++        "stale": {
++          "$ref": "#/definitions/TaskIds"
++        },
++        "excess": {
++          "$ref": "#/definitions/TaskIds"
++        },
++        "exact": {
++          "type": "boolean"
++        }
++      }
++    },
++    "Mutation": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "op",
++        "language",
++        "file"
++      ],
++      "properties": {
++        "op": {
++          "$ref": "#/definitions/EditOp"
++        },
++        "language": {
++          "$ref": "#/definitions/EditLanguage"
++        },
++        "file": {
++          "$ref": "#/definitions/Path"
++        }
++      }
++    },
++    "Scenario": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "id",
++        "title",
++        "area",
++        "target",
++        "kind",
++        "mutation"
++      ],
++      "properties": {
++        "id": {
++          "type": "string",
++          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
++        },
++        "title": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "area": {
++          "enum": [
++            "framework-ts",
++            "rust-crate",
++            "wasm-component",
++            "vite-app",
++            "test-target",
++            "product-activation"
++          ]
++        },
++        "target": {
++          "type": "string",
++          "pattern": "^\\S+:\\S+$"
++        },
++        "kind": {
++          "$ref": "#/definitions/EditKind"
++        },
++        "mutation": {
++          "$ref": "#/definitions/Mutation"
++        },
++        "tools": {
++          "type": "array",
++          "minItems": 1,
++          "uniqueItems": true,
++          "items": {
++            "$ref": "#/definitions/Tool"
++          }
++        },
++        "effects": {
++          "type": "array",
++          "items": {
++            "$ref": "#/definitions/SensitivityRow"
++          }
++        }
++      }
++    },
++    "Labels": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "scenario",
++        "tool",
++        "phase",
++        "must",
++        "may",
++        "executed",
++        "restored",
++        "cutoff",
++        "verdict",
++        "milliseconds",
++        "stale",
++        "excess",
++        "pass",
++        "failed",
++        "skipped",
++        "summary",
++        "area",
++        "kind",
++        "target",
++        "progress",
++        "cancelled",
++        "title",
++        "exact",
++        "bounded",
++        "warm",
++        "edit",
++        "revert",
++        "comparison",
++        "agree",
++        "differ",
++        "only"
++      ],
++      "properties": {
++        "scenario": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "tool": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "phase": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "must": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "may": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "executed": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "restored": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "cutoff": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "verdict": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "milliseconds": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "stale": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "excess": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "pass": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "failed": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "skipped": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "summary": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "area": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "kind": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "target": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "progress": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "cancelled": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "title": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "exact": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "bounded": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "warm": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "edit": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "revert": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "comparison": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "agree": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "differ": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "only": {
++          "$ref": "#/definitions/LocalizedText"
++        }
++      }
++    },
++    "ScenarioSet": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "version",
++        "labels",
++        "sensitivity",
++        "scenarios"
++      ],
++      "properties": {
++        "version": {
++          "const": 1
++        },
++        "labels": {
++          "$ref": "#/definitions/Labels"
++        },
++        "sensitivity": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "$ref": "#/definitions/SensitivityRow"
++          }
++        },
++        "scenarios": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "$ref": "#/definitions/Scenario"
++          }
++        }
++      }
++    },
++    "Row": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "scenario",
++        "tool",
++        "phase",
++        "expected",
++        "observation",
++        "verdict",
++        "milliseconds"
++      ],
++      "properties": {
++        "scenario": {
++          "type": "string",
++          "minLength": 1
++        },
++        "tool": {
++          "$ref": "#/definitions/Tool"
++        },
++        "phase": {
++          "$ref": "#/definitions/Phase"
++        },
++        "expected": {
++          "$ref": "#/definitions/Expected"
++        },
++        "observation": {
++          "$ref": "#/definitions/Observation"
++        },
++        "verdict": {
++          "$ref": "#/definitions/Verdict"
++        },
++        "milliseconds": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "note": {
++          "type": "string"
++        }
++      }
++    },
++    "Report": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "version",
++        "rows",
++        "passed",
++        "failed",
++        "skipped"
++      ],
++      "properties": {
++        "version": {
++          "const": 1
++        },
++        "rows": {
++          "type": "array",
++          "items": {
++            "$ref": "#/definitions/Row"
++          }
++        },
++        "passed": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "failed": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "skipped": {
++          "type": "integer",
++          "minimum": 0
++        }
++      }
++    },
++    "Fixture": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "version",
++        "sensitivity",
++        "evaluation",
++        "verdicts",
++        "mutations",
++        "labels",
++        "environments",
++        "refusals",
++        "bazelLogs",
++        "nxRecords"
++      ],
++      "properties": {
++        "version": {
++          "const": 1
++        },
++        "sensitivity": {
++          "type": "array",
++          "items": {
++            "$ref": "#/definitions/SensitivityRow"
++          }
++        },
++        "evaluation": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "tool",
++              "slice",
++              "edit",
++              "expected"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "tool": {
++                "$ref": "#/definitions/Tool"
++              },
++              "slice": {
++                "$ref": "#/definitions/Slice"
++              },
++              "edit": {
++                "$ref": "#/definitions/Edit"
++              },
++              "expected": {
++                "$ref": "#/definitions/Expected"
++              }
++            }
++          }
++        },
++        "verdicts": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "expected",
++              "executed",
++              "verdict"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "expected": {
++                "$ref": "#/definitions/Expected"
++              },
++              "executed": {
++                "$ref": "#/definitions/TaskIds"
++              },
++              "verdict": {
++                "$ref": "#/definitions/Verdict"
++              }
++            }
++          }
++        },
++        "mutations": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "op",
++              "language",
++              "nonce",
++              "before",
++              "after"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "op": {
++                "$ref": "#/definitions/EditOp"
++              },
++              "language": {
++                "$ref": "#/definitions/EditLanguage"
++              },
++              "nonce": {
++                "type": "string",
++                "pattern": "^[0-9a-z]{6,32}$"
++              },
++              "before": {
++                "type": "string"
++              },
++              "after": {
++                "type": "string"
++              }
++            }
++          }
++        },
++        "labels": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "task",
++              "label"
++            ],
++            "properties": {
++              "task": {
++                "$ref": "#/definitions/TaskId"
++              },
++              "label": {
++                "type": "string",
++                "pattern": "^t_[0-9a-f]{16}$"
++              }
++            }
++          }
++        },
++        "environments": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "parent",
++              "extra",
++              "child"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "parent": {
++                "type": "object",
++                "additionalProperties": {
++                  "type": "string"
++                }
++              },
++              "extra": {
++                "type": "object",
++                "additionalProperties": {
++                  "type": "string"
++                }
++              },
++              "child": {
++                "type": "object",
++                "additionalProperties": {
++                  "type": "string"
++                }
++              }
++            }
++          }
++        },
++        "refusals": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "value"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "value": {}
++            }
++          }
++        },
++        "bazelLogs": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "tasks",
++              "compact",
++              "spawns",
++              "observation"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "tasks": {
++                "$ref": "#/definitions/TaskIds"
++              },
++              "compact": {
++                "type": "string"
++              },
++              "spawns": {
++                "type": "array",
++                "items": {
++                  "type": "object",
++                  "additionalProperties": false,
++                  "required": [
++                    "label",
++                    "mnemonic",
++                    "runner",
++                    "cacheHit"
++                  ],
++                  "properties": {
++                    "label": {
++                      "type": "string"
++                    },
++                    "mnemonic": {
++                      "type": "string"
++                    },
++                    "runner": {
++                      "type": "string"
++                    },
++                    "cacheHit": {
++                      "type": "boolean"
++                    }
++                  }
++                }
++              },
++              "observation": {
++                "type": "object",
++                "additionalProperties": false,
++                "required": [
++                  "executed",
++                  "restored",
++                  "cached",
++                  "unmapped"
++                ],
++                "properties": {
++                  "executed": {
++                    "type": "array",
++                    "items": {
++                      "type": "string"
++                    }
++                  },
++                  "restored": {
++                    "type": "array",
++                    "items": {
++                      "type": "string"
++                    }
++                  },
++                  "cached": {
++                    "type": "array",
++                    "items": {
++                      "type": "string"
++                    }
++                  },
++                  "unmapped": {
++                    "type": "array",
++                    "items": {
++                      "type": "string"
++                    }
++                  }
++                }
++              }
++            }
++          }
++        },
++        "nxRecords": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "tasks",
++              "record",
++              "observation"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "tasks": {
++                "$ref": "#/definitions/TaskIds"
++              },
++              "record": {},
++              "observation": {
++                "type": "object",
++                "additionalProperties": false,
++                "required": [
++                  "executed",
++                  "restored",
++                  "cached",
++                  "unmapped"
++                ],
++                "properties": {
++                  "executed": {
++                    "type": "array",
++                    "items": {
++                      "type": "string"
++                    }
++                  },
++                  "restored": {
++                    "type": "array",
++                    "items": {
++                      "type": "string"
++                    }
++                  },
++                  "cached": {
++                    "type": "array",
++                    "items": {
++                      "type": "string"
++                    }
++                  },
++                  "unmapped": {
++                    "type": "array",
++                    "items": {
++                      "type": "string"
++                    }
++                  }
++                }
++              }
++            }
++          }
++        }
++      }
++    }
++  }
++}
+# stage-clean different staged=bzl-incr-tools/staged/test.ts map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🧪️tests/🟦️.ts
+@@ -1,7 +1,5 @@
+-import {buildBackendIdsV1} from "../../🔌️backends/🟦️.ts";
+ /** 🔁️ Incremental build conformance: the evaluation model, verdicts, mutations, observers, runner and command are checked against language-agnostic fixtures, an independent Python oracle, Bazel's own binary (execution log, summary line, `rdeps`) and the installed Nx's own run-record class. */
+ import {test,expect} from "bun:test";
+-import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+ import Ajv from "ajv";
+ import {spawnSync} from "node:child_process";
+ import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,symlinkSync,writeFileSync,lstatSync,readlinkSync} from "node:fs";
+@@ -9,23 +7,20 @@
+ import {dirname,join} from "node:path";
+ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+ import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+-import mounts from "./🧫️fixtures/💽️mounts/🔣️.json" with {type:"json"};
+-import rootBudget from "./🧫️fixtures/📍️root-budget/🔣️.json" with {type:"json"};
+ import scenarios from "../📋️scenarios/🔣️.json" with {type:"json"};
+ import {incrementalComparisonsV1,incrementalExpectedV1,incrementalLabelV1,incrementalMutateV1,incrementalQuiescentV1,incrementalRdepsExpressionV1,incrementalRdepsPackageV1,incrementalRdepsTasksV1,incrementalReportV1,incrementalScenarioIssuesV1,incrementalSliceV1,incrementalVerdictV1,renderIncrementalReportV1,renderIncrementalScenariosV1,type IncrementalExpectedV1,type IncrementalObservationV1,type IncrementalScenarioSetV1,type IncrementalSliceV1,type IncrementalToolV1} from "../🟦️.ts";
+ import {incrementalBazelObservationV1,incrementalBazelSpawnsV1,incrementalNxObservationV1} from "../👁️observers/🟦️.ts";
+-import {incrementalDetachMountsV1,incrementalMountsInsideV1,incrementalRefreshV1,incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalCliPortsV1,incrementalCloneV1,incrementalDisposableV1,incrementalInsideV1,incrementalPlanTasksV1,incrementalRunScenarioV1,incrementalRunV1,incrementalSelectV1,incrementalSliceFromGraphV1,type IncrementalAdapterV1,type IncrementalHostV1,type IncrementalPortsV1} from "../🏃️runner/🟦️.ts";
+-import {incrementalArgumentsV1,incrementalDefaultRootV1,incrementalTrackedFilesV1,incrementalOptionNamesV1,renderIncrementalPlanV1,runIncrementalCommandV1,type IncrementalCommandPortsV1} from "../⌨️command/🟦️.ts";
++import {incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalCliPortsV1,incrementalCloneV1,incrementalDisposableV1,incrementalInsideV1,incrementalPlanTasksV1,incrementalRunScenarioV1,incrementalRunV1,incrementalSelectV1,incrementalSliceFromGraphV1,type IncrementalAdapterV1,type IncrementalHostV1,type IncrementalPortsV1} from "../🏃️runner/🟦️.ts";
++import {incrementalArgumentsV1,incrementalDefaultRootV1,incrementalOptionNamesV1,renderIncrementalPlanV1,runIncrementalCommandV1,type IncrementalCommandPortsV1} from "../⌨️command/🟦️.ts";
+ import catalog from "../../⚙️operations/🔣️catalog.json" with {type:"json"};
+ import {bazelCommandPlanV1,bazelTaskReportOptionsV1} from "../../🔧️tools/🏗️bazel/🧭️commands/🟦️.ts";
+-import {testScratchRootV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+ import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+ 
+ const findRoot=(from:string):string=>{for(let at=from;;at=dirname(at)){if(existsSync(join(at,"bunfig.toml"))&&existsSync(join(at,"bun.lock")))return at;if(dirname(at)===at)throw Error("repository root not found");}};
+ const root=process.env.SEMIO_TEST_REPO_ROOT??findRoot(import.meta.dir),set=scenarios as unknown as IncrementalScenarioSetV1;
+ const ajv=new Ajv({strict:true,allowUnionTypes:true}),define=(name:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${name}`});
+ const oracle=join(import.meta.dir,"🐍️oracle/🐍️.py"),sens=fixture.sensitivity as never;
+-const python=(input:unknown):any=>{const run=spawnSync(testPythonV1()??"python3",["-I",oracle],{input:JSON.stringify(input),encoding:"utf8",maxBuffer:64*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
++const python=(input:unknown):any=>{const run=spawnSync("python3",["-I",oracle],{input:JSON.stringify(input),encoding:"utf8",maxBuffer:64*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
+ const slice=(value:unknown)=>value as IncrementalSliceV1;
+ 
+ test("the schema is valid and validates the fixture, the scenarios and every row the way the repository validator does",()=>{
+@@ -108,8 +103,7 @@
+ test("the child environment drops invocation, capability, build and Nx state and keeps the language and the tools",()=>{
+  const answers=python(fixture).environments;
+  for(const[index,row]of fixture.environments.entries()){expect(incrementalChildEnvironmentV1(row.parent as unknown as Record<string,string>,row.extra as unknown as Record<string,string>),row.name).toEqual(row.child as unknown as Record<string,string>);expect(answers[index]).toEqual(row.child);}
+- const disposable=join(testScratchRootV1("incremental-root"),"sinc");
+- expect(incrementalCliArgumentsV1("/bin/bun",disposable,"script.ts","bazel",["run","a:b"])).toEqual({command:"/bin/bun",args:[join(disposable,"script.ts"),"repo","--tool=bazel","run","a:b"]});
++ expect(incrementalCliArgumentsV1("/bin/bun","/tmp/sinc","script.ts","bazel",["run","a:b"])).toEqual({command:"/bin/bun",args:["/tmp/sinc/script.ts","repo","--tool=bazel","run","a:b"]});
+ });
+ 
+ test("compact Bazel execution logs decode to the same spawns and observations as the Python wire decoder and Bazel's own summary",()=>{
+@@ -184,7 +178,7 @@
+    expect(counted,row.name+" "+second.stderr).toBe(observation.executed.length);
+    spawnSync(binary!,[`--output_base=${output+index}`,"--nosystem_rc","--nohome_rc","shutdown"],{cwd:work});
+   }
+- }finally{makeTestTreeWritableV1(directory);rmSync(directory,{recursive:true,force:true});}
++ }finally{spawnSync("chmod",["-R","u+w",directory]);rmSync(directory,{recursive:true,force:true});}
+ },600000);
+ 
+ real("an action marked only no-cache is an action cache hit on the same output base, and only a changed action key executes it again",()=>{
+@@ -196,7 +190,7 @@
+   write("n1");expect(bazelRun(directory,output,log).status).toBe(0);expect(labels()).toEqual(["//:stable","//:volatile"]);
+   write("n1");expect(bazelRun(directory,output,log).status).toBe(0);expect(labels(),"no-cache alone re-executes nothing").toEqual([]);
+   write("n2");expect(bazelRun(directory,output,log).status).toBe(0);expect(labels(),"a changed key executes only the volatile action").toEqual(["//:volatile"]);
+- }finally{spawnSync(binary!,[`--output_base=${output}`,"--nosystem_rc","--nohome_rc","shutdown"],{cwd:directory});makeTestTreeWritableV1(directory);rmSync(directory,{recursive:true,force:true});}
++ }finally{spawnSync(binary!,[`--output_base=${output}`,"--nosystem_rc","--nohome_rc","shutdown"],{cwd:directory});spawnSync("chmod",["-R","u+w",directory]);rmSync(directory,{recursive:true,force:true});}
+ },300000);
+ 
+ real("Bazel's own rdeps over the generated package returns the dependents the model reaches when every output changes",()=>{
+@@ -213,7 +207,7 @@
+    const run=bazelRun(directory,output,"",incrementalRdepsExpressionV1(row.edit.files));expect(run.status,row.name+run.stderr).toBe(0);
+    expect(incrementalRdepsTasksV1(flat,run.stdout),row.name).toEqual([...expected.may]);
+   }
+- }finally{spawnSync(binary!,[`--output_base=${output}`,"--nosystem_rc","--nohome_rc","shutdown"],{cwd:directory});makeTestTreeWritableV1(directory);rmSync(directory,{recursive:true,force:true});}
++ }finally{spawnSync(binary!,[`--output_base=${output}`,"--nosystem_rc","--nohome_rc","shutdown"],{cwd:directory});spawnSync("chmod",["-R","u+w",directory]);rmSync(directory,{recursive:true,force:true});}
+ },300000);
+ 
+ const scenario=set.scenarios.find(row=>row.id==="fw-ts-comment")!;
+@@ -313,9 +307,9 @@
+  try{
+   const live=join(base,"live");mkdirSync(join(live,"🧰️x/y"),{recursive:true});
+   writeFileSync(join(live,"🧰️x/y/🟦️.ts"),"export {};\n");writeFileSync(join(live,"plain.txt"),"hello");symlinkSync("plain.txt",join(live,"link"));
+-  symlinkSync(join(live,"plain.txt"),join(live,"back"));const files=["🧰️x/y/🟦️.ts","plain.txt","link","back"],ticks:string[]=[],copy=join(base,"copy");
++  const files=["🧰️x/y/🟦️.ts","plain.txt","link"],ticks:string[]=[],copy=join(base,"copy");
+   const done=await incrementalCloneV1(live,copy,files,{signal:new AbortController().signal,progress:async(count,total)=>{ticks.push(`${count}/${total}`);}});
+-  expect(done).toBe(4);expect(ticks.at(-1)).toBe("4/4");expect(existsSync(join(copy,"back"))).toBe(false);
++  expect(done).toBe(3);expect(ticks.at(-1)).toBe("3/3");
+   expect(readFileSync(join(copy,"🧰️x/y/🟦️.ts"),"utf8")).toBe("export {};\n");expect(readFileSync(join(copy,"plain.txt"),"utf8")).toBe("hello");
+   expect(lstatSync(join(copy,"link")).isSymbolicLink()).toBe(true);expect(readlinkSync(join(copy,"link"))).toBe("plain.txt");
+   await expect(incrementalCloneV1(live,copy,files,{signal:new AbortController().signal,progress:async()=>{}})).rejects.toThrow("must be empty");
+@@ -323,7 +317,7 @@
+   const stop=new AbortController();stop.abort();
+   await expect(incrementalCloneV1(live,join(base,"stopped"),files,{signal:stop.signal,progress:async()=>{}})).rejects.toThrow("Cancelled");
+   await expect(incrementalCloneV1(live,join(base,"deep"),["a/".repeat(130)+"b"],{signal:new AbortController().signal,progress:async()=>{}})).rejects.toThrow("exceeds");
+-  expect(readdirSync(live).sort()).toEqual(["back","link","plain.txt","🧰️x"].sort());
++  expect(readdirSync(live).sort()).toEqual(["link","plain.txt","🧰️x"].sort());
+  }finally{rmSync(base,{recursive:true,force:true});}
+ });
+ 
+@@ -357,12 +351,13 @@
+ });
+ 
+ test("the command arguments are closed, bilingual in their errors and default to both implementations and all phases",()=>{
+- expect(incrementalArgumentsV1(["list"])).toMatchObject({operation:"list",scenarios:"all",tools:buildBackendIdsV1(),phases:["warm","edit","revert"],json:false,fresh:false});
++ expect(incrementalArgumentsV1(["list"])).toMatchObject({operation:"list",scenarios:"all",tools:["nx","bazel"],phases:["warm","edit","revert"],json:false,fresh:false});
+  expect(incrementalArgumentsV1(["run","--scenario=a,b","--implementations","bazel","--phases=edit","--json","--root=/tmp/x","--file=r.json","--lang=de"])).toMatchObject({operation:"run",scenarios:["a","b"],tools:["bazel"],phases:["edit"],json:true,root:"/tmp/x",file:"r.json",language:"de"});
+  expect(incrementalArgumentsV1(["plan","--scenario=all"]).scenarios).toBe("all");
+  for(const[bad,message]of [[[],"Expected repo incremental"],[["go"],"Expected repo incremental"],[["run","extra"],"Expected repo incremental"],[["run","--wat"],"Unknown incremental option"],[["run","--json","--json"],"Repeated option"],[["run","--scenario"],"needs a value"],[["run","--implementations=make"],"Unknown implementation"],[["run","--phases=cold"],"Unknown phase"],[["run","--lang=fr"],"Unknown language"],[["run","--json=1"],"Unknown incremental option"]] as const)
+   expect(()=>incrementalArgumentsV1(bad as never),JSON.stringify(bad)).toThrow(message);
+  expect(()=>incrementalArgumentsV1(["go"])).toThrow("Erwartet: repo incremental");
++ expect(incrementalDefaultRootV1("darwin",{})).toBe("/tmp/sinc");expect(incrementalDefaultRootV1("win32",{SystemDrive:"D:"})).toBe("D:\\sinc");expect(incrementalDefaultRootV1("win32",{})).toBe("C:\\sinc");
+  expect(renderIncrementalPlanV1(set,[{scenario:"s",tool:"nx",expected:{direct:[],must:["a:b"],may:["a:b"],cutoff:[]}}],"de")).toBe("s / nx: muss 1, darf 1, abgeschnitten 0\n  a:b");
+ });
+ 
+@@ -384,15 +379,13 @@
+  try{
+   const live=join(base,"live"),copy=join(base,"copy"),script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";mkdirSync(join(live,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build"),{recursive:true});writeFileSync(join(live,script),"// cli\n");writeFileSync(join(live,"a.ts"),"a\n");
+   const out:string[]=[],stages:string[]=[],log:string[]=[],reports:unknown[]=[],single=slice({version:1,selected:["lib:generate"],tasks:{"lib:generate":{family:"bun-script",cache:true,outputs:true,dependsOn:[],consumes:[],inputs:[]}}});
+-  const ports=(over:Partial<IncrementalCommandPortsV1>={}):IncrementalCommandPortsV1=>({write:line=>out.push(line),progress:async stage=>{stages.push(stage);},check:()=>{},signal:new AbortController().signal,environment:{SEMIO_LANGUAGE:"en",SEMIO_X:"1",PATH:"/usr/bin"},platform:"linux",tmpdir:()=>"/tmp/t",home:()=>"/home/t",now:()=>Date.now(),run:stubCli({base},single,log),report:async(file,value)=>{reports.push([file,value]);},files:async()=>[script,"a.ts"],adapter:async()=>({...stubAdapter,planBazelTasksV1:()=>({selected:["lib:generate"],tasks:{"lib:generate":{id:"lib:generate",dependencies:[],definition:{outputs:["o"]}}}}),bazelTaskCoverageV1:()=>({family:"bun-script"}),bazelTaskInputsV1:()=>[]}),nxRecord:directory=>join(directory,"run.json"),exists:async path=>existsSync(path),scratch:async()=>mkdtempSync(join(base,"scratch-")),...over});
++  const ports=(over:Partial<IncrementalCommandPortsV1>={}):IncrementalCommandPortsV1=>({write:line=>out.push(line),progress:async stage=>{stages.push(stage);},check:()=>{},signal:new AbortController().signal,environment:{SEMIO_LANGUAGE:"en",SEMIO_X:"1",PATH:"/usr/bin"},platform:"linux",now:()=>Date.now(),run:stubCli({base},single,log),report:async(file,value)=>{reports.push([file,value]);},files:async()=>[script,"a.ts"],adapter:async()=>({...stubAdapter,planBazelTasksV1:()=>({selected:["lib:generate"],tasks:{"lib:generate":{id:"lib:generate",dependencies:[],definition:{outputs:["o"]}}}}),bazelTaskCoverageV1:()=>({family:"bun-script"}),bazelTaskInputsV1:()=>[]}),nxRecord:directory=>join(directory,"run.json"),exists:async path=>existsSync(path),scratch:async()=>mkdtempSync(join(base,"scratch-")),...over});
+   await runIncrementalCommandV1(live,["incremental","list","--lang=de"],ports());
+   expect(out.at(-1)).toContain(set.scenarios[0]!.title.de);
+   await expect(runIncrementalCommandV1(live,["incremental","run","--root="+copy],ports())).rejects.toThrow("Prepare the disposable root first");
+   await runIncrementalCommandV1(live,["incremental","prepare","--root="+copy],ports());
+   expect(existsSync(join(copy,script))).toBe(true);expect(stages.some(stage=>stage.startsWith("clone:"))).toBe(true);
+-  expect(log.map(line=>line.split(" repo ")[1])).toEqual(["--tool=nx preflight","--tool=nx tools setup all","--tool=nx dependencies sync --all","--tool=nx tools setup all"]);
+-  stages.length=0;log.length=0;await runIncrementalCommandV1(live,["incremental","prepare","--root="+copy],ports());
+-  expect(stages.some(stage=>stage.startsWith("refresh:"))).toBe(true);expect(stages.some(stage=>stage.startsWith("clone:"))).toBe(false);expect(log.length).toBe(4);
++  expect(log.map(line=>line.split(" repo ")[1])).toEqual(["--tool=nx preflight","--tool=nx tools setup all","--tool=nx dependencies sync --all"]);
+   await expect(runIncrementalCommandV1(live,["incremental","plan","--scenario=lib-none","--root="+copy],ports())).rejects.toThrow("Unknown scenario");
+   out.length=0;
+   await runIncrementalCommandV1(live,["incremental","plan","--scenario=fw-ts-comment","--implementations=bazel","--root="+copy,"--json"],ports());
+@@ -441,7 +434,7 @@
+ test("the neutral catalogue documents repo incremental in both languages with exactly the options and subcommands the parser accepts",()=>{
+  const row=catalog.operations.find(operation=>operation.name==="incremental")!;
+  expect(row).toBeDefined();
+- expect((row as {implementations?:unknown}).implementations).toBeUndefined();
++ expect(row.implementations).toEqual({nx:"neutral",bazel:"neutral"});
+  expect(row.progress&&row.cancellable).toBe(true);
+  expect("subcommands" in row?row.subcommands!.map(sub=>sub.name):[]).toEqual(["list","plan","prepare","run","discard"]);
+  const names=incrementalOptionNamesV1(),accepted=new Set([...names.valued,...names.plain].filter(name=>name!=="--lang"));
+@@ -462,64 +455,3 @@
+  expect(renderIncrementalReportV1(report,set,"de")).toContain("Vergleich der Implementierungen: nx / bazel");
+  expect(python({...fixture,comparisonRows:rows}).comparisons).toEqual(incrementalComparisonsV1(rows));
+ });
+-
+-for(const row of rootBudget.cases)test(`default disposable root ${row.id} keeps the longest product path within the budget`,()=>{
+- const found=incrementalDefaultRootV1(row.platform,row.temporary,row.home);
+- expect(found).toBe(row.root);
+- expect(found.length+1+rootBudget.longestProductPathUnits).toBeLessThanOrEqual(rootBudget.maximumPathLength);
+- expect(schema.definitions.Policy.const.maximumRootLength+1+rootBudget.longestProductPathUnits).toBeLessThanOrEqual(schema.definitions.Policy.const.maximumPathLength);
+-});
+-
+-test("the inventory of a checkout lists what git lists plus the ignored generated outputs, without the ticket workspace and ignored build output, and a clone skips files deleted from the working tree",async()=>{
+- const base=realpathSync(mkdtempSync(join(tmpdir(),"incr-inv-")));
+- try{
+-  const git=(...args:string[])=>{const run=spawnSync("git",["-C",base,...args],{encoding:"utf8"});expect(run.status,run.stderr).toBe(0);return run.stdout;};
+-  git("init","-q");writeFileSync(join(base,".gitignore"),"dist/\n**/🤖️generated/\n**/🤖️generated.*\n/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/*.rs\n");
+-  for(const row of rootBudget.excluded.files){mkdirSync(dirname(join(base,row.path)),{recursive:true});writeFileSync(join(base,row.path),"x");}
+-  mkdirSync(join(base,"dist/prototype/next/standalone"),{recursive:true});writeFileSync(join(base,"dist/prototype/next/standalone/server.js"),"x");
+-  git("add","-A",".");rmSync(join(base,"deleted.txt"));
+-  const listed=await incrementalTrackedFilesV1(base,new AbortController().signal);
+-  const kept=rootBudget.excluded.files.filter(row=>row.kept).map(row=>row.path),oracle=[...git("ls-files","-z","-co","--exclude-standard").split("\0"),...git("ls-files","-z","-o","-i","--exclude-standard","--",":(glob)**/🤖️generated/**",":(glob)**/🤖️generated.*","🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs").split("\0")].filter(file=>file&&!rootBudget.excluded.files.some(row=>!row.kept&&row.path===file));
+-  expect([...listed].sort()).toEqual([...new Set(oracle)].sort());
+-  for(const path of kept)expect(listed,path).toContain(path);
+-  expect(listed.some(file=>file.includes("🎫️tickets")||file.startsWith("dist/")||file.endsWith("other.rs"))).toBe(false);
+-  const copy=join(base,"..","incr-inv-copy-"+Date.now());
+-  try{await incrementalCloneV1(base,copy,listed,{signal:new AbortController().signal,progress:async()=>{}});expect(existsSync(join(copy,"deleted.txt"))).toBe(false);expect(existsSync(join(copy,"🧰️framework/a.ts"))).toBe(true);expect(existsSync(join(copy,"🧰️framework/🔨️modules/x/🤖️generated/📇️registry/Cargo.toml"))).toBe(true);}finally{rmSync(copy,{recursive:true,force:true});}
+- }finally{rmSync(base,{recursive:true,force:true});}
+-});
+-
+-for(const row of mounts.cases)test(`mounts below a disposable root ${row.id} are found deepest first`,()=>{
+- expect(incrementalMountsInsideV1(row.listing,row.root)).toEqual(row.expected);
+-});
+-
+-test("detaching the mounts of a root that holds none, or does not exist, detaches nothing, and the real mount table lists no mount below a fresh directory",async()=>{
+- const base=realpathSync(mkdtempSync(join(tmpdir(),"incr-mnt-")));
+- try{
+-  expect(await incrementalDetachMountsV1(base,new AbortController().signal)).toBe(0);
+-  expect(await incrementalDetachMountsV1(join(base,"absent"),new AbortController().signal)).toBe(0);
+-  expect(await incrementalDetachMountsV1(base,new AbortController().signal,"win32")).toBe(0);
+-  const table=spawnSync("mount",[],{encoding:"utf8"});expect(table.status).toBe(0);
+-  expect(incrementalMountsInsideV1(table.stdout,base)).toEqual([]);
+-  expect(incrementalMountsInsideV1(table.stdout,"/").length).toBeGreaterThan(0);
+- }finally{rmSync(base,{recursive:true,force:true});}
+-});
+-
+-test("refreshing a prepared root adds what is missing, replaces what differs and keeps what the bootstrap built, reports progress and stops when cancelled",async()=>{
+- const base=realpathSync(mkdtempSync(join(tmpdir(),"incr-refresh-")));
+- try{
+-  const live=join(base,"live"),copy=join(base,"copy");mkdirSync(join(live,"🧰️x"),{recursive:true});
+-  writeFileSync(join(live,"🧰️x/same.ts"),"same");writeFileSync(join(live,"🧰️x/changed.ts"),"before");writeFileSync(join(live,"🧰️x/equalsize.ts"),"aaaa");symlinkSync("same.ts",join(live,"🧰️x/link"));
+-  const files=["🧰️x/same.ts","🧰️x/changed.ts","🧰️x/equalsize.ts","🧰️x/link"],hooks={signal:new AbortController().signal,progress:async()=>{}};
+-  await incrementalCloneV1(live,copy,files,hooks);mkdirSync(join(copy,"node_modules"));writeFileSync(join(copy,"node_modules/built.js"),"built");
+-  expect(await incrementalRefreshV1(live,copy,files,hooks)).toEqual({added:0,updated:0});
+-  writeFileSync(join(live,"🧰️x/changed.ts"),"after, longer");writeFileSync(join(live,"🧰️x/equalsize.ts"),"bbbb");writeFileSync(join(live,"🧰️x/new.ts"),"new");rmSync(join(live,"🧰️x/link"));symlinkSync("changed.ts",join(live,"🧰️x/link"));
+-  const next=[...files,"🧰️x/new.ts"],ticks:string[]=[];
+-  expect(await incrementalRefreshV1(live,copy,next,{signal:hooks.signal,progress:async(done,total)=>{ticks.push(`${done}/${total}`);}})).toEqual({added:1,updated:3});
+-  expect(ticks.at(-1)).toBe("5/5");
+-  expect(readFileSync(join(copy,"🧰️x/changed.ts"),"utf8")).toBe("after, longer");expect(readFileSync(join(copy,"🧰️x/equalsize.ts"),"utf8")).toBe("bbbb");expect(readFileSync(join(copy,"🧰️x/new.ts"),"utf8")).toBe("new");expect(readlinkSync(join(copy,"🧰️x/link"))).toBe("changed.ts");expect(readFileSync(join(copy,"node_modules/built.js"),"utf8")).toBe("built");
+-  expect(await incrementalRefreshV1(live,copy,next,hooks)).toEqual({added:0,updated:0});
+-  const stop=new AbortController();stop.abort();
+-  await expect(incrementalRefreshV1(live,copy,next,{signal:stop.signal,progress:async()=>{}})).rejects.toThrow("Cancelled");
+-  await expect(incrementalRefreshV1(live,join(live,"nested"),next,hooks)).rejects.toThrow("separate from the live checkout");
+- }finally{rmSync(base,{recursive:true,force:true});}
+-});

@@ -90,7 +90,7 @@ mod quick {
     round_trip!(pack_round_trip_actor_id, ActorId, ActorId::new(42, 1, 99, 3).await);
     round_trip!(pack_round_trip_actor_kind, ActorKind, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "s.cad.editor".into(), instance_id: 7 });
     round_trip!(pack_round_trip_lane, Lane, Lane::UserVisible);
-    round_trip!(pack_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive, supplied_retained_turn()));
+    round_trip!(pack_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive));
     round_trip!(pack_round_trip_window_id, WindowId, WindowId(5));
     round_trip!(pack_round_trip_origin, Origin, Origin::Bus { topic: "os.runtime.metrics".into() });
     round_trip!(pack_round_trip_job_operation, JobOperation, JobOperation { operation: 11, base_revision: 7, generation: 3, preview_sequence: 2, seed: 99 });
@@ -350,7 +350,7 @@ mod quick {
 
     value_round_trip!(value_round_trip_actor_id, ActorId, ActorId::new(1, 0, 2, 0).await);
     value_round_trip!(value_round_trip_package_id, PackageId, PackageId("semio.demo".to_string()));
-    value_round_trip!(value_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive, supplied_retained_turn()));
+    value_round_trip!(value_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive));
     value_round_trip!(value_round_trip_origin_actor, Origin, Origin::Actor { id: ActorId::new(1, 0, 2, 0).await });
     value_round_trip!(value_round_trip_payload_event, Payload, Payload::Event { bytes: vec![1, 2, 3] });
     value_round_trip!(value_round_trip_failure_stage_throttled, FailureStage, FailureStage::Throttled { factor: 0.5 });
@@ -499,7 +499,7 @@ mod quick {
     async fn deadline_preemption_runs_before_background_drr_deficit() {
         let mut scheduler = Scheduler::new(1).await;
         let package = PackageId("s.mixed".into());
-        let budget = lane_defaults::budget_for(Lane::Background, supplied_retained_turn());
+        let budget = lane_defaults::budget_for(Lane::Background);
         let bg_actor = ActorId::new(1, 0, 0, 0).await;
         let interactive_actor = ActorId::new(1, 0, 1, 0).await;
         scheduler.register_actor(bg_actor, package.clone(), Lane::Background, budget, ShardId(0), supplied_retained_turn(), supplied_retained_loan()).await;
@@ -577,7 +577,7 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn scene_revision_is_monotonic_and_reuses_snapshot_on_empty_commit() {
         let mut store = SceneStore::new();
-        let budget = lane_defaults::budget_for(Lane::Interactive, supplied_retained_turn());
+        let budget = lane_defaults::budget_for(Lane::Interactive);
         let actor = ActorId::new(1, 0, 0, 0).await;
         let first = store.commit_frame(0).await;
         assert_eq!(first.revision, 0, "no pending patches yet -> initial empty snapshot, revision 0");
@@ -595,7 +595,7 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn scene_ui_node_quota_truncates_and_signals() {
         let mut store = SceneStore::new();
-        let mut budget = lane_defaults::budget_for(Lane::Interactive, supplied_retained_turn());
+        let mut budget = lane_defaults::budget_for(Lane::Interactive);
         budget.ui_nodes = 100;
         let actor = ActorId::new(1, 0, 0, 0).await;
         let err = store.apply_patch(actor, vec![1], 150, &budget).await.unwrap_err();
@@ -607,7 +607,7 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn scene_max_patch_bytes_rejects_oversized_patch() {
         let mut store = SceneStore::new();
-        let mut budget = lane_defaults::budget_for(Lane::Interactive, supplied_retained_turn());
+        let mut budget = lane_defaults::budget_for(Lane::Interactive);
         budget.max_patch_bytes = 4;
         let actor = ActorId::new(1, 0, 0, 0).await;
         let err = store.apply_patch(actor, vec![0; 100], 1, &budget).await.unwrap_err();
@@ -637,7 +637,7 @@ mod quick {
         assert_eq!(shard_side.recv().await, None, "a killed transport must never yield a stale message");
     }
 
-    /// 🎯️ terra-shard-grants requirement: `recv_deadline` must return `None` on a genuine
+    /// ⌛️ terra-shard-grants requirement: `recv_deadline` must return `None` on a genuine
     /// timeout (nothing ever sent) rather than blocking forever — proven with a short, bounded
     /// deadline so the test itself cannot hang. "Spawns no thread" is a property of the
     /// IMPLEMENTATION (`mpsc::Receiver::recv_timeout`, which blocks only the calling thread —
@@ -654,7 +654,7 @@ mod quick {
         assert_eq!(result, None, "nothing was ever sent — a timeout must yield None, not block forever");
     }
 
-    /// 🎯️ The complementary case: a message sent before the deadline must still be delivered —
+    /// 📨️ The complementary case: a message sent before the deadline must still be delivered —
     /// `recv_deadline` is a bounded wait, not merely a disguised `recv()` that always returns
     /// `None` until timeout.
     #[semio_framework_async_macros::async_test]
@@ -727,7 +727,7 @@ mod quick {
     //#endregion 🔖️KernelFacade
 
     //#region 🔖️ExtensionActivation
-    /// 📌️ terra-extension-activation: `activate_pinned` must place the extension actor on
+    /// 🧷️ terra-extension-activation: `activate_pinned` must place the extension actor on
     /// EXACTLY the parent's shard, not wherever the least-loaded heuristic would otherwise choose
     /// — the property `MessageEndpoint::Extension` traffic depends on to never cross a transport.
     #[semio_framework_async_macros::async_test]

@@ -2,7 +2,7 @@
 
 use super::*;
 
-/// 🗂️ Full snapshot of one actor — assembled on demand by [`Kernel::actor_record`] from the
+/// 📝️ Full snapshot of one actor — assembled on demand by [`Kernel::actor_record`] from the
 /// scheduler's live entry plus this actor's kind/capabilities/status/failure/metrics bookkeeping.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::semio_framework_value")]
@@ -70,7 +70,7 @@ fn actor_shard_map_from_value(value: ::semio_framework_value::DslValue) -> Resul
         .collect()
 }
 
-/// 🔁️ `ToValue`/`FromValue` for `BTreeMap<ShardId, ActorId>` — same stringified-key shape as
+/// 🗺️ `ToValue`/`FromValue` for `BTreeMap<ShardId, ActorId>` — same stringified-key shape as
 /// [`actor_shard_map_to_value`], keyed the other way round.
 fn shard_actor_map_to_value(map: &BTreeMap<ShardId, ActorId>) -> ::semio_framework_value::DslValue {
     ::semio_framework_value::DslValue::object(map.iter().map(|(shard, id)| (shard.0.to_string(), ::semio_framework_value::ToValue::to_value(id))))
@@ -164,7 +164,7 @@ impl ShardTable {
         ShardId(chosen as u16)
     }
 
-    /// 🔥️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): [`Self::pin`],
+    /// 🏝️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): [`Self::pin`],
     /// restricted to shards NOT in `avoid` — "reserve headroom so an interactive actor is never
     /// co-resident with N CPU-bound ones," concretely: `Kernel::activate` calls this instead of
     /// `pin` for `Lane::Interactive` actors, passing every shard `Kernel::saturated_shards` currently
@@ -182,7 +182,7 @@ impl ShardTable {
         shard
     }
 
-    /// 📌️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): pins `actor` to an
+    /// 🧷️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): pins `actor` to an
     /// EXACT shard, bypassing `pin`/`pin_avoiding`'s least-loaded heuristic entirely. The extension-
     /// activation primitive: an extension actor pins to its PARENT's shard so parent↔extension
     /// `MessageEndpoint::Extension` traffic never crosses a transport (`Kernel::activate_pinned`'s own

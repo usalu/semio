@@ -113,12 +113,12 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     "orthogonal-vertical": {
-      /** 📋️ The waypoints the orthogonal rule produces on this grid. */
+      /** 🏠️ The waypoints the orthogonal rule produces on this grid. */
       oracle: (ctx: AdapterContext) => ({ projection: roundProjectionNumbers({ "geometry/diagram-route": namedRoutes(ctx) }, DECIMALS) }),
       subject: async (ctx: AdapterContext) => (await subject(ctx, "orthogonal")),
     },
     "straight-ports": {
-      /** 📋️ The rectangle/ray intersections the straight rule produces on this grid. */
+      /** ⚖️ The rectangle/ray intersections the straight rule produces on this grid. */
       oracle: (ctx: AdapterContext) => ({ projection: roundProjectionNumbers({ "geometry/diagram-route": namedRoutes(ctx) }, DECIMALS) }),
       subject: async (ctx: AdapterContext) => (await subject(ctx, "straight")),
     },

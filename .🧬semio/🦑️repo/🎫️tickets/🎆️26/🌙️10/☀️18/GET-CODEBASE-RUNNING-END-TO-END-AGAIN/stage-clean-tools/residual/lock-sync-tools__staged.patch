@@ -1,0 +1,210 @@
+# stage-clean different staged=lock-sync-tools/staged/new/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🟨️.mjs
+@@ -1,6 +1,9 @@
+ import { createRequire } from "node:module";
+ 
+-const own = createRequire(import.meta.url);
+-
+-/** 📦️ Loads the TypeScript compiler API from the parser package: the node resolution starts in the parser package directory and, when its install is absent, continues in the checkout root install. */
+-export const parserTypescriptV1 = () => own("typescript");
++/** 📦️ Returns a `require` that loads from the declared parser package first; a checkout whose parser package is not installed yet falls back to the resolution of the requiring file, so the same code runs before and after the install. */
++export function parserRequireV1(from) {
++  const own = createRequire(new URL("./package.json", import.meta.url)), fallback = createRequire(from);
++  const attempt = (action) => (name) => { try { return own[action](name); } catch (error) { if (error?.code !== "MODULE_NOT_FOUND") throw error; return fallback[action](name); } };
++  const load = (name) => { try { return own(name); } catch (error) { if (error?.code !== "MODULE_NOT_FOUND") throw error; return fallback(name); } };
++  return Object.assign(load, { resolve: attempt("resolve") });
++}
+# stage-clean different staged=lock-sync-tools/staged/new/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🎯️closure/🟦️.ts map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🎯️closure/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🧪️tests/🎯️closure/🟦️.ts
+@@ -7,9 +7,9 @@
+ import Ajv from "ajv";
+ import fixture from "./🔣️.json" with {type:"json"};
+ import policy from "../../../🔣️policy.json" with {type:"json"};
+-import {javascriptInstallSchemaV1 as installSchema} from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧱️schemas/🟦️.ts";
++import installSchema from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json" with {type:"json"};
+ import {buildEnvironmentPlanV1,buildParserScopeV1,javascriptInstallModeV1,javascriptScopeOwnersV1} from "../../🟦️.ts";
+-import {parserTypescriptV1} from "../../📦️parsers/🟨️.mjs";
++import {parserRequireV1} from "../../📦️parsers/🟨️.mjs";
+ 
+ const root=join(import.meta.dir,"../../../../../../../../..").replace(/[\\/]+$/u,"");
+ 
+@@ -56,7 +56,9 @@
+  for(const row of fixture.selections)expect(validate(row.value),JSON.stringify(row.value)).toBe(row.valid);
+ });
+ 
+-test("the parser accessor loads the TypeScript compiler of the parser package scope, resolving like the requiring file",()=>{
+- const direct=createRequire(import.meta.url);
+- expect(parserTypescriptV1().version).toBe(direct("typescript").version);
++test("the parser require loads the parser package first and falls back to the requiring file",()=>{
++ const load=parserRequireV1(import.meta.url),direct=createRequire(import.meta.url);
++ expect(load("typescript").version).toBe(direct("typescript").version);
++ expect(load.resolve("typescript/package.json")).toMatch(/typescript[\\/]package\.json$/u);
++ expect(()=>load("absent-parser-package-v1")).toThrow();
+ });
+# stage-clean orphan staged=lock-sync-tools/staged/predicted-lock-delta.json map=None
+--- /dev/null
++++ b/staged/lock-sync-tools/staged/predicted-lock-delta.json
+@@ -0,0 +1,160 @@
++{
++ ".": {
++  "members": 136,
++  "added": [
++   {
++    "member": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
++    "name": "@semio-tech/build-parsers"
++   }
++  ],
++  "removed": [],
++  "changed": [
++   {
++    "member": "",
++    "name": "workspace",
++    "field": "devDependencies",
++    "dep": "@nx/devkit",
++    "lock": "23.2.0",
++    "manifest": null
++   },
++   {
++    "member": "",
++    "name": "workspace",
++    "field": "devDependencies",
++    "dep": "@nx/js",
++    "lock": "23.2.0",
++    "manifest": null
++   },
++   {
++    "member": "",
++    "name": "workspace",
++    "field": "devDependencies",
++    "dep": "@nxlv/python",
++    "lock": "23.0.2",
++    "manifest": null
++   },
++   {
++    "member": "",
++    "name": "workspace",
++    "field": "devDependencies",
++    "dep": "nx",
++    "lock": "23.2.0",
++    "manifest": null
++   },
++   {
++    "member": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
++    "name": "@semio-tech/nx-bootstrap-tools",
++    "field": "dependencies",
++    "dep": "@semio-tech/framework-filesystem",
++    "lock": "workspace:*",
++    "manifest": null
++   }
++  ],
++  "missing": []
++ },
++ "♻️mit-bestand": {
++  "members": 311,
++  "added": [
++   {
++    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
++    "name": "@semio-tech/build-parsers"
++   }
++  ],
++  "removed": [],
++  "changed": [
++   {
++    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
++    "name": "@semio-tech/nx-bootstrap-tools",
++    "field": "dependencies",
++    "dep": "@semio-tech/framework-filesystem",
++    "lock": "workspace:*",
++    "manifest": null
++   }
++  ],
++  "missing": []
++ },
++ "✏️s": {
++  "members": 307,
++  "added": [
++   {
++    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
++    "name": "@semio-tech/build-parsers"
++   }
++  ],
++  "removed": [],
++  "changed": [
++   {
++    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
++    "name": "@semio-tech/nx-bootstrap-tools",
++    "field": "dependencies",
++    "dep": "@semio-tech/framework-filesystem",
++    "lock": "workspace:*",
++    "manifest": null
++   }
++  ],
++  "missing": []
++ },
++ "🌎️hub": {
++  "members": 315,
++  "added": [
++   {
++    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
++    "name": "@semio-tech/build-parsers"
++   }
++  ],
++  "removed": [],
++  "changed": [
++   {
++    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
++    "name": "@semio-tech/nx-bootstrap-tools",
++    "field": "dependencies",
++    "dep": "@semio-tech/framework-filesystem",
++    "lock": "workspace:*",
++    "manifest": null
++   }
++  ],
++  "missing": []
++ },
++ "🎓️teaching": {
++  "members": 137,
++  "added": [
++   {
++    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
++    "name": "@semio-tech/build-parsers"
++   }
++  ],
++  "removed": [],
++  "changed": [
++   {
++    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
++    "name": "@semio-tech/nx-bootstrap-tools",
++    "field": "dependencies",
++    "dep": "@semio-tech/framework-filesystem",
++    "lock": "workspace:*",
++    "manifest": null
++   }
++  ],
++  "missing": []
++ },
++ "🏢️semio-tech": {
++  "members": 309,
++  "added": [
++   {
++    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers",
++    "name": "@semio-tech/build-parsers"
++   }
++  ],
++  "removed": [],
++  "changed": [
++   {
++    "member": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
++    "name": "@semio-tech/nx-bootstrap-tools",
++    "field": "dependencies",
++    "dep": "@semio-tech/framework-filesystem",
++    "lock": "workspace:*",
++    "manifest": null
++   }
++  ],
++  "missing": []
++ }
++}
+\ No newline at end of file

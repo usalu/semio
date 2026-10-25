@@ -19,6 +19,9 @@ impl PartialEq for AddObservedCounter{fn eq(&self,other:&Self)->bool{std::sync::
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddObservedCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "observed-counter", kind: "add-observed-counter", record: "AddedObservedCounter" };
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add observed counter", "Beobachteten Zähler hinzufügen")
+    }
 
 
 }
@@ -34,9 +37,6 @@ impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddObser
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add observed counter", "Beobachteten Zähler hinzufügen")
-    }
 }
 //#endregion ⚙️Behavior
 

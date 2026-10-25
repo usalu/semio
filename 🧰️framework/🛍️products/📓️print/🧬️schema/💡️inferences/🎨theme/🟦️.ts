@@ -1,4 +1,4 @@
-/** 🎨 Themes: the TypeScript twin of `semio-viz-theme`. The categorical, sequential and diverging
+/** 🧬️ Themes: the TypeScript twin of `semio-viz-theme`. The categorical, sequential and diverging
  * palettes are not restated here — they are read from the one generator that also writes
  * `semio-tokens.sty`, so the LaTeX and the TypeScript subject cannot drift apart.
  * @see ../../🎨print-design-token-paints/🟦️.ts
@@ -9,15 +9,15 @@ import { oklabMix } from "@semio-tech/ui-styling/mixing";
 import { loadPrintDesignTokens, renderPrintLatexTokenStylesheet, renderVisualizationPalette, type PrintTheme } from "@semio-tech/print/modules/print-design-token-paints/resolution";
 
 //#region 🔖️Palette
-/** 🎨️ An sRGB colour with an alpha channel, in the byte range the scene graph uses. */
+/** 🔴️ An sRGB colour with an alpha channel, in the byte range the scene graph uses. */
 export type VizRgba = readonly [number, number, number, number];
 
-/** 🎨️ The resolved palettes of one appearance. */
+/** 🎭️ The resolved palettes of one appearance. */
 export type VizPalette = {
   readonly appearance: PrintTheme;
-  /** 🎨️ The categorical wheel: one hex per presence hue, in token order. */
+  /** 🔄️ The categorical wheel: one hex per presence hue, in token order. */
   readonly categorical: readonly string[];
-  /** 🎨️ Named multi-stop schemes, sequential and diverging, as hex stops. */
+  /** 🛑️ Named multi-stop schemes, sequential and diverging, as hex stops. */
   readonly schemes: Readonly<Record<string, readonly string[]>>;
 };
 
@@ -44,14 +44,14 @@ export function vizPalette(appearance: PrintTheme): VizPalette {
   return parsePalette(renderVisualizationPalette(loadPrintDesignTokens()), appearance);
 }
 
-/** 🎨️ The categorical colour of one series index; the wheel cycles. */
+/** 🔢️ The categorical colour of one series index; the wheel cycles. */
 export function vizCategoricalColor(palette: VizPalette, index: number): string {
   return palette.categorical[((index % palette.categorical.length) + palette.categorical.length) % palette.categorical.length]!;
 }
 //#endregion 🔖️Palette
 
 //#region 🔖️Color
-/** 🎨️ Parses owned CSS named, hexadecimal, RGB and HSL paints into byte channels. */
+/** 📖️ Parses owned CSS named, hexadecimal, RGB and HSL paints into byte channels. */
 export function vizParseColor(color: string): VizRgba {
   const value = color.trim().toLowerCase(), names = colorContract["x-semio-named-colors"] as Readonly<Record<string,string>>;
   if (value === "transparent") return [0,0,0,0];
@@ -79,7 +79,7 @@ export function vizParseColor(color: string): VizRgba {
   return [(channels[0]!+base)*255,(channels[1]!+base)*255,(channels[2]!+base)*255,alpha];
 }
 
-/** 🎨️ Formats bytes back to `#rrggbb`, dropping a fully opaque alpha. */
+/** ↩️ Formats bytes back to `#rrggbb`, dropping a fully opaque alpha. */
 export function vizFormatColor(color: VizRgba): string {
   const byte = (value: number): string => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, "0");
   return `#${byte(color[0])}${byte(color[1])}${byte(color[2])}${color[3] >= 255 ? "" : byte(color[3])}`;
@@ -99,16 +99,16 @@ function interpolationColors(a: string,b: string): readonly [VizRgba,VizRgba] {
   return [from,to];
 }
 
-/** 🎨️ Linear sRGB interpolation between two colours, d3's `interpolateRgb` at gamma 1. */
+/** 🥢️ Linear sRGB interpolation between two colours, d3's `interpolateRgb` at gamma 1. */
 export function vizInterpolateRgb(a: string, b: string): (t: number) => string {
   const [from,to] = interpolationColors(a,b);
   return (t) => interpolatedColor([from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t, from[2] + (to[2] - from[2]) * t, from[3] + (to[3] - from[3]) * t]);
 }
 
-/** 🎨️ The authored color spaces shared by numerical and native chart inference. */
+/** 🪐️ The authored color spaces shared by numerical and native chart inference. */
 export type VizColorSpace = "rgb" | "lab" | "hcl" | "oklab";
 
-/** 🎨️ Converts byte sRGB to CIE Lab with the D50 reference white used by the grammar. */
+/** 🔳️ Converts byte sRGB to CIE Lab with the D50 reference white used by the grammar. */
 function colorLab(color: VizRgba): readonly [number, number, number] {
   const linear = (byte: number) => byte / 255 <= 0.04045 ? byte / (255 * 12.92) : ((byte / 255 + 0.055) / 1.055) ** 2.4;
   const [r,g,b] = color.slice(0,3).map(linear);
@@ -119,7 +119,7 @@ function colorLab(color: VizRgba): readonly [number, number, number] {
   return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
 }
 
-/** 🎨️ Resolves CIE Lab back into byte sRGB for print and scene output. */
+/** ⏪️ Resolves CIE Lab back into byte sRGB for print and scene output. */
 function labColor(lab: readonly number[], alpha: number): VizRgba {
   const inverse = (value: number) => value > 6/29 ? value ** 3 : 3 * (6/29) ** 2 * (value - 4/29);
   const middle = (lab[0]! + 16) / 116;
@@ -147,7 +147,7 @@ export function vizInterpolateColor(space: VizColorSpace, a: string, b: string):
   return value => { const angle = hue+difference*value, radius = mix(chroma,targetChroma,value); return interpolatedColor(labColor([mix(start[0]!,end[0]!,value),Number.isNaN(angle)?0:Math.cos(angle)*radius,Number.isNaN(angle)?0:Math.sin(angle)*radius],mix(from[3],to[3],value))); };
 }
 
-/** 🎨️ A piecewise interpolator over the stops of a named scheme. */
+/** 🚏️ A piecewise interpolator over the stops of a named scheme. */
 export function vizSchemeInterpolator(palette: VizPalette, scheme: string, space: VizColorSpace = "rgb"): (t: number) => string {
   const stops = palette.schemes[scheme];
   if (stops === undefined) throw new Error(`unknown scheme ${scheme}; the tokens define ${Object.keys(palette.schemes).join(", ")}`);
@@ -159,7 +159,7 @@ export function vizSchemeInterpolator(palette: VizPalette, scheme: string, space
   };
 }
 
-/** 🎨️ Relative luminance by the WCAG definition — the grayscale-safety test. */
+/** 💡️ Relative luminance by the WCAG definition — the grayscale-safety test. */
 export function vizLuminance(hex: string): number {
   const [r, g, b] = vizParseColor(hex);
   const channel = (value: number): number => {
@@ -169,7 +169,7 @@ export function vizLuminance(hex: string): number {
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 }
 
-/** 🎨️ WCAG contrast ratio between two colours, from 1 to 21. */
+/** ➗️ WCAG contrast ratio between two colours, from 1 to 21. */
 export function vizContrastRatio(a: string, b: string): number {
   const la = vizLuminance(a);
   const lb = vizLuminance(b);
@@ -181,24 +181,24 @@ export function vizContrastRatio(a: string, b: string): number {
 /** 🖍️ The dash patterns that carry a series when colour alone cannot, in millimetres. */
 export const VIZ_DASH_PATTERNS: readonly (readonly number[])[] = [[], [2, 1], [0.5, 1], [3, 1, 0.5, 1], [1, 1], [4, 1.5], [2, 1, 0.5, 1, 0.5, 1]];
 
-/** 🖍️ The hatch patterns that encode a category in a grayscale print. */
+/** 🧵️ The hatch patterns that encode a category in a grayscale print. */
 export const VIZ_HATCH_PATTERNS = ["solid", "north-east-lines", "north-west-lines", "horizontal-lines", "vertical-lines", "crosshatch", "dots", "grid"] as const;
 
 export type VizHatchPattern = (typeof VIZ_HATCH_PATTERNS)[number];
 
-/** 🖍️ The dash pattern of one series index; the list cycles. */
+/** 〰️ The dash pattern of one series index; the list cycles. */
 export function vizDashPattern(index: number): readonly number[] {
   return VIZ_DASH_PATTERNS[((index % VIZ_DASH_PATTERNS.length) + VIZ_DASH_PATTERNS.length) % VIZ_DASH_PATTERNS.length]!;
 }
 
-/** 🖍️ The hatch pattern of one series index; the list cycles. */
+/** ⛓️ The hatch pattern of one series index; the list cycles. */
 export function vizHatchPattern(index: number): VizHatchPattern {
   return VIZ_HATCH_PATTERNS[((index % VIZ_HATCH_PATTERNS.length) + VIZ_HATCH_PATTERNS.length) % VIZ_HATCH_PATTERNS.length]!;
 }
 //#endregion 🔖️Encodings
 
 //#region 🔖️Theme
-/** 🎨️ Everything a renderer needs to draw one chart in one appearance. */
+/** 🗺️ Everything a renderer needs to draw one chart in one appearance. */
 export type VizTheme = {
   readonly name: string;
   readonly appearance: PrintTheme;
@@ -209,7 +209,7 @@ export type VizTheme = {
   readonly typography: Readonly<Record<string, number>>;
 };
 
-/** 🎨️ `\SemioVizTheme`: resolves the named theme for one appearance out of the design tokens. */
+/** 🏷️ `\SemioVizTheme`: resolves the named theme for one appearance out of the design tokens. */
 export function vizTheme(appearance: PrintTheme, name = "semio"): VizTheme {
   const tokens = loadPrintDesignTokens();
   const strokes: Record<string, number> = {};

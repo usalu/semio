@@ -54,7 +54,7 @@ nullable?: boolean, default?: unknown, description?: unknown, group?: string, or
  */
 export type ActionArgOption = { value: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel`. Not yet owned-schema-mirrored
+ * 🔖️ Manifest-level, locale×terminology-checked — see `LocalizedLabel`. Not yet owned-schema-mirrored
  * (follow-up: `LocalizedLabel` itself has no `TS` impl).
  */
 label: unknown, };"####,
@@ -67,7 +67,7 @@ label: unknown, };"####,
  */
 export type ActionDefinition = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * 🎚️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 label: unknown, kind: ActionKind, iconId: IconName,
 /**
@@ -155,12 +155,12 @@ export type AgentContributions = { capabilities: Array<string>, promoted: Array<
  */
 role: AppRole,
 /**
- * 🎯️ The dialect coordinate (artifact kind, standard, subset) this surface is bound to — see
+ * 📕️ The dialect coordinate (artifact kind, standard, subset) this surface is bound to — see
  * `ArtifactDialect`. Together with `role` this derives the canonical `id` via `surface_app_id`.
  */
 dialect: ArtifactDialect,
 /**
- * 🗣️ The app's own display name (e.g. "Puzzle 3D") — manifest-level, locale×terminology-checked,
+ * 📺️ The app's own display name (e.g. "Puzzle 3D") — manifest-level, locale×terminology-checked,
  * see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 label: unknown, breadcrumb: Array<string>, iconId?: IconName, controllerId: string,
@@ -172,7 +172,7 @@ label: unknown, breadcrumb: Array<string>, iconId?: IconName, controllerId: stri
  */
 modes: ModeDefinition[], defaultModeId: string,
 /**
- * 🚧️ See `modes` above — `WindowKinds` is `NonEmptyVec<WindowKindDefinition>`.
+ * 🪟️ See `modes` above — `WindowKinds` is `NonEmptyVec<WindowKindDefinition>`.
  */
 windowKinds: WindowKindDefinition[],
 /**
@@ -197,12 +197,12 @@ tools: Array<ToolDefinition>,
  */
 commands: Array<CommandDefinition>,
 /**
- * 🕹️ The interaction domains (hover + selection) this app exposes (referenced by
+ * 🖱️ The interaction domains (hover + selection) this app exposes (referenced by
  * `WindowKindDefinition.interactions`) — see `crate::InteractionDefinition`.
  */
 interactions: Array<InteractionDefinition>, namedLayouts: Array<NamedLayout>, defaultLayout?: WindowLayout,
 /**
- * 🗣️ Terminology ids this app declares beyond the implicit "native" default.
+ * 🔑️ Terminology ids this app declares beyond the implicit "native" default.
  */
 terminologies: Array<string>,
 /**
@@ -228,11 +228,11 @@ dialogs: Array<DialogDefinition>,
  */
 mediaInputs: Array<MediaPortSpec>,
 /**
- * 🔌️ This app's workflow output ports — see `crate::MediaPortSpec`.
+ * 🖨️ This app's workflow output ports — see `crate::MediaPortSpec`.
  */
 mediaOutputs: Array<MediaPortSpec>,
 /**
- * 🗂️ OS resource kinds this app produces/consumes — see `crate::ArtifactKindSpec`. Drives
+ * 📦️ OS resource kinds this app produces/consumes — see `crate::ArtifactKindSpec`. Drives
  * `framework/product/os/core`'s artifact catalog registry instead of a hardcoded per-app match.
  */
 artifactKinds: Array<ArtifactKindSpec>,
@@ -242,12 +242,12 @@ artifactKinds: Array<ArtifactKindSpec>,
  */
 config: ConfigSpec,
 /**
- * 🎛️ This app's typed binary command grammar — see `crate::CommandGrammar`. Empty until per-app
+ * ⌨️ This app's typed binary command grammar — see `crate::CommandGrammar`. Empty until per-app
  * waves populate it.
  */
 commandGrammar: CommandGrammar,
 /**
- * 🔌️ This app's typed media I/O surface — see `crate::AppIo`. Not yet populated; `media_inputs`/
+ * 📡️ This app's typed media I/O surface — see `crate::AppIo`. Not yet populated; `media_inputs`/
  * `media_outputs`/`artifact_kinds` above remain the live source of truth until later waves migrate
  * onto this.
  */
@@ -270,7 +270,7 @@ faultNotices: Array<FaultNoticeDefinition>, };"####,
  */
 export type AppIo = { artifactSchema: string, artifactMediaType: MediaType,
 /**
- * 🔌️ App-specific ports only — the implicit artifact ports are auto-injected by `all_ports`.
+ * 🔗️ App-specific ports only — the implicit artifact ports are auto-injected by `all_ports`.
  */
 ports: Array<MediaPortSpec>, exportFormats: Array<string>, importFormats: Array<string>, artifact: ArtifactPresentation, };"####,
         },
@@ -406,11 +406,11 @@ export type ArtifactKindSpec = { id: string, name: string, sourceFormat: string,
  */
 exportFormats: Array<string>, importFormats: Array<string>,
 /**
- * 🗄️ Stdio export target kind ids (e.g. `stdio.json`) — additive peer of `export_formats`.
+ * 🏹️ Stdio export target kind ids (e.g. `stdio.json`) — additive peer of `export_formats`.
  */
 exportStdioKinds: Array<string>,
 /**
- * 🗄️ Stdio import source kind ids — additive peer of `import_formats`.
+ * 📥️ Stdio import source kind ids — additive peer of `import_formats`.
  */
 importStdioKinds: Array<string>, };"####,
         },
@@ -496,7 +496,7 @@ export type CommandAddress = { owner: CommandOwnerAddress, commandId: string, };
  */
 export type CommandDefinition = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * ✅️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 label: unknown,
 /**
@@ -504,11 +504,11 @@ label: unknown,
  */
 category: string, iconId: IconName, kind: ActionKind,
 /**
- * 📝️ Reuses `ActionArgDef` — one staged-form contract shared by actions, dialogs, and commands.
+ * ♻️ Reuses `ActionArgDef` — one staged-form contract shared by actions, dialogs, and commands.
  */
 args: Array<ActionArgDef>, keybindings: Array<PlatformKeybinding>, inPalette: boolean,
 /**
- * 🎯️ See `ActionDefinition.semantics` — same D6/§3.1 field, same defaulting/inheritance story.
+ * 🧬️ See `ActionDefinition.semantics` — same D6/§3.1 field, same defaulting/inheritance story.
  */
 semantics: ActionSemantics, };"####,
         },
@@ -634,7 +634,7 @@ export type DescriptorEntry = { id: string, payload?: unknown, };"####,
  */
 export type DialogChoice = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * ☑️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 label: unknown, description?: unknown, action: ActionRef, requires?: Array<string>, tone?: Tone, destructive?: boolean, };"####,
         },
@@ -650,7 +650,7 @@ label: unknown, description?: unknown, action: ActionRef, requires?: Array<strin
  */
 export type DialogDefinition = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * ✔️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 title: unknown, body?: unknown, args: Array<ActionArgDef>,
 /**
@@ -658,7 +658,7 @@ title: unknown, body?: unknown, args: Array<ActionArgDef>,
  */
 submitAction: ActionRef, submitLabel: unknown,
 /**
- * 📇️ Optional active-window action reference dispatched on any dismissal (Escape, veil
+ * 📘️ Optional active-window action reference dispatched on any dismissal (Escape, veil
  * click, or the Cancel button).
  */
 cancelAction?: ActionRef, cancelLabel?: unknown,
@@ -684,11 +684,11 @@ export type DomainSelection = { granularity: string, ids: Array<string>, anchorI
             version: 1,
             typescript: r####"export type ExampleDefinition = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * 🌐️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 label: unknown, iconId: IconName, artifactJson: string,
 /**
- * 🎯️ The DIALECT this example is authored for, never one app of it. An example is a document of an artifact's subset, and every surface bound to that subset — the editor and the viewer alike — opens the same eight fixtures; `SubsetDeclaration.examples` already models them that way. Stamped at registration from the registering app's own `AppDefinition.dialect`, and resolved by [`examples_for_app`] (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ * ✏️ The DIALECT this example is authored for, never one app of it. An example is a document of an artifact's subset, and every surface bound to that subset — the editor and the viewer alike — opens the same eight fixtures; `SubsetDeclaration.examples` already models them that way. Stamped at registration from the registering app's own `AppDefinition.dialect`, and resolved by [`examples_for_app`] (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
  */
 dialect: ArtifactDialect, };"####,
         },
@@ -742,7 +742,7 @@ export type FaultNoticeDefinition = { code: string, label: unknown, };"####,
  */
 export type GranularityDefinition = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * 🔠️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 label: unknown, iconId: IconName, };"####,
         },

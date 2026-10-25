@@ -29,7 +29,7 @@ pub struct InputMeta<E> {
 }
 
 impl<E> InputMeta<E> {
-    /// 🔢️ `raw` as this field commits it: a `number` kind is parsed and constrained by its own
+    /// 🐙️ `raw` as this field commits it: a `number` kind is parsed and constrained by its own
     /// `min`/`max`/`step` (React's DOM input refuses out-of-range values outright), everything else
     /// commits its text verbatim. `None` when a `number` field's buffer does not parse at all — the
     /// guest sees no commit rather than an invented number.
@@ -221,7 +221,7 @@ pub struct TreeSection<E> {
     pub label: Option<String>,
     pub default_open: bool,
     pub items: Vec<TreeItem<E>>,
-    /// 🪟️ The materialised slice of this section's logical item list — see
+    /// 🍕️ The materialised slice of this section's logical item list — see
     /// [`crate::wgpu::component::ui::UiTreeWindow`].
     pub window: Option<UiTreeWindow>,
 }
@@ -361,7 +361,7 @@ pub enum WidgetNode<E> {
         default_open: bool,
         children: Vec<WidgetNode<E>>,
     },
-    /// 🎬️ A scene surface's rect. With no host to fill it this paints the retained arm's placeholder
+    /// 🎞️ A scene surface's rect. With no host to fill it this paints the retained arm's placeholder
     /// chrome; the hit target is minted by `scene_hit_kind` so a press resolves the same
     /// kind/control id `input::retained_hit_registration`'s `ComponentScene` arm resolves.
     ComponentScene {
@@ -522,7 +522,7 @@ pub fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, 
     draw_text_face(ctx, TextFace::Sans, text, x, y, size, color);
 }
 
-/// 🔤️ Paints one run with a selected authored face through a widget context.
+/// 📖️ Paints one run with a selected authored face through a widget context.
 pub fn draw_text_face<E>(ctx: &mut WidgetContext<'_, E>, face: TextFace, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     pen_glyph_run(ctx.draw, ctx.atlas, face, text, (x, y), size, color, false);
 }
@@ -539,7 +539,7 @@ plugin's world-3d window can reuse it, not only `♾️infinite`'s own. `World3d
 plumbing (`update_world_orbit_view_gizmo_hover`, which owns `&mut World3dState`) stays in `♾️infinite/🌍️world`
 — app-specific config plumbing, not paint logic — and now calls through to `orbit_view_gizmo_placement`/
 `orbit_view_gizmo_tips`/`orbit_view_gizmo_hit_test` here. */
-/// 🧭️ Retained-mode orbit-view gizmo paint call (ticket
+/// 🛰️ Retained-mode orbit-view gizmo paint call (ticket
 /// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): only the actual GPU
 /// draw-call issuing stays here, gated with the rest of `widgets.rs` behind `wgpu-engine` — it
 /// needs `WidgetContext`, which bundles the font/icon atlases. The placement/tip-geometry/
@@ -551,7 +551,7 @@ pub mod gizmo {
 use semio_framework_ui_theme::geometry::Rect;
 use semio_framework_ui_theme::Rgba;
 
-    /// 🧭️ Screen-space XYZ orientation gizmo in the lower-right of every world-3d window (wgpu parity with React `WorldOrbitViewGizmo`).
+    /// 🪐️ Screen-space XYZ orientation gizmo in the lower-right of every world-3d window (wgpu parity with React `WorldOrbitViewGizmo`).
     pub fn paint_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Camera3d, viewport: Rect, hovered_tip: Option<usize>) {
         let (margin_x, margin_y) = orbit_view_gizmo_placement(viewport);
         let origin_x = viewport.x + viewport.w - margin_x;
@@ -576,7 +576,7 @@ use semio_framework_ui_theme::Rgba;
 
 //#endregion 🔖️Gizmo
 
-/// 🔢️ Clamps to `[min, max]` and snaps to the nearest `step` off `min` — the three `InputProps`
+/// 🪜️ Clamps to `[min, max]` and snaps to the nearest `step` off `min` — the three `InputProps`
 /// constraints the wire has always carried and this target used to drop on the floor, letting a
 /// number field commit `999` into a `max: 10` parameter that React's own DOM input refuses. A `NaN`
 /// (an unparseable buffer) passes through untouched so the guest still sees the refusal rather than a

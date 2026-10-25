@@ -9,8 +9,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-frame-disposal")]
 pub struct SetFrameDisposal {
-    pub(crate) index: usize,
-    pub(crate) disposal: GifDisposal,
+    pub index: usize,
+    pub disposal: GifDisposal,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDisposal {

@@ -1927,6 +1927,26 @@
       "name": "crlf",
       "source": "[install]\r\nlinker = \"isolated\"\r\nglobalStore = false\r\npublicHoistPattern = []\r\nhoistPattern = []\r\n",
       "accepted": true
+    },
+    {
+      "name": "runtime-guard",
+      "source": "preload = [\"./guard.ts\"]\n\n[test]\npreload = [\"./guard.ts\"]\n\n[install]\nlinker = \"isolated\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\n",
+      "accepted": true
+    },
+    {
+      "name": "runtime-guard-wrong-install",
+      "source": "preload = [\"./guard.ts\"]\n\n[install]\nlinker = \"hoisted\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\n",
+      "accepted": false
+    },
+    {
+      "name": "runtime-guard-without-install",
+      "source": "preload = [\"./guard.ts\"]\n",
+      "accepted": false
+    },
+    {
+      "name": "byte-order-mark",
+      "source": "\ufeff[install]\nlinker = \"isolated\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\n",
+      "accepted": false
     }
   ],
   "producerSourceRefusals": [

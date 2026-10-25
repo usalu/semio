@@ -98,6 +98,7 @@ semio-s-artifact-procedural-3d-set-contributions = { workspace = true }
 semio-s-artifact-procedural-3d-set-widget-input = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job-payload = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-mut-generations = { workspace = true }

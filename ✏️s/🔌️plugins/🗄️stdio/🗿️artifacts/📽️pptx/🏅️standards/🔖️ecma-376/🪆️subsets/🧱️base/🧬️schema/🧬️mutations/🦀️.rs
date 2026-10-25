@@ -118,7 +118,7 @@ pub fn kind_of(mutation: &PptxMutation) -> &'static str {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> protocol::MutationOutcome<PptxDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
+    let outcome = ::semio_framework_os_kernel::ColdMutation::diff(mutation, snapshot);
     match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
@@ -255,7 +255,7 @@ pub fn xml_part_positions(base: &PptxSnapshot, path: &str) -> Option<(usize, Opt
 /// tests AND by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️.rs`'s own
 /// `demo_mutation_cases()` establishes.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_fixture() -> PptxSnapshot {
     opc_layer::with_demo_entries(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation {

@@ -66,6 +66,16 @@ pub mod standards {
                     #[path="../../../../../🚪️io/🔣️json/🦀️.rs"]
                     pub mod puzzle5d_json;
                     #[path = "."]
+                    pub mod binary {
+                        #[path = "../../../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+                        pub mod diff;
+                    }
+                    #[path = "."]
+                    pub mod text {
+                        #[path = "../../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+                        pub mod diff;
+                    }
+                    #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {

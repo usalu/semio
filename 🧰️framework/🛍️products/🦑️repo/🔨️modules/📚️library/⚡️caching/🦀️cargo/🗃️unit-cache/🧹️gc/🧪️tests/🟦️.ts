@@ -5,12 +5,14 @@ import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import {relieveUnitCachePressureV1,retryWhenFullV1,startUnitCacheCollectorV1} from "../../🚪️launch/🟦️.ts";
 import {tryClaimV1} from "../../🔒️lock/🟦️.ts";
-import {applyGcYieldingV1,collectGarbageSingleFlightV1,gcNeedBytesV1,gcOutOfSpaceV1,gcPressureV1,planGcV1,type GcPressureV1} from "../🟦️.ts";
+import {applyGcYieldingV1,collectGarbageSingleFlightV1,gcNeedBytesV1,gcOutOfSpaceV1,gcPressureV1,planGcV1,watchUnitCachePressureV1,type GcPressureV1} from "../🟦️.ts";
+import {readFillSamplesV1} from "../📈️fill/🟦️.ts";
+import {retryAfterOutOfSpaceV1,withUnitPressureRecheckV1} from "../../🚪️launch/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
 const rules=UNIT_CACHE_POLICY_V1.gc,GIB=1024**3,base=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();mkdirSync(base,{recursive:true});
@@ -31,8 +33,11 @@ def need(volume,free):
     return used-int(volume*r["lowWaterShare"]) if used>int(volume*r["highWaterShare"]) else 0
 def decide(i):
     age=float("inf") if i["lastLaunchMs"] is None else i["nowMs"]-i["lastLaunchMs"]
-    if i["volumeBytes"]-i["freeBytes"]<=int(i["volumeBytes"]*r["highWaterShare"]):
+    used=i["volumeBytes"]-i["freeBytes"]
+    if used<=int(i["volumeBytes"]*r["lowWaterShare"]):
         return "maintain" if age>=r["maintenanceIntervalMilliseconds"] else "enough"
+    if used<=int(i["volumeBytes"]*r["highWaterShare"]):
+        return "throttled" if age<r["collectorIntervalMilliseconds"] else "watch"
     if i["freeBytes"]<i["emergencyBytes"]: return "collect-now"
     return "throttled" if age<r["collectorIntervalMilliseconds"] else "launch"
 print(json.dumps([{"need":need(i["volumeBytes"],i["freeBytes"]),"decision":decide(i)} for i in v["inputs"]]))
@@ -45,7 +50,8 @@ function sqliteDecision(input:typeof fixture.pressureVectors[number]["input"]):{
    with i as (select ?1 as volume,?2 as free,?3 as emergency,?4 as now,?5 as last,?6+0.0 as high,?7+0.0 as low,?8 as collector,?9 as maintenance),
    u as (select *,max(0,volume-free) as used,cast(volume*high as integer) as highBytes,cast(volume*low as integer) as lowBytes,case when last is null then null else now-last end as age from i)
    select case when used>highBytes then used-lowBytes else 0 end as need,
-          case when used<=highBytes then case when age is null or age>=maintenance then 'maintain' else 'enough' end
+          case when used<=lowBytes then case when age is null or age>=maintenance then 'maintain' else 'enough' end
+               when used<=highBytes then case when age is not null and age<collector then 'throttled' else 'watch' end
                when free<emergency then 'collect-now'
                when age is not null and age<collector then 'throttled' else 'launch' end as decision from u`).get(input.volumeBytes,input.freeBytes,input.emergencyBytes,input.nowMs,input.lastLaunchMs,rules.highWaterShare,rules.lowWaterShare,rules.collectorIntervalMilliseconds,rules.maintenanceIntervalMilliseconds) as {need:number;decision:GcPressureV1};
   return row;
@@ -81,9 +87,46 @@ test("a collection frees exactly down to the low-water mark when enough is colle
  const input=(free:number)=>({capacityBytes:100000,volumeBytes:volume,freeBytes:free,nowMs:2000,lanes,objects});
  expect(planGcV1(input(200))).toEqual({removeLanes:[],removeIncremental:[],removeObjects:[]});
  for(const free of[199,150,100,50]){
-  const plan=planGcV1(input(free)),freed=plan.removeLanes.length*20+plan.removeObjects.length*20,need=gcNeedBytesV1(volume,free);
+  const plan=planGcV1(input(free),{casProtectedShare:0}),freed=plan.removeLanes.length*20+plan.removeObjects.length*20,need=gcNeedBytesV1(volume,free);
   expect(freed,"free "+free).toBeGreaterThanOrEqual(need);expect(freed-need,"free "+free).toBeLessThan(40);
  }
+});
+
+test("image pressure never evicts the protected newest share of the object store, however large the need, and agrees with a Python derivation",()=>{
+ const random=(()=>{let state=20261024;return()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};})(),cases:Array<{capacityBytes:number;volumeBytes:number;freeBytes:number;objects:Array<{digest:string;bytes:number;lastUsedMs:number}>;protectedShare:number;highWaterShare:number;lowWaterShare:number}>=[],plans:string[][]=[];
+ for(let round=0;round<200;round++){
+  const capacityBytes=1_000_000+Math.floor(random()*9_000_000),objects=Array.from({length:Math.floor(random()*40)},(_,index)=>({digest:index.toString(16).padStart(64,"0"),bytes:Math.floor(random()*300_000),lastUsedMs:1000+Math.floor(random()*100_000)})),input={capacityBytes,volumeBytes:capacityBytes,freeBytes:Math.floor(random()*capacityBytes*0.05),nowMs:2_000_000,lanes:[],objects};
+  plans.push([...planGcV1(input).removeObjects]);cases.push({capacityBytes,volumeBytes:input.volumeBytes,freeBytes:input.freeBytes,objects,protectedShare:schema.definitions.Policy.const.gc.casProtectedShare,highWaterShare:schema.definitions.Policy.const.gc.highWaterShare,lowWaterShare:schema.definitions.Policy.const.gc.lowWaterShare});
+ }
+ const python=pythonOracle(`
+import json,sys
+cases=json.load(sys.stdin);out=[]
+for c in cases:
+    used=c["volumeBytes"]-c["freeBytes"]
+    need=used-int(c["volumeBytes"]*c["lowWaterShare"]) if used>int(c["volumeBytes"]*c["highWaterShare"]) else 0
+    objs=sorted(c["objects"],key=lambda o:(o["lastUsedMs"],o["digest"]))
+    protected=set();total=0
+    for o in reversed(objs):
+        total+=o["bytes"]
+        if total>int(c["capacityBytes"]*c["protectedShare"]):break
+        protected.add(o["digest"])
+    removed=[];freed=0
+    for o in objs:
+        if freed>=need:break
+        if o["digest"] in protected:continue
+        removed.append(o["digest"]);freed+=o["bytes"]
+    share=int(c["capacityBytes"]*0.25);keep=0;over=False
+    for o in sorted(c["objects"],key=lambda o:(-o["lastUsedMs"],o["digest"])):
+        keep+=o["bytes"]
+        if over or keep>share:
+            over=True
+            if o["digest"] not in removed:removed.append(o["digest"])
+    out.append(sorted(removed))
+print(json.dumps(out))
+`,cases) as string[][];
+ python.forEach((row,index)=>expect(plans[index]!.slice().sort(),"round "+index).toEqual(row));
+ const heavy=Array.from({length:6},(_,index)=>({digest:index.toString(16).padStart(64,"0"),bytes:40,lastUsedMs:1000+index})),plan=planGcV1({capacityBytes:1000,volumeBytes:1000,freeBytes:0,nowMs:2000,lanes:[],objects:heavy});
+ expect(plan.removeObjects.length).toBe(4);expect(plan.removeObjects).not.toContain(heavy[5]!.digest);expect(plan.removeObjects).not.toContain(heavy[4]!.digest);
 });
 
 test("compiler output is classified as out of space by the operating system's error number or message, never by an unrelated error",()=>{
@@ -124,10 +167,12 @@ test("pressure relief launches nothing below the high-water mark, one background
   const now=Date.now();
   expect(await relieve(30*GIB,"en",now)).toBe("maintain");expect(started.length).toBe(1);expect(reports).toEqual([]);
   expect(await relieve(30*GIB,"en",now+1000)).toBe("enough");expect(started.length).toBe(1);
-  expect(await relieve(8*GIB,"en",now+2000)).toBe("throttled");expect(started.length).toBe(1);
-  expect(await relieve(8*GIB,"de",now+rules.collectorIntervalMilliseconds+2000)).toBe("launch");expect(started.length).toBe(2);
-  expect(reports.length).toBe(1);expect(reports[0]).toContain("Hochwassermarke");expect(reports[0]).toContain("83 %");
-  expect(await relieve(2*GIB,"en",now+rules.collectorIntervalMilliseconds+3000)).toBe("collect-now");expect(started.length).toBe(2);
+  expect(await relieve(8*GIB,"en",now+1500)).toBe("throttled");expect(started.length).toBe(1);
+  expect(await relieve(8*GIB,"en",now+rules.collectorIntervalMilliseconds+1500)).toBe("watch");expect(started.length).toBe(2);expect(reports).toEqual([]);
+  expect(await relieve(5*GIB,"en",now+1600)).toBe("throttled");expect(started.length).toBe(2);
+  expect(await relieve(5*GIB,"de",now+2*rules.collectorIntervalMilliseconds+2000)).toBe("launch");expect(started.length).toBe(3);
+  expect(reports.length).toBe(1);expect(reports[0]).toContain("Hochwassermarke");expect(reports[0]).toContain("90 %");
+  expect(await relieve(2*GIB,"en",now+2*rules.collectorIntervalMilliseconds+3000)).toBe("collect-now");expect(started.length).toBe(3);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -151,4 +196,48 @@ test("a command that ran out of space is repeated exactly once after the cleanup
   expect({name,runs:run,collected:collect,reported:full,full:last.full}).toEqual({name,runs,collected,reported,full:outcomes[outcomes.length-1]});
  }
  let calls=0;await retryWhenFullV1(async()=>({full:++calls>0}),{collect:async()=>{},stillFull:()=>{}},3);expect(calls).toBe(4);
+});
+
+const gib=GIB,volume=48*GIB;
+function clock(){let time=1_000_000;return{now:()=>time,sleep:async(milliseconds:number)=>{time+=milliseconds;}};}
+
+test("the watching collector collects whenever the image falls below its floor, only watches between floor and target, ends after the quiet period, the stalled rounds or its lifetime, and leaves a fill sample per poll",async()=>{
+ const root=scratch();mkdirSync(join(root,UNIT_CACHE_POLICY_V1.layout.locks),{recursive:true});
+ try{
+  const time=clock();let free=30*gib,collected=0;const measure=()=>({volumeBytes:volume,freeBytes:free}),collect=(async()=>{collected++;free+=8*gib;return{running:false as const,plan:{removeLanes:[],removeIncremental:[],removeObjects:[]},applied:{lanes:0,incremental:0,objects:0,sessions:0,units:3}};}) as never;
+  const quiet=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect});
+  expect(quiet).toMatchObject({state:"done",reason:"quiet",collections:0});expect(quiet.state==="done"&&quiet.rounds).toBe(Math.floor(rules.watchQuietMilliseconds/rules.watchPollMilliseconds)+1);
+  free=5*gib;const relieved=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect});
+  expect(relieved).toMatchObject({state:"done",reason:"quiet",collections:1});expect(collected).toBe(1);expect(relieved.state==="done"&&relieved.freedBytes).toBe(8*gib);
+  free=9*gib;const alert=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect});
+  expect(alert).toMatchObject({state:"done",reason:"expired",collections:0});expect(alert.state==="done"&&alert.rounds).toBeGreaterThan(100);
+  free=2*gib;const stalled=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect:(async()=>({running:false as const,plan:{removeLanes:[],removeIncremental:[],removeObjects:[]},applied:{lanes:0,incremental:0,objects:0,sessions:0,units:0}})) as never});
+  expect(stalled).toMatchObject({state:"done",reason:"stalled",collections:rules.watchStalledRounds});
+  expect(readFillSamplesV1(root).length).toBeGreaterThan(100);const scans=readFillSamplesV1(root).filter(row=>row.profiles!==undefined);expect(scans.length).toBeGreaterThan(2);expect(scans.some((row,index)=>index>0&&row.atMs-scans[index-1]!.atMs>=rules.watchScanMilliseconds),"a long watch scans the profiles again after the scan interval").toBe(true);expect(scans.filter(row=>row.atMs>1_000_000+rules.watchQuietMilliseconds*2).length).toBeGreaterThan(0);expect(readFillSamplesV1(root).every(row=>row.volumeBytes===volume)).toBe(true);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("one watcher owns a cache root, a cancellation ends it cleanly and frees the claim, and the first poll after cancellation is never skipped",async()=>{
+ const root=scratch();mkdirSync(join(root,UNIT_CACHE_POLICY_V1.layout.locks),{recursive:true});
+ try{
+  const time=clock(),controller=new AbortController(),measure=()=>({volumeBytes:volume,freeBytes:9*gib});let polls=0;
+  const first=watchUnitCachePressureV1(root,volume,{now:time.now,measure,signal:controller.signal,sleep:async()=>{if(++polls===3)controller.abort(new Error("cancelled"));time.sleep(rules.watchPollMilliseconds);}});
+  expect(await first).toMatchObject({state:"done",reason:"cancelled",rounds:3});
+  const claim=tryClaimV1(join(root,UNIT_CACHE_POLICY_V1.layout.locks),rules.watchClaim);expect(claim).toBeDefined();
+  expect(await watchUnitCachePressureV1(root,volume,{now:time.now,measure,sleep:time.sleep})).toEqual({state:"running"});claim!.release();
+  expect((await watchUnitCachePressureV1(root,volume,{now:time.now,measure:()=>({volumeBytes:volume,freeBytes:40*gib}),sleep:time.sleep})).state).toBe("done");
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a long compile re-checks the image on a timer and stops checking when it ends, and an out-of-space failure collects once and runs the build again",async()=>{
+ let checks=0;const result=await withUnitPressureRecheckV1(async()=>{checks++;throw Error("a failing check never fails the compile");},async()=>{await new Promise(done=>setTimeout(done,95));return "built";},20);
+ expect(result).toBe("built");const seen=checks;expect(seen).toBeGreaterThanOrEqual(3);await new Promise(done=>setTimeout(done,60));expect(checks).toBe(seen);
+ const root=scratch(),store=join(root,"m");mkdirSync(join(store,"u",UNIT_CACHE_POLICY_V1.layout.locks),{recursive:true});
+ try{
+  let runs=0;const lines:string[]=[];
+  const value=await retryAfterOutOfSpaceV1({store,language:"en",report:line=>lines.push(line)},async()=>{if(++runs===1)throw Object.assign(Error("rustc failed: No space left on device (os error 28)"),{});return "ok";});
+  expect(value).toBe("ok");expect(runs).toBe(2);expect(lines.length).toBe(1);expect(lines[0]).toContain("ran out of space");
+  await expect(retryAfterOutOfSpaceV1({store,language:"en",report:()=>undefined},async()=>{throw Error("type error");})).rejects.toThrow("type error");
+  let twice=0;await expect(retryAfterOutOfSpaceV1({store,language:"de",report:()=>undefined},async()=>{twice++;throw Error("ENOSPC: no space");})).rejects.toThrow("ENOSPC");expect(twice).toBe(2);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

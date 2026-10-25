@@ -10,7 +10,7 @@ import type { ExactCargoLawOptions, ExactCargoLawReceipt } from "../🎯️exact
 
 /** 📨️ Carries one exact Cargo law request; the provider completes it with its selected preparation, storage and source authority. */
 export type ExactCargoLawRequestV1 = Omit<ExactCargoLawOptions, "storage" | "sourceBoundary" | "leaseDirectory" | "manifestPaths" | "cargoTargetDir" | "artifactDir" | "cancelled"> & Readonly<{ manifestPath?: string; manifestPaths?: Readonly<Record<string, string>> }>;
-/** 📦️ Carries one Cargo artifact production request; the provider completes it with its selected storage, source and network authority. */
+/** 🔨️ Carries one Cargo artifact production request; the provider completes it with its selected storage, source and network authority. */
 export type CargoArtifactBuildRequestV1 = Omit<CargoArtifactBuildOptionsV1, "storage" | "sourceBoundary" | "maximumObservationBytes" | "withCargoInputs"> & Readonly<{ invocation: ScriptInvocation; producer: "artifact" | "descriptor-emitter" }>;
 
 /** 🏪️ Exposes the bounded compiler store a provider holds open for one operation. */
@@ -20,7 +20,7 @@ export type CompilerStoreViewV1 = Readonly<{ control: ResourceLeaseControl; root
 export interface CargoAdmissionProviderV1 {
   runTests(request: CargoTestRequestV1, policy: CargoTestPolicyV1, workspace: string, invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): Promise<void>;
   runLint(request: CargoTestRequestV1, policy: CargoTestPolicyV1, workspace: string, invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): Promise<void>;
-  runCommand(invocation: ScriptInvocation, phaseControl: ResourceLeaseControl, workspace: string, args: readonly string[], cwd: string, environment: Readonly<Record<string, string | undefined>>, maximumMilliseconds: number, emit?: boolean): Promise<void>;
+  runCommand(invocation: ScriptInvocation, phaseControl: ResourceLeaseControl, workspace: string, args: readonly string[], cwd: string, environment: Readonly<Record<string, string | undefined>>, maximumMilliseconds: number, emit?: boolean, store?: "shared" | "isolated"): Promise<void>;
   runPackageTests(packages: string[], cwd: string, invocation: ScriptInvocation, extraArgs?: string[], environment?: Readonly<Record<string, string | undefined>>): Promise<void>;
   testPolicy(manifestPath: string, cwd: string, environment?: Readonly<Record<string, string | undefined>>): CargoTestPolicyV1;
   runExactLaws(request: ExactCargoLawRequestV1): Promise<readonly ExactCargoLawReceipt[]>;
@@ -41,8 +41,8 @@ export async function runAdmittedCargoLintV1(request: CargoTestRequestV1, policy
   return (await provider()).runLint(request, policy, workspace, invocation, phaseControl);
 }
 /** 🦀️ Runs one exact Cargo command under the issued compiler admission, failing on a nonzero status. */
-export async function runAdmittedCargoCommandV1(invocation: ScriptInvocation, phaseControl: ResourceLeaseControl, workspace: string, args: readonly string[], cwd: string, environment: Readonly<Record<string, string | undefined>>, maximumMilliseconds: number, emit?: boolean): Promise<void> {
-  return (await provider()).runCommand(invocation, phaseControl, workspace, args, cwd, environment, maximumMilliseconds, emit);
+export async function runAdmittedCargoCommandV1(invocation: ScriptInvocation, phaseControl: ResourceLeaseControl, workspace: string, args: readonly string[], cwd: string, environment: Readonly<Record<string, string | undefined>>, maximumMilliseconds: number, emit?: boolean, store?: "shared" | "isolated"): Promise<void> {
+  return (await provider()).runCommand(invocation, phaseControl, workspace, args, cwd, environment, maximumMilliseconds, emit, store);
 }
 /** 📦️ Runs the tests of named packages after the provider selected and prepared their workspaces. */
 export async function runAdmittedCargoPackageTestsV1(packages: string[], cwd: string, invocation: ScriptInvocation, extraArgs?: string[], environment?: Readonly<Record<string, string | undefined>>): Promise<void> {

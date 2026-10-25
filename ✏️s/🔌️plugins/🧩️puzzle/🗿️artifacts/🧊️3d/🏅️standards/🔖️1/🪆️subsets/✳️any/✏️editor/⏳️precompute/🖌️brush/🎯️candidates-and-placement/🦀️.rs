@@ -178,7 +178,7 @@ pub fn enumerate_brush_fill_vortex_targets(scene_snapshot: &EngineSceneSnapshot)
 //#endregion 🔖️Candidates
 
 //#region 🔖️Weights
-pub fn brush_kind_weight_value(weights: &std::collections::BTreeMap<String, f64>, id: &str) -> f64 {
+pub fn brush_kind_weight_value(weights: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>, id: &str) -> f64 {
     weights.get(id).copied().unwrap_or(1.0)
 }
 

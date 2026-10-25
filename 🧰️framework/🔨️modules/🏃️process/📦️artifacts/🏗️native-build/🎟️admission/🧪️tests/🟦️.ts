@@ -95,3 +95,16 @@ test("both actual production broker inputs apply memory bounds and preserve expl
  }
  const physical=8321515520,constraint=7516192768,effective=admission.admissionMemoryBytesV1(physical,constraint);expect(effective-admission.ADMISSION_POLICY_V1.reserveBytes).toBe(1073741824);expect(physical-effective).toBe(805322752);
 });
+
+test("the broker endpoint stays below the Unix socket path limit however long the temporary root is", () => {
+  const previous = process.env.TMPDIR;
+  try {
+    process.env.TMPDIR = "/" + "t".repeat(120);
+    expect(Buffer.byteLength(admission.brokerEndpointV1("linux"))).toBeLessThan(104);
+    process.env.TMPDIR = "/tmp/s";
+    expect(admission.brokerEndpointV1("linux").startsWith("/tmp/s/semio-broker-")).toBe(true);
+    expect(admission.brokerEndpointV1("win32").startsWith("\\\\.\\pipe\\semio-broker-")).toBe(true);
+  } finally {
+    if (previous === undefined) delete process.env.TMPDIR; else process.env.TMPDIR = previous;
+  }
+});

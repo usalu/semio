@@ -31,7 +31,7 @@ fn sqlite_snapshot_semio_kit_typed_exact_subset_dialect_and_document_guard(){let
 #[test]
 fn sqlite_snapshot_semio_kit_bounded_native_text_binary_admission() {
     let snapshot=fixture();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"kit".into()};
-    let provider=<SemioKitSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let provider=<SemioKitSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
         semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.preflight_sqlite_snapshot_encoding(encoding,control)).unwrap();
         let database=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.to_sqlite_database(control)).unwrap();

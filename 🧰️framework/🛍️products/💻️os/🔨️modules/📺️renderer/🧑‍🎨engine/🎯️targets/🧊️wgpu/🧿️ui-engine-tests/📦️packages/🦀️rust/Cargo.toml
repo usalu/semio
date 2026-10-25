@@ -41,7 +41,6 @@ semio-framework-os-renderer-wgpu-ui-engine = { path = "../../../🖱️ui-engine
 semio-framework-os-renderer-wgpu-ui-engine-dump = { path = "../../../🔎️ui-engine-dump/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-ui-engine-focus = { path = "../../../👆️ui-engine-focus/📦️packages/🦀️rust", features = ["testkit"] }
 base64 = "0.22.1"
-image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-canvas = { path = "../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
@@ -99,3 +98,4 @@ semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️m
 semio-framework-ui-wgpu-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack/📦️packages/🦀️rust" }
 ui_scene = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 semio-framework-os-renderer-wgpu-engine-registry = { path = "../../../🗺️engine-registry/📦️packages/🦀️rust", features = ["testkit"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }

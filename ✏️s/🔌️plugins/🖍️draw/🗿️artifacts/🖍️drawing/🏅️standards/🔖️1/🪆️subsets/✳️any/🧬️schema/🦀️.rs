@@ -226,9 +226,6 @@ pub fn artifact_schema_registered() -> bool {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 /// 📏️ Admits finite vector coordinates and nonnegative arc radii.

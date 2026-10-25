@@ -62,15 +62,15 @@ export type Board2dWasmSession = {
   setTransformFlags?(moveEnabled: boolean, rotateEnabled: boolean): void;
   /** 🩺️ Gumball vitals (`{move,rotate,ringVisible,dragging,radians,pivot,radius}`). */
   transformGumballJson?(): string;
-  /** 🩺️ Live gesture vitals (`{mode,utility,hoveredId,selectionCount,preselectCount,revision}`). */
+  /** 🛠️ Live gesture vitals (`{mode,utility,hoveredId,selectionCount,preselectCount,revision}`). */
   interactionJson?(): string;
   /** 🖍️ World extent one area-brush CLICK paints; a click-drag states its own rectangle. */
   setAreaBrushExtent?(width: number, height: number): void;
   /** 🏷️ Installs (a string) or clears (`null`) the scene's brush placement prefixes in the board's wire form (`Board2dScene.placementNaming`). */
   setPlacementNamingJson?(json: string | null): void;
-  /** 🩺️ Every target region the board holds (`[{id,x,y,width,height,label?,hidden,locked,selected}]`). */
+  /** 📏️ Every target region the board holds (`[{id,x,y,width,height,label?,hidden,locked,selected}]`). */
   targetRegionsJson?(): string;
-  /** 🩺️ On-screen handle vitals (`{total,onScreen,published,capped,rows:[[id,x,y,nodeId,handleKind,open]]}`) — the only DOM channel that names a handle. */
+  /** 🎦️ On-screen handle vitals (`{total,onScreen,published,capped,rows:[[id,x,y,nodeId,handleKind,open]]}`) — the only DOM channel that names a handle. */
   handlePositionsJson?(): string;
   /** 🖱️ Transitive same-kind hover: every element of `kindId` in `domain` paints hovered, with no board event and no guest round trip. Both `null` clears it. */
   setHoveredKindSilent?(domain: string | null, kindId: string | null): void;

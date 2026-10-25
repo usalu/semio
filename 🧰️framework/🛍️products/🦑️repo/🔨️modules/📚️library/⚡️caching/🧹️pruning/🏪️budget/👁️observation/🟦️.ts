@@ -1,5 +1,5 @@
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import{nativeDirectoryHostAvailableBytesV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
+import{nativeDirectoryHostAvailableBytesV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 /** 👁️ Chooses only a local read-only process observation; this grants no descriptor or retirement custody. */

@@ -79,5 +79,3 @@ assert(!validateSet(["text", 1]));
 assert.equal(stableStringify(orderedSet), JSON.stringify(setFixture.expectedValues));
 
 //#endregion 🧺️SetContract
-
-console.log("[DEBUG] ordered map Source corpus retains byte-order JSON oracle through checked existing package adapter");

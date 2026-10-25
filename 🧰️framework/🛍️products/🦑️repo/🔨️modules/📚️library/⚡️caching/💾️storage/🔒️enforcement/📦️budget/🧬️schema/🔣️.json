@@ -15,7 +15,7 @@
     "maximumBytes": {
       "type": "integer",
       "minimum": 1048576,
-      "maximum": 105226698752
+      "maximum": 274877906944
     },
     "maximumControlBytes": {
       "type": "integer",
@@ -59,6 +59,26 @@
         },
         "leases": {
           "$ref": "#/$defs/partition"
+        }
+      }
+    },
+    "elastic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "graph",
+        "products",
+        "rust"
+      ],
+      "properties": {
+        "graph": {
+          "$ref": "#/$defs/elasticPartition"
+        },
+        "products": {
+          "$ref": "#/$defs/elasticPartition"
+        },
+        "rust": {
+          "$ref": "#/$defs/elasticPartition"
         }
       }
     }
@@ -139,6 +159,85 @@
         },
         "accepted": {
           "type": "boolean"
+        }
+      }
+    },
+    "elasticCapacityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "minimumBytes",
+        "hostFreeBytes",
+        "capacityBytes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimumBytes": {
+          "type": "integer",
+          "minimum": 33554432
+        },
+        "hostFreeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 33554432
+        }
+      }
+    },
+    "elasticPartition": {
+      "description": "Sizes an image when it is created: the working set it must hold times the headroom factor, never more than the cap and half of what the host volume has free, never below the declared partition capacity; the created image's own receipt then pins the size.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "needBytes",
+        "headroomPercent",
+        "hostFreeReservePercent",
+        "alignBytes",
+        "maximumBytes",
+        "automatic",
+        "pressureFreeBytes"
+      ],
+      "properties": {
+        "needBytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 68719476736
+        },
+        "headroomPercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "hostFreeReservePercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "alignBytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 68719476736
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 68719476736
+        },
+        "automatic": {
+          "description": "Whether a command that finds the image quiescent (nobody holds it, a non-waiting exclusive try succeeds) and still below its pressure floor recreates it at the elastic size; the graph, compiler and products images qualify (all hold only derived data; `repo run repo:cache-reset-<graph|rust|products>` is the on-demand step).",
+          "type": "boolean"
+        },
+        "pressureFreeBytes": {
+          "description": "Free bytes of the mounted image below which a quiescent image counts as exhausted.",
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 68719476736
         }
       }
     }

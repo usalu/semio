@@ -1,4 +1,4 @@
-import{testMethodV1,testRecordV1}from"../../../../../../📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
+import{testMethodV1,testRecordV1}from"../../../../../../📦️packages/🟦️typescript/🧪️test-values/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";

@@ -68,7 +68,7 @@ const CRC_TABLE: [u32; 256] = {
     table
 };
 
-/// 🧮️ ISO 3309 / ITU-T V.42 CRC-32 of `data`, the checksum every ZIP entry carries.
+/// 📊️ ISO 3309 / ITU-T V.42 CRC-32 of `data`, the checksum every ZIP entry carries.
 pub fn crc32(data: &[u8]) -> u32 {
     !data.iter().fold(u32::MAX, |crc, byte| CRC_TABLE[((crc ^ u32::from(*byte)) & 0xFF) as usize] ^ (crc >> 8))
 }
@@ -103,7 +103,7 @@ pub struct ZipWriter {
 }
 
 impl ZipWriter {
-    /// 📤️ An empty archive.
+    /// 🪫️ An empty archive.
     pub fn new() -> Self {
         Self::default()
     }
@@ -220,18 +220,18 @@ impl<'bytes> ZipArchive<'bytes> {
         Ok(Self { bytes, entries })
     }
 
-    /// 🗂️ Every entry in central-directory order.
+    /// 📂️ Every entry in central-directory order.
     pub fn entries(&self) -> &[ZipEntryHeader] {
         &self.entries
     }
 
-    /// 📥️ The bytes of the entry named `name`, refused beyond `max_len` bytes and checked against its CRC-32.
+    /// 📖️ The bytes of the entry named `name`, refused beyond `max_len` bytes and checked against its CRC-32.
     pub fn read(&self, name: &str, max_len: usize) -> Result<Vec<u8>, ZipArchiveError> {
         let header = self.entries.iter().find(|entry| entry.name == name).ok_or_else(|| ZipArchiveError::MissingEntry(name.into()))?;
         self.read_entry(header, max_len)
     }
 
-    /// 📥️ The bytes of one parsed entry, refused beyond `max_len` bytes and checked against its CRC-32.
+    /// ⛔️ The bytes of one parsed entry, refused beyond `max_len` bytes and checked against its CRC-32.
     pub fn read_entry(&self, header: &ZipEntryHeader, max_len: usize) -> Result<Vec<u8>, ZipArchiveError> {
         if header.raw_len as usize > max_len {
             return Err(ZipArchiveError::TooLarge(header.name.clone()));

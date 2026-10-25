@@ -2,7 +2,7 @@
 import { receiveScriptProcessInvocation, BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptProgram } from "./🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 /** 🚪️ `emit-declarations` — runs the program of this script. */
 class EmitDeclarationsScript extends BundleScript {
   async run(): Promise<void> {

@@ -11,6 +11,7 @@ extern crate semio_framework_value_derive as value_derive;
 pub mod io {
     #[path = "."]
     pub mod binary {
+        pub use semio_s_artifact_stdio_semio_flow_snapshot::io::binary::snapshot;
         #[path = "../../🦀️.rs"]
         pub mod mutations;
     }
@@ -32,3 +33,4 @@ pub mod schema {
         pub use component::*;
     }
 }
+semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioFlowSnapshot, schema::mutations::SemioFlowMutation, open = io::binary::snapshot::SemioFlowSnapshotDecode);

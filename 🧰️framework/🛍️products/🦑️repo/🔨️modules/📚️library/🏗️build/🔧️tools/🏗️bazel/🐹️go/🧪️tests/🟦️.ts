@@ -1,6 +1,7 @@
 /** 🏷️ Contract: a task of the Go family is keyed by a spawn-free toolchain identity (version file, binary, host, compile variables) that is independent of where the toolchain is installed and of the checkout path. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {runtimeIdentityV1} from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdirSync,mkdtempSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
@@ -60,7 +61,7 @@ test("the adapter's action key takes the Go toolchain digest for Go tasks only",
  if(!node)throw Error("Bazel fingerprint implementation required");
  const code=ts.transpileModule(node.getText(tree).replace(/^export /u,"")+";return taskFingerprint;",{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
  const fingerprint=async(task:{target:string;root:string},digest:string,cargo=false)=>{
-  const bindings={bazelNativeToolchainClassV1:()=>undefined,createHash,randomUUID,join,bazelCargoClassV1:()=>cargo?{subcommand:"test",manifest:"Cargo.toml"}:undefined,bazelCargoToolchainDigestV1:async()=>"cargo",bazelGoClassV1:go.bazelGoClassV1,bazelGoToolchainDigestV1:async()=>digest,process:{...process,env:{}},bazelTaskInputsV1:()=>[],issueBazelTaskEnvironmentV1:()=>({SEMIO_BUILD_MODE:"prototype"}),bazelTaskBaseEnvironmentV1:()=>({}),checkScriptInvocation:()=>undefined,bazelSourceIdentityV1:async()=>"source",captureOwnedCommandV1:async()=>""};
+  const bindings={runtimeIdentityV1,bazelNativeToolchainClassV1:()=>undefined,createHash,randomUUID,join,bazelCargoClassV1:()=>cargo?{subcommand:"test",manifest:"Cargo.toml"}:undefined,bazelCargoToolchainDigestV1:async()=>"cargo",bazelGoClassV1:go.bazelGoClassV1,bazelGoToolchainDigestV1:async()=>digest,process:{...process,env:{}},bazelTaskInputsV1:()=>[],issueBazelTaskEnvironmentV1:()=>({SEMIO_BUILD_MODE:"prototype"}),bazelTaskBaseEnvironmentV1:()=>({}),checkScriptInvocation:()=>undefined,bazelSourceIdentityV1:async()=>"source",captureOwnedCommandV1:async()=>""};
   const run=Function(...Object.keys(bindings),code)(...Object.values(bindings)),definition={execution:{kind:"command",command:"repo ./📜️script.ts test"}};
   return run("/root",{},{id:"p:"+task.target,project:"p",target:task.target,root:task.root,args:[],definition},["a.go"],new Map(),{control:{signal:new AbortController().signal}},{},true,"implementation",undefined) as Promise<string>;
  };

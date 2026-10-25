@@ -73,18 +73,6 @@ impl semio_framework_plugin::ToolJobFactory for EnergyModelCommandJobFactory {
 
     semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: ENERGY_MODEL_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > ENERGY_MODEL_RETAINED_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("the bounded energy model command rejects an oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for EnergyModelCommandJobFactory {

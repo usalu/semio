@@ -139,7 +139,7 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
 
  test("owned preview literal argv retains exact bytes through actual spawn", async () => {
   const { generatorPreviewScriptArguments } = await import("@semio-tech/repo-lib/inventory"), { generatorPreviewExecution } = await import("@semio-tech/repo-lib/inventory");
-  const source = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧪️tests/🧫️fixtures/🔣️.json"), policy = await import("@semio-tech/repo-lib/authoring");
+  const source = await import("../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️authoring/🏭️generator/👁️preview/🔤️arguments/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts"), policy = await import("@semio-tech/repo-lib/authoring");
   const oracle = new Ajv({ strict: false }).compile(policy.previewArgumentsSchema), { default: parseArgv } = await import("yargs-parser"), { spawnSync } = await import("node:child_process");
   for (const row of source.default.cases) {
     expect(oracle(row.arguments)).toBe(row.valid);
@@ -158,7 +158,7 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
 
  test("preview shell metadata has a finite literal grammar with an independent lexer", async () => {
   const { parseGeneratorPreviewLiteralCommandV1 } = await import("@semio-tech/repo-lib/authoring");
-  const { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧪️tests/🧫️fixtures/🔣️.json"), { previewArgumentsLiteralCommandSchema: lexicalPolicy } = await import("@semio-tech/repo-lib/authoring"), { default: split } = await import("string-argv");
+  const { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️authoring/🏭️generator/👁️preview/🔤️arguments/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts"), { previewArgumentsLiteralCommandSchema: lexicalPolicy } = await import("@semio-tech/repo-lib/authoring"), { default: split } = await import("string-argv");
   const lexical = new Ajv({ strict: false }).compile(lexicalPolicy);
   for (const row of source.literalCommands) {
     if (!row.valid) { expect(() => parseGeneratorPreviewLiteralCommandV1(row.command)).toThrow(); continue; }
@@ -169,17 +169,17 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
  });
 
  test("declared preview progress preserves strict artifact output and bounded first-party event custody", async () => {
-  const progress = await import("@semio-tech/repo-lib/authoring"), { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧪️tests/🧫️fixtures/🔣️.json"), { previewProgressSchema: policy } = await import("@semio-tech/repo-lib/authoring"), { previewProgressEventSchema: eventPolicy } = await import("@semio-tech/repo-lib/authoring"), jsonc = await import("jsonc-parser");
+  const progress = await import("@semio-tech/repo-lib/authoring"), { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️authoring/🏭️generator/👁️preview/📈️progress/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts"), { previewProgressSchema: policy } = await import("@semio-tech/repo-lib/authoring"), { previewProgressEventSchema: eventPolicy } = await import("@semio-tech/repo-lib/authoring"), jsonc = await import("jsonc-parser");
   const oracle = new Ajv({ strict: false }).compile(policy), eventOracle = new Ajv({ strict: false }).compile(eventPolicy), controller = new AbortController(), started = performance.now(), control = { cancelled: () => controller.signal.aborted, remainingMs: () => 30000 - (performance.now() - started) };
   expect(oracle(source.policy)).toBe(true);
   const admitted = progress.parseGeneratorPreviewProgressPolicyV1(source.policy);
   for (const row of source.cases) {
-    const stderr = row.events.map(event => `[DEBUG] ${JSON.stringify(event)}\n`).join("");
+    const stderr = row.events.map(event => `${source.linePrefix}${JSON.stringify(event)}\n`).join("");
     if (!row.valid) { expect(() => progress.receiveGeneratorPreviewProgressV1(stderr, admitted, control)).toThrow(); continue; }
     expect(row.events.every((event) => Boolean(eventOracle(event)))).toBe(true);
     const events = progress.receiveGeneratorPreviewProgressV1(stderr, admitted, control);
     expect(row.events).toEqual([...events]);
-    expect(stderr.split("\n").filter(Boolean).map(line => jsonc.parse(line.slice(8)))).toEqual([...events]);
+    expect(stderr.split("\n").filter(Boolean).map(line => jsonc.parse(line.slice(source.linePrefix.length)))).toEqual([...events]);
     expect(events.map(event => progress.serializeGeneratorPreviewProgressV1(event, admitted)).join("")).toBe(stderr);
   }
   for (const row of source.policyCases) {
@@ -189,14 +189,18 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
     else expect(() => progress.parseGeneratorPreviewProgressPolicyV1(candidate)).toThrow();
   }
   for (const row of source.capacityCases) {
-    const policy = progress.parseGeneratorPreviewProgressPolicyV1({ ...source.policy, ...row.changes }), events = source.cases.find(candidate => candidate.id === row.caseId)!.events, stderr = events.map(event => `[DEBUG] ${JSON.stringify(event)}\n`).join("");
+    const policy = progress.parseGeneratorPreviewProgressPolicyV1({ ...source.policy, ...row.changes }), events = source.cases.find(candidate => candidate.id === row.caseId)!.events, stderr = events.map(event => `${source.linePrefix}${JSON.stringify(event)}\n`).join("");
     expect(events.every((event) => Boolean(eventOracle(event)))).toBe(true);
     if (row.valid) expect(events).toEqual([...progress.receiveGeneratorPreviewProgressV1(stderr, policy, control)]);
     else expect(() => progress.receiveGeneratorPreviewProgressV1(stderr, policy, control)).toThrow();
   }
   for (const stderr of source.foreignStderr) expect(() => progress.receiveGeneratorPreviewProgressV1(stderr, admitted, control)).toThrow();
-  expect(() => progress.receiveGeneratorPreviewProgressV1("[DEBUG] {}\n", undefined, control)).toThrow();
+  expect(() => progress.receiveGeneratorPreviewProgressV1(source.linePrefix + "{}\n", undefined, control)).toThrow();
   expect(progress.receiveGeneratorPreviewProgressV1("", undefined, control)).toEqual([]);
+  const frames = '[script] {"owner":"repository:build","command":"preview","stage":"loading"}\n[script] Waiting for access to a lease\n';
+  expect(progress.receiveGeneratorPreviewProgressV1(frames, undefined, control)).toEqual([]);
+  expect(() => progress.receiveGeneratorPreviewProgressV1(frames + "error: failure\n", undefined, control)).toThrow();
+  expect(() => progress.receiveGeneratorPreviewProgressV1("[script] {\"stage\":\"running\"}", undefined, control)).toThrow();
   expect(() => progress.receiveGeneratorPreviewProgressV1("", admitted, { ...control, remainingMs: () => 0 })).toThrow();
   controller.abort();expect(() => progress.receiveGeneratorPreviewProgressV1("", admitted, control)).toThrow();
  });

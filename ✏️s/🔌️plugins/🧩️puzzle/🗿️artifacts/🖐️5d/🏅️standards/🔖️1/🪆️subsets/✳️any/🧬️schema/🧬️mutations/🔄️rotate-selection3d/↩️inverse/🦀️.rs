@@ -19,8 +19,8 @@ where
         return Ok(Vec::new());
     }
     let turned = |orientation: Option<[f64; 4]>| Some(quat_mul(turn, orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])));
-    let parts = selection.parts.iter().filter(|part| turned(part.part_3d.orientation) != part.part_3d.orientation).map(|part| rotate_part_3d(part.id.clone(), part.part_3d.orientation));
-    let volumes = selection.volumes.iter().filter(|volume| turned(volume.orientation) != volume.orientation).map(|volume| rotate_target_volume(volume.id.clone(), volume.orientation));
+    let parts = selection.parts.iter().filter(|part| turned(part.part_3d.orientation) != part.part_3d.orientation).map(|part| rotate_part_3d::rotate_part_3d::<Op>(part.id.clone(), part.part_3d.orientation));
+    let volumes = selection.volumes.iter().filter(|volume| turned(volume.orientation) != volume.orientation).map(|volume| rotate_target_volume::rotate_target_volume::<Op>(volume.id.clone(), volume.orientation));
     let mut inverse = parts.chain(volumes).collect::<Vec<_>>();
     inverse.reverse();
     Ok(inverse)

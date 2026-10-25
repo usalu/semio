@@ -2,6 +2,7 @@
 
 use crate::{editor::puzzle2d::snapshot::Puzzle2dInteractionSnapshot, editor::puzzle2d::snapshot::puzzle2d_clear_selection_write, editor::puzzle2d::recorder::puzzle2d_copy_fragment_from, editor::puzzle2d::recorder::puzzle2d_cut_operations_from, editor::puzzle2d::recorder::puzzle2d_paste_operations_on, editor::puzzle2d::snapshot::puzzle2d_selected_node_ids, editor::puzzle2d::snapshot::puzzle2d_selection_is_locked, editor::puzzle2d::snapshot::puzzle2d_selection_write};
 use crate::editor::puzzle2d::config::Puzzle2dConfigMutation;
+use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use semio_framework::kernel::UiDirtyScope;
@@ -215,6 +216,7 @@ pub struct Puzzle2dImportJob {
 
 /// ♻️ The owners one `Puzzle2dImportJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Puzzle2dImportOwners {
     pub port: String,
     media_json: Option<String>,
@@ -566,6 +568,7 @@ pub struct Puzzle2dClipboardJob {
 
 /// ♻️ The owners one `Puzzle2dClipboardJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Puzzle2dClipboardOwners {
     pub args: Option<semio_framework_value::DslValue>,
     pub interaction: Option<semio_framework::InteractionState>,

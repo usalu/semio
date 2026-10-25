@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
+import{testScratchRootV1}from"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
 import {spawn,spawnSync} from "node:child_process";
 import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
-import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import {join} from "node:path";
 import fixture from "./🔣️.json" with {type:"json"};
@@ -16,6 +16,7 @@ async function replay(row:(typeof fixture.cases)[number]){
  const roster=createNativeImageRosterV1({now:()=>clock}),capture=()=>new Promise<string>(done=>{pending.push(()=>done(plist(++released)));});
  for(const step of row.steps as Array<{op:string;id?:string;ms?:number;maxAge?:number;after?:number}>){
   if(step.op==="advance")clock+=step.ms!;
+  else if(step.op==="invalidate")roster.invalidate();
   else if(step.op==="call")calls.set(step.id!,roster.observe({capture,policy:fixture.policy,maximumAgeMilliseconds:step.maxAge??0,after:step.after??0,accept:information=>{const serial=information.serial as number;if((row.rejectSerials as number[]).includes(serial))throw Error("rejected snapshot");return serial;}}));
   else if(step.op==="release"){for(let wait=0;!pending.length&&wait<2000;wait++)await settle();expect(pending.length).toBeGreaterThan(0);pending.shift()!();await settle();}
   else if(step.op==="drain")for(const[id,promise]of calls)served[id]=(await promise).serial;
@@ -27,7 +28,7 @@ const python=["python3","python"].find(name=>spawnSync(name,["-c","pass"]).statu
 const oracleSource=`
 import json,sys
 def simulate(case):
-    clock=0.0;serial=0;latest=None;running=None;queued=None;captures=0;served={}
+    clock=0.0;serial=0;epoch=0;latest=None;running=None;queued=None;captures=0;served={}
     def finish(call,number):
         nonlocal latest
         if number in case["rejectSerials"]:
@@ -35,19 +36,22 @@ def simulate(case):
             request(call,True)
         else: served[call["id"]]=number
     def request(call,force=False):
-        nonlocal running,queued,captures
+        nonlocal running,queued,captures,epoch
         age=call.get("maxAge",0);after=call.get("after",0)
         if not force and age>0 and latest is not None and latest["serial"]>after and clock-latest["at"]<=age: finish(call,latest["serial"])
         elif queued is not None: queued["waiters"].append(call)
-        elif running is None: running={"at":clock,"waiters":[call]};captures+=1
+        elif running is None: running={"at":clock,"epoch":epoch,"waiters":[call]};captures+=1
         else: queued={"at":None,"waiters":[call]};captures+=1
     for step in case["steps"]:
         op=step["op"]
         if op=="advance": clock+=step["ms"]
+        elif op=="invalidate": epoch+=1;latest=None
         elif op=="call": request(dict(step))
         elif op=="release":
-            entry=running;serial+=1;latest={"serial":serial,"at":entry["at"]};running=queued
-            if running is not None: running["at"]=clock
+            entry=running;serial+=1
+            if entry["epoch"]==epoch: latest={"serial":serial,"at":entry["at"]}
+            running=queued
+            if running is not None: running["at"]=clock;running["epoch"]=epoch
             queued=None
             for waiter in entry["waiters"]: finish(waiter,serial)
     return {"captures":captures,"served":served}
@@ -107,7 +111,7 @@ test("native recheck window: zero outside, bounded inside, strict contexts stay 
 
 const run=(program:string,args:readonly string[])=>spawnSync(program,[...args],{encoding:"utf8",env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"}});
 test.skipIf(process.platform!=="darwin")("native roster: shared captures stay consistent for a stable image while other images attach and detach",async()=>{
- const real=fixture.real,root=realpathSync(mkdtempSync(join(tmpdir(),"roster-real-"))),children:ReturnType<typeof spawn>[]=[];
+ const real=fixture.real,root=realpathSync(mkdtempSync(join(testScratchRootV1("image-tests"),"roster-real-"))),children:ReturnType<typeof spawn>[]=[];
  try{
   const make=(name:string)=>{const dir=join(root,name),mount=join(dir,"m");mkdirSync(mount,{recursive:true});const image=join(dir,"t.dmg");expect(run("/usr/bin/hdiutil",["create","-size",real.imageMegabytes+"m","-fs","HFS+","-volname",name,"-type","UDIF",image]).status).toBe(0);return{dir,mount,image};};
   const stable=make("stable");

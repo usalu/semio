@@ -8,7 +8,7 @@ impl Registry {
     pub fn resolve(&self, id: &str, request: &Request) -> Result<Launch, String> {
         let policy = RunPolicy::current();
         let launch = self.resolve_with(id, request, policy)?;
-        let reuses = |launch: &Launch| launch.processes.iter().any(|process| !process.long_running && invokes_build(&process.cmd, &process.args));
+        let reuses = |launch: &Launch| launch.processes.iter().any(|process| !process.long_running && invokes_build(&process.cmd));
         if !(reuses(&launch) || launch.requires.iter().any(reuses)) || !self.graph_is_current() { return Ok(launch); }
         self.resolve_with(id, request, RunPolicy { reuse_published_graph: true, ..policy })
     }
@@ -156,14 +156,14 @@ impl Registry {
             Action::Target { project, target, .. } => {
                 let configuration = value_of(CONFIGURATION).filter(|_| parameters.iter().any(|parameter| parameter.origin == Origin::Configuration));
                 if let Some(configuration) = configuration { command_id = format!("{command_id}:{configuration}"); label.qualifier = if label.qualifier.is_empty() { configuration.to_string() } else { format!("{}:{configuration}", label.qualifier) }; hidden = &[CONFIGURATION]; }
-                ("bun".to_string(), tail(vec!["repo".into(), "run".into(), configuration.map_or_else(|| format!("{project}:{target}"), |configuration| format!("{project}:{target}:{configuration}"))], build_flags, args), self.root.clone(), true)
+                ("repo".to_string(), tail(vec!["run".into(), configuration.map_or_else(|| format!("{project}:{target}"), |configuration| format!("{project}:{target}:{configuration}"))], build_flags, args), self.root.clone(), true)
             }
-            Action::Group { targets, projects } => ("bun".to_string(), tail(vec!["repo".into(), "run-many".into(), "-t".into(), targets.join(","), "-p".into(), projects.join(",")], build_flags, args), self.root.clone(), true),
+            Action::Group { targets, projects } => ("repo".to_string(), tail(vec!["run-many".into(), "-t".into(), targets.join(","), "-p".into(), projects.join(",")], build_flags, args), self.root.clone(), true),
             Action::Tool { command, cwd, .. } => {
                 let mut words = command.iter().map(|word| full(&Text::Declared(word.clone()))).collect::<Result<Vec<_>, _>>()?;
                 let cmd = words.remove(0);
                 words.extend(args);
-                let build = invokes_build(&cmd, &words);
+                let build = invokes_build(&cmd);
                 (cmd, words, full(&Text::Declared(cwd.clone()))?.split('/').filter(|part| !part.is_empty()).fold(self.root.clone(), |path, part| path.join(part)), build)
             }
             Action::Playground(playground) => {
@@ -192,7 +192,7 @@ impl Registry {
                 label.subject = format!("{}·{renderer}", playground.variant);
                 label.qualifier = value_of("example").map(|example| format!("#{example}")).into_iter().chain(slot.map(|slot| format!("@{slot}"))).collect::<Vec<_>>().join(" ");
                 hidden = &["renderer", "example", "user-slot"];
-                ("bun".to_string(), tail(vec!["repo".into(), "run".into(), format!("@semio-tech/framework-os-dev:{target}")], build_flags, args), self.root.clone(), true)
+                ("repo".to_string(), tail(vec!["run".into(), format!("@semio-tech/framework-os-dev:{target}")], build_flags, args), self.root.clone(), true)
             }
             Action::Repo(action) => {
                 if !extra.is_empty() { return Err(format!("{} takes no extra arguments", entry.id)); }

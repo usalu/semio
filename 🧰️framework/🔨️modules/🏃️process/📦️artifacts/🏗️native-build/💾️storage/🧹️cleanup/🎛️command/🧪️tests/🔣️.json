@@ -271,5 +271,119 @@
       },
       "expected": "refuse-platform"
     }
+  ],
+  "concurrentChange": [
+    {
+      "id": "vanished-claim",
+      "code": "ENOENT",
+      "message": "ENOENT: no such file or directory, lstat '.native-birth-x.jsonl'",
+      "transient": true
+    },
+    {
+      "id": "claim-changed",
+      "code": null,
+      "message": "Original persistent descendant claim changed",
+      "transient": true
+    },
+    {
+      "id": "roster-changed",
+      "code": null,
+      "message": "Original persistent descendant kernel roster changed",
+      "transient": true
+    },
+    {
+      "id": "allocation-moved",
+      "code": null,
+      "message": "Exact original parent child allocation required",
+      "transient": true
+    },
+    {
+      "id": "allocation-foreign-mount",
+      "code": null,
+      "message": "Exact original parent child allocation required: no funded child at /c/p/m/tmp/st/d/1/a/i below /c/p/m",
+      "transient": true
+    },
+    {
+      "id": "foreign-mount-refusal",
+      "code": null,
+      "message": "Foreign native image mounted inside the parent, not funded by it and not a sibling race: mount /c/p/m/tmp/st/d/1/a/i/m",
+      "transient": false
+    },
+    {
+      "id": "permission",
+      "code": "EACCES",
+      "message": "EACCES: permission denied",
+      "transient": false
+    },
+    {
+      "id": "identity",
+      "code": null,
+      "message": "Actual parent-funded persistent child required",
+      "transient": false
+    },
+    {
+      "id": "claim-changed-with-suffix",
+      "code": null,
+      "message": "Original persistent descendant claim changed: x",
+      "transient": false
+    }
+  ],
+  "foreignMount": [
+    {
+      "id": "stable-unfunded",
+      "message": "Exact original parent child allocation required: no funded child at /x below /y",
+      "attached": true,
+      "foreign": true,
+      "live": false,
+      "decision": "foreign"
+    },
+    {
+      "id": "retire-race-detached",
+      "message": "Exact original parent child allocation required: no funded child at /x below /y",
+      "attached": false,
+      "foreign": false,
+      "live": false,
+      "decision": "other"
+    },
+    {
+      "id": "bare-message",
+      "message": "Exact original parent child allocation required",
+      "attached": true,
+      "foreign": true,
+      "live": false,
+      "decision": "foreign"
+    },
+    {
+      "id": "claim-changed",
+      "message": "Original persistent descendant claim changed",
+      "attached": true,
+      "foreign": false,
+      "live": false,
+      "decision": "other"
+    },
+    {
+      "id": "other-request",
+      "message": "Exact original parent child request required",
+      "attached": true,
+      "foreign": false,
+      "live": false,
+      "decision": "other"
+    },
+    {
+      "id": "disposable-fixture-child",
+      "message": "Exact original parent child allocation required: no funded child at /x below /y",
+      "attached": true,
+      "live": true,
+      "foreign": true,
+      "decision": "live"
+    },
+    {
+      "id": "detached-live-user",
+      "message": "Exact original parent child allocation required: no funded child at /x below /y",
+      "attached": false,
+      "live": true,
+      "foreign": false,
+      "decision": "other"
+    }
   ]
 }

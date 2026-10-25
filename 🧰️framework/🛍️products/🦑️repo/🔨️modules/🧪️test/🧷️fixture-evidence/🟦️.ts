@@ -15,11 +15,11 @@ import { MANIFEST_MUTATION_ID_RE } from "../📑️mutation-manifest/🟦️.ts"
 //#endregion 🔌️Adapters
 
 //#region 🧫️Fixture
-/** 🧫️ What a fixture IS. Every fixture is exactly one of these — there is no fourth, unlabelled kind. */
+/** 🛠️ What a fixture IS. Every fixture is exactly one of these — there is no fourth, unlabelled kind. */
 
 
 
-/** 🧫️ One file inside a fixture bundle, addressed by ROLE so nothing downstream names a path. */
+/** 📄️ One file inside a fixture bundle, addressed by ROLE so nothing downstream names a path. */
 
 
 /** 🏭️ Exactly how a third-party-generated fixture was produced, in enough detail to re-run it. */
@@ -34,7 +34,7 @@ import { MANIFEST_MUTATION_ID_RE } from "../📑️mutation-manifest/🟦️.ts"
 /** ⚠️ A fixture-level loosening of its tolerance profile — every field mandatory, and always reported. */
 
 
-/** 🧫️ One immutable fixture bundle with complete provenance. */
+/** 📦️ One immutable fixture bundle with complete provenance. */
 
 
 export const SHA256_RE = /^sha256:[0-9a-f]{64}$/;
@@ -44,7 +44,7 @@ export function contentDigest(bytes: Uint8Array): string {
   return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 }
 
-/** #⃣ The canonical content digest of a file on disk. */
+/** 💾️ The canonical content digest of a file on disk. */
 export function contentDigestOf(absPath: string): string {
   return contentDigest(readFileSync(absPath));
 }
@@ -118,10 +118,10 @@ export function fixtureFilePath(repoRoot: string, manifest: TestEvidence, role: 
   return isAbsolute(file.path) ? file.path : join(repoRoot, manifest.manifestDir ?? "", file.path);
 }
 
-/** 🧾️ One verified fixture file. `expected`/`actual` differ exactly when the committed bytes changed. */
+/** 🗂️ One verified fixture file. `expected`/`actual` differ exactly when the committed bytes changed. */
 export type FixtureVerification = Readonly<{ fixture: string; role: string; path: string; expected: string; actual: string; ok: boolean; missing: boolean }>;
 
-/** 🧾️ Compares current example bytes with the recorded test evidence digest. */
+/** 📹️ Compares current example bytes with the recorded test evidence digest. */
 export function verifyFixture(repoRoot: string, manifest: TestEvidence): FixtureVerification[] {
   return manifest.files.map((file) => {
     const abs = isAbsolute(file.path) ? file.path : join(repoRoot, manifest.manifestDir ?? "", file.path);
@@ -131,7 +131,7 @@ export function verifyFixture(repoRoot: string, manifest: TestEvidence): Fixture
   });
 }
 
-/** #⃣ Order-independent digest of every file in a fixture bundle — one component of the run key. */
+/** 🎁️ Order-independent digest of every file in a fixture bundle — one component of the run key. */
 export function fixtureBundleDigest(manifest: TestEvidence): string {
   return setDigest(manifest.files.map((file) => [file.role, file.sha256] as const));
 }

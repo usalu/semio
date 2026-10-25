@@ -17,7 +17,7 @@ import { runtimeCommandNameV1, runtimeTypeEnvironmentV1 } from "../../🔨️mod
 import { runToolSyncV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 function retainedUiNativeStripOnly(): void {
-  const source = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts", import.meta.url).href;
+  const source = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧮️tables/🟦️.ts", import.meta.url).href;
   const numeric = new URL("../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts", import.meta.url).href;
   const fixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🌳️owned-nodes/🔣️.json", import.meta.url).href;
   const validation = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🟦️.ts", import.meta.url).href;

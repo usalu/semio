@@ -15,7 +15,7 @@ import corpus from"./🔣️.json";
 import schema from"./🧬️schema.json";
 import{requireNativeStoragePathV1}from"@semio-tech/process/artifacts/native-build/storage/platform/contract";
 export type OutputNegativeModeV1="actual"|"ledger-model";
-const ackPrefix="[DEBUG] Output negative receiver ",resultPrefix="[DEBUG] Output negative result ";
+const ackPrefix="[TRACE] Output negative receiver ",resultPrefix="[TRACE] Output negative result ";
 function acknowledgement(original:ScriptInvocation,mode:OutputNegativeModeV1){const envelope=readIssuedScriptProcessEnvelopeV1(original),wire=scriptInvocationEnvironment(original,process.env).SEMIO_SCRIPT_PROCESS_INVOCATION!;return{version:1,purpose:corpus.purpose,mode,workspaceRoot:process.cwd(),toolingIdentity:process.env.SEMIO_NX_TOOLING_IDENTITY??null,implementationIdentity:process.env.SEMIO_NX_IMPLEMENTATION_IDENTITY??null,wireSha256:createHash("sha256").update(wire).digest("hex"),policy:envelope.policy,deadlineEpochMilliseconds:envelope.deadlineEpochMilliseconds,capabilities:envelope.capabilities};}
 /** 🧪️ Runs a genuine output waiter in its own received failure ledger. */
 export async function runOutputNegativePurposeV1(original:ScriptInvocation,mode:OutputNegativeModeV1):Promise<void>{

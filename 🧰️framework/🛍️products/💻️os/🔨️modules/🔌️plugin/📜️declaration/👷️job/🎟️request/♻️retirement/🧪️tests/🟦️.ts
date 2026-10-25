@@ -12,5 +12,4 @@ test("original tool request retirement covers every language-neutral owned sourc
  for(const field of fixture.wire)expect(source).toContain(field+".map(OriginalRequestWire)");
  const input=Object.fromEntries(fixture.owned.map((field:string)=>[field,{original:true}]));
  expect(applyPatch(input,fixture.owned.map((field:string)=>({op:"remove"as const,path:"/"+field})),true,false).newDocument).toEqual({});
- console.log("[DEBUG] Original request nineteen source owners, five explicit shared leases and two original wire carriers match independent Ajv/JSONPatch coverage");
 });

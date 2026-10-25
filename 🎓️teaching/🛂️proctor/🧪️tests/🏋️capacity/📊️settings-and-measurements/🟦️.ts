@@ -1,7 +1,7 @@
 /** 📊️ The settings of one capacity run and its measurements: the options, defaults, limits and budgets, and the latency recorder with its generator lag probe. */
 import { availableParallelism } from "node:os";
 import { appendFileSync } from "node:fs";
-import { DEFAULT_LIMITS } from "../../../../../🧰️framework/🛍️products/📚️course/🟦️.ts";
+import { DEFAULT_LIMITS } from "../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🏋️ Records a capacity phase transition in the selected run's diagnostic file. */
 export function capacityProgress(file: string | undefined, stage: string): void {
@@ -23,16 +23,16 @@ export interface CapacityOptions {
   readonly hallOnly?: boolean;
 }
 
-/** 🏫️ The defaults: the class the limits are sized for, five times as fast as it is in life. */
+/** 🏠️ The defaults: the class the limits are sized for, five times as fast as it is in life. */
 export const CAPACITY_DEFAULTS: CapacityOptions = { learners: 300, compression: 5 };
 
 /** 🌐️ The site origin the capacity proctor allows. */
 export const SITE = "https://quizzes.capacity.test";
-/** 🏫️ The one address the whole hall arrives from. */
+/** 📍️ The one address the whole hall arrives from. */
 export const HALL = "198.51.100.10";
 /** 😈️ The address of the abusive script. */
 export const SCRIPT = "203.0.113.66";
-/** 🔌️ Ports other agents and dev servers use; never picked. */
+/** 🚧️ Ports other agents and dev servers use; never picked. */
 export const RESERVED_PORTS = new Set([8791, 8891, 8892, 6061, 6161, 6162]);
 
 /** ⏱️ The latency budget of the hall in milliseconds, per phase: the 95th and 99th percentile of every command and
@@ -95,14 +95,14 @@ export const CURSOR = { intervalMs: 100, share: 0.3 };
 export const CLOCK_MARGIN_MS = 1_000;
 /** 👀️ The interval a home page watches the other rooms at. */
 export const WATCH_INTERVAL_MS = 250;
-/** 🐌️ How often a thread of the load generator probes its own lateness. */
+/** 🔬️ How often a thread of the load generator probes its own lateness. */
 export const LAG_PROBE_MS = 20;
 /** 🧵️ The threads the hall is played on, so that the load generator's own queueing stays out of the hall's latencies. */
 export const HALL_THREADS = Math.max(2, Math.min(8, Math.floor(availableParallelism() / 2)));
 
 //#endregion 🎚️Settings
 //#region 📊️Measurements
-/** 📊️ What one phase measured of the hall. */
+/** 📈️ What one phase measured of the hall. */
 export interface Measurements {
   readonly latencies: Map<string, number[]>;
   readonly errors: string[];

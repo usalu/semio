@@ -30,6 +30,9 @@ pub mod mutation_plan;
 #[doc(hidden)]
 #[path = "🏛️reserved/🦀️.rs"]
 pub mod reserved;
+#[doc(hidden)]
+#[path = "🎛️registry-driver/🦀️.rs"]
+pub mod registry_driver;
 
 //#region 🔖️PublicTypes
 

@@ -38,7 +38,6 @@ fn retained_row_patch_inverse_and_owned_exchange_match_neutral_sparse_fields(){
   let undo=undo.as_mut().unwrap();for field in 0..Patch::FIELD_COUNT{let quote=grant(undo.exchange_demand(field).unwrap());undo.exchange_field(&mut post,field,semio_framework_mutation_diff::testing_apply_capability(),quote).unwrap();}
   assert_eq!(post.name,case["before"]["name"].as_str().unwrap());assert_eq!(post.value,if sibling{99.}else{case["before"]["value"].as_f64().unwrap()});assert_eq!(post.untouched.as_ptr(),pointer);
   close(&mut inverse);close(&mut authored_fields);retire(forward);retire(std::mem::take(undo));close_source(&mut authored);close_source(&mut original);
-  eprintln!("[DEBUG] retained sparse patch {:?}: exact inverse fields, untouched1024-row pointer, sibling undo preserved",case["id"]);
  }
 }
 
@@ -76,5 +75,4 @@ fn retained_row_patch_apply_preserves_portable_rows_and_every_cancelled_frontier
    assert_eq!(observe(||drop(apply)).1,(0,0));close_source(&mut authored);close_source(&mut original);
   }
  }
- eprintln!("[DEBUG] common sparse apply four portable rows: original1024 sibling allocation preserved;41 cancellation frontiers each; exact physical staging/exchange/close receipts");
 }

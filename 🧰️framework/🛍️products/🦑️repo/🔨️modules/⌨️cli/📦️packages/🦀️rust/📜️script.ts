@@ -4,7 +4,7 @@ import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepoScript, runMcpScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+import { runRepoScript, runMcpScript, runInstalledScopeTests } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 const crates = ["semio-framework-repo-cli-event-stream", "semio-framework-repo-cli-command-framework", "semio-framework-repo-cli-mcp-verb", "semio-framework-repo-cli-tree-source-and-search", "semio-framework-repo-cli-verbs", "semio-framework-repo-cli", "semio-framework-repo-workspace"];
 
@@ -20,7 +20,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runRepositoryCargoTests(crates, this.repoRoot, this.invocation, rest);
-    await (await import("../../🔌️mcp-verb/📁️root-scope/🧪️installed/🏃️.ts")).runInstalledRepoScopeTestsV1(this.repoRoot, this.invocation);
+    await runInstalledScopeTests(this.repoRoot, this.invocation);
   }
 }
 

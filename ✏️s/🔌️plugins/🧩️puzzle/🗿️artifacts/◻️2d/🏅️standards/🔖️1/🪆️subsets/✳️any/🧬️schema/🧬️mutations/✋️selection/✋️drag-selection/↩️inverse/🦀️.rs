@@ -13,8 +13,8 @@ pub fn inverse<Op: From<DragSelection> + From<MoveNode> + From<MoveTargetRegion>
     if !(dx.is_finite() && dy.is_finite()) {
         return Ok(Vec::new());
     }
-    let nodes = selection.nodes.iter().filter(|node| node.x + dx != node.x || node.y + dy != node.y).map(|node| move_node(node.id.clone(), node.x, node.y));
-    let regions = selection.regions.iter().filter(|region| region.x + dx != region.x || region.y + dy != region.y).map(|region| move_target_region(region.id.clone(), region.x, region.y));
+    let nodes = selection.nodes.iter().filter(|node| node.x + dx != node.x || node.y + dy != node.y).map(|node| move_node::move_node::<Op>(node.id.clone(), node.x, node.y));
+    let regions = selection.regions.iter().filter(|region| region.x + dx != region.x || region.y + dy != region.y).map(|region| move_target_region::move_target_region::<Op>(region.id.clone(), region.x, region.y));
     Ok(nodes.chain(regions).collect())
 }
 //#endregion 🔖️Inverse

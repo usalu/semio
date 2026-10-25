@@ -4,7 +4,7 @@ import { roles } from "aria-query";
 import { expect, it } from "vitest";
 import { FIXTURE_ELEMENTS, FLOOR, FOCUS_MARGIN, KEEPOUT_MARGIN, PET_CONTROLS, PET_KEEPOUTS, PET_PROPS, PET_SURFACES, SURFACE_WIDTH, fixtureId, stageBox, surfaceId, survey, wallId } from "@semio-tech/pets-react";
 import vectors from "../../🧫️fixtures/📡️surface-survey/🔣️.json";
-import { build, card, place, scenes, viewport } from "../🟣️shared/🟦️.tsx";
+import { build, card, place, scenes, viewport } from "../🟣️harness/🟦️.tsx";
 
 /** 🔷 Registers the ships vectors rule survey tests of the 📡️ surface survey suite. */
 export function registerShipsVectorsRuleSurveyTests(): void {

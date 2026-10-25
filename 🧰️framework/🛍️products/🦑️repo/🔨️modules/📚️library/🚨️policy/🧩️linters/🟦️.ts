@@ -106,7 +106,7 @@ export class TechnologyLinter extends BaseLinter {
   }
 }
 
-/** 📦️BundleLinter queries a bundle node by id. */
+/** 🧰️BundleLinter queries a bundle node by id. */
 export class BundleLinter extends BaseLinter {
   private node: GraphNode | undefined;
 
@@ -296,14 +296,14 @@ export function resolveFolderByPath(repoRoot: string, folderPath: string): Graph
   return data.folder;
 }
 
-/** 🔎️Resolves bundle name like `repo/client` to bundle id. */
+/** 🎁️Resolves bundle name like `repo/client` to bundle id. */
 export function resolveBundleByName(repoRoot: string, name: string): GraphNode {
   const data = runCliGraphql(`query B($n: String!) { bundle(name: $n) { __typename id name root kind } }`, { n: name }, { repoRoot }) as { bundle: GraphNode };
   if (!data.bundle?.id) throw new Error(`[linter] bundle not found for name ${name}`);
   return data.bundle;
 }
 
-/** 🔎️Resolves technology folder name (e.g. `repo`) to technology id. */
+/** 🗂️Resolves technology folder name (e.g. `repo`) to technology id. */
 export function resolveTechnologyByName(repoRoot: string, name: string): GraphNode {
   const data = runCliGraphql(`query T { technologies { id name root kind } }`, {}, { repoRoot }) as { technologies: GraphNode[] };
   const hit = (data.technologies ?? []).find((t) => String(t.name ?? "") === name);

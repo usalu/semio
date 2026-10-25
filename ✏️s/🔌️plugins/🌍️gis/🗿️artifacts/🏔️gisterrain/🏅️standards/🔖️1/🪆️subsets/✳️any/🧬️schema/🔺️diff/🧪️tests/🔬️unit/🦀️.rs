@@ -5,6 +5,7 @@ use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)]
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use crate::standards::v1::subsets::any::schema::diff::*;
 
 #[semio_framework_async_macros::async_test]

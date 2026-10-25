@@ -1,3 +1,7 @@
+import{createRequire}from"node:module";
+
+/** 📖️ The refusal texts load when a native caller is refused, never at startup: every entry that reads a caller stays inside its module budget. */
+const refuseCachingV1=(...input:Parameters<typeof import("../../../📖️texts/🟦️.ts").refuseCachingV1>):ReturnType<typeof import("../../../📖️texts/🟦️.ts").refuseCachingV1>=>(createRequire(import.meta.url)("../../../📖️texts/🟦️.ts") as typeof import("../../../📖️texts/🟦️.ts")).refuseCachingV1(...input);
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {cargoExecutionSchemaV1,type CargoExecutionBackendV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -5,7 +9,8 @@ import serviceSchema from "../../../🕸️graph/🏁️startup/🧬️lifetime/
 import callerSchema from "../../../🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json" with { type: "json" };
 import buildCallerSchema from "../../../../🏗️build/🧬️schema/📥️caller.json" with { type: "json" };
 import {resolve} from "node:path";
-import {checkScriptInvocation,advanceScriptInvocation,scriptResourceProcessEnvironmentV1,requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkScriptInvocation,advanceScriptInvocation,scriptResourceProcessEnvironmentV1,requireIssuedResourceControlInvocationV1,createRenewableIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {progressDeadlinePolicyV1,type ProgressDeadlinePolicyV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type {OwnedCommandOptions} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
@@ -17,7 +22,7 @@ export interface NativeOwnerCapabilities {
   readonly artifactDirectory: string;
   readonly command: Readonly<{ kind: "native-owner-command"; manifest: string; workingDirectory: string; program: string; arguments: readonly string[] }>;
   readonly transport: Readonly<{ maximumBytes: number; maximumLines: number }>;
-  readonly child: Readonly<{ maximumElapsedMilliseconds: number }>;
+  readonly child: Readonly<{ maximumElapsedMilliseconds: number; idleMilliseconds?: number }>;
   readonly network: Readonly<{ offline: boolean }>;
   readonly cargoExecutionBackend?:CargoExecutionBackendV1;
 }
@@ -38,7 +43,7 @@ export interface NativeOrchestrationCallerV1 {
  readonly launches?:readonly (readonly string[])[];
  readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"]}>;
 }
-/** 🔐️ Projects either current native role while retaining its exact declared capabilities. */
+/** 🧲️ Projects either current native role while retaining its exact declared capabilities. */
 export function readNativeCallerAuthorityV1(value:unknown):Readonly<{role:"native-owner-command"|"build-orchestration";repositoryRoot:string;artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"];original:NativeOwnerCapabilities|NativeOrchestrationCallerV1}>{
  if(value&&typeof value==="object"&&"native" in value){
   const refusals=validateJsonSchemaSubset(value&&typeof value==="object"&&"tool" in value?buildCallerSchema:callerSchema,value);if(refusals.length)throw Error("Original native caller capabilities required: "+refusals.slice(0,4).join("; "));
@@ -54,6 +59,8 @@ export function callerRepositoryRootV1(value:unknown):string{
  }
  return readNativeCallerAuthorityV1(value).repositoryRoot;
 }
+/** ⏳️ Turns the declared native child grant into its idle window and nonrenewable maximum: the child is stopped after the idle window without observable progress, never later than the grant. */
+export function nativeChildDeadlinePolicyV1(child:NativeOwnerCapabilities["child"],environment:Readonly<Record<string,string|undefined>>=process.env):ProgressDeadlinePolicyV1{return progressDeadlinePolicyV1("native-child",0,environment,{maximumMilliseconds:child.maximumElapsedMilliseconds,...(child.idleMilliseconds===undefined?{}:{idleMilliseconds:child.idleMilliseconds})});}
 /** 🎛️ Carries the sole original native operation through bounded children and awaited queued custody. */
 export interface NativeCallerPhaseV1 {
  readonly authority:ReturnType<typeof readNativeCallerAuthorityV1>;
@@ -62,11 +69,11 @@ export interface NativeCallerPhaseV1 {
  advance(command:string):Promise<void>;
  options(environment:Readonly<Record<string,string|undefined>>):OwnedCommandOptions;
 }
-/** ⏳️ Intersects the explicitly declared finite native child grant with the unchanged original caller. */
+/** 💻️ Intersects the explicitly declared finite native child grant with the unchanged original caller. */
 export function nativeCallerPhaseV1(invocation:ScriptInvocation,root:string,parent:ResourceLeaseControl):NativeCallerPhaseV1{
  requireIssuedResourceControlInvocationV1(parent,invocation);checkScriptInvocation(invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities);
- if(resolve(authority.repositoryRoot)!==resolve(root))throw Error("Original native caller repository root refused");
- const leaseControl=createRequestedIssuedResourceControlV1(parent,authority.child.maximumElapsedMilliseconds),budget=():number=>{requireIssuedResourceControlInvocationV1(leaseControl,invocation);const remaining=leaseControl.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original finite native child deadline exhausted");return Math.ceil(remaining);};
+ if(resolve(authority.repositoryRoot)!==resolve(root))throw refuseCachingV1("refused","orchestration.caller-repository-root-refused");
+ const leaseControl=createRenewableIssuedResourceControlV1(parent,nativeChildDeadlinePolicyV1(authority.child),0),budget=():number=>{requireIssuedResourceControlInvocationV1(leaseControl,invocation);const remaining=leaseControl.remainingMilliseconds();if(remaining===null||remaining<=0)throw refuseCachingV1("cancelled","orchestration.child-deadline-exhausted");return Math.ceil(remaining);};
  const advance=async(command:string):Promise<void>=>{budget();await advanceScriptInvocation(invocation,command,"running");budget();};
  return Object.freeze({authority,leaseControl,budget,advance,options:(environment:Readonly<Record<string,string|undefined>>)=>{budget();return{signal:leaseControl.signal,output:authority.transport,env:scriptResourceProcessEnvironmentV1(leaseControl,{...environment,CARGO_NET_OFFLINE:String(authority.network.offline),CARGO_TARGET_DIR:authority.artifactDirectory}),onProgress:advance};}});
 }

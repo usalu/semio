@@ -1,4 +1,4 @@
-//! 🎯️ Retained hit registration: projects laid-out retained nodes onto the pointer registry at the band paint owns.
+//! 📌️ Retained hit registration: projects laid-out retained nodes onto the pointer registry at the band paint owns.
 
 use semio_framework_ui_declaration::layout::ActionDescriptor;
 use semio_framework_ui_theme::geometry::Rect;
@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget};
 
 //#region 🎯️RetainedHitRegistry
-/// 🎯️ One interactive retained node, projected onto this region's flat pointer registry.
+/// ➡️ One interactive retained node, projected onto this region's flat pointer registry.
 ///
 /// 🩸️ The shell's registry used to hold the chrome and NOTHING of any retained window body: a
 /// pointer inside a published `mounted_layout` row rect answered the WINDOW's
@@ -77,7 +77,7 @@ pub fn retained_scene_hit(scene: &semio_framework_ui_declaration::ui::UiComponen
     }
 }
 
-/// 🎯️ Projects one laid-out retained node onto the registry at the same band paint owns.
+/// 🖌️ Projects one laid-out retained node onto the registry at the same band paint owns.
 pub fn retained_hit_registration(
     tree: &semio_framework_ui_retained_tree::tree::UiTree,
     id: semio_framework_ui_arena::NodeId,

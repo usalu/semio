@@ -2,10 +2,10 @@
 export type CustodyOpenerV1<S>=()=>Promise<Readonly<{session:S;close():Promise<void>}>>;
 /** ⏲️ Injectable monotonic clock and one-shot timer. */
 export type CustodyTimerV1=Readonly<{now():number;set(milliseconds:number,run:()=>void):unknown;clear(handle:unknown):void}>;
-/** 🏊️ A lazily opened session shared by concurrent requests, released when idle or old. */
+/** 📬️ A lazily opened session shared by concurrent requests, released when idle or old. */
 export type CustodyPoolV1<S>=Readonly<{with<T>(run:(session:S)=>Promise<T>):Promise<T>;close():Promise<void>;opens():number;closes():number;live():boolean}>;
 
-/** 🏊️ Keeps one custody session open across requests so a warm request pays no store open, while an idle or old session is closed so exclusive waiters are never starved and a failed request reopens custody from scratch. */
+/** 🆕️ Keeps one custody session open across requests so a warm request pays no store open, while an idle or old session is closed so exclusive waiters are never starved and a failed request reopens custody from scratch. */
 export function createCustodyPoolV1<S>(options:Readonly<{open:CustodyOpenerV1<S>;idleMilliseconds:number;maximumLifetimeMilliseconds:number;timer:CustodyTimerV1}>):CustodyPoolV1<S>{
  if(!(options.idleMilliseconds>0)||!(options.maximumLifetimeMilliseconds>=options.idleMilliseconds))throw Error("Bounded custody pool lifetimes required");
  let current:Readonly<{opened:number;ready:Promise<Awaited<ReturnType<CustodyOpenerV1<S>>>>}>|undefined,inflight=0,idle:unknown,opened=0,closed=0;const dropped=new WeakSet<object>();

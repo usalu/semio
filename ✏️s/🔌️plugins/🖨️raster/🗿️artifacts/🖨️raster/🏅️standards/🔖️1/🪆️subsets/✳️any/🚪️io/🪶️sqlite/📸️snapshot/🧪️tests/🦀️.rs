@@ -7,7 +7,7 @@ use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
 use semio_s_artifact_raster_raster_model::io::sqlite::snapshot::*;
-fn provider()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<RasterSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().expect("Raster must declare its complete owned semantic SQLite capability")}
+fn provider()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<RasterSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("Raster must declare its complete owned semantic SQLite capability")}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_raster_actual_declaration_capability(){semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("raster").label("Raster owned SQLite").version("0.0.1").package_id("semio:raster").artifact(semio_s_artifact_raster_raster::declaration().unwrap()).try_build().unwrap();let codec=store::os_store::codec_registry::document_codec(RASTER_DOCUMENT_SCHEMA).await.unwrap().unwrap();let p=codec.snapshot_sqlite.expect("actual Raster declaration must publish semantic SQLite");assert_eq!(p.snapshot_type,Some(std::any::TypeId::of::<RasterSnapshot>()));
  use store::io::io_mechanism::io_route;use original_owners::io_run;

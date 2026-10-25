@@ -260,6 +260,23 @@
       "license": "MIT",
       "testOnly": true,
       "productionReachable": true,
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+          "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔌️host-ports/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖼️reference-media/🟦️.ts",
+          "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🎨️gumball-visual/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🎯️gumball-pick/🟦️.ts",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🔩️gumball-handles/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🕹️gumball/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🗿️objects/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🧭️gizmo-snap/🟦️.ts",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🧿️gumball-model/🟦️.ts"
+        ],
+        "owner": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react",
+        "plan": "three is a runtime dependency of the React target (its 3D scene, gumball and gizmo elements import it), so registering `MathUtils.damp` as the follow oracle records the debt instead of claiming a purity the dependency baseline contradicts. The geometry module under test imports nothing from three, so the reference stays independent of the code it judges. The debt retires when the follow-damping law is judged by a first-party closed form that does not need the three package, or when the React target stops importing three."
+      },
       "networkDuringExecution": false,
       "homepage": "https://threejs.org/docs/#api/en/math/MathUtils.damp",
       "hostPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",

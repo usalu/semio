@@ -264,7 +264,7 @@ impl<H:SourceWindowPort> View<'_,H> {
                 Body::Files(files) => self.text().source_browser_caption(files),
                 Body::Document(Some(current)) => {
                     let position = match &tui.scene.node(self.port.window(index).list).content { NodeContent::Widget(WidgetState::Editor(editor)) => { let (line, column) = editor.position(); self.text().source_position.fill(&[("line", &line.to_string()), ("column", &column.to_string())]).into_string() }, _ => String::new() };
-                    self.text().source_document_caption(current,&position)
+                    self.text().source_document_caption(current,&position,self.port.window(index).caption.map_or(0,|node|tui.scene.rect(node).width))
                 }
                 _ => continue,
             };

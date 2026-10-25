@@ -1,6 +1,7 @@
+use crate::store::one_item_publication::lifted_member_owned_batch::BatchRetirement;
 use super::*;
 use semio_framework_job::{OriginalJobDecodeOwner, OriginalJobFixtureCaller, OperationId, Generation};
-use semio_framework_value::{RetainedCloneGrant, RetireOwned};
+use semio_framework_value::{RetainedCloneGrant, retirement::RetireOwned};
 
 fn stock() -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 100_000, maximum_copy_bytes: 64 << 20, maximum_capacity_bytes: 64 << 20, maximum_release_bytes: 64 << 20, maximum_depth: 128 } }
 fn caller() -> OriginalJobFixtureCaller { OriginalJobFixtureCaller::admit(OperationId(11), Generation(3), stock(), || Some(0), u64::MAX, 1_000_000) }
@@ -19,7 +20,7 @@ fn close(owner: &mut OriginalArtifactDocumentReceiving, caller: &mut OriginalJob
 }
 fn close_value<T: RetireOwned>(value: T, caller: &mut OriginalJobFixtureCaller, decoder: &mut OriginalJobDecodeOwner) {
     let mut owner = ControlledRetirement::retain(value);
-    while !owner.terminal_is_empty() { caller.turn_with_decoder(stock(), decoder, |cx| cx.with_original_retirement(|cx| close_original_retained_step(cx, owner.demands()?, |grant| owner.step(grant)))).unwrap(); }
+    while !owner.terminal_is_empty() { caller.turn_with_decoder(stock(), decoder, |cx| cx.with_original_retirement(|cx| close_original_retained_step(cx, owner.next_demand(stock().maximum_copy_bytes)?, |grant| owner.step(grant)))).unwrap(); }
 }
 fn finish(caller: OriginalJobFixtureCaller, mut decoder: OriginalJobDecodeOwner) {
     let mut caller = caller;
@@ -59,7 +60,6 @@ fn artifact_document_original_pair_receiving_preserves_exact_sources_and_physica
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         close_value(pair, &mut caller, &mut decoder); finish(caller, decoder);
     }
-    eprintln!("[DEBUG] original artifact document pair retains exact text and decoded pointers, refuses all deficient axes and reconciles physical construction/close receipts");
 }
 
 #[test]
@@ -81,5 +81,4 @@ fn artifact_document_original_receiving_refusal_cancellation_and_foreign_source_
     assert!(owner.cursors[0].as_ref().unwrap().output_capacity() != 0); original.cancel().cancel_now();
     assert!(original.turn_with_decoder(stock(), &mut decoder, |cx| owner.step(cx)).is_err());
     close(&mut owner, &mut original, &mut decoder); drop(owner); finish(original, decoder); finish(foreign, foreign_decoder);
-    eprintln!("[DEBUG] original document malformed input, cancelled partial decode and equal-number foreign caller preserve actual source custody until paid close");
 }

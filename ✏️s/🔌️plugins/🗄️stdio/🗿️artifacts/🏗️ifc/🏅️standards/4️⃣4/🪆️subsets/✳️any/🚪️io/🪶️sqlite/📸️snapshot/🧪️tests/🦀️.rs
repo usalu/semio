@@ -82,7 +82,7 @@ fn sqlite_snapshot_ifc4_controlled_native_owned_frame_preserves_literal_schema_a
         let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).expect("actual owner must produce full literal Native state");
         let restored = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| <IfcSnapshot as ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).expect("actual owner must construct full literal Native state");
         assert_eq!(project(&restored),expected);
-        let codec = <IfcSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+        let codec = <IfcSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
         let dialect = semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.ifc".into(),standard:"4".into(),subset:"*".into()};
         assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap().value,expected);
         let reconstructed = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema,&dialect,&mut Some(expected.clone()),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap().value;

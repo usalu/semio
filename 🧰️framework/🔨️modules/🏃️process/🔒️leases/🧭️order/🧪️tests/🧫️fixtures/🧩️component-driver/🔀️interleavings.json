@@ -1,0 +1,234 @@
+{
+ "version": 1,
+ "directory": "/w/.cache/b/l/m/data",
+ "scenarios": [
+  {
+   "id": "declared-order-only",
+   "note": "Every task takes the writer custody before the fetch lease, an exclusive recovery writer waits, a compile only holds the writer.",
+   "deadlock": false,
+   "processes": [
+    {
+     "name": "fetch-a",
+     "steps": [
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      },
+      {
+       "resource": "cargo:registry-fetch:/h:-",
+       "mode": "exclusive"
+      }
+     ]
+    },
+    {
+     "name": "fetch-b",
+     "steps": [
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      },
+      {
+       "resource": "cargo:registry-fetch:/h:-",
+       "mode": "exclusive"
+      }
+     ]
+    },
+    {
+     "name": "recovery",
+     "steps": [
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "exclusive"
+      }
+     ]
+    },
+    {
+     "name": "compile",
+     "steps": [
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fetch-first-only",
+   "note": "The retired order, followed by every task: no cycle can form, but each fetch holder waits for the writer behind a queued exclusive writer.",
+   "deadlock": false,
+   "processes": [
+    {
+     "name": "fetch-a",
+     "steps": [
+      {
+       "resource": "cargo:registry-fetch:/h:-",
+       "mode": "exclusive"
+      },
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "name": "fetch-b",
+     "steps": [
+      {
+       "resource": "cargo:registry-fetch:/h:-",
+       "mode": "exclusive"
+      },
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "name": "recovery",
+     "steps": [
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "exclusive"
+      }
+     ]
+    },
+    {
+     "name": "compile",
+     "steps": [
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "mixed-orders",
+   "note": "One task still in the retired order (loaded before the change) beside tasks in the declared order: the live deadlock of 10-23 17:20.",
+   "deadlock": true,
+   "processes": [
+    {
+     "name": "old-fetch",
+     "steps": [
+      {
+       "resource": "cargo:registry-fetch:/h:-",
+       "mode": "exclusive"
+      },
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "name": "new-fetch",
+     "steps": [
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      },
+      {
+       "resource": "cargo:registry-fetch:/h:-",
+       "mode": "exclusive"
+      }
+     ]
+    },
+    {
+     "name": "recovery",
+     "steps": [
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "exclusive"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "registry-after-writer",
+   "note": "A writer holder that waits for the registry reader behind an exclusive registry resolution, whose own path waits for the writer.",
+   "deadlock": true,
+   "processes": [
+    {
+     "name": "driver",
+     "steps": [
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      },
+      {
+       "resource": "cargo:registry:/h",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "name": "resolve",
+     "steps": [
+      {
+       "resource": "cargo:registry:/h",
+       "mode": "exclusive"
+      },
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "exclusive"
+      }
+     ]
+    },
+    {
+     "name": "driver-b",
+     "steps": [
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "registry-before-writer",
+   "note": "The same two tasks in the declared order: the registry reader first.",
+   "deadlock": false,
+   "processes": [
+    {
+     "name": "driver",
+     "steps": [
+      {
+       "resource": "cargo:registry:/h",
+       "mode": "shared"
+      },
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "name": "resolve",
+     "steps": [
+      {
+       "resource": "cargo:registry:/h",
+       "mode": "exclusive"
+      },
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "exclusive"
+      }
+     ]
+    },
+    {
+     "name": "driver-b",
+     "steps": [
+      {
+       "resource": "repo:compiler-writer:/m",
+       "mode": "shared"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

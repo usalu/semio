@@ -8,6 +8,7 @@ import {createRequire} from "node:module";
 import {dirname,resolve} from "node:path";
 const fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 const schema=JSON.parse(readFileSync(new URL("../../../../../🏗️build/📤️arguments/🧬️schema/🔣️.json",import.meta.url),"utf8"));
+const receiptSchema=JSON.parse(readFileSync(new URL("../🧬️schema/📤️receipt.json",import.meta.url),"utf8"));
 test("owner arguments are admitted then transported literally and consumed exactly once",async()=>{
  const admit=new Ajv({strict:true}).compile(schema);
  for(const row of fixture.cases)expect(admit({version:1,arguments:row.arguments})).toBe(true);
@@ -75,8 +76,8 @@ test("the canonical build dispatcher preserves the complete literal filter and p
  const child=Bun.spawn([process.execPath,bootstrap,"repo","run","@semio-tech/repo-lib:probe-nx-owner-arguments","--exclude-dependencies","--skip-cache","--",...arguments_],{cwd:process.cwd(),stdout:"pipe",stderr:"pipe"});
  const [stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
  expect(status,stderr+stdout).toBe(0);
- const marker="[DEBUG] ownerArgumentReceipt=",line=stdout.split(/\r?\n/).find(line=>line.startsWith(marker));
- expect(line).toBeDefined();const receipt=JSON.parse(line!.slice(marker.length));expect(receipt.arguments).toEqual(arguments_);expect(receipt.carrierPresent).toBe(false);
+ const marker=receiptSchema.definitions.Protocol.const.prefix,line=stdout.split(/\r?\n/).find(line=>line.startsWith(marker));
+ expect(line).toBeDefined();const receipt=JSON.parse(line!.slice(marker.length));expect(new Ajv({strict:true}).compile(receiptSchema)(receipt)).toBe(true);expect(receipt.arguments).toEqual(arguments_);expect(receipt.carrierPresent).toBe(false);
 },180000);
 
 test("repo retains both original Nextest filter and positional selections",async()=>{
@@ -84,6 +85,6 @@ test("repo retains both original Nextest filter and positional selections",async
  const child=Bun.spawn([process.execPath,"repo","run","@semio-tech/repo-lib:probe-nx-owner-arguments","--exclude-dependencies","--skip-cache","--",...arguments_],{cwd:process.cwd(),stdout:"pipe",stderr:"pipe"});
  const [stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
  expect(status,stderr+stdout).toBe(0);
- const marker="[DEBUG] ownerArgumentReceipt=",line=stdout.split(/\r?\n/).find(line=>line.startsWith(marker));
- expect(line).toBeDefined();const receipt=JSON.parse(line!.slice(marker.length));expect(receipt.arguments).toEqual(arguments_);expect(receipt.carrierPresent).toBe(false);
+ const marker=receiptSchema.definitions.Protocol.const.prefix,line=stdout.split(/\r?\n/).find(line=>line.startsWith(marker));
+ expect(line).toBeDefined();const receipt=JSON.parse(line!.slice(marker.length));expect(new Ajv({strict:true}).compile(receiptSchema)(receipt)).toBe(true);expect(receipt.arguments).toEqual(arguments_);expect(receipt.carrierPresent).toBe(false);
 },180000);

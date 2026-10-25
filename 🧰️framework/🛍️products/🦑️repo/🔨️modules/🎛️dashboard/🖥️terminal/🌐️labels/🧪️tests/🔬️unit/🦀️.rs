@@ -56,12 +56,13 @@ fn command_line_messages_follow_the_language_of_the_preference() {
 
 #[test]
 fn every_scenario_of_the_labels_feature_is_proved_by_a_test() {
-    dashboard_core::testkit::assert_proved(include_str!("../../../../🧪️tests/🌐️labels/🥒️.feature"), &[include_str!("🦀️.rs"), include_str!("../../../🧪️tests/🔬️unit/🦀️.rs")], &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../../🧪️tests/🌐️labels/🥒️.feature"), &[include_str!("🦀️.rs"), include_str!("../../../🧪️tests/🔬️unit/🦀️.rs"), include_str!("../../../🧪️tests/🔬️unit/🩺️runtime-audit/🦀️.rs")], &[
         ("Every label is complete in every language with the same placeholders", &["every_label_is_complete_in_every_language_with_the_same_placeholders"]),
         ("Every keymap action has a text in every language", &["every_keymap_action_has_a_text_in_every_language"]),
         ("The catalogue follows the chosen language", &["the_catalogue_follows_the_chosen_language"]),
         ("No visible text is hard-coded outside the catalogue", &["p1_11_no_user_visible_text_is_hard_coded_outside_the_catalogue"]),
         ("The messages of the command line follow the preference", &["command_line_messages_follow_the_language_of_the_preference"]),
+        ("A document caption keeps its state and position when the path is long", &["a_document_caption_keeps_its_state_and_position_when_the_path_is_long"]),
     ]);
 }
 
@@ -73,4 +74,27 @@ fn tab_text_keeps_the_verb_and_elides_the_subject_in_the_middle() {
     assert_eq!(tab_text(&TaskLabel { subject: "hub".into(), ..label.clone() }, Locale::En, TAB_CELLS), "dev hub react");
     assert_eq!(tab_texts(&[&label, &label], Locale::En, TAB_CELLS).iter().filter(|text| text.ends_with(" ·2")).count(), 1);
     assert_eq!(window_title(&TaskLabel { subject: "hub".into(), owner: vec!["hub".into()], members: 2, parameters: vec![("backend".into(), "pg".into())], ..label }, Locale::De), "entwickeln · hub ×2 · react · backend=pg");
+}
+
+#[test]
+fn a_document_caption_keeps_its_state_and_position_when_the_path_is_long() {
+    let root = (if cfg!(unix) { std::path::PathBuf::from("/tmp") } else { std::env::temp_dir() }).join(format!("sc{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+    let folders = ["a".repeat(30), "b".repeat(30), "c".repeat(30), "d".repeat(30)].join("/");
+    std::fs::create_dir_all(root.join(&folders)).unwrap();
+    let path = format!("{folders}/ende.txt");
+    std::fs::write(root.join(&path), "x").unwrap();
+    let document = semio_framework_filesystem_workspace::Workspace::new(&root).unwrap().load(&path, &std::sync::atomic::AtomicBool::new(false), &mut |_| {}).unwrap();
+    let buffer = semio_framework_filesystem_workspace::commands::DocumentBuffer::new(document, false);
+    let _ = std::fs::remove_dir_all(&root);
+    for (locale, state, position) in [(Locale::En, "saved", "line 1 · column 1"), (Locale::De, "gespeichert", "Zeile 1 · Spalte 1")] {
+        let text = labels(locale);
+        let full = text.source_document_caption(&buffer, position, 0);
+        assert_eq!(full, format!("{path} · {state} · {position}"));
+        for width in [40u16, 60, 100] {
+            let fitted = text.source_document_caption(&buffer, position, width);
+            assert!(cells(&fitted) <= usize::from(width), "{width}: {fitted}");
+            assert!(fitted.ends_with(&format!(" · {state} · {position}")) && fitted.contains('…') && fitted.starts_with('a'), "{width}: {fitted}");
+        }
+        assert_eq!(text.source_document_caption(&buffer, position, 400), full);
+    }
 }

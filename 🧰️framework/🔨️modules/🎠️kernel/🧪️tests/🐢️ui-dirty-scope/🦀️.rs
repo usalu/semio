@@ -88,7 +88,7 @@ fn a_scope_selects_exactly_the_surfaces_the_fixture_names() {
     }
 }
 
-/// ⚖️ A coalesced pass covers the UNION of everything asked for while it ran — body-key order
+/// 🧫️ A coalesced pass covers the UNION of everything asked for while it ran — body-key order
 /// included, so the Rust and TypeScript requests cannot drift into different section orders.
 #[test]
 fn two_scopes_union_exactly_as_the_fixture_declares() {
@@ -98,7 +98,7 @@ fn two_scopes_union_exactly_as_the_fixture_declares() {
     }
 }
 
-/// ⚖️ A missing `uiScope` is `full`, never `none` — the one default that keeps an unmodified program
+/// 🕳️ A missing `uiScope` is `full`, never `none` — the one default that keeps an unmodified program
 /// rendering everything instead of silently rendering nothing.
 #[test]
 fn an_absent_scope_deserializes_to_full() {

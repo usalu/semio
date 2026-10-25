@@ -54,6 +54,7 @@ fn ephemeral_refusal(advance: Result<ArtifactStoreOneItemAdvance, String>, retai
 
 #[test]
 fn ephemeral_transfer_preparation_faults_close_presence_and_transient_owners() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🫧️preparation-fault/🔣️.json")).unwrap();
     let factory = ArtifactEphemeralTaskPreparationFactory::new(
         |_| Ok(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 64 }),
@@ -247,3 +248,39 @@ async fn a_panicking_body_holding_a_live_store_unwinds_instead_of_aborting_the_p
     let message = payload.downcast_ref::<String>().map(String::as_str).or_else(|| payload.downcast_ref::<&'static str>().copied());
     assert_eq!(message, Some("simulated assertion failure with a live store in scope"));
 }
+
+#[semio_framework_async_macros::async_test]
+async fn presence_local_read_is_o1_and_never_clones_the_payload_at_capture() {
+        let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
+let mut store = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(1) });
+    let factory: Arc<dyn SnapshotRetirementFactory<DemoSnapshot>> = Arc::new(DemoSnapshotRetirementFactory);
+    store.install_local_retirement_factory(factory.clone()).unwrap();
+    let before = store.local_read().unwrap();
+    assert!(std::ptr::eq(before.get(), store.local()));
+    assert_eq!(store.generation_now(), 0);
+
+    let preparation_factory = DemoEphemeralPreparationFactory::admissible();
+    let mut publication = store.begin_publish_one(semio_framework_job::OperationId(2), 0, DemoMutation::SetN(SetN { n: 2 }), Some(&preparation_factory), Some(factory.clone())).unwrap_or_else(|_| panic!("original retained presence publication admits"));
+    let mut published = false;
+    for _ in 0..2048 {
+        if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive(|receiving|store.advance_publish_one(&mut publication, ephemeral_test_close_grant(),receiving)).expect("original presence publication advances") {
+            assert_eq!(receipt, semio_framework_os_store_one_item::LaneItemReceipt { generation_before: 0, generation_after: 1 });
+            published = true;
+            break;
+        }
+    }
+    assert!(published);
+    assert!(publication.acknowledge());
+    close_ephemeral_publication(&mut publication);
+    let after = store.local_read().unwrap();
+    assert!(!std::ptr::eq(before.get(), after.get()));
+    assert_eq!(before.n, Some(1));
+    assert_eq!(after.n, Some(2));
+    assert_eq!(store.generation_now(), 1);
+    drop(before);
+    drop(after);
+    let mut close = store.begin_retirement(Arc::new(DemoSnapshot { n: Some(0) }), |value| value.n == Some(0)).ok().unwrap();
+    test_support::drive_retirement(&mut close).expect("presence retirement reaches its terminal-empty witness under its quoted demands");
+    assert!(close.terminal_is_empty());
+}
+

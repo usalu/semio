@@ -97,7 +97,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     sunburst: {
-      /** 🔮️ The same partition over a full turn: start and end angle, inner and outer radius. */
+      /** 💯️ The same partition over a full turn: start and end angle, inner and outer radius. */
       oracle: () => {
         const nodes = preorder(banded(DEEP, [2 * Math.PI, 24]));
         return {
@@ -113,7 +113,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     unbalanced: {
-      /** 🔮️ The row count of the unbalanced fixture comes from the root height. */
+      /** 🏠️ The row count of the unbalanced fixture comes from the root height. */
       oracle: () => ({
         projection: {
           id: preorder(root(UNBALANCED)).map((each) => each.id!),

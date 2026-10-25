@@ -14,7 +14,7 @@ fn is_false(value: &bool) -> bool {
     !*value
 }
 
-/// 🧱️ The contract-local shape a builder terminates into — everything a [`crate::UiNodeRecord`]
+/// 🧬️ The contract-local shape a builder terminates into — everything a [`crate::UiNodeRecord`]
 /// carries except `id` (minted by the runtime at reconciliation, never by an author) and with
 /// `children` nested inline rather than addressed by [`crate::UiNodeId`], since a freshly authored
 /// tree has no ids yet to address by. Every field below serializes away at its default, mirroring the

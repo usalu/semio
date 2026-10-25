@@ -41,7 +41,7 @@ fn sqlite_snapshot_pdf17_controlled_native_output_preserves_full_fixture_and_sto
 
 #[test]
 fn sqlite_snapshot_pdf17_controlled_native_owner_preserves_full_fixture_and_stops_inside_text(){
-    use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};use semio_framework_os_kernel::io_schema::IoPayload;
+    use store::{snapshot::ArtifactDsl,snapshot::ArtifactPack};use semio_framework_os_kernel::io_schema::IoPayload;
     let mut snapshot=fixture();snapshot.schema="owned PDF 世界\0".repeat(16384);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
     for encoding in [sqlite_snapshot::SnapshotEncoding::Binary,sqlite_snapshot::SnapshotEncoding::Text]{
         let payload=match encoding{sqlite_snapshot::SnapshotEncoding::Binary=>IoPayload::Binary(snapshot.encode_pack()),sqlite_snapshot::SnapshotEncoding::Text=>IoPayload::Text(snapshot.print_dsl())};

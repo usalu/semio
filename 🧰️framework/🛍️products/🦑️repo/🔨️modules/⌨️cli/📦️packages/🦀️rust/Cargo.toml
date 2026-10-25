@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [[bin]]
 name = "repo"
-path = "📦️mcp-main.rs"
+path = "../../🚪️entrypoint/🦀️.rs"
 
 [dependencies]
 semio-framework-repo-cli-command-framework = { path = "../../🧭️repo-cli/🎮️command-framework/📦️packages/🦀️rust" }

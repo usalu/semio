@@ -16,7 +16,7 @@ export function withCargoAdmissionV1<T>(body: (admission: CargoTestAdmissionV1, 
 export function writeOwnerPackageV1(root: string, name = "owner-package"): string {
   mkdirSync(root, { recursive: true });
   const manifest = join(root, "Cargo.toml");
-  writeFileSync(manifest, `[workspace]\n[package]\nname = "${name}"\nversion = "0.0.0"\nedition = "2021"\n[lib]\npath = "lib.rs"\n`);
+  writeFileSync(manifest, `[workspace]\n[profile.prototype]\ninherits = "dev"\n[package]\nname = "${name}"\nversion = "0.0.0"\nedition = "2021"\n[lib]\npath = "lib.rs"\n`);
   writeFileSync(join(root, "lib.rs"), "");
   writeFileSync(join(root, "Cargo.lock"), `version = 4\n[[package]]\nname = "${name}"\nversion = "0.0.0"\n`);
   return manifest;

@@ -61,13 +61,13 @@ semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-flow = { workspace = true }
-json = "0.12"
 semio-framework-job-payload = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 
 [features]
 testkit = ["semio-s-artifact-sequence-sequence-schema/testkit", "semio-s-artifact-sequence-sequence-editor/testkit", "semio-s-artifact-sequence-sequence-inferences/testkit", "semio-s-artifact-sequence-sequence-tests/testkit"]
 
 [dev-dependencies]
+json = "0.12"
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }

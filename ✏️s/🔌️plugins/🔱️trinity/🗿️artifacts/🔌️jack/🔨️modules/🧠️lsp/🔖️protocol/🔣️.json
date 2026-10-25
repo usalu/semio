@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Jack language server protocol",
+  "description": "Schema-first contract of the Jack language server: LSP 3.17 over JSON-RPC 2.0 for the Jack graph query language. Every implementation (Rust server, TypeScript worker, browser probe) reads its method roster, error codes, legends and mappings from this file.",
+  "server": { "name": "semio-jack-language-server", "version": "0.1.0", "positionEncoding": "utf-16", "maximumDocumentBytes": 4194304 },
+  "capabilities": {
+    "textDocumentSync": { "openClose": true, "change": 2 },
+    "completionProvider": { "triggerCharacters": [":", ".", "@"], "resolveProvider": false },
+    "hoverProvider": true,
+    "documentFormattingProvider": true,
+    "semanticTokensProvider": { "full": true }
+  },
+  "requests": ["initialize", "shutdown", "textDocument/completion", "textDocument/hover", "textDocument/formatting", "textDocument/semanticTokens/full", "jack/loadSnapshot"],
+  "notifications": ["initialized", "exit", "textDocument/didOpen", "textDocument/didChange", "textDocument/didClose"],
+  "errorCodes": { "parseError": -32700, "invalidRequest": -32600, "methodNotFound": -32601, "invalidParams": -32602, "internalError": -32603, "serverNotInitialized": -32002, "requestFailed": -32803 },
+  "diagnosticSeverities": { "error": 1, "warning": 2, "information": 3, "info": 3 },
+  "completionKinds": { "default": 1, "variable": 6, "nodeKind": 7, "property": 10, "keyword": 14, "portKind": 5, "edgeKind": 22 },
+  "semanticTokenTypes": ["keyword", "variable", "number", "string", "operator", "punctuation", "error"],
+  "semanticTokenClasses": { "keyword": 0, "ident": 1, "number": 2, "string": 3, "operator": 4, "punctuation": 5, "error": 6 },
+  "diagnosticSource": "jack",
+  "graphlessSuppressedCodePrefix": "jack/unknown-",
+  "documentTooLargeCode": "jack/document-too-large",
+  "extensions": {
+    "jack/loadSnapshot": { "params": { "json": "string: a Jack snapshot JSON document (manifest, nodes, edges)" }, "result": null, "effect": "re-publishes the diagnostics of every open document" }
+  }
+}

@@ -14,6 +14,8 @@ members = [
   "🐚️shell/📦️packages/🦀️rust",
   "📦️packages/🦀️rust",
   "🔨️modules/⚠️errors/📦️packages/🦀️rust",
+  "🔨️modules/🧠️lsp/📦️packages/🦀️rust",
+  "🔨️modules/🧠️lsp/🧩️component/📦️packages/🦀️rust",
   "🛂️manifest/🧪️tests/🔬️unit/📦️packages/🦀️rust",
 ]
 exclude = [

@@ -1,5 +1,8 @@
 /** 💾️ Public `@semio-tech/repo-lib/storage` entry (bounded repository storage: cache partitions, budget stores, Nx and compiler custody, bootstrap tooling, development state); explicit re-exports of the library paths that own each member, nothing is defined here. */
-export { requireCompilerWriterCustodyV1, withCompilerWorkspaceWriteV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+export { requireCompilerWriterCustodyV1, withCompilerWorkspaceSharedWriteV1, withCompilerWorkspaceWriteV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+export { reclaimUnitStorageV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";
+export { relieveUnitStorageV1, retryAfterOutOfSpaceV1, withUnitPressureRecheckV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
+export { withRepositoryComponentLaneV1 } from "../../../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
 export { readObservedCargoConfigurationPlanV1, withRepositoryObservedCargoConfigurationV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/👓️reading/🟦️.ts";
 export { default as configurationReadingSchema } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/👓️reading/🧬️schema/🔣️.json" with { type: "json" };
 export { default as ingressConfigurationSchema } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧬️schema/🔣️.json" with { type: "json" };

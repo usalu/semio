@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::any::schema::rule::{Assignment, Lhs, Paramete
 use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
     serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }

@@ -19,7 +19,9 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    pub use semio_s_artifact_puzzle_2d_graph_manifest::standards::v1::subsets::any::schema::graph_manifest;
+                    pub mod graph_manifest {
+                        pub use semio_s_artifact_puzzle_2d_graph_manifest::*;
+                    }
                     pub use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::records;
                     pub use semio_s_artifact_puzzle_2d_snapshot::standards::v1::subsets::any::schema::snapshot;
                     pub use semio_s_artifact_puzzle_2d_schema::standards::v1::subsets::any::schema::diff;

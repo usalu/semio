@@ -4,8 +4,8 @@ import {randomUUID} from "node:crypto";
 import {dirname,join} from "node:path";
 import {spawnSync} from "node:child_process";
 import {bazelProbeArgumentsV1,bazelProbeDigestsV1,bazelProbeWorkspacePrefixV1,bazelProbeWorkspaceV1,renderBazelProbeV1,type BazelProbeOptionsV1} from "../🟦️.ts";
-import type {CacheProbeSpecV1} from "../../../../⚙️operations/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import type { CacheProbeSpecV1 } from "../../../../⚙️operations/📋️contract/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🏃️ The wire of one probe run, written by `bazelCacheProbeV1` and read here. */
 export type BazelProbeRunV1=Readonly<{options:BazelProbeOptionsV1;specification:CacheProbeSpecV1;task:string;fixture:string;environment:Readonly<Record<string,string|undefined>>}>;

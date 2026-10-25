@@ -6,17 +6,21 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
 use semio_framework_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep};
+use semio_framework_value::retained_clone::{RetainedCloneRef, RetainedCloneStep};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::sync::Arc;
 use std::mem::size_of;
 
 const PREFIX: &str = "stdio-semio-brep-set-vertex";
 
 pub(super) fn route(_prefix: &'static str) -> Option<NativeEditPreparationRoute<SemioBrepSnapshot, SemioBrepMutation>> {
-    Some(NativeEditPreparationRoute::new(BrepVertexEdit::recognizes, Arc::new(app_store::PagedOneItemPreparationFactory::<SemioBrepSnapshot, SemioBrepMutation, BrepVertexEdit>::default())))
+    None
 }
 
 #[derive(Default)]
 pub(super) struct BrepVertexEdit {
+    closing: bool,
     vertex_index: usize,
     matches: usize,
     located: Option<usize>,
@@ -76,9 +80,31 @@ impl PagedOneItemEdit<SemioBrepSnapshot, SemioBrepMutation> for BrepVertexEdit {
         value.vertex_id.len().checked_add(size_of::<SemioPoint3>()).ok_or_else(|| format!("{PREFIX}-payload-overflow"))
     }
 
-    fn advance(&mut self, post: &mut SemioBrepSnapshot, mutation: &SemioBrepMutation, grant: RetainedCloneGrant) -> Result<PagedOneItemEditStep<SemioBrepMutation>, ValueError> {
+    fn advance_demands(&self, _before: RetainedCloneRef<'_, SemioBrepSnapshot>, _mutation: RetainedCloneRef<'_, SemioBrepMutation>, _post: &SemioBrepSnapshot, _body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand::default())
+    }
+
+    fn advance(&mut self, _before: RetainedCloneRef<'_, SemioBrepSnapshot>, mutation: RetainedCloneRef<'_, SemioBrepMutation>, post: &mut SemioBrepSnapshot, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<SemioBrepMutation>, ValueError> {
+        let mutation = mutation.get();
         let target = Self::target(mutation)?;
         if self.scanned { self.apply(post, target, grant) } else { self.scan(post, target, grant) }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_demands(&self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<SemioBrepMutation>, _body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand::default())
+    }
+
+    fn close_step(&mut self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<SemioBrepMutation>, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.closing = true;
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
     }
 }
 

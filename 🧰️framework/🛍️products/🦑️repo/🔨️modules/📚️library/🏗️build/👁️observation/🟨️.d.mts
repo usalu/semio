@@ -15,7 +15,7 @@ export type SourceObservationV1 =
  | Readonly<{kind:"analysis";path:string;fact:SourceAnalysisFactV1}>
  | Readonly<{kind:"exists"|"fileExists"|"directoryExists";path:string;fact:boolean}>
  | Readonly<{kind:"stamp";path:string;fact:string}>
- | Readonly<{kind:"stat"|"lstat"|"readdir"|"realpath"|"realpathNative"|"resolve"|"readdirNames"|"directories"|"typescriptText"|"typescriptRealpath";path:string;fact:string}>;
+ | Readonly<{kind:"stat"|"lstat"|"readdir"|"realpath"|"realpathNative"|"resolve"|"readdirNames"|"directories"|"typescriptText"|"typescriptRealpath"|"registry";path:string;fact:string}>;
 /** 🎟️ Names the immutable parser handle; structural copies remain refused by the runtime registry. */
 export type SourceAnalysisProviderV1 = Readonly<{id:string;revision:string}>;
 /** 📸️ Captures the actual result and every original Source and load-authority observation. */
@@ -58,6 +58,30 @@ export function captureObservedSourceInputsV1<T>(compute:()=>T|PromiseLike<T>,on
 export function observedExactSourceFileV1(batch:ExactSourceReadBatchV1,root:string,name:string):Promise<ExactSourceFileV1|null>;
 /** 📍️ Records the actual system module resolver result or failure. */
 export function observedRequireResolve(from:string|URL,request:string):string;
+/** 🧭️ The spelling in which a module resolution is recorded: the dependency generation id is a placeholder. */
+export function canonicalResolutionV1(path:string):string;
+/** 🔗️ The seam of the shared command closure entries: how the answer of a `closure` fact is read now and how the entries named by facts are brought up to date. */
+export function registerClosureProviderV1(provider:{answer(path:string):string;settle(paths:readonly string[],value?:unknown):Promise<void>}):void;
+/** 🔗️ Brings the closure entries named by the `closure` facts among `rows` up to date. */
+export function settleClosureRowsV1(rows:readonly {kind:string;path:string}[],value?:unknown):Promise<void>;
+/** 🔗️ Records the answer one closure entry gave to the running inference. */
+export function recordClosureFactV1(path:string,answer:string):void;
+/** 🪪️ Records the registry row (root and manifest) one inference read for one owner name, or its absence. */
+/** 🕊️ Drops every in-process cache a graph construction filled; safe only when no inference runs. */
+export function releaseInferenceMemoryV1():void;
+/** 📏️ The entry counts of the in-process caches a graph construction fills. */
+export function inferenceCacheSizesV1():{interned:number;verifiedBlockRows:number;settledReads:number;projectImages:number;publications:number;registryFiles:number};
+export function recordRegistryOwnerV1(workspaceRoot:string,name:string,row:{root:string;manifest:string}|undefined|null):void;
+/** 🔗️ Whether recorded rows still hold, sharing the checks of the running inference round. */
+export function observationRowsHoldV1(rows:readonly unknown[]):boolean;
+/** 🔗️ Whether the shared rows of one reused computation still hold, checked once per validation round. */
+export function observationLayerHoldsV1(layer:readonly unknown[]):boolean;
+/** 🔗️ The running validation round, if any. */
+export function observationRoundV1():object|undefined;
+/** 🔗️ Runs a computation with its observations detached from the running inference; returns its rows and the shared row arrays it reused. */
+export function observeDetachedV1<T>(compute:()=>Promise<T>):Promise<{value:T;rows:unknown[];layers:(readonly unknown[])[]}>;
+/** 🧹️ Removes the observation blocks of one record directory that no record header names any more. */
+export function sweepSupersededObservationBlocksV1(directory:string,options?:{headerPattern?:RegExp;graceMilliseconds?:number;now?:number;dryRun?:boolean;minimumBlocks?:number;blocksPerHeader?:number;signal?:AbortSignal;progress?:(row:{phase:string;done:number;total:number})=>void|Promise<void>}):Promise<{headers:number;live:number;blocks:number;removed:number;bytes:number;kept:number;skipped?:true}>;
 /** 🧭️ Returns the original neutral compiler system with observed filesystem ports. */
 export function observedTypeScriptHost<T extends SourceTypeScriptSystemV1>(sys:T):T;
 /** 🧠️ Memoizes only the current JSON image while retaining its original input identity. */
@@ -85,7 +109,7 @@ export function inferenceHeaderLine(path:string):string|null;
 /** 🧾️ A persisted record header with its fact blocks expanded. */
 export function readInferenceHeaderV1(path:string):{digest:string;resultSha256:string;authorityObservations:readonly SourceObservationV1[];blocks:readonly string[];observations:readonly SourceObservationV1[]};
 /** ✅️ Rechecks untrusted captured facts without admitting a provider or renewing Source authority. */
-export function observationsHold(observations:readonly unknown[],limit?:number,stableDirectories?:Set<string>,symlinks?:Set<string>,signal?:AbortSignal,onStale?:((row:SourceObservationV1)=>void)|undefined):Promise<boolean>;
+export function observationsHold(observations:readonly unknown[],limit?:number,stableDirectories?:Set<string>,symlinks?:Set<string>|true,signal?:AbortSignal,onStale?:((row:SourceObservationV1)=>void)|undefined):Promise<boolean>;
 /** 📊️ Exposes owned computation counts without affecting admission. */
 export function projectInferenceCountsV1():Record<string,number>;
 /** 📦️ The facts one project record consumed, whether it was computed or reused in this process. */

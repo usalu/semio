@@ -7,7 +7,7 @@ import { join, resolve } from "node:path";
 import { partitionNextestExecutionFilters } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { contractRoot } from "../../🏗️shared-fixtures/🟦️.ts";
-import { inputRoot, routerInvocation } from "../🟢️shared/🟦️.ts";
+import { inputRoot, routerInvocation } from "../🟢️harness/🟦️.ts";
 
 /** 🟡 Registers the ui host metadata router tests of the package language semantic handoff suite. */
 export function registerUiHostMetadataRouterTests(): void {
@@ -23,7 +23,7 @@ export function registerUiHostMetadataRouterTests(): void {
     const before = new Map(inputs.map((path: string) => {
       const row = semanticOwnedInputFileSnapshot(root, path); expect(row?.nodeKind, path).toBe("file"); return [path, row!.bytes] as const;
     }));
-    expect(source.split(/\r?\n/u)[0]).toBe("#!/usr/bin/env bun");
+    expect(source.split(/\r?\n/u)[0]).toBe("#!/usr/bin/env repo");
     const imports = syntax.statements.filter(ts.isImportDeclaration);
     expect(imports.map(row => ({ module: (row.moduleSpecifier as import("typescript").StringLiteral).text, names: row.importClause?.namedBindings && ts.isNamedImports(row.importClause.namedBindings) ? row.importClause.namedBindings.elements.map(node => node.name.text).sort() : [] }))).toEqual(expected.moduleImports);
     expect(expected.moduleImports.flatMap((row: { names: string[] }) => row.names).sort()).toEqual(expected.imports);

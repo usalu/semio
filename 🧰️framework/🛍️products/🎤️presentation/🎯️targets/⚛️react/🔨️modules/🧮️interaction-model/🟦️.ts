@@ -18,7 +18,7 @@ export function revealDeckInOverview(element: Element | null): boolean {
   return element?.closest(".reveal")?.classList.contains("overview") ?? false;
 }
 
-/** 🗺️ Swallow the post-gesture click reveal.js uses to leave overview (capture on `.reveal`). */
+/** 🧭️ Swallow the post-gesture click reveal.js uses to leave overview (capture on `.reveal`). */
 export function suppressRevealOverviewSlideNavigation(event: Event): void {
   const origin = event.target;
   if (!(origin instanceof Element)) {
@@ -55,7 +55,7 @@ export function resolveDispositionDragGroupIds(id: string, wasSelected: boolean,
   return selectedIds.size > 1 ? [...selectedIds] : [id];
 }
 
-/** 📐️ Ephemeral slide-space rectangle for interactive dispositions (normalized 0..1). */
+/** 🪐️ Ephemeral slide-space rectangle for interactive dispositions (normalized 0..1). */
 export type DispositionTransform = DispositionPosition;
 
 /** ↔ Marquee selection mode: crossing (L→R partial overlap) vs window (R→L full containment). */
@@ -71,23 +71,23 @@ export function dispositionInteractionId(renderSlideId: string, disposition: Rev
   return `${renderSlideId}--${disposition.morphId}--${disposition.embodimentId ?? index}`;
 }
 
-/** 🔑️ Stable id for one split tile on an interactive slide. */
+/** 🆔️ Stable id for one split tile on an interactive slide. */
 export function tileDispositionInteractionId(renderSlideId: string, disposition: RevealResolvedDisposition, dispositionIndex: number, tileKey: string): string {
   return `${dispositionInteractionId(renderSlideId, disposition, dispositionIndex)}--tile--${tileKey}`;
 }
 
-/** 🔑️ Stable id for a visual row band grouping split tiles on one disposition. */
+/** 🗂️ Stable id for a visual row band grouping split tiles on one disposition. */
 export function rowBandInteractionId(renderSlideId: string, disposition: RevealResolvedDisposition, dispositionIndex: number, rowIndex: number): string {
   return `${dispositionInteractionId(renderSlideId, disposition, dispositionIndex)}--row--${rowIndex}`;
 }
 
-/** 🖱️ One interactive placement (whole disposition or a single split tile). */
+/** 🔪️ One interactive placement (whole disposition or a single split tile). */
 export interface InteractiveDispositionPlacement {
   readonly id: string;
   readonly disposition: RevealResolvedDisposition;
-  /** 📐️ Wrapper frame (row-local for tiles inside a visual row). */
+  /** 🀄️ Wrapper frame (row-local for tiles inside a visual row). */
   readonly declaredRect: DispositionPosition | undefined;
-  /** 📐️ Slide-space frame for marquee, drag, and resize. */
+  /** 📑️ Slide-space frame for marquee, drag, and resize. */
   readonly sectionRect: DispositionPosition | undefined;
   /** 🔗️ reveal.js `data-id` on the canvas wrapper when the tile frame must not own it. */
   readonly revealMorphId?: string;
@@ -101,7 +101,7 @@ export interface InteractiveRowBandPlacement {
   readonly tileIds: readonly string[];
 }
 
-/** 🖱️ Interactive placements and row bands for one slide arrangement. */
+/** 🩹️ Interactive placements and row bands for one slide arrangement. */
 export interface InteractiveSlideLayout {
   readonly placements: readonly InteractiveDispositionPlacement[];
   readonly rowBands: readonly InteractiveRowBandPlacement[];
@@ -123,12 +123,12 @@ export function buildInteractiveSlideLayout(renderSlideId: string, resolved: rea
   return { placements, rowBands: [] };
 }
 
-/** 📐️ True when two normalized rectangles overlap with positive area. */
+/** 🔀️ True when two normalized rectangles overlap with positive area. */
 export function rectsIntersect(a: DispositionPosition, b: DispositionPosition): boolean {
   return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
-/** 📐️ True when outer fully contains inner. */
+/** 📦️ True when outer fully contains inner. */
 export function rectContains(outer: DispositionPosition, inner: DispositionPosition): boolean {
   return inner.x >= outer.x && inner.y >= outer.y && inner.x + inner.width <= outer.x + outer.width && inner.y + inner.height <= outer.y + outer.height;
 }
@@ -145,7 +145,7 @@ export function normalizeMarquee(start: { readonly x: number; readonly y: number
   };
 }
 
-/** ↔ Crossing when dragged right-to-left (end.x < start.x), else window. */
+/** 🏁️ Crossing when dragged right-to-left (end.x < start.x), else window. */
 export function marqueeSelectionRule(start: { readonly x: number; readonly y: number }, end: { readonly x: number; readonly y: number }): MarqueeSelectionRule {
   return end.x < start.x ? "crossing" : "window";
 }
@@ -162,7 +162,7 @@ function clampFraction(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
-/** ↔ Moves a normalized rect by fractional deltas (unbounded; follows pointer across the slide). */
+/** ♾️ Moves a normalized rect by fractional deltas (unbounded; follows pointer across the slide). */
 export function translateDispositionRect(rect: DispositionPosition, dx: number, dy: number): DispositionPosition {
   return {
     x: rect.x + dx,
@@ -172,7 +172,7 @@ export function translateDispositionRect(rect: DispositionPosition, dx: number, 
   };
 }
 
-/** ⊡ Resizes a normalized rect from one handle by fractional deltas. */
+/** 🔧️ Resizes a normalized rect from one handle by fractional deltas. */
 export function resizeDispositionRect(rect: DispositionPosition, handle: DispositionResizeHandle, dx: number, dy: number, minSize: number = DISPOSITION_MIN_FRACTION): DispositionPosition {
   let { x, y, width, height } = rect;
   if (handle.includes("e")) {
@@ -208,7 +208,7 @@ export function resizeDispositionRect(rect: DispositionPosition, handle: Disposi
   return { x, y, width, height };
 }
 
-/** ⊞ Union bounding box of normalized rectangles. */
+/** 🍱️ Union bounding box of normalized rectangles. */
 export function groupBoundingRect(rects: readonly DispositionPosition[]): DispositionPosition | null {
   if (rects.length === 0) {
     return null;
@@ -216,7 +216,7 @@ export function groupBoundingRect(rects: readonly DispositionPosition[]): Dispos
   return unionDispositionPositions(rects);
 }
 
-/** ⊞ Scales one member rect when a group bounding box is resized. */
+/** 👥️ Scales one member rect when a group bounding box is resized. */
 export function scaleRectWithinGroup(rect: DispositionPosition, oldGroup: DispositionPosition, newGroup: DispositionPosition): DispositionPosition {
   if (oldGroup.width <= 0 || oldGroup.height <= 0) {
     return rect;
@@ -241,7 +241,7 @@ export const SLIDE_INTERACTIVE_ENLARGE_FRAME: DispositionPosition = {
   height: 0.85,
 };
 
-/** ⛶️ Toggles uniform enlarged slide frame vs stashed pre-enlarge rect. */
+/** ⏯️ Toggles uniform enlarged slide frame vs stashed pre-enlarge rect. */
 export function toggleEnlargeRect(current: DispositionPosition, stash: DispositionPosition | undefined): { readonly rect: DispositionPosition; readonly stash: DispositionPosition | undefined } {
   if (stash !== undefined) {
     return { rect: stash, stash: undefined };
@@ -249,7 +249,7 @@ export function toggleEnlargeRect(current: DispositionPosition, stash: Dispositi
   return { rect: SLIDE_INTERACTIVE_ENLARGE_FRAME, stash: current };
 }
 
-/** 📐️ reveal.js nested slide section with usable layout height for pointer math. */
+/** 🌳️ reveal.js nested slide section with usable layout height for pointer math. */
 export function slideCoordinateRoot(sectionEl: HTMLElement): HTMLElement {
   const arrangement = sectionEl.closest("section.presentation-arrangement--interactive");
   if (arrangement instanceof HTMLElement) {
@@ -274,7 +274,7 @@ export function slideCoordinateRoot(sectionEl: HTMLElement): HTMLElement {
   return reveal instanceof HTMLElement ? reveal : sectionEl;
 }
 
-/** 📐️ Client/layout bounds for slide-space fractions when inner reveal sections report zero height. */
+/** 🎤️ Client/layout bounds for slide-space fractions when inner reveal sections report zero height. */
 export function slideLayoutBounds(sectionEl: HTMLElement): DOMRect {
   const root = slideCoordinateRoot(sectionEl);
   const rect = root.getBoundingClientRect();
@@ -287,7 +287,7 @@ export function slideLayoutBounds(sectionEl: HTMLElement): DOMRect {
   return new DOMRect(anchor.left, anchor.top, width, height);
 }
 
-/** 🖼️ Arrangement canvas when dispositions use declared slide-space frames; otherwise the slide coordinate root. */
+/** 🏠️ Arrangement canvas when dispositions use declared slide-space frames; otherwise the slide coordinate root. */
 export function dispositionPlacementContainer(sectionEl: HTMLElement, canvasPlacement: boolean): HTMLElement {
   if (!canvasPlacement) {
     return slideCoordinateRoot(sectionEl);
@@ -301,7 +301,7 @@ export function dispositionFrameElement(root: HTMLElement): HTMLElement {
   return (root.querySelector(".presentation-disposition-frame, .presentation-morph-slot--figure, .presentation-morph-anchor") as HTMLElement | null) ?? root;
 }
 
-/** ⊡ Selection chrome style: flow slides use measured ink frame; canvas-framed slides use wrapper inset via CSS. */
+/** 🎨️ Selection chrome style: flow slides use measured ink frame; canvas-framed slides use wrapper inset via CSS. */
 export function interactiveDispositionChromeStyle(options: { readonly selected: boolean; readonly effectiveRect: DispositionPosition | undefined; readonly canvasFramed: boolean; readonly enlarged: boolean }): CSSProperties | undefined {
   const { selected, effectiveRect, canvasFramed, enlarged } = options;
   if (!selected || !effectiveRect || enlarged || canvasFramed) {
@@ -327,7 +327,7 @@ export function clientToSectionFraction(sectionEl: HTMLElement, clientX: number,
   };
 }
 
-/** 📍️ Maps an element's client rect to normalized fractions inside a section. */
+/** 📊️ Maps an element's client rect to normalized fractions inside a section. */
 export function measureElementRectInSection(element: HTMLElement, sectionEl: HTMLElement): DispositionPosition | null {
   const sectionBounds = slideLayoutBounds(sectionEl);
   if (sectionBounds.width <= 0 || sectionBounds.height <= 0) {
@@ -411,7 +411,7 @@ function tightProbeBoundsRect(element: HTMLElement, container: DOMRect): DOMRect
   return alignTightBoxWithin(element, container, probeBox);
 }
 
-/** 📍️ Ink bounds for text nodes (block headings otherwise span the full slide width). */
+/** 📖️ Ink bounds for text nodes (block headings otherwise span the full slide width). */
 export function tightElementBoundsRect(element: HTMLElement): DOMRect | null {
   const box = element.getBoundingClientRect();
   if (box.width <= 0 || box.height <= 0) {
@@ -446,7 +446,7 @@ function clientRectToSectionFraction(rect: DOMRect, sectionBounds: DOMRect): Dis
   };
 }
 
-/** 📍️ Union of morph content bounds in section space (avoids full-width flow wrappers). */
+/** ⏱️ Union of morph content bounds in section space (avoids full-width flow wrappers). */
 export function measureDispositionBoundsInSection(root: HTMLElement, sectionEl: HTMLElement): DispositionPosition | null {
   root.classList.add("presentation-interactive-disposition--measuring");
   try {
@@ -478,7 +478,7 @@ export function measureDispositionBoundsInSection(root: HTMLElement, sectionEl: 
   }
 }
 
-/** 📍️ Ink bounds as fractions inside a container (selection chrome and fill use this space). */
+/** 🔬️ Ink bounds as fractions inside a container (selection chrome and fill use this space). */
 export function measureDispositionBoundsInContainer(root: HTMLElement, containerEl: HTMLElement): DispositionPosition | null {
   root.classList.add("presentation-interactive-disposition--measuring");
   try {
@@ -510,12 +510,12 @@ export function measureDispositionBoundsInContainer(root: HTMLElement, container
   }
 }
 
-/** 📏️ True when measured fractions are large enough to drag or resize reliably. */
+/** ✅️ True when measured fractions are large enough to drag or resize reliably. */
 export function isUsableMeasuredRect(rect: DispositionPosition): boolean {
   return rect.width >= DISPOSITION_MIN_FRACTION && rect.height >= DISPOSITION_MIN_FRACTION;
 }
 
-/** 📐️ Declared placement for one resolved disposition (includes dormant morph anchors at opacity 0). */
+/** 💤️ Declared placement for one resolved disposition (includes dormant morph anchors at opacity 0). */
 export function declaredDispositionRect(disposition: RevealResolvedDisposition): DispositionPosition | undefined {
   return disposition.position;
 }
@@ -548,12 +548,12 @@ export function elementVisualScale(element: HTMLElement): number {
   return Math.min(4, Math.max(0.05, scale));
 }
 
-/** 📐️ reveal.js scales slides visually; map screen-pointer deltas to local translate pixels. */
+/** ⚖️ reveal.js scales slides visually; map screen-pointer deltas to local translate pixels. */
 export function sectionVisualScale(sectionEl: HTMLElement): number {
   return elementVisualScale(slideCoordinateRoot(sectionEl));
 }
 
-/** ↔ Node that receives flow `translate3d` during drag (offset wrapper, else content, else disposition root). */
+/** 📬️ Node that receives flow `translate3d` during drag (offset wrapper, else content, else disposition root). */
 export function flowDragTransformElement(sectionEl: HTMLElement, root: HTMLElement | null, content: HTMLElement | null): HTMLElement {
   if (root?.classList.contains("presentation-interactive-disposition--offset")) {
     return root;
@@ -567,7 +567,7 @@ export function flowDragTransformElement(sectionEl: HTMLElement, root: HTMLEleme
   return slideCoordinateRoot(sectionEl);
 }
 
-/** ↔ Pointer travel in screen px → local px for CSS translate on the flow drag target. */
+/** 🧳️ Pointer travel in screen px → local px for CSS translate on the flow drag target. */
 export function flowPointerDeltaToLocal(transformEl: HTMLElement, startClientX: number, startClientY: number, currentClientX: number, currentClientY: number): { readonly dx: number; readonly dy: number } {
   const scale = elementVisualScale(transformEl);
   const safe = Number.isFinite(scale) && scale > 0 ? Math.min(4, Math.max(0.05, scale)) : 1;
@@ -577,21 +577,21 @@ export function flowPointerDeltaToLocal(transformEl: HTMLElement, startClientX: 
   };
 }
 
-/** ↔ Flow-layout drag: local-pixel translate (x/y are px, not normalized). */
+/** 🖌️ Flow-layout drag: local-pixel translate (x/y are px, not normalized). */
 export function flowDispositionOffsetStyle(transform: DispositionPosition): CSSProperties {
   return {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   };
 }
 
-/** 📐️ True when two normalized disposition frames differ. */
+/** 🆚️ True when two normalized disposition frames differ. */
 export function dispositionPositionChanged(a: DispositionPosition, b: DispositionPosition): boolean {
   return Math.abs(a.x - b.x) > 1e-6 || Math.abs(a.y - b.y) > 1e-6 || Math.abs(a.width - b.width) > 1e-6 || Math.abs(a.height - b.height) > 1e-6;
 }
 
 const SLIDE_INTERACTION_RESET_PROXIMITY_PX = 72;
 
-/** 📐️ True when any disposition on the slide has ephemeral layout (drag, resize, enlarge, or pdf page). */
+/** 📃️ True when any disposition on the slide has ephemeral layout (drag, resize, enlarge, or pdf page). */
 export function slideHasEphemeralLayout(
   transforms: ReadonlyMap<string, DispositionTransform>,
   enlargedIds: ReadonlySet<string>,
@@ -613,7 +613,7 @@ export function slideHasEphemeralLayout(
   return false;
 }
 
-/** 📐️ True when a disposition transform differs from its declared anchor. */
+/** 🧷️ True when a disposition transform differs from its declared anchor. */
 export function dispositionHasEphemeralLayout(transform: DispositionTransform | undefined, anchorRect: DispositionPosition | undefined, measuredNatural: DispositionPosition | undefined, flowLayout: boolean): boolean {
   if (!transform) {
     return false;
@@ -627,7 +627,7 @@ export function dispositionHasEphemeralLayout(transform: DispositionTransform | 
   return true;
 }
 
-/** 🎯️ Pointer is within the top-right hotspot where the slide reset control lives. */
+/** 🔝️ Pointer is within the top-right hotspot where the slide reset control lives. */
 export function pointerNearSlideResetHotspot(section: HTMLElement, clientX: number, clientY: number, proximityPx = SLIDE_INTERACTION_RESET_PROXIMITY_PX): boolean {
   const bounds = slideLayoutBounds(section);
   const reachX = Math.max(proximityPx, bounds.width * 0.12);
@@ -635,7 +635,7 @@ export function pointerNearSlideResetHotspot(section: HTMLElement, clientX: numb
   return clientX >= bounds.right - reachX && clientY >= bounds.top && clientY <= bounds.top + reachY;
 }
 
-/** 📐️ Flow drag: preserve the wrapper footprint while ink is absolutely positioned inside. */
+/** 🌊️ Flow drag: preserve the wrapper footprint while ink is absolutely positioned inside. */
 export function flowDispositionReserveStyle(reservePx: { readonly width: number; readonly height: number }): CSSProperties {
   return {
     minWidth: reservePx.width,
@@ -643,7 +643,7 @@ export function flowDispositionReserveStyle(reservePx: { readonly width: number;
   };
 }
 
-/** 📐️ Flow transforms store pointer deltas; positioned transforms store slide-space frames. */
+/** 🗄️ Flow transforms store pointer deltas; positioned transforms store slide-space frames. */
 export function flowDispositionManipulationRect(measured: DispositionPosition, existing: DispositionPosition | undefined): DispositionPosition {
   if (existing) {
     return existing;
@@ -651,7 +651,7 @@ export function flowDispositionManipulationRect(measured: DispositionPosition, e
   return { x: 0, y: 0, width: measured.width, height: measured.height };
 }
 
-/** 📐️ True when x/y/width/height are a normalized slide-space frame (not pixel drag storage). */
+/** 🎞️ True when x/y/width/height are a normalized slide-space frame (not pixel drag storage). */
 export function isNormalizedSlideFrame(transform: DispositionPosition): boolean {
   return (
     transform.x >= 0 &&
@@ -667,7 +667,7 @@ export function isNormalizedSlideFrame(transform: DispositionPosition): boolean 
   );
 }
 
-/** ↔ True when a flow transform only stores pixel translate with unchanged measured size. */
+/** 💾️ True when a flow transform only stores pixel translate with unchanged measured size. */
 export function isFlowPixelOffsetTransform(transform: DispositionPosition, measured: DispositionPosition | undefined): boolean {
   const sizeMatches = measured === undefined ? transform.width > 0 && transform.width <= 1 && transform.height > 0 && transform.height <= 1 : transform.width === measured.width && transform.height === measured.height;
   if (!sizeMatches) {
@@ -713,7 +713,7 @@ export function interactiveDispositionContentScale(transform: DispositionPositio
   return Number.isFinite(uniform) ? uniform : null;
 }
 
-/** 🔍️ CSS transform that scales disposition content from its center during interactive resize. */
+/** 🔭️ CSS transform that scales disposition content from its center during interactive resize. */
 export function interactiveDispositionContentScaleStyle(scale: number): CSSProperties {
   return {
     transform: `scale(${scale})`,
@@ -722,7 +722,7 @@ export function interactiveDispositionContentScaleStyle(scale: number): CSSPrope
   };
 }
 
-/** 📍️ Converts a flow pixel-offset transform into a slide-space frame using measured ink bounds. */
+/** ♻️ Converts a flow pixel-offset transform into a slide-space frame using measured ink bounds. */
 export function flowPixelOffsetToSectionRect(measured: DispositionPosition, transform: DispositionPosition, sectionEl: HTMLElement, transformEl?: HTMLElement): DispositionPosition {
   const el = transformEl ?? flowDragTransformElement(sectionEl, null, null);
   const layout = slideLayoutBounds(sectionEl);

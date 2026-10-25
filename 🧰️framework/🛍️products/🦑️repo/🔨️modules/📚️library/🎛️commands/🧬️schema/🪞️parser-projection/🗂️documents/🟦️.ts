@@ -1,4 +1,4 @@
-/** 🗂️ Finds the schema modules under a scope, their normative documents and exports, and reads and writes the leaf sources the projection edits.
+/** 🧬️ Finds the schema modules under a scope, their normative documents and exports, and reads and writes the leaf sources the projection edits.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🟦️.ts
  */
 
@@ -14,10 +14,10 @@ import { runToolSyncV1 } from "../../../../../../../../🔨️modules/🏃️pro
 /** 🍃️ The leaf file name of every projected format. */
 export const LEAF = { "🦀️rust": "🦀️.rs", "🟦️typescript": "🟦️.ts", "🔗️graphql": "🔗️.graphql", "🔣️jsonschema": "🔣️.json", "🛰️protobuf": "🛰️.proto" } as const;
 
-/** 🍃️ The projected formats, in leaf order. */
+/** 🔃️ The projected formats, in leaf order. */
 export const FORMATS = Object.keys(LEAF);
 
-/** 🍃️ The facet directories a schema module nests its documents in. */
+/** 📁️ The facet directories a schema module nests its documents in. */
 const FACET_DIRS = new Set(["🔺️diff", "📸️snapshot", "💡️inferences", "🧬️mutations", "📝️text", "💾️binary"]);
 
 const SCHEMA_DIR = "🧬️schema";
@@ -77,7 +77,7 @@ export class SourceStore implements SourceReader {
     return files;
   }
 
-  /** 🍃️ The files of a leaf's module tree that belong to its own document: the tree without the leaves of other schema documents (a folder with a normative document) and everything only they import. */
+  /** 🌳️ The files of a leaf's module tree that belong to its own document: the tree without the leaves of other schema documents (a folder with a normative document) and everything only they import. */
   owned(path: string): readonly string[] {
     const cached = this.holdings.get(path);
     if (cached !== undefined) return cached;
@@ -89,7 +89,7 @@ export class SourceStore implements SourceReader {
     return own;
   }
 
-  /** 🍃️ The text of the files of a leaf's own document (see `owned`): where its parsers are defined, imported and called. */
+  /** 🗃️ The text of the files of a leaf's own document (see `owned`): where its parsers are defined, imported and called. */
   parsers(path: string): string {
     return this.owned(path).map((file) => this.read(file)).join("\n");
   }
@@ -124,7 +124,7 @@ function versionedFiles(root: string, scopes: readonly string[]): string[] | und
   return listed.status === 0 ? listed.stdout.split("\0").filter((path) => path !== "") : undefined;
 }
 
-/** 🔎️ Every normative document and package manifest below `scope` found by walking the directories, for a tree that is no git work tree. */
+/** 📋️ Every normative document and package manifest below `scope` found by walking the directories, for a tree that is no git work tree. */
 function walkedDocuments(root: string, scope: string): string[] {
   const found: string[] = [];
   const walk = (directory: string): void => {
@@ -137,7 +137,7 @@ function walkedDocuments(root: string, scope: string): string[] {
   return found;
 }
 
-/** 🗂️ The schema modules of a tree and their normative documents. A module is a `🧬️schema` folder with a normative document, outside mutation folders; its documents are its own and one per nested facet folder, plus the documents of any other folder that states an `$id` next to a TypeScript leaf (`📍️feature`, `📝️definition`, …). */
+/** 📖️ The schema modules of a tree and their normative documents. A module is a `🧬️schema` folder with a normative document, outside mutation folders; its documents are its own and one per nested facet folder, plus the documents of any other folder that states an `$id` next to a TypeScript leaf (`📍️feature`, `📝️definition`, …). */
 export class SchemaCatalog {
   private readonly documentsByModule = new Map<string, Set<string>>();
   private readonly extras: string[] = [];
@@ -174,32 +174,32 @@ export class SchemaCatalog {
     }
   }
 
-  /** 🔎️ The schema documents in folders of a module that are no facet the projection knows (`📍️feature`, `📝️definition`, …) and that no module claims: addressable by reference, never projected. */
+  /** 📂️ The schema documents in folders of a module that are no facet the projection knows (`📍️feature`, `📝️definition`, …) and that no module claims: addressable by reference, never projected. */
   extraDocuments(): readonly string[] {
     return this.extras.filter((file) => !this.promoted.has(file));
   }
 
-  /** 🔎️ Every module at or below `under`, in code-point order. */
+  /** 📍️ Every module at or below `under`, in code-point order. */
   modules(under: string): string[] {
     const prefix = under.endsWith("/") ? under : `${under}/`;
     return [...this.documentsByModule.keys()].filter((module) => module === under || module.startsWith(prefix)).sort(codePointOrder);
   }
 
-  /** 🔎️ The normative documents of one module, its own first. */
+  /** ⏮️ The normative documents of one module, its own first. */
   documents(module: string): string[] {
     const own = `${module}/${LEAF["🔣️jsonschema"]}`;
     return [own, ...[...(this.documentsByModule.get(module) ?? [])].filter((path) => path !== own).sort(codePointOrder)];
   }
 }
 
-/** 🔎️ The facet folder (relative to its module) that a document path belongs to; empty for the module's own document. */
+/** 💠️ The facet folder (relative to its module) that a document path belongs to; empty for the module's own document. */
 export const facetOf = (module: string, path: string): string => {
   const rest = path.slice(module.length + 1);
   const cut = rest.lastIndexOf("/");
   return cut < 0 ? "" : rest.slice(0, cut);
 };
 
-/** 🍃️ The absolute path of the leaf a document projects into. */
+/** 📄️ The absolute path of the leaf a document projects into. */
 export const leafPath = (root: string, module: string, facet: string, format: keyof typeof LEAF): string => join(root, module, facet, LEAF[format]);
 
 const exactIntegers = (_key: string, value: unknown, context?: { readonly source?: string }): unknown =>
@@ -287,7 +287,7 @@ export function frameworkSpecifiers(root: string, manifests: readonly string[]):
   return found;
 }
 
-/** 🗺️ Every schema document of the indexed scopes, by `$id`, so a `$ref` into another document finds that document's TypeScript leaf. */
+/** 🔨️ Every schema document of the indexed scopes, by `$id`, so a `$ref` into another document finds that document's TypeScript leaf. */
 export function buildOwnerIndex(root: string, catalog: SchemaCatalog): Map<string, Owner> {
   const index = new Map<string, Owner>();
   const specifiers = frameworkSpecifiers(root, catalog.manifests);

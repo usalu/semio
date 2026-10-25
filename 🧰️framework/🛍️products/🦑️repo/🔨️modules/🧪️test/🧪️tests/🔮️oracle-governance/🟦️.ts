@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { oracleHostPython, provisionPythonInterpreter, pythonSiteDirectories } from "../../🖥️host/🏗️materialization/🟦️.ts";
 import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, validateCaseContract, ratchetDependencies, stubSerializerBreaches, subjectHostPackagesFor, testCacheDir, testFilenameForKind, testTaxonomy, caseContractBreaches, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, noOracleMisuseBreaches, reimplementationOracleBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { contributed, exemptAreas, relativeToRepo, repoCases, repoOracleHits, repoRegistry, repoRoot, repoWideBreaches } from "../🧰️repository-scan/🟦️.ts";
+import { contributed, exemptAreas, relativeToRepo, repoCases, repoOracleHits, repoRegistry, repoRoot, repoWideBreaches, withTestArtifacts } from "../🧰️repository-scan/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧪️Tests
@@ -83,7 +83,7 @@ describe("🔒️ dependency ratchet", () => {
 });
 
 describe("🔮️ oracle evidence rules", () => {
-  test("a differential scenario with neither an oracle nor a second implementation is a contract breach", () => {
+  test("a differential scenario with neither an oracle nor a second implementation is a contract breach", () => withTestArtifacts(() => {
     const registry: import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry = { schemaVersion: 1, oracles: [], probes: [], noOracleDecisions: [{ id: "vectors-only", capabilities: ["x"], rationale: "a rationale long enough to satisfy the schema minimum length", substitutes: ["specification-vectors"] }], comparisonProfiles: [...CORE_COMPARISON_PROFILES], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], testEvidence: [], contributions: [] };
     const feature = "@capability-x @no-oracle-vectors-only @comparison-ordered-json-v1\nFeature: F\n  @id-s @level-quick @mode-differential\n  Scenario: S\n    Given a value\n";
     const taxonomy = testTaxonomy(repoRoot);
@@ -108,9 +108,9 @@ describe("🔮️ oracle evidence rules", () => {
     const breaches = validateCaseContract(repoRoot, discovered, registry);
     expect(breaches.some((breach) => breach.id === "differential-without-evidence")).toBe(true);
     rmSync(join(testCacheDir(repoRoot, "work"), "🧪️contract-self-test"), { recursive: true, force: true });
-  });
+  }));
 
-  test("a declared differential row whose adapter cannot run is a contract breach: no entry point, or no adapter in the oracle's language", () => {
+  test("a declared differential row whose adapter cannot run is a contract breach: no entry point, or no adapter in the oracle's language", () => withTestArtifacts(() => {
     const oracle = { id: "reader-x", kind: "third-party-library" as const, ecosystem: "javascript", package: "reader-x", capabilities: ["x"], comparisonProfiles: ["ordered-json-v1"], license: "MIT", testOnly: true as const };
     const registry: import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry = { schemaVersion: 1, oracles: [oracle], probes: [], noOracleDecisions: [], comparisonProfiles: [...CORE_COMPARISON_PROFILES], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], testEvidence: [], contributions: [] };
     const feature = "@capability-x @oracle-reader-x @comparison-ordered-json-v1\nFeature: F\n  @id-s @level-quick @mode-differential\n  Scenario: S\n    Given a value\n";
@@ -135,7 +135,7 @@ describe("🔮️ oracle evidence rules", () => {
     const wired = caseWith("wired", { rust: "pub fn adapter() -> Adapter {\n    Adapter::new(\"rust\")\n}\n", typescript: "export default defineTestAdapter({ implementation: \"typescript\" });\n" });
     expect(wired.filter((id) => id === "adapter-entry-point-missing" || id === "oracle-adapter-missing")).toEqual([]);
     rmSync(root, { recursive: true, force: true });
-  });
+  }));
 });
 
 describe("🌱️ native second implementation", () => {
@@ -359,7 +359,7 @@ describe("🧩️ cross-language oracle hosts", () => {
     expect(dependencyEcosystemOf("python")).toBe("python");
   }, 30_000);
 
-  test("a cache-local Python host environment reuses every distribution its base interpreter provides instead of hiding it", () => {
+  test("a cache-local Python host environment reuses every distribution its base interpreter provides instead of hiding it", () => withTestArtifacts(() => {
     const base = oracleHostPython(repoRoot);
     const read = (interpreter: string, program: string): string[] => {
       const probe = Bun.spawnSync([interpreter, "-c", program], { cwd: repoRoot, env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1" }, stdout: "pipe", stderr: "pipe" });
@@ -377,7 +377,7 @@ describe("🧩️ cross-language oracle hosts", () => {
       expect(sites.some((site) => file.startsWith(site)), `${file} does not come from ${base}'s site directories ${sites.join(", ")}`).toBe(true);
     }
     expect(read(interpreter, "import importlib.metadata as meta; print(meta.version('pillow'))")).toEqual([pillowVersion]);
-  }, 120_000);
+  }), 120_000);
 
   test("the import name defaults to the distribution name and is overridable", () => {
     expect(oracleHostModule({ implementation: "python", package: "ply-rs" })).toBe("ply_rs");
@@ -476,10 +476,10 @@ describe("🎯 reimplementation-registered-as-third-party is entry-granular, not
   type Entry = import("../../📦️packages/🟦️typescript/🟦️.ts").OracleEntry;
   type Registry = import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry;
 
-  /** 🧬️ One oracle entry, defaulting to the minimal shape the detector reads; override per test. */
+  /** ⛔️ One oracle entry, defaulting to the minimal shape the detector reads; override per test. */
   const entry = (id: string, ecosystem: string, overrides: Partial<Entry> = {}): Entry => ({ id, kind: "third-party-library", ecosystem, package: "some-package", capabilities: ["some-mutate"], comparisonProfiles: ["ordered-json-v1"], license: "MIT", testOnly: true, ...overrides });
 
-  /** 🧬️ A minimal registry naming exactly one contribution at `owner`, holding the given oracle entries. */
+  /** 📋️ A minimal registry naming exactly one contribution at `owner`, holding the given oracle entries. */
   const registryWith = (owner: string, oracles: readonly Entry[]): Registry =>
     ({
       schemaVersion: 2,

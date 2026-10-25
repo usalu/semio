@@ -6,7 +6,7 @@ use super::*;
 //#region 🔖️Manifest
 //#region 🔖️Interaction
 //#region 🔖️InteractionRefreshScope
-/// 🕹️ Every declared window body key indexed by the interaction domain that window kind declares —
+/// 🪟️ Every declared window body key indexed by the interaction domain that window kind declares —
 /// the schema-first half of [`interaction_verb_surface_scope`], read once when an app's action
 /// registry is built rather than per dispatched hover.
 pub fn interaction_window_bodies_by_domain(app: &AppDefinition) -> BTreeMap<String, Vec<String>> {
@@ -43,7 +43,7 @@ pub fn panel_leaf_body_keys(app: &AppDefinition) -> Vec<String> {
 }
 //#endregion 🔖️InteractionRefreshScope
 
-/// 🕹️ The six framework-owned Interaction actions, auto-injected into any `AppDefinition` that
+/// 🎬️ The six framework-owned Interaction actions, auto-injected into any `AppDefinition` that
 /// declares at least one `InteractionDefinition` — mirrors `history_action_definitions`/
 /// `clipboard_action_definitions`, except conditional (like `set_active_utility_action_definition`)
 /// rather than unconditional: returns `[]` when `app.interactions` is empty. `interactionSelect`/

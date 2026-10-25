@@ -1,6 +1,6 @@
 /** 🧾️ Invocation: 7 tests covering neutral Rust command recipe has closed location tokens and preserves binding-like literals; neutral Rust command recipe requires the actual owned plan before any effect; neutral Rust command DATA co… */
 import{captureRustUnitInputV1}from"../../../../📋️plan/🟦️.ts";
-import {testPythonV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{Database}from"bun:sqlite";
 import{captureRustUnitGraphInputsV1,iterateRustUnitPlansV1}from"../../../../📋️plan/🕸️graph/🟦️.ts";
 /** 🧪️ Invocation: 4 tests covering neutral Rust command DATA contracts retain complete portable bindings; neutral Rust command DATA owns exact ; neutral Rust command DATA refuses unowned plans and inert malformed bindings before effe… */

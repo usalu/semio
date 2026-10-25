@@ -62,7 +62,7 @@ impl SurfaceReconcileOracle {
         }
     }
 
-    /// ♻️ Diffs `node` against the retained record already at `id`, choosing the narrowest
+    /// 🆚️ Diffs `node` against the retained record already at `id`, choosing the narrowest
     /// representation of the change. Children are diffed first (post-order), since the parent's own
     /// children list — and therefore whether `SetChildren` fires — depends on ids children may have
     /// only just been minted with. Every one of the eight field groups

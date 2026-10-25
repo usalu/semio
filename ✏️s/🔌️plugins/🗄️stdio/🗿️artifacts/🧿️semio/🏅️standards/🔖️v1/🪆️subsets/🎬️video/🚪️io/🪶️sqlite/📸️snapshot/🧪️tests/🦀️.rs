@@ -25,7 +25,7 @@ fn sqlite_snapshot_semio_video_typed_exact_subset_dialect_and_document_guard(){l
 #[test]
 fn sqlite_snapshot_semio_video_bounded_native_text_binary_admission() {
     let snapshot=fixture();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"video".into()};
-    let provider=<SemioVideoSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let provider=<SemioVideoSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
         semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.preflight_sqlite_snapshot_encoding(encoding,control)).unwrap();
         let database=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.to_sqlite_database(control)).unwrap();
@@ -41,7 +41,7 @@ fn sqlite_snapshot_semio_video_bounded_native_text_binary_admission() {
 
 #[test]
 fn sqlite_snapshot_semio_video_explicit_controlled_native_owner(){
- use store::{pack::snapshot::ArtifactPack,pack::snapshot::ArtifactDsl};let f:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=fixture();
+ use store::{snapshot::ArtifactPack,snapshot::ArtifactDsl};let f:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=fixture();
  for payload in [store::io::IoPayload::Binary(expected.encode_pack()),store::io::IoPayload::Text(expected.print_dsl())]{
   let actual=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioVideoSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert!(actual==expected,"controlled native output differs from the authored ordinary wire");assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioVideoSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioVideoSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:f["nativeAdmission"]["tinyBudgetBytes"].as_u64().unwrap() as usize,..SqliteDatabaseLimits::default()}), native_owner)).is_err());assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioVideoSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:2,..SqliteDatabaseLimits::default()}), native_owner)).is_err());
  }
@@ -57,7 +57,7 @@ fn sqlite_snapshot_semio_video_erased_preserves_code_admitted_intermediate_owner
  use std::io::Write;use std::process::{Command,Stdio};
  let neutral:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧩️intermediate/🔣️.json")).unwrap();let input=&neutral["snapshot"];
  let stream=&input["streams"][0];let snapshot=SemioVideoSnapshot{schema:input["schema"].as_str().unwrap().into(),streams:vec![SemioVideoStream{kind:SemioVideoStreamKind::Video,codec:stream["codec"].as_str().unwrap().into(),width:u32::try_from(stream["width"].as_u64().unwrap()).unwrap(),height:u32::try_from(stream["height"].as_u64().unwrap()).unwrap(),rate:SemioRational{num:stream["rate"]["num"].as_str().unwrap().parse().unwrap(),den:stream["rate"]["den"].as_str().unwrap().parse().unwrap()},samples:Vec::new()}]};
- let provider=<SemioVideoSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"video".into()};
+ let provider=<SemioVideoSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"video".into()};
  for encoding in [SnapshotEncoding::Text,SnapshotEncoding::Binary]{
   let payload=match encoding{SnapshotEncoding::Text=>store::io::IoPayload::Text(<SemioVideoSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot)),SnapshotEncoding::Binary=>store::io::IoPayload::Binary(<SemioVideoSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot))};
   assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioVideoSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap(),snapshot);

@@ -14,7 +14,7 @@
 
 //#region 🚩️InvalidationReason
 
-/// 🚩️ Why a window needs another frame. A single [`FrameScheduler::invalidate`] call may carry
+/// ❓️ Why a window needs another frame. A single [`FrameScheduler::invalidate`] call may carry
 /// several reasons at once (bitwise-OR'd); [`FrameScheduler::should_render`] hands back every reason
 /// accumulated since the last frame was built, which is what lets N invalidations in one wake cycle
 /// coalesce into exactly one frame instead of one each.
@@ -97,7 +97,7 @@ impl FrameScheduler {
         self.dirty.insert(reason);
     }
 
-    /// ⏰️ Schedules a future wake. Multiple deadlines may be pending at once (e.g. a caret blink and
+    /// 📬️ Schedules a future wake. Multiple deadlines may be pending at once (e.g. a caret blink and
     /// a camera-settle debounce running concurrently); each fires independently at its own `due` time.
     pub fn request_deadline(&mut self, due: f64, reason: InvalidationReason) {
         self.deadlines.push(Deadline { due, reason });
@@ -122,7 +122,7 @@ impl FrameScheduler {
         self.visible
     }
 
-    /// ⏰️ The soonest still-pending deadline, if any — a caller (the OS event loop) uses this to size
+    /// ⏭️ The soonest still-pending deadline, if any — a caller (the OS event loop) uses this to size
     /// its next `WaitUntil`, independent of whether the window is currently visible.
     pub fn next_deadline(&self) -> Option<Deadline> {
         self.deadlines.iter().chain(self.keyed_deadlines.values()).copied().min_by(|a, b| a.due.total_cmp(&b.due))

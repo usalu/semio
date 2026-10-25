@@ -25,7 +25,7 @@ export type UiDirtyScope =
       readonly labels?: boolean;
     };
 
-/** 🐢️ Normalizes a possibly-absent `UiDirtyScope` — missing (older program, or a response built without one) means `full`. */
+/** 🔎️ Normalizes a possibly-absent `UiDirtyScope` — missing (older program, or a response built without one) means `full`. */
 export function resolveUiDirtyScope(scope: UiDirtyScope | undefined): UiDirtyScope {
   return scope ?? { kind: "full" };
 }
@@ -34,7 +34,7 @@ export function resolveUiDirtyScope(scope: UiDirtyScope | undefined): UiDirtySco
 export type UiDirtySection = "utilities" | "tools" | "engagements" | "measures" | "labels";
 
 /**
- * 🐢️ The selection law both shells answer to — the TypeScript twin of Rust
+ * ⚖️ The selection law both shells answer to — the TypeScript twin of Rust
  * `UiDirtyScope::wants_window_body` and siblings, driven by the same fixture
  * `🧫️fixtures/🐢️ui-dirty-scope/🔣️.json`.
  *
@@ -47,12 +47,12 @@ export function uiDirtyScopeWantsWindowBody(scope: UiDirtyScope, bodyKey: string
   return scope.kind === "full" || (scope.kind === "partial" && (scope.windowBodies ?? []).includes(bodyKey));
 }
 
-/** 🐢️ Twin of Rust `UiDirtyScope::wants_panel_body`. */
+/** 📑️ Twin of Rust `UiDirtyScope::wants_panel_body`. */
 export function uiDirtyScopeWantsPanelBody(scope: UiDirtyScope, bodyKey: string): boolean {
   return scope.kind === "full" || (scope.kind === "partial" && (scope.panelBodies ?? []).includes(bodyKey));
 }
 
-/** 🐢️ Twin of Rust `UiDirtyScope::wants_section`. */
+/** 🧩️ Twin of Rust `UiDirtyScope::wants_section`. */
 export function uiDirtyScopeWantsSection(scope: UiDirtyScope, section: UiDirtySection): boolean {
   return scope.kind === "full" || (scope.kind === "partial" && scope[section] === true);
 }
@@ -67,7 +67,7 @@ export function uiDirtyScopeAsksForNothing(scope: UiDirtyScope): boolean {
   return scope.kind === "none";
 }
 
-/** 🪟️ Structural shape of a mode-layout node, read here so a caller that only asks "which windows are
+/** 🏗️ Structural shape of a mode-layout node, read here so a caller that only asks "which windows are
  * mounted?" does not take a dependency on a renderer's whole layout type surface. */
 type ModeLayoutNodeLikeV1 = { readonly kind: string; readonly id?: string; readonly children?: readonly ModeLayoutNodeLikeV1[] };
 
@@ -93,7 +93,7 @@ export function windowLayoutWindowIdsV1(layout: unknown): ReadonlySet<string> {
   return ids;
 }
 
-/** 🪟️ Splits the declared window instances into the ones a refresh pass must fetch and the ones
+/** ✂️ Splits the declared window instances into the ones a refresh pass must fetch and the ones
  * the layout does not mount. A skipped window's CACHED body must be dropped by the caller, and that is
  * what makes the skip safe: nothing can later serve a stale body, and the pass that fetches the window
  * once it IS mounted asks with no hash and gets a whole one back. An empty `mounted` set means the

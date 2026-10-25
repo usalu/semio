@@ -21,7 +21,7 @@ export function parseLcov(text: string): LcovFileRecord[] {
   return records;
 }
 
-/** 📊️Merges LCOV records from multiple toolchain runs — line-hit counts sum, covered line numbers union. */
+/** 🔀️Merges LCOV records from multiple toolchain runs — line-hit counts sum, covered line numbers union. */
 export function mergeLcov(recordSets: LcovFileRecord[][]): Map<string, Map<number, number>> {
   const merged = new Map<string, Map<number, number>>();
   for (const records of recordSets) {
@@ -34,7 +34,7 @@ export function mergeLcov(recordSets: LcovFileRecord[][]): Map<string, Map<numbe
   return merged;
 }
 
-/** 📊️Renders a merged coverage map back to LCOV text (one `SF:`/`DA:`×N/`end_of_record` block per file, lines sorted ascending). */
+/** 🖌️Renders a merged coverage map back to LCOV text (one `SF:`/`DA:`×N/`end_of_record` block per file, lines sorted ascending). */
 export function renderLcov(merged: Map<string, Map<number, number>>): string {
   const chunks: string[] = [];
   for (const [path, lines] of merged) {
@@ -45,7 +45,7 @@ export function renderLcov(merged: Map<string, Map<number, number>>): string {
   return chunks.join("\n");
 }
 
-/** 📊️Expands a `go test -coverprofile` text block (`mode: <mode>` header, then `file:startLine.startCol,endLine.endCol numStmt count` records) into per-line LCOV records — every line in a statement's range is marked hit iff `count > 0`. */
+/** 🐹️Expands a `go test -coverprofile` text block (`mode: <mode>` header, then `file:startLine.startCol,endLine.endCol numStmt count` records) into per-line LCOV records — every line in a statement's range is marked hit iff `count > 0`. */
 export function goProfileToLcov(text: string): LcovFileRecord[] {
   const byFile = new Map<string, Map<number, number>>();
   for (const rawLine of text.split(/\r?\n/)) {

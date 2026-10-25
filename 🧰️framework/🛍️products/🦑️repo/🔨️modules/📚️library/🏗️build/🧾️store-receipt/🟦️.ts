@@ -1,4 +1,4 @@
-import type {BuildGraphV1} from "../🕸️graph/🟦️.ts";
+import type { BuildGraphV1 } from "../🕸️graph/📋️model/🟦️.ts";
 import {selectBuildTasksV1} from "../🧭️selection/🟦️.ts";
 import {selectedBuildPrerequisitesV1} from "../🧭️selection/📥️closure/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

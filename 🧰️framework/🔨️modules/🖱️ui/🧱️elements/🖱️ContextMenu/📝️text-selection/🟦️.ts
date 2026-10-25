@@ -2,7 +2,7 @@ import { type UiLabel, uiDataLabel } from "../../🎗️UiLabel/🟦️.tsx";
 import { formatKeybindingShortcut } from "../../../🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts";
 import type { ContextMenuItem } from "../🎨️item-render/🟦️.tsx";
 
-/** 📋️ Non-collapsed DOM text selection string, or empty. */
+/** 📖️ Non-collapsed DOM text selection string, or empty. */
 export function readDomTextSelection(): string {
   if (typeof window === "undefined") return "";
   const selection = window.getSelection();
@@ -10,7 +10,7 @@ export function readDomTextSelection(): string {
   return selection.toString();
 }
 
-/** 📋️ True when `target` intersects the current non-empty DOM text selection. */
+/** 🖱️ True when `target` intersects the current non-empty DOM text selection. */
 export function isPointerEventOnDomTextSelection(target: EventTarget | null): boolean {
   if (typeof window === "undefined") return false;
   if (!(target instanceof Node)) return false;
@@ -52,7 +52,7 @@ export interface TextSelectionContextMenuActions {
   readonly selectAll: () => void;
 }
 
-/** 📋️ Builds Cut/Copy/Paste/Select All rows for a DOM text selection. */
+/** 🔨️ Builds Cut/Copy/Paste/Select All rows for a DOM text selection. */
 export function buildTextSelectionContextMenuItems(input: { readonly editable: boolean; readonly hasSelection: boolean }, labels: TextSelectionContextMenuLabels, actions: TextSelectionContextMenuActions): ContextMenuItem[] {
   const items: ContextMenuItem[] = [];
   if (input.editable) {
@@ -104,7 +104,7 @@ export async function cutDomTextSelection(target: EventTarget | null, captured?:
   window.getSelection()?.deleteFromDocument();
 }
 
-/** 📋️ Pastes clipboard text into the editable target (or active element). */
+/** 📥️ Pastes clipboard text into the editable target (or active element). */
 export async function pasteDomTextSelection(target: EventTarget | null): Promise<void> {
   if (typeof navigator === "undefined" || !navigator.clipboard?.readText) return;
   const text = await navigator.clipboard.readText();

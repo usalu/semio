@@ -378,7 +378,7 @@ pub fn test_model_full_topology() -> Model {
     model.name = "Full Topology".into();
     model.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 2.0, cooling_throttle_range_k: 2.0 });
     model.plant_loops.push(PlantLoopConfig { id: EntityId(60), name: "Hot Water".into(), loop_type: PlantLoopType::Heating, supply_temperature_c: 55.0, return_temperature_c: 45.0, design_flow_kg_s: 2.0, equipment_ids: vec![EntityId(61)] });
-    model.pv_systems.push(PvSystemAssignment { id: EntityId(70), dc_capacity_w: 5000.0, area_m2: 25.0, tilt_deg: 30.0, azimuth_deg: 180.0, module_efficiency: 0.2, inverter_efficiency: 0.96, temperature_coefficient: -0.004, faiman_heat_loss_constant_w_m2k: 25.0, faiman_heat_loss_wind_w_s_m3k: 6.84, mounting: crate::model::PhotovoltaicMounting::OpenRack});
+    model.pv_systems.push(PvSystemAssignment { id: EntityId(70), dc_capacity_w: 5000.0, area_m2: 25.0, tilt_deg: 30.0, azimuth_deg: 180.0, module_efficiency: 0.2, inverter_efficiency: 0.96, temperature_coefficient: -0.004, faiman_heat_loss_constant_w_m2k: 25.0, faiman_heat_loss_wind_w_s_m3k: 6.84, mounting: PhotovoltaicMounting::OpenRack});
     model.daylight_zones.push(DaylightZoneConfig { id: EntityId(80), zone_id: EntityId(1), illuminance_target_lux: 500.0, glare_limit: 0.4, window_transmittance: 0.6 });
     model
 }

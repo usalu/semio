@@ -1,4 +1,4 @@
-//! 📏️ The surface view context's capacities, pinned against the language-neutral schema the
+//! 📌️ The surface view context's capacities, pinned against the language-neutral schema the
 //! TypeScript mirror (`parseResolvedPluginViewState` in `🛂️manifest/🟦️.ts`) and its Ajv oracle
 //! validate against — neither side may drift from `🪟️view-context/🧬️schema/🔣️.json`.
 

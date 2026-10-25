@@ -1,4 +1,4 @@
-/** 🧪️ `mutationInputDefs` (the TypeScript twin of Rust `manifest::mutation_input_defs`) over the language-agnostic corpus
+/** 📥️ `mutationInputDefs` (the TypeScript twin of Rust `manifest::mutation_input_defs`) over the language-agnostic corpus
  * `🧫️fixtures/🧫️mutation-inputs/🔣️.json`, byte-equal in canonical JSON to the `expectedInputs` the Rust reader is held to
  * by `🦀️.rs` beside this file. Oracles: the npm `jsonschema` package answers, for every declared input, whether the leaf schema accepts the values its hard
  * bounds, options and `required` admit and refuses the ones they exclude — the same verdicts `🐍️.py` asks Python

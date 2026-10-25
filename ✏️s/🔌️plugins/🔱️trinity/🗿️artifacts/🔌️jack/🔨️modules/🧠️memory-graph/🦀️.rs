@@ -57,6 +57,11 @@ impl Graph {
         Self::from_snapshot(JackSnapshot::from_json(json)?)
     }
 
+    /// 📥️ Loads the self-contained scene document [`JackQueryGraphSnapshot::to_json`] writes: manifest, nodes and edges inline.
+    pub fn load_scene_json(json: &str) -> Result<Self, TrinityRamError> {
+        JackQueryGraphSnapshot::from_json(json)?.into_graph()
+    }
+
     pub fn host_snapshot_json<C:JackContentFactory>(&self) -> Result<String, TrinityRamError> {
         self.to_snapshot::<C>().to_json()
     }

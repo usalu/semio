@@ -13,7 +13,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 static WORKSPACES: AtomicUsize = AtomicUsize::new(0);
 
-/// 🧾️ The portable human workflow vectors consumed by the terminal journeys.
+/// 🧫️ The portable human workflow vectors consumed by the terminal journeys.
 pub fn journey_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧭️journeys/🔣️.json"))).unwrap()
 }
@@ -53,11 +53,12 @@ pub struct Workspace {
 
 impl Workspace {
     /// 📂 Generates short-lived metadata under the test artifact root without copying source code.
-    pub fn new(name: &str) -> Self {
+    pub fn new(_name: &str) -> Self {
         let source = fixture_path!("../../../🧫️fixtures/🧭️journeys/🏗️workspace");
         let artifacts = PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("owning journey artifact directory required"));
         let artifacts = if artifacts.is_absolute() { artifacts } else { std::env::current_dir().unwrap().join(artifacts) };
-        let base = artifacts.join(format!("j{:x}.{:x}", std::process::id(), WORKSPACES.fetch_add(1, Ordering::Relaxed)));
+        let index = WORKSPACES.fetch_add(1, Ordering::Relaxed);
+        let base = artifacts.join(format!("j{:x}.{:x}", std::process::id(), index));
         let root = base.join("w");
         assert!(root.to_string_lossy().encode_utf16().count() <= 152, "journey roots must leave room for native logs within 256 UTF-16 units");
         std::fs::create_dir_all(root.join(".git")).expect("create the workspace");
@@ -72,7 +73,6 @@ impl Workspace {
         std::fs::write(root.join("📋️project.json"), serde_json::to_vec_pretty(&manifest).unwrap()).unwrap();
         let runtime = base.join("r");
         std::fs::create_dir_all(&runtime).unwrap();
-        println!("[DEBUG] isolated journey {name} root={}", root.display());
         Self { root: std::fs::canonicalize(&root).unwrap(), port_a, port_b, runtime }
     }
 
@@ -118,7 +118,7 @@ impl Workspace {
             assert!(length <= 256, "journey path exceeds 256 UTF-16 units: {}", path.display());
             if path.is_dir() { std::fs::read_dir(path).unwrap().map(|entry| maximum(&entry.unwrap().path())).max().unwrap_or(length).max(length) } else { length }
         }
-        println!("[DEBUG] native journey file paths maxUtf16={}", maximum(self.root.parent().unwrap()));
+        maximum(self.root.parent().unwrap());
     }
 
     /// 🧱 A workspace that also carries `count` generated tools in a second project (for the launcher search load).
@@ -162,7 +162,7 @@ impl Workspace {
         String::from_utf8_lossy(&output.stdout).into_owned()
     }
 
-    /// 🌐️ Fetches `http://127.0.0.1:port/path` with a plain socket (no HTTP library in the oracle's way).
+    /// 🔌️ Fetches `http://127.0.0.1:port/path` with a plain socket (no HTTP library in the oracle's way).
     pub fn get(port: u16, path: &str) -> Result<(u16, String), String> {
         let mut stream = TcpStream::connect_timeout(&([127, 0, 0, 1], port).into(), Duration::from_secs(3)).map_err(|error| error.to_string())?;
         stream.set_read_timeout(Some(Duration::from_secs(5))).ok();
@@ -179,6 +179,7 @@ impl Drop for Workspace {
         let _ = self.cli(&["daemon", "stop"]);
         std::thread::sleep(Duration::from_millis(300));
         if std::env::var_os("SEMIO_KEEP_WORKSPACES").is_some() { println!("[kept] {}", self.root.display()); return; }
+        let _ = std::fs::remove_dir_all(&self.runtime);
         if let Some(base) = self.root.parent() { let _ = std::fs::remove_dir_all(base); }
     }
 }

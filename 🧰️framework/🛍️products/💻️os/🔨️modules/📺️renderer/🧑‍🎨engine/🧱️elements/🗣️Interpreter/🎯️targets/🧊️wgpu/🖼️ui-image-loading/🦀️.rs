@@ -90,14 +90,12 @@ fn ui_image_looks_like_svg(url: &str, bytes: &[u8]) -> bool {
 }
 
 fn decode_raster_bytes(bytes: &[u8]) -> Option<(Vec<u8>, u32, u32)> {
-    let image = image::load_from_memory(bytes).ok()?;
-    let rgba = image.to_rgba8();
-    let (width, height) = rgba.dimensions();
-    Some((rgba.into_raw(), width, height))
+    let decoded = semio_framework_pixels::image_decoding::decode_encoded_blocking(bytes.to_vec(), semio_framework_pixels::image_decoding::EncodedDecodeLimits::MAXIMUM, &|| false).ok()?.image;
+    Some((decoded.pixels, decoded.width, decoded.height))
 }
 
 fn raster_dimensions(bytes: &[u8]) -> Option<(u32, u32)> {
-    image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok()?.into_dimensions().ok()
+    semio_framework_intrinsic_size::raster_dimensions(bytes).ok()
 }
 
 const UI_IMAGE_SVG_MAX_DIMENSION: f32 = 2048.0;

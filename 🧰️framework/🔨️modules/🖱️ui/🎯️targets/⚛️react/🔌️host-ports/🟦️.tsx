@@ -31,7 +31,7 @@ const defaultFlowHostPort = flowHostPort;
 const defaultThreeHostPort = threeHostPort;
 const defaultSceneHostPort = sceneHostPort;
 
-/** 🔌️ Overrides for {@link configureHostPorts}; an omitted/`undefined` key is left untouched (whatever port is currently installed keeps running). */
+/** 🖥️ Overrides for {@link configureHostPorts}; an omitted/`undefined` key is left untouched (whatever port is currently installed keeps running). */
 export type HostPortOverrides = Partial<{
   readonly react: ReactHostPort;
   readonly flow: FlowHostPort;
@@ -40,7 +40,7 @@ export type HostPortOverrides = Partial<{
   readonly iconRender: IconRenderPort;
 }>;
 
-/** 🔌️ Swaps one or more host ports; ESM importers cannot assign `export let` bindings directly,
+/** ☁️ Swaps one or more host ports; ESM importers cannot assign `export let` bindings directly,
  * so this is the only way to inject a test double or alternate adapter (e.g. Storybook's `withRenderer`
  * decorator) before a story renders. Ports are page-global (one React per page), so a merge — only the
  * keys you pass are touched, everything else keeps whatever is currently installed — is required rather
@@ -177,7 +177,7 @@ export function iconRenderCameraIsOrthographic(camera: IconRenderCamera): boolea
   return camera.projection === "orthographic";
 }
 
-/** 📷️ Orthographic zoom for a drei/R3F pixel frustum (`left = -width/2`, …) — twin of `worldProjectionOrthoZoom`. */
+/** 📏️ Orthographic zoom for a drei/R3F pixel frustum (`left = -width/2`, …) — twin of `worldProjectionOrthoZoom`. */
 export function iconRenderOrthoZoomForRadius(radius: number, width: number, height: number, padding = 1.25): number {
   const padded = Math.max(radius * Math.max(padding, 1), 0.5);
   const zoomX = width * 0.5 / padded;
@@ -185,7 +185,7 @@ export function iconRenderOrthoZoomForRadius(radius: number, width: number, heig
   return Math.max(Math.min(zoomX, zoomY), 1e-3);
 }
 
-/** 📷️ Perspective eye distance so a bounding sphere fits the shot frustum — twin of `world3dFrameDistanceForRadius`. */
+/** 👁️ Perspective eye distance so a bounding sphere fits the shot frustum — twin of `world3dFrameDistanceForRadius`. */
 export function iconRenderPerspectiveDistanceForRadius(radius: number, fovDeg: number, aspect: number, padding = 1.25): number {
   const vertical = Math.min(Math.max(((fovDeg * Math.PI) / 180) * 0.5, 0.02), 1.5);
   const horizontal = Math.min(Math.max(Math.atan(Math.tan(vertical) * Math.max(aspect, 0.05)), 0.02), 1.5);
@@ -219,7 +219,7 @@ export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Ob
   return { ...camera, position: [target[0] + direction.x * distance, target[1] + direction.y * distance, target[2] + direction.z * distance], target, zoom: camera.zoom };
 }
 
-/** 📷️ Builds the three.js camera for an icon shot — perspective or orthographic to match the scene lane. */
+/** 🔨️ Builds the three.js camera for an icon shot — perspective or orthographic to match the scene lane. */
 export function buildIconCamera(request: IconRenderRequest, pose: IconRenderCamera = request.camera): THREE.Camera {
   const up = pose.up ?? [0, 0, 1];
   if (iconRenderCameraIsOrthographic(pose)) {
@@ -340,7 +340,7 @@ async function applyIconRenderShape(result: IconRenderResult, shape: IconRenderS
   return { dataUrl };
 }
 
-/** 🖼️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG), reassignable via {@link configureHostPorts}. */
+/** 🖌️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG), reassignable via {@link configureHostPorts}. */
 export let iconRenderPort: IconRenderPort = {
   async render(request: IconRenderRequest): Promise<IconRenderResult> {
     const model = await loadGlbGroup(request.assetUrl);
@@ -365,12 +365,12 @@ export function iconShotFrameStyle(width: number, height: number): React.CSSProp
   };
 }
 
-/** 🖼️ Frame mask class for an icon shot shape. */
+/** 🎞️ Frame mask class for an icon shot shape. */
 export function iconShotFrameClass(shape: IconRenderShape): string {
   return shape === "ellipse" ? "rounded-[50%]" : "rounded-none";
 }
 
-/** 🖼️ Centered shot frame overlay with shape mask and W×H badge. */
+/** 🎭️ Centered shot frame overlay with shape mask and W×H badge. */
 export function IconShotFrame({
   width,
   height,

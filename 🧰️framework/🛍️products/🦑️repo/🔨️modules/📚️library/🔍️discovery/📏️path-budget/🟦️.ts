@@ -14,14 +14,14 @@ export function pathUtf16Units(path: string): number {
   return path.length;
 }
 
-/** 🔢️ UTF-8 bytes of the longest component of a path. */
+/** 🛤️ UTF-8 bytes of the longest component of a path. */
 export function pathLongestComponentUtf8Bytes(path: string): number {
   let longest = 0;
   for (const component of path.replaceAll("\\", "/").split("/")) longest = Math.max(longest, ENCODER.encode(component).length);
   return longest;
 }
 
-/** 🚧️ Budget codes violated by a repo-relative path. */
+/** 💰️ Budget codes violated by a repo-relative path. */
 export function pathBudgetCodes(path: string, policy: PathBudgetPolicy): readonly PathBudgetCode[] {
   const rows: PathBudgetCode[] = [];
   if (pathUtf16Units(path) > policy.maxPathUtf16Units) rows.push("path-too-long");

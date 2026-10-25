@@ -1,6 +1,6 @@
 /** 🔌️ Contract: the repository protocol of the graph generation. A shared reader serves a verified or current generation without ever entering the builder custody; only a stale generation under a fresh policy enters it, the facts resource is held only for the pointer swap, closures read only their own projects, texts come in English and German, and partial inference results are shaped into exactly the facts and edges each owner consumed. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdtempSync,readFileSync,realpathSync,rmSync} from "node:fs";
 import {writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
@@ -10,11 +10,11 @@ import Ajv from "ajv";
 import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import {GENERATION_MESSAGES_V1,extractGraphPolicyV1,implementationDigestV1,loadGenerationGraphV1,renderGenerationMessageV1,scopeImplementationRowsV1,sliceClosureV1,expandInChunksV1,shapeComputeResultV1} from "../🟨️.mjs";
+import {GENERATION_MESSAGES_V1,extractGraphPolicyV1,implementationDigestV1,loadGenerationGraphV1,renderGenerationMessageV1,scopeImplementationRowsV1,sliceClosureV1,expandInChunksV1,shapeComputeResultV1,survivingStubsV1} from "../🟨️.mjs";
 import {GENERATION_POLICY_V1,canonicalJsonV1} from "../../🟨️.mjs";
 import {applyOps,createMockHost,ringFiles,seed} from "../../🧪️tests/🏃️world/🟦️.ts";
 
-const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"..","..","🧪️tests","🐍️oracle.py");
+const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"..","..","🧪️tests","🐍️.py");
 const scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"graph-load-"));
 const clean=(dir:string)=>rmSync(dir,{recursive:true,force:true});
 const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
@@ -50,7 +50,7 @@ test("a shared reader never enters the builder; a stale generation does and hold
  try{
   await seed(dir,ringFiles(6));const mock=createMockHost(dir);
   const cold=await loadGenerationGraphV1(mock.host) as any;
-  expect(mock.events).toEqual(["shared","builder:wait","builder:held","builder:released"]);expect(shape(cold)).toEqual(pythonGraph(dir));expect(mock.said.at(-1)!.text).toContain("published");
+  expect(mock.events).toEqual(["shared","builder:wait","builder:held","builder:released"]);expect(shape(cold)).toEqual(pythonGraph(dir));expect(mock.said.at(-2)!.text).toContain("published");expect(mock.said.at(-1)!.text).toContain("fact index of generation 0");
   mock.events.length=0;mock.holdsLog.length=0;const warm=await loadGenerationGraphV1(mock.host) as any;
   expect(mock.events).toEqual(["shared"]);expect(mock.holdsLog).toEqual([]);expect(shape(warm)).toEqual(shape(cold));
   await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:'import "@syn/p4";\nexport const v=2;\n'}]);
@@ -183,7 +183,7 @@ test("a tool source edited every few hundred milliseconds never restarts a 300 p
   await seed(busy,files);const loaded=createMockHost(busy,options),loadedStamp=implementationDigestV1(await loaded.host.implementationRows());
   let editing=true,edits=0;const editor=(async()=>{while(editing){await sleep(250);edits++;await writeFile(join(busy,"tool/graph.mjs"),String(edits));}})();
   const begin=Date.now(),graph=await loadGenerationGraphV1(loaded.host) as any,busyMs=Date.now()-begin;editing=false;await editor;
-  expect(edits).toBeGreaterThanOrEqual(3);expect(loaded.log.length).toBe(1);expect(loaded.said.at(-1)!.text).toContain("published");expect(busyMs).toBeLessThanOrEqual(1.2*quietMs+500);
+  expect(edits).toBeGreaterThanOrEqual(3);expect(loaded.log.length).toBe(1);expect(loaded.said.at(-2)!.text).toContain("published");expect(loaded.said.at(-1)!.text).toContain("fact index of generation");expect(busyMs).toBeLessThanOrEqual(1.2*quietMs+500);
   expect(stampOf(busy)).toBe(loadedStamp);expect(Object.keys(graph.projects).length).toBe(count-broken);
   const next=createMockHost(busy,options);await loadGenerationGraphV1(next.host);
   expect(next.log).toEqual([]);expect(next.events).toEqual(["shared"]);expect(stampOf(busy)).toBe(implementationDigestV1(await next.host.implementationRows()));
@@ -207,7 +207,7 @@ for(const[index,row]of(fixture as any).closures.entries())test("selected closure
 
 test("the slice scenario corpus agrees with the python oracle",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });
 
@@ -252,3 +252,12 @@ test("compact inputs are expanded within the capacity of one capture: text bytes
  calls.length=0;const generous=await expandInChunksV1(projects,expand,{maximumProjects:32,maximumBytes:limit});expect(Object.keys(generous).length).toBe(5);expect(calls.reduce((sum,count)=>sum+count,0)).toBe(5);expect(Math.max(...calls)).toBeLessThan(5);
  await expect(expandInChunksV1({big:{sources:wide}},expand,{maximumProjects:32,maximumBytes:limit})).rejects.toThrow("text capacity exceeded");
 },120000);
+
+test("a removed owner is no stub of the next inference, so no edge refresh can ask for its published fragment",()=>{
+ const stubs={a:{root:"pkg/a"},b:{root:"pkg/b"},c:{root:"pkg/c"}};
+ expect(Object.keys(survivingStubsV1(stubs,new Set(["b"])))).toEqual(["a","c"]);
+ expect(survivingStubsV1(stubs,[])).toEqual(stubs);
+ expect(survivingStubsV1(stubs,["a","b","c","unknown"])).toEqual({});
+ const python3=Bun.spawnSync([python!,"-I","-c","import json,sys;s=json.load(sys.stdin);print(json.dumps({k:v for k,v in s['stubs'].items() if k not in s['removed']}))"],{stdin:new TextEncoder().encode(JSON.stringify({stubs,removed:["b"]}))});
+ expect(JSON.parse(python3.stdout.toString())).toEqual(survivingStubsV1(stubs,["b"]));
+});

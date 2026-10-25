@@ -2,7 +2,7 @@
 
 use super::*;
 
-/// 📦️ An owned copy of a [`ShapeRef`] variant, kept exact (never flattened to a polyline at
+/// 📹️ An owned copy of a [`ShapeRef`] variant, kept exact (never flattened to a polyline at
 /// record time) so a later transform — e.g. zooming an already-recorded scene — cannot make a
 /// circle facet; the real curve only gets tessellated once, by `vello`, at rasterization time.
 #[derive(Clone)]
@@ -201,7 +201,7 @@ impl SceneCommand {
         }
     }
 
-    /// 🖥️ Host/browser-only: replays one command into a real, growing `vello::Scene`. The
+    /// 🎞️ Host/browser-only: replays one command into a real, growing `vello::Scene`. The
     /// only place `vello`'s draw API is actually invoked — see the module docstring.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub(super) fn replay_into(&self, built: &mut backend::Scene) {

@@ -5,7 +5,7 @@ import { type ReactElement } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { COURSE_PET_KEEPOUTS, COURSE_PET_SURFACES, CourseApp, localStore, memoryStorageOrigin, readPreferences, writePreferences, type CoursePetsSource, type CoursePreferences } from "@semio-tech/course-react";
 import { COURSE, PREFERENCES, motionPreference, named, settle } from "../../🪛️pet-companions-kit/🟦️.tsx";
-import { QUIET_PRESENCE, SAMPLE, TIMING, courseProctor } from "../🟠️shared/🟦️.tsx";
+import { QUIET_PRESENCE, SAMPLE, TIMING, courseProctor } from "../🟠️harness/🟦️.tsx";
 
 /** 🔹 Registers the client tests of the 🐾️ pet companions suite. */
 export function registerClientTests(): void {

@@ -18,7 +18,7 @@ build) while [ "$#" -gt 0 ]; do [ "$1" = "-o" ] && out="$2"; shift; done; printf
 esac
 `;
 
-function synthetic(root:string):{bytes:Uint8Array;sha256:string}{
+function synthetic(root:string):{bytes:Uint8Array<ArrayBuffer>;sha256:string}{
   const stage=join(root,"stage");mkdirSync(join(stage,"go/bin"),{recursive:true});writeFileSync(join(stage,"go/bin/go"),fakeGo);chmodSync(join(stage,"go/bin/go"),0o755);
   const made=spawnSync("tar",["-czf",join(root,archive),"-C",stage,"go"]);expect(made.status).toBe(0);
   const bytes=new Uint8Array(readFileSync(join(root,archive)));return{bytes,sha256:createHash("sha256").update(bytes).digest("hex")};

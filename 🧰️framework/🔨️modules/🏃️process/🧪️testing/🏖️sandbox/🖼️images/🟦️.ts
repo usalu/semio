@@ -36,7 +36,7 @@ export function mayHoldDiskImageV1(root: string, bound = 20000): boolean {
   return false;
 }
 
-/** 🧲️ Detaches every disk image whose backing file lives under the root, nested images first. */
+/** 💿️ Detaches every disk image whose backing file lives under the root, nested images first. */
 export function detachDiskImagesUnderV1(root: string): readonly string[] {
   let real = resolve(root);
   try { real = realpathSync(real); } catch {}

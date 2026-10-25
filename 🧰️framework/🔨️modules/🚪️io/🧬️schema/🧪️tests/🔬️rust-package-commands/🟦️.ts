@@ -15,7 +15,7 @@ export async function runOwnershipScript(context: Readonly<{ root: string; repoR
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:context.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
 }
 
-/** 🏃️ Runs the `NativeScript` command under the caller's roots and invocation. */
+/** 🧲️ Runs the `NativeScript` command under the caller's roots and invocation. */
 export async function runNativeScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments:string[]): Promise<void> {
   const cargoPhase=createIssuedResourceControlV1(context.invocation,"cargo:script-entry",0);
   const{rest}=resolveTestLevel(segments);
@@ -23,7 +23,7 @@ export async function runNativeScript(context: Readonly<{ root: string; repoRoot
   await runCargoTestsV1({manifestPath:resolve(context.root,"Cargo.toml"),packages:["semio-framework-io-schema"],cwd:context.root,extraArgs:["--lib","--no-fail-fast"]},readCargoTestPolicyV1(process.env), context.repoRoot, context.invocation,cargoPhase);
 }
 
-/** 🏃️ Runs the `RefusalScript` command under the caller's roots and invocation. */
+/** ▶️ Runs the `RefusalScript` command under the caller's roots and invocation. */
 export async function runRefusalScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments:string[]): Promise<void> {
 if(segments.length)throw Error("test-refusal accepts no arguments");
 const source=resolve(context.root,"../../⚠️refusal/🧪️tests/🟦️.ts");

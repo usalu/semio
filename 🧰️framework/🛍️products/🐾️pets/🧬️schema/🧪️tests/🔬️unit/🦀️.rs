@@ -258,9 +258,10 @@ fn closed_sets_of_numbers_decode_nothing_the_contract_refuses() {
 
 #[test]
 fn every_definition_of_the_normative_file_has_a_twin_under_its_name() {
-    let source = fixture_text!("../../../../🧬️schema/🦀️.rs");
-    let declared: std::collections::BTreeSet<&str> = source
-        .lines()
+    let sources = [fixture_text!("../../../../🧬️schema/🦀️.rs"), fixture_text!("../../../../🧬️schema/🏷️scalars/🦀️.rs"), fixture_text!("../../../../🧬️schema/🦴️rig-and-animation/🦀️.rs"), fixture_text!("../../../../🧬️schema/🐾️menagerie-and-terrain/🦀️.rs"), fixture_text!("../../../../🧬️schema/🎬️stage/🦀️.rs"), fixture_text!("../../../../🧬️schema/🎞️frame/🦀️.rs")];
+    let declared: std::collections::BTreeSet<&str> = sources
+        .into_iter()
+        .flat_map(str::lines)
         .filter_map(|line| ["pub struct ", "pub enum ", "pub type "].iter().find_map(|keyword| line.strip_prefix(keyword)))
         .map(|rest| rest.split(|character: char| !character.is_ascii_alphanumeric()).next().unwrap_or_default())
         .collect();

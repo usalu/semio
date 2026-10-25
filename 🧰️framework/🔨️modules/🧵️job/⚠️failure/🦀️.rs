@@ -28,7 +28,7 @@ impl From<Fault> for OriginalTurnPrimary{fn from(primary:Fault)->Self{Self::Faul
 #[value(send_only)]
 pub struct OriginalTurnFailure{pub effects:super::RetainedCloneProgress,pub primary:OriginalTurnPrimary,pub receipt_refusal:Option<ValueError>,pub context_refusal:Option<ValueError>}
 impl OriginalTurnFailure{
- /// 📊️ Borrows the complete enclosing effect span independently of its last semantic cause.
+ /// ⏳️ Borrows the complete enclosing effect span independently of its last semantic cause.
  pub fn retained_progress(&self)->super::RetainedCloneProgress{self.effects}
  /// 🧾️ Records the actual failed child effects while keeping its primary and any receipt refusal.
  pub fn debit_original(primary:impl Into<OriginalTurnPrimary>,cx:&mut StepContext<'_>)->Self{let primary=primary.into();Self{effects:primary.retained_progress(),receipt_refusal:cx.consume_retained(primary.retained_progress()).err(),context_refusal:None,primary}}

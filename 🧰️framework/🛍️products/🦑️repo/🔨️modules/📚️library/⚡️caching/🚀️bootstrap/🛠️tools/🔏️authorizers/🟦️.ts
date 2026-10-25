@@ -1,3 +1,4 @@
+const viaV1=new Map<string,string>(),viaChainV1=(via:ReadonlyMap<string,string>,from:string):string=>{const out=[from];for(let at=via.get(from);at!==undefined&&out.length<14;at=via.get(at))out.push(at);return out.join(" <- ");};
 import{nxAuthorizerWorkspaceCandidateV1,nxAuthorizerWorkspaceIndexV1,resolveNxAuthorizerWorkspaceV1,type NxAuthorizerResolutionV1}from"./📦️workspace/🟦️.ts";
 import authorizerSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {closureLiteralSitesV1,closurePackageNameV1,closureSpecifierKindV1,closureTargetSchemesV1} from "./🧭️sites/🟦️.ts";
@@ -5,7 +6,7 @@ import{constants}from"node:fs";
 import {createHash} from "node:crypto";
 import {lstat,open,opendir,readFile,realpath} from "node:fs/promises";
 import {dirname,extname,isAbsolute,join,relative,resolve} from "node:path";
-import { runtimeResolveV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeResolveV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🧬️ Exact runtime source names and bytes compiled into one release toolkit. */
 export interface NxAuthorizerSourceManifestV1 {readonly version:1;readonly mode:"release";readonly entry:string;readonly resolutions:readonly NxAuthorizerResolutionV1[];readonly sources:readonly {readonly path:string;readonly sha256:string}[];}
@@ -50,7 +51,7 @@ async function discoveryAncestorsV1(root:string,path:string,signal:AbortSignal):
  sourcePath(root,path);const rows=[],parts=path.split("/");let target=root;for(let index=-1;index<parts.length;index++){signal.throwIfAborted();if(index>=0)target=join(target,parts[index]!);if(target.length>256)throw Error("Bounded authorizer DATA ancestry required");const facts=await lstat(target,{bigint:true});signal.throwIfAborted();if(!facts.isDirectory()||facts.isSymbolicLink())throw Error("No-follow authorizer DATA directory required");rows.push({path:target,stamp:discoveryStampV1(facts),device:facts.dev,inode:facts.ino});}return rows;
 }
 async function discoveryDirectoryHoldsV1(rows:readonly{path:string;stamp:string;device:bigint;inode:bigint}[],signal:AbortSignal):Promise<void>{for(let index=0;index<rows.length;index++){const row=rows[index]!;signal.throwIfAborted();const facts=await lstat(row.path,{bigint:true});signal.throwIfAborted();if(!facts.isDirectory()||facts.isSymbolicLink()||facts.dev!==row.device||facts.ino!==row.inode||index===rows.length-1&&discoveryStampV1(facts)!==row.stamp)throw Error("Authorizer DATA directory changed");}}
-/** 🧬️ Discovers bounded module-owned JSON DATA without granting executable import authority. */
+/** 🔣️ Discovers bounded module-owned JSON DATA without granting executable import authority. */
 async function runtimeDataDiscoveryV1(root:string,path:string,source:string,signal:AbortSignal,state:RuntimeDataDiscoveryV1):Promise<string[]>{
  sourcePath(root,path);signal.throwIfAborted();if(!/\.[cm]?[jt]sx?$/u.test(path))return[];const rows=new Set<string>(),directory=dirname(path)==="."?"":dirname(path)+"/",add=(path:string,facts:Awaited<ReturnType<typeof lstat>>)=>{if(!facts.isFile()||facts.isSymbolicLink()||facts.size<0||facts.size>4_194_304n)throw Error("Bounded ordinary authorizer JSON DATA required");if(!state.results.has(path)){if(state.results.size>=discoveryPolicy.maximumResults||state.bytes+Number(facts.size)>discoveryPolicy.maximumDeclaredBytes)throw Error("Authorizer DATA result capacity exceeded");state.results.add(path);state.bytes+=Number(facts.size);}rows.add(path);},pending=[{path:directory+"🧬️schema",depth:0}];
  while(pending.length){signal.throwIfAborted();const current=pending.pop()!;sourcePath(root,current.path);if(current.depth>discoveryPolicy.maximumDepth)throw Error("Authorizer DATA directory depth exceeded");if(state.directories.has(current.path))continue;let ancestry;try{ancestry=await discoveryAncestorsV1(root,current.path,signal);}catch(error){signal.throwIfAborted();if((error as NodeJS.ErrnoException).code==="ENOENT")continue;throw error;}if(state.directories.size>=discoveryPolicy.maximumDirectories)throw Error("Authorizer DATA directory capacity exceeded");state.directories.add(current.path);signal.throwIfAborted();const stream=await opendir(sourcePath(root,current.path),{bufferSize:1});let failed=false,primary:unknown;
@@ -61,7 +62,7 @@ async function runtimeDataDiscoveryV1(root:string,path:string,source:string,sign
 }
 /** 📥️ Uses the system compiler's import scanner while refusing unresolved runtime dependencies. */
 function installedPathV1(inside:string):boolean{return !inside.startsWith("../")&&inside.split("/").includes("node_modules");}
-/** 📦️ Pins one installed third-party package by name and installed version, the declared dependency image a command closure resolves natively. */
+/** 🎉️ Pins one installed third-party package by name and installed version, the declared dependency image a command closure resolves natively. */
 async function installedMarkV1(root:string,inside:string,specifier:string,versions:Map<string,string>,signal:AbortSignal):Promise<string>{
  const parts=inside.split("/"),at=parts.lastIndexOf("node_modules"),name=closurePackageNameV1(specifier),count=name.split("/").length,directory=parts.slice(0,at+1+count).join("/");
  let version=versions.get(directory);if(version===undefined){const manifest=join(root,directory,"package.json"),facts=await lstat(manifest);signal.throwIfAborted();if(!facts.isFile()||facts.size>1_048_576)throw Error("Bounded installed package manifest required: "+directory);const value:unknown=JSON.parse(Buffer.from(await readFile(manifest)).toString("utf8"));signal.throwIfAborted();version=value!==null&&typeof value==="object"&&typeof (value as {version?:unknown}).version==="string"?(value as {version:string}).version:"unversioned";versions.set(directory,version);}
@@ -84,9 +85,9 @@ export async function captureNxAuthorizerSourcesV1(workspace:string,entry:string
     try{const rootBytes=await capture("package.json"),located=await runtimeResolveV1(specifier,dirname(join(root,path)));signal.throwIfAborted();const actual=await realpath(located),physicalRoot=await realpath(root);signal.throwIfAborted();const candidate=relative(physicalRoot,actual).replaceAll("\\","/");
      if(installed&&installedPathV1(candidate)){marks.set(specifier,await installedMarkV1(root,candidate,specifier,versions,signal));continue;}
      sourcePath(root,candidate);const manifest=nxAuthorizerWorkspaceCandidateV1(rootBytes,candidate);await capture(manifest);signal.throwIfAborted();child=resolveNxAuthorizerWorkspaceV1(nxAuthorizerWorkspaceIndexV1(contents),specifier);if(child!==candidate)throw Error("Located package differs from its captured exact export");resolutions.set(specifier,child);
-    }catch(error){signal.throwIfAborted();if(row.lenient)continue;throw error;}
+    }catch(error){signal.throwIfAborted();if(row.lenient)continue;throw error instanceof Error?new Error(error.message+" (importer chain "+viaChainV1(viaV1,path)+", specifier "+specifier+")",{cause:error}):error;}
    }}
-   sourcePath(root,child);pending.push(child);
+   sourcePath(root,child);if(!viaV1.has(child))viaV1.set(child,path);pending.push(child);
   }
  }
  const manifest:NxAuthorizerSourceManifestV1=Object.freeze({version:1,mode:"release",entry,resolutions:Object.freeze([...resolutions].sort(([left],[right])=>compare(left,right)).map(([specifier,path])=>Object.freeze({specifier,path}))),sources:Object.freeze([...files].sort(([left],[right])=>compare(left,right)).map(([path,sha256])=>Object.freeze({path,sha256})))});
@@ -100,7 +101,7 @@ export function nxAuthorizerImportProjectionV1(workspace:string,bytes:ReadonlyMa
   if(derived!==undefined)for(const target of derived.roots.get(path)??[])if(bytes.has(target)){sourcePath(root,target);imports[closureTargetSchemesV1.root+target]=target;}}
   result.set(path,Object.freeze(imports));}
  return result;}
-/** 🧷️ Reads import edges only from an actual privately issued compiler capture. */
+/** 🔗️ Reads import edges only from an actual privately issued compiler capture. */
 export function nxAuthorizerCapturedImportsV1(workspace:string,source:NxAuthorizerSourcesV1):ReadonlyMap<string,Readonly<Record<string,string>>>{return nxAuthorizerImportProjectionV1(workspace,nxAuthorizerCapturedBytesV1(source),source.manifest.resolutions,capturedInstalled.get(source));}
 /** ✅️ Re-enumerates the actual runtime closure before publishing compiled authorizers. */
 export async function nxAuthorizerSourcesHoldV1(root:string,original:NxAuthorizerSourcesV1,signal:AbortSignal):Promise<boolean>{

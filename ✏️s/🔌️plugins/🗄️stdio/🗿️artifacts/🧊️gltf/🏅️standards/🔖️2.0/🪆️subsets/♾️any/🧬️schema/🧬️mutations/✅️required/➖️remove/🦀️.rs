@@ -30,7 +30,7 @@ pub fn plan(p: &GltfUnrequireExtensionPayload, base: &GltfSnapshot) -> Result<Gl
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfUnrequireExtensionPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::add_required_extension::AddRequiredExtensionMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -75,7 +75,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for RemoveRequiredExtensionMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<RemoveRequiredExtensionMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<RemoveRequiredExtensionMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::add_required_extension::AddRequiredExtensionMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

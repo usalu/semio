@@ -81,7 +81,7 @@ fn type_mentions_ident(ty: &Type, ident: &syn::Ident) -> bool {
 }
 
 
-/// 🧭️ Packed records cannot lend aligned references to their initialized fields.
+/// 📹️ Packed records cannot lend aligned references to their initialized fields.
 pub(crate) fn require_aligned_fields(input:&DeriveInput,owner:&str)->syn::Result<()>{for attribute in input.attrs.iter().filter(|a|a.path().is_ident("repr")){let representations=attribute.parse_args_with(syn::punctuated::Punctuated::<syn::Meta,syn::Token![,]>::parse_terminated)?;if representations.iter().any(|r|r.path().is_ident("packed")){return Err(syn::Error::new_spanned(attribute,format!("{owner} requires naturally aligned fields and refuses packed records")));}}Ok(())}
 
 fn shared_original_retirement(input:&DeriveInput,value_crate:&syn::Path,generics:&syn::Generics)->syn::Result<(TokenStream,TokenStream)>{

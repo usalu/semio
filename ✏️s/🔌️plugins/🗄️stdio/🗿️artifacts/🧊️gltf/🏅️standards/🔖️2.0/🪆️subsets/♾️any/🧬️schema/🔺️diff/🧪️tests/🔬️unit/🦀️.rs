@@ -13,6 +13,7 @@ use framework_schema::ArtifactSchema;
 use protocol::os_spr::command::DiffAlgebra;
 #[allow(unused_imports)]
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use crate::standards::v2_0::subsets::any::schema::diff::*;
 use crate::standards::v2_0::subsets::any::schema::diff_aggregate::*;
 use crate::standards::v2_0::subsets::any::schema::snapshot_root::STDIO_GLTF_DOCUMENT_SCHEMA;

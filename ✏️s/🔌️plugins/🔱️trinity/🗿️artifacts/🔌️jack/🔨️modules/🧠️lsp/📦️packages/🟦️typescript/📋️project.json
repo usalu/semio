@@ -1,0 +1,23 @@
+{
+  "name": "@semio-tech/trinity-jack-lsp-worker",
+  "$schema": "../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/🔖️protocol/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/🧪️tests/**/*"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

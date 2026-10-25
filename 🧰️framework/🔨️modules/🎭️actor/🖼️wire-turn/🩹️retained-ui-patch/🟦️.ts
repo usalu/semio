@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** 🩹️ Retained-mode `UiPatch` ops decoded from the wire and applied onto a kept tree. */
+/** 💊️ Retained-mode `UiPatch` ops decoded from the wire and applied onto a kept tree. */
 // #endregion 🧲️Header
 
 // #region 🔌️Imports

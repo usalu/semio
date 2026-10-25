@@ -53,6 +53,8 @@
     {"id": "repo:ticket.close:26/09/23/DEMO", "label": "tickets / 26/09/23/DEMO [open] Demo ticket / close"},
     {"id": "repo:ticket.files:26/09/23/DEMO", "label": "tickets / 26/09/23/DEMO [open] Demo ticket / files"},
     {"id": "repo:ticket.show:26/09/23/DEMO", "label": "tickets / 26/09/23/DEMO [open] Demo ticket / show"},
+    {"id": "repo:draft.discard", "label": "draft / discard"},
+    {"id": "repo:draft.start", "label": "draft / start"},
     {"id": "repo:goals.list", "label": "goals / list"},
     {"id": "repo:goals.tree", "label": "goals / tree"},
     {"id": "repo:analyze:all", "label": "analyze / all"},
@@ -78,7 +80,7 @@
         "ids": [
           "@fx/quiz:test"
         ],
-        "caption": "1 of 24 commands · repo run @fx/quiz:test",
+        "caption": "1 of 26 commands · repo run @fx/quiz:test",
         "input": "quiz test",
         "outcome": null
       }

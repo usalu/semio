@@ -18,7 +18,7 @@ fn undo_tail_first(mut state: EquationSnapshot, undo: &[EquationMutation]) -> Eq
 async fn a_graph_diff_carries_sparse_slots_and_apply_re_derives_the_triple() {
     let mutation = EquationMutation::UpdateGraphAlgorithm(update_graph_algorithm::UpdateGraphAlgorithm { new_algorithm: "bfs".into(), new_algorithm_seed: None });
     let base = EquationSnapshot::default();
-    let outcome = Mutation::diff(&mutation, &base);
+    let outcome = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
     let diff = outcome.diff();
     assert_eq!(diff.algorithm.as_deref(), Some("bfs"));
     let applied = protocol::apply_diff_cold(&diff, &base).expect("valid mutation diff");
@@ -293,7 +293,7 @@ async fn create_node_duplicate_id_fatal_never_applies() {
     let base = EquationSnapshot::default();
     let existing_id = base.graph.nodes[0].id.clone();
     let mutation = EquationMutation::CreateNode(create_node::CreateNode { id: existing_id, label: "dup".into(), x: 0.0, y: 0.0, index: None });
-    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base)).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -301,14 +301,14 @@ async fn connect_nodes_duplicate_id_fatal_never_applies() {
     let base = EquationSnapshot::default();
     let existing_edge_id = base.graph.edges[0].id.clone();
     let mutation = EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: existing_edge_id, source: "a".into(), target: "d".into(), index: None });
-    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_point_positions_non_finite_fatal_never_applies() {
     let base = EquationSnapshot::default();
     let mutation = EquationMutation::SetPointPositions(set_point_positions::SetPointPositions { positions: vec![set_point_positions::EquationPointPosition { index: 0, x: f64::NAN, y: 0.0 }] });
-    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base)).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -316,7 +316,7 @@ async fn change_coefficient_zero_denominator_fatal_never_applies() {
     let base = EquationSnapshot::default();
     let label = base.equation.expr.label;
     let mutation = EquationMutation::ChangeCoefficient(change_coefficient::ChangeCoefficient { label, numer: "1".into(), denom: "0".into() });
-    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base)).await;
 }
 //#endregion 🔖️OutcomeLaws
 

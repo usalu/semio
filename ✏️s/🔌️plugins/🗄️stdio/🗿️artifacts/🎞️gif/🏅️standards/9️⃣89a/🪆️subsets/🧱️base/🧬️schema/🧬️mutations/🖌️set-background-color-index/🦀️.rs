@@ -9,7 +9,7 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-background-color-index")]
 pub struct SetBackgroundColorIndex {
-    pub(crate) index: u8,
+    pub index: u8,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetBackgroundColorIndex {

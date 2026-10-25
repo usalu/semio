@@ -1,4 +1,4 @@
-import{withCompilerWorkspaceWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+import{withCompilerWorkspaceSharedWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import{repositoryExactCargoProfileV1}from"./📋️profile/🟦️.ts";
 import {join} from "node:path";
 import {runOwnedCommand,captureOwnedProcess,type OwnedCommandOptions,type OwnedProcessCaptureOptions,type OwnedProcessCaptureResult} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -69,7 +69,7 @@ export async function runRepositoryExactCargoLaws(options:RepositoryExactCargoLa
       if(command!=="cargo"||args[0]!=="test"||capture.invocation!==invocation)throw Error("Original exact Cargo dependency operation required");
       const selector=args.indexOf("--manifest-path"),manifest=args[selector+1];
       if(selector<0||!manifest||!Object.values(manifestPaths).includes(manifest))throw Error("Original exact Cargo dependency manifest required");
-      return withRepositoryCargoInputsV1({invocation:invocation,consumption:{kind:"compiler",producer:"artifact",operation:"test"},workspace:root,cwd:root,manifest,args,network,control:phaseControl,storage:store.storage,environment},input=>{if(input.selections.length!==1)throw Error("One issued exact Cargo manifest selection required");return withCompilerWorkspaceWriteV1(store.storage,join(root,".cache/b/l/m/data"),input.control,()=>body({arguments:input.selections[0]!.arguments,environment:input.environment,control:input.control}));});
+      return withRepositoryCargoInputsV1({invocation:invocation,consumption:{kind:"compiler",producer:"artifact",operation:"test"},workspace:root,cwd:root,manifest,args,network,control:phaseControl,storage:store.storage,environment},input=>{if(input.selections.length!==1)throw Error("One issued exact Cargo manifest selection required");return withCompilerWorkspaceSharedWriteV1(store.storage,join(root,".cache/b/l/m/data"),input.control,()=>body({arguments:input.selections[0]!.arguments,environment:input.environment,control:input.control}));});
     },
     probe:host.capture,
   };

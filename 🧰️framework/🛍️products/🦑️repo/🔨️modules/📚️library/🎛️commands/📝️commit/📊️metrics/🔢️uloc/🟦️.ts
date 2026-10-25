@@ -58,7 +58,7 @@ function jsonUlocUnits(text: string): JsonUlocUnits | null {
   }
 }
 
-/** 🧮️Counts JSON additions, semantic edits, and removals in the same key-based ULOC unit as totals. */
+/** 🔣️Counts JSON additions, semantic edits, and removals in the same key-based ULOC unit as totals. */
 export function diffJsonUloc(before: string | null, after: string | null): { added: number; removed: number; edited: number } | null {
   const beforeUnits = before === null ? new Map() : jsonUlocUnits(before);
   const afterUnits = after === null ? new Map() : jsonUlocUnits(after);

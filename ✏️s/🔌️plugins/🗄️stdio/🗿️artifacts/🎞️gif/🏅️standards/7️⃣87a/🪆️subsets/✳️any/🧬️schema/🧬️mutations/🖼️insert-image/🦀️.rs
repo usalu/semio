@@ -9,9 +9,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "insert-image")]
 pub struct InsertImage {
-    pub(crate) index: usize,
+    pub index: usize,
     #[dsl(block)]
-    pub(crate) image: GifImage,
+    pub image: GifImage,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertImage {

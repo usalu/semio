@@ -1,4 +1,4 @@
-//! 🧬️ Versioned owned semantic UI TypeScript projection.
+//! 🌿️ Versioned owned semantic UI TypeScript projection.
 //#region 🔖️TypescriptProjection
 
 use std::collections::HashSet;

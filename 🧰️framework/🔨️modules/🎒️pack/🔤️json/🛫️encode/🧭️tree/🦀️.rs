@@ -66,12 +66,12 @@ impl semio_framework_value::FromValue for ArtifactCanonicalDecimalU64 {
         }
     }
 }
-/// 🔤️ A `i64` whose canonical JSON wire is its decimal string (`"-9223372036854775808"`), for exact signed64 values.
+/// 🖊️ A `i64` whose canonical JSON wire is its decimal string (`"-9223372036854775808"`), for exact signed64 values.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct ArtifactCanonicalDecimalI64(pub i64);
 impl ArtifactCanonicalDecimalI64 {
-    /// 🔗️ Views a native `i64` field in place as its decimal-string role, so `#[canonical_json(decimal_string)]` projects the original field without a copy.
+    /// 🖋️ Views a native `i64` field in place as its decimal-string role, so `#[canonical_json(decimal_string)]` projects the original field without a copy.
     pub const fn from_ref(value: &i64) -> &Self {
         unsafe { &*(value as *const i64).cast::<Self>() }
     }
@@ -98,7 +98,7 @@ impl semio_framework_value::FromValue for ArtifactCanonicalDecimalI64 {
 #[repr(transparent)]
 pub struct ArtifactCanonicalHexWordF32(pub f32);
 impl ArtifactCanonicalHexWordF32 {
-    /// 🔗️ Views a native `f32` field in place as its hex-word role, so `#[canonical_json(hex_word)]` projects the original field without a copy.
+    /// 🔡️ Views a native `f32` field in place as its hex-word role, so `#[canonical_json(hex_word)]` projects the original field without a copy.
     pub const fn from_ref(value: &f32) -> &Self {
         unsafe { &*(value as *const f32).cast::<Self>() }
     }
@@ -120,12 +120,12 @@ impl semio_framework_value::FromValue for ArtifactCanonicalHexWordF32 {
         }
     }
 }
-/// 🔢️ A fixed `[f32; N]` whose canonical JSON wire is an array of hex-word strings.
+/// 🧮️ A fixed `[f32; N]` whose canonical JSON wire is an array of hex-word strings.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(transparent)]
 pub struct ArtifactCanonicalHexWordArray<const N: usize>(pub [f32; N]);
 impl<const N: usize> ArtifactCanonicalHexWordArray<N> {
-    /// 🔗️ Views a native `[f32; N]` field in place as its hex-word array role.
+    /// 🗃️ Views a native `[f32; N]` field in place as its hex-word array role.
     pub const fn from_ref(value: &[f32; N]) -> &Self {
         unsafe { &*(value as *const [f32; N]).cast::<Self>() }
     }
@@ -134,12 +134,12 @@ impl<const N: usize> ArtifactCanonicalJsonTree for ArtifactCanonicalHexWordArray
     fn canonical_tree_node(&self) -> Result<Node<'_>, ValueError> { Ok(Node::Array(N)) }
     fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, ValueError> { self.0.get(ordinal).map(|value| ArtifactCanonicalHexWordF32::from_ref(value) as &dyn ArtifactCanonicalJsonTree).ok_or_else(|| refusal("canonical hex word array ordinal is absent")) }
 }
-/// 🔢️ A `Vec<f32>` whose canonical JSON wire is an array of hex-word strings.
+/// 📋️ A `Vec<f32>` whose canonical JSON wire is an array of hex-word strings.
 #[derive(Clone, Debug, Default, PartialEq)]
 #[repr(transparent)]
 pub struct ArtifactCanonicalHexWordList(pub Vec<f32>);
 impl ArtifactCanonicalHexWordList {
-    /// 🔗️ Views a native `Vec<f32>` field in place as its hex-word list role.
+    /// 🗒️ Views a native `Vec<f32>` field in place as its hex-word list role.
     pub const fn from_ref(value: &Vec<f32>) -> &Self {
         unsafe { &*(value as *const Vec<f32>).cast::<Self>() }
     }
@@ -207,19 +207,19 @@ impl<K:AsRef<str>+Ord+Sync+'static,V:ArtifactCanonicalJsonTree> ArtifactCanonica
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.values().nth(ordinal).map(|value|value as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical ordered map ordinal is absent"))}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.keys().nth(ordinal).map(|key|ArtifactCanonicalJsonText::from(key.as_ref())).ok_or_else(||refusal("canonical ordered map key is absent"))}
 }
-/// 🗝️ First-party retained dictionaries lend their original ranked key and value without allocating a projection.
+/// 🔐️ First-party retained dictionaries lend their original ranked key and value without allocating a projection.
 impl<K:AsRef<str>+Ord+Sync+'static,V:ArtifactCanonicalJsonTree> ArtifactCanonicalJsonTree for semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<K,V>{
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Object(self.len()))}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get_index(ordinal).map(|(_,value)|value as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical retained map ordinal is absent"))}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.get_index(ordinal).map(|(key,_)|ArtifactCanonicalJsonText::from(key.as_ref())).ok_or_else(||refusal("canonical retained map key is absent"))}
 }
-/// 🗝️ Ordered immutable maps render as JSON objects in their own rank order, matching their `ToValue` wire; ordinal access is one bounded ranked visit.
+/// 🗺️ Ordered immutable maps render as JSON objects in their own rank order, matching their `ToValue` wire; ordinal access is one bounded ranked visit.
 impl<V:ArtifactCanonicalJsonTree+Send> ArtifactCanonicalJsonTree for semio_framework_value_ordered::ordered::OrderedMap<V> {
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Object(self.len()))}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.entry_at_rank(ordinal).map(|(_,value)|value as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical ordered root ordinal is absent"))}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.entry_at_rank(ordinal).map(|(key,_)|ArtifactCanonicalJsonText::from(key.as_str())).ok_or_else(||refusal("canonical ordered root key is absent"))}
 }
-/// 🗝️ Ordered immutable string sets render as JSON string arrays in rank order, matching their `ToValue` wire.
+/// 🔃️ Ordered immutable string sets render as JSON string arrays in rank order, matching their `ToValue` wire.
 impl ArtifactCanonicalJsonTree for semio_framework_value_ordered::ordered::OrderedSet {
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Array(self.len()))}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.key_at_rank(ordinal).map(|key|key as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical ordered set ordinal is absent"))}
@@ -228,7 +228,7 @@ fn hashed_entry<K:AsRef<str>+Ord,V,S>(map:&std::collections::HashMap<K,V,S>,ordi
  if ordinal>=map.len(){return None;}
  map.iter().find(|(candidate,_)|map.keys().filter(|other|other.as_ref()<candidate.as_ref()).count()==ordinal)
 }
-/// 🗝️ Hashed maps render in canonical byte-ordered key order, independent of their hasher, by ranking each key without allocating.
+/// 🗄️ Hashed maps render in canonical byte-ordered key order, independent of their hasher, by ranking each key without allocating.
 impl<K:AsRef<str>+Ord+std::hash::Hash+Eq+Sync+'static,V:ArtifactCanonicalJsonTree,S:Sync+'static> ArtifactCanonicalJsonTree for std::collections::HashMap<K,V,S> {
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Object(self.len()))}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{hashed_entry(self,ordinal).map(|(_,value)|value as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical hashed map ordinal is absent"))}
@@ -273,7 +273,7 @@ impl ArtifactCanonicalJsonTree for semio_framework_value::DslValue {
 
 /// 🚚️ The smallest output window in which the bulk path is attempted; smaller windows keep the one-event-per-turn walk.
 const FLAT_MINIMUM_BYTES: usize = 32;
-/// 🚚️ The deepest subtree the bulk path encodes inside one turn.
+/// 📏️ The deepest subtree the bulk path encodes inside one turn.
 const FLAT_DEPTH: usize = 16;
 
 fn put(output: &mut [u8], at: &mut usize, byte: u8) -> bool {
@@ -290,7 +290,7 @@ fn flat_text(text: ArtifactCanonicalJsonText<'_>, output: &mut [u8]) -> Result<O
     Ok(put(output, &mut at, b'"').then_some(at))
 }
 
-/// 🚚️ Encodes one whole subtree into `output` with exactly the bytes the one-event walk emits, or returns `None` when it does not fit or exceeds the bulk depth, leaving the caller on the walk.
+/// 📤️ Encodes one whole subtree into `output` with exactly the bytes the one-event walk emits, or returns `None` when it does not fit or exceeds the bulk depth, leaving the caller on the walk.
 fn flat_encode(tree: &dyn ArtifactCanonicalJsonTree, output: &mut [u8], depth: usize) -> Result<Option<usize>, ValueError> {
     if depth > FLAT_DEPTH { return Ok(None); }
     let mut at = 0;
@@ -323,7 +323,7 @@ fn flat_encode(tree: &dyn ArtifactCanonicalJsonTree, output: &mut [u8], depth: u
     }
 }
 
-/// 🚚️ Moves the frame forward by whole subtrees inside one turn: a node that fits the window completes at once, and an array resumes as a run of children, so contiguous scalar runs cost one turn per window instead of one per element.
+/// ⏩️ Moves the frame forward by whole subtrees inside one turn: a node that fits the window completes at once, and an array resumes as a run of children, so contiguous scalar runs cost one turn per window instead of one per element.
 fn flat_run(frame: &mut NativeFrame, output: &mut [u8], grant: RetainedCloneGrant) -> Result<Option<usize>, ValueError> {
     let window = output.len().min(grant.maximum_copy_bytes);
     if window < FLAT_MINIMUM_BYTES { return Ok(None); }
@@ -422,7 +422,7 @@ impl NativeFrame {
 /// 📊️ One admitted native action reports only its initialized byte prefix and common ownership receipt.
 pub struct ArtifactCanonicalJsonTreeStep { pub ownership: RetainedCloneStep, pub written_bytes: usize }
 
-/// 🧭️ Owns actual immutable-root aliases in a genuinely paged traversal frontier without path rescans.
+/// 🌳️ Owns actual immutable-root aliases in a genuinely paged traversal frontier without path rescans.
 pub struct ArtifactCanonicalJsonTreeCursor {
     #[doc(hidden)] pub frames: PagedList<NativeFrame, {usize::MAX}>,
     #[doc(hidden)] pub pending: Option<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>,

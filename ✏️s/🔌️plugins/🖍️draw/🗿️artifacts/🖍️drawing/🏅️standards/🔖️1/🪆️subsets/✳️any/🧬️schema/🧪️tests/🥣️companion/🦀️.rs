@@ -53,7 +53,19 @@ pub mod io {
             pub mod tests;
         }
     }
+    #[path = "."]
+    pub mod sqlite {
+        #[path = "."]
+        pub mod snapshot {
+            #[path = "../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+            pub mod tests;
+        }
+    }
 }
+#[path = "../../🧪️tests/🔬️unit/🦀️.rs"]
+pub mod unit;
+#[path = "../../../🚪️io/🧪️tests/🔬️unit/🦀️.rs"]
+pub mod io_unit;
 #[path = "."]
 pub mod shape_geometry {
     #[path = "../../🔷️shape/✏️coordinates/🧪️tests/🔬️unit/🦀️.rs"]

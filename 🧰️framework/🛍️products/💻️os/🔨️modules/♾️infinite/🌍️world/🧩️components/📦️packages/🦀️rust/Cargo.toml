@@ -39,7 +39,6 @@ semio-framework-os-infinite-world-model = { path = "../../../🗃️model/📦�
 semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
 ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
-image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
 semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
@@ -47,6 +46,7 @@ semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modul
 ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 
 [dev-dependencies]
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 semio-framework-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

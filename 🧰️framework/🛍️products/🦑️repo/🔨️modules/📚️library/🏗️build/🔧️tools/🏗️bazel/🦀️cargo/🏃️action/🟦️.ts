@@ -2,7 +2,7 @@ import {copyFile,mkdir,readFile,realpath,writeFile,appendFile} from "node:fs/pro
 import {createHash} from "node:crypto";
 import {spawn} from "node:child_process";
 import {dirname,join} from "node:path";
-import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 📦️ Selects the published files of one package from Cargo's JSON messages; the typed module renders the same selection and a shared corpus keeps both equal. */
 export function selectCargoArtifactsV1(lines:readonly string[],pack:string,suffixes:readonly string[]):string[]{

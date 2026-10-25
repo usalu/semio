@@ -14,7 +14,7 @@ const SINGLE = new Set("+-*/%&|^~<>()[]{},:.;@=!".split(""));
 const NUMBER = /(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|(?:\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?[jJ]?)/y;
 const NAME_START = /[\p{L}\p{Nl}_]/u, NAME_PART = /[\p{L}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc}_]/u;
 
-/** 🔤️ Lexes Python source into logical lines. This is a tokenizer, not a parser: it reports only lexical errors (unterminated string, unbalanced brackets, inconsistent dedent); syntax belongs to the interpreter (`py_compile`). */
+/** 🪵️ Lexes Python source into logical lines. This is a tokenizer, not a parser: it reports only lexical errors (unterminated string, unbalanced brackets, inconsistent dedent); syntax belongs to the interpreter (`py_compile`). */
 export function lexPythonV1(text: string): {readonly lines: readonly PythonLogicalLineV1[]; readonly error: string | null} {
   const lines: PythonLogicalLineV1[] = [], stack = [0], n = text.length;
   let error: string | null = null, i = 0, line = 1, depth = 0, current: PythonTokenV1[] = [], currentLine = 1, atStart = true;
@@ -194,7 +194,7 @@ const topLevelEquals = (tokens: readonly PythonTokenV1[]): number[] => {
   for (let index = 0; index < tokens.length; index++) {depth += bracketDelta(tokens[index]!); if (depth === 0 && tokens[index]!.kind === "op" && tokens[index]!.text === "=") found.push(index);}
   return found;
 };
-/** 🎯️ The target segments of an assignment statement (every top-level `=` ends one; a `lambda` starts the value), or undefined when it is not one. */
+/** 🔪️ The target segments of an assignment statement (every top-level `=` ends one; a `lambda` starts the value), or undefined when it is not one. */
 const splitAssignment = (tokens: readonly PythonTokenV1[]): PythonTokenV1[][] | undefined => {
   const cuts = topLevelEquals(tokens), segments: PythonTokenV1[][] = [];
   let from = 0;
@@ -324,7 +324,7 @@ export type PythonModuleV1 = {readonly name: string; readonly file: string; read
 export type PythonWorkspaceSnapshotV1 = {readonly files: readonly string[]; readonly read: (path: string) => string};
 const isDotted = (name: string): boolean => name.split(".").every(part => /^[\p{L}\p{Nl}_][\p{L}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc}_]*$/u.test(part));
 
-/** 🐍️ Plans the unit graph of Python sources: one unit per module (a sibling `.pyi` is its interface), `interface` edges to the workspace modules it imports (parent packages included), import cycles condensed into one unit, third-party imports pinned through `pins`. */
+/** 🕸️ Plans the unit graph of Python sources: one unit per module (a sibling `.pyi` is its interface), `interface` edges to the workspace modules it imports (parent packages included), import cycles condensed into one unit, third-party imports pinned through `pins`. */
 export function planPythonUnitsV1(snapshot: PythonWorkspaceSnapshotV1, options: {readonly policy: UnitsPolicyV1; readonly roots: readonly string[]; readonly toolchain: string; readonly pins: Readonly<Record<string, string>>}): {readonly graph: UnitGraphV1; readonly modules: readonly PythonModuleV1[]; readonly lexicalErrors: Readonly<Record<string, string>>} {
   const {policy} = options, roots = [...options.roots].sort((a, b) => b.length - a.length), fileSet = new Set(snapshot.files);
   const stdlib = new Set(policy.python.stdlib);
@@ -403,7 +403,7 @@ export function planPythonUnitsV1(snapshot: PythonWorkspaceSnapshotV1, options: 
 
 /** 🏷️ The facts of one finished unit the import check needs. */
 type UnitNames = {readonly names: ReadonlySet<string>; readonly dynamic: boolean};
-/** 🔎️ Import-name check: `from m import n` where `m` is a workspace module (outside `try`/`if` guards, which exist to tolerate a missing name) must find `n` among the names `m` binds at module level, a submodule `m.n`, or a dynamic module. It reports only what cannot exist. */
+/** 🩺️ Import-name check: `from m import n` where `m` is a workspace module (outside `try`/`if` guards, which exist to tolerate a missing name) must find `n` among the names `m` binds at module level, a submodule `m.n`, or a dynamic module. It reports only what cannot exist. */
 export function checkPythonImportsV1(items: readonly {readonly file: string; readonly module: PythonModuleV1 | undefined; readonly package: boolean; readonly imports: readonly PythonImportV1[]}[], modules: ReadonlyMap<string, PythonModuleV1>, namesOf: (module: PythonModuleV1) => UnitNames): string[] {
   const diagnostics: string[] = [];
   for (const row of items) for (const item of row.imports) {
@@ -433,7 +433,7 @@ const pycFiles = (root: string): string[] => {
   try {if (statSync(root).isDirectory()) walk(root);} catch {return [];}
   return found;
 };
-/** 🏭️ Executes a Python unit: `python -m py_compile` into a private pycache prefix (checked-hash pycs through `SOURCE_DATE_EPOCH`, so output bytes depend on content only), the import-name check against the interfaces of the workspace modules it imports, and the interface digest (the `.pyi` stub when present, else the extracted API; a cycle unit folds its members). The names of imported modules come from the dependencies' interface artifacts when the request carries them (hermetic builds see no dependency sources), else from the dependency sources through `modules` and `read`. The interface artifact of the unit is `{"modules": {name: {names, dynamic}}}`. */
+/** ▶️ Executes a Python unit: `python -m py_compile` into a private pycache prefix (checked-hash pycs through `SOURCE_DATE_EPOCH`, so output bytes depend on content only), the import-name check against the interfaces of the workspace modules it imports, and the interface digest (the `.pyi` stub when present, else the extracted API; a cycle unit folds its members). The names of imported modules come from the dependencies' interface artifacts when the request carries them (hermetic builds see no dependency sources), else from the dependency sources through `modules` and `read`. The interface artifact of the unit is `{"modules": {name: {names, dynamic}}}`. */
 export function pythonUnitExecutorV1(options: {readonly workspace: string; readonly outputRoot: string; readonly policy: UnitsPolicyV1; readonly modules: readonly PythonModuleV1[]; readonly read: (path: string) => string; readonly run: PythonRunnerV1}): (request: ExecuteRequestV1) => Promise<ExecuteOutcomeV1> {
   const known = new Map(options.modules.map(row => [row.name, row] as const)), knownByFile = new Map(options.modules.map(row => [row.file, row] as const));
   const analyzed = new Map<string, PythonSourceFactsV1>();

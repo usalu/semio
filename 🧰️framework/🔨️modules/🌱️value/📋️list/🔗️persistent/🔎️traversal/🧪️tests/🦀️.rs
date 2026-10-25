@@ -41,7 +41,6 @@ fn persistent_table_traversal_preserves_original_rows_and_linear_zero_heap_scan(
   assert_eq!(heap,(0,0));
   if count>0{let mut cursor=list.iter();let(_,heap)=crate::value::observe_retirement_allocations(||{let row=cursor.nth(count-1).unwrap();assert!(std::ptr::eq(row,list.get(count-1).unwrap()));});assert_eq!(heap,(0,0));assert!(cursor.visited_pages<=usize::from(list.height)+1);assert_eq!(cursor.len(),0);}
   close(&mut source);assert_eq!(crate::value::observe_retirement_allocations(||drop(source)).1,(0,0));
-  eprintln!("[DEBUG] Persistent table {} rows={count} pageVisits={visits} exact/fused=true rowPointers=original heap=0 cloneCalls=0 nthSkips=true terminalDrop=0",case["name"]);
  }
 }
 #[test]
@@ -60,6 +59,6 @@ fn persistent_table_traversal_projects_borrowed_records_and_controlled_wire_with
   let mut callback=|_|true;let mut control=semio_framework_value_native_encoding::native_encoding::NativeEncodeControl::new(1<<24,&mut callback);let(output,heap)=crate::value::observe_retirement_allocations(||list.to_value_controlled(&mut control).unwrap());assert_eq!(heap.0,control.owned_bytes());assert_eq!(heap.1,0);assert_eq!(serde_json::Value::from(&output),*rows);<crate::DslValue as FromValue>::retire_decoded(output);
   let mut canceled=|_|false;let mut control=semio_framework_value_native_encoding::native_encoding::NativeEncodeControl::new(1<<24,&mut canceled);let(result,heap)=crate::value::observe_retirement_allocations(||list.to_value_controlled(&mut control));assert!(result.is_err());assert_eq!(heap,(0,0));
   if !list.is_empty(){let mut accepted=|_|true;let mut control=semio_framework_value_native_encoding::native_encoding::NativeEncodeControl::new(0,&mut accepted);let(result,heap)=crate::value::observe_retirement_allocations(||list.to_value_controlled(&mut control));assert!(result.is_err());assert_eq!(heap,(0,0));}
-  close(&mut source);assert_eq!(crate::value::observe_retirement_allocations(||drop(source)).1,(0,0));eprintln!("[DEBUG] Persistent borrowed table {} records match actual SQLite; shapeHeap=0 controlledOutput=receipted rejectedOutputHeap=0 payloadCloneCalls=0",case["name"]);
+  close(&mut source);assert_eq!(crate::value::observe_retirement_allocations(||drop(source)).1,(0,0));
  }
 }

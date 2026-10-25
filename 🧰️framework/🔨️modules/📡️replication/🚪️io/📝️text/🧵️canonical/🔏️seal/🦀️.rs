@@ -16,7 +16,7 @@ pub fn canonical_edit_seal_header_byte(id:&str,length:u64,mut offset:usize)->Opt
 
 /// 📄️ The window one canonical turn fills and one hash turn consumes; it lives inline in the cursor, so it is bounded by the Store contract that a sealer constructor needs at most 4096 bytes of capacity.
 pub const SEAL_PAGE_BYTES:usize=1024;
-/// 📄️ The free window below which a partly filled page is hashed instead of starving the next canonical turn.
+/// 📃️ The free window below which a partly filled page is hashed instead of starving the next canonical turn.
 const SEAL_FLUSH_MARGIN_BYTES:usize=64;
 
 #[derive(Clone,Copy,PartialEq,Eq)]

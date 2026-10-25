@@ -39,7 +39,7 @@ struct FixedOperationEntry<T> {
     owner: T,
 }
 
-/// 🗄️ Fixed scheduler authority for retained operation owners. Slots and byte credit are admitted
+/// 📚️ Fixed scheduler authority for retained operation owners. Slots and byte credit are admitted
 /// once; no operation can resize the registry or detach an owner without its exact identity.
 pub struct FixedOperationRegistry<T, const CAPACITY: usize> {
     slots: Box<[Option<FixedOperationEntry<T>>]>,

@@ -47,7 +47,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for CreateTargetVolume
 where
-    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<CreateTargetVolume>,
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<CreateTargetVolume> + From<crate::standards::v1::subsets::any::schema::mutations::delete_target_volume::DeleteTargetVolume>,
 {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)

@@ -1,4 +1,4 @@
-import { runtimeNativeSystemV1 } from "../../../../../../⚙️runtime/🧲️native/🟦️.ts";
+import { runtimeNativeSystemV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧲️native/🟦️.ts";
 import{openSync,closeSync,fsyncSync,constants}from"node:fs";
 import{createRequire}from"node:module";
 import{nativeDirectoryProtocolV1,type NativeDirectoryPlatformPortV1}from"../📋️contract/🟦️.ts";

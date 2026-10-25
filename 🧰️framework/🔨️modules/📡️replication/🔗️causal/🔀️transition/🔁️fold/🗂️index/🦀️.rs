@@ -11,7 +11,7 @@ pub use read::HistoryFoldIndexMatch;
 #[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetainedClone)]
 struct FoldIndexNode<K, V> { entry: Option<(K,V)>, retired_entry:Option<(K,V)>, left: Option<usize>, right: Option<usize>, height: usize, count: usize }
 
-/// 🌳️ Ordered fold facts own every arena slot and displaced key until exact retirement.
+/// 🗂️ Ordered fold facts own every arena slot and displaced key until exact retirement.
 #[derive(Clone, Debug, semio_framework_value::RetainedClone)]
 pub struct HistoryFoldIndex<K, V> { nodes: PagedList<FoldIndexNode<K,V>,{usize::MAX}>, root: Option<usize>, free_head:Option<usize>, displaced_keys: PagedList<K,{usize::MAX}>, mutation_epoch:u64 }
 impl<K:Ord,V:PartialEq> PartialEq for HistoryFoldIndex<K,V>{fn eq(&self,other:&Self)->bool{self.len()==other.len()&&self.iter().eq(other.iter())}}
@@ -23,7 +23,7 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     pub fn is_empty(&self)->bool { self.root.is_none() }
     /// 🪹️ Clears the logical root while retaining every original slot for explicit retirement.
     pub fn clear(&mut self){self.root=None;self.mark_mutation();}
-    /// 🪹️ Physical emptiness includes every retained arena and displaced original key backing.
+    /// 🪫️ Physical emptiness includes every retained arena and displaced original key backing.
     pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.nodes.capacity()==0&&self.displaced_keys.capacity()==0}
     /// 🪪️ Original occupied replacement, insertion and removal invalidate borrowed row continuations.
     pub fn mutation_epoch(&self)->u64{self.mutation_epoch}
@@ -52,7 +52,7 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     pub fn next_insert_copy_byte_demand(&self,_key:&K)->Result<usize,ValueError>{Ok(0)}
     /// 🏗️ Quotes one actual original metadata or payload backing allocation.
     pub fn next_insert_capacity_byte_demand(&self,key:&K,_copy:usize)->Result<usize,ValueError>{if self.contains_key(key){self.displaced_keys.next_allocation_bytes()}else if self.free_head.is_some(){Ok(0)}else{self.nodes.next_allocation_bytes()}.map_err(|error|index_page_refusal(error.kind,error.reason))}
-    /// 🍂️ Normal insertion retains every previously admitted original page.
+    /// 📰️ Normal insertion retains every previously admitted original page.
     pub fn next_insert_release_byte_demand(&self,_key:&K)->Result<usize,ValueError>{Ok(0)}
     /// 📐️ Covers the actual AVL path and prospective original page ownership path.
     pub fn next_insert_depth_demand(&self,key:&K)->Result<usize,ValueError>{let page=if self.contains_key(key){self.displaced_keys.next_reserve_depth_demand()}else if self.free_head.is_some(){Ok(0)}else{self.nodes.next_reserve_depth_demand()}.map_err(|error|index_page_refusal(error.kind,error.reason))?;self.height(self.root).checked_add(2).and_then(|tree|page.checked_add(1).map(|page|tree.max(page))).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"index insertion depth overflow"))}
@@ -88,7 +88,7 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     fn remove_rank_at(&mut self,root:Option<usize>,rank:usize)->(Option<usize>,Option<(K,V)>) {let Some(root)=root else{return(None,None)};let left=self.count(self.nodes[root].left);match rank.cmp(&left){Ordering::Less=>{let(next,entry)=self.remove_rank_at(self.nodes[root].left,rank);self.nodes[root].left=next;(Some(self.balance(root)),entry)},Ordering::Greater=>{let(next,entry)=self.remove_rank_at(self.nodes[root].right,rank-left-1);self.nodes[root].right=next;(Some(self.balance(root)),entry)},Ordering::Equal=>self.detach_entry(root)}}
     /// 🎟️ Counts original arena slots, including holes, without collecting a key directory.
     pub fn slot_count(&self)->usize {self.nodes.len()}
-    /// 🧭️ Borrows one exact original arena slot without scanning its siblings.
+    /// ⛔️ Borrows one exact original arena slot without scanning its siblings.
     pub fn slot_entry(&self,index:usize)->Option<(&K,&V)>{self.nodes.get(index)?.entry.as_ref().map(|(key,value)|(key,value))}
     /// 🧗️ Quotes the existing original page path before a borrowed slot access without AVL comparisons.
     pub fn next_slot_depth_demand(&self,index:usize)->Result<usize,ValueError>{self.nodes.next_get_depth_demand(index).map_err(|error|index_page_refusal(error.kind,error.reason))}
@@ -96,7 +96,7 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     pub fn slot_entry_mut(&mut self,index:usize)->Option<(&K,&mut V)>{self.nodes.get_mut(index)?.entry.as_mut().map(|(key,value)|(&*key,value))}
     /// 📏️ Bounds the live AVL removal path while keeping the original selected slot borrowed.
     pub fn next_extract_slot_depth_demand(&self,index:usize)->Result<usize,ValueError>{if self.nodes.get(index).is_none_or(|node|node.entry.is_none()){return Ok(0)}self.height(self.root).checked_add(2).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"index extraction depth overflow"))}
-    /// 🍂️ Examines one original slot and transfers its original row without allocation or cloning.
+    /// 🧲️ Examines one original slot and transfers its original row without allocation or cloning.
     pub fn extract_slot_if(&mut self,index:usize,keep:impl FnOnce(&K,&V)->bool)->Option<(K,V)> {
         let (key,value)=self.nodes.get(index)?.entry.as_ref()?;if keep(key,value){return None;}
         if self.locate(key)!=Some(index){self.mark_mutation();let entry=self.nodes[index].entry.take();self.vacate_slot(index);return entry;}
@@ -104,7 +104,7 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
         while let Some(cursor)=root {let left=self.count(self.nodes[cursor].left);match key.cmp(&self.nodes[cursor].entry.as_ref().unwrap().0){Ordering::Less=>root=self.nodes[cursor].left,Ordering::Greater=>{rank+=left+1;root=self.nodes[cursor].right;},Ordering::Equal=>{rank+=left;break;}}}
         let (root,entry)=self.remove_rank_at(self.root,rank);self.root=root;entry
     }
-    /// 🍂️ Retains one removed original row in its already admitted native slot until owner retirement.
+    /// 🪦️ Retains one removed original row in its already admitted native slot until owner retirement.
     pub fn retire_slot_if(&mut self,index:usize,keep:impl FnOnce(&K,&V)->bool,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
         let empty=RetainedCloneProgress::default();
         if grant.maximum_items==0{return Ok(empty);}
@@ -126,7 +126,7 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     /// 👁️ Borrows the exact active or retired original payload without allocating a projection.
     pub fn retained_slot_entry(&self,index:usize)->Option<(&K,&V)>{let node=self.nodes.get(index)?;node.entry.as_ref().or(node.retired_entry.as_ref()).map(|(key,value)|(key,value))}
 
-    /// 🎟️ Transfers the original key and value while retaining every arena backing allocation.
+    /// ➖️ Transfers the original key and value while retaining every arena backing allocation.
     pub fn remove_entry<Q:Ord+?Sized>(&mut self,key:&Q)->Option<(K,V)> where K:Borrow<Q> {let(root,entry)=self.remove_at(self.root,key);self.root=root;entry}
     pub fn remove<Q:Ord+?Sized>(&mut self,key:&Q)->Option<V> where K:Borrow<Q> {self.remove_entry(key).map(|(key,value)|{self.displaced_keys.push(key);value})}
     pub fn pop_first(&mut self)->Option<(K,V)> {let(root,index)=self.detach_first(self.root?);self.root=root;self.mark_mutation();let entry=self.nodes[index].entry.take();self.vacate_slot(index);entry}
@@ -139,7 +139,7 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
 
     pub fn keys(&self)->impl DoubleEndedIterator<Item=&K>+ExactSizeIterator {self.iter().map(|(key,_)|key)}
     pub fn values(&self)->impl DoubleEndedIterator<Item=&V>+ExactSizeIterator {self.iter().map(|(_,value)|value)}
-    /// 🪵️ Borrows live values in original arena order without a copied key directory.
+    /// 🔃️ Borrows live values in original arena order without a copied key directory.
     pub fn slot_values_mut(&mut self)->impl Iterator<Item=&mut V> {self.nodes.iter_mut().filter_map(|node|node.entry.as_mut().map(|(_,value)|value))}
     /// 🪨️ Borrows each live original key and mutable value in native arena order.
     pub fn slot_entries_mut(&mut self)->impl Iterator<Item=(&K,&mut V)>{self.nodes.iter_mut().filter_map(|node|node.entry.as_mut().map(|(key,value)|(&*key,value)))}
@@ -156,7 +156,7 @@ impl<'a,K:Ord+Copy,V> HistoryFoldIndexEntry<'a,K,V>{
     /// 🌾️ Creates an empty value only when the original row is vacant.
     pub fn or_default(self)->&'a mut V where V:Default{self.or_insert_with(V::default)}
 }
-/// 👁️ Sorted live entry traversal borrows the original arena without allocation.
+/// 📇️ Sorted live entry traversal borrows the original arena without allocation.
 pub struct HistoryFoldIndexIter<'a,K,V>{owner:&'a HistoryFoldIndex<K,V>,ranks:std::ops::Range<usize>}
 impl<'a,K:Ord,V> Iterator for HistoryFoldIndexIter<'a,K,V>{type Item=(&'a K,&'a V);fn next(&mut self)->Option<Self::Item>{self.ranks.next().and_then(|rank|self.owner.ranked(rank))}fn size_hint(&self)->(usize,Option<usize>){self.ranks.size_hint()}}
 impl<K:Ord,V> DoubleEndedIterator for HistoryFoldIndexIter<'_,K,V>{fn next_back(&mut self)->Option<Self::Item>{self.ranks.next_back().and_then(|rank|self.owner.ranked(rank))}}
@@ -166,7 +166,7 @@ impl<'a,K:Ord,V> IntoIterator for &'a HistoryFoldIndex<K,V>{type Item=(&'a K,&'a
 impl<K:Ord,V> FromIterator<(K,V)> for HistoryFoldIndex<K,V>{fn from_iter<T:IntoIterator<Item=(K,V)>>(entries:T)->Self{let mut index=Self::new();for(key,value)in entries{index.insert(key,value);}index}}
 impl<K:Ord,V,const N:usize> From<[(K,V);N]> for HistoryFoldIndex<K,V>{fn from(entries:[(K,V);N])->Self{entries.into_iter().collect()}}
 impl<K:Ord,V> Extend<(K,V)> for HistoryFoldIndex<K,V>{fn extend<T:IntoIterator<Item=(K,V)>>(&mut self,entries:T){for(key,value)in entries{self.insert(key,value);}}}
-/// 🔎️ Original sorted ranks selected by borrowed bounds without a copied directory.
+/// 🔢️ Original sorted ranks selected by borrowed bounds without a copied directory.
 impl<K:Ord,V> HistoryFoldIndex<K,V> {
     pub fn first_key_value(&self)->Option<(&K,&V)> { self.ranked(0) }
     fn bound_rank(&self,bound:std::ops::Bound<&K>,upper:bool)->usize {
@@ -222,21 +222,21 @@ impl<K:Ord> HistoryFoldSet<K>{
     pub fn is_empty(&self)->bool{self.0.is_empty()}
     pub fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     pub fn insert(&mut self,key:K)->bool{self.0.insert(key,()).is_none()}
-    /// 🪙️ Uses the same original index copy authority for membership insertion.
+    /// ➡️ Uses the same original index copy authority for membership insertion.
     pub fn next_insert_copy_byte_demand(&self,key:&K)->Result<usize,ValueError>{self.0.next_insert_copy_byte_demand(key)}
-    /// 🏗️ Prices only the next actual original membership backing page.
+    /// 🔜️ Prices only the next actual original membership backing page.
     pub fn next_insert_capacity_byte_demand(&self,key:&K,copy:usize)->Result<usize,ValueError>{self.0.next_insert_capacity_byte_demand(key,copy)}
     /// 🍂️ Preserves every old membership backing during insertion.
     pub fn next_insert_release_byte_demand(&self,key:&K)->Result<usize,ValueError>{self.0.next_insert_release_byte_demand(key)}
-    /// 📐️ Carries the same live tree and admitted page depth requirement.
+    /// 📃️ Carries the same live tree and admitted page depth requirement.
     pub fn next_insert_depth_demand(&self,key:&K)->Result<usize,ValueError>{self.0.next_insert_depth_demand(key)}
-    /// 🎟️ Admits one original membership page under the unchanged supplied wallet.
+    /// 🪜️ Admits one original membership page under the unchanged supplied wallet.
     pub fn reserve_insert_step(&mut self,key:&K,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,RetainedCloneProgress)>{self.0.reserve_insert_step(key,grant)}
-    /// 🪴️ Places the exact incoming key in the original funded slot or returns it unchanged.
+    /// 📨️ Places the exact incoming key in the original funded slot or returns it unchanged.
     pub fn insert_reserved(&mut self,key:K,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),(ValueError,K)>{self.0.insert_reserved(key,(),grant).map(|(previous,receipt)|(previous.is_none(),receipt)).map_err(|(error,key,())|(error,key))}
 
     pub fn contains<Q:Ord+?Sized>(&self,key:&Q)->bool where K:Borrow<Q>{self.0.contains_key(key)}
-    /// 🧭️ Carries the same original membership comparisons and page lookup depth unchanged.
+    /// ⏭️ Carries the same original membership comparisons and page lookup depth unchanged.
     pub fn next_contains_depth_demand<Q:Ord+?Sized>(&self,key:&Q)->Result<usize,ValueError> where K:Borrow<Q>{self.0.next_contains_depth_demand(key)}
     pub fn get<Q:Ord+?Sized>(&self,key:&Q)->Option<&K> where K:Borrow<Q>{self.0.get_key_value(key).map(|(key,())|key)}
     pub fn remove<Q:Ord+?Sized>(&mut self,key:&Q)->bool where K:Borrow<Q>{self.0.remove(key).is_some()}
@@ -247,7 +247,7 @@ impl<K:Ord> HistoryFoldSet<K>{
     pub fn last(&self)->Option<&K>{self.0.keys().next_back()}
     pub fn iter(&self)->HistoryFoldSetIter<'_,K>{HistoryFoldSetIter{entries:self.0.iter()}}
     pub fn range<R:std::ops::RangeBounds<K>>(&self,bounds:R)->HistoryFoldSetIter<'_,K>{HistoryFoldSetIter{entries:self.0.range(bounds)}}
-    /// 🪹️ Removes live membership while retaining every original key and arena allocation.
+    /// ⌨️ Removes live membership while retaining every original key and arena allocation.
     pub fn clear(&mut self){self.0.clear();}
 }
 /// 👀️ Borrows original live membership keys in either ordered direction.

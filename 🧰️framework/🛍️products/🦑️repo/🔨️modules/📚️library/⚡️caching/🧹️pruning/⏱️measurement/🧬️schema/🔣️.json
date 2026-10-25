@@ -173,7 +173,7 @@
         "maximumSummaryBytes": 2048,
         "maximumOperationSummaries": 4,
         "switch": "SEMIO_CARGO_RETIREMENT_TIMING",
-        "prefix": "[DEBUG] Cargo scanner timing "
+        "prefix": "[TRACE] Cargo scanner timing "
       }
     }
   }

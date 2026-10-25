@@ -35,7 +35,7 @@ export type CiTestResultsIndexV1=Readonly<{version:1;tool:CiToolV1;results:reado
 /** 🧾️ Counts of one JUnit XML document. */
 export type CiJUnitV1=Readonly<{tests:number;failures:number;errors:number;skipped:number}>;
 
-/** 🧪️ Counts of all exported test results. */
+/** 📤️ Counts of all exported test results. */
 export type CiTestsSummaryV1=Readonly<{files:number;tests:number;failures:number;errors:number;skipped:number;cached:number;failed:readonly string[]}>;
 
 /** 🌍️ A report language; English first, German second. */
@@ -104,13 +104,13 @@ function lastValid<T>(text:string,definition:string,message:string):T{
  return objects[objects.length-1] as T;
 }
 
-/** 🗄️ Reads the last CacheStatus of a console capture. */
+/** 🚥️ Reads the last CacheStatus of a console capture. */
 export function readCiCacheStatusV1(text:string):CiCacheStatusV1{return lastValid<CiCacheStatusV1>(text,"CacheStatus","Closed CacheStatus required");}
 
-/** 🗺️ Reads the last DryRunPlan of a console capture. */
+/** 🗓️ Reads the last DryRunPlan of a console capture. */
 export function readCiPlanV1(text:string):CiPlanV1{return lastValid<CiPlanV1>(text,"DryRunPlan","Closed DryRunPlan required");}
 
-/** 📉️ Subtracts two cache statuses; the hit rate is restored over restored plus executed work, and absent when the tool records no activity or did no work. */
+/** ➖️ Subtracts two cache statuses; the hit rate is restored over restored plus executed work, and absent when the tool records no activity or did no work. */
 export function ciCacheDeltaV1(before:CiCacheStatusV1,after:CiCacheStatusV1):CiCacheDeltaV1{
  if(before.tool!==after.tool)throw Error("Cache statuses of one tool required");
  const from=before.activity,to=after.activity,subtract=(key:keyof CiActivityV1)=>to===undefined?0:to[key]-(from?.[key]??0);
@@ -130,7 +130,7 @@ export function renderCiCacheDeltaV1(delta:CiCacheDeltaV1,label:string,hasActivi
  return lines.join("\n");
 }
 
-/** ✅️ Judges a cache proof: run 1 must grow the store, run 2 must not, and run 2 must be recognized as served from the cache by the implementation's own evidence. */
+/** ⚖️ Judges a cache proof: run 1 must grow the store, run 2 must not, and run 2 must be recognized as served from the cache by the implementation's own evidence. */
 export function judgeCiCacheProofV1(input:Readonly<{tool:CiToolV1;statuses:readonly [CiCacheStatusV1,CiCacheStatusV1,CiCacheStatusV1];logs:readonly [string,string]}>):CiProofV1{
  const [s0,s1,s2]=input.statuses,[log1,log2]=input.logs,problems:string[]=[];
  const entries=[s0.entries,s1.entries,s2.entries],bytes=[s0.bytes,s1.bytes,s2.bytes];
@@ -146,7 +146,7 @@ export function judgeCiCacheProofV1(input:Readonly<{tool:CiToolV1;statuses:reado
  requireShape("Proof",proof,"Closed cache proof required");return Object.freeze(proof);
 }
 
-/** 📝️ Renders a proof verdict. */
+/** 🖌️ Renders a proof verdict. */
 export function renderCiProofV1(proof:CiProofV1,language:CiLanguageV1):string{
  const values={tool:proof.tool,rule:proof.rule,entries:proof.entries.join(" > "),bytes:proof.bytes.join(" > ")};
  if(proof.ok)return ciTextV1(language,"proofOk",values);
@@ -160,51 +160,51 @@ export function ciTargetMatcherV1(patterns:string):(name:string)=>boolean{
  return name=>expressions.some(expression=>expression.test(name));
 }
 
-/** 🎯️ The sorted `project:target` tasks of a plan whose target the list names; configurations are part of the identity. */
+/** 🏹️ The sorted `project:target` tasks of a plan whose target the list names; configurations are part of the identity. */
 export function ciPlanSelectionV1(plan:CiPlanV1,targets:string):readonly string[]{
  const matches=ciTargetMatcherV1(targets),selected=new Set<string>();
  for(const task of Object.values(plan.tasks.tasks))if(matches(task.target.target))selected.add(`${task.target.project}:${task.target.target}${task.target.configuration===undefined?"":`:${task.target.configuration}`}`);
  return [...selected].sort();
 }
 
-/** 🧮️ Counts a plan. */
+/** 🔢️ Counts a plan. */
 export function summarizeCiPlanV1(plan:CiPlanV1,targets:string):CiPlanSummaryV1{
  const selection=ciPlanSelectionV1(plan,targets),summary={tasks:Object.keys(plan.tasks.tasks).length,selected:selection.length,projects:new Set(selection.map(item=>item.split(":")[0])).size,targets:targets.split(",").map(item=>item.trim()).filter(Boolean)};
  requireShape("PlanSummary",summary,"Closed plan summary required");return Object.freeze(summary);
 }
 
-/** 📝️ Renders a plan summary. */
+/** 📋️ Renders a plan summary. */
 export function renderCiPlanV1(summary:CiPlanSummaryV1,label:string,language:CiLanguageV1):string{
  return [`### ${ciTextV1(language,"planTitle",{label})}`,"",`- ${summary.selected===0?ciTextV1(language,"planEmpty"):ciTextV1(language,"planLine",{selected:summary.selected,tasks:summary.tasks,projects:summary.projects,targets:summary.targets.join(",")})}`,""].join("\n");
 }
 
-/** 🪞️ Compares the tasks two implementations selected for the same targets. */
+/** 🆚️ Compares the tasks two implementations selected for the same targets. */
 export function compareCiPlansV1(first:CiPlanV1,second:CiPlanV1,targets:string):CiParityV1{
  const a=ciPlanSelectionV1(first,targets),b=ciPlanSelectionV1(second,targets),inA=new Set(a),inB=new Set(b);
  const parity={equal:a.length===b.length&&a.every(item=>inB.has(item)),first:a.length,second:b.length,onlyFirst:a.filter(item=>!inB.has(item)),onlySecond:b.filter(item=>!inA.has(item))};
  requireShape("Parity",parity,"Closed parity required");return Object.freeze(parity);
 }
 
-/** 📝️ Renders a parity verdict; lists are cut after ten entries. */
+/** 🧬️ Renders a parity verdict; lists are cut after ten entries. */
 export function renderCiParityV1(parity:CiParityV1,language:CiLanguageV1):string{
  const list=(items:readonly string[])=>items.slice(0,10).join(", ")+(items.length>10?`, … (${items.length})`:"");
  if(parity.equal)return ciTextV1(language,"parityOk",{first:parity.first});
  return [ciTextV1(language,"parityFail",{first:parity.first,second:parity.second}),...parity.onlyFirst.length?[`- ${ciTextV1(language,"parityOnlyFirst",{list:list(parity.onlyFirst)})}`]:[],...parity.onlySecond.length?[`- ${ciTextV1(language,"parityOnlySecond",{list:list(parity.onlySecond)})}`]:[]].join("\n");
 }
 
-/** 🧾️ Counts the test cases, failures, errors and skips of one JUnit XML document; CDATA sections and comments are ignored and nested suites are never double counted because only cases and their outcome elements are counted. */
+/** ⏭️ Counts the test cases, failures, errors and skips of one JUnit XML document; CDATA sections and comments are ignored and nested suites are never double counted because only cases and their outcome elements are counted. */
 export function summarizeCiJUnitV1(xml:string):CiJUnitV1{
  const text=xml.replace(/<!\[CDATA\[[\s\S]*?\]\]>/gu,"").replace(/<!--[\s\S]*?-->/gu,""),count=(name:string)=>(text.match(new RegExp(`<${name}(?=[\\s/>])`,"gu"))??[]).length;
  const counts={tests:count("testcase"),failures:count("failure"),errors:count("error"),skipped:count("skipped")};
  requireShape("JUnit",counts,"Closed JUnit counts required");return Object.freeze(counts);
 }
 
-/** 📚️ Validates an exported index. */
+/** 📇️ Validates an exported index. */
 export function readCiTestResultsIndexV1(text:string):CiTestResultsIndexV1{
  const value=JSON.parse(text);requireShape("TestResultsIndex",value,"Closed test results index required");return value as CiTestResultsIndexV1;
 }
 
-/** 🧪️ Sums the exported files; a row names its file, and a file without a row still counts. */
+/** 🗃️ Sums the exported files; a row names its file, and a file without a row still counts. */
 export function summarizeCiTestsV1(files:readonly Readonly<{file:string;xml:string}>[],index:CiTestResultsIndexV1|undefined):CiTestsSummaryV1{
  let tests=0,failures=0,errors=0,skipped=0;const failed:string[]=[],rows=new Map((index?.results??[]).map(row=>[row.file,row]));
  for(const entry of files){
@@ -216,7 +216,7 @@ export function summarizeCiTestsV1(files:readonly Readonly<{file:string;xml:stri
  requireShape("TestsSummary",summary,"Closed tests summary required");return Object.freeze(summary);
 }
 
-/** 📝️ Renders the test summary. */
+/** 📃️ Renders the test summary. */
 export function renderCiTestsV1(summary:CiTestsSummaryV1,language:CiLanguageV1):string{
  const lines=[`### ${ciTextV1(language,"testsTitle")}`,""];
  if(summary.files===0)lines.push(`- ${ciTextV1(language,"testsNone")}`);

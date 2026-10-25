@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "relation": "issuer",
+      "expected": "accepted"
+    },
+    {
+      "relation": "narrowed-child",
+      "expected": "accepted"
+    },
+    {
+      "relation": "renewable-child",
+      "expected": "accepted"
+    },
+    {
+      "relation": "grandchild",
+      "expected": "accepted"
+    },
+    {
+      "relation": "retired-child",
+      "expected": "refused",
+      "failure": "Live Original resource control issuance required"
+    },
+    {
+      "relation": "sibling",
+      "expected": "refused",
+      "failure": "Original issued native storage reservation required"
+    },
+    {
+      "relation": "issuer-parent",
+      "expected": "refused",
+      "failure": "Original issued native storage reservation required"
+    },
+    {
+      "relation": "unrelated-original-control",
+      "expected": "refused",
+      "failure": "Original issued native storage reservation required"
+    },
+    {
+      "relation": "fabricated",
+      "expected": "refused",
+      "failure": "Original issued native storage reservation required"
+    }
+  ]
+}

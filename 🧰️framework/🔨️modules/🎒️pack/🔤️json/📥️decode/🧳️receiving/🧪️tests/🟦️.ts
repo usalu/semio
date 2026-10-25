@@ -7,5 +7,4 @@ test("original JSON receiving matches the independent JSON parser and canonical 
  expect(new Ajv({strict:true}).compile(read("../🧬️schema/🔣️.json"))(law)).toBe(true);
  for(const row of law.cases){const body=row.wire.slice(row.header.length);expect(JSON.parse(body)).toEqual(row.value);expect(row.header+JSON.stringify(JSON.parse(body))===row.wire).toBe(row.canonical);}
  expect(law.terminalDropBytes).toBe(0);
- console.log("[DEBUG] original JSON receiving eight semantic/canonical/header/array cases match independent native JSON parse/stringify");
 });

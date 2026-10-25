@@ -47,7 +47,7 @@ export async function decodeValueRefusalKindControlled(value: IntrinsicValue, co
     const result = kind(value.value); await control.step(); return result;
   });
 }
-/** 🛫️ Constructs only the three declared members under cumulative owned admission. */
+/** ❌️ Constructs only the three declared members under cumulative owned admission. */
 export async function encodeValueErrorControlled(error: ValueError, control: ValueRefusalCodecControl): Promise<IntrinsicValue> {
   return control.scopedStage(async () => {
     await control.beginStage(3);
@@ -61,7 +61,7 @@ export async function encodeValueErrorControlled(error: ValueError, control: Val
     return { kind: "object", members: [{ name: kindName, value: kindValue }, { name: messageName, value: { kind: "text", value: message } }, { name: receiptName, value: receipt }] };
   });
 }
-/** 🛬️ Rejects missing, duplicate and unknown members before constructing the owned cause. */
+/** ❓️ Rejects missing, duplicate and unknown members before constructing the owned cause. */
 export async function decodeValueErrorControlled(value: IntrinsicValue, control: ValueRefusalCodecControl): Promise<ValueError> {
   return control.scopedStage(async () => {
     await control.beginStage(3);

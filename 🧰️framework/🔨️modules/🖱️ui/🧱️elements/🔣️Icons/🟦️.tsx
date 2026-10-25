@@ -51,7 +51,7 @@ function themedIconSvg(name: MetabolismIconName, icons: UiTheme["icons"] | undef
 // #endregion 🌱️ThemedIconCatalog
 
 // #region 🔖️Icon
-/** 📐️ Named size tokens for {@link Icon}. */
+/** 📏️ Named size tokens for {@link Icon}. */
 export type IconSizeToken = "tiny" | "small" | "base" | "large";
 
 const ICON_SIZE_PX: Record<IconSizeToken, number> = {
@@ -83,7 +83,7 @@ export type Icon =
   | { readonly kind: "themed"; readonly key: MetabolismIconName }
   | { readonly kind: "node"; readonly node: React.ReactNode };
 
-/** 🎛️ Shared icon editor tab buckets aligned with {@link Icon}. */
+/** 📑️ Shared icon editor tab buckets aligned with {@link Icon}. */
 export type IconSelectorMode = "url" | "shortcode" | "data" | "emoji" | "math" | "text" | "vector";
 
 function isRasterDataUrlPayloadForIcon(s: string): boolean {
@@ -172,7 +172,7 @@ export function decodeIcon(encoded: string): Icon | undefined {
   return undefined;
 }
 
-/** 🔤️ Encodes a structured {@link Icon} into the canonical wire string. */
+/** 📡️ Encodes a structured {@link Icon} into the canonical wire string. */
 export function encodeIcon(icon: Icon): string {
   switch (icon.kind) {
     case "url":
@@ -240,7 +240,7 @@ function resolveShortcodeIcon(code: string): Icon {
   return { kind: "shortcode", code: key };
 }
 
-/** 🖼️ Icon payload: canonical union, vendored catalog name, or legacy shorthand. */
+/** 🎒️ Icon payload: canonical union, vendored catalog name, or legacy shorthand. */
 export type IconSource = Icon | IconName | { readonly name: IconName } | { readonly svg: string } | { readonly url: string } | { readonly node: React.ReactNode };
 
 /** 🎛️ Required icon slot for chrome controls (buttons, toggles, actions). */
@@ -262,12 +262,12 @@ function useThemeIcons(): UiTheme["icons"] {
   );
 }
 
-/** 🖼️ Resolves catalog icon SVG for the active theme. */
+/** 📚️ Resolves catalog icon SVG for the active theme. */
 export function resolveCatalogIconSvg(name: IconName, icons: UiTheme["icons"] = activeUiTheme().icons): string {
   return resolveCatalogIconSvgFromTheme(name, icons);
 }
 
-/** 🖼️ Resolves metabolism icon SVG for the active theme through the installed {@link ThemedIconCatalog} (empty without one). */
+/** 🧬️ Resolves metabolism icon SVG for the active theme through the installed {@link ThemedIconCatalog} (empty without one). */
 export function resolveMetabolismIconSvg(name: MetabolismIconName, icons: UiTheme["icons"] = activeUiTheme().icons): string {
   return themedIconSvg(name, icons) ?? "";
 }
@@ -350,7 +350,7 @@ function coerceIconSource(source: IconSource): Icon {
   return { kind: "catalog", key: source.name };
 }
 
-/** 🎛️ Renders a control icon or a visible missing-icon placeholder. */
+/** 🕳️ Renders a control icon or a visible missing-icon placeholder. */
 export function renderControlIcon(icon: ControlIcon | undefined | null | false, size: number | IconSizeToken = "small"): React.ReactNode {
   if (icon === undefined || icon === null || icon === false) {
     return <span data-missing-icon data-icon-kind="missing" className="inline-flex size-small shrink-0 rounded-sm bg-destructive/30" aria-hidden />;
@@ -371,7 +371,7 @@ export interface CatalogIconProps extends Omit<IconProps, "icon"> {
   readonly icon: IconName;
 }
 
-/** 🖼️ Raw vendored SVG markup for an icon name, or `undefined` when the name is not a vendored {@link IconName}. */
+/** 📄️ Raw vendored SVG markup for an icon name, or `undefined` when the name is not a vendored {@link IconName}. */
 export function iconSvgMarkup(name: IconName): string {
   return resolveCatalogIconSvg(name);
 }
@@ -415,7 +415,7 @@ export function CatalogIcon({ icon, size = "base", className, title }: CatalogIc
   return <span className={cn("inline-flex shrink-0 items-center justify-center [&>svg]:size-full", iconBoxClassName(size, className))} style={{ ...boxStyle, ["--icon-mask" as string]: iconMaskImage(svgMarkup) }} title={title} data-icon={name} data-icon-kind="catalog" dangerouslySetInnerHTML={{ __html: svgMarkup }} aria-hidden={title ? undefined : true} />;
 }
 
-/** 🖼️ Renders canonical icons without depending on an external icon library. */
+/** 🎨️ Renders canonical icons without depending on an external icon library. */
 export function Icon({ icon, size = "base", className, title }: IconProps): React.ReactElement {
   const themeIcons = useThemeIcons();
   const boxStyle = iconBoxStyle(size);

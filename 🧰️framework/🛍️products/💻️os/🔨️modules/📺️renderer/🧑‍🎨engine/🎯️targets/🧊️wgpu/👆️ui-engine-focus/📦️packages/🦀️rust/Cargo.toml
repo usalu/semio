@@ -34,8 +34,8 @@ semio-framework-os-renderer-wgpu-scene-state = { path = "../../../🎭️scene-s
 semio-framework-os-renderer-wgpu-scene-tables = { path = "../../../🧮️scene-tables/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-scene-text-vfs = { path = "../../../📁️scene-text-vfs/📦️packages/🦀️rust" }
 base64 = "0.22.1"
-image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 semio-framework-job = { workspace = true }
+semio-framework-pixels = { path = "../../../../../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

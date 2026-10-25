@@ -1,0 +1,21 @@
+{
+  "schema": "jack-lsp-positions/1",
+  "description": "Byte offset to LSP position (zero-based line, UTF-16 character). Cases with oracle=true are fully defined by the LSP specification and are re-derived independently from JavaScript string semantics; the others pin the clamping the server applies.",
+  "cases": [
+    { "name": "start", "text": "MATCH (a)\nRETURN a", "offset": 0, "line": 0, "character": 0, "oracle": true },
+    { "name": "inside the first line", "text": "MATCH (a)\nRETURN a", "offset": 6, "line": 0, "character": 6, "oracle": true },
+    { "name": "start of the second line", "text": "MATCH (a)\nRETURN a", "offset": 10, "line": 1, "character": 0, "oracle": true },
+    { "name": "end of the document", "text": "MATCH (a)\nRETURN a", "offset": 18, "line": 1, "character": 8, "oracle": true },
+    { "name": "after a trailing newline", "text": "a\n", "offset": 2, "line": 1, "character": 0, "oracle": true },
+    { "name": "crlf second line", "text": "a\r\nb", "offset": 3, "line": 1, "character": 0, "oracle": true },
+    { "name": "crlf end of the first line", "text": "a\r\nb", "offset": 1, "line": 0, "character": 1, "oracle": true },
+    { "name": "lone carriage return", "text": "a\rb", "offset": 2, "line": 1, "character": 0, "oracle": true },
+    { "name": "two byte character", "text": "é1", "offset": 2, "line": 0, "character": 1, "oracle": true },
+    { "name": "three byte character", "text": "€x", "offset": 3, "line": 0, "character": 1, "oracle": true },
+    { "name": "surrogate pair counts two units", "text": "😀x", "offset": 4, "line": 0, "character": 2, "oracle": true },
+    { "name": "surrogate pairs on the second line", "text": "a\n😀😀b", "offset": 10, "line": 1, "character": 4, "oracle": true },
+    { "name": "between carriage return and line feed clamps to the line end", "text": "a\r\nb", "offset": 2, "line": 0, "character": 1, "oracle": false },
+    { "name": "inside a character floors to its start", "text": "é1", "offset": 1, "line": 0, "character": 0, "oracle": false },
+    { "name": "past the end clamps to the end", "text": "ab", "offset": 99, "line": 0, "character": 2, "oracle": false }
+  ]
+}

@@ -149,7 +149,7 @@ export function vizGeneratedFiles(): readonly { readonly path: string; readonly 
   return files;
 }
 
-/** 🏗️ Writes the generated catalogue packages and gallery documents. */
+/** 🏺️ Writes the generated catalogue packages and gallery documents. */
 export function generateVizArtifacts(repoRoot: string): readonly string[] {
   const files = vizGeneratedFiles();
   const written = new Set<string>();

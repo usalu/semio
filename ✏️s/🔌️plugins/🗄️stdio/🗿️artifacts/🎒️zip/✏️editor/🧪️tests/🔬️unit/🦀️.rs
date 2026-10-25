@@ -10,6 +10,7 @@ use crate::editor::editing::{fault, draft};
 use crate::editor::editing::*;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{ColdMutation, Mutation, MutationDiff};
+use protocol::ColdMutationDiff;
 use semio_framework_plugin::ArtifactEditor;
 
 fn fixture() -> serde_json::Value {
@@ -359,13 +360,14 @@ async fn iso_archive_draft_uses_the_registered_retained_factory() {
 #[test]
 fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revision() {
     use protocol::OpBinary;
-    use semio_framework_job::{Generation, InteractiveJob, JobOutcomeBorrow, Operation, OperationId, RevisionId, StepBudget, StepContext};
-    use semio_framework_action_bus::{ActionBus, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
+    use semio_framework_action_bus::{ActionBus, ToolFactoryKey};
+    use semio_framework_job::{Generation, Operation, OperationId, RevisionId};
     use semio_framework_plugin::app::{AppOperationContext, ArtifactOwnedToolJobContext, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ChildContentView, InteractionHoverState};
     use semio_framework_plugin::app::ArtifactOwnedContextHandle;
     use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
     use semio_framework_plugin::{EditorApp, HistoryView};
     use semio_s_artifact_stdio_contract::editing::{BoundedNativeEditToolJobFactory, BoundedNativeEditingEditor};
+    use semio_s_artifact_stdio_contract::testing::registered_job::{admit, close, snapshot_read, step, wire, Seen, Session};
     use std::sync::Arc;
     type Editor = crate::editor::zip::base::ZipAnyEditor;
     type App = EditorApp<Editor>;
@@ -379,20 +381,15 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
     let bus = ActionBus::new();
     bus.register(BoundedNativeEditToolJobFactory::<Editor>::new("zip-replay")).unwrap();
     let operation = Operation::new(OperationId(41), RevisionId(2), Generation(3), 5);
-    let wire = Editor::command_from_action("set-node", Some((arguments).clone()), None).unwrap().encode_op().unwrap();
-    let input = |bytes: &[u8]| {
-        let (admission, mut input) = bus.begin_exact_wire("zip-replay", "set-node", Editor::NATIVE_PAYLOAD_SCHEMA, bytes.len()).unwrap();
-        for page in bytes.chunks(TOOL_WIRE_PAGE_BYTES) {
-            input.admit_page(ToolWirePage::try_copy_from(page).unwrap()).map_err(|(fault, _)| fault).unwrap();
-        }
-        input.seal().unwrap();
-        (admission, input)
-    };
-    let payload = |completion, revision| {
-        ArtifactRetainedCommandPayload::<App>::new(
+    let key = || ToolFactoryKey::new("zip-replay", "set-node");
+    let wire_bytes = Editor::command_from_action("set-node", Some((arguments).clone()), None).unwrap().encode_op().unwrap();
+    let payload = |completion, revision: [u8; 32]| {
+        let (snapshot_read, lease) = snapshot_read(snapshot.clone(), 3, revision);
+        let payload = ArtifactRetainedCommandPayload::<App>::new(
             ArtifactRetainedCommandInputs {
                 command: Editor::command_from_action("set-node", Some((arguments).clone()), None).unwrap(),
                 snapshot: snapshot.clone(),
+                snapshot_read,
                 config: Arc::new(Default::default()),
                 history: Arc::new(HistoryView::empty()),
                 interaction_state: Arc::new(Default::default()),
@@ -412,69 +409,61 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
             Editor::NATIVE_MAXIMUM_RAW_BYTES,
             Editor::NATIVE_MAXIMUM_WORK_ITEMS,
             Editor::native_edit_work("set-node"),
-        )
+        );
+        (payload, lease)
     };
     let completion = ArtifactToolCompletion::<App>::test_new();
     let consumer = completion.clone();
-    let spec = ToolOperationSpec::new("zip-replay", "set-node", Editor::NATIVE_PAYLOAD_SCHEMA, payload(completion, [5; 32]), operation);
-    let (admission, original_input) = input(&wire);
-    let mut original = bus.dispatch_wire_retained_with_spec(&admission, original_input, None, spec).unwrap_or_else(|_| panic!("initial ZIP dispatch"));
-    let mut sequence = 0;
+    let (initial, lease) = payload(completion, [5; 32]);
+    let mut session = Session::new(operation);
+    let mut job = admit(&bus, &mut session, operation, key(), Editor::NATIVE_PAYLOAD_SCHEMA, initial, Some(wire(&wire_bytes)), None);
     let mut saved = None;
     for _ in 0..64 {
-        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
-        match original.job.step(&mut cx).expect("ZIP resolver step") {
-            Some(JobOutcomeBorrow::PreviewReady { .. }) | Some(JobOutcomeBorrow::Yield { .. }) | None => {}
-            Some(JobOutcomeBorrow::CheckpointReady { state, .. }) => {
-                let bytes = state.single_page().unwrap();
+        match step(&mut job, &mut session) {
+            Seen::Preview | Seen::Yield | Seen::Idle => {}
+            Seen::Checkpoint(Some(bytes)) => {
                 if bytes.get(5) == Some(&1) && bytes.get(56) == Some(&1) {
-                    saved = Some(bytes.to_vec());
+                    saved = Some(bytes);
                 }
                 if saved.is_some() {
                     break;
                 }
             }
-            Some(other) => panic!("ZIP resolver must yield a checkpoint before completion: {other:?}"),
+            other => panic!("ZIP resolver must yield a checkpoint before completion: {other:?}"),
         }
     }
     let saved = saved.expect("checkpoint after exactly one member");
-    original.job.begin_close();
-    for _ in 0..64 {
-        if original.job.terminal_is_empty() {
-            break;
-        }
-        let _ = original.job.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant());
-    }
-    assert!(original.job.terminal_is_empty());
+    close(&mut job, &mut session);
+    drop(job);
+    lease.close(&mut session.caller);
+    session.finish();
     assert!(consumer.test_take_emit().unwrap().is_none());
     for (revision, should_complete) in [([5; 32], true), ([6; 32], false)] {
         let completion = ArtifactToolCompletion::<App>::test_new();
         let consumer = completion.clone();
-        let spec = ToolOperationSpec::new("zip-replay", "set-node", Editor::NATIVE_PAYLOAD_SCHEMA, payload(completion, revision), operation);
-        let (admission, wire) = input(&wire);
-        let (_, checkpoint) = input(&saved);
-        let mut resumed = bus.dispatch_wire_retained_with_spec(&admission, wire, Some(checkpoint), spec).unwrap_or_else(|_| panic!("ZIP factory declares checkpoint resume"));
+        let (resumed_payload, lease) = payload(completion, revision);
+        let mut session = Session::new(operation);
+        let mut resumed = admit(&bus, &mut session, operation, key(), Editor::NATIVE_PAYLOAD_SCHEMA, resumed_payload, Some(wire(&wire_bytes)), Some(wire(&saved)));
         let mut completed = false;
         let mut faulted = false;
         for _ in 0..96 {
-            let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
-            match resumed.job.step(&mut cx).expect("ZIP resumed step") {
-                Some(JobOutcomeBorrow::PreviewReady { .. }) | Some(JobOutcomeBorrow::Yield { .. }) | None => {}
-                Some(JobOutcomeBorrow::CheckpointReady { state, .. }) => {
-                    let bytes = state.single_page().unwrap();
+            match step(&mut resumed, &mut session) {
+                Seen::Preview | Seen::Yield | Seen::Idle => {}
+                Seen::Checkpoint(Some(bytes)) => {
                     if bytes.get(5) == Some(&1) {
                         assert_ne!(bytes.get(56), Some(&1), "resumed work must not rescan the first member");
                     }
                 }
-                Some(JobOutcomeBorrow::Complete { .. }) => {
+                Seen::Checkpoint(None) => panic!("ZIP checkpoint carries one page"),
+                Seen::Complete => {
                     completed = true;
                     break;
                 }
-                Some(JobOutcomeBorrow::Fault { .. }) => {
+                Seen::Fault => {
                     faulted = true;
                     break;
                 }
-                Some(JobOutcomeBorrow::Cancelled { .. }) => panic!("uncancelled ZIP resume"),
+                Seen::Cancelled => panic!("uncancelled ZIP resume"),
             }
         }
         assert_eq!(completed, should_complete);
@@ -484,14 +473,10 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
             let expected = edit_node(&snapshot, &entry_node_id(row["rename"]["name"].as_str().unwrap()), row["rename"]["value"].as_str().unwrap(), &text_revision(row["rename"]["name"].as_str().unwrap())).unwrap();
             assert_eq!(emit.unwrap().artifact_mutations, expected.artifact_mutations);
         }
-        resumed.job.begin_close();
-        for _ in 0..64 {
-            if resumed.job.terminal_is_empty() {
-                break;
-            }
-            let _ = resumed.job.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant());
-        }
-        assert!(resumed.job.terminal_is_empty());
+        close(&mut resumed, &mut session);
+        drop(resumed);
+        lease.close(&mut session.caller);
+        session.finish();
     }
     assert!(crate::editor::zip::iso21320::ZipIso21320Editor::NATIVE_CHECKPOINT_RESUME);
 }

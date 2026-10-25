@@ -24,7 +24,7 @@ async fn round_trip(mutation: StepCc1Mutation) {
     let outcome = apply_step_cc1_mutation(&mut mutated, &mutation);
     assert!(outcome.messages().is_empty(), "{mutation:?} was rejected: {:?}", outcome.messages());
     assert_ne!(mutated, start, "{mutation:?} changed nothing -- a mutation that is not observable proves nothing");
-    for step in Mutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture") {
+    for step in ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture") {
         apply_step_cc1_mutation(&mut mutated, &step);
     }
     assert_eq!(mutated, start, "{mutation:?} then its inverse must restore the base");
@@ -76,7 +76,7 @@ fn a_rejected_mutation_leaves_the_snapshot_untouched() {
 async fn removing_a_middle_row_is_restored_at_its_original_index() {
     let start = base();
     let removal = StepCc1Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity: None });
-    let inverse = Mutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
+    let inverse = ::semio_framework_os_kernel::ColdMutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
     let [StepCc1Mutation::RestoreEntities(restore)] = inverse.as_slice() else { panic!("one atomic restore row expected: {inverse:?}") };
     assert_eq!(restore.entities.iter().filter_map(|row| row.index).collect::<Vec<_>>(), vec![0, 1, 2], "every chain rung comes back at its exact base position");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &start).await;

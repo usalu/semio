@@ -3,7 +3,7 @@
 //! `Set` assigns a scalar, `Opt` sets or clears an optional field, `List` edits an ordered id list, `Arr` assigns
 //! entries of a fixed array, `Coll`/`Rec` nest a collection or a record.
 
-use crate::diff_patch::{patch, record_patch, row_patch, Arr, Coll, Field, FieldPatch, List, Opt, Rec, Row, RowPatch, Set, Unchanged};
+use crate::diff_patch::{patch, record_patch, row_patch, Arr, Coll, Field, FieldPatch, List, Opt, Rec, RowPatch, Set, Unchanged};
 use protocol::MutationApplyError;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
@@ -43,16 +43,13 @@ impl FieldPatch for OutputVariableSpecPatch {
     }
 }
 
-impl Row for crate::model::OutputVariableSpec {
-    type Key = (String, String);
-    fn key(&self) -> Self::Key {
-        (self.name.clone(), self.key.clone())
-    }
-}
-
 impl RowPatch for OutputVariableSpecPatch {
+    type Key = (String, String);
     fn key(&self) -> (String, String) {
         (self.name.clone(), self.key.clone())
+    }
+    fn row_key(row: &crate::model::OutputVariableSpec) -> (String, String) {
+        (row.name.clone(), row.key.clone())
     }
 }
 
@@ -87,16 +84,13 @@ impl FieldPatch for AdjacencyPairPatch {
     }
 }
 
-impl Row for crate::model::AdjacencyPair {
-    type Key = (crate::model::EntityId, crate::model::EntityId);
-    fn key(&self) -> Self::Key {
-        (self.surface_a_id, self.surface_b_id)
-    }
-}
-
 impl RowPatch for AdjacencyPairPatch {
+    type Key = (crate::model::EntityId, crate::model::EntityId);
     fn key(&self) -> (crate::model::EntityId, crate::model::EntityId) {
         (self.surface_a_id, self.surface_b_id)
+    }
+    fn row_key(row: &crate::model::AdjacencyPair) -> (crate::model::EntityId, crate::model::EntityId) {
+        (row.surface_a_id, row.surface_b_id)
     }
 }
 //#endregion 🔖️CompositeKeys

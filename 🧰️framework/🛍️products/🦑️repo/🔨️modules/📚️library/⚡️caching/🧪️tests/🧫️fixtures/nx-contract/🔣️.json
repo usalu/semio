@@ -293,6 +293,10 @@
       "output": "{projectRoot}/pkg"
     },
     {
+      "project": "@semio-tech/trinity-jack-lsp",
+      "output": "{projectRoot}/pkg"
+    },
+    {
       "project": "@semio-tech/puzzle-plugin",
       "output": "{projectRoot}/pkg"
     },

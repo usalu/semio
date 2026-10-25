@@ -251,15 +251,17 @@
   "windows": [
     {
       "packages": [
-        "semio-framework-repo-dashboard-terminal"
+        "semio-framework-repo-dashboard-terminal-laws",
+        "semio-framework-repo-dashboard-source-view"
       ],
       "manifests": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🏛️laws/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📂️workspace/🖥️view/📦️packages/🦀️rust/Cargo.toml"
       ],
       "extraArgs": [
         "--lib",
         "-E",
-        "test(docking_) | test(real_pointer_drags_) | test(escape_focus_loss_) | test(keyboard_docking_) | test(every_window_docking_) | test(splitter_drag_) | test(nested_splits_)"
+        "test(docking_) | test(real_pointer_drags_) | test(escape_focus_loss_) | test(keyboard_docking_) | test(every_window_docking_) | test(splitter_drag_) | test(nested_splits_) | test(source_) | test(terminal_backend_failures_preserve_primary_and_cleanup_from_portable_cases) | test(unresolved_terminal_failure_reports_both_declared_languages_without_a_default) | test(clipboard_failure_is_recoverable_and_diagnostics_remain_inspectable_and_copyable) | test(local_control_failures_are_typed_translated_and_retained_under_a_bounded_history) | test(settings_keymap_drafts_match_portable_save_cancel_and_refusal_cases) | test(settings_prefix_is_editable_by_real_keys_and_cancel_never_queues_an_event) | test(keymap_alias_reset_and_durable_save_results_preserve_other_preferences)"
       ],
       "workspace": "."
     },
@@ -305,9 +307,14 @@
     "semio-framework-repo-dashboard-wire",
     "semio-framework-repo-dashboard-preferences",
     "semio-framework-repo-dashboard-labels",
+    "semio-framework-repo-dashboard-feedback",
+    "semio-framework-repo-dashboard-keymap-editor",
+    "semio-framework-repo-dashboard-source-view",
     "semio-framework-repo-dashboard-launcher",
+    "semio-framework-repo-dashboard-language-choice",
     "semio-framework-repo-dashboard-daemon",
     "semio-framework-repo-dashboard-terminal",
+    "semio-framework-repo-dashboard-terminal-laws",
     "semio-framework-repo-dashboard-cli",
     "semio-framework-repo-dashboard"
   ],
@@ -320,9 +327,14 @@
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/🧵️wire/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⚙️preferences/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️labels/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📣️feedback/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/⚙️settings/⌨️keymap/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📂️workspace/🖥️view/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🚀️launcher/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️language-choice/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🏛️laws/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧭️cli/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/Cargo.toml"
   ],
@@ -1109,7 +1121,7 @@
         ]
       },
       {
-        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml",
+        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️language-choice/📦️packages/🦀️rust/Cargo.toml",
         "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️language-choice/🦀️.rs",
         "fixture": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🌐️language/🔣️.json",
         "required": [
@@ -1117,8 +1129,8 @@
         ]
       },
       {
-        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml",
-        "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🦀️.rs",
+        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🏛️laws/📦️packages/🦀️rust/Cargo.toml",
+        "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/📂️sources/🦀️.rs",
         "fixture": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🧪️tests/🔣️.json",
         "required": [
           "limit",
@@ -1126,7 +1138,7 @@
         ]
       },
       {
-        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml",
+        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🏛️laws/📦️packages/🦀️rust/Cargo.toml",
         "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/🖼️window-focus-and-sessions/🦀️.rs",
         "fixture": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⌨️usage/🧪️tests/🔣️.json",
         "required": [
@@ -1134,8 +1146,8 @@
         ]
       },
       {
-        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml",
-        "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📂️sources/🦀️.rs",
+        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🏛️laws/📦️packages/🦀️rust/Cargo.toml",
+        "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/📂️sources/🦀️.rs",
         "fixture": "🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📬️commands/📝️buffer/🧫️fixtures/🔣️.json",
         "required": [
           "cases"

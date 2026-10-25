@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.repo.dependency-selectors/v1",
+  "title": "Rule selectors of the dependency-direction law beyond plain path patterns: dependency types, the circular flag, open selectors",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "graphCases",
+    "refusals",
+    "reportCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "graphCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/GraphCase"
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/Refusal"
+      }
+    },
+    "reportCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/ReportCase"
+      }
+    }
+  },
+  "$defs": {
+    "Selector": {
+      "type": "object"
+    },
+    "Rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "severity",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "const": "error"
+        },
+        "from": {
+          "$ref": "#/$defs/Selector"
+        },
+        "to": {
+          "$ref": "#/$defs/Selector"
+        }
+      }
+    },
+    "Edge": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "GraphCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "files",
+        "entries",
+        "rule",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "rule": {
+          "$ref": "#/$defs/Rule"
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Edge"
+          }
+        }
+      }
+    },
+    "Refusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "rule"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rule": {}
+      }
+    },
+    "ReportCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "exports",
+        "modules",
+        "rule",
+        "accept",
+        "edges"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "exports": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "modules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object"
+          }
+        },
+        "rule": {
+          "$ref": "#/$defs/Rule"
+        },
+        "accept": {
+          "type": "boolean"
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Edge"
+          }
+        },
+        "extraSources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

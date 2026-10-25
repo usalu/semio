@@ -234,7 +234,7 @@ export const collaborationDe = {
   },
 } satisfies Pick<UiTranslationSchema["ui"], "sync" | "ink" | "surfaceContextMenu" | "mutation" | "conflict" | "presence" | "timeTravel" | "history" | "referenceList" | "colorInput" | "nullableInput">;
 
-/** 🤝️ Sync, mutation, conflict, presence and time travel labels (`en`). */
+/** 🔄️ Sync, mutation, conflict, presence and time travel labels (`en`). */
 export const collaborationEn = {
   sync: {
     attach: { label: { normal: "Attach", beginner: "Attach" } },

@@ -12,5 +12,5 @@ export const readNugetLockV1:LockReaderV1=text=>{
  }
  return {packages,members};
 };
-/** 🔷️ The adapter: descriptor data plus the lock reader. */
+/** 📦️ The adapter: descriptor data plus the lock reader. */
 export const dotnetPackageManagerV1=createPackageManagerV1(descriptor as unknown as ManagerDescriptorV1,readNugetLockV1);

@@ -45,7 +45,7 @@ fn the_catalogue_carrier_fixture_pins_a_reordered_javascript_object() {
     assert_eq!(sorted, fixture.ascending_keys, "the same keys, in a different order");
 }
 
-/// 📜️ The defect: the wgpu shell refused the whole catalogue document with `UiFixedMap requires at
+/// 🟨️ The defect: the wgpu shell refused the whole catalogue document with `UiFixedMap requires at
 /// most 32 ascending unique entries` because this object does not arrive ascending.
 #[test]
 fn a_javascript_ordered_carrier_map_decodes_into_the_sorted_map() {
@@ -56,7 +56,7 @@ fn a_javascript_ordered_carrier_map_decodes_into_the_sorted_map() {
     assert_eq!(keys, fixture.ascending_keys, "a decoded fixed map is sorted regardless of wire order");
 }
 
-/// 📜️ The same wire shape embedded in `UiValue::Map` must decode in JavaScript key order — action args
+/// 🗺️ The same wire shape embedded in `UiValue::Map` must decode in JavaScript key order — action args
 /// and extension props use `UiMap`, not `UiFixedMap`.
 #[test]
 fn a_javascript_ordered_ui_map_decodes_into_the_sorted_map() {
@@ -67,7 +67,7 @@ fn a_javascript_ordered_ui_map_decodes_into_the_sorted_map() {
     assert_eq!(keys, fixture.ascending_keys, "a decoded UiMap is sorted regardless of wire order");
 }
 
-/// 📜️ …and each value round-trips as the text slice the carrier stores.
+/// 📖️ …and each value round-trips as the text slice the carrier stores.
 #[test]
 fn a_javascript_ordered_ui_map_preserves_text_values() {
     let fixture = fixture();
@@ -80,7 +80,7 @@ fn a_javascript_ordered_ui_map_preserves_text_values() {
     }
 }
 
-/// 📜️ A duplicate key is still a refusal for `UiMap`.
+/// 🔑️ A duplicate key is still a refusal for `UiMap`.
 #[test]
 fn a_ui_map_still_refuses_duplicate_keys() {
     let duplicated = r#"{"02":"b","01":"a","02":"c"}"#;
@@ -88,7 +88,7 @@ fn a_ui_map_still_refuses_duplicate_keys() {
     assert!(error.to_string().contains("unique"), "the decoder names duplication: {error}");
 }
 
-/// 📜️ …and so is one entry past capacity, whatever order it arrives in.
+/// 🛑️ …and so is one entry past capacity, whatever order it arrives in.
 #[test]
 fn a_ui_map_still_refuses_one_entry_past_capacity() {
     let entries: Vec<String> = (0..=UI_VALUE_MAX_ITEMS).rev().map(|index| format!(r#""{index:03}":"v{index}""#)).collect();
@@ -98,7 +98,7 @@ fn a_ui_map_still_refuses_one_entry_past_capacity() {
     println!("catalogue-carrier-map ui-map capacity-refusal entries={} {error}", UI_VALUE_MAX_ITEMS + 1);
 }
 
-/// 📜️ …and the whole leaf reassembles byte-for-byte, which is what `UiDocumentLease::read_paged_text` and the
+/// 🍃️ …and the whole leaf reassembles byte-for-byte, which is what `UiDocumentLease::read_paged_text` and the
 /// React renderer's `packedTextLeaf` both depend on.
 #[test]
 fn a_javascript_ordered_carrier_leaf_recovers_its_payload() {
@@ -108,14 +108,14 @@ fn a_javascript_ordered_carrier_leaf_recovers_its_payload() {
     assert_eq!(props.packed_payload(), fixture.payload, "the carrier leaf must recover the catalogue payload byte-for-byte");
 }
 
-/// 📜️ A duplicate key is still a refusal — an unordered wire must not silently collapse two entries.
+/// 🗝️ A duplicate key is still a refusal — an unordered wire must not silently collapse two entries.
 #[test]
 fn a_carrier_map_still_refuses_duplicate_keys() {
     let duplicated = r#"{"02":"b","01":"a","02":"c"}"#;
     let error = serde_json::from_str::<UiFixedMap<UiText>>(duplicated).expect_err("a duplicate key must be refused");
 }
 
-/// 📜️ …and so is one entry past capacity, whatever order it arrives in.
+/// ⛔️ …and so is one entry past capacity, whatever order it arrives in.
 #[test]
 fn a_carrier_map_still_refuses_one_entry_past_capacity() {
     let entries: Vec<String> = (0..=UI_FIXED_LIST_ITEMS).rev().map(|index| format!(r#""{index:02}":"v{index}""#)).collect();
@@ -123,7 +123,7 @@ fn a_carrier_map_still_refuses_one_entry_past_capacity() {
     let error = serde_json::from_str::<UiFixedMap<UiText>>(&overflowing).expect_err("one entry past capacity must be refused");
 }
 
-/// 📜️ A refusal must NAME its cause. The two are different defects with different owners — a producer
+/// 🏷️ A refusal must NAME its cause. The two are different defects with different owners — a producer
 /// publishing more than `UI_FIXED_LIST_ITEMS` keys, versus the aggregate page grant running out
 /// mid-document — and the wgpu bridge surfaces this text verbatim inside `renderDocument result parse
 /// failed`, where it is the only evidence a reader gets. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
@@ -149,7 +149,7 @@ fn a_carrier_map_refusal_names_capacity_and_page_grant_apart() {
     assert!(error.to_string().contains("capacity"), "the decoder surfaces the same vocabulary: {error}");
 }
 
-/// 📜️ The `FromValue` decoder is the same wire in the pack codec the guest speaks, so it carries the
+/// 🎒️ The `FromValue` decoder is the same wire in the pack codec the guest speaks, so it carries the
 /// same law — a document that survives `serde_json` must survive it too.
 #[test]
 fn a_javascript_ordered_carrier_map_decodes_through_from_value() {
@@ -164,7 +164,7 @@ fn a_javascript_ordered_carrier_map_decodes_through_from_value() {
     assert_eq!(keys, fixture.ascending_keys, "a decoded fixed map is sorted regardless of pack order");
 }
 
-/// 📜️ The producer's own ascending path is unchanged — a full pack built the way
+/// 📈️ The producer's own ascending path is unchanged — a full pack built the way
 /// `section_text_chunks` builds it still round-trips through the renderer's reader.
 #[test]
 fn an_ascending_carrier_leaf_still_round_trips_through_json() {

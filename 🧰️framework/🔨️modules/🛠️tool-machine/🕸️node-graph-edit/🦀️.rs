@@ -8,7 +8,7 @@ pub const NODE_DRAG_OPERATION: &str = "move";
 /// 🧾️ The closed field set of a [`NODE_DRAG_OPERATION`] row.
 pub const NODE_DRAG_ROW_FIELDS: [&str; 5] = ["operation", "gestureId", "nodeIds", "dx", "dy"];
 
-/// ✋️ The node-graph gesture record every node-graph host dispatches for a released node drag (design §13.3): the press
+/// 📹️ The node-graph gesture record every node-graph host dispatches for a released node drag (design §13.3): the press
 /// it closes, the nodes it moved, and the ONE offset every one of them moved by, relative to where it started. A guest
 /// turns it into its own relative leaf (`drag-nodes`, `move-nodes`, …) and commits it through [`node_drag_commit`], so
 /// editing the drag in history replays the offset on whatever base it lands on.
@@ -21,7 +21,7 @@ pub struct NodeDragRecord {
 }
 
 impl NodeDragRecord {
-    /// 🧾️ Decodes one `{operation:"move", gestureId, nodeIds, dx, dy}` row; any other field, a missing one, an empty
+    /// 🔑️ Decodes one `{operation:"move", gestureId, nodeIds, dx, dy}` row; any other field, a missing one, an empty
     /// gesture or node id, no node or one node twice, or a non-finite offset is refused by name.
     pub fn from_row(row: &protocol::DslValue) -> Result<Self, String> {
         let fields = row.as_object().ok_or("a node drag row must be an object")?;
@@ -83,7 +83,7 @@ pub fn authoring_clock(logical: u64) -> HybridLogicalTimestamp {
     HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical }
 }
 
-/// 🛠️ What a released node drag publishes ([`node_drag_emit`]): ONE tool transaction of its leaves, the leaves as a plain
+/// 🖱️ What a released node drag publishes ([`node_drag_emit`]): ONE tool transaction of its leaves, the leaves as a plain
 /// edit (a view without command authority: no authoring seed), or nothing (no leaves: zero trace).
 #[derive(Clone, Debug, PartialEq)]
 pub enum NodeDragEmit<M> {
@@ -102,7 +102,7 @@ impl<M> NodeDragEmit<M> {
     }
 }
 
-/// 🛠️ The ONE node-drag emission of every guest: `leaves` of the press `gesture` through [`node_drag_commit`] as the tool
+/// 📌️ The ONE node-drag emission of every guest: `leaves` of the press `gesture` through [`node_drag_commit`] as the tool
 /// `<app_id>#<verb>`, minted from the admission's `authoring_seed` and [`authoring_clock`].
 pub fn node_drag_emit<M: Clone + 'static>(app_id: &str, verb: &str, authoring_seed: &str, gesture: &str, leaves: Vec<M>) -> NodeDragEmit<M> {
     match node_drag_commit(format!("{app_id}#{verb}"), ActorId(authoring_seed.into()), gesture, leaves, authoring_clock(GESTURE_CLOCK_TICK.fetch_add(1, std::sync::atomic::Ordering::Relaxed))) {
@@ -127,7 +127,7 @@ pub fn tool_once_emit<M: Clone + 'static>(app_id: &str, verb: &str, authoring_se
 //#region 🔖️NodeGraphEditRows
 /// 📏️ The most rows one `nodeGraphEdit` dispatch carries.
 pub const NODE_GRAPH_EDIT_MAX_ROWS: usize = 256;
-/// 🧾️ The root fields a `nodeGraphEdit` dispatch may carry: its rows, and the press of a dragged inline slider that the
+/// ✏️ The root fields a `nodeGraphEdit` dispatch may carry: its rows, and the press of a dragged inline slider that the
 /// framework scrub machine reads (design §13.1).
 pub const NODE_GRAPH_EDIT_ROOT_FIELDS: [&str; 4] = ["operations", SCRUB_GESTURE_ARG, SCRUB_COMMIT_ARG, SCRUB_ABORT_ARG];
 
@@ -152,7 +152,7 @@ pub enum NodeGraphEditRow {
 }
 
 impl NodeGraphEditRow {
-    /// 🧾️ Decodes one closed row; an unknown operation, a field outside the row's schema, an empty id, a repeated id, a
+    /// 📕️ Decodes one closed row; an unknown operation, a field outside the row's schema, an empty id, a repeated id, a
     /// non-numeric or non-finite number, an unknown port side or a non-integer index is refused by name.
     pub fn from_row(row: &protocol::DslValue) -> Result<Self, String> {
         let operation = row.get("operation").and_then(protocol::DslValue::as_str).ok_or("a nodeGraphEdit row names its operation")?;
@@ -216,7 +216,7 @@ impl NodeGraphEditRow {
     }
 }
 
-/// 🧾️ Decodes the arguments of one `nodeGraphEdit` dispatch: an object holding exactly its `operations` (at most
+/// 📝️ Decodes the arguments of one `nodeGraphEdit` dispatch: an object holding exactly its `operations` (at most
 /// [`NODE_GRAPH_EDIT_MAX_ROWS`] closed rows) and optionally the scrub press fields. Any malformed row refuses the whole batch
 /// before a guest maps anything; an empty batch (a host abort of a slider press) decodes to no rows.
 pub fn node_graph_edit_rows(args: &protocol::DslValue) -> Result<Vec<NodeGraphEditRow>, String> {

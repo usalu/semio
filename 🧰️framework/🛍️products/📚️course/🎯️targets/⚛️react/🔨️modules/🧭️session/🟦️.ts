@@ -18,7 +18,8 @@
  * ({@link CourseSession.now}), so a connection shortage never makes a timely answer late. An easy run's hints follow
  * every answer — at once from the deputy, else with the proctor's view of the run once its answers are delivered.
  *
- * With a {@link Deputy} the device also decides by itself. A command goes straight to the proctor unless the proctor
+ * With a {@link Deputy} — handed in with the options, or seated later by {@link CourseSession.attachDeputy} once a lazily fetched
+ * material has arrived — the device also decides by itself. A command goes straight to the proctor unless the proctor
  * is known not to answer or something the deputy decided still waits in the outbox; then the deputy decides it, its events
  * fold into the held views at once and the command waits in the outbox for the proctor. What the deputy decided is
  * provisional: while such a command waits, the proctor's views are behind and are not adopted; once none waits they
@@ -37,6 +38,7 @@
  */
 
 import { type Answer, type Challenge, type Id, type IdentityClaim, type RunView, type Slug } from "@semio-tech/course";
+import type { Deputy } from "../🫡️deputy/🟦️.ts";
 import { type LocalStore } from "../💾️persistence/🟦️.ts";
 import { Outbox } from "../📮️outbox/🟦️.ts";
 import { RETRY_TIMING, type ProctorClient } from "../🛂️proctor/🟦️.ts";
@@ -53,7 +55,7 @@ import { Adoption } from "./🪟️adoption/🟦️.ts";
 import { OutboxOverlay } from "./🧺️outbox-overlay/🟦️.ts";
 import { Deputising } from "./🫡️deputising/🟦️.ts";
 import { type BoardChoice, type CourseStep } from "./🧮️state/🟦️.ts";
-import { DEPUTY_PATIENCE_MS, type CourseConnection, type CourseSessionOptions, type CourseSnapshot, type SessionFailure, type SubmissionPhase } from "./📋️session-model/🟦️.ts";
+import { DEPUTY_PATIENCE_MS, type CourseConnection, type DeputySeat, type CourseSessionOptions, type CourseSnapshot, type SessionFailure, type SubmissionPhase } from "./📋️session-model/🟦️.ts";
 
 //#region 🎮️Session
 /** 🎮️ One learner session against one proctor tenant — an external store for the UI and the controller of its intents. */
@@ -80,20 +82,20 @@ export class CourseSession {
   constructor(options: CourseSessionOptions) {
     const clock = options.now ?? Date.now;
     const timing = options.timing ?? RETRY_TIMING;
-    const deputy = options.deputy;
+    const seat: DeputySeat = { current: options.deputy };
     this.proctor = options.proctor;
     this.store = options.store;
     this.link = new ProctorLink(options.proctor, timing, options.patienceMs ?? DEPUTY_PATIENCE_MS, clock);
     this.outbox = new Outbox({ send: (command, signal) => this.settlement.deliver(command, signal), store: options.store, timing, now: clock, onSettled: (command, verdict) => this.settlement.settled(command, verdict) });
-    const overlay = new OutboxOverlay(this.outbox, options.store, deputy);
+    const overlay = new OutboxOverlay(this.outbox, options.store, seat);
     const connection = (): CourseConnection => {
       const status = this.outbox.status();
       const reachability = options.proctor.reachability();
       const contract = reachability === "incompatible" ? options.proctor.contract() : undefined;
-      return { reachability, online: this.lifecycle.isOnline(), pending: status.pending, activity: status.activity, deputy: deputy !== undefined, ...(contract === undefined ? {} : { contract }) };
+      return { reachability, online: this.lifecycle.isOnline(), pending: status.pending, activity: status.activity, deputy: seat.current !== undefined, ...(contract === undefined ? {} : { contract }) };
     };
     this.state = new HeldState(options.store, connection, overlay.restore());
-    this.deputising = new Deputising(deputy, this.state, this.outbox, this.link, this.lifecycle);
+    this.deputising = new Deputising(seat, this.state, this.outbox, this.link, this.lifecycle);
     this.deputising.rehintAll();
     const routing = new DecisionRouting(this.state, this.link, this.lifecycle, this.outbox, this.deputising);
     this.reads = new ProctorReads(this.state, this.link, this.lifecycle, this.outbox, overlay, this.deputising, routing);
@@ -159,6 +161,12 @@ export class CourseSession {
     this.outbox.wake();
     void this.refreshCourse();
     void this.refreshLearner();
+  }
+
+  /** 🫡️ Seats the deputy of material that arrived after the session began ({@link Deputising.seatDeputy}); from then on
+   * the device decides while the proctor is away. Does nothing when a deputy sits already. */
+  attachDeputy(deputy: Deputy): void {
+    this.deputising.seatDeputy(deputy);
   }
 
   /** 👋️ The learner has read the introduction. */

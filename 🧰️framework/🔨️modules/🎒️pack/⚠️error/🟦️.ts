@@ -13,7 +13,7 @@ export type PackRetryDisposition = "never" | "transient";
 /** 📋️ The lower borrowed source's refusal kind: the three spellings a paged list can produce. */
 export type PagedRefusalKind = Extract<ValueRefusalKind, "ownershipLimit" | "allocationFailed" | "invariantViolated">;
 
-/** 📋️ The lower borrowed source's kind and static reason, without any prose parsing. */
+/** 📃️ The lower borrowed source's kind and static reason, without any prose parsing. */
 export type PagedRefusalMetadata = Readonly<{kind: PagedRefusalKind; reason: string}>;
 
 /** 🧱️ The borrowed cause plus the actual allocated byte witness. */
@@ -57,7 +57,7 @@ export function packErrorMessage(data: PackErrorData): string {
   }
 }
 
-/** 🧭️ Reads intrinsic syntax authority or the actual mandatory producer-authored kind. */
+/** 🎒️ Reads intrinsic syntax authority or the actual mandatory producer-authored kind. */
 export function packErrorRefusalKind(data: PackErrorData): ValueRefusalKind {
   switch (data.kind) {
     case "BadMagic": case "Truncated": case "ChecksumMismatch": case "ContentHashMismatch": case "NonCanonical": return "invalidValue";
@@ -75,17 +75,17 @@ export class PackError extends Error {
   }
   /** 🔎️ The semantic kind of this refusal. */
   get refusalKind(): ValueRefusalKind { return packErrorRefusalKind(this.data); }
-  /** 🧭️ The cause identity: always a refusal here, with the original kind. */
+  /** 🔑️ The cause identity: always a refusal here, with the original kind. */
   get causeKind(): PackCauseKind { return {kind: "refusal", refusalKind: this.refusalKind}; }
-  /** 🔁️ The retry choice of the transport owner, `null` for every error no transport produced. */
+  /** ❌️ The retry choice of the transport owner, `null` for every error no transport produced. */
   get retry(): PackRetryDisposition | null { return this.data.kind === "Io" ? this.data.retry : null; }
   static fromValue(error: ValueError): PackError { return new PackError({kind: "ValueRefusal", error}); }
   static fromText(error: TextError): PackError { return new PackError({kind: "TextRefusal", error}); }
-  /** 📋️ Preserves the lower borrowed source's kind and static reason. */
+  /** 🛑️ Preserves the lower borrowed source's kind and static reason. */
   static fromPagedRefusal(error: PagedRefusalMetadata, what: string, offset: bigint): PackError {
     return new PackError({kind: "RetainedMalformed", refusalKind: error.kind, what, offset, detail: error.reason});
   }
-  /** 🧱️ Preserves the actual allocated byte witness alongside the borrowed cause. */
+  /** ⚖️ Preserves the actual allocated byte witness alongside the borrowed cause. */
   static fromPagedAllocation(error: PagedAllocationMetadata, what: string, offset: bigint): PackError {
     return new PackError({kind: "RetainedAllocation", refusalKind: error.kind, allocatedBytes: error.allocatedBytes, what, offset, detail: error.reason});
   }

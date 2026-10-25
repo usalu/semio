@@ -14,23 +14,18 @@
 //!
 //! Both are structural, so they are checked here instead of being rediscovered by a wedged build.
 
-use semio_framework_test_fixtures::manifest_dir;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// 📂️ Repo root, five levels above `semio-framework-ui`'s manifest
-/// (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust`).
+/// 📂️ Repo root, found from the manifest of the crate that compiles this law.
 fn repo_root() -> PathBuf {
-    let mut root = manifest_dir!();
-    for _ in 0..5 {
-        root = root.parent().expect("manifest dir has five ancestors up to the repo root").to_path_buf();
-    }
-    root
+    semio_framework_test_fixtures::repo_root!()
 }
 
-/// 🔎️ The two trees that own wgpu case directories: the ui module (its own `🎯️targets/🧊️wgpu` plus
-/// every `🧱️elements/*/🎯️targets/🧊️wgpu`) and the os renderer engine.
-const SCAN_ROOTS: &[&str] = &["🧰️framework/🔨️modules/🖱️ui", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer"];
+/// 🔎️ The trees that own wgpu case directories or mount them: the ui module (its own `🎯️targets/🧊️wgpu` plus
+/// every `🧱️elements/*/🎯️targets/🧊️wgpu`), the os renderer engine and the icon vocabulary, whose
+/// `IconName` value codec mounts its round-trip case from the ui tests.
+const SCAN_ROOTS: &[&str] = &["🧰️framework/🔨️modules/🖱️ui", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer", "🧰️framework/🔨️modules/🖼️assets/🔣️icons"];
 
 /// 🚫️ Build output and vendored trees — never sources, and large enough to matter when walking.
 const SKIP_DIRS: &[&str] = &["node_modules", "dist", "target", "🗑️generated"];
@@ -57,7 +52,7 @@ fn walk(dir: &Path, sources: &mut Vec<PathBuf>, cases: &mut Vec<PathBuf>) {
                 walk(&path, sources, cases);
             }
         } else if name.ends_with(".rs") {
-            if is_wgpu_case_dir(dir) && name == "🦀️.rs" {
+            if is_wgpu_case_dir(dir) && name == "🦀️.rs" && !dir.join("📦️packages/🦀️rust/Cargo.toml").exists() {
                 cases.push(path.clone());
             }
             sources.push(path);
@@ -127,7 +122,7 @@ fn scan() -> (PathBuf, Vec<PathBuf>, Vec<PathBuf>) {
     (root, sources, cases)
 }
 
-/// ⚖️ Exactly one production mount per case directory: none means dead test code, two means the
+/// 📁️ Exactly one production mount per case directory: none means dead test code, two means the
 /// same assertions run twice under two module paths.
 #[test]
 fn every_wgpu_case_directory_is_mounted_exactly_once() {
@@ -144,7 +139,7 @@ fn every_wgpu_case_directory_is_mounted_exactly_once() {
     assert!(violations.is_empty(), "wgpu test case directories must be mounted exactly once by a `#[path]`/`include!` in a production source:\n{}", violations.join("\n"));
 }
 
-/// ⚖️ No mount points at a missing file. One dangling `#[path]` fails the crate's whole `--tests`
+/// 🔗️ No mount points at a missing file. One dangling `#[path]` fails the crate's whole `--tests`
 /// build, so it must fail here — where the message names the offender — instead of there.
 #[test]
 fn no_module_mount_in_the_wgpu_trees_is_dangling() {

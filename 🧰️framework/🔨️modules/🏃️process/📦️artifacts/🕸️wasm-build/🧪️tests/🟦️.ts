@@ -1,4 +1,3 @@
-import"./📐️arguments/🟦️.ts";
 import { build } from "esbuild";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { test, expect } from "bun:test";
@@ -21,7 +20,7 @@ for(const owner of [
  const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"node-compiler-owner-")), executable=join(root,"fixture");writeFileSync(executable,Buffer.from(fixture.wasmHex,"hex"),{mode:0o700});
  const compiled=await build({entryPoints:[fileURLToPath(owner.source)],bundle:true,write:false,format:"esm",platform:"node",metafile:true,define:{"import.meta.url":JSON.stringify(pathToFileURL(fileURLToPath(owner.source)).href)},plugins:[{name:"refuse-product-imports",setup(build){build.onResolve({filter:/.*/},args=>/🛍️products|✏️s|🌎️hub/u.test(args.path)?{errors:[{text:`Product dependency refused: ${args.path}`}]}:undefined);}}]});
  expect(Object.keys(compiled.metafile!.inputs).every(path=>!/[🛍]|✏️s|🌎️hub/u.test(path))).toBe(true);
- const result=spawnSync("node",["--input-type=module","-e",compiled.outputFiles![0]!.text+`\nprocess.stdout.write(JSON.stringify(${owner.expression}));`,executable],{encoding:"utf8",timeout:5000});expect(result.status).toBe(0);expect(result.stderr).toBe("");
+ const result=spawnSync("node",["--input-type=module","-"],{encoding:"utf8",timeout:30000,input:compiled.outputFiles![0]!.text+`\nprocess.argv[1]=${JSON.stringify(executable)};process.stdout.write(JSON.stringify(${owner.expression}));`});expect(result.status).toBe(0);expect(result.stderr).toBe("");
  const expected=owner.expected??Buffer.from(await crypto.subtle.digest("SHA-256",Buffer.from(fixture.wasmHex,"hex"))).toString("hex");expect(JSON.parse(result.stdout)).toBe(expected);
 });
 

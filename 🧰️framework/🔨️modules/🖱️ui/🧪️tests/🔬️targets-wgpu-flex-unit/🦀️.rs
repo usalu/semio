@@ -1,11 +1,14 @@
 use super::*;
 use ui_contract::{AbsoluteLayout, Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, LeafLayout, ScrollAxes, ScrollLayout, Sizing, SpaceToken, StackLayout};
 
+#[global_allocator]
+static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 #[test]
 fn original_flex_grid_close_preserves_native_depth_denial_and_exact_release(){
     let grant=ui_contract::UI_WORKER_RETIREMENT_POLICY;
     for count in [1,16,32]{
-        let(mut owner,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let mut grid=GridLayout::default();for _ in 0..count{grid.try_push_column(GridTrack::Fraction(1)).unwrap();grid.try_push_row(GridTrack::Auto).unwrap();}let mut owner=FlexTree::new();owner.grids.push(Some(Box::new(grid)));owner});
+        let(mut owner,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let mut grid=GridLayout::default();for _ in 0..count{grid.try_push_column(GridTrack::Fraction(1)).unwrap();grid.try_push_row(GridTrack::Auto).unwrap();}let mut owner=FlexTree::new();assert!(owner.grids.try_push(Some(Box::new(grid))).is_ok());owner});
         let mut released=birth.released_bytes;let mut turns=0;let mut depth_denials=0;
         while !owner.close_is_empty(){
             let depth=owner.next_close_depth_demand().unwrap();let original=owner.grids.last().and_then(Option::as_deref).map(|grid|grid as*const _);let bytes=owner.next_close_release_byte_demand().unwrap();
@@ -39,7 +42,8 @@ impl Fixture {
     fn push(&mut self, kind: LayoutNodeKind, parent: Option<usize>, authored: Option<&LayoutSpec>) -> usize {
         let index = self.children.len();
         let parent_kind = parent.map(|parent| self.kinds[parent]);
-        assert!(self.flex.push(kind, parent, authored, &self.metrics, parent_kind, None), "push {index}");
+        while !matches!(self.flex.fund_next_node(ui_contract::UI_WORKER_RETIREMENT_POLICY).expect("node table funding"), NodeFunding::Ready) {}
+        assert!(self.flex.push(kind, parent, authored, &self.metrics, parent_kind, None).is_some(), "push {index}");
         self.children.push(Vec::new());
         self.parents.push(parent);
         self.kinds.push(kind);
@@ -59,12 +63,18 @@ impl Fixture {
         let sizes = self.sizes.clone();
         let mut measure = |node: usize, _constraint: MeasureConstraint| sizes[node];
         for index in (0..self.children.len()).rev() {
-            assert!(self.flex.measure_one(index, &self.children[index], &mut measure), "measure {index}");
+            self.fund(index);
+            assert!(self.flex.measure_one(index, self.children[index].iter().copied(), &mut measure), "measure {index}");
         }
         assert!(self.flex.set_root_box(0, FlexRect { x: 0.0, y: 0.0, width, height }), "root box");
         for index in 0..self.children.len() {
-            assert!(self.flex.arrange_one(index, &self.children[index], &mut measure), "arrange {index}");
+            self.fund(index);
+            assert!(self.flex.arrange_one(index, self.children[index].iter().copied(), &mut measure), "arrange {index}");
         }
+    }
+
+    fn fund(&mut self, index: usize) {
+        while !matches!(self.flex.fund_scratch(index, self.children[index].iter().copied(), ui_contract::UI_WORKER_RETIREMENT_POLICY).expect("track table funding"), NodeFunding::Ready) {}
     }
 
     fn rect(&self, index: usize) -> FlexRect {
@@ -80,7 +90,7 @@ fn fixed_leaf() -> LayoutSpec {
     LayoutSpec::Leaf(LeafLayout { width: Sizing::Fixed(SpaceToken::Xxl), height: Sizing::Fixed(SpaceToken::Lg) })
 }
 
-/// 🧪️ Builds a root container with `count` identical `Fixed(Xxl) x Fixed(Lg)` children — the shape
+/// 🔩️ Builds a root container with `count` identical `Fixed(Xxl) x Fixed(Lg)` children — the shape
 /// most align/justify/wrap fixtures need. Xxl is 38.4px, Lg is 19.2px on the shared ramp.
 fn fixed_children(root: LayoutSpec, count: usize, width: f32, height: f32) -> Fixture {
     let mut fixture = Fixture::new();
@@ -143,7 +153,7 @@ fn the_flex_engine_carries_no_test_gating() {
 
 //#region 📏️SpaceTokenRamp
 
-/// 📏️ The seven-value ramp React resolves through `spaceTokenRem`/`SPACE_TOKEN_MULTIPLIER` —
+/// 🪐️ The seven-value ramp React resolves through `spaceTokenRem`/`SPACE_TOKEN_MULTIPLIER` —
 /// `0, 1, 2, 4, 6, 8, 12` steps of the compact `--ui-spacing` (3.2px). The pre-parity wgpu target
 /// collapsed these onto three buckets (`none`/`tight`/`loose`), rendering `Xs` and `Sm` identically
 /// and shrinking `Md` fourfold.
@@ -498,17 +508,20 @@ fn the_flex_tree_releases_exactly_one_node_per_close_grant() {
     let metrics = TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default());
     let mut flex = FlexTree::new();
     for index in 0..4 {
-        assert!(flex.push(LayoutNodeKind::Leaf, if index == 0 { None } else { Some(0) }, None, &metrics, None, None));
+        while !matches!(flex.fund_next_node(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap(), NodeFunding::Ready) {}
+        assert!(flex.push(LayoutNodeKind::Leaf, if index == 0 { None } else { Some(0) }, None, &metrics, None, None).is_some());
     }
-    let grant = |release| RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 1 };
+    let grant = |release| RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 64 };
     for step in (1..=4).rev() {
         assert_eq!(flex.len(), step);
         assert!(matches!(flex.close_granted(grant(0)).unwrap(), Step::Pending { progress } if progress.copied_items == 1 && progress.released_bytes == 0), "each granted logical owner advances exactly once");
     }
     assert!(flex.is_empty());
     assert!(!flex.close_is_empty(), "logical emptiness retains physical backing");
-    let backings = [flex.flows.capacity(), flex.grids.capacity(), flex.intrinsic.capacity(), flex.resolved.capacity(), flex.main.capacity(), flex.cross.capacity()].into_iter().filter(|capacity| *capacity != 0).count();
-    for _ in 0..backings {
+    let mut turns = 0;
+    while !flex.close_is_empty() {
+        turns += 1;
+        assert!(turns <= 64, "physical close terminates");
         let bytes = flex.next_close_release_byte_demand().unwrap();
         assert!(bytes > 0);
         assert!(matches!(flex.close_granted(grant(bytes - 1)).unwrap(), Step::Pending { progress } if progress == RetainedCloneProgress::default()));
@@ -523,8 +536,8 @@ fn the_flex_tree_releases_exactly_one_node_per_close_grant() {
 fn a_solve_against_a_node_that_was_never_admitted_is_refused_rather_than_guessed() {
     let mut flex = FlexTree::new();
     let mut measure = |_node: usize, _constraint: MeasureConstraint| (0.0_f32, 0.0_f32);
-    assert!(!flex.measure_one(0, &[], &mut measure));
-    assert!(!flex.arrange_one(0, &[], &mut measure));
+    assert!(!flex.measure_one(0, std::iter::empty(), &mut measure));
+    assert!(!flex.arrange_one(0, std::iter::empty(), &mut measure));
     assert!(!flex.set_root_box(0, FlexRect::default()));
     assert_eq!(flex.rect(0), None);
 }
@@ -592,4 +605,287 @@ fn an_engine_surface_root_solves_against_the_viewport_it_is_given() {
     fixture.solve(1433.6, 813.6);
     let rect = fixture.rect(scene);
     assert!(close(rect.width, 1433.6) && close(rect.height, 813.6), "got {rect:?}");
+}
+
+//#region ⚖️TaffyOracle
+
+/// 🔮️ The third-party oracle: taffy reads the very `FlowStyle` the owned solvers read, so a corpus case lands in both engines
+/// through one constructor ([`flow_for`]) and the two cannot drift by mapping.
+fn oracle_style(flow: &FlowStyle, tracks: Option<&GridLayout>) -> taffy::Style {
+    use taffy::style as css;
+    let grid = matches!(flow.kind, FlowKind::Grid);
+    let inset = |value: Option<f32>| value.map_or_else(css::LengthPercentageAuto::auto, css::LengthPercentageAuto::length);
+    let dim = |dim: Dim| match dim {
+        Dim::Auto => css::Dimension::auto(),
+        Dim::Fill => css::Dimension::percent(1.0),
+        Dim::Length(value) => css::Dimension::length(value),
+    };
+    let gap = |column: f32, row: f32| taffy::geometry::Size { width: css::LengthPercentage::length(column), height: css::LengthPercentage::length(row) };
+    let track = |track: GridTrack| -> css::GridTemplateComponent<String> {
+        use taffy::style_helpers::{auto, fr, length, max_content, min_content};
+        match track {
+            GridTrack::Auto => auto(),
+            GridTrack::Fraction(count) => fr(f32::from(count)),
+            GridTrack::Fixed(token) => length(token.px()),
+            GridTrack::MinContent => min_content(),
+            GridTrack::MaxContent => max_content(),
+        }
+    };
+    let mut style = taffy::Style {
+        display: if grid { css::Display::Grid } else { css::Display::Flex },
+        flex_direction: if flow.row { css::FlexDirection::Row } else { css::FlexDirection::Column },
+        flex_wrap: if matches!(flow.kind, FlowKind::Wrapped) { css::FlexWrap::Wrap } else { css::FlexWrap::NoWrap },
+        flex_grow: flow.grow,
+        flex_shrink: flow.shrink,
+        gap: if grid { gap(flow.gap_cross, flow.gap_main) } else { gap(flow.gap_main, flow.gap_main) },
+        padding: taffy::geometry::Rect {
+            left: css::LengthPercentage::length(flow.padding.left),
+            right: css::LengthPercentage::length(flow.padding.right),
+            top: css::LengthPercentage::length(flow.padding.top),
+            bottom: css::LengthPercentage::length(flow.padding.bottom),
+        },
+        align_items: Some(match flow.align {
+            Align::Start => css::AlignItems::Start,
+            Align::Center => css::AlignItems::Center,
+            Align::End => css::AlignItems::End,
+            Align::Stretch => css::AlignItems::Stretch,
+            Align::Baseline => css::AlignItems::Baseline,
+        }),
+        justify_content: Some(match flow.justify {
+            Justify::Start => css::JustifyContent::Start,
+            Justify::Center => css::JustifyContent::Center,
+            Justify::End => css::JustifyContent::End,
+            Justify::SpaceBetween => css::JustifyContent::SpaceBetween,
+            Justify::SpaceAround => css::JustifyContent::SpaceAround,
+            Justify::SpaceEvenly => css::JustifyContent::SpaceEvenly,
+        }),
+        size: taffy::geometry::Size { width: dim(flow.width), height: dim(flow.height) },
+        min_size: taffy::geometry::Size { width: css::Dimension::length(flow.min_width), height: css::Dimension::length(flow.min_height) },
+        position: if flow.absolute { css::Position::Absolute } else { css::Position::Relative },
+        inset: taffy::geometry::Rect { top: inset(flow.inset[0]), right: inset(flow.inset[1]), bottom: inset(flow.inset[2]), left: inset(flow.inset[3]) },
+        ..Default::default()
+    };
+    if flow.clips {
+        style.overflow = taffy::geometry::Point { x: css::Overflow::Hidden, y: css::Overflow::Hidden };
+    }
+    if let Some(tracks) = tracks {
+        style.grid_template_columns = tracks.columns.iter().copied().map(track).collect();
+        style.grid_template_rows = tracks.rows.iter().copied().map(track).collect();
+    }
+    style
+}
+
+#[derive(Clone, Copy)]
+struct OracleLeaf {
+    intrinsic: (f32, f32),
+}
+
+/// 🧮️ Solves node 0's children of an already measured fixture with taffy, against the box the owned arrange was given.
+fn oracle_solve(fixture: &Fixture, width: f32, height: f32) -> Vec<FlexRect> {
+    let mut oracle: taffy::TaffyTree<OracleLeaf> = taffy::TaffyTree::new();
+    oracle.disable_rounding();
+    let leaves: Vec<taffy::NodeId> = (1..fixture.children.len())
+        .map(|index| {
+            let flow = fixture.flex.flows.get(index).expect("leaf flow");
+            let leaf = OracleLeaf { intrinsic: fixture.flex.intrinsic(index).expect("leaf intrinsic") };
+            oracle.new_leaf_with_context(oracle_style(flow, None), leaf).expect("oracle leaf")
+        })
+        .collect();
+    let flow = fixture.flex.flows.get(0).expect("container flow");
+    let mut style = oracle_style(flow, fixture.flex.grids.get(0).and_then(|grid| grid.as_deref()));
+    style.position = taffy::style::Position::Relative;
+    style.inset = taffy::geometry::Rect::auto();
+    style.flex_grow = 0.0;
+    style.size = taffy::geometry::Size { width: taffy::style::Dimension::length(width), height: taffy::style::Dimension::length(height) };
+    style.min_size = taffy::geometry::Size { width: taffy::style::Dimension::length(0.0), height: taffy::style::Dimension::length(0.0) };
+    let root = oracle.new_with_children(style, &leaves).expect("oracle container");
+    oracle
+        .compute_layout_with_measure(root, taffy::geometry::Size { width: taffy::AvailableSpace::Definite(width), height: taffy::AvailableSpace::Definite(height) }, |known, _space, _node, context, _style| {
+            if let (Some(width), Some(height)) = (known.width, known.height) {
+                return taffy::geometry::Size { width, height };
+            }
+            let Some(leaf) = context else { return taffy::geometry::Size::ZERO };
+            let (measured_width, measured_height) = leaf.intrinsic;
+            taffy::geometry::Size { width: known.width.unwrap_or(measured_width), height: known.height.unwrap_or(measured_height) }
+        })
+        .expect("oracle solve");
+    leaves
+        .iter()
+        .map(|&leaf| {
+            let layout = oracle.layout(leaf).expect("oracle layout");
+            FlexRect { x: layout.location.x, y: layout.location.y, width: layout.size.width, height: layout.size.height }
+        })
+        .collect()
+}
+
+struct Lcg(u64);
+
+impl Lcg {
+    fn below(&mut self, bound: usize) -> usize {
+        self.0 = self.0.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+        ((self.0 >> 33) as usize) % bound
+    }
+
+    fn pick<T: Copy>(&mut self, options: &[T]) -> T {
+        options[self.below(options.len())]
+    }
+}
+
+const TOKENS: [SpaceToken; 7] = [SpaceToken::None, SpaceToken::Xs, SpaceToken::Sm, SpaceToken::Md, SpaceToken::Lg, SpaceToken::Xl, SpaceToken::Xxl];
+const SIZED: [SpaceToken; 6] = [SpaceToken::Xs, SpaceToken::Sm, SpaceToken::Md, SpaceToken::Lg, SpaceToken::Xl, SpaceToken::Xxl];
+const ALIGNS: [Align; 4] = [Align::Start, Align::Center, Align::End, Align::Stretch];
+const JUSTIFIES: [Justify; 6] = [Justify::Start, Justify::Center, Justify::End, Justify::SpaceBetween, Justify::SpaceAround, Justify::SpaceEvenly];
+
+fn corpus_sizing(random: &mut Lcg) -> Sizing {
+    match random.below(10) {
+        0..=5 => Sizing::Fixed(random.pick(&SIZED)),
+        6..=7 => Sizing::Fill,
+        _ => Sizing::Hug,
+    }
+}
+
+/// 🎲️ Fills a container with a random mix of leaves (fixed, fill and hug sizes), growing childless stacks and measured text runs (their size
+/// handed over as the measured intrinsic). Out-of-flow children are not part of the corpus: an authored `Absolute` carries no inset, so it sits at
+/// its container's origin in every dialect here, while taffy places it at the flow's static position.
+fn corpus_children(random: &mut Lcg, fixture: &mut Fixture, parent: usize, count: usize) -> String {
+    let mut described = String::new();
+    for _ in 0..count {
+        match random.below(20) {
+            0..=9 => {
+                let spec = LayoutSpec::Leaf(LeafLayout { width: corpus_sizing(random), height: corpus_sizing(random) });
+                let index = fixture.push(LayoutNodeKind::Leaf, Some(parent), Some(&spec));
+                described += &format!(" leaf#{index}{spec:?}");
+            }
+            10..=13 => {
+                let spec = LayoutSpec::Stack(StackLayout { axis: random.pick(&[Axis::Horizontal, Axis::Vertical]), grow: true, ..StackLayout::default() });
+                let index = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, Some(parent), Some(&spec));
+                described += &format!(" grower#{index}{spec:?}");
+            }
+            _ => {
+                let size = (10.0 + random.below(80) as f32, 8.0 + random.below(24) as f32);
+                let index = fixture.push(LayoutNodeKind::Text, Some(parent), None);
+                fixture.measured(index, size);
+                described += &format!(" text#{index}{size:?}");
+            }
+        }
+    }
+    described
+}
+
+fn diverges(left: FlexRect, right: FlexRect) -> bool {
+    !(close(left.x, right.x) && close(left.y, right.y) && close(left.width, right.width) && close(left.height, right.height))
+}
+
+fn corpus_track(random: &mut Lcg) -> GridTrack {
+    match random.below(6) {
+        0 => GridTrack::Auto,
+        1 => GridTrack::Fraction(1),
+        2 => GridTrack::Fraction(2),
+        3 => GridTrack::Fixed(random.pick(&SIZED)),
+        4 => GridTrack::MinContent,
+        _ => GridTrack::MaxContent,
+    }
+}
+
+/// ⚖️ LAW: the owned wrapped-flex solver places every child of every corpus container exactly where taffy does — both axes, all four
+/// cross alignments, all six main distributions, gaps, padding, fixed and measured children, out-of-flow children.
+#[test]
+fn the_owned_wrapped_solver_agrees_with_taffy_across_the_corpus() {
+    let mut random = Lcg(0x5EED_0001);
+    let mut divergences = Vec::new();
+    for case in 0..1500 {
+        let spec = LayoutSpec::Stack(StackLayout {
+            axis: random.pick(&[Axis::Horizontal, Axis::Vertical]),
+            gap: random.pick(&TOKENS),
+            padding: EdgeSpace::All(random.pick(&TOKENS)),
+            align: random.pick(&ALIGNS),
+            justify: random.pick(&JUSTIFIES),
+            grow: false,
+            wrap: true,
+        });
+        let (width, height) = (random.pick(&[50.0_f32, 100.0, 150.0, 200.0, 320.0]), random.pick(&[40.0_f32, 100.0, 200.0, 400.0]));
+        let mut fixture = Fixture::new();
+        let parent = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, None, Some(&spec));
+        let count = 1 + random.below(10);
+        let described = corpus_children(&mut random, &mut fixture, parent, count);
+        fixture.solve(width, height);
+        let expected = oracle_solve(&fixture, width, height);
+        for (offset, oracle) in expected.into_iter().enumerate() {
+            if diverges(fixture.rect(offset + 1), oracle) {
+                divergences.push((count, format!("case {case} {spec:?} in {width}x{height}:{described}\n   child {}: owned {:?} vs taffy {oracle:?}", offset + 1, fixture.rect(offset + 1))));
+                break;
+            }
+        }
+    }
+    divergences.sort_by_key(|(count, _)| *count);
+    assert!(divergences.is_empty(), "{} of 1500 wrapped cases diverge from taffy; smallest:\n{}", divergences.len(), divergences.iter().take(8).map(|(_, text)| text.clone()).collect::<Vec<_>>().join("\n"));
+}
+
+/// 🏠️ LAW: the owned grid solver sizes tracks and places cells exactly where taffy does — fixed, fractional, auto, min- and max-content
+/// tracks, implicit rows, gaps, padding, all four item alignments, all six track distributions, fixed and measured children.
+#[test]
+fn the_owned_grid_solver_agrees_with_taffy_across_the_corpus() {
+    let mut random = Lcg(0x5EED_0002);
+    let mut divergences = Vec::new();
+    for case in 0..1500 {
+        let mut grid = GridLayout { column_gap: random.pick(&TOKENS), row_gap: random.pick(&TOKENS), padding: EdgeSpace::All(random.pick(&TOKENS)), align: random.pick(&ALIGNS), justify: random.pick(&JUSTIFIES), ..GridLayout::default() };
+        for _ in 0..1 + random.below(4) {
+            assert_eq!(grid.try_push_column(corpus_track(&mut random)), Ok(()));
+        }
+        for _ in 0..random.below(3) {
+            assert_eq!(grid.try_push_row(corpus_track(&mut random)), Ok(()));
+        }
+        let spec = LayoutSpec::Grid(grid);
+        let (width, height) = (random.pick(&[50.0_f32, 100.0, 150.0, 200.0, 320.0]), random.pick(&[40.0_f32, 100.0, 200.0, 400.0]));
+        let mut fixture = Fixture::new();
+        let parent = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, None, Some(&spec));
+        let count = 1 + random.below(9);
+        let described = corpus_children(&mut random, &mut fixture, parent, count);
+        fixture.solve(width, height);
+        let expected = oracle_solve(&fixture, width, height);
+        for (offset, oracle) in expected.into_iter().enumerate() {
+            if diverges(fixture.rect(offset + 1), oracle) {
+                divergences.push((count, format!("case {case} {spec:?} in {width}x{height}:{described}\n   child {}: owned {:?} vs taffy {oracle:?}", offset + 1, fixture.rect(offset + 1))));
+                break;
+            }
+        }
+    }
+    divergences.sort_by_key(|(count, _)| *count);
+    assert!(divergences.is_empty(), "{} of 1500 grid cases diverge from taffy; smallest:\n{}", divergences.len(), divergences.iter().take(8).map(|(_, text)| text.clone()).collect::<Vec<_>>().join("\n"));
+}
+
+//#endregion ⚖️TaffyOracle
+
+/// 🧫️ LAW (language-agnostic): the shared wrapped and grid fixture — container spec, children, viewport and expected rectangles as plain
+/// JSON any renderer can replay — holds in the owned solvers and in the taffy oracle alike.
+#[test]
+fn the_wrapped_and_grid_fixture_holds_in_both_engines() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️wrapped-and-grid-flow/🔣️.json")).expect("wrapped and grid fixture");
+    let number = |value: &serde_json::Value, field: &str| value[field].as_f64().unwrap_or_else(|| panic!("{field}")) as f32;
+    for case in fixture["cases"].as_array().expect("cases") {
+        let name = case["name"].as_str().expect("case name");
+        let container: LayoutSpec = serde_json::from_value(case["container"].clone()).unwrap_or_else(|error| panic!("{name}: container: {error}"));
+        let (width, height) = (number(&case["viewport"], "width"), number(&case["viewport"], "height"));
+        let mut layout = Fixture::new();
+        let parent = layout.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, None, Some(&container));
+        for child in case["children"].as_array().expect("children") {
+            match child["kind"].as_str().expect("child kind") {
+                "leaf" => {
+                    let spec: LayoutSpec = serde_json::from_value(child["layout"].clone()).unwrap_or_else(|error| panic!("{name}: leaf: {error}"));
+                    layout.push(LayoutNodeKind::Leaf, Some(parent), Some(&spec));
+                }
+                _ => {
+                    let index = layout.push(LayoutNodeKind::Text, Some(parent), None);
+                    layout.measured(index, (child["size"][0].as_f64().expect("text width") as f32, child["size"][1].as_f64().expect("text height") as f32));
+                }
+            }
+        }
+        layout.solve(width, height);
+        let oracle = oracle_solve(&layout, width, height);
+        for (offset, expected) in case["expected"].as_array().expect("expected").iter().enumerate() {
+            let expected = FlexRect { x: number(expected, "x"), y: number(expected, "y"), width: number(expected, "width"), height: number(expected, "height") };
+            assert!(!diverges(layout.rect(offset + 1), expected), "{name}: child {}: owned {:?}, expected {expected:?}", offset + 1, layout.rect(offset + 1));
+            assert!(!diverges(oracle[offset], expected), "{name}: child {}: taffy {:?}, expected {expected:?}", offset + 1, oracle[offset]);
+        }
+    }
 }

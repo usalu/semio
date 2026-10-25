@@ -23,7 +23,7 @@ const grid = (value: number): number => {
   return value === 0 ? 0 : Math.round(value * factor) / factor;
 };
 
-/** 🎯️ Compiles one committed fixture of this case and returns its whole projection. */
+/** 🔨️ Compiles one committed fixture of this case and returns its whole projection. */
 async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection: ProbeProjection }> {
   const records = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://🥧️charts-pie-donut/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
@@ -31,7 +31,7 @@ async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection
 // #endregion 🧫️Vectors
 
 // #region 🔮️Oracles
-/** 🔮️ d3-shape's pie, split into the two angle sequences the probe emits. */
+/** ✂️ d3-shape's pie, split into the two angle sequences the probe emits. */
 function angles(start: number, end: number, pad: number, sorted: boolean): { start: number[]; end: number[] } {
   const layout = d3pie<number>().value((d) => d).startAngle(start).endAngle(end).padAngle(pad);
   if (sorted) layout.sort((a, b) => b - a);
@@ -40,7 +40,7 @@ function angles(start: number, end: number, pad: number, sorted: boolean): { sta
   return { start: arcs.map((a) => grid(a.startAngle)), end: arcs.map((a) => grid(a.endAngle)) };
 }
 
-/** 🔮️ The annular sectors a donut of the given frame draws for those angles. */
+/** 💍️ The annular sectors a donut of the given frame draws for those angles. */
 function annulus(width: number, height: number, pad: number, inner: number): number[] {
   const cx = width / 2;
   const cy = height / 2;
@@ -64,27 +64,27 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await probe(ctx, "pie.tex")),
     },
     "pie-unsorted": {
-      /** 🔮️ The same generator with sorting disabled, so table order is arc order. */
+      /** 🔃️ The same generator with sorting disabled, so table order is arc order. */
       oracle: () => {
         const a = angles(0, TAU, 0, false);
         return { projection: { "start-angle": a.start, "end-angle": a.end } };
       },
-      /** 🎯️ The angles the unsorted transform produced. */
+      /** 📐️ The angles the unsorted transform produced. */
       subject: async (ctx: AdapterContext) => (await probe(ctx, "pie-unsorted.tex")),
     },
     "pie-padded": {
-      /** 🔮️ A partial circle with a pad angle, where d3 clamps both the sweep and the pad. */
+      /** 🧹️ A partial circle with a pad angle, where d3 clamps both the sweep and the pad. */
       oracle: () => {
         const a = angles(0.5, 3.641592653589793, 0.02, true);
         return { projection: { "start-angle": a.start, "end-angle": a.end } };
       },
-      /** 🎯️ The angles the padded partial circle produced. */
+      /** ⭕️ The angles the padded partial circle produced. */
       subject: async (ctx: AdapterContext) => (await probe(ctx, "pie-padded.tex")),
     },
     "donut": {
-      /** 🔮️ Those angles rendered into the annulus the frame row describes. */
+      /** 🖌️ Those angles rendered into the annulus the frame row describes. */
       oracle: () => ({ projection: { "geometry/arc": annulus(60, 34, 3, 0.55) } }),
-      /** 🎯️ The `geometry/arc` records the donut drew. */
+      /** 🍩️ The `geometry/arc` records the donut drew. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/arc": (await probe(ctx, "donut.tex")).projection["geometry/arc"] ?? [] } }),
     },
   },

@@ -66,12 +66,12 @@ export default defineTestAdapter({
     },
     "slack-ranks-are-as-soon-as-possible": {
       oracle: oracle("slack-ranks-are-as-soon-as-possible"),
-      /** 🎯️ The twin's layers, which the specification says are as soon as possible. */
+      /** 🔜️ The twin's layers, which the specification says are as soon as possible. */
       subject: (ctx: AdapterContext) => ({ projection: { "geometry/layout/layered": layered(ctx, false) } }),
     },
     "barycenter-ordering": {
       oracle: oracle("barycenter-ordering"),
-      /** 🎯️ The twin's layer and within-layer position after the same four barycentre sweeps. */
+      /** 📍️ The twin's layer and within-layer position after the same four barycentre sweeps. */
       subject: (ctx: AdapterContext) => ({ projection: { "geometry/layout/layered": layered(ctx, true) } }),
     },
   },

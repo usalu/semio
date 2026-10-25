@@ -1,3 +1,0 @@
-export const RESIDENT_EXCLUDES_V1:{readonly rooted:readonly string[];readonly names:readonly string[]};
-export const RESIDENT_FENCE_DIRECTORY_V1:string;
-export function runResidentCommandV1(options:{root:string;args:readonly string[];languages:readonly string[];environment?:Readonly<Record<string,string|undefined>>;stdout?:{write(text:string):unknown};stderr?:{write(text:string):unknown};execPath?:string;scriptArguments?:readonly string[];startTimeoutMilliseconds?:number;runForeground?:(context:{runtime:any;root:string;languages:readonly string[];environment:Readonly<Record<string,string|undefined>>})=>Promise<number>}):Promise<number>;

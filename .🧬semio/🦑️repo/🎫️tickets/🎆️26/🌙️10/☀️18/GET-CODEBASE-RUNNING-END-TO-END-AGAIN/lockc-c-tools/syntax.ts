@@ -1,0 +1,2 @@
+import ts from "typescript";import {readFileSync} from "node:fs";
+for(const f of process.argv.slice(2)){const out=ts.transpileModule(readFileSync(f,"utf8"),{reportDiagnostics:true,compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.ESNext},fileName:f});console.log(f.slice(-40),out.diagnostics?.length??0);for(const d of out.diagnostics??[])console.log(ts.flattenDiagnosticMessageText(d.messageText,"\n"));}

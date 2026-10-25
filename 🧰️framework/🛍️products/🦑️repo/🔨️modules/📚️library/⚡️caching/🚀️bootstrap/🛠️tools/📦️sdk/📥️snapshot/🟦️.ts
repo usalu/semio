@@ -1,5 +1,5 @@
 import{verifyNxSdkSharedSourcesV1}from"../📥️source/🔗️derivative/🔏️index/🟦️.ts";
-import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
 import {constants,type BigIntStats} from "node:fs";
 import {createHash} from "node:crypto";
@@ -9,7 +9,7 @@ import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../.
 import {verifyNxSdkBinaryLinksV1} from "../🧊️binary/🔎️verification/🟦️.ts";
 import {publishNxSdkBinaryV1} from "../🧊️binary/📥️publication/🟦️.ts";
 import {nxSdkBinaryPathV1,nxSdkBinaryReceiptV1,type NxSdkBinaryReceiptV1} from "../🧊️binary/🟦️.ts";
-import type {RepositoryToolingStoreV1} from "../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import type {RepositoryToolingStoreV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 

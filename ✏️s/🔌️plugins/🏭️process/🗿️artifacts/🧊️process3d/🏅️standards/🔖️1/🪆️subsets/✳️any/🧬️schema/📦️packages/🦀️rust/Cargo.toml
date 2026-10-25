@@ -42,7 +42,9 @@ semio-framework-pack = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { workspace = true }
+semio-framework-schema-state = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
@@ -59,6 +61,7 @@ semio-s-artifact-stdio-step = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-plugin-reactor-app = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-s-artifact-process-process3d = { workspace = true }
 semio-s-artifact-process-process3d-editor = { workspace = true }
 semio-s-artifact-process-process3d-inferences = { workspace = true }

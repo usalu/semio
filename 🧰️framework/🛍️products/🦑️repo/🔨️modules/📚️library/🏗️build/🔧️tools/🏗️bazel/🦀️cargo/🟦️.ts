@@ -32,7 +32,7 @@ export function bazelCargoArgumentsV1(action:BazelCargoActionV1):string[]{
  return[policy.launcher.command,"--store="+policy.launcher.store,"--configuration="+action.configuration,"--parallelism="+policy.launcher.parallelism,policy.launcher.delimiter,action.subcommand,"--manifest-path",action.manifest,"-p",action.package,action.selection,...(action.target?["--target",action.target]:[]),...(action.features?.length?["--features",[...action.features].sort().join(",")]:[]),policy.messageFormat];
 }
 
-/** 📜️ Builds the closed runner manifest: it holds no workspace path, so the same action key is valid on every host. */
+/** 📕️ Builds the closed runner manifest: it holds no workspace path, so the same action key is valid on every host. */
 export function bazelCargoManifestV1(action:BazelCargoActionV1):BazelCargoManifestV1{
  const manifest:BazelCargoManifestV1={version:1,id:action.id,package:action.package,toolchain:action.toolchain,argv:bazelCargoArgumentsV1(action),artifacts:action.artifacts,suffixes:[...(action.suffixes??[])].sort()};
  if(validateJsonSchemaSubset(manifestSchema,manifest,componentSchema).length)throw new Error(`Closed Bazel Cargo manifest required: ${action.id}`);

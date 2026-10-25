@@ -52,7 +52,7 @@ fn params_of<'a>(snapshot: &'a Generation3dSnapshot, id: &str) -> &'a Dictionary
 }
 
 fn outcome_codes(mutation: &Generation3dMutation, base: &Generation3dSnapshot) -> Vec<(semio_framework_diagnostic::Severity, String)> {
-    let (delta, messages) = protocol::Mutation::diff(mutation, base).into_parts();
+    let (delta, messages) = protocol::ColdMutation::diff(mutation, base).into_parts();
     delta.retire_cold();
     messages.into_iter().map(|message| (message.level, message.code.0)).collect()
 }

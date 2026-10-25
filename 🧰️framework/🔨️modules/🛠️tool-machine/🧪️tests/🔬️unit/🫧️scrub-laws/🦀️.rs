@@ -166,7 +166,7 @@ fn scrub_ledger_replays_every_fixture_scenario() {
     }
 }
 
-/// ⚖️ LAW: a scrub persisted between every two ticks is the scrub that never persisted — the stable-id configuration,
+/// ✔️ LAW: a scrub persisted between every two ticks is the scrub that never persisted — the stable-id configuration,
 /// the context rebuilt from the press and its entries, and the open transaction continue the press unchanged.
 #[test]
 fn a_scrub_persisted_between_ticks_continues_the_same_press() {
@@ -211,7 +211,7 @@ fn explore_scrub_ledger(ledger: &ScrubLedger<Value>, alphabet: &[(&str, &str, Sc
     }
 }
 
-/// ⚖️ LAW (CLOSURE-3): the scrub ledger is total — every order of up to four inputs on one window, across two presses, two
+/// 🚫️ LAW (CLOSURE-3): the scrub ledger is total — every order of up to four inputs on one window, across two presses, two
 /// tools, two document revisions, empty and non-empty ticks, releases and host aborts, answers a step and never a refusal,
 /// so a release always decides its press (the runtime publishes every lane of the press from that one step); a late input
 /// of the press the window already closed leaves the ledger exactly as it was.

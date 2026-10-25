@@ -71,7 +71,6 @@ web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasEle
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]
 base64 = "0.22.1"
-image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [dev-dependencies]
@@ -80,3 +79,6 @@ semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️
 semio-framework-ui-scene-plane = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/📦️packages/🦀️rust" }
 semio-framework-ui-scene-views = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust" }
 semio-framework-ui-scene-world3d = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🌍️world3d/📦️packages/🦀️rust" }
+
+[target.'cfg(not(target_os = "wasi"))'.dev-dependencies]
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }

@@ -25,13 +25,13 @@ import { glassClass } from "../../🔨️modules/🌈️surface-presentation/�
 // #endregion 🔌️Adapters
 
 //#region 🗂️WindowSilhouetteBorder
-/** 🪟️ All border effects the silhouette SVG can paint. */
+/** 🖌️ All border effects the silhouette SVG can paint. */
 export const WINDOW_SILHOUETTE_BORDER_KINDS = ["celebrated", "introduced", "loading", "waiting", "active", "normal"] as const;
 
-/** 🪟️ Which border effect the dock-stack silhouette overlay should paint. */
+/** 🎨️ Which border effect the dock-stack silhouette overlay should paint. */
 export type WindowSilhouetteBorderKind = (typeof WINDOW_SILHOUETTE_BORDER_KINDS)[number];
 
-/** 🪟️ Whether an introduced stamp is the window chrome body itself (kind/instance scroll surface or
+/** 🎯️ Whether an introduced stamp is the window chrome body itself (kind/instance scroll surface or
  * `[data-slot="window"]`), not a nested utility/action/tree row inside the pane. Window silhouette pulse
  * and the stack SVG border must follow only these stamps — introducing `transform` must pulse the utility
  * toggle, not the enclosing Top/Perspective silhouette. */
@@ -46,7 +46,7 @@ export function isWindowChromeIntroducedTarget(el: Element): boolean {
   return false;
 }
 
-/** 🪟️ Resolves silhouette border kind from the active window + stack active flag.
+/** 🏁️ Resolves silhouette border kind from the active window + stack active flag.
  * Introduction stamps `data-introduced` on the window kind id target — often the inner scroll surface
  * (`framework.window.{kind}`), not `[data-slot="window"]` itself — so window-chrome descendants count.
  * Nested introduce targets (utilities, actions) must not promote the window silhouette. `celebrated`
@@ -71,7 +71,7 @@ export function resolveWindowSilhouetteBorderKind(windowEl: Element | null, stac
   return stackActive ? "active" : "normal";
 }
 
-/** 🪟️ Maps a silhouette border kind to stroke classes and color tokens. */
+/** 🗺️ Maps a silhouette border kind to stroke classes and color tokens. */
 export function windowSilhouetteBorderPaint(kind: WindowSilhouetteBorderKind): { readonly className: string; readonly stroke: string } {
   switch (kind) {
     case "celebrated":
@@ -97,7 +97,7 @@ function windowSilhouetteRectOnDock(stackRect: DOMRect, rect: DOMRect, dock: "to
   return dock === "top" ? rect.top - stackRect.top <= WINDOW_SILHOUETTE_CHIP_EPSILON : stackRect.bottom - rect.bottom <= WINDOW_SILHOUETTE_CHIP_EPSILON;
 }
 
-/** 🪟️ Whether `element` belongs to `stack`'s own chrome — nested pane/panel `[data-window-silhouette]` hosts (e.g. projection) keep their chips out of the enclosing window outline so the window bottom stays rectangular while those panes overlay like window options. */
+/** 🥞️ Whether `element` belongs to `stack`'s own chrome — nested pane/panel `[data-window-silhouette]` hosts (e.g. projection) keep their chips out of the enclosing window outline so the window bottom stays rectangular while those panes overlay like window options. */
 function windowSilhouetteOwnsElement(stack: HTMLElement, element: Element): boolean {
   const owner = element.closest("[data-window-silhouette]");
   return owner === null || owner === stack;
@@ -132,7 +132,7 @@ function measureContextMenuFusion(stack: HTMLElement, stackRect: DOMRect, base: 
   return { ...base, width, height, contextMenuFusion: fusion };
 }
 
-/** 🪟️ Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels), in the stack's own pixels even while a host scales it on screen — see {@link windowSilhouetteScale}. Nested silhouette chips are ignored — see {@link windowSilhouetteOwnsElement}. */
+/** 📊️ Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels), in the stack's own pixels even while a host scales it on screen — see {@link windowSilhouetteScale}. Nested silhouette chips are ignored — see {@link windowSilhouetteOwnsElement}. */
 export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhouetteMetrics | null {
   const stackRect = stack.getBoundingClientRect();
   const scale = { x: windowSilhouetteScale(stackRect.width, stack.offsetWidth), y: windowSilhouetteScale(stackRect.height, stack.offsetHeight) };
@@ -223,13 +223,13 @@ export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled =
 /** 📏️ Tab/gap/controls cells stay transparent; glass lives on chip (+ controls) cells only so the U-gap punches through to the base floor. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
 export const windowCapFrameClass = "relative z-[2] border-0 bg-transparent";
 
-/** 🪟️ Gap cutout stays clear — never glass — so the base/canvas floor shows through the U-notch. */
+/** 🕳️ Gap cutout stays clear — never glass — so the base/canvas floor shows through the U-notch. */
 export const windowGapFrameClass = "border-0 bg-transparent";
 
-/** 📏️ Maximize/controls glass cell — host stamps {@link glassClass}; fill must not span the U-gap. */
+/** 🔲️ Maximize/controls glass cell — host stamps {@link glassClass}; fill must not span the U-gap. */
 export const windowControlsCapClass = "pointer-events-auto relative z-[2] flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
-/** 🪜️ `WindowChrome`'s own internal stacking, as inline z-indexes.
+/** 🗂️ `WindowChrome`'s own internal stacking, as inline z-indexes.
  *
  * The chrome's chip rows carried Tailwind ARBITRARY z utilities (`z-[2]`/`z-[1]`), and this design
  * system's stylesheet does not emit those — measured on a served boot, cap row, body plane and footer all
@@ -245,7 +245,7 @@ export const WINDOW_CHROME_BODY_PLANE_STYLE: React.CSSProperties = { zIndex: 1 }
 //#endregion 🗂️WindowSilhouetteBorder
 
 //#region 🗂️WindowChrome
-/** 🪟️ Optional right-cap control on {@link WindowChrome} (enlarge / close). */
+/** 🎛️ Optional right-cap control on {@link WindowChrome} (enlarge / close). */
 export interface WindowChromeControlAction {
   readonly id: string;
   readonly slot: string;
@@ -254,7 +254,7 @@ export interface WindowChromeControlAction {
   readonly onClick: () => void;
 }
 
-/** 🪟️ Title chip in the window-chrome cap row (name + optional drag) — transparent and
+/** 🔤️ Title chip in the window-chrome cap row (name + optional drag) — transparent and
  * borderless so the painted chip-cap cell shows through and the silhouette remains the sole outline. */
 export const windowChromeTitleChipClass = cn(modeDockTabClassName, "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent");
 
@@ -292,9 +292,9 @@ export interface WindowChromeProps {
   readonly borderKind?: WindowSilhouetteBorderKind;
   readonly stackBindProps?: SurfaceActiveBindProps;
   readonly stackDataAttrs?: Record<string, string | undefined>;
-  /** 📐️ Cap row shrink-wraps to title chip + gap (context menus with fused wings). */
+  /** 💸️ Cap row shrink-wraps to title chip + gap (context menus with fused wings). */
   readonly capFitContent?: boolean;
-  /** 🧭️ Which silhouette edge the cap row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
+  /** 🔗️ Which silhouette edge the cap row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
   readonly capDock?: "top" | "bottom";
   /** ↔ Inline layout overrides for the cap row (e.g. chrome-hosted trailing navbar reserve). */
   readonly capRowStyle?: React.CSSProperties;
@@ -304,7 +304,7 @@ export interface WindowChromeProps {
   readonly silhouetteSlot?: string;
 }
 
-/** 🪟️ SVG overlay that paints the U-cutout silhouette for any window-chrome stack. */
+/** 🪵️ SVG overlay that paints the U-cutout silhouette for any window-chrome stack. */
 export const WindowChromeSilhouetteBorder: React.FC<{
   readonly stack: HTMLElement | null;
   readonly geometry?: WindowSilhouetteGeometry;
@@ -389,7 +389,7 @@ export const WindowChromeSilhouetteBorder: React.FC<{
   );
 };
 
-/** 🪟️ Shared U-cutout window chrome: left title chip(s), open gap, optional enlarge/close, continuous body border.
+/** 🟢️ Shared U-cutout window chrome: left title chip(s), open gap, optional enlarge/close, continuous body border.
  * Cap glass lives only on the chip (+ controls) cells — never the full cap row — so the U-gap stays transparent
  * and shows whatever sits behind the stack (veil, canvas, page). Do not paint an absolute inset fill. */
 export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChromeProps>(

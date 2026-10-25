@@ -5,7 +5,7 @@ import type { Band } from "../🎗️band/📋️readout/🟦️.ts";
 
 //#region 🔖️Wgpu
 
-/** 🧊️ The wgpu shell paints on a canvas and publishes no DOM of its own. What a user (or an assistive technology) can
+/** 🖌️ The wgpu shell paints on a canvas and publishes no DOM of its own. What a user (or an assistive technology) can
  * reach is: the ARIA mirror `#semio-wgpu-accessibility` (one element per projected node, `data-node-key` = the node key or
  * chrome control id, `data-window` = its window; a synthetic `click` on an actionable element is an `accessibility-activate`,
  * typing into a mirrored input an `accessibility-value`), the chrome hit registry (`semioWgpuIntrospection.dumpChrome()`:

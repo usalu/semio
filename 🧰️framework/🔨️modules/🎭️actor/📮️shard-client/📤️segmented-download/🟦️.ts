@@ -25,7 +25,7 @@ export const SEGMENTED_DOWNLOAD_CONTRACT = Object.freeze({
   maximumOperationId: 18_446_744_073_709_551_615n,
 });
 
-/** 📤️ The refusal every hop raises for one violated bound. Distinct codes on purpose: a chunk that is
+/** 🛑️ The refusal every hop raises for one violated bound. Distinct codes on purpose: a chunk that is
  * the wrong TYPE is a wire-adaptation defect (the guest's `option<list<u8>>` reaching the worker as
  * jco's tagged `{ tag, val }` object rather than a `Uint8Array`), while an oversized chunk is a producer
  * that sliced by the wrong constant. Reporting both as one "limit" made the 2026-09-12 battery read as
@@ -39,7 +39,7 @@ export const SEGMENTED_DOWNLOAD_REFUSAL = Object.freeze({
   authorityInvalid: "segmented-download-authority-invalid",
 });
 
-/** 📤️ Admits exactly one drained item against the contract, or names the bound it violated.
+/** ⬇️ Admits exactly one drained item against the contract, or names the bound it violated.
  *
  * 🧯 `undefined`/`null` is the producer's TERMINAL sentinel and the only non-chunk this accepts — jco's
  * `{ tag: "none" }` is NOT one, which is why the bridge must unwrap the guest option before any hop

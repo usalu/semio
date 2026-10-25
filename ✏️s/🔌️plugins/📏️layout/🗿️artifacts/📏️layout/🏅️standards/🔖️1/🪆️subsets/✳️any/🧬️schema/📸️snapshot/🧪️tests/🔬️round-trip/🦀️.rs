@@ -24,7 +24,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         overrides: Vec::new(),
     }];
     snapshot.background_drawing =
-        Some(LayoutDrawingChild { handle: store::os_store::artifact_child::ArtifactChild::new("child-drawing-1".to_string(), semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri")), content: Default::default() });
+        Some(LayoutDrawingChild { handle: store::os_store::artifact_child::ArtifactChild::new("child-drawing-1".to_string(), semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri")), content: semio_framework_value::DslValue::Null });
     snapshot.referenced_model = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() });
     snapshot
 }

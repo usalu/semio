@@ -4,6 +4,7 @@ import {test,expect} from "bun:test";
 import {readFileSync,existsSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
 import {createHash} from "node:crypto";
+import {Database} from "bun:sqlite";
 import ts from "typescript";
 import Ajv from "ajv";
 import {compilerStateDirectory} from "../../🗃️state/🟦️.ts";
@@ -55,4 +56,10 @@ test("actual TypeScript argument admission preserves the authored no-output comp
 test("actual TypeScript child environment disables independent bytecode cache writers",()=>{
  const path=resolve(import.meta.dir,"../🟦️.ts"),source=ts.createSourceFile(path,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true);let expression:ts.Expression|undefined;const locate=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="runOwnedCommand"){const options=node.arguments[5];if(options&&ts.isObjectLiteralExpression(options)){const env=options.properties.find(row=>ts.isPropertyAssignment(row)&&ts.isIdentifier(row.name)&&row.name.text==="env");if(env&&ts.isPropertyAssignment(env))expression=env.initializer;}}ts.forEachChild(node,locate);};locate(source);if(!expression)throw Error("Actual compiler child environment required");const evaluate=new Function("mode","compilerEnvironment","buildModeEnvironment","typeScriptCheckEnvironmentV1","return "+expression.getText(source)),helper=(checker as unknown as Record<string,unknown>).typeScriptCheckEnvironmentV1;
  for(const mode of["prototype","release"]as const)for(const environment of cases.environments){const result=evaluate(mode,environment,buildModeEnvironment,helper);for(const[key,value]of Object.entries(checkSchema.definitions.CompilerEnvironment.const))expect(result[key],key).toBe(value);expect(Object.hasOwn(result,"NODE_COMPILE_CACHE")).toBe(false);expect(result.SEMIO_BUILD_MODE).toBe(mode);expect(result.AUTHORED_TEST_VALUE).toBe((environment as Record<string,unknown>).AUTHORED_TEST_VALUE);}
+});
+
+test("the compile budget starts at admission and agrees with an independent SQLite derivation",()=>{
+ const database=new Database(":memory:");
+ try{for(const row of cases.budgets)expect<unknown>(checker.typecheckBudgetMillisecondsV1(row.requested,row.admitted)).toBe((database.query("select case when ?1=0 then ?2 when ?2=0 then ?1 else min(?1,?2) end value").get(row.requested,row.admitted) as{value:number}).value);}finally{database.close();}
+ for(const row of cases.budgets)expect(checker.typecheckBudgetMillisecondsV1(row.requested,row.admitted)).toBe(row.expected);
 });

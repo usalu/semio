@@ -12,7 +12,7 @@ import {requireIssuedNativeImageControlV1,withIssuedNativeImageV1,readIssuedNati
 import {withIssuedResourceOperationV1,requireIssuedResourceControlV1} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 
 import type {NativeFixedPlatformOptionsV1} from "../../../📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
-import { SqliteDatabaseV1 } from "../../../../⚙️runtime/🗃️sqlite/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
 
 type Value=string|number|null;
 type Row=Record<string,unknown>;

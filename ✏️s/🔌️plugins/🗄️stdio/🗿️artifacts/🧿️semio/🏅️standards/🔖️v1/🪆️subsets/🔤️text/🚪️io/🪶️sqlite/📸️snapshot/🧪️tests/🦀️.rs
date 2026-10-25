@@ -4,7 +4,7 @@ use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMark;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMarkKind;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
-use store::{pack::snapshot::ArtifactPack,pack::snapshot::ArtifactDsl};
+use store::{snapshot::ArtifactPack,snapshot::ArtifactDsl};
 use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 
 pub fn fixture() -> SemioTextSnapshot {
@@ -46,7 +46,7 @@ fn sqlite_snapshot_semio_text_typed_exact_subset_dialect_and_document_guard(){le
 #[test]
 fn sqlite_snapshot_semio_text_bounded_native_text_binary_admission() {
     let snapshot=fixture();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"text".into()};
-    let provider=<SemioTextSnapshot as ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let provider=<SemioTextSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
         semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.preflight_sqlite_snapshot_encoding(encoding,control)).unwrap();
         let database=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.to_sqlite_database(control)).unwrap();

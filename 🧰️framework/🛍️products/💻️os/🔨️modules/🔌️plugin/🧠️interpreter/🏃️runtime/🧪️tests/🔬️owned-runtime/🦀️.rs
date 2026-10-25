@@ -20,14 +20,25 @@ fn owned_result_preserves_original_fixed_actor_receipt_without_allocation() {
 }
 
 fn budget() -> Budget {
-    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 500_000_000, deadline_us: semio_framework_job::default_now_us().unwrap() + 60000000, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
+    Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 500_000_000, semio_framework_job::default_now_us().unwrap_or(0), 60000, 64, 1 << 20, 64)
+}
+
+fn job_authority() -> (semio_framework_actor::OriginalJobBudget, semio_framework_actor::OriginalGuestExecutionBudget) {
+    let deadline_us = semio_framework_job::default_now_us().unwrap_or(0) + 600_000_000;
+    let input = semio_framework_actor::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork { clock_binding: 1, absolute_deadline_us: deadline_us, fuel: 10_000_000 }, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } };
+    (semio_framework_actor::OriginalJobBudget { input, retained_policy: input.grant, fuel: 10_000_000, deadline_us, cancelled: false }, semio_framework_actor::OriginalGuestExecutionBudget { input, fuel: 10_000_000, deadline_us })
+}
+
+fn job_source(job: u64, kind: &str) -> semio_framework_actor::OriginalJobSource {
+    semio_framework_actor::OriginalJobSource { job, kind: kind.into(), input: Some(Vec::new()), checkpoint: None }
 }
 
 fn cancel_to_completion(runtime: &OwnedRuntime, instance: &mut OwnedGuestInstance, job: u64) {
     let started = std::time::Instant::now();
     loop {
-        match runtime.cancel_actor_job(instance, job) {
-            Ok(()) => return,
+        let (budget, execution) = job_authority();
+        match runtime.cancel_actor_job(instance, job, budget, execution).original {
+            Ok(_) => return,
             Err(TurnFault::DeadlineExceeded | TurnFault::FuelExhausted) if started.elapsed() < std::time::Duration::from_secs(60) => {}
             Err(error) => panic!("cancel owned job {job}: {error}"),
         }
@@ -54,7 +65,7 @@ async fn configured_component_executes_owned_describe_reactor_jobs_cancel_and_ch
     assert_eq!(deadline_progress.last().map(|(fuel, _)| *fuel), Some(0), "owned describe deadline emitted no exact terminal fuel observation");
 
     let mut resumed = runtime.instantiate_actor(&compiled).expect("instantiate resumable owned fixture");
-    let one_instruction = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, ..budget() };
+    let one_instruction = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, ..budget() };
     assert!(matches!(runtime.execute_actor_turn(&mut resumed, &[], one_instruction, &mut identity), Err(TurnFault::FuelExhausted)));
     let mid_call = runtime.checkpoint_actor(&mut resumed, &mut identity).expect("checkpoint fuel-yielded owned turn");
     runtime.restore_actor(&mut resumed, &mid_call).expect("restore fuel-yielded owned turn");
@@ -68,15 +79,19 @@ async fn configured_component_executes_owned_describe_reactor_jobs_cancel_and_ch
     let turn = runtime.execute_actor_turn(&mut instance, &[], budget(), &mut identity).expect("execute owned empty turn");
     assert!(turn.fuel_used > 0, "owned turn did not report interpreter fuel");
 
-    runtime.start_actor_job(&mut instance, 70, "semio.test-owned-checkpoint", Vec::new()).expect("start checkpointed owned job");
+    let (budget, execution) = job_authority();
+    assert!(runtime.start_actor_job(&mut instance, Some(job_source(70, "semio.test-owned-checkpoint")), budget, execution).original.expect("start checkpointed owned job").admitted);
     let checkpoint = runtime.checkpoint_actor(&mut instance, &mut identity).expect("checkpoint owned instance");
     cancel_to_completion(&runtime, &mut instance, 70);
     runtime.restore_actor(&mut instance, &checkpoint).expect("restore owned checkpoint");
-    assert!(matches!(runtime.step_actor_job(&mut instance, 70, JobBudget { fuel: 10_000_000, deadline_ms: 10_000 }).expect("step restored owned job"), JobStep::Failed { .. }));
+    let (budget, execution) = job_authority();
+    assert!(matches!(runtime.step_actor_job(&mut instance, 70, budget, execution).original.expect("step restored owned job").outcome, Some(outcome) if outcome.state == semio_framework_actor::OriginalJobOutputState::Failed));
 
-    runtime.start_actor_job(&mut instance, 71, "semio.test-owned-cancel", Vec::new()).expect("start cancellable owned job");
+    let (budget, execution) = job_authority();
+    assert!(runtime.start_actor_job(&mut instance, Some(job_source(71, "semio.test-owned-cancel")), budget, execution).original.expect("start cancellable owned job").admitted);
     cancel_to_completion(&runtime, &mut instance, 71);
-    assert!(matches!(runtime.step_actor_job(&mut instance, 71, JobBudget { fuel: 10_000_000, deadline_ms: 10_000 }).expect("step cancelled owned job"), JobStep::Failed { .. }));
+    let (budget, execution) = job_authority();
+    assert!(matches!(runtime.step_actor_job(&mut instance, 71, budget, execution).original.expect("step cancelled owned job").outcome, Some(outcome) if outcome.state == semio_framework_actor::OriginalJobOutputState::Failed));
     crate::test_native_authority::close(&mut identity);
 }
 

@@ -1,0 +1,309 @@
+{
+  "scenarios": [
+    {
+      "id": "stable-ok",
+      "events": [
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        },
+        {
+          "run": "ok"
+        }
+      ],
+      "expected": {
+        "result": "ok",
+        "runs": 1
+      }
+    },
+    {
+      "id": "forbidden-edge-stands",
+      "events": [
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        },
+        {
+          "run": "fail"
+        },
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        }
+      ],
+      "expected": {
+        "result": "failed",
+        "runs": 1
+      }
+    },
+    {
+      "id": "source-vanished-during-pass",
+      "events": [
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        },
+        {
+          "run": "fail"
+        },
+        {
+          "observe": [
+            "a.ts"
+          ]
+        },
+        {
+          "observe": [
+            "a.ts"
+          ]
+        },
+        {
+          "run": "ok"
+        }
+      ],
+      "expected": {
+        "result": "ok",
+        "runs": 2
+      }
+    },
+    {
+      "id": "source-appeared-during-pass",
+      "events": [
+        {
+          "observe": [
+            "a.ts"
+          ]
+        },
+        {
+          "run": "fail"
+        },
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        },
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        },
+        {
+          "run": "ok"
+        }
+      ],
+      "expected": {
+        "result": "ok",
+        "runs": 2
+      }
+    },
+    {
+      "id": "directory-vanished-while-walking",
+      "events": [
+        {
+          "observeFails": "ENOENT",
+          "path": "d/gone.ts"
+        },
+        {
+          "observe": [
+            "a.ts"
+          ]
+        },
+        {
+          "run": "ok"
+        }
+      ],
+      "expected": {
+        "result": "ok",
+        "runs": 1
+      }
+    },
+    {
+      "id": "directory-vanished-in-recheck",
+      "events": [
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        },
+        {
+          "run": "fail"
+        },
+        {
+          "observeFails": "ENOENT",
+          "path": "d/gone.ts"
+        },
+        {
+          "observe": [
+            "a.ts"
+          ]
+        },
+        {
+          "run": "ok"
+        }
+      ],
+      "expected": {
+        "result": "ok",
+        "runs": 2
+      }
+    },
+    {
+      "id": "moves-persist-until-exhausted",
+      "events": [
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        },
+        {
+          "run": "fail"
+        },
+        {
+          "observe": [
+            "a.ts"
+          ]
+        },
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        },
+        {
+          "run": "fail"
+        },
+        {
+          "observe": [
+            "a.ts"
+          ]
+        },
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        },
+        {
+          "run": "fail"
+        },
+        {
+          "observe": [
+            "a.ts"
+          ]
+        },
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        },
+        {
+          "run": "fail"
+        },
+        {
+          "observe": [
+            "a.ts"
+          ]
+        }
+      ],
+      "expected": {
+        "result": "exhausted",
+        "runs": 4,
+        "reason": "vanished",
+        "path": "b.ts"
+      }
+    },
+    {
+      "id": "real-failure-after-one-move",
+      "events": [
+        {
+          "observe": [
+            "a.ts",
+            "b.ts"
+          ]
+        },
+        {
+          "run": "fail"
+        },
+        {
+          "observe": [
+            "a.ts"
+          ]
+        },
+        {
+          "observe": [
+            "a.ts"
+          ]
+        },
+        {
+          "run": "fail"
+        },
+        {
+          "observe": [
+            "a.ts"
+          ]
+        }
+      ],
+      "expected": {
+        "result": "failed",
+        "runs": 2
+      }
+    },
+    {
+      "id": "other-observation-error-stands",
+      "events": [
+        {
+          "observeFails": "EACCES",
+          "path": "d"
+        }
+      ],
+      "expected": {
+        "result": "failed",
+        "runs": 0
+      }
+    },
+    {
+      "id": "replaced-source-counts-as-moved",
+      "events": [
+        {
+          "observe": [
+            "a.ts",
+            "c.ts"
+          ]
+        },
+        {
+          "run": "fail"
+        },
+        {
+          "observe": [
+            "a.ts",
+            "d.ts"
+          ]
+        },
+        {
+          "observe": [
+            "a.ts",
+            "d.ts"
+          ]
+        },
+        {
+          "run": "ok"
+        }
+      ],
+      "expected": {
+        "result": "ok",
+        "runs": 2
+      }
+    }
+  ]
+}

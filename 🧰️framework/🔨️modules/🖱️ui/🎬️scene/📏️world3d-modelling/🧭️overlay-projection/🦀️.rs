@@ -6,7 +6,7 @@ use super::*;
 /// 📏️ Arrowhead length of a dimension, in screen pixels; it never scales with zoom or distance.
 pub const WORLD3D_ANNOTATION_ARROW_PX: f64 = 9.0;
 
-/// 📍️ Edge length of a point marker, in screen pixels.
+/// 🎯️ Edge length of a point marker, in screen pixels.
 pub const WORLD3D_ANNOTATION_MARKER_PX: f64 = 10.0;
 
 /// 🏷️ Distance of a dimension or angle label from its geometry, in screen pixels.
@@ -49,7 +49,7 @@ pub enum World3dLabelAlign {
     End,
 }
 
-/// 🏷️ The screen anchor of an annotation's text.
+/// 🪧️ The screen anchor of an annotation's text.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct World3dProjectedLabel {
     pub x: f64,

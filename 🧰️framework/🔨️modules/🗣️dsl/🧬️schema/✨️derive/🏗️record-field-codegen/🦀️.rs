@@ -1,4 +1,4 @@
-//! 🏗️ Record field codegen of the record derive: the field plans and the shared record and schema field fragments. See [`super`].
+//! 📹️ Record field codegen of the record derive: the field plans and the shared record and schema field fragments. See [`super`].
 
 use super::*;
 

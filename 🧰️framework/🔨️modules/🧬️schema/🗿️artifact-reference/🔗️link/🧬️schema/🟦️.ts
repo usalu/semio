@@ -1,4 +1,4 @@
-/** 🔗️ Shared references preserve independent artifact lifetimes and explicit history pins. */
+/** 🟢️ Shared references preserve independent artifact lifetimes and explicit history pins. */
 import { parseArtifactRef, type ArtifactRef } from "../../🟦️.ts";
 import { parseBlobRef, type BlobRef } from "../../📦️blob/🧬️schema/🟦️.ts";
 export type { ArtifactRef } from "../../🟦️.ts";

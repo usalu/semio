@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain, scriptInvocationBudget } from "../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS } from "../../📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { isMainModuleV1 } from "../../../⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🧪️ Runs the complete owned WASM producer laws with their original process authority. */
 class TestScript extends BundleScript {

@@ -18,7 +18,7 @@ export type LeaseAdmissionV1=Readonly<{floorMegabytes:number;headroomMegabytes:n
 /** 📋️ The whole report (`Report` of the schema). */
 export type LeaseReportV1=Readonly<{version:1;directory:string;atMs:number;holders:readonly LeaseHolderV1[];waiters:readonly LeaseWaiterV1[];waitFor:readonly LeaseEdgeV1[];cycles:readonly LeaseCycleV1[];violations:readonly LeaseViolationV1[];admission?:LeaseAdmissionV1}>;
 
-/** 🎒️ How many leading tickets of an arrival queue hold the lease: the exclusive head alone, or the whole run of shared tickets at the head. */
+/** ▶️ How many leading tickets of an arrival queue hold the lease: the exclusive head alone, or the whole run of shared tickets at the head. */
 const holderRun=(tickets:readonly Readonly<{mode:LeaseModeV1}>[]):number=>{if(tickets[0]?.mode==='exclusive')return 1;let count=0;while(count<tickets.length&&tickets[count]!.mode==='shared')count++;return count;};
 const hash=(resource:string):string=>createHash("sha256").update(resource).digest("hex");
 type Ticket=Readonly<{hash:string;position:number;queued:number;arrivedAtMs:number;pid:number;mode:LeaseModeV1}>;
@@ -66,7 +66,7 @@ export function buildLeaseReportV1(input:Readonly<{directory:string;atMs:number;
    if(known.has(`h\0${ticket.pid}\0${key}`))continue;
    holders.push({resource,hash:key,mode:ticket.mode,pid:ticket.pid,task:0,sinceMs:ticket.arrivedAtMs,heldSeconds:Math.max(0,Math.floor((input.atMs-ticket.arrivedAtMs)/1000)),class:cls.id,rank:cls.rank,source:"queue",...commands.has(ticket.pid)?{command:commands.get(ticket.pid)}:{},...owner(ticket.pid)});
    node(id).holds.push({key,mode:ticket.mode});
-  }else if(!known.has(`w\0${ticket.pid}\0${key}`)){
+  }else if(!known.has(`w\0${ticket.pid}\0${key}`)&&!known.has(`h\0${ticket.pid}\0${key}`)){
    node(id).wait={key,mode:ticket.mode,sinceMs:ticket.arrivedAtMs,queued:true};
   }
  }
@@ -109,7 +109,7 @@ export function formatLeaseReportV1(language:"en"|"de",report:LeaseReportV1):rea
 export type LeasesCommandContextV1=Readonly<{environment:NodeJS.ProcessEnv;write:(line:string)=>void;directory?:string;now?:()=>number;admission?:(language:"en"|"de")=>Promise<LeaseAdmissionV1|undefined>}>;
 const flag=(args:readonly string[],name:string):string|undefined=>{for(const argument of args)if(argument.startsWith(`--${name}=`))return argument.slice(name.length+3);return undefined;};
 
-/** 📋️ Reads the live state of one lease directory. */
+/** 📖️ Reads the live state of one lease directory. */
 export function readLeaseReportV1(directory:string,environment:Readonly<Record<string,string|undefined>>,atMs:number,violations:number):LeaseReportV1{
  const root=leaseRegistryRootV1(environment),resolved=resolve(directory);
  const entries=readLeaseRegistryEntriesV1(root,resolved,atMs),agents=new Map<string,string>(),sessions=agentSessionRegistryRootV1(environment);
@@ -117,7 +117,7 @@ export function readLeaseReportV1(directory:string,environment:Readonly<Record<s
  return buildLeaseReportV1({directory:resolved,atMs,entries,queues:readLeaseQueuesV1(resolved),violations:readLeaseViolationsV1(root,resolved,violations),agents},environment);
 }
 
-/** 🚪️ Dispatches `repo leases status [--json] [--lease-directory=<path>] [--all] [--violations=<n>]`; the machine-wide admission queue is appended when the context offers it. */
+/** 🔒️ Dispatches `repo leases status [--json] [--lease-directory=<path>] [--all] [--violations=<n>]`; the machine-wide admission queue is appended when the context offers it. */
 export async function runLeasesCommandV1(args:readonly string[],context:LeasesCommandContextV1):Promise<number>{
  if(args[0]!=="status")throw Error("Expected repo leases status");
  const known=new Set(["--json","--all"]);

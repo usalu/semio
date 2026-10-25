@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { ListPromptsRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Oracle
@@ -22,7 +22,7 @@ type Surface = {
   ticketTools: string[];
 };
 
-/** 📋️ Loads the authored surface table and the authored description table. */
+/** 📝️ Loads the authored surface table and the authored description table. */
 function authored(ctx: AdapterContext): { surface: Surface; describe: (profile: string, key: string) => string } {
   const surface = JSON.parse(readFileSync(ctx.input("shared://📋️surface.json"), "utf8")) as Surface;
   const table = JSON.parse(readFileSync(ctx.input("asset://🔣️descriptions.json"), "utf8")) as { descriptions: Record<string, Record<string, string>> };

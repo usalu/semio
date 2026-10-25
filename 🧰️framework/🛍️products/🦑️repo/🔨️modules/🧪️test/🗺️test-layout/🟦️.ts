@@ -13,7 +13,7 @@ import { leadingEmojiIdentity } from "../../../../../📦️packages/🟦️type
 import { isExcludedTestPath, testFeatureFilename, testTaxonomy, type TestTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { SKIP_DIR_NAMES, testCollectionIndexes, testFixtureCollectionIndex } from "../🧭️case-discovery/🟦️.ts";
 import { breach } from "../🚨️breaches/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧾️Contract
@@ -50,7 +50,7 @@ export function canonicalTestCaseName(name: string, taxonomy: TestTaxonomy): boo
 
 const registeredFileKindFilenamesCache = new WeakMap<TestTaxonomy, ReadonlySet<string>>();
 
-/** 🏷️ Every canonical kind-only filename the taxonomy registers; a registered file kind is never a legacy test filename. */
+/** 📄️ Every canonical kind-only filename the taxonomy registers; a registered file kind is never a legacy test filename. */
 function registeredFileKindFilenames(taxonomy: TestTaxonomy): ReadonlySet<string> {
   let names = registeredFileKindFilenamesCache.get(taxonomy);
   if (!names) registeredFileKindFilenamesCache.set(taxonomy, names = new Set(Object.values(taxonomy.fileKinds).flatMap((kind) => kind.extensionChains.map((extension) => `${kind.emoji}${extension}`))));
@@ -72,7 +72,7 @@ export function assessTestImplementationPath(path: string, taxonomy: TestTaxonom
   return { canonical: true, finding: null };
 }
 
-/** 🗂️ Rejects explicit testing buckets while preserving semantic test names and ordinary production domains. */
+/** 🪣️ Rejects explicit testing buckets while preserving semantic test names and ordinary production domains. */
 function obsoleteTestingCategoryFinding(path: string, taxonomy: TestTaxonomy, nodeKind: "file" | "directory" = "file"): TestLayoutFinding | null {
   const segments = path.split("/"), directories = nodeKind === "directory" ? segments : segments.slice(0, -1);
   if (directories.includes(taxonomy.testFixturesDirName) || directories.includes(taxonomy.exampleAssetsDirName)) return null;
@@ -167,7 +167,7 @@ function maskCStyleSource(source: string, rust: boolean): string {
   return out.join("");
 }
 
-/** 🧭️ Resolves one relative wiring target and proves it names a discovered canonical implementation. */
+/** 🏹️ Resolves one relative wiring target and proves it names a discovered canonical implementation. */
 function canonicalTestImport(path: string, declared: string, taxonomy: TestTaxonomy, availablePaths: ReadonlySet<string>, inlineModuleAncestors: readonly string[] = []): boolean {
   const root = "/repo", target = posix.resolve(root, posix.dirname(path), ...inlineModuleAncestors, declared.split("\\").join("/"));
   if (target !== root && !target.startsWith(`${root}/`)) return false;
@@ -212,7 +212,7 @@ function rustCfgRequiresTest(expression: string): boolean {
   return call[1] === "all" ? requirements.some(Boolean) : call[1] === "any" && requirements.length > 0 && requirements.every(Boolean);
 }
 
-/** ⚙️ Reads a cfg attribute conservatively, leaving mixed production/test gates untouched. */
+/** 📖️ Reads a cfg attribute conservatively, leaving mixed production/test gates untouched. */
 function rustAttributesRequireTest(attributes: string): boolean {
   for (const match of attributes.matchAll(/cfg\s*\((.*)\)/gu)) if (rustCfgRequiresTest(match[1]!)) return true;
   return false;
@@ -310,7 +310,7 @@ function fixtureSourceDependencies(path: string, source: string, taxonomy: TestT
       }
       if (ts.isCallExpression(node)) {
         const call = node.expression;
-        const fileReader = ts.isIdentifier(call) && (fileBinding(call) === 1 || call.text === "runtimeFileV1") || ts.isPropertyAccessExpression(call) && ts.isIdentifier(call.expression) && fileBinding(call.expression) === 4 && readers.has(call.name.text);
+        const fileReader = ts.isIdentifier(call) && (fileBinding(call) === 1 || call.text === "runtimeFileV1") || ts.isPropertyAccessExpression(call) && ts.isIdentifier(call.expression) && (fileBinding(call.expression) === 4 && readers.has(call.name.text) || call.expression.text === "Bun" && call.name.text === "file" && bound(call.expression) === undefined);
         const target = fileReader ? readTarget(node.arguments[0]) : undefined;
         if (target) add(target, node.getStart(root));
       }
@@ -494,7 +494,7 @@ function conventionalTestSignals(path: string, source: string, extension: string
   return found;
 }
 
-/** 🧫️ Applies the complete path and source contract to an in-memory, language-neutral file set. */
+/** 📏️ Applies the complete path and source contract to an in-memory, language-neutral file set. */
 function inspectTestLayoutSource(taxonomy: TestTaxonomy, entry: TestLayoutSource, availablePaths: ReadonlySet<string>, legacyPatterns: readonly Readonly<{ id: string; pattern: RegExp }>[]): TestLayoutFinding[] {
   const findings: TestLayoutFinding[] = [], path = entry.path.split("\\").join("/"), segments = path.split("/"), name = segments.at(-1)!, extension = testSourceExtension(name, taxonomy);
   const obsoleteCategory = obsoleteTestingCategoryFinding(path, taxonomy);
@@ -519,7 +519,7 @@ function inspectTestLayoutSource(taxonomy: TestTaxonomy, entry: TestLayoutSource
   return [...findings, ...signals.map((signal) => ({ ...signal, path }))];
 }
 
-/** 🧫️ Applies the complete path and source contract to an in-memory, language-neutral file set. */
+/** 🪵️ Applies the complete path and source contract to an in-memory, language-neutral file set. */
 export function inspectTestLayoutSources(taxonomy: TestTaxonomy, sources: readonly TestLayoutSource[], directories: readonly string[] = []): TestLayoutFinding[] {
   const authored = sources.filter(entry => !entry.path.split(/[\\/]/u).slice(0, -1).some(segment => SKIP_DIR_NAMES.has(segment)));
   const legacyPatterns = taxonomy.testLegacyFilenamePatterns.map((entry) => ({ id: entry.id, pattern: new RegExp(entry.pattern, "u") })), availablePaths = new Set(authored.map((entry) => entry.path.split("\\").join("/")));

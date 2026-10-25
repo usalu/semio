@@ -1,4 +1,4 @@
-//! ⚙️ Neutral content-addressed computational engine cache and ephemeral representations.
+//! ⚡️ Neutral content-addressed computational engine cache and ephemeral representations.
 //! Higher host composition registers Engines and supplies EngineHandles to plugins.
 
 use std::collections::{HashMap, VecDeque};

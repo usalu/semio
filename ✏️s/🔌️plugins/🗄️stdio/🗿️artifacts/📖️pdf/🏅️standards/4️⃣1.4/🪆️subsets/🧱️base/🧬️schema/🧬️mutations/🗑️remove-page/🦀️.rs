@@ -38,11 +38,11 @@ where
 
 impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemovePage
 where
-    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemovePage> + From<crate::standards::v1_4::subsets::base::schema::mutations::insert_page::InsertPage>,
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemovePage> + From<crate::standards::v1_4::subsets::base::schema::mutations::insert_page::InsertPage> + protocol::Mutation<PdfSnapshot, Diff = PdfDiff>,
 {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         if !self.valid(base) {
-            return MutationOutcome::error(if self.index < base.pages.len() { "mutation.target-mismatch" } else { "mutation.target-missing" }, "Page target or geometry is outside the PDF 1.4 domain", self.target());
+            return MutationOutcome::error(if self.index < base.pages.len() { "mutation.target-mismatch" } else { "mutation.target-missing" }, "Page target or geometry is outside the PDF 1.4 domain", <Self as protocol::MutationKind<PdfSnapshot, Op>>::target(self));
         }
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { removed: vec![self.index], ..Default::default() }) })
     }

@@ -43,7 +43,7 @@ impl Leaves {
         Ok(Leaves { before: text("before")?, mutation: text("mutation")?, after: text("after")?, diff: text("diff")?, outcome: text("outcome")? })
     }
 
-    /// 🧫️ The leaves as the vector the laws judge.
+    /// 🍃️ The leaves as the vector the laws judge.
     pub fn vector(&self, observable: bool) -> Vector<'_> {
         Vector { before: &self.before, mutation: &self.mutation, after: &self.after, diff: &self.diff, outcome: &self.outcome, observable }
     }

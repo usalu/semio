@@ -1,5 +1,5 @@
-import { runtimeSupportsV1 } from "../../../../../../⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeNativeSystemV1 } from "../../../../../../⚙️runtime/🧲️native/🟦️.ts";
+import { runtimeSupportsV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeNativeSystemV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧲️native/🟦️.ts";
 import{win32}from"node:path";
 import{createRequire}from"node:module";
 import{nativeDirectoryProtocolV1}from"../📋️contract/🟦️.ts";
@@ -18,7 +18,7 @@ export type NativeWindowsBindingV1=Readonly<{
 }>;
 /** 🪟️ Reports one Win32 result without throwing: success flag and the thread's last error. */
 export type NativeWindowsResultV1=Readonly<{ok:boolean;error:number}>;
-/** 🪟️ The semantic host operations of a Windows directory partition. */
+/** 🖥️ The semantic host operations of a Windows directory partition. */
 export type NativeWindowsHostPortV1=Readonly<{
  moveFile(from:string,to:string):NativeWindowsResultV1;
  flushDirectory(path:string):NativeWindowsResultV1;
@@ -80,10 +80,10 @@ export function openNativeWindowsBindingV1():NativeWindowsBindingV1{
  });
 }
 let systemHost:NativeWindowsHostPortV1|undefined;
-/** 🪟️ The process-wide host port over the real kernel; loaded once and kept for the life of the process like libc. */
+/** 💻️ The process-wide host port over the real kernel; loaded once and kept for the life of the process like libc. */
 export function nativeWindowsSystemHostPortV1():NativeWindowsHostPortV1{return systemHost??=createNativeWindowsHostPortV1(openNativeWindowsBindingV1());}
 
-/** 📏️ Reads machine-wide LongPathsEnabled through RegGetValueW; an absent value means disabled. */
+/** 📖️ Reads machine-wide LongPathsEnabled through RegGetValueW; an absent value means disabled. */
 export function readNativeWindowsLongPathsEnabledV1(call?:(hive:bigint,key:Buffer,value:Buffer,flags:number,data:Buffer,size:Buffer)=>number):boolean{
  const policy=windows.longPaths;let library:{close():void}|undefined;
  if(!call){if(process.platform!=="win32"||!runtimeSupportsV1("ffi"))throw Error("Actual Windows Bun registry receiver required");const{dlopen,FFIType:f}=runtimeNativeSystemV1(),opened=dlopen(windows.libraries.registry,{RegGetValueW:{args:[f.i64,f.ptr,f.ptr,f.u32,f.ptr,f.ptr,f.ptr],returns:f.i32}});library=opened;call=(hive,key,value,flags,data,size)=>Number((opened.symbols as unknown as Record<string,(...args:unknown[])=>unknown>).RegGetValueW!(hive,key,value,flags,null,data,size));}

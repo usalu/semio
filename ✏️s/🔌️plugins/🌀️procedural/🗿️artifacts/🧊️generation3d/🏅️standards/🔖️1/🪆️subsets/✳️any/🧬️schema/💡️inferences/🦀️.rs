@@ -6,6 +6,7 @@
 #![allow(clippy::result_large_err)]
 extern crate semio_framework_os_kernel as protocol;
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_geometry::infer_geometry;
 use semio_s_artifact_procedural_3d_geometry::GeometryInput;
 use crate::topology::compute_generation3d_topology;
@@ -14,7 +15,8 @@ use semio_s_artifact_procedural_3d_geometry::Generation3dGeometryRecord;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a generation3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.generation3d.inference")]
 pub struct Generation3dInference {
     #[derived]

@@ -24,6 +24,18 @@ func withStatuteFixtures(t *testing.T) string {
 	return root
 }
 
+func TestFolderURIFollowsTheContextRootNotTheAmbientRoot(t *testing.T) {
+	sandbox.NewRepository(t)
+	own := t.TempDir()
+	path := "tools/build.ts"
+	os.MkdirAll(filepath.Join(own, "tools"), 0755)
+	os.WriteFile(filepath.Join(own, path), []byte("#!/usr/bin/env tsx\nconsole.log('build');\n"), 0644)
+	ctx := NewCodebaseContext(own)
+	if got, want := ctx.FolderURI(path), ctx.FileURI(path); got != want {
+		t.Errorf("FolderURI(%q) = %q, want the context-root result %q", path, got, want)
+	}
+}
+
 func TestFileHeaderId(t *testing.T) {
 	tests := []struct {
 		name string
@@ -48,8 +60,7 @@ func TestFileHeaderId(t *testing.T) {
 	}
 
 	t.Run("shebang ts file becomes script", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		sandbox.BindRoot(t, tmpDir)
+		tmpDir := sandbox.NewRepository(t)
 
 		filePath := "tools/build.ts"
 		absPath := filepath.Join(tmpDir, filePath)
@@ -65,8 +76,7 @@ func TestFileHeaderId(t *testing.T) {
 	})
 
 	t.Run("shebang py file becomes script", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		sandbox.BindRoot(t, tmpDir)
+		tmpDir := sandbox.NewRepository(t)
 
 		filePath := "scripts/run.py"
 		absPath := filepath.Join(tmpDir, filePath)
@@ -82,8 +92,7 @@ func TestFileHeaderId(t *testing.T) {
 	})
 
 	t.Run("code ts without shebang stays code", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		sandbox.BindRoot(t, tmpDir)
+		tmpDir := sandbox.NewRepository(t)
 
 		filePath := "src/index.ts"
 		absPath := filepath.Join(tmpDir, filePath)

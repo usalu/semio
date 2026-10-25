@@ -22,8 +22,8 @@
     "id": "26/09/06/REPO-RUST-IMPLEMENTATION-AND-TAXONOMY-TREE",
     "summary": "Ported the ticket domain, the document codec and the important-document transaction.",
     "files": [
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/🦀️.rs",
-      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/🦀️.rs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🦀️.rs",
+      "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🦀️.rs",
       "file://🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧬️schema/🔣️.json",
       "node_modules/left-pad/index.js",
       "   "

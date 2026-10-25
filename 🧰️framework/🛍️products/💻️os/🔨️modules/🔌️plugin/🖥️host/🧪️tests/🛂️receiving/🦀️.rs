@@ -7,4 +7,6 @@ pub fn close(identity:&mut EntityIdentityAuthority<'_>){let law=policy();let gra
 
 /// 🎟️ The one neutral original retained turn every host test hands the runtime it drives.
 pub fn original_retained_turn()->semio_framework_actor::RetainedTurnInput{let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();serde_json::from_value(law["input"].clone()).unwrap()}
-pub fn idle_receipt()->semio_framework_actor::RetainedTurnReceipt{original_retained_turn().return_original(semio_framework_value::RetainedCloneProgress::default()).expect("idle turn spends nothing")}
+/// 🪙️ The whole held source authority of [`original_retained_turn`] as the loan one activation grants its actor.
+pub fn original_retained_loan()->semio_framework_actor::OriginalActorTurnLoan{let input=original_retained_turn();semio_framework_actor::OriginalActorTurnLoan{retained_policy:input.grant,work_fuel:input.work.fuel,deadline_us:input.work.absolute_deadline_us}}
+pub fn idle_receipt()->semio_framework_actor::RetainedTurnReceipt{original_retained_turn().return_original(semio_framework_value::RetainedCloneProgress::default(),0).expect("idle turn spends nothing")}

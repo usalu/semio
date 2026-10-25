@@ -25,6 +25,13 @@
     "maximumReleaseBytes": 65536,
     "maximumDepth": 64
   },
+  "sessionClose": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 64
+  },
   "primary": "Original worker semantic cause 源🌊",
   "receiptRefusal": "Distinct worker receipt refusal Ω",
   "beforeReceipt": "noFailureLoan",

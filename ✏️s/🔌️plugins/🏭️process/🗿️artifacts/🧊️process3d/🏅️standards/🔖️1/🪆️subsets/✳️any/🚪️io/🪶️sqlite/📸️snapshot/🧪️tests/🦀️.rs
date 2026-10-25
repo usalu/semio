@@ -16,7 +16,7 @@ use semio_s_artifact_stdio_semio_flow::{schema::snapshot::FlowEdge, schema::snap
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
     serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json").leak()).unwrap()
 }
@@ -148,7 +148,7 @@ fn assert_full(actual: &Process3dSnapshot, expected: &Process3dSnapshot, w: u64)
 }
 #[test]
 fn sqlite_snapshot_process3d_actual_parent_bare_capability_is_present() {
-    assert!(<Process3dSnapshot as ArtifactPack>::sqlite_snapshot_codec().is_some());
+    assert!(<Process3dSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
 }
 #[test]
 fn sqlite_snapshot_process3d_complete_parent_native_formats_preserve_all_fields_and_words() {

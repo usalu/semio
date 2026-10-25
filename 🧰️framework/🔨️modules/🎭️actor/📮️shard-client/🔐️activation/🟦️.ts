@@ -50,13 +50,13 @@ export function graftWorkerStack(actorId: string, reason: string, stack: string 
   return error;
 }
 
-/** ⏱️ Marks a rejection the worker classified as a RETRYABLE guest lifecycle-turn deadline — the
+/** 🚩️ Marks a rejection the worker classified as a RETRYABLE guest lifecycle-turn deadline — the
  * browser twin of the host's `retryable_lifecycle_turn` verdict (`🔌plugin/🖥host/🦀.rs`). The guest
  * retained its receipt, so `ShardClient.sendInstanceLifecycle` replays the same events instead
  * of failing the open; a symbol keeps the marker off every structured-clone and JSON path. */
 export const RETRYABLE_LIFECYCLE_TURN = Symbol("semio.actor.retryable-lifecycle-turn");
 
-/** ⏱️ Whether a rejection carries the {@link RETRYABLE_LIFECYCLE_TURN} marker. */
+/** 📍️ Whether a rejection carries the {@link RETRYABLE_LIFECYCLE_TURN} marker. */
 export function isRetryableLifecycleTurn(error: unknown): boolean {
   return typeof error === "object" && error !== null && (error as Record<symbol, unknown>)[RETRYABLE_LIFECYCLE_TURN] === true;
 }

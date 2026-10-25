@@ -342,7 +342,7 @@ impl UiValueArena {
 }
 //#endregion 🧵️ArenaTraversal
 
-/// 🪶️ Advances exact queued value ownership without waiting for the arena or consuming a zero grant.
+/// 📪️ Advances exact queued value ownership without waiting for the arena or consuming a zero grant.
 pub fn close_ui_value_page_with_grant(maximum_items: usize, maximum_bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
     if maximum_items == 0 || maximum_bytes == 0 {
         return Ok(UiValueRetirementStep::default());

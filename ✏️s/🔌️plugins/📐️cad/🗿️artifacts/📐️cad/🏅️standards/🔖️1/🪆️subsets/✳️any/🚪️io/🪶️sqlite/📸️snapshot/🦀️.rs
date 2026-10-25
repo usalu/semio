@@ -109,7 +109,7 @@ fn write_rows(value:&CadSnapshot,output:&mut impl Rows)->Result<(),ValueError>{
     Ok(())
 }
 fn project(value:&CadSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
-    let mut output=Projection::new(<CadSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA,control)?;write_rows(value,&mut output)?;output.finish()
+    let mut output=Projection::new(<CadSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA,control)?;write_rows(value,&mut output)?;output.finish()
 }
 fn flag(row: &SqliteRow, index: usize) -> Result<bool, ValueError> {
     match row.integer(index)? { 0 => Ok(false), 1 => Ok(true), _ => Err(invalid("CAD boolean is undeclared")) }
@@ -201,7 +201,7 @@ fn reconstruct(database: &SqliteDatabase, control: &mut NativeDecodeControl<'_>)
     Ok(value.take())
 }
 fn restore(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<CadSnapshot, ValueError> {
-    validate_sqlite_database_schema_controlled(database, <CadSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA, SqliteSnapshotPhase::ReconstructSnapshot, control)?;
+    validate_sqlite_database_schema_controlled(database, <CadSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, SqliteSnapshotPhase::ReconstructSnapshot, control)?;
     control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
     control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, callback,allocation|{
         let mut progress = |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| callback(event.completed, event.total);

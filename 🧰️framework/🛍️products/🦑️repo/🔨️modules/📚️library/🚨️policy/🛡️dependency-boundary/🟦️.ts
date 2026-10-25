@@ -28,7 +28,7 @@ export function isAdapterBoundaryFile(filePath: string, content: string): boolea
   return ADAPTER_MARKERS.some((m) => lower.includes(m));
 }
 
-/** 🔌️Skips generated, test, and non-source paths for dependency-boundary lint. */
+/** ⏭️Skips generated, test, and non-source paths for dependency-boundary lint. */
 export function shouldSkipDependencyBoundaryFile(filePath: string): boolean {
   const n = normalize(filePath).replaceAll("\\", "/");
   if (n.includes("/node_modules/") || n.includes("/.🧬semio/") || n.includes("/dist/") || n.includes("/target/")) {
@@ -45,7 +45,7 @@ function isInternalPackage(name: string, version: string): boolean {
   return version.startsWith("workspace:") || version.startsWith("file:") || version.startsWith("link:");
 }
 
-/** 🔌️Loads third-party package names from the nearest manifest walking up from filePath. */
+/** 📦️Loads third-party package names from the nearest manifest walking up from filePath. */
 export function loadThirdPartyDeps(repoRoot: string, filePath: string): Set<string> {
   const deps = new Set<string>();
   let dir = normalize(dirname(join(repoRoot, filePath))).replaceAll("\\", "/");
@@ -75,7 +75,7 @@ function mergePackageJson(path: string, deps: Set<string>): void {
   }
 }
 
-/** 🔌️Parses import specifiers from a single import line (TS/JS). */
+/** 📥️Parses import specifiers from a single import line (TS/JS). */
 export function parseTsImportSpecs(line: string): string[] {
   const specs: string[] = [];
   const re = /(?:from|import)\s+['"]([^'"]+)['"]/g;
@@ -99,7 +99,7 @@ function isThirdPartySpec(spec: string, deps: Set<string>): boolean {
   return false;
 }
 
-/** 🔌️Builds breach records for direct third-party imports outside adapter boundaries. */
+/** 🚨️Builds breach records for direct third-party imports outside adapter boundaries. */
 export function dependencyBoundaryBreachesForFile(repoRoot: string, filePath: string, content: string, scope: string): BreachRecord[] {
   if (shouldSkipDependencyBoundaryFile(filePath)) return [];
   if (isAdapterBoundaryFile(filePath, content)) return [];
@@ -125,7 +125,7 @@ export function dependencyBoundaryBreachesForFile(repoRoot: string, filePath: st
   return breachs;
 }
 
-/** 🔌️Aggregates dependency-boundary breaches for every TS/TSX file under a bundle root (repo-relative). */
+/** 🎁️Aggregates dependency-boundary breaches for every TS/TSX file under a bundle root (repo-relative). */
 export function dependencyBoundaryBreachesForBundleDir(repoRoot: string, bundleRootRel: string): BreachRecord[] {
   const rootAbs = join(repoRoot, bundleRootRel);
   if (!existsSync(rootAbs)) return [];

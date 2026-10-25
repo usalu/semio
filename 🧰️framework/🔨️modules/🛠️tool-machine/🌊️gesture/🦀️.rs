@@ -1,4 +1,4 @@
-//! 🌊️ Tool gesture drive: gesture phases, host events, the gesture and press drives and the per-window gesture ledger.
+//! 🔧️ Tool gesture drive: gesture phases, host events, the gesture and press drives and the per-window gesture ledger.
 
 use super::*;
 

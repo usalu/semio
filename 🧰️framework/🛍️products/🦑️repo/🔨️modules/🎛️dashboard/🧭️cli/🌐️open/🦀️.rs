@@ -55,7 +55,7 @@ fn selected_plan(url: &str) -> io::Result<Vec<String>> {
     plan(url, configured.as_deref(), if cfg!(windows) { Platform::Windows } else if cfg!(target_os = "macos") { Platform::Macos } else { Platform::Linux })
 }
 
-/// 🌐️ Runs the same verified opener for a noninteractive caller.
+/// 🔓️ Runs the same verified opener for a noninteractive caller.
 pub(crate) fn open(url: &str) -> io::Result<()> { execute(&selected_plan(url)?, &AtomicBool::new(false)) }
 
 /// ⏳️ One bounded asynchronous opener whose owned helper is cancelled when the view discards it.

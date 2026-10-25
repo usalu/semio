@@ -222,3 +222,35 @@ impl<R:semio_framework_schema_composition::ChildReadSource> semio_framework_sche
 impl<R:semio_framework_schema_composition::ChildReadSource> semio_framework_schema_composition::ChildFieldReadAdmission<R> for TileMedia3d {
  fn admit_child_field(&self,slot:&'static str,source:&mut R)->Result<(),R::Error>{source.step()?;if let Self::MeshChild{child}=self{source.step()?;source.child::<SemioMeshSnapshot>(slot,semio_framework_schema_composition::ChildRefFields{child_id:&child.child_id,artifact_id:&child.target.artifact_id,artifact_kind:&child.target.dialect.artifact_kind,standard:&child.target.dialect.standard,subset:&child.target.dialect.subset})?;}Ok(())}
 }
+
+/// 🔑️ The identity of a `Slot3d` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for Slot3d {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+/// 🔑️ The identity of a `SlotEdge` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for SlotEdge {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+/// 🔑️ The identity of a `Tile` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for Tile {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+/// 🔑️ The identity of a `GraphRule` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for GraphRule {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}

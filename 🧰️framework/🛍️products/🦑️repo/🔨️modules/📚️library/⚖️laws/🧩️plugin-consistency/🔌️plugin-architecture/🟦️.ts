@@ -87,7 +87,7 @@ const POLICY_PLUGIN_CLOSED_SHAPE_LEGACY_FACETS: Readonly<Record<string, string>>
 };
 
 /**
- * 📏️Plugin-root closed-shape rule: for every owner under `✏️s/🔌️plugins/`, every direct child entry NOT
+ * 📕️Plugin-root closed-shape rule: for every owner under `✏️s/🔌️plugins/`, every direct child entry NOT
  * in the taxonomy-derived allowed set (`pluginChildDirs` ∪ `artifactsDirName` ∪ `packagesDirName` ∪ the
  * root component leaf ∪ `rootDocFileNames` ∪ `rootDataDirNames` ∪ `rootDataFileNames` — the last two are
  * legal ONLY at an owner root per taxonomy.json's own `_treePurityComment`, which is why 🗄️stdio's
@@ -174,7 +174,7 @@ function policyPluginClosedShapeBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRulePluginClosedShape
 
 //#region 🔧️PolicyRulePluginPurity
-/** 🎫️Ticket-cited exceptions — empty; an entry requires a ticket citation in a comment beside it. */
+/** 🧼️Ticket-cited exceptions — empty; an entry requires a ticket citation in a comment beside it. */
 const POLICY_PLUGIN_PURITY_ALLOWLIST = new Set<string>();
 
 /** 🗂️`fs::`-word-bounded catches both `std::fs::x` and the common `use std::fs; fs::x` idiom this tree actually uses (📓️w0-c-purity.md §1), plus tokio::fs/read_dir/read_to_string/File::. */
@@ -226,7 +226,7 @@ function policyPluginPurityTestFnSpans(lines: readonly string[]): PolicyModSpan[
   return spans;
 }
 
-/** 🔎️Every `.ts`/`.tsx` file under `rootRel`, excluding the repo's sole TS test convention (`🧪️tests/` dirs, `🟦️.ts` files) — the same split 📓️w0-c-purity.md's scout used, confirmed a 100%-clean split there. */
+/** 📁️Every `.ts`/`.tsx` file under `rootRel`, excluding the repo's sole TS test convention (`🧪️tests/` dirs, `🟦️.ts` files) — the same split 📓️w0-c-purity.md's scout used, confirmed a 100%-clean split there. */
 function policyPluginPurityTsFiles(repoRoot: string, rootRel: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -262,17 +262,17 @@ function policyPluginPurityTsFiles(repoRoot: string, rootRel: string): string[] 
  */
 const POLICY_STATE_LANE_CONFIG_ADAPTER_PREFIXES = ["🧰️framework/🔨️modules/🖥️platform/", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🗂️config-lane/🟦️.ts"];
 
-/** 🫧️Trees excluded from the lane rules: the parallel `compose/` stack and product/site code that is not an app. */
+/** 🌳️Trees excluded from the lane rules: the parallel `compose/` stack and product/site code that is not an app. */
 const POLICY_STATE_LANE_EXCLUDED_PREFIXES = ["compose/", "♻️mit-bestand/", "🌎️hub/", "🧰️framework/🛍️products/🦑️repo/"];
 
-/** 🫧️Direct browser/native persistence — legal only inside the config-lane adapter. */
+/** 💾️Direct browser/native persistence — legal only inside the config-lane adapter. */
 const POLICY_STATE_LANE_STORAGE_RE = /\b(?:localStorage|sessionStorage|indexedDB)\b/;
 
-/** 🫧️The TS process-local ephemeral boxes the Transient lane replaces. */
+/** 📦️The TS process-local ephemeral boxes the Transient lane replaces. */
 const POLICY_STATE_LANE_EPHEMERAL_BOX_RE = /\bephemeral(?:Box|Map|Set|WeakMap)\b/;
 
 /**
- * 📏️State-lane exhaustiveness: exactly FOUR state mechanisms exist, and nothing may route around them —
+ * 🌊️State-lane exhaustiveness: exactly FOUR state mechanisms exist, and nothing may route around them —
  * **artifacts** (persisted + shared), **config** (persisted + local-only), **presence** (ephemeral + shared),
  * **transient** (ephemeral + local-only UI). Ticket `26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION`.
  *
@@ -350,7 +350,7 @@ export function policyStateLaneExhaustivenessBreaches(repoRoot: string): BreachR
 //#endregion 🔖️StateLaneExhaustiveness
 
 /**
- * 📏️Plugin purity: every `.rs` file under `✏️s/🔌️plugins/` may not perform filesystem, env/process, or
+ * ⚗️Plugin purity: every `.rs` file under `✏️s/🔌️plugins/` may not perform filesystem, env/process, or
  * network IO, nor own item-scope ambient mutable state (`thread_local!`/`static mut`/`lazy_static!`/
  * item-scope `Mutex`/`RwLock`/`RefCell`/`Cell`/`Atomic*`) — skips `#[cfg(test)]` modules and `#[test]`
  * functions (test-only IO is currently sanctioned, same skip 📓️w0-c-purity.md's census applied). Also
@@ -489,7 +489,7 @@ function policyPluginPurityBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRulePluginPurity
 
 //#region 🔧️PolicyRuleDeclarativeRegistration
-/** 🎫️Ticket-cited exceptions — empty; an entry requires a ticket citation in a comment beside it. */
+/** 📜️Ticket-cited exceptions — empty; an entry requires a ticket citation in a comment beside it. */
 const POLICY_DECLARATIVE_REGISTRATION_ALLOWLIST = new Set<string>();
 
 /**
@@ -564,7 +564,7 @@ function policyRegistrationBreach(relPath: string, lineNo: number, isEngine: boo
 }
 
 /**
- * 📏️Declarative registration: under `✏️s/🔌️plugins/`, flags (a) `.setup(` inside a `Plugin::builder(…)`
+ * 🪝️Declarative registration: under `✏️s/🔌️plugins/`, flags (a) `.setup(` inside a `Plugin::builder(…)`
  * chain — registration must be declarative data, not an imperative callback (M1 retires `PluginBuilder`'s
  * `setup: Option<fn()>`); (b) any call to the exhaustive global registration family; (c) any
  * `semio_framework_os::` path reference (the OS host crate is forbidden to plugins). (b)/(c) are split into
@@ -619,16 +619,16 @@ function policyDeclarativeRegistrationBreaches(repoRoot: string): BreachRecord[]
 //#endregion 🔧️PolicyRuleDeclarativeRegistration
 
 //#region 🔧️PolicyRulePluginDependencyAllowlist
-/** 🎫️Ticket-cited exceptions — empty; an entry requires a ticket citation in a comment beside it. */
+/** 🔗️Ticket-cited exceptions — empty; an entry requires a ticket citation in a comment beside it. */
 const POLICY_PLUGIN_DEP_ALLOWLIST = new Set<string>();
 
 /** ✅️What a plugin legitimately needs per 📓️w0-d-sdk-surface.md §3.1: the plugin SDK, the os-kernel crate, the 3d crates (base plus the four brep crates of the wave E4 cut) where genuinely used, and schema. Everything else pointing into 🧰️framework/ is a bypass of the curated SDK surface. */
 const POLICY_PLUGIN_DEP_FRAMEWORK_ALLOWLIST = new Set(["semio-framework-plugin", "semio-framework-os-kernel", "semio-framework-3d", "semio-framework-3d-brep-polynomial", "semio-framework-3d-brep-vector", "semio-framework-3d-brep-tolerance", "semio-framework-3d-brep-curve", "semio-framework-3d-brep-surface", "semio-framework-3d-brep-representation", "semio-framework-3d-brep-intersect", "semio-framework-3d-brep-queries", "semio-framework-3d-brep-tessellation", "semio-framework-3d-brep-validation", "semio-framework-3d-brep-analysis", "semio-framework-3d-brep-operations", "semio-framework-3d-brep-engine", "semio-framework-schema"]);
-/** ✅️serde-family third-party crates are always allowed regardless of how they're declared (version-pinned, not path-pointed at 🧰️framework, so they never reach this rule's path filter anyway — kept for defense in depth). */
+/** 🎉️serde-family third-party crates are always allowed regardless of how they're declared (version-pinned, not path-pointed at 🧰️framework, so they never reach this rule's path filter anyway — kept for defense in depth). */
 const POLICY_PLUGIN_DEP_SERDE_RE = /^serde(_json|-wasm-bindgen)?$/;
 
 /**
- * 📇️Exact `semio_framework_os::` symbols each plugin's own `.rs` files use (📓️w0-d-sdk-surface.md §3.2)
+ * 🔣️Exact `semio_framework_os::` symbols each plugin's own `.rs` files use (📓️w0-d-sdk-surface.md §3.2)
  * — keyed by plugin owner dir name, folded into the breach `solution` so the SDK re-export fix is
  * obvious from the breach alone. An empty array means the dependency is declared but 0 uses were found
  * (UNVERIFIED why — w0-d flags ✒️writer/📐️cad/🔱️trinity/🖍️draw as likely stale/unused declarations).
@@ -658,7 +658,7 @@ const POLICY_PLUGIN_DEP_OS_SYMBOLS: Readonly<Record<string, readonly string[]>> 
   "🖨️raster": ["DwgColor", "DwgDrawing", "DwgEntity", "DwgGeometry", "rasterize_svg_to_png_base64"],
 };
 
-/** 🔑Owner dir name (with emoji) for a repo-relative path under `✏️s/🔌️plugins/<owner>/…` — `""` if not under the plugins tree. */
+/** 🛤️Owner dir name (with emoji) for a repo-relative path under `✏️s/🔌️plugins/<owner>/…` — `""` if not under the plugins tree. */
 function policyPluginOwnerFromApaPath(relPath: string): string {
   if (!relPath.startsWith(`${POLICY_APA_PLUGINS_ROOT}/`)) return "";
   return relPath.slice(POLICY_APA_PLUGINS_ROOT.length + 1).split("/")[0] ?? "";
@@ -670,7 +670,7 @@ const POLICY_PLUGIN_DEP_ANY_SECTION_RE = /^\[[^\]]*\]\s*$/gm;
 const POLICY_PLUGIN_DEP_LINE_RE = /^([A-Za-z0-9_.-]+)\s*=\s*\{([^}]*)\}\s*$/gm;
 
 /**
- * 📏️Plugin dependency allowlist: parses every `[dependencies]`/`[target.'cfg(...)'.dependencies]` block
+ * ⛓️Plugin dependency allowlist: parses every `[dependencies]`/`[target.'cfg(...)'.dependencies]` block
  * in every `Cargo.toml` under `✏️s/🔌️plugins/<owner>/.../📦️packages/🦀️rust/` and flags every dependency whose
  * `path =` points into `🧰️framework/` and whose crate name (the `package = "..."` override, or the TOML
  * key) is outside `POLICY_PLUGIN_DEP_FRAMEWORK_ALLOWLIST`. `semio-framework-os` (the HOST crate) is the
@@ -736,11 +736,11 @@ function policyPluginDependencyAllowlistBreaches(repoRoot: string): BreachRecord
 //#endregion 🔧️PolicyRulePluginDependencyAllowlist
 
 //#region 🔧️PolicyRuleEffectCapabilityParity
-/** 🎫️Ticket-cited exceptions — empty; an entry requires a ticket citation in a comment beside it. */
+/** 🎛️Ticket-cited exceptions — empty; an entry requires a ticket citation in a comment beside it. */
 const POLICY_EFFECT_CAPABILITY_ALLOWLIST = new Set<string>();
 
 /**
- * 📇️`HostEffect` variant → required capability `ArtifactKind`, machine-readable form of the effect→
+ * ☁️`HostEffect` variant → required capability `ArtifactKind`, machine-readable form of the effect→
  * capability contract (📓️w0-d-sdk-surface.md §5, `🎠️kernel/🦀️.rs:247-387`). Rights/Scope are
  * noted per-line for provenance but the parity check below matches at `ArtifactKind` granularity only:
  * no plugin has ever called `.capability(...)` for real yet (0 hits repo-wide) to pin the exact
@@ -780,7 +780,7 @@ const POLICY_CAPABILITY_CALL_RE = /\.capability\s*\(\s*ArtifactKind::(\w+)/g;
 const POLICY_BACKBONE_STORAGE_RE = /\.local_backbone_storage\s*\(/;
 
 /**
- * 📏️Effect/capability parity: for each plugin, collects every `HostEffect::<Variant>` constructed
+ * 🪞️Effect/capability parity: for each plugin, collects every `HostEffect::<Variant>` constructed
  * anywhere in its tree (skipping `#[cfg(test)]` spans) and the capabilities it declares in its root
  * `🦀️.rs` (`.capability(ArtifactKind::X, …)` and `.local_backbone_storage()`, which stands in
  * for `ArtifactKind::Backbone`) — flags every constructed variant whose required `ArtifactKind` isn't
@@ -896,7 +896,7 @@ function policyApaRatchetKey(kind: string): string {
 }
 
 /**
- * 🚦Applies the shrink-only ratchet: groups `breaches` by `policyApaRatchetKey`, and for any key present in
+ * 📉️Applies the shrink-only ratchet: groups `breaches` by `policyApaRatchetKey`, and for any key present in
  * `POLICY_APA_RATCHET_CEILINGS`, keeps the first `ceiling` breaches at their original `medium` priority and
  * promotes only the breaches beyond the ceiling to `high` with a regression message naming the key, the
  * ceiling, and the measured count. Keys absent from the table pass through untouched, always `medium`.

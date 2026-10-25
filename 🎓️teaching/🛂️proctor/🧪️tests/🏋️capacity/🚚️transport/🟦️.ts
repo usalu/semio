@@ -1,8 +1,8 @@
-/** 🚚️ The transport of the capacity gate: the HTTP and WebSocket client on Bun's own `fetch`, `WebSocket` and sockets, the quiz client's real envelopes and the raw wire of the abusive script. */
-import { ProctorUnavailable, RETRY_TIMING, retryTransient } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
-import { PRESENCE_PROTOCOL } from "../../../../../🧰️framework/🛍️products/🖥️server/🧬️wire-types/🟦️.ts";
-import { type HttpRequest, type HttpResponse, type HttpTransport } from "../../../../../🧰️framework/🛍️products/🖥️server/🚚️transport/🟦️.ts";
-import { presenceSocketUrl } from "../../../../../🧰️framework/🛍️products/🖥️server/🛣️routes-and-sockets/🟦️.ts";
+/** 🌐️ The transport of the capacity gate: the HTTP and WebSocket client on Bun's own `fetch`, `WebSocket` and sockets, the quiz client's real envelopes and the raw wire of the abusive script. */
+import { ProctorUnavailable, RETRY_TIMING, retryTransient } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/🛂️proctor/🟦️.ts";
+import { PRESENCE_PROTOCOL } from "../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🧬️wire-types/🟦️.ts";
+import { type HttpRequest, type HttpResponse, type HttpTransport } from "../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🚚️transport/🟦️.ts";
+import { presenceSocketUrl } from "../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🛣️routes-and-sockets/🟦️.ts";
 import { fail, GIVE_UP_MS, type Measurements, NO_ANSWER, record, SITE, WATCH_INTERVAL_MS } from "../📊️settings-and-measurements/🟦️.ts";
 
 //#region 🚚️Transport
@@ -73,7 +73,7 @@ export class Room {
     if (this.watching !== undefined) this.send({ type: "watch", scopes: this.watching, intervalMs: WATCH_INTERVAL_MS });
   }
 
-  /** 🚪️ Open one socket and wait for its `welcome`. A socket that never opened because there was no connection or the
+  /** 🔓️ Open one socket and wait for its `welcome`. A socket that never opened because there was no connection or the
    * connection was cut ({@link NO_ANSWER}) is {@link ProctorUnavailable}, as a request without an answer is; a join the
    * proctor answered with a refusal, and a socket that closes after its welcome, are errors of the hall. */
   private open(started: number): Promise<void> {

@@ -141,7 +141,7 @@ describe("OS development composition ownership", () => {
   test("registers one Bun/Nx owner route whose inputs are exactly the contract closure", () => {
     const registration = fixture.registration;
     const packageManifest = JSON.parse(readFileSync(resolve(repoRoot, registration.packagePath), "utf8")) as { scripts?: Record<string, string> };
-    expect(packageManifest.scripts?.[registration.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
+    expect(packageManifest.scripts?.[registration.target]).toBe(`repo run @semio-tech/repo-lib:${registration.target}`);
     expect(registration.command).toBe(`repo ${packageManifest.scripts?.[registration.target]}`);
     const project = JSON.parse(readFileSync(resolve(repoRoot, registration.projectPath), "utf8")) as { targets?: Record<string, { inputs?: string[]; options?: { command?: string } }> };
     const target = project.targets?.[registration.target];

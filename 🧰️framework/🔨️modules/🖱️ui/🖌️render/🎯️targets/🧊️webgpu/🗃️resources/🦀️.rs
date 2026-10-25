@@ -298,7 +298,7 @@ impl GpuResources {
     }
 }
 
-/// 🧊️ Mirrors `WORLD3D_SHADER`'s per-vertex `VertexInput { position, normal, color }` — the
+/// 📍️ Mirrors `WORLD3D_SHADER`'s per-vertex `VertexInput { position, normal, color }` — the
 /// GPU-side vertex layout `crate::pipelines`'s `WORLD3D_OPAQUE_PIPELINE`/
 /// `WORLD3D_TRANSLUCENT_PIPELINE` declare, and the same 40-byte record
 /// `ui_wgpu::wgpu::draw::World3dVertex` uploads, so terrain tints identically on both stacks.

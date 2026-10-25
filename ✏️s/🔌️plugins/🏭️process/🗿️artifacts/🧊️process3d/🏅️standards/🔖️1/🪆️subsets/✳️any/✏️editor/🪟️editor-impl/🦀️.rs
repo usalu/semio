@@ -79,49 +79,25 @@ impl ArtifactEditor for Process3dPlayApp {
         registry.register(Process3dResumableCommandJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        let Some(disposition) = process3d_command_disposition(&request.tool_id) else {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        let Some(disposition) = process3d_command_disposition(&original.tool_id) else {
+            return Ok(false);
         };
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "Process 3D command does not match its exact registered tool"));
+        if original.command.command_id() != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Process 3D command does not match its exact registered tool").into());
         }
-        let tool_id = request.command.command_id();
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match disposition {
-            Process3dCommandDisposition::Bounded => Box::new(BoundedArtifactCommandWork::new(tool_id, process3d_retained_reduce, |_, _, _| Some(1))),
-            Process3dCommandDisposition::Config => {
-                let extent = process3d_resumable_extent(&request.command, &request.snapshot, &request.config, &request.interaction_state).ok_or_else(|| Fault::from("process3d-retained-work-extent-overflow"))?;
-                Box::new(Process3dResumableCommandWork::new(tool_id, extent))
-            }
-        };
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            authoring_seed: request.authoring_seed.clone(),
-            retained: request.retained,
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            Process3dCommand::command_id,
-            process3d_retained_raw_bytes(tool_id),
-            process3d_retained_work_items(tool_id),
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        let tool_id = original.command.command_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request, output, cx, Process3dCommand::command_id, process3d_retained_raw_bytes(tool_id), process3d_retained_work_items(tool_id), false, Default::default(), |request, _identity| {
+            let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match disposition {
+                Process3dCommandDisposition::Bounded => Box::new(BoundedArtifactCommandWork::new(tool_id, process3d_retained_reduce, |_, _, _| Some(1))),
+                Process3dCommandDisposition::Config => {
+                    let extent = process3d_resumable_extent(&request.command, &request.snapshot, &request.config, &request.interaction_state).ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvalidValue, "process3d-retained-work-extent-overflow"))?;
+                    Box::new(Process3dResumableCommandWork::new(tool_id, extent))
+                }
+            };
+            Ok((work, Default::default()))
+        })
     }
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 

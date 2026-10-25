@@ -25,7 +25,7 @@ const TREE_INTERACTION_DOMAIN = "tree";
 const TREE_INTERACTION_LABEL = { native: { en: "Tree", de: "Baum" }, reuse: { en: "Tree", de: "Baum" } } as const;
 const TREE_INTERACTION_ITEM_LABEL = { native: { en: "Item", de: "Element" }, reuse: { en: "Item", de: "Element" } } as const;
 
-/** 🕹️ Minimal `InteractionDefinition` wrapping `selectionMode` — only `granularities[0].id` and
+/** 🌳️ Minimal `InteractionDefinition` wrapping `selectionMode` — only `granularities[0].id` and
  * `selection.modes[0]` are read by `nextSelection`/`validateState`; `hover`/`hierarchy`/`iconId` are
  * unused filler required by the type. */
 const treeInteractionDefinition = (selectionMode: TreeSelectionMode): InteractionDefinition => ({
@@ -38,7 +38,7 @@ const treeInteractionDefinition = (selectionMode: TreeSelectionMode): Interactio
 });
 // #endregion 🕹️InteractionDelegation
 
-/** 🕹️ Delegates to `🕹️interaction`'s `validateState` (wave 0) for the FIRST-id clamp Tree has always
+/** 🧹️ Delegates to `🕹️interaction`'s `validateState` (wave 0) for the FIRST-id clamp Tree has always
  * applied to externally-supplied/persisted ids (`defaultSelectedIds`, controlled `selectedIds`/
  * `highlightedIds`) — distinct from {@link getTreeNextSelectionState}'s LAST-target clamp for a live
  * pick. Falsy-id filtering + dedup stay local sanitization ahead of the shared machine, which has no
@@ -60,7 +60,7 @@ export const normalizeTreeSelectedIds = (selectedIds: readonly string[], selecti
 
 export const getTreeItemDefaultOpen = (item: TreeDataItem): boolean => item.defaultOpen ?? item.collapsibleState === TreeItemCollapsibleState.Expanded;
 
-/** 🕹️ Delegates to `🕹️interaction`'s `nextSelection` (wave 0) for a live pick's LAST-target clamp — see
+/** ⏭️ Delegates to `🕹️interaction`'s `nextSelection` (wave 0) for a live pick's LAST-target clamp — see
  * {@link normalizeTreeSelectedIds}'s doc for the two clamps this wave deliberately keeps distinct.
  * `additiveKey`/`rangeKey` fold to one `MergeMode` the same way `interactionMergeFromModifiers` folds raw
  * pointer modifiers (shift wins over ctrl/meta) — this function's own boolean-pair signature is kept

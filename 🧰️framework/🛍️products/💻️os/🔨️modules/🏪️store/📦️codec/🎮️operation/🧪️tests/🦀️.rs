@@ -22,7 +22,7 @@ fn original_retained_codec_catalog_preserves_input_receipt_and_cancellation_heap
             if owner.is_prepared() { break; }
             let source = || crate::os_store::document_store_owners::bounded_artifact_store_owners_source_demands::<DemoSnapshot, DemoMutation>();
             let demand = owner.demands(grant.maximum_copy_bytes, source).unwrap();
-            let pointers = owner.original.as_ref().map(|catalog| [std::sync::Arc::as_ptr(catalog.snapshot_retirement.0.as_ref().unwrap()) as *const () as usize, std::sync::Arc::as_ptr(catalog.initial_snapshot_retirement.0.as_ref().unwrap()) as *const () as usize, std::sync::Arc::as_ptr(catalog.mutation_retirement.0.as_ref().unwrap()) as *const () as usize]);
+            let pointers = owner.original.as_ref().map(|catalog| [std::sync::Arc::as_ptr(catalog.snapshot_retirement.as_ref().unwrap()) as *const () as usize, std::sync::Arc::as_ptr(catalog.initial_snapshot_retirement.as_ref().unwrap()) as *const () as usize, std::sync::Arc::as_ptr(catalog.mutation_retirement.as_ref().unwrap()) as *const () as usize]);
             for axis in 0..5 {
                 if axis == 1 && demand.copy_bytes == 0 || axis == 2 && demand.capacity_bytes == 0 || axis == 3 && demand.release_bytes == 0 { continue; }
                 let denied = match axis { 0 => RetainedCloneGrant { maximum_items: 0, ..grant }, 1 => RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }, 2 => RetainedCloneGrant { maximum_capacity_bytes: 0, ..grant }, 3 => RetainedCloneGrant { maximum_release_bytes: 0, ..grant }, _ => RetainedCloneGrant { maximum_depth: 0, ..grant } };
@@ -31,7 +31,7 @@ fn original_retained_codec_catalog_preserves_input_receipt_and_cancellation_heap
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 assert!(owner.receipt().is_none());
                 assert_eq!(owner.sources().map(|source| source.as_ptr()), original);
-                assert_eq!(owner.original.as_ref().map(|catalog| [std::sync::Arc::as_ptr(catalog.snapshot_retirement.0.as_ref().unwrap()) as *const () as usize, std::sync::Arc::as_ptr(catalog.initial_snapshot_retirement.0.as_ref().unwrap()) as *const () as usize, std::sync::Arc::as_ptr(catalog.mutation_retirement.0.as_ref().unwrap()) as *const () as usize]), pointers);
+                assert_eq!(owner.original.as_ref().map(|catalog| [std::sync::Arc::as_ptr(catalog.snapshot_retirement.as_ref().unwrap()) as *const () as usize, std::sync::Arc::as_ptr(catalog.initial_snapshot_retirement.as_ref().unwrap()) as *const () as usize, std::sync::Arc::as_ptr(catalog.mutation_retirement.as_ref().unwrap()) as *const () as usize]), pointers);
             }
             let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.advance(grant, source, bounded_artifact_store_owners::<DemoSnapshot, DemoMutation>));
             assert!(matches!(result.unwrap(), ArtifactCodecCatalogStep::Progress | ArtifactCodecCatalogStep::Ready));

@@ -1,4 +1,4 @@
-import { toolJobArtifactRetainedCommandExact, toolJobArtifactRetainedCommandRuntimeLawExact } from "../../🏁️run/🟠️shared/🟦️.ts";
+import { toolJobArtifactRetainedCommandExact, toolJobArtifactRetainedCommandRuntimeLawExact } from "../../🏁️run/🟠️harness/🟦️.ts";
 
 /** 🧪️ Executes tool job artifact retained command policy assertions. */
 export function toolJobArtifactRetainedCommandSelfTests(source: string, runtimeLawSource: string): number {

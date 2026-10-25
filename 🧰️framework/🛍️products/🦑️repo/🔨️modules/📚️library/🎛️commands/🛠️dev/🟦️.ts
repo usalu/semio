@@ -114,10 +114,11 @@ export class DevScript extends Script {
    * Streamable HTTP is the dashboard tool `tool:workspace/os-mcp-http` (build task `@semio-tech/framework-os-mcp-rs:dev`).
    * Extra argv passes straight through to the binary (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
   private async runMcpOs(extra: string[]): Promise<void> {
-    const { ensureMcpBinary, mcpBinaryIsStaged, serveWarmMcpStdio } = await import("../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts");
-    const options = { cwd: this.root, ...daemonBudgetOpts() };
-    if (mcpBinaryIsStaged(this.root)) return runCmd(ensureMcpBinary(this.root), ["stdio", ...extra], options);
-    process.exit(await serveWarmMcpStdio(this.root, extra, { ...process.env, ...options.env }));
+    const { ensureMcpBinary, mcpBinaryIsStaged, serveWarmMcpStdio, takeMcpPluginCatalog, withMcpHostDriverPolicy } = await import("../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts");
+    const catalog = takeMcpPluginCatalog(extra, this.root);
+    const options = { cwd: this.root, ...daemonBudgetOpts(catalog.env) };
+    if (mcpBinaryIsStaged(this.root)) return runCmd(ensureMcpBinary(this.root), withMcpHostDriverPolicy(["stdio", ...catalog.args]), options);
+    process.exit(await serveWarmMcpStdio(this.root, catalog.args, { ...process.env, ...options.env }));
   }
 
   private runMcpStdioRepo(slugs: string[]): void {

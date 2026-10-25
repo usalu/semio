@@ -1,2 +1,0 @@
-/** 🧬️ Is what one producer phase hands the next: the state reached, the current generation prefixes and the targets of every live binding. */
-type JavascriptDependencyProducedV1=Readonly<{state:"current"|"ready"|"published";currents:readonly string[];targets:readonly string[]}>;

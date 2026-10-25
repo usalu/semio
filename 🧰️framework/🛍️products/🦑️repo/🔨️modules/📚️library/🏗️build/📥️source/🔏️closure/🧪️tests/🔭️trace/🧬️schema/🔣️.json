@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:source-trace-corpus:v1",
+  "title": "Source Trace Corpus",
+  "description": "Language-agnostic fixture of the executor source trace: the captured files, what a run of the entry must report as loaded modules, captured reads and live reads, and the action record the entry writes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "entry",
+    "files",
+    "imports",
+    "live",
+    "expectedModules",
+    "expectedReads",
+    "expectedLive",
+    "expectedAction"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "entry": {
+      "type": "string",
+      "minLength": 1
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "imports": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "live": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "expectedModules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expectedReads": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expectedLive": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expectedAction": {
+      "type": "object"
+    }
+  }
+}

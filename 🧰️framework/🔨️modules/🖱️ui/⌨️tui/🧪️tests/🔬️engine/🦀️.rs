@@ -394,7 +394,6 @@ fn corner_tab_preview_geometry_matches_the_independent_taffy_solver() {
             let area = Rect::new(10, 4, width, height);
             let rect = Rect::new(10 + expected.location.x as u16, 4 + expected.location.y as u16, expected.size.width as u16, expected.size.height as u16);
             assert_eq!(DockPlacement::Corner(corner).preview(area), rect, "{corner:?} in {area:?}");
-            println!("[DEBUG] Taffy independently matched corner={corner:?} area={area:?} preview={rect:?}");
         }
     }
 }

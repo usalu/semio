@@ -54,7 +54,7 @@ pub const FORWARDED_FOR: &str = "x-forwarded-for";
 /// 🛣️ The path of the one `POST` that reads.
 pub const QUERIES_PATH: &str = "/queries";
 
-/// 🏷️ The address `headers` and `peer` identify a client as, under `addressing`.
+/// 🗝️ The address `headers` and `peer` identify a client as, under `addressing`.
 pub fn client_key(addressing: ClientAddressing, headers: &HeaderMap, peer: Option<SocketAddr>) -> ClientKey {
     let forwarded = match addressing {
         ClientAddressing::Peer => None,
@@ -175,7 +175,7 @@ pub fn bounded_socket(upgrade: WebSocketUpgrade, inbound: usize) -> WebSocketUpg
     upgrade.max_message_size(inbound).max_frame_size(inbound).read_buffer_size(inbound)
 }
 
-/// 📏️ The most the durable-lane socket takes of one inbound message: its client only ever closes.
+/// 🌊️ The most the durable-lane socket takes of one inbound message: its client only ever closes.
 pub const EVENT_STREAM_INBOUND_BYTES: usize = 1024;
 
 /// 🚀️ Make one accepted connection send each write at once instead of holding a small one back
@@ -190,10 +190,10 @@ pub fn undelayed(connection: &mut tokio::net::TcpStream) {
 //#endregion 🔖️Edge
 
 //#region 🔖️Credential
-/// 🛂️ The header a caller presents a [`CapabilityProof`](crate::contract::CapabilityProof) in.
+/// 🎁️ The header a caller presents a [`CapabilityProof`](crate::contract::CapabilityProof) in.
 pub const CAPABILITY_HEADER: &str = "x-semio-capability";
 
-/// 🛂️ WebSocket subprotocol that carries a session bearer after this marker.
+/// 🕸️ WebSocket subprotocol that carries a session bearer after this marker.
 pub const SESSION_PROTOCOL_V1: &str = "semio.session.v1";
 
 /// 🎟️ The bearer token of an `Authorization: Bearer …` header, if there is one.

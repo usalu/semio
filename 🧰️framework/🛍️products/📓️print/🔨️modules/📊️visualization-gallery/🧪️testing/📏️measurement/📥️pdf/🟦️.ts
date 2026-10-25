@@ -5,7 +5,7 @@ import{Worker}from"node:worker_threads";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{withPrintStorageTaskV1,type PrintExecutionV1}from"../../../../../📦️artifacts/🎛️operation/🟦️.ts";
 import{awaitPrintWorkerV1,type PrintWorkerPortV1}from"../../../../../📦️artifacts/🧵️worker/🟦️.ts";
-import { withArtifactDestinationTaskV1, type ArtifactDestinationV1 } from "@semio-tech/repo-lib/artifacts";
+import { withArtifactDestinationTaskV1, type ArtifactDestinationV1 } from "@semio-tech/repo-lib/artifacts/storage";
 import{requireIssuedResourceControlRefinementV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};

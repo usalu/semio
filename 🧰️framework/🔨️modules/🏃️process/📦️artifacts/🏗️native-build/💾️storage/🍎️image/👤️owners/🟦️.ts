@@ -5,7 +5,7 @@ const protocol=imageSchema.definitions.ImageProtocol.const;
 export function nativeImageAttachArgumentsV1(root:string,image:string):readonly string[]{return Object.freeze(["attach",...protocol.attachArguments,"-mountpoint",root,image]);}
 /** 🔍️ Resolves the innermost mount that hosts `directory` from `mount` output, without a runtime library. */
 export function nativeImageHostMountV1(mountOutput:string,directory:string):Readonly<{mountPoint:string;flags:readonly string[];owners:boolean}>{return nativeImageHostMountOfV1(mountOutput,realpathSync(directory));}
-/** 🔍️ Resolves the innermost mount of an already canonical absolute path from `mount` output. */
+/** 🖼️ Resolves the innermost mount of an already canonical absolute path from `mount` output. */
 export function nativeImageHostMountOfV1(mountOutput:string,real:string):Readonly<{mountPoint:string;flags:readonly string[];owners:boolean}>{
  let best:{mountPoint:string;flags:string[]}|undefined;
  for(const line of mountOutput.split("\n")){const row=/^\S+ on (.+) \(([^()]*)\)$/u.exec(line);if(!row)continue;const mountPoint=row[1]!;if(mountPoint!==real&&!real.startsWith(mountPoint==="/"?"/":mountPoint+"/"))continue;if(!best||mountPoint.length>best.mountPoint.length)best={mountPoint,flags:row[2]!.split(",").map(flag=>flag.trim())};}

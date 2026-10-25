@@ -16,7 +16,7 @@ export type PackageTarget = string;
 export interface DiscoveredPackage {
   readonly ownerRel: string;
   readonly lang: PackageLang;
-  /** 🎯️ Set when `ownerRel` ends in `🎯️targets/<registered-target>`. */
+  /** 🏹️ Set when `ownerRel` ends in `🎯️targets/<registered-target>`. */
   readonly target?: PackageTarget;
   /** 📁️ Repo-relative dir holding the manifest (i.e. `dirname(manifestPath)`). */
   readonly packageRel: string;
@@ -38,7 +38,7 @@ export interface DiscoveredOwner {
   readonly targets: readonly PackageTarget[];
   readonly roles: readonly PackageRole[];
   readonly packages: readonly DiscoveredPackage[];
-  /** 🔥️ Residual `⚡️implementations`/`⚡️implementation` dirs still inside this owner (burn-down counter — must decrease monotonically to 0). */
+  /** 🔽️ Residual `⚡️implementations`/`⚡️implementation` dirs still inside this owner (burn-down counter — must decrease monotonically to 0). */
   readonly residualImplDirs: number;
   /** 🚪️ Shape V1 leftovers: entry files still sitting at the owner root instead of in `📦️packages/<lang>/`. */
   readonly entryFilesAtOwnerRoot: readonly string[];
@@ -57,12 +57,12 @@ export interface DiscoveryBurndown {
   readonly packagesTotal: number;
   readonly cleanOwners: number;
   readonly mixedOwners: readonly DiscoveredOwner[];
-  /** 🔥️ Every forbidden-segment dir repo-wide, including those outside any migrated owner. */
+  /** ⛔️ Every forbidden-segment dir repo-wide, including those outside any migrated owner. */
   readonly implDirsTotal: number;
   readonly implDirsByArea: Readonly<Record<string, number>>;
   /** 🏷️ `📦️packages/<lang>/` manifests carrying no role marker — invisible to `discoverPackages` until they get one. */
   readonly unmarkedManifests: readonly { readonly path: string; readonly area: string }[];
-  /** 📦️ Files inside a package dir that are neither packaging code nor its entry file (data/docs belong at the owner root under Shape V2). */
+  /** 🚨️ Files inside a package dir that are neither packaging code nor its entry file (data/docs belong at the owner root under Shape V2). */
   readonly packagingViolations: readonly { readonly path: string; readonly ownerRel: string }[];
 }
 
@@ -91,7 +91,7 @@ export function declaredComponentKind(text: string): "plugin" | "extension" | un
   return kind;
 }
 
-/** 🔍️ Walks a dotted key path (`"metadata.semio"`, `"semio"`) into a parsed JSON manifest. */
+/** 🏓️ Walks a dotted key path (`"metadata.semio"`, `"semio"`) into a parsed JSON manifest. */
 export function jsonTable(value: unknown, table: string): Record<string, unknown> | undefined {
   let current: unknown = value;
   for (const key of table.split(".")) {
@@ -101,12 +101,12 @@ export function jsonTable(value: unknown, table: string): Record<string, unknown
   return typeof current === "object" && current !== null ? (current as Record<string, unknown>) : undefined;
 }
 
-/** 🏷️ Package name from a Cargo.toml's `[package] name = "…"` line. */
+/** 🦀️ Package name from a Cargo.toml's `[package] name = "…"` line. */
 function rustPackageName(text: string): string | undefined {
   return text.match(/^name\s*=\s*"([^"]+)"/m)?.[1];
 }
 
-/** 🏷️ Resolves role metadata from supplied bytes, including transaction preimage views. */
+/** 📖️ Resolves role metadata from supplied bytes, including transaction preimage views. */
 export function parseSemioMarker(content: string, lang: PackageLang, taxonomy: Taxonomy): { role: PackageRole; id?: string } | undefined {
   const spec = taxonomy.ecosystems[lang]?.marker;
   if (!spec) return undefined;
@@ -159,7 +159,7 @@ const DISCOVERY_SKIP_DIRS = new Set(["node_modules", "target", "dist", "📤️d
 
 export const CARGO_TARGET_DIR_PATTERN = /^target(?:-[a-z0-9]+)*$/u;
 
-/** 🎯️ Cargo target roots (`target`, `target-<slug>`) are build output that concurrent lanes create and prune mid-walk; discovery never enters them.
+/** ⏭️ Cargo target roots (`target`, `target-<slug>`) are build output that concurrent lanes create and prune mid-walk; discovery never enters them.
  *
  * `🗑️generated` is tool and test output by AGENTS.md's own rule and is gitignored (`.gitignore:22`), so
  * it is untracked by construction and can never hold authored content. The same set is already
@@ -181,7 +181,7 @@ export function retryOnEintr<T>(operation: () => T): T {
   }
 }
 
-/** 📁️ `readdirSync(dir, { withFileTypes: true })`, defaulting to `[]` for an unreadable/missing dir — a helper (rather than an explicit `ReturnType<typeof readdirSync>` annotation) so the `Dirent<string>` element type infers unambiguously from this specific overload. */
+/** 🔄️ `readdirSync(dir, { withFileTypes: true })`, defaulting to `[]` for an unreadable/missing dir — a helper (rather than an explicit `ReturnType<typeof readdirSync>` annotation) so the `Dirent<string>` element type infers unambiguously from this specific overload. */
 /** 🌪️ Enumerates a directory that a concurrent rename may remove between discovery and enumeration; a vanished directory has no children. */
 export function readdirVanishing(absDir: string): string[] {
   try {

@@ -54,7 +54,7 @@ function macroInvocationRanges(source: ScannedSource): (readonly [number, number
   return ranges;
 }
 
-/** 🪞️ Drives one unmirror run over the files of a universe. */
+/** ▶️ Drives one unmirror run over the files of a universe. */
 export class Unmirror {
   readonly report: UnmirrorReport = { edits: new Map(), removedLeaves: 0, repointedLeaves: 0, repointedChains: 0, addedImports: 0, removedModules: 0, unresolvedMirrors: [], multiMounted: [], invisible: [] };
   constructor(private readonly universe: Universe, private readonly options: UnmirrorOptions) {

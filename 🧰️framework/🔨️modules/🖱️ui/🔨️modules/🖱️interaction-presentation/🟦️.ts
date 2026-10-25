@@ -20,25 +20,25 @@ const hoverExcludingHandleActiveTextClass = "hover:not-data-[handle-hovered=true
 /** 🫳️ Tree-row hover fill excluding the nested drag handle. */
 export const groupHoverExcludingHandleBgFillClass = "group-hover/tree-row:not-group-data-[handle-hovered=true]/tree-row:bg-hover-interactive-fill";
 
-/** 🫳️ Hover emphasis excluding the nested drag handle. */
+/** ‼️ Hover emphasis excluding the nested drag handle. */
 export const hoverExcludingHandleTextEmphasizedClass = "hover:not-data-[handle-hovered=true]:text-emphasized";
 
-/** 🫳️ Hover fill excluding the nested drag handle. */
+/** 🪆️ Hover fill excluding the nested drag handle. */
 export { hoverExcludingHandleBgFillClass };
 
-/** 🎨️ Normal-border interactive hover fill. */
+/** 🖱️ Normal-border interactive hover fill. */
 export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
 
-/** 🎨️ Interactive hover fill with emphasized content. */
+/** 👆️ Interactive hover fill with emphasized content. */
 export const interactiveHoverClass = cn(interactiveHoverFillClass, "hover:text-emphasized");
 
 /** 📏️ Active stroke paired with interactive active fill. */
 export const interactiveActiveBorderClass = "border-active-base";
 
-/** 🎨️ Pressed and selected active presentation. */
+/** ☑️ Pressed and selected active presentation. */
 export const interactiveActiveFillClass = cn("bg-active-base", interactiveActiveBorderClass, "text-active-foreground", hoverExcludingHandleActiveBgClass, hoverExcludingHandleActiveBorderClass, hoverExcludingHandleActiveTextClass);
 
-/** 🎨️ Data-state on presentation. */
+/** 🔛️ Data-state on presentation. */
 export const interactiveOnClass = cn(
   "data-[state=on]:bg-active-base",
   "data-[state=on]:border-active-base",
@@ -48,7 +48,7 @@ export const interactiveOnClass = cn(
   "data-[state=on]:hover:text-active-foreground",
 );
 
-/** 🎨️ Active tab presentation. */
+/** 📑️ Active tab presentation. */
 export const interactiveTabActiveClass = cn(
   "data-[state=active]:bg-active-base",
   "data-[state=active]:border-active-base",

@@ -45,7 +45,7 @@ impl JsonWriteSource for OriginalDisplay<'_>{
  }
 }
 impl FlowDisplayCursor{
- pub(super) fn new()->Self{Self{control:None,rows:Vec::new(),writer:JsonBorrowedWriteCursor::new(),text:None,widget:0,scan:0,rank:0,stage:0}}
+ pub fn new()->Self{Self{control:None,rows:Vec::new(),writer:JsonBorrowedWriteCursor::new(),text:None,widget:0,scan:0,rank:0,stage:0}}
  pub fn complete(&self)->bool{self.stage==255}
  pub fn take_text(&mut self)->Option<String>{self.text.take()}
  fn source<'a>(&'a self,snapshot:&'a FlowHostSnapshot,channels:&'a EvalChannels,infos:&'a HistoryFoldIndex<String,OperatorInfo>)->OriginalDisplay<'a>{OriginalDisplay{snapshot,channels,infos,rows:&self.rows}}
@@ -56,7 +56,7 @@ impl FlowDisplayCursor{
   if self.stage==7{return self.writer.normal_step_demands(&self.source(snapshot,channels,infos))}
   Ok(d)
  }
- pub(super) fn step(&mut self,snapshot:&FlowHostSnapshot,channels:&EvalChannels,infos:&HistoryFoldIndex<String,OperatorInfo>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+ pub fn step(&mut self,snapshot:&FlowHostSnapshot,channels:&EvalChannels,infos:&HistoryFoldIndex<String,OperatorInfo>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   let d=self.demands(snapshot,channels,infos)?;if grant.maximum_items==0{return Ok(Default::default())}if grant.maximum_depth<d.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original display requires source depth"))}if grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes{return Ok(Default::default())}
   let mut p=RetainedCloneProgress{copied_items:1,..Default::default()};
   match self.stage{

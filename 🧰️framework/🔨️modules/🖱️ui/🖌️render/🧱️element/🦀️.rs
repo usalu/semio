@@ -1,4 +1,4 @@
-//! 🧱️ The `Element` trait, stable `ElementId` identity, and the per-frame arena that erases
+//! 🖼️ The `Element` trait, stable `ElementId` identity, and the per-frame arena that erases
 //! concrete `Element` types without `dyn Element` (ruling U3).
 //!
 //! **Erasure mechanism (U3):** `dyn Element` is banned because `Element` carries two associated
@@ -114,7 +114,7 @@ pub struct PrepaintCx<'a> {
 }
 
 impl<'a> PrepaintCx<'a> {
-    /// 🌱️ `parent: None` — the first [`Self::register`] call this frame becomes the tree's root (see
+    /// 🌿️ `parent: None` — the first [`Self::register`] call this frame becomes the tree's root (see
     /// [`crate::DispatchTree::insert`]).
     pub fn new(shared: SharedFrameCx<'a>, dispatch: &'a mut crate::DispatchTree, text: &'a mut crate::TextSystem) -> Self {
         Self { shared, dispatch, text, parent: None }
@@ -211,7 +211,7 @@ fn paint_erased<E: Element + 'static>(element: &mut dyn Any, id: ElementId, boun
     element.paint(id, bounds, layout, prepaint, cx);
 }
 
-/// 🧱️ One type-erased [`Element`], its erasure vtable, and its per-phase state once produced. Never
+/// 🔂️ One type-erased [`Element`], its erasure vtable, and its per-phase state once produced. Never
 /// constructed as `dyn Element` (ruling U3) — see this file's docstring for the fn-pointer + `dyn Any`
 /// mechanism. Phase methods `expect`-panic (never silently no-op) when called out of order, since an
 /// erased element cannot lean on the compile-time ordering [`Element`]'s own associated types give

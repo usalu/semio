@@ -130,7 +130,7 @@ describe("commit", () => {
       writeFileSync(msg, "🐙️ueli🎆️26🌙️06☀️01🚩️001\n\n🎆️26🌙️06☀️04⏰️12⌚️00⏱️00\n🔧️Work\n", "utf8");
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", msg], { cwd: root });
       const bundles = parseCommitBundleBody("📚️repo🔧️js\n🎆️26🌙️06☀️04\n🔧️Only repo");
-      expect(() => validateBundleCommitAttribution(root, wip, "HEAD", bundles)).toThrow(/not attributed to any bundle|do not add up/);
+      expect(() => validateBundleCommitAttribution(root, wip, "HEAD", bundles)).toThrow(/commit\.attribution\.changed-path-is-not-attributed|commit\.attribution\.per-day-metric-for-does/);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -150,7 +150,7 @@ describe("commit", () => {
       ],
     ]);
     const bundleTotals = [{ added: 0, removed: 0, edited: 0 }];
-    expect(() => validateBundleDayDeltasAttribution(bundles, prefixSets, dateDeltas, bundleTotals)).toThrow(/missing from your bundle body/);
+    expect(() => validateBundleDayDeltasAttribution(bundles, prefixSets, dateDeltas, bundleTotals)).toThrow(/commit\.attribution\.has-changes-on-but-that/);
   });
 
   test("validateBundleDayDeltasAttribution rejects when listed days do not sum to bundle total", async () => {
@@ -170,9 +170,9 @@ describe("commit", () => {
         ]),
       ],
     ]);
-    expect(() => validateBundleDayDeltasAttribution(bundles, [["repo/js"]], dateDeltas, [{ added: 2, edited: 0, removed: 0 }])).toThrow(/missing from your bundle body/);
+    expect(() => validateBundleDayDeltasAttribution(bundles, [["repo/js"]], dateDeltas, [{ added: 2, edited: 0, removed: 0 }])).toThrow(/commit\.attribution\.has-changes-on-but-that/);
     const dateDeltasOneDay = new Map([[0, new Map([["🎆️26🌙️06☀️04", { added: 2, edited: 0, removed: 0 }]])]]);
-    expect(() => validateBundleDayDeltasAttribution(bundles, [["repo/js"]], dateDeltasOneDay, [{ added: 7, edited: 0, removed: 0 }])).toThrow(/does not add up/);
+    expect(() => validateBundleDayDeltasAttribution(bundles, [["repo/js"]], dateDeltasOneDay, [{ added: 7, edited: 0, removed: 0 }])).toThrow(/commit\.attribution\.per-day-metric-for-does/);
   });
 
   test("buildCommitMessage appends per-day uloc from micro-commit dates", async () => {
@@ -461,10 +461,11 @@ describe("command budgets", () => {
 });
 
 describe("nextest execution filters", () => {
-  test("retains explicit task artifacts and preserves the default temporary location", () => {
-    const fixture = JSON.parse(readFileSync(join(contractRoot, "../🧫️fixtures/🏎️nextest/🗺️artifact-location.json"), "utf8")) as { schema: string; cases: Array<{ value: string; relative: string | null; retain: boolean }> };
+  test("uses explicit task artifacts, refuses blank ones and never retains them", () => {
+    const fixture = JSON.parse(readFileSync(join(contractRoot, "../🧫️fixtures/🏎️nextest/🗺️artifact-location.json"), "utf8")) as { schema: string; cases: Array<{ value: string; relative: string | null; refused: boolean }> };
     for (const row of fixture.cases) {
-      expect(nextestArtifactLocation(contractRoot, { SEMIO_TEST_ARTIFACT_DIR: row.value })).toEqual({ directory: row.relative === null ? tmpdir() : resolve(contractRoot, row.relative), retain: row.retain });
+      if (row.refused) expect(() => nextestArtifactLocation(contractRoot, { SEMIO_TEST_ARTIFACT_DIR: row.value })).toThrow("Bounded original native test evidence directory required");
+      else expect(nextestArtifactLocation(contractRoot, { SEMIO_TEST_ARTIFACT_DIR: row.value })).toEqual({ directory: resolve(contractRoot, row.relative!), retain: false });
     }
   });
 

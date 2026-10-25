@@ -5,7 +5,7 @@ import {mkdirSync,mkdtempSync,realpathSync,rmSync,symlinkSync,writeFileSync} fro
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {generatorOutputOwners} from "../🟨️.mjs";
 import policy from "../../../../../⚡️caching/🔣️policy.json";
 import corpus from "./🔣️.json";

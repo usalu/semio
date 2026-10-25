@@ -7,13 +7,17 @@ use protocol::Mutation;
 use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
-#[derive(Clone, Debug, PartialEq, Default, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Default, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct VcsDemoPresence {}
 
-impl store::ArtifactPresenceSnapshot for VcsDemoPresence {}
+impl store::ArtifactPresenceSnapshot for VcsDemoPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 /// 🔺️ Sparse delta over [`VcsDemoPresence`]: the presence record carries no field, so its delta names nothing.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]

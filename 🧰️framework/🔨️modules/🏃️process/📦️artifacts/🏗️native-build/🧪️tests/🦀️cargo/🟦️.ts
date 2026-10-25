@@ -1,6 +1,7 @@
 import { phaseCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../🎛️owned-execution/🟦️.ts";
 import { expect } from "bun:test";
+import { withBuildTestInvocationV1 } from "../../../../🧪️testing/📥️invocation/🟦️.ts";
 import { spawn, spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { checkResourceLeaseControl } from "../../../../🔒️leases/🟦️.ts";
@@ -10,7 +11,7 @@ import { startAdmissionBrokerV1, type UnitRecordV1 } from "../../🎟️admissio
 import { verifyCapturedCargoArtifactsV1, type CargoArtifactBuildOptionsV1 } from "../../🟦️.ts";
 import { CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1 } from "../../🧾️receipt/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
-import { withScriptInvocationSignalV1, type IssuedScriptInvocationV1 } from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { createIssuedResourceControlV1, withScriptInvocationSignalV1, type IssuedScriptInvocationV1 } from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { createJobserverV1, defaultJobserverStyleV1 } from "../../🎰️jobserver/🟦️.ts";
 import type { BuildScriptRunV1 } from "../../📈️telemetry/🟦️.ts";
 import { acquireNativeStorageV1, nativeStorageRetirementPortV1, type NativeStorageReservationV1 } from "../../💾️storage/🟦️.ts";
@@ -19,6 +20,9 @@ import type { CargoSourceBoundaryPolicyV1 } from "../../📥️source/🎟️adm
 import policy from "./🧫️fixtures/🔣️.json" with { type: "json" };
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
+
+/** 🧾️ Writes the issued-free compiler configuration (central profile tables only, no compiler ingress) a Cargo-backed law compiles under. */
+export function lawCompilerConfigurationV1(directory: string): string { const path = join(directory, "compiler.toml"); writeFileSync(path, policy.compilerConfiguration); return path; }
 
 /** 📏️ The Source boundary every Cargo-backed law admits under: the repository's configured ceiling, kept as a language-neutral fixture. */
 export const lawSourceBoundaryV1: CargoSourceBoundaryPolicyV1 = policy.sourceBoundary as CargoSourceBoundaryPolicyV1;
@@ -32,7 +36,7 @@ export function withLawStorageV1<T>(control:CompilerAdmissionControl,filesystemB
  const directory=join(mkdtempSync(join(artifacts,"i-")),"i");return withNativeImageStorageV1({directory,leaseDirectory:artifacts,filesystemBytes,maximumPhysicalBytes:filesystemBytes+policy.imageSlackBytes,control},async(image,control)=>{const root=join(image.root,"o");let storage:NativeStorageReservationV1|undefined;try{storage=await acquireNativeStorageV1({policy:{version:1,root:image.root,leaseDirectory:artifacts,capacityBytes:image.maximumPhysicalBytes,maximumWorkspaceBytes:filesystemBytes,maximumArtifactBytes:filesystemBytes},control,port:nativeStorageRetirementPortV1(image.port,async()=>rmSync(root,{recursive:true,force:true})),owner:"law:"+basename(resolve(directory,"..")),kind:"compiler-workspace",bytes:filesystemBytes});const home=join(root,"h"),temporary=join(root,"tmp");for(const path of[root,home,temporary])mkdirSync(path,{recursive:true});return await body({storage,root,environment:{CARGO_HOME:home,TMPDIR:temporary,TMP:temporary,TEMP:temporary}},control);}finally{if(storage)await storage.retire();}});
 }
 
-/** 🗄️ Retains the real scoped Native body inside a compiler reservation derived from an issued invocation and the case's own cancellation, so the build, relay and storage laws share one original authority. */
+/** ⚖️ Retains the real scoped Native body inside a compiler reservation derived from an issued invocation and the case's own cancellation, so the build, relay and storage laws share one original authority. */
 export function withIssuedLawStorageV1<T>(original:IssuedScriptInvocationV1,signal:AbortSignal,body:(held:LawStorageV1,control:CompilerAdmissionControl,invocation:IssuedScriptInvocationV1)=>Promise<T>):Promise<T>{
  return withScriptInvocationSignalV1(original,signal,invocation=>withLawStorageV1(scriptCompilerAdmissionControlV1(invocation,"law:storage",120000),lawStoragePolicyV1.realImageBytes,(held,control)=>body(held,control,invocation)));
 }
@@ -50,8 +54,8 @@ export const lawStoragePolicyV1 = Object.freeze({ stubImageBytes: policy.stubIma
  * (`repo cargo --store=shared`, the launcher `runRepositoryCargoCommandV1` delegates to), never by a direct `cargo`, and copied out of the shared store's
  * release target to the artifact directory.
  * @see ../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts */
-export const schedulerBinaries = (): Promise<ReadonlyMap<string, string>> => (globalThis as any).__semioScheduler ??= (async () => {
-  const control = phaseCompilerAdmissionControlV1(AbortSignal.timeout(policy.schedulerBuildMs), policy.schedulerBuildMs, () => undefined, () => new Promise(done => setImmediate(done))), output = mkdtempSync(join(artifacts, "sx-"));
+export const schedulerBinaries = (): Promise<ReadonlyMap<string, string>> => (globalThis as any).__semioScheduler ??= withBuildTestInvocationV1(async original => {
+  const control = createIssuedResourceControlV1(original, "law:scheduler-binaries", policy.schedulerBuildMs, AbortSignal.timeout(policy.schedulerBuildMs)), output = mkdtempSync(join(artifacts, "sx-"));
   const manifest = fileURLToPath(new URL("../../🎟️admission/📦️packages/🦀️rust/Cargo.toml", import.meta.url)), declared = Bun.TOML.parse(readFileSync(manifest, "utf8")) as { bin: { name: string }[]; example: { name: string }[] };
   let repository = dirname(manifest);
   while (!existsSync(join(repository, "package.json")) || !(JSON.parse(readFileSync(join(repository, "package.json"), "utf8")).scripts?.repo)) { if (dirname(repository) === repository) throw Error("Cargo laws require the repository that issues their compiler store"); repository = dirname(repository); }
@@ -59,7 +63,7 @@ export const schedulerBinaries = (): Promise<ReadonlyMap<string, string>> => (gl
   await issued(["build", "--bins", "--examples"]);
   const metadata = (await issued(["metadata", "--format-version", "1", "--no-deps"])).split("\n").find((line) => line.startsWith("{\"")), release = join(JSON.parse(metadata ?? "null").target_directory, "release");
   return new Map([...declared.bin.map((row) => [row.name, join(release, row.name)] as const), ...declared.example.map((row) => [row.name, join(release, "examples", row.name)] as const)].map(([name, path]) => { const copy = join(output, name); copyFileSync(path, copy); return [name, copy] as const; }));
-})();
+});
 
 /** 🦀️ A dependency-free Cargo workspace: `base` ← `left`, `right` ← `top` (rlibs), so pipelining, fan-in and a critical chain are observable in seconds; `right` is ten times `left`, so the chain through it is unambiguous. */
 export function tinyCargoWorkspaceV1(root: string, crates: readonly string[]): string {

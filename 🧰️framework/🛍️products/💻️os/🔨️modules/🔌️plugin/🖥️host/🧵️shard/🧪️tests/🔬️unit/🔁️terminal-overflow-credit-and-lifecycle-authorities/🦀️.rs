@@ -46,7 +46,7 @@ async fn permanently_over_capacity_frame_uses_the_same_bounded_overflow_handoff(
         .map(|seq| Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: seq as u64, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Cancel { seq: seq as u64 } })
         .collect();
     let mut raw = Vec::new();
-    ShardFrame::Grant { retained: original_retained_turn(), actor, budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background), envelopes }.pack_encode(&mut raw).await.expect("declared original frame authority");
+    ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background), envelopes }.pack_encode(&mut raw).await.expect("declared original frame authority");
     probe.push_inbound(raw.clone()).await;
 
     assert!(matches!(shard.drive_one().await, ShardDrive::Fault { consumed_epoch: None, terminal_overflow: true, work_remains: false, .. }));

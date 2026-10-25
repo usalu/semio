@@ -25,6 +25,7 @@ semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-binary = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-docx-base-diff = { workspace = true }

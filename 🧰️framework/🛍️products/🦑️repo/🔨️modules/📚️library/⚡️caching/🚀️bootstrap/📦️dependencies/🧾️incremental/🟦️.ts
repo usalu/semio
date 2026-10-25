@@ -41,9 +41,9 @@ export interface StampSourceV1{readonly dev:bigint;readonly ino:bigint;readonly 
 /** 🔖️ Names one directory entry as the scan classifies it. */
 export interface InstalledChildV1{readonly name:string;readonly kind:string}
 
-/** 🧮️ Digests the sorted names and kinds of one directory into a short fixed width key. */
+/** 📂️ Digests the sorted names and kinds of one directory into a short fixed width key. */
 export const installedChildrenDigestV1=(children:readonly InstalledChildV1[]):string=>generationSha256V1(JSON.stringify([...children].sort((left,right)=>compareBytes(left.name,right.name)).map(row=>[row.name,row.kind]))).slice(0,protocol.installed.childDigestUnits);
-/** 🪪️ Renders the schema stamp of a directory from bigint stat fields. */
+/** 🧬️ Renders the schema stamp of a directory from bigint stat fields. */
 export const installedStampV1=(facts:StampSourceV1):InstalledStampV1=>[String(facts.dev),String(facts.ino),String(facts.mode),String(facts.nlink),String(facts.size),String(facts.mtimeNs),String(facts.ctimeNs)];
 /** 🧱️ Builds one ledger row from a closed directory scan: settled only when both change times precede the scan start by the settle window. */
 export function installedRowV1(path:string,facts:StampSourceV1,children:readonly InstalledChildV1[],thresholdNs:bigint):InstalledRowV1{
@@ -52,7 +52,7 @@ export function installedRowV1(path:string,facts:StampSourceV1,children:readonly
 }
 /** ⏱️ Computes the settle threshold in nanoseconds for a scan that started at the given wall clock millisecond. */
 export const installedThresholdNsV1=(startedAtMs:number):bigint=>BigInt(Math.trunc(startedAtMs)-protocol.installed.settleMilliseconds)*1000000n;
-/** 🧮️ Recomputes the entry counts every ledger implies. */
+/** 🔢️ Recomputes the entry counts every ledger implies. */
 export function installedCountsV1(rows:readonly InstalledRowV1[]):Readonly<{entries:number;directories:number;files:number;links:number}>{
  let files=0,links=0,directories=0;for(const row of rows){files+=row.files;links+=row.links;directories+=row.directories;}
  if(directories!==rows.length-1)throw Error("Complete installed directory tree required");
@@ -78,7 +78,7 @@ export function decodeInstalledLedgerV1(bytes:Uint8Array,expected:InstalledRecei
  for(const row of rows.slice(1)){const cut=row.path.lastIndexOf("/"),parent=cut<0?".":row.path.slice(0,cut);if(!seen.has(parent))throw Error("Connected installed ledger required");}
  installedCountsV1(rows);return Object.freeze(rows);
 }
-/** 🔏️ Seals an installed-paths receipt over its generation, device, scan shape and evidence reference. */
+/** 🔐️ Seals an installed-paths receipt over its generation, device, scan shape and evidence reference. */
 export const sealInstalledReceiptV1=(body:Omit<InstalledReceiptV1,"sha256">):InstalledReceiptV1=>seal(body);
 /** 🔓️ Admits only a schema-valid, correctly sealed installed-paths receipt. */
 export const parseInstalledReceiptV1=(bytes:Uint8Array):InstalledReceiptV1=>parseSealed<InstalledReceiptV1>(bytes,protocol.installed.maximumReceiptBytes,installedSchema,"installed-paths receipt");
@@ -92,7 +92,7 @@ export type InstalledMismatchClassV1="receipt-invalid"|"evidence-invalid"|"devic
 /** 🟢️ Is either the unchanged shape of the generation or a typed mismatch for the complete scan. */
 export type InstalledVerifyResultV1=Readonly<{status:"match";shape:InstalledShapeV1;relisted:number}>|Readonly<{status:"mismatch";class:InstalledMismatchClassV1;path?:string}>;
 const miss=(cls:InstalledMismatchClassV1,path?:string):InstalledVerifyResultV1=>Object.freeze({status:"mismatch",class:cls,...(path===undefined?{}:{path})});
-/** 🔬️ Replays a ledger against the live generation: a settled directory whose seven field stamp is unchanged is accepted by one lstat, any other directory by relisting its entries and comparing the entry digest; identity is always required. */
+/** 🎞️ Replays a ledger against the live generation: a settled directory whose seven field stamp is unchanged is accepted by one lstat, any other directory by relisting its entries and comparing the entry digest; identity is always required. */
 export async function verifyInstalledLedgerV1(receipt:InstalledReceiptV1,rows:readonly InstalledRowV1[],ports:InstalledPortsV1):Promise<InstalledVerifyResultV1>{
  const{control}=ports,policy=protocol.installed;let work=0,relisted=0;
  control.check();let counts:ReturnType<typeof installedCountsV1>;
@@ -114,9 +114,9 @@ export async function verifyInstalledLedgerV1(receipt:InstalledReceiptV1,rows:re
 
 /** 👁️ Is one physical observation of the provider walk as the walk itself retained it. */
 export interface ExecutionObservationV1{readonly path:string;readonly stamp:string|null;readonly anchor:string|null;readonly kind:string;readonly target:string|null;readonly full:boolean}
-/** 🔌️ Supplies the stat and link read the replay needs; both must be no-follow. */
+/** 🖇️ Supplies the stat and link read the replay needs; both must be no-follow. */
 export interface ExecutionReplayPortsV1{readonly stat:(path:string)=>Readonly<{stamp:string;anchor:string}>|undefined;readonly readlink:(path:string)=>string;readonly control:IncrementalControlV1}
-/** 🟢️ Is the answer of a replay: every recorded answer still holds, a timestamp too young to prove stability, or the first path that moved. */
+/** ⚙️ Is the answer of a replay: every recorded answer still holds, a timestamp too young to prove stability, or the first path that moved. */
 export type ExecutionReplayResultV1=Readonly<{status:"match"}>|Readonly<{status:"deferred";path:string}>|Readonly<{status:"mismatch";path:string}>;
 /** 🔂️ Re-asks every question an earlier provider walk asked: equal answers to all of them reproduce its deterministic result, so a later walk of the same inputs can be replaced by this check unless a recorded full stamp is younger than the walk start minus the settle window. */
 export async function replayExecutionObservationsV1(observations:readonly ExecutionObservationV1[],startedAtMs:number,ports:ExecutionReplayPortsV1):Promise<ExecutionReplayResultV1>{
@@ -137,9 +137,9 @@ export async function replayExecutionObservationsV1(observations:readonly Execut
 export interface SyncScopeV1{readonly scope:string;readonly generation:string;readonly read:string;readonly installed:string}
 /** 🏁️ Is the sealed claim that a complete synchronization of every scope ended in exactly these verified states. */
 export interface SyncReceiptV1{readonly version:1;readonly purpose:"dependency-sync-receipt";readonly selection:"all";readonly runtimeSha256:string;readonly scopes:readonly SyncScopeV1[];readonly sha256:string}
-/** 🔏️ Seals a synchronization receipt with its scopes in byte order. */
+/** 📡️ Seals a synchronization receipt with its scopes in byte order. */
 export const sealSyncReceiptV1=(body:Omit<SyncReceiptV1,"sha256">):SyncReceiptV1=>seal({...body,scopes:[...body.scopes].sort((left,right)=>compareBytes(left.scope,right.scope))});
-/** 🔓️ Admits only a schema-valid, correctly sealed synchronization receipt with distinct scopes. */
+/** 🔄️ Admits only a schema-valid, correctly sealed synchronization receipt with distinct scopes. */
 export function parseSyncReceiptV1(bytes:Uint8Array):SyncReceiptV1{
  const value=parseSealed<SyncReceiptV1>(bytes,protocol.sync.maximumReceiptBytes,syncSchema,"synchronization receipt");
  if(new Set(value.scopes.map(row=>row.scope)).size!==value.scopes.length)throw Error("Distinct synchronization scopes required");
@@ -148,7 +148,7 @@ export function parseSyncReceiptV1(bytes:Uint8Array):SyncReceiptV1{
 
 /** 🗂️ Is one settled workspace directory listing as the ownership walk retains it. */
 export interface OwnershipRecordV1{readonly path:string;readonly stamp:string;readonly count:number;readonly entries:readonly InstalledChildV1[]}
-/** 📦️ Encodes persisted listing records relative to the workspace into content-addressed evidence. */
+/** 📇️ Encodes persisted listing records relative to the workspace into content-addressed evidence. */
 export function encodeOwnershipIndexV1(root:string,records:readonly OwnershipRecordV1[]):Readonly<{evidence:Readonly<{name:string;sha256:string;bytes:number;rows:number}>;bytes:Buffer}>{
  const prefix=root.endsWith("/")?root:root+"/",rows=records.flatMap(record=>{
   const path=record.path===root?".":record.path.startsWith(prefix)?record.path.slice(prefix.length):undefined,stamp=record.stamp.split(":");
@@ -160,7 +160,7 @@ export function encodeOwnershipIndexV1(root:string,records:readonly OwnershipRec
  const sha256=generationSha256V1(bytes);
  return Object.freeze({evidence:Object.freeze({name:sha256+protocol.ownership.evidenceSuffix,sha256,bytes:bytes.length,rows:rows.length}),bytes});
 }
-/** 📤️ Decodes ownership index evidence into absolute records under the given workspace, refusing malformed rows. */
+/** 📥️ Decodes ownership index evidence into absolute records under the given workspace, refusing malformed rows. */
 export function decodeOwnershipIndexV1(root:string,bytes:Uint8Array,expected:Readonly<{sha256:string;bytes:number;rows:number}>):readonly OwnershipRecordV1[]{
  const out:OwnershipRecordV1[]=[];
  for(const row of decodeRows(bytes,expected,"ownership index")){
@@ -169,16 +169,16 @@ export function decodeOwnershipIndexV1(root:string,bytes:Uint8Array,expected:Rea
  }
  return Object.freeze(out);
 }
-/** 🔏️ Seals an ownership index receipt over its evidence reference. */
+/** 🏷️ Seals an ownership index receipt over its evidence reference. */
 export const sealOwnershipReceiptV1=(body:Readonly<{version:1;purpose:"dependency-ownership-index";evidence:Readonly<{name:string;sha256:string;bytes:number;rows:number}>}>)=>seal(body);
-/** 🔓️ Admits only a schema-valid, correctly sealed ownership index receipt. */
+/** 🎚️ Admits only a schema-valid, correctly sealed ownership index receipt. */
 export const parseOwnershipReceiptV1=(bytes:Uint8Array)=>parseSealed<ReturnType<typeof sealOwnershipReceiptV1>>(bytes,protocol.ownership.maximumReceiptBytes,ownershipSchema,"ownership index receipt");
 
 /** 🔒️ Is the sealed claim that a lock-only run produced exactly the published lock for these inputs. */
 export interface LockReceiptV1{readonly version:1;readonly purpose:"dependency-lock-converged-receipt";readonly scope:string;readonly generation:string;readonly lockSha256:string;readonly recipeSha256:string;readonly runtimeSha256:string;readonly sha256:string}
 /** 🔏️ Seals a converged lock receipt. */
 export const sealLockReceiptV1=(body:Omit<LockReceiptV1,"sha256">):LockReceiptV1=>seal(body);
-/** 🔓️ Admits only a schema-valid, correctly sealed converged lock receipt. */
+/** 📗️ Admits only a schema-valid, correctly sealed converged lock receipt. */
 export const parseLockReceiptV1=(bytes:Uint8Array):LockReceiptV1=>parseSealed<LockReceiptV1>(bytes,protocol.lock.maximumReceiptBytes,lockSchema,"converged lock receipt");
 /** ✅️ Decides whether a converged receipt still describes the current lock inputs exactly. */
 export const lockConvergedV1=(receipt:LockReceiptV1,current:Pick<LockReceiptV1,"scope"|"generation"|"lockSha256"|"recipeSha256"|"runtimeSha256">):boolean=>receipt.scope===current.scope&&receipt.generation===current.generation&&receipt.lockSha256===current.lockSha256&&receipt.recipeSha256===current.recipeSha256&&receipt.runtimeSha256===current.runtimeSha256;

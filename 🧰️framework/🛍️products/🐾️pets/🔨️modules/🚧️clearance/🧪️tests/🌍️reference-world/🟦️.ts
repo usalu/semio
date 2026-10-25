@@ -1,4 +1,4 @@
-/** 🌍️ The reference world of the clearance unit suite: a pure, seeded fold in which the rules of the module, and nothing else, keep six to ten pets apart while they walk, hop, glide, fall, land on heads, are dragged and thrown by a hand and lose, shrink and move their perches.
+/** 📘️ The reference world of the clearance unit suite: a pure, seeded fold in which the rules of the module, and nothing else, keep six to ten pets apart while they walk, hop, glide, fall, land on heads, are dragged and thrown by a hand and lose, shrink and move their perches.
  *
  * The world is exported: `clearance_world.ts` of ticket 2026/10/02/QUIZ-PETS runs it for the published metrics and ablations.
  *

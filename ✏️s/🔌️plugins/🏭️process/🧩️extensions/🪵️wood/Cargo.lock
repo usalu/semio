@@ -4095,6 +4095,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
  "semio-framework-ui-styling",
+ "semio-framework-ui-wgpu-light",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "wasm-bindgen",
@@ -7196,6 +7197,7 @@ dependencies = [
  "semio-framework-ui-contract",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
 ]
 
 [[package]]
@@ -7867,6 +7869,7 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-time-travel",
  "semio-framework-ui-contract",
+ "semio-framework-ui-layout",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -7904,6 +7907,7 @@ name = "semio-framework-plugin-time-travel-turns"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-artifact-reference",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin-child",
@@ -8066,6 +8070,7 @@ name = "semio-framework-plugin-window-kits-rich"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
@@ -9627,7 +9632,9 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-schema-composition",
  "semio-framework-schema-registry",
+ "semio-framework-schema-state",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -9965,6 +9972,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-command",
  "semio-framework-os-kernel",

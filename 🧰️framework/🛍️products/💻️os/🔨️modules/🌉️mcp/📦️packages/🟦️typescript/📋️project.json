@@ -158,6 +158,11 @@
               "en": "Verify the installed native frontend and real OS protocol with bounded owned shutdown.",
               "de": "Installierte native Oberfläche und echtes OS-Protokoll mit begrenztem eigenem Beenden prüfen."
             }
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
           }
         }
       }

@@ -1,3 +1,4 @@
+import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
 import {buildInputSourceRoleV1,readBuildRuntimeSourceEntriesV1,readBuildSourceResourceEntriesV1} from "../../🚪️admission/🟦️.ts";
 import {createRequire} from "node:module";
 const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
@@ -11,11 +12,13 @@ import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/�
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, observeDetachedV1, observationLayerHoldsV1, observationRoundV1, observationRowsHoldV1, recordClosureFactV1, registerClosureProviderV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { readCargoExecutionContractV1, selectCargoExecutionOperationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import { GlobV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
-import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { GlobV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { routerCommandSpecifiersV1, routerCommandWordV1 } from "./🔀️router/🟨️.mjs";
+import { buildSchedulingPrefixesV1 } from "../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
 const { existsSync, statSync } = observedFs;
 
 /** 🚧️ Turns an import of a command closure that resolves to nothing into the withheld-project failure of its importing source, so one broken file withholds its own project instead of aborting the whole graph. */
@@ -23,11 +26,11 @@ function unresolvedSourceImportV1(error,path){return Object.assign(Error(String(
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "script-inputs";
-let buildPath, readPhysicalSource, requirePhysicalSourceV1, prepareSourceAnalysesV1, LIBRARY_ROOT, POLICY, readToml, readBunLockGraph, SCRIPT_PROVIDER_LOADER_MODULE, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA;
+let buildPath, readPhysicalSource, requirePhysicalSourceV1, prepareSourceAnalysesV1, LIBRARY_ROOT, POLICY, readToml, readBunLockGraph, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
-  ({ buildPath, readPhysicalSource, requirePhysicalSourceV1, LIBRARY_ROOT, POLICY, SCRIPT_PROVIDER_LOADER_MODULE, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA } = registry.coordinates);
+  ({ buildPath, readPhysicalSource, requirePhysicalSourceV1, LIBRARY_ROOT, POLICY, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA } = registry.coordinates);
   ({ prepareSourceAnalysesV1 } = registry.sourceAnalyses);
   ({ readToml } = registry.nativeManifests);
   ({ readBunLockGraph } = registry.bunLock);
@@ -36,15 +39,26 @@ export function wire(registry) {
 /** 🗂️ Shares source reads and command closures only within one graph construction. */
 export function createScriptInputCache(context={}) {
   if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);}
-  return { files: new Map(), closures: new Map(), commandDependencies: new Map(), modules:new Set(), resources:new Set(),generatedImports:new Map(),declared:new Map(),paths:new Map(),compiledNames:new WeakMap(),moduleSets:new WeakMap(),context,providerDesignation:context.scriptProviderDesignation };
+  return { files: new Map(), closures: new Map(), commandDependencies: new Map(), modules:new Set(), resources:new Set(),generatedImports:new Map(),declared:new Map(),paths:new Map(),compiledNames:new WeakMap(),moduleSets:new WeakMap(),context,providerDesignation:context.scriptProviderDesignation,lateClosures:context.lateClosures===true };
 }
 
-/** 🔌️ Names the declared provider modules a script loads at run time, which no literal import reaches: the designation, its schema and every designated module. */
-export function scriptProviderImportsV1(cache) {
+/** 🔌️ The script provider ports one module defines: the literal names of its `defineScriptProviderV1("…")` calls, `*` when a use of the function is not such a call (every designated provider is then requested); import and export specifiers and the declaration itself are no uses. */
+export function scriptProviderPortsV1(text) {
+  const names = new Set();
+  for (const match of text.matchAll(/(?<!function\s)\bdefineScriptProviderV1\b(?!\s*[,}])/gu)) {
+    const literal = /^(?:\s*<[^()]*>)?\s*\(\s*(["'])([a-z0-9-]+)\1/u.exec(text.slice(match.index + match[0].length));
+    names.add(literal ? literal[2] : "*");
+  }
+  return [...names].sort();
+}
+
+/** 🔌️ Names what a script that defines provider ports reads at run time and no literal import reaches: the designation, its schema and the designated module of every port its closure defines; a port the designation does not name requests nothing. */
+export function scriptProviderImportsV1(cache, ports) {
   const designation = cache.providerDesignation ?? join(LIBRARY_ROOT, SCRIPT_PROVIDER_DESIGNATION), schema = join(LIBRARY_ROOT, SCRIPT_PROVIDER_DESIGNATION_SCHEMA);
   const declared = JSON.parse(readPhysicalSource(designation).toString("utf8"));
   if (validateJsonSchemaSubset(JSON.parse(readPhysicalSource(schema).toString("utf8")), declared).length) throw Error("Complete repository script provider declaration required");
-  return [{ path: designation, source: false }, { path: schema, source: false }, ...Object.values(declared.providers).map(module => ({ path: resolve(dirname(designation), module), source: true }))];
+  const requested = ports.includes("*") ? Object.keys(declared.providers) : ports.filter((name) => Object.hasOwn(declared.providers, name));
+  return [{ path: designation, source: false }, { path: schema, source: false }, ...requested.map((name) => ({ path: resolve(dirname(designation), declared.providers[name]), source: true }))];
 }
 
 /** 🧿️ Keeps a logical import's interpretation separate from its physical file identity. */
@@ -66,9 +80,14 @@ function workspacePackageModuleV1(containing, specifier, workspaceRoot) {
   return local === "" || local.startsWith("..") || isAbsolute(local) || local.split(sep).includes("node_modules") ? undefined : resolved;
 }
 
+/** 🧾️ Whether a declared input is a literal module path of the project or the workspace, the only kind of input that can join a command closure as an entry. */
+function declaredModuleLiteralV1(input) {
+  return typeof input === "string" && !input.startsWith("!") && !/[*?{}[\]]/u.test(input.replace(/^\{(?:projectRoot|workspaceRoot)\}/u, "")) && /\.[cm]?[jt]sx?$/u.test(input) && /^\{(?:projectRoot|workspaceRoot)\}\//u.test(input);
+}
+
 /** 🧪️ Resolves a literal module path whose task role or explicit runtime contract admits its imports. */
 function declaredModuleInputV1(input, workspaceRoot, projectRoot) {
-  if (typeof input !== "string" || input.startsWith("!") || /[*?{}[\]]/u.test(input.replace(/^\{(?:projectRoot|workspaceRoot)\}/u, "")) || !/\.[cm]?[jt]sx?$/u.test(input) || !/^\{(?:projectRoot|workspaceRoot)\}\//u.test(input)) return undefined;
+  if (!declaredModuleLiteralV1(input)) return undefined;
   const path = resolve(workspaceRoot, input.replace("{projectRoot}", projectRoot).replace("{workspaceRoot}", "."));
   return !relative(workspaceRoot, path).startsWith("..") && existsSync(path) ? path : undefined;
 }
@@ -228,9 +247,22 @@ function generatedTargetsV1(cache, closure, workspaceRoot) {
   return [...new Set([...cache.generatedImports].filter(([path]) => modules.has(path)).flatMap(([, rows]) => rows.map(row => row.target)))].sort();
 }
 
-/** 🧭️ Tracks literal relative command imports through the existing TypeScript tooling boundary. */
-export async function relativeScriptInputs(entries, workspaceRoot, cache = createScriptInputCache(), requiredSources=false, resourceEntries=[]) {
-  const resources=new Set(resourceEntries.map(path=>resolve(path))),resourceKey=memoDigestV1([...resources].sort()),roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), key = memoDigestV1(resolve(workspaceRoot), roots, requiredSources,resourceKey);
+/** 🗓️ Drops the scheduling code from a command closure: the files of the declared scheduling domains decide when and where the command runs, never what it writes, so an edit of one must not change the key of the target (the policy and its law live in the closure module's scheduling domains). */
+export function withoutSchedulingV1(closure) {
+  const prefixes = buildSchedulingPrefixesV1();
+  return closure.filter(entry => typeof entry !== "string" || !prefixes.some(prefix => (entry.startsWith("{workspaceRoot}/") ? entry.slice("{workspaceRoot}/".length) : entry).startsWith(prefix)));
+}
+
+/** 🔀️ The imports a router script needs for all the commands it runs with, or nothing when any of them is not a router this reading understands. */
+function routerKeptV1(compiler, path, text, words) {
+  const kept = new Set();
+  for (const word of words) { let own; try { own = routerCommandSpecifiersV1(compiler, path, text, word); } catch { return undefined; } if (own === undefined) return undefined; for (const specifier of own) kept.add(specifier); }
+  return kept;
+}
+
+/** 🧭️ Tracks literal relative command imports through the existing TypeScript tooling boundary; a router script named in `commands` (absolute path to the registered command words it is run with) contributes only the imports those commands need, and every router this reading does not fully understand keeps all of its imports. */
+export async function relativeScriptInputs(entries, workspaceRoot, cache = createScriptInputCache(), requiredSources=false, resourceEntries=[], commands=new Map()) {
+  const resources=new Set(resourceEntries.map(path=>resolve(path))),resourceKey=memoDigestV1([...resources].sort()),selectors=new Map([...commands].map(([path,words])=>[resolve(path),[...new Set(words)].sort()])),selectorKey=memoDigestV1([...selectors].sort(([a],[b])=>a<b?-1:a>b?1:0)),roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), key = memoDigestV1(resolve(workspaceRoot), roots, requiredSources,resourceKey,selectorKey);
   let steps=0;const checkpoint=(force=false)=>yieldInferenceV1(cache.context,"build:command-source-imports",++steps,force);
   return memoizedObservedAsyncComputationV1(cache.closures,key,async()=>{
   const compiler = parserTypescriptV1(), host = observedTypeScriptHost(compiler.sys), files = new Set(),compiled=new Set();
@@ -245,12 +277,12 @@ export async function relativeScriptInputs(entries, workspaceRoot, cache = creat
     if(!source||!/\.[cm]?[jt]sx?$/u.test(path)){cache.resources.add(path);if(!seen)requirePhysicalSourceV1(path);return;}
     if(compiled.has(path))return;
     compiled.add(path);cache.modules.add(path);
-    const loadsProviders = path === join(LIBRARY_ROOT, SCRIPT_PROVIDER_LOADER_MODULE);
-    const imports = await memoizedObservedAsyncComputationV1(cache.files,JSON.stringify([path,requiredSources,loadsProviders?cache.providerDesignation??null:undefined,resourceKey]),async()=>{
-      const imports = loadsProviders ? scriptProviderImportsV1(cache) : [];
+    const imports = await memoizedObservedAsyncComputationV1(cache.files,JSON.stringify([path,requiredSources,cache.providerDesignation??null,resourceKey,selectors.get(path)??null]),async()=>{
+      const text = readPhysicalSource(path).toString("utf8"), ports = scriptProviderPortsV1(text), imports = ports.length ? scriptProviderImportsV1(cache, ports) : [], words = selectors.get(path), kept = words?.length ? routerKeptV1(compiler, path, text, words) : undefined;
       const generated=specifier=>{const produced=cache.generatedOutput?.(specifier);if(!produced)return false;const rows=cache.generatedImports.get(path)??[];if(!rows.some(row=>row.target===produced.target&&row.output===produced.output))rows.push(produced);cache.generatedImports.set(path,rows);return true;};
       for (const entry of observedSourceAnalysisV1(prepareSourceAnalysesV1().command,path)) {
         await checkpoint();
+        if (kept && !kept.has(entry)) continue;
         const resource=buildImportResourceV1(path,entry);
         if(generated(resource.specifier))continue;
         let resolved;
@@ -308,7 +340,7 @@ export async function nativeCommandInputs(workspaceRoot, scripts) {
 export async function targetScriptSources(target, workspaceRoot, scripts, projectRoot = ".",nativeManifest) {
   const resources=readBuildSourceResourceEntriesV1(target.metadata?.semio?.closure?.resources).map(input=>{const path=resolve(workspaceRoot,input.replace("{projectRoot}",projectRoot).replace("{workspaceRoot}",".")),local=relative(workspaceRoot,path);if(path.length>256||local===".."||local.startsWith(".."+sep)||isAbsolute(local))throw Error("Bounded physical Source resource required");return path;});if(new Set(resources).size!==resources.length)throw Error("Unique physical Source resource entries required");
   const entries=new Set();let fallback=false;
- const retain=bound=>{if(bound.script){requirePhysicalSourceV1(bound.script);entries.add(bound.script);}else fallback=true;};
+ const words=new Map(),retain=bound=>{if(bound.script){requirePhysicalSourceV1(bound.script);entries.add(bound.script);const word=routerCommandWordV1(bound),known=words.get(bound.script);if(word===undefined)words.set(bound.script,null);else if(known===undefined)words.set(bound.script,new Set([word]));else if(known)known.add(word);}else fallback=true;};
  const local=path=>{const value=buildPath(relative(workspaceRoot,path));if(value===".."||value.startsWith("../")||isAbsolute(value))throw Error("Declared command Source escapes workspace");return value||".";};
  for(const options of targetCommandRecipes(target)){
   const commands=typeof options.command==="string"?[options.command]:options.commands??[];if(!commands.length)fallback=true;
@@ -322,13 +354,13 @@ export async function targetScriptSources(target, workspaceRoot, scripts, projec
    const child=selectedOperation.continuation,childBound=bindBuildCommandV1([child.program,...child.arguments].map(value=>JSON.stringify(value)).join(" "),workspaceRoot,child.cwd,projectRoot,[]);if(!childBound.script)throw Error("Declared Cargo continuation requires an explicit script Source");retain(childBound);
   }
  }
- const baseSize=entries.size,base=baseSize?await relativeScriptInputs([...entries],workspaceRoot,scripts,true,resources):undefined;
+ const commands=new Map([...words].filter(([,known])=>known).map(([script,known])=>[script,[...known]])),baseSize=entries.size,base=baseSize?await relativeScriptInputs([...entries],workspaceRoot,scripts,true,resources,commands):undefined;
  if(buildInputSourceRoleV1(true,false,[target.metadata?.semio?.sourceInputObservation])==="compile")for(const declared of declaredModuleInputsV1(target.inputs,workspaceRoot,projectRoot,scripts,base&&scripts.compiledNames.get(base)))entries.add(declared);
  for(const declared of declaredModuleGlobEntriesV1(target.metadata?.semio?.closure?.modules,workspaceRoot,projectRoot,scripts))entries.add(declared);
  for(const input of readBuildRuntimeSourceEntriesV1(target.metadata?.semio?.runtimeSourceEntries)){const path=resolve(workspaceRoot,input.replace("{projectRoot}",projectRoot).replace("{workspaceRoot}","."));if(path.length>256)throw Error("Bounded physical runtime Source entry required");const entry=declaredModuleInputV1(input,workspaceRoot,projectRoot);if(!entry)throw Error("Bounded physical runtime Source entry required");entries.add(entry);}
- let closure=entries.size===baseSize?base:entries.size?await relativeScriptInputs([...entries],workspaceRoot,scripts,true,resources):undefined,generatedDependencies=scripts.generatedImports.size&&closure?generatedTargetsV1(scripts,closure,workspaceRoot):[];const project=closure?declaredProjectClosureV1(target.metadata?.semio?.closure?.typescript,workspaceRoot,projectRoot,scripts,closure):undefined;
+ let closure=entries.size===baseSize?base:entries.size?await relativeScriptInputs([...entries],workspaceRoot,scripts,true,resources,commands):undefined,generatedDependencies=scripts.generatedImports.size&&closure?generatedTargetsV1(scripts,closure,workspaceRoot):[];const project=closure?declaredProjectClosureV1(target.metadata?.semio?.closure?.typescript,workspaceRoot,projectRoot,scripts,closure):undefined;
  if(project){closure=project.closure;generatedDependencies=[...new Set([...(scripts.generatedImports.size?generatedTargetsV1(scripts,closure,workspaceRoot):[]),...project.generatedDependencies])].sort();}
- return {closure,fallback,...(generatedDependencies.length?{generatedDependencies}:{}),...(project?.packages.length?{packages:project.packages,projectConfig:project.config}:{})};
+ return {closure:closure&&withoutSchedulingV1(closure),fallback,...(generatedDependencies.length?{generatedDependencies}:{}),...(project?.packages.length?{packages:project.packages,projectConfig:project.config}:{})};
 }
 
 /** ⚙️ Keeps configured recipe inheritance identical for command and lock source discovery. */
@@ -393,6 +425,173 @@ export function genericCommandFallbackInputs(workspaceRoot) {
     `{workspaceRoot}/${runner}/🟨️.mjs`,
     `{workspaceRoot}/${runner}/⚡️caching/**/*`,
   ];
+}
+
+const sortedJsonV1 = value => Array.isArray(value) ? value.map(sortedJsonV1) : value !== null && typeof value === "object" ? Object.fromEntries(Object.keys(value).filter(key => value[key] !== undefined).sort().map(key => [key, sortedJsonV1(value[key])])) : value;
+const closureHandleSymbolV1 = Symbol.for("semio.closure.handle"), knownClosureRecipesV1 = new Map();
+
+/** 📜️ The recipe a symbolic list was made from, by its key. */
+export function closureRecipeByKeyV1(key) { const recipe = knownClosureRecipesV1.get(key); if (!recipe) throw refuseBuildV1("invalid", "closure.key-unknown", { key }); return recipe; }
+
+/** 🔑️ The identity of one command closure recipe: the kind of command input and the arguments that determine it, never the files it names. */
+export function closureRecipeKeyV1(recipe) { return createHash("sha256").update(JSON.stringify(sortedJsonV1(recipe))).digest("hex"); }
+
+/** 🧬️ A symbolic command input list: it stands, as one `{closureRef}` item, for the whole list its recipe produces, so a project record names the closure instead of its files; every other way of reading it throws, because a project that read the files would depend on them and must ask a query that records its answer. */
+function closureHandleV1(recipe) {
+  const key = closureRecipeKeyV1(recipe), marker = Object.freeze({ closureRef: key }), identity = Object.freeze({ recipe, key, marker });
+  knownClosureRecipesV1.set(key, recipe);
+  return new Proxy([], {
+    get(_target, name) {
+      if (name === closureHandleSymbolV1) return identity;
+      if (name === Symbol.iterator) return function* () { yield marker; };
+      if (name === "then" || name === "toJSON" || typeof name === "symbol") return undefined;
+      throw refuseBuildV1("invalid", "closure.read-through-queries-only", { name });
+    },
+  });
+}
+
+/** 🧷️ The symbolic list of a recipe (a worker process rebuilds the lists its parent describes by recipe). */
+export function closureHandleFromRecipeV1(recipe) { return closureHandleV1(recipe); }
+
+/** 🪪️ The identity (recipe, key, marker) of a symbolic command input list, or undefined for an ordinary list. */
+export function closureHandleOfV1(value) { return value !== null && typeof value === "object" ? value[closureHandleSymbolV1] : undefined; }
+
+const closureQueriesV1 = new Map([
+  ["some", (value, substrings) => (Array.isArray(value) ? value : value?.closure ?? []).some(path => typeof path === "string" && substrings.some(part => path.includes(part)))],
+  ["generated", value => value?.generatedDependencies ?? []],
+]);
+
+/** ❓️ Registers a pure query over the closure a recipe produces (the inferrer that owns the question, such as the whole-workspace key check, registers it). */
+export function registerClosureQueryV1(name, query) { closureQueriesV1.set(name, query); }
+
+const closureScriptsV1 = new Map(), closureEntriesV1 = new Map(), closureInflightV1 = new Map(), knownClosureInputsV1 = new Map();
+
+/** 🧰️ Binds the script input cache that computes the closure entries of one workspace (the inference binds its own, a verifier binds one of its own). */
+export function bindClosureScriptsV1(workspaceRoot, scripts) { closureScriptsV1.set(workspaceRoot, scripts); }
+
+/** 🧽️ Forgets every in-process entry, as a process that starts later has none. */
+export function resetClosureEntriesV1() { closureEntriesV1.clear(); closureInflightV1.clear(); knownClosureRecipesV1.clear(); knownClosureInputsV1.clear(); }
+
+/** 🏭️ Produces what one recipe stands for, with the same functions the direct inference calls. */
+async function produceClosureRecipeV1(recipe, workspaceRoot, scripts) {
+  const target = recipe.target === undefined ? undefined : closureTargetOfV1(recipe.target);
+  switch (recipe.fn) {
+    case "native-command": return nativeCommandInputs(workspaceRoot, scripts);
+    case "native-target": return nativeTargetCommandInputs(target, workspaceRoot, recipe.fallback ? await produceClosureRecipeV1(recipe.fallback, workspaceRoot, scripts) : undefined, scripts, recipe.projectRoot);
+    case "generic-target": return genericTargetCommandInputs(target, workspaceRoot, genericCommandFallbackInputs(workspaceRoot), scripts, recipe.projectRoot);
+    case "closure-of": return [...await relativeScriptInputs(recipe.entries.map(entry => resolve(workspaceRoot, entry)), workspaceRoot, scripts), ...recipe.extras];
+    case "target-sources": return targetScriptSources(target, workspaceRoot, scripts, recipe.projectRoot, recipe.nativeManifest);
+    default: throw refuseBuildV1("invalid", "closure.recipe-unknown", { recipe: String(recipe.fn) });
+  }
+}
+
+const closureEntryHoldsV1 = entry => {
+  const round = observationRoundV1();
+  if (round && entry.checked?.round === round) return entry.checked.holds;
+  const holds = observationRowsHoldV1(entry.rows) && entry.layers.every(observationLayerHoldsV1);
+  if (round) entry.checked = { round, holds };
+  return holds;
+};
+
+/** 🗃️ The entry of one recipe: computed once with its observations detached from the project that asked, kept while those observations hold, shared by every project and every verification. */
+async function ensureClosureEntryV1(workspaceRoot, recipe) {
+  const id = workspaceRoot + "\0" + closureRecipeKeyV1(recipe), known = closureEntriesV1.get(id);
+  if (known && closureEntryHoldsV1(known)) return known;
+  let flight = closureInflightV1.get(id);
+  if (!flight) {
+    const scripts = closureScriptsV1.get(workspaceRoot);
+    if (!scripts) throw refuseBuildV1("missing", "closure.scripts-unbound", { workspace: String(workspaceRoot) });
+    flight = observeDetachedV1(() => produceClosureRecipeV1(recipe, workspaceRoot, scripts)).then(({ value, rows, layers }) => { const entry = { recipe, value, rows, layers, answers: new Map(), checked: null }; closureEntriesV1.set(id, entry); return entry; }).finally(() => closureInflightV1.delete(id));
+    closureInflightV1.set(id, flight);
+  }
+  return flight;
+}
+
+const closureAnswerV1 = (entry, query) => {
+  const key = JSON.stringify(query);
+  if (!entry.answers.has(key)) {
+    const run = closureQueriesV1.get(query[0]);
+    if (!run) throw refuseBuildV1("invalid", "closure.query-unknown", { query: String(query[0]) });
+    entry.answers.set(key, run(entry.value, ...query.slice(1)));
+  }
+  return entry.answers.get(key);
+};
+
+registerClosureProviderV1({
+  answer(path) {
+    let workspaceRoot, key, query;
+    try { [workspaceRoot, key, query] = JSON.parse(path); } catch { return "!unreadable"; }
+    const entry = closureEntriesV1.get(workspaceRoot + "\0" + key);
+    if (!entry || !closureEntryHoldsV1(entry)) return "!stale";
+    return JSON.stringify(closureAnswerV1(entry, query));
+  },
+  async settle(paths, value) {
+    for (const [key, recipe] of Object.entries(value?.closureRecipes ?? {})) knownClosureRecipesV1.set(key, recipe);
+    for (const [digest, inputs] of Object.entries(value?.closureInputs ?? {})) knownClosureInputsV1.set(digest, inputs);
+    const wanted = new Map();
+    for (const path of paths) { try { const [workspaceRoot, key] = JSON.parse(path), recipe = knownClosureRecipesV1.get(key); if (recipe) wanted.set(workspaceRoot + "\0" + key, [workspaceRoot, recipe, key]); } catch {} }
+    for (const [workspaceRoot, recipe, key] of wanted.values()) { try { await ensureClosureEntryV1(workspaceRoot, recipe); } catch { closureEntriesV1.delete(workspaceRoot + "\0" + key); } }
+  },
+});
+
+/** 🔌️ The command inputs of one inference: in the late mode symbolic lists whose queries are recorded as facts, otherwise the lists themselves; project assembly reads both through this one interface. */
+export function closureApiV1(scripts, workspaceRoot) {
+  const late = scripts.lateClosures === true;
+  if (late) bindClosureScriptsV1(workspaceRoot, scripts);
+  const used = new Map(), fact = async (recipe, query) => { const key = closureRecipeKeyV1(recipe); knownClosureRecipesV1.set(key, recipe); used.set(key, recipe); const entry = await ensureClosureEntryV1(workspaceRoot, recipe), answer = closureAnswerV1(entry, query); recordClosureFactV1(JSON.stringify([workspaceRoot, key, query]), JSON.stringify(answer)); return answer; };
+  const relativeEntries = entries => entries.map(entry => relative(workspaceRoot, entry).split(sep).join("/"));
+  return Object.freeze({
+    late,
+    async nativeCommandInputs() { return late ? closureHandleV1({ fn: "native-command" }) : nativeCommandInputs(workspaceRoot, scripts); },
+    async nativeTargetCommandInputs(target, fallback, projectRoot) {
+      if (!late) return nativeTargetCommandInputs(target, workspaceRoot, fallback, scripts, projectRoot);
+      const base = fallback === undefined ? undefined : closureHandleOfV1(fallback);
+      if (fallback !== undefined && !base) throw refuseBuildV1("invalid", "closure.symbolic-fallback-required");
+      return closureHandleV1({ fn: "native-target", target: closureTargetV1(target), projectRoot, fallback: base?.recipe ?? null });
+    },
+    async genericTargetCommandInputs(target, projectRoot) { return late ? closureHandleV1({ fn: "generic-target", target: closureTargetV1(target), projectRoot }) : genericTargetCommandInputs(target, workspaceRoot, genericCommandFallbackInputs(workspaceRoot), scripts, projectRoot); },
+    async closureOf(entries, extras) { return late ? closureHandleV1({ fn: "closure-of", entries: relativeEntries(entries), extras }) : [...await relativeScriptInputs(entries, workspaceRoot, scripts), ...extras]; },
+    async some(list, substrings) {
+      const handle = closureHandleOfV1(list);
+      return handle ? fact(handle.recipe, ["some", substrings]) : list.some(path => typeof path === "string" && substrings.some(part => path.includes(part)));
+    },
+    async query(list, name, ...args) {
+      const handle = closureHandleOfV1(list);
+      return handle ? fact(handle.recipe, [name, ...args]) : closureQueriesV1.get(name)(list, ...args);
+    },
+    async targetClosureSome(target, projectRoot, substrings) {
+      return late ? fact({ fn: "target-sources", target: closureTargetV1(target), projectRoot }, ["some", substrings]) : (await targetScriptClosure(target, workspaceRoot, scripts, projectRoot))?.some(path => typeof path === "string" && substrings.some(part => path.includes(part))) ?? false;
+    },
+    async generatedDependencies(target, projectRoot, nativeManifest) {
+      return late ? fact({ fn: "target-sources", target: closureTargetV1(target), projectRoot, ...(nativeManifest === undefined ? {} : { nativeManifest }) }, ["generated"]) : (await targetScriptSources(target, workspaceRoot, scripts, projectRoot, nativeManifest)).generatedDependencies ?? [];
+    },
+    table(keys) {
+      const closureRecipes = {}, closureInputs = {};
+      for (const key of [...new Set([...keys, ...used.keys()])].sort()) { const recipe = closureRecipeByKeyV1(key); closureRecipes[key] = recipe; for (const digest of [recipe.target?.inputsDigest, recipe.fallback?.target?.inputsDigest]) if (digest) closureInputs[digest] = knownClosureInputsV1.get(digest); }
+      return { closureRecipes, closureInputs };
+    },
+    async resolve(recipes) {
+      const rows = [], seen = new Set(), layers = new Set(), values = new Map(), take = row => { if (!seen.has(row)) { seen.add(row); rows.push(row); } };
+      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe); values.set(key, entry.value); entry.rows.forEach(take); for (const layer of entry.layers) if (!layers.has(layer)) { layers.add(layer); layer.forEach(take); } }
+      return { values, rows };
+    },
+  });
+}
+
+/** 🎯️ The fields of a target that decide its command closure; the recipe names nothing else of the target. */
+function closureTargetV1(target) {
+  const semio = target.metadata?.semio, modules = Array.isArray(target.inputs) ? target.inputs.filter(declaredModuleLiteralV1) : [];
+  let inputsDigest;
+  if (modules.length) { inputsDigest = createHash("sha256").update(JSON.stringify(modules)).digest("hex"); knownClosureInputsV1.set(inputsDigest, modules); }
+  return sortedJsonV1({ options: target.options, configurations: target.configurations, inputsDigest, metadata: semio ? { semio: { closure: semio.closure, sourceInputObservation: semio.sourceInputObservation, runtimeSourceEntries: semio.runtimeSourceEntries } } : undefined });
+}
+
+/** 🎯️ The target a recipe stands for: the fields it kept and the literal module inputs its digest names. */
+function closureTargetOfV1({ inputsDigest, ...rest }) {
+  if (inputsDigest === undefined) return rest;
+  const inputs = knownClosureInputsV1.get(inputsDigest);
+  if (!inputs) throw refuseBuildV1("invalid", "closure.literal-inputs-unknown", { digest: String(inputsDigest) });
+  return { ...rest, inputs };
 }
 
 /** ⏳️ Delegates bounded inference work to the caller's original progress and continuation control; durable progress is published at most every 200 ms so its cost never scales with the number of inferred facts. */

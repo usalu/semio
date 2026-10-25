@@ -22,7 +22,7 @@ use super::*;
 /// with the tests (`🧪️tests/🧩️instance/🦀️.rs`), because a demo decider and an in-memory store are
 /// fixtures, not product surface.
 pub trait ServerInstance: Sized + Send + Sync + 'static {
-    /// 🧩️ The module set this deployment is assembled from.
+    /// 📦️ The module set this deployment is assembled from.
     type Modules: ServerModule<Instance = Self> + 'static;
     /// ❓️ The read handlers it answers queries with; [`NoQueryHandler`] when it has none yet.
     type Queries: QueryHandler + 'static;
@@ -50,7 +50,7 @@ pub trait ServerInstance: Sized + Send + Sync + 'static {
     async fn open(profile: &StorageProfile) -> Result<InstanceStores<Self>, StorageError>;
 }
 
-/// 🗄️ The four durable roles of one instance, opened together so a half-open server is not a state
+/// 🏪️ The four durable roles of one instance, opened together so a half-open server is not a state
 /// [`ServerBuilder::build`] has to handle.
 pub struct InstanceStores<I: ServerInstance> {
     pub authority: I::AuthorityStore,
@@ -59,12 +59,12 @@ pub struct InstanceStores<I: ServerInstance> {
     pub sessions: I::SessionStore,
 }
 
-/// 🧵️ The saga runner of one instance, over the workflows that instance declared.
+/// 🎼️ The saga runner of one instance, over the workflows that instance declared.
 pub type ServerSagas<I> = SagaRunner<<I as ServerInstance>::Sagas>;
 //#endregion 🔖️Instance
 
 //#region 🔖️Module
-/// 🧩️ The runtime half of a server module.
+/// ☁️ The runtime half of a server module.
 ///
 /// The declarative half is [`ModuleManifest`], which is pure data and lives in the contract so an
 /// instance definition can be inspected, diffed and served without ever constructing a server. This
@@ -79,18 +79,18 @@ pub type ServerSagas<I> = SagaRunner<<I as ServerInstance>::Sagas>;
 /// refuses an associated type, because an enum has no single type to give it — so an instance with
 /// several modules writes the delegating enum by hand, or gives each module its own server.
 pub trait ServerModule: Send + Sync {
-    /// 🪪️ The deployment this module is part of.
+    /// 🚀️ The deployment this module is part of.
     type Instance: ServerInstance;
 
     /// 📇️ What this module declares to the instance registering it.
     async fn manifest(&self) -> ModuleManifest;
 
-    /// ⚖️ The deciders this module registers on the command bus, one per actor kind it serves.
+    /// 🚌️ The deciders this module registers on the command bus, one per actor kind it serves.
     async fn deciders(&self) -> Vec<<Self::Instance as ServerInstance>::Deciders> {
         Vec::new()
     }
 
-    /// 🧵️ The cross-actor workflows this module reacts with, appended to the instance's one saga
+    /// 🔀️ The cross-actor workflows this module reacts with, appended to the instance's one saga
     /// runner in module registration order. A module owns its workflows for the same reason it owns
     /// its deciders: the subsystem that emits an event is the subsystem that knows what must follow.
     async fn sagas(&self) -> Vec<<Self::Instance as ServerInstance>::Sagas> {
@@ -103,7 +103,7 @@ pub trait ServerModule: Send + Sync {
         router
     }
 
-    /// 🪜️ The authentication rungs this module contributes, appended to the shared ladder in
+    /// 🔑️ The authentication rungs this module contributes, appended to the shared ladder in
     /// module registration order.
     async fn resolvers(&self) -> Vec<<Self::Instance as ServerInstance>::Resolvers> {
         Vec::new()
@@ -148,7 +148,7 @@ pub trait ServerModule: Send + Sync {
 //#endregion 🔖️Module
 
 //#region 🔖️Store
-/// 🏛️ The bus shape this gateway serializes every command through: the instance's own authority
+/// 🛡️ The bus shape this gateway serializes every command through: the instance's own authority
 /// store and its own decider set, both known to the compiler at every call site — no boxed trait
 /// object, and no enum this crate had to invent on the instance's behalf.
 pub type ServerAuthority<I> = CommandBus<<I as ServerInstance>::AuthorityStore, <I as ServerInstance>::Deciders>;

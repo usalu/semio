@@ -96,7 +96,7 @@ impl From<&'static str> for FaultCode {
     }
 }
 
-/// 🌉️ Hand-written, not derived: `FaultCode` is `#[serde(transparent)]`, a shape
+/// 🔖️ Hand-written, not derived: `FaultCode` is `#[serde(transparent)]`, a shape
 /// `#[derive(ToValue, FromValue)]` does not support (see its own module docstring).
 impl ToValue for FaultCode {
     fn to_value_controlled(&self, c: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { controlled::encode_code(self, c) }
@@ -115,7 +115,7 @@ impl FromValue for FaultCode {
     }
 }
 
-/// 🏷️ Stable, greppable diagnostic identifier, e.g. `"DSL0001"`.
+/// 🪪️ Stable, greppable diagnostic identifier, e.g. `"DSL0001"`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DiagnosticCode(pub &'static str);
 
@@ -142,7 +142,7 @@ pub enum Severity {
     Fatal,
 }
 
-/// 🌉️ Hand-written, not derived: `Severity` is a plain unit-only "string enum" (`#[serde(rename_all
+/// 🎚️ Hand-written, not derived: `Severity` is a plain unit-only "string enum" (`#[serde(rename_all
 /// = "camelCase")]` with no `tag`, serde's default bare-string representation) —
 /// `#[derive(ToValue, FromValue)]`'s enum path only supports internally-tagged representations.
 impl ToValue for Severity {
@@ -185,7 +185,7 @@ impl Severity {
         }
     }
 
-    /// 🔢️ Inverse of [`as_u8`](Self::as_u8); `None` for any value outside 0..3.
+    /// ↩️ Inverse of [`as_u8`](Self::as_u8); `None` for any value outside 0..3.
     pub fn from_u8(value: u8) -> Option<Self> {
         match value {
             0 => Some(Severity::Info),
@@ -197,7 +197,7 @@ impl Severity {
     }
 }
 
-/// 🧭️ What the parser would have accepted at the failure point — the raw material for
+/// ✅️ What the parser would have accepted at the failure point — the raw material for
 /// completions and for `TextError.expected`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ExpectedSet {
@@ -222,7 +222,7 @@ impl ExpectedSet {
     }
 }
 
-/// 🌉️ Hand-written — see `FaultOrigin` above.
+/// 📋️ Hand-written — see `FaultOrigin` above.
 impl ToValue for ExpectedSet {
     fn to_value_controlled(&self, c: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { controlled::encode_expected(self, c) }
     fn to_value(&self) -> DslValue {
@@ -290,7 +290,7 @@ impl Diagnostic {
     }
 }
 
-/// 🌉️ Hand-written — see `FaultOrigin` above.
+/// 🩹️ Hand-written — see `FaultOrigin` above.
 impl ToValue for Diagnostic {
     fn to_value_controlled(&self, c: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { controlled::encode_diagnostic(self, c) }
     fn to_value(&self) -> DslValue {
@@ -341,7 +341,7 @@ impl FromValue for Diagnostic {
 }
 
 //#region 🔖️Fault
-/// 🧭️ Which layer of the os stack produced a {@link Fault}.
+/// 🥞️ Which layer of the os stack produced a {@link Fault}.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FaultOrigin {
     Edge,
@@ -395,7 +395,7 @@ pub fn is_fault_param_name(name: &str) -> bool {
     chars.next().is_some_and(|first| first.is_ascii_lowercase()) && chars.all(|rest| rest.is_ascii_alphanumeric())
 }
 
-/// 🧭️ Exact scalar positions borrowed from the original source failure.
+/// 📍️ Exact scalar positions borrowed from the original source failure.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct FaultSource {pub offset:Option<u64>,pub byte:Option<u8>,pub depth:Option<u64>}
 impl ToValue for FaultSource {
@@ -425,12 +425,12 @@ pub struct Fault {
     pub source: Option<FaultSource>,
     pub domain:Option<Box<DslValue>>,
     pub causes: Vec<FaultCause>,
-    /// 🔣️ The placeholder values of this fault's localized notice; absent when it names none.
+    /// 💬️ The placeholder values of this fault's localized notice; absent when it names none.
     pub params: Option<Box<FaultParams>>,
     pub retryable: bool,
 }
 
-/// 🌉️ Owned Value conversion preserves the canonical Diagnostic fault wire.
+/// 📡️ Owned Value conversion preserves the canonical Diagnostic fault wire.
 /// Literal camelCase keys and absent optional fields match the declared fault schema.
 impl ToValue for FaultOrigin {
     fn to_value_controlled(&self, c: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { controlled::encode_origin(self, c) }
@@ -469,7 +469,7 @@ impl FromValue for FaultOrigin {
     }
 }
 
-/// 🌉️ Hand-written — see `FaultOrigin` above.
+/// 🔭️ Hand-written — see `FaultOrigin` above.
 impl ToValue for FaultScope {
     fn to_value_controlled(&self, c: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { controlled::encode_scope(self, c) }
     fn to_value(&self) -> DslValue {
@@ -514,7 +514,7 @@ impl FromValue for FaultScope {
     }
 }
 
-/// 🌉️ Hand-written — see `FaultOrigin` above.
+/// 🐛️ Hand-written — see `FaultOrigin` above.
 impl ToValue for FaultCause {
     fn to_value_controlled(&self, c: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { controlled::encode_cause(self, c) }
     fn to_value(&self) -> DslValue {
@@ -548,7 +548,7 @@ impl FromValue for FaultCause {
     }
 }
 
-/// 🌉️ Hand-written — see `FaultOrigin` above.
+/// 💥️ Hand-written — see `FaultOrigin` above.
 impl ToValue for Fault {
     fn to_value_controlled(&self, c: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { controlled::encode_fault(self, c) }
     fn to_value(&self) -> DslValue {
@@ -576,7 +576,7 @@ impl ToValue for Fault {
     }
 }
 
-/// 🌉️ `{name: value}` in authoring order — see [`FaultParams`].
+/// 🧮️ `{name: value}` in authoring order — see [`FaultParams`].
 impl ToValue for FaultParams {
     fn to_value_controlled(&self, c: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { controlled::encode_params(self, c) }
     fn to_value(&self) -> DslValue {
@@ -661,7 +661,7 @@ impl From<String> for Fault {
 }
 
 impl Fault {
-    /// 🏷️ Borrows an existing canonical Value refusal cause while preserving its original diagnostic receipt.
+    /// 🛑️ Borrows an existing canonical Value refusal cause while preserving its original diagnostic receipt.
     pub fn value_refusal_kind(&self)->Option<ValueRefusalKind>{self.param("refusalKind").and_then(ValueRefusalKind::from_wire)}
     /// 🧾️ Reads the exact original failed producer receipt carried through this diagnostic.
     pub fn retained_progress(&self)->semio_framework_value::RetainedCloneProgress{self.retained_progress}
@@ -673,7 +673,7 @@ impl Fault {
         Self { retained_progress:Default::default(),origin, code: code.into(), severity: Severity::Error, message: message.into(), scope: Box::default(), span: None, source:None, domain:None, causes: Vec::new(), params: None, retryable: false }
     }
 
-    /// 🔣️ Names one placeholder value of this fault's localized notice (`{name}`, design §20.12); a later value for the
+    /// 🎨️ Names one placeholder value of this fault's localized notice (`{name}`, design §20.12); a later value for the
     /// same name replaces the earlier one.
     pub fn with_param(mut self, name: impl Into<String>, value: impl Into<String>) -> Self {
         let (name, value) = (name.into(), value.into());
@@ -685,7 +685,7 @@ impl Fault {
         self
     }
 
-    /// 🔎️ The placeholder value named `name`, if this fault carries it.
+    /// 🎒️ The placeholder value named `name`, if this fault carries it.
     pub fn param(&self, name: &str) -> Option<&str> {
         self.params.as_deref().and_then(|params| params.get(name))
     }
@@ -848,7 +848,7 @@ pub fn decode_fault_bytes(bytes: &[u8]) -> Fault {
     try_decode_fault_bytes(bytes).unwrap_or_else(|| Fault::new(FaultOrigin::Os, "os.fault.decode", String::from_utf8_lossy(bytes)))
 }
 
-/// 🔁️ Maps an error type into {@link Fault} with a stable dotted code namespace.
+/// 🗺️ Maps an error type into {@link Fault} with a stable dotted code namespace.
 #[macro_export]
 macro_rules! fault_from_error {
     ($ty:ty, $origin:expr, $prefix:literal) => {

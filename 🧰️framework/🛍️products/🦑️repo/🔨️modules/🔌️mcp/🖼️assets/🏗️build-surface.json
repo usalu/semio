@@ -3,6 +3,7 @@
   "version": 1,
   "catalogue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
   "buildPolicy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+  "backends": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/📋️registry/🔣️.json",
   "identity": {
     "argument": "agent",
     "pattern": "^[A-Za-z0-9._-]{1,64}$",
@@ -13,7 +14,7 @@
     "environment": { "session": "SEMIO_AGENT_SESSION" }
   },
   "globals": [
-    { "flag": "--tool", "input": "tool", "environment": "SEMIO_BUILD_TOOL", "description": { "en": "Build implementation for this call (nx or bazel); otherwise the default of the build policy. Reaches the child as SEMIO_BUILD_TOOL, so nested tasks inherit it.", "de": "Build-Implementierung für diesen Aufruf (nx oder bazel); sonst der Standard der Build-Policy. Erreicht das Kind als SEMIO_BUILD_TOOL, verschachtelte Tasks erben sie." } },
+    { "flag": "--tool", "input": "tool", "environment": "SEMIO_BUILD_TOOL", "description": { "en": "Build implementation for this call (an id of the build backend registry, for example nx or bazel); otherwise the default of the build policy. Reaches the child as SEMIO_BUILD_TOOL, so nested tasks inherit it.", "de": "Build-Implementierung für diesen Aufruf (eine Kennung der Backend-Registry, zum Beispiel nx oder bazel); sonst der Standard der Build-Policy. Erreicht das Kind als SEMIO_BUILD_TOOL, verschachtelte Tasks erben sie." } },
     { "flag": "--workers", "input": "workers", "environment": "SEMIO_BUILD_WORKERS", "description": { "en": "Run actions in persistent workers (on) or one process each (off); otherwise the worker policy. Reaches the child as SEMIO_BUILD_WORKERS.", "de": "Aktionen in persistenten Workern (on) oder je in einem Prozess (off) ausführen; sonst die Worker-Policy. Erreicht das Kind als SEMIO_BUILD_WORKERS." } },
     { "flag": "--lang", "input": "language", "environment": "SEMIO_LANGUAGE", "description": { "en": "Language of the texts the child prints (en or de). No language is assumed: without it the child resolves SEMIO_LANGUAGE, then the locale, and refuses when none resolves.", "de": "Sprache der Texte, die das Kind ausgibt (en oder de). Es wird keine Sprache angenommen: ohne Angabe bestimmt das Kind SEMIO_LANGUAGE, dann die Locale, und verweigert sich, wenn keine bestimmt werden kann." } }
   ],
@@ -32,7 +33,9 @@
     "--area": { "type": "list" },
     "--scenario": { "type": "list" },
     "--workloads": { "type": "list" },
-    "--implementations": { "type": "list", "items": ["nx", "bazel"] },
+    "--implementations": { "type": "list", "closed": true },
+    "--runs": { "type": "integer", "minimum": 1, "maximum": 1000 },
+    "--concurrency": { "type": "integer", "minimum": 1, "maximum": 256 },
     "--phases": { "type": "list", "items": ["warm", "edit", "revert"] },
     "--sessions": { "type": "integer", "minimum": 1, "maximum": 64 },
     "--parallelism": { "type": "integer", "minimum": 1, "maximum": 256 },
@@ -123,6 +126,9 @@
       "annotations": { "destructiveHint": true, "idempotentHint": false, "openWorldHint": true }
     },
     { "operation": "incremental", "subcommand": "run", "kind": "execute" },
+    { "operation": "conformance", "subcommand": "run", "kind": "execute", "flags": ["--scenario", "--implementations", "--keep", "--json"], "bind": { "--json": true } },
+    { "operation": "units", "subcommand": "run", "kind": "execute", "flags": ["--for", "--only", "--concurrency", "--json"], "required": ["--for"], "bind": { "--json": true } },
+    { "operation": "bench", "subcommand": "run", "kind": "execute", "flags": ["--slo", "--runs", "--max-load", "--prepare", "--implementations", "--json"], "bind": { "--json": true } },
     { "operation": "concurrency", "subcommand": "run", "kind": "execute", "flags": ["--workloads", "--sessions", "--criteria", "--implementations", "--root", "--file", "--json"] },
     { "operation": "show", "subcommand": "projects", "kind": "query", "bind": { "--json": true }, "defaults": { "--graph-policy": "current" } },
     {
@@ -145,8 +151,17 @@
     { "operation": "capacity", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
     { "operation": "cache", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
     { "operation": "cache", "subcommand": "verify", "kind": "query", "bind": { "--json": true } },
-    { "operation": "cache", "subcommand": "remote", "kind": "query", "flags": [] },
+    { "operation": "remote-cache", "subcommand": "status", "kind": "query", "flags": [] },
     { "operation": "remote-execution", "subcommand": "status", "kind": "query", "flags": [] },
+    { "operation": "doctor", "kind": "query", "flags": ["--only", "--strict", "--json"], "bind": { "--json": true } },
+    { "operation": "service", "subcommand": "status", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
+    { "operation": "service", "subcommand": "probe", "kind": "query", "flags": [] },
+    { "operation": "tools", "subcommand": "list", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
+    { "operation": "conformance", "subcommand": "list", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
+    { "operation": "conformance", "subcommand": "plan", "kind": "query", "flags": ["--scenario", "--implementations", "--json"], "bind": { "--json": true } },
+    { "operation": "units", "subcommand": "plan", "kind": "query", "flags": ["--for", "--json"], "required": ["--for"], "bind": { "--json": true } },
+    { "operation": "bench", "subcommand": "list", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
+    { "operation": "bench", "subcommand": "compare", "kind": "query", "flags": ["--current", "--baseline", "--json"], "required": ["--current", "--baseline"], "bind": { "--json": true } },
     { "operation": "incremental", "subcommand": "list", "kind": "query" },
     { "operation": "incremental", "subcommand": "plan", "kind": "query", "bind": { "--json": true } },
     { "operation": "concurrency", "subcommand": "list", "kind": "query" },
@@ -180,8 +195,18 @@
     { "operation": "reset", "reason": { "en": "Discards the graph and the local tool state; a human decision.", "de": "Verwirft den Graphen und den lokalen Werkzeugzustand; eine menschliche Entscheidung." } },
     { "operation": "cache", "subcommand": "gc", "reason": { "en": "Deletes shared cache content; a human decision.", "de": "Löscht gemeinsamen Cache-Inhalt; eine menschliche Entscheidung." } },
     { "operation": "cache", "subcommand": "clear", "reason": { "en": "Empties the shared task cache that other agents use; a human decision.", "de": "Leert den gemeinsamen Task-Cache, den andere Agenten nutzen; eine menschliche Entscheidung." } },
-    { "operation": "cache", "subcommand": "serve", "reason": { "en": "Starts a long-running server, not an operation.", "de": "Startet einen dauerhaften Server, keine Operation." } },
+    { "operation": "remote-cache", "subcommand": "serve", "reason": { "en": "Starts a long-running server, not an operation.", "de": "Startet einen dauerhaften Server, keine Operation." } },
+    { "operation": "remote-cache", "subcommand": "gc", "reason": { "en": "Deletes shared remote cache content; a human decision.", "de": "Löscht gemeinsamen Remote-Cache-Inhalt; eine menschliche Entscheidung." } },
     { "operation": "remote-execution", "subcommand": "serve", "reason": { "en": "Starts a long-running cluster, not an operation.", "de": "Startet einen dauerhaften Cluster, keine Operation." } },
-    { "operation": "remote-execution", "subcommand": "env", "reason": { "en": "Prints shell environment for a human shell.", "de": "Gibt Shell-Umgebung für eine menschliche Shell aus." } }
+    { "operation": "remote-execution", "subcommand": "workers", "reason": { "en": "Starts a long-running worker, not an operation.", "de": "Startet einen dauerhaften Worker, keine Operation." } },
+    { "operation": "tools", "subcommand": "exec", "reason": { "en": "Runs any registered tool with arbitrary arguments; agents use the operation that owns the tool (run, cargo).", "de": "Führt jedes registrierte Werkzeug mit beliebigen Argumenten aus; Agenten nutzen die Operation, der das Werkzeug gehört (run, cargo)." } },
+    { "operation": "units", "subcommand": "emit", "reason": { "en": "Writes build files into a directory of the caller's choice; part of the generated-target plumbing.", "de": "Schreibt Build-Dateien in ein frei gewähltes Verzeichnis; Teil der Installation generierter Targets." } },
+    { "operation": "units", "subcommand": "exec", "reason": { "en": "The action of generated Nx targets and Bazel rules, not an operation of its own.", "de": "Die Aktion generierter Nx-Targets und Bazel-Regeln, keine eigene Operation." } },
+    { "operation": "service", "subcommand": "start", "reason": { "en": "Starts a long-running background service; a human decision.", "de": "Startet einen dauerhaften Hintergrunddienst; eine menschliche Entscheidung." } },
+    { "operation": "service", "subcommand": "stop", "reason": { "en": "Stops the service other agents use; a human decision.", "de": "Stoppt den Dienst, den andere Agenten nutzen; eine menschliche Entscheidung." } },
+    { "operation": "service", "subcommand": "restart", "reason": { "en": "Stops the service other agents use; a human decision.", "de": "Stoppt den Dienst, den andere Agenten nutzen; eine menschliche Entscheidung." } },
+    { "operation": "service", "subcommand": "issue", "reason": { "en": "Issues a capability token; a secret that never belongs in a tool result.", "de": "Stellt ein Berechtigungstoken aus; ein Geheimnis, das nie in ein Werkzeugergebnis gehört." } },
+    { "operation": "service", "subcommand": "revoke", "reason": { "en": "Cancels the running commands of other agents; a human decision.", "de": "Bricht laufende Befehle anderer Agenten ab; eine menschliche Entscheidung." } },
+    { "operation": "service", "subcommand": "drop-caches", "reason": { "en": "Forgets digests and task results for every agent; a human decision.", "de": "Vergisst Digests und Task-Ergebnisse für alle Agenten; eine menschliche Entscheidung." } }
   ]
 }

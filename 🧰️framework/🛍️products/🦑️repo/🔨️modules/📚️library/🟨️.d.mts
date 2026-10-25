@@ -1,10 +1,16 @@
-import type{BuildGraphV1,BuildTargetV1,BuildProjectV1}from"./🏗️build/🕸️graph/🟦️.ts";
+import type { BuildGraphV1, BuildTargetV1, BuildProjectV1 } from "./🏗️build/🕸️graph/📋️model/🟦️.ts";
 /** 🕸️ Actual JavaScript projection exports retain dynamic graph DATA as unknown. */
 export function nxBuildDependencyImplementationV1():string;
 export function nxBuildEngineReferencesV1(source:string):readonly Readonly<{kind:"module"|"directory-url"|"file-url";specifier:string}>[];
 export function nxBuildEngineSourceFileV1(owner:string,specifier:string):string;
+export function nxBuildEngineWorkspacePackageFileV1(root:string,specifier:string):string|undefined;
+export function nxBuildEngineClosureV1():Readonly<{files:readonly string[];packages:readonly string[]}>;
+export function nxBuildEngineFilesDigestV1(root:string,files:readonly string[]):string;
+export function nxBuildEngineDigestV1():string;
 export function nxBuildEngineInputsV1():readonly unknown[];
+export function nxOutputsCacheableV1(outputs:readonly unknown[]):boolean;
 export function projectBuildTargetForNxV1(target:BuildTargetV1):NxProjectedTargetV1;
+export function shareNxProjectInputsV1<T extends Record<string,{namedInputs:Record<string,unknown[]>}>>(projects:T):T;
 export function projectBuildGraphForNxV1(graph:BuildGraphV1):NxProjectedGraphV1;
 export function projectBuildDependenciesForNxV1(graph:BuildGraphV1,context:NxDependencyContextV1):BuildGraphV1["dependencies"];
 export function createDependencies(options:unknown,context:unknown):Promise<BuildGraphV1["dependencies"]>;

@@ -1,4 +1,4 @@
-//! 📝️ Structured request-scoped observability: one [`TraceRecord`] per server span or event,
+//! 📬️ Structured request-scoped observability: one [`TraceRecord`] per server span or event,
 //! carrying the five fields an operator needs to answer "who did what, to which artifact, with what
 //! outcome, and how long did it take" — request id, principal, space/artifact id, outcome, duration
 //! — plus a bounded per-event counter table a live introspection route reads.
@@ -35,7 +35,7 @@ use crate::{PercentileRing, try_now_us};
 /// 🌐️ Environment variable naming the lowest level a [`Tracer::from_environment`] emits.
 pub const TRACE_LEVEL_ENV: &str = "SEMIO_TRACE_LEVEL";
 
-/// 🌐️ Environment variable naming where [`Tracer::from_environment`] writes: `stderr`, `stdout`,
+/// 💾️ Environment variable naming where [`Tracer::from_environment`] writes: `stderr`, `stdout`,
 /// `none` or `file:<path>` (JSON lines appended to that file).
 pub const TRACE_SINK_ENV: &str = "SEMIO_TRACE_SINK";
 
@@ -92,7 +92,7 @@ pub enum TraceOutcome {
 }
 
 impl TraceOutcome {
-    /// 🏷️ The wire spelling.
+    /// 🔖️ The wire spelling.
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Started => "started",
@@ -103,7 +103,7 @@ impl TraceOutcome {
         }
     }
 
-    /// 🪜️ The level a record with this outcome is emitted at, unless the caller overrides it.
+    /// 🎚️ The level a record with this outcome is emitted at, unless the caller overrides it.
     pub fn level(self) -> TraceLevel {
         match self {
             Self::Started => TraceLevel::Debug,
@@ -114,7 +114,7 @@ impl TraceOutcome {
     }
 }
 
-/// 🎯️ Every outcome, in declaration order — the Rust half of the language-agnostic vocabulary.
+/// 🔃️ Every outcome, in declaration order — the Rust half of the language-agnostic vocabulary.
 pub const TRACE_OUTCOMES: [TraceOutcome; 5] = [TraceOutcome::Started, TraceOutcome::Ok, TraceOutcome::Refused, TraceOutcome::Failed, TraceOutcome::Cancelled];
 
 /// 🛰️ The declared server span/event names, sorted. A server may emit an event outside this list —
@@ -233,7 +233,7 @@ fn write_json_string(line: &mut String, value: &str) {
 //#endregion 🔖️Record
 
 //#region 🔖️Sink
-/// 🚰️ Where records go. One method, taking a shared reference, because a sink is shared by every
+/// 📡️ Where records go. One method, taking a shared reference, because a sink is shared by every
 /// request thread and must never need the caller to hold a write lock to say something happened.
 pub trait TraceSink: Send + Sync {
     fn emit(&self, record: &TraceRecord);
@@ -247,14 +247,14 @@ impl TraceSink for NullSink {
     fn emit(&self, _record: &TraceRecord) {}
 }
 
-/// 🖨️ Writes one JSON line per record to a standard stream. The only I/O in this module, and the
+/// 🌊️ Writes one JSON line per record to a standard stream. The only I/O in this module, and the
 /// embedder constructs it explicitly.
 pub struct StreamSink {
     stderr: bool,
 }
 
 impl StreamSink {
-    /// 🖨️ To standard error — the default for a server, so records never contaminate a stdout the
+    /// ❌️ To standard error — the default for a server, so records never contaminate a stdout the
     /// operator is piping somewhere.
     pub fn stderr() -> StreamSink {
         StreamSink { stderr: true }
@@ -287,7 +287,7 @@ pub struct FileSink {
 }
 
 impl FileSink {
-    /// 🗃️ Opens `path` for appending, creating it when absent, so a restarted process continues
+    /// ➕️ Opens `path` for appending, creating it when absent, so a restarted process continues
     /// the same log.
     pub fn append(path: &std::path::Path) -> std::io::Result<FileSink> {
         Ok(FileSink { file: Mutex::new(std::fs::OpenOptions::new().create(true).append(true).open(path)?) })
@@ -303,7 +303,7 @@ impl TraceSink for FileSink {
     }
 }
 
-/// 🧪️ Keeps every record it is handed, in order. The sink a test injects; never used in a
+/// ⏺️ Keeps every record it is handed, in order. The sink a test injects; never used in a
 /// production configuration, because it grows without bound on purpose — a test that captures
 /// records wants all of them.
 #[derive(Default)]
@@ -312,7 +312,7 @@ pub struct CapturingSink {
 }
 
 impl CapturingSink {
-    /// 🧪️ An empty capture.
+    /// 📸️ An empty capture.
     pub fn new() -> CapturingSink {
         CapturingSink { records: Mutex::new(Vec::new()) }
     }
@@ -365,7 +365,7 @@ impl EventCounters {
         (self.durations.p50(), self.durations.p95(), self.durations.p99())
     }
 
-    /// 🔢️ How many latency samples back the percentiles.
+    /// ⏪️ How many latency samples back the percentiles.
     pub fn samples(&self) -> usize {
         self.durations.len()
     }
@@ -384,7 +384,7 @@ impl EventCounters {
     }
 }
 
-/// 📊️ One row of [`Tracer::counters`].
+/// 🧮️ One row of [`Tracer::counters`].
 #[derive(Clone, Debug)]
 pub struct EventCount {
     pub event: String,
@@ -413,7 +413,7 @@ pub struct Tracer {
 }
 
 impl Tracer {
-    /// 🔭️ A tracer at `level` writing to `sink`.
+    /// 💿️ A tracer at `level` writing to `sink`.
     pub fn new(level: TraceLevel, sink: Box<dyn TraceSink>) -> Tracer {
         Tracer { inner: Arc::new(TracerInner { level, sink, counters: Mutex::new(BTreeMap::new()), dropped_events: AtomicU64::new(0), requests: AtomicU64::new(0) }) }
     }
@@ -460,18 +460,18 @@ impl Tracer {
         tracer
     }
 
-    /// 🎛️ [`Tracer::from_lookup`] over this process's own environment.
+    /// 🏭️ [`Tracer::from_lookup`] over this process's own environment.
     #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
     pub fn from_environment() -> Tracer {
         Tracer::from_lookup(|key| std::env::var(key).ok())
     }
 
-    /// 🪜️ The level this tracer admits up to.
+    /// 🔏️ The level this tracer admits up to.
     pub fn level(&self) -> TraceLevel {
         self.inner.level
     }
 
-    /// 🪜️ Whether a record at `level` would be emitted — the cheap test a caller makes before
+    /// 🔛️ Whether a record at `level` would be emitted — the cheap test a caller makes before
     /// building a detail string it would otherwise throw away.
     pub fn enabled(&self, level: TraceLevel) -> bool {
         level != TraceLevel::Off && level <= self.inner.level
@@ -484,7 +484,7 @@ impl Tracer {
         format!("r{:012x}", self.inner.requests.fetch_add(1, Ordering::Relaxed))
     }
 
-    /// 📝️ Counts `record` and hands it to the sink, if the level admits it. Counting happens
+    /// 📹️ Counts `record` and hands it to the sink, if the level admits it. Counting happens
     /// first and unconditionally for an admitted record, so the introspection table is the truth
     /// about what happened even when the sink is [`NullSink`].
     pub fn emit(&self, record: TraceRecord) {
@@ -511,12 +511,12 @@ impl Tracer {
         Span { tracer: self.clone(), event: event.to_string(), started_us: try_now_us(), request_id: None, principal: None, space: None, artifact: None }
     }
 
-    /// 📊️ Every event this tracer has seen, sorted by event name.
+    /// 📋️ Every event this tracer has seen, sorted by event name.
     pub fn counters(&self) -> Vec<EventCount> {
         self.inner.counters.lock().unwrap_or_else(PoisonError::into_inner).iter().map(|(event, counters)| EventCount { event: event.clone(), counters: counters.clone() }).collect()
     }
 
-    /// 🧯️ How many records were counted against no row because the table was already at
+    /// 🗑️ How many records were counted against no row because the table was already at
     /// [`COUNTER_EVENT_CAPACITY`]. A non-zero value means the event vocabulary is unbounded
     /// somewhere and is itself worth alerting on.
     pub fn dropped_event_count(&self) -> u64 {
@@ -534,7 +534,7 @@ impl TraceSink for SharedSink {
 //#endregion 🔖️Tracer
 
 //#region 🔖️Span
-/// ⏱️ One in-flight observation. Built by [`Tracer::span`], decorated with whatever identity the
+/// ✈️ One in-flight observation. Built by [`Tracer::span`], decorated with whatever identity the
 /// handler has resolved so far, and closed exactly once with an outcome.
 ///
 /// 🕰️ Duration is measured with [`try_now_us`] rather than [`now_us`](crate::now_us): a span must
@@ -551,7 +551,7 @@ pub struct Span {
 }
 
 impl Span {
-    /// 🆔️ Binds the request id this span belongs to.
+    /// 🪢️ Binds the request id this span belongs to.
     pub fn request(mut self, request_id: impl Into<String>) -> Span {
         self.request_id = Some(request_id.into());
         self
@@ -575,7 +575,7 @@ impl Span {
         self
     }
 
-    /// 👤️ Binds the principal only when one was resolved, for a path where anonymity is normal.
+    /// 🔎️ Binds the principal only when one was resolved, for a path where anonymity is normal.
     pub fn maybe_principal(mut self, principal: Option<String>) -> Span {
         self.principal = principal;
         self
@@ -588,7 +588,7 @@ impl Span {
         Span { tracer: self.tracer.clone(), event: self.event.clone(), started_us: try_now_us(), request_id: self.request_id.clone(), principal: self.principal.clone(), space: self.space.clone(), artifact: self.artifact.clone() }
     }
 
-    /// 🏷️ The event this span will report under.
+    /// 🪧️ The event this span will report under.
     pub fn event(&self) -> &str {
         &self.event
     }
@@ -620,7 +620,7 @@ impl Span {
         self.finish(TraceOutcome::Cancelled, Some(reason.to_string()));
     }
 
-    /// 🎯️ Closes the span with an explicit outcome and optional detail.
+    /// 🏁️ Closes the span with an explicit outcome and optional detail.
     pub fn finish(self, outcome: TraceOutcome, detail: Option<String>) {
         let elapsed_us = match (self.started_us, try_now_us()) {
             (Some(started), Some(now)) => Some(now.saturating_sub(started)),

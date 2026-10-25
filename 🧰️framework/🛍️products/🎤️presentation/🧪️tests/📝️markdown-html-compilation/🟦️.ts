@@ -10,14 +10,14 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { type AdapterContext, type AdapterOutcome, defineTestAdapter } from "@semio-tech/framework/test/adapter";
-import { compileOwnedMarkdownToHtml } from "../../🎯️targets/⚛️react/🔨️modules/📝️markdown-html-compiler/🟦️.ts";
+import { compileOwnedMarkdownToHtml } from "@semio-tech/presentation-react/markdown-html-compiler";
 // #endregion 🔌️Adapters
 
 // #region 🔮️Reference
 /** 🔮️ The CommonMark + GFM reading of the ecosystem, assembled once and reused by every vector. */
 const reference = unified().use(remarkParse).use(remarkGfm).use(remarkRehype).use(rehypeStringify);
 
-/** 🔮️ The reference fragment of one markdown source. @see https://github.com/remarkjs/remark */
+/** 📘️ The reference fragment of one markdown source. @see https://github.com/remarkjs/remark */
 async function compileReferenceMarkdownToHtml(markdown: string): Promise<string> {
   return String(await reference.process(markdown));
 }
@@ -29,7 +29,7 @@ function normalizeFragment(html: string): string {
   return html.replace(/\r\n?/gu, "\n").trim();
 }
 
-/** 🧫️ The scenario's data table as records — the feature owns every vector this case compares. */
+/** 🗄️ The scenario's data table as records — the feature owns every vector this case compares. */
 function rows(ctx: AdapterContext): Record<string, string>[] {
   const table = ctx.scenario.steps.find((step) => step.dataTable !== undefined)?.dataTable;
   if (table === undefined || table.length < 2) throw new Error(`scenario ${ctx.scenario.id} carries no vector table`);
@@ -56,7 +56,7 @@ async function fragments(ctx: AdapterContext, compile: (markdown: string) => Pro
 // #endregion 🧫️Vectors
 
 // #region 🧭️Adapter
-/** 🎛️ Every scenario asks the same question of a different vector set, so they share one shape. */
+/** ❓️ Every scenario asks the same question of a different vector set, so they share one shape. */
 const markdownScenario = () => ({
   oracle: (ctx: AdapterContext) => fragments(ctx, compileReferenceMarkdownToHtml),
   subject: (ctx: AdapterContext) => fragments(ctx, compileOwnedMarkdownToHtml),
@@ -65,19 +65,19 @@ const markdownScenario = () => ({
 export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
-    /** 🔮️/🎯️ Paragraphs, soft breaks and the six heading levels. */
+    /** 📖️/🎯️ Paragraphs, soft breaks and the six heading levels. */
     prose: markdownScenario(),
-    /** 🔮️/🎯️ Emphasis, strong, inline code, backslash escapes and hard breaks. */
+    /** ‼️/🎯️ Emphasis, strong, inline code, backslash escapes and hard breaks. */
     inline: markdownScenario(),
-    /** 🔮️/🎯️ Bullet markers, ordered starts, nesting and inline marks inside items. */
+    /** 📋️/🎯️ Bullet markers, ordered starts, nesting and inline marks inside items. */
     lists: markdownScenario(),
-    /** 🔮️/🎯️ Inline links, titles, mailto destinations and autolinks. */
+    /** 🔗️/🎯️ Inline links, titles, mailto destinations and autolinks. */
     links: markdownScenario(),
-    /** 🔮️/🎯️ Fenced code: language class, escaping and the trailing newline. */
+    /** 💻️/🎯️ Fenced code: language class, escaping and the trailing newline. */
     code: markdownScenario(),
-    /** 🔮️/🎯️ GFM tables and their per-column alignment attributes. */
+    /** 📊️/🎯️ GFM tables and their per-column alignment attributes. */
     tables: markdownScenario(),
-    /** 🔮️/🎯️ A whole slide body, as a deck actually authors one. */
+    /** 🎤️/🎯️ A whole slide body, as a deck actually authors one. */
     slide: markdownScenario(),
   },
 });

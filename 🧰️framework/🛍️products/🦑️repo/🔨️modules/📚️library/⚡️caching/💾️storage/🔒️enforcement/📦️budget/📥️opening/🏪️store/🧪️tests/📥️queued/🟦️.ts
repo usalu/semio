@@ -1,5 +1,5 @@
 import{test,expect,spyOn}from"bun:test";
-import {testPythonV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import ts from"typescript";
@@ -99,7 +99,7 @@ test("a concurrent shared holder makes queued maintenance wait with progress and
    if(scenario.event==="release"){releaseHolder();const lease=await pending;expect(lease.mode).toBe("exclusive");await oracle("held");lease.release();await oracle("free");}
    else if(scenario.event==="cancel"){abort.abort(Object.freeze(Error("Owned queued maintenance cancellation")));await expect(pending).rejects.toThrow(/abort|cancel/iu);expect(maintenance.signal.aborted).toBe(true);expect(settled).toBe(false);await oracle("held");releaseHolder();await oracle("free");}
    else{
-    const late=shared("late-reader").then(lease=>{events.push("late-reader");return lease;});void late.catch(()=>{});await Bun.sleep(600);expect(events).toEqual([]);releaseHolder();const lease=await pending;expect(events).toEqual(["maintenance"]);lease.release();const reader=await late;expect(events).toEqual(["maintenance","late-reader"]);reader.release();await oracle("free");
+    const late=shared("late-reader").then(lease=>{events.push("late-reader");return lease;});void late.catch(()=>{});await Bun.sleep(600);expect(events).toEqual(["late-reader"]);expect(settled).toBe(false);releaseHolder();const reader=await late;await Bun.sleep(300);expect(settled).toBe(false);reader.release();const lease=await pending;expect(events).toEqual(["late-reader","maintenance"]);lease.release();await oracle("free");
    }
   }finally{releaseHolder();rmSync(parent,{recursive:true,force:true});}
  }

@@ -2,13 +2,16 @@
 //! Delegates to `semio_framework_artifact_playbook_playbook`'s existing `GenerationMutation::Add` engine (framework territory,
 //! out of this facet's writable boundary) via the sibling `🔺️diff`/`↩️inverse` leaves.
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 //#region 🔖️CreateGeneration
 /// ➕ Full initial payload for a new generation.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct CreateGeneration {
     pub generation: FormGeneration,
     /// 📍 Zero-based insertion position among the generations; `None` or past the end appends.

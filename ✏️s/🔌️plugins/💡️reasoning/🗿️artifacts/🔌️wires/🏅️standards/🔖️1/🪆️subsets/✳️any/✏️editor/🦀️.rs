@@ -507,22 +507,8 @@ impl ToolJobFactory for WiresRetainedCommandJobFactory {
         wires_retained_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: WIRES_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > WIRES_RETAINED_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("Wires bounded command rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
 }
 
 impl ArtifactOwnedToolJobFactory for WiresRetainedCommandJobFactory {
@@ -609,50 +595,23 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         registry.register(WiresRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !WIRES_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !WIRES_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Wires command does not match its exact retained tool registration"));
+        if original.command.command_id() != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Wires command does not match its exact retained tool registration").into());
         }
-        if wires_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+        if wires_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
             return Err(Fault::from("wires-command-payload-too-large"));
         }
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match *request.command {
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, WiresCommand::command_id, WIRES_RETAINED_RAW_BYTES, WIRES_RETAINED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match *request.command {
             WiresCommand::SetActiveExample(_) | WiresCommand::AddNode(_) | WiresCommand::AddRelationship(_) | WiresCommand::DeleteSelection(_) => {
                 Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(request.command.command_id(), wires_retained_document_reduce, wires_retained_extent))
             }
             _ => Box::new(WiresWindowDragWork { tool_id: request.command.command_id(), node_ids: None, node_cursor: 0, visited: 0, consumed: false }),
-        };
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            WiresCommand::command_id,
-            WIRES_RETAINED_RAW_BYTES,
-            WIRES_RETAINED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        } })
     }
 
     /// ⏯️ Builds the reorganize tool's layout run over the board child the run edits (`ToolRunDefinition.member`); resumed from

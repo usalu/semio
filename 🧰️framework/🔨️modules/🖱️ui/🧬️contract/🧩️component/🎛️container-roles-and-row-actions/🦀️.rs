@@ -112,7 +112,7 @@ pub struct RowAction {
 }
 
 impl RowAction {
-    /// 🚫️ This action with its enabled state set — `true` paints it disabled and refuses its dispatch.
+    /// ⛔️ This action with its enabled state set — `true` paints it disabled and refuses its dispatch.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
         self
@@ -126,10 +126,10 @@ impl RowAction {
     }
 }
 
-/// 🚫️ Why a row action does not dispatch — the ONE typed refusal every host answers a row verb with.
+/// 🛑️ Why a row action does not dispatch — the ONE typed refusal every host answers a row verb with.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RowActionRefusal {
-    /// 🚫️ The action is disabled on this row.
+    /// 🔕️ The action is disabled on this row.
     Disabled,
     /// 🧮️ The target's argument map could not be admitted into one more binding.
     Credit,
@@ -150,7 +150,7 @@ pub struct RowTarget {
     pub version: u16,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub args: Option<crate::UiMap>,
-    /// ▶️ The verb the row's primary activation fires on this target.
+    /// 🏹️ The verb the row's primary activation fires on this target.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub activation: Option<crate::UiText>,
 }
@@ -165,7 +165,7 @@ impl RowTarget {
         Some(crate::ActionBinding { trigger: crate::Trigger::Activate, action: crate::ActionId::new(self.scope.clone(), verb.clone(), self.version), args: credited_args(&self.args)?.map(crate::UiValue::Map), capability: None })
     }
 
-    /// 🎬️ The versioned id one of the row's actions fires on this target — refused typed when the action is disabled, so a
+    /// 🆔️ The versioned id one of the row's actions fires on this target — refused typed when the action is disabled, so a
     /// host never dispatches what the row paints disabled.
     pub fn action_id(&self, action: &RowAction) -> Result<crate::ActionId, RowActionRefusal> {
         if action.disabled {
@@ -174,7 +174,7 @@ impl RowTarget {
         Ok(crate::ActionId::new(self.scope.clone(), action.verb.clone(), self.version))
     }
 
-    /// 🔗️ The binding one of the row's actions fires on this target: [`Self::action_id`] with the target's argument map.
+    /// 🪢️ The binding one of the row's actions fires on this target: [`Self::action_id`] with the target's argument map.
     pub fn action_binding(&self, action: &RowAction) -> Result<crate::ActionBinding, RowActionRefusal> {
         let action = self.action_id(action)?;
         Ok(crate::ActionBinding { trigger: crate::Trigger::Activate, action, args: credited_args(&self.args).ok_or(RowActionRefusal::Credit)?.map(crate::UiValue::Map), capability: None })

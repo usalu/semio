@@ -1,0 +1,188 @@
+{
+ "version": 1,
+ "vectors": [
+  {
+   "name": "no samples",
+   "nowMs": 360000000,
+   "samples": [],
+   "rates": {
+    "spanMs": 0,
+    "freeBytesPerHour": 0,
+    "profileBytesPerHour": {}
+   }
+  },
+  {
+   "name": "one sample",
+   "nowMs": 360000000,
+   "samples": [
+    {
+     "atMs": 359700000,
+     "freeBytes": 12884901888,
+     "volumeBytes": 51539607552
+    }
+   ],
+   "rates": {
+    "spanMs": 0,
+    "freeBytesPerHour": 0,
+    "profileBytesPerHour": {}
+   }
+  },
+  {
+   "name": "two samples closer than the minimum span",
+   "nowMs": 360000000,
+   "samples": [
+    {
+     "atMs": 359940000,
+     "freeBytes": 12884901888,
+     "volumeBytes": 51539607552
+    },
+    {
+     "atMs": 359970000.0,
+     "freeBytes": 11811160064,
+     "volumeBytes": 51539607552
+    }
+   ],
+   "rates": {
+    "spanMs": 30000.0,
+    "freeBytesPerHour": 0,
+    "profileBytesPerHour": {}
+   }
+  },
+  {
+   "name": "free space shrinking by 5 GiB in 30 minutes is 10 GiB per hour",
+   "nowMs": 360000000,
+   "samples": [
+    {
+     "atMs": 358200000,
+     "freeBytes": 12884901888,
+     "volumeBytes": 51539607552
+    },
+    {
+     "atMs": 359100000,
+     "freeBytes": 10200547328,
+     "volumeBytes": 51539607552
+    },
+    {
+     "atMs": 360000000,
+     "freeBytes": 7516192768,
+     "volumeBytes": 51539607552
+    }
+   ],
+   "rates": {
+    "spanMs": 1800000,
+    "freeBytesPerHour": 10737418240,
+    "profileBytesPerHour": {}
+   }
+  },
+  {
+   "name": "free space growing after a collection is a negative rate",
+   "nowMs": 360000000,
+   "samples": [
+    {
+     "atMs": 358800000,
+     "freeBytes": 5368709120,
+     "volumeBytes": 51539607552
+    },
+    {
+     "atMs": 360000000,
+     "freeBytes": 11811160064,
+     "volumeBytes": 51539607552
+    }
+   ],
+   "rates": {
+    "spanMs": 1200000,
+    "freeBytesPerHour": -19327352832,
+    "profileBytesPerHour": {}
+   }
+  },
+  {
+   "name": "samples older than the window are ignored",
+   "nowMs": 360000000,
+   "samples": [
+    {
+     "atMs": 352800000,
+     "freeBytes": 42949672960,
+     "volumeBytes": 51539607552
+    },
+    {
+     "atMs": 358260000,
+     "freeBytes": 12884901888,
+     "volumeBytes": 51539607552
+    },
+    {
+     "atMs": 360000000,
+     "freeBytes": 9663676416,
+     "volumeBytes": 51539607552
+    }
+   ],
+   "rates": {
+    "spanMs": 1740000,
+    "freeBytesPerHour": 6664604425,
+    "profileBytesPerHour": {}
+   }
+  },
+  {
+   "name": "profile growth between the first and last scan",
+   "nowMs": 360000000,
+   "samples": [
+    {
+     "atMs": 358200000,
+     "freeBytes": 12884901888,
+     "volumeBytes": 51539607552,
+     "profiles": {
+      "prototype": 8589934592,
+      "wasm": 5368709120
+     }
+    },
+    {
+     "atMs": 359100000,
+     "freeBytes": 10737418240,
+     "volumeBytes": 51539607552
+    },
+    {
+     "atMs": 360000000,
+     "freeBytes": 8589934592,
+     "volumeBytes": 51539607552,
+     "profiles": {
+      "prototype": 10737418240,
+      "wasm": 5905580032,
+      "debug": 1073741824
+     }
+    }
+   ],
+   "rates": {
+    "spanMs": 1800000,
+    "freeBytesPerHour": 8589934592,
+    "profileBytesPerHour": {
+     "debug": 2147483648,
+     "prototype": 4294967296,
+     "wasm": 1073741824
+    }
+   }
+  },
+  {
+   "name": "one scan is not enough for a profile rate",
+   "nowMs": 360000000,
+   "samples": [
+    {
+     "atMs": 358200000,
+     "freeBytes": 12884901888,
+     "volumeBytes": 51539607552
+    },
+    {
+     "atMs": 360000000,
+     "freeBytes": 8589934592,
+     "volumeBytes": 51539607552,
+     "profiles": {
+      "prototype": 10737418240
+     }
+    }
+   ],
+   "rates": {
+    "spanMs": 1800000,
+    "freeBytesPerHour": 8589934592,
+    "profileBytesPerHour": {}
+   }
+  }
+ ]
+}

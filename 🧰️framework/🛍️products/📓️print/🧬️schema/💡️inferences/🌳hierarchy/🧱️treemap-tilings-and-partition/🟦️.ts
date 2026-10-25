@@ -2,10 +2,10 @@
 import { VizHierarchyNode } from "../🟦️.ts";
 
 //#region 🔖️Tiling
-/** 🧱️ A treemap tiling: it positions the children of one node inside a rectangle. */
+/** 🀄️ A treemap tiling: it positions the children of one node inside a rectangle. */
 export type VizTiling<T> = (parent: VizHierarchyNode<T>, x0: number, y0: number, x1: number, y1: number) => void;
 
-/** 🧱️ `dice`: children side by side across the width. */
+/** 🎲️ `dice`: children side by side across the width. */
 export function tilingDice<T>(parent: VizHierarchyNode<T>, x0: number, y0: number, x1: number, y1: number): void {
   const nodes = parent.children ?? [];
   const k = parent.value ? (x1 - x0) / parent.value : 0;
@@ -19,7 +19,7 @@ export function tilingDice<T>(parent: VizHierarchyNode<T>, x0: number, y0: numbe
   }
 }
 
-/** 🧱️ `slice`: children stacked down the height. */
+/** 🍕️ `slice`: children stacked down the height. */
 export function tilingSlice<T>(parent: VizHierarchyNode<T>, x0: number, y0: number, x1: number, y1: number): void {
   const nodes = parent.children ?? [];
   const k = parent.value ? (y1 - y0) / parent.value : 0;
@@ -33,7 +33,7 @@ export function tilingSlice<T>(parent: VizHierarchyNode<T>, x0: number, y0: numb
   }
 }
 
-/** 🧱️ `slice-dice`: alternating by depth. */
+/** 🔪️ `slice-dice`: alternating by depth. */
 export function tilingSliceDice<T>(parent: VizHierarchyNode<T>, x0: number, y0: number, x1: number, y1: number): void {
   if (parent.depth & 1) tilingSlice(parent, x0, y0, x1, y1);
   else tilingDice(parent, x0, y0, x1, y1);
@@ -96,14 +96,14 @@ function squarifyRatio<T>(ratio: number, parent: VizHierarchyNode<T>, x0In: numb
   return rows;
 }
 
-/** 🧱️ `squarify`: rows chosen to keep every rectangle as close to the golden ratio as possible. */
+/** 🔲️ `squarify`: rows chosen to keep every rectangle as close to the golden ratio as possible. */
 export function tilingSquarify<T>(parent: VizHierarchyNode<T>, x0: number, y0: number, x1: number, y1: number): void {
   squarifyRatio(PHI, parent, x0, y0, x1, y1);
 }
 
 const RESQUARIFY_ROWS = new WeakMap<object, SquarifyRow<unknown>[]>();
 
-/** 🧱️ `resquarify`: squarify that reuses the row structure of the previous pass. */
+/** 🔁️ `resquarify`: squarify that reuses the row structure of the previous pass. */
 export function tilingResquarify<T>(parent: VizHierarchyNode<T>, x0: number, y0: number, x1: number, y1: number): void {
   const cached = RESQUARIFY_ROWS.get(parent as unknown as object) as SquarifyRow<T>[] | undefined;
   if (cached !== undefined && cached.length > 0 && cached[0]!.ratio === PHI) {
@@ -132,7 +132,7 @@ export function tilingResquarify<T>(parent: VizHierarchyNode<T>, x0: number, y0:
   RESQUARIFY_ROWS.set(parent as unknown as object, rows as SquarifyRow<unknown>[]);
 }
 
-/** 🧱️ `binary`: recursive halving by cumulative value, the balanced-partition tiling. */
+/** ⚖️ `binary`: recursive halving by cumulative value, the balanced-partition tiling. */
 export function tilingBinary<T>(parent: VizHierarchyNode<T>, x0: number, y0: number, x1: number, y1: number): void {
   const nodes = parent.children ?? [];
   const n = nodes.length;
@@ -173,7 +173,7 @@ export function tilingBinary<T>(parent: VizHierarchyNode<T>, x0: number, y0: num
   partition(0, n, parent.value ?? 0, x0, y0, x1, y1);
 }
 
-/** 🧱️ Resolves a tiling name from the grammar onto its implementation. */
+/** 🔎️ Resolves a tiling name from the grammar onto its implementation. */
 export function vizTiling<T>(name: string): VizTiling<T> {
   switch (name) {
     case "slice":
@@ -193,7 +193,7 @@ export function vizTiling<T>(name: string): VizTiling<T> {
 
 //#endregion 🔖️Tiling
 //#region 🔖️Treemap
-/** 🧱️ Options of `\SemioVizLayout{treemap}`. */
+/** ⚙️ Options of `\SemioVizLayout{treemap}`. */
 export type VizTreemapOptions<T> = {
   readonly size?: readonly [number, number];
   readonly tile?: string | VizTiling<T>;
@@ -213,7 +213,7 @@ function roundNode<T>(node: VizHierarchyNode<T>): void {
   node.y1 = Math.round(node.y1);
 }
 
-/** 🧱️ The treemap layout: nested rectangles proportional to `value`. */
+/** 🗺️ The treemap layout: nested rectangles proportional to `value`. */
 export function vizTreemap<T>(root: VizHierarchyNode<T>, options: VizTreemapOptions<T> = {}): VizHierarchyNode<T> {
   const tile = typeof options.tile === "function" ? options.tile : vizTiling<T>(typeof options.tile === "string" ? options.tile : "squarify");
   const [dx, dy] = options.size ?? [1, 1];

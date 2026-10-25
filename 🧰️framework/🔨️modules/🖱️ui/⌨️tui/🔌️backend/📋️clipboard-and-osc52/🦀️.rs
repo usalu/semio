@@ -1,4 +1,4 @@
-//! 📋️ Clipboard and osc52: the backend error, the clipboard trait and results, the base64 and osc52 copy sequences, the native copy and paste workers, the host and memory clipboards and the osc52 payload check. See [`super`].
+//! 📌️ Clipboard and osc52: the backend error, the clipboard trait and results, the base64 and osc52 copy sequences, the native copy and paste workers, the host and memory clipboards and the osc52 payload check. See [`super`].
 
 use super::*;
 

@@ -167,6 +167,10 @@
     "generate": {
       "metadata": {
         "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
           "sourceInputObservation": "freshness"
         }
       },

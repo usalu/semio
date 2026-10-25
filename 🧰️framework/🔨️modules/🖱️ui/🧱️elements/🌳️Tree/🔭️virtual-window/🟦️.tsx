@@ -31,17 +31,17 @@ export function treeWindowRowExtentPx(extent: TreeWindowRowExtent): number {
   }
 }
 
-/** 📏️ Every declared closed-row geometry token — the one runtime list a renderer validates a DOM or wire token against before pricing rows with {@link treeWindowRowExtentPx}. A token absent from this list has no pitch, so the container's whole geometry would be `NaN`. */
+/** 🪜️ Every declared closed-row geometry token — the one runtime list a renderer validates a DOM or wire token against before pricing rows with {@link treeWindowRowExtentPx}. A token absent from this list has no pitch, so the container's whole geometry would be `NaN`. */
 export const TREE_WINDOW_ROW_EXTENTS = ["standard", "compactText", "compactSmallControl", "compactControl"] as const satisfies readonly TreeWindowRowExtent[];
 
-/** 🪟️ Rows requested beyond each edge of the viewport, so a scroll of up to this many rows paints from what is already materialised. */
+/** 🔭️ Rows requested beyond each edge of the viewport, so a scroll of up to this many rows paints from what is already materialised. */
 export const TREE_WINDOW_OVERSCAN_ROWS = 8;
 
-/** 🪟️ Hard ceiling on one window request — the guest's `UI_BUILT_CHILDREN_MAX`/`UI_DOCUMENT_NODES` fan-out of one child list. */
+/** 🏔️ Hard ceiling on one window request — the guest's `UI_BUILT_CHILDREN_MAX`/`UI_DOCUMENT_NODES` fan-out of one child list. */
 export const TREE_WINDOW_ROWS_MAX = 128;
 
 /**
- * 🪟️ The nodes ALL windowed containers of one panel body may spend together, and the ONE cost model both
+ * 💰️ The nodes ALL windowed containers of one panel body may spend together, and the ONE cost model both
  * sides price a body with: **every container costs `1 + rows`** — its own container node plus the rows it
  * materialises — summed over every windowed container in the body, nested ones included, each counted once.
  *
@@ -69,7 +69,7 @@ export interface TreeWindowRowMeasure {
   readonly top: number;
 }
 
-/** 📐️ One windowed container as the DOM measured it: its authored key, its window, and the full virtual extent (`top`/`height` cover spacers, rows and any expanded nested content); `rows` are its own materialised rows' real tops, ascending, when the observer could read them. */
+/** 📦️ One windowed container as the DOM measured it: its authored key, its window, and the full virtual extent (`top`/`height` cover spacers, rows and any expanded nested content); `rows` are its own materialised rows' real tops, ascending, when the observer could read them. */
 export interface TreeWindowContainerMeasure {
   readonly key: string;
   readonly total: number;
@@ -81,14 +81,14 @@ export interface TreeWindowContainerMeasure {
   readonly rows?: readonly TreeWindowRowMeasure[];
 }
 
-/** 🪟️ One container's next window: materialise `rows` entries starting at `offset`. */
+/** 📬️ One container's next window: materialise `rows` entries starting at `offset`. */
 export interface TreeWindowRequest {
   readonly key: string;
   readonly offset: number;
   readonly rows: number;
 }
 
-/** 📐️ What one on-screen container contributes to the viewport rule: the rows of it the viewport actually covers, where inside its child list they start, and how far its centre sits from the viewport's — the order a body-wide budget trims in. */
+/** 🎦️ What one on-screen container contributes to the viewport rule: the rows of it the viewport actually covers, where inside its child list they start, and how far its centre sits from the viewport's — the order a body-wide budget trims in. */
 export interface TreeWindowVisibleRows {
   readonly total: number;
   readonly visibleRows: number;
@@ -97,7 +97,7 @@ export interface TreeWindowVisibleRows {
 }
 
 /**
- * 📐️ Maps a pixel position onto the index of the child row of `container` drawn there.
+ * 🎯️ Maps a pixel position onto the index of the child row of `container` drawn there.
  *
  * 🧯️ Not `floor(y / rowHeightPx)`: a container's own rows are NOT all one row tall. A materialised row can
  * itself be an open windowed group rendering its whole subtree, so every row after it sits at a pixel offset
@@ -131,7 +131,7 @@ function treeWindowRowIndexAt(container: TreeWindowContainerMeasure, y: number, 
 }
 
 /**
- * 📐️ Measures every container against the viewport once, so the request rule and the body-wide cap read the
+ * 🔬️ Measures every container against the viewport once, so the request rule and the body-wide cap read the
  * SAME geometry instead of each deriving its own. A container that does not overlap the viewport at all is
  * absent from the map — it is dropped entirely (no request, so a scrolled-away branch keeps whatever it last
  * materialised instead of churning). `visibleRows` is counted in the container's OWN child rows
@@ -161,14 +161,14 @@ export function treeWindowVisibleRowsForViewport(containers: readonly TreeWindow
   return visible;
 }
 
-/** 🪟️ One container's window at an EXACT row count: the slice starts `overscan` rows before the first visible one and always ends inside `total`. */
+/** 📍️ One container's window at an EXACT row count: the slice starts `overscan` rows before the first visible one and always ends inside `total`. */
 function treeWindowRequestAtRows(key: string, metrics: TreeWindowVisibleRows, rows: number, overscan: number): TreeWindowRequest {
   const bounded = Math.max(1, Math.min(Math.floor(rows), metrics.total));
   return { key, offset: Math.min(Math.max(0, metrics.firstVisibleRow - Math.max(0, overscan)), metrics.total - bounded), rows: bounded };
 }
 
 /**
- * 🪟️ The windows the given viewport wants, for every container that intersects it — the ONE pure rule both the
+ * 👀️ The windows the given viewport wants, for every container that intersects it — the ONE pure rule both the
  * React observer and its tests read. Off-screen containers are dropped entirely (no request, so a scrolled-away
  * branch keeps whatever it last materialised instead of churning). `offset` is the first visible row less the
  * overscan, clamped so the window always ends inside `total`; `rows` is the visible run plus one overscan per
@@ -194,7 +194,7 @@ export function treeWindowRequestsForViewport(
 }
 
 /**
- * 🪟️ Fits the WHOLE body's request inside {@link TREE_WINDOW_BODY_NODE_BUDGET}, in the guest's own cost model:
+ * ✂️ Fits the WHOLE body's request inside {@link TREE_WINDOW_BODY_NODE_BUDGET}, in the guest's own cost model:
  * every container in the request costs `1 + rows` — its own node plus the rows it materialises — so a request
  * that fits here is a request the guest can answer in full, and the host never asks for rows it will silently
  * not be given (📓️s3-review-streaming-loop.md §1).
@@ -247,7 +247,7 @@ export function capTreeWindowRequests(requests: readonly TreeWindowRequest[], co
 }
 
 /**
- * 🪟️ Which entry of the child list the `position`-th RENDERED row of a windowed container is —
+ * 📇️ Which entry of the child list the `position`-th RENDERED row of a windowed container is —
  * `undefined` for an unwindowed container, whose rows carry no index and are never measured as rows.
  * A `direction === "up"` tree renders the slice reversed, so the indices count back from its end.
  **/
@@ -267,7 +267,7 @@ export function treeWindowRowAriaAttributes(windowRowIndex: number | undefined, 
   return { "aria-posinset": position, "aria-setsize": Math.max(position, Math.floor(windowRowTotal)) };
 }
 
-/** 🪟️ Spacer row counts for a container that materialised `materialisedCount` rows of {@link TreeDataWindow}. */
+/** 🕳️ Spacer row counts for a container that materialised `materialisedCount` rows of {@link TreeDataWindow}. */
 export function treeWindowSpacerRows(childWindow: TreeDataWindow | undefined, materialisedCount: number): { readonly leading: number; readonly trailing: number } {
   if (!childWindow) return { leading: 0, trailing: 0 };
   const total = Math.max(0, Math.floor(childWindow.total));
@@ -276,7 +276,7 @@ export function treeWindowSpacerRows(childWindow: TreeDataWindow | undefined, ma
 }
 
 /**
- * 🪟️ Joins one windowed container's `windowKey` onto its enclosing windowed containers' — U+241F SYMBOL FOR
+ * ⛓️ Joins one windowed container's `windowKey` onto its enclosing windowed containers' — U+241F SYMBOL FOR
  * UNIT SEPARATOR: the PRINTABLE glyph, not the C0 control character it depicts.
  *
  * 🧯️ The control character itself (U+001F) is what a separator is semantically for, and it does not work
@@ -300,7 +300,7 @@ export function treeWindowSpacerRows(childWindow: TreeDataWindow | undefined, ma
  **/
 export const TREE_WINDOW_PATH_SEPARATOR = "␟";
 
-/** 🪟️ One windowed container's path: its enclosing windowed containers' keys, outermost first, then its own. A top-level section's path IS its key, so a flat body is unchanged. `undefined` for an unwindowed container, which has no window identity at all. */
+/** 🛤️ One windowed container's path: its enclosing windowed containers' keys, outermost first, then its own. A top-level section's path IS its key, so a flat body is unchanged. `undefined` for an unwindowed container, which has no window identity at all. */
 export function treeWindowPathOf(parentWindowPath: string | undefined, windowKey: string | undefined): string | undefined {
   if (windowKey === undefined || windowKey.length === 0) return undefined;
   return parentWindowPath ? `${parentWindowPath}${TREE_WINDOW_PATH_SEPARATOR}${windowKey}` : windowKey;
@@ -316,7 +316,7 @@ export interface TreeWindowDomAttributes {
   readonly "data-tree-window-row-extent": TreeWindowRowExtent;
 }
 
-/** 📮️ Builds {@link TreeWindowDomAttributes} for a windowed container; `undefined` for an unwindowed one (no attributes, no spacers). `-key` stays the AUTHORED node key (and the pick target id); `-path` is the window's identity — what the host keys its state by and sends back on the wire. */
+/** 🏷️ Builds {@link TreeWindowDomAttributes} for a windowed container; `undefined` for an unwindowed one (no attributes, no spacers). `-key` stays the AUTHORED node key (and the pick target id); `-path` is the window's identity — what the host keys its state by and sends back on the wire. */
 export function treeWindowDomAttributes(childWindow: TreeDataWindow | undefined, materialisedCount: number, windowKey: string | undefined, windowPath?: string): TreeWindowDomAttributes | undefined {
   if (!childWindow) return undefined;
   const total = Math.max(0, Math.floor(childWindow.total));
@@ -333,7 +333,7 @@ export function treeWindowDomAttributes(childWindow: TreeDataWindow | undefined,
 }
 
 /**
- * 🪟️ The blank extent standing in for `rows` unmaterialised rows at one edge of a window. A plain block inside
+ * 🖌️ The blank extent standing in for `rows` unmaterialised rows at one edge of a window. A plain block inside
  * the branch content — no {@link TreeAlignedRow}, so it claims no guide gutter and the branch's own indentation
  * lines paint straight through it — sized at exactly the row pitch so the rows below keep their real index.
  * Zero rows render nothing at all.

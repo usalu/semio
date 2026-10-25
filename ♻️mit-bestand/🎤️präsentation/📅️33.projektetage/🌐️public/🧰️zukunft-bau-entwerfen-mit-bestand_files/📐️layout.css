@@ -5,9 +5,7 @@
   font-weight: 300;
   src:
     local("Merriweather Light"),
-    local("Merriweather-Light"),
-    url(../Fonts/merriweather-all-300.woff2) format("woff2"),
-    url(../Fonts/merriweather-all-300.woff) format("woff");
+    local("Merriweather-Light");
 }
 @font-face {
   font-family: "Merriweather";
@@ -16,9 +14,7 @@
   font-weight: 300;
   src:
     local("Merriweather Light Italic"),
-    local("Merriweather-LightItalic"),
-    url(../Fonts/merriweather-all-300-italic.woff2) format("woff2"),
-    url(../Fonts/merriweather-all-300-italic.woff) format("woff");
+    local("Merriweather-LightItalic");
 }
 @font-face {
   font-family: "Merriweather";
@@ -27,9 +23,7 @@
   font-weight: 400;
   src:
     local("Merriweather Regular"),
-    local("Merriweather-Regular"),
-    url(../Fonts/merriweather-all-400.woff2) format("woff2"),
-    url(../Fonts/merriweather-all-400.woff) format("woff");
+    local("Merriweather-Regular");
 }
 @font-face {
   font-family: "Merriweather";
@@ -38,9 +32,7 @@
   font-weight: 400;
   src:
     local("Merriweather Italic"),
-    local("Merriweather-Italic"),
-    url(../Fonts/merriweather-all-400-italic.woff2) format("woff2"),
-    url(../Fonts/merriweather-all-400-italic.woff) format("woff");
+    local("Merriweather-Italic");
 }
 @font-face {
   font-family: "Merriweather";
@@ -49,9 +41,7 @@
   font-weight: 700;
   src:
     local("Merriweather Bold"),
-    local("Merriweather-Bold"),
-    url(../Fonts/merriweather-all-700.woff2) format("woff2"),
-    url(../Fonts/merriweather-all-700.woff) format("woff");
+    local("Merriweather-Bold");
 }
 @font-face {
   font-family: "Merriweather";
@@ -60,9 +50,7 @@
   font-weight: 700;
   src:
     local("Merriweather Bold Italic"),
-    local("Merriweather-BoldItalic"),
-    url(../Fonts/merriweather-all-700-italic.woff2) format("woff2"),
-    url(../Fonts/merriweather-all-700-italic.woff) format("woff");
+    local("Merriweather-BoldItalic");
 }
 @font-face {
   font-family: "Merriweather";
@@ -71,9 +59,7 @@
   font-weight: 900;
   src:
     local("Merriweather Black"),
-    local("Merriweather-Black"),
-    url(../Fonts/merriweather-all-900.woff2) format("woff2"),
-    url(../Fonts/merriweather-all-900.woff) format("woff");
+    local("Merriweather-Black");
 }
 @font-face {
   font-family: "Merriweather";
@@ -82,140 +68,9 @@
   font-weight: 900;
   src:
     local("Merriweather Black Italic"),
-    local("Merriweather-BlackItalic"),
-    url(../Fonts/merriweather-all-900-italic.woff2) format("woff2"),
-    url(../Fonts/merriweather-all-900-italic.woff) format("woff");
+    local("Merriweather-BlackItalic");
 }
-@font-face {
-  font-family: "Open Sans";
-  font-weight: 300;
-  font-style: normal;
-  src:
-    url(../Fonts/OpenSans-Light.woff2) format("woff2"),
-    url(../Fonts/OpenSans-Light.woff) format("woff"),
-    url(../Fonts/OpenSans-Light.ttf) format("truetype"),
-    url(../Fonts/OpenSans-Light.svg#OpenSansLight) format("svg");
-}
-@font-face {
-  font-family: "Open Sans";
-  font-weight: 300;
-  font-style: italic;
-  src:
-    url(../Fonts/OpenSans-LightItalic.woff2) format("woff2"),
-    url(../Fonts/OpenSans-LightItalic.woff) format("woff"),
-    url(../Fonts/OpenSans-LightItalic.ttf) format("truetype"),
-    url(../Fonts/OpenSans-LightItalic.svg#OpenSansLightItalic) format("svg");
-}
-@font-face {
-  font-family: "Open Sans";
-  font-weight: normal;
-  font-style: normal;
-  src:
-    url(../Fonts/OpenSans-Regular.woff2) format("woff2"),
-    url(../Fonts/OpenSans-Regular.woff) format("woff"),
-    url(../Fonts/OpenSans-Regular.ttf) format("truetype"),
-    url(../Fonts/OpenSans-Regular.svg#OpenSansRegular) format("svg");
-}
-@font-face {
-  font-family: "Open Sans";
-  font-weight: normal;
-  font-style: italic;
-  src:
-    url(../Fonts/OpenSans-Italic.woff2) format("woff2"),
-    url(../Fonts/OpenSans-Italic.woff) format("woff"),
-    url(../Fonts/OpenSans-Italic.ttf) format("truetype"),
-    url(../Fonts/OpenSans-Italic.svg#OpenSansItalic) format("svg");
-}
-@font-face {
-  font-family: "Open Sans";
-  font-weight: 600;
-  font-style: normal;
-  src:
-    url(../Fonts/OpenSans-Semibold.woff2) format("woff2"),
-    url(../Fonts/OpenSans-Semibold.woff) format("woff"),
-    url(../Fonts/OpenSans-Semibold.ttf) format("truetype"),
-    url(../Fonts/OpenSans-Semibold.svg#OpenSansSemibold) format("svg");
-}
-@font-face {
-  font-family: "Open Sans";
-  font-weight: 600;
-  font-style: italic;
-  src:
-    url(../Fonts/OpenSans-SemiboldItalic.woff2) format("woff2"),
-    url(../Fonts/OpenSans-SemiboldItalic.woff) format("woff"),
-    url(../Fonts/OpenSans-SemiboldItalic.ttf) format("truetype"),
-    url(../Fonts/OpenSans-SemiboldItalic.svg#OpenSansSemiboldItalic) format("svg");
-}
-@font-face {
-  font-family: "Open Sans";
-  font-weight: bold;
-  font-style: normal;
-  src:
-    url(../Fonts/OpenSans-Bold.woff2) format("woff2"),
-    url(../Fonts/OpenSans-Bold.woff) format("woff"),
-    url(../Fonts/OpenSans-Bold.ttf) format("truetype"),
-    url(../Fonts/OpenSans-Bold.svg#OpenSansBold) format("svg");
-}
-@font-face {
-  font-family: "Open Sans";
-  font-weight: bold;
-  font-style: italic;
-  src:
-    url(../Fonts/OpenSans-BoldItalic.woff2) format("woff2"),
-    url(../Fonts/OpenSans-BoldItalic.woff) format("woff"),
-    url(../Fonts/OpenSans-BoldItalic.ttf) format("truetype"),
-    url(../Fonts/OpenSans-BoldItalic.svg#OpenSansBoldItalic) format("svg");
-}
-@font-face {
-  font-family: "Open Sans";
-  font-weight: 800;
-  font-style: normal;
-  src:
-    url(../Fonts/OpenSans-ExtraBold.woff2) format("woff2"),
-    url(../Fonts/OpenSans-ExtraBold.woff) format("woff"),
-    url(../Fonts/OpenSans-ExtraBold.ttf) format("truetype"),
-    url(../Fonts/OpenSans-ExtraBold.svg#OpenSansExtrabold) format("svg");
-}
-@font-face {
-  font-family: "Open Sans";
-  font-weight: 800;
-  font-style: italic;
-  src:
-    url(../Fonts/OpenSans-ExtraBoldItalic.woff2) format("woff2"),
-    url(../Fonts/OpenSans-ExtraBoldItalic.woff) format("woff"),
-    url(../Fonts/OpenSans-ExtraBoldItalic.ttf) format("truetype"),
-    url(../Fonts/OpenSans-ExtraBoldItalic.svg#OpenSansExtraboldItalic) format("svg");
-}
-@font-face {
-  font-family: "Open Sans Condensed";
-  font-weight: 300;
-  font-style: normal;
-  src:
-    url(../Fonts/OpenSans-CondensedLight.woff2) format("woff2"),
-    url(../Fonts/OpenSans-CondensedLight.woff) format("woff"),
-    url(../Fonts/OpenSans-CondensedLight.ttf) format("truetype"),
-    url(../Fonts/OpenSans-CondensedLight.svg#OpenSansCondensedLight) format("svg");
-}
-@font-face {
-  font-family: "Open Sans Condensed";
-  font-weight: 300;
-  font-style: italic;
-  src:
-    url(../Fonts/OpenSans-CondensedLightItalic.woff2) format("woff2"),
-    url(../Fonts/OpenSans-CondensedLightItalic.woff) format("woff"),
-    url(../Fonts/OpenSans-CondensedLightItalic.ttf) format("truetype"),
-    url(../Fonts/OpenSans-CondensedLightItalic.svg#OpenSansCondensedLightItalic) format("svg");
-}
-@font-face {
-  font-family: "Open Sans Condensed";
-  font-weight: 700;
-  font-style: normal;
-  src:
-    url(../Fonts/OpenSans-CondensedBold.woff2) format("woff2"),
-    url(../Fonts/OpenSans-CondensedBold.woff) format("woff"),
-    url(../Fonts/OpenSans-CondensedBold.ttf) format("truetype"),
-    url(../Fonts/OpenSans-CondensedBold.svg#OpenSansCondensedBold) format("svg");
-} /*! Flickity v3.0.0
+ /*! Flickity v3.0.0
 https://flickity.metafizzy.co
 ---------------------------------------------- */
 .flickity-enabled {
@@ -11948,18 +11803,6 @@ fieldset:disabled .btn {
   background-repeat: repeat-x;
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='rgb(81.8, 197.2666666667, 255)', endColorstr='rgb(58.4099072165, 188.0633642612, 252.8900927835)',GradientType=0);
   opacity: 1;
-}
-@font-face {
-  font-family: "icomoon";
-  src: url(../Fonts/icomoon.eot);
-  src:
-    url(../Fonts/icomoon.eot#iefix) format("embedded-opentype"),
-    url(../Fonts/icomoon.ttf) format("truetype"),
-    url(../Fonts/icomoon.woff) format("woff"),
-    url(../Fonts/ico🔣️moon.svg#icomoon) format("svg");
-  font-weight: normal;
-  font-style: normal;
-  font-display: block;
 }
 [class^="icon-"],
 [class*=" icon-"] {

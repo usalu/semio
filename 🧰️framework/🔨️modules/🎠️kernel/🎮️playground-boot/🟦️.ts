@@ -1,4 +1,4 @@
-/** 🎮️ Playground resolution: the registry id and default app of a playground, the boot planner and the host config.
+/** 🔌️ Playground resolution: the registry id and default app of a playground, the boot planner and the host config.
  *
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
@@ -19,7 +19,7 @@ export function resolvePluginRegistryId(catalog: PluginCatalog, playgroundPlugin
   return findPlaygroundVariant(catalog, playgroundPluginId)?.pluginId ?? playgroundPluginId;
 }
 
-/** 🎯️ Resolves a playground filter/alias to the app id that should be instantiated by default within its plugin's manifest. */
+/** 🏠️ Resolves a playground filter/alias to the app id that should be instantiated by default within its plugin's manifest. */
 export function resolvePlaygroundDefaultAppId(catalog: PluginCatalog, playgroundPluginId: string): string | undefined {
   return findPlaygroundVariant(catalog, playgroundPluginId)?.app;
 }
@@ -134,7 +134,7 @@ export class PlaygroundBootPlanner {
   }
 }
 
-/** 🎮️ Resolves the wasm plugin list and default app for one playground variant; when a caller injects
+/** 🚀️ Resolves the wasm plugin list and default app for one playground variant; when a caller injects
  * session rows for a different variant, rebuilds from the authoritative {@link PluginCatalog}. One-turn drive of
  * {@link PlaygroundBootPlanner} for callers that own no interactive budget. */
 export function resolvePlaygroundBoot(catalog: PluginCatalog, variant: string, session?: PlaygroundBootSession): PlaygroundBoot {
@@ -142,7 +142,7 @@ export function resolvePlaygroundBoot(catalog: PluginCatalog, variant: string, s
 }
 
 //#region 🏠️🧳️PluginHostConfig
-/** 🎯️ Resolves a playground filter/alias to its plugin's host config, or `undefined` when that program
+/** 🎛️ Resolves a playground filter/alias to its plugin's host config, or `undefined` when that program
  * doesn't offer a host-style multi-app experience. A playground row that names one `app` boots THAT app
  * standalone — the host crate's own artifact apps (`🪐️space`'s Home and Space) each have such a row, and
  * booting one of them is a single-app session, never the launcher. */

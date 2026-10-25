@@ -43,7 +43,6 @@ function portablePolicy(): { forbidden: readonly Rule[]; options: { enhancedReso
   const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "dependency-policy-")));
-  const boundary = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs";
   try {
     writePolicyAuthority(root);
     const members = policyOwners.map((row) => row.owner);
@@ -72,7 +71,7 @@ function render(edge: Edge, from: string): { specifier: string; source: string }
   return { specifier, source: sources[edge.syntax] };
 }
 
-/** 🧭️ Canonical package authority is unambiguous before selector or alias maps are constructed. */
+/** 🚧️ Canonical package authority is unambiguous before selector or alias maps are constructed. */
 test("policy construction rejects ambiguous names and divergent owner declarations",async()=>{
  const build=createRequire(import.meta.url)(join(library,"🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs")).buildDependencyDirectionPolicy;
  const taxonomy=JSON.parse(readFileSync(join(library,"🔣️taxonomy.json"),"utf8"));
@@ -369,7 +368,6 @@ test("portable removability cases agree with actual boundary policy loading", as
   const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "dependency-removability-")));
-  const boundary = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs";
   const owner = "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript";
   try {
     const oracleRows: { entry: string; policy: { forbidden: readonly Rule[] } }[] = [];
@@ -472,7 +470,7 @@ test("authored schema type declarations accept the portable wire values", () => 
 }, 45_000);
 
 
-/** 🧪️ Command-only manifests retain exact private ownership and independently parsed registrations. */
+/** 🏗️ Command-only manifests retain exact private ownership and independently parsed registrations. */
 function assertInfrastructure(row:InfrastructureCase):void {
  const manifest=row.manifest;
  expect(manifest.name,row.id).toBe(row.name);expect(manifest.private,row.id).toBe(true);
@@ -493,7 +491,7 @@ test("private owner infrastructure exposes truthful registered commands",()=>{
 /** 🗑️ Specific tree deletion preserves generic policy loading and all package mechanisms. */
 test("synthetic owner policy accepts deletion and rejects malformed present declarations",()=>{
  const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});
- const root=realpathSync(mkdtempSync(join(output,"dependency-specific-deletion-"))),boundary="🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs";
+ const root=realpathSync(mkdtempSync(join(output,"dependency-specific-deletion-")));
  try {
   for(const [index,row] of fixture.policyCases.entries()){
    const cwd=join(root,String(index));writePolicyAuthority(cwd);
@@ -557,7 +555,7 @@ test("current public owner policy replaces obsolete generated registry storage a
   expect(config.forbidden.some(rule=>rule.name==="no-generated-edits-upstream")).toBe(false);
 });
 
-/** 🧭️ Plugin consumers use the strict neutral SDK without executable source exemptions. */
+/** ⚙️ Plugin consumers use the strict neutral SDK without executable source exemptions. */
 test("plugin public SDK policy is strict for runtime and executable owners",()=>{
   const rule=config.forbidden.find(rule=>rule.name==="plugins-framework-sdk-only");
   expect(rule?.severity).toBe("error");

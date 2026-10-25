@@ -127,7 +127,7 @@ pub fn semio_model_mutation_inverse(mutation: &SemioModelMutation, base: &SemioM
 
 /// ↩️ The exact undo of a relative placement edit: one absolute `set-element` placement per addressed element carrying its
 /// BASE placement — never a negated motion that would accumulate float error. Nothing for an identity or invalid motion.
-pub fn relative_placement_inverse(targets: &[String], inert: bool, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {
+pub fn relative_placement_inverse<Op: From<set_element::SetElement>>(targets: &[String], inert: bool, base: &SemioModelSnapshot) -> Vec<Op> {
     if inert {
         return Vec::new();
     }
@@ -136,7 +136,7 @@ pub fn relative_placement_inverse(targets: &[String], inert: bool, base: &SemioM
         .iter()
         .filter(|id| seen.insert(id.as_str()))
         .filter_map(|id| base.elements.iter().find(|element| element.id == *id))
-        .map(|element| SemioModelMutation::SetElement(set_element::SetElement { id: element.id.clone(), class: None, placement: Some(element.placement), geometry: None, spatial_id: None, psets: None }))
+        .map(|element| Op::from(set_element::SetElement { id: element.id.clone(), class: None, placement: Some(element.placement), geometry: None, spatial_id: None, psets: None }))
         .collect()
 }
 

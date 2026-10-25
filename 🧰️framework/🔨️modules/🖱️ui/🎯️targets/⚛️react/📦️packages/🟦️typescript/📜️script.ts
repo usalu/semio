@@ -6,7 +6,7 @@ import { receiveScriptProcessInvocation } from "../../../../../🏃️process/�
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { cmdBudgetMs } from "../../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { runOwnedCommand } from "../../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { repoToolCacheEnv, runOwnedCommand } from "../../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitestV1, readVitestPolicyV1 } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -21,8 +21,9 @@ class LintScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
-    await runVitestV1(readVitestPolicyV1(process.env,this.root), rest, "../../🧪️tests/🎚️config/🟦️.ts", process.env);
+    const { rest } = resolveTestLevel(segments, "quick");
+    const environment = repoToolCacheEnv(this.repoRoot);
+    await runVitestV1(readVitestPolicyV1(environment,this.root), rest, "../../🧪️tests/🎚️config/🟦️.ts", environment);
   }
 }
 

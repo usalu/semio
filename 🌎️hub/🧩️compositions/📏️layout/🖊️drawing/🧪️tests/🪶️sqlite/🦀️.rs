@@ -23,7 +23,7 @@ async fn sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec(
     assert!(database.table("layout_document").is_ok());
 }
 #[test]
-fn sqlite_snapshot_layout_declared_owner_capability(){crate::bind_layout_background_drawing().unwrap();let snapshot=semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();let provider=<LayoutSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().expect("Layout must publish its complete typed semantic SQLite capability");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let payload=store::io::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot));let result=original_owners::with_decoding(|native_owner|(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default()), native_owner)).unwrap();assert!(result.value.table("layout_document").is_ok());}
+fn sqlite_snapshot_layout_declared_owner_capability(){crate::bind_layout_background_drawing().unwrap();let snapshot=semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();let provider=<LayoutSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("Layout must publish its complete typed semantic SQLite capability");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let payload=store::io::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot));let result=original_owners::with_decoding(|native_owner|(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default()), native_owner)).unwrap();assert!(result.value.table("layout_document").is_ok());}
 
 fn component_fixture()->LayoutDrawingChild {
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
@@ -107,7 +107,7 @@ fn complete_fixture(word:f64,color:f32)->LayoutSnapshot{
 fn sqlite_snapshot_layout_complete_owned_fields_words_and_literals_cross_both_native_encodings(){crate::bind_layout_background_drawing().unwrap();
     use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let codec=<LayoutSnapshot as ArtifactPack>::sqlite_snapshot_codec().expect("complete Layout native capability");
+    let codec=<LayoutSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("complete Layout native capability");
     let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};
     for(index,bits)in fixture["float64Bits"].as_array().unwrap().iter().enumerate(){
         let word=u64::from_str_radix(bits.as_str().unwrap(),16).unwrap();let color=u32::from_str_radix(fixture["float32Bits"][index].as_str().unwrap(),16).unwrap();let expected=complete_fixture(f64::from_bits(word),f32::from_bits(color));

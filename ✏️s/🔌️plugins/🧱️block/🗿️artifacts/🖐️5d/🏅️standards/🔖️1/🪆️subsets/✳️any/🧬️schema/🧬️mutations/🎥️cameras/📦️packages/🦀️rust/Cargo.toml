@@ -16,8 +16,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }

@@ -44,9 +44,11 @@
       "**/📤️dist",
       "**/🗑️generated",
       "**/🔌️plugin-modules",
+      "**/🕸️bindings",
       "**/📦️packages/🦀️rust/pkg",
       "**/📦️packages/🟦️typescript/out",
       "**/📦️packages/🔷️dotnet/obj",
+      "**/📦️packages/🔷️dotnet/bin",
       "**/🎤️präsentation/📅️33.projektetage/🌐️public",
       "**/🪞️preview2-shim"
     ]
@@ -12773,7 +12775,8 @@
         "🛰️resident-windows",
         "🐚️unix-host",
         "🪟️windows-host",
-        "🛎️command"
+        "🛎️command",
+        "🏛️core"
       ],
       "source": "registry"
     },
@@ -18273,7 +18276,7 @@
     "readme-license-owner-leaves-v1": {
       "contractKind": "exact-owner-path-catalog",
       "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🏠️owner-projection-policy/🔣️.json",
-      "authorityCatalogSha256": "82d188a512e0051d2a9435715cd62d851911081b07294f81f64c287fe88e8333",
+      "authorityCatalogSha256": "3d6c1020182558c76367098fe9ec02c91fd90c675e06a29ab5ecb217d6600271",
       "currentSourceRevisions": {
         "testing-readme-owner-current": {
           "sourcePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
@@ -18285,12 +18288,12 @@
             "size": 7205
           },
           "currentPreimage": {
-            "sha256": "7e449d5e5d9e867f2f78cfecbf9d2dc45f80c90622a1fb6e388197d100069ca5",
-            "size": 15997,
+            "sha256": "557c74080164289626760edb0fba4c6a86f3ac506122d6d48cb4045eb65243f6",
+            "size": 15733,
             "mode": "0644"
           },
           "approvalPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🪪️current-source-approval/🔣️.json",
-          "approvalSha256": "0a612911ac7e8c28c2714ee17928fdbab2bf807459f52f024fcbccfa3af96f51"
+          "approvalSha256": "95acd6d4ec91f40824efd68333d190f2d7666aaaeb21861fb1878d0a71c6c397"
         },
         "devcontainer-readme-owner-current": {
           "sourcePath": ".devcontainer/README.md",
@@ -18302,12 +18305,12 @@
             "size": 14260
           },
           "currentPreimage": {
-            "sha256": "7e3e2c54d817b12463f6034c255ec04420d263cf6634dd246e02b3f6d2e8c9e2",
-            "size": 10030,
+            "sha256": "5909f4e4b53e8979d68a5051cc08f17332d749f61b4dd658cce7af05b5db8c26",
+            "size": 9947,
             "mode": "0644"
           },
           "approvalPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🪪️devcontainer-current-source-approval/🔣️.json",
-          "approvalSha256": "12c74269327e292b7317c69648a380e6c509615df4847b54eb7d5fea13635fc3"
+          "approvalSha256": "aa7f163b962af7beb65018880d44a696247652060d8f40eec40af7190073b5e3"
         }
       },
       "sourceFileKindId": "markdown",
@@ -18347,8 +18350,7 @@
         "bun-package-publisher",
         "commonmark-scratch-rust-reader",
         "markdown-relative-reference-adapter",
-        "repo-cli-dev-docs-go",
-        "vscode-package-ignore"
+        "repo-cli-dev-docs-go"
       ],
       "generatorOwnerIds": [
         "assets-build"
@@ -24740,6 +24742,53 @@
       "verification": "repo show project and bun pm",
       "expires": null
     },
+    "typescript-package-stylesheet": {
+      "pathPattern": "**/📦️packages/🟦️typescript/🎨️.css",
+      "authority": "Vite and Tailwind CSS",
+      "reason": "A package exports its stylesheet as the literal 🎨️.css leaf at its root; the leaf only wires the owner's stylesheets and never authors a rule",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "vite build resolves the package stylesheet export",
+      "expires": null
+    },
+    "typescript-site-config": {
+      "pathPattern": "**/tsconfig.site.json",
+      "authority": "TypeScript",
+      "reason": "The site build of a TypeScript package compiles under its own compiler configuration beside tsconfig.json",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "package-root",
+        "ecosystemId": "🟦️typescript"
+      },
+      "verification": "tsc --project tsconfig.site.json --showConfig",
+      "expires": null
+    },
+    "build-executors-manifest": {
+      "pathPattern": "**/📋️executors.json",
+      "authority": "Nx",
+      "reason": "Nx discovers the executors of a project from the executors manifest its package.json names, beside the project manifest",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "sibling-fixed-filename-contract",
+        "fixedFilenameContractId": "build-project-manifest"
+      },
+      "verification": "repo show project",
+      "expires": null
+    },
+    "dotnet-package-lock": {
+      "pathPattern": "**/packages.lock.json",
+      "authority": "NuGet",
+      "reason": "NuGet restore pins the resolved dependency graph of a .NET project in packages.lock.json beside its project file",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "package-root",
+        "ecosystemId": "🔷️dotnet"
+      },
+      "verification": "dotnet restore --locked-mode",
+      "expires": null
+    },
     "build-owned-typescript-config": {
       "pathPattern": "**/tsconfig.json",
       "authority": "Build Tools and TypeScript",
@@ -25198,17 +25247,6 @@
       "verification": "prettier",
       "expires": null
     },
-    "vscodeignore": {
-      "pathPattern": "**/.vscodeignore",
-      "authority": "VS Code",
-      "reason": "Extension package ignore discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "vsce package",
-      "expires": null
-    },
     "dockerignore": {
       "pathPattern": "**/.dockerignore",
       "authority": "Docker",
@@ -25597,6 +25635,17 @@
       "pathPattern": "**/🟨️.d.mts",
       "authority": "TypeScript",
       "reason": "Declaration companion of the sibling JavaScript module leaf, named by that leaf's own kind emoji",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "tsc --noEmit",
+      "expires": null
+    },
+    "javascript-commonjs-declaration": {
+      "pathPattern": "**/🟨️.d.cts",
+      "authority": "TypeScript",
+      "reason": "Declaration companion of the sibling CommonJS leaf: TypeScript pairs a declaration with its JavaScript module by stem, so it carries that leaf's own kind emoji",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "path-pattern"
@@ -27225,17 +27274,6 @@
       "verification": "repo ticket inventory",
       "expires": null
     },
-    "vscode-metadata": {
-      "pathPattern": "**/.vscode",
-      "authority": "VS Code",
-      "reason": "Workspace configuration discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "path-pattern"
-      },
-      "verification": "VS Code workspace load",
-      "expires": null
-    },
     "windsurf-metadata": {
       "pathPattern": ".windsurf",
       "authority": "Windsurf",
@@ -27382,6 +27420,13 @@
         "thin-delegation"
       ],
       "maxDelegationStatements": 4
+    },
+    "css": {
+      "analyzer": "css",
+      "allowedRoles": [
+        "declaration"
+      ],
+      "maxDelegationStatements": 64
     }
   },
   "packageBoundaryRules": {
@@ -27394,6 +27439,7 @@
       ],
       "allowedFixedContractIds": [
         "cargo-manifest",
+        "package-cargo-lock",
         "build-project-manifest",
         "root-script"
       ],
@@ -27427,7 +27473,10 @@
         "bun-package-readme",
         "bun-package-license",
         "typescript-config",
+        "typescript-package-stylesheet",
+        "typescript-site-config",
         "build-project-manifest",
+        "build-executors-manifest",
         "root-script",
         "next-environment-declaration",
         "next-typescript-config",
@@ -27446,6 +27495,21 @@
         "apps"
       ],
       "glueGrammarId": "typescript",
+      "directoryAdmissions": [
+        {
+          "form": "manifest-declared-entries",
+          "manifestContractId": "node-package-manifest",
+          "entryFields": [
+            "exports",
+            "main",
+            "types",
+            "module"
+          ]
+        },
+        {
+          "form": "fixed-contract-trees"
+        }
+      ],
       "recursive": true,
       "uncertainRole": "problem",
       "implementationRole": "problem"
@@ -27517,6 +27581,7 @@
       "entryContractIds": [],
       "allowedFixedContractIds": [
         "build-project-manifest",
+        "dotnet-package-lock",
         "root-script"
       ],
       "allowedFileKindIds": [
@@ -27552,6 +27617,14 @@
     }
   },
   "packageSourceDispositions": {
+    "typescript-package-stylesheet": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "grammarId": "css",
+      "authority": "Stylesheet import facade of the package exports without purity exemption",
+      "verification": "taxonomy fixed-source validation and vite build"
+    },
     "print-latex-semio-graph": {
       "contractKind": "fixed",
       "disposition": "adapter-source",
@@ -29367,6 +29440,13 @@
       "authority": "Declaration companion of a JavaScript module leaf without purity exemption",
       "verification": "tsc --noEmit"
     },
+    "javascript-commonjs-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Declaration companion of a CommonJS leaf without purity exemption",
+      "verification": "tsc --noEmit"
+    },
     "sql-module-declaration": {
       "contractKind": "fixed",
       "disposition": "adapter-source",
@@ -29403,11 +29483,9 @@
       "target": "@semio-tech/framework-actor-rs:typegen",
       "previewTarget": "@semio-tech/framework-actor-rs:preview-generated",
       "inputPatterns": [
-        "🧰️framework/🔨️modules/🎭️actor/**/*.rs",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧬️typegen/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🧬️typegen/🏃️execution/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📋️plan/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📤️publication/🟦️.ts",
@@ -33333,7 +33411,12 @@
         "🟢️rename-glazing": "rename-glazing-material",
         "🟣️change-gas-thickness": "change-gas-material-thickness",
         "🟤️change-gas-type": "change-gas-material-gas",
-        "🔘️rename-gas": "rename-gas-material"
+        "🔘️rename-gas": "rename-gas-material",
+        "🌡️infrared-transmittance": "change-glazing-material-infrared-transmittance",
+        "🪞️visible-back": "change-glazing-material-visible-reflectance-back",
+        "🔆️solar-back": "change-glazing-material-solar-reflectance-back",
+        "🔅️solar-front": "change-glazing-material-solar-reflectance-front",
+        "🔎️visible-front": "change-glazing-material-visible-reflectance-front"
       },
       "🏗️construction": {
         "🏗️create": "create-construction",
@@ -33510,7 +33593,11 @@
         "📈️change-tilt": "change-pv-system-tilt",
         "🧿️change-azimuth": "change-pv-system-azimuth",
         "🎖️change-module-efficiency": "change-pv-system-module-efficiency",
-        "♌️change-inverter-efficiency": "change-pv-system-inverter-efficiency"
+        "♌️change-inverter-efficiency": "change-pv-system-inverter-efficiency",
+        "🏠️change-mounting": "change-pv-system-mounting",
+        "🌡️change-temperature": "change-pv-system-temperature-coefficient",
+        "🧊️change-heat-loss": "change-pv-system-faiman-heat-loss-constant",
+        "💨️change-wind-loss": "change-pv-system-faiman-heat-loss-wind"
       },
       "🪫️battery": {
         "🪙️create": "create-battery",

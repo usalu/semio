@@ -38,7 +38,7 @@ class OwnershipScript extends BundleScript {
   }
 }
 
-/** 💰️ Runs the closed original SQLite fixed ceiling contract and selected allocator laws. */
+/** 📜️ Runs the closed original SQLite fixed ceiling contract and selected allocator laws. */
 class OriginalFixedLimitsScript extends BundleScript {
   async run(segments:string[]): Promise<void> {
     await runOriginalFixedLimitsScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);

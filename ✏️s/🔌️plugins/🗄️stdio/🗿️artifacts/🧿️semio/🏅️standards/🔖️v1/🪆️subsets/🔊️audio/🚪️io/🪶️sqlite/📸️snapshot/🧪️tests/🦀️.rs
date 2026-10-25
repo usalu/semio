@@ -24,7 +24,7 @@ fn sqlite_snapshot_semio_audio_typed_exact_subset_dialect_and_document_guard(){l
 #[test]
 fn sqlite_snapshot_semio_audio_bounded_native_text_binary_admission() {
     let snapshot=fixture();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"audio".into()};
-    let provider=<SemioAudioSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let provider=<SemioAudioSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
         semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.preflight_sqlite_snapshot_encoding(encoding,control)).unwrap();
         let database=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.to_sqlite_database(control)).unwrap();
@@ -40,7 +40,7 @@ fn sqlite_snapshot_semio_audio_bounded_native_text_binary_admission() {
 
 #[test]
 fn sqlite_snapshot_semio_audio_explicit_controlled_native_owner(){
- use store::{pack::snapshot::ArtifactPack,pack::snapshot::ArtifactDsl};let f:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=fixture();
+ use store::{snapshot::ArtifactPack,snapshot::ArtifactDsl};let f:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=fixture();
  for payload in [store::io::IoPayload::Binary(expected.encode_pack()),store::io::IoPayload::Text(expected.print_dsl())]{
   let actual=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioAudioSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert_eq!(actual.schema,expected.schema);assert_eq!(actual.sample_rate,expected.sample_rate);assert_eq!(actual.format,expected.format);assert_eq!(actual.tags,expected.tags);assert_eq!(actual.channels.len(),expected.channels.len());for(a,e)in actual.channels.iter().zip(&expected.channels){assert_eq!(a.samples.iter().map(|v|v.to_bits()).collect::<Vec<_>>(),e.samples.iter().map(|v|v.to_bits()).collect::<Vec<_>>());}
   assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioAudioSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioAudioSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:f["nativeAdmission"]["tinyBudgetBytes"].as_u64().unwrap() as usize,..SqliteDatabaseLimits::default()}), native_owner)).is_err());assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioAudioSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:2,..SqliteDatabaseLimits::default()}), native_owner)).is_err());

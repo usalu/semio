@@ -18,7 +18,7 @@ impl NativeDecodeRetirementRecipient{
     pub fn reserve(&mut self)->Result<(),ValueError>{if self.reserved||self.owner.is_some(){return Err(ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"native decode has no available explicit retirement slot"))}self.reserved=true;Ok(())}
     /// 🔓️ Settles the reserved slot with the owner its operation produced, if any.
     pub fn settle(&mut self,owner:Option<Box<dyn ErasedSnapshotRetirement>>){*self.owner=owner;self.reserved=false;}
-    /// 🪑️ Runs one operation with the slot reserved and retains whatever original owner it returns.
+    /// ▶️ Runs one operation with the slot reserved and retains whatever original owner it returns.
     pub fn with_reserved_owner<T,E:From<ValueError>>(&mut self,operation:impl FnOnce()->(Result<T,E>,Option<Box<dyn ErasedSnapshotRetirement>>))->Result<T,E>{self.reserve().map_err(E::from)?;let(result,owner)=operation();self.settle(owner);result}
 }
 impl ErasedSnapshotRetirement for NativeDecodeRetirementRecipient{

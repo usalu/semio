@@ -13,7 +13,7 @@ export const notes: string[] = [];
 
 export const timeline: string[] = [];
 
-/** 🧾️ One ndjson record, stamped with the run clock, the locale and the step. */
+/** 📮️ One ndjson record, stamped with the run clock, the locale and the step. */
 export const emit = (record: Record<string, unknown>) => appendFileSync(ndjsonPath, `${JSON.stringify({ t: Number(((Date.now() - t0) / 1000).toFixed(1)), locale: currentLocale, step: currentStep, ...record })}\n`);
 
 /** 🕰️ One timeline line, printed and kept for the markdown report. */

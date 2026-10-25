@@ -24,8 +24,7 @@ pub mod schema {
         pub mod native_binding {
             #[path = "."]
             pub mod nodes {
-                #[path="../../📸️snapshot/🧩️component/🌳️nodes/🧾️original/🦀️.rs"]
-                pub mod original;
+                pub use semio_s_artifact_stdio_semio_drawing_snapshot::schema::snapshot::native_binding::nodes::original;
             }
         }
         #[cfg(test)]

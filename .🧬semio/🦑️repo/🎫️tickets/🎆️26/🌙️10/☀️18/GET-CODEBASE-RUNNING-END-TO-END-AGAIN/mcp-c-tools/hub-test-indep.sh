@@ -1,0 +1,4 @@
+#!/bin/sh
+cd /Users/ueli/Documents/semio || exit 1
+export SEMIO_TEST_ARTIFACT_DIR="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/mcp-c/test-artifacts"
+SEMIO_SCRIPT_STALL_MS=14400000 nice -n 10 bun repo cargo --store=shared --configuration=prototype -- test --no-fail-fast --manifest-path 🌎️hub/Cargo.toml -p semio-hub-artifact-authority -p semio-hub-artifact-creation -p semio-hub-auth -p semio-hub-component-codec-laws -p semio-hub-directory -p semio-hub-directory-backend-laws -p semio-hub-directory-laws -p semio-hub-directory-neo4j -p semio-hub-directory-postgres -p semio-hub-directory-service -p semio-hub-lag-rebootstrap -p semio-hub-local-bootstrap -p semio-hub-refusal -p semio-hub-stores -p semio-hub-trusted-catalog-contract -p semio-hub-trusted-catalog-contract-laws --message-format=short

@@ -31,7 +31,7 @@ pub fn close_original_nested_step(cx:&mut StepContext<'_>,close:impl FnOnce(&mut
 pub struct SelfFundedCloseCaller{cancel:CancelToken,sequence:u64}
 impl SelfFundedCloseCaller{
  pub fn new()->Self{Self{cancel:root_cancel_token(),sequence:0}}
- /// 🎟️ Lends one context whose whole retained authority is `grant`, with unbounded fuel and deadline, and returns the body's outcome whole.
+ /// 🏛️ Lends one context whose whole retained authority is `grant`, with unbounded fuel and deadline, and returns the body's outcome whole.
  pub fn turn<T>(&mut self,grant:RetainedCloneGrant,close:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<T,OriginalTurnFailure>{
   let mut receipt=RetainedCloneProgress::default();
   let mut cx=StepContext::new(OperationId(1),Generation(1),StepBudget::new(u64::MAX,u64::MAX,grant),self.cancel.clone(),default_now_us,&mut self.sequence,&mut receipt);
@@ -40,5 +40,5 @@ impl SelfFundedCloseCaller{
 }
 impl Default for SelfFundedCloseCaller{fn default()->Self{Self::new()}}
 
-/// 🧪️ Drives one close turn over a fresh [`SelfFundedCloseCaller`].
+/// 📪️ Drives one close turn over a fresh [`SelfFundedCloseCaller`].
 pub fn close_with_self_funded_context<T>(grant:RetainedCloneGrant,close:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<T,OriginalTurnFailure>{SelfFundedCloseCaller::new().turn(grant,close)}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://repo/tests/port-layering/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "owners"],
+  "properties": {
+    "version": { "const": 1 },
+    "owners": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "owner", "forbidden", "port"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "owner": { "type": "string", "minLength": 1 },
+          "forbidden": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "port": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

@@ -8,7 +8,7 @@ import { runtimeBundleV1 } from "../../../⚙️runtime/🔬️source/🟦️.ts
 //#region 🔖️Band
 //#region 🔖️AriaOracle
 
-/** ♿️ The structural ARIA oracle as one browser module: `aria-query` (the WAI-ARIA role model: every role's supported
+/** 🔮️ The structural ARIA oracle as one browser module: `aria-query` (the WAI-ARIA role model: every role's supported
  * attributes, every `aria-*` attribute that exists) and `dom-accessibility-api` (accessible names), the third-party pair the
  * React time-travel laws run in jsdom, here bundled once per run and evaluated into the live page (CDP evaluation, so no page
  * CSP applies). */

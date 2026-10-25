@@ -1,4 +1,4 @@
-import type { PackageImplementationAdmission } from "../🧱️package-implementation-admission/🟦️.ts";
+import type { PackageDirectoryAdmission, PackageImplementationAdmission } from "../🧱️package-implementation-admission/🟦️.ts";
 /** 🗺️ Repository-wide enforcement state; version 7 has no quiet or transitional area mode. */
 /** 🧭️ `clean` is the enforced state of every production area; `exempt` names a subtree the discovery library itself skips. */
 export type AreaState = "clean" | "exempt";
@@ -12,7 +12,7 @@ export type SemanticKind = "inference" | "mutation" | "io" | "module" | "artifac
 /** 🚪️ Exact boundary direction of one I/O semantic collection. */
 export type SemanticIoDirection = "import" | "export" | "transport";
 
-/** 🧭️ Lowest legal owner of a reusable module. */
+/** 🎚️ Lowest legal owner of a reusable module. */
 export type SemanticOwnerLevel = "subset" | "standard" | "artifact" | "app" | "plugin" | "product" | "s" | "framework";
 
 /** 🗂️ Schema entry describing a recognized semantic collection directory. */
@@ -34,7 +34,7 @@ export interface SemanticMember {
   readonly module?: { readonly productionConsumers: readonly string[] };
 }
 
-/** 🏷️ Where an ecosystem's semio role marker lives: a `table` inside the package manifest, addressed dotted (`package.metadata.semio` for TOML, `metadata.semio` for JSON). */
+/** 📍️ Where an ecosystem's semio role marker lives: a `table` inside the package manifest, addressed dotted (`package.metadata.semio` for TOML, `metadata.semio` for JSON). */
 export interface EcosystemMarkerSpec {
   readonly in: "manifest";
   readonly format: "toml" | "json";
@@ -79,7 +79,7 @@ export interface SemanticDirectoryKindSpec {
   readonly parentKindIds?: readonly string[];
 }
 
-/** 🧭️ Contextual source-name rule selecting one global file kind without extension guessing. */
+/** 📕️ Contextual source-name rule selecting one global file kind without extension guessing. */
 export interface FileKindResolutionRuleSpec {
   readonly extensionChain: string;
   readonly fileKindId: string;
@@ -100,7 +100,7 @@ export interface ScopedFileKindSpec {
   readonly expires: string | null;
 }
 
-/** 🧩️ Owner-local semantic member identity loaded after structural directory kinds: exact `memberNames` always win, then the optional anchored `memberSlugPattern` admits any RGI emoji followed by a matching slug below the nearest owner scope; two pattern rows matching at the same nearest owner distance are ambiguous. */
+/** 📂️ Owner-local semantic member identity loaded after structural directory kinds: exact `memberNames` always win, then the optional anchored `memberSlugPattern` admits any RGI emoji followed by a matching slug below the nearest owner scope; two pattern rows matching at the same nearest owner distance are ambiguous. */
 export interface SemanticDirectoryMemberKindSpec {
   readonly ownerKindIds: readonly string[];
   readonly memberNames: readonly string[];
@@ -118,14 +118,14 @@ export interface SemanticProjectedMemberKindSpec {
 
 export type SemanticProjectionCaptureField = "standardVersion" | "subsetId" | "mutationId" | "scenarioId" | "commandDirectoryName";
 
-/** 🧩️ One literal or captured source segment in a projection grammar. */
+/** ➡️ One literal or captured source segment in a projection grammar. */
 export type SemanticProjectionSourceSegment =
   | Readonly<{ kindId: string; literal: string }>
   | Readonly<{ kindId: string; capture: SemanticProjectionCaptureField }>
   | Readonly<{ memberKindId: string; literal: string }>
   | Readonly<{ projectedMemberKindId: string; capture: SemanticProjectionCaptureField }>;
 
-/** 🎯️ One literal, forward-rendered, or identity-copied destination segment. */
+/** ⏩️ One literal, forward-rendered, or identity-copied destination segment. */
 export type SemanticProjectionDestinationSegment =
   | Readonly<{ kindId: string; literal: string }>
   | Readonly<{ kindId: string; render: "profile" }>
@@ -148,7 +148,7 @@ export interface SemanticDescendantDirectoryNode {
   readonly kindId: string;
 }
 
-/** 📄️ One physical-format leaf inside an exact projected bundle. */
+/** 🌿️ One physical-format leaf inside an exact projected bundle. */
 export interface SemanticDescendantKindFileNode {
   readonly pathSegments: readonly Readonly<{ kindId: string; literal: string }>[];
   readonly nodeType: "file";
@@ -172,7 +172,7 @@ export interface SemanticDescendantAlternative {
   readonly nodes: readonly SemanticDescendantNode[];
 }
 
-/** 📦️ Exact physical descendant shape and its derived deepest suffix reserve. */
+/** 💎️ Exact physical descendant shape and its derived deepest suffix reserve. */
 export interface SemanticExactDescendantContract {
   readonly rootDirectoryKindId: string;
   readonly requiredNodes: readonly SemanticDescendantNode[];
@@ -181,7 +181,7 @@ export interface SemanticExactDescendantContract {
   readonly pathBudgetReserve: Readonly<{ derivation: "longest-canonical-descendant-suffix"; utf16Units: number }>;
 }
 
-/** 📚️ A manifest-owned recursive catalog whose realized descendants are data-driven. */
+/** 📖️ A manifest-owned recursive catalog whose realized descendants are data-driven. */
 export interface SemanticCatalogDescendantContract {
   readonly contractKind: "catalog";
   readonly rootDirectoryKindId: string;
@@ -333,7 +333,7 @@ export interface SemanticOwnedInputFileSnapshot extends CurrentSourceApprovalSna
   readonly size: number;
 }
 
-/** 🔏️ A selected source tuple and its revision digest without altering historical catalog rows. */
+/** ☑️ A selected source tuple and its revision digest without altering historical catalog rows. */
 export interface CurrentSourceApprovalResult {
   readonly disposition: "none" | "catalog" | "revised" | "problem";
   readonly sourcePath: string | null;
@@ -343,7 +343,7 @@ export interface CurrentSourceApprovalResult {
   readonly problems: readonly string[];
 }
 
-/** 📚️ One digest-locked exact owner-file catalog with no basename-wide inference. */
+/** 🔐️ One digest-locked exact owner-file catalog with no basename-wide inference. */
 export interface SemanticExactOwnedFileProjectionContract {
   readonly contractKind: "exact-owner-path-catalog";
   readonly authorityCatalogPath: string;
@@ -363,7 +363,7 @@ export interface SemanticExactOwnedFileProjectionContract {
   readonly rationaleRule: "readme-license-owner-projection-v1";
 }
 
-/** 📄️ One primary physical leaf governed directly by its semantic owner. */
+/** 🧬️ One primary physical leaf governed directly by its semantic owner. */
 export interface SemanticPrimaryOwnedFileProjectionContract {
   readonly contractKind: "owner-primary-file";
   readonly ownerFixedDirectoryContractId: string;
@@ -405,7 +405,7 @@ export interface SemanticPackageProjectionContract {
   readonly rationaleRule: "nested-cargo-package-projection-v1";
 }
 
-/** 🔒️ Exact manifest-user coordinates in authoritative dependency approval state. */
+/** ⛓️ Exact manifest-user coordinates in authoritative dependency approval state. */
 export interface SemanticPolicyStateCoordinateContract {
   readonly contractKind: "dependency-freeze-user-coordinates";
   readonly statePath: "🔒️dependencies.json";
@@ -456,7 +456,7 @@ export interface MutationCatalogProjectionContractIds {
   readonly fixtureCoverage: MutationFixtureCoverageContract;
 }
 
-/** 🧭️ Tagged scope predicate for an exact externally-authoritative path contract. */
+/** 💊️ Tagged scope predicate for an exact externally-authoritative path contract. */
 export type FixedContractScope =
   | { readonly kind: "exact-path"; readonly path: string }
   | { readonly kind: "repository-root" }
@@ -468,7 +468,7 @@ export type FixedContractScope =
   | { readonly kind: "sibling-fixed-filename-contract"; readonly fixedFilenameContractId: string }
   | { readonly kind: "path-pattern" };
 
-/** 🔒️ Exact externally-authoritative filename at one semantic scope. */
+/** ⚓️ Exact externally-authoritative filename at one semantic scope. */
 export interface FixedFilenameContract {
   readonly pathPattern: string;
   readonly authority: string;
@@ -479,7 +479,7 @@ export interface FixedFilenameContract {
   readonly expires: string | null;
 }
 
-/** 📁️ Exact externally-authoritative directory path at one semantic scope. */
+/** 📜️ Exact externally-authoritative directory path at one semantic scope. */
 export interface FixedDirectoryContract {
   readonly pathPattern: string;
   readonly authority: string;
@@ -507,7 +507,7 @@ export interface ConfigurableEntryContract {
   readonly configurationSources: readonly string[];
 }
 
-/** 🧱️ Recursive package boundary contract; uncertain content is always a problem. */
+/** ⚖️ Recursive package boundary contract; uncertain content is always a problem. */
 export interface PackageBoundaryRule {
   readonly manifestContractId: string | null;
   readonly entryContractIds: readonly string[];
@@ -519,26 +519,27 @@ export interface PackageBoundaryRule {
   readonly uncertainRole: "problem";
   readonly implementationRole: "problem";
   readonly implementationAdmission: PackageImplementationAdmission | null;
+  readonly directoryAdmissions: readonly PackageDirectoryAdmission[];
 }
 
 /** 🧠️ Conservative source-role grammar selected by ecosystem. */
 export interface PackageGlueGrammarSpec {
-  readonly analyzer: "rust" | "typescript" | "javascript" | "go" | "python" | "dotnet" | "c-cpp" | "tex";
+  readonly analyzer: "rust" | "typescript" | "javascript" | "go" | "python" | "dotnet" | "c-cpp" | "tex" | "css";
   readonly allowedRoles: readonly ("declaration" | "registration" | "bootstrap" | "thin-delegation")[];
   readonly maxDelegationStatements: number;
 }
 
-/** 🧾️ Explicit authority and validator for a source-format fixed or configurable package entry. */
+/** 🪵️ Explicit authority and validator for a source-format fixed or configurable package entry. */
 export interface PackageSourceDisposition {
   readonly contractKind: "fixed" | "configurable";
   readonly disposition: "adapter-source" | "tool-metadata";
-  readonly validator: "package-glue" | "command-router" | "vitest-configuration" | "tool-config-vitest" | "tool-config-tailwind" | "tool-config-postcss" | "tool-config-eslint" | "tool-config-dependency-cruiser" | "pytest-configuration" | "eslint-configuration" | "vscode-test-configuration";
+  readonly validator: "package-glue" | "command-router" | "vitest-configuration" | "tool-config-vitest" | "tool-config-tailwind" | "tool-config-postcss" | "tool-config-eslint" | "tool-config-dependency-cruiser" | "pytest-configuration" | "eslint-configuration";
   readonly grammarId?: string;
   readonly authority: string;
   readonly verification: string;
 }
 
-/** 🧱️ Native package boundary declared before an authoritative language-directory identity exists. */
+/** 👤️ Native package boundary declared before an authoritative language-directory identity exists. */
 export interface PackageBoundaryProfile {
   readonly admission: "blocked-until-language-directory-registered";
   readonly allowedFileKindIds: readonly string[];
@@ -551,10 +552,10 @@ export interface PackageBoundaryProfile {
   readonly reason: string;
 }
 
-/** 🗃️ Whether one generator is runnable by normalization or retained only as a fail-closed ownership finding. */
+/** 🧹️ Whether one generator is runnable by normalization or retained only as a fail-closed ownership finding. */
 export type GeneratorOwnership = "owned" | "external";
 
-/** 🎯 Exact generated output root plus its Git inventory channel. */
+/** 🏭️ Exact generated output root plus its Git inventory channel. */
 export interface GeneratorOutputRoot {
   readonly path: string;
   readonly inclusion: "tracked" | "ignored";
@@ -581,7 +582,7 @@ export interface GeneratorProjectionActivation {
   readonly destinationManifestPath: string;
 }
 
-/** 🧩️ Explicit current JCO coordinates, separate from digest-locked historical projection evidence. */
+/** 🌊️ Explicit current JCO coordinates, separate from digest-locked historical projection evidence. */
 export interface CurrentJcoPackageDestination {
   readonly kind: "jco-canonical-package-v1";
   readonly packageId: "jcoprobe-guest";
@@ -594,7 +595,7 @@ export interface CurrentJcoPackageDestination {
   readonly adapterPath: string;
 }
 
-/** 🚫️ A path prefix that must be filtered lexically before filesystem access. */
+/** 🔑️ A path prefix that must be filtered lexically before filesystem access. */
 export interface PathExclusion {
   readonly path: string;
   readonly mode: "opaque";
@@ -625,7 +626,7 @@ export interface RustEntryPathConvention {
   readonly leafPrefix: string;
 }
 
-/** 🦀️ Cumulative-`#[path]` base rules for the relocated (Shape V2) rust entry file. */
+/** 📋️ Cumulative-`#[path]` base rules for the relocated (Shape V2) rust entry file. */
 export interface RustEntryPathRules {
   readonly _comment?: string;
   readonly entryDirFromOwner: string;

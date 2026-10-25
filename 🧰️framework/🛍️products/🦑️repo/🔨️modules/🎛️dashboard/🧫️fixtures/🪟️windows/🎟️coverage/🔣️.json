@@ -7,8 +7,8 @@
   ],
   "native": [
     {
-      "package": "semio-framework-repo-dashboard-terminal",
-      "source": "../../🖥️terminal/🦀️.rs",
+      "package": "semio-framework-repo-dashboard-terminal-laws",
+      "source": "../../🖥️terminal/🧪️tests/🔬️unit/🦀️.rs",
       "required": [
         "source_ui_browses_saves_conflicts_and_requires_explicit_discard",
         "source_worker_disconnect_retires_without_losing_a_document",

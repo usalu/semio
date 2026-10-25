@@ -36,7 +36,6 @@ semio-framework-os-pack = { path = "../../../🎒️pack/📦️packages/🦀️
 semio-framework-pack-source = { path = "../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-value = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

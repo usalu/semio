@@ -20,5 +20,4 @@ export function testInverseAdmission(): void {
       assert.equal(Boolean(result.admitted), row.inverseAdmitted, row.id);
     }
   } finally { database.close(); }
-  console.log(`[DEBUG] Inverse admission: ${corpus.cases.length} neutral outcomes agree with strict Ajv and independent SQLite admission`);
 }

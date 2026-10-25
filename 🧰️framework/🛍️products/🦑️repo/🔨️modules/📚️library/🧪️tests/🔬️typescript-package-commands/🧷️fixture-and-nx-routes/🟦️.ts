@@ -6,6 +6,7 @@ import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../../../../�
 import { runRepositoryTestCommand } from "../../../🧪️testing/🎛️repository-command/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import type { TestRouteContext } from "../🧭️route-context/🟦️.ts";
+import ownerArgumentReceiptSchema from "../../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📤️receipt.json" with { type: "json" };
 
 /** 🪡️ Runs the fixture placement, original control, target execution and Nx owner routes; true when one matched. */
 export async function runFixtureAndNxRoutes(context: TestRouteContext, segments: string[]): Promise<boolean> {
@@ -51,7 +52,7 @@ export async function runFixtureAndNxRoutes(context: TestRouteContext, segments:
 
   if(segments.length===1&&segments[0]==="build-caller-birth"){await runRepositoryTestCommand(process.execPath,["test",join(context.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts")],{cwd:context.repoRoot,env:repoTestArtifactEnvironment(context.repoRoot,"build-caller-birth"),budgetMs:scriptInvocationBudget(context.invocation,TEST_LEVEL_BUDGET_MS.quick),signal:context.invocation.control.signal});return true;}
 
-  if(segments[0]==="nx-owner-arguments-probe"){return true;}
+  if(segments[0]==="nx-owner-arguments-probe"){process.stdout.write(ownerArgumentReceiptSchema.definitions.Protocol.const.prefix+JSON.stringify({version:1,arguments:segments.slice(1),carrierPresent:process.env.SEMIO_OWNER_ARGUMENTS!==undefined})+"\n");return true;}
   if(segments.length===1&&segments[0]==="nx-native-child-issuance"){await runRepositoryTestCommand(process.execPath,["test",join(context.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts")],{cwd:context.repoRoot,env:repoTestArtifactEnvironment(context.repoRoot,"nx-native-child-issuance"),budgetMs:TEST_LEVEL_BUDGET_MS.quick});return true;}
 
   if(segments.length===1&&segments[0]==="nx-owner-arguments"){const {level}=resolveTestLevel([],"quick");await runRepositoryTestCommand(process.execPath,["test",join(context.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts")],{cwd:context.repoRoot,env:repoTestArtifactEnvironment(context.repoRoot,"nx-owner-arguments"),budgetMs:TEST_LEVEL_BUDGET_MS[level]});return true;}

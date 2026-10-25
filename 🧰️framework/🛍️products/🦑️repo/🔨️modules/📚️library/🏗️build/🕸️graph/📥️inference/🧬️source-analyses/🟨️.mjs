@@ -70,7 +70,7 @@ function rustInputTokens(source) {
   return tokens;
 }
 
-/** 🧾️ Retains only module mounts and include expressions, independently of a file's location. */
+/** 🧾️ Retains only module mounts and include expressions, independently of a file's location; the mounts and includes that only exist under `#[cfg(test)]` (an item or module under `cfg(test)` or `cfg(all(test, …))`, the indexes of its includes, or a whole `#![cfg(test)]` file, which the compiler still reads but never expands) are marked, so a consumer that compiles without that configuration leaves them out. */
 function rustSourceReferences(source) {
   const tokens = rustInputTokens(source), pairs = new Map(), stack = [], includes = [];
   for (let i = 0; i < tokens.length; i++) {
@@ -92,20 +92,35 @@ function rustSourceReferences(source) {
     }
     throw new Error("Dynamic Rust include requires explicit source inputs");
   };
+  const places = [];
   for (let i = 0; i < tokens.length - 3; i++) {
     if (!tokens[i].identifier || !["include", "include_str", "include_bytes"].includes(tokens[i].text) || tokens[i + 1].text !== "!") continue;
     const end = pairs.get(i + 2);
-    if (end !== undefined) includes.push(literal(i + 3, tokens[end - 1]?.text === "," ? end - 1 : end));
+    if (end !== undefined) { places.push(i); includes.push(literal(i + 3, tokens[end - 1]?.text === "," ? end - 1 : end)); }
   }
-  const scope = (start, end) => {
+  const requiresTest = (i) => {
+    const text = tokens[i]?.text;
+    if (tokens[i + 1]?.text === "(" && pairs.get(i + 1) !== undefined) {
+      const close = pairs.get(i + 1);
+      let gated = false;
+      if (text === "all") for (let at = i + 2; at < close;) { const [inner, next] = requiresTest(at); gated ||= inner; at = next; if (tokens[at]?.text === ",") at++; }
+      return [gated, close + 1];
+    }
+    return [text === "test" && tokens[i + 1]?.text !== "=", tokens[i + 1]?.text === "=" ? i + 3 : i + 1];
+  };
+  const gated = [];
+  let fileTest = false;
+  const scope = (start, end, top = false) => {
     const modules = [];
     for (let i = start; i < end;) {
-      let path;
+      let path, test = false;
+      const first = i;
       while (tokens[i]?.text === "#") {
-        const open = tokens[i + 1]?.text === "!" ? i + 2 : i + 1, close = pairs.get(open);
+        const inner = tokens[i + 1]?.text === "!", open = inner ? i + 2 : i + 1, close = pairs.get(open);
         if (close === undefined) break;
         if (tokens[open + 1]?.text === "cfg_attr" && tokens.slice(open + 2, close).some((token) => token.text === "path")) throw new Error("Conditional Rust mount requires conservative source inputs");
         if (tokens[open + 1]?.text === "path" && tokens[open + 2]?.text === "=" && tokens[open + 3]?.string) path = tokens[open + 3].text;
+        if (tokens[open + 1]?.text === "cfg" && tokens[open + 2]?.text === "(" && pairs.get(open + 2) !== undefined && requiresTest(open + 3)[0]) { if (!inner) test = true; else if (top) fileTest = true; }
         i = close + 1;
       }
       if (tokens[i]?.text === "pub") { i++; if (tokens[i]?.text === "(") i = (pairs.get(i) ?? i) + 1; }
@@ -113,18 +128,20 @@ function rustSourceReferences(source) {
         const name = tokens[i + 1].text.replace(/^r#/, ""), boundary = i + 2;
         if (tokens[boundary]?.text === "{") {
           const close = pairs.get(boundary);
-          if (close !== undefined) { modules.push({ name, path, modules: scope(boundary + 1, close) }); i = close + 1; continue; }
+          if (close !== undefined) { modules.push({ name, path, ...(test ? { test } : {}), modules: scope(boundary + 1, close) }); if (test) gated.push([first, close]); i = close + 1; continue; }
         }
-        if (tokens[boundary]?.text === ";") { modules.push({ name, path }); i = boundary + 1; continue; }
+        if (tokens[boundary]?.text === ";") { modules.push({ name, path, ...(test ? { test } : {}) }); if (test) gated.push([first, boundary]); i = boundary + 1; continue; }
       }
       const macro = tokens[i]?.text === "macro_rules";
       while (i < end && tokens[i].text !== ";" && tokens[i].text !== "{") { if (pairs.has(i)) i = pairs.get(i); i++; }
       if (macro && tokens.slice(i, pairs.get(i) ?? i).some((token) => !token.string && token.text === "mod")) throw new Error("Generated Rust modules require conservative source inputs");
       i = (pairs.get(i) ?? i) + 1;
+      if (test) gated.push([first, i]);
     }
     return modules;
   };
-  return { includes, modules: scope(0, tokens.length) };
+  const modules = scope(0, tokens.length, true), testIncludes = places.flatMap((place, index) => (gated.some(([from, to]) => place >= from && place <= to) ? [index] : []));
+  return { includes, modules, ...(testIncludes.length ? { testIncludes } : {}), ...(fileTest ? { fileTest } : {}) };
 }
 
 /** 🪶️ Bounds parsed source facts by serialized bytes plus per-entry bookkeeping. */

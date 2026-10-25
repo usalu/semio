@@ -54,7 +54,7 @@ function gumballAxisPreviewPoints(axis: GumballPreviewAxis, half: number): [numb
   ];
 }
 
-/** 🎨️ Resolved gumball chrome from direction accents; hover/active only raise opacity. */
+/** 🌈️ Resolved gumball chrome from direction accents; hover/active only raise opacity. */
 export interface GumballVisualPalette {
   readonly axisX: string;
   readonly axisY: string;
@@ -90,7 +90,7 @@ export function resolveGumballVisualPalette(): GumballVisualPalette {
 /** 🎛️ Per-handle visual state for gumball hover / drag feedback. */
 export type GumballHandleVisualState = "idle" | "hover" | "active" | "dimmed";
 
-/** 🎛️ Resolves handle chrome from hover and active drag kind. */
+/** 🖱️ Resolves handle chrome from hover and active drag kind. */
 export function gumballHandleVisualState(kind: GumballHandleKind, hovered: GumballHandleKind | null, active: GumballHandleKind | null): GumballHandleVisualState {
   if (active === kind) return "active";
   if (active !== null) return "dimmed";
@@ -99,7 +99,7 @@ export function gumballHandleVisualState(kind: GumballHandleKind, hovered: Gumba
   return "idle";
 }
 
-/** 🎨️ Handle tint + opacity for a resolved visual state. Keeps direction color; only opacity changes. */
+/** 🔎️ Handle tint + opacity for a resolved visual state. Keeps direction color; only opacity changes. */
 export function gumballResolveHandleVisual(baseColor: string, state: GumballHandleVisualState, palette: GumballVisualPalette): { readonly color: string; readonly opacity: number } {
   if (state === "active") return { color: baseColor, opacity: palette.activeOpacity };
   if (state === "hover") return { color: baseColor, opacity: palette.hoverOpacity };

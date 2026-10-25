@@ -38,10 +38,10 @@ export default defineOwnedBuildConfig({
   resolve: {
     alias: [
       { find: /^@semio-tech\/presentation$/u, replacement: resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") },
-      { find: /^@semio-tech\/presentation-react$/u, replacement: resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
+      { find: /^@semio-tech\/presentation-react$/u, replacement: resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: /^@semio-tech\/ui-react$/u, replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: /^@semio-tech\/framework$/u, replacement: resolve(repoRoot, "🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
-      { find: /^@semio-tech\/mit-bestand-praesentation-projektetage\/spec$/u, replacement: resolve(bundleRoot, "🔖️spec.ts") },
+      { find: /^@semio-tech\/mit-bestand-praesentation-projektetage\/spec$/u, replacement: resolve(bundleRoot, "🔖️spec/🟦️.ts") },
     ],
   },
 });

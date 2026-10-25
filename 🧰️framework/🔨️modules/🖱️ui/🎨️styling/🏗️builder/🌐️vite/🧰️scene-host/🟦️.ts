@@ -24,7 +24,7 @@ export function animatePresentRendererVitestStripPlugin(animatePresentIndexPath:
 /** 🎬️ R3F packages that must resolve once with {@link sceneHostPort} and drei controls. */
 export const PLAYGROUND_SCENE_HOST_DEDUPE = ["@react-three/fiber", "@react-three/drei"] as const;
 
-/** 🎬️ Vite aliases that pin R3F to a single node_modules entry (avoids duplicate Canvas stores). */
+/** 📌️ Vite aliases that pin R3F to a single node_modules entry (avoids duplicate Canvas stores). */
 export function playgroundSceneHostResolveAliases(repoRoot: string): ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> {
   return [
     { find: /^@react-three\/fiber$/, replacement: resolve(repoRoot, "node_modules/@react-three/fiber/dist/react-three-fiber.esm.js") },
@@ -32,7 +32,7 @@ export function playgroundSceneHostResolveAliases(repoRoot: string): ReadonlyArr
   ];
 }
 
-/** 🎬️ CommonJS leaves an EXCLUDED R3F package still reaches — fiber → `scheduler`; drei → `stats.js`;
+/** 🍃️ CommonJS leaves an EXCLUDED R3F package still reaches — fiber → `scheduler`; drei → `stats.js`;
  * drei → `tunnel-rat` → (nested) `zustand` → `use-sync-external-store/shim{,/with-selector}.js`, and top-level
  * `zustand/esm/react.mjs` → the same shims. Vite serves an excluded package's files raw and rewrites their bare
  * imports to a prebundled copy only when that dependency IS in the optimizer — so without these entries a fresh
@@ -51,7 +51,7 @@ export const PLAYGROUND_SCENE_HOST_CJS_INCLUDE = ["scheduler", "stats.js", "use-
  * because the optimizer bundles `three` too and shares it between both. */
 export const PLAYGROUND_SCENE_HOST_ESM_INCLUDE = ["three-stdlib"] as const;
 
-/** 🎬️ `optimizeDeps` preset for configs that use {@link playgroundSceneHostResolveAliases}: never prebundle R3F — a `.vite/deps` fiber copy and the aliased ESM entry are two Canvas stores, and drei's `PerspectiveCamera` then throws outside Canvas — but DO prebundle the CJS shims R3F's excluded graph imports ({@link PLAYGROUND_SCENE_HOST_CJS_INCLUDE}). */
+/** 🎛️ `optimizeDeps` preset for configs that use {@link playgroundSceneHostResolveAliases}: never prebundle R3F — a `.vite/deps` fiber copy and the aliased ESM entry are two Canvas stores, and drei's `PerspectiveCamera` then throws outside Canvas — but DO prebundle the CJS shims R3F's excluded graph imports ({@link PLAYGROUND_SCENE_HOST_CJS_INCLUDE}). */
 export function playgroundSceneHostOptimizeDeps(extra?: Pick<NonNullable<OwnedBuildConfig["optimizeDeps"]>, "include" | "exclude">): NonNullable<OwnedBuildConfig["optimizeDeps"]> {
   const include = ["three", ...PLAYGROUND_SCENE_HOST_CJS_INCLUDE, ...PLAYGROUND_SCENE_HOST_ESM_INCLUDE, ...(extra?.include ?? [])].filter((id) => !PLAYGROUND_SCENE_HOST_DEDUPE.includes(id as (typeof PLAYGROUND_SCENE_HOST_DEDUPE)[number]));
   const exclude = [...PLAYGROUND_SCENE_HOST_DEDUPE, ...(extra?.exclude ?? [])];

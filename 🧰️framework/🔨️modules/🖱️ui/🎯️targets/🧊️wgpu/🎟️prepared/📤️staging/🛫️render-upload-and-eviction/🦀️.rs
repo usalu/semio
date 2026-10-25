@@ -166,7 +166,7 @@ impl PreparedRenderUpload {
         }
     }
 
-    /// 🧹 Releases one page, byte, or key scalar from a rejected upload owner.
+    /// 📪️ Releases one page, byte, or key scalar from a rejected upload owner.
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError> {
         self.close_granted(grant)
     }

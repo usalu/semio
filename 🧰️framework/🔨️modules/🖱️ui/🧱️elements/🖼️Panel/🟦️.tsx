@@ -65,7 +65,7 @@ function resolveTreePanelSource(tree: TreePanelSource): TreePanelConfig {
   return tree;
 }
 
-/** 📡️ One LIVE unit's config, re-read on every notification of its source. */
+/** 🔔️ One LIVE unit's config, re-read on every notification of its source. */
 function PanelLiveTreeUnit({ source, render }: { readonly source: TreePanelDefinition & { subscribe(listener: () => void): () => void }; readonly render: (config: TreePanelConfig) => React.ReactNode }) {
   const config = reactHostPort.useSyncExternalStore(source.subscribe, source.resolveTree, source.resolveTree);
   return <>{render(config)}</>;
@@ -75,7 +75,7 @@ import { usePointerDrag } from "../../🔨️modules/🫳️pointer-drag/🟦️
 export { usePointerDrag };
 
 /** 📦️ Native HTML drag-and-drop event props for a host element. */
-/** 🌲 Panel tree-unit dock header — handle-only under the default driver, whole-header under surface drag. */
+/** 🪧️ Panel tree-unit dock header — handle-only under the default driver, whole-header under surface drag. */
 function PanelTreeUnitHeader({
   anchor,
   tabId,
@@ -185,7 +185,7 @@ export interface PanelProps {
   /** 🌱️ Per-branch drill-down memory (see {@link progressPanelTabSelection}) — which child was last active under each branch, so returning to it restores the drill-down. */
   pathMemory?: Readonly<Record<string, string>>;
   onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
-  /** 🌱️ Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
+  /** 📑️ Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
   treeOpenStates?: Readonly<Record<string, boolean>>;
   onTreeOpenStateChange?: (id: string, open: boolean) => void;
   /**
@@ -203,7 +203,7 @@ export interface PanelProps {
   /** 🌀️ Drives the panel chrome silhouette while a tab body is still loading. */
   status?: UiStatus;
   /**
-   * 🎛️ Where this anchor's folded root tab row lives — `"panel"` (default) keeps the chip-only
+   * ⚓️ Where this anchor's folded root tab row lives — `"panel"` (default) keeps the chip-only
    * folded bar on the floating panel; `"chrome"` parks the folded root row in a sibling
    * {@link PanelChromeTabBar} in the navbar/footer. While open, the floating panel hosts the full tab
    * strip as {@link WindowChrome} left chips (same row as fold, U-cutout between) and is positioned via
@@ -214,7 +214,7 @@ export interface PanelProps {
   tabBarHost?: "panel" | "chrome";
 }
 
-/** 🌲️ Leaf-tab tree body shared by {@link Panel} and Layout's private mobile panel — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, labeled (or multi-unit) headers become native-DnD handles draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). Unlabeled single-unit tabs omit the unit header so trees are not topped by a lonely grip. */
+/** 🌳️ Leaf-tab tree body shared by {@link Panel} and Layout's private mobile panel — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, labeled (or multi-unit) headers become native-DnD handles draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). Unlabeled single-unit tabs omit the unit header so trees are not topped by a lonely grip. */
 export const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
   anchor,
   tabId,
@@ -226,10 +226,10 @@ export const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane
   readonly anchor?: Anchor;
   readonly tabId: string;
   readonly units: readonly PanelTreeUnit[];
-  /** 🌱️ Persisted tree expansion, namespaced `${unitId}:${innerId}` across every unit this pane hosts. */
+  /** 🔓️ Persisted tree expansion, namespaced `${unitId}:${innerId}` across every unit this pane hosts. */
   readonly treeOpenStates?: Readonly<Record<string, boolean>>;
   readonly onTreeOpenStateChange?: (id: string, open: boolean) => void;
-  /** ♻️ Identity-only prop — included so memo re-renders when lazy tree sources must re-resolve. */
+  /** 🪪️ Identity-only prop — included so memo re-renders when lazy tree sources must re-resolve. */
   readonly treeContentRevision?: unknown;
 }) {
   const flow = useFlow();

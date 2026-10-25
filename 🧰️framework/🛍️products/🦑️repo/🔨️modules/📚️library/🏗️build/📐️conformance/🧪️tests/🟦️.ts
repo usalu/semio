@@ -6,7 +6,7 @@ import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from
 import {fileURLToPath} from "node:url";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {testScratchRootV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import scenarios from "../📋️scenarios/🔣️.json" with {type:"json"};

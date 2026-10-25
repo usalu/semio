@@ -3382,6 +3382,79 @@
      }
     }
    ]
+  },
+  {
+   "id": "actor-typegen",
+   "evidence": "static",
+   "description": "The actor typegen exports through its Cargo exporter test, so it reads the crate, its test targets and the path-dependency closure its manifest names (never the TypeScript, CSS or other-product trees `^default` stands for), plus the command closure that the target lists itself; its own output (🤖️generated/🎭️actor/🟦️.ts) is written, not read.",
+   "select": {
+    "project": "@semio-tech/framework-actor-rs",
+    "targets": [
+     "typegen"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default"
+   ],
+   "reads": [
+    {
+     "cargo": {
+      "directories": [
+       "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "framework-generate",
+   "evidence": "static",
+   "description": "The framework manifest generation exports through its Cargo exporter test, so it reads the crate, its test targets and the path-dependency closure its manifest names (never the TypeScript, CSS or other-product trees `^default` stands for), plus the command closure that the target lists itself; its own output (🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts) is written, not read.",
+   "select": {
+    "project": "@semio-tech/framework-rs",
+    "targets": [
+     "generate"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default"
+   ],
+   "reads": [
+    {
+     "cargo": {
+      "directories": [
+       "🧰️framework/📦️packages/🦀️rust"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ui-contract-generate",
+   "evidence": "static",
+   "description": "The UI contract generation runs the exporter test of the typegen crate its manifest names (`cargo test -p … --test typegen_export`), so it reads the contract crate, the typegen crate with its test targets and the path-dependency closure of both (never the TypeScript, CSS or other-product trees `^default` stands for), plus the command closure that the target lists itself; its own output (🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts) is written, not read.",
+   "select": {
+    "project": "@semio-tech/ui-contract-rs",
+    "targets": [
+     "generate"
+    ]
+   },
+   "replaces": [
+    "default",
+    "^default"
+   ],
+   "reads": [
+    {
+     "cargo": {
+      "directories": [
+       "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+       "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

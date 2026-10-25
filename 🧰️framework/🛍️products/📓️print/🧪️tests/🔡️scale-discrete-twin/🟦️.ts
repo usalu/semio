@@ -60,7 +60,7 @@ export default defineTestAdapter({
     },
     point: {
       oracle: oracle("point"),
-      /** 🎯️ The twin's point scale with and without outer padding. */
+      /** 📍️ The twin's point scale with and without outer padding. */
       subject: () => {
         const plain = scalePoint(["A", "B", "C", "D"], [0, 120]);
         const padded = scalePoint(["A", "B", "C", "D"], [0, 120], { padding: 0.5 });
@@ -76,7 +76,7 @@ export default defineTestAdapter({
     },
     ordinal: {
       oracle: oracle("ordinal"),
-      /** 🎯️ The twin's ordinal scale cycling a shorter range. */
+      /** 🔄️ The twin's ordinal scale cycling a shorter range. */
       subject: () => {
         const scale = scaleOrdinal(["A", "B", "C", "D", "E"], [10, 20, 30]);
         return { projection: { "ordinal/ord": ["A", "B", "C", "D", "E"].map((entry) => scale(entry)) } };
@@ -84,7 +84,7 @@ export default defineTestAdapter({
     },
     quantize: {
       oracle: oracle("quantize"),
-      /** 🎯️ The twin's quantize scale and its derived thresholds. */
+      /** 🧬️ The twin's quantize scale and its derived thresholds. */
       subject: () => {
         const plain = scaleQuantize([0, 1], [1, 2, 3, 4]);
         const wide = scaleQuantize([-10, 10], ["a", "b", "c"]);
@@ -100,7 +100,7 @@ export default defineTestAdapter({
     },
     quantile: {
       oracle: oracle("quantile"),
-      /** 🎯️ The twin's quantile scale and its R-7 quantiles. */
+      /** 🪞️ The twin's quantile scale and its R-7 quantiles. */
       subject: () => {
         const scale = scaleQuantile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [10, 20, 30, 40]);
         return {
@@ -113,7 +113,7 @@ export default defineTestAdapter({
     },
     threshold: {
       oracle: oracle("threshold"),
-      /** 🎯️ The twin's threshold scale over its explicit cuts. */
+      /** 🔪️ The twin's threshold scale over its explicit cuts. */
       subject: () => {
         const scale = scaleThreshold([0, 1], ["low", "mid", "high"]);
         return {

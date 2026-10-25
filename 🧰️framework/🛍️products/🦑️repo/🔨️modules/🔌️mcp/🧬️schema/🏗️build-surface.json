@@ -23,7 +23,8 @@
         "type": { "enum": ["integer", "list"] },
         "minimum": { "type": "integer" },
         "maximum": { "type": "integer" },
-        "items": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        "items": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "closed": { "description": "A list whose items are exactly the closed value set the catalogue names in the flag's value name.", "const": true }
       }
     },
     "Positional": {
@@ -79,12 +80,13 @@
     "Policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "catalogue", "buildPolicy", "identity", "globals", "omittedFlags", "strip", "set", "flagTypes", "environment", "kinds", "limits", "tools", "excluded"],
+      "required": ["version", "catalogue", "buildPolicy", "backends", "identity", "globals", "omittedFlags", "strip", "set", "flagTypes", "environment", "kinds", "limits", "tools", "excluded"],
       "properties": {
         "$schema": { "type": "string" },
         "version": { "const": 1 },
         "catalogue": { "description": "Repository-relative path of the neutral operations catalogue.", "type": "string", "minLength": 1 },
         "buildPolicy": { "description": "Repository-relative path of the build policy that names the default tool.", "type": "string", "minLength": 1 },
+        "backends": { "description": "Repository-relative path of the build backend registry; its ids replace the `{backends}` placeholder of the catalogue.", "type": "string", "minLength": 1 },
         "identity": {
           "type": "object",
           "additionalProperties": false,
@@ -170,7 +172,7 @@
         "tool": { "description": "Name of the MCP tool.", "type": "string" },
         "operation": { "type": "string" },
         "subcommand": { "type": "string" },
-        "buildTool": { "description": "The build tool the call selected; absent when the policy default ran.", "enum": ["nx", "bazel"] },
+        "buildTool": { "description": "The build tool the call selected; absent when the policy default ran. Any id of the build backend registry.", "type": "string", "minLength": 1 },
         "ok": { "type": "boolean" },
         "exitCode": { "type": "integer" },
         "cancelled": { "type": "boolean" },

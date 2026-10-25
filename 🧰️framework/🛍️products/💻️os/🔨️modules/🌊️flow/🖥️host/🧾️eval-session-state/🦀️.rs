@@ -325,6 +325,8 @@ pub enum FlowEvalPublication {
     Changed(Option<String>),
 }
 
+#[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct SessionResetFields {
     invocation_growth:Option<Vec<FlowInvocationEntry>>,
     invocations:Vec<FlowInvocationEntry>,
@@ -343,7 +345,6 @@ struct SessionResetFields {
     retention:Option<SessionPreviewRetention>,
 }
 
-semio_framework_value::artifact_retire_struct!(SessionResetFields{invocation_growth,invocations,painted,converged,status,handles,meshes,diagnostics,pending,tessellate_handles,tessellation,evaluation,fault,latches,retention});
 
 pub(super) struct SessionResetSources {
     eval: Option<Arc<String>>,
@@ -387,6 +388,7 @@ impl RetireOwned for SessionResetSources {
 }
 
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub(super) struct SessionPreviewCancellationSources {
     invocation_growth:Option<Vec<FlowInvocationEntry>>,
     invocations:Vec<FlowInvocationEntry>,
@@ -405,6 +407,7 @@ pub(super) enum SessionRetentionRow {
     Mesh((String,MeshData)),Diagnostic((String,String)),Pending((u64,String)),Progress((u64,PreviewTessellateProgress)),Roster(Vec<String>),
 }
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub(super) struct SessionPreviewRetention {
     pub roster:Option<Vec<String>>,pub(super) phase:u8,pub(super) slot:usize,pub(super) comparison:usize,pub(super) matched:bool,
     pub(super) removed:Option<ControlledRetirement<SessionRetentionRow>>,

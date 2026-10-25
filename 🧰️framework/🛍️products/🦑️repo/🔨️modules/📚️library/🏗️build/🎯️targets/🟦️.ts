@@ -1,4 +1,4 @@
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🎯️ Selects one canonical tool-neutral build leaf from its closed authored contract. */
 export function canonicalBuildTargetV1(slice: string): string {

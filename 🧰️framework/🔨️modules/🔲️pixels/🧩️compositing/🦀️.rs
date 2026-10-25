@@ -47,7 +47,7 @@ struct Style {pub opacity:f64,pub blend:CompositeBlend,pub mask:Option<Mask>}
 enum Command {Begin,Commit,Draw {image:RasterLease,inverse:CompositeAffine,style:Style},End(Style),Adjust {slope:f64,intercept:f64,style:Style}}
 #[derive(Debug)]
 #[derive(semio_framework_value::RetireOwned)]
-struct Step {depth:usize,command:Command}
+#[doc(hidden)] pub struct Step {depth:usize,command:Command}
 const IDENTITY:CompositeAffine=[1.0,0.0,0.0,1.0,0.0,0.0];
 const TILE:usize=256;
 

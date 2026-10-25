@@ -44,15 +44,15 @@
     "sourceCaller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"
   },
   "scripts": {
-    "repo": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo",
+    "repo": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo",
     "setup": "repo run workspace:setup",
     "dashboard": "repo run @semio-tech/repo-dashboard-rs:run --output=stream",
     "dashboard:install": "repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
   },
   "postCreateCommand": [
-    "repo",
-    "run",
-    "workspace:setup"
+    "bash",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+    "setup"
   ],
   "contexts": [
     {

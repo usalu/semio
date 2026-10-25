@@ -139,6 +139,47 @@
         }
       }
     },
+    "CapturedPhysicalSourceImages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "images"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "images": {
+          "type": "array",
+          "maxItems": 2048,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "byteLength"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "byteLength": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 8388608
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 8388608
+              }
+            }
+          }
+        }
+      }
+    },
     "ModuleOrigin": {
       "type": "string",
       "minLength": 1,

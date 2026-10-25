@@ -1,5 +1,5 @@
 import { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "./🔒️preferences/🟦️.ts";
-/** 🎮️ Playground identity for the whole repository: the generated OS playground catalog, the
+/** 🪪️ Playground identity for the whole repository: the generated OS playground catalog, the
  * dev/test port table every host binds, and the locked-example Vite define. Split out of
  * `📦️packages/🟦️typescript/🟦️.ts` so a consumer that only needs a port (the styling package's dev
  * servers, and through them `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery`
@@ -63,14 +63,14 @@ export const PLAYGROUND_PORTS: Record<string, PlaygroundPortSpec> = new Proxy({}
   },
 });
 
-/** 🔌️ Local dev port for a playground host. */
+/** 🖥️ Local dev port for a playground host. */
 export function playgroundDevPort(kind: PlaygroundHostKind): number {
   const spec = resolvePlaygroundPorts()[kind];
   if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
   return spec.dev;
 }
 
-/** 🔌️ String dev port (vite `--port`, nx `env`). */
+/** 🔢️ String dev port (vite `--port`, nx `env`). */
 export function playgroundDevPortString(kind: PlaygroundHostKind): string {
   return String(playgroundDevPort(kind));
 }
@@ -80,13 +80,13 @@ export function playgroundTestPort(kind: PlaygroundHostKind): number | undefined
   return resolvePlaygroundPorts()[kind]?.test;
 }
 
-/** 🧪️ String test port for nx `env` / playwright. */
+/** 🧫️ String test port for nx `env` / playwright. */
 export function playgroundTestPortString(kind: PlaygroundHostKind): string | undefined {
   const port = playgroundTestPort(kind);
   return port === undefined ? undefined : String(port);
 }
 
-/** 🔌️ Process env var holding the dev port override. */
+/** ⚙️ Process env var holding the dev port override. */
 export function playgroundPortEnv(kind: PlaygroundHostKind): string {
   const spec = resolvePlaygroundPorts()[kind];
   if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
@@ -103,14 +103,14 @@ export function allPlaygroundReservedPorts(): ReadonlySet<number> {
   return ports;
 }
 
-/** 🔌️ OS hub service dev port. 8787, not 6070 — 6070 is the `s` react playground's port,
+/** 🌎️ OS hub service dev port. 8787, not 6070 — 6070 is the `s` react playground's port,
  * see `🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml` `[[package.metadata.semio.playground]]`. */
 export const OS_HUB_PORT = 8787;
 
-/** 🔌️ Process env var for {@link OS_HUB_PORT}. */
+/** 🏭️ Process env var for {@link OS_HUB_PORT}. */
 export const OS_HUB_PORT_ENV = "OS_HUB_PORT";
 
-/** 🔒️ Process env var locking a playground to one example (hides navbar dropdown). */
+/** 🔐️ Process env var locking a playground to one example (hides navbar dropdown). */
 export { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "./🔒️preferences/🟦️.ts";
 
 /** 🔒️ Locked example id from process env, if any. */
@@ -120,7 +120,7 @@ export function playgroundLockedExampleIdFromEnv(env: NodeJS.ProcessEnv = proces
 }
 
 
-/** 🔌️ Vite `define` entries for playground play bundles. */
+/** ▶️ Vite `define` entries for playground play bundles. */
 export function playgroundPlayViteDefine(extra: Record<string, string> = {}): Record<string, string> {
   return {
     "import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID": JSON.stringify(playgroundLockedExampleIdFromEnv() ?? ""),

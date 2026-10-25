@@ -15,22 +15,22 @@
 // #endregion 🧲️Header
 
 //#region 🔖️Switch
-/** 🩺️ Mirrors the guest-side `RUNTIME_DIAGNOSTICS_ENV` (`🧰️framework/🔨️modules/⏱️trace/🦀️.rs`) and the
+/** 🗝️ Mirrors the guest-side `RUNTIME_DIAGNOSTICS_ENV` (`🧰️framework/🔨️modules/⏱️trace/🦀️.rs`) and the
  * renderer's own `RUNTIME_DIAGNOSTICS_KEY`/`TURN_DIAGNOSTICS_KEY` — one name, now three languages. */
 export const SHARD_RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
 
-/** 🩺️ The query parameter {@link stampShardWorkerDiagnostics} puts on a shard-worker URL when
+/** 👷️ The query parameter {@link stampShardWorkerDiagnostics} puts on a shard-worker URL when
  * diagnostics are armed — the only channel that exists before the worker's first message. */
 export const SHARD_WORKER_DIAGNOSTICS_PARAM = "diagnostics";
 
-/** 🩺️ Whether this realm has armed runtime diagnostics: the stored
+/** ⚠️ Whether this realm has armed runtime diagnostics: the stored
  * {@link SHARD_RUNTIME_DIAGNOSTICS_KEY} preference, read defensively because a Worker (and a
  * storage-blocked browser) throws on the accessor itself rather than returning null. */
 export function runtimeDiagnosticsArmed(value: unknown): boolean {
   return typeof value === "string" && ["1", "true", "on", "yes"].includes(value.trim().toLowerCase());
 }
 
-/** 🩺️ Resolves the page-owned persisted switch before its server launch default. A stored false value
+/** 🔎️ Resolves the page-owned persisted switch before its server launch default. A stored false value
  * is an explicit preference and therefore outranks an armed server. */
 export function resolveRuntimeDiagnosticsPreference(stored: string | null | undefined, serverDefault: string | null | undefined): boolean {
   return runtimeDiagnosticsArmed(stored ?? serverDefault);
@@ -44,7 +44,7 @@ export function shardRuntimeDiagnosticsArmed(): boolean {
   }
 }
 
-/** 🩺️ `url`, plus the diagnostics stamp when THIS realm armed them. The stamp belongs to the realm
+/** ➕️ `url`, plus the diagnostics stamp when THIS realm armed them. The stamp belongs to the realm
  * that CONSTRUCTS the worker, because that is the realm holding the preference: wgpu spawns its
  * shards from the UI isolate on a url its FRAME WORKER named, and a frame worker owns no storage, so
  * a url stamped at the naming site was never stamped at all and every guest `[TRACE]` trace site was

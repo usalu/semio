@@ -215,6 +215,6 @@ fn maximum_registry_backing_initializes_inside_one_interactive_ceiling_under_con
     }
     for worker in workers {
         let median = worker.join().expect("concurrent fixed registry initialization worker");
-        assert!(median < u128::from(semio_framework_trace::INTERACTIVE_STEP_CEILING_US), "fixed registry median backing initialization exceeded the interactive ceiling under concurrent load: {median}us");
+        assert!(median < u128::from(semio_framework_job::INTERACTIVE_STEP_CEILING_US), "fixed registry median backing initialization exceeded the interactive ceiling under concurrent load: {median}us");
     }
 }

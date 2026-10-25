@@ -49,7 +49,7 @@ pub(super) fn schema_definition() -> Vec<NamedType> {
 //#endregion 🏗️SchemaDefinition
 
 //#region 🏗️SchemaStatute
-/// 📜️ The statute type.
+/// 🧬️ The statute type.
 pub(super) fn schema_statute() -> Vec<NamedType> {
     vec![NamedType::Object(ObjectType {
         name: "Statute".to_string(),

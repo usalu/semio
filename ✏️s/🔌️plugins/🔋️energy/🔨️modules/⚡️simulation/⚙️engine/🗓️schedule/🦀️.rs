@@ -40,6 +40,26 @@ impl semio_framework_dsl_record::DslField for ScheduleId {
     }
 }
 
+/// 📽️ Scalar id snapshot projection and retained clone: the id is a fixed-size copy root, owned by its defining crate.
+impl semio_framework_value_snapshot_projection::snapshot_projection::ImmutableRootProjection for ScheduleId{
+ fn root_projection_demand(_:semio_framework_value::RetainedCloneRef<'_,Self>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>()*2,depth:1,..Default::default()})}
+ fn project_root(original:semio_framework_value::RetainedCloneRef<'_,Self>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{let demand=Self::root_projection_demand(original)?;Ok(semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand).then(||(*original.get(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}
+}
+impl semio_framework_value::retained_clone::RetainedClone for ScheduleId{
+ type Cursor=semio_framework_value::retained_clone::ScalarCursor<Self>;
+ fn retained_clone_cursor()->Self::Cursor{Default::default()}
+}
+/// 🛬️ Scalar id native receiving: one `u32` leaf read through the original receiving owner.
+impl<I:semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource> semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarValue<I> for ScheduleId{
+ fn read(original:&I)->Result<Self,semio_framework_value::ValueError>{<u32 as semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarValue<I>>::read(original).map(Self)}
+ fn read_copy_bytes(_: &I)->Result<usize,semio_framework_value::ValueError>{Ok(std::mem::size_of::<Self>())}
+}
+impl<I:semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource> semio_framework_value_native_owned::native_decoding::NativeReceive<I> for ScheduleId{
+ type Receiver=semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarReceiver<I,Self>;
+ fn receive_birth_demand()->semio_framework_value::RetirementDemand{Self::Receiver::birth()}
+ fn begin_receive(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::Receiver,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{Self::Receiver::begin(grant)}
+}
+
 semio_framework_value::artifact_retire_leaf!(ScheduleId);
 
 impl semio_framework_dsl_record::BorrowedDslField for ScheduleId { const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::UInt; }

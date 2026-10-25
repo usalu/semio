@@ -1,5 +1,4 @@
 use semio_framework_3d::mesh::*;
-use semio_framework_3d_mesh_surface::MeshSurfaceJob;
 use std::collections::{BTreeMap,HashMap,HashSet};
 use semio_framework_value::{ToValue,FromValue};
 

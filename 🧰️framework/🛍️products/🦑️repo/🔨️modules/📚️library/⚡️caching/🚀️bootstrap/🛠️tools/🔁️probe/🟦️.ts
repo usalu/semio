@@ -1,7 +1,7 @@
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import {openNxSdkV1} from "../🔌️sdk/🟦️.ts";
-import type {CacheProbeInputV1,CacheProbeToolV1} from "../../../../🏗️build/⚙️operations/🟦️.ts";
+import type {CacheProbeInputV1,CacheProbeToolV1} from "../../../../📦️packages/🟦️typescript/🏗️build/⚙️operations/🟦️.ts";
 
 /** 🧭️ Maps one neutral probe input onto its Nx `inputs` spelling. */
 function nxProbeInputV1(input:CacheProbeInputV1):string|Readonly<{env:string}>{

@@ -30,6 +30,7 @@ semio-framework-diagnostic = { path = "../../../../../../../../../../🔨️modu
 semio-framework-dsl-record = { path = "../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-job-payload = { workspace = true }
 semio-framework-os-pack = { path = "../../../../../../../🎒️pack/📦️packages/🦀️rust" }
 semio-framework-os-semio = { path = "../../../../../../../🧬️semio/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../../../../📡️spr/📦️packages/🦀️rust" }

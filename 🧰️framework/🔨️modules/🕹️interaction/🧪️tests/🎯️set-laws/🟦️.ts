@@ -69,6 +69,5 @@ export function testInteractionSetLaws(): void {
       assert.deepEqual(present.hover[domain]!.ids, ["n0"]);
       assert.equal(Object.getPrototypeOf(present.selection), null);
     }
-    console.log(`[DEBUG] Interaction set laws: ${corpus.cases.length} merges, ${corpus.traversals.length} traversals and ${size} identities agree with Ajv and SQLite`);
   } finally { database.close(); }
 }

@@ -2,15 +2,18 @@
   "version": 1,
   "cases": [
     {
-      "owner": "wire-fractional",
-      "parentMilliseconds": 1000,
-      "remainingMilliseconds": 125.5,
+      "owner": "wire-integer",
+      "maximumElapsedMilliseconds": 1000,
       "expected": "finite-integer"
     },
     {
+      "owner": "wire-fractional",
+      "maximumElapsedMilliseconds": 125.5,
+      "expected": "refused"
+    },
+    {
       "owner": "wire-subunit",
-      "parentMilliseconds": 1000,
-      "remainingMilliseconds": 0.75,
+      "maximumElapsedMilliseconds": 0.75,
       "expected": "refused"
     }
   ]

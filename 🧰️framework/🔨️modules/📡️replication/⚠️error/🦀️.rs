@@ -4,7 +4,7 @@
 #[global_allocator]
 static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
-/// 🚨️ The one error type every `protocol_*` public fn returns; never leaks `std::io::Error`.
+/// ❌️ The one error type every `protocol_*` public fn returns; never leaks `std::io::Error`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProtocolError {
     Pack(semio_framework_pack_error::PackError),

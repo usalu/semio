@@ -17,7 +17,7 @@ const DECIMALS = 4;
 
 /** 🖼️ The canvas and padding the fixtures use; the family's own defaults. */
 const FRAME = { x0: 10, x1: 76, y0: 8, y1: 36 } as const;
-/** 📏 The share of one period step a candle body occupies. */
+/** 🕯️ The share of one period step a candle body occupies. */
 const BODY_SHARE = 0.62;
 /** 📏 The minimum body height, so that a doji is drawn rather than lost. */
 const MIN_BODY = 0.4;
@@ -35,7 +35,7 @@ const grid = (value: number): number => {
   return value === 0 ? 0 : Math.round(value * factor) / factor;
 };
 
-/** 🎯️ Every record of one compiled fixture that carries the given key. */
+/** 📹️ Every record of one compiled fixture that carries the given key. */
 async function records(ctx: AdapterContext, fixture: string, key: string): Promise<number[][]> {
   const parsed = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://💹️charts-financial/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return roundProbeNumbers(parsed, DECIMALS)
@@ -71,7 +71,7 @@ export default defineTestAdapter({
       }),
     },
     "moving-average": {
-      /** 🔮️ d3-array's mean over the same trailing windows. */
+      /** 📊️ d3-array's mean over the same trailing windows. */
       oracle: (ctx: AdapterContext) => {
         const row = rows(ctx)[0]!;
         const closes = row.closes!.split(",").map(Number);
@@ -79,7 +79,7 @@ export default defineTestAdapter({
         const means = closes.map((_, index) => grid(mean(closes.slice(Math.max(0, index - window + 1), index + 1)) ?? 0));
         return { projection: { "overlay/window-mean": means } };
       },
-      /** 🎯️ The window means the overlay computed. */
+      /** 🪟️ The window means the overlay computed. */
       subject: async (ctx: AdapterContext) => ({
         projection: { "overlay/window-mean": (await records(ctx, "moving-average.tex", "geometry/window-mean"))[0] ?? [] },
       }),

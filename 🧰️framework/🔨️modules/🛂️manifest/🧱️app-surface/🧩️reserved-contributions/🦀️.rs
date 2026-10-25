@@ -5,7 +5,7 @@ use super::*;
 // #region 🛂️Manifest
 //#region 🔖️Manifest
 //#region 🧩️ReservedContribution
-/// 🧩️ What one feature reserves on the apps that host it: actions joined to the app roster, actions joined to every
+/// 🖥️ What one feature reserves on the apps that host it: actions joined to the app roster, actions joined to every
 /// window kind of a built app, dialogs joined to an app that may edit, and the audience it fixes for its own verbs. A
 /// host (the app builder, the capability catalog) passes the contributions it hosts to [`reserved_app_actions`],
 /// [`reserved_window_actions`], [`reserved_editor_dialogs`] and [`reserved_audience_violation`], so a feature reaches
@@ -62,22 +62,22 @@ fn no_fixed_audience(_action_id: &str) -> Option<CapabilityAudience> {
     None
 }
 
-/// 🕹️ The app-roster actions of every contribution, in contribution order.
+/// 🎬️ The app-roster actions of every contribution, in contribution order.
 pub fn reserved_app_actions(contributions: &[ReservedContribution]) -> Vec<ActionDefinition> {
     contributions.iter().flat_map(|contribution| (contribution.app_actions)()).collect()
 }
 
-/// 🪟️ The window-kind actions every contribution reserves on the built `app`, in contribution order.
+/// 🔃️ The window-kind actions every contribution reserves on the built `app`, in contribution order.
 pub fn reserved_window_actions(contributions: &[ReservedContribution], app: &AppDefinition) -> Vec<ActionDefinition> {
     contributions.iter().flat_map(|contribution| (contribution.window_actions)(app)).collect()
 }
 
-/// 🗳️ The dialogs every contribution reserves on an app that may edit, in contribution order.
+/// ✏️ The dialogs every contribution reserves on an app that may edit, in contribution order.
 pub fn reserved_editor_dialogs(contributions: &[ReservedContribution]) -> Vec<DialogDefinition> {
     contributions.iter().flat_map(|contribution| (contribution.editor_dialogs)()).collect()
 }
 
-/// 🧭️ The audience the first contribution that owns `action_id` fixes for it.
+/// 🔧️ The audience the first contribution that owns `action_id` fixes for it.
 pub fn reserved_fixed_audience(contributions: &[ReservedContribution], action_id: &str) -> Option<CapabilityAudience> {
     contributions.iter().find_map(|contribution| (contribution.fixed_audience)(action_id))
 }

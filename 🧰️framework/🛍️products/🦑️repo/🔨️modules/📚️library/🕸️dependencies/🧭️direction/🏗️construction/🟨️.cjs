@@ -36,7 +36,7 @@ const RENDERER_HOST_UI_CONTRACT_TARGETS = exportTargetPatterns(workspacePackages
 const RENDERER_HOST_WINDOW_KIT_TARGETS = exportTargetPatterns(workspacePackages.filter(pkg => pkg.name === RENDERER_HOST_WINDOW_KIT_CONTRACT.package).map(pkg => ({ ...pkg, exportTargets: pkg.exportTargets.filter(row => RENDERER_HOST_WINDOW_KIT_CONTRACT.subpathPrefixes.some(prefix => row.subpath === prefix || row.subpath.startsWith(prefix + "/"))) })));
 /** 🗝️ The authored public targets of the admitted SDK foundation packages (`publicApi.sdkFoundationPackages`): neutral modules that carry keys once published by the SDK package, shared by plugins and renderer hosts. */
 const SDK_FOUNDATION_TARGETS = exportTargetPatterns(workspacePackages.filter(pkg => api.sdkFoundationPackages.includes(pkg.name)));
-const RESOLVED_NODE_BUILTIN_PATH = `^(?:node:)?(?:${[...new Set(nodeBuiltins.map((name) => name.replace(/^node:/, "")).filter((name) => !name.includes(":")))].map(escapeRegex).join("|")})(?:$|/)`;
+const RESOLVED_NODE_BUILTIN_PATH = `^(?:node:)?(?:${[...new Set(nodeBuiltins.map((name) => name.replace(/^node:/, "")).filter((name) => !name.includes(":") && name !== "sqlite"))].map(escapeRegex).join("|")})(?:$|/)`;
 const RENDERER_HOST_ALLOWED_RESOLVED_PATHS = [
   RENDERER_HOST_ROOT,
   ...RENDERER_HOST_UI_CONTRACT_TARGETS,
@@ -46,7 +46,7 @@ const RENDERER_HOST_ALLOWED_RESOLVED_PATHS = [
   "^🧰️framework/🔨️modules/🖱️ui/",
   "^🧰️framework/📦️packages/",
   installedPackagePath(["react", "react-dom"]),
-  "^(?:node:|vitest/)",
+  "^(?:node:(?!sqlite$)|vitest/)",
   "^bun:test$",
   installedPackagePath(["vite", "vitest"]),
   RESOLVED_NODE_BUILTIN_PATH,

@@ -1,9 +1,11 @@
 import{printScratchOwnerV1}from"../🟦️.ts";
-import { withJavascriptDependencyReadStorageV1, withRepositoryCacheStoreV1, type RepositoryCacheStoreV1 } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { withJavascriptDependencyReadStorageV1 } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
+import { withRepositoryCacheStoreV1, type RepositoryCacheStoreV1 } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import{resolve}from"node:path";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,type ScriptInvocation}from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{ResourceLeaseControl}from "@semio-tech/process/leases";
-import { readNativeCallerAuthorityV1, withArtifactScratchV1, withArtifactDestinationTaskV1, type ArtifactDestinationV1, withArtifactStorageOperationV1 } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { withArtifactScratchV1, withArtifactDestinationTaskV1, type ArtifactDestinationV1, withArtifactStorageOperationV1 } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/💾️storage/🟦️.ts";
 import{validateJsonSchemaSubset}from "../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 export type PrintOperationKindV1="toolchain"|"bundle"|"fonts"|"document"|"probe";

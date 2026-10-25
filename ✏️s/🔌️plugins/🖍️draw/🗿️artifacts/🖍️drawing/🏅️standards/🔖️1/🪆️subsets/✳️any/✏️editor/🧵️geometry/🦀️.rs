@@ -7,8 +7,8 @@ use semio_s_artifact_draw_drawing_scene::retirement::ScenePlanCloseJob;
 use semio_s_artifact_draw_drawing_scene::paint::scene::{ScenePaintJob, ScenePaintRetirement, PreparedScene, PreparedSceneCloseJob, PaintedSceneLimits};
 use semio_framework::kernel::{Effect,JobPlacement};
 use semio_framework_plugin::{AppRenderOperationContext,ArtifactView,Fault,PluginLifecycleStep};
-use semio_framework_plugin::reactor::jobs::{BoundedJob,BoundedJobFactory,IoRunControl,JobBudget,JobStep,SqliteSnapshotControl};
-use semio_framework_job::StepContext;
+use semio_framework_plugin::reactor::jobs::{BoundedJob,BoundedJobFactory,IoRunControl,JobStep,SqliteSnapshotControl};
+use semio_framework_job::{OriginalTurnFailure,StepContext};
 use std::{cell::RefCell,rc::Rc};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
@@ -56,14 +56,14 @@ thread_local!{static MOUNTED:RefCell<Registry>=RefCell::new(Registry::new());}
 struct GeometryJob{shell:Rc<RefCell<Option<State>>>,slot:usize,identity:SceneIdentity,job:u64,input:Option<Vec<u8>>,restored:Option<Vec<u8>>}
 fn fail_current(identity:SceneIdentity,slot:usize){MOUNTED.with(|r|{if let Some(i)=r.borrow_mut().instances[identity.instance as usize%INSTANCES].as_mut().filter(|i|i.identity.matches(identity)&&i.candidate==Some(slot)){i.failed=true;}});}
 impl GeometryJob{
- fn advance(&mut self,budget:JobBudget)->JobStep{
+ fn advance(&mut self,cx:&StepContext<'_>)->JobStep{
   let current=MOUNTED.with(|r|r.borrow().instances[self.identity.instance as usize%INSTANCES].is_some_and(|i|i.identity.matches(self.identity)&&i.candidate==Some(self.slot)));
   let mut shell=match self.shell.try_borrow_mut(){Ok(shell)=>shell,Err(_)=>return JobStep::Running(None)};
   let Some(state)=shell.as_mut()else{return JobStep::Failed(b"drawing.geometry.owner-missing".to_vec())};
   if state.job_id!=self.job||!state.identity.matches(self.identity){return JobStep::Failed(b"drawing.geometry.factory-stale".to_vec());}
   if !current||state.cancelled{state.transfer(false);fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.cancelled".to_vec());}
-  let previous_work=state.work;let started=semio_framework_job::default_now_us();let deadline=started.map(|t|t.saturating_add(u64::from(budget.deadline_ms.min(8))*1000));
-  for _ in 0..budget.fuel.min(65536){if deadline.is_some_and(|d|semio_framework_job::default_now_us().is_none_or(|t|t>=d)){break;}
+  let previous_work=state.work;let started=semio_framework_job::default_now_us();let deadline=started.map(|t|t.saturating_add(8_000).min(cx.deadline_us()));
+  for _ in 0..cx.fuel_remaining().min(65536){if deadline.is_some_and(|d|semio_framework_job::default_now_us().is_none_or(|t|t>=d)){break;}
    if state.cache.is_some(){
     if !state.producer.as_ref().is_some_and(|producer|producer.snapshot_authority_matches(self.identity.generation,self.identity.revision)){state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}
     match state.cache.as_mut().unwrap().advance(1){
@@ -82,9 +82,9 @@ impl GeometryJob{
  }
  }
 impl BoundedJob for GeometryJob{
- fn step(&mut self,budget:JobBudget,_original:&mut IoRunControl<'_,'_>,_snapshot:&mut SqliteSnapshotControl<'_>,_cx:&mut StepContext<'_>)->Result<JobStep,ValueError>{Ok(self.advance(budget))}
+ fn step(&mut self,_original:&mut IoRunControl<'_,'_>,_snapshot:&mut SqliteSnapshotControl<'_>,cx:&mut StepContext<'_>)->Result<JobStep,OriginalTurnFailure>{Ok(self.advance(cx))}
  /// 🧹️ The retained scene owners close through the registry ladder; this handle releases its two original input buffers and itself.
- fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
+ fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let grant=cx.retained_grant();let demand=self.retirement_demands(0)?;
   if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_release_bytes<demand.release_bytes{return Ok(false);}
   if let Some(input)=self.input.take(){cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:input.capacity(),..Default::default()})?;return Ok(false);}

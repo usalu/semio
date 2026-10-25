@@ -20,5 +20,4 @@ test("fixed scratch hash ownership matches independent Map through collisions, t
    expect([...actual.entries()].sort()).toEqual(Object.entries(patched).sort());
   }
  }
- console.log("[DEBUG] Actual first-party scratch hash agrees with independent Map under forced collisions, tombstone reuse, UTF-8 keys and full-capacity refusal");
 });

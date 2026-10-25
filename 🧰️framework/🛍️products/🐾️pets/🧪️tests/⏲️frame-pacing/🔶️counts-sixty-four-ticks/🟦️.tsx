@@ -2,7 +2,7 @@
 import { expect, it } from "vitest";
 import { TICKS_PER_SECOND } from "@semio-tech/pets";
 import { FRAME_TICKS, TICK_MILLISECONDS, createPacer } from "@semio-tech/pets-react";
-import { clock, stage, sum } from "../🟠️shared/🟦️.tsx";
+import { clock, stage, sum } from "../🟠️harness/🟦️.tsx";
 
 /** 🔷 Registers the counts sixty four ticks tests of the ⏲️ frame pacing suite. */
 export function registerCountsSixtyFourTicksTests(): void {

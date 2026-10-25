@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { dirname, relative, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 import Ajv, { type AnySchema } from "ajv";
 import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
@@ -165,37 +165,27 @@ test("keeps the extracted owner graph acyclic and free of root back imports", ()
   expect(visited.size).toBe(owners.size);
 });
 
-test("allocates a neutral caller-owned artifact environment and preserves explicit overrides", () => {
-  const scriptPath = resolve(libraryRoot, "📦️packages/🟦️typescript/📜️script.ts"),
-    text = readFileSync(scriptPath, "utf8");
-  const ownerPath = resolve(repoRoot, fixture.artifactEnvironment.owner),
-    ownerText = readFileSync(ownerPath, "utf8");
-  const syntax = ts.createSourceFile(ownerPath, ownerText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const owner = syntax.statements.find((statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === "repoTestArtifactEnvironment");
-  expect(owner).toBeDefined();
-  const implementationSource = owner!.getText(syntax).replace(/^export /u, "");
-  const implementations = [new Bun.Transpiler({ loader: "ts" }).transformSync(implementationSource), ts.transpileModule(implementationSource, { compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext } }).outputText].map(
-    (code) => new Function("resolve", "mkdirSync", `${code}\nreturn repoTestArtifactEnvironment;`),
-  );
-  for (const compile of implementations) {
-    const created: string[] = [],
-      implementation = compile(resolve, (path: string) => created.push(path));
-    for (const route of fixture.artifactEnvironment.routes) {
-      const actual = implementation(repoRoot, route, {});
-      expect(actual.SEMIO_TEST_ARTIFACT_DIR).toBe(resolve(repoRoot, fixture.artifactEnvironment.defaultRelativeRoot, route));
-    }
-    const explicit = implementation(repoRoot, "taxonomy-cli-cancellation", { SEMIO_TEST_ARTIFACT_DIR: fixture.artifactEnvironment.explicitRelativeRoot, SENTINEL: "preserved" });
-    expect(explicit).toEqual({ SEMIO_TEST_ARTIFACT_DIR: resolve(repoRoot, fixture.artifactEnvironment.explicitRelativeRoot), SENTINEL: "preserved" });
-    expect(created).toHaveLength(fixture.artifactEnvironment.routes.length + 1);
+test("allocates a neutral caller-owned artifact environment and preserves explicit overrides", async () => {
+  const { repoTestArtifactEnvironment } = await import(resolve(repoRoot, fixture.artifactEnvironment.owner));
+  const sandboxed = { ...process.env };
+  delete sandboxed.SEMIO_TEST_ARTIFACT_DIR;
+  const shared = resolve(repoRoot, fixture.artifactEnvironment.defaultRelativeRoot);
+  for (const route of fixture.artifactEnvironment.routes) {
+    const actual = repoTestArtifactEnvironment(repoRoot, route, sandboxed);
+    expect(isAbsolute(actual.SEMIO_TEST_ARTIFACT_DIR), route).toBe(true);
+    expect(actual.SEMIO_TEST_ARTIFACT_DIR.startsWith(shared), route).toBe(false);
   }
-  for (const route of fixture.artifactEnvironment.routes) expect(text).toContain(`repoTestArtifactEnvironment(this.repoRoot, "${route}")`);
+  const explicit = repoTestArtifactEnvironment(repoRoot, "taxonomy-cli-cancellation", { SEMIO_TEST_ARTIFACT_DIR: fixture.artifactEnvironment.explicitRelativeRoot, SENTINEL: "preserved" });
+  expect(explicit).toEqual({ SEMIO_TEST_ARTIFACT_DIR: resolve(repoRoot, fixture.artifactEnvironment.explicitRelativeRoot), SENTINEL: "preserved" });
+  expect(() => repoTestArtifactEnvironment(repoRoot, "Invalid Route", sandboxed)).toThrow("Invalid test artifact route");
 });
+
 
 test("registers one Bun and Nx route", () => {
   const project: NxProjectManifest = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   const packageJson: NpmPackageManifest = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
   expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
-  expect(packageJson.scripts[fixture.route.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.route.target}`);
+  expect(packageJson.scripts[fixture.route.target]).toBe(`repo run @semio-tech/repo-lib:${fixture.route.target}`);
 });
 
 

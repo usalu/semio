@@ -1,5 +1,5 @@
 import{createIssuedResourceControlV1 as artifactEntryControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
@@ -7,12 +7,11 @@ import {Command} from "commander";
 import {spawnSync} from "node:child_process";
 import {existsSync,lstatSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {isAbsolute,join,relative} from "node:path";
-import {availableParallelism} from "node:os";
 import ts from "typescript";
 import {readRepositoryCargoLaunchV1,withRepositoryCargoIsolatedStoreV1,REPOSITORY_CARGO_LAUNCH_POLICY_V1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
-import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {openNativeImageStorageV1,retireNativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/image";
 import {acquireNativeStorageV1,nativeStorageRetirementPortV1} from "@semio-tech/process/artifacts/native-build/storage";
@@ -28,8 +27,8 @@ test("repository Cargo launch arguments agree with commander, Ajv and an indepen
   for(const row of fixture.arguments){
    if(row.request===null){expect(()=>readRepositoryCargoLaunchV1(row.argv,row.environment),row.name).toThrow();continue;}
    const request=readRepositoryCargoLaunchV1(row.argv,row.environment),independent=new Command().exitOverride().option("--store <store>").option("--configuration <configuration>").option("--parallelism <cores>").argument("[cargo...]").parse([...row.argv],{from:"user"}),selected=independent.opts<{store:string;configuration:string;parallelism?:string}>();
-   expect(request,row.name).toEqual({...row.request,parallelism:row.request.parallelism==="available"?availableParallelism():row.request.parallelism} as never);expect(ajv.validate("launch#/definitions/Request",request),row.name).toBe(true);
-   expect([selected.store,selected.configuration,independent.args],row.name).toEqual([request.store,request.configuration,[...request.cargo]]);expect(selected.parallelism===undefined?availableParallelism():Number(selected.parallelism),row.name).toBe(request.parallelism);
+   expect(request,row.name).toEqual(row.request as never);expect(ajv.validate("launch#/definitions/Request",request),row.name).toBe(true);
+   expect([selected.store,selected.configuration,independent.args],row.name).toEqual([request.store,request.configuration,[...request.cargo]]);expect(selected.parallelism===undefined?"planned":Number(selected.parallelism),row.name).toBe(request.parallelism);
    const kind=oracle.query("SELECT subcommands.key AS kind FROM json_each(json_extract(?, '$.subcommands')) AS subcommands, json_each(subcommands.value) AS names WHERE names.value = ?").get(JSON.stringify(REPOSITORY_CARGO_LAUNCH_POLICY_V1),request.cargo[0]!) as {kind:string};expect(kind.kind,row.name).toBe(request.kind);
   }
  }finally{oracle.close();}

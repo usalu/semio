@@ -4,37 +4,37 @@ use crate::{standards::v2_0::subsets::any::schema::snapshot::GltfBuffer, standar
 use crate::standards::v2_0::subsets::any::io::text::diff::wire::*;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_texture_info(v: &GltfTextureInfo) -> String {
+pub fn enc_texture_info(v: &GltfTextureInfo) -> String {
     format!("[{},{},{},{}]", v.index, enc_u64(v.tex_coord), encode_option(&v.extensions, enc_json), encode_option(&v.extras, enc_json))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_texture_info(s: &str) -> Result<GltfTextureInfo, String> {
+pub fn dec_texture_info(s: &str) -> Result<GltfTextureInfo, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [index, tex_coord, extensions, extras] = parts.as_slice() else { return Err(format!("texture info: expected 4 fields, got {}", parts.len())) };
     Ok(GltfTextureInfo { index: parse_usize(index)?, tex_coord: dec_u64(tex_coord)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_normal_texture_info(v: &GltfNormalTextureInfo) -> String {
+pub fn enc_normal_texture_info(v: &GltfNormalTextureInfo) -> String {
     format!("[{},{},{},{},{}]", v.index, enc_u64(v.tex_coord), enc_f64(v.scale), encode_option(&v.extensions, enc_json), encode_option(&v.extras, enc_json))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_normal_texture_info(s: &str) -> Result<GltfNormalTextureInfo, String> {
+pub fn dec_normal_texture_info(s: &str) -> Result<GltfNormalTextureInfo, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [index, tex_coord, scale, extensions, extras] = parts.as_slice() else { return Err(format!("normal texture info: expected 5 fields, got {}", parts.len())) };
     Ok(GltfNormalTextureInfo { index: parse_usize(index)?, tex_coord: dec_u64(tex_coord)?, scale: dec_f64(scale)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_occlusion_texture_info(v: &GltfOcclusionTextureInfo) -> String {
+pub fn enc_occlusion_texture_info(v: &GltfOcclusionTextureInfo) -> String {
     format!("[{},{},{},{},{}]", v.index, enc_u64(v.tex_coord), enc_f64(v.strength), encode_option(&v.extensions, enc_json), encode_option(&v.extras, enc_json))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_occlusion_texture_info(s: &str) -> Result<GltfOcclusionTextureInfo, String> {
+pub fn dec_occlusion_texture_info(s: &str) -> Result<GltfOcclusionTextureInfo, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [index, tex_coord, strength, extensions, extras] = parts.as_slice() else { return Err(format!("occlusion texture info: expected 5 fields, got {}", parts.len())) };
     Ok(GltfOcclusionTextureInfo { index: parse_usize(index)?, tex_coord: dec_u64(tex_coord)?, strength: dec_f64(strength)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_pbr(v: &GltfPbrMetallicRoughness) -> String {
+pub fn enc_pbr(v: &GltfPbrMetallicRoughness) -> String {
     format!(
         "[{},{},{},{},{},{},{}]",
         enc_f64_slice(&v.base_color_factor),
@@ -47,7 +47,7 @@ pub(crate) fn enc_pbr(v: &GltfPbrMetallicRoughness) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_pbr(s: &str) -> Result<GltfPbrMetallicRoughness, String> {
+pub fn dec_pbr(s: &str) -> Result<GltfPbrMetallicRoughness, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [base_color_factor, base_color_texture, metallic_factor, roughness_factor, metallic_roughness_texture, extensions, extras] = parts.as_slice() else {
         return Err(format!("pbr: expected 7 fields, got {}", parts.len()));
@@ -63,7 +63,7 @@ pub(crate) fn dec_pbr(s: &str) -> Result<GltfPbrMetallicRoughness, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_material(m: &GltfMaterial) -> String {
+pub fn enc_material(m: &GltfMaterial) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option(&m.name, |v| enc_str(v)),
@@ -80,7 +80,7 @@ pub(crate) fn enc_material(m: &GltfMaterial) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_material(s: &str) -> Result<GltfMaterial, String> {
+pub fn dec_material(s: &str) -> Result<GltfMaterial, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, pbr, normal_texture, occlusion_texture, emissive_texture, emissive_factor, alpha_mode, alpha_cutoff, double_sided, extensions, extras] = parts.as_slice() else {
         return Err(format!("material: expected 11 fields, got {}", parts.len()));
@@ -100,7 +100,7 @@ pub(crate) fn dec_material(s: &str) -> Result<GltfMaterial, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_material_diff(d: &GltfMaterialDiff) -> String {
+pub fn enc_material_diff(d: &GltfMaterialDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option_option(&d.name, |v| enc_str(v)),
@@ -117,7 +117,7 @@ pub(crate) fn enc_material_diff(d: &GltfMaterialDiff) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_material_diff(s: &str) -> Result<GltfMaterialDiff, String> {
+pub fn dec_material_diff(s: &str) -> Result<GltfMaterialDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, pbr, normal_texture, occlusion_texture, emissive_texture, emissive_factor, alpha_mode, alpha_cutoff, double_sided, extensions, extras] = parts.as_slice() else {
         return Err(format!("material diff: expected 11 fields, got {}", parts.len()));
@@ -137,17 +137,17 @@ pub(crate) fn dec_material_diff(s: &str) -> Result<GltfMaterialDiff, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_buffer(b: &GltfBuffer) -> String {
+pub fn enc_buffer(b: &GltfBuffer) -> String {
     format!("[{},{},{},{},{}]", b.byte_length, encode_option(&b.uri, |v| enc_str(v)), encode_option(&b.name, |v| enc_str(v)), encode_option(&b.extensions, enc_json), encode_option(&b.extras, enc_json))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_buffer(s: &str) -> Result<GltfBuffer, String> {
+pub fn dec_buffer(s: &str) -> Result<GltfBuffer, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [byte_length, uri, name, extensions, extras] = parts.as_slice() else { return Err(format!("buffer: expected 5 fields, got {}", parts.len())) };
     Ok(GltfBuffer { byte_length: parse_usize(byte_length)?, uri: decode_option(uri, dec_str)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_buffer_diff(d: &GltfBufferDiff) -> String {
+pub fn enc_buffer_diff(d: &GltfBufferDiff) -> String {
     format!(
         "[{},{},{},{},{}]",
         encode_option(&d.byte_length, |v| v.to_string()),
@@ -158,7 +158,7 @@ pub(crate) fn enc_buffer_diff(d: &GltfBufferDiff) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_buffer_diff(s: &str) -> Result<GltfBufferDiff, String> {
+pub fn dec_buffer_diff(s: &str) -> Result<GltfBufferDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [byte_length, uri, name, extensions, extras] = parts.as_slice() else { return Err(format!("buffer diff: expected 5 fields, got {}", parts.len())) };
     Ok(GltfBufferDiff {
@@ -170,7 +170,7 @@ pub(crate) fn dec_buffer_diff(s: &str) -> Result<GltfBufferDiff, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_buffer_view(v: &GltfBufferView) -> String {
+pub fn enc_buffer_view(v: &GltfBufferView) -> String {
     format!(
         "[{},{},{},{},{},{},{},{}]",
         v.buffer,
@@ -184,7 +184,7 @@ pub(crate) fn enc_buffer_view(v: &GltfBufferView) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_buffer_view(s: &str) -> Result<GltfBufferView, String> {
+pub fn dec_buffer_view(s: &str) -> Result<GltfBufferView, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer, byte_offset, byte_length, byte_stride, target, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("buffer view: expected 8 fields, got {}", parts.len()));
@@ -204,25 +204,25 @@ pub(crate) fn dec_buffer_view(s: &str) -> Result<GltfBufferView, String> {
 /// this grammar (no base64: no external dep, matching the family's own hex idiom, see
 /// `f6-recon-report.md` §5).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_bytes(v: &[u8]) -> String {
+pub fn enc_bytes(v: &[u8]) -> String {
     hex_encode(v)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
+pub fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
     hex_decode(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_texture(t: &GltfTexture) -> String {
+pub fn enc_texture(t: &GltfTexture) -> String {
     format!("[{},{},{},{},{}]", encode_option(&t.sampler, |v| v.to_string()), encode_option(&t.source, |v| v.to_string()), encode_option(&t.name, |v| enc_str(v)), encode_option(&t.extensions, enc_json), encode_option(&t.extras, enc_json),)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_texture(s: &str) -> Result<GltfTexture, String> {
+pub fn dec_texture(s: &str) -> Result<GltfTexture, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [sampler, source, name, extensions, extras] = parts.as_slice() else { return Err(format!("texture: expected 5 fields, got {}", parts.len())) };
     Ok(GltfTexture { sampler: decode_option(sampler, parse_usize)?, source: decode_option(source, parse_usize)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_image(i: &GltfImage) -> String {
+pub fn enc_image(i: &GltfImage) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&i.uri, |v| enc_str(v)),
@@ -234,7 +234,7 @@ pub(crate) fn enc_image(i: &GltfImage) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_image(s: &str) -> Result<GltfImage, String> {
+pub fn dec_image(s: &str) -> Result<GltfImage, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [uri, mime_type, buffer_view, name, extensions, extras] = parts.as_slice() else { return Err(format!("image: expected 6 fields, got {}", parts.len())) };
     Ok(GltfImage {
@@ -247,7 +247,7 @@ pub(crate) fn dec_image(s: &str) -> Result<GltfImage, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_sampler(s: &GltfSampler) -> String {
+pub fn enc_sampler(s: &GltfSampler) -> String {
     format!(
         "[{},{},{},{},{},{},{}]",
         encode_option(&s.mag_filter, |v| enc_u64(*v)),
@@ -260,7 +260,7 @@ pub(crate) fn enc_sampler(s: &GltfSampler) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_sampler(s: &str) -> Result<GltfSampler, String> {
+pub fn dec_sampler(s: &str) -> Result<GltfSampler, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [mag_filter, min_filter, wrap_s, wrap_t, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("sampler: expected 7 fields, got {}", parts.len()));
@@ -276,7 +276,7 @@ pub(crate) fn dec_sampler(s: &str) -> Result<GltfSampler, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_skin(v: &GltfSkin) -> String {
+pub fn enc_skin(v: &GltfSkin) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&v.inverse_bind_matrices, |x| x.to_string()),
@@ -288,7 +288,7 @@ pub(crate) fn enc_skin(v: &GltfSkin) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_skin(s: &str) -> Result<GltfSkin, String> {
+pub fn dec_skin(s: &str) -> Result<GltfSkin, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [inverse_bind_matrices, skeleton, joints, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("skin: expected 6 fields, got {}", parts.len()));

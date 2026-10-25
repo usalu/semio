@@ -3,12 +3,12 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { identifierSet, parseRustSourceTree, type RustModuleNode } from "../🌳️module-tree/🟦️.ts";
-import { declaredNames, hostPrivate, prependAfterInner, widenHostItems, type TestTransformResult } from "../🧪️test-closure/🟢️shared/🟦️.ts";
+import { declaredNames, hostPrivate, prependAfterInner, widenHostItems, type TestTransformResult } from "../🧪️test-closure/🟢️harness/🟦️.ts";
 
 /** 🪜️ A file module mounted from a host file, with the chain of module names that encloses its declaration. */
 type LibMount = { readonly hostFile: string; readonly node: RustModuleNode; readonly file: string; readonly trail: readonly string[]; readonly hostIsRoot: boolean; readonly inFileScope: boolean };
 
-/** 🪜️ The path a module has once the private `component` mounts are collapsed into their parents. */
+/** 🔂️ The path a module has once the private `component` mounts are collapsed into their parents. */
 function plainTrail(trail: readonly string[]): string[] {
   return trail.filter((segment) => segment !== "component");
 }
@@ -71,7 +71,7 @@ export function absolutizeBeyond(text: string, moduleEff: readonly string[], kee
   return out;
 }
 
-/** 🪜️ Lifts the child modules of the named parents out of their hosts: every `super::` chain of a child subtree that climbs above the child becomes an absolute `crate::` path, private host items and imports the child reaches through `super::*` are carried or widened, so the child no longer needs its host in the same crate and the slicer can place it alone. Returns the transform result extended by the lift. */
+/** ⬆️ Lifts the child modules of the named parents out of their hosts: every `super::` chain of a child subtree that climbs above the child becomes an absolute `crate::` path, private host items and imports the child reaches through `super::*` are carried or widened, so the child no longer needs its host in the same crate and the slicer can place it alone. Returns the transform result extended by the lift. */
 export function liftModuleKids(previous: TestTransformResult | null, rootFile: string, originalRootSource: string, patterns: readonly string[]): TestTransformResult {
   const result: TestTransformResult = previous ?? { rootSource: originalRootSource, edits: new Map(), creates: new Map(), deletes: new Set(), notes: [] };
   const overlay = new Map<string, string>();

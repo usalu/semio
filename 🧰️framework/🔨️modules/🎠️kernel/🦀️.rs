@@ -38,7 +38,7 @@ pub use semio_framework_diagnostic::FaultScope;
 pub use semio_framework_diagnostic::Severity;
 
 //#region 🔖️Invocation
-/// 📋️ How a paste anchors the copied fragment relative to the paste point — the seven placement
+/// ⚓️ How a paste anchors the copied fragment relative to the paste point — the seven placement
 /// modes semio_compose_rs's `copyDesign`/`pasteDesign` supported, now an OS-owned concept.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -53,7 +53,7 @@ pub enum PasteAnchor {
     TopRight,
 }
 
-/// 📋️ Where/how a paste places its fragment: `anchor` picks the reference point, `position` (when
+/// 📌️ Where/how a paste places its fragment: `anchor` picks the reference point, `position` (when
 /// given) overrides where that reference point lands.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -153,7 +153,7 @@ pub enum Effect {
     Notify {
         message: String,
     },
-    /// 📋️ Asks the shell to write a copied/cut fragment to the OS clipboard (system clipboard where
+    /// ✂️ Asks the shell to write a copied/cut fragment to the OS clipboard (system clipboard where
     /// available, session-local fallback otherwise) — emitted by `VcsArtifactApp`'s `copy`/`cut`
     /// interception, never constructed by an app directly.
     ClipboardWrite {
@@ -322,7 +322,7 @@ pub enum Effect {
         #[value(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
     },
-    /// 🔁️ Asks the shell to invoke an extension capability. `req` is MINTED by the guest
+    /// 🔌️ Asks the shell to invoke an extension capability. `req` is MINTED by the guest
     /// request registry (`semio-framework-plugin`'s `RequestRegistry`) and is meaningless — a
     /// silently discarded result — when it is written by hand: `Event::Completed { req, .. }` is
     /// routed exclusively through that registry, and an id with no registry slot resolves nothing.
@@ -338,7 +338,7 @@ pub enum Effect {
         request_json: String,
     },
 
-    /// 📨️ Replaces every non-UI/non-event `AppFrame::*` plus `backbone-send` — `target`
+    /// ✉️ Replaces every non-UI/non-event `AppFrame::*` plus `backbone-send` — `target`
     /// picks shell vs. backbone vs. a specific plugin/extension/topic.
     SendMessage {
         target: MessageEndpoint,
@@ -398,7 +398,7 @@ pub enum Effect {
         #[value(default, skip_serializing_if = "Option::is_none")]
         filter: Option<DslValue>,
     },
-    /// 🧵️ Routed by the host `IoRouter` to the owning plugin as an `Event::Request` — one
+    /// 🗺️ Routed by the host `IoRouter` to the owning plugin as an `Event::Request` — one
     /// hop, no re-entrancy.
     IoCompose {
         req: RequestId,
@@ -476,7 +476,7 @@ pub enum Effect {
 }
 
 impl Effect {
-    /// 🔁️ The single constructor for the `#[non_exhaustive]` [`Effect::InvokeExtension`] variant —
+    /// 🔂️ The single constructor for the `#[non_exhaustive]` [`Effect::InvokeExtension`] variant —
     /// `req` MUST come from the guest `RequestRegistry` (`RequestRegistry::request_continuation`)
     /// or from a host-side WIT lift of an id the guest already minted. Hand-written ids resolve
     /// nothing, which is exactly the foot-gun the variant's `#[non_exhaustive]` closes.
@@ -500,7 +500,7 @@ pub enum JobPlacement {
 
 //#region 🧵️SpawnedJobDrive
 impl JobPlacement {
-    /// 🚦 The WIT `job-placement` case name this placement crosses the actor boundary as
+    /// 🔤️ The WIT `job-placement` case name this placement crosses the actor boundary as
     /// (`🔌️plugin/🧬️schema/📜️.wit`'s `enum job-placement`). jco hands a bare string for a WIT `enum`,
     /// not a `{tag}` record, so a renderer door reads THIS vocabulary and nothing else.
     pub fn wire_name(self) -> &'static str {
@@ -511,7 +511,7 @@ impl JobPlacement {
         }
     }
 
-    /// 🚦 The inverse of [`Self::wire_name`]. An unknown spelling is `None` rather than a silent
+    /// 🔙️ The inverse of [`Self::wire_name`]. An unknown spelling is `None` rather than a silent
     /// default: a host that guessed `Inline` for an unrecognised placement would run a job meant for
     /// its own pooled actor inside the spawning instance's turn budget.
     pub fn from_wire_name(name: &str) -> Option<Self> {
@@ -523,7 +523,7 @@ impl JobPlacement {
         }
     }
 
-    /// 🚦 The whole vocabulary, in WIT declaration order — what a language-agnostic law enumerates.
+    /// 📚️ The whole vocabulary, in WIT declaration order — what a language-agnostic law enumerates.
     pub const ALL: [Self; 3] = [Self::Inline, Self::Isolated, Self::Exclusive];
 }
 
@@ -652,7 +652,7 @@ pub use ::replication::wire::command_ingress::{
     FixedCommandPage, CommandPageSet, PagedCommand, PagedCommandReader, CommandEnvelope, CommandBatch, CommandEnvelopeSet, RejectedCommandBuild, RejectedCommandBuildRegistry, CommandBatchProgress, CommandBatchDriver, CommandDriverRegistry, CommandPageCursor, CommandIngressStatus, COMMAND_PAGE_MAXIMUM_BYTES, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_BATCH_MAXIMUM_ITEMS, INVOCATION_RESULT_PACK_MAXIMUM_BYTES
 };
 
-/// 📨️ Everything the host delivers into a guest's `reactor::poll` — the full inbound contract
+/// 📬️ Everything the host delivers into a guest's `reactor::poll` — the full inbound contract
 /// from `📓️design-abi.md` §2. Lifecycle events open/close/activate/suspend an instance and push
 /// capability/quota changes; channel/surface/completion/messaging/timer/request events drive a
 /// turn. Nothing constructs one yet — additive, packet A2-abi-sdk's executor is the first reader.
@@ -766,7 +766,7 @@ pub enum Event {
     },
     Wake,
 
-    /// ↩️ The former `extension.invoke`/`artifact-compose`/`io-run`/`io-sniff`/`artifact-infer`/
+    /// ❓️ The former `extension.invoke`/`artifact-compose`/`io-run`/`io-sniff`/`artifact-infer`/
     /// `artifact-mutation-plan`/`migrate-artifact` — answered with `Effect::Respond` within a
     /// bounded number of turns, or by spawning a job.
     Request {

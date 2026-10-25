@@ -32,7 +32,7 @@ type Device = ID3D12Device;
 
 //#region 📬️GrowBuffer
 
-/// 📬️ One growable `D3D12_HEAP_TYPE_UPLOAD` buffer, rewritten wholesale every upload. Ported from the
+/// 🌱️ One growable `D3D12_HEAP_TYPE_UPLOAD` buffer, rewritten wholesale every upload. Ported from the
 /// wgpu target's/Metal backend's `GrowBuffer` 1:1 — same growth policy (next power of two, floor 256
 /// bytes, never shrinks), same "empty data uploads nothing and returns `None`" contract.
 #[derive(Default)]
@@ -75,7 +75,7 @@ impl GrowBuffer {
     }
 }
 
-/// 📬️ Every per-frame growable buffer a render pass writes into before encoding draws.
+/// 🎞️ Every per-frame growable buffer a render pass writes into before encoding draws.
 ///
 /// **Same simplification as Metal's `FrameBuffers` vs. the wgpu target's**: `RenderPacket::
 /// quad_instances`/`vector_vertices` are already flat arrays covering every batch (backdrop,

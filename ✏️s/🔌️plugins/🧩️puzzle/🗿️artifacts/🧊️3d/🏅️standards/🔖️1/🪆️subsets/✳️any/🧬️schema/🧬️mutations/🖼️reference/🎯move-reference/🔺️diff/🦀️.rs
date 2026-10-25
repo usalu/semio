@@ -1,4 +1,5 @@
 //! 🔺️ Sparse diff builder for `MoveReference` — patches the one addressed reference in place.
+use protocol::list_delta::RowPatch;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dReferencePatch;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dReferencesDelta;

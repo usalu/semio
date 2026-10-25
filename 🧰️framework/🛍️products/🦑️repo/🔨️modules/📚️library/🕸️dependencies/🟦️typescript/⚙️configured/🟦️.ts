@@ -7,7 +7,7 @@ import {createHash} from "node:crypto";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {checkScriptInvocation,advanceScriptInvocation,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 /** 🧬️ Names authored source roots and compiler configuration without exporting external compiler types. */
 export interface ConfiguredSourceRequestV1{readonly version:1;readonly entries:readonly string[];readonly project:string;readonly packages:Readonly<Record<string,string>>;readonly externalDependencies:readonly string[];readonly maximumFiles:number;readonly maximumBytes:number}
 /** 📌️ Retains current actual Source facts through its original operation and explicit rechecks. */

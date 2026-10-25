@@ -217,7 +217,7 @@ fn a_move_is_one_positional_row_and_inverts_to_the_reverse_move() {
     let (diff, _) = mutation.diff(&before).into_parts();
     assert_eq!(third_party_json(&diff), serde_json::json!({"deltas":[{"delta":"widgets","value":{"removed":[],"inserted":[],"replaced":[],"moved":[{"id":"c","from":2,"to":0}]}}]}));
     assert_eq!(third_party_json(&mutation.inverse(&before).expect("valid retained mutation inverse fixture")), serde_json::json!([{"operation":"moveWidget","id":"c","toIndex":2}]));
-    let negative = crate::os_spr::DiffAlgebra::<FlowHostSnapshot>::inverse(&diff, &before);
+    let negative = crate::os_spr::ColdDiffAlgebra::<FlowHostSnapshot>::inverse(&diff, &before);
     assert_eq!(third_party_json(&negative), serde_json::json!({"deltas":[{"delta":"widgets","value":{"removed":[],"inserted":[],"replaced":[],"moved":[{"id":"c","from":0,"to":2}]}}]}));
     let moved = protocol::apply_diff_cold(&diff, &before).expect("move applies");
     let restored = protocol::apply_diff_cold(&negative, &moved).expect("negative applies");
@@ -234,7 +234,7 @@ fn a_move_is_one_positional_row_and_inverts_to_the_reverse_move() {
 fn a_mixed_remove_and_move_delta_inverts_in_two_ordered_deltas() {
     let before = base();
     let diff = FlowDiff::from(FlowDelta::Widgets(FlowCollectionDelta { removed: vec!["b".into()], moved: vec![FlowMove { id: "c".into(), from: 1, to: 0 }], ..FlowCollectionDelta::default() }));
-    let negative = crate::os_spr::DiffAlgebra::<FlowHostSnapshot>::inverse(&diff, &before);
+    let negative = crate::os_spr::ColdDiffAlgebra::<FlowHostSnapshot>::inverse(&diff, &before);
     assert_eq!(negative.deltas.len(), 2);
     let after = protocol::apply_diff_cold(&diff, &before).expect("mixed delta applies");
     assert_eq!(after.widgets.iter().map(|widget| widget.id().as_str()).collect::<Vec<_>>(), ["c", "a"]);
@@ -393,13 +393,14 @@ fn flow_opens_as_an_owned_member_through_its_own_pack_codec() {
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 0, maximum_release_bytes: 4_096, maximum_depth: 4_096 };
     assert!(matches!(cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..grant }), semio_framework_value::retirement::RetirementStep::BudgetExhausted), "zero items refuse before moving any owner");
     for turn in 0..1_000_000 {
-        if owner.terminal_is_empty() { break; }
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: owner.next_capacity_byte_demand(4_096).expect("exact Flow frontier capacity demand"), maximum_release_bytes: owner.next_release_byte_demand().expect("exact Flow frontier release demand"), maximum_depth: owner.next_depth_demand().expect("exact Flow frontier depth demand") };
-        assert_eq!(owner.step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..grant }).expect("zero items refuse before moving any owner").progress().copied_items, 0);
-        owner.step(grant).expect("the member opener's owner cursor accepts its exact quote");
+        if cursor.terminal_is_empty() { break; }
+        let demand = cursor.next_demand(4_096).expect("exact Flow frontier demand");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: cursor.next_depth_demand().expect("exact Flow frontier depth demand") };
+        assert!(matches!(cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..grant }), semio_framework_value::retirement::RetirementStep::BudgetExhausted), "zero items refuse before moving any owner");
+        assert!(!matches!(cursor.close_step(grant), semio_framework_value::retirement::RetirementStep::Failure(_)), "the member opener's owner cursor accepts its exact quote");
         assert!(turn < 999_999, "the member opener's owner cursor never reached terminal-empty");
     }
-    assert!(owner.terminal_is_empty(), "the member opener's owner cursor reached terminal-empty");
+    assert!(cursor.terminal_is_empty(), "the member opener's owner cursor reached terminal-empty");
     snapshot.retire_cold();
 }
 //#endregion 🧪️Laws

@@ -13,10 +13,10 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { checkParsers, parseProjectionArguments, projectParsers, renderParserCheck, renderProjectionReport } from "./🪞️parser-projection/🟦️.ts";
-import { runtimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#region 🔖️SchemaScript
-/** 🧪️ The tracked vitest project of `framework.schema`, which declares the module's own third-party oracle specs. */
+/** 🔮️ The tracked vitest project of `framework.schema`, which declares the module's own third-party oracle specs. */
 const SCHEMA_ORACLE_VITEST_CONFIG = "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts";
 
 /** 🦀️ The crate whose registered test binaries produce the Rust-side evidence the schema gate consumes. */
@@ -217,6 +217,7 @@ export class SchemaScript extends Script {
   /** 📤️ Runs the genuine native producer and removes only its unique intermediate output. */
   private async productionEntries(args:string[]):Promise<SchemaRustEntryDump>{
     const outIndex=args.indexOf("--out"),name=outIndex>=0?args[outIndex+1]:undefined;if(outIndex>=0&&!name)throw Error("[schema] --out requires a report name");
+    if(name){const {repositoryBuildReportNameV1}=await import("../../🏗️build/📊️reporting/🟦️.ts");repositoryBuildReportNameV1(name);}
     const {withRepositoryCacheStoreV1}=await import("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");
     return withRepositoryCacheStoreV1(this.root,"diagnostics",this.invocation,createIssuedResourceControlV1(this.invocation,"cache:store-entry",0),async store=>{
       const {requireNativeStoragePathV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"),base=requireNativeStoragePathV1(store.root,join(store.root,"tmp"));mkdirSync(base,{recursive:true});const directory=mkdtempSync(join(base,"registry-")),output=requireNativeStoragePathV1(store.root,join(directory,"entries.json")),module=join(this.root,"🧰️framework/🔨️modules/🧬️schema");
@@ -238,13 +239,13 @@ export class SchemaScript extends Script {
     return ["vitest", "run", "--config", join(this.root, SCHEMA_ORACLE_VITEST_CONFIG)];
   }
 
-  /** 🧪️ Runs the ajv draft-07 oracle spec that validates the owned Rust structural validator. */
+  /** 📕️ Runs the ajv draft-07 oracle spec that validates the owned Rust structural validator. */
   private oracle(): void {
     runCmd(process.execPath, ["x", ...this.oracleArguments()], { cwd: this.root });
   }
 
   /**
-   * 🦀️ Runs one registered `semio-framework-schema` test binary with the environment variable that makes it
+   * ▶️ Runs one registered `semio-framework-schema` test binary with the environment variable that makes it
    * write its JSON report, and answers where that report landed. `--out <path>` redirects it; otherwise it
    * lands on the binary's declared `tracked` home, or — when the report is evidence rather than a contract,
    * the exit status being the gate — on a scratch file.
@@ -259,13 +260,13 @@ export class SchemaScript extends Script {
     return path;
   }
 
-  /** 🧩️ The repo-wide gate: every schema module compiles against the owned draft-07 validator. */
+  /** 🔨️ The repo-wide gate: every schema module compiles against the owned draft-07 validator. */
   private compile(args: string[]): void {
     const report = this.rustReport(SCHEMA_MODULE_COMPILE_TEST, args);
     console.log(`[schema compile] cargo test -p ${SCHEMA_RUST_CRATE} --test ${SCHEMA_MODULE_COMPILE_TEST.test} passed; report at ${report}`);
   }
 
-  /** 📤️ Produces and verifies current registry entries once from the clean native binary. */
+  /** 📋️ Produces and verifies current registry entries once from the clean native binary. */
   private async entries(args: string[]): Promise<void> {
     if (args.includes("--rust-entries")) throw Error("[schema entries] Registry inputs are produced fresh; --out names the produced output.");
     await this.verify(args, await this.productionEntries(args));

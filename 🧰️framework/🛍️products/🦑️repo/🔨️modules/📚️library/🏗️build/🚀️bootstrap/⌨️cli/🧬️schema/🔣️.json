@@ -41,7 +41,9 @@
           "scriptRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
           "targets": {
             "cache-reset-graph": "graph",
-            "cache-reset-nx": "nx"
+            "cache-reset-nx": "nx",
+            "cache-reset-rust": "rust",
+            "cache-reset-products": "products"
           }
         }
       }

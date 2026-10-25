@@ -12,10 +12,10 @@ pub fn set_lod_mode_for_pane(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Valu
     ctx.scene.runtime.lod_mode_by_pane.insert(pane.to_string(), mode.to_string());
     if pane == crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID {
         if mode == PUZZLE2D_LOD_MODE_AUTOMATIC {
-            ctx.host.borrow_mut().set_automatic_lod(true);
+            ctx.host.borrow_mut().style.set_automatic_lod(true);
         } else {
-            ctx.host.borrow_mut().set_automatic_lod(false);
-            ctx.host.borrow_mut().set_forced_draw_lod_label(mode);
+            ctx.host.borrow_mut().style.set_automatic_lod(false);
+            ctx.host.borrow_mut().style.set_forced_draw_lod_label(mode);
         }
     }
     *ctx.ui_scope = puzzle2d_window_and_measures_scope();

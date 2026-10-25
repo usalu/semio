@@ -14,7 +14,7 @@ export type ArtifactInstanceRef = {
   readonly artifactKind: string;
 };
 
-/** 🗺️ Host-side registry from artifact id to the plugin instance that owns it — the transaction
+/** 📂️ Host-side registry from artifact id to the plugin instance that owns it — the transaction
  * coordinator's `InstanceDirectory(target) → (plugin, instance)` lookup (contract freeze §5.3).
  * Registration/unregistration is the caller's responsibility (on `createApp`/`loadDocument` and on
  * `destroyApp`), matching how the Rust host's directory is populated. */

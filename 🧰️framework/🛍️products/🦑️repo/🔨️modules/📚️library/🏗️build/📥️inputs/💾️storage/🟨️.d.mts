@@ -59,25 +59,20 @@ export function buildGraphWriterMaintenanceDueV1(request:{readonly kind:"full"|"
 
 export function withRepositoryBuildGraphConsumerV1<T>(workspace:string,control:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
 
-export function requireCurrentRepositoryBuildGraphConsumerV1():void;
 
 /** 🧾️ Counts actual optional deletions under an authenticated canonical writer without promising sufficient headroom. */
-export function retireBuildGraphOptionalHeadroomV1(image:import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts").NativeImageStorageV1,custody:import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts").NativeImageMaintenanceCustodyV1,request:Readonly<{minimumAvailableBytes:number}>):Promise<Readonly<{retainedOptionalBytes:number;availableBytes:number;requiredAvailableBytes:number;retiredBytes:number;retiredFiles:number}>>;
+export function retireBuildGraphOptionalHeadroomV1(image:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts").NativeImageStorageV1,custody:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts").NativeImageMaintenanceCustodyV1,request:Readonly<{minimumAvailableBytes:number}>):Promise<Readonly<{retainedOptionalBytes:number;availableBytes:number;requiredAvailableBytes:number;retiredBytes:number;retiredFiles:number}>>;
 
 /** 🧹️ Retires only idle isolated optional leaves beneath canonical image and ledger custody. */
 export type BuildGraphScopedOptionalRecoveryResultV1=Readonly<{consumed:true;acquired:false;retiredBytes:0;retiredFiles:0}>|Readonly<{consumed:true;acquired:true;availableBytes:number;retiredBytes:number;retiredFiles:number}>;
-export function recoverBuildGraphOptionalScopesHeadroomV1(workspace:string,image:import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts").NativeImageStorageV1,control:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,request:Readonly<{minimumAvailableBytes:number}>):Promise<BuildGraphScopedOptionalRecoveryResultV1>;
+export function recoverBuildGraphOptionalScopesHeadroomV1(workspace:string,image:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts").NativeImageStorageV1,control:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,request:Readonly<{minimumAvailableBytes:number}>):Promise<BuildGraphScopedOptionalRecoveryResultV1>;
 
 /** 🧪️ Exposes only an exact Original fixed disposable diagnostic Graph and its retained owner operations. */
-export interface BuildGraphFixtureV1{readonly root:string;readonly sourceRoot:string;readonly image:RepositoryCacheStoreV1["image"];optionalPublications():Readonly<{attempts:number;declined:number}>;probeMaintenanceDeferral():Promise<Readonly<{consumed:true;acquired:false}>>;withConsumer<T>(body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;withWriter<T>(body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;withMaintenance<T>(body:(image:RepositoryCacheStoreV1["image"],custody:import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts").NativeImageMaintenanceCustodyV1)=>Promise<T>):Promise<T>}
+export interface BuildGraphFixtureV1{readonly root:string;readonly sourceRoot:string;readonly image:RepositoryCacheStoreV1["image"];optionalPublications():Readonly<{attempts:number;declined:number}>;probeMaintenanceDeferral():Promise<Readonly<{consumed:true;acquired:false}>>;withConsumer<T>(body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;withWriter<T>(body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;withMaintenance<T>(body:(image:RepositoryCacheStoreV1["image"],custody:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts").NativeImageMaintenanceCustodyV1)=>Promise<T>):Promise<T>}
 
 /** 🔐️ Checks exact managed observation custody without accepting caller authority. */
 export function requireRepositoryBuildGraphObservationPathV1(path:string,mode:"read"|"write"):Readonly<{kind:"managed"|"ordinary";root?:string;control?:ResourceLeaseControl}>;
 
-/** 🪪️ Requires exact privately owned fixture or canonical Graph maintenance image. */
-export function requireRepositoryBuildGraphMaintenanceImageV1(image:BuildGraphFixtureV1["image"],custody:Parameters<Parameters<BuildGraphFixtureV1["withMaintenance"]>[0]>[1]):void;
-/** 🔒️ Holds the existing actual writer namespace under genuine Graph EX. */
-export function withRepositoryBuildGraphMaintenanceWriterV1<T>(image:BuildGraphFixtureV1["image"],custody:Parameters<Parameters<BuildGraphFixtureV1["withMaintenance"]>[0]>[1],coordinate:Readonly<{kind:"canonical"}|{kind:"selection"|"dataset";identity:string}>,body:()=>Promise<T>):Promise<Readonly<{acquired:false}|{acquired:true;value:T}>>;
 
 
 /** 🪺️ Owns fixed diagnostic funding, isolated Graph mapping and complete accepted child drainage. */

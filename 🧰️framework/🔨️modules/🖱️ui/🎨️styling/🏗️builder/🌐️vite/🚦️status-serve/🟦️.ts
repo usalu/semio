@@ -96,12 +96,12 @@ export type ServeUpgradeSocket = {
   once(event: "finish", listener: () => void): unknown;
 };
 
-/** 🧦️ The part of a dev serve's HTTP server that sees every upgrade first. */
+/** ☁️ The part of a dev serve's HTTP server that sees every upgrade first. */
 export type ServeUpgradeHttpServer = {
   prependListener(event: "upgrade", listener: (request: unknown, socket: ServeUpgradeSocket) => void): unknown;
 };
 
-/** 🔎️ Whether a serve's HTTP server lets a listener see an upgrade before every other one. */
+/** 🆙️ Whether a serve's HTTP server lets a listener see an upgrade before every other one. */
 export function isServeUpgradeHttpServer(value: object | null): value is ServeUpgradeHttpServer {
   return value !== null && typeof (value as Partial<ServeUpgradeHttpServer>).prependListener === "function";
 }
@@ -115,7 +115,7 @@ export function destroySoon(socket: ServeUpgradeSocket): void {
   else socket.once("finish", () => socket.destroy());
 }
 
-/** 🧦️ Lets every socket an upgrade arrives on be ended softly under every runtime. The dev server's proxy of a
+/** ⏹️ Lets every socket an upgrade arrives on be ended softly under every runtime. The dev server's proxy of a
  * WebSocket route ends the browser's socket with `destroySoon` once its upstream answers without upgrading or ends — a
  * backend that restarts or goes away does exactly that — and Bun 1.3's `node:http` hands upgrades a socket without
  * `destroySoon`: the `TypeError` killed the whole dev server whenever its backend went away while a socket was proxied.

@@ -83,8 +83,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
 
     /// 📜️ The retained command catalog's proofs plus the two host-configuration verbs' generic ones.
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-        let mut proofs = Puzzle5dRetainedCommandProofs::bounded_first_step_tool_proofs();
-        proofs.extend(Puzzle5dHostConfigurationProofs::bounded_first_step_tool_proofs());
+        let mut proofs = Puzzle5dRetainedCommandProofs::proofs();
+        proofs.extend(Puzzle5dHostConfigurationProofs::proofs());
         proofs
     }
 

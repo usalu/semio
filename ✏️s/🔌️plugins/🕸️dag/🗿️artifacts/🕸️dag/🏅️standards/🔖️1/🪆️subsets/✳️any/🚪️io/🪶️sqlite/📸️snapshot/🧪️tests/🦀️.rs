@@ -6,7 +6,7 @@ use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use semio_framework_value::{FromValue, ToValue};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn laws() -> serde_json::Value {
     serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()

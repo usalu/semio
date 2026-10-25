@@ -13,12 +13,12 @@ export type PolicySchemaLeafExtract = {
   fields: PolicySchemaFieldShape[];
 };
 
-/** 🔤 Normalizes a state-class token to its canonical identifier. */
+/** 🎨️ Normalizes a state-class token to its canonical identifier. */
 export function policyCanonicalState(raw: string): string {
   return raw.trim().toLowerCase().replace(/_/g, "-");
 }
 
-/** 🔤 Maps exact representation type tokens to canonical scalar identifiers. */
+/** 🗺️ Maps exact representation type tokens to canonical scalar identifiers. */
 export function policyCanonicalScalar(raw: string): string {
   const token = raw.replace(/\s+/g, "").trim();
   const scalars: Record<string, string> = {

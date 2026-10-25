@@ -1,4 +1,4 @@
-//! 🎚️ Slider, stepper and progress nodes: the retained paint steps of the slider, number stepper, ring and progress nodes. See [`super`].
+//! 🎛️ Slider, stepper and progress nodes: the retained paint steps of the slider, number stepper, ring and progress nodes. See [`super`].
 
 use super::*;
 

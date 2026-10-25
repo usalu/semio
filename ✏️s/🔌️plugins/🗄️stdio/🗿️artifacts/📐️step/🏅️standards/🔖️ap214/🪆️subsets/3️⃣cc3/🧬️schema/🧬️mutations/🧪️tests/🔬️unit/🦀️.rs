@@ -34,7 +34,7 @@ async fn round_trip(start: StepSnapshot, mutation: StepCc3Mutation) {
     let outcome = apply_step_cc3_mutation(&mut mutated, &mutation);
     assert!(outcome.messages().is_empty(), "{mutation:?} was rejected: {:?}", outcome.messages());
     assert_ne!(mutated, start, "{mutation:?} changed nothing -- a mutation that is not observable proves nothing");
-    for step in Mutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture") {
+    for step in ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture") {
         apply_step_cc3_mutation(&mut mutated, &step);
     }
     assert_eq!(mutated, start, "{mutation:?} then its inverse must restore the base");
@@ -106,7 +106,7 @@ async fn removing_a_middle_row_is_restored_at_its_original_index() {
     assert!(outcome.messages().is_empty(), "{created:?} was rejected: {:?}", outcome.messages());
     assert_eq!(start.entities.iter().position(|entity| entity.id == 99), Some(2), "the creation honours its index");
     let removal = StepCc3Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 99, representation: None, index: None });
-    let inverse = Mutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
+    let inverse = ::semio_framework_os_kernel::ColdMutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
     let [StepCc3Mutation::RestoreEntities(restore)] = inverse.as_slice() else { panic!("one atomic restore row expected: {inverse:?}") };
     assert_eq!(restore.entities.iter().map(|row| row.index).collect::<Vec<_>>(), vec![Some(2)], "the removal's inverse restores the row at its original index");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &start).await;

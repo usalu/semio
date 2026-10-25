@@ -1,3 +1,4 @@
+use semio_framework_os_store_space_schema::space_history_document::SpaceHistorySnapshot;
 use semio_framework_os_store_space_schema::space_history_mutations::set_active_space_alternative::SetActiveSpaceAlternative;
 use semio_framework_os_store_space_schema::space_history_mutations::SpaceHistoryMutation;
 use semio_framework_value::FromValue;
@@ -26,7 +27,7 @@ async fn inverse_diffs_sum_to_the_negative_diff() {
     for active in [None, Some("a".to_string())] {
         let base = SpaceHistorySnapshot { alternatives: vec![alternative("a"), alternative("b")], active_alternative_id: active, ..Default::default() };
         for target in [Some("a".to_string()), Some("b".to_string()), None] {
-            crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: target }), &base).await;
+            semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: target }), &base).await;
         }
     }
 }

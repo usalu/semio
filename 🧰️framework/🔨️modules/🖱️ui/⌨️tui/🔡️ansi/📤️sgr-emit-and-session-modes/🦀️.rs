@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 📤️Emit
-/// 📤️ A batch of raw ANSI bytes ready to write to a terminal (or feed to xterm.js).
+/// 🩹️ A batch of raw ANSI bytes ready to write to a terminal (or feed to xterm.js).
 #[derive(Default, Clone)]
 pub struct AnsiPatch(pub String);
 

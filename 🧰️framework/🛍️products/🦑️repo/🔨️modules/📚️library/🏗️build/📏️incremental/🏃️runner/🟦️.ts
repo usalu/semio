@@ -1,5 +1,5 @@
 import {constants} from "node:fs";
-import {copyFile,lstat,mkdir,readFile,readlink,readdir,realpath,rm,symlink,writeFile} from "node:fs/promises";
+import {copyFile,lstat,mkdir,readFile,readlink,readdir,realpath,rm,rmdir,symlink,writeFile} from "node:fs/promises";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -111,13 +111,35 @@ export async function incrementalCloneV1(source:string,destination:string,files:
   if(Math.floor(done/1000)!==Math.floor(before/1000))await hooks.progress(done,files.length);
  }
  await hooks.progress(files.length,files.length);
+ await incrementalWriteInventoryV1(destination,files);
  return files.length;
 }
 
-/** 🔄️ Brings a prepared disposable root up to date with the live checkout: adds the files it lacks and replaces the ones whose content differs (size and time first, bytes when they disagree), keeping everything else the bootstrap built; files deleted from the checkout stay until the root is discarded. */
-export async function incrementalRefreshV1(source:string,destination:string,files:readonly string[],hooks:Readonly<{signal:AbortSignal;progress(done:number,total:number):Promise<void>}>):Promise<Readonly<{added:number;updated:number}>>{
+/** 📒️ Records the files a clone or refresh copied, so a later refresh can tell what the checkout dropped from what the bootstrap built. */
+async function incrementalWriteInventoryV1(destination:string,files:readonly string[]):Promise<void>{
+ await writeFile(join(destination,policy.inventoryFile),JSON.stringify({version:1,files:[...files].sort(order)}));
+}
+
+/** 📖️ Reads the recorded inventory of a prepared root; a root prepared before the inventory existed has none and prunes nothing once. */
+async function incrementalReadInventoryV1(destination:string):Promise<readonly string[]>{
+ try{const value=JSON.parse(await readFile(join(destination,policy.inventoryFile),"utf8")) as {version?:unknown;files?:unknown};return value.version===1&&Array.isArray(value.files)&&value.files.every(file=>typeof file==="string")?value.files as string[]:[];}
+ catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return [];throw error;}
+}
+
+/** 🧹️ Removes a file the checkout dropped and the directories it leaves empty, never above the root. */
+async function incrementalPruneV1(destination:string,file:string):Promise<boolean>{
+ const target=incrementalInsideV1(destination,file),present=await lstat(target).then(meta=>meta,error=>{if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;});
+ if(!present)return false;
+ await rm(target,{force:true});
+ for(let at=dirname(target);at!==resolve(destination)&&at.startsWith(resolve(destination)+sep);at=dirname(at)){try{await rmdir(at);}catch{break;}}
+ return true;
+}
+
+/** 🔄️ Brings a prepared disposable root up to date with the live checkout: adds the files it lacks, replaces the ones whose content differs (size and time first, bytes when they disagree), removes the files the previous clone or refresh copied that the checkout no longer lists (moved or deleted sources must not linger as duplicates) and keeps everything else the bootstrap built. */
+export async function incrementalRefreshV1(source:string,destination:string,files:readonly string[],hooks:Readonly<{signal:AbortSignal;progress(done:number,total:number):Promise<void>}>):Promise<Readonly<{added:number;updated:number;removed:number}>>{
  await incrementalDisposableV1(source,destination);
  for(const file of files)incrementalInsideV1(destination,file);
+ const previous=await incrementalReadInventoryV1(destination);
  const made=new Set<string>(),ensure=async(directory:string)=>{if(!made.has(directory)){await mkdir(directory,{recursive:true});made.add(directory);}},absent=(error:unknown)=>{if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;};
  let added=0,updated=0,done=0;
  for(let start=0;start<files.length;start+=policy.copyConcurrency){
@@ -137,7 +159,10 @@ export async function incrementalRefreshV1(source:string,destination:string,file
   if(Math.floor(done/1000)!==Math.floor(before/1000))await hooks.progress(done,files.length);
  }
  await hooks.progress(files.length,files.length);
- return Object.freeze({added,updated});
+ const listed=new Set(files);let removed=0;
+ for(const file of previous){if(hooks.signal.aborted)throw Error("Cancelled\nAbgebrochen");if(!listed.has(file)&&await incrementalPruneV1(destination,file))removed++;}
+ await incrementalWriteInventoryV1(destination,files);
+ return Object.freeze({added,updated,removed});
 }
 
 /** 🔎️ Reads the mounts that lie inside a root from the mount table of `mount` (macOS `dev on path (apfs, …)`, Linux `dev on path type ext4 (…)`), deepest first. */

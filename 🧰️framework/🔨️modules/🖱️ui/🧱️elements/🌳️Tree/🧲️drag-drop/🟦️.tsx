@@ -78,7 +78,7 @@ export interface TreeReorderControllerOptions {
   readonly resolveParentId?: (item: TreeDataItem) => string | undefined;
 }
 
-/** 🔀️ Builds a {@link TreeDragAndDropController} that emits cross-container reorder moves. */
+/** 🔨️ Builds a {@link TreeDragAndDropController} that emits cross-container reorder moves. */
 export function treeReorderDragController(options: TreeReorderControllerOptions): TreeDragAndDropController {
   return {
     handleDrop: ({ target, targetKind, sourceItems, dropPosition }) => {
@@ -100,7 +100,7 @@ export interface UseTreeReorderResult {
   readonly dragController: TreeDragAndDropController;
 }
 
-/** 🔀️ Hook wiring tree reorder callbacks to drop-position aware drag handling. */
+/** 🪝️ Hook wiring tree reorder callbacks to drop-position aware drag handling. */
 export function useTreeReorder(onMove: (move: TreeReorderMove) => void, resolveParentId?: (item: TreeDataItem) => string | undefined): UseTreeReorderResult {
   const dropStateRef = reactHostPort.useRef<{ id: string | null; position: TreeDropPosition | null }>({ id: null, position: null });
   const [, bump] = reactHostPort.useState(0);
@@ -124,17 +124,17 @@ export const CATALOGUE_DRAG_MIME = "application/x-semio-catalogue-item";
 const activeCatalogueDragPayload = ephemeralBox<string | null>("framework.modules.ui.elements.Tree.component.tsx.activeCatalogueDragPayload", null);
 const activeCataloguePointerDragData = ephemeralBox<{ readonly payload: string; readonly types: readonly string[] } | null>("framework.modules.ui.elements.Tree.component.tsx.activeCataloguePointerDragData", null);
 
-/** 🖱️ Payload of the catalogue drag currently in flight — native HTML5 `dragover` can't read `dataTransfer` until drop, so drop targets (e.g. a canvas host previewing a fixture drop) read this instead. */
+/** 📚️ Payload of the catalogue drag currently in flight — native HTML5 `dragover` can't read `dataTransfer` until drop, so drop targets (e.g. a canvas host previewing a fixture drop) read this instead. */
 export function getActiveCatalogueDragPayload(): string | null {
   return activeCatalogueDragPayload.current;
 }
 
-/** 🖱️ Payload owned specifically by the pointer transport, separate from native HTML drag. */
+/** 📡️ Payload owned specifically by the pointer transport, separate from native HTML drag. */
 export function getActiveCataloguePointerDragData(): { readonly payload: string; readonly types: readonly string[] } | null {
   return activeCataloguePointerDragData.current;
 }
 
-/** 🖱️ {@link TreeDragAndDropController} for catalogue rows carrying encoded payloads. */
+/** 📖️ {@link TreeDragAndDropController} for catalogue rows carrying encoded payloads. */
 export function catalogueTreeDragController(mime: string = CATALOGUE_DRAG_MIME): TreeDragAndDropController {
   const pointerRef = { active: false };
   const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {

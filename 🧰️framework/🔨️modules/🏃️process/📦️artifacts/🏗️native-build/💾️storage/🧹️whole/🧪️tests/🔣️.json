@@ -389,5 +389,91 @@
       "waitedMilliseconds": 15000,
       "refused": false
     }
+  ],
+  "verdicts": [
+    {
+      "name": "one-committed",
+      "allocations": [
+        {
+          "id": "a",
+          "owner": "o",
+          "kind": "artifact-publication",
+          "bytes": 1,
+          "phase": "committed"
+        }
+      ],
+      "verdict": "admitted"
+    },
+    {
+      "name": "empty",
+      "allocations": [],
+      "verdict": "empty"
+    },
+    {
+      "name": "products-journal",
+      "allocations": [
+        {
+          "id": "a",
+          "owner": "repository:products-store",
+          "kind": "artifact-publication",
+          "bytes": 24692916224,
+          "phase": "committed"
+        },
+        {
+          "id": "b",
+          "owner": "development:local-state:dc9d73b6d260500341182f1169040b5754f98aa0d26ecf6753b49cd81da40205",
+          "kind": "persistent-state",
+          "bytes": 1075838976,
+          "phase": "reserved"
+        }
+      ],
+      "verdict": "persistent-state"
+    },
+    {
+      "name": "persistent-alone",
+      "allocations": [
+        {
+          "id": "b",
+          "owner": "o",
+          "kind": "persistent-state",
+          "bytes": 1,
+          "phase": "committed"
+        }
+      ],
+      "verdict": "persistent-state"
+    },
+    {
+      "name": "two-committed",
+      "allocations": [
+        {
+          "id": "a",
+          "owner": "o",
+          "kind": "artifact-publication",
+          "bytes": 1,
+          "phase": "committed"
+        },
+        {
+          "id": "b",
+          "owner": "p",
+          "kind": "artifact-restore",
+          "bytes": 1,
+          "phase": "committed"
+        }
+      ],
+      "verdict": "foreign-charge"
+    },
+    {
+      "name": "reserved",
+      "allocations": [
+        {
+          "id": "a",
+          "owner": "o",
+          "kind": "artifact-publication",
+          "bytes": 1,
+          "phase": "reserved"
+        }
+      ],
+      "verdict": "incomplete-charge"
+    }
   ]
 }

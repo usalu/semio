@@ -9,7 +9,7 @@ pub struct AttractionVortexContext {
     pub vortex_kind: Option<String>,
 }
 
-#[derive(Clone, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub struct BrushFillVortexTarget {
     pub full_id: String,
     pub object_id: String,

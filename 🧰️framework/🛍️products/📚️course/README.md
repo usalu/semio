@@ -841,7 +841,8 @@ depend on when its commands arrive.
 ### While the proctor is away
 
 A site may hand the web client its material — the course and its quizzes, solutions included
-(`mountCourse(root, { material })`). The client then has a **deputy** (`🎯️targets/⚛️react/🔨️modules/🫡️deputy`): the
+(`mountCourse(root, { material })`; the material may be a `CourseMaterialSource`, a function that fetches it while the client
+already shows, and the deputy joins the session the moment it has arrived). The client then has a **deputy** (`🎯️targets/⚛️react/🔨️modules/🫡️deputy`): the
 core's own deciders on the device.
 
 | | Without material | With material |
@@ -904,8 +905,22 @@ core's own deciders on the device.
   way to show it again and a reload, and the rest of the client goes on — everything the learner did lives in the
   session, not in the screen.
 
-The solutions travel in the site's scripts with this. The proctor still scores every run itself, so a leaderboard
-never trusts what a device computed.
+The solutions travel with the site, as chunks of their own the client fetches while it already shows. The proctor still
+scores every run itself, so a leaderboard never trusts what a device computed.
+
+### What the first paint carries
+
+A site's entry script carries only what the first paint needs; everything else is a lazy chunk, so the entry stays far
+below the site's size budget (`🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🔣️.json`, `budget`):
+
+- the material — the course and its quizzes with their solutions — is a `CourseMaterialSource`: fetched while the client
+  shows, after which the deputy joins the session (`CourseSession.attachDeputy`);
+- the chrome texts are one chunk per language (`loadCourseLocales`, `courseLocaleLoaded`): `mountCourse` fetches the
+  language the learner speaks (the stored choice, else the browser's preselection) before it first renders — the page's
+  own loading text stands meanwhile — and every offered language while none is known, because the language question is
+  asked in all of them at once and assumes none. Choosing the other language fetches its chunk first; the language
+  before stays on screen until it has arrived, and so does the language of a learner followed on another screen.
+- the pets, a run and its results were lazy chunks already.
 
 ## Validation issues
 

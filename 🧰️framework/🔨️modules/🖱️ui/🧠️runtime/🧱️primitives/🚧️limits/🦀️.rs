@@ -5,7 +5,7 @@ use crate::SURFACE_RECONCILE_FIXED_NODES;
 
 //#region ⏭️ResumableReconcile
 
-/// 🚧️ Fixed admission bounds for one retained reconciliation authority.
+/// 🔏️ Fixed admission bounds for one retained reconciliation authority.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SurfaceReconcileLimits {
     pub max_nodes: usize,
@@ -14,7 +14,7 @@ pub struct SurfaceReconcileLimits {
     pub max_identifier_bytes: usize,
 }
 
-/// 🚧️ The item ceiling [`SurfaceReconcileLimits::default`] admits for one surface — the bound a producer that
+/// 🛑️ The item ceiling [`SurfaceReconcileLimits::default`] admits for one surface — the bound a producer that
 /// windows its rows (the plugin SDK's `TreeWindows` ledger) stays under by charging [`surface_subtree_items`].
 pub const SURFACE_RECONCILE_MAX_ITEMS: usize = 4_097;
 

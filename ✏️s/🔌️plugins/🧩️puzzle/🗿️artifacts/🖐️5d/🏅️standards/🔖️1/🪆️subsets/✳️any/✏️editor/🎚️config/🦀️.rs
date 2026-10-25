@@ -434,10 +434,10 @@ impl Puzzle5dConfig {
             mutations.push(Puzzle5dConfigMutation::SetChunkSize(Puzzle5dConfigSetChunkSize{ value: next.chunk_size }));
         }
         if self.object_kind_weights != next.object_kind_weights {
-            mutations.push(Puzzle5dConfigMutation::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights{ value: next.object_kind_weights.clone() }));
+            mutations.push(Puzzle5dConfigMutation::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights::from_map(&next.object_kind_weights)));
         }
         if self.vortex_kind_weights != next.vortex_kind_weights {
-            mutations.push(Puzzle5dConfigMutation::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights{ value: next.vortex_kind_weights.clone() }));
+            mutations.push(Puzzle5dConfigMutation::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights::from_map(&next.vortex_kind_weights)));
         }
         mutations
     }
@@ -448,49 +448,92 @@ impl Puzzle5dConfig {
 //#region 🔖️ConfigMutation
 /// 🧮️ B1: `Puzzle5dConfig`'s operation enum. Every real config edit is captured as "the whole config
 /// after this edit"; `backwards()` is the same one-liner regardless of what changed.
-/// 🎚️ Payload of [`Puzzle5dConfigMutation::SetFillCount`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+/// 🎚️ One kind-weight row of a weights payload: the wire form of a `kind id -> weight` map entry, sorted by id.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "kind-weight")]
+pub struct Puzzle5dKindWeightRow {
+    pub id: String,
+    pub weight: f64,
+}
+
+fn kind_weight_rows(map: &Puzzle5dKindWeights) -> Vec<Puzzle5dKindWeightRow> {
+    map.iter().map(|(id, weight)| Puzzle5dKindWeightRow { id: id.clone(), weight: *weight }).collect()
+}
+
+fn kind_weight_map(rows: &[Puzzle5dKindWeightRow]) -> Puzzle5dKindWeights {
+    rows.iter().map(|row| (row.id.clone(), row.weight)).collect()
+}
+
+/// 🎚️ Payload of [`Puzzle5dConfigMutation::SetFillCount`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-fill-count")]
 pub struct Puzzle5dConfigSetFillCount {
     pub value: u32,
 }
 
 /// 🎚️ Payload of [`Puzzle5dConfigMutation::SetContactTolerance`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-contact-tolerance")]
 pub struct Puzzle5dConfigSetContactTolerance {
     pub value: f64,
 }
 
 /// 🎚️ Payload of [`Puzzle5dConfigMutation::SetProximityRadius`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-proximity-radius")]
 pub struct Puzzle5dConfigSetProximityRadius {
     pub value: f64,
 }
 
 /// 🎚️ Payload of [`Puzzle5dConfigMutation::SetChunkSize`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-chunk-size")]
 pub struct Puzzle5dConfigSetChunkSize {
     pub value: f64,
 }
 
 /// 🎚️ Payload of [`Puzzle5dConfigMutation::SetObjectKindWeights`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-object-kind-weights")]
 pub struct Puzzle5dConfigSetObjectKindWeights {
-    pub value: Puzzle5dKindWeights,
+    pub value: Vec<Puzzle5dKindWeightRow>,
+}
+
+impl Puzzle5dConfigSetObjectKindWeights {
+    pub fn from_map(map: &Puzzle5dKindWeights) -> Self {
+        Self { value: kind_weight_rows(map) }
+    }
+
+    pub fn to_map(&self) -> Puzzle5dKindWeights {
+        kind_weight_map(&self.value)
+    }
 }
 
 /// 🎚️ Payload of [`Puzzle5dConfigMutation::SetVortexKindWeights`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-vortex-kind-weights")]
 pub struct Puzzle5dConfigSetVortexKindWeights {
-    pub value: Puzzle5dKindWeights,
+    pub value: Vec<Puzzle5dKindWeightRow>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+impl Puzzle5dConfigSetVortexKindWeights {
+    pub fn from_map(map: &Puzzle5dKindWeights) -> Self {
+        Self { value: kind_weight_rows(map) }
+    }
+
+    pub fn to_map(&self) -> Puzzle5dKindWeights {
+        kind_weight_map(&self.value)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum Puzzle5dConfigMutation {
     SetFillCount(Puzzle5dConfigSetFillCount),
@@ -537,8 +580,8 @@ impl protocol::ColdMutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
             Self::SetContactTolerance(Puzzle5dConfigSetContactTolerance{ value }) => Puzzle5dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
             Self::SetProximityRadius(Puzzle5dConfigSetProximityRadius{ value }) => Puzzle5dConfigDiff { proximity_radius: (value != &base.proximity_radius).then_some(*value), ..Default::default() },
             Self::SetChunkSize(Puzzle5dConfigSetChunkSize{ value }) => Puzzle5dConfigDiff { chunk_size: (value != &base.chunk_size).then_some(*value), ..Default::default() },
-            Self::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights{ value }) => Puzzle5dConfigDiff { object_kind_weights: (value != &base.object_kind_weights).then(|| value.clone()), ..Default::default() },
-            Self::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights{ value }) => Puzzle5dConfigDiff { vortex_kind_weights: (value != &base.vortex_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetObjectKindWeights(payload) => Puzzle5dConfigDiff { object_kind_weights: Some(payload.to_map()).filter(|value| value != &base.object_kind_weights), ..Default::default() },
+            Self::SetVortexKindWeights(payload) => Puzzle5dConfigDiff { vortex_kind_weights: Some(payload.to_map()).filter(|value| value != &base.vortex_kind_weights), ..Default::default() },
         };
         if protocol::DiffAlgebra::<Puzzle5dConfig>::is_empty(&diff) {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "The configuration already holds this value.");
@@ -551,21 +594,21 @@ impl protocol::ColdMutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
             Self::SetContactTolerance(Puzzle5dConfigSetContactTolerance{ .. }) => Self::SetContactTolerance(Puzzle5dConfigSetContactTolerance{ value: base.contact_tolerance }),
             Self::SetProximityRadius(Puzzle5dConfigSetProximityRadius{ .. }) => Self::SetProximityRadius(Puzzle5dConfigSetProximityRadius{ value: base.proximity_radius }),
             Self::SetChunkSize(Puzzle5dConfigSetChunkSize{ .. }) => Self::SetChunkSize(Puzzle5dConfigSetChunkSize{ value: base.chunk_size }),
-            Self::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights{ .. }) => Self::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights{ value: base.object_kind_weights.clone() }),
-            Self::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights{ .. }) => Self::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights{ value: base.vortex_kind_weights.clone() }),
+            Self::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights{ .. }) => Self::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights::from_map(&base.object_kind_weights)),
+            Self::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights{ .. }) => Self::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights::from_map(&base.vortex_kind_weights)),
         }])
     }
 }
 
 impl protocol::OpBinary for Puzzle5dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
+        dsl::variants_binary::encode_op(self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+        dsl::variants_binary::decode_op(bytes)
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(Puzzle5dConfigMutation);
 
 impl protocol::OpText for Puzzle5dConfigMutation {
     fn print_op(&self) -> String {

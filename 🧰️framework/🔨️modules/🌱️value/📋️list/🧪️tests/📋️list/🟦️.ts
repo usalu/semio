@@ -13,7 +13,6 @@ test("independently reserved capacity retains the neutral ordered payload",()=>{
   assert.equal(slots,1);
   assert.deepEqual(reservation.promotionPages,[1,reservation.fanout,reservation.fanout**2]);
   assert.deepEqual(reservation.deniedAxes,["items","capacityBytes","depth"]);
-  console.log("[DEBUG] neutral capacity fixture independently materialized with JSON Patch: "+values.length+" ordered rows");
 });
 
 test("owner payload page ceiling preserves independently patched order and exact UTF-8 input", () => {

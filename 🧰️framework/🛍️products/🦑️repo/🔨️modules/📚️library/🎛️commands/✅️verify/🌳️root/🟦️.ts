@@ -9,10 +9,10 @@ import { interactivityAllAppDiscoverySelfTests } from "../../../🔍️discovery
 import { interactivityRuntimeSourceSelfTests } from "../../../🔍️discovery/🧪️tests/🔬️interactivity-runtime-source/🟦️.ts";
 import { interactivityToolRunPolicySelfTests } from "../../../🔍️discovery/🧪️tests/🧪️interactivity-tool-run-policy/🟦️.ts";
 import { historyClosurePolicySelfTests } from "../../../⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🧪️tests/🧪️history-closure-policy/🟦️.ts";
-import { interactivityLiveReconcileSelfTests } from "../../../../../../💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️interactivity-live-reconcile/🟦️.ts";
+import { interactivityLiveReconcileSelfTests } from "../../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️testing/🔬️interactivity-live-reconcile/🟦️.ts";
 import { interactivityMountedLayoutTextSelfTests } from "../../../⚖️laws/🔬️interactivity-audit/🖥️mounted/🧪️tests/🔬️interactivity-mounted-layout-text/🟦️.ts";
-import { interactivityMountedFrameTransactionSelfTests } from "../../../../../../💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️interactivity-mounted-frame-transaction/🟦️.ts";
-import { interactivityMountedEngineSurfaceLifetimeSelfTests } from "../../../../../../💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️interactivity-mounted-engine-surface-lifetime/🟦️.ts";
+import { interactivityMountedFrameTransactionSelfTests } from "../../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️testing/🔬️interactivity-mounted-frame-transaction/🟦️.ts";
+import { interactivityMountedEngineSurfaceLifetimeSelfTests } from "../../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️testing/🔬️interactivity-mounted-engine-surface-lifetime/🟦️.ts";
 import { interactivityMountedPreparedRenderSelfTests } from "../../../⚖️laws/🔬️interactivity-audit/🖥️mounted/🖼️mounted-surface/🧪️tests/🔬️interactivity-mounted-prepared-render/🟦️.ts";
 import { interactivityMountedSurfaceLaneSelfTests } from "../../../⚖️laws/🔬️interactivity-audit/🖥️mounted/🖼️mounted-surface/🧪️tests/🔬️interactivity-mounted-surface-lane/🟦️.ts";
 import { interactivityPreparedRasterProducerSelfTests } from "../../../⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-prepared-raster-producer/🟦️.ts";
@@ -72,8 +72,8 @@ const selfTestLanes: SelfTestLanes = {
   interactivityMcpHttpTransportSelfTests,
   dependencyJsLockParitySelfTests,
   dependencyTruthSelfTests,
-  toolJobCoverageSelfTests: async () => (await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🟦️.ts")).toolJobCoverageSelfTests(),
-  toolJobLatestWinsSelfTests: async () => (await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts")).toolJobLatestWinsSelfTests(),
+  toolJobCoverageSelfTests: async () => (await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🧪️tests/🔬️tool-job-coverage/🟦️.ts")).toolJobCoverageSelfTests(),
+  toolJobLatestWinsSelfTests: async () => (await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🧪️testing/🔬️tool-job-latest-wins/🟦️.ts")).toolJobLatestWinsSelfTests(),
 };
 
 /** ✅️ The root `verify` command bound to this checkout's self-test lanes. */

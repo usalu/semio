@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use super::{MutationApplyError, MutationApplyResult};
 
-/// 🗂️ A concrete map owner settles replaced and removed values through its own authority.
+/// 🗺️ A concrete map owner settles replaced and removed values through its own authority.
 pub trait MapDeltaTarget<V> {
     fn contains_key(&self,key:&str)->bool;
     fn set_owned(&mut self,key:String,value:V);
@@ -34,9 +34,9 @@ pub enum MapEntryOperation<V> { Set(V), Remove, Reject }
 pub struct MapEntryDelta<V> { precondition: MapPresence, operation: MapEntryOperation<V> }
 
 impl<V> MapEntryDelta<V> {
-    /// 🧭️ The entry's original-base presence requirement.
+    /// ⛔️ The entry's original-base presence requirement.
     pub fn precondition(&self) -> MapPresence { self.precondition }
-    /// ✍️ The entry's final value operation.
+    /// 🔚️ The entry's final value operation.
     pub fn operation(&self) -> &MapEntryOperation<V> { &self.operation }
     /// ♻️ Transfers owned fields to an incremental retirement provider.
     pub fn into_parts(self) -> (MapPresence, MapEntryOperation<V>) { (self.precondition, self.operation) }
@@ -66,7 +66,7 @@ impl<V> MapDelta<V> {
     }
     /// 📖️ Read-only view of compact entries in canonical key order.
     pub fn entries(&self) -> &BTreeMap<String, MapEntryDelta<V>> { &self.entries }
-    /// ♻️ Transfers the entry tree to its caller's incremental retirement provider.
+    /// 📋️ Transfers the entry tree to its caller's incremental retirement provider.
     pub fn into_entries(self) -> BTreeMap<String, MapEntryDelta<V>> { self.entries }
     /// 🕳️ An empty map delta is the identity transformation.
     pub fn is_empty(&self) -> bool { self.entries.is_empty() }
@@ -203,7 +203,7 @@ mod tests;
 mod owned_retirement {
     use super::*;
     use semio_framework_value::retirement::{RetireOwned, RetirementCursor, sequence, leaf, deferred, deferred_birth_bytes_for, sequence_birth_bytes};
-    /// 🗃️ A map delta retires through its ordered entry tree, so it is controlled exactly when its value type is.
+    /// 🗾️ A map delta retires through its ordered entry tree, so it is controlled exactly when its value type is.
     impl<V: RetireOwned> RetireOwned for MapDelta<V> {
         fn controlled_retirement_supported() -> bool { <std::collections::BTreeMap<String, MapEntryDelta<V>> as RetireOwned>::controlled_retirement_supported() }
         fn retirement(self) -> Box<dyn RetirementCursor> {

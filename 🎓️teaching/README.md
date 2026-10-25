@@ -74,7 +74,7 @@ Everything runs through the tool-neutral build entry (`repo run <project>:<targe
 |---|---|---|
 | `repo run @teaching/architecture-course:dev` (the proctor, then the site, stopped together) | `8791` and `6061` | never |
 | `repo run @teaching/architecture-course:test`, `typecheck` | | yes |
-| `repo run @teaching/architecture-course:test-e2e -- --topology dev --` | fresh loopback ports | never |
+| `repo run @teaching/architecture-course:test-e2e -- --topology dev` | fresh loopback ports | never |
 | `repo run @teaching/proctor:test`, `build` | | yes |
 
 Prerequisites per command, the release path (Docker, native Linux x64, release mode), the dashboard registry entries and what is not yet verified are in the [course README](🏛️architecture/📚️course/README.md#develop) and the [proctor README](🛂️proctor/README.md#run) (each with a German chapter at the end).
@@ -83,4 +83,4 @@ Prerequisites per command, the release path (Docker, native Linux x64, release m
 
 ### Entwickeln
 
-Alles läuft über den werkzeugneutralen Build-Einstieg (`repo run <Projekt>:<Target>`, standardmäßig Nx mit Bun, Bazel mit `repo --tool=bazel run …`) und ist im Dashboard wählbar (`repo dashboard`, **New Task**). Nach `repo tools setup all` und `repo dependencies sync --all` gelten dieselben Befehle wie in der englischen Tabelle oben: `@teaching/architecture-course:dev` (Proctor `8791`, Seite `6061`, nie gecacht), `test` und `typecheck` (gecacht), `test-e2e -- --topology dev --` (frische Loopback-Ports, nie gecacht) sowie `@teaching/proctor:test` und `build` (gecacht). Voraussetzungen je Befehl, der Release-Pfad (Docker, natives Linux x64, Release-Modus), die Dashboard-Registereinträge und der Verifikationsstand stehen im [README des Kurses](🏛️architecture/📚️course/README.md#-deutsch) und im [README des Proctors](🛂️proctor/README.md#-deutsch), jeweils mit deutschem Kapitel am Ende.
+Alles läuft über den werkzeugneutralen Build-Einstieg (`repo run <Projekt>:<Target>`, standardmäßig Nx mit Bun, Bazel mit `repo --tool=bazel run …`) und ist im Dashboard wählbar (`repo dashboard`, **New Task**). Nach `repo tools setup all` und `repo dependencies sync --all` gelten dieselben Befehle wie in der englischen Tabelle oben: `@teaching/architecture-course:dev` (Proctor `8791`, Seite `6061`, nie gecacht), `test` und `typecheck` (gecacht), `test-e2e -- --topology dev` (frische Loopback-Ports, nie gecacht) sowie `@teaching/proctor:test` und `build` (gecacht). Voraussetzungen je Befehl, der Release-Pfad (Docker, natives Linux x64, Release-Modus), die Dashboard-Registereinträge und der Verifikationsstand stehen im [README des Kurses](🏛️architecture/📚️course/README.md#-deutsch) und im [README des Proctors](🛂️proctor/README.md#-deutsch), jeweils mit deutschem Kapitel am Ende.

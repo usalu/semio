@@ -26,7 +26,7 @@ impl SceneColorSource3d {
     }
 }
 
-/// ✂️ How one instance takes part in the pass's section plane ([`ScenePass3d::section_clip`]). `Clipped` fragments on the removed side of the plane are discarded;
+/// 🎟️ How one instance takes part in the pass's section plane ([`ScenePass3d::section_clip`]). `Clipped` fragments on the removed side of the plane are discarded;
 /// `StencilToggle` is the cap's parity pass over a clipped solid (it writes only the stencil's section bit, never colour or depth);
 /// `Cap` is the flat plane that is drawn where that bit is set and the cut therefore exposes a solid's inside.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

@@ -12,6 +12,7 @@ pub fn protocol_err(err: protocol::ProtocolError) -> DbError {
 pub(super) struct WalPageSource<'pages>(pub(super) &'pages db_io_core::DbIoPages);
 
 impl semio_framework_pack_source::PackSource for WalPageSource<'_> {
+    type Error = pack::PackRefusal;
     async fn len(&self) -> u64 {
         self.0.len() as u64
     }
@@ -218,7 +219,7 @@ fn wal_decode_scalar_record(kind: u8, reader: &mut WalPageReader<'_>) -> Result<
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct WalRecordFrame {
+pub struct WalRecordFrame {
     pub kind: u8,
     pub payload_start: usize,
     pub payload_end: usize,

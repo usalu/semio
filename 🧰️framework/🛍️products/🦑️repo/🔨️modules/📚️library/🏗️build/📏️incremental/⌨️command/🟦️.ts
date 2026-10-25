@@ -63,6 +63,7 @@ export type IncrementalCommandPortsV1=Readonly<{
  run(command:string,args:readonly string[],cwd:string,env:Readonly<Record<string,string>>,signal:AbortSignal):Promise<string>;
  report(file:string,value:unknown):Promise<void>;
  files(root:string,signal:AbortSignal):Promise<readonly string[]>;
+ locks(root:string):void;
  adapter():Promise<IncrementalAdapterV1>;
  nxRecord(root:string):string;
  exists(path:string):Promise<boolean>;
@@ -96,6 +97,7 @@ export async function runIncrementalCommandV1(live:string,args:readonly string[]
  try{
   if(parsed.operation==="prepare"){
    ports.check();
+   ports.locks(live);
    if(parsed.fresh)await incrementalDiscardV1(live,root,ports.signal);
    const files=await ports.files(live,ports.signal);
    if(!exists||parsed.fresh)await incrementalCloneV1(live,root,files,{signal:ports.signal,progress:async(done,total)=>{await ports.progress(`clone:${done}/${total}`);}});
@@ -126,7 +128,7 @@ export async function runIncrementalCommandV1(live:string,args:readonly string[]
 
 /** 🏗️ Binds the command to the running build CLI: its invocation for progress and cancellation, its owned process execution, its report store and the live Bazel adapter. */
 export async function incrementalCommandPortsV1(root:string,invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<IncrementalCommandPortsV1>{
- const nx=await import("../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts"),routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),execution=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
+ const wasm=await import("../../../⚡️caching/🦀️cargo/🕸️wasm-bindgen/🟦️.ts"),nx=await import("../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts"),routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),execution=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
  return Object.freeze({
   write:writeResultLineV1,
   progress:stage=>routing.advanceScriptInvocation(invocation,"incremental:"+stage,"running"),
@@ -140,6 +142,7 @@ export async function incrementalCommandPortsV1(root:string,invocation:import(".
   run:(command,args,cwd,env,signal)=>execution.captureOwnedCommandV1(command,args,cwd,{env,signal}),
   report:async(file,value)=>{const{withRepositoryBuildReportV1}=await import("../../📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,file,value,invocation,async artifact=>{writeResultLineV1(artifact.path);});},
   files:(directory,signal)=>incrementalTrackedFilesV1(directory,signal),
+  locks:directory=>wasm.requireWasmBindgenLocksV1(directory),
   adapter:async()=>await import("../../🔧️tools/🏗️bazel/📜️script.ts") as unknown as IncrementalAdapterV1,
   nxRecord:directory=>join(nx.nxCacheDirectoryV1(directory),"run.json"),
   exists:async path=>access(path).then(()=>true,()=>false),
@@ -167,7 +170,7 @@ async function incrementalIgnoredFilesV1(directory:string,entries:readonly strin
  return found;
 }
 
-/** 📜️ Lists the tracked and untracked, non-ignored files of a checkout plus its ignored generated outputs, without the ticket workspace, read-only, bounded and cancellable. */
+/** 🛤️ Lists the tracked and untracked, non-ignored files of a checkout plus its ignored generated outputs, without the ticket workspace, read-only, bounded and cancellable. */
 export async function incrementalTrackedFilesV1(directory:string,signal:AbortSignal):Promise<readonly string[]>{
  const [listed,ignored]=await Promise.all([incrementalGitListV1(directory,["-co","--exclude-standard"],signal),incrementalGitListV1(directory,["-o","-i","--exclude-standard","--directory"],signal)]);
  const files=new Set([...listed,...await incrementalIgnoredFilesV1(directory,ignored)]);

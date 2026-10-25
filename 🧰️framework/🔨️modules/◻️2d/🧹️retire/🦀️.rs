@@ -21,7 +21,7 @@ pub fn advance_physical_work<T:semio_framework_value::retirement::RetireOwned>(o
 #[macro_export]
 macro_rules! physical_work_retirement {
  ($retired:ident,$job:ty,$error:ty,$invalid:expr) => {
-  pub struct $retired {owner:semio_framework_value::retirement::controlled::ControlledRetirement<$job>,work:u64}
+  pub struct $retired {#[doc(hidden)] pub owner:semio_framework_value::retirement::controlled::ControlledRetirement<$job>,work:u64}
   impl $retired {
    pub fn new(job:$job)->Self {Self{owner:semio_framework_value::retirement::controlled::ControlledRetirement::new(job).unwrap_or_else(|(error,_)|panic!("physical raster owner refused: {error}")),work:0}}
    pub fn terminal_is_empty(&self)->bool {self.owner.terminal_is_empty()}

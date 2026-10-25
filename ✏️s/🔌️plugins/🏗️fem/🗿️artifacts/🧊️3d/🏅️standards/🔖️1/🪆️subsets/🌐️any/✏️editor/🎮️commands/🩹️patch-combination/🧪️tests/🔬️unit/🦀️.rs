@@ -54,9 +54,9 @@ fn combination_name_and_terms_preserve_independent_intent(){
     let mut opposite=vcs::apply_mutation(&base,&name).unwrap().0;opposite=vcs::apply_mutation(&opposite,&second).unwrap().0;opposite=vcs::apply_mutation(&opposite,&first).unwrap().0;
     assert_eq!(combined,opposite);assert_eq!(combined.combinations[0].name,"Independent");
     assert_eq!(combined.combinations[0].terms.get("lc1"),Some(&2.0));assert_eq!(combined.combinations[0].terms.get("lc2"),Some(&3.0));
-    let mut undone=combined.clone();for inverse in protocol::Mutation::inverse(&first,&base).unwrap().iter().rev(){undone=vcs::apply_mutation(&undone,inverse).unwrap().0;}
+    let mut undone=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undone=vcs::apply_mutation(&undone,inverse).unwrap().0;}
     assert_eq!(undone,vcs::apply_mutation(&after_second,&name).unwrap().0);
-    let mut sum=protocol::Mutation::diff(&first,&base).into_parts().0;protocol::ColdMutationDiff::absorb(&mut sum,protocol::Mutation::diff(&second,&base).into_parts().0);protocol::ColdMutationDiff::absorb(&mut sum,protocol::Mutation::diff(&name,&base).into_parts().0);
+    let mut sum=protocol::ColdMutation::diff(&first,&base).into_parts().0;protocol::ColdMutationDiff::absorb(&mut sum,protocol::ColdMutation::diff(&second,&base).into_parts().0);protocol::ColdMutationDiff::absorb(&mut sum,protocol::ColdMutation::diff(&name,&base).into_parts().0);
     assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
     assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
     eprintln!("[DEBUG] combination name and independent keyed terms preserve all authored fields and sparse undo");

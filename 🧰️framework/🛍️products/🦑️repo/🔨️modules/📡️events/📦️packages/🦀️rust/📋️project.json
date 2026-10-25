@@ -42,7 +42,8 @@
                 "foreign-source",
                 "proc-macro",
                 "build-script",
-                "build-script-run"
+                "build-script-run",
+                "effective-profile"
               ]
             }
           }

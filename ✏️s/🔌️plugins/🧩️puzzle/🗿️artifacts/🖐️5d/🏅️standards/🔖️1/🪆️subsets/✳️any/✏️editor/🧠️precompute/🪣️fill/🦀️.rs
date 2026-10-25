@@ -40,7 +40,8 @@ pub fn fill_run_job<A: Puzzle5dEditor>(request: ToolRunJobRequest<'_, EditorApp<
     let board = Puzzle5dPlannerBoard::new(&document, request.provisional)?;
     let snapshot = Arc::new(puzzle3d_snapshot(&document, puzzle5d_authored_kind_catalogs(&request.snapshot)?)?);
     let config = Arc::new(puzzle3d_config(&request.config));
-    let inner = fill3d::build_run_job(ToolRunJobRequest {
+    let inner = fill3d::build_run_job::<semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp>(ToolRunJobRequest {
+        receiving: request.receiving,
         tool_id: semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::modes::edit::tools::fill::TOOL_ID,
         definition: request.definition,
         purpose: request.purpose,

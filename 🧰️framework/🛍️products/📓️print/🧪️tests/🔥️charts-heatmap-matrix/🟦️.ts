@@ -24,7 +24,7 @@ const grid = (value: number): number => {
   return value === 0 ? 0 : Math.round(value * factor) / factor;
 };
 
-/** 🎯️ Compiles one committed fixture of this case and returns its whole projection. */
+/** 🔨️ Compiles one committed fixture of this case and returns its whole projection. */
 async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection: ProbeProjection }> {
   const records = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://🔥️charts-heatmap-matrix/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
@@ -32,7 +32,7 @@ async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection
 // #endregion 🧫️Vectors
 
 // #region 🔮️Oracles
-/** 🔮️ Two unpadded d3-scale band scales, inset by the padding fraction of the cell. */
+/** 🩹️ Two unpadded d3-scale band scales, inset by the padding fraction of the cell. */
 function rectangles(width: number, height: number, pad: number, padding: number): number[] {
   const columns = scaleBand<string>().domain([...COLUMNS]).range([pad, width - pad]);
   const rows = scaleBand<string>().domain([...ROWS]).range([pad, height - pad]);
@@ -50,7 +50,7 @@ function rectangles(width: number, height: number, pad: number, padding: number)
   return out;
 }
 
-/** 🔮️ One record per cell: its one-based row and column plus its raw and normalised value. */
+/** 📝️ One record per cell: its one-based row and column plus its raw and normalised value. */
 function cells(): number[] {
   const min = Math.min(...VALUES);
   const max = Math.max(...VALUES);
@@ -76,15 +76,15 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/rect": (await probe(ctx, "heatmap.tex")).projection["geometry/rect"] ?? [] } }),
     },
     "cells": {
-      /** 🔮️ The raw and normalised value of every cell of the matrix extent. */
+      /** 🌱️ The raw and normalised value of every cell of the matrix extent. */
       oracle: () => ({ projection: { "geometry/cell": cells() } }),
-      /** 🎯️ The `geometry/cell` records the heatmap emitted. */
+      /** 🔥️ The `geometry/cell` records the heatmap emitted. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/cell": (await probe(ctx, "cells.tex")).projection["geometry/cell"] ?? [] } }),
     },
     "heatmap-padded": {
-      /** 🔮️ The same band scales with every cell inset by a fifth of its own size. */
+      /** 📏️ The same band scales with every cell inset by a fifth of its own size. */
       oracle: () => ({ projection: { "geometry/rect": rectangles(64, 40, 4, 0.2) } }),
-      /** 🎯️ The `geometry/rect` records the padded heatmap drew. */
+      /** 🔲️ The `geometry/rect` records the padded heatmap drew. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/rect": (await probe(ctx, "heatmap-padded.tex")).projection["geometry/rect"] ?? [] } }),
     },
   },

@@ -613,7 +613,7 @@ impl BitmapInferenceJob {
             BitmapInferenceJobRun::Yield | BitmapInferenceJobRun::Staged => Ok(None),
             BitmapInferenceJobRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
             BitmapInferenceJobRun::StepRestore => {
-                let result = self.restore.as_mut().expect("restore job").step(context)?;
+                let result = self.restore.as_mut().expect("restore job").step_value(context)?;
                 if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
                     self.restore_done = true;
                     return Ok(None);
@@ -622,7 +622,7 @@ impl BitmapInferenceJob {
                 Ok(result)
             }
             BitmapInferenceJobRun::StepChild => {
-                let result = self.child.as_mut().expect("WFC child").step(context)?;
+                let result = self.child.as_mut().expect("WFC child").step_value(context)?;
                 let end = if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
                     Some(InferenceChildEnd::Complete)
                 } else {
@@ -806,18 +806,7 @@ impl semio_framework::ToolJobFactory for BitmapInferenceJobFactory {
         semio_framework::ToolExecutionContract::resumable(16 << 20, MAX_BITMAP_INPUT_CELLS + MAX_BITMAP_OUTPUT_CELLS + MAX_BITMAP_PINS, 4_096, MAX_BITMAP_OUTPUT_BYTES, 7_500, 1, 1)
     }
 
-    fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        BitmapInferenceJob::new(operation, payload).map_err(semio_framework::ToolJobFactoryError::new)
-    }
-
-    fn create_job_from_wire(&mut self, operation: semio_framework_job::Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        let payload_text = std::str::from_utf8(payload).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("bitmap-inference-wire-decode:{error}")))?;
-        let mut request: BitmapInferenceRequest = crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value(payload_text).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("bitmap-inference-wire-decode:{error}")))?;
-        if checkpoint.is_some() {
-            request.checkpoint = checkpoint;
-        }
-        BitmapInferenceJob::new(operation, request).map_err(semio_framework::ToolJobFactoryError::new)
-    }
+    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| BitmapInferenceJob::new(operation, payload));
 }
 
 pub fn register_bitmap_inference_factory(bus: &semio_framework::ActionBus) -> Result<(), semio_framework::ToolRegistrationError> {

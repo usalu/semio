@@ -1,7 +1,7 @@
 import{isBuiltin}from"node:module";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
-import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
-import { TranspilerV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
 const policy=schema.$defs.Policy.const,messages=schema.$defs.Messages.const;
 /** 🧭️ One literal module specifier a source file asks for; a lenient site is derived from text rather than the scanner, so a miss is not fatal. */
 export interface ClosureLiteralSiteV1{readonly kind:"static"|"dynamic"|"require"|"resolve"|"create-require";readonly specifier:string;readonly lenient:boolean;readonly scanned:boolean}

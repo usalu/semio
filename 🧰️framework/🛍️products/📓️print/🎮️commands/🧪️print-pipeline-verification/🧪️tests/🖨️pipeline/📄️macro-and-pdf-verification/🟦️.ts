@@ -127,7 +127,7 @@ export async function verifyPrintPdfs(context:PrintPipelineVerificationV1,templa
   console.log(`[print] PDF.js consumption ${collection}: ${count} PDFs PASS`);
 }
 
-/** 🧪️ Verifies the light and dark PDFs prepared by explicit Nx document prerequisites. */
+/** 🖨️ Verifies the light and dark PDFs prepared by explicit Nx document prerequisites. */
 export async function verifyPrintPipelineLong(context:PrintPipelineVerificationV1): Promise<void> {
   const outputRoot=outputDirectory(context),{execution,control}=pipelineScope(context);
   await verifyPrintPdfs(context,registeredPrintTemplates(), "templates");

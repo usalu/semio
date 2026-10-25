@@ -490,9 +490,7 @@ pub mod playback {
             CONTRACT
         }
 
-        fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-            Ok(payload)
-        }
+        semio_framework_plugin::retained_command::reserved_tool_job_factory_admission!();
     }
 
     impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> ArtifactOwnedToolJobFactory for Mp3MediaExportJobFactory<A> {

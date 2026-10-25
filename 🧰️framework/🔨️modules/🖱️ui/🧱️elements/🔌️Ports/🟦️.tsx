@@ -31,10 +31,10 @@ export { interactiveJobPort, setInteractiveJobPort, type InteractiveJobDescripto
  * only behind this interface, re-exported explicitly, never its whole namespace (AGENTS.md). */
 export const SCENE_THREE_BINDINGS = Object.freeze({ Box3, BoxGeometry, BufferAttribute, BufferGeometry, Camera, CanvasTexture, Color, DoubleSide, EdgesGeometry, Float32BufferAttribute, Group, HalfFloatType, LineBasicMaterial, LineSegments, LinearFilter, LinearSRGBColorSpace, MOUSE, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, OrthographicCamera: ThreeOrthographicCamera, PerspectiveCamera: ThreePerspectiveCamera, Plane, PlaneGeometry, Quaternion, RGBAFormat, Ray, Raycaster, Scene, ShaderMaterial, Texture, Vector2, Vector3, WebGLRenderTarget });
 
-/** 🧊️ The shape of {@link SCENE_THREE_BINDINGS}: what a test double of the scene port's `three` member provides. */
+/** 🔱️ The shape of {@link SCENE_THREE_BINDINGS}: what a test double of the scene port's `three` member provides. */
 export type SceneThreeBindings = typeof SCENE_THREE_BINDINGS;
 
-/** 🧊️ Scene host surface for puzzle/cad R3F + three.js (implemented by 🔌️Adapters). */
+/** 🎬️ Scene host surface for puzzle/cad R3F + three.js (implemented by 🔌️Adapters). */
 export interface SceneHostPort {
   readonly fiber: {
     readonly canvas: typeof ThreeCanvas;
@@ -89,7 +89,7 @@ export let sceneHostPort: SceneHostPort = {
   three: SCENE_THREE_BINDINGS,
 };
 
-/** 🔌️ ESM importers cannot assign an imported `export let` binding directly, so this is the only
+/** 🪢️ ESM importers cannot assign an imported `export let` binding directly, so this is the only
  * way to swap {@link sceneHostPort} from outside this module (the barrel's `configureHostPorts` calls
  * this instead of a direct assignment). Returns the previously-installed port. */
 export function setSceneHostPort(port: SceneHostPort): SceneHostPort {
@@ -121,6 +121,6 @@ export function setFlowHostPort(port: FlowHostPort): FlowHostPort {
 export const HostReactFlow = flowHostPort.flow;
 /** 🔖️ JSX alias for diagram flow provider. */
 export const HostReactFlowProvider = flowHostPort.provider;
-/** 🧊️ JSX alias for the three.js canvas host. */
+/** 🖥️ JSX alias for the three.js canvas host. */
 export const HostThreeCanvas = sceneHostPort.fiber.canvas;
 //#endregion 🔌️Ports

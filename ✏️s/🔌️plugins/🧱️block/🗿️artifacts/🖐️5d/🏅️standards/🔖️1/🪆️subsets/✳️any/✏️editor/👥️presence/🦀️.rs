@@ -8,7 +8,7 @@ use pack::snapshot::ArtifactPack;
 /// broadcasts automatically via the framework's typed `PresenceInteraction` for the declared `grip`
 /// domain (see `crate::editor::block5d::create_block5d_app`), so this facet is empty until block5d
 /// grows genuinely app-specific live state.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -98,7 +98,11 @@ impl protocol::ColdMutationDiff<Block5dPresence> for Block5dPresenceDiff {
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub enum Block5dPresenceMutation {}
 
-impl store::ArtifactPresenceSnapshot for Block5dPresence {}
+impl store::ArtifactPresenceSnapshot for Block5dPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl protocol::Mutation<Block5dPresence> for Block5dPresenceMutation {
     type Diff = Block5dPresenceDiff;

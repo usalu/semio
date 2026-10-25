@@ -29,7 +29,7 @@ mod subject {
             .collect()
     }
 
-    /// 📃️ Renders a string list as the host's JSON.
+    /// 🖥️ Renders a string list as the host's JSON.
     fn rows(values: &[String]) -> Json {
         Json::Array(values.iter().map(|value| Json::String(value.clone())).collect())
     }

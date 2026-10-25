@@ -177,7 +177,7 @@ pub struct ArtifactDeclaration<PA: PluginApp = NoPluginApp> {
 
 /// 🏗️ Everything `PluginBuilder::try_build` folds into its own `app_defs`/
 /// `app_schema_descriptors`/`capabilities` vectors once a declared tree commits.
-pub(crate) struct DeclaredRegistration<PA: PluginApp = NoPluginApp> {
+pub struct DeclaredRegistration<PA: PluginApp = NoPluginApp> {
     pub app_defs: Vec<(App, AppFactory<PA>)>,
     pub app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>>,
     pub capabilities: Vec<CapabilityRequirement>,

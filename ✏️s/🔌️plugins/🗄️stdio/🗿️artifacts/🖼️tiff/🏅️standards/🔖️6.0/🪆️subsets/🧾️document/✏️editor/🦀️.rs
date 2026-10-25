@@ -145,11 +145,7 @@ impl ToolJobFactory for TiffAnyEditorExampleFactory {
     fn payload_schema_id(&self) -> &str { STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
     fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500) }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
-    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES || checkpoint.is_some() { return Err((ToolJobFactoryError::new("stdio example command rejects oversized wire"), input, checkpoint)); }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
 }
 impl ArtifactOwnedToolJobFactory for TiffAnyEditorExampleFactory {
     type Owner = EditorApp<TiffAnyEditor>;
@@ -176,15 +172,7 @@ impl ToolJobFactory for TiffPaintRegionFactory {
     fn payload_schema_id(&self) -> &str { paint_region::PAYLOAD_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
     fn execution_contract(&self) -> ToolExecutionContract { tiff_any_editor_paint_region_execution_contract() }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > paint_region::MAXIMUM_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("TIFF paint region rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: paint_region::MAXIMUM_RAW_BYTES, checkpoint_resume: false);
 }
 impl ArtifactOwnedToolJobFactory for TiffPaintRegionFactory {
     type Owner = EditorApp<TiffAnyEditor>;
@@ -232,33 +220,26 @@ impl ArtifactEditor for TiffAnyEditor {
         registry.register(TiffPaintRegionFactory::new(registry.controller_id()))?;
         editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
-        if editing::is_snapshot_edit_action(&request.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request); }
-        if request.tool_id == paint_region::ACTION_ID {
-            if tiff_any_editor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-tiff-paint-region-tool-mismatch")); }
-            let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone(), retained: request.retained };
-            let payload = ArtifactRetainedCommandPayload::new(
-                ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
-                tiff_any_editor_command_id,
-                paint_region::MAXIMUM_RAW_BYTES,
-                paint_region::CAPACITY.work_items(),
-                Box::new(paint_region::PaintRegionWork::new()),
-            );
-            return Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if editing::is_snapshot_edit_action(&original.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request, output, cx); }
+        if original.tool_id == paint_region::ACTION_ID {
+            if tiff_any_editor_command_id(&original.command) != original.tool_id { return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-tiff-paint-region-tool-mismatch").into()); }
+            
+            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, tiff_any_editor_command_id, paint_region::MAXIMUM_RAW_BYTES, paint_region::CAPACITY.work_items(), false, |request| paint_region::PaintRegionWork::new());
         }
-        if !STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
-        if tiff_any_editor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch")); }
-        let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone(), retained: request.retained };
-        let action_id = match request.tool_id.as_str() {
+        if !STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&original.tool_id.as_str()) { return Ok(false); }
+        if tiff_any_editor_command_id(&original.command) != original.tool_id { return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into()); }
+        
+        let action_id = match original.tool_id.as_str() {
             semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
             main::SELECT_IFD_ACTION_ID => main::SELECT_IFD_ACTION_ID,
             _ => unreachable!("filtered above"),
         };
-        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, tiff_any_editor_command_id, STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(action_id, tiff_any_editor_retained_reduce, tiff_any_editor_retained_extent)));
-        Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, tiff_any_editor_command_id, STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(action_id, tiff_any_editor_retained_reduce, tiff_any_editor_retained_extent))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+        Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<TiffEditorConfig, TiffEditorConfigMutation>())

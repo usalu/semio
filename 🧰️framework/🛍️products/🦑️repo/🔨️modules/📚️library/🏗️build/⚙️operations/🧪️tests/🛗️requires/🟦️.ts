@@ -18,7 +18,7 @@ test("every operation declares what it needs, and the declaration is the one the
 });
 
 test("the build CLI derives its dependency provisioning from the declaration and keeps no list of its own", () => {
-  const source = readFileSync(join(import.meta.dir, "../../../📜️script.ts"), "utf8");
+  const source = readFileSync(join(import.meta.dir, "../../../⌨️command/⚙️runtime/🟦️.ts"), "utf8");
   expect(source).toContain(fixture.repoScript.ensureGateText);
   expect(source).not.toContain(fixture.repoScript.retiredText);
 });

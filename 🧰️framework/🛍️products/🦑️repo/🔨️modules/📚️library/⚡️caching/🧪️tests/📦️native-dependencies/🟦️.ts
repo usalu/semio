@@ -1,8 +1,9 @@
 import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import {testRecordV1} from "../📋️values/🟦️.ts";
+import {WASM_BINDGEN_LOCKS_V1} from "../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import assert from "node:assert/strict";
-import toolchainPolicy from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json" with { type: "json" };
+import toolchainPolicy from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️json/🟦️.ts";
 import { existsSync, realpathSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, resolve, relative, sep } from "node:path";
@@ -28,7 +29,7 @@ export async function testNativeDependencies(workspace: string, output: string,i
     for (const forbidden of fixture.forbiddenImports) assert.ok(!source.includes(forbidden), source);
   }
   for (const value of Object.values(graph.metafile.outputs) as { imports: { path: string }[] }[]) for (const dependency of value.imports) assert.ok(dependency.path.startsWith("node:")||fixture.systemModules.includes(dependency.path), dependency.path);
-  const { prepareDependencies, NativeDependenciesScript } = await import(pathToFileURL(join(workspace, fixture.entry)).href);
+  const { prepareDependencies, NativeDependenciesScript } = await import(pathToFileURL(join(workspace, fixture.entry.replace("📜️script.ts", "🟦️.ts"))).href);
   const root=mkdtempSync(join(output,"native-sync-")),controller=new AbortController(),progress:string[]=[],phases=new Map<AbortSignal,ReturnType<typeof nativeCallerPhaseV1>>();
   const storage={version:1 as const,directory:join(root,"preparation"),leaseDirectory:join(root,"leases"),program:repositoryCargoPreparationStorageV1(workspace).program};
   const{runNativeDependencyFixtureNegativeV1}=await import("./📥️purpose/🟦️.ts");
@@ -50,6 +51,7 @@ export async function testNativeDependencies(workspace: string, output: string,i
     assert.deepEqual(cargoRepositoryPackages(root), fixture.cargo.expectedMembers);
     delete process.env.PLAYWRIGHT_BROWSERS_PATH;
     writeFileSync(join(root, "Cargo.lock"), fixture.bindgenLock);
+    for (const path of WASM_BINDGEN_LOCKS_V1) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), fixture.bindgenLock); }
     const interpolate = (value: string): string => value.replace("{workspace}", root).replaceAll("/", process.platform === "win32" && value.startsWith("{workspace}") ? "\\" : "/");
     for (const row of fixture.environments) {
       const target = projects.targets[`deps-${row.kind}`], calls: string[][] = [];
@@ -62,14 +64,14 @@ export async function testNativeDependencies(workspace: string, output: string,i
         for (const [key, value] of Object.entries(row.environment ?? {})) assert.equal(env[key], interpolate(value as string));
         return "";
       }, process.env, async (base: NodeJS.ProcessEnv) => ({ ...base, ...toolchainPolicy.go.variables }));
-      assert.deepEqual(calls, row.commands.map((command: string[]) => command.map(interpolate)), row.kind);
+      assert.deepEqual(calls.map(call => call[0] === process.execPath ? ["bun", ...call.slice(1)] : call), row.commands.map((command: string[]) => command.map(interpolate)), row.kind);
     }
     for (const row of fixture.browserPaths) {
       if (row.input === null) delete process.env.PLAYWRIGHT_BROWSERS_PATH;
       else process.env.PLAYWRIGHT_BROWSERS_PATH = interpolate(row.input);
       let acquisitions = 0;
       await prepareDependencies("browsers", root, invocation,storage,phaseFor(controller.signal), async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean, env: NodeJS.ProcessEnv) => {
-        assert.equal(command, "bun");
+        assert.equal(command, process.execPath);
         assert.deepEqual(args, [join(root, "node_modules/playwright/cli.js"), "install", "chromium"]);
         assert.equal(env.PLAYWRIGHT_BROWSERS_PATH, interpolate(row.expected));
         acquisitions += 1;

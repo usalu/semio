@@ -16,7 +16,7 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of the read-only 3d preview surface.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "generation3dview.presence")]
 #[dsl(layout = "lines")]
@@ -35,7 +35,11 @@ impl Default for Generation3dViewPresence {
 }
 
 /// 🫴️ Native presence snapshot — the framework's generic codec carries it.
-impl store::ArtifactPresenceSnapshot for Generation3dViewPresence {}
+impl store::ArtifactPresenceSnapshot for Generation3dViewPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 
 impl pack::snapshot::ArtifactDsl for Generation3dViewPresence {

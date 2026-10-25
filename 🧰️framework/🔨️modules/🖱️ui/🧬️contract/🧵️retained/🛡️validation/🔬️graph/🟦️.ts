@@ -120,7 +120,7 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
   }
 }
 
-/** 🎯️ Re-checks ONLY the records a shape-preserving delta replaced, against an already-validated base.
+/** 🕸️ Re-checks ONLY the records a shape-preserving delta replaced, against an already-validated base.
  *
  * Every state an `OwnedUiSurface` publishes passed {@link retainedUiGraphValidation}, so a candidate
  * differs from a proven-valid graph by exactly the delta. When each replacement kept its sibling `key`,

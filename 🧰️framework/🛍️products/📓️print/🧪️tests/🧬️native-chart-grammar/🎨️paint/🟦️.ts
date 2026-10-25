@@ -3,11 +3,11 @@ import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/proc
 import policyData from"./🧬️schema/🔣️.json"with{type:"json"};
 const policy=Object.freeze({...policyData.definitions.Policy.const});
 import{PRINT_PDF_OPS_V1 as OPS,printPdfTransformV1,printPdfApplyV1,printPdfInverseV1,printPdfArrayV1,printPdfNumberV1,printPdfVectorV1,printPdfNameV1,printPdfRecordV1,printPdfGlyphsV1,requirePrintPdfOperatorFactsV1,type PrintPdfValueV1,type PrintPdfPageV1}from"../../../📦️artifacts/📖️pdf/🟦️.ts";
-/** 🎨️ Captures actual normalized paint and visible stroke/fill facts in physical canvas coordinates. */
+/** 🖌️ Captures actual normalized paint and visible stroke/fill facts in physical canvas coordinates. */
 export type NativeControlPdfPath={paint:string;closed:boolean;points:number[][];bounds:number[];width:number;opacity:number;fillOpacity:number;stroke:number[];fill:number[];dash:number[];dashPhase:number};
 /** 🎨️ Collects owned PDF paint in physical canvas coordinates with exact cubic extrema. */
 export type NativePdfPaintV1={paths:NativeControlPdfPath[];glyphs:{text:string;bounds?:number[];origin?:number[];advance?:number[];fill?:number[];fillOpacity?:number;strokeOpacity?:number;textMode?:number}[];images:{operator:string;corners:number[][];opacity:number;resource?:string;sourceWidth?:number;sourceHeight?:number}[]};
-/** 🎨️ Interprets immutable operator DATA under one finite issued paint phase. */
+/** 🌈️ Interprets immutable operator DATA under one finite issued paint phase. */
 export function nativeControlPdfPaint(operators:PrintPdfPageV1["operators"],canvas:number[],marker:string,control:ResourceLeaseControl,excluded:readonly string[]=[]):Promise<NativePdfPaintV1>{
  requireIssuedResourceControlV1(control);operators=requirePrintPdfOperatorFactsV1(operators);canvas=printPdfVectorV1(canvas,2);if(operators.fnArray.length>policy.maximumOperators)throw Error("Print paint operator capacity exceeded");if(canvas.some(value=>value<=0)||typeof marker!=="string"||!marker||marker.length>256||excluded.length>64||excluded.some(name=>typeof name!=="string"||!name||name.length>256))throw Error("Finite PDF paint selection required");excluded=Object.freeze([...excluded]);
  return withRequestedIssuedResourceControlV1(control,0,async control=>{

@@ -1,4 +1,4 @@
-import { runtimeCommandNameV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { toolForCommandV1, TOOL_REGISTRY_V1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
 import { resolveToolV1, systemToolHostV1, toolRootV1 } from "../🔎️resolve/🟦️.ts";
 import { toolEnvironmentV1 } from "../🌿️environment/🟦️.ts";

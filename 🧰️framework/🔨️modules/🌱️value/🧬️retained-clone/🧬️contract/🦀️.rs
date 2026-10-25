@@ -75,19 +75,19 @@ pub fn retained_clone_close_demands<T:RetainedClone>(cursor:&impl RetainedCloneC
     cursor.close_demands(maximum_body_bytes)
 }
 
-/// 🎟️ Preserves the exact admitted original action across its enclosing clone frame.
+/// 🪆️ Preserves the exact admitted original action across its enclosing clone frame.
 pub fn nested_retained_clone_grant(grant:RetainedCloneGrant)->Result<RetainedCloneGrant,crate::ValueError> {
     Ok(RetainedCloneGrant {maximum_depth:grant.maximum_depth.checked_sub(1).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"nested clone requires enclosing depth"))?,..grant})
 }
 
-/// 🎟️ Preserves the exact admitted original action across its enclosing clone frame.
+/// 🌳️ Preserves the exact admitted original action across its enclosing clone frame.
 pub fn nested_retained_clone_demands<T:RetainedClone>(child:&impl RetainedCloneCursor<T>,source:RetainedCloneRef<'_,T>,maximum_copy_bytes:usize)->Result<crate::RetirementDemand,crate::ValueError> {
     let mut demand=child.advance_demands(source,maximum_copy_bytes)?;
     demand.depth=demand.depth.checked_add(1).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"nested clone depth overflow"))?;
     Ok(demand)
 }
 
-/// 🎟️ Preserves the exact admitted original action across its enclosing clone frame.
+/// 🎬️ Preserves the exact admitted original action across its enclosing clone frame.
 pub fn nested_retained_clone_close_demands<T:RetainedClone>(child:&impl RetainedCloneCursor<T>,maximum_body_bytes:usize)->Result<crate::RetirementDemand,crate::ValueError> {
     let mut demand=child.close_demands(maximum_body_bytes)?;
     demand.depth=demand.depth.checked_add(1).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"nested clone close depth overflow"))?;

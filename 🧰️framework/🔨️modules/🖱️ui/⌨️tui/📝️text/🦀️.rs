@@ -163,7 +163,7 @@ pub enum WidthMode {
     WindowsConsole,
 }
 
-/// 🪟️ Measures the visible scalar cells of the native Windows console after presentation selectors and joiners are removed.
+/// 🔡️ Measures the visible scalar cells of the native Windows console after presentation selectors and joiners are removed.
 pub(crate) fn scalar_cells_in(c: char, mode: WidthMode) -> u8 {
     let width = char_cells(c);
     if mode != WidthMode::WindowsConsole { return width; }
@@ -400,10 +400,16 @@ pub fn elide_middle(s: &str, max_cells: u16, tail_cells: u16) -> Cow<'_, str> {
 //#endregion ✂️Truncation And Ellipsis
 
 //#region 🧵️Cursor Positions
+/// ⏮️ The last cluster boundary known without segmenting: the byte after the last line feed before `limit` (a line feed always breaks a grapheme cluster, so every line starts on a boundary), so one lookup costs one line instead of the whole text.
+fn line_origin(s: &str, limit: usize) -> usize {
+    let limit = limit.min(s.len());
+    s.as_bytes()[..limit].iter().rposition(|byte| *byte == b'\n').map_or(0, |index| index + 1)
+}
+
 /// 🧵️ The byte offset of the cluster boundary at or before `byte`.
 pub fn boundary_at_or_before(s: &str, byte: usize) -> usize {
-    let mut start = 0usize;
-    for cluster in clusters(s) {
+    let mut start = line_origin(s, byte);
+    for cluster in clusters(&s[start..]) {
         if start + cluster.len() > byte {
             return start;
         }
@@ -414,9 +420,9 @@ pub fn boundary_at_or_before(s: &str, byte: usize) -> usize {
 
 /// ◀️ The byte offset of the cluster boundary before `byte` (0 at the start).
 pub fn previous_boundary(s: &str, byte: usize) -> usize {
-    let mut previous = 0usize;
-    let mut start = 0usize;
-    for cluster in clusters(s) {
+    let mut start = line_origin(s, byte.saturating_sub(1));
+    let mut previous = start;
+    for cluster in clusters(&s[start..]) {
         if start >= byte {
             break;
         }
@@ -428,8 +434,8 @@ pub fn previous_boundary(s: &str, byte: usize) -> usize {
 
 /// ▶️ The byte offset of the cluster boundary after `byte` (`s.len()` at the end).
 pub fn next_boundary(s: &str, byte: usize) -> usize {
-    let mut start = 0usize;
-    for cluster in clusters(s) {
+    let mut start = line_origin(s, byte);
+    for cluster in clusters(&s[start..]) {
         start += cluster.len();
         if start > byte {
             return start;

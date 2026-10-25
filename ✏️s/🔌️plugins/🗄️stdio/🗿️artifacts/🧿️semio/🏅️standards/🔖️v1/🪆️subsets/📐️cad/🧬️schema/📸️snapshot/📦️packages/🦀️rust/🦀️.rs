@@ -34,3 +34,8 @@ pub mod schema {
         pub use component::*;
     }
 }
+semio_framework_value::artifact_retire_struct!(schema::snapshot::CadLayer { name, color_index, line_type, visible });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::CadEntityRecord { handle, layer, entity });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::CadBlock { name, base_point, entities });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioCadSnapshot { schema, layers, blocks, entities });
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioCadSnapshot);

@@ -10,6 +10,9 @@ import { spawnSync } from "node:child_process";
 import ts from "typescript";
 import { inspectTestLayoutSources, repoRootFromHere, scanTestLayout, TEST_LAYOUT_FINDING_CODES, testTaxonomy, validateCaseContract, type DiscoveredCase, type OracleRegistry, type TestLayoutFinding, type TestLayoutSource } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { testFixture as protocol } from "@semio-tech/framework/test/schema";
+import { withBuildTestInvocationV1 } from "@semio-tech/process/testing/invocation";
+import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { withRepositoryBuildGraphFixtureV1 } from "../../../📚️library/📦️packages/🟦️typescript/🏗️build/📥️inputs/💾️storage/🟨️.mjs";
 import vectors from "../🧫️fixtures/📐️test-layout/🔣️.json";
 
 type Expected = Readonly<{ code: string; path: string; line: number | null }>;
@@ -260,14 +263,16 @@ describe("📐️ canonical test layout", () => {
       const patterns = values.filter((value): value is string => typeof value === "string");
       return patterns.some(value => !value.startsWith("!") && matches(value)) && !patterns.some(value => value.startsWith("!") && matches(value.slice(1)));
     };
-    for (const row of vectors.cacheOwnership) {
-      const project = JSON.parse(readFileSync(join(repoRoot, row.projectRoot, "📋️project.json"), "utf8"));
-      const groups = await cacheInternals.projectInputs(project, row.projectRoot, repoRoot, new Map());
-      expect(existsSync(join(repoRoot, row.path)), row.id).toBe(true);
-      expect(contains(expanded(groups, "default"), row.path, row.projectRoot), row.id).toBe(row.defaults);
-      expect(contains(expanded(groups, "production"), row.path, row.projectRoot), row.id).toBe(row.production);
-    }
-  });
+    await withBuildTestInvocationV1((original) => withRepositoryBuildGraphFixtureV1(repoRoot, original, createIssuedResourceControlV1(original, "graph:fixture-lifetime", 180000), (fixture: { withWriter: (body: () => Promise<void>) => Promise<void> }) => fixture.withWriter(async () => {
+      for (const row of vectors.cacheOwnership) {
+        const project = JSON.parse(readFileSync(join(repoRoot, row.projectRoot, "📋️project.json"), "utf8"));
+        const groups = await cacheInternals.projectInputs(project, row.projectRoot, repoRoot, new Map());
+        expect(existsSync(join(repoRoot, row.path)), row.id).toBe(true);
+        expect(contains(expanded(groups, "default"), row.path, row.projectRoot), row.id).toBe(row.defaults);
+        expect(contains(expanded(groups, "production"), row.path, row.projectRoot), row.id).toBe(row.production);
+      }
+    })));
+  }, 120_000);
 
 
 });

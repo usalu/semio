@@ -42,8 +42,8 @@ impl Waker {
 
 /// 🔌️ A platform terminal I/O implementation, kept out of the retained-mode core.
 pub trait TerminalBackend {
-        fn width_mode(&self) -> semio_framework_ui_tui_core::text::WidthMode { semio_framework_ui_tui_core::text::WidthMode::Scalar }
-fn enter(&mut self) -> io::Result<()>;
+    fn width_mode(&self) -> semio_framework_ui_tui_core::text::WidthMode { semio_framework_ui_tui_core::text::WidthMode::Scalar }
+    fn enter(&mut self) -> io::Result<()>;
     fn leave(&mut self) -> io::Result<()>;
     fn size(&self) -> io::Result<Size>;
     fn capabilities(&self) -> Capabilities;
@@ -58,7 +58,7 @@ fn lowered(env: &dyn Fn(&str) -> Option<String>, name: &str) -> String {
     env(name).unwrap_or_default().to_ascii_lowercase()
 }
 
-/// 🔎️ Reads colour depth, glyph repertoire and synchronized-output support from the terminal environment (`COLORTERM`, `TERM`, `TERM_PROGRAM`, `WT_SESSION`, `NO_COLOR`, locale).
+/// 🩺️ Reads colour depth, glyph repertoire and synchronized-output support from the terminal environment (`COLORTERM`, `TERM`, `TERM_PROGRAM`, `WT_SESSION`, `NO_COLOR`, locale).
 pub fn detect_capabilities(env: &dyn Fn(&str) -> Option<String>, windows: bool) -> Capabilities {
     let term = lowered(env, "TERM");
     let colorterm = lowered(env, "COLORTERM");

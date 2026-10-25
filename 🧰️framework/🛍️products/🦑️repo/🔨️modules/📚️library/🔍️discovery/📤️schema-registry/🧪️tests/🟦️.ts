@@ -41,7 +41,7 @@ test("production schema registry refuses the genuine alternate entity catalog ro
 });
 
 
-test("original schema routes refuse test inputs and protect existing output before acquisition",()=>withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"schema-registry-test",maximumElapsedMilliseconds:0},{},Date.now()),async invocation=>{
+test("original schema routes refuse test inputs and refuse an output path instead of a report name before acquisition",()=>withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"schema-registry-test",maximumElapsedMilliseconds:0},{},Date.now()),async invocation=>{
  const root=resolve(import.meta.dir,"../../../../../../../..");
  const script=new SchemaScript(root,root,invocation);
  for(const route of ["verify","entries"])
@@ -53,7 +53,7 @@ test("original schema routes refuse test inputs and protect existing output befo
  try{
   const bytes=Buffer.from("original output \0 🧫️", "utf8");
   writeFileSync(output,bytes);
-  await expect(script.run(["entries","--out",output])).rejects.toThrow("--out requires a new output file");
+  await expect(script.run(["entries","--out",output])).rejects.toThrow("Declared build report name required");
   expect(readFileSync(output)).toEqual(bytes);
  }finally{rmSync(directory,{recursive:true,force:true});}
 }));

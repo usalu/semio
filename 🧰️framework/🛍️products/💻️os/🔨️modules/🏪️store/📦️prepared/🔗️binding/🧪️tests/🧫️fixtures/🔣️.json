@@ -181,8 +181,8 @@
       "visible": false
     }
   ],
-  "inlineTerminalRetirement": {
-    "frameCopyMultiplier": 2,
+  "boxedTerminalRetirement": {
+    "depth": 1,
     "cases": [
       {
         "funded": false,

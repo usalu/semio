@@ -92,9 +92,9 @@ fn acceptance_view_difference(saved: &AcceptanceDocumentView, reloaded: &Accepta
     if saved.head != reloaded.head {
         return Some(format!("the head differs at {}", acceptance_text_difference(&saved.head.1, &reloaded.head.1)));
     }
-    if saved.children != reloaded.child_composition.children {
+    if saved.children != reloaded.children {
         let names = |children: &[(String, String, String, Vec<u8>)]| children.iter().map(|(slot, child, dialect, bytes)| format!("{slot}/{child} {dialect} ({} bytes)", bytes.len())).collect::<Vec<_>>();
-        return Some(format!("the owned children differ: {:?} saved, {:?} reloaded", names(&saved.children), names(&reloaded.child_composition.children)));
+        return Some(format!("the owned children differ: {:?} saved, {:?} reloaded", names(&saved.children), names(&reloaded.children)));
     }
     saved.renders.iter().zip(&reloaded.renders).find(|(left, right)| left != right).map(|((body, left), (_, right))| match (left, right) {
         (Ok(left), Ok(right)) => format!("window body {body} renders differently at {}", acceptance_text_difference(left, right)),
@@ -121,7 +121,7 @@ where
         saved.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
         let outcome = async {
             if let Some(example) = example {
-                assert_eq!(saved.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
+                assert_eq!(saved.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
                 acceptance_verb(&mut saved, CATALOGUE_EXAMPLE_ACTION_ID, vec![("exampleId", DslValue::String(example))],cx).await.map_err(|refusal|refusal.context("the app's own example route does not load it".into()))?;
                 semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut saved, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await)?;
             }

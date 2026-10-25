@@ -244,6 +244,10 @@ pub fn resolve_labels<L: AppLabels>(axes: &impl LabelAxes) -> &'static L {
 #[cfg(test)]
 include!("../🧪️tests/🔬️app-terminology/🦀️.rs");
 
+/// 🎯️ M1 retained typed-command bridge fixtures, kept at the owner boundary of `merge_ui_values` and the retained UI-value bridge.
+#[cfg(test)]
+include!("../🧪️tests/🔬️app-merge-ui-values/🦀️.rs");
+
 // 🎯️ Shared ~30x hand-rolled `fn x_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
 // ActionDescriptor { controller_id: X_CONTROLLER_ID.into(), action: action.into(), args } }` body —
 // every app keeps its own locally-named wrapper (so call

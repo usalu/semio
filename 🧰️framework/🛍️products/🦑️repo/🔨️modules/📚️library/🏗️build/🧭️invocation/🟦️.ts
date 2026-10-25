@@ -12,7 +12,7 @@ import {readFileSync,statSync} from "node:fs";
 import {join,resolve,isAbsolute} from "node:path";
 import {checkScriptInvocation,advanceScriptInvocation,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {buildInvocationGraphSelectionV1,readBuildOwnerRegistryV1,type BuildGraphSelectionV1} from "../🕸️graph/🚪️admission/🟦️.ts";
-import type {BuildGraphV1} from "../🕸️graph/🟦️.ts";
+import type { BuildGraphV1 } from "../🕸️graph/📋️model/🟦️.ts";
 import {resolveTestLevel} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {semioBuildParallelFlag} from "../../🏃️process/🌿️environment/🟦️.ts";
 import {buildModeEnvironment,readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -210,7 +210,7 @@ export function nxBuildArgumentsV1(args:readonly string[]):string[] {
   return translated;
 }
 
-/** 🧭️ Resolves the public selection and compiler configuration before any backend prepares. */
+/** 🔨️ Resolves the public selection and compiler configuration before any backend prepares. */
 export function resolveBuildInvocationV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv=process.env):Selection { const selected=resolveBuildSelectionV1(root,[...args]);return resolveBuildModeV1(selected,environment,readSelectedBuildTargetModesV1(root,selected.args)); }
 
 /** 🧬️ Resolves an original declared caller without deriving authority from ambient task fields. */

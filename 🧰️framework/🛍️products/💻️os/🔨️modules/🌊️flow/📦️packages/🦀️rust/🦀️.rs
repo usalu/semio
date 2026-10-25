@@ -41,16 +41,18 @@ pub use semio_framework_os_flow_drawing::{
     SceneNode, StrokeStyle, trace_bitmap_json, with_drawing_kernel,
 };
 
+#[cfg(test)]
 pub use semio_framework_os_flow_operators::registry::drain_flow_extension_registry_retirements;
+#[cfg(test)]
+pub use semio_framework_os_flow_operators::{FLOW_EXTENSION_REGISTRY_TEST_LOCK, lock_flow_extension_registry_for_test, test_flow_registry_retirement_step};
 pub use semio_framework_os_flow_operators::{
     CatalogueGroup, CatalogueItem, CatalogueSection, flow_app_catalogue, flow_app_catalogue_json,
     flow_app_catalogue_json_shared, flow_catalogue_sections, FLOW_EXTENSION_CONTRIBUTIONS_MAXIMUM_BYTES, FLOW_EXTENSION_CONTRIBUTIONS_MAXIMUM_PAGES, flow_extension_invocation_address, flow_extension_registry,
-    flow_extension_registry_generation, FLOW_EXTENSION_REGISTRY_TEST_LOCK, FLOW_LOD_MODE_AUTOMATIC, flow_neuron_kind_info_map, flow_neuron_kind_infos_json, flow_operator_catalogue_json,
+    flow_extension_registry_generation, FLOW_LOD_MODE_AUTOMATIC, flow_neuron_kind_info_map, flow_neuron_kind_infos_json, flow_operator_catalogue_json,
     flow_operator_catalogue_records, flow_operator_registry, flow_palette_catalogue_sections, FlowAppCatalogue, FlowExtensionAddressMiss, FlowExtensionInfo,
     FlowExtensionManifestRejection, FlowExtensionSpec, host_flow_extension_contributions_pending_bytes, install_builtin_flow_extensions, install_flow_extension, install_flow_extension_manifest,
-    installed_flow_extensions, installed_flow_extensions_shared, lock_flow_extension_registry_for_test, next_flow_extension_registry_retirement_demands, register_linked_flow_extension_installer, reset_host_flow_extension_contributions_pages,
-    retire_flow_extension_registries_step, seed, seed_flow_eval_node_cache, sync_host_flow_extension_contributions, sync_host_flow_extension_contributions_page, test_flow_registry_retirement_step,
-    uninstall_flow_extension, unregister_linked_flow_extension_installer,
+    installed_flow_extensions, installed_flow_extensions_shared, next_flow_extension_registry_retirement_demands, register_linked_flow_extension_installer, reset_host_flow_extension_contributions_pages,
+    retire_flow_extension_registries_step, seed, seed_flow_eval_node_cache, sync_host_flow_extension_contributions, sync_host_flow_extension_contributions_page, uninstall_flow_extension, unregister_linked_flow_extension_installer,
 };
 
 pub use semio_framework_os_flow_vcs::{

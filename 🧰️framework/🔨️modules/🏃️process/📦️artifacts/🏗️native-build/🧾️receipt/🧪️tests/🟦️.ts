@@ -9,6 +9,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { CurrentPhysicalOwnerV1, mapBoundedV1, type CurrentPhysicalPortV1 } from "@semio-tech/framework-filesystem/observation/current";
+import { churnProtocolV1, concurrentEditV1, ConcurrentEditErrorV1 } from "@semio-tech/framework-filesystem/observation/churn";
 import { CargoProvenanceSessionV1, portProvenanceCustodyV1, sharedProvenanceCustodyV1, writeCompletedCargoInvocationProvenanceV1 } from "../../🟦️.ts";
 import {
   CARGO_PROVENANCE_PHYSICAL_BUDGET_V1,
@@ -26,6 +27,7 @@ import {
   encodeCargoProvenanceV1,
   type CargoProvenanceV1,
 } from "../🟦️.ts";
+import { progressDeadlinePolicyV1 } from "../../../../⏱️budget/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
@@ -100,13 +102,25 @@ test("the stream refuses out-of-order sections and conflicting input observation
   await expect(witnessed.buildResource({ package_id: "p", out_dir: "/o", path: "/o/x", sha256: "1".repeat(64), observedAtMs: 1, resources: [{ input: { kind: "read", path: 7 } }] })).rejects.toThrow("must be a string");
 });
 
-test("the physical budget is the schema-declared finite law and the deadline covers the slowest measured observation", () => {
+test("the physical budget is the schema-declared finite law and the observation maximum covers the slowest measured observation", () => {
   const schema = JSON.parse(readFileSync(new URL("../🧬️schema/📏️physical-budget.json", import.meta.url), "utf8"));
   const budget = { version: 1, ...CARGO_PROVENANCE_PHYSICAL_BUDGET_V1 };
   expect(new Ajv({ strict: true }).validate(schema, budget)).toBe(true);
   expect(new Ajv({ strict: true }).validate(schema, { ...budget, deadlineMs: 1 })).toBe(false);
   const slowestMeasuredMs = 600000;
-  expect(CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.deadlineMs).toBeGreaterThanOrEqual(3 * slowestMeasuredMs);
+  expect(progressDeadlinePolicyV1("native-observation", 1, {}).maximumMilliseconds).toBeGreaterThanOrEqual(3 * slowestMeasuredMs);
+});
+
+test("the physical deadline spends only active observation time: an hour-long gap before the final recheck starts a new phase, a stalled phase still expires", () => {
+  let now = 0;
+  const gap = 60000, deadline = 120000, control = cargoProvenancePhysicalControlV1({ cancelled: () => false, deadlineMs: deadline, clock: () => now, onProgress: () => undefined });
+  expect(control.remainingMs()).toBe(deadline);
+  now += 3600000;
+  expect(control.remainingMs()).toBe(deadline);
+  now += gap; expect(control.remainingMs()).toBe(deadline - gap);
+  for (let spent = gap; spent < deadline; spent += gap) now += gap, control.remainingMs();
+  now += gap;
+  expect(control.remainingMs()).toBeLessThanOrEqual(0);
 });
 
 test("the physical control is finite, owner-validated and bounded by the caller's own deadline", () => {
@@ -115,7 +129,7 @@ test("the physical control is finite, owner-validated and bounded by the caller'
   expect(control.maxBytes).toBe(CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.maxBytes);
   expect(control.maxWork).toBe(CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.maxWork);
   expect(control.remainingMs()).toBeLessThanOrEqual(5);
-  expect(cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined }).remainingMs()).toBeGreaterThan(CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.deadlineMs - 5000);
+  expect(cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined }).remainingMs()).toBeGreaterThan(progressDeadlinePolicyV1("native-observation", 1, {}).idleMilliseconds - 5000);
   expect(() => new CurrentPhysicalOwnerV1(artifacts, control)).not.toThrow();
   expect(CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1).toBeLessThanOrEqual(128 * 1024 * 1024);
 });
@@ -146,7 +160,7 @@ test("exact-boundary provenance receipts keep every temporary materialized path 
   writeFileSync(manifest, law.manifest);
   const observed = new Set<string>(), started = performance.now();
   const physical = new CurrentPhysicalOwnerV1(root, cargoProvenancePhysicalControlV1({ cancelled: () => false, remainingMs: () => 30000 - (performance.now() - started), onProgress: () => { for (const file of readdirSync(root).filter(name => name.endsWith(".tmp"))) observed.add(join(root, file)); } }));
-  await writeCompletedCargoInvocationProvenanceV1(receipt, { manifest, cwd: root, command: "check", args: [], buildDirectory: null, builtAtMs: Date.now(), status: 0, cancelled: false, units: [], buildScripts: [] }, new Map(), root, physical);
+  await writeCompletedCargoInvocationProvenanceV1(receipt, { manifest, cwd: root, command: "check", args: [], buildDirectory: null, builtAtMs: Date.now(), status: 0, cancelled: false, units: [], buildScripts: [] }, new Map(), root, () => physical);
   expect(observed.size).toBeGreaterThan(0);
   for (const path of observed) expect(validate(path.split("")), `Temporary path has ${path.length} UTF-16 units`).toBe(true);
   expect(existsSync(receipt)).toBe(law.expectedPublished);
@@ -201,7 +215,7 @@ test("a throttled progress sink never weakens cancellation and leaves the receip
     Date.now = () => 1_760_000_000_000;
     for (const onProgress of [() => undefined, cargoProvenanceProgressSinkV1(() => rows++)]) {
       const receipt = join(root, `receipt-${receipts.length}.json`);
-      await writeCompletedCargoInvocationProvenanceV1(receipt, { ...invocation, buildDirectory: null }, new Map(), join(root, "cargo-home"), new CurrentPhysicalOwnerV1(root, cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress })));
+      await writeCompletedCargoInvocationProvenanceV1(receipt, { ...invocation, buildDirectory: null }, new Map(), join(root, "cargo-home"), () => new CurrentPhysicalOwnerV1(root, cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress })));
       receipts.push(readFileSync(receipt));
     }
   } finally {
@@ -302,7 +316,7 @@ test("a large invocation is observed against real bytes and published as a small
       await owner.recheck();
     },
   });
-  await writeCompletedCargoInvocationProvenanceV1(receipt, invocation, new Map(), join(root, "cargo-home"), physical);
+  await writeCompletedCargoInvocationProvenanceV1(receipt, invocation, new Map(), join(root, "cargo-home"), () => physical);
   expect(unpublished).toBe(1);
   expect(readdirSync(join(root, "receipts")).filter((name) => name.endsWith(".tmp"))).toEqual([]);
   expect(readdirSync(join(root, "build", "semio-cargo-provenance"))).toEqual(["cargo-unit-provenance-synthetic.json"]);
@@ -338,11 +352,11 @@ test("a refused or failed observation leaves neither a receipt nor a temporary f
       throw Error("Current physical bytes changed before transfer");
     },
   });
-  await expect(writeCompletedCargoInvocationProvenanceV1(receipt, invocation, new Map(), join(root, "cargo-home"), recheckFails)).rejects.toThrow("changed before transfer");
+  await expect(writeCompletedCargoInvocationProvenanceV1(receipt, invocation, new Map(), join(root, "cargo-home"), () => recheckFails)).rejects.toThrow("changed before transfer");
   expect(readdirSync(join(root, "receipts"))).toEqual([]);
   expect(existsSync(join(root, "build", "semio-cargo-provenance"))).toBe(false);
   const starved = new CurrentPhysicalOwnerV1(root, { ...cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined }), maxWork: 40 });
-  await expect(writeCompletedCargoInvocationProvenanceV1(receipt, invocation, new Map(), join(root, "cargo-home"), starved)).rejects.toThrow();
+  await expect(writeCompletedCargoInvocationProvenanceV1(receipt, invocation, new Map(), join(root, "cargo-home"), () => starved)).rejects.toThrow();
   expect(readdirSync(join(root, "receipts"))).toEqual([]);
 });
 
@@ -350,7 +364,7 @@ test("the receipt document is decoded from the file the writer published for a c
   const root = mkdtempSync(join(artifacts, "c-"));
   const { files, invocation } = syntheticInvocation(root, 6, 1);
   const receipt = join(root, "receipt.json");
-  await writeCompletedCargoInvocationProvenanceV1(receipt, { ...invocation, buildDirectory: null }, new Map(), join(root, "cargo-home"), physicalFor(root));
+  await writeCompletedCargoInvocationProvenanceV1(receipt, { ...invocation, buildDirectory: null }, new Map(), join(root, "cargo-home"), () => physicalFor(root));
   const observed: CargoProvenanceV1 = decodeCargoProvenanceV1(readFileSync(receipt, "utf8"));
   const before = observed.units[0]!.inputs.find((row) => row.path === files[2]!.path)!.sha256;
   writeFileSync(files[2]!.path, "changed\n");
@@ -397,7 +411,7 @@ test("one build session hashes every file once and rechecks it once however many
   expect(reads.bytes).toBe([...reads.files.keys()].reduce((sum, path) => sum + 2 * statSync(path).size, 0));
   const strip = (value: CargoProvenanceV1): unknown => JSON.parse(JSON.stringify({ ...value, args: [], builtAtMs: 0, observedAtMs: 0, units: value.units.map((unit) => ({ ...unit, observedAtMs: 0 })), buildResources: value.buildResources.map((row) => ({ ...row, observedAtMs: 0 })), compilerResources: value.compilerResources.map((row) => ({ ...row, observedAtMs: 0 })) }));
   const oneShot = join(root, "one-shot.json");
-  await writeCompletedCargoInvocationProvenanceV1(oneShot, passes[0]!.invocation, new Map(), join(root, "cargo-home"), physicalFor(root));
+  await writeCompletedCargoInvocationProvenanceV1(oneShot, passes[0]!.invocation, new Map(), join(root, "cargo-home"), () => physicalFor(root));
   const expected = strip(decodeCargoProvenanceV1(readFileSync(oneShot, "utf8")));
   for (const pass of passes) expect(deepEqual(strip(decodeCargoProvenanceV1(readFileSync(pass.receipt, "utf8"))), expected), pass.name).toBe(true);
   const roots = { repository: root, build: join(root, "build"), cargoHome: join(root, "cargo-home") };
@@ -416,4 +430,58 @@ test("a session whose files changed before its final recheck publishes no receip
   await expect(session.close()).rejects.toThrow("before transfer");
   expect(existsSync(receipt)).toBe(false);
   expect(readdirSync(join(root, "session"))).toEqual([]);
+});
+
+test("a session whose files were rewritten with identical bytes still publishes, and a refusal names the changed file", async () => {
+  const root = mkdtempSync(join(artifacts, "t-"));
+  const { files, invocation } = syntheticInvocation(root, 8, 2);
+  const custody = sharedProvenanceCustodyV1(root, () => cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined })), session = new CargoProvenanceSessionV1(custody);
+  const receipt = join(root, "session", "cargo-unit-provenance-touched.json");
+  await session.write(receipt, invocation, new Map(), join(root, "cargo-home"));
+  const before = statSync(files[3]!.path, { bigint: true });
+  await new Promise(accept => setTimeout(accept, 20));
+  writeFileSync(files[3]!.path, readFileSync(files[3]!.path));
+  expect(statSync(files[3]!.path, { bigint: true }).mtimeNs).not.toBe(before.mtimeNs);
+  await session.close();
+  expect(existsSync(receipt)).toBe(true);
+  const again = sharedProvenanceCustodyV1(root, () => cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined })), changed = new CargoProvenanceSessionV1(again);
+  await changed.write(join(root, "session", "cargo-unit-provenance-named.json"), invocation, new Map(), join(root, "cargo-home"));
+  writeFileSync(files[4]!.path, "pub const NAMED: u32 = 1;\n");
+  await expect(changed.close()).rejects.toThrow(files[4]!.path);
+});
+
+const quiet = { sleep: async () => undefined, onRetry: () => undefined };
+
+test("an observation that meets another process's edit is repeated from a fresh owner and publishes the receipt of the final state", async () => {
+  const root = mkdtempSync(join(artifacts, "e-"));
+  const { invocation } = syntheticInvocation(root, 20, 2);
+  const receipt = join(root, "receipts", "cargo-unit-provenance-churn.json");
+  let made = 0;
+  const sleeps: number[] = [];
+  await writeCompletedCargoInvocationProvenanceV1(receipt, invocation, new Map(), join(root, "cargo-home"), () => {
+    const owner = physicalFor(root);
+    return ++made > 1 ? owner : wrap(owner, { recheck: async () => { throw concurrentEditV1("roster", join(root, "src"), "Current directory changed before transfer", "snapshot"); } });
+  }, { ...quiet, sleep: async (milliseconds: number) => { sleeps.push(milliseconds); } });
+  expect(made).toBe(2);
+  expect(sleeps).toEqual([churnProtocolV1().profiles.snapshot.backoffMs[0]!]);
+  expect(decodeCargoProvenanceV1(readFileSync(receipt, "utf8")).units.length).toBe(invocation.units.length);
+  expect(readdirSync(join(root, "receipts"))).toEqual(["cargo-unit-provenance-churn.json"]);
+});
+
+test("an edit that persists through every attempt fails the observation naming the path, with neither a receipt nor a temporary file", async () => {
+  const root = mkdtempSync(join(artifacts, "p-"));
+  const { invocation } = syntheticInvocation(root, 20, 2);
+  const receipt = join(root, "receipts", "cargo-unit-provenance-persistent.json");
+  const busy = join(root, "src", "busy.rs");
+  let made = 0;
+  const failure = await writeCompletedCargoInvocationProvenanceV1(receipt, invocation, new Map(), join(root, "cargo-home"), () => {
+    made++;
+    return wrap(physicalFor(root), { recheck: async () => { throw concurrentEditV1("bytes", busy, "Current physical bytes changed before transfer", "snapshot"); } });
+  }, quiet).catch((error) => error);
+  expect(failure).toBeInstanceOf(ConcurrentEditErrorV1);
+  expect(failure.path).toBe(busy);
+  expect(failure.message).toContain(busy);
+  expect(failure.attempts).toBe(churnProtocolV1().profiles.snapshot.maximumAttempts);
+  expect(made).toBe(churnProtocolV1().profiles.snapshot.maximumAttempts);
+  expect(readdirSync(join(root, "receipts"))).toEqual([]);
 });

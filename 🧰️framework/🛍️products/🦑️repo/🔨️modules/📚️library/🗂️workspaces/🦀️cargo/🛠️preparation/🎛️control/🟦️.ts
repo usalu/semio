@@ -1,4 +1,4 @@
-/** 🎛️ Cargo preparation control: the progress and cancellation contract a controlled workspace or preparation phase runs under, held apart so custody and the owner share it without importing each other.
+/** 🦀️ Cargo preparation control: the progress and cancellation contract a controlled workspace or preparation phase runs under, held apart so custody and the owner share it without importing each other.
  * @see ../🟦️.ts — the preparation owner
  */
 import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";

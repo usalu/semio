@@ -28,7 +28,7 @@ import { WIRE_VERSION } from "@semio-tech/course";
 import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptInvocationEnvironment, type ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {courseOriginalBuildModeV1} from "../🏗️builder/🎚️mode/🟦️.ts";
-import { disagreement, type ProctorContract } from "../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
+import { disagreement, type ProctorContract } from "../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/🛂️proctor/🟦️.ts";
 import { LAUNCHER_SIGNALS, PROCTOR_STOP_GRACE_MS, developmentDataSettled, proctorDevelopmentEnvironment, proctorOrigin, proctorReady, proctorSourceChanged, proctorSourceDirectories, type ProctorArtifact, type ProctorProcess } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import { acquireProctor } from "../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
 
@@ -38,7 +38,7 @@ export type Say = (line: string) => void;
 
 const announce: Say = (line) => console.log(`[stack] ${line}`);
 
-/** ⏳️ How long a launched server may take to answer once its build is done. */
+/** ⏲️ How long a launched server may take to answer once its build is done. */
 export const STACK_READY_TIMEOUT_MS = 180_000;
 
 /** 🐢️ How long one answer of the dev server may take: its first page is transformed on demand, slowly on a busy machine. */
@@ -216,10 +216,10 @@ export function serveStaticSite(directory: string, port: number): Promise<{ read
 //#endregion 🌍️StaticOrigin
 
 //#region 🧑‍🔧️Supervision
-/** ⏳️ How long a change of the sources or the course settles before the proctor is built or launched anew. */
+/** 🕰️ How long a change of the sources or the course settles before the proctor is built or launched anew. */
 export const PROCTOR_CHANGE_SETTLE_MS = 400;
 
-/** ⏳️ The pause before a proctor that ended by itself is launched again after `crashes` such ends in a row: one second,
+/** 🔁️ The pause before a proctor that ended by itself is launched again after `crashes` such ends in a row: one second,
  * doubling, at most half a minute. */
 export function relaunchDelay(crashes: number): number {
   return Math.min(30_000, 1_000 * 2 ** Math.max(0, crashes - 1));

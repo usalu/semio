@@ -1,3 +1,5 @@
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,paint::*,picking::*,placement::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 //! 🧫️ Shared glyph scenes retain authored semantic owners and match independent font contours.
 use semio_framework_test_fixtures::fixture_text;
 

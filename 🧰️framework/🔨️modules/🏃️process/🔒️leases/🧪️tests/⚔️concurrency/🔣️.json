@@ -6,7 +6,7 @@
       "runtime": "bun",
       "mode": "shared",
       "expected": {
-        "gateBusy": false,
+        "waiting": false,
         "activeRetired": 0,
         "settledRetired": 1,
         "primary": null,
@@ -18,7 +18,7 @@
       "runtime": "node",
       "mode": "exclusive",
       "expected": {
-        "gateBusy": false,
+        "waiting": false,
         "activeRetired": 0,
         "settledRetired": 1,
         "primary": null,
@@ -30,7 +30,7 @@
       "runtime": "bun",
       "mode": "shared",
       "expected": {
-        "gateBusy": true,
+        "waiting": true,
         "activeRetired": 0,
         "settledRetired": 1,
         "primary": null,
@@ -42,7 +42,7 @@
       "runtime": "node",
       "mode": "exclusive",
       "expected": {
-        "gateBusy": false,
+        "waiting": false,
         "activeRetired": 0,
         "settledRetired": 1,
         "primary": null,
@@ -54,7 +54,7 @@
       "runtime": "bun",
       "mode": "shared",
       "expected": {
-        "gateBusy": true,
+        "waiting": true,
         "activeRetired": 0,
         "settledRetired": 1,
         "primary": null,
@@ -66,7 +66,7 @@
       "runtime": "node",
       "mode": "shared",
       "expected": {
-        "gateBusy": false,
+        "waiting": false,
         "activeRetired": 0,
         "settledRetired": 1,
         "primary": "undefined",
@@ -78,7 +78,7 @@
       "runtime": "bun",
       "mode": "exclusive",
       "expected": {
-        "gateBusy": false,
+        "waiting": false,
         "activeRetired": 0,
         "settledRetired": 1,
         "primary": "frozen",
@@ -90,7 +90,7 @@
       "runtime": "node",
       "mode": "shared",
       "expected": {
-        "gateBusy": false,
+        "waiting": false,
         "activeRetired": 0,
         "settledRetired": 1,
         "primary": null,
@@ -102,7 +102,7 @@
       "runtime": "node",
       "mode": "shared",
       "expected": {
-        "gateBusy": false,
+        "waiting": false,
         "activeRetired": null,
         "settledRetired": 1,
         "primary": null,

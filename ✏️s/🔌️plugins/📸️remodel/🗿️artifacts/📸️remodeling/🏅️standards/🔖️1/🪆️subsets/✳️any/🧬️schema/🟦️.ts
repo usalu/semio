@@ -1,7 +1,8 @@
 /** 🧬️ Canonical persisted Remodeling model and its declared JSON boundary. */
 import * as snapshot from "./📸️snapshot/🟦️.ts";
+import type {RemodelingSnapshot} from "./📸️snapshot/🟦️.ts";
 export * from "./📸️snapshot/🟦️.ts";
-export interface RemodelingArtifact extends snapshot.RemodelingSnapshot {}
+export interface RemodelingArtifact extends RemodelingSnapshot {}
 export const REMODELING_ARTIFACT_SPEC=snapshot.REMODELING_SNAPSHOT_SPEC;
 export const REMODELING_SNAPSHOT_FIELDS=["schema","id","streams","assets","durableArtifacts","calibration","params","gcps","results"] as const;
 /** 📸️ Persist the nine actual native artifact fields. */

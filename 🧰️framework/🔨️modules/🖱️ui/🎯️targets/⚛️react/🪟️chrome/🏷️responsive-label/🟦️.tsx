@@ -1,6 +1,6 @@
 import * as React from "react";
 
-/** 📱 A shell label that shows its short form below the tablet breakpoint and its full form from tablet width up. Both forms stay available to assistive technology. Lives beside the slim chrome so a page that imports `@semio-tech/ui-react/chrome` does not load the React target barrel.
+/** 🔖️ A shell label that shows its short form below the tablet breakpoint and its full form from tablet width up. Both forms stay available to assistive technology. Lives beside the slim chrome so a page that imports `@semio-tech/ui-react/chrome` does not load the React target barrel.
  * @see ../🟦️.ts — the slim chrome that re-exports this
  * @see ../../🟦️.tsx — the full React target, which re-exports it unchanged
  */

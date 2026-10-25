@@ -15,7 +15,7 @@ test("The host capacity schema agrees with Ajv, an independent validator, on eve
   Host:{valid:[fixture.cases[0]!.host,{...fixture.cases[0]!.host,load:null,swapUsedMegabytes:null,swapOutMegabytesPerSecond:null,openFiles:null,openFilesMaximum:null,attachedImages:null}],invalid:[{...fixture.cases[0]!.host,pressure:"high"},{...fixture.cases[0]!.host,platform:"freebsd"},{...fixture.cases[0]!.host,cores:0},{...fixture.cases[0]!.host,availableMegabytes:-1},{...fixture.cases[0]!.host,load:"1"},{...fixture.cases[0]!.host,openFiles:-1},{...fixture.cases[0]!.host,openFilesMaximum:0},{...fixture.cases[0]!.host,attachedImages:"3"},{...fixture.cases[0]!.host,attachedImages:undefined}]},
   Request:{valid:[fixture.cases[0]!.queue[0]!.request],invalid:[{...fixture.cases[0]!.queue[0]!.request,id:"short"},{...fixture.cases[0]!.queue[0]!.request,minimumJobs:0},{...fixture.cases[0]!.queue[0]!.request,priority:"urgent"},{...fixture.cases[0]!.queue[0]!.request,operation:"Run"}]},
   Waiter:{valid:[fixture.cases[0]!.queue[0]],invalid:[{...fixture.cases[0]!.queue[0],pid:0},{request:fixture.cases[0]!.queue[0]!.request,arrivedAtMs:0}]},
-  Grant:{valid:[fixture.cases[2]!.ledger[0]],invalid:[{...fixture.cases[2]!.ledger[0],jobs:0},{...fixture.cases[2]!.ledger[0],observedMegabytes:-1},{...fixture.cases[2]!.ledger[0],id:"x"}]},
+  Grant:{valid:[fixture.cases[2]!.ledger[0],{...fixture.cases[2]!.ledger[0],lentSinceMs:5,resumedAtMs:9}],invalid:[{...fixture.cases[2]!.ledger[0],lentSinceMs:-1},{...fixture.cases[2]!.ledger[0],resumedAtMs:"now"},{...fixture.cases[2]!.ledger[0],jobs:0},{...fixture.cases[2]!.ledger[0],observedMegabytes:-1},{...fixture.cases[2]!.ledger[0],id:"x"}]},
   Decision:{valid:[fixture.cases[0]!.expect.decisions[0]],invalid:[{...fixture.cases[0]!.expect.decisions[0],reason:"because"},{...fixture.cases[0]!.expect.decisions[0],verdict:"maybe"}]},
   Evaluation:{valid:[fixture.cases[0]!.expect],invalid:[{...fixture.cases[0]!.expect,binding:"other"}]},
   Plan:{valid:[{version:1,id:"aaaaaaaa1",jobs:2,cpu:2,memoryMegabytes:4096,fixedMegabytes:1536,floorMegabytes:6553}],invalid:[{version:1,id:"aaaaaaaa1",jobs:0,cpu:2,memoryMegabytes:4096,fixedMegabytes:1536,floorMegabytes:6553}]},
@@ -183,4 +183,25 @@ test("A batch request that has waited agingMilliseconds ranks as interactive, a 
  const old=asker("old",3000,0),fresh=asker("fresh",3000,wait.agingMilliseconds,"interactive");
  expect(evaluateHostCapacityV1(policy,fair(10000),[],[fresh,old],wait.agingMilliseconds).decisions.map(row=>[row.id,row.verdict])).toEqual([["oldxxxxx","admit"],["freshxxx","wait"]]);
  expect(evaluateHostCapacityV1(policy,fair(10000),[],[fresh,old],wait.agingMilliseconds-1).decisions.map(row=>[row.id,row.verdict])).toEqual([["freshxxx","admit"],["oldxxxxx","wait"]]);
+});
+
+test("Lending equals the SQLite oracle on a seeded corpus in which grants are lent or resumed, and a lent grant counts for nobody",()=>{
+ const random=seededRandomV1(20261023),pick=random;
+ for(let index=0;index<300;index++){
+  const base=randomHostCaseV1(random,index),ledger=base.ledger.map(grant=>{const roll=pick();return roll<0.4?{...grant,lentSinceMs:grant.admittedAtMs+1000}:roll<0.6?{...grant,resumedAtMs:base.nowMs-Math.floor(pick()*400000)}:grant;}),item={...base,ledger};
+  const expected=sqliteHostOracleV1(policy,item);
+  expect(JSON.parse(JSON.stringify(run(item))),`lending corpus ${index}`).toEqual(JSON.parse(JSON.stringify(expected)));
+  const without={...item,ledger:ledger.filter(grant=>grant.lentSinceMs===undefined)},sameRoom=run(without);
+  expect(run(item).unrealizedMegabytes,"a lent grant adds no unrealized memory").toBe(sameRoom.unrealizedMegabytes);
+  expect(run(item).headroomMegabytes,"a lent grant takes no room").toBe(sameRoom.headroomMegabytes);
+  expect(run(item).loadRoom,"a lent grant holds no cores").toBe(sameRoom.loadRoom);
+ }
+});
+
+test("The status line of a lent grant says so in English and German and fills every placeholder",()=>{
+ for(const language of ["en","de"] as const){
+  const text=formatHostCapacityV1(language,"grantLent",{id:"gggggggg1",operation:"run",cpu:8,reserved:3584,observed:270,pid:42,seconds:600});
+  expect(text).not.toContain("{");expect(text).toContain("3584");expect(text).toContain("270");expect(text).toContain("gggggggg1");
+ }
+ expect(formatHostCapacityV1("de","grantLent",{id:"a",operation:"run",cpu:1,reserved:1,observed:1,pid:1,seconds:1})).toContain("verliehen");
 });

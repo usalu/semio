@@ -52,6 +52,7 @@ enum Puzzle5dImportStage {
 
 /// ♻️ The owners one `Puzzle5dImportJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Puzzle5dImportOwners {
     pub raw: Vec<u8>,
     pub port: String,
@@ -210,8 +211,8 @@ impl Puzzle5dImportJob {
                 }
                 self.stage = Puzzle5dImportStage::Decode;
             }
-            Puzzle5dImportStage::Decode => self.turn_decode(),
-            Puzzle5dImportStage::CensusParts => self.turn_census_parts(),
+            Puzzle5dImportStage::Decode => { if let Some(outcome) = self.turn_decode() { return outcome; } }
+            Puzzle5dImportStage::CensusParts => { if let Some(outcome) = self.turn_census_parts() { return outcome; } }
             Puzzle5dImportStage::ReserveCatalogParts => {
                 let capacity = self.snapshot_rows("kindCatalogs", "parts").len().saturating_add(self.rows("objectKinds").len());
                 if capacity > PUZZLE5D_IMPORT_SEMANTIC_ITEMS || self.catalogs.parts.try_reserve_exact(capacity).is_err() {
@@ -269,7 +270,7 @@ impl Puzzle5dImportJob {
                 self.stage = Puzzle5dImportStage::ReserveMutations;
                 self.nested_cursor = 0;
             }
-            Puzzle5dImportStage::ReserveMutations => self.turn_reserve_mutations(),
+            Puzzle5dImportStage::ReserveMutations => { if let Some(outcome) = self.turn_reserve_mutations() { return outcome; } }
             Puzzle5dImportStage::LoadCatalogParts => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "parts").get(self.cursor) {
                     let parsed = match <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogPartKind as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
@@ -363,7 +364,7 @@ impl Puzzle5dImportJob {
                     self.cursor = 0;
                 }
             }
-            Puzzle5dImportStage::Parts => self.turn_parts(),
+            Puzzle5dImportStage::Parts => { if let Some(outcome) = self.turn_parts() { return outcome; } }
             Puzzle5dImportStage::PartReserve => {
                 let grip_count = self.rows("objectKinds").get(self.cursor).and_then(|row| row.get("vortices")).and_then(Value::as_array).map_or(0, Vec::len);
                 let Some(part) = self.current_part.as_mut() else {
@@ -374,7 +375,7 @@ impl Puzzle5dImportJob {
                 }
                 self.stage = Puzzle5dImportStage::PartVortices;
             }
-            Puzzle5dImportStage::PartVortices => self.turn_part_vortices(),
+            Puzzle5dImportStage::PartVortices => { if let Some(outcome) = self.turn_part_vortices() { return outcome; } }
             Puzzle5dImportStage::PartPublish => {
                 let Some(next) = self.current_part.take() else {
                     return puzzle5d_job_fault("puzzle5d kit:in lost its completed part owner");
@@ -391,8 +392,8 @@ impl Puzzle5dImportJob {
                 self.cursor += 1;
                 self.stage = Puzzle5dImportStage::Parts;
             }
-            Puzzle5dImportStage::Grips => self.turn_grips(),
-            Puzzle5dImportStage::Compatibility => self.turn_compatibility(),
+            Puzzle5dImportStage::Grips => { if let Some(outcome) = self.turn_grips() { return outcome; } }
+            Puzzle5dImportStage::Compatibility => { if let Some(outcome) = self.turn_compatibility() { return outcome; } }
             Puzzle5dImportStage::CatalogMutation => {
                 if self.catalog_changed {
                     let mutation = crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(Some(std::mem::take(&mut self.catalogs)));
@@ -403,7 +404,7 @@ impl Puzzle5dImportJob {
                 }
                 self.stage = Puzzle5dImportStage::Complete;
             }
-            Puzzle5dImportStage::Complete => self.turn_complete(),
+            Puzzle5dImportStage::Complete => return self.turn_complete(),
         }
         self.progress = self.progress.saturating_add(1);
         cx.consume_fuel(1);
@@ -411,16 +412,16 @@ impl Puzzle5dImportJob {
     }
 
     /// 🧱️ Decodes one record of the imported snapshot.
-    fn turn_decode(&mut self) -> crate::puzzle_job::JobTurn {
+    fn turn_decode(&mut self) -> Option<crate::puzzle_job::JobTurn> {
         if self.port != "kit:in" {
-            return puzzle5d_job_fault("puzzle5d import only implements kit:in");
+            return Some(puzzle5d_job_fault("puzzle5d import only implements kit:in"));
         }
         let Some(media_json) = self.media_json.as_ref() else {
-            return puzzle5d_job_fault("puzzle5d kit:in requires a structured payload");
+            return Some(puzzle5d_job_fault("puzzle5d kit:in requires a structured payload"));
         };
         let fragment = match puzzle5d_decode_import_fragment(media_json) {
             Ok(fragment) => fragment,
-            Err(error) => return puzzle5d_job_fault(error),
+            Err(error) => return Some(puzzle5d_job_fault(error)),
         };
         let fragment_items = ["objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"].into_iter().try_fold(0usize, |total, key| total.checked_add(fragment.get(key).and_then(Value::as_array).map_or(0, Vec::len)));
         let snapshot_items = ["parts", "grips", "fasteners", "ropes"]
@@ -429,94 +430,97 @@ impl Puzzle5dImportJob {
             .and_then(|total| total.checked_add(self.snapshot_kind_compatibility_rows().len()));
         self.decoded_items = match fragment_items.and_then(|fragment_items| snapshot_items.and_then(|snapshot_items| fragment_items.checked_add(snapshot_items))) {
             Some(items) if items <= PUZZLE5D_IMPORT_DECODED_ITEMS => items,
-            _ => return puzzle5d_job_fault("puzzle5d kit:in decoded item limit exceeded"),
+            _ => return Some(puzzle5d_job_fault("puzzle5d kit:in decoded item limit exceeded")),
         };
         if fragment.as_object().is_none() {
-            return puzzle5d_job_fault("puzzle5d kit:in root must be an object");
+            return Some(puzzle5d_job_fault("puzzle5d kit:in root must be an object"));
         }
         if !puzzle5d_import_keys_are(&fragment, &["schema", "objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"]) {
-            return puzzle5d_job_fault("puzzle5d kit:in root contains an unknown field");
+            return Some(puzzle5d_job_fault("puzzle5d kit:in root contains an unknown field"));
         }
         if fragment.get("schema").is_some_and(|value| value.as_str() != Some("manifest")) {
-            return puzzle5d_job_fault("puzzle5d kit:in schema must be manifest when present");
+            return Some(puzzle5d_job_fault("puzzle5d kit:in schema must be manifest when present"));
         }
         if ["objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"].into_iter().any(|key| fragment.get(key).is_some_and(|value| value.as_array().is_none())) {
-            return puzzle5d_job_fault("puzzle5d kit:in collection must be an array");
+            return Some(puzzle5d_job_fault("puzzle5d kit:in collection must be an array"));
         }
         if ["objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"].into_iter().any(|key| fragment.get(key).and_then(Value::as_array).is_some_and(|rows| rows.len() > PUZZLE5D_IMPORT_SEMANTIC_ITEMS)) {
-            return puzzle5d_job_fault("puzzle5d kit:in collection exceeds its fixed-page descriptor cap");
+            return Some(puzzle5d_job_fault("puzzle5d kit:in collection exceeds its fixed-page descriptor cap"));
         }
         if ["cableKinds", "attractionKinds"].into_iter().any(|key| fragment.get(key).and_then(Value::as_array).is_some_and(|rows| !rows.is_empty())) {
-            return puzzle5d_job_fault("puzzle5d kit:in cannot silently discard unmapped cable or attraction kinds");
+            return Some(puzzle5d_job_fault("puzzle5d kit:in cannot silently discard unmapped cable or attraction kinds"));
         }
         self.had_catalogs = self.snapshot.as_ref().is_some_and(|snapshot| snapshot.typed().kind_catalogs.is_some());
         self.catalog_changed = !self.had_catalogs;
         self.fragment = Some(fragment);
         self.stage = Puzzle5dImportStage::CensusParts;
         self.cursor = 0;
+        None
     }
 
     /// 🪵️ Counts the parts of the imported snapshot.
-    fn turn_census_parts(&mut self) -> crate::puzzle_job::JobTurn {
+    fn turn_census_parts(&mut self) -> Option<crate::puzzle_job::JobTurn> {
         if let Some(row) = self.rows("objectKinds").get(self.cursor) {
             if !puzzle5d_import_keys_are(row, &["id", "name", "label", "meshUrl", "vortices"]) {
-                return puzzle5d_job_fault("puzzle5d kit:in object kind contains an unknown field");
+                return Some(puzzle5d_job_fault("puzzle5d kit:in object kind contains an unknown field"));
             }
             if row.get("vortices").is_some_and(|value| value.as_array().is_none()) {
-                return puzzle5d_job_fault("puzzle5d kit:in object-kind vortices must be an array");
+                return Some(puzzle5d_job_fault("puzzle5d kit:in object-kind vortices must be an array"));
             }
             let vortices = row.get("vortices").and_then(Value::as_array).map_or(0, Vec::len);
             if vortices > PUZZLE5D_IMPORT_SEMANTIC_ITEMS {
-                return puzzle5d_job_fault("puzzle5d kit:in vortex collection exceeds its fixed-page descriptor cap");
+                return Some(puzzle5d_job_fault("puzzle5d kit:in vortex collection exceeds its fixed-page descriptor cap"));
             }
             self.decoded_items = match self.decoded_items.checked_add(vortices) {
                 Some(items) if items <= PUZZLE5D_IMPORT_DECODED_ITEMS => items,
-                _ => return puzzle5d_job_fault("puzzle5d kit:in nested vortex item limit exceeded"),
+                _ => return Some(puzzle5d_job_fault("puzzle5d kit:in nested vortex item limit exceeded")),
             };
             self.cursor += 1;
         } else {
             self.stage = Puzzle5dImportStage::ReserveCatalogParts;
             self.cursor = 0;
         }
+        None
     }
 
     /// 🔩️ Reserves the mutation slots of the import.
-    fn turn_reserve_mutations(&mut self) -> crate::puzzle_job::JobTurn {
+    fn turn_reserve_mutations(&mut self) -> Option<crate::puzzle_job::JobTurn> {
         let capacity = self.rows("kindCompatibility").len().saturating_mul(2).saturating_add(1);
         if capacity > PUZZLE5D_IMPORT_MUTATION_ITEMS {
-            return puzzle5d_job_fault("puzzle5d kit:in mutation reserve rejected");
+            return Some(puzzle5d_job_fault("puzzle5d kit:in mutation reserve rejected"));
         }
         let page_start = self.nested_cursor.saturating_mul(PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE);
         if page_start < capacity {
             let page_items = capacity.saturating_sub(page_start).min(PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE);
             let Some(page) = self.mutation_pages.get_mut(self.nested_cursor) else {
-                return puzzle5d_job_fault("puzzle5d kit:in mutation page reserve rejected");
+                return Some(puzzle5d_job_fault("puzzle5d kit:in mutation page reserve rejected"));
             };
             if page.try_reserve_exact(page_items).is_err() {
-                return puzzle5d_job_fault("puzzle5d kit:in mutation page reserve rejected");
+                return Some(puzzle5d_job_fault("puzzle5d kit:in mutation page reserve rejected"));
             }
             self.nested_cursor += 1;
-            return self.checkpoint();
+            return Some(self.checkpoint());
         }
         self.stage = Puzzle5dImportStage::LoadCatalogParts;
         self.cursor = 0;
         self.nested_cursor = 0;
+        None
     }
 
     /// ⚙️ Builds one part of the imported snapshot.
-    fn turn_parts(&mut self) -> crate::puzzle_job::JobTurn {
+    fn turn_parts(&mut self) -> Option<crate::puzzle_job::JobTurn> {
         if let Some(row) = self.rows("objectKinds").get(self.cursor) {
             let id = match row.get("id").and_then(Value::as_str) {
                 Some(value) => value.to_string(),
-                None => return puzzle5d_job_fault("puzzle5d kit:in object kind lacks id"),
+                None => return Some(puzzle5d_job_fault("puzzle5d kit:in object kind lacks id")),
             };
             let name = match row.get("name").and_then(Value::as_str) {
                 Some(value) => value.to_string(),
-                None => return puzzle5d_job_fault("puzzle5d kit:in object kind lacks name"),
+                None => return Some(puzzle5d_job_fault("puzzle5d kit:in object kind lacks name")),
             };
             let label = match row.get("label").and_then(Value::as_str) {
                 Some(value) => value.to_string(),
-                None => return puzzle5d_job_fault("puzzle5d kit:in object kind lacks label"),
+                None => return Some(puzzle5d_job_fault("puzzle5d kit:in object kind lacks label")),
             };
             let mesh_url = row.get("meshUrl").and_then(Value::as_str).map(str::to_string);
             self.current_part = Some(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogPartKind {
@@ -533,33 +537,34 @@ impl Puzzle5dImportJob {
             self.stage = Puzzle5dImportStage::Grips;
             self.cursor = 0;
         }
+        None
     }
 
     /// 🧲️ Builds the vortices of one part.
-    fn turn_part_vortices(&mut self) -> crate::puzzle_job::JobTurn {
+    fn turn_part_vortices(&mut self) -> Option<crate::puzzle_job::JobTurn> {
         let vortex = self.rows("objectKinds").get(self.cursor).and_then(|row| row.get("vortices")).and_then(Value::as_array).and_then(|rows| rows.get(self.nested_cursor));
         if let Some(vortex) = vortex {
             if !puzzle5d_import_keys_are(vortex, &["id", "vortexKind", "position", "direction", "radius"]) {
-                return puzzle5d_job_fault("puzzle5d kit:in vortex contains an unknown field");
+                return Some(puzzle5d_job_fault("puzzle5d kit:in vortex contains an unknown field"));
             }
             let vortex_kind = match vortex.get("vortexKind").and_then(Value::as_str) {
                 Some(value) => value.to_string(),
-                None => return puzzle5d_job_fault("puzzle5d kit:in vortex lacks kind"),
+                None => return Some(puzzle5d_job_fault("puzzle5d kit:in vortex lacks kind")),
             };
             let point = match puzzle5d_import_vec3(vortex.get("position")) {
                 Ok(value) => value,
-                Err(error) => return puzzle5d_job_fault(error),
+                Err(error) => return Some(puzzle5d_job_fault(error)),
             };
             let direction = match puzzle5d_import_vec3(vortex.get("direction")) {
                 Ok(value) => value,
-                Err(error) => return puzzle5d_job_fault(error),
+                Err(error) => return Some(puzzle5d_job_fault(error)),
             };
             let radius = match vortex.get("radius").and_then(Value::as_f64).filter(|value| value.is_finite()) {
                 Some(value) => value,
-                None => return puzzle5d_job_fault("puzzle5d kit:in vortex lacks finite radius"),
+                None => return Some(puzzle5d_job_fault("puzzle5d kit:in vortex lacks finite radius")),
             };
             let Some(part) = self.current_part.as_mut() else {
-                return puzzle5d_job_fault("puzzle5d kit:in lost its current part owner");
+                return Some(puzzle5d_job_fault("puzzle5d kit:in lost its current part owner"));
             };
             part.grips.push(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGripTemplate {
                 id: format!("g{}", self.nested_cursor),
@@ -575,17 +580,18 @@ impl Puzzle5dImportJob {
         } else {
             self.stage = Puzzle5dImportStage::PartPublish;
         }
+        None
     }
 
     /// 🪛️ Builds the grips of the imported snapshot.
-    fn turn_grips(&mut self) -> crate::puzzle_job::JobTurn {
+    fn turn_grips(&mut self) -> Option<crate::puzzle_job::JobTurn> {
         if let Some(row) = self.rows("vortexKinds").get(self.cursor) {
             if !puzzle5d_import_keys_are(row, &["id", "name", "label", "color", "defaultCableKind"]) {
-                return puzzle5d_job_fault("puzzle5d kit:in vortex kind contains an unknown field");
+                return Some(puzzle5d_job_fault("puzzle5d kit:in vortex kind contains an unknown field"));
             }
             let id = match row.get("id").and_then(Value::as_str) {
                 Some(value) => value.to_string(),
-                None => return puzzle5d_job_fault("puzzle5d kit:in vortex kind lacks id"),
+                None => return Some(puzzle5d_job_fault("puzzle5d kit:in vortex kind lacks id")),
             };
             let next = crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogGripKind {
                 id: id.clone(),
@@ -608,33 +614,34 @@ impl Puzzle5dImportJob {
             self.stage = Puzzle5dImportStage::Compatibility;
             self.cursor = 0;
         }
+        None
     }
 
     /// 🔧️ Checks the compatibility of the imported snapshot.
-    fn turn_compatibility(&mut self) -> crate::puzzle_job::JobTurn {
+    fn turn_compatibility(&mut self) -> Option<crate::puzzle_job::JobTurn> {
         if let Some(row) = self.rows("kindCompatibility").get(self.cursor) {
             if !puzzle5d_import_keys_are(row, &["source", "target", "bidirectional", "important", "specificity"]) {
-                return puzzle5d_job_fault("puzzle5d kit:in compatibility contains an unknown field");
+                return Some(puzzle5d_job_fault("puzzle5d kit:in compatibility contains an unknown field"));
             }
             let parsed = match <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                 Ok(parsed) => parsed,
-                Err(error) => return puzzle5d_job_fault(error.to_string()),
+                Err(error) => return Some(puzzle5d_job_fault(error.to_string())),
             };
             let key = (parsed.source.clone(), parsed.target.clone());
             match self.compatibility_index.iter().find_map(|(candidate, index)| (candidate == &key).then_some(*index)) {
                 Some(index) if self.compatibility[index] == parsed => {}
                 Some(index) => {
                     if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(parsed.source.clone(), parsed.target.clone())) {
-                        return puzzle5d_job_fault(error);
+                        return Some(puzzle5d_job_fault(error));
                     }
                     if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity, None)) {
-                        return puzzle5d_job_fault(error);
+                        return Some(puzzle5d_job_fault(error));
                     }
                     self.compatibility[index] = parsed;
                 }
                 None => {
                     if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity, None)) {
-                        return puzzle5d_job_fault(error);
+                        return Some(puzzle5d_job_fault(error));
                     }
                     self.compatibility_index.push((key, self.compatibility.len()));
                     self.compatibility.push(parsed);
@@ -644,6 +651,7 @@ impl Puzzle5dImportJob {
         } else {
             self.stage = Puzzle5dImportStage::CatalogMutation;
         }
+        None
     }
 
     /// 🔨️ Completes the import and publishes the result.

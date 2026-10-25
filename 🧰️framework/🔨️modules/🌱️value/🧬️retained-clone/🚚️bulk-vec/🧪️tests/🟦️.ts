@@ -27,7 +27,6 @@ test("bulk bitwise vector clone chunks agree with an independent page-wise typed
   while(arrayCopied<largeArray.length){arrayCopied+=Math.min(law.maximumZeroSizedElementsPerTurn,largeArray.length-arrayCopied);arrayTurns++;}
   expect(arrayCopied).toBe(structuredClone(largeArray).length);expect(arrayTurns).toBe(Math.ceil(law.largeZeroSizedArrayCount/law.maximumZeroSizedElementsPerTurn));
   expect(law.ownerHeaderBytes).toBe(3*8);
-  console.log("[DEBUG] Bulk vector clone chunk arithmetic and sample bytes agree with an independent typed-array page copy");
 });
 
 
@@ -45,7 +44,6 @@ test("bulk grant boundaries agree with independent SQLite physical and logical p
     expect(pages.map(row=>row.rows)).toEqual(original.reduce<number[]>((pages,rank)=>{const page=Math.floor(rank/law.maximumZeroSizedElementsPerTurn);pages[page]=(pages[page]??0)+1;return pages;},[]));
     expect(pages.every(row=>row.rows<=law.maximumZeroSizedElementsPerTurn)).toBe(true);
     expect(pages.reduce((sum,row)=>sum+row.rows,0)).toBe(law.largeZeroSizedArrayCount);
-    console.log(`[DEBUG] SQLite verifies ${rows.length} bulk grant boundaries and ${pages.length} finite zero-sized array pages; native custody laws remain separate`);
   }finally{db.close();}
 });
 
@@ -103,7 +101,6 @@ test("logical clone bodies remain independent from admitted physical headers",()
  expect(source).toContain("copy_bytes:if self.output.is_none(){size_of::<Vec<T>>()}else{0}");
  const field=readFileSync(new URL("../../📋️field/🦀️.rs",import.meta.url),"utf8");expect(field).toContain("child.advance(source,body,");
  const derive=readFileSync(new URL("../../../✨️derive/🧬️retained-clone/🦀️.rs",import.meta.url),"utf8");expect(derive).toContain("advance_demands(self,source,body)");
- console.log("[DEBUG] original logical1/7/4096 clone extents agree with independent SQLite and NodeBuffer; native cursor laws remain separate");
 });
 
 

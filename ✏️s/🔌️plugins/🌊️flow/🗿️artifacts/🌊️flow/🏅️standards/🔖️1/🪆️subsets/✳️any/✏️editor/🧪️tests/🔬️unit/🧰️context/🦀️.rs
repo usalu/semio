@@ -185,7 +185,7 @@ pub async fn settle_refusal(app: &mut FlowAppFixture) -> semio_framework_plugin:
 /// never the parent's genesis owner (see `crate::flow_composed_snapshot`).
 pub async fn composed_scene(app: &FlowApp) -> semio_framework_artifact_flow_flow::FlowHostSnapshot {
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-    use store::SpaceMember;
+    use store::SpaceMember, ReferenceSpaceMember;
     let snapshot = app.snapshot().expect("snapshot");
     let child = SemioFlowSnapshot::decode_pack(&app.child_store("content", &snapshot.content.child_id).await.expect("composed content child").document_pack_bytes().await.expect("content child pack")).expect("content child snapshot");
     let (widgets, synapses, layout) = crate::working_from_flow_content_snapshot(&child);

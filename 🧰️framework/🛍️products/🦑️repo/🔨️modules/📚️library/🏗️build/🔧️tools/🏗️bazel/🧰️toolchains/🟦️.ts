@@ -11,7 +11,7 @@ export type BazelNativeToolchainKindV1 = Exclude<ToolchainKindV1, "go">;
 /** 🧾️ What the classifier reads of one task. */
 export type BazelNativeToolchainTaskV1 = {project?: string; target: string; root: string; definition: {execution: {kind: string; command?: string}}};
 
-/** 🧾️ The authored class table: the task family or command pattern that makes a task a member of a toolchain class. */
+/** 🏓️ The authored class table: the task family or command pattern that makes a task a member of a toolchain class. */
 export const BAZEL_NATIVE_TOOLCHAINS_V1 = table;
 
 /** 🧮️ Names the toolchain class of a task, decided by the same ordered family rules that classify every task for coverage, so Bazel and the neutral contract agree on what is Python, .NET or CMake; `undefined` for every other task. */

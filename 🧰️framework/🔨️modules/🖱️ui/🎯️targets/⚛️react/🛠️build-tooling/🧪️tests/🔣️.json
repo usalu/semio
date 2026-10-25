@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "id": "narrowed-root-reaches-the-scan-hook", "sourceBase": "/repo/.storybook", "viteRoot": "/repo", "expectedRoot": "/repo/.storybook", "expectedOtherKeysKept": ["build", "css"] },
+    { "id": "no-source-base-keeps-the-vite-root", "sourceBase": null, "viteRoot": "/repo", "expectedRoot": "/repo", "expectedOtherKeysKept": ["build", "css"] }
+  ]
+}

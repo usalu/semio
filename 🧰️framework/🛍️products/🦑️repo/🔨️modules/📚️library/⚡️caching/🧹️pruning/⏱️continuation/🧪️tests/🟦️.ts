@@ -1,4 +1,3 @@
-import"../../../🧪️tests/📐️phases/🟦️.ts";
 import {expect,test} from "bun:test";
 import {mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,symlinkSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
@@ -9,8 +8,8 @@ import schema from "../../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {testCachePrune} from "../../../🧪️tests/🧹️cache-prune/🟦️.ts";
-import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 
 test("Cooperative scanners retain every existing portable pruning and physical byte law",()=>withBuildTestInvocationV1(async original=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original ticket artifact directory required");

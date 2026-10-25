@@ -19,6 +19,7 @@ pub mod testkit;
 #[cfg(any(test, feature = "testkit"))]
 pub use testkit::Puzzle2dApp as Puzzle2dTestApp;
 
+use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 use crate::editor::puzzle2d::snapshot::puzzle2d_scene_for;
 use crate::editor::puzzle2d::snapshot::puzzle2d_scene_with;
 use crate::editor::puzzle2d::snapshot::PUZZLE2D_GENERIC_TOOL_IDS;

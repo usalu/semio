@@ -67,12 +67,3 @@ pub mod viewer {
         }
     }
 }
-
-semio_framework_value::artifact_retire_struct!(schema::snapshot::PortRef { node, port });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::FlowParam { key, value });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::FlowNode { id, kind, label, params, position });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::FlowEdge { id, from, to, kind });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioFlowSnapshot { schema, nodes, edges });
-
-semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioFlowSnapshot);
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioFlowSnapshot, schema::mutations::SemioFlowMutation, open = io::binary::snapshot::SemioFlowSnapshotDecode);

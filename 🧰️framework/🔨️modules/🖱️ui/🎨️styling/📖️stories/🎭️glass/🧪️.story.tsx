@@ -33,7 +33,7 @@ function LevelGlassReader(): ReactElement {
   );
 }
 
-/** 🪟️ One `LevelProvider` boundary + a reader nested inside — demonstrates the provider/hook contract, not just the class lookup table. */
+/** 🪆️ One `LevelProvider` boundary + a reader nested inside — demonstrates the provider/hook contract, not just the class lookup table. */
 function LevelGlassSwatch({ level }: { readonly level: Level }): ReactElement {
   return (
     <LevelProvider level={level}>

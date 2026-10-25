@@ -1,6 +1,6 @@
 /** 📝️ Manifest edits of an unmirror run: path dependencies on the crates that now own a re-pointed item are added, dependencies nothing references any more are removed. Plain line edits keep the hand-formatted manifests intact. */
 
-/** ➕️ A dependency to add: the package name, the path from the manifest directory and the section. */
+/** ⛓️ A dependency to add: the package name, the path from the manifest directory and the section. */
 export type DependencyAddition = Readonly<{ name: string; path: string; section: "dependencies" | "dev-dependencies" }>;
 
 const sectionHeader = /^\[([^\]]+)\]\s*$/u;

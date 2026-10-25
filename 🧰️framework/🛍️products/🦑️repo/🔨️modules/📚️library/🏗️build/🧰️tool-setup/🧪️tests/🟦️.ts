@@ -4,10 +4,10 @@ import {spawnSync} from "node:child_process";
 import {existsSync, readFileSync, readdirSync} from "node:fs";
 import {dirname, join, sep} from "node:path";
 import Ajv from "ajv";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {pythonInterpreterDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
-import {TOOL_SETUP_V1, locateToolV1, renderToolReportV1, resolvePinV1, resolveSiblingPackageV1, runtimeWarningV1, setupToolsV1, toolPinAwaitsDependenciesV1, toolPinValueV1, toolRowV1, toolRowsV1, toolSetupMessageV1, toolVersionMatchesV1, verifyToolV1, verifyToolsV1, type ToolContextV1, type ToolRowV1} from "../🟦️.ts";
+import {TOOL_SETUP_V1, locateToolV1, renderToolReportV1, resolvePinV1, resolveSiblingPackageV1, runtimeWarningV1, runningRuntimeLineV1, setupToolsV1, toolPinAwaitsDependenciesV1, toolPinValueV1, toolRowV1, toolRowsV1, toolSetupMessageV1, toolVersionMatchesV1, verifyToolV1, verifyToolsV1, type ToolContextV1, type ToolRowV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type: "json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type: "json"};
 import fixtureSchema from "./🧬️schema/🔣️.json" with {type: "json"};
@@ -188,6 +188,13 @@ describe("verification", () => {
     expect(runtimeWarningV1([], "1.3.14", {SEMIO_LANGUAGE: "en"})).toBeUndefined();
     expect(runtimeWarningV1(reports, "1.3.14", {SEMIO_LANGUAGE: "en"})).toContain("running Bun 1.3.14 is not the pinned Bun 1.4.2");
     expect(runtimeWarningV1(reports, "1.3.14", {SEMIO_LANGUAGE: "de"})).toContain("laufende Bun 1.3.14");
+  });
+
+  test("always names the running Bun, its path and the pin, in the resolved language", () => {
+    const reports = [{id: "bun", pin: "1.4.2", found: "1.4.2", status: "ok" as const, location: "/x/bun"}];
+    expect(runningRuntimeLineV1(reports, "1.4.2", "/x/bun", {SEMIO_LANGUAGE: "en"})).toBe("Running Bun 1.4.2 (/x/bun); pinned Bun 1.4.2.");
+    expect(runningRuntimeLineV1(reports, "1.4.2", "/x/bun", {SEMIO_LANGUAGE: "de"})).toBe("Laufendes Bun 1.4.2 (/x/bun); gepinntes Bun 1.4.2.");
+    expect(runningRuntimeLineV1([], "1.3.14", "/y/bun", {SEMIO_LANGUAGE: "en"})).toBe("Running Bun 1.3.14 (/y/bun); pinned Bun -.");
   });
 
   test("stops between tools when the signal is aborted", async () => {

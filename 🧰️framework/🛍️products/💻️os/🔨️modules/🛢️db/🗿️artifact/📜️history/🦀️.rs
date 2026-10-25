@@ -5,7 +5,6 @@ use db_durability::Frontier;
 use db_ids::{*, ArtifactId, DbError};
 use protocol::MutationDiff as _;
 use std::{future::Future, pin::Pin, sync::Arc};
-#[cfg(test)]
 use db_io_core::WalStorage;
 
 #[path = "🧭️replay-limits-view-and-reservation/🦀️.rs"]

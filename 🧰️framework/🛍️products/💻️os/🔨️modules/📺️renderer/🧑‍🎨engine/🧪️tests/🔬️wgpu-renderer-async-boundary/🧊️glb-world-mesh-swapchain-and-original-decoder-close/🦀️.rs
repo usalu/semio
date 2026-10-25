@@ -334,7 +334,6 @@ fn original_decoder_close_hands_back_same_response_under_exact_independent_grant
     assert_eq!(row["maximumReleaseBytes"].as_u64().unwrap(),0);
     assert_eq!(caller.turn(|cx|job.close_step(cx)).unwrap(),InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()});assert!(job.terminal_is_empty());
     close_owned_decoder_fixture(authority,recovered);
-    eprintln!("[DEBUG] original decoder explicit same response handback; borrowed owner refuses theft; zero physical transfer");
 }
 
 #[test]

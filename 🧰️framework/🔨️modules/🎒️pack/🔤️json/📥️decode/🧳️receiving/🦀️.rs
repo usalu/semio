@@ -80,7 +80,7 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
  pub fn ready(&self)->bool{!self.closing&&!self.faulted&&self.phase==Phase::Ready&&self.output.is_some()}
  /// 🛑️ Cancellation retains parser, typed result, canonical cursor and every original source alias.
  pub fn begin_close(&mut self){self.closing=true;if let Some(receiver)=self.receiver.as_mut(){receiver.begin_close();}if let Some(canonical)=self.canonical.as_mut(){canonical.begin_close();}}
- /// 📏️ Cleanup quotes its defining typed owners instead of retiring payloads through a cold fallback.
+ /// 📪️ Cleanup quotes its defining typed owners instead of retiring payloads through a cold fallback.
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<DslValue>(false,&None,body);}
   if let Some(canonical)=self.canonical.as_ref(){return if canonical.terminal_is_empty(){Ok(header::<Option<ArtifactCanonicalJsonTreeCursor>>())}else{canonical.next_demand()};}

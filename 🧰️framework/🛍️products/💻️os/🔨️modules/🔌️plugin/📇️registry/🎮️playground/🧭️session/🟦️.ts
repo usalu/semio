@@ -6,6 +6,7 @@ import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modu
 import { readNativeCallerAuthorityV1, withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { withRepositoryCacheStoreV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { retryOnConcurrentEditV1 } from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "../../📦️deployment/🟦️.ts";
@@ -145,8 +146,5 @@ export async function stagePlaygroundSession(workspace:string,invocation:ScriptI
   await withRepositoryArtifactDestinationV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:output},destination=>stageRepositoryArtifacts(destination,"playground-session:"+variant,files));
   return {path:playgroundSessionStagedOutputPath(sessionsRoot,variant),session};
  })));
- for(let attempt=1;;attempt++){
-  try{return await stage();}
-  catch(error){if(attempt>=schema.definitions.Protocol.const.siblingStagingAttempts||!(error instanceof Error)||error.message!=="Original relative directory facts changed")throw error;await new Promise(accept=>setTimeout(accept,attempt*250+Math.floor(Math.random()*250)));}
- }
+ return retryOnConcurrentEditV1("snapshot",stage,{onRetry:event=>process.stderr.write(event.text+"\n")});
 }

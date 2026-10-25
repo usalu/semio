@@ -50,7 +50,7 @@ impl ScissorRect {
     }
 }
 
-/// 🪟️ An exact union of non-overlapping scissor rects — the silhouette clip. Ported verbatim.
+/// ✂️ An exact union of non-overlapping scissor rects — the silhouette clip. Ported verbatim.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ClipRegion {
     pub scissors: Vec<ScissorRect>,
@@ -116,13 +116,13 @@ impl QuadInstance {
         Self { rect, color, params: [radius, border, KIND_ROUNDED, border_color[3]], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
-    /// 🌀️ Clockwise spinning + pulsing loading ring; the sweep/pulse phase is a shader-side function
+    /// ⭕️ Clockwise spinning + pulsing loading ring; the sweep/pulse phase is a shader-side function
     /// of elapsed seconds, so a packet carrying this kind must set `has_animated_primitives`.
     pub fn loading_border(rect: [f32; 4], color: [f32; 4], radius: f32, border: f32) -> Self {
         Self { rect, color, params: [radius, border, KIND_LOADING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
-    /// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring — animated, see `loading_border`.
+    /// ⏳️ Dashed, slow-spinning + gently pulsing waiting ring — animated, see `loading_border`.
     pub fn waiting_border(rect: [f32; 4], color: [f32; 4], radius: f32, border: f32) -> Self {
         Self { rect, color, params: [radius, border, KIND_WAITING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
@@ -178,7 +178,7 @@ pub struct GlassStyle {
     pub saturate: f32,
 }
 
-/// 🧊️ One glass backdrop region: a rounded rect blurred/saturated/tinted from the scene content
+/// 🥂️ One glass backdrop region: a rounded rect blurred/saturated/tinted from the scene content
 /// behind it. `SceneBuilder::push_glass` returns this region's index, which `begin_glass_content`
 /// tags onto every layer drawn until the matching `end_glass_content`.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -191,7 +191,7 @@ pub struct GlassRegion {
     pub saturate: f32,
 }
 
-/// 🧊️ The GPU-instance form of a [`GlassRegion`]: `params` is `[radius, alpha, blur_px, saturate]`.
+/// 📦️ The GPU-instance form of a [`GlassRegion`]: `params` is `[radius, alpha, blur_px, saturate]`.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct GlassInstance {

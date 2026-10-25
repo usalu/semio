@@ -1,0 +1,12 @@
+import{readFileSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";import{join}from"node:path";
+const L="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const inference=await import(join(L,"🏗️build/🕸️graph/📥️inference/🟨️.mjs"));await inference.libraryBootstrap;inference.prepareSourceAnalysesV1();
+const obs=await import(join(L,"🏗️build/👁️observation/🟨️.mjs"));
+const gen=await import(join(L,"🏗️build/🕸️graph/🕰️generations/🟨️.mjs"));
+const P=gen.GENERATION_POLICY_V1;console.log("policy",P.verifyChunkRows,P.verifyParallelChunks,P.bisectBudgetCalls);
+const idx=JSON.parse(brotliDecompressSync(readFileSync(process.argv[2])).toString());
+const sel=gen.selectFactClassesV1(idx,undefined);
+const own=r=>r.kind==="field"||r.kind==="digest"||(process.env.SKIP||"").split(",").includes(r.kind);
+const hold=async rows=>{const plain=rows.filter(r=>!own(r));if(!plain.length)return true;return obs.observationsHold(plain,64,new Set(),new Set());};
+const t0=performance.now();const{stale,calls}=await gen.staleFactRowsV1(idx,sel.ids,hold,{});
+console.log("rows",sel.ids.length,"stale",stale.size,"calls",calls,"secs",((performance.now()-t0)/1000).toFixed(1),"cpu",process.cpuUsage());

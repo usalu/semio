@@ -17,4 +17,5 @@ impl protocol::OpBinary for Wfc2dConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(Wfc2dConfigMutation);
 }

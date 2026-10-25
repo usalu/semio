@@ -17,7 +17,7 @@ const DECIMALS = 6;
 /** 🗂️ The three families the §45 catalogue kinds are served from. */
 const FAMILIES = ["state-overview", "state-selection", "state-sequence"] as const;
 
-/** 🗂️ The catalogue variants of one family, sorted. */
+/** 🔃️ The catalogue variants of one family, sorted. */
 function catalogueVariants(family: string): readonly string[] {
   return loadVizCatalog()
     .kinds.filter((entry) => entry.family === family)
@@ -25,7 +25,7 @@ function catalogueVariants(family: string): readonly string[] {
     .sort();
 }
 
-/** 🎯️ The catalogue's own promise: every kind present, every kind drawing something of its own. */
+/** 📚️ The catalogue's own promise: every kind present, every kind drawing something of its own. */
 export function catalogueProjection(families: readonly string[]): ProbeProjection {
   const projection: Record<string, readonly (number | string)[]> = {};
   for (const family of families) {
@@ -78,9 +78,9 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     kinds: {
-      /** 🗂️ The catalogue itself: every registered §45 kind of the three state families. */
+      /** 📖️ The catalogue itself: every registered §45 kind of the three state families. */
       oracle: () => ({ projection: catalogueProjection(FAMILIES) }),
-      /** 🎯️ Every interaction-state kind drawn once, reduced to presence and pairwise distinctness. */
+      /** 🔂️ Every interaction-state kind drawn once, reduced to presence and pairwise distinctness. */
       subject: async (ctx: AdapterContext) => await subject(ctx),
     },
   },

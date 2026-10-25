@@ -1,7 +1,7 @@
 import {readBuildGraphV1} from "../../🟦️.ts";
 import graphSchema from "../../../🧬️schema/🔣️.json" with {type:"json"};
 import {selectBuildProjectsV1,selectBuildTasksV1,buildOptionsV1} from "./../../../🧭️selection/🟦️.ts";
-import {withBuildTestInvocationV1} from "./../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import selectionSchema from "../../../🧬️schema/🚪️selection.json" with {type:"json"};
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
@@ -43,3 +43,13 @@ test("explicit exec owner admission matches the actual planner and independent S
  const calls=new Map<string,number>(),admitted=await closeBuildOwnerAdmissionV1(selection,registry,async(owner,targets,inputs)=>{expect(targets).toEqual([]);expect(inputs).toEqual([]);calls.set(owner.name,(calls.get(owner.name)??0)+1);return{project:project(owner),files:[owner.manifest,...owner.name==="app"?["library/api.ts"]:[]],dependencies:owner.name==="app"?["lib"]:[]};});expect(admitted.owners,row.name).toEqual(row.owners);expect([...calls.keys()].sort(),row.name).toEqual(row.owners);expect([...calls.values()].every(value=>value===1),row.name).toBe(true);expect(admitted.targets).toEqual({});const serialized={version:1,projects:Object.fromEntries(registry.owners.map(owner=>[owner.name,project(owner)])),dependencies:[],admission:{selection,registry:"a".repeat(64),closure:"b".repeat(64)}};expect(new Ajv({strict:false}).compile(graphSchema)(serialized),row.name).toBe(true);expect(readBuildGraphV1(serialized).admission!.selection,row.name).toEqual(selection);const key=buildGraphScopeKeyV1(selection,registry);expect(key).toMatch(/^[0-9a-f]{64}$/u);if(selection.kind==="owners")expect(key).not.toBe(buildGraphScopeKeyV1({kind:"all"},registry));
  }}finally{db.close();}
 }));
+
+test("run-many with literal projects and targets admits their owner closure and the prerequisites of those targets, not the whole workspace",()=>{
+ const owners={kind:"owners",projects:["app","lib"],exclude:["lib"],targets:["test","typecheck"]};
+ expect<unknown>(buildInvocationGraphSelectionV1(["run-many","--targets=typecheck,test","--projects=app,lib","--exclude=lib"])).toEqual(owners);
+ expect<unknown>(buildInvocationGraphSelectionV1(["run-many","-p","app,lib","--exclude=lib","-t","test","--target=typecheck","--parallel=1","--","--flag"])).toEqual(owners);
+ const open=[["--targets=typecheck"],["--targets=typecheck","--projects=tag:scope"],["--targets=typecheck","--projects=app","--all"],["--targets=typecheck","--projects=*"],["--targets=type*","--projects=app"],["--projects=app"]];
+ for(const rest of open)expect<unknown>(buildInvocationGraphSelectionV1(["run-many",...rest]),rest.join(" ")).toEqual({kind:"all"});
+ expect<unknown>(buildInvocationGraphSelectionV1(["run-many","--targets=typecheck","--projects=app","--","--all"]).kind).toBe("owners");
+ expect<unknown>(readBuildGraphSelectionV1(owners)).toEqual(owners);expect(()=>readBuildGraphSelectionV1({...owners,targets:["a*"]})).toThrow();
+});

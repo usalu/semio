@@ -2,7 +2,7 @@ import{readInactiveCargoRetirementOperationV1,retireInactiveCargoStoreV1,CARGO_R
 import{withHistoricalCargoImageMaintenanceV1}from"./📜️history/🟦️.ts";
 import{withCompilerWriterCustodyV1}from"../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import{repositoryCompilerLayoutV1}from"../../💾️storage/🔒️enforcement/🏗️compiler/📍️layout/🟦️.ts";
-import{openRepositoryCachePartitionV1}from"../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import { openRepositoryCachePartitionV1 } from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
 import{repositoryCompilerReservationV1}from"../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import{repositoryStrictStorageV1}from"../../💾️storage/🔒️enforcement/🟦️.ts";
 import{withRepositoryCacheStoreV1}from"../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
@@ -14,7 +14,7 @@ import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{mkdtemp}from"node:fs/promises";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
-import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 const runtime=schema.definitions.Runtime.const;
 
 /** 🏪️ Maintains the authored inactive byte budget under the actual repository caller. */

@@ -1,4 +1,4 @@
-/** 🔗️ The reference diagnostics of the schema contract layer: JSON pointers, `$ref` resolution and the whole schema contract diagnostic of a tree. */
+/** 🧬️ The reference diagnostics of the schema contract layer: JSON pointers, `$ref` resolution and the whole schema contract diagnostic of a tree. */
 import { join } from "node:path";
 import { normativeSchemaFormat, readSchemaCatalog, type SchemaCatalog, type SchemaCatalogScope, schemaDiagnostic, type SchemaDiagnostic } from "../🟦️.ts";
 import { readJson, schemaTreeFiles } from "../🏗️scope-eligibility-and-tree/🟦️.ts";
@@ -6,7 +6,7 @@ import { inertSchemaDataPaths, schemaFixtureIsolationDiagnostics, schemaMeasurem
 import { schemaExportCompletenessDiagnostics, scopeNormativeDocuments } from "../📤️export-completeness/🟦️.ts";
 
 //#region 🧬️SchemaContracts
-/** 🔗️ The member a JSON pointer addresses inside one document, or `undefined` when it addresses none. */
+/** 📍️ The member a JSON pointer addresses inside one document, or `undefined` when it addresses none. */
 function jsonPointerTarget(document: unknown, pointer: string): unknown | undefined {
   if (pointer.length === 0) return document;
   if (!pointer.startsWith("/")) return undefined;
@@ -80,7 +80,7 @@ function schemaRefDiagnostics(scopeId: string, scope: SchemaCatalogScope, file: 
 }
 
 /**
- * 🔗️ Export resolution over the whole catalog: every `$ref` lands where it says it does, and a
+ * ⚠️ Export resolution over the whole catalog: every `$ref` lands where it says it does, and a
  * cross-scope reference is only legal when the referring scope DECLARED that dependency.
  *
  * Every document of a scope is read, not only its module root: a facet child (`🔺️diff/`,
@@ -111,7 +111,7 @@ export function schemaResolutionDiagnostics(repoRoot: string, under = ""): Schem
   return found;
 }
 
-/** 🔗️ Every `$ref` string anywhere in a JSON document. */
+/** 📄️ Every `$ref` string anywhere in a JSON document. */
 function jsonRefsIn(document: unknown): string[] {
   const refs: string[] = [];
   const visit = (node: unknown): void => {

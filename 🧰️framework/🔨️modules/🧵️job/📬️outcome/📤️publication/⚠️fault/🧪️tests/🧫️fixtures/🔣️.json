@@ -10,7 +10,7 @@
   "metadataCopyBytes": 0,
   "originalGrant": [
     1,
-    17,
+    4096,
     8192,
     65536,
     9

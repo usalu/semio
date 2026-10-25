@@ -8,12 +8,12 @@ import {POLICY_V1,SUPPORTED_LANGUAGES_V1,renderBothV1,renderTextV1,validatorV1} 
 import {attenuateCapabilityV1,authorizeCapabilityV1,capabilityIdV1,createRevocationRegistryV1,createRootKeyV1,mintCapabilityV1,verifyCapabilityV1} from "../📨️protocol/🔑️capability/🟨️.mjs";
 import {canonicalRootV1,worktreeIdV1} from "../📨️protocol/📍️endpoint/🟨️.mjs";
 import {appendAuditV1} from "../../📥️caller/🛰️service/🔑️session/🟨️.mjs";
-import {agentSessionEnvironmentV1,agentSessionRegistryRootV1,agentSessionStoreV1,currentAgentSessionV1,setAgentSessionCapabilityV1,writeAgentSessionTokenV1} from "../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts";
+import {agentSessionEnvironmentV1,agentSessionRegistryRootV1,agentSessionStoreV1,currentAgentSessionV1,setAgentSessionCapabilityV1,writeAgentSessionTokenV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 import coreSchema from "../../📥️caller/🛰️service/🧬️schema/🔣️.json" with {type:"json"};
 import {createFilterV1,createWorkspaceStateV1,outputSignatureV1} from "../🗃️state/🟨️.mjs";
 import {createWatchSupervisorV1} from "../🔭️watch/🟨️.mjs";
 import {BusyErrorV1,createGovernorV1} from "./🚦️governor/🟨️.mjs";
-import {runtimeCollectGarbageV1} from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import {runtimeCollectGarbageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 const validateClient=validatorV1("ClientFrame");
 

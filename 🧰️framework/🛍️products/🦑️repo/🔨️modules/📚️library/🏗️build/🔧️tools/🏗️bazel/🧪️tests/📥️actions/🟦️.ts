@@ -1,6 +1,6 @@
 /** 🏷️ Contract: native Bazel actions declare real inputs, minimal outputs, a stable key and an explicit cache policy. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {createHash} from "node:crypto";
 import {mkdir,readFile,rm,symlink,writeFile} from "node:fs/promises";
 import {dirname,join} from "node:path";
@@ -17,6 +17,8 @@ import schema from "./🧬️schema.json";
 import component from "../../🧬️schema/🔣️.json";
 import targetCache from "../../../../🏃️execution/🧬️schema/💾️cache.json";
 import type {BazelUncachedReasonV1} from "../../📜️script.ts";
+import {bazelResourceSetsV1} from "../../🌡️host-capacity/🟦️.ts";
+import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../../../🌡️host-capacity/🟦️.ts";
 
 const api=await import("../../📜️script.ts"),graph=corpus.graph as any,plan=api.planBazelTasksV1(graph,corpus.request),emitted=api.bazelActionsV1(graph,plan,false),sha=(value:string)=>createHash("sha256").update(value).digest("hex"),python=testPythonV1();
 
@@ -108,7 +110,7 @@ test("Bazel BUILD output matches the language-agnostic fixture and never emits t
 });
 
 test.skipIf(!python)("Bazel generated Starlark parses and its action requirements agree with the fixture under an independent Python interpreter",async()=>{
- const source=await readFile(new URL("../../📜️script.ts",import.meta.url),"utf8"),file=ts.createSourceFile("bazel.ts",source,ts.ScriptTarget.Latest,true),declaration=file.statements.filter(ts.isVariableStatement).flatMap(row=>[...row.declarationList.declarations]).find(row=>row.name.getText(file)==="STARLARK_RULES")!,rules=(declaration.initializer as ts.NoSubstitutionTemplateLiteral).text;
+ const source=await readFile(new URL("../../📜️script.ts",import.meta.url),"utf8"),file=ts.createSourceFile("bazel.ts",source,ts.ScriptTarget.Latest,true),declaration=file.statements.filter(ts.isVariableStatement).flatMap(row=>[...row.declarationList.declarations]).find(row=>row.name.getText(file)==="STARLARK_RULES")!,rules=bazelResourceSetsV1(BUILD_HOST_CAPACITY_POLICY_V1.kinds)+((declaration.initializer as ts.BinaryExpression).right as ts.NoSubstitutionTemplateLiteral).text;
  const groups=new Map<string,{groups:string[];files:string[]}>(),build=api.renderBazelBuildV1({actions:[...emitted.values()],groups,bun:"/opt/bun",sourceIdentity:"a".repeat(64),extension:""}).replace(/^load\(.*$/mu,"");
  const run=(program:string)=>Bun.spawnSync([python!,"-I","-c",program],{stdout:"pipe",stderr:"pipe"});
  expect(run("import ast,sys\nast.parse(sys.stdin.read())".replace("sys.stdin.read()",JSON.stringify(rules))).exitCode).toBe(0);

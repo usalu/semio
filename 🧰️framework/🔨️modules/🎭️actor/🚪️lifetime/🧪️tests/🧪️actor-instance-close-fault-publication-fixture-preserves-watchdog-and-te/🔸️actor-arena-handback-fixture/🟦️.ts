@@ -1,7 +1,7 @@
 /** 🔸️ The actor arena handback fixture phase of registerTests1. */
 import type { ActorInstanceLifecycleReceipt, ActorInstanceLifecycleWire, ActorInstanceOpenRequest } from "../../../🟦️.ts";
 import type { registerActorInstanceCloseFaultTests } from "../🔶️actor-instance-close-fault/🟦️.ts";
-import type { TestSource } from "../🟢️shared/🟦️.ts";
+import type { TestSource } from "../🟢️harness/🟦️.ts";
 
 /** 🔹 Registers the actor arena handback fixture tests of registerTests1. */
 export function registerActorArenaHandbackFixtureTests({ it, source, expect, encodeActorInstanceLifecycle, ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, decodeActorInstanceLifecycle }: Pick<ReturnType<typeof registerActorInstanceCloseFaultTests>, "it" | "expect" | "encodeActorInstanceLifecycle" | "ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES" | "decodeActorInstanceLifecycle"> & { readonly source: TestSource }) {

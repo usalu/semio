@@ -122,6 +122,7 @@ pub mod editor {
             pub use semio_s_artifact_puzzle_5d_dispatch::editor::puzzle5d::commands::set_camera;
             pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_camera_2d;
             pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_camera_3d;
+            pub use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::commands::focus_selection;
             pub use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::commands::set_fill_count;
             pub use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::commands::export_snapshot;
             pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::import_snapshot;

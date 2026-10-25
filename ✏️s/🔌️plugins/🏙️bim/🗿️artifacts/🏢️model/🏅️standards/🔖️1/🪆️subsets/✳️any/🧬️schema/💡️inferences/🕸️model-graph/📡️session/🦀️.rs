@@ -11,6 +11,7 @@ use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{step_field_update, DiffRegions, MutationDiff, FieldChange, FieldDelta, FieldUpdate, InferenceCache, InferenceCacheConfig, InferenceError, InferenceWorkFailure, InferenceFault, InferenceSession, TouchedPaths};
+use protocol::ColdMutationDiff;
 use std::collections::BTreeMap;
 
 /// 📊️ What the last run did: the proof an edit recomputed only what it touched.

@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build/format-stamps/implementation-edit-vectors/v1",
+  "title": "Implementation edit vectors",
+  "description": "Language-agnostic vectors of how a failure caused by an edited implementation is classified (stale code, authority change, captured exit 75, half-edited module, escaped concurrent edit, none) and how the outermost command answers it (restart, pause, yield, exhaust).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "classification", "policy"],
+  "properties": {
+    "version": {"const": 1},
+    "classification": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Classification"}},
+    "policy": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Policy"}}
+  },
+  "definitions": {
+    "Error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["message"],
+      "properties": {
+        "name": {"type": "string"},
+        "code": {"type": "string"},
+        "message": {"type": "string"},
+        "reason": {"type": "string"},
+        "path": {"type": "string"},
+        "rank": {"type": "integer"},
+        "outcome": {"type": "object", "required": ["status"], "properties": {"status": {"type": "integer"}}},
+        "cause": {"$ref": "#/definitions/Error"},
+        "errors": {"type": "array", "items": {"$ref": "#/definitions/Error"}}
+      }
+    },
+    "Classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "error", "origin"],
+      "properties": {"id": {"type": "string"}, "error": {"$ref": "#/definitions/Error"}, "origin": {"enum": ["error", "exit", "load", "edit", null]}}
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "origin", "attempt", "ranMilliseconds", "outermost"],
+      "properties": {"id": {"type": "string"}, "origin": {"enum": ["error", "exit", "load", "edit"]}, "attempt": {"type": "integer", "minimum": 0}, "ranMilliseconds": {"type": "integer", "minimum": 0}, "outermost": {"type": "boolean"}}
+    }
+  }
+}

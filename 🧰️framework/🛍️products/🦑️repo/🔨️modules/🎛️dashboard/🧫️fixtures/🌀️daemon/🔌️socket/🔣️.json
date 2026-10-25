@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "limits": {
+    "macos": 104,
+    "linux": 108
+  },
+  "fallbackDirectory": "/tmp/semio-dashboard-501",
+  "key": "0123456789abcdef",
+  "cases": [
+    {
+      "name": "the default per-user directory",
+      "runtime": "/tmp/semio-dashboard-501",
+      "preferredBytes": 46,
+      "preferred": {
+        "macos": true,
+        "linux": true
+      },
+      "fallbackFile": "a7d22b8a9475e2fe.sock"
+    },
+    {
+      "name": "one byte below the macOS capacity",
+      "runtime": "/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+      "preferredBytes": 103,
+      "preferred": {
+        "macos": true,
+        "linux": true
+      },
+      "fallbackFile": "f581845ee20331a4.sock"
+    },
+    {
+      "name": "exactly the macOS capacity",
+      "runtime": "/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+      "preferredBytes": 104,
+      "preferred": {
+        "macos": false,
+        "linux": true
+      },
+      "fallbackFile": "08418cb89b9330cc.sock"
+    },
+    {
+      "name": "one byte below the Linux capacity",
+      "runtime": "/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+      "preferredBytes": 107,
+      "preferred": {
+        "macos": false,
+        "linux": true
+      },
+      "fallbackFile": "832ea132202dc8d2.sock"
+    },
+    {
+      "name": "exactly the Linux capacity",
+      "runtime": "/rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+      "preferredBytes": 108,
+      "preferred": {
+        "macos": false,
+        "linux": false
+      },
+      "fallbackFile": "67c31824fc7154d2.sock"
+    },
+    {
+      "name": "a deep Unicode runtime directory",
+      "runtime": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tmp/st/d/1d994ca0/artifacts/dashboard-journeys/j16381.14",
+      "preferredBytes": 141,
+      "preferred": {
+        "macos": false,
+        "linux": false
+      },
+      "fallbackFile": "76d86a9a998c2250.sock"
+    },
+    {
+      "name": "a very deep ASCII runtime directory",
+      "runtime": "/dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "preferredBytes": 323,
+      "preferred": {
+        "macos": false,
+        "linux": false
+      },
+      "fallbackFile": "696c8bf209a45a50.sock"
+    }
+  ]
+}

@@ -9,7 +9,8 @@ use semio_s_artifact_cad_cad_kit::{cad_action, cad_tree_item, cad_tree_item_stat
 use semio_s_artifact_cad_cad_model::geometry::CadObject;
 use semio_s_artifact_cad_cad_inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
 use semio_s_artifact_cad_cad_model::{snapshot::CadPaneId, snapshot::CadReference, snapshot::CadSnapshot};
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
+use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, RowActionPlacement};
+use semio_framework_plugin::{Buildable, HasBase};
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
 use semio_framework_plugin::tree_window_item;

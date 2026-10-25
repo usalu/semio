@@ -1,4 +1,4 @@
-//! 🌉️ Publication error and bridge: the publication error and the test-only outcome projection and turn bridge. See [`super`].
+//! ❌️ Publication error and bridge: the publication error and the test-only outcome projection and turn bridge. See [`super`].
 
 use super::*;
 

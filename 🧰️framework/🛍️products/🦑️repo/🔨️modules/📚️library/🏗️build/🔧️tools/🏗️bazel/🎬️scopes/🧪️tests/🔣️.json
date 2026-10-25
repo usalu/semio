@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "checkoutFromTests": "../../../../../../../../../..",
+  "entryFromTests": "../../🎬️executor/🟦️.ts",
+  "executorOracleFromTests": "../../🎬️executor/🧪️tests/🐍️oracle/🐍️.py",
+  "maximumFiles": 450,
+  "traceFields": [
+    "command",
+    "workerKind",
+    "executionKind",
+    "semioKind",
+    "owner"
+  ],
+  "forbidden": [
+    {
+      "reason": "the graph reader belongs to planning",
+      "fragment": "/🏗️build/🕸️graph/🟦️.ts"
+    },
+    {
+      "reason": "the build door is the launcher",
+      "fragment": "/🏗️build/🚪️door/"
+    },
+    {
+      "reason": "the adapter itself is the wide implementation",
+      "fragment": "/🏗️bazel/📜️script.ts"
+    }
+  ],
+  "unrelated": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts"
+  ],
+  "lazyEdgeBound": 8,
+  "schedulingOracleFromTests": "./🐍️oracle/🐍️.py",
+  "maximumKeyedFiles": 200,
+  "keyedProducers": [
+    {
+      "reason": "the executor decides which command runs with which environment and which outputs are cached",
+      "fragment": "/🏗️bazel/🎬️executor/🟦️.ts"
+    },
+    {
+      "reason": "the caller issues the environment and arguments the command receives",
+      "fragment": "/🏗️build/📥️caller/🟦️.ts"
+    },
+    {
+      "reason": "the execution environment is what the command sees",
+      "fragment": "/🌱️exec-environment/🟦️.ts"
+    },
+    {
+      "reason": "the glob selects the declared outputs that are cached",
+      "fragment": "/⚙️runtime/🌐️glob/🟦️.ts"
+    },
+    {
+      "reason": "the source closure capture decides which code a child runs",
+      "fragment": "/🏗️build/📥️source/🔏️closure/🟦️.ts"
+    },
+    {
+      "reason": "tool resolution decides which pinned binary runs",
+      "fragment": "/🧰️tools/🔎️resolve/🟦️.ts"
+    },
+    {
+      "reason": "the owned execution starts the command itself",
+      "fragment": "/🎛️owned-execution/🟦️.ts"
+    }
+  ],
+  "schedulingSamples": [
+    {
+      "reason": "resource leases only order holders",
+      "fragment": "/🔒️leases/🟦️.ts"
+    },
+    {
+      "reason": "host capacity only delays starts",
+      "fragment": "/🌡️host-capacity/🟦️.ts"
+    },
+    {
+      "reason": "the cache store custody only decides where bytes live",
+      "fragment": "/🏪️store/🟦️.ts"
+    },
+    {
+      "reason": "the churn retry only decides when to read again",
+      "fragment": "/🧾️observation/🔁️churn/🟦️.ts"
+    },
+    {
+      "reason": "progress and refusal texts are shown to humans",
+      "fragment": "/🗣️language/🟦️.ts"
+    }
+  ]
+}

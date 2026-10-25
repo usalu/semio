@@ -29,7 +29,7 @@ impl Drop for StepTimer {
     }
 }
 
-/// ⏱️ Same shape as [`StepTimer`], named separately for callback/event-handler call sites (a UI event
+/// ⏰️ Same shape as [`StepTimer`], named separately for callback/event-handler call sites (a UI event
 /// dispatch, a promise resolution) so a latency report reads by call-site intent instead of forcing
 /// every caller to squint at one generic timer type.
 // 🔕 dead_code: this field is never read directly — it exists purely for its `Drop` side effect,
@@ -103,7 +103,7 @@ impl CallbackVerdict {
     }
 }
 
-/// 🚨️ Ring capacity for the process-wide violation store — bounded so a runaway-overrunning site
+/// ⭕️ Ring capacity for the process-wide violation store — bounded so a runaway-overrunning site
 /// cannot grow this unboundedly; oldest violations are evicted first (see [`Watchdog::violation_count`]
 /// for the never-shrinking total).
 pub(super) const VIOLATION_RING_CAPACITY: usize = 128;
@@ -113,7 +113,7 @@ pub(super) fn violation_ring() -> &'static StaticTryGate<BoundedRing<ContractVio
     &RING
 }
 
-/// 🐕️ RAII guard: wraps one [`InteractiveStage`] site for a specific operation/generation, records the
+/// 🛡️ RAII guard: wraps one [`InteractiveStage`] site for a specific operation/generation, records the
 /// elapsed sample into the same per-site [`PercentileRing`] [`StepTimer`] uses, and reports a
 /// [`ContractViolation`] at the strict ceiling. [`Watchdog::finish`] transfers the exact verdict;
 /// global snapshots are optional diagnostics and must never authorize publication or quarantine.
@@ -131,7 +131,7 @@ impl Watchdog {
         Self::start_at(site, operation, generation, stage, try_now_us())
     }
 
-    /// ⏱️ [`Watchdog::start`] from a reading its caller already made at the site's entry, so a
+    /// 🔰️ [`Watchdog::start`] from a reading its caller already made at the site's entry, so a
     /// driver that reads the clock to derive a step budget does not read it a second time.
     pub fn start_at(site: &'static str, operation: OperationId, generation: Generation, stage: InteractiveStage, start_us: Option<u64>) -> Watchdog {
         Watchdog { site, operation, generation, stage, start_us, finished: false }

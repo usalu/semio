@@ -14,8 +14,9 @@ fn database_capacity(database:&SqliteDatabase)->usize{
 fn strings_capacity(values:&Vec<String>)->usize{
  let mut bytes=slots(values);for value in values{add(&mut bytes,value.capacity());}bytes
 }
+fn cow_capacity(value:&std::borrow::Cow<'static,str>)->usize{match value{std::borrow::Cow::Owned(owned)=>owned.capacity(),std::borrow::Cow::Borrowed(_)=>0}}
 fn diagnostic_capacity(error:&store::io_schema::IoError)->usize{
- let mut bytes=error.cause.message.capacity();add(&mut bytes,slots(&error.diagnostics));
+ let mut bytes=cow_capacity(&error.cause.message);add(&mut bytes,slots(&error.diagnostics));
  for diagnostic in &error.diagnostics{
   add(&mut bytes,diagnostic.code.0.capacity());add(&mut bytes,diagnostic.message.capacity());
   if let Some(expected)=&diagnostic.expected{for values in [&expected.tokens,&expected.keywords,&expected.keys]{add(&mut bytes,strings_capacity(values));}}
@@ -51,8 +52,8 @@ fn sqlite_retained_host_count_erased_requests_diagnostics_and_full_release(){
    for reconstruct in [false,true]{
     let incoming=if reconstruct{incoming}else{0};
     let operation=|control:&mut SqliteSnapshotControl<'_>,input:&mut Option<SqliteDatabase>|{
-     if reconstruct{(codec.import)(KIND,&coordinate,input.take().unwrap(),encoding,control).map(|output|{let correct=output.value==expected_output&&output.diagnostics.is_empty();drop(output);correct})}
-     else{(codec.export)(KIND,&coordinate,&native,control).map(|output|{let correct=output.value==expected&&output.diagnostics.is_empty();drop(output);correct})}
+     if reconstruct{super::import_native(&codec,KIND,&coordinate,input.take().unwrap(),encoding,control).map(|output|{let correct=output.value==expected_output&&output.diagnostics.is_empty();drop(output);correct})}
+     else{super::export_native(&codec,KIND,&coordinate,&native,control).map(|output|{let correct=output.value==expected&&output.diagnostics.is_empty();drop(output);correct})}
     };
     let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,defaults);let mut input=Some(expected.clone());
     let (sample,requests,freed)=measure(||operation(&mut control,&mut input));

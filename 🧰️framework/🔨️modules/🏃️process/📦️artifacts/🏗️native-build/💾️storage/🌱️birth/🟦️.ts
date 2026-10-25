@@ -1,3 +1,5 @@
+import type {NativeStorageChildFundingV1} from "../📋️contract/🟦️.ts";
+export type {NativeStorageChildFundingV1} from "../📋️contract/🟦️.ts";
 import{requireNativeImageEnvelopeV1}from"../🌐️platform/📋️contract/🟦️.ts";
 import{requireMaterializedPathV1}from"../../../../🔒️leases/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -22,8 +24,6 @@ import type{NativeStoragePolicyV1}from"../📜️journal/🟦️.ts";
 import type{ScriptInvocation}from"../../../../🧭️routing/📥️invocation/🟦️.ts";
 import exportedStorageSchema from"../🧬️schema/🔣️.json" with{type:"json"};
 const storageSchema=structuredClone(exportedStorageSchema);
-/** 🧾️ Declares finite funding DATA beside its authentic Original; it grants no provider authority. */
-export type NativeStorageChildFundingV1=Readonly<{policy:NativeStoragePolicyV1;invocation:ScriptInvocation;owner:string;metadataBytes:number;policySha256:string}>;
 const fundedProtocol=Object.freeze({...schema.definitions.FundedFactoryProtocol.const});
 function fields(value:unknown,required:readonly string[],optional:readonly string[]=[]):Record<string,unknown>{if(!value||typeof value!=="object"||Array.isArray(value)||types.isProxy(value)||Object.getPrototypeOf(value)!==Object.prototype&&Object.getPrototypeOf(value)!==null)throw Error("Plain closed funded factory fields required");const captured:Record<string,unknown>=Object.create(null),keys=Reflect.ownKeys(value);if(required.some(key=>!keys.includes(key)))throw Error("Complete funded factory fields required");for(const key of keys){if(typeof key!=="string"||!required.includes(key)&&!optional.includes(key))throw Error("Unknown funded factory field");const row=Object.getOwnPropertyDescriptor(value,key);if(!row||!("value"in row)||!row.enumerable)throw Error("Funded factory accessors refused");captured[key]=row.value;}return captured;}
 /** 🧮️ Computes the actual requested backing plus accepted metadata; caller totals are never consumed. */

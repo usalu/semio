@@ -34,7 +34,7 @@ export type PresenceDomain = {
   readonly hovered: readonly string[];
 };
 
-/** 📡️ One peer's interaction roster for one app instance, mirrored onto `PresencePeer.interaction`
+/** 🪞️ One peer's interaction roster for one app instance, mirrored onto `PresencePeer.interaction`
  * (bit 7) on the heartbeat. Only explicit ids broadcast; receivers expand transitive closures via
  * their own topology. */
 export type PresenceInteraction = {
@@ -100,7 +100,7 @@ export function parseSelectionMode(value: unknown, at = "SelectionMode"): Select
   return member(value, "SelectionMode", at, ["single", "multiple"] as const);
 }
 
-/** 🎯️ `$defs.SelectionMethod` — how a surface gathers targets for one dispatch. */
+/** 🧲️ `$defs.SelectionMethod` — how a surface gathers targets for one dispatch. */
 export function parseSelectionMethod(value: unknown, at = "SelectionMethod"): SelectionMethod {
   return member(value, "SelectionMethod", at, ["pick", "rectangle", "lasso"] as const);
 }
@@ -170,14 +170,14 @@ export function parseInteractionTarget(value: unknown, at = "InteractionTarget")
   return { granularity: text(entry.granularity, "InteractionTarget", `${at}.granularity`), id: text(entry.id, "InteractionTarget", `${at}.id`) };
 }
 
-/** 🖱️ `$defs.DomainSelection` — one domain's current selection. */
+/** 🎚️ `$defs.DomainSelection` — one domain's current selection. */
 export function parseDomainSelection(value: unknown, at = "DomainSelection"): DomainSelection {
   const entry = members(value, "DomainSelection", at, ["granularity", "ids"], ["anchorId"]);
   const selection: DomainSelection = { granularity: text(entry.granularity, "DomainSelection", `${at}.granularity`), ids: list(entry.ids, "DomainSelection", `${at}.ids`, 0, (item, itemAt) => text(item, "DomainSelection", itemAt)) };
   return entry.anchorId === undefined ? selection : { ...selection, anchorId: text(entry.anchorId, "DomainSelection", `${at}.anchorId`) };
 }
 
-/** 🐁️ `$defs.DomainHover` — one domain's current hover on one channel. */
+/** 👆️ `$defs.DomainHover` — one domain's current hover on one channel. */
 export function parseDomainHover(value: unknown, at = "DomainHover"): DomainHover {
   const entry = members(value, "DomainHover", at, ["channel", "ids"]);
   return { channel: text(entry.channel, "DomainHover", `${at}.channel`), ids: list(entry.ids, "DomainHover", `${at}.ids`, 0, (item, itemAt) => text(item, "DomainHover", itemAt)) };
@@ -194,7 +194,7 @@ export function parseInteractionState(value: unknown, at = "InteractionState"): 
   };
 }
 
-/** 🌳️ `$defs.TopologyNode` — one node of a domain's topology; an absent `parent` is a root. */
+/** 🌿️ `$defs.TopologyNode` — one node of a domain's topology; an absent `parent` is a root. */
 export function parseTopologyNode(value: unknown, at = "TopologyNode"): TopologyNode {
   const entry = members(value, "TopologyNode", at, ["id", "granularity"], ["parent"]);
   const node: TopologyNode = { id: text(entry.id, "TopologyNode", `${at}.id`), granularity: text(entry.granularity, "TopologyNode", `${at}.granularity`) };
@@ -207,7 +207,7 @@ export function parseDomainTopology(value: unknown, at = "DomainTopology"): Doma
   return { ordered: list(entry.ordered, "DomainTopology", `${at}.ordered`, 0, (item, itemAt) => parseTopologyNode(item, itemAt)) };
 }
 
-/** 📡️ `$defs.PresenceDomain` — one domain's broadcast slice, explicit ids only. */
+/** 📖️ `$defs.PresenceDomain` — one domain's broadcast slice, explicit ids only. */
 export function parsePresenceDomain(value: unknown, at = "PresenceDomain"): PresenceDomain {
   const entry = members(value, "PresenceDomain", at, ["domain", "granularity", "selected", "hovered"]);
   return {
@@ -218,7 +218,7 @@ export function parsePresenceDomain(value: unknown, at = "PresenceDomain"): Pres
   };
 }
 
-/** 📡️ `$defs.PresenceInteraction` — one peer's interaction roster for one app instance. */
+/** 👥️ `$defs.PresenceInteraction` — one peer's interaction roster for one app instance. */
 export function parsePresenceInteraction(value: unknown, at = "PresenceInteraction"): PresenceInteraction {
   const entry = members(value, "PresenceInteraction", at, ["appId", "domains"]);
   return { appId: text(entry.appId, "PresenceInteraction", `${at}.appId`), domains: list(entry.domains, "PresenceInteraction", `${at}.domains`, 0, (item, itemAt) => parsePresenceDomain(item, itemAt)) };

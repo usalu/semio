@@ -58,7 +58,7 @@ impl SceneDoc for TiledMapScene {
     }
 }
 
-/// 🚚️ The tiled-map payload field that rides OUTSIDE the fixed-capacity surface doc — the map twin of
+/// 🎒️ The tiled-map payload field that rides OUTSIDE the fixed-capacity surface doc — the map twin of
 /// [`Board2dSceneLane`]/[`Paint2dSceneLane`], pinned against
 /// `🧪️tests/🧫️fixtures/🚚️tiledmap-scene-lanes/🔣️.json` on both sides.
 ///
@@ -76,19 +76,19 @@ pub enum TiledMapSceneLane {
     MapDescriptor,
 }
 
-/// 🚚️ Reserved carrier-key namespace of the tiled-map lanes.
+/// 🔑️ Reserved carrier-key namespace of the tiled-map lanes.
 pub const TILEDMAP_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.tiledmap.";
 
-/// 🚚️ Wire name of each [`TiledMapSceneLane`], in `TiledMapSceneLane::ALL` order.
+/// 📛️ Wire name of each [`TiledMapSceneLane`], in `TiledMapSceneLane::ALL` order.
 pub const TILEDMAP_SCENE_LANE_NAMES: [&str; 1] = ["mapDescriptor"];
 
-/// 🚚️ [`TiledMapScene`] field each lane carries, spelled as its serialized (camelCase) name.
+/// 📋️ [`TiledMapScene`] field each lane carries, spelled as its serialized (camelCase) name.
 pub const TILEDMAP_SCENE_LANE_FIELDS: [&str; 1] = ["mapDescriptorJson"];
 
-/// 🚚️ Reserved carrier key of each lane.
+/// 🗝️ Reserved carrier key of each lane.
 pub const TILEDMAP_SCENE_LANE_BODY_KEYS: [&str; 1] = ["framework.scene.tiledmap.mapDescriptor"];
 
-/// 🚚️ Whether each lane's [`TiledMapScene`] field is an `Option<String>`.
+/// ❓️ Whether each lane's [`TiledMapScene`] field is an `Option<String>`.
 pub const TILEDMAP_SCENE_LANE_OPTIONAL: [bool; 1] = [false];
 
 impl TiledMapSceneLane {
@@ -99,7 +99,7 @@ impl TiledMapSceneLane {
         TILEDMAP_SCENE_LANE_NAMES[self as usize]
     }
 
-    /// 🏷️ See [`TILEDMAP_SCENE_LANE_FIELDS`].
+    /// 🔖️ See [`TILEDMAP_SCENE_LANE_FIELDS`].
     pub fn field(self) -> &'static str {
         TILEDMAP_SCENE_LANE_FIELDS[self as usize]
     }
@@ -109,7 +109,7 @@ impl TiledMapSceneLane {
         TILEDMAP_SCENE_LANE_BODY_KEYS[self as usize]
     }
 
-    /// 🏷️ See [`TILEDMAP_SCENE_LANE_OPTIONAL`].
+    /// ❔️ See [`TILEDMAP_SCENE_LANE_OPTIONAL`].
     pub fn optional(self) -> bool {
         TILEDMAP_SCENE_LANE_OPTIONAL[self as usize]
     }
@@ -119,7 +119,7 @@ impl TiledMapSceneLane {
         Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
     }
 
-    /// 🔎️ Resolves a lane wire name back to its lane.
+    /// ↩️ Resolves a lane wire name back to its lane.
     pub fn from_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|lane| lane.name() == name)
     }
@@ -195,7 +195,7 @@ pub fn tiled_map_default_selection_mode() -> String {
 }
 
 impl TiledMapScene {
-    /** 🗺️ Builds a tiled map scene with optional extensions unset. */
+    /** 🧱️ Builds a tiled map scene with optional extensions unset. */
     pub fn base(map_descriptor_json: String, camera_json: String) -> Self {
         Self {
             map_descriptor_json,

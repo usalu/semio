@@ -211,7 +211,7 @@ export function CoursePetLayer(props: { readonly pets: StagedPets }): ReactEleme
 //#endregion 🫧️Layer
 
 //#region 🤹️Playground
-/** 🤹️ "Play with the pets", a row of the settings (`row`, with its name in `name`: the settings' own classes) that plays
+/** 🎮️ "Play with the pets", a row of the settings (`row`, with its name in `name`: the settings' own classes) that plays
  * with the pets on stage without a pointer (WCAG 2.1.1 keyboard, 2.5.1 pointer gestures, 2.5.7 dragging movements): one
  * group per pet, named by the pet, with a button for each deed, including explicit gesture choices, and one polite
  * status line that says what the learner just asked for, and only that: nothing the pets do by themselves is spoken.

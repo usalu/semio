@@ -1,0 +1,29 @@
+# stage-clean different staged=conc-ts-tools/staged3/new/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🧩️units/🔌️repository/🟦️.ts map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🧩️units/🔌️repository/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🧩️units/🔌️repository/🟦️.ts
+@@ -6,7 +6,6 @@
+ import {compilerAdmissionBudgetV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+ import {typeScriptCheckEnvironmentV1,type TypeScriptCheckOptions} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+ import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+-import {currentAgentSessionV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
+ import {advanceScriptInvocation,createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+ import {withRepositoryCacheStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+ import {readNativeCallerAuthorityV1} from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+@@ -21,7 +20,7 @@
+ const atomic = (path: string, text: string): void => {mkdirSync(dirname(path), {recursive: true}); const temporary = `${path}.${process.pid}.tmp`; writeFileSync(temporary, text); renameSync(temporary, path);};
+ const text = (key: keyof typeof rules.messages.texts, language: string, values: Readonly<Record<string, string | number>>): string => (rules.messages.texts[key] as Record<string, string>)[language]!.replace(/\{(\w+)\}/gu, (_, name: string) => String(values[name]));
+ 
+-/** 🪁️ Type-checks one authored configuration unit by unit against stored declaration outputs. Shared results live in the products store; incremental compiler state lives in the compiler-state directory of the agent session, so concurrent agents share results and never mutable state. */
++/** 🪁️ Type-checks one authored configuration unit by unit against stored declaration outputs. Shared results live in the products store; incremental compiler state lives in the session's compiler-state directory (`SEMIO_SESSION`, default `default`), so concurrent agents share results and never mutable state. */
+ export async function typecheckRepositoryUnitsV1(options: RepositoryTypeScriptUnitsOptionsV1): Promise<void> {
+   const invocation = options.invocation, incoming = options.control;
+   requireIssuedResourceControlInvocationV1(incoming, invocation);
+@@ -45,7 +44,7 @@
+     const require = createRequire(join(options.cwd, "package.json")), ts = require("typescript") as typeof import("typescript"), compiler = require.resolve("typescript/bin/tsc"), project = resolve(options.cwd, options.project);
+     const family = relative(options.workspace, project), parsed = ts.getParsedCommandLineOfConfigFile(project, {}, {...ts.sys, onUnRecoverableConfigFileDiagnostic: diagnostic => {throw Error(ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));}});
+     if (!parsed) throw Error("TypeScript configuration could not be read: " + family);
+-    const session = currentAgentSessionV1({environment}).id, sharedRoot = join(options.stateRoot, "units");
++    const session = (environment.SEMIO_SESSION ?? "default").replace(/[^A-Za-z0-9_.-]/gu, "_").slice(0, 64) || "default", sharedRoot = join(options.stateRoot, "units");
+     await withCompilerState({root: options.stateRoot, owner: options.owner, compiler: `typescript:${ts.version}`, configuration: JSON.stringify([family, "units", session]), mode: options.mode, control, storage: options.storage, storageControl: options.storageControl, files: ["units.state"], environment, capacity: {kind: "exact", parallelism: Math.max(1, Math.min(8, options.jobs))}}, async (directory, compilerEnvironment, actualControl) => {
+       const memoryDigests = new Map<string, {key: string; digest: string}>(), digest = (path: string): string => {const absolute = join(options.workspace, path), info = statSync(absolute), key = `${info.mtimeMs}:${info.size}`, known = memoryDigests.get(absolute); if (known?.key === key) return known.digest; const value = createHash("sha256").update(readFileSync(absolute)).digest("hex"); memoryDigests.set(absolute, {key, digest: value}); return value;};
+       const roots = parsed.fileNames.filter(file => file.startsWith(options.workspace + "/") && !file.includes("/node_modules/")).map(file => file.slice(options.workspace.length + 1)), memoPath = join(sharedRoot, "imports", sha(family, ts.version, JSON.stringify(parsed.options)) + ".json");

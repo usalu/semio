@@ -34,5 +34,5 @@ pub fn duplicate_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
     for clone in &mut clones {
         clone.id = fresh_ids.next_part();
     }
-    ctx.artifact_mutations.extend(clones.into_iter().map(|clone| create_part(clone, None)));
+    ctx.artifact_mutations.extend(clones.into_iter().map(|clone| create_part::create_part(clone, None)));
 }

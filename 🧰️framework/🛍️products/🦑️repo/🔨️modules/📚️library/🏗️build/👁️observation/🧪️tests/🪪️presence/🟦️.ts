@@ -17,7 +17,7 @@ import{observeProjectInferenceV1,sourceObservationStatsV1}from"../../🟨️.mjs
 import{withManagedGraphSourceReadBatchV1,readExactSourceInventoryV1}from"../../../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 import schema from"../../📥️reuse/🧬️schema/🔣️.json";
 import corpus from"./🧫️cases.json";
-import{requireNativePlatformImageWriterV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import{requireNativePlatformImageWriterV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import receiverCorpus from"../../../📥️inputs/💾️storage/🧪️fixture/🧫️cases.json";
 import fixtureSchema from"../../../📥️inputs/💾️storage/🧪️fixture/🧬️schema/🔣️.json";
 const hash=(text:string)=>createHash("sha256").update(text).digest("hex"),workspace=resolve(process.cwd());

@@ -81,12 +81,28 @@ pub struct CadModelSlot {
 
 protocol::list_delta! {
     /// 🧩 Positional delta for nodes (`protocol::list_delta`).
-    pub CadNodesDelta { removal: CadNodeRemoval, insertion: CadNodeInsertion, relocation: CadNodeRelocation, modification: CadNodeModification, row: CadNode, patch: CadNodePatch, key: id }
+    pub CadNodesDelta { removal: CadNodeRemoval, insertion: CadNodeInsertion, relocation: CadNodeRelocation, modification: CadNodeModification, row: CadNode, patch: CadNodePatch, list: Vec<CadNode>, key: String = by CadNodeKeys }
+}
+
+/// 🔑️ Keys the foreign `CadNode` rows of their list delta by `id`.
+pub(crate) struct CadNodeKeys;
+
+impl protocol::list_delta::KeyOf<CadNode> for CadNodeKeys {
+    type Key = String;
+    fn key_of(row: &CadNode) -> String { row.id.clone() }
 }
 
 protocol::list_delta! {
     /// 📎 Positional delta for one model's reference list (`protocol::list_delta`).
-    pub CadReferencesDelta { removal: CadReferenceRemoval, insertion: CadReferenceInsertion, relocation: CadReferenceRelocation, modification: CadReferenceModification, row: CadReference, patch: CadReferencePatch, key: id }
+    pub CadReferencesDelta { removal: CadReferenceRemoval, insertion: CadReferenceInsertion, relocation: CadReferenceRelocation, modification: CadReferenceModification, row: CadReference, patch: CadReferencePatch, list: Vec<CadReference>, key: String = by CadReferenceKeys }
+}
+
+/// 🔑️ Keys the foreign `CadReference` rows of their list delta by `id`.
+pub(crate) struct CadReferenceKeys;
+
+impl protocol::list_delta::KeyOf<CadReference> for CadReferenceKeys {
+    type Key = String;
+    fn key_of(row: &CadReference) -> String { row.id.clone() }
 }
 
 /// 🔑️ Keys the foreign drawing child rows by their child id.

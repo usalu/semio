@@ -13,7 +13,7 @@ use semio_framework_plugin_host_guest_runtime::MockGuestRuntime;
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_plugin_host_engine::minimal_component_without_actor_world;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_plugin_host_post_turn_relay::test_relay_wake_authority;
+use semio_framework_plugin_host_post_turn_relay::{test_relay_original_input,test_relay_wake_authority};
 use semio_framework_plugin_host_guest_runtime::GuestRuntime as _;
 
 //#region 🔖️IoRouterW1d
@@ -154,7 +154,7 @@ async fn io_router_register_plugin_rejects_conflicting_io_entry_ownership() {
 #[semio_framework_async_macros::async_test]
 async fn wasmtime_runtime_keeps_wrong_abi_components_isolated_by_package() {
     let runtime = WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.expect("engine builds");
-    let budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
     for name in ["stdio", "cad"] {
         let package = PackageRef { package: PackageId(name.to_string()), hash: PackageHash([name.len() as u8; 32]) };
         let compiled = runtime.compile(&package, minimal_component_without_actor_world()).await.unwrap_or_else(|error| panic!("{name} component compiles: {error}"));
@@ -173,11 +173,11 @@ async fn plugin_instance_handle_drives_io_run_job_on_worker_through_a_running_st
     let mock = Arc::new(MockGuestRuntime::new().await);
     let actor = RuntimeActorId(100);
     let compiled = mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([1u8; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
     mock.script_job_step(actor, JobStep::Running { progress: None }).await;
     let io_payload = semio_framework::io_schema::IoPayload::Text("87a-bytes".to_string());
     mock.script_job_step(actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&io_payload).into_bytes() }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_wake_authority()).await;
+    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_original_input(),test_relay_wake_authority()).await;
 
     let payload_bytes = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Text("raw-bytes".to_string())).into_bytes();
     let result = handle.io_run("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", payload_bytes).await.expect("job-backed io_run must drive start-job + step-job to Done");
@@ -192,9 +192,9 @@ async fn plugin_instance_handle_io_sniff_decodes_the_confidence_byte() {
     let mock = Arc::new(MockGuestRuntime::new().await);
     let actor = RuntimeActorId(101);
     let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([2u8; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
     mock.script_job_step(actor, JobStep::Done { output: vec![3u8] }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_wake_authority()).await;
+    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_original_input(),test_relay_wake_authority()).await;
 
     let payload_bytes = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Binary(vec![0xFF])).into_bytes();
     let rank = handle.io_sniff("framework.io.binary@raw/*", "s.stdio.gif@87a/*", &payload_bytes).await.expect("job-backed io_sniff must decode a Done result");
@@ -209,10 +209,10 @@ async fn plugin_instance_handle_migrate_drives_the_semio_migrate_job_to_completi
     let mock = Arc::new(MockGuestRuntime::new().await);
     let actor = RuntimeActorId(102);
     let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([9u8; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
     mock.script_job_step(actor, JobStep::Running { progress: None }).await;
     mock.script_job_step(actor, JobStep::Done { output: vec![1, 2, 3, 0xAB] }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_wake_authority()).await;
+    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_original_input(),test_relay_wake_authority()).await;
 
     let result = handle.migrate("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", vec![1, 2, 3]).await.expect("job-backed migrate must drive start-job + step-job to Done");
     assert_eq!(result, vec![1, 2, 3, 0xAB]);
@@ -225,9 +225,9 @@ async fn plugin_instance_handle_mutation_plan_passes_wire_bytes_through_to_done(
     let mock = Arc::new(MockGuestRuntime::new().await);
     let actor = RuntimeActorId(103);
     let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([10u8; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
     mock.script_job_step(actor, JobStep::Done { output: b"planned".to_vec() }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_wake_authority()).await;
+    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_original_input(),test_relay_wake_authority()).await;
 
     let result = handle.mutation_plan(b"request-wire-bytes").await.expect("job-backed mutation_plan must drive start-job + step-job to Done");
     assert_eq!(result, b"planned");
@@ -250,7 +250,7 @@ async fn io_router_run_io_crosses_two_real_plugin_instance_handles() {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     let router = IoRouter::new();
-    let budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
 
     let stdio_mock = Arc::new(MockGuestRuntime::new().await);
     let stdio_actor = RuntimeActorId(200);
@@ -258,7 +258,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let stdio_instance = stdio_mock.instantiate(&stdio_compiled, stdio_actor, &[], &budget).await.expect("stdio mock instantiate");
     let midpoint = semio_framework::io_schema::IoPayload::Text("midpoint".to_string());
     stdio_mock.script_job_step(stdio_actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&midpoint).into_bytes() }).await;
-    let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, Arc::new(GuestRuntimes::Mock(stdio_mock)), stdio_instance,test_relay_wake_authority()).await);
+    let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, Arc::new(GuestRuntimes::Mock(stdio_mock)), stdio_instance,test_relay_original_input(),test_relay_wake_authority()).await);
 
     let gif_mock = Arc::new(MockGuestRuntime::new().await);
     let gif_actor = RuntimeActorId(201);
@@ -266,7 +266,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let gif_instance = gif_mock.instantiate(&gif_compiled, gif_actor, &[], &budget).await.expect("gif mock instantiate");
     let final_payload = semio_framework::io_schema::IoPayload::Text("final".to_string());
     gif_mock.script_job_step(gif_actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&final_payload).into_bytes() }).await;
-    let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, Arc::new(GuestRuntimes::Mock(gif_mock)), gif_instance,test_relay_wake_authority()).await);
+    let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, Arc::new(GuestRuntimes::Mock(gif_mock)), gif_instance,test_relay_original_input(),test_relay_wake_authority()).await);
 
     let binary_raw = io_dialect("framework.io.binary", "raw", "*").await;
     let gif_87a = io_dialect("s.stdio.gif", "87a", "*").await;
@@ -304,12 +304,12 @@ async fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_t
     let router = IoRouter::new();
     let mock = Arc::new(MockGuestRuntime::new().await);
     let actor = RuntimeActorId(202);
-    let budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
     let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([5u8; 32]) }, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
     mock.script_job_step(actor, JobStep::Running { progress: None }).await;
     mock.script_job_step(actor, JobStep::Done { output: b"composed".to_vec() }).await;
-    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance,test_relay_wake_authority()).await);
+    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance,test_relay_original_input(),test_relay_wake_authority()).await);
 
     let dialects = vec![(
         semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },
@@ -338,10 +338,10 @@ async fn io_router_compose_still_refuses_to_route_back_into_the_calling_plugin()
     let router = IoRouter::new();
     let mock = Arc::new(MockGuestRuntime::new().await);
     let actor = RuntimeActorId(203);
-    let budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
     let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([6u8; 32]) }, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
-    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance,test_relay_wake_authority()).await);
+    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance,test_relay_original_input(),test_relay_wake_authority()).await);
 
     let dialects = vec![(
         semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },

@@ -129,8 +129,8 @@ fn invalid_blend_edits_are_rejected_without_changing_the_document() {
     for case in cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode") {
         let mode = case["patch"]["value"].as_str().unwrap();
         let accepted = case["accepted"].as_bool().unwrap();
-        let mutation = semio_s_artifact_draw_drawing_style::set_layer_blend_mode::mutation::set_layer_blend_mode("shape-a".into(), mode.into());
-        let blocked = protocol::Mutation::<DrawingSnapshot>::diff(&mutation, &original).messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
+        let mutation: DrawingMutation = semio_s_artifact_draw_drawing_style::set_layer_blend_mode::mutation::set_layer_blend_mode("shape-a".into(), mode.into());
+        let blocked = <DrawingMutation as protocol::ColdMutation<DrawingSnapshot>>::diff(&mutation, &original).messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
         assert_eq!(!blocked, accepted, "{mode}");
         let mut document = original.clone();
         apply_drawing_mutation(&mut document, &mutation).expect("a refused edit folds as a no-op");

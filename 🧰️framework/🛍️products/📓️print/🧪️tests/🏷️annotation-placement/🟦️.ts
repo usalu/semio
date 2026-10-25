@@ -51,7 +51,7 @@ export default defineTestAdapter({
       oracle: (ctx: AdapterContext) => ({
         projection: { "annotation-anchors": grid(rows(ctx).flatMap((row) => [X(Number(row.x)), Y(Number(row.y))])) },
       }),
-      /** 🎯️ The positions the annotations resolved to while drawing. */
+      /** 🖍️ The positions the annotations resolved to while drawing. */
       subject: async (ctx: AdapterContext) => {
         const values = (await subject(ctx, "data-space.tex")).projection["geometry/annotation-reference-point"] ?? [];
         const anchors: number[] = [];
@@ -60,9 +60,9 @@ export default defineTestAdapter({
       },
     },
     "reference-extent": {
-      /** 📐️ The specified extents of a reference line, band and event marker. */
+      /** 📘️ The specified extents of a reference line, band and event marker. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),
-      /** 🎯️ The extents the annotations emitted while drawing. */
+      /** ✏️ The extents the annotations emitted while drawing. */
       subject: async (ctx: AdapterContext) => {
         const projection = (await subject(ctx, "data-space.tex")).projection;
         return {
@@ -75,9 +75,9 @@ export default defineTestAdapter({
       },
     },
     "bracket-normal": {
-      /** 📐️ The specified bracket segment and arm depth. */
+      /** 🔖️ The specified bracket segment and arm depth. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),
-      /** 🎯️ The bracket the annotation emitted while drawing. */
+      /** 📌️ The bracket the annotation emitted while drawing. */
       subject: async (ctx: AdapterContext) => ({ projection: { bracket: (await subject(ctx, "bracket.tex")).projection["geometry/annotation-bracket"] ?? [] } }),
     },
   },

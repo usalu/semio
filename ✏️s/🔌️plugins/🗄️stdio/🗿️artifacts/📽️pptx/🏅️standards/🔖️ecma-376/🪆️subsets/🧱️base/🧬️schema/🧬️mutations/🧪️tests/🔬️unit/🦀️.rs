@@ -111,7 +111,7 @@ fn canonical_addressed_edits_preserve_rich_unknown_xml_and_exact_inverse() {
         let restored = protocol::apply_diff_cold(&outcome.diff().inverse(&base), &edited).expect("inverse diff");
         assert_eq!(restored, base);
         let mut inverse_restored = edited.clone();
-        for inverse in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for inverse in ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_pptx_mutation(&mut inverse_restored, &inverse);
         }
         assert_eq!(inverse_restored, base);

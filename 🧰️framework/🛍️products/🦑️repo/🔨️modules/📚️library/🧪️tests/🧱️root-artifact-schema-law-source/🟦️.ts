@@ -43,7 +43,7 @@ interface SourceState {
   readonly expected: string;
 }
 
-/** 🔗️ The ancestor symlink whose resolution the law owner must refuse to follow. */
+/** 🛑️ The ancestor symlink whose resolution the law owner must refuse to follow. */
 interface SourceAncestorSymlink {
   readonly ancestor: string;
   readonly path: string;
@@ -55,7 +55,7 @@ interface SourceDiscovery {
   readonly symlink: string;
 }
 
-/** 🗿️ The artifact-schema law ownership fixture, mirroring `🧬️schema/🧱️root-artifact-schema-law-source/🔣️.json`. */
+/** 🧫️ The artifact-schema law ownership fixture, mirroring `🧬️schema/🧱️root-artifact-schema-law-source/🔣️.json`. */
 interface SourceOwnershipFixture {
   readonly schemaVersion: number;
   readonly owners: readonly SourceOwner[];
@@ -326,5 +326,5 @@ test("registers one Bun and Nx route", () => {
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
   expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
   for (const input of fixture.route.inputs) expect(project.targets[fixture.route.target]?.inputs).toContain(input);
-  expect(packageJson.scripts[fixture.route.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.route.target}`);
+  expect(packageJson.scripts[fixture.route.target]).toBe(`repo run @semio-tech/repo-lib:${fixture.route.target}`);
 });

@@ -17,5 +17,4 @@ test("ordered diff reference preserves intermediate originals and transactional 
   expect(accepted,row.name).toBe(row.accepted);expect(actual!==undefined,row.name).toBe(row.accepted);expect(messageCount,row.name).toBe(row.messageCount);
   const output=db.query("SELECT a,b,text FROM original_state").get()as Snapshot;expect(output).toEqual(accepted?row.expected:base);if(actual)expect(actual).toEqual(output);db.close();
  }
- console.log("[DEBUG] six ordered diff originals/refusals/diagnostic counts match independent SQLite commit and rollback output");
 });

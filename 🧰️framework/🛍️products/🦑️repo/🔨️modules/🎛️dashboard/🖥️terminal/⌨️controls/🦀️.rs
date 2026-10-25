@@ -21,7 +21,7 @@ const PREFIX_PATIENCE: std::time::Duration = std::time::Duration::from_secs(3);
 const ARMED_FIRST: &[&str] = &["show-help", "new-task", "show-tasks", "split-right", "split-down", "next-window", "zoom", "close-window", "detach"];
 
 /// 🎬️ One authored action table emits enum, ids and exact match parsing.
-macro_rules! actions{($( $variant:ident => $id:literal ),+ $(,)?)=>{#[derive(Clone,Copy,Debug,PartialEq,Eq)] pub(super) enum Action{$($variant),+} impl Action{pub fn id(self)->&'static str{match self{$(Self::$variant=>$id),+}}pub fn parse(id:&str)->Option<Self>{match id{$($id=>Some(Self::$variant)),+, _=>None}}}}}
+macro_rules! actions{($( $variant:ident => $id:literal ),+ $(,)?)=>{#[derive(Clone,Copy,Debug,PartialEq,Eq)] pub enum Action{$($variant),+} impl Action{pub fn id(self)->&'static str{match self{$(Self::$variant=>$id),+}}pub fn parse(id:&str)->Option<Self>{match id{$($id=>Some(Self::$variant)),+, _=>None}}}}}
 actions!{
     InspectHistory => "inspect-history",
     ReconcileHistory => "reconcile-history",
@@ -90,11 +90,11 @@ fn class_of(body: &Body) -> Class {
 
 /// 🚦️ Whether the dashboard goes on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Flow { Continue, Quit }
+pub enum Flow { Continue, Quit }
 
-/// 📏️ The leading hints that fit whole beside a status that keeps up to a third of the row (the footer draws ` key ` and `label ` per hint).
-pub(super) fn fit_hints(hints: Vec<semio_framework_ui_tui_frame::chrome::KeyHint>, width: u16) -> Vec<semio_framework_ui_tui_frame::chrome::KeyHint> {
-    let mut room = i32::from(width) - i32::from(width / 3) - 1;
+/// 📏️ The leading hints that fit whole beside a status that keeps a third of the row, and up to two thirds while a notice needs them (the footer draws ` key ` and `label ` per hint).
+pub fn fit_hints(hints: Vec<semio_framework_ui_tui_frame::chrome::KeyHint>, width: u16, notice_cells: u16) -> Vec<semio_framework_ui_tui_frame::chrome::KeyHint> {
+    let mut room = i32::from(width) - i32::from(notice_cells.saturating_add(1).clamp(width / 3, width / 3 * 2)) - 1;
     hints.into_iter().take_while(|hint| {
         room -= i32::from(semio_framework_ui_tui_core::text::display_width(&hint.key)) + i32::from(semio_framework_ui_tui_core::text::display_width(&hint.label)) + 3;
         room >= 0
@@ -103,7 +103,7 @@ pub(super) fn fit_hints(hints: Vec<semio_framework_ui_tui_frame::chrome::KeyHint
 
 // #region 🔖️Keys
 /// 🔑️ The keymap's spelling of a key event (a keypad key is spelled like the main block key it types); `None` for a combination no binding can name.
-pub(super) fn spec_of(event: &KeyEvent) -> Option<KeySpec> {
+pub fn spec_of(event: &KeyEvent) -> Option<KeySpec> {
     let name = match event.key {
         Key::Char(c) => KeyName::Char(c),
         Key::Enter => KeyName::Named("enter".into()),
@@ -131,7 +131,7 @@ pub(super) fn spec_of(event: &KeyEvent) -> Option<KeySpec> {
 }
 
 /// 🎹️ The key event a keymap key stands for, used to send the prefix key itself to a terminal.
-pub(super) fn event_of(spec: &KeySpec) -> KeyEvent {
+pub fn event_of(spec: &KeySpec) -> KeyEvent {
     let key = match &spec.name {
         KeyName::Char(c) => Key::Char(*c),
         KeyName::Named(name) => match name.as_str() {
@@ -190,7 +190,7 @@ impl Dashboard {
         }
         if self.keymap.is_prefix(&spec) { return self.arm(spec); }
         if self.terminal_has_keyboard(tui) { return self.pass_key(tui, key); }
-        if matches!(self.windows[self.focused_index(tui)].body, Body::Document(_)) && key.key == Key::Tab { self.view_key(tui, key, &spec); return Flow::Continue; }
+        if self.windows.get(self.focused_index(tui)).is_some_and(|window| matches!(window.body, Body::Document(_))) && key.key == Key::Tab { self.view_key(tui, key, &spec); return Flow::Continue; }
         if let Some(flow) = self.keymap.resolve(Scope::Window, &spec).map(str::to_string).and_then(|id| self.run_action(tui, &id)) { return flow; }
         self.view_key(tui, key, &spec);
         Flow::Continue
@@ -622,11 +622,11 @@ impl Dashboard {
             ARMED_FIRST.iter().filter_map(|action| hint(Scope::Prefix, action).map(strip)).chain(hint(Scope::Prefix, "cancel-prefix").map(strip)).collect()
         } else {
             let controls = KeyHint { key: self.keymap.prefix().label(), label: text.hint_controls.as_str().into() };
-            if matches!(self.windows[self.focused_index(tui)].body, Body::Files(_)) { std::iter::once(controls).chain(["create-file","create-directory","rename-entry","retain-entry","inspect-recovery","cancel-source"].into_iter().filter_map(|action|hint(Scope::Prefix,action))).collect() } else if matches!(self.windows[self.focused_index(tui)].body, Body::Document(_)) { std::iter::once(controls).chain(["save-document", "discard-document", "inspect-recovery", "cancel-source"].into_iter().filter_map(|action| hint(Scope::Prefix, action))).collect() } else if self.terminal_has_keyboard(tui) { std::iter::once(controls).chain(hint(Scope::Prefix, if self.opening_url.is_some() { "cancel-open-ready" } else { "open-ready" }).filter(|_| self.opening_url.is_some() || self.ready_address(self.focused_index(tui)).is_some())).collect() } else {
+            if self.windows.get(self.focused_index(tui)).is_some_and(|window| matches!(window.body, Body::Files(_))) { std::iter::once(controls).chain(["create-file","create-directory","rename-entry","retain-entry","inspect-recovery","cancel-source"].into_iter().filter_map(|action|hint(Scope::Prefix,action))).collect() } else if self.windows.get(self.focused_index(tui)).is_some_and(|window| matches!(window.body, Body::Document(_))) { std::iter::once(controls).chain(["save-document", "discard-document", "inspect-recovery", "cancel-source"].into_iter().filter_map(|action| hint(Scope::Prefix, action))).collect() } else if self.terminal_has_keyboard(tui) { std::iter::once(controls).chain(hint(Scope::Prefix, if self.opening_url.is_some() { "cancel-open-ready" } else { "open-ready" }).filter(|_| self.opening_url.is_some() || self.ready_address(self.focused_index(tui)).is_some())).collect() } else {
                 std::iter::once(controls).chain([(Scope::View, "activate"), (Scope::View, "back"), (Scope::View, "up"), (Scope::View, "down"), (Scope::Window, "next-window")].into_iter().filter_map(|(scope, action)| hint(scope, action).map(|found| if action == "activate" { KeyHint { label: text.hint_activate.as_str().to_string(), ..found } } else { found }))).collect()
             }
         };
-        fit_hints(wanted, tui.size().width)
+        fit_hints(wanted, tui.size().width, self.notice.as_deref().map_or(0, semio_framework_ui_tui_core::text::display_width))
     }
 
     fn footer_status(&self, tui: &Tui) -> String {

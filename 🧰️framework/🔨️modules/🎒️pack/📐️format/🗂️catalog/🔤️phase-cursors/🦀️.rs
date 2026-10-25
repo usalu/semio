@@ -1,4 +1,4 @@
-//! 🔤️ Byte-driven phase cursors: the manifest varint cursor, the UTF-8 scalar cursor, the symbol-table cursor and the chunk-table cursor.
+//! 🖱️ Byte-driven phase cursors: the manifest varint cursor, the UTF-8 scalar cursor, the symbol-table cursor and the chunk-table cursor.
 
 use semio_framework_replication_codec::PackLimits;
 use semio_framework_value::ValueRefusalKind;

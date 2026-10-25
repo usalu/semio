@@ -269,7 +269,7 @@ fn sqlite_snapshot_xml_owned_valid_guard_preserves_exact_warnings_and_errors(){l
 fn sqlite_snapshot_xml_erased_native_encoding_admission_and_large_field_limits() {
     let snapshot = fixture();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xml".into(), standard: "1.0".into(), subset: "*".into() };
-    let codec = <XmlSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let codec = <XmlSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
         let restored = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)("XML preflight", &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;

@@ -1,4 +1,4 @@
-//! 🌊️ Flow style: the dimension, the flow kind and style, the flow from the authored spec, the tree content flow and `flow_for`. See [`super`].
+//! 🖌️ Flow style: the dimension, the flow kind and style, the flow from the authored spec, the tree content flow and `flow_for`. See [`super`].
 
 use super::*;
 
@@ -31,10 +31,9 @@ fn dim_of(sizing: Sizing) -> Dim {
     }
 }
 
-/// 🌊️ How a container arranges its own children. `Flow` is plain single-line flex, which this engine
-/// resolves arithmetically (see [`FlexTree::measure_one`]); `Wrapped` and `Grid` are handed to the
-/// taffy solver instead — both are rare and small in practice (a toolbar, a property grid), so the
-/// bound "one container per grant" still holds for them.
+/// 🌊️ How a container arranges its own children. `Flow` is plain single-line flex, `Wrapped` is multi-line flex
+/// and `Grid` is a track-sized grid; this engine resolves all three arithmetically, one container per grant
+/// (see [`FlexTree::measure_one`] and [`FlexTree::arrange_one`]).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum FlowKind {
     Flow,
@@ -42,9 +41,8 @@ pub enum FlowKind {
     Grid,
 }
 
-/// 🌊️ Everything the arithmetic path needs about one node, in this crate's own vocabulary. It is the
-/// PRIMARY style: [`taffy_style`] derives the taffy `Style` from it (plus the authored grid tracks),
-/// so the two readings cannot drift — there is one constructor, [`flow_for`].
+/// 🗺️ Everything the arithmetic solvers need about one node, in this crate's own vocabulary. There is one
+/// constructor, [`flow_for`]; the oracle tests read taffy's `Style` from it, so the two cannot drift.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct FlowStyle {
     pub kind: FlowKind,
@@ -118,7 +116,7 @@ impl FlowStyle {
     }
 }
 
-/// 🌊️ The authored `LayoutSpec` in flow vocabulary, field for field against React's
+/// 📕️ The authored `LayoutSpec` in flow vocabulary, field for field against React's
 /// `layoutSpecStyle`. React leaves `leaf`/`overlay`/`scroll`/`absolute` as CSS BLOCK containers (it
 /// sets no `display`), which is a column flow whose children span the inline size — the same box a
 /// column flex with the default `Stretch` alignment produces for a vocabulary with no margins.
@@ -171,7 +169,7 @@ pub(super) fn tree_content_flow(content: TreeContentFlow, natural: FlowStyle, me
     }
 }
 
-/// 🌊️ One retained node's flow style. `authored` is the node's own `LayoutSpec` when the producer
+/// 🎨️ One retained node's flow style. `authored` is the node's own `LayoutSpec` when the producer
 /// published one (the React-parity dialect); the composite wgpu kinds ignore it on purpose — their
 /// geometry is what `paint`/`events` already derive their rows from.
 ///

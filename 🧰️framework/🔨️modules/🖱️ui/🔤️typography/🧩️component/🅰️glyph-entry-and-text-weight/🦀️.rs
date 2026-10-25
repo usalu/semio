@@ -15,7 +15,7 @@ pub struct GlyphEntry {
     pub width: u32,
     pub height: u32,
     pub advance: f32,
-    /// 📏️ The advance per logical pixel of font size, from the face's own units — what [`FontAtlas::ensure_glyph_for`] scales to
+    /// ⏩️ The advance per logical pixel of font size, from the face's own units — what [`FontAtlas::ensure_glyph_for`] scales to
     /// the EXACT requested size, so no layout ever sees the raster grid.
     pub advance_em: f32,
     pub bearing_x: f32,
@@ -36,14 +36,14 @@ impl GlyphEntry {
         self.width as f32 / self.raster_scale.max(f32::MIN_POSITIVE)
     }
 
-    /// 📏️ Quad height in LOGICAL pixels — the vertical twin of [`Self::logical_width`].
+    /// ↕️ Quad height in LOGICAL pixels — the vertical twin of [`Self::logical_width`].
     pub fn logical_height(&self) -> f32 {
         self.height as f32 / self.raster_scale.max(f32::MIN_POSITIVE)
     }
 }
 
 //#region 🅰️Weight
-/// 🅰️ The three weights the UI asks for — default, `font-medium`, and `font-semibold`.
+/// ⚖️ The three weights the UI asks for — default, `font-medium`, and `font-semibold`.
 ///
 /// ⚠️ No bold Latin face ships in this repo: `🖼️assets/🔤️fonts/{🚀️anta,🧱️kelly-slab,⌨️share-tech-mono}`
 /// each carry `📖️regular` only (Anta and Share Tech Mono are single-weight upstream), and the only
@@ -61,7 +61,7 @@ pub enum TextWeight {
 }
 
 impl TextWeight {
-    /// 🅰️ React's own mapping: `emphasize` is `font-semibold`, everything else the default face.
+    /// 🗺️ React's own mapping: `emphasize` is `font-semibold`, everything else the default face.
     pub const fn of(emphasize: bool) -> Self {
         if emphasize {
             TextWeight::Semibold
@@ -70,7 +70,7 @@ impl TextWeight {
         }
     }
 
-    /// 🅰️ How many strikes one glyph costs at this weight — the number a per-glyph reservation must
+    /// 💲️ How many strikes one glyph costs at this weight — the number a per-glyph reservation must
     /// price before the retained paint arm can carry a real weight swap.
     pub const fn strikes(self) -> usize {
         match self {
@@ -95,7 +95,7 @@ fn faux_medium_offset(size_px: f32) -> f32 {
     (size_px * FAUX_MEDIUM_EM_RATIO).max(FAUX_MEDIUM_MIN_PX)
 }
 
-/// 🅰️ The x offset of a synthetic semibold's second strike, in LOGICAL pixels. CSS `font-weight: 600`
+/// ↗️ The x offset of a synthetic semibold's second strike, in LOGICAL pixels. CSS `font-weight: 600`
 /// against `400` thickens a stem by roughly 4 % of the em, which is the ratio this reproduces — so it
 /// scales with the font size rather than being a fixed pixel smear, with a floor so the strike still
 /// shows at the smallest ramp step.
@@ -106,10 +106,10 @@ pub fn faux_bold_offset(size_px: f32) -> f32 {
     (size_px * FAUX_BOLD_EM_RATIO).max(FAUX_BOLD_MIN_PX)
 }
 
-/// 🅰️ The em fraction a synthetic semibold offsets by.
+/// ➗️ The em fraction a synthetic semibold offsets by.
 const FAUX_BOLD_EM_RATIO: f32 = 0.04;
 
-/// 🅰️ The floor below which a synthetic semibold would not show at all.
+/// 🔽️ The floor below which a synthetic semibold would not show at all.
 const FAUX_BOLD_MIN_PX: f32 = 0.34;
 
 const FAUX_MEDIUM_EM_RATIO: f32 = 0.02;

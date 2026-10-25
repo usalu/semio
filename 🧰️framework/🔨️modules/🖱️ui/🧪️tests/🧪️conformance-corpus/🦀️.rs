@@ -14,7 +14,7 @@ use semio_framework_ui_declaration::ui::UiNode;
 use ui_contract::{UiNodeId, SurfaceId, UiDocumentLeaseHeader, UiRevision};
 
 fn corpus_dir() -> std::path::PathBuf {
-    fixture_path!("../../🧬️contract/🧪️tests/🧫️fixtures/🧪️conformance")
+    fixture_path!("../../../../../../🧬️contract/🧪️tests/🧫️fixtures/🧪️conformance")
 }
 
 fn read(path: &std::path::Path) -> serde_json::Value {
@@ -114,7 +114,7 @@ fn node_of<'a>(ui: &'a Ui, window: &str, id: u64) -> &'a UiNode {
     &node.spec.0
 }
 
-/// 🧪️ Every accept case mounts its full record set; every number-control and recipe case also paints.
+/// 📚️ Every accept case mounts its full record set; every number-control and recipe case also paints.
 /// (A bare root `TreeItem` paints only inside its `Tree`, so painting is pinned where a case stands alone.)
 #[test]
 fn every_accept_case_of_the_corpus_mounts_every_record() {
@@ -412,7 +412,7 @@ fn row_descriptions_reach_their_controls_and_disabled_row_actions_stay_focusable
     }
 }
 
-/// 💬️ LAW (audit W1E-1, `💬️row-semantics` `revealReason`, the wgpu half of React's `[data-slot="row-action-reason"][data-revealed]`):
+/// 🧠️ LAW (audit W1E-1, `💬️row-semantics` `revealReason`, the wgpu half of React's `[data-slot="row-action-reason"][data-revealed]`):
 /// a disabled row action's reason stays its description and is SHOWN as a hint anchored to its icon after each `on` trigger — the
 /// pointer entering the icon, keyboard focus on the action, a press that dispatches nothing — and hidden after each `off` trigger:
 /// the pointer leaving the icon, blur, Escape.

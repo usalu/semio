@@ -31,7 +31,8 @@ export type OwnedBuildHtmlTag = {
   readonly children?: string | readonly OwnedBuildHtmlTag[];
   readonly injectTo?: "head" | "head-prepend" | "body" | "body-prepend";
 };
-export type OwnedBuildHtmlContext = { readonly path: string; readonly filename: string; readonly server?: OwnedBuildServer };
+export type OwnedBuildOutput = { readonly type: string; readonly fileName: string; readonly facadeModuleId?: string | null };
+export type OwnedBuildHtmlContext = { readonly path: string; readonly filename: string; readonly server?: OwnedBuildServer; readonly bundle?: Readonly<Record<string, OwnedBuildOutput>> };
 export type OwnedBuildHtmlResult = void | string | readonly OwnedBuildHtmlTag[] | { readonly html?: string; readonly tags: readonly OwnedBuildHtmlTag[] };
 export type OwnedBuildHtmlHook = (html: string, context: OwnedBuildHtmlContext) => OwnedBuildHtmlResult | Promise<OwnedBuildHtmlResult>;
 
@@ -104,9 +105,15 @@ export type OwnedBuildConfigFactory = (environment: OwnedBuildEnvironment) => Ow
 //#endregion 🔖️OwnedBuildContract
 
 //#region 🏭️Factories
-/** 🎨️ Tailwind's temporary build adapter behind the UI package that declares it. */
-export function uiTailwindBuildPlugins(): OwnedBuildPlugin[] {
-  return tailwindcss() as unknown as OwnedBuildPlugin[];
+/** 🎨️ Tailwind's temporary build adapter behind the UI package that declares it. Tailwind scans `**\/*` below the Vite root for every stylesheet that carries `@import "tailwindcss"` without `source(none)`; `sourceBase` narrows exactly that automatic scan to one directory (explicit `@source` lines stay untouched), which a host whose Vite root is the whole repository needs, because the repository-wide walk never finishes. */
+export function uiTailwindBuildPlugins(options: Readonly<{ sourceBase?: string }> = {}): OwnedBuildPlugin[] {
+  const plugins = tailwindcss() as unknown as OwnedBuildPlugin[], { sourceBase } = options;
+  if (sourceBase === undefined) return plugins;
+  return plugins.map((plugin) => {
+    const resolved = (plugin as { configResolved?: unknown }).configResolved;
+    if (typeof resolved !== "function") return plugin;
+    return { ...plugin, configResolved: function (this: unknown, config: object) { return (resolved as (config: object) => unknown).call(this, Object.create(config, { root: { value: sourceBase } })); } } as unknown as OwnedBuildPlugin;
+  });
 }
 
 /** ⚛️ React's temporary build adapter behind the UI package that declares it. */

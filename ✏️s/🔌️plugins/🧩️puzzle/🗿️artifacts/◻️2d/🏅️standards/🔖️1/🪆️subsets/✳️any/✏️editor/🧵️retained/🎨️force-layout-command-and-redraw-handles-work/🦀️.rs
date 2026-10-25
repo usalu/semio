@@ -1,6 +1,7 @@
 //! 🎨️ Force layout command and redraw handles work: the retained command implementation of the force layout, the redraw limits, stages and shape and the redraw handles work with its retained command implementation. See [`super`].
 
 use super::*;
+use semio_framework_job::StepContext;
 
 //#region 🔖️PlayApp
 //#region 🧵️RetainedCommands
@@ -392,7 +393,8 @@ impl Puzzle2dRedrawHandlesWork {
         if self.shapes.pop().is_some() {
             return true;
         }
-        if let Some(key) = self.handle_locations.keys().next().cloned() {
+        let handle_locations_next = self.handle_locations.keys().next().cloned();
+        if let Some(key) = handle_locations_next {
             self.handle_locations.remove(&key);
             return true;
         }

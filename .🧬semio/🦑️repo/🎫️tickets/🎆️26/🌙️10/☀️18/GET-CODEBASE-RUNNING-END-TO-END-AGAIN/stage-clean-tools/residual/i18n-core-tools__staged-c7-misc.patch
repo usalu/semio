@@ -1,0 +1,1111 @@
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/0ba5b67b12e47d0bdd2c75cb390ce270a7fd8f6ba2b9bf669fb4853527b688be map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/🟦️.ts
+@@ -7,6 +7,7 @@
+ import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
+ import { dependencyBoundaryBreachesForBundleDir } from "../🚨️policy/🛡️dependency-boundary/🟦️.ts";
+ import { runtimeExecutableV1 } from "../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
++import {sayDiscoveryV1} from "../🔍️discovery/📖️texts/🟦️.ts";
+ 
+ const join = (...parts: string[]): string => systemJoin(...parts).replaceAll("\\", "/");
+ export const policy = defineLint("@semio-tech/repo-ui", (_l: BundleLinter) => dependencyBoundaryBreachesForBundleDir(getWorkspaceRoot(), "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript"));
+@@ -246,15 +247,15 @@
+   }
+ 
+   if (failures.length === 0) {
+-    console.log(`framework/ui/js/react: no UI primitive violations (${allowlist.size} allowlisted files)`);
++    sayDiscoveryV1("ui.framework-js-react-no-primitive",{files:allowlist.size});
+     return;
+   }
+-  console.error(`framework/ui/js/react: found ${failures.length} UI primitive violation(s):`);
++  sayDiscoveryV1("ui.framework-js-react-found-primitive",{failures:failures.length},"error");
+   for (const failure of failures.slice(0, 120)) {
+     console.error(`  ${failure}`);
+   }
+   if (failures.length > 120) {
+-    console.error(`  … and ${failures.length - 120} more`);
++    sayDiscoveryV1("ui.and-more",{failures:String(failures.length - 120)},"error");
+   }
+   process.exit(1);
+ }
+@@ -280,7 +281,7 @@
+   }
+ 
+   if (failures.length === 0) {
+-    console.log(`framework/ui/js/react: no chrome i18n violations (${allowlist.size} allowlisted files)`);
++    sayDiscoveryV1("ui.framework-js-react-no-chrome",{files:allowlist.size});
+     return;
+   }
+   console.error(`framework/ui/js/react: found ${failures.length} chrome i18n violation(s):`);
+@@ -288,7 +289,7 @@
+     console.error(`  ${failure}`);
+   }
+   if (failures.length > 120) {
+-    console.error(`  … and ${failures.length - 120} more`);
++    sayDiscoveryV1("ui.and-more",{failures:String(failures.length - 120)},"error");
+   }
+   process.exit(1);
+ }
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/25ec0aaa1f0959df39744c2ea65cc47bb432f8f9424759e04457f8256e4bbd70 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🟦️.ts
+@@ -2,6 +2,7 @@
+ import { isAbsolute, join, relative, resolve, sep } from "node:path";
+ import { setImmediate as yieldEventLoop } from "node:timers/promises";
+ import { withCurrentBunWorkspaceOwnershipV1 } from "../../🗂️workspaces/🟦️bun/🟦️.ts";
++import {sayDiscoveryV1} from "../../🔍️discovery/📖️texts/🟦️.ts";
+ 
+ /** 📦️ One exact public runtime export selected from an authored package manifest. */
+ export interface PublicRuntimePackageExportV1 { readonly specifier: string; readonly target: string }
+@@ -46,7 +47,7 @@
+   const advance = async (progress: WorkspaceTestResolutionProgressV1): Promise<void> => {
+     signal.throwIfAborted();
+     if (control.advance) await control.advance(progress);
+-    else if (Date.now() - reported >= 2000) { console.log(`[test-resolution] ${progress.stage}: ${progress.completedOperations} source operations`); reported = Date.now(); }
++    else if (Date.now() - reported >= 2000) { sayDiscoveryV1("workspace-exports.test-resolution-source-operations",{stage:String(progress.stage),completedOperations:String(progress.completedOperations)}); reported = Date.now(); }
+     signal.throwIfAborted();
+     await yieldEventLoop();
+     signal.throwIfAborted();
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/2d5598736b041e68a6e4534d1eefe18e6b5e52b306bc0335d9e9851c53a0ece6 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts
+@@ -23,6 +23,7 @@
+ import {withRepositoryCargoInputsV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+ import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+ import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
++import {sayDiscoveryV1} from "../../📖️texts/🟦️.ts";
+ 
+ /** 🧵️ Binds one actual verified-Blob import operation while preserving all other computed callers. */
+ export function runtimeActorChildImportV1(source:string,child:string,actor:string,sha256:string){
+@@ -380,8 +381,8 @@
+   const findings: RuntimeGraphFindingV1[] = [], graphs: { readonly selection: unknown; readonly evidence: RuntimeGraphEvidenceV1; readonly resolvedFeatures?: readonly string[] }[] = [], identities = new Map<string, string>();
+   const signal = phaseControl.signal;
+   const checkCancellation = (): void => requireIssuedResourceControlInvocationV1(phaseControl,invocation);
+-  const observationStarted=Date.now(),observationBudget=cmdBudgetMs(),observation:FileObservationControlV1={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>signal.aborted,remainingMs:()=>Math.min(phaseControl.remainingMilliseconds()??Infinity,(observationBudget>0?observationBudget:86_400_000)-(Date.now()-observationStarted)),onProgress:step=>console.log(`[runtime graph] physical file ${step.phase} ${step.bytes}/${step.totalBytes}`)};
+-  const cargoObservation = cargoProvenancePhysicalControlV1({ cancelled: () => signal.aborted, deadlineMs: 86_400_000, remainingMs: () => Math.min(phaseControl.remainingMilliseconds()??Infinity,(observationBudget > 0 ? observationBudget : 86_400_000) - (Date.now() - observationStarted)), onProgress: step => console.log(`[runtime graph] physical cargo ${step.phase} ${step.bytes}/${step.totalBytes}`) });
++  const observationStarted=Date.now(),observationBudget=cmdBudgetMs(),observation:FileObservationControlV1={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>signal.aborted,remainingMs:()=>Math.min(phaseControl.remainingMilliseconds()??Infinity,(observationBudget>0?observationBudget:86_400_000)-(Date.now()-observationStarted)),onProgress:step=>sayDiscoveryV1("runtime.graph-physical-file",{phase:String(step.phase),bytes:String(step.bytes),totalBytes:String(step.totalBytes)})};
++  const cargoObservation = cargoProvenancePhysicalControlV1({ cancelled: () => signal.aborted, deadlineMs: 86_400_000, remainingMs: () => Math.min(phaseControl.remainingMilliseconds()??Infinity,(observationBudget > 0 ? observationBudget : 86_400_000) - (Date.now() - observationStarted)), onProgress: step => sayDiscoveryV1("runtime.graph-physical-cargo",{phase:String(step.phase),bytes:String(step.bytes),totalBytes:String(step.totalBytes)}) });
+   const read = (path: string): string | undefined => {
+     checkCancellation(); const absolute = resolve(root, path);
+     if (!existsSync(absolute)) return;
+@@ -406,7 +407,7 @@
+       if (completed.length!==checks.length) {
+         const producer=declaration.steps.find((step:any)=>step.command?.[0]==="repo"&&step.command?.[1]==="run"&&step.command?.[2]?.endsWith(":guest-framework-check"));
+         if (!producer) throw Error("Runtime graph has no registered actual guest compiler producer");
+-        console.log(`[runtime graph] acquiring current exact guest compiler/resource witnesses through ${producer.command[2]}`);
++        sayDiscoveryV1("runtime.graph-acquiring-current-exact-guest",{command:String(producer.command[2])});
+         mkdirSync(ledger,{recursive:true});
+         await runRuntimeBuildInvocationV1(root,[...producer.command.slice(1),"--skip-cache","--output=static"],invocation,phaseControl,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build,SEMIO_TEST_ARTIFACT_DIR:ledger});
+         completed=await runtimeCargoObservationsForChecksV1(load(),checks,root,current);
+@@ -459,14 +460,14 @@
+       const physicalOwner=new CurrentPhysicalOwnerV1(root,cargoObservation),currentCompiler=(receipt:RuntimeCargoObservationV1,physical:CurrentPhysicalPortV1):Promise<boolean>=>runtimeCargoObservationCurrentV1(receipt,{root,cwd:receipt.cwd,outDirectory:"",buildDirectory:directories.build,cargoHome:resolve(environment.CARGO_HOME!),fixtureCollections,physical});
+       const loadNative=async():Promise<{receipt:RuntimeTrunkObservationV1;compiler:RuntimeCargoObservationV1}|undefined>=>{const candidates:{receipt:RuntimeTrunkObservationV1;compiler:RuntimeCargoObservationV1}[]=[];if(existsSync(nativeLedger))for(const name of readdirSync(nativeLedger)){let receipt:RuntimeTrunkObservationV1;try{receipt=JSON.parse(readFileSync(join(nativeLedger,name,"trunk.json"),"utf8"));}catch{continue;}const compiler=await runtimeTrunkObservationCurrentV1(receipt,{root,profile:completedProfile,manifest:nativeManifest,outputDirectory:roots.compilerRoot,owner:nativeOwner,physical:physicalOwner,compilerCurrent:currentCompiler});if(compiler)candidates.push({receipt,compiler});}candidates.sort((a,b)=>b.receipt.observedAtMs-a.receipt.observedAtMs);return candidates[0];};
+       let native=await loadNative();
+-      if(!native&&!provenance&&!artifacts){console.log(`[runtime graph] acquiring actual native browser mount through ${config.nativeBrowserProject}:wasm:${completedProfile}`);await runRuntimeBuildInvocationV1(root,["run",config.nativeBrowserProject+":wasm","--configuration="+completedProfile,"--skip-cache","--output=static"],invocation,phaseControl,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build});native=await loadNative();if(!native)throw Error("Registered Trunk producer did not retain a current exact native mount/compiler/resource witness");}
++      if(!native&&!provenance&&!artifacts){sayDiscoveryV1("runtime.graph-acquiring-actual-native-browser",{nativeBrowserProject:String(config.nativeBrowserProject),completedProfile:String(completedProfile)});await runRuntimeBuildInvocationV1(root,["run",config.nativeBrowserProject+":wasm","--configuration="+completedProfile,"--skip-cache","--output=static"],invocation,phaseControl,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build});native=await loadNative();if(!native)throw Error("Registered Trunk producer did not retain a current exact native mount/compiler/resource witness");}
+       const nativePaths=new Set<string>(native?.receipt.outputs.map(output=>relative(root,output.path).replaceAll("\\","/"))??[]);
+       if(native){const selection=runtimeCargoInvocationV1(native.compiler,root),name=(runtimeParseTomlV1(readFileSync(nativeManifest,"utf8")) as {package:{name:string}}).package.name;for(const unit of native.compiler.units){const message={...unit.message,runtimeTarget:selection.target,runtimeWorkspace:selection.workspace};compiler.push(message);retainedUnits.set(message,{observation:native.compiler,unit,selection});}for(const script of native.compiler.buildScripts){const record={...script,runtimeTarget:selection.target,runtimeWorkspace:selection.workspace};buildScripts.push(record);retainedBuildScripts.set(record,native.compiler);}observations.push(native.compiler);runtimeChecks.push({target:selection.target!,workspace:selection.workspace,packages:[name],requestedPackages:selection.packages,features:selection.features});}
+       const resourceMounts = Object.fromEntries(wgpuBrowserMounts(roots).filter((row: unknown[])=>typeof row[1]==="string").map(([route,path]:[string,string])=>[route,relative(root,path).replaceAll("\\","/")]));
+       const outputs = new Map<string,string>(browser.nodes.map((node:any)=>[node.path,node.content]));
+       const physical=(path:string):Uint8Array|undefined=>{try{return readFileSync(resolve(root,path))}catch{return undefined}};
+       let mountedOutputs:ReturnType<typeof runtimeBrowserArtifactV1>[]=browser.nodes.map((node:any)=>runtimeBrowserArtifactV1(node.path,node.content,physical));
+-      if(mountedOutputs.some(artifact=>!artifact.current)&&!provenance&&!artifacts){console.log(`[runtime graph] acquiring current browser mount through ${config.nativeBrowserProject}:generate-frame-worker`);await runRuntimeBuildInvocationV1(root,["run",config.nativeBrowserProject+":generate-frame-worker","--skip-cache","--output=static"],invocation,phaseControl,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build});mountedOutputs=browser.nodes.map((node:any)=>runtimeBrowserArtifactV1(node.path,node.content,physical));}
++      if(mountedOutputs.some(artifact=>!artifact.current)&&!provenance&&!artifacts){sayDiscoveryV1("runtime.graph-acquiring-current-browser-mount",{nativeBrowserProject:String(config.nativeBrowserProject)});await runRuntimeBuildInvocationV1(root,["run",config.nativeBrowserProject+":generate-frame-worker","--skip-cache","--output=static"],invocation,phaseControl,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build});mountedOutputs=browser.nodes.map((node:any)=>runtimeBrowserArtifactV1(node.path,node.content,physical));}
+       browser.nodes.forEach((node:any)=>read(node.path));
+       for(const artifact of mountedOutputs)if(!artifact.current)findings.push({code:"runtime-unresolved-edge",path:artifact.path,detail:artifact.mountedSha256===null?"Fresh browser compiler output is not present at its actual server mount":"Actual server-mounted browser bytes differ from fresh compiler output"});
+       const outputUrls = Object.fromEntries(browser.entryInputs.map((entry:any)=>{
+@@ -490,7 +491,7 @@
+     const hostCfg = (await execute(["rustc", "--print", "cfg"])).trim().split("\n");
+     const compilerResourceCache=new Map<RuntimeCargoObservationV1,Map<string,ReturnType<typeof runtimeCompilerResourceReadOwnersV1>>>();
+     for (const [index, check] of runtimeChecks.entries()) {
+-      console.log(`[runtime graph] actual Cargo metadata ${index + 1}/${checks.length} ${check.target}: ${check.packages.join(",")}`);
++      sayDiscoveryV1("runtime.graph-actual-cargo-metadata",{index:String(index + 1),checks:checks.length,target:String(check.target),packages:check.packages.join(",")});
+       const arguments_ = ["cargo", "metadata", "--locked", "--manifest-path", check.workspace, "--format-version", "1", "--filter-platform", check.target, ...(check.features.length ? ["--features", check.features.join(",")] : [])];
+       const metadataText = await execute(arguments_), metadata = JSON.parse(metadataText) as { workspace_root:string; packages: CargoPackageV1[]; resolve: { nodes: CargoNodeV1[] } };
+       await diagnostics.recheck();requireNativeStoragePathV1(diagnostics.root,dirname(report));mkdirSync(dirname(report), { recursive: true });writeFileSync(runtimeVerificationMetadataV1(diagnostics.root,report,index), metadataText);
+@@ -583,7 +584,7 @@
+     for(const[path,sha256]of identities)try{if(createHash("sha256").update(readFileSync(resolve(root,path))).digest("hex")!==sha256)findings.push({code:"runtime-input-mismatch",path,detail:"Source/resource changed before actual runtime graph completion"});}catch{findings.push({code:"runtime-input-mismatch",path,detail:"Source/resource disappeared before actual runtime graph completion"});}
+     await diagnostics.recheck();requireNativeStoragePathV1(diagnostics.root,dirname(report));mkdirSync(dirname(report), { recursive: true });writeFileSync(requireNativeStoragePathV1(diagnostics.root,report), JSON.stringify({ generatedAt: new Date().toISOString(), declarations: config, compilerArtifacts: artifacts ?? null, compilerProvenance: receiptPaths, durableLedger, selectedActors:actorSelection?{dataRoot:actorSelection.dataRoot,requested:actorSelection.requested,profile:actorSelection.profile,publication:actorSelection.published.record,witnesses:actorSelection.witnesses}:null, retainedInvocations:observations.map(observation=>({manifest:observation.manifest,cwd:observation.cwd,args:observation.args,builtAtMs:observation.builtAtMs,observedAtMs:observation.observedAtMs,buildDirectory:observation.buildDirectory,invocationInputs:observation.invocationInputs})), graphs, sourceIdentities: Object.fromEntries(identities), findings }, null, 2) + "\n");
+   }
+-  console.log(`[runtime graph] graphs=${graphs.length} sources/resources=${identities.size} findings=${findings.length} report=${report}`);
++  sayDiscoveryV1("runtime.graph-graphs-sources-resources-findings",{graphs:graphs.length,size:identities.size,findings:findings.length,value:String(report)});
+   if (findings.length) { for (const finding of findings) console.error(JSON.stringify(finding)); throw Error(`Runtime source/resource graph refused ${findings.length} findings`); }
+   await store.storage.recheck();await diagnostics.recheck();
+   });
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/32e035de874f5704b2502bed4430a05291d1812e1bb80ed4d5e1eeccbfba86d8 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/📋️example-argv/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/📋️example-argv/🟦️.ts
+@@ -1,3 +1,4 @@
++import {sayDiscoveryV1} from "../../🔍️discovery/📖️texts/🟦️.ts";
+ /** 🔒️ Parses optional `example <id>` argv prefix for playground play scripts. */
+ export function consumePlaygroundExampleArgv(segments: string[], resolveExampleId: (slug: string) => string | undefined): { readonly segments: string[]; readonly exampleEnv: NodeJS.ProcessEnv } {
+   if (segments[0] !== "example" || !segments[1]) {
+@@ -5,7 +6,7 @@
+   }
+   const exampleId = resolveExampleId(segments[1]);
+   if (!exampleId) {
+-    console.error(`[play] unknown example ${JSON.stringify(segments[1])}`);
++    sayDiscoveryV1("example-argv.play-unknown",{segments:String(JSON.stringify(segments[1]))},"error");
+     process.exit(1);
+   }
+   return {
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/5b5da4ae04f16110ba6905ae4330c06bc0dd5cdac84da9ef3d86fb332083b02f map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🎮️command/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🎮️command/🟦️.ts
+@@ -1,5 +1,6 @@
+ import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+ import { checkAgentClients, writeAgentClients } from "../🟦️.ts";
++import {sayDiscoveryV1} from "../../🔍️discovery/📖️texts/🟦️.ts";
+ 
+ /** 🤖️ `agents write|check`: derives the MCP configuration of each headless agent client from the root dashboard declaration, or fails on drift.
+  * @see ../🟦️.ts */
+@@ -13,9 +14,9 @@
+     }
+     if (verb === "check") {
+       const drift = checkAgentClients(this.root);
+-      for (const entry of drift) console.error(`[agents check] ${entry.path} (${entry.client}) is ${entry.reason === "missing" ? "missing" : "out of date"}; run: repo ./📜️script.ts agents write`);
++      for (const entry of drift) sayDiscoveryV1("command.agents-check-is-run-repo",{path:String(entry.path),client:String(entry.client),state:String(entry.reason === "missing" ? "missing" : "out of date")},"error");
+       if (drift.length > 0) process.exit(1);
+-      console.log("[agents check] every client file matches the root declaration");
++      sayDiscoveryV1("command.agents-check-every-client-file");
+       return;
+     }
+     console.error("[agents] usage: repo ./📜️script.ts agents <write|check>");
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/67a12e757295a91146a28807e5cd1d695e51103deef33774f5f26f3d0c92f8a7 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/✅️verification/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/✅️verification/🟦️.ts
+@@ -9,6 +9,7 @@
+ import { abstractionOwnershipSchema, abstractionOwnershipViolations, type AbstractionOwnership } from "../🧱️contract/🟦️.ts";
+ import { abstractionOwnershipRustCommands, abstractionOwnershipSchemaFields } from "../🔍️source-projection/🟦️.ts";
+ import { TranspilerV1 } from "../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
++import {sayDiscoveryV1} from "../../../🔍️discovery/📖️texts/🟦️.ts";
+ 
+ /** 🧪️ Compares language-independent ownership vectors with Ajv and real schema representations. */
+ export function abstractionOwnershipChecks(root: string, operations: PolicySourceOperations = POLICY_SOURCE_OPERATIONS): number {
+@@ -30,21 +31,21 @@
+     if (JSON.stringify(actual) !== JSON.stringify(row.expected)) throw new Error(`[verify abstraction-ownership] ${row.name}: expected ${JSON.stringify(row.expected)}, got ${JSON.stringify(actual)}.`);
+     if (validate(declaration) !== (actual.length === 0)) throw new Error(`[verify abstraction-ownership] ${row.name}: implementation disagrees with Ajv.`);
+   }
+-  console.log(`[verify abstraction-ownership] ${fixture.cases.length} ownership vectors agree with Ajv.`);
++  sayDiscoveryV1("abstraction.ownership-ownership-vectors-agree-with",{cases:fixture.cases.length});
+   for (const row of fixture.schemaCases) {
+     const declaration: AbstractionOwnership = { owner: "surface", fields: abstractionOwnershipSchemaFields(row.input.schema), commands: [] },
+       actual = abstractionOwnershipViolations(declaration, schema);
+     if (JSON.stringify(actual) !== JSON.stringify(row.expected)) throw new Error(`[verify abstraction-ownership] ${row.name}: expected ${JSON.stringify(row.expected)}, got ${JSON.stringify(actual)}.`);
+     if (validate(declaration) !== (actual.length === 0)) throw new Error(`[verify abstraction-ownership] ${row.name}: schema discovery disagrees with Ajv.`);
+   }
+-  console.log(`[verify abstraction-ownership] ${fixture.schemaCases.length} nested schema ownership vectors agree with Ajv.`);
++  sayDiscoveryV1("abstraction.ownership-nested-schema-ownership-vectors",{schemaCases:fixture.schemaCases.length});
+   for (const row of fixture.sourceCases) {
+     const declaration: AbstractionOwnership = { owner: "surface", fields: [], commands: abstractionOwnershipRustCommands(row.source) },
+       actual = abstractionOwnershipViolations(declaration, schema);
+     if (JSON.stringify(actual) !== JSON.stringify(row.expected)) throw new Error(`[verify abstraction-ownership] ${row.name}: expected ${JSON.stringify(row.expected)}, got ${JSON.stringify(actual)}.`);
+     if (validate(declaration) !== (actual.length === 0)) throw new Error(`[verify abstraction-ownership] ${row.name}: source declaration disagrees with Ajv.`);
+   }
+-  console.log(`[verify abstraction-ownership] ${fixture.sourceCases.length} command source ownership vectors agree with Ajv.`);
++  sayDiscoveryV1("abstraction.ownership-command-source-ownership-vectors",{sourceCases:fixture.sourceCases.length});
+   const validateArtifactFields = new Ajv({ strict: true, allErrors: true }).compile({
+       type: "object",
+       propertyNames: { not: { enum: schema.$defs.ArtifactExcludedField.enum } },
+@@ -75,6 +76,6 @@
+       if (excluded.length) throw new Error(`[verify abstraction-ownership] ${pathName}: live UI/computed state ${JSON.stringify(excluded)}.`);
+     }
+   }
+-  console.log(`[verify abstraction-ownership] ${fixture.artifactSchemas.length} artifact contracts expose document state only across five schema formats.`);
++  sayDiscoveryV1("abstraction.ownership-artifact-contracts-expose-document",{artifactSchemas:fixture.artifactSchemas.length});
+   return fixture.cases.length;
+ }
+# stage-clean orphan staged=i18n-core-tools/staged-c7-misc/blobs/6a24d1847ae7e7937bb88dbf5694fc4bfe98bc9434b6743c3788bff5c9fd5c25 map=ref:sha256
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️texts/🟦️.ts
+@@ -0,0 +1,13 @@
++import { bindCatalogV1, type TextValuesV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
++import { sayV1, type ProgressLevelV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📣️progress/🟦️.ts";
++import catalog from "./🔣️.json" with { type: "json" };
++
++/** 📖️ The texts of the discovery, ownership, UI, agent-client, testing, transaction, policy and playground lines in English and German. */
++export const DISCOVERY_TEXTS_V1 = bindCatalogV1("misc", catalog);
++
++/** 🔑️ Every message key of this catalog. */
++export type MiscTextKeyV1 = keyof typeof catalog.messages;
++
++/** 📢️ Says one line of this catalog as data; the CLI boundary renders it in the resolved language. */
++export const sayDiscoveryV1 = (key: MiscTextKeyV1, values: TextValuesV1 = {}, level: ProgressLevelV1 = "info"): void => sayV1(DISCOVERY_TEXTS_V1, key, values, level);
++
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/774c4370cdd38bed88c6eac6fc3a8f2251a1366172b78f99cf03345cf8828ea8 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts
+@@ -1,17 +1,16 @@
+-import { spawnSync } from "node:child_process";
+-import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+-import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
++import {spawnSync} from "node:child_process";
+ /** 🔌️ True when host:port already accepts TCP (existing dev server). */
+ export function isDevPortInUse(host: string, port: number): boolean {
+   const probe = `
+ import { createConnection } from "node:net";
++import {sayDiscoveryV1} from "../../🔍️discovery/📖️texts/🟦️.ts";
+ const socket = createConnection({ host: ${JSON.stringify(host)}, port: ${port} });
+ socket.setTimeout(300);
+ socket.once("connect", () => process.exit(0));
+ socket.once("timeout", () => process.exit(1));
+ socket.once("error", () => process.exit(1));
+ `;
+-  const result = runToolSyncV1(runtimeCommandNameV1(), ["--input-type=module", "-e", probe], { timeout: 500 });
++  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { timeout: 500 });
+   return result.status === 0;
+ }
+ 
+@@ -30,7 +29,7 @@
+ const match = text.match(/PLAYGROUND_APP_KIND\\":\\s*\\"([^\\"]+)\\"/);
+ process.stdout.write(match?.[1] ?? "");
+ `;
+-  const result = runToolSyncV1(runtimeCommandNameV1(), ["--input-type=module", "-e", probe], { encoding: "utf8", timeout: 3000 });
++  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { encoding: "utf8", timeout: 3000 });
+   const entry = result.stdout?.trim();
+   return entry || undefined;
+ }
+@@ -53,7 +52,7 @@
+   const url = devServerUrl(host, port);
+   const probe = `const res = await fetch(${JSON.stringify(url)}, { signal: AbortSignal.timeout(2000) });
+ process.exit(res.ok ? 0 : 1);`;
+-  const result = runToolSyncV1(runtimeCommandNameV1(), ["--input-type=module", "-e", probe], { timeout: 3000 });
++  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { timeout: 3000 });
+   if (result.status !== 0) return false;
+   if (!expectedPlayEntry) return true;
+   return devServerPlayEntry(host, port) === expectedPlayEntry;
+@@ -66,7 +65,7 @@
+     if (skipPorts.has(port)) continue;
+     if (!isDevPortInUse(host, port)) return port;
+   }
+-  console.error(`[dev] No free port found in range ${preferredPort}-${preferredPort + maxAttempts - 1}.`);
++  sayDiscoveryV1("ports.dev-no-free-port-found",{preferredPort:String(preferredPort),maxAttempts:String(preferredPort + maxAttempts - 1)},"error");
+   process.exit(1);
+ }
+ 
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/93b662d7afa2e89a633b825c4ba52aa5fbed3c14710a400d44acb8814d512a35 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🔒️allowlist/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🗣️language-catalogs/🔒️allowlist/🔣️.json
+@@ -1,13 +1,12 @@
+ {
+  "version": 1,
+- "ceiling": 9832,
++ "ceiling": 9374,
+  "files": {
+   "🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts": 1,
+-  "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🟦️.ts": 5,
+   "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/📥️input/🟦️.ts": 6,
+   "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts": 26,
+   "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts": 2,
+-  "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts": 11,
++  "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts": 9,
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/⚙️cargo/🟦️.ts": 2,
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/📜️script.ts": 2,
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts": 2,
+@@ -89,7 +88,6 @@
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts": 208,
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🟦️.ts": 21,
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🤲️lifetime/🟦️.ts": 7,
+-  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️whole/🟦️.ts": 66,
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧾️metadata/🟦️.ts": 8,
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🪟️conditional-retirement/🔌️port/🟦️.ts": 11,
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🪟️conditional-retirement/🟦️.ts": 19,
+@@ -181,7 +179,6 @@
+   "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🟦️.ts": 7,
+   "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts": 5,
+   "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts": 5,
+-  "🧰️framework/🔨️modules/🏃️process/🧰️tools/📖️registry/🟦️.ts": 4,
+   "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🗄️store/🟦️.ts": 2,
+   "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🗣️messages/🟦️.ts": 2,
+   "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🪪️identity/🟦️.ts": 1,
+@@ -193,12 +190,10 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🧭️all-app/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🏛️foundation/🟦️.ts": 1,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🏛️foundation/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🗺️taxonomy-shape/🏷️naming/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🧾️standards/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-spawn/⌨️command/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧰️direct-tool-spawn/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts": 6,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🎛️loader/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/📜️script.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🟦️.ts": 1,
+@@ -207,10 +202,10 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📥️environment/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📥️inputs/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts": 4,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts": 13,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts": 12,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts": 17,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🎫️output/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/📊️report/🟦️.ts": 3,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/📊️report/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📍️layout/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/♻️recovery/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts": 12,
+@@ -225,20 +220,15 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/⚡️recovery/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/📜️script.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts": 52,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🟦️.ts": 21,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts": 69,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts": 47,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts": 68,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📐️layout/🟦️.ts": 25,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts": 263,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts": 11,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🟦️.ts": 26,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs": 57,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts": 17,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs": 5,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🟨️.mjs": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts": 106,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts": 6,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs": 38,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts": 101,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts": 7,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts": 8,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🎛️operation/🟦️.ts": 7,
+@@ -258,10 +248,9 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🧵️session/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🟦️.ts": 4,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📇️inventory/📋️orchestration/🟦️.ts": 2,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📇️inventory/📋️orchestration/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📇️inventory/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏃️contract-capture/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts": 13,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🔁️lifecycle/🟦️.ts": 2,
+@@ -276,7 +265,7 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts": 7,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🗺️owner-test-manifests/🟦️.ts": 4,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts": 8,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts": 7,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📌️executable/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔌️provider/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🟦️.ts": 5,
+@@ -286,10 +275,10 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🟦️.ts": 21,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🟦️.ts": 8,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧬️declarations/🟦️.ts": 9,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts": 4,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts": 22,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️bun/📤️stream/🟦️.ts": 15,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️bun/🟦️.ts": 21,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️bun/🟦️.ts": 20,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔁️verification/📋️orchestration/🟦️.ts": 6,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔏️inputs/🟦️.ts": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚏️admission/🟦️.ts": 1,
+@@ -309,7 +298,7 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🌐️rpc/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/🟦️.ts": 12,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts": 11,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/🟦️.ts": 5,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📦️facts/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧮️census/🟨️.mjs": 3,
+@@ -319,10 +308,9 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/💾️budget/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts": 28,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️admission/💾️storage/🟦️.ts": 5,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️admission/🟦️.ts": 4,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️admission/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️caller/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/⌨️commands/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts": 6,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts": 478,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🟦️.ts": 2,
+@@ -331,14 +319,14 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts": 21,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs": 4,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧩️materialize/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/💾️storage/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🟦️.ts": 13,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts": 4,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts": 12,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🟦️.ts": 12,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts": 14,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🟦️.ts": 11,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/💾️storage/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/🟦️.ts": 11,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🪞️adopt/💾️storage/🟦️.ts": 3,
+@@ -378,11 +366,11 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📥️loading/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts": 20,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🟦️.ts": 16,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts": 26,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts": 11,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔗️activation/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts": 20,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts": 41,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts": 15,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts": 18,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts": 40,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts": 13,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️bootstrap/🟦️.ts": 25,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️capture/🟦️.ts": 15,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🔤️toml/🟦️.ts": 1,
+@@ -395,7 +383,7 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🟦️.ts": 20,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚦️ci/🐙️github/🟦️.ts": 12,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚦️ci/🟦️.ts": 3,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚦️ci/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚦️ci/🧭️baseline/🌿️environment/🟦️.ts": 8,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚦️ci/🧭️baseline/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/⚙️policy/🟦️.ts": 1,
+@@ -440,7 +428,7 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🧾️provenance/🟦️.ts": 8,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🧾️provenance/🟦️.ts": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/⏱️measurement/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/⏱️recency/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/⚙️execution/🟦️.ts": 11,
+@@ -450,37 +438,31 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/🪟️conditional/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📉️pressure/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📋️orchestration/🟦️.ts": 2,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📋️orchestration/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📦️metadata/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🟦️.ts": 7,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🏭️generate/🟦️.ts": 10,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📚️examples/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts": 7,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🕸️dependency-lint/🟦️.ts": 10,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🏭️generate/🟦️.ts": 2,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🕸️dependency-lint/🟦️.ts": 6,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️registry/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️schema-read-inventory/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗄️stdio/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗺️general-execution-ownership/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🚀️release/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🟦️.ts": 5,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧩️os/🟦️.ts": 3,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🚀️release/🟦️.ts": 2,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧪️test/🚦️root/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧪️test/🟦️.ts": 8,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🟦️.ts": 29,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧪️test/🟦️.ts": 7,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🟦️.ts": 13,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/✍️leaf-writer/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🚪️guard-helpers/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🟦️.ts": 7,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🧱️unowned/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧱️fixture-ownership/🟦️.ts": 2,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧱️fixture-ownership/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧱️scale-fixture/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧹️code-style/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🪁️typecheck/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/📋️inventory/🟦️.ts": 19,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts": 21,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/📇️source/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/📋️example-argv/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟨️.mjs": 18,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟨️.mjs": 19,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🌳️git/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts": 1,
+@@ -500,11 +482,11 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts": 16,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧾️fetched/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🔣️policy/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts": 17,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts": 15,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🧵️session/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🟦️.ts": 9,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🧩️contributions/🟦️.ts": 4,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🟦️.ts": 31,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🟦️.ts": 17,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/📝️render/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🔬️verify/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🗺️plan/💰️budget/🟦️.ts": 1,
+@@ -514,14 +496,8 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🪞️unmirror/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🗂️collection-catalog/🟦️.ts": 14,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🗿️artifact-tree/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🧬️mutation-tree/🟦️.ts": 31,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/.profiled-script.ts": 17,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts": 7,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/💾️cache/📋️ledger/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/💾️cache/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/📦️dependencies/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🩺️preflight/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/🟨️.mjs": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/📖️help/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🟦️.ts": 1,
+@@ -530,7 +506,6 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🖥️server/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/⌨️command/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🏃️entry/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/👷️worker/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts": 15,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/📡️wire/🚪️grpc/🟦️.ts": 2,
+@@ -543,10 +518,12 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/📋️constraints/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🟦️.ts": 11,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎯️host-platform/🟦️.ts": 9,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎯️targets/🟦️.ts": 1,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🐳️service/🟦️.ts": 7,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🔌️providers/🔷️typescript/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🟦️.ts": 1,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/👷️worker/🟨️.mjs": 1,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏊️farm/🟨️.mjs": 6,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏛️service/🟨️.mjs": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📨️protocol/🎚️policy/🟨️.mjs": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📨️protocol/🟨️.mjs": 1,
+@@ -554,9 +531,9 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🏗️provision/🟨️.mjs": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🟨️.mjs": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🗃️state/🟨️.mjs": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🚪️client/🔁️repo/🟨️.mjs": 3,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🚪️client/🔁️repo/🟨️.mjs": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/📥️reuse/🟨️.mjs": 29,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": 55,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": 54,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👷️workers/📨️protocol/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👷️workers/🟦️.ts": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/📜️script.ts": 1,
+@@ -569,30 +546,28 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/⌨️command/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🏃️runner/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/🤝️concurrent/🟦️.ts": 5,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🎭️stub/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/🏃️runner/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🏃️execution/🟦️.ts": 7,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/💾️storage/📜️script.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/💾️storage/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts": 6,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🟦️.ts": 1,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts": 14,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs": 10,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts": 8,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️orchestration/🟨️.mjs": 19,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🛰️service/🔑️session/🟨️.mjs": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🛰️service/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts": 19,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts": 23,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/📦️snapshot/🟦️.ts": 23,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/🦀️rust/🟦️.ts": 10,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/🦀️rust/🟦️.ts": 12,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/📒️ledger/🟨️.mjs": 24,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/📜️script.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🔒️writer/🟨️.mjs": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs": 60,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs": 58,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/📜️script.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🟦️.ts": 9,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🟨️.mjs": 15,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs": 17,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs": 16,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔒️lock/📥️read/🟨️.mjs": 8,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔒️lock/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔒️lock/🟨️.mjs": 4,
+@@ -602,27 +577,19 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🟨️.mjs": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🟨️.mjs": 7,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts": 24,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🏗️compiler/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟢️node/🟨️.mjs": 21,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts": 26,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts": 29,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts": 20,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🟦️.ts": 7,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🟦️.ts": 6,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🟦️.ts": 6,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🟦️.ts": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌐️platform/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎯️affected/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🟦️.ts": 14,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/👁️evidence/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🗑️reset/🟦️.ts": 11,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🟦️.ts": 11,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📐️conformance/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📐️path-plan/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": 131,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🟦️.ts": 5,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts": 126,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🏭️runner/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔁️probe/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔌️backend/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔗️closure/🟦️.ts": 8,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🟦️.ts": 6,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🟦️.ts": 1,
+@@ -631,29 +598,18 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧰️toolchains/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🔌️port/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🟦️.ts": 16,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧾️test-results/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🪵️failure-tail/🟦️.ts": 5,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🌐️remote/🟦️.ts": 7,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🏁️scheduler/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🔌️backend/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🗄️store/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🚀️exec/🟦️.ts": 4,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/💾️storage/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/📐️conformance/🟦️.ts": 4,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/📨️envelope/🟦️.ts": 4,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🔌️backend/🟦️.ts": 1,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧾️test-results/🟦️.ts": 2,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/💾️storage/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/⏱️phases/🟨️.mjs": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/♻️revision/🟨️.mjs": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/🟨️.mjs": 15,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎯️target-policy/🟨️.mjs": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🏭️generator-outputs/🟨️.mjs": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📍️coordinates/🟨️.mjs": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🏊️pool/🟨️.mjs": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs": 1,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔁️bootstrap/🟨️.mjs": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs": 28,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔖️stamps/🟨️.mjs": 9,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🟨️.mjs": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🚦️invocation/🟨️.mjs": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🛡️policy/🟨️.mjs": 1,
+@@ -669,7 +625,7 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌍️environment/🟨️.mjs": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts": 37,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts": 66,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts": 62,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts": 7,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🟦️.ts": 7,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️source/🟦️.ts": 6,
+@@ -678,9 +634,8 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/🧩️assembly/🟦️.ts": 26,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧾️collect-errors/🟨️.mjs": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🟦️.ts": 5,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🟦️.ts": 6,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts": 21,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🟦️.ts": 4,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers/🟦️.ts": 1,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts": 19,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🎬️stage/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🏃️execution/🟦️.ts": 8,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📡️data/🟦️.ts": 5,
+@@ -693,24 +648,14 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🧩️units/🔌️repository/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🧩️units/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🟨️.mjs": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/⌨️command/📜️script.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/🏃️engine/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/🐹️go/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/🔏️key/🟦️.ts": 4,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/🕸️graph/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/🦀️rust/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts": 18,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts": 22,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/👁️watch/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️closure/📜️script.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️closure/🟦️.ts": 6,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🟦️.ts": 18,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧮️task-model/🟦️.ts": 15,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧵️workers/👷️worker/🟨️.mjs": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧵️workers/🟨️.mjs": 7,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🟨️.mjs": 5,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/📜️script.ts": 2,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/📜️script.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🟨️.mjs": 14,
+@@ -726,15 +671,15 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/📣️publication/🟦️.ts": 22,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/📜️script.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/🟦️.ts": 5,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/✅️verification/🟦️.ts": 17,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/✅️verification/🟦️.ts": 13,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/🧱️contract/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts": 4,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts": 6,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📁️run-allocation/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts": 4,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/⚗️audit-generator-contracts/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts": 32,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts": 33,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🎁️package-projection/🟦️.ts": 37,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🎯️taxonomy-path-matching/🟦️.ts": 8,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🏷️package-source-classification/🟦️.ts": 1,
+@@ -752,7 +697,7 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/📜️script.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/💾️storage/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts": 43,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts": 36,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗂️file-kind-resolution/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗃️owned-file-projection/🟦️.ts": 6,
+@@ -767,7 +712,7 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧲️registry-catalog-projection/🟦️.ts": 16,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🪞️path-projection/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts": 4,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/⚖️truth/🟦️.ts": 23,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/⚖️truth/🟦️.ts": 9,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📇️inventory/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured/📜️script.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts": 22,
+@@ -777,17 +722,16 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs": 17,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts": 39,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/⏱️budget/🟦️.ts": 3,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/🟦️.ts": 3,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/🟦️.ts": 25,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts": 14,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts": 13,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts": 6,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/🟦️.ts": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📄️manifest-projection/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📣️publication/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts": 7,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs": 62,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs": 61,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🟦️.ts": 7,
+@@ -803,20 +747,18 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts": 61,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧩️capabilities/🟦️.ts": 16,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗄️stdio-ledger/🟦️.ts": 66,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🏃️runner/🟦️.ts": 4,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🏃️runner/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🖥️cli/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚪️io/🏛️architecture/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs": 7,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🎮️command/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🟦️.ts": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️execution/🐹️go/🟦️.ts": 6,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/📜️script.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🟦️.ts": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts": 14,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📊️coverage/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🟦️.ts": 7,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🟦️.ts": 6,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🗄️lcov/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/⚖️laws/🏷️type-name-parity/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/⚖️laws/💧️state-purity/🟦️.ts": 1,
+@@ -831,8 +773,8 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/❄️frozen-evidence/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/➰️symlink-targets/🟦️.ts": 4,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🌳️tree-digests/🟦️.ts": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts": 17,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🟦️.ts": 16,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts": 11,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🟦️.ts": 15,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🏛️repository-authority/🟦️.ts": 9,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🏭️generator-inputs/🟦️.ts": 15,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🏷️file-kind-matching/🟦️.ts": 1,
+@@ -882,26 +824,17 @@
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📇️index/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts": 9,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts": 14,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts": 10,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts": 2,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧭️reference-resolution/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧮️reference-digests/🟦️.ts": 1,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧾️plan-parsing/🟦️.ts": 64,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🩹️recovery-authorities/🟦️.ts": 15,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🪞️artifact-reference-projection/🟦️.ts": 15,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts": 13,
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts": 3,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🛡️protection/🟦️.ts": 5,
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts": 1
+  },
+- "defaultsCeiling": 10,
+- "defaults": {
+-  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts": 1,
+-  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/⌨️command/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/⌨️command/🟨️.mjs": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏛️service/🟨️.mjs": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🚪️client/🟨️.mjs": 2,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/🏃️engine/🟦️.ts": 1,
+-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/⌨️command/🟦️.ts": 1
+- }
++ "defaultsCeiling": 0,
++ "defaults": {}
+ }
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/a57196f19d9473b57eaa1a991a50968d891f52f77d542e92a3c8b15a9520203d map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📊️coverage/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📊️coverage/🟦️.ts
+@@ -1,6 +1,7 @@
+ import { join } from "node:path";
+ import { mkdirSync } from "node:fs";
+ import { coverageDir, coverageSlug } from "../../🏃️process/📋️context/🔣️policy/🟦️.ts";
++import {sayDiscoveryV1} from "../../🔍️discovery/📖️texts/🟦️.ts";
+ 
+ /** 📊️Whether instrumented coverage collection is on — auto-set by [[resolveTestLevel]] at the `exhaustive` level; `SEMIO_COVERAGE=0` opts out. */
+ export function coverageEnabled(): boolean {
+@@ -122,7 +123,7 @@
+     for (const file of summary.perFile.slice(0, worstCount)) {
+       console.log(`  ${file.pct.toFixed(1)}% (${file.linesHit}/${file.linesFound})  ${file.path}`);
+     }
+-    console.error(`[coverage] ${summary.pct.toFixed(2)}% < ${thresholdPct}% — exhaustive gate failed.`);
++    sayDiscoveryV1("coverage.exhaustive-gate-failed",{pct:summary.pct.toFixed(2),thresholdPct:String(thresholdPct)},"error");
+     process.exit(1);
+   }
+ }
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/b035ba5356779d689a24eff26fb0b2d381d50de70bdc012dacbdabfd9d6707f2 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🏃️runner/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🏃️runner/🟦️.ts
+@@ -6,6 +6,7 @@
+ import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
+ import type { BreachRecord } from "../🔖️breach/🟦️.ts";
+ import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
++import {sayDiscoveryV1} from "../../🔍️discovery/📖️texts/🟦️.ts";
+ 
+ export type LintScriptModule = {
+   policy?: LintFn<never>;
+@@ -158,7 +159,7 @@
+   const { breachs, cachePath } = await runPolicyScript(scriptPath);
+   const high = breachs.filter(isBlockingBreach);
+   if (high.length === 0) {
+-    console.log(`policy: no high-priority breaches (${breachs.length} total recorded at ${cachePath})`);
++    sayDiscoveryV1("runner.policy-no-high-priority-breaches",{total:breachs.length,cachePath:String(cachePath)});
+     return;
+   }
+   console.error(formatBreachReport(high, cachePath));
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/c150491ad4520142a67b8dea961e150ec42f15f7b4539eec5da0006525a5ad5c map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts
+@@ -5,6 +5,7 @@
+ import { retainTransactionV2Record, transactionV2Identities, transactionV2IdentityPaths } from "../🧾️provenance/🟦️.ts";
+ import { runTransactionV2Shards, TRANSACTION_V2_DEFAULT_FILTER_WAVES } from "../🏃️shard-execution/🟦️.ts";
+ import { runtimeBundleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
++import {sayDiscoveryV1} from "../../../🔍️discovery/📖️texts/🟦️.ts";
+ 
+ /** 🔄️ Runs the bounded transaction verification aggregate and retains exact source/result identities. */
+ export async function runTransactionV2(repoRoot: string, segments: string[]): Promise<void> {
+@@ -14,7 +15,7 @@
+   const artifactRoot = repoTestArtifactEnvironment(repoRoot, "transaction-v2").SEMIO_TEST_ARTIFACT_DIR!;
+   const bundleRoot = transactionV2BundleRoot(artifactRoot, runId);
+   const runRoot = dirname(bundleRoot);
+-  console.error(`[TRACE] Transaction v2 run owner ${runRoot}`);
++  sayDiscoveryV1("verification.trace-transaction-v2-run-owner",{runRoot:String(runRoot)},"error");
+   const bundle = join(bundleRoot, "🟦️.test.js");
+   const identityPaths = transactionV2IdentityPaths(repoRoot);
+   const beforeIdentities = transactionV2Identities(identityPaths);
+# stage-clean orphan staged=i18n-core-tools/staged-c7-misc/blobs/ed6b9e28b23fab039e08c77a4293a719956495000cd31484df3cfe3dc7d9f194 map=ref:sha256
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️texts/🔣️.json
+@@ -0,0 +1,106 @@
++{
++  "version": 1,
++  "id": "misc",
++  "languages": [
++    "en",
++    "de"
++  ],
++  "messages": {
++    "ports.dev-no-free-port-found": {
++      "en": "[dev] No free port found in range {preferredPort}-{maxAttempts}.",
++      "de": "[dev] Im Bereich {preferredPort}-{maxAttempts} wurde kein freier Port gefunden."
++    },
++    "example-argv.play-unknown": {
++      "en": "[play] unknown example {segments}",
++      "de": "[play] Unbekanntes Beispiel {segments}"
++    },
++    "abstraction.ownership-ownership-vectors-agree-with": {
++      "en": "[verify abstraction-ownership] {cases} ownership vectors agree with Ajv.",
++      "de": "[verify abstraction-ownership] {cases} Eigentümerschaftsvektoren stimmen mit Ajv überein."
++    },
++    "abstraction.ownership-nested-schema-ownership-vectors": {
++      "en": "[verify abstraction-ownership] {schemaCases} nested schema ownership vectors agree with Ajv.",
++      "de": "[verify abstraction-ownership] {schemaCases} Vektoren zur verschachtelten Schema-Eigentümerschaft stimmen mit Ajv überein."
++    },
++    "abstraction.ownership-command-source-ownership-vectors": {
++      "en": "[verify abstraction-ownership] {sourceCases} command source ownership vectors agree with Ajv.",
++      "de": "[verify abstraction-ownership] {sourceCases} Vektoren zur Befehlsquellen-Eigentümerschaft stimmen mit Ajv überein."
++    },
++    "abstraction.ownership-artifact-contracts-expose-document": {
++      "en": "[verify abstraction-ownership] {artifactSchemas} artifact contracts expose document state only across five schema formats.",
++      "de": "[verify abstraction-ownership] {artifactSchemas} Artefaktverträge legen nur den Dokumentzustand über fünf Schema-Formate offen."
++    },
++    "verification.trace-transaction-v2-shard-finished": {
++      "en": "[TRACE] Transaction v2 shard {ordinal} finished in {seconds}s",
++      "de": "[TRACE] Transaktion v2, Shard {ordinal} in {seconds} s beendet"
++    },
++    "verification.trace-transaction-v2-run-owner": {
++      "en": "[TRACE] Transaction v2 run owner {runRoot}",
++      "de": "[TRACE] Transaktion v2, Lauf-Eigentümer {runRoot}"
++    },
++    "runtime.graph-physical-file": {
++      "en": "[runtime graph] physical file {phase} {bytes}/{totalBytes}",
++      "de": "[runtime graph] Physische Datei {phase} {bytes}/{totalBytes}"
++    },
++    "runtime.graph-physical-cargo": {
++      "en": "[runtime graph] physical cargo {phase} {bytes}/{totalBytes}",
++      "de": "[runtime graph] Physisches Cargo {phase} {bytes}/{totalBytes}"
++    },
++    "runtime.graph-acquiring-current-exact-guest": {
++      "en": "[runtime graph] acquiring current exact guest compiler/resource witnesses through {command}",
++      "de": "[runtime graph] Aktuelle exakte Gast-Compiler-/Ressourcen-Zeugen werden über {command} beschafft"
++    },
++    "runtime.graph-acquiring-actual-native-browser": {
++      "en": "[runtime graph] acquiring actual native browser mount through {nativeBrowserProject}:wasm:{completedProfile}",
++      "de": "[runtime graph] Die tatsächliche native Browser-Einbindung wird über {nativeBrowserProject}:wasm:{completedProfile} beschafft"
++    },
++    "runtime.graph-acquiring-current-browser-mount": {
++      "en": "[runtime graph] acquiring current browser mount through {nativeBrowserProject}:generate-frame-worker",
++      "de": "[runtime graph] Die aktuelle Browser-Einbindung wird über {nativeBrowserProject}:generate-frame-worker beschafft"
++    },
++    "runtime.graph-actual-cargo-metadata": {
++      "en": "[runtime graph] actual Cargo metadata {index}/{checks} {target}: {packages}",
++      "de": "[runtime graph] Tatsächliche Cargo-Metadaten {index}/{checks} {target}: {packages}"
++    },
++    "runtime.graph-graphs-sources-resources-findings": {
++      "en": "[runtime graph] graphs={graphs} sources/resources={size} findings={findings} report={value}",
++      "de": "[runtime graph] graphs={graphs} sources/resources={size} findings={findings} report={value}"
++    },
++    "ui.framework-js-react-no-primitive": {
++      "en": "framework/ui/js/react: no UI primitive violations ({files} allowlisted files)",
++      "de": "framework/ui/js/react: keine Verstöße gegen UI-Primitive ({files} Dateien auf der Allowlist)"
++    },
++    "ui.framework-js-react-found-primitive": {
++      "en": "framework/ui/js/react: found {failures} UI primitive violation(s):",
++      "de": "framework/ui/js/react: {failures} Verstoß/Verstöße gegen UI-Primitive gefunden:"
++    },
++    "ui.and-more": {
++      "en": "  … and {failures} more",
++      "de": "  … und {failures} weitere"
++    },
++    "ui.framework-js-react-no-chrome": {
++      "en": "framework/ui/js/react: no chrome i18n violations ({files} allowlisted files)",
++      "de": "framework/ui/js/react: keine i18n-Verstöße im Chrome ({files} Dateien auf der Allowlist)"
++    },
++    "runner.policy-no-high-priority-breaches": {
++      "en": "policy: no high-priority breaches ({total} total recorded at {cachePath})",
++      "de": "policy: keine Verstöße mit hoher Priorität ({total} insgesamt, erfasst in {cachePath})"
++    },
++    "command.agents-check-is-run-repo": {
++      "en": "[agents check] {path} ({client}) is {state}; run: repo ./📜️script.ts agents write",
++      "de": "[agents check] {path} ({client}) ist {state}; ausführen: repo ./📜️script.ts agents write"
++    },
++    "command.agents-check-every-client-file": {
++      "en": "[agents check] every client file matches the root declaration",
++      "de": "[agents check] Jede Client-Datei entspricht der Wurzeldeklaration"
++    },
++    "coverage.exhaustive-gate-failed": {
++      "en": "[coverage] {pct}% < {thresholdPct}% — exhaustive gate failed.",
++      "de": "[coverage] {pct} % < {thresholdPct} % — das erschöpfende Gate ist fehlgeschlagen."
++    },
++    "workspace-exports.test-resolution-source-operations": {
++      "en": "[test-resolution] {stage}: {completedOperations} source operations",
++      "de": "[test-resolution] {stage}: {completedOperations} Quelloperationen"
++    }
++  }
++}
+# stage-clean orphan staged=i18n-core-tools/staged-c7-misc/blobs/f24b0c48bffe401c8428fee3b24fb8dec33178cab08d6fabd27ddb13b82dac3a map=ref:sha256
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️texts/🧪️tests/🟦️.ts
+@@ -0,0 +1,37 @@
++import { expect, test } from "bun:test";
++import { readdirSync, readFileSync } from "node:fs";
++import { dirname, join } from "node:path";
++import Ajv from "ajv";
++import { CATALOG_LANGUAGES_V1, defineCatalogV1, placeholdersV1, textV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
++import schema from "../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/📖️catalog/🧬️schema/🔣️.json" with { type: "json" };
++import catalog from "../🔣️.json" with { type: "json" };
++import { DISCOVERY_TEXTS_V1 } from "../🟦️.ts";
++
++const LANGUAGE_NEUTRAL: readonly string[] = ["runtime.graph-graphs-sources-resources-findings"];
++const owner = join(import.meta.dir, "..", "../..");
++const sources = (directory: string): string[] => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? (["🧪️tests", "📖️texts", "node_modules", ".cache"].includes(entry.name) ? [] : sources(join(directory, entry.name))) : /\.(?:ts|mjs)$/u.test(entry.name) ? [join(directory, entry.name)] : []);
++
++test("the catalog satisfies the strict independent validator and the language contract", () => {
++  const ajv = new Ajv({ strict: true, allErrors: true });
++  expect(ajv.validate(schema, catalog), JSON.stringify(ajv.errors)).toBe(true);
++  expect(defineCatalogV1(catalog).languages).toEqual([...CATALOG_LANGUAGES_V1]);
++  expect(DISCOVERY_TEXTS_V1.id).toBe("misc");
++});
++
++test("every message renders in both languages with exactly its placeholders and differs between them unless it is language-neutral", () => {
++  for (const [key, leaf] of Object.entries(catalog.messages)) {
++    const names = placeholdersV1(leaf.en), values = Object.fromEntries(names.map((name) => [name, "v" + name]));
++    for (const language of CATALOG_LANGUAGES_V1) {
++      const text = textV1(DISCOVERY_TEXTS_V1.catalog, key, language, values);
++      for (const name of names) expect(text, `${key} ${language}`).toContain("v" + name);
++    }
++    expect(leaf.en === leaf.de, key).toBe(LANGUAGE_NEUTRAL.includes(key));
++  }
++});
++
++test("every message is used by the code it belongs to and every key the code names exists", () => {
++  const code = sources(owner).map((path) => readFileSync(path, "utf8")).join("\n");
++  const keys = Object.keys(catalog.messages);
++  for (const key of keys) expect(code.includes(JSON.stringify(key)), `${key} is unused`).toBe(true);
++  for (const match of code.matchAll(/\b(?:sayDiscoveryV1|refuseNoneV1)\(\s*(?:"(?:usage|invalid|missing|refused|failed|breach|stale|unsupported)"\s*,\s*)?("(?:[^"\\]|\\.)*")/gu)) expect(keys, match[1]).toContain(JSON.parse(match[1]!));
++});
+# stage-clean different staged=i18n-core-tools/staged-c7-misc/blobs/f98eb37482847c529ac873100dfc8896d954f0bd35a03679ec9ac1df0627fe14 map=ref:sha256
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts
+@@ -1,10 +1,9 @@
+ import { terminateOwnedProcessTree } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+ 
+ import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+-import { spawn } from "node:child_process";
++import { spawn, spawnSync } from "node:child_process";
+ import { join } from "node:path";
+-import { startToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+-import { runtimeCommandNameV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
++import {sayDiscoveryV1} from "../../../🔍️discovery/📖️texts/🟦️.ts";
+ 
+ export const TRANSACTION_V2_DEFAULT_FILTER_WAVES: readonly (readonly string[])[] = [
+   [
+@@ -93,7 +92,7 @@
+       return path;
+     });
+     const startedAt = performance.now();
+-    const child = startToolV1(runtimeCommandNameV1(), ["test", `--max-concurrency=${concurrency}`, options.bundle, "-t", filter], {
++    const child = spawn(process.execPath, ["test", `--max-concurrency=${concurrency}`, options.bundle, "-t", filter], {
+       cwd: options.repoRoot,
+       detached: process.platform !== "win32",
+       env: {
+@@ -136,7 +135,7 @@
+         child.once("exit", (code, signal) => {
+           const milliseconds = performance.now() - startedAt;
+           outcomes.push({ ordinal, filter, concurrency, milliseconds, code, signal });
+-          console.error(`[TRACE] Transaction v2 shard ${ordinal} finished in ${(milliseconds / 1_000).toFixed(2)}s`);
++          sayDiscoveryV1("verification.trace-transaction-v2-shard-finished",{ordinal:String(ordinal),seconds:(milliseconds / 1_000).toFixed(2)},"error");
+           if (code !== 0 || signal) stop(new Error(`Transaction v2 shard ${ordinal} failed with ${signal ?? code}`));
+           accept();
+         });

@@ -20,7 +20,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
 
     /// 🧩️ Read-only twin of `ArtifactEditor::Members` — the roster this viewer's composed children
     /// are opened through, carried by the app rather than by whoever registers it.
-    type Members: SpaceMember + MemberFactory + Send + 'static = NoMembers;
+    type Members: ReferenceSpaceMember + MemberFactory + Send + 'static = NoMembers;
     /// 📖️ Supplies domain-owned decoding for saved documents and their editor-authored history.
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         None

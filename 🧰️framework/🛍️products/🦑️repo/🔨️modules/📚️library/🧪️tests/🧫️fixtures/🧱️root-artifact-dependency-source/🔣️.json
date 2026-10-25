@@ -56,13 +56,12 @@
         "dependencyFreezeCheck",
         "dependencyFreezeWriteBaseline",
         "dependencyIsCompositionManifest",
-        "dependencyJsLockWorkspaceMismatches",
+        "dependencyJsLockAudit",
         "dependencyJsParity",
         "dependencyParseGoModule"
       ],
       "consumers": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/⚖️truth/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-js-lock-parity/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts"
       ]
     },

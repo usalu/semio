@@ -2,7 +2,6 @@
 
 use super::*;
 
-
 impl RegisterRow {
     /// 🗂️ The collection this row belongs to.
     pub fn key(&self) -> RegisterKey {

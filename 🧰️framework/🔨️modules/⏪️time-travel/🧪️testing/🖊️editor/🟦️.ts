@@ -19,7 +19,7 @@ const editorNumbers = (): readonly string[] => scenario?.editorNumbers ?? [];
 /** ✏️ The draft editor section: its heading, the Rust band status line, the scenario's number controls and the targets list. */
 export const editor = (): Promise<Editor | null> => (renderer === "wgpu" ? wgpuEditor(editorNumbers()) : reactEditor(editorNumbers()));
 
-/** 🖊️ The draft editor through the wgpu mirror; a number input is a `spinbutton` (or `slider`) whose value the mirror
+/** 📙️ The draft editor through the wgpu mirror; a number input is a `spinbutton` (or `slider`) whose value the mirror
  * carries as the input value / `aria-valuenow`. */
 const wgpuEditor = async (pointers: readonly string[]): Promise<Editor | null> => {
   const nodes = await mirror();

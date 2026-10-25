@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
@@ -37,7 +37,7 @@ test("chrome card imports omit the layered renderer until it is requested", asyn
       root,
       logLevel: "silent",
       plugins: [{ name: "chrome-boundary", resolveId: id => id === entry ? entry : undefined, load: id => id === entry ? `export { ${name} } from ${JSON.stringify(chrome)};` : undefined }],
-      build: { write: false, minify: false, rollupOptions: { input: entry, preserveEntrySignatures: "strict", external: [/^react(?:\/|$)/, /^react-dom(?:\/|$)/, /^@semio-tech\//, /^i18next$/, /^react-i18next$/], output: { format: "es" } } },
+      build: { write: false, minify: false, rollupOptions: { input: entry, preserveEntrySignatures: "strict", external: [/^react(?:\/|$)/, /^react-dom(?:\/|$)/, /^@semio-tech\/(?!ui\/)/], output: { format: "es" } } },
     });
     const outputs = (Array.isArray(result) ? result : [result]).flatMap(output => "output" in output ? output.output : []);
     const chunks = outputs.filter(output => output.type === "chunk");
@@ -47,3 +47,23 @@ test("chrome card imports omit the layered renderer until it is requested", asyn
   expect(await renderLength("OverviewCard")).toBe(0);
   expect(await renderLength("LayeredOverview")).toBeGreaterThan(0);
 }, 30_000);
+
+const uiRoot = resolve(root, "../../../..");
+const ownedExternals: Record<string, readonly string[]> = {
+  "react-resizable-panels": ["🧱️elements/↔️Resizable/🟦️.tsx"],
+};
+const walk = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap(entry => entry.isDirectory() && !["node_modules", "dist", ".cache"].includes(entry.name) ? walk(resolve(dir, entry.name)) : entry.isFile() && /\.(?:ts|tsx)$/u.test(entry.name) ? [resolve(dir, entry.name)] : []);
+
+test("an interface-owned external package is named by exactly its owner file and by no public barrel", () => {
+  const sources = walk(uiRoot);
+  for (const [name, owners] of Object.entries(ownedExternals)) {
+    const quoted = new RegExp(`from ["']${name}(?:/[^"']*)?["']|import\\(["']${name}`, "u");
+    const naming = sources.filter(file => quoted.test(readFileSync(file, "utf8"))).map(file => file.slice(uiRoot.length + 1).replaceAll("\\", "/")).sort();
+    expect(naming).toEqual([...owners].sort());
+  }
+  for (const barrel of ["🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts", "🎯️targets/⚛️react/📦️packages/🟦️typescript/📥️source/🟦️.ts"]) {
+    const text = readFileSync(resolve(uiRoot, barrel), "utf8");
+    for (const name of Object.keys(ownedExternals)) expect(text).not.toContain(`"${name}"`);
+    expect(text).not.toContain("ResizablePrimitive");
+  }
+});

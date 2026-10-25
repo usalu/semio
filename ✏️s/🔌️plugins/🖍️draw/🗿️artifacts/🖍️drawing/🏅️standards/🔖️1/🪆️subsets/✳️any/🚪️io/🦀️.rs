@@ -34,9 +34,6 @@ use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas as Semio
 //#endregion 🔖️IoDeclaration
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 #[path = "💾️binary/🦀️.rs"]

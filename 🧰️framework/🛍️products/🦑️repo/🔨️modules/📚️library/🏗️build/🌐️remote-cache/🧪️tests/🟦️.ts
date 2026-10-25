@@ -1,5 +1,5 @@
 import {afterAll,expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {createHash} from "node:crypto";
 import {spawn,spawnSync} from "node:child_process";

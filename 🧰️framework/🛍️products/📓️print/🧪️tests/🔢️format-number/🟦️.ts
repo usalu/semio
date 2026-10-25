@@ -52,7 +52,7 @@ const SPECIFIERS: readonly (readonly [string, number | string])[] = [
   ["c", "unit"],
 ];
 
-/** 🔮️ Renders the specifier list through d3-format in the transport encoding the probe uses. */
+/** 🖌️ Renders the specifier list through d3-format in the transport encoding the probe uses. */
 function reference(locale: string): ProbeProjection {
   const format = formatLocale(LOCALES[locale]!);
   return Object.fromEntries(SPECIFIERS.map(([specifier, value], index) => [`format/${index}`, [`|${format.format(specifier)(value as number).replaceAll(" ", "_")}`]]));
@@ -72,13 +72,13 @@ export default defineTestAdapter({
     "en-locale": {
       /** 🔮️ d3-format with its English locale definition. */
       oracle: () => ({ projection: reference("en") }),
-      /** 🎯️ The same specifiers rendered by semio-viz-format inside a compiled document. */
+      /** 📄️ The same specifiers rendered by semio-viz-format inside a compiled document. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "de-locale": {
-      /** 🔮️ d3-format with its German locale definition. */
+      /** 🌐️ d3-format with its German locale definition. */
       oracle: () => ({ projection: reference("de") }),
-      /** 🎯️ The same specifiers rendered with the German locale selected. */
+      /** 🗣️ The same specifiers rendered with the German locale selected. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

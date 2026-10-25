@@ -71,13 +71,30 @@
     6067,
     6068,
     6010,
+    6050,
+    6061,
+    6063,
     6274,
-    6277
+    6277,
+    8791,
+    8793
   ],
   "portsAttributes": {
     "6010": {
       "label": "Storybook",
       "onAutoForward": "notify"
+    },
+    "6050": {
+      "label": "Projektetage deck",
+      "onAutoForward": "notify"
+    },
+    "6061": {
+      "label": "Course site",
+      "onAutoForward": "notify"
+    },
+    "6063": {
+      "label": "Course site beside stack",
+      "onAutoForward": "silent"
     },
     "6066": {
       "label": "s wgpu",
@@ -114,6 +131,14 @@
     "8787": {
       "label": "os-hub",
       "onAutoForward": "notify"
+    },
+    "8791": {
+      "label": "Course proctor",
+      "onAutoForward": "notify"
+    },
+    "8793": {
+      "label": "Course proctor beside stack",
+      "onAutoForward": "silent"
     }
   },
   "mounts": [

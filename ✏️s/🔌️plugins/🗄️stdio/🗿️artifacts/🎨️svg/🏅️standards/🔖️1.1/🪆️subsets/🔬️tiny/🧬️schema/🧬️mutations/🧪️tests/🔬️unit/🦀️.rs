@@ -104,7 +104,7 @@ fn strip_non_tiny_is_invertible_through_its_own_inverse() {
     let base = document(elem("svg", vec![], vec![elem("g", vec![("style", crate::schema::snapshot::SvgAttributeValue::Text("fill:#000".into()))], vec![])]));
     let mut snapshot = base.clone();
     let mutation = SvgTinyMutation::StripNonTiny(strip_non_tiny::StripNonTiny {});
-    let undo = Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let undo = ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     apply_svg_tiny_mutation(&mut snapshot, &mutation);
     for step in &undo {
         apply_svg_tiny_mutation(&mut snapshot, step);
@@ -117,7 +117,7 @@ fn stamp_base_profile_is_invertible_when_the_root_declared_neither_attribute() {
     let base = document(elem("svg", vec![("id", crate::schema::snapshot::SvgAttributeValue::Text("Layer_1".into()))], vec![]));
     let mut snapshot = base.clone();
     let mutation = SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: Some("tiny".into()), version: Some("1.1".into()), base_profile_index: None, version_index: None });
-    let undo = Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let undo = ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     apply_svg_tiny_mutation(&mut snapshot, &mutation);
     assert_eq!(element_attr(snapshot.doc.root.as_ref().unwrap(), "baseProfile"), Some(&SvgAttributeValue::Text("tiny".into())));
     for step in &undo {

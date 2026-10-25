@@ -8,7 +8,7 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ No shareable live launcher state — chrome stays in `HomeConfig`.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
 #[value(rename_all = "camelCase")]
 pub struct HomePresence {}
 
@@ -154,5 +154,9 @@ impl protocol::OpBinary for HomePresenceMutation {
 //#endregion 🔖️PresenceMutation
 
 //#region 🫴️NativePresence
-impl store::ArtifactPresenceSnapshot for HomePresence {}
+impl store::ArtifactPresenceSnapshot for HomePresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 //#endregion 🫴️NativePresence

@@ -368,7 +368,7 @@ export function collectTaxonomySourceAdmission(taxonomy: LoadedTaxonomy, prepare
   return { inventory, inputText };
 }
 
-/** 🧭️ Enumerates source admission without reading admitted leaf content. */
+/** 🔏️ Enumerates source admission without reading admitted leaf content. */
 export function inventoryTaxonomySources(options: TaxonomySourceInventoryOptions): TaxonomySourceInventory {
   const prepared = sourceAdmissionPrepareOptions(options);
   const taxonomy = loadTaxonomy({ repoRoot: prepared.repoRoot, taxonomyPath: prepared.taxonomyPath });

@@ -17,7 +17,7 @@ type Outcome={status:"ok";value:unknown}|{status:"refused";message:string};
 const fixtureSchema={type:"object",additionalProperties:false,required:["version","entry","roots","files","late","cases","drift"],properties:{version:{const:1},entry:{type:"string"},roots:{type:"object",additionalProperties:{type:"array",items:{type:"string"}}},files:{type:"object",additionalProperties:{type:"string"}},late:{type:"object",additionalProperties:{type:"string"}},drift:{type:"object",additionalProperties:false,required:["file","text","code"],properties:{file:{type:"string"},text:{type:"string"},code:{enum:Object.keys(closureRefusalMessagesV1)}}},cases:{type:"array",minItems:1,items:{type:"object",additionalProperties:false,required:["name","expression","outcome"],properties:{name:{type:"string",minLength:1},expression:{type:"string",minLength:1},outcome:{enum:["ok","refused"]},value:{},code:{enum:Object.keys(closureRefusalMessagesV1)}}}}}};
 const prefix=(code:string,language:"en"|"de")=>(closureRefusalMessagesV1 as Record<string,Record<string,{refusal:string}>>)[code]![language]!.refusal.split("{")[0]!;
 
-/** 🧪️ Runs the captured entry of the fixture workspace through the real stream loader. */
+/** ▶️ Runs the captured entry of the fixture workspace through the real stream loader. */
 async function runLoaderV1(workspace:string,text:string,sha:string,language:string):Promise<Record<string,Outcome>|string>{
  const child=spawn(process.execPath,["--eval",buildSourceClosureStreamLoaderV1,"--",sha],{cwd:workspace,stdio:["ignore","pipe","pipe","pipe"],env:{...process.env,SEMIO_LANGUAGE:language}});let out="",err="";child.stdout!.on("data",data=>out+=data);child.stderr!.on("data",data=>err+=data);(child.stdio[3] as NodeJS.WritableStream).end(text);
  await new Promise(resolve=>child.on("close",resolve));const line=out.split("\n").find(row=>row.startsWith("RESULT "));return line?JSON.parse(line.slice(7)):err;
@@ -51,7 +51,7 @@ ${fixture.cases.map(row=>` await t(${JSON.stringify(row.name)},async()=>(${row.e
  }finally{rmSync(area,{recursive:true,force:true});}
 },120000);
 
-/** 🧪️ The pinned system Node loader accepts the same derived installed-package targets and loads them natively. */
+/** 📦️ The pinned system Node loader accepts the same derived installed-package targets and loads them natively. */
 test("the Node loader serves installed package targets",async()=>{
  const node=Bun.which("node");if(!node)return;
  const area=mkdtempSync(join(realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"cn-")),put=(path:string,text:string)=>{mkdirSync(dirname(join(area,path)),{recursive:true});writeFileSync(join(area,path),text);};

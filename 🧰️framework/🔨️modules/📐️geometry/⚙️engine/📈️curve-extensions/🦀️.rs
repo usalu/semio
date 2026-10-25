@@ -56,7 +56,7 @@ pub fn cubic_nearest_t(point: Point, c: CubicBez, segments: usize) -> f64 {
     best_t
 }
 
-/// ✂️ Intersection point of two line segments, if any (parametric line-line solve).
+/// 📍️ Intersection point of two line segments, if any (parametric line-line solve).
 pub fn segment_intersection(a0: Point, a1: Point, b0: Point, b1: Point) -> Option<Point> {
     let (x1, y1, x2, y2) = (a0.x(), a0.y(), a1.x(), a1.y());
     let (x3, y3, x4, y4) = (b0.x(), b0.y(), b1.x(), b1.y());

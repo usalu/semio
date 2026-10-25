@@ -1,8 +1,9 @@
 // #region flex
 //! 📏️ The production flex/grid layout engine for the retained tree (`tree`/`reconcile`), driven one
-//! bounded step at a time by `mounted_layout::MountedLayoutJob`. Taffy's own types (`taffy::TaffyTree`,
-//! `taffy::NodeId`, `taffy::Style`, …) are fully wrapped by [`FlexTree`] and never appear in any item
-//! visible outside this file — [`FlexRect`]/[`MeasureConstraint`] are this crate's own vocabulary.
+//! bounded step at a time by `mounted_layout::MountedLayoutJob`. Every container shape — single-line flex, wrapped
+//! flex and grid — is solved by [`FlexTree`]'s own allocation-free arithmetic, so the shipped engine owns no
+//! third-party layout value: [`FlexRect`]/[`MeasureConstraint`] are this crate's own vocabulary and taffy only
+//! judges the solvers in `🧪️tests`.
 //!
 //! **Two layout dialects meet here, and the difference is deliberate.** A node whose `LayoutSpec`
 //! was AUTHORED (a `UiNodeRecord` carrying `record.layout`, the same value React's `layoutSpecStyle`
@@ -36,9 +37,7 @@ use flow_style::{flow_for, tree_content_flow};
 
 #[path = "🎨️style-mapping-and-chrome-metrics/🦀️.rs"]
 mod style_mapping_and_chrome_metrics;
-#[cfg(test)]
-use style_mapping_and_chrome_metrics::align_items;
-use style_mapping_and_chrome_metrics::{grows_children, taffy_style};
+use style_mapping_and_chrome_metrics::grows_children;
 pub use style_mapping_and_chrome_metrics::{
     field_chrome_metrics, section_chrome_metrics, ChromeBand, SectionFieldChromeMetrics,
     FIELD_DETAIL_FONT_SIZE, FIELD_LABEL_FONT_SIZE, FIELD_LABEL_LINE_HEIGHT, SECTION_TITLE_BODY_GAP,
@@ -47,7 +46,13 @@ pub use style_mapping_and_chrome_metrics::{
 
 #[path = "🧮️flex-tree/🦀️.rs"]
 mod flex_tree;
-pub use flex_tree::FlexTree;
+pub use flex_tree::{FlexTree, NodeFunding};
+
+/// 🎟️ Node credits of one layout pass: every node table is a paged list of exactly this many rows.
+pub const FLEX_NODE_CREDITS: usize = 4_096;
+
+/// 🔲️ Track credits of one grid sizing step: the explicit columns (at most [`ui_contract::UI_GRID_TRACKS`]) plus every implicit or explicit row a full node table can fill.
+pub const FLEX_TRACK_CREDITS: usize = FLEX_NODE_CREDITS + ui_contract::UI_GRID_TRACKS;
 
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️targets-wgpu-flex-unit/🦀️.rs"]

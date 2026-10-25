@@ -3,8 +3,10 @@ import { join } from "node:path";
 import { authoredPackageExportAuthority } from "./🏗️construction/🟦️.ts";
 import { bunRepositoryMembership } from "../../🗂️workspaces/🟦️bun/🟦️.ts";
 import type { DependencyPolicySnapshot } from "./🚀️bootstrap/🟦️.ts";
+import { refuseDirectionV1 } from "./📖️texts/🟦️.ts";
 
-export type DependencyDirectionRule = Readonly<{ name: string; severity: string; from: { path: readonly string[]; pathNot?: readonly string[] }; to: { path: readonly string[]; pathNot?: readonly string[] } }>;
+/** 🧭️ One enforced path rule: an absent selector path is normalized to the empty pattern that matches every path; `dependencyTypes`, `dependencyTypesNot` and `circular` constrain the dependency itself, with the semantics of the resolver's own rule matching. */
+export type DependencyDirectionRule = Readonly<{ name: string; severity: string; from: { path: readonly string[]; pathNot?: readonly string[] }; to: { path: readonly string[]; pathNot?: readonly string[]; dependencyTypes?: readonly string[]; dependencyTypesNot?: readonly string[]; circular?: boolean } }>;
 export type DependencyDirectionEdge = Readonly<{ rule: string; from: string; to: string }>;
 export type DependencyDirectionGraphScope = Readonly<{ workspaceRoots: readonly string[]; workspacePackages: readonly Readonly<{ name: string; owner: string; sourceOwner:string; exports: readonly string[]; exportTargets:readonly Readonly<{subpath:string;target:string|null}>[] }>[]; excludedPaths: readonly string[]; nonFollowedPaths: readonly string[]; expectedSources: readonly string[] }>;
 
@@ -19,23 +21,41 @@ export const dependencyDirectionPathMatches = (patterns: readonly string[], path
 const terminalPath = (scope: DependencyDirectionGraphScope, path: string): boolean => dependencyDirectionPathMatches([...scope.excludedPaths, ...scope.nonFollowedPaths], path);
 const workspacePath = (scope: DependencyDirectionGraphScope, path: string): boolean => scope.workspaceRoots.some((root) => path === root || path.startsWith(`${root}/`));
 
-/** 🧾️ Admits the exact path-rule subset shared by the resolver and independent graph verifier. */
+/** 🧾️ Admits the exact rule subset shared by the resolver and the independent graph verifier: path selectors, dependency types and the circular flag, nothing else. */
 function strictRule(value: unknown): DependencyDirectionRule {
   const record=(value:unknown):Record<string,unknown>=>{if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Dependency direction requires exact strict rule authority");return value as Record<string,unknown>;};
   const rule=record(value);
   if(typeof rule.name!=="string"||!rule.name||Object.keys(rule).some(key=>!["name","severity","comment","scope","from","to"].includes(key))||rule.severity!=="error"||rule.scope!==undefined&&rule.scope!=="module"||rule.comment!==undefined&&typeof rule.comment!=="string")throw Error("Dependency direction requires exact strict rule authority");
-  const selector=(value:unknown):DependencyDirectionRule["from"]=>{
-    const selected=record(value);
-    if(Object.keys(selected).some(key=>key!=="path"&&key!=="pathNot"))throw Error("Dependency direction cannot enforce undeclared rule selectors");
-    const patterns=(value:unknown,empty=false):readonly string[]=>{
-      const paths=typeof value==="string"?[value]:value;
-      if(!Array.isArray(paths)||!empty&&!paths.length||paths.some(path=>typeof path!=="string"))throw Error("Dependency direction requires readable rule paths");
-      for(const path of paths)try{new RegExp(path,"u");}catch{throw Error("Dependency direction requires valid rule path patterns");}
-      return paths;
-    };
-    return {path:patterns(selected.path),...(Object.hasOwn(selected,"pathNot")?{pathNot:patterns(selected.pathNot,true)}:{})};
+  const patterns=(value:unknown,empty=false):readonly string[]=>{
+    const paths=typeof value==="string"?[value]:value;
+    if(!Array.isArray(paths)||!empty&&!paths.length||paths.some(path=>typeof path!=="string"))throw Error("Dependency direction requires readable rule paths");
+    for(const path of paths)try{new RegExp(path,"u");}catch{throw Error("Dependency direction requires valid rule path patterns");}
+    return paths;
   };
-  return {name:rule.name,severity:"error",from:selector(rule.from),to:selector(rule.to)};
+  const types=(value:unknown):readonly string[]=>{if(!Array.isArray(value)||!value.length||value.some(type=>typeof type!=="string"||!type))throw refuseDirectionV1("invalid","rule.dependency-types-readable");return value;};
+  const selector=(value:unknown,allowed:readonly string[]):Record<string,unknown>=>{
+    const selected=record(value);
+    if(Object.keys(selected).some(key=>!allowed.includes(key)))throw Error("Dependency direction cannot enforce undeclared rule selectors");
+    return selected;
+  };
+  const from=selector(rule.from,["path","pathNot"]),to=selector(rule.to,["path","pathNot","dependencyTypes","dependencyTypesNot","circular"]);
+  if(!Object.keys(from).length&&!Object.keys(to).length)throw refuseDirectionV1("invalid","rule.selects-nothing");
+  if(Object.hasOwn(to,"circular")&&typeof to.circular!=="boolean")throw refuseDirectionV1("invalid","rule.circular-boolean");
+  return {name:rule.name,severity:"error",
+    from:{path:Object.hasOwn(from,"path")?patterns(from.path):[""],...(Object.hasOwn(from,"pathNot")?{pathNot:patterns(from.pathNot,true)}:{})},
+    to:{path:Object.hasOwn(to,"path")?patterns(to.path):[""],...(Object.hasOwn(to,"pathNot")?{pathNot:patterns(to.pathNot,true)}:{}),...(Object.hasOwn(to,"dependencyTypes")?{dependencyTypes:types(to.dependencyTypes)}:{}),...(Object.hasOwn(to,"dependencyTypesNot")?{dependencyTypesNot:types(to.dependencyTypesNot)}:{}),...(Object.hasOwn(to,"circular")?{circular:to.circular as boolean}:{})}};
+}
+
+/** 🪪️ Admits one authored rule or refuses it; the one place that defines which selectors the independent verifier can enforce. */
+export function dependencyDirectionRule(value: unknown): DependencyDirectionRule {
+  return strictRule(value);
+}
+
+/** 📤️ Renders enforced rules in the resolver's own configuration dialect: a selector path that selects every path is omitted again. */
+export function dependencyDirectionResolverRules(rules: readonly DependencyDirectionRule[]): readonly Record<string, unknown>[] {
+  const open = (path: readonly string[]): boolean => path.length === 1 && path[0] === "";
+  const selector = (value: DependencyDirectionRule["from"] | DependencyDirectionRule["to"]): Record<string, unknown> => ({ ...(open(value.path) ? {} : { path: value.path }), ...Object.fromEntries(Object.entries(value).filter(([key]) => key !== "path")) });
+  return rules.map((rule) => ({ name: rule.name, severity: rule.severity, from: selector(rule.from), to: selector(rule.to) }));
 }
 
 /** 🧮️ Selects complete mandatory semantic authority before any graph is inspected. */
@@ -43,7 +63,7 @@ function selectedStrictRules(snapshot: Pick<DependencyPolicySnapshot,"taxonomy"|
   const {taxonomy,plugins,policy}=snapshot;
   if(new Set(plugins).size!==plugins.length||plugins.some(plugin=>typeof plugin!=="string"||!plugin))throw Error("Dependency direction requires distinct present plugin owners");
   const names=new Set(["framework-no-implementation","repo-no-implementation","s-modules-no-plugins",...(publicApi?["plugins-framework-sdk-only"]:[]),...Object.keys(taxonomy.dependencyDirections.rules),...plugins.flatMap(from=>plugins.filter(to=>to!==from).map(to=>`no-cross-plugin-${from}-to-${to}`))]);
-  const rules=policy.forbidden.filter(rule=>names.has(rule.name)||publicApi&&rule.name.startsWith(taxonomy.dependencyDirections.publicApi.rulePrefix)||rule.name.startsWith("plugin-no-extension-or-artifact-")).map(strictRule);
+  const rules=policy.forbidden.filter(rule=>publicApi?rule.severity==="error":names.has(rule.name)||rule.name.startsWith("plugin-no-extension-or-artifact-")).map(strictRule);
   const present=new Set(rules.map(rule=>rule.name));
   if(rules.length!==present.size||[...names].some(name=>!present.has(name)))throw Error("Canonical architecture is missing or repeats a declared strict rule");
   return rules;
@@ -107,6 +127,11 @@ export function dependencyDirectionWorkspacePackages(root: string, excludedPaths
   });
 }
 
+/** 🔗️ Whether a symbolic link leads to a directory; a link whose target is gone leads nowhere and holds no source. */
+function linkedDirectory(path: string): boolean {
+  try { return statSync(path).isDirectory(); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return false; throw error; }
+}
+
 /** 🗂️ Inventories every followed TypeScript/JavaScript root independently of resolver graph output. */
 export function dependencyDirectionSourceInventory(root: string, roots: readonly string[], scope: DependencyDirectionGraphScope): readonly string[] {
   validateScope(scope);
@@ -118,7 +143,7 @@ export function dependencyDirectionSourceInventory(root: string, roots: readonly
       const child = `${path}/${entry.name}`;
       if (terminalPath(scope, child)) continue;
       if (entry.isSymbolicLink()) {
-        if (sourceExtension.test(child) || statSync(join(root, child)).isDirectory()) throw new Error(`Dependency direction cannot inventory a linked source: ${child}`);
+        if (sourceExtension.test(child) || linkedDirectory(join(root, child))) throw new Error(`Dependency direction cannot inventory a linked source: ${child}`);
         continue;
       }
       if (entry.isDirectory()) walk(child);
@@ -158,12 +183,12 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
   const authority = (value: unknown): string => {
     const rule = strictRule(value);
     const selector=(value:DependencyDirectionRule["from"]):readonly (string|null)[]=>[value.path.join("|"),value.pathNot?.join("|")??null];
-    return JSON.stringify([rule.name,rule.severity,selector(rule.from),selector(rule.to)]);
+    return JSON.stringify([rule.name,rule.severity,selector(rule.from),selector(rule.to),rule.to.dependencyTypes?.join("|")??null,rule.to.dependencyTypesNot?.join("|")??null,rule.to.circular??null]);
   };
   const usedRules = array(record(summary.ruleSetUsed).forbidden).map(authority).sort();
   if (JSON.stringify(usedRules) !== JSON.stringify(rules.map(authority).sort())) throw new Error("Dependency direction graph used different authored rule authority");
   if (!modules.length || summary.totalCruised !== modules.length) throw new Error("Dependency direction graph is empty or incomplete");
-  const edges: DependencyDirectionEdge[] = [], problems: string[] = [], sources = new Map<string, string>();
+  const edges: DependencyDirectionEdge[] = [], problems: string[] = [], sources = new Map<string, string>(), typed = rules.some((rule) => rule.to.dependencyTypes !== undefined || rule.to.dependencyTypesNot !== undefined), builtOutputs = new WeakSet<object>(), inventoried = new Set(scope.expectedSources), cycleEdges = new Map<string, DependencyDirectionEdge[]>(rules.filter((rule) => rule.to.circular === true).map((rule) => [rule.name, []]));
   let dependencyCount = 0;
   for (const value of modules) {
     const module = record(value), from = text(module.source), dependencies = array(module.dependencies);
@@ -174,9 +199,9 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
     const applicable = rules.filter((rule) => matches(rule.from.path, from) && !matches(rule.from.pathNot ?? [], from));
     for (const value of dependencies) {
       const dependency = record(value), to = text(dependency.resolved);
-      const specifier = text(dependency.module), pkg = scope.workspacePackages.find((pkg) => specifier === pkg.name || specifier.startsWith(`${pkg.name}/`));
+      const specifier = text(dependency.module), bare = specifier.replace(/[?#].*$/u, ""), pkg = scope.workspacePackages.find((pkg) => bare === pkg.name || bare.startsWith(`${pkg.name}/`));
       if (pkg) {
-        const subpath = specifier === pkg.name ? "." : `.${specifier.slice(pkg.name.length)}`;
+        const subpath = bare === pkg.name ? "." : `.${bare.slice(pkg.name.length)}`;
         if (subpath !== "." && subpath.slice(2).split(/[\\/]/u).some((segment) => !segment || segment === "." || segment === "..")) throw new Error(`Dependency direction graph uses an invalid authored package subpath: ${from} → ${specifier}`);
         const exported = pkg.exports.some((path) => new RegExp(`^${path.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`, "u").test(subpath));
         if (!exported) problems.push(`Dependency direction graph uses an undeclared authored package export: ${from} → ${specifier}`);
@@ -186,11 +211,20 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
         }).sort((a,b)=>b.rank-a.rank || b.subpath.length-a.subpath.length);
         const chosen=candidates.filter(row=>row.subpath===candidates[0]?.subpath);
         const installedTarget=to.includes("/node_modules/")?to.slice(to.lastIndexOf("/node_modules/")+1):to;
-        if (!chosen.some(row=>{if(row.target===null)return false;const target=row.target.slice(2).replaceAll("*",row.capture);return to===`${pkg.owner}/${target}` || installedTarget===`node_modules/${pkg.name}/${target}`;})) problems.push(`Dependency direction graph resolves an authored package export to a different target: ${from} → ${specifier} → ${to}`);
+        const exportPaths=chosen.flatMap(row=>row.target===null?[]:[`${pkg.owner}/${row.target.slice(2).replaceAll("*",row.capture)}`]);
+        const builtOutput=dependency.couldNotResolve===true&&chosen.length>0&&exportPaths.length===chosen.length&&(specifier!==bare||exportPaths.some(path=>terminalPath(scope,path)))&&exportPaths.every(path=>terminalPath(scope,path)||/\.d\.[cm]?ts$/u.test(path)||specifier!==bare&&inventoried.has(path));
+        if (builtOutput) builtOutputs.add(dependency);
+        else if (!chosen.some(row=>{if(row.target===null)return false;const target=row.target.slice(2).replaceAll("*",row.capture);return to===`${pkg.owner}/${target}` || installedTarget===`node_modules/${pkg.name}/${target}`;})) problems.push(`Dependency direction graph resolves an authored package export to a different target: ${from} → ${specifier} → ${to}`);
 
       }
       const installed = to.split("/").lastIndexOf("node_modules"), ownership = installed < 0 ? to : to.split("/").slice(installed).join("/");
-      for (const rule of applicable) if (!matches(rule.to.pathNot ?? [], to) && (matches(rule.to.path, ownership) || (pkg && (matches(rule.to.path, specifier) || matches(rule.to.path, `${pkg.owner}/`))))) edges.push({ rule: rule.name, from, to });
+      const kinds = dependency.dependencyTypes;
+      if (typed && (!Array.isArray(kinds) || kinds.some((kind) => typeof kind !== "string"))) throw refuseDirectionV1("invalid","graph.dependency-types-required",{from,specifier});
+      const typesOf = (kinds ?? []) as readonly string[];
+      for (const rule of applicable) if (!matches(rule.to.pathNot ?? [], to) && (matches(rule.to.path, ownership) || (pkg && dependency.couldNotResolve === true && (matches(rule.to.path, specifier) || matches(rule.to.path, `${pkg.owner}/`))))
+        && (rule.to.dependencyTypes === undefined || rule.to.dependencyTypes.some((kind) => typesOf.includes(kind)))
+        && (rule.to.dependencyTypesNot === undefined || !rule.to.dependencyTypesNot.some((kind) => typesOf.includes(kind)))
+        && (rule.to.circular === undefined || (dependency.circular === true) === rule.to.circular)) (rule.to.circular === true ? cycleEdges.get(rule.name)! : edges).push({ rule: rule.name, from, to });
     }
   }
   if (summary.totalDependenciesCruised !== dependencyCount) throw new Error("Dependency direction graph omits framework sources or dependencies");
@@ -204,12 +238,27 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
       const specifier = text(dependency.module);
       const authored = scope.workspacePackages.some((pkg) => specifier === pkg.name || specifier.startsWith(`${pkg.name}/`)) || specifier.startsWith("@semio-tech/");
       const local = /^(?:\.{1,2}(?:\/|$)|\/|[A-Za-z]:[\\/])/u.test(specifier) || workspacePath(scope, target);
-      if (dependency.couldNotResolve === true && (local || authored)) problems.push(`Dependency direction graph has an unresolved workspace dependency: ${module.source} → ${specifier}`);
+      if (dependency.couldNotResolve === true && (local || authored) && !builtOutputs.has(dependency)) problems.push(`Dependency direction graph has an unresolved workspace dependency: ${module.source} → ${specifier}`);
       if (workspacePath(scope, target) && (sourceExtension.test(target) || dependency.followable === true) && !sources.has(target)) problems.push(`Dependency direction graph omits followed workspace source: ${module.source} → ${target}`);
     }
   }
   if (problems.length) throw new Error([...new Set(problems)].join("\n"));
   const key = (edge: DependencyDirectionEdge): string => JSON.stringify([edge.rule, edge.from, edge.to]);
+  for (const [rule, candidates] of cycleEdges) {
+    const found = new Set(candidates.map((edge) => `${edge.from}\0${edge.to}`)), covered = new Set<string>(), representatives: DependencyDirectionEdge[] = [];
+    for (const value of array(summary.violations)) {
+      const violation = record(value);
+      if (text(record(violation.rule).name) !== rule) continue;
+      const from = text(violation.from), to = text(violation.to), cycle = array(violation.cycle).map((member) => text(record(member).name));
+      if (!found.has(`${from}\0${to}`) || !cycle.length || cycle[0] !== to || cycle.at(-1) !== from) throw refuseDirectionV1("failed","graph.cycle-not-in-source",{rule,from,to});
+      covered.add(`${from}\0${to}`);
+      for (let index = 0; index + 1 < cycle.length; index++) covered.add(`${cycle[index]}\0${cycle[index + 1]}`);
+      representatives.push({ rule, from, to });
+    }
+    const uncovered = [...found].filter((edge) => !covered.has(edge));
+    if (uncovered.length) throw refuseDirectionV1("failed","graph.cycle-uncovered",{rule,edges:uncovered.map((edge) => edge.replace("\0", " → ")).join(", ")});
+    edges.push(...representatives);
+  }
   const actual = [...new Set(edges.map(key))].sort();
   const reported = [...new Set(array(summary.violations).map((value) => {
     const violation = record(value);
@@ -217,6 +266,9 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
     if (!names.includes(rule)) throw new Error("Dependency direction graph reports a different policy");
     return key({ rule, from: text(violation.from), to: text(violation.to) });
   }))].sort();
-  if (JSON.stringify(actual) !== JSON.stringify(reported) || summary.error !== reported.length) throw new Error("Dependency direction resolver verdict disagrees with the source graph");
+  if (JSON.stringify(actual) !== JSON.stringify(reported) || summary.error !== reported.length) {
+    const only = (left: readonly string[], right: readonly string[]): string => { const known = new Set(right), rows = left.filter((row) => !known.has(row)); return `${rows.length}${rows.length ? ` e.g. ${rows.slice(0, 3).join(" ")}` : ""}`; };
+    throw new Error(`Dependency direction resolver verdict disagrees with the source graph: only in the verifier ${only(actual, reported)}; only in the resolver ${only(reported, actual)}; resolver error count ${String(summary.error)} for ${reported.length} distinct edges`);
+  }
   return actual.map((value) => { const [rule, from, to] = JSON.parse(value) as [string, string, string]; return { rule, from, to }; });
 }

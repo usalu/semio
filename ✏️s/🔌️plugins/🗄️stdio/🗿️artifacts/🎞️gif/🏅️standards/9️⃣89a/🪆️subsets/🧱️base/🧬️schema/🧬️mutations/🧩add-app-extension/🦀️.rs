@@ -9,9 +9,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "add-app-extension")]
 pub struct AddAppExtension {
-    pub(crate) index: usize,
+    pub index: usize,
     #[dsl(block)]
-    pub(crate) extension: GifAppExtension,
+    pub extension: GifAppExtension,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for AddAppExtension {

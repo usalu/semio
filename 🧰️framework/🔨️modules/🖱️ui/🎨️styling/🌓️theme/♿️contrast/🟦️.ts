@@ -16,22 +16,22 @@ export function relativeLuminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/** 🌓️ WCAG 2.2 minimum contrast for normal body text (1.4.3 Contrast Minimum, level AA). */
+/** 📖️ WCAG 2.2 minimum contrast for normal body text (1.4.3 Contrast Minimum, level AA). */
 export const WCAG_AA_CONTRAST = 4.5;
 
-/** 🌓️ WCAG 2.2 minimum contrast for large text (≥18.66 px bold or ≥24 px) and for non-text UI
+/** 🔠️ WCAG 2.2 minimum contrast for large text (≥18.66 px bold or ≥24 px) and for non-text UI
  * components and graphical objects (1.4.11), level AA. */
 export const WCAG_AA_LARGE_CONTRAST = 3;
 
-/** 🌓️ WCAG 2.2 enhanced contrast for normal body text (1.4.6, level AAA). */
+/** 🔬️ WCAG 2.2 enhanced contrast for normal body text (1.4.6, level AAA). */
 export const WCAG_AAA_CONTRAST = 7;
 
-/** 🌓️ How a measured contrast ratio grades against WCAG 2.2 — `"fail"` is below the large-text/UI
+/** 🏅️ How a measured contrast ratio grades against WCAG 2.2 — `"fail"` is below the large-text/UI
  * floor, so it is unreadable at ANY size. */
 export type WcagContrastGrade = "aaa" | "aa" | "aaLarge" | "fail";
 
 /**
- * 🌓️ The WCAG 2.2 contrast ratio between two resolved `#rrggbb` colors: `(L₁ + 0.05) / (L₂ + 0.05)`
+ * ➗️ The WCAG 2.2 contrast ratio between two resolved `#rrggbb` colors: `(L₁ + 0.05) / (L₂ + 0.05)`
  * with `L₁` the lighter relative luminance. Always ≥ 1 and ≤ 21, and symmetric in its arguments.
  *
  * @see {@link https://www.w3.org/TR/WCAG22/#dfn-contrast-ratio | WCAG 2.2 — contrast ratio}
@@ -44,7 +44,7 @@ export function contrastRatio(a: string, b: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-/** 🌓️ {@link contrastRatio} for two resolved RGBA8888 paints, ignoring alpha (a ratio is only defined
+/** 🖌️ {@link contrastRatio} for two resolved RGBA8888 paints, ignoring alpha (a ratio is only defined
  * for the colors that actually land on the pixel; a translucent paint's real contrast depends on what is
  * behind it, which a token table cannot know). */
 export function contrastRatioRgba(a: Rgba8, b: Rgba8): number {
@@ -52,7 +52,7 @@ export function contrastRatioRgba(a: Rgba8, b: Rgba8): number {
   return contrastRatio(hex(a), hex(b));
 }
 
-/** 🌓️ Grades a ratio against the three WCAG thresholds. The bands are inclusive at each floor, matching
+/** ⚖️ Grades a ratio against the three WCAG thresholds. The bands are inclusive at each floor, matching
  * the spec's "at least" wording. */
 export function wcagContrastGrade(ratio: number): WcagContrastGrade {
   if (!Number.isFinite(ratio)) return "fail";
@@ -62,7 +62,7 @@ export function wcagContrastGrade(ratio: number): WcagContrastGrade {
   return "fail";
 }
 
-/** 🌓️ One live contrast verdict for a theme-editor row: the ratio a user's custom paint reaches against
+/** ✏️ One live contrast verdict for a theme-editor row: the ratio a user's custom paint reaches against
  * its own appearance foreground, rounded to the 0.01 the UI prints, and whether it clears body-text AA.
  * `🎨️styling/🧪️tests/🧪️levels-oklabmix/🟦️.ts` asserts the GENERATED palette clears the same bar; this is
  * the same law applied live to a palette the generator never saw. */
@@ -71,11 +71,11 @@ export function themePaintContrast(paint: Rgba8, foreground: Rgba8): { readonly 
   return { ratio, grade: wcagContrastGrade(ratio), passesBodyText: ratio >= WCAG_AA_CONTRAST };
 }
 
-/** 🌓️ One text-on-surface pair of the `chrome` appearance palette that WCAG 2.2 1.4.3 governs. */
+/** 🥢️ One text-on-surface pair of the `chrome` appearance palette that WCAG 2.2 1.4.3 governs. */
 export type ThemeContrastPair = { readonly text: string; readonly surface: string };
 
 /**
- * 🌓️ The `chrome` palette's text-on-surface pairs — the ONLY pairs a contrast verdict is meaningful for.
+ * 📋️ The `chrome` palette's text-on-surface pairs — the ONLY pairs a contrast verdict is meaningful for.
  * Measuring every paint against `foreground` (the first cut of this check) compared text with text
  * (`activeForeground` vs `foreground` = 1:1) and borders with text, so an untouched theme raised warnings
  * that meant nothing. Borders are non-text decoration and are not paired. `foreground` rides every neutral
@@ -94,7 +94,7 @@ export const THEME_CHROME_CONTRAST_PAIRS: readonly ThemeContrastPair[] = [
   { text: "activeForeground", surface: "activeHover" },
 ];
 
-/** 🌓️ Every {@link THEME_CHROME_CONTRAST_PAIRS} pair `paintKey` takes part in (as text OR surface), measured
+/** 🔎️ Every {@link THEME_CHROME_CONTRAST_PAIRS} pair `paintKey` takes part in (as text OR surface), measured
  * on `palette`, worst ratio first — so editing EITHER side of a pair surfaces the verdict on the row being
  * edited. Pairs whose other paint the palette lacks are skipped; a paint in no pair answers `[]`. */
 export function themePaintContrastPairs(palette: Readonly<Record<string, Rgba8>>, paintKey: string): readonly (ThemeContrastPair & { readonly counterpart: string; readonly ratio: number; readonly grade: WcagContrastGrade; readonly passesBodyText: boolean })[] {

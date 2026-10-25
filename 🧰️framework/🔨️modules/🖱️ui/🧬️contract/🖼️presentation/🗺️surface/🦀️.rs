@@ -138,7 +138,7 @@ pub struct SurfaceDoc {
     pub bytes: crate::UiFixedBytes,
 }
 
-/// 🗺️ An embedded product surface. Replaces the old `UiComponentSceneNode`'s 15 sparse
+/// 🛍️ An embedded product surface. Replaces the old `UiComponentSceneNode`'s 15 sparse
 /// `Option<XxxScene>` fields with exactly ONE payload, identified by `doc_schema` — the 15 product
 /// scene structs themselves stay product payloads and move to `🖱️ui/🎬️scene/🦀️.rs` in a
 /// later packet, never into this dependency-free contract crate. See this file's own module doc for
@@ -189,15 +189,15 @@ pub struct SurfaceSchema<'a> {
 pub enum SurfaceSchemaFault {
     /// 🕳️ `doc_schema` was the empty string.
     Empty,
-    /// 🔗️ No `@` separator — the string is not `"<kind>@<version>"` shaped at all.
+    /// ✂️ No `@` separator — the string is not `"<kind>@<version>"` shaped at all.
     MissingVersionSeparator,
-    /// 🏷️ An `@` was found but the kind half in front of it was empty.
+    /// 🪫️ An `@` was found but the kind half in front of it was empty.
     EmptyKind,
     /// 🔢️ The version half after `@` did not parse as a `u32`.
     InvalidVersion,
 }
 
-/// 🧩️ Splits `doc_schema` into a [`SurfaceSchema`], or a [`SurfaceSchemaFault`] describing exactly why
+/// 🔪️ Splits `doc_schema` into a [`SurfaceSchema`], or a [`SurfaceSchemaFault`] describing exactly why
 /// it could not — never panics on any input, including empty strings, strings with no `@`, or a
 /// non-numeric version half. This crate calls this function nowhere itself (validation never rejects on
 /// `doc_schema` content — see this file's own module doc); it exists for renderers to call so their own

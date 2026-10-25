@@ -33,7 +33,7 @@ pub fn plan(p: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<GltfDiff,
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_scene::CreateSceneMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_default_scene::BindDefaultSceneMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -80,7 +80,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for DeleteSceneMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<DeleteSceneMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<DeleteSceneMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::create_scene::CreateSceneMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_default_scene::BindDefaultSceneMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

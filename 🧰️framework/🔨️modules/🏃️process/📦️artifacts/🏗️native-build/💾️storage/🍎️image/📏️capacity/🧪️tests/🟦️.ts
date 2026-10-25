@@ -1,7 +1,7 @@
 import{test,expect}from"bun:test";
+import{testScratchRootV1}from"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
 import{spawnSync}from"node:child_process";
 import{mkdirSync,mkdtempSync,realpathSync,rmSync}from"node:fs";
-import{tmpdir}from"node:os";
 import{join}from"node:path";
 import fixture from"./🔣️.json"with{type:"json"};
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
@@ -20,7 +20,7 @@ test("a 63 MiB lease-sized image keeps 63.14 MB usable instead of the nominal 66
  expect(nativeImageUsableBytesV1(66060288)).toBeLessThan(66060288-2000000);
 });
 test.skipIf(process.platform!=="darwin")("the model agrees with statvfs and the used bytes of real seeded images of three sizes",()=>{
- const scratch=realpathSync(mkdtempSync(join(process.env.TMPDIR||tmpdir(),"capacity-"))),attached:string[]=[],seed=createNativeImageVolumeSilenceSeedV1();
+ const scratch=realpathSync(mkdtempSync(join(testScratchRootV1("image-tests"),"capacity-"))),attached:string[]=[],seed=createNativeImageVolumeSilenceSeedV1();
  try{
   for(const megabytes of[32,63,128]){
    const imageBytes=megabytes*1048576,image=join(scratch,megabytes+".dmg"),mount=join(scratch,"m"+megabytes);mkdirSync(mount);

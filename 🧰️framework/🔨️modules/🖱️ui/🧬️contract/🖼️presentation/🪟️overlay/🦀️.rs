@@ -44,7 +44,7 @@ impl OverlaySide {
         }
     }
 
-    /// 🧭️ React's `transformOrigin` for the settled side (`🗨️Popover/🟦️.tsx:257`) — what an arrow or
+    /// 🌱️ React's `transformOrigin` for the settled side (`🗨️Popover/🟦️.tsx:257`) — what an arrow or
     /// a scale-in animation points at.
     pub const fn transform_origin(self) -> &'static str {
         match self {
@@ -97,7 +97,7 @@ impl Default for AnchoredPlacement {
     }
 }
 
-/// 📐️ How an overlay's resolved position is computed from its anchor.
+/// 📍️ How an overlay's resolved position is computed from its anchor.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum OverlayPlacement {
     /// ⚓️ React's anchored positioner: main-axis flip plus viewport clamp.
@@ -112,7 +112,7 @@ impl Default for OverlayPlacement {
     }
 }
 
-/// 📐️ What [`resolve_anchored_placement`] answers: the origin plus the side actually used after a
+/// 🔎️ What [`resolve_anchored_placement`] answers: the origin plus the side actually used after a
 /// collision flip, so a caller can point an arrow the same way React's `transformOrigin` does.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ResolvedOverlayPlacement {
@@ -121,7 +121,7 @@ pub struct ResolvedOverlayPlacement {
     pub y: f32,
 }
 
-/// 📐️ An anchor rectangle in the same logical pixels the viewport is measured in. Its own type
+/// 📌️ An anchor rectangle in the same logical pixels the viewport is measured in. Its own type
 /// rather than any target's `Rect`, so this module stays renderer-neutral.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct OverlayRect {
@@ -136,14 +136,14 @@ impl OverlayRect {
         Self { x, y, width, height }
     }
 
-    /// ⚓️ The degenerate rect a POINT anchor (a right-click position, a pointer-anchored tooltip)
+    /// 🖱️ The degenerate rect a POINT anchor (a right-click position, a pointer-anchored tooltip)
     /// stands for.
     pub const fn point(x: f32, y: f32) -> Self {
         Self { x, y, width: 0.0, height: 0.0 }
     }
 }
 
-/// 📐️ React's `resolvePopoverPlacement`, field for field: align the cross axis, place on the
+/// 🧷️ React's `resolvePopoverPlacement`, field for field: align the cross axis, place on the
 /// requested side, flip to the opposite side when the main axis overflows *and* the flip does not,
 /// then clamp both axes inside `collision_padding`.
 ///
@@ -201,7 +201,7 @@ pub fn resolve_anchored_placement(anchor: OverlayRect, content_size: (f32, f32),
     ResolvedOverlayPlacement { side: resolved_side, x: point.0, y: point.1 }
 }
 
-/// 🎯️ The centered placement a modal surface resolves to — no anchor, and no flow direction (a
+/// 🔆️ The centered placement a modal surface resolves to — no anchor, and no flow direction (a
 /// scrim's centre is direction-invariant).
 pub fn resolve_centered_placement(content_size: (f32, f32), viewport: (f32, f32)) -> ResolvedOverlayPlacement {
     let (content_w, content_h) = content_size;
@@ -209,7 +209,7 @@ pub fn resolve_centered_placement(content_size: (f32, f32), viewport: (f32, f32)
     ResolvedOverlayPlacement { side: OverlaySide::Bottom, x: ((viewport_w - content_w) / 2.0).max(0.0), y: ((viewport_h - content_h) / 2.0).max(0.0) }
 }
 
-/// 📐️ [`resolve_anchored_placement`]/[`resolve_centered_placement`] behind the one
+/// 🧲️ [`resolve_anchored_placement`]/[`resolve_centered_placement`] behind the one
 /// [`OverlayPlacement`] switch, so a caller holding a placement value never re-implements the match.
 pub fn resolve_overlay_placement(anchor: OverlayRect, content_size: (f32, f32), viewport: (f32, f32), placement: OverlayPlacement, flow: FlowInline) -> ResolvedOverlayPlacement {
     match placement {
@@ -218,7 +218,7 @@ pub fn resolve_overlay_placement(anchor: OverlayRect, content_size: (f32, f32), 
     }
 }
 
-/// 🔽️ `Select`'s own positioner (`🧱️elements/🔽️Select/🟦️.tsx:253-265`), which does NOT go through
+/// ⬅️ `Select`'s own positioner (`🧱️elements/🔽️Select/🟦️.tsx:253-265`), which does NOT go through
 /// `resolvePopoverPlacement`: it resolves the inline edge first (`inlineStart`/`inlineEnd`, both
 /// mirrored under RTL) and then picks by `align`. Answers the popup's LEFT edge.
 pub fn resolve_select_inline_left(trigger: OverlayRect, content_width: f32, align: OverlayAlign, flow: FlowInline) -> f32 {
@@ -240,7 +240,7 @@ pub fn resolve_select_inline_left(trigger: OverlayRect, content_width: f32, alig
 /// `🧱️elements/💡️ChromeControlHint/🟦️.tsx:21`).
 pub const TOOLTIP_DWELL_SECONDS: f64 = 0.4;
 
-/// ⏱️ How long a tooltip lingers after the pointer leaves both its anchor and its own bounds.
+/// 🍂️ How long a tooltip lingers after the pointer leaves both its anchor and its own bounds.
 pub const TOOLTIP_HOVER_OUT_SECONDS: f32 = 0.4;
 
 /// 🏷️ Which of the six floating-surface use-cases is open — drives the default placement rule and
@@ -253,7 +253,7 @@ pub enum OverlayKind {
     SelectPopup,
     ContextMenu,
     Tooltip,
-    /// 🗨️ React's `🧱️elements/🗨️Popover/🟦️.tsx` — a non-modal anchored surface. `PopoverContent`'s
+    /// 🧱️ React's `🧱️elements/🗨️Popover/🟦️.tsx` — a non-modal anchored surface. `PopoverContent`'s
     /// own prop defaults are what [`AnchoredPlacement::POPOVER`] carries.
     #[default]
     Popover,
@@ -269,13 +269,13 @@ pub struct DismissPolicy {
     pub outside_press_swallow: bool,
     /// ⎋️ `Escape` closes this overlay if it is the topmost open one.
     pub escape_closes: bool,
-    /// ⏱️ Tooltip-specific: close this many seconds after the pointer leaves both the anchor and the
+    /// ⌛️ Tooltip-specific: close this many seconds after the pointer leaves both the anchor and the
     /// overlay's own bounds.
     pub hover_out_delay_seconds: Option<f32>,
 }
 
 impl OverlayKind {
-    /// 📐️ The placement rule this kind hangs off by default.
+    /// ⚖️ The placement rule this kind hangs off by default.
     pub const fn default_placement(self) -> OverlayPlacement {
         match self {
             OverlayKind::SelectPopup | OverlayKind::ContextMenu => OverlayPlacement::Anchored(AnchoredPlacement::MENU),
@@ -285,7 +285,7 @@ impl OverlayKind {
         }
     }
 
-    /// 🚪️ This kind's dismissal policy.
+    /// 🔏️ This kind's dismissal policy.
     pub const fn dismiss_policy(self) -> DismissPolicy {
         match self {
             OverlayKind::Tooltip => DismissPolicy { outside_press_swallow: false, escape_closes: true, hover_out_delay_seconds: Some(TOOLTIP_HOVER_OUT_SECONDS) },

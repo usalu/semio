@@ -34,7 +34,11 @@ func originFile(t *testing.T, segments ...string) []byte {
 
 func authoredSurface(t *testing.T) (Catalogue, Policy) {
 	t.Helper()
-	catalogue, err := ParseCatalogue(originFile(t, "📚️library", "🏗️build", "⚙️operations", "🔣️catalog.json"))
+	backends, err := ParseBackendIds(originFile(t, "📚️library", "🏗️build", "🔌️backends", "📋️registry", "🔣️.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	catalogue, err := ParseCatalogue(originFile(t, "📚️library", "🏗️build", "⚙️operations", "🔣️catalog.json"), backends)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,6 +124,35 @@ func TestBuildToolsAreDerivedFromTheCatalogue(t *testing.T) {
 			if !strings.Contains(input.Description, "EN: ") || !strings.Contains(input.Description, "DE: ") {
 				t.Errorf("%s.%s: description is not bilingual", tool.Name, input.Name)
 			}
+		}
+	}
+}
+
+func TestCatalogueExpandsTheRegisteredBackends(t *testing.T) {
+	backends, err := ParseBackendIds(originFile(t, "📚️library", "🏗️build", "🔌️backends", "📋️registry", "🔣️.json"))
+	if err != nil || len(backends) < 2 {
+		t.Fatalf("the registry names at least two backends: %v %v", backends, err)
+	}
+	catalogue, policy := authoredSurface(t)
+	row, ok := catalogue.flag("--tool", "")
+	if !ok || row.ValueName != strings.Join(backends, "|") {
+		t.Fatalf("--tool value set got=%q want=%q", row.ValueName, strings.Join(backends, "|"))
+	}
+	tools, err := Derive(catalogue, policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tools) == 0 {
+		t.Fatal("no build tools derived")
+	}
+	for _, tool := range tools {
+		if strings.Contains(tool.Schema.Description, "{backends}") {
+			t.Errorf("%s: placeholder left in the description", tool.Name)
+		}
+	}
+	for _, bad := range []string{`{"backends":[]}`, `{"backends":[{"id":"a|b"}]}`, `{"backends":[{"id":""}]}`, `[`} {
+		if _, err := ParseBackendIds([]byte(bad)); err == nil {
+			t.Errorf("registry %s must be refused", bad)
 		}
 	}
 }

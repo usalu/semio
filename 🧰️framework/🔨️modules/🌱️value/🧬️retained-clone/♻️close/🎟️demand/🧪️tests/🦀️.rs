@@ -25,7 +25,7 @@ fn original_nested_close_preserves_paid_source_and_cancellation(){
   }
   assert_eq!(source.borrow().get().body.as_ref().unwrap()[0][0][0][0][0].as_ptr(),pointer);assert_eq!(crate::observe_retirement_allocations(||drop(cursor)).1,(0,0));
   while !source.terminal_is_empty(){let demand=crate::RetirementDemand{copy_bytes:source.next_close_copy_byte_demand().unwrap(),capacity_bytes:source.next_close_capacity_byte_demand(body).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()};let funded=grant(demand,body);let(step,heap)=crate::observe_retirement_allocations(||source.close_step(funded).unwrap());let p=step.progress();assert!(p.fits(funded));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=heap.0;released+=heap.1;}
-  assert_eq!(crate::observe_retirement_allocations(||drop(source)).1,(0,0));assert_eq!(born,released);eprintln!("[DEBUG] original nested record65537 bytes cut={cut} fundedCloseTurns={turns} exactHeap={born} terminalDrop=0");
+  assert_eq!(crate::observe_retirement_allocations(||drop(source)).1,(0,0));assert_eq!(born,released);
  }
 }
 
@@ -71,7 +71,6 @@ fn original_derived_custody<T:RetainedClone>(original:T,cut:usize,axes:&[serde_j
   let(step,heap)=crate::observe_retirement_allocations(||source.close_step(funded).unwrap());let progress=step.progress();assert!(progress.fits(funded));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;released+=heap.1;
  }
  assert!(source.terminal_is_empty());assert_eq!(crate::observe_retirement_allocations(||drop(source)).1,(0,0));assert_eq!(born,released);
- eprintln!("[DEBUG] actual derived record/enum cut={cut} original source closed exactHeap={born} terminalDrop=0");
 }
 
 /// 🪄️ Actual generated record and enum cursors retain separately funded transfers and every denied original frontier.

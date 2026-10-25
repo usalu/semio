@@ -195,7 +195,7 @@ pub fn draft_preview_segments(utility: &str, points: &UiFixedList<[f64; 2], DRAW
 }
 
 /// 🔷️ The `create-layer` a shape drag yields, `None` when the drag is too small to commit.
-pub(super) fn shape_drag_layer(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end: [f64; 2], identity:crate::schema::identity::DrawingIdentity) -> Option<DrawingMutation> {
+pub(super) fn shape_drag_layer(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end: [f64; 2], identity:semio_s_artifact_draw_drawing_model::identity::DrawingIdentity) -> Option<DrawingMutation> {
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
@@ -223,7 +223,7 @@ pub(super) fn shape_drag_layer(doc: &DrawingSnapshot, utility: &str, start: [f64
 }
 
 /// 🖊️ The `create-layer` a committed pen or polygon draft yields, `None` below two points.
-pub(super) fn draft_layer(doc: &DrawingSnapshot, utility: &str, points: &UiFixedList<[f64; 2], DRAWING_GESTURE_PREVIEW_POINT_CAPACITY>, identity:crate::schema::identity::DrawingIdentity) -> Option<DrawingMutation> {
+pub(super) fn draft_layer(doc: &DrawingSnapshot, utility: &str, points: &UiFixedList<[f64; 2], DRAWING_GESTURE_PREVIEW_POINT_CAPACITY>, identity:semio_s_artifact_draw_drawing_model::identity::DrawingIdentity) -> Option<DrawingMutation> {
     if points.len() < 2 {
         return None;
     }
@@ -245,7 +245,7 @@ pub(super) fn draft_layer(doc: &DrawingSnapshot, utility: &str, points: &UiFixed
 }
 
 /// 🖼️ The `create-layer` a finished trace yields, `None` without an image source.
-pub(super) fn trace_layer(doc: &DrawingSnapshot, source_key: Option<&str>,identity:crate::schema::identity::DrawingIdentity) -> Option<DrawingMutation> {
+pub(super) fn trace_layer(doc: &DrawingSnapshot, source_key: Option<&str>,identity:semio_s_artifact_draw_drawing_model::identity::DrawingIdentity) -> Option<DrawingMutation> {
     let source_key=source_key?;
     let mut layer = create_drawing_trace_layer(identity, "Trace", source_key);
     crate::initialize_appearance(&mut layer);

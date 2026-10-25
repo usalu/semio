@@ -1,9 +1,9 @@
-/** 📣️ Contract: catalog publication resolves strict RFC 6901 pointers without prototype aliases, reads the one admitted `manifest` path of the owner publication subtable and records bounded component admission without following symlinks; the corpus is language-agnostic, `fast-json-patch` and `@iarna/toml` are the independent third-party oracles for pointers and the TOML subtable, and `🐍️oracle.py` re-derives both. */
+/** 📣️ Contract: catalog publication resolves strict RFC 6901 pointers without prototype aliases, reads the one admitted `manifest` path of the owner publication subtable and records bounded component admission without following symlinks; the corpus is language-agnostic, `fast-json-patch` and `@iarna/toml` are the independent third-party oracles for pointers and the TOML subtable, and `🐍️.py` re-derives both. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {getValueByPointer} from "fast-json-patch";
 import {parse} from "@iarna/toml";
 import {afterAll} from "bun:test";
@@ -41,6 +41,6 @@ test("an absolute target outside the workspace and a symlink are refused, an ove
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

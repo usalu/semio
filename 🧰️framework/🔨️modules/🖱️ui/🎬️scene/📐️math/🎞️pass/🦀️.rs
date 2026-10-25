@@ -179,7 +179,7 @@ pub fn directional_shadow_view_projection(light_dir: [f32; 3]) -> [f32; 16] {
     directional_shadow_view_projection_m(light_dir).to_cols_array_m()
 }
 
-/// 🌑️ The directional light's own culling planes, independent of the color camera.
+/// 🕯️ The directional light's own culling planes, independent of the color camera.
 pub fn directional_shadow_frustum_planes(light_dir: [f32; 3]) -> [FrustumPlane; 6] {
     frustum_planes(directional_shadow_view_projection_m(light_dir))
 }

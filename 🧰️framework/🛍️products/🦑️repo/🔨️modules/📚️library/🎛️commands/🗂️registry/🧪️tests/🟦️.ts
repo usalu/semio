@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import { createScriptProcessEnvelope, Script, ScriptRouter, withScriptProcessEnvelope, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { diskZeroTouchTreeV1, scanModuleSpecifiersV1 } from "../../../🏗️build/📥️source/🛗️zero-touch/🟦️.ts";
 import { readRootCommandHelpRequestV1, readRootCommandRegistryV1, registerRootCommandsV1, renderRootCommandHelpV1, rootCommandHelpV1, rootCommandRegistryV1, type RootCommandV1 } from "../🟦️.ts";
-import { buildOwnedInvocationV1, dependencyGateV1, provisionEnvironmentV1, type DependencyProvisionPortsV1 } from "../🥾️provision/🟦️.ts";
+import { buildOwnedInvocationV1, dependencyGateV1, dependencyProvisionPortsV1, provisionEnvironmentV1, type DependencyProvisionPortsV1 } from "../🥾️provision/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import data from "../🔣️.json" with { type: "json" };
 import fixture from "./🔣️.json" with { type: "json" };
@@ -180,4 +180,19 @@ test("the registry data points at its schema and every reason is written in ever
   expect(join(import.meta.dir, "..", data.$schema)).toBe(join(import.meta.dir, "..", "🧬️schema/🔣️.json"));
   expect(JSON.parse(readFileSync(join(import.meta.dir, "..", data.$schema), "utf8"))).toEqual(schema);
   for (const command of registry.commands) for (const language of registry.languages) expect(command.reason[language]?.length, `${command.id} ${language}`).toBeGreaterThan(8);
+});
+
+test("the default provisioning ports keep stdout clean for the command that follows, such as an MCP stdio server", async () => {
+  const written = { out: [] as string[], err: [] as string[] }, stdout = process.stdout.write.bind(process.stdout), stderr = process.stderr.write.bind(process.stderr), log = console.log, error = console.error;
+  const capture = (target: string[]) => ((chunk: string | Uint8Array, ...rest: unknown[]) => { target.push(typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8")); for (const part of rest) if (typeof part === "function") part(); return true; }) as typeof process.stdout.write;
+  process.stdout.write = capture(written.out); process.stderr.write = capture(written.err); console.log = (...values: unknown[]) => { written.out.push(values.join(" ")); }; console.error = (...values: unknown[]) => { written.err.push(values.join(" ")); };
+  try {
+    dependencyProvisionPortsV1.write("gate-line");
+    await dependencyProvisionPortsV1.run(process.execPath, ["-e", "console.log('child-line')"], root, "dependencies", { PATH: process.env.PATH }, new AbortController().signal);
+  } finally {
+    process.stdout.write = stdout; process.stderr.write = stderr; console.log = log; console.error = error;
+  }
+  expect(written.out.join("")).toBe("");
+  expect(written.err.join("")).toContain("gate-line");
+  expect(written.err.join("")).toContain("[dependencies] child-line");
 });

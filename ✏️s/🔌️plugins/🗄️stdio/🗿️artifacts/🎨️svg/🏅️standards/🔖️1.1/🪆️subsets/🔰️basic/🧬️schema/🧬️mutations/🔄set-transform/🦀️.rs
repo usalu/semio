@@ -21,10 +21,10 @@ use crate::schema::mutation_support::prior_attribute;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetTransform {
-    pub(crate) path: NodePath,
-    pub(crate) transform: Option<Vec<TransformOp>>,
+    pub path: NodePath,
+    pub transform: Option<Vec<TransformOp>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
 }
 
 impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetTransform

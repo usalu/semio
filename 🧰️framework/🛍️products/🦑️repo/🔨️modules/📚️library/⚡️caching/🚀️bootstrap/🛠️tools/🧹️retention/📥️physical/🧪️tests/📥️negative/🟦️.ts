@@ -6,15 +6,15 @@ import{setTimeout as delay}from"node:timers/promises";
 import{checkScriptInvocation,createIssuedResourceControlV1,readIssuedScriptProcessEnvelopeV1,scriptInvocationEnvironment,type ScriptInvocation}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import{repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1,openRepositoryCachePartitionV1}from"../../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import{repositoryCacheBudgetV1}from"../../../../../../💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
-import*as owner from"../../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import{repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1,openRepositoryCachePartitionV1}from"../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import{repositoryCacheBudgetV1}from"../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
+import*as owner from"../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import*as leases from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import schema from"./🧬️schema.json";
 import corpus from"./🔣️.json";
 import physical from"../🔣️.json";
 type Purpose=typeof corpus.cases[number]["purpose"];
-const ackPrefix="[DEBUG] Retention negative receiver ",failurePrefix="[DEBUG] Retention negative result ";
+const ackPrefix="[TRACE] Retention negative receiver ",failurePrefix="[TRACE] Retention negative result ";
 function requirePurpose(value:string):Purpose{if(validateJsonSchemaSubset(schema.definitions.Purpose,value,schema).length)throw Error("Closed retention negative purpose required");return value as Purpose;}
 function requireWorkspace(workspace:string):void{if(resolve(workspace)!==workspace||workspace.length>256||dirname(workspace)!==repositoryCachePartitionRootV1(process.cwd(),"products")||!/^tr-[A-Za-z0-9_-]+$/u.test(basename(workspace)))throw Error("Exact products-funded private retention workspace required");}
 function acknowledgement(original:ScriptInvocation,workspace:string,purpose:Purpose){const envelope=readIssuedScriptProcessEnvelopeV1(original),wire=scriptInvocationEnvironment(original,process.env).SEMIO_SCRIPT_PROCESS_INVOCATION!;return{version:1,purpose,workspace,wireSha256:createHash("sha256").update(wire).digest("hex"),policy:envelope.policy,deadlineEpochMilliseconds:envelope.deadlineEpochMilliseconds,capabilities:envelope.capabilities};}

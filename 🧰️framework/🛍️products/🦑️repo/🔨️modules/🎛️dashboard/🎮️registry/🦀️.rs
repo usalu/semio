@@ -13,7 +13,7 @@ use dashboard_repo_domain::{RepoAction, RepoImplementation};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use ui_locale::Locale;
+pub use ui_locale::Locale;
 use semio_framework_ui_tui_core::text::elide_end;
 
 // #region 🔖️Wire

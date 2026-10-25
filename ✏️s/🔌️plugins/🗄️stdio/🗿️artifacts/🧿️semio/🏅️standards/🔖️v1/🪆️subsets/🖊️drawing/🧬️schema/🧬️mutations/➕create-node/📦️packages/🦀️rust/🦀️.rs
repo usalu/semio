@@ -12,11 +12,7 @@ pub mod schema {
     #[path = "."]
     pub mod snapshot {
         pub use semio_s_artifact_stdio_semio_drawing_snapshot::schema::snapshot::*;
-        #[path = "."]
-        pub mod native_binding {
-            #[path="../../../../📸️snapshot/🧩️component/🌳️nodes/🦀️.rs"]
-            pub mod nodes;
-        }
+        pub use semio_s_artifact_stdio_semio_drawing_snapshot::schema::snapshot::native_binding;
     }
     pub use semio_s_artifact_stdio_semio_drawing_inferences::schema::diff;
     #[path = "."]

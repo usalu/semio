@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:bazel-executor-closure-corpus:v1",
+  "title": "Bazel Executor Closure Corpus",
+  "description": "Language-agnostic bounds of the narrow source closure every ordinary Bazel action runs: the entry, the closure it must stay inside, the modules it must never reach and the modules it must reach.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "checkoutFromTests",
+    "entryFromTests",
+    "adapter",
+    "maximumFiles",
+    "forbidden",
+    "required"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "checkoutFromTests": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entryFromTests": {
+      "type": "string",
+      "minLength": 1
+    },
+    "adapter": {
+      "type": "string",
+      "minLength": 1
+    },
+    "maximumFiles": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    },
+    "forbidden": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Fragment"
+      }
+    },
+    "required": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Fragment"
+      }
+    }
+  },
+  "definitions": {
+    "Fragment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reason",
+        "fragment"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fragment": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

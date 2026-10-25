@@ -5,9 +5,10 @@ import {expect,test,setDefaultTimeout} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,buildCapacityAskV1,createCapacityControlV1,grantedBuildArgumentsV1} from "../../🟦️.ts";
 import {runCapacityCommandV1} from "../../⌨️command/🟦️.ts";
+import {isRepoErrorV1,renderRepoErrorV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import {currentWorkerHostV1,planWorkersV1,readWorkerPolicyV1} from "../../../👷️workers/🟦️.ts";
 import buildPolicy from "../../../🔣️policy.json";
 import corpus from "./🔣️.json";
@@ -60,7 +61,7 @@ test("the wait control cancels on interrupt and termination, has no deadline and
   const emitter=new EventEmitter(),handle=createCapacityControlV1(emitter as never);
   expect(emitter.listenerCount("SIGINT")).toBe(1);expect(emitter.listenerCount("SIGTERM")).toBe(1);
   expect(handle.control.remainingMilliseconds()).toBeNull();expect(handle.control.signal.aborted).toBe(false);await handle.control.yieldContinuation();expect(handle.control.publish({} as never)).toBeUndefined();
-  emitter.emit(signal);expect(handle.control.signal.aborted).toBe(true);expect((handle.control.signal.reason as Error).message).toBe("Host capacity wait cancelled by "+signal);
+  emitter.emit(signal);expect(handle.control.signal.aborted).toBe(true);expect(isRepoErrorV1(handle.control.signal.reason)).toBe(true);expect(handle.control.signal.reason).toMatchObject({code:"cancelled",key:"capacity.wait-cancelled",values:{signal}});for(const [language,text] of [["en","Waiting for host capacity was cancelled by "+signal],["de","Das Warten auf Host-Kapazität wurde durch "+signal+" abgebrochen"]])expect(renderRepoErrorV1(handle.control.signal.reason as never,language)).toBe(text);
   handle.dispose();expect(emitter.listenerCount("SIGINT")+emitter.listenerCount("SIGTERM")).toBe(0);expect(Object.isFrozen(handle.control)).toBe(true);
  }
  const emitter=new EventEmitter(),handle=createCapacityControlV1(emitter as never);handle.dispose();emitter.emit("SIGINT");expect(handle.control.signal.aborted).toBe(false);

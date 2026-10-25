@@ -34,7 +34,7 @@ async fn spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completi
     let actor = ActorId(21);
     let package = PackageRef { package: PackageId("remodel".to_string()), hash: PackageHash([9u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
 
     let job_id = 777u64;
     let mut spawning_turn = MockGuestRuntime::idle_turn(original_retained_turn()).await;
@@ -123,7 +123,7 @@ async fn a_framework_reserved_spawn_starts_live_hands_its_turn_to_the_host_and_r
     let actor = ActorId(23);
     let package = PackageRef { package: PackageId("block".to_string()), hash: PackageHash([7u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
     let job_id = 71u64;
     let mut spawning_turn = MockGuestRuntime::idle_turn(original_retained_turn()).await;
     spawning_turn.effects.push(Effect::SpawnJob { job: job_id, kind: semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND.to_string(), input: b"undo".to_vec(), placement: JobPlacement::Isolated });
@@ -183,7 +183,7 @@ async fn cancel_job_effect_stops_a_job_before_it_is_ever_stepped() {
     let actor = ActorId(22);
     let package = PackageRef { package: PackageId("remodel".to_string()), hash: PackageHash([10u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
 
     let job_id = 888u64;
     let mut turn = MockGuestRuntime::idle_turn(original_retained_turn()).await;
@@ -220,7 +220,7 @@ async fn cancel_job_effect_failure_retires_the_actor_and_surfaces_the_typed_faul
     let actor = ActorId(23);
     let package = PackageRef { package: PackageId("remodel-cancel-failure".to_string()), hash: PackageHash([11u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
     let job_id = 889u64;
     let mut spawn = MockGuestRuntime::idle_turn(original_retained_turn()).await;
     spawn.effects.push(Effect::SpawnJob { job: job_id, kind: "remodel.reconstruct".to_string(), input: Vec::new(), placement: JobPlacement::Inline });

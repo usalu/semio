@@ -5,7 +5,7 @@ import { ValueError, type ValueRefusalKind } from "../../🌱️value/📦️pac
 export { ValueError, type ValueRefusalKind } from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 
 export type SqliteValue = null | bigint | number | string | Uint8Array;
-/** 🧾️ Semantic cells in declared column order, including resolved INTEGER PRIMARY KEY aliases. */
+/** 🔃️ Semantic cells in declared column order, including resolved INTEGER PRIMARY KEY aliases. */
 export interface SqliteRow { readonly rowid: bigint; readonly values: readonly SqliteValue[] }
 /** 🗃️ A handcrafted rowid-table schema and its semantic rows. */
 export interface SqliteTable { readonly name: string; readonly sql: string; readonly rows: readonly SqliteRow[] }
@@ -49,7 +49,7 @@ export class SqliteAllocationControl {
     this.admit(bytes);
     try{return new Uint8Array(bytes);}catch(error){if(error instanceof RangeError)throw new ValueError("allocationFailed","SQLite byte backing allocation failed");throw error;}
   }
-  /** 🛑️ Rejects before a concrete backing allocation; retirement never refunds admission. */
+  /** 🔏️ Rejects before a concrete backing allocation; retirement never refunds admission. */
   admit(bytes: number): void {
     cancelled(this.options);
     if (!Number.isSafeInteger(bytes) || bytes < 0) throw new ValueError("invalidValue", "Invalid SQLite allocation count");
@@ -69,7 +69,7 @@ export class SqliteAllocationControl {
 
 }
 
-/** 🪆️ Owns one immutable SQLite operation configuration and its cumulative byte backing. */
+/** 🎛️ Owns one immutable SQLite operation configuration and its cumulative byte backing. */
 export class SqliteOperation implements SqliteDatabaseOptions {
   readonly #options:Readonly<SqliteDatabaseOptions>;
   readonly #allocation:SqliteAllocationControl;
@@ -91,10 +91,10 @@ export class SqliteOperation implements SqliteDatabaseOptions {
   get ownedBytes(){return this.#allocation.ownedBytes;}
   remainingBytes():number{return this.#allocation.remainingBytes();}
   allocateBytes(bytes:number):Uint8Array{return this.#allocation.allocateBytes(bytes);}
-  /** 🪆️ Settles a concrete child backing ledger against this same caller on every outcome. */
+  /** 📒️ Settles a concrete child backing ledger against this same caller on every outcome. */
   allocationStage<C extends {readonly ownedBytes:number},T>(create:(maximum:number)=>C,operation:(control:C)=>Promise<T>):Promise<T>{return this.#allocation.stage(create,operation);}
 }
-/** 🏗️ Retains an explicit operation owner or creates one from its declarative configuration. */
+/** 🆕️ Retains an explicit operation owner or creates one from its declarative configuration. */
 export function sqliteOperation(options:SqliteDatabaseOptions={}):SqliteOperation{return options instanceof SqliteOperation?options:new SqliteOperation(options);}
 
 const PAGE_SIZE = 4096;
@@ -322,7 +322,7 @@ function* parseSchemaWork(sql:string,options:SqliteDatabaseOptions,prepared?:Map
 }
 /** 🏛️ Parse handcrafted CREATE TABLE statements synchronously without filesystem access. */
 export function parseSqliteDatabaseSchema(sql:string,options:SqliteDatabaseOptions={}):SqliteDatabase{cancelled(options);return grammarSync(parseSchemaWork(sql,options));}
-/** 🧵️ Parse the same handcrafted schema with bounded operation-owned grammar checkpoints. */
+/** 🧬️ Parse the same handcrafted schema with bounded operation-owned grammar checkpoints. */
 export async function parseSqliteDatabaseSchemaControlled(sql:string,options:SqliteDatabaseOptions={}):Promise<SqliteDatabase>{const operation=sqliteOperation(options);return grammarControlled(parseSchemaWork(sql,operation),operation);}
 
 function* validateSchemaWork(database:SqliteDatabase,sql:string,options:SqliteDatabaseOptions):GrammarWork<SqliteDatabase>{
@@ -336,7 +336,7 @@ function* validateSchemaWork(database:SqliteDatabase,sql:string,options:SqliteDa
 }
 /** 🔎️ Validate the handcrafted semantic schema synchronously, including row identities. */
 export function validateSqliteDatabaseSchema(database:SqliteDatabase,sql:string,options:SqliteDatabaseOptions={}):void{cancelled(options);grammarSync(validateSchemaWork(database,sql,options));}
-/** 🧵️ Validate the full row corpus and return its already parsed authored schema under one operation. */
+/** ✅️ Validate the full row corpus and return its already parsed authored schema under one operation. */
 export async function validateSqliteDatabaseSchemaControlled(database:SqliteDatabase,sql:string,options:SqliteDatabaseOptions={}):Promise<SqliteDatabase>{const operation=sqliteOperation(options);return grammarControlled(validateSchemaWork(database,sql,operation),operation);}
 
 function* equivalentSchema(received:readonly Token[], trusted:readonly Token[]): GrammarWork<boolean> {

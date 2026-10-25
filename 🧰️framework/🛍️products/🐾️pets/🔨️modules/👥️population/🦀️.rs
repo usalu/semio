@@ -8,13 +8,13 @@
 
 use semio_framework_pets_staging_draft::draft::{actor_key, blink_at, clip_at, crowd_on, hover_of, index_of, release, remove, settle, shift, stage_key, surface_of, Draft};
 use semio_framework_pets_staging_draft::locomotion::{drop, leave, vanish};
-use semio_framework_pets_staging_draft::spacing::{quarters, rooms_for};
+use semio_framework_pets_staging_draft::spacing::{company_of, perches_for, quarters, rooms_for, Ground};
 use semio_framework_pets_character::behavior::{dwell_of, needs_of, MODE_LIMITS};
 use semio_framework_pets_character::feeling::at_rest;
 use semio_framework_pets_contract::schema::{Activity, Actor, Facing, Footing, Gaze, Menagerie, PetMode, Slug, Species, Surface, Surveyed, Ticks};
 use semio_framework_pets_interaction::gesture::{no_hover, COLD};
 use semio_framework_pets_kinematics::randomness::{random_words, unit_of};
-use semio_framework_pets_kinematics::terrain::{landing_of, larger, perches_of, smaller};
+use semio_framework_pets_kinematics::terrain::{landing_of, larger, smaller};
 use semio_framework_pets_kinematics::trigonometry::clamp;
 use semio_framework_pets_character::feeling::Occasion;
 use semio_framework_pets_contract::schema::Wall;
@@ -33,20 +33,18 @@ pub(crate) const CENTRED: Gaze = Gaze { x: 0.0, y: 0.0, vx: 0.0, vy: 0.0 };
 //#endregion 🔖️Constants
 
 //#region 🔖️Riding
-/// 📐️ The perches of the stage for everyone who is on it or wanted: clearance = the tallest of them plus its hover, minimum = the widest, so that every perch carries any of them.
+/// 📐️ The perches and the pitches of the stage for its company ([`company_of`]: everyone who is on it or wanted and can stand on its ground together): clearance = the tallest of them plus its hover, minimum = the widest, so that every perch carries any of them; none when nobody that is there or wanted can stand on the ground at all.
 fn measure(menagerie: &Menagerie, draft: &mut Draft<'_>) {
-    let mut tallest = 0.0;
+    let company = company_of(menagerie, draft);
     let mut widest = 0.0;
     let mut smallest = f64::INFINITY;
-    for kind in &menagerie.species {
-        if !draft.stage.wanted.contains(&kind.id) && index_of(&draft.stage.actors, &kind.id).is_none() {
-            continue;
-        }
-        tallest = larger(tallest, kind.size.height + hover_of(kind));
+    for kind in &company {
         widest = larger(widest, kind.size.width);
         smallest = smaller(smallest, kind.size.height);
     }
-    draft.stage.perches = perches_of(&draft.stage.surfaces, &draft.stage.keepouts, draft.stage.width, draft.stage.height, tallest, widest);
+    let wishes = !draft.stage.actors.is_empty() || draft.stage.wanted.iter().any(|id| menagerie.species.iter().any(|kind| &kind.id == id));
+    let perches = if wishes && company.is_empty() { Vec::new() } else { perches_for(Ground { surfaces: &draft.stage.surfaces, keepouts: &draft.stage.keepouts, width: draft.stage.width, height: draft.stage.height }, &company) };
+    draft.stage.perches = perches;
     draft.stage.pitches = if smallest.is_infinite() { Vec::new() } else { walls_of(&draft.stage.walls, &draft.stage.keepouts, draft.stage.width, draft.stage.height, widest + 8.0, 0.5 * smallest) };
 }
 
@@ -312,16 +310,17 @@ fn arrive<'a>(draft: &mut Draft<'a>, kind: &'a Species, stream: u32) {
     draft.streams.insert(at, stream);
 }
 
-/// 📣️ Every wanted species that is not on stage arrives, in `menagerie.species` order — as long as the company on stage, leavers included, is smaller than the wanted one: a newcomer waits until whoever it replaces is gone, so a stage never holds more actors than were summoned.
+/// 📣️ Every wanted species that is not on stage arrives, in `menagerie.species` order — as long as the company on stage, leavers included, is smaller than the wanted one: a newcomer waits until whoever it replaces is gone, so a stage never holds more actors than were summoned. A wanted species that cannot stand on the ground together with the company ([`company_of`]) waits off stage and does not hold the others back.
 pub(crate) fn spawn<'a>(menagerie: &'a Menagerie, draft: &mut Draft<'a>) {
     if draft.stage.perches.is_empty() {
         return;
     }
+    let company: Vec<Slug> = company_of(menagerie, draft).into_iter().map(|kind| kind.id.clone()).collect();
     for (stream, kind) in menagerie.species.iter().enumerate() {
         if draft.stage.actors.len() >= draft.stage.wanted.len() {
             break;
         }
-        if draft.stage.wanted.contains(&kind.id) && index_of(&draft.stage.actors, &kind.id).is_none() {
+        if draft.stage.wanted.contains(&kind.id) && index_of(&draft.stage.actors, &kind.id).is_none() && company.contains(&kind.id) {
             arrive(draft, kind, stream as u32);
         }
     }

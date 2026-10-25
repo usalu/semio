@@ -12,8 +12,8 @@ import type{ResourceLeaseControl}from"../../../../../../../../../../../../🔨�
 import{validateJsonSchemaSubset}from"../../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{closureReadStartupWitnessV1,closureReadInputFramesV1,closureReadReplyCreditV1,closureReadDeferredV1,closureReadCohortAdmitsV1}from"./🟨️.mjs";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
-import ownedInputSchema from"../../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/📥️input/🧬️schema/🔣️.json"with{type:"json"};
-import {runtimeCommandNameV1} from "../../../../../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import ownedInputSchema from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/📥️capture/📥️input/🧬️schema/🔣️json/🟦️.ts";
+import {runtimeCommandNameV1} from "../../../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 const P=schema.definitions.Protocol.const,S=schema.definitions.ReadSessionProtocol.const,I=ownedInputSchema.definitions.Policy.const;
 /** 🧾️ Observes accepted disposal without replacing the first protocol error or claiming signal cause. */
 async function retainClosureReadProtocolTerminalV1(channel:Parameters<typeof closeOwnedCommandChannelV1>[0],primary:unknown):Promise<void>{let value:unknown;try{const terminal=await closeOwnedCommandChannelV1(channel);value=Object.freeze({version:1,settlement:"accepted-disposal",status:terminal.status,signal:terminal.signal});}catch{value=Object.freeze({version:1,settlement:"unavailable",status:null,signal:null});}try{if(primary instanceof Error&&Object.isExtensible(primary)&&!Object.hasOwn(primary,"closureReadTerminal")&&!validateJsonSchemaSubset(schema.definitions.ReadProtocolTerminal,value,schema).length)Object.defineProperty(primary,"closureReadTerminal",{value,enumerable:true});}catch{}}

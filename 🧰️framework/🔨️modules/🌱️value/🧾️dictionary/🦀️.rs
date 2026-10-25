@@ -9,7 +9,7 @@ mod tests;
 /// 🪪️ One literal question identity and its actual first-party value.
 #[derive(Clone,Debug,semio_framework_dsl_record_derive::DslRecord,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone)]
 pub struct QuestionDictionaryEntry{pub question_id:String,pub value:DslValue}
-/// 🧾️ An ordered dictionary distinguishes absent ownership, empty entries and member null.
+/// ❓️ An ordered dictionary distinguishes absent ownership, empty entries and member null.
 #[derive(Clone,Debug,Default,PartialEq,semio_framework_dsl_record_derive::DslRecord,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone)]
 pub struct QuestionDictionary{pub entries:Vec<QuestionDictionaryEntry>}
 impl QuestionDictionary{
@@ -19,7 +19,7 @@ impl QuestionDictionary{
  pub fn validate_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(&self,control:&mut C)->Result<(),ValueError>{control.scoped_stage(|control|{control.begin_stage(0)?;let mut identities=control.allocate_vec(self.entries.len())?;for entry in &self.entries{control.step()?;identities.push(entry.question_id.as_str());}for root in(0..identities.len()/2).rev(){sift(&mut identities,root,self.entries.len(),control)?;}for end in(1..identities.len()).rev(){identities.swap(0,end);sift(&mut identities,0,end,control)?;}for pair in identities.windows(2){if compare(pair[0],pair[1],control)?.is_eq(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate QuestionDictionary question identity"));}}Ok(())})}
  /// 🎞️ Consume the actual ordered dictionary object transported by a workflow wire.
  pub fn from_intrinsic(value:DslValue)->Result<Self,ValueError>{let DslValue::Object(values)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"QuestionDictionary media must own an object"));};let owner=Self{entries:values.into_iter().map(|(question_id,value)|QuestionDictionaryEntry{question_id,value}).collect()};if let Err(error)=owner.validate(){<Self as FromValue>::retire_decoded(owner);return Err(error);}Ok(owner)}
- /// 🎞️ Transfer configured entries directly to the shared intrinsic media owner.
+ /// 🟢️ Transfer configured entries directly to the shared intrinsic media owner.
  pub fn into_intrinsic(self)->DslValue{DslValue::Object(self.entries.into_iter().map(|entry|(entry.question_id,entry.value)).collect())}
  /// 🫳️ Bind the borrowed intrinsic object directly to its owned entries on one ledger.
  pub fn from_intrinsic_controlled(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{control.begin_stage(0)?;let DslValue::Object(values)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"QuestionDictionary media must own an object"))};let mut owner=semio_framework_value::DecodedValue::new(Self{entries:control.allocate_vec(values.len())?},<Self as FromValue>::retire_decoded);for(question_id,value)in values{let question_id=control.copy_text(question_id)?;let value=<DslValue as FromValue>::from_value_controlled(value,control)?;owner.get_mut().entries.push(QuestionDictionaryEntry{question_id,value});control.step()?;}owner.get().validate_controlled(control)?;Ok(owner.take())})}

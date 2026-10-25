@@ -1,8 +1,8 @@
 #!/usr/bin/env repo
 import { resolve } from "node:path";
-import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import { scriptInvocationBudget } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { TEST_LEVEL_BUDGET_MS } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { TEST_LEVEL_BUDGET_MS } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitestV1, readVitestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";

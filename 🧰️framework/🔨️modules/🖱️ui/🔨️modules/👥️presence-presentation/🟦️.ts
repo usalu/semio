@@ -12,7 +12,7 @@ import { STYLING_PRESENCE_PALETTES } from "@semio-tech/ui-styling";
 /** 🌓️ Selects which of `STYLING_PRESENCE_PALETTES`'s `light`/`dark` base `{s, l}` {@link presenceColor} resolves against. */
 export type PresenceAppearance = "light" | "dark";
 
-/** 🎨️ Resolved HSL triple — `h` in degrees `[0, 360)`, `s`/`l` in `[0, 1]`. */
+/** 🌡️ Resolved HSL triple — `h` in degrees `[0, 360)`, `s`/`l` in `[0, 1]`. */
 export interface PresenceHsl {
   readonly h: number;
   readonly s: number;
@@ -35,7 +35,7 @@ export function presenceColor(index: number, appearance: PresenceAppearance): Pr
   return { h, s, l };
 }
 
-/** 🎨️ CSS custom-property reference for a peer's base-cycle palette index (`index % 12`) — only
+/** 🔗️ CSS custom-property reference for a peer's base-cycle palette index (`index % 12`) — only
  * meaningful when `Math.floor(index / 12) === 0`; callers past the first cycle render {@link presenceColor}'s
  * HSL inline instead (contract freeze §C7.5). */
 export function presenceCssVar(index: number): string {

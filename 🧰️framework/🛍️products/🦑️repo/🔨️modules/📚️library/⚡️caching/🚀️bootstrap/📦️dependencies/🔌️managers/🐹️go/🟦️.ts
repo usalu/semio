@@ -14,5 +14,5 @@ export const readGoSumV1:LockReaderV1=text=>{
  }
  return {packages:[...rows.values()],members:[]};
 };
-/** 🐹️ The adapter: descriptor data plus the lock reader. */
+/** 📦️ The adapter: descriptor data plus the lock reader. */
 export const goPackageManagerV1=createPackageManagerV1(descriptor as unknown as ManagerDescriptorV1,readGoSumV1);

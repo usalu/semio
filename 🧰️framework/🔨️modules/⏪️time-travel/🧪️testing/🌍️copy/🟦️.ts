@@ -2,7 +2,7 @@
 
 //#region 🔖️Copy
 
-/** 🌍️ The localized texts every verdict compares against, byte-equal with their Rust/TS producers:
+/** 📖️ The localized texts every verdict compares against, byte-equal with their Rust/TS producers:
  * history-edit rows (`SupersedeLedger::label`), the finalize
  * dialog (`history_edit_finalize_dialog`), the panel copy (`HistoryPanelText`) and the review lines (`TimeTravelLabel`). */
 export const COPY = {

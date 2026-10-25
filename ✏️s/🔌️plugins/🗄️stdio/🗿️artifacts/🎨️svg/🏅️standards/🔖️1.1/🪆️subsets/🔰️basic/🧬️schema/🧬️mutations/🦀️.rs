@@ -115,7 +115,7 @@ pub fn kind_of(mutation: &SvgBasicMutation) -> &'static str {
 /// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source.
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_svg_basic_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgBasicMutation) -> protocol::MutationOutcome<SvgDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
+    let outcome = ::semio_framework_os_kernel::ColdMutation::diff(mutation, snapshot);
     match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;

@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { frameworkOsEngineSourceOwnersV1 } from "../../../../../../../💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
-import { observedSourceAnalysisV1, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { observedSourceAnalysisV1, observedFs, recordRegistryOwnerV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { storeReceiptOutputV1 } from "../../../🧾️store-receipt/🟨️.mjs";
 const { existsSync, lstatSync, readFileSync } = observedFs;
 
@@ -85,7 +85,7 @@ function admittedRegistry(registry){
 export function playgroundSiteTargetsForAdmissionV1(root,playgrounds,workspaceRoot,registry,selectedTargets){
  const rows=playgrounds.filter(row=>row.cratePath===root),names=new Set(["build",...rows.map(row=>"build-"+row.variant+"-site")]);
  if(!rows.length||selectedTargets!==undefined&&!selectedTargets.some(name=>names.has(name)))return {};
- const declaration=admittedRegistry(registry),owner=declaration.owners.find(owner=>owner.name==="@semio-tech/framework-os-dev");
+ const declaration=admittedRegistry(registry),owner=declaration.owners.find(owner=>owner.name==="@semio-tech/framework-os-dev");recordRegistryOwnerV1(workspaceRoot,"@semio-tech/framework-os-dev",owner);
  if(!owner||owner.manifest!==(owner.root==="."?PROJECT_BASENAME:owner.root+"/"+PROJECT_BASENAME))throw Error("Playground site output requires the release producer's staging project");
  const project=JSON.parse(readPhysicalSource(join(workspaceRoot,owner.manifest)).toString("utf8"));
  if(project.name!==owner.name||project.root!==undefined&&project.root!==owner.root)throw Error("Canonical playground release staging producer differs");

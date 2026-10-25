@@ -59,7 +59,7 @@ fn nakagin() -> SemioJackOwnedContent {
 
 /// 🧸️ The live node positions of the app's `content` member store (design §20.15: the parent holds no content).
 fn node_positions(app: &JackApp) -> BTreeMap<String, (f64, f64)> {
-    use store::{pack::snapshot::ArtifactPack, SpaceMember};
+    use store::{snapshot::ArtifactPack, SpaceMember};
     let snapshot = app.snapshot().expect("Jack parent projection");
     let member = ::semio_framework_async::poll::resolve_ready(app.child_store("content", &snapshot.content.child_id)).expect("Jack content child");
     let bytes = ::semio_framework_async::poll::resolve_ready(member.document_pack_bytes()).expect("Jack content child pack");

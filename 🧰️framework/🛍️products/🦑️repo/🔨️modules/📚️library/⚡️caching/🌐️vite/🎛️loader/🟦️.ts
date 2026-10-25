@@ -2,7 +2,7 @@
  * @see https://vite.dev/config/#configloader */
 export type ViteConfigLoaderV1 = "runner" | "native";
 
-/** 🎛️ Admits one loader name before it reaches a Vite command line; absent means `runner`. */
+/** 📖️ Admits one loader name before it reaches a Vite command line; absent means `runner`. */
 export function readViteConfigLoaderV1(value: unknown): ViteConfigLoaderV1 {
   if (value === undefined) return "runner";
   if (value !== "runner" && value !== "native") throw Error("Vite config loader must be runner or native");

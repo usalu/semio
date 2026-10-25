@@ -153,7 +153,7 @@ fn split_words_snake(ident: &str) -> Vec<String> {
     ident.split('_').filter(|s| !s.is_empty()).map(|s| s.to_lowercase()).collect()
 }
 
-/// 🐫 Splits a `PascalCase` variant ident into lowercase words at each uppercase boundary.
+/// 🔪️ Splits a `PascalCase` variant ident into lowercase words at each uppercase boundary.
 fn split_words_pascal(ident: &str) -> Vec<String> {
     let mut words = Vec::new();
     let mut current = String::new();
@@ -256,7 +256,7 @@ struct ContainerAttrs {
 }
 
 impl ContainerAttrs {
-    /// 🐫 Variant `rename_all` overrides container `rename_all_fields`; an explicit field rename
+    /// 🐳️ Variant `rename_all` overrides container `rename_all_fields`; an explicit field rename
     /// wins in `field_wire_name`. Container `rename_all` controls enum variant names only.
     fn field_rename_all(&self, variant: &VariantAttrs) -> Option<String> {
         variant.rename_all.clone().or_else(|| self.rename_all_fields.clone())
@@ -294,7 +294,7 @@ impl FieldAttrs {
         self.serialize_with.clone().or_else(|| self.with.as_ref().map(|path| format!("{path}::to_value")))
     }
 
-    /// 🩹 `with = "path"` shorthand resolved for the deserialize direction — sibling of
+    /// 🔎️ `with = "path"` shorthand resolved for the deserialize direction — sibling of
     /// `effective_serialize_with` above.
     fn effective_deserialize_with(&self) -> Option<String> {
         self.deserialize_with.clone().or_else(|| self.with.as_ref().map(|path| format!("{path}::from_value")))
@@ -643,7 +643,7 @@ fn check_variant_field_attrs_supported(field: &syn::Field, attrs: &FieldAttrs) -
     Ok(())
 }
 
-/// 🎯 Emits one named enum-variant field's `ToValue` push into the accumulator `push_into`
+/// 📤️ Emits one named enum-variant field's `ToValue` push into the accumulator `push_into`
 /// (`content_entries` for externally/adjacently-tagged, `__out_entries` for internally-tagged),
 /// honoring `skip` (omit unconditionally), `skip_serializing_if` (omit conditionally), and
 /// `serialize_with`/`with` (replaces the default `ToValue::to_value` call) — mirrors
@@ -678,7 +678,7 @@ fn variant_field_to_value_push(field: &syn::Field, field_attrs: &FieldAttrs, wir
     })
 }
 
-/// 🎯 Emits one named enum-variant field's `FromValue` read out of `entries_ident` (a
+/// 📖️ Emits one named enum-variant field's `FromValue` read out of `entries_ident` (a
 /// `Vec<(String, DslValue)>`-shaped expression), honoring `skip` (bypass the wire lookup entirely
 /// and always fall back to `default`/`Default::default()` — mirrors `from_value_struct_fields`'s
 /// struct-field handling), the pre-existing `default` handling, and `deserialize_with`/`with`
@@ -749,11 +749,11 @@ fn variant_destructure_patterns(named: &syn::FieldsNamed) -> Vec<proc_macro2::To
 mod canonical_tree;
 pub fn expand_canonical_tree(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{canonical_tree::expand(input)}
 
-/// 🧭️ Resolves the authored value namespace for an actual typed generator owner.
+/// 🌱️ Resolves the authored value namespace for an actual typed generator owner.
 pub fn declared_value_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_crate_path(&parse_container_attrs(&input.attrs)?))}
 /// 🔐️ Reports whether the owner keeps exclusive Send-only custody and therefore issues no shared original retirement.
 pub fn declared_send_only(input:&DeriveInput)->syn::Result<bool>{Ok(parse_container_attrs(&input.attrs)?.send_only)}
-/// 🟰️ Resolves the authored owner namespace of structural retained equality for an actual typed generator owner.
+/// 🏗️ Resolves the authored owner namespace of structural retained equality for an actual typed generator owner.
 pub fn declared_persistent_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_persistent_path(&parse_container_attrs(&input.attrs)?))}
 #[path="../🛬️receive/🦀️.rs"]mod native_receiving;
 pub fn expand_native_receive(input:&syn::DeriveInput)->syn::Result<proc_macro2::TokenStream>{native_receiving::expand(input)}

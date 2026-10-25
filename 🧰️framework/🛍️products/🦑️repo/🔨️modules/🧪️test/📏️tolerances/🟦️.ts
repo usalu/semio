@@ -1,4 +1,4 @@
-/** 📏️ Numeric tolerances
+/** 🔢️ Numeric tolerances
  *
  * Core tolerance profiles and their resolution.
  */
@@ -27,7 +27,7 @@ export type ToleranceProfile = Readonly<{
   maxOverrideFactor?: number;
 }>;
 
-/** 📏️ The domain-neutral profiles the framework owns. An owner contributes further ones by manifest. */
+/** 🏛️ The domain-neutral profiles the framework owns. An owner contributes further ones by manifest. */
 export const CORE_TOLERANCE_PROFILES: readonly ToleranceProfile[] = [
   { id: "analytic-strict", description: "Analytic primitives whose exact answer is known in closed form; only representation noise is permitted.", absoluteLength: 1e-9, relativeLength: 1e-12, absoluteArea: 1e-9, relativeArea: 1e-11, absoluteVolume: 1e-9, relativeVolume: 1e-11, normalizedHausdorffMax: 1e-9, normalizedCentroidDistanceMax: 1e-10, maxOverrideFactor: 10 },
   { id: "mechanical-standard", description: "Ordinary mechanical solids at millimetre scale — the default for the Boolean corpus.", absoluteLength: 1e-7, relativeLength: 1e-9, absoluteArea: 1e-7, relativeArea: 1e-8, absoluteVolume: 1e-7, relativeVolume: 1e-8, normalizedHausdorffMax: 1e-6, normalizedCentroidDistanceMax: 1e-8, maxOverrideFactor: 10 },
@@ -38,16 +38,16 @@ export const CORE_TOLERANCE_PROFILES: readonly ToleranceProfile[] = [
   { id: "real-world-import", description: "Third-party real-world models whose own authoring tolerance is unknown and larger than anything we generate.", absoluteLength: 1e-4, relativeLength: 1e-6, absoluteArea: 1e-4, relativeArea: 1e-5, absoluteVolume: 1e-4, relativeVolume: 1e-5, normalizedHausdorffMax: 1e-4, normalizedCentroidDistanceMax: 1e-5, maxOverrideFactor: 3 },
 ];
 
-/** 📏️ `max(absolute, relative × reference)` — the one rule every dimensional tolerance is resolved by. */
+/** 📘️ `max(absolute, relative × reference)` — the one rule every dimensional tolerance is resolved by. */
 export function resolveTolerance(absolute: number | undefined, relative: number | undefined, reference: number): number {
   return Math.max(absolute ?? 0, (relative ?? 0) * Math.abs(reference));
 }
 
-/** 📏️ The four resolved dimensional tolerances of one profile against one fixture's reference scale. */
+/** 🔎️ The four resolved dimensional tolerances of one profile against one fixture's reference scale. */
 export type ResolvedTolerances = Readonly<{ length: number; area: number; volume: number; normalizedHausdorffMax: number; normalizedCentroidDistanceMax: number; overrideFactor: number; overridden: boolean }>;
 
 /**
- * 📏️ Resolves a profile against a measured reference scale and an optional fixture override. The
+ * ⚖️ Resolves a profile against a measured reference scale and an optional fixture override. The
  * override is CAPPED by the profile's own `maxOverrideFactor`, so a fixture cannot quietly widen its
  * gate until everything passes.
  */

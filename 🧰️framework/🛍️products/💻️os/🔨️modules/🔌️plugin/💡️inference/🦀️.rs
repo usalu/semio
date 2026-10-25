@@ -190,3 +190,7 @@ impl ArtifactInferenceGatewayFailure {
 pub use semio_framework_plugin_decl_registry::artifact_inference::*;
 
 pub use semio_framework_plugin_plugin_program::artifact_inference::*;
+
+#[path = "🫴️receiving/🦀️.rs"]
+mod receiving;
+pub use receiving::OriginalArtifactDocumentReceiving;

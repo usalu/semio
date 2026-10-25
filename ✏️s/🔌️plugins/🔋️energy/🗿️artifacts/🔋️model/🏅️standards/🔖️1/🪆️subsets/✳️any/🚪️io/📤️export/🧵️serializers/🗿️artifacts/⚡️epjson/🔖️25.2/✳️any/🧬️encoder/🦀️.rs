@@ -128,7 +128,7 @@ fn encode_schedules(model: &Model, document: &mut Object, diagnostics: &mut Vec<
             for (hour, value) in daily.hourly_values.iter().enumerate() {
                 let clamped = daily.limits.map_or(*value, |limit| value.clamp(limit.min, limit.max));
                 data.push(Value::Object(Object::from_iter([field("field", format!("Until: {:02}:00", hour + 1))])));
-                data.push(Value::Object(Object::from_iter([field("field", semio_framework_pack_json::format_f64(clamped))])));
+                data.push(Value::Object(Object::from_iter([field("field", semio_framework_pack_json_float::format_f64(clamped))])));
             }
             entry(schedule_name(daily.id), [field("schedule_type_limits_name", SCHEDULE_LIMITS_ANY), ("data".to_string(), Value::Array(data))])
         })

@@ -190,24 +190,7 @@ impl ToolJobFactory for HomeRetainedCommandJobFactory {
     fn payload_schema_id(&self) -> &str { HOME_RETAINED_PAYLOAD_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
     fn execution_contract(&self) -> ToolExecutionContract { home_retained_contract() }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > HOME_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
-            return Err((ToolJobFactoryError::new("Space Home retained command rejects an oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(match checkpoint {
-            Some(checkpoint) => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
-            None => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input),
-        })
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: HOME_RETAINED_RAW_BYTES, checkpoint_resume: true);
 }
 
 impl ArtifactOwnedToolJobFactory for HomeRetainedCommandJobFactory {
@@ -478,40 +461,24 @@ impl ArtifactEditor for HomeApp {
         registry.register(HomeRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !HOME_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !HOME_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "space home command does not match its exact registered tool"));
+        if original.command.command_id() != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "space home command does not match its exact registered tool").into());
         }
-        if home_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
-            return Err(Fault::new(FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.too-large"), "space home command payload exceeds its bounded retained extent"));
+        if home_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "space home command payload exceeds its bounded retained extent").into());
         }
-        let tool_id = request.command.command_id();
-        let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> = match request.command.as_ref() {
+        let tool_id = original.command.command_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, HomeCommand::command_id, HOME_RETAINED_RAW_BYTES, HOME_RETAINED_WORK_ITEMS, true, |request| -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> { match request.command.as_ref() {
             HomeCommand::CreateStudio(_) => Box::new(HomeCreateStudioWork::new(request.completion.clone())),
             HomeCommand::ApplyDirectoryEventPage(_) => Box::new(apply_directory_event_page::HomeDirectoryPageWork::<EditorApp<Self>>::new(tool_id, home_directory_page_json)),
             HomeCommand::ImportSpace(_) | HomeCommand::BindSpaceFile(_) | HomeCommand::PersistLocally(_) | HomeCommand::ApplyLocalCatalogDocument(_) => Box::new(HomeCatalogWork::new(tool_id)),
             _ => Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, home_retained_reduce, home_retained_extent)),
-        };
-        let operation_context = AppOperationContext {
-            retained: request.retained,
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
-            HomeCommand::command_id,
-            HOME_RETAINED_RAW_BYTES,
-            HOME_RETAINED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        } })
     }
 
     fn initial_snapshot() -> SHomeSnapshot {

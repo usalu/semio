@@ -39,7 +39,6 @@ fn scoped_identity_visitor_is_atomic_ordered_and_allocation_free() {
     let mut callbacks = 0;
     assert!(visit_scoped_identity_segments(&overflow, |_| callbacks += 1).is_err());
     assert_eq!(callbacks, law["overflowCallbacks"].as_u64().unwrap() as usize);
-    println!("[DEBUG] Borrowed scoped visitor preserves ordered original slices, callbacks0 on whole-input refusal,32segments maximum and zero heap bytes; encoder owns one exact allocation");
 }
 
 #[test]
@@ -59,5 +58,4 @@ fn scoped_identities_follow_portable_vectors_and_bounds() {
     assert!(encode_scoped_identity(&["x"; SCOPED_IDENTITY_MAX_SEGMENTS + 1]).is_err());
     assert!(decode_scoped_identity(&format!("{PREFIX}{}", "1:x".repeat(SCOPED_IDENTITY_MAX_SEGMENTS + 1))).is_err());
     assert!(encode_scoped_identity(&[&"x".repeat(SCOPED_IDENTITY_MAX_BYTES)]).is_err());
-    println!("[DEBUG] Scoped interaction identities preserve Unicode byte boundaries, case ownership, delimiters and bounded canonical refusal");
 }

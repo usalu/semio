@@ -1,7 +1,7 @@
 import "./📦️document-size/🟦️.ts";
-/** 🕰️ Contract: many agents edit different projects of one folder while the graph is read, verified and published without any of them waiting for a whole-workspace rebuild. An edit in one project refreshes exactly its owners, never yields a stale graph for that project, a reader never sees a torn generation, concurrent writers coalesce under one builder, the exclusive hold of the facts resource is bounded to the pointer swap, and a graph policy decides who may wait. Every expectation is produced by the independent Python model in `🐍️oracle.py`. */
+/** 🕰️ Contract: many agents edit different projects of one folder while the graph is read, verified and published without any of them waiting for a whole-workspace rebuild. An edit in one project refreshes exactly its owners, never yields a stale graph for that project, a reader never sees a torn generation, concurrent writers coalesce under one builder, the exclusive hold of the facts resource is bounded to the pointer swap, and a graph policy decides who may wait. Every expectation is produced by the independent Python model in `🐍️.py`. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {createHash} from "node:crypto";
 import {chmodSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {lstat,readFile,readdir,writeFile} from "node:fs/promises";
@@ -16,7 +16,7 @@ import schema from "../🧬️schema/🔣️.json";
 import {GENERATION_POLICY_V1,canonicalJsonV1,createFactIndexV1,createFileLeasePortV1,createFrontierV1,createGenerationStoreV1,diffFrontiersV1,factConsumersV1,frontierHoldsV1,patchFactIndexV1,readGenerationFragmentV1,readGenerationManifestV1,readGenerationPointerV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleFactRowsV1,type GenerationRowV1} from "../🟨️.mjs";
 import {IDENTITY,IMPLEMENTATION,applyOps,createMemoryFilePort,createWorld,ringFiles,seed,type Op} from "./🏃️world/🟦️.ts";
 
-const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️oracle.py"),windows=process.platform==="win32";
+const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️.py"),windows=process.platform==="win32";
 const sha=(text:string)=>createHash("sha256").update(text).digest("hex");
 const scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"graph-generations-"));
 const clean=(dir:string)=>rmSync(dir,{recursive:true,force:true});
@@ -89,7 +89,7 @@ test("a missing fragment is rebuilt, a missing index or manifest starts over, an
   rmSync(join(store,"o",victim[1].fragment+".json.br"));
   const healed=await world.refresh();expect(healed.built).toBe(true);expect(world.log.at(-1)!.full).toEqual([victim[0]]);
   expect(await world.graph(healed.current)).toEqual(normalized(pythonGraph(dir)));
-  rmSync(join(store,"x",healed.current.manifest!.factIndex+".json.br"));
+  rmSync(join(store,"x",healed.current.manifest!.factIndex+".facts.br"));
   const again=await createWorld(dir).refresh();expect(again.current.manifest!.built.kind).toBe("cold");
   rmSync(join(store,"m",again.current.pointer.manifest+".json"));
   const third=createWorld(dir),rebuilt=await third.refresh();expect(rebuilt.built).toBe(true);expect(rebuilt.current.manifest!.built.kind).toBe("cold");

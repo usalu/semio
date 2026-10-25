@@ -23,11 +23,11 @@ use crate::schema::mutation_support::prior_attribute;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetTinyAttribute {
-    pub(crate) path: NodePath,
-    pub(crate) name: String,
-    pub(crate) value: Option<SvgAttributeValue>,
+    pub path: NodePath,
+    pub name: String,
+    pub value: Option<SvgAttributeValue>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
 }
 
 impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetTinyAttribute

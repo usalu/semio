@@ -18,7 +18,7 @@ import {systemNativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/�
 import {bunDistribution, prepareBun} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts";
 import {binaryenDirectory, prepareBinaryen} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts";
 import {bazelDistribution} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts";
-import {locateToolV1, renderToolReportV1, resolveSiblingPackageV1, setupToolsV1, runtimeWarningV1, toolRowV1, toolRowsV1, toolSetupMessageV1, verifyToolsV1, type ToolContextV1, type ToolProvisionerV1, type ToolReportV1, type ToolRowV1} from "../🟦️.ts";
+import {locateToolV1, renderToolReportV1, resolveSiblingPackageV1, setupToolsV1, runtimeWarningV1, runningRuntimeLineV1, toolRowV1, toolRowsV1, toolSetupMessageV1, verifyToolsV1, type ToolContextV1, type ToolProvisionerV1, type ToolReportV1, type ToolRowV1} from "../🟦️.ts";
 import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
 const executableSuffix = (platform: NodeJS.Platform): string => platform === "win32" ? ".exe" : "";
@@ -33,7 +33,7 @@ export function dotnetSdkDirectoryV1(toolsRoot: string, sdk: string, host: Toolc
   return join(toolsRoot, "native", "dotnet", sdk, host + "-" + scriptSha256.slice(0, 16));
 }
 
-/** 📜️ One pinned row of the bootstrap pins. */
+/** 📌️ One pinned row of the bootstrap pins. */
 export type DotnetInstallerRowV1 = Readonly<{tool: string; version: string; platform: string; arch: string; url: string; sha256: string}>;
 
 /** 📜️ Selects the pinned .NET installer script of a host from the bootstrap pins: PowerShell on Windows, the shell script elsewhere. */
@@ -92,7 +92,8 @@ export function systemToolContextV1(root: string, control: ResourceLeaseControl,
 export async function runToolsVerifyV1(root: string, control: ResourceLeaseControl, names: readonly string[], write: (line: string) => void = writeResultLineV1): Promise<number> {
   const context = systemToolContextV1(root, control), reports = await verifyToolsV1(selectToolRowsV1(names, [], context.environment), context, control.signal);
   for (const line of renderToolReportV1(reports, context.environment)) write(line);
-  const warning = runtimeWarningV1(reports, (process.versions as {bun?: string}).bun, context.environment);
+  const running = (process.versions as {bun?: string}).bun, warning = runtimeWarningV1(reports, running, context.environment);
+  if (running !== undefined) write(runningRuntimeLineV1(reports, running, process.execPath, context.environment));
   if (warning !== undefined) write(warning);
   return reports.every(report => report.status === "ok") ? 0 : 1;
 }
@@ -129,7 +130,7 @@ export async function installDotnetSdkV1(sdk: string, directory: string, scriptS
   }
 }
 
-/** 📥️ Runs `repo tools setup toolchains|all`: provisions every pinned tool of the selection that differs from its pin below the tools partition (or through its owning installer), then verifies it again; returns the final report. */
+/** 🔧️ Runs `repo tools setup toolchains|all`: provisions every pinned tool of the selection that differs from its pin below the tools partition (or through its owning installer), then verifies it again; returns the final report. */
 export async function runToolchainsSetupV1(root: string, invocation: ScriptInvocation, control: ResourceLeaseControl, names: readonly string[], excluded: readonly string[], offline: boolean): Promise<readonly ToolReportV1[]> {
   const context = systemToolContextV1(root, control), host = toolchainHostV1(), rows = selectToolRowsV1(names, excluded, context.environment), port = systemNativeToolPortV1(root, offline);
   const entry = (label: string): ResourceLeaseControl => createIssuedResourceControlV1(invocation, label, 0);

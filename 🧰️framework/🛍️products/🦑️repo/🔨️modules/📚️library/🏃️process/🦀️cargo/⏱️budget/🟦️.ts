@@ -50,7 +50,7 @@ export const PACKAGE_TEST_BUDGET_MS: Record<string, Partial<Record<TestLevel, nu
   "semio-s-plugin-sourcing-slabs": { quick: 600_000 },
   "semio-s-plugin-sourcing-windows": { quick: 600_000 },
 };
-/** ⏱️ Intersects package floors with the caller-selected test level. */
+/** 🧪️ Intersects package floors with the caller-selected test level. */
 export function packageTestBudgetMs(packages: readonly string[], level: TestLevel = activeTestLevel(), environment:Readonly<Record<string,string|undefined>>=process.env): number {
   if (environment.SEMIO_TEST_BUDGET_MS !== undefined) return Number(environment.SEMIO_TEST_BUDGET_MS);
   let budget = TEST_LEVEL_BUDGET_MS[level];

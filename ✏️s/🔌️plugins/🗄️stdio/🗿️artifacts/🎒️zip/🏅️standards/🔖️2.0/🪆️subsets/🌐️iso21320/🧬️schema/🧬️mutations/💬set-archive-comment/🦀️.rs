@@ -8,8 +8,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetArchiveComment {
-    pub(crate) comment: String,
-    pub(crate) comment_utf8: bool,
+    pub comment: String,
+    pub comment_utf8: bool,
 }
 
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for SetArchiveComment {

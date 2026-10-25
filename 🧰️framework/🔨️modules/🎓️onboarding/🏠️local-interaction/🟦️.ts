@@ -18,7 +18,7 @@ export function applyTutorialLocalInteractionCold(before: LocalInteractionState,
   return { selection: patchField(before.selection, change.domainId, change.patch.selection), activeMode: patchField(before.activeMode, change.domainId, change.patch.activeMode), activeGranularity: patchField(before.activeGranularity, change.domainId, change.patch.activeGranularity) };
 }
 
-/** 🧊️ Exact cold authored diff; collection traversal is not a retained recording or publication step. */
+/** ❄️ Exact cold authored diff; collection traversal is not a retained recording or publication step. */
 export function diffTutorialLocalInteractionCold(before: LocalInteractionState, after: LocalInteractionState): readonly TutorialLocalInteractionChange[] {
   const domains = new Set([...Object.keys(before.selection), ...Object.keys(after.selection), ...Object.keys(before.activeMode), ...Object.keys(after.activeMode), ...Object.keys(before.activeGranularity), ...Object.keys(after.activeGranularity)]);
   const changes: TutorialLocalInteractionChange[] = [];

@@ -26,7 +26,7 @@ pub const BROWSER_HOST_OPERATION_CLIPBOARD_WRITE: u16 = 1_797;
 
 pub const BROWSER_HOST_OPERATION_DETACH: u16 = 1_798;
 
-/// 🔌️ A1 port specialization implemented by an owned host shim.
+/// 🖥️ A1 port specialization implemented by an owned host shim.
 pub trait BrowserHostPort: AbiPort {}
 
 impl<T: AbiPort> BrowserHostPort for T {}

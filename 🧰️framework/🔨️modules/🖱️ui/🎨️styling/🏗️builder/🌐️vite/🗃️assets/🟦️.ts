@@ -58,7 +58,7 @@ export function semioAssetsVitePlugin(repoRoot: string): OwnedBuildPlugin[] {
   return uiAssetsVitePluginsForRoot(resolveSemioAssetRoot(repoRoot));
 }
 
-/** 🌐️ Serves `/🖼️assets/*` like {@link semioAssetsVitePlugin}, but a build copies only the asset files the written bundle
+/** 📦️ Serves `/🖼️assets/*` like {@link semioAssetsVitePlugin}, but a build copies only the asset files the written bundle
  * references (the fonts of an imported palette, an icon named in CSS) instead of the whole asset root — for a site that
  * ships a handful of files rather than the library's every font, mesh and image. A reference is a route that opens a
  * token (after a quote, bracket, `=` or whitespace), so a repository path that merely contains `/🖼️assets/` never counts. */

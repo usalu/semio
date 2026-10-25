@@ -17,6 +17,35 @@ impl BoardFillSnapshotIngress {
         }
     }
 
+    pub fn admission_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let mut demand = BoardFillSnapshot::descriptor_demands(); demand.copy_bytes += size_of::<Self>(); Ok(demand)
+    }
+    pub fn admit_original(suggestion_offset: f64, naming: &'static BoardNaming, output: &mut Option<Self>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_action_bus::{admit_original_tool_construction_scoped, ToolJobAdmissionDemand};
+        use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
+        let demand = Self::admission_demands()?;
+        let mut allocation_failed = false;
+        let mut constructed_progress = RetainedCloneProgress::default();
+        let admitted = admit_original_tool_construction_scoped(cx, output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
+            scope.admit_owner(demand)?;
+            let mut candidate = Self::new(suggestion_offset, naming);
+            let snapshot = candidate.snapshot.as_mut().expect("original snapshot construction carrier");
+            snapshot.original_source = Some(scope.identity().source_binding());
+            let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Self>(), ..Default::default() };
+            macro_rules! descriptor {
+                ($field:ident) => { if !allocation_failed { match BoardFillFixedPages::try_new() {
+                    Ok(pages) => { let bytes = size_of_val(pages.pages.as_ref()); progress.retained_capacity_bytes += bytes; progress.copied_bytes += bytes; snapshot.$field = pages; },
+                    Err(()) => allocation_failed = true,
+                } } };
+            }
+            descriptor!(nodes); descriptor!(handles); descriptor!(kinds); descriptor!(rules);
+            constructed_progress = progress;
+            Ok((candidate, progress))
+        })?;
+        if allocation_failed { return Err(ValueError::literal(ValueRefusalKind::AllocationFailed, "board fill retains its partial snapshot owner for original close").with_retained_progress(constructed_progress).into()); }
+        Ok(admitted)
+    }
+
     pub fn begin_node(&mut self) -> Result<(), BoardFillCaptureFault> {
         if self.closing || self.node.is_some() {
             return Err(BoardFillCaptureFault::StaleNode);

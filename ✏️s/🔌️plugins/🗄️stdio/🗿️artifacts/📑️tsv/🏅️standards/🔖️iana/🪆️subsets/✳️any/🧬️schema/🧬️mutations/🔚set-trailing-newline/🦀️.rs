@@ -8,7 +8,7 @@ use super::*;
 #[value(rename_all = "camelCase")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetTrailingNewline {
-    pub(crate) trailing_newline: bool,
+    pub trailing_newline: bool,
 }
 
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetTrailingNewline {

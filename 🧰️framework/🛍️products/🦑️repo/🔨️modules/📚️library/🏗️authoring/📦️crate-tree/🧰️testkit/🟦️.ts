@@ -1,6 +1,6 @@
 import { rustFindTopLevel, rustTokenPairs, rustTokens, type RustToken } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { useLeafNames } from "../🌳️module-tree/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 🧰️ A feature of a carved crate with the entries it enables. */
 export type TestkitFeature = Readonly<{ name: string; entries: readonly string[] }>;
@@ -67,7 +67,7 @@ export function testGateFeatures(attribute: string): string[] {
   return [...found];
 }
 
-/** 🚩️ Every feature that a `cfg(...)` attribute text requires: the `feature = "x"` arguments outside `not(...)`. */
+/** ⭐️ Every feature that a `cfg(...)` attribute text requires: the `feature = "x"` arguments outside `not(...)`. */
 export function cfgFeatures(attribute: string): string[] {
   const text = attribute.trim();
   if (!/^cfg\s*\(/u.test(text)) return [];
@@ -194,7 +194,7 @@ export type TestkitCrate = Readonly<{
   featureFiles: ReadonlyMap<string, ReadonlySet<string>>;
 }>;
 
-/** 🧩️ Scans the files of one crate for test gates and asks `featureClosure` for the paths that the crate's closure adds when a gate feature is on. */
+/** 🔨️ Scans the files of one crate for test gates and asks `featureClosure` for the paths that the crate's closure adds when a gate feature is on. */
 export async function buildTestkitCrate(spec: Readonly<{ name: string; ident: string; dependsOn: readonly string[]; devDependsOn?: readonly string[]; ownedFiles?: ReadonlySet<string>; files: ReadonlyMap<string, string> }>, featureClosure: (feature: string) => Promise<ReadonlySet<string>>): Promise<TestkitCrate> {
   const gates = new Map<string, readonly TestGate[]>();
   const candidates = new Set<string>();
@@ -226,10 +226,10 @@ export function declaredNames(text: string): Set<string> {
 /** 📦️ One external dependency of the pre-carve package manifest. */
 export type ExternalDependency = Readonly<{ key: string; ident: string; dependency: boolean; devOnly: boolean; devFeatures: readonly string[]; devRow: string | null; row: string | null }>;
 
-/** 🚪️ Names behind a feature that a dev-dependency row adds to an external dependency, or `null` when the dependency source is unreadable and every gated name must count as referenced. */
+/** 📖️ Names behind a feature that a dev-dependency row adds to an external dependency, or `null` when the dependency source is unreadable and every gated name must count as referenced. */
 export type ExternalGateReader = (external: ExternalDependency, feature: string) => ReadonlySet<string> | null;
 
-/** 📦️ Reads the external dependencies of a package manifest: which are normal dependencies, which exist only as dev-dependencies, and the features a dev-dependency row adds. */
+/** ⛓️ Reads the external dependencies of a package manifest: which are normal dependencies, which exist only as dev-dependencies, and the features a dev-dependency row adds. */
 export function externalDependencies(manifestText: string, rows: Readonly<{ dependencies?: readonly string[]; devDependencies: readonly string[] }>): ExternalDependency[] {
   const parsed = runtimeParseTomlV1(manifestText) as { dependencies?: Record<string, unknown>; "dev-dependencies"?: Record<string, unknown> };
   const normal = parsed.dependencies ?? {};
@@ -332,7 +332,7 @@ function gateSlots(crate: TestkitCrate, ignore: ReadonlySet<string>, owns: (path
   return { slots, aliases };
 }
 
-/** 🧭️ Derives the test-support wiring of a carve from the sources. A gated file that several crates mount belongs to the crate whose plan slices contain it, else to the crates that do not depend on another one of them. A crate defines a gate feature when an item other than a re-export sits behind it, and declares it when it defines it or when another crate enables it; a declared feature enables the external features and optional dependencies its gated code needs and forwards to the crates whose gated items that code names. A crate whose gated code names something that a dev-dependency feature of an external crate adds enables the dev-dependency features of every external crate it names. A crate consumes a dependency's feature when its code names an exported gated item of the dependency (a gated method counts when the code names the method and its type) or when its own gated code uses the dependency's crate. Features in `declared` are forwarded to every crate by the plain feature path and are left out here. */
+/** 🧪️ Derives the test-support wiring of a carve from the sources. A gated file that several crates mount belongs to the crate whose plan slices contain it, else to the crates that do not depend on another one of them. A crate defines a gate feature when an item other than a re-export sits behind it, and declares it when it defines it or when another crate enables it; a declared feature enables the external features and optional dependencies its gated code needs and forwards to the crates whose gated items that code names. A crate whose gated code names something that a dev-dependency feature of an external crate adds enables the dev-dependency features of every external crate it names. A crate consumes a dependency's feature when its code names an exported gated item of the dependency (a gated method counts when the code names the method and its type) or when its own gated code uses the dependency's crate. Features in `declared` are forwarded to every crate by the plain feature path and are left out here. */
 export function planTestkitWiring(crates: readonly TestkitCrate[], externals: readonly ExternalDependency[], declared: ReadonlySet<string>, externalGates: ExternalGateReader = () => null): Map<string, CrateWiring> {
   const byName = new Map(crates.map((crate) => [crate.name, crate]));
   const reach = new Map<string, Set<string>>();
@@ -425,7 +425,7 @@ export function requiredTestFeatures(targetTokens: ReadonlySet<string>, gatedNam
   return [...gatedNames].filter(([, names]) => [...names].some((name) => targetTokens.has(name))).map(([feature]) => feature).sort();
 }
 
-/** 🎯️ Adds `required-features` to the named `[[test]]` sections of a manifest; a section that has the key keeps it, extended with the missing features. */
+/** 📑️ Adds `required-features` to the named `[[test]]` sections of a manifest; a section that has the key keeps it, extended with the missing features. */
 export function withRequiredFeatures(manifestText: string, byTarget: ReadonlyMap<string, readonly string[]>): string {
   if (!byTarget.size) return manifestText;
   const lines = manifestText.split("\n");
@@ -450,12 +450,12 @@ export function withRequiredFeatures(manifestText: string, byTarget: ReadonlyMap
   return lines.join("\n");
 }
 
-/** 🚩️ The manifest row of a gate feature. */
+/** ⛩️ The manifest row of a gate feature. */
 export function testkitFeatureRow(feature: TestkitFeature): string {
   return `${feature.name} = [${feature.entries.map((entry) => JSON.stringify(entry)).join(", ")}]`;
 }
 
-/** 🚩️ Adds feature rows to a package manifest: a row of an existing `[features]` section is replaced, a missing section is created in front of `[dependencies]`. */
+/** ➕️ Adds feature rows to a package manifest: a row of an existing `[features]` section is replaced, a missing section is created in front of `[dependencies]`. */
 export function withFeatureRows(manifestText: string, features: readonly TestkitFeature[]): string {
   let out = manifestText;
   for (const feature of features) {

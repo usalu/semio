@@ -1,8 +1,8 @@
 import {lstatSync,readFileSync,readdirSync,readlinkSync,unlinkSync} from "node:fs";
 import {join} from "node:path";
-import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {javascriptDependencyGenerationDirectoryV1,javascriptDependencySourceOwnerRuntimeV1,selectObsoleteJavascriptDependencyGenerationsV1,type JavascriptDependencyReadContextV1} from "../../💾️storage/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import { javascriptDependencyGenerationDirectoryV1, javascriptDependencySourceOwnerRuntimeV1, selectObsoleteJavascriptDependencyGenerationsV1, type JavascriptDependencyReadContextV1 } from "../../💾️storage/📥️read-context/🟦️.ts";
 import {javascriptInstallSchemaV1 as installSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
 import {verifyJavascriptDependencyGenerationReceiptV1,writeJavascriptDependencyGenerationFilesV1} from "../../🧾️generation/💾️storage/🟦️.ts";
 import {generationCauseV1,generationSha256V1} from "../../🧾️generation/🟦️.ts";
@@ -31,7 +31,7 @@ const kindOf=(facts:{isSymbolicLink():boolean;isDirectory():boolean;isFile():boo
 
 /** 🪣️ Collects the ledger rows of one installed-paths scan as it closes each directory. */
 export interface InstalledLedgerSinkV1{readonly directory:(portable:string,facts:StampSourceV1,children:readonly InstalledChildV1[])=>void;readonly rows:InstalledRowV1[]}
-/** 🪣️ Creates the sink for a scan that starts now; its threshold is the settle window before that start. */
+/** 📒️ Creates the sink for a scan that starts now; its threshold is the settle window before that start. */
 export function installedLedgerSinkV1(startedAtMs:number=Date.now()):InstalledLedgerSinkV1{
  const threshold=installedThresholdNsV1(startedAtMs),rows:InstalledRowV1[]=[];
  return Object.freeze({rows,directory:(portable:string,facts:StampSourceV1,children:readonly InstalledChildV1[])=>{rows.push(installedRowV1(portable,facts,children,threshold));}});
@@ -55,7 +55,7 @@ export async function verifyJavascriptDependencyInstalledReceiptV1(storeRoot:str
  }
  return undefined;
 }
-/** 🔏️ Seals the ledger of a completed scan under the caller's exclusive Store custody and retires the superseded ledgers of the same generation. */
+/** 🧾️ Seals the ledger of a completed scan under the caller's exclusive Store custody and retires the superseded ledgers of the same generation. */
 export async function sealJavascriptDependencyInstalledReceiptV1(storeRoot:string,generation:string,scan:Readonly<{entries:number;directories:number;files:number;links:number;maximumPathUnits:number;sha256:string}>,rows:readonly InstalledRowV1[],checkpoint:()=>void,yieldContinuation:()=>Promise<void>):Promise<string>{
  const counts=installedCountsV1(rows);
  if(counts.entries!==scan.entries||counts.directories!==scan.directories||counts.files!==scan.files||counts.links!==scan.links)throw Error("Complete installed ledger of the scan required");

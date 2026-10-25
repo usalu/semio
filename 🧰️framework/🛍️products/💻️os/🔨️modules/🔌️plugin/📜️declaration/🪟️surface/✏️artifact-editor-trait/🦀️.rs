@@ -20,7 +20,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
     /// reads it from, so `genesis_member_schema::<Self::Members>` resolves every dialect
     /// `genesis_child_pack` derives no matter which plugin registers the surface. `NoMembers` (the
     /// default) is right for an editor that composes no children; an editor that does state its own.
-    type Members: SpaceMember + MemberFactory + Send + 'static = NoMembers;
+    type Members: ReferenceSpaceMember + MemberFactory + Send + 'static = NoMembers;
     const DIALECT: Dialect;
     /// 🧬️ Supplies the editor's bounded projection of real parent child fields.
     fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {

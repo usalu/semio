@@ -1,4 +1,4 @@
-//! 📖️ Wire decoding: the symref and chunk source, the materialization admission owners and the tag-driven value decoders.
+//! 📡️ Wire decoding: the symref and chunk source, the materialization admission owners and the tag-driven value decoders.
 
 use semio_framework_value::{DslValue, Number, ValueError, ValueRefusalKind};
 use semio_framework_pack_error::PackRefusal;
@@ -16,7 +16,7 @@ pub(super) enum DecSource<'a> {
     Inline { symbols: Vec<String> },
 }
 
-/// 📖️ Mutable state threaded through one `decode_document`/`decode_record_body` call: the
+/// 📄️ Mutable state threaded through one `decode_document`/`decode_record_body` call: the
 /// symref/chunk resolution source, the caller's limits/verification/preserve-unknown choices, and
 /// the accumulated unknown-field-id report.
 pub(super) struct DecCtx<'a> {
@@ -42,7 +42,7 @@ impl ValueMaterialization {
     }
 }
 
-/// 🧾️ Transfers octets after controlled validation of the same immutable source range.
+/// 🦜️ Transfers octets after controlled validation of the same immutable source range.
 /// Both private admission owners use the exact span copy; the immutable borrow prevents its
 /// validated scalar words from changing between validation and owned transfer.
 fn copy_validated_span_utf8<M:MaterializationAdmission+?Sized>(materialization:&M,bytes:semio_framework_replication_codec::ByteSpan<'_>,offset:u64,what:&'static str)->Result<String,PackRefusal>{
@@ -251,7 +251,7 @@ pub(super) fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&Re
     Ok(record)
 }
 
-/// 📖️ Decodes one tag-prefixed value. `shape`, when known, disambiguates `Tuple` vs
+/// 🔖️ Decodes one tag-prefixed value. `shape`, when known, disambiguates `Tuple` vs
 /// `List`, resolves nested `Record`/`Block`/`Statements`/`Map` sub-shapes, and reinterprets
 /// `PackedVarint` payloads as `UInt`/`Enum` where the shape says so; `None` decodes generically
 /// straight from the wire tag — every tag is self-describing enough for this to always succeed,

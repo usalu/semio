@@ -26,19 +26,19 @@ export interface WindowTemplateDragSession {
 
 const activeWindowTemplateDragSession = ephemeralBox<WindowTemplateDragSession | null>("framework.modules.ui.elements.Canvas.component.tsx.activeWindowTemplateDragSession", null);
 
-/** 🪟️ Records the active palette template drag until drop or dragend. */
+/** ▶️ Records the active palette template drag until drop or dragend. */
 export function beginWindowTemplateDrag(session: WindowTemplateDragSession): void {
   activeWindowTemplateDragSession.current = session;
   panelGhostSessionBridge?.begin(null);
 }
 
-/** 🪟️ Clears the active palette template drag session. */
+/** ⏹️ Clears the active palette template drag session. */
 export function endWindowTemplateDrag(): void {
   activeWindowTemplateDragSession.current = null;
   panelGhostSessionBridge?.end();
 }
 
-/** 🪟️ Returns the in-flight palette template drag, if any. */
+/** 📖️ Returns the in-flight palette template drag, if any. */
 export function readActiveWindowTemplateDragSession(): WindowTemplateDragSession | null {
   return activeWindowTemplateDragSession.current;
 }
@@ -46,18 +46,18 @@ export function readActiveWindowTemplateDragSession(): WindowTemplateDragSession
 /** 🖱️ Active pointer-driven window-template drag from the Display tree. */
 export const windowTemplatePointerDragRef = { active: false };
 
-/** 🖱️ Marks a pointer-driven window-template drag as active. */
+/** 🚩️ Marks a pointer-driven window-template drag as active. */
 export function beginWindowTemplatePointerDrag(_encoded: string): void {
   windowTemplatePointerDragRef.active = true;
 }
 
-/** 🖱️ Cancels a pointer-driven window-template drag. */
+/** ✖️ Cancels a pointer-driven window-template drag. */
 export function cancelWindowTemplatePointerDrag(): void {
   windowTemplatePointerDragRef.active = false;
   endWindowTemplateDrag();
 }
 
-/** 🖱️ {@link TreeDragAndDropController} for Display rows that carry window-template `dragData`. */
+/** 🌳️ {@link TreeDragAndDropController} for Display rows that carry window-template `dragData`. */
 export function windowTemplatePaletteTreeDragController(): TreeDragAndDropController {
   const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
     const payload = dragData?.[COMPOSE_WINDOW_TEMPLATE_MIME];

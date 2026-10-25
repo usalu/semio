@@ -66,7 +66,7 @@ export default defineTestAdapter({
     },
     "arc-spacing": {
       oracle: oracle("arc-spacing"),
-      /** 🎯️ The twin's axis, whose length is the spacing times the gaps between the nodes. */
+      /** ⏱️ The twin's axis, whose length is the spacing times the gaps between the nodes. */
       subject: (ctx: AdapterContext) => {
         const g = graph(ctx);
         return { projection: { "geometry/layout/arc": placements(vizArcLayout(g, { length: SPACING * Math.max(0, g.nodes.length - 1) })) } };

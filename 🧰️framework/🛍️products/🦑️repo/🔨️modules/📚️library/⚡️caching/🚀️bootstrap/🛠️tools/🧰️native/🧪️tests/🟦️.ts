@@ -5,7 +5,7 @@ import {createHash} from "node:crypto";
 import {chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {delimiter, join} from "node:path";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {NATIVE_TOOLCHAINS_V1, nativeToolBinaryDirectoryV1, nativeToolDirectoryV1, type NativeToolV1, type ToolchainHostV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import {pinnedGoEnvironmentV1, pinnedUvEnvironmentV1, prepareNativeToolV1, preparedNativeToolV1, verifyExtractedTreeV1, withPinnedNativePathV1, type NativeToolPortV1} from "../🟦️.ts";
 

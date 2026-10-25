@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import ts from "typescript";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
+import { repositoryVitestPolicyV1 } from "../../🏃️process/📋️context/🔣️policy/🟦️.ts";
 
 //#region 🧬️Contract
 /** ✂️ The declared strip-only surface: config specifiers that mark a vite/vitest config, the package entries those configs
@@ -134,7 +135,7 @@ test("every native entry's runtime closure is erasable, imports types as types, 
   for (const entry of fixture.nativeEntries) {
     expect(stripOnlyFindings(nativeClosure(entry)), entry).toEqual([]);
     if (entry.includes("/🧪️testing/🎚️config/")) continue;
-    const load = spawnSync("node", ["--no-warnings", "--experimental-strip-types", "--input-type=module", "-e", `await import(${JSON.stringify(pathToFileURL(join(root, entry)).href)});`], { cwd: root, encoding: "utf8" });
+    const load = spawnSync("node", ["--no-warnings", "--experimental-strip-types", "--input-type=module", "-e", `await import(${JSON.stringify(pathToFileURL(join(root, entry)).href)});`], { cwd: root, encoding: "utf8", env: { ...process.env, SEMIO_VITEST_POLICY: JSON.stringify(repositoryVitestPolicyV1(root)) } });
     expect(load.status, `${entry}\n${load.stderr.slice(0, 2048)}`).toBe(0);
   }
 }, 120_000);

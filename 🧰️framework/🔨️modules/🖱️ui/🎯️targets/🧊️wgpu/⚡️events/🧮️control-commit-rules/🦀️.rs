@@ -35,13 +35,13 @@ use super::*;
 /// from the args exactly as `ui_contract::UiIntent` keeps `args` and `input` apart.
 /// [`UiIntentCommand::payload`] is the single place they merge, on the way to the host.
 #[derive(Clone, Debug, PartialEq)]
-pub(super) struct FiredAction {
+pub struct FiredAction {
     pub(super) trigger: Trigger,
     pub(super) action: ActionDescriptor,
     pub input: Option<DslValue>,
 }
 
-/// 🎬️ One gesture against `action`'s binding. `None` when the node declares no binding for this
+/// 🪢️ One gesture against `action`'s binding. `None` when the node declares no binding for this
 /// trigger — `reconcile::record_action_or_inert` marks that by an EMPTY action name, which is exactly
 /// the condition React's `emitIntent` answers `undefined` for.
 pub(super) fn fired_action(action: &ActionDescriptor, trigger: Trigger, input: DslValue) -> Option<FiredAction> {
@@ -51,7 +51,7 @@ pub(super) fn fired_action(action: &ActionDescriptor, trigger: Trigger, input: D
     Some(FiredAction { trigger, action: action.clone(), input: Some(input) })
 }
 
-/// 🎬️ A gesture that carries no payload of its own (`Activate`, a focus commit's own re-dispatch).
+/// 🎒️ A gesture that carries no payload of its own (`Activate`, a focus commit's own re-dispatch).
 pub(super) fn bare_action(action: &ActionDescriptor, trigger: Trigger) -> Option<FiredAction> {
     if action.action.is_empty() {
         return None;
@@ -89,7 +89,7 @@ pub(super) fn commits_on_blur(node: &UiNode) -> bool {
     matches!(node, UiNode::Input(input) if input.commit.as_deref() == Some("blur"))
 }
 
-/// ✍️ The action an editable node's CURRENT buffer commits: `{value: <text>}`, numeric for a
+/// ✏️ The action an editable node's CURRENT buffer commits: `{value: <text>}`, numeric for a
 /// `Component::Input` of kind `number` (React's `InputView`: `kind === "number" ? Number(raw) : raw`),
 /// and constrained by that input's own `min`/`max`/`step` before it leaves — the canvas twin of the
 /// `<input type="number" min max step>` attributes React hands the browser to enforce
@@ -109,7 +109,7 @@ pub(super) fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction>
     }
 }
 
-/// ⏎️⎋️🔁️ The three moments React's window-search line binds BESIDE `onChange` — `Trigger::Submit`
+/// 🔎️⎋️🔁️ The three moments React's window-search line binds BESIDE `onChange` — `Trigger::Submit`
 /// (Enter, carrying the TRIMMED line, React's `input.onSubmit(draft.trim())`), `Trigger::Abort`
 /// (Escape, bare) and `Trigger::RepeatLast` (Space on an empty line, bare). Producing them here is
 /// what makes a retained command line behave like React's: `onChange` keeps firing on every
@@ -341,13 +341,13 @@ fn number_stepper_fired(node: &Node, stepper: &UiNumberStepperNode, sign: f64) -
     }
 }
 
-/// 🎚️ Whether a press on this variant keeps committing while the pointer drags — React delegates
+/// 🐙️ Whether a press on this variant keeps committing while the pointer drags — React delegates
 /// `Slider`/`Ring` to controls that report every intermediate value, not only the release.
 pub(super) fn commits_while_dragging(node: &UiNode) -> bool {
     matches!(node, UiNode::Slider(_) | UiNode::Ring(_))
 }
 
-/// 🎚️ The scrub protocol's argument names (`🛠️tool-machine` `SCRUB_GESTURE_ARG`/`SCRUB_COMMIT_ARG`/`SCRUB_ABORT_ARG`,
+/// 🧽️ The scrub protocol's argument names (`🛠️tool-machine` `SCRUB_GESTURE_ARG`/`SCRUB_COMMIT_ARG`/`SCRUB_ABORT_ARG`,
 /// pinned by `🛠️tool-machine/🧫️fixtures/🧫️scrub-law`): a continuous control's dispatch carries its value, the press it
 /// belongs to and whether it is the release; a host cancel carries the press and its reason and no value.
 pub const SCRUB_GESTURE_ARG: &str = "gesture";
@@ -359,7 +359,7 @@ pub const SCRUB_ABORT_ARG: &str = "abort";
 /// 🔢️ Process-wide press serial: every press identity is unique for the life of the guest it addresses.
 static SCRUB_PRESS_SERIAL: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-/// 🎚️ Whether `node` is a continuous control whose value rides presses: a `Slider`, a `Ring`, a `NumberStepper`'s absolute
+/// 🎛️ Whether `node` is a continuous control whose value rides presses: a `Slider`, a `Ring`, a `NumberStepper`'s absolute
 /// value, or a number or colour `Input` without a commit policy (React's `SliderView`, `RingView`, `NumberStepperView` and
 /// `InputView` ride their continuous lane exactly then; a typed field's blur is the release).
 pub(super) fn is_continuous_control(node: &UiNode) -> bool {
@@ -370,7 +370,7 @@ pub(super) fn is_continuous_control(node: &UiNode) -> bool {
     }
 }
 
-/// 🎚️ `fired` as one dispatch of the press `id` is in: its payload becomes `{value, gesture, commit}`. A press opens on
+/// 🖱️ `fired` as one dispatch of the press `id` is in: its payload becomes `{value, gesture, commit}`. A press opens on
 /// its first dispatch; a release closes it, so a release with no open press is a one-shot press of its own.
 pub(super) fn pressed(tree: &mut UiTree, window_id: &str, id: NodeId, mut fired: FiredAction, release: bool) -> FiredAction {
     let value = fired.input.take().unwrap_or(DslValue::Null);

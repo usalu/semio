@@ -9,8 +9,8 @@ use super::*;
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "rename-entry")]
 pub struct RenameEntry {
-    pub(crate) name: String,
-    pub(crate) new_name: String,
+    pub name: String,
+    pub new_name: String,
 }
 
 impl protocol::MutationKind<ZipSnapshot, ZipMutation> for RenameEntry {

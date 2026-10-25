@@ -70,7 +70,7 @@ impl OriginalNativeDecodeSource{
  }
  /// 📏️ Quotes the retained recipient or original source metadata return without constructing an authority.
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.closed{return Ok(Default::default())}if let Some(recipient)=self.original_recipient.as_ref().filter(|recipient|!recipient.terminal_is_empty()){return Ok(RetirementDemand{copy_bytes:recipient.next_copy_byte_demand()?,capacity_bytes:recipient.next_capacity_byte_demand(body)?,release_bytes:recipient.next_release_byte_demand()?,depth:recipient.next_depth_demand()?})}Ok(RetirementDemand{depth:1,..Default::default()})}
- /// ♻️ Returns recipient owners and the consuming receipt before the genuine source loan's last close phase.
+ /// 📪️ Returns recipient owners and the consuming receipt before the genuine source loan's last close phase.
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<RetainedCloneStep,OriginalTurnFailure>{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   self.closing=true;
@@ -88,7 +88,7 @@ impl OriginalNativeDecodeSource{
  }
  /// 📊️ Borrows the retained consuming decoder ledger without creating another admission.
  pub fn owned_bytes(&self)->Option<usize>{self.receipt.as_ref().map(NativeForwardedDecodeReceipt::owned_bytes)}
- /// 🔒️ No original recipient, decoder receipt or source alias remains after the final paid turn.
+ /// 🪫️ No original recipient, decoder receipt or source alias remains after the final paid turn.
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.source.is_none()&&self.original_recipient.is_none()&&self.receipt.is_none()}
 }
 impl Drop for OriginalNativeDecodeSource{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original native decode source requires explicit terminal source return")}}

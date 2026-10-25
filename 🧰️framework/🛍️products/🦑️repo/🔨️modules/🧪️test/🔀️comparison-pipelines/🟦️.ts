@@ -24,13 +24,13 @@ export type ComparisonStage = Readonly<{
   assertions?: Readonly<Record<string, unknown>>;
 }>;
 
-/** ⚖️ An ordered, multi-artifact, externally-probed comparison. */
+/** 🚂️ An ordered, multi-artifact, externally-probed comparison. */
 export type ComparisonPipeline = Readonly<{ id: string; description?: string; toleranceProfile?: string; referenceScale?: "bounding-box-diagonal" | "unit" | "declared"; stages: readonly ComparisonStage[] }>;
 
-/** ⚖️ One evaluated assertion. `expected` is what the stage declared, `actual` what the probe measured. */
+/** 🔔️ One evaluated assertion. `expected` is what the stage declared, `actual` what the probe measured. */
 export type AssertionVerdict = Readonly<{ stage: number; probe: string; key: string; expected: unknown; actual: unknown; ok: boolean; optional: boolean; reason: string }>;
 
-/** ⚖️ The verdict of one whole pipeline run. */
+/** 🏁️ The verdict of one whole pipeline run. */
 export type PipelineVerdict = Readonly<{
   pipeline: string;
   equal: boolean;
@@ -42,7 +42,7 @@ export type PipelineVerdict = Readonly<{
 }>;
 
 /**
- * ⚖️ Evaluates one stage's declarative assertions against one probe report. The vocabulary is small
+ * 🎪️ Evaluates one stage's declarative assertions against one probe report. The vocabulary is small
  * and deliberately arithmetic-free beyond comparison: `<key>Max` bounds a measured number from above,
  * `<key>Min` from below, `<key>Equal` compares structurally, and a bare boolean/number/string
  * compares for equality. Anything a probe cannot measure it must report as `unsupported` rather than
@@ -78,7 +78,7 @@ export function evaluateStageAssertions(stageIndex: number, stage: ComparisonSta
 }
 
 /**
- * ⚖️ Evaluates a whole pipeline against the reports its stages produced. A stage with no report is a
+ * 🧾️ Evaluates a whole pipeline against the reports its stages produced. A stage with no report is a
  * failure, not a skip: an unmeasured assertion that reads as green is the exact defect this pipeline
  * replaces v1's single generic tolerance to prevent.
  */
@@ -119,7 +119,7 @@ export function pipelineRoleArtifacts(results: readonly Pick<TestResult, "role" 
 }
 
 /**
- * ⚖️ Runs one comparison pipeline over one scenario pair's artifacts and evaluates it. Every stage input role must name
+ * 🥢️ Runs one comparison pipeline over one scenario pair's artifacts and evaluates it. Every stage input role must name
  * an artifact one side produced — a role nobody produced is a stage without a report, which `evaluatePipeline` fails,
  * never a skip. Each stage runs its probe's registered `command` with one `--input <path>` per declared input, in the
  * declared order; its whole stdout is the one report it prints, validated before a single assertion is read. Stages run in order; `signal`

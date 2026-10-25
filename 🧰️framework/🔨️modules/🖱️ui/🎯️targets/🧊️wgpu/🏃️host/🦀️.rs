@@ -267,7 +267,7 @@ pub async fn clipboard_write_text(text: &str) {
     }
 }
 
-/** 📋️ The wasm mirror of `clipboard_read_text` above — `async` because the browser's Clipboard API
+/** 📖️ The wasm mirror of `clipboard_read_text` above — `async` because the browser's Clipboard API
  * is Promise-based with no synchronous escape hatch; a caller drives this from a
  * owned browser-local task (see `report-w3-clipboard-dnd.md`), since the OS
  * clipboard permission prompt/read can't resolve within one synchronous per-frame call. */

@@ -88,7 +88,7 @@ pub struct DecisionContext {
     pub scope: Scope,
 }
 
-/// 📣️ A side effect a decision requests: mail, webhook, blob transcode, push. Committed to
+/// 📮️ A side effect a decision requests: mail, webhook, blob transcode, push. Committed to
 /// the outbox in the same write as the events, dispatched later, never inside the turn.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Effect {
@@ -202,7 +202,7 @@ pub struct AuthorityDirectory {
 }
 
 impl Default for AuthorityDirectory {
-    /// 🌱️ An empty directory of [`DIRECTORY_CAPACITY`].
+    /// 📂️ An empty directory of [`DIRECTORY_CAPACITY`].
     fn default() -> Self {
         Self::bounded(DIRECTORY_CAPACITY)
     }
@@ -219,7 +219,7 @@ impl AuthorityDirectory {
         Self { activations: HashMap::new(), next_epoch: 0, capacity: capacity.max(1), turns: 0 }
     }
 
-    /// 🔥️ Place `key` under `holder`, minting a fenced activation epoch on first placement and
+    /// 🔆️ Place `key` under `holder`, minting a fenced activation epoch on first placement and
     /// returning the already-live activation otherwise. A placement beyond the capacity passivates
     /// the least recently used actor first.
     pub fn activate(&mut self, key: &ActorKey, holder: &str) -> Result<&mut Activation, AuthorityError> {
@@ -258,12 +258,12 @@ impl AuthorityDirectory {
         self.activations.contains_key(key)
     }
 
-    /// 🔢️ The fencing epoch of the current activation, if any.
+    /// 🌊️ The fencing epoch of the current activation, if any.
     pub fn activation_epoch(&self, key: &ActorKey) -> Option<u64> {
         self.activations.get(key).map(|activation| activation.lease.epoch)
     }
 
-    /// 🧾️ Read-only view of one activation.
+    /// 📖️ Read-only view of one activation.
     pub fn activation(&self, key: &ActorKey) -> Option<&Activation> {
         self.activations.get(key)
     }
@@ -290,7 +290,7 @@ pub type SharedStore<S> = Arc<RwLock<S>>;
 /// writes the next one, unless the bus is told otherwise with [`CommandBus::snapshotting`].
 pub const SNAPSHOT_INTERVAL: u64 = 64;
 
-/// 🚫️ The `invalid` detail of a command whose idempotency key its principal already used for
+/// ⚔️ The `invalid` detail of a command whose idempotency key its principal already used for
 /// another actor.
 pub const IDEMPOTENCY_CONFLICT: &str = "idempotency-key-conflict";
 
@@ -298,7 +298,7 @@ pub const IDEMPOTENCY_CONFLICT: &str = "idempotency-key-conflict";
 /// knowledge, not the caller's.
 pub const FORBIDDEN: &str = "forbidden";
 
-/// 🚫️ The `actorUnavailable` detail of every turn the authority itself failed. The cause goes to the
+/// ❌️ The `actorUnavailable` detail of every turn the authority itself failed. The cause goes to the
 /// operator's log, never to the caller.
 pub const UNAVAILABLE: &str = "unavailable";
 
@@ -323,7 +323,7 @@ pub struct CommandBus<S: AuthorityStore, D: Decider> {
     committed: Committed,
 }
 
-/// 🧮️ How much a bus has committed since it was built: events and outbox rows. Whoever relays the
+/// 🚌️ How much a bus has committed since it was built: events and outbox rows. Whoever relays the
 /// outbox or folds read models compares these with what it last relayed and folded, and asks the
 /// store only when they moved.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -333,44 +333,44 @@ pub struct Committed {
 }
 
 impl<S: AuthorityStore, D: Decider> CommandBus<S, D> {
-    /// 🆕️ Build a bus over a placement directory, a durable store and a policy admission hook. It
+    /// 🔨️ Build a bus over a placement directory, a durable store and a policy admission hook. It
     /// admits every envelope shape and snapshots every [`SNAPSHOT_INTERVAL`] events until told
     /// otherwise.
     pub fn new(directory: AuthorityDirectory, store: S, policy_hook: PolicyHook) -> Self {
         Self { directory, store: Arc::new(RwLock::new(store)), policy_hook, admission_hook: Box::new(|_| Ok(())), registrations: HashMap::new(), holder: HOLDER.to_string(), snapshot_interval: SNAPSHOT_INTERVAL, committed: Committed::default() }
     }
 
-    /// 🛃️ Ask `hook` about every envelope before anything else is done with it.
+    /// ✔️ Ask `hook` about every envelope before anything else is done with it.
     pub fn admitting(mut self, hook: AdmissionHook) -> Self {
         self.admission_hook = hook;
         self
     }
 
-    /// 📸️ Write an actor's snapshot once it is `interval` events ahead of the stored one; `0`
+    /// ⏲️ Write an actor's snapshot once it is `interval` events ahead of the stored one; `0`
     /// writes none.
     pub fn snapshotting(mut self, interval: u64) -> Self {
         self.snapshot_interval = interval;
         self
     }
 
-    /// 📇️ Register a decider under the actor kind it declares, replacing any previous one.
+    /// 🔖️ Register a decider under the actor kind it declares, replacing any previous one.
     pub async fn register(&mut self, decider: D) {
         let registration = ActorRegistration::new(decider).await;
         self.registrations.insert(registration.actor_kind.clone(), registration);
     }
 
-    /// 🗺️ The placement directory this bus runs turns against.
+    /// 📁️ The placement directory this bus runs turns against.
     pub fn directory(&self) -> &AuthorityDirectory {
         &self.directory
     }
 
-    /// 🗄️ The durable store this bus commits into, shared: a reader clones the handle once and
+    /// 🏬️ The durable store this bus commits into, shared: a reader clones the handle once and
     /// never takes the bus again.
     pub fn store(&self) -> &SharedStore<S> {
         &self.store
     }
 
-    /// 🧮️ How many events and outbox rows this bus has committed so far.
+    /// 📬️ How many events and outbox rows this bus has committed so far.
     pub fn committed(&self) -> Committed {
         self.committed
     }
@@ -522,7 +522,7 @@ impl<S: AuthorityStore, D: Decider> CommandBus<S, D> {
         }
     }
 
-    /// 🧾️ Steps nine and ten: commit every staged turn in one store call and answer each.
+    /// 🐙️ Steps nine and ten: commit every staged turn in one store call and answer each.
     async fn commit(&mut self, staged: &mut Vec<Staged>, answers: &mut [Option<CommandOutcome>]) {
         if staged.is_empty() {
             return;
@@ -565,7 +565,7 @@ impl<S: AuthorityStore, D: Decider> CommandBus<S, D> {
     }
 }
 
-/// 🏷️ The holder name a single-process authority leases actors under.
+/// 🔒️ The holder name a single-process authority leases actors under.
 const HOLDER: &str = "authority";
 
 /// 📝️ What one accepted turn commits: its re-stamped events, their outbox rows, the receipt, the
@@ -590,7 +590,7 @@ struct Staged {
     turn: Turn,
 }
 
-/// ⚖️ Steps five to seven of [`CommandBus::submit_batch`]: one placed actor decides one admitted,
+/// 🪜️ Steps five to seven of [`CommandBus::submit_batch`]: one placed actor decides one admitted,
 /// authorized, not-yet-seen command. `Err` is the command's answer when it emits nothing.
 async fn decide<D: Decider>(decider: &D, activation: &mut Activation, envelope: &CommandEnvelope, now: HybridLogicalClock, snapshot_interval: u64) -> Result<Turn, Box<CommandOutcome>> {
     //#region 🔖️Fence
@@ -663,7 +663,7 @@ fn frame(format: u32, state: &[u8]) -> Vec<u8> {
     framed
 }
 
-/// 🔓️ The state inside a stored snapshot, when it was written in `format`.
+/// 🎒️ The state inside a stored snapshot, when it was written in `format`.
 fn unframe(format: u32, framed: &[u8]) -> Option<&[u8]> {
     let (stamp, state) = framed.split_at_checked(4)?;
     (stamp == format.to_le_bytes()).then_some(state)
@@ -674,12 +674,12 @@ fn acknowledge(envelope: &CommandEnvelope, revision: Revision, now: HybridLogica
     CommandReceipt { command_id: envelope.command_id.clone(), actor: envelope.target.clone(), revision, accepted_at: now }
 }
 
-/// 🚫️ A refusal carrying the receipt the caller still needs to correlate the answer.
+/// 🛑️ A refusal carrying the receipt the caller still needs to correlate the answer.
 fn refuse(envelope: &CommandEnvelope, revision: Revision, now: HybridLogicalClock, reason: Rejection) -> CommandOutcome {
     CommandOutcome::Rejected { receipt: acknowledge(envelope, revision, now), reason, notices: Vec::new() }
 }
 
-/// 🗄️ A storage or placement failure surfaced as a retryable refusal rather than a panic. The
+/// 🚨️ A storage or placement failure surfaced as a retryable refusal rather than a panic. The
 /// cause is reported to the operator; the caller learns only that a retry may succeed.
 fn unavailable(envelope: &CommandEnvelope, revision: Revision, now: HybridLogicalClock, cause: &dyn std::fmt::Display) -> CommandOutcome {
     report("authority turn", cause);
@@ -714,7 +714,7 @@ fn dispatchable(actor: &ActorKey, events: &[EventRecord], effects: Vec<Effect>) 
 /// absent by design, because each of them re-couples the availability of one actor to another.
 #[dyn_enum]
 pub trait Saga: Send + Sync {
-    /// 🎬️ The commands this workflow issues in response to one committed event.
+    /// 🎫️ The commands this workflow issues in response to one committed event.
     async fn on_event(&self, event: &EventRecord) -> Vec<CommandEnvelope>;
 }
 
@@ -733,12 +733,12 @@ impl<W: Saga> Default for SagaRunner<W> {
 }
 
 impl<W: Saga> SagaRunner<W> {
-    /// 🆕️ A runner with no workflow registered.
+    /// 🏃️ A runner with no workflow registered.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// 📇️ Register one workflow.
+    /// 🪢️ Register one workflow.
     pub fn register(&mut self, saga: W) {
         self.sagas.push(saga);
     }

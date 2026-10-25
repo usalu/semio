@@ -9,7 +9,7 @@ fn text_edits_preserve_content_size_and_history_payload() {
     let id = semio_s_artifact_draw_drawing_model::layer_id(&layer).to_string();
     let before = semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     for (index,edit) in fixture["edits"].as_array().unwrap().iter().enumerate() {
-        let mutation = semio_s_artifact_draw_drawing_style::update_text::mutation::update_text(id.clone().into(), edit["content"].as_str().unwrap().into(), edit["size"].as_f64().unwrap(),semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::parse(edit["fontFamily"].as_str().unwrap()).unwrap());
+        let mutation: semio_s_artifact_draw_drawing_mutations::DrawingMutation = semio_s_artifact_draw_drawing_style::update_text::mutation::update_text(id.clone().into(), edit["content"].as_str().unwrap().into(), edit["size"].as_f64().unwrap(),semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::parse(edit["fontFamily"].as_str().unwrap()).unwrap());
         store::os_store::test_support::assert_op_line_round_trip(&mutation);
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
         let outcome = mutation.diff(&before);
@@ -18,12 +18,13 @@ fn text_edits_preserve_content_size_and_history_payload() {
         let mut after = protocol::apply_diff_cold(outcome.diff(), &before).unwrap();
         let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Text(text) = &after.layers[0] else { panic!("Text kind changed") };
         assert_eq!(text.content, edit["content"].as_str().unwrap());
-        assert_eq!(text.size, edit["size"].as_f64().unwrap(),semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::parse(edit["fontFamily"].as_str().unwrap()).unwrap());
+        assert_eq!(text.size, edit["size"].as_f64().unwrap());
+        assert_eq!(text.font_family, semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::parse(edit["fontFamily"].as_str().unwrap()).unwrap());
         for inverse in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut after, &inverse).unwrap(); }
         assert_eq!(after, before);
     }
     for size in [0.0, -1.0, f64::NAN, f64::INFINITY] {
-        let rejected = semio_s_artifact_draw_drawing_style::update_text::mutation::update_text(id.clone().into(), "changed".into(), size,semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::Anta).diff(&before);
+        let rejected = semio_s_artifact_draw_drawing_style::update_text::mutation::update_text::<semio_s_artifact_draw_drawing_mutations::DrawingMutation>(id.clone().into(), "changed".into(), size,semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::Anta).diff(&before);
         assert!(!rejected.messages().is_empty());
         assert_eq!(protocol::apply_diff_cold(rejected.diff(), &before).unwrap(), before);
     }

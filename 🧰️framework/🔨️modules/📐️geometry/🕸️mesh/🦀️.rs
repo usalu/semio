@@ -1,4 +1,4 @@
-//! 🕸️ Owned double-precision triangle meshes and solid builders.
+//! ‼️ Owned double-precision triangle meshes and solid builders.
 //!
 //! [`TriMesh`] stores positions, normals and counter-clockwise (outward) triangles; builders emit one vertex triple per triangle (flat shading), [`TriMesh::crease_normals`] smooths curved parts.
 //! Measures use the divergence theorem, so they are exact for closed, outward-wound meshes: `volume = sum(a . (b x c)) / 6`.
@@ -36,7 +36,7 @@ impl TriMesh {
         self.positions.len()
     }
 
-    /// 🔢️ Number of triangles.
+    /// 🔻️ Number of triangles.
     pub fn triangle_count(&self) -> usize {
         self.indices.len()
     }
@@ -60,7 +60,7 @@ impl TriMesh {
         self.indices.push([base, base + 1, base + 2]);
     }
 
-    /// ➕️ Adds the quad `a b c d` (counter-clockwise) as two triangles.
+    /// 🔃️ Adds the quad `a b c d` (counter-clockwise) as two triangles.
     pub fn push_quad(&mut self, a: Xyz, b: Xyz, c: Xyz, d: Xyz) {
         self.push_triangle(a, b, c);
         self.push_triangle(a, c, d);
@@ -99,7 +99,7 @@ impl TriMesh {
             .sum()
     }
 
-    /// 📦️ Absolute volume in cubic metres.
+    /// 🧊️ Absolute volume in cubic metres.
     pub fn volume(&self) -> f64 {
         self.signed_volume().abs()
     }
@@ -222,12 +222,12 @@ impl TriMesh {
         self.positions.iter().flat_map(|p| p.map(|v| v as f32)).collect()
     }
 
-    /// 📤️ Flat `f32` normals for rendering.
+    /// 🖌️ Flat `f32` normals for rendering.
     pub fn normals_f32(&self) -> Vec<f32> {
         self.normals.iter().flat_map(|p| p.map(|v| v as f32)).collect()
     }
 
-    /// 📤️ Flat triangle index list for rendering.
+    /// 📇️ Flat triangle index list for rendering.
     pub fn indices_flat(&self) -> Vec<u32> {
         self.indices.iter().flatten().copied().collect()
     }
@@ -256,7 +256,7 @@ fn dedup_ring(points: &[Point]) -> Vec<Point> {
     out
 }
 
-/// 🧱️ Prism over a polygon with holes between two height planes: bottom cap, top cap and vertical side walls; rings may have either orientation.
+/// 📏️ Prism over a polygon with holes between two height planes: bottom cap, top cap and vertical side walls; rings may have either orientation.
 /// The top plane should lie above the bottom plane everywhere (otherwise the volume is signed).
 pub fn extrude(outer: &[Point], holes: &[Vec<Point>], bottom: ZPlane, top: ZPlane) -> TriMesh {
     let outer = dedup_ring(&oriented(&dedup_ring(outer), true));
@@ -281,7 +281,7 @@ pub fn extrude(outer: &[Point], holes: &[Vec<Point>], bottom: ZPlane, top: ZPlan
     mesh
 }
 
-/// 🧱️ [`extrude`] over bulged loops: arcs are flattened within `tolerance` and the curved walls get smooth normals.
+/// ➰️ [`extrude`] over bulged loops: arcs are flattened within `tolerance` and the curved walls get smooth normals.
 pub fn extrude_loops(outer: &[Vertex], holes: &[Vec<Vertex>], tolerance: f64, bottom: ZPlane, top: ZPlane) -> TriMesh {
     let curved = outer.iter().chain(holes.iter().flatten()).any(|v| v.bulge != 0.0);
     let mesh = extrude(&loops::flatten(outer, tolerance), &holes.iter().map(|h| loops::flatten(h, tolerance)).collect::<Vec<_>>(), bottom, top);
@@ -301,7 +301,7 @@ fn mean(ring: &[Xyz]) -> Xyz {
     scale3(ring.iter().fold([0.0; 3], |s, &p| add3(s, p)), 1.0 / ring.len() as f64)
 }
 
-/// 🧱️ Closed prism between two rings of equal length (`lower[i]` pairs with `upper[i]`); rings may have either orientation, caps are triangulated in the plane of the lower ring.
+/// 📕️ Closed prism between two rings of equal length (`lower[i]` pairs with `upper[i]`); rings may have either orientation, caps are triangulated in the plane of the lower ring.
 pub fn prism_between(lower: &[Xyz], upper: &[Xyz]) -> TriMesh {
     let mut mesh = TriMesh::new();
     if lower.len() < 3 || lower.len() != upper.len() {
@@ -424,7 +424,7 @@ fn slice_triangle(t: [Pair; 3], delta: f64, out: &mut Vec<[Pair; 3]>) {
     }
 }
 
-/// 🧱️ Wall-like solid between two developed faces: `left` is mapped onto `left_curve`, `right` onto `right_curve` (point `(s, z)` goes to `curve.point_at(s / axis_length)` at height `base_z + z`).
+/// 🪨️ Wall-like solid between two developed faces: `left` is mapped onto `left_curve`, `right` onto `right_curve` (point `(s, z)` goes to `curve.point_at(s / axis_length)` at height `base_z + z`).
 /// Both faces must have the same ring structure (same vertex counts, vertex `i` of one pairs with vertex `i` of the other); they may differ in the `s` of their end vertices, which yields slanted (mitered) ends.
 /// Holes become openings with reveals (the ring edges are joined by side walls), outline notches become door-like cut-outs.
 /// On curved carriers the faces are sliced at `s` grid lines so that no edge spans more than the chord `tolerance` allows; the result is crack-free and gets smooth normals on the curved parts.
@@ -521,14 +521,14 @@ fn stations(path: &[BulgeSeg], tolerance: f64) -> Vec<Station> {
     out
 }
 
-/// 🧱️ Solid swept from a vertical cross-section along a path of bulged segments (consecutive segments must touch).
+/// 📑️ Solid swept from a vertical cross-section along a path of bulged segments (consecutive segments must touch).
 /// Profile coordinates are `(u, v)`: `u` horizontal to the left of the direction of travel, `v` up from `base_z`; rings may have either orientation.
 /// Corners between segments are mitered, arcs are flattened within `tolerance`, both ends are capped. Curved parts get smooth normals.
 pub fn sweep_profile(outer: &[Point], holes: &[Vec<Point>], path: &[BulgeSeg], base_z: f64, tolerance: f64) -> TriMesh {
     sweep_profile_ramped(outer, holes, path, base_z, 0.0, tolerance)
 }
 
-/// 📐️ [`sweep_profile`] along a path that climbs linearly with its arc length by `rise` metres (negative descends): the reference line of the profile starts at `base_z` and ends at `base_z + rise`, and the cross-section
+/// 🧹️ [`sweep_profile`] along a path that climbs linearly with its arc length by `rise` metres (negative descends): the reference line of the profile starts at `base_z` and ends at `base_z + rise`, and the cross-section
 /// is turned about the horizontal lateral axis so that it stays perpendicular to the inclined path (the profile `v` runs along the up direction of the slope, not along the vertical). Corners and caps behave like [`sweep_profile`]; the horizontal
 /// sweep is unchanged, so with `rise = 0` the result is identical.
 pub fn sweep_profile_ramped(outer: &[Point], holes: &[Vec<Point>], path: &[BulgeSeg], base_z: f64, rise: f64, tolerance: f64) -> TriMesh {

@@ -5,7 +5,7 @@ import policy from "./🔣️.json" with {type:"json"};
 import {buildOperationArgumentsV1,normalizeBuildOptionsV1} from "../⚙️operations/🔤️options/🟦️.ts";
 import {buildHelpForArgumentsV1,resolveBuildCliLanguageV1} from "../⚙️operations/📖️help/🟦️.ts";
 import {profilePhaseV1} from "../⏱️profile/🟨️.mjs";
-import {writeResultLineV1} from "../../../../../../🔨️modules/🏃️process/🏗️build/📤️output/🟦️.ts";
+import {writeResultLineV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
 /** 🛃️ The part of the neutral operations catalogue the front door reads: languages, global options with their allowed values, command and subcommand names. */
 export type BuildDoorCatalogueV1=Readonly<{languages:readonly string[];flags:readonly Readonly<{name:string;aliases?:readonly string[];value:string;valueName?:string;operations?:readonly string[]}>[];operations:readonly Readonly<{name:string;requires:string;subcommands?:readonly Readonly<{name:string}>[]}>[]}>;

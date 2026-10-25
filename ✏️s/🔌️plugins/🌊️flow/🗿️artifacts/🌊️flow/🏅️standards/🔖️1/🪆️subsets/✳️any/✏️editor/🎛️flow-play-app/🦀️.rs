@@ -113,56 +113,28 @@ impl ArtifactEditor for FlowPlayApp {
         registry.register(FlowDirectStoreJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str())
-            && !FLOW_HOST_ONLY_TOOL_IDS.contains(&request.tool_id.as_str())
-            && !FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&request.tool_id.as_str())
-            && !FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str())
-            && !FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&request.tool_id.as_str())
+    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !FLOW_CHILD_GROUP_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !FLOW_HOST_ONLY_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !FLOW_DIRECT_STORE_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str())
         {
-            return Ok(None);
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Flow command does not match its exact retained tool registration"));
+        if original.command.command_id() != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Flow command does not match its exact retained tool registration").into());
         }
-        if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str())
-            || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&request.tool_id.as_str())
-            || FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str())
-            || FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&request.tool_id.as_str())
+        if FLOW_CHILD_GROUP_TOOL_IDS.contains(&original.tool_id.as_str())
+            || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&original.tool_id.as_str())
+            || FLOW_DIRECT_STORE_TOOL_IDS.contains(&original.tool_id.as_str())
+            || FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str())
         {
-            let tool_id = request.command.command_id();
-            let work: Box<dyn ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
-                Box::new(FlowContributionsWork::new(request.instance_operation_owner))
-            } else if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
-                Box::new(FlowChildGroupWork::new(tool_id, request.instance_operation_owner))
-            } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
-                Box::new(FlowGraphOperationWork::new(tool_id, request.instance_operation_owner))
-            } else {
-                Box::new(FlowDirectStoreWork::new(tool_id))
-            };
-            let operation_context = semio_framework_plugin::AppOperationContext {
-                app_instance_id: request.app_instance_id,
-                parent_document_id: request.parent_document_id,
-                operation_id: request.operation.operation.0,
-                generation: request.operation.generation.0,
-                canonical_base_revision: request.canonical_base_revision,
-                retained: request.retained,
-                authoring_seed: request.authoring_seed.clone(),
-            };
-            let payload = ArtifactRetainedCommandPayload::new(
-                semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                    command: *request.command,
-                    snapshot: request.snapshot,
-                    config: request.config,
-                    history: request.history,
-                    interaction_state: request.interaction_state,
-                    interaction_hover: request.interaction_hover,
-                    context: Some(request.context),
-                    operation: operation_context,
-                    completion: request.completion,
-                },
-                FlowCommand::command_id,
-                if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
+            let tool_id = original.command.command_id();
+            
+            
+            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, FlowCommand::command_id, if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
                     FLOW_CONTRIBUTIONS_RAW_BYTES
                 } else if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
                     FLOW_CHILD_GROUP_RAW_BYTES
@@ -170,28 +142,23 @@ impl ArtifactEditor for FlowPlayApp {
                     FLOW_GRAPH_OPERATION_RAW_BYTES
                 } else {
                     FLOW_DIRECT_STORE_RAW_BYTES
-                },
-                if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) || FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
+                }, if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) || FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
                     1
                 } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
                     FLOW_GRAPH_OPERATION_CAPACITY.work_items()
                 } else {
                     FLOW_STORE_MAX_MUTATION_ITEMS
-                },
-                work,
-            );
-            return Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
+                }, false, |request| if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
+                Box::new(FlowContributionsWork::new(request.instance_operation_owner))
+            } else if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
+                Box::new(FlowChildGroupWork::new(tool_id, request.instance_operation_owner))
+            } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
+                Box::new(FlowGraphOperationWork::new(tool_id, request.instance_operation_owner))
+            } else {
+                Box::new(FlowDirectStoreWork::new(tool_id))
+            });
         }
-        let payload = FlowHostEffectPayload {
-            command: *request.command,
-            snapshot: request.snapshot,
-            config: Arc::new(main::config::from_snapshot(request.window_config.as_ref())),
-            history: request.history,
-            children: request.context.children.clone(),
-            instance_owner: request.instance_operation_owner,
-            completion: request.completion,
-        };
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        flow_build_host_only_job(request, output, cx)
     }
 
     fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {

@@ -349,7 +349,7 @@
     },
     {
       "id": "ui-runtime-module-must-not-use-process",
-      "rule": "ui-no-framework-packages",
+      "rule": "ui-runtime-no-test-support",
       "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
       "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
       "forbidden": true

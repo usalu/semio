@@ -15,7 +15,7 @@ type Fixture = { readonly keys: readonly { readonly case: string; readonly kind:
 const read = (path: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const PHYSICAL: Readonly<Record<TextInputKey, string>> = { enter: "Enter", escape: "Escape" };
 
-/** 🖊️ Answers every shared fixture row, returning how many assertions the corpus carried. */
+/** 📝️ Answers every shared fixture row, returning how many assertions the corpus carried. */
 export function textControlsSelfTests(): number {
   const Ajv2020 = createRequire(import.meta.url)("ajv/dist/2020").default;
   const fixture = read("../🧫️fixtures/🧫️text-controls/🔣️.json") as Fixture;

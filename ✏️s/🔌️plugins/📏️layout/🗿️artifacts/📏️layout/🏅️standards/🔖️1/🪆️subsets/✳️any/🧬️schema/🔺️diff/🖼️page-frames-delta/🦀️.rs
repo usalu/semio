@@ -17,7 +17,8 @@ protocol::list_delta! {
         modification: PageLayersModification,
         row: Layer,
         patch: LayerPatch,
-        key: id
+        list: Vec<Layer>,
+        key: String = keyed
     }
 }
 

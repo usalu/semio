@@ -4,7 +4,7 @@ import{AsyncLocalStorage}from"node:async_hooks";
 import{captureRepositorySourceRootV1}from"../../../../../🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs";
 import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{acquireResourceLease,checkResourceLeaseControl,type ResourceLease,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import{finishResourceLeaseCleanupV1}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/♻️retirement/🟦️.ts";
+import{finishResourceLeaseCleanupV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/♻️retirement/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 const protocol=Object.freeze({...schema.definitions.Protocol.const});
 type Scope={readonly root:string;readonly mode:"prototype"|"release";readonly directory:string;readonly access:"shared"|"exclusive";readonly control:ResourceLeaseControl;readonly parent:Scope|undefined;live:boolean};

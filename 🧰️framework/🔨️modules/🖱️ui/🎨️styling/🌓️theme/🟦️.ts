@@ -1,6 +1,6 @@
 // #region 🧲️Header
 /// <reference types="vite/client" />
-/** 🎨️ `@semio-tech/ui-styling` centralizes palette CSS, theme tokens and the shared typography preset for ui consumers.
+/** 🧰️ `@semio-tech/ui-styling` centralizes palette CSS, theme tokens and the shared typography preset for ui consumers.
  * Browser-only by construction: this barrel is served to the browser through `📦️packages/🟦️typescript/🟦️.ts`, so it MUST NOT
  * reach `../💨️tailwind/🟦️.ts` (the build-time Tailwind config, whose `@tailwindcss/typography` → `@tailwindcss/node` →
  * `@tailwindcss/oxide` closure ends at a `.node` binary Vite's dependency optimizer cannot load). Build tooling imports the
@@ -49,7 +49,7 @@ export function setStylingAppearanceRoot(root: HTMLElement | null): void {
   }
 }
 
-/** 🌓️ Notifies when the appearance root changes, so a canvas surface that mounted before the
+/** 🔔️ Notifies when the appearance root changes, so a canvas surface that mounted before the
  * shell registered its `.semio-scope` root re-observes and re-resolves instead of keeping the paints it
  * resolved against `documentElement`'s light palette. Returns an unsubscribe function. */
 export function subscribeStylingAppearanceRoot(callback: () => void): () => void {
@@ -59,7 +59,7 @@ export function subscribeStylingAppearanceRoot(callback: () => void): () => void
   };
 }
 
-/** 🌓️ Unregisters `root` — and ONLY `root`. A page whose `documentElement` lease is released
+/** 🔓️ Unregisters `root` — and ONLY `root`. A page whose `documentElement` lease is released
  * moments after a shell registered its own `.semio-scope` root must not drag the live registration down
  * with it, which an unconditional `setStylingAppearanceRoot(null)` did (measured: the flow canvas
  * re-resolved the light palette ~40 s after the shell had already gone dark). */
@@ -83,12 +83,12 @@ export function serializeCanvasThemeJson(appearanceName: StylingAppearanceName =
   return JSON.stringify(STYLING_BOARD_PALETTES[appearanceName]);
 }
 
-/** 🎨️ WASM session surface that accepts serialized canvas theme JSON. */
+/** 🔌️ WASM session surface that accepts serialized canvas theme JSON. */
 export interface CanvasThemeSession {
   setCanvasThemeJson(json: string): void;
 }
 
-/** 🌓️ Pushes the active theme's canvas palette into a canvas WASM session. */
+/** 🔄️ Pushes the active theme's canvas palette into a canvas WASM session. */
 export function syncSessionCanvasTheme(session: CanvasThemeSession | null | undefined): void {
   if (!session) return;
   try {
@@ -99,7 +99,7 @@ export function syncSessionCanvasTheme(session: CanvasThemeSession | null | unde
 
 const _builtinThemesCache = ephemeralBox<UiTheme[] | undefined>("framework.modules.ui.styling.packages.typescript.index.ts._builtinThemesCache", undefined);
 
-/** 🎨️ Bundles the same JSON presets that the styling projection validates; standalone scripts use semio. */
+/** 📦️ Bundles the same JSON presets that the styling projection validates; standalone scripts use semio. */
 export function builtinUiThemes(): readonly UiTheme[] {
   if (_builtinThemesCache.current) {
     return _builtinThemesCache.current;
@@ -120,7 +120,7 @@ function setCssVar(root: HTMLElement, appliedNames: Set<string>, name: string, v
   appliedNames.add(name);
 }
 
-/** 🎨️ Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline CSS var overrides on
+/** 🌳️ Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline CSS var overrides on
  * `root`, clearing any previous overrides *this function* applied to that same root first. Applied
  * unconditionally (even for a pristine semio theme, whose values equal the generated CSS defaults) so a
  * semio-based *draft* with edits — which still carries `id: "semio"` until saved — is never mistaken for
@@ -174,7 +174,7 @@ export function applyUiThemeToRoot(root: HTMLElement, theme: UiTheme): void {
   clearColorResolveCache();
 }
 
-/** 🎨️ Removes every CSS var {@link applyUiThemeToRoot} applied to `root` and forgets its registry
+/** 🧹️ Removes every CSS var {@link applyUiThemeToRoot} applied to `root` and forgets its registry
  * entry — call on a shell's unmount so a later, unrelated element reused at the same DOM position never
  * inherits a stale theme's inline overrides. */
 export function clearUiThemeFromRoot(root: HTMLElement): void {
@@ -187,7 +187,7 @@ export function clearUiThemeFromRoot(root: HTMLElement): void {
   _appliedThemeCssPropsByRoot.delete(root);
 }
 
-/** 🎨️ Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline `documentElement` CSS
+/** 📄️ Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline `documentElement` CSS
  * var overrides — the page-owning case of {@link applyUiThemeToRoot}. */
 export function applyUiThemeToDocument(theme: UiTheme): void {
   if (typeof document === "undefined") {
@@ -196,7 +196,7 @@ export function applyUiThemeToDocument(theme: UiTheme): void {
   applyUiThemeToRoot(document.documentElement, theme);
 }
 
-/** 🎨️ Sets the *page-global* active theme, applies it to `document.documentElement`, and notifies
+/** 📃️ Sets the *page-global* active theme, applies it to `document.documentElement`, and notifies
  * subscribers — for the single page-owning shell (`ShellScope.ownsPage`) or a standalone (non-shell) host.
  * A co-mounted, non-page-owning shell must call {@link applyUiThemeToRoot} on its own root instead, or it
  * would fight every other mounted shell over the same document-wide tokens. */

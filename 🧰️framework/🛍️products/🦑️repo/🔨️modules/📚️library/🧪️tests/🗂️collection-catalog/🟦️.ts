@@ -1,5 +1,5 @@
 /**
- * 🗂️ Collection-catalog generator: catalog admission, generated-output freshness, and the generic register-row payload
+ * 📚️ Collection-catalog generator: catalog admission, generated-output freshness, and the generic register-row payload
  * schemas checked by Ajv (the third-party JSON Schema oracle) against every committed register-row fixture.
  * The generated TypeScript catalog imports each row type from the module that declares it and never through the entry that
  * imports the catalog (an import cycle); the TypeScript compiler API is the independent oracle for declarations and cycles.

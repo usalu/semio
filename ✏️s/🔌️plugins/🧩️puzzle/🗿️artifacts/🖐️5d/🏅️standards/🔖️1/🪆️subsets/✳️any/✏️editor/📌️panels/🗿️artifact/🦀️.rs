@@ -25,7 +25,8 @@ use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::ui_la
 use semio_s_artifact_puzzle_5d_document_records::editor::puzzle5d::terminology::Puzzle5dLabels;
 use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::{find_part_by_grip_full_id, puzzle5d_grip_full_id, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::view::Puzzle5dScene;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
+use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, RowActionPlacement};
+use semio_framework_plugin::{Buildable, HasBase};
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
 use semio_framework_plugin::tree_window_item;

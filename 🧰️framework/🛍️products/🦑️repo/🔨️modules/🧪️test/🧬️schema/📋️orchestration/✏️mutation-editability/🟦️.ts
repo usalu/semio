@@ -1,4 +1,4 @@
-/** ✏️ Mutation editability gate
+/** 🚪️ Mutation editability gate
  *
  * `schema-mutation-editability`: every aggregate is editable in history or declares why not.
  */
@@ -17,7 +17,7 @@ import { MUTATION_LABEL_APP_TRAITS } from "../🏷️mutation-labels/🟦️.ts"
  * a `#[mutation_leaf(payload = …)]` leaf) or `foreign` (a composite that may emit foreign steps). */
 export type MutationEditabilityVerdict = "editable" | "inert" | "foreign";
 
-/** ✏️ One leaf of a `#[derive(Mutations)]` aggregate: its verdict (`inert` when its descriptor declares it withdraw-only) and, for a
+/** 🍃️ One leaf of a `#[derive(Mutations)]` aggregate: its verdict (`inert` when its descriptor declares it withdraw-only) and, for a
  * payload-marked leaf, the inert phase variants beside its editable payload. */
 export type MutationLeafEditability = Readonly<{ owner: string; aggregate: string; path: string; kind: string; variant: string; verdict: MutationEditabilityVerdict; inert: readonly string[] }>;
 
@@ -31,13 +31,13 @@ export type MutationHandwrittenAggregate = Readonly<{ owner: string; path: strin
  * every inert phase of a payload-marked leaf. */
 export type MutationEditabilityCensusRow = { readonly owner: string; aggregates: number; leaves: number; editable: number; foreign: number; inert: number; withdrawOnly: number; handwritten: number; findings: number; readonly refused: Record<string, number> };
 
-/** ✏️ The `schema-mutation-editability` lint, its census, every leaf verdict and every hand-written aggregate. */
+/** 🧬️ The `schema-mutation-editability` lint, its census, every leaf verdict and every hand-written aggregate. */
 export type MutationEditabilityReport = { readonly diagnostics: readonly SchemaDiagnostic[]; readonly census: readonly MutationEditabilityCensusRow[]; readonly leaves: readonly MutationLeafEditability[]; readonly handwritten: readonly MutationHandwrittenAggregate[] };
 
 const MUTATION_LANE_SEGMENTS = new Set(["🎚️config", "👥️presence", "🫧️transient", "🪟️window", "📝️draft"]);
 const MUTATION_PAYLOAD_ACCESSORS = ["INPUT_SCHEMAS", "input_schema", "payload_value", "with_payload_value", "from_payload_value"];
 
-/** 🖐️ The declared reason of a hand-written `impl Mutation<snapshot> for name` at `path` whose body is `body`. */
+/** 📸️ The declared reason of a hand-written `impl Mutation<snapshot> for name` at `path` whose body is `body`. */
 export function mutationHandwrittenReason(path: string, name: string, snapshot: string, body: readonly RustToken[], source: string): MutationHandwrittenAggregate["reason"] {
   const segments = path.split("/");
   if (new RegExp(`enum\\s+${name.replace(/[$]/gu, "\\$")}\\s*\\{\\s*\\}`, "u").test(source)) return "empty";
@@ -144,7 +144,7 @@ export function mutationSchemaReferences(document: unknown): string[] {
   return found.filter((id) => id.length > 0);
 }
 
-/** 🔗️ The `$id`s a leaf payload schema references (transitively) that neither its search trees ({@link mutationSchemaSearchRoots}: what
+/** 🍁️ The `$id`s a leaf payload schema references (transitively) that neither its search trees ({@link mutationSchemaSearchRoots}: what
  * `#[derive(MutationLeaf)]` embeds and the runtime publishes) nor a framework scope (`frameworkIndex`) holds — the inputs the history
  * editor cannot resolve. */
 export function mutationLeafUnpublishedReferences(repoRoot: string, schemaPath: string, rootIndex: ReadonlyMap<string, string>, frameworkIndex: ReadonlyMap<string, string>): string[] {
@@ -177,7 +177,7 @@ function rustCalls(tokens: readonly RustToken[], start: number, end: number): st
   return calls;
 }
 
-/** 🪆️ Whether `sources` define `struct <snapshot> { … }` with a `#[child(…)]` field — a composed parent. */
+/** 📷️ Whether `sources` define `struct <snapshot> { … }` with a `#[child(…)]` field — a composed parent. */
 export function composedSnapshot(sources: readonly { readonly path: string; readonly source: string }[], snapshot: string): boolean {
   return sources.some(({ source }) => {
     if (!source.includes(snapshot) || !source.includes("child")) return false;
@@ -193,7 +193,7 @@ export function composedSnapshot(sources: readonly { readonly path: string; read
   });
 }
 
-/** 🪆️ `<tree>\u0000<Snapshot>` for every composed parent snapshot struct (a `#[child(…)]` field) under `roots`, keyed by its owning tree. */
+/** 🌳️ `<tree>\u0000<Snapshot>` for every composed parent snapshot struct (a `#[child(…)]` field) under `roots`, keyed by its owning tree. */
 function composedParents(repoRoot: string, roots: readonly string[]): Set<string> {
   const found = new Set<string>();
   for (const root of roots) {
@@ -206,7 +206,7 @@ function composedParents(repoRoot: string, roots: readonly string[]): Set<string
 }
 
 /**
- * 🪆️ The parent-lane leaves of a composed parent that read its owned child's content (design §20.15: composed content is edited only on
+ * 📖️ The parent-lane leaves of a composed parent that read its owned child's content (design §20.15: composed content is edited only on
  * the child lane, parent-lane leaves never read `local_owner`, readers compose on read). `sources` are the owning tree's Rust sources;
  * a free function or inherent method reads the child when its body calls a {@link CHILD_CONTENT_READS} accessor or, transitively, another
  * such function (by name; a name any trait impl of the tree also defines is ambiguous across types, so it never propagates); every leaf directory of
@@ -255,7 +255,7 @@ export function composedLeafChildReads(sources: readonly { readonly path: string
 }
 
 /**
- * ✏️ Enumerates every mutation aggregate under `under` (design §16.3) and decides, from source alone, which history mutations the
+ * 🧾️ Enumerates every mutation aggregate under `under` (design §16.3) and decides, from source alone, which history mutations the
  * generic editor can edit: each leaf of a `#[derive(Mutations)]` aggregate is `editable` unless its descriptor declares
  * `"editable": false` (`inert`: withdraw-only by declaration, design §22.20 — counted, never the subject of an editability finding) or
  * composes a plan (`foreign`, the `may_emit_foreign_steps` capability), a payload-marked leaf adds its inert phases; a generic aggregate gets no emitted
@@ -363,7 +363,7 @@ export function mutationEditabilityReport(repoRoot: string, under = "", roots: r
 }
 
 /**
- * ✏️ `test schema mutation-editability` — the `schema-mutation-editability` gate: every mutation aggregate is editable by the generic
+ * ▶️ `test schema mutation-editability` — the `schema-mutation-editability` gate: every mutation aggregate is editable by the generic
  * history editor or declares why not. `--census` prints the per-plugin table and always exits 0; `--json` adds every leaf verdict and
  * hand-written aggregate (the non-editable list); without either any finding fails.
  *

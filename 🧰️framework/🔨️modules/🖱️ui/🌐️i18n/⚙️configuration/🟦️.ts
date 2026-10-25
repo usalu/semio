@@ -317,7 +317,7 @@ export const configurationDe = {
   },
 } satisfies Pick<UiTranslationSchema["ui"], "settings" | "plugins" | "command" | "shellCommand" | "ribbon" | "selection" | "windowFault" | "common" | "window" | "contextMenu">;
 
-/** ⚙️ Settings, plugin, command, selection and window configuration labels (`en`). */
+/** 🎛️ Settings, plugin, command, selection and window configuration labels (`en`). */
 export const configurationEn = {
   settings: {
     tab: {

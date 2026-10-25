@@ -4,7 +4,7 @@ import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {bunBundleStreamFramesV1,createBunBundleStreamV1,type BunBundleStreamEventV1} from "../🟦️.ts";
 import policySchema from "../🧬️schema/🔣️.json";
 import own from "./🔣️.json";

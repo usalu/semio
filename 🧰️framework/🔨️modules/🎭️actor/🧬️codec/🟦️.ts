@@ -24,7 +24,7 @@ export type ActorCodecSuccess<Operation extends ActorCodecRequest["operation"] =
 /** 📨️ A {@link ActorCodecRequest}'s closed success or the original guest fault pack. */
 export type ActorCodecAnswer<Operation extends ActorCodecRequest["operation"] = ActorCodecRequest["operation"]> = { readonly ok: ActorCodecSuccess<Operation> } | { readonly fault: Uint8Array };
 
-/** 🧬️ The jco binding of the `codec` interface, as the bridge destructures it off the component. */
+/** 🌉️ The jco binding of the `codec` interface, as the bridge destructures it off the component. */
 export type ActorCodecExports = {
   readonly packSchemaHash: (artifactKind: string) => Promise<Uint8Array>;
   readonly genesis: (artifactKind: string, documentId: string) => Promise<ActorCodecDocumentPair>;

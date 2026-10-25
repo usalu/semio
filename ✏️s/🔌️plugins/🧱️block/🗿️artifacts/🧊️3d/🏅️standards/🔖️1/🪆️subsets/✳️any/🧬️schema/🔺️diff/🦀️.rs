@@ -55,13 +55,29 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the vortex kinds.
-    pub Block3dVortexKindsDelta { removal: Block3dVortexKindsRemoval, insertion: Block3dVortexKindsInsertion, relocation: Block3dVortexKindsRelocation, modification: Block3dVortexKindsPatchEntry, row: Block3dVortexKind, patch: Block3dVortexKindPatch, key: id }
+    pub Block3dVortexKindsDelta { removal: Block3dVortexKindsRemoval, insertion: Block3dVortexKindsInsertion, relocation: Block3dVortexKindsRelocation, modification: Block3dVortexKindsPatchEntry, row: Block3dVortexKind, patch: Block3dVortexKindPatch, list: Vec<Block3dVortexKind>, key: String = by Block3dVortexKindKeys }
+}
+
+/// 🔑️ Keys the foreign `Block3dVortexKind` rows of their list delta by `id`.
+pub(crate) struct Block3dVortexKindKeys;
+
+impl protocol::list_delta::KeyOf<Block3dVortexKind> for Block3dVortexKindKeys {
+    type Key = String;
+    fn key_of(row: &Block3dVortexKind) -> String { row.id.clone() }
 }
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the vortex templates.
-    pub Block3dVorticesDelta { removal: Block3dVorticesRemoval, insertion: Block3dVorticesInsertion, relocation: Block3dVorticesRelocation, modification: Block3dVorticesPatchEntry, row: Block3dVortexTemplate, patch: Block3dVortexTemplatePatch, key: id }
+    pub Block3dVorticesDelta { removal: Block3dVorticesRemoval, insertion: Block3dVorticesInsertion, relocation: Block3dVorticesRelocation, modification: Block3dVorticesPatchEntry, row: Block3dVortexTemplate, patch: Block3dVortexTemplatePatch, list: Vec<Block3dVortexTemplate>, key: String = by Block3dVortexTemplateKeys }
+}
+
+/// 🔑️ Keys the foreign `Block3dVortexTemplate` rows of their list delta by `id`.
+pub(crate) struct Block3dVortexTemplateKeys;
+
+impl protocol::list_delta::KeyOf<Block3dVortexTemplate> for Block3dVortexTemplateKeys {
+    type Key = String;
+    fn key_of(row: &Block3dVortexTemplate) -> String { row.id.clone() }
 }
 //#endregion 🔖️Patches
 

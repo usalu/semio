@@ -1,0 +1,13 @@
+import{readFileSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";import{join}from"node:path";
+const L="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const gen=await import(join(L,"🏗️build/🕸️graph/🕰️generations/🟨️.mjs"));
+const g="/Users/ueli/Documents/semio/.cache/b/g/m/generations/",cur=JSON.parse(readFileSync(g+"current.json","utf8")),m=JSON.parse(readFileSync(g+"m/"+cur.manifest+".json","utf8"));
+const mem=l=>{if(process.env.GC)Bun.gc(true);const u=process.memoryUsage();console.log(l.padEnd(34),"rss",Math.round(u.rss/1048576),"heap",Math.round(u.heapUsed/1048576));};
+mem("start");
+const index=JSON.parse(brotliDecompressSync(readFileSync(g+"x/"+m.factIndex+".json.br")).toString());mem("index parsed");
+const N=+process.argv[2]||1000;
+const ownerRows=new Map();index.classes.forEach(c=>{for(const o of c.o){const name=index.owners[o];if(ownerRows.size<N||ownerRows.has(name)){let l=ownerRows.get(name);if(!l)ownerRows.set(name,l=[]);for(const r of c.r)l.push(index.rows[r]);}}});
+console.log("upsert owners",ownerRows.size,"rows",[...ownerRows.values()].reduce((a,l)=>a+l.length,0));
+const clones=new Map();const clone=r=>{let c=clones.get(r);if(!c){c=structuredClone(r);clones.set(r,c);}return c;};const upserts=new Map([...ownerRows].map(([n,l])=>[n,l.map(clone)]));console.log("distinct rows",clones.size);mem("upserts cloned");
+const t=Date.now();const next=gen.patchFactIndexV1(index,{drop:[...upserts.keys()],upserts,append:new Map()});mem("patched ("+(Date.now()-t)+" ms)");
+const t2=Date.now();const bytes=gen.packGenerationDocumentV1(next,536870912);mem("packed ("+(Date.now()-t2)+" ms) "+Math.round(bytes.length/1048576)+" MB");

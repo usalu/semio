@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, GetPromptRequestSchema, ListPromptsRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema, ReadResourceRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Oracle
@@ -49,7 +49,7 @@ function vectors(ctx: AdapterContext): Vector[] {
   return (JSON.parse(readFileSync(ctx.input("shared://2️⃣g2-contract.json"), "utf8")) as { vectors: Vector[] }).vectors;
 }
 
-/** 📞️ Dispatches one vector against a freshly initialized reference server. */
+/** 🔗️ Dispatches one vector against a freshly initialized reference server. */
 async function dispatch(vector: Vector): Promise<Record<string, unknown>> {
   const send = await referenceCallServer();
   if (vector.ready) await send({ jsonrpc: "2.0", id: "init", method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "1" } } });

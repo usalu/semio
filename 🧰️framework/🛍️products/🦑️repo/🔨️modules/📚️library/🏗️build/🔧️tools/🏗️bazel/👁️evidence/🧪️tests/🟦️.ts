@@ -1,6 +1,6 @@
 /** 👁️ Bazel evidence: the directory contract, the flag, the closure record, and the execution log of the pinned Bazel as the oracle for the verifier's reader. */
 import {test,expect} from "bun:test";
-import {makeTestTreeWritableV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {makeTestTreeWritableV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";

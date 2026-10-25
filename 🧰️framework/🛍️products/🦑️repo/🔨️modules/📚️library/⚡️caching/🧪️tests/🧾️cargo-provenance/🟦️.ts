@@ -1,10 +1,11 @@
 import { expect, test } from "bun:test";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
+import { renderCargoProfileConfigurationV1 } from "../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import { decodeCargoDepInfo, foreignDepInfoPaths, invalidateForeignUnits, scanBuildDirProvenance, type CargoDepInfoFile } from "../../🦀️cargo/🧾️provenance/🟦️.ts";
 
 const moduleRoot = resolve(import.meta.dir, "../..");
@@ -90,18 +91,29 @@ test("a second checkout poisons a shared build-dir, the gate names it and the re
   }
 }, { timeout: 240_000 });
 
-test("no profile keeps incremental state in the shared build-dir, whatever the caller's CARGO_INCREMENTAL (cargo unit-graph oracle)", () => {
-  const manifest = Bun.TOML.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as { profile: Record<string, { inherits?: string; incremental?: boolean }> };
-  const builtIn: Record<string, string> = { test: "dev", bench: "release" };
-  const resolve = (name: string): boolean | undefined => manifest.profile[name]?.incremental ?? (manifest.profile[name]?.inherits ?? builtIn[name] ? resolve(manifest.profile[name]?.inherits ?? builtIn[name]!) : undefined);
-  for (const row of fixture.incrementalFree as { profile: string; package: string; target: string | null }[]) {
-    expect(resolve(row.profile), row.profile).toBe(false);
-    const { CARGO_INCREMENTAL: _unset, ...env } = process.env;
-    const graph = spawnSync("cargo", ["check", "--unit-graph", "-Z", "unstable-options", "--offline", "-p", row.package, "--lib", "--profile", row.profile, ...(row.target ? ["--target", row.target] : [])], { cwd: repoRoot, encoding: "utf8", env, maxBuffer: 256 * 1024 * 1024 });
-    expect(graph.status, graph.stderr).toBe(0);
-    const units = (JSON.parse(graph.stdout) as { units: { profile: { name: string; incremental: boolean } }[] }).units;
-    expect(units.length, `${row.profile} ${row.package}`).toBeGreaterThan(0);
-    expect(units.filter((unit) => unit.profile.incremental).map((unit) => unit.profile.name), `${row.profile} ${row.package} ${row.target ?? "host"}`).toEqual([]);
+test("the issued profile selectors give every unit the incremental setting the policy declares (cargo unit-graph oracle)", () => {
+  const toolchain = { ...process.env, RUSTUP_TOOLCHAIN: process.env.RUSTUP_TOOLCHAIN ?? "nightly-2026-07-20" } as NodeJS.ProcessEnv;
+  const host = /^host: (\S+)$/mu.exec(spawnSync("rustc", ["-vV"], { encoding: "utf8", env: toolchain }).stdout)?.[1];
+  expect(host).toBeDefined();
+  const scratch = mkdtempSync(join(tmpdir(), "semio-profile-graph-"));
+  try {
+    mkdirSync(join(scratch, "src"));
+    writeFileSync(join(scratch, "Cargo.toml"), '[package]\nname = "probe"\nversion = "0.0.0"\nedition = "2021"\nbuild = "build.rs"\n\n[workspace]\n');
+    writeFileSync(join(scratch, "build.rs"), "fn main() {}\n");
+    writeFileSync(join(scratch, "src", "lib.rs"), "");
+    for (const row of fixture.profileUnitGraph as { mode: "prototype" | "release"; producer: string; target: string | null }[]) {
+      const target = row.target ?? host!, rendered = renderCargoProfileConfigurationV1({ version: 1, mode: row.mode, target, producer: row.producer, operation: "check" }, "Cargo.toml", "repository");
+      const graph = spawnSync("cargo", ["check", "--unit-graph", "-Z", "unstable-options", "-Z", "trim-paths", "--offline", "--lib", "--target", target, "--profile", rendered.plan.profile, ...rendered.selectors.flatMap((selector) => ["--config", selector])], { cwd: scratch, encoding: "utf8", env: toolchain, maxBuffer: 64 * 1024 * 1024 });
+      expect(graph.status, graph.stderr).toBe(0);
+      const units = (JSON.parse(graph.stdout) as { units: { platform: string | null; mode: string; profile: { name: string; incremental: boolean } }[] }).units;
+      expect(units.length, `${row.mode} ${target}`).toBeGreaterThan(1);
+      for (const unit of units) {
+        expect(unit.profile.name, `${row.mode} ${target}`).toBe(rendered.plan.profile);
+        expect(unit.profile.incremental, `${row.mode} ${target} ${unit.platform ?? "host"}`).toBe(unit.platform === null || unit.mode === "run-custom-build" ? rendered.plan.host.incremental : rendered.plan.target.incremental);
+      }
+    }
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
   }
 }, { timeout: 240_000 });
 

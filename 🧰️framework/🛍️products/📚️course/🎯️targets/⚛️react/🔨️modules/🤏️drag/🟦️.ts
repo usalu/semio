@@ -74,7 +74,7 @@ function releasePointer(target: Element, id: number | undefined): void {
   }
 }
 
-/** 🤏️ Starts a pointer drag of the element around `event.currentTarget` (its nearest `[data-course-drag]` ancestor);
+/** 🖱️ Starts a pointer drag of the element around `event.currentTarget` (its nearest `[data-course-drag]` ancestor);
  * `onDrop` receives the zone the pointer is released over. A touch that starts here cannot scroll the page: the grip
  * refuses panning, and every touch move until the drag ends is cancelled. */
 export function startPointerDrag(event: { readonly button: number; readonly clientX: number; readonly clientY: number; readonly pointerId?: number; readonly currentTarget: Element; preventDefault(): void }, onDrop: (zone: string) => void): void {

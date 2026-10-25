@@ -1,8 +1,8 @@
 import{createRequire}from"node:module";
 import{nativeWindowsExtendedPathV1,nativeWindowsUtf16V1}from"../../📁️directory/🪟️host/🟦️.ts";
-import schema from"../🧬️schema/🔣️.json";
-import { runtimeSupportsV1 } from "../../../../../../⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeNativeSystemV1 } from "../../../../../../⚙️runtime/🧲️native/🟦️.ts";
+import schema from"../🧬️schema/🔣️.json"with{type:"json"};
+import { runtimeSupportsV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeNativeSystemV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧲️native/🟦️.ts";
 const policy=schema.$defs.Policy.const,info=policy.information;
 /** 🧷️ Names a pinned Windows object without exporting a platform handle. */
 export type ConditionalWindowsIdentityV1=Readonly<{volume:string;file:string;directory:boolean;links:number;bytes:number;attributes:number;access:string;write:string;change:string}>;
@@ -11,7 +11,7 @@ export type ConditionalWindowsPinV1=Readonly<{identity:ConditionalWindowsIdentit
 /** 🧰️ A firstparty call table keeps system FFI behind a replaceable boundary. */
 export type ConditionalWindowsBindingV1=Readonly<{open(path:Buffer,access:number,share:number,flags:number):bigint;information(handle:bigint,kind:number,data:Buffer):boolean;disposition(handle:bigint,kind:number,data:Buffer):boolean;filesystem(handle:bigint,data:Buffer):boolean;fileType(handle:bigint):number;driveType(root:Buffer):number;closeHandle(handle:bigint):boolean;error():number;close():void}>;
 /** 🔖️ Preserves exact native refusal codes alongside ordinary Error causes. */
-export class ConditionalWindowsRefusalV1 extends Error{constructor(readonly operation:string,readonly nativeCode:number,options?:ErrorOptions){super("Windows conditional retirement "+operation+" refused ("+nativeCode+")",options);}}
+export class ConditionalWindowsRefusalV1 extends Error{readonly operation:string;readonly nativeCode:number;constructor(operation:string,nativeCode:number,options?:ErrorOptions){super("Windows conditional retirement "+operation+" refused ("+nativeCode+")",options);this.operation=operation;this.nativeCode=nativeCode;}}
 const failure=(binding:ConditionalWindowsBindingV1,operation:string)=>new ConditionalWindowsRefusalV1(operation,binding.error());
 /** 🧲️ Creates no-census conditional file custody over exact Win32 calls. */
 export function createConditionalWindowsPortV1(binding:ConditionalWindowsBindingV1):Readonly<{pin(path:string,candidate:boolean):ConditionalWindowsPinV1;close():void}>{

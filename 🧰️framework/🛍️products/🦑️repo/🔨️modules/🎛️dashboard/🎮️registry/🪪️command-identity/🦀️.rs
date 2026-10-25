@@ -13,7 +13,7 @@ pub const REPO_VERBS: &[&str] = &["tickets", "draft", "goals", "analyze", "tree"
 
 pub(super) const RESERVED_KINDS: &[&str] = &["playground", "tool", "compound", "group", "ticket"];
 
-/// 🪪️ Whether text after `repo:` is a repo-domain action key rather than a target of a project named `repo`.
+/// 🔑️ Whether text after `repo:` is a repo-domain action key rather than a target of a project named `repo`.
 fn is_action_key(text: &str) -> bool {
     let scope = |text: &str| !text.is_empty() && text.bytes().all(|byte| byte.is_ascii_lowercase());
     matches!(text, "goals.list" | "goals.tree" | "tree.monorepo" | "tree.goal" | "tree.statute" | "tree.territory" | "statutes.catalog" | "draft.start" | "draft.discard")

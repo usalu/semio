@@ -142,7 +142,7 @@ pub enum FlowVcsCursorKind {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(super) struct FlowVcsCursor {
+pub struct FlowVcsCursor {
     pub(super) phase: FlowVcsCursorPhase,
     pub(super) kind: FlowVcsCursorKind,
     pub scan: usize,

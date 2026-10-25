@@ -20,12 +20,12 @@ export interface PackageAssetDeclaration {
   readonly sha256: string;
 }
 
-/** 🚏️ The static-directory mounts a dev server needs so every declared directory answers at its route: `[route, directory]`. */
+/** 📁️ The static-directory mounts a dev server needs so every declared directory answers at its route: `[route, directory]`. */
 export function packageAssetMounts(): readonly (readonly [string, string])[] {
   return PACKAGE_ASSET_DIRECTORIES.map(directory => [`${PACKAGE_ASSET_ROUTE}/${directory}`, directory] as const);
 }
 
-/** 🚏️ [`packageAssetMounts`] as the `static-dir` deliveries a repository dev server mounts (`root` is repository-relative). */
+/** 🚚️ [`packageAssetMounts`] as the `static-dir` deliveries a repository dev server mounts (`root` is repository-relative). */
 export function packageAssetDeliveries(): readonly { readonly kind: "static-dir"; readonly route: string; readonly root: string }[] {
   return packageAssetMounts().map(([route, root]) => ({ kind: "static-dir" as const, route, root }));
 }

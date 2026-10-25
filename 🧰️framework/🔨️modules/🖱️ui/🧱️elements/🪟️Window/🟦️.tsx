@@ -50,17 +50,17 @@ export interface WindowConfig {
   utilityBar?: React.ReactNode;
   /** 🎛️ Controlled fold state for the Window Options (measures) rail (default true); externally settable so the introduction walkthrough can force-unfold a step's measure target into view. */
   measuresFolded?: boolean;
-  /** 🎛️ Fires when the user or a redirect toggles the Window Options rail fold state. */
+  /** 📏️ Fires when the user or a redirect toggles the Window Options rail fold state. */
   onMeasuresFoldedChange?: (folded: boolean) => void;
-  /** 🎛️ Controlled fold state for the Utilities rail (default true); externally settable so the introduction walkthrough can force-unfold a step's utility anchor into view. */
+  /** 🛠️ Controlled fold state for the Utilities rail (default true); externally settable so the introduction walkthrough can force-unfold a step's utility anchor into view. */
   utilityBarFolded?: boolean;
-  /** 🎛️ Fires when the user or a redirect toggles the Utilities rail fold state. */
+  /** 🔔️ Fires when the user or a redirect toggles the Utilities rail fold state. */
   onUtilityBarFoldedChange?: (folded: boolean) => void;
-  /** 🎛️ Categorized ad-hoc actions tree, merged into the top-left Actions pane below the active {@link engagement} (when present); folds to a chip by default. */
+  /** 🌳️ Categorized ad-hoc actions tree, merged into the top-left Actions pane below the active {@link engagement} (when present); folds to a chip by default. */
   actionPane?: React.ReactNode;
-  /** 🎛️ Controlled fold state for the merged top-left Actions pane (default true); externally settable so the palette/keybinding redirect can force-unfold. */
+  /** ⬅️ Controlled fold state for the merged top-left Actions pane (default true); externally settable so the palette/keybinding redirect can force-unfold. */
   actionsFolded?: boolean;
-  /** 🎛️ Fires when the user or a redirect toggles the Actions pane fold state. */
+  /** 🎬️ Fires when the user or a redirect toggles the Actions pane fold state. */
   onActionsFoldedChange?: (folded: boolean) => void;
   /** 💬️ Active engagement content (options/status/control) rendered above {@link actionPane} inside the same top-left Actions pane. */
   engagement?: EngagementSpec;

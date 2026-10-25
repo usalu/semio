@@ -61,7 +61,7 @@ pub fn encode_envelope(envelope: &MutationEnvelope, out: &mut Vec<u8>) {
     }
 }
 
-/// 🎯️ Inverse of [`encode_envelope`].
+/// 📩️ Inverse of [`encode_envelope`].
 pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope, semio_framework_replication_error::ProtocolError> {
     let mutation_id = semio_framework_replication_ids::MutationId(semio_framework_replication_wire_core::read_str(bytes, pos)?);
     let document_id = semio_framework_replication_ids::ArtifactId(semio_framework_replication_wire_core::read_str(bytes, pos)?);
@@ -96,7 +96,7 @@ pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope
     Ok(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp, transaction, verb, line })
 }
 
-/// 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
+/// 📄️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
 /// varint | chain_hash 32`.
 pub fn encode_frontier(f: &FrontierSummary, out: &mut Vec<u8>) {
     semio_framework_replication_wire_core::write_str(out, &f.document_id.0);
@@ -106,7 +106,7 @@ pub fn encode_frontier(f: &FrontierSummary, out: &mut Vec<u8>) {
     semio_framework_replication_wire_core::write_hash32(out, &f.chain_hash);
 }
 
-/// 🎯️ Inverse of [`encode_frontier`].
+/// ↩️ Inverse of [`encode_frontier`].
 pub fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary, semio_framework_replication_error::ProtocolError> {
     let document_id = semio_framework_replication_ids::ArtifactId(semio_framework_replication_wire_core::read_str(bytes, pos)?);
     let head_edit_ordinal = semio_framework_replication_wire_core::read_varint_u64(bytes, pos)?;
@@ -116,7 +116,7 @@ pub fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary,
     Ok(FrontierSummary { document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash })
 }
 
-/// 🎯️ `count varint | encode_envelope each` — for boundaries that move a whole batch of
+/// 🔢️ `count varint | encode_envelope each` — for boundaries that move a whole batch of
 /// envelopes as one opaque byte blob (the WIT ABI, worker frames) instead of one wire frame per
 /// envelope (`ClientFrame::Commands`, which already carries `Vec<MutationEnvelope>` typed).
 pub fn encode_envelopes(envelopes: &[MutationEnvelope]) -> Vec<u8> {
@@ -296,7 +296,7 @@ pub fn decode_document_backbone_envelopes_exact(bytes: &[u8]) -> Result<Vec<Muta
     decode_document_backbone_envelopes_exact_with_limits(bytes, DocumentBackboneBatchLimitsV1::default())
 }
 
-/// 🎯️ Inverse of [`encode_envelopes`].
+/// 📨️ Inverse of [`encode_envelopes`].
 pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<MutationEnvelope>, semio_framework_replication_error::ProtocolError> {
     let mut pos = 0usize;
     let count = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)?;
@@ -307,7 +307,7 @@ pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<MutationEnvelope>, semio_fra
     Ok(envelopes)
 }
 
-/// 🎯️ `count varint | (len varint | bytes) each` — a binary vec-of-op-payloads framing,
+/// 📦️ `count varint | (len varint | bytes) each` — a binary vec-of-op-payloads framing,
 /// replacing the `serde_json::json!({"inverse": [...]})` convention for `InverseMutation`
 /// payloads that carry more than one composed op (e.g. framework/plugin's `result_from_last_edit`).
 pub fn encode_ops_vec(ops: &[Vec<u8>]) -> Vec<u8> {
@@ -319,7 +319,7 @@ pub fn encode_ops_vec(ops: &[Vec<u8>]) -> Vec<u8> {
     out
 }
 
-/// 🎯️ Inverse of [`encode_ops_vec`].
+/// 🔙️ Inverse of [`encode_ops_vec`].
 pub fn decode_ops_vec(bytes: &[u8]) -> Result<Vec<Vec<u8>>, semio_framework_replication_error::ProtocolError> {
     let mut pos = 0usize;
     let count = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)?;

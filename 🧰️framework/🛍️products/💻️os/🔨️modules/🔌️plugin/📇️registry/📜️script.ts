@@ -3,9 +3,9 @@ import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/�
 import { runVitest } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 import { runToolSyncV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-import { runtimeCommandNameV1 } from "../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 📦️ Verifies owner-supplied deployment inventory without compiled component prerequisites. */
 class DeploymentContractTestScript extends BundleScript {

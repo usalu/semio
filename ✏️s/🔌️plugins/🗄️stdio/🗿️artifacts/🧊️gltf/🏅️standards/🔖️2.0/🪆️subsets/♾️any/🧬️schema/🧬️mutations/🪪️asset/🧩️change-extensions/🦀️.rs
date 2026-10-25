@@ -29,7 +29,7 @@ pub fn plan(p: &GltfChangeAssetExtensionDataPayload, base: &GltfSnapshot) -> Res
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfChangeAssetExtensionDataPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::change_asset_extension_data::ChangeAssetExtensionDataMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();

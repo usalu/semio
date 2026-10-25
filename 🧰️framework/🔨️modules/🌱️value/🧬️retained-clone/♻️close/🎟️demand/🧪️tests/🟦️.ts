@@ -17,7 +17,6 @@ test("one original complete close quote visits each child once",()=>{
   for(let level=0;level<row.depth;level++){const child=owner;owner={closeStarted:true,closeDemand:body=>{visits++;seen.push(body);return nestedRetainedCloseDemand(child,body);}};}
   const demand=owner.closeDemand(row.body);expect(visits).toBe(row.expectedVisits);expect(demand).toEqual({copyBytes:1,capacityBytes:17,releaseBytes:23,depth:row.expectedDepth});expect(seen.every(body=>body===row.body)).toBe(true);
  }
- console.log("[DEBUG] six original close-demand paths match SQLite recursive visits, preserve all currencies and carry the original body once through each child");
  }finally{database.close();}
 });
 
@@ -51,6 +50,5 @@ test("derived clone neutral denial axes cannot spend another physical currency",
   for(const axis of fixture.derive.denials)expect(admitted.get({$axis:axis})?.admitted).toBe(0);
   expect(admitted.get({$axis:"exact"})?.admitted).toBe(1);
   expect(fixture.derive.cuts).toContain(0);
-  console.log("[DEBUG] Derived record/enum custody five independent denial axes agree with SQLite; native staged heap laws remain uncompiled");
  }finally{db.close();}
 });

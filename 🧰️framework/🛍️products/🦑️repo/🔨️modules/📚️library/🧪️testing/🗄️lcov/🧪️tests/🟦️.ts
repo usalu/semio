@@ -1,9 +1,9 @@
-/** 🗄️ Contract: LCOV text is parsed into per-file line hits (only `SF:`, `DA:` and `end_of_record`), merged by summing hits, rendered with sorted lines, and Go cover profiles expand each statement range into per-line hits; the corpus is language-agnostic and `🐍️oracle.py` is an independent LCOV/Go-profile model. */
+/** 🗄️ Contract: LCOV text is parsed into per-file line hits (only `SF:`, `DA:` and `end_of_record`), merged by summing hits, rendered with sorted lines, and Go cover profiles expand each statement range into per-line hits; the corpus is language-agnostic and `🐍️.py` is an independent LCOV/Go-profile model. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {goProfileToLcov,mergeLcov,parseLcov,renderLcov} from "../🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
@@ -21,6 +21,6 @@ for(const row of corpus.go)test("go profile: "+row.name,()=>{expect<unknown>(fla
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

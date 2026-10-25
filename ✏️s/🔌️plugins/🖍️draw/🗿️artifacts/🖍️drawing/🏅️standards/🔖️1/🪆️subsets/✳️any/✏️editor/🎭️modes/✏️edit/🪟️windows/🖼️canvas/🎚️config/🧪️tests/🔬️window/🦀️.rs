@@ -118,7 +118,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
 
 #[test]
 fn drawing_canvas_window_ownership_matches_neutral_fixture_and_codecs() {
-    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+    use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

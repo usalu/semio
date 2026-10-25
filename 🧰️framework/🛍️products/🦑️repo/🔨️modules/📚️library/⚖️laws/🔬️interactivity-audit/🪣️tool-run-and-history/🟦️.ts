@@ -33,10 +33,10 @@ export const INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES = {
   puzzle5dWindow: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️.rs",
 } as const;
 
-/** 🪣️ Raw text per [[INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES]] role; a missing file is the empty string. */
+/** 📄️ Raw text per [[INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES]] role; a missing file is the empty string. */
 export type InteractivityPuzzleFillSources = Readonly<Record<keyof typeof INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES, string>>;
 
-/** 🪣️ Reads every puzzle fill role, Rust files with their declared canonical test evidence appended. */
+/** 🦀️ Reads every puzzle fill role, Rust files with their declared canonical test evidence appended. */
 export function interactivityPuzzleFillSources(repoRoot: string): InteractivityPuzzleFillSources {
   return Object.fromEntries(Object.entries(INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES).map(([key, path]) => [key, policyReadRustPolicySource(repoRoot, path)])) as InteractivityPuzzleFillSources;
 }
@@ -50,7 +50,7 @@ function interactivityPuzzleFillCode(sources: InteractivityPuzzleFillSources): I
 }
 
 /**
- * 🪣️ Puzzle 3d fill is a framework tool run: the fill tool declares a mutating `instance3d` `ToolRunDefinition`, its
+ * 💼️ Puzzle 3d fill is a framework tool run: the fill tool declares a mutating `instance3d` `ToolRunDefinition`, its
  * `FillBuilder` run job spends one fuel unit per candidate and streams every verdict as a trace upsert, accepted
  * placements stay provisional `appendOps`, and the plugin owns no lifecycle (no tick command, lock-is-commit, plugin
  * spawn/cancel or history coalescing). See `📋️tool-run-contract.md` §2.4, §2.7, §3.6, §3.7 and §5 W1-A/W1-B/W1-F.
@@ -99,7 +99,7 @@ export function interactivityPuzzleFillRunJobFailures(sources: InteractivityPuzz
 }
 
 /**
- * 🪣️ Puzzle fill shows its process through tool-run trace pages only: no diagnostic page, candidate ghost or reveal
+ * 🕵️ Puzzle fill shows its process through tool-run trace pages only: no diagnostic page, candidate ghost or reveal
  * cutoff survives in the 3d/5d producers or World3dHost, the legacy preview JSON fixture is gone, and World3dHost mounts
  * the framework `ToolRunTraceLayer` (`📋️tool-run-contract.md` §3.2, §3.6, §4.1, §5 W1-C).
  */
@@ -332,7 +332,7 @@ export function interactivityToolRunPolicySources(repoRoot: string, requirements
  */
 export type HistoryClosureRule = { readonly id: string; readonly anchors: readonly string[]; readonly pattern: RegExp; readonly applies: (path: string) => boolean; readonly allow: readonly string[]; readonly functions?: readonly string[]; readonly within?: RegExp; readonly unless?: RegExp; readonly item?: { readonly header: RegExp; readonly unless: RegExp }; readonly reason: string };
 
-/** 🚫️ One closure violation anchored to its rule, a repo-relative file and a 1-based line. */
+/** 🕰️ One closure violation anchored to its rule, a repo-relative file and a 1-based line. */
 export type HistoryClosureFinding = { readonly rule: string; readonly file: string; readonly line: number; readonly text: string };
 
 const HISTORY_CLOSURE_ROOTS = ["✏️s", "🧰️framework", "🌎️hub"] as const;
@@ -349,7 +349,7 @@ function historyClosurePluginProduction(path: string): boolean {
 }
 
 /**
- * 🚫️ The closure rules. Every lane commits through a tool transaction (artifact) or one plain config edit at gesture end
+ * ⚖️ The closure rules. Every lane commits through a tool transaction (artifact) or one plain config edit at gesture end
  * (§20.1): no amend constructor, no `AmendLast*` command, no coalesce key on any emission, edit, wire frame or fixture, no
  * gesture bracket verb, no host-snapshot bracket. Plugins never hand-build a `protocol::Edit` (the Store authority's
  * `next_edit` mints it) and never hand-declare a fold footprint (derived from the leaf's `x-semio-inverse-rows`, §20.5).
@@ -367,7 +367,7 @@ export const HISTORY_CLOSURE_RULES: readonly HistoryClosureRule[] = [
   { id: "footprint-default", anchors: ["INPUT_SCHEMAS"], pattern: /\bconst\s+INPUT_SCHEMAS\b/, applies: (path) => path.endsWith(".rs") && !HISTORY_CLOSURE_TESTS.test(path), allow: [], item: { header: /^\s*impl\b.*(?<!Semantic)\bMutation</, unless: /\bfn\s+inverse_rows\b/ }, reason: "a hand-written aggregate that forwards leaf payload schemas forwards their `x-semio-inverse-rows` too (`fn inverse_rows`); the default single row under-declares every multi-row leaf (§20.5, CLOSURE-4)" },
 ];
 
-/** 🪧️ The header line and brace-balanced body of the Rust `impl`/`trait` item enclosing `index` in `lines`, or `undefined`. */
+/** 📇️ The header line and brace-balanced body of the Rust `impl`/`trait` item enclosing `index` in `lines`, or `undefined`. */
 function historyClosureEnclosingItem(lines: readonly string[], index: number): { readonly header: string; readonly body: string } | undefined {
   for (let cursor = index; cursor >= 0; cursor--) if (/^\s*(?:pub(?:\([^)]*\))?\s+)?(?:unsafe\s+)?(?:impl|trait)\b/.test(lines[cursor]!)) return { header: lines[cursor]!, body: historyClosureFunctionBody(lines, cursor) };
   return undefined;
@@ -395,7 +395,7 @@ function historyClosureEnclosingFunctionLine(lines: readonly string[], index: nu
   return -1;
 }
 
-/** 🔎️ The Rust function enclosing `index` in `lines` (nearest preceding `fn name`), or `undefined`. */
+/** 🔭️ The Rust function enclosing `index` in `lines` (nearest preceding `fn name`), or `undefined`. */
 function historyClosureEnclosingFunction(lines: readonly string[], index: number): string | undefined {
   for (let cursor = index; cursor >= 0; cursor--) {
     const name = lines[cursor]!.match(/\bfn\s+(\w+)/)?.[1];
@@ -404,7 +404,7 @@ function historyClosureEnclosingFunction(lines: readonly string[], index: number
   return undefined;
 }
 
-/** 🚫️ Every closure violation in `sources` under `rules` (default [[HISTORY_CLOSURE_RULES]]); pure, so planted-violation tests drive it directly. */
+/** 🚨️ Every closure violation in `sources` under `rules` (default [[HISTORY_CLOSURE_RULES]]); pure, so planted-violation tests drive it directly. */
 export function historyClosureFindings(sources: readonly { readonly path: string; readonly text: string }[], rules: readonly HistoryClosureRule[] = HISTORY_CLOSURE_RULES): HistoryClosureFinding[] {
   const findings: HistoryClosureFinding[] = [];
   for (const { path, text } of sources) {
@@ -447,7 +447,7 @@ export function historyClosureSources(repoRoot: string): { readonly path: string
   });
 }
 
-/** 🚫️ The closure gate as breach records: one high-priority breach per finding. */
+/** 🔏️ The closure gate as breach records: one high-priority breach per finding. */
 export function policyHistoryClosureBreaches(repoRoot: string): BreachRecord[] {
   return historyClosureFindings(historyClosureSources(repoRoot)).map((finding) => ({
     id: `history-closure-${finding.rule}-${finding.file}:${finding.line}`,

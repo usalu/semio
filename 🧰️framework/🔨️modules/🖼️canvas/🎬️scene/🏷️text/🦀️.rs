@@ -77,7 +77,7 @@ impl LabelShapeBounds {
         Ok(bounds)
     }
 
-    /// 🏷️ The bounds [`LABEL_SHAPES_SCHEMA`] declares.
+    /// 🔖️ The bounds [`LABEL_SHAPES_SCHEMA`] declares.
     pub fn declared() -> Self {
         static DECLARED: OnceLock<LabelShapeBounds> = OnceLock::new();
         *DECLARED.get_or_init(|| Self::from_schema(LABEL_SHAPES_SCHEMA).expect("the label-shapes schema declares consistent bounds"))
@@ -195,7 +195,7 @@ thread_local! {
     static LABEL_SHAPES: RefCell<LabelShapeCache> = RefCell::new(LabelShapeCache { lru: BoundedLru::new(LabelShapeBounds::declared()), stats: LabelShapeStats::default() });
 }
 
-/// 📊️ The calling thread's shaped-label cache counters (a browser canvas session runs on one thread; every
+/// ☎️ The calling thread's shaped-label cache counters (a browser canvas session runs on one thread; every
 /// native test thread owns its own cache).
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn label_shape_stats() -> LabelShapeStats {
@@ -242,7 +242,7 @@ fn shaped_label(markup: &str, paint: bool) -> Option<Rc<LabelShape>> {
     Some(shape)
 }
 
-/// 📐️ Measure markup of one label line: its box, no paint — shared by the line layout and every prefix advance.
+/// ⏱️ Measure markup of one label line: its box, no paint — shared by the line layout and every prefix advance.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn label_measure_markup(text: &str, px: f64) -> String {
     let pad = px * ui_styling::metrics::label::PAD_RATIO;
@@ -332,7 +332,7 @@ pub fn label_extent(label: &str, px: f64) -> (f64, f64) {
 /// truncated title reads identically on the GPU, on the 2D replay and on the wgpu shell.
 pub const LABEL_ELLIPSIS: &str = "…";
 
-/// ✂️ Longest prefix of `text` that still fits `max_width` once {@link LABEL_ELLIPSIS} is
+/// 📄️ Longest prefix of `text` that still fits `max_width` once {@link LABEL_ELLIPSIS} is
 /// appended, measured by the CALLER's own text measure — a glyph atlas on the wgpu shell, the
 /// canvas `measureText` in the browser, a synthetic advance in a law.
 ///
@@ -376,7 +376,7 @@ pub fn label_advance(label: &str, px: f64) -> f64 {
     label.len() as f64 * px * ui_styling::metrics::label::CHAR_WIDTH_RATIO
 }
 
-/// 📏️ Left inset from label origin to first glyph baseline start.
+/// 📖️ Left inset from label origin to first glyph baseline start.
 pub fn label_text_inset(px: f64) -> f64 {
     if px < ui_styling::metrics::label::MIN_PX {
         return 0.0;
@@ -428,7 +428,7 @@ fn label_prefix_advance_svg(line: &str, byte_end: usize, px: f64) -> f64 {
     (bx + bw) - pad
 }
 
-/// ↔ World x for a byte offset in a code line (matches `append_label_tspans` layout).
+/// 🌐️ World x for a byte offset in a code line (matches `append_label_tspans` layout).
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn label_byte_world_x(line: &str, byte_offset: usize, origin_x: f64, px: f64) -> f64 {
     let Some(layout) = label_line_layout(line, px) else {
@@ -438,7 +438,7 @@ pub fn label_byte_world_x(line: &str, byte_offset: usize, origin_x: f64, px: f64
     origin_x + (layout.pad + advance - layout.bx) * layout.scale
 }
 
-/// ↔ `wasm32-wasip2` arm: no `usvg` text shaper is linked on this target (see this module's
+/// 🌍️ `wasm32-wasip2` arm: no `usvg` text shaper is linked on this target (see this module's
 /// top docstring — every real caller is host/browser-only or unreachable). Uses the same
 /// character-width heuristic (`label_advance`/`label_text_inset`) this module already falls
 /// back to when real glyph shaping is unavailable (see `label_prefix_advance_svg`'s own
@@ -452,12 +452,12 @@ pub fn label_byte_world_x(line: &str, byte_offset: usize, origin_x: f64, px: f64
     origin_x + label_text_inset(px) + label_advance(&line[..end], px)
 }
 
-/// ↔ World x range for a byte span in a code line.
+/// 🌎️ World x range for a byte span in a code line.
 pub fn label_span_world_x(line: &str, byte_start: usize, byte_end: usize, origin_x: f64, px: f64) -> (f64, f64) {
     (label_byte_world_x(line, byte_start, origin_x, px), label_byte_world_x(line, byte_end, origin_x, px))
 }
 
-/// 🏷️ Renders a single map label via SVG text at `origin` (screen px, baseline), shaped once per content.
+/// 🔂️ Renders a single map label via SVG text at `origin` (screen px, baseline), shaped once per content.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn append_label(scene: &mut Scene, label: &str, origin: Point, px: f64, fill: Color, halo: Color) {
     let trimmed = label.trim();
@@ -491,7 +491,7 @@ fn append_shaped_label(scene: &mut Scene, shape: &LabelShape, origin: Point, px:
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub fn append_label(_scene: &mut Scene, _label: &str, _origin: Point, _px: f64, _fill: Color, _halo: Color) {}
 
-/// 🏷️ Renders one label with colored inline tspans (single padding box, no per-span gaps), shaped once per content.
+/// 🎨️ Renders one label with colored inline tspans (single padding box, no per-span gaps), shaped once per content.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn append_label_tspans(scene: &mut Scene, line: &str, spans: &[(usize, usize, Color)], origin: Point, px: f64, _halo: Color) {
     if line.is_empty() || spans.is_empty() || px < ui_styling::metrics::label::MIN_PX {
@@ -503,7 +503,7 @@ pub fn append_label_tspans(scene: &mut Scene, line: &str, spans: &[(usize, usize
     append_shaped_label(scene, &shape, origin, px);
 }
 
-/// 🚫️ `wasm32-wasip2` arm: see `append_label`'s `wasm32-wasip2` arm docstring — identical
+/// 🔠️ `wasm32-wasip2` arm: see `append_label`'s `wasm32-wasip2` arm docstring — identical
 /// reasoning, this is the multi-span sibling.
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub fn append_label_tspans(_scene: &mut Scene, _line: &str, _spans: &[(usize, usize, Color)], _origin: Point, _px: f64, _halo: Color) {}

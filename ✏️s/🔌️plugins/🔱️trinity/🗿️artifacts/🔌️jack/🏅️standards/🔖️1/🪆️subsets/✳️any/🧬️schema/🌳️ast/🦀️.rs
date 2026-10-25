@@ -121,6 +121,9 @@ pub struct JackQueryGraphSnapshot{
 impl JackQueryGraphSnapshot{
  pub fn into_graph(self)->Result<crate::standards::v1::subsets::any::schema::memory::Graph,crate::standards::v1::subsets::any::schema::errors::TrinityRamError>{crate::standards::v1::subsets::any::schema::memory::Graph::with_scene(crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot{schema:self.schema,name:self.name,manifest_id:self.manifest_id,manifest:self.manifest,camera:self.camera,root_node_id:self.root_node_id,query:self.query,..Default::default()},crate::standards::v1::subsets::any::schema::content::JackWorkingScene{nodes:self.nodes,edges:self.edges})}
 
+ /// 📥️ Decodes the self-contained scene document [`Self::to_json`] writes.
+ pub fn from_json(json:&str)->Result<Self,crate::standards::v1::subsets::any::schema::errors::TrinityRamError>{let parsed=semio_framework_pack_json::parse(json,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))?;Ok(<Self as semio_framework_value::FromValue>::from_value(crate::standards::v1::subsets::any::schema::json_transport::convert_scene(semio_framework_pack_json::to_dsl_value(&parsed),true)?)?)}
+
  pub fn to_json(&self)->Result<String,crate::standards::v1::subsets::any::schema::errors::TrinityRamError>{let value=crate::standards::v1::subsets::any::schema::json_transport::convert(semio_framework_value::ToValue::to_value(self),false)?;Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&value)))}
 }
 impl semio_s_artifact_trinity_jack_graph_query::JackContentVisual for JackQueryGraphSnapshot{

@@ -11,14 +11,14 @@ impl RetainedPackSymbolTable{
  pub fn symbol_storage_admission_demands(&mut self,target:usize,offset:u64)->Result<RetirementDemand,RetainedPackCatalogFault>{
   Ok(match self.next_symbol_allocation_bytes(target,offset)?{Some(bytes)=>RetirementDemand{copy_bytes:self.symbols.next_capacity_copy_byte_demand(target).map_err(|error|RetainedPackCatalogFault::from_paged_refusal(error,"retained-pack.symbol-copy",offset))?,capacity_bytes:bytes,release_bytes:0,depth:self.symbols.next_capacity_depth_demand(target).map_err(|error|RetainedPackCatalogFault::from_paged_refusal(error,"retained-pack.symbol-depth",offset))?},None=>Default::default()})
  }
- /// 📏️ Quotes the actual next Unicode scalar page without conflating copy and capacity.
+ /// 🔏️ Quotes the actual next Unicode scalar page without conflating copy and capacity.
  pub fn scalar_storage_admission_demands(&mut self,target:usize,offset:u64)->Result<RetirementDemand,RetainedPackCatalogFault>{
   let limit=if target>self.scalars.capacity(){self.maximum_scalars}else{target};
   Ok(match self.next_scalar_allocation_bytes(target,offset)?{Some(bytes)=>RetirementDemand{copy_bytes:self.scalars.next_capacity_copy_byte_demand(limit).map_err(|error|RetainedPackCatalogFault::from_paged_refusal(error,"retained-pack.scalar-copy",offset))?,capacity_bytes:bytes,release_bytes:0,depth:self.scalars.next_capacity_depth_demand(limit).map_err(|error|RetainedPackCatalogFault::from_paged_refusal(error,"retained-pack.scalar-depth",offset))?},None=>Default::default()})
  }
  /// 📦️ Preserves every actual span page on denied work, copy, capacity, or depth.
  pub fn admit_symbol_storage(&mut self,target:usize,grant:RetainedCloneGrant,offset:u64)->Result<RetainedCloneProgress,RetainedPackCatalogAllocationError>{self.admit_original_storage(target,grant,offset,true)}
- /// 📦️ Preserves every actual scalar page on denied work, copy, capacity, or depth.
+ /// 📃️ Preserves every actual scalar page on denied work, copy, capacity, or depth.
  pub fn admit_scalar_storage(&mut self,target:usize,grant:RetainedCloneGrant,offset:u64)->Result<RetainedCloneProgress,RetainedPackCatalogAllocationError>{self.admit_original_storage(target,grant,offset,false)}
  fn admit_original_storage(&mut self,target:usize,grant:RetainedCloneGrant,offset:u64,symbol:bool)->Result<RetainedCloneProgress,RetainedPackCatalogAllocationError>{
   let demand=if symbol{self.symbol_storage_admission_demands(target,offset)}else{self.scalar_storage_admission_demands(target,offset)}.map_err(|fault|RetainedPackCatalogAllocationError{allocated_bytes:0,fault})?;
@@ -26,7 +26,7 @@ impl RetainedPackSymbolTable{
   let result=if symbol{self.symbols.reserve_capacity_one_funded(target,grant)}else{self.scalars.reserve_capacity_one_funded(if target>self.scalars.capacity(){self.maximum_scalars}else{target},grant)};
   match result{Ok(receipt)=>Ok(receipt),Err(error)=>{let fault=RetainedPackCatalogFault::from_paged_allocation(error,"retained-pack.original-symbol-storage",offset);self.fault.get_or_insert(fault);Err(RetainedPackCatalogAllocationError{allocated_bytes:error.allocated_bytes,fault})}}
  }
- /// 📏️ Quotes the same original controlled page owner with a separately declared frame ceiling.
+ /// 🔣️ Quotes the same original controlled page owner with a separately declared frame ceiling.
  pub fn symbol_storage_retirement_demands(&self,maximum_body_bytes:usize)->Result<RetirementDemand,ValueError>{
   if let Some(owner)=&self.storage_retirement{if !owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?.checked_add(size_of::<usize>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"symbol storage copy extent"))?,capacity_bytes:owner.next_capacity_byte_demand(maximum_body_bytes)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"symbol storage depth extent"))?})}return Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<SymbolStorage>>>()+4*size_of::<usize>()+2*size_of::<bool>(),depth:1,..Default::default()})}
   if self.closed{return Ok(Default::default())}Ok(RetirementDemand{copy_bytes:size_of::<SymbolStorage>()+size_of::<Option<ControlledRetirement<SymbolStorage>>>()+size_of::<usize>()+size_of::<bool>(),depth:1,..Default::default()})

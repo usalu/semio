@@ -7,7 +7,7 @@ import { bisectRight, quantileSorted, tickIncrement, ticks } from "../📐scale/
 import { type VizRow, type VizStackOffset, type VizStackOrder, type VizTable } from "@semio-tech/print/schema/snapshot/chart";
 
 //#region 🔖️Statistics
-/** ➕️ Neumaier compensated summation, the full-precision accumulator `d3.fsum` uses. */
+/** 💯️ Neumaier compensated summation, the full-precision accumulator `d3.fsum` uses. */
 export function fsum(values: Iterable<number>): number {
   let hi = 0;
   let lo = 0;
@@ -44,7 +44,7 @@ export function mean(values: Iterable<number>): number | undefined {
   return count > 0 ? total / count : undefined;
 }
 
-/** 📊️ Unbiased sample variance by Welford's recurrence, exactly `d3.variance`. */
+/** 🎲️ Unbiased sample variance by Welford's recurrence, exactly `d3.variance`. */
 export function variance(values: Iterable<number>): number | undefined {
   let count = 0;
   let delta: number;
@@ -62,13 +62,13 @@ export function variance(values: Iterable<number>): number | undefined {
   return count > 1 ? total / (count - 1) : undefined;
 }
 
-/** 📊️ Sample standard deviation. */
+/** 📏️ Sample standard deviation. */
 export function deviation(values: Iterable<number>): number | undefined {
   const v = variance(values);
   return v === undefined ? undefined : Math.sqrt(v);
 }
 
-/** 📊️ The smallest and largest defined value, `undefined` when there is none. */
+/** ↔️ The smallest and largest defined value, `undefined` when there is none. */
 export function extent(values: Iterable<number>): [number, number] | [undefined, undefined] {
   let min: number | undefined;
   let max: number | undefined;
@@ -81,18 +81,18 @@ export function extent(values: Iterable<number>): [number, number] | [undefined,
   return min === undefined || max === undefined ? [undefined, undefined] : [min, max];
 }
 
-/** 📊️ The R-7 quantile of an unsorted sample. */
+/** 🍰️ The R-7 quantile of an unsorted sample. */
 export function quantile(values: Iterable<number>, p: number): number {
   const sorted = [...values].filter((value) => value !== null && !Number.isNaN(+value)).sort((a, b) => a - b);
   return quantileSorted(sorted, p);
 }
 
-/** 📊️ The median. */
+/** ⚖️ The median. */
 export function median(values: Iterable<number>): number {
   return quantile(values, 0.5);
 }
 
-/** 📊️ The running sums of a sequence. */
+/** 📚️ The running sums of a sequence. */
 export function cumulativeSum(values: Iterable<number>): number[] {
   let total = 0;
   const out: number[] = [];
@@ -108,22 +108,22 @@ export function cumulativeSum(values: Iterable<number>): number[] {
 /** 📦️ One histogram bin: its half-open span and the rows that fell into it. */
 export type VizBin<T> = { readonly x0: number; readonly x1: number; readonly values: readonly T[] };
 
-/** 📦️ The bin-count rules `\SemioVizTransform{bin}` accepts. */
+/** 📋️ The bin-count rules `\SemioVizTransform{bin}` accepts. */
 export type VizThresholdRule = "sturges" | "scott" | "freedman-diaconis";
 
-/** 📦️ Sturges' rule for a sample size. */
+/** 🪣️ Sturges' rule for a sample size. */
 export function thresholdSturges(count: number): number {
   return Math.max(1, Math.ceil(Math.log(count) / Math.LN2) + 1);
 }
 
-/** 📦️ Scott's normal reference rule. */
+/** 🧪️ Scott's normal reference rule. */
 export function thresholdScott(values: readonly number[], min: number, max: number): number {
   const count = values.length;
   const d = deviation(values);
   return count > 0 && d !== undefined && d > 0 ? Math.ceil((max - min) * count ** (1 / 3) / (3.49 * d)) : 1;
 }
 
-/** 📦️ The Freedman–Diaconis rule. */
+/** 🔬️ The Freedman–Diaconis rule. */
 export function thresholdFreedmanDiaconis(values: readonly number[], min: number, max: number): number {
   const count = values.length;
   const spread = quantile(values, 0.75) - quantile(values, 0.25);
@@ -148,7 +148,7 @@ function niceBinDomain(start: number, stop: number, count: number): [number, num
   }
 }
 
-/** 📦️ `d3.bin`: histogram bins over a sample, with the domain niced exactly as d3 nices it. */
+/** 🧺️ `d3.bin`: histogram bins over a sample, with the domain niced exactly as d3 nices it. */
 export function bin<T>(data: readonly T[], options: { value?: (row: T) => number; domain?: readonly [number, number]; thresholds?: number | readonly number[] | VizThresholdRule } = {}): VizBin<T>[] {
   const value = options.value ?? ((row: T) => Number(row));
   const values = data.map(value);
@@ -206,14 +206,14 @@ export function group<T, K>(data: Iterable<T>, key: (row: T) => K): Map<K, T[]> 
   return out;
 }
 
-/** 🗂️ `d3.rollup`: rows grouped by one accessor and reduced to one value each. */
+/** 🗜️ `d3.rollup`: rows grouped by one accessor and reduced to one value each. */
 export function rollup<T, K, R>(data: Iterable<T>, reduce: (rows: T[]) => R, key: (row: T) => K): Map<K, R> {
   const out = new Map<K, R>();
   for (const [k, rows] of group(data, key)) out.set(k, reduce(rows));
   return out;
 }
 
-/** 🗂️ Long-to-wide: one row per `index` value, one column per `key` value. */
+/** 🔄️ Long-to-wide: one row per `index` value, one column per `key` value. */
 export function pivot(table: VizTable, index: string, key: string, value: string): VizTable {
   const keys = [...new Set(table.rows.map((row) => String(row[key])))];
   const rows: VizRow[] = [];
@@ -225,7 +225,7 @@ export function pivot(table: VizTable, index: string, key: string, value: string
   return { name: `${table.name}-pivot`, columns: [index, ...keys], rows };
 }
 
-/** 🗂️ Wide-to-long: the named columns folded into a key column and a value column. */
+/** ↩️ Wide-to-long: the named columns folded into a key column and a value column. */
 export function fold(table: VizTable, columns: readonly string[], keyName = "key", valueName = "value"): VizTable {
   const kept = table.columns.filter((column) => !columns.includes(column));
   const rows: VizRow[] = [];
@@ -241,7 +241,7 @@ export function fold(table: VizTable, columns: readonly string[], keyName = "key
   return { name: `${table.name}-fold`, columns: [...kept, keyName, valueName], rows };
 }
 
-/** 🗂️ A centred or trailing moving aggregate over one column. */
+/** 🪟️ A centred or trailing moving aggregate over one column. */
 export function window(values: readonly number[], size: number, reduce: (frame: readonly number[]) => number, centred = false): number[] {
   const half = centred ? Math.floor(size / 2) : 0;
   return values.map((_, i) => {
@@ -251,7 +251,7 @@ export function window(values: readonly number[], size: number, reduce: (frame: 
   });
 }
 
-/** 🗂️ Rescales a column onto `[0, 1]` by its own extent; a degenerate column becomes all zeros. */
+/** 🧹️ Rescales a column onto `[0, 1]` by its own extent; a degenerate column becomes all zeros. */
 export function normalize(values: readonly number[]): number[] {
   const [lo, hi] = extent(values);
   if (lo === undefined || hi === undefined || hi === lo) return values.map(() => 0);
@@ -265,7 +265,7 @@ export const VIZ_KERNELS = ["gaussian", "epanechnikov", "triangular", "uniform"]
 
 export type VizKernel = (typeof VIZ_KERNELS)[number];
 
-/** 🔔️ One smoothing kernel evaluated at a standardised distance. */
+/** 🌰️ One smoothing kernel evaluated at a standardised distance. */
 export function vizKernel(kind: VizKernel): (u: number) => number {
   switch (kind) {
     case "epanechnikov":
@@ -279,7 +279,7 @@ export function vizKernel(kind: VizKernel): (u: number) => number {
   }
 }
 
-/** 🔔️ Silverman's rule-of-thumb bandwidth. */
+/** 📶️ Silverman's rule-of-thumb bandwidth. */
 export function silvermanBandwidth(values: readonly number[]): number {
   const n = values.length;
   const d = deviation(values) ?? 0;
@@ -288,7 +288,7 @@ export function silvermanBandwidth(values: readonly number[]): number {
   return spread > 0 ? 0.9 * spread * n ** (-1 / 5) : 1;
 }
 
-/** 🔔️ One-dimensional kernel density estimate evaluated on a grid. */
+/** 🏔️ One-dimensional kernel density estimate evaluated on a grid. */
 export function kernelDensity1d(values: readonly number[], grid: readonly number[], options: { bandwidth?: number; kernel?: VizKernel } = {}): number[] {
   const bandwidth = options.bandwidth ?? silvermanBandwidth(values);
   const k = vizKernel(options.kernel ?? "gaussian");
@@ -300,7 +300,7 @@ export function kernelDensity1d(values: readonly number[], grid: readonly number
 /** 📈️ An ordinary-least-squares line with its coefficient of determination. */
 export type VizLinearFit = { readonly slope: number; readonly intercept: number; readonly r2: number; readonly predict: (x: number) => number };
 
-/** 📈️ Least-squares straight-line fit through the given points. */
+/** 📉️ Least-squares straight-line fit through the given points. */
 export function linearRegression(points: readonly (readonly [number, number])[]): VizLinearFit {
   const n = points.length;
   const meanX = points.reduce((total, point) => total + point[0], 0) / n;
@@ -319,7 +319,7 @@ export function linearRegression(points: readonly (readonly [number, number])[])
   return { slope, intercept, r2, predict: (x: number) => intercept + slope * x };
 }
 
-/** 📈️ Least-squares polynomial fit of the requested order, by normal equations. */
+/** 〰️ Least-squares polynomial fit of the requested order, by normal equations. */
 export function polynomialRegression(points: readonly (readonly [number, number])[], order: number): number[] {
   const size = order + 1;
   const matrix: number[][] = Array.from({ length: size }, () => new Array<number>(size + 1).fill(0));
@@ -350,7 +350,7 @@ export function polynomialRegression(points: readonly (readonly [number, number]
 /** 🧱️ One stacked point: the baseline, the top, and the row it came from. */
 export type VizStackPoint = { 0: number; 1: number; readonly index: number };
 
-/** 🧱️ One stacked series: the key it encodes and its points in row order. */
+/** 🥞️ One stacked series: the key it encodes and its points in row order. */
 export type VizStackSeries = { readonly key: string; index: number; readonly points: VizStackPoint[] };
 
 function seriesSum(series: VizStackSeries): number {
@@ -362,7 +362,7 @@ function seriesSum(series: VizStackSeries): number {
   return total;
 }
 
-/** 🧱️ The series order for one of the six stack orders. */
+/** 🔃️ The series order for one of the six stack orders. */
 export function stackOrder(series: readonly VizStackSeries[], order: VizStackOrder): number[] {
   const n = series.length;
   const none = Array.from({ length: n }, (_, i) => i);
@@ -426,7 +426,7 @@ function offsetNone(series: readonly VizStackSeries[], order: readonly number[])
   }
 }
 
-/** 🧱️ Applies one of the five stack offsets in place. */
+/** ➖️ Applies one of the five stack offsets in place. */
 export function stackOffset(series: readonly VizStackSeries[], order: readonly number[], offset: VizStackOffset): void {
   const n = series.length;
   if (n === 0) return;
@@ -506,7 +506,7 @@ export function stackOffset(series: readonly VizStackSeries[], order: readonly n
   offsetNone(series, order);
 }
 
-/** 🧱️ `d3.stack`: one series per key, stacked with the requested order and offset. */
+/** 🪜️ `d3.stack`: one series per key, stacked with the requested order and offset. */
 export function stack<T>(data: readonly T[], keys: readonly string[], options: { value?: (row: T, key: string) => number; order?: VizStackOrder; offset?: VizStackOffset } = {}): VizStackSeries[] {
   const value = options.value ?? ((row: T, key: string) => Number((row as Record<string, unknown>)[key]));
   const series: VizStackSeries[] = keys.map((key) => ({ key, index: 0, points: data.map((row, index) => ({ 0: 0, 1: value(row, key), index })) }));

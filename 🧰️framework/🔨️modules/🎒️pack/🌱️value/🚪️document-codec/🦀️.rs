@@ -22,7 +22,7 @@ pub struct DecodeReport {
     pub verified: semio_framework_pack_format::VerificationLevel,
 }
 
-/// 🚪️ The single entry point every other `pack_*`/`vcs`/`dsl_derive` crate encodes a
+/// 📄️ The single entry point every other `pack_*`/`vcs`/`dsl_derive` crate encodes a
 /// `RecordValue` through. Pre-pass computes the deterministic symbol table, then writes
 /// `Symbols`, one-or-more `Document` frames (split at `options.frame_size`), any `Bytes64` chunks
 /// produced along the way, and finally the `Manifest`/`End`/`Footer` via `PackWriter::finish`.
@@ -70,7 +70,7 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
     ::semio_framework_async::poll::resolve_ready(writer.finish(&manifest))
 }
 
-/// 🚪️ The single entry point every other `pack_*`/`vcs`/`dsl_derive` crate decodes a
+/// 📍️ The single entry point every other `pack_*`/`vcs`/`dsl_derive` crate decodes a
 /// `RecordValue` through. Opens the pack file at manifest level, reads and concatenates the
 /// `Document` frame(s), then decodes the top-level record body against `spec` — self-describing
 /// enough that any field id `spec` doesn't recognize still decodes and is preserved (subject to
@@ -133,7 +133,7 @@ pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &Enc
     Ok(out)
 }
 
-/// 🎯️ Decodes an [`encode_record_body`] payload against `spec`. Unknown fields decode,
+/// 🎒️ Decodes an [`encode_record_body`] payload against `spec`. Unknown fields decode,
 /// are preserved (subject to `options.preserve_unknown`), and are reported exactly like the
 /// document path; a `TAG_BYTES_CHUNKED` value is malformed here by construction.
 pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackRefusal> {
@@ -145,7 +145,7 @@ pub fn decode_record_body_exact(bytes: &[u8], spec: &RecordSpec, options: &Decod
     decode_record_body_inner(bytes, spec, options, true).map(|(record, _)| record)
 }
 
-/// 🛬️ Parses a terminal container-less record under the same control used by its typed constructor.
+/// 📹️ Parses a terminal container-less record under the same control used by its typed constructor.
 pub fn decode_record_body_exact_controlled(bytes:&[u8],spec:&RecordSpec,options:&DecodeOptions,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RecordValue,PackRefusal>{
     if bytes.len() as u64>options.limits.max_file_len{return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "record body exceeds max_file_len" });}
     control.begin_stage(0).map_err(PackRefusal::from)?;
@@ -221,7 +221,7 @@ pub fn decode_value_record_body_exact_controlled(bytes:&[u8],field_id:u16,option
     control.scoped_stage(|control|{control.begin_stage(0).map_err(PackRefusal::ValueRefusal)?;let mut reader=ByteReader::new(bytes);let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};let symbols=decode_inline_symbols(&mut reader,&options.limits,&materialization)?;if reader.read_varint_u64()?!=1||reader.read_varint_u64()?!=u64::from(field_id)||reader.read_u8()?!=TAG_VALUE{return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"expected exactly one declared Value field".into()});}let mut ctx=DecCtx{source:DecSource::Inline{symbols},limits:options.limits.clone(),verification:options.verification,preserve_unknown:false,unknown_field_ids:Vec::new(),materialization:&materialization};let value=decode_dsl_value(&mut reader,&mut ctx,0)?;if reader.position()!=bytes.len(){return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"trailing bytes after terminal intrinsic value".into()});}materialization.control.borrow_mut().checkpoint().map_err(PackRefusal::ValueRefusal)?;Ok(value)})
 }
 
-/// 🎞️ Decodes one exact intrinsic body by borrowing the caller's complete immutable byte source.
+/// 💎️ Decodes one exact intrinsic body by borrowing the caller's complete immutable byte source.
 pub fn decode_value_record_body_span_exact_controlled(bytes:semio_framework_replication_codec::ByteSpan<'_>,field_id:u16,options:&DecodeOptions,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<DslValue,PackRefusal>{
     if bytes.len() as u64>options.limits.max_file_len{return Err(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::WorkLimit,"intrinsic wire exceeds max_file_len")));}
     control.scoped_stage(|control|{control.begin_stage(0).map_err(PackRefusal::ValueRefusal)?;let mut reader=ByteReader::from_span(bytes);let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};let symbols=decode_inline_symbols(&mut reader,&options.limits,&materialization)?;if reader.read_varint_u64()?!=1||reader.read_varint_u64()?!=u64::from(field_id)||reader.read_u8()?!=TAG_VALUE{return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"expected exactly one declared Value field".into()});}let mut ctx=DecCtx{source:DecSource::Inline{symbols},limits:options.limits.clone(),verification:options.verification,preserve_unknown:false,unknown_field_ids:Vec::new(),materialization:&materialization};let value=decode_dsl_value(&mut reader,&mut ctx,0)?;if reader.position()!=bytes.len(){return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"trailing bytes after terminal intrinsic value".into()});}materialization.control.borrow_mut().checkpoint().map_err(PackRefusal::ValueRefusal)?;Ok(value)})

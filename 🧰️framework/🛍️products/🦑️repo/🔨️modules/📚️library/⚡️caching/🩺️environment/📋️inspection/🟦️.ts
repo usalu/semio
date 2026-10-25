@@ -1,6 +1,6 @@
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runtimeCommandNamesV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeSpawnSyncV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeCommandNamesV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeSpawnSyncV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 export class DoctorScript extends BundleScript {
   run(): void {

@@ -150,7 +150,7 @@ fn snapshot_identity_admission_preserves_namespaces_and_refuses_invalid_owners()
     assert!(oversized.validate_interaction_identities().is_err());
     let invalid_node = semio_s_fem_node::volumetric::FemNodeValue { id: String::new(), x: 1.0, y: 2.0, z: 3.0 };
     let operation = semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: invalid_node, index: None });
-    assert_eq!(protocol::Mutation::diff(&operation, &doc).diff(), &Default::default());
+    assert_eq!(protocol::ColdMutation::diff(&operation, &doc).diff(), &Default::default());
     assert_eq!(crate::vcs::apply_mutation(&doc, &operation).unwrap().0, doc);
     eprintln!("[DEBUG] FEM3d snapshot text/binary admission accepts scoped collisions and refuses duplicate, empty or oversized owners");
 }

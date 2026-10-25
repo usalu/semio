@@ -44,7 +44,7 @@ function fixture(): string {
   return mkdtempSync(join(runRoot, "🧫️run-"));
 }
 
-/** 🧫️ Writes an owned relative fixture file. */
+/** 📝️ Writes an owned relative fixture file. */
 function writeFixture(rootPath: string, path: string, bytes: string | Uint8Array): void {
   if (!path || path.includes("\\") || path.split("/").some((part) => !part || part === "" || part === "../../📋️mutation-inventory" || part.toLocaleLowerCase("en-US") === "compose")) throw new Error(`unsafe fixture path: ${path}`);
   const target = join(rootPath, ...path.split("/"));
@@ -52,7 +52,7 @@ function writeFixture(rootPath: string, path: string, bytes: string | Uint8Array
   writeFileSync(target, bytes, { flag: "wx" });
 }
 
-/** 🧫️ Supplies exactly one complete admission; no collector is invoked. */
+/** ✅️ Supplies exactly one complete admission; no collector is invoked. */
 function admission(rootPath: string, taxonomyBytes: Buffer, cancellationProbe = false): TaxonomySourceInventory {
   const regular = vectors.cases.map((row): TaxonomySourceObservation => ({ sourcePath: row.path, observedKind: "file", worktreeMode: "100644", explicitDirectory: false, origins: ["tracked"], indexEntries: [{ stage: 0, mode: "100644", objectId: sha256(row.bytes).slice(0, 40) }], generatorOutputs: [], repositoryBoundary: null }));
   const nonregular: TaxonomySourceObservation = { sourcePath: "virtual/nonregular.rs", observedKind: "symlink", worktreeMode: "120000", explicitDirectory: false, origins: ["tracked"], indexEntries: [{ stage: 0, mode: "120000", objectId: "0".repeat(40) }], generatorOutputs: [], repositoryBoundary: null };

@@ -45,7 +45,6 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod animate {
-        pub use semio_s_artifact_animate_presentation_animate::editor::animate::*;
         #[path = "."]
         pub mod engine {
             #[path = "."]

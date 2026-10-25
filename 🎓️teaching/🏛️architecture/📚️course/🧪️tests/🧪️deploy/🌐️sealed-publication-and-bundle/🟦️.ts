@@ -4,6 +4,7 @@ import type { Readable, Writable } from "node:stream";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
+import { gzipSync } from "node:zlib";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
@@ -14,7 +15,7 @@ import bundleCases from "../../../🧫️fixtures/🚛️bundle/🔣️.json" wi
 import bundlePolicySchema from "../../../🧫️fixtures/🚛️bundle/🧬️schema/🔣️.json" with { type: "json" };
 import { saveStackBundleImages, verifyStackBundleArchive, stackBundleImages, stackBundlePlan } from "../../../🚀️deploy/🎁️stack-bundle/🟦️.ts";
 import readiness from "../../../🧫️fixtures/🚀️readiness/🔣️.json" with { type: "json" };
-import { COURSE_BUNDLE_DIRECTORY, COURSE_BUNDLE_IMAGE, COURSE_PAGES_DIRECTORY, COURSE_PROCTOR_ORIGIN, COURSE_SITE_BUDGET, COURSE_SITE_HEADERS, COURSE_SITE_ORIGIN, COURSE_STACK_CERTIFICATES, COURSE_STACK_FILES, hostZone } from "../../../🚀️deploy/🟦️.ts";
+import { COURSE_BUNDLE_DIRECTORY, COURSE_BUNDLE_IMAGE, COURSE_PAGES_DIRECTORY, COURSE_PROCTOR_ORIGIN, COURSE_SITE_BUDGET, COURSE_SITE_HEADERS, COURSE_SITE_ORIGIN, COURSE_STACK_CERTIFICATES, COURSE_STACK_FILES, courseSiteTopology, hostZone } from "../../../🚀️deploy/🟦️.ts";
 import { siteArtifactProblems, siteDocumentProblems } from "../../../🚀️deploy/🌐️site/🟦️.ts";
 import { stackBundleEnvironment, stackBundleReadme } from "../../../🚀️deploy/🎁️stack-bundle/🟦️.ts";
 import { deployCheckSteps } from "../../../🚀️deploy/⚖️readiness/🟦️.ts";
@@ -51,9 +52,35 @@ export function registerSealedPublicationAndBundleTests(): void {
     const { "assets/app-EfGh5678.css": _stylesheet, "robots.txt": _robots, ...partial } = released(COURSE_PROCTOR_ORIGIN);
     expect(siteArtifactProblems(tree(partial), COURSE_PROCTOR_ORIGIN)).toEqual(["robots.txt is missing", "the document loads assets/app-EfGh5678.css, which the artifact lacks"]);
     expect(siteArtifactProblems(tree({ "index.html": sealed(COURSE_PROCTOR_ORIGIN), CNAME: `${deployment.site.host}\n` }), COURSE_PROCTOR_ORIGIN)).toEqual(["404.html is missing", ".nojekyll is missing", "robots.txt is missing", "manifest.webmanifest is missing", "favicon.svg is missing", "the document loads assets/app-AbCd1234.js, which the artifact lacks", "the document loads assets/app-EfGh5678.css, which the artifact lacks", `no script bakes the proctor origin ${COURSE_PROCTOR_ORIGIN}`]);
-    const heavy = `${released(COURSE_PROCTOR_ORIGIN)["assets/app-AbCd1234.js"] as string}\n/* ${randomBytes(COURSE_SITE_BUDGET.scriptGzipBytes * 2).toString("base64")} */`;
+    const heavy = `${released(COURSE_PROCTOR_ORIGIN)["assets/app-AbCd1234.js"] as string}\n/* ${randomBytes(COURSE_SITE_BUDGET.scriptGzipBytes.publish * 2).toString("base64")} */`;
     expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), "assets/app-AbCd1234.js": heavy }), COURSE_PROCTOR_ORIGIN)).toEqual([expect.stringMatching(/^the document's scripts weigh \d+ bytes compressed, over the budget of \d+$/u)]);
     expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), "🖼️assets/font.woff2": randomBytes(COURSE_SITE_BUDGET.totalBytes) }), COURSE_PROCTOR_ORIGIN)).toEqual([expect.stringMatching(/^the artifact weighs \d+ bytes, over the budget of \d+$/u)]);
+  });
+  it("pins the weight of the entry chunk per topology, charges what the document runs and not what it hints at low priority", () => {
+    const topologies = { publish: COURSE_PROCTOR_ORIGIN, rehearsal: "https://localhost:18443" } as const;
+    expect(Object.keys(COURSE_SITE_BUDGET.scriptGzipBytes).sort()).toEqual(Object.keys(topologies).sort());
+    for (const [topology, origin] of Object.entries(topologies)) {
+      const budget = COURSE_SITE_BUDGET.scriptGzipBytes[topology as keyof typeof topologies];
+      expect(courseSiteTopology(origin)).toBe(topology);
+      const entry = (gzipped: number): string => `${released(origin)["assets/app-AbCd1234.js"] as string}\n/* ${randomBytes(gzipped).toString("base64")} */`;
+      const weight = (source: string): number => gzipSync(source).length;
+      const fits = entry(Math.floor(budget * 0.8));
+      const over = entry(Math.floor(budget * 1.2));
+      expect(weight(fits)).toBeLessThanOrEqual(budget);
+      expect(weight(over)).toBeGreaterThan(budget);
+      expect(siteArtifactProblems(tree({ ...released(origin), "assets/app-AbCd1234.js": fits }), origin)).toEqual([]);
+      expect(siteArtifactProblems(tree({ ...released(origin), "assets/app-AbCd1234.js": over }), origin)).toEqual([`the document's scripts weigh ${weight(over)} bytes compressed, over the budget of ${budget}`]);
+      const lazy = `/* ${randomBytes(budget * 2).toString("base64")} */`;
+      const html = released(origin)["index.html"] as string;
+      const document = html.replace("</head>", `<link rel="modulepreload" fetchpriority="low" crossorigin href="/assets/quiz-IjKl9012.js">\n  </head>`);
+      expect(siteArtifactProblems(tree({ ...released(origin), "index.html": document, "404.html": document, "assets/quiz-IjKl9012.js": lazy }), origin)).toEqual([]);
+      const preloaded = html.replace("</head>", `<link rel="modulepreload" crossorigin href="/assets/quiz-IjKl9012.js">\n  </head>`);
+      expect(siteArtifactProblems(tree({ ...released(origin), "index.html": preloaded, "404.html": preloaded, "assets/quiz-IjKl9012.js": lazy }), origin)).toEqual([expect.stringMatching(/^the document's scripts weigh \d+ bytes compressed, over the budget of \d+$/u)]);
+      const missing = html.replace("</head>", `<link rel="modulepreload" fetchpriority="low" crossorigin href="/assets/quiz-IjKl9012.js">\n  </head>`);
+      expect(siteArtifactProblems(tree({ ...released(origin), "index.html": missing, "404.html": missing }), origin)).toEqual(["the document loads assets/quiz-IjKl9012.js, which the artifact lacks"]);
+    }
+    expect(COURSE_SITE_BUDGET.scriptGzipBytes.rehearsal).toBeLessThanOrEqual(300_000);
+    expect(COURSE_SITE_BUDGET.scriptGzipBytes.publish).toBeLessThanOrEqual(300_000);
   });
   it("bundles the proctor stack for a host without a registry: the tag pinned, the defaults of compose.yaml listed, every step told", () => {
     const defaults = Object.fromEntries([...read("compose.yaml").matchAll(/\$\{([A-Z_]+):-([^}]*)\}/gu)].map((substitution) => [substitution[1]!, substitution[2]!]));

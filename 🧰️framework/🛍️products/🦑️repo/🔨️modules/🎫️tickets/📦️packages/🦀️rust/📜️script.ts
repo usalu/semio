@@ -5,7 +5,6 @@ import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️proces
 /** ⚙️ Builds and tests the `semio-framework-repo-tickets` crate (owned build route for `repo/tickets/rs`). */
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 const CRATE = "semio-framework-repo-tickets";
 
@@ -22,7 +21,5 @@ class TestScript extends BundleScript {
   }
 }
 
-if (isMainModuleV1(import.meta.url)) {
-  const router = new ScriptRouter(import.meta.dirname).register("build", BuildScript).register("test", TestScript);
-  await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
-}
+const router = new ScriptRouter(import.meta.dirname).register("build", BuildScript).register("test", TestScript);
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

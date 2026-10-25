@@ -24,7 +24,7 @@ import { measureRustCrate } from "../📦️crate-tree/🗺️plan/📏️measur
 import { resolveOwningCrate } from "../📦️crate-tree/🗺️plan/📦️cargo-lib/🟦️.ts";
 import { addWorkspaceMembers, manifestRowKey, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest } from "../📦️crate-tree/📝️render/🟦️.ts";
 import { BUILD_OWNER_REGISTRY_FILE, reconcileBuildOwnerRegistry } from "../../🏗️build/🕸️graph/🧾️registry-consistency/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 export type NewMutationScaffoldOptions = {
   readonly composite?: boolean;
@@ -236,7 +236,7 @@ export function newMutationUpdateAggregate(repoRoot: string, mutationsRel: strin
 /** 🏘️ Family crate bookkeeping of one `<domain>/<operation>` leaf: the family root that mounts it and the crate that owns the family. */
 export type NewMutationFamilyPlan = { readonly domainRel: string; readonly crateName: string; readonly crateIdent: string; readonly alias: string; readonly packageDir: string; readonly owner: { manifest: string; name: string; entry: string } };
 
-/** 🏘️ Resolves the family crate of `<domain>/<operation>` below a mutations root, or refuses when no Cargo crate owns the root. */
+/** 🗓️ Resolves the family crate of `<domain>/<operation>` below a mutations root, or refuses when no Cargo crate owns the root. */
 export function newMutationFamilyPlan(repoRoot: string, mutationsRel: string, name: string, parts: ReturnType<typeof newMutationSemanticParts>): NewMutationFamilyPlan {
   const [domain, ...rest] = name.split("/");
   if (!domain || rest.length !== 1) throw new Error(`new mutation: a family leaf is named <domain>/<operation>, got ${JSON.stringify(name)}.`);
@@ -248,7 +248,7 @@ export function newMutationFamilyPlan(repoRoot: string, mutationsRel: string, na
   return { domainRel: `${mutationsRel}/${domain}`, crateName, crateIdent, alias: `${slug.replaceAll("-", "_")}_mutations`, packageDir: `${mutationsRel}/${domain}/📦️packages/🦀️rust`, owner };
 }
 
-/** 🏘️ Appends the `#[path]` mount of a family leaf to its family root text (creating the root text when the family has none). */
+/** 🏠️ Appends the `#[path]` mount of a family leaf to its family root text (creating the root text when the family has none). */
 export function newMutationFamilyRoot(existing: string | null, domainLabel: string, name: string, parts: ReturnType<typeof newMutationSemanticParts>): { source: string; added: boolean } {
   const operation = name.split("/")[1]!;
   const mount = `#[path = "${operation}/${POLICY_RS_COMPONENT_LEAF_NAME}"]\npub mod ${parts.moduleName};`;
@@ -260,7 +260,7 @@ export function newMutationFamilyRoot(existing: string | null, domainLabel: stri
 /** 📏️ What adding one mutation leaf does to the crate that owns the aggregate. */
 export type MutationCrateBudgetAssessment = Readonly<{ crate: string; lib: { files: number; bytes: number; lines: number }; test: { files: number; bytes: number; lines: number }; verdict: "fits" | "near-limit" | "refused" | "already-over" }>;
 
-/** 📏️ Measures the crate owning a mutations root with the canonical source counter and decides whether one more leaf (one mounted file, three active lines) keeps it inside the source gate. Returns null where no Cargo crate owns the root. */
+/** 💰️ Measures the crate owning a mutations root with the canonical source counter and decides whether one more leaf (one mounted file, three active lines) keeps it inside the source gate. Returns null where no Cargo crate owns the root. */
 export async function assessMutationCrateBudget(repoRoot: string, mutationsRel: string): Promise<MutationCrateBudgetAssessment | null> {
   const owner = resolveOwningCrate(repoRoot, mutationsRel);
   if (!owner) return null;
@@ -382,7 +382,7 @@ function readWorkspacePointer(manifest: string): string {
   return (runtimeParseTomlV1(readFileSync(manifest, "utf8")) as { package?: { workspace?: string } }).package?.workspace ?? ".";
 }
 
-/** 🏘️ Registers a new family crate with the owning workspace: member list, aggregate dependency, router packages and lockfile. */
+/** 📁️ Registers a new family crate with the owning workspace: member list, aggregate dependency, router packages and lockfile. */
 function registerMutationFamilyCrate(repoRoot: string, family: NewMutationFamilyPlan, createdManifest: boolean): string[] {
   if (!createdManifest) return [];
   const updated: string[] = [];

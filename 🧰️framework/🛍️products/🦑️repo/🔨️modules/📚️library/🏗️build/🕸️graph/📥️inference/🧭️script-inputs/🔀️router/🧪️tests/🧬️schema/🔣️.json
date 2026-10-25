@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:router-command-law-corpus:v1",
+  "title": "Router Command Specifier Law Corpus",
+  "description": "Language-agnostic cases of the per-command closure of a router script: each case is a router source with the stub modules it imports, the command it is run with and the exact specifiers that command needs (null when the router is not understood and keeps its whole closure). The stubs log which of them the selected command really touches, the execution-based oracle that the specifiers must cover. realCommands names real router scripts and commands whose pruned closure must be smaller than the whole closure, bounded, and, where ports is true (a closure narrow enough to be proven), reach scheduling code only through declared ports.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "checkoutFromTests",
+    "scriptRootsFromTests",
+    "minimumPrunedRouters",
+    "cases",
+    "realCommands"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "checkoutFromTests": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scriptRootsFromTests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "minimumPrunedRouters": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case",
+          "command",
+          "files",
+          "expected",
+          "note"
+        ],
+        "properties": {
+          "case": {
+            "type": "string",
+            "minLength": 1
+          },
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "files": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "realCommands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "script",
+          "command",
+          "maximumFiles",
+          "ports"
+        ],
+        "properties": {
+          "script": {
+            "type": "string",
+            "minLength": 1
+          },
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maximumFiles": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "ports": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

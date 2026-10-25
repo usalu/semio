@@ -1,11 +1,13 @@
 //! 🕸️ Framework DAG persisted-owner capability, literal-state and control baselines.
+use crate::dsl::ArtifactPack;
+use crate::dsl::ArtifactDsl;
 use semio_framework_os_space_testing_sqlite_native_caller as native_caller;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use native_caller::*;
 use crate::*;
 use semio_framework_value::{DslValue, FromValue, Number, ToValue};
 
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use crate::pack::snapshot::{ArtifactDsl, ArtifactPack};
 #[path="./🧮️properties/🦀️.rs"]
 pub(crate) mod property_allocation;
 

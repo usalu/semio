@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { serialize } from "node:v8";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
-import { runtimeHostIdV1 } from "../../../../../../../../../../🔨️modules/⚙️runtime/🧭️selection/🟦️.ts";
+import { runtimeHostIdV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧭️selection/🟦️.ts";
 
 /** 🧊️ Freezes a declaration recursively. */
 const freeze = value => { if (value !== null && typeof value === "object") { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } return value; };

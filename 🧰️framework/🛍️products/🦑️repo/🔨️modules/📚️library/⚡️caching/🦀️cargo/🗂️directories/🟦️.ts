@@ -1,6 +1,6 @@
 import {existsSync,readFileSync} from "node:fs";
 import {join,resolve} from "node:path";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 🗂️ Describes current Cargo output directories under original environment precedence. */
 export interface CargoDirectories {

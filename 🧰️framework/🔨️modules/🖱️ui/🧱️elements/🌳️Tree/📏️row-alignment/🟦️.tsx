@@ -1,4 +1,4 @@
-/** 📏 Owns the tree row alignment contexts and detail-panel row metrics shared by Label and the tree. */
+/** 🔎️ Owns the tree row alignment contexts and detail-panel row metrics shared by Label and the tree. */
 import * as React from "react";
 import { STYLING_DOM, domSizePx, sizeVar, uiSpacingLen } from "@semio-tech/ui-styling";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";

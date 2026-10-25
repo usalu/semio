@@ -104,7 +104,7 @@ fn payload_parts<R: protocol::list_delta::Keyed<Key = String> + Clone + PartialE
 
 /// 🎯️ The override rows that turn a page's held overrides into the payload overrides.
 pub fn page_override_rows(held: &[PageOverride], payload: &[PageOverride]) -> PageOverridesDelta {
-    PageOverridesDelta::from_parts(payload_parts(held, payload))
+    PageOverridesDelta::from_row_parts(payload_parts(held, payload))
 }
 
 /// 🎯️ The dictionary rows that turn the held entries into the payload entries.

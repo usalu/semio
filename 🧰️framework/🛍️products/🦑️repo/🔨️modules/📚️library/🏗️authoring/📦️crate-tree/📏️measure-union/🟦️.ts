@@ -25,7 +25,7 @@ export class MeasureUnion {
     this.lines = floor.lines;
   }
 
-  /** 🧮️ Totals of everything added so far. */
+  /** 💯️ Totals of everything added so far. */
   totals(): MeasureTotals {
     return { files: this.files, bytes: this.bytes, lines: this.lines };
   }

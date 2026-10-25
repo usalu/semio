@@ -85,7 +85,7 @@ mod tests {
         hidden: bool,
     }
 
-    /// 📄️ The declarative, renderer-neutral expectation every fixture carries — see
+    /// 🧫️ The declarative, renderer-neutral expectation every fixture carries — see
     /// `📓️terra-conformance-corpus-report.md`'s "decisions" section for why this shape and not a
     /// Rust-specific one. `violations`/`patch_rejection` reuse the contract's own wire types directly
     /// (`crate::PatchRejection` etc.) rather than re-describing them, so a corpus expectation can never
@@ -303,7 +303,7 @@ mod tests {
         assert!(missing.is_empty(), "Component variants with no fixture anywhere in the corpus: {missing:?}");
     }
 
-    /// 📊️ Every `crate::UiPatchOp` variant must appear in at least one 🩹️patch or 🚫️rejection case's
+    /// 💊️ Every `crate::UiPatchOp` variant must appear in at least one 🩹️patch or 🚫️rejection case's
     /// ops — the same "adding a variant silently goes untested" guard, for patches instead of nodes.
     #[test]
     fn every_ui_patch_op_variant_appears_in_a_patch_case() {

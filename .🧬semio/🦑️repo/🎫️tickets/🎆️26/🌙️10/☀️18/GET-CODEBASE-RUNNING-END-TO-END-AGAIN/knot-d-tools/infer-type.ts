@@ -1,0 +1,14 @@
+import ts from "/Users/ueli/Documents/semio/node_modules/typescript/lib/typescript.js";
+import { resolve } from "node:path";
+const [file, fn] = process.argv.slice(2) as [string, string];
+const options: ts.CompilerOptions = { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true, noEmit: true, strict: true, resolveJsonModule: true, skipLibCheck: true, types: ["node", "bun"], typeRoots: ["/Users/ueli/Documents/semio/node_modules/@types"], allowJs: true, esModuleInterop: true };
+const program = ts.createProgram([resolve(file)], options);
+const checker = program.getTypeChecker();
+const sf = program.getSourceFile(resolve(file))!;
+let found: ts.Node | undefined;
+const visit = (n: ts.Node) => { if (ts.isFunctionDeclaration(n) && n.name?.text === fn) found = n; ts.forEachChild(n, visit); };
+visit(sf);
+const sig = checker.getSignatureFromDeclaration(found as ts.FunctionDeclaration)!;
+let rt = checker.getReturnTypeOfSignature(sig);
+rt = checker.getAwaitedType(rt) ?? rt;
+console.log(checker.typeToString(rt, undefined, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.InTypeAlias | ts.TypeFormatFlags.MultilineObjectLiterals | ts.TypeFormatFlags.UseFullyQualifiedType));

@@ -33,7 +33,7 @@ export class ShardWatchdog {
     this.noteLiveness(slot, atMs);
   }
 
-  /** 🫀️ Every request still outstanding on `slot`, oldest first — the watchdog's whole view of what
+  /** 📬️ Every request still outstanding on `slot`, oldest first — the watchdog's whole view of what
    * the worker is busy with, and the payload {@link describeShardSilence} turns into a cause. */
   private outstandingRequests(slot: ShardSlot): readonly PendingEntry[] {
     const entries: PendingEntry[] = [];

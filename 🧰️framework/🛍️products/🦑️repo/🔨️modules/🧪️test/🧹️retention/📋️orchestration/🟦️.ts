@@ -23,7 +23,7 @@ export class CleanScript extends Script {
   }
 }
 
-/** 🧹️ Mark-and-sweep over the fixture store and the run directories. Dry by default, everywhere. */
+/** 📜️ Mark-and-sweep over the fixture store and the run directories. Dry by default, everywhere. */
 export class GcScript extends Script {
   run(segments: string[]): void {
     const registry = loadOracleRegistry(this.repoRoot);

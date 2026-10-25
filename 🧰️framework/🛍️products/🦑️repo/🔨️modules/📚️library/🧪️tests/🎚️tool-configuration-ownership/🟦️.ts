@@ -1,8 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { createRequire } from "node:module";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv/dist/2020.js";
@@ -10,14 +9,15 @@ import { ESLint } from "eslint";
 import postcss from "postcss";
 import loadPostcssConfig from "postcss-load-config";
 import { build, loadConfigFromFile } from "vite";
+import { repositoryCachePartitionRootDataV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 
 type Owner = Readonly<{
   id: string;
-  tool: "vite" | "playwright" | "tailwind" | "postcss" | "eslint" | "dependency-cruiser";
+  tool: "vite" | "playwright" | "tailwind" | "postcss" | "eslint";
   previousPath: string;
   ownerPath: string;
   effectiveRoot: string;
-  loader: "vite-native" | "module" | "postcss-load-config" | "eslint" | "dependency-cruiser";
+  loader: "vite-native" | "module" | "postcss-load-config" | "eslint";
   mode: "serve" | "build" | "test" | "lint" | "verify";
 }>;
 type Fixture = Readonly<{
@@ -58,7 +58,7 @@ describe("Tool configuration ownership", () => {
     
     expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["registration"]["target"]).toEqual("test-tool-configuration-ownership");expect(fixture["postcss"]["ownerId"]).toEqual("ui-react-postcss");expect(fixture["postcss"]["packageExport"]).toEqual("./postcss.config");expect(fixture["postcss"]["packageExportTarget"]).toEqual("./🟦️.mts");expect(fixture["postcss"]["standaloneLoader"]["kind"]).toEqual("explicit-search-place");expect(fixture["postcss"]["standaloneLoader"]["searchPlace"]).toEqual("🟦️.mts");expect(fixture["postcss"]["viteLoader"]["kind"]).toEqual("inline-plugin-array");expect(fixture["postcss"]["viteLoader"]["exportName"]).toEqual("uiPostcssInlinePlugins");
     
-    expect(fixture.owners).toHaveLength(11);
+    expect(fixture.owners).toHaveLength(10);
     expect(new Set(fixture.owners.map(({ id }) => id)).size).toBe(11);
     expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(11);
     expect(fixture.removedShims).toHaveLength(2);
@@ -92,23 +92,25 @@ describe("Tool configuration ownership", () => {
   });
 
   test("loads all five Vite owners with the installed native loader and preserves effective roots", async () => {
-    const previous = { plugin: process.env.SEMIO_PLUGIN, renderer: process.env.SEMIO_RENDERER };
-    process.env.SEMIO_PLUGIN = "s";
+    const previous = { plugin: process.env.SEMIO_PLUGIN, renderer: process.env.SEMIO_RENDERER, cache: process.env.SEMIO_VITE_CACHE_DIRECTORY };
+    delete process.env.SEMIO_PLUGIN;
     process.env.SEMIO_RENDERER = "react";
+    process.env.SEMIO_VITE_CACHE_DIRECTORY = join(repositoryCachePartitionRootDataV1(repoRoot, "products"), "tool-configuration-ownership");
     try {
       for (const owner of fixture.owners.filter(({ loader }) => loader === "vite-native")) {
         const command = owner.mode === "build" ? "build" : "serve";
-        const loaded = await loadConfigFromFile({ command, mode: command === "build" ? "production" : "development", isSsrBuild: false, isPreview: false }, resolve(repoRoot, owner.ownerPath), undefined, "silent", undefined, "native");
+        const loaded = await loadConfigFromFile({ command, mode: "prototype", isSsrBuild: false, isPreview: false }, resolve(repoRoot, owner.ownerPath), undefined, "silent", undefined, "native");
         expect(loaded, owner.id).toBeDefined();
         expect(resolve(loaded!.config.root ?? repoRoot), owner.id).toBe(resolve(repoRoot, owner.effectiveRoot));
       }
     } finally {
       if (previous.plugin === undefined) delete process.env.SEMIO_PLUGIN; else process.env.SEMIO_PLUGIN = previous.plugin;
       if (previous.renderer === undefined) delete process.env.SEMIO_RENDERER; else process.env.SEMIO_RENDERER = previous.renderer;
+      if (previous.cache === undefined) delete process.env.SEMIO_VITE_CACHE_DIRECTORY; else process.env.SEMIO_VITE_CACHE_DIRECTORY = previous.cache;
     }
   }, 30_000);
 
-  test("loads Playwright, Tailwind, ESLint and dependency-cruiser configurations through installed tool contracts", async () => {
+  test("loads Playwright, Tailwind and ESLint configurations through installed tool contracts", async () => {
     const playwright = ownerById.get("demonstrator-playwright")!;
     const listed = spawnSync(process.execPath, [resolve(repoRoot, "node_modules/playwright/cli.js"), "test", "--config", resolve(repoRoot, playwright.ownerPath), "--list"], { cwd: repoRoot, encoding: "utf8", timeout: 30_000, env: { ...process.env, PLAYWRIGHT_BASE_URL: "http://127.0.0.1:6029" } });
     expect(listed.status, listed.stderr).toBe(0);
@@ -136,10 +138,6 @@ describe("Tool configuration ownership", () => {
     const reactConfig = await reactLint.calculateConfigForFile(resolve(reactRoot, "🟦️.tsx"));
     expect(reactConfig?.languageOptions.parser).toBeDefined();
 
-    const dependencyOwner = ownerById.get("dependency-boundaries")!;
-    const dependencyConfig = createRequire(import.meta.url)(resolve(repoRoot, dependencyOwner.ownerPath));
-    expect(dependencyConfig.forbidden.length).toBeGreaterThan(20);
-    expect(dependencyConfig.options).toBeDefined();
 
 
   }, 60_000);
@@ -217,6 +215,6 @@ describe("Tool configuration ownership", () => {
     expect(project.targets[fixture.registration.target].inputs).toContain("{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts");
     for (const path of [ownerById.get(fixture.postcss.ownerId)!.ownerPath, fixture.postcss.packageEntryPath, fixture.postcss.historicalFixturePath]) expect(project.targets[fixture.registration.target].inputs).toContain(`{workspaceRoot}/${path}`);
     const manifest = JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"));
-    expect(manifest.scripts[fixture.registration.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
+    expect(manifest.scripts[fixture.registration.target]).toBe(`repo run @semio-tech/repo-lib:${fixture.registration.target}`);
   });
 });

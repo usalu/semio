@@ -35,7 +35,7 @@ fn node_drag_rows_decode_to_their_records_and_invalid_rows_are_refused() {
     }
 }
 
-/// ⚖️ LAW: the node-drag machine commits a release as ONE transaction of the guest's leaves, its ref minted from the
+/// 🖱️ LAW: the node-drag machine commits a release as ONE transaction of the guest's leaves, its ref minted from the
 /// authoring actor, the clock and the tool; a release that yields nothing commits nothing.
 #[test]
 fn a_released_node_drag_commits_one_transaction_of_its_leaves() {

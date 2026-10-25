@@ -231,7 +231,7 @@ export function goalOutcomes(plan: GoalPlan, steps: GoalSummary["steps"]): GoalS
   });
 }
 
-/** 🏁️ The per-outcome verdict table of one run in one language — the answer to "is the goal met, and where not". */
+/** 🏓️ The per-outcome verdict table of one run in one language — the answer to "is the goal met, and where not". */
 export function goalOutcomeTable(summary: GoalSummary, plan: GoalPlan, language: keyof LocalizedText): string[] {
   const heading = language === "en" ? ["Outcome", "Verdict", "Pass", "Fail", "Blocked", "Skipped"] : ["Ergebnisziel", "Urteil", "Bestanden", "Fehlgeschlagen", "Blockiert", "Übersprungen"];
   return [`| ${heading.join(" | ")} |`, `|${heading.map(() => "---").join("|")}|`, ...summary.outcomes.map((outcome) => `| ${outcome.id}. ${plan.outcomes.find((candidate) => candidate.id === outcome.id)?.title[language] ?? outcome.id} | **${STATUS_WORD[outcome.status][language]}** | ${outcome.totals.pass} | ${outcome.totals.fail} | ${outcome.totals.blocked} | ${outcome.totals.skipped} |`)];
@@ -255,7 +255,7 @@ export function goalSummaryMarkdown(summary: GoalSummary, plan: GoalPlan, langua
 const PROVIDED_REQUIREMENTS: readonly ProvidedRequirement[] = ["hub", "serve", "localServe"];
 const ADMIN_CAPABILITY_BOUND_MS = 60_000;
 
-/** 🏗️ Stands up, in dependency order, every requirement the selected checks need that the command line did not name and
+/** ☑️ Stands up, in dependency order, every requirement the selected checks need that the command line did not name and
  * the plan provides; returns the resolved options, the holders to stop at the end and why any provider failed. */
 async function provisionRequirements(repoRoot: string, plan: GoalPlan, selected: readonly GoalPlanStep[], options: GoalGateOptions): Promise<{ resolved: GoalGateOptions; holders: Readonly<{ stop: () => Promise<void> }>[]; failures: Map<ProvidedRequirement | "hubAdmin", string> }> {
   const needed = new Set(selected.flatMap((step) => step.checks.flatMap((check) => check.requires)));
@@ -379,7 +379,7 @@ function option(segments: readonly string[], flag: string): string | undefined {
   return value === undefined || value.startsWith("--") ? undefined : value;
 }
 
-/** 🎯️ `acceptance goal [--hub <url>] [--serve <url>] [--local-serve <url>] [--hub-binary <path>] [--hub-admin-capability <file>] [--users <json>] [--plan <path>] [--only <step,…>]
+/** 📜️ `acceptance goal [--hub <url>] [--serve <url>] [--local-serve <url>] [--hub-binary <path>] [--hub-admin-capability <file>] [--users <json>] [--plan <path>] [--only <step,…>]
  * [--out <dir>] [--include-optional] [--max-browsers <n>] [--max-parallel <n>]` and `acceptance plan` (prints the plan).
  * A hub or serve the command line does not name is stood up by the plan's provider and stopped after the run. */
 export class AcceptanceScript extends Script {

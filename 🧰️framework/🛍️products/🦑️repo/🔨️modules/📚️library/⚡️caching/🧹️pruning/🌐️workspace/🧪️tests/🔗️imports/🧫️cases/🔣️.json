@@ -4,15 +4,15 @@
   "routes": [
     {
       "symbol": "collectGarbage",
-      "owner": "../../../../🧪️test/🗑️retention/🟦️.ts"
+      "owner": "../../../../🧪️test/📦️packages/🟦️typescript/🗑️retention/🟦️.ts"
     },
     {
       "symbol": "formatGcReport",
-      "owner": "../../../../🧪️test/🗑️retention/🟦️.ts"
+      "owner": "../../../../🧪️test/📦️packages/🟦️typescript/🗑️retention/🟦️.ts"
     },
     {
       "symbol": "loadOracleRegistry",
-      "owner": "../../../../🧪️test/🤝️contributions/🟦️.ts"
+      "owner": "../../../../🧪️test/📦️packages/🟦️typescript/🤝️contributions/🟦️.ts"
     }
   ],
   "forbidden": "../../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts"

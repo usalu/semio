@@ -5,7 +5,7 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
 
 use crate::command_tree::LauncherRow;
-use dashboard_registry::{graph_file, segment_key, Facts, Fingerprint, GraphBasis, PlaygroundFacts, Problem, ProjectFacts, Registry, TargetFacts, TicketFacts, GRAPH_OWNERS, PLAYGROUND_SOURCE, TICKET_COMMANDS};
+use dashboard_registry::{graph_file, segment_key, Facts, Fingerprint, GraphBasis, LocalizedText, PlaygroundFacts, Problem, ProjectFacts, Registry, TargetFacts, TicketFacts, GRAPH_OWNERS, PLAYGROUND_SOURCE, TICKET_COMMANDS};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -98,11 +98,11 @@ impl Snapshot {
         let mut projects: BTreeMap<String, ProjectFacts> = self.graph.value.iter().map(|project| (project.name.clone(), project.clone())).collect();
         let mut problems = Vec::new();
         for (path, manifest) in &self.manifests {
-            if let Some(message) = &manifest.problem { problems.push(Problem { file: path.clone(), at: String::new(), message: message.clone() }); }
+            if let Some(message) = &manifest.problem { problems.push(Problem { file: path.clone(), at: String::new(), message: LocalizedText::of(format!("unreadable manifest: {message}"), format!("Manifest nicht lesbar: {message}")) }); }
             let Some(stated) = &manifest.project else { continue };
             let name = if !stated.name.is_empty() { stated.name.clone() } else { projects.values().find(|project| project.root == stated.root).map_or_else(|| if stated.root == "." { "workspace".to_string() } else { stated.root.rsplit('/').next().unwrap_or_default().to_string() }, |project| project.name.clone()) };
             if let Some(known) = projects.get(&name).filter(|known| known.root != stated.root) {
-                problems.push(Problem { file: path.clone(), at: "name".into(), message: format!("project name {name:?} is already used by the project in {:?}", known.root) });
+                problems.push(Problem { file: path.clone(), at: "name".into(), message: LocalizedText::of(format!("project name {name:?} is already used by the project in {:?}", known.root), format!("Projektname {name:?} wird schon vom Projekt in {:?} verwendet", known.root)) });
                 continue;
             }
             projects.retain(|known, project| known == &name || project.root != stated.root);
@@ -120,9 +120,9 @@ impl Snapshot {
             }
             project.targets.sort_by(|left, right| left.name.cmp(&right.name));
         }
-        problems.extend(self.graph_errors.iter().enumerate().map(|(index, message)| Problem { file: graph_file().into(), at: format!("errors[{index}]"), message: message.clone() }));
-        problems.extend(self.tickets.iter().filter_map(|ticket| ticket.problem.as_ref().map(|message| Problem { file: format!("{}/{TICKET_COMMANDS}", ticket.facts.folder), at: String::new(), message: message.clone() })));
-        Facts { projects: projects.into_values().collect(), playgrounds: self.playgrounds.value.clone(), tickets: self.tickets.iter().map(|ticket| ticket.facts.clone()).collect(), problems }
+        problems.extend(self.graph_errors.iter().enumerate().map(|(index, message)| Problem { file: graph_file().into(), at: format!("errors[{index}]"), message: LocalizedText::of(format!("build graph error: {message}"), format!("Build-Graph-Fehler: {message}")) }));
+        problems.extend(self.tickets.iter().filter_map(|ticket| ticket.problem.as_ref().map(|message| Problem { file: format!("{}/{TICKET_COMMANDS}", ticket.facts.folder), at: String::new(), message: LocalizedText::of(format!("unreadable ticket commands: {message}"), format!("Ticket-Befehle nicht lesbar: {message}")) })));
+        Facts { projects: projects.into_values().collect(), playgrounds: self.playgrounds.value.clone(), tickets: self.tickets.iter().map(|ticket| ticket.facts.clone()).collect(), problems, catalog_configured: self.catalog_path.is_some(), graph_unpublished: self.graph.fingerprint.is_none() }
     }
 
     fn same_sources(&self, other: &Self) -> bool {
@@ -349,7 +349,7 @@ pub fn discover_with_catalog(root:&Path,cancelled:&AtomicBool,publication:Option
 /// 🌱️ The commands known without the graph, the walk or the ticket index: the playgrounds and
 /// what the root manifest declares.
 pub fn seed(root:&Path)->Registry{let publication=dashboard_core::catalog::configured_catalog_root().expect("Command catalog location refused");seed_with_catalog(root,publication.as_deref())}
-/// 🌱️ Seeds the root commands and explicitly supplied playground contribution.
+/// 🎲️ Seeds the root commands and explicitly supplied playground contribution.
 pub fn seed_with_catalog(root:&Path,publication:Option<&Path>)->Registry{
     let mut snapshot = Snapshot { version: SNAPSHOT_VERSION, root: root.to_path_buf(), playgrounds: read_playgrounds(publication),catalog_path:publication.map(|root|root.join("🚀️playgrounds.json")), ..Default::default() };
     for name in PROJECT_MANIFESTS { if let Some(manifest) = read_manifest(root, name) { snapshot.manifests.insert((*name).to_string(), manifest); } }
@@ -362,7 +362,7 @@ pub fn registry(root: &Path) -> Registry { registry_at(root, &cache_path(root)) 
 
 /// 🗄️ [`registry`] with the snapshot at an explicit place.
 pub fn registry_at(root:&Path,snapshot_path:&Path)->Registry{let publication=dashboard_core::catalog::configured_catalog_root().expect("Command catalog location refused");registry_at_with_catalog(root,snapshot_path,publication.as_deref())}
-/// 🔏️ Binds snapshot freshness to the actual supplied catalog file and its fingerprint.
+/// 📸️ Binds snapshot freshness to the actual supplied catalog file and its fingerprint.
 pub fn registry_at_with_catalog(root:&Path,snapshot_path:&Path,publication:Option<&Path>)->Registry{
     let previous = read_snapshot(snapshot_path, root);
     if let Some(snapshot) = previous.as_ref().filter(|snapshot| snapshot.is_current_for(publication)) { return snapshot.registry(); }

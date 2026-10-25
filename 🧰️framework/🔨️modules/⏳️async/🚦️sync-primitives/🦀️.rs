@@ -1,4 +1,4 @@
-//! 🚦️ `Notify` and the owned-permit `Semaphore`: the repo-owned wait primitives.
+//! 📮️ `Notify` and the owned-permit `Semaphore`: the repo-owned wait primitives.
 
 //#region 🪢️Oneshot
 #[path = "../🪢️oneshot/🦀️.rs"]
@@ -53,7 +53,7 @@ impl Default for Notify {
     }
 }
 
-/// 🔔️ Future returned by [`Notify::notified`] — resolves once a permit is available, consuming it.
+/// 📣️ Future returned by [`Notify::notified`] — resolves once a permit is available, consuming it.
 pub struct Notified<'a> {
     notify: &'a Notify,
 }
@@ -103,7 +103,7 @@ impl Semaphore {
     }
 }
 
-/// 🚦️ RAII permit returned by [`Semaphore::acquire_owned`] — returns its one permit to the
+/// 🎟️ RAII permit returned by [`Semaphore::acquire_owned`] — returns its one permit to the
 /// semaphore (and wakes every pending waiter) on drop.
 pub struct OwnedPermit {
     semaphore: Arc<Semaphore>,
@@ -121,7 +121,7 @@ impl Drop for OwnedPermit {
     }
 }
 
-/// 🚦️ Future returned by [`Semaphore::acquire_owned`].
+/// 🎫️ Future returned by [`Semaphore::acquire_owned`].
 pub struct AcquireOwned {
     semaphore: Arc<Semaphore>,
     pub(crate) id: Option<u64>,

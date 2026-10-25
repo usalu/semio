@@ -39,3 +39,5 @@ semio-framework-diagnostic = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-draw-drawing-diff = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }

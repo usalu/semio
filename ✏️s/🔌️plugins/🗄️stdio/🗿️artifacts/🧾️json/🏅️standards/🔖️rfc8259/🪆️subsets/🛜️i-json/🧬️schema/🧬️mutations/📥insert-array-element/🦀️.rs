@@ -7,9 +7,9 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertArrayElement {
-    pub(crate) path: JsonPath,
-    pub(crate) index: usize,
-    pub(crate) value: JsonValue,
+    pub path: JsonPath,
+    pub index: usize,
+    pub value: JsonValue,
 }
 
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for InsertArrayElement {

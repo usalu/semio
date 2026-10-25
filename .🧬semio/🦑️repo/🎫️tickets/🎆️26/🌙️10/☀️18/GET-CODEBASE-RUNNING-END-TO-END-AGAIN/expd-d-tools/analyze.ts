@@ -1,0 +1,13 @@
+import { readFileSync } from "node:fs";
+const { edges } = JSON.parse(readFileSync(process.argv[2]!, "utf8"));
+const prefix = process.argv[3] ?? "🧰️framework/🛍️products/🦑️repo/";
+const mine = edges.filter((e: any) => e.from.startsWith(prefix));
+console.log("total", edges.length, "mine", mine.length);
+const byRule: Record<string, number> = {};
+for (const e of mine) byRule[e.rule] = (byRule[e.rule] ?? 0) + 1;
+console.log(byRule);
+const byTarget: Record<string, number> = {};
+for (const e of mine) if (e.rule.startsWith("no-cross-package-relative")) byTarget[e.to] = (byTarget[e.to] ?? 0) + 1;
+const sorted = Object.entries(byTarget).sort((a, b) => b[1] - a[1]);
+console.log("distinct targets", sorted.length);
+for (const [t, n] of sorted.slice(0, Number(process.argv[4] ?? 60))) console.log(n, t);

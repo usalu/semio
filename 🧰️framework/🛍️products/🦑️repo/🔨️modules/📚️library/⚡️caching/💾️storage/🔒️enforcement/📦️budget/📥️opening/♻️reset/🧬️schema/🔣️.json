@@ -397,7 +397,9 @@
     "Profile": {
       "enum": [
         "graph",
-        "nx"
+        "nx",
+        "rust",
+        "products"
       ]
     },
     "InactivePublicationProtocol": {
@@ -428,11 +430,13 @@
         "texts": {
           "en": {
             "obsolete": "The cache image {partition} ({directory}) was published in an unsupported receipt format, for example before the boot-stable ancestry binding. Its contents are recomputable: it is retired and rebuilt automatically.",
-            "attached": "The cache image {partition} ({directory}) is attached and has an unsupported receipt format. Detach it (hdiutil detach <device>) and run the command again: it is then rebuilt automatically."
+            "attached": "The cache image {partition} ({directory}) is attached and has an unsupported receipt format. Detach it (hdiutil detach <device>) and run the command again: it is then rebuilt automatically.",
+            "declined": "The cache image {partition} ({directory}) is not recreated: its journal verdict is {reason} (a whole-image reset never drops persistent state or foreign charges). Space is recovered by collection (repo cache gc) only."
           },
           "de": {
             "obsolete": "Das Cache-Image {partition} ({directory}) wurde in einem nicht unterstützten Quittungsformat veröffentlicht, zum Beispiel vor der bootstabilen Vorfahrenbindung. Sein Inhalt ist neu berechenbar: es wird ausgemustert und automatisch neu aufgebaut.",
-            "attached": "Das Cache-Image {partition} ({directory}) ist angehängt und hat ein nicht unterstütztes Quittungsformat. Hängen Sie es ab (hdiutil detach <Gerät>) und führen Sie den Befehl erneut aus: es wird dann automatisch neu aufgebaut."
+            "attached": "Das Cache-Image {partition} ({directory}) ist angehängt und hat ein nicht unterstütztes Quittungsformat. Hängen Sie es ab (hdiutil detach <Gerät>) und führen Sie den Befehl erneut aus: es wird dann automatisch neu aufgebaut.",
+            "declined": "Das Cache-Image {partition} ({directory}) wird nicht neu erzeugt: sein Journal-Urteil lautet {reason} (ein Gesamt-Reset verwirft nie persistenten Zustand oder fremde Belastungen). Platz wird nur durch Einsammeln (repo cache gc) zurückgewonnen."
           }
         },
         "attachedRefusal": "Original relative child volume required"
@@ -503,7 +507,10 @@
                 "enum": [
                   "graph",
                   "nx",
-                  "products"
+                  "rust",
+                  "products",
+                  "tools",
+                  "dependencies"
                 ]
               },
               "scenario": {
@@ -517,7 +524,8 @@
                   "retirement-failure",
                   "retirement-false",
                   "lease-close-false",
-                  "exclusive-refused"
+                  "exclusive-refused",
+                  "declined"
                 ]
               },
               "accepted": {
@@ -560,6 +568,52 @@
         },
         "accepted": {
           "type": "boolean"
+        }
+      }
+    },
+    "RegrowPlanCases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "record",
+          "due",
+          "verdict",
+          "plan"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "record": {
+            "type": "boolean"
+          },
+          "due": {
+            "type": "boolean"
+          },
+          "verdict": {
+            "enum": [
+              "admitted",
+              "empty",
+              "persistent-state",
+              "foreign-charge",
+              "incomplete-charge",
+              "unreadable"
+            ]
+          },
+          "plan": {
+            "enum": [
+              "resume",
+              "skip",
+              "decline",
+              "reset"
+            ]
+          }
         }
       }
     }

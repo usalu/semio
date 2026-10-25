@@ -7,7 +7,7 @@ import {tmpdir} from "node:os";
 import {dirname,join,relative,resolve} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {checkStoreReceiptFileV1,declaredStoreReceiptV1,encodeStoreReceiptV1,isStoreRepairSelectionV1,issueStoreReceiptV1,observeStoreContentV1,parseStoreReceiptV1,recordStoreContentV1,requireStoreReceiptV1,storeReceiptOutputV1,storeRepairNxArgumentsV1,storeTreeDigestV1,verifyStoreReceiptV1,type StoreReceiptEntryV1} from "../🟨️.mjs";
+import {checkStoreReceiptFileV1,declaredStoreReceiptV1,encodeStoreReceiptV1,isStoreRepairSelectionV1,issueStoreReceiptV1,settleStoreReceiptV1,observeStoreContentV1,parseStoreReceiptV1,recordStoreContentV1,requireStoreReceiptV1,storeReceiptOutputV1,storeRepairNxArgumentsV1,storeTreeDigestV1,verifyStoreReceiptV1,type StoreReceiptEntryV1} from "../🟨️.mjs";
 import {checkStoreReceiptTasksV1,withStoreReceiptsV1,type StoreReceiptTaskV1} from "../🟦️.ts";
 
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),validate=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/Receipt"}),workspaceRoot=resolve(import.meta.dir,"../../../../../../../.."),directories:string[]=[];
@@ -113,14 +113,45 @@ test("a task declares a receipt only through its own target's receipt output",()
  expect(()=>storeReceiptOutputV1("a/b")).toThrow();
 });
 
-test("issuing a receipt clears the previous one and names the new one to the handler",()=>{
+test("issuing a receipt names a private pending file and leaves the declared receipt alone",()=>{
  const root=workspace(),outputs=[storeReceiptOutputV1("build")],file=join(root,"proj",receiptName("build"));
- mkdirSync(dirname(file),{recursive:true});writeFileSync(file,"stale");
+ mkdirSync(dirname(file),{recursive:true});writeFileSync(file,"finished by another run");
  const undeclared=issueStoreReceiptV1({workspaceRoot:root,projectRoot:"proj",target:"build",outputs:[]});
  expect(Object.hasOwn(undeclared,policy.environment)&&undeclared[policy.environment]===undefined,"a task without a receipt unsets the parent's").toBe(true);
- expect(existsSync(file)).toBe(true);
- expect(issueStoreReceiptV1({workspaceRoot:root,projectRoot:"proj",target:"build",outputs})).toEqual({[policy.environment]:file});
- expect(existsSync(file)).toBe(false);
+ const first=issueStoreReceiptV1({workspaceRoot:root,projectRoot:"proj",target:"build",outputs})[policy.environment]!,second=issueStoreReceiptV1({workspaceRoot:root,projectRoot:"proj",target:"build",outputs})[policy.environment]!;
+ expect(first.startsWith(file+".")&&first!==file&&first!==second,"each run gets its own pending file below the receipt directory").toBe(true);
+ expect(first.length,"within the finite path bound").toBeLessThanOrEqual(256);
+ expect(readFileSync(file,"utf8"),"a concurrent start of the same task never deletes the receipt a finishing run wrote").toBe("finished by another run");
+});
+
+test("settling moves the pending receipt over the declared one atomically; failure and an empty task keep only what is current",async()=>{
+ const root=workspace(),outputs=[storeReceiptOutputV1("build")],file=join(root,"proj",receiptName("build")),declaration={workspaceRoot:root,projectRoot:"proj",target:"build",outputs};
+ mkdirSync(dirname(file),{recursive:true});
+ const issued=issueStoreReceiptV1(declaration),other=issueStoreReceiptV1(declaration);
+ writeFileSync(issued[policy.environment]!,"mine");writeFileSync(other[policy.environment]!,"theirs");
+ await settleStoreReceiptV1(declaration,issued,{succeeded:true,startedAtMs:Date.now()});
+ expect(readFileSync(file,"utf8")).toBe("mine");expect(existsSync(issued[policy.environment]!)).toBe(false);
+ const late=issueStoreReceiptV1(declaration);await settleStoreReceiptV1(declaration,late,{succeeded:true,startedAtMs:Date.now()+60_000});
+ expect(existsSync(file),"a task that recorded nothing drops a receipt older than its own start").toBe(false);
+ writeFileSync(file,"fresh");const empty=issueStoreReceiptV1(declaration);await settleStoreReceiptV1(declaration,empty,{succeeded:true,startedAtMs:Date.now()-60_000});
+ expect(readFileSync(file,"utf8"),"but keeps one a concurrent run finished after it started").toBe("fresh");
+ writeFileSync(other[policy.environment]!,"theirs");await settleStoreReceiptV1(declaration,other,{succeeded:false,startedAtMs:Date.now()});
+ expect(existsSync(other[policy.environment]!),"a failed task leaves no pending file").toBe(false);expect(readFileSync(file,"utf8")).toBe("fresh");
+ await settleStoreReceiptV1({...declaration,outputs:[]},{[policy.environment]:undefined},{succeeded:true,startedAtMs:0});
+});
+
+test("two overlapping runs of one task each keep a complete receipt: the later settle wins and no start deletes a finished receipt",async()=>{
+ const root=workspace(),outputs=[storeReceiptOutputV1("build")],file=join(root,"proj",receiptName("build")),declaration={workspaceRoot:root,projectRoot:"proj",target:"build",outputs};
+ mkdirSync(join(root,"store"),{recursive:true});writeFileSync(join(root,"store","a"),"alpha");
+ const environment=(issued:Record<string,string|undefined>)=>({...issued,SEMIO_TASK_PROJECT:"fixture/project",SEMIO_TASK_TARGET:"build"});
+ const first=issueStoreReceiptV1(declaration);await recordStoreContentV1({environment:environment(first),workspaceRoot:root,paths:[join(root,"store/a")]});
+ const second=issueStoreReceiptV1(declaration);
+ await settleStoreReceiptV1(declaration,first,{succeeded:true,startedAtMs:0});
+ expect(existsSync(file),"the run that finished first still captures its receipt although the second run has started").toBe(true);
+ expect(parseStoreReceiptV1(readFileSync(file,"utf8")).entries.map(entry=>entry.path)).toEqual(["store/a"]);
+ await recordStoreContentV1({environment:environment(second),workspaceRoot:root,paths:[join(root,"store/a")]});
+ await settleStoreReceiptV1(declaration,second,{succeeded:true,startedAtMs:0});
+ expect((await checkStoreReceiptFileV1(root,file)).state).toBe("valid");
 });
 
 test("recording merges published content by path and a task without a receipt records nothing",async()=>{

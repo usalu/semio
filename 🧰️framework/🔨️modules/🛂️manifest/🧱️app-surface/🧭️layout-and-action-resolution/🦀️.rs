@@ -4,7 +4,7 @@ use super::*;
 
 // #region 🛂️Manifest
 //#region 🔖️Manifest
-/// 🧭️ Resolves the dock layout a mode should present.
+/// 🔎️ Resolves the dock layout a mode should present.
 pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<WindowLayout> {
     let mode = app.modes.iter().find(|mode| mode.id == mode_id)?;
     if let Some(layout_id) = &mode.layout_id {

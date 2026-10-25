@@ -1,18 +1,20 @@
-import installationSchema from "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️.json";
+import installationSchema from "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🔣️json/🟦️.ts";
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
 import { readFileSync, lstatSync } from "node:fs";
 import { resolve, join } from "node:path";
 import ts from "typescript";
-import { dashboardBuildDescendantsV1, dashboardInvocation, dashboardPackageRoot } from "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
-import { createBuildBootstrapCapabilitiesV1 } from "../../../../📚️library/🏗️build/📥️caller/📤️child/🟦️.ts";
-import { createNativeBuildCallerCapabilitiesV1, type NativeBuildCallerCapabilitiesV1 } from "../../../../📚️library/🏗️build/📥️caller/🟦️.ts";
-import callerSchema from "../../../../📚️library/🏗️build/🧬️schema/📥️caller.json";
-import orchestrationSchema from "../../../../📚️library/🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json";
-import executionSchema from "../../../../📚️library/🏗️build/🏃️execution/🧬️schema/🔣️.json";
+import { dashboardBuildDescendantsV1, dashboardInvocation, dashboardPackageRoot } from "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
+import { createBuildBootstrapCapabilitiesV1 } from "../../../../📚️library/📦️packages/🟦️typescript/🏗️build/📥️caller/📤️child/🟦️.ts";
+import { createNativeBuildCallerCapabilitiesV1, type NativeBuildCallerCapabilitiesV1 } from "../../../../📚️library/📦️packages/🟦️typescript/🏗️build/📥️caller/🟦️.ts";
+import { declaredCapabilitiesV1 } from "../../../../📚️library/📦️packages/🟦️typescript/🏗️build/📥️caller/🛰️service/🟦️.ts";
+import { buildOperationArgumentsV1 } from "../../../../📚️library/📦️packages/🟦️typescript/🏗️build/⚙️operations/🔤️options/🟦️.ts";
+import callerSchema from "../../../../📚️library/📦️packages/🟦️typescript/🏗️build/🧬️schema/📥️caller.json/🟦️.ts";
+import orchestrationSchema from "../../../../📚️library/📦️packages/🟦️typescript/🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️json/🟦️.ts";
+import executionSchema from "../../../../📚️library/📦️packages/🟦️typescript/🏗️build/🏃️execution/🧬️schema/🔣️json/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "../../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🚀️launch/🔣️.json" with { type: "json" };
+import schema from "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/🎛️dashboard/📦️installation/🧬️schema/🚀️launch/🔣️json/🟦️.ts";
 import fixture from "../../🧫️fixtures/🧊️execution/🔣️.json" with { type: "json" };
 
 test("dashboard bootstrap closes exact authored build and compile requests before Original birth", async () => {
@@ -31,7 +33,7 @@ test("dashboard bootstrap closes exact authored build and compile requests befor
       const environment = { SEMIO_BUILD_TOOL: tool, SEMIO_BUILD_MODE: mode, CARGO_NET_OFFLINE: "true" }, initial = createNativeBuildCallerCapabilitiesV1(process.cwd(), row.args, tool, environment), grant = await createBuildBootstrapCapabilitiesV1(process.cwd(), ["repo", ...row.args], environment) as NativeBuildCallerCapabilitiesV1;
       expect(grant.arguments).toEqual(initial.arguments); expect(grant.selection).toEqual(initial.selection); expect(grant.native).toEqual(initial.native); expect([grant.tool, grant.buildMode]).toEqual([tool, mode]);
       expect(grant.launches.filter(request => request[0] === "repo")).toEqual([["repo", ...row.args], ...row.descendants.map(request => ["repo", ...request])]);
-      const token = Object.freeze({ fixture: "received" }), ports = { schema: callerSchema, resolve, readIssuedScriptProcessEnvelopeV1: (value: unknown) => { expect(value).toBe(token); return { capabilities: grant }; }, validateJsonSchemaSubset: (schema: object, value: unknown) => oracle.compile(schema)(value) ? [] : ["refused"] };
+      const token = Object.freeze({ fixture: "received" }), ports = { schema: callerSchema, resolve, declaredCapabilitiesV1, buildOperationArgumentsV1, readIssuedScriptProcessEnvelopeV1: (value: unknown) => { expect(value).toBe(token); return { capabilities: grant }; }, validateJsonSchemaSubset: (schema: object, value: unknown) => oracle.compile(schema)(value) ? [] : ["refused"] };
       const read = new Function(...Object.keys(ports), compiled.outputText + ";return readOwnedBuildInvocationV1;")(...Object.values(ports));
       for (const request of row.descendants) expect(read(process.cwd(), token, request)).toBe(grant);
       expect(() => read(process.cwd(), token, ["run", "@semio-tech/repo-dashboard-rs:unowned"])).toThrow("Undeclared original Repo build selection");
@@ -42,7 +44,6 @@ test("dashboard bootstrap closes exact authored build and compile requests befor
   expect(dashboardInvocation(["run", "@semio-tech/repo-dashboard-rs:run", "--graph=stdout"])).toBeUndefined();
   expect(dashboardInvocation(["run", "@semio-tech/repo-dashboard-rs:run", "--", "workflow", "status"])).toEqual(["workflow", "status"]);
   expect(dashboardPackageRoot).toBe(resolve(import.meta.dir, "../../../📦️packages/🦀️rust"));
-  console.log(`[DEBUG] Actual dashboard prebirth closure matched ${fixture.bootstrap.length} authored vectors across both backends and modes; exact reader body ports isolated private Original receipt`);
 });
 
 test("dashboard bootstrap refuses malformed or unowned authored child declarations", () => {
@@ -62,7 +63,6 @@ test("dashboard bootstrap refuses malformed or unowned authored child declaratio
     const descendants = new Function(...Object.keys(ports), body + ";return dashboardBuildDescendantsV1;")(...Object.values(ports));
     expect(() => descendants(["run", "@semio-tech/repo-dashboard-rs:run"]), mutation).toThrow(/dashboard bootstrap/);
   }
-  console.log("[DEBUG] Actual dashboard metadata reader refused foreign owners, missing child targets and closed-schema mutations without changing authored files");
 });
 
 test("dashboard bootstrap accepts closed source and native leaves without child authority",()=>{

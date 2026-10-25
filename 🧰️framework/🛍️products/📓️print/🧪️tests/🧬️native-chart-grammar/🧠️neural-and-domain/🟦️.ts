@@ -32,7 +32,7 @@ import nativeControlSchema from "../../../🧬️schema/✅️native-controls/�
 import Ajv2020 from "ajv/dist/2020.js";
 import { equal } from "../🧰️grammar-kit/🟦️.ts";
 
-/** 🧠 Measures all declared architecture palette modes against an authored fifteen-colour D3 ordinal oracle and actual native PDF nodes. */
+/** 🏛️ Measures all declared architecture palette modes against an authored fifteen-colour D3 ordinal oracle and actual native PDF nodes. */
 export async function compileNativeNeuralArchitectureControls(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/neural-architecture-controls",async({directory:workDir,execution})=>{
   const neutral=fixture.nativeNeuralArchitectureControls,c=neutral.vectors,failures:string[]=[];const palette=scaleOrdinal(c.modes,c.palette),kindDomain=[...new Set(c.layers.map(layer=>layer.kind))],x=scaleLinear([0,c.layers.length],[c.padding,c.width-c.padding]),nodes=c.layers.flatMap((layer,index)=>Array.from({length:layer.units},(_,unit)=>({x:x(index+.5),y:c.height/2+(unit+1-(layer.units+1)/2)*Math.min(3*c.unitSize,(c.height-2*c.padding-6)/layer.units),kind:kindDomain.indexOf(layer.kind)})));
   deepStrictEqual(chartSchema["x-semio-family-options"]["neural-network"].options.mode.enum,c.modes);
@@ -86,7 +86,7 @@ export async function compileNativeNeuralReferenceControls(execution:PrintExecut
  if(failures.length)throw Error(failures.join("\n"));
 });}
 
-/** 🌲️ Checks public stratified forests and order-independent subtree paint through canonical inference. */
+/** 📘️ Checks public stratified forests and order-independent subtree paint through canonical inference. */
 export async function compileNativeDomainReferenceControls(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/domain-reference-controls",async({directory:workDir,execution})=>{
   const neutral=fixture.nativeDomainReferenceControls,control=neutral.vectors,original=JSON.stringify(control),{stratify,partition}=await import("d3-hierarchy"),failures:string[]=[],baseline=process.env.PRINT_NATIVE_DOMAIN_PHASE==="baseline",themes=(["light","dark"]as const).filter(theme=>!process.env.PRINT_NATIVE_CONTROL_THEME||theme===process.env.PRINT_NATIVE_CONTROL_THEME);
   

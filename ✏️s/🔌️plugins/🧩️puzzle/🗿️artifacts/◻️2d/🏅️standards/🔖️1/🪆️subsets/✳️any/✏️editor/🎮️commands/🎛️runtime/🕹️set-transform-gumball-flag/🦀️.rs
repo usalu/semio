@@ -15,6 +15,6 @@ pub fn set_transform_gumball_flag(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<
         "rotate" => ctx.scene.runtime.transform_rotate = pressed.unwrap_or(!ctx.scene.runtime.transform_rotate),
         _ => return,
     }
-    ctx.host.borrow_mut().set_transform_flags(ctx.scene.runtime.transform_move, ctx.scene.runtime.transform_rotate);
+    { let mut host = ctx.host.borrow_mut(); let host = &mut *host; semio_framework_os_infinite_board_normal_gestures::set_transform_flags(&mut host.scene, &mut host.gestures, ctx.scene.runtime.transform_move, ctx.scene.runtime.transform_rotate); }
     *ctx.ui_scope = puzzle2d_window_and_measures_scope();
 }

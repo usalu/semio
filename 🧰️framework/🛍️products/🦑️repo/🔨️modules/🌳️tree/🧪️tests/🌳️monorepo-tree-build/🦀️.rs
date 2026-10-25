@@ -48,7 +48,7 @@ mod subject {
         tree::MemoryTreeSource::from_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://🌳️tree-source.json")?))
     }
 
-    /// 📥️ The committed expectations every scenario is held against.
+    /// 🆚️ The committed expectations every scenario is held against.
     fn expected(ctx: &Context) -> Result<Json, String> {
         parse_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://📤️tree-build-expectations.json")?))
     }
@@ -73,7 +73,7 @@ mod subject {
         Err(format!("{name}: expected {want:?}, got {actual:?}"))
     }
 
-    /// 📃️ Renders a string list as the host's JSON.
+    /// 🖥️ Renders a string list as the host's JSON.
     fn rows(values: &[String]) -> Json {
         Json::Array(values.iter().map(|value| Json::String(value.clone())).collect())
     }

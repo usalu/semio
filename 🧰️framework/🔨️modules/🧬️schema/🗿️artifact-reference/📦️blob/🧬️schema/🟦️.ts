@@ -1,7 +1,7 @@
 /** 📦️ Durable identity and metadata of a Store-owned content-addressed blob. */
 export interface BlobRef { hash: string; size: bigint; mediaType: string }
 
-/** 📦️ Admits blob metadata without payload bytes or process-local ownership. */
+/** 📖️ Admits blob metadata without payload bytes or process-local ownership. */
 export function parseBlobRef(value: unknown): BlobRef {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("blob reference must be an object");
   const row = value as Record<string, unknown>;

@@ -43,13 +43,13 @@ function agentCredentialFileIsWellFormed(contents: string): boolean {
 /** 🔌️ Turns an agent delegation into a working MCP client on a development host: the delegation
  * pane posts the one-time credential here, this server writes it owner-only (`0600` in a `0700`
  * directory) under the delegation's own file name, and answers with its absolute path and the launcher
- * that starts `semio-os-mcp` from this checkout (the `semio` server declared in the root `📋️project.json`, `repo <repo>/📜️script.ts dev mcp stdio os`, which
+ * that starts `semio-os-mcp` from this checkout (the `semio` server declared in the root `📋️project.json`, `repo dev mcp stdio os`, which
  * stages the binary itself). `DELETE <endpoint>/<delegationId>` removes it once the delegation is
  * withdrawn. Only same-origin requests are served, so no other site can plant or remove a credential.
  * Contract: `📇️directory/🧬️schema` `AgentCredentialInstallRequestV1` / `AgentCredentialInstallReceiptV1`. */
 export function semioAgentCredentialInstallVitePlugin(options: { readonly repoRoot: string; readonly credentialsRoot?: string }) {
   const root = options.credentialsRoot ?? agentCredentialsDir();
-  const launcherOf = (): { readonly command: string; readonly args: readonly string[] } => agentClientLauncher(readDeclaredTools(options.repoRoot), options.repoRoot, "semio", process.execPath);
+  const launcherOf = (): { readonly command: string; readonly args: readonly string[] } => agentClientLauncher(readDeclaredTools(options.repoRoot), "semio");
   return {
     name: "semio-agent-credential-install",
     apply: "serve" as const,

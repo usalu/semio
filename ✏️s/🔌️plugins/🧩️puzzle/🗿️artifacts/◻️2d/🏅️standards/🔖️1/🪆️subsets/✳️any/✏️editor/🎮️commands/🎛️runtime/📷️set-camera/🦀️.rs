@@ -8,7 +8,7 @@ pub fn set_camera(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
         return;
     };
     if let (Some(x), Some(y), Some(zoom)) = (camera.get("x").and_then(|value| value.as_f64()), camera.get("y").and_then(|value| value.as_f64()), camera.get("zoom").and_then(|value| value.as_f64())) {
-        ctx.host.borrow_mut().set_camera(x, y, zoom);
+        { let mut host = ctx.host.borrow_mut(); let host = &mut *host; semio_framework_os_infinite::board_set_camera(&mut host.scene, &mut host.outbox, x, y, zoom); }
     }
     set_runtime_camera(&mut ctx.scene.runtime, camera);
     *ctx.ui_scope = puzzle2d_window_only_scope();

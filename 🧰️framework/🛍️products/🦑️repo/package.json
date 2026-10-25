@@ -6,24 +6,34 @@
   "type": "module",
   "private": true,
   "exports": {
-    "./modules/dashboard/testing/coverage/oracle": "./🔨️modules/🎛️dashboard/🧪️tests/🗺️coverage/🔮️oracle/🟦️.ts"
+    "./modules/dashboard/testing/coverage/oracle": "./🔨️modules/🎛️dashboard/🧪️tests/🗺️coverage/🔮️oracle/🟦️.ts",
+    "./modules/dashboard/control-policy/products/tests": "./🔨️modules/🎛️dashboard/🎛️control-policy/🧩️products/🧪️tests/🟦️.ts",
+    "./modules/graphql/types/tests/producer": "./🔨️modules/🔗️graphql/🔤️types/🧪️tests/🔒️producer/🟦️.ts",
+    "./modules/graphql/tests/tickets/scope": "./🔨️modules/🔗️graphql/🧪️tests/🌿️tickets/📁️scope/🟦️.ts",
+    "./modules/native/bootstrap/schema.json": "./🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json",
+    "./modules/cli/packages/go/project.json": "./🔨️modules/⌨️cli/📦️packages/🐹️go/📋️project.json",
+    "./modules/workspace/packages/go/project.json": "./🔨️modules/🏠️workspace/📦️packages/🐹️go/📋️project.json",
+    "./modules/graphql/packages/go/project.json": "./🔨️modules/🔗️graphql/📦️packages/🐹️go/📋️project.json",
+    "./modules/tickets/packages/go/project.json": "./🔨️modules/🎫️tickets/📦️packages/🐹️go/📋️project.json",
+    "./modules/client/mcp": "./🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+    "./modules/client/mcp/script": "./🔨️modules/💻️client/🔌️mcp/📜️script.ts",
+    "./modules/client/mcp/installation/schema.json": "./🔨️modules/💻️client/🔌️mcp/📥️installation/🧬️schema/🔣️.json"
   },
   "dependencies": {
     "@semio-tech/process": "workspace:*",
     "@semio-tech/repo-lib": "workspace:*",
-    "@semio-tech/schema-validator-ts": "workspace:*",
-    "@eslint/js": "^10.0.1",
-    "eslint-plugin-storybook": "10.4.0",
-    "typescript-eslint": "^8.50.1"
+    "@semio-tech/schema-validator-ts": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "bundleKind": "library",
   "devDependencies": {
     "@semio-tech/ui": "workspace:*",
+    "@eslint/js": "^10.0.1",
     "@iarna/toml": "2.2.5",
     "@modelcontextprotocol/sdk": "1.32.1",
     "ajv": "8.20.0",
     "esbuild": "^0.27.2",
+    "eslint-plugin-storybook": "10.4.0",
     "fast-glob": "3.3.3",
     "find-up": "5.0.0",
     "graphql": "^17.0.2",
@@ -32,12 +42,12 @@
     "jsonc-parser": "3.3.1",
     "lodash": "4.18.1",
     "micromatch": "^4.0.8",
-    "nx": "23.2.0",
     "smart-buffer": "^4.2.0",
     "string-argv": "0.4.0",
     "string-width": "7.2.0",
     "strip-ansi": "^7.2.0",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.50.1",
     "vitest": "^4.0.17",
     "yaml": "2.9.0"
   }

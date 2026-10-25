@@ -2563,7 +2563,7 @@
       "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
       "router": "⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
       "operation": "prepareJavascriptDependencies",
-      "scriptHeader": "#!/usr/bin/env bun",
+      "scriptHeader": "#!/usr/bin/env repo",
       "operationExports": [
         "javascriptDependencyProducerArgumentsV1",
         "prepareJavascriptDependencies"
@@ -2942,12 +2942,6 @@
             "run",
             "app:build",
             "--skip-nx-cache"
-          ],
-          [
-            "nx",
-            "run",
-            "workspace:deps-javascript",
-            "--output-style=stream"
           ]
         ]
       },
@@ -2969,27 +2963,33 @@
       }
     ],
     "storagePorts": [
-      "requireCurrentRepositoryBuildGraphConsumerV1",
       "createBuildGraphOptionalQuotaV1",
       "isBuildGraphOptionalCachePathV1",
       "buildGraphWriterDirectoryAdmittedV1",
       "buildGraphWriterOptionalPathAdmittedV1",
       "buildGraphOptionalRetirementDueV1",
       "buildGraphWriterMaintenanceDueV1",
+      "retireBuildGraphOptionalHeadroomV1",
       "prepareBuildGraphOptionalHeadroomV1",
       "maintainBuildGraphOptionalCachesV1",
       "buildGraphWriterOptionalQuotaFactsV1",
+      "withBuildGraphStagingV1",
+      "noteBuildGraphStagedLeafV1",
       "withBuildGraphOptionalPublicationV1",
+      "withBuildGraphOptionalPublicationsV1",
       "registerBuildGraphOptionalHandleV1",
       "repositoryBuildGraphDataDirectoryV1",
-      "buildGraphWriterResourceV1",
       "withRepositoryBuildGraphConsumerV1",
+      "requireRepositoryBuildGraphObservationPathV1",
       "withRepositoryBuildGraphFactStoreV1",
       "requireRepositoryBuildGraphWriterV1",
       "repositoryBuildGraphWriterDirectoryV1",
       "withRepositoryBuildGraphSelectionV1",
       "readBuildInferenceDatasetV1",
-      "withRepositoryBuildInferenceDatasetV1"
+      "withRepositoryBuildInferenceDatasetV1",
+      "recoverBuildGraphOptionalScopesHeadroomV1",
+      "withRepositoryBuildGraphFixtureV1",
+      "withRepositoryBuildGraphPublicationFixtureV1"
     ],
     "missingLaunches": {
       "omit": "launches",
@@ -3782,6 +3782,7 @@
       "🟨️.mjs",
       "⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs",
       "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs",
+      "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",
       "🏗️build/🧬️schema/📥️pin.json",
       "🏗️build/🧬️schema/📥️engine.json"
     ],
@@ -3815,11 +3816,7 @@
         ],
         "configurations": {
           "release": {
-            "inputs": [
-              "{projectRoot}/release.ts"
-            ],
             "execution": {
-              "kind": "command",
               "command": "bun build.ts release"
             }
           }

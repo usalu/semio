@@ -1,4 +1,21 @@
 // ⏯️ Support module 1 of the split test module `🔬️tool-run`: the fixtures that more than one piece uses, as real definitions the pieces import.
+use semio_framework_value::RetirementDemand;
+use semio_framework_os_kernel::ConfigStore;
+use serde_json::Value;
+use semio_framework_ui_contract::column;
+use semio_framework_os_kernel::store_schema::ArtifactCommand;
+use semio_framework_plugin_decl_views::tool_contract::EmptyArtifactInstanceOperationOwner;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_owners;
+use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
+use semio_framework_value::ValueError;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_framework_value::RetainedCloneProgress;
+use semio_framework_os_kernel::ArtifactStore;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_owners;
+use semio_framework_value::RetainedCloneStep;
 use semio_framework_plugin_decl_emission::{ActionMeta, AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
 use semio_framework_plugin_app_builder::App;
 use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
@@ -12,7 +29,6 @@ use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
 use semio_framework_ui_runtime::ComponentTree;
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
-#[cfg(test)]
 use semio_framework_ui_locale::{Label, LocalizedLabel};
 use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
 use semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1;
@@ -21,7 +37,7 @@ use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
 use semio_framework_plugin_plugin_program::PluginProgram;
 use semio_framework_job::StepContext;
-use semio_framework_ui_declaration::ui::SurfaceKind;
+use semio_framework_ui_contract::SurfaceKind;
 use semio_framework_plugin_decl_app::tool_run_contract::ToolRunJobRequest;
 use semio_framework_plugin_interaction::UiAssemblyResult;
 use semio_framework_plugin_instance_app::VcsArtifactApp;

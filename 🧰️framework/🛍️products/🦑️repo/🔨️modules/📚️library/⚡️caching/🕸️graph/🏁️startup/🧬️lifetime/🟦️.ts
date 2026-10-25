@@ -39,3 +39,9 @@ export function createNxDaemonLifetimeV1(value:unknown):Readonly<{record(event:N
   return snapshot();
  }});
 }
+
+/** 🚦️ Holds every request that arrives before the daemon is ready (the socket accepts clients as soon as it listens) and refuses them when the daemon drains first; the lifetime itself still refuses a request outside the ready phase. */
+export function createNxDaemonReadinessV1():Readonly<{ready():void;refuse(error:unknown):void;admit():Promise<void>}>{
+ let ready!:()=>void,refuse!:(error:unknown)=>void;const gate=new Promise<void>((accept,reject)=>{ready=accept;refuse=reject;});void gate.catch(()=>{});
+ return Object.freeze({ready,refuse,admit:()=>gate});
+}

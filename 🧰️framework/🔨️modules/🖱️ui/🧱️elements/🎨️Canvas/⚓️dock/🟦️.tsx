@@ -12,8 +12,7 @@ import { DragHandle } from "../../🧱️DragHandle/🟦️.tsx";
 import { useSurfaceActive, SurfaceScope } from "../../🌈️Surface/🟦️.tsx";
 import { Window } from "../../🪟️Window/🟦️.tsx";
 import { WindowChrome } from "../../🗂️WindowChrome/🟦️.tsx";
-import { type ResizableJoinCornerResizeHandler, ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../↔️Resizable/🟦️.tsx";
-import * as ResizablePrimitive from "react-resizable-panels";
+import { type ResizableGroupHandle, type ResizableJoinCornerResizeHandler, ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../↔️Resizable/🟦️.tsx";
 import { type ModeDragState, type ModeTabInsertPreview, modeDockTabsWithInsertPreview } from "../🎯️drop/🟦️.ts";
 import { type ModeLayoutPath, modeJoinPath } from "../🗺️layout/🟦️.ts";
 import { modeDockTabInsertPreviewClass } from "../🧲️drag-preview/🟦️.tsx";
@@ -221,7 +220,7 @@ interface ModeDockStackProps {
   node: WindowLayoutStackNode;
   windowsById: ReadonlyMap<string, ModeWindowDescriptor>;
   activeWindowId: string | null;
-  /** 📱️ Skips the per-tab active-chrome grid (which sizes tab columns to their content and doesn't scroll) in favor of the plain scrollable tab strip, and drops the Focus control (windows always take the full space on mobile) so only Close stays reachable when many windows collapse into one mobile tab stack. Desktop also hides Focus when the canvas has only one window. */
+  /** 📲️ Skips the per-tab active-chrome grid (which sizes tab columns to their content and doesn't scroll) in favor of the plain scrollable tab strip, and drops the Focus control (windows always take the full space on mobile) so only Close stays reachable when many windows collapse into one mobile tab stack. Desktop also hides Focus when the canvas has only one window. */
   mobile?: boolean;
 }
 
@@ -347,7 +346,7 @@ export interface ModeRenderContext {
   activeWindowId: string | null;
   onAxisLayoutChanged: (axisPath: ModeLayoutPath, sizes: Record<string, number>) => void;
   onJoinCornerResize: ResizableJoinCornerResizeHandler;
-  registerAxisGroup: (axisPath: ModeLayoutPath, group: ResizablePrimitive.GroupImperativeHandle | null) => void;
+  registerAxisGroup: (axisPath: ModeLayoutPath, group: ResizableGroupHandle | null) => void;
   registerAxisElement: (axisPath: ModeLayoutPath, element: HTMLDivElement | null) => void;
 }
 

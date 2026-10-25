@@ -1,6 +1,6 @@
 /** 🟠️ The wire fixtures phase of registerTests1. */
 import type { buildArtifactBootstrapAssemblerState } from "../🔶️artifact-bootstrap-assembler/🟦️.ts";
-import type { TestSource } from "../🟢️shared/🟦️.ts";
+import type { TestSource } from "../🟢️harness/🟦️.ts";
 
 /** 🟡 Registers the wire fixtures tests of registerTests1. */
 export function registerWireFixturesTests({ describe, it, source, decodeClientFrame, expect, encodeClientFrame, decodeServerFrame, encodeServerFrame, decodePresencePeer, encodePresencePeer }: Pick<ReturnType<typeof buildArtifactBootstrapAssemblerState>, "describe" | "it" | "decodeClientFrame" | "expect" | "encodeClientFrame" | "decodeServerFrame" | "encodeServerFrame" | "decodePresencePeer" | "encodePresencePeer"> & { readonly source: TestSource }) {

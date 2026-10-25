@@ -42,7 +42,7 @@ export function activationReasonForAppId(appId: string): ActivationReason {
  * encoding lives in the pure `semio-framework-actor` crate — packet A1); this registry only needs a
  * stable key for shard routing and residency bookkeeping, same as `ShardClient` itself.
  */
-/** 🎬️ Why an actor is being activated, in `📓️design-abi.md` §2's own dash-separated declaration
+/** 🧠️ Why an actor is being activated, in `📓️design-abi.md` §2's own dash-separated declaration
  * grammar — the SAME spelling a plugin's `activationEvents` row carries, so a declared
  * `on-artifact-kind:s.cad.cad` row and the reason an open of that kind activates its owner with are
  * one string, not two vocabularies. The payload-bearing forms mirror the WIT `activation-event`
@@ -57,7 +57,7 @@ export type ActivationReason =
   | "on-startup-finished"
   | "manual";
 
-/** 🎬️ The WIT `event::activate` an {@link ActivationReason} justifies, in the `{kind, payload}`
+/** ✉️ The WIT `event::activate` an {@link ActivationReason} justifies, in the `{kind, payload}`
  * envelope shape `🟨️shard-worker.js` lifts into the guest's own `{tag, val}` variant — this is the
  * whole bridge from a declared activation event to what the guest's `activate` actually receives.
  * `manual` and an unparseable reason answer `undefined`: the WIT variant has no case for them, so the

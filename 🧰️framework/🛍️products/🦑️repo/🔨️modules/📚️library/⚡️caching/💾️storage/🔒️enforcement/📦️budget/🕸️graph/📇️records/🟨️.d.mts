@@ -1,7 +1,7 @@
 /** 🧾️ The finite limits of the graph record format. */
 export interface GraphRecordPolicyV1{readonly version:2;readonly projectsPerYield:number;readonly edgesPerRecord:number;readonly externalNodesPerRecord:number;readonly maximumRecordBytes:number;readonly compressionLevel:number;readonly internMinimumItems:number}
 /** 📇️ A pinned graph as content-addressed gzip records and a small manifest. */
-export interface EncodedGraphRecordsV1{readonly manifestBytes:Buffer;readonly digest:string;readonly records:ReadonlyMap<string,Buffer>;readonly recordBytes:number;readonly bytes:number}
+export interface EncodedGraphRecordsV1{readonly manifestBytes:Buffer;readonly digest:string;readonly records:Map<string,Buffer>;readonly recordBytes:number;readonly bytes:number}
 /** 📇️ Encodes a build graph without ever holding it as one string; refuses beyond `maximumBytes` compressed bytes. */
 export function encodeGraphRecordsV1(graph:unknown,options:{policy:GraphRecordPolicyV1;maximumBytes:number}):Promise<EncodedGraphRecordsV1>;
 /** 🧷️ Collapses long identical string arrays to one retained array. */

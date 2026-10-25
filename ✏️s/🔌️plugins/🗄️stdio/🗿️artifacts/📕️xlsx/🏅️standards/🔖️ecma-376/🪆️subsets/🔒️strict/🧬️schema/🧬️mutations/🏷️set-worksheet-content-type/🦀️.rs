@@ -7,10 +7,10 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetWorksheetContentType {
-    pub(crate) path: String,
-    pub(crate) content_type: String,
+    pub path: String,
+    pub content_type: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) override_index: Option<usize>,
+    pub override_index: Option<usize>,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetWorksheetContentType {

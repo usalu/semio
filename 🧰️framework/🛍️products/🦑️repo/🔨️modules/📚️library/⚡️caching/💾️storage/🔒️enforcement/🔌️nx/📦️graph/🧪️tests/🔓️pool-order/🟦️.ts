@@ -1,6 +1,6 @@
-/** 🔓️ Pool lock-order laws over `./🧫️fixtures/🔣️.json`: no role of the new design blocks on a lease while it holds the exclusive `nx:graph-pool` and the wait-for graph is acyclic (independent Python graphlib model `./🐍️oracle.py`; the old design must fail the same check, so it is not vacuous); the source keeps the order the model assumes: the namespace lease is taken before the pool pass, attachment and eviction never wrap retirement in the pool, victims are only try-locked. */
+/** 🔓️ Pool lock-order laws over `./🧫️fixtures/🔣️.json`: no role of the new design blocks on a lease while it holds the exclusive `nx:graph-pool` and the wait-for graph is acyclic (independent Python graphlib model `./🐍️.py`; the old design must fail the same check, so it is not vacuous); the source keeps the order the model assumes: the namespace lease is taken before the pool pass, attachment and eviction never wrap retirement in the pool, victims are only try-locked. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
@@ -28,7 +28,7 @@ function model(design:Record<string,readonly Step[]>):{cycle:boolean;poolHolders
 
 for(const name of ["before","after"]){
  test("lock-order model agrees with the independent Python model: "+name,()=>{
-  const ours=model(fixture.designs[name]),python=spawnSync(testPythonV1()??"python3",["-I",resolve(import.meta.dir,"./🐍️oracle.py"),resolve(import.meta.dir,"./🧫️fixtures/🔣️.json"),name],{encoding:"utf8"});
+  const ours=model(fixture.designs[name]),python=spawnSync(testPythonV1()??"python3",["-I",resolve(import.meta.dir,"./🐍️.py"),resolve(import.meta.dir,"./🧫️fixtures/🔣️.json"),name],{encoding:"utf8"});
   expect(python.error).toBeUndefined();expect(python.status).toBe(0);
   expect(JSON.parse(python.stdout)).toEqual(ours);
  });

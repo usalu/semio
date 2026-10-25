@@ -28,7 +28,7 @@ pub enum WidgetSignal {
     TabMoved { from: usize, to: usize },
         /// 🧲️ A held tab was released over a group or one of its split edges.
     WindowDocked { source: String, target: String, placement: crate::docking::DockPlacement, tab_index: Option<usize> },
-    /// 🔲️ A proposal lets the owning layout resolve the preview after reclaiming the source group.
+    /// 👁️ A proposal lets the owning layout resolve the preview after reclaiming the source group.
     WindowDockPreview { source: String, target: String, placement: crate::docking::DockPlacement, tab_index: Option<usize> },
 /// ↕️ `path` names the splitter inside its window layout, `delta` the cells the pointer moved along the axis since the last report.
     SplitterDragged { path: Vec<usize>, delta: i16 },

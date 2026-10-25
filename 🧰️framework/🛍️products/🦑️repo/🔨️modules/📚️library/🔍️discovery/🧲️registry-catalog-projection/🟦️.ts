@@ -6,7 +6,7 @@ import { type DiscoveredPackage, declaredComponentKind, isDiscoverySkipDirectory
 import { type GeneratorInputProjection, type RegistryCatalogInputView, type RegistryCatalogProjection, type RegistryCompilerInputDependencies, type RegistryCompilerInputRole, parseGeneratorInputProjection, parseRegistryCatalogProjection, parseRegistrySourceRoots, registryCatalogOwnerIndex, registryCompilerInputDependencies } from "../📇️registry-catalog-inputs/🟦️.ts";
 import { canonicalPrimaryFilenameForKind, loadTaxonomy, registryCatalogInputView } from "../🔐️taxonomy-authority/🟦️.ts";
 import { scanRepo } from "../🔭️repository-scan/🟦️.ts";
-import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🌳️ Applies only authorized leaf operations and their required ancestor membership in memory. */
 export function registryCatalogProjectedInputView(repoRoot: string, taxonomy: Taxonomy, projection: RegistryCatalogProjection, base: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy)): RegistryCatalogInputView {

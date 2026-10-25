@@ -14,7 +14,7 @@ export function rgba8ToCss([r, g, b, a]: Rgba8): string {
   return `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(3)})`;
 }
 
-/** 🎨️ 6-digit hex for an sRGB8888 tuple's RGB channels (alpha is shown separately — swatch labels need both). */
+/** 🔢️ 6-digit hex for an sRGB8888 tuple's RGB channels (alpha is shown separately — swatch labels need both). */
 export function rgba8ToHex([r, g, b]: Rgba8): string {
   const channel = (n: number) => n.toString(16).padStart(2, "0");
   return `#${channel(r)}${channel(g)}${channel(b)}`;

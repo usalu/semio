@@ -73,7 +73,7 @@
         "adapters": {
           "type": "array",
           "minItems": 1,
-          "maxItems": 5,
+          "maxItems": 6,
           "uniqueItems": true,
           "items": {
             "enum": [
@@ -81,7 +81,8 @@
               "binary",
               "proc-macro",
               "build-script",
-              "build-script-run"
+              "build-script-run",
+              "effective-profile"
             ]
           }
         }

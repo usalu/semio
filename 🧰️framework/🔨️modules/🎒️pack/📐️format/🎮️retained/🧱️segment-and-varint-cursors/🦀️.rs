@@ -38,7 +38,7 @@ impl RetainedVarintFault{
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-/// 🔢️ Incrementally validates the existing canonical unsigned wire format.
+/// 🖱️ Incrementally validates the existing canonical unsigned wire format.
 pub struct RetainedVarintCursor {
     pub(super) value: u64,
     pub(super) bytes: u8,

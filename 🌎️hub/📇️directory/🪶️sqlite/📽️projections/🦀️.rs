@@ -126,7 +126,7 @@ impl SqliteDirectory {
                 let descriptor = tx.query_row("SELECT space_id, document_id, artifact_kind, artifact_schema, owner_plugin_id, owner_package_id, owner_version, owner_package_hash, pack_schema_hash, bootstrap_version, bootstrap_head_seq, bootstrap_commit_seq, bootstrap_epoch, bootstrap_snapshot_hash FROM hub_document_descriptor WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], document_descriptor_row).optional().map_err(backend)?.ok_or_else(|| DirectoryError::NotFound("checkpoint document descriptor".into()))?;
                 let index_payload: Option<String> =
                     tx.query_row("SELECT payload FROM hub_document_index WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).optional().map_err(backend)?;
-                let index = index_payload.as_deref().map(semio_framework_pack_json::from_json_str::<directory::os_directory::DirectoryIndexedDocumentViewV1>).transpose().map_err(backend)?;
+                let index = index_payload.as_deref().map(|payload| semio_framework_pack_json::from_json_str::<directory::os_directory::DirectoryIndexedDocumentViewV1>(payload, semio_framework_pack_json::JsonMemberPolicy::Reject)).transpose().map_err(backend)?;
                 semio_hub_directory::validate_checkpoint_index_v1(index.as_ref(), &descriptor, checkpoint)?;
                 let active = tx
                     .query_row("SELECT payload FROM hub_artifact_checkpoint WHERE space_id = ?1 AND document_id = ?2 AND active = 1", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], published_checkpoint_row)

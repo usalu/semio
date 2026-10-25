@@ -1,5 +1,5 @@
 /** 🧭️ The layout state, the refs and the prop synchronization effects of the docking mode shell. */
-import * as ResizablePrimitive from "react-resizable-panels";
+import type { ResizableGroupHandle } from "../../↔️Resizable/🟦️.tsx";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext/.forwardRef at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
@@ -33,7 +33,7 @@ export function useModeLayoutState({ windows, layout, onLayoutChange, activeWind
   const [dropZone, setDropZone] = reactHostPort.useState<ModeDropZone | null>(null);
   const dropZoneRef = reactHostPort.useRef<ModeDropZone | null>(null);
   const modeBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const axisGroupRefsRef = reactHostPort.useRef(new Map<ModeLayoutPath, ResizablePrimitive.GroupImperativeHandle>());
+  const axisGroupRefsRef = reactHostPort.useRef(new Map<ModeLayoutPath, ResizableGroupHandle>());
   const axisGroupElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, HTMLDivElement>());
   const stackDropElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, { corners: Partial<Record<WindowStackCorner, HTMLElement | null>>; body: HTMLElement | null }>());
   const layoutStateRef = reactHostPort.useRef(layoutState);

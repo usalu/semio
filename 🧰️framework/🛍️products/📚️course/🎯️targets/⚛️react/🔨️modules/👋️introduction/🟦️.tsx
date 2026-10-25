@@ -6,11 +6,14 @@ import { localized, courseText, type CourseLocale } from "../🌐️i18n/🟦️
 
 const Introduction = lazy(() => import("@semio-tech/ui-react/introduction").then(({ UIIntroduction }) => ({ default: UIIntroduction })));
 
+/** 🌐️ The element id of the navbar's language switch: the welcome step lifts it above its veil, so a visitor whose browser language is not the one they read can switch before the tour ends. */
+export const COURSE_LANGUAGE_ANCHOR = "course.nav.language";
+
 /** 🗺️ Localized, declarative steps anchored to the root overview's cards. */
 export function courseIntroduction(course: CourseView, locale: CourseLocale): IntroductionDefinition {
   const text = courseText(locale);
   const anchor = (page: string): string => `course.home.${page}`;
-  const step = (id: string, title: string, body: string, introduce: string | null): IntroductionStepDefinition => ({ id: "course.introduction." + id, title, body, introduce, show: [], placement: introduce === null ? "center" : "bottom", interactions: [], ordered: false, logos: [], demonstrations: [] });
+  const step = (id: string, title: string, body: string, introduce: string | null): IntroductionStepDefinition => ({ id: "course.introduction." + id, title, body, introduce, show: introduce === null ? [COURSE_LANGUAGE_ANCHOR] : [], placement: introduce === null ? "center" : "bottom", interactions: [], ordered: false, logos: [], demonstrations: [] });
   return {
     title: localized(course.introduction.title, locale),
     steps: [

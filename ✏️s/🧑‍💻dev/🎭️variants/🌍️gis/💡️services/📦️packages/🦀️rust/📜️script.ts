@@ -7,6 +7,7 @@ import { runVitest } from "../../../../../../../🧰️framework/🛍️products
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { nativeCommandPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { NativeScript } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { nativeServiceCompositionLaws } from "../../🧪️tests/🔌️service-composition/🟦️.ts";
 import { runBuildScript, runOsMcpLiveAgentLoopScript, runOsMcpHubAgentParticipantScript, runOsMcpPluginCoverageScript, runOsMcpUserPathScript, runOsMcpInferenceQuartetScript, runOsMcpSecurityScript, runOsMcpAgentReplyScript, runFixtureOwnershipCompositionScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
@@ -85,7 +86,7 @@ class FixtureOwnershipCompositionScript extends BundleScript {
 class CanonicalPairCompositionScript extends BundleScript {
   async run(): Promise<void> {
     await runRepositoryCommand(this.invocation,process.execPath,["repo", "run", "@semio-tech/framework-os-mcp-rs:canonical-pair-check", "--skip-cache"],this.repoRoot,"canonical-pair-neutral",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}});
-    await runRepositoryCommand(this.invocation,"cargo",["check", "-p", "semio-hub", "--all-features", "--bin", "os-hub"],this.repoRoot,"canonical-pair-peer",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}});
+    await runRepositoryCommand(this.invocation,"cargo",["check", "-p", "semio-hub", "--all-features", "--bin", "os-hub"],this.repoRoot,"canonical-pair-peer",nativeCommandPolicyV1({maximumBytes:134217728,maximumLines:65536}));
   }
 }
 

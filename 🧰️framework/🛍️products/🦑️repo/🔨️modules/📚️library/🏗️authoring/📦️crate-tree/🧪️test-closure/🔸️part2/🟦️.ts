@@ -4,8 +4,8 @@ import { basename, dirname, resolve } from "node:path";
 import { identifierSet, parseRustSourceTree, prunedUse, useLeafNames } from "../../🌳️module-tree/🟦️.ts";
 import { relativePosix } from "../../📝️render/🟦️.ts";
 import type { useResultState } from "../🔶️result/🟦️.ts";
-import { declaredNames, discoverMounts, fixturesToRuntime, hostPrivate, prependAfterInner, snake } from "../🟢️shared/🟦️.ts";
-import type { TestMount, TestTransformOptions } from "../🟢️shared/🟦️.ts";
+import { declaredNames, discoverMounts, fixturesToRuntime, hostPrivate, prependAfterInner, snake } from "../🟢️harness/🟦️.ts";
+import type { TestMount, TestTransformOptions } from "../🟢️harness/🟦️.ts";
 
 /** 🔹 Runs the effects and registrations of transformTestClosure. */
 export function usePart2({ options, rootFile, result, readText, setText, repoRoot, subtreeText, rootNames, artifactSources, hostGlobCarry, widenFor, queueEdit, removalOf, orphanedDocRemoval, retargetPrivateImportPaths, flushEdits, overlay }: { readonly options: TestTransformOptions; readonly rootFile: string; readonly repoRoot: string; readonly rootNames: ReadonlySet<string> } & Pick<ReturnType<typeof useResultState>, "result" | "readText" | "setText" | "subtreeText" | "artifactSources" | "hostGlobCarry" | "widenFor" | "queueEdit" | "removalOf" | "orphanedDocRemoval" | "retargetPrivateImportPaths" | "flushEdits" | "overlay">) {

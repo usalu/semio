@@ -328,14 +328,14 @@ fn paged_native_drawing_snapshot_rename_inverse_measures_every_owned_page_and_re
         for pause in [0usize, 1, 3, 7, 17, 64, 256, 1024, 4096, usize::MAX] {
             let (mut cursor, allocation) = observe(|| DrawingRenameInverseCursor::new(source.project_owned(0, |snapshot| snapshot)).unwrap());
             assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-            let (zero, allocation) = observe(|| cursor.advance(mutation.borrow(), Default::default()).unwrap());
+            let (zero, allocation) = observe(|| cursor.advance(mutation.borrow(), usize::MAX, Default::default()).unwrap());
             assert_eq!(zero.progress(), Default::default());
             assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             let mut complete = false;
             for turn in 0..100000 {
                 if turn == pause { break; }
                 let grant = drawing_snapshot_heap_grant(turn, budget);
-                let (result, allocation) = observe(|| cursor.advance(mutation.borrow(), grant));
+                let (result, allocation) = observe(|| cursor.advance(mutation.borrow(), usize::MAX, grant));
                 let step = result.unwrap();
                 drawing_snapshot_heap_admission(step.progress(), grant, allocation);
                 if matches!(step, RetainedCloneStep::Complete(_)) { complete = true; break; }

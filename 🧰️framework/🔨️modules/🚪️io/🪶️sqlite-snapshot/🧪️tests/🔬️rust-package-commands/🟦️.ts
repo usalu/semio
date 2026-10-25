@@ -16,7 +16,7 @@ export async function runRefusalScript(context: Readonly<{ root: string; repoRoo
   await runBudgetedTestCommand(process.execPath, ["test", source], { cwd: context.repoRoot, budgetMs: testLevelBudgetMs(), throwOnFailure: true });
 }
 
-/** 🏃️ Runs the `NativeScript` command under the caller's roots and invocation. */
+/** 🧲️ Runs the `NativeScript` command under the caller's roots and invocation. */
 export async function runNativeScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   const cargoPhase=createIssuedResourceControlV1(context.invocation,"cargo:script-entry",0);
   const { rest } = resolveTestLevel(segments);
@@ -24,7 +24,7 @@ export async function runNativeScript(context: Readonly<{ root: string; repoRoot
   await runCargoTestsV1({ manifestPath: resolve(context.root, "Cargo.toml"), packages: ["semio-framework-io-sqlite-snapshot"], cwd: context.root, extraArgs: ["--lib", "--no-fail-fast", "--", "--nocapture"] }, readCargoTestPolicyV1(process.env), context.repoRoot, context.invocation,cargoPhase);
 }
 
-/** 🏃️ Runs the `ReceivingSchemaScript` command under the caller's roots and invocation. */
+/** 🧬️ Runs the `ReceivingSchemaScript` command under the caller's roots and invocation. */
 export async function runReceivingSchemaScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments:string[]): Promise<void> {
   const cargoPhase=createIssuedResourceControlV1(context.invocation,"cargo:script-entry",0);
 if(segments.length)throw Error('test-receiving-schema accepts no arguments');
@@ -33,7 +33,7 @@ await runBudgetedTestCommand(process.execPath,['test',source],{cwd:context.repoR
 await runCargoTestsV1({manifestPath:resolve(context.root,'Cargo.toml'),packages:['semio-framework-io-sqlite-snapshot'],cwd:context.root,extraArgs:['--lib','sqlite_snapshot_receiving_borrowed_schema_uses_original_work_without_owned_tokens','--no-fail-fast','--success-output','immediate'],signal:context.invocation.control.signal,remainingMilliseconds:context.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env), context.repoRoot, context.invocation,cargoPhase);
  }
 
-/** 🏃️ Runs the `OperationScript` command under the caller's roots and invocation. */
+/** ▶️ Runs the `OperationScript` command under the caller's roots and invocation. */
 export async function runOperationScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments:string[]): Promise<void> {
 if(segments.length)throw Error("test-operation accepts no arguments");
 const sources=["💰️operation","💰️frontiers","🗂️typed-index","🗂️row-index"].map(kind=>resolve(context.root,"../../🧪️tests/"+kind+"/🟦️.ts"));
@@ -41,7 +41,7 @@ await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(conte
 await runBudgetedTestCommand(process.execPath,["test",...sources],{cwd:context.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }
 
-/** 🏃️ Runs the `OwnershipScript` command under the caller's roots and invocation. */
+/** 📜️ Runs the `OwnershipScript` command under the caller's roots and invocation. */
 export async function runOwnershipScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments:string[]): Promise<void> {
 if(segments.length)throw Error("test-ownership accepts no arguments");
 const source=resolve(context.root,"../../🧪️tests/🏛️ownership/🟦️.ts");
@@ -49,7 +49,7 @@ await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(conte
 await runBudgetedTestCommand(process.execPath,["test",source],{cwd:context.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }
 
-/** 🏃️ Runs the `OriginalFixedLimitsScript` command under the caller's roots and invocation. */
+/** 🔧️ Runs the `OriginalFixedLimitsScript` command under the caller's roots and invocation. */
 export async function runOriginalFixedLimitsScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments:string[]): Promise<void> {
   const cargoPhase=createIssuedResourceControlV1(context.invocation,"cargo:script-entry",0);
 const mode=segments[0];if(segments.length!==1||(mode!=="source"&&mode!=="native"))throw Error("test-original-fixed-limits requires source or native");
@@ -59,7 +59,7 @@ await runBudgetedTestCommand(process.execPath,["test",source],{cwd:context.repoR
 if(mode==="native")await runCargoTestsV1({manifestPath:resolve(context.root,"Cargo.toml"),packages:["semio-framework-io-sqlite-snapshot"],cwd:context.root,extraArgs:["--lib","sqlite_snapshot_original_fixed_limits_","--no-fail-fast","--success-output","immediate"],signal:context.invocation.control.signal,remainingMilliseconds:context.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env), context.repoRoot, context.invocation,cargoPhase);
  }
 
-/** 🏃️ Runs the `OriginalPhysicalScript` command under the caller's roots and invocation. */
+/** 🏠️ Runs the `OriginalPhysicalScript` command under the caller's roots and invocation. */
 export async function runOriginalPhysicalScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments:string[]): Promise<void> {
   const cargoPhase=createIssuedResourceControlV1(context.invocation,"cargo:script-entry",0);
 const mode=segments[0];if(segments.length!==1||(mode!=="source"&&mode!=="native"))throw Error("test-original-physical requires source or native");

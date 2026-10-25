@@ -1,8 +1,8 @@
-use crate::{BoundedJob, JOB_KIND_MIGRATE, PHASE_DECODED, cancel_job, checkpoint_jobs, fault};
+use crate::{BoundedJob, JOB_KIND_MIGRATE, PHASE_DECODED, checkpoint_jobs, fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::future::Future;
 use semio_framework_actor::OriginalJobStep as JobStep;
-use crate::tests::{slice_fixture, start_fixture, terminal_fixture};
+use crate::tests::{cancel_fixture, slice_fixture, start_fixture, terminal_fixture};
 
 
 fn append_job_test_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
@@ -80,7 +80,7 @@ async fn migrate_job_checkpoint_restore_matches_an_uninterrupted_run() {
     let entry = entries.iter().find(|entry| entry.job == 402).expect("job 402 must appear in checkpoint_jobs()");
     assert_eq!(entry.checkpoint.as_deref(), Some(PHASE_DECODED));
     let checkpoint = entry.checkpoint.clone();
-    cancel_job(402).await;
+    cancel_fixture(402);
     terminal_fixture(402);
     start_fixture(402, JOB_KIND_MIGRATE, input.clone(), checkpoint);
     let restored_final = match slice_fixture(402) {

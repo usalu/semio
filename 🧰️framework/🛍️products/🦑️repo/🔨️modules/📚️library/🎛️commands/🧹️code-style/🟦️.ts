@@ -11,7 +11,7 @@ export class LintScript extends Script {
       console.log("[lint] Completed the repository lint graph.");
       return;
     }
-    runCmd(process.execPath, ["x", "dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root });
+    runCmd("repo", ["run", "@semio-tech/repo-lib:lint-dependency-direction"], { cwd: this.root });
   }
 }
 //#endregion 🔖️LintScript

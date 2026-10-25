@@ -63,7 +63,6 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod flow {
-        pub use semio_s_artifact_flow_flow_editor::editor::flow::*;
         #[path = "../../../../✏️editor/🧱️editor-vocabulary/🦀️.rs"]
         pub mod editor_vocabulary;
         #[path = "."]

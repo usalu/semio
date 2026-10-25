@@ -11,7 +11,7 @@ pub mod lookup;
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[value(retire_with = "crate::standards::v1::subsets::any::schema::snapshot::retire_decoded_drawing_snapshot")]
+#[value(retire_with = "crate::snapshot::retire_decoded_drawing_snapshot")]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(id = "drawing.drawing", layout = "lines")]
 #[artifact_schema(id = "s.draw.drawing")]

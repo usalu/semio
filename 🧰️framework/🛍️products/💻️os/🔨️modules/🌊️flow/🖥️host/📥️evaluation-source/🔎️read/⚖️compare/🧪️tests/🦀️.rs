@@ -1,3 +1,4 @@
+use neural_engine::ColdRetire;
 use super::*;
 
 #[test]

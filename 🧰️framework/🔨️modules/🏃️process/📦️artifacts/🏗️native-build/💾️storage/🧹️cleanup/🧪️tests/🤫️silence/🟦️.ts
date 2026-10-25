@@ -1,7 +1,7 @@
 import{test,expect}from"bun:test";
+import{testScratchRootV1}from"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
 import{spawnSync}from"node:child_process";
 import{existsSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,unlinkSync,writeFileSync}from"node:fs";
-import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{createIssuedResourceControlV1,receiveScriptProcessInvocation}from"../../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{openNativePlatformStorageV1}from"../../../🌐️platform/🟦️.ts";
@@ -15,7 +15,7 @@ const owner=(path:string)=>Number(run("/usr/bin/python3",["-I","-c","import os,s
 const drift=(root:string,logs:number,marker:boolean)=>{const service=join(root,protocol.serviceDirectory);for(let index=0;index<logs;index++)writeFileSync(join(service,(index+1).toString(16).padStart(16,"0")),"x".repeat(500));if(!marker)unlinkSync(join(service,protocol.serviceMarker));};
 /** 🤫️ Proves the product open path silences a fresh image at birth, repairs a drifted mounted image when its exclusive lease is free, and defers while another reader holds it. */
 test.skipIf(process.platform!=="darwin")("fresh birth silences the image and a drifted mounted image is repaired at the next open even while another reader holds it",async()=>{
- const scratch=realpathSync(mkdtempSync(join(process.env.TMPDIR||tmpdir(),"sl-"))),directory=join(scratch,"img"),leaseDirectory=join(scratch,"leases"),root=join(directory,"m"),service=join(root,protocol.serviceDirectory);mkdirSync(leaseDirectory);
+ const scratch=realpathSync(mkdtempSync(join(testScratchRootV1("image-tests"),"sl-"))),directory=join(scratch,"img"),leaseDirectory=join(scratch,"leases"),root=join(directory,"m"),service=join(root,protocol.serviceDirectory);mkdirSync(leaseDirectory);
  const options=(control:ReturnType<typeof createIssuedResourceControlV1>)=>({directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control});
  try{
   await receiveScriptProcessInvocation(process.env,async original=>{

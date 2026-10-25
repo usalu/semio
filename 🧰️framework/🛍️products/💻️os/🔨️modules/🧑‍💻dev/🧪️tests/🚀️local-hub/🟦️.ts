@@ -302,6 +302,25 @@ describe("the shared serve fixture", () => {
     for (const request of fixture.serves.invalidRequests) expect(valid(request), JSON.stringify(request)).toBe(false);
   });
 
+  it("serves the full OS shell for the goal gate's variant-less local serve row and refuses an empty React variant", () => {
+    const gate = JSON.parse(readFileSync(join(REPO, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🎚️config/🔣️.json"), "utf8")) as { providers: Record<string, { project: string; target: string; args: string[] }> };
+    const row = gate.providers.localServe!;
+    expect([row.project, row.target]).toEqual(["@semio-tech/framework-os-dev", "serve-hold"]);
+    expect(row.args, "the row names no variant, so the serve owner must default it").not.toContain("--variant");
+    const requests: DevServeSpawnRequestV1[] = [];
+    const real = devServeWorldV1(REPO);
+    const abort = new AbortController();
+    const world = { ...real, answers: async () => false, portInUse: async () => false, spawnServe: (request: DevServeSpawnRequestV1) => (requests.push(request), abort.abort(new DOMException("cancelled", "AbortError")), { pid: 0, exited: () => false }), terminate: () => {} };
+    return ensureDevServe({ repoRoot: REPO, port: devServePortV1(row.args[row.args.indexOf("--serve") + 1]!), signal: abort.signal, world, logPath: join(scratch("serve-log"), "serve.log") }).then(
+      () => expect.unreachable("cancelled before it answered"),
+      () => {
+        expect(requests).toHaveLength(1);
+        expect(devServeCommandV1(requests[0]!).args).toEqual(["serve", "s", "react", "prototype"]);
+        expect(() => devServeCommandV1({ ...requests[0]!, variant: "" })).toThrow(/requires a playground variant/u);
+      },
+    );
+  });
+
   it("reads the loopback port of a --serve url and refuses any other host or scheme", () => {
     for (const row of fixture.serves.urls) {
       if (row.port === null) expect(() => devServePortV1(row.url), row.url).toThrow(/dev serve/u);
@@ -335,6 +354,7 @@ describe("the shared serve fixture", () => {
         ...real,
         spawnServe: (request: DevServeSpawnRequestV1) => {
           expect(validRequest(request), JSON.stringify(request)).toBe(true);
+          expect(request.variant, "a caller that names no variant gets the full OS shell, never an empty one").toBe("s");
           spawned += 1;
           const program = row.exits
             ? "process.exit(3)"

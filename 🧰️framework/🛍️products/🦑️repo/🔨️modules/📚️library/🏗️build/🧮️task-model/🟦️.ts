@@ -1,9 +1,9 @@
-import {GlobV1} from "../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import {GlobV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
 import {createHash} from "node:crypto";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {buildModesV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import targetCacheSchema from "../🏃️execution/🧬️schema/💾️cache.json" with {type:"json"};
-import {resolveBuildTargetV1,type BuildGraphV1,type BuildTargetV1} from "../🕸️graph/🟦️.ts";
+import { resolveBuildTargetV1 } from "../🕸️graph/🟦️.ts"; import type { BuildGraphV1, BuildTargetV1 } from "../🕸️graph/📋️model/🟦️.ts";
 
 /** 📋️ One planned task: the build target resolved for a project and configuration, with the ids of the tasks it depends on. */
 export interface BuildTaskV1{id:string;project:string;target:string;configuration?:string;label:string;dependencies:string[];args:string[];definition:BuildTargetV1;root:string}

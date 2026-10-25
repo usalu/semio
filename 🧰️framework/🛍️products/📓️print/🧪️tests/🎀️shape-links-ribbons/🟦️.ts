@@ -96,15 +96,15 @@ export default defineTestAdapter({
           "link/flat": link("horizontal", [10, 20], [10, 20]),
         },
       }),
-      /** 🎯️ \SemioVizLink over the same endpoints. */
+      /** 🖇️ \SemioVizLink over the same endpoints. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     ribbons: {
-      /** 🔮️ d3-chord's ribbon, padded, across two radii, and folded onto itself. */
+      /** 🧶️ d3-chord's ribbon, padded, across two radii, and folded onto itself. */
       oracle: () => ({
         projection: Object.fromEntries(Object.entries(RIBBONS).map(([tag, spec]) => [`ribbon/${tag}`, chord(spec)])),
       }),
-      /** 🎯️ \SemioVizRibbon over the same spans. */
+      /** 🎗️ \SemioVizRibbon over the same spans. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

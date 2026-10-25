@@ -2,7 +2,7 @@
 use crate::editor::bim::kit::window_config;
 use crate::editor::bim::modes::edit::windows::world::config::*;
 use protocol::{OpBinary, OpText};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn pinned() -> BimWorldWindowConfig {
     BimWorldWindowConfig {

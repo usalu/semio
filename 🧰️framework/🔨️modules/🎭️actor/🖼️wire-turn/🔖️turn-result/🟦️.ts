@@ -102,7 +102,7 @@ function shellMessagePayload(effect: WireVariant, instanceId: number): Uint8Arra
   return coerceWireBytes(val.payload);
 }
 
-/** 🔀️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps —
+/** 🎞️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps —
  * `⚛️reactor/🦀️.rs`'s `route_app_frame` puts EVERY non-`UiPatch` `AppFrame` reply here.
  *
  * ⚖️ `route_exchange_output` (`⚛️reactor/🔄️turn/🦀️.rs`) multiplexes a SECOND wire language onto that
@@ -120,7 +120,7 @@ export function shellFrameBytes(effect: WireVariant, instanceId: number): Uint8A
   return payload;
 }
 
-/** 🔀️ Which wire language one `Shell{instance}` payload speaks, or `null` when the effect is not a
+/** 💬️ Which wire language one `Shell{instance}` payload speaks, or `null` when the effect is not a
  * shell message addressed at `instanceId` at all. Total by construction, so a third language added to
  * this endpoint has to name itself here rather than silently decoding as an `AppFrame`. */
 export function shellMessageKind(effect: WireVariant, instanceId: number): "app-frame" | "typed-operation-page" | "typed-operation-ack" | null {
@@ -175,14 +175,14 @@ export function wireSendMessageTargetTag(effect: WireVariant): string | null {
   return val.target?.tag ?? "";
 }
 
-/** 📨️ Every `MessageEndpoint` a host route already owns. `Shell{instance}` is the reply-frame
+/** 🗺️ Every `MessageEndpoint` a host route already owns. `Shell{instance}` is the reply-frame
  * transport ({@link shellFrameBytes}, and `leftoverShellInvocationFrames` for a frame that lands on a
  * later turn than the call it answers); `Backbone{uri}` is the document port. Both are consumed
  * BEFORE {@link wireEffectToFriendly} ever sees them — they are transport, not a friendly `Effect`,
  * and the friendly union deliberately declares no `sendMessage` member for them. */
 export const WIRE_SEND_MESSAGE_ROUTED_TARGETS: readonly string[] = ["shell", "backbone"];
 
-/** 📨️ Whether a `send-message` effect is already owned by one of {@link WIRE_SEND_MESSAGE_ROUTED_TARGETS}. */
+/** 📮️ Whether a `send-message` effect is already owned by one of {@link WIRE_SEND_MESSAGE_ROUTED_TARGETS}. */
 export function isRoutedWireSendMessage(effect: WireVariant): boolean {
   const target = wireSendMessageTargetTag(effect);
   return target !== null && WIRE_SEND_MESSAGE_ROUTED_TARGETS.includes(target);
@@ -200,23 +200,23 @@ function bytesStartWith(bytes: Uint8Array, prefix: Uint8Array): boolean {
 
 /** 📬️ `TypedOperationResultPage::RENDERER_PAGE_MAGIC` (`🔌️plugin/🦀️.rs`), byte for byte. */
 export const TYPED_OPERATION_PAGE_MAGIC = new TextEncoder().encode("semio.typed-operation-page.v1\0");
-/** 📬️ `TypedOperationResultPage::RENDERER_ACK_MAGIC` (`🔌️plugin/🦀️.rs`), byte for byte. */
+/** 🪄️ `TypedOperationResultPage::RENDERER_ACK_MAGIC` (`🔌️plugin/🦀️.rs`), byte for byte. */
 export const TYPED_OPERATION_ACK_MAGIC = new TextEncoder().encode("semio.typed-operation-ack.v1\0");
 /** 📏️ `{receiver u32 | operation u64 | generation u64 | sequence u32 | attempt u8 | lane u8 | len u32}`,
  * little-endian — `renderer_exchange_bytes`' fixed header after the magic. */
 export const TYPED_OPERATION_PAGE_HEADER_BYTES = 30;
-/** 📏️ The acknowledgement body: the page header's first 25 bytes, i.e. its token alone. */
+/** 🔑️ The acknowledgement body: the page header's first 25 bytes, i.e. its token alone. */
 export const TYPED_OPERATION_TOKEN_BYTES = 25;
-/** 📏️ `TYPED_OPERATION_RESULT_PAGE_BYTES` (`🔌️plugin/🦀️.rs`) — one page's fixed payload authority. */
+/** 🧱️ `TYPED_OPERATION_RESULT_PAGE_BYTES` (`🔌️plugin/🦀️.rs`) — one page's fixed payload authority. */
 export const TYPED_OPERATION_RESULT_PAGE_BYTES = 4_096;
 /** 🛤️ Highest `TypedOperationResultLane` discriminant the guest emits (`🔌️plugin/🦀️.rs`: Artifact 0 …
  * Fault 11, Interaction 12, WindowTransient 13, WindowConfig 14). */
 export const TYPED_OPERATION_RESULT_LANE_MAX = 15;
-/** 🛤️ The lane a typed operation's document edit page rides (`{generationBefore, generationAfter}`). */
+/** ✏️ The lane a typed operation's document edit page rides (`{generationBefore, generationAfter}`). */
 export const TYPED_OPERATION_LANE_ARTIFACT = 0;
-/** 🛤️ The lane a terminal result page rides. */
+/** 💻️ The lane a terminal result page rides. */
 export const TYPED_OPERATION_LANE_TERMINAL = 10;
-/** 🛤️ The lane a fault result page rides. */
+/** 🚦️ The lane a fault result page rides. */
 export const TYPED_OPERATION_LANE_FAULT = 11;
 /** ⚠️ Original operation diagnostic JSON fragments remain nonterminal and require exact ACK. */
 export const TYPED_OPERATION_LANE_DIAGNOSTIC = 15;
@@ -230,7 +230,7 @@ export type TypedOperationToken = {
   readonly attempt: number;
 };
 
-/** 📨️ The `Event::Message{source: Shell{instance}}` envelope that acknowledges one page. Structurally
+/** ✉️ The `Event::Message{source: Shell{instance}}` envelope that acknowledges one page. Structurally
  * a `ShardEventEnvelope`; declared here rather than imported so this module keeps its "transports are
  * injected" discipline. */
 export type TypedOperationAckEvent = {
@@ -238,7 +238,7 @@ export type TypedOperationAckEvent = {
   readonly payload: { readonly source: { readonly tag: "shell"; readonly val: string }; readonly payload: readonly number[] };
 };
 
-/** 📬️ One decoded typed-operation result page and the acknowledgement the guest blocks on. */
+/** 📃️ One decoded typed-operation result page and the acknowledgement the guest blocks on. */
 export type TypedOperationPage = {
   readonly token: TypedOperationToken;
   readonly lane: number;
@@ -246,7 +246,7 @@ export type TypedOperationPage = {
   readonly acknowledgement: TypedOperationAckEvent;
 };
 
-/** ⚠️ A borrowed original diagnostic JSON window keeps exact operation and row provenance. */
+/** 🩺️ A borrowed original diagnostic JSON window keeps exact operation and row provenance. */
 export type TypedOperationDiagnosticFragment = {
   readonly token: TypedOperationToken;
   readonly row: number;
@@ -262,7 +262,7 @@ export function typedOperationDiagnosticFragment(page: TypedOperationPage): Type
   return { token: page.token, row: header.getUint32(0, true), complete: page.payload[4] === 1, bytes: page.payload.subarray(5) };
 }
 
-/** 📬️ Decodes one `Shell{instance}`-addressed typed-operation result page, or `null` when the effect
+/** 📄️ Decodes one `Shell{instance}`-addressed typed-operation result page, or `null` when the effect
  * carries an `AppFrame` (or is not a shell message at all). The TS twin of the native host's
  * `TypedOperationResultPage::decode_guest_message` (`🧊️renderer/🦀️.rs`) and of the emitter
  * `renderer_exchange_bytes` (`🔌️plugin/🦀️.rs`) — a page whose receiver, lane or length contradicts
@@ -293,7 +293,7 @@ export function typedOperationResult(effect: WireVariant): TypedOperationPage | 
   };
 }
 
-/** 📬️ Every acknowledgement one turn's result pages owe. The guest PARKS its operation until each
+/** ⌨️ Every acknowledgement one turn's result pages owe. The guest PARKS its operation until each
  * lands, so a host that collects pages without answering them freezes the operation mid-flight. */
 export function typedOperationAcknowledgements(turn: { readonly effects: readonly WireVariant[] }): TypedOperationAckEvent[] {
   return turn.effects.flatMap((effect) => {
@@ -302,7 +302,7 @@ export function typedOperationAcknowledgements(turn: { readonly effects: readonl
   });
 }
 
-/** 📬️ What one turn's effects hold once its typed-operation pages are taken out of them. Pure: it
+/** 🔂️ What one turn's effects hold once its typed-operation pages are taken out of them. Pure: it
  * chooses no policy for a fault or a terminal, it only names them, so React's owner-attributing
  * router and the wgpu bridge's single-caller ladder read ONE scan rather than two decoders. */
 export type TypedOperationPageScan = {
@@ -335,7 +335,7 @@ export function scanTypedOperationPages(effects: readonly WireVariant[]): TypedO
   return { kept, pages, acknowledgements: pages.map((page) => page.acknowledgement), terminal, faults, diagnosticFragments };
 }
 
-/** 📬️ What ONE typed-operation result page asks of the host driving an action turn: its acknowledgement — a fault
+/** 🖥️ What ONE typed-operation result page asks of the host driving an action turn: its acknowledgement — a fault
  * page's too, since the guest parks the operation until every page lands and an unanswered fault page left the
  * document's actor unable to take its next action — whether it is the guest's refusal of the action, and whether it
  * rides the artifact lane. Policy stays with the caller: it refuses the action only after the whole turn is answered. */

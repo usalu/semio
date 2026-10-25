@@ -1,4 +1,4 @@
-//! 🎨️ Paint values of the scene: the colour, the fill rule, the blend mode, the paint and the raster image with their peniko conversions. See [`super`].
+//! 🖌️ Paint values of the scene: the colour, the fill rule, the blend mode, the paint and the raster image with their peniko conversions. See [`super`].
 
 use super::*;
 
@@ -138,7 +138,7 @@ impl semio_framework_value::retirement::RetireOwned for RasterImage {
 }
 
 impl RasterImage {
-    /// 🖼️ Builds an RGBA8 raster image for scene drawing.
+    /// 🖍️ Builds an RGBA8 raster image for scene drawing.
     pub fn rgba8(width: u32, height: u32, data: SharedArc<Vec<u8>>) -> Self {
         Self { width, height, data }
     }
@@ -172,7 +172,7 @@ impl RasterImage {
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 impl RasterImage {
-    /// 🖥️ Host/browser-only: rebuilds a real `peniko::ImageData`, only ever needed at the
+    /// ☁️ Host/browser-only: rebuilds a real `peniko::ImageData`, only ever needed at the
     /// `SceneCommand::replay_into` rasterization boundary.
     pub(crate) fn to_peniko(&self) -> peniko::ImageData {
         peniko::ImageData { data: peniko::Blob::new(self.data.clone()), format: peniko::ImageFormat::Rgba8, alpha_type: peniko::ImageAlphaType::Alpha, width: self.width, height: self.height }

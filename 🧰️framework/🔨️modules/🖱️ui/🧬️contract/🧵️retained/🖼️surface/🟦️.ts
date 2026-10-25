@@ -354,7 +354,7 @@ export class OwnedUiSurfacePatch {
       this.#bindingRetirement = this.#bindingEdit!.beginClose(); this.#bindingEdit = null; yield 64; yield* this.#drainBindings();
     }
   }
-  /** 🩹️ Validates, rehashes, restages and renotifies the candidate, then publishes it.
+  /** 📢️ Validates, rehashes, restages and renotifies the candidate, then publishes it.
    *
    * The `validation` phase is priced by the DELTA whenever every operation certified
    * `shapePreserving` — same sibling key, same `children` edges, same section role — because the source

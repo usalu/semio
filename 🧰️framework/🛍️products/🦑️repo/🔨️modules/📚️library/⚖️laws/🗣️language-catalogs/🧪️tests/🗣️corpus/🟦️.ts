@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import { testPythonV1 } from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import { testPythonV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import { LANGUAGE_LAW_RULES_V1, isProseV1, languageLawAllowlistV1, languageLawFindingsV1, proseSitesV1, readLanguageLawSourcesV1, type LanguageLawAllowlistV1 } from "../../🟦️.ts";
 import allowlist from "../../🔒️allowlist/🔣️.json" with { type: "json" };
 import allowlistSchema from "../../🔒️allowlist/🧬️schema/🔣️.json" with { type: "json" };
@@ -13,7 +13,7 @@ import corpus from "./🔣️.json" with { type: "json" };
 import corpusSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 const workspace = (() => { for (let at = import.meta.dir; ; at = dirname(at)) { if (existsSync(join(at, "bunfig.toml")) && existsSync(join(at, "nx.json"))) return at; if (dirname(at) === at) throw Error("workspace root not found"); } })();
-const checker = fileURLToPath(new URL("./🐍️checker.py", import.meta.url));
+const checker = fileURLToPath(new URL("./🐍️.py", import.meta.url));
 const python = (args: readonly string[], input?: string): unknown => {
   const run = spawnSync(testPythonV1() ?? "python3", ["-I", checker, ...args], { encoding: "utf8", input, maxBuffer: 1 << 28 });
   if (run.status !== 0) throw new Error(`checker failed: ${run.stderr}`);

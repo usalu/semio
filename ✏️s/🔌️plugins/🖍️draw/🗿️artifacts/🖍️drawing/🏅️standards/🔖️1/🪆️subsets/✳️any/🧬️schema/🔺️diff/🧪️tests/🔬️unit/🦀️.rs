@@ -1,6 +1,7 @@
 use super::*;
 use semio_s_artifact_draw_drawing_model::{create_drawing_group_layer, create_drawing_shape_layer_rect, default_drawing_document};
 use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
+use protocol::ColdMutationDiff;
 
 fn id_of(node: &DrawingLayerNode) -> String {
     layer_id(node).to_string_owner()

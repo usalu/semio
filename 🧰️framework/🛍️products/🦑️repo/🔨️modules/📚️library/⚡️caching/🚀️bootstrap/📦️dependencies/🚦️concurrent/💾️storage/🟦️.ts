@@ -2,8 +2,8 @@ import {randomBytes} from "node:crypto";
 import {closeSync,fsyncSync,lstatSync,mkdirSync,openSync,readdirSync,readFileSync,readlinkSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {nativeStatfsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {dirname,join,resolve,sep} from "node:path";
-import {setTimeout as delay} from "node:timers/promises";
-import {acquireResourceLease,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {waitingDelayV1 as delay} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+import {acquireResourceLease,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {concurrentEventV1,concurrentLeaseResourceV1,concurrentPinNamesV1,concurrentPinResourceV1,concurrentPointerNameV1,concurrentProtocolV1 as protocol,concurrentStaleTemporariesV1,concurrentTextV1,concurrentWaitStepV1,encodeConcurrentPointerV1,parseConcurrentPointerV1,type ConcurrentEventV1,type ConcurrentLeaseKindV1,type ConcurrentPointerV1} from "../🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
 
@@ -55,7 +55,7 @@ export async function acquireConcurrentPinsV1(directory:string,workspace:string,
  catch(error){for(const lease of held.reverse())try{lease.release();}catch{}throw error;}
  return held;
 }
-/** 📌️ Holds shared pins on the given generations while `body` consumes them; a collector can never remove a pinned generation. */
+/** 🧷️ Holds shared pins on the given generations while `body` consumes them; a collector can never remove a pinned generation. */
 export async function withConcurrentPinsV1<T>(directory:string,workspace:string,generations:readonly string[],control:ResourceLeaseControl|undefined,signal:AbortSignal,body:()=>Promise<T>):Promise<T>{
  const held=await acquireConcurrentPinsV1(directory,workspace,generations,control,signal);
  let failed=false,failure:unknown,value:T|undefined;
@@ -87,7 +87,7 @@ export function readConcurrentPointersV1(storeRoot:string):readonly ConcurrentPo
  }catch{}
  return Object.freeze(rows);
 }
-/** 📖️ Reads one scope's pointer, or null while the scope was never published. */
+/** 📮️ Reads one scope's pointer, or null while the scope was never published. */
 export function readConcurrentPointerV1(storeRoot:string,scope:string):ConcurrentPointerV1|null{
  return readConcurrentPointersV1(storeRoot).find(pointer=>pointer.scope===scope)??null;
 }
@@ -109,13 +109,13 @@ export function writeConcurrentPointerV1(storeRoot:string,pointer:ConcurrentPoin
 export async function concurrentFreeFractionV1(path:string,read:ConcurrentVolumeReaderV1=readConcurrentVolumeV1):Promise<number>{
  const facts=await measureConcurrentVolumeV1(path,read);return facts.blocks>0?facts.bavail/facts.blocks:1;
 }
-/** 🔌️ Reads the volume that holds the generations; replaceable so an unreadable volume is testable on any host. */
+/** 🔊️ Reads the volume that holds the generations; replaceable so an unreadable volume is testable on any host. */
 export type ConcurrentVolumeReaderV1=(path:string)=>Promise<Readonly<{blocks:number;bavail:number;bsize:number}>>;
 const readConcurrentVolumeV1:ConcurrentVolumeReaderV1=path=>nativeStatfsV1(path,{fresh:true});
 async function measureConcurrentVolumeV1(path:string,read:ConcurrentVolumeReaderV1){
  try{return await read(path);}catch(error){throw Error(concurrentTextV1(resolveLanguageV1(protocol.languages,[],process.env).language,"freeSpaceUnreadable",{path,reason:(error as Error).message}),{cause:error});}
 }
-/** 🌡️ Reports the bytes a writer can still use on that volume, measured now, so a before-and-after difference is the size of what an install built; an unreadable volume is refused, never reported as unlimited. */
+/** 🆓️ Reports the bytes a writer can still use on that volume, measured now, so a before-and-after difference is the size of what an install built; an unreadable volume is refused, never reported as unlimited. */
 export async function concurrentFreeBytesV1(path:string,read:ConcurrentVolumeReaderV1=readConcurrentVolumeV1):Promise<number>{
  const facts=await measureConcurrentVolumeV1(path,read);return facts.bavail*facts.bsize;
 }

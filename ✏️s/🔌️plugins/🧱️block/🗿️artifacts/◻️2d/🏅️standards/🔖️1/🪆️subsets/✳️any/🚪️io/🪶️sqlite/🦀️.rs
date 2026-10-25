@@ -8,5 +8,4 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_block_2d_model::sqlite_snapshot as snapshot;

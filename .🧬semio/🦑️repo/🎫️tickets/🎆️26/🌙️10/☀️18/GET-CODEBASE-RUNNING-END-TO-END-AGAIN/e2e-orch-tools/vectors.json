@@ -40,6 +40,13 @@
     { "memoryMb": 131072, "cores": 32, "slots": 6 },
     { "memoryMb": 65536, "cores": 4, "slots": 2 }
   ],
+  "queue": [
+    { "name": "no-wait", "grace": 60, "events": [[0, "start"], [10, "work"]], "end": 20, "credit": 0 },
+    { "name": "slot-wait-then-work", "grace": 60, "events": [[0, "[bazel] all 3 Bazel server slots are in use; waiting for one (5 s)"], [5, "[bazel] all 3 Bazel server slots are in use; waiting for one (10 s)"], [30, "[bazel] session slot s0: warm server"]], "end": 100, "credit": 30 },
+    { "name": "heartbeats-are-neutral", "grace": 60, "events": [[0, "Waiting for access to repo:compiler-writer:x (exclusive): position 2 of 3"], [10, "[repository:command] running elapsedMs=10000"], [20, "[repository:command] running elapsedMs=20000"], [25, "work output"]], "end": 40, "credit": 25 },
+    { "name": "silent-queue-expires", "grace": 60, "events": [[0, "[capacity] waiting 5s for run: not enough free memory"]], "end": 500, "credit": 60 },
+    { "name": "two-queues", "grace": 60, "events": [[0, "[capacity] waiting 5s for run: x"], [10, "admitted and compiling"], [50, "[bazel] all 3 Bazel server slots are in use; waiting for one (1 s)"], [60, "Compiling foo v1.0.0"]], "end": 70, "credit": 20 }
+  ],
   "delta": {
     "before": "builds: 3\nactions: 100\nexecuted: 40\nlabel only\n",
     "after": "builds: 5\nactions: 150\nexecuted: 40\nlabel only\ncacheHits = 7\n",

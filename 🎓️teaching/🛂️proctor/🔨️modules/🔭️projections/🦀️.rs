@@ -305,7 +305,7 @@ struct Fold {
 }
 
 impl Projector {
-    /// 🆕️ A projector for one loaded course, with an empty board and a learner count of zero.
+    /// 🌱️ A projector for one loaded course, with an empty board and a learner count of zero.
     pub fn new(course: Arc<LoadedCourse>) -> Self {
         Self { board: Arc::new(Board::new(Arc::clone(&course))), course, learners: Arc::new(AtomicU64::new(0)), mirror: Mutex::new(None) }
     }
@@ -518,7 +518,7 @@ fn write<T: Serialize>(projection: &str, key: &str, value: &T) -> Result<Project
     Ok(ProjectionWrite { projection: projection.to_string(), key: key.to_string(), value })
 }
 
-/// 🎽️ The run a fact is about, if any.
+/// 🎯️ The run a fact is about, if any.
 pub fn run_of(fact: &Event) -> Option<&String> {
     match fact {
         Event::RunStarted { run, .. } | Event::RunVoided { run, .. } | Event::TaskOpened { run, .. } | Event::AnswerRecorded { run, .. } | Event::RunSubmitted { run, .. } | Event::BadgeAwarded { run, .. } => Some(run),

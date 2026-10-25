@@ -10,8 +10,8 @@ extern crate semio_framework_schema as schema;
 
 use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_framework_value_derive::{FromValue, ToValue};
 use crate::snapshot::LayoutSnapshot;
+use semio_framework_artifact_reference::{Dialect, StandardId};
 use semio_framework_value::DslValue as Value;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -283,7 +283,7 @@ pub const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", 
 /// [`LAYOUT_BACKGROUND_DRAWING`]. `LayoutSnapshot::referenced_model` is the forward `ArtifactLink` slot for a referenced `model` artifact, schema and codec
 /// complete but otherwise inert (no `LinkResolver` seam, no mutation dispatch).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[value(rename_all = "camelCase", deny_unknown_fields, retire_with="crate::standards::v1::subsets::any::schema::snapshot::drawing_child::retire")]
+#[value(rename_all = "camelCase", deny_unknown_fields, retire_with="crate::snapshot::drawing_child::retire")]
 pub struct LayoutDrawingChild {
     pub handle: store::os_store::artifact_child::ArtifactChild<LayoutBackgroundDrawing>,
     #[value(deserialize_with = "validated_drawing_content")]
@@ -867,6 +867,70 @@ impl Identified<String> for ParentPage {
 impl Identified<String> for Spread {
     fn id(&self) -> &String {
         &self.id
+    }
+}
+
+/// 🔑️ List-delta rows key themselves by their id.
+impl protocol::list_delta::Keyed for Page {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+impl protocol::list_delta::Keyed for TextStory {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+impl protocol::list_delta::Keyed for ImageLink {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+impl protocol::list_delta::Keyed for ParagraphStyle {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+impl protocol::list_delta::Keyed for CharacterStyle {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+impl protocol::list_delta::Keyed for ParentPage {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+impl protocol::list_delta::Keyed for Spread {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+impl protocol::list_delta::Keyed for Layer {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+impl protocol::list_delta::Keyed for PageOverride {
+    type Key = String;
+    fn key(&self) -> String {
+        self.object_id.clone()
     }
 }
 

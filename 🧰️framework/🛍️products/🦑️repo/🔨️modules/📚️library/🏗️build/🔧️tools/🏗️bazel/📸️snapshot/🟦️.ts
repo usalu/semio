@@ -1,7 +1,7 @@
 /** 📸️ Captures the declared sources of a Bazel plan once into the generated workspace, so actions stage and hash the planned bytes however the live checkout changes before they start. */
-import{createHash}from"node:crypto";
+import{createHash,randomUUID}from"node:crypto";
 import{constants}from"node:fs";
-import{chmod,copyFile,lstat,mkdir,open,readFile,readdir,rename,rm,rmdir,stat,unlink,writeFile}from"node:fs/promises";
+import{chmod,copyFile,lstat,mkdir,open,readFile,readdir,rename,rm,rmdir,stat,unlink,utimes,writeFile}from"node:fs/promises";
 import{dirname,join}from"node:path";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json" with { type: "json" };
@@ -11,8 +11,8 @@ const policy=schema.definitions.Policy.const,absent=new Set(["ENOENT","ENOTDIR",
 /** 🧾️ One captured file: its content address, the live identity it was captured from and the modification times of its private copies. */
 export type BazelSourceSnapshotRowV1={path:string;sha256:string;bytes:number;executable:boolean;liveMtimeNs:string;liveIno:string;racy:boolean;aliasMtimeNs:string;realMtimeNs?:string};
 
-/** 🎟️ What one capture needs: the live checkout, the generated workspace, the two view directory names, the alias of a repository directory, the files to capture and the subset that the repository view names too. */
-export interface BazelSourceSnapshotRequestV1{readonly root:string;readonly directory:string;readonly files:readonly string[];readonly real?:ReadonlySet<string>;readonly views:{readonly alias:string;readonly real:string};readonly alias:(directory:string)=>string;readonly check:()=>void;readonly progress:()=>Promise<void>;readonly now?:()=>number}
+/** 🎟️ What one capture needs: the live checkout, the generated workspace, an optional content pool on the same volume whose identical files every package clones instead of copying, the two view directory names, the alias of a repository directory, the files to capture and the subset that the repository view names too. */
+export interface BazelSourceSnapshotRequestV1{readonly root:string;readonly directory:string;readonly pool?:string;readonly files:readonly string[];readonly real?:ReadonlySet<string>;readonly views:{readonly alias:string;readonly real:string};readonly alias:(directory:string)=>string;readonly check:()=>void;readonly progress:()=>Promise<void>;readonly now?:()=>number}
 
 /** 📊️ The captured files in order, the requested files that vanished before capture, the alias to directory mapping and what the capture did. */
 export interface BazelSourceSnapshotV1{readonly files:string[];readonly vanished:string[];readonly directories:ReadonlyMap<string,string>;readonly captured:number;readonly reused:number;readonly pruned:number}
@@ -59,6 +59,35 @@ export async function bazelSourceSnapshotDriftV1(root:string,rows:ReadonlyMap<st
  return drifted;
 }
 
+const clonable=new Map<string,Promise<boolean>>(),poolFailures=new Set(["ENOTSUP","EOPNOTSUPP","EXDEV","ENOSYS","EINVAL","EPERM"]);
+/** 🧪️ Whether the pool directory lies on a volume that clones files copy-on-write (APFS, btrfs, XFS, ReFS): one tiny file is cloned once per process and pool; anywhere else the capture keeps plain private copies. */
+async function poolClonesV1(pool:string):Promise<boolean>{
+ let known=clonable.get(pool);
+ if(!known){
+  known=(async()=>{const probe=join(pool,policy.poolProbe+"-"+process.pid);try{await mkdir(pool,{recursive:true});await writeFile(probe,"x");await copyFile(probe,probe+".clone",constants.COPYFILE_FICLONE_FORCE);return true;}catch{return false;}finally{await rm(probe,{force:true}).catch(()=>undefined);await rm(probe+".clone",{force:true}).catch(()=>undefined);}})();
+  clonable.set(pool,known);
+ }
+ return known;
+}
+/** 🧬️ Places a captured file at its destination: a pool hit is a copy-on-write clone of the entry (its change time is renewed first, so the collector, which only removes entries by that time, leaves it alone), a miss, an entry that vanished meanwhile or a collector that emptied the folder just places the captured copy itself and then re-seeds the pool with a clone of it. A missing pool entry therefore never fails a capture; false only means the volume refused cloning, which switches the pool off for this process and leaves the captured copy for a plain placement. */
+async function placeFromPoolV1(pool:string,holder:string,destination:string,clone:string,digest:Readonly<{sha256:string;bytes:number}>,executable:boolean):Promise<boolean>{
+ const entry=join(pool,digest.sha256.slice(0,policy.poolFanout),digest.sha256+(executable?policy.poolExecutableSuffix:""));
+ try{
+  const hit=await lstat(entry).then(facts=>facts.isFile()&&facts.size===digest.bytes,error=>{if(absent.has(code(error)))return false;throw error;});
+  if(hit)try{const facts=await stat(entry);await utimes(entry,facts.atime,facts.mtime);await copyFile(entry,clone,constants.COPYFILE_FICLONE_FORCE);await rename(clone,destination);await rm(holder,{force:true});return true;}
+  catch(error){await rm(clone,{force:true}).catch(()=>undefined);if(!absent.has(code(error)))throw error;}
+  await rename(holder,destination);
+  const seed=entry+"."+randomUUID()+".tmp";
+  try{await mkdir(dirname(entry),{recursive:true});await copyFile(destination,seed,constants.COPYFILE_FICLONE_FORCE);await rename(seed,entry);}
+  catch(error){await rm(seed,{force:true}).catch(()=>undefined);if(poolFailures.has(code(error)))clonable.set(pool,Promise.resolve(false));else if(!absent.has(code(error)))throw error;}
+  return true;
+ }catch(error){
+  await rm(clone,{force:true}).catch(()=>undefined);
+  if(!poolFailures.has(code(error)))throw error;
+  clonable.set(pool,Promise.resolve(false));return false;
+ }
+}
+
 /** 🧊️ Captures every requested file as a private regular copy `<alias view>/<alias>/<name>` (and `<repository view>/<path>` for the repository-named subset) and publishes `snapshot.json`; copies are clones or plain copies and never hardlinks, a file is read from the live tree once, a torn capture retries a bounded number of times, and an unchanged file keeps its copy so Bazel's state stays stable. A legacy view that links into the live tree is unlinked before anything is written. */
 export async function captureBazelSourceSnapshotV1(request:BazelSourceSnapshotRequestV1):Promise<BazelSourceSnapshotV1>{
  const{root,directory,views,check}=request,wanted=[...new Set(request.files)].sort(),real=request.real??new Set<string>();
@@ -67,6 +96,7 @@ export async function captureBazelSourceSnapshotV1(request:BazelSourceSnapshotRe
  const aliasRoot=join(directory,views.alias),realRoot=join(directory,views.real),temporary=join(directory,policy.temporary);
  const aliasDestination=(path:string)=>{const cut=path.lastIndexOf("/");return join(aliasRoot,aliasOf(cut<0?"":path.slice(0,cut)),path.slice(cut+1));},realDestination=(path:string)=>join(realRoot,...path.split("/"));
  for(const path of wanted){requirePathV1(path);aliasOf(path.includes("/")?path.slice(0,path.lastIndexOf("/")):"");}
+ const pool=request.pool!==undefined&&await poolClonesV1(request.pool)?request.pool:undefined;
  await ensureTreeV1(aliasRoot);await ensureTreeV1(realRoot);await rm(temporary,{recursive:true,force:true});await mkdir(temporary,{recursive:true});
  const prior=await readBazelSourceSnapshotV1(directory),current=new Set(wanted),made=new Map<string,Promise<void>>(),rows:BazelSourceSnapshotRowV1[]=[],vanished:string[]=[];let pruned=0,captured=0,reused=0,done=0,counter=0;
  const emptied=new Set<string>(),removeRealV1=async(path:string)=>{await removeEntryV1(realDestination(path));for(let folder=dirname(realDestination(path));folder.length>realRoot.length;folder=dirname(folder))emptied.add(folder);};
@@ -93,7 +123,7 @@ export async function captureBazelSourceSnapshotV1(request:BazelSourceSnapshotRe
     const digest=await hashFileV1(holder);
     if(after.size!==before.size||after.mtimeNs!==before.mtimeNs||after.ino!==before.ino||BigInt(digest.bytes)!==before.size)continue;
     const executable=(before.mode&0o111n)!==0n,racy=(request.now?.()??Date.now())-Number(before.mtimeNs/1000000n)<policy.racyMilliseconds;
-    await chmod(holder,executable?policy.executableMode:policy.fileMode);await ensureDirectory(dirname(destination),true);await rename(holder,destination);copied=false;
+    await chmod(holder,executable?policy.executableMode:policy.fileMode);await ensureDirectory(dirname(destination),true);if(!(pool!==undefined&&await placeFromPoolV1(pool,holder,destination,join(temporary,String(counter++)),digest,executable)))await rename(holder,destination);copied=false;
     return{path,sha256:digest.sha256,bytes:digest.bytes,executable,liveMtimeNs:before.mtimeNs.toString(),liveIno:before.ino.toString(),racy,aliasMtimeNs:(await lstat(destination,{bigint:true})).mtimeNs.toString()};
    }finally{if(copied)await rm(holder,{force:true});}
   }

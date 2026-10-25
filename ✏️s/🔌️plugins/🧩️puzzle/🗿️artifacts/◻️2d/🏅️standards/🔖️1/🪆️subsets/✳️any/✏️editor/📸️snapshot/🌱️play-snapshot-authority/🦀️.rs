@@ -6,8 +6,8 @@ use super::*;
 /// 🌱️ Immutable typed puzzle authority and its deferred first-party intrinsic view.
 #[derive(Debug)]
 pub struct Puzzle2dPlaySnapshot {
-    typed: std::sync::Arc<Puzzle2dSnapshot>,
-    pub(super) value: std::sync::OnceLock<std::sync::Arc<HostValue>>,
+    pub typed: std::sync::Arc<Puzzle2dSnapshot>,
+    pub value: std::sync::OnceLock<std::sync::Arc<HostValue>>,
 }
 
 impl Puzzle2dPlaySnapshot {

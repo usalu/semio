@@ -4,7 +4,7 @@ use super::*;
 
 //#region 💡️InferenceJobTools
 /// 🏁 One finished guest run: the guest's own result bytes and whether it reported completion.
-struct GuestInferenceRun {
+pub struct GuestInferenceRun {
     pub inference_schema: String,
     pub complete: bool,
     pub payload: Option<Vec<u8>>,
@@ -20,7 +20,7 @@ pub(crate) fn inference_original_retained(grant:&serde_json::Value)->Result<semi
 }
 
 /// 🎟️ The command borrows original cancellation and carries its one caller turn and work policy.
-struct InferenceCallerAuthority<'a>{pub turn:semio_framework_actor::RetainedTurnInput,pub retained_policy:semio_framework_value::RetainedCloneGrant,pub revision:u64,pub cancellation_id:&'a str,pub work_units:u64,pub maximum_elapsed_milliseconds:u64}
+pub struct InferenceCallerAuthority<'a>{pub turn:semio_framework_actor::RetainedTurnInput,pub retained_policy:semio_framework_value::RetainedCloneGrant,pub revision:u64,pub cancellation_id:&'a str,pub work_units:u64,pub maximum_elapsed_milliseconds:u64}
 
 /// 🎟️ Exact JSON identities are mandatory before any guest command or job is born.
 pub(crate) fn inference_original_turn(arguments: &serde_json::Value) -> Result<InferenceCallerAuthority<'_>, GatewayError> {

@@ -1,4 +1,4 @@
-//! ⭕️ Curve shapes of the geometry primitives: the circle, the line, the elliptical arc and the cubic bezier. See [`super`].
+//! 🧱️ Curve shapes of the geometry primitives: the circle, the line, the elliptical arc and the cubic bezier. See [`super`].
 
 use super::*;
 
@@ -17,7 +17,7 @@ impl Circle {
     pub fn center(self) -> Point {
         self.center
     }
-    /// 🧾️ Radius, for encoders that emit the primitive rather than its flattening.
+    /// 📤️ Radius, for encoders that emit the primitive rather than its flattening.
     pub fn radius(self) -> f64 {
         self.radius
     }
@@ -38,11 +38,11 @@ impl Line {
     pub fn new(p0: Point, p1: Point) -> Self {
         Self { p0, p1 }
     }
-    /// 🧾️ Start point, for encoders that emit the primitive rather than its flattening.
+    /// 📍️ Start point, for encoders that emit the primitive rather than its flattening.
     pub fn p0(self) -> Point {
         self.p0
     }
-    /// 🧾️ End point, for encoders that emit the primitive rather than its flattening.
+    /// ⏹️ End point, for encoders that emit the primitive rather than its flattening.
     pub fn p1(self) -> Point {
         self.p1
     }
@@ -70,12 +70,12 @@ impl Arc {
     pub fn eval(self, t: f64) -> Point {
         elliptical_point(self.center, self.radii, self.x_rotation, self.start_angle + t * self.sweep)
     }
-    /// 🧾️ `(center, radii, start_angle, sweep, x_rotation)` — the exact `ctx.ellipse` arguments,
+    /// 🧹️ `(center, radii, start_angle, sweep, x_rotation)` — the exact `ctx.ellipse` arguments,
     /// for encoders that emit the primitive rather than its flattening.
     pub fn parameters(self) -> (Point, (f64, f64), f64, f64, f64) {
         (self.center, self.radii, self.start_angle, self.sweep, self.x_rotation)
     }
-    /// 🌓️ [`elliptical_arc_segments`] over this arc's own angle range — open (no `ClosePath`),
+    /// 📂️ [`elliptical_arc_segments`] over this arc's own angle range — open (no `ClosePath`),
     /// since an arc is a curve, not necessarily a closed region.
     pub fn path_elements(&self, tolerance: f64) -> Vec<PathEl> {
         let mut elements = vec![PathEl::MoveTo(self.eval(0.0))];

@@ -3,15 +3,16 @@ import {createHash} from "node:crypto";
 import {existsSync,mkdirSync,mkdtempSync,readdirSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir,uptime} from "node:os";
 import {join} from "node:path";
-import {leaseRegistryFolderV1} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
+import {leaseRegistryFolderV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧭️order/🟦️.ts";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {cacheLedgerV1,cacheRootDirectoryV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {DOCTOR_POLICY_V1,validateDoctorV1,type DoctorFactsV1,type DoctorPolicyV1} from "../../🟦️.ts";
 import {analyzeDoctorV1} from "../../🧮️analysis/🟦️.ts";
 import {doctorPortsV1,type DoctorPortsV1} from "../../🔌️ports/🟦️.ts";
 import {DoctorCancelledV1,collectDoctorFactsV1,runDoctorV1,selectDoctorProbesV1} from "../../🏃️runner/🟦️.ts";
-import {DOCTOR_PROBES_V1,DOCTOR_REPAIRS_V1,type DoctorProbeContextV1,type DoctorProbeV1} from "../../🔎️probes/🟦️.ts";
-import {toolPinDriftV1} from "../../🔎️probes/🔧️tools/🟦️.ts";
+import {DOCTOR_PROBES_V1,DOCTOR_REPAIRS_V1} from "../../🔎️probes/🟦️.ts";
+import type {DoctorProbeContextV1,DoctorProbeV1} from "../../🔎️probes/📋️contract/🟦️.ts";
+import {toolPinDriftV1,wasmLockFactsV1} from "../../🔎️probes/🔧️tools/🟦️.ts";
 import {cachesProbeV1,deadPublicationsV1} from "../../🔎️probes/⚡️caches/🟦️.ts";
 import {capacityProbeV1} from "../../🔎️probes/🎫️capacity/🟦️.ts";
 import {dependenciesProbeV1} from "../../🔎️probes/📦️dependencies/🟦️.ts";
@@ -219,6 +220,19 @@ test("tools: pins, missing tools and the probe budget through the registry when 
  const late=await read(toolsProbeV1,ports(fresh(),{platform:"darwin",optional:optional as never}),context({deadlineMs:0})) as {tools:NonNullable<DoctorFactsV1["tools"]>};
  expect(late.tools.rows.every(row=>row.state==="unprobed")).toBe(true);
  expect("unavailable" in await toolsProbeV1.read(ports(fresh(),{optional:(async()=>undefined) as never}),context())).toBe(true);
+});
+
+test("tools: the wasm lock identity reads every declared lock against the root pin and the analysis names the drifted ones",async()=>{
+ const root=fresh(),lock=(version:string)=>`[[package]]\nname = "wasm-bindgen"\nversion = "${version}"\n`;
+ expect(wasmLockFactsV1(root)).toEqual([]);
+ writeFileSync(join(root,"Cargo.lock"),lock("0.2.129"));
+ mkdirSync(join(root,"🌎️hub"),{recursive:true});writeFileSync(join(root,"🌎️hub/Cargo.lock"),lock("0.2.126"));
+ mkdirSync(join(root,"🧰️framework"),{recursive:true});writeFileSync(join(root,"🧰️framework/Cargo.lock"),"[[package]]\nname = \"serde\"\nversion = \"1.0.0\"\n");
+ const facts=wasmLockFactsV1(root);
+ expect(facts).toEqual([{path:"Cargo.lock",version:"0.2.129",pinned:"0.2.129"},{path:"🧰️framework/Cargo.lock",version:null,pinned:"0.2.129"},{path:"🌎️hub/Cargo.lock",version:"0.2.126",pinned:"0.2.129"}]);
+ expect(validateDoctorV1("ToolsFacts",{rows:[],wasmLocks:facts})).toEqual([]);
+ const report=analyzeDoctorV1({version:1,atMs:1,platform:"darwin",probes:[],tools:{rows:[],wasmLocks:facts}} as never,DOCTOR_POLICY_V1);
+ expect(report.findings.map(finding=>[finding.id,finding.severity,finding.subject]).sort()).toEqual([["tools.wasm-lock-drift","error","🌎️hub/Cargo.lock"],["tools.wasm-lock-drift","error","🧰️framework/Cargo.lock"]].sort());
 });
 
 test("sessions: counts through the session module, zero for a worktree without records, and the repair through the owner",async()=>{

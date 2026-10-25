@@ -15,7 +15,7 @@ import {independentGlobV1,withCommandSourceControlV1} from "../🧰️support/�
 
 const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020").default;
 test("test owner inference names only the current declared fact namespace without storage admission",async()=>{
- const root=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!),"ti-")),plugin=await import("../../../../../🧪️test/🟨️.mjs"),declaration=JSON.parse(await readFile(new URL("../../../📥️inputs/💾️storage/🧬️schema/🔣️.json",import.meta.url),"utf8")),admitted=new Ajv({strict:true}).compile(declaration);
+ const root=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!),"ti-")),plugin=await import("../../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),declaration=JSON.parse(await readFile(new URL("../../../📥️inputs/💾️storage/🧬️schema/🔣️.json",import.meta.url),"utf8")),admitted=new Ajv({strict:true}).compile(declaration);
  try{expect(admitted(fixture.testInferenceLocation.namespace)).toBe(true);expect(plugin.testBuildInferenceDirectoryV1(root)).toBe(join(root,fixture.testInferenceLocation.relative));const prior=process.env.SEMIO_BUILD_INFERENCE_DIRECTORY;try{process.env.SEMIO_BUILD_INFERENCE_DIRECTORY=join(root,fixture.testInferenceLocation.override);expect(plugin.testBuildInferenceDirectoryV1(root)).toBe(join(root,fixture.testInferenceLocation.relative));}finally{if(prior===undefined)delete process.env.SEMIO_BUILD_INFERENCE_DIRECTORY;else process.env.SEMIO_BUILD_INFERENCE_DIRECTORY=prior;}expect(await access(join(root,".cache")).then(()=>true,()=>false)).toBe(false);}finally{await rm(root,{recursive:true,force:true});}
 });
 test("the defining graph fact module exposes its declared writer port under original custody",async()=>{

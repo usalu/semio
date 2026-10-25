@@ -12,7 +12,7 @@ export function nxPutSlotCountV1(environment:Readonly<Record<string,string|undef
 }
 
 const key=(root:string)=>createHash("sha256").update(resolve(root).replaceAll("\\","/")).digest("hex").slice(0,16);
-/** 🎟️ The exclusive lease resource of one slot of one image. */
+/** 🔒️ The exclusive lease resource of one slot of one image. */
 export function nxPutSlotResourceV1(root:string,index:number):string{return `nx:put-slot:${key(root)}:${index}`;}
 /** 🚪️ The queued gate that orders waiting publications first in, first out. */
 export function nxPutGateResourceV1(root:string):string{return `nx:put-gate:${key(root)}`;}
@@ -30,7 +30,7 @@ const sleep=(milliseconds:number,signal:AbortSignal)=>new Promise<void>((done,fa
 /** 🧵️ Runs one publication as its own lease task, so concurrent publications of one process wait for each other's gate and slot exactly like publications of separate processes. */
 export function withNxPutSlotV1<T>(options:Readonly<{root:string;leaseDirectory:string;control:ResourceLeaseControl;slots:number}>,body:(slot:NxPutSlotV1)=>Promise<T>):Promise<T>{return withLeaseTaskV1(()=>admitNxPutSlotV1(options,body));}
 
-/** 🧵️ Runs one publication in a free slot. The oldest waiter holds the gate and polls the slots with a bounded back-off; the gate is released as soon as a slot is taken, and a slot holder waits for nothing but the shared writer custody, so the wait graph stays acyclic. Cancellation and the lease control are honoured on every poll. */
+/** 🆓️ Runs one publication in a free slot. The oldest waiter holds the gate and polls the slots with a bounded back-off; the gate is released as soon as a slot is taken, and a slot holder waits for nothing but the shared writer custody, so the wait graph stays acyclic. Cancellation and the lease control are honoured on every poll. */
 async function admitNxPutSlotV1<T>(options:Readonly<{root:string;leaseDirectory:string;control:ResourceLeaseControl;slots:number}>,body:(slot:NxPutSlotV1)=>Promise<T>):Promise<T>{
  const {root,leaseDirectory,control}=options,count=Math.min(Math.max(1,options.slots),policy.maximumSlots),base={directory:leaseDirectory,mode:"exclusive" as const,signal:control.signal,control};
  let held:{index:number;lease:ResourceLease}|undefined;

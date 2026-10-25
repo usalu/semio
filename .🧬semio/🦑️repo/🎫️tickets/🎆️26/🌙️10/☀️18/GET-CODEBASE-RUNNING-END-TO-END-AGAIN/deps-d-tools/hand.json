@@ -1,0 +1,172 @@
+[
+ {
+  "name": "every kind of drift in code-unit order across a sub-scope with a parent member and a backslash path",
+  "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"s\",\"dependencies\":{\"a\":\"1\",\"b\":\"3\",\"e\":\"9\"}},\"../up\":{\"name\":\"up\"},\"pkgs/x\":{\"name\":\"x\",\"version\":\"1.0.0\",\"dependencies\":{\"d\":\"1\"},\"devDependencies\":{\"z\":\"1\"}},\"gone\":{\"name\":\"gone\"}},\"packages\":{\"a\":[\"a@1.0.0\"],\"b\":[\"b@3.0.0\"],\"d\":[\"d@1.0.0\"],\"e\":[\"e@9.0.0\"],\"z\":[\"z@1.0.0\"],\"up\":[\"up@workspace:../up\"],\"x\":[\"x@workspace:pkgs/x\"]}}",
+  "manifests": [
+   [
+    "package.json",
+    {
+     "name": "s",
+     "dependencies": {
+      "a": "1",
+      "b": "2"
+     },
+     "devDependencies": {
+      "c": "3"
+     }
+    }
+   ],
+   [
+    "../up/package.json",
+    {
+     "name": "up"
+    }
+   ],
+   [
+    "pkgs\\x\\package.json",
+    {
+     "name": "x",
+     "version": "1.0.1",
+     "dependencies": {
+      "d": "1"
+     }
+    }
+   ],
+   [
+    "pkgs/y/package.json",
+    {
+     "name": "y"
+    }
+   ]
+  ],
+  "expected": [
+   {
+    "kind": "workspace-stale",
+    "manifest": "gone/package.json",
+    "frozen": true
+   },
+   {
+    "kind": "version-mismatch",
+    "manifest": "package.json",
+    "section": "dependencies",
+    "dependency": "b",
+    "manifestVersion": "2",
+    "lockVersion": "3",
+    "frozen": false
+   },
+   {
+    "kind": "stale-in-lock",
+    "manifest": "package.json",
+    "section": "dependencies",
+    "dependency": "e",
+    "lockVersion": "9",
+    "frozen": false
+   },
+   {
+    "kind": "missing-in-lock",
+    "manifest": "package.json",
+    "section": "devDependencies",
+    "dependency": "c",
+    "manifestVersion": "3",
+    "frozen": true
+   },
+   {
+    "kind": "stale-in-lock",
+    "manifest": "pkgs/x/package.json",
+    "section": "devDependencies",
+    "dependency": "z",
+    "lockVersion": "1",
+    "frozen": false
+   },
+   {
+    "kind": "identity-mismatch",
+    "manifest": "pkgs/x/package.json",
+    "section": "version",
+    "manifestVersion": "1.0.1",
+    "lockVersion": "1.0.0",
+    "frozen": false
+   },
+   {
+    "kind": "workspace-missing",
+    "manifest": "pkgs/y/package.json",
+    "frozen": true
+   }
+  ],
+  "bun": null
+ },
+ {
+  "name": "an unreadable lock is one frozen finding naming the lock file",
+  "lock": "{ not a lock",
+  "manifests": [
+   [
+    "package.json",
+    {
+     "name": "r"
+    }
+   ]
+  ],
+  "expected": [
+   {
+    "kind": "invalid-lockfile",
+    "manifest": "bun.lock",
+    "frozen": true
+   }
+  ],
+  "bun": null
+ },
+ {
+  "name": "a lock without a workspace table lacks the root",
+  "lock": "{\"lockfileVersion\":1}",
+  "manifests": [
+   [
+    "package.json",
+    {
+     "name": "r"
+    }
+   ]
+  ],
+  "expected": [
+   {
+    "kind": "workspace-missing",
+    "manifest": "package.json",
+    "frozen": true
+   }
+  ],
+  "bun": null
+ },
+ {
+  "name": "scoped and nested locked package names count as locked",
+  "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"}},\"packages\":{\"a\":[\"a@1.0.0\"],\"a/@s/p\":[\"@s/p@1.0.0\"]}}",
+  "manifests": [
+   [
+    "package.json",
+    {
+     "name": "r",
+     "dependencies": {
+      "@s/p": "1.0.0",
+      "@s/q": "1.0.0"
+     }
+    }
+   ]
+  ],
+  "expected": [
+   {
+    "kind": "missing-in-lock",
+    "manifest": "package.json",
+    "section": "dependencies",
+    "dependency": "@s/p",
+    "manifestVersion": "1.0.0",
+    "frozen": false
+   },
+   {
+    "kind": "missing-in-lock",
+    "manifest": "package.json",
+    "section": "dependencies",
+    "dependency": "@s/q",
+    "manifestVersion": "1.0.0",
+    "frozen": true
+   }
+  ],
+  "bun": null
+ }
+]

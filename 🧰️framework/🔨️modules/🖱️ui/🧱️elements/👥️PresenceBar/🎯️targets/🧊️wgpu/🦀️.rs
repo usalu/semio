@@ -56,7 +56,7 @@ pub struct PresencePeerRow {
     pub activity: Option<PresenceActivity>,
 }
 
-/// ⏪️ One peer activity the roster names — React's `PresencePeer.activity`.
+/// 🏃️ One peer activity the roster names — React's `PresencePeer.activity`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PresenceActivity {
     pub text: String,
@@ -67,7 +67,7 @@ pub use semio_framework_ui_theme::presence::{presence_color,PresenceAppearance,P
 
 /// 🛰️ inline instead (contract freeze §C7.5).
 // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
-/// 🎨️ CSS custom-property reference for a peer's base-cycle palette index (`index % 12`) — only
+/// 🔗️ CSS custom-property reference for a peer's base-cycle palette index (`index % 12`) — only
 /// meaningful when `index / 12 == 0`; callers past the first cycle render [`presence_color`]'s HSL
 pub fn presence_css_var(index: u8) -> String {
     format!("var(--presence-{})", index % 12)
@@ -82,7 +82,7 @@ fn presence_text(value: String) -> UiNode {
     UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
 }
 
-/// 👥️ Builds the `PresenceBar` roster as a `UiNode` tree: an empty-state text node when `peers` is
+/// 🔨️ Builds the `PresenceBar` roster as a `UiNode` tree: an empty-state text node when `peers` is
 /// empty, else one `id: "peer:{actor}"`-carrying `UiStackNode` per visible peer (capped at `max`,
 /// defaulting to [`PRESENCE_BAR_DEFAULT_MAX`]) plus a trailing overflow node past the cap. `id` becomes
 /// the root `UiStackNode`'s own id (the shells pass `s-presence-peers`, contract freeze §C0).
@@ -118,7 +118,7 @@ pub fn build_presence_bar(id: impl Into<String>, peers: &[PresencePeerRow], max:
     presence_stack(id, children)
 }
 
-/// 👥️ This element's own empty-state copy — React's `ui.presence.empty`
+/// 🔖️ This element's own empty-state copy — React's `ui.presence.empty`
 /// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s translation table). Shared by the `UiNode` roster above and by
 /// [`presence_bar_chip_text`], so the two can never drift.
 // 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
@@ -126,19 +126,19 @@ pub fn presence_empty_label(locale: Locale) -> String {
     LocalizedLabel::native("No one else is here", "Niemand sonst ist hier").resolve(Terminology::ALL[0], locale).to_string()
 }
 
-/// 🤖️ The agent badge word — React's `ui.presence.kind.agent`.
+/// 🪪️ The agent badge word — React's `ui.presence.kind.agent`.
 // 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
 pub fn presence_agent_label(locale: Locale) -> String {
     LocalizedLabel::native("AI agent", "KI-Agent").resolve(Terminology::ALL[0], locale).to_string()
 }
 
-/// 👥️ The `+N more` suffix past the visible cap — React's `ui.presence.overflow`.
+/// ➕️ The `+N more` suffix past the visible cap — React's `ui.presence.overflow`.
 // 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
 pub fn presence_overflow_label(overflow_count: usize, locale: Locale) -> String {
     format!("+{overflow_count} {}", LocalizedLabel::native("more", "weitere").resolve(Terminology::ALL[0], locale))
 }
 
-/// 👥️ The roster as ONE line of text, for a shell that paints `#s-presence-peers` as a chrome chip
+/// 📃️ The roster as ONE line of text, for a shell that paints `#s-presence-peers` as a chrome chip
 /// rather than walking a `UiNode` tree through the Interpreter — the wgpu OS shell's footer, whose
 /// every other pill (`#s-sync-status`, `#s-checkin`) is an immediate-mode `ChromeGroupItem` for the
 /// same reason: they are SHELL-owned chrome, not plugin-declared nodes. Identical vocabulary to

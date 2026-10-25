@@ -76,7 +76,7 @@ function validateMeshAttributes(mesh: PolygonMesh, corners: number): void {
   }
 }
 
-/** ✂️ Ear-clips planar simple polygons, including concave faces, with original winding. */
+/** 🎬️ Ear-clips planar simple polygons, including concave faces, with original winding. */
 export function triangulateMeshFace(mesh: PolygonMesh, face: number[]): [number,number,number][] {
   if (face.length === 3) return [[meshElement(face,0),meshElement(face,1),meshElement(face,2)]];
   let normal: MeshPoint = [0, 0, 0];
@@ -269,7 +269,7 @@ export function loopCutMesh(input: PolygonMesh, edges: number[], cuts: number): 
 /** 🔪️ A line projected onto one zero-based face defines a surface-preserving cut. */
 export interface MeshKnifeCut { face: number; start: MeshPoint; end: MeshPoint }
 
-/** ✂️ Splits convex polygons or their concave triangulation and shares boundary intersections with neighbors. */
+/** 🪓️ Splits convex polygons or their concave triangulation and shares boundary intersections with neighbors. */
 export function knifeCutMesh(input: PolygonMesh, cut: MeshKnifeCut): PolygonMesh {
   const source = parsePolygonMesh(JSON.stringify(input));
   source.vertices = source.vertices.map(point => point.map(Math.fround) as MeshPoint);

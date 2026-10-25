@@ -232,6 +232,17 @@ last, so a cast spreads over the surfaces instead of lining up on the floor. Whe
 whoever shares a perch moves to one that holds nobody, and an actor whose surface vanished in that same survey
 is gone with it and arrives anew instead of falling in front of what is there now.
 
+Who can stand: the perches of a stage are cut for its company — the actors on it and the species wanted — with the
+clearance of the tallest and the minimum width of the widest, so every perch carries each of them. A species that fits
+no ground even alone (too wide for every free stretch, too tall for every headroom) would take the ground from all the
+others; so the company is formed one species at a time (the actors first, then the wanted in menagerie order), each
+joining only while perches for it and for everyone who joined before it still exist, and only the company arrives. A
+host that holds the troupe it casts (`castOf`) to the ground (`castOn`: whoever cannot stand there even alone gives its
+seat to a species of the scene that can) shows pets that stand on the page it has — on a phone at 200 % text only the few
+small species that fit between the content and the screen's edge — within the second after a survey, and recasts nobody
+while a changing ground still carries them; the stage alone never leaves a fitting wanted species off stage because of one
+that does not fit.
+
 Mischief with the page (`🎯️choice` `mischief`, the horizon `prankTick` of `🗓️schedule`): a host marks elements
 with a key among the grounds (`<quiz>/<task>/…`), the survey reports them as fixtures, and once the gates of
 `🪄️mischief` open — mischief permitted (the render target permits it only where the pointer is fine), a stage at

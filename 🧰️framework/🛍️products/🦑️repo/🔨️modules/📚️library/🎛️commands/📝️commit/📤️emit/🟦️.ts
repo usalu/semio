@@ -51,7 +51,7 @@ export function bulletMatchesCommitHistory(bullet: string, history: Set<string>)
   return history.has(normalizeCompareLine(bullet));
 }
 
-/** 🚫️Ensures bullets are newly written from diff analysis, not pasted from prior commits. */
+/** 🆕️Ensures bullets are newly written from diff analysis, not pasted from prior commits. */
 export function validateBundleBulletsFresh(root: string, base: string, head: string, bundles: CommitBundleSection[]): void {
   const history = commitHistoryCompareLines(root, base, head);
   for (const bundle of bundles) {
@@ -76,7 +76,7 @@ function emitCommitAnalysisHint(): void {
   sayCommitV1("emit.write-new-bundle-scopes-dates",{},"error");
 }
 
-/** 📜️Prior commit messages since last WIP (context for dates only — not for copying bullets). */
+/** 🪵️Prior commit messages since last WIP (context for dates only — not for copying bullets). */
 export function emitCommitLog(root: string): void {
   root = gitRepoRoot(root);
   const resolved = resolveCommitBundleRange(root);

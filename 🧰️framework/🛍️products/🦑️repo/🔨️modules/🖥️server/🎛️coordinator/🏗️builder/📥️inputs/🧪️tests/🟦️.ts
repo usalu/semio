@@ -4,7 +4,7 @@ import {join,relative} from "node:path";
 import Ajv from "ajv";
 import {withCoordinatorNextInputsV1} from "../🟦️.ts";
 import { configuredSourceInputsV1 } from "@semio-tech/repo-lib/inventory";
-import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
 import {readdirSync,lstatSync} from "node:fs";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};

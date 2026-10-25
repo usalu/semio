@@ -162,7 +162,7 @@ export class GapScript extends Script {
 }
 
 /**
- * 🧬️ Generates each owner's v2 mutation manifest FROM ITS LEAF DESCRIPTORS, and reports who cannot yet
+ * 📜️ Generates each owner's v2 mutation manifest FROM ITS LEAF DESCRIPTORS, and reports who cannot yet
  * have one.
  *
  * A manifest must state the OUTCOME CLASSES each mutation can reach, and that is the one field nobody

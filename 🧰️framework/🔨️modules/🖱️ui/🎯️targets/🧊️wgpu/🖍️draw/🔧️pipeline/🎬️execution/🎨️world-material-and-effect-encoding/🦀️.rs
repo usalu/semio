@@ -22,7 +22,7 @@ impl UiPipelines {
         height: f32,
     ) -> Result<bool, &'static str> {
         let Some(mesh) = mesh_store.get_versioned(&draw_owner.mesh_key, draw_owner.mesh_version) else { return Ok(false) };
-        if mesh.index_count == 0 { return Ok(true); }
+        let (Some(vertex_buffer), Some(index_buffer)) = (&mesh.vertex_buffer, &mesh.index_buffer) else { return Ok(true) };
         let globals = World3dGlobals::from_pass(pass_owner);
         self.resources.world_globals_ring.ensure_slots(device, &self.resources.world_bind_group_layout, 1);
         self.resources.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
@@ -144,9 +144,9 @@ impl UiPipelines {
                 }
             }
         }
-        pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+        pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         pass.set_vertex_buffer(1, instance_buffer);
-        pass.set_index_buffer(mesh.index_buffer.slice(..), gpu_device::IndexFormat::Uint32);
+        pass.set_index_buffer(index_buffer.slice(..), gpu_device::IndexFormat::Uint32);
         let first = draw_owner.first_index.min(mesh.index_count);
         let end = first.saturating_add(draw_owner.index_count).min(mesh.index_count);
         if first < end {

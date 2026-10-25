@@ -15,7 +15,7 @@ use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d::mesh::{HalfedgeMesh, MeshKernelError, MeshModelingJob, MeshModelingProgress, MeshModelingStep, MeshTessellationJob, MeshTessellationStep, Vec3};
-use semio_framework_3d_mesh_surface::MeshSurfaceJob;
+use semio_framework_3d::mesh::MeshSurfaceJob;
 use semio_framework_mesh_engine::PolygonMeshSource;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use std::panic::{catch_unwind, AssertUnwindSafe};

@@ -109,6 +109,7 @@ semio-framework-canvas = { path = "../../../../../../../🧰️framework/🔨️
 semio-framework-job-worker = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job-worker-authority = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust", features = ["testkit"] }
 
+semio-framework-plugin-reactor-app = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }

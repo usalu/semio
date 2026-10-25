@@ -1,10 +1,10 @@
 /** 🎭️ The abusive script of the capacity gate: it fills the roster, floods malformed commands and queries, sends oversized bodies and frames and pushes sockets into the hall's room. */
 import { connect, type Socket } from "node:net";
-import { type Command } from "../../../../../🧰️framework/🛍️products/📚️course/🟦️.ts";
-import { commandEnvelope, newId } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
-import { PRESENCE_PROTOCOL } from "../../../../../🧰️framework/🛍️products/🖥️server/🧬️wire-types/🟦️.ts";
-import { encodeCommandEnvelope } from "../../../../../🧰️framework/🛍️products/🖥️server/🔤️codec/🟦️.ts";
-import { presenceSocketUrl } from "../../../../../🧰️framework/🛍️products/🖥️server/🛣️routes-and-sockets/🟦️.ts";
+import { type Command } from "../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🟦️.ts";
+import { commandEnvelope, newId } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/🛂️proctor/🟦️.ts";
+import { PRESENCE_PROTOCOL } from "../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🧬️wire-types/🟦️.ts";
+import { encodeCommandEnvelope } from "../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🔤️codec/🟦️.ts";
+import { presenceSocketUrl } from "../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🛣️routes-and-sockets/🟦️.ts";
 import { GIVE_UP_MS, SCRIPT, SIGN_UP } from "../📊️settings-and-measurements/🟦️.ts";
 import { forwarded, pause } from "../🚚️transport/🟦️.ts";
 
@@ -130,7 +130,7 @@ export function signUpFate(status: number, body: string): string {
   return answer.status === "accepted" && (answer.events?.length ?? 0) > 0 ? "registered" : `rejected ${answer.reason?.detail ?? answer.status ?? "?"}`;
 }
 
-/** 😈️ Run every attack beside the hall until told to stop; report what was answered. */
+/** 🔥️ Run every attack beside the hall until told to stop; report what was answered. */
 export async function script(orders: ScriptOrders, stopped: () => boolean): Promise<ScriptReport> {
   const started = performance.now();
   const report: Omit<ScriptReport, "seconds"> = { commands: {}, signUps: {}, malformed: {}, queries: {}, oversizedBody: {}, sockets: { attempted: 0, opened: 0, refused: {} }, oversizedFrame: { sent: 0, closed: 0 } };

@@ -1,5 +1,5 @@
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../../../../📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 /** 🔗️ Keeps the external pins of a recipe: a `workspace:*` link names first-party code the captured sources resolve, never a package the installer fetches, and the lock holds no row for it. */

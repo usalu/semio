@@ -1,11 +1,11 @@
-/** 🧭️ Statechart testing: the explorer, invariants, conformance runner and the in-source suite of the machine package. TypeScript twin of `🧭️testing/🦀️.rs`. */
+/** 🧪️ Statechart testing: the explorer, invariants, conformance runner and the in-source suite of the machine package. TypeScript twin of `🧭️testing/🦀️.rs`. */
 
 import { type Command, type Configuration, EventId, GuardId, type Machine, type MachineSpec, NodeId, type NodeDef, ROOT, Snapshot } from "../🟦️.ts";
 import { NullInspector } from "../🔎️inspect/🟦️.ts";
 import { init, macrostep } from "../🧠️kernel/🟦️.ts";
 
 //#region 🧭️Testing
-/** 🧭 A set of representative events tried from every reachable configuration. */
+/** 🎛️ A set of representative events tried from every reachable configuration. */
 export class Model<M extends MachineSpec> {
   readonly events: readonly M["Event"][];
   constructor(events: readonly M["Event"][]) {
@@ -13,7 +13,7 @@ export class Model<M extends MachineSpec> {
   }
 }
 
-/** 🧭 What a BFS {@link explore} found: distinct configurations visited and every stable state id
+/** 📊️ What a BFS {@link explore} found: distinct configurations visited and every stable state id
  * reached across them. */
 export interface Coverage {
   readonly visitedConfigurations: number;
@@ -57,13 +57,13 @@ export function explore<M extends MachineSpec>(machine: Machine<M>, model: Model
 /** ⚠️ Why an {@link Invariant} check or {@link runConformance} fixture failed. */
 export type FsmError = { readonly kind: "violation"; readonly message: string };
 
-/** 🧭 A named property that must hold of every {@link Snapshot} visited during exploration. */
+/** 📸️ A named property that must hold of every {@link Snapshot} visited during exploration. */
 export interface Invariant<M extends MachineSpec> {
   readonly name: string;
   readonly check: (snapshot: Snapshot<M>) => { readonly ok: true } | { readonly ok: false; readonly error: FsmError };
 }
 
-/** 🧭 Runs every invariant against `snapshot`, returning one formatted message per violation. */
+/** ✅️ Runs every invariant against `snapshot`, returning one formatted message per violation. */
 export function checkInvariants<M extends MachineSpec>(snapshot: Snapshot<M>, invariants: readonly Invariant<M>[]): readonly string[] {
   const violations: string[] = [];
   for (const invariant of invariants) {
@@ -73,14 +73,14 @@ export function checkInvariants<M extends MachineSpec>(snapshot: Snapshot<M>, in
   return violations;
 }
 
-/** 🧭 One step of an inline conformance fixture: send `event`, then assert every stable id in
+/** 🪜️ One step of an inline conformance fixture: send `event`, then assert every stable id in
  * `expectActive` is part of the settled configuration. */
 export interface ConformanceStep<M extends MachineSpec> {
   readonly event: M["Event"];
   readonly expectActive: readonly string[];
 }
 
-/** 🧭 Runs `steps` against a freshly-initialized machine, failing fast with a descriptive message
+/** ▶️ Runs `steps` against a freshly-initialized machine, failing fast with a descriptive message
  * naming the offending step and the actual active configuration. */
 export function runConformance<M extends MachineSpec>(machine: Machine<M>, input: M["Input"], steps: readonly ConformanceStep<M>[]): { readonly ok: true } | { readonly ok: false; readonly error: FsmError } {
   const nodes = machine.definition.nodes;

@@ -1,6 +1,7 @@
 use semio_s_artifact_norm_en1991_diff::*;
 use semio_s_artifact_norm_en1991_mutations::En1991Mutation;
 use protocol::{apply_diff_cold, DiffAlgebra, Mutation as _, MutationDiff};
+use protocol::ColdMutationDiff;
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 
 /// 🔺️ A floor change patches only that floor's field; the document settings and the other lists stay untouched.

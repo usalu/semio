@@ -1,7 +1,7 @@
 import {createRequire} from "node:module";
 import {Script,createContext} from "node:vm";
 import {posix} from "node:path";
-import { readInferenceGraphSourceV1, readInferenceSourceV1 } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
+import { readInferenceGraphSourceV1, readInferenceSourceV1 } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️test-values/🟦️.ts";
 import { repositoryCachePartitionRootDataV1 } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";

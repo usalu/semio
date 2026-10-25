@@ -66,7 +66,7 @@ impl<T:RetainedEquality> RetainedEqualityOwner<T>{
  pub fn result(&self)->Option<bool>{self.result}
  /// 🧭️ Validates the actual source pair after decision without changing original custody.
  pub fn verify(&self,left:RetainedCloneRef<'_,T>,right:RetainedCloneRef<'_,T>)->Result<(),ValueError>{left.check_binding(&self.left)?;right.check_binding(&self.right)?;Ok(())}
- /// 🪡️ Inverse preparation must retain the exact original right-side source.
+ /// ✅️ Inverse preparation must retain the exact original right-side source.
  pub fn verify_original(&self,right:RetainedCloneRef<'_,T>)->Result<(),ValueError>{right.check_binding(&self.right)?;Ok(())}
  fn fixed()->usize{size_of::<Option<RetainedCloneBinding>>()*2+size_of::<Option<bool>>()+size_of::<usize>()*2}
  pub fn demand(&self,left:RetainedCloneRef<'_,T>,right:RetainedCloneRef<'_,T>,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.result.is_some(){return Err(invalid("original typed comparison is closing or settled"));}left.check_binding(&self.left)?;right.check_binding(&self.right)?;if self.left.is_none(){return Ok(scalar(left.binding_copy_bytes()));}if self.right.is_none(){return Ok(scalar(right.binding_copy_bytes()));}let mut d=self.cursor.demand(left.get(),right.get(),body.saturating_sub(Self::fixed()))?;d.copy_bytes+=Self::fixed();d.depth+=1;Ok(d)}

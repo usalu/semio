@@ -47,7 +47,7 @@ pub struct ActionArgDef {
 }
 
 impl ArgSchema {
-    /// 🔢️ A plain number with hard bounds and a UI `step`, carrying no display facts.
+    /// 📺️ A plain number with hard bounds and a UI `step`, carrying no display facts.
     pub fn number(min: Option<f64>, max: Option<f64>, step: Option<f64>, integer: bool) -> Self {
         ArgSchema::Number { min, min_exclusive: false, max, max_exclusive: false, step, integer, unit: None, snaps: Vec::new(), snap_source: None, soft_min: None, soft_max: None, precision: None, display_unit: None, display_factor: None, scale: None }
     }
@@ -67,7 +67,7 @@ impl ActionArgDef {
         Self::with_schema(id, label, Self::plain_string(None))
     }
 
-    /// 🔢️ A numeric argument (a plain number field by default).
+    /// 🧮️ A numeric argument (a plain number field by default).
     pub fn number(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, ArgSchema::number(None, None, None, false))
     }
@@ -126,7 +126,7 @@ impl ActionArgDef {
         Self::with_schema(id, label, ArgSchema::Any)
     }
 
-    /// 🧬️ A JSON-text argument — a `String` wire field that actually carries a JSON document
+    /// 🔣️ A JSON-text argument — a `String` wire field that actually carries a JSON document
     /// (`patchLayer.value`, `loadDocumentJson.json`), tagged `x-semio-format: json` so a client knows
     /// to send JSON text rather than a bare word.
     pub fn json_text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
@@ -152,7 +152,7 @@ impl ActionArgDef {
         def
     }
 
-    /// 🔐️ One addressed target's revision a rendered binding carries — hidden and optional like
+    /// 🏹️ One addressed target's revision a rendered binding carries — hidden and optional like
     /// [`Self::document_revision`]; the agent lane fills it from the app's own `agent_target_revision`.
     pub fn target_revision(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         let mut def = Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::TargetRevision)));
@@ -166,7 +166,7 @@ impl ActionArgDef {
         self
     }
 
-    /// 🔤️ Constrains text length; zero explicitly admits an empty required value.
+    /// 📏️ Constrains text length; zero explicitly admits an empty required value.
     pub fn min_length(mut self, minimum: u32) -> Self {
         if let ArgSchema::String { min_len, .. } = &mut self.schema {
             *min_len = Some(minimum);

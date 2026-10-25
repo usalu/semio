@@ -1,7 +1,9 @@
 //! 🧫️ The published Host Count owner requires its own semantic SQLite capability.
+use semio_framework_plugin::sqlite_wire;
+use crate::dsl::ArtifactPack;
+use crate::dsl::ArtifactDsl;
 use crate::{Snapshot,Mutation};
 use semio_framework_os_kernel as store;
-use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};
 use store::sqlite_snapshot::*;
 use semio_framework_value::ValueRefusalKind;
 const KIND:&str="fixture.neutral-host-fixture.counter";
@@ -19,7 +21,7 @@ fn export_native(codec:&store::serialization::ArtifactSqliteSnapshotCodec,schema
  let grant=original_native_grant();let mut observe=|_|true;let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut owner=store::io::control::NativeSnapshotDecodeOwner::new(&mut native,grant);(codec.export)(schema,dialect,payload,sql,&mut owner)
 }
 fn import_native(codec:&store::serialization::ArtifactSqliteSnapshotCodec,schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:SqliteDatabase,encoding:SnapshotEncoding,sql:&mut SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<store::io::IoPayload>{
- let grant=original_native_grant();let mut observe=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut owner=store::io::control::NativeSnapshotEncodeOwner::new(&mut native,grant);(codec.import)(schema,dialect,database,encoding,sql,&mut owner)
+ let grant=original_native_grant();let mut observe=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut owner=store::io::control::NativeSnapshotEncodeOwner::new(&mut native,grant);(codec.import)(schema,dialect,&mut Some(database),encoding,sql,&mut owner)
 }
 fn database(count:i32)->SqliteDatabase{
  let mut database=SqliteDatabase::from_schema(SQL).unwrap();
@@ -130,12 +132,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
   let mut native_control=semio_framework_os_kernel::io::io_mechanism::IoRunControl::new(&mut decoder,&mut encoder,grant);
   let mut snapshot_control=SqliteSnapshotControl::new(&mut progress,limits);
   let native=payload(&source,encoding);let payload=match native{store::io::IoPayload::Binary(bytes)=>bytes,store::io::IoPayload::Text(text)=>text.into_bytes()};
-  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_export(&mut crate::sqlite_wire::SnapshotInputOwner{wire:Some(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload,limits:SnapshotLimits::from(limits),native:grant.into()}),dialect:None,route:None,payload:None,hop:None},&mut native_control,&mut snapshot_control)).unwrap();
+  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_export(&mut sqlite_wire::SnapshotInputOwner{wire:Some(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload,limits:SnapshotLimits::from(limits),native:grant.into()}),dialect:None,route:None,payload:None,hop:None},&mut native_control,&mut snapshot_control)).unwrap();
   let SnapshotFileResult::Done(file)=output else{panic!("actual published Count export must succeed")};assert_eq!(&file.bytes[..16],b"SQLite format 3\0");
   let database=import_sqlite_database(&file.bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
   assert_eq!(store::io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap(),(dialect(),encoding));
-  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_import(&mut crate::sqlite_wire::SnapshotInputOwner{wire:Some(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload:file.bytes,limits:SnapshotLimits::from(limits),native:grant.into()}),dialect:None,route:None,payload:None,hop:None},&mut native_control,&mut snapshot_control)).unwrap();
-  let SnapshotPayloadResult::Done(output)=output else{panic!("actual published Count import must succeed")};assert_eq!(output.encoding,encoding.as_str());
+  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_import(&mut sqlite_wire::SnapshotInputOwner{wire:Some(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload:file.bytes,limits:SnapshotLimits::from(limits),native:grant.into()}),dialect:None,route:None,payload:None,hop:None},&mut native_control,&mut snapshot_control)).unwrap();
+  let SnapshotPayloadResult::Done(output)=output else{panic!("actual published Count import must succeed")};assert_eq!(output.encoding,encoding);
   assert_eq!(decode(match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(output.bytes),SnapshotEncoding::Text=>store::io::IoPayload::Text(String::from_utf8(output.bytes).unwrap())}),source);
  }}
 }

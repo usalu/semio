@@ -348,9 +348,24 @@ pub struct GltfAttribute {
 protocol::plain_list_delta! { pub GltfRefsDelta { removal: GltfRefRemoval, insertion: GltfRefInsertion, relocation: GltfRefRelocation, row: GltfRef, list: Vec<GltfRef>, key: usize = |reference| reference.0, values_only } }
 protocol::plain_list_delta! { pub GltfStringsDelta { removal: GltfStringRemoval, insertion: GltfStringInsertion, relocation: GltfStringRelocation, row: String, values_only } }
 protocol::plain_list_delta! { pub GltfAttributesDelta { removal: GltfAttributeRemoval, insertion: GltfAttributeInsertion, relocation: GltfAttributeRelocation, row: GltfAttribute, list: Vec<GltfAttribute>, key: String = |attribute| attribute.semantic.clone(), values_only } }
-protocol::plain_list_delta! { pub GltfTargetsDelta { removal: GltfTargetRemoval, insertion: GltfTargetInsertion, relocation: GltfTargetRelocation, row: GltfMorphTarget, list: Vec<GltfMorphTarget>, key: String = |target| format!("{target:?}"), values_only } }
-protocol::plain_list_delta! { pub GltfChannelsDelta { removal: GltfChannelRemoval, insertion: GltfChannelInsertion, relocation: GltfChannelRelocation, row: GltfAnimationChannel, list: Vec<GltfAnimationChannel>, key: String = |channel| format!("{channel:?}"), values_only } }
-protocol::plain_list_delta! { pub GltfAnimationSamplersDelta { removal: GltfAnimationSamplerRemoval, insertion: GltfAnimationSamplerInsertion, relocation: GltfAnimationSamplerRelocation, row: GltfAnimationSampler, list: Vec<GltfAnimationSampler>, key: String = |sampler| format!("{sampler:?}"), values_only } }
+protocol::plain_list_delta! { pub GltfTargetsDelta { removal: GltfTargetRemoval, insertion: GltfTargetInsertion, relocation: GltfTargetRelocation, row: GltfMorphTarget, list: Vec<GltfMorphTarget>, key: String = by GltfMorphTargetKeys, values_only } }
+protocol::plain_list_delta! { pub GltfChannelsDelta { removal: GltfChannelRemoval, insertion: GltfChannelInsertion, relocation: GltfChannelRelocation, row: GltfAnimationChannel, list: Vec<GltfAnimationChannel>, key: String = by GltfAnimationChannelKeys, values_only } }
+protocol::plain_list_delta! { pub GltfAnimationSamplersDelta { removal: GltfAnimationSamplerRemoval, insertion: GltfAnimationSamplerInsertion, relocation: GltfAnimationSamplerRelocation, row: GltfAnimationSampler, list: Vec<GltfAnimationSampler>, key: String = by GltfAnimationSamplerKeys, values_only } }
+
+/// 🔑️ Keys the foreign `GltfMorphTarget` rows of their list delta.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GltfMorphTargetKeys;
+impl protocol::list_delta::KeyOf<GltfMorphTarget> for GltfMorphTargetKeys { type Key = String; fn key_of(row: &GltfMorphTarget) -> String { format!("{row:?}") } }
+
+/// 🔑️ Keys the foreign `GltfAnimationChannel` rows of their list delta.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GltfAnimationChannelKeys;
+impl protocol::list_delta::KeyOf<GltfAnimationChannel> for GltfAnimationChannelKeys { type Key = String; fn key_of(row: &GltfAnimationChannel) -> String { format!("{row:?}") } }
+
+/// 🔑️ Keys the foreign `GltfAnimationSampler` rows of their list delta.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GltfAnimationSamplerKeys;
+impl protocol::list_delta::KeyOf<GltfAnimationSampler> for GltfAnimationSamplerKeys { type Key = String; fn key_of(row: &GltfAnimationSampler) -> String { format!("{row:?}") } }
 
 /// 🧷️ The plain-row constructor of a macro-generated list delta: removed `(id, base index)`, inserted `(after index, row)` and moved
 /// `(id, base index, after index)`, each read from the base list by the leaf that raises the delta.
@@ -366,9 +381,20 @@ macro_rules! delta_rows {
 delta_rows!(GltfRefsDelta, GltfRef);
 delta_rows!(GltfStringsDelta, String);
 delta_rows!(GltfAttributesDelta, GltfAttribute);
-delta_rows!(GltfTargetsDelta, GltfMorphTarget);
-delta_rows!(GltfChannelsDelta, GltfAnimationChannel);
-delta_rows!(GltfAnimationSamplersDelta, GltfAnimationSampler);
+
+/// 🧷️ The plain-row constructor of a list delta whose foreign rows are keyed by a local [`KeyOf`](protocol::list_delta::KeyOf) marker.
+macro_rules! delta_rows_by {
+    ($delta:ident, $row:ty, $keyer:ty) => {
+        impl $delta {
+            pub fn rows(removed: Vec<(<$keyer as protocol::list_delta::KeyOf<$row>>::Key, usize)>, inserted: Vec<(usize, $row)>, moved: Vec<(<$keyer as protocol::list_delta::KeyOf<$row>>::Key, usize, usize)>) -> Self {
+                Self::from_parts(protocol::list_delta::Parts { removed, inserted, moved, modified: Vec::new() })
+            }
+        }
+    };
+}
+delta_rows_by!(GltfTargetsDelta, GltfMorphTarget, GltfMorphTargetKeys);
+delta_rows_by!(GltfChannelsDelta, GltfAnimationChannel, GltfAnimationChannelKeys);
+delta_rows_by!(GltfAnimationSamplersDelta, GltfAnimationSampler, GltfAnimationSamplerKeys);
 
 /// 🧷️ Folds `later` into the list delta already held in a slot of a diff.
 macro_rules! absorb_slot {

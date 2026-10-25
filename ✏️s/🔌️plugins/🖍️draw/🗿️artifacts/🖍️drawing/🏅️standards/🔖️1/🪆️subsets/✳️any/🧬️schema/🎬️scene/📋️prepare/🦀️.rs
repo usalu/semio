@@ -1,5 +1,6 @@
 //! 📋️ Complete authored documents become private typed plans under work grants.
 use semio_framework_value::paged::Utf8Text;
+use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, FillStyle, StrokeStyle, PathSegment};
 use semio_s_artifact_draw_drawing_model::{layer_base, DrawingSceneGroup};
@@ -203,7 +204,7 @@ impl DocumentScenePreparation{
  pub fn into_retirement(self)->(DocumentSceneRetirement,Option<DocumentScenePlan>){self.cursor.into_retirement()}
 }
 /// 🧱️ Borrows one stable document while retaining only source positions in its traversal cursor.
-pub struct DocumentSceneJob<'a>{document:&'a DrawingSnapshot,cursor:DocumentSceneCursor}
+pub struct DocumentSceneJob<'a>{document:&'a DrawingSnapshot,pub cursor:DocumentSceneCursor}
 impl<'a> DocumentSceneJob<'a>{
  pub fn new(document:&'a DrawingSnapshot,limits:DocumentSceneLimits)->Result<Self,DocumentSceneError>{Ok(Self{document,cursor:DocumentSceneCursor::new(document,limits)?})}
  pub fn advance(&mut self,budget:usize)->Result<DocumentSceneProgress,DocumentSceneError>{self.cursor.advance(self.document,budget)}
@@ -237,8 +238,8 @@ enum VectorChildRetirement{Preparation(DocumentSceneRetirement),Trace(DocumentTr
 impl VectorChildRetirement{fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,DocumentSceneError>{match self{Self::Preparation(job)=>job.advance(grant),Self::Trace(job)=>job.advance(grant),Self::Text(job)=>job.advance(grant),Self::Boolean(job)=>job.advance(grant)}}}
 /// 🎬️ Resolves one stable source while retaining text and authored paint metadata.
 pub struct DocumentVectorJob<'a>{
- pub source:Option<DocumentVectorSource<'a>>,preparation:Option<DocumentSceneCursor>,traces:Option<DocumentTraceJob>,texts:Option<DocumentTextJob>,algorithms:Option<DocumentBooleanJob>,progress:DocumentVectorProgress,
- pub output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,cancelled:bool,limits:DocumentAlgorithmLimits,closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,retired_children:Vec<VectorChildRetirement>,retired_plans:Vec<ScenePlanCloseJob>,
+ pub source:Option<DocumentVectorSource<'a>>,pub preparation:Option<DocumentSceneCursor>,pub traces:Option<DocumentTraceJob>,texts:Option<DocumentTextJob>,pub algorithms:Option<DocumentBooleanJob>,progress:DocumentVectorProgress,
+ pub output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,cancelled:bool,limits:DocumentAlgorithmLimits,pub closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,retired_children:Vec<VectorChildRetirement>,retired_plans:Vec<ScenePlanCloseJob>,
 }
 impl<'a> DocumentVectorJob<'a>{
  pub fn new(document:&'a DrawingSnapshot,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits)->Result<Self,DocumentSceneError>{Self::from_source(DocumentVectorSource::Borrowed(document),limits,algorithms)}
@@ -296,9 +297,10 @@ impl<'a> DocumentVectorJob<'a>{
  pub fn result(&mut self)->Result<DocumentScenePlan,DocumentSceneError>{if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(e)=&self.failure{return Err(e.clone());}if !self.progress.done{return Err(DocumentSceneError::Incomplete);}self.output.take().ok_or(DocumentSceneError::Incomplete)}
 }
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct DocumentVectorOwners{children:Vec<VectorChildRetirement>,plans:Vec<ScenePlanCloseJob>,failure:Option<DocumentSceneError>}
 /// 🔐️ Actual private byte ownership closes before the exact source read returns to its registry.
-pub struct DocumentVectorRetirement<'a>{source:Option<DocumentVectorSource<'a>>,owner:ControlledRetirement<DocumentVectorOwners>,work:u64}
+pub struct DocumentVectorRetirement<'a>{pub source:Option<DocumentVectorSource<'a>>,owner:ControlledRetirement<DocumentVectorOwners>,work:u64}
 impl DocumentVectorRetirement<'_>{
  pub fn private_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  pub fn terminal_is_empty(&self)->bool{self.private_is_empty()&&self.source.is_none()}
@@ -320,6 +322,7 @@ impl DocumentVectorRetirement<'_>{
  }
 }
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct BorrowedVectorOwners{preparation:Option<DocumentSceneCursor>,traces:Option<DocumentTraceJob>,texts:Option<DocumentTextJob>,algorithms:Option<DocumentBooleanJob>,output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,retired_children:Vec<VectorChildRetirement>,retired_plans:Vec<ScenePlanCloseJob>}
 /// 👁️ Actual scene parts are borrowed per turn while every private producer owner stays typed.
 pub struct DocumentVectorPreparationJob{job:DocumentVectorJob<'static>}
@@ -384,6 +387,7 @@ impl<'a> DocumentRasterJob<'a>{
 }
 /// 🧺️ Source handback follows actual vector, raster and private candidate retirement.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct DocumentRasterOwners{source:VecDeque<DocumentSceneNode>,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>,retired_nodes:Vec<DocumentSceneNode>,retired_paths:Vec<Vec<u16>>,retired_texts:Vec<String>,raster:Option<crate::raster::RasterSceneRetirement>,handoff:Option<DocumentScenePlan>,output:Option<semio_framework_pixels::RasterImage>,failure:Option<DocumentSceneError>}
 pub struct DocumentRasterRetirement<'a>{vector:Option<DocumentVectorRetirement<'a>>,owner:ControlledRetirement<DocumentRasterOwners>,work:u64}
 impl DocumentRasterRetirement<'_>{

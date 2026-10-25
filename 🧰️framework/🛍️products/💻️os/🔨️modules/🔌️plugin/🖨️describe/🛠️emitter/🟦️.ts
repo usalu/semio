@@ -1,9 +1,9 @@
 import { withRepositoryCompilerStoreV1, withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import type {NativeStorageReservationV1} from "@semio-tech/process/artifacts/native-build/storage";
 import {readCompletedCargoRetainedIndexV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📥️reading/🟦️.ts";
-import type {RetainedCompilationFileV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📁️copy/🟦️.ts";
+import type {RetainedCompilationFileV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📁️copy/🟦️.ts";
 import type {CompletedCargoCompilationViewV1} from "@semio-tech/process/artifacts/native-build/receipt/retention/snapshot";
-import {CurrentPhysicalOwnerV1} from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
+import {CurrentPhysicalOwnerV1} from "@semio-tech/framework-filesystem/observation/current";
 import {cargoProvenancePhysicalControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {checkResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import compilerInventory from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/📥️sources/🧬️schema/🔣️json/🟦️.ts";

@@ -4,7 +4,7 @@ use super::*;
 
 // #region 🛂️Manifest
 //#region 🔖️Manifest
-/// 📇️ Declares one action an app can receive via `ActionDescriptor.action`.
+/// 🎬️ Declares one action an app can receive via `ActionDescriptor.action`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -40,7 +40,7 @@ impl ActionDefinition {
         Self { id: id.into(), label: label.into(), kind, icon_id: icon_id.into(), args: Vec::new(), keys: None, in_palette: true, category: None, semantics: ActionSemantics::for_kind(kind) }
     }
 
-    /// 🎯️ Declares an action with the neutral icon for its kind.
+    /// 📚️ Declares an action with the neutral icon for its kind.
     pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
         Self::new(id, label, kind, default_action_icon_id(kind))
     }
@@ -59,7 +59,7 @@ impl ActionDefinition {
         definition
     }
 
-    /// 📝️ Attaches typed argument declarations to this action.
+    /// 📎️ Attaches typed argument declarations to this action.
     pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
         self.args = args.into_iter().collect();
         self
@@ -71,7 +71,7 @@ impl ActionDefinition {
         self
     }
 
-    /// 🎨️ Sets palette visibility for this action.
+    /// 👁️ Sets palette visibility for this action.
     pub fn in_palette(self, in_palette: bool) -> Self {
         self.with_in_palette(in_palette)
     }
@@ -85,12 +85,12 @@ impl ActionDefinition {
         self
     }
 
-    /// 🗂️ Sets this action's ribbon-parent-taxonomy category — see `with_category`.
+    /// 🎀️ Sets this action's ribbon-parent-taxonomy category — see `with_category`.
     pub fn category(self, category: impl Into<String>) -> Self {
         self.with_category(category)
     }
 
-    /// 🎯️ Replaces this action's whole `ActionSemantics` wholesale.
+    /// 🧬️ Replaces this action's whole `ActionSemantics` wholesale.
     pub async fn semantics(mut self, semantics: ActionSemantics) -> Self {
         self.semantics = semantics;
         self
@@ -108,7 +108,7 @@ impl ActionDefinition {
         self
     }
 
-    /// 🗣️ Sets the natural-language phrases a capability search should match this action
+    /// 🔎️ Sets the natural-language phrases a capability search should match this action
     /// against (`ActionSemantics.use_when`).
     pub fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
         self.semantics.use_when = phrases.into_iter().map(Into::into).collect();
@@ -123,7 +123,7 @@ impl ActionDefinition {
         self
     }
 
-    /// 🎯️ Declares this action's [`CapabilityAudience`] explicitly, overriding
+    /// 👥️ Declares this action's [`CapabilityAudience`] explicitly, overriding
     /// [`derive_audience`].
     pub fn audience(mut self, audience: CapabilityAudience) -> Self {
         self.semantics.audience = Some(audience);

@@ -11,7 +11,7 @@ pub fn parse(input: &str, policy: JsonMemberPolicy) -> Result<Value, JsonError> 
     loop { if let Some(value) = cursor.step(input, 4096,&mut control,RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:isize::MAX as usize,maximum_capacity_bytes:isize::MAX as usize,maximum_release_bytes:isize::MAX as usize,maximum_depth:MAX_DEPTH as usize+4})? { return Ok(value); } }
 }
 
-/// 🌳️ [`parse`] over raw bytes — errors with [`JsonError::InvalidUtf8`] if `input` is not UTF-8.
+/// 📖️ [`parse`] over raw bytes — errors with [`JsonError::InvalidUtf8`] if `input` is not UTF-8.
 pub fn parse_bytes(input: &[u8], policy: JsonMemberPolicy) -> Result<Value, JsonError> {
     let text = std::str::from_utf8(input).map_err(|_| JsonError::InvalidUtf8)?;
     parse(text, policy)
@@ -60,7 +60,7 @@ fn json_candidate_demand<T>(owner:&JsonCandidates<T>,demand:&mut RetirementDeman
 /// 🧵️ Retains the canonical JSON grammar and admitted candidates while borrowing unchanged source.
 pub type JsonParseCursor=JsonGrammarCursor<Value>;
 
-/// 🌳️ One retained grammar moves admitted semantic cells directly into its declared first-party output.
+/// 🖱️ One retained grammar moves admitted semantic cells directly into its declared first-party output.
 pub struct JsonGrammarCursor<V:JsonParsedValue> {
     #[doc(hidden)] pub position: usize, validated_position:usize, #[doc(hidden)] pub limits:JsonReadLimits, #[doc(hidden)] pub policy: JsonMemberPolicy, #[doc(hidden)] pub frames: Vec<JsonFrame<V>>, #[doc(hidden)] pub lexeme: Option<JsonLexeme>,
     #[doc(hidden)] pub pending: Option<V>, #[doc(hidden)] pub result: Option<V>, retired: JsonCandidates<V>, obsolete:Option<V>, pub(super) complete: bool, pub(super) normal_step_progress:RetainedCloneProgress,
@@ -354,15 +354,15 @@ impl semio_framework_value::retirement::RetireOwned for JsonCompletedFrameRetire
 pub struct JsonValueProjection {#[doc(hidden)] pub pending:Option<Value>,#[doc(hidden)] pub output:Option<DslValue>,#[doc(hidden)] pub frames:Vec<JsonProjectionFrame>,pub(super) ordered:bool,#[doc(hidden)] pub retirement:Option<JsonCompletedFrameRetirement>,pub(super) normal_step_progress:RetainedCloneProgress}
 
 impl JsonValueProjection {
-    /// 🌱️ Takes ownership of the existing parsed candidate.
+    /// 🎚️ Takes ownership of the existing parsed candidate.
     pub fn new(value:Value)->Self {Self {pending:Some(value),output:None,frames:Vec::new(),ordered:false,retirement:None,normal_step_progress:Default::default()}}
     /// 🧬️ Projects the same candidate with canonical member order for dependency identity.
     pub fn new_ordered(value:Value)->Self {let mut cursor=Self::new(value);cursor.ordered=true;cursor}
-    /// 🧭️ Exposes the current admitted value or consumed input frontier.
+    /// 📥️ Exposes the current admitted value or consumed input frontier.
     pub fn phase(&self)->&'static str {if self.retirement.is_some(){"project-retire"}else if self.frames.last().is_some_and(|frame|!frame.admitted)||self.pending.as_ref().is_some_and(|value|matches!(value,Value::Array(_)|Value::Object(_))){"project-admit"}else{"project"}}
-    /// ⏱️ Moves admitted values and drains consumed input under the same work and decode controls.
+    /// 🪜️ Moves admitted values and drains consumed input under the same work and decode controls.
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
-    /// 📏️ Reads actual admitted output birth and original input backing release independently.
+    /// 👣️ Reads actual admitted output birth and original input backing release independently.
     pub fn normal_step_demands(&self)->Result<RetirementDemand,ValueError>{
         if let Some(retirement)=&self.retirement{return Ok(RetirementDemand{copy_bytes:if semio_framework_value::retirement::RetirementCursor::terminal_is_empty(retirement){size_of::<u8>()}else{0},release_bytes:retirement.release_demand(),depth:1,..Default::default()});}
         let mut demand=RetirementDemand{depth:self.frames.len()+1,..Default::default()};

@@ -29,7 +29,7 @@ impl<'a> NativeDecodeControl<'a>{
  pub fn new_forwarded(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool,allocate:&'a mut NativeDecodeAllocationPort<'a>)->NativeForwardedDecodeControl<'a>{let mut inner=Self::new(maximum_bytes,callback);inner.allocation=Binding::Forwarded(allocate);NativeForwardedDecodeControl{inner}}
 }
 impl<'a> NativeForwardedDecodeControl<'a>{
- /// ⏸️ Ends this import loan while retaining the actual recipient identity and consuming ledger.
+ /// ⏹️ Ends this import loan while retaining the actual recipient identity and consuming ledger.
  pub fn detach(self)->Result<NativeForwardedDecodeReceipt,(ValueError,Self)>{
   if self.inner.construction.is_some(){return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction loan cannot detach from its original receiving hop"),self));}
   let receipt=match self.inner.continuation(){Ok(receipt)=>receipt,Err(error)=>return Err((error,self))};
@@ -43,19 +43,19 @@ impl<'a> NativeForwardedDecodeControl<'a>{
  }
  /// ⏸️ Moves original allocation and retirement authority together with the cumulative receipt.
  pub fn pause(mut self)->Result<NativeForwardedDecodeContinuation<'a>,ValueError>{if self.inner.construction.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction loan cannot pause outside its original receiving hop"));}let receipt=self.inner.continuation()?;let Binding::Forwarded(allocate)=std::mem::replace(&mut self.inner.allocation,Binding::Local)else{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"forwarded decoder lacks original allocation port"))};Ok(NativeForwardedDecodeContinuation{receipt:Some(receipt),allocate,retirement:self.inner.retirement.take()})}
- /// ▶️ Rebinds only progress while retaining original allocation and retirement authority.
+ /// ⏳️ Rebinds only progress while retaining original allocation and retirement authority.
  pub fn resume(receipt:NativeForwardedDecodeContinuation<'a>,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Result<Self,ValueError>{let mut inner=NativeDecodeControl::resume(receipt.receipt.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"forwarded decoder is already receiving"))?,callback)?;inner.allocation=Binding::Forwarded(receipt.allocate);inner.retirement=receipt.retirement;Ok(Self{inner})}
 }
 impl<'a> NativeForwardedDecodeContinuation<'a>{
- /// 🏭️ Binds the original caller port directly without creating replacement progress authority.
+ /// 🪢️ Binds the original caller port directly without creating replacement progress authority.
  pub fn new(maximum_bytes:usize,allocate:&'a mut NativeDecodeAllocationPort<'a>)->Self{Self{receipt:Some(NativeDecodeContinuation{ledger:super::next_ledger(),receiving:false,maximum_bytes,owned_bytes:0,completed:0,total:0,stage:0}),allocate,retirement:None}}
  /// 🫴️ Installs the original caller return slot before retained decoder ownership exists.
  pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeDecodeRetirementRecipient)->Result<(),ValueError>{if self.retirement.is_some()||!crate::ErasedSnapshotRetirement::terminal_is_empty(recipient){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"forwarded decoder requires one empty original retirement slot"))}self.retirement=Some(recipient);Ok(())}
  /// 🔁️ Reborrows original ports and retirement slot for one synchronous receiving hop.
  pub fn decode<T>(&mut self,callback:&mut dyn FnMut(NativeDecodeProgress)->bool,operation:impl FnOnce(&mut NativeDecodeControl<'_>)->Result<T,ValueError>)->Result<T,ValueError>{let receipt=self.receipt.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"forwarded decoder is already receiving"))?;let mut control=NativeDecodeControl::resume(receipt,callback)?;control.allocation=Binding::Forwarded(&mut *self.allocate);control.retirement=self.retirement.as_deref_mut();let result=control.scoped_stage(operation);self.receipt=Some(control.continuation()?);result}
- /// 📏️ Returns the original receiving ceiling.
+ /// 📬️ Returns the original receiving ceiling.
  pub fn maximum_bytes(&self)->usize{self.receipt.as_ref().expect("decoder receipt present outside receiving hop").maximum_bytes}
- /// 📊️ Returns cumulative original receiving admission.
+ /// 📩️ Returns cumulative original receiving admission.
  pub fn owned_bytes(&self)->usize{self.receipt.as_ref().expect("decoder receipt present outside receiving hop").owned_bytes}
 }
 impl<'a> std::ops::Deref for NativeForwardedDecodeControl<'a>{type Target=NativeDecodeControl<'a>;fn deref(&self)->&Self::Target{&self.inner}}

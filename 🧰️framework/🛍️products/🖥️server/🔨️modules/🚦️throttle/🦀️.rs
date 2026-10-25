@@ -81,7 +81,7 @@ pub struct Limits {
     pub writes: Rate,
     /// 📖️ Requests that read (queries, event pages, the instance document), per client address.
     pub reads: Rate,
-    /// 🔌️ Websocket upgrades, per client address.
+    /// 🆙️ Websocket upgrades, per client address.
     pub upgrades: Rate,
     /// 🧧️ The allowances this instance names, per client address; none unless stated.
     pub allowances: Vec<Allowance>,
@@ -157,7 +157,7 @@ pub enum RequestClass {
 pub enum Refusal {
     /// 🐇️ This client address spent its allowance.
     Throttled { retry_after: Duration },
-    /// 🌊️ The instance as a whole is at a cap.
+    /// 🌋️ The instance as a whole is at a cap.
     Overloaded { retry_after: Duration },
 }
 
@@ -314,7 +314,7 @@ impl Clients {
     }
 }
 
-/// 🚦️ The live bookkeeping of one instance's [`Limits`].
+/// 🛑️ The live bookkeeping of one instance's [`Limits`].
 pub struct Throttle {
     limits: Limits,
     clients: Mutex<Clients>,
@@ -329,7 +329,7 @@ impl Throttle {
         Arc::new(Self { limits, clients, in_flight: AtomicUsize::new(0), sockets: AtomicUsize::new(0) })
     }
 
-    /// 🎚️ The limits this throttle enforces.
+    /// 📏️ The limits this throttle enforces.
     pub fn limits(&self) -> &Limits {
         &self.limits
     }
@@ -360,7 +360,7 @@ impl Throttle {
         clients.seat(&self.limits, client, now).allowances[index].refund(rate, now);
     }
 
-    /// 🚪️ Count one more request in flight until the returned guard is dropped, or turn it away
+    /// 🔙️ Count one more request in flight until the returned guard is dropped, or turn it away
     /// when the instance already serves as many as it may.
     pub fn enter(self: &Arc<Self>) -> Result<InFlight, Refusal> {
         claim(&self.in_flight, self.limits.in_flight).map(|()| InFlight { throttle: Arc::clone(self) }).ok_or(Refusal::Overloaded { retry_after: OVERLOAD_RETRY })
@@ -384,17 +384,17 @@ impl Throttle {
         Ok(SocketPermit { throttle: Arc::clone(self), seat })
     }
 
-    /// 🌊️ How many requests are in flight.
+    /// ✈️ How many requests are in flight.
     pub fn in_flight(&self) -> usize {
         self.in_flight.load(Ordering::Relaxed)
     }
 
-    /// 🧶️ How many sockets are open.
+    /// 🔓️ How many sockets are open.
     pub fn sockets(&self) -> usize {
         self.sockets.load(Ordering::Relaxed)
     }
 
-    /// 🧮️ How many client addresses are tracked.
+    /// 👥️ How many client addresses are tracked.
     pub fn clients(&self) -> usize {
         self.clients.lock().unwrap_or_else(PoisonError::into_inner).tracked.len()
     }
@@ -423,7 +423,7 @@ impl Drop for InFlight {
     }
 }
 
-/// 🪑️ Where a socket was counted: on its client's own entry, on the entry untracked addresses
+/// 💺️ Where a socket was counted: on its client's own entry, on the entry untracked addresses
 /// share, or — when clients are not capped — nowhere but the instance's total.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Seat {
@@ -432,7 +432,7 @@ enum Seat {
     Uncounted,
 }
 
-/// 🎫️ One open socket of one client; dropping it frees both the client's and the instance's place.
+/// 📂️ One open socket of one client; dropping it frees both the client's and the instance's place.
 pub struct SocketPermit {
     throttle: Arc<Throttle>,
     seat: Seat,

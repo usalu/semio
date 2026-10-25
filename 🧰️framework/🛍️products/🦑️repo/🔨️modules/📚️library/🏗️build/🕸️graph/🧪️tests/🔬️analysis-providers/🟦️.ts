@@ -5,7 +5,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 
-const library=fileURLToPath(new URL("../../../../",import.meta.url)),child=fileURLToPath(new URL("./🧪️child.mjs",import.meta.url)),oracle=fileURLToPath(new URL("./🐍️oracle.py",import.meta.url));
+const library=fileURLToPath(new URL("../../../../",import.meta.url)),child=fileURLToPath(new URL("./🟨️.mjs",import.meta.url)),oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url));
 const run=(args:string[],input?:string)=>{const result=Bun.spawnSync([process.execPath,child,...args],{stdin:input===undefined?"ignore":new TextEncoder().encode(input),stdout:"pipe",stderr:"pipe"});expect(result.exitCode,result.stderr.toString()).toBe(0);return result.stdout.toString();};
 
 test("a fresh process holds a recorded source analysis only after it registered the parsers",()=>{

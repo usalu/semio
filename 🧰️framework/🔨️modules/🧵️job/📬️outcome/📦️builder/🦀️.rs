@@ -22,7 +22,7 @@ impl JobPayloadAuthority{
 }
 impl Drop for JobPayloadAuthority{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original payload authority reached Drop before separate paid ledger closure");}}
 
-/// 🪪️ Compares the current live in-place header storage without lending payload or ledger custody.
+/// 🔨️ Compares the current live in-place header storage without lending payload or ledger custody.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct OriginalPayloadBuilderIdentity(usize);
 /// 🧱️ Enclosing job admission owns this storage; bounded turns initialize its original fields.
@@ -38,9 +38,9 @@ impl RetainedPayloadBuilder{
  pub fn original(&self)->Option<&RetainedJobPayload>{self.ready.then(||unsafe{self.original.assume_init_ref()})}
  pub fn published(&self)->Option<&RetainedJobPayload>{if self.sealed{self.original()}else{None}}
  pub fn is_initialized(&self)->bool{self.ready}
- /// 🪪️ Observes this live storage location; moving its enclosing owner changes the observation.
+ /// 🧲️ Observes this live storage location; moving its enclosing owner changes the observation.
  pub fn native_header_identity(&self)->OriginalPayloadBuilderIdentity{OriginalPayloadBuilderIdentity(self.original.as_ptr()as usize)}
- /// 🏗️ Reads the exact initialized native binding prefix without borrowing uninitialized fields.
+ /// 📖️ Reads the exact initialized native binding prefix without borrowing uninitialized fields.
  pub fn initialized_bindings(&self)->usize{self.initialized}
  /// 🏷️ Rebinds only an empty original carrier on one caller-funded metadata turn.
  pub fn select_stream(&mut self,stream:JobPayloadStream,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.stream==stream{return Ok(RetainedCloneStep::Complete(Default::default()))}if !self.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original payload stream rebind requires terminal empty custody"))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}self.stream=stream;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}
@@ -66,12 +66,14 @@ impl RetainedPayloadBuilder{
   if new{if payload.page_count>=JOB_PAYLOAD_OPERATION_PAGES{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original payload has no remaining admitted page binding"))}let extent=demand.capacity_bytes;match cx.payload_ledger().reserve_original(payload.stream,extent){Ok(_)=>{},Err((fault,copy_bytes))=>{let progress=RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()};cx.consume_retained(progress)?;return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,match fault{JobPayloadAdmissionFault::OperationItems=>"original operation page count refused",JobPayloadAdmissionFault::OperationBytes=>"original operation page extent refused",JobPayloadAdmissionFault::StreamItems=>"original stream page count refused",JobPayloadAdmissionFault::StreamBytes=>"original stream page extent refused",_=>"original process page extent refused"}).with_retained_progress(progress))}}payload.pages[payload.page_count]=Some(JobPayloadPage{source:JobPayloadPageSource::with_extent(extent),length:0});payload.page_count+=1;if payload.ledger.is_none(){*payload.ledger=Some(Arc::clone(cx.payload_ledger()));}cx.grant_payload_page();cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:extent,..Default::default()})?;return Ok(false)}
   let page=payload.pages[payload.page_count-1].as_mut().unwrap();let count=grant.maximum_copy_bytes.min(page.source.allocated_capacity_bytes()-page.length).min(source.len()-*cursor);unsafe{std::ptr::copy_nonoverlapping(source.as_ptr().add(*cursor),page.source.storage.as_mut_ptr().cast::<u8>().add(page.length),count);}page.length+=count;payload.length+=count;*cursor+=count;cx.grant_payload_page();cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;Ok(*cursor==source.len())
  }
+ /// 📏️ Quotes the one scalar flag copied when the original header is sealed.
+ pub fn seal_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}}
  /// 🔏️ Seals this same original header for borrowed semantic consumption without a finish transfer.
- pub fn seal(&mut self,cx:&mut impl JobPayloadStep)->Result<bool,ValueError>{if !self.ready{return Ok(false)}if self.sealed{return Ok(true)}let demand=RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()};if cx.is_cancelled()||!Self::permits(cx,demand){return Ok(false)}self.sealed=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})?;Ok(true)}
+ pub fn seal(&mut self,cx:&mut impl JobPayloadStep)->Result<bool,ValueError>{if !self.ready{return Ok(false)}if self.sealed{return Ok(true)}let demand=Self::seal_demand();if cx.is_cancelled()||!Self::permits(cx,demand){return Ok(false)}self.sealed=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})?;Ok(true)}
  pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{if self.staged.is_some(){return self.staged_retirement_demands()}if let Some(payload)=self.original(){if !payload.terminal_is_empty(){let mut demand=payload.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original payload builder depth overflow"))?;return Ok(demand)}}Ok(RetirementDemand{copy_bytes:if self.terminal_is_empty(){0}else{2*size_of::<bool>()+size_of::<usize>()},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
  /// ♻️ Original pages and ledger close before a separate in-place metadata removal turn.
  pub fn close_step_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.retirement_demands()?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}if self.staged.is_some(){return self.close_staged_granted(grant)}if self.original().is_some_and(|payload|!payload.terminal_is_empty()){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let original=unsafe{self.original.assume_init_mut()};let step=original.close_step(child)?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,original.terminal_is_empty(),"original retained payload builder")?;return Ok(RetainedCloneStep::Progress(step.progress()))}self.ready=false;self.sealed=false;self.initialized=0;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
- /// ♻️ The original caller context records each exact granted close receipt before returning its original error.
+ /// 📪️ The original caller context records each exact granted close receipt before returning its original error.
  pub fn close_step(&mut self,cx:&mut impl JobPayloadStep)->Result<bool,ValueError>{let result=self.close_step_granted(cx.retained_grant());match result{Ok(step)=>{cx.consume_retained(step.progress())?;Ok(self.terminal_is_empty())},Err(original)=>{let _=cx.consume_retained(original.retained_progress());Err(original)}}}
 
 }
@@ -83,6 +85,6 @@ mod tests;
 #[path="⛽️staged/🦀️.rs"]
 mod staged;
 impl RetainedPayloadBuilder{
- /// 📦️ Lends the sealed in-place header once its last page is ready to supply.
+ /// 🔐️ Lends the sealed in-place header once its last page is ready to supply.
  pub fn sealed_original_mut(&mut self)->Option<&mut RetainedJobPayload>{if !self.sealed||!self.ready||self.staged.is_some(){return None}Some(unsafe{self.original.assume_init_mut()})}
 }

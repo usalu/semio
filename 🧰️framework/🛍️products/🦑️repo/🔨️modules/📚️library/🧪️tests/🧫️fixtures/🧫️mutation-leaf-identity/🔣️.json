@@ -71,8 +71,8 @@
     },
     {
       "id": "descriptorless-helper-module",
-      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run",
-      "path": "🧬️schema/🧬️mutations/⚡️apply",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store",
+      "path": "🧷️assembly/⏳️lifetime/🧪️tests/🧫️fixtures/🧑️client/valid-order",
       "owner": null,
       "form": "none",
       "expectedKindId": null

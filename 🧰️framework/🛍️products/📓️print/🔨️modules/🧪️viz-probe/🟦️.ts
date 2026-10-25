@@ -13,10 +13,10 @@ import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 /** 🧪️ One line of `<job>.probe.jsonl` — the `ProbeRecord` of `🧬️schema/🔣️.json`. */
 export type ProbeRecord = Readonly<{ case: string; scenario: string; key: string; values: readonly (number | string)[] }>;
 
-/** 🧪️ A stable, comparable view of a probe run: every key mapped onto its values in emission order. */
+/** 👁️ A stable, comparable view of a probe run: every key mapped onto its values in emission order. */
 export type ProbeProjection = Readonly<Record<string, readonly (number | string)[]>>;
 
-/** 🧪️ How one probe document is compiled. `workDir` must be cache-local, never inside the repository tree. */
+/** ⚙️ How one probe document is compiled. `workDir` must be cache-local, never inside the repository tree. */
 export type VizProbeOptions=Readonly<{execution:PrintExecutionV1;caseName?:string;scenario?:string;sources?:readonly string[];resources?:readonly PrintProbeResourceV1[]}>;
 
 /** 📝️ One statement of a programmatically rendered probe document. */
@@ -29,7 +29,7 @@ export type VizProbeStatement =
   | Readonly<{ points: Readonly<{ key: string; coordinates: readonly (readonly [number | string, number | string])[] }> }>
   | Readonly<{ raw: string }>;
 
-/** 📝️ A probe document built from Gherkin data-table vectors instead of a committed fixture. */
+/** 🏓️ A probe document built from Gherkin data-table vectors instead of a committed fixture. */
 export type VizProbeDocumentSpec = Readonly<{
   case: string;
   scenario: string;
@@ -108,7 +108,7 @@ export function roundProbeNumbers(records: readonly ProbeRecord[], decimals: num
   return records.map((record) => ({ ...record, values: record.values.map((value) => (typeof value === "number" ? normalizeZero(Math.round(value * factor) / factor) : value)) }));
 }
 
-/** 🔢️ Rounds every number of an already-built projection, for an ORACLE side that never sees records. */
+/** 🔮️ Rounds every number of an already-built projection, for an ORACLE side that never sees records. */
 export function roundProjectionNumbers(projection: ProbeProjection, decimals: number): ProbeProjection {
   const single = roundProbeNumbers(Object.entries(projection).map(([key, values]) => ({ case: "", scenario: "", key, values })), decimals);
   return Object.fromEntries(single.map((record) => [record.key, record.values]));
@@ -120,7 +120,7 @@ function normalizeZero(value: number): number {
 //#endregion 🧮️Projection
 
 //#region 📝️DocumentRendering
-/** 📝️ Renders a probe `.tex` from a spec, so vectors can stay in the Gherkin data table. */
+/** 🖌️ Renders a probe `.tex` from a spec, so vectors can stay in the Gherkin data table. */
 export function renderVizProbeDocument(spec: VizProbeDocumentSpec): string {
   const packages = spec.packages ?? ["semio-viz"];
   const lines = [
@@ -152,17 +152,17 @@ function renderStatement(statement: VizProbeStatement): string {
 
 /** 📖️ Carries parsed records while the actual compiled input readers and scratch remain held. */
 export interface CompiledVizProbeV1{readonly records:readonly ProbeRecord[];readonly probe:CompiledPrintProbeV1}
-/** 🧪️ Compiles generated DATA and keeps every expensive consumer inside the retained callback. */
+/** 🔨️ Compiles generated DATA and keeps every expensive consumer inside the retained callback. */
 export function withCompiledVizProbeDocumentV1<T>(spec:VizProbeDocumentSpec,options:VizProbeOptions,body:(compiled:CompiledVizProbeV1)=>Promise<T>):Promise<T>{const source=renderVizProbeDocument(spec),execution=Object.freeze({...options.execution}),selection=Object.freeze({caseName:options.caseName??spec.case,scenario:Object.hasOwn(options,"scenario")?options.scenario:spec.scenario}),resources=options.resources;return withCompiledPrintProbeV1(execution,{version:1,kind:"probe",name:"probe.tex",source,...(resources?{resources}:{})},async probe=>{const text=new TextDecoder("utf-8",{fatal:true}).decode(await probe.read("probe.probe.jsonl",1048576)),records=selectProbeRecords(parseProbeJsonLines(text),{execution,...selection});return body(Object.freeze({records:Object.freeze(records),probe}));});}
-/** 🧪️ Returns finite validated records as DATA, with no escaped compiler path or memoized pending work. */
+/** 📹️ Returns finite validated records as DATA, with no escaped compiler path or memoized pending work. */
 export function compileVizProbeDocument(spec:VizProbeDocumentSpec,options:VizProbeOptions):Promise<ProbeRecord[]>{return withCompiledVizProbeDocumentV1(spec,options,async compiled=>[...compiled.records]);}
 /** 🧭️ The part of a test adapter context that owns a probe run: the workspace, the original invocation and its phase control. */
 export type VizProbeContextV1=Readonly<{repoRoot:string;invocation:ScriptInvocation;phaseControl:ResourceLeaseControl}>;
-/** 🧪️ Compiles one probe document inside a fresh probe execution of the adapter context that already owns the invocation and its phase control. */
+/** 🆕️ Compiles one probe document inside a fresh probe execution of the adapter context that already owns the invocation and its phase control. */
 export function compileVizProbeDocumentInContext(context:VizProbeContextV1,spec:VizProbeDocumentSpec,options:Omit<VizProbeOptions,"execution">={}):Promise<ProbeRecord[]>{return withPrintExecutionV1({workspace:context.repoRoot,invocation:context.invocation,phaseControl:context.phaseControl,kind:"probe"},execution=>compileVizProbeDocument(spec,{...options,execution}));}
 /** 📚️ Compiles an explicit workspace Source probe and retains all consumers through its callback. */
 export function withCompiledVizProbeV1<T>(texPath:string,options:VizProbeOptions,body:(compiled:CompiledVizProbeV1)=>Promise<T>):Promise<T>{const path=texPath,execution=Object.freeze({...options.execution}),selection=Object.freeze({caseName:options.caseName,scenario:options.scenario}),sources=Object.freeze([...(options.sources??[])]);return withPrintStorageTaskV1(execution.operation,execution.phaseControl,async(operation,context)=>{const sourceRoot=relative(context.workspace,dirname(path)).replaceAll("\\","/"),name=basename(path);return withCompiledPrintProbeV1({operation,phaseControl:context.phaseControl},{version:1,kind:"document",namespace:"probe",id:"source-probe",sourceRoot,texPath:name,sources:[name,...sources],dark:false},async probe=>{const stream=basename(printCompilerName(name),".tex")+".probe.jsonl",records=selectProbeRecords(parseProbeJsonLines(new TextDecoder("utf-8",{fatal:true}).decode(await probe.read(stream,1048576))),{execution,...selection});return body(Object.freeze({records:Object.freeze(records),probe}));});});}
-/** 🧪️ Projects a consumed Source compilation into finite record DATA. */
+/** 🎙️ Projects a consumed Source compilation into finite record DATA. */
 export function compileVizProbe(texPath:string,options:VizProbeOptions):Promise<ProbeRecord[]>{return withCompiledVizProbeV1(texPath,options,async compiled=>[...compiled.records]);}
 
 function selectProbeRecords(records: readonly ProbeRecord[], options: VizProbeOptions): ProbeRecord[] {
@@ -171,7 +171,7 @@ function selectProbeRecords(records: readonly ProbeRecord[], options: VizProbeOp
   return selected;
 }
 
-/** 🧪️ Convenience for an adapter's `subject`: compile, round, project, in one call. */
+/** 🔌️ Convenience for an adapter's `subject`: compile, round, project, in one call. */
 export async function vizProbeProjection(texPath: string, options: VizProbeOptions & { readonly decimals?: number }): Promise<ProbeProjection> {
   const records = await compileVizProbe(texPath, options);
   return probeProjection(options.decimals === undefined ? records : roundProbeNumbers(records, options.decimals));

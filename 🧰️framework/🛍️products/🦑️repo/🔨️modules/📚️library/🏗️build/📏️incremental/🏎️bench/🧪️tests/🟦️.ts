@@ -632,7 +632,7 @@ const commandPorts=(live:string,root:string,environment:Record<string,string|und
  const out:string[]=[],reports=new Map<string,unknown>(),texts=new Map<string,string>(),progress:string[]=[],controller=new AbortController();
  const ports:BenchCommandPortsV1={
   write:line=>{out.push(line);},progress:async stage=>{progress.push(stage);},check:()=>{},signal:controller.signal,environment,platform:process.platform,tmpdir:()=>tmpdir(),home:()=>homedir(),now:()=>performance.now(),
-  run:async()=>"",report:async(file,value)=>{reports.set(file,value);},files:async()=>["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json"],adapter:async()=>{throw Error("no adapter");},nxRecord:()=>"",exists:async path=>existsSync(path),
+  run:async()=>"",report:async(file,value)=>{reports.set(file,value);},locks:()=>{},files:async()=>["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json"],adapter:async()=>{throw Error("no adapter");},nxRecord:()=>"",exists:async path=>existsSync(path),
   scratch:async()=>mkdtempSync(join(tmpdir(),"bench-scratch-")),readText:async path=>{const found=texts.get(path);if(found===undefined)throw Error("ENOENT "+path);return found;},writeText:async(path,content)=>{texts.set(path,content);},...over
  };
  return {ports,out,reports,texts,progress};

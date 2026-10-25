@@ -304,5 +304,389 @@
       "callback": false,
       "accepted": false
     }
+  ],
+  "progressDeadlines": [
+    {
+      "name": "a quiet action expires exactly after the idle window",
+      "idleMilliseconds": 100,
+      "maximumMilliseconds": 1000,
+      "progress": [],
+      "waits": [],
+      "checks": [
+        0,
+        50,
+        99,
+        100,
+        101
+      ],
+      "expected": [
+        {
+          "remaining": 100,
+          "expiry": null
+        },
+        {
+          "remaining": 50,
+          "expiry": null
+        },
+        {
+          "remaining": 1,
+          "expiry": null
+        },
+        {
+          "remaining": 0,
+          "expiry": "idle"
+        },
+        {
+          "remaining": -1,
+          "expiry": "idle"
+        }
+      ]
+    },
+    {
+      "name": "progress renews the window",
+      "idleMilliseconds": 100,
+      "maximumMilliseconds": 1000,
+      "progress": [
+        60
+      ],
+      "waits": [],
+      "checks": [
+        0,
+        59,
+        60,
+        100,
+        159,
+        160
+      ],
+      "expected": [
+        {
+          "remaining": 100,
+          "expiry": null
+        },
+        {
+          "remaining": 41,
+          "expiry": null
+        },
+        {
+          "remaining": 100,
+          "expiry": null
+        },
+        {
+          "remaining": 60,
+          "expiry": null
+        },
+        {
+          "remaining": 1,
+          "expiry": null
+        },
+        {
+          "remaining": 0,
+          "expiry": "idle"
+        }
+      ]
+    },
+    {
+      "name": "renewal never moves the nonrenewable maximum",
+      "idleMilliseconds": 100,
+      "maximumMilliseconds": 250,
+      "progress": [
+        90,
+        180,
+        270
+      ],
+      "waits": [],
+      "checks": [
+        200,
+        249,
+        250
+      ],
+      "expected": [
+        {
+          "remaining": 50,
+          "expiry": null
+        },
+        {
+          "remaining": 1,
+          "expiry": null
+        },
+        {
+          "remaining": 0,
+          "expiry": "maximum"
+        }
+      ]
+    },
+    {
+      "name": "a declared wait keeps the window full and ends it at the wait end",
+      "idleMilliseconds": 100,
+      "maximumMilliseconds": 1000,
+      "progress": [],
+      "waits": [
+        [
+          10,
+          500
+        ]
+      ],
+      "checks": [
+        5,
+        10,
+        300,
+        499,
+        500,
+        599,
+        600
+      ],
+      "expected": [
+        {
+          "remaining": 95,
+          "expiry": null
+        },
+        {
+          "remaining": 100,
+          "expiry": null
+        },
+        {
+          "remaining": 100,
+          "expiry": null
+        },
+        {
+          "remaining": 100,
+          "expiry": null
+        },
+        {
+          "remaining": 100,
+          "expiry": null
+        },
+        {
+          "remaining": 1,
+          "expiry": null
+        },
+        {
+          "remaining": 0,
+          "expiry": "idle"
+        }
+      ]
+    },
+    {
+      "name": "a declared wait cannot defeat the maximum",
+      "idleMilliseconds": 100,
+      "maximumMilliseconds": 1000,
+      "progress": [],
+      "waits": [
+        [
+          0,
+          2000
+        ]
+      ],
+      "checks": [
+        999,
+        1000
+      ],
+      "expected": [
+        {
+          "remaining": 1,
+          "expiry": null
+        },
+        {
+          "remaining": 0,
+          "expiry": "maximum"
+        }
+      ]
+    },
+    {
+      "name": "overlapping declared waits are one wait",
+      "idleMilliseconds": 30,
+      "maximumMilliseconds": 1000,
+      "progress": [],
+      "waits": [
+        [
+          0,
+          100
+        ],
+        [
+          50,
+          200
+        ]
+      ],
+      "checks": [
+        150,
+        199,
+        200,
+        229,
+        230
+      ],
+      "expected": [
+        {
+          "remaining": 30,
+          "expiry": null
+        },
+        {
+          "remaining": 30,
+          "expiry": null
+        },
+        {
+          "remaining": 30,
+          "expiry": null
+        },
+        {
+          "remaining": 1,
+          "expiry": null
+        },
+        {
+          "remaining": 0,
+          "expiry": "idle"
+        }
+      ]
+    },
+    {
+      "name": "progress at the check instant counts",
+      "idleMilliseconds": 100,
+      "maximumMilliseconds": 1000,
+      "progress": [
+        100
+      ],
+      "waits": [],
+      "checks": [
+        100,
+        199,
+        200
+      ],
+      "expected": [
+        {
+          "remaining": 100,
+          "expiry": null
+        },
+        {
+          "remaining": 1,
+          "expiry": null
+        },
+        {
+          "remaining": 0,
+          "expiry": "idle"
+        }
+      ]
+    },
+    {
+      "name": "idle window equal to the maximum behaves as a fixed deadline",
+      "idleMilliseconds": 500,
+      "maximumMilliseconds": 500,
+      "progress": [
+        100,
+        200,
+        300
+      ],
+      "waits": [],
+      "checks": [
+        0,
+        300,
+        499,
+        500
+      ],
+      "expected": [
+        {
+          "remaining": 500,
+          "expiry": null
+        },
+        {
+          "remaining": 200,
+          "expiry": null
+        },
+        {
+          "remaining": 1,
+          "expiry": null
+        },
+        {
+          "remaining": 0,
+          "expiry": "maximum"
+        }
+      ]
+    }
+  ],
+  "progressDerivations": [
+    {
+      "kind": "native-child",
+      "units": 0,
+      "environment": {},
+      "expected": {
+        "idleMilliseconds": 3600000,
+        "maximumMilliseconds": 14400000
+      }
+    },
+    {
+      "kind": "native-child",
+      "units": 3,
+      "environment": {},
+      "expected": {
+        "idleMilliseconds": 3600000,
+        "maximumMilliseconds": 16200000
+      }
+    },
+    {
+      "kind": "native-child",
+      "units": 1000,
+      "environment": {},
+      "expected": {
+        "idleMilliseconds": 3600000,
+        "maximumMilliseconds": 86400000
+      }
+    },
+    {
+      "kind": "native-observation",
+      "units": 1,
+      "environment": {},
+      "expected": {
+        "idleMilliseconds": 600000,
+        "maximumMilliseconds": 5400000
+      }
+    },
+    {
+      "kind": "native-observation",
+      "units": 4,
+      "environment": {},
+      "expected": {
+        "idleMilliseconds": 600000,
+        "maximumMilliseconds": 10800000
+      }
+    },
+    {
+      "kind": "native-child",
+      "units": 0,
+      "environment": {
+        "SEMIO_PROGRESS_DEADLINE_IDLE_MS": "60000"
+      },
+      "expected": {
+        "idleMilliseconds": 60000,
+        "maximumMilliseconds": 14400000
+      }
+    },
+    {
+      "kind": "native-child",
+      "units": 0,
+      "environment": {
+        "SEMIO_PROGRESS_DEADLINE_IDLE_MS": "999"
+      },
+      "expected": null
+    },
+    {
+      "kind": "native-child",
+      "units": 0,
+      "environment": {
+        "SEMIO_PROGRESS_DEADLINE_IDLE_MS": "abc"
+      },
+      "expected": null
+    },
+    {
+      "kind": "native-child",
+      "units": -1,
+      "environment": {},
+      "expected": null
+    },
+    {
+      "kind": "native-child",
+      "units": 0,
+      "environment": {
+        "SEMIO_PROGRESS_DEADLINE_IDLE_MS": "99999999999"
+      },
+      "expected": null
+    }
   ]
 }

@@ -214,3 +214,12 @@ test("the Nx command bridge awaits the declared readiness of a continuous target
   await rm(directory,{recursive:true,force:true});
  }
 },60000);
+
+test("every authored dashboard readiness that names a port environment variable also declares its default port",async()=>{
+ const listed=Bun.spawnSync(["git","ls-files","-z","--","*project.json"],{cwd:new URL("../../../../../../../../",import.meta.url).pathname}),root=new URL("../../../../../../../../",import.meta.url).pathname,faults:string[]=[];
+ for(const file of new TextDecoder().decode(listed.stdout).split("\0").filter(Boolean)){
+  let manifest:any;try{manifest=JSON.parse(readFileSync(join(root,file),"utf8"));}catch{continue;}
+  for(const [name,target] of Object.entries<any>(manifest?.targets??{})){const ready=target?.metadata?.semio?.dashboard?.ready;if(ready&&typeof ready.portEnv==="string"&&ready.port===undefined&&ready.printed===undefined&&ready.pattern===undefined)faults.push(`${file}:${name}`);}
+ }
+ expect(faults).toEqual([]);
+});

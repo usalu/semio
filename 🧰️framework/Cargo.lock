@@ -4524,13 +4524,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-3d-mesh-surface"
-version = "0.1.0"
-dependencies = [
- "semio-framework-3d-mesh-document",
-]
-
-[[package]]
 name = "semio-framework-3d-mesh-tests"
 version = "0.1.0"
 dependencies = [
@@ -4538,7 +4531,6 @@ dependencies = [
  "semio-framework-3d",
  "semio-framework-3d-mesh-quality",
  "semio-framework-3d-mesh-reconstruction",
- "semio-framework-3d-mesh-surface",
  "semio-framework-3d-testing-support",
  "semio-framework-async-macros",
  "semio-framework-mesh-engine",
@@ -4832,12 +4824,12 @@ dependencies = [
 name = "semio-framework-canvas-icons"
 version = "0.1.0"
 dependencies = [
- "image",
  "semio-framework-canvas-assets",
  "semio-framework-compiler",
  "semio-framework-icon-contract",
  "semio-framework-intrinsic-size",
  "semio-framework-io-base64",
+ "semio-framework-pixels",
  "semio-framework-ui-styling",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -4876,6 +4868,7 @@ dependencies = [
  "rustybuzz",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
+ "semio-framework-io-base64",
  "semio-framework-pack-json",
  "semio-framework-test-fixtures",
  "semio-framework-value",
@@ -6324,7 +6317,6 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-schema-state",
  "semio-framework-value",
- "serde",
 ]
 
 [[package]]
@@ -6661,7 +6653,6 @@ dependencies = [
  "semio-framework-value-persistent",
  "semio-framework-value-snapshot-projection",
  "semio-framework-value-snapshot-read",
- "serde",
 ]
 
 [[package]]
@@ -8090,16 +8081,11 @@ dependencies = [
 [[package]]
 name = "semio-framework-ui-contract-text-edit"
 version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
-]
 
 [[package]]
 name = "semio-framework-ui-contract-typegen"
 version = "0.1.0"
 dependencies = [
- "serde",
  "serde_json",
 ]
 
@@ -8833,6 +8819,7 @@ dependencies = [
  "semio-framework-dsl-record-ownership-oracle",
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "serde",
  "serde_json",

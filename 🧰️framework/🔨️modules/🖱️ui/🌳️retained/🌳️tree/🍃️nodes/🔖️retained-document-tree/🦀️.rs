@@ -78,7 +78,7 @@ impl UiDocumentTree {
         Self { generation: self.generation, surface: self.surface.clone(), revision: self.revision, root: self.root, layout_epoch: self.layout_epoch, node_count: self.node_count, nodes: UiNodeTable::default() }
     }
 
-    /// 🪙 Copies one record through the contract's explicit credit-accounting seam. A record is
+    /// 💳️ Copies one record through the contract's explicit credit-accounting seam. A record is
     /// never duplicated with `Clone`: component values, action bindings, and menu references must
     /// each acquire their own bounded owner or the whole candidate copy is refused.
     pub fn credited_record_at(&self, index: usize) -> Result<UiNodeRecord, UiDocumentTreeFault> {

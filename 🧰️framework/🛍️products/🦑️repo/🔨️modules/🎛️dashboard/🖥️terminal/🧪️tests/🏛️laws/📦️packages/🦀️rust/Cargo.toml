@@ -1,0 +1,44 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-repo-dashboard-terminal-laws"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "repo dashboard terminal laws: the native view driven through real keys, pointers, sessions and terminals"
+
+[package.metadata.semio]
+role = "tool"
+id = "repo-dashboard-terminal-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+dashboard_terminal = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-terminal", features = ["testkit"] }
+dashboard_source_view = { path = "../../../../../📂️workspace/🖥️view/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-source-view", features = ["testkit"] }
+dashboard_feedback = { path = "../../../../📣️feedback/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-feedback" }
+dashboard_keymap_editor = { path = "../../../../⚙️settings/⌨️keymap/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-keymap-editor" }
+dashboard_labels = { path = "../../../../🌐️labels/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-labels" }
+dashboard_launch = { path = "../../../../../🧾️launch/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launch" }
+dashboard_launcher = { path = "../../../../🚀️launcher/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launcher" }
+dashboard_preferences = { path = "../../../../../⚙️preferences/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-preferences" }
+dashboard_registry = { path = "../../../../../🎮️registry/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-registry" }
+dashboard_wire = { path = "../../../../../🌀️daemon/🧵️wire/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-wire" }
+ui_locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-framework-ui-locale" }
+ui_styling = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+semio-framework-filesystem-workspace = { path = "../../../../../../../../../🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust" }
+semio-framework-ui-tui-core = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
+semio-framework-ui-tui-engine = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-ui-tui-frame = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust" }
+semio-framework-ui-tui-terminal = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust" }
+semio-framework-ui-tui-widgets = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

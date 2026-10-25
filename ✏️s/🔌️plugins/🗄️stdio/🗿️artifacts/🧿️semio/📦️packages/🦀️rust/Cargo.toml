@@ -37,6 +37,7 @@ semio-framework-action-bus = { path = "../../../../../../../🧰️framework/�
 semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-semio-animation = { workspace = true }
@@ -72,7 +73,6 @@ semio-s-artifact-stdio-semio-video-mutations = { workspace = true }
 
 [dev-dependencies]
 semio-framework-value-native-owned = { workspace = true }
-semio-framework-value = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio-sqlite-laws-1 = { path = "../../🧪️tests/🪶️sqlite/🧫️subset-laws-1/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio-sqlite-laws-2 = { path = "../../🧪️tests/🪶️sqlite/🧬️subset-laws-2/📦️packages/🦀️rust" }

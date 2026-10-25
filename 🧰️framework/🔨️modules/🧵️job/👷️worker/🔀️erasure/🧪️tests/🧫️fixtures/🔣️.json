@@ -8,6 +8,13 @@
     65536,
     64
   ],
+  "closeGrant": [
+    1,
+    4096,
+    8192,
+    65536,
+    64
+  ],
   "metadataCopyBytes": 0,
   "originalIdentity": [
     919,

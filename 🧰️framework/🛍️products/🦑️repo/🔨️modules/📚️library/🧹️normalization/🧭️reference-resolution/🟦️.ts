@@ -76,7 +76,7 @@ function resolveReferencePath(referencePath: string, token: string, index: Refer
   return null;
 }
 
-/** ➕️ Visits one token's reach, mirroring {@link resolveReferencePath}'s value admission and leaf derivation exactly: every final segment
+/** 📘️ Visits one token's reach, mirroring {@link resolveReferencePath}'s value admission and leaf derivation exactly: every final segment
  * a candidate value or physical target names (`null` when normalization can replace it) and whether the value could take the Python route;
  * stops as soon as `visit` returns true and reports whether it did. */
 export function visitReferenceTokenReach(token: ReferenceToken, repoRoot: string | undefined, visit: (leaf: string | null, python: boolean) => boolean): boolean {

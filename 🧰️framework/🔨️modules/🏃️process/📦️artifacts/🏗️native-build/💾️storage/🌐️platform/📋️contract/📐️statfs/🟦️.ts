@@ -49,7 +49,7 @@ export async function nativeStatfsV1(path:string,options?:{bigint?:boolean;platf
  return bigint?statfs(path,{bigint:true}):statfs(path);
 }
 
-/** 💽️ Synchronous statfs with the same meaning: below a directory partition it serves the last measurement of the shared usage cell, refreshes an old one in the background and walks the tree synchronously only when none is younger than a minute. */
+/** 🧲️ Synchronous statfs with the same meaning: below a directory partition it serves the last measurement of the shared usage cell, refreshes an old one in the background and walks the tree synchronously only when none is younger than a minute. */
 export function nativeStatfsSyncV1(path:string,options?:{bigint?:false;platform?:string}):StatsFs;
 export function nativeStatfsSyncV1(path:string,options:{bigint:true;platform?:string}):BigIntStatsFs;
 export function nativeStatfsSyncV1(path:string,options?:{bigint?:boolean;platform?:string}):StatsFs|BigIntStatsFs{

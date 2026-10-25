@@ -1,8 +1,8 @@
-import "../📋️contract/🧪️tests/🟦️.ts";
-import "./📥️inputs/🟦️.ts";
 import {pathToFileURL} from "node:url";
 import {testPythonV1} from "../../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import { phaseCompilerAdmissionControlV1, scriptCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
+import { withCompilerCapacityConsumptionV1 } from "../../../../🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts";
+import { availableParallelism } from "node:os";
 import { withBuildTestInvocationV1 } from "../../../../🧪️testing/📥️invocation/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../🎛️owned-execution/🟦️.ts";
 import { expect, test } from "bun:test";
@@ -74,7 +74,7 @@ async function runStub(root: string, plan: NativeBuildPlanV1, cargo: ReturnType<
     try {
       return { failed: false, outcome: await withLawStorageV1(control, lawStoragePolicyV1.stubImageBytes, async (held, control) => {
         let outcome: NativeBuildOutcomeV1 | undefined;
-        try { outcome = await runNativeBuildDriverV1({ plan, storage: held.storage, sourceBoundary: lawSourceBoundaryV1, cwd: root, cacheRoot: join(held.root, "cache"), shared: { target: join(held.root, "target"), build: join(held.root, "build") }, generation: "warm", leaseDirectory: artifacts, environment: { ...process.env, ...held.environment, CARGO_TARGET_DIR: join(held.root, "target"), STUB_MODE: mode }, control, tokens: fixture.stub.tokens, physicalBytes: fixture.stub.physicalGiB * 1024 ** 3, storageReserveBytes: lawStoragePolicyV1.reserveBytes, scheduler: process.execPath, cargo, log: () => undefined, ...driver }); return outcome; }
+        try { outcome = await runNativeBuildDriverV1({ plan, storage: held.storage, sourceBoundary: lawSourceBoundaryV1, cwd: root, cacheRoot: join(held.root, "cache"), shared: { target: join(held.root, "target"), build: join(held.root, "build") }, generation: "warm", leaseDirectory: artifacts, environment: { ...process.env, ...held.environment, CARGO_TARGET_DIR: join(held.root, "target"), STUB_MODE: mode }, control, tokens: fixture.stub.tokens, withCapacity: (compile) => withCompilerCapacityConsumptionV1({ request: { kind: "exact", parallelism: Math.min(fixture.stub.tokens, availableParallelism()) }, directory: artifacts, control, environment: process.env }, (facts, held) => compile(facts, held, undefined)), physicalBytes: fixture.stub.physicalGiB * 1024 ** 3, storageReserveBytes: lawStoragePolicyV1.reserveBytes, scheduler: process.execPath, cargo, log: () => undefined, ...driver }); return outcome; }
         finally { await inspect?.({ outcome, held }); }
       }) };
     } catch (failure) { return { failed: true, failure }; }

@@ -8,7 +8,7 @@ import {incrementalBazelObservationV1,incrementalBazelSpawnsV1} from "../../👁
 import {incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalInsideV1,incrementalPlanTasksV1,incrementalSliceFromGraphV1,type IncrementalHostV1} from "../../🏃️runner/🟦️.ts";
 import type {IncrementalSliceV1,IncrementalToolV1} from "../../🟦️.ts";
 import {concurrentAttributeV1,concurrentDigestV1,concurrentIndependenceIssuesV1,concurrentLineKeeperV1,concurrentMergeWaitsV1,concurrentMutateV1,concurrentNxFitV1,concurrentTraceWaitsV1,concurrentWaitsV1,type ConcurrentMeasurementV1,type ConcurrentObservationV1,type ConcurrentObservedV1,type ConcurrentSessionResultV1,type ConcurrentSessionV1,type ConcurrentStepResultV1,type ConcurrentStepV1,type ConcurrentWorkloadSetV1,type ConcurrentWorkloadV1} from "../🟦️.ts";
-import {terminateOwnedChildTree} from "../../../../../../../..//🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import {terminateOwnedChildTree} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 const policy=schema.definitions.Policy.const,order=(left:string,right:string)=>left<right?-1:left>right?1:0;
 const both=(english:string,german:string)=>`${english}\n${german}`;

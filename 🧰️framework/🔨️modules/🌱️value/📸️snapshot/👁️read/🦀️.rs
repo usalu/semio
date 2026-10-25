@@ -14,7 +14,7 @@ pub const SNAPSHOT_READ_LEASE_CAPACITY: usize = 1_024;
 pub const SNAPSHOT_READ_RELEASE_PAGE_BYTES: usize = 4096;
 /// 📄 Lease slots per backing page; one page of slots fits one release page on every target.
 pub const SNAPSHOT_READ_SLOT_PAGE: usize = 128;
-/// 📄 Lease generation words per page: exactly one release page.
+/// 📖️ Lease generation words per page: exactly one release page.
 pub const SNAPSHOT_READ_GENERATION_PAGE: usize = SNAPSHOT_READ_RELEASE_PAGE_BYTES / size_of::<std::sync::atomic::AtomicU64>();
 
 pub struct SnapshotReadLeaseSlot {
@@ -27,7 +27,7 @@ type SnapshotReadGenerationPage = [std::sync::atomic::AtomicU64; SNAPSHOT_READ_G
 const _: () = assert!(size_of::<SnapshotReadSlotPage>() <= SNAPSHOT_READ_RELEASE_PAGE_BYTES && size_of::<SnapshotReadGenerationPage>() <= SNAPSHOT_READ_RELEASE_PAGE_BYTES);
 const _: () = assert!(SNAPSHOT_READ_LEASE_CAPACITY % SNAPSHOT_READ_SLOT_PAGE == 0 && SNAPSHOT_READ_LEASE_CAPACITY % SNAPSHOT_READ_GENERATION_PAGE == 0);
 
-/// 📄 The lease slot table in fixed release pages. Issuing requires every page; closing releases one page per step.
+/// 📃️ The lease slot table in fixed release pages. Issuing requires every page; closing releases one page per step.
 pub struct SnapshotReadSlotPages {
     pages: [Option<Box<SnapshotReadSlotPage>>; SNAPSHOT_READ_LEASE_CAPACITY / SNAPSHOT_READ_SLOT_PAGE],
 }
@@ -38,7 +38,7 @@ impl SnapshotReadSlotPages {
     pub fn resident(&self) -> bool { self.pages.iter().all(Option::is_some) }
     /// 🪪️ Identity of the first resident slot page, for physical-custody witnesses.
     pub fn backing_identity(&self) -> Option<*const ()> { self.pages.iter().flatten().next().map(|page| page.as_ptr() as *const ()) }
-    /// 📏️ Bytes the next page release frees, or zero once every page is released.
+    /// ⏭️ Bytes the next page release frees, or zero once every page is released.
     fn next_release_bytes(&self) -> usize { if self.pages.iter().any(Option::is_some) { size_of::<SnapshotReadSlotPage>() } else { 0 } }
     fn release_page(&mut self) -> usize { self.pages.iter_mut().rev().find(|page| page.is_some()).and_then(Option::take).map_or(0, |page| { drop(page); size_of::<SnapshotReadSlotPage>() }) }
 }
@@ -52,7 +52,7 @@ impl std::ops::IndexMut<usize> for SnapshotReadSlotPages {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output { &mut self.pages[index / SNAPSHOT_READ_SLOT_PAGE].as_mut().expect("resident lease slot page")[index % SNAPSHOT_READ_SLOT_PAGE] }
 }
 
-/// 📄 The lock-free lease generation words in fixed release pages, released only once the registry is exclusively owned.
+/// 📸️ The lock-free lease generation words in fixed release pages, released only once the registry is exclusively owned.
 pub struct SnapshotReadGenerationPages {
     pages: [Option<Box<SnapshotReadGenerationPage>>; SNAPSHOT_READ_LEASE_CAPACITY / SNAPSHOT_READ_GENERATION_PAGE],
 }
@@ -103,7 +103,7 @@ pub struct SnapshotReadLeaseStateLock {
     state: std::cell::UnsafeCell<SnapshotReadLeaseRegistryState>,
 }
 
-/// 🔒️ Acquire/Release guards exclusively borrow the Send registry state and never cross threads.
+/// 🔄️ Acquire/Release guards exclusively borrow the Send registry state and never cross threads.
 unsafe impl Sync for SnapshotReadLeaseStateLock where SnapshotReadLeaseRegistryState: Send {}
 
 impl SnapshotReadLeaseStateLock {
@@ -274,7 +274,7 @@ impl SnapshotReadLeaseRegistry {
         self.returned.load(std::sync::atomic::Ordering::Acquire) != 0
     }
 
-    /// 📏️ Quotes the next slot page an empty shared registry releases; generation pages wait for exclusive ownership.
+    /// 🪫️ Quotes the next slot page an empty shared registry releases; generation pages wait for exclusive ownership.
     pub fn empty_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         let state = self.state.try_lock().map_err(|reason| match reason { std::sync::TryLockError::WouldBlock => SnapshotReadLeaseRefusal::Busy.into_value_error(), std::sync::TryLockError::Poisoned(_) => SnapshotReadLeaseRefusal::Poisoned.into_value_error() })?;
         let release_bytes = state.slots.next_release_bytes();
@@ -292,14 +292,14 @@ impl SnapshotReadLeaseRegistry {
         let progress = RetainedCloneProgress { copied_items: 1, released_bytes: state.slots.release_page(), ..Default::default() };
         Ok(if state.slots.next_release_bytes() == 0 { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
     }
-    /// 📏️ Quotes the next page an exclusively owned empty registry releases: slot pages, then generation pages.
+    /// ⏪️ Quotes the next page an exclusively owned empty registry releases: slot pages, then generation pages.
     pub fn owned_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         let shared = self.empty_backing_demands()?;
         if shared.release_bytes != 0 { return Ok(shared); }
         let release_bytes = self.lease_generations.next_release_bytes();
         Ok(semio_framework_value::RetirementDemand { release_bytes, depth: usize::from(release_bytes != 0), ..Default::default() })
     }
-    /// ♻️ Releases one page of an exclusively owned empty registry; the last generation page completes its backing.
+    /// 📪️ Releases one page of an exclusively owned empty registry; the last generation page completes its backing.
     pub fn close_owned_backing_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         if self.empty_backing_demands()?.release_bytes != 0 { return self.close_empty_backing_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
@@ -342,7 +342,7 @@ impl SnapshotReadLeaseRegistry {
         true
     }
 
-    /// 🪶 Frees one occupied slot under the held registry lock and hands its owner to the caller to drop after unlocking.
+    /// 🆓️ Frees one occupied slot under the held registry lock and hands its owner to the caller to drop after unlocking.
     fn free_slot_locked(&self, state: &mut SnapshotReadLeaseStateGuard<'_>, index: usize) -> SnapshotReadLeaseSlot {
         let slot = unsafe { state.slots[index].assume_init_read() };
         state.occupied[index / 64] &= !(1 << (index % 64));
@@ -428,16 +428,17 @@ impl SnapshotReadLeaseRegistryOwner {
     pub fn returned_count(&self) -> usize { self.0.as_ref().map_or(0, |owner| owner.returned_count()) }
 
     pub fn new() -> Self { Self(Some(SnapshotReadRegistryAliasRetirement::new(SnapshotReadRegistryHandle::new()))) }
-    pub fn terminal_is_empty(&self) -> bool { self.0.as_ref().is_none_or(|owner| owner.terminal_is_empty()) }
+    /// 🔬️ The registry holds no lease, outstanding or returned. The alias owner's own `ErasedSnapshotRetirement::terminal_is_empty` means only that its registry custody is already released, so both are named explicitly.
+    pub fn terminal_is_empty(&self) -> bool { self.0.as_ref().is_none_or(|owner| ErasedSnapshotRetirement::terminal_is_empty(owner) || SnapshotReadLeaseRegistry::terminal_is_empty(owner)) }
     pub fn closed(&self) -> bool { self.0.is_none() }
     pub fn occupied_count(&self) -> usize { self.0.as_ref().map_or(0, |owner| owner.occupied_count()) }
     pub fn empty_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.0.as_ref().map_or(Ok(Default::default()), |owner| owner.empty_backing_demands()) }
     pub fn close_empty_backing_step(&self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.0.as_ref().map_or(Ok(RetainedCloneStep::Complete(Default::default())), |owner| owner.close_empty_backing_step(grant)) }
-    /// 📏️ Quotes the next release of the registry's own custody: its Arc frame, then, once sole, each generation page.
+    /// 📚️ Quotes the next release of the registry's own custody: its Arc frame, then, once sole, each generation page.
     pub fn custody_byte_demand(&self) -> Result<usize, ValueError> { self.0.as_ref().map_or(Ok(0), |owner| owner.custody_byte_demand()) }
-    /// ♻️ Releases the registry's own custody one frame or page at a time once it is the sole terminal owner.
+    /// 🪜️ Releases the registry's own custody one frame or page at a time once it is the sole terminal owner.
     pub fn close_custody_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        if self.0.as_ref().is_some_and(|owner| owner.strong_count() != 1 || !owner.terminal_is_empty()) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if self.0.as_ref().is_some_and(|owner| owner.strong_count() != 1 || !(ErasedSnapshotRetirement::terminal_is_empty(owner) || SnapshotReadLeaseRegistry::terminal_is_empty(owner))) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         snapshot_registry_alias_close_step(&mut self.0, grant)
     }
 }
@@ -517,7 +518,7 @@ impl SnapshotReadReturn {
 }
 
 impl<T: ?Sized> SnapshotRead<T> {
-    /// 📏️ The inline bytes one Store read occupies while an owner captures it by move.
+    /// ⏺️ The inline bytes one Store read occupies while an owner captures it by move.
     pub const fn capture_copy_byte_demand() -> usize { size_of::<Self>() }
     pub fn release_original_alias(&mut self) -> bool { self.owner.take().is_some() }
     pub fn return_original_lease(&mut self) -> Option<SnapshotReadRegistryAliasRetirement> { let mut lease = self.lease.take()?; lease.return_now(); Some(SnapshotReadRegistryAliasRetirement::new(lease.registry)) }
@@ -530,12 +531,12 @@ impl<T: ?Sized> SnapshotRead<T> {
         Self { owner: Some(owner), lease: Some(lease) }
     }
 
-    /// 👁️ Borrows the captured immutable value without exposing its owner.
+    /// 🗿️ Borrows the captured immutable value without exposing its owner.
     pub fn get(&self) -> &T {
         self.owner.as_deref().expect("live snapshot read owner is present")
     }
 
-    /// 🔐️ Revalidates this lease against the store-owned event authority without reading
+    /// 🏛️ Revalidates this lease against the store-owned event authority without reading
     /// a session-local registry. A concurrent publication produces an odd or changed sequence and
     /// therefore fails closed.
     pub fn commit_authority_matches(&self, generation: u64, revision: [u8; 32]) -> bool {
@@ -561,7 +562,7 @@ impl<T: ?Sized> SnapshotRead<T> {
     pub fn try_return_to_registry_witness(mut self)->Result<SnapshotReadReturn,Self>{
         match try_return_original_snapshot_read(&mut self.owner, &mut self.lease) { Ok(witness) => Ok(witness), Err(()) => Err(self) }
     }
-    /// 🧹 Returns this lease and hands the caller an exact generation witness for store retirement.
+    /// 📋️ Returns this lease and hands the caller an exact generation witness for store retirement.
     pub fn return_to_registry_witness(mut self) -> Option<SnapshotReadReturn> {
         let lease = self.lease.as_ref()?;
         let witness = SnapshotReadReturn { registry: lease.registry.clone(), index: lease.index, generation: lease.generation };
@@ -605,14 +606,14 @@ impl ErasedSnapshotRead {
     pub fn terminal_is_empty(&self) -> bool { self.owner.is_none() && self.lease.is_none() }
     pub fn lease_identity(&self) -> Option<(usize, u16, u64)> { self.lease.as_ref().map(|lease| (lease.registry.identity(), lease.index, lease.generation)) }
 
-    /// 🔒️ Revalidates the original erased lease against its issuer's current event authority.
+    /// 🐙️ Revalidates the original erased lease against its issuer's current event authority.
     pub fn commit_authority_matches(&self,generation:u64,revision:[u8;32])->bool{
         self.owner.is_some()&&self.lease.as_ref().is_some_and(|lease|lease.registry.authority_matches(generation,revision))
     }
-    /// 📏️ Generation leases use the registry's fixed inline atomics and allocate no per-read backing.
+    /// ⚛️ Generation leases use the registry's fixed inline atomics and allocate no per-read backing.
     pub const LEASE_ALLOCATION_BYTES: usize = 0;
 
-    /// 🪪️ Quotes the original private read, fixed registry slot and exact return metadata.
+    /// 📥️ Quotes the original private read, fixed registry slot and exact return metadata.
     pub fn prepared_return_demands() -> semio_framework_value::RetirementDemand {
         semio_framework_value::RetirementDemand { depth: 2, ..Default::default() }
     }
@@ -624,7 +625,7 @@ impl ErasedSnapshotRead {
         Self { owner: Some(owner), lease: Some(lease) }
     }
 
-    /// 🪪️ Acquires another genuine lease over this exact captured root and original issuer without allocating.
+    /// 💎️ Acquires another genuine lease over this exact captured root and original issuer without allocating.
     pub fn try_duplicate(&self) -> Result<Self, ValueError> {
         let owner = self.owner.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original erased read has no captured root"))?;
         let lease = self.lease.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original erased read has no captured lease"))?;
@@ -648,7 +649,7 @@ impl ErasedSnapshotRead {
         self.owner.as_deref()?.downcast_ref::<T>().map(|owner| SnapshotReadRef { owner })
     }
 
-    /// 🪞️ Moves this original erased root and lease into typed custody; mismatch returns the exact original read.
+    /// ⌨️ Moves this original erased root and lease into typed custody; mismatch returns the exact original read.
     pub fn try_into_typed<T: Send + Sync + 'static>(mut self) -> Result<SnapshotRead<T>, Self> {
         if self.lease.is_none() { return Err(self); }
         let Some(owner) = self.owner.take() else { return Err(self); };
@@ -657,7 +658,7 @@ impl ErasedSnapshotRead {
             Err(owner) => { self.owner = Some(owner); Err(self) }
         }
     }
-    /// 👁️ Borrows one exact concrete owner without exposing or cloning its retained `Arc`.
+    /// 🎯️ Borrows one exact concrete owner without exposing or cloning its retained `Arc`.
     pub fn get<T: Send + Sync + 'static>(&self) -> Option<&T> {
         self.owner.as_deref()?.downcast_ref::<T>()
     }

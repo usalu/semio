@@ -1,5 +1,7 @@
 use super::*;
 use std::time::Instant;
+/// ⏳️ A liveness bound, not a performance one: a loaded machine may deschedule the owner for long.
+const WORKER_LIVENESS_BOUND: std::time::Duration = std::time::Duration::from_secs(30);
 struct StructuredChildJob {
     backing: Option<Box<u8>>,
     closing: bool,

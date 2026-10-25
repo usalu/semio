@@ -230,6 +230,115 @@
     "a": 1,
     "b": 2
    }
+  },
+  {
+   "name": "an invalidated snapshot is never reused",
+   "rejectSerials": [],
+   "steps": [
+    {
+     "op": "call",
+     "id": "a",
+     "maxAge": 500
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    },
+    {
+     "op": "invalidate"
+    },
+    {
+     "op": "call",
+     "id": "b",
+     "maxAge": 500
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    }
+   ],
+   "captures": 2,
+   "served": {
+    "a": 1,
+    "b": 2
+   }
+  },
+  {
+   "name": "a capture running during an invalidation is never reusable",
+   "rejectSerials": [],
+   "steps": [
+    {
+     "op": "call",
+     "id": "a",
+     "maxAge": 500
+    },
+    {
+     "op": "invalidate"
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    },
+    {
+     "op": "call",
+     "id": "b",
+     "maxAge": 500
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    }
+   ],
+   "captures": 2,
+   "served": {
+    "a": 1,
+    "b": 2
+   }
+  },
+  {
+   "name": "a snapshot taken after the invalidation is reused again",
+   "rejectSerials": [],
+   "steps": [
+    {
+     "op": "invalidate"
+    },
+    {
+     "op": "call",
+     "id": "a",
+     "maxAge": 500
+    },
+    {
+     "op": "release"
+    },
+    {
+     "op": "drain"
+    },
+    {
+     "op": "advance",
+     "ms": 100
+    },
+    {
+     "op": "call",
+     "id": "b",
+     "maxAge": 500
+    },
+    {
+     "op": "drain"
+    }
+   ],
+   "captures": 1,
+   "served": {
+    "a": 1,
+    "b": 1
+   }
   }
  ],
  "gate": [

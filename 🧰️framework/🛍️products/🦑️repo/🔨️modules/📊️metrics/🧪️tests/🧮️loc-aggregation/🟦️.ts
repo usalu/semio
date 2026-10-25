@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import { countUnifiedLocForFile } from "@semio-tech/repo-lib/inventory";
-import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔬️Reference aggregation

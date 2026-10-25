@@ -1,10 +1,10 @@
-//! 🎯️ Interaction options: the pick granularity and targets, the section plane and cap, the sub-element style, the highlight and the modelling options with their lane codecs. See [`super`].
+//! 🖱️ Interaction options: the pick granularity and targets, the section plane and cap, the sub-element style, the highlight and the modelling options with their lane codecs. See [`super`].
 
 use super::*;
 
 //#region 🔖️Interaction
 string_enum! {
-    /// 🎯️ The only granularity hover and selection reach.
+    /// 🔬️ The only granularity hover and selection reach.
     World3dPickGranularity { Shape => "shape", Face => "face", Edge => "edge", Vertex => "vertex" }
 }
 
@@ -18,7 +18,7 @@ pub struct World3dPickTargets {
 }
 
 impl World3dPickGranularity {
-    /// 🎯️ The targets a filter admits; no filter admits all of them.
+    /// 🏹️ The targets a filter admits; no filter admits all of them.
     pub fn targets(filter: Option<Self>) -> World3dPickTargets {
         match filter {
             None => World3dPickTargets { mesh: true, face: true, edge: true, vertex: true },
@@ -35,7 +35,7 @@ pub struct World3dSectionCap {
     pub tone: World3dTone,
 }
 
-/// ✂️ A section plane through `origin`; geometry on the side `normal` points to is removed. `cap` closes the cut with a solid face.
+/// 📑️ A section plane through `origin`; geometry on the side `normal` points to is removed. `cap` closes the cut with a solid face.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct World3dSection {
@@ -60,7 +60,7 @@ impl World3dSection {
         vec3_nonzero(&self.normal, "normal")
     }
 
-    /// ✂️ The plane `[nx, ny, nz, constant]` in three.js clipping convention (negative signed distance is clipped), removing the side `normal` points to.
+    /// 📎️ The plane `[nx, ny, nz, constant]` in three.js clipping convention (negative signed distance is clipped), removing the side `normal` points to.
     pub fn clip_plane(&self) -> [f64; 4] {
         let length = self.normal.iter().map(|component| component * component).sum::<f64>().sqrt();
         let unit = [self.normal[0] / length, self.normal[1] / length, self.normal[2] / length];
@@ -103,7 +103,7 @@ impl FromValue for World3dSection {
     }
 }
 
-/// 🖍️ Hover and selection tokens of one sub-element granularity; an absent token keeps the theme default (secondary for hover, primary for selection).
+/// 🖌️ Hover and selection tokens of one sub-element granularity; an absent token keeps the theme default (secondary for hover, primary for selection).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct World3dSubElementStyle {

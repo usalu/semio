@@ -25,7 +25,7 @@ export interface HistoryColumnAuthor {
  * `undefined` when the checkpoint carries no message at all (the common case). */
 export type HistoryMutationLevel = "info" | "warning" | "error" | "fatal";
 
-/** 🗄️ One row of a checkpoint ancestor graph — mirrors the plugin-side `HistoryColumn` (see `vcs::HistoryColumn`). */
+/** 🕸️ One row of a checkpoint ancestor graph — mirrors the plugin-side `HistoryColumn` (see `vcs::HistoryColumn`). */
 export interface HistoryColumn {
   readonly checkpointId: string;
   readonly timestamp: string;
@@ -35,7 +35,7 @@ export interface HistoryColumn {
   readonly description?: string;
   readonly lane: number;
   readonly alternativeIds: readonly string[];
-  /** ⚖️ Worst `MutationMessage` level this checkpoint's edit carried — a `Degraded` first-class
+  /** 🎚️ Worst `MutationMessage` level this checkpoint's edit carried — a `Degraded` first-class
    * conflict (§C5/§C6) always sets at least `"warning"`. `undefined` renders no badge. */
   readonly mutationLevel?: HistoryMutationLevel;
 }
@@ -141,7 +141,7 @@ const HISTORY_LEVEL_BADGE_CLASS: Record<HistoryMutationLevel, string> = {
   fatal: "bg-destructive text-destructive-foreground",
 };
 
-/** ⚖️ Small uppercase level chip for a checkpoint's worst `mutationLevel` — see {@link HistoryColumn}. */
+/** 🏷️ Small uppercase level chip for a checkpoint's worst `mutationLevel` — see {@link HistoryColumn}. */
 function HistoryLevelBadge({ level }: { readonly level: HistoryMutationLevel }): React.ReactElement {
   return (
     <span className={cn("shrink-0 rounded px-1.5 py-0.5 text-2xs uppercase", HISTORY_LEVEL_BADGE_CLASS[level])} title={level}>

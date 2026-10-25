@@ -175,7 +175,7 @@ pub(super) fn table_section(document: &UiDocumentTree, record: &UiNodeRecord, pr
     }
 }
 
-/// 📊️ One `Component::TableRow` as its tree item: named by its first cell (React's row name), activated by its target's
+/// 📋️ One `Component::TableRow` as its tree item: named by its first cell (React's row name), activated by its target's
 /// activation verb, its `RowAction`s the item's trailing actions — the one representation every target paints.
 fn table_row_item(record: &UiNodeRecord) -> Option<UiTreeItemNode> {
     let ui_contract::Component::TableRow(props) = &record.component else { return None };

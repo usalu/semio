@@ -340,8 +340,8 @@ pub struct PendingCommandReport {
     /// mid-history (`ingest_remote`/`resolve_conflict`), where "everything past `before`" no longer
     /// names only the newly-landed edits.
     pub(crate) edit_ids: Option<Vec<String>>,
-    pub(crate) messages: Vec<semio_framework_os_spr::EditMessages>,
-    pub(crate) worst: Option<semio_framework_diagnostic::Severity>,
+    pub messages: Vec<semio_framework_os_spr::EditMessages>,
+    pub worst: Option<semio_framework_diagnostic::Severity>,
     /// 📤️ Every event this command authored (edit operations, history transitions), in authoring
     /// order — announced outbound as one `BackboneMessage::Mutations` batch when the command ends.
     pub(crate) outbound: Vec<semio_framework_os_spr::MutationEnvelope>,

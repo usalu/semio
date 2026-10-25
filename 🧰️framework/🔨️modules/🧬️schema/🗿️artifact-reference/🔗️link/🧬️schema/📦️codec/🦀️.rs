@@ -339,7 +339,7 @@ impl semio_framework_dsl_record::BorrowedDslRecord for ArtifactLink{
 impl semio_framework_dsl_record::BorrowedDslField for ArtifactLink{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);}
 
 impl semio_framework_dsl_record::DslField for ArtifactLink {
-    /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
+    /// 📐️async: E4 — see `DslField::shape`'s tag on the trait.
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Record(artifact_link_spec_producer())
     }

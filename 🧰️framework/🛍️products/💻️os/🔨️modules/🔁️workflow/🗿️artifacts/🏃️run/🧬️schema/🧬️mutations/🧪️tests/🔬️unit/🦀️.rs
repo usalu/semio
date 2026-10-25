@@ -67,13 +67,13 @@ async fn node_rows_are_position_exact() {
     let mut base = empty_run_document().await;
     base.node_records = vec![sample_run_node_record("a", RunNodeStatus::Computed).await, sample_run_node_record("b", RunNodeStatus::Computed).await, sample_run_node_record("c", RunNodeStatus::Computed).await];
     let removal = RunMutation::RemoveRunNode(RemoveRunNode { node_id: "b".into() });
-    let diff = protocol::Mutation::diff(&removal, &base);
+    let diff = protocol::ColdMutation::diff(&removal, &base);
     assert_eq!(diff.diff().steps, vec![RunStep::Node { node_id: "b".into(), record: None, index: Some(1) }]);
-    let inverse = protocol::Mutation::inverse(&removal, &base).expect("inverse");
+    let inverse = protocol::ColdMutation::inverse(&removal, &base).expect("inverse");
     assert!(matches!(inverse.as_slice(), [RunMutation::FinishRunNode(FinishRunNode { index: Some(1), .. })]), "{inverse:?}");
     let insert = RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("z", RunNodeStatus::Computed).await, index: Some(1) });
-    let inserted = protocol::apply_diff_cold(protocol::Mutation::diff(&insert, &base).diff(), &base).expect("insert applies");
+    let inserted = protocol::apply_diff_cold(protocol::ColdMutation::diff(&insert, &base).diff(), &base).expect("insert applies");
     assert_eq!(inserted.node_records.iter().map(|record| record.node_id.as_str()).collect::<Vec<_>>(), ["a", "z", "b", "c"]);
     let past = RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("z", RunNodeStatus::Computed).await, index: Some(4) });
-    assert_eq!(protocol::Mutation::diff(&past, &base).messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), ["mutation.target-missing"]);
+    assert_eq!(protocol::ColdMutation::diff(&past, &base).messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), ["mutation.target-missing"]);
 }

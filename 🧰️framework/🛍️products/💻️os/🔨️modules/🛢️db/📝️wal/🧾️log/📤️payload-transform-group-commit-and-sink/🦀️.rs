@@ -251,7 +251,8 @@ impl SharedBuf {
 }
 
 impl semio_framework_pack_source::PackSink for SharedBuf {
-    async fn write_all(&mut self, bytes: &[u8]) -> Result<(), pack::PackError> {
+    type Error = DbError;
+    async fn write_all(&mut self, bytes: &[u8]) -> Result<(), DbError> {
         let mut cursor = 0;
         while cursor < bytes.len() {
             let written = lock(&self.0).write_step(&bytes[cursor..])?;

@@ -1,9 +1,9 @@
-/** 🔍️ Contract: cleanup candidate discovery lists misplaced repository folders, root transients, ticket folders over their size limits, closed-ticket generated output, oversized ignored files, Windows-illegal names, Cargo targets and rustc incremental caches in a synthetic workspace without ever listing an open ticket; the corpus is language-agnostic and `🐍️oracle.py` rebuilds the workspace and recomputes the filesystem-only verdicts. */
+/** 🔍️ Contract: cleanup candidate discovery lists misplaced repository folders, root transients, ticket folders over their size limits, closed-ticket generated output, oversized ignored files, Windows-illegal names, Cargo targets and rustc incremental caches in a synthetic workspace without ever listing an open ticket; the corpus is language-agnostic and `🐍️.py` rebuilds the workspace and recomputes the filesystem-only verdicts. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {afterAll} from "bun:test";
 import {closeSync,ftruncateSync,mkdirSync,mkdtempSync,openSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -86,6 +86,6 @@ test("rustc incremental caches over the limit are listed per profile or per idle
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

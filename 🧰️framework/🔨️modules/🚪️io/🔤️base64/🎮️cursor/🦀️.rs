@@ -40,7 +40,7 @@ pub struct Base64DecodeParts<'input> {
     pub outcome: Base64DecodeOutcome,
 }
 
-/// 🪜️ Validation and reconstruction retain their exact positions across bounded caller turns.
+/// 🖱️ Validation and reconstruction retain their exact positions across bounded caller turns.
 pub struct Base64DecodeCursor<'input> {
     input: Base64Input<'input>,
     range: Base64InputRange,
@@ -85,10 +85,10 @@ impl<'input> Base64DecodeCursor<'input> {
         bytes + if self.phase == Base64Phase::Validate && self.offset + bytes < length { bytes } else { 0 }
     }
 
-    /// 📐️ Borrows the exact decoded extent from length and final padding; strict validation still precedes reconstruction.
+    /// 🖨️ Borrows the exact decoded extent from length and final padding; strict validation still precedes reconstruction.
     pub fn expected_output_bytes(&self) -> usize { self.output_length }
 
-    /// 🎟️ Quotes the one actual retained output allocation before its decode-stage birth.
+    /// ⏭️ Quotes the one actual retained output allocation before its decode-stage birth.
     pub fn next_capacity_byte_demand(&self) -> usize {
         if !self.complete && self.refusal.is_none() && self.phase == Base64Phase::Decode && !self.started { self.output_length } else { 0 }
     }
@@ -148,13 +148,13 @@ impl<'input> Base64DecodeCursor<'input> {
     /// 🔎️ Borrows the same immutable source owner for independent inspection.
     pub fn input(&self) -> &Base64Input<'input> { &self.input }
 
-    /// 📏️ Borrows exact currently retained output capacity without transferring its owner.
+    /// 💎️ Borrows exact currently retained output capacity without transferring its owner.
     pub fn output_capacity(&self) -> usize { self.output.as_ref().map_or(0, Vec::capacity) }
 
     /// 📤️ Moves the original result exactly once, only after complete reconstruction.
     pub fn take_output(&mut self) -> Option<Vec<u8>> { if self.complete { self.output.take() } else { None } }
 
-    /// 🫴️ Transfers original custody to the caller's retirement mechanism without allocating or releasing.
+    /// 〽️ Transfers original custody to the caller's retirement mechanism without allocating or releasing.
     pub fn into_parts(self) -> Base64DecodeParts<'input> {
         let outcome = match self.refusal { Some(error) => Base64DecodeOutcome::Refused(error), None if self.complete => Base64DecodeOutcome::Complete, None => Base64DecodeOutcome::Pending };
         Base64DecodeParts { input: self.input, range: self.range, output: self.output, outcome }

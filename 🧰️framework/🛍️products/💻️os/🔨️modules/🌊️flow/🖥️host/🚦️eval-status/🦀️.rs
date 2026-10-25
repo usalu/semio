@@ -1,6 +1,7 @@
 //! 🚦️ Evaluation publication decisions, session-wired host construction, unserved kinds and per-node status JSON.
 
 use super::*;
+use neural_engine::ColdRetire;
 
 /// 🧬 Stable `nodeHash` for an extension tessellate request (mirrored through ShellHost).
 /// 📤️ The publication one surface owes, given the evaluation bytes it ALREADY retains.

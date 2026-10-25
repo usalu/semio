@@ -10,7 +10,7 @@ use super::*;
 #[dsl(keyword = "set-loop-count")]
 #[value(rename_all = "camelCase")]
 pub struct SetLoopCount {
-    pub(crate) loop_count: Option<u16>,
+    pub loop_count: Option<u16>,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetLoopCount {

@@ -1,10 +1,9 @@
 import type { BlockListScene } from "../🧬️schema/🧩️block-list/🟦️.ts";
 import type { ActionDescriptor } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import type { ContextMenuItemSpec, UiContextMenuRequest, UiMenuRef } from "@semio-tech/framework-manifest/context-menu";
-import type { Canvas2dScene } from "../🟦️.ts";
 import type { World3dScene } from "../🌐️world3d/🟦️.ts";
 import type { NodeGraphScene, TextEditorScene } from "../🕸️node-graph/🟦️.ts";
-import type { Board2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, Paint2dScene, TableScene, TiledMapScene, VirtualFileSystemScene } from "../📄️documents/🟦️.ts";
+import type { Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, Paint2dScene, TableScene, TiledMapScene, VirtualFileSystemScene } from "../📄️documents/🟦️.ts";
 
 /** 🔌️ A plugin-contributed external body rendered inline — mirrors the wasm `externalSlot` node. */
 export type UiExternalSlotNode = {

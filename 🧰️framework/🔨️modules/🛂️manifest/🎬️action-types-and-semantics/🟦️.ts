@@ -45,7 +45,7 @@ export function referenceIdText(value: unknown): string | undefined {
   return typeof value === "number" && Number.isSafeInteger(value) ? String(value) : undefined;
 }
 
-/** 🎯️ Generated from Rust `🔖️ActionSemantics` (`🛂️manifest/🦀️.rs`) — effects/policy/
+/** 🦀️ Generated from Rust `🔖️ActionSemantics` (`🛂️manifest/🦀️.rs`) — effects/policy/
  * execution + natural-language framing carried on every `ActionDefinition`/`CommandDefinition`. */
 export type ResourceSelector = GeneratedResourceSelector;
 export type CapabilityEffects = GeneratedCapabilityEffects;

@@ -48,7 +48,7 @@ impl<T> std::ops::Deref for StateGuard<'_,T> {type Target=State<T>;fn deref(&sel
 impl<T> std::ops::DerefMut for StateGuard<'_,T> {fn deref_mut(&mut self)->&mut Self::Target {unsafe{&mut*self.lock.state.get()}}}
 impl<T> Drop for StateGuard<'_,T> {fn drop(&mut self){if !self.panicking&&std::thread::panicking(){self.lock.poisoned.store(true,Ordering::Relaxed);}self.lock.held.store(false,Ordering::Release);}}
 
-/// 🔗️ Fixed typed roots and inline return flags retain exact immutable read authority.
+/// 📖️ Fixed typed roots and inline return flags retain exact immutable read authority.
 pub struct ReadOwnershipRegistry<T:RetireOwned+Sync> {state:StateLock<T>,returned:AtomicUsize,sequence:AtomicU64,generation:AtomicU64,revision:[AtomicU64;4]}
 impl<T:RetireOwned+Sync> ReadOwnershipRegistry<T> {
     pub fn constructor_capacity_bytes()->usize {crate::retirement::arc_custody::arc_bytes::<Self>()+size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>()}

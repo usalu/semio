@@ -21,7 +21,7 @@ pub fn validate_scoped_identity_segments(segments: &[&str]) -> Result<usize, Sco
     Ok(bytes)
 }
 
-/// 🧩️ Encodes admitted segments with one exact output allocation.
+/// 🔑️ Encodes admitted segments with one exact output allocation.
 pub fn encode_scoped_identity(segments: &[&str]) -> Result<String, ScopedIdentityError> {
     let bytes = validate_scoped_identity_segments(segments)?;
     let mut encoded = String::with_capacity(bytes);

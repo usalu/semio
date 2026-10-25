@@ -1,4 +1,4 @@
-/** 🎨️ Canonical colorInputSelfTests: the TypeScript half of the colour law of the `color_input` recipe, answering the
+/** 🌈️ Canonical colorInputSelfTests: the TypeScript half of the colour law of the `color_input` recipe, answering the
  * very same `🧪️tests/🧫️fixtures/🧫️color-input/🔣️.json` rows the Rust `🔬️component-unit` law answers through
  * `ui_color_hex`/`parse_ui_color_hex`. Ajv validates the fixture against its schema and color-string is the independent
  * oracle: it parses every accepted text to the same channels and alpha, refuses every refused one, and prints the same

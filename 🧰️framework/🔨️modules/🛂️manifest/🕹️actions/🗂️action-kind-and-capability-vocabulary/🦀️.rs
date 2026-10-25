@@ -5,7 +5,7 @@ use super::*;
 // #region 🛂️Manifest
 //#region 🔖️Manifest
 //#region 🔖️ActionKind
-/// 🗂️ Classifies a declared action by how it interacts with VCS history.
+/// 🎬️ Classifies a declared action by how it interacts with VCS history.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -146,7 +146,7 @@ pub enum UndoMode {
     #[default]
     None,
     Inverse,
-    /// 🔁️ Undone by invoking a DIFFERENT capability (id, not the gateway's `CapabilityDefinition` —
+    /// ⚖️ Undone by invoking a DIFFERENT capability (id, not the gateway's `CapabilityDefinition` —
     /// that type lives in the gateway crate per D5) rather than a true inverse.
     Compensate {
         capability: String,

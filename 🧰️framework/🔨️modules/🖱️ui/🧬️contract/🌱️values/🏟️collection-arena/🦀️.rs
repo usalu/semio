@@ -347,7 +347,7 @@ impl UiValueHeadroom {
     }
 }
 
-/// 🎟️ Reads [`UiValueHeadroom`]; never admits, never retires.
+/// 📏️ Reads [`UiValueHeadroom`]; never admits, never retires.
 pub fn ui_value_headroom() -> UiValueHeadroom {
     with_ui_value_arena(|arena| UiValueHeadroom { collections: arena.free_collection_count, items: arena.free_page_count })
 }

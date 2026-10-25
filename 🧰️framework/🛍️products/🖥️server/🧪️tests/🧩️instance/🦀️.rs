@@ -113,13 +113,13 @@ pub const COUNTER: &str = "counter";
 /// 🪞️ The actor kind [`MirrorDecider`] serves.
 pub const MIRROR: &str = "mirror";
 
-/// 🧮️ Fold [`CounterDecider`]'s little-endian counter bytes back to a `u64`, defaulting to zero for
+/// 📖️ Fold [`CounterDecider`]'s little-endian counter bytes back to a `u64`, defaulting to zero for
 /// an unstarted or malformed state.
 pub fn read_counter(bytes: &[u8]) -> u64 {
     <[u8; 8]>::try_from(bytes).map_or(0, u64::from_le_bytes)
 }
 
-/// 🧮️ A little-endian counter over one command kind, exercising all four [`Decision`] branches.
+/// 🌿️ A little-endian counter over one command kind, exercising all four [`Decision`] branches.
 pub struct CounterDecider;
 
 impl Decider for CounterDecider {
@@ -144,7 +144,7 @@ impl Decider for CounterDecider {
     }
 }
 
-/// 🪞️ A second decider, serving its own actor kind by echoing the command payload back as an event.
+/// 🦜️ A second decider, serving its own actor kind by echoing the command payload back as an event.
 /// It exists so [`TestDeciders`] is a genuinely two-variant closed set: one variant would prove only
 /// that a type alias compiles, not that a downstream `dyn_enum_close!` dispatches.
 pub struct MirrorDecider;
@@ -416,7 +416,7 @@ impl MemoryProjectionStore {
         Self::default()
     }
 
-    /// 🧨️ Fail this store's sink from here on, the way a disk stops accepting writes under a
+    /// 🚨️ Fail this store's sink from here on, the way a disk stops accepting writes under a
     /// store that already holds state.
     pub fn fail(&mut self) {
         self.sink = ReferenceSink::Failing;
@@ -507,7 +507,7 @@ impl MemorySessionStore {
         Self::default()
     }
 
-    /// 🧨️ Fail this store's sink from here on, the way a disk stops accepting writes under a
+    /// ❌️ Fail this store's sink from here on, the way a disk stops accepting writes under a
     /// store that already holds sessions.
     pub fn fail(&mut self) {
         self.sink = ReferenceSink::Failing;

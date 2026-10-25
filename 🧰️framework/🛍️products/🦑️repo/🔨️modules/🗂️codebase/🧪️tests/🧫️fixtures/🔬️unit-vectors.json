@@ -1,0 +1,599 @@
+{
+ "schema": "semio.repo.codebase.unit-vectors/1",
+ "$comment": "🔬️ Expected answers for the cargo unit tests over the repository materialised from 📡️repo-tree.json. `gitignored` is the verdict of the owned matcher modelled in Python (separator rules anchored at the root: the recorded divergence from git), `git` the verdict of real `git check-ignore` for comparison, `structural`, `generated` and the lexical walk by plain Python models. Regenerate with the oracle; never edit by hand.",
+ "oracle": {
+  "script": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/rtest-d-tools/oracle_codebase.py",
+  "tool": "git check-ignore + python3",
+  "libraries": [
+   "git",
+   "os",
+   "re"
+  ],
+  "model": "structural exclusion, generated folders, lexical walk, scope resolution"
+ },
+ "gitignorePatterns": [
+  "ignored/",
+  "*.tmp"
+ ],
+ "ignore": [
+  {
+   "path": "compose/🖥️app/🧩️widget.ts",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "compose/🖥️app/ignored/💀️dead.ts",
+   "structural": false,
+   "gitignored": false,
+   "git": true,
+   "generated": false
+  },
+  {
+   "path": "compose/🖥️app/scratch.tmp",
+   "structural": false,
+   "gitignored": true,
+   "git": true,
+   "generated": false
+  },
+  {
+   "path": "compose/📚️core/generated/🤖️gen.ts",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "node_modules/vendored/index.ts",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "compose/📚️core/node_modules/dep/index.ts",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": ".🧬semio/🦑️repo/📁️files.json",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": ".git/config",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "compose/📚️core/dist/bundle.js",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "compose/📚️core/build/out.js",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "compose/📚️core/target/debug/lib.rs",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "compose/📚️core/__pycache__/mod.pyc",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "compose/🖥️app/.next/page.js",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "compose/🖥️app/coverage/lcov.info",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "compose/🖥️app/Form.Designer.cs",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "compose/🖥️app/codegen/schema.ts",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "assets/repo/logo.png",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "LICENSE.md",
+   "structural": false,
+   "gitignored": true,
+   "git": true,
+   "generated": false
+  },
+  {
+   "path": "compose/📚️core/LICENSE.md",
+   "structural": false,
+   "gitignored": true,
+   "git": true,
+   "generated": false
+  },
+  {
+   "path": "./compose/🖥️app/🧩️widget.ts",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "plain/📁️x.ts",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "./plain/📁️x.ts",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "a/b/c.rs",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "a/node_modules/x.ts",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "node_modules",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "node_modules/x",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": ".git",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": ".git/config",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "x/.git/hooks",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": ".🧬semio",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": ".🧬semio/a",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": ".🧬semio-extra/a",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "assets/repo",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "assets/repo/x.png",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "assets/repository/x.png",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "p/asset/repo/x.png",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "a/dist/x.js",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "dist/x.js",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "a/build/x.js",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "a/target/x.rs",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "a/__pycache__/x.pyc",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "a/.next/x.js",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "a/coverage/x",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "Form.Designer.cs",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "a/Form.Designer.cs",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "a/Form.designer.cs",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "a/codegen/x.ts",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "codegen/x.ts",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "a/codegenerator/x.ts",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": ".",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "LICENSE.md",
+   "structural": false,
+   "gitignored": true,
+   "git": true,
+   "generated": false
+  },
+  {
+   "path": "a/LICENSE.md",
+   "structural": false,
+   "gitignored": true,
+   "git": true,
+   "generated": false
+  },
+  {
+   "path": "a/license.md",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "generated/x.ts",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "a/generated",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "a/Generated/x.ts",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "js/vscode/generated",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "js/vscode/generated/x",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "js/compose/generated/y",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "js/vscode/generatedx",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  },
+  {
+   "path": "a/b/dist",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "x/build/y/z",
+   "structural": true,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "coverage",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": true
+  },
+  {
+   "path": "a/.venv/x.py",
+   "structural": false,
+   "gitignored": false,
+   "git": false,
+   "generated": false
+  }
+ ],
+ "scopes": {
+  "repo": [
+   "compose/sites/🌐️web/🌍️page.tsx",
+   "compose/📚️core/generated/🤖️gen.ts",
+   "compose/📚️core/🔧️util.rs",
+   "compose/📚️core/🧪️util_test.rs",
+   "compose/🖥️app/ignored/💀️dead.ts",
+   "compose/🖥️app/🧩️widget.ts",
+   "repo/🐹️tool/🔧️main.go"
+  ],
+  "technologies": [
+   {
+    "name": "compose/🌐️web",
+    "root": "compose/sites/🌐️web",
+    "files": [
+     "compose/sites/🌐️web/🌍️page.tsx"
+    ]
+   },
+   {
+    "name": "compose/📚️core",
+    "root": "compose/📚️core",
+    "files": [
+     "compose/📚️core/generated/🤖️gen.ts",
+     "compose/📚️core/🔧️util.rs",
+     "compose/📚️core/🧪️util_test.rs"
+    ]
+   },
+   {
+    "name": "compose/🖥️app",
+    "root": "compose/🖥️app",
+    "files": [
+     "compose/🖥️app/ignored/💀️dead.ts",
+     "compose/🖥️app/🧩️widget.ts"
+    ]
+   },
+   {
+    "name": "repo/🐹️tool",
+    "root": "repo/🐹️tool",
+    "files": [
+     "repo/🐹️tool/🔧️main.go"
+    ]
+   }
+  ],
+  "folders": [
+   {
+    "path": "compose/",
+    "files": [
+     "compose/sites/🌐️web/🌍️page.tsx",
+     "compose/📚️core/generated/🤖️gen.ts",
+     "compose/📚️core/🔧️util.rs",
+     "compose/📚️core/🧪️util_test.rs",
+     "compose/🖥️app/ignored/💀️dead.ts",
+     "compose/🖥️app/🧩️widget.ts"
+    ]
+   },
+   {
+    "path": "compose/🖥️app/",
+    "files": [
+     "compose/🖥️app/ignored/💀️dead.ts",
+     "compose/🖥️app/🧩️widget.ts"
+    ]
+   },
+   {
+    "path": "compose/📚️core/",
+    "files": [
+     "compose/📚️core/generated/🤖️gen.ts",
+     "compose/📚️core/🔧️util.rs",
+     "compose/📚️core/🧪️util_test.rs"
+    ]
+   },
+   {
+    "path": "docs/",
+    "files": []
+   },
+   {
+    "path": "ignored/",
+    "files": []
+   },
+   {
+    "path": "compose/🖥️app/ignored/",
+    "files": [
+     "compose/🖥️app/ignored/💀️dead.ts"
+    ]
+   },
+   {
+    "path": "missing/",
+    "files": []
+   }
+  ],
+  "files": [
+   {
+    "path": "compose/🖥️app/🧩️widget.ts",
+    "files": [
+     "compose/🖥️app/🧩️widget.ts"
+    ]
+   },
+   {
+    "path": "compose/🖥️app/ignored/💀️dead.ts",
+    "files": [
+     "compose/🖥️app/ignored/💀️dead.ts"
+    ]
+   },
+   {
+    "path": "LICENSE.md",
+    "files": []
+   },
+   {
+    "path": "node_modules/vendored/index.ts",
+    "files": []
+   },
+   {
+    "path": "README.md",
+    "files": [
+     "README.md"
+    ]
+   },
+   {
+    "path": "missing.ts",
+    "files": [
+     "missing.ts"
+    ]
+   }
+  ]
+ }
+}

@@ -20,6 +20,10 @@ testkit = ["dep:serde", "semio-s-artifact-draw-drawing-geometry/testkit", "semio
 
 [dependencies]
 semio-framework-2d = { workspace = true }
+semio-framework-2d-text-font = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📦️packages/🦀️rust" }
+semio-framework-2d-text-font-catalog = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/📦️packages/🦀️rust" }
+semio-framework-2d-text-font-run = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📦️packages/🦀️rust" }
+semio-framework-2d-text-font-shape-unicode = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -45,3 +49,5 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tiny-skia = { workspace = true }
 ttf-parser = { workspace = true }
+semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }

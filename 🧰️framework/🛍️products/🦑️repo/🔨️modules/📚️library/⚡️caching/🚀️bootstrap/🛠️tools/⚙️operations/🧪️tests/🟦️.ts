@@ -5,11 +5,11 @@ import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} fr
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {buildChangedFilesCommandsV1} from "../../../../../🏗️build/🧭️selection/🟦️.ts";
+import {buildChangedFilesCommandsV1} from "../../../../../📦️packages/🟦️typescript/🏗️build/🧭️selection/🟦️.ts";
 import {nxAffectedArgumentsV1,nxBuildCacheToolV1,nxCacheDirectoryV1,nxExecEnvironmentMappingV1,nxExecWrapperV1,nxOperationArgumentsV1} from "../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
-const root=join(import.meta.dir,"../../../../../../../../../..").replace(/[\\/]+$/u,""),installed=createRequire(join(root,"package.json")),parse=installed("yargs-parser");
+const root=join(import.meta.dir,"../../../../../../../../../..").replace(/[\\/]+$/u,""),installed=createRequire(join(root,".nx/installation/package.json")),parse=installed("yargs-parser");
 
 function git(directory:string,args:readonly string[]):string{
  const result=spawnSync("git",["-c","user.name=probe","-c","user.email=probe@example.invalid","-c","commit.gpgsign=false","-c","core.fsmonitor=false",...args],{cwd:directory,encoding:"utf8"});

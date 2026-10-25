@@ -5,7 +5,7 @@ import {createRequire} from "node:module";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {scriptInvocationEnvironment} from "../../../../../../../../\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83e\udded\ufe0frouting/\ud83d\udfe6\ufe0f.ts";
-import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83c\udf9b\ufe0fexecution/\ud83d\udfe6\ufe0f.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83c\udfd7\ufe0fbuild/\ud83c\udf9f\ufe0fcapacity/\ud83d\udfe6\ufe0f.ts";
 /** 🏇️ Missing publication after the real graph lock is stale; a published graph failure preserves its cause. */

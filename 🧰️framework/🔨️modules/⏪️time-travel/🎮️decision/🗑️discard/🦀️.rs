@@ -59,7 +59,7 @@ impl TimeTravelDiscardCursor {
             self.bound=Some((session as *const _ as usize,session.id,session.generation,session.base));self.planned_stage=Some(if pending.return_stage==TimeTravelStage::Reviewing{TimeTravelStage::Reviewing}else{TimeTravelStage::Inactive});self.phase=1;
             Ok(RetainedCloneStep::Progress(copied(demand.copy_bytes)))
     }
-    /// 🎟️ The caller commits only after its original Store effects have reached admitted custody.
+    /// 🐙️ The caller commits only after its original Store effects have reached admitted custody.
     pub fn commit(&mut self,session:&mut TimeTravelSession,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let demand=self.commit_demands(session)?;
         if !admits(demand,grant){return Ok(idle())}

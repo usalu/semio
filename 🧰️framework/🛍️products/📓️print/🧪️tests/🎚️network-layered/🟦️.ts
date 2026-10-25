@@ -35,7 +35,7 @@ function nodeIds(ctx: AdapterContext): string[] {
   return seen;
 }
 
-/** 📋️ The expectation rows of a conformance scenario, keyed by node id. */
+/** 🔑️ The expectation rows of a conformance scenario, keyed by node id. */
 function expectations(ctx: AdapterContext): Record<string, Record<string, string>> {
   const out: Record<string, Record<string, string>> = {};
   for (const row of rows(ctx)) if ((row.node ?? "") !== "") out[row.node!] = row;
@@ -44,7 +44,7 @@ function expectations(ctx: AdapterContext): Record<string, Record<string, string
 // #endregion 🧫️Vectors
 
 // #region 🔮️Oracle
-/** 🔮️ dagre with the same ranker; the rank is read back as the position of the node's
+/** 🧱️ dagre with the same ranker; the rank is read back as the position of the node's
  * row among the distinct row centres, because dagre drops `rank` from the label once it has
  * turned it into a coordinate. */
 function dagreLayers(ctx: AdapterContext): number[] {
@@ -73,7 +73,7 @@ function namedLayers(ctx: AdapterContext): number[] {
   return flat;
 }
 
-/** 📋️ The layers and positions the conformance table names, in node-index order. */
+/** 📍️ The layers and positions the conformance table names, in node-index order. */
 function namedOrder(ctx: AdapterContext): number[] {
   const table = expectations(ctx);
   const flat: number[] = [];
@@ -117,16 +117,16 @@ export default defineTestAdapter({
     "ranks-agree-with-dagre": {
       /** 🔮️ dagre's own longest-path ranker over the same DAG. */
       oracle: (ctx: AdapterContext) => ({ projection: { "geometry/layout/layered": dagreLayers(ctx) } }),
-      /** 🎯️ Node index and layer from the kernel's layered layout. */
+      /** 🗂️ Node index and layer from the kernel's layered layout. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, [0, 1])),
     },
     "slack-ranks-are-as-soon-as-possible": {
-      /** 📋️ The as-soon-as-possible layers the feature specifies. */
+      /** 🔜️ The as-soon-as-possible layers the feature specifies. */
       oracle: (ctx: AdapterContext) => ({ projection: { "geometry/layout/layered": namedLayers(ctx) } }),
       subject: async (ctx: AdapterContext) => (await subject(ctx, [0, 1])),
     },
     "barycenter-ordering": {
-      /** 📋️ The layer and within-layer position the feature specifies. */
+      /** 🥪️ The layer and within-layer position the feature specifies. */
       oracle: (ctx: AdapterContext) => ({ projection: { "geometry/layout/layered": namedOrder(ctx) } }),
       subject: async (ctx: AdapterContext) => (await subject(ctx, [0, 1, 2])),
     },

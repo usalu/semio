@@ -2,7 +2,7 @@ import{spawnSync}from"node:child_process";
 import{chmodSync,lstatSync,readdirSync}from"node:fs";
 import{join}from"node:path";
 import protocol from"./🔣️.json"with{type:"json"};
-import { runtimeWhichV1 } from "../../../⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeWhichV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 type CandidateV1=Readonly<{command:string;arguments?:readonly string[];platforms?:readonly string[]}>;
 type ToolRowV1=Readonly<{candidates:readonly CandidateV1[];probe:readonly string[];pattern:string;locate?:readonly string[]}>;
@@ -10,7 +10,7 @@ type ToolRowV1=Readonly<{candidates:readonly CandidateV1[];probe:readonly string
 export type TestToolNameV1=keyof typeof protocol.tools;
 /** 🔌️ What resolving a tool touches, replaceable so every host is testable on any host. */
 export type TestToolchainPortV1=Readonly<{platform:NodeJS.Platform;which(command:string):string|null;run(command:string,args:readonly string[]):Readonly<{status:number|null;stdout:string}>;environment:Readonly<Record<string,string|undefined>>;write(text:string):void}>;
-/** 🔎️ The outcome: an absolute program path, or null with the candidates that were tried. */
+/** 🛠️ The outcome: an absolute program path, or null with the candidates that were tried. */
 export type TestToolResolutionV1=Readonly<{tool:TestToolNameV1;path:string|null;tried:readonly string[]}>;
 
 const systemPort:TestToolchainPortV1=Object.freeze({platform:process.platform,which:command=>runtimeWhichV1(command),run:(command,args)=>{const result=spawnSync(command,[...args],{encoding:"utf8",timeout:10000,windowsHide:true});return{status:result.status,stdout:(result.stdout??"")+(result.stderr??"")};},environment:process.env,write:text=>{process.stderr.write(text+"\n");}});
@@ -37,7 +37,7 @@ export function describeMissingTestToolV1(resolution:TestToolResolutionV1,enviro
 }
 
 const resolved=new Map<TestToolNameV1,TestToolResolutionV1>();
-/** 🧰️ Returns the program path of a test tool or null, resolving once per process; a missing tool is announced once with the reason, so a skipped comparison is never silent. */
+/** 🔧️ Returns the program path of a test tool or null, resolving once per process; a missing tool is announced once with the reason, so a skipped comparison is never silent. */
 export function testToolPathV1(tool:TestToolNameV1,port:TestToolchainPortV1=systemPort):string|null{
  const cached=port===systemPort?resolved.get(tool):undefined;if(cached)return cached.path;
  const resolution=resolveTestToolV1(tool,port);
@@ -47,7 +47,7 @@ export function testToolPathV1(tool:TestToolNameV1,port:TestToolchainPortV1=syst
 }
 /** 🐍️ The Python 3 interpreter for independent oracles: `python3`, `python` or `py -3`, whichever is a real Python 3, or null. */
 export const testPythonV1=():string|null=>testToolPathV1("python");
-/** 🔎️ The ripgrep program for scan oracles, or null. */
+/** 🧪️ The ripgrep program for scan oracles, or null. */
 export const testRipgrepV1=():string|null=>testToolPathV1("ripgrep");
 /** 🚧️ Returns the tool path or throws the bilingual message, for a test that must not pass without it. */
 export function requireTestToolV1(tool:TestToolNameV1,port:TestToolchainPortV1=systemPort):string{

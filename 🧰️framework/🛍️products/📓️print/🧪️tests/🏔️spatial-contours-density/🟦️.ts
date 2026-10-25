@@ -91,7 +91,7 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🏔️spatial-contours-density/contours.tex", DECIMALS)),
     },
     "kernel-density": {
-      /** 🔮️ The exact Gaussian sum (independent implementation of the specification) and `d3-contour` on it. */
+      /** 💎️ The exact Gaussian sum (independent implementation of the specification) and `d3-contour` on it. */
       oracle: (ctx: AdapterContext) => {
         const [row] = rows(ctx);
         if (row === undefined) throw new Error("the kernel-density scenario carries no parameter row");
@@ -105,7 +105,7 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ `\SemioVizDensity` and `\SemioVizContour` on the grid it produced. */
+      /** 🏠️ `\SemioVizDensity` and `\SemioVizContour` on the grid it produced. */
       subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🏔️spatial-contours-density/density.tex", DENSITY_DECIMALS)),
     },
   },

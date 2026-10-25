@@ -23,7 +23,7 @@ impl<T> std::ops::Deref for RetainedOwnerGateGuard<'_,T> {type Target=T;fn deref
 impl<T> std::ops::DerefMut for RetainedOwnerGateGuard<'_,T> {fn deref_mut(&mut self)->&mut T {unsafe{&mut*self.gate.value.get()}}}
 impl<T> Drop for RetainedOwnerGateGuard<'_,T> {fn drop(&mut self){self.gate.occupied.store(false,std::sync::atomic::Ordering::Release)}}
 
-/// 🎮️ Erases only the owner type while preserving each independent retirement authority.
+/// 🏛️ Erases only the owner type while preserving each independent retirement authority.
 pub trait ErasedControlledRetirement: Send {
     fn next_demand(&self, maximum_body_bytes: usize) -> Result<crate::RetirementDemand, ValueError>;
     fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
@@ -74,7 +74,7 @@ pub struct ControlledRetirement<T: RetireOwned> {
 }
 
 impl<T: RetireOwned> ControlledRetirement<T> {
-    /// 🎟️ Retains the input inline without constructing a retirement scaffold.
+    /// 🆕️ Retains the input inline without constructing a retirement scaffold.
     pub fn new(value: T) -> Result<Self, (ValueError, T)> {
         if !T::controlled_retirement_supported() { return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner, "typed owner has no controlled retirement authority"), value)); }
         Ok(Self::retain(value))
@@ -94,7 +94,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
 
     pub fn terminal_is_empty(&self) -> bool { self.value.is_none() && self.cursors.terminal_is_empty() }
 
-    /// 🎟️ Visits only the original active child once and preserves one actual body hint.
+    /// 🔂️ Visits only the original active child once and preserves one actual body hint.
     pub fn next_demand(&self, body:usize)->Result<crate::RetirementDemand,ValueError>{
         use crate::RetirementDemand;
         if self.value.is_some()&&!T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"typed owner has no controlled retirement authority"))}
@@ -118,7 +118,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
         if cursor.terminal_is_empty() { Ok(0) } else { cursor.next_work_byte_demand() }
     }
 
-    /// 📏️ Exposes the next complete constructor allocation before the caller grants it.
+    /// ⏭️ Exposes the next complete constructor allocation before the caller grants it.
     pub fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError> {
         if self.value.is_some()&&!T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"typed owner has no controlled retirement authority"))}
         if self.terminal_is_empty() || (self.value.is_none() && (self.cursors.is_empty() || self.cursors.get(self.cursors.len() - 1).is_some_and(|cursor| cursor.terminal_is_empty()))) { return Ok(0); }
@@ -127,7 +127,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
         demand.ok_or_else(|| refusal("retirement owner has no controlled birth authority"))
     }
 
-    /// 📏️ Exposes the next complete physical release before the caller grants it.
+    /// 📦️ Exposes the next complete physical release before the caller grants it.
     pub fn next_release_byte_demand(&self) -> Result<usize, ValueError> {
         if self.value.is_some() || self.terminal_is_empty() { return Ok(0); }
         if self.cursors.is_empty() { return self.cursors.next_release_allocation_bytes().map_err(ValueError::from); }

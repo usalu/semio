@@ -20,5 +20,4 @@ test("indexed collection transfer matches independent JSON Patch and preserves e
    for(const original of originals)expect((returned.filter(row=>row===original).length)+(commit.complete?target.value.filter(row=>row===original).length:0)).toBe(1);
   }
  }
- console.log("[DEBUG] five neutral collection streams agree with JSON Patch; original survivor identities and cancellation ownership are returned exactly once at seven frontiers");
 });

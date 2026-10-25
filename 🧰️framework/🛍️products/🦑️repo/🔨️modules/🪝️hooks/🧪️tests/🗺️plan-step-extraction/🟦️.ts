@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🗺️Plans
@@ -57,7 +57,7 @@ function entriesOf(source: Record<string, unknown>, key: string, nameKey: string
   return steps;
 }
 
-/** 🗺️ VS Code's `todoList` first, then the neutral `steps`. */
+/** 📋️ VS Code's `todoList` first, then the neutral `steps`. */
 function extractPlanSteps(input: unknown, toolArgs: string): PlanStep[] {
   const source = planSource(input, toolArgs);
   if (source === null) return [];

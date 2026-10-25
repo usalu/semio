@@ -10,10 +10,10 @@ import { getRepoMetaDir } from "../../../🗂️workspaces/🧬️metadata/🟦�
 /** 📊️ Names the supported repository coverage storage kinds. */
 export type CoverageKind="js"|"rust"|"go"|"py"|"dotnet";
 
-/** 📊️ Creates the selected toolchain's genuine repository coverage directory. */
+/** 📁️ Creates the selected toolchain's genuine repository coverage directory. */
 export function coverageDir(repoRoot:string,kind:CoverageKind):string{const directory=join(getRepoMetaDir(repoRoot),"📊️metrics","coverage",kind);mkdirSync(directory,{recursive:true});return directory;}
 
-/** 📊️ Resolves the stable filesystem-safe owner name for a coverage product. */
+/** 🍃️ Resolves the stable filesystem-safe owner name for a coverage product. */
 export function coverageSlug(owner:string):string{return owner.replace(/[^a-zA-Z0-9_-]+/g,"_");}
 
 /** 📋️ Supplies genuine repository storage to the explicitly selected process owner. */

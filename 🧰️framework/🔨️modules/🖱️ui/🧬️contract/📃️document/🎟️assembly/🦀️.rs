@@ -103,7 +103,7 @@ impl UiDocumentAssembly {
         result
     }
 
-    /// 🎟️ The exact job reservation becomes the root's sole credit before any payload allocation.
+    /// 🔓️ The exact job reservation becomes the root's sole credit before any payload allocation.
     pub fn open_with_permit(&mut self, permit: &mut Option<UiResidentPermit>, surface: &mut Option<SurfaceId>, identity: UiDocumentAssemblyIdentity, items: usize, bytes: usize) -> Result<UiDocumentAssemblyProgress, UiDocumentAssemblyError> {
         let UiDocumentAssemblyIdentity { generation, revision, root, layout_epoch } = identity;
         if self.builder.is_some() || self.closing {

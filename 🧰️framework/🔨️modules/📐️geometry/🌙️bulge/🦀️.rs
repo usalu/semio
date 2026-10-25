@@ -9,12 +9,12 @@ use semio_framework_geometry_vector::{angle_between, cross, perp, unit, ANGLE_EP
 use semio_framework_geometry_primitives::{Affine, Point, Rect, Vec2};
 use std::f64::consts::{PI, TAU};
 
-/// 🌙️ Sweep angle (radians, signed, counter-clockwise positive) of a bulge.
+/// 🧹️ Sweep angle (radians, signed, counter-clockwise positive) of a bulge.
 pub fn sweep_from_bulge(bulge: f64) -> f64 {
     4.0 * bulge.atan()
 }
 
-/// 🌙️ Bulge (`tan(sweep / 4)`) of a signed sweep angle.
+/// 🖊️ Bulge (`tan(sweep / 4)`) of a signed sweep angle.
 pub fn bulge_from_sweep(sweep: f64) -> f64 {
     (sweep / 4.0).tan()
 }
@@ -42,7 +42,7 @@ pub enum Extent {
     Unbounded,
 }
 
-/// ✂️ One intersection of two segments with the parameter on each; `ta`/`tb` are unclamped when the extent is [`Extent::Unbounded`].
+/// 💥️ One intersection of two segments with the parameter on each; `ta`/`tb` are unclamped when the extent is [`Extent::Unbounded`].
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SegHit {
     pub point: Point,
@@ -51,12 +51,12 @@ pub struct SegHit {
 }
 
 impl BulgeSeg {
-    /// 📏️ Straight segment.
+    /// ➖️ Straight segment.
     pub fn line(start: Point, end: Point) -> Self {
         Self { start, end, bulge: 0.0 }
     }
 
-    /// 🌙️ Segment from explicit endpoints and bulge.
+    /// 🆕️ Segment from explicit endpoints and bulge.
     pub fn new(start: Point, end: Point, bulge: f64) -> Self {
         Self { start, end, bulge }
     }
@@ -82,17 +82,17 @@ impl BulgeSeg {
         Some(Self { start: a, end: b, bulge: bulge_from_sweep(sweep) })
     }
 
-    /// 📏️ `true` when the segment is a straight line (|bulge| below 1e-12).
+    /// ❓️ `true` when the segment is a straight line (|bulge| below 1e-12).
     pub fn is_line(&self) -> bool {
         self.bulge.abs() <= 1e-12
     }
 
-    /// 📏️ Straight distance between the endpoints.
+    /// 🏹️ Straight distance between the endpoints.
     pub fn chord(&self) -> f64 {
         (self.end - self.start).hypot()
     }
 
-    /// 🧭️ Signed sweep angle, counter-clockwise positive; zero for lines.
+    /// 🖋️ Signed sweep angle, counter-clockwise positive; zero for lines.
     pub fn sweep(&self) -> f64 {
         sweep_from_bulge(self.bulge)
     }
@@ -105,7 +105,7 @@ impl BulgeSeg {
         self.chord() / (2.0 * (self.sweep().abs() / 2.0).sin())
     }
 
-    /// 🎯️ Arc centre; `None` for lines and for degenerate zero-chord arcs.
+    /// 🔘️ Arc centre; `None` for lines and for degenerate zero-chord arcs.
     pub fn center(&self) -> Option<Point> {
         let chord = self.chord();
         if self.is_line() || chord <= LENGTH_EPS {
@@ -126,7 +126,7 @@ impl BulgeSeg {
         }
     }
 
-    /// 🧭️ Angle of the start point around the centre; `None` for lines.
+    /// ▶️ Angle of the start point around the centre; `None` for lines.
     pub fn start_angle(&self) -> Option<f64> {
         let center = self.center()?;
         let v = self.start - center;
@@ -145,7 +145,7 @@ impl BulgeSeg {
         }
     }
 
-    /// 📍️ Point at arc length `s` from the start (not clamped).
+    /// 🔰️ Point at arc length `s` from the start (not clamped).
     pub fn point_at_length(&self, s: f64) -> Point {
         let length = self.length();
         self.point_at(if length > 0.0 { s / length } else { 0.0 })
@@ -162,7 +162,7 @@ impl BulgeSeg {
         }
     }
 
-    /// ➡️ Unit tangent at arc length `s` from the start.
+    /// 🏁️ Unit tangent at arc length `s` from the start.
     pub fn tangent_at_length(&self, s: f64) -> Vec2 {
         let length = self.length();
         self.tangent_at(if length > 0.0 { s / length } else { 0.0 })
@@ -192,7 +192,7 @@ impl BulgeSeg {
         }
     }
 
-    /// 🎯️ Closest point on the segment (endpoints included).
+    /// 🧲️ Closest point on the segment (endpoints included).
     pub fn closest(&self, p: Point) -> Closest {
         let make = |t: f64, point: Point| Closest { t, point, distance: (p - point).hypot() };
         match self.center() {
@@ -257,7 +257,7 @@ impl BulgeSeg {
         (Self { start: self.start, end: mid, bulge: bulge_from_sweep(sweep * t) }, Self { start: mid, end: self.end, bulge: bulge_from_sweep(sweep * (1.0 - t)) })
     }
 
-    /// ✂️ Sub-segment between parameters `t0 <= t1`.
+    /// 🔪️ Sub-segment between parameters `t0 <= t1`.
     pub fn subsegment(&self, t0: f64, t1: f64) -> Self {
         let (t0, t1) = (t0.clamp(0.0, 1.0), t1.clamp(0.0, 1.0));
         let (a, b) = (self.point_at(t0), self.point_at(t1));
@@ -323,14 +323,14 @@ impl BulgeSeg {
         out.push(self.end);
     }
 
-    /// 🔷️ Polyline approximation including the start point.
+    /// 〰️ Polyline approximation including the start point.
     pub fn flatten(&self, tolerance: f64) -> Vec<Point> {
         let mut out = vec![self.start];
         self.flatten_into(tolerance, &mut out);
         out
     }
 
-    /// 📐️ Signed area between chord and arc (positive for counter-clockwise arcs): `r^2 / 2 * (sweep - sin sweep)`; zero for lines.
+    /// 🔏️ Signed area between chord and arc (positive for counter-clockwise arcs): `r^2 / 2 * (sweep - sin sweep)`; zero for lines.
     pub fn segment_area(&self) -> f64 {
         if self.is_line() {
             return 0.0;
@@ -423,14 +423,14 @@ fn within(t: f64, seg: &BulgeSeg) -> bool {
     t >= -slack && t <= 1.0 + slack
 }
 
-/// ✂️ Intersections of two segments sorted by `ta`; parallel, coincident and concentric carriers yield none, tangential contact yields one point.
+/// 🔃️ Intersections of two segments sorted by `ta`; parallel, coincident and concentric carriers yield none, tangential contact yields one point.
 pub fn intersect(a: &BulgeSeg, b: &BulgeSeg, extent: Extent) -> Vec<SegHit> {
     let mut hits: Vec<SegHit> = candidate_points(&carrier(a), &carrier(b)).into_iter().map(|point| SegHit { point, ta: a.param_of(point), tb: b.param_of(point) }).filter(|hit| extent == Extent::Unbounded || (within(hit.ta, a) && within(hit.tb, b))).collect();
     hits.sort_by(|x, y| x.ta.total_cmp(&y.ta));
     hits
 }
 
-/// 🎯️ Intersection of the infinite carriers (or the bounded segments) closest to `near`; the miter point of a corner when `near` is the shared vertex.
+/// ♾️ Intersection of the infinite carriers (or the bounded segments) closest to `near`; the miter point of a corner when `near` is the shared vertex.
 pub fn nearest_intersection(a: &BulgeSeg, b: &BulgeSeg, extent: Extent, near: Point) -> Option<Point> {
     intersect(a, b, extent).into_iter().map(|hit| hit.point).min_by(|p, q| (*p - near).hypot().total_cmp(&(*q - near).hypot()))
 }
@@ -442,7 +442,7 @@ pub struct Corner {
     pub right: Option<Point>,
 }
 
-/// 🧱️ Miter join of two bands meeting at `prev.end == next.start`: each band has its own `(left, right)` half widths; returns the points where the left faces and the right faces meet.
+/// 🩹️ Miter join of two bands meeting at `prev.end == next.start`: each band has its own `(left, right)` half widths; returns the points where the left faces and the right faces meet.
 pub fn corner_join(prev: &BulgeSeg, prev_widths: (f64, f64), next: &BulgeSeg, next_widths: (f64, f64)) -> Corner {
     let side = |a: Option<BulgeSeg>, b: Option<BulgeSeg>| match (a, b) {
         (Some(a), Some(b)) => nearest_intersection(&a, &b, Extent::Unbounded, prev.end),
@@ -451,7 +451,7 @@ pub fn corner_join(prev: &BulgeSeg, prev_widths: (f64, f64), next: &BulgeSeg, ne
     Corner { left: side(prev.offset(prev_widths.0), next.offset(next_widths.0)), right: side(prev.offset(-prev_widths.1), next.offset(-next_widths.1)) }
 }
 
-/// 🧱️ Footprint of a band around `axis` as a counter-clockwise loop of four bulged vertices `[right.start, right.end, left.end, left.start]`.
+/// ➰️ Footprint of a band around `axis` as a counter-clockwise loop of four bulged vertices `[right.start, right.end, left.end, left.start]`.
 /// `start_trim`/`end_trim` replace the `(left, right)` end points (for example from [`corner_join`]); `None` keeps the square cut. `None` result when a side collapses.
 pub fn band_loop(axis: &BulgeSeg, left: f64, right: f64, start_trim: Option<(Point, Point)>, end_trim: Option<(Point, Point)>) -> Option<[(Point, f64); 4]> {
     let l = axis.offset(left)?;

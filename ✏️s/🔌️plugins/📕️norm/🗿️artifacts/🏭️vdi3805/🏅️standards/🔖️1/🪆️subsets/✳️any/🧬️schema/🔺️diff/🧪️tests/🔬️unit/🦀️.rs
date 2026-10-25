@@ -11,6 +11,7 @@ use semio_s_artifact_norm_vdi3805_mut_products::remove_product::RemoveProduct;
 use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
 use semio_s_artifact_norm_vdi3805_model::{EditionProfileChoice, Vdi3805Snapshot};
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
+use protocol::ColdMutationDiff;
 
 fn diff_of(mutation: &Vdi3805Mutation, base: &Vdi3805Snapshot) -> Vdi3805Diff {
     let raised = mutation.diff(base);

@@ -44,7 +44,7 @@ export function parseVizTaxonomyLeaves(md: string): string[] {
   return parseVizTaxonomy(md).map((leaf) => `${leaf.section}/${leaf.slug}`);
 }
 
-/** 📊️ Enumerates the generated per-section gallery documents plus the hand-written API reference. */
+/** 📑️ Enumerates the generated per-section gallery documents plus the hand-written API reference. */
 export function visualizationTemplates(): readonly { readonly id: string; readonly texPath: string }[] {
   const documents = [
     ...readdirSync(VIZ_GALLERY_DIR).map((name) => ({ name, directory: "📊️viz-gallery" })),

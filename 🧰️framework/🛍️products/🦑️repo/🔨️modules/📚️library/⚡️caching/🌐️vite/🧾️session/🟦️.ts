@@ -17,7 +17,7 @@ function mutateServiceSession<T>(root: string, signal: AbortSignal, operation: (
   return withResourceLeases({ directory: join(root, contract.directory), resources: [{ resource: contract.resource, mode: "exclusive" }], signal }, async () => operation());
 }
 
-/** 🧾️ Validates the owned service generation independently of any process-ID reuse. */
+/** 🛎️ Validates the owned service generation independently of any process-ID reuse. */
 export function parseServiceSession(value: unknown): ServiceSession {
   if (!keys(value, "id,owner,pid,schema") || value.schema !== "semio.nx.service/v1" || typeof value.id !== "string" || !idPattern.test(value.id) || typeof value.owner !== "string" || !value.owner || value.owner.length > 256 || !Number.isSafeInteger(value.pid) || Number(value.pid) < 1) throw new Error("Invalid service session or pid");
   return value as ServiceSession;

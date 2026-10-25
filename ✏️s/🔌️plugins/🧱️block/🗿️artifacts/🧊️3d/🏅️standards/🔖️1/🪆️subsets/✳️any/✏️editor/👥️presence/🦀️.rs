@@ -16,7 +16,7 @@ use pack::snapshot::ArtifactPack;
 /// (`selected_ids`/`hovered_vortex_full_id`) — both now broadcast automatically via the framework's
 /// typed `PresenceInteraction` for the declared `vortex` domain (see `crate::editor::block3d::create_block3d_app`),
 /// so this facet is empty until block3d grows genuinely app-specific live state (e.g. a live camera).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -106,7 +106,11 @@ impl protocol::ColdMutationDiff<Block3dPresence> for Block3dPresenceDiff {
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub enum Block3dPresenceMutation {}
 
-impl store::ArtifactPresenceSnapshot for Block3dPresence {}
+impl store::ArtifactPresenceSnapshot for Block3dPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl protocol::Mutation<Block3dPresence> for Block3dPresenceMutation {
     type Diff = Block3dPresenceDiff;

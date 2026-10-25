@@ -148,9 +148,10 @@
   "asyncRuntime": {
    "parts": [
     {
-     "reader": "rust-source",
+     "reader": "rust-family",
      "paths": [
-      "🧰️framework/🔨️modules/⏳️async/🦀️.rs"
+      "🧰️framework/🔨️modules/⏳️async/🖥️native-pool/🦀️.rs",
+      "🧰️framework/🔨️modules/⏳️async/⏰️timer-wheel/🦀️.rs"
      ]
     }
    ]

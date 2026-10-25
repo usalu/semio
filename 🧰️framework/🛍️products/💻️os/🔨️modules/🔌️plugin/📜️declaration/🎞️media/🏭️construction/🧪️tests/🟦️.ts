@@ -18,5 +18,4 @@ test("original output construction has exact neutral chunk-slot bounds",()=>{
  expect(rust.includes("pub fn original_birth_demands")).toBe(true);
  expect(rust.includes("pub fn from_original_construction")).toBe(true);
  expect(rust.includes("chunks.capacity()")).toBe(true);
- console.log("[DEBUG] Nine output bounds agree with strict Ajv, exact BigInt division and independent Mathjs ceil");
 });

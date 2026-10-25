@@ -878,10 +878,7 @@
             "verb": "dev",
             "command": [
               "repo",
-              "./📜️script.ts",
-              "dev",
-              "mcp",
-              "stdio"
+              "mcp"
             ],
             "continuous": true,
             "parameters": [
@@ -889,7 +886,7 @@
                 "id": "client",
                 "kind": "text",
                 "default": "client",
-                "valuePositional": true
+                "valueEnv": "SEMIO_REPO_MCP_CLIENT"
               }
             ],
             "mcp": {
@@ -913,11 +910,12 @@
             "verb": "dev",
             "command": [
               "repo",
-              "./📜️script.ts",
               "dev",
               "mcp",
               "stdio",
               "os",
+              "--catalog",
+              "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated",
               "--folder",
               ".🧬semio/🔗space/os-mcp",
               "--scopes",
@@ -1616,8 +1614,7 @@
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧪️tests/🟦️.ts",
-            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts",
-            "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧪️tests/📜️script.ts"
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts"
           ],
           "cache": {
             "version": 1,
@@ -3959,6 +3956,15 @@
       "dependsOn": [],
       "options": {
         "command": "repo ./📜️script.ts verify dependencies literal-external"
+      }
+    },
+    "verify-dependencies-locks": {
+      "executor": "repo:script",
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./📜️script.ts verify dependencies locks",
+        "forwardAllArgs": true
       }
     },
     "verify-dependencies-freeze-write-baseline": {

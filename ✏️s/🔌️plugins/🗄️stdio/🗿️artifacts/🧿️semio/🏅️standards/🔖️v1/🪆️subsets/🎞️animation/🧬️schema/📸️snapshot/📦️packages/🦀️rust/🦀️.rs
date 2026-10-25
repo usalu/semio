@@ -34,3 +34,10 @@ pub mod schema {
         pub use component::*;
     }
 }
+semio_framework_value::artifact_retire_leaf!(schema::snapshot::AnimInterpolation);
+semio_framework_value::artifact_retire_struct!(schema::snapshot::AnimTarget { node, property });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::AnimKeyframe { t, value });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::AnimChannel { target, interpolation, keyframes });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::AnimTimeline { name, channels });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioAnimationSnapshot { schema, timelines });
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioAnimationSnapshot);

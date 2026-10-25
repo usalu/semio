@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Locator, Page } from "@playwright/test";
-import { readIntroduction, activeOverview, openQuizGrid, boxOf, card, expect, primary, screen, swipeTo, test, way } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { readIntroduction, activeOverview, openQuizGrid, boxOf, card, expect, learnerId, primary, screen, swipeTo, test, way } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 interface Seen {
   readonly device: string;
@@ -42,7 +42,7 @@ function tier(part: string): number {
   return found.from;
 }
 
-/** 📐️ The inline size of `room` in rem of the root text size. */
+/** 🔠️ The inline size of `room` in rem of the root text size. */
 async function rem(room: Locator): Promise<number> {
   return room.evaluate((element) => element.clientWidth / Number.parseFloat(getComputedStyle(document.documentElement).fontSize));
 }
@@ -80,6 +80,7 @@ for (const seen of vectors.devices) {
     await expectNoSidewaysScroll(page, where("the identity step"));
     await primary(screen(page, "identity")).click();
     await expect(activeOverview(page)).toBeVisible();
+    await expect.poll(() => learnerId({ page }), { message: "the identified learner is kept on the device before the page is left", timeout: 20_000 }).not.toBe("");
 
     await openQuizGrid({ page }, "physics");
     if (await activeOverview(page).getAttribute("data-mode") === "swipe") await swipeTo({page},"physics");

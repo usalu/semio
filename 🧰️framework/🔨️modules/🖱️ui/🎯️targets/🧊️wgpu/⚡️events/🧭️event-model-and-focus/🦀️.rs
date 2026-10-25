@@ -95,7 +95,7 @@ pub enum AccessibilityUiEvent {
     Value(String),
 }
 
-/// 🈶️ One IME composition step — see `UiEvent::Ime`.
+/// 🪜️ One IME composition step — see `UiEvent::Ime`.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ImeEvent {
     Start,
@@ -105,7 +105,7 @@ pub enum ImeEvent {
         text: String,
         cursor: usize,
     },
-    /// 🈶️ Finalizes the composition: clears `EditState::composition` and inserts `text` at the caret
+    /// ✔️ Finalizes the composition: clears `EditState::composition` and inserts `text` at the caret
     /// exactly like `TextInput`.
     Commit {
         text: String,
@@ -115,7 +115,7 @@ pub enum ImeEvent {
 //#endregion 🔖️UiEvent
 
 //#region 🔖️HitTest
-/// 🎯️ Reverse-paint-order hit test from `root`: `paint::paint_stack` walks first_child→last_child
+/// 🧪️ Reverse-paint-order hit test from `root`: `paint::paint_stack` walks first_child→last_child
 /// (parent background first, then children in that order, each drawn over the last), so the
 /// topmost node at any point is the *last*-painted one — this walk visits children last-first to
 /// match. Overlay-flagged (`NodeFlags::OVERLAY`) children are tested before normal siblings at
@@ -179,7 +179,7 @@ fn disclosure_header_band(tree: &UiTree, id: NodeId, rect: Rect, reversed: bool,
     }
 }
 
-/// 🎯️🌳️ W2 wiring: a `Stack` (`node.spec.0`) stops being a plain pass-through container the moment
+/// 🥞️🌳️ W2 wiring: a `Stack` (`node.spec.0`) stops being a plain pass-through container the moment
 /// it carries `activate`/`drop_action` of its own, or is a registered `NodeFlags::DRAG_SOURCE`
 /// (`paint::sync_interactive_state` keeps that flag synced with `Tree` rows' `draggable` field, and
 /// `dispatch`'s `PointerDown` handling can only ever register a drag payload on a node that's
@@ -244,7 +244,7 @@ pub fn node_abs_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
     tree.absolute_rect(id)
 }
 
-/// 🎯️ Tests a placed subtree in window coordinates, including open overlays outside ancestor clips.
+/// 📎️ Tests a placed subtree in window coordinates, including open overlays outside ancestor clips.
 pub fn hit_test_subtree(tree: &UiTree, subtree_root: NodeId, x: f32, y: f32) -> Option<NodeId> {
     let rect = tree.absolute_rect(subtree_root)?;
     let layout = tree.accepted_layout(subtree_root)?;
@@ -276,7 +276,7 @@ pub enum CaptureKind {
 /// 🔒️ Once a node captures, subsequent pointer-move/up events route directly to it regardless of
 /// what's actually under the pointer, until released on `PointerUp` (or explicit `release`).
 #[derive(Clone, Copy, Debug, Default)]
-pub(super) struct CaptureState {
+pub struct CaptureState {
     pub target: Option<(u64, NodeId, CaptureKind)>,
 }
 
@@ -295,7 +295,7 @@ impl CaptureState {
 //#endregion 🔖️Capture
 
 //#region 🔖️Focus
-/// 🎯️ Which `UiNode` variants participate in Tab-order focus cycling.
+/// 🔄️ Which `UiNode` variants participate in Tab-order focus cycling.
 fn is_focusable(node: &UiNode) -> bool {
     matches!(node, UiNode::Input(_) | UiNode::Button(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_)) && node.presence().state != UiState::Disabled
 }

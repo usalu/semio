@@ -167,7 +167,7 @@ export { Mode };
 
 // #region 🧭️App
 
-/** 📱️ Mode descriptor rendered inside {@link App}. */
+/** 🎭️ Mode descriptor rendered inside {@link App}. */
 export interface AppModeDescriptor {
   id: string;
   label?: UiLabel;
@@ -184,7 +184,7 @@ export interface AppProps {
   chrome?: boolean;
 }
 
-/** 📱️ App shell with optional mode switcher and one active mode body. */
+/** 🧩️ App shell with optional mode switcher and one active mode body. */
 const App: React.FC<AppProps> = ({ modes, activeModeId, onActiveModeChange, children, className = "", chrome = true }) => {
   const modeLabel = useLabel("ui.selection.mode");
   const activeMode = modes.find((mode) => mode.id === activeModeId) ?? modes[0];
@@ -239,7 +239,7 @@ export interface UiProps {
   chrome?: boolean;
 }
 
-/** 🖥️ Top-level UI shell with optional app switcher and one active app body. */
+/** 🔝️ Top-level UI shell with optional app switcher and one active app body. */
 const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, footer, children, className = "", chrome = true }) => {
   const activeApp = apps.find((app) => app.id === activeAppId) ?? apps[0];
   const body = children ?? activeApp?.children;

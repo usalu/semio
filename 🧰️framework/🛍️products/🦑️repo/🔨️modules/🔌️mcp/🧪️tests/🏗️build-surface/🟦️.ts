@@ -19,7 +19,8 @@ import { describe, expect, it } from "vitest";
  */
 const modules = join(import.meta.dirname, "../../..");
 const read = (...segments: string[]): any => JSON.parse(readFileSync(join(modules, ...segments), "utf8"));
-const catalogue = read("📚️library", "🏗️build", "⚙️operations", "🔣️catalog.json");
+const backendIds: string[] = read("📚️library", "🏗️build", "🔌️backends", "📋️registry", "🔣️.json").backends.map((row: any) => row.id);
+const catalogue = JSON.parse(readFileSync(join(modules, "📚️library", "🏗️build", "⚙️operations", "🔣️catalog.json"), "utf8").replaceAll("{backends}", backendIds.join("|")));
 const policy = read("🔌️mcp", "🖼️assets", "🏗️build-surface.json");
 const golden = read("🔌️mcp", "🧪️tests", "🧫️fixtures", "🏗️build-surface.json");
 const AjvConstructor = createRequire(import.meta.url)("ajv") as new (options: Record<string, unknown>) => { compile(schema: unknown): ((data: unknown) => boolean) & { errors?: unknown } };
@@ -58,12 +59,12 @@ function inputSchema(spec: any): Record<string, unknown> {
   const bound = Object.keys(spec.bind ?? {});
   const omitted = policy.omittedFlags.map((row: any) => row.flag);
   for (const flag of flagsOf(spec).filter((name) => !bound.includes(name) && !omitted.includes(name))) {
-    const row = catalogue.flags.find((candidate: any) => candidate.name === flag);
+    const row = catalogue.flags.find((candidate: any) => candidate.name === flag && (candidate.operations ?? []).includes(spec.operation)) ?? catalogue.flags.find((candidate: any) => candidate.name === flag);
     const override = policy.flagTypes[flag];
     let schema: Record<string, unknown>;
     if (row.value === "none") schema = { type: "boolean" };
     else if (override?.type === "integer") schema = { type: "integer", minimum: override.minimum, maximum: override.maximum };
-    else if (override?.type === "list") schema = { type: "array", minItems: 1, uniqueItems: true, items: { type: "string", minLength: 1, ...(override.items ? { enum: override.items } : {}) } };
+    else if (override?.type === "list") schema = { type: "array", minItems: 1, uniqueItems: true, items: { type: "string", minLength: 1, ...(override.closed ? { enum: closedValues(row.valueName) } : override.items ? { enum: override.items } : {}) } };
     else if (closedValues(row.valueName)) schema = { type: "string", enum: closedValues(row.valueName) };
     else schema = { type: "string", minLength: 1 };
     properties[property(flag)] = schema;
@@ -114,7 +115,7 @@ describe("build surface oracle", () => {
 
   it("accepts and refuses exactly the golden argument vectors under a JSON Schema validator", () => {
     const ajv = new AjvConstructor({ strict: false });
-    const validators = new Map(policy.tools.map((spec: any) => [toolName(spec), ajv.compile(inputSchema(spec))]));
+    const validators = new Map<string, ((data: unknown) => boolean) & { errors?: unknown }>(policy.tools.map((spec: any) => [toolName(spec), ajv.compile(inputSchema(spec))]));
     for (const vector of golden.vectors) {
       const validate = validators.get(vector.tool)!;
       expect(validate(vector.arguments), `${vector.id}: ${JSON.stringify(validate.errors)}`).toBe(vector.valid);

@@ -101,7 +101,7 @@ describe("the admission corpus (language-agnostic; an independent Python referen
  };
  const places:Record<string,string>={inside:cwd,outside:join(base,"outside"),"other-worktree":join(rootTwo,"pkgs/a"),"symlink-out":join(root,"link"),missing:join(root,"nowhere")};
  const oracle=(()=>{
-  const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️oracle.py"),join(import.meta.dir,"🔣️.json"),join(import.meta.dir,"../🧬️schema/🔣️.json"),join(import.meta.dir,"../../../⚙️operations/🔣️catalog.json")]);
+  const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️.py"),join(import.meta.dir,"🔣️.json"),join(import.meta.dir,"../🧬️schema/🔣️.json"),join(import.meta.dir,"../../../⚙️operations/🔣️catalog.json")]);
   if(run.exitCode!==0)throw new Error(run.stderr.toString());
   return JSON.parse(run.stdout.toString()) as {requests:string[];arguments:{code:string;named:string[]|null}[]};
  })();
@@ -280,10 +280,10 @@ describe("the real launch checks of the authority core",()=>{
   const held={...caller,buildMode:door.buildMode,service:grant};
   const registry=createRevocationRegistryV1(join(runtime,"revoked.jsonl"),now),rows:ServiceAuditRowV1[]=[];
   await withScriptProcessEnvelope(createScriptProcessEnvelope(policyOf(),held,Date.now()),async invocation=>{
-   const admission=holdServiceInvocationV1(realRoot,invocation,{key:realKey,revocations:registry,audit:{record:row=>{rows.push(row);}},now,environment:()=>({...environment})});
+   const admission=holdServiceInvocationV1(realRoot,invocation,{key:realKey,revocations:registry,audit:{record:row=>{rows.push(row);}},bootstrap:createBuildBootstrapCapabilitiesV1,now,environment:()=>({...environment})});
    const selection=["nx",...door.launches.find(launch=>launch[0]==="nx")!.slice(1)];
    expect(()=>readOwnedBuildInvocationV1(realRoot,invocation,args)).toThrow("Undeclared original Repo build selection");
-   expect(()=>projectOwnedNxProcessEnvelopeV1(realRoot,invocation,selection.slice(1))).toThrow("Undeclared Repo-to-Nx child selection");
+   expect(()=>projectOwnedNxProcessEnvelopeV1(realRoot,invocation,selection.slice(1))).toThrow("build.nx.child-selection-undeclared");
    const token=mintCapabilityV1(realKey,[{k:"scope",v:["run"]},{k:"worktree",v:worktreeIdV1(realRoot)},{k:"agent",v:"codex-1"},{k:"notAfter",v:at+60_000}]);
    const{readBuildGraphAncestorSelectionV1}=await import("../../../🧭️invocation/🟦️.ts"),carried=()=>JSON.parse(issueBuildTaskEnvironmentV1(realRoot,invocation,{} as never,args,{...environment}).SEMIO_SCRIPT_PROCESS_INVOCATION!).capabilities as object;
    expect(()=>readBuildGraphAncestorSelectionV1(realRoot,invocation.capabilities)).not.toThrow();
@@ -296,7 +296,7 @@ describe("the real launch checks of the authority core",()=>{
     expect(projectOwnedNxProcessEnvelopeV1(realRoot,invocation,selection.slice(1)).capabilities).toMatchObject({selection});
     expect(()=>readOwnedBuildInvocationV1(realRoot,invocation,["run","other:build"])).toThrow("Undeclared original Repo build selection");
     expect(()=>readOwnedBuildInvocationV1(realRoot,invocation,["exec","app:build"])).toThrow("Undeclared original Repo build selection");
-    expect(()=>projectOwnedNxProcessEnvelopeV1(realRoot,invocation,["run","other:build"])).toThrow("Undeclared Repo-to-Nx child selection");
+    expect(()=>projectOwnedNxProcessEnvelopeV1(realRoot,invocation,["run","other:build"])).toThrow("build.nx.child-selection-undeclared");
    });
    expect(()=>readOwnedBuildInvocationV1(realRoot,invocation,args)).toThrow("Undeclared original Repo build selection");
    expect(await refused(admission.admit({token,agent:"codex-1",cwd:realRoot,args:[...args,"--tool=bazel"]}))).toBe("tool");
@@ -309,7 +309,7 @@ describe("the real launch checks of the authority core",()=>{
   const held={...caller,buildMode:mode,service:{...grantFor(),worktree:worktreeIdV1(realRoot),keyDigest:keyDigestV1(realKey)}},genuine={...caller,buildMode:mode,launches:[["repo",...args]]};
   const variants:object[]=[{...genuine,tool:"bazel"},{...genuine,buildMode:mode==="release"?"prototype":"release"},{...genuine,native:{...caller.native,artifactDirectory:"/elsewhere"}},{...genuine,service:held.service}];
   await withScriptProcessEnvelope(createScriptProcessEnvelope(policyOf(),held,Date.now()),async invocation=>{
-   const admission=holdServiceInvocationV1(realRoot,invocation,{key:realKey,revocations:createRevocationRegistryV1(join(runtime,"r3.jsonl")),audit:{record(){}},now,environment:()=>({...environment})});
+   const admission=holdServiceInvocationV1(realRoot,invocation,{key:realKey,revocations:createRevocationRegistryV1(join(runtime,"r3.jsonl")),audit:{record(){}},bootstrap:(...call)=>child.createBuildBootstrapCapabilitiesV1(...call),now,environment:()=>({...environment})});
    const token=mintCapabilityV1(realKey,[{k:"scope",v:["run"]},{k:"worktree",v:worktreeIdV1(realRoot)},{k:"agent",v:"codex-1"},{k:"notAfter",v:at+60_000}]);
    for(const answer of variants){
     const spy=spyOn(child,"createBuildBootstrapCapabilitiesV1").mockResolvedValue(answer as never);
@@ -322,7 +322,7 @@ describe("the real launch checks of the authority core",()=>{
  test("an invocation without a grant cannot be held, and a forged request never reaches the declaration",async()=>{
   const caller=createNativeBuildCallerCapabilitiesV1(realRoot,["service","executor"],"nx",{...environment,SEMIO_SCRIPT_CAPABILITIES:undefined} as never);
   await withScriptProcessEnvelope(createScriptProcessEnvelope(policyOf(),caller,Date.now()),async invocation=>{
-   expect(()=>holdServiceInvocationV1(realRoot,invocation,{key:realKey,revocations:createRevocationRegistryV1(join(runtime,"r2.jsonl")),audit:{record(){}}})).toThrow(/Service request refused \(grant\)/u);
+   expect(()=>holdServiceInvocationV1(realRoot,invocation,{key:realKey,revocations:createRevocationRegistryV1(join(runtime,"r2.jsonl")),audit:{record(){}},bootstrap:createBuildBootstrapCapabilitiesV1})).toThrow(/Service request refused \(grant\)/u);
    expect(()=>readOwnedBuildInvocationV1(realRoot,invocation,args)).toThrow("Undeclared original Repo build selection");
   });
  });

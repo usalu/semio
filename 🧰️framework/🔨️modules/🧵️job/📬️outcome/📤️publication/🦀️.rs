@@ -29,7 +29,7 @@ impl RetainedJobPublication{
  fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.builder.terminal_is_empty()&&!self.closing}
  pub fn published(&self)->Option<&RetainedJobPayload>{self.builder.published()}
- /// 📏️ Quotes the next actual source frontier without copying, allocating or changing custody.
+ /// ⏩️ Quotes the next actual source frontier without copying, allocating or changing custody.
  pub fn advance_demands(&self,kind:JobPublicationKind,source:&[u8],cx:&StepContext<'_>)->Result<RetirementDemand,ValueError>{
   let binding=Self::original(kind,source,cx);if self.binding.is_some_and(|original|original!=binding)||self.closing{return Err(Self::invalid())}
   if self.delivered{return Ok(Default::default())}
@@ -54,7 +54,7 @@ impl RetainedJobPublication{
   let binding=self.binding.filter(|_|self.delivered&&!self.closing).ok_or_else(Self::invalid)?;let payload=self.builder.published().ok_or_else(Self::invalid)?;
   match binding.kind{JobPublicationKind::Preview=>descriptor.preview(payload),JobPublicationKind::Checkpoint{applied_progress}=>{if descriptor.kind()!=(JobOutcomeKind::CheckpointReady{applied_progress}){return Err(Self::invalid())}descriptor.checkpoint(payload)},JobPublicationKind::Fault=>descriptor.fault(payload)}
  }
- /// 📏️ Quotes close admission, actual child backing, and final metadata removal separately.
+ /// 📪️ Quotes close admission, actual child backing, and final metadata removal separately.
  pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{
   if self.terminal_is_empty(){return Ok(Default::default())}
   if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}

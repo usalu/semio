@@ -10,7 +10,7 @@ import { existsSync, readdirSync, type Dirent } from "node:fs";
 import { join } from "node:path";
 import { policyDocumentAppUsages } from "../🧮️completeness/🟦️.ts";
 import { policyAllRustFiles, policyExtractFnBody, policyPackageScriptModulePaths, policyRootScriptModulePaths } from "../🏛️foundation/🟦️.ts";
-import { isRuntimeExecutableV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { isRuntimeExecutableV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#region 🔧️PolicyRuleDbServerOnly
 /** 🔎️Repo-wide `Cargo.toml` file paths (repo-relative), same walker + `POLICY_SKIP_DIRS` as the other policy file discoverers. */
@@ -41,7 +41,7 @@ export function policyDiscoverCargoTomlFiles(repoRoot: string): string[] {
 /** 🛡️Directory prefixes allowed to carry a `db`/`db_*` Cargo dependency: the db family itself and the os hub server. */
 const POLICY_DB_SERVER_ONLY_ALLOWED_PREFIXES = ["db/", "hub/"];
 
-/** 🛡️True if `dir` (a repo-relative directory, trailing "/") may depend on `db`/`db_*`. */
+/** 🗄️True if `dir` (a repo-relative directory, trailing "/") may depend on `db`/`db_*`. */
 function policyDbAllowedDir(dir: string): boolean {
   return POLICY_DB_SERVER_ONLY_ALLOWED_PREFIXES.some((prefix) => dir.startsWith(prefix));
 }
@@ -97,7 +97,7 @@ const POLICY_OS_STATE_ATOMIC_ID_RE = /\bAtomicU(?:32|64)\b/;
 const POLICY_OS_STATE_THREAD_LOCAL_RE = /\bthread_local!\s*(?:\{|\()/;
 const POLICY_OS_STATE_LAZY_STATIC_RE = /\blazy_static!\s*\{/;
 
-/** 🛡️True when `relPath` is in scope for OS-exclusive state authority (outside OS product; not compose/mit-bestand/hub). */
+/** 🛤️True when `relPath` is in scope for OS-exclusive state authority (outside OS product; not compose/mit-bestand/hub). */
 function policyOsStateAuthorityPathInScope(relPath: string): boolean {
   const n = relPath.replace(/^\.\//, "");
   if (n.startsWith(POLICY_OS_STATE_AUTHORITY_ROOT)) return false;
@@ -108,7 +108,7 @@ function policyOsStateAuthorityPathInScope(relPath: string): boolean {
 
 
 /**
- * 📏️OS-exclusive state authority: outside `🧰️framework/🛍️products/💻️os/`, no item-scope interior
+ * 🔒️OS-exclusive state authority: outside `🧰️framework/🛍️products/💻️os/`, no item-scope interior
  * mutability / TLS / lazy globals, no Store|Registry|Host|… types with HashMap/BTreeMap fields, and no
  * `seq: u32` / `AtomicU32`/`AtomicU64` id minting. Skips test mods; excludes compose/mit-bestand/hub.
  */
@@ -256,7 +256,7 @@ function policyStructDeclaresFields(content: string, structName: string): { line
 }
 
 /**
- * 📏️DocumentApp shape law: every `impl DocumentApp for X` app type must be a ZST (no fields).
+ * ⚖️DocumentApp shape law: every `impl DocumentApp for X` app type must be a ZST (no fields).
  * `register_document_app(` factory-closure args are checked only after the receiverless API lands —
  * today `PluginBundle::register_document_app` still takes `factory: impl Fn() -> A`, so that arm is a
  * deliberate no-op until Wave 1b deletes the factory.
@@ -295,7 +295,7 @@ export function policyDocumentAppShapeBreaches(repoRoot: string): BreachRecord[]
 //#endregion 🔧️PolicyRuleOsStateAuthority
 
 //#region 🔧️PolicyRuleNoPackFiles
-/** 🔎️Repo-wide `*.pack` file paths (repo-relative), same walker + `POLICY_SKIP_DIRS` as `policyDiscoverExampleJsonFiles`/`policyDiscoverOpsFiles`. */
+/** 🎒️Repo-wide `*.pack` file paths (repo-relative), same walker + `POLICY_SKIP_DIRS` as `policyDiscoverExampleJsonFiles`/`policyDiscoverOpsFiles`. */
 function policyDiscoverPackFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -321,7 +321,7 @@ function policyDiscoverPackFiles(repoRoot: string): string[] {
 }
 
 /**
- * 📏️pack/ rollout rule: no `*.pack` binary file may ever be committed. Pack is authoritative-but-
+ * 📦️pack/ rollout rule: no `*.pack` binary file may ever be committed. Pack is authoritative-but-
  * regeneratable local storage + export/import (`FolderTextStorage`/`FolderSqliteStorage`'s pack
  * columns/files, both dev-disposable), never a checked-in artifact — examples stay committed DSL text
  * so diffs and golden hashes stay human-legible (golden fixtures are text blake3 hashes, not binary
@@ -347,7 +347,7 @@ export function policyNoPackFilesBreaches(repoRoot: string): BreachRecord[] {
 //#region 🔧️PolicyRuleNoRawSpawn
 const POLICY_RAW_SPAWN_RE = /\b(spawnSync|execSync|execFileSync|Bun\.spawn|spawn)\s*\(/g;
 
-/** 🔎️Strips TS/JS comments and string literals so policy regexes only see executable code. */
+/** ✂️Strips TS/JS comments and string literals so policy regexes only see executable code. */
 export function policyStripTsCommentsAndStrings(content: string): string {
   const out: string[] = [];
   let i = 0;
@@ -397,7 +397,7 @@ export function policyStripTsCommentsAndStrings(content: string): string {
   return out.join("");
 }
 
-/** 🔎️Repo-wide `script.ts` file paths (repo-relative), skipping node_modules/target/.🧬semio and other policy skip dirs. */
+/** 📜️Repo-wide `script.ts` file paths (repo-relative), skipping node_modules/target/.🧬semio and other policy skip dirs. */
 function policyDiscoverScriptTsFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -423,7 +423,7 @@ function policyDiscoverScriptTsFiles(repoRoot: string): string[] {
 }
 
 /**
- * 📏️Budgeted-spawn rule: every `script.ts` must route subprocesses through the budgeted runners in
+ * 🏃️Budgeted-spawn rule: every `script.ts` must route subprocesses through the budgeted runners in
  * `repo/lib/js/index.ts` — raw `spawn`/`spawnSync`/`execSync`/`execFileSync`/`Bun.spawn` bypass
  * wall-clock budgets and are forbidden outside the budget implementation itself.
  */
@@ -459,7 +459,7 @@ export function policyRawSpawnBreaches(repoRoot: string): BreachRecord[] {
 
 //#region 🔧️PolicyRuleNoBudgetNull
 /**
- * 📏️Budget-null rule: `budgetMs: null` is not a supported escape hatch — use orchestratorBudgetOpts()
+ * 💰️Budget-null rule: `budgetMs: null` is not a supported escape hatch — use orchestratorBudgetOpts()
  * or daemonBudgetOpts() (or an explicit positive budget) so every subprocess has a named budget class.
  */
 export function policyBudgetNullBreaches(repoRoot: string): BreachRecord[] {
@@ -491,14 +491,14 @@ export function policyBudgetNullBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRuleNoBudgetNull
 
 //#region 🔧️PolicyRuleMcpConfig
-/** 🔎️True when an MCP server starts through the cross-platform Bun bootstrap that builds the native binary on demand. */
+/** 🚀️True when an MCP server starts through the cross-platform Bun bootstrap that builds the native binary on demand. */
 function policyMcpServerUsesBootstrap(server: McpServer): boolean {
   const args = server.args;
   return isRuntimeExecutableV1(server.command) && args[0] === "./📜️script.ts" && args[1] === "dev" && args[2] === "mcp" && args[3] === "stdio" && Boolean(args[4]);
 }
 
 /**
- * 📏️MCP-config rule: every client file is derived from the root dashboard declaration (`repo ./📜️script.ts agents write`),
+ * ⚙️MCP-config rule: every client file is derived from the root dashboard declaration (`repo ./📜️script.ts agents write`),
  * and every declared server launches through the Bun bootstrap so missing platform-specific binaries
  * are built before stdio is handed to the native MCP server.
  * @see ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🟦️.ts

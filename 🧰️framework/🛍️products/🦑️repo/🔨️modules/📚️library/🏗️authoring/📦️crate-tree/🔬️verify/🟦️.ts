@@ -3,7 +3,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, resolve } from "node:path";
 import { parseRustSourceTree, type RustModuleNode, type RustSourceItem } from "../🌳️module-tree/🟦️.ts";
 import { relativePosix } from "../📝️render/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🌳️ One resolved module of a crate: its path, owning file and cfg. */
@@ -115,7 +115,7 @@ export type OracleEntry = Readonly<{ code: string; message: string; label: strin
 /** 🧭️ The module path without the crate prefix, the combined-layout mount segments and the empty segments: the form in which a diagnostic names a module and a module resolution lists it. */
 export const plainModulePath = (segments: readonly string[]): string => segments.filter((segment) => segment !== "" && segment !== "crate" && !segment.startsWith("__c_")).join("::");
 
-/** 🪤️ Drops the `unresolved import` errors that only repeat a re-export of an external crate the sandbox does not link: a failed external import leaves no binding, so every further `use` of its name reports an error that the compiled crate does not have. A module that glob-re-exports an unlinked crate (`pub use ext::*;`, `pub use ext::{self as graph, *};`) gives no binding for any name, so an import through that module (`globModules` lists them by plain module path) is such a cascade as well. Both sides of a differential go through the same filter. */
+/** 💧️ Drops the `unresolved import` errors that only repeat a re-export of an external crate the sandbox does not link: a failed external import leaves no binding, so every further `use` of its name reports an error that the compiled crate does not have. A module that glob-re-exports an unlinked crate (`pub use ext::*;`, `pub use ext::{self as graph, *};`) gives no binding for any name, so an import through that module (`globModules` lists them by plain module path) is such a cascade as well. Both sides of a differential go through the same filter. */
 export function dropUnlinkedCascades(entries: readonly OracleEntry[], globModules: ReadonlySet<string> = new Set()): OracleEntry[] {
   const tainted = new Set<string>();
   for (const entry of entries) if (entry.message.includes("unlinked crate") || entry.label.includes("unlinked crate")) for (const match of entry.sourceLine.matchAll(/[A-Za-z_][A-Za-z0-9_]*/gu)) tainted.add(match[0]);
@@ -137,7 +137,7 @@ export function unlinkedGlobModules(sandboxRoot: string, rootFile: string, entri
   return modules;
 }
 
-/** 🔬️ Runs the full-resolution oracle on one crate root and returns normalised diagnostics. */
+/** 🔮️ Runs the full-resolution oracle on one crate root and returns normalised diagnostics. */
 export function runResolutionOracle(sandboxRoot: string, rootFile: string, crateName: string, flags: readonly string[]): { diagnostics: OracleDiagnostic[]; locations: string[]; exit: number | null } {
   const result = runToolSyncV1("cargo", ["+nightly-2026-07-20", "--edition", "2021", "--crate-type", "lib", "--crate-name", crateName.replaceAll("-", "_"), "--emit=metadata", "--error-format=json", "-o", resolve(sandboxRoot, ".oracle.rmeta"), ...flags, rootFile], { command: "rustc", encoding: "utf8", maxBuffer: 512 * 1024 * 1024, timeout: 300_000, env: { ...process.env, CARGO_MANIFEST_DIR: sandboxRoot } });
   const entries: OracleEntry[] = [];
@@ -155,7 +155,7 @@ export function runResolutionOracle(sandboxRoot: string, rootFile: string, crate
   return { diagnostics: kept.map((entry) => [entry.code, entry.message, entry.file, entry.label].join("\t")), locations: kept.map((entry) => (entry.file ? `${entry.file}:${entry.line}` : "")), exit: result.status };
 }
 
-/** 🧮️ Multiset difference of two diagnostic lists. */
+/** 🆚️ Multiset difference of two diagnostic lists. */
 export function diffDiagnostics(original: readonly string[], candidate: readonly string[]): { onlyOriginal: string[]; onlyCandidate: string[] } {
   const counts = new Map<string, number>();
   for (const entry of original) counts.set(entry, (counts.get(entry) ?? 0) + 1);
@@ -173,7 +173,7 @@ export function diffDiagnostics(original: readonly string[], candidate: readonly
 /** 🛡️ One cross-crate path whose target is not publicly reachable. */
 export type VisibilityViolation = Readonly<{ from: string; file: string; chain: string; reason: string }>;
 
-/** 🛡️ Checks every `crate::<unit>::…` path that crosses a crate boundary resolves through `pub` modules to a `pub` item. */
+/** ✅️ Checks every `crate::<unit>::…` path that crosses a crate boundary resolves through `pub` modules to a `pub` item. */
 export function checkCrossCrateVisibility(repoRoot: string, crates: readonly { name: string; unitPaths: readonly string[][]; rootFile: string; rootText: string; sourceFiles: ReadonlyMap<string, string> }[], chainsOf: (text: string) => string[][]): VisibilityViolation[] {
   const violations: VisibilityViolation[] = [];
   type Info = { modules: Map<string, ResolvedModule>; items: Map<string, Map<string, { kind: string; visibility: string }>>; globs: Map<string, string[]> };
@@ -218,7 +218,7 @@ export function checkCrossCrateVisibility(repoRoot: string, crates: readonly { n
   return violations;
 }
 
-/** ⚖️ One impl that the orphan rules would reject after the carve. */
+/** 🚨️ One impl that the orphan rules would reject after the carve. */
 export type CoherenceViolation = Readonly<{ crate: string; file: string; trait: string | null; selfType: string; definedIn: readonly string[] }>;
 
 /** ⚖️ Flags `impl <foreign trait> for <type defined in another carved crate>` and inherent impls of foreign types. */
@@ -246,7 +246,7 @@ export function checkOrphanRules(crates: readonly { name: string; sources: Reado
 /** 🔁️ One source file that the module trees of more than one package reach, with the manifests of those packages. */
 export type SharedMount = Readonly<{ file: string; manifests: readonly string[] }>;
 
-/** 🔁️ Lists the source files reached from more than one package: every package contributes the closure of its lib, test and bin roots (explicit `#[path]` mounts followed, missing generated files tolerated). A file with a second owner is the same source compiled into two crates, so each owner must be the single crate that the others depend on. `within` keeps only the files that at least one matching manifest reaches. */
+/** 🟢️ Lists the source files reached from more than one package: every package contributes the closure of its lib, test and bin roots (explicit `#[path]` mounts followed, missing generated files tolerated). A file with a second owner is the same source compiled into two crates, so each owner must be the single crate that the others depend on. `within` keeps only the files that at least one matching manifest reaches. */
 export function sharedMountFiles(repoRoot: string, manifests: readonly string[], within: (manifest: string) => boolean = () => true): SharedMount[] {
   const owners = new Map<string, Set<string>>();
   const read = (file: string): string => (existsSync(file) ? readFileSync(file, "utf8") : "");

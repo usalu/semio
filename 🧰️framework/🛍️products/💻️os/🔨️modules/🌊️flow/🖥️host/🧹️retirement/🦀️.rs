@@ -10,6 +10,7 @@ impl<T:RetireOwned+Sync> RetireOwned for HostShared<T>{
 }
 
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub(super) struct FlowHostPayload {
  operator_registry:Option<neural::SharedRegistry>,
  pub host_snapshot:FlowHostSnapshot,
@@ -81,6 +82,7 @@ impl FlowHostPayload {
    pan_anchor,
    ghost_node,
    history_store,
+   history_store_factory:_,
    pending_history_baseline,
    pending_change,
    pending_leaves,

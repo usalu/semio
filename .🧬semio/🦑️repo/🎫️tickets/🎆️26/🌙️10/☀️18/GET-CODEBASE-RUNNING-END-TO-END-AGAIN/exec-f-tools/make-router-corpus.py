@@ -1,0 +1,44 @@
+import json,sys
+LIB="export class Script{run(){}}\nexport class ScriptRouter{#c=new Map();register(n,C){this.#c.set(n,()=>C);return this}registerLazy(n,l){this.#c.set(n,l);return this}adopt(o){return this}async run(argv){const load=this.#c.get(argv[0]);if(!load)throw Error('unknown');const C=await load();await new C().run(argv.slice(1));}}\nexport const touch=name=>{(globalThis.__touched??=[]).push(name);};\n"
+def stub(name,body="",extra=""):
+    return f"import {{touch}} from './lib.ts';\n{body}export const {name}=()=>touch('./{name}.ts');\n"+extra
+def case(name,command,router,files=None,expected=None,note=""):
+    base={"lib.ts":LIB}
+    for n in "abcdhsz":
+        base[f"{n}.ts"]=stub(n)
+    base["side.ts"]="import {touch} from './lib.ts';touch('./side.ts');export const side=1;\n"
+    base["d.ts"]=stub("d")
+    base["ns.ts"]=stub("ns")
+    base["lazy.ts"]="import {touch,Script} from './lib.ts';export class Lazy extends Script{run(){touch('./lazy.ts');}}\n"
+    base["t.ts"]="export type T=number;\n"
+    base["other.ts"]="import {ScriptRouter} from './lib.ts';export const other=new ScriptRouter();\n"
+    base["def.ts"]="import {touch} from './lib.ts';export default ()=>touch('./def.ts');\n"
+    base["router.ts"]=router
+    if files: base.update(files)
+    return {"case":name,"command":command,"files":base,"expected":expected,"note":note}
+H="import {Script,ScriptRouter} from './lib.ts';\n"
+cases=[
+ case("selected-only","a",H+"import {a} from './a.ts';import {b} from './b.ts';\nclass A extends Script{run(){a();}}\nclass B extends Script{run(){b();}}\nconst router=new ScriptRouter().register('a',A).register('b',B);\nawait router.run(process.argv.slice(2));\n",expected=["./a.ts","./lib.ts"],note="the import only the other command uses is dropped"),
+ case("other-command","b",H+"import {a} from './a.ts';import {b} from './b.ts';\nclass A extends Script{run(){a();}}\nclass B extends Script{run(){b();}}\nconst router=new ScriptRouter().register('a',A).register('b',B);\nawait router.run(process.argv.slice(2));\n",expected=["./b.ts","./lib.ts"],note="the same router answers the other command"),
+ case("side-effect-import-stays","a",H+"import './side.ts';import {a} from './a.ts';\nclass A extends Script{run(){a();}}\nconst router=new ScriptRouter().register('a',A);\nawait router.run(process.argv.slice(2));\n",expected=["./a.ts","./lib.ts","./side.ts"],note="a bare import runs at load and stays"),
+ case("static-initializer-of-another-command-stays","a",H+"import {a} from './a.ts';import {c} from './c.ts';\nclass A extends Script{run(){a();}}\nclass C extends Script{static ready=c();}\nconst router=new ScriptRouter().register('a',A).register('c',C);\nawait router.run(process.argv.slice(2));\n",expected=["./a.ts","./c.ts","./lib.ts"],note="a static initializer runs when the class is defined, whatever command runs"),
+ case("heritage-of-another-command-stays","a",H+"import {a} from './a.ts';import {Base} from './b.ts';\nclass A extends Script{run(){a();}}\nclass B extends Base{}\nconst router=new ScriptRouter().register('a',A).register('b',B);\nawait router.run(process.argv.slice(2));\n",files={"b.ts":"import {Script} from './lib.ts';export class Base extends Script{}\n"},expected=["./a.ts","./b.ts","./lib.ts"],note="the base class of another command is evaluated when it is defined"),
+ case("method-and-field-of-another-command-go","a",H+"import {a} from './a.ts';import {b} from './b.ts';import {c} from './c.ts';\nclass A extends Script{run(){a();}}\nclass B extends Script{field=b();run(){c();}}\nconst router=new ScriptRouter().register('a',A).register('b',B);\nawait router.run(process.argv.slice(2));\n",expected=["./a.ts","./lib.ts"],note="instance fields and method bodies of another command never run"),
+ case("dynamic-import-in-selected-stays","a",H+"import {b} from './b.ts';\nclass A extends Script{async run(){const m=await import('./d.ts');m.d();}}\nclass B extends Script{run(){b();}}\nconst router=new ScriptRouter().register('a',A).register('b',B);\nawait router.run(process.argv.slice(2));\n",expected=["./d.ts","./lib.ts"],note="a dynamic load of the selected command stays, the other command's import goes"),
+ case("dynamic-import-in-another-goes","a",H+"import {a} from './a.ts';\nclass A extends Script{run(){a();}}\nclass B extends Script{async run(){const m=await import('./d.ts');m.d();}}\nconst router=new ScriptRouter().register('a',A).register('b',B);\nawait router.run(process.argv.slice(2));\n",expected=["./a.ts","./lib.ts"],note="a dynamic load only another command makes goes"),
+ case("lazy-registration","a",H+"const router=new ScriptRouter().registerLazy('a',async()=>(await import('./lazy.ts')).Lazy).registerLazy('b',async()=>(await import('./d.ts')).D);\nawait router.run(process.argv.slice(2));\n",expected=["./lazy.ts","./lib.ts"],note="a lazy registration of another command is not loaded"),
+ case("shared-helper","a",H+"import {h} from './h.ts';import {s} from './s.ts';\nfunction viaH(){h();}\nfunction viaS(){s();}\nclass A extends Script{run(){viaH();}}\nclass B extends Script{run(){viaS();}}\nconst router=new ScriptRouter().register('a',A).register('b',B);\nawait router.run(process.argv.slice(2));\n",expected=["./h.ts","./lib.ts"],note="what a helper function reaches is followed through the selected command only"),
+ case("namespace-and-default-imports","a",H+"import * as ns from './ns.ts';import go from './def.ts';import {a} from './a.ts';\nclass A extends Script{run(){ns.ns();go();}}\nclass B extends Script{run(){a();}}\nconst router=new ScriptRouter().register('a',A).register('b',B);\nawait router.run(process.argv.slice(2));\n",expected=["./def.ts","./lib.ts","./ns.ts"],note="namespace and default bindings count like named ones"),
+ case("alias-variable-keeps-its-command","a",H+"import {a} from './a.ts';import {b} from './b.ts';\nclass A extends Script{run(){a();}}\nclass B extends Script{run(){b();}}\nconst Alias=B;\nconst router=new ScriptRouter().register('a',A).register('x',Alias);\nawait router.run(process.argv.slice(2));\n",expected=["./a.ts","./b.ts","./lib.ts"],note="a variable initializer runs at load, so the command it names is kept"),
+ case("re-export-stays","a",H+"import {a} from './a.ts';\nexport {z} from './z.ts';\nclass A extends Script{run(){a();}}\nconst router=new ScriptRouter().register('a',A);\nawait router.run(process.argv.slice(2));\n",expected=["./a.ts","./lib.ts","./z.ts"],note="a re-export is evaluated at load"),
+ case("adopted-router-stays","a",H+"import {other} from './other.ts';import {a} from './a.ts';\nclass A extends Script{run(){a();}}\nconst router=new ScriptRouter().register('a',A).adopt(other);\nawait router.run(process.argv.slice(2));\n",expected=["./a.ts","./lib.ts","./other.ts"],note="a statement outside the commands always runs"),
+ case("exported-class-is-a-root","a",H+"import {a} from './a.ts';import {b} from './b.ts';\nclass A extends Script{run(){a();}}\nexport class B extends Script{run(){b();}}\nconst router=new ScriptRouter().register('a',A).register('b',B);\nawait router.run(process.argv.slice(2));\n",expected=["./a.ts","./b.ts","./lib.ts"],note="an exported class may be used by an importer of the script"),
+ case("duplicate-registration-keeps-all","a",H+"import {a} from './a.ts';\nclass A extends Script{run(){a();}}\nconst router=new ScriptRouter().register('a',A).register('a',A);\n",expected=None,note="two registrations of one name are not understood"),
+ case("unknown-command-keeps-all","zzz",H+"import {a} from './a.ts';\nclass A extends Script{run(){a();}}\nconst router=new ScriptRouter().register('a',A);\n",expected=None,note="a command the router does not register is not understood"),
+ case("computed-name-keeps-all","a",H+"import {a} from './a.ts';\nconst n='a';\nclass A extends Script{run(){a();}}\nconst router=new ScriptRouter().register(n,A);\n",expected=None,note="a name that is not a literal is not understood"),
+ case("eval-keeps-all","a",H+"import {a} from './a.ts';\nclass A extends Script{run(){a();eval('1');}}\nconst router=new ScriptRouter().register('a',A);\n",expected=None,note="eval can reach any binding"),
+ case("parse-error-keeps-all","a",H+"import {a} from './a.ts'\nclass A extends Script{run(){a();}\nconst router=new ScriptRouter().register('a',A);\n",expected=None,note="a file that does not parse is not understood"),
+ case("not-a-router-keeps-all","a",H+"import {a} from './a.ts';\na();\n",expected=None,note="a script without registrations is not understood"),
+]
+json.dump({"version":1,"checkoutFromTests":"../../../../../../../../../../..","scriptRootsFromTests":["🧰️framework/🔨️modules","🧰️framework/🛍️products/🦑️repo","🧰️framework/🛍️products/📓️print","🎓️teaching"],"minimumPrunedRouters":3,"cases":cases},open(sys.argv[1],"w",encoding="utf8"),ensure_ascii=False,indent=1)
+open(sys.argv[1],"a").write("\n")

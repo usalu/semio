@@ -11,7 +11,7 @@ export type CensusSource = Readonly<{ path: string; testOnly: boolean }>;
 
 export const TEST_SEGMENT = /(^|\/)(🧪️tests|tests|🧫️fixtures|benches|examples)\//u;
 
-/** 🗂️ Every git-tracked `*.rs` outside the ticket tree, classified. */
+/** 🛤️ Every git-tracked `*.rs` outside the ticket tree, classified. */
 export function trackedRustSources(repoRoot: string): CensusSource[] {
   const listed = runToolSyncV1("git", ["ls-files", "-z", "--", "*.rs", ":!.🧬semio"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
   if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`);
@@ -58,7 +58,7 @@ export type PlaceholderHit = Readonly<{ path: string; line: number; macro: "unim
 
 const PLACEHOLDER = /(unimplemented|todo)!\s*\(/gu;
 
-/** 🚧️ Scans Rust text for placeholder macros, separating code from commented occurrences. */
+/** 💬️ Scans Rust text for placeholder macros, separating code from commented occurrences. */
 export function placeholderHitsOfText(path: string, text: string, testOnly: boolean): PlaceholderHit[] {
   const hits: PlaceholderHit[] = [];
   const inBlock = { open: false };
@@ -74,7 +74,7 @@ export type InteractiveJobDeclaration = Readonly<{ path: string; line: number; c
 
 const INTERACTIVE_JOB = /\.action_interactive_job\(\s*(?:"([^"]+)"|\*?([A-Za-z_][\w:]*))\s*,\s*(?:[A-Za-z_][\w]*::)*InteractiveJobClassification::(\w+)/gu;
 
-/** 🎛️ Every declared interactive job of Rust text, and how many `.action_interactive_job(` calls it holds. */
+/** 💼️ Every declared interactive job of Rust text, and how many `.action_interactive_job(` calls it holds. */
 export function interactiveJobsOfText(path: string, text: string, testOnly: boolean): { declarations: InteractiveJobDeclaration[]; calls: number; codeCalls: number } {
   const inBlock = { open: false };
   const code = text.split("\n").map((line) => rustCodeOfLine(line, inBlock)).join("\n");

@@ -32,9 +32,8 @@ fn retained_index_sort_matches_portable_order_and_bounds_every_action() {
     }
     for count in [2, 17, 128, 1024, 4097] {
         let keys: Vec<[u64; 3]> = (0..count).rev().map(|value| [value as u64, 0, 0]).collect();
-        let (order, work) = execute(&keys);
+        let (order, _) = execute(&keys);
         assert!(order.windows(2).all(|pair| keys[pair[0]] <= keys[pair[1]]));
-        println!("[DEBUG] shared heap-sort {count} original indices completed in {work} bounded actions");
     }
 }
 
@@ -50,5 +49,4 @@ fn retained_index_sort_refuses_wrong_observation_without_changing_cursor() {
     assert!(matches!(cursor.next(), HeapSortWork::Compare { .. }));
     assert_eq!(cursor.advance(None), Err(HeapSortFault::MissingComparison));
     assert_eq!(cursor, original);
-    println!("[DEBUG] shared heap-sort invalid observations preserve the exact cursor");
 }

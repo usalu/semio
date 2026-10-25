@@ -31,7 +31,7 @@ pub fn plan(p: &GltfUnbindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Resul
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfUnbindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_indices::BindPrimitiveIndicesMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -76,7 +76,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for UnbindPrimitiveIndicesMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<UnbindPrimitiveIndicesMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<UnbindPrimitiveIndicesMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_indices::BindPrimitiveIndicesMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

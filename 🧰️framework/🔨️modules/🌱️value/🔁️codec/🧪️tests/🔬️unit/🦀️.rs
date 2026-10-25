@@ -180,7 +180,7 @@ fn f32_widens_through_its_own_shortest_lexeme_not_its_bits() {
     assert_eq!((0.42_f32).to_value(), DslValue::float(0.42));
 }
 
-/// 🔬️ Deterministic sweep over arbitrary `f32` bit patterns — every finite `f32` must survive
+/// 🧪️ Deterministic sweep over arbitrary `f32` bit patterns — every finite `f32` must survive
 /// `to_value`/`from_value` bit-exactly (this is what keeps the binary record carriers, which
 /// store `Number::Float`'s `f64` verbatim, lossless for `f32` fields) AND must widen to a
 /// `f64` equal to serde's parsed decimal value. Serde uses different fixed/scientific

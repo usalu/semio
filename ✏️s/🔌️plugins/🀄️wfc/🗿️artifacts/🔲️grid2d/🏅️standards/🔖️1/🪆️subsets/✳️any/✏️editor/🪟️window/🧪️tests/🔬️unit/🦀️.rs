@@ -44,7 +44,7 @@ fn the_transient_round_trips_and_absorbs_wholesale() {
 fn a_config_mutation_inverts_to_the_base_it_replaced() {
     let base = Grid2dWindowConfig::default();
     let mutation = Grid2dWindowConfigMutation::SetGridFactor(Grid2dWindowConfigSetGridFactor { factor: 16.0 });
-    let inverse = protocol::Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let inverse = protocol::ColdMutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Grid2dWindowConfigMutation::SetGridFactor(Grid2dWindowConfigSetGridFactor { factor: base.grid_factor })]);
 }
 

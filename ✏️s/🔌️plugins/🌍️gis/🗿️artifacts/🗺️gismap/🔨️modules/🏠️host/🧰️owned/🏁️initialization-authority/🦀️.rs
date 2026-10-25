@@ -29,8 +29,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
         self.close_demands(maximum_copy_bytes)
     }
 
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
-        match self.step_phase(cx) {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        let outcome = match self.step_phase(cx) {
             GisMapInitializerTurn::Yield => semio_framework_job::JobOutcomeBorrow::admit_yield(cx),
             GisMapInitializerTurn::Complete => semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None),
             GisMapInitializerTurn::Cancelled => semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx),
@@ -38,7 +38,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
                 let detail = self.fault_detail.as_deref().unwrap_or(b"gis-map-store.initializer-fault");
                 self.publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, detail, cx)
             }
-        }
+        };
+        outcome.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -62,9 +63,11 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
         }
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<RetainedCloneStep, semio_framework_job::OriginalTurnFailure> {
+        let grant = cx.retained_grant();
         self.begin_close();
         let step = self.close_original(grant)?;
+        cx.consume_retained(step.progress())?;
         if self.close_is_terminal() {
             self.terminal_handoff = true;
             return Ok(RetainedCloneStep::Complete(step.progress()));

@@ -6,7 +6,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
 import {stronglyConnectedV1 as sharedStronglyConnectedV1} from "../../🧩️units/🕸️graph/🟦️.ts";
 
-/** 🧾️ The closed unit document: how a TypeScript program is cut into acyclic check units and how a unit is checked. */
+/** 📜️ The closed unit document: how a TypeScript program is cut into acyclic check units and how a unit is checked. */
 export type TypeScriptUnitsDocumentV1 = {
   readonly version: 1;
   readonly seeds: {readonly markers: readonly string[]; readonly manifests: boolean; readonly roots: readonly string[]; readonly isolate: readonly string[]; readonly ambient: readonly string[]};
@@ -36,7 +36,7 @@ export function readTypeScriptUnitsDocumentV1(value: unknown): TypeScriptUnitsDo
 /** 🔁️ Tarjan strongly connected components: the one implementation lives in the neutral unit graph (`🏗️build/🧩️units/🕸️graph`); this wrapper keeps the UTF-16 member order the TypeScript plans were built with. */
 export const stronglyConnectedV1 = (nodes: readonly string[], adjacent: ReadonlyMap<string, ReadonlySet<string>>): string[][] => sharedStronglyConnectedV1(nodes, adjacent, (a, b) => a < b ? -1 : a > b ? 1 : 0);
 
-/** 🧷️ Compiles a workspace glob (`*`, `**`) to the expression of the paths it selects. */
+/** 📁️ Compiles a workspace glob (`*`, `**`) to the expression of the paths it selects. */
 export function workspaceGlobRegExpV1(glob: string): RegExp {
   let out = "";
   for (let i = 0; i < glob.length; i++) {

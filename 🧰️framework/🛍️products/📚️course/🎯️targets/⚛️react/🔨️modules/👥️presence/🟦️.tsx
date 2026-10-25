@@ -37,7 +37,7 @@ interface PresenceContextValue {
 
 const PresenceContext = createContext<PresenceContextValue>({ view: EMPTY_PRESENCE_VIEW, showCursors: true, setTask: () => undefined });
 
-/** 👥️ Makes `view` the presence every screen below shows (others' cursors only while `showCursors`), and `setTask`
+/** 📺️ Makes `view` the presence every screen below shows (others' cursors only while `showCursors`), and `setTask`
  * where the run screen reports its task. */
 export function PresenceProvider(props: { readonly view: PresenceView; readonly showCursors?: boolean; readonly setTask: (task: string | undefined) => void; readonly children: ReactNode }): ReactElement {
   return <PresenceContext.Provider value={{ view: props.view, showCursors: props.showCursors ?? true, setTask: props.setTask }}>{props.children}</PresenceContext.Provider>;
@@ -94,7 +94,7 @@ function draggedItem(target: EventTarget | null): string | undefined {
   return target.closest<HTMLElement>("[data-course-item]")?.dataset.courseItem;
 }
 
-/** 🖱️ Feeds `presence` from the document: the pointer over its nearest anchor (a card, an item, a category), also while
+/** 📄️ Feeds `presence` from the document: the pointer over its nearest anchor (a card, an item, a category), also while
  * pressed, the item a grip drags until release, nothing once the pointer leaves the page or the window loses focus, and
  * the anchor holding keyboard focus while the keyboard moves it. */
 export function usePresencePointer(presence: CoursePresence, enabled = true): void {
@@ -167,7 +167,7 @@ function channel(value: number): number {
   return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
 }
 
-/** 🖋️ The ink that reads on the palette colour of roster slot `colour` in `appearance`: black or white, whichever
+/** 🖊️ The ink that reads on the palette colour of roster slot `colour` in `appearance`: black or white, whichever
  * contrasts more by the WCAG relative luminance of that colour. */
 export function peerInk(colour: number, appearance: "light" | "dark"): string {
   const { h, s, l } = presenceColor(colour, appearance);
@@ -204,7 +204,7 @@ function focusedBox(): DOMRect | undefined {
   return box.width > 0 && box.height > 0 ? box : undefined;
 }
 
-/** 🫣️ Whether the name label of a mark placed at (`left`, `top`) would lie over `focus` or closer to it than
+/** 🔖️ Whether the name label of a mark placed at (`left`, `top`) would lie over `focus` or closer to it than
  * {@link PEER_LABEL_CLEARANCE_PX}. */
 function covers(mark: HTMLElement, left: number, top: number, focus: DOMRect): boolean {
   const label = mark.querySelector<HTMLElement>(".course-peer-label");
@@ -216,7 +216,7 @@ function covers(mark: HTMLElement, left: number, top: number, focus: DOMRect): b
   return x < focus.right + reach && x + label.offsetWidth > focus.left - reach && y < focus.bottom + reach && y + label.offsetHeight > focus.top - reach;
 }
 
-/** 👁️ Resolves the visible owner or observed anchor while excluding held screens and inert page previews. */
+/** 🧷️ Resolves the visible owner or observed anchor while excluding held screens and inert page previews. */
 function visibleAnchor(element: HTMLElement): boolean {
   if (element.closest("[hidden]") !== null) return false;
   if (element.closest("[inert]") === null) return true;
@@ -383,7 +383,7 @@ export function CardPresence(props: { readonly anchor: Anchor; readonly accepts:
     </ul>
   );
 }
-/** 👥️ The online count for the navbar: a people icon and the number, the words for assistive technology and wide
+/** 🚥️ The online count for the navbar: a people icon and the number, the words for assistive technology and wide
  * screens. Nothing until the roster room is joined. */
 export function PresenceStatus(props: { readonly text: CourseText }): ReactElement | null {
   const { roster } = usePresenceView();

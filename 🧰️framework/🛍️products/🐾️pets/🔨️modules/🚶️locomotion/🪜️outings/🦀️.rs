@@ -1,4 +1,4 @@
-//! 🪜️ Outings: planning a gear trip over walls, ladders and grappling ropes and committing it only when its corridor is clear. See [`super`].
+//! 🧗️ Outings: planning a gear trip over walls, ladders and grappling ropes and committing it only when its corridor is clear. See [`super`].
 
 use super::*;
 use semio_framework_pets_traversal::climbing::Handwork;

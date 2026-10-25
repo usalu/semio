@@ -3,6 +3,25 @@
 use super::*;
 
 //#region 🔖️ArtifactChannel
+/// 🧮️ The logical work units one headless turn may spend; the instruction fuel is disarmed separately.
+#[cfg(not(target_arch = "wasm32"))]
+const HEADLESS_WORK_FUEL: u64 = 1 << 30;
+
+/// 🎫️ The standalone retained turn a headless gateway issues to itself for one guest turn of `wall_us`.
+#[cfg(not(target_arch = "wasm32"))]
+fn headless_budget(wall_us: u64) -> semio_framework::kernel::Budget {
+    semio_framework_plugin_host::self_issued_budget(1, semio_framework_job::default_now_us, wall_us, HEADLESS_WORK_FUEL, u64::MAX, 4096, 1 << 24, 4096).expect("headless turn budget is issued on the process clock")
+}
+
+/// 🪪️ Runs `run` under the authoring identity a headless gateway issues to itself.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn with_headless_identity<T>(run: impl FnOnce(&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> T) -> T {
+    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("headless authoring identity admission");
+    run(&mut identity)
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 /// 🔢️ The actor ordinal the inference-only activation uses. Distinct from every `ensure_instance`
 /// ordinal (those are `instance + 1`, i.e. `1..=u16::MAX - 1`) so an inference guest can never
@@ -30,7 +49,7 @@ pub(super) const INFERENCE_RECURSION_DEPTH: u32 = 4;
 /// unresumable as an epoch cut, so the time ceiling is the only one worth arming.
 #[cfg(not(target_arch = "wasm32"))]
 pub(super) fn headless_inference_budget() -> semio_framework::kernel::Budget {
-    semio_framework::kernel::Budget { fuel: u64::MAX, deadline_ms: 30_000, max_effects: 4096, max_patch_bytes: 1 << 24, max_frames: 4096 }
+    headless_budget(30_000_000)
 }
 
 /// 🎬️ The budget a COLD OPEN turn runs under. A ceiling, not a slice: under the compiled runtime a
@@ -47,7 +66,7 @@ pub(super) fn headless_inference_budget() -> semio_framework::kernel::Budget {
 /// under exactly this shape.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn headless_open_budget() -> semio_framework::kernel::Budget {
-    semio_framework::kernel::Budget { fuel: u64::MAX, deadline_ms: 60_000, max_effects: 4096, max_patch_bytes: 1 << 24, max_frames: 4096 }
+    headless_budget(60_000_000)
 }
 
 /// 📨️ The ceiling ONE `AppCommand` page turn runs under — same reasoning as
@@ -57,7 +76,7 @@ pub(crate) fn headless_open_budget() -> semio_framework::kernel::Budget {
 /// is [`COMMAND_RESUME_WALL_BUDGET`]'s, and reaching THIS ceiling means one turn wedged.
 #[cfg(not(target_arch = "wasm32"))]
 pub(super) fn headless_command_budget() -> semio_framework::kernel::Budget {
-    semio_framework::kernel::Budget { fuel: u64::MAX, deadline_ms: 5_000, max_effects: 4096, max_patch_bytes: 1 << 24, max_frames: 4096 }
+    headless_budget(5_000_000)
 }
 
 /// ⏱️ How long the page loop for ONE `AppCommand` may keep taking turns before it reports the stall

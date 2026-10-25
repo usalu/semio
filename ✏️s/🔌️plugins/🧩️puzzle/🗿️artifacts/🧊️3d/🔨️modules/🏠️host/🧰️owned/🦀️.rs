@@ -18,7 +18,7 @@ pub type Puzzle3dStore = ArtifactStore<Puzzle3dSnapshot, Puzzle3dMutation>;
 /// `Puzzle3dPlayApp::build_document_store_owners` hands the host, so both entry points record edits
 /// under one authority instead of two.
 pub async fn puzzle3d_store(envelope: Puzzle3dEnvelope, actor: protocol::ActorId) -> Result<Puzzle3dStore, String> {
-    let mut store = Puzzle3dStore::new(envelope, actor).await.map_err(|error| format!("puzzle3d store construction refused: {error:?}"))?;
+    let mut store = Puzzle3dStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await.map_err(|error| format!("puzzle3d store construction refused: {error:?}"))?;
     let owners = puzzle3d_authoring_owners().map_err(semio_framework_value::ValueError::into_message)?;
     store.install_document_store_owners_exact(owners).map_err(|(error, _)| error.into_message())?;
     Ok(store)

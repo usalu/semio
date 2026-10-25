@@ -67,7 +67,7 @@ pub struct LocalInteractionIdentity {
     pub topology_revision: [u8; 32],
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `LocalInteractionState` above. `generation`
+/// 🧰️ Hand-written, not derived — same reason as `LocalInteractionState` above. `generation`
 /// mirrors `#[serde(with = "decimal_u64")]` (a canonical decimal string, lossless past JS's 2^53
 /// float-precision boundary); `revision`/`document_revision`/`topology_revision` mirror
 /// `#[serde(with = "revision_hex")]` (64 lowercase hex chars). `deny_unknown_fields` enforced.
@@ -120,7 +120,7 @@ pub struct LocalInteractionDomainPatch {
     pub active_granularity: Option<String>,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `LocalInteractionState` above. Mirrors
+/// 💎️ Hand-written, not derived — same reason as `LocalInteractionState` above. Mirrors
 /// `#[serde(deserialize_with = "required_nullable")]`: the KEY must be present (missing ⇒ decode
 /// error) even though its VALUE may be `null` (⇒ `None`) — distinct from an ordinary `Option<T>`
 /// field, where a missing key and a `null` value both decode to `None`. Tracked with a nested
@@ -165,7 +165,7 @@ pub struct LocalInteractionCapture {
     pub state: LocalInteractionState,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `LocalInteractionState` above.
+/// 🧬️ Hand-written, not derived — same reason as `LocalInteractionState` above.
 impl semio_framework_value::ToValue for LocalInteractionCapture {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![("identity".to_string(), semio_framework_value::ToValue::to_value(&self.identity)), ("state".to_string(), semio_framework_value::ToValue::to_value(&self.state))])
@@ -199,7 +199,7 @@ pub enum LocalInteractionRestore {
     Domains { base: LocalInteractionIdentity, domains: BTreeMap<String, LocalInteractionDomainPatch> },
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `LocalInteractionState` above. Internally tagged
+/// 🖋️ Hand-written, not derived — same reason as `LocalInteractionState` above. Internally tagged
 /// on `"kind"`, mirroring `#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]`.
 impl semio_framework_value::ToValue for LocalInteractionRestore {
     fn to_value(&self) -> semio_framework_value::DslValue {
@@ -245,7 +245,7 @@ impl semio_framework_value::FromValue for LocalInteractionRestore {
     }
 }
 
-/// 📃️ Query page transport; admission checks the fixed 4096-byte maximum before owning a page.
+/// 🎨️ Query page transport; admission checks the fixed 4096-byte maximum before owning a page.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LocalInteractionQueryToken {
     pub request_id: u64,
@@ -254,7 +254,7 @@ pub struct LocalInteractionQueryToken {
     pub ordinal: u64,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `LocalInteractionState` above. `request_id`/
+/// 🪡️ Hand-written, not derived — same reason as `LocalInteractionState` above. `request_id`/
 /// `query_generation`/`ordinal` mirror `#[serde(with = "decimal_u64")]`.
 impl semio_framework_value::ToValue for LocalInteractionQueryToken {
     fn to_value(&self) -> semio_framework_value::DslValue {
@@ -304,7 +304,7 @@ pub struct LocalInteractionPage {
     pub bytes: Vec<u8>,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `LocalInteractionQueryToken` above.
+/// ✋️ Hand-written, not derived — same reason as `LocalInteractionQueryToken` above.
 impl semio_framework_value::ToValue for LocalInteractionPage {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![
@@ -358,7 +358,7 @@ impl LocalInteractionRestore {
         match self { Self::Full { base, .. } | Self::Domains { base, .. } => base }
     }
 
-    /// 🧊️ Cold tutorial composition only; live producers require retained topology validation and Store authority.
+    /// ❄️ Cold tutorial composition only; live producers require retained topology validation and Store authority.
     pub fn apply_cold(&self, before: &LocalInteractionState, current: &LocalInteractionIdentity) -> Result<LocalInteractionState, &'static str> {
         if self.base() != current { return Err("stale-authority"); }
         match self {
@@ -383,7 +383,7 @@ fn apply_field<T: Clone>(map: &mut BTreeMap<String, T>, domain: &str, value: &Op
 //#endregion 🧮️ColdComposition
 
 //#region 📦️ColdValueCodec
-/// 🌱️ Canonical decimal-string encoding for a `u64` that must survive JS's 2^53 float-precision
+/// 🔢️ Canonical decimal-string encoding for a `u64` that must survive JS's 2^53 float-precision
 /// boundary losslessly — the first-party twin of the former `#[serde(with = "decimal_u64")]`.
 fn encode_decimal_u64(value: u64) -> semio_framework_value::DslValue {
     semio_framework_value::DslValue::String(value.to_string())
@@ -398,7 +398,7 @@ fn decode_decimal_u64(value: semio_framework_value::DslValue) -> Result<u64, sem
     text.parse().map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "invalid decimal u64"))
 }
 
-/// 🌱️ Canonical 64-lowercase-hex-char encoding for a `[u8; 32]` revision — the first-party twin
+/// 🔡️ Canonical 64-lowercase-hex-char encoding for a `[u8; 32]` revision — the first-party twin
 /// of the former `#[serde(with = "revision_hex")]`.
 fn encode_revision_hex(value: &[u8; 32]) -> semio_framework_value::DslValue {
     const HEX: &[u8; 16] = b"0123456789abcdef";
@@ -421,7 +421,7 @@ fn nibble(byte: u8) -> u8 { if byte <= b'9' { byte - b'0' } else { byte - b'a' +
 //#endregion 📦️ColdValueCodec
 
 //#region 🧪️TestBridge
-/// 🌱️ `#[cfg(test)]`-only bridge between the `serde_json::Value` fixtures every test file in this
+/// 🔣️ `#[cfg(test)]`-only bridge between the `serde_json::Value` fixtures every test file in this
 /// module already loads from disk and the `crate::value::DslValue` tree `ToValue`/`FromValue`
 /// produce/consume — lets fixture-driven tests keep comparing against literal JSON without any
 /// shipped type needing `serde::Serialize`/`Deserialize`. `serde_json` stays a dev-dependency only.
@@ -433,7 +433,7 @@ fn json_to_dsl(value: serde_json::Value) -> semio_framework_value::DslValue {
 fn dsl_to_json(value: &semio_framework_value::DslValue) -> serde_json::Value {
     serde_json::Value::from(value)
 }
-/// 🌱️ Test-only convenience: decode a `DslValue` (typically freshly built by `json_to_dsl`) via
+/// 🧪️ Test-only convenience: decode a `DslValue` (typically freshly built by `json_to_dsl`) via
 /// `FromValue`, panicking with the decode error on failure (mirrors `serde_json::from_value(...)
 /// .unwrap()`'s former ergonomics).
 #[cfg(test)]

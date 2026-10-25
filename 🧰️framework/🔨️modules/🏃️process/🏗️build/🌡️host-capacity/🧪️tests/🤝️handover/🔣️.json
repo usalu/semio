@@ -1,0 +1,534 @@
+{
+  "cases": [
+    {
+      "id": "own-replacement-takes-the-grant",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "adopt"
+    },
+    {
+      "id": "offer-at-the-age-bound-still-counts",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1110000
+      },
+      "expected": "adopt"
+    },
+    {
+      "id": "malformed-offer-text",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "nonsense",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "token"
+    },
+    {
+      "id": "offer-without-separator",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "token"
+    },
+    {
+      "id": "grant-row-gone",
+      "input": {
+        "grant": null,
+        "grantCurrent": false,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "gone"
+    },
+    {
+      "id": "grant-no-longer-current",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": false,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "gone"
+    },
+    {
+      "id": "offer-names-another-grant",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "zzzzzzzz87654321.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "gone"
+    },
+    {
+      "id": "wrong-token",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.BBBBBBBBBBBBBBBBBBBBBB",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "token"
+    },
+    {
+      "id": "grant-carries-no-offer",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "token"
+    },
+    {
+      "id": "offer-older-than-the-bound",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1110001
+      },
+      "expected": "expired"
+    },
+    {
+      "id": "parent-unknown",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": null,
+        "nowMs": 1000000
+      },
+      "expected": "identity"
+    },
+    {
+      "id": "parent-is-another-process",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": {
+          "pid": 4243,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "identity"
+    },
+    {
+      "id": "parent-pid-recycled",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 20:00:00 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "identity"
+    },
+    {
+      "id": "grant-already-belongs-to-another-process",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 5555,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "identity"
+    },
+    {
+      "id": "other-operation",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "cargo",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "operation"
+    },
+    {
+      "id": "expired-before-identity",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.AAAAAAAAAAAAAAAAAAAAAA",
+        "operation": "run",
+        "parent": null,
+        "nowMs": 1110001
+      },
+      "expected": "expired"
+    },
+    {
+      "id": "token-before-expired",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": true,
+        "offered": "abcdefgh12345678.BBBBBBBBBBBBBBBBBBBBBB",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1110001
+      },
+      "expected": "token"
+    },
+    {
+      "id": "gone-before-token",
+      "input": {
+        "grant": {
+          "id": "abcdefgh12345678",
+          "operation": "run",
+          "jobs": 2,
+          "cpu": 2,
+          "reservedMegabytes": 3584,
+          "admittedAtMs": 900000,
+          "observedMegabytes": 127,
+          "pid": 4242,
+          "bootAtMs": 800000,
+          "handover": {
+            "token": "AAAAAAAAAAAAAAAAAAAAAA",
+            "fromPid": 4242,
+            "fromStarted": "Sat Oct 24 19:14:40 2026",
+            "offeredAtMs": 990000
+          }
+        },
+        "grantCurrent": false,
+        "offered": "abcdefgh12345678.BBBBBBBBBBBBBBBBBBBBBB",
+        "operation": "run",
+        "parent": {
+          "pid": 4242,
+          "started": "Sat Oct 24 19:14:40 2026"
+        },
+        "nowMs": 1000000
+      },
+      "expected": "gone"
+    }
+  ]
+}

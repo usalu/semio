@@ -484,6 +484,7 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::{PptxDiff};
     use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{PptxMutation};
     use protocol::{ColdDiffAlgebra, DiffAlgebra, DiffBinary,DiffCodec,DiffText, ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
+    use protocol::ColdMutationDiff;
     use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
     let snapshot = decode_pptx(&exact_pptx_bytes().await).expect("import exact fixture");

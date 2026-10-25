@@ -19,12 +19,12 @@ export function relayPluginBackboneOutbound(uri: string, message: Uint8Array): v
   pluginBackboneRoutes.get(pluginBackboneDocumentIdFromUri(uri))?.(uri, message);
 }
 
-/** 🌉️ A direct-import (main-thread, no-worker) plugin's generated `🟨️.js` runs in this
+/** 🐝️ A direct-import (main-thread, no-worker) plugin's generated `🟨️.js` runs in this
  * same realm but can't import from this module, so it reaches the outbound relay through this
  * well-known global instead — the same relay a worker-backed program reaches via `postMessage`. */
 (globalThis as unknown as { __semioMainThreadPluginBackboneOutbound?: (uri: string, message: Uint8Array) => void }).__semioMainThreadPluginBackboneOutbound = relayPluginBackboneOutbound;
 
-/** 🌉️ Inbound counterpart: pushes straight into the same global queue a direct-import plugin's
+/** 📥️ Inbound counterpart: pushes straight into the same global queue a direct-import plugin's
  * `🟨️.js` `backbonePoll` drains, keyed by `uri` (globally unique per document, so no pluginId
  * scoping is needed even though several plugins may share this realm). */
 function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly Uint8Array[]): void {
@@ -70,7 +70,7 @@ function pluginBackboneDocumentIdFromUri(uri: string): string {
 const pluginBackboneRoutes = new Map<string, (uri: string, message: Uint8Array) => void>();
 
 /**
- * 🐚️ Routes a plugin's outbound backbone bytes for one document to whichever shell instance owns
+ * 🧭️ Routes a plugin's outbound backbone bytes for one document to whichever shell instance owns
  * it — replaces the old page-global relay slot (`setPluginBackboneOutboundRelay`), which a second
  * mounted shell silently overwrote: misrouting the first shell's document sync into the second shell's
  * backbone worker, then severing it entirely the moment that second shell unmounted (it cleared the

@@ -22,7 +22,7 @@ impl CancelTokenRetirement{
         if waiters.capacity()>0{return Ok(RetirementDemand{copy_bytes:0,release_bytes:waiters.capacity().checked_mul(size_of::<(u64,Waker)>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"cancellation waiter backing overflow"))?,depth:1,..Default::default()});}
         Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()})
     }
-    /// 🪢️ Returns this original token alias while its matching borrowed strong root stays live through the paid turn.
+    /// ↩️ Returns this original token alias while its matching borrowed strong root stays live through the paid turn.
     pub fn return_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<RetainedCloneStep,CancelTokenRetirementError>{
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         let Some(original)=self.current.as_ref().filter(|original|Arc::ptr_eq(&original.0,&witness.0))else{return Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed cancellation root does not witness this original alias")));};
@@ -50,7 +50,7 @@ impl CancelTokenRetirement{
     }
 }
 impl Drop for CancelTokenRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"cancellation retirement abandoned its original node");}}
-/// 🎟️ Erases original cancellation custody behind the typed retirement ladder of owning containers.
+/// 🪜️ Erases original cancellation custody behind the typed retirement ladder of owning containers.
 struct Cursor(CancelTokenRetirement);
 impl RetireOwned for CancelToken{
     fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor(CancelTokenRetirement::from_token(self)))}

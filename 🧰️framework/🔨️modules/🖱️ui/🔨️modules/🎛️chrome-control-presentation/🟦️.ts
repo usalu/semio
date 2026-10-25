@@ -25,16 +25,16 @@ export const chromeControlItemBaseClass = cn(
   "whitespace-nowrap min-h-medium h-full max-h-full p-single leading-none",
 );
 
-/** 🎛️ Interactive chrome control cell. */
+/** 🔘️ Interactive chrome control cell. */
 export const chromeControlItemClass = cn(chromeControlItemBaseClass, interactiveHoverClass);
 
-/** 🎛️ Drag-handle-aware chrome tab cell. */
+/** 🖱️ Drag-handle-aware chrome tab cell. */
 export const chromeControlTabItemClass = cn(chromeControlItemBaseClass, hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass);
 
 /** 📑️ Default mode-dock tab label. */
 export const modeDockTabClassName = cn(chromeControlTabItemClass, "group max-w-[12rem] shrink-0 cursor-pointer items-center px-single select-none transition-colors");
 
-/** 📑️ Pane chrome toggle presentation. */
+/** ⏯️ Pane chrome toggle presentation. */
 export const windowPaneChromeToggleClass = cn(
   modeDockTabClassName,
   "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent",
@@ -42,16 +42,16 @@ export const windowPaneChromeToggleClass = cn(
   "disabled:pointer-events-none disabled:opacity-50",
 );
 
-/** 🎛️ Shared outer chrome control shell. */
+/** 🗂️ Shared outer chrome control shell. */
 export const chromeControlGroupShellClass = cn("box-border flex items-stretch overflow-visible border w-fit shrink-0", borderNormalClass, glassClass);
 
-/** 🎛️ Standard chrome control group height. */
+/** 👥️ Standard chrome control group height. */
 export const chromeControlGroupClass = cn(chromeControlGroupShellClass, "h-medium");
 
-/** 🎛️ Data-state on presentation for chrome controls. */
+/** 🔛️ Data-state on presentation for chrome controls. */
 export const chromeControlItemOnClass = interactiveOnClass;
 
-/** 🎛️ Data-active presentation for chrome tabs. */
+/** ✅️ Data-active presentation for chrome tabs. */
 export const chromeControlTabActiveClass = cn(
   "data-[active=true]:bg-active-base",
   "data-[active=true]:border-active-base",

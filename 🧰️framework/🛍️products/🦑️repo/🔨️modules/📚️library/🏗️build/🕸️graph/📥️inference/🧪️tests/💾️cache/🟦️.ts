@@ -1,6 +1,7 @@
 /** 💾️ Every inferred target says why a task cache may or may not replay it. The corpus in `./🔣️.json` is language-agnostic data: the repository contract and the independent Ajv implementation must agree on every decision, every synthesized playground target must carry the decision its fixture row names, and the native input plan must keep authored inputs while replacing only the broad project groups. */
 import { expect, test } from "bun:test";
 import { createRequire } from "node:module";
+import { realpathSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -20,7 +21,7 @@ const ajv = new Ajv({ strict: true, allErrors: true });
 const validateDecision = ajv.compile<ReturnType<typeof api.cacheDecisionV1>>(cacheSchema);
 const decisionOf = (target: any): string[] | null => { const value = target?.metadata?.semio?.cache; return value ? [value.class, value.reason] : null; };
 const expand = (template: string, variant: string, profile = "") => template.replaceAll("{variant}", variant).replaceAll("{profile}", profile);
-const artifacts = () => process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
+const artifacts = () => realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir());
 
 test("the corpus and the cache decision schema satisfy the strict independent validator", () => {
   expect(ajv.validate(corpusSchema, corpus), JSON.stringify(ajv.errors)).toBe(true);
@@ -69,7 +70,7 @@ test("the emoji prefix of a target name never hides it from its class", () => {
 });
 
 test("native targets run tests by contract, by name or through the Cargo test driver", () => {
-  for (const row of corpus.nativeRunsTests) expect(api.nativeTargetRunsTestsV1(row.name, row.execution ?? undefined, row.commandSources), row.id).toBe(row.expect);
+  for (const row of corpus.nativeRunsTests) expect(api.nativeTargetRunsTestsV1(row.name, row.execution ?? undefined, row.commandSources.some((path: string) => path.includes("/🏃️process/🧪️testing/🦀️cargo/"))), row.id).toBe(row.expect);
 });
 
 test("a command closure is native only when it reaches a declared native driver", async () => {

@@ -138,7 +138,7 @@ export function uiTextInputKeyOf(event: { readonly key: string; readonly ctrlKey
 /** 📄️ How many steps a large arrow or a page key with no detent ahead moves a numeric control — the twin of `SLIDER_PAGE_STEPS`. */
 export const SLIDER_PAGE_STEPS = 10;
 
-/** ⌨️ The keys a slider takes on its value axis — the twin of `SliderKey`. */
+/** 🔑️ The keys a slider takes on its value axis — the twin of `SliderKey`. */
 export type SliderKey = "decrement" | "increment" | "pageDown" | "pageUp" | "home" | "end";
 
 /** 🎹️ The {@link SliderKey} a key press on a number field names (design §18): ArrowUp/ArrowDown one step (Shift: `large`),

@@ -7,10 +7,10 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct DeclareEntity {
-    pub(crate) index: usize,
-    pub(crate) parameter: bool,
-    pub(crate) name: String,
-    pub(crate) value: String,
+    pub index: usize,
+    pub parameter: bool,
+    pub name: String,
+    pub value: String,
 }
 
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareEntity {

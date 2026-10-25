@@ -9,8 +9,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "move-image")]
 pub struct MoveImage {
-    pub(crate) from: usize,
-    pub(crate) to: usize,
+    pub from: usize,
+    pub to: usize,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for MoveImage {

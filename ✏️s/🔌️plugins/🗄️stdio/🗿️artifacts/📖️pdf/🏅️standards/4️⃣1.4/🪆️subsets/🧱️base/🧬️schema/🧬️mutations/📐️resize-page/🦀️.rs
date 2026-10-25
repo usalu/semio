@@ -40,11 +40,11 @@ where
 
 impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for ResizePage
 where
-    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<ResizePage>,
+    Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<ResizePage> + protocol::Mutation<PdfSnapshot, Diff = PdfDiff>,
 {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         if !self.valid(base) {
-            return MutationOutcome::error("mutation.target-missing", "Page target or geometry is outside the PDF 1.4 domain", self.target());
+            return MutationOutcome::error("mutation.target-missing", "Page target or geometry is outside the PDF 1.4 domain", <Self as protocol::MutationKind<PdfSnapshot, Op>>::target(self));
         }
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: self.index, diff: PdfPageDiff { width: Some(self.width), height: Some(self.height), text: None } }], ..Default::default() }) })
     }

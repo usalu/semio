@@ -21,7 +21,7 @@ pub fn layout_from_wire(bytes: &[u8]) -> Result<LayoutSnapshot, store::PackError
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1::subsets::any::io::LayoutAnalyzer;
+    use crate::LayoutAnalyzer;
     use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
@@ -327,8 +327,8 @@ pub fn layout_document_json_from_drawing(content: &Value, source: &str, name: &s
 /// module's `entries()` (`&'static [ComposerEntry]`, owning storage) — deliberately different return
 /// types; do not conflate them when qualifying paths.
 pub mod io_registry {
-    use crate::standards::v1::subsets::any::io::LayoutBuilder as LayoutAnyBuilder;
-    use crate::standards::v1::subsets::any::io::LayoutComposer as LayoutAnyComposer;
+    use crate::LayoutBuilder as LayoutAnyBuilder;
+    use crate::LayoutComposer as LayoutAnyComposer;
     use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 

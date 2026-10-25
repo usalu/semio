@@ -1,4 +1,4 @@
-//! 🎨️ Native RGBA8 pixel editing with owned, cancellable candidates and deterministic sampling.
+//! ✏️ Native RGBA8 pixel editing with owned, cancellable candidates and deterministic sampling.
 use crate::RasterImage;
 
 pub const MAX_IMAGE_SIDE: u32 = 16_384;
@@ -202,7 +202,7 @@ impl PixelOperation {
         self.filtered_color(image, original, x, y, selection_coverage)
     }
 
-    /// 🖌️ One pixel under a brush or alpha brush: the strongest coverage any of `stroke_segments` (the segments whose
+    /// 🖊️ One pixel under a brush or alpha brush: the strongest coverage any of `stroke_segments` (the segments whose
     /// band holds the pixel's row) lays at its centre, scaled by opacity and selection coverage. The one brush law
     /// both the whole-image job and the in-place painter use.
     fn stroke_pixel(&self, original: PixelColor, x: u32, y: u32, selection_coverage: f64, stroke_segments: &[usize]) -> PixelColor {
@@ -310,7 +310,7 @@ pub struct PixelRect {
     pub height: u32,
 }
 
-/// 🔲️ Every pixel a brush of `size` along `points` can reach on a `width × height` image: the union of each segment's
+/// 📏️ Every pixel a brush of `size` along `points` can reach on a `width × height` image: the union of each segment's
 /// box widened by the radius and clipped to the image — the walk the TypeScript twin's `paintStroke` takes. `None`
 /// when the stroke lies wholly outside the image.
 pub fn stroke_bounds(points: &[[f64; 2]], size: f64, width: u32, height: u32) -> Option<PixelRect> {
@@ -414,7 +414,7 @@ pub fn flood_selection(image: &RasterImage, x: u32, y: u32, tolerance: u8, selec
     Ok(mask)
 }
 
-/// 🪣️ Applies a `Fill` or `AlphaFill` to `image` in place under the per-pixel `coverage` of a region (a
+/// 🖼️ Applies a `Fill` or `AlphaFill` to `image` in place under the per-pixel `coverage` of a region (a
 /// [`flood_selection`]): byte-identical to a whole-image [`PixelEditJob`] of the same operation selected by `coverage`,
 /// touching only the covered pixels — the deterministic filler a replayed region-fill leaf runs. Answers whether a pixel
 /// changed.

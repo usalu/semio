@@ -57,7 +57,7 @@ pub(super) fn defilter_row(filter_type: u8, filt: &[u8], prev: Option<&[u8]>, bp
     Ok(out)
 }
 
-/// 🧮️ Minimum-sum-of-absolute-values heuristic (bytes read as signed), the common real-world
+/// ➕️ Minimum-sum-of-absolute-values heuristic (bytes read as signed), the common real-world
 /// choice per PNG spec §9.8 — not optimal, but genuinely per-scanline-adaptive.
 pub(super) fn choose_filter(cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> (u8, Vec<u8>) {
     let mut best_ft = 0u8;

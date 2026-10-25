@@ -602,7 +602,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<GifSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (next, diff) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            let (next, diff) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::ColdMutation::diff(&mutation, &self.snapshot));
             self.snapshot = next;
             (self, diff)
         }

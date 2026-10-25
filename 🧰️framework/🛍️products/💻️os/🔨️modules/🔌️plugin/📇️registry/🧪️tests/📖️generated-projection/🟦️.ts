@@ -5,7 +5,7 @@ import { isHostPlaygroundFilter } from "../../🟦️.ts";
 import { type DeployedRegistryEntryV1, resolveRegistryPluginIdsForFilter } from "../../🔎️discovery/🟦️.ts";
 import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
 import { parseDeployedRegistryEntryV1 } from "../../🔎️discovery/🧬️schema/🟦️.ts";
-import type { PlaygroundEntry } from "../../🎮️playground/🔎️discovery/🟦️.ts";
+import type { PlaygroundEntry } from "../../🎮️playground/📋️contract/🟦️.ts";
 import { emitRustArtifacts } from "../../📽️projection/🟦️.ts";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 

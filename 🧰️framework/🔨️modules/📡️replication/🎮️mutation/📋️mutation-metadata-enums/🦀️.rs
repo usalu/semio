@@ -28,7 +28,7 @@ impl semio_framework_value::ToValue for MutationInvertibility {
     }
 }
 
-/// 🧷️ Schema vocabulary for one direct mutation's diff participation.
+/// 🧬️ Schema vocabulary for one direct mutation's diff participation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum MutationDiffParticipation {
@@ -38,7 +38,7 @@ pub enum MutationDiffParticipation {
     None,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
+/// 🧰️ Hand-written, not derived — same reason as `MutationInvertibility` above.
 impl semio_framework_value::ToValue for MutationDiffParticipation {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::String(
@@ -53,7 +53,7 @@ impl semio_framework_value::ToValue for MutationDiffParticipation {
     }
 }
 
-/// 🧷️ The protocol outcome class one direct mutation can reach — the vocabulary fixtures, manifests and bridges
+/// 📊️ The protocol outcome class one direct mutation can reach — the vocabulary fixtures, manifests and bridges
 /// share verbatim, so no layer projects one record onto another.
 ///
 /// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — `$defs/MutationOutcomeClass`
@@ -80,14 +80,14 @@ impl MutationOutcomeClass {
     }
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
+/// 💎️ Hand-written, not derived — same reason as `MutationInvertibility` above.
 impl semio_framework_value::ToValue for MutationOutcomeClass {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::String(self.as_str().to_string())
     }
 }
 
-/// 🧷️ Schema vocabulary for one direct mutation's composition form.
+/// 🗺️ Schema vocabulary for one direct mutation's composition form.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum MutationComposition {
@@ -95,14 +95,14 @@ pub enum MutationComposition {
     Composite,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
+/// 🖋️ Hand-written, not derived — same reason as `MutationInvertibility` above.
 impl semio_framework_value::ToValue for MutationComposition {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::String(match self { MutationComposition::Atomic => "atomic", MutationComposition::Composite => "composite" }.to_string())
     }
 }
 
-/// 🧷️ Schema vocabulary for a direct mutation's required language surfaces.
+/// 🌐️ Schema vocabulary for a direct mutation's required language surfaces.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum MutationLanguageSurface {
@@ -115,7 +115,7 @@ pub enum MutationLanguageSurface {
     Binary,
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
+/// 🪡️ Hand-written, not derived — same reason as `MutationInvertibility` above.
 impl semio_framework_value::ToValue for MutationLanguageSurface {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::String(

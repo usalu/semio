@@ -1,7 +1,7 @@
 /// 🎲️ Property and differential laws of the pack-json companion: the deterministic generator, the round trips, the serde differentials and the float parity.
 
 //#region 🔖️PropertyTesting
-/// 🎲️ A tiny deterministic PRNG (SplitMix64) — property/differential tests need arbitrary
+/// 🔀️ A tiny deterministic PRNG (SplitMix64) — property/differential tests need arbitrary
 /// `Value` trees, but adding a `rand`/`proptest`/`arbitrary` crate would itself be a NEW
 /// third-party dependency the freeze ratchet forbids; this is small enough to own outright.
 struct Rng(u64);
@@ -180,7 +180,7 @@ fn to_serde_json(value: &Value) -> serde_json::Value {
     }
 }
 
-/// 🔬️ On documents with no object-key-order ambiguity (scalars, arrays, single-key objects),
+/// 📄️ On documents with no object-key-order ambiguity (scalars, arrays, single-key objects),
 /// our writer's bytes agree with `serde_json`'s exactly — including large-magnitude floats,
 /// now that `FloatParity` below proves the writers agree on every `f64`.
 #[test]
@@ -197,7 +197,7 @@ fn canonical_bytes_match_serde_json_for_typical_documents() {
 //#endregion 🔖️DifferentialTesting
 
 //#region 🔖️FloatParity
-/// 🔬️ Exhaustive-ish differential sweep proving `write_float`'s output is byte-identical to
+/// 🔢️ Exhaustive-ish differential sweep proving `write_float`'s output is byte-identical to
 /// `serde_json`'s (`zmij`'s) for every `f64` it is handed — a constant-seeded LCG over random
 /// bit patterns (this crate's own `Rng`, reused rather than adding a `rand`/`proptest`
 /// dependency) plus every historically-awkward case named in this ticket's own brief. See
@@ -280,7 +280,7 @@ fn write_float_matches_serde_json_byte_for_byte() {
     assert!(mismatches.is_empty(), "{} of {checked} floats mismatched serde_json byte-for-byte:\n{}", mismatches.len(), mismatches.join("\n"));
 }
 
-/// 🔬️ The two real production call sites this parity result unblocks
+/// 🔣️ The two real production call sites this parity result unblocks
 /// (`🌿️vcs::content_addressed_checkpoint_id_core`'s `serde_json::to_vec(change)` and
 /// `🧵️canonical-edit::ScalarBytes::from_node`'s `serde_json::to_writer`) both serialize a
 /// single JSON document containing ordinary application floats, not adversarial bit patterns —

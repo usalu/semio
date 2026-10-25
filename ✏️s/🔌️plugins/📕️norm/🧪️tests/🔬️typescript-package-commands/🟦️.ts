@@ -21,7 +21,7 @@ type Descriptor = { manifest: { apps: DescriptorApp[] } };
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
 export function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
   const plugin = join(context.root, "..", "..");
-  const fixture = JSON.parse(readFileSync(join(plugin, "🧫️fixtures", "🧫️retained-command-dispositions", "🔣️.json"), "utf8")) as RetainedFixture;
+  const fixture = JSON.parse(readFileSync(join(plugin, "📇️registry", "🧬️contract", "🧪️tests", "🧫️fixtures", "🧫️retained-command-dispositions", "🔣️.json"), "utf8")) as RetainedFixture;
   const descriptor = JSON.parse(readFileSync(join(plugin, "🔣️.json"), "utf8")) as Descriptor;
   const failures: string[] = [];
   const expect = (ok: boolean, message: string) => {

@@ -13,7 +13,7 @@ pub use original_fixed_slot_pages::OriginalFixedSlotPages;
 //#endregion 🎰️FixedSlotPages
 
 //#region 🧱️BoxedSlots
-/// 🧱️ Fills `len` slots straight onto the heap, never through a stack temporary.
+/// 📦️ Fills `len` slots straight onto the heap, never through a stack temporary.
 ///
 /// `Box::new([const { None }; N])` and `Box::new(core::array::from_fn(fill))` are heap
 /// *destinations* with a **stack source**: the array expression is a value, materialised in the
@@ -36,7 +36,7 @@ pub fn boxed_slots<T>(len: usize, fill: impl FnMut() -> T) -> Box<[T]> {
     slots.into_boxed_slice()
 }
 
-/// 🧱️ [`boxed_slots`] for a statically-sized slot table: `Box<[T; N]>`, so callers keep the exact
+/// 🔧️ [`boxed_slots`] for a statically-sized slot table: `Box<[T; N]>`, so callers keep the exact
 /// array type (and its indexing/credit invariants) the stack-materialising literal gave them.
 ///
 /// `Box<[T]> → Box<[T; N]>` is `TryFrom`, a pointer cast with no copy, and `N` is the same constant
@@ -69,7 +69,7 @@ impl FixedSlotTableBudget {
     }
 }
 
-/// 🧱️ The whole `boxed_fixed_slots` law, in one place: the crate's measured rows equal the
+/// 📊️ The whole `boxed_fixed_slots` law, in one place: the crate's measured rows equal the
 /// committed fixture's rows, every listed table is big enough to be worth listing
 /// (`capacity * element_bytes` over the conversion threshold), every owner is **smaller than the
 /// table it owns** — which is exactly what an inline `[T; N]` field cannot be, so it is the

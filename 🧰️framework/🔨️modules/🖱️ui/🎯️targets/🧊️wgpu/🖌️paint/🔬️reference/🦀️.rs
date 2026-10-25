@@ -27,7 +27,7 @@ use semio_framework_ui_wgpu_paint::{TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_
 /// literal `12` the Interpreter passes (`chrome::ICON_TREE_ROW`).
 pub const PANEL_HEADER: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::PANEL_HEADER_HEIGHT_UI_SPACING) as f32;
 
-/// 🖼️ Top-level entry point: unconditionally walks and (re)paints every node reachable from `root`,
+/// 🖌️ Top-level entry point: unconditionally walks and (re)paints every node reachable from `root`,
 /// clearing `DIRTY_PAINT` as it visits (mirroring `flex::LayoutEngine::write_back`'s clear-as-you-go
 /// pattern) but never touching `DIRTY_LAYOUT`/`SUBTREE_DIRTY` — clearing those is `flex`'s job and
 /// `flex::LayoutEngine::compute` already runs (and clears them) before paint each frame, per the
@@ -115,7 +115,7 @@ pub fn sync_select_popup_rows(tree: &mut UiTree, select_id: NodeId, items: &[UiS
     }
 }
 
-/// 🌳️ Keeps every `Tree` row's `NodeFlags::DRAG_SOURCE` synced with its authored `draggable`
+/// 🔄️ Keeps every `Tree` row's `NodeFlags::DRAG_SOURCE` synced with its authored `draggable`
 /// (see `events::is_plain_stack_container`/`set_drag_payload`, the two consumers of that bit) —
 /// the `cfg(test)` twin of `sync_interactive_state_node_step`'s `Tree*` phases. Row GEOMETRY is
 /// deliberately absent here: `mounted_layout` is this target's single writer of tree row rects, so

@@ -182,7 +182,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, loading);
     }
 
-    /// 🌀️ `waiting` follows the same skip-if-default convention as `loading`: absent when unset, round-trips when set.
+    /// ⏳️ `waiting` follows the same skip-if-default convention as `loading`: absent when unset, round-trips when set.
     #[semio_framework_async_macros::async_test]
     async fn ui_tree_item_waiting_status_skips_when_default_and_roundtrips_when_set() {
         let idle = UiTreeItemNode::base("idle", Label::data("Idle"));
@@ -498,7 +498,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(serde_json::from_str::<ContextMenuItemSpec>(&json).unwrap(), refused);
     }
 
-    /// 🖱️ Every `UiNode` variant's `menu` ref actually serializes when set, and is omitted by default
+    /// 🧾️ Every `UiNode` variant's `menu` ref actually serializes when set, and is omitted by default
     /// — the same exhaustiveness belt-and-braces check as `every_ui_node_variant_serializes_a_non_default_presence`.
     #[semio_framework_async_macros::async_test]
     async fn every_ui_node_variant_serializes_a_set_menu_ref() {
@@ -666,7 +666,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(ribbon_parent_label("not-a-category", false), None);
     }
 
-    /// 🗂️ Every group row `organize_context_menu` can emit resolves to a real label in BOTH locales —
+    /// 🏷️ Every group row `organize_context_menu` can emit resolves to a real label in BOTH locales —
     /// the 20 taxonomy ids AND the overflow bucket it synthesizes itself. `menu.group.more` is the one
     /// id outside the taxonomy, so resolving group rows through `ribbon_parent_label` alone rendered the
     /// overflow row with an empty label in the wgpu shell (React twin: the `ui.contextMenu.more` key).

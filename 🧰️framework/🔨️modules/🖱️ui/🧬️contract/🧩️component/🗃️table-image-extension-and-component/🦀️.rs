@@ -34,14 +34,14 @@ pub struct TableProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub window: Option<TreeWindow>,
-    /// ↔️ The materialised slice of the logical column list. `columns` and every row's `cells`
+    /// 🍕️ The materialised slice of the logical column list. `columns` and every row's `cells`
     /// contain exactly this slice and retain their logical indices through `offset`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub column_window: Option<TreeWindow>,
 }
 
-/// 📊️ Props for `Component::TableRow` — one row of a [`TableProps`] table: its cells in column order, its
+/// 🏓️ Props for `Component::TableRow` — one row of a [`TableProps`] table: its cells in column order, its
 /// row-scoped actions and its target, all as props, so a row is ONE node record. Actions and activation
 /// are verbs on the row's ONE [`RowTarget`], exactly as a [`TreeItemProps`] row's are. No
 /// `ToValue`/`FromValue`: [`RowTarget`] embeds `UiMap`, the same deliberate exception [`TreeItemProps`]
@@ -51,7 +51,7 @@ pub struct TableProps {
 pub struct TableRowProps {
     /// 📝️ The row's cells, positional to the table's `columns`.
     pub cells: crate::UiFixedList<crate::UiText>,
-    /// 🎬️ Row-scoped actions, rendered in the table's trailing actions column.
+    /// 🔘️ Row-scoped actions, rendered in the table's trailing actions column.
     #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     pub row_actions: crate::UiFixedList<RowAction>,
     /// 🎯️ The one target `row_actions` and the activation fire on — present exactly when either is.
@@ -97,7 +97,7 @@ pub struct ExtensionProps {
 //#endregion 🎨️Props
 
 //#region 🧩️Enum
-/// 🧩️ The closed set of things a [`crate::UiNodeRecord`] can render.
+/// 🧱️ The closed set of things a [`crate::UiNodeRecord`] can render.
 ///
 /// ⚠️ Unlike the old `UiNode`, no `#[allow(clippy::large_enum_variant)]` is needed: the old
 /// `ComponentScene` variant carried up to fifteen `Option<XxxScene>` fields inline, which is exactly

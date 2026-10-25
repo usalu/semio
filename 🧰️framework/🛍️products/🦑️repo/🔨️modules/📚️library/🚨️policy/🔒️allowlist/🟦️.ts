@@ -7,7 +7,7 @@ const POLICY_DISCOVERY_SKIPPED_DIRS = new Set(["node_modules", ".git", ".nx", ".
 export const POLICY_ALLOWLIST_FILENAME = "🔒️policy-allowlist.json";
 
 /**
- * 🔒️ Merges one policy rule's allowlist from every area that contributes to it. A rule therefore
+ * 🔀️ Merges one policy rule's allowlist from every area that contributes to it. A rule therefore
  * never names a path it exempts: the exemption lives with the code it describes, and deleting that
  * code deletes the exemption. Discovery is by convention, so a new area needs no code change.
  */

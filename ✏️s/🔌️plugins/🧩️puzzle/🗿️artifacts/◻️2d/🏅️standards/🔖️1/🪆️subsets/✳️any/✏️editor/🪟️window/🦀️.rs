@@ -1,7 +1,6 @@
 //! 🪟️ Exact-instance persisted and ephemeral ownership for Puzzle 2D panes.
 
 use crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu;
-use semio_s_artifact_puzzle_2d_graph_manifest::editor::puzzle2d::modes::edit::windows::overview;
 use std::collections::BTreeMap;
 
 /// 🎚️ ONE exact Puzzle 2D pane's persisted-local options. `WindowConfigOwner::State` requires
@@ -581,7 +580,6 @@ impl protocol::ColdDiffAlgebra<Puzzle2dWindowTransient> for Puzzle2dWindowTransi
     }
 }
 
-semio_framework_value::artifact_retire_struct!(Puzzle2dSuggestionMenu { x, y, window_id, handle_id });
 semio_framework_value::artifact_retire_struct!(Puzzle2dWindowTransient { engagement_input, brush_candidate_index, brush_candidates, brush_candidate_source_handle_id, suggestion_menu });
 
 fn puzzle2d_window_transient_retained_bytes(transient: &Puzzle2dWindowTransient) -> Option<usize> {

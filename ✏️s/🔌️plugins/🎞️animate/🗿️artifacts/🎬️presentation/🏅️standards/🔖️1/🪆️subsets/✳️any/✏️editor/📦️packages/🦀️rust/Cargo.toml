@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-job-payload = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-job.workspace = true
 semio-framework-async.workspace = true
 framework_hash = { package = "semio-framework-hash", path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }

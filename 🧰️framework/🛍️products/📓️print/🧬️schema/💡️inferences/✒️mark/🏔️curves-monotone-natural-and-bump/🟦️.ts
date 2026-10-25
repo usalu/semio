@@ -87,7 +87,7 @@ function monotoneFactory(reflect: boolean): VizCurveFactory {
 /** ✒️ `curveMonotoneX`: monotone in x, never overshooting between samples. */
 export const curveMonotoneX = monotoneFactory(false);
 
-/** ✒️ `curveMonotoneY`: the same interpolator with the axes exchanged. */
+/** ↕️ `curveMonotoneY`: the same interpolator with the axes exchanged. */
 export const curveMonotoneY = monotoneFactory(true);
 
 //#endregion 🔖️CurvesMonotone
@@ -120,7 +120,7 @@ function naturalControlPoints(x: readonly number[]): [number[], number[]] {
   return [a, b];
 }
 
-/** ✒️ `curveNatural`: the natural cubic spline through every point. */
+/** 🌿️ `curveNatural`: the natural cubic spline through every point. */
 export const curveNatural: VizCurveFactory = (context) => {
   let xs: number[] = [];
   let ys: number[] = [];
@@ -156,7 +156,7 @@ export const curveNatural: VizCurveFactory = (context) => {
   };
 };
 
-/** ✒️ `curveBumpX` — the horizontal bump `linkHorizontal` draws with. */
+/** ↔️ `curveBumpX` — the horizontal bump `linkHorizontal` draws with. */
 export const curveBumpX: VizCurveFactory = (context) => {
   const s: MonotoneState = { x0: Number.NaN, x1: Number.NaN, y0: Number.NaN, y1: Number.NaN, t0: Number.NaN, point: 0, line: Number.NaN };
   return {
@@ -182,7 +182,7 @@ export const curveBumpX: VizCurveFactory = (context) => {
   };
 };
 
-/** ✒️ `curveBumpY` — the vertical bump `linkVertical` draws with. */
+/** ⛰️ `curveBumpY` — the vertical bump `linkVertical` draws with. */
 export const curveBumpY: VizCurveFactory = (context) => {
   const s: MonotoneState = { x0: Number.NaN, x1: Number.NaN, y0: Number.NaN, y1: Number.NaN, t0: Number.NaN, point: 0, line: Number.NaN };
   return {

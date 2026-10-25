@@ -39,6 +39,8 @@ semio-s-artifact-stdio-pptx-strict = { workspace = true }
 semio-s-artifact-stdio-pptx-transitional = { workspace = true }
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

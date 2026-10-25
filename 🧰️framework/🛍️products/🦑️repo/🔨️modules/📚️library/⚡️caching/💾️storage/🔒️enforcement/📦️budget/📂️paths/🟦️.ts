@@ -1,7 +1,7 @@
 import {isAbsolute,join,resolve} from "node:path";
 import type {RepositoryCachePartitionIdV1} from "../🟦️.ts";
 import policy from "../🔣️policy.json" with {type:"json"};
-import native from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import native from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️json/🟦️.ts";
 
 /** 🗺️ Names one authored mounted partition as DATA without opening storage or issuing custody. */
 export function repositoryCachePartitionRootDataV1(workspace:string,id:RepositoryCachePartitionIdV1):string{

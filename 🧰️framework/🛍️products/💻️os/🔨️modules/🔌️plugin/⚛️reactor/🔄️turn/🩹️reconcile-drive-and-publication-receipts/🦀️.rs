@@ -140,7 +140,7 @@ struct OriginalPublicationReceipts{
  pub retirement:Option<(semio_framework_job::OperationId,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
 }
 
-struct OriginalPublicationReceiptRefusal{pub receipts:OriginalPublicationReceipts,pub error:semio_framework_job::OriginalTurnFailure}
+pub(crate) struct OriginalPublicationReceiptRefusal{pub receipts:OriginalPublicationReceipts,pub error:semio_framework_job::OriginalTurnFailure}
 
 pub(super) struct RefusedPublicationOwner{pub instance:u32,pub operation:semio_framework_job::OperationId,pub generation:semio_framework_job::Generation,pub output:std::mem::ManuallyDrop<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>,pub receipts:std::mem::ManuallyDrop<OriginalPublicationReceipts>}
 

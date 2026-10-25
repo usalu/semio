@@ -1,6 +1,6 @@
-import {createIssuedResourceControlV1} from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import type {ScriptInvocation} from "../../../🏃️process/🧭️routing/📥️invocation/🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {createIssuedResourceControlV1} from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import type {ScriptInvocation} from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {expect,test} from "bun:test";
 import {mkdtempSync,writeFileSync,readFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";

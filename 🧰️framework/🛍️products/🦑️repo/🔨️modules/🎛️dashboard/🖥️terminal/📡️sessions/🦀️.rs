@@ -10,7 +10,7 @@ use dashboard_feedback::{Failure,Operation};
 use super::windows::{Body, Dashboard, Kind, LinkState, Place};
 use dashboard_inventory::Update;
 use dashboard_wire::client::{Connection, Message};
-use dashboard_wire::ipc::{ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus, SpawnGroup};
+use dashboard_wire::ipc::{task_language, ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus, SpawnGroup};
 use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 use semio_framework_ui_tui_engine::Tui;
@@ -26,7 +26,7 @@ const RECONNECT_FIRST: Duration = Duration::from_millis(500);
 const RECONNECT_LAST: Duration = Duration::from_secs(8);
 
 /// 🔗️ The connection to the daemon and the work waiting for it.
-pub(super) struct Link {
+pub struct Link {
     pub connection: Option<Connection>,
     connecting: Option<std::sync::mpsc::Receiver<std::io::Result<Connection>>>,
     next_reconnect: Instant,
@@ -35,20 +35,20 @@ pub(super) struct Link {
     pub enabled: bool,
     pub outbox: Vec<ClientMsg>,
     backoff: Duration,
-    #[cfg(test)]
+    #[cfg(feature = "testkit")]
     pub online_for_test: bool,
-    #[cfg(test)]
+    #[cfg(feature = "testkit")]
     pub fail_sends: bool,
 }
 
 impl Default for Link {
-    fn default() -> Self { Self { connection: None, connecting: None, next_reconnect: Instant::now(), pending: VecDeque::new(), restoring: true, enabled: true, outbox: Vec::new(), backoff: RECONNECT_FIRST, #[cfg(test)] online_for_test: false, #[cfg(test)] fail_sends: false } }
+    fn default() -> Self { Self { connection: None, connecting: None, next_reconnect: Instant::now(), pending: VecDeque::new(), restoring: true, enabled: true, outbox: Vec::new(), backoff: RECONNECT_FIRST, #[cfg(feature = "testkit")] online_for_test: false, #[cfg(feature = "testkit")] fail_sends: false } }
 }
 
 impl Link {
-    fn pretend_online(&self) -> bool { #[cfg(test)] { self.online_for_test } #[cfg(not(test))] { false } }
+    fn pretend_online(&self) -> bool { #[cfg(feature = "testkit")] { self.online_for_test } #[cfg(not(feature = "testkit"))] { false } }
 
-    fn fails(&self) -> bool { #[cfg(test)] { self.fail_sends } #[cfg(not(test))] { false } }
+    fn fails(&self) -> bool { #[cfg(feature = "testkit")] { self.fail_sends } #[cfg(not(feature = "testkit"))] { false } }
 
     /// ⏳️ Schedules the next connection attempt: the wait doubles after every failure up to a ceiling and starts over after a success.
     pub fn schedule_reconnect(&mut self, failed: bool, now: Instant) {
@@ -56,20 +56,20 @@ impl Link {
         self.next_reconnect = now + if failed { self.backoff } else { RECONNECT_FIRST };
     }
 
-    #[cfg(test)]
+    #[cfg(feature = "testkit")]
     pub fn next_attempt(&self) -> Instant { self.next_reconnect }
 
-    #[cfg(test)]
+    #[cfg(feature = "testkit")]
     pub fn backoff(&self) -> Duration { self.backoff }
 
     /// 🧪️ A link that never reaches for a daemon: starts queue and every other message lands in the outbox.
-    #[cfg(test)]
+    #[cfg(feature = "testkit")]
     pub fn offline() -> Self { Self { enabled: false, restoring: false, ..Self::default() } }
 }
 
 /// 📣️ What polling found.
 #[derive(Default)]
-pub(super) struct Polled { pub changed: bool, pub quit: bool }
+pub struct Polled { pub changed: bool, pub quit: bool }
 
 
 
@@ -100,7 +100,7 @@ impl Dashboard {
     pub fn start(&mut self, tui: &mut Tui, index: usize, request: &Start) -> Result<(), String> {
         let registry = self.registry.clone().ok_or_else(|| self.text().start_unavailable.as_str().to_string())?;
         let launch = registry.resolve(&request.id, &request.request())?;
-        let mut group = SpawnGroup::from_launch(&launch, &[]);
+        let mut group = SpawnGroup::from_launch(&launch, &[task_language(self.locale.as_str())]);
         let Some(primary) = group.members.first() else { return Err(format!("{} starts nothing", request.id)) };
         if let Some(live) = self.sessions.values().find(|session| matches!(session.status, SessionStatus::Running | SessionStatus::Stopping) && without_graph_reuse(&session.command).same_task(&without_graph_reuse(&primary.command))).cloned() {
             self.reveal_session(tui, &live.session_id);
@@ -191,7 +191,7 @@ impl Dashboard {
         }
     }
 
-    /// ⏳️ Starts the opener outside the UI loop and reports its completion through the wake queue.
+    /// ▶️ Starts the opener outside the UI loop and reports its completion through the wake queue.
     pub fn begin_open_ready(&mut self, url: &str) {
         match dashboard_cli::browser::Job::start(url, self.waker.clone()) {
             Ok(job) => { self.opening_url = Some(job); self.notice = Some(self.opening_notice()); }
@@ -213,7 +213,7 @@ impl Dashboard {
         if let Err(error) = result { self.record_io(Operation::Input,error); }
     }
 
-    /// 🛑️ Asks the daemon to stop; the view leaves when it confirms, never earlier.
+    /// ⏹️ Asks the daemon to stop; the view leaves when it confirms, never earlier.
     pub fn begin_shutdown(&mut self) {
         match self.send(&ClientMsg::Shutdown {}) {
             Ok(()) => self.shutdown_since = Some(Instant::now()),

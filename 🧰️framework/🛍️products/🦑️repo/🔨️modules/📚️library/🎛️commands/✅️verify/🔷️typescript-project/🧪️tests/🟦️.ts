@@ -1,9 +1,9 @@
-/** 🔷️ Contract: `verify typescript` parses its flags strictly, selects the workspace roots (excludes, shadowed declarations, scopes, changed and listed sets), generates the relative project document, finds excluded applications, counts diagnostics by column-zero lines and type-checks a real project in a Node child; the corpus is language-agnostic, minimatch and the TypeScript compiler API are the third-party oracles and `🐍️oracle.py` re-implements the selection and the log counting. */
+/** 🔷️ Contract: `verify typescript` parses its flags strictly, selects the workspace roots (excludes, shadowed declarations, scopes, changed and listed sets), generates the relative project document, finds excluded applications, counts diagnostics by column-zero lines and type-checks a real project in a Node child; the corpus is language-agnostic, minimatch and the TypeScript compiler API are the third-party oracles and `🐍️.py` re-implements the selection and the log counting. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import ts from "typescript";
 import {minimatch} from "minimatch";
 import {afterAll} from "bun:test";
@@ -85,6 +85,6 @@ test("the compiler child type-checks every parsable file and reports syntax erro
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

@@ -54,7 +54,7 @@ const DIRECTIVES: readonly (readonly [string, string])[] = [
   ["100%% %b", "2026-05-04"],
 ];
 
-/** 🔮️ Renders the directive list through d3-time-format in the transport encoding the probe uses. */
+/** ⌛️ Renders the directive list through d3-time-format in the transport encoding the probe uses. */
 function reference(locale: string): ProbeProjection {
   const format = timeFormatLocale(LOCALES[locale]!);
   return Object.fromEntries(DIRECTIVES.map(([specifier, timestamp], index) => [`time/${index}`, [`|${format.utcFormat(specifier)(new Date(`${timestamp}Z`)).replaceAll(" ", "_")}`]]));
@@ -74,13 +74,13 @@ export default defineTestAdapter({
     "en-locale": {
       /** 🔮️ d3-time-format's utcFormat with the English calendar names. */
       oracle: () => ({ projection: reference("en") }),
-      /** 🎯️ The same directives rendered by semio-viz-format inside a compiled document. */
+      /** 📄️ The same directives rendered by semio-viz-format inside a compiled document. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "de-locale": {
-      /** 🔮️ d3-time-format's utcFormat with the German calendar names. */
+      /** ⏱️ d3-time-format's utcFormat with the German calendar names. */
       oracle: () => ({ projection: reference("de") }),
-      /** 🎯️ The same directives rendered with the German locale selected. */
+      /** 🗣️ The same directives rendered with the German locale selected. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

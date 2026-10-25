@@ -1,5 +1,5 @@
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {Database} from "bun:sqlite";
 import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
@@ -11,7 +11,7 @@ import probeSchema from "../../../../../⚡️caching/🔁️verification/🧬�
 import probeDocument from "../../../../../⚡️caching/🔁️verification/🔣️probe.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {bazelCacheProbeV1,bazelProbeArgumentsV1,bazelProbeDigestsV1,bazelProbeInputNameV1,bazelProbeLeavesV1,bazelProbeWorkspaceV1,renderBazelProbeV1} from "../🟦️.ts";
-import type {CacheProbeSpecV1} from "../../../../⚙️operations/🟦️.ts";
+import type { CacheProbeSpecV1 } from "../../../../⚙️operations/📋️contract/🟦️.ts";
 
 const specification=probeDocument as CacheProbeSpecV1,python=spawnSync(testPythonV1()??"python3",["-c","import ast,hashlib"]).status===0;
 const read=(file:string)=>(fixture.contents as Record<string,string>)[file]===undefined?undefined:new TextEncoder().encode((fixture.contents as Record<string,string>)[file]);

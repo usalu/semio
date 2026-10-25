@@ -67,7 +67,7 @@ async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjecti
     },
   };
 }
-/** 🌀 Compiles the rotation fixture and reduces the `…/at` records to angle and placement. */
+/** 🔄️ Compiles the rotation fixture and reduces the `…/at` records to angle and placement. */
 async function rotationSubject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
   const records = roundProbeNumbers(
     await compileAdapterVizProbeV1(ctx,ctx.input(ROTATION_FIXTURE), { caseName: CASE, scenario: ctx.scenario.id }),
@@ -89,7 +89,7 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     primitives: {
-      /** 🗂️ The taxonomy itself: every section 0 slug, each with geometry of its own. */
+      /** 📑️ The taxonomy itself: every section 0 slug, each with geometry of its own. */
       oracle: () => ({
         projection: {
           "mark/kinds": [...KINDS].sort(),
@@ -97,11 +97,11 @@ export default defineTestAdapter({
           "mark/distinct": [KINDS.length],
         },
       }),
-      /** 🎯️ Every primitive drawn with no ink, reduced to presence and distinctness. */
+      /** 🧱️ Every primitive drawn with no ink, reduced to presence and distinctness. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     rotation: {
-      /** 🌀 The rotation the option asked for reaches the record, and moves nothing else. */
+      /** 🧭️ The rotation the option asked for reaches the record, and moves nothing else. */
       oracle: () => ({
         projection: {
           "mark/rotation/angles": ROTATIONS.map(([, angle]) => angle),
@@ -109,7 +109,7 @@ export default defineTestAdapter({
           "mark/rotation/distinct": [ROTATIONS.length],
         },
       }),
-      /** 🎯️ The same two marks drawn twice each, unrotated and rotated. */
+      /** 🚩️ The same two marks drawn twice each, unrotated and rotated. */
       subject: async (ctx: AdapterContext) => (await rotationSubject(ctx)),
     },
   },

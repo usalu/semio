@@ -1,0 +1,1581 @@
+{
+  "entries": [
+    {
+      "argv": [],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--maintenance-source"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--maintenance-strict"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--plan-maintenance",
+        "nx",
+        "native-assets-protected-1.json"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--plan-maintenance",
+        "products",
+        "native-assets-protected-2.json"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-3.json"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--maintain",
+        "native-assets-protected-3.json"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "../graph-maintenance-command-1.json"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--plan-maintenance",
+        "tools",
+        "native-assets-protected-1.json"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--plan-maintenance",
+        "nx",
+        "native-assets-protected-0.json"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--plan-maintenance",
+        "nx",
+        "native-assets-protected-1.json",
+        "extra"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json",
+        "extra"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_SCRIPT_POLICY",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_SCRIPT_CAPABILITIES",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_BUILD_TOOL",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_BUILD_MODE",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_BUILD_GRAPH_PATH",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_BUILD_GRAPH_DIGEST",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_BUILD_REUSE_GRAPH",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_SCRIPT_MAX_ELAPSED_MS",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_BUILD_INVOCATION_PID",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_TASK_PROJECT",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_TASK_TARGET",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_BAZEL_FIXTURE_PHASE",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_BAZEL_INTEGRATION",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_BUILD_BUDGET_MS",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_CMD_BUDGET_MS",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_ORCHESTRATOR_BUDGET_MS",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_DAEMON_BUDGET_MS",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintenance-default-source"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--maintain",
+        "graph-maintenance-command-1111111111111111111111111111111111111111111111111111111111111111.json"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--service-roster",
+        "nx",
+        "native-assets-protected-1.json"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--service-roster",
+        "products",
+        "native-assets-protected-1.json"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--service-roster",
+        "tools",
+        "native-assets-protected-1.json"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--service-roster",
+        "products",
+        "../native-assets-protected-1.json"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--service-roster",
+        "products",
+        "native-assets-protected-1.json"
+      ],
+      "override": "SEMIO_BUILD_TOOL",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-exact",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--maintain-exact",
+        "native-assets-protected-1.json"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-exact",
+        "../graph-maintenance-command-1.json"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-exact",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--plan-maintenance-streamed",
+        "products",
+        "native-assets-protected-1.json"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--plan-maintenance-streamed",
+        "nx",
+        "native-assets-protected-1.json"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--maintain-streamed",
+        "graph-maintenance-command-1.json"
+      ],
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--maintain-streamed",
+        "native-assets-protected-1.json"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--plan-maintenance-streamed",
+        "products",
+        "native-assets-protected-1.json",
+        "extra"
+      ],
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--plan-maintenance-streamed",
+        "tools",
+        "native-assets-protected-1.json"
+      ],
+      "override": null,
+      "accepted": false
+    }
+  ],
+  "plans": [
+    {
+      "kind": "namespace",
+      "fault": "none",
+      "canonical": false,
+      "status": "ready",
+      "operation": "publish",
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace-many",
+      "fault": "none",
+      "canonical": false,
+      "status": "ready",
+      "operation": "publish",
+      "failed": false,
+      "namespaceCount": 12,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "none",
+      "canonical": true,
+      "status": "ready",
+      "operation": "retire-empty-image",
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "pool",
+      "fault": "none",
+      "canonical": false,
+      "status": "ready",
+      "operation": "retire-artifact",
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "pool-empty",
+      "fault": "none",
+      "canonical": true,
+      "status": "ready",
+      "operation": "retire-empty-image",
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "products",
+      "fault": "none",
+      "canonical": false,
+      "status": "ready",
+      "operation": "retire-artifact",
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "products-empty",
+      "fault": "none",
+      "canonical": true,
+      "status": "ready",
+      "operation": "retire-empty-image",
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "parent-busy",
+      "canonical": false,
+      "status": null,
+      "operation": null,
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "container-busy",
+      "canonical": false,
+      "status": "busy",
+      "operation": null,
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "unknown-roster",
+      "canonical": false,
+      "status": null,
+      "operation": null,
+      "failed": true,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "descriptor-path",
+      "canonical": false,
+      "status": null,
+      "operation": null,
+      "failed": true,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "descriptor-json",
+      "canonical": false,
+      "status": null,
+      "operation": null,
+      "failed": true,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "descriptor-stamp",
+      "canonical": false,
+      "status": null,
+      "operation": null,
+      "failed": true,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "unknown-payload",
+      "canonical": true,
+      "status": null,
+      "operation": null,
+      "failed": true,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "unknown-row",
+      "canonical": true,
+      "status": null,
+      "operation": null,
+      "failed": true,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "products",
+      "fault": "producer-change",
+      "canonical": false,
+      "status": null,
+      "operation": null,
+      "failed": true,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "products",
+      "fault": "fixture-change",
+      "canonical": false,
+      "status": null,
+      "operation": null,
+      "failed": true,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "pool",
+      "fault": "gate-close",
+      "canonical": false,
+      "status": null,
+      "operation": null,
+      "failed": true,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "journal-absent-host",
+      "canonical": false,
+      "status": "ready",
+      "operation": "publish",
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "journal-absent-all",
+      "canonical": false,
+      "status": "ready",
+      "operation": "publish",
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "native-payload",
+      "canonical": true,
+      "status": "ready",
+      "operation": "retire-native-payload",
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "native-absent",
+      "canonical": true,
+      "status": "ready",
+      "operation": "retire-native-payload",
+      "failed": false,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "pool",
+      "fault": "unknown-role",
+      "canonical": true,
+      "status": null,
+      "operation": null,
+      "failed": true,
+      "pending": false,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "none",
+      "canonical": true,
+      "status": "ready",
+      "operation": "publish",
+      "failed": false,
+      "pending": true,
+      "serviceRoster": false
+    },
+    {
+      "kind": "pool-empty",
+      "fault": "none",
+      "canonical": true,
+      "status": "ready",
+      "operation": "publish",
+      "failed": false,
+      "pending": true,
+      "serviceRoster": false
+    },
+    {
+      "kind": "namespace",
+      "fault": "none",
+      "canonical": false,
+      "status": "diagnostic",
+      "operation": null,
+      "failed": false,
+      "pending": false,
+      "serviceRoster": true
+    }
+  ],
+  "launches": [
+    {
+      "language": "EN",
+      "mode": "--plan-maintenance",
+      "order": 924.2,
+      "policyText": "Default Policy (No Overall Deadline)"
+    },
+    {
+      "language": "EN",
+      "mode": "--maintain",
+      "order": 924.4,
+      "policyText": "Default Policy (No Overall Deadline)"
+    },
+    {
+      "language": "DE",
+      "mode": "--plan-maintenance",
+      "order": 924.3,
+      "policyText": "Standardrichtlinie (Ohne Gesamtfrist)"
+    },
+    {
+      "language": "DE",
+      "mode": "--maintain",
+      "order": 924.5,
+      "policyText": "Standardrichtlinie (Ohne Gesamtfrist)"
+    },
+    {
+      "language": "EN",
+      "mode": "--maintenance-default-source",
+      "order": 924.6,
+      "policyText": "Default Policy (No Overall Deadline)"
+    },
+    {
+      "language": "DE",
+      "mode": "--maintenance-default-source",
+      "order": 924.7,
+      "policyText": "Standardrichtlinie (Ohne Gesamtfrist)"
+    }
+  ],
+  "files": [
+    {
+      "mode": "complete",
+      "accepted": true
+    },
+    {
+      "mode": "empty",
+      "accepted": true
+    },
+    {
+      "mode": "too-large",
+      "accepted": false
+    },
+    {
+      "mode": "symlink",
+      "accepted": false
+    },
+    {
+      "mode": "hardlink",
+      "accepted": false
+    },
+    {
+      "mode": "invalid-utf8",
+      "accepted": false
+    },
+    {
+      "mode": "cancelled",
+      "accepted": false
+    }
+  ],
+  "profileBoundaries": [
+    {
+      "stage": "body-returned",
+      "profile": "1",
+      "delivery": "normal",
+      "writes": 1
+    },
+    {
+      "stage": "issued-settled",
+      "profile": "1",
+      "delivery": "normal",
+      "writes": 1
+    },
+    {
+      "stage": "original-settled",
+      "profile": "1",
+      "delivery": "normal",
+      "writes": 1
+    },
+    {
+      "stage": "body-returned",
+      "profile": null,
+      "delivery": "normal",
+      "writes": 0
+    },
+    {
+      "stage": "body-returned",
+      "profile": "true",
+      "delivery": "normal",
+      "writes": 0
+    },
+    {
+      "stage": "issued-settled",
+      "profile": "1",
+      "delivery": "undefined",
+      "writes": 1
+    },
+    {
+      "stage": "original-settled",
+      "profile": "1",
+      "delivery": "frozen",
+      "writes": 1
+    }
+  ],
+  "namespacePayloadDiagnostics": [
+    {
+      "mode": "absent",
+      "accepted": true,
+      "delivery": "normal"
+    },
+    {
+      "mode": "empty-journal",
+      "accepted": true,
+      "delivery": "normal"
+    },
+    {
+      "mode": "current-row",
+      "accepted": true,
+      "delivery": "normal"
+    },
+    {
+      "mode": "extra",
+      "accepted": false,
+      "delivery": "normal"
+    },
+    {
+      "mode": "too-many",
+      "accepted": false,
+      "delivery": "normal"
+    },
+    {
+      "mode": "wrong-root",
+      "accepted": false,
+      "delivery": "normal"
+    },
+    {
+      "mode": "wrong-stamp",
+      "accepted": false,
+      "delivery": "normal"
+    },
+    {
+      "mode": "empty",
+      "accepted": false,
+      "delivery": "normal"
+    },
+    {
+      "mode": "absent",
+      "accepted": true,
+      "delivery": "undefined"
+    },
+    {
+      "mode": "absent",
+      "accepted": true,
+      "delivery": "frozen"
+    }
+  ],
+  "imageMetadataSeeds": [
+    {
+      "kind": "settled",
+      "seed": true
+    },
+    {
+      "kind": "reserved-directory",
+      "seed": true
+    },
+    {
+      "kind": "reserved-file",
+      "seed": true
+    },
+    {
+      "kind": "reserved-link",
+      "seed": true
+    },
+    {
+      "kind": "unknown",
+      "seed": false
+    },
+    {
+      "kind": "missing-image",
+      "seed": false
+    },
+    {
+      "kind": "missing-root",
+      "seed": false
+    },
+    {
+      "kind": "reserved-and-unknown",
+      "seed": false
+    }
+  ],
+  "imageOperations": [
+    {
+      "allocated": false,
+      "canonical": false,
+      "pending": false,
+      "operation": "publish",
+      "role": "namespace"
+    },
+    {
+      "allocated": false,
+      "canonical": false,
+      "pending": true,
+      "operation": "publish",
+      "role": "namespace"
+    },
+    {
+      "allocated": false,
+      "canonical": true,
+      "pending": false,
+      "operation": "retire-empty-image",
+      "role": "namespace"
+    },
+    {
+      "allocated": false,
+      "canonical": true,
+      "pending": true,
+      "operation": "publish",
+      "role": "namespace"
+    },
+    {
+      "allocated": true,
+      "canonical": false,
+      "pending": false,
+      "operation": "retire-artifact",
+      "role": "namespace"
+    },
+    {
+      "allocated": true,
+      "canonical": false,
+      "pending": true,
+      "operation": "retire-artifact",
+      "role": "namespace"
+    },
+    {
+      "allocated": true,
+      "canonical": true,
+      "pending": false,
+      "operation": "retire-artifact",
+      "role": "namespace"
+    },
+    {
+      "allocated": true,
+      "canonical": true,
+      "pending": true,
+      "operation": "retire-artifact",
+      "role": "namespace"
+    },
+    {
+      "allocated": false,
+      "canonical": true,
+      "pending": false,
+      "operation": "retain-inactive",
+      "role": "leases"
+    },
+    {
+      "allocated": false,
+      "canonical": true,
+      "pending": true,
+      "operation": "publish",
+      "role": "leases"
+    },
+    {
+      "allocated": false,
+      "canonical": false,
+      "pending": false,
+      "operation": "publish",
+      "role": "leases"
+    }
+  ],
+  "serviceRosters": [
+    {
+      "kind": "absent",
+      "accepted": true,
+      "emptyMarker": false
+    },
+    {
+      "kind": "empty",
+      "accepted": true,
+      "emptyMarker": false
+    },
+    {
+      "kind": "marker",
+      "accepted": true,
+      "emptyMarker": true
+    },
+    {
+      "kind": "nonempty-marker",
+      "accepted": true,
+      "emptyMarker": false
+    },
+    {
+      "kind": "marker-link",
+      "accepted": true,
+      "emptyMarker": false
+    },
+    {
+      "kind": "marker-hardlink",
+      "accepted": true,
+      "emptyMarker": false
+    },
+    {
+      "kind": "opaque-file",
+      "accepted": true,
+      "emptyMarker": false
+    },
+    {
+      "kind": "opaque-directory",
+      "accepted": true,
+      "emptyMarker": false
+    },
+    {
+      "kind": "too-many",
+      "accepted": false,
+      "emptyMarker": false
+    },
+    {
+      "kind": "changed-directory",
+      "accepted": false,
+      "emptyMarker": false
+    },
+    {
+      "kind": "changed-entry",
+      "accepted": false,
+      "emptyMarker": false
+    }
+  ],
+  "exactDispatches": [
+    {
+      "mode": "--maintain",
+      "input": "image",
+      "accepted": true,
+      "policy": null
+    },
+    {
+      "mode": "--maintain-exact",
+      "input": "image",
+      "accepted": true,
+      "policy": "exact-payload"
+    },
+    {
+      "mode": "--maintain-exact",
+      "input": "retire",
+      "accepted": false,
+      "policy": null
+    },
+    {
+      "mode": "--maintain-exact",
+      "input": "artifact",
+      "accepted": false,
+      "policy": null
+    },
+    {
+      "mode": "--maintain-exact",
+      "input": "native",
+      "accepted": false,
+      "policy": null
+    },
+    {
+      "mode": "--maintain-exact",
+      "input": "foreign",
+      "accepted": false,
+      "policy": null
+    }
+  ],
+  "preparedEntries": [
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": null,
+      "accepted": true
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "linux",
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "win32",
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared"
+      ],
+      "platform": "darwin",
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "../graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "native-assets-protected-1.json"
+      ],
+      "platform": "darwin",
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-0.json"
+      ],
+      "platform": "darwin",
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json",
+        "extra"
+      ],
+      "platform": "darwin",
+      "override": null,
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_SCRIPT_POLICY",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_SCRIPT_CAPABILITIES",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_BUILD_TOOL",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_BUILD_MODE",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_BUILD_GRAPH_PATH",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_BUILD_GRAPH_DIGEST",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_BUILD_REUSE_GRAPH",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_SCRIPT_MAX_ELAPSED_MS",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_BUILD_INVOCATION_PID",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_TASK_PROJECT",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_TASK_TARGET",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_BAZEL_FIXTURE_PHASE",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_BAZEL_INTEGRATION",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_BUILD_BUDGET_MS",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_CMD_BUDGET_MS",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_ORCHESTRATOR_BUDGET_MS",
+      "accepted": false
+    },
+    {
+      "argv": [
+        "--maintain-prepared",
+        "graph-maintenance-command-1.json"
+      ],
+      "platform": "darwin",
+      "override": "SEMIO_DAEMON_BUDGET_MS",
+      "accepted": false
+    }
+  ],
+  "preparedDispatches": [
+    {
+      "platform": "darwin",
+      "input": "image",
+      "accepted": true
+    },
+    {
+      "platform": "darwin",
+      "input": "retire",
+      "accepted": false
+    },
+    {
+      "platform": "darwin",
+      "input": "artifact",
+      "accepted": false
+    },
+    {
+      "platform": "darwin",
+      "input": "native",
+      "accepted": false
+    },
+    {
+      "platform": "darwin",
+      "input": "foreign",
+      "accepted": false
+    },
+    {
+      "platform": "linux",
+      "input": "image",
+      "accepted": false
+    },
+    {
+      "platform": "linux",
+      "input": "retire",
+      "accepted": false
+    },
+    {
+      "platform": "linux",
+      "input": "artifact",
+      "accepted": false
+    },
+    {
+      "platform": "linux",
+      "input": "native",
+      "accepted": false
+    },
+    {
+      "platform": "linux",
+      "input": "foreign",
+      "accepted": false
+    },
+    {
+      "platform": "win32",
+      "input": "image",
+      "accepted": false
+    },
+    {
+      "platform": "win32",
+      "input": "retire",
+      "accepted": false
+    },
+    {
+      "platform": "win32",
+      "input": "artifact",
+      "accepted": false
+    },
+    {
+      "platform": "win32",
+      "input": "native",
+      "accepted": false
+    },
+    {
+      "platform": "win32",
+      "input": "foreign",
+      "accepted": false
+    }
+  ],
+  "preparedCore": [
+    {
+      "platform": "darwin",
+      "policy": "prepared-service",
+      "callback": true,
+      "arity": 5,
+      "operation": "publish",
+      "admitted": true,
+      "purpose": "current-prepared-publication"
+    },
+    {
+      "platform": "linux",
+      "policy": "prepared-service",
+      "callback": true,
+      "arity": 5,
+      "operation": "publish",
+      "admitted": false,
+      "purpose": null
+    },
+    {
+      "platform": "win32",
+      "policy": "prepared-service",
+      "callback": true,
+      "arity": 5,
+      "operation": "publish",
+      "admitted": false,
+      "purpose": null
+    },
+    {
+      "platform": "darwin",
+      "policy": "prepared-service",
+      "callback": false,
+      "arity": 5,
+      "operation": "publish",
+      "admitted": false,
+      "purpose": null
+    },
+    {
+      "platform": "darwin",
+      "policy": "prepared-service",
+      "callback": true,
+      "arity": 6,
+      "operation": "publish",
+      "admitted": false,
+      "purpose": null
+    },
+    {
+      "platform": "darwin",
+      "policy": "prepared-service",
+      "callback": true,
+      "arity": 5,
+      "operation": "retire",
+      "admitted": false,
+      "purpose": null
+    },
+    {
+      "platform": "darwin",
+      "policy": "unknown",
+      "callback": true,
+      "arity": 5,
+      "operation": "publish",
+      "admitted": false,
+      "purpose": null
+    },
+    {
+      "platform": "darwin",
+      "policy": null,
+      "callback": true,
+      "arity": 5,
+      "operation": "publish",
+      "admitted": false,
+      "purpose": null
+    },
+    {
+      "platform": "darwin",
+      "policy": null,
+      "callback": false,
+      "arity": 3,
+      "operation": "publish",
+      "admitted": true,
+      "purpose": "current-publication"
+    },
+    {
+      "platform": "darwin",
+      "policy": null,
+      "callback": true,
+      "arity": 4,
+      "operation": "publish",
+      "admitted": true,
+      "purpose": "current-publication"
+    },
+    {
+      "platform": "darwin",
+      "policy": "exact-payload",
+      "callback": true,
+      "arity": 5,
+      "operation": "publish",
+      "admitted": true,
+      "purpose": "current-exact-publication"
+    },
+    {
+      "platform": "linux",
+      "policy": "exact-payload",
+      "callback": true,
+      "arity": 5,
+      "operation": "publish",
+      "admitted": true,
+      "purpose": "current-exact-publication"
+    },
+    {
+      "platform": "win32",
+      "policy": "exact-payload",
+      "callback": true,
+      "arity": 5,
+      "operation": "publish",
+      "admitted": false,
+      "purpose": null
+    },
+    {
+      "platform": "darwin",
+      "policy": null,
+      "callback": false,
+      "arity": 2,
+      "operation": "publish",
+      "admitted": false,
+      "purpose": null
+    }
+  ],
+  "payloadReadReporterCases": [
+    {
+      "effect": "valid",
+      "delivered": true
+    },
+    {
+      "effect": "frozen",
+      "delivered": true
+    },
+    {
+      "effect": "undefined",
+      "delivered": false
+    },
+    {
+      "effect": "null",
+      "delivered": false
+    },
+    {
+      "effect": "string",
+      "delivered": false
+    },
+    {
+      "effect": "getter-cause",
+      "delivered": false
+    },
+    {
+      "effect": "proxy-error",
+      "delivered": false
+    },
+    {
+      "effect": "proxy-cause",
+      "delivered": false
+    },
+    {
+      "effect": "getter-field",
+      "delivered": false
+    },
+    {
+      "effect": "extra-field",
+      "delivered": false
+    },
+    {
+      "effect": "wrong-purpose",
+      "delivered": false
+    },
+    {
+      "effect": "overlong-root",
+      "delivered": false
+    },
+    {
+      "effect": "oversize-work",
+      "delivered": false
+    },
+    {
+      "effect": "output-failure",
+      "delivered": false
+    }
+  ],
+  "streamDispatches": [
+    {
+      "mode": "--maintain-streamed",
+      "input": "artifact",
+      "selector": "stream",
+      "accepted": true
+    },
+    {
+      "mode": "--maintain-streamed",
+      "input": "native",
+      "selector": "stream",
+      "accepted": true
+    },
+    {
+      "mode": "--maintain-streamed",
+      "input": "image",
+      "selector": "stream",
+      "accepted": false
+    },
+    {
+      "mode": "--maintain-streamed",
+      "input": "foreign",
+      "selector": "stream",
+      "accepted": false
+    },
+    {
+      "mode": "--maintain-streamed",
+      "input": "artifact",
+      "selector": "missing",
+      "accepted": false
+    },
+    {
+      "mode": "--maintain-streamed",
+      "input": "artifact",
+      "selector": "foreign",
+      "accepted": false
+    },
+    {
+      "mode": "--maintain",
+      "input": "artifact",
+      "selector": "stream",
+      "accepted": false
+    },
+    {
+      "mode": "--maintain-exact",
+      "input": "artifact",
+      "selector": "stream",
+      "accepted": false
+    },
+    {
+      "mode": "--maintain-prepared",
+      "input": "artifact",
+      "selector": "stream",
+      "accepted": false
+    }
+  ]
+}

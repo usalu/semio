@@ -84,7 +84,7 @@ pub fn text_identifier_bounds_at(text: &str, offset: usize) -> Option<(usize, us
     }
 }
 
-/// 🔎️ JSON `{selection, hover}` occurrence ranges for the identifier under `cursor`, for editor cross-highlighting.
+/// 🔦️ JSON `{selection, hover}` occurrence ranges for the identifier under `cursor`, for editor cross-highlighting.
 pub fn text_identifier_occurrences_json(text: &str, cursor: usize) -> Option<String> {
     let (start, end) = text_identifier_bounds_at(text, cursor)?;
     let needle = &text[start..end];

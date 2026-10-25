@@ -8,7 +8,7 @@ import { directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirec
 import { parseDirectorySpaceAdministrationPageV1 } from "../📇️directory/🚪️io/📝️text/🟦️.ts";
 import type { FetchTimeoutResponse } from "@semio-tech/framework";
 import { fetchWithTimeout } from "../🚪️io/🌐️fetch-timeout/🟦️.ts";
-import { retryWithJitteredBackoff } from "../⏳️async/🔁️jittered-backoff/🟦️.ts";
+import { retryWithJitteredBackoff } from "../⏳️async/📦️packages/🟦️typescript/🔁️jittered-backoff/🟦️.ts";
 import type { DirectoryEvent, DirectoryStreamMessage } from "../📇️directory/🟦️.ts";
 import { type DirectorySessionAuthorityV1 } from "../📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
 import { closeHubSocketV1 } from "../📇️directory/🔌️client/🚪️socket-close/🟦️.ts";

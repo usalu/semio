@@ -1,15 +1,15 @@
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
 import {resolveBuildHelpLanguageV1} from "../../⚙️operations/📖️help/🟦️.ts";
-import { isRuntimeExecutableV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { isRuntimeExecutableV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
-/** 🧾️ The closed derivation document: named glob profiles and the rules that select targets and name what they read. */
+/** 📕️ The closed derivation document: named glob profiles and the rules that select targets and name what they read. */
 export type InputPrecisionDocumentV1 = {readonly version: 1; readonly exclusions: readonly string[]; readonly retained: readonly string[]; readonly profiles: Readonly<Record<string, {readonly description: string; readonly reads: readonly InputPrecisionReadV1[]}>>; readonly rules: readonly InputPrecisionRuleV1[]; readonly routes: readonly InputPrecisionRouteV1[]; readonly messages: InputPrecisionMessagesV1};
 /** 💬️ The progress texts of the program analysis in every language of the document. */
 export type InputPrecisionMessagesV1 = {readonly languages: readonly string[]; readonly texts: Readonly<Record<"deriving" | "progress" | "done", Readonly<Record<string, string>>>>};
 /** 🔀️ One owner delegation: the script words a root command forwards to an owner target. */
 export type InputPrecisionRouteV1 = {readonly words: readonly string[]; readonly project: string; readonly target: string; readonly root: string};
-/** 🎯️ One rule: which targets it selects, which inherited groups it narrows and what the task reads instead. */
+/** ⚖️ One rule: which targets it selects, which inherited groups it narrows and what the task reads instead. */
 export type InputPrecisionRuleV1 = {readonly id: string; readonly description: string; readonly select: {readonly project: string; readonly targets?: readonly string[]; readonly commands?: readonly (readonly string[])[]}; readonly evidence: "traced" | "static" | "bound" | "whole" | "assumed"; readonly replaces: readonly string[]; readonly reads: readonly InputPrecisionReadV1[]};
 /** 📖️ The closed union of derivations a rule can name. */
 export type InputPrecisionReadV1 =
@@ -24,8 +24,8 @@ export type InputPrecisionReadV1 =
   | {readonly input: string};
 /** 🧾️ The decision a narrowed or assumed target records in `metadata.semio.inputPrecision`: which rule bounds its inputs and how well the rule is evidenced. */
 export type InputPrecisionDecisionV1 = {readonly version: 1; readonly rule: string; readonly evidence: InputPrecisionRuleV1["evidence"]};
-/** 🏷️ The identity the engine selects on: project, target and the script command the target runs. */
-export type InputPrecisionTargetV1 = {readonly project: string; readonly target: string; readonly command?: string};
+/** 🏷️ The identity the engine selects on: project, target and the script command the target runs, plus the workspace-relative files and directories the target writes (written, never read: a derived read inside them is dropped). */
+export type InputPrecisionTargetV1 = {readonly project: string; readonly target: string; readonly command?: string; readonly outputs?: readonly string[]};
 /** 🧰️ The file system, the taxonomy and the dependency analyses the engine consults; every one is injected so the engine owns no I/O. */
 export type InputPrecisionHostV1 = {
   readonly exists: (path: string) => boolean;
@@ -36,7 +36,7 @@ export type InputPrecisionHostV1 = {
   readonly program?: ProgramHostV1;
   readonly cargoManifests: () => readonly string[];
   readonly cargoRoots: (crate: string) => readonly string[];
-  readonly cargoSources: (crate: string) => readonly string[] | undefined;
+  readonly cargoSources: (crate: string, named: boolean) => readonly string[] | undefined;
   readonly cargoToolchain: readonly string[];
   readonly cargoIdentity?: (crateDirectory: string) => unknown;
 };
@@ -83,14 +83,14 @@ export function inputGlobRegExpV1(pattern: string): RegExp {
   compiledGlobs.set(pattern, expression);
   return expression;
 }
-/** 🧷️ Whether a workspace-relative path matches one input glob. */
+/** 📂️ Whether a workspace-relative path matches one input glob. */
 export const globMatchesV1 = (pattern: string, path: string): boolean => inputGlobRegExpV1(pattern).test(path);
 const WHOLE = /^(?:\*\*\/\*|\*\*|\*)$/u;
 const REPOSITORY = /^(?:\*\*\/\*|\*\*)$/u;
 const bare = (pattern: string): string => pattern.replace(/^!?\{(?:workspaceRoot|projectRoot)\}\//u, "").replace(/^(?:\.\/)+/u, "");
 /** 🌐️ Whether a workspace-relative input glob selects every file of the repository. */
 export const globSelectsRepositoryV1 = (pattern: string): boolean => REPOSITORY.test(bare(pattern));
-/** 🧾️ The decision record of a rule. */
+/** 📹️ The decision record of a rule. */
 export const inputPrecisionDecisionV1 = (rule: InputPrecisionRuleV1): InputPrecisionDecisionV1 => ({version: 1, rule: rule.id, evidence: rule.evidence});
 const fail = (message: string): never => {
   throw new InputPrecisionErrorV1(message);
@@ -127,7 +127,7 @@ export function readInputPrecisionV1(value: unknown): InputPrecisionDocumentV1 {
 
 /** 🗣️ Chooses the progress language by the shared rule of the CLI help; no language is assumed. */
 export const inputPrecisionLanguageV1 = (document: Pick<InputPrecisionDocumentV1, "messages">, environment: Readonly<Record<string, string | undefined>>, osLanguages?: () => readonly string[]): string => resolveBuildHelpLanguageV1(document.messages.languages, [], environment, osLanguages);
-/** 💬️ Renders one program analysis event in a language of the document. */
+/** 🖌️ Renders one program analysis event in a language of the document. */
 export function inputPrecisionTextV1(document: Pick<InputPrecisionDocumentV1, "messages">, event: ProgramEventV1, language: string): string {
   const key = event.phase === "derive" ? "deriving" : event.phase;
   return (document.messages.texts[key][language] ?? fail(`Input precision message language missing: ${language}`)).replace(/\{(tsconfig|files|derived|reused|seconds)\}/gu, (_, name: keyof ProgramEventV1) => String(event[name]));
@@ -140,10 +140,10 @@ export function commandTokensV1(command: string): string[] {
   return tokens;
 }
 
-/** 🧭️ The words a `bun <script> <words…>` command passes to its script; `undefined` for anything else. */
+/** 🧭️ The words a `repo <script> <words…>` or runtime `<script> <words…>` command passes to its script; `undefined` for anything else. */
 export function commandWordsV1(command: string): {readonly script: string; readonly words: readonly string[]} | undefined {
   const tokens = commandTokensV1(command);
-  if (!isRuntimeExecutableV1(tokens[0] ?? "")) return undefined;
+  if (!/^repo(?:\.exe|\.cmd)?$/u.test(tokens[0] ?? "") && !isRuntimeExecutableV1(tokens[0] ?? "")) return undefined;
   const index = tokens.findIndex((token, position) => position > 0 && /script\.ts$/u.test(token));
   return index < 0 ? undefined : {script: tokens[index]!, words: tokens.slice(index + 1)};
 }
@@ -184,7 +184,7 @@ export function packageNameV1(manifest: string): string | undefined {
 }
 
 const indexes = new WeakMap<object, Map<string, string>>();
-/** 🦀️ Maps every crate name of the declared Cargo workspaces to its directory; hidden trees (tickets, caches, drafts) never own a crate. */
+/** 🗺️ Maps every crate name of the declared Cargo workspaces to its directory; hidden trees (tickets, caches, drafts) never own a crate. */
 export function crateIndexV1(host: Pick<InputPrecisionHostV1, "readText" | "cargoManifests">): ReadonlyMap<string, string> {
   const known = indexes.get(host);
   if (known) return known;
@@ -198,14 +198,14 @@ export function crateIndexV1(host: Pick<InputPrecisionHostV1, "readText" | "carg
   return index;
 }
 
-/** 🦀️ The sources of the crates in the given directories and every path dependency they compile with. */
+/** ⛓️ The sources of the crates in the given directories and every path dependency they compile with: Cargo compiles the test, bench and example targets of the named crates only, never those of their dependencies, and a dependency is compiled without `cfg(test)`. */
 export function crateDirectoryPatternsV1(directories: readonly string[], host: Pick<InputPrecisionHostV1, "cargoRoots" | "cargoSources" | "cargoToolchain" | "cargoIdentity">): {patterns: string[]; files: string[]; markers: unknown[]} {
   const patterns: string[] = [], files: string[] = [], markers: unknown[] = [];
   for (const directory of directories) {
     const marker = host.cargoIdentity?.(directory);
     if (marker !== undefined) markers.push(marker);
     for (const root of host.cargoRoots(directory)) {
-      const sources = host.cargoSources(root);
+      const sources = host.cargoSources(root, directories.includes(root));
       patterns.push(`${WORKSPACE}${root}/Cargo.toml`);
       if (sources) files.push(...sources.map((source) => source.replace(WORKSPACE, "")));
       else patterns.push(`${WORKSPACE}${root}/**/*`, `!${WORKSPACE}${root}/**/target/**`);
@@ -214,7 +214,7 @@ export function crateDirectoryPatternsV1(directories: readonly string[], host: P
   return {patterns: unique([...patterns, ...host.cargoToolchain.map((file) => `${WORKSPACE}${file}`)]), files: unique(files), markers: uniqueJson(markers)};
 }
 
-/** 🦀️ The sources of the named crates and every path dependency they compile with. */
+/** 🔨️ The sources of the named crates and every path dependency they compile with. */
 export function cratePatternsV1(packages: readonly string[], host: Pick<InputPrecisionHostV1, "readText" | "cargoManifests" | "cargoRoots" | "cargoSources" | "cargoToolchain" | "cargoIdentity">): {patterns: string[]; files: string[]; markers: unknown[]} {
   const index = crateIndexV1(host);
   return crateDirectoryPatternsV1(packages.map((name) => index.get(name) ?? fail(`Unknown Cargo package: ${name}`)), host);
@@ -236,7 +236,7 @@ export function dispatchBranchesV1(source: string): BranchFactsV1[] {
   return branches;
 }
 
-/** 🔖️ Cargo packages (-p), repository path literals and whether a source text runs Cargo. */
+/** 🛤️ Cargo packages (-p), repository path literals and whether a source text runs Cargo. */
 export function literalFactsV1(text: string): {readonly crates: readonly string[]; readonly paths: readonly string[]; readonly cargo: boolean} {
   const literals = [...text.matchAll(/"((?:[^"\\\n]|\\.)*)"/gu)].map((match) => match[1]!);
   const joined = [...text.matchAll(/\bjoin\(([^)]*)\)/gu)].map((match) => [...match[1]!.matchAll(/"((?:[^"\\\n]|\\.)*)"/gu)].map((part) => part[1]!).join("/"));
@@ -308,7 +308,7 @@ const SOURCE = /\.(?:ts|tsx|mts|cts)$/u;
 const SKIPPED = new Set(["node_modules", ".git"]);
 const GLOB_CHARACTERS = /[*?{[]/u;
 const SEGMENT_EXCLUDE = /^(?:(.*?)\/)?\*\*\/([^*?{}[\]/]+)(\/\*\*)?$/u;
-/** 🚫️ Compiles exclude globs into one predicate with the answers of matching each glob and its `/**` extension: literal paths and `prefix/**\/name[/**]` patterns by path segment, everything else by expression. */
+/** 🔌️ Compiles exclude globs into one predicate with the answers of matching each glob and its `/**` extension: literal paths and `prefix/**\/name[/**]` patterns by path segment, everything else by expression. */
 export function excludesV1(patterns: readonly string[]): (path: string) => boolean {
   const literals: string[] = [], segments: {prefix: string; name: string; beyond: boolean}[] = [], expressions: RegExp[] = [];
   for (const pattern of patterns) {
@@ -328,7 +328,7 @@ export function excludesV1(patterns: readonly string[]): (path: string) => boole
   };
 }
 
-/** 🧾️ One answer of the file system or the compiler that a module resolution depended on: a probe is `file` or `directory` existence, the `text` digest of a package manifest, a `realpath`, a `directories` listing or the `digest` of a workspace file. */
+/** 🔬️ One answer of the file system or the compiler that a module resolution depended on: a probe is `file` or `directory` existence, the `text` digest of a package manifest, a `realpath`, a `directories` listing or the `digest` of a workspace file. */
 export type ProgramFactV1 = {readonly kind: "file" | "directory" | "text" | "realpath" | "directories" | "digest"; readonly path: string; readonly value: boolean | string | null};
 /** 📇️ The persisted import analysis of one program: per source file its content digest, what its imports resolved to and the indexes of the facts that resolution consulted. */
 export type ProgramReceiptV1 = {readonly version: 1; readonly tsconfig: string; readonly compiler: string; readonly chain: readonly {readonly path: string; readonly sha256: string | null}[]; readonly facts: readonly ProgramFactV1[]; readonly files: Readonly<Record<string, {readonly sha256: string; readonly resolved: readonly string[]; readonly facts: readonly number[]}>>};
@@ -362,7 +362,7 @@ const readReceipt = (host: ProgramHostV1, key: string, tsconfig: string, chain: 
   return receipt.tsconfig === tsconfig && receipt.compiler === host.compiler && receipt.chain.length === chain.length && receipt.chain.every((row, index) => row.path === chain[index]!.path && sameFact(row.sha256, chain[index]!.sha256)) ? receipt : undefined;
 };
 
-/** 🔷️ The TypeScript program of a tsconfig: the include globs, the import closure of the files they select, the configuration chain and the package manifests that resolution reads. The import analysis is kept in a receipt keyed by tsconfig and compiler, and a file's entry is reused while its content digest and every fact its resolution consulted still hold, so a warm run derives nothing and an edit re-derives only the files it touches. Progress is reported and cancellation honoured per file; a cancelled or failed run writes no receipt. */
+/** ⌨️ The TypeScript program of a tsconfig: the include globs, the import closure of the files they select, the configuration chain and the package manifests that resolution reads. The import analysis is kept in a receipt keyed by tsconfig and compiler, and a file's entry is reused while its content digest and every fact its resolution consulted still hold, so a warm run derives nothing and an edit re-derives only the files it touches. Progress is reported and cancellation honoured per file; a cancelled or failed run writes no receipt. */
 export function programInputsV1(tsconfig: string, host: Pick<InputPrecisionHostV1, "readText" | "exists" | "listDirectory" | "program">): Promise<{patterns: string[]; files: string[]; roots: string[]}> {
   const key = normalize(tsconfig);
   let byConfig = programs.get(host);
@@ -561,5 +561,6 @@ export async function deriveInputsV1(document: InputPrecisionDocumentV1, rule: I
   if (cargoUnresolved && !cargoDeclared) fail(`Dispatch branch runs cargo without a literal package and the rule declares none: ${identity.project}:${identity.target}`);
   for (const pattern of patterns) if (!pattern.startsWith("!") && globSelectsRepositoryV1(pattern)) fail(`Input precision derived a pattern that selects the whole repository: ${pattern} (${identity.project}:${identity.target})`);
   const positive = patterns.some((pattern) => !pattern.startsWith("!"));
-  return {rule: rule.id, drops: [...rule.replaces], patterns: unique([...patterns, ...(positive ? document.exclusions : [])]), groups: unique([...(rule.replaces.length ? document.retained : []), ...groups]), files: sorted(unique(files)), unresolved: unique(unresolved), ...(markers.length ? {markers: uniqueJson(markers)} : {}), reads};
+  const written = (path: string): boolean => (identity.outputs ?? []).some((output) => path === output || path.startsWith(`${output}/`));
+  return {rule: rule.id, drops: [...rule.replaces], patterns: unique([...patterns, ...(positive ? document.exclusions : [])]), groups: unique([...(rule.replaces.length ? document.retained : []), ...groups]), files: sorted(unique(files.filter((file) => !written(file)))), unresolved: unique(unresolved), ...(markers.length ? {markers: uniqueJson(markers)} : {}), reads};
 }

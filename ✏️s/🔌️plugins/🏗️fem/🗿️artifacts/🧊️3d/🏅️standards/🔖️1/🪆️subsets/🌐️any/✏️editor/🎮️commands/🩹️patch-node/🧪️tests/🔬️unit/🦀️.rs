@@ -17,7 +17,7 @@ fn concurrent_node_fields_preserve_both_authors_intent() {
         for mutation in sequence { semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut snapshot, mutation).expect("independent field replay"); }
         assert_eq!(snapshot.nodes[0].x, 3.0);
         assert_eq!(snapshot.nodes[0].y, 4.0);
-        for inverse in protocol::Mutation::inverse(&first, &base).expect("field inverse").iter().rev() {
+        for inverse in protocol::ColdMutation::inverse(&first, &base).expect("field inverse").iter().rev() {
             semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut snapshot, inverse).expect("independent field inverse replay");
         }
         assert_eq!(snapshot.nodes[0].x, base.nodes[0].x);

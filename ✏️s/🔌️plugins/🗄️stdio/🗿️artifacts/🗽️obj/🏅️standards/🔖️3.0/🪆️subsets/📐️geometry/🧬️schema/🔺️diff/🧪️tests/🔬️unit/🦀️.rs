@@ -1,4 +1,5 @@
 use crate::ObjSnapshot;
+use protocol::{DiffBinary as _, DiffText as _};
 use crate::standards::v3_0::subsets::any::schema::diff::*;
 
 #[test]

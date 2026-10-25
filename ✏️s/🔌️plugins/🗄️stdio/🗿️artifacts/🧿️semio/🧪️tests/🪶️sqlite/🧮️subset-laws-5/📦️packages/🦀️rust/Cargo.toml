@@ -76,7 +76,7 @@ semio-s-artifact-stdio-semio-video-model = { workspace = true }
 semio-s-artifact-stdio-semio-video-mutations = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 
 [dev-dependencies]
-semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }

@@ -3,7 +3,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // Both TypeScript halves of the coordinator envelope case. The SUBJECT is the coordinator's own
-// Next.js package, whose `📡️events.ts` writes out FIPS 180-4 and the canonical encoding itself. The
+// Next.js package, whose `⚡️events/🟦️.ts` writes out FIPS 180-4 and the canonical encoding itself. The
 // ORACLE is `node:crypto`, which reaches OpenSSL and decides the checksum from outside this
 // repository — two independent readings of the same standard, never one library judging itself.
 
@@ -11,7 +11,7 @@
 
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
-import { canonicalEventLine, canonicalJson, eventChecksum } from "../../📦️packages/🟦️typescript/📡️events.ts";
+import { canonicalEventLine, canonicalJson, eventChecksum } from "../../⚡️events/🟦️.ts";
 import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 //#endregion 🔌️Adapters
 

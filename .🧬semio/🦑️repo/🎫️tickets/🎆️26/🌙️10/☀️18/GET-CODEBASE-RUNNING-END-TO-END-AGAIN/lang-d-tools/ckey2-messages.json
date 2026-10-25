@@ -1,0 +1,365 @@
+{
+ "note": "Catalog rows for build/📖️texts/🔣️.json (id build) for the findings of 🎬️executor, 🎬️scopes, 📥️source/🔏️closure and bazel 📜️script.ts; apply with C/lang-d-tools/ckey2-apply-catalog.py (idempotent). The consumers: bazel 📜️script.ts matches the closure refusal by its key (build.closure.source-not-admitted), the closure test by build.closure.source-differs.",
+ "messages": [
+  {
+   "key": "bazel.output-outside-workspace",
+   "code": "invalid",
+   "en": "Build output must be inside the workspace: {path}",
+   "de": "Die Build-Ausgabe muss innerhalb des Workspace liegen: {path}"
+  },
+  {
+   "key": "bazel.output-ancestry-not-real",
+   "code": "invalid",
+   "en": "Build output requires real directory ancestry: {current}",
+   "de": "Die Build-Ausgabe verlangt echte Verzeichnis-Vorfahren: {current}"
+  },
+  {
+   "key": "bazel.task-option-required",
+   "code": "missing",
+   "en": "Build task requires option {key}: {task}",
+   "de": "Die Build-Aufgabe verlangt die Option {key}: {task}"
+  },
+  {
+   "key": "bazel.task-manifest-required",
+   "code": "invalid",
+   "en": "Closed Bazel task manifest required",
+   "de": "Geschlossenes Bazel-Task-Manifest erforderlich"
+  },
+  {
+   "key": "bazel.implementation-required",
+   "code": "missing",
+   "en": "Exact captured Bazel implementation required",
+   "de": "Exakt erfasste Bazel-Implementierung erforderlich"
+  },
+  {
+   "key": "bazel.runtime-channel-workspace-required",
+   "code": "invalid",
+   "en": "Bazel runtime channel requires the manifest's own workspace",
+   "de": "Der Bazel-Laufzeitkanal verlangt den eigenen Workspace des Manifests"
+  },
+  {
+   "key": "bazel.runtime-channel-required",
+   "code": "invalid",
+   "en": "Closed Bazel runtime channel required",
+   "de": "Geschlossener Bazel-Laufzeitkanal erforderlich"
+  },
+  {
+   "key": "bazel.build-modes-conflict",
+   "code": "refused",
+   "en": "Conflicting build modes: task {task} is {configuration}, the original caller is {mode}",
+   "de": "Widersprüchliche Build-Modi: Task {task} ist {configuration}, der ursprüngliche Aufrufer ist {mode}"
+  },
+  {
+   "key": "bazel.replayed-output-missing",
+   "code": "failed",
+   "en": "Declared output of a replayed Bazel task was not produced: {task} {path}",
+   "de": "Die deklarierte Ausgabe einer wiederholten Bazel-Aufgabe wurde nicht erzeugt: {task} {path}"
+  },
+  {
+   "key": "bazel.snapshot-link-target-required",
+   "code": "invalid",
+   "en": "Bazel snapshot link requires an existing file or directory target",
+   "de": "Der Bazel-Snapshot-Link verlangt ein vorhandenes Datei- oder Verzeichnisziel"
+  },
+  {
+   "key": "bazel.output-directory-changed-during-mode-update",
+   "code": "stale",
+   "en": "Original Bazel output directory changed during mode update",
+   "de": "Das ursprüngliche Bazel-Ausgabeverzeichnis hat sich während der Modus-Aktualisierung geändert"
+  },
+  {
+   "key": "bazel.output-directory-changed-before-mode-update",
+   "code": "stale",
+   "en": "Original Bazel output directory changed before mode update",
+   "de": "Das ursprüngliche Bazel-Ausgabeverzeichnis hat sich vor der Modus-Aktualisierung geändert"
+  },
+  {
+   "key": "bazel.output-snapshot-invalid",
+   "code": "invalid",
+   "en": "Invalid Bazel output snapshot",
+   "de": "Ungültiger Bazel-Ausgabe-Snapshot"
+  },
+  {
+   "key": "bazel.restored-output-not-directory",
+   "code": "invalid",
+   "en": "Restored Bazel output requires an ordinary directory",
+   "de": "Die wiederhergestellte Bazel-Ausgabe verlangt ein gewöhnliches Verzeichnis"
+  },
+  {
+   "key": "bazel.snapshot-file-identity-invalid",
+   "code": "invalid",
+   "en": "Invalid Bazel snapshot file identity",
+   "de": "Ungültige Dateiidentität im Bazel-Snapshot"
+  },
+  {
+   "key": "bazel.orchestration-task-changed",
+   "code": "stale",
+   "en": "Original Bazel orchestration task changed",
+   "de": "Die ursprüngliche Bazel-Orchestrierungsaufgabe hat sich geändert"
+  },
+  {
+   "key": "bazel.orchestration-declaration-changed",
+   "code": "stale",
+   "en": "Original Bazel orchestration declaration changed",
+   "de": "Die ursprüngliche Bazel-Orchestrierungsdeklaration hat sich geändert"
+  },
+  {
+   "key": "bazel.build-command-required",
+   "code": "missing",
+   "en": "Build command required: {task}",
+   "de": "Build-Befehl erforderlich: {task}"
+  },
+  {
+   "key": "bazel.task-phase-expired",
+   "code": "cancelled",
+   "en": "Inherited Bazel task phase expired",
+   "de": "Die geerbte Phase der Bazel-Aufgabe ist abgelaufen"
+  },
+  {
+   "key": "bazel.cancellation-control-required",
+   "code": "missing",
+   "en": "Original loopback Bazel action cancellation control required",
+   "de": "Ursprüngliche Loopback-Abbruchsteuerung der Bazel-Aktion erforderlich"
+  },
+  {
+   "key": "bazel.handshake-cancelled",
+   "code": "cancelled",
+   "en": "Original Bazel handshake cancelled",
+   "de": "Der ursprüngliche Bazel-Handshake wurde abgebrochen"
+  },
+  {
+   "key": "bazel.handshake-deadline-exhausted",
+   "code": "cancelled",
+   "en": "Original Bazel handshake deadline exhausted",
+   "de": "Die Frist des ursprünglichen Bazel-Handshakes ist erschöpft"
+  },
+  {
+   "key": "bazel.work-request-cancelled",
+   "code": "cancelled",
+   "en": "Bazel work request cancelled",
+   "de": "Die Bazel-Arbeitsanfrage wurde abgebrochen"
+  },
+  {
+   "key": "bazel.action-control-disconnected",
+   "code": "failed",
+   "en": "Original Bazel action control disconnected",
+   "de": "Die ursprüngliche Bazel-Aktionssteuerung wurde getrennt"
+  },
+  {
+   "key": "bazel.action-control-message-too-large",
+   "code": "invalid",
+   "en": "Bazel action control exceeds its bounded message",
+   "de": "Die Bazel-Aktionssteuerung überschreitet ihre begrenzte Nachrichtengröße"
+  },
+  {
+   "key": "bazel.action-control-invalid",
+   "code": "invalid",
+   "en": "Invalid Bazel action control",
+   "de": "Ungültige Bazel-Aktionssteuerung"
+  },
+  {
+   "key": "bazel.invocation-cancelled",
+   "code": "cancelled",
+   "en": "Original Bazel invocation cancelled",
+   "de": "Der ursprüngliche Bazel-Aufruf wurde abgebrochen"
+  },
+  {
+   "key": "bazel.action-control-event-invalid",
+   "code": "invalid",
+   "en": "Invalid Bazel action control event",
+   "de": "Ungültiges Ereignis der Bazel-Aktionssteuerung"
+  },
+  {
+   "key": "bazel.action-termination-receipt-deadline-exhausted",
+   "code": "cancelled",
+   "en": "Bazel action termination receipt deadline exhausted",
+   "de": "Die Frist für den Beendigungsbeleg der Bazel-Aktion ist erschöpft"
+  },
+  {
+   "key": "bazel.birth-input-required",
+   "code": "invalid",
+   "en": "Bounded regular Bazel birth input required",
+   "de": "Begrenzte reguläre Birth-Eingabe der Bazel-Aktion erforderlich"
+  },
+  {
+   "key": "bazel.birth-input-shortened",
+   "code": "stale",
+   "en": "Bazel birth input shortened",
+   "de": "Die Birth-Eingabe der Bazel-Aktion wurde verkürzt"
+  },
+  {
+   "key": "bazel.birth-input-changed",
+   "code": "stale",
+   "en": "Bazel birth input changed: {path}",
+   "de": "Die Birth-Eingabe der Bazel-Aktion hat sich geändert: {path}"
+  },
+  {
+   "key": "bazel.birth-handshake-deadline-exhausted",
+   "code": "cancelled",
+   "en": "Bazel action birth handshake deadline exhausted",
+   "de": "Die Frist des Birth-Handshakes der Bazel-Aktion ist erschöpft"
+  },
+  {
+   "key": "bazel.birth-rendezvous-required",
+   "code": "missing",
+   "en": "Bazel birth rendezvous required",
+   "de": "Birth-Rendezvous der Bazel-Aktion erforderlich"
+  },
+  {
+   "key": "bazel.birth-wire-expectation-required",
+   "code": "missing",
+   "en": "Bazel birth wire expectation required",
+   "de": "Erwartung der Birth-Leitung der Bazel-Aktion erforderlich"
+  },
+  {
+   "key": "bazel.birth-deadline-exhausted",
+   "code": "cancelled",
+   "en": "Original Bazel action birth deadline exhausted",
+   "de": "Die Birth-Frist der ursprünglichen Bazel-Aktion ist erschöpft"
+  },
+  {
+   "key": "bazel.birth-owned-rendezvous-required",
+   "code": "missing",
+   "en": "Owned Bazel birth rendezvous required",
+   "de": "Eigenes Birth-Rendezvous der Bazel-Aktion erforderlich"
+  },
+  {
+   "key": "bazel.birth-required",
+   "code": "missing",
+   "en": "Closed Bazel action birth required",
+   "de": "Geschlossener Birth der Bazel-Aktion erforderlich"
+  },
+  {
+   "key": "bazel.birth-message-too-large",
+   "code": "invalid",
+   "en": "Bazel birth message exceeds finite control boundary",
+   "de": "Die Birth-Nachricht der Bazel-Aktion überschreitet die endliche Steuergrenze"
+  },
+  {
+   "key": "bazel.birth-parent-disconnected",
+   "code": "failed",
+   "en": "Original Bazel birth parent disconnected",
+   "de": "Der ursprüngliche Birth-Elternprozess der Bazel-Aktion wurde getrennt"
+  },
+  {
+   "key": "bazel.birth-response-too-large",
+   "code": "invalid",
+   "en": "Bazel birth response exceeds finite control boundary",
+   "de": "Die Birth-Antwort der Bazel-Aktion überschreitet die endliche Steuergrenze"
+  },
+  {
+   "key": "bazel.birth-response-refused",
+   "code": "refused",
+   "en": "Bazel birth response refused",
+   "de": "Die Birth-Antwort der Bazel-Aktion wurde abgelehnt"
+  },
+  {
+   "key": "bazel.birth-parent-cancelled",
+   "code": "cancelled",
+   "en": "Original Bazel birth parent cancelled",
+   "de": "Der ursprüngliche Birth-Elternprozess der Bazel-Aktion wurde abgebrochen"
+  },
+  {
+   "key": "bazel.birth-termination-receipt-deadline-exhausted",
+   "code": "cancelled",
+   "en": "Bazel birth termination receipt deadline exhausted",
+   "de": "Die Frist für den Beendigungsbeleg des Bazel-Birth ist erschöpft"
+  },
+  {
+   "key": "bazel.action-manifest-output-expected",
+   "code": "invalid",
+   "en": "Expected Bazel action manifest output [dependency snapshots]",
+   "de": "Erwartete Ausgabe des Bazel-Aktionsmanifests [Abhängigkeits-Snapshots]"
+  },
+  {
+   "key": "bazel.child-deadline-exhausted",
+   "code": "cancelled",
+   "en": "Original Bazel child deadline exhausted",
+   "de": "Die Frist des ursprünglichen Bazel-Kindprozesses ist erschöpft"
+  },
+  {
+   "key": "bazel.birth-manifest-changed",
+   "code": "stale",
+   "en": "Original Bazel action birth manifest changed",
+   "de": "Das ursprüngliche Birth-Manifest der Bazel-Aktion hat sich geändert"
+  },
+  {
+   "key": "bazel.work-request-manifest-required",
+   "code": "missing",
+   "en": "Bazel work request requires a manifest and an output",
+   "de": "Die Bazel-Arbeitsanfrage verlangt ein Manifest und eine Ausgabe"
+  },
+  {
+   "key": "bazel.work-action-arguments-expected",
+   "code": "usage",
+   "en": "Expected Bazel work-action --persistent_worker or one @flagfile",
+   "de": "Erwartet wurde die Bazel-Arbeitsaktion --persistent_worker oder ein @flagfile"
+  },
+  {
+   "key": "bazel.orchestrated-tasks-adapter-only",
+   "code": "refused",
+   "en": "Orchestrated Bazel tasks run only in the adapter implementation",
+   "de": "Orchestrierte Bazel-Tasks laufen nur in der Adapter-Implementierung"
+  },
+  {
+   "key": "bazel.loader-identity-required",
+   "code": "missing",
+   "en": "Captured Bazel loader identity required",
+   "de": "Erfasste Bazel-Loader-Identität erforderlich"
+  },
+  {
+   "key": "bazel.task-entry-loader-required",
+   "code": "missing",
+   "en": "Bazel task entry requires its captured implementation loader",
+   "de": "Der Einstieg der Bazel-Aufgabe verlangt ihren erfassten Implementierungs-Loader"
+  },
+  {
+   "key": "bazel.cleanup-refusal-retained",
+   "code": "failed",
+   "en": "[bazel] Cleanup refusal retained after primary: {message}",
+   "de": "[bazel] Aufräum-Ablehnung nach der primären Ablehnung behalten: {message}"
+  },
+  {
+   "key": "bazel.scope-table-required",
+   "code": "invalid",
+   "en": "Closed Bazel implementation scope table required",
+   "de": "Geschlossene Bazel-Implementierungs-Scope-Tabelle erforderlich"
+  },
+  {
+   "key": "bazel.scope-unique-required",
+   "code": "invalid",
+   "en": "Unique Bazel implementation scope required: {id}",
+   "de": "Eindeutiger Bazel-Implementierungs-Scope erforderlich: {id}"
+  },
+  {
+   "key": "bazel.scope-declared-required",
+   "code": "missing",
+   "en": "Declared Bazel implementation scope required: {id}",
+   "de": "Deklarierter Bazel-Implementierungs-Scope erforderlich: {id}"
+  },
+  {
+   "key": "closure.source-not-admitted",
+   "code": "refused",
+   "en": "Implementation Source is not admitted by parent: {path}",
+   "de": "Die Implementierungs-Quelle wird vom Elternprozess nicht zugelassen: {path}"
+  },
+  {
+   "key": "closure.source-differs",
+   "code": "stale",
+   "en": "Captured implementation Source differs from admitted parent",
+   "de": "Die erfasste Implementierungs-Quelle weicht vom zugelassenen Elternprozess ab"
+  },
+  {
+   "key": "closure.capacity-exceeded",
+   "code": "refused",
+   "en": "Implementation Source closure capacity exceeded: {path}",
+   "de": "Die Kapazität des Implementierungs-Quellabschlusses ist überschritten: {path}"
+  },
+  {
+   "key": "bazel.scope-table-refused",
+   "code": "refused",
+   "en": "[bazel] the declared implementation scope table is refused ({reason}), every action keeps the full executor closure",
+   "de": "[bazel] die deklarierte Implementierungs-Scope-Tabelle wird abgelehnt ({reason}), jede Aktion behält die volle Executor-Hülle"
+  }
+ ]
+}

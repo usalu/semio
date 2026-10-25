@@ -25,6 +25,7 @@
 import { useEffect, useImperativeHandle, useMemo, useRef, useSyncExternalStore, type ReactElement, type Ref } from "react";
 import { ROTATION_STREAM, TICKS_PER_SECOND, advance, castOf, frameOf, menagerieIssues, openStage, petCast, randomBetween, type ActorFrame, type Deed, type Frame, type Menagerie, type PetMode, type Point, type Pointed, type Rect, type Slug, type Species, type Stage, type StageEvent, type Summoned, type Surveyed, type Unpointed } from "@semio-tech/pets";
 export { petCast } from "@semio-tech/pets";
+import { castOn, standing } from "@semio-tech/pets/modules/spacing";
 import { depict, paint, type Depiction } from "../🖌️depiction/🟦️.ts";
 import { paintEffects, paintPuffs, retireEffects, stageEffects, stockEffects, strikeEffects, tintEffects } from "../✨️effects/🟦️.ts";
 import { equip, paintLadders, paintTools, rackLadders, type Equipment } from "../🧰️gear/🟦️.ts";
@@ -50,7 +51,7 @@ export const PET_MEDIUM_WIDTH = 1024;
 /** 🧱️ How far from the left and the right edge of the layer every surface ends, in pixels at pet size 1. */
 export const PET_EDGE_INSET = 6;
 
-/** 🔁️ The shortest and the longest time in seconds a rotation of the cast stays on stage. */
+/** ⌛️ The shortest and the longest time in seconds a rotation of the cast stays on stage. */
 export const PET_ROTATION_SECONDS = [60, 120] as const;
 
 /** 👆️ The media query of a device whose primary pointer is coarse: there a finger that drags a pet needs a pad that keeps the page from scrolling. */
@@ -61,6 +62,23 @@ export const PET_FINE_POINTER = "(pointer: fine)";
 
 const SURVEY_TICKS = 8;
 const PATROL_TICKS = TICKS_PER_SECOND;
+
+/** 🚫️ How long a company (or a single species) stays out of the cast once it was cast and the page then had no room for all of it: ten minutes of the pets' time, longer than any survey of one viewport but not for good. */
+export const PET_SHUN_SECONDS = 600;
+
+/** 🗝️ The key of a company of species: their names in alphabetical order, one space apart (a single species is its own name). */
+function companyKey(species: readonly Slug[]): string {
+  return [...species].sort().join(" ");
+}
+
+/** 🦋️ How many times the pets on stage may come and go within {@link PET_FLAP_SECONDS} after a cast before the company is held to blame: a page whose layout follows its pets (the rows that play with them) can take the room they stood on and give it back, again and again. */
+export const PET_FLAPS = 4;
+
+/** ⏱️ The span of {@link PET_FLAPS}: ten seconds of the pets' time. */
+export const PET_FLAP_SECONDS = 10;
+
+/** 🔁️ How long a stage with nobody on it waits before it casts again although the ground did not change: four seconds of the pets' time (a page settles after its first survey, a transition ends). */
+export const PET_RETRY_SECONDS = 4;
 const FORCED_COLORS = "(forced-colors: active)";
 const OFFSTAGE = "[inert], [hidden]";
 const PRESS_KINDS: ReadonlySet<string> = new Set(["pressed", "dragged", "released", "cancelled"]);
@@ -222,7 +240,15 @@ function within(box: Rect, x: number, y: number): boolean {
  * drag of a frame, and one stir and one scroll at a time. The pacer hands out at most eight ticks while the stage runs
  * and every tick slept after a rest, which the stage jumps over; its clock runs `tempo` times as fast as the wall clock
  * (held between an eighth and eight: beyond eight ticks a frame time would be dropped). The rotation of the cast
- * advances every 60 to 120 seconds of stage time, never while the stage is `still` or quiet. The show rests — no frame,
+ * advances every 60 to 120 seconds of stage time, never while the stage is `still` or quiet. The troupe that `castOf` casts is
+ * held to the ground the survey brought (`castOn`) whenever a cast is made: a pet that cannot stand on it even alone gives its
+ * seat to a species of the scene that can, so a page that leaves room for a few small pets shows them instead of waiting for a
+ * rotation that happens to cast one. A cast is made when the turn changes (a scene, a capacity and an epoch), and when nobody is
+ * on stage for a second and the ground changed since: a ground that changes under pets that stand never recasts them. A page
+ * whose layout follows the pets that are on it (the rows that play with them) can take the room they stood on by their very
+ * presence and give it back when they have left, again and again: a company that comes and goes ({@link PET_FLAPS} changes of whether any of it is on stage) within
+ * {@link PET_FLAP_SECONDS} of its cast is shunned for {@link PET_SHUN_SECONDS} (cast again as one of its members alone, or as
+ * another company), so the cast settles on pets that leave room for themselves instead of swinging back and forth. The show rests — no frame,
  * no timer, no survey, the pets where they are, a held pet called off — while the document is hidden and while the
  * layer itself is inert or hidden (a host that opens a modal dialog makes everything else inert: the pets wait behind
  * it instead of falling off surfaces that seem to have vanished).
@@ -262,6 +288,18 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
   let waiting: StageEvent[] = [];
   let stale: "now" | "soon" | null = "now";
   let surveyed: Surveyed | null = null;
+  let ground: Surveyed | null = null;
+  let grounds = 0;
+  let held: { readonly turn: string; readonly species: readonly Slug[] } = { turn: "", species: [] };
+  const shunned = new Map<string, number>();
+  let heldAt = 0;
+  const changes: number[] = [];
+  let drawnNow = "";
+  let present = false;
+  let emptySince = 0;
+  let castGrounds = -1;
+  let castTick = 0;
+  let lately = 0;
   let surveyedSize = 1;
   let surveyedAt = 0;
   let glanced: readonly Point[] = [];
@@ -294,11 +332,28 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
   const playable = (): boolean => direction.play !== false && direction.mode !== "still" && !ended && !resting();
 
   const summon = (): Summoned | null => {
-    const wish = `${direction.scene} ${capacity()} ${epoch}`;
-    if (wish === wished) return null;
+    const flaps = changes.filter((at) => at >= heldAt && lately - at <= PET_FLAP_SECONDS * TICKS_PER_SECOND).length;
+    if (held.species.length > 0 && flaps >= PET_FLAPS) {
+      shunned.set(companyKey(held.species), lately + PET_SHUN_SECONDS * TICKS_PER_SECOND);
+      changes.length = 0;
+    }
+    for (const [key, until] of shunned) if (until <= lately) shunned.delete(key);
+    const bare = drawnNow === "" && lately - emptySince >= TICKS_PER_SECOND && (grounds !== castGrounds || lately - castTick >= PET_RETRY_SECONDS * TICKS_PER_SECOND);
+    const wish = `${direction.scene} ${capacity()} ${epoch} ${[...shunned.keys()].join(",")}`;
+    if (wish === wished && !bare) return null;
     wished = wish;
+    castGrounds = grounds;
+    castTick = lately;
     const cast = petCast(menagerie, direction.scene);
-    const species = cast === null ? [] : castOf(cast, capacity(), epoch, seed);
+    const turn = `${direction.scene} ${capacity()} ${epoch}`;
+    const troupe = cast === null ? [] : castOf(cast, capacity(), epoch, seed);
+    let species = cast === null || ground === null ? troupe : castOn(menagerie, ground, cast, troupe, epoch, turn === held.turn ? held.species : [], [...shunned.keys()].filter((key) => !key.includes(" ")));
+    while (species.length > 0 && shunned.has(companyKey(species))) species = species.slice(0, -1);
+    if (companyKey(species) !== companyKey(held.species)) {
+      heldAt = lately;
+      changes.length = 0;
+    }
+    held = { turn, species };
     const wanted = species.join(" ");
     if (wanted === summoned) return null;
     summoned = wanted;
@@ -318,7 +373,9 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
     if (size !== surveyedSize || !sameSurvey(surveyed, seen)) {
       surveyed = seen;
       surveyedSize = size;
-      events.push(staged(seen, size));
+      ground = staged(seen, size);
+      grounds += 1;
+      events.push(ground);
     }
     const points = direction.glances?.().map((point) => ({ x: (point.x - box.x) / size, y: (point.y - box.y) / size })) ?? [];
     if (!samePoints(glanced, points)) {
@@ -396,6 +453,16 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
     pad(next, size);
     grasp.frame(next.held !== null);
     announce(menagerie.species.filter((species) => drawn.has(species.id)).map((species) => species.id));
+    const names = [...drawn].sort().join(" ");
+    if (names !== drawnNow) {
+      drawnNow = names;
+      if (names === "") emptySince = lately;
+    }
+    const here = held.species.some((id) => drawn.has(id));
+    if (here !== present) {
+      present = here;
+      changes.push(lately);
+    }
   };
 
   const announce = (cast: readonly Slug[]): void => {
@@ -406,6 +473,18 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
     told = names;
     toldTo = listener;
     if (news) listener?.(cast);
+  };
+
+  const nextWake = (wake: number | null, tick: number): number | null => {
+    const due: number[] = wake === null ? [] : [wake];
+    const casting = direction.mode !== "still" && direction.quiet !== true && petCast(menagerie, direction.scene) !== null;
+    if (casting && rotateAt !== null && rotateAt > tick) due.push(rotateAt);
+    for (const until of shunned.values()) if (until > tick) due.push(until);
+    if (casting && drawnNow === "") {
+      const retry = Math.max(emptySince + TICKS_PER_SECOND, grounds !== castGrounds ? 0 : castTick + PET_RETRY_SECONDS * TICKS_PER_SECOND);
+      if (retry > tick) due.push(retry);
+    }
+    return due.length === 0 ? null : Math.min(...due);
   };
 
   const step = (ticks: number): Pace => {
@@ -424,6 +503,7 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
       if (rotateAt !== null && tick >= rotateAt) epoch += 1;
       if (rotateAt === null || tick >= rotateAt) rotateAt = tick + Math.floor(randomBetween([seed, ROTATION_STREAM, epoch], PET_ROTATION_SECONDS[0], PET_ROTATION_SECONDS[1]) * TICKS_PER_SECOND);
     }
+    lately = tick;
     const cast = summon();
     if (cast !== null) events.push(cast);
     let shown = frame;
@@ -434,7 +514,7 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
     }
     if (events.length > 0 || redraw) show(shown);
     redraw = false;
-    return shown;
+    return { tick: shown.tick, rate: shown.rate, wake: nextWake(shown.wake, tick) };
   };
 
   const pacer = createPacer(

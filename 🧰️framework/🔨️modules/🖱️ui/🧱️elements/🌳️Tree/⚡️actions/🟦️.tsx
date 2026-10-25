@@ -188,7 +188,7 @@ export const TreeCheckbox: React.FC<TreeCheckboxProps> = ({ id, checked, onCheck
 /** 🎯️ What a row's control exposes to `aria-describedby`: every focusable element and widget role inside it. */
 const TREE_ROW_DESCRIBED_CONTROLS = 'input, select, textarea, button, [tabindex], [role="slider"], [role="spinbutton"], [role="combobox"], [role="switch"], [role="checkbox"]';
 
-/** 💬️ Names `descriptionId` in the `aria-describedby` of every focusable control inside `slot` — kept there across the
+/** ℹ️ Names `descriptionId` in the `aria-describedby` of every focusable control inside `slot` — kept there across the
  * control's own re-renders (a refusal that sets or clears its own `aria-describedby`), so a property row's description is
  * always announced with its control, whatever element the control renders. */
 export function useTreeRowDescribedControls(slot: React.RefObject<HTMLElement | null>, descriptionId: string | undefined): void {

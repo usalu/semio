@@ -139,55 +139,21 @@ impl ArtifactEditor for Generation3dPlayApp {
         registry.register(Generation3dDocumentIoJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !GENERATION3D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str())
-            && !GENERATION3D_FLOW_EVAL_TOOL_IDS.contains(&request.tool_id.as_str())
-            && !GENERATION3D_CONTRIBUTIONS_TOOL_IDS.contains(&request.tool_id.as_str())
-            && !GENERATION3D_DOCUMENT_IO_TOOL_IDS.contains(&request.tool_id.as_str())
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !GENERATION3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !GENERATION3D_FLOW_EVAL_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !GENERATION3D_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !GENERATION3D_DOCUMENT_IO_TOOL_IDS.contains(&original.tool_id.as_str())
         {
-            return Ok(None);
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "the generation 3d command does not match its exact registered tool"));
+        if original.command.command_id() != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the generation 3d command does not match its exact registered tool").into());
         }
-        let tool_id = request.command.command_id();
+        let tool_id = original.command.command_id();
         let contributions = GENERATION3D_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Generation3dPlayApp>>> =
-            if contributions {
-                Box::new(Generation3dContributionsWork { instance_owner: request.instance_operation_owner, consumed: false })
-            } else if GENERATION3D_DOCUMENT_IO_TOOL_IDS.contains(&tool_id) {
-                Box::new(Generation3dDocumentIoWork::new(tool_id, request.instance_operation_owner))
-            } else if GENERATION3D_FLOW_EVAL_WINDOW_TOOL_IDS.contains(&tool_id) {
-                Box::new(Generation3dFlowEvalWindowWork::new(tool_id, request.instance_operation_owner))
-            } else if GENERATION3D_PREVIEW_TOOL_IDS.contains(&tool_id) {
-                Box::new(Generation3dPreviewCommandWork::new(tool_id, request.instance_operation_owner))
-            } else {
-                Box::new(Generation3dSessionCommandWork::new(tool_id, request.instance_operation_owner))
-            };
-        let operation_context = AppOperationContext {
-            retained: request.retained,
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            Generation3dCommand::command_id,
-            if contributions {
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Generation3dCommand::command_id, if contributions {
                 GENERATION3D_CONTRIBUTIONS_RAW_BYTES
             } else if GENERATION3D_DOCUMENT_IO_TOOL_IDS.contains(&tool_id) {
                 GENERATION3D_DOCUMENT_IO_RAW_BYTES
@@ -195,11 +161,17 @@ impl ArtifactEditor for Generation3dPlayApp {
                 GENERATION3D_FLOW_EVAL_RAW_BYTES
             } else {
                 GENERATION3D_RETAINED_RAW_BYTES
-            },
-            GENERATION3D_RETAINED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+            }, GENERATION3D_RETAINED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Generation3dPlayApp>>> { if contributions {
+                Box::new(Generation3dContributionsWork { instance_owner: request.instance_operation_owner.clone(), consumed: false })
+            } else if GENERATION3D_DOCUMENT_IO_TOOL_IDS.contains(&tool_id) {
+                Box::new(Generation3dDocumentIoWork::new(tool_id, request.instance_operation_owner.clone()))
+            } else if GENERATION3D_FLOW_EVAL_WINDOW_TOOL_IDS.contains(&tool_id) {
+                Box::new(Generation3dFlowEvalWindowWork::new(tool_id, request.instance_operation_owner.clone()))
+            } else if GENERATION3D_PREVIEW_TOOL_IDS.contains(&tool_id) {
+                Box::new(Generation3dPreviewCommandWork::new(tool_id, request.instance_operation_owner.clone()))
+            } else {
+                Box::new(Generation3dSessionCommandWork::new(tool_id, request.instance_operation_owner.clone()))
+            } })
     }
 
     /// 🧾️ BOTH factories' proofs, in registration order — `validate_tool_job_rows` matches this

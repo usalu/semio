@@ -6,16 +6,16 @@
 /** 🧱️ A JSON object read from a schema document. */
 export type Dict = { readonly [key: string]: unknown };
 
-/** 🧱️ True for a JSON object (never an array, never `null`). */
+/** 🔣️ True for a JSON object (never an array, never `null`). */
 export const isDict = (value: unknown): value is Dict => typeof value === "object" && value !== null && !Array.isArray(value);
 
-/** 🧱️ The object itself, or an empty object for any other value. */
+/** 🪫️ The object itself, or an empty object for any other value. */
 export const asDict = (value: unknown): Dict => (isDict(value) ? value : {});
 
-/** 🧱️ True when the object states `key` itself. */
+/** ⌨️ True when the object states `key` itself. */
 export const has = (node: Dict, key: string): boolean => Object.hasOwn(node, key);
 
-/** 🧱️ Truthiness of a schema value: absent, `null`, `false`, `0`, `""`, `[]` and `{}` are empty. */
+/** 🧬️ Truthiness of a schema value: absent, `null`, `false`, `0`, `""`, `[]` and `{}` are empty. */
 export function truthy(value: unknown): boolean {
   if (value === undefined || value === null || value === false || value === 0 || value === "") return false;
   if (Array.isArray(value)) return value.length > 0;
@@ -23,10 +23,10 @@ export function truthy(value: unknown): boolean {
   return true;
 }
 
-/** 🧱️ True when a key would be reordered by an object (an array index), so insertion order could not be trusted. */
+/** 🗂️ True when a key would be reordered by an object (an array index), so insertion order could not be trusted. */
 const isIndexKey = (key: string): boolean => /^(?:0|[1-9][0-9]*)$/u.test(key) && Number(key) < 2 ** 32 - 1;
 
-/** 🧱️ The entries of an object in document order, or `null` when an index-like key makes that order unrecoverable. */
+/** 📄️ The entries of an object in document order, or `null` when an index-like key makes that order unrecoverable. */
 export function orderedEntries(node: Dict): [string, unknown][] | null {
   const keys = Object.keys(node);
   return keys.some(isIndexKey) ? null : keys.map((key) => [key, node[key]]);
@@ -37,19 +37,19 @@ export function orderedEntries(node: Dict): [string, unknown][] | null {
 /** 🏷️ An export name: starts with an upper-case letter. */
 export const EXPORT_NAME = /^[A-Z][A-Za-z0-9]*\n?$/u;
 
-/** 🏷️ A GraphQL or TypeScript identifier. */
+/** 🪪️ A GraphQL or TypeScript identifier. */
 export const IDENTIFIER_NAME = /^[A-Za-z_][A-Za-z0-9_]*\n?$/u;
 
-/** 🏷️ A bare PascalCase type name. */
+/** 🔤️ A bare PascalCase type name. */
 export const BARE_TYPE_NAME = /^[A-Z][A-Za-z0-9]*$/u;
 
-/** 🏷️ Escapes a literal for use inside a regular expression. */
+/** 🧯️ Escapes a literal for use inside a regular expression. */
 export const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 
-/** 🏷️ `CsvRecordAdded` to `csv_record_added`. */
+/** 🐍️ `CsvRecordAdded` to `csv_record_added`. */
 export const snake = (name: string): string => name.replace(/(?<!^)(?=[A-Z])/gu, "_").toLowerCase();
 
-/** 🏷️ The key as it appears in an object literal: bare when it is an identifier, quoted otherwise. */
+/** 🔑️ The key as it appears in an object literal: bare when it is an identifier, quoted otherwise. */
 export const keyText = (field: string): string => (IDENTIFIER_NAME.test(field) ? field : jsonString(field, false));
 
 /** 🔀️ Orders strings by code point, which is the order of their UTF-8 bytes. */
@@ -63,7 +63,7 @@ export function jsonString(value: string, ensureAscii: boolean): string {
   return ensureAscii ? text.replace(/[^\x20-\x7e]/gu, (unit) => `\\u${unit.charCodeAt(0).toString(16).padStart(4, "0")}`) : text;
 }
 
-/** 📝️ A JSON value in Python's `json.dumps` layout (`", "` and `": "` separators). */
+/** 💎️ A JSON value in Python's `json.dumps` layout (`", "` and `": "` separators). */
 export function jsonValue(value: unknown, ensureAscii: boolean): string {
   if (typeof value === "string") return jsonString(value, ensureAscii);
   if (typeof value === "bigint") return value.toString();

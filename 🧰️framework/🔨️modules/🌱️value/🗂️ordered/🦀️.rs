@@ -88,7 +88,7 @@ fn at<V>(mut root: &Root<V>, mut index: usize) -> Option<&Entry<V>> {
 //#endregion 🌳️PersistentNodes
 
 //#region 🗂️Map
-/// 🗂️ Ordered immutable root; clones share payloads and every nonempty owner must be explicitly retired.
+/// 🗺️ Ordered immutable root; clones share payloads and every nonempty owner must be explicitly retired.
 /// 🔒️ Dropping live ownership panics without destroying payloads; unwinding preserves it without a second panic.
 #[must_use = "ordered roots must be transferred or explicitly retired"]
 pub struct OrderedMap<V> { root: ManuallyDrop<Root<V>> }
@@ -126,20 +126,20 @@ impl<V> OrderedMap<V> {
             }
         }
     }
-    /// 🧊️ Cold synchronous membership; no interactive accounting is provided.
+    /// 🗝️ Cold synchronous membership; no interactive accounting is provided.
     pub fn contains_key(&self, key: &str) -> bool { self.get(key).is_some() }
 
-    /// 🧊️ Cold input admission allocates two shared headers; retained callers use admitted begin_set_shared inputs.
+    /// ▶️ Cold input admission allocates two shared headers; retained callers use admitted begin_set_shared inputs.
     pub fn begin_set(&self, key: String, value: V) -> UpdateCursor<V> { self.begin_set_shared(SharedOwner::from_cold(key), SharedOwner::from_cold(value)) }
     /// 📥️ Begins a retained upsert by moving exactly two shared pointers; no key or value bytes are copied.
     pub fn begin_set_shared(&self, key: SharedOwner<String>, value: SharedOwner<V>) -> UpdateCursor<V> { UpdateCursor::new(self.clone(), key, Some(value)) }
-    /// 🧊️ Cold key admission allocates a shared header; retained callers use begin_remove_shared.
+    /// ➖️ Cold key admission allocates a shared header; retained callers use begin_remove_shared.
     pub fn begin_remove(&self, key: String) -> UpdateCursor<V> { self.begin_remove_shared(SharedOwner::from_cold(key)) }
     /// 🗑️ Moves an exact shared key into retained removal without copying its bytes.
     pub fn begin_remove_shared(&self, key: SharedOwner<String>) -> UpdateCursor<V> { UpdateCursor::new(self.clone(), key, None) }
     /// 🔎️ Retains an immutable root and compares a lookup key under the caller's byte grants.
     pub fn begin_lookup(&self, key: String) -> LookupCursor<V> { self.begin_lookup_shared(SharedOwner::from_cold(key)) }
-    /// 🔎️ Moves an exact shared key into retained lookup without copying its bytes.
+    /// 🟢️ Moves an exact shared key into retained lookup without copying its bytes.
     pub fn begin_lookup_shared(&self, key: SharedOwner<String>) -> LookupCursor<V> { LookupCursor::new(self.clone(), key) }
 
     /// ⚡️ Completes a synchronous convenience upsert; retained jobs must use begin_set and advance.
@@ -148,7 +148,7 @@ impl<V> OrderedMap<V> {
         while !cursor.is_complete() { cursor.advance(cold_update_grant(&cursor)).expect("ordered cold insert admission"); }
         let removed = cursor.take_removed(); let displaced = std::mem::replace(self, cursor.take_result().unwrap()); retire_cold(displaced.retire()); close_cold(&mut cursor); removed.and_then(release_cold)
     }
-    /// ⚡️ Completes a synchronous convenience removal; retained jobs must use begin_remove and advance.
+    /// 🏪️ Completes a synchronous convenience removal; retained jobs must use begin_remove and advance.
     /// `Some` states that the key WAS present, whatever else still shares its payload: a clone of this map keeps the payload
     /// alive, so only [`Removal::Owned`] hands the value over and [`Removal::Shared`] reports that another owner retains it.
     pub fn remove(&mut self, key: &str) -> Option<Removal<V>> {
@@ -187,14 +187,14 @@ impl<'a, V> IntoIterator for &'a OrderedMap<V> {
 impl<V: PartialEq> PartialEq for OrderedMap<V> { fn eq(&self, other: &Self) -> bool { self.iter().eq(other.iter()) } }
 impl<V: Eq> Eq for OrderedMap<V> {}
 impl<V: std::fmt::Debug> std::fmt::Debug for OrderedMap<V> { fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { f.debug_map().entries(self.iter()).finish() } }
-/// 🧊️ Cold synchronous construction explicitly drains displaced roots; it provides no interactive credit.
+/// 🚧️ Cold synchronous construction explicitly drains displaced roots; it provides no interactive credit.
 impl<V> FromIterator<(String, V)> for OrderedMap<V> {
     fn from_iter<T: IntoIterator<Item = (String, V)>>(entries: T) -> Self { let mut map = Self::new(); for (key, value) in entries { map.insert(key, value); } map }
 }
 impl<V, const N: usize> From<[(String, V); N]> for OrderedMap<V> { fn from(entries: [(String, V); N]) -> Self { entries.into_iter().collect() } }
 //#endregion 🗂️Map
 
-/// 🗑️ What a completed [`OrderedMap::remove`] took out of the map: the key was present either way.
+/// ✅️ What a completed [`OrderedMap::remove`] took out of the map: the key was present either way.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Removal<V> {
     /// 👪️ The payload had no other owner, so its value moves to the caller (who retires it if it owns a fail-closed root).
@@ -388,7 +388,7 @@ impl<V> UpdateCursor<V> {
             +usize::from(self.state.current.is_some())+usize::from(self.state.removed_node.is_some())+usize::from(self.state.successor_entry.is_some())
             +usize::from(self.state.replacement.is_some())+usize::from(self.state.removed.is_some())+growth
     }
-    /// 🎟️ Admits one real comparison or structural event; births are exact and obsolete roots remain in close custody.
+    /// ⏩️ Admits one real comparison or structural event; births are exact and obsolete roots remain in close custody.
     pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError> {
         if self.state.closing{return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));}
         if self.state.is_complete(){return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));}
@@ -466,7 +466,7 @@ impl<V> LookupState<V> {
     fn retained_depth(&self)->usize{usize::from(!self.base.is_empty())+usize::from(self.current.is_some())+usize::from(self.key.is_some())}
 }
 
-/// 🔎️ Borrowed lookup result stays rooted until this cursor's explicit close; no payload clone.
+/// 🖱️ Borrowed lookup result stays rooted until this cursor's explicit close; no payload clone.
 #[must_use = "lookup cursors must finish explicit close before drop"]
 pub struct LookupCursor<V> { state: ManuallyDrop<LookupState<V>> }
 impl<V> LookupCursor<V> {
@@ -499,7 +499,7 @@ impl<V> Drop for LookupCursor<V> {
 enum Owner<V> {
     Node(Arc<Node<V>>), Entry(Arc<Entry<V>>), Key(SharedOwner<String>), Value(SharedOwner<V>),
 }
-/// 📤️ OwnedValue transfers final payload ownership to the caller's domain retirement cursor.
+/// 🪜️ OwnedValue transfers final payload ownership to the caller's domain retirement cursor.
 pub enum RetirementStep<V> { Blocked, Progress { released_items: usize, released_bytes: usize }, ProcessedBytes(usize), OwnedValue(V), Failure(crate::ValueError), Complete }
 #[must_use = "retirement owners must be drained before drop"]
 pub struct Retirement<V> {
@@ -584,7 +584,7 @@ impl<V> Retirement<V> {
     }
 }
 
-/// 🧊️ Cold-only convenience cleanup; never called by retained advance or close_step.
+/// ❄️ Cold-only convenience cleanup; never called by retained advance or close_step.
 fn retire_cold<V>(mut retirement: Retirement<V>) {
     loop {
         let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:retirement.next_close_byte_demand().expect("finite ordered cold release demand"),maximum_depth:retirement.next_depth_demand()};
@@ -592,7 +592,7 @@ fn retire_cold<V>(mut retirement: Retirement<V>) {
     }
 }
 
-/// 🧊️ Cold-only convenience cleanup; explicit synchronous APIs cannot earn interactive credit.
+/// 📪️ Cold-only convenience cleanup; explicit synchronous APIs cannot earn interactive credit.
 fn close_cold<V>(cursor: &mut UpdateCursor<V>) {
     cursor.begin_close();
     loop {let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:cursor.next_close_byte_demand().expect("ordered cold close release demand"),maximum_depth:cursor.next_close_depth_demand()};match cursor.close_step(grant) { RetirementStep::OwnedValue(value) => drop(value), RetirementStep::Complete => break, RetirementStep::Failure(error)=>panic!("ordered cold close refused: {error}"), _ => {} } }
@@ -605,7 +605,7 @@ fn release_cold<T>(mut value:SharedOwner<T>)->Option<T>{value.release_step(Retai
 mod typed_retirement;
 
 //#region 🔀️Serde
-/// 🧊️ `#[cfg(test)]`-only (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01,
+/// 🧪️ `#[cfg(test)]`-only (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01,
 /// tenth-seam pass). The three production sites that previously required this — `Dictionary`'s
 /// `#[serde(transparent)]` derive over `pairs: OrderedMap<Value>`, `Value`'s derive (has a
 /// `Dictionary` variant), `Neuron`'s derive (holds a `Value` via `Dictionary`) — all moved to
@@ -620,7 +620,7 @@ impl<V: serde::Serialize> serde::Serialize for OrderedMap<V> {
         let mut map = serializer.serialize_map(Some(self.len()))?; for (key, value) in self.iter() { map.serialize_entry(key, value)?; } map.end()
     }
 }
-/// 🧊️ `#[cfg(test)]`-only — see `Serialize` above for why.
+/// 🔌️ `#[cfg(test)]`-only — see `Serialize` above for why.
 #[cfg(test)]
 impl<'de, V: serde::Deserialize<'de>> serde::Deserialize<'de> for OrderedMap<V> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {

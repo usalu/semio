@@ -7,7 +7,7 @@ import {playPollingEnv} from "../../../🏃️process/🌿️environment/🟦️
 import {isDevPortInUse,devServerUrl,devServerPlayEntry,describeDevPortOccupant,canReuseDevPort,resolveDevPort} from "../../../🌐️network/🔌️ports/🟦️.ts";
 import type {ViteConfigLoaderV1} from "../🎛️loader/🟦️.ts";
 import {resolve} from "node:path";
-import type { RuntimeIdV1 } from "../../../../../../../🔨️modules/⚙️runtime/📋️contract/🟦️.ts";
+import type { RuntimeIdV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📋️contract/🟦️.ts";
 /** ▶️Vite dev via `bunx` with an explicitly owned configuration source. */
 export async function runViteBunxDev(
   invocation: ScriptInvocation,

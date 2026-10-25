@@ -22,22 +22,19 @@ pub mod standards {
                 pub mod io {
                     #[path = "."]
                     pub mod binary {
-                        #[path = "../../../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
-                        pub mod snapshot;
+                        pub use semio_s_artifact_note_note_schema::standards::v1::subsets::any::io::binary::snapshot;
                         #[path = "../../../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
                     }
                     #[path = "."]
                     pub mod text {
-                        #[path = "../../../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
-                        pub mod snapshot;
+                        pub use semio_s_artifact_note_note_schema::standards::v1::subsets::any::io::text::snapshot;
                         #[path = "../../../../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
                     }
                     #[path = "."]
                     pub mod sqlite {
-                        #[path = "../../../../../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
-                        pub mod snapshot;
+                        pub use semio_s_artifact_note_note_schema::standards::v1::subsets::any::io::sqlite::snapshot;
                     }
                     #[path = "."]
                     pub mod import {

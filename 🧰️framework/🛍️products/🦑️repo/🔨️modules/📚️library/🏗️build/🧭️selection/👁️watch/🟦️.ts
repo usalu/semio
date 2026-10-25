@@ -3,7 +3,7 @@ import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {compileJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import { isRuntimeExecutableV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { isRuntimeExecutableV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 const argumentsContract=compileJsonSchemaSubset(schema.definitions.Arguments),changesContract=compileJsonSchemaSubset(schema.definitions.Changes);
 export const watchBuildChangeLimitsV1=Object.freeze({files:schema.definitions.Changes.properties.files.maxItems,path:schema.definitions.Changes.properties.files.items.maxLength});

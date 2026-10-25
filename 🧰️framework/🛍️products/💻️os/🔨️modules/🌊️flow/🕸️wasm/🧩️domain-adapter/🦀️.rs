@@ -87,7 +87,7 @@ pub fn flow_vcs_grant(budget: AbiWorkBudget) -> FlowVcsGrant {
 }
 
 #[derive(Clone, Copy)]
-pub(super) enum FlowArgumentKind {
+pub enum FlowArgumentKind {
     Text,
     OptionalText,
     Number,
@@ -101,10 +101,10 @@ pub(super) enum FlowArgumentKind {
 #[derive(Clone, Copy)]
 pub struct FlowArgumentSpan {
     name: &'static str,
-    pub(super) kind: FlowArgumentKind,
+    pub kind: FlowArgumentKind,
     start: usize,
-    pub(super) end: usize,
-    pub(super) present: bool,
+    pub end: usize,
+    pub present: bool,
 }
 
 impl FlowArgumentSpan {
@@ -187,11 +187,11 @@ impl FlowArguments {
         Ok(Self { payload, spans, count: fields.len() })
     }
 
-    pub(super) fn get(&self, key: &str) -> Option<FlowArgumentSpan> {
+    pub fn get(&self, key: &str) -> Option<FlowArgumentSpan> {
         self.spans[..self.count].iter().copied().find(|span| span.name == key)
     }
 
-    pub(super) fn bytes(&self, span: FlowArgumentSpan) -> &[u8] {
+    pub fn bytes(&self, span: FlowArgumentSpan) -> &[u8] {
         &self.payload[span.start..span.end]
     }
 }
@@ -328,7 +328,7 @@ pub enum FlowStringArrayStep {
 }
 
 pub struct FlowStringArrayCursor {
-    pub(super) phase: FlowStringArrayPhase,
+    pub phase: FlowStringArrayPhase,
     item_cursor: usize,
     text_cursor: usize,
     item_count: usize,
@@ -357,7 +357,7 @@ impl FlowStringArrayCursor {
         }
     }
 
-    pub(super) fn step(&mut self, source: &impl FlowStringArraySource) -> Result<FlowStringArrayStep, FlowFailure> {
+    pub fn step(&mut self, source: &impl FlowStringArraySource) -> Result<FlowStringArrayStep, FlowFailure> {
         let count = source.len();
         match self.phase {
             FlowStringArrayPhase::CensusItem => {
@@ -465,7 +465,7 @@ impl FlowStringArrayCursor {
 }
 
 pub struct FlowProgramState {
-    pub(super) phase: FlowProgramPhase,
+    pub phase: FlowProgramPhase,
     field_cursor: usize,
     byte_cursor: usize,
     validated_fields: usize,
@@ -473,11 +473,11 @@ pub struct FlowProgramState {
     encode_cursor: usize,
     utf8: [FlowUtf8State; 8],
     source_output: Option<Vec<u8>>,
-    pub(super) output: Vec<u8>,
+    pub output: Vec<u8>,
 }
 
 impl FlowProgramState {
-    pub(super) fn new(_arguments: &FlowArguments) -> Self {
+    pub fn new(_arguments: &FlowArguments) -> Self {
         Self { phase: FlowProgramPhase::Decode, field_cursor: 0, byte_cursor: 0, validated_fields: 0, domain_cursor: 0, encode_cursor: 0, utf8: [FlowUtf8State::default(); 8], source_output: None, output: Vec::new() }
     }
 
@@ -654,10 +654,10 @@ fn validate_utf8_byte(state: &mut FlowUtf8State, byte: u8) -> Result<(), FlowFai
     Ok(())
 }
 
-struct FlowDagReadLease {admission:FlowFeatureAdmission,active:Cell<bool>}
-pub struct FlowOperationObserver {cancelled:Cell<bool>,interrupted:Cell<bool>,deadline_us:Cell<Option<u64>>,failure:Cell<Option<AbiErrorCode>>,bound:Cell<bool>}
+pub struct FlowDagReadLease {pub admission:FlowFeatureAdmission,pub active:Cell<bool>}
+pub struct FlowOperationObserver {cancelled:Cell<bool>,interrupted:Cell<bool>,deadline_us:Cell<Option<u64>>,pub failure:Cell<Option<AbiErrorCode>>,pub bound:Cell<bool>}
 impl FlowOperationObserver {
-    pub(super) fn new()->Self{Self{cancelled:Cell::new(false),interrupted:Cell::new(false),deadline_us:Cell::new(None),failure:Cell::new(None),bound:Cell::new(false)}}
+    pub fn new()->Self{Self{cancelled:Cell::new(false),interrupted:Cell::new(false),deadline_us:Cell::new(None),failure:Cell::new(None),bound:Cell::new(false)}}
     pub fn check_budget(&self,budget:AbiWorkBudget)->Result<(),FlowFailure>{
         let code=if self.cancelled.get()||budget.cancelled{Some(AbiErrorCode::Cancelled)}else if self.interrupted.get()||budget.interrupted{Some(AbiErrorCode::Interrupted)}else if budget.deadline_ms.is_some_and(|deadline|budget.now_ms>=deadline){Some(AbiErrorCode::DeadlineExceeded)}else{None};if let Some(code)=code{self.failure.set(Some(code));Err(abi_failure(code))}else{Ok(())}
     }

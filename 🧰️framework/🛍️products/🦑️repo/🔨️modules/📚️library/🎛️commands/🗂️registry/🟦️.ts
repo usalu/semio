@@ -1,6 +1,6 @@
 import registryData from "./🔣️.json" with { type: "json" };
 import registrySchema from "./🧬️schema/🔣️.json" with { type: "json" };
-import { compileJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { compileJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { resolveBuildHelpLanguageV1 } from "../../🏗️build/⚙️operations/📖️help/🟦️.ts";
 import type { ScriptCommand, ScriptInvocation, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -41,7 +41,7 @@ export function readRootCommandRegistryV1(value: unknown): RootCommandRegistryV1
   return registry;
 }
 
-/** 🗂️ The registry authored next to this module. */
+/** 🏠️ The registry authored next to this module. */
 export function rootCommandRegistryV1(): RootCommandRegistryV1 {
   return cached ??= readRootCommandRegistryV1(registryData);
 }

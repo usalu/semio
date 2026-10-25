@@ -46,7 +46,7 @@ export class ArtifactSqliteProjection {
     await artifactSqliteCheckpoint(this.options, "projectSnapshot", this.count, 0);
   }
 
-  /** 🔗️ Inserts supplied semantic cells with an explicit or per-table surrogate identity. */
+  /** 📊️ Inserts supplied semantic cells with an explicit or per-table surrogate identity. */
   async insert(name: string, cells: readonly SqliteValue[], identity?: bigint): Promise<bigint> {
     if (this.completed) throw new ValueError("invariantViolated", "Artifact SQLite projection is completed");
     if (cells.length + 1 > (this.options.maxColumns ?? 1024)) throw new ValueError("workLimit", "Artifact SQLite column limit");
@@ -155,7 +155,7 @@ export async function artifactSqliteValueByteLengthControlled(value: SqliteValue
   return bytes;
 }
 
-/** 🧮️ Bound aggregate semantic cell bytes before allocating entity rows. */
+/** 💰️ Bound aggregate semantic cell bytes before allocating entity rows. */
 export function artifactSqliteValueBudget(bytes: number, options: ArtifactSqliteOptions): void {
   const limit = options.maxValueBytes ?? 256 * 1024 * 1024;
   if (!Number.isSafeInteger(limit) || limit < 0 || !Number.isSafeInteger(bytes) || bytes > limit) throw new ValueError("ownershipLimit", "Artifact SQLite value limit");
@@ -229,7 +229,7 @@ export function artifactSqliteInteger(row: SqliteRow, index: number): bigint {
   if (typeof value !== "bigint") throw new ValueError("invalidValue", "Artifact SQLite cell must be INTEGER");
   return value;
 }
-/** 🔤️ Require a TEXT cell. */
+/** 📖️ Require a TEXT cell. */
 export function artifactSqliteText(row: SqliteRow, index: number): string {
   const value = row.values[index];
   if (typeof value !== "string") throw new ValueError("invalidValue", "Artifact SQLite cell must be TEXT");
@@ -258,7 +258,7 @@ export function artifactSqliteDocument(rows: readonly SqliteRow[]): SqliteRow {
 export function artifactSqliteDocumentReference(row: SqliteRow, index: number): void {
   if (artifactSqliteInteger(row, index) !== 1n) throw new ValueError("invalidValue", "Artifact SQLite entity has an unknown document");
 }
-/** 🧮️ Order collection entities by explicit, contiguous ordinals. */
+/** 📦️ Order collection entities by explicit, contiguous ordinals. */
 export function artifactSqliteOrderedRows(rows: readonly SqliteRow[], column: number): SqliteRow[] {
   const ordered = new Array<SqliteRow>(rows.length);
   for (const row of rows) {

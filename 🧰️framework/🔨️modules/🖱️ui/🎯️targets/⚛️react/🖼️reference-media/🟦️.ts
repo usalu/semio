@@ -4,21 +4,21 @@ import { ephemeralBox } from "@semio-tech/framework-transient";
 /** 🖼️ Reference plane media kind for infinite-world grid underlays. */
 export type ReferenceMediaKind = "image" | "svg" | "pdf";
 
-/** 🖼️ Source descriptor for {@link ReferenceMediaPort.loadReferenceTexture}. */
+/** 🪵️ Source descriptor for {@link ReferenceMediaPort.loadReferenceTexture}. */
 export interface ReferenceMediaSource {
   readonly url: string;
   readonly mediaKind: ReferenceMediaKind;
   readonly page?: number;
 }
 
-/** 🖼️ Loaded reference texture with intrinsic pixel dimensions. */
+/** 📥️ Loaded reference texture with intrinsic pixel dimensions. */
 export interface ReferenceMediaLoadResult {
   readonly texture: THREE.Texture;
   readonly width: number;
   readonly height: number;
 }
 
-/** 🖼️ Port for rasterizing png/svg/pdf paths into three.js textures. */
+/** 📂️ Port for rasterizing png/svg/pdf paths into three.js textures. */
 export interface ReferenceMediaPort {
   loadReferenceTexture(source: ReferenceMediaSource): Promise<ReferenceMediaLoadResult>;
 }
@@ -111,7 +111,7 @@ async function loadReferenceImageTexture(url: string): Promise<ReferenceMediaLoa
   };
 }
 
-/** 🖼️ Default {@link ReferenceMediaPort} wired through {@link sceneHostPort}. */
+/** 🔗️ Default {@link ReferenceMediaPort} wired through {@link sceneHostPort}. */
 export let referenceMediaPort: ReferenceMediaPort = {
   async loadReferenceTexture(source) {
     if (source.mediaKind === "image") {

@@ -29,7 +29,7 @@ pub fn path_within_scope(path: &str, scope: &str) -> bool {
     scope.is_empty() || path == scope || path.starts_with(&format!("{scope}/"))
 }
 
-/// 🗂️ The tree source the tree verbs project from: every record read out of the repository
+/// 🌴️ The tree source the tree verbs project from: every record read out of the repository
 /// through the repository context, twin of the Go `FsTreeSource`.
 #[derive(Default)]
 pub struct FsTreeSource {
@@ -47,7 +47,7 @@ pub struct FsTreeSource {
 }
 
 impl FsTreeSource {
-    /// 🎯️ Reads the records of one repository-relative subtree; an empty scope is the whole
+    /// 📥️ Reads the records of one repository-relative subtree; an empty scope is the whole
     /// repository and also loads the aggregates that have no place in the codebase.
     pub fn load(context: &dyn RepoContext, include_sections: bool, scope: &str) -> FsTreeSource {
         let scope = normalize_tree_scope(scope);
@@ -222,7 +222,7 @@ pub fn model_bundle_id(bundle: &semio_framework_repo_model::Bundle) -> String {
     emoji_text(&technology_emoji) + &flat(&technology_code) + &emoji + &flat(&bundle_code)
 }
 
-/// 🗂️ The codebase of the repository the process runs in, which Go's global registries read.
+/// 🦑️ The codebase of the repository the process runs in, which Go's global registries read.
 fn process_codebase() -> Codebase {
     Codebase::new(semio_framework_repo_workspace::find_repo_root(&std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."))))
 }
@@ -281,7 +281,7 @@ pub fn export_entities(context: &dyn RepoContext) -> Result<Vec<semio_framework_
 
 //#region 🔎️StreamOptions
 
-/// 🧹️ The stream filters a list verb applies, twin of `model.StreamOptions`.
+/// 🌊️ The stream filters a list verb applies, twin of `model.StreamOptions`.
 #[derive(Clone, Debug, Default)]
 pub struct StreamOptions {
     pub exclude_kinds: Vec<String>,
@@ -297,7 +297,7 @@ pub struct StreamOptions {
 }
 
 impl StreamOptions {
-    /// 🧹️ Reads the options the stream flags carry, twin of `getStreamOptions`.
+    /// 🎒️ Reads the options the stream flags carry, twin of `getStreamOptions`.
     pub fn of(invocation: &Invocation<'_>) -> StreamOptions {
         let pick = |names: &[(&str, &str)], prefix: &str| names.iter().filter(|(flag, _)| invocation.flag(&format!("{prefix}-{flag}"))).map(|(_, kind)| (*kind).to_string()).collect::<Vec<String>>();
         let files = [("code", "code"), ("script", "script"), ("config", "config"), ("lab", "lab"), ("docs", "docs"), ("resource", "resource"), ("template", "template"), ("license", "license")];
@@ -338,12 +338,12 @@ impl StreamOptions {
         semio_framework_repo_search::score(&text.to_lowercase(), &queries).is_some()
     }
 
-    /// 🔵️ Whether a bundle kind passes the include and exclude lists.
+    /// 🎁️ Whether a bundle kind passes the include and exclude lists.
     pub fn includes_bundle_kind(&self, kind: &str) -> bool {
         (self.include_bundle_kinds.is_empty() || self.include_bundle_kinds.iter().any(|wanted| wanted == kind)) && !self.exclude_bundle_kinds.iter().any(|unwanted| unwanted == kind)
     }
 
-    /// 💕️ Whether a definition kind passes the include and exclude lists.
+    /// ✅️ Whether a definition kind passes the include and exclude lists.
     pub fn includes_definition_kind(&self, kind: &str) -> bool {
         (self.include_definition_kinds.is_empty() || self.include_definition_kinds.iter().any(|wanted| wanted == kind)) && !self.exclude_definition_kinds.iter().any(|unwanted| unwanted == kind)
     }
@@ -360,7 +360,7 @@ pub fn status_filter(invocation: &Invocation<'_>) -> Option<String> {
     Some(invocation.text("status")).filter(|status| !status.is_empty())
 }
 
-/// 🧹️ The monorepo-tree filter the tree flags carry, twin of `buildTreeFilterFromFlags`.
+/// 🚩️ The monorepo-tree filter the tree flags carry, twin of `buildTreeFilterFromFlags`.
 pub fn tree_filter(invocation: &Invocation<'_>) -> TreeFilter {
     let kinds = [
         ("technology", TreeNodeKind::Technology),
@@ -458,7 +458,7 @@ pub fn flatten_tree(node: &TreeNode, out: &mut Vec<TreeNode>) {
     }
 }
 
-/// 🌳️ The monorepo tree a search or list verb answers from.
+/// 🔎️ The monorepo tree a search or list verb answers from.
 pub fn searched_tree(invocation: &Invocation<'_>, positional: usize) -> (TreeNode, TreeFilter) {
     let mut filter = tree_filter(invocation);
     if invocation.args().len() > positional {

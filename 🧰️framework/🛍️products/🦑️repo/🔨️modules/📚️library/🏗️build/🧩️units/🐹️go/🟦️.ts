@@ -8,7 +8,7 @@ import type {ExecuteOutcomeV1, ExecuteRequestV1} from "../🏃️engine/🟦️.
 export type GoModFileV1 = {readonly module: string; readonly go: string; readonly requires: readonly {readonly path: string; readonly version: string}[]; readonly replaces: readonly {readonly from: string; readonly to: string; readonly toVersion: string | null}[]};
 const stripLineComment = (line: string): string => {const at = line.indexOf("//"); return (at < 0 ? line : line.slice(0, at)).trim();};
 const unquote = (value: string): string => value.length >= 2 && (value[0] === '"' || value[0] === "`") && value[value.length - 1] === value[0] ? value.slice(1, -1) : value;
-/** 📜️ Parses `go.mod` text (single-line and block `require`/`replace`, comments). */
+/** 🧱️ Parses `go.mod` text (single-line and block `require`/`replace`, comments). */
 export function parseGoModV1(text: string): GoModFileV1 {
   let module = "", go = "";
   const requires: {path: string; version: string}[] = [], replaces: {from: string; to: string; toVersion: string | null}[] = [];
@@ -34,7 +34,7 @@ export function parseGoModV1(text: string): GoModFileV1 {
   }
   return {module, go, requires, replaces};
 }
-/** 📜️ Parses `go.work` text: language version and `use` directories. */
+/** 💼️ Parses `go.work` text: language version and `use` directories. */
 export function parseGoWorkV1(text: string): {readonly go: string; readonly use: readonly string[]} {
   let go = "", block = false;
   const use: string[] = [];
@@ -65,7 +65,7 @@ const readGoString = (text: string, at: number): {value: string; end: number} | 
   }
   return text[index] === '"' ? {value, end: index + 1} : undefined;
 };
-/** 🔎️ Scans the head of a Go file: the leading `//go:build` constraint (the only build constraint syntax: `// +build` lines are not read), the package clause, the import declarations and `//go:embed` patterns. Stops at the first declaration that is not an import. */
+/** 🪵️ Scans the head of a Go file: the leading `//go:build` constraint (the only build constraint syntax: `// +build` lines are not read), the package clause, the import declarations and `//go:embed` patterns. Stops at the first declaration that is not an import. */
 export function scanGoSourceV1(text: string): GoSourceFactsV1 {
   let at = 0, constraint: string | null = null;
   const skipSpace = (): void => {
@@ -151,7 +151,7 @@ export function goConstraintHoldsV1(expression: string, context: GoBuildContextV
   };
   try {const value = or(); return at === tokens.length ? value : false;} catch {return false;}
 }
-/** 🏷️ go/build `goodOSArchFile`: `name_GOOS.go`, `name_GOARCH.go`, `name_GOOS_GOARCH.go` (before an optional `_test`). */
+/** ⏸️ go/build `goodOSArchFile`: `name_GOOS.go`, `name_GOARCH.go`, `name_GOOS_GOARCH.go` (before an optional `_test`). */
 export function goFileNameHoldsV1(fileName: string, context: GoBuildContextV1, policy: UnitsPolicyV1): boolean {
   let name = fileName.split(".")[0] ?? fileName;
   const first = name.indexOf("_");
@@ -261,7 +261,7 @@ const moduleOfImport = (importPath: string, modules: readonly {dir: string; path
   return best;
 };
 
-/** 🐹️ Plans the unit graph of a Go workspace: one library (or binary) unit per package with `interface` edges to the workspace packages it imports, one test unit per package with tests with `implementation` edges. Standard library imports are covered by the toolchain identity, other modules by exact `module@version` externals. */
+/** 🕸️ Plans the unit graph of a Go workspace: one library (or binary) unit per package with `interface` edges to the workspace packages it imports, one test unit per package with tests with `implementation` edges. Standard library imports are covered by the toolchain identity, other modules by exact `module@version` externals. */
 export function planGoUnitsV1(snapshot: GoWorkspaceSnapshotV1, options: {readonly policy: UnitsPolicyV1; readonly context: GoBuildContextV1; readonly toolchain: string; readonly tests: boolean; readonly importPath?: (module: string, directory: string) => string}): {readonly graph: UnitGraphV1; readonly packages: readonly GoPackageV1[]} {
   const {policy, context} = options, planned = planGoPackagesV1(snapshot, {policy, context, ...(options.importPath ? {importPath: options.importPath} : {})}), files = new Set(snapshot.files);
   const byImport = new Map(planned.packages.map(row => [row.importPath, row] as const)), moduleFiles = new Map(planned.modules.map(row => [row.path, parseGoModV1(snapshot.read(joinPath(row.dir, "go.mod")))] as const));
@@ -375,7 +375,7 @@ export function goExportDigestV1(archive: Uint8Array): string {
 
 /** 🏭️ The process effect of the Go executor; the repository wires its owned child-process runner here. */
 export type GoRunnerV1 = (argv: readonly string[], options: {readonly cwd: string; readonly env: Readonly<Record<string, string>>; readonly signal: AbortSignal}) => Promise<{readonly code: number; readonly output: string}>;
-/** 🏭️ Executes a Go unit. A pure-Go library in `compile` mode (policy of the planner: no cgo, assembly, embed or outside module) is compiled directly with `go tool compile`: its interface artifact is the export-data archive of the package plus those of its workspace dependencies, which the dependents read from their interface files instead of the dependency sources (this is what gives Bazel an early cutoff for Go); the implementation is the link object. Everything else, and every unit when no dependency artifacts exist, runs the unit's own `go build`/`go test` command. A test unit passes when the command exits zero; its output digest is only the verdict so timing lines never move the output closure. */
+/** ▶️ Executes a Go unit. A pure-Go library in `compile` mode (policy of the planner: no cgo, assembly, embed or outside module) is compiled directly with `go tool compile`: its interface artifact is the export-data archive of the package plus those of its workspace dependencies, which the dependents read from their interface files instead of the dependency sources (this is what gives Bazel an early cutoff for Go); the implementation is the link object. Everything else, and every unit when no dependency artifacts exist, runs the unit's own `go build`/`go test` command. A test unit passes when the command exits zero; its output digest is only the verdict so timing lines never move the output closure. */
 export function goUnitExecutorV1(options: {readonly workspace: string; readonly outputRoot: string; readonly run: GoRunnerV1; readonly overlay?: string}): (request: ExecuteRequestV1) => Promise<ExecuteOutcomeV1> {
   return async request => {
     const {unit} = request, out = join(options.outputRoot, sha256V1(unit.id).slice(0, 24));

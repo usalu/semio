@@ -57,7 +57,7 @@ pub fn drop(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     unfoot(draft, index, 0.0, 0.0, Activity::Fall, now);
 }
 
-/// 🕳️ Release a footing, corridor and course before planning the way down.
+/// 🔓️ Release a footing, corridor and course before planning the way down.
 pub fn unfoot(draft: &mut Draft<'_>, index: usize, vx: f64, vy: f64, activity: Activity, now: Ticks) {
     release(draft, index, now);
     let owner = draft.stage.actors[index].species.clone();

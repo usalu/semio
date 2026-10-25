@@ -42,24 +42,24 @@ export default defineTestAdapter({
         const rows = csvParse(source(ctx, "cities.csv"));
         return { projection: { "csv/columns": [...rows.columns], "csv/city": column(rows, "city"), "csv/population": column(rows, "population") } };
       },
-      /** 🎯️ The same file loaded by \SemioVizTableFromCSV inside a compiled document. */
+      /** 🏓️ The same file loaded by \SemioVizTableFromCSV inside a compiled document. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "quoted-fields": {
-      /** 🔮️ d3-dsv's handling of a delimiter inside quotes and of doubled quotes. */
+      /** ✂️ d3-dsv's handling of a delimiter inside quotes and of doubled quotes. */
       oracle: (ctx: AdapterContext) => ({ projection: { "csv/note": column(csvParse(source(ctx, "cities.csv")), "note") } }),
-      /** 🎯️ The same quoted fields from the compiled probe. */
+      /** 🔨️ The same quoted fields from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "custom-delimiter": {
-      /** 🔮️ d3-dsv with a semicolon delimiter over a headerless file, named positionally. */
+      /** 🔤️ d3-dsv with a semicolon delimiter over a headerless file, named positionally. */
       oracle: (ctx: AdapterContext) => {
         const records = dsvFormat(";").parseRows(source(ctx, "places.tsv"));
         const names = records[0]!.map((_, index) => `c${index + 1}`);
         const rows = records.map((record) => Object.fromEntries(record.map((value, index) => [names[index]!, value])));
         return { projection: { "tsv/columns": names, "tsv/c1": column(rows, "c1"), "tsv/c3": column(rows, "c3") } };
       },
-      /** 🎯️ The same file loaded with the delimiter and header options from the compiled probe. */
+      /** 📥️ The same file loaded with the delimiter and header options from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

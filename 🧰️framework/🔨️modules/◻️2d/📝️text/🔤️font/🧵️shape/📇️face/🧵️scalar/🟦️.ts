@@ -3,7 +3,7 @@ import {FontCmapCursor,FontReader,type FontFace,type FontProgress} from "../../.
 import {UnicodeMappingCursor,UnicodePropertyCursor,type UnicodeData,type UnicodeProperty} from "../../🌐️unicode/🟦️.ts";
 import type {NormalizedScalar} from "../../🌐️unicode/🧵️normalize/🟦️.ts";
 import {UnitRetirement,type WorkRetirement} from "../../../../../🧹️retire/🟦️.ts";
-/** 🧬️ One source scalar mapped to a face glyph, the output of the canonical scalar job. */
+/** 🗺️ One source scalar mapped to a face glyph, the output of the canonical scalar job. */
 export type FontMappedScalar={glyph:number;scalar:number;sourceAt:number;property:UnicodeProperty};
 export class FontCanonicalScalarJob{
  private phase="scalar";private stack:{scalar:number;depth:number}[];private current={scalar:0,depth:0};private mapper:FontCmapCursor|null=null;private property:UnicodePropertyCursor|null=null;private mapping:UnicodeMappingCursor|null=null;private glyph=0;private first=0;private at=0;private hangul:number[]=[];private output:FontMappedScalar[]=[];private covered=true;private work=0;private aborted=false;private transferred=false;private failure:unknown=null;

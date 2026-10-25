@@ -1,4 +1,5 @@
 //! 🧪️ DAG document VCS: node operations, diffs, inverses, codecs and store replay through the artifact facade.
+use semio_framework_artifact_infinite_dag_vcs::NodeMove;
 use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use crate::os_spr::{ArtifactId, Edit, Mutation, SchemaId};
@@ -119,7 +120,7 @@ fn connect_disconnect_nodes_round_trip() {
 fn diff_and_inverse_are_deterministic() {
     let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
     let mutation = DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 12.0, y: 34.0 });
-    assert_eq!(Mutation::diff(&mutation, &document), Mutation::diff(&mutation, &document), "diff(payload, base) must be a pure function of its inputs");
+    assert_eq!(protocol::ColdMutation::diff(&mutation, &document), protocol::ColdMutation::diff(&mutation, &document), "diff(payload, base) must be a pure function of its inputs");
     assert_eq!(mutation.inverse(&document).expect("valid retained mutation inverse fixture"), mutation.inverse(&document).expect("valid retained mutation inverse fixture"), "inverse(payload, base) must be a pure function of its inputs");
 }
 
@@ -127,7 +128,7 @@ fn diff_and_inverse_are_deterministic() {
 fn move_node_diff_is_consistent_with_direct_field_mutation() {
     let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
     let mutation = DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 5.0, y: 6.0 });
-    let via_diff = protocol::apply_diff_cold(Mutation::diff(&mutation, &document).diff(), &document).expect("valid DAG diff");
+    let via_diff = protocol::apply_diff_cold(protocol::ColdMutation::diff(&mutation, &document).diff(), &document).expect("valid DAG diff");
     let mut via_direct = document;
     via_direct.nodes[0].x = 5.0;
     via_direct.nodes[0].y = 6.0;
@@ -137,9 +138,9 @@ fn move_node_diff_is_consistent_with_direct_field_mutation() {
 #[test]
 fn move_node_diff_absorb_law_holds() {
     let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
-    let (mut d1, _) = Mutation::diff(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 10.0, y: 10.0 }), &document).into_parts();
+    let (mut d1, _) = protocol::ColdMutation::diff(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 10.0, y: 10.0 }), &document).into_parts();
     let mid = protocol::apply_diff_cold(&d1, &document).expect("valid first DAG diff");
-    let (d2, _) = Mutation::diff(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 20.0, y: 30.0 }), &mid).into_parts();
+    let (d2, _) = protocol::ColdMutation::diff(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 20.0, y: 30.0 }), &mid).into_parts();
     d1.absorb(d2);
     let absorbed = protocol::apply_diff_cold(&d1, &document).expect("valid absorbed DAG diff");
     assert_eq!(absorbed.nodes[0].x, 20.0, "absorb must converge to the LATER move, not the earlier one");
@@ -149,7 +150,7 @@ fn move_node_diff_absorb_law_holds() {
 #[test]
 fn missing_target_inverse_and_diff_are_no_ops() {
     let document = empty_dag_document();
-    assert_eq!(Mutation::diff(&DagMutation::MoveNode(MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }), &document).diff(), &DagDiff::default());
+    assert_eq!(protocol::ColdMutation::diff(&DagMutation::MoveNode(MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }), &document).diff(), &DagDiff::default());
     assert!(DagMutation::MoveNode(MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }).inverse(&document).expect("valid retained mutation inverse fixture").is_empty());
     assert!(DagMutation::DeleteNode(DeleteNode { id: "ghost".into() }).inverse(&document).expect("valid retained mutation inverse fixture").is_empty());
     assert!(DagMutation::DisconnectNodes(DisconnectNodes { id: "ghost".into() }).inverse(&document).expect("valid retained mutation inverse fixture").is_empty());

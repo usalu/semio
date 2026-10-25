@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { carveWrites, parseCrateBudget, planArtifactCrates } from "../../../🏗️authoring/📦️crate-tree/🟦️.ts";
 import { buildTestkitCrate, cfgFeatures, externalDependencies, optionalDependencyRow, planTestkitWiring, requiredTestFeatures, scanTestGates, testGateFeatures, testkitFeatureRow, withFeatureRows, withRequiredFeatures } from "../../../🏗️authoring/📦️crate-tree/🧰️testkit/🟦️.ts";
-import { declaredNames } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️shared/🟦️.ts";
+import { declaredNames } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️harness/🟦️.ts";
 import { files } from "../🏗️virtual-crate/🟦️.ts";
 
 describe("test-support wiring", () => {

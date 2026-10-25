@@ -19,7 +19,7 @@ fn build_policy_contract() -> &'static serde_json::Value {
     CONTRACT.get_or_init(|| serde_json::from_str(include_str!("../../🧬️schema/🔣️.json")).expect("neutral build policy contract"))
 }
 
-/// 🗂️ Resolves the workspace policy from its neutral schema-owned authority path.
+/// 🏗️ Resolves the workspace policy from its neutral schema-owned authority path.
 pub fn build_policy_path(root: &std::path::Path) -> std::path::PathBuf {
     root.join(build_policy_contract()["$defs"]["BuildPolicyAuthority"]["const"]["path"].as_str().expect("neutral build policy path"))
 }

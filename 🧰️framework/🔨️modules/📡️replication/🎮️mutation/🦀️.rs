@@ -30,7 +30,7 @@ pub trait Mutation<P>: Sized + Sync + semio_framework_value::ToValue + semio_fra
     /// 🧷️ Every direct mutation leaf's static metadata, in aggregate-variant order.
     const DESCRIPTORS: &'static [MutationLeafDescriptor];
 
-    /// 🧷️ This value's own direct mutation leaf descriptor.
+    /// 🌿️ This value's own direct mutation leaf descriptor.
     fn descriptor(&self) -> &'static MutationLeafDescriptor;
 
     /// 🧊️ Explicit cold disposal of one owned operation, for the same reason [`MutationDiff::retire_cold`]
@@ -66,7 +66,7 @@ pub trait Mutation<P>: Sized + Sync + semio_framework_value::ToValue + semio_fra
     fn undo_policy(&self) -> semio_framework_replication_wire_core::UndoPolicy {
         semio_framework_replication_wire_core::UndoPolicy::ExactBaseOnly
     }
-    /// 🗂️ Which durability/visibility class this operation's diffs belong to.
+    /// 🆚️ Which durability/visibility class this operation's diffs belong to.
     fn state_class(&self) -> semio_framework_schema_state::StateClass {
         semio_framework_schema_state::StateClass::Artifact
     }
@@ -82,7 +82,7 @@ pub trait Mutation<P>: Sized + Sync + semio_framework_value::ToValue + semio_fra
     fn inverse_rows(&self) -> usize {
         1
     }
-    /// 🌐️ Borrows one original foreign output; discovery never constructs a plan or payload.
+    /// 🪜️ Borrows one original foreign output; discovery never constructs a plan or payload.
     fn foreign_step_source<'a>(&'a self, _base: &'a P, _index: usize) -> Result<Option<ForeignStepSource<'a>>, semio_framework_value::ValueError> {
         Ok(None)
     }
@@ -94,17 +94,17 @@ pub trait Mutation<P>: Sized + Sync + semio_framework_value::ToValue + semio_fra
     /// — what the runtime publishes beside the schemas so every `$ref` of every editable input resolves. Row-aligned like
     /// [`Self::INPUT_SCHEMAS`]; `#[derive(Mutations)]` fills it, a hand-written bridge forwards its source aggregate's.
     const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = &[];
-    /// 🧬️ The payload JSON Schema of this operation's own leaf, or `None` when its inputs are not editable.
+    /// 📥️ The payload JSON Schema of this operation's own leaf, or `None` when its inputs are not editable.
     /// `#[derive(Mutations)]` answers the wrapped leaf's `MutationLeaf::PAYLOAD_SCHEMA`.
     fn input_schema(&self) -> Option<&'static str> {
         None
     }
-    /// 🧬️ The value [`Self::input_schema`] describes: the leaf payload without any aggregate tag or wrapper, so a
+    /// 🎒️ The value [`Self::input_schema`] describes: the leaf payload without any aggregate tag or wrapper, so a
     /// generic editor never depends on the aggregate's wire layout. The default is the whole value.
     fn payload_value(&self) -> semio_framework_value::DslValue {
         self.to_value()
     }
-    /// 🧬️ Rebuilds this operation's own kind from an edited [`Self::payload_value`]; a value that does not decode as
+    /// ✏️ Rebuilds this operation's own kind from an edited [`Self::payload_value`]; a value that does not decode as
     /// that leaf is refused, never reinterpreted as another kind. The default decodes the whole value.
     fn with_payload_value(&self, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError>
     where
@@ -112,7 +112,7 @@ pub trait Mutation<P>: Sized + Sync + semio_framework_value::ToValue + semio_fra
     {
         Self::from_value(value)
     }
-    /// 🧬️ Builds the operation of semantic kind `kind` (its leaf descriptor's `semantic_kind`) from its editable payload
+    /// 🔨️ Builds the operation of semantic kind `kind` (its leaf descriptor's `semantic_kind`) from its editable payload
     /// ([`Self::payload_value`]) alone — the constructor a wire witness such as a `🥒️.feature` row decodes through.
     /// `#[derive(Mutations)]` answers every leaf kind of the aggregate; the default refuses.
     fn from_payload_value(kind: &str, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError>
@@ -161,7 +161,7 @@ pub use foreign_output::{ForeignTarget,ForeignStep,ForeignStepSource,ForeignStep
 
 
 
-/// 🎯️ The one store step from an operation to its next projection: computes the op-stamped diff, applies it through
+/// ➡️ The one store step from an operation to its next projection: computes the op-stamped diff, applies it through
 /// [`protocol::apply_diff`] and retires the diff cold. Every store lane, replay, merge and backbone fold routes through
 /// here; the apply refusal stays structured for callers that must fail instead of record.
 pub fn apply_operation<P, Mutation>(state: &P, operation: &Mutation, op_index: u32) -> (semio_framework_mutation_diff::MutationApplyResult<P>, Vec<crate::MutationMessage>)

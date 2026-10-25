@@ -18,10 +18,9 @@ fn original_slot_preserves_native_payload_and_waits_for_every_projected_reader()
  for _ in 0..10000{if !original.has_read(){break;}let d=original.return_demands(key,4096).unwrap();let(step,heap)=crate::observe_retirement_allocations(||original.return_read(key,&mut returned,grant(d)).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(!original.has_read());assert!(Arc::ptr_eq(returned.as_ref().unwrap(),&factory));assert_eq!(original.get().as_ptr(),pointer);
  let mut issuer=crate::FactoryAuthority::new(returned.take().unwrap());while !issuer.terminal_is_empty(){tick(&mut remaining);let d=issuer.demands(4096).unwrap();issuer.step(grant(d)).unwrap();}
  let value=original.try_into_original().unwrap_or_else(|_|panic!("returned original slot remains uniquely owned"));assert_eq!(value.as_ptr(),pointer);let mut close=semio_framework_value_retirement::retirement::controlled::ControlledRetirement::new(value).map_err(|(e,_)|e).unwrap();while !close.terminal_is_empty(){tick(&mut remaining);let d=close.next_demand(4096).unwrap();let(step,heap)=crate::observe_retirement_allocations(||close.step(grant(d)).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
- eprintln!("[DEBUG] Actual original slot retained giant UTF8 native pointer through denied currencies and foreign source; same issuer returned only after projected read closure");
 }
 #[test]
-fn original_slot_generation_exhaustion_refuses_before_native_exchange(){let mut original=RetainedOriginalSlot::new(7u64);original.generation=u64::MAX;let key=original.key();let mut next=Some(9);let error=original.replace(&mut next,grant(RetainedOriginalSlot::<u64>::replace_demand())).unwrap_err();assert_eq!(error.kind,ValueRefusalKind::InvariantViolated);assert_eq!((original.get(),next,original.key()),(&7,Some(9),key));eprintln!("[DEBUG] Original slot generation exhaustion returned authored replacement and preserved source exactly");}
+fn original_slot_generation_exhaustion_refuses_before_native_exchange(){let mut original=RetainedOriginalSlot::new(7u64);original.generation=u64::MAX;let key=original.key();let mut next=Some(9);let error=original.replace(&mut next,grant(RetainedOriginalSlot::<u64>::replace_demand())).unwrap_err();assert_eq!(error.kind,ValueRefusalKind::InvariantViolated);assert_eq!((original.get(),next,original.key()),(&7,Some(9),key));}
 
 #[test]
 fn original_slot_exchange_matches_all_independent_portable_outputs(){
@@ -31,7 +30,6 @@ fn original_slot_exchange_matches_all_independent_portable_outputs(){
   let(result,heap)=crate::observe_retirement_allocations(||slot.replace(&mut next,grant(d)).unwrap());let(previous,p)=result.unwrap();assert_eq!(heap,(0,0));assert_eq!(p.copied_bytes,d.copy_bytes);assert_eq!(p.copied_items,1);assert!(next.is_none());assert_eq!(previous.as_ptr(),old_pointer);assert_eq!(slot.get().as_ptr(),next_pointer);assert_ne!(slot.key(),key);assert_eq!(serde_json::from_str::<serde_json::Value>(slot.get()).unwrap(),law["expected"]);
   let current=slot.try_into_original().unwrap_or_else(|_|panic!("portable exchange original remains uniquely owned"));for original in [previous,current]{let mut close=semio_framework_value_retirement::retirement::controlled::ControlledRetirement::new(original).map_err(|(e,_)|e).unwrap();while !close.terminal_is_empty(){tick(&mut remaining);let d=close.next_demand(4096).unwrap();let(step,heap)=crate::observe_retirement_allocations(||close.step(grant(d)).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}}
  }
- eprintln!("[DEBUG] Original slot four portable native outputs match independent RFC6902 corpus; denied exchange preserves both source allocation identities");
 }
 
 static RETIRED_POINTER:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
@@ -48,5 +46,4 @@ fn original_slot_retirement_returns_all_readers_then_uses_same_captured_payload_
    let(step,heap)=crate::observe_retirement_allocations(||owner.step(grant(d)).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));if projection.is_some(){assert_eq!(RETIRED_POINTER.load(std::sync::atomic::Ordering::Relaxed),0);}
   }assert!(owner.terminal_is_empty());assert!(projection.is_none());assert_eq!(RETIRED_POINTER.load(std::sync::atomic::Ordering::Relaxed),if prefix==0{0}else{pointer});let mut issuer=crate::FactoryAuthority::new(factory);while !issuer.terminal_is_empty(){tick(&mut remaining);issuer.step(grant(issuer.demands(4096).unwrap())).unwrap();}
  }
- eprintln!("[DEBUG] Original slot cancellation at all three read birth prefixes returned every lease before same-issuer payload retirement; every actual currency matched native System heap");
 }

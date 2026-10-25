@@ -126,7 +126,7 @@ function workspaceWasmPkgResolveCandidates(repoRoot: string, pkgName: string, su
 /** 🌊️ Carries closed Source or selected-publication paths as DATA without opening a compiler or store. */
 export type FlowWasmDeliveryV1=Readonly<{version:1;kind:"source";browser:string;host:string}>|Readonly<{version:1;kind:"publication";root:string}>;
 
-/** 🧱️ Resolves the explicit Flow facet before generic missing-package stubs. */
+/** 🔎️ Resolves the explicit Flow facet before generic missing-package stubs. */
 export function playgroundFlowWasmDevStubPlugin(repoRoot: string,delivery:FlowWasmDeliveryV1): OwnedBuildPlugin {
   if(validateJsonSchemaSubset(providerSchema.definitions.FlowWasmDeliveryV1,delivery).length)throw Error("Closed explicit Flow delivery required");
   for(const path of delivery.kind==="source"?[delivery.browser,delivery.host]:[delivery.root])if(!isAbsolute(path)||resolve(path)!==path)throw Error("Canonical bounded Flow delivery paths required");
@@ -172,7 +172,7 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string,delivery:FlowWa
   };
 }
 
-/** 🧱️ Stubs Playwright when test-only regions are pulled into the browser graph. */
+/** 🎭️ Stubs Playwright when test-only regions are pulled into the browser graph. */
 export function playgroundPlaywrightDevStubPlugin(): OwnedBuildPlugin {
   return {
     name: "playground-playwright-dev-stub",

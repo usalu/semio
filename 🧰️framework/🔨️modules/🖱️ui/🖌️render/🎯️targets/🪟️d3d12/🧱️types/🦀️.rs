@@ -104,7 +104,7 @@ impl From<&LineVertex3> for WorldLineGpuVertex {
     }
 }
 
-/// 🧊️ Byte-identical to `WorldMeshVertexIn`'s per-vertex attributes (input slot 0, locations 0..1).
+/// 📍️ Byte-identical to `WorldMeshVertexIn`'s per-vertex attributes (input slot 0, locations 0..1).
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct World3dGpuVertex {
@@ -190,18 +190,18 @@ pub fn wait_for_fence_value(fence: &ID3D12Fence, target: u64) {
 /// blur scratch texture, the depth/stencil buffer).
 pub const DEFAULT_HEAP: D3D12_HEAP_PROPERTIES = D3D12_HEAP_PROPERTIES { Type: D3D12_HEAP_TYPE_DEFAULT, CPUPageProperty: D3D12_CPU_PAGE_PROPERTY_UNKNOWN, MemoryPoolPreference: D3D12_MEMORY_POOL_UNKNOWN, CreationNodeMask: 1, VisibleNodeMask: 1 };
 
-/// 🏗️ A `D3D12_HEAP_TYPE_UPLOAD` heap-properties value — CPU-writable (`Map`), GPU-readable directly,
+/// ⬆️ A `D3D12_HEAP_TYPE_UPLOAD` heap-properties value — CPU-writable (`Map`), GPU-readable directly,
 /// used for every buffer this crate creates (vertex/index/constant data) and for texture-upload
 /// staging buffers. Mirrors Metal's `StorageModeShared` buffers — no explicit copy/barrier step is
 /// needed for buffers the GPU only ever reads, unlike textures (see `🗃️resources.rs::upload_texture`).
 pub const UPLOAD_HEAP: D3D12_HEAP_PROPERTIES = D3D12_HEAP_PROPERTIES { Type: D3D12_HEAP_TYPE_UPLOAD, CPUPageProperty: D3D12_CPU_PAGE_PROPERTY_UNKNOWN, MemoryPoolPreference: D3D12_MEMORY_POOL_UNKNOWN, CreationNodeMask: 1, VisibleNodeMask: 1 };
 
-/// 🏗️ A `D3D12_HEAP_TYPE_READBACK` heap-properties value — GPU-writes-then-CPU-reads memory, used only
+/// ⬇️ A `D3D12_HEAP_TYPE_READBACK` heap-properties value — GPU-writes-then-CPU-reads memory, used only
 /// by `🪟️backend.rs`'s `backend-testing` `capture_readback`/`read_back` path.
 #[cfg(feature = "backend-testing")]
 pub const READBACK_HEAP: D3D12_HEAP_PROPERTIES = D3D12_HEAP_PROPERTIES { Type: D3D12_HEAP_TYPE_READBACK, CPUPageProperty: D3D12_CPU_PAGE_PROPERTY_UNKNOWN, MemoryPoolPreference: D3D12_MEMORY_POOL_UNKNOWN, CreationNodeMask: 1, VisibleNodeMask: 1 };
 
-/// 📐️ A `D3D12_RESOURCE_DESC` for a linear (row-major) buffer of `size` bytes — vertex/index/constant
+/// 📜️ A `D3D12_RESOURCE_DESC` for a linear (row-major) buffer of `size` bytes — vertex/index/constant
 /// buffers and texture-upload staging buffers all share this shape.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn buffer_desc(size: u64) -> D3D12_RESOURCE_DESC {
@@ -219,7 +219,7 @@ pub fn buffer_desc(size: u64) -> D3D12_RESOURCE_DESC {
     }
 }
 
-/// 📐️ A `D3D12_RESOURCE_DESC` for a `width`x`height` 2D texture with `mip_levels` levels and `flags`
+/// 🖼️ A `D3D12_RESOURCE_DESC` for a `width`x`height` 2D texture with `mip_levels` levels and `flags`
 /// (render-target/depth-stencil/shader-read combinations) — every texture in this crate (atlases,
 /// raster images, the scene target + blur scratch, the depth/stencil buffer) shares this shape.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -238,7 +238,7 @@ pub fn texture2d_desc(format: DXGI_FORMAT, width: u32, height: u32, mip_levels: 
     }
 }
 
-/// 🏗️ Creates a `D3D12_HEAP_TYPE_UPLOAD` buffer of `size` bytes in the `GENERIC_READ` state (the only
+/// 🆕️ Creates a `D3D12_HEAP_TYPE_UPLOAD` buffer of `size` bytes in the `GENERIC_READ` state (the only
 /// legal initial/steady state for an upload-heap resource) and copies `bytes` into it via `Map`. A
 /// zero-length `bytes` still allocates (minimum 1 byte) so callers always get a valid resource back.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -267,7 +267,7 @@ pub fn create_upload_buffer(device: &ID3D12Device, bytes: &[u8], label: &str) ->
     resource
 }
 
-/// 🏗️ Creates a `D3D12_HEAP_TYPE_DEFAULT` 2D texture in `initial_state`, optionally with an optimized
+/// 🎨️ Creates a `D3D12_HEAP_TYPE_DEFAULT` 2D texture in `initial_state`, optionally with an optimized
 /// clear value (render targets and the depth/stencil buffer pass one; sampled-only textures pass
 /// `None`). Shared by `🗃️resources.rs` (atlases/raster images), `🌫️scene_target.rs` (the offscreen
 /// scene target + blur scratch) and `🪟️backend.rs` (the depth/stencil buffer).

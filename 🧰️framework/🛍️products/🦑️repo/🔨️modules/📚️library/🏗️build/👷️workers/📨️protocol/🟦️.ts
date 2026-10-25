@@ -4,23 +4,23 @@ import {isAbsolute,resolve,sep} from "node:path";
 import {format as formatText} from "node:util";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import { runtimeStdinStreamV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeStdinStreamV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 const protocol=schema.definitions.Protocol.const;
 
 /** 📨️ One declared input of a work request: a path relative to the execution root and the opaque digest the build tool computed for it. */
 export type WorkInputV1=Readonly<{path:string;digest:string}>;
 
-/** 📨️ One normalised request of the JSON worker protocol; unknown wire fields are dropped. */
+/** 📬️ One normalised request of the JSON worker protocol; unknown wire fields are dropped. */
 export type WorkRequestV1=Readonly<{arguments:readonly string[];inputs:readonly WorkInputV1[];requestId:number;cancel:boolean;verbosity:number;sandboxDir?:string}>;
 
-/** 📨️ One response of the JSON worker protocol. */
+/** 💼️ One response of the JSON worker protocol. */
 export type WorkResponseV1=Readonly<{exitCode:number;output:string;requestId:number;wasCancelled?:boolean}>;
 
 /** 🎬️ What a handler returns for one request. */
 export type WorkOutcomeV1=Readonly<{exitCode:number;output:string}>;
 
-/** 🎬️ Runs one request; it must stop soon after `signal` aborts. */
+/** ▶️ Runs one request; it must stop soon after `signal` aborts. */
 export type WorkHandlerV1=(request:WorkRequestV1,context:Readonly<{signal:AbortSignal}>)=>Promise<WorkOutcomeV1>;
 
 /** 🚫 A message that breaks the protocol; the worker can not answer it and must stop. */
@@ -36,7 +36,7 @@ export function parseWorkRequestV1(line:string):WorkRequestV1{
  return Object.freeze({arguments:Object.freeze([...(row.arguments as string[]|undefined)??[]]),inputs:Object.freeze(((row.inputs as WorkInputV1[]|undefined)??[]).map(input=>Object.freeze({path:input.path,digest:input.digest}))),requestId:(row.requestId as number|undefined)??0,cancel:row.cancel===true,verbosity:(row.verbosity as number|undefined)??0,...(typeof row.sandboxDir==="string"&&row.sandboxDir?{sandboxDir:row.sandboxDir}:{})});
 }
 
-/** 📨️ Encodes one response as a single compact line; output beyond the bound is cut on a character boundary and marked. */
+/** 🔂️ Encodes one response as a single compact line; output beyond the bound is cut on a character boundary and marked. */
 export function encodeWorkResponseV1(response:WorkResponseV1,maximumOutputBytes:number=protocol.maximumOutputBytes):string{
  let output=response.output;
  if(Buffer.byteLength(output)>maximumOutputBytes){const marker=protocol.truncationMarker;let end=Math.max(0,maximumOutputBytes-Buffer.byteLength(marker));let cut=Buffer.from(output).subarray(0,end).toString("utf8");if(cut.endsWith("�"))cut=cut.slice(0,-1);output=cut+marker;}
@@ -119,7 +119,7 @@ export function installWorkerOutputCaptureV1(stdout:NodeJS.WriteStream=process.s
  };
 }
 
-/** ♻️ The result of preparing one module load. */
+/** 🐝️ The result of preparing one module load. */
 export type WorkerModuleLoadV1<T>=Readonly<{module:T;reset:boolean;retained:number}>;
 
 /** ♻️ Reuses the modules a load brought in across requests while every one of them is unchanged, and drops all of them the moment one changed. A module is unchanged when the digest the build tool declared for it matches the digest recorded at load; where either side has none, when its size and modification time match. Only modules this cache loaded are ever dropped: the worker's own modules, `node_modules` and runtime built-ins stay. */
@@ -131,7 +131,7 @@ export class WorkerModuleCacheV1{
  #keys(){return Object.keys(require.cache).filter(path=>isAbsolute(path));}
  /** 🧹️ Drops every module this cache loaded and forgets its stamp. */
  reset():number{const count=this.#owned.size;for(const path of this.#owned.keys())delete require.cache[path];this.#owned.clear();return count;}
- /** 📥️ Loads `specifier` (an absolute path) after checking that nothing this cache loaded earlier changed. */
+ /** ✅️ Loads `specifier` (an absolute path) after checking that nothing this cache loaded earlier changed. */
  async load<T>(specifier:string,inputs:readonly WorkInputV1[],base:string=this.#root):Promise<WorkerModuleLoadV1<T>>{
   const declared=new Map(inputs.map(input=>[this.#real(resolve(base,input.path)),input.digest] as const));
   let reset=false;

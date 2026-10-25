@@ -85,7 +85,7 @@ async fn six_arg_builder_helpers_derive_the_pre_d6_control() {
     assert_eq!(ActionArgDef::index("i", LocalizedLabel::data("I")).control(), ActionArgControl::Stepper { min: Some(0.0), max: Some(u32::MAX as f64), step: Some(1.0), unit: None, precision: None, display_unit: None, display_factor: None, snaps: Vec::new(), snap_source: None });
 }
 
-/// 🧪️ The two host-resolved builders (unused by any current call site, per the P3 reader
+/// 🎛️ The two host-resolved builders (unused by any current call site, per the P3 reader
 /// audit) still derive their pre-D6 controls too — `ArgFormat::ArtifactKind`/`SurfaceApp` exist
 /// solely so these keep working under the new stored/derived split.
 #[semio_framework_async_macros::async_test]
@@ -95,7 +95,7 @@ async fn host_resolved_arg_builders_derive_their_pre_d6_controls() {
     assert_eq!(ActionArgDef::surface_app("s", LocalizedLabel::data("S"), roles.clone(), "dialect").control(), ActionArgControl::SurfaceApp { roles, dialect_arg: "dialect".to_string() });
 }
 
-/// 🧪️ `ActionSemantics::for_kind` matches the `📋️master.md` §3.1 defaults table.
+/// 🎬️ `ActionSemantics::for_kind` matches the `📋️master.md` §3.1 defaults table.
 #[semio_framework_async_macros::async_test]
 async fn action_semantics_for_kind_matches_the_defaults_table() {
     let mutation = ActionSemantics::for_kind(ActionKind::Mutation);
@@ -119,7 +119,7 @@ async fn action_semantics_for_kind_matches_the_defaults_table() {
     assert_eq!(shell.policy.scopes, vec![CapabilityId("shell.navigate".into())]);
 }
 
-/// 🧪️ `bounded_catalog` retains kind defaults but never grants execution authority.
+/// 🔨️ `bounded_catalog` retains kind defaults but never grants execution authority.
 #[semio_framework_async_macros::async_test]
 async fn action_definition_semantics_default_from_kind_and_builders_compose() {
     let mutation = ActionDefinition::bounded_catalog("deleteThing", LocalizedLabel::data("Delete Thing"), ActionKind::Mutation);
@@ -153,7 +153,7 @@ fn interactive_job_classification_is_explicit_and_release_validated() {
     assert_eq!(errors, vec![InteractiveJobClassificationError { owner: "app.mode".into(), id: "solve".into() }]);
 }
 
-/// 🧪️ `ActionArgDef::json_schema`/`arg_schema_json_schema` produce sane JSON Schema 2020-12
+/// 📔️ `ActionArgDef::json_schema`/`arg_schema_json_schema` produce sane JSON Schema 2020-12
 /// leaves for the shapes P3-manifest-schema actually introduces.
 #[semio_framework_async_macros::async_test]
 async fn action_arg_def_json_schema_covers_the_core_shapes() {
@@ -352,7 +352,7 @@ async fn no_action_definition_is_stored_twice_inside_one_app() {
 }
 
 //#region 🔖️InteractionTests
-/// 🕹️ Minimal one-domain, one-granularity `InteractionDefinition` fixture — mirrors the wave-0
+/// 🧫️ Minimal one-domain, one-granularity `InteractionDefinition` fixture — mirrors the wave-0
 /// `sample_definition()` fixture in `🕹️interaction/🦀️.rs`'s own tests.
 async fn sample_interaction_definition(id: &str) -> InteractionDefinition {
     InteractionDefinition {
@@ -799,7 +799,7 @@ async fn request_media_frames_effect_round_trips_camel_case() {
 //#endregion 🔖️ActionArgsAndUtilitiesTests
 
 //#region 🔖️SurfaceTests
-/// ⚖️ LAW (contract freeze §1 C1): `parse_surface_app_id(surface_app_id(d, r)) == (d, r)` for
+/// 📖️ LAW (contract freeze §1 C1): `parse_surface_app_id(surface_app_id(d, r)) == (d, r)` for
 /// every dialect in a fixture set covering subset `*`, a dotted standard, and a hyphenated
 /// artifact kind.
 #[semio_framework_async_macros::async_test]
@@ -919,7 +919,7 @@ fn switch_alternative_declares_its_alternative_id_for_agents() {
     assert!(action.semantics.use_when.len() >= 2, "use_when phrases");
 }
 
-/// 🕹️ The history lane is exactly the seven framework-owned verbs; reserved history verbs come from contributions.
+/// 🚦️ The history lane is exactly the seven framework-owned verbs; reserved history verbs come from contributions.
 #[test]
 fn history_action_definitions_are_the_seven_lane_verbs() {
     let ids: Vec<String> = history_action_definitions().into_iter().map(|action| action.id).collect();

@@ -13,7 +13,7 @@
       "previousPath": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/vitest.config.ts",
       "ownerPath": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/mit-bestand-praesentation-projektetage",
-      "projectionSha256": "5406f65b63bea835f4e842d89069bcc3d1088f20e66b7010f482e2729c30e49b"
+      "projectionSha256": "5fd5dc43b3b03efc819223586cf632472558551f088a434b7ec29d68b5d22e87"
     },
     {
       "configurationRoot": "♻️mit-bestand/🧺️demonstrator",
@@ -28,6 +28,13 @@
       "ownerPath": "✏️s/🔌️plugins/🏗️fem/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/fem-js",
       "projectionSha256": "ba50607b3720319bcdb305b923262f95db7c5aeda2ac7863246945b6b2bcce85"
+    },
+    {
+      "configurationRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🟦️typescript",
+      "previousPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🟦️typescript/vitest.config.ts",
+      "ownerPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/🧪️tests/🎚️config/🟦️.ts",
+      "expectedName": "@semio-tech/trinity-jack-lsp-worker",
+      "projectionSha256": "21dbfb1e1cce897aded9811e5c5b297dee0b0f4129adb7c57b94600cf84ee71d"
     },
     {
       "configurationRoot": "✏️s/🔌️plugins/📐️cad",
@@ -184,11 +191,11 @@
       "projectionSha256": "c14b68d1f89531668fadac3173ba3c3c6520837285010b99fcd3b0e0685416f2"
     },
     {
-      "configurationRoot": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react",
-      "previousPath": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/vitest.config.ts",
+      "configurationRoot": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "previousPath": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📦️packages/🟦️typescript/vitest.config.ts",
       "ownerPath": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/presentation-react",
-      "projectionSha256": "a5297d912c4050de45f2470526f7cb44f3413dc4b7dd1a471a190c82a9b013b8"
+      "projectionSha256": "8fe5f111e24a401c6c11343a6aa61f19885b2f7bac6ed05d53460cabeb3cae76"
     },
     {
       "configurationRoot": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",

@@ -174,7 +174,7 @@
     "entryOriginalAuthority": {
       "const": [
         2048,
-        4096,
+        16384,
         65536,
         65536,
         16

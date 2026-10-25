@@ -1,7 +1,7 @@
 //! 🧬️ schema leaf
 use framework_schema::ArtifactSchema;
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.dag.dag.presence")]
@@ -14,4 +14,8 @@ pub struct DagPresence {
     pub camera_zoom: f64,
 }
 
-impl store::ArtifactPresenceSnapshot for DagPresence {}
+impl store::ArtifactPresenceSnapshot for DagPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}

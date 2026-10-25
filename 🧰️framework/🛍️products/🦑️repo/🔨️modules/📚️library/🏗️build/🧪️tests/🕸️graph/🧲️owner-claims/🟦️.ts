@@ -4,12 +4,12 @@ import{mkdtempSync,realpathSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import Ajv from"ajv";
-import{testPythonV1}from"../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import{testPythonV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import fixture from"./🔣️.json";
 import fixtureSchema from"./🧬️schema/🔣️.json";
 import{shapeComputeResultV1}from"../../../🕸️graph/🕰️generations/🔌️load/🟨️.mjs";
 
-const python=testPythonV1(),oracle=fileURLToPath(new URL("./🐍️oracle.py",import.meta.url));
+const python=testPythonV1(),oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url));
 
 test("the fixture is closed under its schema",()=>{
  const ajv=new Ajv({strict:false});

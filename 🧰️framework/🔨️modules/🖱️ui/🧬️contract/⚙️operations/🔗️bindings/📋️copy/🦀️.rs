@@ -107,7 +107,7 @@ impl UiBindingsCopy {
         Some(std::mem::take(&mut self.owned.source))
     }
 
-    /// 📤️ Keeps the other root in this owner until its own granted transfer or typed retirement.
+    /// 🏠️ Keeps the other root in this owner until its own granted transfer or typed retirement.
     pub fn take_completed_candidate_with_grant(&mut self, bytes: usize) -> Option<crate::UiNodeBindings> {
         if !self.is_complete() || self.returned & 2 != 0 || bytes < size_of::<crate::UiNodeBindings>() {
             return None;

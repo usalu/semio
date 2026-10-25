@@ -16,7 +16,7 @@ test("dashboard runtime environment verification has no IDE catalog authority",(
  expect(Object.keys(schema.definitions)).toEqual(["Environment"]);
  const root=process.cwd(),owner=JSON.parse(readFileSync(join(root,"🧰️framework/🔨️modules/🏃️process/📋️project.json"),"utf8"));
  expect(owner.targets["test-runtime-environment"]).toMatchObject({executor:"repo:script",options:{cwd:"🧰️framework/🔨️modules/🏃️process",command:"repo ./📜️script.ts test runtime-environment"}});
- const route=readFileSync(join(root,"🧰️framework/🔨️modules/🏃️process/📜️script.ts"),"utf8");expect(route).toContain('"runtime-environment": { source: "🏗️build/🎛️environment/🧪️tests/🟦️.ts"');
+ const table=JSON.parse(readFileSync(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json"),"utf8"));expect(table.suites.find((suite:{id:string})=>suite.id==="runtime-environment")?.files).toEqual(["🏗️build/🎛️environment/🧪️tests/🟦️.ts"]);
 });
 test("actual compiler environment disables implicit caches for every dashboard build mode",()=>{
  const database=new Database(":memory:");try{
@@ -27,8 +27,6 @@ test("actual compiler environment disables implicit caches for every dashboard b
    expect(validate(actual)).toBe(!Object.values(actual).some(value=>value!==null&&typeof value!=="string"));
    expect(validateJsonSchemaSubset(schema.definitions.Environment,actual,schema).length===0).toBe(validate(actual));
   }
-  console.log(`[DEBUG] Owned compiler startup verified ${corpus.cases.length*2} runtime environments against SQLite and Ajv without IDE catalogs`);
  }finally{database.close();}
 });
 
-import "../../🌡️host-capacity/🧪️tests/🧭️liveness/🟦️.ts";

@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import {mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
-import {acquireQueuedResourceLease,acquireResourceLease,LeaseOrderErrorV1,leaseInheritanceEnvironmentV1,resourceLeasePathV1,withLeaseTaskV1,withResourceLeases} from "../../../🟦️.ts";
+import {acquireQueuedResourceLease,acquireResourceLease,LeaseOrderErrorV1,leaseInheritanceEnvironmentV1,otherLeaseHoldersV1,resourceLeasePathV1,withLeaseTaskV1,withResourceLeases} from "../../../🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json";
 import statusSchema from "../../../📋️status/🧬️schema/🔣️.json";
 import ticketSchema from "../../../🧬️schema/📜️ticket.json";
@@ -135,7 +135,7 @@ test("a waiter does not hold the directory admission gate while it waits, so ope
  };
  expect(await probe(true)).toBeGreaterThan(10);
  expect(await probe(false)).toBe(0);
-});
+},30000);
 
 test("fair readers: shared requests through withResourceLeases no longer starve an exclusive request; raw polling is the negative control",async()=>{
  const run=async(queued:boolean):Promise<{acquired:boolean;elapsed:number}>=>{
@@ -258,6 +258,41 @@ test("re-entrant shared: a process that holds a shared lease gets a second share
  for(const writer of writers)await writer.next("ACQUIRED");
 });
 
+test("a build action that names its invocation (SEMIO_BUILD_INVOCATION_PID) is granted a shared lease the invocation holds at once, even with exclusive requests queued; without the name it waits behind them",async()=>{
+ const {directory,env}=scenario({fairness:{queuedWithResourceLeases:true,reentrantShared:true},holdAndWait:{graceMilliseconds:60000,pollMilliseconds:50}});configure(env);
+ const first=await withLeaseTaskV1(()=>acquireQueuedResourceLease({directory,resource:"free:g",mode:"shared",sharedCohort:true,owner:"held",signal:signal()}));
+ const writer=start({mode:"wait",queued:true,directory,resource:"free:g",access:"exclusive",timeoutMs:40000},env);
+ await tick(900);
+ const spec={mode:"wait",queued:true,directory,resource:"free:g",access:"shared",timeoutMs:3000};
+ const action=start(spec,{...env,SEMIO_BUILD_INVOCATION_PID:String(process.pid)}),granted=await action.next("ACQUIRED",5000);
+ expect(Number(granted.split(" ")[1])).toBeLessThan(1500);
+ const stranger=start({...spec,timeoutMs:1500},{...env,SEMIO_BUILD_INVOCATION_PID:String(process.pid+1)});
+ expect((await stranger.next("FAILED",5000)).startsWith("FAILED")).toBe(true);
+ first.release();await writer.next("ACQUIRED");
+});
+
+test("a nested build action that names the chain of its invocations (SEMIO_BUILD_INVOCATION_PIDS) joins the shared hold of any pid in the chain at once, behind a granted shared ticket that is not a cohort; a pid outside the chain waits",async()=>{
+ const {directory,env}=scenario({fairness:{queuedWithResourceLeases:true,reentrantShared:true},holdAndWait:{graceMilliseconds:60000,pollMilliseconds:50}});configure(env);
+ const first=await withLeaseTaskV1(()=>acquireQueuedResourceLease({directory,resource:"free:chain",mode:"shared",owner:"held",signal:signal()}));
+ const spec={mode:"wait",queued:true,directory,resource:"free:chain",access:"shared",timeoutMs:3000};
+ const outermost=process.pid+1,action=start(spec,{...env,SEMIO_BUILD_INVOCATION_PID:String(outermost),SEMIO_BUILD_INVOCATION_PIDS:[outermost+1,process.pid].join(",")}),granted=await action.next("ACQUIRED",5000);
+ expect(Number(granted.split(" ")[1])).toBeLessThan(1500);
+ const outside=start({...spec,timeoutMs:1500},{...env,SEMIO_BUILD_INVOCATION_PID:String(outermost),SEMIO_BUILD_INVOCATION_PIDS:String(outermost+2)});
+ expect((await outside.next("FAILED",5000)).startsWith("FAILED")).toBe(true);
+ first.release();
+});
+
+test("the registry lists the other live holders of a resource in any mode, never this process, and none once they let go",async()=>{
+ const {directory,env}=scenario();configure(env);
+ const spec={mode:"hold",directory,resource:"free:holders",access:"shared"};
+ const own=await acquireResourceLease({directory,resource:"free:holders",mode:"shared",signal:signal()});
+ expect(otherLeaseHoldersV1(directory,"free:holders")).toEqual([]);
+ const child=start(spec,env);await child.next("HELD",5000);await tick(300);
+ expect(otherLeaseHoldersV1(directory,"free:holders")).toEqual([child.pid]);expect(otherLeaseHoldersV1(directory,"free:other")).toEqual([]);
+ child.stop();await child.done;own.release();await tick(300);
+ expect(otherLeaseHoldersV1(directory,"free:holders")).toEqual([]);
+});
+
 test("the exact wedge shape without re-entrancy is detected as a deadlock cycle through the queued-ahead writers, and only the stuck second request fails",async()=>{
  const {first,second,writers,elapsed}=await wedge(false);
  expect(second).toBeInstanceOf(LeaseOrderErrorV1);expect(second.violation.kind).toBe("cycle");expect(elapsed).toBeLessThan(8000);
@@ -317,4 +352,54 @@ test("a registry entry of a killed process is pruned and never reported",async()
  holder.stop();await holder.done;
  const after:string[]=[];await runLeasesCommandV1(["status","--json",`--lease-directory=${directory}`],{environment:env as never,write:line=>after.push(line)});
  expect(JSON.parse(after.join("\n")).holders.some((row:{pid:number})=>row.pid===holder.pid)).toBe(false);
+});
+
+
+const strictPolicy=(rule:string)=>({rules:{...fixture.policy.rules,strictWait:rule},strictWaits:[{held:["repo:compiler-writer:"],requested:["cargo:registry:"],reason:{en:"writer before registry",de:"Schreiber vor Registry"}},{held:["cargo:registry-fetch:"],requested:["repo:compiler-writer:"],reason:{en:"fetch after writer",de:"Abruf nach Schreiber"}}]});
+
+test("a task that holds the compiler writer SHARED and waits for the Cargo registry is refused after the grace period; the same wait without the strict pair is only a wait",async()=>{
+ for(const rule of ["enforce","off"]){
+  const {directory,env}=scenario(strictPolicy(rule));configure(env);
+  const holder=start({mode:"hold",directory,resource:"cargo:registry:/h",access:"exclusive"},env);await holder.next("HELD");
+  const task=signal(),writer=await acquireResourceLease({directory,resource:"repo:compiler-writer:/m",mode:"shared",signal:task});
+  const started=Date.now(),waiting=acquireResourceLease({directory,resource:"cargo:registry:/h",mode:"shared",signal:task});
+  const outcome=waiting.then(lease=>lease,error=>error);
+  if(rule==="enforce"){
+   const error=await outcome;expect(error).toBeInstanceOf(LeaseOrderErrorV1);expect(error.violation).toMatchObject({kind:"out-of-order",held:"repo:compiler-writer:/m",heldMode:"shared",requested:"cargo:registry:/h",enforced:true});expect(error.violation.waitedMilliseconds).toBeGreaterThanOrEqual(900);expect(Date.now()-started).toBeLessThan(5000);
+  }else{
+   await tick(2500);holder.send("release");await holder.next("DONE");const lease=await outcome;expect(lease).not.toBeInstanceOf(Error);(lease as {release():void}).release();
+  }
+  writer.release();if(rule==="enforce"){holder.send("release");await holder.next("DONE");}
+ }
+});
+
+test("a task that holds the registry fetch lease, in any mode, and waits for the compiler writer is refused after the grace period",async()=>{
+ const {directory,env}=scenario(strictPolicy("enforce"));configure(env);
+ const holder=start({mode:"hold",directory,resource:"repo:compiler-writer:/m",access:"exclusive"},env);await holder.next("HELD");
+ const task=signal(),fetch=await acquireResourceLease({directory,resource:"cargo:registry-fetch:/h:-",mode:"shared",signal:task});
+ const error=await acquireResourceLease({directory,resource:"repo:compiler-writer:/m",mode:"shared",signal:task}).then(()=>undefined,failure=>failure);
+ expect(error).toBeInstanceOf(LeaseOrderErrorV1);expect(error.violation).toMatchObject({kind:"out-of-order",held:"cargo:registry-fetch:/h:-",requested:"repo:compiler-writer:/m",enforced:true});
+ fetch.release();holder.send("release");await holder.next("DONE");
+});
+
+
+test("a QUEUED wait for the Cargo registry behind an exclusive holder is refused the same way while the task holds the compiler writer",async()=>{
+ const {directory,env}=scenario(strictPolicy("enforce"));configure(env);
+ const holder=start({mode:"hold",directory,resource:"cargo:registry:/h",access:"exclusive"},env);await holder.next("HELD");
+ const task=signal(),writer=await acquireResourceLease({directory,resource:"repo:compiler-writer:/m",mode:"shared",signal:task});
+ const started=Date.now(),error=await acquireQueuedResourceLease({directory,resource:"cargo:registry:/h",mode:"shared",sharedCohort:true,owner:"queued-strict",signal:task}).then(()=>undefined,failure=>failure);
+ expect(error).toBeInstanceOf(LeaseOrderErrorV1);expect(error.violation).toMatchObject({kind:"out-of-order",requested:"cargo:registry:/h",enforced:true});expect(Date.now()-started).toBeLessThan(6000);
+ writer.release();holder.send("release");await holder.next("DONE");
+},30000);
+
+
+test("a re-entrant shared request for a lease the task already holds is no new ordering fact: it is granted at once and records no violation, while a fresh out-of-order request still does",async()=>{
+ const {directory,env,registry}=scenario({rules:{outOfOrder:"observe",holdAndWait:"enforce",selfDeadlock:"enforce",cycle:"enforce"}});configure(env);
+ const task=signal(),early=await acquireResourceLease({directory,resource:"outer:a",mode:"shared",signal:task}),later=await acquireResourceLease({directory,resource:"inner:b",mode:"shared",signal:task});
+ const again=await acquireResourceLease({directory,resource:"outer:a",mode:"shared",signal:task});again.release();
+ const folders=readdirSync(registry).filter(name=>readdirSync(join(registry,name)).includes("violations.jsonl"));expect(folders).toEqual([]);
+ const fresh=await acquireResourceLease({directory,resource:"outer:c",mode:"shared",signal:task});fresh.release();
+ const folder=readdirSync(registry).find(name=>readdirSync(join(registry,name)).includes("violations.jsonl"))!,rows=readFileSync(join(registry,folder,"violations.jsonl"),"utf8").trim().split("\n").map(line=>JSON.parse(line));
+ expect(rows).toHaveLength(1);expect(rows[0]).toMatchObject({requested:"outer:c"});
+ later.release();early.release();
 });

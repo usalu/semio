@@ -18,7 +18,7 @@ export interface ShardBudget {
   readonly maxFrames: number;
 }
 
-/** ⚖️ Stand-in for `semio_framework_actor::JobBudget` (design-abi.md `jobs::job-budget`). `fuel` is
+/** 💰️ Stand-in for `semio_framework_actor::JobBudget` (design-abi.md `jobs::job-budget`). `fuel` is
  * a WIT `u64` and therefore a `bigint` — the worker hands this record straight to the guest's
  * `step-job`, whose `u64` lowering rejects a `number`. */
 export interface ShardJobBudget {
@@ -26,7 +26,7 @@ export interface ShardJobBudget {
   readonly deadlineMs: number;
 }
 
-/** ⚖️ Stand-in for the WIT `capabilities::capability-grant` record — opaque to the shard worker, just
+/** 🔑️ Stand-in for the WIT `capabilities::capability-grant` record — opaque to the shard worker, just
  * forwarded into the guest's `instance-open` event. */
 export interface ShardCapabilityGrant {
   readonly id: string;
@@ -116,7 +116,7 @@ export type ShardAsset = readonly [name: string, bytes: ArrayBuffer];
 
 export type ShardJobStep = { readonly status: "running"; readonly progress?: Uint8Array } | { readonly status: "done"; readonly value: Uint8Array } | { readonly status: "failed"; readonly value: Uint8Array };
 
-/** ⚖️ Stand-in for the generated mirror of Rust `semio_framework_actor::ShardMetrics` (same "not-yet-
+/** 📏️ Stand-in for the generated mirror of Rust `semio_framework_actor::ShardMetrics` (same "not-yet-
  * emitted `🤖️generated/🎭️actor/🟦️.ts`" reason as `ShardBudget` above) — MICROKERNEL-POOLED-ACTOR-PLUGIN-
  * RUNTIME T1. Field-for-field with the Rust struct, camelCased. */
 export interface ShardMetrics {
@@ -125,7 +125,7 @@ export interface ShardMetrics {
   readonly heartbeatAgeMs: number;
 }
 
-/** ⚖️ Stand-in for `semio_framework_actor::ShardMetricsSample` — one row of the `os.runtime.metrics`
+/** 🧫️ Stand-in for `semio_framework_actor::ShardMetricsSample` — one row of the `os.runtime.metrics`
  * publication's shard table, as `ShardClient.shardMetricsSamples` can observe it purely from data this
  * class already owns (`actorIds`/`pendingRequestIds`/heartbeat state) — no wasm `Kernel` call needed. */
 export interface ShardMetricsSample {
@@ -134,7 +134,7 @@ export interface ShardMetricsSample {
 }
 //#endregion 🧬️Types
 
-/** ⚖️ `semio_framework_actor::lane_defaults::budget_for(Lane::Maintenance)` (`🎭️actor/🦀️.rs`,
+/** 🛠️ `semio_framework_actor::lane_defaults::budget_for(Lane::Maintenance)` (`🎭️actor/🦀️.rs`,
  * `lane_defaults` module) — the ONLY floor a granted-less actor may fall back to, mirrored field-for-
  * field/value-for-value: `{ fuel: 80_000_000, wall_ms: 200, memory_bytes: 256 MiB, ui_nodes: 4_000,
  * mailbox_len: 1024, max_effects: 512, max_patch_bytes: 2_097_152 }`. {@link GrantedBudgetTracker}
@@ -142,12 +142,12 @@ export interface ShardMetricsSample {
  * invents its own number — the same floor `ShardLoop::granted_budget` falls back to natively. */
 export const MAINTENANCE_LANE_DEFAULT_BUDGET: ShardBudget = { fuel: 80_000_000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4_000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2_097_152, maxFrames: 8 };
 
-/** ⚖️ Rust `Origin` mirror (`🎭️actor/🦀️.rs`) — who sent a {@link ShardEnvelope}. `window`
+/** 📍️ Rust `Origin` mirror (`🎭️actor/🦀️.rs`) — who sent a {@link ShardEnvelope}. `window`
  * stays a plain `number` (the generated mirror's own `WindowId`), matching this file's existing
  * convention of not importing bigint-carrying generated types across the `postMessage` boundary. */
 export type ShardOrigin = { readonly kind: "ui"; readonly window: number } | { readonly kind: "actor"; readonly id: string } | { readonly kind: "kernel" } | { readonly kind: "bus"; readonly topic: string };
 
-/** 🚧 terra-web-shardframe's own encoding decision (see this ticket's report, `## encoding decision`):
+/** ✉️ terra-web-shardframe's own encoding decision (see this ticket's report, `## encoding decision`):
  * the Rust `Payload` this field would literally mirror is `{"kind":"event", bytes:[...]}` — an opaque
  * PACK-ENCODED blob no TS codec exists to decode yet (this file's header doc). Rather than carry
  * unusable opaque bytes, `payload` stays the interim, ALREADY-DECODED {@link ShardEventEnvelope} shape
@@ -213,7 +213,7 @@ export function orderEnvelopesByLane(envelopes: readonly ShardEnvelope[]): reado
     .map((entry) => entry.envelope);
 }
 
-/** ⚖️ TypeScript twin of `ShardLoop`'s own `granted_budgets: HashMap<u64, Budget>` +
+/** 💲️ TypeScript twin of `ShardLoop`'s own `granted_budgets: HashMap<u64, Budget>` +
  * `granted_budget()` (`🖥️host/🧵️shard/🦀️.rs`) — remembers the LAST `ShardFrame::Grant`
  * budget per actor so a later budget-less `Envelope` frame for the same actor runs under it instead of
  * any caller-cached constant. An actor never granted at all resolves to

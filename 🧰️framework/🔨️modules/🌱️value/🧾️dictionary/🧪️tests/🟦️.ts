@@ -1,7 +1,7 @@
 /** 🧾️ Question dictionaries agree with their independent JSON Schema oracle and round-trip through the native JSON limbs. */
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
-import schema from "../🔣️.json";
+import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import { parseQuestionDictionary } from "../🟦️.ts";
 import { questionDictionaryFromNativeJson, questionDictionaryNativeJson } from "../🪪️native-json/🟦️.ts";

@@ -1,4 +1,4 @@
-/** 📡️ The typed client of the server product over an owned transport, and the websocket root of an http base URL.
+/** 🛍️ The typed client of the server product over an owned transport, and the websocket root of an http base URL.
  *
  * @see ../🟦️.ts — the TypeScript twin of the server product's wire contract
  */
@@ -68,7 +68,7 @@ export class ServerClient {
     return response.bytes();
   }
 
-  /** ❓️ `HEAD /blobs/{hash}` — the cheap half of an upload negotiation. */
+  /** 🔍️ `HEAD /blobs/{hash}` — the cheap half of an upload negotiation. */
   async hasBlob(hash: string): Promise<boolean> {
     const response = await this.transport.send({ method: "HEAD", path: `/blobs/${encodePathSegment(hash)}`, query: {}, headers: this.headers() });
     if (response.status === 200) return true;

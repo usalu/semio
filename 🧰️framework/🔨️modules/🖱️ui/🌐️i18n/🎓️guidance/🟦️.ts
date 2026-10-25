@@ -110,7 +110,7 @@ export const guidanceDe = {
   },
 } satisfies Omit<UiTranslationSchema, "ui">;
 
-/** 🎓️ Settings, tooltip, introduction and tutorial labels (`en`). */
+/** 🧭️ Settings, tooltip, introduction and tutorial labels (`en`). */
 export const guidanceEn = {
   settings: {
     layout: {

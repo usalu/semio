@@ -1,0 +1,381 @@
+# stage-clean orphan staged=audit-fix-tools/staged/capture-port/new/🧰️framework/🔨️modules/⚙️runtime/🎣️capture/🟦️.ts map=None
+--- /dev/null
++++ b/🧰️framework/🔨️modules/⚙️runtime/🎣️capture/🟦️.ts
+@@ -0,0 +1,101 @@
++import { runtimeProgramV1 } from "../🏷️identity/🟦️.ts";
++import { runtimeMessageV1 } from "../🗣️messages/🟦️.ts";
++import { runtimeSpawnSyncV1, runtimeSpawnV1 } from "../🚀️process/🟦️.ts";
++import { constants } from "node:os";
++import type { RuntimeByteStreamV1 } from "../📋️contract/🟦️.ts";
++
++/** 🎣️ How one captured child ended: it exited by itself, ran out of time, was cancelled by its caller, or wrote more than its bound. */
++export type RuntimeCaptureOutcomeV1 = "exited" | "timeout" | "cancelled" | "output-limit";
++/** 🎣️ One stderr line of a running child, delivered while it runs (asynchronous capture) or replayed after it exited (synchronous capture). */
++export interface RuntimeCaptureProgressV1 { readonly line: string; readonly elapsedMilliseconds: number; readonly live: boolean }
++/** 🎣️ One bounded capture request; the first word of `command` is resolved through the runtime program table, so declared data may keep naming the hosting runtime. */
++export interface RuntimeCaptureRequestV1 {
++  readonly command: readonly string[];
++  readonly cwd?: string;
++  readonly env?: Readonly<Record<string, string | undefined>>;
++  readonly stdin?: string | Uint8Array;
++  readonly maxOutputBytes: number;
++  readonly timeoutMilliseconds: number;
++  readonly signal?: AbortSignal;
++  readonly cancelled?: () => boolean;
++  readonly onProgress?: (event: RuntimeCaptureProgressV1) => void;
++}
++/** 🎣️ The complete, bounded result of one capture; text is UTF-8, cut at the byte bound when the child exceeded it. */
++export interface RuntimeCaptureResultV1 { readonly outcome: RuntimeCaptureOutcomeV1; readonly exitCode: number | null; readonly signalCode: string | null; readonly stdout: string; readonly stderr: string; readonly stdoutBytes: number; readonly stderrBytes: number; readonly elapsedMilliseconds: number }
++
++const GRACE_MILLISECONDS = 2000, POLL_MILLISECONDS = 50;
++
++function checked(request: RuntimeCaptureRequestV1): readonly string[] {
++  if (request.command.length === 0 || request.command.some(word => typeof word !== "string")) throw new TypeError(runtimeMessageV1("commandRequired", {}));
++  if (!Number.isSafeInteger(request.maxOutputBytes) || request.maxOutputBytes < 1) throw new RangeError(runtimeMessageV1("captureBoundRequired", { name: "maxOutputBytes" }));
++  if (!Number.isFinite(request.timeoutMilliseconds) || request.timeoutMilliseconds <= 0) throw new RangeError(runtimeMessageV1("captureBoundRequired", { name: "timeoutMilliseconds" }));
++  return [runtimeProgramV1(request.command[0]!), ...request.command.slice(1)];
++}
++
++function refused(request: RuntimeCaptureRequestV1): boolean {
++  return request.signal?.aborted === true || request.cancelled?.() === true;
++}
++
++const signalName = (code: number): string => Object.entries(constants.signals).find(([, number]) => number === code - 128)?.[0] ?? "SIGTERM";
++const text = (chunks: readonly Uint8Array[]): string => new TextDecoder().decode(Buffer.concat(chunks));
++const empty = (outcome: RuntimeCaptureOutcomeV1): RuntimeCaptureResultV1 => ({ outcome, exitCode: null, signalCode: null, stdout: "", stderr: "", stdoutBytes: 0, stderrBytes: 0, elapsedMilliseconds: 0 });
++
++function replay(request: RuntimeCaptureRequestV1, stderr: string, elapsed: number): void {
++  if (request.onProgress === undefined) return;
++  for (const line of stderr.split("\n").slice(0, stderr.endsWith("\n") ? -1 : undefined)) request.onProgress({ line, elapsedMilliseconds: elapsed, live: false });
++}
++
++/** 🎣️ Runs one child to completion and captures stdin, stdout and stderr within explicit bounds, without blocking the caller: the child is stopped (SIGTERM, then SIGKILL after two seconds) when it exceeds its time or output bound, when the caller's signal aborts or its `cancelled` predicate answers true; every stderr line reaches `onProgress` while the child runs. */
++export async function runtimeCaptureV1(request: RuntimeCaptureRequestV1): Promise<RuntimeCaptureResultV1> {
++  const command = checked(request);
++  if (refused(request)) return empty("cancelled");
++  const started = performance.now(), elapsed = (): number => performance.now() - started;
++  const child = runtimeSpawnV1(command, { cwd: request.cwd, env: request.env, stdin: request.stdin ?? "ignore", stdout: "pipe", stderr: "pipe" });
++  let outcome: RuntimeCaptureOutcomeV1 = "exited", killer: ReturnType<typeof setTimeout> | undefined;
++  const stop = (reason: RuntimeCaptureOutcomeV1): void => {
++    if (outcome !== "exited") return;
++    outcome = reason; child.kill("SIGTERM");
++    killer = setTimeout(() => child.kill("SIGKILL"), GRACE_MILLISECONDS);
++  };
++  const timer = setTimeout(() => stop("timeout"), request.timeoutMilliseconds);
++  const poll = request.cancelled === undefined ? undefined : setInterval(() => { if (request.cancelled!()) stop("cancelled"); }, POLL_MILLISECONDS);
++  const onAbort = (): void => stop("cancelled");
++  request.signal?.addEventListener("abort", onAbort, { once: true });
++  const drain = async (stream: RuntimeByteStreamV1, lines: boolean): Promise<{ chunks: Uint8Array[]; bytes: number }> => {
++    const chunks: Uint8Array[] = [], decoder = new TextDecoder();
++    let bytes = 0, remainder = "";
++    for await (const chunk of stream) {
++      const room = request.maxOutputBytes - bytes, kept = chunk.byteLength > room ? chunk.subarray(0, Math.max(0, room)) : chunk;
++      if (kept.byteLength > 0) chunks.push(kept);
++      bytes += chunk.byteLength;
++      if (lines && kept.byteLength > 0) {
++        remainder += decoder.decode(kept, { stream: true });
++        const rows = remainder.split("\n"); remainder = rows.pop() ?? "";
++        for (const line of rows) request.onProgress?.({ line, elapsedMilliseconds: elapsed(), live: true });
++      }
++      if (bytes > request.maxOutputBytes) stop("output-limit");
++    }
++    if (lines && remainder.length > 0) request.onProgress?.({ line: remainder, elapsedMilliseconds: elapsed(), live: true });
++    return { chunks, bytes };
++  };
++  try {
++    const [out, err, exitCode] = await Promise.all([drain(child.stdout, false), drain(child.stderr, true), child.exited]);
++    const signalCode = exitCode > 128 && outcome !== "exited" ? signalName(exitCode) : null;
++    return { outcome, exitCode: signalCode === null ? exitCode : null, signalCode, stdout: text(out.chunks), stderr: text(err.chunks), stdoutBytes: out.bytes, stderrBytes: err.bytes, elapsedMilliseconds: elapsed() };
++  } finally {
++    clearTimeout(timer); if (poll !== undefined) clearInterval(poll); if (killer !== undefined) clearTimeout(killer);
++    request.signal?.removeEventListener("abort", onAbort);
++  }
++}
++
++/** 🎣️ Runs one child to completion and captures its streams within the same explicit bounds, blocking the caller: the time and output bounds are enforced by the child process API, cancellation is honoured before the child starts, and stderr lines are replayed to `onProgress` after it exited. Use it only where the caller cannot yield. */
++export function runtimeCaptureSyncV1(request: RuntimeCaptureRequestV1): RuntimeCaptureResultV1 {
++  const command = checked(request);
++  if (refused(request)) return empty("cancelled");
++  const started = performance.now(), result = runtimeSpawnSyncV1(command, { cwd: request.cwd, env: request.env, stdin: request.stdin ?? "ignore", timeout: request.timeoutMilliseconds, maxBuffer: request.maxOutputBytes }), elapsed = performance.now() - started;
++  const limited = result.stdout.byteLength >= request.maxOutputBytes || result.stderr.byteLength >= request.maxOutputBytes;
++  const outcome: RuntimeCaptureOutcomeV1 = result.signalCode === null ? "exited" : limited ? "output-limit" : elapsed >= request.timeoutMilliseconds ? "timeout" : "exited";
++  const bounded = (bytes: Buffer): string => (bytes.byteLength > request.maxOutputBytes ? bytes.subarray(0, request.maxOutputBytes) : bytes).toString("utf8"), stderr = bounded(result.stderr);
++  replay(request, stderr, elapsed);
++  return { outcome, exitCode: result.exitCode, signalCode: result.signalCode, stdout: bounded(result.stdout), stderr, stdoutBytes: result.stdout.byteLength, stderrBytes: result.stderr.byteLength, elapsedMilliseconds: elapsed };
++}
+# stage-clean orphan staged=audit-fix-tools/staged/capture-port/new/🧰️framework/🔨️modules/⚙️runtime/🧪️tests/🎣️capture/🟦️.ts map=None
+--- /dev/null
++++ b/🧰️framework/🔨️modules/⚙️runtime/🧪️tests/🎣️capture/🟦️.ts
+@@ -0,0 +1,55 @@
++import "../../🟦️.ts";
++import Ajv from "ajv";
++import { spawnSync } from "node:child_process";
++import { runtimeCaptureSyncV1, runtimeCaptureV1, type RuntimeCaptureProgressV1, type RuntimeCaptureRequestV1 } from "../../🎣️capture/🟦️.ts";
++import { describe, expect, test } from "../../🧪️test/🟦️.ts";
++import corpus from "./🧫️cases.json" with { type: "json" };
++
++interface Row { id: string; script: string; stdin?: string; maxOutputBytes: number; timeoutMilliseconds: number; cancelAfterMilliseconds?: number; abortAfterMilliseconds?: number; cancelledBeforeStart?: boolean; asynchronousOnly?: boolean; oracle?: boolean; expect: { outcome: string; exitCode?: number | null; stdout?: string; stderr?: string; progress?: string[]; stdoutAtMost?: number } }
++const rows = corpus.cases as Row[];
++const shape = { type: "object", additionalProperties: false, required: ["version", "cases", "refusals"], properties: { version: { const: 1 }, cases: { type: "array", minItems: 1 }, refusals: { type: "array", minItems: 1 } } };
++const requestOf = (row: Row, extra: Partial<RuntimeCaptureRequestV1> = {}): RuntimeCaptureRequestV1 => ({ command: [process.execPath, "-e", row.script], stdin: row.stdin, maxOutputBytes: row.maxOutputBytes, timeoutMilliseconds: row.timeoutMilliseconds, ...extra });
++
++function check(row: Row, result: Awaited<ReturnType<typeof runtimeCaptureV1>>, progress: RuntimeCaptureProgressV1[]): void {
++  expect(result.outcome).toBe(row.expect.outcome);
++  if (row.expect.exitCode !== undefined) expect(result.exitCode).toBe(row.expect.exitCode);
++  if (row.expect.stdout !== undefined) expect(result.stdout).toBe(row.expect.stdout);
++  if (row.expect.stderr !== undefined) expect(result.stderr).toBe(row.expect.stderr);
++  if (row.expect.stdoutAtMost !== undefined) expect(result.stdout.length <= row.expect.stdoutAtMost).toBe(true);
++  if (row.expect.progress !== undefined) expect(progress.map(event => event.line)).toEqual(row.expect.progress);
++}
++
++describe("runtime capture port", () => {
++  test("the corpus has its closed shape", () => { expect(new Ajv({ strict: false }).validate(shape, corpus)).toBe(true); });
++  for (const row of rows) {
++    test(`asynchronous capture: ${row.id}`, async () => {
++      const progress: RuntimeCaptureProgressV1[] = [], controller = new AbortController(), started = Date.now();
++      const request = requestOf(row, { onProgress: event => { progress.push(event); }, ...(row.abortAfterMilliseconds !== undefined ? { signal: controller.signal } : {}), ...(row.cancelAfterMilliseconds !== undefined ? { cancelled: () => Date.now() - started >= row.cancelAfterMilliseconds! } : {}), ...(row.cancelledBeforeStart ? { cancelled: () => true } : {}) });
++      if (row.abortAfterMilliseconds !== undefined) setTimeout(() => controller.abort(), row.abortAfterMilliseconds);
++      const result = await runtimeCaptureV1(request);
++      check(row, result, progress);
++      if (row.expect.progress !== undefined) expect(progress.every(event => event.live)).toBe(true);
++    });
++    if (row.asynchronousOnly) continue;
++    test(`synchronous capture: ${row.id}`, () => {
++      const progress: RuntimeCaptureProgressV1[] = [];
++      const result = runtimeCaptureSyncV1(requestOf(row, { onProgress: event => { progress.push(event); }, ...(row.cancelledBeforeStart ? { cancelled: () => true } : {}) }));
++      check(row, result, progress);
++      if (row.expect.progress !== undefined) expect(progress.every(event => !event.live)).toBe(true);
++    });
++    if (!row.oracle) continue;
++    test(`oracle node:child_process agrees: ${row.id}`, async () => {
++      const reference = spawnSync(process.execPath, ["-e", row.script], { input: row.stdin, encoding: "utf8" });
++      const sync = runtimeCaptureSyncV1(requestOf(row)), asynchronous = await runtimeCaptureV1(requestOf(row));
++      for (const result of [sync, asynchronous]) { expect(result.exitCode).toBe(reference.status); expect(result.stdout).toBe(reference.stdout); expect(result.stderr).toBe(reference.stderr); }
++    });
++  }
++  for (const row of corpus.refusals) {
++    test(`refuses an unbounded request: ${row.id}`, async () => {
++      const request: RuntimeCaptureRequestV1 = { command: [process.execPath, "-e", "0"], maxOutputBytes: row.maxOutputBytes, timeoutMilliseconds: row.timeoutMilliseconds };
++      expect(() => runtimeCaptureSyncV1(request)).toThrow();
++      let refused = false; try { await runtimeCaptureV1(request); } catch { refused = true; }
++      expect(refused).toBe(true);
++    });
++  }
++});
+# stage-clean orphan staged=audit-fix-tools/staged/capture-port/new/🧰️framework/🔨️modules/⚙️runtime/🧪️tests/🎣️capture/🧫️cases.json map=None
+--- /dev/null
++++ b/🧰️framework/🔨️modules/⚙️runtime/🧪️tests/🎣️capture/🧫️cases.json
+@@ -0,0 +1,17 @@
++{
++  "version": 1,
++  "cases": [
++    { "id": "stdin-round-trip", "script": "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>process.stdout.write(s.toUpperCase()))", "stdin": "hello\n", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "expect": { "outcome": "exited", "exitCode": 0, "stdout": "HELLO\n", "stderr": "" }, "oracle": true },
++    { "id": "stderr-progress-lines", "script": "console.error('a');console.error('b');console.error('c')", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "expect": { "outcome": "exited", "exitCode": 0, "stdout": "", "stderr": "a\nb\nc\n", "progress": ["a", "b", "c"] }, "oracle": true },
++    { "id": "nonzero-exit", "script": "process.stdout.write('x');process.exit(3)", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "expect": { "outcome": "exited", "exitCode": 3, "stdout": "x", "stderr": "" }, "oracle": true },
++    { "id": "time-bound", "script": "setInterval(()=>{},1000)", "maxOutputBytes": 1024, "timeoutMilliseconds": 300, "expect": { "outcome": "timeout" } },
++    { "id": "output-bound", "script": "process.stdout.write('x'.repeat(1048576));setInterval(()=>{},1000)", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "expect": { "outcome": "output-limit", "stdoutAtMost": 1024 } },
++    { "id": "caller-cancels", "script": "setInterval(()=>{},1000)", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "cancelAfterMilliseconds": 200, "asynchronousOnly": true, "expect": { "outcome": "cancelled" } },
++    { "id": "caller-aborts", "script": "setInterval(()=>{},1000)", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "abortAfterMilliseconds": 200, "asynchronousOnly": true, "expect": { "outcome": "cancelled" } },
++    { "id": "cancelled-before-start", "script": "process.stdout.write('never')", "maxOutputBytes": 1024, "timeoutMilliseconds": 10000, "cancelledBeforeStart": true, "expect": { "outcome": "cancelled", "stdout": "", "exitCode": null } }
++  ],
++  "refusals": [
++    { "id": "no-output-bound", "maxOutputBytes": 0, "timeoutMilliseconds": 1000 },
++    { "id": "no-time-bound", "maxOutputBytes": 1024, "timeoutMilliseconds": 0 }
++  ]
++}
+# stage-clean orphan staged=audit-fix-tools/staged/probe.ts map=None
+--- /dev/null
++++ b/staged/audit-fix-tools/staged/probe.ts
+@@ -0,0 +1,41 @@
++import { execFileSync } from "node:child_process";
++import { createHash } from "node:crypto";
++import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
++import { dirname, join } from "node:path";
++import { createIssuedResourceControlV1, createScriptProcessEnvelope, withScriptProcessEnvelope } from "@semio-tech/process/routing";
++
++const REPO = process.env.AUDIT_FIX_REPO ?? "/Users/ueli/Documents/semio";
++const OVERLAY = process.env.AUDIT_FIX_OVERLAY ?? "/private/tmp/audit-fix/overlay";
++const INF = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference";
++const argv = process.argv.slice(2), option = (name: string): string | undefined => { const at = argv.indexOf(name); return at < 0 ? undefined : argv[at + 1]; };
++const roots = (option("--roots") ?? "").split(",").filter(Boolean), out = option("--out"), limit = Number(option("--limit") ?? "0"), manifests = option("--manifests"), swept = option("--swept");
++if (roots.length === 0 || out === undefined) throw new Error("refused: --roots (explicit root list) and --out are required");
++const listed = roots.flatMap(root => execFileSync("git", ["-C", REPO, "ls-files", "-z", "--", ...(root === "." ? [":(top)📋️project.json"] : [`${root}/**/📋️project.json`, `${root}/📋️project.json`])], { encoding: "utf8", maxBuffer: 1 << 28 }).split("\0").filter(Boolean));
++const files = [...new Set(listed)].sort();
++if (files.length === 0) throw new Error("refused: empty scope");
++const offset = Number(option("--offset") ?? "0"), selected = manifests !== undefined ? JSON.parse(readFileSync(manifests, "utf8")) as string[] : limit > 0 ? files.slice(offset, offset + limit) : files.slice(offset);
++const plugin = await import(`${REPO}/${INF}/🟨️.mjs`);
++await plugin.libraryBootstrap;
++const live = async (name: string) => import(`${REPO}/${INF}/${name}/🟨️.mjs`);
++const registry = { bootstrap: await live("🔁️bootstrap"), nativeManifests: await live("🦀️native-manifests"), coordinates: await live("📍️coordinates"), sourceAnalyses: await live("🧬️source-analyses"), scriptInputs: await live("🧭️script-inputs"), generatorOutputs: await live("🏭️generator-outputs"), targetPolicy: await live("🎯️target-policy"), componentTargets: await live("🧩️component-targets") };
++const taxonomy = join(REPO, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
++const contracts = existsSync(taxonomy) ? registry.sourceAnalyses.readTaxonomyProjectionV1(taxonomy).generatorContracts : {};
++const assembly = await import(`${OVERLAY}/${INF}/🧱️project-assembly/🟨️.mjs`);
++assembly.wire(registry);
++(registry.bootstrap as any).loaded.cargoLockInput = (manifest: string, workspaceRoot: string) => `{workspaceRoot}/${manifest}.lock-probe`;
++const rows: unknown[] = [], failures: { path: string; error: string }[] = [];
++await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "audit-fix-probe", maximumElapsedMilliseconds: 3_600_000 }, {}, Date.now()), async invocation => {
++  const control = createIssuedResourceControlV1(invocation, "graph:project-source", 0);
++  const scripts = plugin.createScriptInputCache({ workspaceRoot: REPO, invocation, phaseControl: control });
++  for (const path of selected) {
++    const text = readFileSync(swept !== undefined && existsSync(join(swept, path)) ? join(swept, path) : join(REPO, path), "utf8"), json = JSON.parse(text), root = json.root ?? dirname(path);
++    (globalThis as any).__execClass = []; (globalThis as any).__classifyOnly = true;
++    try {
++      const project = await assembly.projectWithDefaults(json, root, join(REPO, root), REPO, contracts, new Map(), undefined, scripts, undefined, "source");
++      rows.push({ path, sha256: createHash("sha256").update(readFileSync(join(REPO, path))).digest("hex"), name: json.name, classes: (globalThis as any).__execClass, output: createHash("sha256").update(JSON.stringify(project, (key, value) => key === "execution" && value?.version === 1 && typeof value?.kind === "string" ? undefined : value)).digest("hex") });
++    } catch (error) { failures.push({ path, error: String((error as Error)?.stack ?? error).slice(0, 1800) }); }
++  }
++});
++mkdirSync(dirname(out), { recursive: true });
++writeFileSync(out, JSON.stringify({ roots, total: files.length, offset, count: selected.length, rows, failures }, null, 1));
++console.log(JSON.stringify({ projects: selected.length, rows: rows.length, failures: failures.length }));
+# stage-clean orphan staged=audit-fix-tools/staged/sweep.ts map=None
+--- /dev/null
++++ b/staged/audit-fix-tools/staged/sweep.ts
+@@ -0,0 +1,124 @@
++import { createHash } from "node:crypto";
++import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
++import { dirname, join } from "node:path";
++
++/** Declares `metadata.semio.execution` on every authored command target of the explicit roots from the probe table of the OLD classification rule. Fails closed: explicit roots, empty scope refused, dry run by default, per-manifest sha256 drift refusal, anchored span edits, structural proof after every edit. */
++const REPO = process.env.AUDIT_FIX_REPO ?? "/Users/ueli/Documents/semio";
++const argv = process.argv.slice(2), flag = (name: string): boolean => argv.includes(name), option = (name: string): string | undefined => { const at = argv.indexOf(name); return at < 0 ? undefined : argv[at + 1]; };
++const roots = (option("--roots") ?? "").split(",").filter(Boolean), probeDirectory = option("--probe"), write = flag("--write"), overlayDirectory = option("--overlay"), listPath = option("--list");
++if (roots.length === 0 || probeDirectory === undefined) throw new Error("refused: --roots (explicit list) and --probe (directory of probe tables) are required");
++if (write && overlayDirectory !== undefined) throw new Error("refused: --write and --overlay are exclusive");
++
++interface Node { readonly kind: "object" | "array" | "scalar"; readonly start: number; readonly end: number; readonly members: readonly Member[] }
++interface Member { readonly key: string; readonly keyStart: number; readonly value: Node }
++function parse(text: string): Node {
++  let at = 0;
++  const skip = (): void => { while (at < text.length && /\s/u.test(text[at]!)) at++; };
++  const string = (): string => { const start = at; at++; while (text[at] !== "\"") { if (text[at] === "\\") at++; at++; } at++; return JSON.parse(text.slice(start, at)) as string; };
++  const value = (): Node => {
++    skip(); const start = at, c = text[at];
++    if (c === "{") {
++      at++; const members: Member[] = []; skip();
++      if (text[at] === "}") { at++; return { kind: "object", start, end: at, members }; }
++      for (;;) { skip(); const keyStart = at, key = string(); skip(); at++; const node = value(); members.push({ key, keyStart, value: node }); skip(); if (text[at] === ",") { at++; continue; } at++; break; }
++      return { kind: "object", start, end: at, members };
++    }
++    if (c === "[") { at++; skip(); if (text[at] === "]") { at++; return { kind: "array", start, end: at, members: [] }; } for (;;) { value(); skip(); if (text[at] === ",") { at++; continue; } at++; break; } return { kind: "array", start, end: at, members: [] }; }
++    if (c === "\"") { string(); return { kind: "scalar", start, end: at, members: [] }; }
++    while (at < text.length && !/[,\]}\s]/u.test(text[at]!)) at++;
++    return { kind: "scalar", start, end: at, members: [] };
++  };
++  const root = value(); skip();
++  if (at !== text.length) throw new Error("trailing bytes");
++  return root;
++}
++
++interface Declaration { readonly kind: "native" | "source" | "orchestration"; readonly scope?: "production" | "test"; readonly preparation?: "none" | "production" | "test" }
++const render = (declaration: Declaration): string => `{ "version": 1, "kind": "${declaration.kind}"${declaration.scope === undefined ? "" : `, "scope": "${declaration.scope}"`}${declaration.preparation === undefined ? "" : `, "preparation": "${declaration.preparation}"`} }`;
++/** Mirror of the preparation gate of the native-manifests component for a target without a declaration: its own name rules, kept only to record the CURRENT behaviour once. */
++const PREPARED = /^(?:build|check|lint|test|wasm|native|component|describe|extension-package|package|font-tool|bench)(?:-|$)/u, TESTING = /^(?:test|bench)(?:-|$)/u;
++const member = (node: Node, key: string): Member | undefined => node.members.find(row => row.key === key);
++function indentOf(text: string, offset: number): string { const line = text.lastIndexOf("\n", offset - 1) + 1; return /^[ \t]*/u.exec(text.slice(line, offset))![0]; }
++function unit(text: string, node: Node): string | undefined { const first = node.members[0]; if (first === undefined) return undefined; const inner = indentOf(text, first.keyStart), outer = indentOf(text, node.start); return text.slice(0, node.start).lastIndexOf("\n") < 0 || text.slice(node.start, first.keyStart).indexOf("\n") < 0 ? undefined : inner.startsWith(outer) ? inner.slice(outer.length) || "  " : "  "; }
++
++/** 🧱️ One anchored insertion: `{ at, text }` in original coordinates. */
++function insertionFor(text: string, target: Node, declaration: Declaration): { at: number; text: string } {
++  const metadata = member(target, "metadata"), semio = metadata === undefined || metadata.value.kind !== "object" ? undefined : member(metadata.value, "semio");
++  const inline = unit(text, target) === undefined;
++  const step = unit(text, target) ?? "";
++  if (semio !== undefined && semio.value.kind === "object") {
++    const node = semio.value, first = node.members[0];
++    if (first === undefined) return { at: node.start + 1, text: ` "execution": ${render(declaration)} ` };
++    const pad = unit(text, node) === undefined ? " " : "\n" + indentOf(text, first.keyStart);
++    return { at: first.keyStart, text: `"execution": ${render(declaration)},${pad}` };
++  }
++  if (metadata !== undefined && metadata.value.kind === "object") {
++    const node = metadata.value, first = node.members[0];
++    if (first === undefined) return { at: node.start + 1, text: ` "semio": { "execution": ${render(declaration)} } ` };
++    const inner = indentOf(text, first.keyStart), nested = unit(text, node) === undefined;
++    return { at: first.keyStart, text: nested ? `"semio": { "execution": ${render(declaration)} }, ` : `"semio": {\n${inner}${step || "  "}"execution": ${render(declaration)}\n${inner}},\n${inner}` };
++  }
++  const last = target.members.at(-1);
++  if (last === undefined) return { at: target.start + 1, text: ` "metadata": { "semio": { "execution": ${render(declaration)} } } ` };
++  const inner = indentOf(text, last.keyStart), end = last.value.end;
++  if (inline) return { at: end, text: `, "metadata": { "semio": { "execution": ${render(declaration)} } }` };
++  const stepped = step || "  ";
++  return { at: end, text: `,\n${inner}"metadata": {\n${inner}${stepped}"semio": {\n${inner}${stepped}${stepped}"execution": ${render(declaration)}\n${inner}${stepped}}\n${inner}}` };
++}
++
++interface ProbeRow { path: string; sha256: string; name: string; classes: [string, string, boolean, boolean, string | null, boolean, boolean, boolean, boolean, string | null, boolean | null, boolean, boolean][] }
++const rows: ProbeRow[] = readdirSync(probeDirectory).filter(name => /^old-\d+\.json$/u.test(name)).sort().flatMap(name => (JSON.parse(readFileSync(join(probeDirectory, name), "utf8")) as { rows: ProbeRow[] }).rows);
++if (rows.length === 0) throw new Error("refused: empty probe table");
++const inScope = (path: string): boolean => roots.some(root => root === "." ? !path.includes("/") : path.startsWith(root + "/"));
++const scoped = rows.filter(row => inScope(row.path));
++if (scoped.length === 0) throw new Error("refused: empty scope");
++const changed: { path: string; added: number; names: string[] }[] = [], refused: { path: string; reason: string }[] = [];
++const target = overlayDirectory;
++for (const row of scoped.sort((left, right) => left.path.localeCompare(right.path))) {
++  const absolute = join(REPO, row.path);
++  const original = readFileSync(absolute, "utf8");
++  if (createHash("sha256").update(readFileSync(absolute)).digest("hex") !== row.sha256) { refused.push({ path: row.path, reason: "manifest drifted since the probe" }); continue; }
++  const wanted = new Map<string, Declaration>();
++  for (const [, name, , native, declared, orchestrator, command, authored, , , runsTests, nativePackage, generator] of row.classes) {
++    if (!authored || declared !== null || !command) continue;
++    if (!native) { wanted.set(name, orchestrator ? { kind: "orchestration" } : { kind: "source" }); continue; }
++    const scope = runsTests === true ? "test" : "production", prepared = nativePackage && !generator && PREPARED.test(name), preparedTests = TESTING.test(name);
++    const preparation = !nativePackage || generator ? undefined : !prepared ? "none" : preparedTests !== (scope === "test") ? (preparedTests ? "test" : "production") : undefined;
++    wanted.set(name, { kind: "native", scope, ...(preparation === undefined ? {} : { preparation }) });
++  }
++  if (wanted.size === 0) continue;
++  let root: Node, targets: Member | undefined;
++  try { root = parse(original); targets = member(root, "targets"); } catch (error) { refused.push({ path: row.path, reason: "unparseable: " + (error as Error).message }); continue; }
++  if (targets === undefined || targets.value.kind !== "object") { refused.push({ path: row.path, reason: "no targets object although the probe saw authored targets" }); continue; }
++  const edits: { at: number; text: string }[] = [], names: string[] = [];
++  for (const [name, declaration] of wanted) {
++    const entry = member(targets.value, name);
++    if (entry === undefined || entry.value.kind !== "object") { refused.push({ path: row.path, reason: `target ${name} not found as an object` }); edits.length = 0; names.length = 0; break; }
++    edits.push(insertionFor(original, entry.value, declaration)); names.push(name);
++  }
++  if (edits.length !== wanted.size) continue;
++  let result = original;
++  for (const edit of edits.sort((left, right) => right.at - left.at)) result = result.slice(0, edit.at) + edit.text + result.slice(edit.at);
++  try {
++    const before = JSON.parse(original) as { targets: Record<string, any> }, after = JSON.parse(result) as { targets: Record<string, any> };
++    for (const [name, declaration] of wanted) {
++      const added = after.targets[name]?.metadata?.semio?.execution;
++      if (JSON.stringify(added) !== JSON.stringify({ version: 1, kind: declaration.kind, ...(declaration.scope === undefined ? {} : { scope: declaration.scope }), ...(declaration.preparation === undefined ? {} : { preparation: declaration.preparation }) })) throw new Error(`declaration of ${name} not as planned`);
++      delete after.targets[name].metadata.semio.execution;
++      if (Object.keys(after.targets[name].metadata.semio).length === 0) delete after.targets[name].metadata.semio;
++      if (Object.keys(after.targets[name].metadata).length === 0) delete after.targets[name].metadata;
++    }
++    if (JSON.stringify(before) !== JSON.stringify(after)) throw new Error("edit changed more than the declarations");
++  } catch (error) { refused.push({ path: row.path, reason: "structural proof failed: " + (error as Error).message }); continue; }
++  changed.push({ path: row.path, added: wanted.size, names });
++  if (write || target !== undefined) {
++    const destination = write ? absolute : join(target!, row.path);
++    if (write) { const backup = join("/private/tmp/audit-fix/backup", row.path); mkdirSync(dirname(backup), { recursive: true }); if (!existsSync(backup)) copyFileSync(absolute, backup); } else mkdirSync(dirname(destination), { recursive: true });
++    writeFileSync(destination, result);
++  }
++}
++const summary = { mode: write ? "write" : target !== undefined ? "overlay" : "dry-run", roots, manifests: scoped.length, changed: changed.length, declarations: changed.reduce((sum, row) => sum + row.added, 0), refused: refused.length };
++if (listPath !== undefined) writeFileSync(listPath, JSON.stringify({ summary, changed, refused }, null, 1));
++console.log(JSON.stringify(summary));
++for (const row of refused.slice(0, 20)) console.log("refused", row.path, row.reason);
++if (refused.length > 0) process.exitCode = 1;
+# stage-clean orphan staged=audit-fix-tools/staged/validate-swept.ts map=None
+--- /dev/null
++++ b/staged/audit-fix-tools/staged/validate-swept.ts
+@@ -0,0 +1,19 @@
++import Ajv from "ajv";
++import { existsSync, readFileSync, readdirSync } from "node:fs";
++import { join } from "node:path";
++
++/** Validates every probed manifest (swept copy when the sweep changed it, live file otherwise) against the patched project schema. usage: bun validate-swept.ts <patched-schema> <probe-dir> <sweep-overlay> */
++const REPO = process.env.AUDIT_FIX_REPO ?? "/Users/ueli/Documents/semio";
++const [schemaPath, probeDirectory, sweptDirectory] = process.argv.slice(2);
++if (!schemaPath || !probeDirectory || !sweptDirectory) throw new Error("refused: schema, probe directory and sweep overlay required");
++const ajv = new Ajv({ strict: false, allErrors: false });
++const validate = ajv.compile(JSON.parse(readFileSync(schemaPath, "utf8")));
++const paths = readdirSync(probeDirectory).filter(name => /^old-\d+\.json$/u.test(name)).flatMap(name => (JSON.parse(readFileSync(join(probeDirectory, name), "utf8")) as { rows: { path: string }[] }).rows.map(row => row.path));
++if (paths.length === 0) throw new Error("refused: empty probe table");
++let invalid = 0;
++for (const path of paths) {
++  const swept = join(sweptDirectory, path), file = existsSync(swept) ? swept : join(REPO, path);
++  if (!validate(JSON.parse(readFileSync(file, "utf8")))) { invalid++; if (invalid <= 15) console.log("invalid", path, JSON.stringify(validate.errors?.[0]).slice(0, 220)); }
++}
++console.log(JSON.stringify({ manifests: paths.length, invalid }));
++if (invalid > 0) process.exitCode = 1;

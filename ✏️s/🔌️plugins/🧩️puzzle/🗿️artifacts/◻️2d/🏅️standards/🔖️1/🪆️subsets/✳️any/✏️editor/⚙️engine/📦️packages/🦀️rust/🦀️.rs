@@ -21,7 +21,9 @@ pub mod editor {
             }
             #[path = "."]
             pub mod layout {
-                pub use semio_s_artifact_puzzle_2d_graph_manifest::editor::puzzle2d::engine::layout::*;
+                #[path = "../../📐️layout/🦀️.rs"]
+                mod component;
+                pub use component::*;
                 #[cfg(test)]
                 #[path="../../📐️layout/🧪️tests/🔬️unit/🦀️.rs"]
                 pub mod tests;

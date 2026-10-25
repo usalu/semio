@@ -1,6 +1,7 @@
 //! 🛫️ Native-output laws every stdio SQLite snapshot owner is held to: exact ordinary bytes with cumulative admission, real interior cancellation, and the independent engine preceding late schema-copy cancellation.
-use semio_framework_os_kernel::pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_framework_os_kernel::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use pack::snapshot::{ArtifactDsl,ArtifactPack};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
 pub fn assert_output<T:ArtifactDsl+ArtifactPack+ArtifactSqliteSnapshotHost>(snapshot:&T,semantic_value_bytes:usize){
  assert!(semantic_value_bytes>0);
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let actual=crate::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();let expected=match encoding{SnapshotEncoding::Binary=>semio_framework_os_kernel::io::IoPayload::Binary(snapshot.encode_pack()),SnapshotEncoding::Text=>semio_framework_os_kernel::io::IoPayload::Text(snapshot.print_dsl())};assert!(actual==expected,"controlled native wire differs");let count=match &actual{semio_framework_os_kernel::io::IoPayload::Binary(bytes)=>bytes.len(),semio_framework_os_kernel::io::IoPayload::Text(text)=>text.len()};assert!(count>65536);

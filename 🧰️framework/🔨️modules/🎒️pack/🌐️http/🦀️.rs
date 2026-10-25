@@ -141,7 +141,7 @@ impl<T: RangeTransport> InnerSource<T> {
         match error{PackError::Refusal(semio_framework_pack_error::PackRefusal::Io{retry,..})=>*retry==PackRetryDisposition::Transient,PackError::TransportFailure(error)=>error.retry()==PackRetryDisposition::Transient,_=>false}
     }
 
-    /// ⏱️ The backoff delay before retry attempt `attempt` (0-indexed), doubling from
+    /// 🗂️ The backoff delay before retry attempt `attempt` (0-indexed), doubling from
     /// `initial_backoff` and capped at `max_backoff`.
     async fn backoff_for(&self, attempt: u32) -> Duration {
         let scale = 1u64.checked_shl(attempt).unwrap_or(u64::MAX);
@@ -212,7 +212,7 @@ impl<T: RangeTransport> HttpPackSource<T> {
         Self::with_retry_policy(url, transport, RetryPolicy::default(), runtime)
     }
 
-    /// 🆕️ As `new`, but with an explicit `RetryPolicy`.
+    /// 🔄️ As `new`, but with an explicit `RetryPolicy`.
     pub fn with_retry_policy(url: String, transport: T, retry_policy: RetryPolicy, runtime: RetryRuntime) -> Self {
         let shared = Arc::new(SharedState::new());
         let inner = InnerSource { url, transport, retry_policy, shared: shared.clone(), runtime };

@@ -1,923 +1,1094 @@
 {
- "version": 1,
- "classes": {
-  "bounded": "jobserver-codegen",
-  "exclusive": "whole-host-backend"
- },
- "profiles": [
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": null,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": null,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": null,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": null,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 1,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 1,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 1,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 1,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 2,
-    "lto": "false"
-   },
-   "resourceClass": "jobserver-codegen",
-   "request": {
-    "kind": "available",
-    "maximumParallelism": 2
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 2,
-    "lto": "off"
-   },
-   "resourceClass": "jobserver-codegen",
-   "request": {
-    "kind": "available",
-    "maximumParallelism": 2
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 2,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 2,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 3,
-    "lto": "false"
-   },
-   "resourceClass": "jobserver-codegen",
-   "request": {
-    "kind": "available",
-    "maximumParallelism": 3
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 3,
-    "lto": "off"
-   },
-   "resourceClass": "jobserver-codegen",
-   "request": {
-    "kind": "available",
-    "maximumParallelism": 3
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 3,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 3,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 16,
-    "lto": "false"
-   },
-   "resourceClass": "jobserver-codegen",
-   "request": {
-    "kind": "available",
-    "maximumParallelism": 16
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 16,
-    "lto": "off"
-   },
-   "resourceClass": "jobserver-codegen",
-   "request": {
-    "kind": "available",
-    "maximumParallelism": 16
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 16,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 16,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 256,
-    "lto": "false"
-   },
-   "resourceClass": "jobserver-codegen",
-   "request": {
-    "kind": "available",
-    "maximumParallelism": 256
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 256,
-    "lto": "off"
-   },
-   "resourceClass": "jobserver-codegen",
-   "request": {
-    "kind": "available",
-    "maximumParallelism": 256
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 256,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 256,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": null,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": null,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": null,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": null,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 1,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 1,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 1,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 1,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 2,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 2,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 2,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 2,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 3,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 3,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 3,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 3,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 16,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 16,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 16,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 16,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 256,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 256,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 256,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "cranelift",
-    "codegen_units": 256,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": null,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": null,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": null,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": null,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 1,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 1,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 1,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 1,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 2,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 2,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 2,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 2,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 3,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 3,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 3,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 3,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 16,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 16,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 16,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 16,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 256,
-    "lto": "false"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 256,
-    "lto": "off"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 256,
-    "lto": "thin"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": "gcc",
-    "codegen_units": 256,
-    "lto": "fat"
-   },
-   "resourceClass": "whole-host-backend",
-   "request": {
-    "kind": "whole-host"
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 2,
-    "lto": "off",
-    "opt_level": 3,
-    "debug": false
-   },
-   "resourceClass": "jobserver-codegen",
-   "request": {
-    "kind": "available",
-    "maximumParallelism": 2
-   }
-  },
-  {
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 9007199254740991,
-    "lto": "off"
-   },
-   "resourceClass": "jobserver-codegen",
-   "request": {
-    "kind": "available",
-    "maximumParallelism": 9007199254740991
-   }
-  }
- ],
- "refused": [
-  {
-   "name": "zero codegen units",
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 0,
-    "lto": "off"
-   }
-  },
-  {
-   "name": "negative codegen units",
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": -1,
-    "lto": "off"
-   }
-  },
-  {
-   "name": "fractional codegen units",
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 1.5,
-    "lto": "off"
-   }
-  },
-  {
-   "name": "textual codegen units",
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": "2",
-    "lto": "off"
-   }
-  },
-  {
-   "name": "codegen units above the safe integer range",
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 9007199254740992,
-    "lto": "off"
-   }
-  },
-  {
-   "name": "an unknown lto mode",
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 2,
-    "lto": "yes"
-   }
-  },
-  {
-   "name": "a boolean lto",
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 2,
-    "lto": false
-   }
-  },
-  {
-   "name": "an empty backend name",
-   "profile": {
-    "codegen_backend": "",
-    "codegen_units": 2,
-    "lto": "off"
-   }
-  },
-  {
-   "name": "a missing backend",
-   "profile": {
-    "codegen_units": 2,
-    "lto": "off"
-   }
-  },
-  {
-   "name": "a missing lto",
-   "profile": {
-    "codegen_backend": null,
-    "codegen_units": 2
-   }
-  },
-  {
-   "name": "a numeric backend",
-   "profile": {
-    "codegen_backend": 1,
-    "codegen_units": 2,
-    "lto": "off"
-   }
-  }
- ]
+  "version": 1,
+  "cores": 10,
+  "classes": {
+    "bounded": "jobserver-codegen",
+    "exclusive": "counted-units"
+  },
+  "profiles": [
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": null,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": null,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": null,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": null,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 1,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 1,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 1,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 1,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 2,
+        "lto": "false"
+      },
+      "resourceClass": "jobserver-codegen",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 2,
+        "minimumParallelism": 1
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 2,
+        "lto": "off"
+      },
+      "resourceClass": "jobserver-codegen",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 2,
+        "minimumParallelism": 1
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 2,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 2,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 3,
+        "lto": "false"
+      },
+      "resourceClass": "jobserver-codegen",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 3,
+        "minimumParallelism": 2
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 3,
+        "lto": "off"
+      },
+      "resourceClass": "jobserver-codegen",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 3,
+        "minimumParallelism": 2
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 3,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 3,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 16,
+        "lto": "false"
+      },
+      "resourceClass": "jobserver-codegen",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 16,
+        "lto": "off"
+      },
+      "resourceClass": "jobserver-codegen",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 16,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 16,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 256,
+        "lto": "false"
+      },
+      "resourceClass": "jobserver-codegen",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 256,
+        "lto": "off"
+      },
+      "resourceClass": "jobserver-codegen",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 256,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 256,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": null,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": null,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": null,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": null,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 1,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 1,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 1,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 1,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 2,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 2,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 2,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 2,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 3,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 3,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 3,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 3,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 16,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 16,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 16,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 16,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 256,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 256,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 256,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "cranelift",
+        "codegen_units": 256,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": null,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": null,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": null,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": null,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 1,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 1,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 1,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 1,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 2,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 2,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 2,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 2,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 3,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 3,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 3,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 3,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 16,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 16,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 16,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 16,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 256,
+        "lto": "false"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 256,
+        "lto": "off"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 256,
+        "lto": "thin"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": "gcc",
+        "codegen_units": 256,
+        "lto": "fat"
+      },
+      "resourceClass": "counted-units",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 2,
+        "lto": "off",
+        "opt_level": 3,
+        "debug": false
+      },
+      "resourceClass": "jobserver-codegen",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 2,
+        "minimumParallelism": 1
+      }
+    },
+    {
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 9007199254740991,
+        "lto": "off"
+      },
+      "resourceClass": "jobserver-codegen",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 5,
+        "minimumParallelism": 3
+      }
+    }
+  ],
+  "refused": [
+    {
+      "name": "zero codegen units",
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 0,
+        "lto": "off"
+      }
+    },
+    {
+      "name": "negative codegen units",
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": -1,
+        "lto": "off"
+      }
+    },
+    {
+      "name": "fractional codegen units",
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 1.5,
+        "lto": "off"
+      }
+    },
+    {
+      "name": "textual codegen units",
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": "2",
+        "lto": "off"
+      }
+    },
+    {
+      "name": "codegen units above the safe integer range",
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 9007199254740992,
+        "lto": "off"
+      }
+    },
+    {
+      "name": "an unknown lto mode",
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 2,
+        "lto": "yes"
+      }
+    },
+    {
+      "name": "a boolean lto",
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 2,
+        "lto": false
+      }
+    },
+    {
+      "name": "an empty backend name",
+      "profile": {
+        "codegen_backend": "",
+        "codegen_units": 2,
+        "lto": "off"
+      }
+    },
+    {
+      "name": "a missing backend",
+      "profile": {
+        "codegen_units": 2,
+        "lto": "off"
+      }
+    },
+    {
+      "name": "a missing lto",
+      "profile": {
+        "codegen_backend": null,
+        "codegen_units": 2
+      }
+    },
+    {
+      "name": "a numeric backend",
+      "profile": {
+        "codegen_backend": 1,
+        "codegen_units": 2,
+        "lto": "off"
+      }
+    }
+  ],
+  "shares": [
+    {
+      "cores": 1,
+      "preferred": 1,
+      "minimum": 1
+    },
+    {
+      "cores": 2,
+      "preferred": 1,
+      "minimum": 1
+    },
+    {
+      "cores": 3,
+      "preferred": 1,
+      "minimum": 1
+    },
+    {
+      "cores": 4,
+      "preferred": 2,
+      "minimum": 1
+    },
+    {
+      "cores": 10,
+      "preferred": 5,
+      "minimum": 3
+    },
+    {
+      "cores": 64,
+      "preferred": 32,
+      "minimum": 16
+    }
+  ]
 }

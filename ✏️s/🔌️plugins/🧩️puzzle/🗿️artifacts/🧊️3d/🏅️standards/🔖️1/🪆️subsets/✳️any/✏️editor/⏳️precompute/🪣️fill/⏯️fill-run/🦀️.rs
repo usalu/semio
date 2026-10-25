@@ -62,17 +62,15 @@ pub struct FillRunPlacement {
     pub attraction: AttractionProps,
 }
 
-impl FillRunStage {
-    /// 🧭️ The run stage a planner stage belongs to.
-    fn of(stage: FillJobStage) -> Option<Self> {
-        match stage {
-            FillJobStage::RetractTail => Some(Self::Retract),
-            FillJobStage::PrepareScene | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => Some(Self::Prepare),
-            FillJobStage::PrepareTargets | FillJobStage::SelectTarget | FillJobStage::PrepareCandidates | FillJobStage::SelectCandidate => Some(Self::Search),
-            FillJobStage::ConstructPreview | FillJobStage::QueryBroadPhase | FillJobStage::TestCollision => Some(Self::Test),
-            FillJobStage::AcceptCandidate => Some(Self::Lock),
-            FillJobStage::Complete(_) => None,
-        }
+/// 🧭️ The run stage a planner stage belongs to.
+fn fill_run_stage_of(stage: FillJobStage) -> Option<FillRunStage> {
+    match stage {
+        FillJobStage::RetractTail => Some(FillRunStage::Retract),
+        FillJobStage::PrepareScene | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => Some(FillRunStage::Prepare),
+        FillJobStage::PrepareTargets | FillJobStage::SelectTarget | FillJobStage::PrepareCandidates | FillJobStage::SelectCandidate => Some(FillRunStage::Search),
+        FillJobStage::ConstructPreview | FillJobStage::QueryBroadPhase | FillJobStage::TestCollision => Some(FillRunStage::Test),
+        FillJobStage::AcceptCandidate => Some(FillRunStage::Lock),
+        FillJobStage::Complete(_) => None,
     }
 }
 
@@ -495,7 +493,7 @@ impl FillRunJob {
             }
         }
         self.events = events;
-        if let Some(stage) = FillRunStage::of(self.builder.stage) {
+        if let Some(stage) = fill_run_stage_of(self.builder.stage) {
             self.stage = stage;
         }
         Ok(accepted)

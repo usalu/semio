@@ -1,5 +1,5 @@
 import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
-/** 🌈️ Adapter for `theme-palettes`: the colour kernel every family reads its hues from.
+/** 🔌️ Adapter for `theme-palettes`: the colour kernel every family reads its hues from.
  *
  * Subject: `semio-viz-theme`, probed through `semio-viz-probe`.
  * Oracles: `d3-scale`'s ordinal scale for the palette wrap, `d3-interpolate`'s `piecewise` over
@@ -50,13 +50,13 @@ async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjecti
   return { projection: probeProjection(records, ctx.scenario.id) };
 }
 
-/** 🔮️ One ordinal scale over the declared range, read at every slot the fixture probes. */
+/** 🔁️ One ordinal scale over the declared range, read at every slot the fixture probes. */
 function wrapped(range: readonly string[], count: number): string[] {
   const scale = scaleOrdinal<number, string>().domain(range.map((_, index) => index)).range([...range]);
   return slots(count).map((index) => bar(scale(index % range.length)));
 }
 
-/** 🔮️ `d3-interpolate`'s piecewise ramp over the declared stops, in the given colour space. */
+/** ⏹️ `d3-interpolate`'s piecewise ramp over the declared stops, in the given colour space. */
 function ramp(space: (a: string, b: string) => (t: number) => string, stops: readonly string[], positions: readonly number[]): string[] {
   const interpolator = piecewise(space, stops.map((stop) => `#${stop}`));
   return positions.map((position) => bar(rgb(interpolator(position)).formatHex()));
@@ -79,17 +79,17 @@ export default defineTestAdapter({
         }
         return { projection };
       },
-      /** 🎯️ The colour name `semio-viz-theme` answers for each of those slots. */
+      /** 🏷️ The colour name `semio-viz-theme` answers for each of those slots. */
       subject: async (ctx: AdapterContext) => await subject(ctx),
     },
     "pattern-wrap": {
-      /** 🔮️ The same ordinal wrap over the grayscale theme's hatch set. */
+      /** 🔢️ The same ordinal wrap over the grayscale theme's hatch set. */
       oracle: (ctx: AdapterContext) => ({ projection: { "pattern/hatch": wrapped(list(rows(ctx)[0]!.patterns!), 17) } }),
-      /** 🎯️ The hatch `semio-viz-theme` answers for each of those slots. */
+      /** 🖍️ The hatch `semio-viz-theme` answers for each of those slots. */
       subject: async (ctx: AdapterContext) => await subject(ctx),
     },
     "scheme-stops": {
-      /** 🔮️ Every declared stop as d3-color reads and re-formats it. */
+      /** 📖️ Every declared stop as d3-color reads and re-formats it. */
       oracle: (ctx: AdapterContext) => {
         const projection: Record<string, readonly (number | string)[]> = {};
         for (const row of rows(ctx)) {
@@ -99,11 +99,11 @@ export default defineTestAdapter({
         }
         return { projection };
       },
-      /** 🎯️ The stop lists `semio-viz-theme` reports for both appearances. */
+      /** 🛑️ The stop lists `semio-viz-theme` reports for both appearances. */
       subject: async (ctx: AdapterContext) => await subject(ctx),
     },
     "scheme-ramp-lab": {
-      /** 🔮️ d3-interpolate's piecewise ramp over the same stops, in d3-color's CIE Lab. */
+      /** 🧪️ d3-interpolate's piecewise ramp over the same stops, in d3-color's CIE Lab. */
       oracle: (ctx: AdapterContext) => {
         const projection: Record<string, readonly (number | string)[]> = {};
         for (const row of rows(ctx)) {
@@ -114,11 +114,11 @@ export default defineTestAdapter({
         }
         return { projection };
       },
-      /** 🎯️ The same ramp sampled through the theme with `interpolator=lab`. */
+      /** 🔬️ The same ramp sampled through the theme with `interpolator=lab`. */
       subject: async (ctx: AdapterContext) => await subject(ctx),
     },
     "scheme-ramp-hcl": {
-      /** 🔮️ d3-interpolate's piecewise ramp over the same stops, in d3-color's HCL. */
+      /** 🔴️ d3-interpolate's piecewise ramp over the same stops, in d3-color's HCL. */
       oracle: (ctx: AdapterContext) => {
         const projection: Record<string, readonly (number | string)[]> = {};
         for (const row of rows(ctx)) {
@@ -129,11 +129,11 @@ export default defineTestAdapter({
         }
         return { projection };
       },
-      /** 🎯️ The same ramp sampled through the theme with `interpolator=hcl`. */
+      /** 🔭️ The same ramp sampled through the theme with `interpolator=hcl`. */
       subject: async (ctx: AdapterContext) => await subject(ctx),
     },
     "scheme-ramp-oklab": {
-      /** 🔮️ The stops themselves, as d3-color normalises them: an interpolation space owes its own
+      /** 🚏️ The stops themselves, as d3-color normalises them: an interpolation space owes its own
        * knots back unchanged, whatever it does between them, and OKLab has no d3 reference to
        * adjudicate the space in between. */
       oracle: (ctx: AdapterContext) => {
@@ -145,7 +145,7 @@ export default defineTestAdapter({
         }
         return { projection };
       },
-      /** 🎯️ The default OKLab ramp sampled at its own stop positions. */
+      /** 📍️ The default OKLab ramp sampled at its own stop positions. */
       subject: async (ctx: AdapterContext) => await subject(ctx),
     },
   },

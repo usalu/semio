@@ -5,7 +5,7 @@ import {mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,write
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {BAZEL_WITNESS_RUNNER,BAZEL_WITNESS_STARLARK,bazelWitnessDigestV1} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";

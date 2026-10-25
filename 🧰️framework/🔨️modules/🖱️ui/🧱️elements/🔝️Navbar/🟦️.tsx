@@ -67,7 +67,7 @@ export function navbarFreeBandV1(width: number, occupied: readonly NavbarSpanV1[
   return band.right > band.left ? band : { left: 0, right: width };
 }
 
-/** 🎯️ Left offset of a centered item: the bar's own centre whenever the item fits there without
+/** ⬅️ Left offset of a centered item: the bar's own centre whenever the item fits there without
  * crossing {@link navbarFreeBandV1}'s edges, and otherwise the nearest position inside the band. An item
  * wider than the band starts at the band's left edge — its own `max-width` is what makes it fit, so this
  * is a fixed point rather than a step that re-measures into a different answer. The offset snaps to the
@@ -119,7 +119,7 @@ export interface NavbarProps {
  * `z-index: var(--z-base) !important` here; this class said `z-navbar` and was simply never the truth —
  * a contradiction that cost ticket 26/09/02 three waves of "the navbar covers the catalogue".
  **/
-/** 🛟️ The measured placement of every centered item of one chrome band, in band-relative pixels.
+/** 📍️ The measured placement of every centered item of one chrome band, in band-relative pixels.
  * `null` until the first layout pass — a band that has not been measured centers by transform, so the
  * first painted frame is already centered and nothing flashes in from the left edge. */
 type NavbarCenteredPlacementV1 = { readonly left: number; readonly maxWidth: number };
@@ -256,10 +256,10 @@ export function ShellBrandLogo({ svg, className, style }: { svg: string; classNa
 }
 //#endregion 🏷️ShellBrandLogo
 
-/** ↔ Flex grow class that pushes trailing navbar chrome to the right edge. */
+/** ➡️ Flex grow class that pushes trailing navbar chrome to the right edge. */
 const navbarFillClassName = "flex-1 min-w-0";
 
-/** ↔ Invisible navbar filler; use before trailing toggles when no center slot consumes the flex region. */
+/** 🫥️ Invisible navbar filler; use before trailing toggles when no center slot consumes the flex region. */
 export function navbarFillItem(key = "navbarFill"): NavbarItem {
   return { key, className: navbarFillClassName, content: null };
 }

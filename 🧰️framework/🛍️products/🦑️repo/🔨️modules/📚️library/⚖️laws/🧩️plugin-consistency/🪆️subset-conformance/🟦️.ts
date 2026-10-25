@@ -46,7 +46,7 @@ export function policyListTopLevelSubsetDirs(repoRoot: string): string[] {
   return out;
 }
 
-/** 🪆️ Every subset must own schema, engine, io, and (eventually) examples. */
+/** 💠️ Every subset must own schema, engine, io, and (eventually) examples. */
 export function policySubsetFacetTotalityBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const required = taxonomy.subsetChildDirs ?? ["🧬️schema", "⚙️engine", "🚪️io", "📚️examples"];
@@ -104,7 +104,7 @@ export function policyArtifactEngineFacetForbiddenBreaches(repoRoot: string): Br
   return breaches;
 }
 
-/** ⚙️ Every level of an artifact tree that could carry an `⚙️engine`: the artifact, its standards, and their subsets. */
+/** 📁️ Every level of an artifact tree that could carry an `⚙️engine`: the artifact, its standards, and their subsets. */
 function policyArtifactEngineOwnerDirs(repoRoot: string, artRel: string): string[] {
   const owners = [artRel];
   const standardsRel = join(artRel, "🏅️standards");
@@ -260,7 +260,7 @@ export function policySubsetConformanceBreaches(repoRoot: string): BreachRecord[
  * (C4), so it fails the gate like any other completed-shape lock.
  */
 
-/** 👁️✏️ Every OWNED subset (has `🧬️schema`, independent of `🚪️io` — see the scaffolder's identical
+/** 🧬️✏️ Every OWNED subset (has `🧬️schema`, independent of `🚪️io` — see the scaffolder's identical
  * predicate in `📇️registry/📜️script.ts`) carries both `👁️viewer`/`✏️editor`, each with ≥1 mode
  * carrying ≥1 window with both `windowLeafLangs` leaves. A surface whose scaffolded leaves still carry
  * the `SCAFFOLD` marker is a separate, non-passing breach kind — see the scaffolder region docstring
@@ -326,7 +326,7 @@ export function policySubsetSurfaceCompletenessBreaches(repoRoot: string): Breac
   return breaches;
 }
 
-/** 👁️ No file under a `👁️viewer` dir may reference mutation dispatch, `artifact_mutations`, or an
+/** 📘️ No file under a `👁️viewer` dir may reference mutation dispatch, `artifact_mutations`, or an
  * `::editor::` module path — `ViewEmit` is structurally read-only (contract §2.2); this is the
  * filesystem-content half of that guarantee. */
 export function policyViewerPurityBreaches(repoRoot: string): BreachRecord[] {

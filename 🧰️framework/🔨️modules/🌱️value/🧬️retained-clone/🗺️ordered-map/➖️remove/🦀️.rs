@@ -1,4 +1,4 @@
-//! ➖️ Removes an unpublished owned entry without releasing ungranted backing.
+//! 🪦️ Removes an unpublished owned entry without releasing ungranted backing.
 
 use super::*;
 use std::mem::ManuallyDrop;

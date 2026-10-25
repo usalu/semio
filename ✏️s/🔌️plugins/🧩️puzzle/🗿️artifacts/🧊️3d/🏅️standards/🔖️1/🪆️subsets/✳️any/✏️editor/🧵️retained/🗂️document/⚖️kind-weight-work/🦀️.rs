@@ -82,6 +82,21 @@ impl Puzzle3dKindWeightWork {
         }
     }
 
+    fn base_weight(&self, config: &Puzzle3dConfig, id: &str) -> f64 {
+        if self.ids.is_empty() {
+            return 0.0;
+        }
+        if self.missing || self.weights(config).is_empty() {
+            return 1.0 / self.ids.len() as f64;
+        }
+        let value = self.weights(config).get(id).copied().unwrap_or(0.0);
+        if (self.base_sum - 1.0).abs() > 0.001 && self.base_sum.abs() > f64::EPSILON {
+            value / self.base_sum
+        } else {
+            value
+        }
+    }
+
 
 
 }
@@ -199,8 +214,8 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 puzzle3d_apply_distribution_weight(&mut object_weights, &mut joint_weights, &object_ids, &vortex_ids, self.tool_id, kind_id, object_kind_id, self.requested);
                 Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
                     config_mutations: vec![
-                        Puzzle3dConfigMutation::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ value: object_weights }),
-                        Puzzle3dConfigMutation::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ value: joint_weights }),
+                        Puzzle3dConfigMutation::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights::from_map(&object_weights)),
+                        Puzzle3dConfigMutation::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights::from_map(&joint_weights)),
                     ],
                     ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)),
                     ..Default::default()

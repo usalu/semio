@@ -39,7 +39,7 @@ export function polylinePointAt(points: readonly { readonly x: number; readonly 
   const last=points.at(-1);if(!last)throw Error("Complete polyline terminal point required");return last;
 }
 
-/** 🪡️ Samples a canvas-layer path (`move`/`line`/`quad`/`cubic` segments, in whatever local
+/** 🌀️ Samples a canvas-layer path (`move`/`line`/`quad`/`cubic` segments, in whatever local
  * coordinate space the caller's points are already expressed in — apply layer transforms before calling)
  * into a flat polyline via de Casteljau evaluation — the one parametric-curve evaluator this codebase has,
  * needed because `IntroductionPoint.Curve` resolves through arc-length interpolation over a polyline, not

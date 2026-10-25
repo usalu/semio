@@ -137,6 +137,5 @@ fn factory_owned_source_preserves_actual_payload_and_custom_issuer() {
         assert_eq!(factory.calls.load(Ordering::SeqCst),row["expected"]["payloadRetireCalls"].as_u64().unwrap()as usize);
         assert_eq!(refusals,row["expected"]["refusals"].as_u64().unwrap()as usize);
         assert_eq!(Arc::strong_count(&factory),1);
-        eprintln!("[DEBUG] Factory original source {} exact payload/issuer identity retained, calls={} refusals={refusals}, terminal source empty",row["name"],factory.calls.load(Ordering::SeqCst));
     }
 }

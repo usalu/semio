@@ -151,7 +151,7 @@ export class ArtifactBootstrapAssembler {
     return this.#storage?.byteLength ?? 0;
   }
 
-  /** 📈️ Current monotonic progress snapshot. */
+  /** 📸️ Current monotonic progress snapshot. */
   get progress(): ArtifactBootstrapProgress {
     return { receivedBytes: this.#received, totalBytes: this.bootstrap.pack_length + this.bootstrap.spr_length, receivedChunks: this.#nextIndex, totalChunks: this.bootstrap.chunk_count };
   }

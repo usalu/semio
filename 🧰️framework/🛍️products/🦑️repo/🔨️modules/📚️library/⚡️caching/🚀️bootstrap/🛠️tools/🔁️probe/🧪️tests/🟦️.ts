@@ -4,11 +4,11 @@ import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import Ajv from "ajv";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import probeSchema from "../../../../🔁️verification/🧬️schema/🔣️.json" with {type:"json"};
-import probeDocument from "../../../../🔁️verification/🔣️probe.json" with {type:"json"};
+import probeSchema from "../../../../../📦️packages/🟦️typescript/⚡️caching/🔁️verification/🧬️schema/🔣️json/🟦️.ts";
+import probeDocument from "../../../../../📦️packages/🟦️typescript/⚡️caching/🔁️verification/🔣️json/probe/🟦️.ts";
 import {openNxSdkV1} from "../../🔌️sdk/🟦️.ts";
 import {nxCacheProbeV1} from "../🟦️.ts";
-import type {CacheProbeSpecV1} from "../../../../../🏗️build/⚙️operations/🟦️.ts";
+import type {CacheProbeSpecV1} from "../../../../../📦️packages/🟦️typescript/🏗️build/⚙️operations/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
 const probeSpecification=probeDocument as CacheProbeSpecV1;

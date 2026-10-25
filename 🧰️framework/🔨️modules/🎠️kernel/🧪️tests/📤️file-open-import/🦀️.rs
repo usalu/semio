@@ -146,7 +146,7 @@ fn every_chunk_boundary_is_a_utf8_character_boundary_of_the_payload() {
     }
 }
 
-/// 📥️ One chunk's dispatch arguments are exactly the fixture's, with the fan-out present only for a
+/// 🧫️ One chunk's dispatch arguments are exactly the fixture's, with the fan-out present only for a
 /// multi-file pick.
 #[test]
 fn every_chunk_dispatches_its_declared_arguments() {
@@ -330,7 +330,7 @@ fn every_staging_case_reassembles_or_refuses_exactly_as_the_fixture_states() {
     }
 }
 
-/// ⚖️ LAW: arguments that carry no chunk envelope are no import — every ordinary action passes the staging untouched.
+/// ✉️ LAW: arguments that carry no chunk envelope are no import — every ordinary action passes the staging untouched.
 #[test]
 fn arguments_without_a_chunk_envelope_are_not_an_import() {
     let mut staging = ImportStaging::default();
@@ -339,7 +339,7 @@ fn arguments_without_a_chunk_envelope_are_not_an_import() {
     assert_eq!(staging.admit_args(Some(&semio_framework_value::DslValue::String("x".into()))), Ok(ImportArguments::NotAnImport));
 }
 
-/// ⚖️ LAW: a cancel drops every open run, and the staged bytes of a run never exceed its byte authority.
+/// ✖️ LAW: a cancel drops every open run, and the staged bytes of a run never exceed its byte authority.
 #[test]
 fn cancel_drops_every_open_run_and_a_run_stays_within_its_byte_authority() {
     let payload = "é".repeat(40_000);

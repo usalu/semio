@@ -1,3 +1,4 @@
+use semio_framework_plugin_extension::describe::DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES;
 use semio_framework::PluginManifest;
 use semio_framework_test_fixtures::fixture_path;
 

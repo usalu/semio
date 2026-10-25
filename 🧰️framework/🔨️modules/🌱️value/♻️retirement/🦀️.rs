@@ -27,7 +27,7 @@ pub trait RetireOwned: Send + 'static {
     fn retirement_element_copy_bytes() -> usize { 0 }
 }
 
-/// 🧮️ Composes a composite's page-wise element width: its full padded size when it has no drop glue and every component declares its own plain width, otherwise zero so collections retire it element-wise. See [`RetireOwned::retirement_element_copy_bytes`].
+/// 🦜️ Composes a composite's page-wise element width: its full padded size when it has no drop glue and every component declares its own plain width, otherwise zero so collections retire it element-wise. See [`RetireOwned::retirement_element_copy_bytes`].
 pub fn composite_copy_bytes<T>(components: &[usize]) -> usize {
     if std::mem::needs_drop::<T>() || components.contains(&0) { 0 } else { std::mem::size_of::<T>() }
 }
@@ -60,24 +60,24 @@ pub trait RetirementCursor: Send {
     fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(0)}
     /// 🎯️ Quotes payload work for the same event selected by the incoming body grant.
     fn next_selected_work_byte_demand(&self,_maximum_body_bytes:usize)->Result<usize,crate::ValueError> {self.next_work_byte_demand()}
-    /// 🪆️ Declares a separately funded child when a complete inline item exceeds this work grant.
+    /// 💼️ Declares a separately funded child when a complete inline item exceeds this work grant.
     fn allows_admitted_narrow_work(&self) -> bool { false }
     fn next_birth_bytes(&self, _maximum_bytes: usize) -> Option<usize> { None }
     fn terminal_release_bytes(&self) -> Option<usize> { None }
 }
 
-/// 🧮️ Measures the fixed constructor allocations of a deferred field sequence.
+/// 🎞️ Measures the fixed constructor allocations of a deferred field sequence.
 pub fn sequence_birth_bytes(fields: &[usize]) -> Option<usize> {
     fields.iter().try_fold(size_of::<Sequence>().checked_add(fields.len().checked_mul(size_of::<Box<dyn RetirementCursor>>())?)?, |total, bytes| total.checked_add(*bytes))
 }
 
-/// 🧮️ Measures the exact inline ownership retained by one deferred field Box.
+/// 💎️ Measures the exact inline ownership retained by one deferred field Box.
 pub const fn deferred_birth_bytes<T: RetireOwned>() -> usize { size_of::<Deferred<T>>() }
 
-/// 🧮️ Borrows the exact field type when a declarative owner measures its deferred scaffold.
+/// 🏗️ Borrows the exact field type when a declarative owner measures its deferred scaffold.
 pub fn deferred_birth_bytes_for<T: RetireOwned>(_: &T) -> usize { deferred_birth_bytes::<T>() }
 
-/// 🧮️ Measures the exact scalar retirement scaffold allocation.
+/// 🍃️ Measures the exact scalar retirement scaffold allocation.
 pub const fn leaf_birth_bytes<T: Copy + Send + 'static>() -> usize { size_of::<Leaf<T>>() }
 
 struct Leaf<T: Copy + Send + 'static> {
@@ -188,10 +188,10 @@ impl RetireOwned for std::path::PathBuf {
 }
 /// 📦️ Quotes the actual byte-buffer cursor birth independently of any UTF8 completeness.
 pub const fn bytes_birth_bytes()->usize{size_of::<Bytes>()}
-/// 🧳️ Retains the original byte allocation after its receiving parent admits this natural cursor birth.
+/// 📩️ Retains the original byte allocation after its receiving parent admits this natural cursor birth.
 pub fn bytes(original:Vec<u8>)->Box<dyn RetirementCursor>{Box::new(Bytes(ManuallyDrop::new(original),false))}
 
-/// ♻️ Drains trivial elements as bounded logical work; the original backing allocation remains whole until terminal release.
+/// 📚️ Drains trivial elements as bounded logical work; the original backing allocation remains whole until terminal release.
 struct Collection<T: RetireOwned>(ManuallyDrop<Vec<T>>);
 impl<T: RetireOwned> RetirementCursor for Collection<T> {
     fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:self.next_selected_work_byte_demand(body)?,capacity_bytes:self.next_birth_bytes(body).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original collection child lacks a birth quote"))?,release_bytes:if self.0.is_empty(){self.0.capacity()*size_of::<T>()}else{0},depth:usize::from(!self.terminal_is_empty())})}
@@ -292,9 +292,18 @@ impl<T:RetireOwned> Drop for VectorIterator<T> {fn drop(&mut self) {assert!(std:
 impl<T:RetireOwned> RetireOwned for std::vec::IntoIter<T> {fn retirement(self)->Box<dyn RetirementCursor> {Box::new(VectorIterator(ManuallyDrop::new(self)))} fn controlled_retirement_supported()->bool{false}}
 
 /// 🧺️ Drains one hashed element per turn; the standard table backing is not priced, only the element scaffolds and this cursor shell.
-struct UnorderedSet<T: RetireOwned>{head:ManuallyDrop<Option<T>>,rest:ManuallyDrop<std::collections::hash_set::IntoIter<T>>}
+/// 📏️ Exact bytes of the standard hash table backing that holds `capacity` slots of `T`: buckets are the next power of two the load factor admits, the control bytes follow the slots after one group of padding (a 16-byte SSE2 group on x86, 8 bytes elsewhere). The retirement law in `🛂️manifest/🧪️tests/🪟️resolved-host-context` measures it against the real allocator.
+fn std_hash_table_bytes<T>(capacity:usize)->usize{
+    if capacity==0{return 0}
+    const GROUP:usize=if cfg!(all(any(target_arch="x86",target_arch="x86_64"),target_feature="sse2")){16}else{8};
+    let buckets=if capacity<8{capacity+1}else{capacity*8/7};
+    (buckets*size_of::<T>()).next_multiple_of(align_of::<T>().max(GROUP))+buckets+GROUP
+}
+
+/// 🌀️ Drains one hashed element per turn; its terminal release is the cursor shell plus the standard table backing the iterator still owns.
+struct UnorderedSet<T: RetireOwned>{head:ManuallyDrop<Option<T>>,rest:ManuallyDrop<std::collections::hash_set::IntoIter<T>>,table_bytes:usize}
 impl<T: RetireOwned> UnorderedSet<T> {
-    fn new(mut rest:std::collections::hash_set::IntoIter<T>)->Self {Self{head:ManuallyDrop::new(rest.next()),rest:ManuallyDrop::new(rest)}}
+    fn new(mut rest:std::collections::hash_set::IntoIter<T>,table_bytes:usize)->Self {Self{head:ManuallyDrop::new(rest.next()),rest:ManuallyDrop::new(rest),table_bytes}}
 }
 impl<T: RetireOwned> RetirementCursor for UnorderedSet<T> {
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{capacity_bytes:self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original hashed child lacks a birth quote"))?,depth:usize::from(self.head.is_some()),..Default::default()})}
@@ -303,21 +312,21 @@ impl<T: RetireOwned> RetirementCursor for UnorderedSet<T> {
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let head=self.head.take();*self.head=self.rest.next();head.map_or(RetirementStep::Complete,|value|RetirementStep::Child(value.retirement()))}
     fn terminal_is_empty(&self)->bool {self.head.is_none()}
     fn next_birth_bytes(&self,_:usize)->Option<usize> {self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes)}
-    fn terminal_release_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
+    fn terminal_release_bytes(&self)->Option<usize> {Some(size_of::<Self>()+self.table_bytes)}
 }
 impl<T: RetireOwned> Drop for UnorderedSet<T> {
     fn drop(&mut self) {assert!(std::thread::panicking() || self.terminal_is_empty(),"owned set retired before terminal-empty");unsafe {ManuallyDrop::drop(&mut self.head);ManuallyDrop::drop(&mut self.rest)};}
 }
 impl<T: RetireOwned + std::hash::Hash + Eq> RetireOwned for std::collections::HashSet<T> {
-    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(UnorderedSet::new(self.into_iter()))}
+    fn retirement(self)->Box<dyn RetirementCursor> {let table=std_hash_table_bytes::<T>(self.capacity());Box::new(UnorderedSet::new(self.into_iter(),table))}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<UnorderedSet<T>>())}
     fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
 }
 
-/// 🧺️ Drains one hashed entry per turn; the standard table backing is not priced, only the entry scaffolds and this cursor shell.
-struct UnorderedMap<K: RetireOwned,V: RetireOwned>{head:ManuallyDrop<Option<(K,V)>>,rest:ManuallyDrop<std::collections::hash_map::IntoIter<K,V>>}
+/// 🗺️ Drains one hashed entry per turn; its terminal release is the cursor shell plus the standard table backing the iterator still owns.
+struct UnorderedMap<K: RetireOwned,V: RetireOwned>{head:ManuallyDrop<Option<(K,V)>>,rest:ManuallyDrop<std::collections::hash_map::IntoIter<K,V>>,table_bytes:usize}
 impl<K: RetireOwned,V: RetireOwned> UnorderedMap<K,V> {
-    fn new(mut rest:std::collections::hash_map::IntoIter<K,V>)->Self {Self{head:ManuallyDrop::new(rest.next()),rest:ManuallyDrop::new(rest)}}
+    fn new(mut rest:std::collections::hash_map::IntoIter<K,V>,table_bytes:usize)->Self {Self{head:ManuallyDrop::new(rest.next()),rest:ManuallyDrop::new(rest),table_bytes}}
 }
 impl<K: RetireOwned,V: RetireOwned> RetirementCursor for UnorderedMap<K,V> {
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{capacity_bytes:self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original hashed entry lacks a birth quote"))?,depth:usize::from(self.head.is_some()),..Default::default()})}
@@ -326,18 +335,18 @@ impl<K: RetireOwned,V: RetireOwned> RetirementCursor for UnorderedMap<K,V> {
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let head=self.head.take();*self.head=self.rest.next();head.map_or(RetirementStep::Complete,|entry|RetirementStep::Child(entry.retirement()))}
     fn terminal_is_empty(&self)->bool {self.head.is_none()}
     fn next_birth_bytes(&self,_:usize)->Option<usize> {self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes)}
-    fn terminal_release_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
+    fn terminal_release_bytes(&self)->Option<usize> {Some(size_of::<Self>()+self.table_bytes)}
 }
 impl<K: RetireOwned,V: RetireOwned> Drop for UnorderedMap<K,V> {
     fn drop(&mut self) {assert!(std::thread::panicking() || self.terminal_is_empty(),"owned map retired before terminal-empty");unsafe {ManuallyDrop::drop(&mut self.head);ManuallyDrop::drop(&mut self.rest)};}
 }
 impl<K: RetireOwned + std::hash::Hash + Eq,V: RetireOwned> RetireOwned for std::collections::HashMap<K,V> {
-    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(UnorderedMap::new(self.into_iter()))}
+    fn retirement(self)->Box<dyn RetirementCursor> {let table=std_hash_table_bytes::<(K,V)>(self.capacity());Box::new(UnorderedMap::new(self.into_iter(),table))}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<UnorderedMap<K,V>>())}
     fn controlled_retirement_supported()->bool {K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }
 
-/// 🧺️ Drains one ordered element per turn; the standard node backing is not priced, only the element scaffolds and this cursor shell.
+/// 🔃️ Drains one ordered element per turn; the standard node backing is not priced, only the element scaffolds and this cursor shell.
 struct OrderedSet<T: RetireOwned + Ord>(ManuallyDrop<std::collections::BTreeSet<T>>);
 impl<T: RetireOwned + Ord> RetirementCursor for OrderedSet<T> {
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{capacity_bytes:self.0.first().map_or(Some(0),RetireOwned::retirement_birth_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original ordered child lacks a birth quote"))?,depth:usize::from(!self.0.is_empty()),..Default::default()})}
@@ -368,7 +377,7 @@ impl<T: RetireOwned> RetireOwned for std::cmp::Reverse<T> {
     fn retirement_element_copy_bytes()->usize {T::retirement_element_copy_bytes()}
 }
 
-/// 🧺️ Drains one ordered entry per turn; the standard node backing is not priced, only the entry scaffolds and this cursor shell.
+/// 📇️ Drains one ordered entry per turn; the standard node backing is not priced, only the entry scaffolds and this cursor shell.
 struct OrderedMap<K: RetireOwned + Ord, V: RetireOwned>(ManuallyDrop<std::collections::BTreeMap<K, V>>);
 impl<K: RetireOwned + Ord, V: RetireOwned> RetirementCursor for OrderedMap<K, V> {
     fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{capacity_bytes:self.next_birth_bytes(body).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original ordered entry lacks a birth quote"))?,depth:usize::from(!self.0.is_empty()),..Default::default()})}
@@ -502,7 +511,7 @@ impl<T: RetireOwned, const N: usize> Drop for FixedArray<T, N> {
 }
 fn plain_elements<T: RetireOwned>() -> bool { !std::mem::needs_drop::<T>() && T::retirement_element_copy_bytes() != 0 }
 
-/// 🧱️ Drains a fixed array of trivial elements as bounded logical copy work, as [`Collection`] does, instead of one child cursor per element.
+/// 🔧️ Drains a fixed array of trivial elements as bounded logical copy work, as [`Collection`] does, instead of one child cursor per element.
 struct PlainArray<T: RetireOwned, const N: usize> {
     items: ManuallyDrop<[T; N]>,
     remaining: usize,
@@ -603,15 +612,15 @@ impl<T:RetireOwned> RetirementCursor for Deferred<T>{
 impl<T:RetireOwned> Drop for Deferred<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"deferred original abandoned before terminal-empty");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.original)}}}}
 pub fn deferred<T:RetireOwned>(value:T)->Box<dyn RetirementCursor>{Box::new(Deferred{original:ManuallyDrop::new(Some(value))})}
 
-/// 🧱️ Borrows the exact erased ownership frame before its original value moves.
+/// 🖼️ Borrows the exact erased ownership frame before its original value moves.
 pub const fn owned_retirement_birth_bytes<T: RetireOwned>() -> usize { controlled::controlled_retirement_birth_bytes::<T>() }
 
-/// 🎟️ Returns the original owner when its erased frame has not been admitted.
+/// ↩️ Returns the original owner when its erased frame has not been admitted.
 pub fn admit_owned_retirement<T: RetireOwned>(value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, crate::retained_clone::RetainedCloneProgress), (crate::ValueError, T)> {
     controlled::admit_typed_controlled_retirement(value, grant).map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress))
 }
 
-/// 🎟️ Keeps the exact original in its caller slot until its installed issuer admits the whole frame.
+/// 🖱️ Keeps the exact original in its caller slot until its installed issuer admits the whole frame.
 
 
 struct ErasedCursor(Box<dyn ErasedSnapshotRetirement>);
@@ -634,7 +643,7 @@ impl RetirementCursor for ErasedCursor {
     fn terminal_release_bytes(&self)->Option<usize> {self.0.terminal_is_empty().then_some(size_of::<Self>()+size_of_val(self.0.as_ref()))}
 }
 
-/// ♻️ Transfers an existing admitted retirement into its typed parent frontier.
+/// ⏩️ Transfers an existing admitted retirement into its typed parent frontier.
 /// 🧮️ Declares the existing erased cursor shell before its parent admits ownership.
 pub const fn erased_cursor_birth_bytes()->usize {size_of::<ErasedCursor>()}
 pub fn erased_cursor(value:Box<dyn ErasedSnapshotRetirement>)->Box<dyn RetirementCursor> {Box::new(ErasedCursor(value))}

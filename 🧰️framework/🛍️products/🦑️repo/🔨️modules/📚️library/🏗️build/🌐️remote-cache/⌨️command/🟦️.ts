@@ -39,7 +39,7 @@ export function remoteCacheTextV1(language:RemoteCacheLanguageV1,key:string,vari
  return message[language].replace(/\{([a-z]+)\}/gu,(_,name:string)=>{const value=variables[name];if(value===undefined)throw Error(`Remote cache message variable missing: ${name}`);return String(value);});
 }
 
-/** 🗣️ Picks the output languages: the explicit request, else the one the environment names (`SEMIO_LANGUAGE`, then the locale), else all of them, because no language is the default. */
+/** ☁️ Picks the output languages: the explicit request, else the one the environment names (`SEMIO_LANGUAGE`, then the locale), else all of them, because no language is the default. */
 export function remoteCacheLanguagesV1(requested:string|undefined,environment:Readonly<Record<string,string|undefined>>):readonly RemoteCacheLanguageV1[]{
  if(requested!==undefined){
   if(!LANGUAGES.includes(requested as RemoteCacheLanguageV1))throw Error(both("error.language",{language:requested}));

@@ -35,6 +35,7 @@ semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️i
 semio-framework-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust", features = ["hot-path-census"] }
 semio-framework-os-store-snapshot-clone = { path = "../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item-publication = { path = "../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
 semio-framework-os-store-test-support = { path = "../../../../🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-os-store-testing-doubles = { path = "../../../../🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
 semio-framework-os-store-testing-fixtures = { path = "../../../../🧪️testing/📦️packages/🦀️rust" }

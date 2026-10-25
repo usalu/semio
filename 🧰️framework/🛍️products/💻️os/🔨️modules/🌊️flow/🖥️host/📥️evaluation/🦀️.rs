@@ -12,6 +12,7 @@ fn rows_mut(source:&mut DslValue)->Result<&mut[(String,DslValue)],ValueError>{ma
 fn number_demand(_: &u64,_:&u64,_:usize,_:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:2*size_of::<u64>(),depth:1,..Default::default()})}
 fn number_step(left:&u64,right:&u64,_:usize,g:RetainedCloneGrant)->Result<(Option<std::cmp::Ordering>,usize,RetainedCloneProgress),ValueError>{if g.maximum_copy_bytes<2*size_of::<u64>(){return Ok((None,0,Default::default()))}Ok((Some(left.cmp(right)),0,RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<u64>(),..Default::default()}))}
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Fields{source:Option<DslValue>,dictionary:Option<Dictionary>,insertion:Option<HistoryFoldIndexInsert<u64,PreviewEvalProgress>>,displaced:Option<ControlledRetirement<(u64,PreviewEvalProgress)>>}
 /// 🪪️ This exact command metadata stays borrowed throughout receiving and cache publication.
 pub struct FlowEvaluationReplyAddress<'a>{pub node_hash:u64,pub window_id:&'a str,pub window_kind_id:&'a str}

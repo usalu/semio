@@ -1,6 +1,7 @@
 // 🕸️ Hostile binding, heartbeat and wire fixtures: the hub url derivation, the hostile hub binding, the actor heartbeat stamps, the rollback envelope, the wire fixtures shared with typescript and the presence heartbeat laws.
 
 //#region 🧪️Helpers
+use semio_framework_test_fixtures::fixture_path;
 #[tokio::test]
 async fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
     assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1", None).await, "ws://host:6070/scopes/studio-1%2Fdoc-1/document/ws");

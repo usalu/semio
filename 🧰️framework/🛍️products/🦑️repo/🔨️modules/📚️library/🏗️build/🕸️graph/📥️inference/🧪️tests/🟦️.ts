@@ -115,7 +115,7 @@ test("a revisioned reload reproduces the corpus under Bun and Node alike", () =>
   }
 });
 
-/** 🧪️ Parses one component and reports its roster name, exports, wiring reads and import specifiers through the TypeScript syntax tree. */
+/** 🕵️ Parses one component and reports its roster name, exports, wiring reads and import specifiers through the TypeScript syntax tree. */
 function audit(name: string) {
   const text = readInferenceSourceV1(name), tree = ts.createSourceFile(`${name}.mjs`, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   const imports: string[] = [], reads = new Set<string>();

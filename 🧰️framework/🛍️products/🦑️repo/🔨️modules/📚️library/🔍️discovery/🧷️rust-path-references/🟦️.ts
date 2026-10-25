@@ -21,7 +21,7 @@ export function inspectRustAssertionMessageSpans(source: string): readonly RustA
   return rows;
 }
 
-/** 🧭️ Recognizes every same-file zero-arg `fn NAME() -> PathBuf` whose ENTIRE body is exactly the
+/** 🔤️ Recognizes every same-file zero-arg `fn NAME() -> PathBuf` whose ENTIRE body is exactly the
  * ancestor-walk-to-`nx.json` idiom seeded from `CARGO_MANIFEST_DIR` (`test_repo_root`/`find_repo_root`'s
  * shared strategy — 🏃️run/🦀️.rs, 📦️bin.rs): `let mut V = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
  * loop { if V.join("nx.json").is_file() { return V; } assert!(V.pop(), ..); }`. `nx.json` is this
@@ -80,7 +80,7 @@ function rustRepoRootAncestorWalkHelperNames(tokens: readonly RustToken[], pairs
   return names;
 }
 
-/** 🧭️ One path component and the immutable manifest-relative components preceding it. */
+/** 📘️ One path component and the immutable manifest-relative components preceding it. */
 export interface RustManifestPathReference {
   readonly start: number;
   readonly end: number;
@@ -273,7 +273,7 @@ export interface RustManifestPathCandidate {
   readonly targets: readonly (readonly string[])[];
 }
 
-/** 🧮️ Evaluates bounded immutable loop receivers while preserving tuple correlation and source identity. */
+/** 🦀️ Evaluates bounded immutable loop receivers while preserving tuple correlation and source identity. */
 export function inspectRustManifestPathCandidates(source: string): readonly RustManifestPathCandidate[] {
   if (!source.includes("CARGO_MANIFEST_DIR") || !/\.\s*join\s*\(/u.test(source)) return [];
   const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), limit = 256;
@@ -591,7 +591,7 @@ function rustStringCollectionJoinArguments(tokens: readonly RustToken[], pairs: 
     }
   };
   visit(0, tokens.length, new Map());
-  /** 🔗️ A second, binding-free pass: `<expr>.collect::<Vec<...>>().join("literal")` chained inline (no
+  /** ⛓️ A second, binding-free pass: `<expr>.collect::<Vec<...>>().join("literal")` chained inline (no
    * intermediate `let`) can never be a `Path`/`PathBuf` receiver — `collect::<Vec<_>>()` is syntactically
    * guaranteed to produce a `Vec`, and `Path`/`PathBuf` are never spelled with a `collect` turbofish — so
    * this is provable purely structurally, without the `bindings` machinery above (which only sees named

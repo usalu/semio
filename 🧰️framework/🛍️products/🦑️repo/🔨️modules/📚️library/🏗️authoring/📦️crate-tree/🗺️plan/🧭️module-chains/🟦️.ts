@@ -65,7 +65,7 @@ function groupHeads(tokens: ReturnType<typeof rustTokens>, pairs: ReadonlyMap<nu
   }
 }
 
-/** 🔗️ Chains that go through a `use crate::..::name;` alias: `name::tail` is `crate::..::name::tail`. */
+/** ⛓️ Chains that go through a `use crate::..::name;` alias: `name::tail` is `crate::..::name::tail`. */
 export function aliasChains(source: string): string[][] {
   const aliases = new Map<string, string[]>();
   const tokens = rustTokens(source);
@@ -113,7 +113,7 @@ export function rootAliasModules(source: string, modules: readonly RustModuleNod
   return out;
 }
 
-/** 🔗️ Strongly connected components of a graph where an edge means "depends on"; dependencies come before their dependents. */
+/** 🕸️ Strongly connected components of a graph where an edge means "depends on"; dependencies come before their dependents. */
 export function stronglyConnected(nodes: readonly string[], edges: ReadonlyMap<string, ReadonlySet<string>>): string[][] {
   const index = new Map<string, number>();
   const low = new Map<string, number>();
@@ -204,7 +204,7 @@ export function relativeHeadChains(text: string): string[][] {
   return out;
 }
 
-/** 🧭️ Names a source uses as the head of a path (`name::..`, `self::name`, `super::name`), which is how a module reaches a module it mounts. */
+/** 🔤️ Names a source uses as the head of a path (`name::..`, `self::name`, `super::name`), which is how a module reaches a module it mounts. */
 export function pathHeadNames(text: string): Set<string> {
   const tokens = rustTokens(text);
   const out = new Set<string>();

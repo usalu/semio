@@ -16,6 +16,9 @@ pub struct AddCounter {
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-counter", record: "AddedCounter" };
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
+    }
 
 
 }
@@ -30,9 +33,6 @@ impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddCount
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
-    }
 }
 //#endregion ⚙️Behavior
 

@@ -60,7 +60,7 @@ pub struct DbIoPlatformClose {
 }
 
 /// 🪡 One retained prepared-platform slice fragment per poll.
-pub(crate) struct DbIoPlatformSlicesCopy<'a> {
+pub struct DbIoPlatformSlicesCopy<'a> {
     pub first: &'a [u8],
     pub second: &'a [u8],
     pub source: u8,

@@ -1,7 +1,7 @@
 /** 🟠️ The sets revealmorphfrommorphtoframe previous slide tests of the PresentationDeck suite. */
 import { buildResolutionScope, splitFigureGrid } from "@semio-tech/presentation";
 import { expect, it } from "vitest";
-import { figureCropBackgroundVars, mosaicWindowedCoverVars, resolveRevealArrangement } from "../../../🎯️targets/⚛️react/🟦️.tsx";
+import { figureCropBackgroundVars, mosaicWindowedCoverVars, resolveRevealArrangement } from "@semio-tech/presentation-react";
 
 /** 🟡 Registers the sets revealmorphfrommorphtoframe previous slide tests of the PresentationDeck suite. */
 export function registerSetsRevealmorphfrommorphtoframePreviousSlideTests(): void {

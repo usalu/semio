@@ -10,19 +10,19 @@ use protocol::MutationDiff;
 
 #[path = "🧱️scalar-and-enum-codecs/🦀️.rs"]
 mod scalar_and_enum_codecs;
-pub(crate) use scalar_and_enum_codecs::*;
+pub use scalar_and_enum_codecs::*;
 
 #[path = "🧊️scene-mesh-and-accessor-codecs/🦀️.rs"]
 mod scene_mesh_and_accessor_codecs;
-pub(crate) use scene_mesh_and_accessor_codecs::*;
+pub use scene_mesh_and_accessor_codecs::*;
 
 #[path = "🎨️material-and-resource-codecs/🦀️.rs"]
 mod material_and_resource_codecs;
-pub(crate) use material_and_resource_codecs::*;
+pub use material_and_resource_codecs::*;
 
 #[path = "🎬️animation-and-camera-codecs/🦀️.rs"]
 mod animation_and_camera_codecs;
-pub(crate) use animation_and_camera_codecs::*;
+pub use animation_and_camera_codecs::*;
 
 #[path = "🔺️delta-diff-and-print-codecs/🦀️.rs"]
 mod delta_diff_and_print_codecs;

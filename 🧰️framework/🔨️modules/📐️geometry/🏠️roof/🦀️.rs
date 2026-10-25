@@ -23,7 +23,7 @@ pub const VERTICAL: f64 = FRAC_PI_2;
 /// gable end (about one degree).
 pub const GABLE_END_TOLERANCE: f64 = 0.02;
 
-/// 🏠️ The form of a roof over a footprint; pitches are angles above the horizontal in radians, `ridge_direction` an angle in plan.
+/// 👣️ The form of a roof over a footprint; pitches are angles above the horizontal in radians, `ridge_direction` an angle in plan.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Roof {
     Hip { pitch: f64 },
@@ -32,7 +32,7 @@ pub enum Roof {
     Pitched { pitches: Vec<Vec<f64>> },
 }
 
-/// 📏️ The kind of a roof line: a ridge is horizontal, a hip descends from a ridge or apex to a convex corner, a valley runs into a
+/// 🏷️ The kind of a roof line: a ridge is horizontal, a hip descends from a ridge or apex to a convex corner, a valley runs into a
 /// reflex corner, a verge follows the sloped top of a gable end, a break is the crease between the two slopes of a mansard.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RoofLineKind {
@@ -62,7 +62,7 @@ pub struct RoofFace {
     pub vertices: Vec<Xyz>,
 }
 
-/// 🏠️ The surface of a roof: its faces, its lines and the height of its highest point.
+/// 🏡️ The surface of a roof: its faces, its lines and the height of its highest point.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RoofSurface {
     pub faces: Vec<RoofFace>,
@@ -99,7 +99,7 @@ fn speed_of(pitch: f64) -> Result<f64, RoofError> {
     Ok(if pitch >= FRAC_PI_2 - 1e-12 { 0.0 } else { 1.0 / pitch.tan() })
 }
 
-/// 🏠️ The pitch of every footprint edge of a gable roof: `pitch` for the edges along the ridge, [`VERTICAL`] for the gable ends
+/// 🔗️ The pitch of every footprint edge of a gable roof: `pitch` for the edges along the ridge, [`VERTICAL`] for the gable ends
 /// (edges across `ridge_direction` within `tolerance`, a sine).
 pub fn gable_pitches(rings: &[Vec<Point>], pitch: f64, ridge_direction: f64, tolerance: f64) -> Vec<Vec<f64>> {
     let (sin, cos) = ridge_direction.sin_cos();
@@ -177,7 +177,7 @@ fn collect(skeleton: &Skeleton, rings: &[Vec<Point>], zone: u8, lift: f64, surfa
     surface.height = surface.height.max(skeleton.peak() + lift);
 }
 
-/// 🏠️ The roof surface of `footprint` (outer ring first, then holes, either orientation) for `roof`; `control` is polled per skeleton
+/// ⭕️ The roof surface of `footprint` (outer ring first, then holes, either orientation) for `roof`; `control` is polled per skeleton
 /// event and returns `false` to cancel.
 pub fn roof_surface_controlled(footprint: &[Vec<Point>], roof: &Roof, control: &mut dyn FnMut() -> bool) -> Result<RoofSurface, RoofError> {
     let mut surface = RoofSurface { faces: Vec::new(), lines: Vec::new(), height: 0.0 };
@@ -219,7 +219,7 @@ pub fn roof_surface_controlled(footprint: &[Vec<Point>], roof: &Roof, control: &
     Ok(surface)
 }
 
-/// 🏠️ The roof surface of `footprint` for `roof`, run to the end.
+/// ▶️ The roof surface of `footprint` for `roof`, run to the end.
 pub fn roof_surface(footprint: &[Vec<Point>], roof: &Roof) -> Result<RoofSurface, RoofError> {
     roof_surface_controlled(footprint, roof, &mut || true)
 }
@@ -273,12 +273,12 @@ impl RoofSurface {
         mesh
     }
 
-    /// 📐️ Plan area covered by the sloped faces (the gable ends have none).
+    /// 📔️ Plan area covered by the sloped faces (the gable ends have none).
     pub fn plan_area(&self) -> f64 {
         self.faces.iter().filter(|face| !face.vertical).map(|face| plan_area_of(&face.vertices)).sum()
     }
 
-    /// 📐️ Area of the roof surface in space: sloped faces and gable ends.
+    /// 🪐️ Area of the roof surface in space: sloped faces and gable ends.
     pub fn surface_area(&self) -> f64 {
         self.mesh().surface_area()
     }

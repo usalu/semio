@@ -7,8 +7,8 @@ use semio_framework_os_kernel as store;
 use semio_s_artifact_stdio_semio_flow::io::binary::snapshot::{SemioFlowSnapshotDecode, SemioFlowSnapshotDecodeStep};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, SemioFlowSnapshot};
 use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers, SemioMembersOpen};
-use store::{pack::snapshot::ArtifactPack, os_store::owned_schema_decode::OwnedSchemaDecodeCredits, os_store::owned_schema_decode::OwnedSchemaDecodePage, os_store::owned_schema_decode::OwnedSchemaDecodePages};
-use store::{ErasedSnapshotRetirement, MemberFactory, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenRequest, MemberOpenStep, MemberSnapshotOpenOperation, OwnerRef, SpaceMember};
+use store::{snapshot::ArtifactPack, os_store::owned_schema_decode::OwnedSchemaDecodeCredits, os_store::owned_schema_decode::OwnedSchemaDecodePage, os_store::owned_schema_decode::OwnedSchemaDecodePages};
+use store::{ErasedSnapshotRetirement, MemberFactory, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenRequest, MemberOpenStep, MemberSnapshotOpenOperation, OwnerRef, SpaceMember, ReferenceSpaceMember};
 
 fn request(bytes: &[u8], subset: &str) -> MemberOpenRequest {
     request_with_admission(bytes, subset, true)

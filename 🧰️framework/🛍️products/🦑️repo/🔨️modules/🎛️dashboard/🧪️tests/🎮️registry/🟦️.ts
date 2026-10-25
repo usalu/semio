@@ -16,7 +16,7 @@ import { dirname, join, resolve, relative } from "node:path";
 import { buildGraphPathV1 } from "@semio-tech/repo-lib/build";
 import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
-import { installedDashboard } from "../../../📚️library/⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
+import { installedDashboard } from "../../../📚️library/📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts";
 import {Oracle} from "../🗺️coverage/🔮️oracle/🟦️.ts";
 
 type Json = Record<string, any>;
@@ -50,7 +50,7 @@ beforeAll(() => {
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
 function semio(args: string[], env: Record<string, string> = {}): { code: number; out: string; err: string } {
-  const run = Bun.spawnSync([binary(), ...args], { cwd: root, env: { ...process.env, ...env, SEMIO_DASHBOARD_GRAPH: "fresh", SEMIO_PLUGIN_CATALOG: join(root,"catalog") }, stdout: "pipe", stderr: "pipe" });
+  const run = Bun.spawnSync([binary(), ...args], { cwd: root, env: { ...process.env, ...env, SEMIO_DASHBOARD_GRAPH: "fresh", SEMIO_LOCALE: "en", SEMIO_PLUGIN_CATALOG: join(root,"catalog") }, stdout: "pipe", stderr: "pipe" });
   return { code: run.exitCode, out: run.stdout.toString(), err: run.stderr.toString() };
 }
 const json = (path: string): Json => JSON.parse(files.get(path)!) as Json;
@@ -115,6 +115,30 @@ test("the registry check reports no problem for the fixture workspace and names 
   expect(report.err).toContain("🧰️tools/broken/📋️project.json");
   expect(report.err).toContain("unknown field `target`");
 });
+test("no playground port declared in a Cargo manifest is also the ready port of a tool declared in a project manifest", () => {
+  const tracked = (pathspec: string) => Bun.spawnSync(["git", "ls-files", "-z", "--", pathspec], { cwd: repo, stdout: "pipe" }).stdout.toString().split("\0").filter(Boolean);
+  const playgrounds = new Map<number, string>();
+  for (const file of tracked("*Cargo.toml")) {
+    const match = /ports\s*=\s*\{\s*react\s*=\s*(\d+)\s*,\s*wgpu\s*=\s*(\d+)\s*\}/.exec(readFileSync(join(repo, file), "utf8"));
+    if (match) for (const port of [Number(match[1]), Number(match[2])]) playgrounds.set(port, file);
+  }
+  const readyPorts = (value: unknown, found: number[] = []): number[] => {
+    if (Array.isArray(value)) for (const item of value) readyPorts(item, found);
+    else if (value !== null && typeof value === "object") for (const [key, item] of Object.entries(value)) {
+      if (key === "ready" && item !== null && typeof item === "object" && typeof (item as Json).port === "number") found.push((item as Json).port);
+      else readyPorts(item, found);
+    }
+    return found;
+  };
+  const clashes: string[] = [];
+  for (const file of tracked("*project.json")) {
+    const text = readFileSync(join(repo, file), "utf8");
+    if (!text.includes('"ready"')) continue;
+    for (const port of readyPorts(JSON.parse(text))) if (playgrounds.has(port)) clashes.push(`${port}: ${playgrounds.get(port)} and ${file}`);
+  }
+  expect(playgrounds.size).toBeGreaterThan(50);
+  expect(clashes).toEqual([]);
+}, 120_000);
 // #endregion 🔖️Declarations
 
 // #region 🔖️Listing
@@ -289,7 +313,7 @@ function resolveLaunch(id: string, chosen: Pins, extra: string[], extraEnv: Reco
     const verb = verbOf(group.targets[0]);
     const effects = apply(axesFor(verb, [], true), chosen, values, env);
     const flags = [...new Set(effects.buildFlags)];
-    return [{ commandId: id, cmd: "bun", args: ["repo", "run-many", "-t", group.targets.join(","), "-p", group.projects.join(","), ...flags, ...(effects.args.length + extra.length ? ["--", ...effects.args, ...extra] : [])], cwd: "", env: { ...RUNNER_ENV, ...effects.env, ...extraEnv }, requires: [], verb }];
+    return [{ commandId: id, cmd: "repo", args: ["run-many", "-t", group.targets.join(","), "-p", group.projects.join(","), ...flags, ...(effects.args.length + extra.length ? ["--", ...effects.args, ...extra] : [])], cwd: "", env: { ...RUNNER_ENV, ...effects.env, ...extraEnv }, requires: [], verb }];
   }
   const configuration = id.split(":").length === 3 ? id.split(":")[2] : undefined;
   const project = configuration ? id.slice(0, id.lastIndexOf(":", id.lastIndexOf(":") - 1)) : id.slice(0, id.lastIndexOf(":"));
@@ -303,7 +327,7 @@ function resolveLaunch(id: string, chosen: Pins, extra: string[], extraEnv: Reco
   for (const key of Object.keys(env)) env[key] = expand(env[key]!, values, ready.port);
   const args = [...effects.args.map((word) => expand(word, values, ready.port)), ...extra];
   const flags = [...new Set(effects.buildFlags)];
-  return [{ commandId: id, cmd: "bun", args: ["repo", "run", id, ...flags, ...(args.length ? ["--", ...args] : [])], cwd: "", env: { ...RUNNER_ENV, ...env, ...lateEnv(extraEnv, values, ready.port) }, ready: ready.ready, requires: resolveRequires(declared.requires), verb }];
+  return [{ commandId: id, cmd: "repo", args: ["run", id, ...flags, ...(args.length ? ["--", ...args] : [])], cwd: "", env: { ...RUNNER_ENV, ...env, ...lateEnv(extraEnv, values, ready.port) }, ready: ready.ready, requires: resolveRequires(declared.requires), verb }];
 }
 
 function ticketCompound(rest: string): boolean {
@@ -324,7 +348,7 @@ function resolvePlayground(id: string, variant: string, chosen: Pins, extra: str
   const port = slot === undefined ? row.ports[key] : row.userPorts[key][slot - 1];
   const env: Record<string, string> = { SEMIO_PLUGIN: variant, SEMIO_RENDERER: key, S_OS_PORT: String(extraEnv.S_OS_PORT ?? port), ...(row.app ? { SEMIO_APP_ID: row.app, VITE_SEMIO_APP_ID: row.app } : {}) };
   const target = renderer === "react" ? `dev-${variant}-react-dev` : renderer === "wgpu-native" ? `run-${variant}-native-dev` : `dev-${variant}-wgpu-dev`;
-  const effects=apply(axesFor("dev",[],true,true),chosen,{},env),args = ["repo", "run", `@semio-tech/framework-os-dev:${target}`,...effects.buildFlags];
+  const effects=apply(axesFor("dev",[],true,true),chosen,{},env),args = ["run", `@semio-tech/framework-os-dev:${target}`,...effects.buildFlags];
   if (chosen.example !== undefined) {
     const slug = (row.examples as string[]).find((candidate) => candidate === chosen.example || candidate.split("️").pop() === chosen.example)!;
     env.PLAYGROUND_LOCKED_EXAMPLE_ID = slug;
@@ -341,7 +365,7 @@ function resolvePlayground(id: string, variant: string, chosen: Pins, extra: str
     ready = { port: Number(env.S_OS_PORT), path: chosen["app-role"] === "viewer" && row.viewerPath ? row.viewerPath : "" };
   }
   if(effects.args.length){if(!args.includes("--"))args.push("--");args.push(...effects.args);}
-  return { commandId: id, cmd: "bun", args: [...args, ...extra], cwd: "", env: { ...RUNNER_ENV, ...env,...effects.env,...extraEnv }, ready, requires: [], verb: "dev" };
+  return { commandId: id, cmd: "repo", args: [...args, ...extra], cwd: "", env: { ...RUNNER_ENV, ...env,...effects.env,...extraEnv }, ready, requires: [], verb: "dev" };
 }
 
 /** 🧾️ The comparable form of a launch: process list with workspace-relative cwd, environment as a sorted map. */
@@ -371,7 +395,7 @@ const shapeOfLaunch = (launch: Json): Json => ({ processes: launch.processes.map
 type Case = { id: string; parameters?: Pins; args?: string[]; env?: Record<string, string> };
 const CASES: Case[] = [
   { id: "workspace:test", parameters: { cache: "skip-local", "test-level": "quick", dependencies: true, "cargo-jobs": "2" }, args: ["--filter", "x"], env: { EXTRA: "1" } },
-  { id: "workspace:build", parameters: { "build-mode": "release" } },
+  { id: "workspace:build", parameters: { "build-mode": "ship" } },
   { id: "workspace:dev" },
   { id: "workspace:verify", parameters: { rule: "literal-external" } },
   { id: "hub:dev" },
@@ -384,7 +408,7 @@ const CASES: Case[] = [
   { id: "@fixture/quiz:dev", parameters: { listen: "6070" } },
   { id: "@fixture/quiz:test-e2e", parameters: { "test-level": "long" } },
   { id: "tool:workspace/inspector" },
-  { id: "tool:workspace/bun-test", parameters: { file: "a.test.ts", bail: true, "build-mode": "release", "test-level": "quick" } },
+  { id: "tool:workspace/bun-test", parameters: { file: "a.test.ts", bail: true, "build-mode": "ship", "test-level": "quick" } },
   { id: "tool:workspace/printer" },
   { id: "tool:workspace/viewer" },
   { id: "group:workspace/artifact-tests", parameters: { "test-level": "long", cache: "skip-all" } },
@@ -444,15 +468,17 @@ test("semio has only the dashboard verbs: nothing is forwarded to the root scrip
   for (const verb of ["frobnicate", "verify", "test", "build", "commit", "dev", "setup"]) {
     const unknown = semio([verb]);
     expect({ verb, code: unknown.code }).toEqual({ verb, code: 2 });
-    expect(unknown.err).toContain(`unknown verb "${verb}"`);
-    expect(unknown.err).toContain("semio run <id>");
+    expect(unknown.err).toContain(`unknown verb ${verb}`);
+    expect(unknown.err).toContain("repo dashboard run <id>");
     expect(unknown.out).toBe("");
   }
   for (const flag of ["--help", "-h", "help"]) {
     const help = semio([flag]);
     expect({ flag, code: help.code }).toEqual({ flag, code: 0 });
-    expect(help.out).toContain("Semio has no other verbs");
-    for (const verb of ["commands", "run", "tasks", "logs", "stop|restart|kill", "open", "daemon", "dashboard"]) expect(help.out).toContain(`semio ${verb}`);
+    expect(help.out).toContain("The dashboard has no other verbs");
+    for (const verb of ["commands", "run", "tasks", "logs", "stop|restart|kill", "open", "daemon"]) expect(help.out).toContain(`repo dashboard ${verb}`);
+    expect(help.out).toContain("repo dashboard [--language");
+    expect(help.out).not.toContain("repo dashboard dashboard");
   }
   for (const verb of ["run", "tasks", "logs", "stop", "restart", "kill", "open"]) {
     const refused = semio([verb, "--root", root]);

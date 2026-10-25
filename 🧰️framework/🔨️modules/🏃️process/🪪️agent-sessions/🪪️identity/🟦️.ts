@@ -37,7 +37,7 @@ const knownClients=policy.identity.clients.map(row=>row.id as string);
 export function sanitizeAgentIdV1(raw:string):string{return raw.replace(/[^A-Za-z0-9._-]/gu,"_").slice(0,64);}
 /** 🔎️ Tells whether text is a valid agent identifier. */
 export const isAgentIdV1=(value:string):boolean=>agentPattern.test(value);
-/** 🔎️ Tells whether text is a valid session identifier. */
+/** 📗️ Tells whether text is a valid session identifier. */
 export const isAgentSessionIdV1=(value:string):boolean=>sessionPattern.test(value);
 
 /** 🏷️ Names the agent client a process command line starts: the pattern is matched against the executable only (never against arguments such as shell snapshots or paths), or against the first script argument of an interpreter such as node or bun. */
@@ -50,7 +50,7 @@ export function agentClientProcessV1(command:string):AgentClientV1|undefined{
  return match===null?undefined:agentClientOfV1(match[1]!,"human");
 }
 
-/** 🏷️ Names the client of a free-form name or command: the first known client it contains, else the fallback. */
+/** 🔤️ Names the client of a free-form name or command: the first known client it contains, else the fallback. */
 export function agentClientOfV1(text:string,fallback:AgentClientV1):AgentClientV1{
  const lower=text.toLowerCase();return (knownClients.find(client=>lower.includes(client))??fallback) as AgentClientV1;
 }
@@ -101,7 +101,7 @@ export function agentSessionWeightV1(value:number|undefined):number{
  return value;
 }
 
-/** 🪪️ Derives a session from a seed: identity, resources, lease owner tag, budget weight and the default capability. */
+/** 🤖️ Derives a session from a seed: identity, resources, lease owner tag, budget weight and the default capability. */
 export function deriveAgentSessionV1(seed:AgentSeedV1):DerivedAgentSessionV1{
  const found=deriveAgentIdentityV1(seed),id=agentSessionIdV1(found.agent.id),anchor=found.anchor??(seed.ownerPid===undefined?undefined:{pid:seed.ownerPid,started:""});
  return Object.freeze({
@@ -137,5 +137,5 @@ export function requireAgentSessionV1(value:unknown):AgentSessionV1{
  if(errors.length>0)throw new Error(`Closed agent session required: ${errors[0]}`);
  return value as AgentSessionV1;
 }
-/** ✅️ Tells whether a value is a closed session. */
+/** 📕️ Tells whether a value is a closed session. */
 export const isAgentSessionV1=(value:unknown):value is AgentSessionV1=>validateJsonSchemaSubset(schema.definitions.AgentSession,value,schema).length===0;

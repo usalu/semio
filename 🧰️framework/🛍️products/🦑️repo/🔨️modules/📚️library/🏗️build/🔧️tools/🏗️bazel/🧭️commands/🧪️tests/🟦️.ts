@@ -1,6 +1,6 @@
 /** 🧪️ Bazel command mapping: the fixture is the contract, a Python implementation and Bazel's own binary are the oracles. */
 import {test,expect} from "bun:test";
-import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";

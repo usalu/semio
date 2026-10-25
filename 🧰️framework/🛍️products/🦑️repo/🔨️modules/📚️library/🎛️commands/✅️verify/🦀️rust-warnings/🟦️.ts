@@ -3,8 +3,8 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { GlobV1 } from "../../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { GlobV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import {refuseVerifyV1} from "../📖️texts/🟦️.ts";
 
 /** 🦀️ Shipping plugins, extensions, and their artifact libraries from the repository's package catalog. */

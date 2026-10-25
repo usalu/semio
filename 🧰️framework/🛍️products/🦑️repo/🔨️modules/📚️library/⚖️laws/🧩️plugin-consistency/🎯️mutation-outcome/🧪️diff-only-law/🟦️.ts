@@ -29,7 +29,7 @@ const POLICY_DIFF_ONLY_DIFF_TYPE_MACHINERY: ReadonlySet<string> = new Set(["appl
 /** 🔎️Raw cue that a file may hold a hand-written `impl … MutationKind<` or `impl … Mutation<` block. */
 const POLICY_DIFF_ONLY_IMPL_PROBE_RE = /\bimpl\b[^{;]*\bMutation(?:Kind)?\s*</;
 
-/** 🔎️Raw cue that a file may hold an `impl … MutationDiff<` block. */
+/** 📄️Raw cue that a file may hold an `impl … MutationDiff<` block. */
 const POLICY_DIFF_ONLY_DIFF_IMPL_PROBE_RE = /\bimpl\b[^{;]*\bMutationDiff\s*</;
 
 const POLICY_RUST_RAW_STRING_RE = /b?r(#*)"/y;
@@ -44,15 +44,15 @@ const POLICY_RUST_USE_RE = /\buse\s[^;]*;/g;
 
 const POLICY_DIFF_ONLY_APPLY_RE = /(?:\.|::)apply\s*\(|(?<!\bfn\s+)\bapply_diff\s*\(|\bApplyCapability\b/g;
 
-/** 🔎️Snapshot-differencing and simulation helpers under any spelling: `*between*`, `*_replacing`, `*_state_diff`, `state_after*`, `value_diff*`. */
+/** 📸️Snapshot-differencing and simulation helpers under any spelling: `*between*`, `*_replacing`, `*_state_diff`, `state_after*`, `value_diff*`. */
 const POLICY_DIFF_ONLY_BETWEEN_RE = /(?<!\bfn\s+)(?<!\w)(?:\w*between\w*|\w*_replacing|\w*_state_diff|state_after\w*|value_diff\w*)\s*(?:::\s*<[^>(]*>)?\s*\(/g;
 
-/** 🔎️Fns that build diff-like or whole-state values from the forward payload: negative simulators and derived-inverse helpers. */
+/** 🔨️Fns that build diff-like or whole-state values from the forward payload: negative simulators and derived-inverse helpers. */
 /** 📐️Pure geometry named `…_between` (the angle, distance or gap between two vectors or points) is not snapshot differencing and never counts for R10. */
 const POLICY_DIFF_ONLY_GEOMETRY_BETWEEN_RE = /^(?:\w+_)?(?:angle|distance|gap)_between\b/;
 const POLICY_DIFF_ONLY_SIMULATOR_RE = /(?<!\bfn\s+)(?<!\w)(?:negative|state_after\w*|inverse_of|value_diff\w*)\s*\(|\.negat(?:e|ion)\w*\s*\(/g;
 
-/** 🔎️Raw cue that a plugin file defines a fn named like a diff or inverse builder. */
+/** 🔌️Raw cue that a plugin file defines a fn named like a diff or inverse builder. */
 const POLICY_DIFF_ONLY_DIFFISH_FN_PROBE_RE = /\bfn\s+\w*(?:diff|inverse|negative|negation|replacing|state_after)\w*/;
 
 const POLICY_DIFF_ONLY_DIFFISH_NAME_RE = /(?:^|_)(?:diff|inverse|negative|negation|replacing)(?:_|$)|state_after/;
@@ -63,7 +63,7 @@ const POLICY_DIFF_ONLY_PAYLOAD_PARAM_RE = /^(?:payload|mutation|op|edit|self)$/;
 
 const POLICY_DIFF_ONLY_MUT_REF_RE = /&\s*mut\b/g;
 
-/** 🔎️A `&mut` parameter or value typed as a whole artifact state: the one `&mut` a non-builder helper must never take. */
+/** 📦️A `&mut` parameter or value typed as a whole artifact state: the one `&mut` a non-builder helper must never take. */
 const POLICY_DIFF_ONLY_MUT_STATE_RE = /&\s*mut\s+(?:\w+::)*\w*(?:Snapshot|Document|State)\b/g;
 
 /** 🚪️Infrastructure directories (and any directory ending `-internals`): io codecs, retained prepare state machines, encoders and engine internals are not diff logic and may apply diffs. */
@@ -79,7 +79,7 @@ const POLICY_DIFF_ONLY_RESTORE_RE = /\b(?:SetSnapshot|PatchSnapshot|ReplaceDocum
 
 /** 🫧️The ephemeral-root setter kinds: the presence/window-transient mutation TYPES that travel by whole-root transfer. Judged by the mutation's own type name, never by a directory. */
 const POLICY_DIFF_ONLY_EPHEMERAL_MUTATION_RE = /^\w*(?:Transient|Presence)Mutation$/;
-/** 🫧️The one whole-root setter an ephemeral mutation may invert to: `Self::Snapshot` / `Self::<Name>Snapshot` carrying the base root. */
+/** 🌳️The one whole-root setter an ephemeral mutation may invert to: `Self::Snapshot` / `Self::<Name>Snapshot` carrying the base root. */
 const POLICY_DIFF_ONLY_EPHEMERAL_SETTER_RE = /^Self::\w*Snapshot$/;
 const POLICY_DIFF_ONLY_APPLY_TO_RE = /(?:\.|::)apply_to\s*\(/g;
 
@@ -320,30 +320,30 @@ function policyDiffOnlyBreach(rule: PolicyDiffOnlyRuleId, relPath: string, line:
 }
 
 const POLICY_HOST_APPLY_LANE_DIRS: ReadonlySet<string> = new Set(["✏️editor", "🌉️apply", "📬️preparation"]);
-/** 🚪️Directories R17 never reads: snapshot decoders, test oracles and fixtures, and the trees R8–R16 already gate leaf by leaf. */
+/** 📁️Directories R17 never reads: snapshot decoders, test oracles and fixtures, and the trees R8–R16 already gate leaf by leaf. */
 const POLICY_HOST_APPLY_EXCLUDED_DIRS: ReadonlySet<string> = new Set(["🚪️io", "🔮️oracles", "🧪️tests", "🧫️fixtures", "🧬️schema", "🧬️mutations", "🧬️mutation-support"]);
-/** 🚪️Directories whose code is an exempt CONTEXT for the call sites of a snapshot-writing helper: decoders, oracles, tests. */
+/** 📂️Directories whose code is an exempt CONTEXT for the call sites of a snapshot-writing helper: decoders, oracles, tests. */
 const POLICY_HOST_APPLY_SITE_EXEMPT_DIRS: ReadonlySet<string> = new Set(["🚪️io", "🔮️oracles", "🧪️tests", "🧫️fixtures"]);
 const POLICY_HOST_APPLY_FRAMEWORK_PREFIX = "🧰️framework/🛍️products/💻️os/";
 const POLICY_HOST_APPLY_PLUGIN_ROOT_RE = new RegExp(`^✏️s/🔌️plugins/[^/]+/🗿️artifacts/[^/]+/${POLICY_RS_COMPONENT_LEAF_NAME.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`);
-/** 🔎️A `&mut <X>Snapshot` / `&mut <X>Document` parameter: the only parameter shape R17 follows (framework code has its own `*Document` containers, so there only `Snapshot` counts). */
+/** 🖥️A `&mut <X>Snapshot` / `&mut <X>Document` parameter: the only parameter shape R17 follows (framework code has its own `*Document` containers, so there only `Snapshot` counts). */
 const POLICY_HOST_APPLY_MUT_PARAM_RE = /^(?:mut\s+)?([A-Za-z_]\w*)\s*:\s*&\s*(?:'\w+\s+)?mut\s+(?:\w+::)*\w*(?:Snapshot|Document)\b/;
 const POLICY_HOST_APPLY_MUT_SNAPSHOT_PARAM_RE = /^(?:mut\s+)?([A-Za-z_]\w*)\s*:\s*&\s*(?:'\w+\s+)?mut\s+(?:\w+::)*\w*Snapshot\b/;
-/** 🔎️A fn that builds a load effect: everything it calls fills a freshly decoded document (genesis), not an apply lane. */
+/** 🏗️A fn that builds a load effect: everything it calls fills a freshly decoded document (genesis), not an apply lane. */
 const POLICY_HOST_APPLY_LOAD_BUILDER_RE = /\breset_document_effect\b|\bLoadDocument\b/;
 const POLICY_HOST_APPLY_PLACE = String.raw`(?:\s*\.\s*\w+|\s*\[[^\]\n]*\])*`;
 const POLICY_HOST_APPLY_WRITE_METHODS = String.raw`push|push_str|push_back|push_front|pop|remove|insert|extend|extend_from_slice|truncate|clear|retain|swap|swap_remove|drain|append|resize|entry|take|replace|sort\w*|dedup\w*|set_\w+|\w+_mut`;
-/** 🔎️A before/after differencing call: `object_patch_diff(&before, &after)`. */
+/** ☎️A before/after differencing call: `object_patch_diff(&before, &after)`. */
 const POLICY_HOST_APPLY_BEFORE_AFTER_CALL_RE = /\b(\w*(?:diff|delta|patch)\w*)\s*\(\s*&\s*\w*(?:before|old|prev|previous|original)\w*\s*,\s*&\s*\w*(?:after|new|next|updated|edited)\w*\s*[,)]/gi;
 const POLICY_HOST_APPLY_BEFORE_NAME_RE = /^(?:\w*_)?(?:before|old|prev|previous|original)\w*$/i;
 const POLICY_HOST_APPLY_AFTER_NAME_RE = /^(?:\w*_)?(?:after|new|next|updated|edited)\w*$/i;
 const POLICY_HOST_APPLY_TS_LOCAL_APPLY_RE = /\bapply(?:Local|Optimistic)\w*\s*\(|\bapply\w*Mutation\w*Local\w*\s*\(/;
 const POLICY_HOST_APPLY_TS_REF_ASSIGN_RE = /\b(\w*(?:Catalog|Snapshot|Document|Archive)\w*Ref)\.current\s*=\s*([^;\n]+)/g;
-/** 🔎️TypeScript probe: only files that mention an archive put/restore or a snapshot ref are parsed. */
+/** ☁️TypeScript probe: only files that mention an archive put/restore or a snapshot ref are parsed. */
 const POLICY_HOST_APPLY_TS_PROBE_RE = /Ref\.current|localDocumentArchive|encodeDocumentArchiveBytes|restore\w*Archive/;
 /** 🗃️The archive read back from the store/plugin after its central apply: persisting THAT is the persistence lane, not a second apply. */
 const POLICY_HOST_APPLY_TS_READ_BACK_RE = /\bread\w*DocumentArchive\w*\s*\(/;
-/** 🚪️An archive that enters from outside (admission, folder read-back, decode, parse, load): an import/admission path. */
+/** 📥️An archive that enters from outside (admission, folder read-back, decode, parse, load): an import/admission path. */
 const POLICY_HOST_APPLY_TS_IMPORT_RE = /[Aa]dmission|ReadBack|\b(?:decode|parse|load|admit|verify)\w*Archive\w*\s*\(|\bloadAppDocumentArchive\b/;
 const POLICY_HOST_APPLY_TS_SEND_RE = /\bpostMessage\s*\(|\.send\s*\(/;
 const POLICY_HOST_APPLY_TS_RESTORE_RE = /^restore\w*Archive\w*$/;
@@ -424,7 +424,7 @@ function policyHostApplyHelperExempt(name: string, files: ReadonlyMap<string, Po
 
 let policyHostApplyTypescript: typeof import("typescript") | undefined;
 
-/** 🔎️TypeScript R17: whole-archive puts and archive restores from handlers that are not import/admission/persistence paths, and snapshot refs written from a local apply. */
+/** 🚨️TypeScript R17: whole-archive puts and archive restores from handlers that are not import/admission/persistence paths, and snapshot refs written from a local apply. */
 function policyHostApplyTypescriptBreaches(relPath: string, content: string, add: (index: number, token: string, detail: string) => void): void {
   if (!POLICY_HOST_APPLY_TS_PROBE_RE.test(content)) return;
   const code = content.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (comment) => comment.replace(/[^\n]/g, " "));
@@ -516,7 +516,7 @@ function policyHostApplyTypescriptBreaches(relPath: string, content: string, add
 }
 
 /**
- * 🏠️Rule R17 over ONE source file, pure (L4/L5 beyond `🧬️schema`/`🧬️mutations`): a host, editor, apply or preparation lane turns a mutation into a
+ * 📕️Rule R17 over ONE source file, pure (L4/L5 beyond `🧬️schema`/`🧬️mutations`): a host, editor, apply or preparation lane turns a mutation into a
  * snapshot only through `protocol::apply_diff`. Rust (`policyHostApplyScope`): a fn with a `&mut <X>Snapshot`/`&mut <X>Document` parameter that WRITES
  * through it (assignment, `push`/`remove`/`insert`/… or `*_mut(` on a path rooted at it, `mem::replace|take|swap(&mut it…)`) — except `*it = …apply_diff(…)`, which is
  * the central application itself —, any `snapshot_mut`, and a before/after differencing helper (`object_patch_diff(&before, &after)`, or a diff/delta/patch fn
@@ -592,7 +592,7 @@ export function policyHostApplyFileBreaches(relPath: string, content: string, gr
 }
 
 /**
- * 🔬️Rules R8–R14 and R16 over ONE Rust file, pure. Comments, literals and `#[cfg(test)]` items never count.
+ * 🍁️Rules R8–R14 and R16 over ONE Rust file, pure. Comments, literals and `#[cfg(test)]` items never count.
  * Scope: non-test files under `🧬️mutations`, under `🧬️mutation-support` and under any `🔺️diff`/`↩️inverse` directory of a
  * `🧬️schema` are scanned in EVERY fn (except under the infrastructure directories `🚪️io`, `🎮️prepare`, `📦️codec`, which are treated like any other file); other non-test files holding an `impl … Mutation<`/`MutationKind<`/`MutationDiff<`/
  * `DiffAlgebra<` block are scanned in the fns inside those impls and in fns named like a diff or inverse builder
@@ -707,9 +707,9 @@ function policyDiffOnlyLeafFileBreaches(relPath: string, content: string): Breac
   return breaches;
 }
 
-/** 🔎️R18 tokens: the commit of an assembled mesh, the base-equality filter that sparsifies it, a kernel topology builder (`extrude_faces_job`, `bevel_job`, …) and the whole-arena difference oracles. */
+/** ⛔️R18 tokens: the commit of an assembled mesh, the base-equality filter that sparsifies it, a kernel topology builder (`extrude_faces_job`, `bevel_job`, …) and the whole-arena difference oracles. */
 const POLICY_ROW_EMITTER_BANNED_RE = /\b(?:commit_built|equals_base|sparse_rows)\b|::produced\s*\(|\.(?:extrude_faces|inset_faces|bevel|loop_cut|subdivide_faces|triangulate|mirror|decimate|flip_faces|merge_vertices|dissolve_edges|snap_vertices)_job(?:_owned)?\s*\(/g;
-/** 🔎️Cheap probe: only files naming a banned token are parsed. */
+/** 🕵️Cheap probe: only files naming a banned token are parsed. */
 const POLICY_ROW_EMITTER_PROBE_RE = /commit_built|equals_base|sparse_rows|::produced|_job(?:_owned)?\s*\(/;
 
 /**
@@ -737,7 +737,7 @@ export function policyRowEmitterFileBreaches(relPath: string, content: string): 
   return breaches;
 }
 
-/** 🔬️Rules R8–R14, R16 (leaf trees), R17 (host/editor apply lanes) and R18 (row emitters) over ONE source file, pure. The planted-violation law (`🧪️tests/🧪️diff-only-law-gate`) drives exactly this function. */
+/** ✏️Rules R8–R14, R16 (leaf trees), R17 (host/editor apply lanes) and R18 (row emitters) over ONE source file, pure. The planted-violation law (`🧪️tests/🧪️diff-only-law-gate`) drives exactly this function. */
 export function policyDiffOnlyFileBreaches(relPath: string, content: string, group?: () => ReadonlyMap<string, string>): BreachRecord[] {
   return [...policyDiffOnlyLeafFileBreaches(relPath, content), ...policyHostApplyFileBreaches(relPath, content, group), ...policyRowEmitterFileBreaches(relPath, content)];
 }
@@ -745,7 +745,7 @@ export function policyDiffOnlyFileBreaches(relPath: string, content: string, gro
 const POLICY_INVERSE_SUM_LAW_CALL = "assert_mutation_inverse_sum_law";
 const POLICY_LAW_PAYLOAD_IMPL_RE = /\bMutationKind\s*<[^;{]*?>\s*for\s+(\w+)/g;
 
-/** 🔎️The named fns of a Rust source as `{name, start, end}` spans over the braces of their bodies; comments, strings and chars are blanked first so a brace inside them never unbalances the scan. */
+/** 🦀️The named fns of a Rust source as `{name, start, end}` spans over the braces of their bodies; comments, strings and chars are blanked first so a brace inside them never unbalances the scan. */
 function policyRustFnSpans(content: string): { name: string; start: number; end: number }[] {
   const blanked = content.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\/|r#*"[\s\S]*?"#*|"(?:\\[\s\S]|[^"\\])*"|'(?:\\.|[^'\\])'/g, (hit) => " ".repeat(hit.length));
   const spans: { name: string; start: number; end: number }[] = [];
@@ -763,7 +763,7 @@ function policyRustFnSpans(content: string): { name: string; start: number; end:
   return spans;
 }
 
-/** 🔎️Everything a test source's sum-law fns can reach by name: the fns calling `assert_mutation_inverse_sum_law`, the same-file fns they call and the same-file fns calling them (two hops each way) — the text a family test names its variants in. Empty when the file never calls the law inside a fn. */
+/** ➕️Everything a test source's sum-law fns can reach by name: the fns calling `assert_mutation_inverse_sum_law`, the same-file fns they call and the same-file fns calling them (two hops each way) — the text a family test names its variants in. Empty when the file never calls the law inside a fn. */
 function policyInverseSumLawReach(content: string): string {
   if (!content.includes(POLICY_INVERSE_SUM_LAW_CALL)) return "";
   const spans = policyRustFnSpans(content);
@@ -879,52 +879,52 @@ export function policyLeafMutableBaseBreaches(repoRoot: string): BreachRecord[] 
   return policyDiffOnlyScan(repoRoot).get(`diff-only-mutation/${POLICY_DIFF_ONLY_RULES.R8.slug}`) ?? [];
 }
 
-/** 📏️Rule R9: no `.apply(`, `apply_diff(` or `ApplyCapability` anywhere under `🧬️schema`/`🧬️mutations`/`🧬️mutation-support` or in scanned fns (L4/L5); only a diff type's own `apply` (and the `*apply*` helpers it calls) may forward its capability. */
+/** 🔏️Rule R9: no `.apply(`, `apply_diff(` or `ApplyCapability` anywhere under `🧬️schema`/`🧬️mutations`/`🧬️mutation-support` or in scanned fns (L4/L5); only a diff type's own `apply` (and the `*apply*` helpers it calls) may forward its capability. */
 export function policyLeafCentralApplyBreaches(repoRoot: string): BreachRecord[] {
   return policyDiffOnlyScan(repoRoot).get(`diff-only-mutation/${POLICY_DIFF_ONLY_RULES.R9.slug}`) ?? [];
 }
 
-/** 📏️Rule R10: no `*between*`, `*_replacing`, `*_state_diff`, `state_after*` or `value_diff*` call in a scanned fn (L1: the diff is declarative, never a snapshot difference or simulation). */
+/** 🆚️Rule R10: no `*between*`, `*_replacing`, `*_state_diff`, `state_after*` or `value_diff*` call in a scanned fn (L1: the diff is declarative, never a snapshot difference or simulation). */
 export function policyLeafBetweenBreaches(repoRoot: string): BreachRecord[] {
   return policyDiffOnlyScan(repoRoot).get(`diff-only-mutation/${POLICY_DIFF_ONLY_RULES.R10.slug}`) ?? [];
 }
 
-/** 📏️Rule R11: an inverse never calls `diff(`, `.diff()`, `negative`, `state_after`, `inverse_of`, `value_diff*` or a `*_inverse(…diff…)` helper (L2/AMB-3). */
+/** 🧬️Rule R11: an inverse never calls `diff(`, `.diff()`, `negative`, `state_after`, `inverse_of`, `value_diff*` or a `*_inverse(…diff…)` helper (L2/AMB-3). */
 export function policyDiffDerivedInverseBreaches(repoRoot: string): BreachRecord[] {
   return policyDiffOnlyScan(repoRoot).get(`diff-only-mutation/${POLICY_DIFF_ONLY_RULES.R11.slug}`) ?? [];
 }
 
-/** 📏️Rule R12: no scanned fn copies a reference parameter into a mutable binding (L1). */
+/** ♻️Rule R12: no scanned fn copies a reference parameter into a mutable binding (L1). */
 export function policyBaseCloneDiffBreaches(repoRoot: string): BreachRecord[] {
   return policyDiffOnlyScan(repoRoot).get(`diff-only-mutation/${POLICY_DIFF_ONLY_RULES.R12.slug}`) ?? [];
 }
 
-/** 📏️Rule R13: the diff type is never the snapshot it applies to (`type Diff = <snapshot>`, `impl MutationDiff<X> for X`) (L1). */
+/** 🪞️Rule R13: the diff type is never the snapshot it applies to (`type Diff = <snapshot>`, `impl MutationDiff<X> for X`) (L1). */
 export function policyWholeStateDiffBreaches(repoRoot: string): BreachRecord[] {
   return policyDiffOnlyScan(repoRoot).get(`diff-only-mutation/${POLICY_DIFF_ONLY_RULES.R13.slug}`) ?? [];
 }
 
-/** 📏️Rule R14: an inverse never returns a `SetSnapshot`/`PatchSnapshot`/`Replace…`/`Restore…`/`*Snapshot` variant nor a whole `*_state`/`*_content` record (L2). */
+/** ↩️Rule R14: an inverse never returns a `SetSnapshot`/`PatchSnapshot`/`Replace…`/`Restore…`/`*Snapshot` variant nor a whole `*_state`/`*_content` record (L2). */
 export function policyRestoreInverseBreaches(repoRoot: string): BreachRecord[] {
   return policyDiffOnlyScan(repoRoot).get(`diff-only-mutation/${POLICY_DIFF_ONLY_RULES.R14.slug}`) ?? [];
 }
 
-/** 📏️Rule R15: every direct mutation leaf has a test under its own `🧪️tests` calling `assert_mutation_inverse_sum_law` (L3). */
+/** ⚖️Rule R15: every direct mutation leaf has a test under its own `🧪️tests` calling `assert_mutation_inverse_sum_law` (L3). */
 export function policyInverseSumLawUntestedBreaches(repoRoot: string): BreachRecord[] {
   return policyInverseSumLawUntestedLeafBreaches(policyMutationLawInventory(repoRoot).files, (relPath) => policyReadFileSafe(repoRoot, relPath));
 }
 
-/** 📏️Rule R17: host/editor/apply/preparation lanes and the shell change a snapshot only through `protocol::apply_diff` — no `&mut <X>Snapshot` field writes, `snapshot_mut`, before/after differencing or TypeScript local apply into a snapshot ref (L4/L5 beyond `🧬️schema`/`🧬️mutations`). */
+/** 💾️Rule R17: host/editor/apply/preparation lanes and the shell change a snapshot only through `protocol::apply_diff` — no `&mut <X>Snapshot` field writes, `snapshot_mut`, before/after differencing or TypeScript local apply into a snapshot ref (L4/L5 beyond `🧬️schema`/`🧬️mutations`). */
 export function policyHostApplyBreaches(repoRoot: string): BreachRecord[] {
   return policyDiffOnlyScan(repoRoot).get(`diff-only-mutation/${POLICY_DIFF_ONLY_RULES.R17.slug}`) ?? [];
 }
 
-/** 📏️Rule R18: computational mesh gestures are row emitters — no assembled-mesh commit, base-equality sparsifier, kernel topology builder or whole-arena difference in the non-test code of a `🧬️mutations` tree or the mesh overlay. */
+/** 🧵️Rule R18: computational mesh gestures are row emitters — no assembled-mesh commit, base-equality sparsifier, kernel topology builder or whole-arena difference in the non-test code of a `🧬️mutations` tree or the mesh overlay. */
 export function policyRowEmitterBreaches(repoRoot: string): BreachRecord[] {
   return policyDiffOnlyScan(repoRoot).get(`diff-only-mutation/${POLICY_DIFF_ONLY_RULES.R18.slug}`) ?? [];
 }
 
-/** 📏️Rule R16: `MutationOutcome::apply_to` and `.apply_to(` are gone from every Rust file (L4). */
+/** 🗑️Rule R16: `MutationOutcome::apply_to` and `.apply_to(` are gone from every Rust file (L4). */
 export function policyOutcomeApplyToBreaches(repoRoot: string): BreachRecord[] {
   return policyDiffOnlyScan(repoRoot).get(`diff-only-mutation/${POLICY_DIFF_ONLY_RULES.R16.slug}`) ?? [];
 }

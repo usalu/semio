@@ -54,7 +54,6 @@ test("true source and borrow authority callers select one canonical combined clo
   }
   expect(db.query("SELECT COUNT(*) AS paths,SUM(calls) AS calls FROM callers").get()).toEqual({paths:fixture.closeQuery.callers.length,calls:fixture.closeQuery.callers.reduce((sum,row)=>sum+row.calls,0)});
   expect(db.query("SELECT COUNT(*) AS paths FROM callers WHERE owner='borrowAuthority'").get()).toEqual({paths:2});
-  console.log(`[DEBUG] Canonical single close query matches the true source and borrow authority across ${fixture.closeQuery.callers.length} declaring consumers; SQLite preserves the full13call inventory, native resolution remains unrun`);
  }finally{db.close();}
 });
 

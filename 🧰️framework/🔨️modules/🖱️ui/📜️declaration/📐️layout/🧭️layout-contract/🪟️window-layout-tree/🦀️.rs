@@ -1,4 +1,4 @@
-//! 🪟️ Window layout tree: the window and stack kinds, the stack corner, the window, stack and axis nodes, the layout child and root unions, the named layouts and the layout constructors and window kind collection. See [`super`].
+//! 🌳️ Window layout tree: the window and stack kinds, the stack corner, the window, stack and axis nodes, the layout child and root unions, the named layouts and the layout constructors and window kind collection. See [`super`].
 
 use super::*;
 
@@ -206,7 +206,7 @@ pub fn create_stack_layout(window_kind_ids: &[String], titles: Option<&[String]>
     WindowLayout { root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: kind_stack(), size: None, active_window_kind_id: None, children }) }
 }
 
-/// 🪟️ `direction` is an AXIS direction (`row`/`column`). `stack` is not an axis — it is the
+/// 🆕️ `direction` is an AXIS direction (`row`/`column`). `stack` is not an axis — it is the
 /// tabbed leaf container — so a `stack` request is answered with the single stack root
 /// [`create_stack_layout`] mints. Minting `Axis { kind: "stack" }` instead put a stack node
 /// under a node the whole shell reads AS a stack, and every consumer that walks a stack's
@@ -264,7 +264,7 @@ pub fn merge_named_layouts(base: &[NamedLayout], extension: &[NamedLayout]) -> V
     merged.into_values().collect()
 }
 
-/// 🧭️ Collects every `window_kind_id` referenced by a layout tree.
+/// 🔎️ Collects every `window_kind_id` referenced by a layout tree.
 pub fn collect_window_kind_ids_from_layout(layout: &WindowLayout) -> Vec<String> {
     let mut ids = Vec::new();
     collect_window_kind_ids_from_root(&layout.root, &mut ids);

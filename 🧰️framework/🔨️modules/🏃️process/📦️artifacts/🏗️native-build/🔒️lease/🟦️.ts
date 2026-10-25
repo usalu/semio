@@ -4,6 +4,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { acquireResourceLease, acquireQueuedResourceLease, checkResourceLeaseControl, type LeaseWait, type ResourceLeaseControl, type ResourceLease } from "../../../🔒️leases/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {bindCargoTargetStoreV1} from "./🎯️target/🟦️.ts";
+import {acquireCargoCustodyV1,type CargoCustodyV1} from "./🔐️custody/🟦️.ts";
 
 /** 🪪️ One canonical compiler directory and profile sharing Cargo's unit locks. */
 export type CargoBuildLeaseIdentityV1 = { readonly buildDirectory: string; readonly profile: string; readonly mode: "shared" };
@@ -50,19 +51,21 @@ async function acquireCargoProfileLeaseV1(options:CargoProfileLeaseOptionsV1,mod
   }catch(error){store.release();options.signal.throwIfAborted();throw error;}
 }
 
-/** 🏎️ Admits same-profile compilers concurrently while Cargo protects each physical unit. */
+/** 🏎️ Admits one process tree per build directory and profile to compile at a time, behind the shared store and profile leases that maintenance excludes; trees on distinct build directories (the lanes) never wait for each other. */
 export async function acquireCargoBuildLeaseV1(options:CargoProfileLeaseOptionsV1&Readonly<{targetDirectory:string}>):Promise<ResourceLease>{
   options.signal.throwIfAborted();if(options.control)checkResourceLeaseControl(options.control);
   const delimiter=options.args.indexOf("--"),compilerArgs=delimiter<0?options.args:options.args.slice(0,delimiter);if(compilerArgs.some(arg=>arg==="--target-dir"||arg.startsWith("--target-dir=")))throw Error("Cargo target directory must come from its original leased owner");
   const mode=schema.definitions.Protocol.const.compilerAccess;if(mode!=="shared")throw Error("Cargo compilers require shared profile access");
-  const build=cargoBuildLeaseIdentityV1(options.buildDirectory,options.args),target=cargoBuildLeaseIdentityV1(options.targetDirectory,options.args),directories=[...new Set([build.buildDirectory,target.buildDirectory])].sort(),held:ResourceLease[]=[];
+  const build=cargoBuildLeaseIdentityV1(options.buildDirectory,options.args),target=cargoBuildLeaseIdentityV1(options.targetDirectory,options.args),directories=[...new Set([build.buildDirectory,target.buildDirectory])].sort(),held:ResourceLease[]=[];let custody:CargoCustodyV1|undefined;
+  const releaseAll=():void=>{try{custody?.release();}finally{for(const lease of [...held].reverse())lease.release();}};
   try{
     for(const buildDirectory of directories)held.push(await acquireCargoStoreLeaseV1({...options,buildDirectory,mode}));
     for(const buildDirectory of directories)held.push(await acquireQueuedResourceLease({directory:options.directory,resource:JSON.stringify([schema.definitions.Protocol.const.namespace,buildDirectory,build.profile]),mode,owner:randomBytes(16).toString("base64url"),signal:options.signal,control:options.control,onWait:options.onWait,sharedCohort:true}));
     await bindCargoTargetStoreV1({...options,buildDirectory:build.buildDirectory,targetDirectory:target.buildDirectory});
+    custody=await acquireCargoCustodyV1({directory:options.directory,buildDirectory:build.buildDirectory,profile:build.profile,signal:options.signal,control:options.control,onWait:options.onWait});
     const profile=held[directories.length+directories.indexOf(build.buildDirectory)]!;let released=false;
-    return {...profile,release(){if(released)return;released=true;for(const lease of [...held].reverse())lease.release()}};
-  }catch(error){for(const lease of [...held].reverse())lease.release();options.signal.throwIfAborted();throw error}
+    return {...profile,release(){if(released)return;released=true;releaseAll()}};
+  }catch(error){releaseAll();options.signal.throwIfAborted();throw error}
 }
 
 /** 🛠️ Excludes one profile's compilers before its incremental storage is maintained. */

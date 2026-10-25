@@ -13,7 +13,7 @@ role = "tool"
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [[bin]]
 name = "semio"

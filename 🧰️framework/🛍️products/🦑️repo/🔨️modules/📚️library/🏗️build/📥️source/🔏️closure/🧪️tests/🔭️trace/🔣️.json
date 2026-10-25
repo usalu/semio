@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "entry": "entry.ts",
+  "files": {
+    "entry.ts": "import{helper}from\"./sub/helper.ts\";import data from\"./data.json\";import{readFileSync}from\"node:fs\";export async function runCapturedBuildSourceV1(args:string[]){const trace=(globalThis as any)[Symbol.for(\"semio.sourceTrace.v1\")];if(process.env.TRACE_DIR)trace?.enable(process.env.TRACE_DIR);trace?.record(\"a\",JSON.stringify({id:\"fixture\"}));console.log(JSON.stringify({helper:helper(),data:data.v,note:readFileSync(new URL(\"./sub/note.txt\",import.meta.url),\"utf8\"),live:readFileSync(new URL(\"./live.txt\",import.meta.url),\"utf8\").trim(),args}));const lazy=await import(\"./sub/lazy.ts\");console.log(lazy.lazy);}",
+    "sub/helper.ts": "export const helper=()=>\"helped\";",
+    "sub/lazy.ts": "export const lazy=\"lazy-loaded\";",
+    "sub/note.txt": "note",
+    "data.json": "{\"v\":7}"
+  },
+  "imports": {
+    "./sub/helper.ts": "sub/helper.ts",
+    "./data.json": "data.json",
+    "./sub/lazy.ts": "sub/lazy.ts"
+  },
+  "live": {
+    "live.txt": "live\n"
+  },
+  "expectedModules": [
+    "data.json",
+    "entry.ts",
+    "sub/helper.ts",
+    "sub/lazy.ts"
+  ],
+  "expectedReads": [
+    "sub/note.txt"
+  ],
+  "expectedLive": [
+    "live.txt"
+  ],
+  "expectedAction": {
+    "id": "fixture"
+  }
+}

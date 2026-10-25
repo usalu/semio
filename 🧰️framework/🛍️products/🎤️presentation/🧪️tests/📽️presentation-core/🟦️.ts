@@ -14,7 +14,7 @@ describe("loadPresentationFromSlideGlob", () => {
 		const deck = loadPresentationFromSlideGlob(
 			{ id: "deck", name: "Deck", language: "de" },
 			{
-				"./🎞️slide/Hauptteil/🌷️Einführung/🪻️Einleitung/Titel.ts": {
+				"./🎞️slide/Hauptteil/🌷️Einführung/🪻️Einleitung/Titel/🟦️.ts": {
 					default: {
 						order: 0,
 						participants: [{ id: "title" }],
@@ -26,7 +26,7 @@ describe("loadPresentationFromSlideGlob", () => {
 						},
 					},
 				},
-				"./🎞️slide/Hauptteil/🌷️Einführung/🪻️Einleitung/Ziel.ts": {
+				"./🎞️slide/Hauptteil/🌷️Einführung/🪻️Einleitung/Ziel/🟦️.ts": {
 					default: {
 						order: 1,
 						arrangement: {
@@ -36,7 +36,7 @@ describe("loadPresentationFromSlideGlob", () => {
 						},
 					},
 				},
-				"./🎞️slide/Hauptteil/🌷️Einführung/Medien/🟦️Bauteilkatalog.ts": {
+				"./🎞️slide/Hauptteil/🌷️Einführung/Medien/🟦️Bauteilkatalog/🟦️.ts": {
 					default: {
 						order: 0,
 						arrangement: {
@@ -72,7 +72,7 @@ describe("loadPresentationFromSlideGlob", () => {
 describe("parsePresentationSlideFilePath", () => {
 	it("round-trips canonical slide module paths", () => {
 		const path = presentationSlideFilePath("Hauptteil", "Einführung", "Einleitung", "Titel");
-		expect(path).toBe("🎞️slide/Hauptteil/Einführung/Einleitung/Titel.ts");
+		expect(path).toBe("🎞️slide/Hauptteil/Einführung/Einleitung/Titel/🟦️.ts");
 		expect(parsePresentationSlideFilePath(`./${path}`)).toEqual({
 			chapter: "Hauptteil",
 			sequence: "Einführung",
@@ -85,7 +85,7 @@ describe("parsePresentationSlideFilePath", () => {
 describe("parsePresentationThoughtFilePath", () => {
 	it("round-trips canonical thought template paths", () => {
 		const path = presentationThoughtFilePath("Hauptteil", "Einführung", "Einleitung");
-		expect(path).toBe("🎞️slide/Hauptteil/Einführung/Einleitung.ts");
+		expect(path).toBe("🎞️slide/Hauptteil/Einführung/Einleitung/🟦️.ts");
 		expect(parsePresentationThoughtFilePath(`./${path}`)).toEqual({
 			chapter: "Hauptteil",
 			sequence: "Einführung",
@@ -100,7 +100,7 @@ describe("loadPresentationFromSlideGlob thought templates", () => {
 		const deck = loadPresentationFromSlideGlob(
 			{ id: "deck", name: "Deck", language: "de" },
 			{
-				"./🎞️slide/Hauptteil/🌷️Einführung/🟦️Einleitung.ts": {
+				"./🎞️slide/Hauptteil/🌷️Einführung/🟦️Einleitung/🟦️.ts": {
 					default: introThoughtFile({
 						language: "de",
 						title: { full: ["T"], short: "T" },

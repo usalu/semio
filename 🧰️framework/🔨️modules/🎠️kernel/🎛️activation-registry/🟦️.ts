@@ -27,7 +27,7 @@ export interface ActivationManifestEntry {
   /** 🪪️ The plugin id the program's own descriptor names, when the program id differs from it (a hub document's
    * catalog-resolved program): what an extension's activation event names as its host. */
   readonly manifestPluginId?: string;
-  /** 📦️ The package assets the plugin's descriptor declares, delivered with the activation so they reach `instance-open`. */
+  /** 🚚️ The package assets the plugin's descriptor declares, delivered with the activation so they reach `instance-open`. */
   readonly assets?: readonly PackageAssetDeclaration[];
 }
 
@@ -101,22 +101,22 @@ export interface ActivationRegistryOptions {
    * without a real browser (CLAUDE.md: no direct dependency on an external implementation detail). */
   readonly memoryProbe?: MemoryProbe;
   readonly fetchAssets?: (moduleUrl: string) => Promise<readonly ShardAsset[]>;
-  /** 📦️ Fetches, verifies and returns the declared package assets of one plugin; default: from the page's own origin through
+  /** ✅️ Fetches, verifies and returns the declared package assets of one plugin; default: from the page's own origin through
    * {@link PACKAGE_ASSET_ROUTE} (nothing without a page location). */
   readonly fetchPackageAssets?: (declared: readonly PackageAssetDeclaration[]) => Promise<readonly ShardAsset[]>;
   /** ⏱️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): clock for `runtimeMetricsSnapshot`'s
    * `sampledAtMs`/`startRuntimeMetricsPublisher`'s cadence gate — injectable so both are testable
    * without real timers, same pattern `ShardClient`'s own `options.now` already uses. */
   readonly now?: () => number;
-  /** 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): per-actor `TurnScheduler` mailbox
+  /** 📫️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): per-actor `TurnScheduler` mailbox
    * capacity — see `📬️mailbox.ts`'s own doc for the accept/coalesced/dropped/rejected contract
    * {@link ActivationRegistry.enqueueTurn} surfaces verbatim. */
   readonly turnMailboxCapacity?: number;
-  /** 🧵️ A turn's `ShardClient.turn` result — no effect/`UiPatch` routing exists on this side of the
+  /** 📬️ A turn's `ShardClient.turn` result — no effect/`UiPatch` routing exists on this side of the
    * boundary yet (that belongs to the renderer's `🌉️ProgramBridge`), so the default is a documented
    * no-op rather than a silent drop of something anyone actually reads. */
   readonly onTurnResult?: (actorId: string, result: unknown) => void;
-  /** 🧵️ A rejected queued turn — default logs via `console.error`, same "never let one actor's
+  /** ❌️ A rejected queued turn — default logs via `console.error`, same "never let one actor's
    * failure wedge the dispatch loop" contract `TurnScheduler.onTurnError` documents on its own. */
   readonly onTurnError?: (actorId: string, error: unknown) => void;
   /** 📈️ Set `true` to auto-start `startRuntimeMetricsPublisher` in the constructor, wired to this
@@ -150,7 +150,7 @@ export class ActivationRegistry {
    * seeded manifest never cascades — matching `registerManifest`'s own pre-existing "manifest-only,
    * no side effects" contract exactly. */
   private readonly extensionsByParent = new Map<string, string[]>();
-  /** 🧩️ parent actorId → the child actorIds `activateExtensionsOf` minted for it — the cascade
+  /** 🌳️ parent actorId → the child actorIds `activateExtensionsOf` minted for it — the cascade
    * topology `suspend`/`resume`/`cancel` walk (leaves-first for suspend/cancel, parent-first for
    * resume — see each method's own doc). */
   private readonly extensionChildren = new Map<string, string[]>();
@@ -218,7 +218,7 @@ export class ActivationRegistry {
     }
   }
 
-  /** 🧩️ Indexes one extension program under its parent program — the web mirror of one catalog extension row, for
+  /** 🗂️ Indexes one extension program under its parent program — the web mirror of one catalog extension row, for
    * programs outside the build-time catalog (a hub document's catalog-resolved programs). Both ids are program ids whose
    * manifests `registerManifest` records; registering the same pair twice indexes it once. */
   registerExtension(parentPluginId: string, extensionPluginId: string): void {
@@ -240,7 +240,7 @@ export class ActivationRegistry {
     return this.assetsPromise;
   }
 
-  /** 📦️ The declared package assets of `manifest`'s plugin, fetched and verified once per plugin. A failed fetch or a size/hash
+  /** 📋️ The declared package assets of `manifest`'s plugin, fetched and verified once per plugin. A failed fetch or a size/hash
    * mismatch delivers none of them (the plugin still activates, as it would on a host that delivers nothing) and is reported. */
   private loadPackageAssets(manifest: ActivationManifestEntry): Promise<readonly ShardAsset[]> {
     const declared = manifest.assets;
@@ -263,7 +263,7 @@ export class ActivationRegistry {
     this.touch(actorId);
   }
 
-  /** ⏱️ Refreshes `actorId`'s LRU position — call on every turn, not just activation, or a
+  /** 📍️ Refreshes `actorId`'s LRU position — call on every turn, not just activation, or a
    * long-resident-but-idle actor never yields to memory pressure ahead of one that's actually busy. */
   touch(actorId: string): void {
     const index = this.residencyOrder.indexOf(actorId);
@@ -294,7 +294,7 @@ export class ActivationRegistry {
     await this.activateExtensionsOf(pluginId, actorId);
   }
 
-  /** 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the cascade half of
+  /** ⚙️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the cascade half of
    * `activate` — `design-unified.md` §M6's web mirror, "per-extension `shardClient.activate` with
    * parent affinity, local link records, symmetric cascade." Every registered extension whose
    * descriptor names `pluginId` as its parent (`registerCatalog`'s own `extensionsByParent` index)
@@ -338,7 +338,7 @@ export class ActivationRegistry {
   //#endregion ▶️Activate
 
   //#region 🧵️TurnDispatch
-  /** 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): routes one turn through the
+  /** 🪣️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): routes one turn through the
    * `TurnScheduler` instead of a caller reaching `ShardClient.turn` directly — lane priority,
    * latest-wins coalescing, and cancellation-on-suspend/teardown/restore all come from the scheduler,
    * not from this method. Returns the same {@link Backpressure} the scheduler itself returns; `rejected`
@@ -348,7 +348,7 @@ export class ActivationRegistry {
     return this.turnScheduler.enqueue(actorId, { lane, coalesce: options?.coalesce, payload: { events, generation } });
   }
 
-  /** 🧵️ The `TurnScheduler`'s `runTurn` seam. Drops (rather than dispatches) a turn whose snapshotted
+  /** 🚦️ The `TurnScheduler`'s `runTurn` seam. Drops (rather than dispatches) a turn whose snapshotted
    * generation no longer matches this actor's current one — it was queued against an instance that has
    * since been restored (see `QueuedTurnPayload`'s own doc and `restoreActor`), so running it now would
    * be exactly the "receives pre-restart queued work" bug this packet exists to prevent. */
@@ -390,7 +390,7 @@ export class ActivationRegistry {
     if (index !== -1) this.residencyOrder.splice(index, 1);
   }
 
-  /** 🧩️ terra-extension-activation: cascade half of `suspend` — every child `activateExtensionsOf`
+  /** ⏸️ terra-extension-activation: cascade half of `suspend` — every child `activateExtensionsOf`
    * minted for `parentActorId`, suspended in turn (recursing naturally through each child's own
    * `suspend`, so a deeper cascade would still work correctly if one ever existed — today an
    * extension's `dependsOn[0]` always names a plugin, never another extension, so this is exactly
@@ -401,7 +401,7 @@ export class ActivationRegistry {
     for (const child of children) await this.suspend(child);
   }
 
-  /** 🚑️ Re-activates a suspended actorId and restores its last checkpoint — a plain cold `activate()`
+  /** 🔚️ Re-activates a suspended actorId and restores its last checkpoint — a plain cold `activate()`
    * (no `restore()` call) if it was never checkpointed. */
   async resume(actorId: string): Promise<void> {
     const pluginId = this.actorPlugin.get(actorId);
@@ -417,7 +417,7 @@ export class ActivationRegistry {
     await this.resumeExtensionsOf(actorId);
   }
 
-  /** 🧩️ terra-extension-activation: cascade half of `resume` — every tracked child that was
+  /** 🔁️ terra-extension-activation: cascade half of `resume` — every tracked child that was
    * suspended (has a checkpoint, not currently resident) resumes after its parent. A child never
    * suspended at all (e.g. it failed to activate in the first place, per `activateExtensionsOf`'s
    * best-effort policy) has no checkpoint and is correctly skipped rather than cold-activated here —
@@ -430,7 +430,7 @@ export class ActivationRegistry {
     }
   }
 
-  /** 🚑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): the web mirror of native's
+  /** 🌐️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): the web mirror of native's
    * "Trapped → drop + re-instantiate (generation++) + restore last checkpoint" (design-runtime.md §1
    * `FailurePolicy`) — called from a `ShardClient`'s own `onShardLost` for every actorId that WAS
    * pinned to the shard that just died (see {@link handleShardLost}). Bumps this actor's generation
@@ -451,7 +451,7 @@ export class ActivationRegistry {
     await this.resume(actorId);
   }
 
-  /** 🚑️ Restores every actorId the caller reports as lost together — see {@link restoreActor}. Runs
+  /** ♻️ Restores every actorId the caller reports as lost together — see {@link restoreActor}. Runs
    * every restoration concurrently (independent actors, no ordering dependency between them) and never
    * lets one actor's restore failure block another's, same "one actor's failure never wedges the rest"
    * reasoning `TurnScheduler.onTurnError`'s own doc gives. */
@@ -459,7 +459,7 @@ export class ActivationRegistry {
     await Promise.all(actorIds.map((actorId) => this.restoreActor(actorId).catch((error: unknown) => undefined)));
   }
 
-  /** 🚑️ Bound convenience handler for `ShardClientOptions.onShardLost` — pass this directly, e.g.
+  /** 🏪️ Bound convenience handler for `ShardClientOptions.onShardLost` — pass this directly, e.g.
    * `new ShardClient({ …, onShardLost: registry.handleShardLost })`. `ShardClient`'s own callback
    * contract is synchronous `void` (the shard transport only reports loss; restoration is the
    * kernel-side registry's job, per that option's own doc comment), so the restore promise is
@@ -514,7 +514,7 @@ export class ActivationRegistry {
   //#endregion 🚑️SuspendResume
 
   //#region 📈️RuntimeMetrics
-  /** 📈️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): one row per actor this registry has ever
+  /** 📊️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): one row per actor this registry has ever
    * activated (`actorPlugin` — populated on `markResident`, never cleared on `suspend`, so a
    * suspended-but-not-forgotten actor still gets a row with `resident: false`). Field-compatible
    * with the Rust `ActorMetricsSample` the native host publishes, minus the fields only a live
@@ -525,7 +525,7 @@ export class ActivationRegistry {
     return [...this.actorPlugin.entries()].map(([actorId, pluginId]) => ({ actorId, pluginId, resident: this.resident.has(actorId), shard: this.shardClient.shardIndexFor(actorId) ?? null }));
   }
 
-  /** 📈️ The `os.runtime.metrics` payload this side of the boundary can build: per-actor residency
+  /** 📸️ The `os.runtime.metrics` payload this side of the boundary can build: per-actor residency
    * rows plus `ShardClient.shardMetricsSamples` (see that method's own doc comment). `sampledAtMs`
    * defaults to this registry's own injected clock, same convention as `runtime_metrics_snapshot`'s
    * `sampled_at_ms` on the Rust side. */
@@ -533,7 +533,7 @@ export class ActivationRegistry {
     return { actors: this.runtimeMetricsActorRows(), shards: this.shardClient.shardMetricsSamples(sampledAtMs), sampledAtMs };
   }
 
-  /** ⏱️ Starts a 2Hz (`RUNTIME_METRICS_PUBLISH_INTERVAL_MS`) publish loop calling `sink(topic,
+  /** 🚀️ Starts a 2Hz (`RUNTIME_METRICS_PUBLISH_INTERVAL_MS`) publish loop calling `sink(topic,
    * snapshot)` — `topic` is always `"os.runtime.metrics"`, matching the Rust side's bus topic name.
    * Returns a `stop()` disposer. Real `setInterval`, not the injected `now` (browser timer loops are
    * not something the pure-crate clock-injection discipline applies to — only `🎭️actor` itself must

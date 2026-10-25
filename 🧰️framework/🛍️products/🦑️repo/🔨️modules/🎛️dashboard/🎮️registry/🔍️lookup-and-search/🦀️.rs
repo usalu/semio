@@ -8,6 +8,8 @@ impl Registry {
     pub fn root(&self) -> &Path { &self.root }
     /// 📜️ Every command, sorted by verb in launcher order and then by label.
     pub fn entries(&self) -> &[Entry] { &self.entries }
+    /// 🕸️ Whether the build graph publication was missing when the registry was built, so inferred targets could not be checked.
+    pub fn graph_unpublished(&self) -> bool { self.graph_unpublished }
     /// ❌️ Every invalid declaration and dangling reference, each naming its file.
     pub fn problems(&self) -> &[Problem] { &self.problems }
     /// 📂️ The workspace-relative files that define the project graph: every manifest plus the workspace configuration.

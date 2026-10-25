@@ -1,0 +1,238 @@
+# stage-clean orphan staged=lib-defects-tools/staged/patches/lib-defects-wave2.json map=None
+--- /dev/null
++++ b/staged/lib-defects-tools/staged/patches/lib-defects-wave2.json
+@@ -0,0 +1,12 @@
++[
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "old": "+JSON.stringify(join(censusOwner,\"🟨️.cjs\"))+');'+compiled.code+",
++    "new": "+JSON.stringify(join(censusOwner,\"🟨️.cjs\"))+').createBunWorkspaceOwnershipV1({ownershipPath:'+JSON.stringify(join(censusOwner,\"../🔣️policy.json\"))+',ownershipSource:'+JSON.stringify(readFileSync(join(censusOwner,\"../🔣️policy.json\"),\"utf8\"))+'});'+compiled.code+",
++    "count": 1
++   }
++  ]
++ }
++]
+\ No newline at end of file
+# stage-clean orphan staged=lib-defects-tools/staged/patches/lib-defects.json map=None
+--- /dev/null
++++ b/staged/lib-defects-tools/staged/patches/lib-defects.json
+@@ -0,0 +1,217 @@
++[
++ {
++  "file": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/🧪️execution/🔣️.json",
++  "edits": [
++   {
++    "old": "\"packages\": [\"semio-framework-value-derive\"]",
++    "new": "\"packages\": [\"semio-framework-value-derive\", \"semio-framework-value-derive-expansion\"]",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
++  "edits": [
++   {
++    "old": "\"--projects={project}\",\"--\",\"bun\"",
++    "new": "\"--projects={project}\",\"--dry-run={dry-run}\",\"--\",\"bun\"",
++    "count": 3
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "old": "join(censusOwner,\"🧫️fixtures/🔣️.json\")",
++    "new": "join(censusOwner,\"🧪️tests/🧫️fixtures/🔣️.json\")",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️scope/🟦️.ts",
++  "edits": [
++   {
++    "old": "\"../../../📜️script.ts\"",
++    "new": "\"../../../🟦️.ts\"",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "old": "\"../📜️script.ts\"",
++    "new": "\"../🟦️.ts\"",
++    "count": 5
++   },
++   {
++    "old": "expect(call.arguments[3].body.expression.getText(tree)).toBe(\"provisionNxToolsOwnedV1\");expect(call.arguments[3].body.arguments",
++    "new": "expect(call.arguments[4].body.expression.getText(tree)).toBe(\"provisionNxToolsOwnedV1\");expect(call.arguments[4].body.arguments",
++    "count": 1
++   },
++   {
++    "old": "toEqual([\"workspace\",\"store\",\"publisher\"])",
++    "new": "toEqual([\"workspace\",\"store\",\"publisher\",\"control\"])",
++    "count": 1
++   },
++   {
++    "old": "managed=find(owner,\"withManagedToolingProvisionV1\")",
++    "new": "managed=find(owner,\"withManagedToolingProvisionOwnedV1\")",
++    "count": 1
++   },
++   {
++    "old": "toContain(\"await retireManagedToolingGenerationsOwnedV1(workspace,store,selected,registry)\");expect(body).toContain(\"result.availableBytes<selected.minimumAvailableBytes\")",
++    "new": "toContain(\"await retireManagedToolingGenerationsOwnedV1(workspace,store,selected,registry,control)\");expect(body).toContain(\"observeToolingHeadroomV1(store.storage,control,store.invocation,selected.minimumAvailableBytes)\")",
++    "count": 1
++   },
++   {
++    "old": "toContain(\"withAdmittedNxSdkClonePublicationV1(store,quote,registry,run)\")",
++    "new": "toContain(\"withAdmittedNxSdkClonePublicationV1(store,quote,registry,control,run)\")",
++    "count": 1
++   },
++   {
++    "old": "activationResources=activator.body.statements[0].expression.arguments[0]",
++    "new": "activationResources=activator.body.statements.find((node:any)=>parser.isReturnStatement(node)).expression.arguments[0]",
++    "count": 1
++   },
++   {
++    "old": "method=tree.statements.find((node:any)=>parser.isFunctionDeclaration(node)&&node.name?.text===\"withManagedToolingProvisionV1\")",
++    "new": "method=tree.statements.find((node:any)=>parser.isFunctionDeclaration(node)&&node.name?.text===\"withManagedToolingProvisionOwnedV1\")",
++    "count": 1
++   },
++   {
++    "old": "expect(retention).toContain(\"body(publisher)\")",
++    "new": "expect(retention).toContain(\"body(publisher,control)\")",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🧹️cleanup/🟦️.ts",
++  "edits": [
++   {
++    "old": "\"../../📜️script.ts\"",
++    "new": "\"../../🟦️.ts\"",
++    "count": 2
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "old": "const consumer=readFileSync(join(process.cwd(),\"🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/📜️script.ts\"),\"utf8\");",
++    "new": "const consumer=readFileSync(join(process.cwd(),\"🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/📜️script.ts\"),\"utf8\")+readFileSync(join(process.cwd(),\"🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️python-package-commands/🟦️.ts\"),\"utf8\");",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "old": "const tree=ts.createSourceFile(script,readFileSync(script,\"utf8\"),ts.ScriptTarget.Latest,true),body=tree.statements.filter(ts.isClassDeclaration).find(value=>value.name?.text===\"TestScript\")?.members.filter(ts.isMethodDeclaration).find(value=>value.name.getText(tree)===\"run\")?.body;\n expect(body).toBeDefined();const referenced=new Set<string>();const visit=(node:ts.Node)=>{if(ts.isIdentifier(node))referenced.add(node.text);ts.forEachChild(node,visit);};visit(body!);for(const imported of tree.statements.filter(ts.isImportDeclaration)){",
++    "new": "const tree=ts.createSourceFile(script,readFileSync(script,\"utf8\"),ts.ScriptTarget.Latest,true),run=tree.statements.filter(ts.isClassDeclaration).find(value=>value.name?.text===\"TestScript\")?.members.filter(ts.isMethodDeclaration).find(value=>value.name.getText(tree)===\"run\")?.body;\n expect(run).toBeDefined();expect(run!.getText(tree)).toContain(\"runTestScript(\");const helperImport=tree.statements.filter(ts.isImportDeclaration).find(value=>ts.isStringLiteral(value.moduleSpecifier)&&value.importClause?.namedBindings!==undefined&&ts.isNamedImports(value.importClause.namedBindings)&&value.importClause.namedBindings.elements.some(element=>element.name.text===\"runTestScript\"));expect(helperImport).toBeDefined();\n const helperPath=resolve(owner,(helperImport!.moduleSpecifier as ts.StringLiteral).text),helperTree=ts.createSourceFile(helperPath,readFileSync(helperPath,\"utf8\"),ts.ScriptTarget.Latest,true),body=helperTree.statements.filter(ts.isFunctionDeclaration).find(value=>value.name?.text===\"runTestScript\")?.body;\n expect(body).toBeDefined();const referenced=new Set<string>();const visit=(node:ts.Node)=>{if(ts.isIdentifier(node))referenced.add(node.text);ts.forEachChild(node,visit);};visit(body!);for(const imported of helperTree.statements.filter(ts.isImportDeclaration)){",
++    "count": 1
++   },
++   {
++    "old": "const compiled=ts.transpileModule(\"return async function(segments:string[])\"+body!.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.None}}).outputText;\n  await new Function(\"executeCargoRequestV1\",\"relative\",\"resolve\",compiled)(capture,relative,resolve).call({repoRoot:root,root:owner,invocation:original},tail);",
++    "new": "const compiled=ts.transpileModule(\"return async function(context:any,segments:string[])\"+body!.getText(helperTree),{compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.None}}).outputText;\n  await new Function(\"executeCargoRequestV1\",\"relative\",\"resolve\",compiled)(capture,relative,resolve)({repoRoot:root,root:owner,invocation:original},tail);",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json",
++  "edits": [
++   {
++    "old": "      \"packages\": [\n        \"semio-framework-value-derive\"\n      ]",
++    "new": "      \"packages\": [\n        \"semio-framework-value-derive\",\n        \"semio-framework-value-derive-expansion\"\n      ]",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🧪️tests/🟦️.ts",
++  "edits": [
++   {
++    "old": "[\"bun\",\"repo\",\"exec\",\"--projects={project}\",\"--\",\"bun\",\"{workspace}/{script}\"]",
++    "new": "[\"bun\",\"repo\",\"exec\",\"--projects={project}\",\"--dry-run={dry-run}\",\"--\",\"bun\",\"{workspace}/{script}\"]",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/📜️script.ts",
++  "edits": [
++   {
++    "old": "}finally{rmSync(root,{recursive:true,force:true});}\n",
++    "new": "}finally{rmSync(root,{recursive:true,force:true});}\nprocess.stdout.write(JSON.stringify({accepted,same,completed,observed,restored,mutated,bytesRead,metadataBytes,cacheUnchanged,digest,closed,readOperations,parentCount})+\"\\n\");\n",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🟦️.ts",
++  "edits": [
++   {
++    "old": "taskInputs:(_graph:unknown,selected:typeof task)=>selected.definition.inputs",
++    "new": "bazelTaskInputsV1:(_graph:unknown,selected:typeof task)=>selected.definition.inputs",
++    "count": 1
++   },
++   {
++    "old": "taskInputs:()=>task.definition.inputs",
++    "new": "bazelTaskInputsV1:()=>task.definition.inputs",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/💾️cache/🔣️.json",
++  "edits": [
++   {
++    "old": "        \"options\": {\n          \"command\": \"bun ./📜️script.ts build\"\n        }",
++    "new": "        \"options\": {\n          \"cwd\": \"{projectRoot}\",\n          \"command\": \"bun ./📜️script.ts build\"\n        }",
++    "count": 1
++   },
++   {
++    "old": "        \"options\": {\n          \"command\": \"bun ./📜️script.ts check\"\n        }",
++    "new": "        \"options\": {\n          \"cwd\": \"{projectRoot}\",\n          \"command\": \"bun ./📜️script.ts check\"\n        }",
++    "count": 1
++   },
++   {
++    "old": "        \"options\": {\n          \"command\": \"bun ./📜️script.ts test\"\n        }",
++    "new": "        \"options\": {\n          \"cwd\": \"{projectRoot}\",\n          \"command\": \"bun ./📜️script.ts test\"\n        }",
++    "count": 2
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🥾️cross-platform-bootstrap/🔣️.json",
++  "edits": [
++   {
++    "old": "\"-Z\", \"threads=8\"",
++    "new": "\"-Z\", \"threads=0\"",
++    "count": 1
++   },
++   {
++    "old": "      \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts\"\n    ]\n  }",
++    "new": "      \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts\"\n    ],\n    \"deferredImports\": {\n      \"source\": \"import { sep } from \\\"node:path\\\";\\nexport const initial = sep;\\nexport const load = () => import(\\\"./command.ts\\\");\\n\",\n      \"imports\": [\n        { \"path\": \"node:path\", \"kind\": \"import-statement\" },\n        { \"path\": \"./command.ts\", \"kind\": \"dynamic-import\" }\n      ]\n    }\n  }",
++    "count": 1
++   }
++  ]
++ },
++ {
++  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🥾️nx-entrypoints/🔣️.json",
++  "edits": [
++   {
++    "old": "\"source\": \"⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts\"",
++    "new": "\"source\": \"⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts\"",
++    "count": 1
++   }
++  ]
++ }
++]

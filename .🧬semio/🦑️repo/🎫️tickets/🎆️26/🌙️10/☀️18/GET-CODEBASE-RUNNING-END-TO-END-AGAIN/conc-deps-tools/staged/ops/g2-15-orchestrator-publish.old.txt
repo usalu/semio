@@ -1,1 +1,0 @@
-try{published=await runJavascriptDependencyStoreProducerV1(workspace,store,control,selection,"publish");}

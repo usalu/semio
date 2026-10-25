@@ -1,4 +1,4 @@
-//! 🎫️ Ticket and contributor schemas of the repo GraphQL schema: the ticket, checkpoint and contributor types. See [`super`].
+//! 🎟️ Ticket and contributor schemas of the repo GraphQL schema: the ticket, checkpoint and contributor types. See [`super`].
 
 use super::*;
 

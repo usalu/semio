@@ -15,7 +15,7 @@
     "Read": {
       "oneOf": [
         { "type": "object", "additionalProperties": false, "required": ["kind", "config"], "properties": { "kind": { "const": "vitest" }, "config": { "type": "string" } } },
-        { "type": "object", "additionalProperties": false, "required": ["kind", "entries"], "properties": { "kind": { "const": "imports" }, "entries": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "types": { "type": "boolean" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "entries"], "properties": { "kind": { "const": "imports" }, "entries": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "types": { "type": "boolean" }, "command": { "type": "string" }, "specifiers": { "type": "array", "items": { "type": "string" } } } },
         { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "workspace-manifests" } } },
         { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "nearest-tsconfig" } } },
         { "type": "object", "additionalProperties": false, "required": ["kind", "paths"], "properties": { "kind": { "const": "files" }, "paths": { "type": "array", "uniqueItems": true, "items": { "type": "string" } } } },

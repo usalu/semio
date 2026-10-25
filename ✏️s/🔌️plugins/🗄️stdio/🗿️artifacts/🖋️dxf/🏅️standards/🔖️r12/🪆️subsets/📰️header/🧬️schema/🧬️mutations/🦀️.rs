@@ -51,7 +51,7 @@ use crate::schema::diff::{block_field_changes,
 
 
 use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle};
-#[cfg(test)] use crate::schema::snapshot::{DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText};
+#[allow(unused_imports)] use crate::schema::snapshot::{DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText};
 use crate::DxfSnapshot;
 
 use protocol::Mutation;

@@ -4,7 +4,7 @@
   "description": "🧫️ The language-agnostic cases of the input precision engine: every implementation answers the same globs, command words, JSONC documents, dispatcher branches, package names and derivations over one in-memory workspace.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["globs", "commands", "jsonc", "dispatch", "program", "messages", "packageNames", "workspace", "document", "derive", "unselected", "refusals", "expect"],
+  "required": ["globs", "commands", "jsonc", "dispatch", "program", "messages", "packageNames", "workspace", "document", "derive", "cargoExport", "unselected", "refusals", "expect"],
   "properties": {
     "$schema": { "type": "string" },
     "globs": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["pattern", "path", "match"], "properties": { "pattern": { "type": "string" }, "path": { "type": "string" }, "match": { "type": "boolean" } } } },
@@ -23,11 +23,13 @@
         "kinds": { "type": "object" },
         "cargoRoots": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
         "cargoSources": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+        "cargoDependencySources": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
         "cargoToolchain": { "type": "array", "items": { "type": "string" } }
       }
     },
     "document": { "type": "object" },
     "derive": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["identity"], "properties": { "identity": { "type": "object" } } } },
+    "cargoExport": { "type": "object", "additionalProperties": false, "required": ["identity", "files", "absent", "withoutOutputs"], "properties": { "identity": { "type": "object" }, "files": { "type": "array", "items": { "type": "string" } }, "absent": { "type": "array", "items": { "type": "string" } }, "withoutOutputs": { "type": "array", "items": { "type": "string" } } } },
     "unselected": { "type": "array", "items": { "type": "object" } },
     "refusals": { "type": "array", "items": { "type": "object" } },
     "expect": { "type": "object" }

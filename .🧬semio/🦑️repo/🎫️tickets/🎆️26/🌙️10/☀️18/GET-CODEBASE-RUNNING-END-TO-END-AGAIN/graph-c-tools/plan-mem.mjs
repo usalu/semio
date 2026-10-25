@@ -1,0 +1,16 @@
+import{readFileSync}from"node:fs";import{join}from"node:path";
+const L="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const inference=await import(join(L,"🏗️build/🕸️graph/📥️inference/🟨️.mjs"));await inference.libraryBootstrap;inference.prepareSourceAnalysesV1();
+const obs=await import(join(L,"🏗️build/👁️observation/🟨️.mjs"));
+const gen=await import(join(L,"🏗️build/🕸️graph/🕰️generations/🟨️.mjs"));
+const root="/Users/ueli/Documents/semio/.cache/b/g/m/generations";
+const holds=async rows=>{const plain=rows.filter(r=>r.kind!=="closure"&&r.kind!=="field"&&r.kind!=="digest");return plain.length===0||obs.observationsHold(plain,64,new Set(),true);};
+const mem=(l)=>{const m=process.memoryUsage();console.log(l,"rss",Math.round(m.rss/1048576),"heap",Math.round(m.heapUsed/1048576),"ext",Math.round(m.external/1048576));};mem("after imports");
+const store=gen.createGenerationStoreV1({root,holds,resources:{facts:"x"}});
+const current=await store.read();console.log("generation",current.pointer.generation);
+const t=Date.now();
+mem("before plan");
+const verdict=await store.plan({current,identity:current.manifest.identity,changes:[],progress:undefined});
+console.log(verdict.kind,"dirty",verdict.dirty.size,"stale",verdict.stale,"added",verdict.added.length,"envStale",verdict.envStale,"secs",(Date.now()-t)/1000);
+
+mem("after plan");Bun.gc(true);mem("after gc");

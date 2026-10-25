@@ -110,7 +110,7 @@ fn set_clip_path_reference_accepts_a_shape_only_clip_path_and_inverts() {
     let base = document();
     let mut snapshot = base.clone();
     let mutation = SvgBasicMutation::SetClipPathReference(set_clip_path_reference::SetClipPathReference { path: vec![1], clip_path_id: Some("shape".into()) });
-    let undo = Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let undo = ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let outcome = apply_svg_basic_mutation(&mut snapshot, &mutation);
     assert!(outcome.messages().is_empty(), "a shape-only clipPath is legal: {:?}", outcome.messages());
     assert_eq!(element_attr(node_at(&snapshot.doc, &[1]).unwrap(), "clip-path"), Some(&SvgAttributeValue::LocalReference("shape".into())));
@@ -134,7 +134,7 @@ fn insert_clip_path_shape_adds_a_real_shape_and_inverts() {
     let base = document();
     let mut snapshot = base.clone();
     let mutation = SvgBasicMutation::InsertClipPathShape(insert_clip_path_shape::InsertClipPathShape { clip_path_id: "shape".into(), index: 0, node: elem("circle", vec![("cx", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:4.0,unit:"".into()})), ("cy", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:4.0,unit:"".into()})), ("r", crate::schema::snapshot::SvgAttributeValue::Length(crate::schema::snapshot::SvgLength{magnitude:4.0,unit:"".into()}))], vec![]) });
-    let undo = Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    let undo = ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     apply_svg_basic_mutation(&mut snapshot, &mutation);
     match node_at(&snapshot.doc, &[0, 0]) {
         Ok(SvgNode::Element { children, .. }) => assert_eq!(children.len(), 2, "the clip path must have gained the shape"),

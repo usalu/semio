@@ -27,7 +27,7 @@ pub struct GpuContext {
     /// a draw list, a hit test or a chrome constant speaks is logical; see `logical_width`.
     pub(super) width: u32,
     pub(super) height: u32,
-    /// 📐️ LOGICAL (CSS) surface extent — what the projection divides by, so a draw list authored in
+    /// 📏️ LOGICAL (CSS) surface extent — what the projection divides by, so a draw list authored in
     /// logical pixels lands on the full physical surface at any scale factor.
     pub(super) logical_width: f32,
     pub(super) logical_height: f32,
@@ -125,7 +125,7 @@ impl GpuContext {
         self.depth_view = Some(depth_view);
     }
 
-    /// 📐️ `css_width`/`css_height` are LOGICAL pixels; `dpr` is the surface scale factor. A scale
+    /// 🔄️ `css_width`/`css_height` are LOGICAL pixels; `dpr` is the surface scale factor. A scale
     /// change alone (the window dragged onto a display with a different density) still has to land,
     /// because the projection divisor and the scissor scale both move with it even when the
     /// physical extent happens to be identical.
@@ -161,7 +161,7 @@ impl GpuContext {
     }
 
     pub fn mesh_index_count(&self,key:&str,version:u64)->Option<u32>{self.mesh_store.get_versioned(key,version).map(|mesh|mesh.index_count)}
-    pub fn mesh_observation(&self,key:&str,version:u64)->Option<crate::MeshGpuObservation>{self.mesh_store.get_versioned(key,version).map(|mesh|crate::MeshGpuObservation{source:mesh.original_source_lease(),index_count:mesh.index_count,index_bytes:mesh.index_buffer.size(),vertex_bytes:mesh.vertex_buffer.size()})}
+    pub fn mesh_observation(&self,key:&str,version:u64)->Option<crate::MeshGpuObservation>{self.mesh_store.get_versioned(key,version).map(|mesh|crate::MeshGpuObservation{source:mesh.original_source_lease(),index_count:mesh.index_count,index_bytes:mesh.index_buffer.as_ref().map_or(0,gpu_device::Buffer::size),vertex_bytes:mesh.vertex_buffer.as_ref().map_or(0,gpu_device::Buffer::size)})}
 
     pub fn ensure_mesh_step(&mut self, key: &str, version: u64, lease: crate::kernel_3d_scene::Mesh3dLease) -> Result<bool, &'static str> {
         self.mesh_store.ensure_mesh_step(&self.roots.device, &self.roots.queue, key, version, lease)
@@ -175,7 +175,7 @@ impl GpuContext {
         self.mesh_store.upload_terminal_is_empty()
     }
 
-    /// 🧷️ The last prepared world draw that named a non-resident mesh, TAKEN so the host reports it
+    /// 🕳️ The last prepared world draw that named a non-resident mesh, TAKEN so the host reports it
     /// exactly once per occurrence instead of once per instance scalar.
     pub fn take_missing_world_mesh(&mut self) -> Option<(String, u64)> {
         self.missing_world_mesh.take()

@@ -1,10 +1,10 @@
-//! 📏️ Measurement and utf16: the text measurement results, the `TextSystem` measure and wrap operations and the utf8 to utf16 offset conversions. See [`super`].
+//! 📐️ Measurement and utf16: the text measurement results, the `TextSystem` measure and wrap operations and the utf8 to utf16 offset conversions. See [`super`].
 
 use super::*;
 
 //#region 🔖️Measure
 //#region 📏️Measurement
-/// 📏️ The outcome of measuring one leaf's intrinsic content against the available space taffy offers
+/// 🍃️ The outcome of measuring one leaf's intrinsic content against the available space taffy offers
 /// it. `Pending`/`Failed` are how master.md's decision #1 ("a dependency that is not ready is reported
 /// as a pending measurement with a placeholder size — never awaited") is expressed in this crate: an
 /// unshaped `TextSystem` run or an undecoded image resource is a `Pending` result carrying whatever
@@ -29,7 +29,7 @@ pub enum Measurement {
 /// does for those scripts anyway. This is what lets this crate ship grapheme-aware cursor movement
 /// without adding a `unicode-segmentation` dependency this packet is forbidden from introducing.
 impl TextSystem {
-    /// 📏️ Unwrapped intrinsic size. Short-circuits to `Measurement::Pending` without shaping at all
+    /// 📊️ Unwrapped intrinsic size. Short-circuits to `Measurement::Pending` without shaping at all
     /// when `style.family` names a [`FontDependencyId`] that has not resolved yet — the placeholder is
     /// a crude `chars × size_px × 0.6` estimate, deliberately not a real shape with the wrong font.
     pub fn measure(&mut self, text: &str, style: &TextStyle) -> Measurement {
@@ -108,7 +108,7 @@ pub fn utf8_to_utf16(text: &str, byte_index: usize) -> u32 {
     }
 }
 
-/// 🔡️ UTF-16 code unit index → UTF-8 byte index — the inverse of [`utf8_to_utf16`]. A non-BMP
+/// 🔢️ UTF-16 code unit index → UTF-8 byte index — the inverse of [`utf8_to_utf16`]. A non-BMP
 /// character (e.g. most emoji) is 2 UTF-16 units and 1 `char`; `ch.len_utf16()` accounts for that so
 /// the round trip lands exactly on the character's start, never mid-surrogate-pair.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

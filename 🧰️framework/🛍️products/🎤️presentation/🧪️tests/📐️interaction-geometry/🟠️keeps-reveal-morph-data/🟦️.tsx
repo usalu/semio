@@ -1,7 +1,7 @@
 /** 🟠️ The keeps reveal morph data tests of the presentation interaction geometry suite. */
 import { buildResolutionScope, resolveArrangement } from "@semio-tech/presentation";
 import { expect, it } from "vitest";
-import { buildInteractiveSlideLayout } from "../../../🎯️targets/⚛️react/🟦️.tsx";
+import { buildInteractiveSlideLayout } from "@semio-tech/presentation-react";
 import { globalsCssSource } from "../../🧰️presentation-deck-helpers/🟦️.tsx";
 
 /** 🟡 Registers the keeps reveal morph data tests of the presentation interaction geometry suite. */

@@ -9,7 +9,7 @@ import { discoverCargoWorkspaces } from "../../../../🗂️workspaces/🦀️ca
 import { withRepositoryCargoPreparationV1 } from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { repoToolCacheEnv } from "../../../../🏃️process/🌿️environment/🟦️.ts";
-import { wasmBindgenVersion } from "../../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
+import { requireWasmBindgenLocksV1, wasmBindgenVersion } from "../../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
 import { selectPackageManagerV1 } from "../🔌️managers/📚️catalog/🟦️.ts";
 import { repositoryCachePartitionRootV1 } from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import { NATIVE_TOOLCHAINS_V1, pythonEnvironmentOfProjectV1, toolchainMessageV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
@@ -17,7 +17,7 @@ import { toolPinValueV1 } from "../../../../🏗️build/🧰️tool-setup/🟦�
 import { pinnedGoEnvironmentV1, pinnedUvEnvironmentV1 } from "../../🛠️tools/🧰️native/🟦️.ts";
 import { systemNativeToolPortV1 } from "../../🛠️tools/🧰️native/🔌️port/🟦️.ts";
 import { runNativeDependencyToolV1, runPreparedCargoDependencyPairV1, type NativeDependencyToolRunnerV1 } from "../🟦️.ts";
-import { runtimeExecutableV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 
 
@@ -65,6 +65,7 @@ export async function prepareDependencies(kind: string, workspace: string, invoc
   else if (kind === "browsers") await run(runtimeExecutableV1(), [join(workspace, "node_modules/playwright/cli.js"), "install", "chromium"], false, repoToolCacheEnv(workspace));
   else if (kind === "wasm" || kind === "trunk") {
     const bindgen = wasmBindgenVersion(readFileSync(join(workspace, "Cargo.lock"), "utf8"));
+    requireWasmBindgenLocksV1(workspace);
     if (kind === "wasm") await tool("wasm-pack", ["wasm-pack"], toolPinValueV1("wasm-pack"));
     else await tool("trunk", ["trunk"], toolPinValueV1("trunk"));
     await tool("wasm-bindgen-cli", ["wasm-bindgen"], bindgen);

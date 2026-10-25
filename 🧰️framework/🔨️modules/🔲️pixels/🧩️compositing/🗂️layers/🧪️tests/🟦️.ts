@@ -8,7 +8,7 @@ import {CompositeJob} from "../../🟦️.ts";
 import {RasterStackJob,type RasterStackLayer} from "../🟦️.ts";
 const images=()=>Object.fromEntries(Object.entries(fixture.images).map(([key,image])=>[key,{...image,pixels:Uint8Array.from(image.pixels)}]));
 const validate=new Ajv({strict:false}).compile<{layers:RasterStackLayer[]}>(schema);
-/** 🗂️ Admits one fixture layer list through the shared schema, so the job receives exactly the validated stack. */
+/** 🔏️ Admits one fixture layer list through the shared schema, so the job receives exactly the validated stack. */
 const admitted=(layers:unknown):RasterStackLayer[]=>{const input={layers,images:fixture.images};if(!validate(input))throw new Error(JSON.stringify(validate.errors));return input.layers;};
 for(const row of fixture.cases)test(row.name,async()=>{
   expect(validate({layers:row.layers,images:fixture.images})).toBe(true);

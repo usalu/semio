@@ -43,7 +43,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for DisconnectKindCompatibility
 where
-    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<DisconnectKindCompatibility>,
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<DisconnectKindCompatibility> + From<crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility::ConnectKindCompatibility>,
 {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)

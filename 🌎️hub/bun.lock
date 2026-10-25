@@ -1355,10 +1355,8 @@
         "@semio-tech/schema-validator-ts": "workspace:*",
         "@semio-tech/ui-contract": "workspace:*",
         "@xyflow/react": "12.12.0",
-        "i18next": "25.10.10",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
-        "react-i18next": "16.6.6",
         "react-resizable-panels": "4.14.5",
         "three": "^0.182.0"
       },
@@ -1388,6 +1386,7 @@
         "fast-glob": "3.3.3",
         "fast-json-patch": "3.1.1",
         "graphlib": "2.1.8",
+        "i18next": "25.10.10",
         "lodash": "4.18.1",
         "playwright": "^1.57.0",
         "polygon-clipping": "0.15.7",
@@ -1445,15 +1444,12 @@
         "@semio-tech/ui": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
         "@xyflow/react": "^12.10.0",
-        "i18next": "^25.7.4",
         "pdfjs-dist": "^5.4.296",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
-        "react-i18next": "^16.5.2",
         "react-resizable-panels": "4.14.5",
         "three": "^0.182.0",
-        "three-mesh-bvh": "^0.9.14",
-        "xstate": "^5.25.0"
+        "three-mesh-bvh": "^0.9.14"
       },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
@@ -1473,7 +1469,6 @@
         "polygon-clipping": "0.15.7",
         "postcss": "8.5.30",
         "tailwindcss": "^4.0.0",
-        "terser": "5.49.1",
         "typescript": "^5.9.3",
         "vitest": "^4.0.17"
       }
@@ -1852,7 +1847,7 @@
         "vitest": "^4.0.17"
       }
     },
-    "../🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react": {
+    "../🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
       "name": "@semio-tech/presentation-react",
       "version": "0.1.0",
       "dependencies": {
@@ -2440,19 +2435,18 @@
       "name": "@semio-tech/repo-product",
       "version": "0.1.0",
       "dependencies": {
-        "@eslint/js": "^10.0.1",
         "@semio-tech/process": "workspace:*",
         "@semio-tech/repo-lib": "workspace:*",
-        "@semio-tech/schema-validator-ts": "workspace:*",
-        "eslint-plugin-storybook": "10.4.0",
-        "typescript-eslint": "^8.50.1"
+        "@semio-tech/schema-validator-ts": "workspace:*"
       },
       "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "@iarna/toml": "2.2.5",
         "@modelcontextprotocol/sdk": "1.32.1",
         "@semio-tech/ui": "workspace:*",
         "ajv": "8.20.0",
         "esbuild": "^0.27.2",
+        "eslint-plugin-storybook": "10.4.0",
         "fast-glob": "3.3.3",
         "find-up": "5.0.0",
         "graphql": "^17.0.2",
@@ -2461,12 +2455,12 @@
         "jsonc-parser": "3.3.1",
         "lodash": "4.18.1",
         "micromatch": "^4.0.8",
-        "nx": "23.2.0",
         "smart-buffer": "^4.2.0",
         "string-argv": "0.4.0",
         "string-width": "7.2.0",
         "strip-ansi": "^7.2.0",
         "typescript": "^5.9.3",
+        "typescript-eslint": "^8.50.1",
         "vitest": "^4.0.17",
         "yaml": "2.9.0"
       }
@@ -2525,7 +2519,7 @@
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📦️parsers": {
       "name": "@semio-tech/build-parsers",
       "version": "0.1.0",
-      "dependencies": {
+      "devDependencies": {
         "@iarna/toml": "2.2.5",
         "typescript": "5.9.3"
       }
@@ -3241,19 +3235,6 @@
         "typescript": "^5.9.3"
       }
     },
-    "../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/trinity-jack-lsp-worker",
-      "version": "0.1.0",
-      "devDependencies": {
-        "@semio-tech/framework": "workspace:*",
-        "typescript": "^5.9.3",
-        "vitest": "^4.0.17"
-      }
-    },
-    "../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/pkg": {
-      "name": "@semio-tech/trinity-jack-lsp",
-      "version": "0.1.0"
-    },
     "../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript": {
       "name": "@semio-tech/trinity-rewriting",
       "version": "0.1.0",
@@ -3281,12 +3262,29 @@
         "@semio-tech/framework": "workspace:*"
       }
     },
+    "../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust": {
+      "name": "@semio-tech/trinity-jack-rs",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@semio-tech/framework": "workspace:*"
+      }
+    },
+    "../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/trinity-jack-lsp-worker",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/trinity-jack-lsp": "workspace:*",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17"
+      }
+    },
     "../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🟦️typescript": {
       "name": "@semio-tech/wfc-bitmap",
       "version": "0.1.0"
     },
-    "../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust": {
-      "name": "@semio-tech/trinity-jack-rs",
+    "../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust": {
+      "name": "@semio-tech/trinity-jack-lsp",
       "version": "0.1.0",
       "devDependencies": {
         "@semio-tech/framework": "workspace:*"
@@ -6169,17 +6167,6 @@
       {},
       "sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw=="
     ],
-    "@jridgewell/source-map": [
-      "@jridgewell/source-map@0.3.11",
-      "",
-      {
-        "dependencies": {
-          "@jridgewell/gen-mapping": "^0.3.5",
-          "@jridgewell/trace-mapping": "^0.3.25"
-        }
-      },
-      "sha512-ZMp1V8ZFcPG5dIWnQLr3NSI1MiCU7UETdS/A0G8V/XWHvJv3ZsFqutJn1Y5RPmAPX6F3BiE397OqveU/9NCuIA=="
-    ],
     "@jridgewell/sourcemap-codec": [
       "@jridgewell/sourcemap-codec@1.6.0",
       "",
@@ -8461,7 +8448,7 @@
       "@semio-tech/presentation@workspace:../🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript"
     ],
     "@semio-tech/presentation-react": [
-      "@semio-tech/presentation-react@workspace:../🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react"
+      "@semio-tech/presentation-react@workspace:../🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📦️packages/🟦️typescript"
     ],
     "@semio-tech/print": [
       "@semio-tech/print@workspace:../🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript"
@@ -8779,10 +8766,10 @@
       "@semio-tech/trinity-jack@workspace:../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript"
     ],
     "@semio-tech/trinity-jack-lsp": [
-      "@semio-tech/trinity-jack-lsp@workspace:../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/pkg"
+      "@semio-tech/trinity-jack-lsp@workspace:../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust"
     ],
     "@semio-tech/trinity-jack-lsp-worker": [
-      "@semio-tech/trinity-jack-lsp-worker@workspace:../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript"
+      "@semio-tech/trinity-jack-lsp-worker@workspace:../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🟦️typescript"
     ],
     "@semio-tech/trinity-jack-rs": [
       "@semio-tech/trinity-jack-rs@workspace:../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"
@@ -12942,16 +12929,6 @@
       {},
       "sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg=="
     ],
-    "html-parse-stringify": [
-      "html-parse-stringify@3.1.0",
-      "",
-      {
-        "dependencies": {
-          "void-elements": "3.1.0"
-        }
-      },
-      "sha512-E0oAXcELOtsXe+BmpJ2EZyedbldPpriV5vICzEuo6xjC/D1lDukOI7KrpfQGF2Qc4wWEy0nk3bFORS2K5ZAhFQ=="
-    ],
     "html-void-elements": [
       "html-void-elements@3.0.0",
       "",
@@ -15542,30 +15519,6 @@
       },
       "sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ=="
     ],
-    "react-i18next": [
-      "react-i18next@16.6.6",
-      "",
-      {
-        "dependencies": {
-          "@babel/runtime": "^7.29.2",
-          "html-parse-stringify": "^3.0.1",
-          "use-sync-external-store": "^1.6.0"
-        },
-        "peerDependencies": {
-          "i18next": ">= 25.10.9",
-          "react": ">= 16.8.0",
-          "react-dom": "*",
-          "react-native": "*",
-          "typescript": "^5 || ^6"
-        },
-        "optionalPeers": [
-          "react-dom",
-          "react-native",
-          "typescript"
-        ]
-      },
-      "sha512-ZgL2HUoW34UKUkOV7uSQFE1CDnRPD+tCR3ywSuWH7u2iapnz86U8Bi3Vrs620qNDzCf1F47NxglCEkchCTDOHw=="
-    ],
     "react-is": [
       "react-is@17.0.2",
       "",
@@ -16575,22 +16528,6 @@
       },
       "sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg=="
     ],
-    "terser": [
-      "terser@5.49.1",
-      "",
-      {
-        "dependencies": {
-          "@jridgewell/source-map": "^0.3.3",
-          "acorn": "^8.15.0",
-          "commander": "^2.20.0",
-          "source-map-support": "~0.5.20"
-        },
-        "bin": {
-          "terser": "bin/terser"
-        }
-      },
-      "sha512-7A2xlQ5EnGT8KPA92dUh6RbRYTVw8hEaEN9L1K68l4UOXFuV511NnAqObGoRqGOQofQcMypisu1s3xawCEHrvA=="
-    ],
     "text-decoder": [
       "text-decoder@1.2.7",
       "",
@@ -17250,12 +17187,6 @@
         }
       },
       "sha512-5eWdz2yb3ajxWF3C8C4TjkXl7FGm3n2E/VlazALrQHzK7nYMSGFnCZto0bbPNl77AwkOZVLk0YnBAejUu0NiWA=="
-    ],
-    "void-elements": [
-      "void-elements@3.1.0",
-      "",
-      {},
-      "sha512-Dhxzh5HZuiHQhbvTW9AMetFfBHDMYpo23Uo9btPXgdYP+3T5S+p+jgNy7spra+veYhBP2dCSgxR/i2Y02h5/6w=="
     ],
     "w3c-xmlserializer": [
       "w3c-xmlserializer@5.0.0",
@@ -18993,23 +18924,6 @@
       "",
       {},
       "sha512-KzTVk2tCWAHtYrvvvaP8bJKJq2pVinhLcGEQdtLIYPbmNGNyYe8QwNaTUYQp2J7/vIsUKt5QCqAfUkYyG9DkOw=="
-    ],
-    "terser/commander": [
-      "commander@2.20.3",
-      "",
-      {},
-      "sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ=="
-    ],
-    "terser/source-map-support": [
-      "source-map-support@0.5.21",
-      "",
-      {
-        "dependencies": {
-          "buffer-from": "^1.0.0",
-          "source-map": "^0.6.0"
-        }
-      },
-      "sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w=="
     ],
     "three-stdlib/fflate": [
       "fflate@0.6.11",

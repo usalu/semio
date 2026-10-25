@@ -12,7 +12,7 @@ use semio_s_artifact_raster_raster_model::layer_name;
 use semio_s_artifact_raster_raster_model::{layer_visible, layer_protection, layer_node_id};
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot as RasterDocument;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+use semio_framework_plugin::{Buildable, HasBase};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::tree_window_item;
 use semio_framework_plugin::BuiltNode;

@@ -1,4 +1,4 @@
-//! 🧾️ Canonical-mode helpers: record specs, depth limits, packed-numeric eligibility, the encode context and the deterministic string-interning pre-pass.
+//! 🏁️ Canonical-mode helpers: record specs, depth limits, packed-numeric eligibility, the encode context and the deterministic string-interning pre-pass.
 
 use semio_framework_value::{DslValue, ValueError, ValueRefusalKind};
 use semio_framework_pack_error::PackRefusal;

@@ -22,7 +22,7 @@ export interface RuntimeAssetStageTree {
   readonly files: readonly { readonly name: string; readonly source: string }[];
 }
 
-/** 🌳️ Six trees: per channel the whole directory's port files, and the guest subset under its package asset name. */
+/** ⚙️ Six trees: per channel the whole directory's port files, and the guest subset under its package asset name. */
 export function runtimeAssetStageTrees(productsRoot: string, mode: string): readonly RuntimeAssetStageTree[] {
   if (!isAbsolute(productsRoot) || resolve(productsRoot) !== productsRoot || !schema.properties.mode.enum.includes(mode)) throw Error("Canonical Canvas products root and build mode required");
   const root = join(productsRoot, "canvas", mode);

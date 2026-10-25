@@ -1,4 +1,4 @@
-//! 🚚️ Shard transport and kernel types: the shard transport trait with its thread transport, the activation event, the kernel error, the actor meta and the kernel struct. See [`super`].
+//! 📡️ Shard transport and kernel types: the shard transport trait with its thread transport, the activation event, the kernel error, the actor meta and the kernel struct. See [`super`].
 
 use super::*;
 
@@ -22,7 +22,7 @@ pub(super) mod thread_transport {
 
     use super::ShardTransport;
 
-    /// 🚚️ Native duplex transport over `std::sync::mpsc` — one end held by the kernel, the mirror
+    /// 🧵️ Native duplex transport over `std::sync::mpsc` — one end held by the kernel, the mirror
     /// end by the shard loop. Gated to non-wasm32 only; the pure crate core never spawns threads
     /// itself (the shard loop that reads/writes the mirror end lives in `plugin/host`, packet B1).
     pub struct ThreadTransport {
@@ -33,7 +33,7 @@ pub(super) mod thread_transport {
     }
 
     impl ThreadTransport {
-        /// 🔗️ Builds both ends of one duplex link, sharing the heartbeat/kill flags.
+        /// 🖇️ Builds both ends of one duplex link, sharing the heartbeat/kill flags.
         pub async fn new_pair() -> (ThreadTransport, ThreadTransport) {
             let (tx_a, rx_a) = std::sync::mpsc::channel();
             let (tx_b, rx_b) = std::sync::mpsc::channel();
@@ -139,7 +139,7 @@ impl std::fmt::Display for KernelError {
 
 impl std::error::Error for KernelError {}
 
-/// 🏛️ Per-actor bookkeeping the [`Scheduler`] doesn't need to see: kind, capabilities, status,
+/// 👁️ Per-actor bookkeeping the [`Scheduler`] doesn't need to see: kind, capabilities, status,
 /// failure ladder, metrics, and which window (if any) its scene patches target.
 #[derive(Clone, Debug)]
 pub(super) struct ActorMeta {
@@ -155,7 +155,7 @@ pub(super) struct ActorMeta {
     pub(super) window: Option<WindowId>,
 }
 
-/// 🏛️ The one-implementation, three-host runtime façade: `submit`/`tick`/`complete`/`activate`/
+/// 🔱️ The one-implementation, three-host runtime façade: `submit`/`tick`/`complete`/`activate`/
 /// `suspend`/`resume`/`request_exclusive`/`commit_frame`/`metrics`. Composes [`Scheduler`],
 /// [`ShardTable`], per-window [`SceneStore`]s and the failure ladder over one actor registry.
 #[derive(Debug)]

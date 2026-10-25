@@ -10,8 +10,8 @@ use protocol::OpText;
 
 use protocol::ColdMutationDiff;
 use std::collections::BTreeMap;
-use store::pack::snapshot::ArtifactDsl;
-use store::pack::snapshot::ArtifactPack;
+use store::snapshot::ArtifactDsl;
+use store::snapshot::ArtifactPack;
 
 fn settings(loop_mode: FemLoopMode) -> FemResultsAnimation {
     FemResultsAnimation { phase: 0.0, playing: true, speed: 0.5, loop_mode, waveform: FemWaveform::Ramp, reverse: false }
@@ -124,7 +124,7 @@ fn clock_partition_matches_language_neutral_json_oracle() {
         let clock = serde_json::from_value::<Option<FemPlaybackClock>>(step["clock"].clone()).expect("clock");
         let mutation = FemResultsWindowTransientMutation::from(SetPlaybackClock { clock });
         let state = typed.entry(window_id.clone()).or_default();
-        let (next, _) = store::os_store::replay::apply_outcome(state, Mutation::diff(&mutation, state));
+        let (next, _) = store::os_store::replay::apply_outcome(state, ::semio_framework_os_kernel::ColdMutation::diff(&mutation, state));
         *state = next;
         oracle.insert(window_id, step["clock"].clone());
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);

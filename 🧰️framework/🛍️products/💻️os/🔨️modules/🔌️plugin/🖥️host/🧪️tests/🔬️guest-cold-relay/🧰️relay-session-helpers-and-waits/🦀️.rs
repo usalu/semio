@@ -9,7 +9,7 @@ async fn relay_session_with_tokens(
     step: JobStep,
 ) -> (semio_framework_job_worker::WorkerJobSession<GuestColdRelayJob>, Arc<MockJobStepGate>, Arc<Mutex<GuestInstanceSlot>>) {
     let compiled = mock.compile(&PackageRef { package: PackageId("relay-test".to_string()), hash: PackageHash([41; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4_096, 1)).await.expect("mock instantiate");
     let instance = Arc::new(Mutex::new(GuestInstanceSlot::Available(instance)));
     let gate = mock.script_pending_job_step(actor, step).await;
     let relay = GuestColdRelayJob::new(Arc::new(GuestRuntimes::Mock(mock)), Arc::clone(&instance), Arc::new(semio_framework_async_sync::Semaphore::new(1)), pool, relay_cancel, 1, ("semio.infer".to_string(), b"request".to_vec()));
@@ -41,8 +41,8 @@ async fn relay_session(
 
 async fn mounted_handle(mock: Arc<MockGuestRuntime>, actor: RuntimeActorId) -> PluginInstanceHandle {
     let compiled = mock.compile(&PackageRef { package: PackageId("mounted-relay-test".to_string()), hash: PackageHash([43; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
-    PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance,test_relay_wake_authority()).await
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4_096, 1)).await.expect("mock instantiate");
+    PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance,test_relay_original_input(),test_relay_wake_authority()).await
 }
 
 async fn relay_session_for_handle(
@@ -84,7 +84,7 @@ async fn drive_until_step_admitted(session: &mut semio_framework_job_worker::Wor
 
 async fn wait_for_cancel_admission(pool: &WorkerPool, mock: &MockGuestRuntime) {
     for _ in 0..64 {
-        let _ = semio_framework_job_worker::pump_worker_job_retirements(1,test_relay_drive_policy());
+        let _ = semio_framework_job::close_with_self_funded_context(test_relay_drive_policy(), |cx| semio_framework_job_worker::pump_worker_job_retirements(1, cx));
         if mock.cancel_admissions() == 1 {
             return;
         }

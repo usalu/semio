@@ -51,7 +51,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<SemioModelSnapshot, Op> for RotateElements
 where
-    Op: protocol::ColdMutation<SemioModelSnapshot, ReferenceDiff = SemioModelDiff> + From<RotateElements>,
+    Op: protocol::ColdMutation<SemioModelSnapshot, ReferenceDiff = SemioModelDiff> + From<RotateElements> + From<crate::schema::mutations::set_element::SetElement>,
 {
     fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
         let Some(delta) = self.delta() else {

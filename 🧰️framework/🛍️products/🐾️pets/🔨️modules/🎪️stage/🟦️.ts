@@ -19,7 +19,8 @@
  * out: they arrive on a perch that holds the fewest, on the ground — the lowest perches of the stage — only when no
  * higher one is as empty. And when a survey brings new ground, the scenery has changed: whoever stood on ground that
  * vanished is gone with it and arrives anew (without new ground it falls), and whoever shares a perch moves to one
- * that holds nobody.
+ * that holds nobody. A species that cannot stand on the ground at all (too wide or too tall for every free stretch) never takes
+ * the ground from the others: the perches are cut for the company that stands together (`companyOf`), and only it arrives.
  *
  * THE POINTER. Outside a time of concentration a pet that stands idle by itself attends to the pointer while it is
  * worth a look (it moved within the last 4 s): its pupils follow it, the bone that carries its first eye leans

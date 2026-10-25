@@ -1,9 +1,9 @@
-/** ⏯️ Contract: the tool-run policy finds tools that declare `run: Some(ToolRunDefinition)` in synthetic Rust sources, flags lifecycle verbs, measures and states that survive next to a declaration, legacy trace identifiers outside comments and test modules, framework-reserved `toolRun*` action ids and stale or duplicate requirement rows, with line-aligned comment-free code; the corpus is language-agnostic and `🐍️oracle.py` re-derives the scanner verdicts. */
+/** ⏯️ Contract: the tool-run policy finds tools that declare `run: Some(ToolRunDefinition)` in synthetic Rust sources, flags lifecycle verbs, measures and states that survive next to a declaration, legacy trace identifiers outside comments and test modules, framework-reserved `toolRun*` action ids and stale or duplicate requirement rows, with line-aligned comment-free code; the corpus is language-agnostic and `🐍️.py` re-derives the scanner verdicts. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {INTERACTIVITY_TOOL_RUN_TRIGGER,interactivityToolRunCode,interactivityToolRunDeclarationFailures,interactivityToolRunEnclosing,interactivityToolRunLegacyTraceFailures,interactivityToolRunLocalLifecycleFailures,interactivityToolRunReservedActionFailures,interactivityToolRunScopePath,interactivityToolRunWithin} from "../🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
@@ -28,6 +28,6 @@ test("the index of one source list is memoised and sources are never mutated",()
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

@@ -55,7 +55,7 @@ pub struct Board2dScene {
     /// engine's own default. A click-drag states its own rectangle and ignores this.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub area_brush_size: Option<String>,
-    /// 🎯️ The framework interaction domain this board's picks and hovers belong to — the owning app's
+    /// 🧰️ The framework interaction domain this board's picks and hovers belong to — the owning app's
     /// declared `InteractionDefinition.id`. `None` means the app declares none and the host publishes
     /// no `interactionHover` at all.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -142,7 +142,7 @@ impl SceneDoc for Board2dScene {
     }
 }
 
-/// 🚚️ The board-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the board twin of
+/// 🎒️ The board-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the board twin of
 /// [`Canvas2dSceneLane`], pinned against `🧪️tests/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json` on both sides.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Board2dSceneLane {
@@ -152,30 +152,30 @@ pub enum Board2dSceneLane {
     ToolRunTrace,
 }
 
-/// 🚚️ Reserved carrier-key namespace of the board-2d lanes.
+/// 🔑️ Reserved carrier-key namespace of the board-2d lanes.
 pub const BOARD2D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.board2d.";
 
-/// 🚚️ Wire name of each [`Board2dSceneLane`], in `Board2dSceneLane::ALL` order.
+/// 📛️ Wire name of each [`Board2dSceneLane`], in `Board2dSceneLane::ALL` order.
 pub const BOARD2D_SCENE_LANE_NAMES: [&str; 2] = ["snapshot", "toolRunTrace"];
 
-/// 🚚️ [`Board2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
+/// 📋️ [`Board2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
 pub const BOARD2D_SCENE_LANE_FIELDS: [&str; 2] = ["snapshotJson", "toolRunTrace"];
 
-/// 🚚️ Reserved carrier key of each lane.
+/// 🗝️ Reserved carrier key of each lane.
 pub const BOARD2D_SCENE_LANE_BODY_KEYS: [&str; 2] = ["framework.scene.board2d.snapshot", "framework.scene.board2d.toolRunTrace"];
 
-/// 🚚️ Whether each lane's [`Board2dScene`] field is an `Option<String>`.
+/// ❓️ Whether each lane's [`Board2dScene`] field is an `Option<String>`.
 pub const BOARD2D_SCENE_LANE_OPTIONAL: [bool; 2] = [false, true];
 
 impl Board2dSceneLane {
     pub const ALL: [Self; 2] = [Self::Snapshot, Self::ToolRunTrace];
 
-    /// 🏷️ See [`BOARD2D_SCENE_LANE_NAMES`].
+    /// 🔤️ See [`BOARD2D_SCENE_LANE_NAMES`].
     pub fn name(self) -> &'static str {
         BOARD2D_SCENE_LANE_NAMES[self as usize]
     }
 
-    /// 🏷️ See [`BOARD2D_SCENE_LANE_FIELDS`].
+    /// 🔖️ See [`BOARD2D_SCENE_LANE_FIELDS`].
     pub fn field(self) -> &'static str {
         BOARD2D_SCENE_LANE_FIELDS[self as usize]
     }
@@ -185,7 +185,7 @@ impl Board2dSceneLane {
         BOARD2D_SCENE_LANE_BODY_KEYS[self as usize]
     }
 
-    /// 🏷️ See [`BOARD2D_SCENE_LANE_OPTIONAL`].
+    /// ❔️ See [`BOARD2D_SCENE_LANE_OPTIONAL`].
     pub fn optional(self) -> bool {
         BOARD2D_SCENE_LANE_OPTIONAL[self as usize]
     }
@@ -195,7 +195,7 @@ impl Board2dSceneLane {
         Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
     }
 
-    /// 🔎️ Resolves a lane wire name back to its lane.
+    /// ↩️ Resolves a lane wire name back to its lane.
     pub fn from_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|lane| lane.name() == name)
     }
@@ -247,7 +247,7 @@ pub fn board2d_default_grid_factor() -> f64 {
     1.0
 }
 
-/// 👁️ A board scene an older producer wrote carries neither the grid-visibility nor the
+/// ✅️ A board scene an older producer wrote carries neither the grid-visibility nor the
 /// selectable-kind flags; both default ON so the absent field reads as the pre-filter behaviour.
 // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
 pub fn board2d_default_true() -> bool {
@@ -270,7 +270,7 @@ pub fn board2d_default_lod_mode() -> String {
 }
 
 impl Board2dScene {
-    /** 🧩️ Builds a 2D board scene with optional extensions unset. */
+    /** 🧱️ Builds a 2D board scene with optional extensions unset. */
     pub fn base(snapshot_json: String, camera_json: String, interactive: bool) -> Self {
         Self {
             snapshot_json,

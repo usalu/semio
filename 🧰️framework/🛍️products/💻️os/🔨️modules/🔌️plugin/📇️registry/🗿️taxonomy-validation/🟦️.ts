@@ -6,9 +6,9 @@ import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️proce
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { registrySchemaValidator } from "../✅️catalog-verification/🎯️native-selection/🟦️.ts";
 import { EXAMPLES_DIRNAME, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_RUST_LEAF, EXAMPLE_TESTS_DIRNAME, EXAMPLE_TS_LEAF, FORBIDDEN_EXAMPLE_PLURAL_DIRS, PLUGIN_AREAS, RUST_LANG, TAXONOMY, isExampleSlugName, primaryFilenameForKind, requiredRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
-import { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
+import type { PlaygroundEntry } from "../🎮️playground/📋️contract/🟦️.ts";
 import type { SemanticFacetPrimaryFileProjectionContract } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
-import { SqliteDatabaseV1 } from "../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
 import { ToolErrorV1, runToolV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 

@@ -33,26 +33,7 @@ impl<E: BoundedNativeEditingEditor> ToolJobFactory for BoundedNativeEditToolJobF
         E::native_edit_execution_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > E::NATIVE_MAXIMUM_RAW_BYTES {
-            return Err((ToolJobFactoryError::new("bounded native edit rejects oversized wire"), input, checkpoint));
-        }
-        match checkpoint {
-            Some(checkpoint) if E::NATIVE_CHECKPOINT_RESUME => Ok(ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint)),
-            Some(checkpoint) => Err((ToolJobFactoryError::new("bounded native edit does not declare checkpoint resumption"), input, Some(checkpoint))),
-            None => Ok(ArtifactRetainedCommandJob::from_wire(payload, input)),
-        }
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: E::NATIVE_MAXIMUM_RAW_BYTES, checkpoint_resume: E::NATIVE_CHECKPOINT_RESUME);
 }
 
 impl<E: BoundedNativeEditingEditor> ArtifactOwnedToolJobFactory for BoundedNativeEditToolJobFactory<E> {
@@ -92,43 +73,16 @@ pub fn admit_bounded_native_command<C: OpBinary>(command: &C, maximum_bytes: usi
     Ok(encoded.len())
 }
 
-pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request: ArtifactOwnedToolJobRequest<EditorApp<E>>) -> Result<Option<ToolOperationSpec>, Fault> {
-    if !E::NATIVE_TOOL_IDS.contains(&request.tool_id.as_str()) {
-        return Ok(None);
+pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<E>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    if !E::NATIVE_TOOL_IDS.contains(&original.tool_id.as_str()) {
+        return Ok(false);
     }
-    if E::command_id(&request.command) != request.tool_id {
-        return Err(edit_fault("app.command.tool-mismatch", "bounded native edit command does not match its addressed tool"));
+    if E::command_id(&original.command) != original.tool_id {
+        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "bounded native edit command does not match its addressed tool").into());
     }
-    admit_bounded_native_command(request.command.as_ref(), E::NATIVE_MAXIMUM_RAW_BYTES)?;
-    let tool_id = E::command_id(&request.command);
-    let operation = AppOperationContext {
-        app_instance_id: request.app_instance_id,
-        parent_document_id: request.parent_document_id,
-        operation_id: request.operation.operation.0,
-        generation: request.operation.generation.0,
-        canonical_base_revision: request.canonical_base_revision,
-        retained: request.retained,
-        authoring_seed: request.authoring_seed.clone(),
-    };
-    let payload = ArtifactRetainedCommandPayload::new(
-        ArtifactRetainedCommandInputs {
-            command: *request.command,
-            snapshot: request.snapshot,
-            snapshot_read: request.snapshot_read,
-            config: request.config,
-            history: request.history,
-            interaction_state: request.interaction_state,
-            interaction_hover: request.interaction_hover,
-            context: Some(request.context),
-            operation,
-            completion: request.completion,
-        },
-        E::command_id,
-        E::NATIVE_MAXIMUM_RAW_BYTES,
-        E::NATIVE_MAXIMUM_WORK_ITEMS,
-        E::native_edit_work(tool_id),
-    );
-    Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    let tool_id = E::command_id(&original.command);
+    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, E::command_id, E::NATIVE_MAXIMUM_RAW_BYTES, E::NATIVE_MAXIMUM_WORK_ITEMS, E::NATIVE_CHECKPOINT_RESUME, |_request| E::native_edit_work(tool_id))
 }
 
 pub fn bounded_native_edit_bounded_first_step_proofs<E: BoundedNativeEditingEditor>(owner_file: &'static str, controller_id: &'static str, artifact_schema: &'static str) -> Vec<ArtifactBoundedFirstStepProof> {
@@ -243,22 +197,7 @@ impl<E: SnapshotEditingEditor> ToolJobFactory for SnapshotEditToolJobFactory<E> 
         snapshot_edit_execution_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("snapshot edit rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl<E: SnapshotEditingEditor> ArtifactOwnedToolJobFactory for SnapshotEditToolJobFactory<E> {
@@ -283,7 +222,7 @@ fn snapshot_edit_extent<E: SnapshotEditingEditor>(command: &E::Command, _snapsho
 }
 
 /// 📏️ Refuses a resolved edit whose mutation or exact undo cannot be carried as one native publication item.
-pub fn check_publication_limits<S, M: Mutation<S> + OpBinary>(snapshot: &S, mutations: &[M]) -> Result<(), Fault> {
+pub fn check_publication_limits<S, M: Mutation<S> + kernel::ColdMutation<S> + OpBinary>(snapshot: &S, mutations: &[M]) -> Result<(), Fault> {
     mutations.iter().try_for_each(|mutation| {
         let inverses = mutation.inverse(snapshot).map_err(|error| edit_fault("snapshot-edit.inverse-refused", error.into_message()))?;
         std::iter::once(mutation).chain(inverses.iter()).try_for_each(|operation| {
@@ -308,45 +247,19 @@ fn snapshot_edit_reduce<E: SnapshotEditingEditor>(
     E::snapshot_edit_emit(event, snapshot)
 }
 
-pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: ArtifactOwnedToolJobRequest<EditorApp<E>>) -> Result<Option<ToolOperationSpec>, Fault> {
-    if !SNAPSHOT_EDIT_ACTION_IDS.contains(&request.tool_id.as_str()) {
-        return Ok(None);
+pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<E>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    if !SNAPSHOT_EDIT_ACTION_IDS.contains(&original.tool_id.as_str()) {
+        return Ok(false);
     }
-    let Some(event) = E::snapshot_edit_event(&request.command) else {
-        return Err(edit_fault("snapshot-edit.command-mismatch", "snapshot edit tool received a native command"));
+    let Some(event) = E::snapshot_edit_event(&original.command) else {
+        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "snapshot edit tool received a native command").into());
     };
-    if event.action_id() != request.tool_id {
-        return Err(edit_fault("app.command.tool-mismatch", "snapshot edit command does not match its addressed tool"));
+    if event.action_id() != original.tool_id {
+        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "snapshot edit command does not match its addressed tool").into());
     }
     let tool_id = event.action_id();
-    let operation = AppOperationContext {
-        app_instance_id: request.app_instance_id,
-        parent_document_id: request.parent_document_id,
-        operation_id: request.operation.operation.0,
-        generation: request.operation.generation.0,
-        canonical_base_revision: request.canonical_base_revision,
-        retained: request.retained,
-        authoring_seed: request.authoring_seed.clone(),
-    };
-    let payload = ArtifactRetainedCommandPayload::new(
-        ArtifactRetainedCommandInputs {
-            command: *request.command,
-            snapshot: request.snapshot,
-            snapshot_read: request.snapshot_read,
-            config: request.config,
-            history: request.history,
-            interaction_state: request.interaction_state,
-            interaction_hover: request.interaction_hover,
-            context: Some(request.context),
-            operation,
-            completion: request.completion,
-        },
-        snapshot_edit_command_id::<E>,
-        SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES,
-        SNAPSHOT_EDIT_WORK_CAPACITY.work_items(),
-        Box::new(BoundedArtifactCommandWork::new(tool_id, snapshot_edit_reduce::<E>, snapshot_edit_extent::<E>)),
-    );
-    Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, snapshot_edit_command_id::<E>, SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES, SNAPSHOT_EDIT_WORK_CAPACITY.work_items(), false, |request| BoundedArtifactCommandWork::new(tool_id, snapshot_edit_reduce::<E>, snapshot_edit_extent::<E>))
 }
 
 pub fn snapshot_edit_bounded_first_step_proofs<E: SnapshotEditingEditor>(owner_file: &'static str, controller_id: &'static str, artifact_schema: &'static str) -> Vec<ArtifactBoundedFirstStepProof> {

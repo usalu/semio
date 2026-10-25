@@ -16,7 +16,7 @@ impl World3dText {
         Self { en: en.into(), de: de.into() }
     }
 
-    /// 🌍️ The entry for the active locale (`de`, `de-CH` → German; everything else → English, the first language).
+    /// 🌐️ The entry for the active locale (`de`, `de-CH` → German; everything else → English, the first language).
     pub fn resolve(&self, locale: &str) -> &str {
         if locale.to_ascii_lowercase().split('-').next() == Some("de") {
             &self.de
@@ -65,7 +65,7 @@ impl Default for World3dTone {
 
 //#region 🔖️Annotations
 string_enum! {
-    /// 📍️ The mark a point annotation is drawn with.
+    /// 🚩️ The mark a point annotation is drawn with.
     World3dMarkerShape { Dot => "dot", Cross => "cross", Ring => "ring" }
 }
 
@@ -120,7 +120,7 @@ pub struct World3dMarker {
     pub tone: World3dTone,
 }
 
-/// 🏷️ A text label connected to a world anchor by a leader line; `label_offset_px` displaces the label on screen.
+/// ⚓️ A text label connected to a world anchor by a leader line; `label_offset_px` displaces the label on screen.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct World3dLeader {
@@ -132,7 +132,7 @@ pub struct World3dLeader {
     pub tone: World3dTone,
 }
 
-/// 📏️ One annotation of the layer, discriminated on the wire by `kind`.
+/// 📌️ One annotation of the layer, discriminated on the wire by `kind`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum World3dAnnotation {

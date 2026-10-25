@@ -1,4 +1,4 @@
-//! 📦️ Intrinsic Document verification and bounded value/chunk replay retain original wire custody.
+//! 📄️ Intrinsic Document verification and bounded value/chunk replay retain original wire custody.
 use crate::{RetainedValueToken as Token,RetainedValueContainer as Container,RetainedValueRole as Role,RetainedValueDriver,retained_pack_close_progress};
 use semio_framework_replication_codec::PackLimits;
 use semio_framework_pack_error::PackRefusal;

@@ -16,6 +16,7 @@ use crate::standards::v1::subsets::any::schema::diff::*;
 
 use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
 use protocol::{apply_diff_cold, ColdDiffAlgebra, DiffAlgebra, MutationDiff};
+use protocol::ColdMutationDiff;
 
 fn rename_stakeholder_diff(id: &EntityId, name: &str) -> ProgramDiff {
     ProgramDiff { stakeholders: Some(ProgramStakeholdersDelta { modified: vec![ProgramStakeholdersPatchEntry { id: id.0.clone(), patch: StakeholderPatch { name: Some(name.into()), ..Default::default() } }], ..Default::default() }), ..Default::default() }

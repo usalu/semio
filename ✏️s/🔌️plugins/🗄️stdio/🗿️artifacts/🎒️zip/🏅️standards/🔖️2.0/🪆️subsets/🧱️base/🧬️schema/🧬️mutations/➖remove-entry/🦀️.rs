@@ -8,7 +8,7 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "remove-entry")]
 pub struct RemoveEntry {
-    pub(crate) name: String,
+    pub name: String,
 }
 
 impl protocol::MutationKind<ZipSnapshot, ZipMutation> for RemoveEntry {

@@ -1,5 +1,5 @@
 // #region theme
-//! 🎨️ Theme colors and metrics for wgpu UI rendering.
+//! 🖌️ Theme colors and metrics for wgpu UI rendering.
 
 use crate::geometry::Rect;
 use crate::presence::{presence_color, PresenceAppearance, PresenceHsl};
@@ -33,7 +33,7 @@ impl Rgba {
         Self::new(lr, lg, lb, la)
     }
 
-    /// 🎨️ Lifts one generated `ui_styling` paint (already linear-float RGBA, decoded from the
+    /// 🧬️ Lifts one generated `ui_styling` paint (already linear-float RGBA, decoded from the
     /// authored sRGB hex by the styling codegen) into a `Rgba`. Every themed color in this target
     /// MUST come through here or [`Rgba::from_srgb8`] — a hand-written channel literal is a drift
     /// bug, and `🧪️tests/🔬️targets-wgpu-theme-token-parity` fails the build on one.
@@ -120,9 +120,9 @@ pub struct Theme {
     /// `dom.treeRowUiSpacing` (7.5 × `--ui-spacing`), the same `--size-workbench` React's
     /// `Tree` rows carry as `h-workbench`. See `layout::TreeRowMetrics`.
     pub tree_row_height: f32,
-    /// 🌳️ Per-level tree indent — `dom.treeIndentPerLevelUiSpacing`, React's own gutter step.
+    /// 🌲️ Per-level tree indent — `dom.treeIndentPerLevelUiSpacing`, React's own gutter step.
     pub tree_indent_per_level: f32,
-    /// 🌳️ Tree expand/collapse gutter width — `dom.treeToggleUiSpacing`.
+    /// 🔽️ Tree expand/collapse gutter width — `dom.treeToggleUiSpacing`.
     pub tree_toggle_width: f32,
     pub glass_saturate: f32,
     pub font_size_body: f32,
@@ -142,7 +142,7 @@ pub struct Theme {
     pub border_emphasized: Rgba,
     pub text_element: Rgba,
     pub stroke_hairline: f32,
-    /// 🎉️ React's `--stroke-focus` (`🎨️styling/🖌️ui/🎨️.css:771`, three hairlines) — the thick end of
+    /// 🎯️ React's `--stroke-focus` (`🎨️styling/🖌️ui/🎨️.css:771`, three hairlines) — the thick end of
     /// the `celebrate-border-burst` keyframe, and what a `focus-visible:ring-[length:var(--stroke-focus)]`
     /// control rings at.
     pub stroke_focus: f32,
@@ -151,7 +151,7 @@ pub struct Theme {
     /// (`🎨️styling/🖌️ui/🎨️.css:1239-1247`'s `--celebrate-conic`). Until ticket 26/09/17 packet W2k
     /// `Theme` had no triad at all, so a celebrating element painted a STATIC `accent` ring.
     pub celebrate: [Rgba; 3],
-    /// 🎉️ React's `--celebrate-border-duration` (1.2 s) — one full spin AND one full thickness burst.
+    /// ⏱️ React's `--celebrate-border-duration` (1.2 s) — one full spin AND one full thickness burst.
     pub celebrate_duration_seconds: f32,
     pub checker_light: Rgba,
     pub checker_dark: Rgba,
@@ -161,7 +161,7 @@ pub struct Theme {
     pub diagram_accent_fill: Rgba,
     /// ✏️ Default outline for a canvas2d shape layer that declares no stroke colour of its own.
     pub diagram_shape_outline: Rgba,
-    /// 📐️ The three FEM result-field hues a canvas2d packet distinguishes (residual / reaction+load /
+    /// 🔥️ The three FEM result-field hues a canvas2d packet distinguishes (residual / reaction+load /
     /// displacement+mode), taken from the palette so they stay distinguishable in both appearances.
     pub diagram_field_residual: Rgba,
     pub diagram_field_reaction: Rgba,
@@ -179,18 +179,18 @@ pub struct Theme {
     /// counterpart of the `--color-warning` palette token, sitting between [`Theme::progress`]
     /// and [`Theme::error`].
     pub warning: Rgba,
-    /// 🪜️ Plain per-level fill, indexed by `Level::index` — `ui-surface`'s wgpu counterpart, backing
+    /// 🏔️ Plain per-level fill, indexed by `Level::index` — `ui-surface`'s wgpu counterpart, backing
     /// `Theme::surface`/`glass`. Populated from the generated `levelBase..levelMenu`
     /// chrome paints (see `from_chrome` below).
     ///
     /// 🌫️ The fullscreen scrim behind a modal is [`Theme::veil`], not a field — React derives it the
     /// same way (`ui-veil` = `--surface-bg` of a `data-level="dialog"` host at `--veil-alpha`).
     pub level_bg: [Rgba; 6],
-    /// 🎨️ The 12 base-cycle (`k = index / 12 == 0`) session-color swatches for this theme's appearance
+    /// 👥️ The 12 base-cycle (`k = index / 12 == 0`) session-color swatches for this theme's appearance
     /// (contract freeze §C7.5), indexed by `index % 12` — filled from `ui_styling::presence` via
     /// `presence_bar::presence_color`. See [`Theme::presence_color`].
     pub presence: [Rgba; 12],
-    /// 🎨️ The local user's own hub-assigned palette index, if any — `None` before the hub's
+    /// 📍️ The local user's own hub-assigned palette index, if any — `None` before the hub's
     /// `ServerFrame::Session` handshake or for a folder-only session with no hub connection.
     pub local_presence: Option<u8>,
 }
@@ -212,7 +212,7 @@ fn panel_width(ui_spacing_mult: f64) -> f32 {
 }
 
 //#region 🔖️Presence
-/// 🎨️ HSL (`h` degrees, `s`/`l` `[0, 1]`) → sRGB8888, standard sector conversion.
+/// 🔄️ HSL (`h` degrees, `s`/`l` `[0, 1]`) → sRGB8888, standard sector conversion.
 // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
 fn hsl_to_srgb8(h: u16, s: f64, l: f64) -> (u8, u8, u8) {
     let h = f64::from(h).rem_euclid(360.0);
@@ -238,7 +238,7 @@ fn presence_rgba(hsl: PresenceHsl) -> Rgba {
 }
 //#endregion 🔖️Presence
 
-/// 🎨️ Builds one appearance's `Theme` out of the generated `ui_styling` palettes only — the same
+/// 🔨️ Builds one appearance's `Theme` out of the generated `ui_styling` palettes only — the same
 /// `🔣️.json` that emits React's `🎨️palette/🎨️.css`. Every field below is either a `Rgba::from_token`
 /// lift of a generated paint or a `ui_styling::{metrics, levels, radii, strokes}` constant; nothing
 /// here may be a hand-written channel or px literal (law:
@@ -335,7 +335,7 @@ pub enum SurfaceFill {
     Veil,
 }
 
-/// 🌈️ One inherited surface scope: the level a subtree sits at plus what that scope paints. The
+/// 🪟️ One inherited surface scope: the level a subtree sits at plus what that scope paints. The
 /// renderer twin of React's `SurfaceScopeValue`, which `useSurface()` hands to chrome.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SurfaceScope {
@@ -406,7 +406,7 @@ impl Theme {
     }
 
     //#region 🔖️LevelSurfaces
-    /// 🪜️ Plain per-level fill (no blur/alpha) — `ui-surface`'s wgpu counterpart.
+    /// 🧱️ Plain per-level fill (no blur/alpha) — `ui-surface`'s wgpu counterpart.
     pub fn surface(&self, level: Level) -> Rgba {
         self.level_bg[level.index()]
     }
@@ -428,12 +428,12 @@ impl Theme {
         self.surface(level).with_alpha(levels::VEIL_ALPHA as f32)
     }
 
-    /// 🌫️ Blur radius `ui-veil` applies behind the scrim — `levels::VEIL_BLUR_PX` (`--veil-blur`).
+    /// 💧️ Blur radius `ui-veil` applies behind the scrim — `levels::VEIL_BLUR_PX` (`--veil-blur`).
     pub fn veil_blur_px() -> f32 {
         levels::VEIL_BLUR_PX as f32
     }
 
-    /// 🌫️ `ui-veil` as a GLASS region — the whole utility, not just its fill. React's scrim is
+    /// 🔳️ `ui-veil` as a GLASS region — the whole utility, not just its fill. React's scrim is
     /// `backdrop-filter: blur(var(--veil-blur)) saturate(var(--glass-saturate))` UNDER
     /// `color-mix(… var(--surface-bg) calc(var(--veil-alpha) * 100%) …)`, so a scrim pushed as a
     /// plain [`Self::veil`] quad is only half of it: everything behind stayed razor sharp while the

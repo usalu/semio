@@ -15,7 +15,7 @@ pub struct SetSpatialNode {
     pub kind: Option<SpatialKind>,
     #[value(default)]
     pub name: Option<String>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "semio_s_artifact_stdio_contract::deserialize_double_option")]
     pub parent_id: Option<Option<String>>,
     #[value(default)]
     pub placement: Option<SemioTransform>,

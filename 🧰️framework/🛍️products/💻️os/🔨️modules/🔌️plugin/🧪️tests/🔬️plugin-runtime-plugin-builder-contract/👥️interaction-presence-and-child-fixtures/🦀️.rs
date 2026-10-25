@@ -78,7 +78,7 @@ pub const INGRESS_TURNS_PER_COMMAND: usize = 512;
     
     #[doc(hidden)]
 pub fn command_page_authority_budget() -> Budget {
-        Budget { retained: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }
+        Budget::from_retained(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 64, 16, 65536, 16)
     }
 
     #[doc(hidden)]

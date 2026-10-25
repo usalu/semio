@@ -14,7 +14,7 @@ type Fixture = Readonly<{
   declaration: Readonly<{ tools: readonly DeclaredTool[] }>;
   servers: Readonly<Record<string, readonly McpServer[]>>;
   files: Readonly<Record<string, string>>;
-  launchers: readonly Readonly<{ server: string; root: string; runtime: string; expected: { command: string; args: string[] } }>[];
+  launchers: readonly Readonly<{ server: string; expected: { command: string; args: string[] } }>[];
   refusals: readonly Readonly<{ id: string; tool: DeclaredTool; message: string }>[];
 }>;
 
@@ -23,7 +23,7 @@ const repoRoot = resolve(libraryRoot, "../../../../..");
 const fixture = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🤖️agent-client-configuration/🔣️.json"), "utf8")) as Fixture;
 const registrySchema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json"), "utf8")) as { $id: string; $defs: { AgentClientId: { enum: string[] } } };
 
-type ServerTable = Record<string, { type?: string; command: string; args: string[]; enabled?: boolean; cwd?: string }>;
+type ServerTable = Record<string, { type?: string; command: string; args: string[]; env?: Record<string, string>; enabled?: boolean; cwd?: string }>;
 
 function parsedServers(path: string, text: string): McpServer[] {
   const table: ServerTable = path.endsWith(".toml")
@@ -32,7 +32,7 @@ function parsedServers(path: string, text: string): McpServer[] {
         const document = parseJsonc(text) as { mcpServers?: ServerTable; servers?: ServerTable };
         return document.mcpServers ?? document.servers ?? {};
       })();
-  return Object.entries(table).map(([name, entry]) => ({ name, command: entry.command, args: entry.args }));
+  return Object.entries(table).map(([name, entry]) => ({ name, command: entry.command, args: entry.args, ...(entry.env ? { env: entry.env } : {}) }));
 }
 
 describe("derivation from a fixture declaration", () => {
@@ -69,22 +69,19 @@ describe("derivation from a fixture declaration", () => {
 });
 
 describe("the launcher a credential flow completes", () => {
-  const slashed = (value: string): string => value.replaceAll("\\", "/");
-
   for (const launcher of fixture.launchers) {
     test(`is the declared words of ${launcher.server} up to the first flag`, () => {
-      const answer = agentClientLauncher(fixture.declaration.tools, launcher.root, launcher.server, launcher.runtime);
-      expect({ command: answer.command, args: answer.args.map(slashed) }).toEqual(launcher.expected);
+      const answer = agentClientLauncher(fixture.declaration.tools, launcher.server);
+      expect({ command: answer.command, args: answer.args }).toEqual(launcher.expected);
     });
   }
 
-  test("the real semio server starts the checkout's script without the folder and scopes of its client files", () => {
-    const answer = agentClientLauncher(readDeclaredTools(repoRoot), repoRoot, "semio", "bun");
-    expect(answer.args.map(slashed)).toEqual([`${slashed(repoRoot)}/📜️script.ts`, "dev", "mcp", "stdio", "os"]);
+  test("the real semio server starts through the repo command without the catalog, folder and scopes of its client files", () => {
+    expect(agentClientLauncher(readDeclaredTools(repoRoot), "semio")).toEqual({ command: "repo", args: ["dev", "mcp", "stdio", "os"] });
   });
 
   test("refuses a server nobody declares", () => {
-    expect(() => agentClientLauncher(fixture.declaration.tools, "/work", "missing", "bun")).toThrow("no MCP server missing");
+    expect(() => agentClientLauncher(fixture.declaration.tools, "missing")).toThrow("no MCP server missing");
   });
 });
 
@@ -122,11 +119,11 @@ describe("the checked-in client files", () => {
     }
   });
 
-  test("every server starts through the Bun bootstrap and binds a folder that is not the repository root", () => {
+  test("every server starts through the repo command and binds a folder that is not the repository root", () => {
     for (const server of Object.values(mcpServersOf(readDeclaredTools(repoRoot))).flat()) {
-      expect(server.command).toBe("bun");
-      expect(server.args.slice(0, 4)).toEqual(["./📜️script.ts", "dev", "mcp", "stdio"]);
-      if (server.args[4] === "os") expect(server.args[server.args.indexOf("--folder") + 1]).not.toBe(".");
+      expect(server.command).toBe("repo");
+      expect(server.args).not.toContain("./📜️script.ts");
+      if (server.args[3] === "os") expect(server.args[server.args.indexOf("--folder") + 1]).not.toBe(".");
     }
   });
 });

@@ -20,7 +20,7 @@ export interface ReactHostPort {
   readonly createContext: typeof React.createContext;
 }
 
-/** 🔌️ Default host port — inject a test double via {@link setReactHostPort} before render. */
+/** ⚛️ Default host port — inject a test double via {@link setReactHostPort} before render. */
 export let reactHostPort: ReactHostPort = {
   createElement: React.createElement,
   useState: React.useState,
@@ -40,7 +40,7 @@ export let reactHostPort: ReactHostPort = {
   createContext: React.createContext,
 };
 
-/** 🔌️ ESM importers cannot assign an imported `export let` binding directly, so this is the only
+/** 🪢️ ESM importers cannot assign an imported `export let` binding directly, so this is the only
  * way to swap {@link reactHostPort} from outside this module (the barrel's `configureHostPorts` calls
  * this instead of a direct assignment). Returns the previously-installed port. */
 export function setReactHostPort(port: ReactHostPort): ReactHostPort {

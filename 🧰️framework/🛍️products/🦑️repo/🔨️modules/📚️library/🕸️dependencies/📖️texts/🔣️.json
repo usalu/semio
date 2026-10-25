@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "id": "dependencies",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "verify.format-unsupported": {
+      "en": "[verify dependencies {command}] unsupported format {format}.",
+      "de": "[verify dependencies {command}] nicht unterstütztes Format {format}."
+    },
+    "verify.locks-disagree": {
+      "en": "[verify dependencies locks] {count} disagreement(s) between a dependency scope's lock and its manifests in {scopes} scope(s).",
+      "de": "[verify dependencies locks] {count} Abweichung(en) zwischen dem Lock eines Abhängigkeitsbereichs und seinen Manifesten in {scopes} Bereich(en)."
+    },
+    "verify.parity-ecosystem-unsupported": {
+      "en": "[verify dependencies] parity currently supports only the 'js' ecosystem.",
+      "de": "[verify dependencies] Parität unterstützt derzeit nur das Ökosystem 'js'."
+    },
+    "verify.parity-undeclared-imports": {
+      "en": "[verify dependencies parity js] {count} external import(s) have no declaration in their owning package.",
+      "de": "[verify dependencies parity js] {count} externe(r) Import(e) ohne Deklaration im besitzenden Paket."
+    },
+    "verify.parity-lock-mismatch": {
+      "en": "[verify dependencies parity js] {count} package manifest / {lock} workspace snapshot mismatch(es) in {scopes} scope(s); \"repo dependencies lock --scope <scope>\" regenerates a lock.",
+      "de": "[verify dependencies parity js] {count} Abweichung(en) zwischen Paket-Manifest und {lock}-Workspace-Abbild in {scopes} Bereich(en); \"repo dependencies lock --scope <scope>\" erzeugt einen Lock neu."
+    },
+    "verify.parity-unowned-rows": {
+      "en": "[verify dependencies parity js] {count} direct external row(s) have no owned-scope evidence.",
+      "de": "[verify dependencies parity js] {count} direkte externe Zeile(n) ohne Nachweis im eigenen Bereich."
+    },
+    "verify.literal-external-not-zero": {
+      "en": "[verify dependencies literal-external] target=0, current={current}, oracle-conflicts={oracleConflicts}, toolchain-owner-conflicts={ownerConflicts}, toolchain-failures={failures}.",
+      "de": "[verify dependencies literal-external] Ziel=0, aktuell={current}, Orakel-Konflikte={oracleConflicts}, Toolchain-Eigentümer-Konflikte={ownerConflicts}, Toolchain-Fehler={failures}."
+    },
+    "verify.list-ecosystem-unsupported": {
+      "en": "[verify dependencies] list ecosystem must be 'all' or one of {ecosystems}.",
+      "de": "[verify dependencies] das Listen-Ökosystem muss 'all' oder eines von {ecosystems} sein."
+    },
+    "verify.new-dependencies": {
+      "en": "[verify dependencies] {count} new third-party dependenc(y/ies) — approve deliberately with 'repo ./📜️script.ts verify dependencies write-baseline', or remove the dependency.",
+      "de": "[verify dependencies] {count} neue Drittanbieter-Abhängigkeit(en) — bewusst freigeben mit 'repo ./📜️script.ts verify dependencies write-baseline' oder die Abhängigkeit entfernen."
+    }
+  }
+}

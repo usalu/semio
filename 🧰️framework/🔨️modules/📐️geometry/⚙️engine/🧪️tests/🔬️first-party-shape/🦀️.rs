@@ -96,7 +96,7 @@ fn affine_translate_rotate_scale_composition_and_apply_agree_with_kurbo() {
     }
 }
 
-/// 🔬️ DIFFERENTIAL ORACLE: `BezPath::bounding_box`'s tight per-segment extrema box vs
+/// 🗃️ DIFFERENTIAL ORACLE: `BezPath::bounding_box`'s tight per-segment extrema box vs
 /// `kurbo::Shape::bounding_box` on the same mixed line/quad/cubic path, across 32 randomly
 /// generated multi-segment paths.
 #[test]
@@ -204,7 +204,7 @@ fn empty_or_move_only_bezpath_bounding_box_agrees_with_kurbo() {
     assert!((ours.x0() - oracle.x0).abs() < 1e-12 && (ours.y0() - oracle.y0).abs() < 1e-12 && (ours.x1() - oracle.x1).abs() < 1e-12 && (ours.y1() - oracle.y1).abs() < 1e-12);
 }
 
-/// 🔬️ DIFFERENTIAL ORACLE: `Arc::eval` vs `kurbo::ParamCurve::eval(&kurbo::Arc, t)`, built
+/// 🔮️ DIFFERENTIAL ORACLE: `Arc::eval` vs `kurbo::ParamCurve::eval(&kurbo::Arc, t)`, built
 /// independently from the same deterministic pseudo-random center/radii/angles/rotation.
 #[test]
 fn arc_eval_agrees_with_kurbo_arc_eval() {
@@ -224,7 +224,7 @@ fn arc_eval_agrees_with_kurbo_arc_eval() {
     }
 }
 
-/// 🔬️ SELF-CONSISTENCY: every point sampled along a flattened circle's cubic segments stays
+/// ⭕️ SELF-CONSISTENCY: every point sampled along a flattened circle's cubic segments stays
 /// within a generous multiple of `tolerance` of the analytic circle (`|distance_to_center -
 /// radius|`) — proves [`elliptical_arc_segments`]' tolerance-driven segment count actually
 /// honors the requested accuracy, independent of `kurbo`.
@@ -249,7 +249,7 @@ fn circle_flattening_stays_within_tolerance_of_the_analytic_circle() {
     }
 }
 
-/// 🔬️ DIFFERENTIAL ORACLE: a flattened circle's `BezPath::bounding_box` vs the analytic
+/// 📦️ DIFFERENTIAL ORACLE: a flattened circle's `BezPath::bounding_box` vs the analytic
 /// `kurbo::Circle`'s own exact `bounding_box` (`center ± radius`), within `2 * tolerance`.
 #[test]
 fn circle_flattening_bounding_box_matches_kurbo_circle_bounding_box() {
@@ -266,7 +266,7 @@ fn circle_flattening_bounding_box_matches_kurbo_circle_bounding_box() {
     assert!((bb.y1() - oracle_bb.y1).abs() < tolerance * 2.0, "y1: ours={bb:?} oracle={oracle_bb:?}");
 }
 
-/// 🔬️ SELF-CONSISTENCY + shape smoke test: a rounded rect's flattened outline is closed and
+/// 📕️ SELF-CONSISTENCY + shape smoke test: a rounded rect's flattened outline is closed and
 /// its bounding box matches the outer rect within a small slack.
 #[test]
 fn rounded_rect_flattening_is_closed_and_bounded_by_the_outer_rect() {

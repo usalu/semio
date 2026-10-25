@@ -19,7 +19,7 @@ const TAU = 2 * Math.PI;
 const SPEED = [4.2, 5.6, 6.8, 3.9, 5.1, 7.4, 6.2, 4.7] as const;
 const COUNT = [12, 9, 17, 7, 14, 21, 16, 10] as const;
 
-/** 🧪️ The first series column of `demo-profile`. */
+/** 👤️ The first series column of `demo-profile`. */
 const PROFILE = [8, 4, 6, 9, 3, 5] as const;
 
 const grid = (value: number): number => {
@@ -34,7 +34,7 @@ function frame(width: number, height: number, pad: number): Frame {
   return { cx: width / 2, cy: height / 2, radius: Math.min(width - 2 * pad, height - 2 * pad) / 2 };
 }
 
-/** 🎯️ Compiles one committed fixture of this case and returns its whole projection. */
+/** 🔨️ Compiles one committed fixture of this case and returns its whole projection. */
 async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection: ProbeProjection }> {
   const records = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://🎡️charts-polar-radar/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
@@ -42,12 +42,12 @@ async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection
 // #endregion 🧫️Vectors
 
 // #region 🔮️Oracles
-/** 🔮️ d3-scale's linear radius scale from the value domain into the inner/outer radius band. */
+/** ⚖️ d3-scale's linear radius scale from the value domain into the inner/outer radius band. */
 function radial(values: readonly number[], f: Frame, inner: number) {
   return scaleLinear().domain([0, Math.max(...values)]).range([f.radius * inner, f.radius]);
 }
 
-/** 🔮️ The polar projection: zero at twelve o'clock, growing clockwise. */
+/** ➡️ The polar projection: zero at twelve o'clock, growing clockwise. */
 const px = (f: Frame, angle: number, r: number): number => grid(f.cx + r * Math.sin(angle));
 const py = (f: Frame, angle: number, r: number): number => grid(f.cy + r * Math.cos(angle));
 // #endregion 🔮️Oracles
@@ -74,7 +74,7 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/circle": (await probe(ctx, "polar-scatter.tex")).projection["geometry/circle"] ?? [] } }),
     },
     "polar-bars": {
-      /** 🔮️ One annular sector per slot, inset by the family's 0.03 rad hairline gap. */
+      /** 🕳️ One annular sector per slot, inset by the family's 0.03 rad hairline gap. */
       oracle: () => {
         const f = frame(60, 40, 4);
         const r = radial(SPEED, f, 0.2);
@@ -91,11 +91,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The `geometry/arc` records the radial bars drew. */
+      /** 📊️ The `geometry/arc` records the radial bars drew. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/arc": (await probe(ctx, "polar-bars.tex")).projection["geometry/arc"] ?? [] } }),
     },
     "radar": {
-      /** 🔮️ The single grid ring, then a closed profile whose radius is the value over the
+      /** ⭕️ The single grid ring, then a closed profile whose radius is the value over the
        * maximum of every series column — the two polygons a one-level radar emits, in that order. */
       oracle: () => {
         const f = frame(60, 40, 4);
@@ -111,11 +111,11 @@ export default defineTestAdapter({
         });
         return { projection: { "geometry/polygon": [...ring, ...profile] } };
       },
-      /** 🎯️ The `geometry/polygon` record the radar profile drew. */
+      /** 🕸️ The `geometry/polygon` record the radar profile drew. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/polygon": (await probe(ctx, "radar.tex")).projection["geometry/polygon"] ?? [] } }),
     },
     "coxcomb": {
-      /** 🔮️ Equal-angle sectors whose radius is the square root of the normalised count. */
+      /** 🏠️ Equal-angle sectors whose radius is the square root of the normalised count. */
       oracle: () => {
         const f = frame(60, 40, 4);
         const max = Math.max(...COUNT);
@@ -132,7 +132,7 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The `geometry/arc` records the coxcomb drew. */
+      /** 🌸️ The `geometry/arc` records the coxcomb drew. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/arc": (await probe(ctx, "coxcomb.tex")).projection["geometry/arc"] ?? [] } }),
     },
   },

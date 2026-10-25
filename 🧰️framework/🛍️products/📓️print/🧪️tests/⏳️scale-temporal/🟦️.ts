@@ -50,31 +50,31 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same temporal scales from the compiled probe. */
+      /** 🔨️ The same temporal scales from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "day-ticks": {
-      /** 🔮️ d3-time's utcDay boundaries inside the domain. */
+      /** 🕐️ d3-time's utcDay boundaries inside the domain. */
       oracle: () => ({ projection: { "ticks/day": boundaries(utcDay, "2026-02-25", "2026-03-04") } }),
-      /** 🎯️ The day ticks the probe's temporal scale produced. */
+      /** ☀️ The day ticks the probe's temporal scale produced. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "week-ticks": {
-      /** 🔮️ d3-time's utcWeek, which is Sunday based, inside the domain. */
+      /** 🗓️ d3-time's utcWeek, which is Sunday based, inside the domain. */
       oracle: () => ({ projection: { "ticks/week": boundaries(utcWeek, "2026-01-01", "2026-03-01") } }),
-      /** 🎯️ The week ticks the probe's temporal scale produced. */
+      /** 📆️ The week ticks the probe's temporal scale produced. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "month-ticks": {
-      /** 🔮️ d3-time's utcMonth boundaries inside the domain. */
+      /** ⌛️ d3-time's utcMonth boundaries inside the domain. */
       oracle: () => ({ projection: { "ticks/month": boundaries(utcMonth, "2026-01-01", "2026-12-31") } }),
-      /** 🎯️ The month ticks the probe's temporal scale produced. */
+      /** 🌙️ The month ticks the probe's temporal scale produced. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "year-ticks": {
-      /** 🔮️ d3-time's utcYear boundaries inside the domain. */
+      /** ⏳️ d3-time's utcYear boundaries inside the domain. */
       oracle: () => ({ projection: { "ticks/year": boundaries(utcYear, "2019-06-01", "2024-06-01") } }),
-      /** 🎯️ The year ticks the probe's temporal scale produced. */
+      /** 🎆️ The year ticks the probe's temporal scale produced. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

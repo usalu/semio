@@ -1,6 +1,6 @@
 /** 📏️ Contract: every path the Bazel backend creates for a task stays within the repository's 256 unit rule and the host's own limit, because source labels name a short content-addressed directory alias instead of the repository path; the budget is computed from the real closure per OS and an independent Python implementation, the closed fixture schema, iconv-lite and the real Bazel binary cross-check it. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import iconv from "iconv-lite";
 import {existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";

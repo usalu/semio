@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveVmlPart {
-    pub(crate) path: String,
+    pub path: String,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for RemoveVmlPart {

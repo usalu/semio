@@ -1,6 +1,7 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
-import { STORY_SCOPES, buildExactAliasEntries, buildScopeAliases, buildScopeStoryGlobs, buildScopeWatchIgnores, resolveActiveScopes, scopeActive } from "../../📖️stories/🧭️coordination/🟦️.ts";
+import { STORY_SCOPES, buildExactAliasEntries, buildScopeAliases, buildScopeStoryGlobs, buildScopeWatchIgnores, buildScopeWatchRoots, isWatchedPathV1, resolveActiveScopes, scopeActive } from "../../📖️stories/🧭️coordination/🟦️.ts";
 
 describe("resolveActiveScopes", () => {
   it("returns every scope when the expression is empty", () => {
@@ -72,5 +73,23 @@ describe("Storybook scope projections", () => {
     expect(scopeActive(ids, "puzzle")).toBe(true);
     expect(scopeActive(ids, "puzzle/2d")).toBe(true);
     expect(scopeActive(ids, "ui")).toBe(false);
+  });
+});
+
+describe("Storybook watch roots", () => {
+  const repo = "/repo";
+  it("covers the .storybook folder, source roots, story glob bases and deep alias targets only", () => {
+    const roots = buildScopeWatchRoots(resolveActiveScopes("ui"), repo, ["a/b/c/index.ts", "top.ts", "x/y.ts"]);
+    expect(roots).toContain("/repo/.storybook");
+    expect(roots).toContain("/repo/🧰️framework/🔨️modules/🖱️ui/📖️stories");
+    expect(roots).toContain("/repo/🧰️framework/🔨️modules/🖼️assets");
+    expect(roots).toContain("/repo/a/b/c");
+    expect(roots).not.toContain("/repo");
+    expect(roots).not.toContain("/repo/x");
+  });
+  it("walks ancestors of a root and the root itself but nothing else", () => {
+    const roots = ["/repo/.storybook", "/repo/a/b/c"];
+    for (const path of ["/repo/.storybook", "/repo/.storybook/main.ts", "/repo/a", "/repo/a/b", "/repo/a/b/c/d/e.ts"]) expect(isWatchedPathV1(path, roots), path).toBe(true);
+    for (const path of ["/repo/.cache", "/repo/a/z", "/repo/a/b/cx", "/repo/📦️other"]) expect(isWatchedPathV1(path, roots), path).toBe(false);
   });
 });

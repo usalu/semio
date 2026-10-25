@@ -1,6 +1,6 @@
 /** 🔖️ Contract: the inference protocol stamps. Every inferrer carries one declared stamp, a record or generation fact names the stamps it took part in instead of the bytes of the code that ran, the declared sources classify every file of the loaded implementation, and a stamp row holds exactly while the process carries the stamp it was recorded with. The classification and the admission rules are answered a second time by an independent Python oracle. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {existsSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join,relative,resolve,sep} from "node:path";
@@ -13,7 +13,7 @@ import roster from "../../🗂️components/🔣️.json";
 import {admitInferenceProtocolV1,classifyImplementationRowsV1,inferenceFragmentsV1,inferenceStampEntriesV1,matchesFragmentsV1,unclassifiedCodeV1} from "../🟨️.mjs";
 import {captureObservedSourceInputsV1,observationsHold,observedInferenceStampsV1,registerInferenceStampsV1} from "../../../../👁️observation/🟨️.mjs";
 
-const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️oracle.py"),schemaPath=join(here,"..","🧬️schema","🔣️.json");
+const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️.py"),schemaPath=join(here,"..","🧬️schema","🔣️.json");
 const library=resolve(here,"../../../../.."),workspace=resolve(library,"../../../../..");
 const protocol=schema.definitions.Protocol.const as never;
 const scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"graph-stamps-"));

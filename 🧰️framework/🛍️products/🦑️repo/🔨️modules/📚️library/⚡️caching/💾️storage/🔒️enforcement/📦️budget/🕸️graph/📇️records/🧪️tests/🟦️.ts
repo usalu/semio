@@ -5,7 +5,7 @@ import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import Ajv2020 from "ajv/dist/2020";
-import {testPythonV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import corpus from "./🔣️.json";
 import policy from "../../🔣️policy.json";
 import schema from "../../🧬️schema/🔣️.json";
@@ -42,7 +42,7 @@ test("the independent python reader rebuilds the same graph from the written rec
  try{
   const encoded=await encodeGraphRecordsV1(corpus.graph,{policy:corpus.policy as never,maximumBytes:policy.maximumSnapshotBytes});
   writeFileSync(join(dir,encoded.digest+".json"),encoded.manifestBytes);for(const[digest,bytes]of encoded.records)writeFileSync(join(dir,digest+".gz"),bytes);
-  const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),dir,encoded.digest]);expect(result.exitCode).toBe(0);
+  const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),dir,encoded.digest]);expect(result.exitCode).toBe(0);
   expect(canonical(JSON.parse(result.stdout.toString()))).toBe(canonical(corpus.graph));
  }finally{rmSync(dir,{recursive:true,force:true});}
 });

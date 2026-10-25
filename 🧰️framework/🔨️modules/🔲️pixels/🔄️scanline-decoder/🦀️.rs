@@ -18,7 +18,7 @@ pub struct PngScanlineDecoder {
     pub(super) rows: PngScanlineSource,
 }
 
-/// ⏭️ Outcome of one bounded [`PngScanlineDecoder::step`].
+/// 👣️ Outcome of one bounded [`PngScanlineDecoder::step`].
 #[derive(Debug, PartialEq, Eq)]
 pub enum PngScanlineStep {
     /// ⏳️ The unit budget ran out before the next scanline was complete.
@@ -134,7 +134,7 @@ impl PngScanlineDecoder {
         Self::from_vec(data.to_vec())
     }
 
-    /// 🌱️ Walks the chunk headers, verifies and parses IHDR/PLTE/tRNS, and positions the stream at
+    /// ✅️ Walks the chunk headers, verifies and parses IHDR/PLTE/tRNS, and positions the stream at
     /// the first `IDAT` byte. Only an interlaced image is decoded here, eagerly.
     pub fn from_vec(data: Vec<u8>) -> Result<Self, RasterError> {
         if data.len() < 8 || data[0..8] != PNG_SIGNATURE {
@@ -312,7 +312,7 @@ impl PngScanlineDecoder {
         }
     }
 
-    /// ⏱️ One bounded unit of decoding: at most `unit_budget` inflater advances (each consumes at
+    /// 🪜️ One bounded unit of decoding: at most `unit_budget` inflater advances (each consumes at
     /// most one compressed byte and produces at most one filtered-scanline byte), plus the
     /// unfilter/canonicalize of the one scanline they complete.
     pub fn step(&mut self, unit_budget: usize) -> Result<PngScanlineStep, RasterError> {

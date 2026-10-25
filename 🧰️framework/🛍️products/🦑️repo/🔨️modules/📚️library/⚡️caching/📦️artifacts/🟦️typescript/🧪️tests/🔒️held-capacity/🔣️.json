@@ -1,0 +1,13 @@
+{
+  "calls": [
+    {"id": "the package build owns capacity through one scope", "owner": "withCompilation", "callee": "withCompilerCapacityScopeV1", "calls": 1},
+    {"id": "the source check owns capacity through one scope", "owner": "checkArtifactTypeScriptSourceV1", "callee": "withCompilerCapacityScopeV1", "calls": 1},
+    {"id": "no inner step of the build acquires a second lease", "owner": "withCompilation", "callee": "acquireCompilerCapacityLeaseV1", "calls": 0},
+    {"id": "no inner step of the check acquires a second lease", "owner": "checkArtifactTypeScriptSourceV1", "callee": "acquireCompilerCapacityLeaseV1", "calls": 0},
+    {"id": "the declaration child runs under the lent capacity", "owner": "runScriptProgram", "callee": "acquireCompilerCapacityLeaseV1", "calls": 0}
+  ],
+  "order": [
+    {"id": "the build takes capacity (rank 3) before every store and scratch (ranks 5-7)", "owner": "withCompilation", "first": "withCompilerCapacityScopeV1", "then": ["withRepositoryCacheStoreV1", "withArtifactScratchV1", "withResourceLeases"]},
+    {"id": "the check takes capacity (rank 3) before every store and scratch (ranks 5-7)", "owner": "checkArtifactTypeScriptSourceV1", "first": "withCompilerCapacityScopeV1", "then": ["withRepositoryCacheStoreV1", "withArtifactScratchV1", "withResourceLeases"]}
+  ]
+}

@@ -2,9 +2,9 @@ import{expect,test}from"bun:test";
 import{existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join,resolve}from"node:path";
-import{crashScenariosV1,type CrashScenarioV1}from"./🎬️scenarios.ts";
+import{crashScenariosV1,type CrashScenarioV1}from"./🎬️scenarios/🟦️.ts";
 
-const preload=resolve(import.meta.dir,"🔌️preload.ts"),child=resolve(import.meta.dir,"🏃️child.ts");
+const preload=resolve(import.meta.dir,"🔌️preload/🟦️.ts"),child=resolve(import.meta.dir,"🏃️child/🟦️.ts");
 const scratch=()=>{const base=process.env.SEMIO_TEST_ARTIFACT_DIR?resolve(process.env.SEMIO_TEST_ARTIFACT_DIR):tmpdir();mkdirSync(base,{recursive:true});return mkdtempSync(join(base,"cr-"));};
 
 /** 💥️ Kills the ceremony before each state-changing call in turn (optionally tearing the call's own write), recovers and checks the invariant. */

@@ -21,7 +21,7 @@ import { policyInferenceFamilyBreaches } from "../../../🧬️schema/💡️inf
 import { policyMutationOutcomeMergePolicyBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/📐️merge-policy-law/🟦️.ts";
 import { policyHistoryClosureBreaches } from "../../../⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts";
 import { VerifyToolJobLane } from "../🎯️tool-job-lane/🟦️.ts";
-import { runtimeExecutableV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import {sayVerifyV1,refuseVerifyV1} from "../📖️texts/🟦️.ts";
 
 /** 🏁️ Dependency-freeze, layering, canonical-architecture and whole-gate verification lanes. */
@@ -37,13 +37,13 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
   /** 🧱️ Enforces dependency direction through the repository library's taxonomy-owned graph rule. */
   protected runLayering(segments: string[]): void {
     if (segments.length) throw refuseVerifyV1("usage","gates.expected-layering");
-    runCmd("repo", ["run-many", "-p", "@semio-tech/repo-lib", "-t", "lint-dependency-direction", "lint-rust-source-direction", "lint-cargo-dependency-direction", "--skip-cache", ...semioBuildParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("repo", ["run-many", "--projects=@semio-tech/repo-lib", "--targets=lint-dependency-direction,lint-rust-source-direction,lint-cargo-dependency-direction", "--skip-cache", ...semioBuildParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 
   /** 🏛️ Executes architecture contract checks contributed by their owning build projects. */
   protected runCanonicalArchitecture(): void {
     sayVerifyV1("gates.canonical-architecture-checking-owner-contributed");
-    runCmd("repo", ["run-many", "-t", "canonical-architecture", "--all", "--exclude", "workspace", "--skip-cache", ...semioBuildParallelFlag()], {
+    runCmd("repo", ["run-many", "--targets=canonical-architecture", "--exclude=workspace", "--skip-cache", ...semioBuildParallelFlag()], {
       cwd: this.root,
       ...orchestratorBudgetOpts(canonicalArchitectureEnvironment(this.root, process.env)),
     });
@@ -51,12 +51,8 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
 
   protected async runGate(): Promise<void> {
     this.runCanonicalArchitecture();
-    // Deliberately calls dependency-cruiser directly rather than `LintScript`/`repo run-many --targets=lint --all`:
-    // several unrelated projects have pre-existing broken eslint configs,
-    // and framework-renderer-wgpu:lint has known pending color-literal violations (see spawn_task follow-ups) —
-    // this gate must stay a meaningful, currently-green signal for refactor sessions, not inherit that noise.
-    sayVerifyV1("gates.dependency-cruiser-boundaries");
-    runCmd(process.execPath, ["x", "dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root });
+    sayVerifyV1("gates.dependency-direction");
+    this.runLayering([]);
     sayVerifyV1("gates.generated-catalog-freshness");
     runCmd("repo", ["run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     sayVerifyV1("gates.region-host-contract-script-lints");
@@ -219,7 +215,7 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
     // Quick level here: the full repo-wide sweep (parse→print→reparse fixpoint, canonicalize
     // idempotence over every real 📚️examples fixture — @semio-tech/s-fixture-sweep-rs) runs at
     // `test dsl`/`test dsl exhaustive`; the gate only needs the engine crates' own quick-level unit tests.
-    runCmd("repo", ["run-many", "-t", "test", "-p", "@semio-tech/dsl-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", ...semioBuildParallelFlag(), "--", "quick"], {
+    runCmd("repo", ["run-many", "--targets=test", "--projects=@semio-tech/dsl-rs,@semio-tech/dsl-schema-rs,@semio-tech/dsl-derive-rs", ...semioBuildParallelFlag(), "--", "quick"], {
       cwd: this.root,
       ...orchestratorBudgetOpts(),
     });

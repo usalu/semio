@@ -369,7 +369,7 @@ fn db_io_finish_async_driver(handle: DbIoTaskHandle, backend: DbIoBackendControl
         Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok()),
         Ok(()) => match terminal {
             Ok(result) => DbIoTerminal::Result(result),
-            Err(error) => DbIoTerminal::Fault(db_io_task_fault(DbIoFaultKind::Backend, &error)),
+            Err(error) => DbIoTerminal::Fault(db_io_task_fault(owner.fault_custody.take().expect("preborn task fault custody"), DbIoFaultKind::Backend, error)),
         },
     });
     owner.phase = match owner.terminal.as_ref() {

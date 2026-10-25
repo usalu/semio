@@ -65,7 +65,7 @@ export function renderVizTikz(spec: VizChartSpecification): string {
   return renderVizTikzPlan(plan);
 }
 
-/** 🖋️ Emits one previously inferred render plan into TikZ source. */
+/** 🗺️ Emits one previously inferred render plan into TikZ source. */
 export function renderVizTikzPlan(plan: VizRenderPlan): string {
   const lines = [`\\begin{tikzpicture}[x=1mm,y=-1mm]`, `% ${plan.width}mm × ${plan.height}mm, ${plan.theme.appearance} appearance`, ...plan.items.map(tikzItem), `\\end{tikzpicture}`];
   return `${lines.join("\n")}\n`;

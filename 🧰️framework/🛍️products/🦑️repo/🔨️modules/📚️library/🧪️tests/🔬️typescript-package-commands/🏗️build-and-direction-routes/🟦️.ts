@@ -101,7 +101,7 @@ export async function runBuildAndDirectionRoutes(context: TestRouteContext, segm
   }
   if (segments[0] === "dependency-direction") {
     if (segments.length !== 1) throw new Error("Expected test dependency-direction");
-    const sources = ["🧪️tests/🧱️dependency-direction/🟦️.ts", "🕸️dependencies/🧭️direction/🏗️construction/🧪️tests/🟦️.ts", "🕸️dependencies/🧭️direction/🧪️tests/🧾️selection/🟦️.ts"].map(path=>join(context.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",path));
+    const sources = ["🧪️tests/🧱️dependency-direction/🟦️.ts", "🕸️dependencies/🧭️direction/🏗️construction/🧪️tests/🟦️.ts", "🕸️dependencies/🧭️direction/🧪️tests/🧾️selection/🟦️.ts", "🕸️dependencies/🧭️direction/🧪️tests/🔁️observation/🟦️.ts"].map(path=>join(context.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",path));
     const env = repoTestArtifactEnvironment(context.repoRoot, "dependency-direction");
     await runRepositoryTestCommand(process.execPath,[resolveTypescriptCompilerV1(context.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",...sources],{cwd:context.repoRoot,env,budgetMs:45_000});
     await runRepositoryTestCommand(process.execPath, ["test", ...sources], { cwd: context.repoRoot, env, budgetMs: 45_000 });

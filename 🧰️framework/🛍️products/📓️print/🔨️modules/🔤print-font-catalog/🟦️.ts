@@ -3,7 +3,7 @@ import{preparePrintMaterialV1,withPreparedPrintMaterialV1,type PreparedPrintMate
 import type{PrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
 /** 🔤️ Describes authored Source and compiler-facing font filenames. */
 export interface PrintFontDescriptor{readonly family:string;readonly directory:string;readonly filename:string;readonly texFilename:string}
-/** 🔤️ Returns immutable authored font DATA without granting a reader. */
+/** 🪪️ Returns immutable authored font DATA without granting a reader. */
 export function printFontDescriptors():readonly PrintFontDescriptor[]{return Object.freeze(fonts.map(font=>Object.freeze({...font})));}
 /** 📤️ Explicitly prepares the selected mode's fixed font artifact under actual product and scratch custody. */
 export function stagePrintFonts(execution:PrintExecutionV1):Promise<Readonly<{files:number;bytes:number}>>{return preparePrintMaterialV1(execution.operation,"fonts",execution.phaseControl);}

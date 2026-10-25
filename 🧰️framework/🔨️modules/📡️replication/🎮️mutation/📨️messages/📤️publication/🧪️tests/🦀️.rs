@@ -32,7 +32,6 @@ fn message_borrowed_publication_copies_exact_committed_sources_and_closes_partia
         for _ in 0..100000 { if owner.terminal_is_empty() { break; } let demand = owner.close_demands().unwrap(); let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }; let (step, heap) = observe_heap_allocations_on_this_thread(|| owner.close_step(grant).unwrap()); assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes)); }
         assert!(owner.terminal_is_empty()); assert_eq!(source.iter().map(|row| row.message.as_ptr()).collect::<Vec<_>>(), originals);
         let (_, heap) = observe_heap_allocations_on_this_thread(|| drop(owner)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] Diagnostic committed-prefix case={} originalRows={} terminalDrop=0", case["id"], source.len());
     }
 }
 
@@ -183,6 +182,5 @@ fn message_publication_final_selection_preserves_neutral_policy_and_partial_cust
             }else{assert!(cancel.is_some());}
             owner.begin_close();for turn in 0..100000{if owner.terminal_is_empty(){break;}let demand=owner.close_demands().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999);}assert!(owner.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         }
-        println!("[DEBUG] shared publication final selection case={} actualIdentityBytes={} independentReport=true allCancellationFrontiers=true",case["name"],case["editId"].as_str().unwrap().len());
     }
 }

@@ -298,7 +298,7 @@ fn render_scene_placeholder<E>(surface_id: &str, bounds: Rect, ctx: &mut WidgetC
     semio_framework_ui_wgpu_layout::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel);
 }
 
-/// 🧩️ A plugin body slot labelled by its `body_key`; the body itself is the host's concern.
+/// 🔌️ A plugin body slot labelled by its `body_key`; the body itself is the host's concern.
 fn render_external_slot<E>(body_key: &str, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.panel, ctx.theme.border_radius);
     semio_framework_ui_wgpu_layout::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel);

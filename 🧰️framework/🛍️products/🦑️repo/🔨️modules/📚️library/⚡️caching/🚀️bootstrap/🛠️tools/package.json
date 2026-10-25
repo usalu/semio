@@ -34,7 +34,15 @@
     "./bazel/readiness": "./🏗️bazel/🩺️readiness/🟦️.ts",
     "./operations": "./⚙️operations/🟦️.ts",
     "./probe": "./🔁️probe/🟦️.ts",
-    "./sdk": "./🔌️sdk/🟦️.ts"
+    "./sdk": "./🔌️sdk/🟦️.ts",
+    "./authorizers/tests/data": "./🔏️authorizers/🧪️tests/📥️data/🟦️.ts",
+    "./host-capacity": "./🌡️host-capacity/🟦️.ts",
+    "./workers": "./👷️workers/🟦️.ts",
+    "./remote-cache": "./🌐️remote-cache/🟦️.ts",
+    "./native": "./🧰️native/🟦️.ts",
+    "./native/port": "./🧰️native/🔌️port/🟦️.ts",
+    "./authorizers/schema.json": "./🔏️authorizers/🧬️schema/🔣️.json",
+    "./authorizers/sites": "./🔏️authorizers/🧭️sites/🟦️.ts"
   },
   "packageManager": "bun@1.4.2",
   "dependencies": {

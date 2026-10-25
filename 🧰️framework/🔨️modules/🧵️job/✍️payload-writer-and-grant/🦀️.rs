@@ -81,7 +81,7 @@ impl RetainedJobPayloadWriter {
         self.staged.as_ref().map(|(_, _, length)| *length)
     }
 
-        /// 🪪️ Identifies the same original staged backing across admitted and refused turns.
+        /// ⏪️ Identifies the same original staged backing across admitted and refused turns.
     pub fn staged_backing_identity(&self) -> Option<*const MaybeUninit<u8>> { self.staged.as_ref().map(|(_, source, _)| source.backing_identity()) }
 
 pub fn write_staged(&mut self, bytes: &[u8]) -> Result<(), JobPayloadAdmissionFault> {

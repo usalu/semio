@@ -1,0 +1,328 @@
+[
+  {
+    "id": "source-preflight",
+    "argv": [
+      "--test-ordinary"
+    ],
+    "override": null,
+    "accepted": true
+  },
+  {
+    "id": "ordinary-publication",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": null,
+    "accepted": true
+  },
+  {
+    "id": "finite-publication",
+    "argv": [
+      "--publish",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": null,
+    "accepted": true
+  },
+  {
+    "id": "extra-tail",
+    "argv": [
+      "--test-ordinary",
+      "foreign"
+    ],
+    "override": null,
+    "accepted": false
+  },
+  {
+    "id": "foreign-partition",
+    "argv": [
+      "--publish-ordinary",
+      "foreign",
+      "native-assets-protected-1.json"
+    ],
+    "override": null,
+    "accepted": false
+  },
+  {
+    "id": "foreign-census",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "../foreign.json"
+    ],
+    "override": null,
+    "accepted": false
+  },
+  {
+    "id": "refuse-script-process-invocation",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+    "accepted": false
+  },
+  {
+    "id": "refuse-script-policy",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_SCRIPT_POLICY",
+    "accepted": false
+  },
+  {
+    "id": "refuse-script-capabilities",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_SCRIPT_CAPABILITIES",
+    "accepted": false
+  },
+  {
+    "id": "refuse-build-tool",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_BUILD_TOOL",
+    "accepted": false
+  },
+  {
+    "id": "refuse-build-mode",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_BUILD_MODE",
+    "accepted": false
+  },
+  {
+    "id": "refuse-build-graph-path",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_BUILD_GRAPH_PATH",
+    "accepted": false
+  },
+  {
+    "id": "refuse-build-graph-digest",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_BUILD_GRAPH_DIGEST",
+    "accepted": false
+  },
+  {
+    "id": "refuse-build-reuse-graph",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_BUILD_REUSE_GRAPH",
+    "accepted": false
+  },
+  {
+    "id": "refuse-script-max-elapsed-ms",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_SCRIPT_MAX_ELAPSED_MS",
+    "accepted": false
+  },
+  {
+    "id": "refuse-build-invocation-pid",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_BUILD_INVOCATION_PID",
+    "accepted": false
+  },
+  {
+    "id": "refuse-task-project",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_TASK_PROJECT",
+    "accepted": false
+  },
+  {
+    "id": "refuse-task-target",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_TASK_TARGET",
+    "accepted": false
+  },
+  {
+    "id": "refuse-bazel-fixture-phase",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_BAZEL_FIXTURE_PHASE",
+    "accepted": false
+  },
+  {
+    "id": "refuse-bazel-integration",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_BAZEL_INTEGRATION",
+    "accepted": false
+  },
+  {
+    "id": "refuse-build-budget-ms",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_BUILD_BUDGET_MS",
+    "accepted": false
+  },
+  {
+    "id": "refuse-cmd-budget-ms",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_CMD_BUDGET_MS",
+    "accepted": false
+  },
+  {
+    "id": "refuse-orchestrator-budget-ms",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_ORCHESTRATOR_BUDGET_MS",
+    "accepted": false
+  },
+  {
+    "id": "refuse-daemon-budget-ms",
+    "argv": [
+      "--publish-ordinary",
+      "tools",
+      "native-assets-protected-1.json"
+    ],
+    "override": "SEMIO_DAEMON_BUDGET_MS",
+    "accepted": false
+  },
+  {
+    "id": "worker-fresh-refuses",
+    "argv": [
+      "--ordinary-worker"
+    ],
+    "override": null,
+    "accepted": false
+  },
+  {
+    "id": "worker-wire-presence-grammar",
+    "argv": [
+      "--ordinary-worker"
+    ],
+    "override": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+    "accepted": true
+  },
+  {
+    "id": "root0-failure-preflight",
+    "argv": [
+      "--test-root0-failure"
+    ],
+    "override": null,
+    "accepted": true
+  },
+  {
+    "id": "root0-worker-no-incoming",
+    "argv": [
+      "--root0-error-worker"
+    ],
+    "override": null,
+    "accepted": false
+  },
+  {
+    "id": "root0-worker-carried",
+    "argv": [
+      "--root0-error-worker"
+    ],
+    "override": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+    "accepted": true
+  },
+  {
+    "id": "root0-worker-extra-tail",
+    "argv": [
+      "--root0-error-worker",
+      "foreign"
+    ],
+    "override": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+    "accepted": false
+  },
+  {
+    "id": "root0-fresh-incoming-refused",
+    "argv": [
+      "--test-root0-failure"
+    ],
+    "override": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+    "accepted": false
+  },
+  {
+    "id": "retirement-source",
+    "argv": [
+      "--retirement-source"
+    ],
+    "override": null,
+    "accepted": true
+  },
+  {
+    "id": "retirement-strict",
+    "argv": [
+      "--retirement-strict"
+    ],
+    "override": null,
+    "accepted": true
+  },
+  {
+    "id": "service-payload-source",
+    "argv": [
+      "--service-payload-source"
+    ],
+    "override": null,
+    "accepted": true
+  },
+  {
+    "id": "service-payload-strict",
+    "argv": [
+      "--service-payload-strict"
+    ],
+    "override": null,
+    "accepted": true
+  }
+]

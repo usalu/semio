@@ -41,7 +41,7 @@ export function mintTransactionRef(actor: string, hlc: WireMutationEnvelope["tim
   return { id: `tx-${blake3Hex(new Uint8Array(material)).slice(0, 16)}`, tool };
 }
 
-/** 🪪️ Twin of Rust `history_transition_id`: `transition-{hex16(blake3(hlc.actor varint | hlc.physical_ms varint |
+/** 🕰️ Twin of Rust `history_transition_id`: `transition-{hex16(blake3(hlc.actor varint | hlc.physical_ms varint |
  * hlc.logical varint | payload bytes))}`. The free-form actor string is authentication metadata and never enters the
  * content address. */
 export function historyTransitionId(hlc: WireMutationEnvelope["timestamp"], payload: readonly number[] | Uint8Array): string {
@@ -56,7 +56,7 @@ export function historyTransitionId(hlc: WireMutationEnvelope["timestamp"], payl
 /** 🏷️ Twin of Rust `HistoryTransitionKind`: every transition kind, in wire-tag order. */
 export const HISTORY_TRANSITION_KINDS = Object.freeze(["revert", "reinstate", "commit", "branch", "checkout", "repin", "supersede"] as const);
 
-/** 🪪️ One transition kind. */
+/** 📜️ One transition kind. */
 export type HistoryTransitionKind = (typeof HISTORY_TRANSITION_KINDS)[number];
 
 /** 🗂️ Twin of Rust `HistoryShape`: a `document` history holds every transition, a `config` history only the undo and
@@ -142,7 +142,7 @@ export function foldSupersessions(documentId: string, operations: ReadonlySet<st
 /** 🚦️ Twin of Rust `diagnostic::Severity` (`ToValue` spelling), in level order. */
 export const REPLAY_SEVERITIES = Object.freeze(["info", "warning", "error", "fatal"] as const);
 
-/** 🚦️ One `Severity` wire name. */
+/** 🎞️ One `Severity` wire name. */
 export type ReplaySeverity = (typeof REPLAY_SEVERITIES)[number];
 
 /** 📖️ Twin of Rust `OUTCOME_CODES`: the frozen outcome-code vocabulary and the one level each code fixes

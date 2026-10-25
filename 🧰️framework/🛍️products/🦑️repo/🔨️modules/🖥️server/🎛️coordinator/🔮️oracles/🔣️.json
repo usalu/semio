@@ -26,7 +26,14 @@
       ],
       "license": "MIT",
       "testOnly": true,
-      "productionReachable": false,
+      "productionReachable": true,
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts"
+        ],
+        "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
+        "plan": "The Nx input builder of the TypeScript coordinator hashes with node:crypto at runtime, so the node:crypto reference records the debt instead of claiming it is never reachable from an implementation. The event-checksum capability is judged on the Go and Rust event-log implementations, which hand-roll SHA-256 and never import node:crypto, so the reference stays independent of the code it judges there. The debt retires when the builder hashes through the first-party digest module."
+      },
       "networkDuringExecution": false,
       "platforms": [
         "darwin-arm64",

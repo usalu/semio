@@ -30,7 +30,7 @@ export interface NavbarExampleOption {
   readonly icon: IconName;
 }
 
-/** 🧪️ Props for {@link NavbarExampleSelect}. */
+/** ⚙️ Props for {@link NavbarExampleSelect}. */
 export interface NavbarExampleSelectProps {
   readonly id: string;
   readonly label?: UiLabel;
@@ -41,7 +41,7 @@ export interface NavbarExampleSelectProps {
   readonly includeNoExample?: boolean;
 }
 
-/** 🧪️ Center-navbar dropdown for switching playground examples (kits, graphs, shape sources).
+/** 🎮️ Center-navbar dropdown for switching playground examples (kits, graphs, shape sources).
  *
  * 🆔️ `id` names the TRIGGER — the combobox the user presses and the one element whose text is the
  * active example's label — matching the wgpu shell, which handles a press on the bare control id

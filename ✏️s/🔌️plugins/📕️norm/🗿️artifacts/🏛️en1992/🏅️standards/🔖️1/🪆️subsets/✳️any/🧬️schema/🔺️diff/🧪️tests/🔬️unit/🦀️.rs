@@ -10,6 +10,7 @@ use semio_s_artifact_norm_en1992_mut_members::reorder_members::ReorderMembers;
 use semio_s_artifact_norm_en1992_mutations::En1992Mutation;
 use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
+use protocol::ColdMutationDiff;
 
 fn diff_of(mutation: &En1992Mutation, base: &En1992Snapshot) -> En1992Diff {
     let raised = mutation.diff(base);

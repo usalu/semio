@@ -82,7 +82,7 @@ export function vizPrintedScopeFindings(
   return [...new Set(findings)].sort();
 }
 
-/** 📚️ Verifies every family option using the authored schema and actual source forwarding graph. */
+/** 🔎️ Verifies every family option using the authored schema and actual source forwarding graph. */
 export function vizPrintedFamilyFindings(source: string, bindings: Readonly<Record<string, string>>): readonly string[] {
   const required = Object.fromEntries(vizApiReference().families.map(family => [family.name, Object.fromEntries(family.options.map(option => [option.name, { type: option.type, ...(option.default ? { default: option.default } : {}) }]))]));
   return vizPrintedScopeFindings(source, required, vizImplementedFamilyKeyScopes(), bindings);
@@ -180,7 +180,7 @@ export function vizApiReferenceFindings(metadata?: string): readonly string[] {
   return marksItselfGenerated(path, actual) ? [] : [`unmarked ${path}`];
 }
 
-/** 🧪️ Checks the whole visualization catalogue: taxonomy coverage, gallery, schema and public API examples. */
+/** ✅️ Checks the whole visualization catalogue: taxonomy coverage, gallery, schema and public API examples. */
 export function verifyVisualizationCoverage(metadata?: string): void {
   assert.deepEqual(vizApiReferenceFindings(metadata), []);
   const report = vizCoverageReport();
@@ -202,7 +202,7 @@ export function verifyVisualizationCoverage(metadata?: string): void {
   if (report.unknownFamilies.length > 0) console.log(`[TRACE] print: ${report.unknownFamilies.length} families still awaiting a \\SemioVizFamily registration: ${report.unknownFamilies.slice(0, 8).join(" ")}…`);
 }
 
-/** 🧪️ Long-level check: every catalogue family is actually registered by a LaTeX package. */
+/** 🔬️ Long-level check: every catalogue family is actually registered by a LaTeX package. */
 export function verifyVisualizationFamilies(): void {
   const report = vizCoverageReport();
   assert.deepEqual(report.unknownFamilies, []);

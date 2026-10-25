@@ -67,13 +67,29 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the grip kinds.
-    pub Block5dGripKindsDelta { removal: Block5dGripKindsRemoval, insertion: Block5dGripKindsInsertion, relocation: Block5dGripKindsRelocation, modification: Block5dGripKindsPatchEntry, row: Block5dGripKind, patch: Block5dGripKindPatch, key: id }
+    pub Block5dGripKindsDelta { removal: Block5dGripKindsRemoval, insertion: Block5dGripKindsInsertion, relocation: Block5dGripKindsRelocation, modification: Block5dGripKindsPatchEntry, row: Block5dGripKind, patch: Block5dGripKindPatch, list: Vec<Block5dGripKind>, key: String = by Block5dGripKindKeys }
+}
+
+/// 🔑️ Keys the foreign `Block5dGripKind` rows of their list delta by `id`.
+pub(crate) struct Block5dGripKindKeys;
+
+impl protocol::list_delta::KeyOf<Block5dGripKind> for Block5dGripKindKeys {
+    type Key = String;
+    fn key_of(row: &Block5dGripKind) -> String { row.id.clone() }
 }
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the grip templates.
-    pub Block5dGripsDelta { removal: Block5dGripsRemoval, insertion: Block5dGripsInsertion, relocation: Block5dGripsRelocation, modification: Block5dGripsPatchEntry, row: Block5dGripTemplate, patch: Block5dGripTemplatePatch, key: id }
+    pub Block5dGripsDelta { removal: Block5dGripsRemoval, insertion: Block5dGripsInsertion, relocation: Block5dGripsRelocation, modification: Block5dGripsPatchEntry, row: Block5dGripTemplate, patch: Block5dGripTemplatePatch, list: Vec<Block5dGripTemplate>, key: String = by Block5dGripTemplateKeys }
+}
+
+/// 🔑️ Keys the foreign `Block5dGripTemplate` rows of their list delta by `id`.
+pub(crate) struct Block5dGripTemplateKeys;
+
+impl protocol::list_delta::KeyOf<Block5dGripTemplate> for Block5dGripTemplateKeys {
+    type Key = String;
+    fn key_of(row: &Block5dGripTemplate) -> String { row.id.clone() }
 }
 //#endregion 🔖️Patches
 

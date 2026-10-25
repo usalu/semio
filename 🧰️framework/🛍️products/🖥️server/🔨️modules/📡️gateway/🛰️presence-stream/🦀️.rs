@@ -192,7 +192,7 @@ async fn share_state<I: ServerInstance, S: Sink<Message> + Unpin>(state: &Server
     }
 }
 
-/// 👀️ The watching half of one presence socket: one [`RoomReader`] per watched scope, in scope
+/// 👁️ The watching half of one presence socket: one [`RoomReader`] per watched scope, in scope
 /// order, the interval their changes are sent at, and the scope that goes first next time.
 #[derive(Default)]
 struct Watcher {
@@ -203,7 +203,7 @@ struct Watcher {
 }
 
 impl Watcher {
-    /// 🔁️ Replace the watch set: stop reading dropped scopes, start reading new ones on behalf of
+    /// ⌚️ Replace the watch set: stop reading dropped scopes, start reading new ones on behalf of
     /// `client`, (re)start the interval when it changed, and send the new scopes their `snapshot`.
     pub(super) async fn watch<I: ServerInstance, S: Sink<Message> + Unpin>(&mut self, state: &ServerState<I>, scopes: &BTreeSet<String>, client: ClientKey, interval: Duration, settings: &PresenceSettings, sink: &mut S) -> bool {
         self.scopes.retain(|(scope, _)| scopes.contains(scope));

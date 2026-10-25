@@ -1,13 +1,14 @@
 import { cargoWorkspaceForManifest } from "../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {selectPackageManagerV1,packageManagerRegistryV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
-const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
+import type {LockDriftV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts";
+import {checkJavascriptLockScopesV1,readJavascriptLockScopesV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🔒️lock-sync/🟦️.ts";
+const javascriptLockV1=selectPackageManagerV1("javascript").primaryLockName();
 import { builtinModules } from "node:module";
 import { existsSync, readdirSync, readFileSync, writeFileSync, type Dirent } from "node:fs";
 import { dirname, extname, join } from "node:path";
 import { runProbe } from "../../🏃️process/🔍️probe/🟦️.ts";
 import { canonicalFilenameForKind } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeParseJsoncV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { isRuntimeBuiltinSpecifierV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 const DEPENDENCY_SKIP_DIRS = new Set(["compose", "node_modules", ".git", ".cache", ".lake", ".🧬semio", "target", "dist", "build", "coverage", "🤖️generated", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
 
@@ -38,27 +39,29 @@ function dependencyTaxonomy(repoRoot: string): any {
   return JSON.parse(dependencyReadFileSafe(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"));
 }
 
-/** 🔒️Ecosystems the dependency freeze tracks — all five the repository actually ships. */
+/** ❄️Ecosystems the dependency freeze tracks — all five the repository actually ships. */
 export type DependencyEcosystem = "rust" | "js" | "go" | "python" | "dotnet";
 export const DEPENDENCY_ECOSYSTEMS: readonly DependencyEcosystem[] = ["rust", "js", "go", "python", "dotnet"];
 
 /** 🧱️ External libraries production code reaches only through one interface module (AGENTS.md: an external library only
  * behind an interface, re-exported explicitly): `directory` is the only production code that imports the package (the
- * repo acceptance gate `verify interface-owners` proves it), `manifest` its one production declaration. That declaration
- * is not an oracle conflict: an oracle of the same package stays independent of code that only reaches it through here. */
-export const DEPENDENCY_INTERFACE_OWNERS: Readonly<Record<string, Readonly<{ ecosystem: DependencyEcosystem; directory: string; manifest: string }>>> = Object.freeze({
-  three: Object.freeze({ ecosystem: "js" as const, directory: "🧰️framework/🔨️modules/🖱️ui/", manifest: "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json" }),
-  "three-mesh-bvh": Object.freeze({ ecosystem: "js" as const, directory: "🧰️framework/🔨️modules/🖱️ui/", manifest: "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json" }),
+ * repo acceptance gate `verify interface-owners` proves it), and every production declaration of the package inside that
+ * directory is the interface's own. Such a declaration is not an oracle conflict: an oracle of the same package stays
+ * independent of code that only reaches it through here. */
+export type DependencyInterfaceOwner = Readonly<{ ecosystem: DependencyEcosystem; directory: string }>;
+export const DEPENDENCY_INTERFACE_OWNERS: Readonly<Record<string, DependencyInterfaceOwner>> = Object.freeze({
+  three: Object.freeze({ ecosystem: "js" as const, directory: "🧰️framework/🔨️modules/🖱️ui/" }),
+  "three-mesh-bvh": Object.freeze({ ecosystem: "js" as const, directory: "🧰️framework/🔨️modules/🖱️ui/" }),
 });
 /**
- * 🔒️Which phase a dependency is pulled in for. A dependency can serve more than one, so this is a
+ * 🧲️Which phase a dependency is pulled in for. A dependency can serve more than one, so this is a
  * set per baseline entry. The two `production-*` classes are the only ones the purity gate cares
  * about; the target final state is zero of them. `test-oracle` is reserved for packages an approved
  * entry in the oracle registry claims — nothing else may enter under that class.
  */
 export type DependencyKind = "production-runtime" | "production-build" | "repository-tooling" | "test-runner" | "test-oracle";
 
-/** 🔒️Maps a manifest section's intent onto the phase vocabulary above. */
+/** 🗾️Maps a manifest section's intent onto the phase vocabulary above. */
 function dependencyKindOf(intent: "runtime" | "build" | "test" | "tooling"): DependencyKind {
   switch (intent) {
     case "runtime":
@@ -72,24 +75,25 @@ function dependencyKindOf(intent: "runtime" | "build" | "test" | "tooling"): Dep
   }
 }
 
-/** 🔒️One third-party dependency's baseline record — the unit the freeze ratchet compares by `${ecosystem}:${name}` identity (version excluded from identity so routine patch bumps don't trip the gate; recorded for information only). */
+/** 📹️One third-party dependency's baseline record — the unit the freeze ratchet compares by `${ecosystem}:${name}` identity (version excluded from identity so routine patch bumps don't trip the gate; recorded for information only). */
 export type DependencyDeclaration = { user: string; version: string; kind: DependencyKind };
 export type DependencyBaselineEntry = { ecosystem: DependencyEcosystem; name: string; version: string; kinds: DependencyKind[]; users: string[]; productionReachable: boolean; declarations?: DependencyDeclaration[]; oracleIds?: string[]; oracleConflictUsers?: string[] };
 
-/** 🔒️The committed freeze baseline file's shape — `🔒️dependencies.json` at the repo root. */
+/** 📄️The committed freeze baseline file's shape — `🔒️dependencies.json` at the repo root. */
 type DependencyBaseline = { schemaVersion: number; generatedAt: string; commit: string; entries: DependencyBaselineEntry[] };
 
-/** 🔒️Repo-relative path of the committed dependency-freeze baseline. Root-level, alongside `📋️project.json`/`📜️script.ts`/`🧪️tests/🟦️.ts` — no existing convention for a repo-wide *hand-ratcheted* generated inventory exists yet (the `🤖️generated/` folders next to owning modules are build-regenerated and gitignored — see `.gitignore` — the opposite of what a freeze baseline needs). */
+/** 🛤️Repo-relative path of the committed dependency-freeze baseline. Root-level, alongside `📋️project.json`/`📜️script.ts`/`🧪️tests/🟦️.ts` — no existing convention for a repo-wide *hand-ratcheted* generated inventory exists yet (the `🤖️generated/` folders next to owning modules are build-regenerated and gitignored — see `.gitignore` — the opposite of what a freeze baseline needs). */
 export const DEPENDENCY_BASELINE_REL_PATH = "🔒️dependencies.json";
 
-/** 🔒️Rust crate name prefixes/exact names treated as first-party even without a `path =` key (defensive fallback — `path =` is the primary signal). */
+/** 🏠️Rust crate name prefixes/exact names treated as first-party even without a `path =` key (defensive fallback — `path =` is the primary signal). */
 function dependencyIsInternalRustName(name: string): boolean {
   return name.startsWith("semio-") || name.startsWith("semio_") || name === "ports" || /^db(?:_[a-z0-9]+)*$/.test(name);
 }
 
-type DependencyRustEntry = { name: string; version: string; kind: DependencyKind; internal: boolean };
+/** 🦀️ One dependency row of a `Cargo.toml`: `testSupportOf` names the crate whose test-class feature alone switches the optional dependency on (it is then a test input, back to `productionKind` when a production manifest enables that feature), `enablesTestFeatureOf` the crate whose test-class feature this non-dev row switches on. */
+type DependencyRustEntry = { name: string; version: string; kind: DependencyKind; internal: boolean; testSupportOf?: string; productionKind?: DependencyKind; enablesTestFeatureOf?: string };
 
-/** 🔒️Parses `[workspace.dependencies]` from the root `Cargo.toml` into a name → {path?, version?} map, used to resolve `name.workspace = true` / `name = { workspace = true }` references in member manifests. */
+/** 🌳️Parses `[workspace.dependencies]` from the root `Cargo.toml` into a name → {path?, version?} map, used to resolve `name.workspace = true` / `name = { workspace = true }` references in member manifests. */
 function dependencyParseWorkspaceDeps(repoRoot: string, manifest = "Cargo.toml"): Map<string, { path?: string; version?: string }> {
   const map = new Map<string, { path?: string; version?: string }>();
   const content = dependencyReadFileSafe(repoRoot, manifest);
@@ -140,7 +144,7 @@ function dependencyParseWorkspaceDeps(repoRoot: string, manifest = "Cargo.toml")
 
 const DEPENDENCY_CARGO_SECTION_RE = /(?:^|\.)(dependencies|dev-dependencies|build-dependencies)$/;
 
-/** 🔒️True when a `Cargo.toml`'s `[lib]` table sets `proc-macro = true` — such a crate's `[dependencies]` are compiler plugins linked into the compiler at build time, never into the target binary. */
+/** 🏓️True when a `Cargo.toml`'s `[lib]` table sets `proc-macro = true` — such a crate's `[dependencies]` are compiler plugins linked into the compiler at build time, never into the target binary. */
 function dependencyCargoTomlIsProcMacro(content: string): boolean {
   let inLib = false;
   for (const raw of content.split(/\r?\n/)) {
@@ -156,7 +160,48 @@ function dependencyCargoTomlIsProcMacro(content: string): boolean {
   return false;
 }
 
-/** 🔒️Parses every `[dependencies]`/`[dev-dependencies]`/`[build-dependencies]` table (including `[target.'cfg(...)'.…]` variants) in one `Cargo.toml`, resolving `workspace = true` refs against `workspaceDeps`. */
+const DEPENDENCY_TEST_FEATURE_RE = /(^|[-_])(test|tests|testing|testkit)([-_]|$)/u;
+
+/** 🧪️ The optional dependencies only test-class Cargo features switch on: a feature is test-class when a word of its name is `test`, `tests`, `testing` or `testkit`; every other feature, `default` included, is enableable by a dependent in production, and so is each feature it names. A dependency such a feature reaches is production; one reached by test-class features alone (and by `dep:` naming, which retires the implicit feature of the same name) compiles only into test support code. */
+export function dependencyCargoTestOnlyDependencies(content: string): ReadonlySet<string> {
+  const features = new Map<string, string[]>();
+  let inFeatures = false;
+  const lines = content.split(/\r?\n/u);
+  for (let i = 0; i < lines.length; i += 1) {
+    const trimmed = lines[i]!.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const section = trimmed.match(/^\[([^\]]+)\]$/u);
+    if (section) {
+      inFeatures = section[1] === "features";
+      continue;
+    }
+    if (!inFeatures) continue;
+    const entry = trimmed.match(/^["']?([A-Za-z0-9_-]+)["']?\s*=\s*(.*)$/u);
+    if (!entry) continue;
+    let full = entry[2]!;
+    while (!full.includes("]") && i + 1 < lines.length) {
+      i += 1;
+      full += ` ${lines[i]!}`;
+    }
+    features.set(entry[1]!, [...full.matchAll(/"([^"]*)"/gu)].map((match) => match[1]!));
+  }
+  const enabled = new Set([...features.keys()].filter((name) => !DEPENDENCY_TEST_FEATURE_RE.test(name)));
+  const queue = [...enabled];
+  for (let name = queue.pop(); name !== undefined; name = queue.pop()) {
+    for (const item of features.get(name) ?? []) if (features.has(item) && !enabled.has(item)) { enabled.add(item); queue.push(item); }
+  }
+  const dependencyOf = (item: string): string => item.replace(/^dep:/u, "").replace(/\/.*$/u, "").replace(/\?$/u, "");
+  const reached = (names: Iterable<string>): Set<string> => {
+    const found = new Set<string>();
+    for (const name of names) for (const item of features.get(name) ?? []) if ((!features.has(item) || item.startsWith("dep:")) && !item.includes("?/")) found.add(dependencyOf(item));
+    return found;
+  };
+  const production = reached(enabled);
+  const explicit = new Set([...features.values()].flat().filter((item) => item.startsWith("dep:")).map(dependencyOf));
+  return new Set([...reached([...features.keys()].filter((name) => !enabled.has(name)))].filter((name) => explicit.has(name) && !production.has(name)));
+}
+
+/** 🔨️Parses every `[dependencies]`/`[dev-dependencies]`/`[build-dependencies]` table (including `[target.'cfg(...)'.…]` variants) in one `Cargo.toml`, resolving `workspace = true` refs against `workspaceDeps`. */
 function dependencyParseCargoToml(repoRoot: string, relPath: string, workspaceDeps: Map<string, { path?: string; version?: string }>): DependencyRustEntry[] {
   const content = dependencyReadFileSafe(repoRoot, relPath);
   if (!content) return [];
@@ -165,7 +210,9 @@ function dependencyParseCargoToml(repoRoot: string, relPath: string, workspaceDe
   type CargoDepSection = "dependencies" | "dev-dependencies" | "build-dependencies";
   let currentSection: CargoDepSection | null = null;
   const isProcMacro = dependencyCargoTomlIsProcMacro(content);
-  const kindFor = (section: string): DependencyKind => dependencyKindOf(section === "dev-dependencies" ? "test" : section === "build-dependencies" || (section === "dependencies" && isProcMacro) ? "build" : "runtime");
+  const testOnly = dependencyCargoTestOnlyDependencies(content);
+  const ownName = content.match(/^\[package\][^\[]*?^name\s*=\s*"([^"]+)"/mu)?.[1];
+  const kindFor = (section: string, testSupport = false): DependencyKind => dependencyKindOf(section === "dev-dependencies" || (testSupport && section === "dependencies") ? "test" : section === "build-dependencies" || (section === "dependencies" && isProcMacro) ? "build" : "runtime");
 
   for (let i = 0; i < lines.length; i += 1) {
     const trimmed = lines[i]!.trim();
@@ -214,7 +261,9 @@ function dependencyParseCargoToml(repoRoot: string, relPath: string, workspaceDe
       if (ws?.path) internal = true;
       if (ws?.version) version = ws.version;
     }
-    results.push({ name, version, kind: kindFor(currentSection), internal });
+    const testSupport = /\boptional\s*=\s*true/u.test(full) && testOnly.has(name) && ownName !== undefined;
+    const enabled = currentSection === "dependencies" && !testSupport && [...(full.match(/features\s*=\s*\[([^\]]*)\]/u)?.[1] ?? "").matchAll(/"([^"]*)"/gu)].some((feature) => DEPENDENCY_TEST_FEATURE_RE.test(feature[1]!));
+    results.push({ name, version, kind: kindFor(currentSection, testSupport), internal, ...(testSupport ? { testSupportOf: ownName, productionKind: kindFor(currentSection) } : {}), ...(enabled ? { enablesTestFeatureOf: /\bpackage\s*=\s*"([^"]+)"/u.exec(full)?.[1] ?? name } : {}) });
   }
   return results;
 }
@@ -224,64 +273,21 @@ type DependencyJsEntry = { name: string; version: string; kind: DependencyKind; 
 type DependencyJsParityEvidence = { file: string; line: number; kind: "config" | "import" | "script" };
 type DependencyJsParityRow = { dependency: string; manifest: string; scope: string; evidence: DependencyJsParityEvidence[] };
 type DependencyJsParityImport = { dependency: string; file: string; line: number; manifest: string };
-type DependencyJsManifestSection = "dependencies" | "devDependencies" | "optionalDependencies" | "peerDependencies";
-export type DependencyJsLockMismatchKind = "invalid-lockfile" | "missing-in-lock" | "stale-in-lock" | "version-mismatch" | "workspace-missing";
-type DependencyJsLockMismatch = { dependency?: string; kind: DependencyJsLockMismatchKind; lockVersion?: string; manifest: string; manifestVersion?: string; section?: DependencyJsManifestSection };
+/** 🔒️ One disagreement between the lock of a dependency scope and the manifests of its members; `frozen` marks the ones Bun certainly refuses to install frozen. */
+export type DependencyJsLockMismatch = LockDriftV1 & { scope: string };
 export type DependencyJsParityReport = { manifests: number; externalRows: number; evidencedRows: number; unownedRows: DependencyJsParityRow[]; undeclaredImports: DependencyJsParityImport[]; lockMismatches: DependencyJsLockMismatch[]; lockFixtureChecks: number; lockWorkspaces: number };
 
 const DEPENDENCY_JS_SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".css", ".mdx"]);
 const DEPENDENCY_JS_BUILTINS = new Set(builtinModules.flatMap((name) => [name, name.replace(/^node:/, "")]));
-const DEPENDENCY_JS_MANIFEST_SECTIONS: readonly DependencyJsManifestSection[] = ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"];
 
-/** 🧪️ Compares package manifest dependency tables with Bun's live workspace snapshots. */
-export function dependencyJsLockWorkspaceMismatches(manifestValues: ReadonlyMap<string, unknown>, workspaces: unknown): DependencyJsLockMismatch[] {
-  const workspaceRecords = workspaces && typeof workspaces === "object" ? (workspaces as Record<string, unknown>) : {};
-  const mismatches: DependencyJsLockMismatch[] = [];
-  const table = (value: unknown, section: DependencyJsManifestSection): Record<string, string> => {
-    if (!value || typeof value !== "object") return {};
-    const candidate = (value as Record<string, unknown>)[section];
-    if (!candidate || typeof candidate !== "object") return {};
-    return Object.fromEntries(Object.entries(candidate as Record<string, unknown>).map(([name, version]) => [name, String(version)]));
-  };
-  for (const [manifest, manifestValue] of manifestValues) {
-    const normalizedManifest = manifest.replaceAll("\\", "/");
-    const workspaceKey = normalizedManifest === "package.json" ? "" : normalizedManifest.replace(/\/package\.json$/u, "");
-    const lockValue = workspaceRecords[workspaceKey];
-    if (!lockValue || typeof lockValue !== "object") {
-      mismatches.push({ kind: "workspace-missing", manifest });
-      continue;
-    }
-    for (const section of DEPENDENCY_JS_MANIFEST_SECTIONS) {
-      const manifestTable = table(manifestValue, section);
-      const lockTable = table(lockValue, section);
-      for (const dependency of [...new Set([...Object.keys(manifestTable), ...Object.keys(lockTable)])].sort()) {
-        const manifestVersion = manifestTable[dependency];
-        const lockVersion = lockTable[dependency];
-        if (manifestVersion === undefined) mismatches.push({ dependency, kind: "stale-in-lock", lockVersion, manifest, section });
-        else if (lockVersion === undefined) mismatches.push({ dependency, kind: "missing-in-lock", manifest, manifestVersion, section });
-        else if (manifestVersion !== lockVersion) mismatches.push({ dependency, kind: "version-mismatch", lockVersion, manifest, manifestVersion, section });
-      }
-    }
-  }
-  return mismatches.sort((left, right) => left.manifest.localeCompare(right.manifest) || String(left.section).localeCompare(String(right.section)) || String(left.dependency).localeCompare(String(right.dependency)) || left.kind.localeCompare(right.kind));
-}
-
-
-
-/** 🔒️ Reads Bun's lockfile and audits configured in-scope workspace snapshots against their manifests. */
-function dependencyJsLockMismatches(repoRoot: string, manifests: readonly string[]): { mismatches: DependencyJsLockMismatch[]; workspaces: number } {
-  const contents = dependencyReadFileSafe(repoRoot, javascriptLockV1);
-  if (!contents) return { mismatches: [{ kind: "invalid-lockfile", manifest: javascriptLockV1 }], workspaces: 0 };
+/** 🕵️ Audits the lock of every dependency scope against the manifests of its members through the selected package manager. */
+export function dependencyJsLockAudit(repoRoot: string, lockParitySelfTests: () => number): { lockFixtureChecks: number; mismatches: DependencyJsLockMismatch[]; scopes: number; workspaces: number } {
+  const lockFixtureChecks = lockParitySelfTests();
   try {
-    const lock = javascriptManagerV1.parseLockDocument(contents) as { workspaces?: unknown };
-    const rootManifest = runtimeParseJsoncV1(dependencyReadFileSafe(repoRoot, "package.json")) as { workspaces?: unknown };
-    const configuredWorkspaces = new Set(Array.isArray(rootManifest.workspaces) ? rootManifest.workspaces.filter((value): value is string => typeof value === "string").map((value) => value.replaceAll("\\", "/").replace(/\/$/u, "")) : []);
-    const auditedManifests = manifests.filter((manifest) => manifest === "package.json" || configuredWorkspaces.has(manifest.replaceAll("\\", "/").replace(/\/package\.json$/u, "")));
-    const manifestValues = new Map<string, unknown>();
-    for (const manifest of auditedManifests) manifestValues.set(manifest, runtimeParseJsoncV1(dependencyReadFileSafe(repoRoot, manifest)));
-    return { mismatches: dependencyJsLockWorkspaceMismatches(manifestValues, lock.workspaces), workspaces: auditedManifests.length };
+    const scopes = readJavascriptLockScopesV1(repoRoot);
+    return { lockFixtureChecks, mismatches: checkJavascriptLockScopesV1(scopes).flatMap((report) => report.drift.map((row) => ({ ...row, scope: report.scope }))), scopes: scopes.length, workspaces: scopes.reduce((sum, scope) => sum + scope.manifests.size, 0) };
   } catch {
-    return { mismatches: [{ kind: "invalid-lockfile", manifest: javascriptLockV1 }], workspaces: 0 };
+    return { lockFixtureChecks, mismatches: [{ kind: "invalid-lockfile", manifest: javascriptLockV1, frozen: true, scope: "." }], scopes: 0, workspaces: 0 };
   }
 }
 
@@ -298,7 +304,7 @@ function dependencyJsOwnershipScope(manifest: string, manifests: readonly string
   return directory === "." ? "" : directory;
 }
 
-/** 🔎️ Discovers JavaScript/config sources under the same exclusions as the dependency freeze. */
+/** 📜️ Discovers JavaScript/config sources under the same exclusions as the dependency freeze. */
 function dependencyDiscoverJsSourceFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -453,7 +459,7 @@ function dependencyJsTokens(contents: string): DependencyJsToken[] {
   return tokens;
 }
 
-/** 🔎️ Extracts statically named bare module imports without mistaking fixture strings for code. */
+/** 🪝️ Extracts statically named bare module imports without mistaking fixture strings for code. */
 function dependencyJsImports(contents: string): { dependency: string; line: number }[] {
   const tokens = dependencyJsTokens(contents);
   const imports: { dependency: string; line: number }[] = [];
@@ -503,7 +509,7 @@ function dependencyJsImports(contents: string): { dependency: string; line: numb
   return imports;
 }
 
-/** 🔧️ Extracts exact package references from recognized config strings while retaining token line evidence and ignoring comments. */
+/** 🎛️ Extracts exact package references from recognized config strings while retaining token line evidence and ignoring comments. */
 function dependencyJsConfigReferences(contents: string): { dependency: string; line: number }[] {
   const references: { dependency: string; line: number }[] = [];
   for (const token of dependencyJsTokens(contents)) {
@@ -514,9 +520,8 @@ function dependencyJsConfigReferences(contents: string): { dependency: string; l
   return references;
 }
 
-/** 🔎️ Audits direct JavaScript rows against taxonomy-owned source/import/script evidence. */
+/** 🪞️ Audits direct JavaScript rows against taxonomy-owned source/import/script evidence. */
 export function dependencyJsParity(repoRoot: string, lockParitySelfTests: () => number): DependencyJsParityReport {
-  const lockFixtureChecks = lockParitySelfTests();
   const manifests = dependencyDiscoverPackageJsonFiles(repoRoot);
   const internalNames = dependencyInternalJsPackageNames(repoRoot, manifests);
   const sources = dependencyDiscoverJsSourceFiles(repoRoot);
@@ -581,11 +586,11 @@ export function dependencyJsParity(repoRoot: string, lockParitySelfTests: () => 
   }
   undeclaredImports.sort((left, right) => left.file.localeCompare(right.file) || left.line - right.line || left.dependency.localeCompare(right.dependency));
   const unownedRows = rows.filter((row) => row.evidence.length === 0).sort((left, right) => left.manifest.localeCompare(right.manifest) || left.dependency.localeCompare(right.dependency));
-  const lockParity = dependencyJsLockMismatches(repoRoot, manifests);
-  return { manifests: manifests.length, externalRows: rows.length, evidencedRows: rows.length - unownedRows.length, unownedRows, undeclaredImports, lockMismatches: lockParity.mismatches, lockFixtureChecks, lockWorkspaces: lockParity.workspaces };
+  const lockParity = dependencyJsLockAudit(repoRoot, lockParitySelfTests);
+  return { manifests: manifests.length, externalRows: rows.length, evidencedRows: rows.length - unownedRows.length, unownedRows, undeclaredImports, lockMismatches: lockParity.mismatches, lockFixtureChecks: lockParity.lockFixtureChecks, lockWorkspaces: lockParity.workspaces };
 }
 
-/** 🔒️Every internal (workspace-owned) JS package name — the `"name"` field of every non-compose, non-node_modules `package.json`. Used to classify a dependency as first-party even when it isn't `@semio-tech/…`-scoped or `workspace:`-versioned. */
+/** ⚙️Every internal (workspace-owned) JS package name — the `"name"` field of every non-compose, non-node_modules `package.json`. Used to classify a dependency as first-party even when it isn't `@semio-tech/…`-scoped or `workspace:`-versioned. */
 function dependencyInternalJsPackageNames(repoRoot: string, manifests: readonly string[]): Set<string> {
   const names = new Set<string>();
   for (const relPath of manifests) {
@@ -599,7 +604,7 @@ function dependencyInternalJsPackageNames(repoRoot: string, manifests: readonly 
   return names;
 }
 
-/** 🔒️Parses one `package.json`'s `dependencies`/`devDependencies`/`peerDependencies`/`optionalDependencies`. */
+/** 🔣️Parses one `package.json`'s `dependencies`/`devDependencies`/`peerDependencies`/`optionalDependencies`. */
 function dependencyParsePackageJson(repoRoot: string, relPath: string, internalNames: ReadonlySet<string>): DependencyJsEntry[] {
   let pkg: Record<string, unknown>;
   try {
@@ -626,7 +631,7 @@ function dependencyParsePackageJson(repoRoot: string, relPath: string, internalN
   return results;
 }
 
-/** 🔒️Repo-wide `package.json` file paths (repo-relative), skipping policy, ticket, and composition trees. */
+/** 📃️Repo-wide `package.json` file paths (repo-relative), skipping policy, ticket, and composition trees. */
 function dependencyDiscoverPackageJsonFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -651,12 +656,12 @@ function dependencyDiscoverPackageJsonFiles(repoRoot: string): string[] {
   return found.sort();
 }
 
-/** 🧱️ Keeps both canonical and generated composition trees outside the governing refactor boundary. */
+/** 🏗️ Keeps both canonical and generated composition trees outside the governing refactor boundary. */
 export function dependencyIsCompositionManifest(relPath: string): boolean {
   return relPath.startsWith("compose/") || relPath.startsWith("temp/compose/");
 }
 
-/** 🔒️Merges every third-party (non-internal) dependency across the whole workspace (Rust + JS, `compose/` excluded) into one baseline-entry list, keyed by `${ecosystem}:${name}`.
+/** 🎉️Merges every third-party (non-internal) dependency across the whole workspace (Rust + JS, `compose/` excluded) into one baseline-entry list, keyed by `${ecosystem}:${name}`.
  * A manifest inside the taxonomy's test domain never ships, so its runtime/build sections are recorded as `test-runner` inputs. */
 /** 🧰️ The Nx bootstrap recipe: the manifest that installs the runner before the workspace exists, audited against its own
  * lockfile; every section of it is repository tooling. */
@@ -680,12 +685,16 @@ export function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyB
 
   const cargoManifests = dependencyDiscoverCargoTomlFiles(repoRoot).filter((path) => !dependencyIsCompositionManifest(path));
   const workspaceDependencies = new Map<string, ReturnType<typeof dependencyParseWorkspaceDeps>>();
-  for (const manifest of cargoManifests) {
+  const cargoRows = cargoManifests.map((manifest) => {
     const authority = cargoWorkspaceForManifest(repoRoot, manifest);
     if (!workspaceDependencies.has(authority.manifest)) workspaceDependencies.set(authority.manifest, dependencyParseWorkspaceDeps(repoRoot, authority.manifest));
-    for (const dep of dependencyParseCargoToml(repoRoot, manifest, workspaceDependencies.get(authority.manifest)!)) {
+    return { manifest, rows: dependencyParseCargoToml(repoRoot, manifest, workspaceDependencies.get(authority.manifest)!) };
+  });
+  const productionEnabledTestFeatures = new Set(cargoRows.filter(({ manifest }) => !dependencyTestOwned(manifest, testDomain)).flatMap(({ rows }) => rows.flatMap((row) => (row.enablesTestFeatureOf ? [row.enablesTestFeatureOf] : []))));
+  for (const { manifest, rows } of cargoRows) {
+    for (const dep of rows) {
       if (dep.internal) continue;
-      record("rust", dep.name, dep.version, dep.kind, manifest);
+      record("rust", dep.name, dep.version, dep.testSupportOf !== undefined && productionEnabledTestFeatures.has(dep.testSupportOf) ? dep.productionKind! : dep.kind, manifest);
     }
   }
 
@@ -717,7 +726,7 @@ export function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyB
  * examples, oracles, probes, fixture generators) plus the semantic test module. A manifest below any of them is test-owned. */
 export type DependencyTestDomain = { readonly directoryNames: readonly string[]; readonly domainPath: string };
 
-/** 🧪️ Reads {@link DependencyTestDomain} from the taxonomy, so a new test directory kind never needs a second list here. */
+/** 📑️ Reads {@link DependencyTestDomain} from the taxonomy, so a new test directory kind never needs a second list here. */
 export function dependencyTestDomain(taxonomy: Record<string, unknown>): DependencyTestDomain {
   const directoryNames = [taxonomy.testsDirName, taxonomy.testFixturesDirName, taxonomy.testExamplesDirName, taxonomy.testOraclesDirName, taxonomy.testProbeDirName, taxonomy.testGeneratorDirName];
   if (directoryNames.some((name) => typeof name !== "string" || name.length === 0) || typeof taxonomy.testDomainPath !== "string") throw new Error("[dependencies] taxonomy lacks a test-domain directory name or testDomainPath");
@@ -728,18 +737,18 @@ function dependencyTestOwned(path: string, testDomain: DependencyTestDomain): bo
   return path.startsWith(`${testDomain.domainPath}/`) || path.split("/").slice(0, -1).some((segment) => testDomain.directoryNames.includes(segment));
 }
 
-/** 📇️An oracle name changes classification only when every declaration is owned by the test/oracle domain OR is itself a non-production declaration (`dev-dependencies`/`devDependencies`, i.e. `test-runner`/`repository-tooling` kind) — per the ticket's own definition of done, a third-party dependency kept ONLY behind `[dev-dependencies]` is compliant from ANY directory, not just a test-domain one. A genuine conflict requires an actual production-runtime/production-build declaration outside the test domain; those remain honest and become conflicts. */
-export function dependencyClassifyOracleEntry(entry: DependencyBaselineEntry, oracleIds: readonly string[] | undefined, testDomain: DependencyTestDomain): void {
+/** 🔮️An oracle name changes classification only when every declaration is owned by the test/oracle domain OR is itself a non-production declaration (`dev-dependencies`/`devDependencies`, i.e. `test-runner`/`repository-tooling` kind) — per the ticket's own definition of done, a third-party dependency kept ONLY behind `[dev-dependencies]` is compliant from ANY directory, not just a test-domain one. A genuine conflict requires an actual production-runtime/production-build declaration outside the test domain; those remain honest and become conflicts. */
+export function dependencyClassifyOracleEntry(entry: DependencyBaselineEntry, oracleIds: readonly string[] | undefined, testDomain: DependencyTestDomain, owners: Readonly<Record<string, DependencyInterfaceOwner>> = DEPENDENCY_INTERFACE_OWNERS): void {
   if (!oracleIds) return;
   entry.oracleIds = [...oracleIds].sort();
   const declarations = entry.declarations ?? entry.users.map((user) => ({ user, version: entry.version, kind: entry.kinds[0] ?? "repository-tooling" }));
-  const owner = DEPENDENCY_INTERFACE_OWNERS[entry.name];
-  const productDeclarations = declarations.filter((declaration) => !dependencyTestOwned(declaration.user, testDomain) && (declaration.kind === "production-runtime" || declaration.kind === "production-build") && !(owner?.ecosystem === entry.ecosystem && declaration.user === owner.manifest));
+  const owner = Object.hasOwn(owners, entry.name) ? owners[entry.name] : undefined;
+  const productDeclarations = declarations.filter((declaration) => !dependencyTestOwned(declaration.user, testDomain) && (declaration.kind === "production-runtime" || declaration.kind === "production-build") && !(owner?.ecosystem === entry.ecosystem && declaration.user.startsWith(owner.directory)));
   if (productDeclarations.length === 0) entry.kinds = ["test-oracle"];
   else entry.oracleConflictUsers = [...new Set(productDeclarations.map((declaration) => declaration.user))].sort();
 }
 
-/** 📇️Package name → approved oracle ids, from the registry that claims them as test-only references. */
+/** 📚️Package name → approved oracle ids, from the registry that claims them as test-only references. */
 function dependencyOracleRegistryPackages(repoRoot: string): Map<string, string[]> {
   const map = new Map<string, string[]>();
   const taxonomy = dependencyTaxonomy(repoRoot);
@@ -755,15 +764,23 @@ function dependencyOracleRegistryPackages(repoRoot: string): Map<string, string[
     if (manifest === "") continue;
     const content = dependencyReadFileSafe(repoRoot, manifest);
     if (!content) continue;
-    try {
-      for (const entry of (JSON.parse(content) as { oracles?: { id: string; package: string }[] }).oracles ?? []) {
-        map.set(entry.package, [...(map.get(entry.package) ?? []), entry.id]);
-      }
-    } catch {
-      /* an unreadable manifest means no package is excused as an oracle */
-    }
+    for (const [name, id] of dependencyOracleClaims(content)) map.set(name, [...(map.get(name) ?? []), id]);
   }
   return map;
+}
+
+/** 🧷️ Every `[package, oracle id]` claim of one oracle manifest: the primary package of each entry and every further package its composed reference links ([OracleLinkedPackage](../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json) of the test schema); a manifest that does not parse claims nothing, so no package is excused as an oracle. */
+export function dependencyOracleClaims(content: string): [string, string][] {
+  try {
+    const claims: [string, string][] = [];
+    for (const entry of (JSON.parse(content) as { oracles?: { id: string; package: string; packages?: { package: string }[] }[] }).oracles ?? []) {
+      claims.push([entry.package, entry.id]);
+      for (const linked of Array.isArray(entry.packages) ? entry.packages : []) claims.push([linked.package, entry.id]);
+    }
+    return claims;
+  } catch {
+    return [];
+  }
 }
 
 /** 🧩️Every `<owner>/<contributionDir>/<contributionFile>` manifest, found by convention. */
@@ -811,7 +828,7 @@ function dependencyGoModuleDirs(repoRoot: string): string[] {
 
 type DependencyGoRequirement = { name: string; version: string; kind: DependencyKind };
 
-/** 🐹️Reads module identity and local replacements without invoking the Go toolchain. */
+/** 🪪️Reads module identity and local replacements without invoking the Go toolchain. */
 export function dependencyParseGoModule(content: string): { module?: string; localReplaces: string[]; requirements: DependencyGoRequirement[] } {
   const module = content.match(/^\s*module\s+(\S+)\s*$/mu)?.[1];
   const localReplaces: string[] = [];
@@ -837,7 +854,7 @@ export function dependencyParseGoModule(content: string): { module?: string; loc
   return { module, localReplaces: [...new Set(localReplaces)].sort(), requirements };
 }
 
-/** 🐹️First-party module paths proven by `go.work` membership or a local `replace`. */
+/** ⏮️First-party module paths proven by `go.work` membership or a local `replace`. */
 function dependencyGoInternalModules(repoRoot: string, dirs = dependencyGoModuleDirs(repoRoot)): Set<string> {
   const internal = new Set<string>();
   for (const replaced of dependencyParseGoModule(dependencyReadFileSafe(repoRoot, "go.work")).localReplaces) internal.add(replaced);
@@ -849,7 +866,7 @@ function dependencyGoInternalModules(repoRoot: string, dirs = dependencyGoModule
   return internal;
 }
 
-/** 🐹️Third-party requirements of every non-compose Go module. `// indirect` requirements are transitive
+/** 📦️Third-party requirements of every non-compose Go module. `// indirect` requirements are transitive
  * evidence rather than a declared use, so they are classed as build-phase rather than runtime. */
 export function dependencyCollectGo(repoRoot: string, record: (ecosystem: DependencyEcosystem, name: string, version: string, kind: DependencyKind, user: string) => void, recordFirstParty?: (entry: DependencyBaselineEntry) => void): void {
   const dirs = dependencyGoModuleDirs(repoRoot);
@@ -943,7 +960,7 @@ function dependencyCollectDotnet(repoRoot: string, record: (ecosystem: Dependenc
   }
 }
 
-/** 🔒️Reads the committed baseline, or `null` if it doesn't exist yet (first run — `verify dependencies write-baseline` creates it). */
+/** 📥️Reads the committed baseline, or `null` if it doesn't exist yet (first run — `verify dependencies write-baseline` creates it). */
 function dependencyFreezeLoadBaseline(repoRoot: string): DependencyBaseline | null {
   const content = dependencyReadFileSafe(repoRoot, DEPENDENCY_BASELINE_REL_PATH);
   if (!content) return null;
@@ -954,7 +971,7 @@ function dependencyFreezeLoadBaseline(repoRoot: string): DependencyBaseline | nu
   }
 }
 
-/** 🔒️Writes the current third-party dependency inventory as the new committed baseline (repo root, `🔒️dependencies.json`). */
+/** 💾️Writes the current third-party dependency inventory as the new committed baseline (repo root, `🔒️dependencies.json`). */
 export function dependencyFreezeWriteBaseline(repoRoot: string): DependencyBaseline {
   const probe = runProbe("git", ["rev-parse", "HEAD"], { cwd: repoRoot });
   const commit = probe.status === 0 ? probe.stdout.trim() : "unknown";
@@ -966,7 +983,7 @@ export function dependencyFreezeWriteBaseline(repoRoot: string): DependencyBasel
 
 export type DependencyFreezeCheckResult = { baseline: DependencyBaseline; current: DependencyBaselineEntry[]; newDeps: DependencyBaselineEntry[]; removedDeps: DependencyBaselineEntry[] };
 
-/** 🔒️Compares the current third-party inventory against the committed baseline. Only NEW dependencies (present now, absent from baseline) are a failure — removals always pass, so the check only ever ratchets tighter. */
+/** ✅️Compares the current third-party inventory against the committed baseline. Only NEW dependencies (present now, absent from baseline) are a failure — removals always pass, so the check only ever ratchets tighter. */
 export function dependencyFreezeCheck(repoRoot: string): DependencyFreezeCheckResult {
   const baseline = dependencyFreezeLoadBaseline(repoRoot);
   const current = dependencyFreezeCurrentThirdParty(repoRoot);

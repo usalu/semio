@@ -103,7 +103,7 @@ use semio_framework_os_store_one_item_batch as one_item_owners;
 pub use one_item_owners::OneItemOwners;
 
 pub use semio_framework_os_store_one_item_batch::paged_one_item;
-pub use paged_one_item::{mutation_apply_preparation_factory, paged_one_item_factory_birth_bytes, MutationApplyEdit, PagedOneItemPreparationFactory};
+pub use paged_one_item::{cold_mutation_apply_preparation_factory, mutation_apply_preparation_factory, paged_one_item_factory_birth_bytes, ColdMutationApplyFactory, MutationApplyEdit, PagedOneItemPreparationFactory};
 pub use semio_framework_os_store_one_item::semantic::PagedOneItemEdit;
 pub use semio_framework_os_store_one_item::semantic::PagedOneItemEditStep;
 

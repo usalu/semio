@@ -378,7 +378,7 @@
         "maximumElapsedMilliseconds": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 3600000
+          "maximum": 86400000
         },
         "maximumBytes": {
           "type": "integer",

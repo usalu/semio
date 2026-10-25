@@ -28,7 +28,7 @@ pub enum MutationOwnerLayout {
     DomainOperations(&'static [MutationDomainOperation]),
 }
 
-/// 🧭️ Aggregate-owned source facts used to validate one explicitly owned mutation leaf.
+/// 🌿️ Aggregate-owned source facts used to validate one explicitly owned mutation leaf.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MutationLeafSourceScope {
     pub workspace_token: [u8; 32],
@@ -47,7 +47,7 @@ pub struct MutationLeafSourceValidationError {
     pub requirement: &'static str,
 }
 
-/// 🧭️ Validates a direct leaf's descriptor and provenance against aggregate-owned source facts.
+/// ⚖️ Validates a direct leaf's descriptor and provenance against aggregate-owned source facts.
 pub const fn validate_mutation_leaf_source(
     descriptor: &MutationLeafDescriptor,
     provenance: &MutationSourceProvenance,
@@ -69,7 +69,7 @@ pub struct ValidatedMutationLeafSourceScope {
 }
 
 impl MutationLeafSourceScope {
-    /// 🧭️ Checks shared aggregate facts before validating each leaf against the same immutable authority.
+    /// ☑️ Checks shared aggregate facts before validating each leaf against the same immutable authority.
     pub const fn validate(&self) -> Result<ValidatedMutationLeafSourceScope, MutationLeafSourceValidationError> {
         let scope = self;
         if !mutation_leaf_descriptor_root(scope.mutation_root) || !mutation_leaf_source_path(scope.mutation_root) {
@@ -95,7 +95,7 @@ impl MutationLeafSourceScope {
 }
 
 impl ValidatedMutationLeafSourceScope {
-    /// 🔎️ Checks each descriptor and its exact source provenance against the validated aggregate.
+    /// ✅️ Checks each descriptor and its exact source provenance against the validated aggregate.
     pub const fn validate_leaf(&self, descriptor: &MutationLeafDescriptor, provenance: &MutationSourceProvenance) -> Result<(), MutationLeafSourceValidationError> {
         let scope = &self.scope;
         if let Err(error) = validate_mutation_leaf_descriptor(descriptor) {
@@ -199,7 +199,7 @@ const fn mutation_leaf_source_path_matches_direct_or_payload(owner: &str, payloa
         && mutation_leaf_descriptor_bytes_at(value, owner.len() + 1 + payload_facet.len() + 1, filename)
 }
 
-/// 🪪️ Ownership contract for a direct mutation leaf, and the editable payload of one of its operations.
+/// 🎚️ Ownership contract for a direct mutation leaf, and the editable payload of one of its operations.
 pub trait MutationLeaf {
     const DESCRIPTOR: MutationLeafDescriptor;
     const PROVENANCE: MutationSourceProvenance;
@@ -210,27 +210,27 @@ pub trait MutationLeaf {
     /// framework module) tree holds — embedded by `#[derive(dsl::MutationLeaf)]` and published at runtime, so every input resolves
     /// whatever facet or artifact of the plugin it lives in (design §16.3).
     const PAYLOAD_SCHEMA_DOCUMENTS: &'static [&'static str] = &[];
-    /// 🧬️ [`Self::PAYLOAD_SCHEMA`] when this operation is user-editable, else `None`. A leaf whose type wraps its payload
+    /// 📥️ [`Self::PAYLOAD_SCHEMA`] when this operation is user-editable, else `None`. A leaf whose type wraps its payload
     /// in one variant of an enum (`#[mutation_leaf(payload = Apply)]`) is editable only in that variant; its other
     /// variants (an internal inverse such as `Restore`) are not.
     fn input_schema(&self) -> Option<&'static str> {
         Some(Self::PAYLOAD_SCHEMA)
     }
-    /// 🧬️ The value [`Self::input_schema`] describes: the whole leaf value, or the content of the `payload` variant.
+    /// ⌨️ The value [`Self::input_schema`] describes: the whole leaf value, or the content of the `payload` variant.
     fn input_value(&self) -> semio_framework_value::DslValue
     where
         Self: semio_framework_value::ToValue,
     {
         semio_framework_value::ToValue::to_value(self)
     }
-    /// 🧬️ Rebuilds this operation from an edited [`Self::input_value`]; an operation that is not editable refuses.
+    /// ✏️ Rebuilds this operation from an edited [`Self::input_value`]; an operation that is not editable refuses.
     fn with_input_value(&self, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError>
     where
         Self: Sized + semio_framework_value::FromValue,
     {
         <Self as semio_framework_value::FromValue>::from_value(value)
     }
-    /// 🧬️ A new editable operation of this leaf from its [`Self::input_value`] alone: the whole leaf value, or the content
+    /// 🌱️ A new editable operation of this leaf from its [`Self::input_value`] alone: the whole leaf value, or the content
     /// of the `payload` variant.
     fn from_input_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError>
     where

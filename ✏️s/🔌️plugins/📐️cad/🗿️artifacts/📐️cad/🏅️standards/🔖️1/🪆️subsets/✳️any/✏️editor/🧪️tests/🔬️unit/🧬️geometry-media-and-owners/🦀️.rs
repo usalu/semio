@@ -382,7 +382,7 @@ fn cad_imported_geometry_parent_operation_pack_keeps_exact_forward_inverse_owner
         let operation:CadMutation=semio_framework_pack_json::from_json_str(input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&operation)).unwrap(),serde_json::from_str::<serde_json::Value>(input).unwrap());
         let before:CadSnapshot=semio_framework_pack_json::from_json_str(before,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mut operations=protocol::Mutation::inverse(&operation,&before).unwrap();operations.push(operation);
+        let mut operations=protocol::ColdMutation::inverse(&operation,&before).unwrap();operations.push(operation);
         for operation in operations {
         let expected=semio_s_artifact_cad_cad_mutations::standards::v1::subsets::any::io::binary::mutations::encode_op(&operation).unwrap();
         assert!(factory.operation_wire_source(&operation).is_some(),"original parent mutation requires exact borrowed installed Pack authority");

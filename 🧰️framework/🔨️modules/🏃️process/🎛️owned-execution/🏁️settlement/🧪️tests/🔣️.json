@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "decisions": [
+    { "name": "closed wins over everything", "state": { "exited": true, "closed": true, "alive": true, "sinceExitMilliseconds": 9000, "sinceVanishedMilliseconds": 0 }, "grace": 2000, "decision": "closed" },
+    { "name": "running child is waited for", "state": { "exited": false, "closed": false, "alive": true, "sinceExitMilliseconds": 0, "sinceVanishedMilliseconds": 0 }, "grace": 2000, "decision": "wait" },
+    { "name": "exited child inside the grace waits for its close", "state": { "exited": true, "closed": false, "alive": false, "sinceExitMilliseconds": 1999, "sinceVanishedMilliseconds": 0 }, "grace": 2000, "decision": "wait" },
+    { "name": "exited child at the grace is settled by force", "state": { "exited": true, "closed": false, "alive": false, "sinceExitMilliseconds": 2000, "sinceVanishedMilliseconds": 0 }, "grace": 2000, "decision": "force" },
+    { "name": "vanished process without any event waits the grace", "state": { "exited": false, "closed": false, "alive": false, "sinceExitMilliseconds": 0, "sinceVanishedMilliseconds": 1999 }, "grace": 2000, "decision": "wait" },
+    { "name": "vanished process without any event is lost at the grace", "state": { "exited": false, "closed": false, "alive": false, "sinceExitMilliseconds": 0, "sinceVanishedMilliseconds": 2000 }, "grace": 2000, "decision": "lost" }
+  ],
+  "children": [
+    { "name": "stream never closes after exit", "events": [{ "at": 10, "type": "exit", "code": 0 }], "present": false, "settlement": "force", "code": 0, "streamsDestroyed": true },
+    { "name": "ordinary exit and close", "events": [{ "at": 10, "type": "exit", "code": 3 }, { "at": 20, "type": "close", "code": 3 }], "present": false, "settlement": "closed", "code": 3, "streamsDestroyed": false },
+    { "name": "no event at all and the process is gone", "events": [], "present": false, "settlement": "lost", "code": null, "streamsDestroyed": true }
+  ]
+}

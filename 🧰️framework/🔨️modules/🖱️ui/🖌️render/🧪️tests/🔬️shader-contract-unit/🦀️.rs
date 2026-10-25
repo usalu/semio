@@ -170,7 +170,7 @@ fn wgpu_target_const(name: &str) -> Option<String> {
     WGPU_TARGET_SHADERS_SOURCES.iter().find_map(|source| raw_string_const(source, name))
 }
 
-/// ✂️ Lifts `pub const <name>: &str = r#"…"#;` out of Rust source text.
+/// 🔤️ Lifts `pub const <name>: &str = r#"…"#;` out of Rust source text.
 fn raw_string_const(source: &str, name: &str) -> Option<String> {
     let head = format!("pub const {name}: &str = r#\"");
     let start = source.find(&head)? + head.len();
@@ -196,7 +196,7 @@ fn world3d_wgsl_is_byte_identical_in_the_wgpu_target_and_the_shader_contract() {
     assert_eq!(target_textured, WORLD3D_TEXTURED_SHADER, "WORLD3D_TEXTURED_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
 }
 
-/// ⚖️ Law: every per-vertex channel the world-3d WGSL declares has a matching vertex attribute in
+/// 📍️ Law: every per-vertex channel the world-3d WGSL declares has a matching vertex attribute in
 /// both world-3d pipelines, so a shader that gains a `@location` cannot ship without the layout
 /// that feeds it (the exact shape of the W1f divergence: `@location(2) color` present, stride 24).
 #[test]
@@ -214,7 +214,7 @@ fn world3d_vertex_locations_are_all_fed_by_the_declared_vertex_buffers() {
         }
     }
 }
-/// ⚖️ Law: every native mesh mirror carries current Three's bounded standard-material math,
+/// 🌐️ Law: every native mesh mirror carries current Three's bounded standard-material math,
 /// inverse-transpose normal path, and World-only ACES exit.
 #[test]
 fn world3d_environment_and_material_contract_is_identical_in_every_backend_mirror() {
@@ -272,7 +272,7 @@ fn world3d_environment_and_material_contract_is_identical_in_every_backend_mirro
     }
 }
 
-/// 🎨️ World outputs follow their authored material policy; reference Basic and shared UI bypass ACES.
+/// 🗺️ World outputs follow their authored material policy; reference Basic and shared UI bypass ACES.
 #[test]
 fn world3d_output_families_apply_their_authored_tone_mapping_policy() {
     for source in [WORLD3D_SHADER, WORLD3D_LINES_SHADER] {

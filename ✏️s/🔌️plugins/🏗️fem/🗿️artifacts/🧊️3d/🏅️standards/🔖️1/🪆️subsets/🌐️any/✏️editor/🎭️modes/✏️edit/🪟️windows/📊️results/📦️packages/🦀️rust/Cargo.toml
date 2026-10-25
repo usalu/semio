@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-fem-3d-editor-visual-job = { path = "../../../../../../🧵️session/🎞️visual-job/📦️packages/🦀️rust" }
 semio-s-artifact-fem-3d-editor-model-window = { path = "../../../🧱️model/📦️packages/🦀️rust" }
 semio-s-fem-analyses-model = { path = "../../../../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust" }
 pack = { workspace = true }

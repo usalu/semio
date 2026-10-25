@@ -17,7 +17,7 @@ import type { AccessibilitySpec, Component, ContainerRole, Liveness, UiNodeRecor
 
 //#region ♿️Projection
 
-/** ♿️ One node of the accessibility projection a renderer publishes — the TS mirror of the Rust
+/** 📮️ One node of the accessibility projection a renderer publishes — the TS mirror of the Rust
  * `AccessibilityProjectionNode`. Flat and ordered: `depth` carries the tree shape. */
 export type UiAccessibilityProjectionNodeV1 = {
   readonly nodeId: number;
@@ -60,7 +60,7 @@ export type UiAccessibilityProjectionNodeV1 = {
   readonly tone: string | null;
 };
 
-/** 📶️ The range semantics a component announces — the TS mirror of the Rust `AccessibilityValue`. */
+/** 💎️ The range semantics a component announces — the TS mirror of the Rust `AccessibilityValue`. */
 export type UiAccessibilityValueV1 = Pick<UiAccessibilityProjectionNodeV1, "valueMin" | "valueMax" | "valueNow" | "valueText" | "busy" | "valueStep">;
 
 /** 🗂️ The authored container role's own ARIA name — `plain`/`group`/`field` are all plain grouping
@@ -79,7 +79,7 @@ function containerRoleName(role: ContainerRole | undefined): string {
 }
 
 /**
- * ♿️ The ARIA role a component implies. `activatable` is the record's own `activate` binding:
+ * 🎭️ The ARIA role a component implies. `activatable` is the record's own `activate` binding:
  * a container you can press IS a button, exactly as the React Interpreter spells it
  * (`role={activateBinding ? "button" : role}`) — except where the author already declared a landmark
  * (`form`/`toolbar`), which outranks the press.
@@ -223,7 +223,7 @@ export function uiProgressFractionV1(completed: number, total: number | null | u
   return total > 0 ? Math.min(1, Math.max(0, completed / total)) : 0;
 }
 
-/** ♿️ Projects ONE published node record. Pure over the record: a renderer's own walk supplies
+/** 📹️ Projects ONE published node record. Pure over the record: a renderer's own walk supplies
  * `depth` and afterwards stamps whatever live state only it knows (`focused`, and its laid-out
  * rect). A hidden node is KEPT, carrying `hidden` — dropping it would disagree with the DOM
  * renderer, which renders the element and marks it `aria-hidden`. */

@@ -941,7 +941,7 @@
   },
   "registration": {
     "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
-    "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🟦️.ts",
+    "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/📖️readme-and-mutation-routes/🟦️.ts",
     "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
     "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/↪️rust-divergence-callback/🟦️.ts",
     "execution": [
@@ -952,7 +952,7 @@
         "budgetMs": 15000,
         "target": "test-rust-divergence-callback-source",
         "command": "repo ./📜️script.ts test rust-divergence-callback-source",
-        "packageCommand": "repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-source"
+        "packageCommand": "repo run @semio-tech/repo-lib:test-rust-divergence-callback-source"
       },
       {
         "phase": "native",
@@ -961,7 +961,7 @@
         "budgetMs": 15000,
         "target": "test-rust-divergence-callback-native",
         "command": "repo ./📜️script.ts test rust-divergence-callback-native",
-        "packageCommand": "repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-native"
+        "packageCommand": "repo run @semio-tech/repo-lib:test-rust-divergence-callback-native"
       },
       {
         "phase": "syn",
@@ -970,7 +970,7 @@
         "budgetMs": 120000,
         "target": "test-rust-divergence-callback-syn",
         "command": "repo ./📜️script.ts test rust-divergence-callback-syn",
-        "packageCommand": "repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-syn"
+        "packageCommand": "repo run @semio-tech/repo-lib:test-rust-divergence-callback-syn"
       }
     ]
   },

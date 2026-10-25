@@ -66,7 +66,7 @@ wfc_patch!(/// 📍 Field patch over a slot (its id is the row identity).
 
 protocol::list_delta! {
     /// 📂 Row delta over the slots.
-    pub Wfc2dSlotsDelta { removal: Wfc2dSlotsRemoval, insertion: Wfc2dSlotsInsertion, relocation: Wfc2dSlotsRelocation, modification: Wfc2dSlotsModification, row: Wfc2dSlot, patch: Wfc2dSlotPatch, key: id, values_only }
+    pub Wfc2dSlotsDelta { removal: Wfc2dSlotsRemoval, insertion: Wfc2dSlotsInsertion, relocation: Wfc2dSlotsRelocation, modification: Wfc2dSlotsModification, row: Wfc2dSlot, patch: Wfc2dSlotPatch, list: Vec<Wfc2dSlot>, key: String = keyed, values_only }
 }
 
 impl Wfc2dRow for Wfc2dSlotEdge {
@@ -80,7 +80,7 @@ wfc_patch!(/// 🔗 Field patch over an adjacency edge (its id is the row identi
 
 protocol::list_delta! {
     /// 📂 Row delta over the edges.
-    pub Wfc2dEdgesDelta { removal: Wfc2dEdgesRemoval, insertion: Wfc2dEdgesInsertion, relocation: Wfc2dEdgesRelocation, modification: Wfc2dEdgesModification, row: Wfc2dSlotEdge, patch: Wfc2dEdgePatch, key: id, values_only }
+    pub Wfc2dEdgesDelta { removal: Wfc2dEdgesRemoval, insertion: Wfc2dEdgesInsertion, relocation: Wfc2dEdgesRelocation, modification: Wfc2dEdgesModification, row: Wfc2dSlotEdge, patch: Wfc2dEdgePatch, list: Vec<Wfc2dSlotEdge>, key: String = keyed, values_only }
 }
 
 impl Wfc2dRow for Wfc2dTile {
@@ -94,7 +94,7 @@ wfc_patch!(/// 🀄️ Field patch over a tile (its id is the row identity).
 
 protocol::list_delta! {
     /// 📂 Row delta over the tiles.
-    pub Wfc2dTilesDelta { removal: Wfc2dTilesRemoval, insertion: Wfc2dTilesInsertion, relocation: Wfc2dTilesRelocation, modification: Wfc2dTilesModification, row: Wfc2dTile, patch: Wfc2dTilePatch, key: id, values_only }
+    pub Wfc2dTilesDelta { removal: Wfc2dTilesRemoval, insertion: Wfc2dTilesInsertion, relocation: Wfc2dTilesRelocation, modification: Wfc2dTilesModification, row: Wfc2dTile, patch: Wfc2dTilePatch, list: Vec<Wfc2dTile>, key: String = keyed, values_only }
 }
 
 impl Wfc2dRow for Wfc2dRule {
@@ -108,7 +108,7 @@ wfc_patch!(/// ⛓️ Field patch over an adjacency rule (its id is the row iden
 
 protocol::list_delta! {
     /// 📂 Row delta over the rules.
-    pub Wfc2dRulesDelta { removal: Wfc2dRulesRemoval, insertion: Wfc2dRulesInsertion, relocation: Wfc2dRulesRelocation, modification: Wfc2dRulesModification, row: Wfc2dRule, patch: Wfc2dRulePatch, key: id, values_only }
+    pub Wfc2dRulesDelta { removal: Wfc2dRulesRemoval, insertion: Wfc2dRulesInsertion, relocation: Wfc2dRulesRelocation, modification: Wfc2dRulesModification, row: Wfc2dRule, patch: Wfc2dRulePatch, list: Vec<Wfc2dRule>, key: String = keyed, values_only }
 }
 
 //#endregion 🔖️RowTypes

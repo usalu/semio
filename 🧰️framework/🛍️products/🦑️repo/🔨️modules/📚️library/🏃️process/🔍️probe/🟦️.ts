@@ -6,7 +6,7 @@ import {tmpdir} from "node:os";
 import {defaultBudgetMs,budgetTimeoutHint} from "../🟦️.ts";
 import type {RunCmdOpts,RunProbeResult} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 type CapturedSpawnOptions = Readonly<{
   cwd?: string;

@@ -50,7 +50,7 @@ pub struct AnchoredSyntax {
 }
 
 impl AnchoredSyntax {
-    /// 🔎️ Confirms an anchor retains exactly the source range it claims.
+    /// ⚓️ Confirms an anchor retains exactly the source range it claims.
     pub async fn validate(&self) -> Result<(), CodecFailure> {
         if self.anchor.trim().is_empty() {
             return Err(CodecFailure::error("io.codec.empty-anchor", "source anchor is empty").await);
@@ -105,7 +105,7 @@ impl<T> ArtifactCodecResult<T> {
         Ok(())
     }
 
-    /// 📏️ Orders retained opaque records independently of insertion or registry order.
+    /// 📹️ Orders retained opaque records independently of insertion or registry order.
     pub async fn canonical_opaque_extensions(&self) -> Vec<&OpaqueExtension> {
         let mut extensions = self.opaque_extensions.iter().collect::<Vec<_>>();
         extensions.sort_by(|a, b| (a.kind.as_str(), a.source.anchor.as_str(), a.source.span.byte_start, a.source.span.byte_end).cmp(&(b.kind.as_str(), b.source.anchor.as_str(), b.source.span.byte_start, b.source.span.byte_end)));
@@ -118,7 +118,7 @@ impl<T> ArtifactCodecResult<T> {
         self.opaque_extensions.sort_by(|a, b| (a.kind.as_str(), a.source.anchor.as_str(), a.source.span.byte_start, a.source.span.byte_end).cmp(&(b.kind.as_str(), b.source.anchor.as_str(), b.source.span.byte_start, b.source.span.byte_end)));
     }
 
-    /// 🧭️ Verifies the representation promise attached to a completed codec result.
+    /// 📎️ Verifies the representation promise attached to a completed codec result.
     pub async fn validate_representation(&self, representation: CodecRepresentation) -> Result<(), CodecFailure> {
         self.validate_lossless().await?;
         if representation == CodecRepresentation::Canonical {
@@ -160,7 +160,7 @@ pub struct CodecFailure {
 }
 
 impl CodecFailure {
-    /// 🛑️ Builds one structured error without coupling this contract to a parser implementation.
+    /// ❌️ Builds one structured error without coupling this contract to a parser implementation.
     pub async fn error(code: impl Into<String>, message: impl Into<String>) -> Self {
         Self { diagnostics: vec![CodecDiagnostic { code: code.into(), severity: CodecSeverity::Error, message: message.into(), primary_span: None, related_spans: Vec::new() }] }
     }
@@ -178,7 +178,7 @@ pub type CodecResult<T> = Result<CodecOutput<T>, CodecFailure>;
 //#endregion 🔒️Diagnostics
 
 //#region ⏱️Policies
-/// 🎯️ The deterministic representation promise requested from a codec.
+/// 📬️ The deterministic representation promise requested from a codec.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CodecRepresentation {
     Canonical,
@@ -200,13 +200,13 @@ impl CancellationToken {
         self.0.store(true, std::sync::atomic::Ordering::Release);
     }
 
-    /// 🔎️ Reads cancellation with acquire semantics.
+    /// 📖️ Reads cancellation with acquire semantics.
     pub async fn is_cancelled(&self) -> bool {
         self.0.load(std::sync::atomic::Ordering::Acquire)
     }
 }
 
-/// 📏️ Finite caller-owned resource ceilings for one codec invocation.
+/// 🚧️ Finite caller-owned resource ceilings for one codec invocation.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CodecLimits {
     pub max_read_bytes: u64,
@@ -222,7 +222,7 @@ impl Default for CodecLimits {
     }
 }
 
-/// 📥️ Decode policy, including the representation promise, bounded work, and cancellation.
+/// 🔏️ Decode policy, including the representation promise, bounded work, and cancellation.
 #[derive(Clone, Debug)]
 pub struct DecodePolicy {
     pub representation: CodecRepresentation,
@@ -236,7 +236,7 @@ impl Default for DecodePolicy {
     }
 }
 
-/// 📤️ Encode policy, including the representation promise, bounded work, and cancellation.
+/// 💼️ Encode policy, including the representation promise, bounded work, and cancellation.
 #[derive(Clone, Debug)]
 pub struct EncodePolicy {
     pub representation: CodecRepresentation,
@@ -270,17 +270,17 @@ pub struct CodecBudget {
 }
 
 impl CodecBudget {
-    /// 🌱️ Creates a fresh counter from caller-owned limits and cancellation.
+    /// 🆕️ Creates a fresh counter from caller-owned limits and cancellation.
     pub async fn new(limits: CodecLimits, cancellation: CancellationToken) -> Self {
         Self { limits, cancellation, consumption: CodecConsumption::default() }
     }
 
-    /// 🔎️ Returns work already consumed by this invocation.
+    /// ↩️ Returns work already consumed by this invocation.
     pub async fn consumption(&self) -> CodecConsumption {
         self.consumption
     }
 
-    /// 🛑️ Fails immediately when the caller has cancelled this operation.
+    /// 🚨️ Fails immediately when the caller has cancelled this operation.
     pub async fn ensure_active(&self) -> Result<(), CodecFailure> {
         if self.cancellation.is_cancelled().await {
             return Err(CodecFailure::error("io.codec.cancelled", "codec operation cancelled").await);
@@ -323,7 +323,7 @@ impl CodecBudget {
         Ok(())
     }
 
-    /// 🪆️ Leaves one parser or encoder recursion frame.
+    /// 🔲️ Leaves one parser or encoder recursion frame.
     pub async fn leave_recursion(&mut self) -> Result<(), CodecFailure> {
         self.ensure_active().await?;
         match self.consumption.recursion_depth.checked_sub(1) {
@@ -358,7 +358,7 @@ pub struct DecodeContext<R: ResourceResolver> {
 }
 
 impl<R: ResourceResolver> DecodeContext<R> {
-    /// 🌱️ Starts one decode invocation.
+    /// ▶️ Starts one decode invocation.
     pub async fn new(policy: DecodePolicy) -> Self {
         let budget = CodecBudget::new(policy.limits.clone(), policy.cancellation.clone());
         Self { policy, budget: budget.await, resolver: None }
@@ -370,7 +370,7 @@ impl<R: ResourceResolver> DecodeContext<R> {
         Self { policy, budget: budget.await, resolver: Some(resolver) }
     }
 
-    /// 🌊️ Creates the only codec-facing bounded view over a payload source. `S` is trivially
+    /// 🪵️ Creates the only codec-facing bounded view over a payload source. `S` is trivially
     /// generic (R11 part a) — no runtime-chosen implementor lives at this call site.
     pub async fn source<'source, S: PayloadSource>(&'source mut self, source: &'source mut S) -> CodecResult<BoundedPayloadSource<'source, S>> {
         if let Err(error) = source.span().await.validate().await {
@@ -380,7 +380,7 @@ impl<R: ResourceResolver> DecodeContext<R> {
         Ok(CodecOutput { value: BoundedPayloadSource { source, budget: &mut self.budget, policy: &self.policy }, diagnostics: Vec::new() })
     }
 
-    /// 🔗️ Resolves one external source exclusively through the host-owned resolver. The resolved
+    /// 🖥️ Resolves one external source exclusively through the host-owned resolver. The resolved
     /// source's concrete type is the resolver's own `Self::Source` associated type (R11 part b) —
     /// the openness lives at the resolver implementor, never boxed here.
     pub async fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSource<'context, R::Source>> {
@@ -407,7 +407,7 @@ impl<R: ResourceResolver> DecodeContext<R> {
     }
 }
 
-/// 🔍️ Encode invocation state; codecs charge it instead of owning hidden global limits.
+/// 🗂️ Encode invocation state; codecs charge it instead of owning hidden global limits.
 /// 🧬️ Generic over the host-owned resolver `R` — see `DecodeContext`'s doc comment and
 /// `📌️important.md` R11.
 #[derive(Clone)]
@@ -418,13 +418,13 @@ pub struct EncodeContext<R: ResourceResolver> {
 }
 
 impl<R: ResourceResolver> EncodeContext<R> {
-    /// 🌱️ Starts one encode invocation.
+    /// 🔰️ Starts one encode invocation.
     pub async fn new(policy: EncodePolicy) -> Self {
         let budget = CodecBudget::new(policy.limits.clone(), policy.cancellation.clone());
         Self { policy, budget: budget.await, resolver: None }
     }
 
-    /// 🔗️ Starts one encode invocation with the host-owned external resource resolver.
+    /// 🌐️ Starts one encode invocation with the host-owned external resource resolver.
     pub async fn with_resolver(policy: EncodePolicy, resolver: std::sync::Arc<R>) -> Self {
         let budget = CodecBudget::new(policy.limits.clone(), policy.cancellation.clone());
         Self { policy, budget: budget.await, resolver: Some(resolver) }
@@ -437,7 +437,7 @@ impl<R: ResourceResolver> EncodeContext<R> {
         Ok(CodecOutput { value: BoundedPayloadSink { sink, budget: &mut self.budget }, diagnostics: Vec::new() })
     }
 
-    /// 🔗️ Resolves one host-owned encoded resource destination. The resolved sink's concrete
+    /// ☁️ Resolves one host-owned encoded resource destination. The resolved sink's concrete
     /// type is the resolver's own `Self::Sink` associated type (R11 part b).
     pub async fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSink<'context, R::Sink>> {
         self.budget.ensure_active().await?;
@@ -449,7 +449,7 @@ impl<R: ResourceResolver> EncodeContext<R> {
         Ok(CodecOutput { value: ResolvedPayloadSink { sink: resolved.value, budget: &mut self.budget }, diagnostics: resolved.diagnostics })
     }
 
-    /// ✅️ Finalizes an encode result only when host policy has made it canonical or lossless-valid.
+    /// 📗️ Finalizes an encode result only when host policy has made it canonical or lossless-valid.
     pub async fn finalize_result<T>(&mut self, mut result: ArtifactCodecResult<T>) -> CodecResult<ArtifactCodecResult<T>> {
         self.budget.charge_work(1).await?;
         if self.policy.representation == CodecRepresentation::Canonical {
@@ -462,7 +462,7 @@ impl<R: ResourceResolver> EncodeContext<R> {
 //#endregion ⏱️Policies
 
 //#region 🌊️Resources
-/// 🔎️ Bounded type-identification result produced before full decode.
+/// 🎒️ Bounded type-identification result produced before full decode.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PayloadSniff {
     pub media_type: Option<String>,
@@ -470,7 +470,7 @@ pub struct PayloadSniff {
     pub diagnostics: Vec<CodecDiagnostic>,
 }
 
-/// 🧭️ Optional random-access view over a streaming source.
+/// 🔑️ Optional random-access view over a streaming source.
 pub trait RandomAccessPayload: Send + Sync {
     fn len(&self) -> impl std::future::Future<Output = CodecResult<u64>> + Send;
     fn is_empty(&self) -> impl std::future::Future<Output = CodecResult<bool>> + Send {
@@ -482,7 +482,7 @@ pub trait RandomAccessPayload: Send + Sync {
     fn read_at(&self, offset: u64, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
 }
 
-/// 🌊️ A forward-only source which may additionally expose random access. `RandomAccess` is an
+/// ⏩️ A forward-only source which may additionally expose random access. `RandomAccess` is an
 /// associated type rather than `Option<&dyn RandomAccessPayload>` (`📌️important.md` R11 part b —
 /// the return position of a default trait method needs the associated type at the OWNING trait,
 /// which `dyn_enum_close!` cannot annotate here). Implementors that never support random access
@@ -497,19 +497,19 @@ pub trait PayloadSource: Send {
     }
 }
 
-/// 🚰️ A streaming output sink.
+/// 🖨️ A streaming output sink.
 pub trait PayloadSink: Send {
     fn write_chunk(&mut self, input: &[u8]) -> impl std::future::Future<Output = CodecResult<()>> + Send;
 }
 
-/// 🔗️ Resource request expressed without tying codecs to a filesystem, HTTP client, or host API.
+/// 🙋️ Resource request expressed without tying codecs to a filesystem, HTTP client, or host API.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ResourceRequest {
     pub locator: String,
     pub expected_media_type: Option<String>,
 }
 
-/// 🧭️ Resolves a resource into the common streaming/random-access source contract. `Source`/`Sink`
+/// 🎞️ Resolves a resource into the common streaming/random-access source contract. `Source`/`Sink`
 /// push the runtime choice to the implementor (`📌️important.md` R11 part b): a resolver that
 /// genuinely needs to hand back several different source kinds declares its own closed enum over
 /// them — generated with `dyn_enum_close!` if it wants to — and names that enum here. Nothing in
@@ -567,7 +567,7 @@ impl<A: RandomAccessPayload> BoundedRandomAccessPayload<'_, A> {
     }
 }
 
-/// 🔒️ Host-owned bounded streaming view exposed to codecs. Generic over `S: PayloadSource`
+/// 👁️ Host-owned bounded streaming view exposed to codecs. Generic over `S: PayloadSource`
 /// (R11 part a) and, like `BoundedRandomAccessPayload`, non-generic over the resolver `R`.
 pub struct BoundedPayloadSource<'a, S: PayloadSource> {
     source: &'a mut S,
@@ -576,14 +576,14 @@ pub struct BoundedPayloadSource<'a, S: PayloadSource> {
 }
 
 impl<S: PayloadSource> BoundedPayloadSource<'_, S> {
-    /// 📥️ Reads one bounded streaming chunk and charges its actual retained bytes.
+    /// 📡️ Reads one bounded streaming chunk and charges its actual retained bytes.
     pub async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
         let allowed = self.permitted(output.len()).await?;
         let result = self.source.read_chunk(&mut output[..allowed]).await?;
         self.charge_result(result.value, allowed).await
     }
 
-    /// 🎯️ Opens a bounded random-access view when the source supports it.
+    /// 🔓️ Opens a bounded random-access view when the source supports it.
     pub async fn random_access(&mut self) -> Option<BoundedRandomAccessPayload<'_, S::RandomAccess>> {
         let source = self.source.random_access().await?;
         Some(BoundedRandomAccessPayload { source, budget: self.budget, policy: self.policy })
@@ -609,7 +609,7 @@ impl<S: PayloadSource> BoundedPayloadSource<'_, S> {
     }
 }
 
-/// 🔒️ A resolver-owned source whose only codec-facing operations share this context's budget.
+/// 💰️ A resolver-owned source whose only codec-facing operations share this context's budget.
 /// `S` is the resolver's own `ResourceResolver::Source` associated type — the runtime choice made
 /// by the implementor, never a box (`📌️important.md` R11 part b).
 pub struct ResolvedPayloadSource<'a, S: PayloadSource> {
@@ -619,14 +619,14 @@ pub struct ResolvedPayloadSource<'a, S: PayloadSource> {
 }
 
 impl<S: PayloadSource> ResolvedPayloadSource<'_, S> {
-    /// 📥️ Reads one bounded streaming chunk from a resolved source.
+    /// 📃️ Reads one bounded streaming chunk from a resolved source.
     pub async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
         let allowed = self.permitted(output.len()).await?;
         let result = self.source.read_chunk(&mut output[..allowed]).await?;
         self.charge_result(result.value, allowed).await
     }
 
-    /// 🎯️ Opens bounded random access when this resolved source supports it.
+    /// 🔀️ Opens bounded random access when this resolved source supports it.
     pub async fn random_access(&mut self) -> Option<BoundedRandomAccessPayload<'_, S::RandomAccess>> {
         let source = self.source.random_access().await?;
         Some(BoundedRandomAccessPayload { source, budget: self.budget, policy: self.policy })
@@ -652,7 +652,7 @@ impl<S: PayloadSource> ResolvedPayloadSource<'_, S> {
     }
 }
 
-/// 🔒️ Host-owned bounded streaming sink exposed to codecs. Generic over `S: PayloadSink`
+/// 🕳️ Host-owned bounded streaming sink exposed to codecs. Generic over `S: PayloadSink`
 /// (R11 part a); write_chunk never reads `policy`, so unlike the source side this only borrows
 /// the budget.
 pub struct BoundedPayloadSink<'a, S: PayloadSink> {
@@ -661,7 +661,7 @@ pub struct BoundedPayloadSink<'a, S: PayloadSink> {
 }
 
 impl<S: PayloadSink> BoundedPayloadSink<'_, S> {
-    /// 📤️ Writes one bounded chunk while charging work, allocation, and output bytes first.
+    /// 📝️ Writes one bounded chunk while charging work, allocation, and output bytes first.
     pub async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()> {
         self.budget.charge_work(1).await?;
         self.budget.charge_allocation(input.len() as u64).await?;
@@ -670,7 +670,7 @@ impl<S: PayloadSink> BoundedPayloadSink<'_, S> {
     }
 }
 
-/// 🔒️ A resolver-owned sink whose only codec-facing operation shares this context's budget.
+/// 🟢️ A resolver-owned sink whose only codec-facing operation shares this context's budget.
 /// `S` is the resolver's own `ResourceResolver::Sink` associated type (R11 part b).
 pub struct ResolvedPayloadSink<'a, S: PayloadSink> {
     sink: S,
@@ -678,7 +678,7 @@ pub struct ResolvedPayloadSink<'a, S: PayloadSink> {
 }
 
 impl<S: PayloadSink> ResolvedPayloadSink<'_, S> {
-    /// 📤️ Writes one budgeted chunk to a resolved destination.
+    /// 💾️ Writes one budgeted chunk to a resolved destination.
     pub async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()> {
         self.budget.charge_work(1).await?;
         self.budget.charge_allocation(input.len() as u64).await?;
@@ -689,7 +689,7 @@ impl<S: PayloadSink> ResolvedPayloadSink<'_, S> {
 //#endregion 🌊️Resources
 
 //#region 🧬️Codecs
-/// 📦️ Codec for a transport-level payload. It owns sniffing, bounded streaming, and output policy.
+/// 🎚️ Codec for a transport-level payload. It owns sniffing, bounded streaming, and output policy.
 /// `Source`/`Sink` name the concrete `BoundedPayloadSource`/`BoundedPayloadSink` type parameters
 /// this codec streams through (`📌️important.md` R11 part a — trivially generic, no boxing).
 pub trait PayloadCodec: Send + Sync {
@@ -702,7 +702,7 @@ pub trait PayloadCodec: Send + Sync {
     fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> impl std::future::Future<Output = CodecResult<()>> + Send;
 }
 
-/// 🗿️ Semantic artifact codec layered over a transport `PayloadCodec` implementation.
+/// 🏺️ Semantic artifact codec layered over a transport `PayloadCodec` implementation.
 /// `decode_artifact`/`encode_artifact` are themselves generic over the resolver `R` (rather than
 /// the trait as a whole) — a codec body works with whichever resolver its caller supplies, it
 /// never needs to know the resolver's concrete type ahead of time (`📌️important.md` R11 part b).

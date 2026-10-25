@@ -14,5 +14,4 @@ test("retained factory language-neutral vectors match independent Ajv and arithm
   expect(row.refusal).toBe(refused?"invalid-value":null);
   if(!refused){const raw=row.inputBytes!==null&&row.payloadAdmitted&&row.inputBytes<=row.payloadMaximum?row.inputBytes:0;expect(evaluate("frame + raw",{frame:fixture.jobBytes,raw})).toBe(row.capacityBytes);}
  }
- console.log("[DEBUG] retained factory eleven neutral policies accepted by Ajv; quoted frame/raw arithmetic agrees with independent mathjs");
 });

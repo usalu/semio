@@ -1,12 +1,12 @@
 import {existsSync,readdirSync,rmSync,statSync} from "node:fs";
 import {join,resolve,sep} from "node:path";
-import {buildLeaseReportV1,readLeaseQueuesV1} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts";
-import {classifyLeaseResourceV1,leaseOrderPolicyV1} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts";
-import {leaseRegistryRootV1,readLeaseRegistryEntriesV1,readLeaseViolationsV1} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
+import {buildLeaseReportV1,readLeaseQueuesV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📋️status/🟦️.ts";
+import {classifyLeaseResourceV1,leaseOrderPolicyV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧭️order/🟦️.ts";
+import {leaseRegistryRootV1,readLeaseRegistryEntriesV1,readLeaseViolationsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧭️order/🟦️.ts";
 import {REPOSITORY_LEASE_DIRECTORY_V1} from "../../../🔒️leases/⌨️command/🟦️.ts";
 import {redactCommandV1,type HolderFactsV1,type LeasesFactsV1,type WaiterFactsV1} from "../../🟦️.ts";
 import {readJsonFileV1,type DoctorPortsV1} from "../../🔌️ports/🟦️.ts";
-import type {DoctorProbeV1,DoctorRepairRunV1} from "../🟦️.ts";
+import type {DoctorProbeV1,DoctorRepairRunV1} from "../📋️contract/🟦️.ts";
 
 const ENTRY=/^\d+-\d+\.json$/u;
 

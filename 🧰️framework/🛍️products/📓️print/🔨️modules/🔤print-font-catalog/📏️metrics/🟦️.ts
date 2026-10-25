@@ -62,13 +62,13 @@ function measurePrintPrimary(text:string,size:number):number{
   return advance/metrics.unitsPerEm*size*25.4/72.27;
 }
 
-/** 📐️ Measures primary shaping and source-bound CJK runs at authored TeX-point sizes. */
+/** ⏱️ Measures primary shaping and source-bound CJK runs at authored TeX-point sizes. */
 export function measurePrintSans(text:string,size:number):number{
   if(!Number.isFinite(size)||size<0)throw new Error("font size requires nonnegative finite TeX points");
   return printSansRuns(text).reduce((sum,run)=>sum+(run.family===metrics.family?measurePrintPrimary(run.text,size):Array.from(run.text,character=>cjkMetrics.advances[cjkMetrics.characters[String(character.codePointAt(0))]??0]??0).reduce((total,advance)=>total+advance,0)/cjkMetrics.unitsPerEm*size*25.4/72.27),0);
 }
 
-/** 🔤️ Resolves native print selectors through the tracked pure font catalog. */
+/** 🅰️ Resolves native print selectors through the tracked pure font catalog. */
 export function printFontFamily(selector:string):string {const filename={SemioSans:"Anta-Regular.ttf",SemioSerif:"Anta-Regular.ttf",SemioMono:"ShareTechMono-Regular.ttf",SemioEmoji:"NotoEmoji-Regular.ttf",SemioCJK:"NotoSansCJKsc-Regular.otf"}[selector as "SemioSans"|"SemioSerif"|"SemioMono"|"SemioEmoji"|"SemioCJK"];const font=catalog.find(entry=>entry.texFilename===filename);if(font===undefined)throw new Error("unknown print font selector "+selector);return font.family;}
 /** 🖋️ Resolves tracked families to native selectors, retaining explicit authored family names. */
 export function printFontTexSelector(family:string):string|undefined {return {"Anta":"SemioSans","Share Tech Mono":"SemioMono","Noto Emoji":"SemioEmoji","Noto Sans CJK SC":"SemioCJK"}[family as "Anta"|"Share Tech Mono"|"Noto Emoji"|"Noto Sans CJK SC"];}

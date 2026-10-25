@@ -17,7 +17,7 @@ type Fields=(Option<ControlledRetirement<Option<String>>>,Option<Option<String>>
 #[doc(hidden)]
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct SelectionRetainedEdit;
-pub(crate) struct SelectionRetainedEditCursor{pub phase:u8,pub offset:usize,pub allocated:bool,pub cancelled:bool,pub custody:RetainedEditCustody<Fields>}
+pub struct SelectionRetainedEditCursor{pub phase:u8,pub offset:usize,pub allocated:bool,pub cancelled:bool,pub custody:RetainedEditCustody<Fields>}
 impl RetainedCloneEdit<State,Mutation> for SelectionRetainedEdit{
  type Cursor=SelectionRetainedEditCursor;
  fn preflight(&self,mutation:&Mutation,lane:store::os_store::store_schema::HistoryLane)->Result<store::os_store::one_item::ArtifactStoreOneItemFootprint,String>{let Mutation::ChangeTestConfigSelection(value)=mutation;let bytes=value.selected.as_ref().map_or(0,String::len);let retained_bytes=bytes.checked_mul(4).and_then(|bytes|bytes.checked_add(65536)).ok_or("original selection preparation footprint overflow")?;if lane!=store::os_store::store_schema::HistoryLane::Document||retained_bytes>store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES||selection_prepared_bytes(None,value.selected.as_deref()).is_none_or(|bytes|bytes>1024){return Err("original selection preparation exceeds lane or physical bound".into());}Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint{work_items:2,retained_bytes})}

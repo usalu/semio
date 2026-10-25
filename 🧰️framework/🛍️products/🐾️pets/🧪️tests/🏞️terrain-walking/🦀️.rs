@@ -11,10 +11,11 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use pets::serde_json::{self, json, Map, Value};
-    use pets::{nearest_perch, perch_at, perches_of, stride_to, Perch, Rect, Surface};
+    use pets::{cast_on, nearest_perch, perch_at, perches_of, standing as stand_together, stride_to, Cast, Ground, Menagerie, Perch, Rect, Slug, Surface};
     use semio_repo_test_host::{parse_json, Context, Outcome};
 
     const VECTORS: &str = "shared://🏞️terrain-walking/🔣️.json";
+    const MENAGERIE: &str = "shared://🧬️schema-conformance/🔣️.json";
 
     /// 🧫️ The committed vectors.
     fn vectors(ctx: &Context<'_>) -> Result<Value, String> {
@@ -85,6 +86,24 @@ mod subject {
         })?)
     }
 
+    /// 🗿️ `standing` of the order and `cast_on` of the troupe of every committed ground, on the sample menagerie.
+    pub fn company(ctx: &Context<'_>) -> Result<Outcome, String> {
+        let document: Value = serde_json::from_slice(&ctx.input_bytes(MENAGERIE)?).map_err(|error| format!("{MENAGERIE}: {error}"))?;
+        let menagerie: Menagerie = serde_json::from_value(document["menagerie"].clone()).map_err(|error| format!("{MENAGERIE}: {error}"))?;
+        projected(&keyed(list(&vectors(ctx)?, "companies")?, |vector| {
+            let surfaces: Vec<Surface> = serde_json::from_value(vector["surfaces"].clone()).map_err(|error| error.to_string())?;
+            let keepouts: Vec<Rect> = serde_json::from_value(vector["keepouts"].clone()).map_err(|error| error.to_string())?;
+            let order: Vec<Slug> = serde_json::from_value(vector["order"].clone()).map_err(|error| error.to_string())?;
+            let ground = Ground { surfaces: &surfaces, keepouts: &keepouts, width: number(vector, "width")?, height: number(vector, "height")? };
+            let cast = Cast { scene: text(vector, "id")?.to_string(), core: serde_json::from_value(vector["cast"]["core"].clone()).map_err(|error| error.to_string())?, rotation: serde_json::from_value(vector["cast"]["rotation"].clone()).map_err(|error| error.to_string())? };
+            let troupe: Vec<Slug> = serde_json::from_value(vector["troupe"].clone()).map_err(|error| error.to_string())?;
+            let holding: Vec<Slug> = serde_json::from_value(vector["holding"].clone()).map_err(|error| error.to_string())?;
+            let avoid: Vec<Slug> = serde_json::from_value(vector["avoid"].clone()).map_err(|error| error.to_string())?;
+            let epoch = vector.get("epoch").and_then(Value::as_i64).ok_or_else(|| format!("vector {vector} carries no whole number epoch"))?;
+            Ok(json!({ "standing": stand_together(&menagerie, ground, &order).iter().map(|kind| kind.id.clone()).collect::<Vec<_>>(), "cast": cast_on(&menagerie, ground, &cast, &troupe, epoch, &holding, &avoid) }))
+        })?)
+    }
+
     /// 👣️ The x after every tick of every committed walk.
     pub fn strides(ctx: &Context<'_>) -> Result<Outcome, String> {
         projected(&keyed(list(&vectors(ctx)?, "strides")?, |walk| {
@@ -104,6 +123,6 @@ mod subject {
 pub fn adapter() -> Adapter {
     let built = Adapter::new("rust");
     #[cfg(feature = "sut")]
-    let built = built.subject("perches", subject::perches_cut).subject("standing", subject::standing).subject("nearest", subject::nearest).subject("strides", subject::strides);
+    let built = built.subject("perches", subject::perches_cut).subject("standing", subject::standing).subject("nearest", subject::nearest).subject("company", subject::company).subject("strides", subject::strides);
     built
 }

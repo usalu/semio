@@ -107,7 +107,7 @@ export default defineTestAdapter({
     },
     "depth-and-height": {
       oracle: oracle("depth-and-height"),
-      /** 🎯️ The depth, the height and the postorder the twin derives from the structure. */
+      /** 📏️ The depth, the height and the postorder the twin derives from the structure. */
       subject: () => ({
         projection: {
           depth: preorder(root(DEEP)).map((each) => each.depth),
@@ -121,7 +121,7 @@ export default defineTestAdapter({
     },
     sort: {
       oracle: oracle("sort"),
-      /** 🎯️ The five comparators, read back as the preorder the twin's `sort()` produces. */
+      /** ⏪️ The five comparators, read back as the preorder the twin's `sort()` produces. */
       subject: () => ({
         projection: {
           "value-descending": preorder(sorted(DEEP, (a, b) => (b.value ?? 0) - (a.value ?? 0))).map((each) => each.id!),
@@ -134,7 +134,7 @@ export default defineTestAdapter({
     },
     traversal: {
       oracle: oracle("traversal"),
-      /** 🎯️ The twin's `leaves()`, `ancestors()` and the breadth-first `links()`. */
+      /** 🔗️ The twin's `leaves()`, `ancestors()` and the breadth-first `links()`. */
       subject: () => ({
         projection: {
           leaves: root(DEEP).leaves().map((each) => each.id!),

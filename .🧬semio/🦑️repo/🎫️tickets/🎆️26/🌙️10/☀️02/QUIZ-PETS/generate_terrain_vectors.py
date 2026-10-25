@@ -64,7 +64,7 @@ def render(value, depth):
 
 def write(directory, document):
     """💾️ Writes one fixture with a trailing newline, after proving that it reads back as the same document."""
-    path = os.path.join(PETS, "🧫️fixtures", directory, "🔣️.json")
+    path = os.path.join(PETS, "🧪️tests", "🧫️fixtures", directory, "🔣️.json")
     text = render(document, 0) + "\n"
     if json.loads(text) != document:
         raise AssertionError("the rendered fixture %s does not read back as its document" % directory)
@@ -200,6 +200,57 @@ STRIDES = [
 ]
 
 
+SPECIES = ["blobby", "hoppy", "floaty"]
+
+
+def ground(name, width, height, surfaces, keepouts, order):
+    """🪧️ A ground, the order its species are asked to stand together in, the scene they belong to (the first two in its core, the last in its rotation) and the troupe the scene cast, which is the first two of the order, who held a seat the turn before and which species to avoid (an epoch, on every second ground the last species of the order as the holder and on every third its first as the species to avoid are given below)."""
+    return {"id": name, "width": width, "height": height, "surfaces": surfaces, "keepouts": keepouts, "order": order, "cast": {"core": ["blobby", "hoppy"], "rotation": ["floaty"]}, "troupe": order[:2], "holding": [], "avoid": [], "epoch": 0}
+
+
+def drawn_ground(seed):
+    """🌪️ A ground of a few shelves and keep-outs on the quarter-pixel lattice, wide enough for some of the three species and too narrow or too low for the others, and an order of them."""
+    stream = Stream(seed)
+    width, height = 120 + stream.below(6) * 40, 200 + stream.below(5) * 40
+    shelves, blocks = [], []
+    for index in range(1 + stream.below(3)):
+        y = 40 + stream.below(4 * (height - 40)) / 4
+        shelves.append(surface("s%d" % index, stream.below(4 * 20) / 4, width - stream.below(4 * 20) / 4, y))
+        at = stream.below(4 * 30) / 4
+        for _ in range(2 + stream.below(3)):
+            gap, length = 28 + stream.below(4 * 24) / 4, 8 + stream.below(4 * 80) / 4
+            blocks.append(keepout(at + gap, y - 4 - stream.below(4 * 44) / 4, length, 12))
+            at += gap + length
+    order = list(SPECIES)
+    for index in (2, 1):
+        swap = stream.below(index + 1)
+        order[index], order[swap] = order[swap], order[index]
+    return ground("drawn-%d" % seed, width, height, shelves, blocks, order)
+
+
+COMPANIES = [
+    ground("wide-floor", 640, 480, [surface("floor", 0, 640, 480)], [], ["blobby", "hoppy", "floaty"]),
+    ground("sliver-of-35", 640, 480, [surface("sliver", 0, 35, 300)], [], ["blobby", "hoppy", "floaty"]),
+    ground("sliver-of-34", 640, 480, [surface("sliver", 0, 34, 300)], [], ["floaty", "blobby", "hoppy"]),
+    ground("sliver-of-31", 640, 480, [surface("sliver", 0, 31, 300)], [], ["blobby", "hoppy", "floaty"]),
+    ground("sliver-of-30", 640, 480, [surface("sliver", 0, 30, 300)], [], ["floaty", "blobby", "hoppy"]),
+    ground("sliver-of-29-and-three-quarters", 640, 480, [surface("sliver", 0, 29.75, 300)], [], ["hoppy", "blobby", "floaty"]),
+    ground("low-shelf-with-room-for-two", 640, 480, [surface("shelf", 0, 200, 40)], [], ["floaty", "blobby", "hoppy"]),
+    ground("low-shelf-a-quarter-short-of-the-hoverer", 640, 480, [surface("shelf", 0, 200, 43.75)], [], ["floaty", "blobby", "hoppy"]),
+    ground("fits-alone-not-together-blobby-first", 640, 480, [surface("wide", 0, 100, 300), surface("narrow", 200, 236, 300)], [keepout(0, 260, 100, 2)], ["blobby", "floaty", "hoppy"]),
+    ground("fits-alone-not-together-floaty-first", 640, 480, [surface("wide", 0, 100, 300), surface("narrow", 200, 236, 300)], [keepout(0, 260, 100, 2)], ["floaty", "blobby", "hoppy"]),
+    ground("fits-alone-not-together-hoppy-first", 640, 480, [surface("wide", 0, 100, 300), surface("narrow", 200, 236, 300)], [keepout(0, 260, 100, 2)], ["hoppy", "floaty", "blobby"]),
+    ground("gaps-between-keep-outs", 640, 480, [surface("floor", 0, 640, 480)], [keepout(0, 440, 100, 30), keepout(131, 440, 69, 30), keepout(235, 440, 65, 30), keepout(341, 440, 299, 30)], ["blobby", "floaty", "hoppy"]),
+    ground("gaps-a-pixel-short-of-the-widest", 640, 480, [surface("floor", 0, 640, 480)], [keepout(0, 440, 100, 30), keepout(131, 440, 69, 30), keepout(235, 440, 65, 30), keepout(339, 440, 301, 30)], ["blobby", "floaty", "hoppy"]),
+    ground("no-surface-at-all", 640, 480, [], [], ["blobby", "hoppy"]),
+    ground("an-unknown-species-and-a-repeat", 640, 480, [surface("floor", 0, 640, 480)], [], ["blobby", "ghosty", "blobby", "hoppy"]),
+] + [drawn_ground(seed) for seed in range(1, 25)]
+for number, entry in enumerate(COMPANIES):
+    entry["epoch"] = number - 5
+    entry["holding"] = entry["order"][-1:] if number % 2 == 0 else []
+    entry["avoid"] = entry["order"][:1] if number % 3 == 0 else []
+
+
 def walking():
     """🏞️ The vectors of case 🏞️terrain-walking."""
     layouts = [dict(entry, expected=WALKING.perches(LATTICE, entry)) for entry in LAYOUTS]
@@ -208,10 +259,18 @@ def walking():
     standings = [dict(entry, expected=WALKING.standing(LATTICE, entry)) for entry in STANDINGS]
     nearests = [dict(entry, expected=WALKING.nearest(LATTICE, entry)) for entry in NEARESTS]
     strides = [dict(entry, expected=WALKING.strides(entry)) for entry in STRIDES]
+    with open(os.path.join(PETS, "🧪️tests", "🧫️fixtures", "🧬️schema-conformance", "🔣️.json"), encoding="utf-8") as handle:
+        bodies = WALKING.boxes(json.load(handle)["menagerie"])
+    companies = [dict(entry, expected=WALKING.company(LATTICE, entry, bodies)) for entry in COMPANIES]
+    kinds = {len(entry["expected"]["standing"]) for entry in companies}
+    if not {0, 1, 2, 3} <= kinds:
+        raise AssertionError("the grounds seat %r species together, not every number from none to all three" % sorted(kinds))
+    if not any(entry["id"].startswith("drawn") and 0 < len(entry["expected"]["standing"]) < 3 for entry in companies):
+        raise AssertionError("the drawn grounds seat nobody partly")
     for entry in strides:
         if entry["speed"] > 0 and entry["expected"][-1] != entry["goal"]:
             raise AssertionError("strides/%s does not arrive within its ticks" % entry["id"])
-    write("🏞️terrain-walking", {"$comment": GENERATED % "🏞️terrain-walking", "lattice": LATTICE, "layouts": unique(layouts), "standings": unique(standings), "nearests": unique(nearests), "strides": unique(strides)})
+    write("🏞️terrain-walking", {"$comment": GENERATED % "🏞️terrain-walking", "lattice": LATTICE, "layouts": unique(layouts), "standings": unique(standings), "nearests": unique(nearests), "companies": unique(companies), "strides": unique(strides)})
     return {"layouts": len(layouts), "perches": sum(len(entry["expected"]) for entry in layouts), "standings": sum(len(entry["queries"]) for entry in standings), "nearests": sum(len(entry["points"]) for entry in nearests), "strides": len(strides)}
 
 

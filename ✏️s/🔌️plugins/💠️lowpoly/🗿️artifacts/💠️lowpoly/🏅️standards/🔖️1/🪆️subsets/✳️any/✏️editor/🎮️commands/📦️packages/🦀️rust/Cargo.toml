@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 base64_codec = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-3d = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }

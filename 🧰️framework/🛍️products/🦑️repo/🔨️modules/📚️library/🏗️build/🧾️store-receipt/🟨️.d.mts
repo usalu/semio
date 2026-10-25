@@ -9,8 +9,10 @@ export type StoreReceiptModeV1="stat"|"digest";
 export function storeReceiptOutputV1(target:string):string;
 /** 🔎️ Resolves the absolute receipt path a task declares among its outputs, or nothing when it declares none. */
 export function declaredStoreReceiptV1(declaration:StoreReceiptDeclarationV1):string|undefined;
-/** 🎟️ Starts a task that declares a receipt from no receipt and tells its handler where to write it; any other task is told of none, so a nested task never records into its parent's receipt. */
+/** 🎟️ Starts a task that declares a receipt and tells its handler where to write it (a private pending file next to the declared receipt); any other task is told of none, so a nested task never records into its parent's receipt. */
 export function issueStoreReceiptV1(declaration:StoreReceiptDeclarationV1):Record<string,string|undefined>;
+/** 🏁 Settles an issued receipt after its task: success moves the pending file over the declared receipt atomically (a task that recorded nothing drops only a declared receipt older than its own start), failure drops the pending file and keeps the declared one. */
+export function settleStoreReceiptV1(declaration:StoreReceiptDeclarationV1,issued:Readonly<Record<string,string|undefined>>,outcome:{readonly succeeded:boolean;readonly startedAtMs:number}):Promise<void>;
 /** 🔧️ Admits the single-task uncached Nx child launch that repairs a receipt whose store content is gone. */
 export function isStoreRepairSelectionV1(selection:readonly string[]):boolean;
 /** 🛠️ Projects the Nx arguments that re-execute exactly one task uncached. */

@@ -6,7 +6,7 @@ import {linkSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpa
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {restoreNxPackageSourceV1} from "../../🟦️.ts";
 import archivePolicy from "../../../🗃️archive/📋️policy.json";
 import corpus from "./🔣️.json";

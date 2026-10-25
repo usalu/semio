@@ -15,7 +15,7 @@ async fn an_interactive_grant_is_executed_before_background_grants_queued_the_sa
     let mut envelopes = Vec::new();
     for offset in 0..BACKGROUND_ACTORS {
         let actor = ActorId::new(0, 0, u32::try_from(200 + offset).expect("actor ordinal"), 0).await;
-        let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
         shard.register(actor, instance);
         mock.script_turn(actor, MockGuestRuntime::idle_turn(original_retained_turn()).await).await;
         envelopes.push(Envelope {
@@ -31,7 +31,7 @@ async fn an_interactive_grant_is_executed_before_background_grants_queued_the_sa
     }
 
     let interactive_actor = ActorId::new(0, 0, 999, 0).await;
-    let interactive_instance = mock.instantiate(&compiled, interactive_actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let interactive_instance = mock.instantiate(&compiled, interactive_actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
     shard.register(interactive_actor, interactive_instance);
     let mut interactive_turn = MockGuestRuntime::idle_turn(original_retained_turn()).await;
     interactive_turn.fuel_used = 4242;
@@ -48,7 +48,7 @@ async fn an_interactive_grant_is_executed_before_background_grants_queued_the_sa
         payload: Payload::Event { bytes: serde_json::to_vec(&fixture_instance_close_event()).expect("encode") },
     });
     let mut bytes = Vec::new();
-    ShardFrame::Grant { retained: original_retained_turn(), actor: interactive_actor, budget: interactive_budget, envelopes }.pack_encode(&mut bytes).await.expect("declared original frame authority");
+    ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor: interactive_actor, budget: interactive_budget, envelopes }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
 
     let driven = pump(&mut shard).await.expect("pump");
@@ -82,7 +82,7 @@ async fn a_turn_that_hits_its_epoch_deadline_yields_more_work_not_a_fault_and_st
     let actor = ActorId(91);
     let package = PackageRef { package: PackageId("epoch-yield".to_string()), hash: PackageHash([91u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 2, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 2, 8, 4096, 1)).await.expect("mock instantiate");
     mock.script_deadline_exceeded(actor).await;
 
     let (transport, probe) = LoopbackTransport::paired().await;

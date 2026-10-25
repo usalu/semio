@@ -72,7 +72,7 @@ test("closed logical wire depths and signed reference specimen preserve independ
  const corpus=read("./🧫️fixtures/🔣️.json"),r=corpus.logicalDepth;
  expect([r.tableStatements,r.nestedRecord,r.packedSignedList]).toEqual([3,3,1]);expect(r.referenceTarget).toBe("document");expect(r.rootAbsent).toBe(0);
  const db=new Database(":memory:",{safeIntegers:true});try{db.run("CREATE TABLE specimen(ordinal INTEGER PRIMARY KEY,word INTEGER,label TEXT)");for(const[index,word]of r.signedWords.entries())db.query("INSERT INTO specimen VALUES(?,?,?)").run(index,BigInt(word),r.nestedText);expect((db.query("SELECT word,label FROM specimen ORDER BY ordinal").all() as {word:bigint,label:string}[]).map(row=>[String(row.word),row.label])).toEqual(r.signedWords.map((word:string)=>[word,r.nestedText]));}finally{db.close();}
- const raw=Buffer.from(r.nestedText);expect(inflateRawSync(deflateRawSync(raw))).toEqual(raw);console.log("[DEBUG] independent SQLite retains all signed words and literal UTF8 at the authored logical-depth frontier");
+ const raw=Buffer.from(r.nestedText);expect(inflateRawSync(deflateRawSync(raw))).toEqual(raw);
 });
 
 test("closed authored coordinates and directions preserve exact words through independent SQLite and DEFLATE",()=>{

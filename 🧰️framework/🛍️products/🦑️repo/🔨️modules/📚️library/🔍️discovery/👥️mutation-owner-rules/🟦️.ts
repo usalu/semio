@@ -2,7 +2,7 @@ import { pathEmojiStatuteFindings } from "../../../../../../📦️packages/🟦
 import { leadingEmojiIdentity } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 
-/** 🌳️ Level descriptor: fixed allowlist or wildcard (`*` = any emoji-prefixed slug dir). */
+/** 🪜️ Level descriptor: fixed allowlist or wildcard (`*` = any emoji-prefixed slug dir). */
 type ArtifactFacetLevel =
   | { readonly kind: "fixed"; readonly dirs: readonly string[] }
   | { readonly kind: "wildcard" }
@@ -59,7 +59,7 @@ export const MUTATION_DIRECT_LEAF_STRUCTURAL_PATTERNS: Readonly<Record<string, R
   "↩️inverse": /^pub (?:async )?fn inverse\(/mu,
 };
 
-/** 🌳️ Declared child level of a path under an artifact root (parents are `/`-segments already accepted). */
+/** 🏠️ Declared child level of a path under an artifact root (parents are `/`-segments already accepted). */
 export function artifactFacetChildLevel(parents: readonly string[], taxonomy: Taxonomy): ArtifactFacetLevel {
   if (parents.length === 0) return { kind: "fixed", dirs: taxonomy.artifactComponentDirs };
   const root = parents[0]!;

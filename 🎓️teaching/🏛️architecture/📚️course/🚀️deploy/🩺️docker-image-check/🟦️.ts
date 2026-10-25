@@ -1,4 +1,4 @@
-/** 🩺️ The `docker-image-check` verb: runs the image as the stack does (no configuration, read-only root, no capabilities) and checks what it is (labels, user, no shell, the stack files it carries) and the API as the CDN-hosted site meets it — ready behind the proxy, cleartext refused, cross-origin preflight and POST granted to the site origin only, the request body limit, shared presence between two learners, `docker stop` draining with exit code 0 while a socket is open, the WAL folded into `proctor.sqlite` on the volume.
+/** 🖼️ The `docker-image-check` verb: runs the image as the stack does (no configuration, read-only root, no capabilities) and checks what it is (labels, user, no shell, the stack files it carries) and the API as the CDN-hosted site meets it — ready behind the proxy, cleartext refused, cross-origin preflight and POST granted to the site origin only, the request body limit, shared presence between two learners, `docker stop` draining with exit code 0 while a socket is open, the WAL folded into `proctor.sqlite` on the volume.
  * @see ../🟦️.ts — the constants, tools and drift check shared by the operator verbs */
 
 import { randomBytes } from "node:crypto";
@@ -9,10 +9,10 @@ import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { workspaceCargoVersion } from "@semio-tech/repo-lib/cargo";
 import { type ScriptInvocation } from "@semio-tech/process/routing";
-import { PRESENCE_PROTOCOL, type PresenceFrame } from "../../../../../🧰️framework/🛍️products/🖥️server/🧬️wire-types/🟦️.ts";
-import { decodeCommandOutcome, decodePresenceFrame, encodeCommandEnvelope, encodePresenceFrame, encodeQueryEnvelope } from "../../../../../🧰️framework/🛍️products/🖥️server/🔤️codec/🟦️.ts";
-import { presenceSocketUrl } from "../../../../../🧰️framework/🛍️products/🖥️server/🛣️routes-and-sockets/🟦️.ts";
-import type { IdentityClaim } from "../../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🟦️.ts";
+import { PRESENCE_PROTOCOL, type PresenceFrame } from "../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🧬️wire-types/🟦️.ts";
+import { decodeCommandOutcome, decodePresenceFrame, encodeCommandEnvelope, encodePresenceFrame, encodeQueryEnvelope } from "../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🔤️codec/🟦️.ts";
+import { presenceSocketUrl } from "../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🛣️routes-and-sockets/🟦️.ts";
+import type { IdentityClaim } from "../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
 import course from "../../🔣️.json" with { type: "json" };
 import { BUNDLE, COURSE_DEPLOY_CLEANUP_MS, COURSE_IMAGE_DATABASE, COURSE_IMAGE_DATA_ROOT, COURSE_IMAGE_HEALTHCHECK, COURSE_IMAGE_PORT, COURSE_IMAGE_REPOSITORY, COURSE_IMAGE_STACK_ROOT, COURSE_IMAGE_USER, COURSE_PROCTOR_HOST, COURSE_SITE_ORIGIN, COURSE_STACK_FILES, DEPLOY, FOREIGN_ORIGIN, containerLog, docker, dockerOk, dockerServerVersion, flag, interruption, pause, say, stackRequestBodyLimit } from "../🟦️.ts";
 
@@ -33,8 +33,8 @@ export type Door = Readonly<{ base: string; headers: Record<string, string>; ins
 
 /** 🧑‍🎓️ The site's own proctor client. A check sends the envelopes this module builds (§9a), so it meets the proctor
  * exactly as the released site does; loaded only when a check runs. */
-function siteClient(): Promise<typeof import("../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts")> {
-  return import("../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts");
+function siteClient(): Promise<typeof import("../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/🛂️proctor/🟦️.ts")> {
+  return import("../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/🛂️proctor/🟦️.ts");
 }
 
 /** ❓️ One quiz query as the site sends it, answered with its status and the view. */

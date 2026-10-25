@@ -38,7 +38,7 @@ function compiled(compiler: typeof compilers[number], inertNativeApi?: unknown) 
   let code = text; for (const row of replacements.sort((a, b) => b.start - a.start)) code = code.slice(0, row.start) + row.text + code.slice(row.end);
   if (inertNativeApi) code += "\nprocessNativeApi = async () => inertNativeApi;";
   code += `\nreturn { ${exports.join(", ")}, createTransactionProcessObserver };`;
-  return new Function("require", "process", "inertNativeApi", compiler.compile(code))((name: string) => name === "node:child_process" ? { ChildProcess: FakeChild } : require(name), { pid: 100, ppid: 1, platform: "darwin", arch: "arm64" }, inertNativeApi);
+  return new Function("require", "process", "inertNativeApi", compiler.compile(code))((name: string) => name === "node:child_process" ? { ChildProcess: FakeChild } : require(name.startsWith(".") ? resolve(scope, name) : name), { pid: 100, ppid: 1, platform: "darwin", arch: "arm64" }, inertNativeApi);
 }
 
 class FakeChild extends EventEmitter {
@@ -156,13 +156,13 @@ test("private observer retains pending identity and actual handle lifecycle with
 
 test("actual module imports no third-party runtime or signal/command implementation", () => {
   expect(existsSync(path)).toBe(true); const text = readFileSync(path, "utf8"), source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const imports = source.statements.filter(ts.isImportDeclaration).map((row) => (row.moduleSpecifier as ts.StringLiteral).text); expect(imports.every((name) => name.startsWith("node:"))).toBe(true);
+  const imports = source.statements.filter(ts.isImportDeclaration).map((row) => (row.moduleSpecifier as ts.StringLiteral).text); expect(imports.every((name) => name.startsWith("node:") || /\/⚙️runtime\/🧲️native\/🟦️\.ts$/u.test(name))).toBe(true);
   expect(text).not.toMatch(/\b(?:spawnSync|execSync|execFile|taskkill|TerminateProcess|process\.kill)\b/u);
   expect(text).not.toContain("export function createTransactionProcessObserver");
 });
 
 test("complete private helper passes actual strict TypeScript declaration checking", () => {
-  const options: ts.CompilerOptions = { noEmit: true, strict: true, noUncheckedIndexedAccess: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, skipLibCheck: true, types: ["node"] };
+  const options: ts.CompilerOptions = { noEmit: true, strict: true, noUncheckedIndexedAccess: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true, skipLibCheck: true, types: ["node"] };
   expect(ts.getPreEmitDiagnostics(ts.createProgram([path], options)).map((row) => `${row.file?.fileName}:${row.start} ${ts.flattenDiagnosticMessageText(row.messageText, "\n")}`)).toEqual([]);
 });
 

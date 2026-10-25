@@ -460,7 +460,7 @@ impl PreparedRenderReceiver {
         !self.owned
     }
 
-    /// 🧹 Advances one owner from one mailbox abandoned by its final handle.
+    /// ⏭️ Advances one owner from one mailbox abandoned by its final handle.
 
     pub fn next_abandoned_close_demands(copy: usize) -> Result<RetainedCloneGrant, ValueError> {
         prepared_abandoned_demands(PREPARED_RENDER_MAILBOX.iter().map(|slot| (&slot.state, &slot.packet)), 4, copy, PreparedRenderPacket::next_close_demands, PreparedRenderPacket::retirement_is_empty)

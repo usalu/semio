@@ -153,7 +153,7 @@ pub struct Puzzle2dPlayRuntime {
 /// which exact window instance owns it, and the handle whose candidate page it lists. `None` is the
 /// closed state — the 2d twin of puzzle3d's `Puzzle3dSuggestionMenu`. Per-gesture scratch, so it
 /// lives on the window transient and never on a persisted config.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dSuggestionMenu {
     #[value(default)]
@@ -373,10 +373,10 @@ impl Puzzle2dConfig {
     pub fn mutations_to(&self, next: &Puzzle2dConfig) -> Vec<Puzzle2dConfigMutation> {
         let mut mutations = Vec::new();
         if self.node_kind_weights != next.node_kind_weights {
-            mutations.push(Puzzle2dConfigMutation::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ value: next.node_kind_weights.clone() }));
+            mutations.push(Puzzle2dConfigMutation::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights::from_map(&next.node_kind_weights)));
         }
         if self.handle_kind_weights != next.handle_kind_weights {
-            mutations.push(Puzzle2dConfigMutation::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights{ value: next.handle_kind_weights.clone() }));
+            mutations.push(Puzzle2dConfigMutation::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights::from_map(&next.handle_kind_weights)));
         }
         if self.fill_count != next.fill_count {
             mutations.push(Puzzle2dConfigMutation::SetFillCount(Puzzle2dConfigSetFillCount{ value: next.fill_count }));
@@ -394,42 +394,84 @@ impl Puzzle2dConfig {
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation
-/// 🎚️ Payload of [`Puzzle2dConfigMutation::SetNodeKindWeights`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+/// 🎚️ One kind-weight row of a weights payload: the wire form of a `kind id -> weight` map entry, sorted by id.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "kind-weight")]
+pub struct Puzzle2dKindWeightRow {
+    pub id: String,
+    pub weight: f64,
+}
+
+fn kind_weight_rows(map: &BTreeMap<String, f64>) -> Vec<Puzzle2dKindWeightRow> {
+    map.iter().map(|(id, weight)| Puzzle2dKindWeightRow { id: id.clone(), weight: *weight }).collect()
+}
+
+fn kind_weight_map(rows: &[Puzzle2dKindWeightRow]) -> BTreeMap<String, f64> {
+    rows.iter().map(|row| (row.id.clone(), row.weight)).collect()
+}
+
+/// 🎚️ Payload of [`Puzzle2dConfigMutation::SetNodeKindWeights`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-node-kind-weights")]
 pub struct Puzzle2dConfigSetNodeKindWeights {
-    pub value: BTreeMap<String, f64>,
+    pub value: Vec<Puzzle2dKindWeightRow>,
+}
+
+impl Puzzle2dConfigSetNodeKindWeights {
+    pub fn from_map(map: &BTreeMap<String, f64>) -> Self {
+        Self { value: kind_weight_rows(map) }
+    }
+
+    pub fn to_map(&self) -> BTreeMap<String, f64> {
+        kind_weight_map(&self.value)
+    }
 }
 
 /// 🎚️ Payload of [`Puzzle2dConfigMutation::SetHandleKindWeights`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-handle-kind-weights")]
 pub struct Puzzle2dConfigSetHandleKindWeights {
-    pub value: BTreeMap<String, f64>,
+    pub value: Vec<Puzzle2dKindWeightRow>,
+}
+
+impl Puzzle2dConfigSetHandleKindWeights {
+    pub fn from_map(map: &BTreeMap<String, f64>) -> Self {
+        Self { value: kind_weight_rows(map) }
+    }
+
+    pub fn to_map(&self) -> BTreeMap<String, f64> {
+        kind_weight_map(&self.value)
+    }
 }
 
 /// 🎚️ Payload of [`Puzzle2dConfigMutation::SetFillCount`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-fill-count")]
 pub struct Puzzle2dConfigSetFillCount {
     pub value: u32,
 }
 
 /// 🎚️ Payload of [`Puzzle2dConfigMutation::SetContactTolerance`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-contact-tolerance")]
 pub struct Puzzle2dConfigSetContactTolerance {
     pub value: f64,
 }
 
 /// 🎚️ Payload of [`Puzzle2dConfigMutation::SetBrushPlacementOverlapBudget`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-brush-placement-overlap-budget")]
 pub struct Puzzle2dConfigSetBrushPlacementOverlapBudget {
     pub value: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum Puzzle2dConfigMutation {
     SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights),
@@ -469,8 +511,8 @@ impl protocol::ColdMutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
     type ReferenceDiff = Puzzle2dConfigDiff;
     fn diff(&self, base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfigDiff> {
         let diff = match self {
-            Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ value }) => Puzzle2dConfigDiff { node_kind_weights: (value != &base.node_kind_weights).then(|| value.clone()), ..Default::default() },
-            Self::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights{ value }) => Puzzle2dConfigDiff { handle_kind_weights: (value != &base.handle_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetNodeKindWeights(payload) => Puzzle2dConfigDiff { node_kind_weights: Some(payload.to_map()).filter(|value| value != &base.node_kind_weights), ..Default::default() },
+            Self::SetHandleKindWeights(payload) => Puzzle2dConfigDiff { handle_kind_weights: Some(payload.to_map()).filter(|value| value != &base.handle_kind_weights), ..Default::default() },
             Self::SetFillCount(Puzzle2dConfigSetFillCount{ value }) => Puzzle2dConfigDiff { fill_count: (value != &base.fill_count).then_some(*value), ..Default::default() },
             Self::SetContactTolerance(Puzzle2dConfigSetContactTolerance{ value }) => Puzzle2dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
             Self::SetBrushPlacementOverlapBudget(Puzzle2dConfigSetBrushPlacementOverlapBudget{ value }) => Puzzle2dConfigDiff { brush_placement_overlap_budget: (value != &base.brush_placement_overlap_budget).then_some(*value), ..Default::default() },
@@ -482,8 +524,8 @@ impl protocol::ColdMutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
     }
     fn inverse(&self, base: &Puzzle2dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ .. }) => Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ value: base.node_kind_weights.clone() }),
-            Self::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights{ .. }) => Self::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights{ value: base.handle_kind_weights.clone() }),
+            Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ .. }) => Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights::from_map(&base.node_kind_weights)),
+            Self::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights{ .. }) => Self::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights::from_map(&base.handle_kind_weights)),
             Self::SetFillCount(Puzzle2dConfigSetFillCount{ .. }) => Self::SetFillCount(Puzzle2dConfigSetFillCount{ value: base.fill_count }),
             Self::SetContactTolerance(Puzzle2dConfigSetContactTolerance{ .. }) => Self::SetContactTolerance(Puzzle2dConfigSetContactTolerance{ value: base.contact_tolerance }),
             Self::SetBrushPlacementOverlapBudget(Puzzle2dConfigSetBrushPlacementOverlapBudget{ .. }) => Self::SetBrushPlacementOverlapBudget(Puzzle2dConfigSetBrushPlacementOverlapBudget{ value: base.brush_placement_overlap_budget }),
@@ -493,13 +535,13 @@ impl protocol::ColdMutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
 
 impl protocol::OpBinary for Puzzle2dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
+        dsl::variants_binary::encode_op(self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+        dsl::variants_binary::decode_op(bytes)
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(Puzzle2dConfigMutation);
 
 impl protocol::OpText for Puzzle2dConfigMutation {
     fn print_op(&self) -> String {

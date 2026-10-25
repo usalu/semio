@@ -2,6 +2,7 @@
 //! 🗣️ Puzzle 2d play app — the complete UI label set: one field per label, so every
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
+use semio_framework_ui_locale::AppLabels;
 use semio_framework_ui_locale::LabelText;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;

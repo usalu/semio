@@ -16,7 +16,6 @@ fn original_scratch_hash_matches_neutral_dictionary(){
   }
   assert_eq!(actual.len(),oracle.len());for(key,value)in&oracle{assert_eq!(actual.get(key),Some(value));}
  }
- eprintln!("[DEBUG] Actual native scratch slots preserve capacity refusal, tombstones, original operands and neutral dictionary output");
 }
 #[test]
 fn scratch_hash_forced_collisions_preserve_deleted_probe_chains(){

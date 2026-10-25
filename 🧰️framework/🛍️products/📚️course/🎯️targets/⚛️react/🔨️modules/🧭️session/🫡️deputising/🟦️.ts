@@ -6,25 +6,40 @@
 import { emptyLearnerState, evolveLearner, challengeRules, type Command, type Event, type HandleView, type Id, type LearnerState } from "@semio-tech/course";
 import type { Deputy } from "../../🫡️deputy/🟦️.ts";
 import { type Outbox } from "../../📮️outbox/🟦️.ts";
+import { type DeputySeat } from "../📋️session-model/🟦️.ts";
 import { type CommandVerdict } from "../../🛂️proctor/🟦️.ts";
 import { type HeldState } from "../🗃️held-state/🟦️.ts";
 import { type Lifecycle } from "../🔌️lifecycle/🟦️.ts";
 import { type ProctorLink } from "../📡️proctor-link/🟦️.ts";
 
 //#region 🫡️Deputising
-/** 🪖️ The deputy of one session, if it has one, working on the held state and the outbox. */
+/** 🪖️ The deputy of one session, if it has one yet, working on the held state and the outbox. */
 export class Deputising {
   constructor(
-    private readonly deputy: Deputy | undefined,
+    private readonly seat: DeputySeat,
     private readonly state: HeldState,
     private readonly outbox: Outbox,
     private readonly link: ProctorLink,
     private readonly lifecycle: Lifecycle,
   ) {}
 
+  private get deputy(): Deputy | undefined {
+    return this.seat.current;
+  }
+
   /** 🙋️ Whether the session has a deputy. */
   get present(): boolean {
     return this.deputy !== undefined;
+  }
+
+  /** 🪑️ Seats the deputy of material that arrived after the session began: it tells the hints of the runs held and, where
+   * no course was loaded or cached, its own stands in until the proctor's arrives. Does nothing when one sits already. */
+  seatDeputy(deputy: Deputy): void {
+    if (this.seat.current !== undefined) return;
+    this.seat.current = deputy;
+    if (this.state.read().course === undefined) this.state.dispatch({ type: "course-loaded", course: deputy.course }, false);
+    this.rehintAll();
+    this.state.notify();
   }
 
   /** 🔦️ Who holds `handle` as the deputy knows it: nobody. */

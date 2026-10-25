@@ -1,7 +1,7 @@
 {
   "version": 1,
   "scripts": {
-    "repo": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo",
+    "repo": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo",
     "setup": "repo run workspace:setup",
     "dashboard": "repo run @semio-tech/repo-dashboard-rs:run --output=stream",
     "dashboard:install": "repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
@@ -160,10 +160,10 @@
   ],
   "devcontainerRuntime": {
     "postCreateCommand": [
-      "repo",
-      "run",
-      "workspace:setup"
-    ],
+    "bash",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+    "setup"
+  ],
     "postStartCommand": [
       "repo",
       "run",
@@ -261,8 +261,12 @@
       "accepted": true
     },
     {
-      "command": "bun \"domain/📜️script.ts\" build --release",
+      "command": "repo \"domain/📜️script.ts\" build --release",
       "accepted": true
+    },
+    {
+      "command": "bun \"domain/📜️script.ts\" build --release",
+      "accepted": false
     },
     {
       "command": "repo domain/📜️script.ts test",
@@ -938,10 +942,10 @@
     },
     {
       "id": "@semio-tech/stdio-plugin:parent-removal-check",
-      "parameters": {
-        "snapshot": "{workspace}/witness"
-      },
-      "args": [],
+      "parameters": {},
+      "args": [
+        "{workspace}/witness"
+      ],
       "env": {},
       "commandIds": [
         "@semio-tech/stdio-plugin:parent-removal-check"
@@ -1057,41 +1061,47 @@
       ]
     },
     {
-      "id": "@semio-tech/bim-model-rs:sqlite-oracle-words",
-      "parameters": {
-        "word": "7ff8000000000042",
-        "file": "witness.sqlite"
-      },
-      "args": [],
+      "id": "@semio-tech/bim-model-rs:sqlite-oracle",
+      "parameters": {},
+      "args": [
+        "words",
+        "7ff8000000000042",
+        "--file",
+        "witness.sqlite"
+      ],
       "env": {},
       "commandIds": [
-        "@semio-tech/bim-model-rs:sqlite-oracle-words"
+        "@semio-tech/bim-model-rs:sqlite-oracle"
       ],
       "words": [
         "repo",
         "run",
-        "@semio-tech/bim-model-rs:sqlite-oracle-words",
+        "@semio-tech/bim-model-rs:sqlite-oracle",
         "--",
+        "words",
         "7ff8000000000042",
         "--file",
         "witness.sqlite"
       ]
     },
     {
-      "id": "@semio-tech/bim-model-rs:sqlite-oracle-edit",
-      "parameters": {
-        "file": "witness.sqlite"
-      },
-      "args": [],
+      "id": "@semio-tech/bim-model-rs:sqlite-oracle",
+      "parameters": {},
+      "args": [
+        "edit",
+        "--file",
+        "witness.sqlite"
+      ],
       "env": {},
       "commandIds": [
-        "@semio-tech/bim-model-rs:sqlite-oracle-edit"
+        "@semio-tech/bim-model-rs:sqlite-oracle"
       ],
       "words": [
         "repo",
         "run",
-        "@semio-tech/bim-model-rs:sqlite-oracle-edit",
+        "@semio-tech/bim-model-rs:sqlite-oracle",
         "--",
+        "edit",
         "--file",
         "witness.sqlite"
       ]
@@ -1144,8 +1154,9 @@
         "repo",
         "exec",
         "--projects=workspace",
+        "--dry-run=false",
         "--",
-        "bun",
+        "repo",
         "{workspace}/📜️script.ts",
         "--help"
       ]
@@ -1170,8 +1181,13 @@
         "repo",
         "exec",
         "--projects=workspace",
+        "--dry-run=false",
         "--",
+        "repo",
+        "tools",
+        "exec",
         "bun",
+        "--",
         "test",
         "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts",
         "--timeout",
@@ -1414,7 +1430,8 @@
     "boundaryDirectories": [
       ".git",
       "node_modules",
-      ".venv"
+      ".venv",
+      ".lake"
     ],
     "excludedRoots": [
       ".cache",
@@ -1426,6 +1443,10 @@
       ".🧬semio/🦑️repo/🎫️tickets",
       ".🧬semio/🦑️repo/⚡️cache",
       ".🧬semio/🦑️repo/🧹️tmp",
+      ".🧬semio/🌐hub",
+      ".🧬semio/🎓️teaching",
+      ".🧬semio/🔗space",
+      ".🧬semio/🗺️map",
       ".repo/cache",
       "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/dist",
       "✏️s/🔌️plugins/🏭️process/dist",

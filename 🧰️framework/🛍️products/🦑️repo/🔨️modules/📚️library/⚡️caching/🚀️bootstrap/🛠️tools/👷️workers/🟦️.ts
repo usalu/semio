@@ -1,4 +1,4 @@
-import {WORKER_ACTION_KINDS_V1,type WorkerMappingV1,type WorkerPlanV1} from "../../../../🏗️build/👷️workers/🟦️.ts";
+import {WORKER_ACTION_KINDS_V1,type WorkerMappingV1,type WorkerPlanV1} from "../../../../📦️packages/🟦️typescript/🏗️build/👷️workers/🟦️.ts";
 
 /** 🧰️ What the plan becomes in Nx: environment variables and a report of how exactly each contract field is honoured. */
 export type NxWorkerSettingsV1=Readonly<{environment:Readonly<Record<string,string>>;mapping:readonly WorkerMappingV1[]}>;

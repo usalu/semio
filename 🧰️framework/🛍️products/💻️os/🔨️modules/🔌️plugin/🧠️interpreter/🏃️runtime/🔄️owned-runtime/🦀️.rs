@@ -286,6 +286,7 @@ impl OwnedRuntime {
     /// 🧾️ One owned job crossing: validates its actual execution authorization, drives the export and reads its fixed receipt.
     fn job_call<T>(&self,state:&mut OwnedGuestInstance,operation:OwnedOperation,json:Option<Vec<u8>>,arguments:Vec<Value>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget,source:Option<OriginalJobSource>,reply:impl FnOnce(OriginalOwnedJobCall,Option<OriginalJobSource>)->Result<T,TurnFault>)->OriginalGuestJobCall<T>{
         if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,source,identity_turn_fault(error))}
+        if state.original_job_clock.is_none(){state.original_job_clock=Some((budget.input.work.clock_binding,self.original_clock));}
         let receipt=|spent:u64|OriginalGuestExecutionReceipt{budget:execution,spent_fuel:Some(spent.min(execution.fuel)),submitted:true};
         match self.drive_job(state,operation,json,arguments,execution.fuel,execution.deadline_us){
             Err(failure) if !failure.submitted=>OriginalGuestJobCall::unsubmitted(execution,source,failure.fault),

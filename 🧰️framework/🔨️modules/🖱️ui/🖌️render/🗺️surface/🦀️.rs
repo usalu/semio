@@ -101,7 +101,7 @@ pub struct SurfacePlacement {
     pub z_index: i32,
 }
 
-/// 🎯️ `None` when `window_point` falls outside `placement.bounds` — the "input outside the bounds is
+/// 🧭️ `None` when `window_point` falls outside `placement.bounds` — the "input outside the bounds is
 /// not routed" half of this file's contract. Otherwise the point in surface-local coordinates: the
 /// bounds offset is subtracted first, then `placement.transform`'s inverse is applied — a singular
 /// transform (see [`Transform2D::invert`]) falls back to identity rather than dropping the event.
@@ -171,7 +171,7 @@ pub struct SurfaceRenderCx<'a> {
     pub time_seconds: f32,
 }
 
-/// 🖱️ Which pointer button an input event names. Re-exported from the dispatch layer rather than
+/// 🔘️ Which pointer button an input event names. Re-exported from the dispatch layer rather than
 /// redefined: a surface receives the *same* button identity generic dispatch resolved, and two
 /// structurally identical enums would let them silently drift apart.
 pub use crate::PointerButton;
@@ -201,7 +201,7 @@ pub enum SurfaceError {
     Internal(String),
 }
 
-/// 🗺️ One embedded product surface's lifecycle. Carries zero `dyn` (see this file's top docstring): a
+/// 🛍️ One embedded product surface's lifecycle. Carries zero `dyn` (see this file's top docstring): a
 /// product crate implements this directly on its own concrete type and drives it through ordinary
 /// generics — [`AnySurface`] only exists for a *host* that must hold several different kinds together.
 pub trait Surface {
@@ -222,7 +222,7 @@ pub trait Surface {
     fn next_deadline(&self) -> Option<Deadline>;
 }
 
-/// 🖌️ Applies `placement.bounds` as a scissor around one [`Surface::render`] call, so a surface can
+/// ✂️ Applies `placement.bounds` as a scissor around one [`Surface::render`] call, so a surface can
 /// never paint outside where UI core placed it and two placements never merge into one scissored
 /// batch. Rendering placements in ascending `z_index` order across a frame is the *caller's*
 /// discipline — this crate already paints in call order everywhere else ([`SceneBuilder`]'s own
@@ -337,7 +337,7 @@ impl AnySurface {
         (self.vtable.render)(self.inner.as_mut(), cx)
     }
 
-    /// 🖌️ [`render_placed_surface`]'s equivalent for an already-erased surface.
+    /// 🎞️ [`render_placed_surface`]'s equivalent for an already-erased surface.
     pub fn render_placed(&mut self, placement: &SurfacePlacement, scene: &mut SceneBuilder, resources: &mut ResourceRegistry, time_seconds: f32) -> Result<(), SurfaceError> {
         scene.push_scissor(placement.bounds);
         let mut cx = SurfaceRenderCx { scene, resources, placement, time_seconds };

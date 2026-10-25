@@ -5059,13 +5059,13 @@
    }
   },
   {
-   "name": "host-share-beats-the-small-show-grant",
+   "name": "grant-bounds-the-budget-on-a-large-host",
    "environment": {
     "SEMIO_HOST_CAPACITY_PLAN": "{\"jobs\": 1, \"fixedMegabytes\": 5120, \"memoryMegabytes\": 0}"
    },
    "hostMegabytes": 32768,
    "expect": {
-    "bytes": 8589934592
+    "bytes": 2684354560
    }
   },
   {

@@ -58,7 +58,6 @@ fn factory_vector_retirement_preserves_original_capacity_order_and_refused_row()
     assert_eq!(refusals,1);assert_eq!(factory.attempts.load(Ordering::SeqCst),fixture["expectedAttempts"].as_u64().unwrap()as usize);
     let order=fixture["expectedOrder"].as_array().unwrap().iter().fold(0,|value,row|value*10+row.as_u64().unwrap()as usize);assert_eq!(factory.order.load(Ordering::SeqCst),order);
     let(_,heap)=crate::observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));
-    eprintln!("[DEBUG] original vector exact issuer order={order}, refusal restored original text pointer, retained capacity={capacity}, terminalDrop=0");
 }
 
 #[derive(Clone,Copy,crate::FactoryPayloadRetirement)]
@@ -85,5 +84,5 @@ fn factory_vector_retirement_rejects_same_data_different_method_table_issuer(){
  let q=grant(owner.demands(original,4096).unwrap());owner.close_step(original,q).unwrap();assert_eq!(owner.pending().unwrap().text.as_ptr(),pointer);
  let(result,heap)=crate::observe_retirement_allocations(||owner.close_step(foreign,q));assert!(result.is_err());assert_eq!(heap,(0,0));assert_eq!(owner.pending().unwrap().id,law["pendingId"].as_u64().unwrap()as usize);assert_eq!(owner.pending().unwrap().text.as_ptr(),pointer);assert_eq!(owner.allocation_address(),allocation);assert_eq!(OTHER_CALLS.get(),law["providerCalls"].as_u64().unwrap()as usize);
  for turn in 0..1000{if owner.terminal_is_empty(){break;}let g=grant(owner.demands(original,4096).unwrap());owner.close_step(original,g).unwrap();assert!(turn<999);}
- assert!(owner.terminal_is_empty());eprintln!("[DEBUG] exact issuer sameData=true, sameVtable=false: foreign provider calls0, original pending row/allocation preserved");
+ assert!(owner.terminal_is_empty());
 }

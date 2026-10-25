@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🧱️Codec
-/// 🧱 Encodes the canonical versioned, little-endian structural ledger.
+/// 📦️ Encodes the canonical versioned, little-endian structural ledger.
 pub fn encode_abi_message(message: &AbiMessage) -> Vec<u8> {
     let mut encoder = Encoder::new();
     encoder.u8(ABI_VERSION);

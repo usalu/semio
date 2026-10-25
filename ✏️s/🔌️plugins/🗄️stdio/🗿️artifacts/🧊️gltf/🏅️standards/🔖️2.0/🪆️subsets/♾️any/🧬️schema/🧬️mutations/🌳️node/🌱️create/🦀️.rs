@@ -35,7 +35,7 @@ pub fn plan(p: &GltfCreateNodePayload, base: &GltfSnapshot) -> Result<GltfDiff, 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfCreateNodePayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_node::DeleteNodeMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -77,7 +77,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for CreateNodeMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<CreateNodeMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<CreateNodeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::delete_node::DeleteNodeMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

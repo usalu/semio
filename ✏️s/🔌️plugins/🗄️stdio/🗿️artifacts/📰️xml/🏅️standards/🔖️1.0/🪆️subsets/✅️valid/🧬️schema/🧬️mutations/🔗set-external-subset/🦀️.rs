@@ -8,7 +8,7 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetExternalSubset {
-    pub(crate) external_id: Option<XmlExternalId>,
+    pub external_id: Option<XmlExternalId>,
 }
 
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetExternalSubset {

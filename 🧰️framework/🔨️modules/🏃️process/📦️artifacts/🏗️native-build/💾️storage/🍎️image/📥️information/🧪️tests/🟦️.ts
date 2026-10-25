@@ -1,7 +1,7 @@
 import{test,expect}from"bun:test";
+import{testScratchRootV1}from"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
 import{spawn,spawnSync}from"node:child_process";
 import{mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync}from"node:fs";
-import{tmpdir}from"node:os";
 import{join}from"node:path";
 import fixture from"./🔣️.json"with{type:"json"};
 import{captureOwnedCommandV1}from"../../../../../../🎛️owned-execution/🟦️.ts";
@@ -37,7 +37,7 @@ test("system image inventory: a retried snapshot agrees with the system plist co
  const text=plist(["parent","child"]);
  const direct=nativeImageInformationV1(text);
  if(process.platform==="darwin"){
-  const root=mkdtempSync(join(tmpdir(),"inventory-oracle-"));
+  const root=mkdtempSync(join(testScratchRootV1("image-tests"),"inventory-oracle-"));
   try{const path=join(root,"info.plist");writeFileSync(path,text);const oracle=spawnSync("/usr/bin/plutil",["-convert","json","-o","-",path],{encoding:"utf8"});expect(oracle.status).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(direct);}finally{rmSync(root,{recursive:true,force:true});}
  }
  expect((direct.images as unknown[]).length).toBe(2);
@@ -50,7 +50,7 @@ test("system image inventory: noise and structure are named in the refusal",()=>
 
 const run=(program:string,args:readonly string[])=>spawnSync(program,[...args],{encoding:"utf8",env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"}});
 test.skipIf(process.platform!=="darwin")("system image inventory: stays consistent for a stable image while other images attach and detach concurrently",async()=>{
- const real=fixture.real,root=realpathSync(mkdtempSync(join(tmpdir(),"inventory-real-"))),attached:string[]=[],children:ReturnType<typeof spawn>[]=[];
+ const real=fixture.real,root=realpathSync(mkdtempSync(join(testScratchRootV1("image-tests"),"inventory-real-"))),attached:string[]=[],children:ReturnType<typeof spawn>[]=[];
  try{
   const make=(name:string)=>{const dir=join(root,name),mount=join(dir,"m");mkdirSync(mount,{recursive:true});const image=join(dir,"t.dmg");expect(run("/usr/bin/hdiutil",["create","-size",real.imageMegabytes+"m","-fs","HFS+","-volname",name,"-type","UDIF",image]).status).toBe(0);return{dir,mount,image};};
   const stable=make("stable");

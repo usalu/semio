@@ -2,8 +2,8 @@
   "manifest": "crate/Cargo.toml",
   "mode": "prototype",
   "name": "published",
-  "source": "fn main(){println!(\"[DEBUG] original published executable\");}\n",
-  "output": "[DEBUG] original published executable\n",
+  "source": "fn main(){println!(\"[TRACE] original published executable\");}\n",
+  "output": "[TRACE] original published executable\n",
   "environmentKeys": [
     "RUSTUP_HOME",
     "PATH",

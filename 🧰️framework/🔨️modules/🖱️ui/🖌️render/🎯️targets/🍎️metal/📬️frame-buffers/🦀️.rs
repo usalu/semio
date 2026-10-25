@@ -9,7 +9,7 @@ use objc2_metal::MTLResourceOptions;
 
 //#region 🔖️FrameBuffers
 
-/// 📬️ One growable `Shared`-storage buffer, rewritten wholesale every upload. Ported from
+/// 🌱️ One growable `Shared`-storage buffer, rewritten wholesale every upload. Ported from
 /// `GrowBuffer` in the wgpu target 1:1 — same growth policy, same "empty data uploads nothing and
 /// returns `None`" contract.
 #[derive(Default)]
@@ -47,7 +47,7 @@ impl GrowBuffer {
     }
 }
 
-/// 📬️ Every per-frame growable buffer a render pass writes into before encoding draws.
+/// 🎞️ Every per-frame growable buffer a render pass writes into before encoding draws.
 ///
 /// **Simpler than the wgpu target's `FrameBuffers` — one buffer per array, not one per batch group.**
 /// The wgpu target re-collects each filtered batch group (backdrop/foreground × normal/overlay) into

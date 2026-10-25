@@ -18,22 +18,22 @@ use std::sync::atomic::{AtomicIsize, Ordering};
 /// off the staged component's memory section by the law in `🧪️tests/🔬️memory`.
 pub const GUEST_LINEAR_MEMORY_MAXIMUM_BYTES: usize = 536_870_912;
 
-/// 📏️ Shadow stack reserved inside that memory — `stackBytes`, linked in as `wasm-ld -zstack-size`
+/// 🥞️ Shadow stack reserved inside that memory — `stackBytes`, linked in as `wasm-ld -zstack-size`
 /// by `.cargo/config.toml`'s `[target.wasm32-wasip2]` rustflags.
 pub const GUEST_LINEAR_MEMORY_STACK_BYTES: usize = 8_388_608;
 
-/// 📏️ Share of [`GUEST_LINEAR_MEMORY_MAXIMUM_BYTES`], in percent, the boot + contributions-install +
+/// 🍕️ Share of [`GUEST_LINEAR_MEMORY_MAXIMUM_BYTES`], in percent, the boot + contributions-install +
 /// first-mesh sequence's retained-heap peak must stay under — `installPeakPercent`. Headroom for the
 /// evaluation, tessellation and render work that runs AFTER the sequence a law can bound.
 pub const GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT: usize = 60;
 
-/// 📏️ [`GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT`] of the budget, in bytes — the number a law
+/// 💰️ [`GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT`] of the budget, in bytes — the number a law
 /// compares a measured peak against, so no call site re-derives the percentage.
 pub const fn guest_linear_memory_install_peak_ceiling_bytes() -> usize {
     (GUEST_LINEAR_MEMORY_MAXIMUM_BYTES as u64 * GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT as u64 / 100) as usize
 }
 
-/// 📏️ Largest CONTIGUOUS block a routine, per-command or per-turn guest path may request —
+/// 🧱️ Largest CONTIGUOUS block a routine, per-command or per-turn guest path may request —
 /// `contiguousRequestCeilingBytes`, one wasm page.
 ///
 /// 🧊️ The guest runs on one linear memory that grows and never shrinks, served by `dlmalloc` with a
@@ -46,7 +46,7 @@ pub const fn guest_linear_memory_install_peak_ceiling_bytes() -> usize {
 /// A path that runs once per command or once per turn must therefore stay at or under this.
 pub const GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES: usize = 65_536;
 
-/// 📏️ Largest ASSEMBLED answer the host may deliver into a guest for ONE outstanding request —
+/// ☁️ Largest ASSEMBLED answer the host may deliver into a guest for ONE outstanding request —
 /// `hostAnswerCeilingBytes`.
 ///
 /// 🧨️ [`GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`] bounds what a SINGLE lowering asks the guest
@@ -66,7 +66,7 @@ pub const fn guest_host_answer_pages(bytes: usize) -> usize {
 //#endregion 📏️Budget
 
 //#region 🧮️HeapWitness
-/// 🧮️ Bytes this process has allocated and not yet freed. Signed: a `realloc` shrink and a free of
+/// ⚙️ Bytes this process has allocated and not yet freed. Signed: a `realloc` shrink and a free of
 /// memory allocated before the witness was installed both legitimately push it down, so a law reads
 /// DIFFERENCES of it and never its absolute value.
 static RETAINED_BYTES: AtomicIsize = AtomicIsize::new(0);
@@ -74,7 +74,7 @@ static RETAINED_BYTES: AtomicIsize = AtomicIsize::new(0);
 /// 🏔️ Largest [`RETAINED_BYTES`] reading since the last [`reset_heap_peak`].
 static PEAK_BYTES: AtomicIsize = AtomicIsize::new(0);
 
-/// 🧮️ A `GlobalAlloc` that forwards to [`std::alloc::System`] and weighs what it hands out.
+/// ⚖️ A `GlobalAlloc` that forwards to [`std::alloc::System`] and weighs what it hands out.
 ///
 /// 🧵️ Process-wide, deliberately NOT per-thread: natively a mounted worker session allocates its
 /// owners on a pool thread and frees them on the caller's, so a per-thread counter reads a growing
@@ -84,7 +84,7 @@ static PEAK_BYTES: AtomicIsize = AtomicIsize::new(0);
 /// cost, and the guest this measures reads its own footprint for free with [`guest_linear_memory_bytes`].
 pub struct HeapWitness;
 
-/// 🧵️ The same signed reading, attributed to the thread that made the allocation — the measurement
+/// 🖊️ The same signed reading, attributed to the thread that made the allocation — the measurement
 /// scope a growth law needs when it shares a test process with hundreds of unrelated laws running on
 /// libtest's other threads. `Cell<isize>` has no destructor and the slot is `const`-initialised, so
 /// reading it inside the allocator neither allocates nor runs lazy initialisation.
@@ -107,7 +107,7 @@ fn record(delta: isize) {
     });
 }
 
-/// 🧮️ Retained bytes right now — the reading a growth law differences.
+/// ➡️ Retained bytes right now — the reading a growth law differences.
 pub fn retained_heap_bytes() -> isize {
     RETAINED_BYTES.load(Ordering::Relaxed)
 }
@@ -127,7 +127,7 @@ pub fn retained_heap_bytes_on_this_thread() -> isize {
     THREAD_RETAINED_BYTES.try_with(std::cell::Cell::get).unwrap_or(0)
 }
 
-/// 🏔️🧵️ Peak of [`retained_heap_bytes_on_this_thread`] since the last [`reset_heap_peak_on_this_thread`]
+/// ⛰️🧵️ Peak of [`retained_heap_bytes_on_this_thread`] since the last [`reset_heap_peak_on_this_thread`]
 /// — the reading a ceiling law compares when it must weigh one block its own thread asked for.
 pub fn peak_heap_bytes_on_this_thread() -> isize {
     THREAD_PEAK_BYTES.try_with(std::cell::Cell::get).unwrap_or(0)
@@ -139,12 +139,12 @@ pub fn reset_heap_peak_on_this_thread() {
     let _ = THREAD_PEAK_BYTES.try_with(|peak| peak.set(retained));
 }
 
-/// 🏔️ Peak retained bytes since the last [`reset_heap_peak`] — the reading a ceiling law compares.
+/// 🔚️ Peak retained bytes since the last [`reset_heap_peak`] — the reading a ceiling law compares.
 pub fn peak_heap_bytes() -> isize {
     PEAK_BYTES.load(Ordering::Relaxed)
 }
 
-/// 🔄️ Arms the peak at the current retained reading, so the next measurement window starts empty.
+/// ⏭️ Arms the peak at the current retained reading, so the next measurement window starts empty.
 pub fn reset_heap_peak() {
     PEAK_BYTES.store(RETAINED_BYTES.load(Ordering::Relaxed), Ordering::Relaxed);
 }

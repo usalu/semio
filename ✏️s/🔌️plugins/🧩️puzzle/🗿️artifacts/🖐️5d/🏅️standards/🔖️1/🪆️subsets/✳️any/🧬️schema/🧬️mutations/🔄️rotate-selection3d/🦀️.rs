@@ -45,7 +45,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for RotateSelection3d
 where
-    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<RotateSelection3d>,
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<RotateSelection3d> + From<crate::standards::v1::subsets::any::schema::mutations::rotate_part_3d::RotatePart3d> + From<crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume::RotateTargetVolume>,
 {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)

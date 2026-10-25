@@ -49,6 +49,7 @@ semio-framework-schema-state = { path = "../../../../../../../../../../../../../
 semio-framework-tool-run-actions = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏯️tool-run/🕹️actions/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-s-artifact-dag-dag-inferences = { path = "../../../💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }

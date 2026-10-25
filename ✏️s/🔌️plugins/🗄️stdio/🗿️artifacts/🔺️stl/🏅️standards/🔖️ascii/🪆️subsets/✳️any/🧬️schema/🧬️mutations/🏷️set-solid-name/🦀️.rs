@@ -8,7 +8,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSolidName {
-    pub(crate) name: String,
+    pub name: String,
 }
 
 impl protocol::MutationKind<StlSnapshot, StlMutation> for SetSolidName {

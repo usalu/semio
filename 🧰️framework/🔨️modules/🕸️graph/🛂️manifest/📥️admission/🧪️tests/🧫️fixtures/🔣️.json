@@ -9,5 +9,6 @@
     "src/package/owned-manifest.json"
   ],
   "dependencyLink": "src/package/node_modules/@semio-tech/framework",
+  "outputLinks": ["src/package/dist", "src/package/📤️dist"],
   "sourceLink": "src/source-link"
 }

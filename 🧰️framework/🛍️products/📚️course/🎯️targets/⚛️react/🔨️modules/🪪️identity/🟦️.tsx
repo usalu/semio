@@ -1,4 +1,4 @@
-/** 🪪️ The identity step: anonymous, pseudonym or name — never a password — and what that means, said plainly before
+/** 🔑️ The identity step: anonymous, pseudonym or name — never a password — and what that means, said plainly before
  * the choice.
  *
  * A pseudonym or name is public (the leaderboard, the others online) and is the whole key to its learner: whoever
@@ -63,7 +63,7 @@ export type HandleFault = { readonly kind: "empty" } | { readonly kind: "long"; 
 
 const PROBE = "a";
 
-/** 🔬️ The fault of a typed handle, `undefined` when the core accepts it. Every answer comes from {@link normalizeHandle}
+/** 🏛️ The fault of a typed handle, `undefined` when the core accepts it. Every answer comes from {@link normalizeHandle}
  * itself: a character is white space when the core collapses it between two letters and refused when the core refuses
  * it beside a letter; the length is that of the handle as the core would keep it (as typed when even that is too long
  * to be read). */
@@ -92,7 +92,7 @@ function shownCharacter(character: string): string {
   return INVISIBLE.test(character) ? `U+${character.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}` : `“${character}”`;
 }
 
-/** 🔬️ A {@link HandleFault} in words: what exactly is wrong and what is allowed instead. */
+/** ✉️ A {@link HandleFault} in words: what exactly is wrong and what is allowed instead. */
 export function handleFaultMessage(fault: HandleFault, text: CourseText): string {
   switch (fault.kind) {
     case "empty":

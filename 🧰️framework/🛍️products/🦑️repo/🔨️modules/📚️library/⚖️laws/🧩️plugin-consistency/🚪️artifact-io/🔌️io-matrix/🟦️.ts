@@ -146,7 +146,7 @@ export function policyIoSerializerMatrixBreaches(repoRoot: string): BreachRecord
   return breaches;
 }
 
-/** ⚖️Stdio dependency DAG is acyclic and every format eventually depends on binary. */
+/** 🕸️Stdio dependency DAG is acyclic and every format eventually depends on binary. */
 export function policyIoTerminalityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const table = policyLoadStdioOwnerTable(repoRoot);
@@ -249,7 +249,7 @@ export function policyIoTerminalityBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** ⚖️Banned stub codec markers (SRAS, IFCCARTOONMESH, minimal stubs) must not remain in Rust sources. */
+/** 🚨️Banned stub codec markers (SRAS, IFCCARTOONMESH, minimal stubs) must not remain in Rust sources. */
 export function policyCodecFidelityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const scanRoots = [

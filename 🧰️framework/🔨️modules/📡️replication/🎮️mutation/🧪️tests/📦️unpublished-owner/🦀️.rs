@@ -106,5 +106,4 @@ fn prepared_fields_follow_portable_atomic_outcomes() {
         assert_eq!(projection.second, case["expected"]["second"].as_i64().unwrap());
         assert_eq!(FIELD_RETIREMENTS.with(|value| value.get()), usize::from(diff.first.is_some()) + usize::from(diff.second.is_some()));
     }
-    eprintln!("[DEBUG] Shared prepared fields preserve portable atomic projections and retire each staged/displaced field once");
 }

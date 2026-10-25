@@ -69,7 +69,7 @@ pub fn semio_written(table: &'static [semio_framework_plugin::io::ComposerEntry]
 }
 
 /// 🧪️ Diff then central apply: the next snapshot (the base when the diff is refused) and the mutation's own outcome.
-pub fn applied<P: Clone, M: protocol::Mutation<P>>(base: &P, mutation: &M) -> (P, protocol::MutationOutcome<M::Diff>) {
+pub fn applied<P: Clone, M: protocol::ColdMutation<P>>(base: &P, mutation: &M) -> (P, protocol::MutationOutcome<M::ReferenceDiff>) {
     let outcome = mutation.diff(base);
     let next = protocol::apply_diff_cold(outcome.diff(), base).unwrap_or_else(|_| base.clone());
     (next, outcome)
@@ -127,7 +127,6 @@ macro_rules! semio_member_owner {
     };
 }
 
-semio_framework_value::artifact_retire_leaf!(schema::geometry::SemioPoint2, schema::geometry::SemioPoint3, schema::geometry::SemioQuaternion, schema::geometry::SemioRgba, schema::geometry::SemioTransform, schema::geometry::SemioUv);
 
 /// 🔗️ One direction of one subset's conversions: `declare` adds the composer rows that write a semio dialect to an
 /// artifact declaration, `register` publishes all of the direction's rows into the process-wide io registry.

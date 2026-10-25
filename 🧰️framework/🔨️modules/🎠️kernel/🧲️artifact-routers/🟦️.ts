@@ -17,7 +17,7 @@ export class ArtifactRouterConflictError extends Error {
   }
 }
 
-/** 🧯 Thrown when a contributor registers onto an artifact kind whose owning plugin is not a direct
+/** ❌️ Thrown when a contributor registers onto an artifact kind whose owning plugin is not a direct
  * entry in the contributor's declared `dependencies` — contract freeze §4 rule 1. Carries the frozen
  * transaction rejection code since an unpermitted contribution is exactly what that code names. */
 export class ArtifactContributionNotPermittedError extends Error {
@@ -59,7 +59,7 @@ class ConflictCheckedRegistry {
   }
 }
 
-/** 🗂️ `(artifactKind, mutationId) -> Owner | Contributed{pluginId}` — the transaction coordinator's
+/** 🏺️ `(artifactKind, mutationId) -> Owner | Contributed{pluginId}` — the transaction coordinator's
  * `ArtifactMutationRouter` lookup (contract freeze §5.3). */
 export class ArtifactMutationRouter {
   private readonly registry = new ConflictCheckedRegistry();

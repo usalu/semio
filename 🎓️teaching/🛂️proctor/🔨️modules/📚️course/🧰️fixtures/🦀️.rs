@@ -8,7 +8,7 @@ pub fn fixture_path() -> PathBuf {
     fixture_path!("../../../../🧪️tests/🧫️fixtures/📚️catalog/🔣️.json")
 }
 
-/// 📚️ The fixture course, loaded.
+/// 🧫️ The fixture course, loaded.
 pub fn fixture() -> LoadedCourse {
     load_course(&fixture_path()).expect("the fixture course is valid")
 }

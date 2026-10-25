@@ -92,7 +92,7 @@ fn auto_fit_moves_both_camera_families_eye_distance_and_preserves_parallel_zoom(
     assert!((parallel_framed.zoom - parallel.zoom).abs() < 1e-6, "and preserves projection-content zoom");
 }
 
-/// 📐️ LAW: a projection pane frames on React's CARDINAL half-extent, not on the box's projected
+/// 🖼️ LAW: a projection pane frames on React's CARDINAL half-extent, not on the box's projected
 /// screen extent — `worldProjectionViewHalfExtent` reads `(hx, hy)` for a plan view, `(hx, hz)` for
 /// front/back, `(hy, hz)` for left/right, `(hx, hz)` for a free oblique, and the ISOTROPIC span
 /// `max(hx, hy, hz)` for everything else (`🎨️r3f/🟦️.tsx`).
@@ -177,7 +177,7 @@ fn the_puzzle3d_pane_cameras_survive_the_orbit_round_trip() {
     assert!(orbit.to_camera().position.sub_m(perspective.position).length_m() < 1e-3);
 }
 
-/// 📐️ LAW: the two `zoom` ↔ frustum mappings React uses are exact inverses, so a projection switch
+/// ↔️ LAW: the two `zoom` ↔ frustum mappings React uses are exact inverses, so a projection switch
 /// never jumps scale (`worldProjectionMatchedOrthoZoom` / `…MatchedPerspectiveDistance`).
 #[test]
 fn the_matched_zoom_and_distance_mappings_invert_each_other() {
@@ -190,7 +190,7 @@ fn the_matched_zoom_and_distance_mappings_invert_each_other() {
     assert!((lod_orbit_distance_for_camera(&perspective, 9.45, 814.0) - 9.45).abs() < 1e-6, "and a perspective one on its own");
 }
 
-/// 📐️ LAW: a parallel camera's visible radius is its own zoomed pixel extent, never the
+/// 🔳️ LAW: a parallel camera's visible radius is its own zoomed pixel extent, never the
 /// height-above-plane a perspective one uses — React's `cameraGridVisibleRadius`.
 #[test]
 fn the_grid_visible_radius_reads_the_cameras_own_family() {
@@ -436,7 +436,7 @@ fn grid_placement_anchor_uses_orbit_xy_and_datum_z() {
     assert_eq!(anchor, vec3_new_m(3.0, 4.0, 12.5));
 }
 
-/// 🎯️ Original ray-to-segment distances retain finite endpoints and the forward ray domain.
+/// 📏️ Original ray-to-segment distances retain finite endpoints and the forward ray domain.
 #[test]
 fn ray_segment_distance_matches_neutral_three_cases() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();

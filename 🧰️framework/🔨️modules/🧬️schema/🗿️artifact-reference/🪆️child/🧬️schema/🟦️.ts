@@ -3,7 +3,7 @@ import { hexLower, sha256 } from "../../../../🔏️hash/🟦️.ts";
 import { parseArtifactRef, type ArtifactRef } from "../../🟦️.ts";
 export interface ArtifactChild { childId: string; target: ArtifactRef }
 
-/** 🪆️ Decodes only the two fields that cross a child-document boundary; `at` names the instance position a refusal reports (the root position `$` adds nothing). */
+/** 📖️ Decodes only the two fields that cross a child-document boundary; `at` names the instance position a refusal reports (the root position `$` adds nothing). */
 export function parseArtifactChild(value: unknown, at = "$"): ArtifactChild {
   const where = at === "$" ? "" : `${at}: `;
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${where}artifact child must be an object`);

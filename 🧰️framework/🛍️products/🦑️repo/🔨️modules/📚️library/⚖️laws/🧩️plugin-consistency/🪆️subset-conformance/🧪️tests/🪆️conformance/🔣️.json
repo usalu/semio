@@ -159,25 +159,25 @@
    "id": "glue-shim-blocks",
    "rule": "policyNoGlueShimBlocksBreaches",
    "files": {
-    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
      "// Shims: keep pre-migration paths"
     ],
-    "✏️s/🔌️plugins/🔭️q/📦️packages/🦀️rust/🦀️.rs": [
+    "✏️s/🔌️plugins/🔭️q/🗿️artifacts/🔸️a/🦀️.rs": [
      "// PRE-MIGRATION MODULE PATHS"
     ],
-    "✏️s/🔌️plugins/🔭️r/📦️packages/🦀️rust/🦀️.rs": [
+    "✏️s/🔌️plugins/🔭️r/🗿️artifacts/🔸️a/🦀️.rs": [
      "// clean glue"
     ]
    },
    "expect": [
     [
-     "glue-shim-✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs",
+     "glue-shim-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs",
      "subset-conformance/no-glue-shim-blocks",
      "medium",
      0
     ],
     [
-     "glue-shim-✏️s/🔌️plugins/🔭️q/📦️packages/🦀️rust/🦀️.rs",
+     "glue-shim-✏️s/🔌️plugins/🔭️q/🗿️artifacts/🔸️a/🦀️.rs",
      "subset-conformance/no-glue-shim-blocks",
      "medium",
      0
@@ -194,7 +194,7 @@
     "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/⚙️engine/x": [],
     "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/x": [],
     "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️b/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/x": [],
-    "✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs": [
+    "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs": [
      "// Shims: keep pre-migration paths"
     ],
     "✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🏅️标准/x": [],
@@ -276,7 +276,7 @@
      0
     ],
     [
-     "glue-shim-✏️s/🔌️plugins/🔭️p/📦️packages/🦀️rust/🦀️.rs",
+     "glue-shim-✏️s/🔌️plugins/🔭️p/🗿️artifacts/🔸️a/🦀️.rs",
      "subset-conformance/no-glue-shim-blocks",
      "medium",
      0

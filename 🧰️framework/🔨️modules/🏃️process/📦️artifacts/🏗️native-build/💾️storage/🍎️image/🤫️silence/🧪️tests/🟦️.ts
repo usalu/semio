@@ -33,7 +33,6 @@ test("observation tolerates a discovered log disappearing and retains cancellati
    try{observeNativeImageVolumeSilenceV1(changed,()=>{if(applied)return;applied=true;if(mutation==="remove")rmSync(service,{recursive:true});else{renameSync(service,join(changed,"original"));mkdirSync(service);}});}catch(error){refusal=error;}
    expect(applied).toBe(true);expect((refusal as NodeJS.ErrnoException)?.code).toBe("ENOENT");
   }
-  console.log("[DEBUG] Native image log census matched the shared rotation vector and propagated original cancellation");
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 test("the silence corpus is schema-valid and every decision is reproduced",()=>{
@@ -122,4 +121,3 @@ test.skipIf(process.platform!=="darwin")("a legacy image with an accumulated log
  }finally{for(const mount of attached.reverse())run("/usr/bin/hdiutil",["detach","-force",mount]);rmSync(scratch,{recursive:true,force:true});}
 },120000);
 
-import "../../../🌐️platform/📋️contract/📂️mount/🧪️tests/🟦️.ts";

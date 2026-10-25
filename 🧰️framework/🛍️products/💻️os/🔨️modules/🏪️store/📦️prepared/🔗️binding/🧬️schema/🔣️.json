@@ -9,7 +9,7 @@
     "snapshotClones",
     "implicitOriginalDrop",
     "receiptCases",
-    "inlineTerminalRetirement",
+    "boxedTerminalRetirement",
     "storeClosure",
     "editProjection"
   ],
@@ -268,15 +268,15 @@
         "additionalProperties": false
       }
     },
-    "inlineTerminalRetirement": {
+    "boxedTerminalRetirement": {
       "type": "object",
       "required": [
-        "frameCopyMultiplier",
+        "depth",
         "cases"
       ],
       "properties": {
-        "frameCopyMultiplier": {
-          "const": 2
+        "depth": {
+          "const": 1
         },
         "cases": {
           "type": "array",

@@ -96,7 +96,7 @@ impl semio_framework_os_spr::DiffAlgebra<DemoSnapshot> for DemoDiff {
     }
 }
 
-impl crate::os_spr::ColdDiffAlgebra<DemoSnapshot> for DemoDiff {
+impl semio_framework_os_spr::ColdDiffAlgebra<DemoSnapshot> for DemoDiff {
     fn inverse(&self, base: &DemoSnapshot) -> Self {
         Self { n: self.n.map(|_| base.n) }
     }
@@ -104,14 +104,14 @@ impl crate::os_spr::ColdDiffAlgebra<DemoSnapshot> for DemoDiff {
 
 impl MutationDiff<DemoSnapshot> for DemoDiff {}
 
-impl crate::os_spr::ColdMutationDiff<DemoSnapshot> for DemoDiff {
+impl semio_framework_os_spr::ColdMutationDiff<DemoSnapshot> for DemoDiff {
     fn absorb(&mut self, other: Self) {
         if other.n.is_some() {
             self.n = other.n;
         }
     }
 
-    fn apply(&self, snapshot: &mut DemoSnapshot, _capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<()> {
+    fn apply(&self, snapshot: &mut DemoSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
         if let Some(value) = self.n { snapshot.n = value; }
         Ok(())
     }

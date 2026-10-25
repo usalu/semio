@@ -144,7 +144,7 @@ fn fixture_case() {
     let id = std::env::var("SEMIO_PUBLICATION_CASE_ID").unwrap_or_else(|_| "free-gate".to_owned());
     let row = corpus["cases"].as_array().unwrap().iter().find(|row| row["id"] == id).unwrap();
     let actual = run_case(row);
-    println!("[DEBUG] Publication admission case {id}: {actual}");
+    println!("[TRACE] Publication admission case {id}: {actual}");
     assert_eq!(actual, row["expected"], "{id}");
 }
 
@@ -158,7 +158,7 @@ fn all_rows_execute_in_distinct_process_gates() {
         let id = row["id"].as_str().unwrap();
         let (timed_out, output) = isolated_observation("fixture_case", "SEMIO_PUBLICATION_CASE_ID", id);
         let observed = String::from_utf8(output.stdout).unwrap();
-        let witness = format!("[DEBUG] Publication admission case {id}:");
+        let witness = format!("[TRACE] Publication admission case {id}:");
         if timed_out || !output.status.success() || !observed.contains(&witness) {
             failures.push(format!("{id}: timedOut={timed_out}, status={}, stdout={observed}, stderr={}", output.status, String::from_utf8_lossy(&output.stderr)));
         }
@@ -172,7 +172,7 @@ fn cross_thread_contention_releases_turn_before_retry() {
         let (timed_out, output) = isolated_observation("cross_thread_contention_releases_turn_before_retry", "SEMIO_PUBLICATION_CONTENTION_CHILD", "1");
         let stdout = String::from_utf8(output.stdout).unwrap();
         assert!(!timed_out && output.status.success(), "timedOut={timed_out}, stdout={stdout}, stderr={}", String::from_utf8_lossy(&output.stderr));
-        assert!(stdout.contains("[DEBUG] Publication contention: busy,acquired; attempts=2"));
+        assert!(stdout.contains("[TRACE] Publication contention: busy,acquired; attempts=2"));
         return;
     }
     let (held_sender, held_receiver) = std::sync::mpsc::sync_channel(0);
@@ -198,7 +198,7 @@ fn cross_thread_contention_releases_turn_before_retry() {
     assert_eq!(control.attempts(), 2);
     assert_eq!(progress.get(), 2);
     drop(transaction);
-    println!("[DEBUG] Publication contention: busy,acquired; attempts=2");
+    println!("[TRACE] Publication contention: busy,acquired; attempts=2");
 }
 
 #[test]
@@ -295,13 +295,13 @@ fn transaction_checkpoint_fixture_case() {
             let (timed_out, output) = isolated_observation("transaction_checkpoint_fixture_case", "SEMIO_PUBLICATION_CHECKPOINT_CASE_ID", "live-owner");
             let stdout = String::from_utf8(output.stdout).unwrap();
             assert!(!timed_out && output.status.success(), "timedOut={timed_out}, stdout={stdout}, stderr={}", String::from_utf8_lossy(&output.stderr));
-            assert!(stdout.contains("[DEBUG] Publication checkpoint case live-owner:"));
+            assert!(stdout.contains("[TRACE] Publication checkpoint case live-owner:"));
             return;
         }
     };
     let row = corpus["cases"].as_array().unwrap().iter().find(|row| row["id"] == id).unwrap();
     let actual = run_checkpoint_case(row);
-    println!("[DEBUG] Publication checkpoint case {id}: {actual}");
+    println!("[TRACE] Publication checkpoint case {id}: {actual}");
     assert_eq!(actual, row["expected"], "{id}");
 }
 
@@ -315,7 +315,7 @@ fn transaction_checkpoints_execute_under_distinct_process_gates() {
         let id = row["id"].as_str().unwrap();
         let (timed_out, output) = isolated_observation("transaction_checkpoint_fixture_case", "SEMIO_PUBLICATION_CHECKPOINT_CASE_ID", id);
         let observed = String::from_utf8(output.stdout).unwrap();
-        let witness = format!("[DEBUG] Publication checkpoint case {id}:");
+        let witness = format!("[TRACE] Publication checkpoint case {id}:");
         if timed_out || !output.status.success() || !observed.contains(&witness) {
             failures.push(format!("{id}: timedOut={timed_out}, status={}, stdout={observed}, stderr={}", output.status, String::from_utf8_lossy(&output.stderr)));
         }

@@ -1,0 +1,11 @@
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+const mode = process.argv[2]!;
+const layout = mode === "old" ? await import("./old/📐️layout/🟦️.ts") : await import(join(process.cwd(),"🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/📐️layout/🟦️.ts"));
+const base = realpathSync(mkdtempSync(join(tmpdir(), "mp-"))), partition = join(base, "p"), inside = join(partition, "m", "tmp");
+mkdirSync(inside, { recursive: true }); writeFileSync(join(partition, "fixed.dmg"), "");
+process.env.TMPDIR = inside;
+const parent = layout.testSandboxParentV1(undefined);
+console.log(mode, parent, parent.startsWith(partition) ? "NESTED-IN-MANAGED-PARENT" : "outside");
+rmSync(base, { recursive: true, force: true });

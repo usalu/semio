@@ -37,7 +37,7 @@ pub type Block5dSnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use crate::text::snapshot::*;
+use crate::text_snapshot::*;
 use semio_s_artifact_block_5d_model::*;
 use semio_s_artifact_block_5d_model::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, BLOCK_5D_SCHEMA};
 use semio_s_plugin_block::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
@@ -64,11 +64,10 @@ impl pack::snapshot::ArtifactDsl for Block5dSnapshot {
     }
 }
 }
-#[cfg(test)] pub use crate::text::snapshot::snapshot_codec::*;
+#[cfg(test)] pub use crate::text_snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use semio_s_artifact_block_5d_schema::*;
 use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
@@ -100,7 +99,7 @@ pub fn empty_block5d_snapshot() -> Block5dSnapshot {
 /// carry identity across examples. Booting on the same fixture the id assertions name keeps the boot
 /// document and its own identity consistent.
 pub fn default_block5d_snapshot() -> Block5dSnapshot {
-    crate::text::snapshot::parse_dsl(crate::text::snapshot::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block5d_snapshot())
+    crate::text_snapshot::parse_dsl(crate::text_snapshot::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block5d_snapshot())
 }
 }
-pub use crate::text::snapshot::snapshot_wire_codec::*;
+pub use crate::text_snapshot::snapshot_wire_codec::*;

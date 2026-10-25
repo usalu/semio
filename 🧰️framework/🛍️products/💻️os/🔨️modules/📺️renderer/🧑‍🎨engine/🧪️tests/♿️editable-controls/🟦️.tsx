@@ -322,7 +322,7 @@ for (const locale of ["en", "de"] as const) for (const order of ["publication-fi
   publish(law.base.value, law.base.revision, 1);
   const i18n = createShellI18nInstance(locale);
   receiptLocales.push(i18n);
-  const view = render(createElement(I18nextProvider, { i18n }, createElement(UiNodeView, { store, id: 1, context })));
+  const view = render(createElement(UiI18nProvider, { instance: i18n }, createElement(UiNodeView, { store, id: 1, context })));
   const control = view.getByRole("textbox", { name: "Cell" }) as HTMLInputElement;
   for (const value of law.queued) { fireEvent.change(control, { target: { value } }); fireEvent.blur(control); }
   const publication = foreign ? law.foreignPublication : law.localPublication;
@@ -360,8 +360,7 @@ for (const locale of ["en", "de"] as const) for (const order of ["publication-fi
   } else expect(intents[1].args.revision).toBe(law.localCompletion.revision);
 });
 
-import { I18nextProvider } from "react-i18next";
-import { createShellI18nInstance, disposeShellI18nInstance } from "@semio-tech/ui-react";
+import { UiI18nProvider, createShellI18nInstance, disposeShellI18nInstance } from "@semio-tech/ui-react";
 const receiptLocales: ReturnType<typeof createShellI18nInstance>[] = [];
 afterEach(() => { for (const instance of receiptLocales.splice(0)) disposeShellI18nInstance(instance); });
 

@@ -1,4 +1,4 @@
-/** 🌳️ Mutation tree
+/** 🌲️ Mutation tree
  *
  * Discovers the mutation leaves and the `#[derive(Mutations)]` aggregates of the repository, walks its Rust sources, and names the owner and artifact scope of a mutation schema.
  */
@@ -38,12 +38,12 @@ function rustValueAttributes(attributes: readonly (readonly RustToken[])[], name
   return pairs;
 }
 
-/** 🦀️ Every `#[derive(… Mutations …)]` enum of one Rust source with its `#[value(...)]` wire layout and variants, read from tokens. */
+/** 📡️ Every `#[derive(… Mutations …)]` enum of one Rust source with its `#[value(...)]` wire layout and variants, read from tokens. */
 export function rustMutationAggregates(path: string, source: string): MutationAggregate[] {
   return rustValueEnums(path, source).filter((candidate) => candidate.mutations);
 }
 
-/** 🦀️ Every enum of one Rust source with its `#[value(...)]` wire layout, variants (with `#[value(rename)]`) and each tuple variant's payload type, read from tokens. */
+/** 🌱️ Every enum of one Rust source with its `#[value(...)]` wire layout, variants (with `#[value(rename)]`) and each tuple variant's payload type, read from tokens. */
 export function rustValueEnums(path: string, source: string): RustValueEnum[] {
   const tokens = rustLex(source);
   const enums: RustValueEnum[] = [];
@@ -140,7 +140,7 @@ export function mutationTree(repoRoot: string, roots: readonly string[] = MUTATI
   return tree;
 }
 
-/** 🗂️ The census owner of a repository path: the plugin under `🔌️plugins`, else the product under `🛍️products`, else the root. */
+/** 🎒️ The census owner of a repository path: the plugin under `🔌️plugins`, else the product under `🛍️products`, else the root. */
 export function mutationPayloadOwner(path: string): string {
   const segments = path.split("/");
   const plugin = segments.indexOf("🔌️plugins");
@@ -167,7 +167,7 @@ export function sharedSegments(left: string, right: string): number {
 //#endregion ⚖️MutationPayloadParity
 
 //#region 🦀️RustSources
-/** 🗂️ The roots the history gates read Rust from: the mutation roots plus the hub compositions. */
+/** 🏠️ The roots the history gates read Rust from: the mutation roots plus the hub compositions. */
 const RUST_SOURCE_ROOTS = [...MUTATION_TREE_ROOTS, "🌎️hub"];
 
 /** 🔎️ Every `.rs` source under `under` whose text `keep` admits, repository-relative and sorted, with its text; build output, generated

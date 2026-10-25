@@ -41,8 +41,72 @@
         "failAvailableMemoryGb",
         "verifyTargetSeconds"
       ],
-      "patternProperties": {
-        "^[a-zA-Z]+$": {
+      "properties": {
+        "minFreeDiskGbCold": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minFreeDiskGbWarm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "abortFreeDiskGb": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minAvailableMemoryGb": {
+          "type": "number",
+          "minimum": 0
+        },
+        "loadWarnPerCore": {
+          "type": "number",
+          "minimum": 0
+        },
+        "heartbeatSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "snapshotSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "snapshotTimeoutSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "staggerSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "terminateGraceSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "deadlineHours": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cliProbeSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "failAvailableMemoryGb": {
+          "type": "number",
+          "minimum": 0
+        },
+        "verifyTargetSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "queueGraceSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "staleRetries": {
+          "type": "number",
+          "minimum": 0
+        },
+        "warmSettleRuns": {
           "type": "number",
           "minimum": 0
         }
@@ -335,7 +399,10 @@
           "then": {
             "required": [
               "args"
-            ]
+            ],
+            "properties": {
+              "args": true
+            }
           }
         },
         {
@@ -349,7 +416,10 @@
           "then": {
             "required": [
               "script"
-            ]
+            ],
+            "properties": {
+              "script": true
+            }
           }
         },
         {
@@ -363,7 +433,10 @@
           "then": {
             "required": [
               "argv"
-            ]
+            ],
+            "properties": {
+              "argv": true
+            }
           }
         }
       ]

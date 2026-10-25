@@ -1,6 +1,6 @@
 /** 🔸️ The artifact bootstrap protocol phase of registerTests1. */
 import type { buildArtifactBootstrapAssemblerState } from "../🔶️artifact-bootstrap-assembler/🟦️.ts";
-import type { ArtifactBootstrapControl, ArtifactBootstrapLimits, ArtifactBootstrapProgress, ServerFrame, TestSource, WireArtifactBootstrap, WireFrontierSummary } from "../🟢️shared/🟦️.ts";
+import type { ArtifactBootstrapControl, ArtifactBootstrapLimits, ArtifactBootstrapProgress, ServerFrame, TestSource, WireArtifactBootstrap, WireFrontierSummary } from "../🟢️harness/🟦️.ts";
 
 /** 🔹 Registers the artifact bootstrap protocol tests of registerTests1. */
 export function registerArtifactBootstrapProtocolTests({ describe, source, it, expect, decodeServerFrame, encodeServerFrame, artifactBootstrapSha256, artifactBootstrapAggregateHash, ArtifactBootstrapAssembler }: Pick<ReturnType<typeof buildArtifactBootstrapAssemblerState>, "describe" | "it" | "expect" | "decodeServerFrame" | "encodeServerFrame" | "artifactBootstrapSha256" | "artifactBootstrapAggregateHash" | "ArtifactBootstrapAssembler"> & { readonly source: TestSource }) {

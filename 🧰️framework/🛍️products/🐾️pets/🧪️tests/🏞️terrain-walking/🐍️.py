@@ -31,6 +31,7 @@ from semio_repo_test import Adapter, Outcome
 
 # region 🔖️Reference
 VECTORS = "shared://🏞️terrain-walking/🔣️.json"
+MENAGERIE = "shared://🧬️schema-conformance/🔣️.json"
 TICKS_PER_SECOND = 64
 AGREEMENT = 1e-12
 STEPPING = 1e-9
@@ -106,6 +107,35 @@ def nearest(lattice, near):
     return answers
 
 
+def boxes(menagerie):
+    """📦️ The body of every species of a menagerie: its width, and its height with the hover of a floater beneath it."""
+    return {species["id"]: {"width": species["size"]["width"], "height": species["size"]["height"] + (species["locomotion"].get("hover", 0) if species["locomotion"]["gait"] == "float" else 0)} for species in menagerie["species"]}
+
+
+def company(lattice, vector, bodies):
+    """🪧️ Who of an order stands together on a ground and what becomes of a troupe of a scene on it: a species joins when the raster of the ground still holds a free run as wide as the widest body, under the clearance of the tallest, for everyone who joined and for it; of those who held a seat the turn before and of the troupe (in this order, as many as the troupe has seats) the species that hold a run alone and are not to be avoided stay, and each other seat goes to the next species of the scene (core, then rotation, none twice, none of the troupe) that holds one, counted from the epoch (``numpy.roll`` of the spare ones). Every question is put to the raster again, nothing of a company is derived."""
+    def room(names):
+        layout = {"width": vector["width"], "height": vector["height"], "clearance": max([0] + [bodies[name]["height"] for name in names]), "minimum": max([0] + [bodies[name]["width"] for name in names]), "surfaces": vector["surfaces"], "keepouts": vector["keepouts"]}
+        return len(perches(lattice, layout)) > 0
+    def alone(name):
+        return name in bodies and name not in vector["avoid"] and room([name])
+    joined = []
+    for name in vector["order"]:
+        if name in bodies and name not in joined and room(joined + [name]):
+            joined.append(name)
+    kept = []
+    for name in vector["holding"] + vector["troupe"]:
+        if len(kept) < len(vector["troupe"]) and name not in kept and alone(name):
+            kept.append(name)
+    spare = []
+    for name in vector["cast"]["core"] + vector["cast"]["rotation"]:
+        if name not in spare and name not in kept and name not in vector["troupe"] and alone(name):
+            spare.append(name)
+    seats = min(len(vector["troupe"]) - len(kept), len(spare))
+    rolled = numpy.roll(numpy.array(spare, dtype=object), -vector["epoch"]).tolist() if spare else []
+    return {"standing": joined, "cast": kept + rolled[:seats]}
+
+
 def strides(walk):
     """👣️ The x after every stated tick of a walk, confirmed by its closed form: ``min(k × step, distance)`` covered towards the goal, the goal itself once it is reached."""
     step = max(walk["speed"], 0) / TICKS_PER_SECOND
@@ -170,6 +200,13 @@ def perch_nearest(ctx):
     return agree("nearest", {near["id"]: nearest(document["lattice"], near) for near in document["nearests"]}, document["nearests"])
 
 
+def company_standing(ctx):
+    """🪧️ The company and the cast of every committed ground."""
+    document = committed(ctx)
+    bodies = boxes(json.loads(ctx.input_bytes(MENAGERIE))["menagerie"])
+    return agree("company", {vector["id"]: company(document["lattice"], vector, bodies) for vector in document["companies"]}, document["companies"])
+
+
 def walking(ctx):
     """🚶️ Every committed walk, tick by tick."""
     walks = committed(ctx)["strides"]
@@ -182,7 +219,7 @@ def walking(ctx):
 # region 🔖️Registration
 def adapter():
     """🧭️ Oracle role only: numpy is the reference, the TypeScript and Rust twins are judged against it."""
-    return Adapter("python").oracle("perches", perch_cutting).oracle("standing", perch_standing).oracle("nearest", perch_nearest).oracle("strides", walking)
+    return Adapter("python").oracle("perches", perch_cutting).oracle("standing", perch_standing).oracle("nearest", perch_nearest).oracle("company", company_standing).oracle("strides", walking)
 
 
 # endregion 🔖️Registration

@@ -172,7 +172,7 @@
       },
       "pin": {
         "format": "json",
-        "file": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
         "pointer": "/go/tool/version"
       },
       "probe": {
@@ -203,7 +203,7 @@
       },
       "pin": {
         "format": "json",
-        "file": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
         "pointer": "/python/tool/version"
       },
       "probe": {
@@ -234,7 +234,7 @@
       },
       "pin": {
         "format": "json",
-        "file": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
         "pointer": "/python/interpreters/main/series"
       },
       "probe": {
@@ -263,7 +263,7 @@
       },
       "pin": {
         "format": "json",
-        "file": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
         "pointer": "/python/interpreters/oracle/series"
       },
       "probe": {
@@ -292,7 +292,7 @@
       },
       "pin": {
         "format": "json",
-        "file": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
         "pointer": "/dotnet/sdk"
       },
       "probe": {
@@ -331,7 +331,7 @@
       },
       "pin": {
         "format": "json",
-        "file": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
         "pointer": "/cmake/cmake/version"
       },
       "probe": {
@@ -362,7 +362,7 @@
       },
       "pin": {
         "format": "json",
-        "file": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🔣️.json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
         "pointer": "/cmake/ninja/version"
       },
       "probe": {
@@ -802,6 +802,10 @@
       "installer": {
         "en": "The pinned installer for {tool} is missing for the host {host}.",
         "de": "Das gepinnte Installationsprogramm für {tool} fehlt für den Host {host}."
+      },
+      "running": {
+        "en": "Running Bun {found} ({path}); pinned Bun {pin}.",
+        "de": "Laufendes Bun {found} ({path}); gepinntes Bun {pin}."
       },
       "runtime": {
         "en": "Warning: the running Bun {found} is not the pinned Bun {pin}; start the repository tools through the repo launcher, which selects the pinned Bun.",

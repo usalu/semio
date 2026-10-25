@@ -7,6 +7,7 @@ use crate::FlowContentChild;
 use framework_schema::ArtifactSchema;
 #[allow(unused_imports)]
 use protocol::{ApplyCapability, MutationApplyResult, MutationDiff};
+use protocol::ColdMutationDiff;
 use crate::standards::v1::subsets::any::schema::diff::*;
 
 #[test]

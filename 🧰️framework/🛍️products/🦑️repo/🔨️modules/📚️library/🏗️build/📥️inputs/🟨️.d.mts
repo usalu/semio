@@ -7,6 +7,10 @@ export function cargoLockInput(manifest:string,workspaceRoot:string):{env:string
 /** 🧵️ Matches portable source globs across admitted native backends. */
 export function buildInputPathMatchesV1(path:string,pattern:string):boolean;
 /** 🧮️ Publishes shared exact-source inventories under original graph writer custody. */
+/** ✂️ Cuts a sorted roster into content-defined chunks (a chunk ends after a path whose digest byte is a multiple of 128 once it holds 16 paths). */
+export function splitInputClosureV1(files:readonly string[]):string[][];
+/** 🕊️ Forgets the in-process memo of captured inventories and verified closure stamps. */
+export function releaseInputMemoryV1():void;
 export function compactSourceInputs(inputs:unknown[],workspaceRoot:string,root?:string):unknown[];
 /** 🧮️ Interns equivalent source coordinates before native hashing. */
 export function deduplicateProjectInputs(inputs:unknown[],root:string):unknown[];

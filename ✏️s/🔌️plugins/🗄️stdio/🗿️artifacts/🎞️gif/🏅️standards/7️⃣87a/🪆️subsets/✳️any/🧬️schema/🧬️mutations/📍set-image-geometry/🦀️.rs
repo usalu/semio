@@ -9,11 +9,11 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-image-geometry")]
 pub struct SetImageGeometry {
-    pub(crate) index: usize,
-    pub(crate) left: u32,
-    pub(crate) top: u32,
-    pub(crate) width: u32,
-    pub(crate) height: u32,
+    pub index: usize,
+    pub left: u32,
+    pub top: u32,
+    pub width: u32,
+    pub height: u32,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetImageGeometry {

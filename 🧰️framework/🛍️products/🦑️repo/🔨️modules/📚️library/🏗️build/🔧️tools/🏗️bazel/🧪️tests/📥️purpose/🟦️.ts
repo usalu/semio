@@ -9,8 +9,9 @@ import{fileURLToPath}from"node:url";
 import {existsSync,constants} from "node:fs";
 import fixture from "../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json";
 import {scriptInvocationEnvironment,checkScriptInvocation,requireIssuedResourceControlInvocationV1,withScriptInvocationSignalV1,acknowledgeScriptInvocationSignalStopV1,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {runBazelTasksV1,withBazelTaskCleanupV1,type BazelTaskRequestV1} from "../../📜️script.ts";
-import type {BuildGraphV1} from "../../../../🕸️graph/🟦️.ts";
+import {runBazelTasksV1,type BazelTaskRequestV1} from "../../📜️script.ts";
+import {withBazelTaskCleanupV1} from "../../🎬️executor/🟦️.ts";
+import type { BuildGraphV1 } from "../../../../🕸️graph/📋️model/🟦️.ts";
 import{withRepositoryNxStorageV1}from"../../../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import{withNxToolingUseV1,nxToolingUseStorageV1}from"@semio-tech/nx-bootstrap-tools/use";
 
@@ -42,7 +43,7 @@ export async function executeBazelLiteralParityV1(root:string,project:string,gra
 export async function executeBazelExpectedFailureV1(root:string,project:string,graph:BuildGraphV1,variant:"cancel"|"parallel-failure"|"refusal-early"|"refusal-ended",original:ScriptInvocation):Promise<never>{
  if(variant==="refusal-early"||variant==="refusal-ended"){await runBazelTasksV1(root,graph,{tasks:["fixture:consumer"],parallel:2},original,createIssuedResourceControlV1(original,"bazel:negative-fixture",0));throw Error("Expected continuous dependency refusal did not occur");}
  if(variant==="parallel-failure"){await runBazelTasksV1(root,graph,{tasks:["fixture:parallel"],parallel:2},original,createIssuedResourceControlV1(original,"bazel:negative-fixture",0));throw Error("Expected parallel task failure did not occur");}
- const cancellation=new AbortController();await withScriptInvocationSignalV1(original,cancellation.signal,async derived=>{const work=runBazelTasksV1(root,graph,{tasks:["fixture:cancelled"],parallel:2},derived,createIssuedResourceControlV1(derived,"bazel:cancellation-fixture",0));let pending=true;void work.finally(()=>{pending=false;}).catch(()=>{});await withBazelTaskCleanupV1(async()=>{while(!existsSync(join(project,"consumer-started.txt"))){checkScriptInvocation(original);if(!pending){await work;throw Error("Cancellation consumer exited before startup");}await original.control.yieldContinuation();await Bun.sleep(10);}cancellation.abort(Error("[DEBUG] Original user cancellation"));await work;},async()=>{cancellation.abort(Error("[DEBUG] Cancellation fixture settled"));await Promise.allSettled([work]);acknowledgeScriptInvocationSignalStopV1(derived);});});throw Error("Expected cancellation task failure did not occur");
+ const cancellation=new AbortController();await withScriptInvocationSignalV1(original,cancellation.signal,async derived=>{const work=runBazelTasksV1(root,graph,{tasks:["fixture:cancelled"],parallel:2},derived,createIssuedResourceControlV1(derived,"bazel:cancellation-fixture",0));let pending=true;void work.finally(()=>{pending=false;}).catch(()=>{});await withBazelTaskCleanupV1(async()=>{while(!existsSync(join(project,"consumer-started.txt"))){checkScriptInvocation(original);if(!pending){await work;throw Error("Cancellation consumer exited before startup");}await original.control.yieldContinuation();await Bun.sleep(10);}cancellation.abort(Error("[TRACE] Original user cancellation"));await work;},async()=>{cancellation.abort(Error("[TRACE] Cancellation fixture settled"));await Promise.allSettled([work]);acknowledgeScriptInvocationSignalStopV1(derived);});});throw Error("Expected cancellation task failure did not occur");
 }
 
 

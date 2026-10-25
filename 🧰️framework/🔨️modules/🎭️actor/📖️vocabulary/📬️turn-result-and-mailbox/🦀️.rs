@@ -88,7 +88,7 @@ impl Usage {
     }
 }
 
-/// 🔁️ What a `GuestRuntime::execute_turn` (packet B1) hands back to the kernel. `ui_patches`/
+/// ⏪️ What a `GuestRuntime::execute_turn` (packet B1) hands back to the kernel. `ui_patches`/
 /// `effects` are opaque pack-encoded `Vec<UiPatch>`/`Vec<Effect>` blobs — see the module seam docstring.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::semio_framework_value")]
@@ -190,7 +190,7 @@ impl TurnResult {
 pub enum Backpressure {
     Accept,
     Coalesced,
-    /// 🐛️ Struct variant, not the newtype `Dropped(Lane)` this used to be. `Lane` itself serializes
+    /// 🗑️ Struct variant, not the newtype `Dropped(Lane)` this used to be. `Lane` itself serializes
     /// fine alone (a plain enum, `#[serde(tag = "kind")]` with unit variants), but wrapping it as a
     /// newtype payload of ANOTHER internally-tagged enum hits the same "cannot serialize tagged
     /// newtype variant" defect as [`Payload::Event`] — the payload type does not matter, only that
@@ -225,7 +225,7 @@ impl Backpressure {
     }
 }
 
-/// 📬️ Bounded ring per actor: one `VecDeque` per lane (so pop honors lane priority for free), a
+/// 📫️ Bounded ring per actor: one `VecDeque` per lane (so pop honors lane priority for free), a
 /// coalescing scan on enqueue, and eviction of the lowest-priority nonempty lane before a hard reject.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::semio_framework_value")]
@@ -260,7 +260,7 @@ impl Mailbox {
         self.len as f32 / self.capacity as f32
     }
 
-    /// 📬️ `latest-wins` coalescing (replaces in place, preserving queue position — coalescing must
+    /// 📍️ `latest-wins` coalescing (replaces in place, preserving queue position — coalescing must
     /// not let a hot key jump the line), then bounded-ring enqueue with lowest-priority eviction.
     pub async fn enqueue(&mut self, envelope: Envelope) -> Backpressure {
         if let Some(key) = envelope.coalesce.clone() {

@@ -244,7 +244,7 @@ pub enum LeaderboardPeriod {
     AllTime,
 }
 
-/// 🗓️ Every [`LeaderboardPeriod`] in the order they are offered.
+/// 📆️ Every [`LeaderboardPeriod`] in the order they are offered.
 pub const LEADERBOARD_PERIODS: [LeaderboardPeriod; 4] = [LeaderboardPeriod::Daily, LeaderboardPeriod::Weekly, LeaderboardPeriod::Monthly, LeaderboardPeriod::AllTime];
 
 /// 🪟️ The time a leaderboard period spans: a run counts when it was submitted at or after `from` and

@@ -36,13 +36,13 @@ pub struct PresenceSession {
     pub actor: String,
     /// 🪟️ Which surface the actor joined from.
     pub surface: String,
-    /// 🎨️ The palette slot leased for the life of the session.
+    /// 🔐️ The palette slot leased for the life of the session.
     pub colour: u8,
     /// 📦️ The last opaque presence payload the actor published, if any.
     pub peer: Option<Vec<u8>>,
 }
 
-/// 👥️ The ephemeral presence registry: who is in which scope, and which of the 256 palette slots
+/// 📚️ The ephemeral presence registry: who is in which scope, and which of the 256 palette slots
 /// each of them holds.
 #[derive(Default)]
 pub struct Presence {
@@ -56,7 +56,7 @@ impl Presence {
         Self::default()
     }
 
-    /// 🎨️ The lowest palette slot not currently held in `scope`, or the actor's existing slot with
+    /// 🖌️ The lowest palette slot not currently held in `scope`, or the actor's existing slot with
     /// one more reference on it. Wraps once all 256 slots are taken.
     pub fn acquire_colour(&self, scope: &str, actor: &str) -> u8 {
         self.colours.mutate_or_default(scope.to_string(), |colours| {
@@ -138,7 +138,7 @@ impl Presence {
 /// actions [`PRESENCE_JOIN`] and [`PRESENCE_PUBLISH`].
 pub const PRESENCE_RESOURCE: &str = "presence";
 
-/// 🚪️ The action admitting a principal into a presence room.
+/// 🎬️ The action admitting a principal into a presence room.
 pub const PRESENCE_JOIN: &str = "join";
 
 /// 📣️ The action admitting a principal to share a state in a presence room.
@@ -150,17 +150,17 @@ pub const PRESENCE_WATCH: &str = "watch";
 /// 🔌️ The websocket subprotocol of the presence socket.
 pub const PRESENCE_PROTOCOL_V1: &str = "semio.presence.v1";
 
-/// 🚫️ The `refused` reason of a client frame larger than [`PresenceSettings::max_state_bytes`].
+/// 🛑️ The `refused` reason of a client frame larger than [`PresenceSettings::max_state_bytes`].
 pub const REFUSED_TOO_LARGE: &str = "state-too-large";
 
-/// 🚫️ The `refused` reason of a frame that is neither a `state` nor a `watch` frame.
+/// ❌️ The `refused` reason of a frame that is neither a `state` nor a `watch` frame.
 pub const REFUSED_INVALID: &str = "frame-invalid";
 
 /// 🚫️ The `refused` reason of a state from a principal policy does not let publish, and — followed
 /// by the scope — of a watch naming a scope policy does not let it watch.
 pub const REFUSED_FORBIDDEN: &str = "forbidden";
 
-/// 🚫️ The `refused` reason of a watch naming more than [`PresenceSettings::max_watch_scopes`] scopes.
+/// 🎛️ The `refused` reason of a watch naming more than [`PresenceSettings::max_watch_scopes`] scopes.
 pub const REFUSED_WATCH_TOO_MANY: &str = "watch-too-many";
 
 /// ⏱️ The knobs of the presence socket. The defaults are the protocol's (design §15).
@@ -178,7 +178,7 @@ pub struct PresenceSettings {
     pub max_states_per_second: u32,
     /// 🏷️ The longest `surface` a session may join with, in characters.
     pub max_surface_chars: usize,
-    /// 👀️ The most scopes one `watch` may name.
+    /// ⌚️ The most scopes one `watch` may name.
     pub max_watch_scopes: usize,
     /// 🐢️ The slowest interval a watcher may ask for; the fastest is [`tick`](Self::tick).
     pub max_watch_interval: Duration,
@@ -200,7 +200,7 @@ pub struct PresenceSettings {
 }
 
 impl PresenceSettings {
-    /// 📏️ The most the presence socket's protocol layer takes of one inbound message: twice the
+    /// 📨️ The most the presence socket's protocol layer takes of one inbound message: twice the
     /// largest state, so a frame somewhat over the limit is still read and answered
     /// [`REFUSED_TOO_LARGE`], while anything larger fails the socket before it is buffered.
     pub fn inbound_bytes(&self) -> usize {
@@ -231,7 +231,7 @@ impl Default for PresenceSettings {
 /// every origin, which is right only where nothing but loopback can reach the process.
 pub type OriginAdmission = Arc<dyn Fn(&str) -> bool + Send + Sync>;
 
-/// 🧍️ One member of a presence room: its session and its entry as every reader is sent it.
+/// 🪪️ One member of a presence room: its session and its entry as every reader is sent it.
 #[derive(Debug)]
 pub struct Member {
     pub session: String,
@@ -338,7 +338,7 @@ impl Room {
         }
     }
 
-    /// 🔎️ The first seat at or after `from` that changed after `clock`.
+    /// ⏩️ The first seat at or after `from` that changed after `clock`.
     pub fn next_changed(&self, from: usize, clock: u64) -> Option<usize> {
         let seats = self.seats.len();
         if from >= seats {
@@ -503,7 +503,7 @@ impl Outflow {
     }
 }
 
-/// 👥️ Every presence room of the instance, keyed by presence lane. Latest-state: a room keeps each
+/// 🗝️ Every presence room of the instance, keyed by presence lane. Latest-state: a room keeps each
 /// session's newest entry only and queues nothing for anybody — a socket reads it through its own
 /// [`RoomReader`]. A room lives while it has a member or a reader.
 pub struct PresenceRooms {
@@ -557,7 +557,7 @@ impl PresenceRooms {
         RoomReader { rooms: Arc::clone(self), lane: lane.to_string(), lead: lead.map(str::to_string), client, changes, seen: 0, target: 0, resume: 0, departures: 0, fresh: true, behind: true }
     }
 
-    /// 🚪️ Add `entry`'s session to a room.
+    /// ➕️ Add `entry`'s session to a room.
     pub fn join(&self, lane: &str, entry: &PresenceEntry) {
         let Some(wire) = wire(entry) else { return };
         self.rooms.mutate_or_default(lane.to_string(), |room| room.seat(Member { session: entry.session.clone(), wire }));
@@ -573,13 +573,13 @@ impl PresenceRooms {
         });
     }
 
-    /// 🚶️ Remove a session and remember its departure.
+    /// 🗑️ Remove a session and remember its departure.
     pub fn leave(&self, lane: &str, session: &str) {
         self.rooms.with_mut(lane, |room| room.is_some_and(|room| room.vacate(session, self.departures_kept)));
         self.rooms.remove_if(lane, Room::deserted);
     }
 
-    /// 📋️ Every member of a room, ordered by session.
+    /// 🔃️ Every member of a room, ordered by session.
     pub fn roster(&self, lane: &str) -> Vec<PresenceEntry> {
         let mut roster: Vec<PresenceEntry> = self.rooms.with(lane, |room| room.map(|room| room.seats.iter().flatten().filter_map(|member| serde_json::from_str(&member.wire).ok()).collect()).unwrap_or_default());
         roster.sort_by(|left, right| left.session.cmp(&right.session));
@@ -773,7 +773,7 @@ impl Page {
         format!(r#"{{"type":"welcome","session":{},"colour":{colour},"roster":[{}]}}"#, quoted(session), self.entries)
     }
 
-    /// 📦️ This page as a `batch` frame.
+    /// 🎞️ This page as a `batch` frame.
     pub fn batch(&self) -> String {
         format!(r#"{{"type":"batch","entries":[{}],"left":[{}]}}"#, self.entries, self.left)
     }
@@ -784,7 +784,7 @@ impl Page {
     }
 }
 
-/// 🚦️ A session's state-frame allowance: at most `limit` frames per one-second window.
+/// 💰️ A session's state-frame allowance: at most `limit` frames per one-second window.
 #[derive(Clone, Copy, Debug)]
 pub struct StateBudget {
     window: Instant,
@@ -793,7 +793,7 @@ pub struct StateBudget {
 }
 
 impl StateBudget {
-    /// 🌱️ A fresh allowance of `limit` frames per second.
+    /// 🌿️ A fresh allowance of `limit` frames per second.
     pub fn new(limit: u32) -> Self {
         Self { window: Instant::now(), spent: 0, limit }
     }
@@ -824,7 +824,7 @@ pub fn admit_frame(text: &str, settings: &PresenceSettings, budget: &mut StateBu
     }
 }
 
-/// 🐢️ The interval a watcher asked for, clamped between [`PresenceSettings::tick`] (a room never
+/// 🗜️ The interval a watcher asked for, clamped between [`PresenceSettings::tick`] (a room never
 /// changes faster) and [`PresenceSettings::max_watch_interval`].
 pub fn watch_interval(interval_ms: u64, settings: &PresenceSettings) -> Duration {
     Duration::from_millis(interval_ms).min(settings.max_watch_interval).max(settings.tick)

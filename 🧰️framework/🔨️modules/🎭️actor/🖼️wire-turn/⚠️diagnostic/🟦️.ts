@@ -86,9 +86,9 @@ export class OperationDiagnosticInbox {
   }
   const diagnostic=await receiver.receive(fragment);return diagnostic?{token:fragment.token,diagnostic}:null;
  }
- /** 🏁️ Admits terminal custody before removing the original operation stream. */
+ /** 🪦️ Admits terminal custody before removing the original operation stream. */
  finish(token:TypedOperationToken):void {const key=this.key(token);if(this.admitting===key)refuse("terminal precedes original stream admission");const receiver=this.streams.get(key);if(receiver){receiver.finish();receiver.cancel();this.streams.delete(key);}}
- /** 🛑️ Receiver loss cancels every original operation independently of any polling call. */
+ /** 📞️ Receiver loss cancels every original operation independently of any polling call. */
  cancelAll():void {this.stopped=true;this.admissionCancelled=true;for(const receiver of this.streams.values())receiver.cancel();this.streams.clear();}
  /** 🧯️ A failed original operation ends its incomplete receiving stream. */
  cancel(token:TypedOperationToken):void {const key=this.key(token);if(this.admitting===key)this.admissionCancelled=true;this.streams.get(key)?.cancel();this.streams.delete(key);}

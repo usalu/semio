@@ -1,9 +1,0 @@
-function orderedLeaseResources(resources:readonly string[]):string[]{
- const policy=leaseOrderPolicyV1();
- return [...resources].sort((left,right)=>classifyLeaseResourceV1(policy,left).rank-classifyLeaseResourceV1(policy,right).rank||(left<right?-1:left>right?1:0));
-}
-function acquireOrdered(options:LeaseOptions&{readonly resources?:unknown}):Promise<ResourceLease>{
- const{resources:_resources,...request}=options;
- if(leaseOrderPolicyV1().fairness.queuedWithResourceLeases&&request.timeoutMs!==0&&request.maximumDatabaseBytes===undefined&&!internalLeaseResource(request.resource)&&!heldLeasesV1(leaseTaskOf(request)).some(row=>row.directory===resolve(request.directory)&&row.resource===request.resource))return acquireQueuedResourceLease({...request,owner:randomBytes(12).toString("hex"),...(request.mode==="shared"?{sharedCohort:true}:{})});
- return acquireResourceLease(request);
-}

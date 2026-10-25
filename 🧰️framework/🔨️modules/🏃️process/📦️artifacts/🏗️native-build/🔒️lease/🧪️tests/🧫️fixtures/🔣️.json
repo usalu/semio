@@ -61,10 +61,10 @@
   ],
   "cases": [
     {
-      "name": "same-profile-builders-parallel",
+      "name": "same-profile-builders-queued",
       "first": "prototype",
       "second": "prototype",
-      "action": "parallel",
+      "action": "release-first",
       "firstAccess": "compile",
       "secondAccess": "compile"
     },
@@ -130,7 +130,7 @@
       "secondBuild": "b",
       "secondTarget": "t",
       "secondAccess": "compile",
-      "action": "parallel"
+      "action": "release-first"
     },
     {
       "name": "target-profile-maintenance",

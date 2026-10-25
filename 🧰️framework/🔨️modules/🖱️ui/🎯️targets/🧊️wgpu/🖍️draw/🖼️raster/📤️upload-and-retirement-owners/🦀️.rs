@@ -17,7 +17,7 @@ pub(super) struct RasterTextureUploadCursor {
 
 #[derive(Clone, Copy)]
 pub enum RasterUploadPixels<'a> {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     Contiguous(&'a [u8]),
     Pages(&'a PreparedRasterPages),
     Scene(&'a crate::raster_ownership::SceneRasterLease),
@@ -26,7 +26,7 @@ pub enum RasterUploadPixels<'a> {
 impl RasterUploadPixels<'_> {
     pub(super) fn len(&self) -> usize {
         match self {
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             Self::Contiguous(pixels) => pixels.len(),
             Self::Pages(pixels) => pixels.byte_len(),
             Self::Scene(lease) => lease.byte_len(),
@@ -35,7 +35,7 @@ impl RasterUploadPixels<'_> {
 
     pub(super) fn dimensions_match(&self, width: u32, height: u32) -> bool {
         match self {
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             Self::Contiguous(_) => true,
             Self::Pages(pixels) => pixels.width() == width && pixels.height() == height,
             Self::Scene(lease) => {
@@ -45,18 +45,20 @@ impl RasterUploadPixels<'_> {
         }
     }
 
-    pub(super) fn content_identity(&self, _width: u32, _height: u32) -> Option<RasterContentIdentity> {
+    #[cfg_attr(not(any(test, feature = "testkit")), allow(unused_variables))]
+    pub(super) fn content_identity(&self, width: u32, height: u32) -> Option<RasterContentIdentity> {
         match self {
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             Self::Contiguous(pixels) => RasterContentIdentity::test_pixels(width, height, pixels),
             Self::Pages(pixels) => Some(pixels.content_identity()),
             Self::Scene(lease) => Some(lease.identity().content()),
         }
     }
 
-    pub(super) fn with_rows<R>(&self, row: u32, _start: usize, _end: usize, _rows: u32, read: impl FnOnce(&[u8], u32) -> R) -> Option<R> {
+    #[cfg_attr(not(any(test, feature = "testkit")), allow(unused_variables))]
+    pub(super) fn with_rows<R>(&self, row: u32, start: usize, end: usize, rows: u32, read: impl FnOnce(&[u8], u32) -> R) -> Option<R> {
         match self {
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             Self::Contiguous(pixels) => pixels.get(start..end).map(|page| read(page, rows)),
             Self::Pages(pixels) => pixels.page_for_row(row).map(|(page, page_rows)| read(page, page_rows)),
             Self::Scene(lease) => lease.with_rows(row, lease.transfer_bytes(), read).ok(),
@@ -66,7 +68,7 @@ impl RasterUploadPixels<'_> {
     pub(super) fn transfer_bytes(&self) -> usize {
         match self {
             Self::Scene(lease) => lease.transfer_bytes(),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             Self::Contiguous(_) => crate::prepared::PREPARED_RASTER_PAGE_BYTES,
             Self::Pages(_) => crate::prepared::PREPARED_RASTER_PAGE_BYTES,
         }
@@ -75,7 +77,7 @@ impl RasterUploadPixels<'_> {
     pub(super) fn release_witness(&self) -> Option<crate::raster_ownership::SceneRasterReleaseWitness> {
         match self {
             Self::Scene(lease) => lease.release_witness(),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             Self::Contiguous(_) => None,
             Self::Pages(_) => None,
         }

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Nx failed run output tail",
+  "description": "Schema-first contract of the output tail of one Nx invocation. Nx does not hand a failed task's output back to its caller, it streams it to the standard output and error of the `nx` process, so the repo adapter keeps the last `maximumTailCharacters` characters of everything that process printed (in arrival order, stdout and stderr together) and, when the invocation failed, classifies that tail like the Bazel lane classifies the tail of a failed action: a task that yielded because its implementation is outdated ends the invocation with the stale implementation error (the outermost command starts again), a task whose inputs were edited while it ran makes the lane run the invocation again (the `build` layer of the churn policy; Nx's own cache makes the rerun execute only the tasks that did not finish).",
+  "definitions": {
+    "Policy": {
+      "description": "Authored numbers. `maximumTailCharacters`: the bounded tail kept per invocation.",
+      "const": {
+        "version": 1,
+        "maximumTailCharacters": 262144
+      }
+    }
+  }
+}

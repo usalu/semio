@@ -97,7 +97,7 @@
   "wire": {
     "originalInputBytes": 88,
     "schedulingBudgetBytes": 34,
-    "emptyTurnGrantBytes": 133
+    "emptyTurnGrantBytes": 193
   },
   "authorityStorage": "borrowedOriginal"
 }

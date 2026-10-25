@@ -176,7 +176,7 @@ fn sought<A: Borrow<Actor>>(stage: &Stage, actors: &[A], kinds: &[&Species], ind
     Point { x: GAZE_AHEAD * actor.facing.sign(), y: 0.0 }
 }
 
-/// 👀️ A mood averts or lowers the gaze without changing its target selection.
+/// 🎯️ A mood averts or lowers the gaze without changing its target selection.
 fn gaze_goal<A: Borrow<Actor>>(stage: &Stage, actors: &[A], kinds: &[&Species], index: usize, now: Ticks) -> Point {
     let actor: &Actor = actors[index].borrow();
     if matches!(actor.activity, Activity::Sleep | Activity::Sulk) {
@@ -378,7 +378,7 @@ fn guards_of(draft: &Draft<'_>, now: Ticks) -> Guards {
     Guards { control: draft.stage.over == Over::Control, scrolled: now - draft.stage.scrolled <= 1, quiet: draft.stage.quiet, still: draft.stage.mode == PetMode::Still }
 }
 
-/// 🌀️ Perched actors recognise pointer gestures before the stage beat.
+/// 🖱️ Perched actors recognise pointer gestures before the stage beat.
 pub fn hovers(draft: &mut Draft<'_>, now: Ticks) {
     let Some(pointer) = draft.stage.pointer.filter(|_| draft.stage.play && draft.stage.press.phase == PressPhase::Idle) else { return; };
     let guards = guards_of(draft, now);

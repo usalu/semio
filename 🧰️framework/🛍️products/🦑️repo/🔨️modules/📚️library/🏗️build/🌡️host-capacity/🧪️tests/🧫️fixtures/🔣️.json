@@ -20,5 +20,25 @@
   {"args": ["run", "x:y", "--", "--parallel=9"], "operation": "run", "jobs": 2, "expect": ["run", "x:y", "--parallel=2", "--", "--parallel=9"]},
   {"args": ["cargo", "--store=shared", "--parallelism=10", "--", "check"], "operation": "cargo", "jobs": 4, "expect": ["cargo", "--store=shared", "--parallelism=4", "--", "check"]},
   {"args": ["run", "x:y", "--parallelism=7"], "operation": "run", "jobs": 2, "expect": ["run", "x:y", "--parallelism=7", "--parallel=2"]}
- ]
+ ],
+  "nativeLaunch": {
+    "free": [
+      ["run", "@semio-tech/repo-dashboard-rs:run"],
+      ["run", "@semio-tech/repo-dashboard-rs:daemon", "--", "status"],
+      ["run", "@semio-tech/repo-dashboard-rs:preferences", "--", "show"]
+    ],
+    "asking": [
+      ["run", "@semio-tech/repo-dashboard-rs:build"],
+      ["run", "@semio-tech/repo-dashboard-rs:test-unit"],
+      ["run", "@semio-tech/repo-dashboard-rs:run", "--graph=x"]
+    ]
+  },
+  "deferred": [
+    {"args": ["dependencies", "ensure"], "deferred": true},
+    {"args": ["dependencies", "sync", "--all"], "deferred": false},
+    {"args": ["dependencies", "lock", "--all"], "deferred": false},
+    {"args": ["run", "@x/y:build"], "deferred": false},
+    {"args": ["show", "projects"], "deferred": false},
+    {"args": ["ensure"], "deferred": false}
+  ]
 }

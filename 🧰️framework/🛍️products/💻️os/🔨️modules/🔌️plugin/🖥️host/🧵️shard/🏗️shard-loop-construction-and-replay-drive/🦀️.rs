@@ -38,6 +38,13 @@ impl ShardLoop {
         self.granted_budgets.get(&actor).map(|turn| &turn.budget)
     }
 
+    /// 💼️ Funds the guest job crossings of `actor` from the Kernel-issued retained turn of its last grant.
+    pub(super) fn job_funds(&self, actor: u64) -> Result<semio_framework_plugin_host_guest_runtime::JobFunds, TurnFault> {
+        let turn = self.granted_budgets.get(&actor).ok_or_else(|| TurnFault::Host(PluginHostError::NativeIo(IssuedShardTurn::refusal("job crossing has no Kernel-issued actor batch"))))?;
+        let loan = semio_framework_actor::OriginalActorTurnLoan { retained_policy: turn.retained_policy, work_fuel: turn.work_fuel, deadline_us: turn.deadline_us };
+        semio_framework_plugin_host_guest_runtime::JobFunds::issued(*turn.original_input(), loan, turn.budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::NativeIo(error)))
+    }
+
     /// 🚦 terra-shard-lane piece 1: true for the two lanes that must jump a shard's queue ahead of
     /// any Background/Maintenance grant — Interactive (direct user input) and UserVisible
     /// (visible-but-not-actively-touched UI). `pump_primed`'s two queues partition on this.
@@ -352,8 +359,9 @@ impl ShardLoop {
                     let seed = self.replay_seeds[index].as_mut().expect("start seed");
                     (seed.job, seed.kind_owner.take().expect("original kind checked out once"), seed.input_owner.take().expect("original input transfers once"))
                 };
+                let funds = self.job_funds(actor);
                 let result = match self.instances.get_mut(&actor) {
-                    Some(instance) => self.runtime.start_job(instance, job, &kind, input).await,
+                    Some(instance) => match funds { Ok(mut funds) => self.runtime.start_job_funded(instance, &mut funds, job, kind.clone(), input).await, Err(fault) => Err(fault) },
                     None => {
                         let seed = self.replay_seeds[index].as_mut().expect("lost start seed");
                         seed.kind_owner = Some(kind);
@@ -524,8 +532,9 @@ impl ShardLoop {
                     let input_bytes = seed.seed.as_ref().expect("retained seed").input_length;
                     (seed.job, kind, input, input_bytes)
                 };
+                let funds = self.job_funds(actor);
                 let result = match self.instances.get_mut(&actor) {
-                    Some(instance) => self.runtime.start_job(instance, job, &kind, input).await,
+                    Some(instance) => match funds { Ok(mut funds) => self.runtime.start_job_funded(instance, &mut funds, job, kind.clone(), input).await, Err(fault) => Err(fault) },
                     None => {
                         let seed = self.replay_seeds[index].as_mut().expect("lost restart seed");
                         seed.replay_kind_owner = Some(kind);

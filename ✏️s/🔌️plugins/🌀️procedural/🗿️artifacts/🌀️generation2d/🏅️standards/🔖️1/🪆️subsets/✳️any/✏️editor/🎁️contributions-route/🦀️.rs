@@ -118,22 +118,8 @@ impl semio_framework::ToolJobFactory for Generation2dContributionsJobFactory {
         generation2d_contributions_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION2D_CONTRIBUTIONS_RAW_BYTES, checkpoint_resume: false);
 
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > GENERATION2D_CONTRIBUTIONS_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("Generation2d contributions command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dContributionsJobFactory {

@@ -2,9 +2,9 @@ import {randomBytes} from "node:crypto";
 import {mkdirSync,readdirSync,readFileSync,renameSync,rmSync,statSync,unlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {homedir,uptime} from "node:os";
 import {isAbsolute,join} from "node:path";
-import {setTimeout as delay} from "node:timers/promises";
+import {beginAdmissionWaitV1,liveChildPidsV1,scriptProcessWaitEpisodeV1,waitingDelayV1 as delay} from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../🔒️leases/🎛️control/🟦️.ts";
-import {describeHostReasonV1,evaluateHostCapacityV1,formatHostCapacityV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,planHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,softHostReasonV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostPlanV1,type HostReasonV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1} from "../📏️decision/🟦️.ts";
+import {decideHostHandoverV1,describeHostHandoverRefusalV1,describeHostReasonV1,evaluateHostCapacityV1,formatHostCapacityV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,planHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,softHostReasonV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostHandoverV1,type HostPlanV1,type HostReasonV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1} from "../📏️decision/🟦️.ts";
 import {currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,type HostSampleRecordV1} from "../📡️sampling/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
@@ -22,12 +22,10 @@ export function hostCapacityDirectoryV1(environment:Readonly<Record<string,strin
 export function newHostCapacityIdV1():string{return randomBytes(16).toString("base64url");}
 
 /** 🎟️ What an admitted operation holds and the environment its children inherit. */
-export type HostCapacityHandleV1=Readonly<{id:string;jobs:number;cpu:number;reservedMegabytes:number;plan:HostPlanV1;inherited:boolean;bypassed:boolean;environment:Readonly<Record<string,string>>}>;
+export type HostCapacityHandleV1=Readonly<{id:string;jobs:number;cpu:number;reservedMegabytes:number;plan:HostPlanV1;inherited:boolean;adopted:boolean;bypassed:boolean;environment:Readonly<Record<string,string>>}>;
 
-/** 🔌️ The ports of one gate: time, process identity, host samples and process-tree observation; tests replace them. */
-export type HostCapacityPortsV1=Readonly<{now?:()=>number;pid?:number;sample?:(previous?:Readonly<{atMs:number;swappedOutMegabytes:number|null}>)=>Promise<HostSampleRecordV1>;observe?:(pid:number)=>Promise<number|null>}>;
-/** ⚙️ Everything one admission needs. */
-export type HostCapacityOptionsV1=HostCapacityPortsV1&Readonly<{directory:string;policy:HostCapacityPolicyV1;request:HostRequestV1;control:ResourceLeaseControl;environment?:Readonly<Record<string,string|undefined>>;write?:(line:string)=>void;session?:Readonly<{address:string;weight:number}>}>;
+import type {HostCapacityOptionsV1,HostCapacityPortsV1,HostLedgerPrimitivesV1,HostProcessIdentityV1} from "./📋️contract/🟦️.ts";
+export type {HostCapacityOptionsV1,HostCapacityPortsV1,HostLedgerPrimitivesV1,HostProcessIdentityV1} from "./📋️contract/🟦️.ts";
 /** 📋️ What the gate currently knows. */
 export type HostCapacityStatusV1=Readonly<{host:HostSampleV1;grants:readonly HostGrantV1[];waiters:readonly HostWaiterV1[];evaluation:HostEvaluationV1}>;
 
@@ -112,19 +110,22 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
  if(!policy.enabled||environment[protocol.switchEnvironment]==="off"){
   if(policy.enabled)write(formatHostCapacityV1(language,"bypassed",{switch:protocol.switchEnvironment}));
   const plan=planHostCapacityV1(policy,{totalMegabytes:1048576},request,request.preferredJobs);
-  return body(Object.freeze({id:request.id,jobs:plan.jobs,cpu:plan.cpu,reservedMegabytes:0,plan,inherited:false,bypassed:true,environment:Object.freeze({})}));
+  return body(Object.freeze({id:request.id,jobs:plan.jobs,cpu:plan.cpu,reservedMegabytes:0,plan,inherited:false,adopted:false,bypassed:true,environment:Object.freeze({})}));
  }
  const inheritedId=environment[protocol.grantEnvironment];
  if(inheritedId!==undefined&&!new RegExp(schema.definitions.Grant.properties.id.pattern,"u").test(inheritedId))throw hostCapacityErrorV1("inheritedIdentifier",{},environment);
  const directory=prepare(options.directory),inheritedPath=inheritedId?grantPath(directory,inheritedId):undefined,inherited=inheritedPath?readJson(inheritedPath):undefined,at=now();
  if(inheritedPath&&isCurrentHostGrantV1({grant:inherited,expectedId:inheritedId,pidAlive:isHostCapacityV1("Grant",inherited)&&alive((inherited as HostGrantV1).pid),nowMs:at,bootAtMs:bootAt(at),modifiedAtMs:modified(inheritedPath)},policy)){
   const grant=inherited as HostGrantV1,carried=readHostCapacityPlanV1(environment),plan=carried?.id===grant.id?carried:requireHostCapacityV1<HostPlanV1>("Plan",{version:1,id:grant.id,jobs:grant.jobs,cpu:grant.cpu,memoryMegabytes:grant.reservedMegabytes,fixedMegabytes:0,floorMegabytes:0});
-  return body(Object.freeze({id:grant.id,jobs:grant.jobs,cpu:grant.cpu,reservedMegabytes:grant.reservedMegabytes,plan,inherited:true,bypassed:false,environment:Object.freeze({[protocol.grantEnvironment]:grant.id,[protocol.planEnvironment]:JSON.stringify(plan)})}));
+  return body(Object.freeze({id:grant.id,jobs:grant.jobs,cpu:grant.cpu,reservedMegabytes:grant.reservedMegabytes,plan,inherited:true,adopted:false,bypassed:false,environment:Object.freeze({[protocol.grantEnvironment]:grant.id,[protocol.planEnvironment]:JSON.stringify(plan)})}));
  }
+ const offered=environment[protocol.handoverEnvironment];
+ if(offered!==undefined){const claimed=await(await import("./🤝️handover/🟦️.ts")).claimHostGrantHandoverV1(custody(),options,directory,offered,request,language,now,pid);if(claimed)return holdHostGrantV1(options,claimed,undefined,request,directory,pid,body);}
  if(names(directory,"queue").length>=policy.wait.maximumWaiters)throw Error(schema.definitions.Messages.const[language].errors.queueFull);
  const arrivedAtMs=now(),waiterPath=queuePath(directory,arrivedAtMs,request.id),record:HostWaiterV1={request,arrivedAtMs,pid,...options.session===undefined?{}:{session:options.session.address,weight:options.session.weight}};
  writeJson(waiterPath,record);
  let grant:HostGrantV1|undefined,admittedHost:HostSampleV1|undefined,lastProgress=-Infinity;
+ const endAdmissionWait=beginAdmissionWaitV1();
  try{
   while(!grant){
    checkResourceLeaseControl(options.control);
@@ -152,19 +153,45 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
    const budget=checkResourceLeaseControl(options.control);
    try{await delay(Math.max(1,Math.min(policy.wait.pollMilliseconds*(0.75+Math.random()*0.5),budget??Infinity)),undefined,{signal:options.control.signal});}catch(error){throw options.control.signal.aborted?options.control.signal.reason:error;}
   }
- }catch(error){remove(waiterPath);throw error;}
- const held=grant!,path=grantPath(directory,held.id),plan=planHostCapacityV1(policy,admittedHost!,request,held.jobs);
- let holding=true;
- const cleanup=()=>{holding=false;try{unlinkSync(path);}catch{}};
- process.once("exit",cleanup);
- const timer=setInterval(()=>{void(options.observe??observeTreeMegabytesV1)(pid).then(observed=>{if(holding&&observed!==null)writeJson(path,{...held,observedMegabytes:observed});}).catch(()=>undefined);},policy.wait.heartbeatMilliseconds);
- timer.unref();
- try{
-  return await body(Object.freeze({id:held.id,jobs:held.jobs,cpu:held.cpu,reservedMegabytes:held.reservedMegabytes,plan,inherited:false,bypassed:false,environment:Object.freeze({[protocol.grantEnvironment]:held.id,[protocol.planEnvironment]:JSON.stringify(plan)})}));
- }finally{clearInterval(timer);process.removeListener("exit",cleanup);cleanup();}
+ }catch(error){remove(waiterPath);throw error;}finally{endAdmissionWait();}
+ return holdHostGrantV1(options,grant!,admittedHost!,request,directory,pid,body);
 }
 
-/** 📋️ Reads the gate without joining its queue: the sample, the live grants, the waiters and what the next request would get. */
+const custody=():HostLedgerPrimitivesV1=>Object.freeze({protocol,takeLock,grantPath,readJson,writeJson,remove,alive,bootAt,modified,delay,checkResourceLeaseControl});
+
+/** 🔐️ Holds one admitted grant while its body runs: heartbeats what the process tree holds, lends the reservation while the process only waits in a queue, gives the reservation back when the body ends (or keeps it parked when the body failed in a way a restart cures and the caller says so). An adopted grant carries the plan its owner admitted. */
+async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1,admittedHost:HostSampleV1|undefined,request:HostRequestV1,directory:string,pid:number,body:(handle:HostCapacityHandleV1)=>Promise<T>):Promise<T>{
+ const policy=options.policy,now=options.now??Date.now,environment=options.environment??process.env,path=grantPath(directory,held.id),adopted=admittedHost===undefined,carried=adopted?readHostCapacityPlanV1(environment):undefined;
+ const plan=adopted?carried?.id===held.id?carried:requireHostCapacityV1<HostPlanV1>("Plan",{version:1,id:held.id,jobs:held.jobs,cpu:held.cpu,memoryMegabytes:held.reservedMegabytes,fixedMegabytes:0,floorMegabytes:0}):planHostCapacityV1(policy,admittedHost!,request,held.jobs);
+ let holding=true,state:HostGrantV1=held,childless=false,checkedChildren=-Infinity,parked=false;
+ const cleanup=()=>{holding=false;try{unlinkSync(path);}catch{}};
+ process.once("exit",cleanup);
+ const publish=(next:HostGrantV1):void=>{state=next;if(holding)writeJson(path,state);};
+ const timer=setInterval(()=>{void(options.observe??observeTreeMegabytesV1)(pid).then(observed=>{if(holding&&observed!==null)publish({...state,observedMegabytes:observed});}).catch(()=>undefined);},policy.wait.heartbeatMilliseconds);
+ const lender=setInterval(()=>{
+  try{
+   const at=now(),episode=(options.waited??scriptProcessWaitEpisodeV1)(at),lent=state.lentSinceMs!==undefined;
+   if(episode===0)checkedChildren=-Infinity;
+   if(lent&&episode===0){const{lentSinceMs:_,...rest}=state;publish({...rest,resumedAtMs:at});return;}
+   if(Math.min(episode,at-(state.resumedAtMs??state.admittedAtMs))<policy.wait.lendAfterMilliseconds&&!lent)return;
+   if(at-checkedChildren>=policy.wait.heartbeatMilliseconds){checkedChildren=at;childless=((options.children??liveChildPidsV1)(pid)?.length??1)===0;}
+   if(!lent&&childless)publish({...state,lentSinceMs:at});
+   else if(lent&&!childless){const{lentSinceMs:_,...rest}=state;publish({...rest,resumedAtMs:at});}
+  }catch{}
+ },policy.wait.pollMilliseconds);
+ timer.unref();lender.unref();
+ try{
+  return await body(Object.freeze({id:held.id,jobs:held.jobs,cpu:held.cpu,reservedMegabytes:held.reservedMegabytes,plan,inherited:false,adopted,bypassed:false,environment:Object.freeze({[protocol.grantEnvironment]:held.id,[protocol.planEnvironment]:JSON.stringify(plan)})}));
+ }catch(error){
+  try{parked=options.park!==undefined&&await options.park(error);}catch{parked=false;}
+  throw error;
+ }finally{
+  clearInterval(timer);clearInterval(lender);process.removeListener("exit",cleanup);
+  if(parked)try{await(await import("./🤝️handover/🟦️.ts")).parkHostGrantV1(custody(),{options,path,state,plan,pid,now,language:resolveHostCapacityLanguageV1(environment)});holding=false;}catch{cleanup();}else cleanup();
+ }
+}
+
+/** 🚥️ Reads the gate without joining its queue: the sample, the live grants, the waiters and what the next request would get. */
 export async function readHostCapacityStatusV1(options:HostCapacityPortsV1&Readonly<{directory:string;policy:HostCapacityPolicyV1;control:ResourceLeaseControl}>):Promise<HostCapacityStatusV1>{
  const now=options.now??Date.now,directory=prepare(options.directory),host=await currentSample(directory,options.policy,options.control,options),grants=readGrants(directory,now(),options.policy),waiters=readWaiters(directory,now(),options.policy);
  return Object.freeze({host,grants,waiters,evaluation:evaluateHostCapacityV1(options.policy,host,grants,waiters,now())});

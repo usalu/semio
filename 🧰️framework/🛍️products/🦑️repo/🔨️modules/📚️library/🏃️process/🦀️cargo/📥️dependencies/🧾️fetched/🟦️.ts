@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {posix,resolve,sep} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import { runtimeParseTomlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 const protocol=Object.freeze({...schema.definitions.Protocol.const});
 const digestOf=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
@@ -53,7 +53,7 @@ export function fetchedRegistryStampsV1(home:string,port:FetchedPortV1,packages:
  return Object.freeze({digest:digestOf(Buffer.from(JSON.stringify(rows))),count:rows.length});
 }
 
-/** 🧾️ Builds the receipt after a successful locked fetch; refuses any lockfile that is not purely registry-sourced. */
+/** ⏺️ Builds the receipt after a successful locked fetch; refuses any lockfile that is not purely registry-sourced. */
 export async function captureFetchedV1(input:Readonly<{request:string;manifests:readonly string[];home:string}>,port:FetchedPortV1):Promise<FetchedReceiptV1|undefined>{
  const paths=new Set<string>();
  for(const manifest of input.manifests){const lock=await fetchedLockPathV1(manifest,port.read);if(!lock)return undefined;paths.add(lock);}

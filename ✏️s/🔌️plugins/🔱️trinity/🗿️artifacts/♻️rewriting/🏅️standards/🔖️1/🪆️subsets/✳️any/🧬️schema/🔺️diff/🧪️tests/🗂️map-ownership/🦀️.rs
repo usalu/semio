@@ -2,6 +2,7 @@ use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use protocol::{ColdMutation, Mutation, MutationDiff};
+use protocol::ColdMutationDiff;
 
 /// 🗂️ Each persisted map edit preserves null and removal as distinct operations.
 #[semio_framework_async_macros::async_test]

@@ -18,8 +18,18 @@ pub struct SSpaceDiff {
 }
 
 protocol::list_delta! {
-    pub SSpaceArtifactsDelta { removal: SSpaceArtifactsRemoval, insertion: SSpaceArtifactsInsertion, relocation: SSpaceArtifactsRelocation, modification: SSpaceArtifactsModification, row: SpaceArtifactRow, patch: SSpaceArtifactPatch, key: id, values_only }
+    pub SSpaceArtifactsDelta { removal: SSpaceArtifactsRemoval, insertion: SSpaceArtifactsInsertion, relocation: SSpaceArtifactsRelocation, modification: SSpaceArtifactsModification, row: SpaceArtifactRow, patch: SSpaceArtifactPatch, list: Vec<SpaceArtifactRow>, key: String = by SSpaceArtifactsKeys, values_only }
 }
+
+/// 🔑️ Keys the foreign `SpaceArtifactRow` rows of their list delta.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SSpaceArtifactsKeys;
+
+impl protocol::list_delta::KeyOf<SpaceArtifactRow> for SSpaceArtifactsKeys {
+    type Key = String;
+    fn key_of(row: &SpaceArtifactRow) -> String { row.id.clone() }
+}
+
 
 /// 🩹 Field patch of one artifact row; every present slot is the new value of exactly that field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]

@@ -7,7 +7,7 @@ extern crate semio_framework_os_kernel as store;
 use semio_s_artifact_cad_cad_model::CadArtifact;
 use semio_s_artifact_cad_cad_model_diff::CadDiff;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 use semio_framework_os_kernel::{DiffBinary, DiffText};
 
 #[test]

@@ -508,7 +508,7 @@ function scrubInput(json: Json): T.ScrubInput<unknown> {
 
 const scrubClock = (physical: number): T.ToolClock => ({ actor: 0, physical_ms: physical, logical: 0 });
 
-/** 🎛️ The xstate oracle of the scrub chart: guard `sameGesture`, actions logging yields, an independent `Map` transaction, the rest law, host cancels re-entering the initial snapshot, and the capture of another press as a host cancel first. */
+/** 🔮️ The xstate oracle of the scrub chart: guard `sameGesture`, actions logging yields, an independent `Map` transaction, the rest law, host cancels re-entering the initial snapshot, and the capture of another press as a host cancel first. */
 class ScrubOracle {
   readonly #machine;
   #snapshot: AnyMachineSnapshot;

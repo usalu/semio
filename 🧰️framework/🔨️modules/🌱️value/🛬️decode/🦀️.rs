@@ -45,9 +45,9 @@ impl<'a> NativeDecodeControl<'a> {
 
     /// 🪪️ Names the one cumulative ownership ledger shared by this decoder and every scoped child.
     pub fn ledger_identity(&self)->u64{self.ledger}
-    /// 🪪️ Names the one cancellation callback shared by this decoder and every scoped child.
+    /// 🔑️ Names the one cancellation callback shared by this decoder and every scoped child.
     pub fn callback_identity(&self)->usize{std::ptr::from_ref(&*self.callback).cast::<()>() as usize}
-    /// 🪪️ Names the installed explicit recipient, if any, without borrowing its owner.
+    /// 👤️ Names the installed explicit recipient, if any, without borrowing its owner.
     pub fn retirement_recipient_identity(&self)->Option<u64>{self.retirement.as_ref().map(|recipient|recipient.identity)}
     /// 🧬️ Lends the same ledger, callback and stage to a nested decoder that retires into its own explicit recipient.
     pub fn with_retirement_child<T,E:From<ValueError>>(&mut self,recipient:&mut NativeDecodeRetirementRecipient,operation:impl FnOnce(&mut NativeDecodeControl<'_>)->Result<T,E>)->Result<T,E>{child::run(self,recipient,operation)}
@@ -64,7 +64,7 @@ impl<'a> NativeDecodeControl<'a> {
         self.checkpoint()?;self.charge(capacity)?;self.retirement.as_mut().unwrap().close_step(grant)
     }
 
-    /// 🫴️ Installs one explicit caller recipient before any retained decoder ownership is created.
+    /// 🆕️ Installs one explicit caller recipient before any retained decoder ownership is created.
     pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeDecodeRetirementRecipient)->Result<(),ValueError>{
         if self.retirement.is_some()||!recipient.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native decode requires one empty explicit retirement recipient"));}
         self.retirement=Some(recipient);Ok(())
@@ -115,7 +115,7 @@ impl<'a> NativeDecodeControl<'a> {
     pub fn checkpoint(&mut self)->Result<(),ValueError> { let owned_bytes=self.owned_bytes();if(self.callback)(NativeDecodeProgress{completed:self.completed,total:self.total,owned_bytes}){self.started=true;Ok(())}else{Err(ValueError::literal(ValueRefusalKind::Canceled, "native decoding canceled"))} }
     /// 🧭️ Begins a known stage workload while retaining every previously admitted byte.
     pub fn begin_stage(&mut self,total:usize)->Result<(),ValueError>{self.stage=self.stage.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "native decoding stage overflow"))?;self.completed=0;self.total=total;self.started=false;self.checkpoint()}
-    /// 🪆️ Restores a parent workload after a child begins its own stage, preserving cumulative ownership.
+    /// 🎪️ Restores a parent workload after a child begins its own stage, preserving cumulative ownership.
     pub fn scoped_stage<T,E>(&mut self,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{
         let parent=(self.completed,self.total,self.started,self.stage);let scope=StageScope{control:self,parent};operation(&mut *scope.control)
     }
@@ -146,21 +146,21 @@ impl<'a> NativeDecodeControl<'a> {
         let mut output=String::new();output.try_reserve_exact(text.len()).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native decoding text allocation failed"))?;
         let mut position=0;while position<text.len(){let mut end=position.saturating_add(65536).min(text.len());while !text.is_char_boundary(end){end-=1;}output.push_str(&text[position..end]);position=end;self.copy_checkpoint(position,text.len())?;}Ok(output)
     }
-    /// 🧵️ Preserves the caller's original UTF8 destination and each cancellable copied prefix.
+    /// 🦜️ Preserves the caller's original UTF8 destination and each cancellable copied prefix.
     pub fn copy_text_into(&mut self,text:&str,output:&mut String)->Result<(),ValueError>{
         if !output.is_empty()||output.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native copied text slot must be empty"))}
         self.charge(text.len())?;self.copy_checkpoint(0,text.len())?;
         output.try_reserve_exact(text.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native decoding text allocation failed"))?;
         let mut position=0;while position<text.len(){let mut end=position.saturating_add(65536).min(text.len());while !text.is_char_boundary(end){end-=1;}output.push_str(&text[position..end]);position=end;self.copy_checkpoint(position,text.len())?;}Ok(())
     }
-    /// 🫴️ Copies into the caller's original slot so cancellation retains every born buffer.
+    /// 🪞️ Copies into the caller's original slot so cancellation retains every born buffer.
     pub fn copy_bytes_into(&mut self,bytes:&[u8],output:&mut Vec<u8>)->Result<(),ValueError>{
         if !output.is_empty()||output.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native copied buffer slot must be empty"))}
         self.charge(bytes.len())?;self.copy_checkpoint(0,bytes.len())?;
         output.try_reserve_exact(bytes.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native decoding collection allocation failed"))?;
         for chunk in bytes.chunks(65536){output.extend_from_slice(chunk);self.copy_checkpoint(output.len(),bytes.len())?;}Ok(())
     }
-    /// 🧬️ Copies intrinsic octets in cancellable64KiB spans after complete ownership admission.
+    /// 🔒️ Copies intrinsic octets in cancellable64KiB spans after complete ownership admission.
     pub fn copy_bytes(&mut self,bytes:&[u8])->Result<Vec<u8>,ValueError> {
         self.charge(bytes.len())?;self.copy_checkpoint(0,bytes.len())?;
         let mut output=Vec::new();output.try_reserve_exact(bytes.len()).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native decoding collection allocation failed"))?;

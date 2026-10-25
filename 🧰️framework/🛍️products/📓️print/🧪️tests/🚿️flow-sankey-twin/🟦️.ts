@@ -63,7 +63,7 @@ function oracle(id: string): (ctx: AdapterContext) => AdapterOutcome | Promise<A
 // #endregion 🧫️Vectors
 
 // #region 🎯️Subject
-/** 🎯️ The twin's `vizSankey`, in the same unit extent and with the same four alignments. */
+/** 🪞️ The twin's `vizSankey`, in the same unit extent and with the same four alignments. */
 function twinProjection(ctx: AdapterContext): { projection: Record<string, number[]> } {
   const nodes = nodeIds(ctx).map((id) => ({ name: id }));
   const links = rows(ctx).map((row) => ({ source: row.source!, target: row.target!, value: Number(row.value) }));

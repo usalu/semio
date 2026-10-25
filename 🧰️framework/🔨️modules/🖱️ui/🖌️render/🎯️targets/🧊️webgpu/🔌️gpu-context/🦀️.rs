@@ -22,7 +22,7 @@ pub(crate) fn surface_format_marker(format: wgpu::TextureFormat) -> Option<Surfa
     }
 }
 
-/// 🎨️ Picks the base (non-srgb) surface format the same way `gpu.rs` did — the swapchain texture
+/// 🎚️ Picks the base (non-srgb) surface format the same way `gpu.rs` did — the swapchain texture
 /// itself stays in this format; a per-frame view reinterprets it as [`srgb_view_format`] for
 /// hardware-correct blending. Falls back to whatever the surface offers first if every format is srgb.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

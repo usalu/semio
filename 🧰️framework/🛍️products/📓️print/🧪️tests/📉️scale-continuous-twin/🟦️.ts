@@ -59,7 +59,7 @@ export default defineTestAdapter({
     },
     log: {
       oracle: oracle("log"),
-      /** 🎯️ The twin's logarithmic scale and its decade ticks. */
+      /** 🪵️ The twin's logarithmic scale and its decade ticks. */
       subject: () => {
         const lg = scaleLog([1, 1000], [0, 300]);
         const small = scaleLog([0.001, 1], [0, 100]);
@@ -75,7 +75,7 @@ export default defineTestAdapter({
     },
     pow: {
       oracle: oracle("pow"),
-      /** 🎯️ The twin's power and square-root scales. */
+      /** 🔋️ The twin's power and square-root scales. */
       subject: () => {
         const pw = scalePow([0, 10], [0, 100], { exponent: 2 });
         const half = scalePow([0, 16], [0, 64], { exponent: 0.5 });
@@ -93,7 +93,7 @@ export default defineTestAdapter({
     },
     symlog: {
       oracle: oracle("symlog"),
-      /** 🎯️ The twin's symmetric-logarithmic scale at two linear-region constants. */
+      /** ⚖️ The twin's symmetric-logarithmic scale at two linear-region constants. */
       subject: () => {
         const sl = scaleSymlog([-100, 100], [0, 200]);
         const constant = scaleSymlog([-100, 100], [0, 200], { constant: 10 });
@@ -109,7 +109,7 @@ export default defineTestAdapter({
     },
     nice: {
       oracle: oracle("nice"),
-      /** 🎯️ The domains the twin's `niceDomain` rounds four raw domains onto. */
+      /** 🪞️ The domains the twin's `niceDomain` rounds four raw domains onto. */
       subject: () => ({
         projection: {
           "nice/n1": grid(niceDomain([0.1, 0.9], 10)),

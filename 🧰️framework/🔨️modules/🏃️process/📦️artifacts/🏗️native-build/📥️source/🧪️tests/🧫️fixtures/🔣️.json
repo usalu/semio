@@ -303,7 +303,7 @@
       "cfg": [],
       "entry": "lib.rs",
       "files": {
-        "lib.rs": "mod inline { pub fn f() -> S { let s = S { a: 1, #[cfg(test)] owner: 2 }; s } mod child; }",
+        "lib.rs": "mod inline { pub struct S { pub a: i32, #[cfg(test)] pub owner: i32 } pub fn f() -> S { let s = S { a: 1, #[cfg(test)] owner: 2 }; s } mod child; }",
         "inline/child.rs": "pub struct Child;"
       },
       "expected": [
@@ -324,7 +324,7 @@
       ],
       "entry": "lib.rs",
       "files": {
-        "lib.rs": "mod inline { pub fn sync(file: &File) -> Res { #[cfg(not(feature = \"durable\"))] file.sync_all().map_err(io_err) } mod child; }",
+        "lib.rs": "mod inline { use std::fs::File; type Res = std::io::Result<()>; fn io_err(error: std::io::Error) -> std::io::Error { error } pub fn sync(file: &File) -> Res { #[cfg(not(feature = \"durable\"))] file.sync_all().map_err(io_err) } mod child; }",
         "inline/child.rs": "pub struct Child;"
       },
       "expected": [

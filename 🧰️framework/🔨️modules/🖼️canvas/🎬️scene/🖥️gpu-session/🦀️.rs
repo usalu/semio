@@ -23,7 +23,7 @@ impl CanvasGpuSession {
         self.surface.is_some()
     }
 
-    /// 🖥️ WebGPU surface bring-up; returns `String` (not `CanvasError`) because every call site is a wasm-bindgen boundary fn that immediately erases the error into a `JsValue` for JS — see `render_frame` below for the same convention.
+    /// 🆕️ WebGPU surface bring-up; returns `String` (not `CanvasError`) because every call site is a wasm-bindgen boundary fn that immediately erases the error into a `JsValue` for JS — see `render_frame` below for the same convention.
     ///
     /// The adapter is acquired BEFORE the canvas is touched, and that order is the contract, not
     /// a preference: `Instance::create_surface` binds a `webgpu` context to the element, a canvas

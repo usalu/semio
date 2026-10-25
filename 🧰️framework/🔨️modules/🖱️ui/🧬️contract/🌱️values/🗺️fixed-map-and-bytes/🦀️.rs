@@ -265,7 +265,7 @@ impl<'de> Deserialize<'de> for UiFixedBytes {
     }
 }
 
-/// 🌱️ Hand-written, not derived. `serde_json`'s `serialize_bytes` (the format this `Serialize` impl
+/// 🧬️ Hand-written, not derived. `serde_json`'s `serialize_bytes` (the format this `Serialize` impl
 /// runs under on every JSON-speaking caller) has no native bytes type and falls back to a plain
 /// `Number` array — mirrored here byte for byte so `to_value`/`from_value` round-trip the SAME wire
 /// shape as `serde_json::to_value`/`from_value` do. Ticket

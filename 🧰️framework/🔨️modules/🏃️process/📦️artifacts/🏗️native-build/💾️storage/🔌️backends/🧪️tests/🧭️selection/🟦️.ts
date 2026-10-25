@@ -25,7 +25,7 @@ test("the declared backends validate against their schema, the vocabularies matc
 });
 
 test("the selection table gives the same answer in TypeScript and in the independent Python oracle",()=>{
- const run=spawnSync("python3",["-I",join(import.meta.dir,"🐍️oracle.py"),resolve(import.meta.dir,"../../🧬️schema/🔣️.json"),resolve(import.meta.dir,"🧫️fixtures/🔣️.json")],{encoding:"utf8"});
+ const run=spawnSync("python3",["-I",join(import.meta.dir,"🐍️.py"),resolve(import.meta.dir,"../../🧬️schema/🔣️.json"),resolve(import.meta.dir,"🧫️fixtures/🔣️.json")],{encoding:"utf8"});
  expect(run.status,run.stderr).toBe(0);
  const oracle=JSON.parse(run.stdout) as Record<string,string>;
  for(const row of fixture.rows){

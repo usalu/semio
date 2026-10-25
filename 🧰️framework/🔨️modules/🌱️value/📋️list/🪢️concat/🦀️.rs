@@ -38,7 +38,7 @@ impl<T:RetireOwned> OriginalVectorConcat<T>{
   let mut output=Vec::new();output.try_reserve_exact(self.total).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original concatenated output reservation refused"))?;
   let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:output.capacity().checked_mul(size_of::<T>()).ok_or_else(invalid)?,..Default::default()};*self.output=Some(output);self.phase=1;Ok(RetainedCloneStep::Progress(progress))
  }
- /// 📏️ Each turn prices the actual ranked chunk and one original payload header.
+ /// 🎒️ Each turn prices the actual ranked chunk and one original payload header.
  pub fn demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing||self.phase!=1{return Err(invalid());}
   let Some(chunk)=self.chunks.get(self.index)else{return Ok(Self::scalar());};

@@ -13,8 +13,8 @@ import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { orchestratorBudgetOpts } from "../../../🏃️process/🟦️.ts";
 import { wasmBindgenVersion } from "../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
 import { wasmBuildEnvironment } from "../../../🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
-import { BundleScript, checkScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { captureOwnedCommandV1, resolveTypescriptCompilerV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { BundleScript, checkScriptInvocation, scriptInvocationEnvironment, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import plugin, { cacheInternals } from "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 import { stageRepositoryArtifacts } from "../../📦️artifacts/🟦️.ts";
 import { acquireQueuedResourceLease } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -75,60 +75,15 @@ async function testWorkspaceOwnership(invocation: ScriptInvocation, root: string
   if(!/\b[1-9][0-9]* pass\b/u.test(transcript))throw new Error("Original Bun test owner did not report completed tests");
 }
 
-/** 🧪️ Routes the full cache suite, the focused portable command-source contract or the build-dir provenance laws. */
+/** 📜️ Routes the function proofs that no test file carries (the declared `codeSuites` of the route table) and the full cache contract suite; every test file is routed by `🗂️suites`. */
 export class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     await withRepositoryTestArtifactsV1(this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cache:tests",0),actualPhase=>this.runTests(args,repositoryTestArtifactEnvironmentV1(this.repoRoot,scriptInvocationEnvironment(this.invocation,process.env)),actualPhase));
   }
-  private async runBunTests(args:readonly string[],budgetMs:number,environment:NodeJS.ProcessEnv,phaseControl:ResourceLeaseControl):Promise<void>{
-    process.stdout.write(await captureOwnedCommandV1(process.execPath,args,this.repoRoot,{control:createRequestedIssuedResourceControlV1(phaseControl,budgetMs),env:environment,output:{maximumBytes:16777216,maximumLines:65536}}));
-  }
   private async runTests(args:string[],environment:NodeJS.ProcessEnv,phaseControl:ResourceLeaseControl):Promise<void>{
-    if(args[0]==="playground-preparation-source"){
-      if(args.length!==1)throw new Error("Expected test playground-preparation-source");
-      const source=join(SCRIPT_ROOT,"🧪️tests/🎮️playground-preparation/🧪️tests/🟦️.ts"),budget=scriptInvocationBudget(this.invocation,120000);
-      await this.runBunTests([resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowJs","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun,node",source],budget,environment,phaseControl);
-      await this.runBunTests(["test","--timeout",String(scriptInvocationBudget(this.invocation,budget)),source],scriptInvocationBudget(this.invocation,budget),environment,phaseControl);return;
-    }
-    if(args[0]==="bootstrap-original-invocation"){
-      if(args.length!==1)throw new Error("Expected test bootstrap-original-invocation");
-      const source=join(SCRIPT_ROOT,"🚀️bootstrap/📥️invocation/🧪️tests/🟦️.ts"),budget=scriptInvocationBudget(this.invocation,120000);
-      await this.runBunTests([resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],budget,environment,phaseControl);
-      await this.runBunTests(["test","--timeout",String(scriptInvocationBudget(this.invocation,budget)),source],scriptInvocationBudget(this.invocation,budget),environment,phaseControl);return;
-    }
-    if(args[0]==="pruning"){
-      if(args.length!==1)throw new Error("Expected test pruning");
-      const owner=join(SCRIPT_ROOT,"🧹️pruning"),artifacts=environment.SEMIO_TEST_ARTIFACT_DIR;
-      if(!artifacts)throw new Error("Original ticket artifact directory required");
-      await testWorkspaceOwnership(this.invocation,this.repoRoot,artifacts,phaseControl,join(owner,"⏱️continuation/🧪️tests/🟦️.ts"));
-      await testWorkspaceOwnership(this.invocation,this.repoRoot,artifacts,phaseControl,join(owner,"🔒️store/🧪️tests/🟦️.ts"));
-      await testWorkspaceOwnership(this.invocation,this.repoRoot,artifacts,phaseControl,join(owner,"🔒️incremental/🧪️tests/🟦️.ts"));
-      const control=createRequestedIssuedResourceControlV1(phaseControl,120000);
-      await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(owner,"🟦️.ts")],this.repoRoot,{control,env:environment});
-      return;
-    }
-    if(args[0]==="sdk-snapshot"){
-      if(args.length!==1)throw new Error("Expected test sdk-snapshot");
-      const owner=join(SCRIPT_ROOT,"🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot");
-      await testWorkspaceOwnership(this.invocation,this.repoRoot,repositoryTestArtifactRootV1(this.repoRoot),phaseControl,join(owner,"🧪️tests/🟦️.ts"));
-      const control=createRequestedIssuedResourceControlV1(phaseControl,120000);
-      await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(owner,"🟦️.ts")],this.repoRoot,{control,env:environment});
-      const material=join(SCRIPT_ROOT,"🚀️bootstrap/🛠️tools/📦️sdk/📊️material");await testWorkspaceOwnership(this.invocation,this.repoRoot,repositoryTestArtifactRootV1(this.repoRoot),phaseControl,join(material,"🧪️tests/🟦️.ts"));await testWorkspaceOwnership(this.invocation,this.repoRoot,repositoryTestArtifactRootV1(this.repoRoot),phaseControl,join(SCRIPT_ROOT,"🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/🟦️.ts"));const {withNxSdkMaterialReportV1,proveNxSdkMaterialConsumptionV1}=await import("../../🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🟦️.ts");await withNxSdkMaterialReportV1(this.repoRoot,this.invocation,phaseControl,async(report,store,materialPhase)=>{await proveNxSdkMaterialConsumptionV1(report.generation,report.generationMaterial,store,materialPhase);await proveNxSdkMaterialConsumptionV1(report.snapshot,report.snapshotMaterial,store,materialPhase);const {proveNxSdkBinaryPublicationV1}=await import("../../🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/📥️runtime/🟦️.ts");await proveNxSdkBinaryPublicationV1(store,materialPhase);writeFileSync(join(repositoryTestArtifactRootV1(this.repoRoot),"sdk-material.json"),JSON.stringify(report,null,2)+"\n");});return;
-    }
-    if(args[0]==="journal-source"){
-      if(args.length!==1)throw new Error("Expected test journal-source");
-      const owner=join(SCRIPT_ROOT,"🕸️graph/🔏️seal/📥️membership/📥️journal");
-      await testWorkspaceOwnership(this.invocation,this.repoRoot,repositoryTestArtifactRootV1(this.repoRoot),phaseControl,join(owner,"🧪️tests/🟦️.ts"));
-      const control=createRequestedIssuedResourceControlV1(phaseControl,120000);
-      await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(owner,"🟦️.ts")],this.repoRoot,{control,env:environment});
-      return;
-    }
-    if(args[0]==="authorizers"){
-      if(args.length!==1)throw new Error("Expected test authorizers");
-      await testWorkspaceOwnership(this.invocation,this.repoRoot,repositoryTestArtifactRootV1(this.repoRoot),phaseControl,join(SCRIPT_ROOT,"🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts"));
-      const source=join(SCRIPT_ROOT,"🚀️bootstrap/🛠️tools"),control=createRequestedIssuedResourceControlV1(phaseControl,120000);
-      await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(source,"🔏️authorizers/🟦️.ts"),join(source,"🔏️authorizers/📜️script.ts"),join(source,"🔏️authorizers/📤️receipt/🟦️.ts"),join(source,"🟦️.ts")],this.repoRoot,{control,env:environment});
-      return;
+    if(args[0]==="sdk-material"){
+      if(args.length!==1)throw new Error("Expected test sdk-material");
+      const {withNxSdkMaterialReportV1,proveNxSdkMaterialConsumptionV1}=await import("../../🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🟦️.ts");await withNxSdkMaterialReportV1(this.repoRoot,this.invocation,phaseControl,async(report,store,materialPhase)=>{await proveNxSdkMaterialConsumptionV1(report.generation,report.generationMaterial,store,materialPhase);await proveNxSdkMaterialConsumptionV1(report.snapshot,report.snapshotMaterial,store,materialPhase);const {proveNxSdkBinaryPublicationV1}=await import("../../🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/📥️runtime/🟦️.ts");await proveNxSdkBinaryPublicationV1(store,materialPhase);writeFileSync(join(repositoryTestArtifactRootV1(this.repoRoot),"sdk-material.json"),JSON.stringify(report,null,2)+"\n");});return;
     }
     if (args[0] === "daemon-journal") {
       if (args.length !== 1 && (args.length !== 2 || !["transport", "workspace"].includes(args[1]!))) throw new Error("Expected test daemon-journal [transport|workspace]");
@@ -136,7 +91,6 @@ export class TestScript extends BundleScript {
       await (await import("../🕸️daemon/📥️journal/🟦️.ts")).proveDaemonJournal(this.repoRoot, output, this.invocation, args[1] === "transport", args[1] === "workspace");
       return;
     }
-    if(args[0]==="graph-cache-waiter"){if(args.length!==1)throw new Error("Expected test graph-cache-waiter");await testWorkspaceOwnership(this.invocation,this.repoRoot,repositoryTestArtifactRootV1(this.repoRoot),phaseControl,join(SCRIPT_ROOT,"🕸️graph/🏇️waiter/🧪️tests/🟦️.ts"));return;}
     if(args[0]==="binaryen-partition"){if(args.length!==1)throw new Error("Expected test binaryen-partition");const {withRepositoryToolingStoreV1}=await import("../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts"),{prepareBinaryen}=await import("../../🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts");await withRepositoryToolingStoreV1(this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),async store=>{const executable=await prepareBinaryen(this.repoRoot,store);const version=await captureOwnedCommandV1(executable,["--version"],this.repoRoot,{control:store.control,env:scriptInvocationEnvironment(this.invocation,store.environment)});if(version.trim()!=="wasm-opt version 130 (version_130)")throw new Error("Original bounded Binaryen version refused");});return;}
     if(args[0]==="bazel-storage-runtime"){if(args.length!==1)throw new Error("Expected test bazel-storage-runtime");await (await import("../../../🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/📥️runtime/🟦️.ts")).proveBazelStorageRuntimeV1(this.repoRoot,this.invocation);return;}
     if(args[0]==="runtime-verification-storage-runtime"){if(args.length!==1)throw new Error("Expected one verifier storage proof");await(await import("../../../🔍️discovery/🕸️runtime/🔎️verification/💾️storage/🧪️tests/📥️runtime/🟦️.ts")).proveRuntimeVerificationStorageV1(this.repoRoot,this.invocation);await(await import("../../💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/📥️runtime/🟦️.ts")).proveCargoCompilerConfigurationAdmissionV1(this.repoRoot,this.invocation);return;}
@@ -146,10 +100,6 @@ export class TestScript extends BundleScript {
     if(args[0]==="rustup-toolchain"){if(args.length!==1)throw new Error("Expected test rustup-toolchain");const proof=await import("../../🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🏗️installation/🟦️.ts");await proof.proveRepositoryRustToolchainV1(this.repoRoot,this.invocation);return;}
     if(args[0]==="rustup-generation"){if(args.length!==1)throw new Error("Expected test rustup-generation");const proof=await import("../../🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/📥️runtime/🟦️.ts");await proof.proveRustupGenerationCaptureV1(this.repoRoot,this.invocation);return;}
     if(args[0]==="tools-partition"){if(args.length!==1)throw new Error("Expected test tools-partition");const proof=await import("../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🟦️.ts");await proof.proveRepositoryToolsPartitionV1(this.repoRoot,createRequestedIssuedResourceControlV1(phaseControl,120000));await proof.proveRepositoryToolingChargeV1(this.repoRoot,this.invocation);await proof.proveRepositoryCacheScopeLifetimeV1(this.repoRoot,this.invocation);return;}
-    const inferenceTests:Record<string,string>={"cache-reset":"💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts","cargo-retirement":"🧹️pruning/🏪️budget/🧪️tests/🟦️.ts","rustup-protocol":"🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🟦️.ts","cargo-ingress":"💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/🧪️tests/🟦️.ts","compiler-headroom":"💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🤝️shared/🟦️.ts","cargo-launcher":"../🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts","runtime-verification-storage":"../🔍️discovery/🕸️runtime/🔎️verification/💾️storage/🧪️tests/🟦️.ts","cache-scope":"💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🏪️scope/🟦️.ts","javascript-storage":"🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts","javascript-installed-paths":"🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📏️paths/🟦️.ts","javascript-endpoint-fence":"🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🚧️fence/🟦️.ts","javascript-provider-walk":"🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🟦️.ts","package-manager-seam":"🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts","javascript-incremental-sync":"🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts","javascript-adopt":"🚀️bootstrap/📦️dependencies/🪞️adopt/🧪️tests/🟦️.ts","javascript-concurrent-generations":"🚀️bootstrap/📦️dependencies/🚦️concurrent/🧪️tests/🟦️.ts","javascript-generation":"🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🟦️.ts","javascript-generation-ingress":"🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🚪️ingress/🟦️.ts","javascript-generation-followup":"🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🛡️followup/🟦️.ts","lease-bootstrap":"../../../../../🔨️modules/🏃️process/🔒️leases/📦️bounded/🧪️tests/🟦️.ts","toolkit-preflight":"🚀️bootstrap/🛠️tools/🔏️authorizers/📥️loading/🧪️tests/🟦️.ts","storage-budget":"💾️storage/🔒️enforcement/📦️budget/🧪️tests/🟦️.ts","graph-bounded":"💾️storage/🔒️enforcement/📦️budget/🕸️graph/🧪️tests/🟦️.ts","bazel-storage":"../🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts","repository-exact":"../🏃️process/🦀️cargo/🎯️exact/🧪️tests/🍎️image/🟦️.ts","nx-bounded-image":"📦️artifacts/🔒️bounded/🧪️tests/🍎️image/🟦️.ts","nx-bounded":"📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts","rust-units":"🦀️cargo/📦️units/🧪️tests/🟦️.ts","caller-environment":"🧪️tests/🌍️caller-environment/🟦️.ts","toolkit-outputs":"💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts","toolkit-retention":"🚀️bootstrap/🛠️tools/🧹️retention/🧪️tests/🟦️.ts","graph-publication":"🕸️graph/📤️publication/🧪️tests/🟦️.ts","import-edges":"🧪️tests/🔗️import-edges","task-child":"🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📬️task-child/🟦️.ts","toolkit-use":"🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts","project-admission":"../🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts","inference-observation":"../🏗️build/👁️observation/🧪️tests/🟦️.ts"};
-    if(args[0]&&inferenceTests[args[0]]){if(args.length!==1)throw new Error("Expected one inference test command");const selected=args[0];await withRepositoryTestArtifactsV1(this.repoRoot,this.invocation,phaseControl,async phaseControl=>{process.stdout.write(await captureOwnedCommandV1(process.execPath,["test",...(selected==="import-edges"?["🧪️tests/🔗️import-edges/🟦️.ts","🧪️tests/🔗️import-edges/📁️paths/🟦️.ts","🧪️tests/🔗️import-edges/🔁️context/🟦️.ts","🧪️tests/🔗️import-edges/🏛️graph/🔑️authority/🟦️.ts"].map(path=>join(SCRIPT_ROOT,path)):(selected==="nx-bounded"?[join(SCRIPT_ROOT,inferenceTests[selected]!),join(SCRIPT_ROOT,"💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts")]:selected==="repository-exact"?[join(SCRIPT_ROOT,inferenceTests[selected]!),join(SCRIPT_ROOT,"../🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts")]:selected==="rust-units"?[join(SCRIPT_ROOT,inferenceTests[selected]!),join(SCRIPT_ROOT,"🦀️cargo/📦️units/🧪️tests/📥️source/🟦️.ts"),join(this.repoRoot,"🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🧪️tests/🟦️.ts"),join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts")]:selected==="cargo-ingress"?[join(SCRIPT_ROOT,inferenceTests[selected]!),join(SCRIPT_ROOT,"💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📥️arguments/🧪️tests/🟦️.ts"),join(SCRIPT_ROOT,"💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📥️arguments/📤️forwarding/🧪️tests/🟦️.ts"),join(SCRIPT_ROOT,"💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/🌍️environment/🧪️tests/🟦️.ts"),join(this.repoRoot,"🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧪️tests/🟦️.ts"),join(this.repoRoot,"🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🧪️tests/🟦️.ts")]:[join(SCRIPT_ROOT,inferenceTests[selected]!)])),],this.repoRoot,{control:createRequestedIssuedResourceControlV1(phaseControl,selected==="rust-units"?600000:120000),env:environment}));if(["nx-bounded","toolkit-use","graph-publication","toolkit-outputs"].includes(selected)){const strictOwner=selected==="toolkit-outputs"?"💾️storage/🔒️enforcement/🔌️nx/📦️outputs":selected==="nx-bounded"?"📦️artifacts/🔒️bounded":selected==="toolkit-use"?"🚀️bootstrap/🛠️tools/📥️use":"🕸️graph/📤️publication";await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(SCRIPT_ROOT,strictOwner,"🟦️.ts"),join(SCRIPT_ROOT,strictOwner,"🧪️tests/🟦️.ts"),...(selected==="nx-bounded"?[join(SCRIPT_ROOT,"💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts")]:[])],this.repoRoot,{control:createRequestedIssuedResourceControlV1(phaseControl,120000),env:environment});}});return;}
-    if(args[0]==="selected-graph"){if(args.length!==1)throw new Error("Expected test selected-graph");await testWorkspaceOwnership(this.invocation,this.repoRoot,repositoryTestArtifactRootV1(this.repoRoot),phaseControl,join(SCRIPT_ROOT,"🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts"));return;}
-    if(args[0]==="graph-seal"){if(args.length!==1)throw new Error("Expected test graph-seal");await this.runBunTests(["test",join(SCRIPT_ROOT,"🕸️graph/🔏️seal/🧪️tests/🟦️.ts")],orchestratorBudgetOpts(environment).budgetMs!,environment,phaseControl);return;}
     if (args[0] === "build-mode") {
       if (args.length !== 1) throw new Error("Expected test build-mode");
       const { testNxBuildModes } = await import("../🎚️build-mode/🟦️.ts");
@@ -208,11 +158,6 @@ export class TestScript extends BundleScript {
       await (await import("../📦️native-dependencies/🟦️.ts")).testNativeDependencies(this.repoRoot, output,this.invocation,phaseControl);
       return;
     }
-    if (args[0] === "artifact-source") {
-      if (args.length !== 1) throw new Error("Expected test artifact-source");
-      await this.runBunTests(["test", join(SCRIPT_ROOT, "🧪️tests", "🗿️artifact-source", "🟦️.ts")],orchestratorBudgetOpts(environment).budgetMs!,environment,phaseControl);
-      return;
-    }
     if (args[0] === "workspace-ownership") {
       if (args.length !== 1) throw new Error("Expected test workspace-ownership");
       const artifacts = repositoryTestArtifactRootV1(this.repoRoot);
@@ -232,36 +177,6 @@ export class TestScript extends BundleScript {
       });
       checkScriptInvocation(this.invocation);
       writeFileSync(join(artifacts, "bun-workspace-ownership.json"), JSON.stringify(report, null, 2) + "\n");
-      return;
-    }
-    if (args[0] === "native-input-vocabulary") {
-      if (args.length !== 1) throw new Error("Expected test native-input-vocabulary");
-      await this.runBunTests(["test",join(SCRIPT_ROOT,"../🧪️tests/⚡️production-cache-input-boundary/🟦️.ts")],15000,environment,phaseControl);
-      return;
-    }
-    if (args[0] === "cache-command-source") {
-      if (args.length !== 1) throw new Error("Expected test cache-command-source");
-      await this.runBunTests(["test", join(SCRIPT_ROOT, "🧪️tests", "🧱️command-source", "🟦️.ts")],orchestratorBudgetOpts(environment).budgetMs!,environment,phaseControl);
-      return;
-    }
-    if (args[0] === "cargo-provenance") {
-      if (args.length !== 1) throw new Error("Expected test cargo-provenance");
-      await this.runBunTests(["test", join(SCRIPT_ROOT, "🧪️tests", "🧾️cargo-provenance", "🟦️.ts")],orchestratorBudgetOpts(environment).budgetMs!,environment,phaseControl);
-      return;
-    }
-    if (args[0] === "law-coverage") {
-      if (args.length !== 1) throw new Error("Expected test law-coverage");
-      await this.runBunTests(["test", ...["💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🧮️lifecycle/🟦️.ts","📦️artifacts/🟦️typescript/🔗️binding/🧪️tests/🟦️.ts","📦️bundle/🟦️bun/📤️stream/🧪️tests/🟦️.ts","🕸️graph/🏁️startup/🚦️service/🧪️tests/🧮️handoff/🟦️.ts","🚀️bootstrap/🛠️tools/⚙️operations/🧪️tests/🧮️arguments/🟦️.ts","🚀️bootstrap/🛠️tools/🌡️host-capacity/🧪️tests/🧮️settings/🟦️.ts","🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🧮️mapping/🟦️.ts","🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🧪️tests/🟦️.ts","🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/📋️plan/🧪️tests/🟦️.ts","🚀️bootstrap/🛠️tools/📦️sdk/🪪️identity/🧪️tests/🧮️keys/🟦️.ts","🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🟦️.ts","🚀️bootstrap/🛠️tools/🟦️bun/🧪️tests/🟦️.ts","🚀️bootstrap/🛠️tools/🩹️patch/🧪️tests/🟦️.ts","🚦️ci/🧭️baseline/🏃️resolve/🧪️tests/🧮️matrix/🟦️.ts","🦀️cargo/📦️units/🏗️compiler/📍️workspace/🧪️tests/🟦️.ts","🦀️cargo/🗃️unit-cache/🔏️key/🧪️tests/🟦️.ts","🧹️pruning/⏱️recency/🧪️tests/🟦️.ts","🧹️pruning/🌐️workspace/🧪️tests/🧮️projection/🟦️.ts","🧹️pruning/🧪️tests/🧮️plan/🟦️.ts"].map(path => join(SCRIPT_ROOT, path))],orchestratorBudgetOpts(environment).budgetMs!,environment,phaseControl);
-      return;
-    }
-    if (args[0] === "law-coverage-fixes") {
-      if (args.length !== 1) throw new Error("Expected test law-coverage-fixes");
-      await this.runBunTests(["test", ...["🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🧪️tests/🧮️fetch/🟦️.ts","🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🧪️tests/🧮️restore/🟦️.ts"].map(path => join(SCRIPT_ROOT, path))],orchestratorBudgetOpts(environment).budgetMs!,environment,phaseControl);
-      return;
-    }
-    if (args[0] === "law-coverage-tests") {
-      if (args.length !== 1) throw new Error("Expected test law-coverage-tests");
-      await this.runBunTests(["test", ...["🚀️bootstrap/🛠️tools/🧪️tests/📦️install-images/🟦️.ts","🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🎟️capacity/🧪️tests/🟦️.ts","🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/📦️contract/🟦️.ts"].map(path => join(SCRIPT_ROOT, path))],orchestratorBudgetOpts(environment).budgetMs!,environment,phaseControl);
       return;
     }
     await testCacheContracts(this.invocation,phaseControl);

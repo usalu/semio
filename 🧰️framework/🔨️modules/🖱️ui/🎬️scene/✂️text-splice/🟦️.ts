@@ -45,7 +45,7 @@ function nearestV1(positions: readonly number[], expected: number): number | nul
   return best;
 }
 
-/** 📍️ Locates `splice` in `text`, deterministically and identically in every language twin:
+/** 🔦️ Locates `splice` in `text`, deterministically and identically in every language twin:
  * 1. the run with context on both sides, `k` = the longer side's length down to {@link TEXT_SPLICE_MIN_TWO_SIDED_SCALARS}
  *    (each side capped at its own length);
  * 2. the run with context on one side, `k` = the longer side's length down to 1 (both sides of one `k` compete);
@@ -79,7 +79,7 @@ export function locateTextSpliceV1(text: string, splice: TextSpliceV1): LocatedT
   return { start: Math.min(Math.max(splice.start, 0), hay.length), deleteLength: 0, clamped: deleted.length > 0 || before.length > 0 || after.length > 0 };
 }
 
-/** ✂️ Applies `splice` to `text` where it locates, answering the new text and the inverse splice (the removed run back
+/** 🩹️ Applies `splice` to `text` where it locates, answering the new text and the inverse splice (the removed run back
  * in place of the inserted one, with the context of the new text). */
 export function applyTextSpliceV1(text: string, splice: TextSpliceV1, context = TEXT_SPLICE_CONTEXT_SCALARS): AppliedTextSpliceV1 {
   const located = locateTextSpliceV1(text, splice);
@@ -94,7 +94,7 @@ export function applyTextSpliceV1(text: string, splice: TextSpliceV1, context = 
   };
 }
 
-/** ⌨️ The ONE splice an editor sends for its own change `previous → next`: the common scalar prefix and suffix bound the
+/** ✏️ The ONE splice an editor sends for its own change `previous → next`: the common scalar prefix and suffix bound the
  * changed run, the context is what the author saw around it; `null` when nothing changed. */
 export function textSpliceFromEditV1(previous: string, next: string, context = TEXT_SPLICE_CONTEXT_SCALARS): TextSpliceV1 | null {
   const a = scalars(previous), b = scalars(next);
@@ -120,11 +120,11 @@ export function textMarkerV1(text: string, position: number, context = TEXT_SPLI
   return { start: at, deleted: "", insert: "", before: hay.slice(Math.max(0, at - context), at).join(""), after: hay.slice(at, at + context).join("") };
 }
 
-/** 🔗️ How a typed splice joins its run ({@link composeTextSplicesV1}): one net splice, a run that changed nothing, or a caret
+/** 🧶️ How a typed splice joins its run ({@link composeTextSplicesV1}): one net splice, a run that changed nothing, or a caret
  * that jumped away (the run ends and a new one begins). */
 export type TextSpliceCompositionV1 = { readonly kind: "composed"; readonly splice: TextSpliceV1 } | { readonly kind: "cancelled" } | { readonly kind: "disjoint" };
 
-/** 🔗️ The ONE splice of a typing run (twin of Rust `TextSplice::then`): `net` (the run so far) took the author's text `T0` to
+/** 🧵️ The ONE splice of a typing run (twin of Rust `TextSplice::then`): `net` (the run so far) took the author's text `T0` to
  * `T1`, `next` (an edit of `T1`, same author, same coordinates) takes `T1` to `T2`. `next` must lie inside the run's window
  * `before + insert + after` of `T1` and agree with it wherever both carry text, and the two changes must touch once each is placed
  * anywhere it may equivalently sit among repeated scalars. The run then grows to the union of both changes, untrimmed — a scalar the
@@ -170,7 +170,7 @@ export function composeTextSplicesV1(net: TextSpliceV1, next: TextSpliceV1, cont
 /** 🪜️ One equivalent placement of a change inside a window: where its `T1` side starts, that side and its other side. */
 type TextSplicePlacementV1 = { readonly at: number; readonly inside: readonly string[]; readonly outside: readonly string[] };
 
-/** 🪜️ Every equivalent placement of one change inside `window` (`T1`), twin of Rust `placements`: shifting it by one scalar `c`
+/** 🧩️ Every equivalent placement of one change inside `window` (`T1`), twin of Rust `placements`: shifting it by one scalar `c`
  * is the same change while both sides end (left) or start (right) with `c`; ordered by distance, left before right. */
 function textSplicePlacementsV1(window: readonly string[], at: number, inside: readonly string[], outside: readonly string[]): TextSplicePlacementV1[] {
   const shift = (placement: TextSplicePlacementV1, leftward: boolean): TextSplicePlacementV1 | undefined => {
@@ -215,7 +215,7 @@ export function scalarOfUtf8OffsetV1(text: string, bytes: number): number {
   return index;
 }
 
-/** 🔢️ UTF-8 byte offset of scalar index `index` in `text`. */
+/** 🔤️ UTF-8 byte offset of scalar index `index` in `text`. */
 export function utf8OffsetOfScalarV1(text: string, index: number): number {
   return new TextEncoder().encode(scalars(text).slice(0, index).join("")).length;
 }
@@ -227,7 +227,7 @@ export function utf8OffsetOfScalarV1(text: string, index: number): number {
  * names the last `seq` the window applied. Absent: the window takes whole-text `textEdit`. */
 export type TextEditorTypingV1 = { readonly mode: "splice" };
 
-/** ⌨️ The typing contract a scene's `settingsJson` declares, or `null`. */
+/** 📃️ The typing contract a scene's `settingsJson` declares, or `null`. */
 export function textEditorTypingV1(settingsJson: string | undefined): TextEditorTypingV1 | null {
   if (!settingsJson) return null;
   try {
@@ -238,7 +238,7 @@ export function textEditorTypingV1(settingsJson: string | undefined): TextEditor
   }
 }
 
-/** 🔢️ The last host splice `seq` a scene's `selectionJson` says its window applied (`0` when none). */
+/** 🔖️ The last host splice `seq` a scene's `selectionJson` says its window applied (`0` when none). */
 export function textEditorAppliedSpliceV1(selectionJson: string | undefined): number {
   if (!selectionJson) return 0;
   try {
@@ -249,7 +249,7 @@ export function textEditorAppliedSpliceV1(selectionJson: string | undefined): nu
   }
 }
 
-/** 🧾️ One splice-typing host's knowledge of one window (the Jupiter client model, no CRDT): `remote` — the text the
+/** 🖥️ One splice-typing host's knowledge of one window (the Jupiter client model, no CRDT): `remote` — the text the
  * window last published, `base` — the text the window holds once it applied every splice this host sent (the text the next
  * splice is computed against), `seq` — the last splice sent, `acknowledged` — the last splice a scene said the window applied (a
  * scene naming a lower one comes from a reincarnated window), `unapplied` — the sent splices no scene acknowledged yet, oldest
@@ -271,7 +271,7 @@ export function textEditorSpliceHostV1(buffer: string, applied: number): TextEdi
   return { remote: buffer, base: buffer, seq: applied, acknowledged: applied, unapplied: [] };
 }
 
-/** ⌨️ The host's editor now shows `local`: the ONE splice to send (numbered `seq`) and the host after it, or `null` when
+/** 📤️ The host's editor now shows `local`: the ONE splice to send (numbered `seq`) and the host after it, or `null` when
  * the window will already hold `local`. */
 export function sendTextEditorSpliceV1(host: TextEditorSpliceHostV1, local: string): { readonly host: TextEditorSpliceHostV1; readonly splice: TextSpliceV1; readonly seq: number } | null {
   const splice = textSpliceFromEditV1(host.base, local);
@@ -286,7 +286,7 @@ function textEditorSpliceShowV1(host: TextEditorSpliceHostV1, remote: string, un
   return { host: { ...host, remote, base, unapplied }, show: view.text === local ? null : view };
 }
 
-/** 🔁️ The window published `remote` having applied this host's splices up to `applied`, while the editor shows `local` with
+/** 📨️ The window published `remote` having applied this host's splices up to `applied`, while the editor shows `local` with
  * the scalar `selection`: the editor shows `remote` with every still-unapplied splice and the not-yet-sent local change folded
  * on, the selection carried along by its context — nothing when that is what it shows already (an echo of its own typing),
  * so neither a lagging echo nor a collaborator's run ever reverts or scrambles what this host typed. A scene naming a splice BELOW
@@ -320,7 +320,7 @@ export function refuseTextEditorSpliceV1(host: TextEditorSpliceHostV1, seq: numb
 //#endregion ⌨️TextEditorTyping
 
 //#region ⏱️TextEditorTypingRun
-/** ⌨️ The host side of the typing-run protocol (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING; owner constants
+/** 🗄️ The host side of the typing-run protocol (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING; owner constants
  * `🛠️tool-machine` `TYPING_BUFFER_ARG`/`TYPING_COMMIT_ARG`/`TYPING_IDLE_MS`, pinned against the typing-law fixture by this
  * module's laws): every live delivery names the buffer it types into, a commit signal names its reason and carries no edit. */
 export const TEXT_EDITOR_TYPING_BUFFER_ARG = "typing";
@@ -335,7 +335,7 @@ export type TextEditorTypingCommitV1 = "idle" | "selectionJump" | "blur" | "ente
  * `hostSignals`): the idle bound, a pure caret move, the editor losing keyboard focus, the page hidden or left. */
 export const TEXT_EDITOR_TYPING_HOST_SIGNALS = { idle: "idle", caretMove: "selectionJump", blur: "blur", hidden: "hidden" } as const satisfies Record<string, TextEditorTypingCommitV1>;
 
-/** ⌨️ One editor's typing run as its host sees it: `typed(verb, before)` after every delivery the window took (`before` = the text
+/** 🏃️ One editor's typing run as its host sees it: `typed(verb, before)` after every delivery the window took (`before` = the text
  * the delivery was computed against), `commit(reason)` to end the run (blur, page hidden, Enter in a single-line buffer; the idle
  * bound fires on its own), `closed()` when the window ended it itself (a caret move it was told about), `preview(local)` = the
  * run's pending change as ONE splice of the text it started from (the ephemeral shared preview peers render), `dispose()` ends a
@@ -349,7 +349,7 @@ export type TextEditorTypingRunV1 = {
   readonly dispose: () => void;
 };
 
-/** ⌨️ Creates one editor's typing run: `send(verb, reason)` dispatches the commit signal, `schedule(run, ms)` arms the idle bound
+/** 🆕️ Creates one editor's typing run: `send(verb, reason)` dispatches the commit signal, `schedule(run, ms)` arms the idle bound
  * and answers its cancel (a host timer; the laws drive a fake one). */
 export function createTextEditorTypingRunV1(send: (verb: string, reason: TextEditorTypingCommitV1) => void, schedule: (run: () => void, ms: number) => () => void): TextEditorTypingRunV1 {
   let run: { readonly verb: string; readonly base: string } | null = null;
@@ -384,18 +384,18 @@ export function createTextEditorTypingRunV1(send: (verb: string, reason: TextEdi
 //#endregion ⏱️TextEditorTypingRun
 
 //#region ✂️DraftChangeSet
-/** ✂️ One range of an explicit draft's change set: in the coordinates of the text the draft STARTED from (ascending, never
+/** 📙️ One range of an explicit draft's change set: in the coordinates of the text the draft STARTED from (ascending, never
  * overlapping), `delete` scalars at `offset` were replaced by `insert`. Offsets and lengths count Unicode scalar values. A change set
  * is what an explicit-draft host publishes on Apply when the window declares {@link DRAFT_SPLICES_ARGUMENT} as its edit argument:
  * the editor applies the ranges verbatim instead of comparing the finished draft with its document. */
 export type DraftChangeV1 = { readonly offset: number; readonly delete: number; readonly insert: string };
 
-/** ✂️ The edit argument a window declares to receive the draft's change set (JSON list of {@link DraftChangeV1}) instead of its text. */
+/** 📩️ The edit argument a window declares to receive the draft's change set (JSON list of {@link DraftChangeV1}) instead of its text. */
 export const DRAFT_SPLICES_ARGUMENT = "splices";
 
 type DraftPieceV1 = { readonly keep: true; readonly base: number; readonly length: number } | { readonly keep: false; readonly base: number; readonly remove: number; readonly insert: readonly string[] };
 
-/** ⌨️ The change set after one more editor step `previous → next` (a typed run, a paste, an undo, a redo — whatever the editor did
+/** ⏪️ The change set after one more editor step `previous → next` (a typed run, a paste, an undo, a redo — whatever the editor did
  * to its draft): the step is the editor's own change (the scalars both texts share at either end bound it), folded into the
  * ranges so far; every range stays in the coordinates of the starting text. */
 export function composeDraftStepV1(changes: readonly DraftChangeV1[], previous: string, next: string): DraftChangeV1[] {
@@ -471,7 +471,7 @@ export function draftChangesJsonV1(changes: readonly DraftChangeV1[]): string {
   return JSON.stringify(changes.map((change) => ({ offset: change.offset, delete: change.delete, insert: change.insert })));
 }
 
-/** ✂️ Applies a change set (ranges in the coordinates of `text`) to `text`; `null` when a range leaves the text or overlaps the previous one. */
+/** 📝️ Applies a change set (ranges in the coordinates of `text`) to `text`; `null` when a range leaves the text or overlaps the previous one. */
 export function applyDraftChangesV1(text: string, changes: readonly DraftChangeV1[]): string | null {
   const hay = scalars(text);
   const parts: string[] = [];

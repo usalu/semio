@@ -86,14 +86,14 @@ fn record_row_actions(record: &ui_contract::UiNodeRecord) -> Option<(&str, &ui_c
     }
 }
 
-/// ♿️ Which of a row's actions the virtual `<rowKey>::row-action::<i>` button of [`accessibility_projection`] activates.
+/// ⌨️ Which of a row's actions the virtual `<rowKey>::row-action::<i>` button of [`accessibility_projection`] activates.
 pub fn row_accessibility_action(record: &ui_contract::UiNodeRecord, key: &str) -> Option<usize> {
     let (_, actions) = record_row_actions(record)?;
     let index = key.strip_prefix(record.key.as_str())?.strip_prefix(ROW_ACTION_KEY_INFIX)?.parse::<usize>().ok()?;
     actions.get(index).map(|_| index)
 }
 
-/// ♿️ A row's actions as buttons — the trailing icons of its Row-placed actions and the context-menu entries of its
+/// 🕸️ A row's actions as buttons — the trailing icons of its Row-placed actions and the context-menu entries of its
 /// Menu-placed ones alike — named `"<label>: <row name>"` as React's `TableView` names them, reachable and activatable, so no
 /// row action is pointer-only on this target.
 fn row_action_accessibility_nodes(record: &ui_contract::UiNodeRecord, depth: usize, owner: &AccessibilityProjectionNode) -> Vec<AccessibilityProjectionNode> {
@@ -221,7 +221,7 @@ fn segmented_accessibility_nodes(record: &ui_contract::UiNodeRecord, depth: usiz
         .collect()
 }
 
-/// ♿️ The accessibility tree ONE window's retained document publishes, in pre-order — the reading
+/// 🌳️ The accessibility tree ONE window's retained document publishes, in pre-order — the reading
 /// order an assistive technology walks.
 ///
 /// Answers an empty projection rather than a fault for a window that has published no document yet:

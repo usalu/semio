@@ -37,7 +37,7 @@ pub struct DragGhost {
     pub offset_y: f32,
 }
 
-/// 🫳️ Ported from `events.rs::DragSession`, `source`/`drop_target` swapped to [`ElementId`] — a drag
+/// 🏹️ Ported from `events.rs::DragSession`, `source`/`drop_target` swapped to [`ElementId`] — a drag
 /// spans many frames, so it must be addressed by the identity that survives a rebuild.
 #[derive(Clone, Debug, PartialEq)]
 pub struct DragSession {
@@ -52,7 +52,7 @@ pub struct DragSession {
 /// 📏️ Ported from `events.rs::DRAG_PROMOTE_THRESHOLD_SQ` verbatim.
 pub(super) const DRAG_PROMOTE_THRESHOLD_SQ: f32 = 16.0;
 
-/// 🎯️ A [`Dispatcher::set_drop_accept`] predicate — `dyn Fn` is U3-permitted (not a first-party
+/// ✅️ A [`Dispatcher::set_drop_accept`] predicate — `dyn Fn` is U3-permitted (not a first-party
 /// trait).
 type DropAcceptPredicate = Box<dyn Fn(&DragPayload) -> bool>;
 

@@ -20,6 +20,7 @@ fn close_retained_clone_preparation_publication<P: Send + Sync + 'static, M: Sen
 
 #[semio_framework_async_macros::async_test]
 async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
     let grant = fixture_one_item_grant(&fixture["grant"]);
     for (index, row) in fixture["cases"].as_array().expect("lifecycle cases").iter().enumerate() {
@@ -179,6 +180,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
 
 #[semio_framework_async_macros::async_test]
 async fn interrupted_retained_clone_publication_handoffs_to_store_maintenance() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
     let row = &fixture["handoff"];
     let grant = fixture_one_item_grant(&row["closeGrant"]);
@@ -234,6 +236,7 @@ async fn interrupted_retained_clone_publication_handoffs_to_store_maintenance() 
 
 #[semio_framework_async_macros::async_test]
 async fn retained_clone_preparation_refuses_contiguous_capacity_larger_than_one_store_grant() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
     let grant = fixture_one_item_grant(&fixture["grant"]);
     let text_bytes = fixture["largeCapacity"]["stringByteLength"].as_u64().expect("large string byte length") as usize;
@@ -311,6 +314,7 @@ fn close_ephemeral_publication(publication: &mut ArtifactEphemeralOneItemPublica
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_single_retry_ack_and_move_only_root_preserve_generation_revision_and_history() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-single", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
@@ -320,7 +324,7 @@ async fn artifact_store_one_item_single_retry_ack_and_move_only_root_preserve_ge
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(1), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 7 })], HistoryLane::Document, Some(&admitted), None)
         .expect("explicit domain factory admits");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: 4096,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
     let receipt = loop {
         if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, 4096, grant,receiving)).expect("one bounded durable step") {
             break receipt;

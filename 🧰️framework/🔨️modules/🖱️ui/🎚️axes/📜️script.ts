@@ -1,6 +1,6 @@
 import { writeGeneratedFileIfChanged } from "../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { cmdBudgetMs } from "../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { runOwnedCommand } from "../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runBudgetedTestCommand } from "../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { BundleScript } from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readUiAxes } from "./📥️source/🟦️.ts";
 import { uiAxesPreview, uiAxesTargets } from "./📋️plan/🟦️.ts";
@@ -31,7 +31,7 @@ export class CheckAxesScript extends BundleScript {
     const axes = readUiAxes(repoRoot);
     const stale = staleUiAxesTargets(uiAxesTargets(repoRoot, axes));
     if (stale.length > 0) throw new Error(`ui axes are stale: ${stale.join(", ")}`);
-    await runOwnedCommand(process.execPath, ["test", "./🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️axes/🟦️.ts"], repoRoot, "ui-axes", cmdBudgetMs(), { env: process.env });
+    await runBudgetedTestCommand(process.execPath, ["test", "./🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️axes/🟦️.ts"], { cwd: repoRoot, budgetMs: cmdBudgetMs(), env: process.env, throwOnFailure: true });
     console.log(`ui axes are fresh (${axes.locales.length} locales, ${axes.terminologies.length} terminologies).`);
   }
 }

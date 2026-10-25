@@ -2467,7 +2467,8 @@
    "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts",
    "adapterScope": [
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧫️sandbox/**",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**"
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/**",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/**"
    ],
    "allowedCallers": [
     "**"

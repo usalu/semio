@@ -28,7 +28,9 @@
     "./testing/video-render-job": "./🧪️testing/🧵️video-render-job/🟦️.ts",
     "./testing/video-render-program": "./🧪️testing/🎞️video-render-program/🟦️.ts",
     "./turn-outcome-broadcast": "./📡️turn-outcome-broadcast/🟦️.ts",
-    "./ui-dirty-scope": "./🎯️ui-dirty-scope/🟦️.ts"
+    "./ui-dirty-scope": "./🎯️ui-dirty-scope/🟦️.ts",
+    "./opening-resolver": "./📖️opening-resolver/🟦️.ts",
+    "./fault": "./🚨️fault/🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/framework-actor": "workspace:*",

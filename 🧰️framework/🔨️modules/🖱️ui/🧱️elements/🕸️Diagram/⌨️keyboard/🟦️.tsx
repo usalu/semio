@@ -4,15 +4,15 @@ import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 /** ♿️ The four directions arrow-key navigation walks a node graph in. */
 export type DiagramArrowDirection = "up" | "down" | "left" | "right";
 
-/** ♿️ Arrow keys mapped to graph directions — the ONE place the mapping lives, so the keyboard handler
+/** ⌨️ Arrow keys mapped to graph directions — the ONE place the mapping lives, so the keyboard handler
  * and its test cannot disagree. */
 export const DIAGRAM_ARROW_KEYS: Readonly<Record<string, DiagramArrowDirection>> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
 
-/** ♿️ The only node facts keyboard navigation reads: identity and canvas position. */
+/** 🧭️ The only node facts keyboard navigation reads: identity and canvas position. */
 export type DiagramNavigableNode = { readonly id: string; readonly position: { readonly x: number; readonly y: number } };
 
 /**
- * ♿️ The node an arrow press moves to: the nearest node in that half-plane, measured with the
+ * 🏹️ The node an arrow press moves to: the nearest node in that half-plane, measured with the
  * ALONG-axis distance weighted over the across-axis one, so `ArrowRight` prefers the node to the right
  * over one that is merely further away diagonally. Ties break on id so the walk is deterministic.
  *
@@ -54,14 +54,14 @@ export function diagramArrowNavigationTarget(nodes: readonly DiagramNavigableNod
   return best?.id ?? null;
 }
 
-/** ♿️ The selection an Enter press produces: plain Enter replaces, Shift+Enter toggles membership —
+/** ✅️ The selection an Enter press produces: plain Enter replaces, Shift+Enter toggles membership —
  * the same replace/additive vocabulary `🕹️interaction`'s `MergeMode` names. */
 export function diagramActivateSelection(selectedIds: readonly string[], focusedId: string, additive: boolean): string[] {
   if (!additive) return [focusedId];
   return selectedIds.includes(focusedId) ? selectedIds.filter((id) => id !== focusedId) : [...selectedIds, focusedId];
 }
 
-/** ♿️ What ONE key press does to a keyboard-walked node graph — `null` when the key is not the graph's.
+/** 🪜️ What ONE key press does to a keyboard-walked node graph — `null` when the key is not the graph's.
  * `select.added` says whether the focused node ended up IN the selection (Shift+Enter can remove it). */
 export type DiagramKeyboardStep =
   | { readonly kind: "focus"; readonly focusedId: string }
@@ -70,7 +70,7 @@ export type DiagramKeyboardStep =
   | null;
 
 /**
- * ♿️ The whole keyboard law of every node-graph surface — the React Flow {@link Diagram} and the dag/flow
+ * 👣️ The whole keyboard law of every node-graph surface — the React Flow {@link Diagram} and the dag/flow
  * canvas hosts (`🕸️NodeGraph`) run THIS function, so arrows, Enter, Shift+Enter and Escape mean one thing
  * wherever a graph is drawn. Arrows move focus ({@link diagramArrowNavigationTarget}); Enter/Space select
  * the focused node ({@link diagramActivateSelection}); Escape clears. Selection keys are inert on a
@@ -89,22 +89,22 @@ export function diagramKeyboardStep(nodes: readonly DiagramNavigableNode[], focu
   return { kind: "select", focusedId, selectedIds: next, added: next.includes(focusedId) };
 }
 
-/** ♿️ A node's 1-based position in reading order (top-to-bottom, then left-to-right, then id) — the
+/** 📖️ A node's 1-based position in reading order (top-to-bottom, then left-to-right, then id) — the
  * "3 of 7" a screen reader speaks, independent of the order the graph happens to store its nodes in. */
 export function diagramReadingOrderPosition(nodes: readonly DiagramNavigableNode[], id: string): number {
   const ordered = [...nodes].sort((a, b) => a.position.y - b.position.y || a.position.x - b.position.x || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   return ordered.findIndex((node) => node.id === id) + 1;
 }
 
-/** ♿️ The visible keyboard-focus ring on the focused node — the sighted twin of what the live region
+/** ⭕️ The visible keyboard-focus ring on the focused node — the sighted twin of what the live region
  * speaks. (React Flow reserves a node's DOM `id`, so there is no `aria-activedescendant` target: the
  * {@link DiagramLiveRegion} sentence is the assistive-technology channel.) */
 export const DIAGRAM_KEYBOARD_FOCUS_CLASS = "outline-solid outline-2 outline-offset-2 outline-accent";
 
-/** ♿️ Resolves a translation key with interpolation outside render (keyboard handlers run there). */
+/** 🔑️ Resolves a translation key with interpolation outside render (keyboard handlers run there). */
 export type DiagramTranslate = (key: "ui.diagram.focusedNode" | "ui.diagram.selectedNode" | "ui.diagram.deselectedNode" | "ui.diagram.selectionCleared", options?: Record<string, unknown>) => string;
 
-/** ♿️ The localized sentence a {@link DiagramLiveRegion} speaks for one {@link diagramKeyboardStep}: the
+/** 📢️ The localized sentence a {@link DiagramLiveRegion} speaks for one {@link diagramKeyboardStep}: the
  * focused node's label with its reading-order position, the (de)selection with the new selection size,
  * or "selection cleared". Pure — the locale lives entirely in `translate`. */
 export function diagramKeyboardAnnouncement(step: NonNullable<DiagramKeyboardStep>, nodes: readonly DiagramNavigableNode[], labelOf: (id: string) => string, translate: DiagramTranslate): string {
@@ -113,14 +113,14 @@ export function diagramKeyboardAnnouncement(step: NonNullable<DiagramKeyboardSte
   return translate(step.added ? "ui.diagram.selectedNode" : "ui.diagram.deselectedNode", { node: labelOf(step.focusedId), count: step.selectedIds.length });
 }
 
-/** ♿️ {@link DiagramTranslate} bound to the active shell locale and label tier (no default language:
+/** 🌐️ {@link DiagramTranslate} bound to the active shell locale and label tier (no default language:
  * whatever the scope's i18n instance stands at is what is spoken). */
 export function useDiagramTranslate(): DiagramTranslate {
   const { t } = useUiTranslation();
   return reactHostPort.useCallback<DiagramTranslate>((key, options) => resolveTranslationLabel(t(key, options)) ?? "", [t]);
 }
 
-/** ♿️ The polite live region every node-graph surface announces keyboard steps through. Visually
+/** 🕸️ The polite live region every node-graph surface announces keyboard steps through. Visually
  * hidden; `aria-atomic` so the whole sentence is re-read when it changes. */
 export function DiagramLiveRegion({ text }: { readonly text: string }) {
   return (

@@ -1,4 +1,5 @@
 //! 🔺️ Sparse diff builder for `ScaleTargetVolume` — patches the one addressed target-volume in place.
+use protocol::list_delta::RowPatch;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumePatch;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumesDelta;

@@ -1,6 +1,6 @@
 //! 🧪️ Dag neutral document and sparse-edit laws against independent JSON values.
 use crate::{DagSnapshot, DagDiff};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn vectors() -> serde_json::Value {
     serde_json::from_str(runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json")).expect("neutral vectors")

@@ -107,11 +107,11 @@ fn reconstruct_controlled(value:Snapshot,control:&mut NativeDecodeControl<'_>)->
 }
 
 pub(crate) fn decode_owned(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<MdSnapshot,ValueError>{
- let limits=control.limits();if <MdSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA.len()>limits.max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"CommonMark authored schema exceeds caller limit"))}store::decode_sqlite_snapshot_record_native(payload,"stdio.md",Snapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {MdSnapshot::admit_sqlite_record(record,limits,native)?;let flat=Snapshot::__dsl_from_record_controlled(record,native)?;reconstruct_controlled(flat,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
+ let limits=control.limits();if <MdSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA.len()>limits.max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"CommonMark authored schema exceeds caller limit"))}store::decode_sqlite_snapshot_record_native(payload,"stdio.md",Snapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {MdSnapshot::admit_sqlite_record(record,limits,native)?;let flat=Snapshot::__dsl_from_record_controlled(record,native)?;reconstruct_controlled(flat,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
 }
 pub(crate) fn encode_owned(value:&MdSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
  value.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative)?;
- let limits=control.limits();if <MdSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA.len()>limits.max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"CommonMark authored schema exceeds caller limit"))}store::encode_sqlite_snapshot_record_native(encoding,"stdio.md",Snapshot::__dsl_spec_producer(),|native|{let flat=project_controlled(value,limits.max_rows,native)?;flat.__dsl_to_record_controlled(native)},control,native_owner)
+ let limits=control.limits();if <MdSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA.len()>limits.max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"CommonMark authored schema exceeds caller limit"))}store::encode_sqlite_snapshot_record_native(encoding,"stdio.md",Snapshot::__dsl_spec_producer(),|native|{let flat=project_controlled(value,limits.max_rows,native)?;flat.__dsl_to_record_controlled(native)},control,native_owner)
 }
 
 pub(crate) fn retire_owned(value:MdSnapshot){retire_parts(value.blocks,Vec::new())}
@@ -119,7 +119,7 @@ pub(crate) fn retire_owned(value:MdSnapshot){retire_parts(value.blocks,Vec::new(
 #[cfg(any(test, feature = "testkit"))]
 pub fn duplicate_roots_payload_for_test(value:&MdSnapshot)->store::io_schema::IoPayload{let mut record=Snapshot::from(value).__dsl_to_record();let Some(semio_framework_dsl_record::FieldValue::List(roots))=record.fields.get_mut(&1)else{panic!("owned logical roots field must be a list")};assert_eq!(roots.len(),1);roots.push(semio_framework_dsl_record::FieldValue::UInt(0));let body=semio_framework_dsl_record::print(&record,&Snapshot::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.md",store::semio_format::Component::Dsl,1).unwrap();store::io_schema::IoPayload::Text(store::semio_format::wrap_text(&envelope,&body))}
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 std::thread_local!{
  static RETIRE_ALLOCATION_TRACKING:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};
  static RETIRE_ALLOCATION_REFUSAL:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};

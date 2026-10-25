@@ -8,7 +8,7 @@
  * @see https://html.spec.whatwg.org/multipage/nav-history-apis.html#the-history-interface
  */
 
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { JSDOM } from "jsdom";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -34,7 +34,9 @@ import {
   stepAddress,
   stepAfter,
   stepBefore,
+  useAddress,
   type PresenceConnect,
+  type CourseSession,
   type CourseState,
   type CourseStep,
   type StorageArea,
@@ -211,7 +213,7 @@ function openedPage(): string | null {
   return [...document.querySelectorAll<HTMLElement>("[data-layered-pane][data-opened]")].at(-1)?.dataset.layeredPane ?? null;
 }
 
-/** 🧭️ Opens a named page through the same address channel as a direct link. */
+/** 📂️ Opens a named page through the same address channel as a direct link. */
 function openAddress(page: string): void {
   act(() => {
     window.history.replaceState(null, "", `#${page}`);
@@ -485,6 +487,23 @@ describe("🚏️ the navbar", () => {
     expect(leads("back")).toEqual(["Back: Badges", true]);
   });
 
+  for (const stored of [false, true]) {
+    for (const turns of [0, 3, 12]) {
+      it(`opens the page an address names that was set ${turns} turns after the client mounted, ${stored ? "with the course restored from the device" : "while the course is still on its way"}`, { timeout: 30_000 }, async () => {
+        const area = device();
+        if (stored) localStore(area, COURSE.id).write("course", COURSE);
+        render(app(area));
+        for (let turn = 0; turn < turns; turn += 1) await act(async () => void (await new Promise((resolve) => window.setTimeout(resolve, 0))));
+        openAddress("badges");
+        await waitFor(() => expect(openedPage()).toBe("badges"));
+        expect(window.location.hash).toBe("#badges");
+        await act(async () => void (await new Promise((resolve) => window.setTimeout(resolve, 50))));
+        expect(openedPage()).toBe("badges");
+        expect(window.location.hash).toBe("#badges");
+      });
+    }
+  }
+
   it("opens an addressed page on the first visit before a learner is identified", { timeout: 30_000 }, async () => {
     window.history.replaceState(null, "", "#prefs");
     const origin = memoryStorageOrigin();
@@ -492,5 +511,46 @@ describe("🚏️ the navbar", () => {
     await waitFor(() => expect(openedPage()).toBe("prefs"));
     expect(window.location.hash).toBe("#prefs");
     expect([leads("back"), leads("up")]).toEqual([["Back", false], ["Up: Course overview", true]]);
+  });
+});
+
+describe("🔗️ the address set from outside", () => {
+  const opened: { readonly step: CourseStep; readonly instead: boolean }[] = [];
+  let front: CourseStep = { screen: "home" };
+  const session = { getSnapshot: () => ({ state: stateAt(front as Step) }), open: (step: CourseStep, instead = false) => void opened.push({ step, instead }) } as unknown as CourseSession;
+  const hosted = () => renderHook(({ shown }) => useAddress(session, shown), { initialProps: { shown: stateAt({ screen: "home" }) } });
+  afterEach(() => {
+    opened.splice(0);
+    front = { screen: "home" };
+  });
+
+  it("is kept while the course arrives again before the change of the address is delivered, and opens its page once it is", () => {
+    const host = hosted();
+    act(() => window.history.replaceState(null, "", "#badges"));
+    host.rerender({ shown: { ...stateAt({ screen: "home" }), course: { ...COURSE } } });
+    expect(window.location.hash).toBe("#badges");
+    act(() => void window.dispatchEvent(new HashChangeEvent("hashchange")));
+    expect(opened).toEqual([{ step: { screen: "home", page: "badges" }, instead: false }]);
+    expect(window.location.hash).toBe("#badges");
+  });
+
+  it("is kept through every kind of re-render that leaves the step where it was", () => {
+    const host = hosted();
+    for (const [index, hash] of ["#board", "#learner", "#quizzes"].entries()) {
+      act(() => window.history.replaceState(null, "", hash));
+      host.rerender({ shown: { ...stateAt({ screen: "home" }), course: { ...COURSE, title: text(`Ways ${index}`, `Wege ${index}`) }, introduced: index % 2 === 0 } });
+      expect(window.location.hash).toBe(hash);
+    }
+  });
+
+  it("gives way to the address of the step once the step moves", () => {
+    const host = hosted();
+    act(() => window.history.replaceState(null, "", "#badges"));
+    front = { screen: "home", page: "board" };
+    host.rerender({ shown: stateAt(front as Step) });
+    expect(window.location.hash).toBe("#board");
+    front = { screen: "run", run: "run-open" };
+    host.rerender({ shown: stateAt(front as Step) });
+    expect(window.location.hash).toBe("");
   });
 });

@@ -81,7 +81,7 @@ pub fn repo_bytes_in(manifest_dir: &str, relative: impl AsRef<Path>) -> &'static
     bytes
 }
 
-/// 📚️ UTF-8 text of `relative` below the repository root above `manifest_dir`, read once per process and shared by every later call.
+/// 🦑️ UTF-8 text of `relative` below the repository root above `manifest_dir`, read once per process and shared by every later call.
 ///
 /// # Panics
 /// When no ancestor is a workspace root, or the file is missing, unreadable or not UTF-8.
@@ -112,7 +112,7 @@ macro_rules! manifest_dir {
     };
 }
 
-/// 🧭️ Path of a fixture relative to the manifest directory of the calling crate, for readers that need a path (`read_dir`, `File::open`, `fs::write` of a blessed fixture).
+/// 📂️ Path of a fixture relative to the manifest directory of the calling crate, for readers that need a path (`read_dir`, `File::open`, `fs::write` of a blessed fixture).
 #[macro_export]
 macro_rules! fixture_path {
     ($relative:expr) => {
@@ -120,7 +120,7 @@ macro_rules! fixture_path {
     };
 }
 
-/// 📖️ UTF-8 text of a fixture relative to the manifest directory of the calling crate, as a `&'static str`.
+/// 🧫️ UTF-8 text of a fixture relative to the manifest directory of the calling crate, as a `&'static str`.
 #[macro_export]
 macro_rules! fixture_text {
     ($relative:expr) => {
@@ -128,7 +128,7 @@ macro_rules! fixture_text {
     };
 }
 
-/// 💾️ Bytes of a fixture relative to the manifest directory of the calling crate, as a `&'static [u8]`.
+/// 📁️ Bytes of a fixture relative to the manifest directory of the calling crate, as a `&'static [u8]`.
 #[macro_export]
 macro_rules! fixture_bytes {
     ($relative:expr) => {
@@ -136,7 +136,7 @@ macro_rules! fixture_bytes {
     };
 }
 
-/// 🏠️ Repository root above the calling crate, found by its declared package workspace.
+/// ☎️ Repository root above the calling crate, found by its declared package workspace.
 #[macro_export]
 macro_rules! repo_root {
     () => {
@@ -144,7 +144,7 @@ macro_rules! repo_root {
     };
 }
 
-/// 📚️ UTF-8 text of a repository file, given relative to the repository root above the calling crate; read once per process.
+/// 📄️ UTF-8 text of a repository file, given relative to the repository root above the calling crate; read once per process.
 #[macro_export]
 macro_rules! repo_text {
     ($relative:expr) => {
@@ -152,7 +152,7 @@ macro_rules! repo_text {
     };
 }
 
-/// 📚️ Bytes of a repository file, given relative to the repository root above the calling crate; read once per process.
+/// 🗂️ Bytes of a repository file, given relative to the repository root above the calling crate; read once per process.
 #[macro_export]
 macro_rules! repo_bytes {
     ($relative:expr) => {

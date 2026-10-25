@@ -7,6 +7,6 @@ cwd = "."
 
 [mcp_servers.semio]
 command = "repo"
-args = ["dev", "mcp", "stdio", "os", "--folder", ".🧬semio/🔗space/os-mcp", "--scopes", "workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"]
+args = ["dev", "mcp", "stdio", "os", "--catalog", "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated", "--folder", ".🧬semio/🔗space/os-mcp", "--scopes", "workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"]
 enabled = true
 cwd = "."

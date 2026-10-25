@@ -1,7 +1,7 @@
 //! 🧾️ Canonical language-neutral operation wire witness through the independent JSON oracle.
 use crate::{FromValue, ToValue};
 
-/// 🧾️ Asserts a committed language-agnostic wire witness (`…/🧾️wire-witness/🦠️mutation/🔣️.json`) IS the canonical
+/// 📡️ Asserts a committed language-agnostic wire witness (`…/🧾️wire-witness/🦠️mutation/🔣️.json`) IS the canonical
 /// Rust wire of its operation: `FromValue` decodes it and `ToValue` re-encodes exactly the committed JSON under the
 /// independent `serde_json` oracle (key order free, number spelling exact — `3.0` for an `f64`). The owner-side half of
 /// the `schema-mutation-payload-parity` witness rule; the lint validates the same file against the leaf schema.

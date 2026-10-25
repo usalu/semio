@@ -69,8 +69,6 @@ func TestAllEntityEmojisProjectsTheFrameworkCatalog(t *testing.T) {
 	if kind, found := EntityKindByEmoji("📝️"); !found || kind.ID != "draft" {
 		t.Errorf("first-wins index: expected draft for the shared note emoji, got %q (found=%v)", kind.ID, found)
 	}
-	t.Logf("[DEBUG] Repo CLI Go entity projection observed: %d complete source rows and FIRST-WINS emoji lookups", len(catalog))
-
 }
 
 func TestArtifactKinds(t *testing.T) {

@@ -59,7 +59,15 @@ pub struct LowpolyDiff {
 //#region 🔖️DeltaHelpers
 protocol::list_delta! {
     /// 🧩 Positional row delta for `objects`.
-    pub LowpolyObjectsDelta { removal: LowpolyObjectRemoval, insertion: LowpolyObjectInsertion, relocation: LowpolyObjectRelocation, modification: LowpolyObjectsModification, row: LowpolyObject, patch: LowpolyObjectPatchEntry, key: id, values_only }
+    pub LowpolyObjectsDelta { removal: LowpolyObjectRemoval, insertion: LowpolyObjectInsertion, relocation: LowpolyObjectRelocation, modification: LowpolyObjectsModification, row: LowpolyObject, patch: LowpolyObjectPatchEntry, list: Vec<LowpolyObject>, key: String = by LowpolyObjectKeys, values_only }
+}
+
+/// 🔑️ Keys the foreign `LowpolyObject` rows of their list delta by `id`.
+pub(crate) struct LowpolyObjectKeys;
+
+impl protocol::list_delta::KeyOf<LowpolyObject> for LowpolyObjectKeys {
+    type Key = String;
+    fn key_of(row: &LowpolyObject) -> String { row.id.clone() }
 }
 
 /// 🩹 One patched object entry: the object's own field patch, then its paint-layer edits, then its mesh vertex positions and the Normal channels they rewrote, in that order.

@@ -109,7 +109,7 @@ pub struct RuntimeAppCell<PA: PluginApp> {
     pub maintenance_pressure: AtomicBool,
     #[cfg(any(test, target_arch = "wasm32"))]
     pub maintenance_probe_entries: AtomicU64,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "cleanup-probes"))]
     pub maintenance_probe_input_waits: AtomicU64,
 }
 impl<PA: PluginApp> RuntimeAppCell<PA> {
@@ -129,7 +129,7 @@ impl<PA: PluginApp> RuntimeAppCell<PA> {
             maintenance_pressure: AtomicBool::new(false),
             #[cfg(any(test, target_arch = "wasm32"))]
             maintenance_probe_entries: AtomicU64::new(0),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "cleanup-probes"))]
             maintenance_probe_input_waits: AtomicU64::new(0),
         }
     }

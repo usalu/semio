@@ -4,7 +4,7 @@ import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { spawn } from "node:child_process";
 import { join } from "node:path";
 import { startToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-import { runtimeCommandNameV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 export const TRANSACTION_V2_DEFAULT_FILTER_WAVES: readonly (readonly string[])[] = [
   [

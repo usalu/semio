@@ -1,0 +1,9 @@
+{
+ "registries": {
+  "base": {"version": 1, "owners": [{"name": "a", "root": "pkg/a", "manifest": "pkg/a/project.json", "packages": []}], "catalogProviders": [{"ownerRoot": "✏️s", "sourcePath": "✏️s/catalog.ts", "consumerRoots": ["✏️s/a"]}]},
+  "moreOwners": {"version": 1, "owners": [{"name": "a", "root": "pkg/a", "manifest": "pkg/a/project.json", "packages": []}, {"name": "b", "root": "pkg/b", "manifest": "pkg/b/project.json", "packages": ["@s/b"]}], "catalogProviders": [{"ownerRoot": "✏️s", "sourcePath": "✏️s/catalog.ts", "consumerRoots": ["✏️s/a", "✏️s/b"]}]},
+  "otherProvider": {"version": 1, "owners": [{"name": "a", "root": "pkg/a", "manifest": "pkg/a/project.json", "packages": []}], "catalogProviders": [{"ownerRoot": "✏️s", "sourcePath": "✏️s/other.ts", "consumerRoots": ["✏️s/a"]}]}
+ },
+ "same": [["base", "moreOwners"]],
+ "different": [["base", "otherProvider"]]
+}

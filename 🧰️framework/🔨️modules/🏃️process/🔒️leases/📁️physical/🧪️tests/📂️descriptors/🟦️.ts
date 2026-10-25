@@ -25,7 +25,6 @@ test("physical descriptor transfer and baseline digest close every refused opene
   expect(events.every(event=>event.fd===17)).toBe(true);expect(actual.closed+actual.retained).toBe(actual.opened);
   if(row.owner==="physical"){const owner=tree.statements.find((node:any)=>ts.isFunctionDeclaration(node)&&node.name?.text==="acquirePhysicalFileLocksV1");expect(owner.getText(tree)).toContain("retainPhysicalDescriptorV1(path,held)");}
  }}finally{database.close();}
- console.log("[DEBUG] descriptor lifetime: 18 injected open/validation/hash/read/transfer frontiers match independent SQLite custody counts");
 });
 
 test.skipIf(!["darwin","linux"].includes(process.platform))("qualified kernel flock retains and releases the actual original descriptor",async()=>receiveScriptProcessInvocation(process.env,async original=>{

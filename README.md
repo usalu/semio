@@ -142,7 +142,7 @@ repo dashboard run workspace:setup                                           # o
 repo dashboard run playground:s --param renderer=react --detach --wait-ready  # prints http://127.0.0.1:6070/
 ```
 
-`semio …` is shorthand for `repo dashboard …` (see *The four golden paths* below). The
+`semio …` is the native executable behind `repo dashboard …`: it takes the same verbs and is installed by the first `repo dashboard` start; `repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream` prints its path, and `repo dashboard …` is the supported way to invoke it (see *The four golden paths* below). The
 command activates the shell first (the cached `activate-s-react-dev` prerequisite stages and compiles the
 components) and then serves it. The first activation compiles every plugin to WebAssembly and takes tens of
 minutes; later starts take seconds. The same command is a row of the dashboard (`repo dashboard`,
@@ -638,7 +638,7 @@ The devcontainer includes:
   the first `cargo` invocation inside the repo
 - The dashboard developer control plane
 - Pre-configured development environment
-- Port forwarding for dashboard services (8787, 6070, 6072/6073, 6066, 6067/6068, 6010, 6274/6277)
+- Port forwarding for dashboard services (8787, 6070, 6072/6073, 6066, 6067/6068, 6010, 6050, 6061/6063, 6274/6277, 8791/8793)
 
 ### 🏁️ The four golden paths
 
@@ -868,13 +868,9 @@ Used from the phone for cloud tasks 📱️
 
 Used to ensure consistent order of source code, docs, …
 
-- [GitHub Agent](.github/agents/compose.agent.md)
-
 #### 🔁️ Formatter [↑](#-agents-)
 
 Used to ensure consistent formatting of source code, docs, …
-
-- [GitHub Agent](.github/agents/compose.agent.md)
 
 ### 🤖️ Models [↑](#-ai-)
 

@@ -94,7 +94,7 @@ impl UiIntentCommand {
         self.action.scope.as_str()
     }
 
-    /// 🆔️ The verb as the host addresses it — the bare name at version one, `name@version` beyond it,
+    /// 🗣️ The verb as the host addresses it — the bare name at version one, `name@version` beyond it,
     /// so a renderer can never silently invoke a different version of the same verb.
     pub fn action_name(&self) -> String {
         if self.action.version == 1 {
@@ -136,7 +136,7 @@ pub fn intent_is_stale(recorded: u64, current: u64) -> bool {
     current > recorded.saturating_add(1)
 }
 
-/// 🔢️ Renderer-monotonic per surface — the `seq` a fired intent carries, minted once per gesture so
+/// 🔂️ Renderer-monotonic per surface — the `seq` a fired intent carries, minted once per gesture so
 /// the receiving side can order and de-duplicate independently of transport delivery order.
 #[derive(Clone, Debug, Default)]
 pub struct UiIntentSequencer {

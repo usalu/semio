@@ -73,7 +73,7 @@ pub fn divergence_within(actual: &Json, expected: &Json, ignore_keys: &[&str], t
     walk("$", actual, expected, ignore_keys, tolerance)
 }
 
-/// 🔎️ [`divergence_within`] with no writer freedom at all — exact equality.
+/// 📝️ [`divergence_within`] with no writer freedom at all — exact equality.
 pub fn divergence(actual: &Json, expected: &Json) -> Option<String> {
     divergence_within(actual, expected, &[], 0.0)
 }
@@ -152,7 +152,7 @@ pub fn inverse_restores_within(kind: &str, restored: &Json, original: &Json, ign
     }
 }
 
-/// ↩️ [`inverse_restores_within`] with no writer freedom.
+/// ⏪️ [`inverse_restores_within`] with no writer freedom.
 pub fn inverse_restores(kind: &str, restored: &Json, original: &Json) -> Result<(), String> {
     inverse_restores_within(kind, restored, original, &[], 0.0)
 }
@@ -170,7 +170,7 @@ pub fn mutation_is_observable(kind: &str, mutated: &Json, base: &Json, unobserva
     mutation_is_observable_within(kind, mutated, base, unobservable, &[], 0.0)
 }
 
-/// 👁️ [`mutation_is_observable`] measured under the case's own comparison profile rather than under
+/// 🆚️ [`mutation_is_observable`] measured under the case's own comparison profile rather than under
 /// exact equality. A move confined to keys the profile ignores, or smaller than the slack it allows,
 /// is a move the comparison itself cannot see — so a checker stricter than the profile would accept
 /// a row the profile would still let through unobserved.
@@ -192,7 +192,7 @@ pub fn round_trip_preserves_within(reencoded: &Json, original: &Json, ignore_key
     }
 }
 
-/// 🔁️ [`round_trip_preserves_within`] with no writer freedom.
+/// 🔄️ [`round_trip_preserves_within`] with no writer freedom.
 pub fn round_trip_preserves(reencoded: &Json, original: &Json) -> Result<(), String> {
     round_trip_preserves_within(reencoded, original, &[], 0.0)
 }
@@ -208,7 +208,7 @@ pub fn reparsed_not_copied(output: &[u8], input: &[u8]) -> Result<(), String> {
     Ok(())
 }
 
-/// 🔒️ The mirror law of [`reparsed_not_copied`], for the cases where reproducing the input exactly
+/// 🎯️ The mirror law of [`reparsed_not_copied`], for the cases where reproducing the input exactly
 /// is the CORRECT answer and anything else is the defect — a carrier whose decode/encode is an
 /// identity by construction, a format that leaves a writer no freedom at all, or a fixture the
 /// reference's OWN writer authored with the same options it will re-encode under. Each call site
@@ -232,7 +232,7 @@ pub fn carrier_is_exact(output: &[u8], input: &[u8]) -> Result<(), String> {
 //#endregion 🔖️Laws
 
 //#region 🔖️Wire
-/// 🧾️ The wire-witness law (design §11): a `{kind, params}` row's `params` IS the leaf's wire payload, so the subject's own
+/// 📡️ The wire-witness law (design §11): a `{kind, params}` row's `params` IS the leaf's wire payload, so the subject's own
 /// re-emission of the payload it decoded (`to_json_string(payload_value())`) must be exactly `params` — a hand-mapped shorthand,
 /// a misspelled member, or a member the decoder silently ignored fails here instead of passing as a witness. The failure
 /// carries the whole emitted wire, which is what the row has to read.
@@ -244,7 +244,7 @@ pub fn params_are_wire(kind: &str, params: &Json, emitted: &str) -> Result<(), S
     }
 }
 
-/// 🧾️ The one way a stdio case adapter turns a `{kind, params}` row into the subject's operation: the artifact's own
+/// 🔧️ The one way a stdio case adapter turns a `{kind, params}` row into the subject's operation: the artifact's own
 /// payload decoder (`mutation_from_payload_json`) builds it, and its own re-emission (`mutation_payload_json`) is held
 /// against the row by [`params_are_wire`].
 pub fn wire_operation<M>(kind: &str, params: &Json, decode: impl FnOnce(&str, &str) -> Result<M, String>, emit: impl FnOnce(&M) -> String) -> Result<M, String> {

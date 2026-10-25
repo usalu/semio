@@ -152,7 +152,7 @@ pub struct DrawingStrokePatch { pub value: Option<StrokeStyle> }
 #[value(rename_all="camelCase")]
 #[cfg_attr(any(test, feature = "testkit"),serde(rename_all="camelCase"))]
 pub struct DrawingShapeCoordinatePatch {
-    pub field:crate::schema::shape_geometry::ShapeCoordinateField,
+    pub field:semio_s_artifact_draw_drawing_model::shape_geometry::ShapeCoordinateField,
     pub index:Option<usize>,
     pub value:f64,
 }
@@ -279,7 +279,7 @@ pub fn diff_set_path_geometry(layer_id: &(impl std::fmt::Display + ?Sized), segm
 }
 
 /// 🌀️ Sparse authored fill-rule delta.
-pub fn diff_set_layer_fill_rule(layer_id:&(impl std::fmt::Display + ?Sized),fill_rule:crate::FillRule)->DrawingDiff {layer_base_patch(layer_id,DrawingLayerPatch {fill_rule:Some(fill_rule),..Default::default()})}
+pub fn diff_set_layer_fill_rule(layer_id:&(impl std::fmt::Display + ?Sized),fill_rule:semio_s_artifact_draw_drawing_model::fill_rule::FillRule)->DrawingDiff {layer_base_patch(layer_id,DrawingLayerPatch {fill_rule:Some(fill_rule),..Default::default()})}
 
 pub fn diff_set_group_isolation(layer_id:&(impl std::fmt::Display + ?Sized),isolation:bool)->DrawingDiff {layer_base_patch(layer_id,DrawingLayerPatch {isolation:Some(isolation),..Default::default()})}
 

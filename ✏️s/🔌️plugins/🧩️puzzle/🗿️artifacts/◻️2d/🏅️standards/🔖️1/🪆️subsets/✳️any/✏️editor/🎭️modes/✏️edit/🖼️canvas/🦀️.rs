@@ -12,6 +12,7 @@ use semio_framework_plugin::WindowEngagementInput;
 use semio_framework_plugin::WindowEngagementStatus;
 use semio_framework_pack_json::{json,Value};
 use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_SURFACE_ID;
+use semio_framework_os_infinite_board_normal_scene::overlay_paint_state_json;
 
 //#region 🔖️PaneCamera
 const PUZZLE2D_VIEWPORT_REF_SHORT_PX: f64 = 640.0;

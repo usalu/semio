@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "id": "host-uses-native-events", "environment": {}, "expected": "false" },
+    { "id": "devcontainer-polls", "environment": { "DEVCONTAINER": "true" }, "expected": "true" },
+    { "id": "other-devcontainer-value-uses-native-events", "environment": { "DEVCONTAINER": "false" }, "expected": "false" }
+  ]
+}

@@ -13,7 +13,7 @@ import{appendNativeBootLedgerV1,bindNativeBackingIdentityV1,bindNativeIdentities
 import{createNativeBootFsPortV1,type NativeBootEffectsV1}from"../🧯️act/🟦️.ts";
 import type{NativeBootTargetV1}from"../📡️observe/🟦️.ts";
 
-const oracle=resolve(import.meta.dir,"🐍️oracle.py"),BOOT="1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",DAY=86400000;
+const oracle=resolve(import.meta.dir,"🐍️.py"),BOOT="1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",DAY=86400000;
 const scratch=()=>{const base=process.env.SEMIO_TEST_ARTIFACT_DIR?resolve(process.env.SEMIO_TEST_ARTIFACT_DIR):tmpdir();mkdirSync(base,{recursive:true});return mkdtempSync(join(base,"br-"));};
 const sha=(text:string|Buffer)=>createHash("sha256").update(text).digest("hex");
 const effects:NativeBootEffectsV1={retireTicket:async()=>"done",retireSettledClaims:async()=>"done",recoverDirectorySwap:async()=>"done",detachImage:async()=>"done"};

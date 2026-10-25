@@ -9,7 +9,7 @@ import { goCoverageArgs, goLevelTestArgs, runCanonicalGoTests, runCanonicalGoBui
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepoScriptMain } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 import { runRepositoryTestCommand } from "../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
-import { resolveCliBin } from "../../../📚️library/🚨️policy/🖥️cli/🟦️.ts";
+import { resolveCliBin } from "../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🖥️cli/🟦️.ts";
 
 class BuildScript extends BundleScript {
   async run(): Promise<void> {

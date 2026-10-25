@@ -24,7 +24,7 @@ fn base() -> Generation2dSnapshot {
 }
 
 fn outcome_codes(mutation: &Generation2dMutation, base: &Generation2dSnapshot) -> Vec<(semio_framework_diagnostic::Severity, String)> {
-    let (delta, messages) = Mutation::diff(mutation, base).into_parts();
+    let (delta, messages) = ::semio_framework_os_kernel::ColdMutation::diff(mutation, base).into_parts();
     delta.retire_cold();
     messages.into_iter().map(|message| (message.level, message.code.0)).collect()
 }

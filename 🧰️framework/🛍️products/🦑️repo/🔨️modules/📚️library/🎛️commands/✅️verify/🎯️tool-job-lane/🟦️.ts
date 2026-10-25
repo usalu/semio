@@ -13,7 +13,7 @@ import {sayVerifyV1,refuseVerifyV1} from "../📖️texts/🟦️.ts";
 
 /** 🎯️ Tool-job coverage verification lane. */
 export abstract class VerifyToolJobLane extends VerifyInteractivityLanes {
-  /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
+  /** 🏭️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
   protected async runToolJobCoverage(args: string[]): Promise<void> {
     if (args[0] === "mounted-dispatch") {
       if (args.length !== 1) throw refuseVerifyV1("usage","tool-jobs.expected-interactivity-mounted-dispatch");

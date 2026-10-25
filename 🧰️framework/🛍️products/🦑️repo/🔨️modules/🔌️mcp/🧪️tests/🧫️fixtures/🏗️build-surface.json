@@ -2,17 +2,24 @@
   "schema": "semio.repo.mcp.build-surface/1",
   "tools": [
     "affected",
-    "cache_remote",
+    "bench_compare",
+    "bench_list",
+    "bench_run",
     "cache_status",
+    "cache_verify",
     "capacity_run",
     "capacity_status",
     "cargo",
     "concurrency_list",
     "concurrency_plan",
     "concurrency_run",
+    "conformance_list",
+    "conformance_plan",
+    "conformance_run",
     "dependencies_ensure",
     "dependencies_lock",
     "dependencies_sync",
+    "doctor",
     "exec",
     "graph",
     "incremental_discard",
@@ -23,9 +30,12 @@
     "inputs",
     "leases_status",
     "preflight",
+    "remote_cache_status",
     "remote_execution_status",
     "run",
     "run_many",
+    "service_probe",
+    "service_status",
     "session_close",
     "session_list",
     "session_open",
@@ -34,7 +44,11 @@
     "show_projects",
     "show_targets",
     "test",
-    "tools_setup"
+    "tools_list",
+    "tools_setup",
+    "tools_verify",
+    "units_plan",
+    "units_run"
   ],
   "vectors": [
     {
@@ -411,6 +425,32 @@
       "agent": "alpha"
     },
     {
+      "id": "run-tool-from-registry",
+      "tool": "run",
+      "arguments": {
+        "target": "a:b",
+        "tool": "semio"
+      },
+      "valid": true,
+      "argv": [
+        "run",
+        "a:b"
+      ],
+      "environment": {
+        "SEMIO_BUILD_TOOL": "semio"
+      },
+      "agent": ""
+    },
+    {
+      "id": "run-tool-unregistered",
+      "tool": "run",
+      "arguments": {
+        "target": "a:b",
+        "tool": "{backends}"
+      },
+      "valid": false
+    },
+    {
       "id": "run-without-target",
       "tool": "run",
       "arguments": {},
@@ -660,6 +700,73 @@
       ],
       "environment": {},
       "agent": ""
+    },
+    {
+      "id": "units-plan-language",
+      "tool": "units_plan",
+      "arguments": {
+        "for": "go"
+      },
+      "valid": true,
+      "argv": [
+        "units",
+        "plan",
+        "--json",
+        "--for=go"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "units-plan-unknown-language",
+      "tool": "units_plan",
+      "arguments": {
+        "for": "cobol"
+      },
+      "valid": false
+    },
+    {
+      "id": "units-plan-without-language",
+      "tool": "units_plan",
+      "arguments": {},
+      "valid": false
+    },
+    {
+      "id": "bench-compare-needs-both-reports",
+      "tool": "bench_compare",
+      "arguments": {
+        "current": "a.json"
+      },
+      "valid": false
+    },
+    {
+      "id": "conformance-plan-backends",
+      "tool": "conformance_plan",
+      "arguments": {
+        "implementations": [
+          "nx",
+          "semio"
+        ]
+      },
+      "valid": true,
+      "argv": [
+        "conformance",
+        "plan",
+        "--json",
+        "--implementations=nx,semio"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "conformance-plan-unregistered-backend",
+      "tool": "conformance_plan",
+      "arguments": {
+        "implementations": [
+          "make"
+        ]
+      },
+      "valid": false
     }
   ]
 }

@@ -1,4 +1,4 @@
-//! 🌳️ The declared repo command tree, twin of `NewRootWithConfig`: the flag builders, the command builders and the root.
+//! 🏠️ The declared repo command tree, twin of `NewRootWithConfig`: the flag builders, the command builders and the root.
 
 use super::verbs;
 use semio_framework_repo_cli_command_framework::{Action, Arity, Command, Flag};
@@ -123,7 +123,7 @@ fn only_no(pairs: &[(&str, &str, &str)]) -> Vec<Flag> {
     pairs.iter().flat_map(|(name, only, no)| [Flag::boolean(&format!("only-{name}"), only), Flag::boolean(&format!("no-{name}"), no)]).collect()
 }
 
-/// 🌳️ The monorepo-tree filter vocabulary, twin of `bindTreeFlags`.
+/// 🚩️ The monorepo-tree filter vocabulary, twin of `bindTreeFlags`.
 fn tree_flags() -> Vec<Flag> {
     let mut flags = only_no(&[
         ("technology", "Only show technologies", "Exclude technologies"),

@@ -62,18 +62,11 @@
         "withRepositoryCacheStoreQueuedMaintenanceV1(workspace,\"tools\"",
         "repositoryCacheOrdinaryMaintenanceV1()"
       ]
-    },
-    {
-      "id": "dependencies-install",
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
-      "tokens": [
-        "withRepositoryCacheStoreQueuedMaintenanceV1(workspace,\"dependencies\""
-      ]
     }
   ],
   "nonwaiting": [
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/🟦️.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️script.ts",
       "sites": 2,
       "kind": "explicit-command",
       "reason": "Operator cache-retire-inactive previews or retires only what is idle and never waits behind live builds."
@@ -91,12 +84,6 @@
       "reason": "Inactive Cargo store retirement refuses to take the compiler writer from a running build."
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
-      "sites": 1,
-      "kind": "opportunistic",
-      "reason": "Idle lease retirement is skipped when another invocation holds the lease image and loses nothing."
-    },
-    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
       "sites": 1,
       "kind": "opportunistic",
@@ -110,9 +97,9 @@
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
-      "sites": 1,
+      "sites": 2,
       "kind": "opportunistic",
-      "reason": "Optional graph cache trimming defers to readers because mandatory headroom recovery queues separately."
+      "reason": "Optional graph cache trimming and its quota recovery defer to readers because mandatory headroom recovery queues separately."
     },
     {
       "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts",
@@ -121,10 +108,34 @@
       "reason": "Protected parent image retirement is a maintenance command that refuses a held image."
     },
     {
-      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📋️contract/🟦️.ts",
       "sites": 1,
       "kind": "type-only",
       "reason": "The protected mounted-parent read request type pins its nonwaiting literal."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts",
+      "sites": 1,
+      "kind": "opportunistic",
+      "reason": "Compact headroom recovery tries the exclusive compiler writer without waiting; the caller then retries through the queued admission."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+      "sites": 1,
+      "kind": "opportunistic",
+      "reason": "Graph fixture maintenance takes the image only when no reader or writer holds it and reports the outcome."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+      "sites": 1,
+      "kind": "opportunistic",
+      "reason": "Selected graph headroom recovery is skipped when readers hold the image; the queued coarse recovery follows."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚰️reclaim/🟦️.ts",
+      "sites": 2,
+      "kind": "explicit-command",
+      "reason": "The cache gc command declares its selected graph recovery nonwaiting in its port type and at its call."
     }
   ],
   "scenarios": [

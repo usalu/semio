@@ -102,7 +102,7 @@ test("the analysis reproduces the hand-stated findings, waits and processes of e
 });
 
 test("an independent Python implementation reproduces every case",()=>{
- const run=Bun.spawnSync(["python3",join(import.meta.dir,"🐍️oracle.py")],{stdin:new TextEncoder().encode(JSON.stringify({policy:policyDocument,cases:cases.map(item=>item.facts)})),stdout:"pipe",stderr:"pipe"});
+ const run=Bun.spawnSync(["python3",join(import.meta.dir,"🐍️.py")],{stdin:new TextEncoder().encode(JSON.stringify({policy:policyDocument,cases:cases.map(item=>item.facts)})),stdout:"pipe",stderr:"pipe"});
  expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);
  const results=JSON.parse(new TextDecoder().decode(run.stdout)) as {findings:[string,string,string][];waits:[string,number,number|null,string|null][];processes:[number,string,number|null][];verdict:string;counts:Record<string,number>}[];
  expect(results.length).toBe(cases.length);

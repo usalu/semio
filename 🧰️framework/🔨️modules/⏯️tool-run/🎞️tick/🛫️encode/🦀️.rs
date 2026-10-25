@@ -124,7 +124,7 @@ impl ToolRunTickWireCursor{
   let f=self.frames[self.depth];let path=match f.node{Node::Tick=>0,Node::Identity(which,..)=>match which{0=>1,1=>2,_=>3},Node::Progress|Node::Counters=>2,Node::Step(ring,..)=>if ring{4}else{2},Node::Args(ring,..)=>if ring{5}else{3},Node::Steps(ring)=>if ring{3}else{1},Node::Bytes(index)=>if f.phase>0&&wire>0{Self::bytes_source(writer,payload,index)?.demand(f.offset,wire)?.depth}else{1},Node::Page(index)|Node::PageBody(index)|Node::Column(index,_)=>if index<writer.pages().len(){3}else{2},_=>1};
   path.checked_add(1).ok_or_else(||invalid("original tick source depth overflow"))
  }
- /// 🎟️ Quotes this exact immutable source event, native cursor writes and canonical output independently of grant size.
+ /// 🔜️ Quotes this exact immutable source event, native cursor writes and canonical output independently of grant size.
  pub fn advance_demands(&self,writer:&ToolRunTickWriter,payload:Option<&dyn ToolRunTickPayloadSource>)->Result<RetirementDemand,ValueError>{
   self.validate_source(writer,payload)?;if self.closed||self.done||self.length>0{return Ok(Default::default())}let wire=self.next_wire_byte_demand(writer,payload)?;
   Ok(RetirementDemand{copy_bytes:self.event_native_copy(writer,payload,wire)?,depth:self.source_depth(writer,payload,wire)?,..Default::default()})

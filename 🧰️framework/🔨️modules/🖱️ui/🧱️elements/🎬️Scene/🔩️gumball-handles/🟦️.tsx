@@ -46,7 +46,7 @@ export const GUMBALL_AXIS_BY_KIND: Readonly<Record<GumballHandleKind, GumballVec
 
 export type GumballScalePlane = "xy" | "yz" | "xz";
 
-/** 📐️ Local scale axis pair for a 2D plane scale handle. */
+/** 🥢️ Local scale axis pair for a 2D plane scale handle. */
 export function gumballScalePlaneAxisIndices(kind: GumballHandleKind): readonly [0 | 1 | 2, 0 | 1 | 2] | null {
   if (kind === "scaleXY") return [0, 1];
   if (kind === "scaleYZ") return [1, 2];
@@ -68,7 +68,7 @@ export function gumballWorldPointToLocalOffset(point: GumballVec3, pivot: Gumbal
   return [v.x, v.y, v.z];
 }
 
-/** 📐️ Scale factors for a 2D plane scale drag; uniform uses radial distance in the plane. */
+/** ✖️ Scale factors for a 2D plane scale drag; uniform uses radial distance in the plane. */
 export function gumballPlaneScaleFactors(startLocal: readonly [number, number], currentLocal: readonly [number, number], uniform = false): readonly [number, number] {
   if (uniform) {
     const factor = gumballAxisScaleFactor(Math.hypot(startLocal[0], startLocal[1]), Math.hypot(currentLocal[0], currentLocal[1]));

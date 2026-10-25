@@ -138,6 +138,12 @@ impl XlsxSnapshot {
         self.xml_parts.iter_mut().find(|part| part.path == key)
     }
 
+    /// 📄️ Text of one logical XML part, or of a UTF-8 non-XML OPC part.
+    pub fn part_text(&self, path: &str) -> Option<String> {
+        let key = path.trim_start_matches('/');
+        self.xml_part(key).map(|part| semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text(&part.document)).or_else(|| self.opc.part_bytes(key).and_then(|bytes| String::from_utf8(bytes.to_vec()).ok()))
+    }
+
     /// 🛡️ Refuses duplicate, mismatched, or unresolved XML/package authority.
     pub fn validate_authority(&self) -> Result<(), crate::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError> {
         use crate::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError;

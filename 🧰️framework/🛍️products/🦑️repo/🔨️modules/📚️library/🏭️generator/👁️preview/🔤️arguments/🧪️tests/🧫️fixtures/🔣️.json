@@ -96,7 +96,7 @@
       "id": "empty",
       "command": "repo ./📜️script.ts generate playground-session playground-session \"\" \"\" 🧰️framework/🤖️generated preview",
       "arguments": [
-        "bun",
+        "repo",
         "./📜️script.ts",
         "generate",
         "playground-session",
@@ -112,7 +112,7 @@
       "id": "spaces",
       "command": "repo ./📜️script.ts browser \"a b\" \"Grüße 🦑️\" preview",
       "arguments": [
-        "bun",
+        "repo",
         "./📜️script.ts",
         "browser",
         "a b",

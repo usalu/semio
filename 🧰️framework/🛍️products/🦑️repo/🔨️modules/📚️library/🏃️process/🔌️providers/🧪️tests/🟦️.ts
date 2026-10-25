@@ -6,13 +6,14 @@ import { SCRIPT_PROVIDERS_ENV, loadScriptProviderV1, readScriptProviderMapV1, ty
 import { CARGO_ADMISSION_PROVIDER_V1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { WASM_BUILD_PROVIDER_V1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { TYPESCRIPT_CHECK_PROVIDER_V1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
-import { ARTIFACT_STAGING_PROVIDER_V1, EXTENSION_PACKAGE_PROVIDER_V1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
+import { ARTIFACT_STAGING_PROVIDER_V1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
+import { EXTENSION_PACKAGE_PROVIDER_V1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧩️extension-package/🟦️.ts";
 import { REPOSITORY_TOOLING_PROVIDER_V1, getRepoMetaDir, repoCacheDirectory, runCmd, cargoTargetDirectory, devToolingEnv } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { ARTIFACT_PACKAGE_PROVIDER_V1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { CARGO_WORKSPACE_PROVIDER_V1, observeCargoPreparationInputV1, completeCargoPreparationObservationV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { cargoTargetDirectory as repositoryCargoTargetDirectory } from "../../../⚡️caching/🦀️cargo/🗂️directories/🟦️.ts";
 import { getRepoMetaDir as repositoryMetaDirectory } from "../../../🗂️workspaces/🧬️metadata/🟦️.ts";
-import { STYLING_PYTHON_PROVIDER_V1 } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts";
+import { STYLING_PYTHON_PROVIDER_V1 } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🐍️python/📜️script.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { issueRepositoryScriptProvidersV1, repositoryScriptProvidersV1 } from "../🟦️.ts";
 import declaration from "../🔣️.json" with { type: "json" };

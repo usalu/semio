@@ -181,7 +181,7 @@ fn rewrite_sgr(params: &str, depth: ColorDepth, out: &mut String) {
     out.push('m');
 }
 
-/// 🌈️ Rewrites the truecolor SGR sequences of a patch down to the colours a terminal of `depth` renders.
+/// 🔽️ Rewrites the truecolor SGR sequences of a patch down to the colours a terminal of `depth` renders.
 pub fn quantize_patch(patch: &str, depth: ColorDepth) -> Cow<'_, str> {
     if depth == ColorDepth::TrueColor {
         return Cow::Borrowed(patch);

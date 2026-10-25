@@ -81,7 +81,7 @@ type TypeScriptParserApi = {
 };
 
 /**
- * 🔬️Walks every TS/JS file the repo owns and reports emoji spliced into ASCII identifiers — the signature of
+ * 🦑️Walks every TS/JS file the repo owns and reports emoji spliced into ASCII identifiers — the signature of
  * the 2026-09-03 rename-plan codemod incident. Two independent checks, neither of them a heuristic: jco
  * world bindings are validated against {@link jcoWorldAlias}, and every other candidate file is handed to
  * the repo's own TypeScript parser, so an emoji counts as spliced only where the parser reports an error at

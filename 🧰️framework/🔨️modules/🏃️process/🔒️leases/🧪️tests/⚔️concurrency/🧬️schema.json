@@ -54,14 +54,14 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "gateBusy",
+              "waiting",
               "activeRetired",
               "settledRetired",
               "primary",
               "cleanup"
             ],
             "properties": {
-              "gateBusy": {
+              "waiting": {
                 "type": "boolean"
               },
               "activeRetired": {

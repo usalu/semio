@@ -1,0 +1,90 @@
+# stage-clean different staged=hub-bzl-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/🟦️.ts
+@@ -2,7 +2,6 @@
+ import {readFile,realpath} from "node:fs/promises";
+ import {delimiter,dirname,join} from "node:path";
+ import {taskFamilyV1} from "../../../🏃️execution/🟦️.ts";
+-import {nativeToolBinaryDirectoryV1,toolchainHostV1,toolchainRootsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
+ import componentSchema from "./🧬️schema/🔣️.json" with {type:"json"};
+ 
+ const policy=componentSchema.definitions.Policy.const,hash=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex");
+@@ -18,7 +17,7 @@
+ 
+ /** 🧊️ Resolves the `go` binary like a shell would, without spawning it: `GOROOT` first, then the `PATH` entries in order; the first existing candidate wins and its links are resolved. */
+ export async function bazelGoBinaryV1(environment:Readonly<Record<string,string|undefined>>,platform:string):Promise<string|undefined>{
+- const name=platform.startsWith("win32")?policy.binary.windows:policy.binary.posix,[system,architecture]=platform.split("-"),pinned=environment.SEMIO_WORKSPACE_ROOT===undefined?undefined:join(nativeToolBinaryDirectoryV1("go",toolchainHostV1(system,architecture),toolchainRootsV1(environment.SEMIO_WORKSPACE_ROOT).tools),name),candidates=pinned!==undefined?[pinned]:[...(environment.GOROOT?[join(environment.GOROOT,"bin",name)]:[]),...(environment.PATH??"").split(delimiter).filter(Boolean).map(directory=>join(directory,name))];
++ const name=platform.startsWith("win32")?policy.binary.windows:policy.binary.posix,candidates=[...(environment.GOROOT?[join(environment.GOROOT,"bin",name)]:[]),...(environment.PATH??"").split(delimiter).filter(Boolean).map(directory=>join(directory,name))];
+  for(const candidate of candidates)try{return await realpath(candidate);}catch(error){if(!["ENOENT","ENOTDIR","EACCES"].includes((error as NodeJS.ErrnoException).code??""))throw error;}
+  return undefined;
+ }
+# stage-clean different staged=hub-bzl-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/🧪️tests/🔣️.json map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/🧪️tests/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/🧪️tests/🔣️.json
+@@ -6,7 +6,7 @@
+    "target": "test",
+    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go",
+    "kind": "command",
+-   "command": "repo ./📜️script.ts test",
++   "command": "bun ./📜️script.ts test",
+    "expected": true
+   },
+   {
+@@ -15,7 +15,7 @@
+    "target": "build",
+    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go",
+    "kind": "command",
+-   "command": "repo ./📜️script.ts build",
++   "command": "bun ./📜️script.ts build",
+    "expected": true
+   },
+   {
+@@ -24,7 +24,7 @@
+    "target": "test",
+    "root": "🌎️hub/📦️packages/🦀️rust",
+    "kind": "command",
+-   "command": "repo ./📜️script.ts test",
++   "command": "bun ./📜️script.ts test",
+    "expected": false
+   },
+   {
+@@ -33,7 +33,7 @@
+    "target": "typecheck",
+    "root": "🌎️hub/📦️packages/🟦️typescript",
+    "kind": "command",
+-   "command": "repo ./📜️script.ts typecheck",
++   "command": "bun ./📜️script.ts typecheck",
+    "expected": false
+   },
+   {
+# stage-clean different staged=hub-bzl-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/🧪️tests/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🐹️go/🧪️tests/🟦️.ts
+@@ -1,7 +1,5 @@
+ /** 🏷️ Contract: a task of the Go family is keyed by a spawn-free toolchain identity (version file, binary, host, compile variables) that is independent of where the toolchain is installed and of the checkout path. */
+ import {expect,test} from "bun:test";
+-import {runtimeIdentityV1} from "../../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+ import {mkdirSync,mkdtempSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
+ import {tmpdir} from "node:os";
+ import {dirname,join} from "node:path";
+@@ -14,7 +12,7 @@
+ import schema from "../🧬️schema/🔣️.json";
+ import * as go from "../🟦️.ts";
+ 
+-const python=testPythonV1(),oracle=(source:string,input:unknown):any=>{const run=spawnSync(python!,["-I","-c",source],{input:JSON.stringify(input),encoding:"utf8"});if(run.status!==0)throw new Error(run.stderr);return JSON.parse(run.stdout);};
++const python=Bun.which("python3"),oracle=(source:string,input:unknown):any=>{const run=spawnSync(python!,["-I","-c",source],{input:JSON.stringify(input),encoding:"utf8"});if(run.status!==0)throw new Error(run.stderr);return JSON.parse(run.stdout);};
+ const materialize=(row:(typeof corpus.digests)[number],root:string)=>{
+  for(const [path,text] of Object.entries(row.files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}
+  for(const [path,target] of Object.entries((row as {links?:Record<string,string>}).links??{}))symlinkSync(join(root,target),join(root,path));
+@@ -61,8 +59,8 @@
+  if(!node)throw Error("Bazel fingerprint implementation required");
+  const code=ts.transpileModule(node.getText(tree).replace(/^export /u,"")+";return taskFingerprint;",{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+  const fingerprint=async(task:{target:string;root:string},digest:string,cargo=false)=>{
+-  const bindings={runtimeIdentityV1,bazelNativeToolchainClassV1:()=>undefined,createHash,randomUUID,join,bazelCargoClassV1:()=>cargo?{subcommand:"test",manifest:"Cargo.toml"}:undefined,bazelCargoToolchainDigestV1:async()=>"cargo",bazelGoClassV1:go.bazelGoClassV1,bazelGoToolchainDigestV1:async()=>digest,process:{...process,env:{}},bazelTaskInputsV1:()=>[],issueBazelTaskEnvironmentV1:()=>({SEMIO_BUILD_MODE:"prototype"}),bazelTaskBaseEnvironmentV1:()=>({}),checkScriptInvocation:()=>undefined,bazelSourceIdentityV1:async()=>"source",captureOwnedCommandV1:async()=>""};
+-  const run=Function(...Object.keys(bindings),code)(...Object.values(bindings)),definition={execution:{kind:"command",command:"repo ./📜️script.ts test"}};
++  const bindings={createHash,randomUUID,join,bazelCargoClassV1:()=>cargo?{subcommand:"test",manifest:"Cargo.toml"}:undefined,bazelCargoToolchainDigestV1:async()=>"cargo",bazelGoClassV1:go.bazelGoClassV1,bazelGoToolchainDigestV1:async()=>digest,process:{...process,env:{}},bazelTaskInputsV1:()=>[],issueBazelTaskEnvironmentV1:()=>({SEMIO_BUILD_MODE:"prototype"}),bazelTaskBaseEnvironmentV1:()=>({}),checkScriptInvocation:()=>undefined,bazelSourceIdentityV1:async()=>"source",captureOwnedCommandV1:async()=>""};
++  const run=Function(...Object.keys(bindings),code)(...Object.values(bindings)),definition={execution:{kind:"command",command:"bun ./📜️script.ts test"}};
+   return run("/root",{},{id:"p:"+task.target,project:"p",target:task.target,root:task.root,args:[],definition},["a.go"],new Map(),{control:{signal:new AbortController().signal}},{},true,"implementation",undefined) as Promise<string>;
+  };
+  const goRow=corpus.classes.find(row=>row.expected)!,otherRow=corpus.classes.find(row=>!row.expected&&row.kind==="command")!;

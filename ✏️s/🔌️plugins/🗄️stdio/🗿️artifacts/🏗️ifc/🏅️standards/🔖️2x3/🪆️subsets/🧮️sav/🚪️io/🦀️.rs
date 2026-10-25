@@ -152,7 +152,7 @@ use semio_framework_diagnostic::Severity;
 
         /// ⚖️ Adds a load group (`IFCSTRUCTURALLOADGROUP`) instance.
         pub fn add_load_group(mut self, id: u64) -> Self {
-            let (next, outcome) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::Mutation::diff(&Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: Part21Instance { id, entities: vec![("IFCSTRUCTURALLOADGROUP".into(), vec![])] }, index: None }), &self.snapshot));
+            let (next, outcome) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::ColdMutation::diff(&Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: Part21Instance { id, entities: vec![("IFCSTRUCTURALLOADGROUP".into(), vec![])] }, index: None }), &self.snapshot));
             self.snapshot = next;
             stage_mutation_errors(&mut self.diagnostics, &outcome);
             self
@@ -183,7 +183,7 @@ use semio_framework_diagnostic::Severity;
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (next, diff) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            let (next, diff) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::ColdMutation::diff(&mutation, &self.snapshot));
             self.snapshot = next;
             (self, diff)
         }

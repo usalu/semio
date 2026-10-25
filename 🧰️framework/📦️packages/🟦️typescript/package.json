@@ -265,7 +265,20 @@
     "./value/sort/testing": "./🌱️value/📶️sort/🧪️testing/🟦️.ts",
     "./tool-run/payload/stream": "./⏯️tool-run/📨️payload/🌊️stream/🟦️.ts",
     "./replication/mutation/map/testing/shared-map-delta-source": "./📡️replication/🎮️mutation/🗂️map/🧪️testing/🧪️shared-map-delta-source/🟦️.ts",
-    "./dsl/record/testing/variant-field": "./🗣️dsl/🧪️testing/🌿️variant-field/🟦️.ts"
+    "./dsl/record/testing/variant-field": "./🗣️dsl/🧪️testing/🌿️variant-field/🟦️.ts",
+    "./runtime/glob": "./⚙️runtime/🌐️glob/🟦️.ts",
+    "./runtime/identity": "./⚙️runtime/🏷️identity/🟦️.ts",
+    "./runtime/sqlite": "./⚙️runtime/🗃️sqlite/🟦️.ts",
+    "./runtime/test": "./⚙️runtime/🧪️test/🟦️.ts",
+    "./runtime/main": "./⚙️runtime/🏁️main/🟦️.ts",
+    "./runtime/process": "./⚙️runtime/🚀️process/🟦️.ts",
+    "./runtime/contract": "./⚙️runtime/📋️contract/🟦️.ts",
+    "./runtime/parse": "./⚙️runtime/📄️parse/🟦️.ts",
+    "./runtime/source": "./⚙️runtime/🔬️source/🟦️.ts",
+    "./runtime/semver": "./⚙️runtime/🔢️semver/🟦️.ts",
+    "./runtime/native": "./⚙️runtime/🧲️native/🟦️.ts",
+    "./runtime/serve": "./⚙️runtime/🌍️serve/🟦️.ts",
+    "./runtime/selection": "./⚙️runtime/🧭️selection/🟦️.ts"
   },
   "scripts": {
     "test": "repo run @semio-tech/framework:test",

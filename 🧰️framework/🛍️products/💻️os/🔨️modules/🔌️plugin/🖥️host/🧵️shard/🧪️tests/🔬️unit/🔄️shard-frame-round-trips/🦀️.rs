@@ -23,7 +23,7 @@ shard_frame_round_trip!(shard_frame_round_trip_register, ShardFrame::Register { 
 shard_frame_round_trip!(shard_frame_round_trip_unregister, ShardFrame::Unregister { actor: ActorId(9) });
 shard_frame_round_trip!(
     shard_frame_round_trip_grant,
-    ShardFrame::Grant { retained: original_retained_turn(),         actor: ActorId(11),
+    ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us,         actor: ActorId(11),
         budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive),
         envelopes: vec![Envelope {
             to: ActorId(11),
@@ -93,12 +93,12 @@ async fn grant_with_no_envelopes_does_not_issue_a_batch() {
     let actor = ActorId(61);
     let package = PackageRef { package: PackageId("grant-empty".to_string()), hash: PackageHash([20u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("mock instantiate");
     let (transport, probe) = LoopbackTransport::paired().await;
     let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
     budget.fuel = 123_456;
     let mut bytes = Vec::new();
-    ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![] }.pack_encode(&mut bytes).await.expect("declared original frame authority");
+    ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget, envelopes: vec![] }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
 
     let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;

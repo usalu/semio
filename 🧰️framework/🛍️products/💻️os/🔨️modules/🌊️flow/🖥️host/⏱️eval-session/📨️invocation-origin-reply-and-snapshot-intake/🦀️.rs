@@ -64,7 +64,7 @@ impl FlowEvalSession {
         if self.state.pending_tick_snapshot.is_some(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original completed snapshot custody is occupied").into())}
         let source=self.state.pending_snapshot_copy.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original tick snapshot read is absent"))?;
         if !source.complete(){return Ok(false)}
-        self.state.pending_tick_snapshot=source.take();source.begin_close();cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)
+        let taken=source.take();source.begin_close();self.state.pending_tick_snapshot=taken;cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)
     }
     pub fn admitted_tick_snapshot(&self)->Option<&FlowHostSnapshot>{self.state.pending_tick_snapshot.as_ref()}
     /// ♻️ Closes only the original intake source while its completed snapshot remains retained.

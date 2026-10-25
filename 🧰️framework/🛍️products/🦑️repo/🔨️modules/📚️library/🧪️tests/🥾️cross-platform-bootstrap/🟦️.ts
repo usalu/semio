@@ -103,21 +103,20 @@ describe("cross-platform bootstrap", () => {
     const contract = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🥾️nx-entrypoints/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(libraryRoot, "🧬️schema/🥾️nx-entrypoints/🔣️.json"), "utf8"));
     expect(new Ajv({ allErrors: true, strict: true }).compile(schema)(contract)).toBe(true);
-    const nodeOracle = spawnSync("node", ["--input-type=module", "-e", 'import {createRequire} from "node:module";import {readFileSync,realpathSync} from "node:fs";import {resolve} from "node:path";const rows=JSON.parse(readFileSync(0,"utf8")),load=createRequire(resolve("package.json"));process.stdout.write(JSON.stringify(rows.map(row=>realpathSync(load.resolve(row.specifier)))));'], { cwd: repoRoot, input: JSON.stringify(contract.cases), encoding: "utf8", windowsHide: true, timeout: 10_000 });
+    const nodeOracle = spawnSync("node", ["--input-type=module", "-e", 'import {createRequire} from "node:module";import {readFileSync,realpathSync} from "node:fs";import {resolve} from "node:path";const rows=JSON.parse(readFileSync(0,"utf8")),load=createRequire(resolve(".nx/installation/package.json"));process.stdout.write(JSON.stringify(rows.map(row=>realpathSync(load.resolve(row.specifier)))));'], { cwd: repoRoot, input: JSON.stringify(contract.cases), encoding: "utf8", windowsHide: true, timeout: 10_000 });
     expect(nodeOracle.status).toBe(0);
     const nodeTargets = JSON.parse(nodeOracle.stdout) as string[];
-    const load = createRequire(join(repoRoot, "package.json"));
+    const load = createRequire(join(repoRoot, ".nx/installation/package.json"));
     const metadata = load("nx/package.json") as { bin: { nx: string } };
     for (const row of contract.cases as { id: string; source: string; pattern: string; specifier: string; target: string }[]) {
       const original = readFileSync(join(libraryRoot, row.source), "utf8").match(new RegExp(row.pattern))?.[1];
       expect(original).toBe(row.specifier);
       const independent = realpathSync(load.resolve(row.specifier));
-      expect(realpathSync(Bun.resolveSync(original!, repoRoot))).toBe(independent);
+      expect(realpathSync(Bun.resolveSync(original!, join(repoRoot, ".nx/installation")))).toBe(independent);
       expect(nodeTargets[contract.cases.indexOf(row)]).toBe(independent);
       expect(independent).toBe(realpathSync(join(dirname(load.resolve("nx/package.json")), row.target)));
       if (row.id === "cli") expect(independent).toBe(realpathSync(join(dirname(load.resolve("nx/package.json")), metadata.bin.nx)));
     }
-    console.log("[DEBUG] Nx entrypoints: two neutral declarations match Node/Bun loaders and the package bin");
   });
 
   test("keeps deferred command imports distinct from initial router imports", async () => {
@@ -241,7 +240,8 @@ describe("cross-platform bootstrap", () => {
     const image = readFileSync(join(repoRoot, fixture.nodePin.dockerfile), "utf8").match(new RegExp(`^ARG ${fixture.nodePin.dockerfileArg}=(.+)$`, "mu"))?.[1];
     expect(pinned).toMatch(/^\d+\.\d+\.\d+$/u);
     expect(image).toBe(pinned);
-    expect(readFileSync(join(repoRoot, fixture.unixBootstrap.path), "utf8")).toContain('require("./package.json").engines.node');
+    const unix = readFileSync(join(repoRoot, fixture.unixBootstrap.path), "utf8");
+    expect(unix).toContain('"$REPO_ROOT/package.json"');expect(unix).toContain('/"engines"/ { engines = 1 }');
     const windows = readFileSync(join(repoRoot, fixture.windowsBootstrap.path), "utf8");
     expect(windows).toContain("$manifest.engines.node");
     expect(windows).not.toContain("OpenJS.NodeJS");
@@ -259,7 +259,7 @@ describe("cross-platform bootstrap", () => {
     const validate = new Ajv({ allErrors: true, strict: true }).compile(pins.schema);
     expect(validate({ assets: pins.assets }), JSON.stringify(validate.errors)).toBe(true);
     const shell = readFileSync(join(repoRoot, fixture.unixBootstrap.path), "utf8"), windows = readFileSync(join(repoRoot, fixture.windowsBootstrap.path), "utf8");
-    const bunPath = nativePinsPath(shell, /^BUN_PINS_FILE="\$REPO_ROOT\/(.*)"$/mu, "/");
+    const bunPath = nativePinsPath(shell, /^PINS_FILE="\$REPO_ROOT\/(.*)"$/mu, "/");
     expect(nativePinsPath(windows, /^\$script:PinsFile = Join-Path \$repoRoot "(.*)"$/mu, "\\")).toBe(pins.path);
     expect(nativePinsPath(windows, /^\$script:BunPinsFile = Join-Path \$repoRoot "(.*)"$/mu, "\\")).toBe(bunPath);
     const rowLines = readFileSync(pins.path, "utf8").split("\n").filter((line) => line.trim().startsWith('{"tool":'));
@@ -306,7 +306,7 @@ describe("cross-platform bootstrap", () => {
   test("selects pinned distributions in the shell exactly as the schemas declare them", () => {
     if (process.platform === "win32") return;
     const pins = nativePins(), source = readFileSync(join(repoRoot, fixture.unixBootstrap.path), "utf8");
-    const bunPath = nativePinsPath(source, /^BUN_PINS_FILE="\$REPO_ROOT\/(.*)"$/mu, "/");
+    const bunPath = nativePinsPath(source, /^PINS_FILE="\$REPO_ROOT\/(.*)"$/mu, "/");
     const bun = JSON.parse(readFileSync(bunPath, "utf8")).definitions.Release.const as { version: string; release: string; distributions: { platform: string; arch: string; musl: boolean; archive: string; sha256: string }[] };
     const functions = ["pin_row", "pin_field", "bun_release_row", "version_at_least"].map((name) => shellFunction(source, name)).join("\n");
     const script = (body: string) => spawnSync("bash", ["-c", `set -euo pipefail\nPINS_FILE="$1"\nBUN_PINS_FILE="$2"\n${functions}\n${body}`, "law", pins.path, bunPath], { encoding: "utf8" });

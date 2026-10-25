@@ -51,24 +51,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     fn execution_contract(&self) -> ToolExecutionContract {
         ToolExecutionContract::resumable(RAW_BYTES, 64, 1, 1_048_576, 7_500, 1, 1)
     }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
-            return Err((ToolJobFactoryError::new("query wire or checkpoint exceeds admitted ownership"), input, checkpoint));
-        }
-        Ok(match checkpoint {
-            Some(checkpoint) => ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
-            None => ArtifactRetainedCommandJob::from_wire(payload, input),
-        })
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: RAW_BYTES, checkpoint_resume: true);
 }
 
 impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ArtifactOwnedToolJobFactory for JackQueryJobFactory<C>{
@@ -78,73 +61,62 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "runQuery", lanes: LANES }, ArtifactToolPublicationContract { tool_id: "loadExampleQuery", lanes: LANES }];
 }
 
-pub fn build_job<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(request: ArtifactOwnedToolJobRequest<Owner<C>>) -> Result<semio_framework::ToolOperationSpec, Fault> {
-    let tool = TrinityJackPlayApp::<C>::command_id(&request.command);
-    if tool != request.tool_id || !JACK_QUERY_TOOL_IDS.contains(&tool) {
-        return Err(Fault::from("query command does not match its exact factory key"));
+pub fn build_job<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(request: &mut Option<ArtifactOwnedToolJobRequest<Owner<C>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    let tool = TrinityJackPlayApp::<C>::command_id(&original.command);
+    if tool != original.tool_id || !JACK_QUERY_TOOL_IDS.contains(&tool) {
+        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "query command does not match its exact factory key").into());
     }
-    let view = request.context.view_state.as_ref().ok_or_else(|| Fault::from("Jack query execution requires an exact attached-window roster"))?;
-    let editor_window_id = view.window_id.as_deref().ok_or_else(|| Fault::from("Jack query execution requires its originating editor window"))?;
-    let editor_kind = view.window_instances.iter().find(|window| window.id == editor_window_id).map(|window| window.window_kind_id.as_str());
-    if editor_kind != Some(crate::editor::jack::TRINITY_JACK_PLAY_WINDOW_EDITOR) {
-        return Err(Fault::from("Jack query execution origin must be an attached editor window"));
-    }
-    let results_window_id = match request.command.as_ref() {
-        TrinityJackCommand::RunQuery { results_window_id, .. } | TrinityJackCommand::LoadExampleQuery { results_window_id, .. } => results_window_id.as_str(),
-        _ => return Err(Fault::from("Jack query execution requires an explicit results-window target")),
-    };
-    let results_kind = view.window_instances.iter().find(|window| window.id == results_window_id).map(|window| window.window_kind_id.as_str());
-    if results_kind != Some(crate::editor::jack::TRINITY_JACK_PLAY_WINDOW_RESULTS) {
-        return Err(Fault::from("Jack query execution target must be an attached results window"));
-    }
-    if request
-        .context
-        .window_transient
-        .as_ref()
-        .filter(|window| window.window_id() == results_window_id)
-        .and_then(|window| window.get::<JackResultsWindowTransientOwner>())
-        .is_none()
-    {
-        return Err(Fault::from("Jack query execution requires the exact targeted results-window transient snapshot"));
-    }
-    let source = match request.command.as_ref() {
-        TrinityJackCommand::RunQuery { query, .. } => query.as_deref().filter(|query| !query.trim().is_empty()).unwrap_or(&request.snapshot.query),
-        TrinityJackCommand::LoadExampleQuery { query, .. } => query,
-        _ => unreachable!(),
-    };
-    if source.len() > QUERY_BYTES {
-        return Err(Fault::from("query source exceeds its admitted capacity"));
-    }
-    let operation = AppOperationContext {
-        app_instance_id: request.app_instance_id,
-        parent_document_id: request.parent_document_id.clone(),
-        operation_id: request.operation.operation.0,
-        generation: request.operation.generation.0,
-        canonical_base_revision: request.canonical_base_revision,
-        retained: request.retained,
-        authoring_seed: request.authoring_seed.clone(),
-    };
-    let adopts_query = matches!(request.command.as_ref(), TrinityJackCommand::LoadExampleQuery { .. }) && source != request.snapshot.query && source.len() <= crate::standards::v1::subsets::any::schema::graph::JACK_QUERY_MAXIMUM_BYTES;
-    let work = Box::new(JackQueryWork::<C>::new(tool, source.to_string(), adopts_query, editor_window_id.to_string(), results_window_id.to_string(), operation.operation_id, operation.generation));
-    let payload = ArtifactRetainedCommandPayload::new(
-        ArtifactRetainedCommandInputs {
-            command: *request.command,
-            snapshot: request.snapshot,
-            snapshot_read: request.snapshot_read,
-            config: request.config,
-            history: request.history,
-            interaction_state: request.interaction_state,
-            interaction_hover: request.interaction_hover,
-            context: Some(request.context),
-            operation,
-            completion: request.completion,
-        },
-        TrinityJackPlayApp::<C>::command_id,
-        RAW_BYTES,
-        1,
-        work,
-    );
-    Ok(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation))
+    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request, output, cx, TrinityJackPlayApp::<C>::command_id, RAW_BYTES, 1, true, Default::default(), |request, _identity| {
+        let work = (|| -> Result<_, Fault> {
+        let view = request.context.view_state.as_ref().ok_or_else(|| Fault::from("Jack query execution requires an exact attached-window roster"))?;
+        let editor_window_id = view.window_id.as_deref().ok_or_else(|| Fault::from("Jack query execution requires its originating editor window"))?;
+        let editor_kind = view.window_instances.iter().find(|window| window.id == editor_window_id).map(|window| window.window_kind_id.as_str());
+        if editor_kind != Some(crate::editor::jack::TRINITY_JACK_PLAY_WINDOW_EDITOR) {
+            return Err(Fault::from("Jack query execution origin must be an attached editor window"));
+        }
+        let results_window_id = match request.command.as_ref() {
+            TrinityJackCommand::RunQuery { results_window_id, .. } | TrinityJackCommand::LoadExampleQuery { results_window_id, .. } => results_window_id.as_str(),
+            _ => return Err(Fault::from("Jack query execution requires an explicit results-window target")),
+        };
+        let results_kind = view.window_instances.iter().find(|window| window.id == results_window_id).map(|window| window.window_kind_id.as_str());
+        if results_kind != Some(crate::editor::jack::TRINITY_JACK_PLAY_WINDOW_RESULTS) {
+            return Err(Fault::from("Jack query execution target must be an attached results window"));
+        }
+        if request
+            .context
+            .window_transient
+            .as_ref()
+            .filter(|window| window.window_id() == results_window_id)
+            .and_then(|window| window.get::<JackResultsWindowTransientOwner>())
+            .is_none()
+        {
+            return Err(Fault::from("Jack query execution requires the exact targeted results-window transient snapshot"));
+        }
+        let source = match request.command.as_ref() {
+            TrinityJackCommand::RunQuery { query, .. } => query.as_deref().filter(|query| !query.trim().is_empty()).unwrap_or(&request.snapshot.query),
+            TrinityJackCommand::LoadExampleQuery { query, .. } => query,
+            _ => unreachable!(),
+        };
+        if source.len() > QUERY_BYTES {
+            return Err(Fault::from("query source exceeds its admitted capacity"));
+        }
+        let operation = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
+            authoring_seed: request.authoring_seed.clone(),
+        };
+        let adopts_query = matches!(request.command.as_ref(), TrinityJackCommand::LoadExampleQuery { .. }) && source != request.snapshot.query && source.len() <= crate::standards::v1::subsets::any::schema::graph::JACK_QUERY_MAXIMUM_BYTES;
+        let work = JackQueryWork::<C>::new(tool, source.to_string(), adopts_query, editor_window_id.to_string(), results_window_id.to_string(), operation.operation_id, operation.generation);
+            Ok(work)
+        })()
+        .map_err(|fault| semio_framework_plugin::__value::ValueError::new(semio_framework_plugin::__value::ValueRefusalKind::InvalidValue, fault.message.to_string()))?;
+        Ok((work, Default::default()))
+    })
 }
 
 /// 🚫️ A query run without the document's child view cannot read or edit the scene.

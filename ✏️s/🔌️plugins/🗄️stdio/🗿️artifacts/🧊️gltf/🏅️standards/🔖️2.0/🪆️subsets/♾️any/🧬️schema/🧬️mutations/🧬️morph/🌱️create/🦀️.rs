@@ -39,7 +39,7 @@ pub fn plan(p: &GltfCreateMorphTargetPayload, base: &GltfSnapshot) -> Result<Glt
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfCreateMorphTargetPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_morph_target::DeleteMorphTargetMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -81,7 +81,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for CreateMorphTargetMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<CreateMorphTargetMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<CreateMorphTargetMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::delete_morph_target::DeleteMorphTargetMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

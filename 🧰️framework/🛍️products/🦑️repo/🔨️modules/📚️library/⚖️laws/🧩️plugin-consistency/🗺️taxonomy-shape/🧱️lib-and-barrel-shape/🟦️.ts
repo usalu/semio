@@ -55,7 +55,7 @@ export function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonl
 }
 
 /**
- * 📏️TS analogue of `policyTaxonomyLibShapeBreaches`, added by ticket
+ * 🛢️TS analogue of `policyTaxonomyLibShapeBreaches`, added by ticket
  * `26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE` (Single-File-Repo hazard ruling, scope note 2): a
  * `"taxonomy"`-area TypeScript package's configured entry file must stay a wiring-only re-export barrel — counts non-import/export/comment/blank lines
  * and flags a breach past `libWiringLineBudget`. Warn-only (`priority: "medium"`) and still vacuous

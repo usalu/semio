@@ -1,3 +1,6 @@
+import type { BuildExecutionV1, BuildGraphInvalidationInventoryV1, BuildGraphModuleAuthorityV1, BuildGraphPartStubV1, BuildGraphPartV1, BuildGraphRowV1, BuildGraphV1, BuildProjectV1, BuildTargetV1, BuildUnavailableProjectV1 } from "./📋️model/🟦️.ts";
+import{refuseBuildV1}from"../📖️texts/🟦️.ts";
+import{staleImplementationV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import{buildGraphRetryDiagnosticV1}from"./🔁retry/🟨️.mjs";
 import type graphSnapshotPolicy from"../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json";
 import type exactReadSchema from"../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json";
@@ -6,6 +9,7 @@ import{fileURLToPath}from"node:url";
 import{selectPackageManagerV1}from"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 const javascriptManagerV1=selectPackageManagerV1("javascript");
 import*as observationV1 from"../👁️observation/🟨️.mjs";
+import{GENERATION_PIN_POLICY_V1,encodeGenerationPinV1,generationPinOwnerV1,generationPinStateV1,type GenerationPinV1}from"./🕰️generations/🧷️pin/🟨️.mjs";
 import{readInventoryRecordLeanV1,rememberInventoryRecordV1}from"../📥️inputs/🪶️lean-inventory/🟨️.mjs";
 import{createGraphPhaseClockV1,writeGraphPhaseRowV1}from"./⏱️phases/🟨️.mjs";
 import{createProjectFileIndexV1}from"./🧭️file-owner/🟨️.mjs";
@@ -24,14 +28,15 @@ import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { checkScriptInvocation, advanceScriptInvocation, requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import {acquireQueuedResourceLease} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {acquireQueuedResourceLease,acquireResourceLease} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {buildGraphWriterResourceV1} from "../📥️inputs/💾️storage/🔒️writer/🟨️.mjs";
 import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{decodeGraphRecordsV1}from"../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📇️records/🟨️.mjs";
-import{createGenerationStoreV1,createNodeFilePortV1,createFrontierV1,diffFrontiersV1,frontierHoldsV1,canonicalJsonV1 as canonicalGenerationJsonV1}from"./🕰️generations/🟨️.mjs";
-import{loadGenerationGraphV1,renderGenerationMessageV1,withholdDanglingTestProjectsV1}from"./🕰️generations/🔌️load/🟨️.mjs";
+import{createGenerationStoreV1,createNodeFilePortV1,createFrontierV1,diffFrontiersV1,frontierHoldsV1,stableDirectoriesV1,canonicalJsonV1 as canonicalGenerationJsonV1}from"./🕰️generations/🟨️.mjs";
+import{loadGenerationGraphV1,renderGenerationMessageV1,survivingStubsV1,withholdDanglingTestProjectsV1}from"./🕰️generations/🔌️load/🟨️.mjs";
 import{deriveEnvironmentV1,environmentRowHoldsV1}from"./🕰️generations/🌍️environment/🟨️.mjs";
-import{GRAPH_MEMORY_POLICY_V1,graphStringInternerV1}from"../🧠️memory/🟨️.mjs";
+import{GRAPH_MEMORY_POLICY_V1,graphStringInternerV1,createMemoryPortsV1}from"../🧠️memory/🟨️.mjs";
 import{residentGraphSeamsV1}from"../🏡️resident/🕰️graph-hooks/🔌️host/🟨️.mjs";
 import{createGenerationFilesV1}from"./🗂️generation-files/🟦️.ts";
 import generationSchemaV1 from"./🕰️generations/🧬️schema/🔣️.json"with{type:"json"};
@@ -44,15 +49,12 @@ const graphFormatStampsV1=Object.freeze(["graph.generation","graph.record","grap
 
 const graphSnapshotPolicyURLV1=new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),exactReadPolicyURLV1=new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),65536,true),exactReadPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),65536,true);
 const graphSnapshotPolicyV1:typeof graphSnapshotPolicy=Object.freeze(JSON.parse(graphSnapshotPolicyCaptureV1.text??"")),exactSourceReadPolicyV1:typeof exactReadSchema.definitions.Policy.const=Object.freeze(JSON.parse(exactReadPolicyCaptureV1.text??"").definitions.Policy.const);
-function requireCurrentGraphReadPoliciesV1():void{if(implementationPinnedV1())return;if(captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),65536).sha256!==graphSnapshotPolicyCaptureV1.sha256||captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),65536).sha256!==exactReadPolicyCaptureV1.sha256)throw Error("Stale loaded Graph reader policy; restart required");}
+function requireCurrentGraphReadPoliciesV1():void{if(implementationPinnedV1())return;if(captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),65536).sha256!==graphSnapshotPolicyCaptureV1.sha256||captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),65536).sha256!==exactReadPolicyCaptureV1.sha256)throw staleImplementationV1("Stale loaded Graph reader policy; restart required");}
 
 /** 📖️ Reads each declaration through the same exact source fact boundary as inference. */
 function graphDeclarationV1(path:string):any{const url=new URL(path,physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL));return JSON.parse(pinnedAuthorityReadV1(url.href,()=>{const captured=capturePhysicalSourceTextV1(url,65536),observed=observationV1.observedFs.readFileSync(url,"utf8");if(observed!==captured)throw Error("Current graph declaration Source changed");return observed;}));}
-
-/** 🧾️ Binds loaded graph behavior and its publication declaration to their original bytes. */
-export interface BuildGraphModuleAuthorityV1{implementation:string;publication:string}
 /** 🗂️ The graph implementation files whose bytes the module authority covers, and whose loaded bytes every generation names. */
-const graphImplementationUrlsV1=():URL[]=>[new URL(physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🧮️digest/📥️read/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/📥️reuse/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/📥️reuse/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/📥️load/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🚪️admission/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧭️selection/📥️options/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🚪️selection.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/📋️owners.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🚪️admission.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🪶️lean.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🔒️writer/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/📒️ledger/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🔏️revision/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🔏️revision/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🔁retry/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🔁retry/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🗂️generation-files/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🔌️load/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🌍️environment/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🧭️file-owner/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️read.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🟢️node/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🎯️precision/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/💾️receipt/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧠️memory/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1,new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))];
+const graphImplementationUrlsV1=():URL[]=>[new URL(physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🧮️digest/📥️read/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/📥️reuse/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../👁️observation/📥️reuse/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/📥️load/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/📋️data/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🚪️admission/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧭️selection/📥️options/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🚪️selection.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/📋️owners.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🚪️admission.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧬️schema/🪶️lean.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🔒️writer/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/💾️storage/📒️ledger/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🔏️revision/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🔏️revision/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🔁retry/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🔁retry/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🗂️generation-files/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🔌️load/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🕰️generations/🌍️environment/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("./🧭️file-owner/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🟢️node/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️source/🔏️closure/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🎯️precision/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../📥️inputs/🦀️resolution/💾️receipt/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),new URL("../🧠️memory/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),graphSnapshotPolicyURLV1,new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))];
 const graphModuleAuthorityV1=():BuildGraphModuleAuthorityV1=>{requireCurrentSourceInventoryV1();requireCurrentGraphReadPoliciesV1();const observation=observationV1;if(typeof observation.requireCurrentObservationV1!=="function")throw Error("Loaded observation current-instance guard required");observation.requireCurrentObservationV1();const implementation=createHash("sha256");for(const path of graphImplementationUrlsV1())implementation.update(captureBoundedSourceRevisionV1(fileURLToPath(path),8388608).sha256);return {implementation:implementation.digest("hex"),publication:captureBoundedSourceRevisionV1(fileURLToPath(new URL("../🧬️schema/📣️publication.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),65536).sha256};};
 const loadedGraphModuleAuthorityV1=graphModuleAuthorityV1();
 /** 📋️ The loaded graph implementation as workspace facts of the bytes it had when this module loaded; a pinned build names these and no later edit. */
@@ -61,11 +63,11 @@ const loadedGraphImplementationRowsV1:readonly {kind:"digest";path:string;fact:{
 /** 🔒️ Refuses a loaded implementation or declaration superseded while an original invocation waited. */
 export function requireBuildGraphModuleAuthorityV1(original:BuildGraphModuleAuthorityV1,current:BuildGraphModuleAuthorityV1):void{
  const schema=graphDeclarationV1("../🧬️schema/📥️authority.json").properties.module;
- if(validateJsonSchemaSubset(schema,original).length||validateJsonSchemaSubset(schema,current).length||original.implementation!==current.implementation||original.publication!==current.publication)throw Error("Loaded build graph source changed; restart the owned build invocation "+JSON.stringify({loaded:original,current}));
+ if(validateJsonSchemaSubset(schema,original).length||validateJsonSchemaSubset(schema,current).length||original.implementation!==current.implementation||original.publication!==current.publication)throw staleImplementationV1("Loaded build graph source changed; restart the owned build invocation "+JSON.stringify({loaded:original,current}));
 }
 const requireCurrentGraphModuleV1=():void=>{if(implementationPinnedV1())return;requireBuildGraphModuleAuthorityV1(loadedGraphModuleAuthorityV1,graphModuleAuthorityV1());};
 
-/** 🔏️ Reads immutable defining authority after checking that the loaded graph is still current. */
+/** 🏛️ Reads immutable defining authority after checking that the loaded graph is still current. */
 export function readBuildGraphModuleAuthorityV1():Readonly<BuildGraphModuleAuthorityV1>{requireCurrentGraphModuleV1();return Object.freeze({...loadedGraphModuleAuthorityV1});}
 
 /** 🧷️ Admits only source receipts issued by the exact loaded producer protocol. */
@@ -73,17 +75,6 @@ export function buildGraphProducerAuthorityV1(receipt:unknown,module:BuildGraphM
  if(validateJsonSchemaSubset(graphDeclarationV1("../🧬️schema/📥️authority.json"),receipt).length)return false;
  const admitted=receipt as {module:BuildGraphModuleAuthorityV1};return admitted.module.implementation===module.implementation&&admitted.module.publication===module.publication;
 }
-
-/** ⚙️ Describes portable process execution independently of any build implementation. */
-export interface BuildExecutionV1 { kind: "command" | "noop"; program?:string; command?: string; commands?: (string | {command:string;forwardAllArgs?:boolean})[]; args?:string[]; cwd?:string; env?:Record<string,string>; parallel?:boolean; forwardAllArgs?:boolean; [key:string]:unknown }
-/** 🎯️ Declares one build operation and its configuration, inputs and products. */
-export interface BuildTargetV1 { execution:BuildExecutionV1; configurations?:Record<string,Record<string,unknown>>; dependsOn?: (string | {target:string;projects?:string[]|string;dependencies?:boolean;params?:string})[]; inputs?:unknown[]; outputs?:string[]; cache?:boolean; continuous?:boolean; [key:string]:unknown }
-/** 🧩️ Describes an owned project with its complete inferred operations. */
-export interface BuildProjectV1 { name:string; root:string; targets:Record<string,BuildTargetV1>; tags?:string[]; namedInputs?:Record<string,unknown[]>; [key:string]:unknown }
-/** 🕸️ Defines the authoritative portable workspace graph. */
-export interface BuildGraphV1 { version:1; projects:Record<string,BuildProjectV1>; dependencies:{source:string;target:string;type?:string;sourceFile?:string}[]; namedInputs?:Record<string,unknown[]>; externalNodes?:Record<string,unknown>; unavailable?:BuildUnavailableProjectV1[]; admission?:{selection:BuildGraphSelectionV1;registry:string;closure:string} }
-/** 🚧️ Names one project withheld from the snapshot because a source its inference consumed does not parse. */
-export interface BuildUnavailableProjectV1 { root:string; project?:string; source:string; sha256:string; reason:string; missing?:string[] }
 
 /** ✅️ Admits the language-neutral graph contract and cross-project identities. */
 export function readBuildGraphV1(value:unknown):BuildGraphV1 {
@@ -128,9 +119,6 @@ function requireBuildArgumentsV1(options:Record<string,unknown>,identity?:string
 /** 🗃️ Locates the sole published portable graph. */
 export function buildGraphPathV1(root:string):string { const publication=graphDeclarationV1("../🧬️schema/📣️publication.json").properties;return join(repositoryCachePartitionRootV1(root,publication.partition.const),publication.graph.const); }
 
-/** 📋️ Describes observed root entries without granting mutation or storage custody. */
-export interface BuildGraphInvalidationInventoryV1 {device:number;entries:{name:string;kind:"file"|"directory"|"symlink"|"other";links:number;bytes:number;device:number}[]}
-
 /** 🗑️ Selects only owned current publications and their bounded staging files. */
 export function planBuildGraphInvalidationV1(inventory:BuildGraphInvalidationInventoryV1):string[] {
   const schema=graphDeclarationV1("../🧬️schema/🗑️reset.json");if(validateJsonSchemaSubset(schema,inventory).length)throw Error("Build graph reset inventory required");
@@ -139,7 +127,7 @@ export function planBuildGraphInvalidationV1(inventory:BuildGraphInvalidationInv
   return selected.map(entry=>entry.name).sort();
 }
 
-/** 🔒️ Serializes graph publication and invalidation inside the original enforcing store. */
+/** 🛑️ Serializes graph publication and invalidation inside the original enforcing store. */
 async function withBuildGraphStateV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>,scope?:string):Promise<T> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);requireCurrentGraphModuleV1();
   const run=async(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>{
@@ -174,6 +162,25 @@ const expandedClosuresV1=new Map<string,string[]>();let expandedClosureEntriesV1
 function rememberExpandedClosureV1(key:string,list:string[]):void{
   if(expandedClosureEntriesV1+list.length>GRAPH_MEMORY_POLICY_V1.maximumCachedClosureEntries){expandedClosuresV1.clear();expandedClosureEntriesV1=0;}
   expandedClosuresV1.set(key,list);expandedClosureEntriesV1+=list.length;
+}
+
+const releasedBuildGraphsV1=new WeakSet<object>(),buildGraphContentKeysV1=["projects","dependencies","namedInputs","externalNodes","unavailable","admission"] as const;
+
+/** 🕊️ Drops the content of graphs whose planning is done and the caches built to expand them, then collects once the event loop turned (a collection inside the releasing call still sees the caller's stack), so a long build phase holds only what it plans from: every later read of a released graph throws instead of silently seeing nothing. Callers hold the shell, never the content; a consumer that needs the graph again reads the pinned snapshot. */
+export async function releaseBuildGraphV1(...graphs:readonly BuildGraphV1[]):Promise<void>{
+  for(const graph of graphs){
+    if(releasedBuildGraphsV1.has(graph))continue;
+    releasedBuildGraphsV1.add(graph);
+    for(const key of buildGraphContentKeysV1)Object.defineProperty(graph,key,{configurable:true,enumerable:false,get(){throw refuseBuildV1("stale","graph.released-read");}});
+  }
+  expandedClosuresV1.clear();expandedClosureEntriesV1=0;graphStringInternerV1.clear();
+  const memory=createMemoryPortsV1();await new Promise<void>(resolve=>setTimeout(resolve,0));memory.collect();
+}
+
+/** 🔨️ Refuses a graph whose content was released. */
+export function requireLiveBuildGraphV1(graph:BuildGraphV1):BuildGraphV1{
+  if(releasedBuildGraphsV1.has(graph))throw refuseBuildV1("stale","graph.released-read");
+  return graph;
 }
 
 /** 📁️ Discovers real workspace authority while yielding cancellation and progress. */
@@ -261,7 +268,7 @@ function portableInputs(root:string,value:unknown,invocation:ScriptInvocation,co
   return expand();
 }
 
-/** 🪪️ Refuses caller registry data superseded before the current source boundary. */
+/** 📇️ Refuses caller registry data superseded before the current source boundary. */
 export function requireBuildOwnerRegistryAuthorityV1(original:unknown,current:unknown):void{
  if(JSON.stringify(readBuildOwnerRegistryV1(original))!==JSON.stringify(readBuildOwnerRegistryV1(current)))throw Object.assign(Error("Original build owner registry changed before source consumption"),{code:"BUILD_SOURCE_AUTHORITY"});
 }
@@ -278,7 +285,7 @@ export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelec
   requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(pinnedAuthorityReadV1(join(root,"📋️build-owners.json"),()=>observationV1.observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8"))));
   if(selection.kind!=="all"&&!admission)throw Error("Closed selected owner admission required");
   const files=suppliedFiles??(selection.kind==="all"?buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation)):admission!.files);
-  const [owner,tests,policies]=await Promise.all([import("./📥️inference/🟨️.mjs"),import("../../../🧪️test/🟨️.mjs"),import("./📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
+  const [owner,tests,policies]=await Promise.all([import("./📥️inference/🟨️.mjs"),import("../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("./📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
   const policy=graphDeclarationV1("../🔣️policy.json"),options={analyzeLockfile:true,catalogProviders:selection.kind==="all"?registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})):admission!.catalogProviders,...(selection.kind!=="all"?{ownerAdmission:admission}:{})};
   const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),options,{workspaceRoot:root,invocation,phaseControl,registry});
   if(invocation)await advanceScriptInvocation(invocation,"build:infer","running");
@@ -311,28 +318,42 @@ export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelec
   return compact?compactGraph as unknown as BuildGraphV1:readBuildGraphV1({...compactGraph,projects:await portableInputs(root,neutral,invocation,phaseControl)});
 }
 
+/** 📍️ The pin of the generation the newest graph load of this process served; the descendants that answer to this invocation read exactly that generation. */
+let sealedGenerationPinTextV1:string|undefined;
+/** 🎁️ Hands the pin of the newest generation load to the ones that start nested commands; with a `tool` only when that build tool issues every task environment itself (the others keep the graph of their own nested commands). */
+export function sealedGenerationPinV1(tool?:string):string|undefined{return tool===undefined||GENERATION_PIN_POLICY_V1.tools.includes(tool)?sealedGenerationPinTextV1:undefined;}
+/** 🏷️ Takes over the pin a graph child of this invocation reported (or forgets it with undefined). */
+export function recordSealedGenerationPinV1(text:string|undefined):void{sealedGenerationPinTextV1=text;}
+/** 🧭️ The pin this command is bound by: the one its Original invocation put in the environment while that process is alive; a pin of anyone else is none. */
+function boundGenerationPinV1():GenerationPinV1|undefined{const state=generationPinStateV1(process.env);return state.state==="bound"?state.pin:undefined;}
+
 /** 🔌️ The identity of the one builder custody of the generation store: every builder of the all-workspace graph queues on it, shared readers never do. */
 const generationScopeV1=createHash("sha256").update("semio-graph-generations-v1").digest("hex");
 
-/** 🗂️ Opens the generation documents of the graph partition: every path stays inside the original store and the store is rechecked while documents move. */
+/** 📈️ Opens the generation documents of the graph partition: every path stays inside the original store and the store is rechecked while documents move. */
 function generationFilesV1(store:RepositoryCacheStoreV1){
   return createGenerationFilesV1({store,base:createNodeFilePortV1(),requirePath:requireNativeStoragePathV1});
 }
 
+/** 🪪️ The identity of the generation a registry may read: the store format and the catalog providers whose output reaches every project. The owners of the registry are no identity: an added or removed project is a membership change the generation absorbs incrementally, and the one owner row an inference reads is a recorded `registry` fact. */
+export function buildGraphGenerationIdentityV1(registry:BuildOwnerRegistryV1):string{
+  return createHash("sha256").update(JSON.stringify([generationSchemaV1.definitions.Identity.const,registry.catalogProviders.map(({ownerRoot,sourcePath})=>[ownerRoot,sourcePath])])).digest("hex");
+}
+
 /** 🕰️ Binds the repository to the graph generation load: shared reader custody, the builder custody, the bounded facts lease, fact checks that understand environment rows, the membership frontier and the partial inference. */
 function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,registry:BuildOwnerRegistryV1,compact=false){
-  const registryDigest=createHash("sha256").update(JSON.stringify(registry)).digest("hex"),state={files:[] as string[]},leaseDirectory=join(root,".cache/b/l/m/data");
+  const registryDigest=createHash("sha256").update(JSON.stringify(registry)).digest("hex"),state={files:[] as string[],stable:new Set<string>()},leaseDirectory=join(root,".cache/b/l/m/data");
   const read=async(path:string)=>{try{return await readFile(join(root,path),"utf8");}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   const statFile=async(path:string)=>{try{const status=await lstat(join(root,path));return status.isFile()?{size:status.size,mtimeMs:status.mtimeMs}:undefined;}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   const statEntry=async(path:string)=>{try{const status=await lstat(join(root,path));return {directory:status.isDirectory(),file:status.isFile(),mtimeMs:status.mtimeMs,ino:status.ino,mode:status.mode};}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   let analyses:Promise<void>|undefined;
   const analysesPrepared=():Promise<void>=>analyses??=import("./📥️inference/🟨️.mjs").then(async producer=>{await producer.libraryBootstrap;producer.prepareSourceAnalysesV1();});
   const holdsByStat=async(rows:readonly {kind:string;path:string;fact:any}[],signal?:AbortSignal):Promise<boolean>=>{
-    const plain:typeof rows[number][]=[],own:typeof rows[number][]=[];for(const row of rows)(row.kind==="field"||row.kind==="digest"?own:plain).push(row);
+    const plain:typeof rows[number][]=[],own:typeof rows[number][]=[];for(const row of rows){if(row.kind==="closure")continue;(row.kind==="field"||row.kind==="digest"?own:plain).push(row);}
     for(let at=0;at<own.length;at+=64){signal?.throwIfAborted();if(!(await Promise.all(own.slice(at,at+64).map(row=>environmentRowHoldsV1(row as never,{read,stat:statFile})))).every(Boolean))return false;}
     if(plain.length===0)return true;
     await analysesPrepared();
-    return observationV1.observationsHold(plain,64,new Set(),new Set(),signal);
+    return observationV1.observationsHold(plain,64,state.stable,true,signal);
   };
   const lease=(control:ResourceLeaseControl)=>({async exclusive<T>(resource:string,body:()=>Promise<T>,options:{signal?:AbortSignal;timeoutMs?:number}={}):Promise<T>{
     const held=await acquireQueuedResourceLease({directory:leaseDirectory,resource,mode:"exclusive",owner:randomBytes(16).toString("base64url"),control,signal:options.signal??control.signal,...(options.timeoutMs!==undefined?{timeoutMs:options.timeoutMs}:{})});
@@ -352,23 +373,44 @@ function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:R
     const config=(path:string)=>["📋️project.json","Cargo.toml"].includes(path.slice(path.lastIndexOf("/")+1));
     return {digest,frontier,changes:previous?diffFrontiersV1(previous.frontier,frontier).map(change=>({...change,...(!change.directory&&config(change.path)?{config:true}:{})})):[]};
   };
-  const seams=residentGraphSeamsV1({root,membership:membershipByStat,holds:holdsByStat,adopt:(files:string[])=>{state.files=files;}}),membership=seams.membership,holds=seams.holds;
+  const seams=residentGraphSeamsV1({root,membership:membershipByStat,holds:holdsByStat,adopt:(files:string[])=>{state.files=files;}}),holds=seams.holds;
+  const membership=async(previous:Parameters<typeof seams.membership>[0],signal?:AbortSignal)=>{
+    const live=await seams.membership(previous,signal);
+    state.stable=previous?.frontier?new Set([...stableDirectoriesV1(previous.frontier,live.frontier)].map(path=>join(root,...path.split("/")))):new Set();
+    return live;
+  };
   return {
     workspaceRoot:root,separator:sep,language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,namedInputs:graphDeclarationV1("../🔣️policy.json").namedInputs,registryDigest,signal:invocation.control.signal,verbose:process.env.SEMIO_GRAPH_PHASES==="1"||process.env.SEMIO_BUILD_PROFILE_INPUTS==="1",
-    async identity(){requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation","refuse");return createHash("sha256").update(JSON.stringify([generationSchemaV1.definitions.Identity.const,registryDigest])).digest("hex");},
+    async identity(){requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation","refuse");return buildGraphGenerationIdentityV1(registry);},
     async implementationRows(){const producer=await import("./📥️inference/🟨️.mjs");await producer.libraryBootstrap;const rows:{kind:"digest";path:string;fact:{sha256:string;size:number;mtimeMs:number}}[]=[];for(const row of [...loadedGraphImplementationRowsV1,...producer.loadedImplementationRowsV1]){const inside=relative(root,row.path);if(inside===""||inside.startsWith("..")||isAbsolute(inside))continue;rows.push({...row,path:inside.split(sep).join("/")});}return producer.classifyImplementationRowsV1(rows);},
+    release:async()=>{observationV1.releaseInferenceMemoryV1();(await import("../📥️inputs/🟨️.mjs")).releaseInputMemoryV1();(await import("./📥️inference/🧭️script-inputs/🟨️.mjs")).resetClosureEntriesV1();graphStringInternerV1.clear();createMemoryPortsV1().collect();},
     withShared:<T>(body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>Promise<T>)=>withRepositoryCacheStoreV1(root,"graph",invocation,phaseControl,async(store,control)=>{await store.recheck();checkResourceLeaseControl(control);return body(store,control);}),
-    withBuilder:<T>(body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>Promise<T>)=>withBuildGraphStateV1(root,invocation,phaseControl,body,generationScopeV1),
+    withBuilder:async<T>(body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>Promise<T>)=>{
+      let image:string|undefined;
+      const result=await withBuildGraphStateV1(root,invocation,phaseControl,(store,control)=>{image=store.root;return body(store,control);},generationScopeV1);
+      if(image!==undefined)await sweepSupersededBlocksV1(root,image,invocation,phaseControl,(key,fields)=>process.stderr.write(renderGenerationMessageV1(key as never,fields,resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language)+"\n"));
+      return result;
+    },
     storeOptions:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>({root:join(store.root,"generations"),fs:generationFilesV1(store),lease:lease(control),holds,resources:{facts:"repository-graph-facts:"+resolve(root)}}),
     membership,
-    discoverPart:(spec:{cold:boolean;owners:string[];discover:string[];previousEnv:string|null;stubs:Record<string,BuildGraphPartStubV1>},signal:AbortSignal|undefined,control:ResourceLeaseControl)=>{signal?.throwIfAborted();requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation");return discoverBuildGraphPartV1(root,registry,invocation,control,state.files,{cold:spec.cold,roots:new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]),stubs:spec.stubs,previousEnv:spec.previousEnv});},
+    discoverPart:(spec:{cold:boolean;owners:string[];discover:string[];removed:string[];previousEnv:string|null;stubs:Record<string,BuildGraphPartStubV1>},signal:AbortSignal|undefined,control:ResourceLeaseControl)=>{signal?.throwIfAborted();requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation");return discoverBuildGraphPartV1(root,registry,invocation,control,state.files,{cold:spec.cold,roots:new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]),stubs:survivingStubsV1(spec.stubs,spec.removed),previousEnv:spec.previousEnv});},
     expand:async(projects:Record<string,unknown>,control:ResourceLeaseControl)=>compact?projects:(await portableInputs(root,projects,invocation,control)) as Record<string,unknown>,
     expansionLimits:{maximumProjects:32,maximumBytes:Math.floor(graphDeclarationV1("../👁️observation/📥️reuse/🧬️schema/🔣️.json").definitions.Policy.const.maximumTextBytes/4)},
     readLean:(value:unknown)=>readBuildGraphLeanV1(value),
     readGraph:(value:unknown)=>readBuildGraphV1(value),
+    sealed:(record:{generation:number;manifest:string;owners:readonly string[];covered:ReadonlySet<string>|undefined;atMs:number})=>{sealedGenerationPinTextV1=encodeGenerationPinV1({owner:generationPinOwnerV1(process.env),...record});},
     clock:(control:ResourceLeaseControl)=>createGraphPhaseClockV1({publish:resource=>control.publish({resource,mode:"shared",elapsedMs:0}),write:writeGraphPhaseRowV1}),
     say:(key:string,fields:Record<string,string|number>)=>{process.stderr.write(renderGenerationMessageV1(key as never,fields,resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language)+"\n");},
   };
+}
+
+/** 🧹️ After a build, removes the observation blocks no record names any more once a record directory holds many more blocks than its records can name (each re-inference supersedes blocks, and a graph store whose inventory is exhausted refuses every command), outside the builder custody, group by group under the writer lease of the group, and never lets a failing sweep fail the build. */
+async function sweepSupersededBlocksV1(root:string,image:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,say:(key:string,fields:Record<string,string|number>)=>void):Promise<void>{
+  try{
+    const scan=await import("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),directory=join(root,".cache/b/l/m/data");
+    const report=await scan.supersedeBuildGraphObservationBlocksV1(image,{lease:async(kind,identity)=>{try{return await acquireResourceLease({directory,resource:buildGraphWriterResourceV1(root,kind,identity),mode:"exclusive",signal:invocation.control.signal,control:phaseControl,timeoutMs:0});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return undefined;throw error;}}},{cancelled:()=>invocation.control.signal.aborted,progress:()=>{}},{minimumBlocks:24576,blocksPerHeader:6});
+    if(report.removed)say("swept",{removed:report.removed,megabytes:Math.round(report.bytes/1048576),headers:report.headers});
+  }catch(error){if(invocation.control.signal.aborted)throw error;process.stderr.write("graph: sweep of superseded observation blocks failed: "+String((error as Error).message)+"\n");}
 }
 
 /** 🔍️ Names the first difference between a generation graph and the graph a full inference produced; the diagnostic oracle of `SEMIO_BUILD_GRAPH_VERIFY=1`. */
@@ -380,20 +422,11 @@ function requireEqualBuildGraphsV1(actual:BuildGraphV1,expected:BuildGraphV1):vo
   for(const key of["externalNodes","unavailable","namedInputs"] as const)if(!same(actual[key]??null,expected[key]??null))throw Error(`Graph generation differs from full inference at ${key}`);
 }
 
-/** 🧩️ What one partial inference produced, in repository terms: fully inferred owners with their own facts, owners whose edges alone were recomputed, every edge of the processed owners, the environment and every fact the inference consumed. */
-export interface BuildGraphPartV1 {owners:{name:string;root:string;nativeRoot?:string;config?:string;tag?:string;node?:any;unavailable?:BuildUnavailableProjectV1;nodeRows?:BuildGraphRowV1[]}[];edgeOnly:{name:string}[];edges:{source:string;target:string;[key:string]:unknown}[];externalNodes:Record<string,unknown>;parseUnavailable:BuildUnavailableProjectV1[];rows:BuildGraphRowV1[];env:{digest:string;rows:BuildGraphRowV1[]};replaceTags:string[]}
-
-/** 🧾️ One consumed fact of an inference. */
-export interface BuildGraphRowV1 {kind:string;path:string;fact:unknown}
-
-/** 🧭️ The stored summary of one published owner: enough for edges, ownership and generator validation without its node. */
-export interface BuildGraphPartStubV1 {root:string;kind:string;targets:readonly string[];nativeRoot?:string;config?:string;tag?:string}
-
 /** 🧩️ Infers only the projects whose roots are in `part.roots` (all of them when cold) plus the test and policy contributions, recomputes the edges of every other owner when the environment moved, and returns the pieces owner by owner. Everything an owner consumed is recorded in its own project record or in the capture around this call, so a later edit finds exactly its consumers. */
 export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,files:readonly string[],part:{cold:boolean;roots:ReadonlySet<string>;stubs:Record<string,BuildGraphPartStubV1>;previousEnv:string|null}):Promise<BuildGraphPartV1> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);registry=readBuildOwnerRegistryV1(registry);
   requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(pinnedAuthorityReadV1(join(root,"📋️build-owners.json"),()=>observationV1.observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8"))));
-  const [owner,tests,policies]=await Promise.all([import("./📥️inference/🟨️.mjs"),import("../../../🧪️test/🟨️.mjs"),import("./📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
+  const [owner,tests,policies]=await Promise.all([import("./📥️inference/🟨️.mjs"),import("../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("./📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
   const nodeRows:Record<string,BuildGraphRowV1[]>={},context={workspaceRoot:root,invocation,phaseControl,registry},stubs=Object.entries(part.stubs),realRoots=new Set(stubs.filter(([,stub])=>!stub.tag).map(([,stub])=>stub.root));
   const read=async(path:string)=>{try{return await readFile(join(root,path),"utf8");}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}},stat=async(path:string)=>{try{const status=await lstat(join(root,path));return status.isFile()?{size:status.size,mtimeMs:status.mtimeMs}:undefined;}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   const captured=await observationV1.captureObservedSourceInputsV1(async()=>{
@@ -478,16 +511,16 @@ export function withRepositoryBuildGraphPublicationV1<T>(root:string,control:Res
  return withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{await store.recheck();checkResourceLeaseControl(actual);const expected=requireNativeStoragePathV1(store.root,join(store.root,"snapshots",pin.digest+".json"));if(pin.path!==expected)throw Error("Original retained Graph snapshot identity required");return withRetainedGraphSnapshotV1(root,store,expected,actual,async source=>{if(createHash("sha256").update(source).digest("hex")!==pin.digest)throw Error("Pinned build graph digest differs from original authority");let reads=0;const records=dirname(expected),graph=await decodeGraphRecordsV1(Buffer.from(source),async digest=>{if(++reads%64===0)await store.recheck();checkResourceLeaseControl(actual);const path=requireNativeStoragePathV1(store.root,join(records,digest+".gz")),status=await lstat(path);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>graphSnapshotPolicyV1.maximumSnapshotBytes)throw Error("Original bounded Graph record required");return readFile(path);},{policy:graphSnapshotPolicyV1.records as never}) as BuildGraphV1;requireCurrentGraphModuleV1();checkResourceLeaseControl(actual);const value=await body(graph,pin.digest!,actual);await store.recheck();checkResourceLeaseControl(actual);requireCurrentGraphModuleV1();return value;});});
 }
 
-/** 📥️ Resolves one candidate while keeping every candidate's memory within its own finite attempt. */
+/** 🎬️ Resolves one candidate while keeping every candidate's memory within its own finite attempt. */
 async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean;sealedOnly?:boolean},registry?:BuildOwnerRegistryV1,scope?:string):Promise<BuildGraphV1|OwnerRegistryInvalidationV1|undefined> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
-  const invalidated=(reason:string,details:Record<string,unknown>={})=>{if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){let diagnostic;try{diagnostic=buildGraphRetryDiagnosticV1(root,reason,details,path=>captureBoundedSourceRevisionV1(path,8388608).sha256);}catch{diagnostic=buildGraphRetryDiagnosticV1(root,reason);}process.stderr.write("[DEBUG] graph-retry "+JSON.stringify(diagnostic)+"\n");}return undefined;};
+  const invalidated=(reason:string,details:Record<string,unknown>={})=>{if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){let diagnostic;try{diagnostic=buildGraphRetryDiagnosticV1(root,reason,details,path=>captureBoundedSourceRevisionV1(path,8388608).sha256);}catch{diagnostic=buildGraphRetryDiagnosticV1(root,reason);}process.stderr.write("[graph-retry] "+JSON.stringify(diagnostic)+"\n");}return undefined;};
   const phaseRows:{phase:string;milliseconds:number}[]=[],timing=(phase:string,started:number,details:Record<string,unknown>={})=>{const row={phase,milliseconds:Math.round(performance.now()-started),...details};phaseRows.push(row);if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.SEMIO_GRAPH_PHASES==="1")process.stderr.write("[graph-phase] "+JSON.stringify(row)+"\n");};
   const image=async(source:string)=>{let started=performance.now();const decoded=JSON.parse(source);timing("graph-json-parse",started,{bytes:Buffer.byteLength(source)});started=performance.now();const expanded=await portableInputs(root,decoded,invocation,phaseControl);timing("graph-input-expand",started);started=performance.now();const graph=readBuildGraphV1(expanded);timing("graph-schema-validation",started,{projects:Object.keys(graph.projects).length,dependencies:graph.dependencies.length});return graph;};
   if(!registry)throw Error("Original canonical graph owner registry required");
   const selected=options.selection.kind!=="all",path=scope?join(dirname(buildGraphPathV1(root)),"selected",scope+".json"):buildGraphPathV1(root),authorityPath=scope?join(dirname(path),scope+".authority.json"):join(dirname(path),graphDeclarationV1("../🧬️schema/📣️publication.json").properties.authority.const);
   if(options.sealedOnly){if(selected)return undefined;try{if(!buildGraphProducerAuthorityV1(JSON.parse(await readFile(authorityPath,"utf8")),loadedGraphModuleAuthorityV1))return undefined;}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT"||error instanceof SyntaxError)return undefined;throw error;}}
-  const observation=observationV1,[producer]=await Promise.all([import("./📥️inference/🟨️.mjs"),import("../../../🧪️test/🟨️.mjs"),import("./📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
+  const observation=observationV1,[producer]=await Promise.all([import("./📥️inference/🟨️.mjs"),import("../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("./📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
   const inventory=async()=>{let started=performance.now();const captured=selected?await observation.captureObservedSourceInputsV1(()=>observation.settleObservedComputationV1(async()=>{const current=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));if(buildGraphScopeKeyV1(options.selection,current)!==scope)return ownerRegistryInvalidationV1;const nativeCache=new Map(),nativeClosures=new Map();return closeBuildOwnerAdmissionV1(options.selection,registry!,async(owner,targets,inputs)=>{if(invocation)checkScriptInvocation(invocation);return producer.discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,{workspaceRoot:root,invocation,phaseControl,selection:options.selection,nativeCache,nativeClosures},inputs);});},{signal:invocation?.control.signal})):undefined,candidate=captured?.value;if(isOwnerRegistryInvalidationV1(candidate))return candidate;const admission=candidate as BuildOwnerAdmissionV1|undefined,files=admission?.files??buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation));timing("workspace-catalog-lookup",started,{files:files.length,directories:inventoryDirectoriesV1.get(files)?.length??0});started=performance.now();const digest=await buildGraphMembershipV1(root,files,invocation);timing("workspace-membership-hash",started);return {files,digest,admission,observations:captured?.observations??[]};};
   let initial:Awaited<ReturnType<typeof inventory>>;try{initial=await inventory();}catch(error){if(buildGraphErrorCodeV1(error)==="BUILD_MEMBERSHIP_CHANGED")return invalidated("membership");throw error;}
   if(isOwnerRegistryInvalidationV1(initial)){invalidated("owner-registry");return initial;}
@@ -550,7 +583,7 @@ async function loadBuildGraphSliceV1(root:string,invocation:ScriptInvocation,pha
   const producer=await import("./📥️inference/🟨️.mjs"),registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))),selection=readBuildGraphSelectionV1(options.selection);
   if(selection.kind==="all")throw Error("Selected build graph scope required");
   const roots=selection.kind==="tasks"?[...new Set(selection.tasks.map(task=>task.project))]:selectLiteralBuildProjectsV1(registry.owners,selection.projects,selection.exclude);
-  return await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry,options.graph?.compact===true),{policy:options.graph?.policy??"fresh",selection,slice:{selection,roots,providers:registry.catalogProviders.map(({consumerRoots,sourcePath})=>({consumerRoots,sourcePath}))}}) as BuildGraphV1;
+  return await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry,options.graph?.compact===true),{policy:options.graph?.policy??"fresh",selection,slice:{selection,roots,providers:registry.catalogProviders.map(({consumerRoots,sourcePath})=>({consumerRoots,sourcePath}))},pin:boundGenerationPinV1()}) as BuildGraphV1;
 }
 
 /** 🪶️ Admits the lean graph of `show projects|targets`: project and target names, unavailable projects, no inputs. */
@@ -560,7 +593,7 @@ function readBuildGraphLeanV1(value:unknown):BuildGraphV1 {
   return value as BuildGraphV1;
 }
 
-/** 🔍️ Names the first difference between a generation slice and the selected graph a full selected inference produced, in both directions: every selected project is equal, the dependencies among the selected projects are the same set, and every selected external node is equal; the slice may hold more projects. The oracle of `SEMIO_BUILD_GRAPH_VERIFY=1` for selected scopes. */
+/** 🔭️ Names the first difference between a generation slice and the selected graph a full selected inference produced, in both directions: every selected project is equal, the dependencies among the selected projects are the same set, and every selected external node is equal; the slice may hold more projects. The oracle of `SEMIO_BUILD_GRAPH_VERIFY=1` for selected scopes. */
 function requireSelectedSubgraphV1(slice:BuildGraphV1,selected:BuildGraphV1):void{
   const same=(left:unknown,right:unknown)=>canonicalGenerationJsonV1(left)===canonicalGenerationJsonV1(right),chosen=new Set(Object.keys(selected.projects));
   for(const[name,project]of Object.entries(selected.projects)){if(!slice.projects[name])throw Error(`Graph slice lacks the selected project ${name}`);if(!same(slice.projects[name],project))throw Error(`Graph slice differs from the selected graph at project ${name}`);}
@@ -573,7 +606,7 @@ function requireSelectedSubgraphV1(slice:BuildGraphV1,selected:BuildGraphV1):voi
 
 type BuildGraphLoadOptionsV1={selection:BuildGraphSelectionV1;reuse?:boolean;baseline?:boolean;graph?:{policy?:"fresh"|"current";closure?:readonly string[];lean?:boolean;compact?:boolean}};
 
-/** 🔒️ Loads the graph with the strict self-checks of the loaded implementation; the generation path runs pinned and completes with what it loaded. */
+/** 🕸️ Loads the graph with the strict self-checks of the loaded implementation; the generation path runs pinned and completes with what it loaded. */
 async function loadBuildGraphUnpinnedV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:BuildGraphLoadOptionsV1):Promise<BuildGraphV1> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);requireCurrentGraphModuleV1();
   options={...options,selection:readBuildGraphSelectionV1(options.selection)};
@@ -581,7 +614,7 @@ async function loadBuildGraphUnpinnedV1(root:string,invocation:ScriptInvocation,
   if(!invocation)throw Error("Original build graph producer invocation required");
   if(options.selection.kind==="all"&&!options.baseline){
     const producer=await import("./📥️inference/🟨️.mjs"),registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));
-    const graph=await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry),{policy:options.graph?.policy??"fresh",closure:options.graph?.closure,lean:options.graph?.lean}) as BuildGraphV1;
+    const graph=await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry),{policy:options.graph?.policy??"fresh",closure:options.graph?.closure,lean:options.graph?.lean,pin:boundGenerationPinV1()}) as BuildGraphV1;
     if(process.env.SEMIO_BUILD_GRAPH_VERIFY==="1"&&!options.graph?.closure&&!options.graph?.lean)requireEqualBuildGraphsV1(graph,await loadBuildGraphV1(root,invocation,phaseControl,{selection:options.selection,baseline:true}));
     checkScriptInvocation(invocation);return graph;
   }
@@ -612,7 +645,7 @@ export function resolveBuildTargetV1(target:BuildTargetV1,configuration?:string)
 }
 
 
-/** 📥️ Expands owned named inputs while preserving explicit dependency and runtime declarations. */
+/** 🎯️ Expands owned named inputs while preserving explicit dependency and runtime declarations. */
 export function resolveBuildInputsV1(graph:BuildGraphV1,project:string|BuildProjectV1,inputs:readonly unknown[]):unknown[] {
   const owner=typeof project==="string"?graph.projects[project]:project;
   if(!owner)throw Error(`Unknown build input owner: ${project}`);

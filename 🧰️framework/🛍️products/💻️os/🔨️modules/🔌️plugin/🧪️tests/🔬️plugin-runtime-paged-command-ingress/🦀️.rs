@@ -21,7 +21,7 @@ mod paged_command_ingress_tests {
 
     #[test]
     fn decoded_two_field_cancellation_never_publishes_partial_success() {
-        let owner = protocol::DecodedAppCommandOwner::new(protocol::AppCommand::Command { seq: 3, command: vec![1; 4_096], view_state: vec![2; 4_096] });
+        let owner = OriginalDecodedPluginCommand::new(protocol::AppCommand::Command { seq: 3, command: vec![1; 4_096], view_state: vec![2; 4_096] });
         let first = PluginCommandIngress::Decoded(owner).cancel(plugin_internal_fault("cancelled"));
         let second = match first.step() {
             PluginCommandIngressStep::Pending(next) => next,

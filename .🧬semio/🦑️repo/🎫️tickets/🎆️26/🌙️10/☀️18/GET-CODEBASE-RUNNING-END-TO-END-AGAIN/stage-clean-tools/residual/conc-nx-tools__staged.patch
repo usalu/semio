@@ -1,0 +1,377 @@
+# stage-clean orphan staged=conc-nx-tools/staged/new/daemon/tests.ts map=None
+--- /dev/null
++++ b/staged/conc-nx-tools/staged/new/daemon/tests.ts
+@@ -0,0 +1,64 @@
++/** 🚏️ Nx daemon admission laws over `./🧫️fixtures/🔣️.json`: limits, admission decisions and the idle rule equal an independent Python model (`./🐍️oracle.py`), the Decision schema is validated by Ajv, and with the real lease library daemon slots enforce the cap (a free slot is taken, a full family refuses, a released slot is reusable, a live namespace daemon is detected). */
++import {expect,test} from "bun:test";
++import {spawnSync} from "node:child_process";
++import {mkdtempSync,readFileSync,rmSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join,resolve} from "node:path";
++import Ajv from "ajv";
++import {acquireNxDaemonSlotV1,countNxDaemonSlotsV1,decideNxDaemonV1,nxDaemonIdleV1,nxDaemonLimitsV1,nxDaemonResourceHeldV1,nxDaemonSlotResourceV1} from "../🟦️.ts";
++import {acquireResourceLease} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
++
++const fixturePath=resolve(import.meta.dir,"./🧫️fixtures/🔣️.json"),fixture=JSON.parse(readFileSync(fixturePath,"utf8")) as any;
++const schema=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8")),validate=new Ajv({strict:false}).compile({...schema.definitions.Decision});
++const artifacts=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());
++const model=(()=>{const run=spawnSync("python3",["-I",resolve(import.meta.dir,"./🐍️oracle.py"),fixturePath],{encoding:"utf8"});expect(run.status).toBe(0);return JSON.parse(run.stdout);})();
++const signal=new AbortController().signal;
++
++fixture.limits.forEach((row:any,index:number)=>test("limits: "+row.name,()=>{
++ const found=nxDaemonLimitsV1(row.environment,row.memoryGiB*fixture.GiB);
++ expect({finite:found.finite,watch:found.watch,idleMilliseconds:found.idleMilliseconds}).toEqual(row.expected);expect({finite:found.finite,watch:found.watch,idleMilliseconds:found.idleMilliseconds}).toEqual(model.limits[index]);
++}));
++fixture.decisions.forEach((row:any,index:number)=>test("decision: "+row.name,()=>{
++ const found=decideNxDaemonV1(row.input);expect(found).toEqual(row.expected);expect(found).toEqual(model.decisions[index]);expect(validate(found)).toBe(true);
++}));
++fixture.idle.forEach((row:any,index:number)=>test("idle: "+row.name,()=>{expect(nxDaemonIdleV1(row.state)).toBe(row.expected);expect(row.expected).toBe(model.idle[index]);}));
++
++test("slots enforce the cap with the real lease library",async()=>{
++ const root=mkdtempSync(join(artifacts,"nx-daemon-slots-")),leases=join(root,"lease"),image=join(root,"checkout");
++ try{
++  expect(await countNxDaemonSlotsV1(leases,image,"finite",signal)).toBe(0);
++  const first=await acquireNxDaemonSlotV1(leases,image,"finite",2,signal),second=await acquireNxDaemonSlotV1(leases,image,"finite",2,signal);
++  expect(await countNxDaemonSlotsV1(leases,image,"finite",signal)).toBe(2);expect(await countNxDaemonSlotsV1(leases,image,"watch",signal)).toBe(0);
++  await expect(acquireNxDaemonSlotV1(leases,image,"finite",2,signal)).rejects.toThrow("slots exhausted");
++  first.release();expect(await countNxDaemonSlotsV1(leases,image,"finite",signal)).toBe(1);
++  const again=await acquireNxDaemonSlotV1(leases,image,"finite",2,signal);again.release();second.release();
++  expect(await countNxDaemonSlotsV1(leases,image,"finite",signal)).toBe(0);
++ }finally{rmSync(root,{recursive:true,force:true});}
++});
++
++test("a held namespace resource is seen as a live daemon and a free one is not",async()=>{
++ const root=mkdtempSync(join(artifacts,"nx-daemon-held-")),leases=join(root,"lease"),resource=nxDaemonSlotResourceV1(root,"finite",0);
++ try{
++  expect(await nxDaemonResourceHeldV1(leases,resource,signal)).toBe(false);
++  const lease=await acquireResourceLease({directory:leases,resource,mode:"exclusive",signal});
++  expect(await nxDaemonResourceHeldV1(leases,resource,signal)).toBe(true);lease.release();
++  expect(await nxDaemonResourceHeldV1(leases,resource,signal)).toBe(false);
++ }finally{rmSync(root,{recursive:true,force:true});}
++});
++
++const service=readFileSync(resolve(import.meta.dir,"../../🚦️service/🟦️.ts"),"utf8"),script=readFileSync(resolve(import.meta.dir,"../../../../🚀️bootstrap/📜️script.ts"),"utf8");
++test("source: the daemon takes its slot before its service lifetime and gives it back last",()=>{
++ const start=service.indexOf("acquireNxDaemonSlotV1(repositoryLeaseDirectoryV1(birth.repositoryRoot)");
++ expect(start).toBeGreaterThan(-1);expect(start).toBeLessThan(service.indexOf("let release!:()=>void;"));
++ expect(service).toContain("finally{release();slot.release();}");
++});
++test("source: finite daemons idle out through the pure rule and the timer is cleared with the service",()=>{
++ expect(service).toContain("nxDaemonIdleV1({kind,openRequests:activity.open,lastActivity:activity.last");
++ expect(service).toContain("idleTimer.unref()");expect(service).toContain("finally{clearInterval(idleTimer);");
++ expect(service).toContain("activity.open++;activity.last=Date.now();");expect(service).toContain("activity.open--;activity.last=Date.now();");
++});
++test("source: a run asks for admission once, after its namespace is bound and never for watch or explicit settings",()=>{
++ const bind=script.indexOf("(await bind(toolingIdentity,env.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity)).environment);"),admission=script.indexOf("nxDaemonAdmissionV1(this.root,env,actualPhase.signal)");
++ expect(bind).toBeGreaterThan(-1);expect(admission).toBeGreaterThan(bind);
++ expect(script).toContain('if(env.NX_DAEMON===undefined&&!invocation.watch&&invocation.args[0]!=="watch")');
++});
+# stage-clean orphan staged=conc-nx-tools/staged/new/generation/tests/tests.ts map=None
+--- /dev/null
++++ b/staged/conc-nx-tools/staged/new/generation/tests/tests.ts
+@@ -0,0 +1,103 @@
++/** 📌️ Pinned generation laws over `./🧫️fixtures/🔣️.json`: a receipt holds exactly while the three graph files and every identity file are unchanged and the claim is the same, every receipt satisfies `../🧬️schema/🔣️.json` (Ajv, third party) and the identity digest equals an independent Python hashlib model (`./🐍️oracle.py`). */
++import {expect,test} from "bun:test";
++import {spawnSync} from "node:child_process";
++import {appendFileSync,linkSync,mkdirSync,mkdtempSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {dirname,join,resolve} from "node:path";
++import Ajv from "ajv";
++import {NX_GENERATION_FILE,nxGenerationClaimV1,nxGenerationHoldsV1,nxGenerationIdentityV1,writeNxGenerationReceiptV1} from "../🟦️.ts";
++
++const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"./🧫️fixtures/🔣️.json"),"utf8")) as any;
++const validate=new Ajv({strict:false,allErrors:true}).compile(JSON.parse(readFileSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8")));
++const artifacts=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());
++mkdirSync(artifacts,{recursive:true});
++
++function build():{root:string;data:string;environment:Record<string,string>}{
++ const root=mkdtempSync(join(artifacts,"nx-generation-")),data=join(root,"data");
++ for(const [path,content] of Object.entries<string>(fixture.workspace)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);}
++ mkdirSync(data,{recursive:true});
++ for(const [name,content] of Object.entries<string>(fixture.graph))writeFileSync(join(data,name),content);
++ return {root,data,environment:{SEMIO_BUILD_GRAPH_DIGEST:fixture.claim.graphDigest,SEMIO_NX_IMPLEMENTATION_IDENTITY:fixture.claim.implementation,SEMIO_NX_TOOLING_IDENTITY:fixture.claim.tooling}};
++}
++
++test("identity digest equals the independent model",async()=>{
++ const {root}=build();
++ try{
++  const model=spawnSync("python3",["-I",resolve(import.meta.dir,"./🐍️oracle.py"),root,resolve(import.meta.dir,"./🧫️fixtures/🔣️.json")],{encoding:"utf8"});
++  expect(model.error).toBeUndefined();expect(model.status).toBe(0);
++  expect(await nxGenerationIdentityV1(root)).toBe(model.stdout.trim());
++ }finally{rmSync(root,{recursive:true,force:true});}
++});
++
++for(const scenario of fixture.scenarios){
++ test("generation: "+scenario.name,async()=>{
++  const {root,data,environment}=build();
++  try{
++   const claim=(await nxGenerationClaimV1(root,environment))!;
++   expect(await writeNxGenerationReceiptV1(root,data,claim)).toBe(true);
++   expect(validate(JSON.parse(readFileSync(join(data,NX_GENERATION_FILE),"utf8")))).toBe(true);
++   expect(await nxGenerationHoldsV1(root,data,claim)).toBe(true);
++   const mutation=scenario.mutation,base=mutation.inData||fixture.graphFiles.includes(mutation.path)?data:root,path=mutation.path===undefined?"":join(base,mutation.path);
++   if(mutation.kind==="none"){}
++   else if(mutation.kind==="replace"){const temporary=path+".next";writeFileSync(temporary,mutation.content);renameSync(temporary,path);}
++   else if(mutation.kind==="append")appendFileSync(path,mutation.content);
++   else if(mutation.kind==="delete")rmSync(path);
++   expect(await nxGenerationHoldsV1(root,data,claim)).toBe(scenario.holds);
++   if(fixture.identityFiles.includes(mutation.path))expect(await nxGenerationHoldsV1(root,data,(await nxGenerationClaimV1(root,environment))!)).toBe(false);
++  }finally{rmSync(root,{recursive:true,force:true});}
++ });
++}
++
++test("generation: a different pin, implementation or tooling never holds",async()=>{
++ const {root,data,environment}=build();
++ try{
++  const claim=(await nxGenerationClaimV1(root,environment))!;
++  expect(await writeNxGenerationReceiptV1(root,data,claim)).toBe(true);
++  for(const key of fixture.claimMismatch)expect(await nxGenerationHoldsV1(root,data,{...claim,[key]:"f".repeat(64)})).toBe(false);
++  expect(await nxGenerationClaimV1(root,{...environment,SEMIO_BUILD_GRAPH_DIGEST:"nothex"})).toBeUndefined();
++  expect(await nxGenerationClaimV1(root,{})).toBeUndefined();
++ }finally{rmSync(root,{recursive:true,force:true});}
++});
++
++for(const refusal of fixture.refusals){
++ test("generation refuses to certify: "+refusal.name,async()=>{
++  const {root,data,environment}=build();
++  try{
++   const claim=(await nxGenerationClaimV1(root,environment))!;
++   if(refusal.remove)rmSync(join(data,refusal.remove));
++   if(refusal.link)linkSync(join(data,refusal.link),join(root,"alias"));
++   expect(await writeNxGenerationReceiptV1(root,data,claim)).toBe(false);
++   expect(await nxGenerationHoldsV1(root,data,claim)).toBe(false);
++  }finally{rmSync(root,{recursive:true,force:true});}
++ });
++}
++
++test("generation refuses when the identity moved between claim and write",async()=>{
++ const {root,data,environment}=build();
++ try{
++  const claim=(await nxGenerationClaimV1(root,environment))!;
++  appendFileSync(join(root,"nx.json")," ");
++  expect(await writeNxGenerationReceiptV1(root,data,claim)).toBe(false);
++ }finally{rmSync(root,{recursive:true,force:true});}
++});
++
++test("concurrent writers leave one valid receipt",async()=>{
++ const {root,data,environment}=build();
++ try{
++  const claim=(await nxGenerationClaimV1(root,environment))!;
++  await Promise.all(Array.from({length:8},()=>writeNxGenerationReceiptV1(root,data,claim)));
++  expect(validate(JSON.parse(readFileSync(join(data,NX_GENERATION_FILE),"utf8")))).toBe(true);
++  expect(await nxGenerationHoldsV1(root,data,claim)).toBe(true);
++ }finally{rmSync(root,{recursive:true,force:true});}
++});
++
++for(const race of [{name:"a graph file is replaced while the receipt is sealed",apply:(root:string,data:string)=>{const path=join(data,"project-graph.json");writeFileSync(path+".next","{\"nodes\":{}}");renameSync(path+".next",path);}},{name:"nx.json moves while the receipt is sealed",apply:(root:string)=>appendFileSync(join(root,"nx.json")," ")}]){
++ test("generation refuses when "+race.name,async()=>{
++  const {root,data,environment}=build();
++  try{
++   const claim=(await nxGenerationClaimV1(root,environment))!;
++   expect(await writeNxGenerationReceiptV1(root,data,claim,undefined,async()=>race.apply(root,data))).toBe(false);
++   expect(await nxGenerationHoldsV1(root,data,claim)).toBe(false);
++  }finally{rmSync(root,{recursive:true,force:true});}
++ });
++}
+# stage-clean orphan staged=conc-nx-tools/staged/new/poolorder/tests.ts map=None
+--- /dev/null
++++ b/staged/conc-nx-tools/staged/new/poolorder/tests.ts
+@@ -0,0 +1,69 @@
++/** 🔓️ Pool lock-order laws over `./🧫️fixtures/🔣️.json`: no role of the new design blocks on a lease while it holds the exclusive `nx:graph-pool` and the wait-for graph is acyclic (independent Python graphlib model `./🐍️oracle.py`; the old design must fail the same check, so it is not vacuous); the source keeps the order the model assumes: the namespace lease is taken before the pool pass, attachment and eviction never wrap retirement in the pool, victims are only try-locked. */
++import {expect,test} from "bun:test";
++import {spawnSync} from "node:child_process";
++import {readFileSync} from "node:fs";
++import {resolve} from "node:path";
++
++const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"./🧫️fixtures/🔣️.json"),"utf8")) as any;
++const source=readFileSync(resolve(import.meta.dir,"../../🟦️.ts"),"utf8");
++
++type Step=readonly string[];
++function model(design:Record<string,readonly Step[]>):{cycle:boolean;poolHoldersWaiting:string[][]}{
++ const edges=new Map<string,Set<string>>(),waiting:string[][]=[];
++ for(const [role,steps] of Object.entries(design)){
++  const held:string[]=[];
++  for(const step of steps){
++   if(step[0]==="acquire"){
++    if(step[2]==="wait"){for(const resource of held){if(!edges.has(step[1]!))edges.set(step[1]!,new Set());edges.get(step[1]!)!.add(resource);}if(held.includes("pool"))waiting.push([role,step[1]!]);}
++    held.push(step[1]!);
++   }else held.splice(held.indexOf(step[1]!),1);
++  }
++ }
++ const state=new Map<string,number>();let cycle=false;
++ const visit=(node:string):void=>{if(state.get(node)===1){cycle=true;return;}if(state.get(node)===2)return;state.set(node,1);for(const next of edges.get(node)??[])visit(next);state.set(node,2);};
++ for(const node of edges.keys())visit(node);
++ return {cycle,poolHoldersWaiting:waiting};
++}
++
++for(const name of ["before","after"]){
++ test("lock-order model agrees with the independent Python model: "+name,()=>{
++  const ours=model(fixture.designs[name]),python=spawnSync("python3",["-I",resolve(import.meta.dir,"./🐍️oracle.py"),resolve(import.meta.dir,"./🧫️fixtures/🔣️.json"),name],{encoding:"utf8"});
++  expect(python.error).toBeUndefined();expect(python.status).toBe(0);
++  expect(JSON.parse(python.stdout)).toEqual(ours);
++ });
++}
++test("the old design blocks while holding the pool, the new design never does and has no wait cycle",()=>{
++ expect(model(fixture.designs.before).poolHoldersWaiting.length).toBeGreaterThan(0);
++ const after=model(fixture.designs.after);expect(after.poolHoldersWaiting).toEqual([]);expect(after.cycle).toBe(false);
++});
++
++function body(start:string):string{
++ const first=source.indexOf(start);expect(first).toBeGreaterThan(-1);
++ const next=source.indexOf("\n/** ",first+start.length),line=source.indexOf("\n",first);
++ return source.slice(first,Math.min(...[next,source.length].filter(value=>value>first)));
++}
++test("source: the namespace lease precedes the pool pass of an acquisition and the old room walk is gone",()=>{
++ const text=body(fixture.sourceLaws.acquireFunction);
++ expect(text.indexOf("acquireResourceLease(")).toBeGreaterThan(-1);
++ expect(text.indexOf("acquireResourceLease(")).toBeLessThan(text.indexOf("poolWithRoom("));
++ expect(text.indexOf("attachExistingNamespaceV1(")).toBeLessThan(text.indexOf("poolWithRoom("));
++ expect(source.includes(fixture.sourceLaws.removed)).toBe(false);expect(source.includes("await room(")).toBe(false);
++});
++test("source: inside a pool pass the namespace lease is only try-locked",()=>{
++ const pass=body("async function tryNamespaceLeaseV1");expect(pass).toContain("timeoutMs:0");
++ const text=body(fixture.sourceLaws.acquireFunction);expect(text).toContain("tryNamespaceLeaseV1(store,directory)");
++ expect(text.indexOf("poolWithRoom(")).toBeLessThan(text.indexOf("tryNamespaceLeaseV1(store,directory)"));
++});
++test("source: attachment takes no pool and eviction only reads the roster under it and only try-locks victims",()=>{
++ const attach=body(fixture.sourceLaws.attachFunction);expect(attach).not.toContain("pool(");expect(attach).toContain("observeNativeStorageStateV1(");expect(attach).toContain('phase!=="committed"');
++ const evict=body(fixture.sourceLaws.evictFunction);
++ expect(evict.split("pool(store").length-1).toBe(fixture.sourceLaws.evictPoolCalls);
++ expect(evict.split("timeoutMs:0").length-1).toBe(fixture.sourceLaws.evictTryLocks);
++ expect(evict.indexOf("rmSync(")).toBeGreaterThan(evict.indexOf("timeoutMs:0"));
++ expect(evict).toContain("acquireQueuedResourceLease(");
++});
++
++test("source: every user of the fixed cache image holds it shared",()=>{
++ const nx=readFileSync(resolve(import.meta.dir,"../../../../🟦️.ts"),"utf8");
++ expect(nx).toContain('resources:[{resource:"nx:fixed-cache:"+image.root,mode:"shared"}]');expect(nx).not.toContain('resource:"nx:fixed-cache:"+image.root,mode}');
++});
+# stage-clean orphan staged=conc-nx-tools/staged/new/putslots/module.ts map=None
+--- /dev/null
++++ b/staged/conc-nx-tools/staged/new/putslots/module.ts
+@@ -0,0 +1,48 @@
++import {createHash,randomBytes} from "node:crypto";
++import {resolve} from "node:path";
++import schema from "./🧬️schema/🔣️.json" with {type:"json"};
++import {acquireQueuedResourceLease,acquireResourceLease,checkResourceLeaseControl,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
++
++const policy=schema.definitions.Policy.const;
++
++/** 🎟️ How many publications may write into the shared Nx cache image at once: `SEMIO_NX_PUT_SLOTS` within 1..16, else the authored default. */
++export function nxPutSlotCountV1(environment:Readonly<Record<string,string|undefined>>):number{
++ const raw=Number(environment.SEMIO_NX_PUT_SLOTS);
++ return Number.isSafeInteger(raw)&&raw>=1?Math.min(raw,policy.maximumSlots):policy.slots;
++}
++
++const key=(root:string)=>createHash("sha256").update(resolve(root).replaceAll("\\","/")).digest("hex").slice(0,16);
++/** 🎟️ The exclusive lease resource of one slot of one image. */
++export function nxPutSlotResourceV1(root:string,index:number):string{return `nx:put-slot:${key(root)}:${index}`;}
++/** 🚪️ The queued gate that orders waiting publications first in, first out. */
++export function nxPutGateResourceV1(root:string):string{return `nx:put-gate:${key(root)}`;}
++
++/** 🎫️ One admitted publication: its slot and a probe of how many other slots are in use right now. */
++export interface NxPutSlotV1 {readonly index:number;others():Promise<number>}
++
++const timedOut=(resource:string)=>(error:unknown)=>error instanceof Error&&error.message==="Resource lease timed out: "+resource;
++const sleep=(milliseconds:number,signal:AbortSignal)=>new Promise<void>((done,fail)=>{
++ if(signal.aborted)return fail(signal.reason instanceof Error?signal.reason:Error("Nx put slot wait cancelled"));
++ const timer=setTimeout(()=>{signal.removeEventListener("abort",abort);done();},milliseconds),abort=()=>{clearTimeout(timer);fail(signal.reason instanceof Error?signal.reason:Error("Nx put slot wait cancelled"));};
++ signal.addEventListener("abort",abort,{once:true});
++});
++
++/** 🧵️ Runs one publication in a free slot. The oldest waiter holds the gate and polls the slots with a bounded back-off; the gate is released as soon as a slot is taken, and a slot holder waits for nothing but the shared writer custody, so the wait graph stays acyclic. Cancellation and the lease control are honoured on every poll. */
++export async function withNxPutSlotV1<T>(options:Readonly<{root:string;leaseDirectory:string;control:ResourceLeaseControl;slots:number}>,body:(slot:NxPutSlotV1)=>Promise<T>):Promise<T>{
++ const {root,leaseDirectory,control}=options,count=Math.min(Math.max(1,options.slots),policy.maximumSlots),base={directory:leaseDirectory,mode:"exclusive" as const,signal:control.signal,control};
++ let held:{index:number;lease:ResourceLease}|undefined;
++ const gate=await acquireQueuedResourceLease({...base,resource:nxPutGateResourceV1(root),owner:randomBytes(8).toString("hex")});
++ try{
++  for(let delay=policy.pollInitialMilliseconds;!held;delay=Math.min(policy.pollMaximumMilliseconds,delay*2)){
++   checkResourceLeaseControl(control);
++   for(let index=0;index<count&&!held;index++){
++    const resource=nxPutSlotResourceV1(root,index);
++    try{held={index,lease:await acquireResourceLease({...base,resource,timeoutMs:0})};}catch(error){if(!timedOut(resource)(error))throw error;}
++   }
++   if(!held)await sleep(delay,control.signal);
++  }
++ }finally{gate.release();}
++ if(!held)throw Error("Nx put slot admission required");
++ const slot=held,others=async()=>{let busy=0;for(let index=0;index<count;index++){if(index===slot.index)continue;const resource=nxPutSlotResourceV1(root,index);try{(await acquireResourceLease({...base,resource,timeoutMs:0})).release();}catch(error){if(!timedOut(resource)(error))throw error;busy++;}}return busy;};
++ try{return await body(Object.freeze({index:slot.index,others}));}finally{slot.lease.release();}
++}
+# stage-clean orphan staged=conc-nx-tools/staged/new/putslots/tests.ts map=None
+--- /dev/null
++++ b/staged/conc-nx-tools/staged/new/putslots/tests.ts
+@@ -0,0 +1,73 @@
++/** 🎟️ Nx put slot laws over `./🧫️fixtures/🔣️.json` with the real lease library: the slot count parsing table, peak concurrency never above the slot count while every worker finishes (independent Python schedule model `./🐍️oracle.py`), first-in first-out admission, a probe of the other slots, release after a failing body, and cancellation of a waiter. */
++import {expect,test} from "bun:test";
++import {spawnSync} from "node:child_process";
++import {mkdtempSync,readFileSync,rmSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join,resolve} from "node:path";
++import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
++import {nxPutSlotCountV1,nxPutSlotResourceV1,withNxPutSlotV1} from "../🟦️.ts";
++
++const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"./🧫️fixtures/🔣️.json"),"utf8")) as any;
++const artifacts=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());
++const withEnvelope=<T>(body:(original:Parameters<Parameters<typeof withScriptProcessEnvelope<T>>[1]>[0])=>Promise<T>):Promise<T>=>withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"nx-put-slots-test",maximumElapsedMilliseconds:60000},{},Date.now()),body);
++const issue=(original:Parameters<Parameters<typeof withScriptProcessEnvelope>[1]>[0],signal?:AbortSignal)=>{const base=createIssuedResourceControlV1(original,"nx:put-slots",0);return signal?createRequestedIssuedResourceControlV1(base,0,signal):base;};
++const sleep=(ms:number)=>new Promise<void>(done=>setTimeout(done,ms));
++const area=()=>{const root=mkdtempSync(join(artifacts,"nx-put-slots-"));return {root,lease:join(root,"lease"),image:join(root,"image")};};
++
++for(const row of fixture.counts)test("slot count "+JSON.stringify(row.environment),()=>expect(nxPutSlotCountV1(row.environment)).toBe(row.expected));
++
++test("resources are stable, distinct per slot and per image",()=>{
++ expect(nxPutSlotResourceV1("/a",0)).toBe(nxPutSlotResourceV1("/a",0));expect(nxPutSlotResourceV1("/a",0)).not.toBe(nxPutSlotResourceV1("/a",1));expect(nxPutSlotResourceV1("/a",0)).not.toBe(nxPutSlotResourceV1("/b",0));
++});
++
++test("concurrent publications never exceed the slots and all finish",()=>withEnvelope(async original=>{
++ const {root,lease,image}=area(),row=fixture.contention;
++ try{
++  const controller=new AbortController();let active=0,peak=0,done=0;
++  await Promise.all(Array.from({length:row.workers},()=>withNxPutSlotV1({root:image,leaseDirectory:lease,control:issue(original),slots:row.slots},async()=>{active++;peak=Math.max(peak,active);await sleep(row.holdMilliseconds);active--;done++;})));
++  expect(done).toBe(row.workers);expect(peak).toBeLessThanOrEqual(row.maximumConcurrent);expect(peak).toBe(row.maximumConcurrent);
++  const model=spawnSync("python3",["-I",resolve(import.meta.dir,"./🐍️oracle.py"),String(row.slots),String(row.workers)],{encoding:"utf8"});expect(model.status).toBe(0);expect(JSON.parse(model.stdout).peak).toBe(peak);
++ }finally{rmSync(root,{recursive:true,force:true});}
++}),30000);
++
++test("waiters are admitted first in, first out",()=>withEnvelope(async original=>{
++ const {root,lease,image}=area(),row=fixture.fifo;
++ try{
++  const controller=new AbortController(),order:number[]=[],runs:Promise<void>[]=[];
++  for(let worker=0;worker<row.workers;worker++){runs.push(withNxPutSlotV1({root:image,leaseDirectory:lease,control:issue(original),slots:row.slots},async()=>{order.push(worker);await sleep(row.holdMilliseconds);}));await sleep(30);}
++  await Promise.all(runs);
++  const model=spawnSync("python3",["-I",resolve(import.meta.dir,"./🐍️oracle.py"),String(row.slots),String(row.workers)],{encoding:"utf8"});expect(model.status).toBe(0);
++  expect(order).toEqual(JSON.parse(model.stdout).order);
++ }finally{rmSync(root,{recursive:true,force:true});}
++}),30000);
++
++test("a slot reports the other slots in use and is released after a failing body",()=>withEnvelope(async original=>{
++ const {root,lease,image}=area(),controller=new AbortController(),options={root:image,leaseDirectory:lease,control:issue(original),slots:3};
++ try{
++  let seen=-1;
++  await withNxPutSlotV1(options,async first=>{expect(await first.others()).toBe(0);await withNxPutSlotV1(options,async second=>{expect(second.index).not.toBe(first.index);seen=await second.others();expect(await first.others()).toBe(1);});});
++  expect(seen).toBe(1);
++  await expect(withNxPutSlotV1(options,async()=>{throw Error("body failed");})).rejects.toThrow("body failed");
++  await withNxPutSlotV1(options,async slot=>expect(await slot.others()).toBe(0));
++ }finally{rmSync(root,{recursive:true,force:true});}
++}));
++
++test("a cancelled waiter leaves without a slot and without blocking the next one",()=>withEnvelope(async original=>{
++ const {root,lease,image}=area(),holder=new AbortController(),waiter=new AbortController();
++ try{
++  let release!:()=>void;const held=new Promise<void>(done=>{release=done;}),running=withNxPutSlotV1({root:image,leaseDirectory:lease,control:issue(original),slots:1},()=>held);
++  await sleep(100);
++  const blocked=withNxPutSlotV1({root:image,leaseDirectory:lease,control:issue(original,waiter.signal),slots:1},async()=>undefined);
++  await sleep(150);waiter.abort(Error("cancelled by test"));
++  await expect(blocked).rejects.toThrow();
++  release();await running;
++  await withNxPutSlotV1({root:image,leaseDirectory:lease,control:issue(original),slots:1},async slot=>expect(slot.index).toBe(0));
++ }finally{rmSync(root,{recursive:true,force:true});}
++}),30000);
++
++const nxSource=readFileSync(resolve(import.meta.dir,"../../🟦️.ts"),"utf8");
++test("source: puts run in a slot under the shared writer custody and judge headroom minus the other slots",()=>{
++ expect(nxSource).toContain("withNxPutSlotV1({root:scope.root,leaseDirectory:scope.leaseDirectory,control:scope.control,slots:nxPutSlotCountV1(scope.environment)}");
++ expect(nxSource).toContain("withCompilerSharedHeadroomV1(");expect(nxSource).not.toContain("withCompilerInitialHeadroomV1");
++ expect(nxSource).toContain("await slot.others()*maximum");
++});

@@ -91,17 +91,18 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         registry.register(RewritingDocumentJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if REWRITING_DOCUMENT_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return rewriting_build_document_tool_job(request);
+    fn build_tool_job(request: &mut Option<semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if REWRITING_DOCUMENT_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return rewriting_build_document_tool_job(request, output, cx);
         }
-        window_config::job::build_job(request)
+        window_config::job::build_job(request, output, cx)
     }
 
     /// 🧾️ Store publication authority for the `Artifact` lane — without it the host refuses every document
     /// verb at dispatch (`declares the unsupported artifact publication lane`).
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+        Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     /// 🎯️ Host-action bridge into the closed `TrinityRewritingCommand` enum — see `args_bridge`.

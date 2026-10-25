@@ -1,4 +1,4 @@
-import type { PackageImplementationAdmission } from "../../../🔍️discovery/🧱️package-implementation-admission/🟦️.ts";
+import type { PackageDirectoryAdmission, PackageImplementationAdmission } from "../../../🔍️discovery/🧱️package-implementation-admission/🟦️.ts";
 import type { GeneratorPreviewProgressPolicyV1 } from "../../../🏭️generator/👁️preview/📈️progress/🟦️.ts";
 import type { GeneratorProjectionActivation, RegistryCatalogInputDiscovery } from "../../../🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
 import type { SemanticPackageGeneration } from "../../../🔍️discovery/📦️package-projection-contracts/🟦️.ts";
@@ -40,6 +40,7 @@ export interface PackageBoundaryRule {
   readonly uncertainRole: "problem";
   readonly implementationRole: "problem";
   readonly implementationAdmission: PackageImplementationAdmission | null;
+  readonly directoryAdmissions: readonly PackageDirectoryAdmission[];
 }
 
 export interface PackageBoundaryProfile {
@@ -57,7 +58,7 @@ export interface PackageBoundaryProfile {
 export interface PackageSourceDisposition {
   readonly contractKind: "fixed" | "configurable";
   readonly disposition: "adapter-source" | "tool-metadata";
-  readonly validator: "package-glue" | "command-router" | "vitest-configuration" | "tool-config-vitest" | "tool-config-tailwind" | "tool-config-postcss" | "tool-config-eslint" | "tool-config-dependency-cruiser" | "pytest-configuration" | "eslint-configuration" | "vscode-test-configuration";
+  readonly validator: "package-glue" | "command-router" | "vitest-configuration" | "tool-config-vitest" | "tool-config-tailwind" | "tool-config-postcss" | "tool-config-eslint" | "tool-config-dependency-cruiser" | "pytest-configuration" | "eslint-configuration";
   readonly grammarId?: string;
   readonly authority: string;
   readonly verification: string;
@@ -69,7 +70,7 @@ export interface EcosystemSpec {
 }
 
 export interface PackageGlueGrammar {
-  readonly analyzer: "rust" | "typescript" | "javascript" | "go" | "python" | "dotnet" | "c-cpp" | "tex";
+  readonly analyzer: "rust" | "typescript" | "javascript" | "go" | "python" | "dotnet" | "c-cpp" | "tex" | "css";
   readonly allowedRoles: readonly ("declaration" | "registration" | "bootstrap" | "thin-delegation")[];
   readonly maxDelegationStatements: number;
 }

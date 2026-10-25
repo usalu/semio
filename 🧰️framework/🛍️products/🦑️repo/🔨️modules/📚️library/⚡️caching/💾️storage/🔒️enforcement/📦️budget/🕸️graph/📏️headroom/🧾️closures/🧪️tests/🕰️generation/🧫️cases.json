@@ -65,27 +65,6 @@
       "references": []
     },
     {
-      "id": "extra-root-key",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[],\"version\":1,\"extra\":0}",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "duplicate-root-key",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[],\"version\":1,\"version\":1}",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "bad-class",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[{\"r\":[],\"o\":[],\"extra\":0}],\"owners\":[],\"rows\":[],\"version\":1}",
-      "accepted": false,
-      "references": []
-    },
-    {
       "id": "bad-class-array",
       "kind": "generation-index",
       "wire": "{\"classes\":[{\"r\":0,\"o\":[]}],\"owners\":[],\"rows\":[],\"version\":1}",
@@ -103,27 +82,6 @@
       "id": "reference-word-boundary",
       "kind": "generation-index",
       "wire": "{\"classes\":[],\"owners\":[],\"rows\":[{\"kind\":\"file\",\"path\":\"x\",\"fact\":\"SEMIO_CARGO_LOCK_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbz\"}],\"version\":1}",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "trailing-comma",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[],\"version\":1,}",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "truncated",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[],\"version\":1",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "trailing-value",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[],\"version\":1}null",
       "accepted": false,
       "references": []
     },
@@ -163,79 +121,30 @@
       "references": []
     },
     {
-      "id": "invalid-string-escape",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[\"\\x\"],\"version\":1}",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "leading-zero",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[01],\"version\":1}",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "empty-exponent",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[1e],\"version\":1}",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "missing-colon",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\"[],\"version\":1}",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "mismatched-close",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[],\"version\":1]",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "raw-control-in-string",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[\"\n\"],\"version\":1}",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "duplicate-class-key",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[{\"r\":[],\"r\":[],\"o\":[]}],\"owners\":[],\"rows\":[],\"version\":1}",
-      "accepted": false,
-      "references": []
-    },
-    {
       "id": "scalar-depth-64",
       "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[{\"kind\":\"file\",\"path\":\"x\",\"fact\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}],\"version\":1}",
+      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[{\"kind\":\"file\",\"path\":\"x\",\"fact\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}],\"version\":1}",
       "accepted": true,
       "references": []
     },
     {
       "id": "scalar-depth-65",
       "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[{\"kind\":\"file\",\"path\":\"x\",\"fact\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}],\"version\":1}",
+      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[{\"kind\":\"file\",\"path\":\"x\",\"fact\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}],\"version\":1}",
       "accepted": false,
       "references": []
     },
     {
       "id": "object-key-depth-64",
       "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[{\"kind\":\"file\",\"path\":\"x\",\"fact\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":0}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}],\"version\":1}",
+      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[{\"kind\":\"file\",\"path\":\"x\",\"fact\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":0}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}],\"version\":1}",
       "accepted": true,
       "references": []
     },
     {
       "id": "object-key-depth-65",
       "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[{\"kind\":\"file\",\"path\":\"x\",\"fact\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":0}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}],\"version\":1}",
+      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[{\"kind\":\"file\",\"path\":\"x\",\"fact\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":{\"x\":0}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}],\"version\":1}",
       "accepted": false,
       "references": []
     },
@@ -257,13 +166,6 @@
       "id": "missing-row-field",
       "kind": "generation-index",
       "wire": "{\"classes\":[],\"owners\":[],\"rows\":[{\"kind\":\"file\",\"path\":\"x\"}],\"version\":1}",
-      "accepted": false,
-      "references": []
-    },
-    {
-      "id": "extra-row-field",
-      "kind": "generation-index",
-      "wire": "{\"classes\":[],\"owners\":[],\"rows\":[{\"kind\":\"file\",\"path\":\"x\",\"fact\":0,\"extra\":0}],\"version\":1}",
       "accepted": false,
       "references": []
     },

@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️Value
 /// 🔢️ Exact logical STEP real: decimal coefficient/scale plus an optional base-10 exponent.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields )]
 pub struct Part21Decimal {
@@ -145,7 +145,7 @@ impl Part21Value {
 //#region 🔖️Instance
 /// 🧩️ One `#N = TYPE(args...)` line, or `#N = (TYPE1(...) TYPE2(...))` for a complex instance —
 /// every `(type_name, args)` pair is kept, nothing about a multi-type instance is dropped.
-#[derive(Clone, Debug, PartialEq, Default, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, Default, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 pub struct Part21Instance {
     pub id: u64,
     pub entities: Vec<(String, Vec<Part21Value>)>,

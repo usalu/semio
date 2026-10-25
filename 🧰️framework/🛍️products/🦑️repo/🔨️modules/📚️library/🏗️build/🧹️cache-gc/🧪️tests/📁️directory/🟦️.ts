@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
-import {activateNativeDirectoryV1,allocateNativeDirectoryV1,deactivateNativeDirectoryV1,nativeDirectoryProtocolV1,nativeDirectoryUsageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
+import {activateNativeDirectoryV1,allocateNativeDirectoryV1,deactivateNativeDirectoryV1,nativeDirectoryProtocolV1,nativeDirectoryUsageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {readCacheLedgerV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {cacheRunnerPortsV1,reportCacheLedgerV1} from "../../🏃️runner/🟦️.ts";
 

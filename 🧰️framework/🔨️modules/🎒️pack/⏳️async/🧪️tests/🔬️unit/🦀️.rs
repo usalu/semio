@@ -32,7 +32,7 @@ impl AsyncPackSource for RecordingSource {
     }
 }
 
-/// 🧪️ A test double whose `read_at` never resolves, used to prove `CancellationToken`
+/// 📖️ A test double whose `read_at` never resolves, used to prove `CancellationToken`
 /// actually short-circuits an in-flight read rather than waiting for it to finish.
 struct HangingSource;
 
@@ -56,7 +56,7 @@ fn cancellation_token_starts_uncancelled_and_latches_once_cancelled() {
     assert!(token.is_cancelled(), "cancelling a clone must be visible through the original");
 }
 
-/// 🧪️ Wraps a future and counts how many times it is actually polled — used below to prove
+/// 🔢️ Wraps a future and counts how many times it is actually polled — used below to prove
 /// `CancelWatch` is driven by real waker wakeups rather than a hot poll loop.
 struct CountingPoll<F> {
     inner: F,
@@ -72,7 +72,7 @@ impl<F: Future + Unpin> Future for CountingPoll<F> {
     }
 }
 
-/// 🧪️ Regression test for the poll-sleep defect this packet fixes: `CancelWatch` must stay
+/// ✖️ Regression test for the poll-sleep defect this packet fixes: `CancelWatch` must stay
 /// `Pending` until a genuinely separate OS thread transitions `CancellationToken`'s state
 /// (calls `cancel()`), then resolve — driven purely by `Waker::wake`, never by sleeping or
 /// busy-repolling. A busy-poll implementation (the original 200µs-sleep version) would rack

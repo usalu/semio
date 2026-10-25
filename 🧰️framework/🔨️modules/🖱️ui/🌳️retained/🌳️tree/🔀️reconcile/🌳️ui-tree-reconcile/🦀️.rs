@@ -5,7 +5,7 @@ use super::*;
 // #region reconcile
 //#region 🌳️DocumentTreeReconcile
 impl UiTree {
-    /// 🌳️ Advances this surface's document→arena reconcile by exactly one unit. See
+    /// 🪜️ Advances this surface's document→arena reconcile by exactly one unit. See
     /// [`UiDocumentReconcileCursor`] for the phase ladder and the identity rule.
     ///
     /// 📐️ The record's own `LayoutSpec` is the React-parity geometry channel

@@ -17,7 +17,7 @@ pub struct SetElement {
     pub placement: Option<SemioTransform>,
     #[value(default)]
     pub geometry: Option<GeometryRef>,
-    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "semio_s_artifact_stdio_contract::deserialize_double_option")]
     pub spatial_id: Option<Option<String>>,
     #[value(default)]
     pub psets: Option<Vec<PropertySet>>,

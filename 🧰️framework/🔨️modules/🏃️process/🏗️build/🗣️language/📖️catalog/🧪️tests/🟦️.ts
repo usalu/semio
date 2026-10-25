@@ -18,7 +18,7 @@ const refusal = (run: () => unknown): string | undefined => {
   return undefined;
 };
 const oracle = (): Oracle => {
-  const run = spawnSync(testPythonV1() ?? "python3", ["-I", fileURLToPath(new URL("./🐍️oracle.py", import.meta.url))], { encoding: "utf8", input: JSON.stringify(corpus), maxBuffer: 1 << 24 });
+  const run = spawnSync(testPythonV1() ?? "python3", ["-I", fileURLToPath(new URL("./🐍️.py", import.meta.url))], { encoding: "utf8", input: JSON.stringify(corpus), maxBuffer: 1 << 24 });
   if (run.status !== 0) throw new Error(`oracle failed: ${run.stderr}`);
   return JSON.parse(run.stdout) as Oracle;
 };

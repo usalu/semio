@@ -7,6 +7,7 @@ import { requireTaxonomyValue } from "../../🧹️normalization/📜️plan-con
 import { semanticOwnedInputFileSnapshot } from "../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import { join, resolve } from "node:path";
 import ts from "typescript";
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization"), source = normalizationSourceDeclarations(sourcePath);
 const tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
@@ -92,7 +93,7 @@ test("recovery authority is mounted through its exact Nx registration", () => {
   const row = vector.registration, packagePath = join(library, "📦️packages/🟦️typescript");
   const project = JSON.parse(readFileSync(join(packagePath, "📋️project.json"), "utf8"));
   expect(project.targets["test-" + row.id]).toMatchObject({ executor: "repo:script", options: { cwd: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript", command: "repo ./📜️script.ts test " + row.id } });
-  const router = readFileSync(join(packagePath, "📜️script.ts"), "utf8");
+  const router = readRegisteredTestRoute(resolve(library, "../../../../.."), row.id).text;
   expect(router).toContain('segments[0] === "' + row.id + '"');
   expect(router).toContain('🧪️tests/🛟️' + row.id + '/🟦️.ts');
 });
@@ -118,7 +119,7 @@ for (const compiler of compilers) test(compiler.name + " preserves physical inde
       const [header, path] = record.split("\t"), [mode, objectId, stage] = header.split(" ");
       return { path, entry: { mode, objectId, stage: Number(stage) } };
     });
-    const adapters = { process, Buffer, join, lstatSync, readdirSync, lstatOrNull: (path: string) => { try { return lstatSync(path); } catch { return null; } }, semanticOwnedInputFileSnapshot, sha256: (text: string) => createHash("sha256").update(text).digest("hex"), canonicalJson: (value: unknown): string => JSON.stringify(value), execFileSync: (command: string, args: string[], options: any) => { oracleReads++; return execFileSync(command, args, options); }, sourceAdmissionGitExclusions: () => [], sourceAdmissionGitRecords: (bytes: Buffer) => bytes.toString("utf8").split("\0").filter(Boolean), sourceAdmissionSafePath: (path: string) => path.length > 0 && !path.includes("..") };
+    const adapters = { process: { env: Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_"))) }, Buffer, join, lstatSync, readdirSync, lstatOrNull: (path: string) => { try { return lstatSync(path); } catch { return null; } }, semanticOwnedInputFileSnapshot, sha256: (text: string) => createHash("sha256").update(text).digest("hex"), canonicalJson: (value: unknown): string => JSON.stringify(value), runToolSyncV1: (command: string, args: string[], options: any) => { oracleReads++; return { stdout: execFileSync(command, args, { cwd: options.cwd, encoding: options.encoding, maxBuffer: options.maxBuffer }) }; }, execFileSync: (command: string, args: string[], options: any) => { oracleReads++; return execFileSync(command, args, options); }, sourceAdmissionGitExclusions: () => [], sourceAdmissionGitRecords: (bytes: Buffer) => bytes.toString("utf8").split("\0").filter(Boolean), sourceAdmissionSafePath: (path: string) => path.length > 0 && !path.includes("..") };
     const read = new Function(...Object.keys(adapters), compiler.compile(code) + "\nreturn sourceAdmissionGitRows;")(...Object.values(adapters));
     const spec = { positivePathspec: ":(top)", exclusionPathspecs: [] };
     expect(read(root, spec)).toEqual(parse(git(["ls-files", "--stage", "-z"])));

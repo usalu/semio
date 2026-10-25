@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 /** 🔌️ True when host:port already accepts TCP (existing dev server). */
 export function isDevPortInUse(host: string, port: number): boolean {
   const probe = `
@@ -59,7 +59,7 @@ process.exit(res.ok ? 0 : 1);`;
   return devServerPlayEntry(host, port) === expectedPlayEntry;
 }
 
-/** 🔌️ First free TCP port at or after `preferredPort` (up to `maxAttempts`), skipping `skipPorts`. */
+/** 🆓️ First free TCP port at or after `preferredPort` (up to `maxAttempts`), skipping `skipPorts`. */
 export function resolveDevPort(host: string, preferredPort: number, maxAttempts = 20, skipPorts: ReadonlySet<number> = new Set()): number {
   for (let offset = 0; offset < maxAttempts; offset++) {
     const port = preferredPort + offset;

@@ -6,13 +6,13 @@
 //! windows for the same viewport. Pure: no layout, no DOM, no retained tree — a host measures, this answers.
 //! @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️design-virtualised-tree.md §6.1, §7
 
-/// 🪟️ Rows requested beyond each edge of the viewport (`TREE_WINDOW_OVERSCAN_ROWS`, `🌳️Tree/🟦️.tsx`).
+/// 🔭️ Rows requested beyond each edge of the viewport (`TREE_WINDOW_OVERSCAN_ROWS`, `🌳️Tree/🟦️.tsx`).
 pub const TREE_WINDOW_OVERSCAN_ROWS: u32 = 8;
 
-/// 🪟️ Hard ceiling on one window request (`TREE_WINDOW_ROWS_MAX`, `🌳️Tree/🟦️.tsx`).
+/// 🏔️ Hard ceiling on one window request (`TREE_WINDOW_ROWS_MAX`, `🌳️Tree/🟦️.tsx`).
 pub const TREE_WINDOW_ROWS_MAX: u32 = 128;
 
-/// 🪟️ Rows an off-screen container that already materialised something is asked for (`TREE_WINDOW_OFFSCREEN_ROWS`).
+/// 🎦️ Rows an off-screen container that already materialised something is asked for (`TREE_WINDOW_OFFSCREEN_ROWS`).
 pub const TREE_WINDOW_OFFSCREEN_ROWS: u32 = 0;
 
 /// 🌱️ Rows an off-screen container that materialised nothing yet is asked for (`TREE_WINDOW_OFFSCREEN_SEED_ROWS`).
@@ -25,7 +25,7 @@ pub struct TreeWindowRowMeasure {
     pub top: f64,
 }
 
-/// 📐️ One windowed container as a host measured it (`TreeWindowContainerMeasure`): its window path, its window, its full
+/// 📏️ One windowed container as a host measured it (`TreeWindowContainerMeasure`): its window path, its window, its full
 /// virtual extent in viewport space (content origin at 0), the pitch of one closed row, and its materialised rows' tops.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TreeWindowContainerMeasure {
@@ -39,7 +39,7 @@ pub struct TreeWindowContainerMeasure {
     pub rows: Vec<TreeWindowRowMeasure>,
 }
 
-/// 🪟️ One container's next window: materialise `rows` entries starting at `offset`.
+/// 📬️ One container's next window: materialise `rows` entries starting at `offset`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TreeWindowRequest {
     pub key: String,
@@ -47,7 +47,7 @@ pub struct TreeWindowRequest {
     pub rows: u32,
 }
 
-/// 📐️ What one on-screen container contributes to the viewport rule (`TreeWindowVisibleRows`).
+/// 👁️ What one on-screen container contributes to the viewport rule (`TreeWindowVisibleRows`).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TreeWindowVisibleRows {
     pub total: u32,
@@ -85,7 +85,7 @@ fn get<'a, T>(table: &'a [(String, T)], key: &str) -> Option<&'a T> {
     table.iter().find(|(existing, _)| existing == key).map(|(_, value)| value)
 }
 
-/// 📐️ The child row of `container` drawn at pixel `y` (`treeWindowRowIndexAt`): the materialised band reads the rows' real
+/// 🎯️ The child row of `container` drawn at pixel `y` (`treeWindowRowIndexAt`): the materialised band reads the rows' real
 /// tops, the two spacer bands the uniform pitch.
 fn row_index_at(container: &TreeWindowContainerMeasure, y: f64, total: u32, offset: u32, length: u32) -> u32 {
     let clamp = |index: f64| index.max(0.0).min(f64::from(total) - 1.0) as u32;
@@ -112,7 +112,7 @@ fn row_index_at(container: &TreeWindowContainerMeasure, y: f64, total: u32, offs
     clamp(f64::from(container.rows[low].index))
 }
 
-/// 📐️ Every container measured against the viewport once (`treeWindowVisibleRowsForViewport`); a container off the
+/// 🔬️ Every container measured against the viewport once (`treeWindowVisibleRowsForViewport`); a container off the
 /// viewport is absent.
 pub fn visible_rows_for_viewport(containers: &[TreeWindowContainerMeasure], viewport_top: f64, viewport_height: f64) -> Vec<(String, TreeWindowVisibleRows)> {
     let mut visible = Vec::new();
@@ -138,19 +138,19 @@ pub fn visible_rows_for_viewport(containers: &[TreeWindowContainerMeasure], view
     visible
 }
 
-/// 🪟️ One container's window at an EXACT row count (`treeWindowRequestAtRows`).
+/// 📍️ One container's window at an EXACT row count (`treeWindowRequestAtRows`).
 fn request_at_rows(key: &str, metrics: &TreeWindowVisibleRows, rows: u32, overscan: u32) -> TreeWindowRequest {
     let bounded = rows.min(metrics.total).max(1);
     TreeWindowRequest { key: key.to_owned(), offset: metrics.first_visible_row.saturating_sub(overscan).min(metrics.total - bounded), rows: bounded }
 }
 
-/// 🪟️ The windows the viewport wants for every container it intersects (`treeWindowRequestsForViewport`).
+/// 👀️ The windows the viewport wants for every container it intersects (`treeWindowRequestsForViewport`).
 pub fn requests_for_viewport(containers: &[TreeWindowContainerMeasure], viewport_top: f64, viewport_height: f64, overscan: u32) -> Vec<TreeWindowRequest> {
     let visible = visible_rows_for_viewport(containers, viewport_top, viewport_height);
     containers.iter().filter_map(|container| get(&visible, &container.key).map(|metrics| request_at_rows(&container.key, metrics, (metrics.visible_rows + 2 * overscan).min(TREE_WINDOW_ROWS_MAX), overscan))).collect()
 }
 
-/// 🪟️ Fits a whole body's request inside `budget` in the guest's cost model — every container `1 + rows` —
+/// 💰️ Fits a whole body's request inside `budget` in the guest's cost model — every container `1 + rows` —
 /// overscan first, then rows furthest from the viewport centre (`capTreeWindowRequests`).
 pub fn cap_requests(requests: Vec<TreeWindowRequest>, visible: &[(String, TreeWindowVisibleRows)], budget: usize) -> Vec<TreeWindowRequest> {
     let cost = |rows: &mut dyn Iterator<Item = u32>| -> usize { rows.fold(0usize, |carry, rows| carry + 1 + rows as usize) };
@@ -227,7 +227,7 @@ pub fn cap_requests(requests: Vec<TreeWindowRequest>, visible: &[(String, TreeWi
         .collect()
 }
 
-/// 🪟️ Every windowed container of one body priced together (`treeWindowBodyRequestsV1`): on-screen ones with the rows they
+/// 📦️ Every windowed container of one body priced together (`treeWindowBodyRequestsV1`): on-screen ones with the rows they
 /// need, off-screen ones as spacer windows at the offset they hold (one seed row if they hold nothing), then capped.
 pub fn body_requests(containers: &[TreeWindowContainerMeasure], viewport_height: f64, budget: usize) -> Vec<TreeWindowRequest> {
     let visible = visible_rows_for_viewport(containers, 0.0, viewport_height);
@@ -250,7 +250,7 @@ pub fn body_requests(containers: &[TreeWindowContainerMeasure], viewport_height:
     cap_requests(requests, &visible, budget)
 }
 
-/// 🧠️ [`body_requests`] spent where the guest can actually answer it (`treeWindowServedRequestsV1`): a window answered
+/// 🛎️ [`body_requests`] spent where the guest can actually answer it (`treeWindowServedRequestsV1`): a window answered
 /// SHORT teaches the container's capacity, and from then on the window is placed for that capacity — centred on the visible
 /// rows when it covers them, else pinned to the edge the reader scrolls towards — so every row stays reachable.
 pub fn served_requests(containers: &[TreeWindowContainerMeasure], viewport_height: f64, memory: &[(String, TreeWindowServedMemory)], budget: usize) -> (Vec<TreeWindowRequest>, Vec<(String, TreeWindowServedMemory)>) {
@@ -305,7 +305,7 @@ pub fn served_requests(containers: &[TreeWindowContainerMeasure], viewport_heigh
     (requests, next)
 }
 
-/// 🪟️ The one line a report is compared on (`treeWindowReportSignatureV1`): the host refreshes only when the ANSWER changed.
+/// 🔏️ The one line a report is compared on (`treeWindowReportSignatureV1`): the host refreshes only when the ANSWER changed.
 pub fn report_signature(requests: &[TreeWindowRequest], viewport_rows: u32) -> String {
     let body: Vec<String> = requests.iter().map(|request| format!("{}:{}:{}", request.key, request.offset, request.rows)).collect();
     format!("{viewport_rows}|{}", body.join(","))

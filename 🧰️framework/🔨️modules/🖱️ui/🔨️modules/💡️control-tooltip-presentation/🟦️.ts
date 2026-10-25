@@ -11,7 +11,7 @@ export interface ControlTooltipTextInput {
   readonly hotkey?: string;
 }
 
-/** 💬 Composes a native `title` string from a label and optional hotkey chord. */
+/** 📝️ Composes a native `title` string from a label and optional hotkey chord. */
 export function formatControlTooltipText({ label, hotkey }: ControlTooltipTextInput): string {
   if (!hotkey) return label;
   return `${label} (${hotkey})`;

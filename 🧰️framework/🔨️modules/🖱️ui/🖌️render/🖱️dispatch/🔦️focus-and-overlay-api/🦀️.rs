@@ -36,7 +36,7 @@ impl Dispatcher {
         self.apply_focus_transition(tree, None)
     }
 
-    /// 🎯️ Ported from `events.rs::FocusState::focus_next` verbatim, `NodeId` swapped for `ElementId`
+    /// ⏭️ Ported from `events.rs::FocusState::focus_next` verbatim, `NodeId` swapped for `ElementId`
     /// and the tab order rebuilt from [`collect_focusable`] scoped to `scope` (the topmost focus-trap
     /// overlay's root, or the tree root — see `Self::dispatch`'s `Tab` handling).
     pub(super) fn focus_next(&mut self, tree: &DispatchTree, scope: FrameNodeId) -> bool {

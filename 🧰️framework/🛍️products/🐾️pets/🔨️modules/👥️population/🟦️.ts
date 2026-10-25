@@ -11,7 +11,7 @@ import { type Fixture, type Ladder, type Menagerie, type Perch, type PetMode, ty
 import { MARGIN, evicted, freeAt, seatOf, shifted, type Body as Solid } from "../🚧️clearance/🟦️.ts";
 import { randomWords, unitOf } from "../🎲️randomness/🟦️.ts";
 import { landingOf, perchesOf, wallsOf } from "../🏞️terrain/🟦️.ts";
-import { bodiesOf, extentOf, quarters, roomsFor } from "../📏️spacing/🟦️.ts";
+import { bodiesOf, companyOf, extentOf, perchesFor, quarters, roomsFor } from "../📏️spacing/🟦️.ts";
 import { clamp } from "../📐️trigonometry/🟦️.ts";
 import { actorKey, blinkAt, clipAt, crowdOn, feel, hoverOf, indexOf, release, remove, settle, shift, stageKey, surfaceOf, type Body, type Draft } from "../📝️draft/🟦️.ts";
 import { courseOf, drop, poof, unfoot, vanish } from "../🚶️locomotion/⚓️footing/🟦️.ts";
@@ -34,18 +34,17 @@ export const FIXTURE_SLACK = 0.5;
 //#endregion 🔖️Constants
 
 //#region 🔖️Riding
-/** 📐️ The perches and the pitches of the stage for everyone who is on it or wanted: perches with clearance = the tallest of them plus its hover and minimum = the widest, so that every perch carries any of them; pitches (`wallsOf`) with a band of the widest plus `WALL_ROOM` beside the wall and at least `WALL_LEAST` of the smallest height long, so that every pitch takes any of them and is worth a climb; none when nobody is there. */
+/** 📐️ The perches and the pitches of the stage for its company ({@link companyOf}: everyone who is on it or wanted and can stand on its ground together): perches with clearance = the tallest of them plus its hover and minimum = the widest, so that every perch carries any of them; pitches (`wallsOf`) with a band of the widest plus `WALL_ROOM` beside the wall and at least `WALL_LEAST` of the smallest height long, so that every pitch takes any of them and is worth a climb; none when nobody is there or nobody that is can stand on the ground at all. */
 function measure(menagerie: Menagerie, draft: Draft): void {
-  let tallest = 0;
+  const company = companyOf(menagerie, draft);
   let widest = 0;
   let smallest = Infinity;
-  for (const kind of menagerie.species) {
-    if (!draft.wanted.includes(kind.id) && indexOf(draft.actors, kind.id) < 0) continue;
-    tallest = Math.max(tallest, kind.size.height + hoverOf(kind));
+  for (const kind of company) {
     widest = Math.max(widest, kind.size.width);
     smallest = Math.min(smallest, kind.size.height);
   }
-  draft.perches = perchesOf(draft.surfaces, draft.keepouts, draft.width, draft.height, tallest, widest);
+  const wishes = draft.actors.length > 0 || draft.wanted.some((id) => menagerie.species.some((kind) => kind.id === id));
+  draft.perches = wishes && company.length === 0 ? [] : perchesFor(draft, company);
   draft.pitches = smallest === Infinity ? [] : wallsOf(draft.walls, draft.keepouts, draft.width, draft.height, widest + WALL_ROOM, WALL_LEAST * smallest);
 }
 
@@ -341,12 +340,13 @@ function arrive(draft: Draft, kind: Species, stream: number): void {
   draft.streams.splice(at, 0, stream);
 }
 
-/** 📣️ Every wanted species that is not on stage arrives, in `menagerie.species` order — as long as the company on stage, leavers included, is smaller than the wanted one: a newcomer waits until whoever it replaces is gone, so a stage never holds more actors than were summoned. */
+/** 📣️ Every wanted species that is not on stage arrives, in `menagerie.species` order — as long as the company on stage, leavers included, is smaller than the wanted one: a newcomer waits until whoever it replaces is gone, so a stage never holds more actors than were summoned. A wanted species that cannot stand on the ground together with the company ({@link companyOf}) waits off stage and does not hold the others back. */
 export function spawn(menagerie: Menagerie, draft: Draft): void {
   if (draft.perches.length === 0) return;
+  const company = companyOf(menagerie, draft);
   for (let stream = 0; stream < menagerie.species.length && draft.actors.length < draft.wanted.length; stream++) {
     const kind = menagerie.species[stream]!;
-    if (draft.wanted.includes(kind.id) && indexOf(draft.actors, kind.id) < 0) arrive(draft, kind, stream);
+    if (draft.wanted.includes(kind.id) && indexOf(draft.actors, kind.id) < 0 && company.includes(kind)) arrive(draft, kind, stream);
   }
 }
 

@@ -1,6 +1,6 @@
 /** 🔖️ Law: an inferrer that changes its output for the same inputs must declare a new stamp. The corpus in `./🔣️.json` is language-agnostic data (calls with JSON arguments and fixture files); the sha256 of the canonical JSON of every output is recorded per declared stamp. The law fails when a probe answers differently under a stamp that already has a recorded answer, and when a stamp has no recorded answer at all, so a bump and the refreshed record move together (`SEMIO_UPDATE_OUTPUT_STAMPS=1` rewrites the record of the current stamps). The canonical form and the digests are recomputed by an independent Python implementation. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {createHash} from "node:crypto";
 import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -12,7 +12,7 @@ import fixtureSchema from "./🧬️schema/🔣️.json";
 import protocolSchema from "../../🔖️stamps/🧬️schema/🔣️.json";
 import {observedSourceAnalysisV1} from "../../../../👁️observation/🟨️.mjs";
 
-const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️oracle.py"),fixturePath=join(here,"🔣️.json");
+const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️.py"),fixturePath=join(here,"🔣️.json");
 const protocol=protocolSchema.definitions.Protocol.const as {inferrers:Record<string,{stamp:string;scope:string}>};
 const plugin=await import("../../🟨️.mjs");await plugin.libraryBootstrap;
 const api=plugin.cacheInternals as Record<string,(...args:unknown[])=>unknown>,library=resolve(here,"../../../../..");

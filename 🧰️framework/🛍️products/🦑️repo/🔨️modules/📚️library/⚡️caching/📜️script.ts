@@ -1,4 +1,5 @@
 #!/usr/bin/env repo
+import { join } from "node:path";
 import { AuditScript, PolicyScript } from "./📇️inventory/📋️orchestration/🟦️.ts";
 import { GraphScript } from "./🕸️graph/✅️verification/🟦️.ts";
 import { DiskScript } from "./💾️storage/📊️report/🟦️.ts";
@@ -10,12 +11,23 @@ import { CargoProvenanceScript } from "./🦀️cargo/🧾️provenance/🟦️.
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 
-/** 💤️ Loads the cache test proofs only for their explicit test command. */
+/** 🌱️ Launches a test file inside the genuine Original process birth of each declared birth identifier, so gates on the real build capabilities, setup purpose or installed Nx tooling see an authentic caller. @see ../🧪️testing/🌱️genuine-birth/🔣️.json */
+function genuineBirthLaunchersV1(script: string, root: string): Readonly<Record<string, (file: string) => readonly string[]>> {
+  return Object.fromEntries(["setup", "setup-sdk", "orchestration", "model"].map(birth => [birth, (file: string) => [script, "--file=" + file, "--birth=" + birth, "--root=" + root]]));
+}
+
+/** 🧪️ Runs a declared suite of the route table with every test file in its own process; any other `test` name loads the legacy proofs lazily. */
 class CacheTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
+    const { cachingTestRootV1, readCachingTestTableV1 } = await import("./🗂️suites/🟦️.ts"), table = readCachingTestTableV1();
+    if (args.length === 1 && table.suites.some(suite => suite.id === args[0])) {
+      const { processTestCheckoutV1, runProcessTestSuiteV1, withProcessTestOutputV1 } = await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🏃️run/🟦️.ts"), checkout = processTestCheckoutV1(this.root, this.repoRoot);
+      await withProcessTestOutputV1(checkout, "cache-contract", output => runProcessTestSuiteV1({ invocation: this.invocation, root: cachingTestRootV1, checkout, table, suite: args[0]!, owner: "cache", output, environment: process.env, launchers: genuineBirthLaunchersV1(join(this.root, "../🧪️testing/🌱️genuine-birth/📜️script.ts"), checkout) }), table.suites.find(suite => suite.id === args[0])?.scratch);
+      return;
+    }
     const { TestScript } = await import("./🧪️tests/🔬️script-commands/🟦️.ts");
     await new TestScript(this.root, this.repoRoot, this.invocation).run(args);
   }
@@ -29,7 +41,7 @@ class CacheLeaseScript extends BundleScript {
   }
 }
 
-/** 🧪️ Loads the artifact package proof only for its explicit verification command. */
+/** 📦️ Loads the artifact package proof only for its explicit verification command. */
 class ArtifactPackageVerificationScript extends BundleScript {
   async run(): Promise<void> {
     const { ArtifactPackageContractScript } = await import("./🧪️tests/📦️artifact-packages/🟦️.ts");

@@ -1,0 +1,11 @@
+{
+  "repoRoot": "/work/semio",
+  "rows": [
+    { "name": "no catalog leaves arguments and environment alone", "args": ["--folder", "space", "--scopes", "workspace.read"], "argsOut": ["--folder", "space", "--scopes", "workspace.read"], "env": {} },
+    { "name": "a relative root resolves against the repository", "args": ["--folder", "space", "--catalog", "s/catalog/generated"], "argsOut": ["--folder", "space"], "env": { "SEMIO_PLUGIN_CATALOG": "/work/semio/s/catalog/generated" } },
+    { "name": "an absolute root stays", "args": ["--catalog", "/srv/publication", "--scopes", "a"], "argsOut": ["--scopes", "a"], "env": { "SEMIO_PLUGIN_CATALOG": "/srv/publication" } },
+    { "name": "a missing value is refused", "args": ["--catalog"], "error": "exactly one" },
+    { "name": "a flag instead of a value is refused", "args": ["--catalog", "--folder", "x"], "error": "exactly one" },
+    { "name": "two catalogs are refused", "args": ["--catalog", "a", "--catalog", "b"], "error": "exactly one" }
+  ]
+}

@@ -13,7 +13,7 @@ type WatchdogTailCase = {
   readonly publication: "allowed" | "refused" | "already-committed-fault";
 };
 
-/** ⏱️ The canonical watchdog-tail fixture: the exclusive microsecond ceiling, the sampled clock order and the scope claims. */
+/** 🧫️ The canonical watchdog-tail fixture: the exclusive microsecond ceiling, the sampled clock order and the scope claims. */
 type WatchdogTailFixture = {
   readonly version: number;
   readonly exclusiveCeilingUs: number;

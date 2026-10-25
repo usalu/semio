@@ -90,7 +90,7 @@ impl ArtifactCreationDirectory for SqliteDirectory {
     }
 
     async fn read_artifact_creation(&self, actor_user_id: &str, request_id: &str) -> DirectoryResult<Vec<ArtifactCreationFactV1>> {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if self.creation_read_failure.swap(false, std::sync::atomic::Ordering::SeqCst) {
             return Err(DirectoryError::Backend("injected creation receipt read failure".into()));
         }
@@ -262,7 +262,7 @@ impl ArtifactCreationDirectory for SqliteDirectory {
         if tx.commit().is_err() {
             return Ok(DocumentGenesisCommitV1::Indeterminate);
         }
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         {
             let failure = self.genesis_commit_ack_failure.swap(0, std::sync::atomic::Ordering::SeqCst);
             if failure == 2 {

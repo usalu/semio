@@ -146,7 +146,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         puzzle2d_fault_notices()
     }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() {
+            return Err(fault);
+        }
+        let args = args.as_ref();
         let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
         if let Some(flag) = puzzle2d_flag_value_argument(action) {
             args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle2d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
@@ -175,8 +179,9 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let window_transient = Puzzle2dWindowTransient::default();
         let window_kind = view_state.and_then(window::kind_for_view).unwrap_or(semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID);
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
-        let base_revision = doc.operation_optional().map(|operation| puzzle2d_revision_hex(&operation.canonical_base_revision)).unwrap_or_default();
-        puzzle2d_dispatch_emit::<Self>(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, &base_revision, &semio_framework_plugin::app::GestureSlot::detached(), doc.operation_optional().cloned())
+        let revision = doc.operation_optional().map(|operation| puzzle2d_revision_hex(&operation.canonical_base_revision));
+        let base_revision = revision.as_ref().map_or("", |hex| std::str::from_utf8(hex).expect("lowercase hexadecimal is ASCII"));
+        puzzle2d_dispatch_emit::<Self>(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, base_revision, &semio_framework_plugin::app::GestureSlot::detached(), doc.operation_optional().cloned())
             .map(|(emit, _)| emit)
     }
 
@@ -193,8 +198,8 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-        let mut proofs = Puzzle2dRetainedCommandProofs::bounded_first_step_tool_proofs();
-        proofs.extend(Puzzle2dHostConfigurationProofs::bounded_first_step_tool_proofs());
+        let mut proofs = Puzzle2dRetainedCommandProofs::proofs();
+        proofs.extend(Puzzle2dHostConfigurationProofs::proofs());
         proofs
     }
 
@@ -345,8 +350,9 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        Self::render_body(body_key, doc, cfg, view_state, &window::transient_from_view(transient), Puzzle2dInteractionSnapshot::from_interaction(interaction))
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> semio_framework_plugin::plugin_app_close_prelude::semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        Self::render_body(body_key, doc, cfg, view_state, &window::transient_from_view(transient), Puzzle2dInteractionSnapshot::from_interaction(interaction)).map(Some).map_err(Into::into)
     }
 
     fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {

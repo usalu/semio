@@ -4,7 +4,7 @@
   "sourcePath": ".devcontainer/README.md",
   "policy": {
     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🏠️owner-projection-policy/🔣️.json",
-    "sha256": "82d188a512e0051d2a9435715cd62d851911081b07294f81f64c287fe88e8333"
+    "sha256": "3d6c1020182558c76367098fe9ec02c91fd90c675e06a29ab5ecb217d6600271"
   },
   "baseline": {
     "commit": "101a6b4ea83acc82d6fbdc0607e6ae5d876825ae",
@@ -16,8 +16,8 @@
     }
   },
   "currentPreimage": {
-    "sha256": "7e3e2c54d817b12463f6034c255ec04420d263cf6634dd246e02b3f6d2e8c9e2",
-    "size": 10030,
+    "sha256": "5909f4e4b53e8979d68a5051cc08f17332d749f61b4dd658cce7af05b5db8c26",
+    "size": 9947,
     "mode": "0644"
   }
 }

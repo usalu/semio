@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
@@ -70,7 +70,7 @@ async function testPlanCachePrune(control:ResourceLeaseControl): Promise<{ planC
   return { planCachePrune: pruning.planCachePrune };
 }
 
-/** 🧪️ Verifies real-disk scanning, incremental session compaction, deletion and cancellation against a temp Cargo-shaped tree and a Python byte oracle. */
+/** 🦀️ Verifies real-disk scanning, incremental session compaction, deletion and cancellation against a temp Cargo-shaped tree and a Python byte oracle. */
 async function testCargoDiskScan(output: string,control:ResourceLeaseControl): Promise<void> {
   const pruning = await import("../../🧹️pruning/🟦️.ts");
   const root = mkdtempSync(join(output, "cache-prune-"));

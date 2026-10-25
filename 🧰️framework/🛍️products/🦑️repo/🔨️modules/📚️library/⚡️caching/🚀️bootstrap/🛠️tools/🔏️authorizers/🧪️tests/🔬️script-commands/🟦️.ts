@@ -1,4 +1,4 @@
-import {readNativeCallerAuthorityV1} from "../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import { createIssuedResourceControlV1 } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createHash } from "node:crypto";
 import { lstat, mkdir, readFile, rename, writeFile, rm } from "node:fs/promises";

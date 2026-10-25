@@ -1,4 +1,4 @@
-/** 🔑️ The implemented keys of the LaTeX visualization packages: the scanned l3keys declarations, the key paths a helper reaches and the keys each family implements. */
+/** 🗝️ The implemented keys of the LaTeX visualization packages: the scanned l3keys declarations, the key paths a helper reaches and the keys each family implements. */
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { VIZ_LATEX_DIR } from "../🟦️.ts";
@@ -27,7 +27,7 @@ export function texGroup(text: string, open: number): { body: string; end: numbe
   throw new Error("unbalanced TeX group while reading an l3keys block");
 }
 
-/** ✂️ Index of the next non-space character at or after `from`. */
+/** ⏭️ Index of the next non-space character at or after `from`. */
 export function texSkipSpace(text: string, from: number): number {
   let index = from;
   while (index < text.length && /\s/.test(text[index]!)) index += 1;
@@ -179,7 +179,7 @@ export function vizKeysModel(sources?: readonly string[]): KeysModel {
   return { literal, helpers, installs, families, macros };
 }
 
-/** 🔑 The keys a helper installs on `path` when it is called with `argument`. */
+/** 🪝️ The keys a helper installs on `path` when it is called with `argument`. */
 export function helperKeysOn(model: KeysModel, macro: string, argument: string, path: KeyPath, seen: Set<string>): Set<string> {
   if (seen.has(macro)) return new Set();
   seen.add(macro);
@@ -207,7 +207,7 @@ export function helperDeclaredKeyNames(model: KeysModel, macro: string, seen: Se
   return keys;
 }
 
-/** 🔑 Every key one l3keys path accepts: its own declarations, the ones a helper installed on it,
+/** 📂️ Every key one l3keys path accepts: its own declarations, the ones a helper installed on it,
  * and the ones its `unknown` handler forwards to another path. */
 export function keysOfPath(model: KeysModel, path: KeyPath, seen: Set<KeyPath>): Set<string> {
   path = vizKeyPath(path);
@@ -268,12 +268,12 @@ export function pathsReachedBy(model: KeysModel, body: string, depth: number, se
   return paths;
 }
 
-/** 🧭️ Resolves one exact native owner path, including its installed and forwarded controls. */
+/** 🛤️ Resolves one exact native owner path, including its installed and forwarded controls. */
 export function vizImplementedKeyPathNames(path: string): readonly string[] {
   return [...keysOfPath(vizKeysModel(), path, new Set())].sort();
 }
 
-/** 🔑 Family names retain only their source-reachable controls and the registry variant. */
+/** 🎛️ Family names retain only their source-reachable controls and the registry variant. */
 export function vizImplementedFamilyKeys(): Readonly<Record<string, readonly string[]>> {
   const model = vizKeysModel();
   const result: Record<string, readonly string[]> = {};

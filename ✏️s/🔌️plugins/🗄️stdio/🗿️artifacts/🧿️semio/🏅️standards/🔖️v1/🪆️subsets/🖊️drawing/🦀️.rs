@@ -86,12 +86,3 @@ pub mod viewer {
         }
     }
 }
-
-semio_framework_value::artifact_retire_leaf!(schema::snapshot::DrawCanvas);
-semio_framework_value::artifact_retire_struct!(schema::snapshot::DrawStyle { name, fill, stroke, stroke_width, opacity });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::DrawLayer { id, name, visible, root });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioDrawingSnapshot { schema, canvas, styles, layers });
-semio_framework_value::artifact_retire_struct!(schema::diff::NodePath { layer, path });
-
-semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioDrawingSnapshot);
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioDrawingSnapshot, schema::mutations::SemioDrawingMutation);

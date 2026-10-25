@@ -3,7 +3,7 @@ import {expect,test,setDefaultTimeout} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {bazelGrantedWorkerHostV1,bazelHostPlanV1,bazelHostResourceSettingsV1,bazelLocalConcurrencyV1,bazelResourceSetsV1} from "../../🟦️.ts";
 import {bazelWorkerMnemonicV1} from "../../../👷️workers/🟦️.ts";
 import {WORKER_ACTION_KINDS_V1} from "../../../../../👷️workers/🟦️.ts";

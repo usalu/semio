@@ -68,7 +68,9 @@ fn apply_xml_part(part: &mut XlsxXmlPart, diff: &XlsxXmlPartDiff, capability: pr
         part.content_type.clone_from(content_type);
     }
     if let Some(document) = &diff.document {
-        part.document = document.apply(&xml_snapshot(&part.document), capability)?.doc;
+        let mut snapshot = xml_snapshot(&part.document);
+        document.apply(&mut snapshot, capability)?;
+        part.document = snapshot.doc;
     }
     Ok(())
 }

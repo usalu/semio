@@ -3,7 +3,7 @@ import {existsSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync} from 
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {cacheLedgerV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
-import {GRAPH_COLLECTOR_INTERVAL_MS_V1,graphCollectorDecisionV1,graphCollectorEnvironmentV1,launchGraphOptionalCollectorV1,type GraphCollectorPortsV1} from "../../🚀️launch/🟦️.ts";
+import {GRAPH_COLLECTOR_INTERVAL_MS_V1,PRODUCTS_COLLECTOR_INTERVAL_MS_V1,graphCollectorDecisionV1,graphCollectorEnvironmentV1,launchGraphCollectorIfPressedV1,launchGraphOptionalCollectorV1,launchProductsCollectorIfPressedV1,launchProductsCollectorV1,type GraphCollectorPortsV1} from "../../🚀️launch/🟦️.ts";
 import {reclaimGraphOptionalV1,type GraphReclaimPortsV1} from "../../🚰️reclaim/🟦️.ts";
 
 const GIB=1024**3,ledger=cacheLedgerV1(),reclaim=ledger.areas.find(area=>area.id==="graph-inference")!.reclaim!;
@@ -11,12 +11,13 @@ let workspace="";
 beforeAll(()=>{workspace=mkdtempSync(join(tmpdir(),"cgl-"));});
 afterAll(()=>{rmSync(workspace,{recursive:true,force:true});});
 
-test("the decision is enough above the soft threshold, the writer's own last resort below the floor, and one launch per interval in between",()=>{
- const base={softBytes:reclaim.softAvailableBytes,floorBytes:GIB,nowMs:10_000_000,lastLaunchMs:null,minimumIntervalMs:GRAPH_COLLECTOR_INTERVAL_MS_V1};
+test("the decision is enough above the soft threshold and one launch per interval below it, however low the free space",()=>{
+ const base={softBytes:reclaim.softAvailableBytes,nowMs:10_000_000,lastLaunchMs:null,minimumIntervalMs:GRAPH_COLLECTOR_INTERVAL_MS_V1};
  expect(graphCollectorDecisionV1({...base,availableBytes:reclaim.softAvailableBytes})).toBe("enough");
  expect(graphCollectorDecisionV1({...base,availableBytes:reclaim.softAvailableBytes*4})).toBe("enough");
- expect(graphCollectorDecisionV1({...base,availableBytes:GIB-1})).toBe("inline-floor");
- expect(graphCollectorDecisionV1({...base,availableBytes:0})).toBe("inline-floor");
+ expect(graphCollectorDecisionV1({...base,availableBytes:GIB-1})).toBe("launch");
+ expect(graphCollectorDecisionV1({...base,availableBytes:0})).toBe("launch");
+ expect(graphCollectorDecisionV1({...base,availableBytes:0,lastLaunchMs:base.nowMs-1000})).toBe("throttled");
  expect(graphCollectorDecisionV1({...base,availableBytes:GIB})).toBe("launch");
  expect(graphCollectorDecisionV1({...base,availableBytes:reclaim.softAvailableBytes-1})).toBe("launch");
  expect(graphCollectorDecisionV1({...base,availableBytes:GIB*1.5,lastLaunchMs:base.nowMs-1000})).toBe("throttled");
@@ -39,10 +40,9 @@ function ports(state:{now:number;stamp:number|null;started:Started;fail?:boolean
  return{now:()=>state.now,readStamp:async()=>state.stamp,writeStamp:async()=>{if(state.fail)throw Error("disk full");state.stamp=state.now;},start:(command,args,options)=>{if(state.fail)throw Error("no process");state.started.push({command,args:[...args],...options});},writeStatus:async(_path,text)=>{if(state.failStatus)throw Error("status volume gone");state.statuses?.push(text);},report:line=>{state.reports?.push(line);},environment:{PATH:"/bin",SEMIO_SCRIPT_PROCESS_INVOCATION:"{}"},execPath:"/bun",script:"/s/script.ts"};
 }
 
-test("a writer below the soft threshold launches the collector once per interval, a writer above it or below the floor launches nothing, and a failing launch never fails the writer",async()=>{
+test("a writer below the soft threshold launches the collector once per interval, a writer above it launches nothing, and a failing launch never fails the writer",async()=>{
  const state={now:50_000_000,stamp:null as number|null,started:[] as Started};
  expect(await launchGraphOptionalCollectorV1(workspace,3*GIB,ports(state),ledger)).toBe("enough");
- expect(await launchGraphOptionalCollectorV1(workspace,GIB/2,ports(state),ledger)).toBe("inline-floor");
  expect(state.started).toEqual([]);
  expect(await launchGraphOptionalCollectorV1(workspace,1.5*GIB,ports(state),ledger)).toBe("launch");
  expect(state.started).toEqual([{command:"/bun",args:["/s/script.ts","repo","cache","gc","--area=graph-inference"],cwd:workspace,env:{SEMIO_CACHE_BACKGROUND:"1",PATH:"/bin"},log:join(workspace,".🧬semio","🦑️repo","⚡️cache","build","graph-collector.log")}]);
@@ -60,6 +60,24 @@ test("a writer below the soft threshold launches the collector once per interval
  expect(blind.reports[0]).toBe("status: status volume gone");expect(blind.reports.length).toBe(2);
  const withoutArea={...ledger,areas:ledger.areas.filter(area=>area.id!=="graph-inference")};
  expect(await launchGraphOptionalCollectorV1(workspace,GIB,ports(state),withoutArea)).toBe("enough");
+});
+
+test("the products collector reads the soft threshold of the Bazel workspaces area, launches the Bazel session collector once per interval with its own stamp, log and status, and reports a failed start in both languages",async()=>{
+ const products=ledger.areas.find(area=>area.id==="bazel-workspaces")!.reclaim!,state={now:70_000_000,stamp:null as number|null,started:[] as Started};
+ expect(products.softAvailableBytes).toBe(3*GIB);expect(products.targetAvailableBytes).toBeGreaterThan(products.softAvailableBytes);
+ expect(await launchProductsCollectorV1(workspace,products.softAvailableBytes,ports(state),ledger)).toBe("enough");expect(state.started).toEqual([]);
+ expect(await launchProductsCollectorV1(workspace,products.softAvailableBytes-1,ports(state),ledger)).toBe("launch");
+ expect(state.started).toEqual([{command:"/bun",args:["/s/script.ts","repo","cache","gc","--area=bazel-workspaces,bazel-outputs"],cwd:workspace,env:{SEMIO_CACHE_BACKGROUND:"1",PATH:"/bin"},log:join(workspace,".🧬semio","🦑️repo","⚡️cache","build","products-collector.log")}]);
+ expect(await launchProductsCollectorV1(workspace,0,ports(state),ledger)).toBe("throttled");
+ state.now+=GRAPH_COLLECTOR_INTERVAL_MS_V1;expect(await launchProductsCollectorV1(workspace,0,ports(state),ledger)).toBe("throttled");state.now+=PRODUCTS_COLLECTOR_INTERVAL_MS_V1;expect(await launchProductsCollectorV1(workspace,0,ports(state),ledger)).toBe("launch");expect(state.started.length).toBe(2);
+ const broken={now:1,stamp:null as number|null,started:[] as Started,fail:true,statuses:[] as string[],reports:[] as string[]};
+ expect(await launchProductsCollectorV1(workspace,0,ports(broken),ledger)).toBe("failed");
+ expect(JSON.parse(broken.statuses[0]!)).toEqual({version:1,atMs:1,state:"failed",message:"disk full"});
+ expect(broken.reports).toEqual(["The products cache collector could not be started: disk full\nDer Produkt-Cache-Sammler konnte nicht gestartet werden: disk full"]);
+ expect(await launchProductsCollectorV1(workspace,0,ports(state),{...ledger,areas:ledger.areas.filter(area=>area.id!=="bazel-workspaces")})).toBe("enough");
+ expect(await launchProductsCollectorIfPressedV1(workspace,ports(state),()=>undefined)).toBe("unmounted");
+ expect(await launchProductsCollectorIfPressedV1(workspace,ports(state),()=>{throw Error("no image");})).toBe("unmounted");
+ const before=state.started.length;state.now+=PRODUCTS_COLLECTOR_INTERVAL_MS_V1*2;expect(await launchProductsCollectorIfPressedV1(workspace,ports(state),()=>GIB)).toBe("launch");expect(state.started.length).toBe(before+1);
 });
 
 test("the stamp lives in the declared build area and is a real file after a real launch decision",async()=>{
@@ -118,3 +136,26 @@ test("the reclaim takes a single-flight lease, uses only the two shared scoped r
  expect(broken.slice(-2)).toEqual(["close","release"]);
  expect(await reclaimGraphOptionalV1("/w",{...ledger,areas:ledger.areas.filter(area=>area.id!=="graph-inference")},false,"en",fake([GIB],[]))).toBe("No reclaim threshold is declared for the graph image");
 });
+
+test("every graph loader below the soft threshold launches the collector once per interval, and the decision agrees with an independent Python model",async()=>{
+ const grid=[0,GIB/2,GIB-1,GIB,1.5*GIB,reclaim.softAvailableBytes-1,reclaim.softAvailableBytes,4*GIB],ages=[null,1000,GRAPH_COLLECTOR_INTERVAL_MS_V1-1,GRAPH_COLLECTOR_INTERVAL_MS_V1],base={softBytes:reclaim.softAvailableBytes,nowMs:90_000_000,minimumIntervalMs:GRAPH_COLLECTOR_INTERVAL_MS_V1};
+ const cases=grid.flatMap(availableBytes=>ages.map(age=>({availableBytes,lastLaunchMs:age===null?null:base.nowMs-age})));
+ const model=`import json,sys
+b,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
+out=[]
+for r in rows:
+    if r["availableBytes"]>=b["softBytes"]: out.append("enough")
+    elif r["lastLaunchMs"] is not None and b["nowMs"]-r["lastLaunchMs"]<b["minimumIntervalMs"]: out.append("throttled")
+    else: out.append("launch")
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(base),JSON.stringify(cases)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);
+ expect(cases.map(row=>graphCollectorDecisionV1({...base,...row}))).toEqual(JSON.parse(run.stdout.toString()));
+ const state={now:70_000_000,stamp:null as number|null,started:[] as Started},half=()=>GIB/2;
+ expect(await launchGraphCollectorIfPressedV1(workspace,ports(state),half)).toBe("launch");
+ expect(await launchGraphCollectorIfPressedV1(workspace,ports(state),half)).toBe("throttled");
+ expect(state.started.length).toBe(1);
+ expect(await launchGraphCollectorIfPressedV1(workspace,ports({now:1,stamp:null,started:[] as Started}),()=>8*GIB)).toBe("enough");
+ expect(await launchGraphCollectorIfPressedV1(workspace,ports({now:1,stamp:null,started:[] as Started}),()=>undefined)).toBe("unmounted");
+ expect(await launchGraphCollectorIfPressedV1(workspace,ports({now:1,stamp:null,started:[] as Started}),()=>{throw Error("unreadable");})).toBe("unmounted");
+});
+

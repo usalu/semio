@@ -3,6 +3,7 @@
 //! function rather than an `InferredField` dependency chain — `fixture` is small and always
 //! recomputed wholesale (widget/synapse edits are already coarse-grained mutations).
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 use std::collections::{BTreeMap, VecDeque};
@@ -11,7 +12,8 @@ use std::collections::{BTreeMap, VecDeque};
 /// 🧭️ `topology` — the DAG shape of `fixture`'s widget/synapse graph: node/edge counts, a
 /// topological order (Kahn's algorithm; empty when the graph has a cycle), whether it is acyclic,
 /// and the longest dependency chain's depth (0 for an empty or edge-free graph).
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Generation3dTopology {
     pub node_count: u32,
     pub edge_count: u32,

@@ -3,17 +3,17 @@
 use super::*;
 
 //#region 🔎️Inspector
-struct InspectorField {
-    id: &'static str,
-    label_en: &'static str,
-    label_de: &'static str,
-    action: &'static str,
-    key: &'static str,
-    kind: ui::InputKind,
-    value: String,
-    numbers: Vec<(&'static str, f64)>,
-    text: Option<String>,
-    object_key: Option<String>,
+pub(crate) struct InspectorField {
+    pub id: &'static str,
+    pub label_en: &'static str,
+    pub label_de: &'static str,
+    pub action: &'static str,
+    pub key: &'static str,
+    pub kind: ui::InputKind,
+    pub value: String,
+    pub numbers: Vec<(&'static str, f64)>,
+    pub text: Option<String>,
+    pub object_key: Option<String>,
 }
 
 pub(super) fn inspector_fields(snapshot: &PdfSnapshot, object: &PageObject) -> Vec<InspectorField> {

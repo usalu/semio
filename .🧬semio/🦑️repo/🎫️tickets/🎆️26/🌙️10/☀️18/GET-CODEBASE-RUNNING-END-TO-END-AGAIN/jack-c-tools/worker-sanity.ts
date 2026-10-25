@@ -1,0 +1,17 @@
+const L = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp";
+const posted: unknown[] = [];
+let listener: ((event: { data: unknown }) => void) | undefined;
+(globalThis as any).self = { addEventListener: (_t: string, l: typeof listener) => { listener = l; }, postMessage: (m: unknown) => posted.push(m) };
+await import(`${L}/🟦️.ts`);
+const { calls } = await import(`${L}/🧪️tests/📡️worker/🪞️session-double/🟦️.ts`);
+const settle = async () => { for (let i = 0; i < 20; i++) await Promise.resolve(); await new Promise(r => setTimeout(r, 0)); };
+listener!({ data: { operation: "init", snapshotJson: "{}" } }); await settle();
+console.log("init", JSON.stringify(posted), JSON.stringify(calls.snapshots)); posted.length = 0;
+listener!({ data: { jsonrpc: "2.0", method: "textDocument/didOpen", params: {} } });
+listener!({ data: { jsonrpc: "2.0", id: 4, method: "textDocument/hover" } }); await settle();
+console.log("ordered", calls.handled.map((t: string) => JSON.parse(t).method).join(","), posted.length); posted.length = 0;
+calls.failing = true;
+listener!({ data: { jsonrpc: "2.0", id: 5, method: "textDocument/hover" } }); listener!({ data: { jsonrpc: "2.0", method: "x" } }); await settle();
+console.log("trap", JSON.stringify(posted)); posted.length = 0; calls.failing = false;
+listener!({ data: "text" }); listener!({ data: { operation: "other" } }); listener!({ data: { jsonrpc: "2.0", id: 1, result: null } }); await settle();
+console.log("ignored", posted.length);

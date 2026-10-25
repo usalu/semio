@@ -1,4 +1,4 @@
-//! 🏁️ Preserves one original watchdog across admission, publication and optional telemetry.
+//! ❓️ Preserves one original watchdog across admission, publication and optional telemetry.
 use super::{try_now_us, CallbackClockFault, CallbackVerdict, Watchdog};
 
 //#region 🐕️Admission

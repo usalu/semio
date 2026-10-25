@@ -76,11 +76,19 @@ function witnessValid(witness: FilesystemJournalWitnessV1): boolean {
 function awaitControl<T>(work: Promise<T>, control: FilesystemJournalControlV1, abandon: (reason: unknown) => void, ownerSignal: AbortSignal): Promise<T> {
  check(control);
  return new Promise((accept, reject) => {
-  let settled = false;
+  let settled = false, timer: ReturnType<typeof setTimeout> | undefined;
   const finish = (failed: boolean, value: unknown): void => { if (settled) return; settled = true; clearTimeout(timer); control.signal.removeEventListener("abort", abort); ownerSignal.removeEventListener("abort", ownerAbort); if (failed) { abandon(value); reject(value); } else accept(value as T); };
-  const abort = (): void => finish(true, control.signal.reason ?? Error("Filesystem journal caller cancelled")), budget = control.remainingMilliseconds();
+  const abort = (): void => finish(true, control.signal.reason ?? Error("Filesystem journal caller cancelled"));
   const ownerAbort = (): void => finish(true, ownerSignal.reason ?? Error("Filesystem journal owner cancelled"));
-  const timer = budget === null ? undefined : setTimeout(() => finish(true, Error("Filesystem journal original deadline exhausted")), budget);
+  const arm = (): void => {
+   if (settled) return;
+   let left: number | null;
+   try { left = control.remainingMilliseconds(); } catch (error) { finish(true, error); return; }
+   if (left === null) return;
+   if (!Number.isFinite(left) || left <= 0) { finish(true, Error("Filesystem journal original deadline exhausted")); return; }
+   timer = setTimeout(arm, Math.max(1, Math.min(2147483647, Math.ceil(left))));
+  };
+  arm();
   control.signal.addEventListener("abort", abort, { once: true });
   ownerSignal.addEventListener("abort", ownerAbort, { once: true });
   work.then(value => finish(false, value), error => finish(true, error));

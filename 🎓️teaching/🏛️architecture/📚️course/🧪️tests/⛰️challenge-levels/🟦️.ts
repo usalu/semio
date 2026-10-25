@@ -103,7 +103,7 @@ function seconds(text: string): number {
   return Number(found[1]) * 60 + Number(found[2]);
 }
 
-/** ⏲️ The seconds the clock of the task on screen shows: allowed while closed, left while it runs. */
+/** ⏰️ The seconds the clock of the task on screen shows: allowed while closed, left while it runs. */
 async function clockSeconds(device: Device): Promise<number> {
   return seconds(await screen(device.page, "task").locator("[data-clock]").first().innerText());
 }
@@ -250,7 +250,7 @@ async function expectPowersQuestions(device: Device, order: readonly string[]): 
   await expectQuestions(device, powers, "compare", far ? { [largest]: adds(powers, "under", largest, below, locale, quantity), [next]: adds(powers, "over", next, below, locale, quantity) } : {});
 }
 
-/** 🧢️ Places the physics `powers` sorting on screen (true order `order`) upside down, so more items miss their keys than
+/** 🔋️ Places the physics `powers` sorting on screen (true order `order`) upside down, so more items miss their keys than
  * a task questions at once, and expects questions beside exactly {@link HINTS_PER_TASK} of the items that miss. */
 async function expectCappedPowers(device: Device, order: readonly string[]): Promise<void> {
   const value = (id: string): number => itemOf(powers, id).value!;
@@ -311,7 +311,7 @@ function farthestProfile(item: string): { readonly category: string; readonly ax
   return found;
 }
 
-/** 🧭️ The question beside `item` of the demand `standard-profiles` task put into `category`, whose profile questions it
+/** ❔️ The question beside `item` of the demand `standard-profiles` task put into `category`, whose profile questions it
  * on `axis`, while every other of `placed` sits in its own profile (design §8.4a.6): where some of them lies strictly
  * between the assigned and the own value on the axis, whether `item` lies above (or below, as the placement claims) the
  * one farthest from its own value; else whether it fits `category`, with the axis at about the profile's value. */

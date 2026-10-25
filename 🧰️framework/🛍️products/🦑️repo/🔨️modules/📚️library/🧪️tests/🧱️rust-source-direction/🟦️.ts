@@ -272,7 +272,7 @@ test("finite local macro inputs retain native expansion provenance and runtime b
   expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
   try {
     const modules = rows.map((row, index) => "#[path=" + JSON.stringify(row.id + "/" + row.root) + "] mod case_" + index + ";").join("\n");
-    const calls = rows.map((row, index) => 'println!("[DEBUG] macro-case:' + row.id + '"); case_' + index + "::main();").join("\n");
+    const calls = rows.map((row, index) => 'println!("[TRACE] macro-case:' + row.id + '"); case_' + index + "::main();").join("\n");
     for (const row of rows) for (const [path, source] of Object.entries(row.files)) {
       mkdirSync(dirname(join(root, row.id, path)), { recursive: true }); writeFileSync(join(root, row.id, path), source);
     }
@@ -282,7 +282,7 @@ test("finite local macro inputs retain native expansion provenance and runtime b
     expect(build.status, build.stdout + build.stderr).toBe(0);
     const runtime = await nativeCommand([binary], root);
     expect(runtime.status, runtime.stderr).toBe(0);
-    expect(runtime.stdout.replaceAll("\r\n", "\n")).toBe(rows.map((row) => "[DEBUG] macro-case:" + row.id + "\n" + row.stdout).join(""));
+    expect(runtime.stdout.replaceAll("\r\n", "\n")).toBe(rows.map((row) => "[TRACE] macro-case:" + row.id + "\n" + row.stdout).join(""));
     const testBinary = join(root, process.platform === "win32" ? "laws.exe" : "laws");
     const testBuild = await nativeCommand(["rustc", "--crate-name", "macro_laws", "--test", "--emit=dep-info=dependencies.d,link", "-o", testBinary, "macro-host.rs"], root);
     expect(testBuild.status, testBuild.stdout + testBuild.stderr).toBe(0);

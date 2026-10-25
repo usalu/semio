@@ -1,6 +1,6 @@
 //! 🥒️ The test kit of the dashboard crates: the proof that a feature file and the tests that name its scenarios agree.
 
-/// 🥒️ Fails unless the scenarios of a feature are exactly the titles of `proofs`, in order, and every test a title names is a test of one of `sources`.
+/// 🚨️ Fails unless the scenarios of a feature are exactly the titles of `proofs`, in order, and every test a title names is a test of one of `sources`.
 pub fn assert_proved(feature: &str, sources: &[&str], proofs: &[(&str, &[&str])]) {
     let titles: Vec<&str> = feature.lines().filter_map(|line| line.trim().strip_prefix("Scenario: ")).collect();
     assert_eq!(titles, proofs.iter().map(|(title, _)| *title).collect::<Vec<_>>());

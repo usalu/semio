@@ -444,7 +444,7 @@
   },
   "registration": {
     "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
-    "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🟦️.ts",
+    "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️typescript-package-commands/🔗️reference-authority-routes/🟦️.ts",
     "target": "test-rust-finite-target-consumption",
     "command": "repo ./📜️script.ts test rust-finite-target-consumption",
     "route": "rust-finite-target-consumption",

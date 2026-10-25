@@ -60,7 +60,7 @@ export async function runWorkerMaintenanceCheckScript(context: Readonly<{ root: 
   for (const receipt of receipts) console.log(`worker-maintenance-native-receipt: ${JSON.stringify(receipt)}`);
 }
 
-/** 🏃️ Runs the `WorkerParkingCheckScript` command under the caller's roots and invocation. */
+/** ✅️ Runs the `WorkerParkingCheckScript` command under the caller's roots and invocation. */
 export async function runWorkerParkingCheckScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-parking-check accepts only --native");
   const owner = join(context.root, "../../🔔️worker-parking");
@@ -94,7 +94,7 @@ export async function runWorkerParkingCheckScript(context: Readonly<{ root: stri
   for (const receipt of receipts) console.log(`worker-parking-native-receipt: ${JSON.stringify(receipt)}`);
 }
 
-/** 🏃️ Runs the `WorkerDeferredWakeCheckScript` command under the caller's roots and invocation. */
+/** ⏰️ Runs the `WorkerDeferredWakeCheckScript` command under the caller's roots and invocation. */
 export async function runWorkerDeferredWakeCheckScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-deferred-wake-check accepts only --native");
   const owner = join(context.root, "../../🔔️deferred-wake");
@@ -125,7 +125,7 @@ export async function runWorkerDeferredWakeCheckScript(context: Readonly<{ root:
   for (const receipt of receipts) console.log(`worker-deferred-wake-native-receipt: ${JSON.stringify(receipt)}`);
 }
 
-/** 🏃️ Runs the `WorkerPoolUseCheckScript` command under the caller's roots and invocation. */
+/** 🐝️ Runs the `WorkerPoolUseCheckScript` command under the caller's roots and invocation. */
 export async function runWorkerPoolUseCheckScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-pool-use-check accepts only --native");
   const owner = join(context.root, "../../🔐️use");
@@ -163,7 +163,7 @@ export async function runWorkerPoolUseCheckScript(context: Readonly<{ root: stri
   for (const receipt of receipts) console.log(`worker-pool-use-native-receipt: ${JSON.stringify(receipt)}`);
 }
 
-/** 🏃️ Runs the `TypegenScript` command under the caller's roots and invocation. */
+/** 🧬️ Runs the `TypegenScript` command under the caller's roots and invocation. */
 export async function runTypegenScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
   const outPath = generatedBindingsPath(context.root);
   mkdirSync(dirname(outPath), { recursive: true });
@@ -172,7 +172,7 @@ export async function runTypegenScript(context: Readonly<{ root: string; repoRoo
   console.log(`framework-async typescript mirror refreshed -> ${outPath}`);
 }
 
-/** 🏃️ Runs the `PreviewGeneratedScript` command under the caller's roots and invocation. */
+/** 📺️ Runs the `PreviewGeneratedScript` command under the caller's roots and invocation. */
 export async function runPreviewGeneratedScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
   const targetPath = generatedBindingsPath(context.root);
   const temp = mkdtempSync(join(tmpdir(), "semio-async-typegen-"));

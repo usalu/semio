@@ -10,6 +10,7 @@ use semio_framework_os_mcp_probe_document::probe_document::PROBE_SURFACE_ID;
 use crate::compiled_components::{ComponentBytes, scoped_compiled_component};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::plugin_artifact_channel::headless_open_budget;
+use semio_framework_plugin_host::GuestRuntime as _;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{PluginRegistryEntry, resolve_plugin_wasm_path};
 #[cfg(not(target_arch = "wasm32"))]
@@ -132,7 +133,7 @@ pub fn activate_plugin_instance(
         capabilities: caps,
         quotas: descriptor.quotas.clone(),
     };
-    let turn = semio_framework_async::block_on(runtime.execute_turn(&mut instance, &[open_event], budget)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` InstanceOpen turn faulted: {error}", entry.plugin_id)))?;
+    let turn = crate::plugin_artifact_channel::with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(&mut instance, &[open_event], budget, identity))).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` InstanceOpen turn faulted: {error}", entry.plugin_id)))?;
     let turn_status = format!("{:?}", turn.status);
     let outcome = PluginActivationOutcome { plugin_id: entry.plugin_id.clone(), app_id: app_ref.app_id.clone(), actor, turn_status, effects_emitted: turn.effects.len(), fuel_used: turn.fuel_used };
     Ok((instance, outcome))

@@ -39,7 +39,7 @@ export type TestContribution = Readonly<{
   subjectHostPackages: readonly SubjectHostPackage[];
   /** 🦠️ The mutation vocabularies this owner claims exhaustive coverage of. */
   mutationCatalogs: readonly MutationCatalog[];
-  /** 🧬️ The authoritative subset-scoped mutation manifests this owner declares. */
+  /** 📋️ The authoritative subset-scoped mutation manifests this owner declares. */
   mutationManifests: readonly MutationManifest[];
   /** 🧫️ The provenance-carrying fixture manifests this owner commits. */
   testEvidence: readonly TestEvidence[];
@@ -70,7 +70,7 @@ export type OracleRegistry = Readonly<{
   contributions: readonly TestContribution[];
 }>;
 
-/** 🧬️ The protocol definition every record of each contribution array must satisfy — the schema is the authority, the TS types mirror it. */
+/** 📹️ The protocol definition every record of each contribution array must satisfy — the schema is the authority, the TS types mirror it. */
 const CONTRIBUTION_RECORD_DEFINITIONS: Readonly<Record<string, string>> = {
   oracles: "OracleRegistryEntry",
   probes: "ProbeRegistryEntry",
@@ -130,7 +130,7 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
 }
 
 /**
- * 🧩️ Discovers each owner's contribution at its taxonomy-declared directory and JSON kind leaf.
+ * 📂️ Discovers each owner's contribution at its taxonomy-declared directory and JSON kind leaf.
  * An owner-specific handpicked directory replaces the default only at that exact owner.
  */
 export function discoverTestContributions(repoRoot: string): TestContribution[] {
@@ -154,13 +154,13 @@ export function discoverTestContributions(repoRoot: string): TestContribution[] 
   return found;
 }
 
-/** 🧩️ Discovery walks the whole repository, and the registry is consulted per case and per role, so
+/** ⚡️ Discovery walks the whole repository, and the registry is consulted per case and per role, so
  * the result is memoized for the life of the process. `clearContributionCache` exists for tests that
  * add or remove a manifest mid-run. */
 const contributionCache = new Map<string, TestContribution[]>();
 
 /**
- * 🧩️ Forgets the memoized contribution scan — of ONE root when it is named, of every root otherwise.
+ * 💾️ Forgets the memoized contribution scan — of ONE root when it is named, of every root otherwise.
  *
  * A caller that mutated one synthetic repository names it: discarding every root's scan on its behalf
  * makes the next reader of a repository nobody touched pay a full repository walk again, which is how a
@@ -202,18 +202,18 @@ export function loadOracleRegistry(repoRoot: string): OracleRegistry {
   };
 }
 
-/** ⚖️ The effective profile table: core profiles plus every contributed one, keyed by id. */
+/** 📊️ The effective profile table: core profiles plus every contributed one, keyed by id. */
 export function profileTable(registry: OracleRegistry): ReadonlyMap<string, ComparisonProfileSpec> {
   return new Map(registry.comparisonProfiles.map((spec) => [spec.id, spec]));
 }
 
-/** 🧩️ The native oracle packages one owner's adapters may reach, walking up to the nearest contributor. */
+/** 📦️ The native oracle packages one owner's adapters may reach, walking up to the nearest contributor. */
 export function oracleHostPackagesFor(registry: OracleRegistry, owner: string, implementation: Implementation): OracleHostPackage[] {
   return packagesForOwner(registry.contributions, owner, implementation);
 }
 
 /**
- * 🧱️ The packages the generated SUBJECT host links beside the owner's own package: what the owner and each ancestor
+ * 🔗️ The packages the generated SUBJECT host links beside the owner's own package: what the owner and each ancestor
  * contribution declares for `implementation`, one row per package (identical rows from two ancestors merge; a package
  * declared from two paths is refused).
  */
@@ -231,7 +231,7 @@ export function subjectHostPackagesFor(registry: OracleRegistry, owner: string, 
 //#endregion 📇️Registry
 
 //#region 🧬️Manifest
-/** 🧬️ Every manifest in the registry that owns a mutation with this id, for duplicate-owner detection. */
+/** 📚️ Every manifest in the registry that owns a mutation with this id, for duplicate-owner detection. */
 export function manifestsOwning(registry: OracleRegistry, mutationId: string): { manifest: MutationManifest; mutation: ManifestMutation }[] {
   const found: { manifest: MutationManifest; mutation: ManifestMutation }[] = [];
   for (const manifest of registry.mutationManifests) for (const mutation of manifest.mutations) if (mutation.id === mutationId) found.push({ manifest, mutation });
@@ -240,19 +240,19 @@ export function manifestsOwning(registry: OracleRegistry, mutationId: string): {
 //#endregion 🧬️Manifest
 
 //#region 📏️Tolerance
-/** 📏️ The effective profile table: core profiles plus every contributed one, keyed by id. */
+/** 🗄️ The effective profile table: core profiles plus every contributed one, keyed by id. */
 export function toleranceProfileTable(registry: OracleRegistry): ReadonlyMap<string, ToleranceProfile> {
   return new Map([...CORE_TOLERANCE_PROFILES, ...registry.toleranceProfiles].map((profile) => [profile.id, profile]));
 }
 //#endregion 📏️Tolerance
 
 //#region ⚖️Pipeline
-/** ⚖️ The effective pipeline table: every contributed pipeline, keyed by id. */
+/** 🚂️ The effective pipeline table: every contributed pipeline, keyed by id. */
 export function pipelineTable(registry: OracleRegistry): ReadonlyMap<string, ComparisonPipeline> {
   return new Map(registry.comparisonPipelines.map((pipeline) => [pipeline.id, pipeline]));
 }
 
-/** 🔬️ The effective probe table, keyed by id. */
+/** 🏓️ The effective probe table, keyed by id. */
 export function probeTable(registry: OracleRegistry): ReadonlyMap<string, ProbeEntry> {
   return new Map(registry.probes.map((probe) => [probe.id, probe]));
 }

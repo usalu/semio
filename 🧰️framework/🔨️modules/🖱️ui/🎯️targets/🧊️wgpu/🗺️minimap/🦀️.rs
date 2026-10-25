@@ -1,5 +1,5 @@
 // #region minimap
-/// 🗺️ Computed screen-space layout for one minimap frame.
+/// 🖼️ Computed screen-space layout for one minimap frame.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct MinimapLayout {
     pub panel: (f64, f64, f64, f64),
@@ -11,7 +11,7 @@ pub struct MinimapLayout {
     pub viewport: (f64, f64, f64, f64),
 }
 
-/// 🗺️ Axis-aligned content bounds in world space (already padded by the caller).
+/// 📏️ Axis-aligned content bounds in world space (already padded by the caller).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct MinimapContentBounds {
     pub min_x: f64,
@@ -20,7 +20,7 @@ pub struct MinimapContentBounds {
     pub max_y: f64,
 }
 
-/// 🗺️ True when a `viewport_w`x`viewport_h` viewport at `camera_zoom` centered on
+/// 👁️ True when a `viewport_w`x`viewport_h` viewport at `camera_zoom` centered on
 /// `(camera_x, camera_y)` already shows the whole of `content` (within `tolerance_px` screen
 /// pixels) — the minimap should hide itself in this case.
 pub fn content_fully_visible(content: &MinimapContentBounds, viewport_w: u32, viewport_h: u32, camera_x: f64, camera_y: f64, camera_zoom: f64, tolerance_px: f64) -> bool {
@@ -31,7 +31,7 @@ pub fn content_fully_visible(content: &MinimapContentBounds, viewport_w: u32, vi
     camera_x - half_w <= content.min_x + tol && camera_x + half_w >= content.max_x - tol && camera_y - half_h <= content.min_y + tol && camera_y + half_h >= content.max_y - tol
 }
 
-/// 🗺️ Bottom-right inset panel of `panel_w`x`panel_h` with `margin` from the viewport edge, its
+/// 📐️ Bottom-right inset panel of `panel_w`x`panel_h` with `margin` from the viewport edge, its
 /// content scaled to fit `content_fit_ratio` (clamped `0.5..=0.98`) of the panel, plus the camera's
 /// current view rect mapped into minimap-local coordinates.
 #[allow(clippy::too_many_arguments, reason = "mirrors the dag board's own MinimapWidgetLayout inputs 1:1 — a struct would just move the same arity into a constructor")]
@@ -74,7 +74,7 @@ pub fn screen_to_world(map_origin_x: f64, map_origin_y: f64, world_min_x: f64, w
     (world_min_x + (sx - map_origin_x) / scale, world_min_y + (sy - map_origin_y) / scale)
 }
 
-/// 🗺️ Point-in-axis-aligned-rect test — shared by panel/viewport hit-testing.
+/// 📍️ Point-in-axis-aligned-rect test — shared by panel/viewport hit-testing.
 pub fn point_in_rect((x0, y0, x1, y1): (f64, f64, f64, f64), sx: f64, sy: f64) -> bool {
     sx >= x0 && sx <= x1 && sy >= y0 && sy <= y1
 }

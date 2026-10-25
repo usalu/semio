@@ -19,7 +19,7 @@ export function leadingEmojiClusterCount(line: string): number {
   return n;
 }
 
-/** 🔢️Emoji clusters anywhere on a line (bundle labels interleave emoji + text). */
+/** 🔖️Emoji clusters anywhere on a line (bundle labels interleave emoji + text). */
 export function emojiClusterCountInLine(line: string): number {
   const re = /\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*/gu;
   return [...line.matchAll(re)].length;
@@ -64,7 +64,7 @@ export function bundleScopeLabelError(line: string): string | null {
   return null;
 }
 
-/** 🏷️Bundle scope line: two+ emojis, or one emoji + lowercase technology slug (`🥅️framework`). */
+/** 📦️Bundle scope line: two+ emojis, or one emoji + lowercase technology slug (`🥅️framework`). */
 export function isBundleScopeLine(line: string): boolean {
   const t = normalizeBundleScopeLabel(line);
   if (!t || BUNDLE_DATE_SECTION_RE.test(t)) return false;

@@ -1,6 +1,6 @@
 /** 🔒️ Law: hermetic class members, run through the generated workspace and the real Bazel, execute the repository's own script routing with an original process authority issued inside the action, read only declared inputs (workspace links, declared sources, one content-addressed dependency tree), fail loudly on an undeclared read, an undeclared package, an undeclared write and a compile error, behave the same under the sandbox and under the local strategy, share their cache across checkout paths and route to a remote pool without running locally. */
 import {expect,test} from "bun:test";
-import {makeTestTreeWritableV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {makeTestTreeWritableV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {cpSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";

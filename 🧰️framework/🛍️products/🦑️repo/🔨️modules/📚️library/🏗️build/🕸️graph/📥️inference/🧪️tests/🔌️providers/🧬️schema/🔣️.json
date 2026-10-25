@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio://repo/build/inference-provider-inputs-corpus/v1",
   "title": "Build inference provider input corpus",
-  "description": "A language-agnostic scenario: a workspace of files, a provider designation, command entries that load providers or not, and the input relations every implementation must reproduce: designated modules and their import closures are inputs of exactly the entries that load providers, and editing one changes the input hash of exactly those entries.",
+  "description": "A language-agnostic scenario: a workspace of files, a provider designation, command entries that define provider ports (by literal name, by a name no literal states, or not at all) or only import the loader, and the input relations every implementation must reproduce: the designation, its schema and the designated module of every port a closure defines (all of them for an unnamed port) are inputs of exactly that entry, and editing one changes the input hash of exactly those entries.",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "designation", "files", "cases", "edits"],
@@ -16,11 +16,12 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "directory", "loadsProviders", "includes", "excludes"],
+        "required": ["id", "directory", "definesPorts", "importsLoader", "includes", "excludes"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "directory": { "type": "string", "minLength": 1 },
-          "loadsProviders": { "type": "boolean" },
+          "definesPorts": { "type": "boolean" },
+          "importsLoader": { "type": "boolean" },
           "includes": { "type": "array", "items": { "type": "string" } },
           "excludes": { "type": "array", "items": { "type": "string" } }
         }

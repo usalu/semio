@@ -7,15 +7,15 @@ import { releaseTestPortV1, reserveTestPortV1 } from "../🔌️ports/🟦️.ts
 import { summarizeGuardReportV1 } from "../🛡️guard/🟦️.ts";
 import { reclaimAbandonedTestSandboxesV1 } from "../♻️reclaim/🟦️.ts";
 import { agentSessionAddressV1, currentAgentSessionV1 } from "../../../🪪️agent-sessions/🟦️.ts";
-import { runtimeTestApiV1 } from "../../../../⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeTestApiV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🏖️ Names the guard mode a sandbox hands to its children. */
 export type TestGuardModeV1 = "off" | "report" | "enforce";
 
-/** 🏖️ Describes how one sandbox is created. */
+/** 🆕️ Describes how one sandbox is created. */
 export type TestSandboxOptionsV1 = Readonly<{ route: string; parent?: string; checkout?: string; guard?: TestGuardModeV1; heartbeat?: boolean; reclaim?: boolean; session?: Readonly<{ id: string; worktree: string; resources: Readonly<{ tests: Readonly<{ root: string }> }> }> }>;
 
-/** 🏖️ One per-run test environment: a private temp root, artifact, image and cache directories, a port lease set and the environment children inherit. */
+/** ▶️ One per-run test environment: a private temp root, artifact, image and cache directories, a port lease set and the environment children inherit. */
 export type TestSandboxV1 = Readonly<{
   id: string; root: string; artifacts: string; tmp: string; images: string; cache: string; shared: string;
   environment: Readonly<Record<string, string>>;
@@ -33,7 +33,7 @@ function atTestEnd(callback: () => void): void {
   try { runtimeTestApiV1()?.afterAll(callback); } catch {}
 }
 
-/** 🏖️ Creates a unique sandbox under the root of the current agent session below the short host-wide parent (the session decides the root, so concurrent agents never share a directory and a gone session takes its sandboxes with it); it is detached, released and removed on disposal and when the process exits, and abandoned siblings of dead processes are reclaimed first. */
+/** 📁️ Creates a unique sandbox under the root of the current agent session below the short host-wide parent (the session decides the root, so concurrent agents never share a directory and a gone session takes its sandboxes with it); it is detached, released and removed on disposal and when the process exits, and abandoned siblings of dead processes are reclaimed first. */
 export function createTestSandboxV1(options: TestSandboxOptionsV1, declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): TestSandboxV1 {
   if (!/^[a-z0-9][a-z0-9-]{0,127}$/u.test(options.route)) throw Error("Invalid test sandbox route");
   const parent = testSandboxParentV1(options.parent, declared), names = declared.environment, session = options.session ?? currentAgentSessionV1(), home = join(parent, session.resources.tests.root);
@@ -89,7 +89,7 @@ export function createTestSandboxV1(options: TestSandboxOptionsV1, declared: Tes
   return sandbox;
 }
 
-/** 🏖️ Runs a body inside a fresh sandbox and disposes it afterwards, also when the body fails or is cancelled. */
+/** 🚨️ Runs a body inside a fresh sandbox and disposes it afterwards, also when the body fails or is cancelled. */
 export async function withTestSandboxV1<T>(options: TestSandboxOptionsV1, body: (sandbox: TestSandboxV1) => Promise<T> | T): Promise<T> {
   const sandbox = createTestSandboxV1(options);
   try { return await body(sandbox); } finally { sandbox.dispose(); }
@@ -101,7 +101,7 @@ export function adoptedTestSandboxRootV1(env: NodeJS.ProcessEnv = process.env, d
   return root && existsSync(join(root, declared.layout.owner)) ? root : undefined;
 }
 
-/** 🏖️ Returns the environment a child of this process must inherit: the adopted sandbox environment of a nested run, else a new per-run sandbox bound to the caller until it disposes. */
+/** ↩️ Returns the environment a child of this process must inherit: the adopted sandbox environment of a nested run, else a new per-run sandbox bound to the caller until it disposes. */
 export function testSandboxEnvironmentV1(base: NodeJS.ProcessEnv, options: TestSandboxOptionsV1, declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): Readonly<{ environment: NodeJS.ProcessEnv; release(): void }> {
   const adopted = adoptedTestSandboxRootV1(base, declared);
   if (adopted) {

@@ -1,6 +1,6 @@
 import {buildOptionsV1,literalBuildProjectSelectorsV1,selectLiteralBuildProjectsV1} from "./📥️options/🟦️.ts";
 export {buildOptionsV1} from "./📥️options/🟦️.ts";
-import type { BuildGraphV1 } from "../🕸️graph/🟦️.ts";
+import type { BuildGraphV1 } from "../🕸️graph/📋️model/🟦️.ts";
 import type { BuildWatchChildPortV1 } from "./👁️watch/🟦️.ts";
 import { checkScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, advanceScriptInvocation, createRequestedIssuedResourceControlV1, requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand, captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -10,7 +10,7 @@ import {readWorkerSwitchV1} from "../👷️workers/🟦️.ts";
 import ownership from "../../🗂️workspaces/🔣️policy.json" with { type: "json" };
 import { watch } from "node:fs";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import { GlobV1 } from "../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import { GlobV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
 
 /** 🔎️ Reads portable options without crossing the task argument boundary. */
 export function buildOptionV1(args:readonly string[],name:string,short?:string):string|undefined {
@@ -70,7 +70,7 @@ export function affectedTouchesV1(graph:BuildGraphV1,files:readonly string[]):Ma
   return touches;
 }
 
-/** 🧭️ Closes the projects touched by changed files over their dependents, as Nx's affected does; the neutral answer every build tool must reproduce. */
+/** 🔨️ Closes the projects touched by changed files over their dependents, as Nx's affected does; the neutral answer every build tool must reproduce. */
 export function affectedBuildProjectsV1(graph:BuildGraphV1,files:readonly string[]):string[] {
   const affected=new Set(affectedTouchesV1(graph,files).keys());
   let changed=true;while(changed){changed=false;for(const edge of graph.dependencies)if(affected.has(edge.target)&&!affected.has(edge.source)&&graph.projects[edge.source]){affected.add(edge.source);changed=true;}}

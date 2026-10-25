@@ -68,6 +68,7 @@
         "semio": {
           "dashboard": {
             "ready": {
+              "port": 6069,
               "portEnv": "PETS_STORIES_PORT"
             },
             "parameters": [

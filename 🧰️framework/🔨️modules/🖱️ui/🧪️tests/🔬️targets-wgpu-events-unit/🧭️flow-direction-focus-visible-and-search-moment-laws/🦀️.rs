@@ -127,7 +127,7 @@ fn fired_verbs(commands: &[UiCommand]) -> Vec<(String, String)> {
     commands.iter().filter_map(|cmd| if let UiCommand::App { intent, .. } = cmd { Some((format!("{:?}", intent.trigger), intent.action_name())) } else { None }).collect()
 }
 
-/// ✍️ **LAW: one retained line fires FOUR moments, not one.** React's window search binds
+/// 🔎️ **LAW: one retained line fires FOUR moments, not one.** React's window search binds
 /// `onChange` on every keystroke, `onSubmit` on Enter (with the TRIMMED line), `onAbort` on Escape and
 /// `onRepeatLast` on Space over an empty idle line — all on the SAME field
 /// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s `Search`, `onKeyDown`; `applySearchSpaceAction` at `:10512`).
@@ -184,7 +184,7 @@ fn a_search_line_aborts_on_escape_and_repeats_last_on_space_over_an_empty_line()
     assert!(fired_verbs(&escaped).is_empty(), "⎋️ the first Escape only closes the popover: {:?}", fired_verbs(&escaped));
 }
 
-/// ✍️ **LAW: a line that binds none of the three keeps its old behaviour.** Every other retained
+/// 🧭️ **LAW: a line that binds none of the three keeps its old behaviour.** Every other retained
 /// input in the fleet binds `on_change` alone, so Escape must stay an overlay key and Space must stay
 /// a character — the producers above are opt-in per node, never a new global key grammar.
 #[test]

@@ -13,7 +13,7 @@
 //! default for exactly this crate.
 
 //#region 🔖️Present
-/// 🎭️ Something that presents a [`ComponentTree`] by reading entity state through `cx`. Consumed
+/// 🎤️ Something that presents a [`ComponentTree`] by reading entity state through `cx`. Consumed
 /// generically (`fn drive<P: Present>(p: &P, ...)`), never as `dyn Present` — ruling U3 bans `dyn` on
 /// a first-party trait, and a coordinator wanting heterogeneous presenters in one collection needs an
 /// enum-dispatch or fn-pointer-vtable seam, not a trait object here.

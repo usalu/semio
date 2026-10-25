@@ -1,3 +1,8 @@
+preload = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts"]
+
+[test]
+preload = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts"]
+
 [install]
 linker = "isolated"
 globalStore = false

@@ -24,7 +24,7 @@ import { sourceClosureDigest, sourceClosureTaskEnvironments, sourceClosureReceip
 import { sourceOutputOverlaps, internProjectInputGroups, compactSourceInputs, deduplicateProjectInputs } from "../../../🏗️build/📥️inputs/🟨️.mjs";
 import { cacheInternals } from "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 import { targetBuildModes } from "../../../🏗️build/🎚️mode/🟨️.mjs";
-import { internals as testOwnerInternals } from "../../../../🧪️test/🟨️.mjs";
+import { internals as testOwnerInternals } from "../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs";
 import { compactTaskPlans } from "../../🕸️graph/📤️export/🟨️.mjs";
 import {nxCacheBudgetV1} from "../../🚀️bootstrap/💾️budget/🟦️.ts";
 import {toolPatchReceipt} from "@semio-tech/nx-bootstrap-tools/patch";
@@ -119,6 +119,7 @@ export async function testNxBuildModes(workspace: string, output: string|undefin
   for (const name of Object.keys(repeated)) assert.deepEqual(nxHasher.expandNamedInput(name, shared).map(JSON.stringify).sort(), nxHasher.expandNamedInput(name, repeated).map(JSON.stringify).sort(), "Shared native groups must preserve installed Nx expansion");
   const cargo = testRecordV1(await testMethodV1(cacheInternals,"cargoTargets","🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust",workspace,[]));
   assert.equal(testRecordV1(cargo,"build").defaultConfiguration, "prototype");
+  assert.deepEqual(testRecordV1(cargo,"build").outputs, [], "native cargo build publishes into the compiler store and declares no workspace output");
   assert.equal(testRecordV1(cargo,"build","configurations","release","env").SEMIO_BUILD_MODE, "release");
   const require = createRequire(resolve(workspace, ".nx/installation/package.json"));
   const { createTaskGraph } = require("nx/src/tasks-runner/create-task-graph");

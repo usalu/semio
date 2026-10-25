@@ -1,0 +1,16 @@
+import { JSDOM } from "/Users/ueli/Documents/semio/node_modules/jsdom/lib/api.js";
+import { readFileSync } from "node:fs";
+const root = "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public";
+const html = readFileSync(`${root}/🌐️zukunft-bau-entwerfen-mit-bestand.html`, "utf8");
+const css = readFileSync(`${root}/🧰️zukunft-bau-entwerfen-mit-bestand_files/📐️layout.css`, "utf8");
+const dom = new JSDOM(html);
+const doc = dom.window.document;
+const refs = [...doc.querySelectorAll("[href],[src]")].map((e) => `${e.localName} ${e.getAttribute("href") ? "href" : "src"} ${e.getAttribute("href") ?? e.getAttribute("src")} rel=${e.getAttribute("rel")}`);
+console.log(refs.length, refs.slice(0, 25).join("\n"));
+const t0 = Date.now();
+const style = doc.createElement("style");
+style.textContent = css;
+doc.head.append(style);
+const rules = [...style.sheet.cssRules];
+console.log("rules", rules.length, "ms", Date.now() - t0, "fontfaces", rules.filter((r) => r.type === 5).length);
+console.log(rules.filter((r) => r.type === 5).map((r) => r.style.getPropertyValue("src")).slice(0, 2));

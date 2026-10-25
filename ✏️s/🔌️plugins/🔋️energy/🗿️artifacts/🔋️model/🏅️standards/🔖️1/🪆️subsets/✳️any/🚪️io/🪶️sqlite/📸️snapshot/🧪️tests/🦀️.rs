@@ -11,7 +11,7 @@ fn sqlite_snapshot_energy_actual_owner_declares_capability(){
     let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(corpus["modelCollections"].as_array().unwrap().len(),37);
     assert_eq!(corpus["scheduleCollections"].as_array().unwrap().len(),5);
-    assert!(<EnergyModelSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().is_some(),"actual Energy owner is missing its relational capability");
+    assert!(<EnergyModelSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some(),"actual Energy owner is missing its relational capability");
 }
 
 #[test]

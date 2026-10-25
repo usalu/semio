@@ -193,7 +193,7 @@ export async function provisionNativeToolsV1(tools: readonly NativeToolV1[], too
   return Object.freeze(directories);
 }
 
-/** 🏁️ Provisions the pinned CMake and Ninja of the running host (or finds them) and returns the environment that selects them. */
+/** 🧲️ Provisions the pinned CMake and Ninja of the running host (or finds them) and returns the environment that selects them. */
 export async function pinnedNativeEnvironmentV1(environment: Readonly<Record<string, string | undefined>>, toolsRoot: string, port: NativeToolPortV1, signal: AbortSignal, provision: boolean, host: ToolchainHostV1 = toolchainHostV1()): Promise<Readonly<Record<string, string | undefined>>> {
   await provisionNativeToolsV1(["cmake", "ninja"], toolsRoot, port, signal, provision, host);
   return withPinnedNativePathV1(environment, host, toolsRoot);

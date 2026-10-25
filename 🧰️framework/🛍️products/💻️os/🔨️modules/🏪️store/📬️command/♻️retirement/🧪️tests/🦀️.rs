@@ -43,6 +43,5 @@ fn original_command_all_variants_retire_whole_physical_custody(){
   }
   assert_eq!(disposed,original_bytes+born);
   let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,fixture["law"]["terminalDropBytes"].as_u64().unwrap() as usize));
-  eprintln!("[DEBUG] original command kind={} copy={body} original={original_bytes} born={born} disposed={disposed} turns={turns} terminalDrop0",row["kind"]);
  }}
 }

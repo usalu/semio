@@ -89,18 +89,3 @@ pub mod viewer {
         }
     }
 }
-
-semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepVertex { id, point, tol });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepEdge { id, start_vertex, end_vertex, curve, tol });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepLoopEdge { edge, orientation });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepLoop { id, edges });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepFace { id, outer_loop, inner_loops, surface, orientation, tol });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepShellFace { face, orientation });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepShell { id, faces });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepSolidShell { shell, is_void });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepSolid { id, shells });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepCoedge { id, edge, forward, pcurve, prange, loop_id, next, prev });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids, coedges, next_label });
-
-semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioBrepSnapshot);
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioBrepSnapshot, schema::mutations::SemioBrepMutation);

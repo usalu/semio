@@ -31,6 +31,6 @@ fn original_empty_payload_header_initialization_preserves_every_scalar_and_final
    caller.cancel().cancel_now();let(answer,heap)=observe(||caller.turn(exact(demand),|cx|Ok(builder.advance_initialization(cx)?)));assert!(!answer.unwrap());assert_eq!(heap,(0,0));assert_eq!(caller.receipt(),Default::default());assert_eq!(builder.initialized_bindings(),before);
   }
   while !builder.terminal_is_empty(){let demand=builder.retirement_demands().unwrap();let(answer,heap)=observe(||caller.turn(exact(demand),|cx|close_original_retained_step(cx,demand,|grant|builder.close_step_granted(grant))));let receipt=answer.unwrap().progress();assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));assert_eq!(receipt.copied_bytes,demand.copy_bytes);}
-  assert_eq!(observe(||unsafe{storage.assume_init_drop()}).1,(0,0));let(released,heap)=observe(||caller.retire(stock));assert_eq!(released,birth.0);assert_eq!(heap,(0,birth.0));println!("[DEBUG] original native scalar/header prefix={cut} paid metadata and zero-heap denied/cancelled custody conserve the same source roots");
+  assert_eq!(observe(||unsafe{storage.assume_init_drop()}).1,(0,0));let(released,heap)=observe(||caller.retire(stock));assert_eq!(released,birth.0);assert_eq!(heap,(0,birth.0));
  }
 }

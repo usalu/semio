@@ -46,3 +46,9 @@ Feature: Native Dashboard Keyboard Controls
     When the developer presses the right mouse button on its terminal
     Then a menu lists the actions with the keys the keymap states for them
     And choosing a row performs the action on that window
+
+  Scenario: A long notice takes room from the footer hints
+    Given a footer row with several key hints and a notice of the status
+    When the notice grows from nothing to longer than the row
+    Then the leading hints that still fit whole stay in order and the notice keeps up to two thirds of the row
+    And every shared case is reproduced by an independent cell-width computation

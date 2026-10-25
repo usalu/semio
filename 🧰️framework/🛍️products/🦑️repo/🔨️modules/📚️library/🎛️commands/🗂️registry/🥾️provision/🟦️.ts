@@ -11,10 +11,10 @@ export type DependencyProvisionPortsV1 = Readonly<{
   now(): number;
 }>;
 
-/** 🏃️ Runs the owner of provisioning as an owned child: its output is prefixed, its progress repeats every 10 s, and cancellation ends its process tree. */
+/** 🏃️ Runs the owner of provisioning as an owned child: its output is prefixed and goes to stderr like every line of the gate, because stdout belongs to the command that follows (an MCP server speaks JSON-RPC on it); its progress repeats every 10 s, and cancellation ends its process tree. */
 export const dependencyProvisionPortsV1: DependencyProvisionPortsV1 = {
-  run: (command, args, cwd, label, environment, signal) => runOwnedCommand(command, [...args], cwd, label, 0, { env: environment, signal, outputStyle: "stream" }),
-  write: (line) => console.log(line),
+  run: (command, args, cwd, label, environment, signal) => runOwnedCommand(command, [...args], cwd, label, 0, { env: environment, signal, outputStyle: "stream", stdout: "stderr" }),
+  write: (line) => console.error(line),
   now: () => Date.now(),
 };
 

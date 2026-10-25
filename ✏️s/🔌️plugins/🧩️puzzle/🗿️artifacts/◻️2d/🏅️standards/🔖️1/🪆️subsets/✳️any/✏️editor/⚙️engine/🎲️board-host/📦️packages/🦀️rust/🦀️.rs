@@ -14,7 +14,7 @@ pub mod standards {
                 pub mod schema {
                     #[path = "."]
                     pub mod graph_manifest {
-                        pub use semio_s_artifact_puzzle_2d_graph_manifest::standards::v1::subsets::any::schema::graph_manifest::*;
+                        pub use semio_s_artifact_puzzle_2d_graph_manifest::*;
                         pub use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::graph_manifest::puzzle2d_default;
                     }
                 }
@@ -31,6 +31,15 @@ pub mod editor {
             pub use semio_s_artifact_puzzle_2d_engine::editor::puzzle2d::engine::*;
             #[path = "../../🦀️.rs"]
             pub mod board_host;
+            #[path = "."]
+            pub mod icons {
+                pub use semio_s_artifact_puzzle_2d_engine::editor::puzzle2d::engine::icons::*;
+                #[path = "../../../🔣️icons/🌱️metabolism/🦀️.rs"]
+                pub mod board_metabolism_icons;
+                #[path = "../../../🔣️icons/🦀️.rs"]
+                mod lookup;
+                pub use lookup::*;
+            }
         }
     }
 }

@@ -8,7 +8,7 @@ import type { ToolRunTraceDelta, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceS
 import type { ToolRunTick } from "../🎞️tick/🟦️.ts";
 
 //#region 🔖️Json
-/** 🧾️ Schema JSON form (`🧬️schema/🔣️.json`): u64 as integers, bytes as lowercase hex. */
+/** 🔣️ Schema JSON form (`🧬️schema/🔣️.json`): u64 as integers, bytes as lowercase hex. */
 export type ToolRunJson = null | boolean | number | string | readonly ToolRunJson[] | { readonly [key: string]: ToolRunJson };
 type JsonObject = { readonly [key: string]: any };
 

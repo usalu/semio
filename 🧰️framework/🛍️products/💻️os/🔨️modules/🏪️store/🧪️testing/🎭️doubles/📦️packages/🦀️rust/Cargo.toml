@@ -29,6 +29,7 @@ semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-job-payload = { workspace = true }
+semio-framework-os-store-replay-operation = { path = "../../../../🔁️replay/🎮️operation/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }

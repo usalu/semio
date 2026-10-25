@@ -4,7 +4,7 @@ import { relativePosix } from "../📝️render/🟦️.ts";
 import { useResultState } from "./🔶️result/🟦️.ts";
 import { usePart2 } from "./🔸️part2/🟦️.ts";
 import { usePart3 } from "./🟠️part3/🟦️.ts";
-import type { TestTransformOptions, TestTransformResult } from "./🟢️shared/🟦️.ts";
+import type { TestTransformOptions, TestTransformResult } from "./🟢️harness/🟦️.ts";
 
 /** 🧲️ The crate that reads test fixtures at run time for every other crate, as a dev-dependency. */
 export const FIXTURE_READER_CRATE = "semio-framework-test-fixtures";

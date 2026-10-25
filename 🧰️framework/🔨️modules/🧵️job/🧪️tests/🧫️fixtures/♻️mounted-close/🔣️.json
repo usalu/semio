@@ -36,7 +36,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 0,
+            "copiedBytes": 152,
             "retainedCapacityBytes": 0,
             "releasedBytes": 16384
           }
@@ -47,7 +47,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 0,
+            "copiedBytes": 136,
             "retainedCapacityBytes": 0,
             "releasedBytes": 0
           }
@@ -135,7 +135,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 0,
+            "copiedBytes": 136,
             "retainedCapacityBytes": 0,
             "releasedBytes": 128
           }
@@ -148,7 +148,7 @@
             "copiedItems": 1,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
-            "releasedBytes": 7296
+            "releasedBytes": 7336
           }
         },
         {
@@ -176,9 +176,9 @@
       ],
       "totalReceipt": {
         "copiedItems": 12,
-        "copiedBytes": 0,
+        "copiedBytes": 424,
         "retainedCapacityBytes": 0,
-        "releasedBytes": 23953
+        "releasedBytes": 23993
       }
     }
   ],

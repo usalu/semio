@@ -3,6 +3,9 @@ import { homedir } from "node:os";
 import { relative, resolve, sep } from "node:path";
 import physicalBudgetSchema from "./🧬️schema/📏️physical-budget.json" with { type: "json" };
 import type { FileObservationControlV1, FileObservationProgressV1 } from "../../../../📁️filesystem/🧾️observation/🟦️.ts";
+import budgetSchema from "../../../⏱️budget/🧬️schema/🔣️.json" with { type: "json" };
+import { progressDeadlinePolicyV1, progressDeadlineRemainingV1 } from "../../../⏱️budget/🟦️.ts";
+import { noteScriptProcessActivityV1 } from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 
 /** 🧾️ Schema id of a completed Cargo invocation provenance receipt document.
  * @see ./🧬️schema/🔣️.json
@@ -18,20 +21,21 @@ export const CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1 = 128 * 1024 * 1024;
  * hundred MiB of artifacts and tens of thousands of inputs once, then rechecks them before publication.
  * @see ./🧬️schema/📏️physical-budget.json
  */
-export const CARGO_PROVENANCE_PHYSICAL_BUDGET_V1 = Object.freeze({ maxBytes: physicalBudgetSchema.properties.maxBytes.const, maxWork: physicalBudgetSchema.properties.maxWork.const, chunkBytes: physicalBudgetSchema.properties.chunkBytes.const, deadlineMs: physicalBudgetSchema.properties.deadlineMs.const });
+export const CARGO_PROVENANCE_PHYSICAL_BUDGET_V1 = Object.freeze({ maxBytes: physicalBudgetSchema.properties.maxBytes.const, maxWork: physicalBudgetSchema.properties.maxWork.const, chunkBytes: physicalBudgetSchema.properties.chunkBytes.const });
 
 /** 🔐️ Builds the one finite physical observation control every provenance producer hands to the receipt writer. `scale` is the number of
  * component invocations one invocation stands for (a release driver pass links many components at once); bytes, work and deadline grow with it. */
-export function cargoProvenancePhysicalControlV1(authority: { readonly cancelled: () => boolean; readonly remainingMs?: () => number | null; readonly deadlineMs?: number; readonly scale?: number; readonly onProgress: (progress: FileObservationProgressV1) => void }): FileObservationControlV1 {
+export function cargoProvenancePhysicalControlV1(authority: { readonly cancelled: () => boolean; readonly remainingMs?: () => number | null; readonly deadlineMs?: number; readonly scale?: number; readonly clock?: () => number; readonly onProgress: (progress: FileObservationProgressV1) => void }): FileObservationControlV1 {
   const scale = authority.scale ?? 1;
   if (!Number.isSafeInteger(scale) || scale < 1) throw Error("Physical provenance scale must be a positive integer");
-  const started = performance.now(), deadlineMs = (authority.deadlineMs ?? CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.deadlineMs) * scale;
+  const clock = authority.clock ?? (() => performance.now()), phaseGapMs = budgetSchema.$defs.ProgressDeadlinePolicy.const.phaseGapMilliseconds, policy = progressDeadlinePolicyV1("native-observation", scale, {}, authority.deadlineMs === undefined ? {} : { maximumMilliseconds: authority.deadlineMs * scale });
+  let last = clock(), active = 0;
   return Object.freeze({
     maxBytes: CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.maxBytes * scale,
     maxWork: CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.maxWork * scale,
     chunkBytes: CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.chunkBytes,
     cancelled: authority.cancelled,
-    remainingMs: () => Math.min(authority.remainingMs?.() ?? deadlineMs, deadlineMs - (performance.now() - started)),
+    remainingMs: () => { const now = clock(), gap = now - last; last = now; if (gap <= phaseGapMs) active += gap; noteScriptProcessActivityV1(); return Math.min(authority.remainingMs?.() ?? policy.maximumMilliseconds, progressDeadlineRemainingV1(policy, active, 0)); },
     onProgress: authority.onProgress,
   });
 }
@@ -66,14 +70,14 @@ function insideV1(root: string, path: string): boolean {
   return offset !== "" && !offset.startsWith("..") && !offset.startsWith(sep) && !/^[A-Za-z]:/u.test(offset);
 }
 
-/** 🧭️ A path as `$BUILD/…`, `$CARGO_HOME/…`, `$REPO/…` or `$HOME/…`, with `/` separators. */
+/** 🦀️ A path as `$BUILD/…`, `$CARGO_HOME/…`, `$REPO/…` or `$HOME/…`, with `/` separators. */
 export function cargoProvenancePathV1(path: string, roots: CargoProvenanceRootsV1): string {
   const ordered: readonly (readonly [string, string])[] = [["$BUILD", roots.build], ["$CARGO_HOME", roots.cargoHome], ["$REPO", roots.repository], ["$HOME", roots.home ?? homedir()]];
   for (const [name, root] of ordered) if (insideV1(root, path)) return `${name}/${relative(resolve(root), resolve(path)).split(sep).join("/")}`;
   return path.split(sep).join("/");
 }
 
-/** 🧭️ A repository-relative `/` path when `path` is an in-repository source outside the build directory, otherwise `null`. */
+/** 📂️ A repository-relative `/` path when `path` is an in-repository source outside the build directory, otherwise `null`. */
 export function cargoProvenanceSourceV1(path: string, roots: CargoProvenanceRootsV1): string | null {
   return insideV1(roots.repository, path) && !insideV1(roots.build, path) ? relative(resolve(roots.repository), resolve(path)).split(sep).join("/") : null;
 }
@@ -88,7 +92,7 @@ export function cargoUnitLeafV1(unit: Readonly<{ inputs: readonly CargoInputObse
   return cargoProvenanceRowsDigestV1([...unit.inputs.map((row) => ["input", cargoProvenancePathV1(row.path, roots), row.kind ?? "", row.sha256 ?? ""]), ...unit.artifacts.map((row) => ["artifact", cargoProvenancePathV1(row.path, roots), row.sha256 ?? ""])]);
 }
 
-/** 🍃️ The provenance leaf of one build-script run: its resource capture and every resource it witnessed, path-normalized, as one rows digest. */
+/** 🔨️ The provenance leaf of one build-script run: its resource capture and every resource it witnessed, path-normalized, as one rows digest. */
 export function cargoBuildRunLeafV1(row: Readonly<{ path: string; sha256: string; resources: readonly CargoResourceWitnessV1[] }>, roots: CargoProvenanceRootsV1): string {
   return cargoProvenanceRowsDigestV1([["capture", cargoProvenancePathV1(row.path, roots), row.sha256], ...row.resources.map((witness) => ["resource", cargoProvenancePathV1(String((witness.input as { path?: unknown }).path ?? ""), roots), String((witness.input as { kind?: unknown }).kind ?? ""), String(witness.sha256 ?? "")])]);
 }
@@ -189,7 +193,7 @@ export type CargoProvenanceV1 = Readonly<{
   compilerResources: readonly CargoCompilerResourcesV1[];
 }>;
 
-/** 🧭️ The absolute source paths a dep-info record names, resolved against its base directory. */
+/** 🪵️ The absolute source paths a dep-info record names, resolved against its base directory. */
 export function cargoDepInfoResolvedSourcesV1(dep: Pick<CargoDepInfoV1, "baseDirectory" | "sources">): readonly string[] {
   if (dep.baseDirectory === null) throw Error("Cargo dep-info has no base directory");
   const base = dep.baseDirectory;

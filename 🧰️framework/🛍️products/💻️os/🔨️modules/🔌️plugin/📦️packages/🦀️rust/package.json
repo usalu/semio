@@ -90,7 +90,8 @@
     "./testing/fixtures/tool-run/panel-running.json": "./🧪️testing/🧫️fixtures/⏯️tool-run/🔣️json/panel-running/🟦️.ts",
     "./testing/tool-job-coverage": "./🧪️testing/🔬️tool-job-coverage/🟦️.ts",
     "./testing/tool-job-latest-wins": "./🧪️testing/🔬️tool-job-latest-wins/🟦️.ts",
-    "./testing/worker-vm-source": "./🧪️testing/✂️worker-vm-source/🟦️.ts"
+    "./testing/worker-vm-source": "./🧪️testing/✂️worker-vm-source/🟦️.ts",
+    "./tests/tool-job-coverage": "./🧪️tests/🔬️tool-job-coverage/🟦️.ts"
   },
   "scripts": {
     "test-command-ingress-consumer": "repo run @semio-tech/framework-plugin:test-command-ingress-consumer",

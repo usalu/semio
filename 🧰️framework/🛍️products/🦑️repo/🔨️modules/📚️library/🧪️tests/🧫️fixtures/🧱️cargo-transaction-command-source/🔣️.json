@@ -177,32 +177,26 @@
     },
     {
       "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts",
-      "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
-      ]
+      "owners": []
     },
     {
       "path": "🌎️hub/🧪️tests/🕹️gis-map-process/🟦️.ts",
-      "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
-      ]
+      "owners": []
     },
     {
       "path": "🌎️hub/🎛️commands/🏷️trusted-catalog/🟦️.ts",
-      "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
-      ]
+      "owners": []
     },
     {
       "path": "🌎️hub/🧪️tests/🎁️trusted-stdio-gis-bundle-check/🟦️.ts",
       "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+        "@semio-tech/repo-lib/cargo"
       ]
     },
     {
       "path": "🌎️hub/🎛️commands/🏗️build-and-dev/🟦️.ts",
       "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+        "@semio-tech/repo-lib/cargo"
       ]
     },
     {
@@ -215,47 +209,38 @@
     },
     {
       "path": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/📜️script.ts",
-      "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
-      ]
+      "owners": []
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/📜️script.ts",
-      "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
-      ]
+      "owners": []
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts",
       "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+        "📦️packages/🟦️typescript/🦀️cargo/🟦️.ts"
       ]
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🦀️native/📜️script.ts",
       "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+        "📦️packages/🟦️typescript/🦀️cargo/🟦️.ts"
       ]
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts",
-      "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
-      ]
+      "owners": []
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",
       "owners": [
         "🏃️process/🎛️owned-execution/🟦️.ts",
-        "⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts",
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+        "⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts"
       ]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
-      "owners": [
-        "🏃️process/🎛️owned-execution/🟦️.ts"
-      ]
+      "owners": []
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
@@ -266,7 +251,6 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
       "owners": [
-        "🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts",
         "🧪️execution/🐹️go/🟦️.ts"
       ]
     },

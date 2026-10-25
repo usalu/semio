@@ -165,11 +165,11 @@ export function buildFactsV1(input:Readonly<{cwd:string;directives:Readonly<{fil
  return{facts,environment};
 }
 
-/** 📦️ One cached build script run: the facts it depends on, its OUT_DIR tree, and the two output streams (lane-neutral). */
+/** 🔨️ One cached build script run: the facts it depends on, its OUT_DIR tree, and the two output streams (lane-neutral). */
 export type BuildEntryV1={version:1;key:string;package:string;facts:{path:string;kind:"file"|"tree"|"package";sha256:string}[];environment:{name:string;value:string|null}[];outputs:{path:string;sha256:string;bytes:number;executable:boolean;template:boolean}[];stdout:string|null;stderr:string|null;createdMs:number};
 const runDirectory=(root:string,key:string)=>join(root,layout.runs,key.slice(0,2),key);
 
-/** 🔎️ Returns the newest recorded run of `key` whose facts and environment still hold. */
+/** ▶️ Returns the newest recorded run of `key` whose facts and environment still hold. */
 export function lookupBuildRunV1(root:string,key:string,context:Readonly<{cwd:string;laneRoot:string|undefined;environment:Readonly<Record<string,string|undefined>>;stampDirectory:string|undefined}>):BuildEntryV1|undefined{
  const directory=runDirectory(root,key);let names:string[];
  try{names=readdirSync(directory).filter(name=>name.endsWith(".json")).sort().reverse();}catch{return undefined;}
@@ -193,7 +193,7 @@ export function lookupBuildRunV1(root:string,key:string,context:Readonly<{cwd:st
 
 function isText(bytes:Buffer):boolean{if(bytes.includes(0))return false;try{new TextDecoder("utf-8",{fatal:true}).decode(bytes);return true;}catch{return false;}}
 
-/** 📥️ Publishes one successful build script run. `undefined` when the run is not cacheable: a declared path is missing, the OUT_DIR holds a link, is too large, or a binary file embeds the lane path. */
+/** 📢️ Publishes one successful build script run. `undefined` when the run is not cacheable: a declared path is missing, the OUT_DIR holds a link, is too large, or a binary file embeds the lane path. */
 export function publishBuildRunV1(root:string,input:Readonly<{key:string;package:string;cwd:string;laneRoot:string|undefined;directives:Readonly<{files:readonly string[];variables:readonly string[]}>;environment:Readonly<Record<string,string|undefined>>;outDir:string;stdout:string;stderr:string;stampDirectory:string|undefined}>):BuildEntryV1|undefined{
  const known=buildFactsV1({cwd:input.cwd,directives:input.directives,laneRoot:input.laneRoot,environment:input.environment,stampDirectory:input.stampDirectory});if(!known)return undefined;
  const outputs:BuildEntryV1["outputs"]=[];let total=0,refused=false;
@@ -220,7 +220,7 @@ export function publishBuildRunV1(root:string,input:Readonly<{key:string;package
  return entry;
 }
 
-/** ♻️ Writes a cached run's OUT_DIR tree, and returns the streams to replay, as the script would have produced them. */
+/** ⏪️ Writes a cached run's OUT_DIR tree, and returns the streams to replay, as the script would have produced them. */
 export function restoreBuildRunV1(root:string,entry:BuildEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined}>):{stdout:string;stderr:string}{
  ensure(context.outDir);
  for(const row of entry.outputs){

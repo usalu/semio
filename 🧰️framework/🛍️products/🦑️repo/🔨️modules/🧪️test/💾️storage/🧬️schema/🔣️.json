@@ -71,7 +71,22 @@
     },
     "Protocol": {
       "const": {
-        "runLeaseShards": 16
+        "runLeaseShards": 16,
+        "highWaterShare": 0.7,
+        "lowWaterShare": 0.5,
+        "minimumAgeMilliseconds": 600000, "reservedChildren": ["results"]
+      }
+    },
+    "Messages": {
+      "const": {
+        "would": {
+          "en": "[repo cache] test runs: would retire {count} ended run(s) ({bytes}); {held} held by live test runs, {kept} kept",
+          "de": "[repo cache] Testläufe: würde {count} beendete(n) Lauf/Läufe entfernen ({bytes}); {held} von laufenden Tests gehalten, {kept} behalten"
+        },
+        "removed": {
+          "en": "[repo cache] test runs: retired {count} ended run(s) ({bytes}); {held} held by live test runs, {kept} kept",
+          "de": "[repo cache] Testläufe: {count} beendete(n) Lauf/Läufe entfernt ({bytes}); {held} von laufenden Tests gehalten, {kept} behalten"
+        }
       }
     }
   }

@@ -13,7 +13,7 @@ import { convertMutationLeaves } from "../../../🧬️mutation-families/🟦️
 import { buildSlices, type CarveSlice, collectDecls, type ModuleDecl } from "../../../🧱️decl-tree/🟦️.ts";
 import { crateRelativeChains, qualifyModuleHeads, rootAliasModules } from "../../🧭️module-chains/🟦️.ts";
 import { testOnlyGate } from "../../../🧰️testkit/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 📖 Reads the manifest and the crate root source, folds the mount trees and applies the test, lift and inline transforms. */
 export function readCrateSource({ options, repoRoot, packageDirRel }: { readonly options: PlanOptions; readonly repoRoot: string; readonly packageDirRel: string }) {

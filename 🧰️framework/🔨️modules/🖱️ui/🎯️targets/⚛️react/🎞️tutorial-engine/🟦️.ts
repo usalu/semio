@@ -45,7 +45,7 @@ export function interpolateTutorialCamera(prev: TutorialCameraKeyframe, next: Tu
   return t < 0.5 ? prevCamera : nextCamera;
 }
 
-/** 🎥️ TS port of Rust `tutorial_camera_at`. */
+/** 📷️ TS port of Rust `tutorial_camera_at`. */
 export function tutorialCameraAt(def: TutorialDefinition, windowId: string, atMs: number): TutorialCameraState | undefined {
   const keyframes = [...def.base.cameras, ...def.tracks.camera].filter((keyframe) => keyframe.windowId === windowId);
   const first = keyframes[0];
@@ -121,7 +121,7 @@ export function composeTutorialUi(def: TutorialDefinition, atMs: number): Tutori
   return state;
 }
 
-/** ✂️ TS mirror of Rust `TutorialSlice` — see `tutorialSlice` below. */
+/** 🍕️ TS mirror of Rust `TutorialSlice` — see `tutorialSlice` below. */
 export type TutorialSlice = {
   readonly forward: boolean;
   readonly events: readonly TutorialEvent[];
@@ -129,7 +129,7 @@ export type TutorialSlice = {
   readonly uiChanges: readonly TutorialUiChange[];
 };
 
-/** ✂️ TS port of Rust `tutorial_slice` — same directionality contract (forward: oldest→newest;
+/** 🔪️ TS port of Rust `tutorial_slice` — same directionality contract (forward: oldest→newest;
  * backward: newest→oldest so `Edit.backwards` unwind in the right order). Never spans a
  * `TutorialUiSample::Snapshot` boundary correctly on its own — a seek/scrub must call
  * {@link composeTutorialUi} wholesale instead, exactly like the Rust doc comment warns. */
@@ -196,13 +196,13 @@ export function validateTutorial(def: TutorialDefinition): string | null {
 }
 //#endregion 🎬️TutorialEngine
 
-/** ⏱️ The minimal read+subscribe surface {@link TutorialBar}/{@link TutorialCaptions}/{@link TutorialVideoOverlay}/{@link TutorialGhostPointer} need — lets every per-frame time consumer self-subscribe via `useSyncExternalStore` instead of the whole shell re-rendering on every tick. */
+/** ⏰️ The minimal read+subscribe surface {@link TutorialBar}/{@link TutorialCaptions}/{@link TutorialVideoOverlay}/{@link TutorialGhostPointer} need — lets every per-frame time consumer self-subscribe via `useSyncExternalStore` instead of the whole shell re-rendering on every tick. */
 export type TutorialClockPort = {
   readonly getTimeMs: () => number;
   readonly subscribe: (callback: () => void) => () => void;
 };
 
-/** ⏱️ Full imperative control surface for a `TutorialClockPort` — owned by the shell orchestration (director), read by the UI kit. */
+/** 🕰️ Full imperative control surface for a `TutorialClockPort` — owned by the shell orchestration (director), read by the UI kit. */
 export type TutorialClock = TutorialClockPort & {
   readonly play: () => void;
   readonly pause: () => void;
@@ -214,7 +214,7 @@ export type TutorialClock = TutorialClockPort & {
   readonly dispose: () => void;
 };
 
-/** ⏱️ Creates a tiny external store driven by `requestAnimationFrame`: `t += dtWallClock * rate` while playing, auto-pausing at `durationMs`. Not a React hook itself — subscribe via {@link useTutorialClock} (or any `useSyncExternalStore`) for the reactive read. */
+/** 🆕️ Creates a tiny external store driven by `requestAnimationFrame`: `t += dtWallClock * rate` while playing, auto-pausing at `durationMs`. Not a React hook itself — subscribe via {@link useTutorialClock} (or any `useSyncExternalStore`) for the reactive read. */
 export function createTutorialClock(durationMs: number): TutorialClock {
   let tMs = 0;
   let rate = 1;
@@ -281,7 +281,7 @@ export function createTutorialClock(durationMs: number): TutorialClock {
   };
 }
 
-/** ⏱️ Subscribes the calling component to a {@link TutorialClockPort}'s per-frame time — only this component re-renders on tick, never the whole shell. */
+/** 🕐️ Subscribes the calling component to a {@link TutorialClockPort}'s per-frame time — only this component re-renders on tick, never the whole shell. */
 export function useTutorialClock(clock: TutorialClockPort): number {
   return reactHostPort.useSyncExternalStore(clock.subscribe, clock.getTimeMs, clock.getTimeMs);
 }

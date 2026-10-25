@@ -20,7 +20,7 @@ const ANCHORS = [
   "authority.prepare_one_item",
   "fn cancel(&mut self)",
   "fn begin_close(&mut self)",
-  "base.return_to_registry()",
+  "self.owners.close_step(grant.retained_grant())",
   "fn terminal_is_empty(&self)",
   "LocalizedLabel::native",
   "SelectionMode::Multiple",

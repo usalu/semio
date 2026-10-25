@@ -16,7 +16,7 @@ import { VIZ_AXIS_DEFAULTS, VIZ_LEGEND_DEFAULTS } from "@semio-tech/print/schema
 import { measurePrintSans, printFontFamily } from "@semio-tech/print/modules/print-font-catalog/metrics";
 
 //#region 🔖️Items
-/** 🖼️ Resolved geometry uses millimetres; text sizes use TeX points. */
+/** 📐️ Resolved geometry uses millimetres; text sizes use TeX points. */
 type VizRenderStyle = { readonly nativeStyle?: string; readonly fill?: string; readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number; readonly dash?: readonly number[]; readonly rotation?: number; readonly clip?: VizExtent; readonly cap?: "butt" | "round" | "square"; readonly join?: "miter" | "round" | "bevel" };
 
 /** 🎨️ Compares resolved owned style values without a textual representation. */
@@ -34,7 +34,7 @@ export type VizRenderItem = VizRenderStyle & (
   | { readonly kind: "path"; readonly commands: readonly VizPathCommand[]; readonly fill?: string; readonly stroke?: string; readonly strokeWidth?: number; readonly opacity?: number }
   | { readonly kind: "text"; readonly x: number; readonly y: number; readonly content: string; readonly size: number; readonly font?: string; readonly fill?: string; readonly anchor?: "start" | "middle" | "end"; readonly baseline?: "alphabetic" | "middle" | "top" | "bottom" });
 
-/** 🖼️ A chart resolved into primitives: the frame it was laid out in and the items to draw. */
+/** 🗺️ A chart resolved into primitives: the frame it was laid out in and the items to draw. */
 export type VizRenderPlan = { readonly width: number; readonly height: number; readonly frame: VizExtent; readonly theme: VizTheme; readonly items: readonly VizRenderItem[] };
 //#endregion 🔖️Items
 
@@ -133,7 +133,7 @@ function seriesOf(rows: readonly VizRow[], layer: VizLayerSpec, scales: Map<stri
   for (const row of rows) { const key = channel(scales, layer, "detail", row, ""); const group = groups.get(key) ?? []; group.push(row); groups.set(key, group); }
   return [...groups.values()].map((g) => layer.encodings?.order === undefined ? g : g.sort((a,b) => numberChannel(scales,layer,"order",a,0)-numberChannel(scales,layer,"order",b,0)));
 }
-/** 🖼️ Resolves inferred data, encodings, coordinates, marks, guides and annotations. */
+/** 🎛️ Resolves inferred data, encodings, coordinates, marks, guides and annotations. */
 export type VizRenderControl = { readonly signal?: AbortSignal; readonly onProgress?: (completed: number, total: number) => void };
 export function planVizChart(spec: VizChartSpecification, control: VizRenderControl = {}): VizRenderPlan {
   control.signal?.throwIfAborted(); control.onProgress?.(0,spec.layers.length);
@@ -371,7 +371,7 @@ function pathSegments(commands: readonly VizPathCommand[]): readonly PathSegment
   return segments;
 }
 
-/** 🖼️ Renders a chart specification into the dependency-free 2D scene graph. */
+/** 🎬️ Renders a chart specification into the dependency-free 2D scene graph. */
 export function renderVizScene(spec: VizChartSpecification): DrawingScene {
   const plan = planVizChart(spec);
   return renderVizScenePlan(plan);

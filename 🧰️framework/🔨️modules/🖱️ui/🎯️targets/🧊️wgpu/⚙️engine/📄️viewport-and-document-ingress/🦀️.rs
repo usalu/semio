@@ -1,4 +1,4 @@
-//! 📄️ Viewport and document ingress: the viewport and window flow, the presence notes, the tree application and the document begin, page, finish, publish, reconcile and close steps. See [`super`].
+//! 📥️ Viewport and document ingress: the viewport and window flow, the presence notes, the tree application and the document begin, page, finish, publish, reconcile and close steps. See [`super`].
 
 use super::*;
 
@@ -46,7 +46,7 @@ impl Ui {
         self.enqueue_layout_reason(window_id, SurfaceLayoutReason::Metrics);
     }
 
-    /// 🧭️ `window_id`'s current flow, or React's `DEFAULT_FLOW` for a window that has none yet.
+    /// 🌊️ `window_id`'s current flow, or React's `DEFAULT_FLOW` for a window that has none yet.
     pub fn window_flow(&self, window_id: &str) -> ui_contract::UiFlow {
         self.windows.get(window_id).map_or(ui_contract::UiFlow::DEFAULT, |window| window.router.flow())
     }

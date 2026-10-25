@@ -3,7 +3,7 @@ import{withPrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { TEST_LEVELS } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
-import { verifyVizChartInferences } from "@semio-tech/print-viz-inference/script";
+import { verifyVizChartInferences } from "@semio-tech/print-viz-inference/verification";
 import { BundleScript } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🩺️coverage-verification/🟦️.ts";
 import { writePrintGalleryEvidence } from "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🟦️.ts";

@@ -28,7 +28,7 @@ async fn ok_turn() -> TurnResult {
 #[semio_framework_async_macros::async_test]
 async fn maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host() {
     let mut kernel = Kernel::new(ShardKind::Native, 1, 0, 4).await;
-    let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, semio_framework_plugin_host_operation::test_native_authority::original_retained_turn()).await;
+    let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, semio_framework_plugin_host_operation::test_native_authority::original_retained_turn(), semio_framework_plugin_host_operation::test_native_authority::original_retained_loan()).await;
     kernel.submit(&env(actor, Lane::Interactive, 1).await).await;
     kernel.tick(0).await;
     kernel.complete(actor, &ok_turn().await, 0).await.unwrap();
@@ -125,7 +125,7 @@ async fn runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_regist
         } else {
             (PackageId(plugin_id.to_string()), ActorKind::Extension { plugin: PackageId(plugin_id.to_string()), extension_id: record.id.clone() })
         };
-        let actor = kernel.activate(package, ordinal.await, kind, lane.await, None, ActivationEvent::Manual, semio_framework_plugin_host_operation::test_native_authority::original_retained_turn()).await;
+        let actor = kernel.activate(package, ordinal.await, kind, lane.await, None, ActivationEvent::Manual, semio_framework_plugin_host_operation::test_native_authority::original_retained_turn(), semio_framework_plugin_host_operation::test_native_authority::original_retained_loan()).await;
         if record.scale_fixture.profile == "crash" && crash_profile_actor.is_none() {
             crash_profile_actor = Some(actor);
         }

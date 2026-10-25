@@ -20,7 +20,7 @@ import { type ClassifiedDependency } from "../🔒️oracle-dependencies/🟦️
 //#endregion 🔌️Adapters
 
 //#region 📊️Reports
-/** 📊️ Aggregated view of one run, per level, implementation and owner. */
+/** 🎚️ Aggregated view of one run, per level, implementation and owner. */
 export type RunSummary = Readonly<{
   level: TestLevel;
   cases: number;
@@ -36,7 +36,7 @@ export type RunSummary = Readonly<{
   oracleUnavailable: readonly { caseDir: string; oracle: string; missing: readonly string[] }[];
 }>;
 
-/** 📊️ Builds the owned run summary from raw host results plus the parity verdicts. */
+/** 🏁️ Builds the owned run summary from raw host results plus the parity verdicts. */
 export function summarizeRun(level: TestLevel, cases: number, scenarios: number, results: readonly TestResult[], parity: RunSummary["parity"], problems: readonly string[], oracleUnavailable: RunSummary["oracleUnavailable"] = []): RunSummary {
   const byImplementation: Record<string, { passed: number; failed: number; errored: number }> = {};
   for (const result of results) {
@@ -58,7 +58,7 @@ export function summarizeRun(level: TestLevel, cases: number, scenarios: number,
   };
 }
 
-/** 📊️ Renders JUnit XML so any CI surface can consume the run without knowing this protocol. */
+/** 🧾️ Renders JUnit XML so any CI surface can consume the run without knowing this protocol. */
 export function renderJUnit(results: readonly TestResult[]): string {
   const escape = (value: string): string => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const suites = new Map<string, TestResult[]>();
@@ -81,7 +81,7 @@ export function renderJUnit(results: readonly TestResult[]): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<testsuites>\n${body}\n</testsuites>\n`;
 }
 
-/** 📊️ Renders a human-readable semantic diff for one failed parity comparison. */
+/** 🆚️ Renders a human-readable semantic diff for one failed parity comparison. */
 export function renderDiff(testIdentity: string, verdict: ComparisonVerdict): string {
   const lines = [`# ${testIdentity}`, `profile: ${verdict.profile}`, `equal: ${verdict.equal}`, ""];
   for (const diff of verdict.diffs.slice(0, 200)) lines.push(`${diff.path}: ${diff.reason}\n  oracle:  ${JSON.stringify(diff.oracle)}\n  subject: ${JSON.stringify(diff.subject)}`);
@@ -92,7 +92,7 @@ export function renderDiff(testIdentity: string, verdict: ComparisonVerdict): st
 
 //#region 📈️Metrics
 /**
- * 📈️ The seven non-aggregate metrics of §13. A single well-covered implementation must never be able
+ * 📏️ The seven non-aggregate metrics of §13. A single well-covered implementation must never be able
  * to mask an untested one in another language, so every metric that CAN be per-implementation is.
  */
 export type CoverageMetrics = Readonly<{
@@ -108,7 +108,7 @@ export type CoverageMetrics = Readonly<{
   dependencyCleanCoverage: { clean: number; total: number; ratio: number };
 }>;
 
-/** 📈️ Per-implementation source coverage, so an aggregate percentage cannot hide an untested language. */
+/** 🧶️ Per-implementation source coverage, so an aggregate percentage cannot hide an untested language. */
 export type ImplementationCoverage = Readonly<{ implementation: string; lines: { covered: number; total: number; ratio: number }; branches: { covered: number; total: number; ratio: number } | null }>;
 
 function ratio(part: number, whole: number): number {
@@ -116,7 +116,7 @@ function ratio(part: number, whole: number): number {
 }
 
 /**
- * 📈️ Computes the run's non-aggregate metrics from the discovered cases and the emitted results.
+ * ▶️ Computes the run's non-aggregate metrics from the discovered cases and the emitted results.
  * Adapters, generated hosts, fixtures and oracle implementations are not repository source and are
  * therefore never counted as covered production code — only the claimed implementations are.
  */
@@ -175,7 +175,7 @@ export function computeCoverageMetrics(repoRoot: string, cases: readonly Discove
 }
 
 /**
- * 📈️ Enforces the non-aggregate gates. Scenario, implementation, parity and oracle coverage must all
+ * 🛑️ Enforces the non-aggregate gates. Scenario, implementation, parity and oracle coverage must all
  * be complete for the selected scope; source coverage is enforced per implementation against the
  * repository threshold, never as one blended percentage.
  */
@@ -192,7 +192,7 @@ export function enforceMetricGates(metrics: CoverageMetrics, perImplementation: 
   return failures;
 }
 
-/** 📈️ Renders the metrics as the repository dashboard row set of §22. */
+/** 🖌️ Renders the metrics as the repository dashboard row set of §22. */
 export function formatMetrics(metrics: CoverageMetrics, perImplementation: readonly ImplementationCoverage[]): string {
   const lines = [
     `[metrics] scenario coverage      ${metrics.scenarioCoverage.executed}/${metrics.scenarioCoverage.declared} (${(metrics.scenarioCoverage.ratio * 100).toFixed(1)}%)`,
@@ -207,7 +207,7 @@ export function formatMetrics(metrics: CoverageMetrics, perImplementation: reado
 //#endregion 📈️Metrics
 
 //#region 📈️CoverageV2
-/** 📈️ Every dimension the release gate reads. A gate that reads nothing else cannot be satisfied by an aggregate. */
+/** 📖️ Every dimension the release gate reads. A gate that reads nothing else cannot be satisfied by an aggregate. */
 export const COVERAGE_DIMENSIONS = [
   "runtimeMutationCoverage",
   "subsetOwnershipCoverage",
@@ -229,7 +229,7 @@ export const COVERAGE_DIMENSIONS = [
 ] as const;
 export type CoverageDimension = (typeof COVERAGE_DIMENSIONS)[number];
 
-/** 📈️ Dimensions that must be exactly 100% to release. */
+/** 📦️ Dimensions that must be exactly 100% to release. */
 export const RELEASE_GATED_DIMENSIONS: readonly CoverageDimension[] = ["runtimeMutationCoverage", "subsetOwnershipCoverage", "externalOracleCoverage", "oracleEvidenceCoverage", "productionBridgeCoverage", "fixtureProvenanceCoverage", "dependencyIsolationCoverage"];
 
 /** 📊️ One report row, keyed by the FULL coordinate. Reporting at artifact level is what this shape prevents. */
@@ -255,7 +255,7 @@ export type CoverageRow = Readonly<{
   notes?: string;
 }>;
 
-/** 📈️ One dimension's measured ratio plus the exact coordinates that are missing. */
+/** ➗️ One dimension's measured ratio plus the exact coordinates that are missing. */
 export type DimensionMeasurement = Readonly<{ dimension: CoverageDimension; covered: number; total: number; ratio: number; missing: readonly string[] }>;
 
 function measure(dimension: CoverageDimension, covered: number, total: number, missing: readonly string[]): DimensionMeasurement {
@@ -263,7 +263,7 @@ function measure(dimension: CoverageDimension, covered: number, total: number, m
 }
 
 /**
- * 📈️ Builds the complete v2 coverage matrix from the registry, the runtime inventories and the run's
+ * 🔨️ Builds the complete v2 coverage matrix from the registry, the runtime inventories and the run's
  * results. The matrix is enumerated from the MANIFESTS, not from the results, so a mutation nobody
  * wrote a test for appears as a `missing` row instead of being absent from the denominator.
  */
@@ -347,7 +347,7 @@ export function buildCoverageMatrix(repoRoot: string, registry: OracleRegistry, 
   return rows;
 }
 
-/** 📈️ Measures all sixteen dimensions from the matrix, the registry and the run's results. */
+/** ⏱️ Measures all sixteen dimensions from the matrix, the registry and the run's results. */
 export function measureCoverage(registry: OracleRegistry, rows: readonly CoverageRow[], results: readonly TestResult[], runtimeInventories: readonly RuntimeMutationInventory[], repoRoot: string = repoRootFromHere()): DimensionMeasurement[] {
   const manifestMutations = registry.mutationManifests.flatMap((manifest) => manifest.mutations.map((mutation) => ({ manifest, mutation })));
   const owned = new Set(manifestMutations.map(({ manifest, mutation }) => `${manifest.artifact}@${manifest.standard}::${mutation.id}`));
@@ -433,7 +433,7 @@ export function enforceReleaseGates(measurements: readonly DimensionMeasurement[
   return failures;
 }
 
-/** 📊️ Renders the matrix as the report's own questions, each answered by an explicit list. */
+/** ❓️ Renders the matrix as the report's own questions, each answered by an explicit list. */
 export function formatCoverageQuestions(registry: OracleRegistry, rows: readonly CoverageRow[], measurements: readonly DimensionMeasurement[]): string {
   const fixtures = registry.contributions.flatMap((contribution) => contribution.testEvidence);
   const byDimension = new Map(measurements.map((measurement) => [measurement.dimension, measurement]));

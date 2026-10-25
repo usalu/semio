@@ -33,10 +33,6 @@ impl protocol::ColdDiffAlgebra<Counter> for CounterDiff {
 fn inverse(&self, _base: &Counter) -> Self { Self { deltas: self.deltas.iter().rev().flat_map(|delta| Self::from_wide(-i128::from(*delta)).deltas).collect() } }
 }
 
-impl crate::ColdDiffAlgebra<Counter> for CounterDiff {
-    fn inverse(&self, _base: &Counter) -> Self { Self { deltas: self.deltas.iter().rev().flat_map(|delta| Self::from_wide(-i128::from(*delta)).deltas).collect() } }
-}
-
 impl MutationDiff<Counter> for CounterDiff {
 
 

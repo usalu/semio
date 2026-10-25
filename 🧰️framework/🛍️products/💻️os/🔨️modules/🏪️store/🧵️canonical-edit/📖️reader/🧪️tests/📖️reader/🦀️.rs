@@ -359,7 +359,7 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 262144, maximum_depth: 4096 };
             let mut failure = None;
             for _ in 0..100_000 {
-                match owner.advance(grant) {
+                match with_receiving(|receiving| owner.advance(grant, receiving)) {
                     Err(error) => {
                         failure = Some(error);
                         break;
@@ -370,7 +370,7 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             }
             assert_eq!(failure.as_ref().map(|error| error.message.as_ref()), fixture["expectedError"].as_str(), "native sealer borrowed={borrowed} grant={maximum_bytes}");
             assert!(owner.prepared().is_none() && owner.take_prepared().is_none());
-            assert_eq!(owner.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked);
+            assert_eq!(with_receiving(|receiving| owner.advance(grant, receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked);
             owner.begin_close();
             for _ in 0..100_000 {
                 if matches!(owner.close_step(*RETIREMENT_POLICY).unwrap(), RetainedCloneStep::Complete(_)) {
@@ -383,3 +383,5 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
     }
 }
 //#endregion ⚠️ErrorProgress
+
+fn with_receiving<R>(operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R { semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(operation) }

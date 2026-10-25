@@ -3,7 +3,7 @@ import {expect,test,setDefaultTimeout} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {CACHE_POLICY} from "../../../../🔍️discovery/📂️source/🟦️.ts";
 import {areaUnitRoot,scanCacheAreas} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
@@ -58,4 +58,3 @@ test("the root of a scanned unit follows its area and kind, equal to the Python 
  }
 });
 
-import "../🔗️imports/🟦️.ts";

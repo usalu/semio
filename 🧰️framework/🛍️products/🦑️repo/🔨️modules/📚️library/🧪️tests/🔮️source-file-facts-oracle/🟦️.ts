@@ -16,14 +16,14 @@ export function sourceFileFactCatalog(kind: SourceFileFactCase["catalog"], taxon
   return { ...taxonomy, fileKinds: { ...taxonomy.fileKinds, ...additions } };
 }
 
-/** 🧪️ Compares raw physical path spellings by UTF-8 bytes. */
+/** 🆚️ Compares raw physical path spellings by UTF-8 bytes. */
 export function sourceFileFactByteCompare(left: string, right: string): number {
   const leftBytes = new TextEncoder().encode(left), rightBytes = new TextEncoder().encode(right), length = Math.min(leftBytes.length, rightBytes.length);
   for (let index = 0; index < length; index += 1) if (leftBytes[index] !== rightBytes[index]) return leftBytes[index]! - rightBytes[index]!;
   return leftBytes.length - rightBytes.length;
 }
 
-/** 🧪️ Selects one unique longest suffix through test-only minimatch. */
+/** 🔮️ Selects one unique longest suffix through test-only minimatch. */
 export function sourceFileFactOracleKind(path: string, catalog: Taxonomy): { readonly fileKindId: string | null; readonly extensionChain: string | null } {
   const filename = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize(catalog.unicodeNormalization.form).split("/").at(-1)!.toLocaleLowerCase("en-US");
   const candidates = Object.entries(catalog.fileKinds).flatMap(([fileKindId, spec]) => spec.extensionChains.filter((extensionChain) => minimatch(filename, `*${extensionChain}`, { nocase: true, dot: true })).map((extensionChain) => ({ fileKindId, extensionChain })));
@@ -32,7 +32,7 @@ export function sourceFileFactOracleKind(path: string, catalog: Taxonomy): { rea
   return unique.length === 1 ? unique[0]! : { fileKindId: null, extensionChain: null };
 }
 
-/** 🧪️ Projects only complete supplied regular observations with the independent suffix oracle. */
+/** 📘️ Projects only complete supplied regular observations with the independent suffix oracle. */
 export function sourceFileFactReference(rows: readonly SourceFileFactCase[], catalog: Taxonomy): readonly SourceFileFactExpected[] {
   if (rows.some((row) => row.admissionStatus !== "complete")) throw new Error("source admission is rejected");
   return rows.filter((row) => row.observedKind === "file" && (row.mode === "100644" || row.mode === "100755") && row.repositoryBoundary !== "gitlink").map((row) => {

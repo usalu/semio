@@ -31,7 +31,8 @@ use crate::editor_commands::{
 use crate::editor_edit::windows::simulation::SET_RESULT_FIELD_ACTION_ID;
 use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Material, Model, ShadingSurface, Surface, Thermostat, Zone};
 use crate::snapshot::EnergyModelSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
+use semio_framework_plugin::plugin_app_close_prelude::{InputKind};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;

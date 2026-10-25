@@ -20,7 +20,7 @@ component-kind = "plugin"
 [[package.metadata.semio.playground]]
 variant = "architect"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-ports = { react = 6090, wgpu = 6190 }
+ports = { react = 6088, wgpu = 6188 }
 
 [package.metadata.semio.sources]
 artifacts = ["../../../../../../✏️s/🔌️plugins/🏛️architect/🗿️artifacts"]

@@ -31,7 +31,7 @@ export function inspectRustPathMounts(source: string): readonly RustPathMount[] 
   return inspectRustModuleChildren(source).filter(child => child.via === "path").map(({ path, modules }) => ({ path, modules }));
 }
 
-/** 🪢️ Lists every `#[path]` file module and every `include!("literal")` item of a Rust source in declaration order, with cfg attributes ignored and inline module nesting kept; computed `include!` arguments are not children.
+/** 🦀️ Lists every `#[path]` file module and every `include!("literal")` item of a Rust source in declaration order, with cfg attributes ignored and inline module nesting kept; computed `include!` arguments are not children.
  * @see https://doc.rust-lang.org/std/macro.include.html */
 export function inspectRustModuleChildren(source: string): readonly RustModuleChild[] {
   const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), mounts: RustModuleChild[] = [];
@@ -73,7 +73,7 @@ export function inspectRustModuleChildren(source: string): readonly RustModuleCh
   return mounts;
 }
 
-/** 🪢️ Lists the first path segment of every top-level `use` and `extern crate` item of a Rust source in declaration order (cfg attributes ignored, inline modules not entered): the crate names a facade, hub or root file refers to.
+/** 🔝️ Lists the first path segment of every top-level `use` and `extern crate` item of a Rust source in declaration order (cfg attributes ignored, inline modules not entered): the crate names a facade, hub or root file refers to.
  * @see https://doc.rust-lang.org/reference/items/use-declarations.html */
 export function inspectRustCrateReferences(source: string): readonly string[] {
   const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), names: string[] = [];
@@ -114,7 +114,7 @@ const filePath = (root: string | URL): string => root instanceof URL ? fileURLTo
 
 const readSource = (path: string, options: ModuleTreeOptions): string => options.read ? options.read(path) : readFileSync(path, "utf8");
 
-/** 🧭️ A child file with the directory its own mounts stay below: a module owns its own directory, an `include!`d file stays inside the directory of the file that includes it, because its items belong to that module. */
+/** 🌲️ A child file with the directory its own mounts stay below: a module owns its own directory, an `include!`d file stays inside the directory of the file that includes it, because its items belong to that module. */
 interface TreeChild { readonly target: string; readonly scope: string; }
 
 const CRATE_PREFIX = "semio_framework_os_renderer_wgpu_";
@@ -236,7 +236,7 @@ export function listSourceFamily(directory: string | URL, options: { readonly te
   return out;
 }
 
-/** 👪️ Reads the authored sources of a carved crate family as one text, files in path order. */
+/** 🪵️ Reads the authored sources of a carved crate family as one text, files in path order. */
 export function readSourceFamilySource(directory: string | URL, options: { readonly tests?: boolean } = {}): string {
   return listSourceFamily(directory, options).map(file => { const text = readFileSync(file, "utf8"); return text.endsWith("\n") ? text : text + "\n"; }).join("");
 }

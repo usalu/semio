@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🗄️FsRepoContext
-/// 🧭️ One analyze scope, parsed the way the reference `ParseScope` reads a raw scope string.
+/// 🔍️ One analyze scope, parsed the way the reference `ParseScope` reads a raw scope string.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AnalyzeScope {
     Repo,

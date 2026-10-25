@@ -18,7 +18,7 @@ export interface MemoryGovernorOptionsV1{budgetBytes:number;workers:number;basel
 export interface MemoryGovernorStatsV1{waits:number;waitedMilliseconds:number;collections:number;peakMegabytes:number}
 export interface MemoryGovernorV1{run<T>(task:()=>Promise<T>|T):Promise<T>;stats():MemoryGovernorStatsV1}
 export function createMemoryGovernorV1(options:MemoryGovernorOptionsV1):MemoryGovernorV1;
-export interface StringInternerV1{share(text:string):string;stats():{entries:number;characters:number;hits:number;clears:number}}
+export interface StringInternerV1{share(text:string):string;stats():{entries:number;characters:number;hits:number;clears:number};clear():void}
 export function createStringInternerV1(options?:{maximumCharacters?:number;minimumLength?:number}):StringInternerV1;
 export function internJsonStringsV1<T>(value:T,interner:StringInternerV1):T;
 export declare const graphStringInternerV1:StringInternerV1;

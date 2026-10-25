@@ -304,7 +304,7 @@ impl RasterTextureWitnessSlot {
 /// 🌱 What one raster operation still owes when its retirement is admitted.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RasterWitnessAdmission {
-    /// 🌱 The operation admitted no raster at all. An engine surface whose first raster has not been
+    /// ⭕️ The operation admitted no raster at all. An engine surface whose first raster has not been
     /// reserved yet owes NOTHING — that is "not yet", and it must never read as "stale".
     Nothing,
     /// ♻️ The operation owns witnesses a bounded retirement has to consume.
@@ -397,7 +397,7 @@ impl RasterOperationWitnessLedger {
         Ok(RasterWitnessAdmission::Retire)
     }
 
-    /// 🎟️ Admits this operation's retirement and hands it the slots. Idempotent for the operation
+    /// 🏁️ Admits this operation's retirement and hands it the slots. Idempotent for the operation
     /// that already owns them, so a bounded step may re-enter as often as its budget requires.
     pub fn begin_retirement(&mut self, witness: RasterTextureWitness) -> Result<RasterWitnessAdmission, &'static str> {
         let admission = self.retirement_admission(witness)?;
@@ -407,7 +407,7 @@ impl RasterOperationWitnessLedger {
         Ok(admission)
     }
 
-    /// ♻️ Retires ONE witness field per call; `true` once both slots are terminal and the ledger is
+    /// 🪦️ Retires ONE witness field per call; `true` once both slots are terminal and the ledger is
     /// ready for the next operation.
     pub fn retire_step(&mut self) -> bool {
         if !self.candidate_retired {

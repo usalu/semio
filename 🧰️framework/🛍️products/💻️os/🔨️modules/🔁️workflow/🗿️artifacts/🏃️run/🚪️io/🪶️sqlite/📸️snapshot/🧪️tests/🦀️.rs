@@ -1,3 +1,5 @@
+use crate::dsl::ArtifactDsl;
+use crate::dsl::ArtifactPack;
 use semio_framework_os_space_testing_sqlite_native_caller as native_caller;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
@@ -72,7 +74,7 @@ fn sqlite_semantic_run_complete_sql_cells_are_exact_for_both_triggers_and_all_ie
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_semantic_run_normal_owner_registration_public_words_and_independent_edit(){
- use store::{pack::snapshot::ArtifactPack,pack::snapshot::ArtifactDsl};use semio_framework_value::{DslValue,Number,ToValue};
+ use semio_framework_os_kernel::os_pack::snapshot::{ArtifactPack,ArtifactDsl};use semio_framework_value::{DslValue,Number,ToValue};
  struct Owned(Option<RunArtifact>);impl Owned{fn new(value:RunArtifact)->Self{Self(Some(value))}fn get(&self)->&RunArtifact{self.0.as_ref().unwrap()}}impl Drop for Owned{fn drop(&mut self){if let Some(value)=self.0.take(){value.retire_sqlite_snapshot();}}}
  fn exact(a:&DslValue,b:&DslValue){match(a,b){(DslValue::Number(Number::Float(a)),DslValue::Number(Number::Float(b)))=>assert_eq!(a.to_bits(),b.to_bits()),(DslValue::Array(a),DslValue::Array(b))=>{assert_eq!(a.len(),b.len());for(a,b)in a.iter().zip(b){exact(a,b);}},(DslValue::Object(a),DslValue::Object(b))=>{assert_eq!(a.len(),b.len());for((ka,a),(kb,b))in a.iter().zip(b){assert_eq!(ka,kb);exact(a,b);}},_=>assert_eq!(a,b)}}
  let registration=<RunArtifact as ArtifactPack>::native_snapshot_registration();assert!(registration.is_some(),"RunArtifact must publish normal owning native registration rather than a test-local bare codec");let(owner,codec)=registration.unwrap();assert_eq!(owner.artifact_kind,"os.run");assert_eq!(owner.standard.0,"1");assert_eq!(owner.subset.0,"*");assert!(codec.snapshot_sqlite.is_some());store::io::register_native_document_codec(owner,codec).unwrap();

@@ -1,7 +1,6 @@
 #!/usr/bin/env repo
 import { receiveScriptProcessInvocation, BundleScript, ScriptRouter, runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runDepsScript, runBuildScript } from "../../🧪️tests/🔬️dotnet-package-commands/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 📥️ Restores the locked support dependencies inside their actual finite shared backing. */
 class DepsScript extends BundleScript {
@@ -16,4 +15,4 @@ class BuildScript extends BundleScript {
   }
 }
 const router=new ScriptRouter(import.meta.dirname).register("deps",DepsScript).register("build",BuildScript);
-if(isMainModuleV1(import.meta.url))await receiveScriptProcessInvocation(process.env,original=>runScriptMain(router,{invocation:original}));
+await receiveScriptProcessInvocation(process.env,original=>runScriptMain(router,{invocation:original}));

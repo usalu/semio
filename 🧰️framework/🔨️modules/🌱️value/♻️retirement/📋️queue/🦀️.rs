@@ -43,7 +43,7 @@ impl RetirementQueue {
         if !self.has_reserved_slot(){return Err(refusal(ValueRefusalKind::OwnershipLimit,"original typed retirement requires its reserved queue slot"))}
         assert!(self.frames.push_reserved(original.take().unwrap()).is_ok(),"original typed queue reserved slot disappeared");Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
-    /// 🎟️ Transfers an original admitted frame into reserved custody without allocating another shell.
+    /// 🔏️ Transfers an original admitted frame into reserved custody without allocating another shell.
     pub fn admit_retirement(&mut self,owner:Box<dyn ErasedSnapshotRetirement>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Box<dyn ErasedSnapshotRetirement>)> {
         if grant.maximum_items==0{return Err((refusal(ValueRefusalKind::WorkLimit,"retirement queue transfer requires one admitted item"),owner));}
         if grant.maximum_depth<self.frames.len()+1{return Err((refusal(ValueRefusalKind::DepthLimit,"retirement queue transfer exceeds admitted depth"),owner));}
@@ -51,7 +51,7 @@ impl RetirementQueue {
         assert!(self.frames.push_reserved(owner).is_ok(),"retirement queue reserved transfer slot disappeared");
         Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
     }
-    /// 🎟️ Quotes only the original active owner or its terminal frame and queue backing.
+    /// ⏭️ Quotes only the original active owner or its terminal frame and queue backing.
     pub fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
         if self.terminal_is_empty(){return Ok(Default::default());}
         match self.frames.get(self.frames.len().saturating_sub(1)){

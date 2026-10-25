@@ -1,6 +1,6 @@
 import "../../🏗️build/🧭️selection/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
-import {testRipgrepV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testRipgrepV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import ts from "typescript";
@@ -32,7 +32,7 @@ test("package wrappers route to the repository root with independent argv and pa
   for (const row of fixture.packageRouting.cases) {
     const argv=literalCommandTokensV1(row.command), paths=row.platform==="win32"?win32:posix;
     expect(argv).toEqual(parseArgsStringToArgv(row.command));
-    expect(argv.slice(0,2)).toEqual(["bun","--cwd"]);
+    expect(argv.slice(0,2)).toEqual(["repo","--cwd"]);
     expect(paths.resolve(row.root,row.package,argv[2]!)).toBe(paths.resolve(row.root));
     expect(argv[3]).toBe("repo");
     expect(argv.slice(4)).toEqual(row.arguments);
@@ -43,13 +43,14 @@ test("package wrappers route to the repository root with independent argv and pa
   for(const path of new Set(inventory.stdout.split("\0").filter((entry)=>entry!==""&&!entry.startsWith(".🧬semio/")&&existsSync(join(root,entry))))) {
     const manifest=JSON.parse(read(path));
     for(const [name,command] of Object.entries(manifest.scripts??{})) {
-      if(typeof command!=="string"||!/^repo (?:repo |--cwd )/u.test(command))continue;
+      if(typeof command!=="string"||!/^repo (?:repo |--cwd |run )/u.test(command))continue;
       const argv=literalCommandTokensV1(command);
       expect(argv[1]==="nx"||argv[3]==="nx",`${path}:${name}`).toBe(false);
+      if(argv[1]==="run"){expect(argv,`${path}:${name}`).toEqual(parseArgsStringToArgv(command));wrappers++;continue;}
       if(argv[1]!=="repo"&&argv[3]!=="repo")continue;
       expect(argv,`${path}:${name}`).toEqual(parseArgsStringToArgv(command));
       if(path==="package.json"){expect(argv[1]).toBe("repo");continue;}
-      expect(argv.slice(0,2),`${path}:${name}`).toEqual(["bun","--cwd"]);
+      expect(argv.slice(0,2),`${path}:${name}`).toEqual(["repo","--cwd"]);
       expect(resolve(root,dirname(path),argv[2]!),`${path}:${name}`).toBe(root);
       expect(argv[2]).not.toContain("\\");
       expect(argv[3]).toBe("repo");
@@ -58,7 +59,7 @@ test("package wrappers route to the repository root with independent argv and pa
   }
   expect(wrappers).toBeGreaterThan(600);
   const source=ts.createSourceFile("caller.ts",read(fixture.packageRouting.sourceCaller),ts.ScriptTarget.Latest,true),calls:ts.CallExpression[]=[];
-  const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&node.expression.getText(source)==="runCmd"&&node.arguments[1]?.getText(source).includes('"repo"'))calls.push(node);ts.forEachChild(node,visit);};visit(source);
+  const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&node.expression.getText(source)==="runCmd"&&node.arguments[0]?.getText(source)==='"repo"')calls.push(node);ts.forEachChild(node,visit);};visit(source);
   expect(calls.length).toBeGreaterThan(0);
   for(const call of calls){const options=call.arguments[2];expect(options&&ts.isObjectLiteralExpression(options)).toBe(true);const cwd=(options as ts.ObjectLiteralExpression).properties.find(property=>ts.isPropertyAssignment(property)&&property.name.getText(source)==="cwd") as ts.PropertyAssignment;expect(cwd.initializer.getText(source)).toBe("this.repoRoot");}
 });
@@ -106,13 +107,13 @@ test("all authored executor omissions preserve neutral execution through the act
  const db=new Database(":memory:"),admit=new Ajv2020({strict:false}).compile(graphSchema),check=(raw:Record<string,any>,identity:string)=>{const target=neutralBuildTargetV1(raw,identity),graph={version:1 as const,projects:{audit:{name:"audit",root:".",targets:{task:{...target,dependsOn:[]}}}},dependencies:[]};expect(admit(graph),identity+":"+JSON.stringify(admit.errors)).toBe(true);const oracle=db.query("select json_patch(json_object('kind',case when json_extract(?1,'$.executor')='repo:noop' then 'noop' else 'command' end),coalesce(json_extract(?1,'$.options'),'{}')) value").get(JSON.stringify(raw))as{value:string},expected=JSON.parse(oracle.value);if(raw.command!==undefined)expected.command=raw.command;expect(target.execution,identity).toEqual(expected);const plan=planBazelTasksV1(graph,{tasks:["audit:task"],args:[]}),actual=plan.tasks[plan.selected[0]!]!;expect(plan.selected).toHaveLength(1);const mode=actual.configuration,modeOnly=mode!==undefined&&(mode==="prototype"||mode==="release")&&Object.keys(target.configurations??{}).length===0;expect(actual.definition.execution,identity).toEqual(modeOnly?{...target.execution,env:{...target.execution.env,SEMIO_BUILD_MODE:mode}}:resolveBuildTargetV1(target,mode).execution);expect("executor"in actual.definition,identity).toBe(false);return target;};let projects=0,tasks=0,implicit=0;try{for(const row of fixture.implicitExecutors){if(row.target.executor===undefined)implicit++;if(row.accepted)check(row.target,row.name);else expect(()=>check(row.target,row.name)).toThrow();}const inventory=spawnSync(testRipgrepV1()??"rg",["--files","--hidden","--null","-g","📋️project.json","-g","!node_modules","-g","!.git","-g","!.cache","-g","!🗑️generated"],{cwd:root,encoding:"utf8",timeout:10000,maxBuffer:16*1024*1024});expect(inventory.status,inventory.stderr).toBe(0);for(const path of new Set(inventory.stdout.split("\0").filter(path=>path&&!path.includes("/🎫️tickets/")))){const value=JSON.parse(read(path));projects++;for(const[name,raw]of Object.entries(value.targets??{})){const target=raw as Record<string,any>;check(target,path+":"+name);tasks++;}}expect(implicit).toBeGreaterThan(0);}finally{db.close();}
 });
 
-test("dashboard entry points retain localized build and source controls",()=>{const dashboard=JSON.parse(read("📋️project.json")).metadata.semio.dashboard;for(const id of ["run-targets","run-script"]){const tool=dashboard.tools.find((tool:any)=>tool.id===id);expect(tool,id).toBeDefined();for(const language of ["en","de"]){expect(tool.title[language].trim().length).toBeGreaterThan(0);expect(tool.description[language].trim().length).toBeGreaterThan(0);}expect(tool.command.slice(0,2)).toEqual(["repo"]);}});
+test("dashboard entry points retain localized build and source controls",()=>{const dashboard=JSON.parse(read("📋️project.json")).metadata.semio.dashboard;for(const id of ["run-targets","run-script"]){const tool=dashboard.tools.find((tool:any)=>tool.id===id);expect(tool,id).toBeDefined();for(const language of ["en","de"]){expect(tool.title[language].trim().length).toBeGreaterThan(0);expect(tool.description[language].trim().length).toBeGreaterThan(0);}expect(tool.command.slice(0,1)).toEqual(["repo"]);}});
 
 test("application task environments use neutral execution controls", () => {
   for (const path of fixture.environmentSources) expect(read(path), path).not.toMatch(/\bNX_[A-Z_]+/u);
 });
 
-test("dashboard task arguments cross the neutral argument boundary",()=>{const dashboard=JSON.parse(read("📋️project.json")).metadata.semio.dashboard;expect(dashboard.tools.find((tool:any)=>tool.id==="run-targets").command.slice(0,3)).toEqual(["repo","run-many"]);for(const row of fixture.editorCommands)for(const answers of fixture.editorAnswers){const template=createRequire(import.meta.url)("lodash/template"),command=("repo "+row.args).replace(/\$\{input:(repoBuild[^}]+)\}/gu,(_,id:string)=>{expect(Object.hasOwn(answers,id),id).toBe(true);return answers[id as keyof typeof answers];});expect(command).toBe(template("repo "+row.args,{interpolate:/\$\{input:(repoBuild[^}]+)\}/g})(answers));const parsed=parseBuildInvocationV1(parseArgsStringToArgv(command).slice(2),{}).args;if(["run","run-many","affected","exec","watch"].includes(parsed[0]!))expect(()=>validateBuildTaskArgumentsV1(parsed),row.args).not.toThrow();}}, { timeout: 120_000 });
+test("dashboard task arguments cross the neutral argument boundary",()=>{const dashboard=JSON.parse(read("📋️project.json")).metadata.semio.dashboard;expect(dashboard.tools.find((tool:any)=>tool.id==="run-targets").command.slice(0,2)).toEqual(["repo","run-many"]);for(const row of fixture.editorCommands)for(const answers of fixture.editorAnswers){const template=createRequire(import.meta.url)("lodash/template"),command=("repo "+row.args).replace(/\$\{input:(repoBuild[^}]+)\}/gu,(_,id:string)=>{expect(Object.hasOwn(answers,id),id).toBe(true);return answers[id as keyof typeof answers];});expect(command).toBe(template("repo "+row.args,{interpolate:/\$\{input:(repoBuild[^}]+)\}/g})(answers));const parsed=parseBuildInvocationV1(parseArgsStringToArgv(command).slice(2),{}).args;if(["run","run-many","affected","exec","watch"].includes(parsed[0]!))expect(()=>validateBuildTaskArgumentsV1(parsed),row.args).not.toThrow();}}, { timeout: 120_000 });
 
 test("native orchestration and rebuild declarations use neutral build commands", () => {
   const manifest = JSON.parse(read("package.json"));
@@ -124,7 +125,7 @@ test("MCP native staging uses one neutral command with independent argv", () => 
   const path=fixture.commandSources.find(path=>path.endsWith("/🌉️mcp/🟦️.ts"))!;
   expect(path).toBeDefined();
   const source=ts.createSourceFile(path,read(path),ts.ScriptTarget.Latest,true),calls:ts.CallExpression[]=[];
-  const visit=(node:ts.Node):void=>{if(ts.isVariableDeclaration(node)&&node.name.getText(source)==="nativeMcpBinaryStagingFor"){const collect=(child:ts.Node):void=>{if(ts.isCallExpression(child)&&child.expression.getText(source)==="spawnSync")calls.push(child);ts.forEachChild(child,collect);};collect(node);}else ts.forEachChild(node,visit);};visit(source);
+  const visit=(node:ts.Node):void=>{if(ts.isVariableDeclaration(node)&&node.name.getText(source)==="nativeMcpBinaryStagingFor"){const collect=(child:ts.Node):void=>{if(ts.isCallExpression(child)&&child.expression.getText(source)==="runToolSyncV1")calls.push(child);ts.forEachChild(child,collect);};collect(node);}else ts.forEachChild(node,visit);};visit(source);
   expect(calls.length).toBe(1);
   const project=JSON.parse(read(join(dirname(path),"📦️packages/🦀️rust/📋️project.json"))),target=project.name+":build",call=calls[0]!,argumentsNode=call.arguments[1];
   expect(ts.isStringLiteral(call.arguments[0]!)&&call.arguments[0]!.text).toBe("repo");

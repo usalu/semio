@@ -1,7 +1,7 @@
 /** 🔸️ The cancels frame timer while tests of the ⏲️ frame pacing suite. */
 import { expect, it, vi } from "vitest";
 import { TICK_MILLISECONDS, createPacer, documentHidden, watchVisibility } from "@semio-tech/pets-react";
-import { clock, stage, sum } from "../🟠️shared/🟦️.tsx";
+import { clock, stage, sum } from "../🟠️harness/🟦️.tsx";
 
 /** 🔹 Registers the cancels frame timer while tests of the ⏲️ frame pacing suite. */
 export function registerCancelsFrameTimerWhileTests(): void {

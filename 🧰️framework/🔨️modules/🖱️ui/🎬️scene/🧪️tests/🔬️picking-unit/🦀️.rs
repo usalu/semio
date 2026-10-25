@@ -144,7 +144,7 @@ fn a_parallel_pick_ray_round_trips_through_the_pixel_it_came_from() {
     }
 }
 
-/// 📡️ LAW: the perspective pick ray survives React's adaptive far plane. It is three's
+/// 🔦️ LAW: the perspective pick ray survives React's adaptive far plane. It is three's
 /// `origin = camera.position, direction = unproject(ndc, 0.5) - origin`; the near-minus-far pair it
 /// replaced was numerically empty in `f32` at a `0.2 / 524 288` ratio and missed every instance
 /// (`📓️w7b-presenter-one-frame-per-boot.md` §5.1).

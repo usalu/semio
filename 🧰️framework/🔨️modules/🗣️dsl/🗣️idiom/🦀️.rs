@@ -98,7 +98,7 @@ pub enum LanguageRole {
     Spr,
 }
 
-/// 📖️ One artifact facet language, registered once at plugin init: identity, the extension
+/// 📕️ One artifact facet language, registered once at plugin init: identity, the extension
 /// it opens (documents/configs only), optional hand-authored **grammar** text for text surfaces
 /// (`🗣️dsl` / `🔧️op` / `🔺️diff`, `dialect grammar`), optional hand-authored **protocol** text for
 /// binary surfaces (`🎒️pack` / `📡️spr`, `dialect protocol`), and the [`IdiomHooks`] vtable used by
@@ -138,7 +138,7 @@ impl LanguageSpec {
         Ok(Some(file))
     }
 
-    /// 📡️ Parses `protocol` via [`parse_protocol`].
+    /// 📜️ Parses `protocol` via [`parse_protocol`].
     pub fn parsed_protocol(&self) -> Result<Option<ProtocolFile>, TextError> {
         let Some(text) = self.protocol else {
             return Ok(None);
@@ -222,7 +222,7 @@ pub fn preflight_languages(specs: &[LanguageSpec]) -> Result<(), LanguageRegistr
     Ok(())
 }
 
-/// 📌️ Registers language specifications only after the whole candidate set is conflict-free.
+/// 🌐️ Registers language specifications only after the whole candidate set is conflict-free.
 /// Stays `fn` — see `preflight_languages` above, same external-caller reason.
 #[must_use]
 pub fn register_languages(specs: Vec<LanguageSpec>) -> Result<(), LanguageRegistryError> {
@@ -234,7 +234,7 @@ pub fn register_languages(specs: Vec<LanguageSpec>) -> Result<(), LanguageRegist
     Ok(())
 }
 
-/// 📌️ Registers one grammar under its `id` — called once per grammar at plugin init,
+/// 📥️ Registers one grammar under its `id` — called once per grammar at plugin init,
 /// alongside (not instead of) `register_document_codec_for_app`. Overwrites on re-registration,
 /// matching `register_idiom`'s hot-reload-safe behavior.
 // 🚫️async: E1 pure accessor — see `language_registry` above
@@ -243,14 +243,14 @@ pub fn register_language(spec: LanguageSpec) {
     registry.insert(spec.id, spec);
 }
 
-/// 🔍️ Looks up a registered grammar by its `id` (e.g. `"fem2d"`, `"fem2dcfg"`, `"jack"`).
+/// 👀️ Looks up a registered grammar by its `id` (e.g. `"fem2d"`, `"fem2dcfg"`, `"jack"`).
 // 🚫️async: E1 pure accessor — see `language_registry` above
 pub fn language(id: &str) -> Option<LanguageSpec> {
     let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
     registry.get(id).copied()
 }
 
-/// 🔍️ Looks up a registered grammar by legacy file-extension suffix (e.g. `"note"`, `"jack"`).
+/// 📄️ Looks up a registered grammar by legacy file-extension suffix (e.g. `"note"`, `"jack"`).
 // 🚫️async: E1 pure accessor — see `language_registry` above
 pub fn language_for_extension(extension: &str) -> Option<LanguageSpec> {
     let suffix = extension.strip_prefix('.').unwrap_or(extension);
@@ -258,7 +258,7 @@ pub fn language_for_extension(extension: &str) -> Option<LanguageSpec> {
     registry.values().find(|spec| spec.extension == Some(suffix)).copied()
 }
 
-/// 🔍️ Finds a registered language by an explicit role and extension selection.
+/// 🔎️ Finds a registered language by an explicit role and extension selection.
 pub fn language_for_role_extension(role: LanguageRole, extension: &str) -> Option<LanguageSpec> {
     let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
     registry.values().find(|spec| spec.role == role && spec.extension == Some(extension)).copied()

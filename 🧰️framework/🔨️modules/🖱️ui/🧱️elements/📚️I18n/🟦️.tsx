@@ -14,7 +14,7 @@ export type UiLocale = ShellLocale;
 /** 🪁️ Label pair resolved by the active driver's `labelTier` axis. */
 export type UiLabelPair = { readonly normal: string; readonly beginner: string };
 
-/** 🪁️ Translation leaf with optional manual and tutorial metadata. */
+/** 🍃️ Translation leaf with optional manual and tutorial metadata. */
 export type UiLabelValue = {
   readonly label: UiLabelPair;
   readonly manual?: string;
@@ -39,7 +39,7 @@ export function resolveUiLabel(value: unknown, tier: keyof UiLabelPair): string 
   return uiLabelTierText(label, tier) ?? uiLabelTierText(value, tier);
 }
 
-/** 🪁️ Ribbon collection ids for ribbon collection toggles. */
+/** 🎀️ Ribbon collection ids for ribbon collection toggles. */
 export type UiRibbonParentCategory =
   | "history"
   | "hand"
@@ -62,7 +62,7 @@ export type UiRibbonParentCategory =
   | "utilities"
   | "sync";
 
-/** 🪁️ Runtime enumeration of {@link UiRibbonParentCategory} in taxonomy order — for grouping/sorting menu rows by category at runtime. */
+/** 🎗️ Runtime enumeration of {@link UiRibbonParentCategory} in taxonomy order — for grouping/sorting menu rows by category at runtime. */
 export const UI_RIBBON_PARENT_CATEGORIES: readonly UiRibbonParentCategory[] = [
   "history",
   "hand",
@@ -104,7 +104,7 @@ export type DeepUiTranslationKeys<T, Prefix extends string = ""> = T extends UiL
             [K in keyof T & string]: DeepUiTranslationKeys<T[K], Prefix extends "" ? K : `${Prefix}.${K}`>;
           }[keyof T & string];
 
-/** 🪁️ Domain-neutral chrome translation tree (settings, tooltip, `ui.*`). */
+/** 🧬️ Domain-neutral chrome translation tree (settings, tooltip, `ui.*`). */
 export type UiTranslationSchema = {
   readonly ui: {
     readonly nav: {
@@ -272,7 +272,7 @@ export type UiTranslationSchema = {
           readonly aa: UiLabelValue;
           readonly aaLarge: UiLabelValue;
           readonly fail: UiLabelValue;
-          /** ♿️ Inline warning under a sub-AA paint: `{{ratio}}` is the measured ratio and `{{minimum}}`
+          /** ⚠️ Inline warning under a sub-AA paint: `{{ratio}}` is the measured ratio and `{{minimum}}`
            * the WCAG AA body-text floor, both already formatted in the active locale; `{{counterpart}}` is
            * the other paint of the failing text-on-surface pair. */
           readonly warning: UiLabelValue;
@@ -367,7 +367,7 @@ export type UiTranslationSchema = {
       readonly subtractive: UiLabelValue;
       readonly invertive: UiLabelValue;
     };
-    /** 🩺️ Accessible status vocabulary for a window whose body stayed empty because its plugin
+    /** 🚥️ Accessible status vocabulary for a window whose body stayed empty because its plugin
      * instance faulted — one entry per `WindowFaultClass`, so the shell names the discriminated
      * cause the plugin runtime already put in `Fault.code` instead of rendering a blank surface. */
     readonly windowFault: {
@@ -467,7 +467,7 @@ export type UiTranslationSchema = {
       readonly lock: UiLabelValue;
       readonly unlock: UiLabelValue;
     };
-    /** ♿️ The node-graph editor's own assistive-technology vocabulary. `🕸️Diagram` renders an
+    /** 🕸️ The node-graph editor's own assistive-technology vocabulary. `🕸️Diagram` renders an
      * `application`-role canvas, which by ARIA contract means the widget handles its OWN arrow/Enter
      * keys — so it has to be able to SAY what those keys do, in every locale. */
     readonly diagram: {
@@ -477,7 +477,7 @@ export type UiTranslationSchema = {
       readonly nodes: UiLabelValue;
       readonly edges: UiLabelValue;
       readonly empty: UiLabelValue;
-      /** ♿️ Live-region sentences spoken after a keyboard step; `{{node}}` is the node's label,
+      /** ⌨️ Live-region sentences spoken after a keyboard step; `{{node}}` is the node's label,
        * `{{position}}`/`{{count}}` its reading-order position among all nodes or the selection size. */
       readonly focusedNode: UiLabelValue;
       readonly selectedNode: UiLabelValue;
@@ -488,7 +488,7 @@ export type UiTranslationSchema = {
       readonly emptyScene: UiLabelValue;
       readonly inputDraftConflict: UiLabelValue;
       readonly inputDraftDiscard: UiLabelValue;
-      /** ♿️ The polite status under a windowed table: which of its rows are materialised. */
+      /** 📊️ The polite status under a windowed table: which of its rows are materialised. */
       readonly tableRowRange: UiLabelValue;
       readonly preview: UiLabelValue;
       readonly sourceAvailable: UiLabelValue;
@@ -598,7 +598,7 @@ export type UiTranslationSchema = {
       readonly attachFailed: UiLabelValue;
       /** 🪪️ The focused program has no document of its own, so there is nothing to attach to a folder, a file or a hub. */
       readonly documentUnidentified: UiLabelValue;
-      /** 📎️ The offer to reconnect the folder this device remembers for the booted document (`os.config.local-folders`). */
+      /** 💻️ The offer to reconnect the folder this device remembers for the booted document (`os.config.local-folders`). */
       readonly reconnect: {
         readonly label: UiLabelValue;
         /** 📁️ Names the folder: `{{folder}}`. */
@@ -674,7 +674,7 @@ export type UiTranslationSchema = {
         readonly cascade: UiLabelValue;
         readonly apply: UiLabelValue;
       };
-      /** 🪪️ `history.*` refusals of the event log: `foreignTransition` = an undo or redo naming another author's edit. */
+      /** 📜️ `history.*` refusals of the event log: `foreignTransition` = an undo or redo naming another author's edit. */
       readonly history: {
         readonly foreignTransition: UiLabelValue;
       };
@@ -699,11 +699,11 @@ export type UiTranslationSchema = {
       readonly degraded: UiLabelValue;
       /** 🌐️ The hub refused one of this human's command batches; the edit was rolled back locally. */
       readonly hubRejected: UiLabelValue;
-      /** 🌐️ The hub applied one of this human's command batches in a transformed form (a concurrent edit won). */
+      /** 🌎️ The hub applied one of this human's command batches in a transformed form (a concurrent edit won). */
       readonly hubTransformed: UiLabelValue;
-      /** 🌐️ Why the hub refused a batch: another human changed the same part concurrently (a touched-region conflict). */
+      /** ✏️ Why the hub refused a batch: another human changed the same part concurrently (a touched-region conflict). */
       readonly hubConcurrentEdit: UiLabelValue;
-      /** 🌐️ Why the hub refused a batch: it breaks a structural rule a concurrent change by another human now holds. */
+      /** 🛑️ Why the hub refused a batch: it breaks a structural rule a concurrent change by another human now holds. */
       readonly hubConcurrentInvariant: UiLabelValue;
       /** 🚫️ A batch this device refused before sending it (`CommandRejectionV1`'s `local.*` codes), one line per reason. */
       readonly local: {
@@ -715,7 +715,7 @@ export type UiTranslationSchema = {
         readonly duplicate: UiLabelValue;
         /** ⏳️ `local.backbone-pair-unavailable`: the document has no verified state to admit changes against yet. */
         readonly notReady: UiLabelValue;
-        /** 🧭️ `local.backbone-scope-mismatch`: the change names another document. */
+        /** 📄️ `local.backbone-scope-mismatch`: the change names another document. */
         readonly foreignDocument: UiLabelValue;
         /** 🧩️ `local.backbone-malformed`: the change does not decode. */
         readonly unreadable: UiLabelValue;
@@ -774,7 +774,7 @@ export type UiTranslationSchema = {
       readonly cancelReplay: UiLabelValue;
       readonly rerun: UiLabelValue;
       readonly nextProblem: UiLabelValue;
-      /** 👥️ A peer's open history edit, labelled from this replica's own history rows (no locale text on the wire). */
+      /** 🔓️ A peer's open history edit, labelled from this replica's own history rows (no locale text on the wire). */
       readonly peer: {
         readonly editingRow: UiLabelValue;
         readonly editingTarget: UiLabelValue;
@@ -914,17 +914,17 @@ export type UiTranslationSchema = {
   };
 };
 
-/** 🪁️ Dot-path union of keys in {@link UiTranslationSchema}. */
+/** 🔑️ Dot-path union of keys in {@link UiTranslationSchema}. */
 export type UiTranslationKey = DeepUiTranslationKeys<UiTranslationSchema>;
 
-/** 🪁️ Compile-time check that ribbon collection ids have chrome translation keys. */
+/** 📔️ Compile-time check that ribbon collection ids have chrome translation keys. */
 export type AssertUiRibbonParentKeysCovered<Categories extends string> = {
   readonly [K in Categories]: `ui.ribbon.parent.${K}` extends UiTranslationKey ? true : false;
 }[Categories] extends true
   ? true
   : false;
 
-/** 🪁️ Compile-time check that every {@link UiLocale} has a settings-dropdown label key. */
+/** 📖️ Compile-time check that every {@link UiLocale} has a settings-dropdown label key. */
 export type AssertUiSettingsLanguageKeysCovered<Locales extends string> = {
   readonly [L in Locales]: `ui.settings.language.${L}` extends UiTranslationKey ? true : false;
 }[Locales] extends true
@@ -934,17 +934,17 @@ export type AssertUiSettingsLanguageKeysCovered<Locales extends string> = {
 /** 🗣️ Chrome-known terminology ids — single source `@semio-tech/framework`'s `ShellTerminology`; app-declared ids beyond this set fall back to their raw id in the dropdown. */
 export type UiChromeTerminologyId = ShellTerminology;
 
-/** 🗣️ Compile-time check that every {@link UiChromeTerminologyId} has a settings-dropdown label key. */
+/** 📕️ Compile-time check that every {@link UiChromeTerminologyId} has a settings-dropdown label key. */
 export type AssertUiSettingsTerminologyKeysCovered<Ids extends string> = {
   readonly [I in Ids]: `ui.settings.terminology.${I}` extends UiTranslationKey ? true : false;
 }[Ids] extends true
   ? true
   : false;
 
-/** 🪁️ Typed translate function for domain-neutral chrome keys. */
+/** 🔤️ Typed translate function for domain-neutral chrome keys. */
 export type UiTranslateFn = <K extends UiTranslationKey>(key: K, options?: Record<string, unknown>) => unknown;
 
-/** 🪁️ Shared UI i18n port (wraps i18next; do not import i18next outside this bundle). */
+/** ⚙️ Shared UI i18n port (runs on the owned translation engine of `🌐️i18n/🔡️instance`; no translation library is imported outside it). */
 export interface UiI18nPort {
   readonly t: UiTranslateFn;
   /** 🗺️ A key resolved in one given locale, whatever locale the port stands at — for text journalled in every locale. */
@@ -958,7 +958,7 @@ export interface UiI18nPort {
 }
 
 declare const uiRegisteredTranslationKeyBrand: unique symbol;
-/** 🪁️ Key branded by {@link registerUiTranslationBundles} — only obtainable from the caster it
+/** 🔖️ Key branded by {@link registerUiTranslationBundles} — only obtainable from the caster it
  * returns, so a value of this type provably exists in every {@link UiLocale} bundle registered together
  * with it. Products (coda, compose, …) hold this instead of hand-rolling their own translation-key union
  * and casting into `useLabel`. */

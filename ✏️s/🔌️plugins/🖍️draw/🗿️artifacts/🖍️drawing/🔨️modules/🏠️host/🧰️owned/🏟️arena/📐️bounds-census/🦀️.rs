@@ -23,7 +23,7 @@ pub struct DrawingSnapshotOwnerTotals {
 }
 
 #[derive(Clone, Copy)]
-struct DrawingOwnerCreditSlot {
+pub struct DrawingOwnerCreditSlot {
     pub source_items: u32,
     pub source_bytes: u32,
     pub derived_items: u32,

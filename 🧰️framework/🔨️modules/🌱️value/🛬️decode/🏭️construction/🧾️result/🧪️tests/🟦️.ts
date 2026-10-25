@@ -16,5 +16,4 @@ test("typed native construction preserves output and simultaneous original cause
   expect(result&&"error"in result?result.error:undefined).toBe(row.admitted&&row.primary?primary:undefined);
   expect(refused).toBe(row.receipt?receipt:undefined);
  }}finally{db.close()}
- console.log("[DEBUG] typed construction strictSchema=true independentSQLite=true originalOutput=true simultaneousPrimaryReceipt=true deniedNoCallback=true");
 });

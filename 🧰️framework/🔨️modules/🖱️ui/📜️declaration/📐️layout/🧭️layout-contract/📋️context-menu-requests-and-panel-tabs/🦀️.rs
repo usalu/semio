@@ -65,7 +65,7 @@ pub struct ContextMenuPoint {
     pub y: f64,
 }
 
-/// 🖱️ The plugin-facing on-demand menu request — deliberately does NOT carry view state (this crate
+/// 📬️ The plugin-facing on-demand menu request — deliberately does NOT carry view state (this crate
 /// must never reference `semio_framework`'s `ViewModel`, same boundary as every other type
 /// here). Mirrors `handle_action`/`render`/`tool_measures`, which all take `view_state: &ViewModel`
 /// as a separate `ArtifactApp` method parameter rather than embedding it in the request payload; the
@@ -130,7 +130,7 @@ pub const FRAMEWORK_PANEL_TAB_HISTORY_LABEL: &str = "History";
 
 pub const FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID: &str = "framework.panel.history";
 
-/// 🕰️ Reserved `body_key` intercepted first in `VcsArtifactApp::render`, before any app-specific
+/// 🔑️ Reserved `body_key` intercepted first in `VcsArtifactApp::render`, before any app-specific
 /// body-key match — both renderers fetch it like any other panel-tab body.
 pub const FRAMEWORK_HISTORY_BODY_KEY: &str = "framework.body.history";
 

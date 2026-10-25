@@ -37,3 +37,4 @@ pub mod editor {
     #[path = "../../../../../✏️editor/🧭️edit-rules/🦀️.rs"]
     pub mod edit_rules;
 }
+semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioDocumentSnapshot, schema::mutations::SemioDocumentMutation);

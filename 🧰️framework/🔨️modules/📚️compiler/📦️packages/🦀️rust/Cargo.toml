@@ -22,7 +22,7 @@ semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages
 semio-framework-dsl = { path = "../../../🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 
-# 🔤️ `rustybuzz` (HarfBuzz-class shaping, `🔤️text`) and `base64` (embedded PNG glyph encoding,
+# 🔤️ `rustybuzz` (HarfBuzz-class shaping, `🔤️text`) and the first-party `io-base64` codec (embedded PNG glyph encoding,
 # `📤️svg`) back the crate's real glyph-shaping/outline/raster/math-table engine (`🔤️text`,
 # `🧮️math`, `📤️svg`) — genuinely needed to paint or precisely measure real typography, but a WASI
 # guest component never paints (icon painting is unconditionally host-only, see
@@ -34,8 +34,9 @@ semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️r
 # RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 rustybuzz = "0.20.1"
-base64 = "0.22.1"
+semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+base64 = "0.22.1"
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

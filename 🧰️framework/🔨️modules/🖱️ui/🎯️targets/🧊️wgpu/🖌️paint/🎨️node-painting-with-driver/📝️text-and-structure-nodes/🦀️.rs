@@ -2,7 +2,7 @@
 
 use super::*;
 
-/// 📝 Paints one step of a text node: the weighted body or emphasized run.
+/// 🪜️ Paints one step of a text node: the weighted body or emphasized run.
 pub(super) fn paint_text_node_step(
     text: &semio_framework_ui_declaration::ui::UiTextNode,
     atlas: &mut FontAtlas,

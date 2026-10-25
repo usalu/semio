@@ -1,0 +1,74 @@
+[
+  {
+    "id": "error",
+    "mode": "--root0-error-worker",
+    "primary": "error",
+    "abort": true,
+    "closeCalls": 1,
+    "closeSucceeded": true,
+    "rescue": false
+  },
+  {
+    "id": "undefined",
+    "mode": "--root0-undefined-worker",
+    "primary": "undefined",
+    "abort": true,
+    "closeCalls": 1,
+    "closeSucceeded": true,
+    "rescue": false
+  },
+  {
+    "id": "frozen",
+    "mode": "--root0-frozen-worker",
+    "primary": "frozen",
+    "abort": true,
+    "closeCalls": 1,
+    "closeSucceeded": true,
+    "rescue": false
+  },
+  {
+    "id": "success",
+    "mode": "--root0-success-worker",
+    "primary": "none",
+    "abort": false,
+    "closeCalls": 1,
+    "closeSucceeded": true,
+    "rescue": false
+  },
+  {
+    "id": "cleanup",
+    "mode": "--root0-cleanup-worker",
+    "primary": "error",
+    "abort": true,
+    "closeCalls": 1,
+    "closeSucceeded": false,
+    "rescue": false
+  },
+  {
+    "id": "negative",
+    "mode": "--root0-negative-worker",
+    "primary": "error",
+    "abort": true,
+    "closeCalls": 1,
+    "closeSucceeded": true,
+    "rescue": true
+  },
+  {
+    "id": "cancelled",
+    "mode": "--root0-cancelled-worker",
+    "primary": "frozen",
+    "abort": true,
+    "closeCalls": 0,
+    "closeSucceeded": false,
+    "rescue": false
+  },
+  {
+    "id": "finite-child",
+    "mode": "--root0-finite-child-worker",
+    "primary": "none",
+    "abort": false,
+    "closeCalls": 1,
+    "closeSucceeded": true,
+    "rescue": false
+  }
+]

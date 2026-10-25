@@ -14,7 +14,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discoverPackages, readSemioMarkerSubTable, loadTaxonomy } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 import type { AssetDeliveryDeclarationV1 } from "../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
@@ -157,7 +157,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
       { kind: "static-dir", route: "/renderer-modules", root: ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules" },
     ],
     vitePlugins: async () => {
-      const { playgroundIframeEmbedHeadersPlugin } = await import(/* @vite-ignore */ "../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌐️iframe/🟦️.ts");
+      const { playgroundIframeEmbedHeadersPlugin } = await import(/* @vite-ignore */ "../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🌐️iframe/🟦️.ts");
       return [playgroundIframeEmbedHeadersPlugin()];
     },
     storyGlobs: ["../✏️s/🧑‍💻dev/📖️stories/**/🧪️.story.tsx"],
@@ -317,5 +317,21 @@ export function buildScopeWatchIgnores(activeScopes: readonly StoryScope[]): str
 /** 🎯️ True when `prefix` is (a prefix of) an active scope id — used by `preview.tsx` to gate scope-specific behavior via `__STORYBOOK_ACTIVE_SCOPES__`. */
 export function scopeActive(activeScopeIds: readonly string[], prefix: string): boolean {
   return activeScopeIds.some((id) => scopeTokenMatches(prefix, id));
+}
+/** 🎯️ The absolute directories the dev watcher may enter: the `.storybook` folder, every active scope's source roots, the directory each story glob starts in (globs are relative to `.storybook`) and the directory of each extra alias target. Everything else below the repository root stays unwatched, because a watcher crawl of the whole repository pinned a core and grew past 3 GB without serving one request. */
+export function buildScopeWatchRoots(activeScopes: readonly StoryScope[], repoRoot: string, extraTargets: readonly string[] = []): string[] {
+  const storybookDir = resolve(repoRoot, ".storybook");
+  const globBase = (glob: string): string => {
+    const segments = glob.split("/"), literal = segments.slice(0, Math.max(0, segments.findIndex((part) => /[*?{}[\]]/u.test(part))));
+    return resolve(storybookDir, ...(literal.length ? literal : segments));
+  };
+  const roots = [storybookDir, ...activeScopes.flatMap((scope) => [...scope.sourceRoots.map((root) => resolve(repoRoot, root)), ...(scope.storyGlobs ?? []).map(globBase)]), ...extraTargets.map((target) => dirname(resolve(repoRoot, target))).filter((directory) => { const inside = relative(repoRoot, directory); return !inside.startsWith("..") && inside.split(sep).length >= 3; })];
+  return Array.from(new Set(roots)).sort();
+}
+
+/** 🔎️ True when `path` is inside a watched root or is an ancestor the watcher must pass through to reach one. */
+export function isWatchedPathV1(path: string, roots: readonly string[]): boolean {
+  const normal = resolve(path);
+  return roots.some((root) => normal === root || normal.startsWith(root + sep) || root.startsWith(normal + sep));
 }
 // #endregion 🔖️ScopeResolution

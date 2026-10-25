@@ -5,7 +5,7 @@ import {mkdtempSync,readFileSync,realpathSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {isAbsolute,join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {bazelEvidenceDirectoryV1,bazelEvidenceEventsPathV1,bazelEvidenceFlagsV1,writeBazelClosureEvidenceV1} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";

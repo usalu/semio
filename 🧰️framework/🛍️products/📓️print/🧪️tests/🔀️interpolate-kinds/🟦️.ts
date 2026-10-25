@@ -60,11 +60,11 @@ export default defineTestAdapter({
         });
         return { projection };
       },
-      /** 🎯️ The same pairs through the kernel's `number` interpolator. */
+      /** 🧮️ The same pairs through the kernel's `number` interpolator. */
       subject: async (ctx: AdapterContext) => await subject(ctx),
     },
     round: {
-      /** 🔮️ d3-interpolate's `interpolateRound` on the declared pairs. */
+      /** 🥢️ d3-interpolate's `interpolateRound` on the declared pairs. */
       oracle: (ctx: AdapterContext) => {
         const projection: Record<string, readonly (number | string)[]> = {};
         rows(ctx).forEach((row, index) => {
@@ -72,11 +72,11 @@ export default defineTestAdapter({
         });
         return { projection };
       },
-      /** 🎯️ The same pairs through the kernel's `round` interpolator. */
+      /** 🔄️ The same pairs through the kernel's `round` interpolator. */
       subject: async (ctx: AdapterContext) => await subject(ctx),
     },
     colour: {
-      /** 🔮️ One d3-interpolate colour interpolator per declared space, on the rendered hexadecimal. */
+      /** 🖌️ One d3-interpolate colour interpolator per declared space, on the rendered hexadecimal. */
       oracle: (ctx: AdapterContext) => {
         const projection: Record<string, readonly (number | string)[]> = {};
         for (const row of rows(ctx)) {
@@ -88,11 +88,11 @@ export default defineTestAdapter({
         }
         return { projection };
       },
-      /** 🎯️ The same pairs through the kernel's colour kinds. */
+      /** 🎨️ The same pairs through the kernel's colour kinds. */
       subject: async (ctx: AdapterContext) => await subject(ctx),
     },
     array: {
-      /** 🔮️ d3-interpolate's `interpolateArray` over the declared lists. */
+      /** 🗒️ d3-interpolate's `interpolateArray` over the declared lists. */
       oracle: (ctx: AdapterContext) => {
         const projection: Record<string, readonly (number | string)[]> = {};
         rows(ctx).forEach((row, index) => {
@@ -100,7 +100,7 @@ export default defineTestAdapter({
         });
         return { projection };
       },
-      /** 🎯️ The same lists through the kernel's `array` interpolator. */
+      /** 📋️ The same lists through the kernel's `array` interpolator. */
       subject: async (ctx: AdapterContext) => await subject(ctx),
     },
   },

@@ -6,7 +6,7 @@ import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 export interface PrintDocumentIntentV1{readonly version:1;readonly kind:"document";readonly namespace:"print"|"report"|"probe";readonly id:string;readonly sourceRoot:string;readonly texPath:string;readonly sources:readonly string[];readonly dark:boolean}
 /** 🧪️ Carries one bounded generated TeX document without a caller-selected work or output path. */
 export interface PrintProbeResourceV1{readonly source:string;readonly name:string}
-/** 🧪️ Carries only a TeX document and explicitly named tracked resource Source. */
+/** 🎒️ Carries only a TeX document and explicitly named tracked resource Source. */
 export interface PrintProbeIntentV1{readonly version:1;readonly kind:"probe";readonly name:string;readonly source:string;readonly resources?:readonly PrintProbeResourceV1[]}
 /** 📤️ Names a bounded generated document and its fixed publication identity. */
 export interface PrintGeneratedDocumentIntentV1{readonly version:1;readonly kind:"generated-document";readonly namespace:PrintDocumentIntentV1["namespace"];readonly id:string;readonly name:string;readonly source:string;readonly resources?:readonly PrintProbeResourceV1[];readonly dark:boolean}

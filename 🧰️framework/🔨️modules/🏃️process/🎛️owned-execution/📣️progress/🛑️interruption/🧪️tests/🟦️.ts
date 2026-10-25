@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import corpus from "./🧫️fixtures/🔣️.json";
 import { runOwnedCommand } from "../../../🟦️.ts";
 
-const childCode = `console.log("[DEBUG] interruption child PID "+process.pid);setTimeout(()=>console.log("[DEBUG] interruption child complete"),${corpus.childMilliseconds});`;
+const childCode = `console.log("[TRACE] interruption child PID "+process.pid);setTimeout(()=>console.log("[TRACE] interruption child complete"),${corpus.childMilliseconds});`;
 const oracleCode = 'const c=JSON.parse(process.argv[1]),r=JSON.parse(process.argv[2]),code=process.argv[3],started=performance.now(),controller=new AbortController(),parent=setTimeout(()=>controller.abort(),c.callerCeilingMilliseconds),cancel=r.interruption==="cancelled"?setTimeout(()=>controller.abort(),c.interruptionMilliseconds):null,signal=r.interruption==="deadline"?AbortSignal.any([controller.signal,AbortSignal.timeout(c.interruptionMilliseconds)]):controller.signal;const {Readable,Writable}=require("node:stream"),{pipeline}=require("node:stream/promises"),child=require("node:child_process").spawn(process.execPath,["--eval",code]);let childClosed=false,published=false,publications=0,pending;child.stdout.resume();child.stderr.resume();signal.addEventListener("abort",()=>{if(!childClosed)child.kill()},{once:true});const closed=new Promise((accept,refuse)=>{child.once("error",refuse);child.once("close",(status,signal)=>{childClosed=status===0&&signal===null;accept()})}),sink=new Writable({write(_bytes,_encoding,accept){publications++;pending=new Promise(resolve=>setTimeout(()=>{published=true;accept();resolve()},c.publicationMilliseconds))}}),source=Readable.from((async function*(){await new Promise(resolve=>setTimeout(resolve,c.progressIntervalMilliseconds));yield "progress"})()),publication=pipeline(source,sink,{signal});publication.catch(()=>{});(async()=>{try{await closed;let terminal="completed";try{await publication}catch{terminal="rejected"}console.log(JSON.stringify({terminal,publishedBeforeTerminal:published,childClosedBeforeTerminal:childClosed,publications,elapsedMilliseconds:performance.now()-started}));}finally{await pending;clearTimeout(parent);if(cancel)clearTimeout(cancel);if(child.exitCode===null&&child.signalCode===null)child.kill()}})().catch(error=>{console.error(error);process.exitCode=1});';
 
 for (const row of corpus.cases) test(row.id, async () => {
@@ -16,9 +16,9 @@ for (const row of corpus.cases) test(row.id, async () => {
     const phaseCeiling = row.interruption === "deadline" ? corpus.interruptionMilliseconds : corpus.callerCeilingMilliseconds;
     let terminal = "completed", failure = "";
     try {
-      await runOwnedCommand(process.execPath, ["--eval", childCode], process.cwd(), row.id, phaseCeiling - (performance.now() - started), {
+      await runOwnedCommand(process.execPath, ["--eval", childCode], process.cwd(), row.id, Math.max(0, Math.floor(phaseCeiling - (performance.now() - started))), {
         signal: controller.signal,
-        onLine: line => { const match = /^\[DEBUG\] interruption child PID ([0-9]+)$/u.exec(line); if (match) childPid = Number(match[1]); if (line === "[DEBUG] interruption child complete") childCompleted = true; },
+        onLine: line => { const match = /^\[TRACE\] interruption child PID ([0-9]+)$/u.exec(line); if (match) childPid = Number(match[1]); if (line === "[TRACE] interruption child complete") childCompleted = true; },
         onProgress: () => { publications++; const publication = new Promise<void>(accept => setTimeout(() => { published = true; accept(); }, corpus.publicationMilliseconds)); pending.push(publication); return publication; }
       });
     } catch (error) { terminal = "rejected"; failure = String(error); }

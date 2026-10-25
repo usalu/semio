@@ -3,7 +3,7 @@ import { dirname, resolve } from "node:path";
 import { parseRustSourceTree, type RustModuleNode } from "../🌳️module-tree/🟦️.ts";
 import { relativePosix } from "../📝️render/🟦️.ts";
 
-/** 🌲️ The artifact root with its pure mount-tree files folded back in, the files that became unreferenced and a note per folded file. */
+/** 🌳️ The artifact root with its pure mount-tree files folded back in, the files that became unreferenced and a note per folded file. */
 export type InlinedMountTrees = { readonly rootSource: string; readonly deletes: Set<string>; readonly notes: string[] };
 
 const PATH_ATTRIBUTE = /#\[\s*path\s*=\s*"([^"]*)"\s*\]/gu;

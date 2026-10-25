@@ -87,7 +87,7 @@ pub struct AccessibilityNode {
     pub spec: ui_contract::AccessibilitySpec,
 }
 
-/// ♿️ Every accessibility node in this frame, flat — mirrors [`crate::Hitbox`]'s flat
+/// 📷️ Every accessibility node in this frame, flat — mirrors [`crate::Hitbox`]'s flat
 /// list-plus-interpretation-elsewhere shape rather than a tree, since nothing here needs tree walk
 /// order beyond what `element` + `bounds` already encode.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -160,7 +160,7 @@ impl FrameEngine {
         Self::default()
     }
 
-    /// 📸️ A cheap clone of the currently presented snapshot — safe to hold across input dispatch even
+    /// 🎁️ A cheap clone of the currently presented snapshot — safe to hold across input dispatch even
     /// while a later `build_frame` call runs, since a failed build never touches `self.presented` (see
     /// this file's docstring) and a successful one only replaces it once fully formed.
     pub fn presented(&self) -> Option<Rc<FrameSnapshot>> {

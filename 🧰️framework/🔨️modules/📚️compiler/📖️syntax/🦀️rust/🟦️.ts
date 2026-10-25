@@ -24,7 +24,7 @@ export interface RustVisibility {
   readonly next: number;
 }
 
-/** 🔤️ Recognizes a Rust identifier code point without interpreting comments or literal contents. */
+/** 〽️ Recognizes a Rust identifier code point without interpreting comments or literal contents. */
 function rustIdentifierPart(character: string): boolean {
   return character === "_" || /[\p{L}\p{N}]/u.test(character);
 }
@@ -62,7 +62,7 @@ export function rustStringValue(token: RustToken | undefined): string | null {
   return value;
 }
 
-/** 🧱️ Tokenizes Rust with atomic literals and nested comments. */
+/** 🎨️ Tokenizes Rust with atomic literals and nested comments. */
 export function rustTokens(source: string): RustToken[] {
   const tokens: RustToken[] = [];
   const punctuation = ["::", "=>", "->", "..=", "...", "..", "&&", "||", "<=", ">=", "==", "!=", "<<=", ">>=", "<<", ">>"];
@@ -579,7 +579,7 @@ export function rustTokenText(tokens: readonly RustToken[], start: number, end: 
     .trim();
 }
 
-/** 🧩️ Splits a token range only at delimiters outside paired nested syntax. */
+/** 🔪️ Splits a token range only at delimiters outside paired nested syntax. */
 export function rustTokenSegments(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number, delimiter: string): (readonly [number, number])[] {
   const segments: (readonly [number, number])[] = [];
   let segmentStart = start;
@@ -597,7 +597,7 @@ export function rustTokenSegments(tokens: readonly RustToken[], pairs: ReadonlyM
   return segments;
 }
 
-/** 🏷️ Reads consecutive outer attributes attached to one Rust item. */
+/** 📖️ Reads consecutive outer attributes attached to one Rust item. */
 export function rustAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): RustAttributes {
   const ranges: (readonly [number, number])[] = [];
   let index = start;
@@ -610,7 +610,7 @@ export function rustAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<
   return { ranges, next: index };
 }
 
-/** 👁️ Reads Rust item visibility without flattening restricted `pub(...)` scopes. */
+/** 🦀️ Reads Rust item visibility without flattening restricted `pub(...)` scopes. */
 export function rustVisibility(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number): RustVisibility {
   if (tokens[start]?.text !== "pub") return { value: "private", next: start };
   if (tokens[start + 1]?.text !== "(") return { value: "pub", next: start + 1 };
@@ -650,10 +650,10 @@ export function rustFindTopLevel(tokens: readonly RustToken[], pairs: ReadonlyMa
   return -1;
 }
 
-/** 🏷️ Attribute origin and conditional state. */
+/** 📍️ Attribute origin and conditional state. */
 export interface RustMetadataAttributeFact { readonly name: string; readonly start: number; readonly end: number; readonly conditional: boolean; }
 
-/** 🧭️ Parses one exact nongeneric Rust path from already-tokenized source. */
+/** 📂️ Parses one exact nongeneric Rust path from already-tokenized source. */
 export function rustMetadataPath(tokens: readonly RustToken[], start: number, end: number, absolute: boolean): string | null {
   let index = start, prefix = "";
   if (tokens[index]?.text === "::") { prefix = "::"; index += 1; }
@@ -669,7 +669,7 @@ export function rustMetadataPath(tokens: readonly RustToken[], start: number, en
   return parts.length > 0 && index === end ? `${prefix}${parts.join("::")}` : null;
 }
 
-/** 🧭️ Reads one attribute name and its optional parenthesized argument range. */
+/** ❓️ Reads one attribute name and its optional parenthesized argument range. */
 export function rustMetadataAttributeHead(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): { readonly name: string; readonly arguments: readonly [number, number] | null } | null {
   const name = rustMetadataPath(tokens, start, end, false);
   if (name) return { name, arguments: null };
@@ -688,7 +688,7 @@ export function rustMetadataAttributeHead(tokens: readonly RustToken[], pairs: R
   return { name: parts.join("::"), arguments: [index + 1, close] };
 }
 
-/** 🧭️ Flattens direct and `cfg_attr` metadata while retaining conditional evidence. */
+/** 🧾️ Flattens direct and `cfg_attr` metadata while retaining conditional evidence. */
 export function rustMetadataAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, attributes: RustAttributes): { readonly items: readonly RustMetadataAttributeFact[]; readonly conditional: boolean } {
   const items: RustMetadataAttributeFact[] = [];
   let conditional = false;
@@ -710,7 +710,7 @@ export function rustMetadataAttributes(tokens: readonly RustToken[], pairs: Read
   return { items, conditional };
 }
 
-/** 🧭️ Extracts exact derive paths only from a complete `derive(...)` metadata item. */
+/** 🧬️ Extracts exact derive paths only from a complete `derive(...)` metadata item. */
 export function rustMetadataDerives(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, attributes: readonly RustMetadataAttributeFact[]): readonly string[] {
   const derives: string[] = [];
   for (const attribute of attributes.filter((item) => item.name === "derive")) {

@@ -93,7 +93,7 @@ async fn step_mutations_dispatch_real_effects() {
 async fn a_placed_step_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     fn fold(base: &Process3dSnapshot, mutations: &[Process3dMutation]) -> Process3dSnapshot {
-        mutations.iter().fold(base.clone(), |state, mutation| protocol::apply_diff_cold(protocol::Mutation::diff(mutation, &state).diff(), &state).expect("the edited log folds"))
+        mutations.iter().fold(base.clone(), |state, mutation| protocol::apply_diff_cold(protocol::ColdMutation::diff(mutation, &state).diff(), &state).expect("the edited log folds"))
     }
     let mut store = new_store().await;
     let log = [

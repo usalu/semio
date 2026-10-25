@@ -3,6 +3,36 @@
 use super::*;
 
 //#region 🧵️MountedLayoutText
+/// 👶️ One admitted node's direct children in document order, read straight off the sibling links admission built — a cloneable cursor, so no scan over the node array and no scratch buffer is ever needed.
+#[derive(Clone)]
+pub(super) struct Siblings<'a> {
+    nodes: &'a ui_contract::UiFixedList<LayoutInputNode, LAYOUT_NODE_CREDITS>,
+    next: Option<usize>,
+}
+
+impl<'a> Siblings<'a> {
+    pub(super) fn of(nodes: &'a ui_contract::UiFixedList<LayoutInputNode, LAYOUT_NODE_CREDITS>, parent: usize) -> Self {
+        Self { nodes, next: nodes.get(parent).and_then(|owner| owner.first_child) }
+    }
+}
+
+impl Iterator for Siblings<'_> {
+    type Item = usize;
+
+    fn next(&mut self) -> Option<usize> {
+        let current = self.next?;
+        self.next = self.nodes.get(current).and_then(|node| node.next_sibling);
+        Some(current)
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum TextPush {
+    Glyph,
+    Run,
+    Neither,
+}
+
 impl MountedLayoutJob {
     /// 🧺️ How the node `id` under the admitted node `parent` lays out as tree-row content, when it is: a direct content
     /// child of a row whose content is more than one inline control takes its slot below the content before it
@@ -37,6 +67,106 @@ impl MountedLayoutJob {
             before += u32::from(lines_of(child));
         }
         None
+    }
+
+    /// 🎟️ Admits at most one backing page of `list` under the caller's own grant and debits exactly what it allocated;
+    /// `true` means the next push owns an admitted slot (or the list is at its credit and the push itself reports it).
+    fn fund_list<T, const N: usize>(list: &mut ui_contract::UiFixedList<T, N>, cx: &mut semio_framework_job::StepContext<'_>, fault: MountedLayoutFault) -> Result<bool, MountedLayoutFault> {
+        if list.has_reserved_slot() || list.len() == N {
+            return Ok(true);
+        }
+        let progress = list.try_reserve_one_funded(cx.retained_grant()).map_err(|_| fault)?;
+        cx.consume_retained(progress).map_err(|_| fault)?;
+        Ok(false)
+    }
+
+    /// 🔎️ What the next text admission turn pushes: the same decision `admit_text_one` takes, read without moving.
+    fn text_push_need(&self, tree: &UiTree) -> TextPush {
+        let Some(input) = self.text_node.and_then(|index| self.nodes.as_deref().expect("live layout list owner").get(index)) else { return TextPush::Neither };
+        let Some(spec) = tree.node(input.id).map(|node| &node.spec.0) else { return TextPush::Neither };
+        let part: Option<Option<&str>> = match (spec, self.text_part) {
+            (UiNode::Text(text), 0) => Some(Some(text.value.as_str())),
+            (UiNode::Button(button), 0) => Some(Some(button.label.as_str())),
+            (UiNode::Section(section), 0) => Some(section.label.as_ref().map(|label| label.as_str())),
+            (UiNode::Field(field), 0) => Some(Some(field.label.as_str())),
+            (UiNode::Field(field), 1) => Some(field.description.as_deref()),
+            (UiNode::Field(field), 2) => Some(field.error.as_deref()),
+            (UiNode::Slider(slider), 0) => Some(slider.shown_unit()),
+            (UiNode::Text(_) | UiNode::Button(_) | UiNode::Section(_) | UiNode::Slider(_), 1..) | (UiNode::Field(_), 3..) => None,
+            _ => return TextPush::Neither,
+        };
+        match part {
+            None => TextPush::Run,
+            Some(None) => TextPush::Neither,
+            Some(Some(value)) => if matches!(spec, UiNode::Slider(_)) || value.get(self.text_byte..).and_then(|tail| tail.chars().next()).is_some() { TextPush::Glyph } else { TextPush::Neither },
+        }
+    }
+
+    /// 🔏️ Funds, one page per turn, every list the next admission turn pushes into; `true` once the turn may do its work.
+    pub(super) fn fund_admission_slot(&mut self, tree: &UiTree, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, MountedLayoutFault> {
+        match self.admission {
+            AdmissionPhase::Visit | AdmissionPhase::VisitReversed => {
+                if self.pending_node.is_none() {
+                    return Ok(true);
+                }
+                if !Self::fund_list(self.nodes.as_deref_mut().expect("live layout list owner"), cx, MountedLayoutFault::NodeCredits)? {
+                    return Ok(false);
+                }
+                if self.nodes.as_deref().expect("live layout list owner").len() == LAYOUT_NODE_CREDITS {
+                    return Ok(true);
+                }
+                if !Self::fund_list(self.walk.as_deref_mut().expect("live layout list owner"), cx, MountedLayoutFault::DepthCredits)? {
+                    return Ok(false);
+                }
+                match self.flex.fund_next_node(cx.retained_grant()).map_err(|_| MountedLayoutFault::NodeCredits)? {
+                    NodeFunding::Ready => Ok(true),
+                    NodeFunding::Funded(progress) => {
+                        cx.consume_retained(progress).map_err(|_| MountedLayoutFault::NodeCredits)?;
+                        Ok(false)
+                    }
+                    NodeFunding::Denied => Ok(false),
+                }
+            }
+            AdmissionPhase::Text => match self.text_push_need(tree) {
+                TextPush::Glyph => Self::fund_list(self.glyphs.as_deref_mut().expect("live layout list owner"), cx, MountedLayoutFault::GlyphCredits),
+                TextPush::Run => Self::fund_list(self.runs.as_deref_mut().expect("live layout list owner"), cx, MountedLayoutFault::NodeCredits),
+                TextPush::Neither => Ok(true),
+            },
+            AdmissionPhase::Ready if !self.glyphs.as_deref().expect("live layout list owner").is_empty() => Self::fund_list(self.glyph_previews.as_deref_mut().expect("live layout list owner"), cx, MountedLayoutFault::GlyphCredits),
+            AdmissionPhase::Unwind | AdmissionPhase::Ready => Ok(true),
+        }
+    }
+
+    /// 🐝️ Funds, one page per turn, the lists the next worker turn of the current stage pushes into.
+    fn fund_worker_slot(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, MountedLayoutFault> {
+        match self.stage {
+            LayoutJobStage::ShapeText if self.glyph_cursor < self.glyphs.as_deref().expect("live layout list owner").len() => Self::fund_list(self.glyph_previews.as_deref_mut().expect("live layout list owner"), cx, MountedLayoutFault::GlyphCredits),
+            LayoutJobStage::CollectResults => {
+                let Some(input) = self.nodes.as_deref().expect("live layout list owner").get(self.collect_cursor) else { return Ok(true) };
+                let line = matches!(input.kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. } | LayoutNodeKind::OverlayRow { .. } | LayoutNodeKind::Field { .. } | LayoutNodeKind::Section { .. }) || matches!(input.chrome, ChromeTextRanges::SliderUnit { .. });
+                if line && !Self::fund_list(self.lines.as_deref_mut().expect("live layout list owner"), cx, MountedLayoutFault::NodeCredits)? {
+                    return Ok(false);
+                }
+                Self::fund_list(self.results.as_deref_mut().expect("live layout list owner"), cx, MountedLayoutFault::NodeCredits)
+            }
+            LayoutJobStage::MeasureLayout | LayoutJobStage::SolveLayout => {
+                let index = if self.stage == LayoutJobStage::MeasureLayout { self.measure_cursor.checked_sub(1) } else { Some(self.arrange_cursor) };
+                let Self { flex, nodes, .. } = self;
+                let (Some(index), Some(nodes)) = (index, nodes.as_deref()) else { return Ok(true) };
+                if nodes.get(index).is_none() {
+                    return Ok(true);
+                }
+                match flex.fund_scratch(index, Siblings::of(nodes, index), cx.retained_grant()).map_err(|_| MountedLayoutFault::Solver)? {
+                    NodeFunding::Ready => Ok(true),
+                    NodeFunding::Funded(progress) => {
+                        cx.consume_retained(progress).map_err(|_| MountedLayoutFault::Solver)?;
+                        Ok(false)
+                    }
+                    NodeFunding::Denied => Ok(false),
+                }
+            }
+            _ => Ok(true),
+        }
     }
 
     pub(super) fn admit_text_one(&mut self, tree: &UiTree) -> (usize, usize) {
@@ -158,6 +288,17 @@ impl MountedLayoutJob {
         if cx.should_yield() { return JobOutcomeBorrow::admit_yield(cx); }
         if self.fault.is_some() { return self.publish_fault(cx); }
         cx.set_stage(self.stage_label());
+        match self.fund_worker_slot(cx) {
+            Ok(true) => {}
+            Ok(false) => {
+                cx.consume_fuel(1);
+                return JobOutcomeBorrow::admit_yield(cx);
+            }
+            Err(fault) => {
+                self.fault = Some(fault);
+                return self.publish_fault(cx);
+            }
+        }
         match self.stage {
             LayoutJobStage::ShapeText => self.shape_one(),
             LayoutJobStage::MeasureLayout => self.measure_one(),
@@ -216,17 +357,6 @@ impl MountedLayoutJob {
         (0, 1)
     }
 
-    /// 👶️ Collects node `index`'s direct children into the reusable scratch buffer, in document
-    /// order — the sibling links admission built, so no scan over the node array is ever needed.
-    fn gather_children(&mut self, index: usize) {
-        self.child_scratch.clear();
-        let mut cursor = self.nodes.as_deref().expect("live layout list owner").get(index).and_then(|owner| owner.first_child);
-        while let Some(child) = cursor {
-            self.child_scratch.push(child);
-            cursor = self.nodes.as_deref().expect("live layout list owner").get(child).and_then(|owner| owner.next_sibling);
-        }
-    }
-
     /// 📏️ Measures exactly ONE node's intrinsic size, walking the admission order in REVERSE so every
     /// child is already measured when its parent is reached. Work in this grant is that node's child
     /// count, never its subtree.
@@ -241,7 +371,6 @@ impl MountedLayoutJob {
             return (0, 0);
         };
         self.measure_cursor = index;
-        self.gather_children(index);
         let chrome = self.nodes.as_deref().expect("live layout list owner").get(index).and_then(|node| composite_chrome(node, self.glyphs.as_deref().expect("live layout list owner"), self.glyph_previews.as_deref().expect("live layout list owner"), self.width, self.theme.gap_standard));
         if let Some((top, bottom)) = chrome {
             if !self.flex.set_composite_chrome(index, top, bottom) {
@@ -249,17 +378,17 @@ impl MountedLayoutJob {
                 return (0, 0);
             }
         }
-        let Self { flex, nodes, glyphs, glyph_previews, child_scratch, .. } = self;
+        let Self { flex, nodes, glyphs, glyph_previews, .. } = self;
         let (Some(nodes_ref), Some(glyphs_ref), Some(previews_ref)) = (nodes.as_deref(), glyphs.as_deref(), glyph_previews.as_deref()) else { self.fault = Some(MountedLayoutFault::Stale); return (0, 0); };
         let mut measure = |node: usize, constraint: MeasureConstraint| measure_text(nodes_ref, glyphs_ref, previews_ref, node, constraint);
-        if !flex.measure_one(index, child_scratch, &mut measure) {
+        if !flex.measure_one(index, Siblings::of(nodes_ref, index), &mut measure) {
             self.fault = Some(MountedLayoutFault::Solver);
             return (0, 0);
         }
         (1, 0)
     }
 
-    /// 📐️ Arranges exactly ONE container's direct children inside its own already-resolved box,
+    /// 🗃️ Arranges exactly ONE container's direct children inside its own already-resolved box,
     /// walking the admission order FORWARD so a parent's box is always settled before its children
     /// are placed. This is the grant the eight-millisecond slice law is charged against: its cost is
     /// the container's child count, so a 1,025-node surface is ~1,025 small solves, never one large one.
@@ -270,8 +399,7 @@ impl MountedLayoutJob {
         }
         let index = self.arrange_cursor;
         self.arrange_cursor += 1;
-        self.gather_children(index);
-        if self.child_scratch.is_empty() {
+        if self.nodes.as_deref().expect("live layout list owner").get(index).is_none_or(|node| node.first_child.is_none()) {
             return (1, 0);
         }
         let width = self.flex.rect(index).map_or(self.width, |rect| rect.width);
@@ -282,10 +410,10 @@ impl MountedLayoutJob {
                 return (0, 0);
             }
         }
-        let Self { flex, nodes, glyphs, glyph_previews, child_scratch, .. } = self;
+        let Self { flex, nodes, glyphs, glyph_previews, .. } = self;
         let (Some(nodes_ref), Some(glyphs_ref), Some(previews_ref)) = (nodes.as_deref(), glyphs.as_deref(), glyph_previews.as_deref()) else { self.fault = Some(MountedLayoutFault::Stale); return (0, 0); };
         let mut measure = |node: usize, constraint: MeasureConstraint| measure_text(nodes_ref, glyphs_ref, previews_ref, node, constraint);
-        if !flex.arrange_one(index, child_scratch, &mut measure) {
+        if !flex.arrange_one(index, Siblings::of(nodes_ref, index), &mut measure) {
             self.fault = Some(MountedLayoutFault::Solver);
             return (0, 0);
         }

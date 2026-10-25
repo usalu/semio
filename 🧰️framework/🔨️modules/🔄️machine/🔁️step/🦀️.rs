@@ -38,7 +38,7 @@ impl<M: Machine> Inspector<M> for StepInspector {
 
 //#region 🔖️MachineStep
 
-/// 🔁️ Everything a host needs to project one settled transition into its own state lanes.
+/// 🖥️ Everything a host needs to project one settled transition into its own state lanes.
 ///
 /// `entered`/`exited` are the union across the macrostep's microsteps, in execution order — a
 /// node touched twice within one macrostep appears twice, because that is what happened.
@@ -64,7 +64,7 @@ impl<M: Machine> MachineStep<M> {
         }
     }
 
-    /// 🔎️ Whether the settled configuration contains the state with this stable id.
+    /// 🎛️ Whether the settled configuration contains the state with this stable id.
     pub fn is_active(&self, stable_id: &str) -> bool {
         self.active.iter().any(|id| *id == stable_id)
     }
@@ -87,7 +87,7 @@ pub fn start<M: Machine>(input: M::Input) -> MachineStep<M> {
     MachineStep::of(&snapshot, Vec::new(), Vec::new(), commands, StepReport::default())
 }
 
-/// 🔁️ Restores from `prior`, runs one macrostep, and persists the result — the whole
+/// 🪜️ Restores from `prior`, runs one macrostep, and persists the result — the whole
 /// read-transition-write cycle, with the live [`Snapshot`] confined to this frame.
 pub fn step<M: Machine, Mg: Migration>(prior: &PersistedSnapshot, context: M::Context, event: M::Event, migrations: &[&Mg]) -> Result<MachineStep<M>, RestoreError> {
     let mut snapshot = persist::restore::<M, Mg>(prior, context, migrations)?;

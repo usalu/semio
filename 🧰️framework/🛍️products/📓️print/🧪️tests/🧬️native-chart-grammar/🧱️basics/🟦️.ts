@@ -178,7 +178,7 @@ export async function compileNativeDirectedGraphGrammar(execution:PrintExecution
 });}
 
 
-/** 🔤️ Measures authored SemioSans shaping with the actual native hbox and tracked font data. */
+/** 📊️ Measures authored SemioSans shaping with the actual native hbox and tracked font data. */
 export async function compileNativeFontMetricsGrammar(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/font-metrics-grammar",async({directory:workDir,execution})=>{
   const bodies:{raw:string}[]=[{raw:"\\begin{VizFigure}[width=80,height=30]"}];
   for(const size of fontVectors.sizes){
@@ -380,7 +380,7 @@ export async function compileNativeGeoPaletteGrammar(execution:PrintExecutionV1)
   if(phase!=="ramp"){await compileNativeGeoPaletteLegend(execution);await compileNativeVectorBaseAdmission();await compileNativeGeoFlowAdmission();await compileNativeVectorPaintControls(execution);}
 });}
 
-/** 🏷️ Compiles the actual one-level diverging choropleth legend in each authored language. */
+/** 🎚️ Compiles the actual one-level diverging choropleth legend in each authored language. */
 async function compileNativeGeoPaletteLegend(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/geo-palette-legend",async({directory:workDir,execution})=>{
   const control=fixture.nativeGeoPalette,body:{raw:string}[]=[];
   for(const entry of control.legendCases){

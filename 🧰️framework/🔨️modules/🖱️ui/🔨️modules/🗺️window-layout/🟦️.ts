@@ -27,7 +27,7 @@ export interface WindowLayoutAxisNode {
 /** 🪟️ Recursive resizable window layout tree for {@link Mode}. */
 export type WindowLayoutNode = WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode;
 
-/** 🪟️ Builds an even horizontal split layout for the given window ids. */
+/** ⚖️ Builds an even horizontal split layout for the given window ids. */
 export function createEvenWindowLayout(windowIds: readonly string[]): WindowLayoutNode {
   if (windowIds.length === 0) return { kind: "stack", children: [] };
   if (windowIds.length === 1) return { kind: "stack", children: [{ kind: "window", id: windowIds[0]! }] };

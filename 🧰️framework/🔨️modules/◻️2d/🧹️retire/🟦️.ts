@@ -1,7 +1,7 @@
 /** 🧹️ Shared work-granted retirement protocol for private geometry owners. */
 export type WorkRetirementProgress={phase:"closing"|"complete";work:number;done:boolean};
 export interface WorkRetirement{advance(grant:number):WorkRetirementProgress;terminalIsEmpty():boolean;}
-/** 🧹️ Releases its kernel closure only when that owner reports an empty terminal destructor. */
+/** 🧾️ Releases its kernel closure only when that owner reports an empty terminal destructor. */
 export class UnitRetirement implements WorkRetirement{
  private work=0;constructor(private step:(()=>boolean)|null){}
  terminalIsEmpty():boolean{return this.step===null;}

@@ -4,7 +4,7 @@ import { expect, it } from "vitest";
 import { homeCells, homeLayout } from "@semio-tech/course-react";
 import { quizStylesheet as stylesheet } from "@semio-tech/course-react/stylesheet";
 import { Home, PAGES, atViewport, cardHost, fixture, stubSession } from "../../🛠️home-grid-kit/🟦️.tsx";
-import { layerAt, layerRules, weights } from "../🟣️shared/🟦️.tsx";
+import { layerAt, layerRules, weights } from "../🟣️harness/🟦️.tsx";
 
 /** 🔵 Registers the home overview tests of the 🏠️ home overview suite. */
 export function registerHomeOverviewTests(): void {

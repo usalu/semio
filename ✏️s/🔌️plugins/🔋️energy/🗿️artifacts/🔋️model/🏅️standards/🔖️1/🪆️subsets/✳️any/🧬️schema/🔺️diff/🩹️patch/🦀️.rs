@@ -33,15 +33,11 @@ pub trait FieldPatch: Unchanged + Clone + PartialEq + Debug {
     fn inverse(&self, base: &Self::Target) -> Self;
 }
 
-/// 🔑️ A collection entry addressed by a stable key.
-pub trait Row: Clone + PartialEq + Debug {
+/// 🩹 A patch over one keyed row; the key is declared by the patch because the row type is owned by the model crate.
+pub trait RowPatch: FieldPatch<Target: Clone + PartialEq + Debug> {
     type Key: Clone + Ord + Debug + ToValue + FromValue;
     fn key(&self) -> Self::Key;
-}
-
-/// 🩹 A patch over one keyed row.
-pub trait RowPatch: FieldPatch<Target: Row> {
-    fn key(&self) -> <Self::Target as Row>::Key;
+    fn row_key(row: &Self::Target) -> Self::Key;
 }
 
 pub(crate) fn refused(code: &'static str, message: impl Into<String>) -> MutationApplyError {
@@ -360,23 +356,23 @@ impl<T: FromValue> FromValue for ListEdit<T> {
 /// index; `modified` patches the rows that stay, one patch per key.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Rows<P: RowPatch> {
-    edit: Splice<<P::Target as Row>::Key, P::Target>,
+    edit: Splice<P::Key, P::Target>,
     modified: Vec<P>,
 }
 
 impl<P: RowPatch + semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for Rows<P>
 where
     P::Target: semio_framework_value::retirement::RetireOwned,
-    <P::Target as Row>::Key: semio_framework_value::retirement::RetireOwned,
+    P::Key: semio_framework_value::retirement::RetireOwned,
 {
     fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         semio_framework_value::retirement::RetireOwned::retirement((self.edit, self.modified))
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
-        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&(Splice::<<P::Target as Row>::Key, P::Target>::default(), Vec::<P>::new()))
+        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&(Splice::<P::Key, P::Target>::default(), Vec::<P>::new()))
     }
     fn controlled_retirement_supported() -> bool {
-        <(Splice<<P::Target as Row>::Key, P::Target>, Vec<P>) as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()
+        <(Splice<P::Key, P::Target>, Vec<P>) as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()
     }
 }
 
@@ -398,13 +394,13 @@ impl<P: RowPatch> Rows<P> {
     }
 
     /// ✂️ Removes the row of `list` addressed by `key`.
-    pub fn removing(list: &[P::Target], key: &<P::Target as Row>::Key) -> Self {
-        Self::removing_where(list, |row| row.key() == *key)
+    pub fn removing(list: &[P::Target], key: &P::Key) -> Self {
+        Self::removing_where(list, |row| P::row_key(row) == *key)
     }
 
     /// ✂️ Removes every row of `list` that `matches`.
     pub fn removing_where(list: &[P::Target], matches: impl Fn(&P::Target) -> bool) -> Self {
-        Self { edit: Splice::new(list.iter().enumerate().filter(|(_, row)| matches(row)).map(|(index, row)| (index, row.key())).collect(), Vec::new()), modified: Vec::new() }
+        Self { edit: Splice::new(list.iter().enumerate().filter(|(_, row)| matches(row)).map(|(index, row)| (index, P::row_key(row))).collect(), Vec::new()), modified: Vec::new() }
     }
 
     /// 🔎️ The patches of the rows that stay.
@@ -418,7 +414,7 @@ impl<P: RowPatch> Rows<P> {
     }
 
     /// 🔎️ The removed keys with their base index.
-    pub fn removed(&self) -> &[(usize, <P::Target as Row>::Key)] {
+    pub fn removed(&self) -> &[(usize, P::Key)] {
         self.edit.cuts()
     }
 
@@ -440,10 +436,10 @@ impl<P: RowPatch> FieldPatch for Rows<P> {
     fn commit_onto(&self, target: &mut Vec<P::Target>) -> Result<(), MutationApplyError> {
         for patch in &self.modified {
             let key = patch.key();
-            let row = target.iter_mut().find(|row| row.key() == key).ok_or_else(|| refused("diff.target-missing", "a row patch names a row the collection does not hold"))?;
+            let row = target.iter_mut().find(|row| P::row_key(row) == key).ok_or_else(|| refused("diff.target-missing", "a row patch names a row the collection does not hold"))?;
             patch.commit_onto(row)?;
         }
-        *target = self.edit.commit_onto(std::mem::take(target), |row, key| row.key() == *key).map_err(splice_refused)?;
+        *target = self.edit.commit_onto(std::mem::take(target), |row, key| P::row_key(row) == *key).map_err(splice_refused)?;
         Ok(())
     }
     fn absorb(&mut self, later: Self) {
@@ -456,7 +452,7 @@ impl<P: RowPatch> FieldPatch for Rows<P> {
             if later_cut_keys.contains(&key) {
                 continue;
             }
-            let folded = puts.iter_mut().find(|(_, row)| row.key() == key).is_some_and(|(_, row)| {
+            let folded = puts.iter_mut().find(|(_, row)| P::row_key(row) == key).is_some_and(|(_, row)| {
                 let mut next = row.clone();
                 let applied = patch.commit_onto(&mut next).is_ok();
                 if applied {
@@ -478,8 +474,8 @@ impl<P: RowPatch> FieldPatch for Rows<P> {
     }
     fn inverse(&self, base: &Vec<P::Target>) -> Self {
         Self {
-            edit: self.edit.inverse(base, Row::key),
-            modified: self.modified.iter().filter_map(|patch| base.iter().find(|row| row.key() == patch.key()).map(|row| patch.inverse(row))).collect(),
+            edit: self.edit.inverse(base, P::row_key),
+            modified: self.modified.iter().filter_map(|patch| base.iter().find(|row| P::row_key(row) == patch.key()).map(|row| patch.inverse(row))).collect(),
         }
         .normalized()
     }
@@ -496,7 +492,7 @@ struct RowsWire<K, R, P> {
     modified: Vec<P>,
 }
 
-impl<P: RowPatch + ToValue> RowsWire<<P::Target as Row>::Key, P::Target, P>
+impl<P: RowPatch + ToValue> RowsWire<P::Key, P::Target, P>
 where
     P::Target: ToValue,
 {
@@ -522,11 +518,11 @@ where
     P::Target: FromValue,
 {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let wire = RowsWire::<<P::Target as Row>::Key, P::Target, P>::from_value(value)?;
+        let wire = RowsWire::<P::Key, P::Target, P>::from_value(value)?;
         Ok(Self { edit: splice_of(wire.removed, wire.inserted), modified: wire.modified })
     }
     fn from_value_controlled(value: &DslValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> {
-        let wire = RowsWire::<<P::Target as Row>::Key, P::Target, P>::from_value_controlled(value, control)?;
+        let wire = RowsWire::<P::Key, P::Target, P>::from_value_controlled(value, control)?;
         Ok(Self { edit: splice_of(wire.removed, wire.inserted), modified: wire.modified })
     }
 }
@@ -597,7 +593,7 @@ macro_rules! patch {
             /// 🗃️ Stages changed fields with shared owners before installing any record field.
             pub fn prepare_fields(&self, target: &$row, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<impl FnOnce(&mut $row)> {
                 $(let $field = if self.$field.unchanged() { None } else { Some(protocol::PreparedField::prepare(&target.$field, semio_framework_value::FromValue::retire_decoded, capability, |candidate| self.$field.commit_onto(candidate))?) };)*
-                Ok(move |target| { $(if let Some(prepared) = $field { prepared.install(&mut target.$field); })* })
+                Ok(move |target: &mut $row| { $(if let Some(prepared) = $field { prepared.install(&mut target.$field); })* })
             }
         }
 
@@ -628,16 +624,13 @@ macro_rules! row_patch {
     ($(#[$meta:meta])* $patch:ident for $row:ty { key $key:ident: $key_ty:ty; $($kind:ident $field:ident: $ty:ty),* $(,)? }) => {
         patch!(@ $(#[$meta])* $patch for $row; [$key: $key_ty]; $($kind $field: $ty),*);
 
-        impl Row for $row {
+        impl RowPatch for $patch {
             type Key = $key_ty;
             fn key(&self) -> $key_ty {
                 self.$key.clone()
             }
-        }
-
-        impl RowPatch for $patch {
-            fn key(&self) -> $key_ty {
-                self.$key.clone()
+            fn row_key(row: &$row) -> $key_ty {
+                row.$key.clone()
             }
         }
     };

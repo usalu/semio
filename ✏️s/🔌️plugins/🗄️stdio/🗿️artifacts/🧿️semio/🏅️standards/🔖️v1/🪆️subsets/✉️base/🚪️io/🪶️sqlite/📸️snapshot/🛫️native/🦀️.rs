@@ -34,6 +34,7 @@ struct Word{bytes:[u8;384],length:usize}
 impl std::fmt::Write for Word{fn write_str(&mut self,value:&str)->std::fmt::Result{let end=self.length.checked_add(value.len()).filter(|end|*end<=self.bytes.len()).ok_or(std::fmt::Error)?;self.bytes[self.length..end].copy_from_slice(value.as_bytes());self.length=end;Ok(())}}
 /// 🧊️ Original output octets and nested admission recipient stay together through success, cancellation and refusal.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct EncodingPrefix{bytes:Vec<u8>,admission:NativeDecodeRetirementRecipient}
 impl EncodingPrefix{fn empty()->Self{Self{bytes:Vec::new(),admission:NativeDecodeRetirementRecipient::new()}}}
 pub fn encode(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encode_fields(encoding,text_preamble,binary_token,control,false,|_|Ok(()),fields,native_owner)}

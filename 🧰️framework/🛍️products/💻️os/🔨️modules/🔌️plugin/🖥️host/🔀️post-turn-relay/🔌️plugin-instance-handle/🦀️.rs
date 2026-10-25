@@ -177,7 +177,12 @@ impl std::fmt::Debug for PluginInstanceHandle {
 
 #[cfg(any(test, feature = "testkit"))]
 pub fn test_relay_wake_authority()->GuestRelayWakeAuthority{
-    GuestRelayWakeAuthority{drive_policy:serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../../⚡️effects/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap(),policy:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64},issuer:semio_framework_job_worker::admit_original_thread_worker_wake,receiver:Arc::new(GuestRelayWakeReceiptLedger::new())}
+    GuestRelayWakeAuthority{drive_policy:serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../../⚡️effects/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap(),policy:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64},issuer:semio_framework_job_worker::admit_original_thread_worker_wake,receiver:Arc::new(GuestRelayWakeDriver::new(semio_framework_pack_json::from_json_str::<semio_framework_plugin_host_wake::GuestRelayDriverPolicy>(include_str!("../../🔔️wake/📃️policy/🧪️tests/🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),semio_framework_job::default_now_us,Box::new(||false)).unwrap())}
+}
+/// 🎟️ The supplied retained turn that a mounted test handle keeps for its instance.
+#[cfg(any(test, feature = "testkit"))]
+pub fn test_relay_original_input()->semio_framework_actor::RetainedTurnInput{
+    semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1871,absolute_deadline_us:1_000_000,fuel:64},grant:test_relay_wake_authority().drive_policy}
 }
 //#endregion 🔀️PostTurnRelay
 

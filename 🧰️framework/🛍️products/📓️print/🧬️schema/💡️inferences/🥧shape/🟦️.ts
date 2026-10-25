@@ -18,7 +18,7 @@ export type VizLineOptions<T> = {
   readonly curve?: VizCurveFactory;
 };
 
-/** 📈️ `\SemioVizLine`: one polyline through the data, interpolated by the chosen curve. */
+/** 📏️ `\SemioVizLine`: one polyline through the data, interpolated by the chosen curve. */
 export function vizLine<T>(data: readonly T[], options: VizLineOptions<T> = {}, context?: VizPathContext): VizPathCommand[] {
   const recorder = context === undefined ? vizPathRecorder() : undefined;
   const sink = context ?? recorder!;
@@ -49,7 +49,7 @@ export type VizAreaOptions<T> = {
   readonly curve?: VizCurveFactory;
 };
 
-/** 🏞️ `\SemioVizArea`: the band between two boundaries, closed at both ends. */
+/** 🌄️ `\SemioVizArea`: the band between two boundaries, closed at both ends. */
 export function vizArea<T>(data: readonly T[], options: VizAreaOptions<T> = {}, context?: VizPathContext): VizPathCommand[] {
   const recorder = context === undefined ? vizPathRecorder() : undefined;
   const sink = context ?? recorder!;
@@ -152,7 +152,7 @@ function cornerTangents(x0: number, y0: number, x1: number, y1: number, r1: numb
   return { cx: cx0, cy: cy0, x01: -ox, y01: -oy, x11: cx0 * (r1 / r - 1), y11: cy0 * (r1 / r - 1) };
 }
 
-/** 🍩️ `\SemioVizArc`: a circular or annular sector with optional padding and rounded corners. */
+/** 🌈️ `\SemioVizArc`: a circular or annular sector with optional padding and rounded corners. */
 export function vizArc(options: VizArcOptions, context?: VizPathContext): VizPathCommand[] {
   const recorder = context === undefined ? vizPathRecorder() : undefined;
   const sink = context ?? recorder!;
@@ -277,7 +277,7 @@ export function vizArc(options: VizArcOptions, context?: VizPathContext): VizPat
   return recorder?.commands ?? [];
 }
 
-/** 🍩️ The centroid of an arc, where a slice label is anchored. */
+/** ⚓️ The centroid of an arc, where a slice label is anchored. */
 export function vizArcCentroid(options: VizArcOptions): VizPoint {
   const r = (+options.innerRadius + +options.outerRadius) / 2;
   const a = (options.startAngle + options.endAngle) / 2 - HALF_PI;
@@ -286,10 +286,10 @@ export function vizArcCentroid(options: VizArcOptions): VizPoint {
 //#endregion 🔖️Arc
 
 //#region 🔖️Pie
-/** 🥧 One slice produced by `\SemioVizPie`. */
+/** 🍕️ One slice produced by `\SemioVizPie`. */
 export type VizPieSlice<T> = { readonly data: T; readonly index: number; readonly value: number; readonly startAngle: number; readonly endAngle: number; readonly padAngle: number };
 
-/** 🥧 Options of `\SemioVizPie`; the default sort is by descending value, exactly like d3. */
+/** ⚙️ Options of `\SemioVizPie`; the default sort is by descending value, exactly like d3. */
 export type VizPieOptions<T> = {
   readonly value?: (row: T, index: number) => number;
   readonly sort?: ((a: T, b: T) => number) | null;
@@ -299,7 +299,7 @@ export type VizPieOptions<T> = {
   readonly padAngle?: number;
 };
 
-/** 🥧 `\SemioVizPie`: turns values into angular slices of the circle. */
+/** 🎂️ `\SemioVizPie`: turns values into angular slices of the circle. */
 export function vizPie<T>(data: readonly T[], options: VizPieOptions<T> = {}): VizPieSlice<T>[] {
   const value = options.value ?? ((row: T) => Number(row));
   const n = data.length;
@@ -333,13 +333,13 @@ export function vizPie<T>(data: readonly T[], options: VizPieOptions<T> = {}): V
 /** 🔗️ The three link orientations `\SemioVizLink` draws. */
 export type VizLinkKind = "horizontal" | "vertical" | "radial";
 
-/** 🔗️ Polar to cartesian, the convention `linkRadial` and the radial curves share. */
+/** 📍️ Polar to cartesian, the convention `linkRadial` and the radial curves share. */
 export function vizPointRadial(angle: number, radius: number): VizPoint {
   const a = angle - HALF_PI;
   return [radius * Math.cos(a), radius * Math.sin(a)];
 }
 
-/** 🔗️ `\SemioVizLink`: a smooth connector between a source and a target point. For the radial kind
+/** 🖇️ `\SemioVizLink`: a smooth connector between a source and a target point. For the radial kind
  * both points are `(angle, radius)` pairs; for the others they are cartesian. */
 export function vizLink(kind: VizLinkKind, source: VizPoint, target: VizPoint, context?: VizPathContext): VizPathCommand[] {
   const recorder = context === undefined ? vizPathRecorder() : undefined;
@@ -367,7 +367,7 @@ export function vizLink(kind: VizLinkKind, source: VizPoint, target: VizPoint, c
 /** 🎀️ One end of a ribbon: an angular span at a radius. */
 export type VizRibbonEnd = { readonly startAngle: number; readonly endAngle: number; readonly radius: number };
 
-/** 🎀️ `\SemioVizRibbon`: the two-ended band a chord diagram is drawn from. */
+/** 🎗️ `\SemioVizRibbon`: the two-ended band a chord diagram is drawn from. */
 export function vizRibbon(source: VizRibbonEnd, target: VizRibbonEnd, options: { headRadius?: number } = {}, context?: VizPathContext): VizPathCommand[] {
   const recorder = context === undefined ? vizPathRecorder() : undefined;
   const sink = context ?? recorder!;

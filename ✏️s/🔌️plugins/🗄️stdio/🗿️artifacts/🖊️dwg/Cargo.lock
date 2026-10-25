@@ -1798,7 +1798,6 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-schema-state",
  "semio-framework-value",
- "serde",
 ]
 
 [[package]]
@@ -2694,7 +2693,6 @@ dependencies = [
  "semio-framework-value-persistent",
  "semio-framework-value-snapshot-projection",
  "semio-framework-value-snapshot-read",
- "serde",
 ]
 
 [[package]]
@@ -3671,7 +3669,6 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
- "serde_json",
 ]
 
 [[package]]
@@ -4216,6 +4213,7 @@ dependencies = [
  "semio-framework-ui-contract",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
 ]
 
 [[package]]
@@ -5624,7 +5622,6 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-ui-contract-components",
  "semio-framework-ui-contract-values",
- "serde",
 ]
 
 [[package]]
@@ -5652,9 +5649,6 @@ dependencies = [
 [[package]]
 name = "semio-framework-ui-contract-text-edit"
 version = "0.1.0"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "semio-framework-ui-contract-validation"
@@ -5931,6 +5925,8 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
  "serde",
 ]
 
@@ -6482,6 +6478,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-contract-list-delta"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-dsl-record",
  "semio-framework-os-kernel",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -6520,10 +6517,14 @@ dependencies = [
 name = "semio-s-artifact-stdio-contract-testing"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-action-bus",
+ "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-snapshot-read",
 ]
 
 [[package]]

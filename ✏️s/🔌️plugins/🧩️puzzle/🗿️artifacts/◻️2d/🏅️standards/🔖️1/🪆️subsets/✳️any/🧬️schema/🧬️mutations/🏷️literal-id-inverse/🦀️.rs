@@ -7,6 +7,16 @@ use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
 pub trait Puzzle2dLiteralIdInverse: Send + Sync { fn inverse_id(&self) -> &PagedUtf8<{usize::MAX}>; fn inverse_payload(id: PagedUtf8<{usize::MAX}>) -> Puzzle2dMutation; }
 
+impl Puzzle2dLiteralIdInverse for crate::standards::v1::subsets::any::schema::mutations::CreateNode {
+    fn inverse_id(&self) -> &PagedUtf8<{usize::MAX}> { &self.node.id }
+    fn inverse_payload(id: PagedUtf8<{usize::MAX}>) -> Puzzle2dMutation { Puzzle2dMutation::DeleteNode(crate::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode { id }) }
+}
+
+impl Puzzle2dLiteralIdInverse for crate::standards::v1::subsets::any::schema::mutations::ConnectHandles {
+    fn inverse_id(&self) -> &PagedUtf8<{usize::MAX}> { &self.id }
+    fn inverse_payload(id: PagedUtf8<{usize::MAX}>) -> Puzzle2dMutation { Puzzle2dMutation::DisconnectHandles(crate::standards::v1::subsets::any::schema::mutations::disconnect_handles::DisconnectHandles { id }) }
+}
+
 pub struct Puzzle2dLiteralIdInverseCursor<M: Puzzle2dLiteralIdInverse> { state: ManuallyDrop<Puzzle2dLiteralIdInverseState>, marker: std::marker::PhantomData<M> }
 
 #[doc(hidden)]

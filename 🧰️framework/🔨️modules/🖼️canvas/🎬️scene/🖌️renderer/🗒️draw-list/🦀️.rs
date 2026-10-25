@@ -273,7 +273,7 @@ pub fn scene_draw_list_json(scene: &Scene, options: DrawListOptions) -> String {
     out
 }
 
-/// 🎬️ Appends the same encoding into a caller-owned buffer.
+/// 📝️ Appends the same encoding into a caller-owned buffer.
 ///
 /// The buffer is the point: a guest paints EVERY frame through here, and dlmalloc never
 /// returns freed pages to the module, so a fresh multi-kilobyte `String` per frame

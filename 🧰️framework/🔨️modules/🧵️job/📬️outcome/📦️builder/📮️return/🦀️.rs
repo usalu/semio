@@ -3,7 +3,7 @@ use super::*;
 
 /// 📦️ Supplies the last page of a sealed builder into a page return reservation.
 pub trait RetainedPayloadBuilderSupply{
- /// 📦️ A valid sealed prefix remains in the same header while the last page keeps its original ordinal.
+ /// 📃️ A valid sealed prefix remains in the same header while the last page keeps its original ordinal.
  fn supply_last_page<const N:usize>(&mut self,reservation:&mut OriginalJobPageReservation<N>,cx:&mut StepContext<'_>)->Result<Option<OriginalSuppliedJobPage>,OriginalTurnFailure>;
 }
 impl RetainedPayloadBuilderSupply for RetainedPayloadBuilder{

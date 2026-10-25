@@ -53,7 +53,7 @@ export class OwnedUiPatchInputAcceptance {
   static matches(claim: unknown, source: object, ordinal: number, original: unknown): claim is OwnedUiPatchInputAcceptance { return claim !== null && typeof claim === "object" && #source in claim && claim.#source === source && claim.#ordinal === ordinal && claim.#original === original; }
 }
 
-/** 📥️ Exact native source, ordinal and original operation bind the completed input-retirement obligation. */
+/** 🧲️ Exact native source, ordinal and original operation bind the completed input-retirement obligation. */
 export class OwnedUiPatchInputRetirement {
   readonly #source: UiPatchSource;
   readonly #ordinal: number;
@@ -161,7 +161,7 @@ export class OwnedUiSurfaceLookup {
 //#endregion 🔍️OneCellLookup
 
 //#region 📥️OwnedPatchFacade
-/** 📥️ Patch work cannot consume its aggregate's outstanding receipt records. */
+/** 🧾️ Patch work cannot consume its aggregate's outstanding receipt records. */
 export class OwnedUiInstancePatch {
   readonly #cell: Cell;
   #closing = false;
@@ -250,7 +250,7 @@ export class OwnedUiInstance {
    * serialized intake per instance keeps this `false` at every {@link beginPatch}; it is the query that
    * lets such a host assert that instead of discovering it as a fault. */
   surfacePatchIsOpen(facade: OwnedUiInstanceSurface): boolean { const cell = cellOf(facade); return cell.owner === this && patchIsOpen(cell); }
-  /** 📥️ Opens the surface's next patch. The two refusals are DIFFERENT faults and are named apart:
+  /** 🔓️ Opens the surface's next patch. The two refusals are DIFFERENT faults and are named apart:
    * `Foreign instance surface owner` is an identity error (another instance's cell, another surface's
    * name, a retired cell) and stays a fault forever; `Busy instance surface owner` means this surface's
    * previous patch has not closed, which is unreachable from a host whose intake is serialized per

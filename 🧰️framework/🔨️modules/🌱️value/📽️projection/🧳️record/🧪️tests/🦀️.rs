@@ -16,7 +16,7 @@ wide_record!(f00,f01,f02,f03,f04,f05,f06,f07,f08,f09,f10,f11,f12,f13,f14,f15,f16
 struct NestedRecord{left:WideRecord,right:WideRecord}
 fn exact(d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes<=4096&&d.capacity_bytes<=4096,"original record frontier exceeds actual 4096 copy/capacity allowance: {d:?}");funded(d)}
 fn check(p:crate::retained_clone::RetainedCloneProgress,g:RetainedCloneGrant,heap:(usize,usize)){assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));}
-fn close<T:crate::retirement::RetireOwned>(value:T){let mut cursor=ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();for _ in 0..100000{if cursor.terminal_is_empty(){return;}let d=cursor.next_demand(4096).unwrap();assert!(d.copy_bytes<=4096&&d.capacity_bytes<=4096,"[DEBUG] original record close scope={} demand={d:?}",std::any::type_name::<T>());let g=exact(d);let(step,heap)=observe_retirement_allocations(||cursor.step(g).unwrap());check(step.progress(),g,heap);}panic!("wide original record owner did not close");}
+fn close<T:crate::retirement::RetireOwned>(value:T){let mut cursor=ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();for _ in 0..100000{if cursor.terminal_is_empty(){return;}let d=cursor.next_demand(4096).unwrap();assert!(d.copy_bytes<=4096&&d.capacity_bytes<=4096,"original record close scope={} demand={d:?}",std::any::type_name::<T>());let g=exact(d);let(step,heap)=observe_retirement_allocations(||cursor.step(g).unwrap());check(step.progress(),g,heap);}panic!("wide original record owner did not close");}
 fn run<S:SnapshotProjection>(original:S,cut:usize,verify:impl Fn(&S,&S)){
  let d=RetainedCloneSource::<S>::owned_constructor_demand::<()>();let g=exact(RetirementDemand{copy_bytes:RetainedCloneSource::<S>::constructor_copy_bytes(),capacity_bytes:d.capacity_bytes,depth:d.depth,..Default::default()});let(source,_)=RetainedCloneSource::admit_owned(original,(),g).map_err(|(error,..)|error).unwrap();
  let g=exact(S::projection_birth_demand());let((mut cursor,p),heap)=observe_retirement_allocations(||S::begin_projection(g).unwrap());check(p,g,heap);
@@ -28,7 +28,6 @@ fn verify(original:&WideRecord,output:&WideRecord,expected:&serde_json::Value){l
 #[test]
 fn original_record_projection_stages_one_paid_field_and_preserves_all_cancellation_prefixes(){
  let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🧳️record/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();for law in corpus["cases"].as_array().unwrap(){for cut in corpus["cancelCuts"].as_array().unwrap(){let cut=cut.as_u64().unwrap()as usize;run(WideRecord::new(&law["values"]),cut,|original,output|verify(original,output,&law["expected"]));run(NestedRecord{left:WideRecord::new(&law["values"]),right:WideRecord::new(&law["values"])},cut,|original,output|{verify(&original.left,&output.left,&law["expected"]);verify(&original.right,&output.right,&law["expected"]);});}}
- println!("[DEBUG] original 32-field and nested record projection: 2 portable outputs x 8 cancellation cuts, every native copy/capacity frontier<=4096, original backing and all physical receipts preserved");
 }
 
 #[test]

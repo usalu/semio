@@ -2,7 +2,7 @@ use super::*;
 use semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document;
 use crate::{PageFramesDelta, PagePatch};
 use crate::{FramePatch};
-use protocol::{DiffAlgebra, ColdMutation, Mutation};
+use protocol::{ColdDiffAlgebra, ColdMutationDiff};
 
 fn apply(diff: &LayoutDiff, base: &LayoutSnapshot) -> LayoutSnapshot {
     protocol::apply_diff_cold(diff, base).expect("the diff applies")
@@ -10,7 +10,7 @@ fn apply(diff: &LayoutDiff, base: &LayoutSnapshot) -> LayoutSnapshot {
 
 fn absorbed(first: &LayoutDiff, second: &LayoutDiff) -> LayoutDiff {
     let mut sum = first.clone();
-    MutationDiff::absorb(&mut sum, second.clone());
+    ColdMutationDiff::absorb(&mut sum, second.clone());
     sum
 }
 
@@ -22,11 +22,10 @@ fn move_frame(frame_id: &str, x: f64) -> LayoutDiff {
     page_patch(PagePatch { frames: PageFramesDelta::modification(frame_id, FramePatch { x: Some(x), ..Default::default() }), ..Default::default() })
 }
 
-#[semio_framework_async_macros::async_test]
-async fn set_data_fields_diff_applies_onto_the_base_snapshot() {
+#[test]
+fn created_data_fields_diff_applies_onto_the_base_snapshot() {
     let base = default_document();
-    let operation = semio_s_artifact_layout_layout_mutations::LayoutMutation::ChangeDataFields(semio_s_artifact_layout_layout_mutations_content::change_data_fields::ChangeDataFields { new_fields: Some(semio_framework_value_dictionary::QuestionDictionary::default()) });
-    let diff: LayoutDiff = operation.diff(&base).into_parts().0;
+    let diff = LayoutDiff { data_fields: Some(LayoutDataFieldsDelta { presence: Some(DataFieldsPresence::Created), entries: None }), ..Default::default() };
     assert_eq!(apply(&diff, &base).data_fields, Some(semio_framework_value_dictionary::QuestionDictionary::default()));
 }
 
@@ -107,7 +106,7 @@ fn inverse_restores_the_base() {
     for diff in cases {
         let after = apply(&diff, &base);
         assert_ne!(after, base);
-        let inverse = DiffAlgebra::inverse(&diff, &base);
+        let inverse = ColdDiffAlgebra::inverse(&diff, &base);
         assert_eq!(apply(&inverse, &after), base, "inverse of {diff:?}");
     }
 }
@@ -125,7 +124,7 @@ fn moved_rows_apply_and_invert_by_coordinates() {
     let diff = LayoutDiff { pages: Some(LayoutPagesDelta { moved: vec![LayoutPageRelocation { id: "a".into(), from: 0, to: 2 }], ..Default::default() }), ..Default::default() };
     let after = apply(&diff, &base);
     assert_eq!(after.pages.iter().map(|page| page.id.as_str()).collect::<Vec<_>>(), ["b", "c", "a"]);
-    let inverse = DiffAlgebra::inverse(&diff, &base);
+    let inverse = ColdDiffAlgebra::inverse(&diff, &base);
     assert_eq!(inverse.pages.as_ref().expect("pages").moved, vec![LayoutPageRelocation { id: "a".into(), from: 2, to: 0 }]);
     assert_eq!(apply(&inverse, &after), base);
 }
@@ -138,7 +137,7 @@ fn removed_rows_invert_to_insertions_at_their_base_index() {
     base.pages = ["a", "b", "c"].map(|id| Page { id: id.into(), ..page.clone() }).to_vec();
     let diff = LayoutDiff { pages: Some(LayoutPagesDelta { removed: vec![LayoutPageRemoval { id: "b".into(), index: 1 }], ..Default::default() }), ..Default::default() };
     let after = apply(&diff, &base);
-    let inverse = DiffAlgebra::inverse(&diff, &base);
+    let inverse = ColdDiffAlgebra::inverse(&diff, &base);
     let rows = &inverse.pages.as_ref().expect("pages").inserted;
     assert_eq!((rows.len(), rows[0].index, rows[0].row.id.as_str()), (1, 1, "b"));
     assert_eq!(apply(&inverse, &after), base);

@@ -9,7 +9,7 @@ use semio_framework_plugin_host_post_turn_relay::PluginInstanceHandle;
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_plugin_host_guest_runtime::MockGuestRuntime;
 #[cfg(any(test, feature = "testkit"))]
-use semio_framework_plugin_host_post_turn_relay::test_relay_wake_authority;
+use semio_framework_plugin_host_post_turn_relay::{test_relay_original_input,test_relay_wake_authority};
 use semio_framework_plugin_host_guest_runtime::GuestRuntime as _;
 
 async fn owner_entry(mutation_id: &str) -> HostMutationRosterEntry {
@@ -76,10 +76,10 @@ async fn unregister_drops_only_that_plugins_rows() {
 
 async fn mock_handle(actor: RuntimeActorId) -> (Arc<MockGuestRuntime>, Arc<PluginInstanceHandle>) {
     let mock = Arc::new(MockGuestRuntime::new().await);
-    let budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
     let compiled = mock.compile(&PackageRef { package: PackageId("mutplan".to_string()), hash: PackageHash([7u8; 32]) }, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
-    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_wake_authority()).await);
+    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_original_input(),test_relay_wake_authority()).await);
     (mock, handle)
 }
 

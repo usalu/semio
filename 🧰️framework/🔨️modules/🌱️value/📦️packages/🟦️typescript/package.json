@@ -55,7 +55,8 @@
     "./retirement/factory/vector/testing/fixtures.json": "./♻️retirement/🏭️factory/📋️vector/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts",
     "./sort/testing": "./📶️sort/🧪️testing/🟦️.ts",
     "./text/utf8": "./📝️text/🚶️utf8/🟦️.ts",
-    "./tree/equal": "./🌳️tree/🟰️equal/🟦️.ts"
+    "./tree/equal": "./🌳️tree/🟰️equal/🟦️.ts",
+    "./retirement/support/tests": "./♻️retirement/🌀️support/🧪️tests/🟦️.ts"
   },
   "scripts": {
     "test-numeric-api": "repo run @semio-tech/value-ts:test-numeric-api",

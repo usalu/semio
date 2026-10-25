@@ -8,6 +8,7 @@ use std::collections::BTreeMap;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use protocol::list_delta::RowPatch;
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use semio_s_artifact_cad_cad_mut_nodes::create_node::CreateNode;
 use semio_s_artifact_cad_cad_mut_nodes::delete_node::DeleteNode;
 use semio_s_artifact_cad_cad_mut_nodes::rename_node::RenameNode;

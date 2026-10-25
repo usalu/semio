@@ -1,9 +1,9 @@
 /** 🌊️ The presentation react deck, interaction DOM of intro flow dispositions: pixel-offset drag, auto-animate morph pairing, flow resize and flow enlarge. */
 import { intro } from "@semio-tech/presentation";
-import type { Presentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import type { Presentation } from "@semio-tech/presentation-react";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { act } from "@semio-tech/ui-react/test";
-import { SLIDE_INTERACTIVE_ENLARGE_FRAME, mountPresentation, presentationAutoAnimateMatcher, resetPdfCanvasPort, setPdfCanvasPort, unmountPresentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { SLIDE_INTERACTIVE_ENLARGE_FRAME, mountPresentation, presentationAutoAnimateMatcher, resetPdfCanvasPort, setPdfCanvasPort, unmountPresentation } from "@semio-tech/presentation-react";
 import { globalsCssSource, stockRevealAutoAnimateMatcherHost } from "../🧰️presentation-deck-helpers/🟦️.tsx";
 import { mockClientRect, pointerClick, pointerDrag, testPdfCanvasPort } from "../🧱️interaction-dom-kit/🟦️.ts";
 

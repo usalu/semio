@@ -1,6 +1,7 @@
 //! 🧱️ Catalog rows, mesh index and labels: the kind row normalization, the catalog upserts, the mesh urls and scales, the vortex world positions and the object display labels. See [`super`].
 
 use super::*;
+use semio_s_artifact_puzzle_3d_model::quat_rotate_vector;
 
 /// 🔌️ `kit:in` seam helper: keyed UPSERT of `incoming` rows (each shaped `{"id": "...", ...}`) into
 /// `catalogs[section]` (creating the section as an empty array if absent) — replaces any existing row

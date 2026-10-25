@@ -4,7 +4,7 @@ import { PRESENCE_HISTORY_EDIT_STAGES, PRESENCE_PRINCIPAL_KINDS, PRESENCE_TOOL_R
 import { writeVarintU64, readVarintU64, writeStr, readStr, writeBytes, writeBool, writeF64 } from "../🟦️.ts";
 import { writeVecStr, readVecStr, writeOptStr } from "../🔗️causal/🟦️.ts";
 
-/** 🎯️ `actor str | flags varint_u64 | connected_at_ms varint | fields present per bitmask, strictly
+/** 🎤️ `actor str | flags varint_u64 | connected_at_ms varint | fields present per bitmask, strictly
  * in bit order (label str? | presence_pack bytes? | user_id str? | role str? | drag_ghost_json str? |
  * interaction? | color u8? | surface str? | views? | ui? | tool_run?)` — the TS twin of Rust
  * `encode_presence_peer` (`📡️wire/🦀️.rs`). This is what `ClientFrame::Presence.peer`/
@@ -340,7 +340,7 @@ export function encodePresenceHistoryEdit(historyEdit: ArtifactPresenceHistoryEd
   return out;
 }
 
-/** 🎞️ Twin of Rust `decode_presence_history_edit`: the peer decoder's limits over a standalone body, no trailing bytes. */
+/** ✏️ Twin of Rust `decode_presence_history_edit`: the peer decoder's limits over a standalone body, no trailing bytes. */
 export function decodePresenceHistoryEdit(bytes: Uint8Array): ArtifactPresenceHistoryEdit {
   if (bytes.length > PRESENCE_PEER_WIRE_LIMITS_V1.maximumEntryBytes) throw new Error("presence history edit bytes: limit exceeded");
   const reader = new PresencePeerReader(bytes, 0);
@@ -349,7 +349,7 @@ export function decodePresenceHistoryEdit(bytes: Uint8Array): ArtifactPresenceHi
   return historyEdit;
 }
 
-/** 🎞️ One raw byte — the TS twin of `protocol_core::read_u8`-shaped inline reads. */
+/** 📖️ One raw byte — the TS twin of `protocol_core::read_u8`-shaped inline reads. */
 export function readU8(bytes: Uint8Array, pos: [number]): number {
   const byte = bytes[pos[0]];
   if (byte === undefined) throw new Error("presence peer color: truncated");
@@ -376,13 +376,13 @@ function writePresenceInteraction(out: number[], interaction: ArtifactPresenceIn
   }
 }
 
-/** 🕹️ Twin of Rust `decode_presence_interaction` — `pub` for the same reason as
+/** 🖱️ Twin of Rust `decode_presence_interaction` — `pub` for the same reason as
  * {@link encodePresenceInteraction}. */
 export function decodePresenceInteraction(bytes: Uint8Array, pos: [number]): ArtifactPresenceInteraction {
   return readPresenceInteraction(bytes, pos);
 }
 
-/** 🕹️ Twin of Rust `decode_presence_interaction` — app id, then a varint-counted run of domains. */
+/** 🦀️ Twin of Rust `decode_presence_interaction` — app id, then a varint-counted run of domains. */
 function readPresenceInteraction(bytes: Uint8Array, pos: [number]): ArtifactPresenceInteraction {
   const app_id = readStr(bytes, pos);
   const count = Number(readVarintU64(bytes, pos));

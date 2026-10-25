@@ -28,7 +28,7 @@ pub struct TutorialDefinition {
     #[serde(default)]
     #[value(default)]
     pub chapters: Vec<TutorialChapter>,
-    /// 🎬️ Starting conditions the player restores into its sandbox before t=0.
+    /// 🏠️ Starting conditions the player restores into its sandbox before t=0.
     pub base: TutorialBase,
     pub tracks: TutorialTracks,
     /// 🧾️ Recorder provenance (ISO 8601 timestamp); `None` means hand-authored.
@@ -45,7 +45,7 @@ impl TutorialDefinition {
     }
 }
 
-/// 📖️ One scrub-bar marker in a `TutorialDefinition`'s timeline.
+/// 📘️ One scrub-bar marker in a `TutorialDefinition`'s timeline.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -53,14 +53,14 @@ impl TutorialDefinition {
 pub struct TutorialChapter {
     pub id: String,
     pub at: u64,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+    /// 🩺️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub title: LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub body: Option<LocalizedLabel>,
 }
 
-/// 🎬️ What must be true at t=0: the document the tutorial sandboxes and the initial UI/camera
+/// 🧱️ What must be true at t=0: the document the tutorial sandboxes and the initial UI/camera
 /// state. The player snapshots the user's live document, loads this in its place, and restores the
 /// snapshot on exit — a tutorial can never touch real work.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
@@ -68,7 +68,7 @@ pub struct TutorialChapter {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialBase {
-    /// 📂️ Full document DSL text (`ArtifactTextFiles.dsl`) to sandbox-load; `None` falls back to `example_id`, and both
+    /// 📃️ Full document DSL text (`ArtifactTextFiles.dsl`) to sandbox-load; `None` falls back to `example_id`, and both
     /// `None` falls back to the app's default/empty document.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -155,15 +155,15 @@ fn tutorial_rate_is_default(rate: &f64) -> bool {
 pub struct TutorialNarrationCue {
     pub id: String,
     pub at: u64,
-    /// ⏱️ Audio duration when `audio` is set (recorder-measured); a rough TTS estimate otherwise — used
+    /// 🎧️ Audio duration when `audio` is set (recorder-measured); a rough TTS estimate otherwise — used
     /// for scrub-bar layout only, never to gate playback.
     pub duration_ms: u64,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+    /// ✅️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub text: LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub audio: Option<TutorialAssetSrc>,
-    /// 🗣️ Web Speech API voice-name hint; ignored once `audio` is set.
+    /// 🎤️ Web Speech API voice-name hint; ignored once `audio` is set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub voice: Option<String>,
@@ -178,7 +178,7 @@ pub struct TutorialNarrationCue {
     pub captions: Vec<TutorialCaption>,
 }
 
-/// 💬️ One timed caption sub-segment of a `TutorialNarrationCue`.
+/// 💭️ One timed caption sub-segment of a `TutorialNarrationCue`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -186,7 +186,7 @@ pub struct TutorialNarrationCue {
 pub struct TutorialCaption {
     pub at: u64,
     pub duration_ms: u64,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+    /// 📝️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub text: LocalizedLabel,
 }
 

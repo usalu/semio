@@ -8,7 +8,22 @@
         "maximumReceivers": 32,
         "maximumReceiptBytes": 4096,
         "maximumPendingOperations": 32,
-        "maximumOpeningObservations": 4
+        "maximumOpeningObservations": 4,
+        "concurrentChangeAttempts": 6,
+        "orphanNotice": {
+          "en": "Funded child without a creator claim ignored (a retirement stopped half way): {path}",
+          "de": "Finanziertes Kind ohne Erzeuger-Beleg ignoriert (eine Stilllegung blieb auf halbem Weg stehen): {path}"
+        },
+        "foreignMountRefusal": {
+          "en": "Foreign native image mounted inside the parent, not funded by it and not a sibling race: mount {mount}, backing image {image}, device {device}, owner {owner}. Detach it with `/usr/bin/hdiutil detach {device}` (a test sandbox must live outside every managed native parent).",
+          "de": "Fremdes natives Abbild im Elternteil eingehaengt, weder von ihm finanziert noch ein Geschwister-Wettlauf: Einhaengepunkt {mount}, Abbilddatei {image}, Geraet {device}, Besitzer {owner}. Mit `/usr/bin/hdiutil detach {device}` aushaengen (eine Test-Sandbox muss ausserhalb jedes verwalteten nativen Elternteils liegen)."
+        },
+        "concurrentChangeBackoffMilliseconds": 250,
+        "concurrentChangePatterns": [
+          "^Original persistent descendant claim changed$",
+          "^Original persistent descendant kernel roster changed$",
+          "^Exact original parent child allocation required(: |$)"
+        ]
       }
     },
     "Evidence": {

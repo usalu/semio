@@ -1,0 +1,8 @@
+[build]
+target-dir = "t"
+build-dir = "b"
+
+[unstable]
+fine-grain-locking = true
+build-dir-new-layout = true
+checksum-freshness = true

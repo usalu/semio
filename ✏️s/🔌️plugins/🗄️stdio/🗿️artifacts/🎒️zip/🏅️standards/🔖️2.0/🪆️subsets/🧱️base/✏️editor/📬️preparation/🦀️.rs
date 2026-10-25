@@ -2,8 +2,9 @@
 
 use crate::schema::mutations::{rename_entry, set_archive_comment};
 use crate::{ZipMutation, ZipSnapshot};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
 use semio_framework_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep};
 use std::sync::Arc;
@@ -16,7 +17,7 @@ fn structural_items(snapshot: &ZipSnapshot) -> Option<usize> {
 }
 
 pub(super) fn route(_prefix: &'static str) -> Option<NativeEditPreparationRoute<ZipSnapshot, ZipMutation>> {
-    Some(NativeEditPreparationRoute::new(ZipTextEdit::recognizes, Arc::new(app_store::PagedOneItemPreparationFactory::<ZipSnapshot, ZipMutation, ZipTextEdit>::default())))
+    None
 }
 
 #[derive(Default)]
@@ -27,6 +28,7 @@ pub(super) struct ZipTextEdit {
     collision: bool,
     located: Option<usize>,
     scanned: bool,
+    closing: bool,
 }
 
 fn refusal(message: &'static str) -> ValueError {
@@ -117,7 +119,12 @@ impl PagedOneItemEdit<ZipSnapshot, ZipMutation> for ZipTextEdit {
         }
     }
 
-    fn advance(&mut self, post: &mut ZipSnapshot, mutation: &ZipMutation, grant: RetainedCloneGrant) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
+    fn advance_demands(&self, _before: RetainedCloneRef<'_, ZipSnapshot>, _mutation: RetainedCloneRef<'_, ZipMutation>, _post: &ZipSnapshot, _body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand::default())
+    }
+
+    fn advance(&mut self, _before: RetainedCloneRef<'_, ZipSnapshot>, mutation: RetainedCloneRef<'_, ZipMutation>, post: &mut ZipSnapshot, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
+        let mutation = mutation.get();
         if !self.admitted {
             return self.envelope(post);
         }
@@ -135,6 +142,23 @@ impl PagedOneItemEdit<ZipSnapshot, ZipMutation> for ZipTextEdit {
             }
             _ => Err(refusal("stdio-zip-base-snapshot-edit-unsupported-mutation")),
         }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_demands(&self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<ZipMutation>, _body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand::default())
+    }
+
+    fn close_step(&mut self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<ZipMutation>, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.closing = true;
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
     }
 }
 

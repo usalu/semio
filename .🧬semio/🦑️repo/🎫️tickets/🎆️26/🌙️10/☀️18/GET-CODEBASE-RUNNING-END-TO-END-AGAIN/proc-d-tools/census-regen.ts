@@ -1,0 +1,10 @@
+import ts from "typescript";
+import {readFileSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+const fixturePath="/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🪆️scope/🧫️fixtures/🔣️.json";
+const fx=JSON.parse(readFileSync(fixturePath,"utf8")),names=["withCompilerCapacityScopeV1","acquireCompilerCapacityLeaseV1","withCompilerCapacityConsumptionV1"];
+const callers:string[]=readFileSync(process.argv[2]!,"utf8").split("\n").filter(Boolean);
+const rows=callers.map(path=>{const text=readFileSync(join("/Users/ueli/Documents/semio",path),"utf8"),source=ts.createSourceFile(path,text,ts.ScriptTarget.Latest,true),forwarded:{callee:string;argument:string}[]=[];let literalCalls=0;const walk=(node:ts.Node)=>{if(ts.isCallExpression(node)&&names.includes(node.expression.getText(source))){const o=node.arguments[0];if(o&&ts.isObjectLiteralExpression(o))literalCalls++;else forwarded.push({callee:node.expression.getText(source),argument:o?.getText(source)??""});}ts.forEachChild(node,walk);};walk(source);return{path,literalCalls,forwarded};});
+fx.callers=callers;fx.census.files=rows.length;fx.census.literalCalls=rows.reduce((s,r)=>s+r.literalCalls,0);fx.census.rows=rows;
+writeFileSync(fixturePath,JSON.stringify(fx,null,2)+"\n");
+console.log(rows.length,fx.census.literalCalls,JSON.stringify(rows.flatMap(r=>r.forwarded)).slice(0,300));

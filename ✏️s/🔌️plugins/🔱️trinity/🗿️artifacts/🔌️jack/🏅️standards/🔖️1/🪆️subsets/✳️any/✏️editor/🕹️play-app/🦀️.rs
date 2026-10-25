@@ -112,92 +112,37 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         registry.register(commands::query::job::JackQueryJobFactory::<C>::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if commands::query::job::JACK_QUERY_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return commands::query::job::build_job::<C>(request).map(Some);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if commands::query::job::JACK_QUERY_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return commands::query::job::build_job::<C>(request, output, cx);
         }
-        if JACK_RETAINED_TRANSIENT_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            if Self::command_id(&request.command) != request.tool_id {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Jack command does not match its exact registered tool"));
+        if JACK_RETAINED_TRANSIENT_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            if Self::command_id(&original.command) != original.tool_id {
+                return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Jack command does not match its exact registered tool").into());
             }
-            let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(JackEditorWindowTransientCommandWork { consumed: false });
-            let operation = AppOperationContext {
-                app_instance_id: request.app_instance_id,
-                parent_document_id: request.parent_document_id.clone(),
-                operation_id: request.operation.operation.0,
-                generation: request.operation.generation.0,
-                canonical_base_revision: request.canonical_base_revision,
-                retained: request.retained,
-                authoring_seed: request.authoring_seed.clone(),
-            };
-            let payload = ArtifactRetainedCommandPayload::new(
-                semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                    command: *request.command,
-                    snapshot: request.snapshot,
-                    snapshot_read: request.snapshot_read,
-                    config: request.config,
-                    history: request.history,
-                    interaction_state: request.interaction_state,
-                    interaction_hover: request.interaction_hover,
-                    context: Some(request.context),
-                    operation,
-                    completion: request.completion,
-                },
-                TrinityJackPlayApp::<C>::command_id,
-                JACK_RETAINED_RAW_BYTES,
-                JACK_RETAINED_WORK_ITEMS,
-                work,
-            );
-            return Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
+            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, TrinityJackPlayApp::<C>::command_id, JACK_RETAINED_RAW_BYTES, JACK_RETAINED_WORK_ITEMS, false, |_request| JackEditorWindowTransientCommandWork { consumed: false });
         }
-        let tool_id = Self::command_id(&request.command);
-        let (work, raw_bytes): (Box<dyn ArtifactCommandWork<EditorApp<Self>>>, usize) = if JACK_RETAINED_DOCUMENT_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            if tool_id != request.tool_id {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Jack command does not match its exact registered tool"));
+        let tool_id = Self::command_id(&original.command);
+        if JACK_RETAINED_DOCUMENT_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            if tool_id != original.tool_id {
+                return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Jack command does not match its exact registered tool").into());
             }
-            if jack_retained_document_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("trinity.jack.retained-capacity"), "the jack command exceeds the capacity of one bounded edit"));
+            if jack_retained_document_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
+                return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the jack command exceeds the capacity of one bounded edit").into());
             }
-            (Box::new(BoundedArtifactCommandWork::new(tool_id, jack_retained_document_reduce, jack_retained_document_extent)), JACK_RETAINED_DOCUMENT_RAW_BYTES)
-        } else if JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            if tool_id != request.tool_id {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Jack command does not match its exact registered tool"));
+            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, TrinityJackPlayApp::<C>::command_id, JACK_RETAINED_DOCUMENT_RAW_BYTES, JACK_RETAINED_WORK_ITEMS, false, |_request| BoundedArtifactCommandWork::new(tool_id, jack_retained_document_reduce, jack_retained_document_extent));
+        }
+        if JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            if tool_id != original.tool_id {
+                return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Jack command does not match its exact registered tool").into());
             }
-            if jack_retained_window_config_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("trinity.jack.retained-capacity"), "the jack command exceeds the capacity of one bounded edit"));
+            if jack_retained_window_config_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
+                return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the jack command exceeds the capacity of one bounded edit").into());
             }
-            (Box::new(BoundedArtifactCommandWork::new(tool_id, jack_retained_window_config_reduce, jack_retained_window_config_extent)), JACK_RETAINED_RAW_BYTES)
-        } else {
-            return Ok(None);
-        };
-        let operation = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation,
-                completion: request.completion,
-            },
-            TrinityJackPlayApp::<C>::command_id,
-            raw_bytes,
-            JACK_RETAINED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, TrinityJackPlayApp::<C>::command_id, JACK_RETAINED_RAW_BYTES, JACK_RETAINED_WORK_ITEMS, false, |_request| BoundedArtifactCommandWork::new(tool_id, jack_retained_window_config_reduce, jack_retained_window_config_extent));
+        }
+        Ok(false)
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
@@ -214,7 +159,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+        Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     /// ⏯️ Builds the reorganize tool's layout run over the run's base (`ToolRunDefinition.runJob`); resumed from the

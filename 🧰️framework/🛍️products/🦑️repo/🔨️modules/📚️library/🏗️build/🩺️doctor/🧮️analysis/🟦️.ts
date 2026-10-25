@@ -119,6 +119,7 @@ export function analyzeDoctorV1(facts:DoctorFactsV1,options:DoctorAnalysisOption
   if(row.state==="missing")add(essential.has(row.id)?"tools.missing-essential":"tools.missing",essential.has(row.id)?"error":"warn",row.id,{tool:row.id});
   else if(row.state==="drift")add("tools.pin-drift","warn",row.id,{tool:row.id,found:row.found,pinned:row.pin});
  }
+ for(const lock of facts.tools?.wasmLocks??[])if(lock.version!==lock.pinned)add("tools.wasm-lock-drift","error",lock.path,{path:lock.path,found:lock.version??"unreadable",pinned:lock.pinned});
 
  if(leases){
   for(const cycle of leases.cycles)add("leases.cycle","error",cycle.members.join(" → "),{members:cycle.members.join(", "),victim:cycle.victim});

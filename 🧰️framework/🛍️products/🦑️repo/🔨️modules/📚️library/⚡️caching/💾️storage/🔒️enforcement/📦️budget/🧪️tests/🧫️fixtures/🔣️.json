@@ -1,6 +1,6 @@
 {
   "schema": "repository-cache-budget/v1",
-  "expectedPartitionBytes": 70397198336,
+  "expectedPartitionBytes": 104756936704,
   "expectedHeadroomBytes": 468713472,
   "cases": [
     {
@@ -108,5 +108,125 @@
     "childPhysicalBytes": 67108864,
     "childMetadataBytes": 131072,
     "minimumChildren": 14
-  }
+  },
+  "elasticCapacity": [
+    {
+      "id": "host-ample",
+      "minimumBytes": 6442450944,
+      "hostFreeBytes": 139586437120,
+      "capacityBytes": 12884901888
+    },
+    {
+      "id": "host-free-binds",
+      "minimumBytes": 6442450944,
+      "hostFreeBytes": 21474836480,
+      "capacityBytes": 10737418240
+    },
+    {
+      "id": "host-free-below-minimum",
+      "minimumBytes": 6442450944,
+      "hostFreeBytes": 8589934592,
+      "capacityBytes": 6442450944
+    },
+    {
+      "id": "host-full",
+      "minimumBytes": 6442450944,
+      "hostFreeBytes": 0,
+      "capacityBytes": 6442450944
+    },
+    {
+      "id": "minimum-above-need",
+      "minimumBytes": 15032385536,
+      "hostFreeBytes": 139586437120,
+      "capacityBytes": 15032385536
+    },
+    {
+      "id": "cap-binds",
+      "minimumBytes": 6442450944,
+      "hostFreeBytes": 1073741824000,
+      "capacityBytes": 12884901888
+    }
+  ],
+  "elasticProductsCapacity": [
+    {
+      "id": "host-ample",
+      "minimumBytes": 25769803776,
+      "hostFreeBytes": 139586437120,
+      "capacityBytes": 33285996544
+    },
+    {
+      "id": "this host: 123 GiB free",
+      "minimumBytes": 25769803776,
+      "hostFreeBytes": 132070244352,
+      "capacityBytes": 33285996544
+    },
+    {
+      "id": "host-free-binds",
+      "minimumBytes": 25769803776,
+      "hostFreeBytes": 53687091200,
+      "capacityBytes": 26843545600
+    },
+    {
+      "id": "host-free-below-minimum",
+      "minimumBytes": 25769803776,
+      "hostFreeBytes": 32212254720,
+      "capacityBytes": 25769803776
+    },
+    {
+      "id": "host-full",
+      "minimumBytes": 25769803776,
+      "hostFreeBytes": 0,
+      "capacityBytes": 25769803776
+    },
+    {
+      "id": "host-huge",
+      "minimumBytes": 25769803776,
+      "hostFreeBytes": 2147483648000,
+      "capacityBytes": 33285996544
+    },
+    {
+      "id": "minimum-above-need",
+      "minimumBytes": 42949672960,
+      "hostFreeBytes": 139586437120,
+      "capacityBytes": 42949672960
+    }
+  ],
+  "elasticRustCapacity": [
+    {
+      "id": "host-ample",
+      "minimumBytes": 51539607552,
+      "hostFreeBytes": 139586437120,
+      "capacityBytes": 64424509440
+    },
+    {
+      "id": "this host: 123 GiB free",
+      "minimumBytes": 51539607552,
+      "hostFreeBytes": 132070244352,
+      "capacityBytes": 64424509440
+    },
+    {
+      "id": "host-free-binds",
+      "minimumBytes": 51539607552,
+      "hostFreeBytes": 85899345920,
+      "capacityBytes": 51539607552
+    },
+    {
+      "id": "host-free-below-minimum",
+      "minimumBytes": 51539607552,
+      "hostFreeBytes": 64424509440,
+      "capacityBytes": 51539607552
+    },
+    {
+      "id": "host-full",
+      "minimumBytes": 51539607552,
+      "hostFreeBytes": 0,
+      "capacityBytes": 51539607552
+    },
+    {
+      "id": "host-huge",
+      "minimumBytes": 51539607552,
+      "hostFreeBytes": 2147483648000,
+      "capacityBytes": 64424509440
+    }
+  ]
 }

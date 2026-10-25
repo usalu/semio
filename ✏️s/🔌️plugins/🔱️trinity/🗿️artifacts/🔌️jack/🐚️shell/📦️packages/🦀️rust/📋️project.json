@@ -2,22 +2,20 @@
   "name": "@semio-tech/trinity-jack-shell",
   "$schema": "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/**/*.rs",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/🧪️tests/🧫️fixtures/**/*.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/🧪️tests/**/*.ts",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
-    "test": {
-      "executor": "repo:script",
-      "outputs": [],
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust",
-        "command": "repo ./📜️script.ts test",
-        "forwardAllArgs": true
-      }
-    },
     "run": {
       "executor": "repo:script",
       "cache": false,
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts run",
@@ -26,8 +24,21 @@
       "continuous": true,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "continuous", "reason": "serves-until-stopped" }
+          "cache": {
+            "version": 1,
+            "class": "continuous",
+            "reason": "serves-until-stopped"
+          }
         }
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test",
+        "forwardAllArgs": true
       }
     }
   }

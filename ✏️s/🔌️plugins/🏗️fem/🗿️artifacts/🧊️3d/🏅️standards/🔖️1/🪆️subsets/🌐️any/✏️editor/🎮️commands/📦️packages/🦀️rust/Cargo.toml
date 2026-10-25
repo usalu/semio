@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-fem-3d-mesh-elements = { workspace = true }
 semio-s-artifact-fem-3d-mesh-sections = { workspace = true }
 semio-s-artifact-fem-3d-mesh-solids = { workspace = true }

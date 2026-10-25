@@ -39,19 +39,19 @@
       ]
     },
     {
-      "id": "serde-json-sequence-carrier-reader",
+      "id": "json-rust-sequence-carrier-reader",
       "kind": "third-party-library",
       "ecosystem": "rust",
-      "package": "serde_json",
-      "version": "1",
+      "package": "json",
+      "version": "0.12",
       "source": {
-        "repository": "https://github.com/serde-rs/json",
+        "repository": "https://github.com/maciejhirsz/json-rust",
         "license": "MIT OR Apache-2.0"
       },
       "engine": {
-        "family": "serde-json",
-        "implementation": "serde_json 1 value tree",
-        "version": "1"
+        "family": "json-rust",
+        "implementation": "json-rust 0.12 value tree",
+        "version": "0.12"
       },
       "capabilities": [
         "sequence-1-mutate-json-carried"
@@ -61,14 +61,7 @@
       ],
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
-      "productionReachable": true,
-      "productionDebt": {
-        "reachableFrom": [
-          "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs"
-        ],
-        "owner": "🧰️framework/🔨️modules/🎯️action-bus",
-        "plan": "serde_json is production-reachable repo-wide (211 manifests in 🔒️dependencies.json; the framework action bus itself takes a serde_json::Value in `optional_json_to_dsl`), so registering it as this subset's carrier oracle records the debt instead of claiming a purity the baseline contradicts. The sequence subset's own production no longer reaches it (session 12: every production JSON read/write moved onto the first-party pack JSON tree, serde_json is a dev-dependency there), so the reference stays independent of the code it judges. The debt shrinks as every production caller moves to pack JSON, starting with `optional_json_to_dsl`; it retires when 🔒️dependencies.json no longer classifies serde_json as production."
-      },
+      "productionReachable": false,
       "networkDuringExecution": false,
       "platforms": [
         "darwin-arm64",
@@ -77,8 +70,8 @@
         "linux-arm64",
         "win32-x64"
       ],
-      "homepage": "https://docs.rs/serde_json",
-      "rationale": "🧩️ A QUALIFYING CARRIER ORACLE FOR THE FOUR KINDS THE CSV CARRIER CANNOT SEE — `move-step`, `change-step-collapsed`, `connect-steps`, `disconnect-steps` — and for exactly the same reason `csv-rfc4180-reader` qualifies for the other four: the carrier is REAL. `🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs` (`SequenceIntoJson`, fidelity `Exact`) materializes the composed scene child and writes the whole `{schema, steps, edges}` document — step `x`/`y`, the `collapsed` flag and every edge included — through real serialization, not `print_dsl`. serde_json reads those bytes into its own value tree without consulting this repository's snapshot types, so a wrong move, flag or edge surfaces as a value disagreement rather than as two halves of this repository agreeing.\n\nHOW IT IS EXERCISED. The standalone `🏭️generator/🧩️json` engine (serde_json and nothing else) writes one authored `(⬅️before.json, ➡️after.json)` pair per kind — the pair IS the expectation — and refuses a pair whose serde_json projection does not move. `🚪️io/🧪️tests/🔬️carrier-contract::the_json_carrier_pairs_hold_the_kinds_the_csv_carrier_cannot_see` loads each before-carrier into the subset, applies the kind derived from what the pair changed, exports it through `SequenceIntoJson`, reads the bytes back with serde_json and requires the committed after-carrier; the kind's own inverse must export back to the before-carrier. That law is where the APPLIED branch of these four kinds is observed at all: their leaf vectors pin only guard branches, because a content-changing diff mints a hash-addressed child handle no fixture can author.\n\nWHAT IT DOES NOT CLAIM. serde_json does not know what a sequence step means; it adjudicates the carrier's content, which for these four kinds is the whole of what they write."
+      "homepage": "https://docs.rs/json",
+      "rationale": "🧩️ A QUALIFYING CARRIER ORACLE FOR THE FOUR KINDS THE CSV CARRIER CANNOT SEE — `move-step`, `change-step-collapsed`, `connect-steps`, `disconnect-steps` — and for exactly the same reason `csv-rfc4180-reader` qualifies for the other four: the carrier is REAL. `🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs` (`SequenceIntoJson`, fidelity `Exact`) materializes the composed scene child and writes the whole `{schema, steps, edges}` document — step `x`/`y`, the `collapsed` flag and every edge included — through real serialization, not `print_dsl`. json-rust reads those bytes into its own value tree without consulting this repository's snapshot types, so a wrong move, flag or edge surfaces as a value disagreement rather than as two halves of this repository agreeing.\n\nHOW IT IS EXERCISED. `🚪️io/🧪️tests/🔬️carrier-contract::the_json_carrier_pairs_hold_the_kinds_the_csv_carrier_cannot_see` loads each before-carrier into the subset, applies the kind derived from what the pair changed, exports it through `SequenceIntoJson`, reads the bytes back with json-rust and requires the committed after-carrier; the kind's own inverse must export back to the before-carrier. That law is where the APPLIED branch of these four kinds is observed at all: their leaf vectors pin only guard branches, because a content-changing diff mints a hash-addressed child handle no fixture can author.\n\nWHAT IT DOES NOT CLAIM. json-rust does not know what a sequence step means; it adjudicates the carrier's content, which for these four kinds is the whole of what they write."
     }
   ],
   "noOracleDecisions": [
@@ -127,7 +120,7 @@
   "comparisonProfiles": [
     {
       "id": "semantic-sequence-carrier-v1",
-      "description": "The `{schema, steps, edges}` JSON carrier compared as serde_json value trees: key order never significant, step and edge array order significant (a step's position in `steps` is its drawing order), numbers compared as the values they denote."
+      "description": "The `{schema, steps, edges}` JSON carrier compared as json-rust value trees: key order never significant, step and edge array order significant (a step's position in `steps` is its drawing order), numbers compared as the values they denote."
     }
   ]
 }

@@ -52,7 +52,7 @@ const validateAs = (name: string, value: unknown): string[] => validateJsonSchem
 /** 🔎️ Validates a value against a named definition of the unit schema and returns the failures. */
 export function unitsSchemaFailuresV1(name: "Graph" | "Unit" | "Receipt" | "Policy" | "InterfaceFile" | "OutFile", value: unknown): readonly string[] {return validateAs(name, value);}
 
-/** 🔎️ Reads the policy document against its schema. */
+/** 📖️ Reads the policy document against its schema. */
 export function readUnitsPolicyV1(value: unknown): UnitsPolicyV1 {
   const failures = validateAs("Policy", value);
   if (failures.length) throw Error("Invalid units policy: " + failures.join("; "));
@@ -136,7 +136,7 @@ export function unitGraphFailuresV1(graph: UnitGraphV1, policy?: UnitsPolicyV1):
   return failures;
 }
 
-/** 🔎️ Reads a unit graph and refuses it when any law fails. */
+/** 🕸️ Reads a unit graph and refuses it when any law fails. */
 export function readUnitGraphV1(value: unknown, policy?: UnitsPolicyV1): UnitGraphV1 {
   const failures = unitGraphFailuresV1(value as UnitGraphV1, policy);
   if (failures.length) throw Error("Invalid unit graph: " + failures.join("; "));
@@ -151,7 +151,7 @@ export type UnitPlanV1 = {
   readonly layer: Readonly<Record<string, number>>;
   readonly dependents: Readonly<Record<string, readonly string[]>>;
 };
-/** 🗺️ Plans a valid graph: a stable topological order (by layer, then code point), layers and dependents. */
+/** 🗓️ Plans a valid graph: a stable topological order (by layer, then code point), layers and dependents. */
 export function planUnitsV1(graph: UnitGraphV1): UnitPlanV1 {
   const byId = new Map(graph.units.map(unit => [unit.id, unit] as const)), layer: Record<string, number> = {}, dependents: Record<string, string[]> = {};
   for (const unit of graph.units) dependents[unit.id] = [];

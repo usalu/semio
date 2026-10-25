@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::any::schema::manifest::{EdgeKindDef, Manifest
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_framework_graph_manifest::{PortDirection, PropertyDef, PropertyKind};
 use semio_framework_value::{FromValue, ToValue, ValueType};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
     serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }

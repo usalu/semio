@@ -360,7 +360,7 @@ export function mutationInputWidgetVocabulary(repoRoot: string, resolve: (id: st
 }
 
 /**
- * 🎛️ Audits every catalogued mutation leaf's payload schema with the framework's collecting reader `mutationInputAudit`
+ * 📥️ Audits every catalogued mutation leaf's payload schema with the framework's collecting reader `mutationInputAudit`
  * (the TypeScript twin of `manifest::mutation_input_audit`), resolving cross-document `$ref`s through the catalog's own
  * documents: every finding at every nested pointer is one `schema-mutation-input-ui` diagnostic naming the reader's error
  * class and the input pointer; a reader fault (any throw that is not an `InputSchemaError`) is the finding `readerFault`

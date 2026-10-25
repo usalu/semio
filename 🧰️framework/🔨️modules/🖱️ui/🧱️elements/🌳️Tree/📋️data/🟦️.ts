@@ -17,7 +17,7 @@ export interface TreeDataActivationContext {
   sectionId: string;
 }
 
-/** 🖱️ Builds the exact `(event, context)` pair a row activation carries, for hosts that press a
+/** 🔨️ Builds the exact `(event, context)` pair a row activation carries, for hosts that press a
  * {@link TreeDataItem.onClick} without a rendered tree (row-gate and category-tree tests). The event is a
  * real DOM `MouseEvent` wrapped in React's synthetic surface, so a handler that reads `button`,
  * `metaKey` or calls `preventDefault()` behaves exactly as it does under a rendered row. */
@@ -83,7 +83,7 @@ export interface TreeDataItem {
   defaultOpen?: boolean;
   /** 🌀️ Host-declared loading state, ORed with the tree's own async {@link getItems} pending state. */
   loading?: boolean;
-  /** 🌀️ Host-declared waiting state; dashed, slower ring than {@link loading}. */
+  /** ⏸️ Host-declared waiting state; dashed, slower ring than {@link loading}. */
   waiting?: boolean;
   collapsibleState?: TreeItemCollapsibleState;
   emptyState?: React.ReactNode;
@@ -98,7 +98,7 @@ export interface TreeDataItem {
   isHidden?: boolean;
   /** 🖱️ Right-click menu for the row (selection-aware actions are built by the host). */
   contextMenu?: ContextMenuItem[];
-  /** 🪟️ The slice of this group's children {@link TreeDataItem.items} actually carries — see {@link TreeDataWindow}. */
+  /** 🍕️ The slice of this group's children {@link TreeDataItem.items} actually carries — see {@link TreeDataWindow}. */
   window?: TreeDataWindow;
   /** 🔑️ The authored node key — the pick target id, NOT {@link TreeDataItem.id}, which is a DOM id. */
   windowKey?: string;
@@ -115,9 +115,9 @@ export interface TreeDataSection {
   actions?: TreeHeaderAction[];
   className?: string;
   defaultOpen?: boolean;
-  /** 🌀️ Host-declared loading state, ORed with the tree's own async {@link getItems} pending state. */
+  /** ⭕️ Host-declared loading state, ORed with the tree's own async {@link getItems} pending state. */
   loading?: boolean;
-  /** 🌀️ Host-declared waiting state; dashed, slower ring than {@link loading}. */
+  /** ⌛️ Host-declared waiting state; dashed, slower ring than {@link loading}. */
   waiting?: boolean;
   emptyState?: React.ReactNode;
   onPointerEnter?: () => void;
@@ -125,10 +125,10 @@ export interface TreeDataSection {
   onDoubleClick?: (event: React.MouseEvent) => void;
   /** ↕️ When true (or when the host Tree enables {@link TreeRootProps.sortableSections}), this section header shows a drag handle for reordering among sibling sections. */
   draggable?: boolean;
-  /** 🪟️ The slice of this section's children {@link TreeDataSection.items} actually carries — see {@link TreeDataWindow}. */
+  /** 🔪️ The slice of this section's children {@link TreeDataSection.items} actually carries — see {@link TreeDataWindow}. */
   window?: TreeDataWindow;
-  /** 🔑️ The authored node key — the pick target id, NOT {@link TreeDataSection.id}, which is a DOM id. */
+  /** 🗝️ The authored node key — the pick target id, NOT {@link TreeDataSection.id}, which is a DOM id. */
   windowKey?: string;
-  /** 🪟️ This window's IDENTITY: {@link treeWindowPathOf} of the enclosing windowed containers and this one. A top-level section's path IS its key. */
+  /** 🪪️ This window's IDENTITY: {@link treeWindowPathOf} of the enclosing windowed containers and this one. A top-level section's path IS its key. */
   windowPath?: string;
 }

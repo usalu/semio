@@ -250,7 +250,7 @@ fn retire_decoded(self){for v in self{T::retire_decoded(v)}}
     }
 }
 
-/// 📐️ A fixed-size array encodes exactly like a `Vec<T>` (a plain JSON array) — the length is
+/// 🔧️ A fixed-size array encodes exactly like a `Vec<T>` (a plain JSON array) — the length is
 /// carried by `N`, not the wire, so decode rejects any array whose length doesn't match `N`
 /// (matches what a fixed-size `[T; N]` field means: this many, no more, no fewer).
 impl<T: ToValue, const N: usize> ToValue for [T; N] {
@@ -781,7 +781,7 @@ fn retire_decoded(self){A::retire_decoded(self.0);B::retire_decoded(self.1);}
     }
 }
 
-/// 🔗️ A 3-tuple encodes as a fixed-length array — the same shape `serde_json` gives a Rust tuple.
+/// 🧩️ A 3-tuple encodes as a fixed-length array — the same shape `serde_json` gives a Rust tuple.
 impl<A: ToValue, B: ToValue, C: ToValue> ToValue for (A, B, C) {
 fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{c.scoped_depth(64,|c|c.scoped_stage(|c|{c.begin_stage(3)?;let mut output=Vec::<DslValue>::guard_decoded(c.allocate_vec(3)?);output.get_mut().push(self.0.to_value_controlled(c)?);c.step()?;output.get_mut().push(self.1.to_value_controlled(c)?);c.step()?;output.get_mut().push(self.2.to_value_controlled(c)?);c.step()?;Ok(DslValue::Array(output.take()))}))}
     fn to_value(&self) -> DslValue {

@@ -10,7 +10,7 @@ import { toolJobPluginFamilySource, toolJobPluginProductionSources } from "../..
 import { type FixedOperationFixtureOutput, toolJobDrawingGestureOperationOwnerExact, toolJobFixedOperationFixtureRun, toolJobFixedOperationRegistryExact, toolJobFixedOperationRustFixtureSource, toolJobSharedFrameworkActionFixtureRun } from "../../⚙️fixed-operation/🟦️.ts";
 import { toolJobAppOwnedRows, toolJobDispositions, toolJobGlobalPayloadStoreInventory, toolJobGlobalPayloadStoreIsSharedFixedAuthority, toolJobProductionSource, toolJobProofIdentity, toolJobProofs, toolJobRustBlock, toolJobScanThenMonolithRows, toolJobStaticRows } from "../../📋️inventory/🟦️.ts";
 import type { SelfTestLanes } from "../../../🧪️self-test-lanes/🟦️.ts";
-import { toolJobArtifactRetainedCommandExact, toolJobArtifactRetainedCommandRuntimeLawExact } from "../🟠️shared/🟦️.ts";
+import { toolJobArtifactRetainedCommandExact, toolJobArtifactRetainedCommandRuntimeLawExact } from "../🟠️harness/🟦️.ts";
 
 /** 🔷 Builds macroFiles, fixtureMacroFiles, commandRows, fixtureCommandRows of toolJobCoverageRun. */
 export async function buildMacroFilesState({ root, lanes }: { readonly root: string; readonly lanes: SelfTestLanes }) {

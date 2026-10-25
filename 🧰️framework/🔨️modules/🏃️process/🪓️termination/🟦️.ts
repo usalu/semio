@@ -55,7 +55,7 @@ export function terminateOwnedProcessTree(rootPid: number): void {
   }
 }
 
-/** 🪓️ Terminates one still-running spawned child with its whole descendant tree — POSIX groups and `taskkill /T`
+/** ⏹️ Terminates one still-running spawned child with its whole descendant tree — POSIX groups and `taskkill /T`
  * on Windows through [[terminateOwnedProcessTree]] — and never signals a pid its exited child no longer owns. */
 export function terminateOwnedChildTree(child: OwnedChildHandle): void {
   if (child.exitCode === null && child.signalCode === null && child.pid) terminateOwnedProcessTree(child.pid);

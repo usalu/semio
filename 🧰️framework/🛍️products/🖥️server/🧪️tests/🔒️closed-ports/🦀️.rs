@@ -246,7 +246,7 @@ dyn_enum_close! {
 }
 
 dyn_enum_close! {
-    /// 🪜️ Two authentication rungs behind one type — the set an instance most obviously has
+    /// 📕️ Two authentication rungs behind one type — the set an instance most obviously has
     /// several of.
     pub enum ClosedResolvers: PrincipalResolver {
         First(Rung<1>),

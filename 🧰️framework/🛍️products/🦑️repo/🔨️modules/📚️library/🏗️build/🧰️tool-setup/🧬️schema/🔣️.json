@@ -476,6 +476,7 @@
             "postponed",
             "installer",
             "runtime",
+            "running",
             "cancelled",
             "progress"
           ],
@@ -535,6 +536,9 @@
               "$ref": "#/definitions/Text"
             },
             "runtime": {
+              "$ref": "#/definitions/Text"
+            },
+            "running": {
               "$ref": "#/definitions/Text"
             },
             "cancelled": {

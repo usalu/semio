@@ -1,6 +1,6 @@
 import{totalmem}from"node:os";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import {runtimeCollectGarbageV1} from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import {runtimeCollectGarbageV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🧊️ Freezes a declaration recursively. */
 const freeze=value=>{if(value!==null&&typeof value==="object"){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};
@@ -34,7 +34,7 @@ export function hostMemoryMegabytesV1(){
  return Number.isFinite(bytes)&&bytes>0?Math.floor(bytes/MEGABYTE):0;
 }
 
-/** 📏️ The managed memory budget of one graph construction in bytes: the explicit environment value, else derived from the machine: the larger of the declared share of the host memory and the declared share of the host capacity grant the process inherited (fixed plus per job megabytes), within the declared minimum and maximum. Nothing is a constant of one machine. */
+/** 📏️ The managed memory budget of one graph construction in bytes: the explicit environment value, else derived from the machine: the declared share of the host capacity grant the process inherited (fixed plus per job megabytes) when it has one, else the declared share of the host memory, within the declared minimum and maximum: a process never plans beyond what the machine admitted it for, because the garbage a bigger budget tolerates is resident (and compressed) memory of every other command. Nothing is a constant of one machine. */
 export function graphMemoryBudgetBytesV1(environment,policy=P,hostMegabytes=hostMemoryMegabytesV1()){
  const text=environment[policy.budgetEnvironment];
  if(text!==undefined){
@@ -44,7 +44,7 @@ export function graphMemoryBudgetBytesV1(environment,policy=P,hostMegabytes=host
  }
  let plan;try{plan=JSON.parse(environment[policy.planEnvironment]??"null");}catch{}
  const part=value=>typeof value==="number"&&Number.isFinite(value)&&value>0?value:0,granted=part(plan?.memoryMegabytes)+part(plan?.fixedMegabytes);
- const derived=Math.max(Math.floor(part(hostMegabytes)*policy.hostShare),Math.floor(granted*policy.grantShare));
+ const derived=granted>0?Math.floor(granted*policy.grantShare):Math.floor(part(hostMegabytes)*policy.hostShare);
  return Math.max(policy.minimumBudgetMegabytes,Math.min(policy.maximumBudgetMegabytes,derived))*MEGABYTE;
 }
 
@@ -150,6 +150,7 @@ export function createStringInternerV1({maximumCharacters=P.maximumInternedChara
    table.set(text,text);characters+=text.length;return text;
   },
   stats:()=>({entries:table.size,characters,hits,clears}),
+  clear(){table.clear();characters=0;},
  });
 }
 

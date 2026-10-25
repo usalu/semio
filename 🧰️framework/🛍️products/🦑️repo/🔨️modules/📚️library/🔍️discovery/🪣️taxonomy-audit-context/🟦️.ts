@@ -16,7 +16,7 @@ export type TaxonomyAuditPorts = Readonly<{
   semanticDescendantNodeRelativePath: (node: SemanticDescendantNode, taxonomy: Taxonomy) => string;
 }>;
 
-/** 🪣️ One taxonomy under audit with its shared problem list, its shared check helpers and the injected authority ports. */
+/** 🕵️ One taxonomy under audit with its shared problem list, its shared check helpers and the injected authority ports. */
 export type TaxonomyAudit = TaxonomyAuditPorts & Readonly<{
   taxonomy: Taxonomy;
   problems: string[];
@@ -34,7 +34,7 @@ export type TaxonomyAudit = TaxonomyAuditPorts & Readonly<{
   kebabId: (value: string, key: string) => void;
 }>;
 
-/** 🪣️ Creates the audit context for one taxonomy, binding the shared problem list, the shared check helpers and the injected authority ports. */
+/** 🆕️ Creates the audit context for one taxonomy, binding the shared problem list, the shared check helpers and the injected authority ports. */
 export function createTaxonomyAudit(taxonomy: Taxonomy, ports: TaxonomyAuditPorts): TaxonomyAudit {
   const problems: string[] = [];
   const pathMatcher = createTaxonomyPathMatcher();

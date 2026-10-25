@@ -28,7 +28,7 @@ export function concurrentPinResourceV1(workspace:string,generation:string):stri
  if(!/^[a-f0-9]{20}$/u.test(prefix)||typeof workspace!=="string"||!workspace.length)throw Error("Concrete generation prefix required");
  return protocol.resources.pin+workspace+":"+prefix;
 }
-/** 📌️ Reduces generations (complete, or already reduced to their physical directory name) to the sorted distinct names a holder pins. */
+/** 🧷️ Reduces generations (complete, or already reduced to their physical directory name) to the sorted distinct names a holder pins. */
 export function concurrentPinNamesV1(generations:readonly string[]):readonly string[]{
  const names=new Set<string>();
  for(const generation of generations){if(!/^[a-f0-9]{20}(?:[a-f0-9]{44})?$/u.test(generation))throw Error("Complete generation required");names.add(generation.slice(0,20));}
@@ -98,7 +98,7 @@ export function concurrentTextV1(language:string,name:string,values:Readonly<Rec
 }
 /** 📣️ Is one language-neutral concurrency event. */
 export type ConcurrentEventV1=Readonly<{version:1;purpose:"dependency-concurrency-event";event:(typeof protocol.events)[number];resource?:ConcurrentLeaseKindV1;elapsedMs?:number;scope?:string;generation?:string;epoch?:number;count?:number;neededBytes?:number;freeBytes?:number;reason?:string}>;
-/** 📣️ Admits only a schema-valid event. */
+/** 📗️ Admits only a schema-valid event. */
 export function concurrentEventV1(body:Omit<ConcurrentEventV1,"version"|"purpose">):ConcurrentEventV1{
  const value={version:1 as const,purpose:"dependency-concurrency-event" as const,...body},errors=eventSchema.validate(value);
  if(errors.length)throw Error("Closed dependency concurrency event required",{cause:errors.slice(0,4)});

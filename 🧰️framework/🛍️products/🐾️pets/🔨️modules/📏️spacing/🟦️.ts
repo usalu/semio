@@ -13,9 +13,9 @@
  * @see ./🦀️.rs — the Rust twin
  */
 
-import { type Actor, type Extent, type Footing, type Pitch, type Point, type Species, type Ticks, type Turns } from "../../🧬️schema/🟦️.ts";
+import { type Actor, type Cast, type Extent, type Footing, type Menagerie, type Perch, type Pitch, type Point, type Slug, type Species, type Surveyed, type Ticks, type Turns } from "../../🧬️schema/🟦️.ts";
 import { MARGIN, SEAM, UPRIGHT, bodyOf, obstaclesOf, united, type Body as Solid } from "../🚧️clearance/🟦️.ts";
-import { hopStep, perchAt, type Flight, type Hop } from "../🏞️terrain/🟦️.ts";
+import { hopStep, perchAt, perchesOf, type Flight, type Hop } from "../🏞️terrain/🟦️.ts";
 import { clamp, cosTurns, sinTurns } from "../📐️trigonometry/🟦️.ts";
 import { carve, crowdOn, hoverOf, shoulders, type Draft, type Room } from "../📝️draft/🟦️.ts";
 import { CHUTE_ROD } from "../🪢️swing/🟦️.ts";
@@ -181,6 +181,51 @@ export function roomsFor(draft: Draft, kind: Species): Room[] {
     rooms.push({ perch, stretches, span, crowd: crowdOn(draft, perch) });
   }
   return rooms;
+}
+
+/** 🌇️ The ground a survey offers: what the perches of a company are cut from. */
+export type Ground = Pick<Surveyed, "surfaces" | "keepouts" | "width" | "height">;
+
+/** 🏙️ The perches of a company on `ground`: clearance = the tallest of them plus its hover, minimum = the widest, so that every perch carries any of them; for nobody, the perches of nobody (every surface). */
+export function perchesFor(ground: Ground, company: readonly Species[]): Perch[] {
+  let tallest = 0;
+  let widest = 0;
+  for (const kind of company) {
+    tallest = Math.max(tallest, kind.size.height + hoverOf(kind));
+    widest = Math.max(widest, kind.size.width);
+  }
+  return perchesOf(ground.surfaces, ground.keepouts, ground.width, ground.height, tallest, widest);
+}
+
+/** 🗿️ Who of `species` (in the order given, a species the menagerie does not know left out) can stand on `ground` together: each one in its turn joins when the perches cut for it and everyone who joined before it still exist. Whoever does not fit is left out and the others do not wait for it, so one species too wide or too tall for every ground never takes the ground from those that fit; the first of them that fits alone always joins. */
+export function standing(menagerie: Menagerie, ground: Ground, species: readonly Slug[]): Species[] {
+  const company: Species[] = [];
+  for (const id of species) {
+    const kind = menagerie.species.find((known) => known.id === id);
+    if (kind === undefined || company.includes(kind)) continue;
+    if (perchesFor(ground, [...company, kind]).length > 0) company.push(kind);
+  }
+  return company;
+}
+
+/** 🎑️ The company of a stage: who stands on it already (its actors, in their order) and who is wanted (in `menagerie.species` order), as far as they can stand on its ground together ({@link standing}). Its perches are cut for them, and of the wanted only they arrive. */
+export function companyOf(menagerie: Menagerie, draft: Draft): Species[] {
+  const names = draft.actors.map((actor) => actor.species);
+  for (const kind of menagerie.species) if (draft.wanted.includes(kind.id) && !names.includes(kind.id)) names.push(kind.id);
+  return standing(menagerie, draft, names);
+}
+
+/** 🏰️ The troupe a scene casts, as far as `ground` carries it: of those who stood on the stage the turn before (`holding`) and of the `troupe` (in this order, as many as the troupe has seats), whoever stands on the ground even alone stays; every other seat goes to a species of the scene's core and rotation (in this order, once) that does, the `epoch`th of them first and the next ones round and round. A species to `avoid` (one the host has found does not stay on the ground it is shown on: its own presence takes the room it stood on) does not fit. A troupe that stands on the ground is cast as it is, and whoever held a seat keeps it while it fits, so a ground that changes under the pets recasts nobody who can stay and a page whose layout follows the pets cannot make the cast swing back and forth; when none of the scene's species can stand, nobody is cast. */
+export function castOn(menagerie: Menagerie, ground: Ground, cast: Cast, troupe: readonly Slug[], epoch: number, holding: readonly Slug[] = [], avoid: readonly Slug[] = []): Slug[] {
+  const fits = (id: Slug): boolean => !avoid.includes(id) && standing(menagerie, ground, [id]).length > 0;
+  const kept: Slug[] = [];
+  for (const id of [...holding, ...troupe]) if (kept.length < troupe.length && !kept.includes(id) && fits(id)) kept.push(id);
+  if (kept.length === troupe.length) return kept;
+  const spare: Slug[] = [];
+  for (const id of [...cast.core, ...cast.rotation]) if (!spare.includes(id) && !kept.includes(id) && !troupe.includes(id) && fits(id)) spare.push(id);
+  const first = spare.length === 0 ? 0 : ((epoch % spare.length) + spare.length) % spare.length;
+  for (let seat = 0, open = Math.min(troupe.length - kept.length, spare.length); seat < open; seat++) kept.push(spare[(first + seat) % spare.length]!);
+  return kept;
 }
 
 /** 🏘️ The rooms a newcomer chooses among, so that a company spreads out over what the stage offers: those that hold the fewest actors, and of these the ones on the ground — the lowest perches of the stage — only when no higher one is as empty. Pets stand on things before they stand beneath them. */

@@ -1,4 +1,3 @@
-import "./🚫️paths/🟦️.ts";
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";

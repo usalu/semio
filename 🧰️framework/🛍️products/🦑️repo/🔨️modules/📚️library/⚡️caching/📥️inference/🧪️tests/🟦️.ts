@@ -15,7 +15,7 @@ const library = resolve(import.meta.dir, "../../.."), repository = resolve(libra
 /** 🧬️ Executes the actual authored plugin within its complete owned command-source closure. */
 async function copiedPlugin(root: string): Promise<typeof plugin> {
   const revision = JSON.parse(readFileSync(join(library, "⚡️caching/🧪️tests/🧫️fixtures/🔁️graph-revision/🔣️.json"), "utf8"));
-  const files = [...revision.files.map((path: string) => relative(repository, resolve(library, path))), "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs", ...(await cacheInternals.relativeScriptInputs([...revision.commandSources.map((path: string) => join(repository, path)), join(library, "🏗️build/🕸️graph/📥️inference/🟨️.mjs")], repository)).map((path: string) => path.slice("{workspaceRoot}/".length))];
+  const files = [...revision.files.map((path: string) => relative(repository, resolve(library, path))), "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs", ...(await cacheInternals.relativeScriptInputs([...revision.commandSources.map((path: string) => join(repository, path)), join(library, "🏗️build/🕸️graph/📥️inference/🟨️.mjs")], repository)).map((path: string) => path.slice("{workspaceRoot}/".length)), ...(JSON.parse(readFileSync(join(library, "🏗️build/🔣️policy.json"), "utf8")).presentationResources as string[])];
   for (const path of new Set<string>(files)) { const destination = join(root, path); mkdirSync(dirname(destination), { recursive: true }); copyFileSync(join(repository, path), destination); }
   return (await import(pathToFileURL(join(root, relative(repository, library), "🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href)).default;
 }

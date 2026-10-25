@@ -18,7 +18,7 @@ export async function runBuildScript(context: Readonly<{ root: string; repoRoot:
   await runCanonicalGoBuild(PACKAGE_DIR, ["./..."], { control: scriptCompilerAdmissionControlV1(context.invocation, "go:build", 0),  env: goEnvironment(context.repoRoot), budgetMs: buildBudgetMs(),  });
 }
 
-/** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
+/** ▶️ Runs the `TestScript` command under the caller's roots and invocation. */
 export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   const { level, rest } = resolveTestLevel(segments);
   await runCanonicalGoTests(PACKAGE_DIR, [...goLevelTestArgs(level), ...goCoverageArgs(context.repoRoot, PACKAGE_DIR), ...rest], context.invocation, { env: goEnvironment(context.repoRoot) });

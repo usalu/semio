@@ -601,6 +601,8 @@ nul
 !elements/server/bin
 # Shape V2 standalone verification — never commit nested workspace locks
 **/📦️packages/**/Cargo.lock
+# The JCO probe guest is an external component build: its lock pins the wasm dependencies and is a declared tracked output (`external-cargo-locks`).
+!🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock
 
 **/partial_movie_files/
 
@@ -626,3 +628,7 @@ nul
 .[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]
 
 /.workspace-events/
+
+# Compiled Go executables of the main packages are build output
+**/📦️packages/🐹️go/📦️main/main
+**/📦️packages/🐹️go/📦️main/bin

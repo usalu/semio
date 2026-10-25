@@ -21,7 +21,7 @@
       },
       "properties": {
         "repo": {
-          "const": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo"
+          "const": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo"
         },
         "setup": {
           "const": "repo run workspace:setup"
@@ -66,10 +66,10 @@
       "properties": {
         "postCreateCommand": {
           "const": [
-            "repo",
-            "run",
-            "workspace:setup"
-          ]
+      "bash",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+      "setup"
+    ]
         },
         "postStartCommand": {
           "const": [
@@ -98,7 +98,7 @@
     },
     "OwnerCommand": {
       "type": "string",
-      "description": "📜️ One owner invokes a permanent canonical script through Bun with an explicit command; shell pipelines, substitutions and alternate task executors are forbidden.",
+      "description": "📜️ One owner invokes a permanent canonical script through the repo binary with an explicit command; shell pipelines, substitutions and alternate task executors are forbidden.",
       "not": {
         "pattern": "[$`]"
       },
@@ -244,6 +244,9 @@
           },
           {
             "pattern": "(^|/)\\.cursor/rules(/|$)"
+          },
+          {
+            "pattern": "(^|/)\\.github/hooks(/|$)"
           }
         ]
       }
@@ -260,7 +263,8 @@
           "const": [
             ".git",
             "node_modules",
-            ".venv"
+            ".venv",
+            ".lake"
           ]
         },
         "excludedRoots": {
@@ -274,6 +278,10 @@
             ".🧬semio/🦑️repo/🎫️tickets",
             ".🧬semio/🦑️repo/⚡️cache",
             ".🧬semio/🦑️repo/🧹️tmp",
+            ".🧬semio/🌐hub",
+            ".🧬semio/🎓️teaching",
+            ".🧬semio/🔗space",
+            ".🧬semio/🗺️map",
             ".repo/cache",
             "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/dist",
             "✏️s/🔌️plugins/🏭️process/dist",

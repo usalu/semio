@@ -2,8 +2,8 @@ import {constants,openSync,closeSync,fstatSync,lstatSync} from "node:fs";
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import { runtimeSupportsV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeNativeSystemV1 } from "../../../⚙️runtime/🧲️native/🟦️.ts";
+import { runtimeSupportsV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeNativeSystemV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🧲️native/🟦️.ts";
 
 /** 🔐️ Retains exact physical compiler lock descriptors under the original process lifetime. */
 export interface PhysicalFileLocksV1 {readonly pid:number;readonly paths:readonly string[];check():void;close():void;}

@@ -76,7 +76,7 @@ export class ShardClientHub implements ShardClientHubPort<ShardClient> {
 }
 
 //#region 🧵️ShardClient
-/** 🧵️ One `ShardClient` instance owns the WHOLE bounded pool (design: "ShardClient... replaces both
+/** 🪣️ One `ShardClient` instance owns the WHOLE bounded pool (design: "ShardClient... replaces both
  * `PluginWorkerClient`s [both former per-plugin copies] and `pluginHandleForBridge`") — internally one
  * `ShardWorkerLike` ("MessagePort") per shard, `actorId`-tagged request/reply multiplexing so several
  * actors share a shard's single message channel without cross-talk. */
@@ -178,7 +178,7 @@ export class ShardClient {
     await this.send<void>(slot, { kind: "cancelJob", requestId, actorId, job }, requestId);
   }
 
-  /** 🧵 Requests exactly one operation-owned item and admits it against {@link SEGMENTED_DOWNLOAD_CONTRACT}. */
+  /** ⬇️ Requests exactly one operation-owned item and admits it against {@link SEGMENTED_DOWNLOAD_CONTRACT}. */
   async takeSegmentedDownloadChunk(actorId: string, instanceId: number, operationId: bigint): Promise<Uint8Array | undefined> {
     admitSegmentedDownloadOperationId(operationId, instanceId);
     const slot = this.requireShard(actorId);

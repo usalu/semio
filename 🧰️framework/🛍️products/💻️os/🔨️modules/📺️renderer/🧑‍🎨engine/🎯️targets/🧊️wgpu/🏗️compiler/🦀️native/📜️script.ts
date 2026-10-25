@@ -7,7 +7,7 @@ import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨�
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 📂️ Gives the native producer and its runner one profile-specific artifact directory. */
 export function nativeRendererDirectory(rustPackageRoot: string, profile: string): string {

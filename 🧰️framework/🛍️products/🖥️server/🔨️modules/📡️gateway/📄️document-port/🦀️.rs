@@ -1,4 +1,4 @@
-//! 📄️ The document authority and query handler ports with their empty implementations.
+//! 🏛️ The document authority and query handler ports with their empty implementations.
 
 use super::*;
 
@@ -59,12 +59,12 @@ pub trait DocumentAuthority: Send + Sync {
     /// 🤝️ Whether this engine greets first or waits for a client hello frame.
     fn handshake(&self) -> impl Future<Output = DocumentHandshake> + Send;
 
-    /// 🧭️ Resolve the socket actor for this principal on `scope`, or refuse when the principal holds
+    /// 🪢️ Resolve the socket actor for this principal on `scope`, or refuse when the principal holds
     /// no grant. The default binds from [`Resolved::actor`] / the principal id; hub overrides to
     /// require a hub-issued actor grant.
     fn bind_socket(&self, scope: &Scope, resolved: &Resolved) -> impl Future<Output = Result<DocumentSocketIdentity, ServerError>> + Send;
 
-    /// 👋️ The handshake frames for a joining actor. `resume` is the engine's own resumption token;
+    /// 🎞️ The handshake frames for a joining actor. `resume` is the engine's own resumption token;
     /// `hello` is the first client binary frame when [`DocumentHandshake::ClientFirst`], else `None`.
     /// Returning several frames lets an engine stream welcome plus bootstrap chunks as distinct WS
     /// messages — the gateway never concatenates them.
@@ -83,7 +83,7 @@ pub trait DocumentAuthority: Send + Sync {
 /// put the same bytes in both fields.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct DocumentFrames {
-    /// 🪞 Frames returned only to the socket that submitted.
+    /// 🦜️ Frames returned only to the socket that submitted.
     pub echo: Vec<Vec<u8>>,
     /// 📣 Frames relayed to every other session on the document lane.
     pub relay: Vec<Vec<u8>>,
@@ -143,11 +143,11 @@ pub trait QueryHandler: Send + Sync {
     /// 🏷️ The [`QueryEnvelope::kind`] this handler answers.
     fn kind(&self) -> impl Future<Output = &str> + Send;
 
-    /// 📤️ Answer one query against the read models.
+    /// 📖️ Answer one query against the read models.
     fn handle<P: ProjectionStore>(&self, envelope: &QueryEnvelope, projections: &P) -> impl Future<Output = Result<QueryResult, ServerError>> + Send;
 }
 
-/// 🕳️ The query set of an instance that registers no read handler. Uninhabited, so `queries` stays
+/// 🔎️ The query set of an instance that registers no read handler. Uninhabited, so `queries` stays
 /// empty and `POST /queries` answers [`ServerError::NotFound`] for every kind.
 pub enum NoQueryHandler {}
 

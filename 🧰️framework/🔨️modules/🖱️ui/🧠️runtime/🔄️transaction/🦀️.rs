@@ -106,7 +106,7 @@ pub enum TransactFault {
     CreditsExceeded { usage: FrameTransactionUsage, limits: FrameTransactionLimits },
 }
 
-/// 🌀️ How many `crate::EntityStore::flush_effects` cycles one frame transaction permits before
+/// 💰️ How many `crate::EntityStore::flush_effects` cycles one frame transaction permits before
 /// treating an unsettled effect fixpoint as [`TransactFault::EffectStorm`] rather than spinning
 /// further (ticket-mandated).
 pub const EFFECT_STORM_BUDGET: u32 = 64;
@@ -152,7 +152,7 @@ impl std::fmt::Debug for TransactionPatch {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { std::fmt::Debug::fmt(&**self, formatter) }
 }
 
-/// 🧪️ Test-only: lets fixture-oracle tests diff a published patch against `serde_json` directly —
+/// 🧾️ Test-only: lets fixture-oracle tests diff a published patch against `serde_json` directly —
 /// `serde` moved to `[dev-dependencies]`, ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-
 /// PLUGINS-AND-ARTIFACTS.
 #[cfg(test)]
@@ -221,7 +221,7 @@ impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
         &mut self.store
     }
 
-    /// 🧱️ Pairs a presenter entity with the `crate::SurfaceReconciler` that will turn its presents
+    /// 🤝️ Pairs a presenter entity with the `crate::SurfaceReconciler` that will turn its presents
     /// into patches for `surface`. The caller constructs both — `crate::EntityStore::insert` (via
     /// [`Self::store_mut`]) for the presenter, `crate::SurfaceReconciler::new` for the reconciler —
     /// registration only pairs them, never `dyn Present`/`dyn HandleIntent` (ruling U3; see
@@ -241,7 +241,7 @@ impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
         self.pending_intents.push_back(intent);
     }
 
-    /// 📥️ The bounded, coalescing entry point for a projection delta — a CQRS subscription pushes
+    /// 📍️ The bounded, coalescing entry point for a projection delta — a CQRS subscription pushes
     /// here; `transact` drains and applies it.
     pub fn push_delta(&mut self, delta: D) -> Result<(), crate::InboxOverflow> {
         let result = self.inbox.push(delta);
@@ -304,7 +304,7 @@ impl Default for FrameTransactionLimits {
     }
 }
 
-/// 📏️ Credits consumed by the current unpublished transaction.
+/// 🎫️ Credits consumed by the current unpublished transaction.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct FrameTransactionUsage {
     pub items: usize,
@@ -355,7 +355,7 @@ impl Drop for ActiveReconcile {
     }
 }
 
-/// 🧪️ Test-only frame oracle. Reconciliation reads the same canonical root through an alias and
+/// 🎞️ Test-only frame oracle. Reconciliation reads the same canonical root through an alias and
 /// becomes visible only in `PublishSnapshot`, so newer input can discard obsolete trees and patches
 /// without corrupting revision state or losing commands already accepted by the gateway.
 pub struct FrameTransaction {
@@ -381,7 +381,7 @@ pub struct FrameTransaction {
 }
 
 impl FrameTransaction {
-    /// 🌱️ Creates an idle persistent transaction. The first step captures the scheduler clock.
+    /// 💤️ Creates an idle persistent transaction. The first step captures the scheduler clock.
     pub fn new(limits: FrameTransactionLimits) -> Self {
         Self {
             stage: FrameTransactionStage::DrainProjectionDeltas,

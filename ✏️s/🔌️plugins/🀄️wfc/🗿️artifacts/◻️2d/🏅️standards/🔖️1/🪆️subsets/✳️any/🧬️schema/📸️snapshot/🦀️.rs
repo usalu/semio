@@ -260,3 +260,35 @@ pub fn relations(snapshot: &Wfc2dSnapshot) -> Vec<String> {
 
 
 
+
+/// 🔑️ The identity of a `Wfc2dSlot` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for Wfc2dSlot {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+/// 🔑️ The identity of a `Wfc2dSlotEdge` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for Wfc2dSlotEdge {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+/// 🔑️ The identity of a `Wfc2dTile` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for Wfc2dTile {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+/// 🔑️ The identity of a `Wfc2dRule` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for Wfc2dRule {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}

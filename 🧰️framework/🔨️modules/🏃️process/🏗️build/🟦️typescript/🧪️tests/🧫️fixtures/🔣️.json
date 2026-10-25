@@ -213,5 +213,32 @@
       "NODE_COMPILE_CACHE": "unmanaged-node",
       "AUTHORED_TEST_VALUE": "retained"
     }
+  ],
+  "budgets": [
+    {
+      "requested": 120000,
+      "admitted": 0,
+      "expected": 120000
+    },
+    {
+      "requested": 0,
+      "admitted": 0,
+      "expected": 0
+    },
+    {
+      "requested": 0,
+      "admitted": 5000,
+      "expected": 5000
+    },
+    {
+      "requested": 120000,
+      "admitted": 5000,
+      "expected": 5000
+    },
+    {
+      "requested": 1000,
+      "admitted": 5000,
+      "expected": 1000
+    }
   ]
 }

@@ -37,7 +37,7 @@ export type PluginCatalogTarget = {
   readonly assets?: readonly PackageAssetDeclaration[];
 };
 
-/** 🗂️ Framework-owned mirror of the OS product's generated `PlaygroundBuildTarget` row — only the
+/** 🎯️ Framework-owned mirror of the OS product's generated `PlaygroundBuildTarget` row — only the
  * columns the kernel's playground resolvers actually read. */
 export type PlaygroundCatalogTarget = {
   readonly variant: string;
@@ -47,7 +47,7 @@ export type PlaygroundCatalogTarget = {
 };
 
 /**
- * 🗂️ Everything the kernel's plugin/playground resolvers need, injected by the caller instead of
+ * 🔌️ Everything the kernel's plugin/playground resolvers need, injected by the caller instead of
  * imported from a specific product's generated build output — inverts the upward dependency a generic
  * framework module must never have on a product's build artifacts. The OS product's
  * `🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts` is the one place allowed to import the generated
@@ -62,7 +62,7 @@ export interface PluginCatalog {
   extensionModuleUrl(pluginId: string): string;
 }
 
-/** 🎬️ The `on-artifact-kind:` prefix `📓️design-abi.md` §2 gives `ActivationEvent::OnArtifactKind`. */
+/** 🏺️ The `on-artifact-kind:` prefix `📓️design-abi.md` §2 gives `ActivationEvent::OnArtifactKind`. */
 export const ON_ARTIFACT_KIND_ACTIVATION_PREFIX = "on-artifact-kind:";
 
 /** 🧩️ The `on-extension-request:` prefix `📓️design-abi.md` §2 gives
@@ -71,7 +71,7 @@ export const ON_ARTIFACT_KIND_ACTIVATION_PREFIX = "on-artifact-kind:";
 export const ON_EXTENSION_REQUEST_ACTIVATION_PREFIX = "on-extension-request:";
 
 /**
- * 🎬️ The plugin an artifact kind activates, from declared activation events alone — the one
+ * 🧲️ The plugin an artifact kind activates, from declared activation events alone — the one
  * resolution path that works BEFORE the owner's manifest exists, which is exactly the hub case:
  * {@link AppRouter} can only route kinds whose plugin is already loaded, so a `s` session that has
  * never touched `cad` has no router entry for `s.cad.cad` and {@link resolveOpeningApp} throws

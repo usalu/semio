@@ -33,7 +33,7 @@ fn space_token(token: ui_contract::SpaceToken) -> Option<String> {
     Some(semio_framework_ui_layout::space_token_name(token).to_string())
 }
 
-/// 📐️ A record's [`ui_contract::EdgeSpace`] as one legacy string — every side, space-separated in
+/// 🔲️ A record's [`ui_contract::EdgeSpace`] as one legacy string — every side, space-separated in
 /// CSS shorthand order, so an asymmetric padding no longer collapses onto one sampled side.
 fn edge_token(edge: ui_contract::EdgeSpace) -> Option<String> {
     let name = semio_framework_ui_layout::space_token_name;
@@ -44,7 +44,7 @@ fn edge_token(edge: ui_contract::EdgeSpace) -> Option<String> {
     })
 }
 
-/// 📐️ The `(direction, gap, padding)` triple `UiStackNode` carries, read off the record's own
+/// 🥞️ The `(direction, gap, padding)` triple `UiStackNode` carries, read off the record's own
 /// `LayoutSpec` — the contract keeps geometry on the record, never on the component props. These
 /// three strings are the LEGACY declarative dialect's vocabulary and the reconcile diff's baseline;
 /// the layout engine itself reads the full `LayoutSpec` off `Node::layout_spec`, so `Grid`/`Scroll`/
@@ -133,7 +133,7 @@ pub(super) fn record_action(record: &UiNodeRecord, trigger: ui_contract::Trigger
     record.bindings.iter().find(|binding| binding.trigger == trigger).map(|binding| action_descriptor(&binding.action.scope, &binding.action.name, binding.action.version, binding.args.as_ref().and_then(ui_value_to_dsl)))
 }
 
-/// 🎬️ One versioned action as the `ActionDescriptor` the retained spec carries: the authored scope, and `name@version` past
+/// 🏹️ One versioned action as the `ActionDescriptor` the retained spec carries: the authored scope, and `name@version` past
 /// version 1 — the one spelling a record binding and a row verb share.
 fn action_descriptor(scope: &ui_contract::UiText, name: &ui_contract::UiText, version: u16, args: Option<DslValue>) -> ActionDescriptor {
     ActionDescriptor { controller_id: scope.as_str().to_string(), action: if version == 1 { name.as_str().to_string() } else { format!("{}@{}", name.as_str(), version) }, args }
@@ -148,7 +148,7 @@ fn row_target(record: &UiNodeRecord) -> Option<&ui_contract::RowTarget> {
     }
 }
 
-/// 🎬️ `verb` on a row's target as the retained spec's `ActionDescriptor` — scope, version and argument map inherited.
+/// 🪝️ `verb` on a row's target as the retained spec's `ActionDescriptor` — scope, version and argument map inherited.
 pub(super) fn row_verb_action(target: &ui_contract::RowTarget, verb: &ui_contract::UiText) -> ActionDescriptor {
     action_descriptor(&target.scope, verb, target.version, target.args.as_ref().and_then(ui_value_to_dsl))
 }
@@ -162,7 +162,7 @@ pub(super) fn record_action_or_inert(record: &UiNodeRecord, trigger: ui_contract
     record_action(record, trigger, controller).unwrap_or_else(|| ActionDescriptor { controller_id: controller.to_string(), action: String::new(), args: None })
 }
 
-/// 🎬️ The record's whole dispatch contract for the arena node it mounts as: its address on this
+/// 🤝️ The record's whole dispatch contract for the arena node it mounts as: its address on this
 /// surface at this revision, plus every `(trigger, ActionId)` it binds. The twin of React's
 /// `UiDocumentStore::buildIntent` inputs — `surface`/`revision` come from the store there and from
 /// the published document header here, `node`/`node_key` from the record itself.
@@ -250,7 +250,7 @@ fn lane_payload(document: &UiDocumentTree, root: &UiNodeRecord) -> String {
     payload
 }
 
-/// 🚚️ Reattaches a surface's out-of-doc payload lanes to the spine its `doc.bytes` decoded to.
+/// 🔀️ Reattaches a surface's out-of-doc payload lanes to the spine its `doc.bytes` decoded to.
 /// `lane_name` resolves a carrier key to its declared lane name (`World3dSceneLane`,
 /// `Canvas2dSceneLane`, `Board2dSceneLane`, `Paint2dSceneLane`). A lane the document declares but whose carrier has not fully arrived is left
 /// at its spine value rather than guessed — a truncated `meshes` payload would parse to an EMPTY

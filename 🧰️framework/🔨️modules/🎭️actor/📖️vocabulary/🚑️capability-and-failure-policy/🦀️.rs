@@ -21,7 +21,7 @@ impl CapabilityGrant {
     }
 }
 
-/// 🔐️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the security property of
+/// 🛡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the security property of
 /// the whole extension-activation design — an extension must never hold a capability its host plugin
 /// lacks. A REQUESTED grant survives only when `granted` (the parent's own already-granted set)
 /// carries a grant of the SAME `capability` name; an ungranted request is silently dropped, never
@@ -35,7 +35,7 @@ pub async fn intersect_capabilities(granted: &[CapabilityGrant], requested: &[Ca
 //#endregion 🔐️CapabilityGrant
 
 //#region 🚑️FailurePolicy
-/// 🚑️ What triggered a failure-ladder transition.
+/// 📡️ What triggered a failure-ladder transition.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::semio_framework_value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -167,7 +167,7 @@ pub const FAILURE_QUARANTINE_RESTART_THRESHOLD: u32 = 3;
 /// 💓️ Consecutive missed heartbeats before a shard is treated as dead (see design §Watchdog).
 pub const FAILURE_HEARTBEAT_TRAP_THRESHOLD: u32 = 3;
 
-/// ⚖️ Exponential per-lane warn-count thresholds `[warned→throttled, throttled→suspended]` —
+/// ⚠️ Exponential per-lane warn-count thresholds `[warned→throttled, throttled→suspended]` —
 /// interactive actors escalate fastest (they are the most visible), maintenance actors get the
 /// most slack.
 async fn lane_escalation_thresholds(lane: Lane) -> [u32; 2] {
@@ -179,7 +179,7 @@ async fn lane_escalation_thresholds(lane: Lane) -> [u32; 2] {
     }
 }
 
-/// 🚑️ Per-actor failure ladder state: current [`FailureStage`], warn/restart counters, and the
+/// ❌️ Per-actor failure ladder state: current [`FailureStage`], warn/restart counters, and the
 /// clean-turn counter that drives decay.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::semio_framework_value")]
@@ -197,7 +197,7 @@ impl Default for FailureState {
     }
 }
 
-/// 🪜️ Outcome of `FailureState::on_signal` the kernel must act on beyond updating this actor's own state.
+/// 📶️ Outcome of `FailureState::on_signal` the kernel must act on beyond updating this actor's own state.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FailureEscalation {
     /// 🫥️ No cross-actor action required.
@@ -213,7 +213,7 @@ impl FailureState {
         Self { stage: FailureStage::Healthy, clean_turns: 0, warn_count: 0, restart_count: 0, last_signal_ms: 0 }
     }
 
-    /// 🚑️ Applies one failure signal, returning what the kernel must do beyond this actor's own bookkeeping.
+    /// 🔔️ Applies one failure signal, returning what the kernel must do beyond this actor's own bookkeeping.
     pub async fn on_signal(&mut self, signal: &FailureSignal, lane: Lane, now_ms: u64) -> FailureEscalation {
         self.clean_turns = 0;
         self.last_signal_ms = now_ms;
@@ -253,7 +253,7 @@ impl FailureState {
         FailureEscalation::None
     }
 
-    /// ⏳️ One clean (no-signal) turn elapsed — decays one rung after `FAILURE_DECAY_CLEAN_TURNS`
+    /// 🧼️ One clean (no-signal) turn elapsed — decays one rung after `FAILURE_DECAY_CLEAN_TURNS`
     /// consecutive clean turns, or immediately promotes an expired `Suspended`/`Quarantined` timer
     /// into the next rung down.
     pub async fn on_clean_turn(&mut self, now_ms: u64) {
@@ -326,7 +326,7 @@ async fn suspend_backoff_ms(warn_count: u32) -> u64 {
     1_000u64.saturating_mul(1u64 << warn_count.min(10))
 }
 
-/// 🚑️ The failure policy supplies the same quarantine duration to package-wide Kernel escalation.
+/// ⌛️ The failure policy supplies the same quarantine duration to package-wide Kernel escalation.
 pub async fn quarantine_duration_ms(restart_count: u32) -> u64 {
     5_000u64.saturating_mul(1u64 << restart_count.min(10))
 }

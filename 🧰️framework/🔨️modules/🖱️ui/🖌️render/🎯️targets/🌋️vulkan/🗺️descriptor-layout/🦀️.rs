@@ -79,7 +79,7 @@ fn vk_input_rate_for(step_mode: VertexStepMode) -> vk::VertexInputRate {
     }
 }
 
-/// 📐️ `PipelineSpec::vertex_buffers` → the `(bindings, attributes)` pair
+/// 🧬️ `PipelineSpec::vertex_buffers` → the `(bindings, attributes)` pair
 /// `vk::PipelineVertexInputStateCreateInfo::vertex_binding_descriptions`/
 /// `vertex_attribute_descriptions` need. Binding index is the buffer's position in `buffers` — the
 /// same convention every `PipelineSpec` in `shader_contract.rs` already assumes (its

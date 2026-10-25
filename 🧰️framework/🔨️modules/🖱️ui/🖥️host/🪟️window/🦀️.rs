@@ -112,7 +112,7 @@ mod native {
         Deadline,
     }
 
-    /// 🪟️ The `winit::application::ApplicationHandler` that owns a single native window: creates it
+    /// 🖥️ The `winit::application::ApplicationHandler` that owns a single native window: creates it
     /// on `resumed`, normalizes every `WindowEvent` through `🦀️event.rs` before handing it to `D`,
     /// and gates every redraw through [`should_request_redraw`].
     pub struct NativeHost<D: WindowDelegate> {
@@ -269,7 +269,7 @@ mod native {
 
     //#region 🚀️NativeRuntime
 
-    /// 📨️ A clonable, `Send`-capable handle a background thread uses to ask the event loop for a
+    /// 📡️ A clonable, `Send`-capable handle a background thread uses to ask the event loop for a
     /// frame — the "wake transport" the packet brief asks for, wrapping `winit::event_loop::EventLoopProxy`
     /// so nothing above this file needs to name it.
     #[derive(Clone)]
@@ -299,7 +299,7 @@ mod native {
             WakeProxy(self.event_loop.create_proxy())
         }
 
-        /// 🚀️ Blocks the calling thread for the lifetime of the window (winit's own contract for
+        /// ▶️ Blocks the calling thread for the lifetime of the window (winit's own contract for
         /// `run_app`) — call this last, after any async device/adapter setup the delegate needed has
         /// already completed.
         pub fn run<D: WindowDelegate>(self, delegate: D) -> Result<(), winit::error::EventLoopError> {
@@ -308,7 +308,7 @@ mod native {
         }
     }
 
-    /// 🚀️ Convenience wrapper over [`NativeRuntime`] for a caller with no need for a [`WakeProxy`].
+    /// 🏃️ Convenience wrapper over [`NativeRuntime`] for a caller with no need for a [`WakeProxy`].
     pub fn run_native<D: WindowDelegate>(delegate: D) -> Result<(), winit::error::EventLoopError> {
         NativeRuntime::new()?.run(delegate)
     }

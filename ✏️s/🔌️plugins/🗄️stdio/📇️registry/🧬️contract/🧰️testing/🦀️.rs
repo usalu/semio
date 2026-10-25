@@ -10,6 +10,8 @@ mod native_owners;
 mod native_output;
 #[path = "🔀️routed-io/🦀️.rs"]
 mod routed_io;
+#[path = "🔁️registered-job/🦀️.rs"]
+pub mod registered_job;
 
 pub use grants::{NATIVE_MAXIMUM_BYTES, mounted_policy, original_grant, unbounded_grant};
 pub use native_output::{assert_output, assert_reconstruction};

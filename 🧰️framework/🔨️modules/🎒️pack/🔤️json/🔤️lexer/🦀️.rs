@@ -1,4 +1,4 @@
-//! 🔤️ Lexer: the token enum, the token-at-a-time lexer and the shared number scan. See [`super`].
+//! 📖️ Lexer: the token enum, the token-at-a-time lexer and the shared number scan. See [`super`].
 
 use super::*;
 
@@ -164,7 +164,7 @@ impl<'a> Lexer<'a> {
         Ok(value)
     }
 
-    /// 🧵️ Reads a full JSON string literal (opening quote must be at `self.pos`). Handles every
+    /// 💯️ Reads a full JSON string literal (opening quote must be at `self.pos`). Handles every
     /// short escape, `\uXXXX`, and UTF-16 surrogate pairs for supplementary-plane characters —
     /// rejects a lone (unpaired) surrogate rather than silently producing an invalid `char`.
     fn read_string(&mut self) -> Result<String, JsonError> {

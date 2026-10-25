@@ -383,7 +383,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         let ArtifactStoreBatchStage { edit, post, local_actor: _, applied_edit_id, tail_edit_id, digest, mut diagnostics, .. } = *stage;
         let edit = edit.expect("live staged edit owner");
         let post = post.expect("validated staged batch post root");
-        let mut prepared=authority.seal_prepared_owned(edit, post, digest, [authority.actor.as_str().into(), applied_edit_id.into(), tail_edit_id.into()]);
+        let mut prepared=authority.seal_prepared_owned(edit, post, digest, [authority.actor().into(), applied_edit_id.into(), tail_edit_id.into()]);
         let mut receipt=RetainedCloneProgress::default();
         if diagnostics.row_count()!=0 { let(owner,original_receipt)=diagnostics.take_joined(grant)?; prepared.record_outcome_messages(owner);receipt=original_receipt; }
         Some((prepared,receipt))

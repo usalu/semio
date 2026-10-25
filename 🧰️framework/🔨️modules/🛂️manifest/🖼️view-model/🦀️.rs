@@ -1,4 +1,4 @@
-//! 🪟️ View model handed to guests: view context capacities, public invocation capacity and UI refresh sections.
+//! 👁️ View model handed to guests: view context capacities, public invocation capacity and UI refresh sections.
 
 use semio_framework_tool_run::ToolRunTraceCursor;
 use semio_framework_ui_locale::Locale;
@@ -37,7 +37,7 @@ pub struct ViewModel {
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_utility_by_window_id: std::collections::HashMap<String, String>,
-    /// 🧰️ Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
+    /// ☎️ Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
     /// call (`window_id`). On batched `refresh-ui`, the plugin stamps this from
     /// `active_utility_by_window_id` per window entry — never from the focused window alone.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -76,13 +76,13 @@ pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub panel_json: Option<String>,
-    /// 🪪️ Current host session identity for this call. This is ephemeral OS/session context:
+    /// 📞️ Current host session identity for this call. This is ephemeral OS/session context:
     /// plugins may use it to qualify authored work and presentation, but must not persist a copy in
     /// app or document configuration.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub session_identity: Option<ViewSessionIdentity>,
-    /// 🗣️ Active terminology id (`Native` default, or an app-declared alternative term set).
+    /// 🧲️ Active terminology id (`Native` default, or an app-declared alternative term set).
     pub terminology: Terminology,
     /// ⏯️ The tool run trace cursor each window instance's renderer echoes, keyed by window instance id —
     /// host-owned like [`Self::active_utility_by_window_id`]. The guest answers the trace pages after it
@@ -90,12 +90,13 @@ pub struct ViewModel {
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub tool_run_trace_cursor_by_window_id: std::collections::HashMap<String, ToolRunTraceCursor>,
-    /// 🪟️ Rows the tallest visible panel body fits, the shared first-paint budget a guest spends in
+    /// 🌳️ Rows the tallest visible panel body fits, the shared first-paint budget a guest spends in
     /// document order over containers the host has not yet seen. Absent means "the host has not
     /// measured a viewport yet" — the guest falls back to its own default, never to unbounded.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
-    pub tree_viewport_rows: Option<u32>,    /// 🪟️ Every tree container the host holds state for, flattened over all panel bodies — the ONE
+    pub tree_viewport_rows: Option<u32>,
+    /// 🌿️ Every tree container the host holds state for, flattened over all panel bodies — the ONE
     /// source of truth for which containers are open and which rows are on screen. A guest reads them
     /// per body and materialises exactly the named windows; it keeps no expansion state of its own,
     /// which is what lets an open container survive a refresh.
@@ -108,14 +109,14 @@ pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub window_id: Option<String>,
-    /// 🪟️ The live set of open window instances (base + spawned/split), sent on every refresh/action so
+    /// 🔓️ The live set of open window instances (base + spawned/split), sent on every refresh/action so
     /// `window_engagements`/`window_measures` can return one entry per instance instead of per kind.
     #[serde(default)]
     #[value(default)]
     pub window_instances: Vec<ViewWindowInstance>,
 }
 
-/// 🪟️ One tree container's host-known state: whether the user opened or closed it (`None` = the
+/// 📬️ One tree container's host-known state: whether the user opened or closed it (`None` = the
 /// author's own default still stands) and the row window on screen, overscan included. `body_key`
 /// names the panel body the container lives in, `node_key` the container's **window path** within it.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
@@ -144,7 +145,7 @@ pub struct TreeWindowRequest {
     pub rows: u32,
 }
 
-/// 🪟️ One live window instance, as seen by a plugin: `id` is the instance id (equal to `window_kind_id`
+/// 🔌️ One live window instance, as seen by a plugin: `id` is the instance id (equal to `window_kind_id`
 /// for a base, unsplit window), `window_kind_id` is the `AppDefinition.windowKinds` entry it renders.
 // 🚧️ UNBLOCKED: was gated on `ViewModel` above, itself gated on `ui_wgpu::wgpu::{Locale,
 // Terminology}` gaining `ToValue`/`FromValue` — both now converted (see `ViewModel`'s own comment).
@@ -156,7 +157,7 @@ pub struct ViewWindowInstance {
     pub window_kind_id: String,
 }
 
-/// 🪪️ The authenticated OS session identity projected into every guest call while available.
+/// 👤️ The authenticated OS session identity projected into every guest call while available.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -188,7 +189,7 @@ impl ViewModel {
         }
     }
 
-    /// 📌️ Projects app-level panels without binding their controls to a window.
+    /// 🎛️ Projects app-level panels without binding their controls to a window.
     ///
     /// 🎯️ [`Self::focused_window_id`] survives — that is the whole point of the field — but only while
     /// it names a pane the host actually carries. A shell publishes the new mode's roster before it
@@ -205,7 +206,7 @@ impl ViewModel {
         Self { window_id: None, active_window_kind_id: None, active_utility_id: None, focused_window_id, ..self.clone() }
     }
 
-    /// 🎯️ Projects host-owned context onto one concrete window without borrowing the focused window's utility.
+    /// 🖥️ Projects host-owned context onto one concrete window without borrowing the focused window's utility.
     pub fn for_window_instance(&self, window_id: &str) -> Option<Self> {
         let window = self.window_instances.iter().find(|window| window.id == window_id)?;
         Some(Self {
@@ -216,7 +217,7 @@ impl ViewModel {
         })
     }
 
-    /// 🧰️ Resolves utilities through exact window ownership; kind requests need an addressed or unique live instance.
+    /// 🎚️ Resolves utilities through exact window ownership; kind requests need an addressed or unique live instance.
     pub fn window_utility(&self, window_id: Option<&str>) -> Option<&str> {
         let Some(requested) = window_id.or(self.window_id.as_deref()) else { return self.active_utility_id.as_deref().filter(|utility| !utility.is_empty()) };
         let instance = |id: Option<&str>| id.and_then(|id| self.window_instances.iter().find(|window| window.id == id && window.window_kind_id == requested));
@@ -231,7 +232,7 @@ impl ViewModel {
         self.active_utility_by_window_id.get(id).map(String::as_str).or_else(|| (self.window_id.as_deref() == Some(id)).then_some(self.active_utility_id.as_deref()).flatten()).filter(|utility| !utility.is_empty())
     }
 
-    /// 🛠️ Overlays the host-owned mode tool, then binds the view to a window or the panel.
+    /// 🎬️ Overlays the host-owned mode tool, then binds the view to a window or the panel.
     pub fn for_host_armed_action(&self, host_active_tool_id: Option<&str>, window_id: Option<&str>) -> Option<Self> {
         let armed = Self { active_tool_id: host_active_tool_id.map(str::to_string), ..self.clone() };
         match window_id {
@@ -242,7 +243,7 @@ impl ViewModel {
 }
 
 //#region 📏️ViewContextCapacity
-/// 📏️ The surface view context's capacities, mirrored from the ONE language-neutral declaration
+/// 🪞️ The surface view context's capacities, mirrored from the ONE language-neutral declaration
 /// `🪟️view-context/🧬️schema/🔣️.json` — the same file `parseResolvedPluginViewState`
 /// (`🛂️manifest/🟦️.ts`) and its Ajv oracle validate against. Pinned from Rust by
 /// `🧪️tests/🔬️view-context-capacity/🦀️.rs`, so neither side can drift from the schema.
@@ -251,16 +252,16 @@ pub const VIEW_CONTEXT_IDENTIFIER_CHARS: usize = 256;
 /// 📏️ `panelJson` capacity, in Unicode characters (schema `maxLength`).
 pub const VIEW_CONTEXT_LONG_STRING_CHARS: usize = 65_536;
 
-/// 📏️ `activeUtilityByWindowId` capacity (schema `maxProperties`).
+/// 🧬️ `activeUtilityByWindowId` capacity (schema `maxProperties`).
 pub const VIEW_CONTEXT_UTILITY_ENTRIES: usize = 64;
 
-/// 📏️ `windowInstances` capacity (schema `maxItems`).
+/// 🔲️ `windowInstances` capacity (schema `maxItems`).
 pub const VIEW_CONTEXT_WINDOW_INSTANCES: usize = 64;
 
-/// 📏️ `toolRunTraceCursorByWindowId` capacity (schema `maxProperties`).
+/// 🕵️ `toolRunTraceCursorByWindowId` capacity (schema `maxProperties`).
 pub const VIEW_CONTEXT_TRACE_CURSOR_ENTRIES: usize = 64;
 
-/// 📏️ `treeWindows` capacity (schema `maxItems`) — one document's worth of containers
+/// 🌲️ `treeWindows` capacity (schema `maxItems`) — one document's worth of containers
 /// (`ui_contract::UI_DOCUMENT_NODES`), the widest tree a single refresh can be about.
 pub const VIEW_CONTEXT_TREE_WINDOWS: usize = 128;
 
@@ -271,32 +272,32 @@ pub const VIEW_CONTEXT_TREE_WINDOW_NUMERIC_FIELDS: usize = 2;
 /// 🔤️ Fields one `TreeWindowRequest` encodes: `bodyKey`, `nodeKey`, `open`, `offset`, `rows`.
 pub const VIEW_CONTEXT_TREE_WINDOW_FIELDS: usize = 5;
 
-/// 🔢️ Numeric fields of one `ToolRunTraceCursor`: `run`, `generation`, `page`.
+/// 👣️ Numeric fields of one `ToolRunTraceCursor`: `run`, `generation`, `page`.
 pub const VIEW_CONTEXT_TRACE_CURSOR_FIELDS: usize = 3;
 
 /// 📐️ Widest decimal a numeric field reaches in text form: `run` up to 2^53-1, and every `u32`
 /// field (`generation`, `page`, `offset`, `rows`, `treeViewportRows`) comfortably inside it.
 const VIEW_CONTEXT_TRACE_CURSOR_DIGITS: usize = 16;
 
-/// 🔢️ `Identifier`-typed scalar fields: `activeModeId`, `activeWindowKindId`, `activeUtilityId`,
+/// 🆔️ `Identifier`-typed scalar fields: `activeModeId`, `activeWindowKindId`, `activeUtilityId`,
 /// `activeToolId`, `windowId`, `focusedWindowId`.
 pub const VIEW_CONTEXT_IDENTIFIER_FIELDS: usize = 6;
 
 /// 🪪️ Identifier-shaped fields nested in `sessionIdentity`: `userId` and `displayName`.
 pub const VIEW_CONTEXT_SESSION_IDENTITY_FIELDS: usize = 2;
 
-/// 🔢️ Bounded opaque inputs: panel state and one embedded surface's parameters.
+/// 📥️ Bounded opaque inputs: panel state and one embedded surface's parameters.
 pub const VIEW_CONTEXT_LONG_STRING_FIELDS: usize = 2;
 
-/// 📐️ Worst-case UTF-8 expansion of one schema character — the schema bounds characters, the wire
+/// 🔣️ Worst-case UTF-8 expansion of one schema character — the schema bounds characters, the wire
 /// carries bytes.
 const VIEW_CONTEXT_BYTES_PER_CHAR: usize = 4;
 
-/// 📐️ Per-encoded-value framing allowance (tag, length prefix, key) of the pack wire the shell
+/// 🎞️ Per-encoded-value framing allowance (tag, length prefix, key) of the pack wire the shell
 /// encodes a view context with.
 const VIEW_CONTEXT_FRAMING_BYTES_PER_VALUE: usize = 64;
 
-/// 🔢️ Encoded values a maximal view context carries: every scalar field, the two enums, every
+/// 🎒️ Encoded values a maximal view context carries: every scalar field, the two enums, every
 /// collection and each of their entries' fields.
 const VIEW_CONTEXT_ENCODED_VALUES: usize = VIEW_CONTEXT_IDENTIFIER_FIELDS
     + VIEW_CONTEXT_SESSION_IDENTITY_FIELDS
@@ -312,7 +313,7 @@ const VIEW_CONTEXT_ENCODED_VALUES: usize = VIEW_CONTEXT_IDENTIFIER_FIELDS
     + VIEW_CONTEXT_TREE_WINDOWS * (1 + VIEW_CONTEXT_TREE_WINDOW_FIELDS)
     + 1;
 
-/// 📏️ Largest wire-encoded surface view context the contract can produce — the admission bound
+/// 📡️ Largest wire-encoded surface view context the contract can produce — the admission bound
 /// `plugin_mount_surface` holds `Event::SurfaceVisible`'s `view_state` to.
 ///
 /// Derived from the schema above rather than borrowed: this used to reuse
@@ -332,18 +333,18 @@ pub const MAX_SURFACE_VIEW_CONTEXT_BYTES: usize = (VIEW_CONTEXT_IDENTIFIER_FIELD
     * VIEW_CONTEXT_BYTES_PER_CHAR
     + VIEW_CONTEXT_ENCODED_VALUES * VIEW_CONTEXT_FRAMING_BYTES_PER_VALUE;
 
-/// 📏️ Largest surface body key the same contract admits — a body key is a window-kind id, a
+/// 🔠️ Largest surface body key the same contract admits — a body key is a window-kind id, a
 /// panel-tab leaf id or a reserved `UiRefreshSection` key, all `Identifier`-shaped.
 pub const MAX_SURFACE_BODY_KEY_BYTES: usize = VIEW_CONTEXT_IDENTIFIER_CHARS * VIEW_CONTEXT_BYTES_PER_CHAR;
 
 //#endregion 📏️ViewContextCapacity
 //#region 📏️PublicInvocationCapacity
 
-/// 📏️ Largest UTF-8 body one structurally addressed action/command JSON invocation may occupy on
+/// 🧳️ Largest UTF-8 body one structurally addressed action/command JSON invocation may occupy on
 /// the way into a plugin process — `🎛️public-invocation/🧬️schema/🔣️.json`'s `maxBodyBytes`.
 pub const PUBLIC_INVOCATION_BODY_BYTES: usize = 262_144;
 
-/// 📏️ Largest single JSON string one invocation may carry — `maxStringBytes`. Counted as escaped
+/// 🔂️ Largest single JSON string one invocation may carry — `maxStringBytes`. Counted as escaped
 /// bytes minus their leading backslashes, so `\"` costs one and `A` costs five.
 ///
 /// This is the bound that actually sizes a host→guest push, and NO tool execution contract can
@@ -352,17 +353,17 @@ pub const PUBLIC_INVOCATION_BODY_BYTES: usize = 262_144;
 /// producer (`🏛️ShellHost/🟦️.tsx`'s `publicInvocationStringPages`).
 pub const PUBLIC_INVOCATION_STRING_BYTES: usize = 4_096;
 
-/// 📏️ Deepest object/array nesting one invocation may reach — `maxDepth`.
+/// ⏬️ Deepest object/array nesting one invocation may reach — `maxDepth`.
 pub const PUBLIC_INVOCATION_DEPTH: usize = 64;
 
-/// 📐️ Wire bytes one counted string byte may occupy — `escapePairWireFactor`. A two-character
+/// ✖️ Wire bytes one counted string byte may occupy — `escapePairWireFactor`. A two-character
 /// escape pair (`\"`, `\\`, `\n`) counts ONE against [`PUBLIC_INVOCATION_STRING_BYTES`] and occupies
 /// TWO on the wire; every longer escape (`\u00XX`, six bytes) counts five, a smaller ratio. So a
 /// page filled to the string bound occupies at most twice its counted extent, which is what a tool
 /// carrying such a page must declare as its `max_raw_wire_bytes`.
 pub const PUBLIC_INVOCATION_ESCAPE_PAIR_WIRE_FACTOR: usize = 2;
 
-/// 📐️ What ONE character of a raw string costs against [`PUBLIC_INVOCATION_STRING_BYTES`] once the
+/// 💲️ What ONE character of a raw string costs against [`PUBLIC_INVOCATION_STRING_BYTES`] once the
 /// JSON encoder has written it — the exact accounting `validate_public_json_envelope` performs,
 /// which skips a leading `\` and counts every byte after it. Non-ASCII is charged at its `\uXXXX`
 /// escape (five per UTF-16 unit), never at its shorter raw UTF-8 form, so a page cut with this
@@ -403,7 +404,7 @@ pub fn public_invocation_string_pages(text: &str) -> Vec<String> {
 //#endregion 📏️PublicInvocationCapacity
 //#region 🔖️UiRefreshSection
 
-/// 🧩️ The four refresh sections that are NOT authored window/panel bodies. Each is its own retained
+/// 📑️ The four refresh sections that are NOT authored window/panel bodies. Each is its own retained
 /// surface whose reserved body key names the object-safe accessor the plugin runtime calls in place of
 /// `PluginApp::render` (`window_engagements`/`window_measures`/`tool_measures`/`app_catalogue`), so
 /// measures, tool measures, engagements and the app-static catalogue publish, re-publish and page
@@ -425,7 +426,7 @@ pub enum UiRefreshSection {
     Catalogue,
 }
 
-/// 🔑️ Response field / host refresh-cache key of each [`UiRefreshSection`], in `UiRefreshSection::ALL` order.
+/// ⌨️ Response field / host refresh-cache key of each [`UiRefreshSection`], in `UiRefreshSection::ALL` order.
 pub const UI_REFRESH_SECTION_KEYS: [&str; 4] = ["engagements", "measures", "tools", "catalogue"];
 
 /// 🪧️ Reserved body key — and retained surface key — of each [`UiRefreshSection`], in
@@ -436,12 +437,12 @@ pub const UI_REFRESH_SECTION_BODY_KEYS: [&str; 4] = ["framework.section.engageme
 impl UiRefreshSection {
     pub const ALL: [Self; 4] = [Self::Engagements, Self::Measures, Self::Tools, Self::Catalogue];
 
-    /// 🔑️ See [`UI_REFRESH_SECTION_KEYS`].
+    /// 🔐️ See [`UI_REFRESH_SECTION_KEYS`].
     pub fn key(self) -> &'static str {
         UI_REFRESH_SECTION_KEYS[self as usize]
     }
 
-    /// 🪧️ See [`UI_REFRESH_SECTION_BODY_KEYS`].
+    /// 🗝️ See [`UI_REFRESH_SECTION_BODY_KEYS`].
     pub fn body_key(self) -> &'static str {
         UI_REFRESH_SECTION_BODY_KEYS[self as usize]
     }

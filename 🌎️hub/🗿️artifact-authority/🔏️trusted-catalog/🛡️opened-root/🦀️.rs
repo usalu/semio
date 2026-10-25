@@ -86,7 +86,7 @@ impl TrustedCatalogDataRoot {
 }
 
 /// 📤️ One exclusive publication window bound to the already-opened catalog directory.
-pub(super) struct TrustedCatalogPublicationOwner {
+pub struct TrustedCatalogPublicationOwner {
     pub directory: File,
     _fence: semio_hub_artifact_authority::FileFence,
 }
@@ -155,7 +155,7 @@ impl TrustedCatalogGenerationRoot {
 }
 
 /// 📄 One already-opened regular file; later pathname replacement cannot redirect its read.
-pub(super) struct TrustedCatalogOpenedFile {
+pub struct TrustedCatalogOpenedFile {
     file: File,
     length: u64,
 }

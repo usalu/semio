@@ -10,7 +10,7 @@ const source=readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8"),s
 test("the fixture is closed under its schema",()=>{expect(new Ajv({strict:true}).validate(fixtureSchema,fixture)).toBe(true);expect(start).toBeGreaterThan(-1);expect(end).toBeGreaterThan(start);});
 test("blocks are compressed at a bounded quality, after the existence and refusal checks",()=>{
  expect(body).toContain("zlibConstants.BROTLI_PARAM_QUALITY]:5");
- const exists=body.indexOf("fs.existsSync(path)"),refused=body.indexOf("blocksRefused.get(directory)"),pack=body.indexOf("brotliCompressSync(");
+ const exists=body.indexOf("readObservationBlockV1(directory,known.digest,true)"),refused=body.indexOf("blocksRefused.get(directory)"),pack=body.indexOf("brotliCompressSync(");
  expect(exists).toBeGreaterThan(-1);expect(refused).toBeGreaterThan(exists);expect(pack).toBeGreaterThan(refused);
  expect(body.indexOf("blocksRefused.set(directory")).toBeGreaterThan(pack);
  expect(body.match(/brotliCompressSync\(/gu)?.length).toBe(1);

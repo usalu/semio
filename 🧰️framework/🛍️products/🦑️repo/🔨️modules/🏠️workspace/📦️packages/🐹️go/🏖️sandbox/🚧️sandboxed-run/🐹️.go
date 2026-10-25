@@ -39,7 +39,7 @@ func Root() string {
 	return root
 }
 
-// 🧰️Run runs a test binary against a root it owns: a temporary git repository is bound as the workspace root and working directory, every resolution is observed, and the run fails when anything resolved or still holds the checkout the binary was started in. The held callback names extra roots the caller keeps, and it may be nil.
+// 🧰️Run runs a test binary (its scratch directory, which the issued test environment places below the checkout, is owned too) against a root it owns: a temporary git repository is bound as the workspace root and working directory, every resolution is observed, and the run fails when anything resolved or still holds the checkout the binary was started in. The held callback names extra roots the caller keeps, and it may be nil.
 func Run(name string, held func() map[string]string, run func() int) int {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -57,7 +57,12 @@ func Run(name string, held func() map[string]string, run func() int) int {
 		return 2
 	}
 	origin = workspace.CanonicalPath(cwd)
-	guard := NewGuard(workspace.ResolveRepoRoot(cwd))
+	checkout := workspace.ResolveRepoRoot(cwd)
+	guard := NewGuard(checkout)
+	guard.Own(repository)
+	if scratch := os.TempDir(); workspace.CanonicalPath(scratch) != workspace.CanonicalPath(checkout) {
+		guard.Own(scratch)
+	}
 	defer workspace.ObserveRootResolution(guard.Observe)()
 	workspace.SetRootDir(repository)
 	root = workspace.GetRootDir()

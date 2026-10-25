@@ -2,7 +2,8 @@ import {fileURLToPath} from "node:url";
 import {DOCTOR_POLICY_V1,DOCTOR_PROTOCOL_V1,DOCTOR_RULES_V1,type DoctorAreaV1,type DoctorFactsV1,type DoctorPolicyV1,type DoctorProbeRowV1,type DoctorReportV1,type DoctorRepairResultV1,type DoctorRuleV1} from "../🟦️.ts";
 import {analyzeDoctorV1,buildDoctorReportV1} from "../🧮️analysis/🟦️.ts";
 import type {DoctorPortsV1} from "../🔌️ports/🟦️.ts";
-import {DOCTOR_PROBES_V1,DOCTOR_REPAIRS_V1,type DoctorProbeContextV1,type DoctorProbeV1,type DoctorRepairV1,type DoctorSectionsV1} from "../🔎️probes/🟦️.ts";
+import {DOCTOR_PROBES_V1,DOCTOR_REPAIRS_V1} from "../🔎️probes/🟦️.ts";
+import type {DoctorProbeContextV1,DoctorProbeV1,DoctorRepairV1,DoctorSectionsV1} from "../🔎️probes/📋️contract/🟦️.ts";
 
 /** 🎛️ What one doctor run is asked to do. */
 export type DoctorRunOptionsV1=Readonly<{

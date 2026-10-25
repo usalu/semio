@@ -393,7 +393,7 @@ function validateBrush(points:readonly PixelPoint[],brush:PixelBrush|PixelAlphaB
 /** 🔲️ A pixel-aligned rectangle of an image. */
 export type PixelRect = { x: number; y: number; width: number; height: number };
 
-/** 🔲️ Every pixel a brush of `size` along `points` can reach on a `width × height` image: the union of each segment's box
+/** 📏️ Every pixel a brush of `size` along `points` can reach on a `width × height` image: the union of each segment's box
  * widened by the radius and clipped to the image — exactly the rectangles `paintStroke` walks; `null` when the stroke lies
  * wholly outside. Twin of the Rust `stroke_bounds` the replayed raster stroke leaf paints over. */
 export function strokeBounds(points: readonly PixelPoint[], size: number, width: number, height: number): PixelRect | null {

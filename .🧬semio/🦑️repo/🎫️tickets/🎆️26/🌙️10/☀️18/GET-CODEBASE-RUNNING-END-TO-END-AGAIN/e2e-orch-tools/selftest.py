@@ -61,6 +61,16 @@ def test_vectors():
     for row in data["slotsFor"]:
         expect(orch.lane_slots(row["memoryMb"], row["cores"]) == row["slots"], "slots for %s" % row)
     expect([list(r) for r in orch.counter_delta(data["delta"]["before"], data["delta"]["after"])] == data["delta"]["rows"], "counter delta")
+    for row in data["queue"]:
+        clock = orch.QueueClock(row["grace"])
+        moments = sorted(set([event[0] for event in row["events"]] + list(range(0, row["end"] + 1))))
+        feed = {}
+        for at, text in row["events"]:
+            feed.setdefault(at, []).append(text)
+        for at in moments:
+            clock.feed("\n".join(feed.get(at, [])), at)
+            credit = clock.update(at)
+        expect(abs(credit - row["credit"]) <= 0.5, "queue %s: credit %s != %s" % (row["name"], credit, row["credit"]))
     log = "INFO: 2 processes: 1 disk cache hit, 1 internal.\nINFO: 1 process: 1 internal.\n  Compiling foo v1.0.0\n  11 passed (3m)\n  1 failed\n"
     parsed = orch.parse_log(log)
     expect((parsed["summaries"], parsed["processes"], parsed["spawns"], parsed["cacheHits"], parsed["internal"]) == (2, 3, 0, 1, 2), "aggregate %s" % parsed)
@@ -135,6 +145,10 @@ def test_cli():
     done = subprocess.run(["sh", str(HERE / "run.sh"), "all", "--dry-run", "--phase", "all"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
     text = done.stdout.decode()
     expect(done.returncode == 0 and "bun repo --tool=bazel run @semio-tech/semio-tech-play:activate-prototype" in text and "assert spawns<=0" in text, "dry run output: %s" % text[:300])
+    declared = subprocess.run(["sh", str(HERE / "run.sh"), "course", "--dry-run", "--phase", "e2e"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60).stdout.decode()
+    narrowed = subprocess.run(["sh", str(HERE / "run.sh"), "course", "--dry-run", "--phase", "e2e", "--course-topology", "dev"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60).stdout.decode()
+    expect("--topology" not in declared and "--release" in declared, "without --course-topology the course gate runs the topologies its target declares (release mode): %s" % declared[-300:])
+    expect("--topology=dev" in narrowed and "--release" not in narrowed, "--course-topology dev narrows the gate: %s" % narrowed[-300:])
     refused = subprocess.run(["sh", str(HERE / "run.sh"), "play", "--phase", "cold"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60, env={k: v for k, v in os.environ.items() if k != "E2E_GO"})
     expect(refused.returncode == 2 and b"need the coordinator" in refused.stdout, "cold without --go is refused: rc %s" % refused.returncode)
 
@@ -222,6 +236,50 @@ def test_functional():
         expect(process.returncode == 130 and state3["steps"][0]["status"] == "CANCELLED" and state3["cancelled"], "cancellation rc %s %s" % (process.returncode, [r["status"] for r in state3["steps"]]))
         expect(time.time() - started < 50, "cancellation stops the child promptly")
         expect(not (work / "out" / "ORCH.lock").exists(), "lock released")
+        queued = dict(steps)
+        queued["cold"] = [{"id": "q", "group": "gq", "kind": "exec", "argv": ["sh", "-c", "for i in 1 2 3 4 5 6 7 8; do echo '[bazel] all 3 Bazel server slots are in use; waiting for one'; sleep 1; done; echo ready"], "timeoutSeconds": 3, "warm": {"mode": "skip"}},
+                          {"id": "r", "group": "gr", "kind": "exec", "argv": ["sh", "-c", "for i in 1 2 3 4 5 6 7 8; do echo working; sleep 1; done"], "timeoutSeconds": 3, "warm": {"mode": "skip"}}]
+        queued["warm"] = "cold"
+        queued["e2e"] = []
+        fake_plan(work / "plan4.json", queued)
+        cmd = common[:4] + [str(work / "plan4.json")] + common[5:-1] + ["t4", "--phase", "cold"]
+        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120)
+        state4 = json.loads((work / "out" / "t4" / "state.json").read_text(encoding="utf-8"))
+        status4 = {r["id"]: (r["status"], r["note"]) for r in state4["steps"]}
+        expect(status4["q"][0] == "PASS", "queue waits do not count against the step timeout: %s" % (status4,))
+        expect(status4["r"][0] == "FAIL" and "timeout after 3s" in status4["r"][1], "work beyond the timeout still fails: %s" % (status4,))
+        fixed = dict(broken)
+        fixed["cold"] = [exec_step("x", "gx", "INFO: 1 process: 1 internal.", {"mode": "zero"}), exec_step("y", "gx", "INFO: 1 process: 1 internal.", {"mode": "zero"}), exec_step("z", "gz", "INFO: 1 process: 1 internal.", {"mode": "zero"})]
+        fake_plan(work / "plan2.json", fixed)
+        done = subprocess.run(common[:4] + [str(work / "plan2.json")] + common[5:-1] + ["t2", "--phase", "cold,warm,e2e"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120)
+        state2 = json.loads((work / "out" / "t2" / "state.json").read_text(encoding="utf-8"))
+        status2 = {(r["phase"], r["id"]): r["status"] for r in state2["steps"]}
+        expect(done.returncode == 0 and status2[("cold", "x")] == "PASS" and status2[("cold", "y")] == "PASS" and status2[("cold", "z")] == "PASS" and status2[("e2e", "t")] == "PASS", "a continued run id retries failed steps: rc %s %s" % (done.returncode, status2))
+        settle = dict(steps)
+        script = "if [ -f \"$0\" ]; then echo 'INFO: 2 processes: 2 internal.'; else touch \"$0\"; echo 'INFO: 3 processes: 2 internal, 1 local.'; fi"
+        settle["cold"] = [exec_step("w", "gw", "INFO: 1 process: 1 internal.", {"mode": "zero"}), exec_step("v", "gv", "INFO: 1 process: 1 internal.", {"mode": "zero"})]
+        settle["warm"] = [{"id": "w", "group": "gw", "kind": "exec", "argv": ["sh", "-c", script, str(work / "settle.marker")], "timeoutSeconds": 30, "warm": {"mode": "zero"}},
+                          {"id": "v", "group": "gv", "kind": "exec", "argv": ["sh", "-c", "echo 'INFO: 2 processes: 1 internal, 1 local.'"], "timeoutSeconds": 30, "warm": {"mode": "zero"}}]
+        settle["e2e"] = []
+        fake_plan(work / "plan6.json", settle)
+        cmd = common[:4] + [str(work / "plan6.json")] + common[5:-1] + ["t6", "--phase", "cold,warm"]
+        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120)
+        state6 = json.loads((work / "out" / "t6" / "state.json").read_text(encoding="utf-8"))
+        status6 = {(r["phase"], r["id"]): (r["status"], r["note"]) for r in state6["steps"]}
+        expect(status6[("warm", "w")][0] == "PASS" and "settle run 1" in status6[("warm", "w")][1], "a warm step that rebuilt once passes on its settle run: %s" % (status6,))
+        expect(status6[("warm", "v")][0] == "FAIL" and "settle run 1" in status6[("warm", "v")][1], "a warm step that always spawns still fails: %s" % (status6,))
+        stale = dict(steps)
+        stale["cold"] = [{"id": "s", "group": "gs", "kind": "exec", "argv": ["sh", "-c", "if [ -f \"$0\" ]; then echo fine; else touch \"$0\"; echo 'This command runs an outdated implementation: the declared format stamp moved'; exit 75; fi", str(work / "stale.marker")], "timeoutSeconds": 30, "warm": {"mode": "skip"}},
+                         {"id": "u", "group": "gu", "kind": "exec", "argv": ["sh", "-c", "echo 'boom'; exit 75"], "timeoutSeconds": 30, "warm": {"mode": "skip"}}]
+        stale["warm"] = "cold"
+        stale["e2e"] = []
+        fake_plan(work / "plan5.json", stale)
+        cmd = common[:4] + [str(work / "plan5.json")] + common[5:-1] + ["t5", "--phase", "cold"]
+        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120)
+        state5 = json.loads((work / "out" / "t5" / "state.json").read_text(encoding="utf-8"))
+        status5 = {r["id"]: (r["status"], r["note"]) for r in state5["steps"]}
+        expect(status5["s"][0] == "PASS" and "retried 1" in status5["s"][1], "outdated-implementation exit is retried: %s" % (status5,))
+        expect(status5["u"] == ("FAIL", "exit code 75"), "a plain exit 75 is not retried: %s" % (status5,))
         listing = subprocess.run(["pgrep", "-f", "sleep 58.7321"], stdout=subprocess.PIPE).stdout.decode().split()
         expect(not [p for p in listing if p != str(os.getpid())], "no orphan sleep left: %s" % listing)
     finally:

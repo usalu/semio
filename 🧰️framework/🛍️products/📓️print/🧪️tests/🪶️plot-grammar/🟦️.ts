@@ -35,7 +35,7 @@ function grid(values: readonly number[]): number[] {
   return values.map((value) => Math.round(value * factor) / factor + 0);
 }
 
-/** 🎯️ Compiles the committed fixture and returns the records of one scenario. */
+/** 📹️ Compiles the committed fixture and returns the records of one scenario. */
 async function records(ctx: AdapterContext): Promise<ProbeRecord[]> {
   return roundProbeNumbers(await compileAdapterVizProbeV1(ctx,ctx.input(FIXTURE), { caseName: CASE, scenario: ctx.scenario.id }), DECIMALS);
 }
@@ -77,7 +77,7 @@ export default defineTestAdapter({
       },
     },
     "linear-mapping": {
-      /** 🔮️ Two d3-scale linear scales over the declared domains and the plot rectangle. */
+      /** ⚖️ Two d3-scale linear scales over the declared domains and the plot rectangle. */
       oracle: (ctx: AdapterContext) => {
         const row = rows(ctx)[0]!;
         const x = scaleLinear(list(row.xDomain!).map(Number), list(row.xRange!).map(Number));
@@ -86,11 +86,11 @@ export default defineTestAdapter({
         const ys = list(row.y!).map(Number);
         return { projection: { "plot/point": grid(xs.flatMap((value, index) => [x(value), y(ys[index]!)])) } };
       },
-      /** 🎯️ Where `\SemioVizPlot` put each row of the same table. */
+      /** 🏓️ Where `\SemioVizPlot` put each row of the same table. */
       subject: async (ctx: AdapterContext) => ({ projection: { "plot/point": points(await records(ctx)) } as ProbeProjection }),
     },
     "band-mapping": {
-      /** 🔮️ d3-scale's band scale for the categorical channel, read at the centre of each band. */
+      /** 🩹️ d3-scale's band scale for the categorical channel, read at the centre of each band. */
       oracle: (ctx: AdapterContext) => {
         const row = rows(ctx)[0]!;
         const categories = list(row.x!);
@@ -100,11 +100,11 @@ export default defineTestAdapter({
         const ys = list(row.y!).map(Number);
         return { projection: { "plot/point": grid(categories.flatMap((value, index) => [x(value)! + x.bandwidth() / 2, y(ys[index]!)])) } };
       },
-      /** 🎯️ Where `\SemioVizPlot` put each row of the same table. */
+      /** 🗄️ Where `\SemioVizPlot` put each row of the same table. */
       subject: async (ctx: AdapterContext) => ({ projection: { "plot/point": points(await records(ctx)) } as ProbeProjection }),
     },
     "twin-plan": {
-      /** 🔮️ The TypeScript twin resolving the same specification — the same table, the same channel
+      /** 🪞️ The TypeScript twin resolving the same specification — the same table, the same channel
        * bindings, the same frame — into drawing primitives, read at the centre of each point mark. */
       oracle: (ctx: AdapterContext) => {
         const row = rows(ctx)[0]!;
@@ -140,7 +140,7 @@ export default defineTestAdapter({
         const circles = plan.items.filter((item): item is Extract<typeof item, { kind: "circle" }> => item.kind === "circle");
         return { projection: { "plot/point": grid(circles.flatMap((item) => [item.cx, item.cy])) } };
       },
-      /** 🎯️ Where the LaTeX pipeline put the same rows. */
+      /** 🚂️ Where the LaTeX pipeline put the same rows. */
       subject: async (ctx: AdapterContext) => ({ projection: { "plot/point": points(await records(ctx)) } as ProbeProjection }),
     },
   },

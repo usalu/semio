@@ -78,7 +78,7 @@ pub struct DocxXmlPartDiff {
 
 semio_s_artifact_stdio_contract::stdio_list_delta! {
     /// 🪡️ The positional delta of the XML parts, keyed by part name.
-    pub DocxXmlPartsDelta { removal: DocxXmlPartRemoval, insertion: DocxXmlPartInsertion, relocation: DocxXmlPartRelocation, modification: DocxXmlPartModification, row: DocxXmlPart, patch: DocxXmlPartDiff, list: DocxXmlPartRows, key: String = |part| part.path.clone() }
+    pub DocxXmlPartsDelta { removal: DocxXmlPartRemoval, insertion: DocxXmlPartInsertion, relocation: DocxXmlPartRelocation, modification: DocxXmlPartModification, row: DocxXmlPart, patch: DocxXmlPartDiff, list: DocxXmlPartRows, keyed: String }
 }
 //#endregion 🔖️XmlPartDiffTypes
 
@@ -158,8 +158,9 @@ fn apply_xml_part(part: &mut DocxXmlPart, diff: &DocxXmlPartDiff, capability: pr
         part.content_type.clone_from(content_type);
     }
     if let Some(document) = &diff.document {
-        let next = document.apply(&xml_snapshot(&part.document), capability)?.doc;
-        part.replace_document(next).map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.into_message()).at(["document"]))?;
+        let mut snapshot = xml_snapshot(&part.document);
+        document.apply(&mut snapshot, capability)?;
+        part.replace_document(snapshot.doc).map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.into_message()).at(["document"]))?;
     }
     Ok(())
 }

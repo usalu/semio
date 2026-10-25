@@ -163,7 +163,7 @@ export const contentHostsDe = {
   },
 } satisfies Pick<UiTranslationSchema["ui"], "diagram" | "host" | "blockList" | "tableStepper" | "docs" | "ring" | "iconSelector" | "stepper" | "engagement" | "windowSearch" | "flowSpotlight" | "nodeGraph">;
 
-/** 🧩️ Content host labels for diagrams, docs, steppers, engagement and node graphs (`en`). */
+/** 📺️ Content host labels for diagrams, docs, steppers, engagement and node graphs (`en`). */
 export const contentHostsEn = {
   diagram: {
     label: { label: { normal: "Node graph", beginner: "Diagram of nodes and connections" } },

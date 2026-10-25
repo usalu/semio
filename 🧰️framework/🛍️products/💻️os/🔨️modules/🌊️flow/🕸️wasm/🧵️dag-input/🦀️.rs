@@ -19,7 +19,7 @@ pub struct FlowDagAction{
     close_capacity:usize,close_copy:usize,close_release:usize,receipt:RetainedCloneProgress,
 }
 impl FlowDagAction{
-    pub(super) fn new(operation:u16,args:&FlowArguments)->Self{
+    pub fn new(operation:u16,args:&FlowArguments)->Self{
         let input=match operation{2514=>Some(DagInputKind::Progress),2515=>Some(DagInputKind::Statuses),2525=>Some(DagInputKind::Selection),2528=>Some(DagInputKind::Channels),_=>None};
         let kind=match operation{2518=>Some(DagOutputKind::Nodes),2519=>Some(DagOutputKind::Edges),2520=>Some(DagOutputKind::Selection),2522=>Some(DagOutputKind::Hover),2523=>Some(DagOutputKind::Channels),_=>None};
         Self{operation,admission:None,input_ceiling:0,output_ceiling:0,program:FlowProgramState::new(args),observer:Rc::new(FlowOperationObserver::new()),input:input.map(DagInputCursor::new),output:kind.map(|_|JsonBorrowedWriteCursor::new()),kind,application:None,displaced:None,output_preparation:kind.map(DagOutputPreparation::new),output_prepared:false,decode:None,encode:None,decode_started:false,encode_started:false,retirement:None,transitions:0,close_capacity:0,close_copy:0,close_release:0,receipt:Default::default()}
@@ -34,14 +34,14 @@ impl FlowDagAction{
         if self.input.is_some(){
             if let Some(displaced)=self.displaced.as_mut(){
                 if budget.retained.maximum_items==0||budget.retained.maximum_depth==0{return FlowFeatureStep::Yield}
-                *displaced.original_mut().expect("pre-admitted untouched displaced custody")=self.application.as_mut().unwrap().commit(&mut domain.host.dag);
+                *displaced.original_mut().expect("pre-admitted untouched displaced custody")={let dag=&mut domain.host.dag;self.application.as_mut().unwrap().commit(&mut dag.graph,&mut dag.paint)};
                 self.receipt=self.receipt.checked_add(RetainedCloneProgress{copied_items:1,..Default::default()}).expect("bounded atomic exchange receipt");self.retirement=self.displaced.take().map(|owner|owner as Box<dyn ErasedSnapshotRetirement>);return self.program.finish_domain(ok())
             }
             let source=match text(args,"json"){Ok(value)=>value,Err(error)=>return self.program.finish_domain(Err(error))};
             let observer=self.observer.clone();let mut observe=|_|observer.observe();
             let mut control=match self.decode.take(){Some(receipt)=>NativeDecodeControl::resume(receipt,&mut observe),None if !self.decode_started=>{self.decode_started=true;Ok(NativeDecodeControl::new_retained(&mut observe))},None=>return self.program.finish_domain(Err(abi_failure(AbiErrorCode::Busy)))};
             let grant=match control.as_ref(){Ok(control)=>RetainedCloneGrant{maximum_capacity_bytes:budget.retained.maximum_capacity_bytes.min(self.input_ceiling.saturating_sub(control.owned_bytes())),..budget.retained},Err(_)=>budget.retained};
-            let result=match control.as_mut(){Ok(control)=>if let Some(application)=self.application.as_mut(){application.step(&domain.host.dag,1,control,grant)}else{self.input.as_mut().unwrap().step(source,1,control,grant)},Err(error)=>Err(semio_framework_value::ValueError::literal(error.kind,"DAG input continuation refused"))};
+            let result=match control.as_mut(){Ok(control)=>if let Some(application)=self.application.as_mut(){application.step(&domain.host.dag.viewport,&domain.host.dag.graph,1,control,grant)}else{self.input.as_mut().unwrap().step(source,1,control,grant)},Err(error)=>Err(semio_framework_value::ValueError::literal(error.kind,"DAG input continuation refused"))};
             let progress=self.application.as_ref().map(DagInputApplication::normal_step_progress).unwrap_or_else(||self.input.as_ref().unwrap().normal_step_progress());self.receipt=match self.receipt.checked_add(progress){Ok(receipt)=>receipt,Err(error)=>return self.program.finish_domain(Err(self.failure(error)))};
             if let Ok(control)=control{match control.pause(){Ok(receipt)=>self.decode=Some(receipt),Err(error)=>return self.program.finish_domain(Err(dag_input_failure(error)))}}
             match result{

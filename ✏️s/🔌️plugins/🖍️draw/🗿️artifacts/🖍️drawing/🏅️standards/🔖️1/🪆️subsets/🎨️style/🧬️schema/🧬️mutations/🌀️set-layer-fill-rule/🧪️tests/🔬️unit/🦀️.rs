@@ -32,11 +32,11 @@ fn fill_rule_fixture_applies_and_inverts_through_all_owned_codecs() {
 #[test]
 fn unchanged_and_missing_fill_rule_targets_do_not_mutate() {
     let before:DrawingSnapshot=serde_json::from_str(*BEFORE).unwrap();
-    let same=semio_s_artifact_draw_drawing_style::set_layer_fill_rule::mutation::set_layer_fill_rule("shape-a".into(),FillRule::Evenodd);
+    let same: semio_s_artifact_draw_drawing_mutations::DrawingMutation=semio_s_artifact_draw_drawing_style::set_layer_fill_rule::mutation::set_layer_fill_rule("shape-a".into(),FillRule::Evenodd);
     let result=same.diff(&before);
     assert!(!result.messages().is_empty());
     assert_eq!(protocol::apply_diff_cold(result.diff(),&before).unwrap(),before);
-    let missing=semio_s_artifact_draw_drawing_style::set_layer_fill_rule::mutation::set_layer_fill_rule("missing".into(),FillRule::Nonzero);
+    let missing=semio_s_artifact_draw_drawing_style::set_layer_fill_rule::mutation::set_layer_fill_rule::<semio_s_artifact_draw_drawing_mutations::DrawingMutation>("missing".into(),FillRule::Nonzero);
     assert!(!missing.diff(&before).messages().is_empty());
     assert!(missing.inverse(&before).expect("valid retained mutation inverse fixture").is_empty());
 }

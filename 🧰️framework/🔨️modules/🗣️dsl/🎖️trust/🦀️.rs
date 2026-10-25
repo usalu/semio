@@ -21,7 +21,7 @@ impl<T> Sanitized<T> {
     }
 }
 
-/// 🛂️ A value that has additionally passed schema validation. Reserved for the
+/// 📗️ A value that has additionally passed schema validation. Reserved for the
 /// `dsl_schema` layer to construct.
 #[derive(Clone, Debug)]
 pub struct SchemaValid<T>(T);

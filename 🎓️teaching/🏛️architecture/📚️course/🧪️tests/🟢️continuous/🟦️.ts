@@ -8,8 +8,8 @@ import { connect, createServer as createNetServer, type AddressInfo } from "node
 import { afterEach, describe, expect, it } from "vitest";
 import contract from "../../🧫️fixtures/🟢️continuous/🔣️.json" with { type: "json" };
 import contractSchema from "../../🧫️fixtures/🟢️continuous/🧬️schema/🔣️.json" with { type: "json" };
-import projectSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json" with { type: "json" };
-import { ReadinessMatcherV1, readReadinessDeclarationV1, resolveReadinessV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟢️readiness/🟦️.ts";
+import projectSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🧬️schema/📋️project/🔣️json/🟦️.ts" with { type: "json" };
+import { ReadinessMatcherV1, readReadinessDeclarationV1, resolveReadinessV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟢️readiness/🟦️.ts";
 import { awaitAnnounced, httpAnswers, siteOrigin, stackFollowsSources } from "../../🧱️stack/🟦️.ts";
 import { proctorOrigin } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 

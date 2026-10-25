@@ -52,7 +52,7 @@ export function cgroupMemoryFilesV1(membership:string|null):readonly Readonly<{m
  return[{maximum:"/sys/fs/cgroup/memory.max",current:"/sys/fs/cgroup/memory.current"}];
 }
 
-/** 🧮️ Picks, over the chain of cgroup levels, the level that leaves the least memory; an unlimited level (`max`, or a v1 limit of 2^62 and beyond) constrains nothing. */
+/** 🐘️ Picks, over the chain of cgroup levels, the level that leaves the least memory; an unlimited level (`max`, or a v1 limit of 2^62 and beyond) constrains nothing. */
 export function effectiveCgroupMemoryV1(levels:readonly Readonly<{maximum:string|null;current:string|null}>[]):Readonly<{maximum:string|null;current:string|null}>{
  let best:Readonly<{maximum:string|null;current:string|null}>|undefined,room=Infinity;
  for(const level of levels){
@@ -74,7 +74,7 @@ export function parseCpuQuotaCoresV1(rows:readonly(string|null)[]):number|null{
  return best;
 }
 
-/** 🧠️ Counts the cores this process may use: the logical cores, bounded by the tightest cgroup v2 CPU quota above the process on Linux. */
+/** ⚙️ Counts the cores this process may use: the logical cores, bounded by the tightest cgroup v2 CPU quota above the process on Linux. */
 export async function readHostCoresV1(probe:HostProbeV1,logical:number):Promise<number>{
  if(probe.platform!=="linux")return logical;
  const membership=await probe.read("/proc/self/cgroup");if(!(membership??"").split("\n").some(line=>line.startsWith("0::")))return logical;
@@ -128,7 +128,7 @@ export const runHostCommandV1:HostCommandRunnerV1=(command,args,signal)=>new Pro
  execFile(command,[...args],{timeout:10000,maxBuffer:4194304,windowsHide:true,encoding:"utf8",...signal?{signal}:{}},(error,stdout)=>error?reject(error):resolve(stdout));
 });
 
-/** 📄️ Reads a text file bounded to one mebibyte, answering null when it is absent. */
+/** 📖️ Reads a text file bounded to one mebibyte, answering null when it is absent. */
 export const readHostTextV1:HostTextReaderV1=async path=>{
  try{return (await readFile(path,"utf8")).slice(0,MEGABYTE);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT"||(error as NodeJS.ErrnoException).code==="ENOTDIR")return null;throw error;}
 };
@@ -155,7 +155,7 @@ export function treeMegabytesV1(rows:readonly Readonly<{pid:number;parent:number
  return Math.floor(total/1024);
 }
 
-/** 🌳️ Parses `/proc/<pid>/status` into a process row: the parent from `PPid:` and the resident set from `VmRSS:` (absent for kernel threads, so 0). */
+/** 🚥️ Parses `/proc/<pid>/status` into a process row: the parent from `PPid:` and the resident set from `VmRSS:` (absent for kernel threads, so 0). */
 export function parseProcStatusV1(pid:number,status:string):Readonly<{pid:number;parent:number;rssKilobytes:number}>|undefined{
  const parent=/^PPid:\s+([0-9]+)\s*$/mu.exec(status),resident=/^VmRSS:\s+([0-9]+)\s+kB\s*$/mu.exec(status);
  return parent?Object.freeze({pid,parent:Number(parent[1]),rssKilobytes:resident?Number(resident[1]):0}):undefined;

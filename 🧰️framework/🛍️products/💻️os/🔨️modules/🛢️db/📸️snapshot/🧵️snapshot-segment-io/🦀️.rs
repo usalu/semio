@@ -37,6 +37,7 @@ pub(super) struct PageSubSource<'pages> {
 }
 
 impl semio_framework_pack_source::PackSource for PageSubSource<'_> {
+    type Error = pack::PackRefusal;
     async fn len(&self) -> u64 {
         self.len
     }
@@ -76,7 +77,10 @@ struct SnapshotDescriptorReader<'source, 'control, S: semio_framework_pack_sourc
     pub(super) control: &'control mut SnapshotCursorControl,
 }
 
-impl<S: semio_framework_pack_source::PackSource> SnapshotDescriptorReader<'_, '_, S> {
+impl<S: semio_framework_pack_source::PackSource> SnapshotDescriptorReader<'_, '_, S>
+where
+    DbError: From<S::Error>,
+{
     async fn fixed<const N: usize>(&mut self) -> Result<[u8; N], DbError> {
         if self.cursor.checked_add(N as u64).is_none_or(|end| end > self.end) {
             return Err(DbError::Corrupt("snapshot descriptor ended early".to_string()));
@@ -148,7 +152,10 @@ impl<S: semio_framework_pack_source::PackSource> SnapshotDescriptorReader<'_, '_
     }
 }
 
-pub(super) async fn decode_snapshot_descriptor(source: &impl semio_framework_pack_source::PackSource, control: &mut SnapshotCursorControl) -> Result<SnapshotDescriptor, DbError> {
+pub(super) async fn decode_snapshot_descriptor<S: semio_framework_pack_source::PackSource>(source: &S, control: &mut SnapshotCursorControl) -> Result<SnapshotDescriptor, DbError>
+where
+    DbError: From<S::Error>,
+{
     let offset = pack::HEADER_SIZE as u64;
     let mut prefix = [0u8; 12];
     control.grant()?;

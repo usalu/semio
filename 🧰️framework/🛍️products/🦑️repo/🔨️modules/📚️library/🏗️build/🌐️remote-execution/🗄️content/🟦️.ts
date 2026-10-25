@@ -1,5 +1,5 @@
 import type {RemoteExecutionDigestV1} from "../🟦️.ts";
-import { runtimeSleepV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeSleepV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🗄️ Where the protocol's blobs and action results live: the shared content-addressed store. Scheduler and workers use this interface only, so a store can be swapped without touching either. */
 export interface RemoteExecutionContentV1{

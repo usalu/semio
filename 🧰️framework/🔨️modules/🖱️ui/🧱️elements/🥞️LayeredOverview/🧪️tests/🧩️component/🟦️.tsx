@@ -912,7 +912,7 @@ describe("LayeredOverview swipe", () => {
     expect(at()).toEqual({ x: 1, y: 0 });
   });
 
-  /** 🧭️ The neighbour hints shown: direction, page and accessible name, in DOM order. */
+  /** 💡️ The neighbour hints shown: direction, page and accessible name, in DOM order. */
   const hints = (root: HTMLElement) => [...root.querySelectorAll<HTMLButtonElement>("[data-layered-neighbour]")].map((hint) => [hint.dataset.layeredNeighbour, hint.dataset.pane, hint.getAttribute("aria-label"), hint.textContent?.trim()]);
 
   it("names the page that lies behind each edge of the view, across an edge the page of the far side", () => {

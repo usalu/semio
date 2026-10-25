@@ -20,6 +20,7 @@ semio-framework = { workspace = true }
 semio-framework-2d = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }

@@ -1,0 +1,10 @@
+import{writeFileSync,readFileSync,existsSync}from"node:fs";import{join}from"node:path";
+const[,,generationsModule,store,output,count]=process.argv;
+const gen=await import(generationsModule);
+const engine=gen.createGenerationStoreV1({root:store,holds:async()=>true,resources:{facts:"x"}});
+const current=await engine.read();
+await engine.readIndex(current.manifest.factIndex);
+const roots=Object.keys(current.manifest.owners).sort().slice(0,Number(count));
+const names=[...await engine.closureOf(current,roots)];
+const assembled=await engine.assemble(current,{names});
+writeFileSync(output,JSON.stringify({projects:assembled.projects,dependencies:assembled.dependencies}));

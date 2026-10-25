@@ -8,8 +8,8 @@ import {runOwnedCommand} from "../../../../../🔨️modules/🏃️process/📦
 import {executeDeveloperRequest,parseDeveloperArguments,developerDebuggers} from "./🟦️.ts";
 
 import {createDeveloperProcessV1,developerMessageV1,probeNativeDebuggerV1,createNativeDebuggerSetupHostV1,SetupDebuggerScript} from "./🏃️process/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
-import { runtimeWhichV1 } from "../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeWhichV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🛠️ Every developer operation keeps the original task's streamed output and cancellation. */
 function developerCommand(command:string):ScriptCommand {

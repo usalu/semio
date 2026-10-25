@@ -6,7 +6,7 @@ use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff::
 
 /// ▶️ Applies `mutation` via its diff — the sole apply path (no hand-written match dispatch).
 pub fn apply_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> protocol::MutationApplyResult<NoteSnapshot> {
-    let (diff, _messages) = protocol::Mutation::diff(mutation, snapshot).into_parts();
+    let (diff, _messages) = protocol::ColdMutation::diff(mutation, snapshot).into_parts();
     protocol::apply_diff_cold(&diff, snapshot)
 }
 

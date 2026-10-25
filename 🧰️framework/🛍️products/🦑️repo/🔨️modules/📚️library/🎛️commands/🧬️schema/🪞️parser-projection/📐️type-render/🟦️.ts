@@ -9,7 +9,7 @@ import { EXPORT_NAME, IDENTIFIER_NAME, asDict, has, isDict, jsonString, jsonValu
 /** 🔎️ The one element schema of an array; a positional (tuple) `items` list has none. */
 export const itemSchema = (node: Dict): Dict => (isDict(node.items) ? node.items : {});
 
-/** 🔎️ The export a `$ref` names, if its last segment is an export name. */
+/** 🔚️ The export a `$ref` names, if its last segment is an export name. */
 const referenced = (node: Dict): string | undefined => {
   const target = String(node.$ref).split("/").at(-1)!;
   return EXPORT_NAME.test(target) ? target : undefined;
@@ -17,7 +17,7 @@ const referenced = (node: Dict): string | undefined => {
 
 const isNull = (node: unknown): boolean => isDict(node) && node.type === "null";
 
-/** 🔎️ The single non-null alternative of `type: [T, "null"]` or `anyOf|oneOf: [T, {"type": "null"}]`. */
+/** 🔂️ The single non-null alternative of `type: [T, "null"]` or `anyOf|oneOf: [T, {"type": "null"}]`. */
 export function nullableOf(node: Dict): Dict | undefined {
   const kinds = node.type;
   if (Array.isArray(kinds) && kinds.includes("null")) {
@@ -45,7 +45,7 @@ const objectEntries = (node: Dict): [string, unknown][] | undefined => {
 
 const ANNOTATIONS = new Set(["description", "title", "default", "examples", "$comment", "deprecated", "readOnly", "writeOnly", "$id", "$schema"]);
 
-/** 🔎️ A node that states no structure, only annotations: any JSON value. */
+/** 📊️ A node that states no structure, only annotations: any JSON value. */
 export const isAny = (node: Dict): boolean => Object.keys(node).every((key) => ANNOTATIONS.has(key) || key.startsWith("x-"));
 
 /** 🏷️ A field name as a GraphQL or protobuf identifier: a character outside `[A-Za-z0-9_]` becomes `_` and a leading digit gets a `_` in front (`2d` to `_2d`); `undefined` when nothing is left. */
@@ -54,7 +54,7 @@ const identifierOf = (field: string): string | undefined => {
   return name === "" ? undefined : /^[0-9]/u.test(name) ? `_${name}` : name;
 };
 
-/** 🏷️ `foo_bar` and `fooBar` to `FooBar`. */
+/** 🐪️ `foo_bar` and `fooBar` to `FooBar`. */
 const pascal = (field: string): string =>
   field
     .split(/[^A-Za-z0-9]+/u)
@@ -67,7 +67,7 @@ type ScalarKind = "string" | "integer" | "number" | "boolean";
 const memberKind = (value: unknown): ScalarKind | undefined =>
   typeof value === "string" ? "string" : typeof value === "boolean" ? "boolean" : typeof value === "bigint" ? "integer" : typeof value === "number" ? (Number.isInteger(value) ? "integer" : "number") : undefined;
 
-/** 🔎️ The scalar kind an `enum` or `const` pins its values to, or `undefined` for none or a mixture. */
+/** 📌️ The scalar kind an `enum` or `const` pins its values to, or `undefined` for none or a mixture. */
 function pinnedKind(node: Dict): ScalarKind | undefined {
   const members = has(node, "const") ? [node.const] : Array.isArray(node.enum) ? node.enum : undefined;
   if (members === undefined || members.length === 0) return undefined;
@@ -77,14 +77,14 @@ function pinnedKind(node: Dict): ScalarKind | undefined {
   return [...kinds].every((kind) => kind === "integer" || kind === "number") ? "number" : undefined;
 }
 
-/** 🔎️ The kind of a node: what its `enum` or `const` pins, else its `type`, else `object` for a node that states properties. */
+/** 🗂️ The kind of a node: what its `enum` or `const` pins, else its `type`, else `object` for a node that states properties. */
 function kindOf(node: Dict): string | undefined {
   return pinnedKind(node) ?? (typeof node.type === "string" ? node.type : !has(node, "type") && objectEntries(node) !== undefined ? "object" : undefined);
 }
 //#endregion 🔖️Shapes
 
 //#region 🔖️Auxiliaries
-/** 🏷️ True when a name is already declared in the leaf (or is an export of the document) and must not be taken by an auxiliary declaration. */
+/** 📄️ True when a name is already declared in the leaf (or is an export of the document) and must not be taken by an auxiliary declaration. */
 export type Taken = (name: string) => boolean;
 
 /** 📦️ The named declarations one rendering adds in front of its export (`<Parent><Field>` for a nested object, the `JSON` scalar), and the names it has claimed. */
@@ -141,7 +141,7 @@ function graphqlObject(name: string, node: Dict, aux: Auxiliaries): string | und
   return `type ${name} {\n${lines.join("\n")}\n}\n`;
 }
 
-/** 🔗️ The GraphQL type of one schema node and whether it admits `null`. Every node has one: a nested object becomes the type `<Parent><Field>`, an enum or constant its scalar, and a form GraphQL cannot express (a map, a union, any value, a tuple) the scalar `JSON`. */
+/** 🧬️ The GraphQL type of one schema node and whether it admits `null`. Every node has one: a nested object becomes the type `<Parent><Field>`, an enum or constant its scalar, and a form GraphQL cannot express (a map, a union, any value, a tuple) the scalar `JSON`. */
 function graphqlType(node: Dict, parent: string, field: string, aux: Auxiliaries): GraphqlType {
   const json = (): GraphqlType => {
     aux.json();
@@ -171,7 +171,7 @@ function graphqlType(node: Dict, parent: string, field: string, aux: Auxiliaries
   return json();
 }
 
-/** 🔗️ The GraphQL declarations of one export: an enum, an object type (with the types of its nested objects in front) or a scalar. `undefined` only when a property has no GraphQL name. */
+/** 🖌️ The GraphQL declarations of one export: an enum, an object type (with the types of its nested objects in front) or a scalar. `undefined` only when a property has no GraphQL name. */
 export function renderGraphql(name: string, definition: Dict, taken: Taken = () => false): string | undefined {
   const members = stringEnum(definition);
   if (members) {
@@ -220,7 +220,7 @@ function protoMessage(name: string, node: Dict, aux: Auxiliaries): string | unde
   return `message ${name} {\n${lines.join("\n")}\n}\n`;
 }
 
-/** 🛰️ The protobuf type of one schema node. Every node has one: a nested object becomes the message `<Parent><Field>`, a typed map `map<string, V>`, an array `repeated`, and a form protobuf cannot express (a union, any value, a tuple, a nullable array, an array of arrays) `bytes`, the JSON text of the value. */
+/** 🧪️ The protobuf type of one schema node. Every node has one: a nested object becomes the message `<Parent><Field>`, a typed map `map<string, V>`, an array `repeated`, and a form protobuf cannot express (a union, any value, a tuple, a nullable array, an array of arrays) `bytes`, the JSON text of the value. */
 function protoType(node: Dict, parent: string, field: string, aux: Auxiliaries): ProtoType {
   if (has(node, "$ref")) {
     const target = referenced(node);
@@ -260,7 +260,7 @@ function protoType(node: Dict, parent: string, field: string, aux: Auxiliaries):
   return BYTES;
 }
 
-/** 🛰️ The protobuf messages of one export: the message itself (with the messages of its nested objects in front) or, for a value that is no object, a message whose one field carries the value. `undefined` only when a property has no protobuf name. */
+/** 📨️ The protobuf messages of one export: the message itself (with the messages of its nested objects in front) or, for a value that is no object, a message whose one field carries the value. `undefined` only when a property has no protobuf name. */
 export function renderProto(name: string, definition: Dict, taken: Taken = () => false): string | undefined {
   const aux = new Auxiliaries(taken, name);
   const entries = objectEntries(definition);
@@ -277,7 +277,7 @@ export function renderProto(name: string, definition: Dict, taken: Taken = () =>
 //#endregion 🔖️Protobuf
 
 //#region 🔖️TypeScript
-/** 🔎️ True when `text` has `operator` outside every bracket and string literal. */
+/** 🔝️ True when `text` has `operator` outside every bracket and string literal. */
 function splitsAtTop(text: string, operator: string): boolean {
   let depth = 0;
   let quote: string | undefined;
@@ -301,14 +301,14 @@ const propertyName = (field: string): string => (IDENTIFIER_NAME.test(field) ? f
 /** 🧭️ How the TypeScript type of a reference outside the plain export names is found: the type text, or the node to render in the scope of the document that states it. */
 export type TypeResolution = string | { readonly node: Dict; readonly scope: TypeScope };
 
-/** 🧭️ The references one document's types can follow (a whole document, a pointer into this or another document); without a scope only a reference to an export name has a type. */
+/** ⌨️ The references one document's types can follow (a whole document, a pointer into this or another document); without a scope only a reference to an export name has a type. */
 export interface TypeScope {
   readonly type: (reference: string) => TypeResolution | undefined;
 }
 
 let following = 0;
 
-/** 🧭️ How many references one type follows in place before it is refused as cyclic. */
+/** 🛑️ How many references one type follows in place before it is refused as cyclic. */
 const MAX_FOLLOWED = 12;
 
 function tsFields(node: Dict, scope?: TypeScope): string[] | undefined {
@@ -342,7 +342,7 @@ function constType(value: unknown): string | undefined {
   return undefined;
 }
 
-/** 🟦️ The TypeScript type text of one schema node, or `undefined` when it has no plain form: a reference nothing resolves, or a nested object with a property that has no plain form. A union is the union of its alternatives, `allOf` an intersection, a positional `items` list a tuple, a nested object an object type, a constant its literal type, and a node that states no structure `unknown`. */
+/** 📜️ The TypeScript type text of one schema node, or `undefined` when it has no plain form: a reference nothing resolves, or a nested object with a property that has no plain form. A union is the union of its alternatives, `allOf` an intersection, a positional `items` list a tuple, a nested object an object type, a constant its literal type, and a node that states no structure `unknown`. */
 export function tsType(node: Dict, scope?: TypeScope): string | undefined {
   if (has(node, "$ref")) {
     if (scope === undefined || typeof node.$ref !== "string") return referenced(node);
@@ -410,7 +410,7 @@ export function tsType(node: Dict, scope?: TypeScope): string | undefined {
   return undefined;
 }
 
-/** 🟦️ An exported TypeScript interface or alias for one export, or `undefined` when the schema has no plain form. */
+/** 📤️ An exported TypeScript interface or alias for one export, or `undefined` when the schema has no plain form. */
 export function renderTsType(name: string, definition: Dict, scope?: TypeScope): string | undefined {
   const fields = tsFields(definition, scope);
   if (fields !== undefined) return `export interface ${name} {\n${fields.map((line) => `  ${line};`).join("\n")}\n}\n`;

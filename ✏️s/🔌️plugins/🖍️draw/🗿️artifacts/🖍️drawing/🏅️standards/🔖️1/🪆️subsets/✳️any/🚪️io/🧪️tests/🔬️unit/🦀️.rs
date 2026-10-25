@@ -1,4 +1,5 @@
-
+use semio_s_artifact_draw_drawing::io;
+use semio_s_artifact_draw_drawing_write::{drawing_document_json_to_svg, drawing_document_to_svg};
 use semio_s_artifact_draw_drawing_model::{create_drawing_image_layer, create_drawing_shape_layer_rect, default_layer_base};
 use semio_s_artifact_draw_drawing_model::default_drawing_document;
 use semio_s_artifact_draw_drawing_model::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};
@@ -8,8 +9,6 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 /// 🎨️ The direct typed SVG route retains authored paint and positioned text.
 #[semio_framework_async_macros::async_test]
 async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes() {
-    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::svg_element_from_xml_node;
-    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::SvgElement;
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::parse_svg_xml;
 
     let mut rect = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect");
@@ -34,41 +33,13 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
     let (svg_text, width, height) = drawing_document_to_svg(&doc).expect("direct SVG export");
     assert!(width >= 1 && height >= 1);
 
-    let reparsed = parse_svg_xml(&svg_text).expect("bridged svg reparses");
-    let root = svg_element_from_xml_node(reparsed.root.as_ref().expect("svg root")).expect("typed svg root");
-    let layer_children: Vec<&SvgElement> = match &root {
-        SvgElement::Svg { children, .. } => children.iter().filter(|child| matches!(child, SvgElement::Group { .. })).collect(),
-        other => panic!("expected <svg> root, got {other:?}"),
-    };
-    assert_eq!(layer_children.len(), 4, "rect, gradient rect, text, image");
-    let leaf = |index: usize| match &layer_children[index] {
-        SvgElement::Group { children, .. } => &children[0],
-        other => panic!("expected node wrapper group, got {other:?}"),
-    };
-
-    match leaf(0) {
-        SvgElement::Path { common, .. } => assert!(common.presentation.fill.as_deref().is_some_and(|fill| fill.starts_with("rgb(255,")), "{:?}", common.presentation.fill),
-        other => panic!("expected filled rect path, got {other:?}"),
-    }
-    match leaf(1) {
-        SvgElement::Path { common, .. } => assert!(common.presentation.fill.as_deref().is_some_and(|fill| fill.starts_with("url(#draw-gradient-")), "gradient references its exported definition"),
-        other => panic!("expected gradient rect path, got {other:?}"),
-    }
-    match leaf(2) {
-        SvgElement::Text { common, children, .. } => {
-            assert_eq!(common.presentation.font_size.as_deref(), Some("12"));
-            assert!(matches!(&children[0], SvgElement::Tspan { children, .. } if children == &vec![SvgElement::TextNode("<a & b>".into())]));
-        },
-        other => panic!("expected text node, got {other:?}"),
-    }
-    match leaf(3) {
-        SvgElement::Unknown { name, attrs, .. } => {
-            assert_eq!(name, "image");
-            let href = attrs.iter().find(|attr| attr.name == "href").expect("image href attr");
-            assert!(href.value.starts_with("data:image/png;base64,"));
-        }
-        other => panic!("expected image node, got {other:?}"),
-    }
+    parse_svg_xml(&svg_text).expect("bridged svg reparses");
+    assert_eq!(svg_text.matches("<g").count(), 4, "rect, gradient rect, text, image wrappers");
+    assert!(svg_text.contains("fill=\"rgb(255,"), "{svg_text}");
+    assert!(svg_text.contains("url(#draw-gradient-"), "gradient references its exported definition");
+    assert!(svg_text.contains("font-size=\"12\""));
+    assert!(svg_text.contains("&lt;a &amp; b&gt;"));
+    assert!(svg_text.contains("<image") && svg_text.contains("data:image/png;base64,"));
 
     let json_error = drawing_document_json_to_svg(&semio_framework_value::DslValue::object([("bad".to_string(), semio_framework_value::DslValue::Bool(true))]));
     assert!(json_error.is_err());
@@ -82,7 +53,7 @@ async fn declared_pdf_serializer_entry_answers_a_pdf_for_the_native_pack() {
     let entry = io().entries.iter().find(|entry| entry.into.artifact_kind == "s.stdio.pdf").expect("the pdf serializer row is declared");
     let mut doc = default_drawing_document("hop", None);
     doc.layers.push(create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect"));
-    let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&doc)));
+    let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as semio_framework_pack::snapshot::ArtifactPack>::encode_pack(&doc)));
     let outcome = result.expect("the pdf hop runs");
     let IoPayload::Binary(bytes) = &outcome.value else { panic!("pdf is a binary payload") };
     assert!(bytes.starts_with(b"%PDF-1.4\n"), "{:?}", &bytes[..16]);

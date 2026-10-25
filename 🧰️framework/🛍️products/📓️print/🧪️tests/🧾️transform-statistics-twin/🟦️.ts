@@ -66,7 +66,7 @@ export default defineTestAdapter({
     },
     quantiles: {
       oracle: oracle("quantiles"),
-      /** 🎯️ The twin's R-7 quantile at the default and at four custom probabilities. */
+      /** 🎲️ The twin's R-7 quantile at the default and at four custom probabilities. */
       subject: () => {
         const defaults = [0, 0.25, 0.5, 0.75, 1];
         const custom = [0.1, 0.33, 0.66, 0.9];
@@ -82,7 +82,7 @@ export default defineTestAdapter({
     },
     kde: {
       oracle: oracle("kde"),
-      /** 🎯️ The twin's Gaussian and Epanechnikov estimates on the same nine-point grid. */
+      /** 🏠️ The twin's Gaussian and Epanechnikov estimates on the same nine-point grid. */
       subject: () => {
         const points = positions(SAMPLE, 9);
         return {

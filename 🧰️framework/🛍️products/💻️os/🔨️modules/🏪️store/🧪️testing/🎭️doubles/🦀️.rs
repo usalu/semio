@@ -9,6 +9,9 @@ pub use retirement::*;
 #[path = "🗄️store/🦀️.rs"]
 pub mod store;
 pub use store::{DemoMemberStoreProducer, DemoMemberWirePreparation, DemoMemberWirePreparationFactory, FixtureAuthoringFactory, close_demo_artifact_store, close_durable_publication, close_erased_member_publication, close_test_store, complete_test_catalog, demo_base_store_owners, demo_closable_store_owners, drain_channel_for_test, drive_test_report_replay, fixture_authoring_birth_demand, fixture_authoring_catalog, fixture_authoring_member_owners, fixture_wire_source, retained_demo_member_owners};
+#[path = "🌱️retained-edit/🦀️.rs"]
+mod retained_edit;
+pub use retained_edit::*;
 #[path = "🏭️preparation/🦀️.rs"]
 mod preparation;
 pub use preparation::*;

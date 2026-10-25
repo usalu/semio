@@ -199,7 +199,7 @@ export function toolJobProductionSource(source: string): string {
   return lines.join("\n");
 }
 
-/** 🧹️ Masks only test-only Rust items, preserving neighboring fields and production cfg alternatives. */
+/** 🎭️ Masks only test-only Rust items, preserving neighboring fields and production cfg alternatives. */
 export function toolJobProductionProtocolSource(raw: string): string {
   const source = raw, tokens = rustTokens(source), pairs = rustTokenPairs(tokens), spans: [number, number][] = [];
   const production = (start: number, end: number): number => {
@@ -293,7 +293,7 @@ export function toolJobGlobalPayloadStoreIsSharedFixedAuthority(row: GlobalPaylo
   );
 }
 
-/** 🎯️ Enumerates macro and ordinary builder registrations without trusting a manifest disposition. */
+/** 🔬️ Enumerates macro and ordinary builder registrations without trusting a manifest disposition. */
 /** 🏭️ The tool ids each proof-cataloged `ToolJobFactory` of one owner text classifies through its own `classification()` and `ArtifactOwnedToolJobFactory::TOOL_IDS`. */
 function toolJobClassifiedFactories(source: string, constants: ReadonlyMap<string, string>, lists: ReadonlyMap<string, string[]>): { classification: string; ids: string[] }[] {
   const result: { classification: string; ids: string[] }[] = [];
@@ -580,7 +580,7 @@ export function toolJobConstantEvaluator(sources: Iterable<string>): (expression
   return (expression) => evaluate(expression, []);
 }
 
-/** 🎯️ The text between the parenthesis that opens at `open` and its match, ignoring nested parentheses. */
+/** ☎️ The text between the parenthesis that opens at `open` and its match, ignoring nested parentheses. */
 function toolJobCallArguments(source: string, open: number): string | undefined {
   let depth = 0;
   for (let index = open; index < source.length; index += 1) {
@@ -605,7 +605,7 @@ function toolJobSplitArguments(text: string): string[] {
 }
 
 /** 📐️ Reads only owner-local typed bounded-first-step proof catalogs. A contract is spelled inline (`ToolExecutionContract::bounded_first_step(..)`) or as a call of an owner-local `fn name() -> ToolExecutionContract` whose body is that inline form; its arguments are literals or integer constants, evaluated from the constants of the same sources. */
-/** 🧮️ Resolves static contracts through exact constants and side-effect-free zero-argument helpers. */
+/** 📜️ Resolves static contracts through exact constants and side-effect-free zero-argument helpers. */
 export function toolJobContractSource(source: string, expression: string): { execution: "bounded" | "resumable"; values: number[] } | undefined {
   const external = new Map([
     ["semio_framework::kernel::COMMAND_MAXIMUM_BYTES", ["🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🦀️.rs", "COMMAND_MAXIMUM_BYTES"]],
@@ -649,7 +649,7 @@ export function toolJobContractSource(source: string, expression: string): { exe
   return resolve(expression, new Set());
 }
 
-/** 📐️ Reads only owner-local typed bounded-first-step proof catalogs. */
+/** ✅️ Reads only owner-local typed bounded-first-step proof catalogs. */
 export function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[] {
   const proofs: ToolJobProof[] = [];
   const evaluate = toolJobConstantEvaluator(files.values());

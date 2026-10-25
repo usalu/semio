@@ -2,7 +2,7 @@
 
 #[test]
 fn open_ready_routes_keyboard_overview_and_context_menu_using_shared_vectors() {
-    let vectors: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧫️fixtures/🌐️open/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧫️fixtures/🌐️open/🔣️.json")).unwrap();
     for row in vectors["tasks"].as_array().unwrap() {
         let (mut dashboard, mut tui) = view();
         let status = serde_json::from_value(row["status"].clone()).unwrap();
@@ -16,7 +16,7 @@ fn open_ready_routes_keyboard_overview_and_context_menu_using_shared_vectors() {
         dashboard.effects.clear();
         dashboard.focus_window(&mut tui, 0);
         dashboard.refresh_panes(&mut tui);
-        let ready_row = dashboard.windows[0].pane.rows.iter().position(|(_, action)| matches!(action, super::panes::RowAction::OpenReady(_)));
+        let ready_row = dashboard.windows[0].pane.rows.iter().position(|(_, action)| matches!(action, dashboard_terminal::testing::RowAction::OpenReady(_)));
         assert_eq!(ready_row.is_some(), row["accepted"].as_bool().unwrap());
         if let Some(selected) = ready_row { dashboard.windows[0].pane.selected = selected; dashboard.activate_row(&mut tui, 0); assert_eq!(dashboard.effects, expected, "overview: {row}"); }
         dashboard.effects.clear();

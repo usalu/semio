@@ -1,5 +1,8 @@
 
 //! 🧬️ Direct DAG mutation leaves: roster, wire witnesses, codecs, inverses and wire index exactness through the artifact facade.
+use semio_framework_os_kernel::DiffAlgebra;
+use semio_framework_artifact_infinite_dag_vcs::NodeMove;
+use semio_framework_artifact_infinite_dag_vcs::ReorderedNode;
 use super::*;
 use crate::os_spr::{ColdMutation, Mutation};
 use crate::os_spr::{ColdMutationDiff,ColdDiffAlgebra};
@@ -219,7 +222,7 @@ fn direct_reorder_diff_is_positional_rows_and_inverts_to_the_reversed_moves() {
     assert_eq!(mutation.inverse(&before).expect("valid retained mutation inverse fixture"), vec![DagMutation::ReorderNodes(ReorderNodes { moves: vec![NodeMove { id: "a".into(), to: 1 }, NodeMove { id: "c".into(), to: 2 }] })]);
     let after = protocol::apply_diff_cold(&diff, &before).expect("reorder applies");
     assert_eq!(after.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), ["c", "b", "a"]);
-    let negative = DiffAlgebra::<DagSnapshot>::inverse(&diff, &before);
+    let negative = protocol::ColdDiffAlgebra::<DagSnapshot>::inverse(&diff, &before);
     assert_eq!(protocol::apply_diff_cold(&negative, &after).expect("negative applies"), before);
     for (rows, code) in [
         (vec![ReorderedNode { id: "b".into(), from: 0, to: 1 }], "mutation.apply.order-mismatch"),
@@ -241,7 +244,7 @@ fn direct_delete_negative_diff_restores_the_node_before_its_edges() {
     let (diff, _) = mutation.diff(&before).into_parts();
     let after = protocol::apply_diff_cold(&diff, &before).expect("delete applies");
     assert_eq!(after.edges.iter().map(|edge| edge.id.as_str()).collect::<Vec<_>>(), ["keep"]);
-    let negative = DiffAlgebra::<DagSnapshot>::inverse(&diff, &before);
+    let negative = protocol::ColdDiffAlgebra::<DagSnapshot>::inverse(&diff, &before);
     assert_eq!(negative.steps.len(), 3);
     assert_eq!(negative.steps[0].created_node_at, Some(0));
     assert_eq!(negative.steps[1].connected_edge_at, Some(0));
@@ -256,7 +259,7 @@ fn direct_rename_negative_diff_is_one_delta_with_the_cascade() {
     let mutation = DagMutation::RenameNode(RenameNode { id: "a".into(), new_id: "z".into() });
     let (diff, _) = mutation.diff(&before).into_parts();
     let after = protocol::apply_diff_cold(&diff, &before).expect("rename applies");
-    let negative = DiffAlgebra::<DagSnapshot>::inverse(&diff, &before);
+    let negative = protocol::ColdDiffAlgebra::<DagSnapshot>::inverse(&diff, &before);
     assert_eq!(negative.steps.len(), 1);
     assert_eq!(protocol::apply_diff_cold(&negative, &after).expect("negative applies"), before);
 }
@@ -449,7 +452,7 @@ async fn reorder_nodes_inverse_diffs_sum_to_the_negative_diff() {
 async fn replace_node_kind_inverse_diffs_sum_to_the_negative_diff() {
     let mut cases = vec![self::witness_mutation(9)];
     cases.extend([
-        DagMutation::ReplaceNodeKind(ReplaceNodeKind { id: "b".into(), new_kind: DagNodeKind::Note { text: "middle".into(), output: crate::snapshot::IoPortSpec::default() } }),
+        DagMutation::ReplaceNodeKind(ReplaceNodeKind { id: "b".into(), new_kind: DagNodeKind::Note { text: "middle".into(), output: crate::pack::snapshot::IoPortSpec::default() } }),
     ]);
     for mutation in cases {
         crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &self::base()).await;

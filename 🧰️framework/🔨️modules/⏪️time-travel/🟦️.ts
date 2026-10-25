@@ -93,7 +93,7 @@ export function inputReplacementEquals(left: InputReplacement, right: InputRepla
   return left.schema === right.schema && left.payload.length === right.payload.length && left.payload.every((byte, index) => byte === right.payload[index]);
 }
 
-/** 🔤️ UTF-8 byte order (= code point order) of two strings, as Rust's `String: Ord`. */
+/** 📐️ UTF-8 byte order (= code point order) of two strings, as Rust's `String: Ord`. */
 export function compareCodePoints(left: string, right: string): number {
   let i = 0;
   let j = 0;
@@ -254,7 +254,7 @@ export function timeTravelUnchanged(session: TimeTravelSession, pending: TimeTra
   return inputReplacementEquals(pending.replacement, timeTravelStartOf(session, pending));
 }
 
-/** 🧾️ Why `accept` would be refused; an unchanged input keeps the draft open. */
+/** 🚫️ Why `accept` would be refused; an unchanged input keeps the draft open. */
 export function timeTravelAcceptRefusal(session: TimeTravelSession): TimeTravelRefusal | null {
   if (session.stage !== "editing" || session.pending === null) return "timeTravel.illegal";
   return timeTravelUnchanged(session, session.pending) ? "timeTravel.unchanged" : null;

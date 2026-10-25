@@ -19,6 +19,11 @@ pub const MAX_CHUNK_BYTES: usize = 64 * 1024;
 const MAX_ENVIRONMENT_PAIRS: usize = 8192;
 const MAX_GROUP_MEMBERS: usize = 64;
 pub const BUILD_TOOL_ENVIRONMENT: &str = "SEMIO_BUILD_TOOL";
+/// 🗣️ The variable through which a task learns the language of the dashboard that started it; the repo CLI reads it before every operating system setting.
+pub const TASK_LANGUAGE_ENVIRONMENT: &str = "SEMIO_LANGUAGE";
+
+/// 🌐️ The environment entry that makes a task speak `language` (`en`, `de`), for `SpawnGroup::from_launch`.
+pub fn task_language(language: &str) -> (String, String) { (TASK_LANGUAGE_ENVIRONMENT.to_string(), language.to_string()) }
 #[path = "../../../📚️library/🏗️build/🕸️graph/🦀️rust/🦀️.rs"]
 pub mod build_authority;
 
@@ -259,12 +264,12 @@ fn validate_environment(env: &[(String, String)]) -> bool {
 }
 
 impl SessionCommand {
-    /// 🏗️ Identifies the neutral Repo launcher whose selected backend belongs to task identity.
-    pub fn uses_build_tool(&self, root: &Path) -> bool {
-        let runtime = self.cmd.rsplit(['/', '\\']).next().is_some_and(|name| name == "bun" || name == "bun.exe");
-        if !runtime { return false; }
-        if self.args.first().is_some_and(|value| value == "repo") { return true; }
-        if !self.args.get(1).is_some_and(|value| value == "repo") { return false; }
+    /// 🔨️ Locates the arguments of the neutral Repo launcher: the `repo` binary takes them from the first word, a Bun script launcher owned by the workspace after its script and the `repo` word.
+    fn build_offset(&self, root: &Path) -> Option<usize> {
+        let name = self.cmd.rsplit(['/', '\\']).next()?;
+        if name == "repo" || name == "repo.exe" { return Some(0); }
+        if name != "bun" && name != "bun.exe" { return None; }
+        if !self.args.get(1).is_some_and(|value| value == "repo") { return None; }
         let normalize = |path: &Path| {
             let mut output = std::path::PathBuf::new();
             for component in path.components() {
@@ -276,14 +281,16 @@ impl SessionCommand {
         build_authority::build_launcher_paths(root).iter().any(|path| {
             #[cfg(windows)] { normalize(path).to_string_lossy().eq_ignore_ascii_case(&script.to_string_lossy()) }
             #[cfg(not(windows))] { normalize(path) == script }
-        })
+        }).then_some(2)
     }
+
+    /// 🔧️ Identifies the neutral Repo launcher whose selected backend belongs to task identity.
+    pub fn uses_build_tool(&self, root: &Path) -> bool { self.build_offset(root).is_some() }
 
     /// 🎯️ Resolves only explicit outer Repo options and environment; the workspace owns the default.
     pub fn selected_build_tool<'a>(&'a self, root: &Path, inherited: Option<&'a str>) -> Option<&'a str> {
-        if !self.uses_build_tool(root) { return None; }
+        let offset = self.build_offset(root)?;
         let mut tool = build_tool_environment(&self.env).or(inherited);
-        let offset = if self.args.first().is_some_and(|value| value == "repo") { 1 } else { 2 };
         let mut arguments = self.args[offset..].iter();
         while let Some(argument) = arguments.next() {
             if argument == "--" { break; }
@@ -321,9 +328,9 @@ impl SessionCommand {
         Ok(())
     }
 
-    /// 🪞 Whether two invocations are the same process: program, arguments, directory and declared environment.
+    /// 🪞 Whether two invocations are the same process: program, arguments, directory and declared environment; the language a task speaks is not part of its identity.
     pub fn same_task(&self, other: &Self) -> bool {
-        let env = |pairs: &[(String, String)]| pairs.iter().map(|(key, value)| (if cfg!(windows) { key.to_uppercase() } else { key.clone() }, value.clone())).collect::<std::collections::BTreeMap<_, _>>();
+        let env = |pairs: &[(String, String)]| pairs.iter().map(|(key, value)| (if cfg!(windows) { key.to_uppercase() } else { key.clone() }, value.clone())).filter(|(key, _)| key != TASK_LANGUAGE_ENVIRONMENT).collect::<std::collections::BTreeMap<_, _>>();
         self.cmd == other.cmd && self.args == other.args && self.cwd == other.cwd && env(&self.env) == env(&other.env)
     }
 }
@@ -396,7 +403,7 @@ pub fn dashboard_cache_dir(root: &Path) -> PathBuf {
     repo_meta_dir(root).join("⚡️cache").join("🎛️dashboard")
 }
 
-/// 🌐 The name of the daemon instance the environment selects, if any. `SEMIO_DASHBOARD_INSTANCE=<name>` gives a
+/// ☑️ The name of the daemon instance the environment selects, if any. `SEMIO_DASHBOARD_INSTANCE=<name>` gives a
 /// workspace a second, isolated daemon with its own endpoint, lock, journal and logs, so a smoke test can run on the
 /// real workspace without touching the developer's daemon. Characters other than letters, digits, `.`, `_` and `-`
 /// become `_`; the name is cut to 32 characters; an empty value selects the default instance.
@@ -459,20 +466,36 @@ pub fn workspace_key_of(root: &Path, instance: Option<&str>) -> String {
     format!("{:016x}", stable_hash(named.as_bytes()))
 }
 
-/// 🗄️ The per-user directory of daemon sockets. It never depends on `TMPDIR`, which differs between
-/// the shells and editors that start views; `SEMIO_DASHBOARD_RUNTIME_DIR` names another directory.
+/// 🗄️ The directory of daemon sockets the environment names: `SEMIO_DASHBOARD_RUNTIME_DIR`, else the per-user directory below.
 #[cfg(unix)]
 pub fn runtime_dir() -> PathBuf {
-    match std::env::var_os("SEMIO_DASHBOARD_RUNTIME_DIR").filter(|value| !value.is_empty()) {
-        Some(directory) => PathBuf::from(directory),
-        None => PathBuf::from("/tmp").join(format!("semio-dashboard-{}", semio_framework_ui_tui_terminal::pty::user_id())),
-    }
+    std::env::var_os("SEMIO_DASHBOARD_RUNTIME_DIR").filter(|value| !value.is_empty()).map_or_else(user_socket_dir, PathBuf::from)
 }
 
-/// 🔌 Where the daemon of a workspace listens unless its endpoint record says otherwise.
+/// 🧷 The short per-user directory every socket can live in. It never depends on `TMPDIR`, which differs between
+/// the shells and editors that start views, and it is shallow on purpose: `sun_path` holds 104 bytes on macOS and 108 on Linux.
+#[cfg(unix)]
+pub fn user_socket_dir() -> PathBuf {
+    PathBuf::from("/tmp").join(format!("semio-dashboard-{}", semio_framework_ui_tui_terminal::pty::user_id()))
+}
+
+/// 🔌 Where a daemon named `key` listens: `<runtime>/<key>.sock` while `fits` accepts that path, else
+/// `<fallback>/<xxh3 of the preferred path>.sock`, so a deep runtime directory never keeps a daemon from starting
+/// and two runtime directories never share a socket.
+///
+/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧫️fixtures/🌀️daemon/🔌️socket/🔣️.json
+#[cfg(unix)]
+pub fn socket_beneath(runtime: &Path, fallback: &Path, key: &str, fits: impl Fn(&Path) -> bool) -> PathBuf {
+    use std::os::unix::ffi::OsStrExt;
+    let preferred = runtime.join(format!("{key}.sock"));
+    if fits(&preferred) { return preferred; }
+    fallback.join(format!("{:016x}.sock", stable_hash(preferred.as_os_str().as_bytes())))
+}
+
+/// 🛤️ Where the daemon of a workspace listens unless its endpoint record says otherwise; the platform's own `sun_path` rule decides what fits.
 #[cfg(unix)]
 pub fn socket_path(root: &Path) -> PathBuf {
-    runtime_dir().join(format!("{}.sock", workspace_key(root)))
+    socket_beneath(&runtime_dir(), &user_socket_dir(), &workspace_key(root), |path| std::os::unix::net::SocketAddr::from_pathname(path).is_ok())
 }
 
 #[cfg(windows)]
@@ -491,7 +514,7 @@ pub fn endpoint(root: &Path) -> String {
     { daemon_dir(root).join("daemon.sock").display().to_string() }
 }
 
-/// 🏗️ The identity of this executable's build. An installed dashboard lives in a directory named
+/// 🏭️ The identity of this executable's build. An installed dashboard lives in a directory named
 /// after the hash of its bytes; any other build is identified by its size and modification instant.
 pub fn build_id() -> &'static str {
     static BUILD: std::sync::OnceLock<String> = std::sync::OnceLock::new();

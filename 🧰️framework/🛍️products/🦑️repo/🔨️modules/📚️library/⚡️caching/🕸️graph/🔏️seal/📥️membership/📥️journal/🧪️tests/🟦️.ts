@@ -1,4 +1,3 @@
-import"../../../../../🧪️tests/📐️phases/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "@semio-tech/framework-filesystem/observation/journal/schema.json";
@@ -17,7 +16,7 @@ test("repository journal joins installed native watcher, Git census and no-follo
  await mkdir(dirname(artifact), { recursive: true });
  const root = await mkdtemp(join(dirname(artifact), "j-")), abort = new AbortController(), start = performance.now(), seen: FilesystemJournalChangeV1[] = [];
  const control: FilesystemJournalControlV1 = { signal: abort.signal, remainingMilliseconds: () => 30_000 - (performance.now() - start), publish: async () => {}, yieldContinuation: async () => { await delay(0); } };
- const require = createRequire(join(process.cwd(), "package.json")), { Watcher } = require(join(dirname(require.resolve("nx/package.json")), "dist/src/native/index.js"));
+ const require = createRequire(join(process.cwd(), ".nx/installation/package.json")), { Watcher } = require(join(dirname(require.resolve("nx/package.json")), "dist/src/native/index.js"));
  let receive: ((error: unknown, events: readonly FilesystemJournalChangeV1[]) => void) | undefined, watcher: any, journal: Awaited<ReturnType<typeof createRepositoryFilesystemJournalV1>> | undefined;
  try {
   await mkdir(join(root, ".git/objects"), { recursive: true }); await mkdir(join(root, ".git/refs/heads"), { recursive: true });

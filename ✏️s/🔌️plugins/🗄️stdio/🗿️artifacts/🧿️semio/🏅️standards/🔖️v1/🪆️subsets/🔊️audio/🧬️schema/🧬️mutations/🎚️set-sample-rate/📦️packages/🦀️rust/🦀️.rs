@@ -38,8 +38,8 @@ pub mod schema {
         pub mod set_tag_value;
 
         /// 🔗️ The aggregate-facing contract of every audio leaf: an operation enum that diffs an audio snapshot into an audio diff and wraps each leaf.
-        pub trait SemioAudioOp: protocol::Mutation<SemioAudioSnapshot, Diff = SemioAudioDiff> + From<set_sample_rate::SetSampleRate> + From<set_format::SetFormat> + From<insert_channel::InsertChannel> + From<remove_channel::RemoveChannel> + From<set_channel_samples::SetChannelSamples> + From<insert_tag::InsertTag> + From<remove_tag::RemoveTag> + From<set_tag_value::SetTagValue> {}
+        pub trait SemioAudioOp: protocol::Mutation<SemioAudioSnapshot, Diff = SemioAudioDiff> + protocol::ColdMutation<SemioAudioSnapshot, ReferenceDiff = SemioAudioDiff> + From<set_sample_rate::SetSampleRate> + From<set_format::SetFormat> + From<insert_channel::InsertChannel> + From<remove_channel::RemoveChannel> + From<set_channel_samples::SetChannelSamples> + From<insert_tag::InsertTag> + From<remove_tag::RemoveTag> + From<set_tag_value::SetTagValue> {}
 
-        impl<T> SemioAudioOp for T where T: protocol::Mutation<SemioAudioSnapshot, Diff = SemioAudioDiff> + From<set_sample_rate::SetSampleRate> + From<set_format::SetFormat> + From<insert_channel::InsertChannel> + From<remove_channel::RemoveChannel> + From<set_channel_samples::SetChannelSamples> + From<insert_tag::InsertTag> + From<remove_tag::RemoveTag> + From<set_tag_value::SetTagValue> {}
+        impl<T> SemioAudioOp for T where T: protocol::Mutation<SemioAudioSnapshot, Diff = SemioAudioDiff> + protocol::ColdMutation<SemioAudioSnapshot, ReferenceDiff = SemioAudioDiff> + From<set_sample_rate::SetSampleRate> + From<set_format::SetFormat> + From<insert_channel::InsertChannel> + From<remove_channel::RemoveChannel> + From<set_channel_samples::SetChannelSamples> + From<insert_tag::InsertTag> + From<remove_tag::RemoveTag> + From<set_tag_value::SetTagValue> {}
     }
 }

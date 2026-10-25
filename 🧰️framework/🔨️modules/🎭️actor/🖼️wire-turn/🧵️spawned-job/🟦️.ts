@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** 🧵️ The spawned-job drive: a `spawn-job` recovered off the boundary and pumped step by step until the kernel's rule completes it. */
+/** 🚀️ The spawned-job drive: a `spawn-job` recovered off the boundary and pumped step by step until the kernel's rule completes it. */
 // #endregion 🧲️Header
 
 // #region 🔌️Imports
@@ -25,7 +25,7 @@ export type SpawnedJobPort = {
   readonly stepJob: (job: bigint, budget: { readonly fuel: bigint; readonly deadlineMs: number }) => Promise<unknown>;
 };
 
-/** 🧵️ One spawned job, as this side of the ABI states it. `stepCeiling` exists for a law that wants
+/** 💼️ One spawned job, as this side of the ABI states it. `stepCeiling` exists for a law that wants
  * to drive the stall arm without 32 real round trips; production leaves it alone. */
 export type SpawnedJobDrive = {
   readonly job: bigint;
@@ -37,7 +37,7 @@ export type SpawnedJobDrive = {
   readonly onStep?: (step: { readonly job: bigint; readonly index: number; readonly status: SpawnedJobStep["status"] }) => void;
 };
 
-/** 🧵️ Normalizes one `jobs::job-step` observation. jco hands the WIT variant as `{tag, val}`; the
+/** 🪜️ Normalizes one `jobs::job-step` observation. jco hands the WIT variant as `{tag, val}`; the
  * shard worker already normalizes it to `{status, value}` for `ShardClient.stepJob`, and a
  * `running` carries an OPTIONAL progress pack. Both shapes are real on the same door, so reading only
  * one of them turns a finished job into a stall — the same class of defect that lost
@@ -52,7 +52,7 @@ export function wireJobStep(raw: unknown): SpawnedJobStep {
 }
 
 /**
- * 🧵️ Drives ONE `Effect::SpawnJob` to a terminal `job-step` — the host half of the ABI's job
+ * 🖥️ Drives ONE `Effect::SpawnJob` to a terminal `job-step` — the host half of the ABI's job
  * seam, shared verbatim by every renderer door so the two targets can never drift into two
  * protocols (this module's own header: the "third divergent copy" hazard).
  *
@@ -81,7 +81,7 @@ export async function driveSpawnedJob(drive: SpawnedJobDrive): Promise<SpawnedJo
   return spawnedJobCompletion(steps);
 }
 
-/** 🧵️ The actor-boundary event a completed spawned job owes its guest — the WIT `job-completed-event`
+/** ✅️ The actor-boundary event a completed spawned job owes its guest — the WIT `job-completed-event`
  * (`{job: u64, outcome: completion-result}`) in the same `{kind, payload}` envelope every other
  * host-submitted event uses. The guest correlates on `job` ALONE: the job id IS the parked request id
  * (`⚛️reactor/🔄️turn/🦀️.rs`), so no host-side request table exists or is needed. */
@@ -90,7 +90,7 @@ export function spawnedJobCompletedEvent(job: bigint, completion: SpawnedJobComp
   return { kind: "job-completed", payload: { job, outcome: { tag: "ok" in completion.outcome ? "ok" : "fault", val: Array.from(bytes) } } };
 }
 
-/** 🧵️ Every `spawn-job` a turn handed back, decoded once. Kept here rather than at each door so a
+/** 📡️ Every `spawn-job` a turn handed back, decoded once. Kept here rather than at each door so a
  * renderer never re-implements "which of these effects is a job". */
 export function wireSpawnedJobs(effects: readonly WireVariant[]): readonly Extract<Effect, { readonly spawnJob: unknown }>["spawnJob"][] {
   return effects.filter((effect) => effect.tag === "spawn-job").map((effect) => wireSpawnJob(effect).spawnJob);

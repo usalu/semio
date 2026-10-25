@@ -32,7 +32,7 @@ func MarkdownTable(title string, rows map[string]LocLangStats, fullTree, sincePr
 	case fullTree:
 		out.WriteString("| Category | loc | % | wip% | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n")
 	default:
-		out.WriteString("| Category | wip% | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: | ---: |\n")
+		out.WriteString("| Category | wip% | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: |\n")
 	}
 	for _, name := range names {
 		row := rows[name]

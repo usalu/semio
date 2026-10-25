@@ -22,7 +22,7 @@ export function wire(registry) {
 }
 
 /** 📄️ Projects a document catalog into separately owned PDF tasks without executing a compiler. */
-export async function printDocumentTargets(project, root, workspaceRoot, scripts) {
+export async function printDocumentTargets(project, root, workspaceRoot, scripts, intern = (inputs) => inputs) {
   const path = project.metadata?.printCatalog;
   if (!path) return {};
   const catalog = JSON.parse(readFileSync(join(workspaceRoot, path), "utf8")), compiler = dirname(dirname(path));
@@ -35,6 +35,7 @@ export async function printDocumentTargets(project, root, workspaceRoot, scripts
     return `{workspaceRoot}/${absolute}${statSync(join(workspaceRoot, absolute)).isDirectory() ? "/**/*" : ""}`;
   });
   const inputs = [...commandInputs, ...project.targets.fonts.inputs, `{workspaceRoot}/${path}`, `{workspaceRoot}/${compiler}/🔧️toolchain/**/*`, `{workspaceRoot}/${compiler}/📚️bundle/🔒️dependencies.json`, ...libraryInputs, `{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json`, `{workspaceRoot}/${javascriptManagerV1.scopeConfigName}`, { externalDependencies: ["pdfjs-dist", "sharp"] }, { runtime: "bun --version" }, { runtime: 'node -p "process.platform.concat(process.arch)"' }];
+  const shared = intern(inputs);
   for (const document of catalog.documents) {
     if (!/^[a-z]+(?:-[a-z0-9]+)*$/.test(document.id) || ids.has(document.id) || sources.has(document.texPath) || !["templates", "visualizations"].includes(document.collection)) throw new Error(`Invalid Print document owner: ${document.id}`);
     ids.add(document.id); sources.add(document.texPath);
@@ -43,14 +44,14 @@ export async function printDocumentTargets(project, root, workspaceRoot, scripts
       const source = `${product}/${path}`;
       return `{workspaceRoot}/${source}${statSync(join(workspaceRoot, source)).isDirectory() ? "/**/*" : ""}`;
     });
-    targets[`build-${document.id}`] = executionTargetV1("source", { executor: DEFAULT_EXECUTOR, cache: true, outputs: [printArtifactNxOutputV1(workspaceRoot,{version:1,kind:"document",mode:"prototype",namespace:"print",id:document.id})], inputs: [...inputs, ...paths], dependsOn: ["fonts", "deps-tectonic", "deps-tex", "generate"], options: { cwd: root, command: `repo ${buildPath(relative(root, script))} build ${document.id}`, forwardAllArgs: false } });
+    targets[`build-${document.id}`] = executionTargetV1("source", { executor: DEFAULT_EXECUTOR, cache: true, outputs: [printArtifactNxOutputV1(workspaceRoot,{version:1,kind:"document",mode:"prototype",namespace:"print",id:document.id})], inputs: [...shared, ...paths], dependsOn: ["fonts", "deps-tectonic", "deps-tex", "generate"], options: { cwd: root, command: `repo ${buildPath(relative(root, script))} build ${document.id}`, forwardAllArgs: false } });
     targets[`watch-${document.id}`] = executionTargetV1("source", { executor: DEFAULT_EXECUTOR, cache: false, continuous: true, outputs: [], dependsOn: [`build-${document.id}`], options: { cwd: root, command: `repo ${buildPath(relative(root, script))} watch`, forwardAllArgs: false } });
   }
   for (const [name, collection] of [["build", "templates"], ["build-viz", "visualizations"]]) targets[name] = executionTargetV1("source", { ...project.targets[name], cache: false, outputs: [], dependsOn: catalog.documents.filter(document => document.collection === collection).map(document => `build-${document.id}`) });
   return targets;
 }
 
-/** 🔨️ Every concrete Cargo package exposes native leaves even when its authored metadata only defines generators. `build` queues on the Cargo build lease and may overlap other work; `check` and `test` run Cargo directly and stay `parallelism: false`. */
+/** 🔨️ Every concrete Cargo package exposes native leaves even when its authored metadata only defines generators. `build` publishes its deliverables into the compiler store (`native cargo build` never writes `dist/build`), so no leaf declares a workspace output; it queues on the Cargo build lease and may overlap other work; `check` and `test` run Cargo directly and stay `parallelism: false`. */
 export async function cargoTargets(root, workspaceRoot, commandInputs,scripts) {
   const manifest = join(workspaceRoot, root, "Cargo.toml");
   if (!existsSync(manifest) || !readToml(manifest).package) return {};
@@ -60,7 +61,7 @@ export async function cargoTargets(root, workspaceRoot, commandInputs,scripts) {
     executor: DEFAULT_EXECUTOR,
     cache: true,
     ...(target === "build" ? {} : { parallelism: false }),
-    outputs: target === "build" ? ["{projectRoot}/dist/build/{options.env.SEMIO_BUILD_MODE}"] : [],
+    outputs: [],
     inputs: [target === "test" ? "nativeTestSources" : "nativeSources", target === "test" ? "^nativeTestSources" : "^nativeSources", ...commandInputs],
     options: { cwd: ".", command: `repo ${JSON.stringify(script)} native cargo ${target} --manifest ${JSON.stringify(buildPath(relative(workspaceRoot, manifest)))}` },
   }, target === "test" ? "test" : "production"))]));

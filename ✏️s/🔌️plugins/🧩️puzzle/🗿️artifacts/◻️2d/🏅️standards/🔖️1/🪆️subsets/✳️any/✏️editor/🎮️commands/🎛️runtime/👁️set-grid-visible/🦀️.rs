@@ -8,6 +8,6 @@ use semio_framework_pack_json::Value;
 pub fn set_grid_visible(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let next = args.and_then(|value| value.get("pressed")).and_then(Value::as_bool).unwrap_or(!ctx.scene.runtime.grid_visible);
     ctx.scene.runtime.grid_visible = next;
-    ctx.host.borrow_mut().set_grid_visible(next);
+    { let mut host = ctx.host.borrow_mut(); let host = &mut *host; semio_framework_os_infinite::board_set_grid_visible(&mut host.scene, &mut host.style, next); }
     *ctx.ui_scope = puzzle2d_window_and_measures_scope();
 }

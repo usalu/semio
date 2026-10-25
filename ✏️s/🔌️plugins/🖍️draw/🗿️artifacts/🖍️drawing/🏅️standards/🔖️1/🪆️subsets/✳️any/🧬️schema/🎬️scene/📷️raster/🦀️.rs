@@ -1,4 +1,5 @@
 //! 🖼️ Resolved world-space scene inputs with isolated scopes and cropped private paint.
+use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_s_artifact_draw_drawing_model::{PathSegment, FillStyle, StrokeStyle};
 use semio_s_artifact_draw_drawing_model::DrawingSceneGroup;
 use semio_framework_pixels::RasterImage;
@@ -62,10 +63,10 @@ pub struct RasterSceneJob {
  width:u32,height:u32,origin:[f64;2],tolerance:f64,max_pixels:usize,total_nodes:usize,source:VecDeque<RasterSceneNode>,
  max_source_bytes:usize,total_assets:usize,asset_source:VecDeque<RasterSceneAsset>,assets:usize,source_bytes:usize,admitted_images:usize,
  catalog:SceneTable<RasterSceneAsset>,admitted:SceneTable<RasterLease>,
- pub nodes:usize,group_at:usize,pixels:usize,work:u64,entries:usize,phase:&'static str,current:Option<RasterSceneNode>,retired_nodes:Vec<RasterSceneNode>,retired_assets:Vec<RasterSceneAsset>,retired_groups:Vec<DrawingSceneGroup>,retired_strings:Vec<String>,
- stack:Vec<Scope>,root:Vec<CompositeLayer>,closed:Vec<String>,ids:Vec<String>,images:SceneTable<RasterLease>,
- segment:usize,from:[f64;2],start:[f64;2],contour:bool,bounds:[f64;4],crop:[f64;6],painter:Option<PathRasterJob>,sampler:Option<AffineImageJob>,compositor:Option<CompositeJob>,compositor_retirement:Option<CompositeRetirement>,output:Option<RasterImage>,cancelled:bool,failure:Option<RasterSceneError>,
- pub painter_retirement:Option<PathRasterRetirement>,painted:Option<RasterImage>,sampler_retirement:Option<AffineImageRetirement>,sampled:Option<RasterImage>,retired_painters:Vec<PathRasterRetirement>,retired_samplers:Vec<AffineImageRetirement>,retired_compositors:Vec<CompositeRetirement>,
+ pub nodes:usize,group_at:usize,pixels:usize,pub work:u64,entries:usize,pub phase:&'static str,current:Option<RasterSceneNode>,retired_nodes:Vec<RasterSceneNode>,retired_assets:Vec<RasterSceneAsset>,retired_groups:Vec<DrawingSceneGroup>,retired_strings:Vec<String>,
+ stack:Vec<Scope>,root:Vec<CompositeLayer>,closed:Vec<String>,ids:Vec<String>,pub images:SceneTable<RasterLease>,
+ segment:usize,from:[f64;2],start:[f64;2],contour:bool,bounds:[f64;4],crop:[f64;6],pub painter:Option<PathRasterJob>,pub sampler:Option<AffineImageJob>,pub compositor:Option<CompositeJob>,pub compositor_retirement:Option<CompositeRetirement>,pub output:Option<RasterImage>,cancelled:bool,failure:Option<RasterSceneError>,
+ pub painter_retirement:Option<PathRasterRetirement>,pub painted:Option<RasterImage>,pub sampler_retirement:Option<AffineImageRetirement>,pub sampled:Option<RasterImage>,pub retired_painters:Vec<PathRasterRetirement>,pub retired_samplers:Vec<AffineImageRetirement>,pub retired_compositors:Vec<CompositeRetirement>,
 }
 /// 🛂️ Checks scalar and catalog capacities while preserving all original input custody.
 pub fn validate_scene_input(input:&RasterSceneInput)->Result<(),RasterSceneError>{
@@ -224,6 +225,7 @@ impl RasterSceneJob {
  }
 }
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct RasterSceneOwners {
  source:VecDeque<RasterSceneNode>,asset_source:VecDeque<RasterSceneAsset>,catalog:SceneTable<RasterSceneAsset>,admitted:SceneTable<RasterLease>,current:Option<RasterSceneNode>,retired_nodes:Vec<RasterSceneNode>,retired_assets:Vec<RasterSceneAsset>,retired_groups:Vec<DrawingSceneGroup>,retired_strings:Vec<String>,
  stack:Vec<Scope>,root:Vec<CompositeLayer>,closed:Vec<String>,ids:Vec<String>,images:SceneTable<RasterLease>,

@@ -5,7 +5,7 @@
   "description": "Where the architecture course is deployed: the host a CDN serves the static site at, and the host, image repository and container port of the proctor stack. The one authored source every deployment file is checked against.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["site", "proctor"],
+  "required": ["site", "proctor", "budget"],
   "properties": {
     "$schema": { "type": "string" },
     "site": {
@@ -36,6 +36,25 @@
         "image": { "description": "The registry repository every proctor image tag lives under, without a tag.", "type": "string", "pattern": "^[a-z0-9.-]+(?::[0-9]+)?(?:/[a-z0-9]+(?:[._-][a-z0-9]+)*)+$" },
         "port": { "description": "The port the proctor binds inside its container.", "type": "integer", "minimum": 1024, "maximum": 65535 }
       }
+    },
+    "budget": {
+      "description": "What a release build of the site may weigh, pinned from the real release build: the scripts the document runs (the entry chunk, compressed as a CDN sends them) per topology — `publish` is the build for the production proctor, `rehearsal` the one the end-to-end gate serves against its own proctor; the development topology serves unbundled modules and has no entry chunk to weigh —, the stylesheet compressed, and the whole artifact on disk. Lazy chunks the document merely hints at low priority (`fetchpriority=\"low\"`) are not charged to the scripts.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scriptGzipBytes", "styleGzipBytes", "totalBytes"],
+      "properties": {
+        "scriptGzipBytes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["publish", "rehearsal"],
+          "properties": {
+            "publish": { "$ref": "#/$defs/Bytes" },
+            "rehearsal": { "$ref": "#/$defs/Bytes" }
+          }
+        },
+        "styleGzipBytes": { "$ref": "#/$defs/Bytes" },
+        "totalBytes": { "$ref": "#/$defs/Bytes" }
+      }
     }
   },
   "$defs": {
@@ -44,6 +63,11 @@
       "type": "string",
       "maxLength": 253,
       "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$"
+    },
+    "Bytes": {
+      "description": "A size in bytes.",
+      "type": "integer",
+      "minimum": 1
     },
     "Link": {
       "description": "An absolute HTTPS URL.",

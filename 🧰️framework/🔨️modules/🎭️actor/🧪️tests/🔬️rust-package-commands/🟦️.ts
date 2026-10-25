@@ -11,10 +11,10 @@ export async function runTestScript(context: Readonly<{ root: string; repoRoot: 
   await executeCargoRequestV1({version:1,kind:"tests",manifest:relative(context.repoRoot,resolve(context.root,"Cargo.toml")).replaceAll("\\","/"),cwd:relative(context.repoRoot,context.root).replaceAll("\\","/"),packages:["semio-framework-actor"],arguments:segments},context.invocation);
 }
 
-/** 🏃️ Runs the `OriginalReceivingSourceScript` command under the caller's roots and invocation. */
+/** 📩️ Runs the `OriginalReceivingSourceScript` command under the caller's roots and invocation. */
 export async function runOriginalReceivingSourceScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args:string[]): Promise<void> {if(args.length)throw new Error("Expected test-original-receiving-source");await runActorSourceLawsV1(context.root,context.repoRoot,context.invocation);}
 
-/** 🏃️ Runs the `OriginalOwnedAsyncScript` command under the caller's roots and invocation. */
+/** 🏠️ Runs the `OriginalOwnedAsyncScript` command under the caller's roots and invocation. */
 export async function runOriginalOwnedAsyncScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args: string[]): Promise<void> {
   if(args.length!==1||!["source","native"].includes(args[0]!))throw new Error("Expected test-original-owned-async source|native");
   const left=context.invocation.control.remainingMilliseconds();if(left===null||left<=0)throw new Error("Original async qualification requires a finite original caller");
@@ -26,7 +26,7 @@ export async function runOriginalOwnedAsyncScript(context: Readonly<{ root: stri
   await executeCargoRequestV1({version:1,kind:"exact-laws",manifest:relative(context.repoRoot,resolve(context.root,"Cargo.toml")).replaceAll("\\","/"),cwd:".",groups:[{package:"semio-framework-actor",target:{kind:"test",name:"original-owned-async-turn"},laws:["original_owned_async_actor_turn_keeps_exact_wallet_recipient_and_epoch","original_owned_async_actor_turn_refuses_fresh_polling_wallet_without_losing_loan","original_owned_async_actor_turn_preserves_full_failure_and_raw_overspent_work","original_owned_async_actor_issuer_moves_and_rejoins_before_polling","original_source_loan_cancellation_witness_borrows_exact_parent_without_alias_birth","original_native_decode_source_receives_actual_physical_producer_and_preserves_denial","original_native_decode_source_preserves_outcome_on_raw_work_receiving_refusal"]}]},context.invocation);
 }
 
-/** 🏃️ Runs the `OriginalContextNativeScript` command under the caller's roots and invocation. */
+/** 💻️ Runs the `OriginalContextNativeScript` command under the caller's roots and invocation. */
 export async function runOriginalContextNativeScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args: string[]): Promise<void> {
   if (args.length) throw new Error("Expected test-original-context-native");
   const left = context.invocation.control.remainingMilliseconds();
@@ -45,10 +45,10 @@ export async function runOriginalContextNativeScript(context: Readonly<{ root: s
   ]},context.invocation);
 }
 
-/** 🏃️ Runs the `OwnershipScript` command under the caller's roots and invocation. */
+/** 🔑️ Runs the `OwnershipScript` command under the caller's roots and invocation. */
 export async function runOwnershipScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args:string[]): Promise<void> {if(args.length)throw new Error("Expected test-ownership");await runActorSourceLawsV1(context.root,context.repoRoot,context.invocation);}
 
-/** 🏃️ Runs the `OperationDiagnosticPublicationScript` command under the caller's roots and invocation. */
+/** 🩺️ Runs the `OperationDiagnosticPublicationScript` command under the caller's roots and invocation. */
 export async function runOperationDiagnosticPublicationScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args:string[]): Promise<void> {
 if(args.length!==1||!["source","native"].includes(args[0]!))throw new Error("test-operation-diagnostics requires source or native");
 const file=resolve(context.root,"../../🖼️wire-turn/⚠️diagnostic/🧪️tests/🟦️.ts"),receiving=resolve(context.root,"../../🖼️wire-turn/📬️typed-operation/📥️receiving/🧪️tests/🟦️.ts"),policy={version:1 as const,maximumElapsedMilliseconds:120000,output:{maximumBytes:1048576,maximumLines:4096}};

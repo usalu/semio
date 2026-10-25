@@ -2,7 +2,7 @@ import {sha256V1} from "../🔏️key/🟦️.ts";
 import {compareCodePointsV1, sortedCodePointsV1, type UnitDependencyV1, type UnitGraphV1, type UnitsPolicyV1, type UnitV1} from "../🕸️graph/🟦️.ts";
 import type {ExecuteOutcomeV1} from "../🏃️engine/🟦️.ts";
 
-/** 🦀️ The part of `cargo metadata --format-version 1` the planner reads. */
+/** 📖️ The part of `cargo metadata --format-version 1` the planner reads. */
 export type CargoMetadataV1 = {
   readonly workspace_root: string;
   readonly workspace_members: readonly string[];
@@ -77,7 +77,7 @@ export function rustUnitsFromMetadataV1(metadata: CargoMetadataV1, options: {rea
   return {version: 1, units: units.filter((unit, index) => units.findIndex(other => other.id === unit.id) === index)};
 }
 
-/** 🦀️ Maps a unit-cache entry (the rustc-granularity cache of `⚡️caching/🦀️cargo/🗃️unit-cache`) onto the neutral outcome: the `.rmeta` output is the interface, the digest of all outputs the implementation. */
+/** ⚡️ Maps a unit-cache entry (the rustc-granularity cache of `⚡️caching/🦀️cargo/🗃️unit-cache`) onto the neutral outcome: the `.rmeta` output is the interface, the digest of all outputs the implementation. */
 export function rustEntryOutcomeV1(entry: {readonly outputs: readonly {readonly name: string; readonly sha256: string}[]}, unit: Pick<UnitV1, "interface">): ExecuteOutcomeV1 {
   const rmeta = entry.outputs.find(output => output.name.endsWith(".rmeta"));
   if (unit.interface && !rmeta) throw Error("unit-cache entry has no .rmeta output");

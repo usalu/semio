@@ -25,7 +25,7 @@ export function readTypecheckUnitsSelectionV1(words:readonly string[]):Readonly<
  if(unitsContract.validate(selection).length)throw Error("Expected typecheck units <workspace-relative configuration.json> [--only <unit>]... [--jobs 1-8] [--replan]");return selection as {project:string;only:readonly string[];jobs:number;replan:boolean};
 }
 
-/** 📂️ Resolves the unit-wise selection to a real configuration inside the workspace. */
+/** 🔎️ Resolves the unit-wise selection to a real configuration inside the workspace. */
 export async function resolveTypecheckUnitsSelectionV1(workspace:string,words:readonly string[]):Promise<Readonly<{cwd:string;project:string;only:readonly string[];jobs:number;replan:boolean}>>{
  const selection=readTypecheckUnitsSelectionV1(words),cwd=await realpath(workspace),project=await realpath(resolve(cwd,selection.project)),distance=relative(cwd,project);
  if(project.length>256||isAbsolute(distance)||distance===".."||distance.startsWith(".."+sep)||!(await stat(project)).isFile())throw Error("TypeScript project must be a real workspace configuration");return{cwd,project,only:selection.only,jobs:selection.jobs,replan:selection.replan};

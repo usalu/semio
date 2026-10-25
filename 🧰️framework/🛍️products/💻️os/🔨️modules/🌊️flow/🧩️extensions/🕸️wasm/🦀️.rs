@@ -1,6 +1,11 @@
 //! 🔌️ Shared wasm extension glue for flow modules.
 
 use neural_engine::{inject_channel_defaults, ColdOwner, Dictionary, Registry};
+
+/// 🧮️ Weighs the allocator events that the paid-receipt laws of this crate's own test binary compare with their receipts.
+#[cfg(test)]
+#[global_allocator]
+static EXTENSIONS_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_value::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 

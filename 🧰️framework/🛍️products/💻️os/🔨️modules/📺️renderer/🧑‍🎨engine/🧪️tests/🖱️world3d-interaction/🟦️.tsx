@@ -200,7 +200,6 @@ export function testWorld3dInteraction(): void {
       view.unmount();
       clearArtifactPresenceRosterV1(runtimeKey);
       publishLocalPresenceActorV1(runtimeKey, null);
-      console.log("[DEBUG] mounted World3d presence: initial and settled orbit cameras published on canonical document/window view; no fabricated cursor; owner retirement cleared view");
     });
     afterEach(() => { cleanup(); presenceOwners.retireAll(); vi.restoreAllMocks(); });
 

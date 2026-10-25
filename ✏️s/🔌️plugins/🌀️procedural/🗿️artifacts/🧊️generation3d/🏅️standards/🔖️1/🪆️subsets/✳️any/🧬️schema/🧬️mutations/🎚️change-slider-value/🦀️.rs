@@ -2,6 +2,7 @@
 //! continuous control's intent IS the value (design §13.1), so a scrub commits exactly this leaf and editing it in
 //! history replays the value on any base.
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use crate::generation3d_label_number;
 
@@ -9,8 +10,10 @@ use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️ChangeSliderValue
 /// 🎚️ Sets slider `id` to `value`; a value outside the slider's range widens the range the way the canvas knob does.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeSliderValue {
     pub id: String,
     pub value: f64,

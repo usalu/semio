@@ -1,0 +1,1889 @@
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go
+@@ -14,12 +14,9 @@
+ 	"errors"
+ 	"fmt"
+ 	"os"
+-	"os/signal"
+-	"strings"
+-	"syscall"
++ "path/filepath"
+ 	"time"
+ 	graphqlpkg "github.com/usalu/semio/repo/graphql"
+-	launcher "github.com/usalu/semio/repo/launcher"
+ 	"github.com/usalu/semio/repo/providers"
+ 	"github.com/usalu/semio/repo/workspace"
+ 
+@@ -81,7 +78,6 @@
+ 	root.PersistentFlags().BoolP("text", "", false, "Shorthand for --format text")
+ 	root.PersistentFlags().BoolP("json", "", false, "Shorthand for --format json")
+ 	root.PersistentPreRunE = func(cmd *Command, args []string) error {
+-  if cmd.Flags().Changed("repo") && config.Repo == "" { return fmt.Errorf("repository directory required / Repository-Verzeichnis erforderlich") }
+ 		if b, _ := cmd.Flags().GetBool("json"); b {
+ 			config.Format = "json"
+ 		} else if b, _ := cmd.Flags().GetBool("text"); b {
+@@ -93,7 +89,6 @@
+ 	}
+ 	root.PersistentFlags().BoolVar(&config.Verbose, "verbose", false, "Verbose output")
+ 	root.PersistentFlags().StringVar(&config.Repo, "repo", "", "Repo root path")
+- root.PersistentFlags().flags["repo"].Single=true
+ 	root.PersistentFlags().DurationVar(&config.Timeout, "timeout", DefaultCommandTimeout, "Timeout for command execution")
+ 	root.AddCommand(mcpCommand(factory, &config))
+ 	root.AddCommand(graphqlCommand(factory, &config))
+@@ -165,10 +160,16 @@
+ 
+ // 🔶️defaultEngineFactory holds the data fields for a defaultEngineFactory record.
+ func defaultEngineFactory(config Config) (*Engine, error) {
+-	cwd, err := os.Getwd(); if err != nil { return nil, err }
+- var explicit *string; if config.Repo != "" { explicit = &config.Repo }
+- repoRoot, err := workspace.SelectRepoRoot(cwd, explicit); if err != nil { return nil, err }
+-	exec, err := graphqlpkg.NewExecutor(repoRoot)
++	repoRoot := config.Repo
++	if repoRoot == "" {
++		cwd, err := os.Getwd()
++		if err != nil {
++			return nil, err
++		}
++		repoRoot = workspace.FindRepoRoot(cwd)
++	}
++	workspace.SetRootDir(repoRoot)
++	exec, err := graphqlpkg.NewExecutorWithContext(repoRoot, graphqlpkg.NewRepoContext(repoRoot))
+ 	if err != nil {
+ 		return nil, err
+ 	}
+@@ -176,22 +177,37 @@
+ }
+ 
+ // 🚪️NativeEntrypointPlan selects the owned process port without parsing its arguments.
+-type NativeEntrypointPlan = launcher.Plan
+-
+-// 🧭️PlanNativeEntrypoint preserves opaque arguments at the native process boundary; the launcher module owns the one planner.
+-func PlanNativeEntrypoint(argv []string) NativeEntrypointPlan { return launcher.PlanRoute(argv) }
++type NativeEntrypointPlan struct { Kind string; Arguments []string }
++
++// 🧭️PlanNativeEntrypoint preserves opaque arguments at the native process boundary.
++func PlanNativeEntrypoint(argv []string) NativeEntrypointPlan {
++ arguments := append([]string{}, argv...)
++ if len(argv) >= 4 && argv[0] == "dev" && argv[1] == "mcp" && argv[2] == "stdio" && argv[3] == "os" { return NativeEntrypointPlan{"workspace", arguments} }
++ if len(argv) > 0 && argv[0] == "mcp" { return NativeEntrypointPlan{"mcp", arguments[1:]} }
++ if len(argv) > 0 && argv[0] == "dashboard" { return NativeEntrypointPlan{"build", append([]string{"run", "@semio-tech/repo-dashboard-rs:run", "--output=stream", "--"}, argv[1:]...)} }
++ index := 0
++ for index < len(argv) {
++  if argv[index] == "--tool" { index += 2; continue }
++  if len(argv[index]) >= 7 && argv[index][:7] == "--tool=" { index++; continue }; break
++ }
++ if index > 0 { return NativeEntrypointPlan{"build", arguments} }
++ if index < len(argv) { switch argv[index] { case "run", "run-many", "affected", "exec", "watch", "dependencies", "cargo", "tools", "reset", "cache", "preflight", "show", "graph", "inputs", "incremental", "concurrency", "capacity", "leases", "remote-execution": return NativeEntrypointPlan{"build", arguments} } }
++ return NativeEntrypointPlan{"domain", arguments}
++}
+ 
+ // 🛠️NativeScriptTool is the tool-independent owned build process port.
+ type NativeScriptTool interface { Run(root string, arguments []string) error }
+ 
+-type nativeLauncherTool struct{ entry string }
+-
+-func (tool nativeLauncherTool) Run(root string, arguments []string) error {
+- ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+- code := launcher.DefaultHost().Execute(ctx, root, tool.entry, arguments)
+- stop()
+- if code != 0 { return workspace.ExitError{Code: code} }
+- return nil
++type nativeBunBuildTool struct{}
++
++func (nativeBunBuildTool) Run(root string, arguments []string) error {
++ entry := filepath.Join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts")
++ return runNativeScriptProcess(append([]string{entry, "repo"}, arguments...))
++}
++
++type nativeRootScriptTool struct{}
++func (nativeRootScriptTool) Run(root string, arguments []string) error {
++ return runNativeScriptProcess(append([]string{filepath.Join(root, "📜️script.ts")}, arguments...))
+ }
+ 
+ // 🏗️RunNativeScript selects the issued build invocation without rewriting its environment.
+@@ -200,36 +216,15 @@
+  return tool.Run(workspace.FindRepoRoot(cwd), arguments)
+ }
+ 
+-// 📖️runRootHelp prints the one build catalogue help (the front door of the build implementation, the same text as `bun repo --help`) and then the native commands of the command tree, so no command list is kept twice.
+-func runRootHelp(arguments []string) error {
+- cwd, err := os.Getwd(); if err != nil { return err }
+- root := workspace.FindRepoRoot(cwd)
+- ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+- defer stop()
+- host := launcher.DefaultHost()
+- host.HandOff = launcher.RunChild
+- code := host.Execute(ctx, root, "build", arguments)
+- if heading, ok := host.Say(root, arguments, "helpNative", nil); ok {
+-  fmt.Fprintln(os.Stdout, "\n"+heading)
+-  tree, _ := NewRootWithConfig(defaultEngineFactory)
+-  rows := [][2]string{}
+-  for _, command := range tree.Commands() { rows = append(rows, [2]string{command.Use, command.Short}) }
+-  for _, id := range []string{"helpDashboard", "helpOsMcp"} { if line, found := host.Say(root, arguments, id, nil); found { usage, description, _ := strings.Cut(line, "   "); rows = append(rows, [2]string{usage, strings.TrimLeft(description, " ")}) } }
+-  width := 0
+-  for _, row := range rows { if len(row[0]) > width { width = len(row[0]) } }
+-  for _, row := range rows { fmt.Fprintf(os.Stdout, "  %-*s  %s\n", width, row[0], row[1]) }
+- }
+- if code != 0 { return workspace.ExitError{Code: code} }
+- return nil
+-}
+-
+ // 🔊️RunCLI runs the repo CLI entry point.
+ func RunCLI() error {
+  plan := PlanNativeEntrypoint(os.Args[1:])
+- if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-V") { if code := launcher.DefaultHost().Version(os.Args[1:]); code != 0 { return workspace.ExitError{Code: code} }; return nil }
+- if plan.Kind == "build" && (len(plan.Arguments) == 0 || plan.Arguments[0] == "--help" || plan.Arguments[0] == "-h") { return runRootHelp(plan.Arguments) }
+- if plan.Kind == "build" || plan.Kind == "workspace" || plan.Kind == "script" { return RunNativeScript(plan.Arguments, nativeLauncherTool{plan.Kind}) }
+-	if plan.Kind != "mcp" { if err := workspace.BindWorkingDirectory(); err != nil { return err } }
++ if plan.Kind == "build" { return RunNativeScript(plan.Arguments, nativeBunBuildTool{}) }
++ if plan.Kind == "workspace" { return RunNativeScript(plan.Arguments, nativeRootScriptTool{}) }
++ if len(os.Args) == 1 || os.Args[1] == "--help" || os.Args[1] == "-h" { fmt.Fprintln(os.Stdout, "Repository build commands: run, run-many, affected, exec, watch, dependencies, cargo, tools, reset, cache, preflight, show, graph, inputs, incremental, concurrency, capacity, leases, remote-execution\nHuman control plane: repo dashboard [arguments]\nMCP stdio: repo mcp (SEMIO_REPO_MCP_CLIENT selects the profile)\nOS MCP stdio: repo dev mcp stdio os [arguments]") }
++	if err := workspace.BindWorkingDirectory(); err != nil {
++		return err
++	}
+ 	if err := Execute(defaultEngineFactory); err != nil {
+ 		var exitErr workspace.ExitError
+ 		if errors.As(err, &exitErr) {
+@@ -242,7 +237,7 @@
+ 
+ // 🦀️RunMCP runs the repo MCP entry point (generic kind).
+ func RunMCP() error {
+- cwd,err:=os.Getwd();if err!=nil { return err };root,err:=workspace.SelectRepoRoot(cwd,nil);if err!=nil { return err };return RunMcpServerFor(context.Background(),root,providers.McpClientGeneric,DefaultCommandTimeout)
++	return RunMcpServerFor(providers.McpClientGeneric, DefaultCommandTimeout)
+ }
+ 
+ // 🔺️mcpCommand holds the data fields for a mcpCommand record.
+@@ -253,6 +248,9 @@
+ 		Short: "Run MCP server (optional kind: client, cursor, copilot, claude, codex, kiro)",
+ 		Args:  MaximumNArgs(1),
+ 		RunE: func(cmd *Command, args []string) error {
++			if dryRun {
++				return nil
++			}
+ 			kind := providers.McpClientGeneric
+ 			if len(args) > 0 {
+ 				parsed, err := providers.ParseMcpClientKind(args[0])
+@@ -261,15 +259,25 @@
+ 				}
+ 				kind = parsed
+ 			}
+-			if dryRun {return nil}
+-			cwd,err:=os.Getwd();if err!=nil { return err };var explicit *string;if cmd.Flags().Changed("repo") || config.Repo!="" { explicit=&config.Repo };rootDir,err:=workspace.SelectRepoRoot(cwd,explicit);if err!=nil { return err };return serveMcp(cmd.Context(),rootDir,kind,config.Timeout)
++			return serveMcp(cmd.Context(), kind, config.Timeout)
+ 		},
+ 	}
+ 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Initialize and exit without starting server")
+ 	return cmd
+ }
+ 
+-func serveMcp(ctx context.Context, rootDir string, kind providers.McpClientKind, toolTimeout time.Duration) error { return RunMcpServerFor(ctx,rootDir,kind,toolTimeout) }
++func serveMcp(ctx context.Context, kind providers.McpClientKind, toolTimeout time.Duration) error {
++	errCh := make(chan error, 1)
++	go func() {
++		errCh <- RunMcpServerFor(kind, toolTimeout)
++	}()
++	select {
++	case err := <-errCh:
++		return err
++	case <-ctx.Done():
++		return ctx.Err()
++	}
++}
+ 
+ // 🕸️graphqlCommand holds the data fields for a graphqlCommand record.
+ func graphqlCommand(factory EngineFactory, config *Config) *Command {
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🚪️entrypoint/🔣️.json
+@@ -5,27 +5,20 @@
+     "affected",
+     "exec",
+     "watch",
++    "dependencies",
++    "cargo",
++    "tools",
++    "reset",
++    "cache",
++    "preflight",
++    "show",
+     "graph",
+-    "show",
+     "inputs",
+-    "reset",
+-    "tools",
+-    "preflight",
+     "incremental",
+     "concurrency",
+-    "conformance",
+-    "units",
+-    "bench",
+-    "dependencies",
+-    "cargo",
+-    "cache",
+-    "remote-cache",
+     "capacity",
+     "leases",
+-    "service",
+-    "remote-execution",
+-    "doctor",
+-    "session"
++    "remote-execution"
+   ],
+   "dashboardArguments": [
+     "run",
+@@ -263,69 +256,9 @@
+       ]
+     },
+     {
+-      "id": "session",
+-      "argv": [
+-        "session",
+-        "--opaque=value"
+-      ],
+-      "kind": "build",
+-      "arguments": [
+-        "session",
+-        "--opaque=value"
+-      ]
+-    },
+-    {
+-      "id": "conformance",
+-      "argv": ["conformance", "--opaque=value"],
+-      "kind": "build",
+-      "arguments": ["conformance", "--opaque=value"]
+-    },
+-    {
+-      "id": "units",
+-      "argv": ["units", "--opaque=value"],
+-      "kind": "build",
+-      "arguments": ["units", "--opaque=value"]
+-    },
+-    {
+-      "id": "bench",
+-      "argv": ["bench", "--opaque=value"],
+-      "kind": "build",
+-      "arguments": ["bench", "--opaque=value"]
+-    },
+-    {
+-      "id": "remote-cache",
+-      "argv": ["remote-cache", "--opaque=value"],
+-      "kind": "build",
+-      "arguments": ["remote-cache", "--opaque=value"]
+-    },
+-    {
+-      "id": "service",
+-      "argv": ["service", "--opaque=value"],
+-      "kind": "build",
+-      "arguments": ["service", "--opaque=value"]
+-    },
+-    {
+-      "id": "doctor",
+-      "argv": ["doctor", "--opaque=value"],
+-      "kind": "build",
+-      "arguments": ["doctor", "--opaque=value"]
+-    },
+-    {
+-      "id": "service-status",
+-      "argv": ["service", "status"],
+-      "kind": "build",
+-      "arguments": ["service", "status"]
+-    },
+-    {
+-      "id": "service-leading-option",
+-      "argv": ["--service=off", "run", "a:b"],
+-      "kind": "build",
+-      "arguments": ["--service=off", "run", "a:b"]
+-    },
+-    {
+       "id": "root",
+       "argv": [],
+-      "kind": "build",
++      "kind": "domain",
+       "arguments": []
+     },
+     {
+@@ -333,42 +266,8 @@
+       "argv": [
+         "--help"
+       ],
+-      "kind": "build",
+-      "arguments": [
+-        "--help"
+-      ]
+-    },
+-    {
+-      "id": "help-short",
+-      "argv": [
+-        "-h"
+-      ],
+-      "kind": "build",
+-      "arguments": [
+-        "-h"
+-      ]
+-    },
+-    {
+-      "id": "help-language",
+-      "argv": [
+-        "--help",
+-        "--lang=de"
+-      ],
+-      "kind": "build",
+-      "arguments": [
+-        "--help",
+-        "--lang=de"
+-      ]
+-    },
+-    {
+-      "id": "domain-help",
+-      "argv": [
+-        "ticket",
+-        "--help"
+-      ],
+-      "kind": "domain",
+-      "arguments": [
+-        "ticket",
++      "kind": "domain",
++      "arguments": [
+         "--help"
+       ]
+     },
+@@ -635,137 +534,6 @@
+         "dev",
+         "mcp",
+         "stdio"
+-      ]
+-    },
+-    {
+-      "id": "mcp-explicit-root",
+-      "argv": [
+-        "mcp",
+-        "--repo",
+-        "chosen"
+-      ],
+-      "kind": "mcp",
+-      "arguments": [
+-        "--repo",
+-        "chosen"
+-      ]
+-    },
+-    {
+-      "id": "mcp-prefix-root",
+-      "argv": [
+-        "--repo",
+-        "chosen",
+-        "mcp"
+-      ],
+-      "kind": "mcp",
+-      "arguments": [
+-        "--repo",
+-        "chosen"
+-      ]
+-    },
+-    {
+-      "id": "mcp-prefix-root-equals",
+-      "argv": [
+-        "--repo=chosen",
+-        "mcp"
+-      ],
+-      "kind": "mcp",
+-      "arguments": [
+-        "--repo=chosen"
+-      ]
+-    },
+-    {
+-      "id": "script-plain",
+-      "argv": [
+-        "./📜️script.ts",
+-        "build"
+-      ],
+-      "kind": "script",
+-      "arguments": [
+-        "./📜️script.ts",
+-        "build"
+-      ]
+-    },
+-    {
+-      "id": "script-watch",
+-      "argv": [
+-        "--watch",
+-        "./x.ts",
+-        "a"
+-      ],
+-      "kind": "script",
+-      "arguments": [
+-        "--watch",
+-        "./x.ts",
+-        "a"
+-      ]
+-    },
+-    {
+-      "id": "script-cwd-equals",
+-      "argv": [
+-        "--cwd=sub",
+-        "x.mjs"
+-      ],
+-      "kind": "script",
+-      "arguments": [
+-        "--cwd=sub",
+-        "x.mjs"
+-      ]
+-    },
+-    {
+-      "id": "script-cwd-separate",
+-      "argv": [
+-        "--cwd",
+-        "sub dir",
+-        "--watch",
+-        "x.js",
+-        "--",
+-        "z"
+-      ],
+-      "kind": "script",
+-      "arguments": [
+-        "--cwd",
+-        "sub dir",
+-        "--watch",
+-        "x.js",
+-        "--",
+-        "z"
+-      ]
+-    },
+-    {
+-      "id": "script-after-tool-is-build",
+-      "argv": [
+-        "--tool=nx",
+-        "x.ts"
+-      ],
+-      "kind": "build",
+-      "arguments": [
+-        "--tool=nx",
+-        "x.ts"
+-      ]
+-    },
+-    {
+-      "id": "script-argument-is-not-a-script",
+-      "argv": [
+-        "ticket",
+-        "x.ts"
+-      ],
+-      "kind": "domain",
+-      "arguments": [
+-        "ticket",
+-        "x.ts"
+-      ]
+-    },
+-    {
+-      "id": "script-option-without-script",
+-      "argv": [
+-        "--watch",
+-        "run"
+-      ],
+-      "kind": "domain",
+-      "arguments": [
+-        "--watch",
+-        "run"
+       ]
+     }
+   ],
+@@ -776,14 +544,5 @@
+       "stdio",
+       "os"
+     ]
+-  ],
+-  "scriptExtensions": [
+-    ".ts",
+-    ".mjs",
+-    ".js"
+-  ],
+-  "scriptOptions": [
+-    "watch",
+-    "cwd"
+   ]
+ }
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚀️run-and-projection/🦀️.rs map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚀️run-and-projection/🦀️.rs
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚀️run-and-projection/🦀️.rs
+@@ -222,10 +222,7 @@
+         let _ = out.write_all(selected.help().as_bytes());
+         return EXIT_OK;
+     };
+-    let current = match std::env::current_dir() { Ok(path) => path, Err(error) => { let _ = writeln!(err, "{error}"); return EXIT_ERROR; } };
+-    let explicit = (parsed.flags.get("repo").is_some_and(|(_, changed)| *changed) || !config.repo.is_empty()).then(|| std::path::Path::new(&config.repo));
+-    let repo_root = match semio_framework_repo_workspace::select_repo_root(&current, explicit) { Ok(path) => path, Err(error) => { let _ = writeln!(err, "{error}"); return EXIT_ERROR; } };
+-    let mut invocation = Invocation::new(parsed, config, out, err, is_tty, repo_root);
++    let mut invocation = Invocation { parsed, config, out, err, is_tty };
+     match action(&mut invocation) {
+         Ok(()) => EXIT_OK,
+         Err(CliError::Exit(code)) => code,
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚪️entrypoint/🦀️.rs map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚪️entrypoint/🦀️.rs
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧭️repo-cli/🚪️entrypoint/🦀️.rs
+@@ -4,87 +4,45 @@
+ #[derive(Debug, PartialEq, Eq)]
+ pub struct NativeEntrypointPlan { pub kind: &'static str, pub arguments: Vec<String> }
+ 
+-/// 🎯️ Reads the existing repository-root option before the generic MCP protocol starts.
+-pub fn read_native_mcp_root_option(arguments: &[String]) -> Result<Option<String>, String> {
+- match arguments {
+-  [] => Ok(None),
+-  [flag, value] if flag == "--repo" && !value.is_empty() && !value.starts_with('-') => Ok(Some(value.clone())),
+-  [value] if value.starts_with("--repo=") && value.len() > 7 => Ok(Some(value[7..].to_owned())),
+-  _ => Err("Expected mcp [--repo <directory>] / Erwartet mcp [--repo <Verzeichnis>]".into()),
++/// 🎯️ Selects the process port before domain flag parsing.
++pub fn plan_native_entrypoint(argv: &[String]) -> NativeEntrypointPlan {
++ if argv.len() >= 4 && argv[..4].iter().map(String::as_str).eq(["dev", "mcp", "stdio", "os"]) { return NativeEntrypointPlan { kind: "workspace", arguments: argv.to_vec() }; }
++ if argv.first().is_some_and(|value| value == "mcp") { return NativeEntrypointPlan { kind: "mcp", arguments: argv[1..].to_vec() }; }
++ if argv.first().is_some_and(|value| value == "dashboard") { let mut arguments: Vec<String> = ["run", "@semio-tech/repo-dashboard-rs:run", "--output=stream", "--"].into_iter().map(String::from).collect(); arguments.extend_from_slice(&argv[1..]); return NativeEntrypointPlan { kind: "build", arguments }; }
++ let mut index = 0;
++ while index < argv.len() { if argv[index] == "--tool" { index += 2; } else if argv[index].starts_with("--tool=") { index += 1; } else { break; } }
++ let build = index > 0 || argv.get(index).is_some_and(|value| matches!(value.as_str(), "run" | "run-many" | "affected" | "exec" | "watch" | "dependencies" | "cargo" | "tools" | "reset" | "cache" | "preflight" | "show" | "graph" | "inputs" | "incremental" | "concurrency" | "capacity" | "leases" | "remote-execution"));
++ NativeEntrypointPlan { kind: if build { "build" } else { "domain" }, arguments: argv.to_vec() }
++}
++
++/// 🛠️ The tool-independent build process boundary.
++pub trait NativeScriptTool { fn run(&self, root: &std::path::Path, arguments: &[String]) -> Result<i32, String>; }
++
++struct BunScriptTool { entry: &'static str, prefix: &'static [&'static str] }
++impl NativeScriptTool for BunScriptTool {
++ fn run(&self, root: &std::path::Path, arguments: &[String]) -> Result<i32, String> {
++  let mut command = std::process::Command::new("bun");
++  command.arg(root.join(self.entry)).args(self.prefix).args(arguments);
++  #[cfg(unix)] { use std::os::unix::process::CommandExt; Err(command.exec().to_string()) }
++  #[cfg(not(unix))] { command.status().map(|status| status.code().unwrap_or(1)).map_err(|error| error.to_string()) }
+  }
+ }
+ 
+-/// 🏠️ Binds a native MCP process to a validated explicit or discovered repository directory.
+-pub fn resolve_native_mcp_root(arguments: &[String], current: &std::path::Path) -> Result<std::path::PathBuf, String> {
+- let selected = read_native_mcp_root_option(arguments)?;
+- semio_framework_repo_workspace::select_repo_root(current, selected.as_deref().map(std::path::Path::new))
++/// 🏗️ Runs the owned script entry with inherited environment, streams and process authority.
++fn run_native_script(arguments: &[String], tool: &dyn NativeScriptTool) -> i32 {
++ let current = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
++ let root = semio_framework_repo_workspace::find_repo_root(&current);
++ match tool.run(&root, arguments) { Ok(code) => code, Err(error) => { eprintln!("{error}"); 1 } }
+ }
+ 
+-/// 🎯️ Selects the process port before domain flag parsing.
+-pub fn plan_native_entrypoint(argv: &[String]) -> NativeEntrypointPlan { plan_native_entrypoint_with(&build_verbs(), argv) }
++/// 🏗️ Enters the authored build owner through the shared native script port.
++pub fn run_native_build(arguments: &[String]) -> i32 { run_native_script(arguments, &BunScriptTool { entry: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts", prefix: &["repo"] }) }
+ 
+-/// 🎯️ Plans with explicit build verbs.
+-pub fn plan_native_entrypoint_with(verbs: &[String], argv: &[String]) -> NativeEntrypointPlan {
+- if argv.len() >= 4 && argv[..4].iter().map(String::as_str).eq(["dev", "mcp", "stdio", "os"]) { return NativeEntrypointPlan { kind: "workspace", arguments: argv.to_vec() }; }
+- let mut prefix = 0;
+- while prefix < argv.len() { if argv[prefix] == "--repo" && prefix + 1 < argv.len() { prefix += 2; } else if argv[prefix].starts_with("--repo=") { prefix += 1; } else { break; } }
+- if prefix > 0 && argv.get(prefix).is_some_and(|value| value == "mcp") { let mut arguments = argv[..prefix].to_vec(); arguments.extend_from_slice(&argv[prefix + 1..]); return NativeEntrypointPlan { kind: "mcp", arguments }; }
+- if argv.first().is_some_and(|value| value == "mcp") { return NativeEntrypointPlan { kind: "mcp", arguments: argv[1..].to_vec() }; }
+- if argv.first().is_some_and(|value| value == "dashboard") { let mut arguments: Vec<String> = ["run", "@semio-tech/repo-dashboard-rs:run", "--output=stream", "--"].into_iter().map(String::from).collect(); arguments.extend_from_slice(&argv[1..]); return NativeEntrypointPlan { kind: "build", arguments }; }
+- if argv.is_empty() || argv.first().is_some_and(|value| value == "--help" || value == "-h") { return NativeEntrypointPlan { kind: "build", arguments: argv.to_vec() }; }
+- if script_index(argv).is_some() { return NativeEntrypointPlan { kind: "script", arguments: argv.to_vec() }; }
+- let mut index = 0;
+- while index < argv.len() { if argv[index] == "--tool" { index += 2; } else if argv[index].starts_with("--tool=") { index += 1; } else if argv[index].starts_with("--service=") { index += 1; } else { break; } }
+- let build = index > 0 || argv.get(index).is_some_and(|value| verbs.iter().any(|verb| verb == value));
+- NativeEntrypointPlan { kind: if build { "build" } else { "domain" }, arguments: argv.to_vec() }
+-}
+-
+-/// 📜️ The script file extensions a script route accepts (neutral vector `scriptExtensions`).
+-const SCRIPT_EXTENSIONS: [&str; 3] = [".ts", ".mjs", ".js"];
+-
+-/// 📜️ The index of the script argument when only the neutral watch and cwd options precede it.
+-fn script_index(argv: &[String]) -> Option<usize> {
+- let mut index = 0;
+- while index < argv.len() { if argv[index] == "--watch" || argv[index].starts_with("--cwd=") { index += 1; } else if argv[index] == "--cwd" { index += 2; } else { break; } }
+- (index < argv.len() && SCRIPT_EXTENSIONS.iter().any(|extension| argv[index].ends_with(extension))).then_some(index)
+-}
+-
+-/// 🏗️ The launcher registry names the neutral operations catalogue whose operation names are the build verbs.
+-const LAUNCHER_REGISTRY: &str = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json";
+-
+-fn read_build_verbs(root: &std::path::Path, registry: &std::path::Path) -> Option<Vec<String>> {
+- let document: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(registry).ok()?).ok()?;
+- let catalogue: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(root.join(document["routing"]["catalogue"].as_str()?)).ok()?).ok()?;
+- Some(catalogue["operations"].as_array()?.iter().filter_map(|operation| operation["name"].as_str().map(String::from)).collect())
+-}
+-
+-/// 🏗️ Reads the build verbs of the repository around the working directory; none outside a repository.
+-pub fn build_verbs() -> Vec<String> {
+- let mut directory = std::env::current_dir().ok();
+- while let Some(path) = directory {
+-  let registry = path.join(LAUNCHER_REGISTRY);
+-  if registry.is_file() { return read_build_verbs(&path, &registry).unwrap_or_default(); }
+-  directory = path.parent().map(std::path::Path::to_path_buf);
+- }
+- Vec::new()
+-}
+-
+-/// 🛠️ Build, workspace and script routes are started by the one canonical launcher, the Go `repo` command (module `🚀️launcher`); this implementation plans the routes and refuses to start them.
+-pub const LAUNCHER_REFUSAL: &str = "Build commands are started by the canonical Go repo launcher: repo run repo-mcp:install\nBuild-Befehle startet der kanonische Go-repo-Launcher: repo run repo-mcp:install";
++/// 🌉️ Enters the existing OS MCP workspace owner without generic build logging.
++pub fn run_native_workspace(arguments: &[String]) -> i32 { run_native_script(arguments, &BunScriptTool { entry: "📜️script.ts", prefix: &[] }) }
+ 
+ #[cfg(test)]
+ mod tests {
+- #[test]
+- fn native_mcp_repository_option_matches_shared_root_vectors() {
+-  let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🏠️workspace/🧭️root-selection/🧪️tests/🧫️fixtures/🔣️.json")).expect("shared root vectors");
+-  for row in fixture["optionCases"].as_array().expect("option cases") {
+-   let argv: Vec<String> = row["args"].as_array().expect("args").iter().map(|value| value.as_str().expect("argument").to_owned()).collect();
+-   let result = super::read_native_mcp_root_option(&argv);
+-   assert_eq!(result.is_ok(), row["accepted"].as_bool().expect("acceptance"));
+-   if let Ok(value) = result { assert_eq!(serde_json::json!(value), row["root"]); }
+-  }
+- }
+-
+  #[test]
+  fn native_entrypoint_matches_neutral_vectors() {
+   let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️entrypoint/🔣️.json")).unwrap();
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/README.md map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/README.md
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/README.md
+@@ -6,7 +6,7 @@
+ 
+ `repo mcp` exposes the build and dev surface as tools, so agents never shell out to build tools. Every exposed row of the tool-neutral operations catalogue (`📚️library/🏗️build/⚙️operations/🔣️catalog.json`) is one tool (`run`, `test`, `run_many`, `affected`, `exec`, `cargo`, `show_projects`, `show_project`, `show_targets`, `graph`, `inputs`, `leases_status`, `capacity_status`, `cache_status`, `incremental_*`, `concurrency_*`, ...). Name, input schema, argument vector, English and German description, annotations and task support are derived from the catalogue and one authored exposure policy (`🔌️mcp/🖼️assets/🏗️build-surface.json`, schema `🔌️mcp/🧬️schema/🏗️build-surface.json`); a catalogue row that is neither exposed nor excluded with a reason in both languages fails the start of the tools and the tests. The resource `repo://build-surface` lists what is exposed and what is left out.
+ 
+-Each call runs the `repo` executable itself without a shell, with no standard input and a cleaned environment, and answers with one structured result (`$defs.Result`): exit code, exact command, parsed JSON or the bounded output tail, agent, progress count and hints. It reports `notifications/progress` from the child's typed `[script]` lines, stops the child when the call is cancelled (interrupt, then kill after the grace period) and also runs as an MCP task (`tools/call` with `task`, `tasks/get|result|list|cancel`). Graph queries read the sealed graph by default (`graph_policy` current) and never wait for a rebuild. The argument `agent` (default: the agent of the connection) names the agent session of the call: the server asks `repo session open --json` once per agent (the client's own session variable, the connection, or the explicit name decide the identity) and passes only the session address as `SEMIO_AGENT_SESSION` to the child, so leases, capacity grants, cache lanes, Bazel slots, test sandboxes and compiler sessions attribute to that agent. The tools `session_open`, `session_status`, `session_list` and `session_close` expose the session itself. `tool`, `workers` and `language` select the build tool, the workers and the text language through `SEMIO_BUILD_TOOL`, `SEMIO_BUILD_WORKERS` and `SEMIO_LANGUAGE`.
++Each call runs the `repo` executable itself without a shell, with no standard input and a cleaned environment, and answers with one structured result (`$defs.Result`): exit code, exact command, parsed JSON or the bounded output tail, agent, progress count and hints. It reports `notifications/progress` from the child's typed `[script]` lines, stops the child when the call is cancelled (interrupt, then kill after the grace period) and also runs as an MCP task (`tools/call` with `task`, `tasks/get|result|list|cancel`). Graph queries read the sealed graph by default (`graph_policy` current) and never wait for a rebuild. The argument `agent` (default: the agent of the connection) becomes `SEMIO_AGENT_ID`, `SEMIO_SESSION` and `SEMIO_CARGO_LANE` of the child, so leases, capacity grants, cache lanes and compiler sessions attribute to that agent. `tool`, `workers` and `language` select the build tool, the workers and the text language through `SEMIO_BUILD_TOOL`, `SEMIO_BUILD_WORKERS` and `SEMIO_LANGUAGE`.
+ 
+ The server keeps a ring event log (a long session never loses its connection to a full log), isolates a panicking tool, interrupts its children when the connection ends and prints one readiness line on stderr.
+ 
+@@ -43,5 +43,5 @@
+ # 💯️Requirements
+ 
+ The GraphQL surface is a contract of this module, not of the CLI binary: `🔗️graphql/📦️packages/🐹️go`
+-implements the executor and the CLI imports it, the canonical GraphQL operation documents validate against it, and neither may add a field that this
++implements the executor and the CLI imports it, `🧩️vscode` writes documents against it, and neither may add a field that this
+ module does not declare.
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🏃️process/🐹️.go map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🏃️process/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🏃️process/🐹️.go
+@@ -19,8 +19,6 @@
+ 	"sync"
+ 	"time"
+ 	"unicode/utf8"
+-
+-	"github.com/usalu/semio/repo/workspace"
+ )
+ 
+ // #region 📈️Progress
+@@ -293,7 +291,7 @@
+ 		emit(event)
+ 	}
+ 	sink := &stderrSink{capture: stderr, emit: safeEmit, events: &events}
+-	command := workspace.ToolCommand(spec.Binary, append(append([]string(nil), spec.Prefix...), spec.Argv...)...)
++	command := exec.Command(spec.Binary, append(append([]string(nil), spec.Prefix...), spec.Argv...)...)
+ 	command.Dir, command.Env = spec.Dir, spec.Env
+ 	command.Stdin = nil
+ 	command.Stdout, command.Stderr = stdout, sink
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🔨️build/🐹️.go map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🔨️build/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🔨️build/🐹️.go
+@@ -32,7 +32,7 @@
+ 	Prefix    []string
+ 	Root      string
+ 	Environ   func() []string
+-	Sessions  SessionOpener
++	Lookup    func(string) (string, bool)
+ 	Process   int
+ 	Parent    int
+ 	gate      chan struct{}
+@@ -55,15 +55,7 @@
+ 	if err != nil {
+ 		return nil, err
+ 	}
+-	registryData, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(policy.Backends)))
+-	if err != nil {
+-		return nil, err
+-	}
+-	backends, err := ParseBackendIds(registryData)
+-	if err != nil {
+-		return nil, err
+-	}
+-	catalogue, err := ParseCatalogue(catalogueData, backends)
++	catalogue, err := ParseCatalogue(catalogueData)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+@@ -80,29 +72,19 @@
+ 	if err != nil {
+ 		return nil, err
+ 	}
+-	surface := &BuildSurface{Policy: policy, Catalogue: catalogue, Tools: tools, Runner: ExecRunner{}, Binary: binary, Root: root, Environ: os.Environ, Process: os.Getpid(), Parent: os.Getppid(), gate: make(chan struct{}, policy.Limits.Concurrent)}
+-	surface.Sessions = &surfaceSessions{surface: surface, known: map[SessionRequest]AgentIdentity{}}
+-	return surface, nil
+-}
+-
+-// 🪪️Agent opens the agent session of a call: the `agent` argument names it, else the connection does (client name and process ids; the client's own session variable wins inside `repo session open`). A session that cannot be opened leaves the call without an address, so the child resolves its own, and the reason is returned as a hint.
+-func (surface *BuildSurface) Agent(ctx context.Context, explicit string) (AgentIdentity, string) {
+-	request := SessionRequest{Agent: explicit}
+-	if explicit == "" {
+-		client := ""
+-		if session, ok := SessionFrom(ctx); ok {
+-			client = session.ClientInfo().Name
+-		}
+-		request = SessionRequest{Client: client, ClientProcess: surface.Parent, Process: surface.Process}
+-		if client == "" {
+-			request.Client = "agent"
+-		}
+-	}
+-	identity, err := surface.Sessions.Open(ctx, request)
+-	if err != nil {
+-		return AgentIdentity{ID: "unattached"}, "agent session not opened (" + err.Error() + "); the command attaches to its own session"
+-	}
+-	return identity, ""
++	return &BuildSurface{Policy: policy, Catalogue: catalogue, Tools: tools, Runner: ExecRunner{}, Binary: binary, Root: root, Environ: os.Environ, Lookup: os.LookupEnv, Process: os.Getpid(), Parent: os.Getppid(), gate: make(chan struct{}, policy.Limits.Concurrent)}, nil
++}
++
++// 🪪️Agent names the agent of a call: the `agent` argument, else the agent of the connection.
++func (surface *BuildSurface) Agent(ctx context.Context, explicit string) AgentIdentity {
++	if explicit != "" {
++		return NewAgent(explicit)
++	}
++	client := ""
++	if session, ok := SessionFrom(ctx); ok {
++		client = session.ClientInfo().Name
++	}
++	return ConnectionAgent(surface.Lookup, surface.Policy.Identity.ConnectionSources, client, surface.Parent, surface.Process)
+ }
+ 
+ // 🌿️Environment builds the environment of a child: the inherited one without the authored strip list, the authored constants, then the call's own variables.
+@@ -221,7 +203,7 @@
+ 			}
+ 			return CallToolResult{}, err
+ 		}
+-		agent, sessionHint := surface.Agent(ctx, invocation.Agent)
++		agent := surface.Agent(ctx, invocation.Agent)
+ 		limits := surface.Policy.Limits
+ 		report := &throttle{interval: time.Duration(limits.ProgressIntervalMs) * time.Millisecond, deliver: func(value float64, message string) { _ = progress.Report(ctx, value, nil, message) }}
+ 		send := report.send
+@@ -253,9 +235,6 @@
+ 			return CallToolResult{}, ctx.Err()
+ 		}
+ 		result := NewBuildResult(tool, invocation, agent, outcome)
+-		if sessionHint != "" {
+-			result.Hint = strings.TrimSpace(result.Hint + " " + sessionHint)
+-		}
+ 		structured, err := json.Marshal(result)
+ 		if err != nil {
+ 			return CallToolResult{}, err
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗂️catalog/🐹️.go map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗂️catalog/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗂️catalog/🐹️.go
+@@ -72,33 +72,9 @@
+ 	Operations []CatalogueOperation `json:"operations"`
+ }
+ 
+-// 🔌️ParseBackendIds reads the ids of the build backend registry in registry order.
+-func ParseBackendIds(data []byte) ([]string, error) {
+-	var registry struct {
+-		Backends []struct {
+-			ID string `json:"id"`
+-		} `json:"backends"`
+-	}
+-	if err := json.Unmarshal(data, &registry); err != nil {
+-		return nil, fmt.Errorf("mcp: backend registry: %w", err)
+-	}
+-	ids := make([]string, 0, len(registry.Backends))
+-	for _, backend := range registry.Backends {
+-		if backend.ID == "" || strings.ContainsAny(backend.ID, "|{}[]<>=, \"") {
+-			return nil, fmt.Errorf("mcp: backend registry: unusable id %q", backend.ID)
+-		}
+-		ids = append(ids, backend.ID)
+-	}
+-	if len(ids) == 0 {
+-		return nil, errors.New("mcp: backend registry: no backends")
+-	}
+-	return ids, nil
+-}
+-
+-// 📖️ParseCatalogue reads the catalogue document, expands the `{backends}` placeholder to the registered backend ids and refuses an unknown version or a missing language.
+-func ParseCatalogue(data []byte, backends []string) (Catalogue, error) {
++// 📖️ParseCatalogue reads the catalogue document and refuses an unknown version or a missing language.
++func ParseCatalogue(data []byte) (Catalogue, error) {
+ 	var catalogue Catalogue
+-	data = bytes.ReplaceAll(data, []byte("{backends}"), []byte(strings.Join(backends, "|")))
+ 	if err := json.Unmarshal(data, &catalogue); err != nil {
+ 		return Catalogue{}, fmt.Errorf("mcp: catalogue: %w", err)
+ 	}
+@@ -117,23 +93,13 @@
+ 	return CatalogueOperation{}, false
+ }
+ 
+-func (catalogue Catalogue) flag(name, operation string) (CatalogueFlag, bool) {
+-	var fallback *CatalogueFlag
+-	for index, flag := range catalogue.Flags {
+-		if flag.Name != name {
+-			continue
+-		}
+-		if contains(flag.Operations, operation) {
++func (catalogue Catalogue) flag(name string) (CatalogueFlag, bool) {
++	for _, flag := range catalogue.Flags {
++		if flag.Name == name {
+ 			return flag, true
+ 		}
+-		if fallback == nil || (len(fallback.Operations) > 0 && len(flag.Operations) == 0) {
+-			fallback = &catalogue.Flags[index]
+-		}
+-	}
+-	if fallback == nil {
+-		return CatalogueFlag{}, false
+-	}
+-	return *fallback, true
++	}
++	return CatalogueFlag{}, false
+ }
+ 
+ // #endregion 📖️CatalogueModel
+@@ -141,10 +107,11 @@
+ // #region 🏗️PolicyModel
+ 
+ type PolicyIdentity struct {
+-	Argument    string           `json:"argument"`
+-	Pattern     string           `json:"pattern"`
+-	Description Text             `json:"description"`
+-	Environment AgentEnvironment `json:"environment"`
++	Argument          string           `json:"argument"`
++	Pattern           string           `json:"pattern"`
++	Description       Text             `json:"description"`
++	Environment       AgentEnvironment `json:"environment"`
++	ConnectionSources []string         `json:"connectionSources"`
+ }
+ 
+ type PolicyGlobal struct {
+@@ -164,7 +131,6 @@
+ 	Minimum *int64   `json:"minimum"`
+ 	Maximum *int64   `json:"maximum"`
+ 	Items   []string `json:"items"`
+-	Closed  bool     `json:"closed"`
+ }
+ 
+ type PolicyEnvironment struct {
+@@ -239,7 +205,6 @@
+ 	Version      int                          `json:"version"`
+ 	Catalogue    string                       `json:"catalogue"`
+ 	BuildPolicy  string                       `json:"buildPolicy"`
+-	Backends     string                       `json:"backends"`
+ 	Identity     PolicyIdentity               `json:"identity"`
+ 	Globals      []PolicyGlobal               `json:"globals"`
+ 	OmittedFlags []PolicyOmitted              `json:"omittedFlags"`
+@@ -483,7 +448,7 @@
+ 			if omitted[flag] {
+ 				continue
+ 			}
+-			row, ok := catalogue.flag(flag, spec.Operation)
++			row, ok := catalogue.flag(flag)
+ 			if !ok {
+ 				return nil, fmt.Errorf("mcp: tool %q accepts %s, which the catalogue does not define", name, flag)
+ 			}
+@@ -520,7 +485,7 @@
+ 			}
+ 		}
+ 		for _, global := range policy.Globals {
+-			row, ok := catalogue.flag(global.Flag, "")
++			row, ok := catalogue.flag(global.Flag)
+ 			if !ok {
+ 				return nil, fmt.Errorf("mcp: policy global %s is not in the catalogue", global.Flag)
+ 			}
+@@ -606,18 +571,11 @@
+ 		input.Kind, input.Minimum, input.Maximum = InputInteger, override.Minimum, override.Maximum
+ 		schema.Type, schema.Minimum, schema.Maximum = "integer", override.Minimum, override.Maximum
+ 	case override.Type == "list":
+-		items := override.Items
+-		if override.Closed {
+-			items = enumOf(row.ValueName)
+-			if len(items) == 0 {
+-				return Input{}, Schema{}, fmt.Errorf("flag %s is a closed list but the catalogue names no value set", row.Name)
+-			}
+-		}
+-		input.Kind, input.Items = InputList, items
++		input.Kind, input.Items = InputList, override.Items
+ 		schema.Type, schema.MinItems, schema.UniqueItems = "array", 1, true
+ 		schema.Items = &Schema{Type: "string", MinLength: 1}
+-		if len(items) > 0 {
+-			schema.Items.Enum = items
++		if len(override.Items) > 0 {
++			schema.Items.Enum = override.Items
+ 		}
+ 	case row.Value == "optional":
+ 		return Input{}, Schema{}, fmt.Errorf("flag %s takes an optional value; omit it in the policy", row.Name)
+@@ -665,7 +623,7 @@
+ 		"tool":           text,
+ 		"operation":      text,
+ 		"subcommand":     text,
+-		"buildTool":      {Type: "string", MinLength: 1},
++		"buildTool":      {Type: "string", Enum: []string{"nx", "bazel"}},
+ 		"ok":             flag,
+ 		"exitCode":       whole,
+ 		"cancelled":      flag,
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗄️repository/🐹️.go map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗄️repository/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗄️repository/🐹️.go
+@@ -303,7 +303,7 @@
+ 	reopenProperties := map[string]Schema{"path": stringField("YY/MM/DD/SLUG path."), "prompt": stringField("Additional task description."), "client": stringField("Agent client."), "llm": stringField("Model."), "effort": stringField("Reasoning effort."), "draft": stringField("Draft id."), "title": stringField("Updated title."), "goal": stringField("Goal id."), "parent": stringField("Parent ticket."), "no_management": booleanField("Skip management integration.")}
+ 	reopenProperties["prompt"] = Schema{Type: "string", Description: "Additional task description.", MinLength: 1, Pattern: `\S`}
+ 	switch resolvedProfile {
+-	case providers.McpClientCopilot, providers.McpClientClaude, providers.McpClientCodex:
++	case providers.McpClientCursor, providers.McpClientCopilot, providers.McpClientClaude, providers.McpClientCodex:
+ 		openProperties["plan_id"] = stringField("Client plan id.")
+ 		reopenProperties["plan_id"] = stringField("Client plan id.")
+ 	case providers.McpClientKiro:
+# stage-clean head-live-changed staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🏗️build-surface/🐹️.go map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🏗️build-surface/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🏗️build-surface/🐹️.go
+@@ -34,11 +34,7 @@
+ 
+ func authoredSurface(t *testing.T) (Catalogue, Policy) {
+ 	t.Helper()
+-	backends, err := ParseBackendIds(originFile(t, "📚️library", "🏗️build", "🔌️backends", "📋️registry", "🔣️.json"))
+-	if err != nil {
+-		t.Fatal(err)
+-	}
+-	catalogue, err := ParseCatalogue(originFile(t, "📚️library", "🏗️build", "⚙️operations", "🔣️catalog.json"), backends)
++	catalogue, err := ParseCatalogue(originFile(t, "📚️library", "🏗️build", "⚙️operations", "🔣️catalog.json"))
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+@@ -124,35 +120,6 @@
+ 			if !strings.Contains(input.Description, "EN: ") || !strings.Contains(input.Description, "DE: ") {
+ 				t.Errorf("%s.%s: description is not bilingual", tool.Name, input.Name)
+ 			}
+-		}
+-	}
+-}
+-
+-func TestCatalogueExpandsTheRegisteredBackends(t *testing.T) {
+-	backends, err := ParseBackendIds(originFile(t, "📚️library", "🏗️build", "🔌️backends", "📋️registry", "🔣️.json"))
+-	if err != nil || len(backends) < 2 {
+-		t.Fatalf("the registry names at least two backends: %v %v", backends, err)
+-	}
+-	catalogue, policy := authoredSurface(t)
+-	row, ok := catalogue.flag("--tool", "")
+-	if !ok || row.ValueName != strings.Join(backends, "|") {
+-		t.Fatalf("--tool value set got=%q want=%q", row.ValueName, strings.Join(backends, "|"))
+-	}
+-	tools, err := Derive(catalogue, policy)
+-	if err != nil {
+-		t.Fatal(err)
+-	}
+-	if len(tools) == 0 {
+-		t.Fatal("no build tools derived")
+-	}
+-	for _, tool := range tools {
+-		if strings.Contains(tool.Schema.Description, "{backends}") {
+-			t.Errorf("%s: placeholder left in the description", tool.Name)
+-		}
+-	}
+-	for _, bad := range []string{`{"backends":[]}`, `{"backends":[{"id":"a|b"}]}`, `{"backends":[{"id":""}]}`, `[`} {
+-		if _, err := ParseBackendIds([]byte(bad)); err == nil {
+-			t.Errorf("registry %s must be refused", bad)
+ 		}
+ 	}
+ }
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🔌️build-session/🐹️.go map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🔌️build-session/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🔌️build-session/🐹️.go
+@@ -32,7 +32,6 @@
+ 	reader  *bufio.Reader
+ 	next    int
+ 	pending []json.RawMessage
+-	stashed map[int]rpcReply
+ }
+ 
+ type rpcReply struct {
+@@ -69,10 +68,6 @@
+ func (peer *rpcPeer) await(id int) rpcReply {
+ 	peer.t.Helper()
+ 	reply := rpcReply{}
+-	if early, found := peer.stashed[id]; found {
+-		delete(peer.stashed, id)
+-		return early
+-	}
+ 	for {
+ 		_ = peer.conn.SetReadDeadline(time.Now().Add(20 * time.Second))
+ 		line, err := peer.reader.ReadBytes('\n')
+@@ -96,10 +91,6 @@
+ 			reply.Result, reply.Error = envelope.Result, envelope.Error
+ 			return reply
+ 		}
+-		if peer.stashed == nil {
+-			peer.stashed = map[int]rpcReply{}
+-		}
+-		peer.stashed[*envelope.ID] = rpcReply{Result: envelope.Result, Error: envelope.Error}
+ 	}
+ }
+ 
+@@ -148,6 +139,7 @@
+ 	}
+ 	surface.Binary, surface.Prefix = "sh", []string{"-c", script, "repo"}
+ 	surface.Process, surface.Parent = 4242, 4241
++	surface.Lookup = func(string) (string, bool) { return "", false }
+ 	surface.Environ = func() []string {
+ 		return []string{"PATH=" + os.Getenv("PATH"), "MARKS=" + marks, "SEMIO_SCRIPT_POLICY=inherited", "SEMIO_PROCESS_OWNER_CONTEXT=inherited"}
+ 	}
+@@ -208,17 +200,7 @@
+ 	return CallToolResult{Content: result.Content, IsError: result.IsError}, build
+ }
+ 
+-// 🧪️reportScript stands in for the `repo` executable: `session open --json` answers like the real command (a deterministic session per agent name or per connection, and one line per call in $MARKS/opens), everything else reports what the child sees.
+-const reportScript = `if [ "$1" = session ]; then
+- agent=""; client=""; clientpid=""; ownerpid=""
+- for a in "$@"; do case "$a" in --agent=*) agent="${a#--agent=}";; --client=*) client="${a#--client=}";; --client-pid=*) clientpid="${a#--client-pid=}";; --owner-pid=*) ownerpid="${a#--owner-pid=}";; esac; done
+- [ -n "$MARKS" ] && echo "$*" >> "$MARKS/opens"
+- [ -n "$FAIL_SESSION" ] && { echo "no session" >&2; exit 3; }
+- if [ -z "$agent" ]; then agent="$(printf '%s' "$client" | tr 'A-Z ' 'a-z_')-$clientpid-$ownerpid"; fi
+- printf '{"version":1,"created":true,"address":"0123456789ab.s%s","session":{"id":"s%s","agent":{"id":"%s"},"resources":{"cargo":{"lane":"l%s"}}}}' "$agent" "$agent" "$agent" "$agent"
+- exit 0
+-fi
+-printf '{"address":"%s","tool":"%s","language":"%s","level":"%s","policy":"%s","owner":"%s","args":"%s","legacy":"%s"}' "$SEMIO_AGENT_SESSION" "${SEMIO_BUILD_TOOL:-}" "${SEMIO_LANGUAGE:-}" "${SEMIO_TEST_LEVEL:-}" "${SEMIO_SCRIPT_POLICY:-none}" "${SEMIO_PROCESS_OWNER_CONTEXT:-none}" "$*" "${SEMIO_AGENT_ID:-}${SEMIO_SESSION:-}${SEMIO_CARGO_LANE:-}"`
++const reportScript = `printf '{"agent":"%s","session":"%s","lane":"%s","tool":"%s","language":"%s","level":"%s","policy":"%s","owner":"%s","args":"%s"}' "$SEMIO_AGENT_ID" "$SEMIO_SESSION" "$SEMIO_CARGO_LANE" "${SEMIO_BUILD_TOOL:-}" "${SEMIO_LANGUAGE:-}" "${SEMIO_TEST_LEVEL:-}" "${SEMIO_SCRIPT_POLICY:-none}" "${SEMIO_PROCESS_OWNER_CONTEXT:-none}" "$*"`
+ 
+ func TestServerListsDerivedBuildToolsAndTasks(t *testing.T) {
+ 	fixture := newBuildSession(t, reportScript, nil)
+@@ -261,20 +243,17 @@
+ 	if text.IsError || !build.OK || build.ExitCode != 0 || build.Operation != "run" || build.BuildTool != "bazel" {
+ 		t.Fatalf("result %+v", build)
+ 	}
+-	var data struct{ Address, Tool, Language, Policy, Owner, Args, Legacy string }
++	var data struct{ Agent, Session, Lane, Tool, Language, Policy, Owner, Args string }
+ 	if err := json.Unmarshal(build.Data, &data); err != nil {
+ 		t.Fatalf("data %s: %v", build.Data, err)
+ 	}
+-	if data.Address != "0123456789ab.salpha" || data.Tool != "bazel" || data.Language != "en" || data.Args != "run a:b" {
+-		t.Fatalf("the child must see the session address and the selection: %+v", data)
+-	}
+-	if data.Legacy != "" {
+-		t.Fatalf("no per-tool identity variable reaches the child: %q", data.Legacy)
++	if data.Agent != "alpha" || data.Session != "alpha" || data.Lane != AgentLane("alpha") || data.Tool != "bazel" || data.Language != "en" || data.Args != "run a:b" {
++		t.Fatalf("the child must see the agent and the selection: %+v", data)
+ 	}
+ 	if data.Policy != "none" || data.Owner != "none" {
+ 		t.Fatalf("a call is its own original invocation: %+v", data)
+ 	}
+-	if build.Agent.ID != "alpha" || build.Agent.Session != "salpha" || build.Agent.Lane != "lalpha" || strings.Join(build.Command, " ") != "repo run a:b" {
++	if build.Agent.ID != "alpha" || strings.Join(build.Command, " ") != "repo run a:b" {
+ 		t.Fatalf("the result names the agent and the exact command: %+v", build)
+ 	}
+ 	if len(text.Content) != 1 || !strings.HasPrefix(text.Content[0].Text, "OK repo run a:b") {
+@@ -282,74 +261,10 @@
+ 	}
+ 	other := fixture.callTool("test", map[string]any{"project": "@semio-tech/repo-client", "test_level": "quick"}, nil)
+ 	_, tested := decodeToolResult(t, other)
+-	var testData struct{ Address, Level, Args string }
++	var testData struct{ Agent, Level, Args string }
+ 	_ = json.Unmarshal(tested.Data, &testData)
+-	if testData.Address != "0123456789ab.sharness_client-4241-4242" || tested.Agent.ID != "harness_client-4241-4242" || testData.Level != "quick" || testData.Args != "run @semio-tech/repo-client:test" {
+-		t.Fatalf("a call without agent runs as the agent of the connection: %+v %+v", testData, tested.Agent)
+-	}
+-}
+-
+-func TestEachAgentOpensItsSessionOnceAndAFailureNeverStopsTheCall(t *testing.T) {
+-	fixture := newBuildSession(t, reportScript, nil)
+-	for index := 0; index < 3; index++ {
+-		fixture.callTool("run", map[string]any{"target": "a:b", "agent": "alpha"}, nil)
+-	}
+-	fixture.callTool("run", map[string]any{"target": "a:b", "agent": "beta"}, nil)
+-	fixture.callTool("run", map[string]any{"target": "a:b"}, nil)
+-	fixture.callTool("run", map[string]any{"target": "a:b"}, nil)
+-	opens, err := os.ReadFile(filepath.Join(fixture.marks, "opens"))
+-	if err != nil {
+-		t.Fatal(err)
+-	}
+-	lines := strings.Split(strings.TrimSpace(string(opens)), "\n")
+-	want := []string{"session open --json --agent=alpha", "session open --json --agent=beta", "session open --json --client=Harness Client --client-pid=4241 --owner-pid=4242"}
+-	if len(lines) != len(want) {
+-		t.Fatalf("one open per distinct agent: %q", lines)
+-	}
+-	for index := range want {
+-		if lines[index] != want[index] {
+-			t.Fatalf("open %d got=%q want=%q", index, lines[index], want[index])
+-		}
+-	}
+-	broken := newBuildSession(t, reportScript, nil)
+-	broken.surface.Environ = func() []string {
+-		return []string{"PATH=" + os.Getenv("PATH"), "MARKS=" + broken.marks, "FAIL_SESSION=1"}
+-	}
+-	text, build := decodeToolResult(t, broken.callTool("run", map[string]any{"target": "a:b"}, nil))
+-	var data struct{ Address string }
+-	_ = json.Unmarshal(build.Data, &data)
+-	if text.IsError || !build.OK || data.Address != "" || build.Agent.ID != "unattached" || !strings.Contains(build.Hint, "agent session not opened") {
+-		t.Fatalf("a failed session open leaves the call running without an address: %+v %+v", build, data)
+-	}
+-}
+-
+-func TestSessionRequestsBuildTheRepoArguments(t *testing.T) {
+-	cases := map[string]SessionRequest{
+-		"session open --json --agent=x":                                          {Agent: "x"},
+-		"session open --json --client=c --client-pid=3 --owner-pid=4":            {Client: "c", ClientProcess: 3, Process: 4},
+-		"session open --json --client=c":                                         {Client: "c"},
+-		"session open --json":                                                    {},
+-	}
+-	for want, request := range cases {
+-		if got := strings.Join(request.Argv(), " "); got != want {
+-			t.Errorf("argv got=%q want=%q", got, want)
+-		}
+-	}
+-	if _, err := ParseSession([]byte(`{"address":"","session":{}}`)); err == nil {
+-		t.Error("a reply without an address is refused")
+-	}
+-	if _, err := ParseSession([]byte("not json")); err == nil {
+-		t.Error("garbage is refused")
+-	}
+-	identity, err := ParseSession([]byte(`{"address":"0123456789ab.sa","session":{"id":"sa","agent":{"id":"agent-1"},"resources":{"cargo":{"lane":"sa"}}}}`))
+-	if err != nil || identity != (AgentIdentity{ID: "agent-1", Session: "sa", Lane: "sa", Address: "0123456789ab.sa"}) {
+-		t.Errorf("identity %+v %v", identity, err)
+-	}
+-	if env := (AgentIdentity{}).Environment(AgentEnvironment{Session: "SEMIO_AGENT_SESSION"}); len(env) != 0 {
+-		t.Errorf("a call without an address carries no variable: %v", env)
+-	}
+-	if env := identity.Environment(AgentEnvironment{Session: "SEMIO_AGENT_SESSION"}); env["SEMIO_AGENT_SESSION"] != "0123456789ab.sa" || len(env) != 1 {
+-		t.Errorf("the address is the one variable: %v", env)
++	if !strings.HasPrefix(testData.Agent, "harness_client-") || testData.Level != "quick" || testData.Args != "run @semio-tech/repo-client:test" {
++		t.Fatalf("a call without agent runs as the agent of the connection: %+v", testData)
+ 	}
+ }
+ 
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🤝️protocol-contract/🐹️.go map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🤝️protocol-contract/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🤝️protocol-contract/🐹️.go
+@@ -119,7 +119,7 @@
+ 				if hasPlan || !hasSpec {
+ 					t.Fatalf("kiro ticket schema plan=%v spec=%v", hasPlan, hasSpec)
+ 				}
+-			} else if profile.Kind == "generic" || profile.Kind == "cursor" {
++			} else if profile.Kind == "generic" {
+ 				if hasPlan || hasSpec {
+ 					t.Fatalf("generic ticket schema plan=%v spec=%v", hasPlan, hasSpec)
+ 				}
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🪢️session/🐹️.go map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🪢️session/🐹️.go
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🪢️session/🐹️.go
+@@ -2,139 +2,86 @@
+ 
+ // 2026 Ueli Saluz <ueli@semio-tech.com>
+ 
+-// Agent sessions: whose call a build operation is. The repository's own `repo session open` issues the session (identity, lane, slot preference, namespaces, budget, capability) and this server only asks for it, once per agent, and hands the child its address.
++// Agent identity: whose call a build operation is, passed to the child so its leases, capacity grants, cache lanes and compiler sessions attribute to that agent.
+ 
+ // #endregion 🧲️Header
+ 
+ package main
+ 
+ import (
+-	"context"
+-	"encoding/json"
+-	"errors"
++	"crypto/sha256"
++	"encoding/hex"
+ 	"fmt"
+-	"strconv"
++	"math/big"
+ 	"strings"
+-	"sync"
+-	"time"
+ )
+ 
+-// #region 🪪️AgentSession
++// #region 🪪️AgentIdentity
+ 
+-// 🪪️AgentIdentity is the agent session of one call as `repo session open --json` reports it: the agent name, the session identifier, the cargo lane and the address children attach to.
++const maximumAgentIdentifier = 64
++
++// 🪪️AgentIdentity names one agent in the three spellings the repository tools accept.
+ type AgentIdentity struct {
+ 	ID      string
+ 	Session string
+ 	Lane    string
+-	Address string
+ }
+ 
+-// 🪪️SessionRequest names what identifies the agent of a call: an explicit agent name, or the client of the connection with the process ids that make the connection unique.
+-type SessionRequest struct {
+-	Agent         string
+-	Client        string
+-	ClientProcess int
+-	Process       int
++// 🧼️SanitizeAgent keeps `[A-Za-z0-9._-]`, replaces every other character and bounds the length; the result is empty only for empty input.
++func SanitizeAgent(raw string) string {
++	var out strings.Builder
++	for _, character := range strings.TrimSpace(raw) {
++		switch {
++		case character >= 'a' && character <= 'z', character >= 'A' && character <= 'Z', character >= '0' && character <= '9', character == '.', character == '_', character == '-':
++			out.WriteRune(character)
++		default:
++			out.WriteByte('_')
++		}
++		if out.Len() >= maximumAgentIdentifier {
++			break
++		}
++	}
++	return out.String()
+ }
+ 
+-// 🪪️Argv is the `repo` argument vector that opens or attaches the session of a request.
+-func (request SessionRequest) Argv() []string {
+-	argv := []string{"session", "open", "--json"}
+-	switch {
+-	case request.Agent != "":
+-		argv = append(argv, "--agent="+request.Agent)
+-	case request.Client != "":
+-		argv = append(argv, "--client="+request.Client)
+-		if request.ClientProcess > 0 {
+-			argv = append(argv, "--client-pid="+strconv.Itoa(request.ClientProcess))
+-		}
+-		if request.Process > 0 {
+-			argv = append(argv, "--owner-pid="+strconv.Itoa(request.Process))
++// 🏷️AgentLane derives the Cargo lane of an agent: `a` and ten base-36 characters of its digest, which is the shape of the lane the repository derives from an agent client process, so an agent keeps one lane across server restarts.
++func AgentLane(agent string) string {
++	digest := sha256.Sum256([]byte("mcp\x00" + agent))
++	number, _ := new(big.Int).SetString(hex.EncodeToString(digest[:6]), 16)
++	return "a" + number.Text(36)[:min(10, len(number.Text(36)))]
++}
++
++// 🪪️NewAgent completes an identifier into an identity.
++func NewAgent(id string) AgentIdentity {
++	id = SanitizeAgent(id)
++	return AgentIdentity{ID: id, Session: id, Lane: AgentLane(id)}
++}
++
++// 🔌️ConnectionAgent names the agent of one MCP connection: the first non-empty source variable, else the client name with a digest of the client process and this process, so two connections never share an agent by accident.
++func ConnectionAgent(lookup func(string) (string, bool), sources []string, clientName string, clientProcess, process int) AgentIdentity {
++	for _, name := range sources {
++		if value, found := lookup(name); found && SanitizeAgent(value) != "" {
++			return NewAgent(SanitizeAgent(value))
+ 		}
+ 	}
+-	return argv
++	name := strings.ToLower(SanitizeAgent(clientName))
++	if name == "" {
++		name = "agent"
++	}
++	digest := sha256.Sum256([]byte(fmt.Sprintf("%d:%d", clientProcess, process)))
++	return NewAgent(name[:min(len(name), 40)] + "-" + hex.EncodeToString(digest[:4]))
+ }
+ 
+-// 🪪️SessionOpener opens or attaches the session of a request.
+-type SessionOpener interface {
+-	Open(ctx context.Context, request SessionRequest) (AgentIdentity, error)
++// 🌿️Environment projects the identity onto the variables the repository tools read.
++func (agent AgentIdentity) Environment(names AgentEnvironment) map[string]string {
++	return map[string]string{names.Agent: agent.ID, names.Session: agent.Session, names.Lane: agent.Lane}
+ }
+ 
+-// 🪪️ParseSession reads the JSON `repo session open --json` prints.
+-func ParseSession(data []byte) (AgentIdentity, error) {
+-	var reply struct {
+-		Address string `json:"address"`
+-		Session struct {
+-			ID    string `json:"id"`
+-			Agent struct {
+-				ID string `json:"id"`
+-			} `json:"agent"`
+-			Resources struct {
+-				Cargo struct {
+-					Lane string `json:"lane"`
+-				} `json:"cargo"`
+-			} `json:"resources"`
+-		} `json:"session"`
+-	}
+-	if err := json.Unmarshal(data, &reply); err != nil {
+-		return AgentIdentity{}, fmt.Errorf("agent session reply is not JSON: %w", err)
+-	}
+-	if reply.Address == "" || reply.Session.ID == "" || reply.Session.Agent.ID == "" {
+-		return AgentIdentity{}, errors.New("agent session reply lacks the address, the identifier or the agent")
+-	}
+-	return AgentIdentity{ID: reply.Session.Agent.ID, Session: reply.Session.ID, Lane: reply.Session.Resources.Cargo.Lane, Address: reply.Address}, nil
++// 🌿️AgentEnvironment names the three variables of the authored policy.
++type AgentEnvironment struct {
++	Agent   string `json:"agent"`
++	Session string `json:"session"`
++	Lane    string `json:"lane"`
+ }
+ 
+-// 🪪️surfaceSessions asks the `repo` executable of a build surface, remembering every answered request.
+-type surfaceSessions struct {
+-	surface *BuildSurface
+-	mu      sync.Mutex
+-	known   map[SessionRequest]AgentIdentity
+-}
+-
+-const sessionTimeout = 60 * time.Second
+-
+-// 🪪️Open runs `repo session open --json` once per distinct request; a failure is not remembered.
+-func (sessions *surfaceSessions) Open(ctx context.Context, request SessionRequest) (AgentIdentity, error) {
+-	sessions.mu.Lock()
+-	if identity, found := sessions.known[request]; found {
+-		sessions.mu.Unlock()
+-		return identity, nil
+-	}
+-	sessions.mu.Unlock()
+-	surface := sessions.surface
+-	limits := surface.Policy.Limits
+-	spec := ProcessSpec{Binary: surface.Binary, Prefix: surface.Prefix, Argv: request.Argv(), Dir: surface.Root, Env: surface.Environment(Invocation{}, AgentIdentity{}), Grace: time.Duration(limits.CancelGraceMs) * time.Millisecond, HeadMax: limits.CaptureBytes, StdoutMax: limits.StdoutBytes, StderrMax: limits.StderrBytes}
+-	opening, cancel := context.WithTimeout(ctx, sessionTimeout)
+-	defer cancel()
+-	outcome := surface.Runner.Run(opening, spec, func(ProcessEvent) {})
+-	if !outcome.Started {
+-		return AgentIdentity{}, errors.New("repo did not start: " + outcome.StartError)
+-	}
+-	if outcome.ExitCode != 0 {
+-		return AgentIdentity{}, fmt.Errorf("repo session open failed with exit %d: %s", outcome.ExitCode, strings.TrimSpace(string(outcome.Stderr.Tail)))
+-	}
+-	identity, err := ParseSession(outcome.Stdout.Head)
+-	if err != nil {
+-		return AgentIdentity{}, err
+-	}
+-	sessions.mu.Lock()
+-	sessions.known[request] = identity
+-	sessions.mu.Unlock()
+-	return identity, nil
+-}
+-
+-// 🌿️Environment projects the session onto the one variable the repository tools read; a call without a session carries nothing and its child resolves its own.
+-func (agent AgentIdentity) Environment(names AgentEnvironment) map[string]string {
+-	if agent.Address == "" {
+-		return map[string]string{}
+-	}
+-	return map[string]string{names.Session: agent.Address}
+-}
+-
+-// 🌿️AgentEnvironment names the variable of the authored policy.
+-type AgentEnvironment struct {
+-	Session string `json:"session"`
+-}
+-
+-// #endregion 🪪️AgentSession
++// #endregion 🪪️AgentIdentity
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🗄️repository/🦀️.rs map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🗄️repository/🦀️.rs
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🗄️repository/🦀️.rs
+@@ -6,7 +6,7 @@
+ 
+ //#region 🗄️Repository
+ 
+-/// 🪪️ The per-agent-client surface selected by `SEMIO_REPO_MCP_CLIENT`.
++/// 🪪️ The per-IDE surface selected by `SEMIO_REPO_MCP_CLIENT`.
+ #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+ pub enum Profile {
+     #[default]
+@@ -202,7 +202,7 @@
+         ("no_management", Schema::boolean("Skip management integration.")),
+     ];
+     match profile {
+-        Profile::Copilot | Profile::Claude | Profile::Codex => {
++        Profile::Cursor | Profile::Copilot | Profile::Claude | Profile::Codex => {
+             open.push(("plan_id", Schema::string(&describe(profile, "arg_plan_id"))));
+             reopen.push(("plan_id", Schema::string(&describe(profile, "arg_plan_id"))));
+         }
+@@ -210,7 +210,7 @@
+             open.push(("spec_id", Schema::string(&describe(profile, "arg_spec_id"))));
+             reopen.push(("spec_id", Schema::string(&describe(profile, "arg_spec_id"))));
+         }
+-        Profile::Cursor | Profile::Generic => {}
++        Profile::Generic => {}
+     }
+     let tool = |name: &str, schema: Schema| Tool { name: name.to_string(), title: String::new(), description: describe(profile, &format!("tool_{name}")), input_schema: schema, output_schema: Some(Tool::result_output_schema()) };
+     vec![
+@@ -273,7 +273,7 @@
+ pub fn resource_schemas(profile: Profile) -> Vec<Resource> {
+     [("repo://", "repo", "res_root"), ("repo://bundles", "bundles", "res_bundles"), ("repo://folders", "folders", "res_folders"), ("repo://files", "files", "res_files"), ("repo://tickets", "tickets", "res_tickets"), ("repo://goals", "goals", "res_goals"), ("repo://policies", "policies", "res_policies"), ("repo://contributors", "contributors", "res_contributors")]
+         .into_iter()
+-        .map(|(uri, name, key)| Resource { uri: uri.to_string(), name: name.to_string(), title: String::new(), description: describe(profile, key), mime_type: if matches!(uri, "repo://files" | "repo://folders") { "application/json" } else { "text/plain" }.to_string() })
++        .map(|(uri, name, key)| Resource { uri: uri.to_string(), name: name.to_string(), title: String::new(), description: describe(profile, key), mime_type: "text/plain".to_string() })
+         .collect()
+ }
+ 
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🖼️assets/🏗️build-surface.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🖼️assets/🏗️build-surface.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🖼️assets/🏗️build-surface.json
+@@ -3,7 +3,6 @@
+   "version": 1,
+   "catalogue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",
+   "buildPolicy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+-  "backends": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/📋️registry/🔣️.json",
+   "identity": {
+     "argument": "agent",
+     "pattern": "^[A-Za-z0-9._-]{1,64}$",
+@@ -11,10 +10,11 @@
+       "en": "Agent that owns this call. Leases, capacity grants, cache lanes and compiler sessions of the run are attributed to it. Default: the agent of this MCP connection. Pass your own name when several agents share one connection.",
+       "de": "Agent, dem dieser Aufruf gehört. Leases, Kapazitätszusagen, Cache-Bahnen und Compiler-Sitzungen des Laufs werden ihm zugeordnet. Standard: der Agent dieser MCP-Verbindung. Eigenen Namen angeben, wenn mehrere Agenten eine Verbindung teilen."
+     },
+-    "environment": { "session": "SEMIO_AGENT_SESSION" }
++    "environment": { "agent": "SEMIO_AGENT_ID", "session": "SEMIO_SESSION", "lane": "SEMIO_CARGO_LANE" },
++    "connectionSources": ["SEMIO_AGENT_ID", "CLAUDE_CODE_SESSION_ID", "CODEX_THREAD_ID"]
+   },
+   "globals": [
+-    { "flag": "--tool", "input": "tool", "environment": "SEMIO_BUILD_TOOL", "description": { "en": "Build implementation for this call (an id of the build backend registry, for example nx or bazel); otherwise the default of the build policy. Reaches the child as SEMIO_BUILD_TOOL, so nested tasks inherit it.", "de": "Build-Implementierung für diesen Aufruf (eine Kennung der Backend-Registry, zum Beispiel nx oder bazel); sonst der Standard der Build-Policy. Erreicht das Kind als SEMIO_BUILD_TOOL, verschachtelte Tasks erben sie." } },
++    { "flag": "--tool", "input": "tool", "environment": "SEMIO_BUILD_TOOL", "description": { "en": "Build implementation for this call (nx or bazel); otherwise the default of the build policy. Reaches the child as SEMIO_BUILD_TOOL, so nested tasks inherit it.", "de": "Build-Implementierung für diesen Aufruf (nx oder bazel); sonst der Standard der Build-Policy. Erreicht das Kind als SEMIO_BUILD_TOOL, verschachtelte Tasks erben sie." } },
+     { "flag": "--workers", "input": "workers", "environment": "SEMIO_BUILD_WORKERS", "description": { "en": "Run actions in persistent workers (on) or one process each (off); otherwise the worker policy. Reaches the child as SEMIO_BUILD_WORKERS.", "de": "Aktionen in persistenten Workern (on) oder je in einem Prozess (off) ausführen; sonst die Worker-Policy. Erreicht das Kind als SEMIO_BUILD_WORKERS." } },
+     { "flag": "--lang", "input": "language", "environment": "SEMIO_LANGUAGE", "description": { "en": "Language of the texts the child prints (en or de). No language is assumed: without it the child resolves SEMIO_LANGUAGE, then the locale, and refuses when none resolves.", "de": "Sprache der Texte, die das Kind ausgibt (en oder de). Es wird keine Sprache angenommen: ohne Angabe bestimmt das Kind SEMIO_LANGUAGE, dann die Locale, und verweigert sich, wenn keine bestimmt werden kann." } }
+   ],
+@@ -33,17 +33,14 @@
+     "--area": { "type": "list" },
+     "--scenario": { "type": "list" },
+     "--workloads": { "type": "list" },
+-    "--implementations": { "type": "list", "closed": true },
+-    "--runs": { "type": "integer", "minimum": 1, "maximum": 1000 },
+-    "--concurrency": { "type": "integer", "minimum": 1, "maximum": 256 },
++    "--implementations": { "type": "list", "items": ["nx", "bazel"] },
+     "--phases": { "type": "list", "items": ["warm", "edit", "revert"] },
+     "--sessions": { "type": "integer", "minimum": 1, "maximum": 64 },
+     "--parallelism": { "type": "integer", "minimum": 1, "maximum": 256 },
+     "--memory": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+     "--cpu": { "type": "integer", "minimum": 1, "maximum": 256 },
+     "--jobs": { "type": "integer", "minimum": 1, "maximum": 256 },
+-    "--violations": { "type": "integer", "minimum": 0, "maximum": 100000 },
+-    "--weight": { "type": "integer", "minimum": 1, "maximum": 16 }
++    "--violations": { "type": "integer", "minimum": 0, "maximum": 100000 }
+   },
+   "environment": {
+     "test_level": {
+@@ -126,9 +123,6 @@
+       "annotations": { "destructiveHint": true, "idempotentHint": false, "openWorldHint": true }
+     },
+     { "operation": "incremental", "subcommand": "run", "kind": "execute" },
+-    { "operation": "conformance", "subcommand": "run", "kind": "execute", "flags": ["--scenario", "--implementations", "--keep", "--json"], "bind": { "--json": true } },
+-    { "operation": "units", "subcommand": "run", "kind": "execute", "flags": ["--for", "--only", "--concurrency", "--json"], "required": ["--for"], "bind": { "--json": true } },
+-    { "operation": "bench", "subcommand": "run", "kind": "execute", "flags": ["--slo", "--runs", "--max-load", "--prepare", "--implementations", "--json"], "bind": { "--json": true } },
+     { "operation": "concurrency", "subcommand": "run", "kind": "execute", "flags": ["--workloads", "--sessions", "--criteria", "--implementations", "--root", "--file", "--json"] },
+     { "operation": "show", "subcommand": "projects", "kind": "query", "bind": { "--json": true }, "defaults": { "--graph-policy": "current" } },
+     {
+@@ -150,18 +144,8 @@
+     { "operation": "leases", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
+     { "operation": "capacity", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
+     { "operation": "cache", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
+-    { "operation": "cache", "subcommand": "verify", "kind": "query", "bind": { "--json": true } },
+-    { "operation": "remote-cache", "subcommand": "status", "kind": "query", "flags": [] },
++    { "operation": "cache", "subcommand": "remote", "kind": "query", "flags": [] },
+     { "operation": "remote-execution", "subcommand": "status", "kind": "query", "flags": [] },
+-    { "operation": "doctor", "kind": "query", "flags": ["--only", "--strict", "--json"], "bind": { "--json": true } },
+-    { "operation": "service", "subcommand": "status", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
+-    { "operation": "service", "subcommand": "probe", "kind": "query", "flags": [] },
+-    { "operation": "tools", "subcommand": "list", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
+-    { "operation": "conformance", "subcommand": "list", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
+-    { "operation": "conformance", "subcommand": "plan", "kind": "query", "flags": ["--scenario", "--implementations", "--json"], "bind": { "--json": true } },
+-    { "operation": "units", "subcommand": "plan", "kind": "query", "flags": ["--for", "--json"], "required": ["--for"], "bind": { "--json": true } },
+-    { "operation": "bench", "subcommand": "list", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
+-    { "operation": "bench", "subcommand": "compare", "kind": "query", "flags": ["--current", "--baseline", "--json"], "required": ["--current", "--baseline"], "bind": { "--json": true } },
+     { "operation": "incremental", "subcommand": "list", "kind": "query" },
+     { "operation": "incremental", "subcommand": "plan", "kind": "query", "bind": { "--json": true } },
+     { "operation": "concurrency", "subcommand": "list", "kind": "query" },
+@@ -171,42 +155,21 @@
+       "subcommand": "setup",
+       "kind": "maintain",
+       "flags": [],
+-      "positional": [{ "name": "which", "optional": true, "enum": ["nx", "bazel", "toolchains", "all"], "description": { "en": "Tools to provision: nx, bazel, the native toolchains or all (default: the selected tool).", "de": "Zu installierende Werkzeuge: nx, bazel, die nativen Toolchains oder all (Standard: das gewählte Werkzeug)." } }]
+-    },
+-    {
+-      "operation": "tools",
+-      "subcommand": "verify",
+-      "kind": "query",
+-      "flags": [],
+-      "positional": [{ "name": "pinned", "optional": true, "pattern": "^[a-z][a-z0-9-]*$", "description": { "en": "Pinned tool to compare with its pin, for example go (default: every pinned tool).", "de": "Gepinntes Werkzeug, das mit seinem Pin verglichen wird, zum Beispiel go (Standard: jedes gepinnte Werkzeug)." } }]
++      "positional": [{ "name": "which", "optional": true, "enum": ["nx", "bazel", "all"], "description": { "en": "Build tool to provision: nx, bazel or all (default: the selected tool).", "de": "Zu installierendes Build-Werkzeug: nx, bazel oder all (Standard: das gewählte Werkzeug)." } }]
+     },
+     { "operation": "dependencies", "subcommand": "ensure", "kind": "maintain" },
+     { "operation": "dependencies", "subcommand": "sync", "kind": "maintain", "anyOf": [["--all"], ["--scope"]] },
+     { "operation": "dependencies", "subcommand": "lock", "kind": "maintain", "anyOf": [["--all"], ["--scope"]] },
+     { "operation": "incremental", "subcommand": "prepare", "kind": "maintain" },
+-    { "operation": "incremental", "subcommand": "discard", "kind": "maintain" },
+-    { "operation": "session", "subcommand": "open", "kind": "maintain", "flags": ["--weight", "--json"], "bind": { "--json": true } },
+-    { "operation": "session", "subcommand": "status", "kind": "query", "flags": ["--json"], "bind": { "--json": true }, "positional": [{ "name": "id", "optional": true, "pattern": "^[a-z][a-z0-9]{0,11}$", "description": { "en": "Agent session identifier (default: the session of this call).", "de": "Kennung der Agent-Sitzung (Standard: die Sitzung dieses Aufrufs)." } }] },
+-    { "operation": "session", "subcommand": "list", "kind": "query", "flags": ["--all", "--json"], "bind": { "--json": true } },
+-    { "operation": "session", "subcommand": "close", "kind": "maintain", "flags": ["--dead", "--force", "--json"], "bind": { "--json": true }, "positional": [{ "name": "id", "optional": true, "pattern": "^[a-z][a-z0-9]{0,11}$", "description": { "en": "Agent session identifier to close; leave empty together with dead=true.", "de": "Kennung der zu schließenden Agent-Sitzung; zusammen mit dead=true leer lassen." } }] }
++    { "operation": "incremental", "subcommand": "discard", "kind": "maintain" }
+   ],
+   "excluded": [
+     { "operation": "watch", "reason": { "en": "Never ends by itself; an agent starts reruns with run.", "de": "Endet nie von selbst; ein Agent startet Wiederholungen mit run." } },
+     { "operation": "reset", "reason": { "en": "Discards the graph and the local tool state; a human decision.", "de": "Verwirft den Graphen und den lokalen Werkzeugzustand; eine menschliche Entscheidung." } },
+     { "operation": "cache", "subcommand": "gc", "reason": { "en": "Deletes shared cache content; a human decision.", "de": "Löscht gemeinsamen Cache-Inhalt; eine menschliche Entscheidung." } },
+     { "operation": "cache", "subcommand": "clear", "reason": { "en": "Empties the shared task cache that other agents use; a human decision.", "de": "Leert den gemeinsamen Task-Cache, den andere Agenten nutzen; eine menschliche Entscheidung." } },
+-    { "operation": "remote-cache", "subcommand": "serve", "reason": { "en": "Starts a long-running server, not an operation.", "de": "Startet einen dauerhaften Server, keine Operation." } },
+-    { "operation": "remote-cache", "subcommand": "gc", "reason": { "en": "Deletes shared remote cache content; a human decision.", "de": "Löscht gemeinsamen Remote-Cache-Inhalt; eine menschliche Entscheidung." } },
++    { "operation": "cache", "subcommand": "serve", "reason": { "en": "Starts a long-running server, not an operation.", "de": "Startet einen dauerhaften Server, keine Operation." } },
+     { "operation": "remote-execution", "subcommand": "serve", "reason": { "en": "Starts a long-running cluster, not an operation.", "de": "Startet einen dauerhaften Cluster, keine Operation." } },
+-    { "operation": "remote-execution", "subcommand": "workers", "reason": { "en": "Starts a long-running worker, not an operation.", "de": "Startet einen dauerhaften Worker, keine Operation." } },
+-    { "operation": "tools", "subcommand": "exec", "reason": { "en": "Runs any registered tool with arbitrary arguments; agents use the operation that owns the tool (run, cargo).", "de": "Führt jedes registrierte Werkzeug mit beliebigen Argumenten aus; Agenten nutzen die Operation, der das Werkzeug gehört (run, cargo)." } },
+-    { "operation": "units", "subcommand": "emit", "reason": { "en": "Writes build files into a directory of the caller's choice; part of the generated-target plumbing.", "de": "Schreibt Build-Dateien in ein frei gewähltes Verzeichnis; Teil der Installation generierter Targets." } },
+-    { "operation": "units", "subcommand": "exec", "reason": { "en": "The action of generated Nx targets and Bazel rules, not an operation of its own.", "de": "Die Aktion generierter Nx-Targets und Bazel-Regeln, keine eigene Operation." } },
+-    { "operation": "service", "subcommand": "start", "reason": { "en": "Starts a long-running background service; a human decision.", "de": "Startet einen dauerhaften Hintergrunddienst; eine menschliche Entscheidung." } },
+-    { "operation": "service", "subcommand": "stop", "reason": { "en": "Stops the service other agents use; a human decision.", "de": "Stoppt den Dienst, den andere Agenten nutzen; eine menschliche Entscheidung." } },
+-    { "operation": "service", "subcommand": "restart", "reason": { "en": "Stops the service other agents use; a human decision.", "de": "Stoppt den Dienst, den andere Agenten nutzen; eine menschliche Entscheidung." } },
+-    { "operation": "service", "subcommand": "issue", "reason": { "en": "Issues a capability token; a secret that never belongs in a tool result.", "de": "Stellt ein Berechtigungstoken aus; ein Geheimnis, das nie in ein Werkzeugergebnis gehört." } },
+-    { "operation": "service", "subcommand": "revoke", "reason": { "en": "Cancels the running commands of other agents; a human decision.", "de": "Bricht laufende Befehle anderer Agenten ab; eine menschliche Entscheidung." } },
+-    { "operation": "service", "subcommand": "drop-caches", "reason": { "en": "Forgets digests and task results for every agent; a human decision.", "de": "Vergisst Digests und Task-Ergebnisse für alle Agenten; eine menschliche Entscheidung." } }
++    { "operation": "remote-execution", "subcommand": "env", "reason": { "en": "Prints shell environment for a human shell.", "de": "Gibt Shell-Umgebung für eine menschliche Shell aus." } }
+   ]
+ }
+# stage-clean head-live-changed staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🏗️build-surface/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🏗️build-surface/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🏗️build-surface/🟦️.ts
+@@ -19,8 +19,7 @@
+  */
+ const modules = join(import.meta.dirname, "../../..");
+ const read = (...segments: string[]): any => JSON.parse(readFileSync(join(modules, ...segments), "utf8"));
+-const backendIds: string[] = read("📚️library", "🏗️build", "🔌️backends", "📋️registry", "🔣️.json").backends.map((row: any) => row.id);
+-const catalogue = JSON.parse(readFileSync(join(modules, "📚️library", "🏗️build", "⚙️operations", "🔣️catalog.json"), "utf8").replaceAll("{backends}", backendIds.join("|")));
++const catalogue = read("📚️library", "🏗️build", "⚙️operations", "🔣️catalog.json");
+ const policy = read("🔌️mcp", "🖼️assets", "🏗️build-surface.json");
+ const golden = read("🔌️mcp", "🧪️tests", "🧫️fixtures", "🏗️build-surface.json");
+ const AjvConstructor = createRequire(import.meta.url)("ajv") as new (options: Record<string, unknown>) => { compile(schema: unknown): ((data: unknown) => boolean) & { errors?: unknown } };
+@@ -59,12 +58,12 @@
+   const bound = Object.keys(spec.bind ?? {});
+   const omitted = policy.omittedFlags.map((row: any) => row.flag);
+   for (const flag of flagsOf(spec).filter((name) => !bound.includes(name) && !omitted.includes(name))) {
+-    const row = catalogue.flags.find((candidate: any) => candidate.name === flag && (candidate.operations ?? []).includes(spec.operation)) ?? catalogue.flags.find((candidate: any) => candidate.name === flag);
++    const row = catalogue.flags.find((candidate: any) => candidate.name === flag);
+     const override = policy.flagTypes[flag];
+     let schema: Record<string, unknown>;
+     if (row.value === "none") schema = { type: "boolean" };
+     else if (override?.type === "integer") schema = { type: "integer", minimum: override.minimum, maximum: override.maximum };
+-    else if (override?.type === "list") schema = { type: "array", minItems: 1, uniqueItems: true, items: { type: "string", minLength: 1, ...(override.closed ? { enum: closedValues(row.valueName) } : override.items ? { enum: override.items } : {}) } };
++    else if (override?.type === "list") schema = { type: "array", minItems: 1, uniqueItems: true, items: { type: "string", minLength: 1, ...(override.items ? { enum: override.items } : {}) } };
+     else if (closedValues(row.valueName)) schema = { type: "string", enum: closedValues(row.valueName) };
+     else schema = { type: "string", minLength: 1 };
+     properties[property(flag)] = schema;
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🏗️build-surface/🥒️.feature map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🏗️build-surface/🥒️.feature
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🏗️build-surface/🥒️.feature
+@@ -34,7 +34,7 @@
+   Scenario: A call runs under the agent that made it
+     Given a call with the argument agent alpha
+     When the child process starts
+-    Then SEMIO_AGENT_SESSION is the address of the session that repo session open issued for alpha, no per-tool identity variable is set, and the variables of an enclosing invocation are removed
++    Then SEMIO_AGENT_ID and SEMIO_SESSION are alpha and SEMIO_CARGO_LANE is the lane derived from alpha, and the variables of an enclosing invocation are removed
+ 
+   @id-cancellation
+   @level-quick
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🏗️build-surface.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🏗️build-surface.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🏗️build-surface.json
+@@ -2,24 +2,17 @@
+   "schema": "semio.repo.mcp.build-surface/1",
+   "tools": [
+     "affected",
+-    "bench_compare",
+-    "bench_list",
+-    "bench_run",
++    "cache_remote",
+     "cache_status",
+-    "cache_verify",
+     "capacity_run",
+     "capacity_status",
+     "cargo",
+     "concurrency_list",
+     "concurrency_plan",
+     "concurrency_run",
+-    "conformance_list",
+-    "conformance_plan",
+-    "conformance_run",
+     "dependencies_ensure",
+     "dependencies_lock",
+     "dependencies_sync",
+-    "doctor",
+     "exec",
+     "graph",
+     "incremental_discard",
+@@ -30,25 +23,14 @@
+     "inputs",
+     "leases_status",
+     "preflight",
+-    "remote_cache_status",
+     "remote_execution_status",
+     "run",
+     "run_many",
+-    "service_probe",
+-    "service_status",
+-    "session_close",
+-    "session_list",
+-    "session_open",
+-    "session_status",
+     "show_project",
+     "show_projects",
+     "show_targets",
+     "test",
+-    "tools_list",
+-    "tools_setup",
+-    "tools_verify",
+-    "units_plan",
+-    "units_run"
++    "tools_setup"
+   ],
+   "vectors": [
+     {
+@@ -425,32 +407,6 @@
+       "agent": "alpha"
+     },
+     {
+-      "id": "run-tool-from-registry",
+-      "tool": "run",
+-      "arguments": {
+-        "target": "a:b",
+-        "tool": "semio"
+-      },
+-      "valid": true,
+-      "argv": [
+-        "run",
+-        "a:b"
+-      ],
+-      "environment": {
+-        "SEMIO_BUILD_TOOL": "semio"
+-      },
+-      "agent": ""
+-    },
+-    {
+-      "id": "run-tool-unregistered",
+-      "tool": "run",
+-      "arguments": {
+-        "target": "a:b",
+-        "tool": "{backends}"
+-      },
+-      "valid": false
+-    },
+-    {
+       "id": "run-without-target",
+       "tool": "run",
+       "arguments": {},
+@@ -588,185 +544,6 @@
+         "test_level": "huge"
+       },
+       "valid": false
+-    },
+-    {
+-      "id": "session-open",
+-      "tool": "session_open",
+-      "arguments": {},
+-      "valid": true,
+-      "argv": [
+-        "session",
+-        "open",
+-        "--json"
+-      ],
+-      "environment": {},
+-      "agent": ""
+-    },
+-    {
+-      "id": "session-open-weight",
+-      "tool": "session_open",
+-      "arguments": {
+-        "weight": 3,
+-        "agent": "planner"
+-      },
+-      "valid": true,
+-      "argv": [
+-        "session",
+-        "open",
+-        "--json",
+-        "--weight=3"
+-      ],
+-      "environment": {},
+-      "agent": "planner"
+-    },
+-    {
+-      "id": "session-open-weight-too-heavy",
+-      "tool": "session_open",
+-      "arguments": {
+-        "weight": 17
+-      },
+-      "valid": false
+-    },
+-    {
+-      "id": "session-status",
+-      "tool": "session_status",
+-      "arguments": {
+-        "id": "a3q5dv7obc"
+-      },
+-      "valid": true,
+-      "argv": [
+-        "session",
+-        "status",
+-        "a3q5dv7obc",
+-        "--json"
+-      ],
+-      "environment": {},
+-      "agent": ""
+-    },
+-    {
+-      "id": "session-status-bad-id",
+-      "tool": "session_status",
+-      "arguments": {
+-        "id": "A-1"
+-      },
+-      "valid": false
+-    },
+-    {
+-      "id": "session-list-all",
+-      "tool": "session_list",
+-      "arguments": {
+-        "all": true
+-      },
+-      "valid": true,
+-      "argv": [
+-        "session",
+-        "list",
+-        "--json",
+-        "--all"
+-      ],
+-      "environment": {},
+-      "agent": ""
+-    },
+-    {
+-      "id": "session-close-dead",
+-      "tool": "session_close",
+-      "arguments": {
+-        "dead": true
+-      },
+-      "valid": true,
+-      "argv": [
+-        "session",
+-        "close",
+-        "--json",
+-        "--dead"
+-      ],
+-      "environment": {},
+-      "agent": ""
+-    },
+-    {
+-      "id": "session-close-one",
+-      "tool": "session_close",
+-      "arguments": {
+-        "id": "a3q5dv7obc",
+-        "force": true
+-      },
+-      "valid": true,
+-      "argv": [
+-        "session",
+-        "close",
+-        "a3q5dv7obc",
+-        "--json",
+-        "--force"
+-      ],
+-      "environment": {},
+-      "agent": ""
+-    },
+-    {
+-      "id": "units-plan-language",
+-      "tool": "units_plan",
+-      "arguments": {
+-        "for": "go"
+-      },
+-      "valid": true,
+-      "argv": [
+-        "units",
+-        "plan",
+-        "--json",
+-        "--for=go"
+-      ],
+-      "environment": {},
+-      "agent": ""
+-    },
+-    {
+-      "id": "units-plan-unknown-language",
+-      "tool": "units_plan",
+-      "arguments": {
+-        "for": "cobol"
+-      },
+-      "valid": false
+-    },
+-    {
+-      "id": "units-plan-without-language",
+-      "tool": "units_plan",
+-      "arguments": {},
+-      "valid": false
+-    },
+-    {
+-      "id": "bench-compare-needs-both-reports",
+-      "tool": "bench_compare",
+-      "arguments": {
+-        "current": "a.json"
+-      },
+-      "valid": false
+-    },
+-    {
+-      "id": "conformance-plan-backends",
+-      "tool": "conformance_plan",
+-      "arguments": {
+-        "implementations": [
+-          "nx",
+-          "semio"
+-        ]
+-      },
+-      "valid": true,
+-      "argv": [
+-        "conformance",
+-        "plan",
+-        "--json",
+-        "--implementations=nx,semio"
+-      ],
+-      "environment": {},
+-      "agent": ""
+-    },
+-    {
+-      "id": "conformance-plan-unregistered-backend",
+-      "tool": "conformance_plan",
+-      "arguments": {
+-        "implementations": [
+-          "make"
+-        ]
+-      },
+-      "valid": false
+     }
+   ]
+ }
+# stage-clean different staged=repo-mcp-build-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧬️schema/🏗️build-surface.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧬️schema/🏗️build-surface.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧬️schema/🏗️build-surface.json
+@@ -23,8 +23,7 @@
+         "type": { "enum": ["integer", "list"] },
+         "minimum": { "type": "integer" },
+         "maximum": { "type": "integer" },
+-        "items": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+-        "closed": { "description": "A list whose items are exactly the closed value set the catalogue names in the flag's value name.", "const": true }
++        "items": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+       }
+     },
+     "Positional": {
+@@ -80,17 +79,16 @@
+     "Policy": {
+       "type": "object",
+       "additionalProperties": false,
+-      "required": ["version", "catalogue", "buildPolicy", "backends", "identity", "globals", "omittedFlags", "strip", "set", "flagTypes", "environment", "kinds", "limits", "tools", "excluded"],
++      "required": ["version", "catalogue", "buildPolicy", "identity", "globals", "omittedFlags", "strip", "set", "flagTypes", "environment", "kinds", "limits", "tools", "excluded"],
+       "properties": {
+         "$schema": { "type": "string" },
+         "version": { "const": 1 },
+         "catalogue": { "description": "Repository-relative path of the neutral operations catalogue.", "type": "string", "minLength": 1 },
+         "buildPolicy": { "description": "Repository-relative path of the build policy that names the default tool.", "type": "string", "minLength": 1 },
+-        "backends": { "description": "Repository-relative path of the build backend registry; its ids replace the `{backends}` placeholder of the catalogue.", "type": "string", "minLength": 1 },
+         "identity": {
+           "type": "object",
+           "additionalProperties": false,
+-          "required": ["argument", "pattern", "description", "environment"],
++          "required": ["argument", "pattern", "description", "environment", "connectionSources"],
+           "properties": {
+             "argument": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+             "pattern": { "type": "string", "minLength": 1 },
+@@ -98,9 +96,10 @@
+             "environment": {
+               "type": "object",
+               "additionalProperties": false,
+-              "required": ["session"],
+-              "properties": { "session": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" } }
+-            }
++              "required": ["agent", "session", "lane"],
++              "properties": { "agent": { "type": "string" }, "session": { "type": "string" }, "lane": { "type": "string" } }
++            },
++            "connectionSources": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" } }
+           }
+         },
+         "globals": {
+@@ -172,7 +171,7 @@
+         "tool": { "description": "Name of the MCP tool.", "type": "string" },
+         "operation": { "type": "string" },
+         "subcommand": { "type": "string" },
+-        "buildTool": { "description": "The build tool the call selected; absent when the policy default ran. Any id of the build backend registry.", "type": "string", "minLength": 1 },
++        "buildTool": { "description": "The build tool the call selected; absent when the policy default ran.", "enum": ["nx", "bazel"] },
+         "ok": { "type": "boolean" },
+         "exitCode": { "type": "integer" },
+         "cancelled": { "type": "boolean" },

@@ -1,0 +1,13 @@
+import { readFileSync } from "node:fs";
+const dir = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/🧪️tests/";
+const adapter: any = (await import(dir + "🔢️numstat-parsing/🟦️.ts")).default;
+const ctx = { inputBytes: (uri: string) => readFileSync(dir + "🧫️fixtures/" + uri.replace("shared://", "")) };
+const scenario = adapter.scenarios["recorded-transcript-matches-real-git"] ?? adapter.scenarios?.get?.("recorded-transcript-matches-real-git");
+const out = scenario.oracle(ctx);
+console.log(JSON.stringify(out.projection.shas), out.projection.commitCount);
+const t = JSON.parse(readFileSync(dir + "🧫️fixtures/🎞️git-transcript.json", "utf8"));
+const crypto = await import("node:crypto");
+console.log("noMerges recorded sha256 head:", crypto.createHash("sha256").update(t.logs[""]).digest("hex").slice(0, 12), JSON.stringify(out.projection).length);
+const { digest } = await import("/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts");
+const p = out.projection;
+console.log("noMerges digest equal:", p.noMergesDigest === digest(t.logs[""]), "withMerges digest equal:", p.withMergesDigest === digest(t.logs["🔀️with-merges"]), "tracked equal:", JSON.stringify(p.trackedAtHead) === JSON.stringify(t.tracked[""]));

@@ -1,4 +1,4 @@
-//! 🌐️ Browser-only `Promise`/`JsValue` bridge: owned microtask spawn and Rust-future-to-Promise adapters (excluded from `wasm32-wasip2`).
+//! 🌉️ Browser-only `Promise`/`JsValue` bridge: owned microtask spawn and Rust-future-to-Promise adapters (excluded from `wasm32-wasip2`).
 
 use js_sys::Promise;
 use std::future::Future;

@@ -11,12 +11,12 @@ export function sqliteHostOracleV1(policy:HostCapacityPolicyV1,item:Omit<HostCas
  const host=item.host,share=Math.floor(host.totalMegabytes*policy.memory.floorBasisPoints/10000),floor=Math.min(host.totalMegabytes,Math.max(policy.memory.floorMinimumMegabytes,Math.min(policy.memory.floorMaximumMegabytes,share))),cap=Math.max(0,host.totalMegabytes-floor);
  const database=new Database(":memory:");
  try{
-  database.run("CREATE TABLE grants(reserved INTEGER, observed INTEGER, cpu INTEGER, admitted INTEGER)");
+  database.run("CREATE TABLE grants(reserved INTEGER, observed INTEGER, cpu INTEGER, admitted INTEGER, ramp INTEGER, lent INTEGER)");
   database.run("CREATE TABLE waiters(id TEXT, priority TEXT, arrived INTEGER, minimum INTEGER, pref INTEGER, fixed INTEGER, perjob INTEGER, cpu INTEGER)");
-  const insertGrant=database.prepare("INSERT INTO grants VALUES (?,?,?,?)"),insertWaiter=database.prepare("INSERT INTO waiters VALUES (?,?,?,?,?,?,?,?)");
-  for(const grant of item.ledger)insertGrant.run(grant.reservedMegabytes,grant.observedMegabytes,grant.cpu,grant.admittedAtMs);
+  const insertGrant=database.prepare("INSERT INTO grants VALUES (?,?,?,?,?,?)"),insertWaiter=database.prepare("INSERT INTO waiters VALUES (?,?,?,?,?,?,?,?)");
+  for(const grant of item.ledger)insertGrant.run(grant.reservedMegabytes,grant.observedMegabytes,grant.cpu,grant.admittedAtMs,grant.resumedAtMs??grant.admittedAtMs,grant.lentSinceMs===undefined?0:1);
   for(const waiter of item.queue){const r=waiter.request;insertWaiter.run(r.id,r.priority,waiter.arrivedAtMs,r.minimumJobs,r.preferredJobs,r.fixedMegabytes,r.perJobMegabytes,r.cpuPerJob);}
-  const totals=database.query(`SELECT COALESCE(SUM(CASE WHEN ${item.nowMs}-admitted<${policy.memory.rampMilliseconds} THEN MAX(reserved-COALESCE(observed,0),0) ELSE 0 END),0) AS unrealized, COALESCE(SUM(CASE WHEN ${item.nowMs}-admitted<${policy.memory.rampMilliseconds} THEN reserved ELSE COALESCE(observed,reserved) END),0) AS committed, COALESCE(SUM(cpu),0) AS cpu, COUNT(*) AS n FROM grants`).get() as {unrealized:number;committed:number;cpu:number;n:number};
+  const totals=database.query(`SELECT COALESCE(SUM(CASE WHEN ${item.nowMs}-ramp<${policy.memory.rampMilliseconds} THEN MAX(reserved-COALESCE(observed,0),0) ELSE 0 END),0) AS unrealized, COALESCE(SUM(CASE WHEN ${item.nowMs}-ramp<${policy.memory.rampMilliseconds} THEN reserved ELSE COALESCE(observed,reserved) END),0) AS committed, COALESCE(SUM(cpu),0) AS cpu, COUNT(*) AS n FROM grants WHERE lent=0`).get() as {unrealized:number;committed:number;cpu:number;n:number};
   const observed=host.availableMegabytes-floor-totals.unrealized,budget=Math.floor(cap*policy.memory.budgetBasisPoints/10000)-totals.committed,room=Math.min(observed,budget);
   const ceiling=policy.load.perCoreCeiling*host.cores,unlimited=host.load===null&&totals.cpu===0,load=unlimited?null:ceiling-Math.max(host.load??0,totals.cpu);
   const swapCeiling=Math.floor(host.totalMegabytes*policy.swap.ceilingBasisPoints/10000),rate=host.swapOutMegabytesPerSecond;

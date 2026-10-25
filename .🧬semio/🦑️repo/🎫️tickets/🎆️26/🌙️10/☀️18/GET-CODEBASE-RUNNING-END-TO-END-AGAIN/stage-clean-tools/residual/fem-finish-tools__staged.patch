@@ -1,0 +1,201 @@
+# stage-clean different staged=fem-finish-tools/staged/files/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs map=ref:sha256
+--- a/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs
++++ b/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs
+@@ -48,8 +48,5 @@
+ #[cfg(test)]
+ #[path = "🧪️tests/🔬️unit/🦀️.rs"]
+ mod tests;
+-#[cfg(test)]
+-#[global_allocator]
+-static ORIGINAL_SPARSE_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+ 
+ // #endregion 🔖️Tests
+# stage-clean different staged=fem-finish-tools/staged/files/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/🧪️tests/🔬️unit/🦀️.rs map=ref:sha256
+--- a/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/🧪️tests/🔬️unit/🦀️.rs
++++ b/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/🧪️tests/🔬️unit/🦀️.rs
+@@ -137,21 +137,16 @@
+ }
+ 
+ #[test]
+-fn mounted_element_stiffness_refuses_oversized_pages_before_allocating_and_retires_admitted_backing() {
+-    let mut oversized = Vec::<f64>::new();
+-    assert!(!reserve_exact_owner_page(&mut oversized, MOUNTED_OWNER_PAGE_BYTES / size_of::<f64>() + 1));
+-    assert_eq!(oversized.capacity(), 0, "a refused oversized page never allocates its backing");
+-    assert_eq!(close_vec_owner_step(&mut oversized, MOUNTED_OWNER_PAGE_BYTES), Ok(None));
+-
+-    let mut admitted = Vec::<f64>::new();
+-    assert!(reserve_exact_owner_page(&mut admitted, MOUNTED_OWNER_PAGE_BYTES / size_of::<f64>()));
+-    let observed = admitted.capacity() * size_of::<f64>();
+-    let pointer = admitted.as_ptr();
+-    assert!(observed > 0 && observed <= MOUNTED_OWNER_PAGE_BYTES);
+-    assert_eq!(close_vec_owner_step(&mut admitted, observed - 1), Err(()));
+-    assert_eq!(admitted.as_ptr(), pointer, "an interrupted close preserves the exact admitted backing");
+-    assert_eq!(close_vec_owner_step(&mut admitted, observed), Ok(Some((1, observed))), "the exact admitted allocation retires through the retained close helper");
+-    assert_eq!(admitted.capacity(), 0);
++fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing() {
++    let mut rejected = Vec::<f64>::new();
++    assert!(!reserve_exact_owner_page(&mut rejected, MOUNTED_OWNER_PAGE_BYTES / size_of::<f64>() + 1));
++    let observed = rejected.capacity() * size_of::<f64>();
++    let pointer = rejected.as_ptr();
++    assert!(observed > MOUNTED_OWNER_PAGE_BYTES);
++    assert_eq!(close_vec_owner_step(&mut rejected, observed - 1), Err(()));
++    assert_eq!(rejected.as_ptr(), pointer, "an interrupted close preserves the exact rejected backing");
++    assert_eq!(close_vec_owner_step(&mut rejected, observed), Ok(Some((1, observed))), "the exact rejected allocation retires through the retained close helper");
++    assert_eq!(rejected.capacity(), 0);
+ }
+ 
+ // #region 🔖️DofMapLaws
+# stage-clean different staged=fem-finish-tools/staged/files/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs map=ref:sha256
+--- a/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs
++++ b/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs
+@@ -371,30 +371,6 @@
+     }
+ }
+ 
+-/// 🩺️ Recovers every element result from nodal displacements and the element's own member load: the local vector is the
+-/// element's `dofs_per_node` slots of each node's six-component displacement, so one superposed or solved displacement
+-/// field yields the same element state as the factorized solve; elements naming a node outside the model are skipped.
+-fn recover_elements(model: &AnalysisModel, displacements: &[NodeDisplacement], member_load: impl Fn(&str) -> Option<MemberUdl>) -> Vec<(String, ElementResult)> {
+-    let node_slot = node_index_of(&model.nodes);
+-    let displacement_slot: HashMap<&str, usize> = model.nodes.iter().enumerate().map(|(slot, node)| (node.id.as_str(), slot)).collect();
+-    let mut recovered = Vec::with_capacity(model.elements.len());
+-    'elements: for element in &model.elements {
+-        let node_ids = element.node_ids();
+-        let dofs = element.dofs_per_node();
+-        let mut local = Vec::with_capacity(node_ids.len() * dofs.len());
+-        for node_id in &node_ids {
+-            let Some(&slot) = displacement_slot.get(node_id.as_str()) else { continue 'elements };
+-            for &dof in dofs {
+-                local.push(displacements[slot].values[dof.index()]);
+-            }
+-        }
+-        let ctx = ElementContext { positions: positions_of(&node_slot, &model.nodes, &node_ids) };
+-        let load = member_load(element.id());
+-        recovered.push((element.id().to_string(), element.recover(&ctx, &VecD::from_vec(local), load.as_ref())));
+-    }
+-    recovered
+-}
+-
+ fn combine_results(model: &AnalysisModel, case_results: &[StaticResult], cases: &[LoadCase], combo: &Combination) -> Result<StaticResult, FemError> {
+     let mut displacements: Vec<NodeDisplacement> = model.nodes.iter().map(|node| NodeDisplacement { node_id: node.id.clone(), values: [0.0; 6] }).collect();
+     let mut reactions: Vec<NodeReaction> = Vec::new();
+# stage-clean different staged=fem-finish-tools/staged/files/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🔶️csr-build-and-run/🦀️.rs map=ref:sha256
+--- a/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🔶️csr-build-and-run/🦀️.rs
++++ b/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🔶️csr-build-and-run/🦀️.rs
+@@ -242,7 +242,7 @@
+     }
+ }
+ 
+-pub(crate) fn element_contribution(plan: &AssemblyPlan, model: &AnalysisModel, element_index: usize) -> Result<PendingElementAssembly, FemError> {
++fn element_contribution(plan: &AssemblyPlan, model: &AnalysisModel, element_index: usize) -> Result<PendingElementAssembly, FemError> {
+     let element = model.elements.get(element_index).ok_or(FemError::Singular)?;
+     let node_ids = element.node_ids();
+     let dofs = element.dofs_per_node();
+# stage-clean different staged=fem-finish-tools/staged/files/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🧪️tests/🔬️unit/🦀️.rs map=ref:sha256
+--- a/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🧪️tests/🔬️unit/🦀️.rs
++++ b/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🧪️tests/🔬️unit/🦀️.rs
+@@ -125,14 +125,14 @@
+             };
+             let mut build = assembly_physical_empty_build(Some(matrix));
+             let first = build.close_step(bytes);
+-            let after = build.csr.matrix.as_ref().map_or([0; 3], Csr::physical_backing_bytes);
++            let after = build.matrix.as_ref().map_or([0; 3], Csr::physical_backing_bytes);
+             let mut released = first.2;
+             let mut exact = allocated == after.into_iter().sum::<usize>() + first.2;
+             let mut terminal = first.0;
+             for _ in 0..100 {
+-                let before_step = build.csr.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
++                let before_step = build.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
+                 let step = build.close_step(MOUNTED_OWNER_PAGE_BYTES);
+-                let after_step = build.csr.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
++                let after_step = build.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
+                 exact &= step.1 <= 1 && step.2 <= MOUNTED_OWNER_PAGE_BYTES && before_step == after_step + step.2;
+                 released += step.2;
+                 if step.0 { terminal = true; break; }
+# stage-clean different staged=fem-finish-tools/staged/files/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🔬️solid/🦀️.rs map=ref:sha256
+--- a/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🔬️solid/🦀️.rs
++++ b/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🔬️solid/🦀️.rs
+@@ -1,8 +1,6 @@
+ use semio_s_fem_algebra::*;
+ use semio_s_fem_elements3d::Hex8;
+ use semio_s_fem_elements3d::Tet4;
+-use semio_s_fem_elements3d::von_mises_solid;
+-use crate::ResultSource;
+ use semio_s_fem_static::Elements;
+ use semio_s_fem_model::Dof;
+ use semio_s_fem_model::Element;
+@@ -151,7 +149,7 @@
+     };
+     let case = semio_s_fem_analyses_model::LoadCase { id: "self_weight".into(), nodal_loads: vec![], member_loads: vec![], self_weight: true };
+     let results = crate::solve_multi_case(&model, &[case], &[], [0.0, 0.0, -g]).expect("solves");
+-    let result = results.get(&ResultSource::LoadCase("self_weight".into())).unwrap();
++    let result = results.get("self_weight").unwrap();
+     let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
+     let expected = density * tet_volume(&positions) * g;
+     assert!((total_tz_reaction - expected).abs() / expected < 1e-9, "reaction sum {total_tz_reaction} vs expected {expected}");
+@@ -264,7 +262,7 @@
+     let model = AnalysisModel { nodes, elements, supports };
+     let case = LoadCase { id: "tip".into(), nodal_loads, member_loads: vec![], self_weight: false };
+     let results = solve_multi_case(&model, std::slice::from_ref(&case), &[], [0.0, 0.0, 0.0]).expect("hex cantilever solves");
+-    let result = results.get(&ResultSource::LoadCase("tip".into())).unwrap();
++    let result = results.get("tip").unwrap();
+     face.iter().map(|&(j, k)| result.displacements.iter().find(|d| d.node_id == id(nx, j, k)).unwrap().values[Dof::Tz.index()]).sum::<f64>() / face.len() as f64
+ }
+ 
+# stage-clean different staged=fem-finish-tools/staged/files/🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🦀️.rs map=suffix
+--- a/🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🦀️.rs
++++ b/🧰️framework/🔨️modules/🌱️value/📋️list/🎟️reservation/🧪️tests/🦀️.rs
+@@ -22,27 +22,16 @@
+  let mut too_wide=PagedList::<[u8;65537],1>::empty();let(p,h)=observe(||too_wide.reserve_one_funded(g).unwrap());assert_eq!(p.copied_bytes,0);assert_eq!(h,(p.retained_capacity_bytes,0));let born=h.0;let(p,h)=observe(||too_wide.reserve_one_funded(g).unwrap());assert_eq!(p,Default::default());assert_eq!(h,(0,0));assert_eq!(too_wide.capacity(),0);assert_eq!(born,close(&mut too_wide,g));let(_,h)=observe(||drop(too_wide));assert_eq!(h,(0,0));
+ }
+ 
+-struct NoMetadataAllocation;
+-unsafe impl PageAllocation for NoMetadataAllocation{fn reserve<T>(_:&mut Vec<T>,_:usize)->Result<(),std::collections::TryReserveError>{Ok(())}}
+-struct PartialPayloadAllocation;
+-unsafe impl PageAllocation for PartialPayloadAllocation{fn reserve<T>(owner:&mut Vec<T>,slots:usize)->Result<(),std::collections::TryReserveError>{owner.try_reserve_exact(slots/2)}}
+-
+ #[test]
+-fn allocation_policy_refuses_empty_metadata_without_hidden_push_allocation(){
+- let mut owner=PagedList::<u64,4>::empty();let demand=owner.next_allocation_bytes().unwrap();let(error,heap)=observe(||owner.reserve_one_using::<NoMetadataAllocation>(demand).unwrap_err());assert_eq!(error.kind,PagedListRefusalKind::InvariantViolated);assert_eq!(error.allocated_bytes,0);assert_eq!(heap,(0,0));assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes()),(0,0,0));assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
++fn original_paged_list_capacity_depth_quote_is_the_funded_reservation_depth(){
++ let g=grant();let mut owner=PagedList::<Row,4096>::empty();
++ assert_eq!(owner.next_capacity_depth_demand(0).unwrap(),0);
++ while owner.capacity()<200{
++  let depth=owner.next_capacity_depth_demand(200).unwrap();assert!(depth>=3);
++  let before=(owner.capacity(),owner.allocated_bytes());let mut denied=g;denied.maximum_depth=depth-1;
++  assert_eq!(owner.reserve_capacity_one_funded(200,denied).unwrap(),RetainedCloneProgress::default());assert_eq!((owner.capacity(),owner.allocated_bytes()),before);
++  let mut exact=g;exact.maximum_depth=depth;assert!(owner.reserve_capacity_one_funded(200,exact).unwrap().retained_capacity_bytes>0);
++ }
++ assert_eq!(owner.next_capacity_depth_demand(200).unwrap(),0);
++ assert_eq!(owner.next_capacity_depth_demand(4097).unwrap_err().reason,"fixed list logical capacity exhausted");
+ }
+-
+-#[test]
+-fn allocation_policy_quarantines_partial_payload_until_exact_funded_release(){
+- let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy=&law["allocationPolicy"];let row=&policy["cases"][1];assert_eq!(size_of::<u64>(),policy["elementBytes"].as_u64().unwrap()as usize);let mut owner=PagedList::<u64,4>::empty();let metadata=owner.next_allocation_bytes().unwrap();let(p,heap)=observe(||owner.reserve_one(metadata).unwrap());assert_eq!(heap,(p.allocated_bytes,0));let root=owner.root.as_ptr();let requested=owner.next_allocation_bytes().unwrap();assert_eq!(requested,policy["requestedSlots"].as_u64().unwrap()as usize*size_of::<u64>());
+- let(error,heap)=observe(||owner.reserve_one_using::<PartialPayloadAllocation>(requested).unwrap_err());let retained=row["retainedBytes"].as_u64().unwrap()as usize;assert_eq!(error.kind,PagedListRefusalKind::InvariantViolated);assert_eq!(error.allocated_bytes,retained);assert_eq!(heap,(retained,0));assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes()),(0,0,metadata+retained));assert!(!owner.has_reserved_slot());assert_eq!(owner.root.as_ptr(),root);
+- let(error,heap)=observe(||owner.reserve_one(requested).unwrap_err());assert_eq!(error.allocated_bytes,0);assert_eq!(heap,(0,0));assert_eq!(owner.root.as_ptr(),root);assert_eq!(owner.next_release_allocation_bytes().unwrap(),retained);assert_eq!(owner.next_release_depth_demand().unwrap(),3);let(p,heap)=observe(||owner.release_empty_page(retained-1).unwrap());assert!(!p.progressed);assert_eq!(heap,(0,0));assert_eq!(owner.allocated_bytes(),metadata+retained);
+- let(p,heap)=observe(||owner.release_empty_page(retained).unwrap());assert!(p.progressed);assert_eq!(p.released_allocation_bytes,retained);assert_eq!(heap,(0,retained));assert_eq!((owner.capacity(),owner.allocated_bytes()),(0,metadata));assert_eq!(owner.next_release_depth_demand().unwrap(),2);assert_eq!(owner.root.as_ptr(),root);assert_eq!(close(&mut owner,grant()),metadata);assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
+-}
+-
+-#[test]
+-fn allocation_policy_partial_payload_hands_back_without_hidden_disposal(){
+- let mut owner=PagedList::<u64,4>::empty();let metadata=owner.next_allocation_bytes().unwrap();owner.reserve_one(metadata).unwrap();let requested=owner.next_allocation_bytes().unwrap();let(error,heap)=observe(||owner.reserve_one_using::<PartialPayloadAllocation>(requested).unwrap_err());let retained=error.allocated_bytes;assert_eq!(retained,2*size_of::<u64>());assert_eq!(heap,(retained,0));let mut parent=semio_framework_value_allocation_return::ParentAllocationReturn::<2>::try_new(65536,131072).unwrap();
+- let(p,heap)=observe(||owner.return_empty_page(&mut parent,0).unwrap());assert!(!p.progressed);assert_eq!(heap,(0,0));assert_eq!(parent.retained_bytes(),0);let(p,heap)=observe(||owner.return_empty_page(&mut parent,1).unwrap());assert!(p.progressed);assert_eq!(p.returned_allocation_bytes,retained);assert_eq!(heap,(0,0));assert_eq!(parent.retained_bytes(),retained);assert_eq!(owner.allocated_bytes(),metadata);assert_eq!(close(&mut owner,grant()),metadata);
+- let(_,heap)=observe(||parent.close_step(1,retained-1));assert_eq!(heap,(0,0));assert_eq!(parent.retained_bytes(),retained);let(_,heap)=observe(||parent.close_step(1,retained));assert_eq!(heap,(0,retained));assert!(parent.terminal_is_empty());let(_,heap)=observe(||drop((owner,parent)));assert_eq!(heap,(0,0));
+-}
+# stage-clean different staged=fem-finish-tools/staged/files/🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs map=ref:sha256
+--- a/🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs
++++ b/🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs
+@@ -224,11 +224,6 @@
+             output.push_reserved(value).map_err(|_| E::from(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "paged list rejected its reserved slot" }))?;
+         }
+         Ok(output)
+-    }
+-    /// 📐️ The least capacity at or above `length` that ends on a whole payload page, so an owner can keep growing page by page.
+-    pub fn whole_page_capacity(&self, length: usize) -> usize {
+-        let items = self.page_items();
+-        length.div_ceil(items).saturating_mul(items).min(N)
+     }
+     fn page_items(&self) -> usize {
+         if size_of::<T>() == 0 {

@@ -10,6 +10,7 @@
 
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
+#![allow(long_running_const_eval)]
 
 #[cfg(test)]
 extern crate semio_s_plugin_energy_engine_model as model;

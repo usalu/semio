@@ -27,6 +27,7 @@ impl RetainedFaultPublication{
   let buffered=self.wire.buffered_bytes(&self.buffer)?.len();
   if buffered==self.buffer.len()||self.wire.is_complete()&&buffered>0{return Self::nested(if self.flush_cursor<buffered{self.builder.append_demand(cx.retained_grant())?}else{RetirementDemand{depth:1,..Default::default()}})}
   if !self.wire.is_complete(){return Self::nested(self.wire.advance_demands(fault,&self.buffer)?)}
+  if self.builder.published().is_none(){return Self::nested(RetainedPayloadBuilder::seal_demand())}
   Ok(RetirementDemand{depth:2,..Default::default()})
  }
  /// ✍️ Preserves the same typed source while actual bytes cross one original window and page at a time.

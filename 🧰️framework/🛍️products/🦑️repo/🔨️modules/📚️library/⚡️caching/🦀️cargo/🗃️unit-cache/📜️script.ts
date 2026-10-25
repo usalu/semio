@@ -8,8 +8,9 @@ import {digestFileV1,emitUnitEventV1,lookupUnitV1,publishUnitV1,restoreUnitV1,ty
 import {lanePathsV1} from "./🧵️lane/🟦️.ts";
 import {buildScriptsEnabledV1,installBuildScriptShimV1,isBuildScriptUnitV1} from "./🏗️buildscript/🟦️.ts";
 import {brokerOfV1,recallProvenanceV1,replayCachedUnitV1} from "./🛰️broker/🟦️.ts";
-import {collectGarbageSingleFlightV1,collectGarbageV1,measureGcV1,planGcV1} from "./🧹️gc/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import {collectGarbageSingleFlightV1,collectGarbageV1,measureGcV1,measureVolumeV1,planGcV1,watchUnitCachePressureV1} from "./🧹️gc/🟦️.ts";
+import {fillRatesV1,readFillSamplesV1} from "./🧹️gc/📈️fill/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
 type Environment=Readonly<Record<string,string|undefined>>;
@@ -119,7 +120,7 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
  }finally{claim?.release();}
 }
 
-/** 🧰️ Operator commands, run as `--semio-unit-cache <command> --root <dir> …`: `stats` summarises the event logs, `plan` and `gc` run the bounded cleanup; `gc --single-flight` is the background collector (one at a time, progress lines on stderr, SIGINT and SIGTERM cancel it). */
+/** 🧰️ Operator commands, run as `--semio-unit-cache <command> --root <dir> …`: `stats` summarises the event logs, `plan` and `gc` run the bounded cleanup; `gc --single-flight` is the background collector (one at a time, progress lines on stderr, SIGINT and SIGTERM cancel it), `gc --single-flight --watch` keeps it alive while compiles run (it collects whenever the image falls below its floor), `fill` prints the fill rates of the last half hour. */
 export async function manageV1(args:readonly string[]):Promise<unknown>{
  const [command,...rest]=args,value=(flag:string)=>{const index=rest.indexOf(flag);return index<0?undefined:rest[index+1];},root=resolve(value("--root")??"");
  if(command==="stats"){
@@ -130,8 +131,10 @@ export async function manageV1(args:readonly string[]):Promise<unknown>{
  const capacity=Number(value("--capacity")??0);if(!Number.isSafeInteger(capacity)||capacity<1)throw Error("--capacity <bytes> required");
  if(command==="plan")return planGcV1(measureGcV1(root,capacity,Date.now()));
  if(command==="gc"&&!rest.includes("--single-flight"))return collectGarbageV1(root,capacity);
+ if(command==="fill"){const volume=measureVolumeV1(root,capacity);return{...fillRatesV1(readFillSamplesV1(root),Date.now()),freeBytes:volume.freeBytes,volumeBytes:volume.volumeBytes};}
  if(command==="gc"){
   const controller=new AbortController();for(const signal of["SIGINT","SIGTERM"] as const)process.once(signal,()=>controller.abort(new Error("cancelled")));
+  if(rest.includes("--watch"))return watchUnitCachePressureV1(root,capacity,{signal:controller.signal});
   return collectGarbageSingleFlightV1(root,capacity,{signal:controller.signal,progress:(done,total)=>{process.stderr.write(JSON.stringify({progress:done,total})+"\n");}});
  }
  throw Error("Unknown unit-cache command");

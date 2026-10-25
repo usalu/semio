@@ -1,4 +1,4 @@
-//! 🧪️ `semio_framework_async_macros` — `#[async_test]`: keeps a test fn's literal `async fn` in
+//! 🧰️ `semio_framework_async_macros` — `#[async_test]`: keeps a test fn's literal `async fn` in
 //! source (the repo's universal-async convention) while expanding it to a plain `#[test] fn` that
 //! drives the body through an inline, dependency-free thread-park executor.
 //!

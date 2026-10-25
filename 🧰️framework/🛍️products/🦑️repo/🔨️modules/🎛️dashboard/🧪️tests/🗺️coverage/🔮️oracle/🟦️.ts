@@ -279,7 +279,7 @@ export function runArguments(selection: Selection, flags: string[] = []): string
   return [selection.id, ...flags, ...Object.entries(selection.parameters).flatMap(([key, value]) => ["--param", `${key}=${String(value)}`]), ...Object.entries(selection.env ?? {}).flatMap(([key, value]) => ["--env", `${key}=${value}`]), ...(selection.extraArgs.length ? ["--", ...selection.extraArgs] : [])];
 }
 
-/** ⚖️ The shape of `semio run --dry-run` output. */
+/** 🖨️ The shape of `semio run --dry-run` output. */
 export type Proc = { commandId: string; cmd: string; args: string[]; cwd: string; env: [string, string][]; ready?: { port: number; path: string; printed?: boolean }; longRunning: boolean };
 export type Launch = { commandId: string; processes: Proc[]; requires: Launch[]; stop: string; group?: string };
 

@@ -78,7 +78,7 @@ impl From<MetalGraphicsError> for BackendError {
 
 //#region 🍎️MetalBackend
 
-/// 🍎️ The concrete macOS `GraphicsBackend`. Every Metal/objc2 type stays behind this crate's own
+/// 🖥️ The concrete macOS `GraphicsBackend`. Every Metal/objc2 type stays behind this crate's own
 /// interface — nothing here appears in a public signature outside this crate (CLAUDE.md's "external
 /// libraries behind an interface" rule).
 pub struct MetalBackend {
@@ -143,7 +143,7 @@ impl MetalBackend {
         Ok(Self::from_parts(device, queue, layer, size, dpr))
     }
 
-    /// 🧪️ A `CAMetalLayer` not attached to any view — Metal drawables work independent of window
+    /// 👻️ A `CAMetalLayer` not attached to any view — Metal drawables work independent of window
     /// presence, so this exercises the full render pipeline for `backend-testing` without an AppKit
     /// window. Never used outside tests/the conformance harness.
     #[cfg(feature = "backend-testing")]
@@ -221,7 +221,7 @@ struct DeviceQueueLayer {
     layer: Owned<MetalLayer>,
 }
 
-/// 🏗️ Shared by `new`/`new_headless`: device, queue, and a fully-configured (but not-yet-attached)
+/// 🆕️ Shared by `new`/`new_headless`: device, queue, and a fully-configured (but not-yet-attached)
 /// `CAMetalLayer`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn create_device_queue_layer(size: PhysicalSize, _dpr: f32) -> Result<DeviceQueueLayer, BackendError> {
@@ -235,7 +235,7 @@ fn create_device_queue_layer(size: PhysicalSize, _dpr: f32) -> Result<DeviceQueu
     Ok(DeviceQueueLayer { device, queue, layer })
 }
 
-/// 📐️ Updates the layer's typed drawable-size value without naming its provider crate.
+/// 📏️ Updates the layer's typed drawable-size value without naming its provider crate.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn set_drawable_size(layer: &MetalLayer, width: u32, height: u32) {
     let mut size = layer.drawable_size();
@@ -292,7 +292,7 @@ impl MetalBackend {
         encoder.endEncoding();
     }
 
-    /// 🎬️ Pass 2 — mirrors `composite_to_swapchain`: blur the scene's mip chain, blit it to the real
+    /// 🪞️ Pass 2 — mirrors `composite_to_swapchain`: blur the scene's mip chain, blit it to the real
     /// swapchain drawable, composite every glass region on top, then paint glass-foreground 2D content
     /// (normal then overlay) directly onto the drawable, reusing `depth_texture` with `Load` ops so it
     /// still clips against the same stencil silhouettes the offscreen pass wrote.
@@ -322,7 +322,7 @@ impl MetalBackend {
         encoder.endEncoding();
     }
 
-    /// 🌫️ Ports `run_blur_chain`: for each mip 1..`SCENE_MIP_LEVELS`, blit-copies the previous mip from
+    /// ⛓️ Ports `run_blur_chain`: for each mip 1..`SCENE_MIP_LEVELS`, blit-copies the previous mip from
     /// `scene_target.texture()` into `scene_target.blur_scratch()` (Metal cannot read and write the
     /// same texture within one pass, same reasoning as the wgpu target), then renders a fullscreen
     /// 5-tap box downsample from the scratch texture into this mip. No per-mip `TextureView`s are
@@ -416,7 +416,7 @@ impl MetalBackend {
     }
 }
 
-/// 🏗️ One color attachment (`color`/`level`/`load`/optional clear) plus an optional shared
+/// 🎨️ One color attachment (`color`/`level`/`load`/optional clear) plus an optional shared
 /// depth+stencil attachment (`depth`/`depth_load`) — every render pass in this backend is one of
 /// these two shapes.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -545,7 +545,7 @@ fn draw_silhouette_mask(encoder: &Encoder, pipelines: &Pipelines, quad_vertex_bu
     }
 }
 
-/// 🖼️ `texture(0)`/`sampler(0)` are always the shared glyph atlas; `texture(1)`/`sampler(1)` are the
+/// 🪢️ `texture(0)`/`sampler(0)` are always the shared glyph atlas; `texture(1)`/`sampler(1)` are the
 /// shared icon atlas for `UiQuad` batches, or the batch's specific raster texture for
 /// `UiRasterTextured` batches (`batch.texture`) — mirrors `RasterTextureTable::ensure_raster`'s
 /// per-texture bind group swap.
@@ -656,7 +656,7 @@ impl GraphicsBackend for MetalBackend {
         Ok(RecoveredResources { lost_textures, lost_meshes, lost_atlases })
     }
 
-    /// 🧪️ Metal has no real "lose the device on demand" API — this sets the same `DeviceStatus::Lost`
+    /// 🐞️ Metal has no real "lose the device on demand" API — this sets the same `DeviceStatus::Lost`
     /// state a real fault would, so `render`/`recover` behave identically to the real-fault path from
     /// this point forward.
     #[cfg(feature = "backend-testing")]
@@ -664,7 +664,7 @@ impl GraphicsBackend for MetalBackend {
         self.status = DeviceStatus::Lost(LossReason::Device);
     }
 
-    /// 🧪️ Reads back the readback texture `render` populated via a same-frame blit from the presented
+    /// ⏪️ Reads back the readback texture `render` populated via a same-frame blit from the presented
     /// drawable (see `capture_readback`) — `BGRA8Unorm_sRGB` bytes swizzled to the tightly packed RGBA8
     /// `ReadbackImage` the conformance suite expects (an sRGB-vs-linear byte reinterpretation, not a
     /// full colour-managed conversion — acceptable for the suite's `|Δ| ≤ 3/255` tolerance, called out
@@ -705,7 +705,7 @@ impl GraphicsBackend for MetalBackend {
 
 #[cfg(feature = "backend-testing")]
 impl MetalBackend {
-    /// 🧪️ Blits the just-composited drawable into a fresh `Shared`-storage readback texture — always
+    /// 📸️ Blits the just-composited drawable into a fresh `Shared`-storage readback texture — always
     /// reallocated at the current size rather than cached, since this path only ever runs inside the
     /// conformance harness (never a hot path worth optimizing).
     fn capture_readback(&mut self, command_buffer: &CommandBuffer, drawable_texture: &MetalTexture) {

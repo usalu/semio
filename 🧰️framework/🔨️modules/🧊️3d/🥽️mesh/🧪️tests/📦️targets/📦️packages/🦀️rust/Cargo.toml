@@ -23,7 +23,6 @@ path = "../../🦀️.rs"
 [dev-dependencies]
 semio-framework-3d = { path = "../../../../../📦️packages/🦀️rust", features = ["mesh-test-observation"] }
 semio-framework-3d-mesh-reconstruction = { path = "../../../../🛠️modeling/🔁️reconstruction/📦️packages/🦀️rust" }
-semio-framework-3d-mesh-surface = { path = "../../../../🎨️surface/📦️packages/🦀️rust" }
 semio-framework-3d-mesh-quality = { path = "../../../../🔎️quality/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }

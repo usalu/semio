@@ -14,7 +14,7 @@ export type ContributedMutationSemantics = {
   readonly record: string;
 };
 
-/** 🗂️ One mutation a plugin contributes onto an artifact kind it depends on — mirrors Rust
+/** 🏺️ One mutation a plugin contributes onto an artifact kind it depends on — mirrors Rust
  * `ContributedMutationMetadata`. `mutationId` follows the contract freeze §3 contributed-id
  * grammar: `"<target-document-schema>#<contributor-plugin-id>:<kebab-kind>"`. */
 export type ContributedMutationMetadata = {
@@ -43,7 +43,7 @@ export type ContributedInferenceMetadata = {
   readonly dependsOn?: readonly string[];
 };
 
-/** 🗂️ Everything one plugin contributes onto one artifact kind it depends on — mirrors Rust
+/** 📦️ Everything one plugin contributes onto one artifact kind it depends on — mirrors Rust
  * `ArtifactContributionDescriptor`. Accepted only when `artifactKind`'s owning plugin is a direct
  * entry in the contributor's declared `PluginManifest.dependencies` (contract freeze §4). */
 export type ArtifactContributionDescriptor = {

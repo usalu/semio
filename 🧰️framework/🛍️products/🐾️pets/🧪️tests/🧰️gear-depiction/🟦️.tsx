@@ -16,7 +16,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { Species } from "@semio-tech/pets";
-import { NEAR, bearing, meant, numbersOf, through, apart, equipped } from "./🟢️shared/🟦️.tsx";
+import { NEAR, bearing, meant, numbersOf, through, apart, equipped } from "./🟢️harness/🟦️.tsx";
 import { registerBuildsToolOnceHiddenTests } from "./🔶️builds-tool-once-hidden/🟦️.tsx";
 import { registerRunsRopePivotActorTests } from "./🔸️runs-rope-pivot-actor/🟦️.tsx";
 import { registerNeverWritesWayPolicyTests } from "./🟠️never-writes-way-policy/🟦️.tsx";

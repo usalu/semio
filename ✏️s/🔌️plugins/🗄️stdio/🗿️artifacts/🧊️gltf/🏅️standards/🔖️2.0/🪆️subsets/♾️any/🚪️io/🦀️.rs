@@ -324,6 +324,5 @@ pub mod binary;
 pub mod text {
     pub use semio_s_artifact_stdio_gltf_model_v2_0::standards::v2_0::subsets::any::io::text::*;
     pub use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::diff;
-    pub use crate::standards::v2_0::subsets::any::io::text::snapshot;
 }
 

@@ -19,7 +19,7 @@ import { semioAssetsVitePlugin } from "../🧰️framework/🔨️modules/🖱�
 import { createWorkspaceViteResolveConfig, findWorkspacePackages } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs/🟦️.ts";
 import { hostBuildPlugins, uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildExactAliasEntries, buildScopeWatchIgnores, type StoryScope } from "./📖️stories/🧭️coordination/🟦️.ts";
+import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildExactAliasEntries, buildScopeWatchIgnores, buildScopeWatchRoots, isWatchedPathV1, type StoryScope } from "./📖️stories/🧭️coordination/🟦️.ts";
 import { repositoryCachePartitionRootDataV1 } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import { createAssetBuildPluginsV1 } from "../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
@@ -92,7 +92,7 @@ const config: StorybookConfig = {
   },
   docs: {},
   typescript: {
-    reactDocgen: "react-docgen-typescript",
+    reactDocgen: "react-docgen",
   },
   core: {
     disableTelemetry: true,
@@ -138,16 +138,17 @@ const config: StorybookConfig = {
     const currentIgnored = currentWatch.ignored;
     const ignoredList = Array.isArray(currentIgnored) ? currentIgnored : currentIgnored ? [currentIgnored] : [];
     const scopeWatchIgnores = buildScopeWatchIgnores(activeScopes);
+    const watchRoots = buildScopeWatchRoots(activeScopes, repoRootPath, Object.values(aliasRecord));
     config.server.watch = {
       ...currentWatch,
-      usePolling: true,
-      ignored: [...ignoredList, "**/storybook-static/**", "**/.nx/**", "**/.🧬semio/**", "**/.repo/**", "**/dist/**", "**/.git/**", "**/node_modules/**", ...scopeWatchIgnores],
+      usePolling: false,
+      ignored: [...ignoredList, (path: string) => !isWatchedPathV1(path, watchRoots), "**/storybook-static/**", "**/.nx/**", "**/.🧬semio/**", "**/.repo/**", "**/.cache/**", "**/bazel-out/**", "**/target/**", "**/temp/**", "**/holder/**", "**/dist/**", "**/.git/**", "**/node_modules/**", ...scopeWatchIgnores],
     };
 
     config.plugins = config.plugins || [];
     const hasTailwindPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "@tailwindcss/vite");
     if (!hasTailwindPlugin) {
-      config.plugins.push(...hostBuildPlugins(uiTailwindBuildPlugins()));
+      config.plugins.push(...hostBuildPlugins(uiTailwindBuildPlugins({ sourceBase: __dirname })));
     }
     const hasUiAssetsPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "ui-assets-serve");
     if (!hasUiAssetsPlugin) {

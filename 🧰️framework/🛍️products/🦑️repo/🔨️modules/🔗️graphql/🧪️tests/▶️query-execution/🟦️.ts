@@ -16,11 +16,11 @@
 
 //#region 🔌️Adapters
 import { buildSchema, execute, parse } from "graphql";
-import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔤️Identity
-/** 🔤️ The code points whose default presentation is text, and therefore carry U+FE0F in an id. */
+/** 📖️ The code points whose default presentation is text, and therefore carry U+FE0F in an id. */
 const TEXT_DEFAULT = ["🏗", "⌨", "🖱", "🗃", "⚙", "⚖", "🏷", "🛠", "✂", "🛡", "🗑", "☀", "⏱", "✏", "👮", "⬅", "⬆", "⬇"];
 
 /** 😀️ Normalises an emoji to the presentation form an identifier carries. */
@@ -35,7 +35,7 @@ function flat(value: string): string {
   return [...value.toLowerCase()].filter((character) => /[a-z0-9]/.test(character)).join("");
 }
 
-/** 🔤️ Title-cases one dash separated slug, word by word. */
+/** 🍃️ Title-cases one dash separated slug, word by word. */
 function titleizeSlug(slug: string): string {
   return slug
     .split("-")
@@ -76,7 +76,7 @@ function technologyKind(name: string): string {
 //#region 🖼️Sources
 type Row = Record<string, any>;
 
-/** 🔤️ A blank string reads as an absent value. */
+/** ❓️ A blank string reads as an absent value. */
 const optional = (value: unknown): string | null => (typeof value === "string" && value !== "" ? value : null);
 
 /** 📁️ Joins a repository-relative path onto the root, always with forward slashes. */

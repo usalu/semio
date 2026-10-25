@@ -1,0 +1,605 @@
+# stage-clean orphan staged=graph-speed-tools/staged/followup-new/test.ts map=None
+--- /dev/null
++++ b/staged/graph-speed-tools/staged/followup-new/test.ts
+@@ -0,0 +1,33 @@
++/** 🙈️ Contract: a resource declared presentation-only in the build policy is not part of any command closure, every other resource the entry imports still is. The expectation list is generated from the entry's own import statements by an independent Python scan (`🐍️oracle.py`). */
++import {expect,test} from "bun:test";
++import {existsSync,readFileSync} from "node:fs";
++import {dirname,join,resolve} from "node:path";
++import {fileURLToPath} from "node:url";
++import Ajv from "ajv";
++import fixture from "./🔣️.json";
++import fixtureSchema from "./🧬️schema/🔣️.json";
++import policy from "../../../../🔣️policy.json";
++
++const root=process.env.SEMIO_TEST_WORKSPACE_ROOT??(()=>{let path=dirname(fileURLToPath(import.meta.url));while(!existsSync(join(path,"bunfig.toml"))||!existsSync(join(path,"bun.lock")))path=dirname(path);return path;})();
++const names=(list:string[])=>list.map(file=>"{workspaceRoot}/"+file);
++
++test("the fixture is closed under its schema and the policy declares exactly the excluded resources",()=>{
++ expect(new Ajv({strict:true}).validate(fixtureSchema,fixture)).toBe(true);
++ expect(policy.presentationResources).toEqual(fixture.excluded);
++ for(const file of [...fixture.excluded,...fixture.included])expect(existsSync(join(root,file))).toBe(true);
++});
++
++test("the command closure of the entry omits presentation resources and keeps the other imported resources",async()=>{
++ const inference=await import("../../🟨️.mjs");await inference.libraryBootstrap;
++ const scripts=await import("../../🧭️script-inputs/🟨️.mjs"),cache=inference.createScriptInputCache({workspaceRoot:root});
++ const closure=await scripts.relativeScriptInputs([resolve(root,fixture.entry)],root,cache,false);
++ for(const file of names(fixture.excluded))expect(closure).not.toContain(file);
++ for(const file of names(fixture.included))expect(closure).toContain(file);
++ expect(closure).toContain("{workspaceRoot}/"+fixture.entry);
++});
++
++test("python scan of the entry's import statements agrees with the fixture",()=>{
++ const python=Bun.which("python3");if(!python)return;
++ const result=Bun.spawnSync([python,"-I",fileURLToPath(new URL("./🐍️oracle.py",import.meta.url)),fileURLToPath(new URL("./🔣️.json",import.meta.url)),root]);
++ expect(result.stdout.toString().trim()).toBe("ok");
++});
+# stage-clean orphan staged=graph-speed-tools/staged/followup.json map=None
+--- /dev/null
++++ b/staged/graph-speed-tools/staged/followup.json
+@@ -0,0 +1,29 @@
++{
++ "ops": [
++  {
++   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
++   "anchor": "  \"defaultTool\": \"nx\",\n",
++   "replacement": "  \"defaultTool\": \"nx\",\n  \"presentationResources\": [\n    \"🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json\"\n  ],\n"
++  },
++  {
++   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
++   "anchor": "/** 🔧️ Native leaves hash their compiler contract and exact command implementation, independently of UI selection. */\n",
++   "replacement": "/** 🙈️ The resources the build policy declares presentation-only (progress labels): their edits never change a command's behavior, so they are not command inputs. */\nfunction presentationResourcesV1(cache) {\n  return cache.presentation ??= new Set(JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, \"🏗️build\", \"🔣️policy.json\")).toString(\"utf8\")).presentationResources);\n}\n\n/** 🔧️ Native leaves hash their compiler contract and exact command implementation, independently of UI selection. */\n"
++  },
++  {
++   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
++   "anchor": "    const seen=files.has(path);\n    files.add(path);\n",
++   "replacement": "    if(presentationResourcesV1(cache).has(buildPath(relative(workspaceRoot,path))))return;\n    const seen=files.has(path);\n    files.add(path);\n"
++  }
++ ],
++ "bases": {
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json": "b31580994fd3cff3f912984de8a172190be4040f16ba13bebe333f5dc70856b8",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": "a56d3e7364bd8d1892427e65575d7c0712792f791c6406ef897149cc6768449b"
++ },
++ "new": {
++  "test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🙈️presentation-resources/🟦️.ts",
++  "fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🙈️presentation-resources/🔣️.json",
++  "fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🙈️presentation-resources/🧬️schema/🔣️.json",
++  "oracle.py": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🙈️presentation-resources/🐍️oracle.py"
++ }
++}
+\ No newline at end of file
+# stage-clean orphan staged=graph-speed-tools/staged/new/lean/test.ts map=None
+--- /dev/null
++++ b/staged/graph-speed-tools/staged/new/lean/test.ts
+@@ -0,0 +1,55 @@
++/** 🪶️ Contract: the lean reader returns exactly the leaves whose sha256 is their name (cross-checked against Python hashlib), refuses every other shape, and a remembered identity survives only while the leaf is untouched. */
++import {expect,test} from "bun:test";
++import {linkSync,mkdirSync,mkdtempSync,realpathSync,rmSync,symlinkSync,unlinkSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import Ajv from "ajv";
++import fixture from "./🔣️.json";
++import fixtureSchema from "./🧬️schema/🔣️.json";
++import {forgetInventoryRecordsV1,inventoryRecordStillHoldsV1,readInventoryRecordLeanV1,rememberInventoryRecordV1} from "../🟨️.mjs";
++
++const python=Bun.which("python3"),windows=process.platform==="win32";
++const scratch=()=>{const root=mkdtempSync(join(realpathSync(tmpdir()),"lean-inventory-")),directory=join(root,fixture.directories[0]!);mkdirSync(directory,{recursive:true});return {root,directory};};
++
++test("the fixture is closed under its schema and its digests are the sha256 of their text",()=>{
++ expect(new Ajv({strict:true}).validate(fixtureSchema,fixture)).toBe(true);
++ if(python){const texts=Object.values(fixture.records).map(row=>row.text),result=Bun.spawnSync([python,"-I","-c","import hashlib,sys\nfor t in sys.argv[1:]:\n    print(hashlib.sha256(t.encode('utf8')).hexdigest())",...texts]);expect(result.stdout.toString().trim().split("\n")).toEqual(Object.values(fixture.records).map(row=>row.sha256));}
++});
++
++for(const row of fixture.cases){
++ test("leaf case: "+row.name,()=>{
++  if(row.link&&windows)return;
++  const {root,directory}=scratch();
++  try{
++   const key=fixture.records[row.fileKey as keyof typeof fixture.records].sha256,path=join(directory,key+".json");
++   const text=row.record===null?undefined:row.record==="empty"?"":fixture.records[row.record as keyof typeof fixture.records].text;
++   if(text!==undefined){
++    if(row.link==="symbolic"){const target=join(root,"target.json");writeFileSync(target,text);symlinkSync(target,path);}
++    else{writeFileSync(path,text);if(row.link==="hard")linkSync(path,join(root,"second.json"));}
++   }
++   const bound=row.maximumBytes??fixture.maximumBytes;
++   if(row.expect==="value"){
++    const leaf=readInventoryRecordLeanV1(directory,key,bound);
++    expect(leaf.sha256).toBe(key);expect(leaf.byteLength).toBe(Buffer.byteLength(text!));expect(leaf.value).toEqual(JSON.parse(text!));expect(leaf.stamp.split(":").length).toBe(5);
++   }else expect(()=>readInventoryRecordLeanV1(directory,key,bound)).toThrow(row.expect);
++  }finally{rmSync(root,{recursive:true,force:true});}
++ });
++}
++
++for(const row of fixture.refusals)test("identity refusal: "+row.name,()=>{expect(()=>readInventoryRecordLeanV1(row.directory.includes("/")?row.directory:join(tmpdir(),row.directory),row.key,row.maximumBytes??fixture.maximumBytes)).toThrow(row.expect);});
++
++test("a remembered identity holds until the leaf is replaced, touched or removed",()=>{
++ forgetInventoryRecordsV1();
++ const {root,directory}=scratch();
++ try{
++  const key=fixture.records.good.sha256,path=join(directory,key+".json");writeFileSync(path,fixture.records.good.text);
++  expect(inventoryRecordStillHoldsV1(root,directory,key)).toBe(false);
++  const leaf=readInventoryRecordLeanV1(directory,key,fixture.maximumBytes);rememberInventoryRecordV1(root,directory,key,leaf.stamp);
++  expect(inventoryRecordStillHoldsV1(root,directory,key)).toBe(true);
++  expect(inventoryRecordStillHoldsV1(root+"-other",directory,key)).toBe(false);
++  unlinkSync(path);writeFileSync(path,fixture.records.good.text+" ");
++  expect(inventoryRecordStillHoldsV1(root,directory,key)).toBe(false);
++  rememberInventoryRecordV1(root,directory,key,"stale");unlinkSync(path);
++  expect(inventoryRecordStillHoldsV1(root,directory,key)).toBe(false);
++ }finally{rmSync(root,{recursive:true,force:true});forgetInventoryRecordsV1();}
++});
+# stage-clean orphan staged=graph-speed-tools/staged/new/phases/module.d.mts map=None
+--- /dev/null
++++ b/staged/graph-speed-tools/staged/new/phases/module.d.mts
+@@ -0,0 +1,7 @@
++/** ⏱️ One finished graph phase. */
++export interface GraphPhaseRowV1{readonly phase:string;readonly milliseconds:number;readonly done?:number;readonly total?:number;readonly [detail:string]:unknown}
++export interface GraphPhaseClockOptionsV1{publish?:(resource:string)=>void|Promise<void>;write?:(row:GraphPhaseRowV1)=>void;now?:()=>number;minimumMilliseconds?:number}
++export interface GraphPhaseClockV1{begin(phase:string,total:number):void|Promise<void>;advance(phase:string,done:number):void|Promise<void>;end(phase:string,details?:Record<string,unknown>):Promise<GraphPhaseRowV1>;rows():GraphPhaseRowV1[]}
++export function createGraphPhaseClockV1(options?:GraphPhaseClockOptionsV1):GraphPhaseClockV1;
++export function writeGraphPhaseRowV1(row:GraphPhaseRowV1):void;
++export function writeGraphPhaseSummaryV1(rows:readonly GraphPhaseRowV1[]):void;
+# stage-clean orphan staged=graph-speed-tools/staged/new/progress/fixture.json map=None
+--- /dev/null
++++ b/staged/graph-speed-tools/staged/new/progress/fixture.json
+@@ -0,0 +1,189 @@
++{
++  "version": 1,
++  "labels": {
++    "en": {
++      "template": "{command} · {phase}: {done} of {total} {units}",
++      "phases": {
++        "inference": {
++          "label": "Inferring projects",
++          "units": "projects"
++        },
++        "verification": {
++          "label": "Verifying input closures",
++          "units": "closures"
++        },
++        "expansion": {
++          "label": "Expanding input closures",
++          "units": "closures"
++        }
++      }
++    },
++    "de": {
++      "template": "{command} · {phase}: {done} von {total} {units}",
++      "phases": {
++        "inference": {
++          "label": "Projekte ableiten",
++          "units": "Projekte"
++        },
++        "verification": {
++          "label": "Eingabehüllen prüfen",
++          "units": "Hüllen"
++        },
++        "expansion": {
++          "label": "Eingabehüllen auflösen",
++          "units": "Hüllen"
++        }
++      }
++    }
++  },
++  "cases": [
++    {
++      "name": "en-inference-120-of-3656",
++      "environment": {
++        "LANG": "en_US.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:inference:120:3656",
++      "mode": "shared",
++      "elapsedMs": 0,
++      "expected": "build:projects · Inferring projects: 120 of 3656 projects"
++    },
++    {
++      "name": "en-verification-0-of-17713",
++      "environment": {
++        "LANG": "en_US.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:verification:0:17713",
++      "mode": "shared",
++      "elapsedMs": 0,
++      "expected": "build:projects · Verifying input closures: 0 of 17713 closures"
++    },
++    {
++      "name": "en-expansion-14232-of-14232",
++      "environment": {
++        "LANG": "en_US.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:expansion:14232:14232",
++      "mode": "shared",
++      "elapsedMs": 0,
++      "expected": "build:projects · Expanding input closures: 14232 of 14232 closures"
++    },
++    {
++      "name": "de-inference-120-of-3656",
++      "environment": {
++        "LANG": "de_DE.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:inference:120:3656",
++      "mode": "shared",
++      "elapsedMs": 0,
++      "expected": "build:projects · Projekte ableiten: 120 von 3656 Projekte"
++    },
++    {
++      "name": "de-verification-0-of-17713",
++      "environment": {
++        "LANG": "de_DE.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:verification:0:17713",
++      "mode": "shared",
++      "elapsedMs": 0,
++      "expected": "build:projects · Eingabehüllen prüfen: 0 von 17713 Hüllen"
++    },
++    {
++      "name": "de-expansion-14232-of-14232",
++      "environment": {
++        "LANG": "de_DE.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:expansion:14232:14232",
++      "mode": "shared",
++      "elapsedMs": 0,
++      "expected": "build:projects · Eingabehüllen auflösen: 14232 von 14232 Hüllen"
++    }
++  ],
++  "rejected": [
++    {
++      "name": "done-above-total",
++      "environment": {
++        "LANG": "en_US.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:inference:5:4",
++      "mode": "shared",
++      "elapsedMs": 0
++    },
++    {
++      "name": "unknown-phase",
++      "environment": {
++        "LANG": "en_US.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:publishing:1:2",
++      "mode": "shared",
++      "elapsedMs": 0
++    },
++    {
++      "name": "missing-total",
++      "environment": {
++        "LANG": "en_US.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:inference:1",
++      "mode": "shared",
++      "elapsedMs": 0
++    },
++    {
++      "name": "extra-part",
++      "environment": {
++        "LANG": "en_US.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:inference:1:2:3",
++      "mode": "shared",
++      "elapsedMs": 0
++    },
++    {
++      "name": "leading-zero",
++      "environment": {
++        "LANG": "en_US.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:inference:01:2",
++      "mode": "shared",
++      "elapsedMs": 0
++    },
++    {
++      "name": "non-zero-elapsed",
++      "environment": {
++        "LANG": "en_US.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:inference:1:2",
++      "mode": "shared",
++      "elapsedMs": 5
++    },
++    {
++      "name": "exclusive-mode",
++      "environment": {
++        "LANG": "en_US.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:inference:1:2",
++      "mode": "exclusive",
++      "elapsedMs": 0
++    },
++    {
++      "name": "overflowing-count",
++      "environment": {
++        "LANG": "en_US.UTF-8"
++      },
++      "command": "build:projects",
++      "resource": "build:graph-phase:inference:1:99999999999999999999",
++      "mode": "shared",
++      "elapsedMs": 0
++    }
++  ]
++}
+# stage-clean orphan staged=graph-speed-tools/staged/new/progress/labels.json map=None
+--- /dev/null
++++ b/staged/graph-speed-tools/staged/new/progress/labels.json
+@@ -0,0 +1,36 @@
++{
++  "en": {
++    "template": "{command} · {phase}: {done} of {total} {units}",
++    "phases": {
++      "inference": {
++        "label": "Inferring projects",
++        "units": "projects"
++      },
++      "verification": {
++        "label": "Verifying input closures",
++        "units": "closures"
++      },
++      "expansion": {
++        "label": "Expanding input closures",
++        "units": "closures"
++      }
++    }
++  },
++  "de": {
++    "template": "{command} · {phase}: {done} von {total} {units}",
++    "phases": {
++      "inference": {
++        "label": "Projekte ableiten",
++        "units": "Projekte"
++      },
++      "verification": {
++        "label": "Eingabehüllen prüfen",
++        "units": "Hüllen"
++      },
++      "expansion": {
++        "label": "Eingabehüllen auflösen",
++        "units": "Hüllen"
++      }
++    }
++  }
++}
+# stage-clean orphan staged=graph-speed-tools/staged/new/progress/test.ts map=None
+--- /dev/null
++++ b/staged/graph-speed-tools/staged/new/progress/test.ts
+@@ -0,0 +1,25 @@
++/** 📈️ Contract: graph phase counters are rendered in English and German exactly as the independent Python label model renders them, and every malformed counter stays silent. */
++import {expect,test} from "bun:test";
++import {fileURLToPath} from "node:url";
++import Ajv from "ajv";
++import fixture from "./🔣️.json";
++import fixtureSchema from "./🧬️schema/🔣️.json";
++import progressSchema from "../../🧬️schema/📈️progress.json";
++import {formatScriptProcessActivityV1} from "../../🟦️.ts";
++import type {ScriptProgress} from "../../../🟦️.ts";
++
++const progress=(row:{command:string;resource:string;mode:string;elapsedMs:number}):ScriptProgress=>({owner:"graph-phase-fixture",command:row.command,stage:"running",activity:{resource:row.resource,mode:row.mode as "shared"|"exclusive",elapsedMs:row.elapsedMs}});
++
++test("the fixture is closed under its schema and the declared labels equal the model labels",()=>{
++ expect(new Ajv({strict:true}).validate(fixtureSchema,fixture)).toBe(true);
++ expect(progressSchema.const.graphPhase.labels).toEqual(fixture.labels);
++ expect(progressSchema.const.graphPhase.resourcePrefix).toBe("build:graph-phase:");
++});
++for(const row of fixture.cases)test("rendered: "+row.name,()=>{expect(formatScriptProcessActivityV1(progress(row),row.environment)).toBe(row.expected);});
++for(const row of fixture.rejected)test("silent: "+row.name,()=>{expect(formatScriptProcessActivityV1(progress(row),row.environment)).toBeNull();});
++test("the python model renders the same text",()=>{
++ const python=Bun.which("python3");if(!python)return;
++ const script="import json,sys\nfixture=json.load(open(sys.argv[1],encoding='utf8'))\nfor row in fixture['cases']:\n    language='de' if row['environment']['LANG'].startswith('de') else 'en'\n    labels=fixture['labels'][language]\n    _,_,phase,done,total=row['resource'].split(':')\n    print(labels['template'].replace('{command}',row['command']).replace('{phase}',labels['phases'][phase]['label']).replace('{done}',done).replace('{total}',total).replace('{units}',labels['phases'][phase]['units']))";
++ const result=Bun.spawnSync([python,"-I","-c",script,fileURLToPath(new URL("./🔣️.json",import.meta.url))]);
++ expect(result.stdout.toString().trim().split("\n")).toEqual(fixture.cases.map(row=>row.expected));
++});
+# stage-clean orphan staged=graph-speed-tools/staged/new/records/test.ts map=None
+--- /dev/null
++++ b/staged/graph-speed-tools/staged/new/records/test.ts
+@@ -0,0 +1,57 @@
++/** 🔌️ Contract: reading records from many packs never keeps more descriptors open than the process-wide limit, every record still reads back byte-exact, and the pack indexes agree with Python hashlib. */
++import {expect,test} from "bun:test";
++import {existsSync,mkdtempSync,readdirSync,readFileSync,readlinkSync,realpathSync,rmSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import Ajv from "ajv";
++import fixture from "./🔣️.json";
++import fixtureSchema from "./🧬️schema/🔣️.json";
++import {RECORD_STORE_DESCRIPTOR_LIMIT,openRecordStore,openRecordStoreDescriptorCount,recordKey} from "../../🟦️.ts";
++
++const python=Bun.which("python3"),inside=(directory:string)=>existsSync("/dev/fd")?readdirSync("/dev/fd").filter(name=>{try{return readlinkSync("/dev/fd/"+name).startsWith(directory);}catch{return false;}}).length:undefined;
++const encoder=new TextEncoder();
++
++test("the fixture is closed under its schema and its keys follow the record key algorithm",()=>{
++ expect(new Ajv({strict:true}).validate(fixtureSchema,fixture)).toBe(true);
++ expect(RECORD_STORE_DESCRIPTOR_LIMIT).toBe(fixture.limit);
++ fixture.records.slice(0,8).forEach((row,index)=>expect(recordKey(fixture.namespace,String(index))).toBe(row.key));
++});
++
++test("many packs read through a bounded descriptor set and every value is exact",()=>{
++ const directory=mkdtempSync(join(realpathSync(tmpdir()),"record-descriptors-"));
++ try{
++  const writer=openRecordStore(directory);
++  for(const row of fixture.records){writer.put(row.key,encoder.encode(row.text));writer.flush();}
++  writer.close();
++  expect(readdirSync(directory).filter(name=>name.endsWith(".pack")).length).toBe(fixture.packs);
++  const reader=openRecordStore(directory);let widest=0,fds=0;
++  for(const row of fixture.records){
++   expect(new TextDecoder().decode(reader.get(row.key)!)).toBe(row.text);
++   widest=Math.max(widest,openRecordStoreDescriptorCount());const real=inside(directory);if(real!==undefined)fds=Math.max(fds,real);
++  }
++  expect(widest).toBeLessThanOrEqual(fixture.limit);expect(widest).toBeGreaterThan(0);
++  if(existsSync("/dev/fd"))expect(fds).toBeLessThanOrEqual(fixture.limit);
++  for(const row of [...fixture.records].reverse())expect(new TextDecoder().decode(reader.get(row.key)!)).toBe(row.text);
++  expect(reader.stats.hits).toBe(fixture.records.length*2);
++  reader.close();expect(openRecordStoreDescriptorCount()).toBe(0);
++  if(python){
++   const script="import hashlib,json,os,sys\nbad=0\nfor name in sorted(os.listdir(sys.argv[1])):\n    if not name.endswith('.idx'): continue\n    index=json.load(open(os.path.join(sys.argv[1],name),encoding='utf8'))\n    data=open(os.path.join(sys.argv[1],index['pack']+'.pack'),'rb').read()\n    for key,offset,length,digest in index['records']:\n        if hashlib.sha256(data[offset:offset+length]).hexdigest()[:32]!=digest: bad+=1\nprint(bad)";
++   expect(Bun.spawnSync([python,"-I","-c",script,directory]).stdout.toString().trim()).toBe("0");
++   const expected=new Map(fixture.records.map(row=>[row.key,row.digest]));let seen=0;
++   for(const name of readdirSync(directory).filter(name=>name.endsWith(".idx")))for(const [key,,,digest] of JSON.parse(readFileSync(join(directory,name),"utf8")).records){expect(expected.get(key)).toBe(digest);seen++;}
++   expect(seen).toBe(fixture.records.length);
++  }
++ }finally{rmSync(directory,{recursive:true,force:true});}
++});
++
++test("two stores share the limit and a closed store releases its descriptors",()=>{
++ const first=mkdtempSync(join(realpathSync(tmpdir()),"record-descriptors-a-")),second=mkdtempSync(join(realpathSync(tmpdir()),"record-descriptors-b-"));
++ try{
++  for(const directory of [first,second]){const writer=openRecordStore(directory);for(const row of fixture.records.slice(0,40)){writer.put(row.key,encoder.encode(row.text));writer.flush();}writer.close();}
++  const left=openRecordStore(first),right=openRecordStore(second);
++  for(const row of fixture.records.slice(0,40)){left.get(row.key);right.get(row.key);expect(openRecordStoreDescriptorCount()).toBeLessThanOrEqual(fixture.limit);}
++  left.close();const afterLeft=openRecordStoreDescriptorCount();right.close();
++  expect(afterLeft).toBeLessThanOrEqual(fixture.limit);expect(openRecordStoreDescriptorCount()).toBe(0);
++  expect(new TextDecoder().decode(openRecordStore(first).get(fixture.records[0]!.key)!)).toBe(fixture.records[0]!.text);
++ }finally{rmSync(first,{recursive:true,force:true});rmSync(second,{recursive:true,force:true});}
++});
+# stage-clean orphan staged=graph-speed-tools/staged/new/sealed/fixture.json map=None
+--- /dev/null
++++ b/staged/graph-speed-tools/staged/new/sealed/fixture.json
+@@ -0,0 +1,88 @@
++{
++  "version": 1,
++  "functions": {
++    "loadBuildGraphV1": {
++      "start": "export async function loadBuildGraphV1(",
++      "end": "/** 🎚️ Resolves one configuration"
++    },
++    "readSealedBuildGraphV1": {
++      "start": "async function readSealedBuildGraphV1(",
++      "end": "/** 💾️ Publishes only a current graph"
++    },
++    "loadBuildGraphAttemptV1": {
++      "start": "async function loadBuildGraphAttemptV1(",
++      "end": "async function readSealedBuildGraphV1("
++    }
++  },
++  "order": [
++    {
++      "name": "a shared reader runs before the exclusive writer lease is requested",
++      "function": "loadBuildGraphV1",
++      "before": "readSealedBuildGraphV1(root,invocation,phaseControl,options,registry)",
++      "after": "withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl)=>{"
++    },
++    {
++      "name": "the sealed-only attempt leaves before any inference starts",
++      "function": "loadBuildGraphAttemptV1",
++      "before": "if(options.sealedOnly)return undefined;\n  let captured",
++      "after": "discoverBuildGraphV1(root,options.selection"
++    },
++    {
++      "name": "the early receipt probe leaves before the workspace inventory is read",
++      "function": "loadBuildGraphAttemptV1",
++      "before": "if(options.sealedOnly){",
++      "after": "const inventory=async()=>"
++    },
++    {
++      "name": "the graph is published as its compact form",
++      "function": "loadBuildGraphAttemptV1",
++      "before": "source=JSON.stringify(compact)",
++      "after": "await rename(temporary,path)"
++    },
++    {
++      "name": "the caller receives the expanded graph that the compact publication was written from",
++      "function": "loadBuildGraphAttemptV1",
++      "before": "readBuildGraphV1(await portableInputs(root,compact,invocation,phaseControl))",
++      "after": "await rename(temporary,path)"
++    }
++  ],
++  "present": [
++    {
++      "name": "the reader uses the shared cache store, not the graph writer",
++      "function": "readSealedBuildGraphV1",
++      "text": "withRepositoryCacheStoreV1(root,\"graph\",invocation,phaseControl"
++    },
++    {
++      "name": "the reader is sealed-only",
++      "function": "readSealedBuildGraphV1",
++      "text": "sealedOnly:true"
++    },
++    {
++      "name": "only the all-graph skips the writer",
++      "function": "loadBuildGraphV1",
++      "text": "if(scope===undefined){"
++    },
++    {
++      "name": "the shared attempt is cancellable",
++      "function": "loadBuildGraphV1",
++      "text": "checkScriptInvocation(invocation);return sealed;"
++    }
++  ],
++  "absent": [
++    {
++      "name": "the reader never takes the graph writer",
++      "function": "readSealedBuildGraphV1",
++      "text": "withBuildGraphStateV1("
++    },
++    {
++      "name": "the reader never takes the facts writer",
++      "function": "readSealedBuildGraphV1",
++      "text": "withRepositoryBuildGraphFactStoreV1("
++    },
++    {
++      "name": "the graph is not published expanded",
++      "function": "loadBuildGraphAttemptV1",
++      "text": "source=JSON.stringify(graph)"
++    }
++  ]
++}
+# stage-clean head-live-changed staged=graph-speed-tools/staged/speed2-new/test.ts map=hash
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️block-cost/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️block-cost/🟦️.ts
+@@ -10,7 +10,7 @@
+ test("the fixture is closed under its schema",()=>{expect(new Ajv({strict:true}).validate(fixtureSchema,fixture)).toBe(true);expect(start).toBeGreaterThan(-1);expect(end).toBeGreaterThan(start);});
+ test("blocks are compressed at a bounded quality, after the existence and refusal checks",()=>{
+  expect(body).toContain("zlibConstants.BROTLI_PARAM_QUALITY]:5");
+- const exists=body.indexOf("readObservationBlockV1(directory,known.digest,true)"),refused=body.indexOf("blocksRefused.get(directory)"),pack=body.indexOf("brotliCompressSync(");
++ const exists=body.indexOf("fs.existsSync(path)"),refused=body.indexOf("blocksRefused.get(directory)"),pack=body.indexOf("brotliCompressSync(");
+  expect(exists).toBeGreaterThan(-1);expect(refused).toBeGreaterThan(exists);expect(pack).toBeGreaterThan(refused);
+  expect(body.indexOf("blocksRefused.set(directory")).toBeGreaterThan(pack);
+  expect(body.match(/brotliCompressSync\(/gu)?.length).toBe(1);
+# stage-clean orphan staged=graph-speed-tools/staged/speed2.json map=None
+--- /dev/null
++++ b/staged/graph-speed-tools/staged/speed2.json
+@@ -0,0 +1,32 @@
++{
++ "ops": [
++  {
++   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
++   "anchor": "let blockRowCounter=0;\n",
++   "replacement": "let blockRowCounter=0;\nconst blocksRefused=new Map(),BLOCK_REFUSAL_MILLISECONDS=30000;\n"
++  },
++  {
++   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
++   "anchor": "const path=inferenceObservationBlockPathV1(directory,known.digest);\n if(fs.existsSync(path)){blocksWritten.add(stamp);return true;}\n",
++   "replacement": "const path=inferenceObservationBlockPathV1(directory,known.digest);\n if(fs.existsSync(path)){blocksWritten.add(stamp);return true;}\n if((blocksRefused.get(directory)??0)>Date.now())return false;\n"
++  },
++  {
++   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
++   "anchor": "const packed=brotliCompressSync(Buffer.from(observationRowsJsonV1(block.rows))),temporary=",
++   "replacement": "const packed=brotliCompressSync(Buffer.from(observationRowsJsonV1(block.rows)),{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:5,[zlibConstants.BROTLI_PARAM_LGWIN]:22}}),temporary="
++  },
++  {
++   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
++   "anchor": "fs.writeFileSync(temporary,packed,{flag:\"wx\"});fs.renameSync(temporary,path);}))return false;\n",
++   "replacement": "fs.writeFileSync(temporary,packed,{flag:\"wx\"});fs.renameSync(temporary,path);})){blocksRefused.set(directory,Date.now()+BLOCK_REFUSAL_MILLISECONDS);return false;}\n"
++  }
++ ],
++ "bases": {
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": "27d51fdcf98e14a26383a9f0926a8ba8146cd4d2608f0dd82178162281e74cd6"
++ },
++ "new": {
++  "test.ts": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️block-cost/🟦️.ts",
++  "fixture.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️block-cost/🔣️.json",
++  "fixture-schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧱️block-cost/🧬️schema/🔣️.json"
++ }
++}
+\ No newline at end of file

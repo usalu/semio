@@ -11,7 +11,7 @@ use dashboard_inventory::{Job, Phase};
 use dashboard_labels::{labels, DashboardLabels};
 use dashboard_launch::TaskLabel;
 use dashboard_preferences::keymap::Keymap;
-use dashboard_preferences::{Change, Preferences};
+use dashboard_preferences::Preferences;
 use dashboard_registry::Registry;
 use dashboard_wire::ipc::{ClientMsg, SessionInfo, SessionStatus};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -32,7 +32,7 @@ const SCROLLBACK: usize = 8000;
 
 // #region 🔖️Window
 /// 🧩️ What a window shows.
-pub(super) enum Body {
+pub enum Body {
     Overview,
     Files(semio_framework_filesystem_workspace::commands::BrowserState),
     Document(Option<Box<semio_framework_filesystem_workspace::commands::DocumentBuffer>>),
@@ -46,14 +46,14 @@ pub(super) enum Body {
 
 /// 🧱️ Which body to build.
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum Kind { Files, Document, Overview, Settings, Diagnostics, KeymapEditor, Help, Launcher, Output }
+pub enum Kind { Files, Document, Overview, Settings, Diagnostics, KeymapEditor, Help, Launcher, Output }
 
 /// 📍️ Where a new window goes among the others.
 #[derive(Clone, Copy)]
-pub(super) enum Place<'a> { Preference, Split(&'a str), Stack(&'a str) }
+pub enum Place<'a> { Preference, Split(&'a str), Stack(&'a str) }
 
 /// 🖼️ One window: its chrome, the node tree of its body and the state behind it.
-pub(super) struct DashboardWindow {
+pub struct DashboardWindow {
     pub id: String,
     pub chrome: NodeId,
     pub root: NodeId,
@@ -83,19 +83,19 @@ impl DashboardWindow {
 
 /// 🔗️ What the dashboard says about its daemon connection.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) enum LinkState { Connecting, Connected, Reconnecting, Stopped, Failed(String) }
+pub enum LinkState { Connecting, Connected, Reconnecting, Stopped, Failed(String) }
 
 /// 📋️ The context menu that is open: its overlay, the window it was opened for and what each row does.
-pub(super) struct ContextMenu { pub node: NodeId, pub window: usize, pub actions: Vec<Option<super::controls::Action>> }
+pub struct ContextMenu { pub node: NodeId, pub window: usize, pub actions: Vec<Option<super::controls::Action>> }
 
 /// 🌬️ Something the view asks of the terminal it runs in, collected so tests need no terminal.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) enum Effect { Copy(String), OpenReady(String) }
+pub enum Effect { Copy(String), OpenReady(String) }
 // #endregion 🔖️Window
 
 // #region 🔖️Dashboard
 /// 🎛️ The whole native dashboard: preferences, keymap, windows, layout and the daemon link.
-pub(super) struct Dashboard {
+pub struct Dashboard {
     pub root: PathBuf,
     pub source: dashboard_source_view::Controller,
     pub source_effects: Vec<dashboard_source_view::Effect>,
@@ -134,7 +134,7 @@ pub(super) struct Dashboard {
     pub waker: Option<semio_framework_ui_tui_terminal::backend::Waker>,
 }
 
-pub(super) fn node_constraint() -> Constraint { Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), direction: Direction::Column, ..Default::default() } }
+pub fn node_constraint() -> Constraint { Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), direction: Direction::Column, ..Default::default() } }
 
 impl Dashboard {
     /// 🌱️ A dashboard with its shell and one task overview, ready to be painted.
@@ -331,7 +331,7 @@ impl Dashboard {
 
 // #region 🔖️Tabs
 /// 🗂️ The window ids sharing a stack with `id`, in tab order.
-pub(super) fn stack_of(layout: &WindowLayout, id: &str) -> Vec<String> {
+pub fn stack_of(layout: &WindowLayout, id: &str) -> Vec<String> {
     fn find(child: &WindowLayoutChild, id: &str) -> Option<Vec<String>> {
         match child {
             WindowLayoutChild::Stack(stack) => stack.children.iter().any(|window| window.window_kind_id == id).then(|| stack.children.iter().map(|window| window.window_kind_id.clone()).collect()),

@@ -8,8 +8,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RenameEntry {
-    pub(crate) name: String,
-    pub(crate) new_name: String,
+    pub name: String,
+    pub new_name: String,
 }
 
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for RenameEntry {

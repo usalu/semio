@@ -2,6 +2,11 @@
 
 use semio_framework_test_fixtures::fixture_text;
 
+/// 🧮️ Weighs the allocator events that the paid-receipt laws of this crate's own test binary compare with their receipts.
+#[cfg(test)]
+#[global_allocator]
+static EXTENSIONS_LAWS_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 pub use semio_framework_os_flow_extensions::*;
 
 #[cfg(test)] use neural_engine::{ColdOwner, Dictionary, Registry};
@@ -14,6 +19,9 @@ pub use semio_framework_os_flow_extensions::*;
 
 /// 🧾️ Reads one file below the extension node at test time instead of compiling it into the suite; the text lives for the whole test process.
 #[cfg(test)]
+fn read_node(path: &str) -> &'static str {
+    fixture_text!(format!("../../../{path}"))
+}
 
 // #region 🔖️Tests
 #[cfg(test)]

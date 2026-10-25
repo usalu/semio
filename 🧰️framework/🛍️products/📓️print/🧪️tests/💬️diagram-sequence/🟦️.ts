@@ -49,7 +49,7 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     "message-y-positions": {
-      /** 📋️ The lifeline positions and message steps the feature specifies. */
+      /** 📨️ The lifeline positions and message steps the feature specifies. */
       oracle: (ctx: AdapterContext) => ({ projection: roundProjectionNumbers({ "geometry/diagram-message": namedMessages(ctx) }, DECIMALS) }),
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },

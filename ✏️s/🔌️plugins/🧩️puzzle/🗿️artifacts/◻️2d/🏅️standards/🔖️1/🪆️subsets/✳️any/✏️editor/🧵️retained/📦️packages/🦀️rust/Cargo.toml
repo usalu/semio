@@ -34,6 +34,7 @@ semio-framework-graph-manifest = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-infinite = { workspace = true }
+semio-framework-os-infinite-board-normal-gestures = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true }

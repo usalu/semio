@@ -1,6 +1,6 @@
 /** 🔶️ The actor return codecs load phase of registerTests1. */
 import type { ActorReturnControl, ActorReturnDrive, ActorReturnIdentity, ActorReturnOrigin, ActorReturnPageReceipt, ActorReturnResult } from "../../../🟦️.ts";
-import type { TestSource } from "../🟢️shared/🟦️.ts";
+import type { TestSource } from "../🟢️harness/🟦️.ts";
 
 /** 🔷 Registers the actor return codecs load tests of registerTests1. */
 export function registerActorReturnCodecsLoadTests({ dependencies, vitest, testSource }: { readonly dependencies: Pick<typeof import("../../../../📃️page/🟦️.ts"), "createActorBytePage" | "readActorBytePage"> & Pick<typeof import("../../../🟦️.ts"), "ACTOR_RETURN_CONTROL_MAXIMUM_BYTES" | "ACTOR_RETURN_DRIVE_MAXIMUM_BYTES" | "ACTOR_RETURN_IDENTITY_MAXIMUM_BYTES" | "ACTOR_RETURN_ORIGIN_MAXIMUM_BYTES" | "ACTOR_RETURN_PAGE_RECEIPT_MAXIMUM_BYTES" | "ACTOR_RETURN_RESULT_MAXIMUM_BYTES" | "ActorReturnResultFraming" | "decodeActorReturnDrive" | "decodeActorReturnResult" | "encodeActorReturnDrive" | "encodeActorReturnResult">; readonly vitest: NonNullable<ImportMeta["vitest"]>; readonly testSource: TestSource }) {

@@ -27,9 +27,9 @@ use crate::standards::v1_1::subsets::basic::schema::mutations::support::subtree_
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct InsertClipPathShape {
-    pub(crate) clip_path_id: String,
-    pub(crate) index: usize,
-    pub(crate) node: SvgNode,
+    pub clip_path_id: String,
+    pub index: usize,
+    pub node: SvgNode,
 }
 
 impl<Op> protocol::MutationKind<SvgSnapshot, Op> for InsertClipPathShape

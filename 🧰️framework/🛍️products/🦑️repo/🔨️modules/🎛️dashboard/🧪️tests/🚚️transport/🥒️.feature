@@ -14,6 +14,11 @@ Feature: Views reach the daemon of their workspace and nobody else
     Then both fail
     And a view still connects to the first daemon without a difference of build
 
+  Scenario: Daemons that start at the same moment all listen
+    Given many workspaces whose sockets live in one runtime directory
+    When their daemons bind their endpoints at the same moment, round after round
+    Then every one of them listens and none is refused by a daemon that only inspects the directory
+
   Scenario: A connection wakes its owner
     Given a view with a notifier
     When a message arrives and when its queued sends drain

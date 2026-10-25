@@ -299,7 +299,7 @@ impl TypedJsonCursor {
 
 }
 
-enum OwnerPage<'a> {
+pub(super) enum OwnerPage<'a> {
     Page(&'a Page),
     Parent(&'a semio_s_artifact_layout_layout_model::ParentPage),
 }

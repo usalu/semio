@@ -3,7 +3,7 @@
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+use semio_framework_plugin::{Buildable, HasBase};
 use semio_framework_plugin::{PanelTreeBuilder, TreeWindows};
 use semio_framework_ui_contract as ui;
 

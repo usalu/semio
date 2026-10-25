@@ -76,7 +76,7 @@ function oracleVerdict(body: Parser.SyntaxNode): Pick<Site, "verdict" | "texts">
   return { verdict: worst ?? (texts.length > 0 ? "native" : forward || uninhabited ? "forward" : "labelUnresolved"), texts };
 }
 
-/** 🔮️ Every label site of one Rust source, by the tree-sitter oracle, in the token gate's order: impl sites, then data sites. */
+/** 🔖️ Every label site of one Rust source, by the tree-sitter oracle, in the token gate's order: impl sites, then data sites. */
 function oracleSites(source: string): Site[] {
   const tree = parser.parse(source);
   const sites: Site[] = [];
@@ -274,7 +274,8 @@ describe("schema-mutation-editability", () => {
     expect(mutationSchemaSearchRoots(repoRoot, schema)).toEqual(["✏️s/🔌️plugins/📏️layout"]);
     const union = new Map(mutationSchemaSearchRoots(repoRoot, schema).flatMap((root) => [...mutationSchemaDocumentIndex(repoRoot, root)]).reverse());
     expect(mutationLeafUnpublishedReferences(repoRoot, schema, union, framework)).toEqual([]);
-    expect(mutationLeafUnpublishedReferences(repoRoot, schema, mutationSchemaDocumentIndex(repoRoot, "✏️s/🔌️plugins/📏️layout"), framework)).toEqual(["https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json"]);
+    expect(mutationLeafUnpublishedReferences(repoRoot, schema, mutationSchemaDocumentIndex(repoRoot, "✏️s/🔌️plugins/📏️layout"), framework)).toEqual([]);
+    expect(mutationLeafUnpublishedReferences(repoRoot, schema, mutationSchemaDocumentIndex(repoRoot, "✏️s/🔌️plugins/📏️layout"), new Map())).toEqual(["https://json.schemas.assets.semio-tech.com/framework/value/question-dictionary.json"]);
     expect(mutationSchemaSearchRoots(repoRoot, "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🧬️schema/🔣️.json")).toEqual(["✏️s/🔌️plugins/📋️forms"]);
   }, 60_000);
   test("the manifest dependency reader agrees with Bun's TOML parser on every artifact crate", () => {

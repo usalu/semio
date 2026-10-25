@@ -1,9 +1,9 @@
-/** 🧱️ Contract: the field-discovery contract normalises state classes, scalar spellings and snake-case names, and finds a schema declaration only by its declared name; the corpus is language-agnostic and `🐍️oracle.py` recomputes each verdict. */
+/** 🧱️ Contract: the field-discovery contract normalises state classes, scalar spellings and snake-case names, and finds a schema declaration only by its declared name; the corpus is language-agnostic and `🐍️.py` recomputes each verdict. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {policyCanonicalScalar,policyCanonicalState,policyFindSchemaDeclaration,policySnakeToCamel} from "../🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
@@ -19,6 +19,6 @@ test("a lookup with a global pattern is repeatable",()=>{const pattern=/\bmessag
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

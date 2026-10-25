@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "entry": "tools/entry.mjs",
+ "files": {
+  "tools/entry.mjs": "import \"./a.mjs\";\nimport \"./b.mjs\";\nexport const entry = 1;\n",
+  "tools/a.mjs": "export const a = 1;\n",
+  "tools/b.mjs": "export const b = 2;\n",
+  "tools/c.mjs": "export const c = 3;\n"
+ },
+ "question": ["/tools/b.mjs"],
+ "steps": [
+  {"name": "first inference", "edit": {}, "reused": false, "closure": ["tools/a.mjs", "tools/b.mjs", "tools/entry.mjs"], "answer": true},
+  {"name": "a new import joins the closure: the roster moves, no question is put differently, the record is reused", "edit": {"tools/a.mjs": "import \"./c.mjs\";\nexport const a = 1;\n"}, "reused": true, "closure": ["tools/a.mjs", "tools/b.mjs", "tools/c.mjs", "tools/entry.mjs"], "answer": true},
+  {"name": "an edit that changes no import keeps record and roster", "edit": {"tools/a.mjs": "import \"./c.mjs\";\nexport const a = 2;\n"}, "reused": true, "closure": ["tools/a.mjs", "tools/b.mjs", "tools/c.mjs", "tools/entry.mjs"], "answer": true},
+  {"name": "a process that starts later has no entries and still finds the record valid", "edit": {}, "forget": true, "reused": true, "closure": ["tools/a.mjs", "tools/b.mjs", "tools/c.mjs", "tools/entry.mjs"], "answer": true},
+  {"name": "dropping the import the question names changes the answer: the record is recomputed", "edit": {"tools/entry.mjs": "import \"./a.mjs\";\nexport const entry = 1;\n"}, "reused": false, "closure": ["tools/a.mjs", "tools/c.mjs", "tools/entry.mjs"], "answer": false}
+ ]
+}

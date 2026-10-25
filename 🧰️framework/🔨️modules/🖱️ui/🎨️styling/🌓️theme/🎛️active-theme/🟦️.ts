@@ -14,7 +14,7 @@ export function stylingAppearanceRootElement(): HTMLElement | null {
   return registered?.isConnected ? registered : document.documentElement;
 }
 
-/** 🌓️ Resolves the active styling appearance name from the registered appearance root. */
+/** 🏠️ Resolves the active styling appearance name from the registered appearance root. */
 export function currentStylingAppearanceName(): StylingAppearanceName {
   if (stylingAppearanceRootElement()?.classList.contains("dark")) {
     return "dark";
@@ -36,12 +36,12 @@ export const _activeUiThemeSubscribers = ephemeralSet<(theme: UiTheme) => void>(
  * "the page", for the single page-owning shell / `setActiveUiTheme` callers). */
 export const _appliedThemeCssPropsByRoot = ephemeralMap<HTMLElement, Set<string>>("framework.modules.ui.styling.packages.typescript.index.ts._appliedThemeCssPropsByRoot");
 
-/** 🎨️ The currently active theme (defaults to semio before any theme is set). */
+/** ⭐️ The currently active theme (defaults to semio before any theme is set). */
 export function activeUiTheme(): UiTheme {
   return _activeUiTheme.current ?? semioTheme();
 }
 
-/** 🎨️ Registers a callback invoked whenever the active theme changes. Returns an unsubscribe function. */
+/** 🔔️ Registers a callback invoked whenever the active theme changes. Returns an unsubscribe function. */
 export function subscribeActiveUiTheme(callback: (theme: UiTheme) => void): () => void {
   _activeUiThemeSubscribers.add(callback);
   return () => _activeUiThemeSubscribers.delete(callback);

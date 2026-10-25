@@ -15,7 +15,7 @@ use semio_framework_os_mcp_bridge_codec::bridge::{
 };
 use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_framework_os_mcp_server::mcp_server::McpServer;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::net::{Shutdown, SocketAddr, TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
 use super::http_authority::ConnectionTurn;

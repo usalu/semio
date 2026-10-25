@@ -27,5 +27,4 @@ fn original_frame_outcome_keeps_candidate_and_absent_payload_through_funded_desc
     let(close,heap)=observe(||caller.turn(|cx|job.close_step(cx)).unwrap());assert!(matches!(close,InteractiveJobCloseStep::Complete{..}));assert_eq!(heap,(0,0));receipts.push(caller.receipt());
     for(actual,expected)in receipts.iter().zip(fixture["progress"].as_array().unwrap()){assert_eq!(*actual,serde_json::from_value::<RetainedCloneProgress>(expected.clone()).unwrap())}
     assert_eq!(observe(||drop(job)).1,(0,0));caller.finish();
-    eprintln!("[DEBUG] same finite original frame71/3: candidate ABI copy1 + publication/ACK metadata + candidate close copy1, four items, no synthetic contexts, absent semantic payload, denied turns zero heap, terminal source paid");
 }

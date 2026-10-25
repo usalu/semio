@@ -456,7 +456,7 @@ pub fn generation2d_apply_retained_mutations_for_test(snapshot: &mut Generation2
 /// travels as the outcome's own messages, codes and levels unchanged, and an apply-time rejection joins them as the
 /// `Fatal` `mutation.apply.*` message `MutationOutcome::apply_to` would persist.
 pub fn apply_generation2d_mutation(projection: &mut Generation2dSnapshot, mutation: &Generation2dMutation) -> Result<(), Vec<protocol::MutationMessage>> {
-    let (delta, messages) = Mutation::diff(mutation, &*projection).into_parts();
+    let (delta, messages) = ::semio_framework_os_kernel::ColdMutation::diff(mutation, &*projection).into_parts();
     if messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
         delta.retire_cold();
         return Err(messages);

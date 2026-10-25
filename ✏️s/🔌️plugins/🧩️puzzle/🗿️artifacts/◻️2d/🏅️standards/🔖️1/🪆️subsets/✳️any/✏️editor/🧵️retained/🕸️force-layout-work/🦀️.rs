@@ -207,15 +207,18 @@ impl Puzzle2dForceLayoutWork {
         pop!(original);
         pop!(raw_node_indices);
         pop!(node_ids);
-        if let Some(key) = self.handle_to_node.keys().next().cloned() {
+        let handle_to_node_next = self.handle_to_node.keys().next().cloned();
+        if let Some(key) = handle_to_node_next {
             self.handle_to_node.remove(&key);
             return true;
         }
-        if let Some(key) = self.id_to_index.keys().next().cloned() {
+        let id_to_index_next = self.id_to_index.keys().next().cloned();
+        if let Some(key) = id_to_index_next {
             self.id_to_index.remove(&key);
             return true;
         }
-        if let Some(edge) = self.edge_set.iter().next().copied() {
+        let edge_set_next = self.edge_set.iter().next().copied();
+        if let Some(edge) = edge_set_next {
             self.edge_set.remove(&edge);
             return true;
         }

@@ -2,13 +2,13 @@
 use crate::*;
 use semio_framework_pack_json as json;
 
-/// 🎒️ Encodes canonical polygon values at the native JSON boundary.
+/// 🧲️ Encodes canonical polygon values at the native JSON boundary.
 pub fn encode_polygon_mesh_source(source:&PolygonMeshSource)->String {json::from_dsl_value(&pack::value::ToValue::to_value(source)).to_string()}
 
 /// 📜️ Reads polygon-preserving OBJ through the cooperative source cursor.
 pub fn polygon_mesh_source_from_obj(text:&str)->Result<PolygonMeshSource,String> {let mut cursor=ObjSourceCursor::new();loop {if let Some(source)=cursor.step(text,4096)?{return Ok(source);}}}
 
-/// 📜️ Incremental form of [`polygon_mesh_source_from_obj`]: reads at most the granted number of lines per step so a host can stay inside an interactive step ceiling.
+/// 🖱️ Incremental form of [`polygon_mesh_source_from_obj`]: reads at most the granted number of lines per step so a host can stay inside an interactive step ceiling.
 pub struct ObjSourceCursor {offset:usize,lines:usize,vertices:Vec<[f32;3]>,faces:Vec<Vec<u32>>}
 
 impl Default for ObjSourceCursor {fn default()->Self {Self::new()}}
@@ -63,7 +63,7 @@ pub fn parse_polygon_mesh_source(text:&str)->Result<PolygonMeshSource,String> {
 #[derive(Clone,Copy,Debug)]
 pub struct PolygonSourceGrant {pub maximum_units:usize,pub maximum_projection_bytes:usize,pub retirement:pack::value::retained_clone::RetainedCloneGrant}
 
-/// 📊️ Returns physical closure receipts alongside the admitted canonical source.
+/// 🪜️ Returns physical closure receipts alongside the admitted canonical source.
 pub struct PolygonSourceStep {pub source:Option<PolygonMeshSource>,pub retirement:pack::value::retained_clone::RetainedCloneProgress}
 
 fn admit_source_retirement<T:pack::value::retirement::RetireOwned>(slot:&mut Option<Box<dyn pack::value::ErasedSnapshotRetirement>>,value:&mut Option<T>,grant:pack::value::retained_clone::RetainedCloneGrant)->Result<pack::value::retained_clone::RetainedCloneProgress,String>{
@@ -105,7 +105,7 @@ impl PolygonSourcePreparation {
         };
         Ok(PolygonSourceGrant{maximum_units,maximum_projection_bytes,retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)}})
     }
-    /// ⏱️ Advances projection work or one independently admitted closure turn.
+    /// 💼️ Advances projection work or one independently admitted closure turn.
     pub fn step(&mut self,text:&str,grant:PolygonSourceGrant)->Result<PolygonSourceStep,String>{
         let waiting=|retirement|PolygonSourceStep{source:None,retirement};
         if text.len()>16_000_000{return Err("mesh input exceeds 16 MB".into());}
@@ -198,7 +198,7 @@ pub struct MeshMetadataCursor {
     metadata_section:u8,metadata_stage:u8,metadata_name:Option<String>,metadata_records:usize,metadata_value:usize,metadata_stack:Vec<MeshJsonTask>,
 }
 impl MeshMetadataCursor {
-    /// 🧵️ Appends one bounded metadata transition using borrowed canonical values.
+    /// 👣️ Appends one bounded metadata transition using borrowed canonical values.
     pub fn step(&mut self, attributes:&HistoryFoldIndex<String,MeshAttribute>,materials:&HistoryFoldIndex<String,pack::value::DslValue>,textures:&HistoryFoldIndex<String,MeshTexture>,references:Option<&ComponentReferenceTable>,corners:Option<&[u32]>,edges:Option<&[u32]>,output:&mut String)->Result<bool,String> {
         use std::ops::Bound::{Excluded,Unbounded};
         if attributes.len()>64 || materials.len()>10_000 || textures.len()>256 {return Err("mesh metadata declaration limit exceeded".into());}

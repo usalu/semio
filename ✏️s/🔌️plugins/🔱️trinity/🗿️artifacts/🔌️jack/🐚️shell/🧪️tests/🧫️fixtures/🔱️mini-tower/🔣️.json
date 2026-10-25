@@ -1,0 +1,450 @@
+{
+  "schema": "trinity.graph",
+  "name": "mini",
+  "manifestId": "nakagin",
+  "manifest": {
+    "nodeKinds": [
+      {
+        "name": "Balcony",
+        "properties": [],
+        "portKinds": []
+      },
+      {
+        "name": "Base",
+        "properties": [],
+        "portKinds": [
+          "core rectangular bottom"
+        ]
+      },
+      {
+        "name": "Base Blob",
+        "properties": [],
+        "portKinds": [
+          "core circular bottom"
+        ]
+      },
+      {
+        "name": "Bridge",
+        "properties": [],
+        "portKinds": [
+          "platform right",
+          "platform left"
+        ]
+      },
+      {
+        "name": "Capital",
+        "properties": [],
+        "portKinds": [
+          "roof rectangular top"
+        ]
+      },
+      {
+        "name": "Capsule",
+        "properties": [],
+        "portKinds": []
+      },
+      {
+        "name": "Capsule Backslash",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule J",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule L",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule P",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule q",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule S",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule Slash",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule With Balcony Backslash",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule With Balcony J",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule With Balcony L",
+        "properties": [],
+        "portKinds": [
+          "door capsule left"
+        ]
+      },
+      {
+        "name": "Capsule With Balcony P",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule With Balcony Q",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule With Balcony S",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule With Balcony Slash",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Capsule With Balcony Z",
+        "properties": [],
+        "portKinds": [
+          "door capsule left"
+        ]
+      },
+      {
+        "name": "Capsule Z",
+        "properties": [],
+        "portKinds": [
+          "door capsule left"
+        ]
+      },
+      {
+        "name": "Cylindric Capital",
+        "properties": [],
+        "portKinds": [
+          "roof circular top"
+        ]
+      },
+      {
+        "name": "Cylindric First Storey Tambour",
+        "properties": [],
+        "portKinds": [
+          "core circular top",
+          "tambour circular top",
+          "door tambour right",
+          "door tambour left"
+        ]
+      },
+      {
+        "name": "Cylindric Last Storey Tambour",
+        "properties": [],
+        "portKinds": [
+          "tambour circular bottom",
+          "roof circular bottom",
+          "door tambour right",
+          "door tambour left"
+        ]
+      },
+      {
+        "name": "Cylindric Single Storey Tambour",
+        "properties": [],
+        "portKinds": [
+          "core circular top",
+          "roof circular bottom",
+          "door tambour right",
+          "door tambour left"
+        ]
+      },
+      {
+        "name": "Cylindric Tambour",
+        "properties": [],
+        "portKinds": [
+          "tambour circular bottom",
+          "tambour circular top",
+          "door tambour right",
+          "door tambour left"
+        ]
+      },
+      {
+        "name": "Ellipsoid",
+        "properties": [],
+        "portKinds": []
+      },
+      {
+        "name": "First Storey Tambour",
+        "properties": [],
+        "portKinds": [
+          "core rectangular top",
+          "tambour rectangular top",
+          "door tambour right",
+          "door tambour left"
+        ]
+      },
+      {
+        "name": "Last Storey Tambour",
+        "properties": [],
+        "portKinds": [
+          "tambour rectangular bottom",
+          "roof rectangular bottom",
+          "door tambour right",
+          "door tambour left"
+        ]
+      },
+      {
+        "name": "Single Storey Tambour",
+        "properties": [],
+        "portKinds": [
+          "core circular top",
+          "roof rectangular bottom",
+          "door tambour right",
+          "door tambour left"
+        ]
+      },
+      {
+        "name": "Tambour",
+        "properties": [],
+        "portKinds": [
+          "tambour rectangular bottom",
+          "tambour rectangular top",
+          "door tambour right",
+          "door tambour left"
+        ]
+      },
+      {
+        "name": "Trapezoid",
+        "properties": [],
+        "portKinds": []
+      },
+      {
+        "name": "Trapezoid Capsule Backslash",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Trapezoid Capsule J",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Trapezoid Capsule L",
+        "properties": [],
+        "portKinds": [
+          "door capsule left"
+        ]
+      },
+      {
+        "name": "Trapezoid Capsule P",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Trapezoid Capsule Q",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Trapezoid Capsule S",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Trapezoid Capsule Slash",
+        "properties": [],
+        "portKinds": [
+          "door capsule right"
+        ]
+      },
+      {
+        "name": "Trapezoid Capsule Z",
+        "properties": [],
+        "portKinds": [
+          "door capsule left"
+        ]
+      },
+      {
+        "name": "Piece",
+        "properties": [
+          {
+            "name": "position",
+            "kind": "data",
+            "valueType": {
+              "kind": "any"
+            }
+          },
+          {
+            "name": "label",
+            "kind": "data",
+            "valueType": {
+              "kind": "text"
+            }
+          },
+          {
+            "name": "tier",
+            "kind": "data",
+            "valueType": {
+              "kind": "decimal"
+            }
+          }
+        ],
+        "portKinds": [
+          "Connector"
+        ]
+      }
+    ],
+    "edgeKinds": [
+      {
+        "name": "Connection",
+        "properties": [
+          {
+            "name": "gap",
+            "kind": "data",
+            "valueType": {
+              "kind": "decimal"
+            }
+          },
+          {
+            "name": "rotation",
+            "kind": "data",
+            "valueType": {
+              "kind": "decimal"
+            }
+          },
+          {
+            "name": "tilt",
+            "kind": "data",
+            "valueType": {
+              "kind": "decimal"
+            }
+          },
+          {
+            "name": "rise",
+            "kind": "data",
+            "valueType": {
+              "kind": "decimal"
+            }
+          },
+          {
+            "name": "turn",
+            "kind": "data",
+            "valueType": {
+              "kind": "decimal"
+            }
+          },
+          {
+            "name": "shift",
+            "kind": "data",
+            "valueType": {
+              "kind": "decimal"
+            }
+          },
+          {
+            "name": "u",
+            "kind": "data",
+            "valueType": {
+              "kind": "decimal"
+            }
+          },
+          {
+            "name": "v",
+            "kind": "data",
+            "valueType": {
+              "kind": "decimal"
+            }
+          }
+        ]
+      },
+      {
+        "name": "edge.link",
+        "properties": []
+      }
+    ],
+    "portKinds": [
+      {
+        "name": "Connector",
+        "direction": "out",
+        "properties": []
+      }
+    ]
+  },
+  "camera": {
+    "x": {
+      "bits": "0000000000000000"
+    },
+    "y": {
+      "bits": "0000000000000000"
+    },
+    "zoom": {
+      "bits": "3ff0000000000000"
+    }
+  },
+  "nodes": [
+    {
+      "id": "root",
+      "kind": "Piece",
+      "name": "core",
+      "x": 0.0,
+      "y": 0.0,
+      "width": 80.0,
+      "height": 40.0,
+      "properties": {},
+      "ports": [
+        {
+          "id": "out",
+          "kind": "Connector",
+          "direction": "out",
+          "properties": {}
+        }
+      ]
+    }
+  ],
+  "edges": [],
+  "rootNodeId": "root",
+  "query": ""
+}

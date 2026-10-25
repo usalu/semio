@@ -1,6 +1,6 @@
 import{capturePhysicalSourceTextV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
-import {createHash} from "node:crypto";
-import {createReadStream,rmSync} from "node:fs";
+import {createHash,randomBytes} from "node:crypto";
+import {createReadStream} from "node:fs";
 import {lstat,mkdir,readdir,readFile,realpath,rename,rm,writeFile} from "node:fs/promises";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 
@@ -22,11 +22,19 @@ export function declaredStoreReceiptV1({workspaceRoot,projectRoot,target,outputs
  return path;
 }
 
-/** 🎟️ Starts a task that declares a receipt from no receipt and tells its handler where to write it; any other task is told of none, so a nested task never records into its parent's receipt. */
+/** 🎟️ Starts a task that declares a receipt and tells its handler where to write it: a private pending file next to the declared receipt, so a concurrent start of the same task in the workspace never deletes the receipt another run just finished; any other task is told of none, so a nested task never records into its parent's receipt. */
 export function issueStoreReceiptV1(declaration){
  const path=declaredStoreReceiptV1(declaration);if(path===undefined)return {[policy.environment]:undefined};
- rmSync(path,{force:true});
- return {[policy.environment]:path};
+ return {[policy.environment]:path+"."+randomBytes(4).toString("hex")};
+}
+
+/** 🏁 Settles an issued receipt after its task: success moves the pending file over the declared receipt atomically (a task that recorded nothing drops only a declared receipt older than its own start), failure drops the pending file and keeps the declared one. */
+export async function settleStoreReceiptV1(declaration,issued,{succeeded,startedAtMs}){
+ const declared=declaredStoreReceiptV1(declaration),pending=issued?.[policy.environment];if(declared===undefined||pending===undefined)return;
+ if(!succeeded){await rm(pending,{force:true});return;}
+ try{await rename(pending,declared);return;}catch(error){if(error?.code!=="ENOENT")throw error;}
+ const facts=await lstat(declared).catch(error=>{if(error?.code==="ENOENT")return undefined;throw error;});
+ if(facts&&facts.mtimeMs<startedAtMs)await rm(declared,{force:true});
 }
 
 /** 🔧️ Admits the single-task uncached Nx child launch that repairs a receipt whose store content is gone. */

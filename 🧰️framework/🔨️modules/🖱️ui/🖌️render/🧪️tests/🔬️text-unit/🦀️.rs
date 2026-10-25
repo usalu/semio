@@ -142,7 +142,7 @@ fn shape_paragraph_wraps_at_max_width_and_never_mid_char() {
     }
 }
 
-/// 🧪️ Fixture table over every [`TextAlignment`] variant: each must still produce a positive
+/// 📏️ Fixture table over every [`TextAlignment`] variant: each must still produce a positive
 /// height and must never widen the shape past `max_width`.
 #[test]
 fn shape_paragraph_alignment_variants_respect_max_width_and_measure_positive_height() {

@@ -24,7 +24,7 @@ pub(super) enum RestoreStage {
 }
 
 #[derive(Clone, Debug)]
-struct RestoreHeader {
+pub(super) struct RestoreHeader {
     pub(super) operation_id: u64,
     pub(super) base_revision: u64,
     pub(super) generation: u64,

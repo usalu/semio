@@ -66,7 +66,7 @@ wfc_patch!(/// 📍 Field patch over a slot (its id is the row identity).
 
 protocol::list_delta! {
     /// 📂 Row delta over the slots.
-    pub Wfc3dSlotsDelta { removal: Wfc3dSlotsRemoval, insertion: Wfc3dSlotsInsertion, relocation: Wfc3dSlotsRelocation, modification: Wfc3dSlotsModification, row: Slot3d, patch: Wfc3dSlotPatch, key: id, values_only }
+    pub Wfc3dSlotsDelta { removal: Wfc3dSlotsRemoval, insertion: Wfc3dSlotsInsertion, relocation: Wfc3dSlotsRelocation, modification: Wfc3dSlotsModification, row: Slot3d, patch: Wfc3dSlotPatch, list: Vec<Slot3d>, key: String = keyed, values_only }
 }
 
 impl Wfc3dRow for SlotEdge {
@@ -80,7 +80,7 @@ wfc_patch!(/// 🔗 Field patch over an adjacency edge (its id is the row identi
 
 protocol::list_delta! {
     /// 📂 Row delta over the edges.
-    pub Wfc3dEdgesDelta { removal: Wfc3dEdgesRemoval, insertion: Wfc3dEdgesInsertion, relocation: Wfc3dEdgesRelocation, modification: Wfc3dEdgesModification, row: SlotEdge, patch: Wfc3dEdgePatch, key: id, values_only }
+    pub Wfc3dEdgesDelta { removal: Wfc3dEdgesRemoval, insertion: Wfc3dEdgesInsertion, relocation: Wfc3dEdgesRelocation, modification: Wfc3dEdgesModification, row: SlotEdge, patch: Wfc3dEdgePatch, list: Vec<SlotEdge>, key: String = keyed, values_only }
 }
 
 impl Wfc3dRow for Tile {
@@ -94,7 +94,7 @@ wfc_patch!(/// 🀄️ Field patch over a tile (its id is the row identity).
 
 protocol::list_delta! {
     /// 📂 Row delta over the tiles.
-    pub Wfc3dTilesDelta { removal: Wfc3dTilesRemoval, insertion: Wfc3dTilesInsertion, relocation: Wfc3dTilesRelocation, modification: Wfc3dTilesModification, row: Tile, patch: Wfc3dTilePatch, key: id, values_only }
+    pub Wfc3dTilesDelta { removal: Wfc3dTilesRemoval, insertion: Wfc3dTilesInsertion, relocation: Wfc3dTilesRelocation, modification: Wfc3dTilesModification, row: Tile, patch: Wfc3dTilePatch, list: Vec<Tile>, key: String = keyed, values_only }
 }
 
 impl Wfc3dRow for GraphRule {
@@ -108,7 +108,7 @@ wfc_patch!(/// ⛓️ Field patch over an adjacency rule (its id is the row iden
 
 protocol::list_delta! {
     /// 📂 Row delta over the rules.
-    pub Wfc3dRulesDelta { removal: Wfc3dRulesRemoval, insertion: Wfc3dRulesInsertion, relocation: Wfc3dRulesRelocation, modification: Wfc3dRulesModification, row: GraphRule, patch: Wfc3dRulePatch, key: id, values_only }
+    pub Wfc3dRulesDelta { removal: Wfc3dRulesRemoval, insertion: Wfc3dRulesInsertion, relocation: Wfc3dRulesRelocation, modification: Wfc3dRulesModification, row: GraphRule, patch: Wfc3dRulePatch, list: Vec<GraphRule>, key: String = keyed, values_only }
 }
 
 //#endregion 🔖️RowTypes

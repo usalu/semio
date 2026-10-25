@@ -93,7 +93,7 @@ export const INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE = "🧰️framework/🛍️p
 export const INTERACTIVITY_AUDIT_WORLD3D_FILES = ["🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧩️components/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧲️cursors/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🌉️bridge/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🦀️.rs"];
 
 /**
- * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
+ * 🏠️ The "single sanctioned runtime module" the thread/pool-construction rule (category
  * `thread-pool`) is scoped OUTSIDE of — this is an authored-production-roots check, unlike the
  * `blocking-bridge`/`sync-*` categories which are scoped to [[INTERACTIVITY_AUDIT_UI_ROOTS]] only.
  * The async primitives crate is the only sanctioned root because it owns the process-wide
@@ -117,7 +117,7 @@ type InteractivityAuditCategory = "blocking-bridge" | "sync-fs" | "sync-net" | "
 
 export type InteractivityAuditPatternDef = { category: InteractivityAuditCategory; re: RegExp; label: string; scope: "ui" | "runtime-repo-wide" };
 
-/** ⏱️ Every forbidden call pattern, its category, and which scope rule scans it (`"ui"` → [[INTERACTIVITY_AUDIT_UI_ROOTS]] only; `"runtime-repo-wide"` → [[INTERACTIVITY_AUDIT_PRODUCTION_ROOTS]] minus [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]). */
+/** ☎️ Every forbidden call pattern, its category, and which scope rule scans it (`"ui"` → [[INTERACTIVITY_AUDIT_UI_ROOTS]] only; `"runtime-repo-wide"` → [[INTERACTIVITY_AUDIT_PRODUCTION_ROOTS]] minus [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]). */
 export const INTERACTIVITY_AUDIT_PATTERNS: readonly InteractivityAuditPatternDef[] = [
   { category: "blocking-bridge", re: /\bblock_on\s*\(/, label: "block_on(", scope: "ui" },
   { category: "blocking-bridge", re: /\brun_blocking\s*\(/, label: "run_blocking(", scope: "ui" },
@@ -137,7 +137,7 @@ export const INTERACTIVITY_AUDIT_PATTERNS: readonly InteractivityAuditPatternDef
 ];
 
 /**
- * ⏱️ One allow-listed `block_on`/`run_blocking` call site — must carry a reason and the phase that
+ * 📋️ One allow-listed `block_on`/`run_blocking` call site — must carry a reason and the phase that
  * removes/reconciles it, so the list only ever shrinks. `inScope: false` marks a site pre-declared
  * for when [[INTERACTIVITY_AUDIT_UI_ROOTS]] widens (not yet reachable by today's scan — never
  * counted as stale). `expectedNeverToMatch: true` marks a site the scanner structurally cannot see
@@ -147,7 +147,7 @@ export const INTERACTIVITY_AUDIT_PATTERNS: readonly InteractivityAuditPatternDef
 export type InteractivityAllowlistEntry = { file: string; lineHint: number; pattern: "block_on" | "run_blocking"; reason: string; phase: string; inScope: boolean; expectedNeverToMatch?: boolean };
 
 /**
- * ⏱️ Known `block_on`/`run_blocking` call sites as of the Phase 0 audit (baseline commit
+ * 🕵️ Known `block_on`/`run_blocking` call sites as of the Phase 0 audit (baseline commit
  * `95b8688ee2`). Verified against the repo, not copied blind from the master ticket. CI fails once `verify interactivity` flips
  * to `"deny"` if an entry here stops matching any real finding (stale) — see `runInteractivityAudit`.
  */

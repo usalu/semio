@@ -299,6 +299,5 @@ fn declared_variant_field_has_one_named_record_and_preserves_control() {
             assert!(<DeclaredVariantField as DslField>::from_value_controlled(&malformed, &mut control).is_err());
         }
     }
-    eprintln!("[DEBUG] declared variant field: three neutral named records, two arity refusals, original controlled allocation and cancellation");
 }
 

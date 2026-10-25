@@ -8,6 +8,7 @@ use semio_s_artifact_norm_en1994_mut_beams::remove_beam::RemoveBeam;
 use semio_s_artifact_norm_en1994_mutations::En1994Mutation;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
+use protocol::ColdMutationDiff;
 
 fn base() -> En1994Snapshot {
     let mut base = En1994Snapshot::default();

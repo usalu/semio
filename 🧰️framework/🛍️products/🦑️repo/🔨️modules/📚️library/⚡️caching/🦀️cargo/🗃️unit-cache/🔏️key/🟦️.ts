@@ -48,7 +48,7 @@ export function parseRustcUnitV1(args:readonly string[]):RustcUnitV1{
  return Object.freeze({crateName:first("--crate-name")??"",crateTypes:Object.freeze(all("--crate-type").flatMap(value=>value.split(","))),emit:Object.freeze(all("--emit").flatMap(value=>value.split(",").map(part=>part.split("=")[0]!))),outDir:first("--out-dir")??"",source:parsed.positional[0]??"",target:first("--target"),externs:Object.freeze(externs),links:Object.freeze(all("-l")),nativeSearch:all("-L").some(value=>/^(native|all)=/u.test(value)),incremental,artifacts:json.includes("artifacts")});
 }
 
-/** 🚫️ Decides whether a command line can be served from the cache. */
+/** ⚡️ Decides whether a command line can be served from the cache. */
 export function rustcBypassV1(unit:RustcUnitV1,args:readonly string[]):RustcBypassV1{
  if(unit.source===""||unit.source==="-"||!unit.source.endsWith(".rs"))return"no-source-file";
  if(unit.crateName==="")return"no-crate-name";

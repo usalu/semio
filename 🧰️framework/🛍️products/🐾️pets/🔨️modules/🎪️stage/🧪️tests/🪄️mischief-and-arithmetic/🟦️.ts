@@ -60,7 +60,7 @@ describe.each(COMPANIES)("mischief of $name: a pet pushes the copy of a marked e
     return surveyed([{ id: TASKS.id, x0: TASKS.x0, x1: TASKS.x1, y: TASKS.y0 }, LEDGE, { ...FLOOR, x1: width }], [{ x: TASKS.x0, y: TASKS.y0, width: TASKS.x1 - TASKS.x0, height: TASKS.y1 - TASKS.y0 }], width, HEIGHT, walls, fixtures);
   }
 
-  /** 🪄️ A stage over the task card, permitted to play with the page, at tick `OPEN` (every mode's first cooldown is over, and the learner has been still since tick 0), on which every one of `who` stands idle at its place on the card's top — or on the ledge, when the place lies on it — for as long as the test runs. */
+  /** 🎮️ A stage over the task card, permitted to play with the page, at tick `OPEN` (every mode's first cooldown is over, and the learner has been still since tick 0), on which every one of `who` stands idle at its place on the card's top — or on the ledge, when the place lies on it — for as long as the test runs. */
   function poised(play: Menagerie, who: readonly Slug[], places: readonly number[], options: { readonly mode?: PetMode; readonly fixtures?: readonly Fixture[]; readonly seed?: number } = {}): Stage {
     let stage: Stage = { ...advance(play, openStage(options.seed ?? 3), [{ kind: "tuned", mode: options.mode ?? "lively" }, page(options.fixtures), { kind: "summoned", species: who }, { kind: "permitted", play: true, mischief: true }]), tick: OPEN };
     who.forEach((species, at) => {

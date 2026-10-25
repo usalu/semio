@@ -106,7 +106,7 @@ pub enum GatewayError {
     Full { command_id: CommandId },
 }
 
-/// 📮️ A non-blocking, bounded gate in front of a [`CommandSink`]. `capacity` bounds how many
+/// 🚪️ A non-blocking, bounded gate in front of a [`CommandSink`]. `capacity` bounds how many
 /// [`Command`]s this gateway will track as outstanding (`Pending`) at once — independent of whatever
 /// bound the backing mailbox itself enforces — so a UI that keeps submitting into a slow actor fails
 /// fast locally instead of growing its own tracking table without limit.
@@ -123,7 +123,7 @@ impl<S: CommandSink> CommandGateway<S> {
         Self { queue: VecDeque::new(), capacity, sink, resolved: HashMap::new() }
     }
 
-    /// 📤️ Submits `command` without blocking. Checks THIS gateway's own outstanding-ticket bound
+    /// 🧱️ Submits `command` without blocking. Checks THIS gateway's own outstanding-ticket bound
     /// first — fast-failing before ever touching `sink` if already at `capacity` — then forwards to
     /// [`CommandSink::try_send`]; either way a full mailbox comes back as [`GatewayError::Full`]
     /// synchronously, on this same call, never as a dropped command nobody hears about.
@@ -162,7 +162,7 @@ impl<S: CommandSink> CommandGateway<S> {
         true
     }
 
-    /// 📊️ The [`OptimisticStatus`] a presenter should layer over its projection read for `command_id` —
+    /// 🚥️ The [`OptimisticStatus`] a presenter should layer over its projection read for `command_id` —
     /// `Pending` while still outstanding, the resolved status once acknowledged/rejected/conflicted, or
     /// `None` if `command_id` was never submitted through this gateway.
     pub fn status(&self, command_id: CommandId) -> Option<OptimisticStatus> {

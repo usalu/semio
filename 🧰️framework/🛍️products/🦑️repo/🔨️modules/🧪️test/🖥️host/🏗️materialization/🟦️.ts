@@ -10,7 +10,7 @@ import { rustSubjectPackage } from "../../🕸️dependencies/🟨️.mjs";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { delimiter, join, relative, sep } from "node:path";
 import { createRequire } from "node:module";
-import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🦀️ Reads Cargo's machine output instead of assuming a target triple, profile directory or executable suffix. */
 export function rustHostExecutableFromCargo(stdout: string): string | null {
@@ -71,7 +71,7 @@ export function contributedOraclePackages(repoRoot: string, discovered: Discover
   return oracleHostPackagesFor(loadOracleRegistry(repoRoot), discovered.owner, implementation);
 }
 
-/** 🦀️ Materializes a standalone cache-local integration crate that links the adapter and the host support crate by path. */
+/** 🖥️ Materializes a standalone cache-local integration crate that links the adapter and the host support crate by path. */
 export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role: TestRole, planPath: string, outPath: string): MaterializedHost {
   const dir = hostDirFor(repoRoot, discovered, role, "rust");
   const adapterAbs = join(repoRoot, discovered.adapters.rust!);
@@ -155,7 +155,7 @@ export function repositoryGoWorkspace(repoRoot: string): { go: string; uses: str
 }
 
 /**
- * 🐹️ Materializes a cache-local Go module whose generated entrypoint delegates to the committed adapter.
+ * ☁️ Materializes a cache-local Go module whose generated entrypoint delegates to the committed adapter.
  * The host joins a generated workspace that uses the repository's own workspace modules, so the
  * adapter's `github.com/usalu/semio/…` and `semio.tech/repo/test` imports resolve locally.
  */
@@ -269,7 +269,7 @@ export function pythonHostArguments(hostPath: string, planPath: string, outPath:
   return [hostPath, ...localPaths.flatMap((path) => ["--local-source", path]), "--plan", planPath, "--out", outPath, "--adapter", adapterPath];
 }
 
-/** 🐍️ Runs the committed adapter through the owned Python host — never through the compose-scoped root discovery config. */
+/** ▶️ Runs the committed adapter through the owned Python host — never through the compose-scoped root discovery config. */
 export function materializePythonHost(repoRoot: string, discovered: DiscoveredCase, role: TestRole, planPath: string, outPath: string): MaterializedHost {
   const dir = hostDirFor(repoRoot, discovered, role, "python");
   const declared = contributedOraclePackages(repoRoot, discovered, "python");
@@ -312,7 +312,7 @@ export function materializeTypescriptHost(repoRoot: string, discovered: Discover
   };
 }
 
-/** 🟦️ Whether a bare specifier resolves from the repository root — the same lookup the host will do. */
+/** 🦑️ Whether a bare specifier resolves from the repository root — the same lookup the host will do. */
 export function resolvesFromRepoRoot(repoRoot: string, specifier: string): boolean {
   try {
     createRequire(join(repoRoot, "package.json")).resolve(specifier);

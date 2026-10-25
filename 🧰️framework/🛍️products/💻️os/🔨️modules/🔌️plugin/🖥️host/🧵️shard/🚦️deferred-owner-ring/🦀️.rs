@@ -17,7 +17,7 @@ pub const SHARD_DEFERRED_BYTES: usize = 16 * 1024 * 1024;
 pub const SHARD_FRAME_MAX_BYTES: usize = SHARD_DEFERRED_BYTES;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct OwnerKey {
+pub struct OwnerKey {
     pub(super) slot: usize,
     pub(super) generation: u64,
 }
@@ -29,7 +29,7 @@ pub enum AdmissionLimit {
 }
 
 #[derive(Debug)]
-pub(crate) struct AdmissionRejected<T> {
+pub struct AdmissionRejected<T> {
     pub limit: AdmissionLimit,
     pub owner: T,
 }
@@ -160,12 +160,12 @@ pub fn split_frame_credit(raw_bytes: usize, items: usize, index: usize) -> usize
 /// this shard does not own and was answered with a `Fault` outcome. An answered rejection is an
 /// outcome on the wire, so it spends the drive's one opportunity exactly like a granted authority.
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum FrameAdmission {
+pub enum FrameAdmission {
     Deferred,
     Answered,
 }
 
-pub(super) enum FrameAdmissionError {
+pub enum FrameAdmissionError {
     Full { bytes: Vec<u8> },
     TerminalCapacity { bytes: Vec<u8>, error: PluginHostError },
     Fault(PluginHostError),

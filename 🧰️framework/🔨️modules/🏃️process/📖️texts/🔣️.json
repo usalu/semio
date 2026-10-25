@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "id": "process",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "leases.yielding-requires-exclusive": {
+      "en": "Yielding lease tickets require exclusive access",
+      "de": "Nachgebende Lease-Tickets erfordern exklusiven Zugriff"
+    },
+    "routing.forwarded-request-invocation-required": {
+      "en": "The original forwarded request needs its script process invocation",
+      "de": "Die ursprüngliche weitergeleitete Anfrage braucht ihren Skriptprozess-Aufruf"
+    },
+    "routing.renewable-control-needs-nonrenewable-maximum": {
+      "en": "A renewable original control requires its nonrenewable maximum as the requested budget",
+      "de": "Eine erneuerbare ursprüngliche Steuerung verlangt ihr nicht erneuerbares Maximum als angefordertes Budget"
+    },
+    "script.suite-sources-missing": {
+      "en": "Test suite sources are missing (bun test would silently skip them): {missing}",
+      "de": "Quellen der Testsuite fehlen (bun test würde sie stillschweigend überspringen): {missing}"
+    },
+    "script.suite-launcher-missing": {
+      "en": "Test suite launcher is not provided by the route: {launcher}",
+      "de": "Der Starter der Testsuite wird von der Route nicht bereitgestellt: {launcher}"
+    },
+    "script.suite-files-failed": {
+      "en": "Test suite {suite} failed in {count} test file(s): {files}",
+      "de": "Die Testsuite {suite} ist in {count} Testdatei(en) fehlgeschlagen: {files}"
+    },
+    "testing.extracted-function-required": {
+      "en": "Extracted function required: {name}",
+      "de": "Extrahierte Funktion erforderlich: {name}"
+    },
+    "leases.invalid-resource": {
+      "en": "Invalid lease resource",
+      "de": "Ungültige Lease-Ressource"
+    },
+    "leases.invalid-access-mode": {
+      "en": "Invalid resource access mode",
+      "de": "Ungültiger Zugriffsmodus der Ressource"
+    },
+    "leases.invalid-timeout": {
+      "en": "Invalid resource lease timeout",
+      "de": "Ungültiges Zeitlimit der Ressourcen-Lease"
+    },
+    "leases.admission-resource-reserved": {
+      "en": "Directory admission resource is reserved",
+      "de": "Die Ressource der Verzeichnis-Zulassung ist reserviert"
+    },
+    "leases.invalid-queue-owner": {
+      "en": "Invalid lease queue owner",
+      "de": "Ungültiger Besitzer der Lease-Warteschlange"
+    },
+    "execution.renewable-command-needs-ceiling": {
+      "en": "A renewable repository command requires a positive ceiling",
+      "de": "Ein erneuerbarer Repository-Befehl verlangt eine positive Obergrenze"
+    },
+    "testing.route-table-invalid": {
+      "en": "The process test route table is invalid: it must satisfy its closed schema",
+      "de": "Die Routentabelle der Prozess-Tests ist ungültig: sie muss ihrem geschlossenen Schema genügen"
+    },
+    "testing.route-suite-duplicated": {
+      "en": "The process test route table repeats a suite identifier",
+      "de": "Die Routentabelle der Prozess-Tests wiederholt eine Suite-Kennung"
+    }
+  }
+}

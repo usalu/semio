@@ -339,7 +339,7 @@ fn quoted_preparation_grant(owner: &ArtifactStoreOneItemSealer<u64, MapMutation>
 fn drive_to_prepared(owner: &mut ArtifactStoreOneItemSealer<u64, MapMutation>, turns: usize) -> Result<usize, semio_framework_value::ValueError> {
     for turn in 0..turns {
         let grant = quoted_preparation_grant(owner);
-        if matches!(owner.advance(grant)?, ArtifactStoreOneItemPreparationStep::Prepared(..)) {
+        if matches!(with_receiving(|receiving| owner.advance(grant, receiving))?, ArtifactStoreOneItemPreparationStep::Prepared(..)) {
             return Ok(turn);
         }
     }
@@ -357,8 +357,13 @@ fn borrowed_map_long_unicode_keys_nested_and_empty_maps_match_serde_under_quoted
     assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
     let mut owner = tests::admit_sealer(tests::authority(), edit, Arc::new(17), Arc::new(MapRetirementFactory), Arc::new(tests::FixtureSnapshotRetirement));
     let before = owner.checkpoint();
-    for denied in [fixture_encoding_grant(0, 4096), fixture_encoding_grant(1, 0)] {
-        assert!(matches!(owner.advance(denied).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
+    let quoted = quoted_preparation_grant(&owner);
+    let mut denied_grants = vec![ArtifactStoreOneItemGrant { maximum_items: 0, ..quoted }];
+    for (demand, denied) in [(quoted.maximum_copy_bytes, ArtifactStoreOneItemGrant { maximum_copy_bytes: quoted.maximum_copy_bytes.saturating_sub(1), ..quoted }), (quoted.maximum_capacity_bytes, ArtifactStoreOneItemGrant { maximum_capacity_bytes: quoted.maximum_capacity_bytes.saturating_sub(1), ..quoted }), (quoted.maximum_release_bytes, ArtifactStoreOneItemGrant { maximum_release_bytes: quoted.maximum_release_bytes.saturating_sub(1), ..quoted }), (quoted.maximum_depth, ArtifactStoreOneItemGrant { maximum_depth: quoted.maximum_depth.saturating_sub(1), ..quoted })] {
+        if demand > 0 { denied_grants.push(denied); }
+    }
+    for denied in denied_grants {
+        assert!(matches!(with_receiving(|receiving| owner.advance(denied, receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
         assert_eq!(owner.checkpoint(), before);
         assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
     }
@@ -375,12 +380,12 @@ fn borrowed_map_cancel_at_every_frontier_retires_the_original_root_exactly_once(
         let (mut owner, _, lifetime) = owner();
         for _ in 0..cut {
             let grant = quoted_preparation_grant(&owner);
-            if matches!(owner.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Prepared(..)) {
+            if matches!(with_receiving(|receiving| owner.advance(grant, receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Prepared(..)) {
                 break;
             }
         }
         owner.cancel();
-        assert!(matches!(owner.advance(fixture_encoding_grant(1, 4096)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
+        assert!(matches!(with_receiving(|receiving| owner.advance(fixture_encoding_grant(1, 4096), receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
         close(&mut owner, &lifetime);
     }
 }
@@ -390,13 +395,13 @@ fn borrowed_map_native_checkpoint_is_refused_and_a_live_owner_moves_workers() {
     let (mut first, fixture, lifetime) = owner();
     for _ in 0..100 {
         let grant = quoted_preparation_grant(&first);
-        first.advance(grant).unwrap();
+        with_receiving(|receiving| first.advance(grant, receiving)).unwrap();
     }
     let checkpoint = first.checkpoint();
     let (mut replay, _, replay_lifetime) = owner();
     replay.restore_checkpoint(checkpoint).unwrap();
     let grant = quoted_preparation_grant(&replay);
-    let refusal = replay.advance(grant).unwrap_err();
+    let refusal = with_receiving(|receiving| replay.advance(grant, receiving)).unwrap_err();
     assert_eq!(refusal.message.as_ref(), "canonical-edit.native-checkpoint-unsupported");
     close(&mut replay, &replay_lifetime);
     let mut first = std::thread::spawn(move || {
@@ -411,7 +416,7 @@ fn borrowed_map_native_checkpoint_is_refused_and_a_live_owner_moves_workers() {
 
 #[test]
 fn borrowed_map_indexed_depth_refusal_and_deep_originals_seal_under_the_depth_grant() {
-    let mut indexed = ArtifactCanonicalJsonCursor::with_maximum_depth(2);
+    let mut indexed = ArtifactCanonicalJsonCursor::with_maximum_depth(2).expect("depth two is admitted");
     let original_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64};
     let mut initialized=0;let mut failure=None;
     for _ in 0..32{match indexed.encode_chunk_admitted(&IndexedDepth(2),&mut[0;256],original_grant){Ok(step)=>initialized+=step.written_bytes,Err(error)=>{failure=Some(error);break}}}
@@ -430,3 +435,5 @@ fn borrowed_map_indexed_depth_refusal_and_deep_originals_seal_under_the_depth_gr
     close_under(&mut owner, &lifetime, RetainedCloneGrant { maximum_depth: 4096, ..fixture_retirement_grant() });
 }
 //#endregion 🧪️BorrowedMapLaws
+
+fn with_receiving<R>(operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R { semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant()).receive(operation) }

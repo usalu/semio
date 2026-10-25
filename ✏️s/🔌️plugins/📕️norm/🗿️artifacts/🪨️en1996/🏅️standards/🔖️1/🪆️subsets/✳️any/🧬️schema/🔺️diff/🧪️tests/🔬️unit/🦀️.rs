@@ -9,7 +9,7 @@ use protocol::{apply_diff_cold, DiffAlgebra, ColdMutation, Mutation};
 fn change_annex_diff_updates_only_annex() {
     let base = En1996Snapshot::compliant_clay_wall();
     let mutation = En1996Mutation::ChangeAnnex(ChangeAnnex { new_annex: AnnexChoice::En });
-    let outcome = Mutation::diff(&mutation, &base);
+    let outcome = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
     let mut expected = base.clone();
     expected.annex = AnnexChoice::En;
     assert_eq!(apply_diff_cold(outcome.diff(), &base).expect("valid mutation diff"), expected);
@@ -18,9 +18,9 @@ fn change_annex_diff_updates_only_annex() {
 #[test]
 fn absorb_of_two_steps_equals_their_sequence() {
     let base = En1996Snapshot::compliant_clay_wall();
-    let first = Mutation::diff(&En1996Mutation::ChangeStoreys(semio_s_artifact_norm_en1996_mut_project::change_storeys::ChangeStoreys { new_storeys: 7 }), &base).diff().clone();
+    let first = ::semio_framework_os_kernel::ColdMutation::diff(&En1996Mutation::ChangeStoreys(semio_s_artifact_norm_en1996_mut_project::change_storeys::ChangeStoreys { new_storeys: 7 }), &base).diff().clone();
     let mid = apply_diff_cold(&first, &base).expect("first applies");
-    let second = Mutation::diff(&En1996Mutation::ChangeWallLength(semio_s_artifact_norm_en1996_mut_walls::change_wall_length::ChangeWallLength { index: 0, new_length_m: 9.5 }), &mid).diff().clone();
+    let second = ::semio_framework_os_kernel::ColdMutation::diff(&En1996Mutation::ChangeWallLength(semio_s_artifact_norm_en1996_mut_walls::change_wall_length::ChangeWallLength { index: 0, new_length_m: 9.5 }), &mid).diff().clone();
     let after = apply_diff_cold(&second, &mid).expect("second applies");
     let mut sum = first;
     protocol::MutationDiff::absorb(&mut sum, second);

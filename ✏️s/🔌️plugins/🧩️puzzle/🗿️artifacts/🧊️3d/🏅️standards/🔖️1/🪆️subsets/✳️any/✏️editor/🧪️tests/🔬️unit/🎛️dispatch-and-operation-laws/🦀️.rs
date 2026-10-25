@@ -222,8 +222,8 @@ async fn puzzle3d_play_projection_pack_round_trips() {
 /// as equal and cannot state this; the object count on BOTH halves can.
 #[semio_framework_async_macros::async_test]
 async fn play_snapshot_typed_authority_survives_every_store_round_trip() {
-    use store::pack::snapshot::ArtifactDsl;
-    use store::pack::snapshot::ArtifactPack;
+    use store::snapshot::ArtifactDsl;
+    use store::snapshot::ArtifactPack;
     let app = app().await;
     let snapshot = app.snapshot().expect("projection");
     let objects = snapshot.value().get("objects").and_then(|value| value.as_array()).map(|items| items.len()).unwrap_or(0);

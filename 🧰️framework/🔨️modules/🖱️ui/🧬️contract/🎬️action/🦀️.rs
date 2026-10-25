@@ -26,7 +26,7 @@ impl ActionId {
         Self { scope, name, version }
     }
 
-    /// 🏭️ Version-1 convenience constructor — the common case; the plugin fleet will write thousands
+    /// 🌱️ Version-1 convenience constructor — the common case; the plugin fleet will write thousands
     /// of these from `&str`/`String` call sites the old `ActionFactory::action` already used.
     pub fn try_v1(scope: impl AsRef<str>, name: impl AsRef<str>) -> Option<Self> {
         Some(Self { scope: UiText::try_from_str(scope.as_ref())?, name: UiText::try_from_str(name.as_ref())?, version: 1 })
@@ -114,7 +114,7 @@ impl MenuRef {
     }
 }
 
-/// 🎬️ One user action against a specific node at a specific revision — what a renderer emits and the
+/// 👤️ One user action against a specific node at a specific revision — what a renderer emits and the
 /// headless runtime dispatches. `revision`/`node_key` let the runtime recognise and drop a `Stale`
 /// intent (one whose `revision` trails the surface's current revision by more than one) instead of
 /// applying it against geometry the user never actually saw.

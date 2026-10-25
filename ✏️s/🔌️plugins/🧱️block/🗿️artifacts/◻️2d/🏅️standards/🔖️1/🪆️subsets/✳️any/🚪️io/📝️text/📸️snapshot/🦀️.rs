@@ -37,7 +37,7 @@ pub type Block2dSnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use crate::text::snapshot::*;
+use crate::text_snapshot::*;
 use semio_s_artifact_block_2d_model::*;
 use semio_s_artifact_block_2d_model::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, BLOCK_2D_SCHEMA};
 use semio_s_plugin_block::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
@@ -64,11 +64,10 @@ impl pack::snapshot::ArtifactDsl for Block2dSnapshot {
     }
 }
 }
-#[cfg(test)] pub use crate::text::snapshot::snapshot_codec::*;
+#[cfg(test)] pub use crate::text_snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use semio_s_artifact_block_2d_schema::*;
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
@@ -91,7 +90,7 @@ pub fn empty_block2d_snapshot() -> Block2dSnapshot {
 /// example fixture (the same DSL text `setActiveExample` loads), falling back to the empty snapshot
 /// only when that fixture fails to parse. Shared by `Block2dPlayApp` and `Block2dViewer`.
 pub fn default_block2d_snapshot() -> Block2dSnapshot {
-    crate::text::snapshot::parse_dsl(crate::text::snapshot::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block2d_snapshot())
+    crate::text_snapshot::parse_dsl(crate::text_snapshot::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block2d_snapshot())
 }
 }
-pub use crate::text::snapshot::snapshot_wire_codec::*;
+pub use crate::text_snapshot::snapshot_wire_codec::*;

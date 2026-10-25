@@ -41,7 +41,6 @@ test("source projection preserves explicit deletion, predecessors and inverse bo
     }
     expect(actual).toEqual(row.expected);
     expect(oracle(row)).toEqual(row.expected);
-    console.log("[DEBUG] source projection case " + JSON.stringify({ id: row.id, expected: row.expected, own: actual, independent: oracle(row) }));
   }
   const change: { path: string; before: string | null; after: string | null } = { path: "a.rs", before: "old", after: null };
   const projection = new SourceProjection([change], () => "old");

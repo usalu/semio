@@ -1,0 +1,7 @@
+#!/bin/sh
+C=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN"
+R="sh $C/rcore-b-tools/run.sh"
+$R $C/🗑️generated/rcore-b/upd3.out update --manifest-path Cargo.toml --workspace --offline
+$R $C/🗑️generated/rcore-b/chk4.out check --manifest-path Cargo.toml --keep-going --tests --message-format=short -p semio-framework-plugin-store-stage-laws -p semio-framework-plugin-interpreter-runtime -p semio-framework-plugin-host-guest-runtime -p semio-framework-os-host-space -p semio-framework-plugin-tests-02-2 -p semio-framework-plugin-tool-run -p semio-framework-plugin-host-shard-laws -p semio-framework-plugin-reactor-jobs
+$R $C/🗑️generated/rcore-b/tst4.out test --manifest-path Cargo.toml --no-fail-fast --message-format=short -p semio-framework-os-kernel-db-io-registry -p semio-framework-plugin-ownership -p semio-framework-plugin-runtime-ops -p semio-framework-plugin-job -p semio-framework-os-command-tests -p semio-framework-os-dsl-module-tests -p semio-framework-os-config-tests-1 -p semio-framework-test-transient-preparation-law -p semio-framework-plugin-instance-docs -p semio-framework-plugin-extension -p semio-framework-plugin-host-operation -p semio-framework-plugin-host-effects -- --test-threads=1
+$R $C/🗑️generated/rcore-b/tst5.out test --manifest-path Cargo.toml --no-fail-fast --message-format=short -p semio-framework-plugin-guest-contract --lib -- --test-threads=1

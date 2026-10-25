@@ -1,0 +1,143 @@
+{
+ "version": 1,
+ "scenarios": [
+  {
+   "id": "same-closure-queue",
+   "duration": 10,
+   "busyUntil": 20,
+   "edits": [
+    {
+     "owner": "a",
+     "at": 1
+    },
+    {
+     "owner": "a",
+     "at": 5
+    },
+    {
+     "owner": "a",
+     "at": 22
+    }
+   ],
+   "requests": [
+    {
+     "id": "r1",
+     "requestedAt": 2,
+     "closure": [
+      "a",
+      "b"
+     ]
+    },
+    {
+     "id": "r2",
+     "requestedAt": 3,
+     "closure": [
+      "a",
+      "b"
+     ]
+    },
+    {
+     "id": "r3",
+     "requestedAt": 4,
+     "closure": [
+      "a"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "mixed-closures-partial-coverage",
+   "duration": 10,
+   "busyUntil": 20,
+   "edits": [
+    {
+     "owner": "core",
+     "at": 1
+    },
+    {
+     "owner": "print",
+     "at": 1
+    },
+    {
+     "owner": "core",
+     "at": 6
+    }
+   ],
+   "requests": [
+    {
+     "id": "course",
+     "requestedAt": 2,
+     "closure": [
+      "core",
+      "course"
+     ]
+    },
+    {
+     "id": "print",
+     "requestedAt": 3,
+     "closure": [
+      "core",
+      "print"
+     ]
+    },
+    {
+     "id": "dash",
+     "requestedAt": 4,
+     "closure": [
+      "core"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "crash-of-the-holder",
+   "duration": 10,
+   "edits": [
+    {
+     "owner": "a",
+     "at": 1
+    }
+   ],
+   "requests": [
+    {
+     "id": "r1",
+     "requestedAt": 2,
+     "closure": [
+      "a"
+     ]
+    },
+    {
+     "id": "r2",
+     "requestedAt": 3,
+     "closure": [
+      "a"
+     ]
+    }
+   ],
+   "crashes": [
+    "r1"
+   ]
+  },
+  {
+   "id": "clean-needs-no-custody",
+   "duration": 10,
+   "edits": [],
+   "requests": [
+    {
+     "id": "r1",
+     "requestedAt": 2,
+     "closure": [
+      "a"
+     ]
+    },
+    {
+     "id": "r2",
+     "requestedAt": 3,
+     "closure": [
+      "b"
+     ]
+    }
+   ]
+  }
+ ]
+}

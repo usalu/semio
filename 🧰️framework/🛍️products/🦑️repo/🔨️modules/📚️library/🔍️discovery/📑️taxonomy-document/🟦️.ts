@@ -139,7 +139,7 @@ export interface HistoricalDocumentEvidencePopulation {
 
 const HISTORICAL_DOCUMENT_EVIDENCE_POPULATION_IDS = ["ticket-report", "ticket-workspace", "dev-prompt-log"] as const;
 
-/** 🧷️ Validates the exact, closed, three-population historical-document-evidence grammar without touching the filesystem. */
+/** 📕️ Validates the exact, closed, three-population historical-document-evidence grammar without touching the filesystem. */
 export function validateHistoricalDocumentEvidencePopulations(value: unknown): string[] {
   const problems: string[] = [];
   const object = (entry: unknown): entry is Record<string, unknown> => entry !== null && typeof entry === "object" && !Array.isArray(entry);
@@ -165,7 +165,7 @@ export function validateHistoricalDocumentEvidencePopulations(value: unknown): s
 }
 
 /**
- * 🔣️ Shape of `🔣️taxonomy.json` — the single source of truth for taxonomy directory-name/role/lang
+ * 📑️ Shape of `🔣️taxonomy.json` — the single source of truth for taxonomy directory-name/role/lang
  * vocabulary and the package-discovery contract, replacing the two independently hand-maintained copies in
  * framework/os/plugin/registry script.ts (`TAXONOMY_ARTIFACT_COMPONENTS`/`TAXONOMY_WINDOW_CHILDREN`) and
  * root script.ts (`POLICY_ARTIFACT_COMPONENT_DIRS`/`POLICY_WINDOW_CHILD_DIRS`) — see master ticket
@@ -242,68 +242,68 @@ export interface Taxonomy {
   readonly standardSlugPattern?: string;
   /** 🪆️ Dir-name prefix for a subset slug under `🪆️subsets/` (mirrors `standardDirPrefix` one level down). */
   readonly subsetDirPrefix?: string;
-  /** 🪆️ Legal shape for a subset id (the logical id, `*`/`subsetAnyId` excepted — that one never matches this pattern by design). */
+  /** 🔠️ Legal shape for a subset id (the logical id, `*`/`subsetAnyId` excepted — that one never matches this pattern by design). */
   readonly subsetSlugPattern?: string;
-  /** 🪆️ The logical id every standard's unconstrained base subset carries. */
+  /** 🎒️ The logical id every standard's unconstrained base subset carries. */
   readonly subsetAnyId?: string;
-  /** 🪆️ The on-disk dir name `subsetAnyId` maps to — canonical single source for the `"*"` ⇔ `✳️any` mapping. */
+  /** 🗺️ The on-disk dir name `subsetAnyId` maps to — canonical single source for the `"*"` ⇔ `✳️any` mapping. */
   readonly subsetAnyDirName?: string;
-  /** 🪆️ Exact per-`🪆️subsets` physical identities for standards whose sibling semantics require distinct emojis. */
+  /** 💎️ Exact per-`🪆️subsets` physical identities for standards whose sibling semantics require distinct emojis. */
   readonly subsetDirectoryOverrides?: Readonly<Record<string, Readonly<Record<string, string>>>>;
-  /** 🔣️ File kind of each per-standard subset vocabulary manifest. */
+  /** 📋️ File kind of each per-standard subset vocabulary manifest. */
   readonly subsetsManifestFileKindId?: string;
   /** ✅️ COMPLETENESS set: every legacy artifact carries schema, engine, and IO. Lifecycle capabilities are schema-derived. */
   readonly artifactComponentDirs: readonly string[];
   /** 🌳️ STRUCTURAL set: every dir allowed as a child of an artifact (superset of `artifactComponentDirs`; the structural-only extra is `📚️examples`). */
   readonly artifactChildDirs: readonly string[];
-  /** 🧬️ Required children of a standards-based artifact. */
+  /** 📦️ Required children of a standards-based artifact. */
   readonly newArtifactComponentDirs: readonly string[];
   readonly newArtifactChildDirs: readonly string[];
   /** 🏅️ Required and allowed children of a standard. */
   readonly standardComponentDirs: readonly string[];
   readonly standardChildDirs: readonly string[];
-  /** 🪆️ Required and allowed children of a subset. */
+  /** 📂️ Required and allowed children of a subset. */
   readonly subsetComponentDirs: readonly string[];
   readonly subsetChildDirs: readonly string[];
   /** 👁️ Surface dir name for the read-only role. */
   readonly viewerDirName: string;
   /** ✏️ Surface dir name for the mutating role. */
   readonly editorDirName: string;
-  /** 👁️✏️ The closed role vocabulary a surface may carry — also the `AppRole` wire strings. */
+  /** 🎼️✏️ The closed role vocabulary a surface may carry — also the `AppRole` wire strings. */
   readonly surfaceRoles: readonly string[];
-  /** 👁️✏️ Role → on-disk surface dir name; the canonical single source for the mapping. */
+  /** 💾️✏️ Role → on-disk surface dir name; the canonical single source for the mapping. */
   readonly surfaceDirNames: Readonly<Record<string, string>>;
-  /** 👁️✏️ STRUCTURAL set: surface dirs a subset may carry. */
+  /** 🏗️✏️ STRUCTURAL set: surface dirs a subset may carry. */
   readonly subsetSurfaceDirs: readonly string[];
-  /** 👁️✏️ COMPLETENESS set: surface dirs every OWNED subset must carry. */
+  /** ☑️✏️ COMPLETENESS set: surface dirs every OWNED subset must carry. */
   readonly subsetRequiredSurfaceDirs: readonly string[];
-  /** 👁️✏️ The only dirs a CONTRIBUTED (foreign-kind) subset mirror may carry — never schema or io. */
+  /** 🪞️✏️ The only dirs a CONTRIBUTED (foreign-kind) subset mirror may carry — never schema or io. */
   readonly contributedSubsetChildDirs: readonly string[];
-  /** 👁️✏️ STRUCTURAL set: every directory allowed directly below a surface. */
+  /** 🔓️✏️ STRUCTURAL set: every directory allowed directly below a surface. */
   readonly surfaceChildDirs: readonly string[];
-  /** 👁️✏️ COMPLETENESS set: surface children that must exist even when empty. */
+  /** 🩺️✏️ COMPLETENESS set: surface children that must exist even when empty. */
   readonly surfaceRequiredChildDirs: readonly string[];
-  /** 👁️✏️ IMPLEMENTATION set: language leaves every surface root must carry. */
+  /** 🌱️✏️ IMPLEMENTATION set: language leaves every surface root must carry. */
   readonly surfaceComponentLangs: readonly string[];
-  /** 🔣️ Normative schema file kind per surface schema facet path. */
+  /** 📘️ Normative schema file kind per surface schema facet path. */
   readonly surfaceSchemaSpecFileKinds: Readonly<Record<string, string>>;
-  /** 🪆️ Allowed subset archetypes: owning owns types; derived reuses types + conformance gate. */
+  /** 🏛️ Allowed subset archetypes: owning owns types; derived reuses types + conformance gate. */
   readonly subsetArchetypes?: readonly string[];
   /** ⚖️ Allowed IO fidelity class names a subset may declare. */
   readonly ioFidelityClasses?: readonly string[];
-  /** 🧬️ Full-match pattern for one direct `<emoji><verb>-<noun>` mutation owner directory. */
+  /** 💯️ Full-match pattern for one direct `<emoji><verb>-<noun>` mutation owner directory. */
   readonly mutationDirectoryPattern: string;
   /** 🏘️ Exact domain and operation owners; semantic IDs remain independent of compact operation basenames. */
   readonly mutationDomainOwners: Readonly<Record<string, Readonly<Record<string, Readonly<Record<string, string>>>>>>;
   /** 🧭️ Exact catalog subset owners whose physical mutations belong to another registered subset of the same artifact and standard. */
   readonly mutationCatalogSourceOwners: Readonly<Record<string, string>>;
-  /** 🦀️ File kind of the mandatory direct `<mutation>/🦀️.rs` owner leaf. */
+  /** ❗️ File kind of the mandatory direct `<mutation>/🦀️.rs` owner leaf. */
   readonly mutationComponentFileKindId: string;
   /** 🪪️ Language-neutral descriptor file kind owned beside every direct mutation component. */
   readonly mutationDescriptorFileKindId: string;
   readonly mutationPayloadSchemaLocation: Readonly<{ directoryKindId: "schema"; directoryName: "🧬️schema"; fileKindId: "json" }>;
   readonly mutationPayloadSchemaAuthority: Readonly<{ contractKind: "descriptor-linked-mutation-payload-schema"; ownerAuthority: "mutationOwnerIdentity"; descriptorFileKindId: "json"; descriptorField: "payloadSchema"; descriptorSchemaVersion: 1; descriptorCardinality: "one-canonical-no-competing-descriptor"; descriptorOwnerField: "owner"; descriptorIdentityField: "semanticKind"; jsonSchemaDialect: string; targetAuthority: "owner-relative-regular-json-schema" }>;
-  /** 🧬️ PLACEMENT-bound facets below a direct mutation owner: `🦠️mutation`/`🔺️diff`/`↩️inverse` behavior, required-when-present, never inlinable into the direct leaf. */
+  /** 💠️ PLACEMENT-bound facets below a direct mutation owner: `🦠️mutation`/`🔺️diff`/`↩️inverse` behavior, required-when-present, never inlinable into the direct leaf. */
   readonly mutationBehaviorFacetDirs: readonly string[];
   /** 🔖️ Region marker whose presence in a direct mutation leaf proves that facet's behavior was inlined instead of split into its own directory. */
   readonly mutationDirectLeafForbiddenRegionMarkers: Readonly<Record<string, string>>;
@@ -313,30 +313,30 @@ export interface Taxonomy {
   readonly schemaChildDirs: readonly string[];
   /** 📝️ Representation nodes under schema snapshot/diff/mutations. */
   readonly representationDirs: readonly string[];
-  /** 🧬️ Required native wire representations; storage representations remain optional. */
+  /** 🧲️ Required native wire representations; storage representations remain optional. */
   readonly nativeRepresentationDirs: readonly string[];
-  /** 🚪️ Top-level dirs under `🚪️io/`: import and export. */
+  /** 🔝️ Top-level dirs under `🚪️io/`: import and export. */
   readonly ioDirectionDirs: readonly string[];
-  /** 🚪️ Semantic codec facets below each native I/O representation; member collections are declared at `🚪️io/<representation>/<facet>`. */
+  /** 🧺️ Semantic codec facets below each native I/O representation; member collections are declared at `🚪️io/<representation>/<facet>`. */
   readonly ioSemanticCollectionDirNames: readonly string[];
-  /** 🚪️ Direction to codec folder (import→deserializers, export→serializers). */
+  /** 📥️ Direction to codec folder (import→deserializers, export→serializers). */
   readonly ioDirectionChildDirs: Readonly<Record<string, string>>;
   /** 📖️ File kinds required under every text representation node. */
   readonly textSpecFileKinds: readonly string[];
   /** 📡️ File kinds required under every binary representation node. */
   readonly binarySpecFileKinds: readonly string[];
   /**
-   * 🧬️ Schema serialisation formats a `🧬️schema` facet must carry, one handcrafted leaf each. `fieldCasing`
+   * 🍁️ Schema serialisation formats a `🧬️schema` facet must carry, one handcrafted leaf each. `fieldCasing`
    * is the canonical casing a field name takes in that format, which the parity scanners normalise through.
    */
   readonly schemaFormats: Readonly<Record<string, { readonly fileKindId: string; readonly fieldCasing: string }>>;
-  /** 🧬️ Per-facet-kind schema format subsets. `facetPathIdentities` DECLARES the exact facet modules of a non-default kind; kind is never probed from the files that happen to sit on disk. */
+  /** 🌿️ Per-facet-kind schema format subsets. `facetPathIdentities` DECLARES the exact facet modules of a non-default kind; kind is never probed from the files that happen to sit on disk. */
   readonly schemaFacetKinds?: Readonly<Record<string, { readonly normativeFormat: string; readonly formats: readonly string[]; readonly facetPathIdentities: readonly string[] }>>;
-  /** 🧬️ The facet kind every schema module carries unless a kind declares it in `facetPathIdentities`. */
+  /** 🏠️ The facet kind every schema module carries unless a kind declares it in `facetPathIdentities`. */
   readonly schemaDefaultFacetKind: string;
   /** 🔣️ The single JSON Schema dialect every `🧬️data` facet declares, shared with `mutationPayloadSchemaAuthority`. */
   readonly schemaJsonDialect: string;
-  /** 🧬️ Eligible schema scope-owner levels: only a directory matching one level (and no exclusion) may carry a `🧬️schema` module. */
+  /** 🪜️ Eligible schema scope-owner levels: only a directory matching one level (and no exclusion) may carry a `🧬️schema` module. */
   readonly schemaScopeOwnerLevels: {
     readonly facetDirName: string;
     readonly directoryKindId: string;
@@ -361,9 +361,9 @@ export interface Taxonomy {
     readonly formatIds: Readonly<Record<string, string>>;
     /** 🦀️ Contract id every `schema verify` dump of `schema_export_catalog_entries()` declares. */
     readonly rustEntriesContractId: string;
-    /** 🧬️ The `$id` segment that turns a mutation leaf into its own scope `<root>.mutation.<semanticKind>`. */
+    /** 👑️ The `$id` segment that turns a mutation leaf into its own scope `<root>.mutation.<semanticKind>`. */
     readonly mutationScopeSegment: string;
-    /** 🧬️ The facet filename a mutation leaf's own module declares. */
+    /** 🧰️ The facet filename a mutation leaf's own module declares. */
     readonly mutationLeafFacetFilename: string;
     readonly mutationAggregateFacetFilename: string;
     readonly rootExportKeyword: string;
@@ -375,7 +375,7 @@ export interface Taxonomy {
     readonly forbiddenPlacementPatterns: readonly string[];
     readonly placementExceptions: Readonly<Record<string, string>>;
   };
-  /** 🔣️ Normative schema file kind per `🧬️schema` facet path. */
+  /** 📙️ Normative schema file kind per `🧬️schema` facet path. */
   readonly artifactSchemaSpecFileKinds: Readonly<Record<string, string>>;
   /** 🎛 Required children of each `🎚️config/` facet: its schema. */
   readonly configChildDirs: readonly string[];
@@ -394,17 +394,17 @@ export interface Taxonomy {
   readonly forbiddenExamplePluralDirs: readonly string[];
   /** 🎭️ STRUCTURAL set: every directory allowed directly below a mode. */
   readonly modeChildDirs: readonly string[];
-  /** 🎭️ COMPLETENESS set: mode children that must exist even when empty. */
+  /** 🎬️ COMPLETENESS set: mode children that must exist even when empty. */
   readonly modeRequiredChildDirs: readonly string[];
-  /** 📖️ Normative specification file kind per constitutional artifact facet. */
+  /** 📓️ Normative specification file kind per constitutional artifact facet. */
   readonly artifactSpecFileKinds: Readonly<Record<string, string>>;
   /** 🪟️ STRUCTURAL set: every directory allowed directly below a window. */
   readonly windowChildDirs: readonly string[];
-  /** 🪟️ COMPLETENESS set: capability directories every window must carry, empty modules allowed. */
+  /** 🔲️ COMPLETENESS set: capability directories every window must carry, empty modules allowed. */
   readonly windowRequiredChildDirs: readonly string[];
   /** 🌐️ IMPLEMENTATION set: language component leaves every concrete capability member must carry. */
   readonly windowComponentLangs: readonly string[];
-  /** 🪟️ IMPLEMENTATION set: language leaves the window ROOT itself must carry (facet items use `windowComponentLangs`). */
+  /** 🍂️ IMPLEMENTATION set: language leaves the window ROOT itself must carry (facet items use `windowComponentLangs`). */
   readonly windowLeafLangs: readonly string[];
   /** 📌️ Tracked marker kind used when a required window facet has no specific items. */
   readonly windowEmptyFacetFileKindId: string;
@@ -474,7 +474,7 @@ export interface Taxonomy {
   readonly osRequiredChildDirs: readonly string[];
   /** 🚫️ Emoji-stripped directory/file stems banned repo-wide (e.g. `core`, `shared`). */
   readonly bannedNameStems: readonly string[];
-  /** 🪆️ Banned stems that stay legal only as a direct child of a `subsetsDirName` owner (the standard's own subset vocabulary, e.g. `base`), and the exact vendored files whose fixed internal import identity forbids a rename. */
+  /** ⛔️ Banned stems that stay legal only as a direct child of a `subsetsDirName` owner (the standard's own subset vocabulary, e.g. `base`), and the exact vendored files whose fixed internal import identity forbids a rename. */
   readonly bannedNameStemExemptions: { readonly subsetDirectories: readonly string[]; readonly vendoredFiles: readonly string[] };
   readonly rootDataDirNames: readonly string[];
   readonly rootDataContractIds: readonly string[];
@@ -495,9 +495,9 @@ export interface Taxonomy {
   };
   readonly areaLayers: Readonly<Record<string, "framework" | "implementation" | "repo-wide">>;
   readonly packageMaturityStates: readonly PackageMaturity[];
-  /** 🧭️ How migration is detected — structurally, never from a hand-maintained package list. */
+  /** 🚩️ How migration is detected — structurally, never from a hand-maintained package list. */
   readonly migratedMarker: "packages-dir-exists";
-  /** 🔌️ Area roots whose package owners contribute plugins. */
+  /** 🔋️ Area roots whose package owners contribute plugins. */
   readonly pluginAreas: readonly string[];
   readonly areas: Readonly<Record<string, AreaState>>;
 }

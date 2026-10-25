@@ -14,7 +14,7 @@ export type InputSchemaResolver = (id: string) => unknown;
 /** 🚫️ The class of an {@link InputSchemaError} — the Rust `InputSchemaErrorCode` twin. */
 export type InputSchemaErrorCode = "malformed" | "refUnresolved" | "uiInvalid" | "widgetIncompatible" | "labelMissing" | "optionLabelMissing" | "localeMissing" | "wordOnlyFloat";
 
-/** 🚫️ Why a mutation payload schema yields no input descriptors: `code` and the RFC 6901 `pointer` of the input in the payload. */
+/** ❌️ Why a mutation payload schema yields no input descriptors: `code` and the RFC 6901 `pointer` of the input in the payload. */
 export class InputSchemaError extends Error {
   readonly code: InputSchemaErrorCode;
   readonly pointer: string;
@@ -33,7 +33,7 @@ type ResolvedInput = { readonly document: string | null; readonly node: JsonObje
 
 const INPUT_UI_KEYS = new Set(["widget", "role", "label", "description", "step", "precision", "softMin", "softMax", "snaps", "snapSource", "optionSource", "unit", "displayUnit", "displayFactor", "scale", "group", "order", "options", "ref"]);
 const INPUT_UI_NUMBER_KEYS = new Set(["step", "precision", "softMin", "softMax", "snaps", "snapSource", "displayUnit", "displayFactor", "scale"]);
-/** 🧭️ The number facets a vector shares across its components — the Rust `INPUT_UI_VECTOR_KEYS` twin. */
+/** ⌨️ The number facets a vector shares across its components — the Rust `INPUT_UI_VECTOR_KEYS` twin. */
 const INPUT_UI_VECTOR_KEYS = new Set(["step", "precision", "snaps", "snapSource", "displayUnit", "displayFactor"]);
 const INPUT_WIDGETS = new Set(["slider", "stepper", "dial", "toggle", "select", "segmented", "text", "multiline", "vector", "color", "reference", "hidden"]);
 const INPUT_TYPES = new Set(["string", "integer", "number", "boolean", "object", "array"]);
@@ -125,7 +125,7 @@ function inputInferredReferenceKind(key: string, many: boolean): string | undefi
   return stem[0]!.toLowerCase() + stem.slice(1);
 }
 
-/** 🧬️ The TypeScript twin of Rust `mutation_input_defs` (`🛂️manifest/🦀️.rs`): one {@link ActionArgDef} per input of a mutation
+/** 📜️ The TypeScript twin of Rust `mutation_input_defs` (`🛂️manifest/🦀️.rs`): one {@link ActionArgDef} per input of a mutation
  * leaf payload JSON Schema, byte-equal in canonical JSON; throws {@link InputSchemaError}. Fixture: `🧫️fixtures/🧫️mutation-inputs`. */
 export function mutationInputDefs(schema: string | unknown, resolver: InputSchemaResolver): ActionArgDef[] {
   return inputSchemaReader(schema, resolver, false).inputs();
@@ -137,7 +137,7 @@ export function mutationInputDefs(schema: string | unknown, resolver: InputSchem
  * entry is the error the fail-fast reader throws) and `inputs` holds what reads despite them. */
 export type InputSchemaAudit = { readonly inputs: ActionArgDef[]; readonly findings: InputSchemaError[] };
 
-/** 🧺️ Reads `schema` in collecting mode — the Rust `mutation_input_audit` twin; see {@link InputSchemaAudit}. */
+/** 📖️ Reads `schema` in collecting mode — the Rust `mutation_input_audit` twin; see {@link InputSchemaAudit}. */
 export function mutationInputAudit(schema: string | unknown, resolver: InputSchemaResolver): InputSchemaAudit {
   let reader: ReturnType<typeof inputSchemaReader>;
   try {
@@ -155,7 +155,7 @@ export function mutationInputInstance(schema: string | unknown, resolver: InputS
   return inputSchemaReader(schema, resolver, false).instance(payload);
 }
 
-/** 🏷️ The label a collecting read keeps for an input whose own label is refused. */
+/** 🔖️ The label a collecting read keeps for an input whose own label is refused. */
 const INPUT_LABEL_PLACEHOLDER = { native: { en: "", de: "" }, reuse: { en: "", de: "" } } as LocalizedLabel;
 
 function inputSchemaReader(schema: string | unknown, resolver: InputSchemaResolver, collect: boolean): { inputs(): ActionArgDef[]; audit(): InputSchemaAudit; instance(payload: unknown): Record<string, unknown> } {
@@ -171,7 +171,7 @@ function inputSchemaReader(schema: string | unknown, resolver: InputSchemaResolv
     throw new InputSchemaError(code, pointer, detail);
   };
   const findings: InputSchemaError[] | undefined = collect ? [] : undefined;
-  /** 🧺️ The Rust `recover` twin: in collecting mode records a refusal and goes on with `fallback`; fail-fast rethrows. */
+  /** 🦀️ The Rust `recover` twin: in collecting mode records a refusal and goes on with `fallback`; fail-fast rethrows. */
   const recover = <T>(attempt: () => T, fallback: () => T): T => {
     if (findings === undefined) return attempt();
     try {
@@ -241,7 +241,7 @@ function inputSchemaReader(schema: string | unknown, resolver: InputSchemaResolv
     return fail("malformed", pointer, "a $ref chain exceeds 32 hops");
   };
 
-  /** 🔢️ Whether `node` (in `document`) is the framework's numeric transport: the binary64 word itself (read as a number but refused
+  /** 📄️ Whether `node` (in `document`) is the framework's numeric transport: the binary64 word itself (read as a number but refused
    * as `wordOnlyFloat`), or a two-branch union of that word and a plain number (each branch restated or referenced) with nothing
    * but annotations beside it — the Rust `InputSchemaReader::numeric_transport` twin. */
   const numericTransportAt = (document: string | null, node: JsonObject, pointer: string): boolean => {

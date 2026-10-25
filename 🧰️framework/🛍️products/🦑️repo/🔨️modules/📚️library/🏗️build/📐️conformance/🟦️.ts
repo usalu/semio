@@ -1,11 +1,11 @@
-import {GlobV1} from "../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
+import {GlobV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
 import {mkdirSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {buildBackendRowV1,type BackendCapabilityV1,type BackendSupportV1} from "../🔌️backends/🟦️.ts";
 import {stubOutputsV1,type StubSpecV1,type StubTaskV1} from "./🎭️stub/🟦️.ts";
-import type {BuildGraphV1} from "../🕸️graph/🟦️.ts";
+import type { BuildGraphV1 } from "../🕸️graph/📋️model/🟦️.ts";
 
 /** ⚙️ The authored constants of the conformance suite. */
 export const CONFORMANCE_POLICY_V1=schema.definitions.Policy.const;

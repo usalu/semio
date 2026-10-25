@@ -39,6 +39,53 @@
       "accepted": false
     }
   ],
+  "renewals": [
+    {
+      "reserveMilliseconds": 10000,
+      "elapsedMilliseconds": 0,
+      "windowMilliseconds": 10000
+    },
+    {
+      "reserveMilliseconds": 10000,
+      "elapsedMilliseconds": 120000,
+      "windowMilliseconds": 10000
+    },
+    {
+      "reserveMilliseconds": 10000,
+      "elapsedMilliseconds": 290000,
+      "windowMilliseconds": 10000
+    },
+    {
+      "reserveMilliseconds": 10000,
+      "elapsedMilliseconds": 295000,
+      "windowMilliseconds": 5000
+    },
+    {
+      "reserveMilliseconds": 10000,
+      "elapsedMilliseconds": 299999,
+      "windowMilliseconds": 1
+    },
+    {
+      "reserveMilliseconds": 10000,
+      "elapsedMilliseconds": 300000,
+      "windowMilliseconds": 0
+    },
+    {
+      "reserveMilliseconds": 60000,
+      "elapsedMilliseconds": 250000,
+      "windowMilliseconds": 50000
+    },
+    {
+      "reserveMilliseconds": 60000,
+      "elapsedMilliseconds": 400000,
+      "windowMilliseconds": 0
+    },
+    {
+      "reserveMilliseconds": 1,
+      "elapsedMilliseconds": 0,
+      "windowMilliseconds": 1
+    }
+  ],
   "observations": {
     "privateToken": true,
     "bodyDrained": true,
@@ -48,6 +95,8 @@
     "sameBeginPromise": true,
     "retiredTokenRefused": true,
     "insufficientFundingBeforeEffects": true,
-    "ordinaryAcceptedWithFixedReserve": true
+    "ordinaryAcceptedWithFixedReserve": true,
+    "ordinaryProgressRenewal": true,
+    "ordinaryIdleExpiry": true
   }
 }

@@ -29,9 +29,6 @@ mod controls;
 #[path = "📂️sources/🦀️.rs"]
 mod sources;
 
-#[path="🌐️language-choice/🦀️.rs"]
-mod language_choice;
-
 
 use controls::Flow;
 use windows::{Dashboard, Effect};
@@ -110,7 +107,7 @@ pub fn run_with(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
     let result=dashboard_feedback::terminal_session(&mut term,|term|{
     if preferences.locale().is_none() {
         let path=if parsed.has_flag("workspace"){dashboard_preferences::shared_path(&root)}else{dashboard_preferences::local_path(&root,parsed)};
-        match language_choice::run(term,&path,Theme::new(if preferences.appearance=="light"{AppearanceName::Light}else{AppearanceName::Dark}))? {Some(locale)=>{preferences.language=Some(locale.as_str().into());preferences_locale=Some(locale);},None=>return Ok(())}
+        match dashboard_language_choice::run(term,&path,Theme::new(if preferences.appearance=="light"{AppearanceName::Light}else{AppearanceName::Dark}))? {Some(locale)=>{preferences.language=Some(locale.as_str().into());preferences_locale=Some(locale);},None=>return Ok(())}
     }
     let size = term.size().unwrap_or(Size { width: 100, height: 32 });
     let mut tui = Tui::new(size, Theme::new(if preferences.appearance == "light" { AppearanceName::Light } else { AppearanceName::Dark }));
@@ -127,6 +124,14 @@ pub fn run_with(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
 }
 // #endregion 🔖️Run
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+/// 🧪️ The internals the terminal laws drive, present only with the `testkit` feature so the shipped API stays `run`, `run_with` and `help_text`.
+#[cfg(feature = "testkit")]
+pub mod testing {
+    pub use crate::controls::{fit_hints, spec_of, Action, Flow};
+    pub use crate::panes::{PreferenceJob, RowAction};
+    pub use crate::sessions::Link;
+    pub use crate::windows::{stack_of, Body, Dashboard, Effect, Kind, LinkState, Place};
+
+    /// 🏃️ Runs the view loop on a backend the law owns, so no real terminal is needed.
+    pub fn run_view<B: super::TerminalBackend>(term: &mut B, dash: &mut Dashboard, tui: &mut super::Tui) -> Result<(), dashboard_feedback::TerminalFailure> { super::run_view(term, dash, tui) }
+}

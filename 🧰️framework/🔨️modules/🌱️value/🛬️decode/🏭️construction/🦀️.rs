@@ -40,7 +40,7 @@ impl NativeDecodeControl<'_>{
   if next>self.maximum_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"constructed allocation exceeds its original decoder ceiling"))}
   if !self.started||bytes>65536{self.checkpoint()?;}Ok(())
  }
- /// 🫴️ Lends one original construction recipient through this receiving hop without changing its cumulative decoder receipt.
+ /// 🏗️ Lends one original construction recipient through this receiving hop without changing its cumulative decoder receipt.
  pub fn with_construction_recipient<T,E:From<ValueError>>(&mut self,recipient:&mut dyn NativeDecodeConstructionRecipient,operation:impl FnOnce(&mut NativeDecodeControl<'_>)->Result<T,E>)->Result<T,E>{run(self,recipient,operation)}
  /// 🧷️ Admits sealed field ownership only under this hop's explicitly supplied original construction recipient.
  pub fn receive_shared<T:Send+Sync+'static>(&mut self,input:&mut Option<T>,output:&mut Option<SealedShared<T>>,issuer:SharedIssuer<T>)->Result<RetainedCloneProgress,ValueError>{
@@ -55,7 +55,7 @@ fn receive_granted<T:Send+Sync+'static>(original:&mut NativeDecodeControl<'_>,in
  original.charge(demand.capacity_bytes)?;let birth=SealedShared::<T>::prepare_birth(grant)?;let(value,mut progress)=birth.materialize(input.take().expect("admitted original native payload"),issuer);*output=Some(value);progress.copied_bytes=demand.copy_bytes;
  if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native construction exceeded its original physical grant").with_retained_progress(progress));}Ok(progress)
 }
-/// 🧷️ Construction borrows the original decoder and recipient without deriving retained authority from cumulative totals.
+/// 🎛️ Construction borrows the original decoder and recipient without deriving retained authority from cumulative totals.
 pub struct NativeOwnedDecodeControl<'operation,'decode>{original:&'operation mut NativeDecodeControl<'decode>,recipient:&'operation mut dyn NativeDecodeConstructionRecipient}
 impl<'operation,'decode> NativeOwnedDecodeControl<'operation,'decode>{
  /// 🔗️ The required recipient belongs to the same owning operation that lends the original decode control.

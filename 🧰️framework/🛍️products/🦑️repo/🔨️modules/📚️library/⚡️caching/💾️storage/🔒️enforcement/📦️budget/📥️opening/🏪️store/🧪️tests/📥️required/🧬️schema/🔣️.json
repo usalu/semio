@@ -200,8 +200,8 @@
       "properties": {
         "module": {
           "enum": [
-            "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
-            "🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+            "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🎟️reservation/🟦️.ts",
+            "🏗️build/📥️inputs/💾️storage/🔧️custody/🟨️.mjs",
             "🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs",
             "🏗️build/👁️observation/🟨️.mjs",
             "🏗️build/🕸️graph/🟦️.ts",

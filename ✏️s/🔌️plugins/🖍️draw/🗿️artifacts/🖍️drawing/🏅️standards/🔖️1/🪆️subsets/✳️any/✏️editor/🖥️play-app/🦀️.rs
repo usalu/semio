@@ -170,47 +170,15 @@ impl ArtifactEditor for DrawingPlayApp {
         registry.register(DrawingExportCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if DRAWING_EXPORT_TOOL_IDS.contains(&request.tool_id.as_str()) {return export_job::build(request).map(Some);}
-        if DRAWING_IMAGE_TOOL_IDS.contains(&request.tool_id.as_str()) {return image_job::build(request).map(Some);}
-        if DRAWING_PATH_TOOL_IDS.contains(&request.tool_id.as_str()) {return path_job::build(request).map(Some);}
-        if DRAWING_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return drawing_bounded_tool_job(request).map(Some);
-        }
-        if !DRAWING_GESTURE_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
-        }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "Drawing gesture command does not match its exact registered tool"));
-        }
-        let view_state = request.context.view_state.clone().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.canvas.window-required"), "Drawing gesture commands require one concrete Canvas window instance"))?;
-        let window_config = canvas_window::config::from_snapshot(request.context.window_config.as_ref());
-        let window_transient = canvas_window::transient::from_snapshot(request.context.window_transient.as_ref());
-        let operation_context = semio_framework_plugin::AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id,
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = DrawingGestureOperationPayload {
-            source_identity: SceneIdentity{instance:request.app_instance_id,base:request.operation.base_revision.0,generation:request.operation.generation.0,revision:request.canonical_base_revision},
-            command: *request.command,
-            snapshot: request.snapshot,
-            config: request.config,
-            window_config,
-            window_transient,
-            view_state,
-            history: request.history,
-            interaction_state: request.interaction_state,
-            instance_owner: request.instance_operation_owner,
-            operation_context,
-            active_utility_id: request.context.view_state.as_ref().map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility).to_owned(),
-            completion: request.completion,
-        };
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        let tool_id = original.tool_id.as_str();
+        if DRAWING_EXPORT_TOOL_IDS.contains(&tool_id) {return export_job::build(request, output, cx);}
+        if DRAWING_IMAGE_TOOL_IDS.contains(&tool_id) {return image_job::build(request, output, cx);}
+        if DRAWING_PATH_TOOL_IDS.contains(&tool_id) {return path_job::build(request, output, cx);}
+        if DRAWING_BOUNDED_TOOL_IDS.contains(&tool_id) {return drawing_bounded_tool_job(request, output, cx);}
+        if DRAWING_GESTURE_TOOL_IDS.contains(&tool_id) {return drawing_gesture_tool_job(request, output, cx);}
+        Ok(false)
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {

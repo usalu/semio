@@ -67,11 +67,11 @@ fn sourcing_curation_mutation_retained_bytes(mutation: &SourcingMutation) -> Res
 fn prepare_sourcing_curation_document(base: &CurationSnapshot, mutation: &SourcingMutation) -> Result<(CurationSnapshot, Vec<SourcingMutation>), semio_framework_value::ValueError> {
     sourcing_curation_mutation_retained_bytes(mutation).map_err(refusal_of)?;
     sourcing_curation_document_bytes(base).map_err(refusal_of)?;
-    let outcome = protocol::Mutation::diff(mutation, base);
+    let outcome = protocol::ColdMutation::diff(mutation, base);
     if let Some(message) = outcome.messages().iter().find(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
         return Err(refusal_of(format!("Sourcing Curation mutation was refused by its own vocabulary: {}", message.message)));
     }
-    let inverse = protocol::Mutation::inverse(mutation, base)?;
+    let inverse = protocol::ColdMutation::inverse(mutation, base)?;
     let post = protocol::apply_diff_cold(outcome.diff(), base).map_err(|error| refusal_of(format!("Sourcing Curation mutation could not apply onto its exact base: {}", error.message)))?;
     sourcing_curation_document_bytes(&post).map_err(refusal_of)?;
     Ok((post, inverse))

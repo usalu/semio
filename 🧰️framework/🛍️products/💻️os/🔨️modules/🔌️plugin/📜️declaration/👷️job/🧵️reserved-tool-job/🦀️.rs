@@ -103,10 +103,12 @@ impl ArtifactReservedToolJob {
         Self{state:ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::retirement::controlled::RetainedOwnerGate::new(ArtifactReservedToolJobState{inner:ManuallyDrop::new(Some(Box::new(job))),operation:None}))))}
     }
 
-    #[cfg(test)]
-    pub(crate) fn test_source_identity(&self)->Option<usize>{self.state.as_ref().map(|state|std::sync::Arc::as_ptr(state)as usize)}
-    #[cfg(test)]
-    pub(crate) fn test_bound_operation(&self)->Option<semio_framework_job::Operation>{self.state.as_ref()?.try_lock().ok()?.operation}
+    #[cfg(any(test, feature = "reserved-producer-testing"))]
+    #[doc(hidden)]
+    pub fn test_source_identity(&self)->Option<usize>{self.state.as_ref().map(|state|std::sync::Arc::as_ptr(state)as usize)}
+    #[cfg(any(test, feature = "reserved-producer-testing"))]
+    #[doc(hidden)]
+    pub fn test_bound_operation(&self)->Option<semio_framework_job::Operation>{self.state.as_ref()?.try_lock().ok()?.operation}
     pub fn bind_operation(&mut self,operation:semio_framework_job::Operation)->Result<(),ValueError>{
         let source=self.state.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"reserved job state already returned"))?;
         let mut state=source.try_lock().map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"reserved job operation authority is busy"))?;

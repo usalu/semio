@@ -33,7 +33,7 @@ fn valid_programs_play_the_declared_frames() {
     }
 }
 
-/// ⚖️ LAW: each invalid program (the base program with one field replaced) is refused with the declared code.
+/// 🚫️ LAW: each invalid program (the base program with one field replaced) is refused with the declared code.
 #[test]
 fn invalid_programs_are_refused_with_the_declared_code() {
     let fixture = fixture();
@@ -49,7 +49,7 @@ fn invalid_programs_are_refused_with_the_declared_code() {
     }
 }
 
-/// ⚖️ LAW: the effect carrying a program keeps its camelCase field names on the wire.
+/// 🐪️ LAW: the effect carrying a program keeps its camelCase field names on the wire.
 #[test]
 fn video_render_export_effect_serializes_camel_case() {
     let fixture = fixture();

@@ -7,7 +7,7 @@ import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {applyPatch} from "diff";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {applyToolingPatchImagesV1,assertToolingPatchV1,toolPatchAdditions,toolPatchReceipt} from "../🟦️.ts";
 import policySchema from "../🧬️schema/🔣️.json";
 import existing from "./🔣️.json";

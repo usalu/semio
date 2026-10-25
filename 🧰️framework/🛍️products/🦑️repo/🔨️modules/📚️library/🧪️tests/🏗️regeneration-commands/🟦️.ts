@@ -6,6 +6,7 @@ import ts from "typescript";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 import { parseTaxonomyPlan } from "../../🧹️normalization/📃️plan-document/🟦️.ts";
 import { taxonomyPlanDigest } from "../../🧹️normalization/🗃️affected-state/🟦️.ts";
 
@@ -28,12 +29,12 @@ test("neutral regeneration commands round-trip with independent schema and canon
 
 /** 🎛️ The authored project and typed dashboard entry points select the same neutral owner. */
 test("neutral regeneration gate has declared script and typed dashboard entry points", () => {
-  const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../.."), fixture = JSON.parse(readFileSync(join(library, "🧪️tests/🧫️fixtures/🏗️regeneration-commands/🔣️.json"), "utf8")), expected = fixture.registration, project = JSON.parse(readFileSync(join(library, "📦️packages/🟦️typescript/📋️project.json"), "utf8")), router = readFileSync(join(library, "📦️packages/🟦️typescript/📜️script.ts"), "utf8");
+  const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../.."), fixture = JSON.parse(readFileSync(join(library, "🧪️tests/🧫️fixtures/🏗️regeneration-commands/🔣️.json"), "utf8")), expected = fixture.registration, project = JSON.parse(readFileSync(join(library, "📦️packages/🟦️typescript/📋️project.json"), "utf8")), router = readRegisteredTestRoute(root, fixture.registration.route).text;
   expect(project.targets[expected.target]).toMatchObject({ executor: "repo:script", options: { cwd: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript", command: "repo ./📜️script.ts test " + expected.route } });
   const source = ts.createSourceFile("script.ts", router, ts.ScriptTarget.Latest, true), routes: ts.IfStatement[] = [];
   const visit = (node: ts.Node): void => { if (ts.isIfStatement(node) && node.expression.getText(source) === `segments[0] === "${expected.route}"`) routes.push(node); ts.forEachChild(node, visit); };
   visit(source);
   expect(routes).toHaveLength(1);
   expect(routes[0]!.thenStatement.getText(source)).toContain("🧪️tests/🏗️regeneration-commands/🟦️.ts");
-  {const dashboard=JSON.parse(readFileSync(process.cwd()+"/📋️project.json","utf8")).metadata.semio.dashboard,tool=dashboard.tools.find((row:any)=>row.id==="run-script");expect(tool.command).toEqual(["repo","exec","--projects={project}","--dry-run={dry-run}","--","bun","{workspace}/{script}"]);expect(tool.parameters.find((row:any)=>row.id==="script")).toMatchObject({kind:"text",required:true});}
+  {const dashboard=JSON.parse(readFileSync(process.cwd()+"/📋️project.json","utf8")).metadata.semio.dashboard,tool=dashboard.tools.find((row:any)=>row.id==="run-script");expect(tool.command).toEqual(["repo","exec","--projects={project}","--dry-run={dry-run}","--","repo","{workspace}/{script}"]);expect(tool.parameters.find((row:any)=>row.id==="script")).toMatchObject({kind:"text",required:true});}
 });

@@ -28,5 +28,5 @@ pub mod io {
         pub mod mutations;
     }
 }
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioAudioSnapshot, schema::mutations::SemioAudioMutation);
+semio_s_artifact_stdio_semio_base::semio_member_owner!(semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot, schema::mutations::SemioAudioMutation);
 

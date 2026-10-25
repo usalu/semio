@@ -1,4 +1,4 @@
-/** 🖼️ Figure scroll and wheel-zoom math, the zoom context, the scroll viewport with its overlay bar and the media teaser wrapper.
+/** 🔎️ Figure scroll and wheel-zoom math, the zoom context, the scroll viewport with its overlay bar and the media teaser wrapper.
  *
  * 🧱️ Child module of {@link presentation-react | the `@semio-tech/presentation-react` barrel}, which re-exports every public name below so import specifiers stay unchanged.
  */
@@ -36,7 +36,7 @@ export function presentationSlidePixelSize(slideAspect?: number): { readonly wid
     height,
   };
 }
-/** 📐️ Estimated frame pixels from normalized disposition (before DOM measure on hidden slides). */
+/** 🔳️ Estimated frame pixels from normalized disposition (before DOM measure on hidden slides). */
 export function estimateDispositionFramePixels(frame: DispositionPosition, slideWidth = 960, slideHeight = 700): { readonly width: number; readonly height: number } {
   return {
     width: frame.width * slideWidth,
@@ -52,12 +52,12 @@ export function figureEmbodimentScrollEnabled(embodiment: FigureEmbodiment): boo
   return true;
 }
 
-/** 📜️ True when a video should use one-axis cover scroll. */
+/** 🎥️ True when a video should use one-axis cover scroll. */
 export function videoEmbodimentScrollEnabled(embodiment: VideoEmbodiment): boolean {
   return embodiment.scroll !== false;
 }
 
-/** 📜️ True when a pdf page should use one-axis cover scroll. */
+/** 📔️ True when a pdf page should use one-axis cover scroll. */
 export function pdfEmbodimentScrollEnabled(embodiment: PdfEmbodiment): boolean {
   return embodiment.scroll !== false;
 }
@@ -96,7 +96,7 @@ export function figureCoverOverflowAxis(frameWidth: number, frameHeight: number,
   return null;
 }
 
-/** ↔ Scroll axis implied by a crop background-size (`N% auto` → x, `auto N%` → y). */
+/** 🪄️ Scroll axis implied by a crop background-size (`N% auto` → x, `auto N%` → y). */
 export function figureBackgroundSizeScrollAxis(bgSize: string): "x" | "y" | null {
   if (bgSize === "cover" || bgSize === "contain") {
     return null;
@@ -110,7 +110,7 @@ export function figureBackgroundSizeScrollAxis(bgSize: string): "x" | "y" | null
   return null;
 }
 
-/** 📐️ Inner scroll content size for a crop background-size string. */
+/** ✂️ Inner scroll content size for a crop background-size string. */
 export function figureCropScrollContentSize(bgSize: string): CSSProperties {
   const horizontal = bgSize.match(/^([\d.]+)% auto$/);
   if (horizontal) {
@@ -123,7 +123,7 @@ export function figureCropScrollContentSize(bgSize: string): CSSProperties {
   return { width: "100%", height: "100%", minWidth: "100%", minHeight: "100%" };
 }
 
-/** ↔ Scroll offset matching CSS background-position along one axis. */
+/** 📍️ Scroll offset matching CSS background-position along one axis. */
 export function figureScrollOffsetForBackgroundPosition(axis: "x" | "y", positionPercent: number, scrollSize: number, clientSize: number): number {
   const max = Math.max(0, scrollSize - clientSize);
   return (positionPercent / 100) * max;
@@ -144,18 +144,18 @@ export function figureCropScrollBackgroundSize(bgSize: string, scrollAxis?: "x" 
 /** 🔍️ Minimum ctrl+wheel zoom (cover baseline). */
 export const FIGURE_WHEEL_ZOOM_MIN = 1;
 
-/** 🔍️ Maximum ctrl+wheel zoom multiplier. */
+/** 🔭️ Maximum ctrl+wheel zoom multiplier. */
 export const FIGURE_WHEEL_ZOOM_MAX = 8;
 
 const FIGURE_WHEEL_ZOOM_FACTOR = 1.1;
 
-/** 🔍️ Next zoom level from a wheel delta and current multiplier. */
+/** 🪜️ Next zoom level from a wheel delta and current multiplier. */
 export function figureWheelZoomStep(deltaY: number, currentZoom: number): number {
   const factor = deltaY < 0 ? FIGURE_WHEEL_ZOOM_FACTOR : 1 / FIGURE_WHEEL_ZOOM_FACTOR;
   return Math.min(FIGURE_WHEEL_ZOOM_MAX, Math.max(FIGURE_WHEEL_ZOOM_MIN, currentZoom * factor));
 }
 
-/** 🔍️ Keep the pointer anchor fixed while zooming scrollable figure content. */
+/** ⚓️ Keep the pointer anchor fixed while zooming scrollable figure content. */
 export function figureWheelZoomAdjustScroll(scroller: HTMLElement, clientX: number, clientY: number, prevZoom: number, nextZoom: number): void {
   if (prevZoom <= 0 || nextZoom === prevZoom) {
     return;
@@ -168,7 +168,7 @@ export function figureWheelZoomAdjustScroll(scroller: HTMLElement, clientX: numb
   scroller.scrollTop = Math.max(0, (scroller.scrollTop + anchorY) * ratio - anchorY);
 }
 
-/** 🔍️ Scale a crop `background-size` string by a zoom multiplier. */
+/** ⚖️ Scale a crop `background-size` string by a zoom multiplier. */
 export function figureBackgroundSizeZoomed(bgSize: string, zoom: number): string {
   if (zoom <= 1) {
     return bgSize;
@@ -184,7 +184,7 @@ export function figureBackgroundSizeZoomed(bgSize: string, zoom: number): string
   return bgSize;
 }
 
-/** 🔍️ Apply ctrl+wheel zoom to cover scroll content sizing. */
+/** 🗜️ Apply ctrl+wheel zoom to cover scroll content sizing. */
 export function figureCoverScrollContentSize(portWidth: number, portHeight: number, sourceAspect: number, zoom = 1): { readonly axis: "x" | "y" | "both" | null; readonly style: CSSProperties } {
   const base = figureCoverScrollContentSizeAtZoom(portWidth, portHeight, sourceAspect, 1);
   if (zoom <= 1) {
@@ -231,7 +231,7 @@ export function figureCoverScrollContentSizeAtZoom(portWidth: number, portHeight
   return { axis, style: { width: `${widthPercent}%`, height: "100%" } };
 }
 
-/** 🔍️ Apply ctrl+wheel zoom to img/video cover element sizing. */
+/** 🖌️ Apply ctrl+wheel zoom to img/video cover element sizing. */
 export function figureCoverScrollElementStyle(portWidth: number, portHeight: number, sourceAspect: number, zoom = 1): CSSProperties {
   if (zoom <= 1) {
     const { axis } = figureCoverScrollContentSizeAtZoom(portWidth, portHeight, sourceAspect, 1);
@@ -285,7 +285,7 @@ export function figureCoverScrollElementStyle(portWidth: number, portHeight: num
 
 const FigureZoomContext = createContext(1);
 
-/** 🔍️ Ctrl+wheel zoom multiplier for the enclosing {@link FigureScrollViewport}. */
+/** 🔬️ Ctrl+wheel zoom multiplier for the enclosing {@link FigureScrollViewport}. */
 export function useFigureZoom(): number {
   return useContext(FigureZoomContext);
 }

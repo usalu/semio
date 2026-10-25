@@ -36,7 +36,8 @@
                 "proc-macro",
                 "build-script",
                 "build-script-run",
-                "binary"
+                "binary",
+                "effective-profile"
               ]
             }
           }

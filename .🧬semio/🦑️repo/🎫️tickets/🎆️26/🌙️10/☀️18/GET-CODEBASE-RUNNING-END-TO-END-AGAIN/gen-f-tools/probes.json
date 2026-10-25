@@ -1,0 +1,24 @@
+{
+ "U1": {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts",
+  "actions": []
+ },
+ "S1": {
+  "file": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧬️typegen/🦀️.rs",
+  "actions": [
+   "@semio-tech/framework-actor-rs:typegen:prototype"
+  ]
+ },
+ "S2": {
+  "file": "🧰️framework/🔨️modules/🧬️schema/📽️projection/🧪️tests/🦀️.rs",
+  "actions": [
+   "@semio-tech/framework-rs:generate:prototype"
+  ]
+ },
+ "S3": {
+  "file": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/⚖️legal/🟦️.tsx",
+  "actions": [
+   "@teaching/architecture-course:build:prototype"
+  ]
+ }
+}

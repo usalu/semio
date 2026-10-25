@@ -89,7 +89,7 @@ export type InboundMessage =
   | { readonly kind: "original-source-close"; readonly actorId: string; readonly activationGeneration: bigint; readonly operation: bigint; readonly generation: bigint; readonly sourceClosed: boolean }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown; readonly timings?: ShardWorkerTurnTimings; readonly beat?: ShardCarriedBeat }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number; readonly retryableLifecycle?: boolean; readonly beat?: ShardCarriedBeat }
-  /** 🫀️ `phase` names the generated worker's await boundary this beat was emitted at
+  /** 🐝️ `phase` names the generated worker's await boundary this beat was emitted at
    * (`module-fetch`/`module-ready`/`actor-ready`, or `progress` from its while-busy ticker); absent on
    * the unconditional start-of-request beat. Diagnostic only — {@link evaluateShardLiveness} treats
    * every beat identically, so a future phase needs no host change to keep a shard alive.
@@ -104,7 +104,7 @@ export type InboundMessage =
    * the request kind), the actor and the module URL. Carries no `requestId` — it is never an answer to
    * anything, so it is dispatched before the generic pending lookup, exactly like `"trap"`. */
   | { readonly kind: "worker-fault"; readonly source: string; readonly phase: string; readonly actorId: string | null; readonly moduleUrl: string | null; readonly message: string; readonly stack?: string; readonly filename?: string; readonly lineno?: number }
-  /** 📨️ terra-shard-effect-bridge: the worker→kernel direction of `🟨️.js`'s `effectRequest`
+  /** 🌉️ terra-shard-effect-bridge: the worker→kernel direction of `🟨️.js`'s `effectRequest`
    * (🧪️ terra-web-bridges) — an async host import the guest `.await`ed. Reuses `ShardFrame`'s own
    * `Envelope` shape verbatim (`frame.envelope.payload` is `{kind:"effect-request", payload:{effect,
    * requestId, params}}`), never a second wire. Carries no `requestId` of its OWN at this outer level

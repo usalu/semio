@@ -213,7 +213,7 @@ fn sample_mutations() -> Vec<XmlMutation> {
 async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = sample_snapshot();
-        let diff_direct = Mutation::diff(&mutation, &base);
+        let diff_direct = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let applied_via_diff = protocol::apply_diff_cold(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
@@ -238,7 +238,7 @@ async fn inverse_law() {
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
-        let diff = Mutation::diff(&mutation, &base);
+        let diff = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let next = protocol::apply_diff_cold(diff.diff(), &base).unwrap();
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
         let restored = protocol::apply_diff_cold(&inverse_diff, &next).unwrap();
@@ -287,9 +287,9 @@ fn root_children_diff(diff: &XmlDiff) -> &crate::schema::diff::XmlChildrenDiff {
 async fn absorb_law() {
     {
         let base = two_child_root("a", "b");
-        let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert_eq!(triple.removed, vec![0]);
@@ -301,9 +301,9 @@ async fn absorb_law() {
 
     {
         let base = two_child_root("a", "b");
-        let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
@@ -321,9 +321,9 @@ async fn absorb_law() {
 
     {
         let base = two_child_root("a", "b");
-        let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
@@ -334,9 +334,9 @@ async fn absorb_law() {
 
     {
         let base = two_child_root("a", "b");
-        let d1 = Mutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 1 }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 1 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
@@ -345,11 +345,11 @@ async fn absorb_law() {
 
     {
         let base = two_child_root("a", "b");
-        let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
         let mid1 = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid1);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid1);
         let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).unwrap();
-        let d3 = Mutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid2);
+        let d3 = ::semio_framework_os_kernel::ColdMutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid2);
         let sequential = protocol::apply_diff_cold(d3.diff(), &mid2).unwrap();
 
         let mut left = d1.diff().clone();

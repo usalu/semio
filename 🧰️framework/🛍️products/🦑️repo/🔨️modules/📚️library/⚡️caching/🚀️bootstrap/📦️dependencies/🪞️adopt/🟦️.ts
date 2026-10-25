@@ -43,7 +43,7 @@ export const adoptDonorQualifiesV1=(receipt:AdoptReceiptV1,wanted:Readonly<{gene
  receipt.generation!==wanted.generation&&receipt.projectionSha256===wanted.projectionSha256&&receipt.runtime.bun===wanted.runtime.bun&&receipt.runtime.platform===wanted.runtime.platform&&receipt.runtime.arch===wanted.runtime.arch&&receipt.runtime.recipeSha256===wanted.runtime.recipeSha256;
 /** 🌳️ Lists the generation-relative directories the installer produces and adoption clones. */
 export const adoptClonedRootsV1=(members:number):readonly string[]=>Object.freeze([protocol.adopt.clonedRoots.root,...Array.from({length:members},(_,index)=>protocol.adopt.clonedRoots.member.replace("{index}",String(index)))]);
-/** 🧬️ Names the copy-on-write clone command of a platform, or undefined where the portable in-process copy applies. */
+/** 🦜️ Names the copy-on-write clone command of a platform, or undefined where the portable in-process copy applies. */
 export function adoptCloneCommandV1(platform:string,source:string,target:string):readonly string[]|undefined{
  const prefix=(protocol.adopt.clone as Readonly<Record<string,readonly string[]|undefined>>)[platform];
  return prefix?Object.freeze([...prefix,source,target]):undefined;

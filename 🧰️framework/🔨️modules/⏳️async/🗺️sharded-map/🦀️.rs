@@ -1,4 +1,4 @@
-//! 🗺️ `ShardedMap`: the fixed-shard concurrent map and its deterministic shard hasher.
+//! 🗾️ `ShardedMap`: the fixed-shard concurrent map and its deterministic shard hasher.
 
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -38,7 +38,7 @@ impl<K, V, const SHARDS: usize> Default for ShardedMap<K, V, SHARDS> {
 }
 
 impl<K, V, const SHARDS: usize> ShardedMap<K, V, SHARDS> {
-    /// 🌱️ Creates an empty map with a fixed, non-zero shard count.
+    /// 🪫️ Creates an empty map with a fixed, non-zero shard count.
     pub fn new() -> Self {
         assert!(SHARDS != 0, "ShardedMap requires at least one shard");
         Self { shards: std::array::from_fn(|_| RwLock::new(HashMap::new())) }

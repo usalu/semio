@@ -51,7 +51,7 @@ fn sqlite_snapshot_bim_complete_semantics_preserve_original_named_maps(){
 }
 #[test]
 fn sqlite_snapshot_bim_complete_public_provider_is_actual(){
- let codec=<ModelSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().expect("BIM original public owner lacks SQLite capability");
+ let codec=<ModelSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("BIM original public owner lacks SQLite capability");
  let _=codec;assert_eq!(ModelSnapshot::SQLITE_SCHEMA,SCHEMA);
 }
 #[test]

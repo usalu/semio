@@ -32,7 +32,7 @@ export function restoredRuns(store: LocalStore, learner: Id | undefined): Readon
   return runs;
 }
 
-/** 💾️ The persisted local-only slices and run records of `store` for its learner, dropping anything unreadable. */
+/** 🗄️ The persisted local-only slices and run records of `store` for its learner, dropping anything unreadable. */
 export function restoreCourseState(store: LocalStore): CourseState {
   const learner = restoredLearner(store.read("learner"));
   return initialCourseState({

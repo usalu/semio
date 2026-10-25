@@ -15,22 +15,31 @@ struct PublicationDiff {
     snapshot: Option<DslValue>,
 }
 
-impl kernel::MutationDiff<DslValue> for PublicationDiff {
-    fn apply(&self, base: &DslValue, _capability: kernel::os_spr::command::ApplyCapability) -> Result<DslValue, kernel::MutationApplyError> {
-        Ok(self.snapshot.clone().unwrap_or_else(|| base.clone()))
-    }
+impl kernel::MutationDiff<DslValue> for PublicationDiff {}
 
+impl kernel::os_spr::command::DiffAlgebra<DslValue> for PublicationDiff {
+    fn is_empty(&self) -> bool { self.snapshot.is_none() }
+}
+
+impl kernel::ColdDiffAlgebra<DslValue> for PublicationDiff {
+    fn inverse(&self, base: &DslValue) -> Self { Self { snapshot: self.snapshot.as_ref().map(|_| base.clone()) } }
+}
+
+impl kernel::ColdMutationDiff<DslValue> for PublicationDiff {
     fn absorb(&mut self, other: Self) {
         if other.snapshot.is_some() {
             *self = other;
         }
     }
+
+    fn apply(&self, base: &mut DslValue, _capability: kernel::os_spr::command::ApplyCapability) -> Result<(), kernel::MutationApplyError> {
+        if let Some(snapshot) = &self.snapshot {
+            *base = snapshot.clone();
+        }
+        Ok(())
+    }
 }
 
-impl kernel::os_spr::command::DiffAlgebra<DslValue> for PublicationDiff {
-    fn inverse(&self, base: &DslValue) -> Self { Self { snapshot: self.snapshot.as_ref().map(|_| base.clone()) } }
-    fn is_empty(&self) -> bool { self.snapshot.is_none() }
-}
 impl kernel::Mutation<DslValue> for PublicationMutation {
     type Diff = PublicationDiff;
     const DESCRIPTORS: &'static [kernel::MutationLeafDescriptor] = &[];
@@ -38,8 +47,12 @@ impl kernel::Mutation<DslValue> for PublicationMutation {
     fn descriptor(&self) -> &'static kernel::MutationLeafDescriptor {
         unreachable!("publication admission does not consult domain descriptors")
     }
+}
 
-    fn diff(&self, _base: &DslValue) -> kernel::MutationOutcome<Self::Diff> {
+impl kernel::ColdMutation<DslValue> for PublicationMutation {
+    type ReferenceDiff = PublicationDiff;
+
+    fn diff(&self, _base: &DslValue) -> kernel::MutationOutcome<Self::ReferenceDiff> {
         kernel::MutationOutcome::new(PublicationDiff { snapshot: Some(self.snapshot.clone()) })
     }
 

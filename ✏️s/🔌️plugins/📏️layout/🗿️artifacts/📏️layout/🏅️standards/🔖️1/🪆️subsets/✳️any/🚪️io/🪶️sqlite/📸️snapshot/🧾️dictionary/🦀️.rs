@@ -1,6 +1,6 @@
 //! 🧾️ Direct dictionary values own literal scalar and ordered child relations.
 use super::*;
-use semio_framework_value_dictionary::QuestionDictionary;
+use semio_framework_value_dictionary::{QuestionDictionary, QuestionDictionaryEntry};
 use semio_framework_value::{DslValue,Number,FromValue,DecodedValue};
 use store::sqlite_snapshot::transfer;
 enum Attach<'a>{Entry(usize,&'a str),Array(i64,usize),Member(i64,usize,&'a str)}

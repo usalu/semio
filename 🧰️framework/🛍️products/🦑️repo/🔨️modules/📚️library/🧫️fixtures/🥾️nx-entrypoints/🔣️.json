@@ -3,8 +3,8 @@
   "cases": [
     {
       "id": "cli",
-      "source": "⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
-      "pattern": "cli: require\\.resolve\\(\"([^\"\\n]+)\"\\)",
+      "source": "⚡️caching/🚀️bootstrap/🛠️tools/🔌️sdk/🟦️.ts",
+      "pattern": "cli:\\(\\)=>locate\\(\"([^\"\\n]+)\"\\)",
       "specifier": "nx/bin/nx.js",
       "target": "dist/bin/nx.js"
     },

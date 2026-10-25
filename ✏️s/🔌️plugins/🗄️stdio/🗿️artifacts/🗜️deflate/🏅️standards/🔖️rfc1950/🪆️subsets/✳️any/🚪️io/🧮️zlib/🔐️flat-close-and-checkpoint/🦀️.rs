@@ -32,7 +32,7 @@ pub(super) fn deflate_close_complete() -> semio_framework_job::InteractiveJobClo
 }
 
 /// ♻️ A flat owner whose whole physical backing one close turn releases.
-trait FlatBacking {
+pub trait FlatBacking {
     fn backing_bytes(&self) -> usize;
     fn release_backing(&mut self);
 }

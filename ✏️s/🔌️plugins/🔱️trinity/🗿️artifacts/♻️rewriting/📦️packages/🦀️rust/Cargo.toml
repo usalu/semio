@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-os-command = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-rewriting-model = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-rewriting-layout = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️typed/🗂️layout/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-rewriting-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }

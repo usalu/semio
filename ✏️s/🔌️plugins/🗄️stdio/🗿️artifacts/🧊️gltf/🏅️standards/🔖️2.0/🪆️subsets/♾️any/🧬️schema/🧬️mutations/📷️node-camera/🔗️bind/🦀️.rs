@@ -28,7 +28,7 @@ pub fn plan(p: &GltfBindNodeCameraPayload, base: &GltfSnapshot) -> Result<GltfDi
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfBindNodeCameraPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_camera::UnbindNodeCameraMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_node_camera::BindNodeCameraMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -74,7 +74,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for BindNodeCameraMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<BindNodeCameraMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<BindNodeCameraMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_camera::UnbindNodeCameraMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

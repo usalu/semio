@@ -55,7 +55,15 @@ func LoadBuildSurface(root string) (*BuildSurface, error) {
 	if err != nil {
 		return nil, err
 	}
-	catalogue, err := ParseCatalogue(catalogueData)
+	registryData, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(policy.Backends)))
+	if err != nil {
+		return nil, err
+	}
+	backends, err := ParseBackendIds(registryData)
+	if err != nil {
+		return nil, err
+	}
+	catalogue, err := ParseCatalogue(catalogueData, backends)
 	if err != nil {
 		return nil, err
 	}

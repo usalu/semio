@@ -8,7 +8,7 @@ import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {acquireCompilerCapacityLeaseV1} from "../🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import { startToolV1 } from "../../../📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-import { runtimeCommandNameV1 } from "../../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 📋️ Declares a finite paid process plan before its custodian acquires actual host capacity. */
 export type PaidProcessCustodianPlanV1=Readonly<{version:1;coverage:"direct-child";directory:string;parallelism:number;jobs:readonly Readonly<{program:string;args:readonly string[];cwd:string;parallelism:number;output:Readonly<{maximumBytes:number;maximumLines:number}>}>[]}>;

@@ -65,9 +65,9 @@ pub struct ArtifactKindSpec {
     /// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
     pub export_formats: Vec<String>,
     pub import_formats: Vec<String>,
-    /// 🗄️ Stdio export target kind ids (e.g. `stdio.json`) — additive peer of `export_formats`.
+    /// 🎯️ Stdio export target kind ids (e.g. `stdio.json`) — additive peer of `export_formats`.
     pub export_stdio_kinds: Vec<String>,
-    /// 🗄️ Stdio import source kind ids — additive peer of `import_formats`.
+    /// 📥️ Stdio import source kind ids — additive peer of `import_formats`.
     pub import_stdio_kinds: Vec<String>,
 }
 
@@ -86,7 +86,7 @@ pub struct HostedArtifactKind {
 //#endregion ArtifactKind
 //#region MediaType
 
-/// 🧬️ Typed-media lattice: every port/wire in the workflow carries a `MediaType` (`class` × `form`) instead of the legacy string `artifact_kind`. `MediaType` is what a wire negotiates; a format kind id string is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ArtifactKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
+/// ⌨️ Typed-media lattice: every port/wire in the workflow carries a `MediaType` (`class` × `form`) instead of the legacy string `artifact_kind`. `MediaType` is what a wire negotiates; a format kind id string is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ArtifactKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
 // 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `🎠️kernel/🦀️.rs`
 // and `🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️.rs` (both owned by other agents this pass) still
 // embed `MediaType`/`MediaClass`/`MediaForm` by value inside plain `#[derive(Serialize,
@@ -107,7 +107,7 @@ pub enum MediaClass {
     Presentation,
 }
 
-/// 🧬️ The shape/representation a `MediaClass` payload takes, orthogonal to `class` — e.g. `ThreeD` × `Brep` vs `ThreeD` × `Mesh`. `Any` only ever appears on the accepting side of a port (see `media_types_compatible`).
+/// 📋️ The shape/representation a `MediaClass` payload takes, orthogonal to `class` — e.g. `ThreeD` × `Brep` vs `ThreeD` × `Mesh`. `Any` only ever appears on the accepting side of a port (see `media_types_compatible`).
 // 🚧️ BLOCKED: see `MediaClass` above — same cross-crate serde dependency.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -132,7 +132,7 @@ pub enum MediaForm {
     Deck,
 }
 
-/// 🧬️ A port or wire's declared media type — the pair a producer offers or a consumer accepts.
+/// 📡️ A port or wire's declared media type — the pair a producer offers or a consumer accepts.
 // 🚧️ BLOCKED: see `MediaClass` above — same cross-crate serde dependency.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -184,7 +184,7 @@ pub enum PortMultiplicity {
     Many,
 }
 
-/// 🔌️ A single port an app exposes on the workflow — `kind_id` optionally pins it to one `ArtifactKindSpec.id` when the port is more specific than its `media_type` alone conveys.
+/// 📕️ A single port an app exposes on the workflow — `kind_id` optionally pins it to one `ArtifactKindSpec.id` when the port is more specific than its `media_type` alone conveys.
 // 🚧️ BLOCKED: see `MediaWireFormat` above — `WorkflowMediaPort.spec` embeds this by value inside a
 // plain `#[derive(Serialize, Deserialize)]` type.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -211,10 +211,10 @@ pub enum MediaCompat {
     Reject,
 }
 
-/// 🔀️ One-way `MediaForm` conversions the workflow is allowed to insert implicitly (e.g. a B-Rep producer feeding a mesh-only consumer). `media_types_compatible` looks up `(produced, accepted)` directly, so add the reverse pair too if a conversion should also hold the other way.
+/// 🔃️ One-way `MediaForm` conversions the workflow is allowed to insert implicitly (e.g. a B-Rep producer feeding a mesh-only consumer). `media_types_compatible` looks up `(produced, accepted)` directly, so add the reverse pair too if a conversion should also hold the other way.
 const MEDIA_FORM_CONVERSIONS: &[(MediaForm, MediaForm)] = &[(MediaForm::Brep, MediaForm::Mesh), (MediaForm::Vector, MediaForm::Raster), (MediaForm::Design, MediaForm::Kit), (MediaForm::Type, MediaForm::Kit)];
 
-/// ⚖️ The single source of truth for wire compatibility: classes must match exactly, `MediaForm::Any` on the accepting side takes anything within the class, equal forms are always direct, and everything else falls through to the explicit `MEDIA_FORM_CONVERSIONS` table.
+/// 🔂️ The single source of truth for wire compatibility: classes must match exactly, `MediaForm::Any` on the accepting side takes anything within the class, equal forms are always direct, and everything else falls through to the explicit `MEDIA_FORM_CONVERSIONS` table.
 pub async fn media_types_compatible(produced: &MediaType, accepted: &MediaType) -> MediaCompat {
     if produced.class != accepted.class {
         return MediaCompat::Reject;
@@ -248,7 +248,7 @@ pub struct ArtifactPresentation {
     pub component_kind: String,
 }
 
-/// 🔌️ An app's full media I/O surface — the artifact schema/type every app carries implicitly (see
+/// 📺️ An app's full media I/O surface — the artifact schema/type every app carries implicitly (see
 /// `artifact_in_port`/`artifact_out_port`) plus whatever additional workflow ports, catalog
 /// export/import formats, and OS presentation it declares itself. Scaffolding for the typed manifest
 /// surface (`AppDefinition.io`); apps don't populate this yet — later waves migrate `media_inputs`/
@@ -260,7 +260,7 @@ pub struct ArtifactPresentation {
 pub struct AppIo {
     pub artifact_schema: String,
     pub artifact_media_type: MediaType,
-    /// 🔌️ App-specific ports only — the implicit artifact ports are auto-injected by `all_ports`.
+    /// 🔗️ App-specific ports only — the implicit artifact ports are auto-injected by `all_ports`.
     pub ports: Vec<MediaPortSpec>,
     pub export_formats: Vec<String>,
     pub import_formats: Vec<String>,
@@ -268,17 +268,17 @@ pub struct AppIo {
 }
 
 impl AppIo {
-    /// 🔌️ The implicit `"artifact:in"` port every app accepts, keyed by `self.artifact_media_type`.
+    /// 🔐️ The implicit `"artifact:in"` port every app accepts, keyed by `self.artifact_media_type`.
     pub async fn artifact_in_port(&self) -> MediaPortSpec {
         MediaPortSpec { id: "artifact:in".into(), label: "Artifact".into(), direction: MediaPortDirection::In, media_type: self.artifact_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
     }
 
-    /// 🔌️ The implicit `"artifact:out"` port every app produces — see `artifact_in_port`.
+    /// 🏺️ The implicit `"artifact:out"` port every app produces — see `artifact_in_port`.
     pub async fn artifact_out_port(&self) -> MediaPortSpec {
         MediaPortSpec { id: "artifact:out".into(), label: "Artifact".into(), direction: MediaPortDirection::Out, media_type: self.artifact_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
     }
 
-    /// 🔌️ The full port list, in stable order: the implicit artifact ports first, followed by every app-specific port declared in `self.ports`.
+    /// 📇️ The full port list, in stable order: the implicit artifact ports first, followed by every app-specific port declared in `self.ports`.
     pub async fn all_ports(&self) -> Vec<MediaPortSpec> {
         let mut ports = vec![self.artifact_in_port().await, self.artifact_out_port().await];
         ports.extend(self.ports.clone());
@@ -290,7 +290,7 @@ impl AppIo {
         Self { artifact_schema: schema.into(), artifact_media_type: media_type, ports: Vec::new(), export_formats: Vec::new(), import_formats: Vec::new(), artifact }
     }
 
-    /// 🔌️ Attaches app-specific ports (beyond the implicit artifact ports) to this `AppIo`.
+    /// 📎️ Attaches app-specific ports (beyond the implicit artifact ports) to this `AppIo`.
     pub async fn with_ports(mut self, ports: Vec<MediaPortSpec>) -> Self {
         self.ports = ports;
         self
@@ -350,7 +350,7 @@ impl FromValue for MediaFingerprint {
 }
 
 impl MediaFingerprint {
-    /// 🔑️ Canonical fingerprint of a `Media` value: structured payloads hash their JSON text, binary payloads reuse their existing content hash directly (no re-hashing bytes already addressed by the blob store).
+    /// 🌱️ Canonical fingerprint of a `Media` value: structured payloads hash their JSON text, binary payloads reuse their existing content hash directly (no re-hashing bytes already addressed by the blob store).
     pub fn of(media: &Media) -> Self {
         match &media.payload {
             MediaPayload::Structured { schema, json } => MediaFingerprint(semio_framework_hash::hash_parts(&[schema.as_str(), json.as_str()])),
@@ -384,7 +384,7 @@ impl std::fmt::Display for MediaError {
 
 impl std::error::Error for MediaError {}
 
-/// 🔀️ A registered one-way conversion the workflow may insert on a wire when `media_types_compatible` reports `MediaCompat::Convert`. Kept behind a trait (never a bare closure) so converters can be enumerated, tested, and swapped without touching the runner.
+/// 🧾️ A registered one-way conversion the workflow may insert on a wire when `media_types_compatible` reports `MediaCompat::Convert`. Kept behind a trait (never a bare closure) so converters can be enumerated, tested, and swapped without touching the runner.
 pub trait MediaConverter: Send + Sync {
     fn source_form(&self) -> impl std::future::Future<Output = MediaForm> + Send;
     fn to_form(&self) -> impl std::future::Future<Output = MediaForm> + Send;
@@ -399,7 +399,7 @@ enum Part<'a>{Value(&'a DslValue),Name(&'a str)}
 
 fn bytes(hash:&mut Sha256,value:&[u8]){hash.update(&(value.len()as u64).to_le_bytes());hash.update(value);}
 
-/// 🔑️ Hash the actual borrowed intrinsic owner directly, without a JSON projection.
+/// 🔣️ Hash the actual borrowed intrinsic owner directly, without a JSON projection.
 pub(crate) fn fingerprint(schema:&str,value:&DslValue)->String{
  let mut hash=Sha256::new();hash.update(b"semio.media.intrinsic/v1\0");bytes(&mut hash,schema.as_bytes());let mut pending=vec![Part::Value(value)];
  while let Some(part)=pending.pop(){match part{

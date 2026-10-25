@@ -8,7 +8,7 @@ use store::os_store::test_support;
 async fn round_trip(deck: &PresentationSnapshot, operation: &PresentationMutation) -> PresentationSnapshot {
     let (forward, _messages) = vcs::apply_mutation(deck, operation).expect("valid mutation");
     let mut restored = forward.clone();
-    for back in protocol::Mutation::inverse(operation, deck).expect("valid retained mutation inverse fixture") {
+    for back in protocol::ColdMutation::inverse(operation, deck).expect("valid retained mutation inverse fixture") {
         let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
         restored = next;
     }

@@ -15,12 +15,12 @@ use objc2_metal::{MTLPixelFormat, MTLTextureUsage};
 
 //#region 🔖️SceneTarget
 
-/// 🌫️ `SCENE_MIP_LEVELS` in the wgpu target's `draw.rs` — five mip levels of box-downsample give the
+/// 🪜️ `SCENE_MIP_LEVELS` in the wgpu target's `draw.rs` — five mip levels of box-downsample give the
 /// glass backdrop's blur radius range (`Theme::glass_mip_level` maps a blur-px request onto
 /// `0..=max_mip`).
 pub const SCENE_MIP_LEVELS: u32 = 5;
 
-/// 🌫️ Owns the two textures `composite_to_swapchain`'s blur/glass pass needs: the scene's own
+/// 🎯️ Owns the two textures `composite_to_swapchain`'s blur/glass pass needs: the scene's own
 /// full-mip-chain color target, and a same-shaped scratch texture the blur downsample copies into
 /// before reading from it (Metal, like wgpu, cannot bind a texture as both a render-target attachment
 /// and a shader-read source within the same texture at once — hence the scratch copy, ported from
@@ -75,7 +75,7 @@ impl SceneTarget {
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-/// 🌫️ How many mip levels these dimensions can actually carry. Metal rejects a descriptor asking for
+/// 📏️ How many mip levels these dimensions can actually carry. Metal rejects a descriptor asking for
 /// more levels than `floor(log2(max(w, h))) + 1` — a hard validation abort, not a soft clamp — so a
 /// window enough during a resize (or a 1×1 surface) would take the process down. The blur chain
 /// therefore asks for as many levels as it wants *or* as many as exist, whichever is fewer.

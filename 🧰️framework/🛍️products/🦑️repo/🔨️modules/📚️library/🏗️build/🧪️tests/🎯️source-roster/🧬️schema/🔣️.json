@@ -138,6 +138,7 @@
             "then": {
               "properties": {
                 "compileEntries": {
+                  "type": "array",
                   "minItems": 1
                 }
               }
@@ -145,6 +146,7 @@
             "else": {
               "properties": {
                 "compileEntries": {
+                  "type": "array",
                   "maxItems": 0
                 }
               }

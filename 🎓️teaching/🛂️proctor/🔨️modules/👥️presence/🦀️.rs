@@ -27,19 +27,19 @@ use server::contract::OpaqueJson;
 
 use crate::course::LoadedCourse;
 
-/// 🚫️ The reason for a state published into a scope that is no room of this course.
+/// ❓️ The reason for a state published into a scope that is no room of this course.
 pub const SCOPE_UNKNOWN: &str = "scope-unknown";
 /// 🚫️ The reason for a state that is not the room's state type.
 pub const STATE_INVALID: &str = "state-invalid";
-/// 🚫️ The code of a place naming a quiz this course does not list.
+/// 🎓️ The code of a place naming a quiz this course does not list.
 pub const QUIZ_UNKNOWN: &str = "quiz-unknown";
-/// 🚫️ The code of a place or draft naming a task its quiz does not have.
+/// 📝️ The code of a place or draft naming a task its quiz does not have.
 pub const TASK_UNKNOWN: &str = "task-unknown";
-/// 🚫️ The code of a draft answer whose kind is not its task's kind.
+/// ⚖️ The code of a draft answer whose kind is not its task's kind.
 pub const KIND_MISMATCH: &str = "kind-mismatch";
-/// 🚫️ The code of a drag or draft naming an item, category or dimension its task does not have.
+/// 🆔️ The code of a drag or draft naming an item, category or dimension its task does not have.
 pub const ID_UNKNOWN: &str = "id-unknown";
-/// 🚫️ The code of a guess or matching value no answer can carry: one that is not positive on a
+/// ❌️ The code of a guess or matching value no answer can carry: one that is not positive on a
 /// logarithmic scale.
 pub const VALUE_INVALID: &str = "value-invalid";
 

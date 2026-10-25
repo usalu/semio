@@ -28,6 +28,6 @@ export { FRAME_TICKS, TICK_MILLISECONDS, createPacer, documentHidden, watchVisib
 export type { Pace, Pacer, PacerSeams, PacingHost } from "./🔨️modules/⏲️pacing/🟦️.ts";
 export { PET_CURSOR, PET_HELD, STIR_MILLISECONDS, watchGrasp } from "./🔨️modules/🤏️grasp/🟦️.ts";
 export type { Grasp, GraspHost, GraspOptions, Grasped } from "./🔨️modules/🤏️grasp/🟦️.ts";
-export { PET_COARSE_POINTER, PET_EDGE_INSET, PET_FINE_POINTER, PET_HOME_SCENE, PET_LAYER_Z_INDEX, PET_MEDIUM_WIDTH, PET_NARROW_WIDTH, PET_ROTATION_SECONDS, PetLayer, petCapacity, petCast, petScale, stageScenery } from "./🔨️modules/🫧️layer/🟦️.tsx";
+export { PET_COARSE_POINTER, PET_EDGE_INSET, PET_FINE_POINTER, PET_HOME_SCENE, PET_LAYER_Z_INDEX, PET_MEDIUM_WIDTH, PET_NARROW_WIDTH, PET_ROTATION_SECONDS, PET_SHUN_SECONDS, PET_FLAPS, PET_FLAP_SECONDS, PET_RETRY_SECONDS, PetLayer, petCapacity, petCast, petScale, stageScenery } from "./🔨️modules/🫧️layer/🟦️.tsx";
 export type { PetLayerHandle, PetLayerProps, Scenery } from "./🔨️modules/🫧️layer/🟦️.tsx";
 //#endregion 🔁️Reexports

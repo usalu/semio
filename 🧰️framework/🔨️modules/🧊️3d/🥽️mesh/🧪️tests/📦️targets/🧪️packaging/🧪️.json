@@ -81,14 +81,6 @@
       ]
     },
     {
-      "name": "semio-framework-3d-mesh-surface",
-      "directory": "🥽️mesh/🎨️surface/📦️packages/🦀️rust",
-      "production": [
-        "semio-framework-3d-mesh-document"
-      ],
-      "development": []
-    },
-    {
       "name": "semio-framework-3d-mesh-quality",
       "directory": "🥽️mesh/🔎️quality/📦️packages/🦀️rust",
       "production": [
@@ -132,7 +124,6 @@
         "semio-framework-3d",
         "semio-framework-3d-mesh-reconstruction",
         "semio-framework-3d-mesh-quality",
-        "semio-framework-3d-mesh-surface",
         "semio-framework-value",
         "semio-framework-pack-json",
         "semio-framework-async-macros",

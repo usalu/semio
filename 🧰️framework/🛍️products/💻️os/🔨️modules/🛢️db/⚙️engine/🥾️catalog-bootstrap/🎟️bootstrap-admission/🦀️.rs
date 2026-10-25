@@ -20,7 +20,7 @@ pub(super) const DATABASE_CATALOG_BOOTSTRAP_TOTAL_BYTES: u64 = DATABASE_CATALOG_
 pub(super) const DATABASE_CATALOG_BOOTSTRAP_RETRY_LIMIT: u8 = 8;
 
 #[derive(Clone, Copy)]
-struct DatabaseCatalogBootstrapAdmissionSlot {
+pub(super) struct DatabaseCatalogBootstrapAdmissionSlot {
     pub generation: u64,
     pub items: u64,
     pub bytes: u64,

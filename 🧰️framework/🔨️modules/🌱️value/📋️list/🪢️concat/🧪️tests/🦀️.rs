@@ -35,7 +35,6 @@ fn check(chunks:Vec<Vec<String>>,expected:Vec<String>,cut:Option<usize>){
  }
  owner.begin_close();let mut close_work=close_work_policy::Work::new();while !owner.terminal_is_empty(){let d=owner.close_demand(4096).unwrap();assert!(d.copy_bytes<=4096,"selected close quote exceeds its authored body");let issued=RetainedCloneGrant{maximum_copy_bytes:4096,..grant(d)};for denied in denied(issued,d){let(step,heap)=crate::observe_retirement_allocations(||owner.close_step(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.close_demand(4096).unwrap(),d);}let step=exact(||owner.close_step(issued).unwrap(),|step|step.progress());assert!(step.progress().fits(issued));close_work.observe(step.progress()==Default::default()&&!owner.terminal_is_empty()&&owner.close_demand(4096).unwrap()==d);}
  assert_eq!(crate::observe_retirement_allocations(||drop(owner)).1,(0,0));for input in inputs{for row in &input{assert_eq!(row.text.as_ptr(),pointers[row.ordinal]);}drain(input);}
- eprintln!("[DEBUG] original concat cut={cut:?} turns={turns} exact original payload pointers, five currency denial and physical terminal closure");
 }
 #[test]
 fn original_vector_concat_preserves_original_rows_and_cancelled_custody(){

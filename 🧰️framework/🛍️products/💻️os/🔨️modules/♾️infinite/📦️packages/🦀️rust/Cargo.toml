@@ -85,7 +85,6 @@ semio-framework-os-infinite-world-bridge = { path = "../../🌍️world/🌉️b
 semio-framework-os-infinite-world-interaction = { path = "../../🌍️world/🧵️interaction/📦️packages/🦀️rust" }
 semio-framework-os-infinite-world-host = { path = "../../🌍️world/🎛️host/📦️packages/🦀️rust" }
 ui_scene = { path = "../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
-image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
 ui_scene = { path = "../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
@@ -112,3 +111,6 @@ semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️
 [[test]]
 name="original_world_resources"
 path="../../🌍️world/♻️resources/🧪️tests/🦀️.rs"
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dev-dependencies]
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }

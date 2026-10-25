@@ -8,8 +8,8 @@ import {decodeProtobufV1,encodeProtobufV1,REAPI_V1,type ProtobufMessageV1} from 
 import {httpRemoteExecutionContentV1,RemoteExecutionContentErrorV1,type RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
 import {selectRemoteExecutionSandboxV1,type RemoteExecutionSandboxStrategyV1} from "../🔒️sandbox/🟦️.ts";
 import {readRemoteExecutionPolicyV1,remoteExecutionHostPropertiesV1,remoteExecutionDigestV1,requireRemoteExecutionShapeV1,type RemoteExecutionDigestV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionSandboxV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1} from "../🟦️.ts";
-import { runtimeSleepV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
-import {runtimeIdentityV1} from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeSleepV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
+import {runtimeIdentityV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 const EMPTY_HASH="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 

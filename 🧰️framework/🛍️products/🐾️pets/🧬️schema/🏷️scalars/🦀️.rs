@@ -6,7 +6,7 @@
 use super::*;
 
 //#region 🔖️Scalars
-/// 🏷️ A kebab-case identifier, unique within its scope (`^[a-z0-9]+(?:-[a-z0-9]+)*$`, 1…64 chars).
+/// 🔖️ A kebab-case identifier, unique within its scope (`^[a-z0-9]+(?:-[a-z0-9]+)*$`, 1…64 chars).
 pub type Slug = String;
 
 /// 🌍️ A human-readable text in every supported language; there is no default language.

@@ -5,7 +5,7 @@ use super::*;
 // #region 🛂️Manifest
 //#region 🔖️Manifest
 //#region 🔖️Utilities
-/// 🧰️ Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
+/// 📺️ Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
 /// an `ActionDefinition`: exactly one utility is active per window kind at a time, and activation is
 /// host-owned session view state (`ViewModel.active_utility_id`), never a document field or VCS operation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -44,7 +44,7 @@ pub struct UtilityDefinition {
 }
 
 impl UtilityDefinition {
-    /// 🧰️ A utility with sensible defaults (no group/keys/cursor/category/run, gates actions while active).
+    /// 🔐️ A utility with sensible defaults (no group/keys/cursor/category/run, gates actions while active).
     pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), group: None, keys: None, cursor: None, category: None, allows_actions_while_active: false, run: None }
     }
@@ -62,7 +62,7 @@ impl UtilityDefinition {
 #[value(rename_all = "camelCase")]
 pub struct CommandDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+    /// 🔖️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     /// 🗂️ Footer category tab this command groups under (an open id, e.g. "document", "appearance").
     pub category: String,
@@ -87,7 +87,7 @@ impl CommandDefinition {
         Self { id: id.into(), label: label.into(), category: category.into(), icon_id: icon_id.into(), kind, args: Vec::new(), keybindings: Vec::new(), in_palette: true, semantics: ActionSemantics::for_kind(kind) }
     }
 
-    /// 🎛️ Declares a command with the neutral icon for its action kind.
+    /// 📚️ Declares a command with the neutral icon for its action kind.
     pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
         Self::new(id, label, category, default_action_icon_id(kind), kind)
     }
@@ -98,7 +98,7 @@ impl CommandDefinition {
         Self::new_catalog(id, label, category, kind)
     }
 
-    /// 📝️ Attaches typed argument declarations to this command.
+    /// 📎️ Attaches typed argument declarations to this command.
     pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
         self.args = args.into_iter().collect();
         self
@@ -110,7 +110,7 @@ impl CommandDefinition {
         self
     }
 
-    /// 🎯️ Replaces this command's whole `ActionSemantics` wholesale.
+    /// 🧬️ Replaces this command's whole `ActionSemantics` wholesale.
     pub async fn semantics(mut self, semantics: ActionSemantics) -> Self {
         self.semantics = semantics;
         self
@@ -125,7 +125,7 @@ impl CommandDefinition {
         self
     }
 
-    /// 🗣️ Sets `ActionSemantics.use_when` — see `ActionDefinition::use_when`.
+    /// 🎬️ Sets `ActionSemantics.use_when` — see `ActionDefinition::use_when`.
     pub async fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
         self.semantics.use_when = phrases.into_iter().map(Into::into).collect();
         self
@@ -137,7 +137,7 @@ impl CommandDefinition {
         self
     }
 
-    /// 🎯️ Declares this command's [`CapabilityAudience`] — see `ActionDefinition::audience`.
+    /// 👥️ Declares this command's [`CapabilityAudience`] — see `ActionDefinition::audience`.
     pub fn audience(mut self, audience: CapabilityAudience) -> Self {
         self.semantics.audience = Some(audience);
         self
@@ -175,13 +175,13 @@ pub struct OsDefinition {
 #[value(rename_all = "camelCase")]
 pub struct ToolDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+    /// 🎚️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub icon_id: IconName,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub keys: Option<String>,
-    /// ⏯️ Declares that this tool runs a visible, abortable, finalizable algorithm (tool run contract §2.4);
+    /// ▶️ Declares that this tool runs a visible, abortable, finalizable algorithm (tool run contract §2.4);
     /// reserves the tool run actions through [`crate::tool_run::RESERVED`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -189,7 +189,7 @@ pub struct ToolDefinition {
 }
 
 impl ToolDefinition {
-    /// 🛠️ A tool with sensible defaults (no keybinding, no run).
+    /// 🔧️ A tool with sensible defaults (no keybinding, no run).
     pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), keys: None, run: None }
     }

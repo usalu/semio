@@ -1,6 +1,7 @@
 use semio_s_artifact_norm_en1995_diff::*;
 use semio_s_artifact_norm_en1995_mutations::En1995Mutation;
 use protocol::{apply_diff_cold, DiffAlgebra, Mutation as _, MutationDiff};
+use protocol::ColdMutationDiff;
 use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
 /// 🔺️ A member-scoped change patches only that member's field; annex and connections stay untouched.

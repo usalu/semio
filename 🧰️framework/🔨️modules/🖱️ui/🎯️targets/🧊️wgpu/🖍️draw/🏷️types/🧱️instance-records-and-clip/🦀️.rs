@@ -22,7 +22,7 @@ pub const KIND_AFFINE_RASTER: f32 = 11.0;
 /// 🌀️ Clockwise spinning + pulsing loading ring (see `UiInstance::loading_border` and `UI_SHADER`'s `kind == 6` branch).
 pub const KIND_LOADING_BORDER: f32 = 6.0;
 
-/// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring (see `UiInstance::waiting_border` and `UI_SHADER`'s `kind == 7` branch).
+/// ⏸️ Dashed, slow-spinning + gently pulsing waiting ring (see `UiInstance::waiting_border` and `UI_SHADER`'s `kind == 7` branch).
 pub const KIND_WAITING_BORDER: f32 = 7.0;
 
 /// ✅️ Solid, static at-bounds ring for `UiStatus::Finished` (see `UiInstance::finished_border` and `UI_SHADER`'s `kind == 8` branch) — no motion, distinguishing it from loading/waiting.
@@ -61,22 +61,22 @@ impl UiInstance {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_ROUNDED, border_color.a], uv_rect: [0.0, 0.0, 1.0, 1.0], clip_ellipse: [0.0; 4] }
     }
 
-    /// 🌀️ Clockwise spinning + pulsing loading ring in `color`; the sweep and pulse phase come from `globals._pad.x` (elapsed seconds) in `UI_SHADER`.
+    /// ⭕️ Clockwise spinning + pulsing loading ring in `color`; the sweep and pulse phase come from `globals._pad.x` (elapsed seconds) in `UI_SHADER`.
     pub fn loading_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_LOADING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0], clip_ellipse: [0.0; 4] }
     }
 
-    /// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring in `color`; the sweep and pulse phase come from `globals._pad.x` (elapsed seconds) in `UI_SHADER`.
+    /// ⏳️ Dashed, slow-spinning + gently pulsing waiting ring in `color`; the sweep and pulse phase come from `globals._pad.x` (elapsed seconds) in `UI_SHADER`.
     pub fn waiting_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_WAITING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0], clip_ellipse: [0.0; 4] }
     }
 
-    /// ✅️ Solid, static at-bounds ring for `UiStatus::Finished` in `color` — no animation.
+    /// 🏁️ Solid, static at-bounds ring for `UiStatus::Finished` in `color` — no animation.
     pub fn finished_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_FINISHED_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0], clip_ellipse: [0.0; 4] }
     }
 
-    /// 💫️ Raised-cosine breathing pulse ring for `UiState::Introducing` in `color`; phase comes from `globals._pad.x` in `UI_SHADER`.
+    /// 🌅️ Raised-cosine breathing pulse ring for `UiState::Introducing` in `color`; phase comes from `globals._pad.x` in `UI_SHADER`.
     pub fn introducing_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
         Self { rect, color: [color.r, color.g, color.b, color.a], params: [radius, border, KIND_INTRODUCING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0], clip_ellipse: [0.0; 4] }
     }

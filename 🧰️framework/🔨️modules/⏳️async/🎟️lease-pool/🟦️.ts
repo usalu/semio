@@ -38,7 +38,7 @@ type LeasePoolEntry<T> = {
 };
 
 /**
- * 🪶️ Generic refcounted resource pool with linger-based eviction — the shared mechanism the
+ * 🪣️ Generic refcounted resource pool with linger-based eviction — the shared mechanism the
  * renderer's engine-session cache and other non-plugin callers build on top of, instead of each
  * hand-rolling its own refcounting. A resource loads once per `key` and is shared by every caller;
  * when the last lease on a key releases, the resource isn't disposed immediately — it lingers for

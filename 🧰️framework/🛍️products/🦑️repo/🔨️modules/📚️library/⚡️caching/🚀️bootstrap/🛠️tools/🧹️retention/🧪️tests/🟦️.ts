@@ -1,5 +1,3 @@
-import "../../📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts";
-import "../📥️physical/🧪️tests/🟦️.ts";
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";

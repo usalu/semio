@@ -5,7 +5,7 @@ import {posix,win32,resolve} from "node:path";
 import {readFileSync} from "node:fs";
 import ts from "typescript";
 import {printArtifactLayoutV1,runPrintWorkersV1,printScratchOwnerV1} from "../🟦️.ts";
-import { readInferenceSourceV1 } from "@semio-tech/repo-lib/testing";
+import { readInferenceSourceV1 } from "@semio-tech/repo-lib/test-values";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import corpus from "./🔣️.json" with {type:"json"};
 

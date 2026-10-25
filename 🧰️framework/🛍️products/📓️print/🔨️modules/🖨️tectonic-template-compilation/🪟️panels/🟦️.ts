@@ -1,5 +1,5 @@
 import{awaitPrintWorkerV1,type PrintWorkerPortV1}from"../../../📦️artifacts/🧵️worker/🟦️.ts";
-import { withArtifactDestinationTaskV1, type ArtifactDestinationV1 } from "@semio-tech/repo-lib/artifacts";
+import { withArtifactDestinationTaskV1, type ArtifactDestinationV1 } from "@semio-tech/repo-lib/artifacts/storage";
 import{Worker}from"node:worker_threads";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,type ScriptInvocation}from"./../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

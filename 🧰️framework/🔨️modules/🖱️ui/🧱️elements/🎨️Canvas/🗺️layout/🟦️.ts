@@ -18,14 +18,14 @@ export function modeCollectWindowIds(node: WindowLayoutNode): string[] {
   return node.children.flatMap(modeCollectWindowIds);
 }
 
-/** 🪟️ Ensures every window leaf sits inside a tab stack. */
+/** 🥞️ Ensures every window leaf sits inside a tab stack. */
 export function normalizeLayoutToStacks(node: WindowLayoutNode): WindowLayoutNode {
   if (node.kind === "window") return { kind: "stack", children: [node], activeId: node.id };
   if (node.kind === "stack") return { ...node, activeId: node.activeId ?? node.children[0]?.id };
   return { ...node, children: node.children.map((child) => normalizeLayoutToStacks(child) as WindowLayoutAxisNode | WindowLayoutStackNode) };
 }
 
-/** 🪟️ Collapses empty axes and hoists single-child axes. */
+/** 🗜️ Collapses empty axes and hoists single-child axes. */
 export function collapseLayout(node: WindowLayoutNode | null): WindowLayoutNode | null {
   if (!node) return null;
   if (node.kind === "window") return node;
@@ -107,7 +107,7 @@ function removeAbsentWindowsFromLayout(layout: WindowLayoutNode, allowed: Readon
   };
 }
 
-/** 🪟️ Removes a window from the layout tree and collapses empty nodes. */
+/** ➖️ Removes a window from the layout tree and collapses empty nodes. */
 export function removeWindowFromLayout(layout: WindowLayoutNode, windowId: string): WindowLayoutNode | null {
   if (layout.kind === "window") return layout.id === windowId ? null : layout;
   if (layout.kind === "stack") {

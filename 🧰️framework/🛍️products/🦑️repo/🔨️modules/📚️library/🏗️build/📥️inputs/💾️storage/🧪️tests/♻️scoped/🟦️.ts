@@ -1,5 +1,5 @@
 import"./🔄️lifetime/🟦️.ts";
-import"./⚠️.ts";
+import"./⚠️scoped-retirement-and-bridge/🟦️.ts";
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
@@ -14,7 +14,7 @@ import{requireNativePlatformImageBindingV1,requireNativePlatformImageWriterV1}fr
 import{nativeStatfsSyncV1}from"@semio-tech/process/artifacts/native-build/storage/platform/contract";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{withRepositoryBuildGraphPublicationFixtureV1}from"../../🟨️.mjs";
-import{requireCurrentRepositoryBuildGraphConsumerV1}from"../../🟨️.mjs";
+import { requireCurrentRepositoryBuildGraphConsumerV1 } from "../../🔧️custody/🟨️.mjs";
 import{repositoryLeaseDirectoryV1}from"../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 import fixture from"./🧫️cases.json"with{type:"json"};

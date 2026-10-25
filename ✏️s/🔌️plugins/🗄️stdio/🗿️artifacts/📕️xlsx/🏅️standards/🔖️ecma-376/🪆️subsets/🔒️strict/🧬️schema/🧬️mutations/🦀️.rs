@@ -105,7 +105,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-relationships-namespace"
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(test)]
 pub fn apply_xlsx_strict_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxStrictMutation) -> protocol::MutationOutcome<XlsxDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
+    let outcome = ::semio_framework_os_kernel::ColdMutation::diff(mutation, snapshot);
     match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;

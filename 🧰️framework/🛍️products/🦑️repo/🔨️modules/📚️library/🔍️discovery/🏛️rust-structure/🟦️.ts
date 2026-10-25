@@ -320,7 +320,7 @@ function rustMutationLeafEvidence(tokens: readonly RustToken[], pairs: ReadonlyM
   return { state: "valid", contracts, detail: null };
 }
 
-/** 🧭️ Expands one tokenized Rust use tree into exact imported aliases. */
+/** 🔀️ Expands one tokenized Rust use tree into exact imported aliases. */
 function rustUseAliases(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): readonly { readonly source: string; readonly alias: string }[] {
   const aliases: { source: string; alias: string }[] = [];
   const parse = (segmentStart: number, segmentEnd: number, prefix: readonly string[], absolute: boolean): void => {

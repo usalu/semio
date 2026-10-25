@@ -3,7 +3,7 @@
 use super::*;
 
 // #region 🔖️Registry
-/// 🪶️ What a source states about a command before the registry labels and files it.
+/// 📙️ What a source states about a command before the registry labels and files it.
 pub(super) struct Draft<'a> { pub(super) id: String, pub(super) kind: Kind, pub(super) verb: String, pub(super) path: Vec<Segment>, pub(super) owner: Vec<String>, pub(super) subject: String, pub(super) qualifier: String, pub(super) long_running: bool, pub(super) source: &'a str, pub(super) own: Vec<Parameter>, pub(super) action: Action }
 
 impl Entry {
@@ -52,5 +52,5 @@ pub(super) fn unknown_parameter(id: &str, key: &str, accepted: &[Parameter]) -> 
     format!("{id}: unknown parameter {key:?}; it accepts {}", if accepted.is_empty() { "none".to_string() } else { accepted.iter().map(|parameter| parameter.id.as_str()).collect::<Vec<_>>().join(", ") })
 }
 
-pub(super) fn invokes_build(cmd: &str, args: &[String]) -> bool { cmd == "bun" && args.first().is_some_and(|first| first == "repo") }
+pub(super) fn invokes_build(cmd: &str) -> bool { cmd == "repo" }
 // #endregion 🔖️Registry

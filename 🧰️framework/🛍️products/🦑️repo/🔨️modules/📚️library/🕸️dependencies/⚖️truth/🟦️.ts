@@ -1,9 +1,11 @@
+import { refuseDependencyV1 } from "../📖️texts/🟦️.ts";
 import { existsSync } from "node:fs";
 import {selectPackageManagerV1,packageManagerRegistryV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
 import { dirname, join, relative, resolve } from "node:path";
-import { DEPENDENCY_BASELINE_REL_PATH, DEPENDENCY_ECOSYSTEMS, DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS, dependencyCollectGo, dependencyDiscoverScriptTsFiles, dependencyFreezeCheck, dependencyFreezeCurrentThirdParty, dependencyFreezeWriteBaseline, dependencyJsParity, dependencyReadFileSafe, type DependencyBaselineEntry, type DependencyDeclaration, type DependencyEcosystem, type DependencyJsParityReport, type DependencyKind } from "../📇️inventory/🟦️.ts";
-import { runtimeParseJsoncV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { DEPENDENCY_BASELINE_REL_PATH, DEPENDENCY_ECOSYSTEMS, DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS, dependencyCollectGo, dependencyDiscoverScriptTsFiles, dependencyFreezeCheck, dependencyFreezeCurrentThirdParty, dependencyFreezeWriteBaseline, dependencyJsLockAudit, dependencyJsParity, dependencyReadFileSafe, type DependencyBaselineEntry, type DependencyDeclaration, type DependencyEcosystem, type DependencyJsParityReport, type DependencyKind } from "../📇️inventory/🟦️.ts";
+import { javascriptLockRefusalTextV1 } from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🔒️lock-sync/🟦️.ts";
+import { runtimeParseJsoncV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 export type DependencyTruthDisposition = "literal-external" | "first-party" | "composition-scoped" | "mandated-toolchain";
 export type DependencyTruthEntry = DependencyBaselineEntry & { disposition: DependencyTruthDisposition; rationale: string; literalExternalUsers?: string[]; mandatedToolchainUsers?: string[] };
@@ -21,7 +23,6 @@ export type DependencyTruthReport = {
 };
 
 const DEPENDENCY_MANDATED_NX_PACKAGES = new Set(["nx", "@nx/devkit", "@nx/js"]);
-const DEPENDENCY_AUTHORIZED_TOOLCHAIN_MANIFESTS = new Set(["package.json", ...DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS.keys()]);
 export const DEPENDENCY_REPO_POLICY_ROOT = "🧰️framework/🛍️products/🦑️repo";
 const DEPENDENCY_REPO_POLICY_LIBRARY_ROOT = `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/📚️library`;
 const DEPENDENCY_REPO_POLICY_PACKAGE_MODULE = `${DEPENDENCY_REPO_POLICY_LIBRARY_ROOT}/📦️packages/🟦️typescript/🚨️policy/🟦️.ts`;
@@ -114,7 +115,7 @@ function dependencyToolchainLockVersions(content: string, recipeLocks: Readonly<
   return versions;
 }
 
-/** 🔒️Classifies only the narrow audited exceptions; every other third-party identity remains literal external inventory. */
+/** 📊️Classifies only the narrow audited exceptions; every other third-party identity remains literal external inventory. */
 export function dependencyTruthReportFromEntries(thirdParty: readonly DependencyBaselineEntry[], firstParty: readonly DependencyBaselineEntry[], rootPackageContent: string, lockContent = "", recipeLocks: Readonly<Record<string, string>> = {}): DependencyTruthReport {
   const toolchain = dependencyTruthRootToolchain(rootPackageContent);
   const lockVersions = dependencyToolchainLockVersions(lockContent, recipeLocks);
@@ -123,7 +124,7 @@ export function dependencyTruthReportFromEntries(thirdParty: readonly Dependency
   const classifiedThirdParty: DependencyTruthEntry[] = thirdParty.map((entry) => {
     if (entry.ecosystem === "js" && DEPENDENCY_MANDATED_NX_PACKAGES.has(entry.name)) {
       const declarations = dependencyTruthDeclarations(entry);
-      const exactAuthorized = declarations.filter((declaration) => toolchain.nxPackages.has(entry.name) && DEPENDENCY_AUTHORIZED_TOOLCHAIN_MANIFESTS.has(declaration.user) && declaration.kind === "repository-tooling");
+      const exactAuthorized = declarations.filter((declaration) => declaration.kind === "repository-tooling" && (DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS.has(declaration.user) || (declaration.user === "package.json" && toolchain.nxPackages.has(entry.name))));
       const external = declarations.filter((declaration) => !exactAuthorized.includes(declaration));
       const row = (declaration: DependencyDeclaration): DependencyToolchainRow => {
         const lockVersion = lockVersions.get(`${declaration.user}\0${entry.name}`);
@@ -219,25 +220,41 @@ export interface DependencyVerificationSelfTests { readonly jsLockParity: () => 
 /** ⚖️ Runs the dependency truth, parity, inventory, and ratchet command without owning task routing. */
 export function runDependencyVerification(repoRoot: string, args: string[], selfTests: DependencyVerificationSelfTests): void {
   dependencyAssertRepoPolicyImportBoundary(repoRoot);
-  if (args[0] === "parity") {
-    if (args[1] !== "js") throw new Error("[verify dependencies] parity currently supports only the 'js' ecosystem.");
+  if (args[0] === "locks") {
     const formatIndex = args.indexOf("--format");
     const format = formatIndex >= 0 ? args[formatIndex + 1] : "text";
-    if (format !== "text" && format !== "json") throw new Error(`[verify dependencies parity js] unsupported format ${JSON.stringify(format)}.`);
+    if (format !== "text" && format !== "json") throw refuseDependencyV1("usage", "verify.format-unsupported", { command: "locks", format: JSON.stringify(format) });
+    const audit = dependencyJsLockAudit(repoRoot, selfTests.jsLockParity);
+    const refused = audit.mismatches.filter((finding) => finding.frozen);
+    const failing = args.includes("--strict") ? audit.mismatches : refused;
+    if (format === "json") console.log(JSON.stringify(audit, null, 2));
+    else console.log(`[verify dependencies locks] scopes=${audit.scopes} manifests=${audit.workspaces} frozen-refusals=${refused.length} lock-noise=${audit.mismatches.length - refused.length} fixtures=${audit.lockFixtureChecks}`);
+    if (failing.length > 0) {
+      if (format === "text") for (const scope of [...new Set(failing.map((finding) => finding.scope))]) console.error(javascriptLockRefusalTextV1("stale", scope, failing.filter((finding) => finding.scope === scope), ["en", "de"]));
+      throw refuseDependencyV1("breach", "verify.locks-disagree", { count: failing.length, scopes: new Set(failing.map((finding) => finding.scope)).size });
+    }
+    console.log("[verify dependencies locks] clean.");
+    return;
+  }
+  if (args[0] === "parity") {
+    if (args[1] !== "js") throw refuseDependencyV1("unsupported", "verify.parity-ecosystem-unsupported");
+    const formatIndex = args.indexOf("--format");
+    const format = formatIndex >= 0 ? args[formatIndex + 1] : "text";
+    if (format !== "text" && format !== "json") throw refuseDependencyV1("usage", "verify.format-unsupported", { command: "parity js", format: JSON.stringify(format) });
     const report: DependencyJsParityReport = dependencyJsParity(repoRoot, selfTests.jsLockParity);
     if (format === "json") console.log(JSON.stringify(report, null, 2));
     else console.log(`[verify dependencies parity js] manifests=${report.manifests} external-rows=${report.externalRows} evidenced=${report.evidencedRows} unowned=${report.unownedRows.length} undeclared-imports=${report.undeclaredImports.length} lock-workspaces=${report.lockWorkspaces} lock-mismatches=${report.lockMismatches.length} lock-fixtures=${report.lockFixtureChecks}`);
     if (report.undeclaredImports.length > 0) {
       if (format === "text") for (const finding of report.undeclaredImports.slice(0, 100)) console.error(`  ${finding.file}:${finding.line}: ${finding.dependency} is not declared by ${finding.manifest}`);
-      throw new Error(`[verify dependencies parity js] ${report.undeclaredImports.length} external import(s) have no declaration in their owning package.`);
+      throw refuseDependencyV1("breach", "verify.parity-undeclared-imports", { count: report.undeclaredImports.length });
     }
     if (report.lockMismatches.length > 0) {
-      if (format === "text") for (const finding of report.lockMismatches.slice(0, 100)) console.error(`  ${finding.manifest}: ${finding.kind}${finding.dependency ? ` ${finding.section}:${finding.dependency}` : ""}${finding.manifestVersion !== undefined || finding.lockVersion !== undefined ? ` (manifest=${JSON.stringify(finding.manifestVersion)}, lock=${JSON.stringify(finding.lockVersion)})` : ""}`);
-      throw new Error(`[verify dependencies parity js] ${report.lockMismatches.length} package manifest / ${javascriptLockV1} workspace snapshot mismatch(es).`);
+      if (format === "text") for (const finding of report.lockMismatches.slice(0, 100)) console.error(`  ${finding.scope}: ${finding.manifest}: ${finding.kind}${finding.frozen ? " (frozen install refused)" : ""}${finding.dependency ? ` ${finding.section}:${finding.dependency}` : ""}${finding.manifestVersion !== undefined || finding.lockVersion !== undefined ? ` (manifest=${JSON.stringify(finding.manifestVersion)}, lock=${JSON.stringify(finding.lockVersion)})` : ""}`);
+      throw refuseDependencyV1("breach", "verify.parity-lock-mismatch", { count: report.lockMismatches.length, lock: javascriptLockV1, scopes: new Set(report.lockMismatches.map((finding) => finding.scope)).size });
     }
     if (args.includes("--no-unowned-rows") && report.unownedRows.length > 0) {
       if (format === "text") for (const finding of report.unownedRows.slice(0, 100)) console.error(`  ${finding.manifest}: ${finding.dependency} has no owned-scope source/config/script evidence`);
-      throw new Error(`[verify dependencies parity js] ${report.unownedRows.length} direct external row(s) have no owned-scope evidence.`);
+      throw refuseDependencyV1("breach", "verify.parity-unowned-rows", { count: report.unownedRows.length });
     }
     console.log("[verify dependencies parity js] clean.");
     return;
@@ -246,21 +263,21 @@ export function runDependencyVerification(repoRoot: string, args: string[], self
   if (args[0] === "summary" || args[0] === "literal-external") {
     const formatIndex = args.indexOf("--format");
     const format = formatIndex >= 0 ? args[formatIndex + 1] : "text";
-    if (format !== "text" && format !== "json") throw new Error(`[verify dependencies ${args[0]}] unsupported format ${JSON.stringify(format)}.`);
+    if (format !== "text" && format !== "json") throw refuseDependencyV1("usage", "verify.format-unsupported", { command: String(args[0]), format: JSON.stringify(format) });
     const report = dependencyTruthReport(repoRoot);
     console.log(format === "json" ? JSON.stringify(report, null, 2) : dependencyTruthSummaryText(report));
     if (args[0] === "literal-external" && !report.meetsTarget) {
       if (report.oracleConflicts.length > 0) for (const conflict of report.oracleConflicts) console.error(`  oracle-conflict ${conflict.ecosystem}:${conflict.name} declared by ${conflict.users.join(", ")}`);
       if (report.toolchainConflicts.length > 0) for (const conflict of report.toolchainConflicts) console.error(`  toolchain-owner-conflict js:${conflict.name}@${conflict.version} declared by ${conflict.user} (lock-owned=${conflict.lockOwned})`);
       if (report.auditedToolchain.failures.length > 0) for (const failure of report.auditedToolchain.failures) console.error(`  toolchain-audit ${failure}`);
-      throw new Error(`[verify dependencies literal-external] target=0, current=${report.totals.literalExternal}, oracle-conflicts=${report.oracleConflicts.length}, toolchain-owner-conflicts=${report.toolchainConflicts.length}, toolchain-failures=${report.auditedToolchain.failures.length}.`);
+      throw refuseDependencyV1("breach", "verify.literal-external-not-zero", { current: report.totals.literalExternal, oracleConflicts: report.oracleConflicts.length, ownerConflicts: report.toolchainConflicts.length, failures: report.auditedToolchain.failures.length });
     }
     return;
   }
   if (args[0] === "list") {
     const requested = args.slice(1).find((arg) => !arg.startsWith("--"));
     const ecosystem = requested === undefined || requested === "all" ? undefined : requested as DependencyEcosystem;
-    if (ecosystem && !DEPENDENCY_ECOSYSTEMS.includes(ecosystem)) throw new Error(`[verify dependencies] list ecosystem must be 'all' or one of ${DEPENDENCY_ECOSYSTEMS.join(", ")}.`);
+    if (ecosystem && !DEPENDENCY_ECOSYSTEMS.includes(ecosystem)) throw refuseDependencyV1("usage", "verify.list-ecosystem-unsupported", { ecosystems: DEPENDENCY_ECOSYSTEMS.join(", ") });
     const report = dependencyTruthReport(repoRoot);
     const entries = args.includes("--raw") ? report.entries.raw : args.includes("--literal-external") ? report.entries.literalExternal : report.entries.raw.filter((entry) => entry.disposition !== "first-party").map(dependencyTruthBaselineEntry);
     console.log(JSON.stringify(entries.filter((entry) => !ecosystem || entry.ecosystem === ecosystem), null, 2));
@@ -281,7 +298,7 @@ export function runDependencyVerification(repoRoot: string, args: string[], self
   if (result.newDeps.length > 0) {
     console.error(`[verify dependencies] ${result.newDeps.length} NEW dependenc(y/ies) not in ${DEPENDENCY_BASELINE_REL_PATH}:`);
     for (const dependency of result.newDeps) console.error(`  ${dependency.ecosystem}:${dependency.name}@${dependency.version} (kinds: ${dependency.kinds.join(",")}; used by: ${dependency.users.slice(0, 3).join(", ")}${dependency.users.length > 3 ? `, +${dependency.users.length - 3} more` : ""})`);
-    throw new Error(`[verify dependencies] ${result.newDeps.length} new third-party dependenc(y/ies) — approve deliberately with 'repo ./📜️script.ts verify dependencies write-baseline', or remove the dependency.`);
+    throw refuseDependencyV1("breach", "verify.new-dependencies", { count: result.newDeps.length });
   }
   console.log("[verify dependencies] clean — no new third-party dependencies.");
 }

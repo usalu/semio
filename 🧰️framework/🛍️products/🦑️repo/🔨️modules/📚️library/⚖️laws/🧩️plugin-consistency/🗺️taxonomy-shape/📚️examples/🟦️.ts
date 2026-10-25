@@ -9,7 +9,7 @@ import { policyStripEmoji } from "../../../../🧹️normalization/🧬️mutati
 import { policySurfaceRoots } from "../../../../🔍️discovery/🗺️surface/🟦️.ts";
 
 /**
- * 📏️ Per-example unit shape: `📚️examples/<emoji-slug>/{definition leaves, 🖼️assets/, 🧪️tests/}` under
+ * 🍃️ Per-example unit shape: `📚️examples/<emoji-slug>/{definition leaves, 🖼️assets/, 🧪️tests/}` under
  * every artifact and every app (apps own examples directly — never under `⚙️engine`). Plugin-root
  * `📚️examples` and plural facet dirs are forbidden.
  */

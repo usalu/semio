@@ -1,7 +1,8 @@
+import{concurrentEditV1,retryOnConcurrentEditV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import selectionSchema from"./🧬️schema/🎯️selection.json"with{type:"json"};
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,requireMaterializedPathV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import{readPhysicalCargoSourceV1}from"../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
+import{readPhysicalCargoSourceV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import {captureOwnedCommandResultV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "./🛠️preparation/📦️storage/🟦️.ts";
@@ -14,11 +15,11 @@ import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json" wi
 import { existsSync, lstatSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import workspaceModule from "../🟨️.cjs";
 import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 const{workspaceTestingCollectionRoot:collectionRoot}=workspaceModule;
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { GlobV1 } from "../../../../../../🔨️modules/⚙️runtime/🌐️glob/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { GlobV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 export type CargoWorkspaceContributionV1 = Readonly<{ schemaVersion: 1; members: readonly string[]; exclude: readonly string[] }>;
 export type CargoWorkspaceScope = Readonly<{ directory: string; manifest: string; lock: string; contribution: CargoWorkspaceContributionV1; memberManifests: readonly string[] }>;
@@ -57,7 +58,7 @@ const operate=(step:CargoPhysicalOperationV1):any=>{
 function drain<T>(plan:CargoPhysicalPlanV1<T>):T {
  let step=plan.next();try{while(!step.done)step=plan.next(operate(step.value));return step.value;}finally{plan.return(undefined as T);}
 }
-/** 🎛️ Preserves original cancellation across every reported physical operation. */
+/** 🛑️ Preserves original cancellation across every reported physical operation. */
 async function controlled<T>(plan:CargoPhysicalPlanV1<T>,control:CargoWorkspaceControlV1):Promise<T> {
  control.signal.throwIfAborted();let count=0,step=plan.next();
  try{while(!step.done){control.signal.throwIfAborted();const operation=step.value;let value:any;if(operation.operation==="program"||operation.operation==="current"){if(!("leaseControl"in control))throw Error("Actual Cargo preparation phase required");const preparation=control as CargoPreparationControlV1;value=operation.operation==="program"?await cargoPreparationProgramSourcesV1(operation.root,operation.path,preparation):await assertCargoPreparationObservationCurrentV1(operation.observation,preparation);}else if(operation.operation==="recipe"){if(!("childBudget" in control)||typeof control.childBudget!=="function"||!("childOptions" in control)||typeof control.childOptions!=="function")throw Error("Original Cargo preparation child control required");await control.advance({operation:operation.operation,path:operation.path,completedOperations:count+1});control.signal.throwIfAborted();const budget=control.childBudget(30_000),options=control.childOptions(operation.environment);if(!Number.isFinite(budget)||budget<=0||options.signal!==control.signal||!options.output||typeof options.onProgress!=="function")throw Error("Original Cargo preparation child options required");recipeCurrent(operation);try{await runOwnedCommand(process.execPath,[operation.path,...operation.args],operation.cwd,"cargo:owner-preparation",budget,{...options,stdout:"stderr"});}catch(error){control.signal.throwIfAborted();throw error;}}else value=operate(operation);control.signal.throwIfAborted();await control.advance({operation:operation.operation==="program"||operation.operation==="current"?"recipe":operation.operation,path:operation.path,completedOperations:++count});control.signal.throwIfAborted();step=plan.next(value);}return step.value;}finally{plan.return(undefined as T);}
@@ -85,7 +86,7 @@ const scope = (directory: string, workspace: Record<string, any>): CargoWorkspac
 
 /** 🗂️ Discovers only present, explicitly authored repository workspaces through physical Cargo documents. */
 export function discoverCargoWorkspaces(root:string):readonly CargoWorkspaceScope[] {return drain(discoverPlan(root));}
-/** 🎛️ Discovers current production owner authority through the original controlled physical plan. */
+/** 🏛️ Discovers current production owner authority through the original controlled physical plan. */
 export function discoverCargoWorkspacesControlledV1(root:string,control:CargoWorkspaceControlV1):Promise<readonly CargoWorkspaceScope[]> {return controlled(discoverPlan(root),control);}
 function* discoverPlan(root:string):CargoPhysicalPlanV1<readonly CargoWorkspaceScope[]> {
   const rootDocument = yield* readPlan(root, "Cargo.toml");
@@ -118,7 +119,7 @@ function* discoverPlan(root:string):CargoPhysicalPlanV1<readonly CargoWorkspaceS
 
 /** 🦀️ Expands each admitted Cargo-native pattern against current physical manifests and rejects absent exact owners. */
 export function cargoWorkspaceMembers(root:string,owner:CargoWorkspaceScope):readonly CargoWorkspacePackage[] {return drain(membersPlan(root,owner));}
-/** 🎛️ Reads current production member authority through one cancellable physical plan. */
+/** 🏭️ Reads current production member authority through one cancellable physical plan. */
 export function cargoWorkspaceMembersControlledV1(root:string,owner:CargoWorkspaceScope,control:CargoWorkspaceControlV1):Promise<readonly CargoWorkspacePackage[]> {return controlled(membersPlan(root,owner),control);}
 function* membersPlan(root:string,owner:CargoWorkspaceScope):CargoPhysicalPlanV1<readonly CargoWorkspacePackage[]> {
   const documents = new Map<string, Record<string, any>>(), scopes = new Map<string, CargoWorkspaceScope>();
@@ -209,7 +210,7 @@ function* selectPlan(root:string,manifest:string,readDocument:(path:string)=>Car
   }
 }
 
-/** 📦️ Inventories all current repository member identities without returning stale removed owners. */
+/** ↩️ Inventories all current repository member identities without returning stale removed owners. */
 export function cargoRepositoryPackages(root: string): readonly CargoWorkspacePackage[] {
   const packages = discoverCargoWorkspaces(root).flatMap(owner => cargoWorkspaceMembers(root, owner));
   const names = new Set<string>();
@@ -238,7 +239,7 @@ export function cargoWorkspaceDeclaresMemberV1(source: string, directory: string
   return contribution.members.some(pattern => new GlobV1(pattern).match(directory)) && !contribution.exclude.some(pattern => new GlobV1(pattern).match(directory));
 }
 
-/** 🎛️ Binds package selectors to one current physical workspace and preserves explicit Cargo manifest control. */
+/** ☑️ Binds package selectors to one current physical workspace and preserves explicit Cargo manifest control. */
 export function selectedCargoArguments(root: string, args: readonly string[]): string[] {
   if (args.some(arg => arg === "--manifest-path" || arg.startsWith("--manifest-path="))) return [...args];
   const names: string[] = [];
@@ -259,14 +260,14 @@ export function publishCargoWorkspaceMembership(root: string, owner: CargoWorksp
   return publishMembership(root, owner, mode, discoverCargoWorkspaces(root));
 }
 
-/** 📣️ Publishes one freshly admitted repository inventory without rediscovering every child for each owner. */
+/** 📮️ Publishes one freshly admitted repository inventory without rediscovering every child for each owner. */
 export function publishCargoWorkspaceMemberships(root: string, mode: "check" | "write"): readonly Readonly<{ owner: CargoWorkspaceScope; changed: boolean }>[] {
   const owners = discoverCargoWorkspaces(root);
   return owners.map(owner => ({ owner, changed: publishMembership(root, owner, mode, owners) }));
 }
 
-/** 📣️ Applies the current admitted native child boundaries to one guarded owner publication. */
-/** 📣️ Publishes selected member authority while retaining unrelated authored native exclusions. */
+/** 📤️ Applies the current admitted native child boundaries to one guarded owner publication. */
+/** 📢️ Publishes selected member authority while retaining unrelated authored native exclusions. */
 export function publishSelectedCargoWorkspaceMembershipV1(root:string,owner:CargoWorkspaceScope,mode:"check"|"write",owners:readonly CargoWorkspaceScope[]):boolean {return publishMembership(root,owner,mode,owners,true);}
 function publishMembership(root: string, owner: CargoWorkspaceScope, mode: "check" | "write", owners: readonly CargoWorkspaceScope[], retainExclusions=false): boolean {
   const path=physical(root,owner.manifest),source=readFileSync(path,"utf8"),document=object(runtimeParseTomlV1(source));
@@ -301,8 +302,9 @@ export type CargoPreparationV1 = Readonly<{ script: string; command: readonly st
 export type CargoPreparationDiagnosticPhaseV1 = "lease-wait" | "lease" | "discovery" | "inventory" | "closure" | "recipe" | "finished" | "publication";
 /** 🕰️ Emits opt-in preparation observations separately from machine-readable stdout. */
 export function logCargoPreparationDiagnosticV1(phase: CargoPreparationDiagnosticPhaseV1, owner: string, elapsedMs: number, items: number): void {
+  console.error("[cargo-preparation-timing] " + JSON.stringify({ phase, owner, elapsedMs, items }));
 }
-/** 🧬️ Admits an owner-authored executable recipe with literal argv and no implicit producer identity. */
+/** 📖️ Admits an owner-authored executable recipe with literal argv and no implicit producer identity. */
 export function parseCargoPreparation(value: unknown): CargoPreparationV1 {
  const row=object(value);if(Object.keys(row).some(k=>!["script","command"].includes(k)) || (typeof row.script!=="string" || !row.script || isAbsolute(row.script) || /^[A-Za-z]:\//.test(row.script) || row.script.includes("\\")) || row.script.split("/").at(-1)!=="📜️script.ts" || !Array.isArray(row.command) || !row.command.length || row.command.some((v:unknown)=>typeof v!=="string" || !v || v.includes("\0")))throw new Error("Invalid Cargo preparation recipe");return {script:row.script,command:[...row.command]};
 }
@@ -367,17 +369,17 @@ function* preparationPlan(root:string,selected:CargoWorkspaceScope,names:readonl
 }
 
 export type CargoPreparationSelectionV1=Readonly<{manifest:string;packages:readonly string[]}>;
-/** 🧭️ Admits a portable current manifest and distinct declared package roots. */
+/** 📋️ Admits a portable current manifest and distinct declared package roots. */
 export function parseCargoPreparationSelectionV1(value:unknown):CargoPreparationSelectionV1 {
  const row=object(value);if(Object.keys(row).some(key=>!Object.keys(custodySchema.$defs.CargoPreparationSelectionV1.properties).includes(key))||!pathPattern(row.manifest)||!/(^|\/)Cargo\.toml$/.test(row.manifest)||!Array.isArray(row.packages)||new Set(row.packages).size!==row.packages.length||row.packages.some(name=>typeof name!=="string"||!name||name.includes("\0")))throw Error("Invalid Cargo preparation selection");return{manifest:row.manifest,packages:[...row.packages]};
 }
 
-/** 🦀️ Uses the owned schema authority for native operations that consume current package inputs. */
+/** 🧲️ Uses the owned schema authority for native operations that consume current package inputs. */
 export function cargoCommandRequiresOwnerPreparationV1(command: string): boolean {
   return invocationSchema.allOf[0]!.if.properties.command.enum.includes(command);
 }
 
-/** 🧭️ Resolves the manifest selected by the repository's existing Cargo invocation grammar. */
+/** 🦑️ Resolves the manifest selected by the repository's existing Cargo invocation grammar. */
 export function cargoInvocationManifestV1(args: readonly string[], cwd: string): string {
   const index = args.indexOf("--manifest-path"), inline = args.find(arg => arg.startsWith("--manifest-path="));
   const selected = index >= 0 ? args[index+1] : inline?.slice(16);
@@ -385,7 +387,7 @@ export function cargoInvocationManifestV1(args: readonly string[], cwd: string):
 }
 
 export type CargoPreparationInvocationV1=Readonly<{command:string;args:readonly string[];cwd:string;environment:Readonly<Record<string,string>>}>;
-/** 🧭️ Selects the current owned preparation launch without executing or borrowing a completed receipt. */
+/** ▶️ Selects the current owned preparation launch without executing or borrowing a completed receipt. */
 export function cargoWorkspacePreparationInvocationV1(storage:CargoPreparationStorageV1,root: string, args: readonly string[], cwd: string, environment: Readonly<Record<string,string|undefined>>):CargoPreparationInvocationV1|undefined {
   parseCargoPreparationStorageV1(storage);if (!cargoCommandRequiresOwnerPreparationV1(args[0] ?? "")) return;
   const path = cargoInvocationManifestV1(args, cwd);
@@ -408,13 +410,17 @@ export async function prepareCargoWorkspaceInvocation(storage:CargoPreparationSt
 
 export interface CargoWorkspaceSelectionViewV1{readonly scope:CargoWorkspaceScope;readonly control:ResourceLeaseControl;readonly inputs:readonly Readonly<{path:string;digest:string;bytes:number}>[];recheck():Promise<void>}
 const selectionLimits=Object.freeze({...selectionSchema.definitions.Protocol.const});
-/** 🧭️ Reuses actual workspace selection with bounded original Source reads and retained callback observations. */
-export async function withCargoWorkspaceSelectionV1<T>(root:string,manifest:string,control:ResourceLeaseControl,body:(view:CargoWorkspaceSelectionViewV1)=>Promise<T>):Promise<T>{
+const stampFieldsV1=["dev","ino","mode","kind","nlink","size","mtimeMs","ctimeMs","birthtimeMs"];
+/** 🔬️ Names the stat facts of a workspace Source observation that differ between two observations. */
+function stampDifferenceV1(before:string,after:string):string{try{const left:unknown=JSON.parse(before),right:unknown=JSON.parse(after);if(Array.isArray(left)&&Array.isArray(right))return stampFieldsV1.filter((_,index)=>left[index]!==right[index]).map(name=>{const index=stampFieldsV1.indexOf(name);return name+" "+String(left[index])+" -> "+String(right[index]);}).join(", ")||"no stat fact";return String(left)+" -> "+String(right);}catch{return "unreadable";}}
+/** ♻️ Reuses actual workspace selection with bounded original Source reads and retained callback observations. */
+export function withCargoWorkspaceSelectionV1<T>(root:string,manifest:string,control:ResourceLeaseControl,body:(view:CargoWorkspaceSelectionViewV1)=>Promise<T>):Promise<T>{return retryOnConcurrentEditV1("snapshot",()=>withCargoWorkspaceSelectionOnceV1(root,manifest,control,body),{signal:control?.signal});}
+async function withCargoWorkspaceSelectionOnceV1<T>(root:string,manifest:string,control:ResourceLeaseControl,body:(view:CargoWorkspaceSelectionViewV1)=>Promise<T>):Promise<T>{
  requireIssuedResourceControlV1(control);root=requireMaterializedPathV1(root);requireMaterializedPathV1(resolve(root,manifest));if(typeof body!=="function")throw Error("Actual bounded workspace selection body required");
  const texts=new Map<string,Buffer>(),observations=new Map<string,{operation:"state"|"presence";path:string;value:string}>();let bytes=0,published=0,live=true,accepting=true,pending=0,refusal:Promise<never>|undefined;
- const guard=(phase:ResourceLeaseControl)=>{if(!live)throw Error("Original Cargo workspace selection released");checkResourceLeaseControl(phase);},stamp=(value:ReturnType<typeof lstatSync>|boolean)=>{if(value===undefined)throw Error("Actual Cargo workspace Source observation required");return JSON.stringify(typeof value==="boolean"?value:[String(value.dev),String(value.ino),String(value.mode),value.isDirectory()?"directory":value.isFile()?"file":value.isSymbolicLink()?"symlink":"other",...(value.isDirectory()?[]:[String(value.nlink),String(value.size),String(value.mtimeMs),String(value.ctimeMs),String(value.birthtimeMs)])]);},advance=async(phase:ResourceLeaseControl)=>{const now=Date.now();if(now-published>=250){published=now;await phase.publish({resource:"cargo:workspace-selection",mode:"shared",elapsedMs:0});}await phase.yieldContinuation();guard(phase);};
- const read=async(path:string,phase:ResourceLeaseControl)=>{guard(phase);const previous=texts.get(path);if(!previous&&texts.size>=selectionLimits.maximumDocuments)throw Error("Cargo workspace Source document capacity exceeded");const value=await readPhysicalCargoSourceV1(path,{version:1,root,expectedBytes:previous?.length??null,maximumBytes:Math.min(selectionLimits.maximumManifestBytes,selectionLimits.maximumAggregateBytes-bytes+(previous?.length??0)),remainingFiles:1},phase);guard(phase);if(!value)throw Error("Original Cargo workspace Source disappeared");const result=Buffer.from(value);if(previous&&!previous.equals(result))throw Error("Original Cargo workspace Source changed: "+path);if(!previous){texts.set(path,result);bytes+=result.length;}return result;};
- const observe=(step:CargoPhysicalOperationV1)=>{if(step.operation!=="state"&&step.operation!=="presence")throw Error("Closed Cargo workspace selection observation required");requireMaterializedPathV1(step.path);const value=operate(step),key=step.operation+":"+step.path,identity=stamp(value),previous=observations.get(key);if(previous&&previous.value!==identity)throw Error("Original Cargo workspace topology changed: "+step.path);if(!previous){if(observations.size>=selectionLimits.maximumObservations)throw Error("Cargo workspace Source observation capacity exceeded");observations.set(key,{operation:step.operation,path:step.path,value:identity});}return value;};
+ const guard=(phase:ResourceLeaseControl)=>{if(!live)throw Error("Original Cargo workspace selection released");checkResourceLeaseControl(phase);},stamp=(value:ReturnType<typeof lstatSync>|boolean)=>{if(value===undefined)throw Error("Actual Cargo workspace Source observation required");return JSON.stringify(typeof value==="boolean"?value:value.isDirectory()?[String(value.dev),String(value.ino),String(value.mode),"directory"]:[value.isFile()?"file":value.isSymbolicLink()?"symlink":"other"]);},advance=async(phase:ResourceLeaseControl)=>{const now=Date.now();if(now-published>=250){published=now;await phase.publish({resource:"cargo:workspace-selection",mode:"shared",elapsedMs:0});}await phase.yieldContinuation();guard(phase);};
+ const read=async(path:string,phase:ResourceLeaseControl)=>{guard(phase);const previous=texts.get(path);if(!previous&&texts.size>=selectionLimits.maximumDocuments)throw Error("Cargo workspace Source document capacity exceeded");const value=await readPhysicalCargoSourceV1(path,{version:1,root,expectedBytes:previous?.length??null,maximumBytes:Math.min(selectionLimits.maximumManifestBytes,selectionLimits.maximumAggregateBytes-bytes+(previous?.length??0)),remainingFiles:1},phase);guard(phase);if(!value)throw concurrentEditV1("vanished",path,"Original Cargo workspace Source disappeared","snapshot");const result=Buffer.from(value);if(previous&&!previous.equals(result))throw concurrentEditV1("bytes",path,"Original Cargo workspace Source changed","snapshot");if(!previous){texts.set(path,result);bytes+=result.length;}return result;};
+ const observe=(step:CargoPhysicalOperationV1)=>{if(step.operation!=="state"&&step.operation!=="presence")throw Error("Closed Cargo workspace selection observation required");requireMaterializedPathV1(step.path);const value=operate(step),key=step.operation+":"+step.path,identity=stamp(value),previous=observations.get(key);if(previous&&previous.value!==identity){if(!texts.has(step.path))throw concurrentEditV1("identity",step.path,"Original Cargo workspace topology changed ("+stampDifferenceV1(previous.value,identity)+")","snapshot");observations.set(key,{...previous,value:identity});}if(!previous){if(observations.size>=selectionLimits.maximumObservations)throw Error("Cargo workspace Source observation capacity exceeded");observations.set(key,{operation:step.operation,path:step.path,value:identity});}return value;};
  const recheck=async(phase:ResourceLeaseControl)=>{guard(phase);for(const row of observations.values()){guard(phase);observe({...row,root});await advance(phase);}for(const path of texts.keys()){await read(path,phase);await advance(phase);}};
  try{const result=await withRequestedIssuedResourceControlV1(control,0,async phase=>{
   const plan=selectPlan(root,manifest,function*(path){const full=yield* physicalPlan(root,path);return object(runtimeParseTomlV1(yield{operation:"text",path:full,root}));},new Map());let step=plan.next();let selected:CargoWorkspaceScope;

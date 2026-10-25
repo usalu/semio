@@ -9,6 +9,11 @@ description = "FEM 2d play app editor: app, manifest, view commands, options and
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 2097152
+maxSourceFiles = 128
+maxActiveLines = 24000
+
 [lints]
 workspace = true
 
@@ -20,6 +25,8 @@ name = "editor_app"
 path = "../../🧪️tests/🔬️app/🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-plugin-retained-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d-mesh-regions = { workspace = true }
 semio-s-artifact-fem-2d-mesh-sections = { workspace = true }
 semio-s-artifact-fem-2d-results-state = { path = "../../🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/📦️packages/🦀️rust" }

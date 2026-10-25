@@ -6,7 +6,7 @@ import { PET_KEEPOUTS } from "@semio-tech/pets-react";
 import type { SheetClassificationTask } from "@semio-tech/course";
 import { CardIcon, ClassificationTaskView, EMPTY_PRESENCE_VIEW, PresenceOverlay, COURSE_PET_CONTROLS, COURSE_PET_KEEPOUTS, COURSE_PET_PROPS, COURSE_PET_SURFACES, CourseCard, COURSE_PETS_TEMPO, peerGlances, petsTempo, courseText, type PeerCursor, type CoursePetsSource, type CoursePetsStage } from "@semio-tech/course-react";
 import { MENAGERIE, Pets, fakeSource, fakeStage, layer, settle, text } from "../../🪛️pet-companions-kit/🟦️.tsx";
-import { boxed, quiet } from "../🟢️shared/🟦️.tsx";
+import { boxed, quiet } from "../🟢️harness/🟦️.tsx";
 
 /** 🟡 Registers the layer tests of the 🐾️ pet companions suite. */
 export function registerLayerTests(): void {

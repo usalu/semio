@@ -190,7 +190,7 @@ test("registration only: coordinate progress has one exact route and package own
   const packageJson = JSON.parse(input(packageRoot + "/package.json").toString("utf8"));
   const router = input(readRegisteredTestRoute(root, registration.command).path).toString("utf8");
   expect(project.targets[registration.target]?.options?.command).toBe("repo ./📜️script.ts test " + registration.command);
-  expect(packageJson.scripts?.[registration.target]).toBe("repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:" + registration.target);
+  expect(packageJson.scripts?.[registration.target]).toBe("repo run @semio-tech/repo-lib:" + registration.target);
   expect(router).toContain('"' + registration.command + '"');
   expect(router).toContain(registration.testPath);
 });

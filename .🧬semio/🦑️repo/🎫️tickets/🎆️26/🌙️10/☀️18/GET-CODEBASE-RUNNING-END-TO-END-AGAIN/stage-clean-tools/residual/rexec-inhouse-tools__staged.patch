@@ -1,0 +1,1078 @@
+# stage-clean orphan staged=rexec-inhouse-tools/staged/cluster.ts map=None
+--- /dev/null
++++ b/staged/rexec-inhouse-tools/staged/cluster.ts
+@@ -0,0 +1,112 @@
++import {createHash} from "node:crypto";
++import {mkdirSync,mkdtempSync,rmSync} from "node:fs";
++import {join} from "node:path";
++import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../🌐️remote-cache/🖥️server/🟦️.ts";
++import {connectGrpcV1,type GrpcClientV1} from "../../📡️wire/🚪️grpc/🟦️.ts";
++import {decodeProtobufV1,encodeProtobufV1,REAPI_V1,type ProtobufMessageV1} from "../../📡️wire/📦️protobuf/🟦️.ts";
++import {httpRemoteExecutionContentV1,type RemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
++import {startRemoteExecutionServerV1,type RemoteExecutionServerOptionsV1,type RemoteExecutionServerV1,type RemoteExecutionTokensV1} from "../../🖥️server/🟦️.ts";
++import {runRemoteExecutionWorkerV1,type RemoteExecutionWorkerEventV1,type RemoteExecutionWorkerOptionsV1} from "../../👷️worker/🟦️.ts";
++
++/** 🧰️ A complete in-process service for tests: a real cache server, the execution server with its scheduler and a gRPC client, plus any number of in-process workers. */
++export const NAMESPACE_V1="build.bazel.remote.execution.v2";
++const sha=(data:Uint8Array|string)=>createHash("sha256").update(data).digest("hex");
++
++/** 📁️ A tree an action receives: file contents (optionally executable) and symbolic links, by relative path. */
++export type ClusterTreeV1=Readonly<Record<string,string|Uint8Array|Readonly<{content?:string|Uint8Array;executable?:boolean;symlink?:string}>>>;
++
++/** 📜️ What a client declares for one action. */
++export type ClusterActionV1=Readonly<{arguments:readonly string[];files?:ClusterTreeV1;environment?:Readonly<Record<string,string>>;outputFiles?:readonly string[];outputDirectories?:readonly string[];outputPaths?:readonly string[];platform?:readonly {name:string;value:string}[];timeoutSeconds?:number;workingDirectory?:string;salt?:string;skipUpload?:boolean}>;
++
++/** 🔢️ A digest in the protocol's own field names. */
++export type ClusterDigestV1={hash:string;size_bytes:number};
++
++/** 🎛️ The harness. */
++export interface ClusterV1{
++ readonly directory:string;readonly cache:RemoteCacheServerV1;readonly server:RemoteExecutionServerV1;readonly client:GrpcClientV1;readonly content:RemoteExecutionContentV1;readonly events:string[];readonly workerEvents:string[];
++ startWorker(options?:Partial<RemoteExecutionWorkerOptionsV1>):{stop():Promise<void>;done:Promise<void>};
++ upload(bytes:Uint8Array):Promise<ClusterDigestV1>;
++ action(spec:ClusterActionV1):Promise<ClusterDigestV1>;
++ execute(action:ClusterDigestV1,options?:{skipCacheLookup?:boolean;signal?:AbortSignal}):Promise<{stages:string[];response:ProtobufMessageV1;operation:string}>;
++ stop():Promise<void>;
++}
++
++/** 🧱️ Uploads a tree and answers its root digest. */
++async function treeDigest(upload:(bytes:Uint8Array)=>Promise<ClusterDigestV1>,tree:ClusterTreeV1):Promise<ClusterDigestV1>{
++ interface Node{files:Record<string,{content:Uint8Array;executable:boolean}>;links:Record<string,string>;dirs:Record<string,Node>}
++ const root:Node={files:{},links:{},dirs:{}};
++ for(const [path,value] of Object.entries(tree)){
++  const parts=path.split("/");let node=root;
++  for(const part of parts.slice(0,-1))node=node.dirs[part]??={files:{},links:{},dirs:{}};
++  const name=parts.at(-1)!;
++  if(typeof value==="string"||value instanceof Uint8Array)node.files[name]={content:typeof value==="string"?new TextEncoder().encode(value):value,executable:false};
++  else if(value.symlink!==undefined)node.links[name]=value.symlink;
++  else node.files[name]={content:typeof value.content==="string"?new TextEncoder().encode(value.content):value.content??new Uint8Array(0),executable:value.executable===true};
++ }
++ const build=async(node:Node):Promise<ClusterDigestV1>=>{
++  const files=[],directories=[],symlinks=[];
++  for(const name of Object.keys(node.files).sort()){const file=node.files[name]!;files.push({name,digest:await upload(file.content),is_executable:file.executable});}
++  for(const name of Object.keys(node.dirs).sort())directories.push({name,digest:await build(node.dirs[name]!)});
++  for(const name of Object.keys(node.links).sort())symlinks.push({name,target:node.links[name]!});
++  return upload(encodeProtobufV1(REAPI_V1.directory,{files,directories,symlinks}));
++ };
++ return build(root);
++}
++
++/** 🚀️ Starts the harness; `workers` in-process workers are started with the given options. */
++export async function startClusterV1(options:Readonly<{workers?:number;bind?:string;advertise?:string;worker?:Partial<RemoteExecutionWorkerOptionsV1>;tokens?:RemoteExecutionTokensV1;scheduler?:Partial<RemoteExecutionServerOptionsV1["scheduler"]>;server?:Partial<RemoteExecutionServerOptionsV1>;root?:string}>={}):Promise<ClusterV1>{
++ const directory=mkdtempSync(join(options.root??"/private/tmp/rexec-inhouse","cluster-")),events:string[]=[],workerEvents:string[]=[],stoppers:(()=>Promise<void>)[]=[];
++ mkdirSync(directory,{recursive:true});
++ const token=options.tokens?.write??options.tokens?.read;
++ const bind=options.bind??"127.0.0.1",cache=await startRemoteCacheServerV1({directory:join(directory,"cache"),host:bind,port:0,maximumBytes:1<<30,maximumEntryBytes:1<<28,maximumAgeDays:30,defaultInstance:"main",tokens:{read:options.tokens?.read,write:options.tokens?.write}});
++ const content=httpRemoteExecutionContentV1({endpoint:cache.url.replace("//0.0.0.0","//127.0.0.1"),token});
++ const server=await startRemoteExecutionServerV1({host:bind,grpcPort:0,workerPort:0,content,cacheUrl:cache.url,advertise:options.advertise,tokens:options.tokens??{},maximumMessageBytes:1<<25,maximumBatchBytes:1<<22,
++  scheduler:{unmatchedSeconds:4,lingerSeconds:1,leaseSeconds:6,maximumAttempts:3,defaultActionSeconds:60,maximumQueued:1000,heartbeatSeconds:1,pollSeconds:2,sweepMilliseconds:250,...options.scheduler},
++  onEvent:event=>{events.push(`${event.stage} ${event.detail}`);},...options.server});
++ const client=connectGrpcV1(server.grpcUrl),metadata:Record<string,string>=token?{authorization:`Bearer ${token}`}:{};
++ const upload=async(bytes:Uint8Array):Promise<ClusterDigestV1>=>{
++  const digest={hash:sha(bytes),size_bytes:bytes.length};
++  if(bytes.length>0){const answer=await client.unary(`${NAMESPACE_V1}.ContentAddressableStorage/BatchUpdateBlobs`,{instance_name:"main",requests:[{digest,data:bytes}]},{metadata});if(answer.responses[0].status.code!==0)throw Error(answer.responses[0].status.message);}
++  return digest;
++ };
++ const harness:ClusterV1={
++  directory,cache,server,client,content,events,workerEvents,upload,
++  startWorker:(extra={})=>{
++   const abort=new AbortController(),name=extra.name??`worker-${stoppers.length+1}`,done=runRemoteExecutionWorkerV1({scheduler:server.workerUrl,token:options.tokens?.worker,cacheToken:token,concurrency:2,directory:join(directory,"worker-"+name),sandbox:"auto",materialize:"clone",maximumBlobBytes:1<<30,inlineOutputBytes:4096,signal:abort.signal,name,onEvent:(event:RemoteExecutionWorkerEventV1)=>{workerEvents.push(`${name} ${event.stage} ${event.detail}`);},...options.worker,...extra});
++   const stop=async()=>{abort.abort();await done;};stoppers.push(stop);return {stop,done};
++  },
++  action:async spec=>{
++   const input=await treeDigest(upload,spec.files??{}),command=await upload(encodeProtobufV1(REAPI_V1.command,{
++    arguments:spec.arguments,environment_variables:Object.entries(spec.environment??{}).sort().map(([name,value])=>({name,value})),output_files:spec.outputFiles??[],output_directories:spec.outputDirectories??[],output_paths:spec.outputPaths??[],
++    platform:{properties:spec.platform??[]},working_directory:spec.workingDirectory??"",
++   }));
++   return upload(encodeProtobufV1(REAPI_V1.action,{command_digest:command,input_root_digest:input,...(spec.timeoutSeconds?{timeout:{seconds:spec.timeoutSeconds}}:{}),...(spec.salt?{salt:new TextEncoder().encode(spec.salt)}:{}),platform:{properties:spec.platform??[]}}));
++  },
++  execute:async(action,run={})=>{
++   const stages:string[]=[];let response:ProtobufMessageV1|undefined,operation="";
++   for await(const row of client.stream(`${NAMESPACE_V1}.Execution/Execute`,{instance_name:"main",action_digest:action,skip_cache_lookup:run.skipCacheLookup===true},{metadata,...(run.signal?{signal:run.signal}:{})})){
++    operation=row.name;stages.push((["UNKNOWN","CACHE_CHECK","QUEUED","EXECUTING","COMPLETED"] as const)[decodeProtobufV1(REAPI_V1.executeMetadata,row.metadata.value).stage]!);
++    if(row.done)response=decodeProtobufV1(REAPI_V1.executeResponse,row.response.value);
++   }
++   if(!response)throw Error("Execution ended without a response");
++   return {stages,response,operation};
++  },
++  stop:async()=>{
++   for(const stop of stoppers)await stop().catch(()=>{});
++   client.close();await server.stop().catch(()=>{});await cache.stop().catch(()=>{});
++   rmSync(directory,{recursive:true,force:true});
++  },
++ };
++ for(let index=0;index<(options.workers??0);index++)harness.startWorker({name:`worker-${index+1}`});
++ return harness;
++}
++
++/** ⏳️ Polls until the condition holds. */
++export async function eventuallyV1(condition:()=>boolean|Promise<boolean>,milliseconds=15000,message="Condition not reached"):Promise<void>{
++ const deadline=Date.now()+milliseconds;
++ while(Date.now()<deadline){if(await condition())return;await Bun.sleep(50);}
++ throw Error(message);
++}
++
++/** 📄️ The text of an inline stream of an ActionResult. */
++export const textOfV1=(bytes:Uint8Array|undefined):string=>new TextDecoder().decode(bytes??new Uint8Array(0));
+# stage-clean orphan staged=rexec-inhouse-tools/staged/content.ts map=None
+--- /dev/null
++++ b/staged/rexec-inhouse-tools/staged/content.ts
+@@ -0,0 +1,101 @@
++import type {RemoteExecutionDigestV1} from "../🟦️.ts";
++
++/** 🗄️ Where the protocol's blobs and action results live: the shared content-addressed store. Scheduler and workers use this interface only, so a store can be swapped without touching either. */
++export interface RemoteExecutionContentV1{
++ has(instance:string,hash:string,signal?:AbortSignal):Promise<boolean>;
++ missing(instance:string,digests:readonly RemoteExecutionDigestV1[],signal?:AbortSignal):Promise<RemoteExecutionDigestV1[]>;
++ read(instance:string,digest:RemoteExecutionDigestV1,signal?:AbortSignal):Promise<Uint8Array|undefined>;
++ stream(instance:string,digest:RemoteExecutionDigestV1,signal?:AbortSignal):Promise<AsyncGenerator<Uint8Array>|undefined>;
++ write(instance:string,digest:RemoteExecutionDigestV1,source:Uint8Array|AsyncIterable<Uint8Array>,signal?:AbortSignal):Promise<void>;
++ readActionResult(instance:string,hash:string,signal?:AbortSignal):Promise<Uint8Array|undefined>;
++ writeActionResult(instance:string,hash:string,bytes:Uint8Array,signal?:AbortSignal):Promise<void>;
++}
++
++/** 🚧️ The store refused or could not take the request; `code` is a gRPC status code. */
++export class RemoteExecutionContentErrorV1 extends Error{constructor(readonly code:number,message:string){super(message);}}
++
++/** ⚙️ How to reach the shared store over its HTTP protocol (`/<instance>/cas/<sha256>`, `/<instance>/ac/<sha256>`, bearer token). */
++export type RemoteExecutionHttpContentOptionsV1=Readonly<{endpoint:string;token?:string|undefined;concurrency?:number;timeoutSeconds?:number;retries?:number}>;
++
++const EMPTY="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",INSTANCE=/^[a-z0-9][a-z0-9._-]{0,63}$/u,TRANSIENT=new Set([408,429,500,502,503,504]);
++
++async function* chunksOf(body:ReadableStream<Uint8Array>):AsyncGenerator<Uint8Array>{
++ const reader=body.getReader();
++ try{for(;;){const {done,value}=await reader.read();if(done)return;yield value;}}finally{await reader.cancel().catch(()=>{});}
++}
++
++/** 🌐️ The store of the repository's own cache server (and any server speaking Bazel's HTTP cache protocol), as `RemoteExecutionContentV1`. Retries transient failures, bounds parallel existence checks, sends the declared length of every blob and streams large blobs in both directions. */
++export function httpRemoteExecutionContentV1(options:RemoteExecutionHttpContentOptionsV1):RemoteExecutionContentV1{
++ const base=options.endpoint.replace(/\/+$/u,""),limit=options.concurrency??32,retries=options.retries??3,timeout=(options.timeoutSeconds??60)*1000,headers=(extra:Record<string,string>={}):Record<string,string>=>({...(options.token?{authorization:`Bearer ${options.token}`}:{}),...extra});
++ const url=(instance:string,kind:"ac"|"cas",hash:string):string=>{
++  if(instance!==""&&!INSTANCE.test(instance))throw new RemoteExecutionContentErrorV1(3,`Valid instance name required: ${instance}`);
++  return `${base}${instance===""?"":"/"+instance}/${kind}/${hash}`;
++ };
++ const send=async(method:string,target:string,signal:AbortSignal|undefined,init:Partial<RequestInit>={},retry=true):Promise<Response>=>{
++  let last:unknown;
++  for(let attempt=0;attempt<=(retry?retries:0);attempt++){
++   try{
++    const response=await fetch(target,{method,...init,headers:{...headers(),...(init.headers as Record<string,string>|undefined)},signal:signal?AbortSignal.any([signal,AbortSignal.timeout(timeout)]):AbortSignal.timeout(timeout)});
++    if(TRANSIENT.has(response.status)&&attempt<retries){await response.body?.cancel();await Bun.sleep(50*2**attempt);continue;}
++    return response;
++   }catch(error){
++    if(signal?.aborted)throw error;
++    last=error;if(attempt<retries)await Bun.sleep(50*2**attempt);
++   }
++  }
++  throw new RemoteExecutionContentErrorV1(14,`Content store unreachable: ${base}: ${last instanceof Error?last.message:String(last)}`);
++ };
++ const refuse=(response:Response,what:string):never=>{
++  const code=response.status===401?16:response.status===403?7:response.status===507?8:response.status===413?8:response.status===400?3:14;
++  throw new RemoteExecutionContentErrorV1(code,`Content store answered ${response.status} for ${what}`);
++ };
++ const content:RemoteExecutionContentV1={
++  async has(instance,hash,signal){
++   if(hash===EMPTY)return true;
++   const response=await send("HEAD",url(instance,"cas",hash),signal);await response.body?.cancel();
++   if(response.status===200)return true;
++   if(response.status===404)return false;
++   return refuse(response,`cas/${hash}`);
++  },
++  async missing(instance,digests,signal){
++   const out:RemoteExecutionDigestV1[]=new Array(digests.length),found:boolean[]=new Array(digests.length);let next=0;
++   await Promise.all(Array.from({length:Math.min(limit,digests.length)},async()=>{for(;;){const index=next++;if(index>=digests.length)return;found[index]=await content.has(instance,digests[index]!.hash,signal);}}));
++   let count=0;
++   digests.forEach((digest,index)=>{if(!found[index])out[count++]=digest;});
++   return out.slice(0,count);
++  },
++  async read(instance,digest,signal){
++   if(digest.size===0&&digest.hash===EMPTY)return new Uint8Array(0);
++   const response=await send("GET",url(instance,"cas",digest.hash),signal);
++   if(response.status===404){await response.body?.cancel();return undefined;}
++   if(response.status!==200)return refuse(response,`cas/${digest.hash}`);
++   return new Uint8Array(await response.arrayBuffer());
++  },
++  async stream(instance,digest,signal){
++   if(digest.size===0&&digest.hash===EMPTY)return (async function*(){})();
++   const response=await send("GET",url(instance,"cas",digest.hash),signal);
++   if(response.status===404){await response.body?.cancel();return undefined;}
++   if(response.status!==200)return refuse(response,`cas/${digest.hash}`);
++   return response.body?chunksOf(response.body):(async function*(){})();
++  },
++  async write(instance,digest,source,signal){
++   if(digest.size===0&&digest.hash===EMPTY)return;
++   const target=url(instance,"cas",digest.hash),request={"content-length":String(digest.size),"content-type":"application/octet-stream"};
++   if(source instanceof Uint8Array){const response=await send("PUT",target,signal,{body:source as unknown as BodyInit,headers:request});await response.body?.cancel();if(response.status!==200)refuse(response,`cas/${digest.hash}`);return;}
++   const iterator=source[Symbol.asyncIterator](),body=new ReadableStream<Uint8Array>({async pull(controller){const next=await iterator.next();if(next.done)controller.close();else controller.enqueue(next.value);},cancel(){void iterator.return?.();}});
++   const response=await send("PUT",target,signal,{body,headers:request,duplex:"half"} as RequestInit,false);await response.body?.cancel();
++   if(response.status!==200)refuse(response,`cas/${digest.hash}`);
++  },
++  async readActionResult(instance,hash,signal){
++   const response=await send("GET",url(instance,"ac",hash),signal);
++   if(response.status===404){await response.body?.cancel();return undefined;}
++   if(response.status!==200)return refuse(response,`ac/${hash}`);
++   return new Uint8Array(await response.arrayBuffer());
++  },
++  async writeActionResult(instance,hash,bytes,signal){
++   const response=await send("PUT",url(instance,"ac",hash),signal,{body:bytes as unknown as BodyInit,headers:{"content-length":String(bytes.length),"content-type":"application/octet-stream"}});await response.body?.cancel();
++   if(response.status!==200)refuse(response,`ac/${hash}`);
++  },
++ };
++ return Object.freeze(content);
++}
+# stage-clean orphan staged=rexec-inhouse-tools/staged/server.ts map=None
+--- /dev/null
++++ b/staged/rexec-inhouse-tools/staged/server.ts
+@@ -0,0 +1,265 @@
++import {createHash,timingSafeEqual} from "node:crypto";
++import {hostname} from "node:os";
++import {decodeProtobufV1,encodeProtobufV1,REAPI_V1,type ProtobufMessageV1} from "../📡️wire/📦️protobuf/🟦️.ts";
++import {GRPC_CODES_V1,GrpcErrorV1,startGrpcServerV1,type GrpcCallEventV1,type GrpcServerV1} from "../📡️wire/🚪️grpc/🟦️.ts";
++import {RemoteExecutionContentErrorV1,type RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
++import {RemoteExecutionSchedulerV1,type RemoteExecutionSchedulerEventV1,type RemoteExecutionSchedulerOptionsV1,type RemoteExecutionSnapshotV1} from "../🗓️scheduler/🟦️.ts";
++import {remoteExecutionDigestV1,requireRemoteExecutionShapeV1,type RemoteExecutionDigestV1} from "../🟦️.ts";
++
++/** 🔐️ Bearer tokens: with none the service is open (loopback only), a read token allows lookups and downloads, a write token everything, a worker token the worker API. */
++export type RemoteExecutionTokensV1=Readonly<{read?:string|undefined;write?:string|undefined;worker?:string|undefined}>;
++
++/** ⚙️ One service: both listeners, the store, the scheduler bounds and the secrets. */
++export type RemoteExecutionServerOptionsV1=Readonly<{
++ host:string;grpcPort:number;workerPort:number;content:RemoteExecutionContentV1;cacheUrl:string|null;scheduler:Omit<RemoteExecutionSchedulerOptionsV1,"content"|"cache"|"language">&{cache?:RemoteExecutionSchedulerOptionsV1["cache"];language?:RemoteExecutionSchedulerOptionsV1["language"]};
++ tokens:RemoteExecutionTokensV1;tls?:Readonly<{certificate:string;key:string}>|undefined;maximumMessageBytes:number;maximumBatchBytes:number;advertise?:string|undefined;onEvent?:(event:RemoteExecutionSchedulerEventV1)=>void;onCall?:(event:GrpcCallEventV1)=>void;
++}>;
++
++/** 🛰️ A running service. */
++export interface RemoteExecutionServerV1{readonly grpcUrl:string;readonly workerUrl:string;readonly scheduler:RemoteExecutionSchedulerV1;status():Promise<Record<string,unknown>>;stop():Promise<void>}
++
++const WILDCARD=new Set(["0.0.0.0","::","[::]"]),NS="build.bazel.remote.execution.v2",EXEC=`${NS}.Execution`,CACHE=`${NS}.ActionCache`,CAS=`${NS}.ContentAddressableStorage`,CAPS=`${NS}.Capabilities`,STREAM="google.bytestream.ByteStream",
++ INSTANCE=/^([a-z0-9][a-z0-9._-]{0,63})?$/u,EMPTY="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",LOOPBACK=new Set(["127.0.0.1","localhost","::1","[::1]"]);
++const READ_ONLY=new Set([`${CAPS}/GetCapabilities`,`${CACHE}/GetActionResult`,`${CAS}/FindMissingBlobs`,`${CAS}/BatchReadBlobs`,`${CAS}/GetTree`,`${STREAM}/Read`,`${STREAM}/QueryWriteStatus`]);
++
++const compare=(expected:string,presented:string):boolean=>timingSafeEqual(createHash("sha256").update(expected).digest(),createHash("sha256").update(presented).digest());
++const bearer=(header:string|null|undefined):string|undefined=>header?.startsWith("Bearer ")?header.slice(7):undefined;
++const instanceOf=(name:string):string=>{if(!INSTANCE.test(name))throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,`Valid instance name required: ${name}`);return name;};
++const digestOf=(message:{hash:string;size_bytes:number}|undefined):RemoteExecutionDigestV1=>{
++ if(!message)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,"Digest required");
++ try{return remoteExecutionDigestV1(message.hash,message.size_bytes);}catch{throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,`Valid SHA-256 digest required: ${message.hash}/${message.size_bytes}`);}
++};
++const wire=(digest:RemoteExecutionDigestV1)=>({hash:digest.hash,size_bytes:digest.size});
++const checkFunction=(value:number|string):void=>{if(value!==0&&value!==1&&value!=="UNKNOWN"&&value!=="SHA256")throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,"Only SHA256 is supported");};
++
++function mapStore(error:unknown):never{
++ if(error instanceof RemoteExecutionContentErrorV1)throw new GrpcErrorV1(error.code,error.message);
++ throw error;
++}
++
++/** 🎞️ Converts a scheduler snapshot to a `google.longrunning.Operation` carrying the protocol's metadata and, once done, its `ExecuteResponse`. */
++export function remoteExecutionOperationV1(snapshot:RemoteExecutionSnapshotV1):ProtobufMessageV1{
++ const stage=snapshot.stage==="CACHE_CHECK"?"CACHE_CHECK":snapshot.stage,metadata=encodeProtobufV1(REAPI_V1.executeMetadata,{stage,action_digest:wire(snapshot.action)}),done=snapshot.stage==="COMPLETED";
++ const operation:ProtobufMessageV1={name:snapshot.name,metadata:{type_url:`type.googleapis.com/${REAPI_V1.executeMetadata}`,value:metadata},done};
++ if(done&&snapshot.outcome){
++  const outcome=snapshot.outcome,details=outcome.status.missing?.length?[{type_url:`type.googleapis.com/${REAPI_V1.preconditionFailure}`,value:encodeProtobufV1(REAPI_V1.preconditionFailure,{violations:outcome.status.missing.map(digest=>({type:"MISSING",subject:`blobs/${digest.hash}/${digest.size}`}))})}]:[];
++  const response=encodeProtobufV1(REAPI_V1.executeResponse,{...(outcome.actionResult?{result:decodeProtobufV1(REAPI_V1.actionResult,outcome.actionResult)}:{}),cached_result:outcome.cached,status:{code:outcome.status.code,message:outcome.status.message,details},message:outcome.worker===""?"":`executed by ${outcome.worker}`});
++  operation.response={type_url:`type.googleapis.com/${REAPI_V1.executeResponse}`,value:response};
++ }
++ return operation;
++}
++
++class Queue<T>{
++ private items:T[]=[];private waiting?:()=>void;private space?:()=>void;private closed=false;
++ constructor(private readonly bound:number){}
++ async push(item:T):Promise<void>{while(this.items.length>=this.bound)await new Promise<void>(resolve=>{this.space=resolve;});this.items.push(item);this.waiting?.();}
++ end():void{this.closed=true;this.waiting?.();}
++ async *drain():AsyncGenerator<T>{
++  for(;;){
++   while(this.items.length>0){const item=this.items.shift()!;this.space?.();yield item;}
++   if(this.closed)return;
++   await new Promise<void>(resolve=>{this.waiting=resolve;});
++  }
++ }
++}
++
++/** 🧩️ The gRPC methods of the Remote Execution API this service implements, over a store and a scheduler. */
++export function remoteExecutionHandlersV1(content:RemoteExecutionContentV1,scheduler:RemoteExecutionSchedulerV1,limits:Readonly<{maximumBatchBytes:number}>):Record<string,(input:any,call:any)=>any>{
++ const blobName=(name:string,marker:"blobs"|"uploads")=>{
++  const parts=name.split("/"),index=marker==="blobs"?parts.indexOf("blobs"):parts.indexOf("uploads");
++  if(parts.includes("compressed-blobs"))throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,"Compressed blobs are not supported");
++  if(marker==="blobs"){if(index<0||parts.length!==index+3)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,`Invalid resource name: ${name}`);return {instance:instanceOf(parts.slice(0,index).join("/")),digest:digestOf({hash:parts[index+1]!,size_bytes:Number(parts[index+2])})};}
++  if(index<0||parts[index+2]!=="blobs"||parts.length!==index+5)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,`Invalid resource name: ${name}`);
++  return {instance:instanceOf(parts.slice(0,index).join("/")),digest:digestOf({hash:parts[index+3]!,size_bytes:Number(parts[index+4])})};
++ };
++ return {
++  [`${CAPS}/GetCapabilities`]:async()=>({
++   cache_capabilities:{digest_functions:["SHA256"],action_cache_update_capabilities:{update_enabled:true},max_batch_total_size_bytes:limits.maximumBatchBytes,symlink_absolute_path_strategy:"ALLOWED"},
++   execution_capabilities:{digest_function:"SHA256",digest_functions:["SHA256"],exec_enabled:true},
++   low_api_version:{major:2,minor:0},high_api_version:{major:2,minor:3},
++  }),
++  [`${EXEC}/Execute`]:async function*(request:ProtobufMessageV1,call:{signal:AbortSignal}){
++   checkFunction(request.digest_function);
++   const instance=instanceOf(request.instance_name),action=digestOf(request.action_digest);
++   for await(const snapshot of scheduler.execute({instance,action,skipCacheLookup:request.skip_cache_lookup===true},call.signal))yield remoteExecutionOperationV1(snapshot);
++  },
++  [`${EXEC}/WaitExecution`]:async function*(request:ProtobufMessageV1,call:{signal:AbortSignal}){
++   const stream=scheduler.wait(request.name,call.signal);
++   if(!stream)throw new GrpcErrorV1(GRPC_CODES_V1.NOT_FOUND,`Unknown operation: ${request.name}`);
++   for await(const snapshot of stream)yield remoteExecutionOperationV1(snapshot);
++  },
++  [`${CACHE}/GetActionResult`]:async(request:ProtobufMessageV1,call:{signal:AbortSignal})=>{
++   checkFunction(request.digest_function);
++   const bytes=await content.readActionResult(instanceOf(request.instance_name),digestOf(request.action_digest).hash,call.signal).catch(mapStore);
++   if(!bytes)throw new GrpcErrorV1(GRPC_CODES_V1.NOT_FOUND,"Action result not found");
++   return decodeProtobufV1(REAPI_V1.actionResult,bytes);
++  },
++  [`${CACHE}/UpdateActionResult`]:async(request:ProtobufMessageV1,call:{signal:AbortSignal})=>{
++   checkFunction(request.digest_function);
++   if(!request.action_result)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,"Action result required");
++   await content.writeActionResult(instanceOf(request.instance_name),digestOf(request.action_digest).hash,encodeProtobufV1(REAPI_V1.actionResult,request.action_result),call.signal).catch(mapStore);
++   return request.action_result;
++  },
++  [`${CAS}/FindMissingBlobs`]:async(request:ProtobufMessageV1,call:{signal:AbortSignal})=>{
++   checkFunction(request.digest_function);
++   const digests=(request.blob_digests as {hash:string;size_bytes:number}[]).map(digestOf),missing=await content.missing(instanceOf(request.instance_name),digests.filter(digest=>digest.size>0||digest.hash!==EMPTY),call.signal).catch(mapStore);
++   return {missing_blob_digests:missing.map(wire)};
++  },
++  [`${CAS}/BatchUpdateBlobs`]:async(request:ProtobufMessageV1,call:{signal:AbortSignal})=>{
++   checkFunction(request.digest_function);
++   const instance=instanceOf(request.instance_name),rows=request.requests as {digest:{hash:string;size_bytes:number};data:Uint8Array;compressor:number}[];
++   let total=0;for(const row of rows)total+=row.data.length;
++   if(total>limits.maximumBatchBytes)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,`Batch exceeds ${limits.maximumBatchBytes} bytes`);
++   const responses:ProtobufMessageV1[]=[];
++   await Promise.all(rows.map(async(row,index)=>{
++    let status={code:0,message:""};
++    try{
++     const digest=digestOf(row.digest);
++     if(row.compressor!==0)status={code:3,message:"Compressed blobs are not supported"};
++     else if(row.data.length!==digest.size||createHash("sha256").update(row.data).digest("hex")!==digest.hash)status={code:3,message:"Blob does not match its digest"};
++     else if(digest.size>0)await content.write(instance,digest,row.data,call.signal);
++    }catch(error){status={code:error instanceof GrpcErrorV1?error.code:error instanceof RemoteExecutionContentErrorV1?error.code:13,message:(error as Error).message};}
++    responses[index]={digest:row.digest,status};
++   }));
++   return {responses};
++  },
++  [`${CAS}/BatchReadBlobs`]:async(request:ProtobufMessageV1,call:{signal:AbortSignal})=>{
++   checkFunction(request.digest_function);
++   const instance=instanceOf(request.instance_name),rows=request.digests as {hash:string;size_bytes:number}[],responses:ProtobufMessageV1[]=[];
++   let total=0;for(const row of rows)total+=row.size_bytes;
++   if(total>limits.maximumBatchBytes)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,`Batch exceeds ${limits.maximumBatchBytes} bytes`);
++   await Promise.all(rows.map(async(row,index)=>{
++    try{
++     const digest=digestOf(row),data=digest.size===0?new Uint8Array(0):await content.read(instance,digest,call.signal);
++     responses[index]=data?{digest:row,data,status:{code:0,message:""}}:{digest:row,status:{code:5,message:"Blob not found"}};
++    }catch(error){responses[index]={digest:row,status:{code:error instanceof RemoteExecutionContentErrorV1?error.code:13,message:(error as Error).message}};}
++   }));
++   return {responses};
++  },
++  [`${CAS}/GetTree`]:async function*(request:ProtobufMessageV1,call:{signal:AbortSignal}){
++   checkFunction(request.digest_function);
++   const instance=instanceOf(request.instance_name),seen=new Set<string>(),pending=[digestOf(request.root_digest)],directories:ProtobufMessageV1[]=[];
++   while(pending.length>0){
++    const digest=pending.shift()!;
++    if(seen.has(digest.hash))continue;seen.add(digest.hash);
++    const bytes=digest.size===0?new Uint8Array(0):await content.read(instance,digest,call.signal).catch(mapStore);
++    if(!bytes)throw new GrpcErrorV1(GRPC_CODES_V1.NOT_FOUND,`Missing directory ${digest.hash}`);
++    const directory=decodeProtobufV1(REAPI_V1.directory,bytes);directories.push(directory);
++    for(const node of directory.directories as {digest:{hash:string;size_bytes:number}}[])pending.push(digestOf(node.digest));
++   }
++   yield {directories,next_page_token:""};
++  },
++  [`${STREAM}/Read`]:async function*(request:ProtobufMessageV1,call:{signal:AbortSignal}){
++   const {instance,digest}=blobName(request.resource_name,"blobs");let skip=Number(request.read_offset),remaining=request.read_limit>0?Number(request.read_limit):Infinity;
++   if(skip<0||skip>digest.size)throw new GrpcErrorV1(GRPC_CODES_V1.OUT_OF_RANGE,"Read offset out of range");
++   if(digest.size===0)return;
++   const source=await content.stream(instance,digest,call.signal).catch(mapStore);
++   if(!source)throw new GrpcErrorV1(GRPC_CODES_V1.NOT_FOUND,`Blob not found: ${digest.hash}/${digest.size}`);
++   for await(let chunk of source){
++    if(skip>0){if(skip>=chunk.length){skip-=chunk.length;continue;}chunk=chunk.subarray(skip);skip=0;}
++    if(chunk.length>remaining)chunk=chunk.subarray(0,remaining);
++    for(let offset=0;offset<chunk.length;offset+=1048576){yield {data:chunk.subarray(offset,offset+1048576)};}
++    remaining-=chunk.length;if(remaining<=0)break;
++   }
++  },
++  [`${STREAM}/Write`]:async(requests:AsyncIterable<ProtobufMessageV1>,call:{signal:AbortSignal})=>{
++   let target:ReturnType<typeof blobName>|undefined,committed=0,queue:Queue<Uint8Array>|undefined,upload:Promise<void>|undefined,finished=false,skipped=false;
++   try{
++    for await(const message of requests){
++     if(!target){
++      target=blobName(message.resource_name,"uploads");
++      if(target.digest.size===0)skipped=true;
++      else if(await content.has(target.instance,target.digest.hash,call.signal).catch(mapStore))skipped=true;
++      else{queue=new Queue<Uint8Array>(8);upload=content.write(target.instance,target.digest,queue.drain(),call.signal);upload.catch(()=>{});}
++     }
++     if(Number(message.write_offset)!==committed&&!skipped)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,`Write offset ${message.write_offset} but ${committed} bytes were committed`);
++     const data=message.data as Uint8Array;
++     if(!skipped&&data.length>0){if(committed+data.length>target.digest.size)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,"More data than the digest declares");await queue!.push(data);}
++     committed+=data.length;
++     if(message.finish_write){finished=true;break;}
++    }
++    if(!target||!finished)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,"Write must finish");
++    if(skipped)return {committed_size:target.digest.size};
++    if(committed!==target.digest.size)throw new GrpcErrorV1(GRPC_CODES_V1.INVALID_ARGUMENT,`Blob has ${committed} bytes but the digest declares ${target.digest.size}`);
++    queue!.end();await upload!.catch(mapStore);
++    return {committed_size:committed};
++   }catch(error){queue?.end();await upload?.catch(()=>{});throw error;}
++  },
++  [`${STREAM}/QueryWriteStatus`]:async(request:ProtobufMessageV1,call:{signal:AbortSignal})=>{
++   const {instance,digest}=blobName(request.resource_name,"uploads"),exists=digest.size===0||await content.has(instance,digest.hash,call.signal).catch(mapStore);
++   return exists?{committed_size:digest.size,complete:true}:{committed_size:0,complete:false};
++  },
++ };
++}
++
++/** 🚀️ Starts the service: the gRPC listener for build tools (capabilities, execution, action cache, CAS, ByteStream) and the HTTP listener for workers and status, both over one scheduler. Refuses to listen beyond loopback without tokens. */
++export async function startRemoteExecutionServerV1(options:RemoteExecutionServerOptionsV1):Promise<RemoteExecutionServerV1>{
++ const open=options.tokens.read===undefined&&options.tokens.write===undefined,openWorkers=options.tokens.worker===undefined;
++ if(!LOOPBACK.has(options.host)&&(open||openWorkers))throw Error("Tokens are required to listen beyond loopback");
++ const cacheUrl=options.cacheUrl;
++ let workerUrl="";
++ const scheduler=new RemoteExecutionSchedulerV1({...options.scheduler,content:options.content,cache:options.scheduler.cache??(cacheUrl?{url:cacheUrl,relative:LOOPBACK.has(new URL(cacheUrl).hostname)||WILDCARD.has(new URL(cacheUrl).hostname)}:{url:"",relative:false}),language:options.scheduler.language??"none",...(options.onEvent?{onEvent:options.onEvent}:{})});
++ const authorize=(call:{method:string;metadata:Readonly<Record<string,string>>}):void=>{
++  if(open)return;
++  const presented=bearer(call.metadata.authorization);
++  if(!presented)throw new GrpcErrorV1(GRPC_CODES_V1.UNAUTHENTICATED,"Unauthorized");
++  const writer=options.tokens.write!==undefined&&compare(options.tokens.write,presented),reader=options.tokens.read!==undefined&&compare(options.tokens.read,presented);
++  if(!writer&&!reader)throw new GrpcErrorV1(GRPC_CODES_V1.UNAUTHENTICATED,"Unauthorized");
++  if(!writer&&!READ_ONLY.has(call.method))throw new GrpcErrorV1(GRPC_CODES_V1.PERMISSION_DENIED,"Read-only token");
++ };
++ const grpc:GrpcServerV1=await startGrpcServerV1({host:options.host,port:options.grpcPort,handlers:remoteExecutionHandlersV1(options.content,scheduler,{maximumBatchBytes:options.maximumBatchBytes}),authorize,tls:options.tls,maximumMessageBytes:options.maximumMessageBytes,...(options.onCall?{onCall:options.onCall}:{})});
++ const text=(status:number,message:string)=>new Response(message+"\n",{status,headers:{"content-type":"text/plain"}});
++ const allowed=(request:Request,kind:"worker"|"status"):Response|undefined=>{
++  const presented=bearer(request.headers.get("authorization"));
++  if(kind==="worker"){
++   if(openWorkers)return undefined;
++   return presented&&compare(options.tokens.worker!,presented)?undefined:text(401,"Unauthorized");
++  }
++  if(open&&openWorkers)return undefined;
++  const matches=[options.tokens.read,options.tokens.write,options.tokens.worker].some(token=>token!==undefined&&presented!==undefined&&compare(token,presented));
++  return matches?undefined:text(401,"Unauthorized");
++ };
++ const status=async():Promise<Record<string,unknown>>=>{
++  const view=scheduler.status();let answers=false;
++  if(cacheUrl)answers=await fetch(new URL("/healthz",cacheUrl),{signal:AbortSignal.timeout(2000)}).then(response=>{void response.body?.cancel();return response.ok;},()=>false);
++  const document={version:1,service:"semio-remote-execution",startedAt:scheduler.startedAt,grpc:grpc.url,workerApi:workerUrl,cache:{url:cacheUrl,answers},counters:view.counters,workers:view.workers,platforms:view.platforms};
++  requireRemoteExecutionShapeV1("ServerStatus",document,"Closed remote execution status required");return document;
++ };
++ const http=Bun.serve({
++  hostname:options.host,port:options.workerPort,idleTimeout:120,maxRequestBodySize:64*1048576,
++  ...(options.tls?{tls:{cert:Bun.file(options.tls.certificate),key:Bun.file(options.tls.key)}}:{}),
++  fetch:async request=>{
++   const url=new URL(request.url),path=url.pathname,method=request.method;
++   try{
++    if(path==="/healthz")return Response.json({status:"ok"});
++    if(path==="/status"&&method==="GET"){const denied=allowed(request,"status");return denied??Response.json(await status());}
++    const route=/^\/v1\/workers(?:\/([A-Za-z0-9-]+)(?:\/(poll|heartbeat)|\/tasks\/([A-Za-z0-9.-]+)\/result)?)?$/u.exec(path);
++    if(!route)return text(404,"Not found");
++    const denied=allowed(request,"worker");if(denied)return denied;
++    const [,id,verb,task]=route;
++    if(!id&&method==="POST"){
++     const body=await request.json().catch(()=>undefined);
++     try{requireRemoteExecutionShapeV1("WorkerRegistration",body,"Closed worker registration required");}catch(error){return text(400,(error as Error).message);}
++     return Response.json(scheduler.register(body));
++    }
++    if(id&&!verb&&!task&&method==="DELETE"){scheduler.deregister(id);return Response.json({ok:true});}
++    if(id&&verb==="poll"&&method==="POST"){const wait=Math.min(60000,Math.max(0,Number(url.searchParams.get("wait")??"20000")));return Response.json(await scheduler.poll(id,wait,request.signal));}
++    if(id&&verb==="heartbeat"&&method==="POST"){
++     const body=await request.json().catch(()=>undefined);
++     try{requireRemoteExecutionShapeV1("Heartbeat",body,"Closed heartbeat required");}catch(error){return text(400,(error as Error).message);}
++     return Response.json(scheduler.heartbeat(id,(body as {running:string[]}).running));
++    }
++    if(id&&task&&method==="POST"){
++     const body=await request.json().catch(()=>undefined);
++     try{requireRemoteExecutionShapeV1("TaskResult",body,"Closed task result required");}catch(error){return text(400,(error as Error).message);}
++     return Response.json({accepted:scheduler.report(id,task,body as never)});
++    }
++    return text(405,"Method not allowed");
++   }catch(error){return text(500,(error as Error).message);}
++  },
++ });
++ const host=options.host.includes(":")&&!options.host.startsWith("[")?`[${options.host}]`:options.host;
++ workerUrl=`${options.tls?"https":"http"}://${options.advertise??(WILDCARD.has(options.host)?hostname():host)}:${http.port}`;
++ let closing:Promise<void>|undefined;
++ return Object.freeze({grpcUrl:grpc.url,workerUrl,scheduler,status,stop:()=>closing??=(async()=>{scheduler.close();await http.stop(true);await grpc.stop();})()});
++}
+# stage-clean orphan staged=rexec-inhouse-tools/staged/test-service.ts map=None
+--- /dev/null
++++ b/staged/rexec-inhouse-tools/staged/test-service.ts
+@@ -0,0 +1,226 @@
++import {afterEach,expect,test} from "bun:test";
++import {createServer} from "node:net";
++import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
++import {networkInterfaces,tmpdir} from "node:os";
++import {join} from "node:path";
++import {GRPC_CODES_V1,GrpcErrorV1} from "../📡️wire/🚪️grpc/🟦️.ts";
++import {decodeProtobufV1,encodeProtobufV1,REAPI_V1} from "../📡️wire/📦️protobuf/🟦️.ts";
++import {createHash} from "node:crypto";
++import {requireRemoteExecutionShapeV1,remoteExecutionHostPropertiesV1} from "../🟦️.ts";
++import {eventuallyV1,NAMESPACE_V1,startClusterV1,textOfV1,type ClusterV1} from "./🧰️cluster/🟦️.ts";
++import {selectRemoteExecutionSandboxV1} from "../🔒️sandbox/🟦️.ts";
++
++const sha=(data:Uint8Array|string)=>createHash("sha256").update(data).digest("hex"),clusters:ClusterV1[]=[],scratch:string[]=[];
++const start=async(...parameters:Parameters<typeof startClusterV1>)=>{const cluster=await startClusterV1(...parameters);clusters.push(cluster);return cluster;};
++afterEach(async()=>{for(const cluster of clusters.splice(0))await cluster.stop();for(const path of scratch.splice(0))rmSync(path,{recursive:true,force:true});});
++const temporary=()=>{const path=mkdtempSync(join("/private/tmp/rexec-inhouse","scratch-"));scratch.push(path);return path;};
++const code=async(promise:Promise<unknown>):Promise<number>=>{try{await promise;return 0;}catch(error){return (error as GrpcErrorV1).code;}};
++const HOST=remoteExecutionHostPropertiesV1();
++const ISOLATED={sandbox:"isolated-root" as const};
++
++test("capabilities advertise execution, SHA-256 and the API versions Bazel negotiates, and bad calls are refused with proper statuses",async()=>{
++ const cluster=await start({workers:0}),caps=await cluster.client.unary(`${NAMESPACE_V1}.Capabilities/GetCapabilities`,{});
++ expect(caps.execution_capabilities).toMatchObject({exec_enabled:true,digest_function:1});
++ expect(caps.cache_capabilities).toMatchObject({digest_functions:[1],max_batch_total_size_bytes:4194304,symlink_absolute_path_strategy:2});
++ expect([caps.low_api_version.major,caps.low_api_version.minor,caps.high_api_version.major,caps.high_api_version.minor]).toEqual([2,0,2,3]);
++ expect(await code(cluster.client.unary(`${NAMESPACE_V1}.ActionCache/GetActionResult`,{instance_name:"Bad Instance!",action_digest:{hash:"a".repeat(64),size_bytes:1}}))).toBe(GRPC_CODES_V1.INVALID_ARGUMENT);
++ expect(await code(cluster.client.unary(`${NAMESPACE_V1}.ActionCache/GetActionResult`,{instance_name:"main",action_digest:{hash:"a".repeat(64),size_bytes:1}}))).toBe(GRPC_CODES_V1.NOT_FOUND);
++ expect(await code(cluster.client.unary(`${NAMESPACE_V1}.ContentAddressableStorage/FindMissingBlobs`,{instance_name:"main",blob_digests:[{hash:"zz",size_bytes:1}]}))).toBe(GRPC_CODES_V1.INVALID_ARGUMENT);
++ expect(await code(cluster.client.unary(`${NAMESPACE_V1}.ActionCache/GetActionResult`,{instance_name:"main",action_digest:{hash:"a".repeat(64),size_bytes:1},digest_function:"SHA512"}))).toBe(GRPC_CODES_V1.INVALID_ARGUMENT);
++});
++
++test("an action runs on a worker, its outputs land in the store, the result is cached and the repeat is answered from the action cache without a worker",async()=>{
++ const cluster=await start({workers:1}),action=await cluster.action({arguments:["/bin/sh","-c","cat in.txt > out.txt; echo hi; echo err >&2"],files:{"in.txt":"input\n"},outputPaths:["out.txt"],platform:HOST.map(row=>({...row}))});
++ const first=await cluster.execute(action);
++ expect(first.response.status.code).toBe(0);expect(first.response.cached_result).toBe(false);expect(first.stages).toContain("EXECUTING");expect(first.stages.at(-1)).toBe("COMPLETED");
++ const result=first.response.result;
++ expect([result.exit_code,textOfV1(result.stdout_raw),textOfV1(result.stderr_raw),result.execution_metadata.worker]).toEqual([0,"hi\n","err\n","worker-1"]);
++ expect(result.output_files).toHaveLength(1);expect(result.output_files[0]).toMatchObject({path:"out.txt",is_executable:false,digest:{hash:sha("input\n"),size_bytes:6}});
++ const stored=await cluster.content.read("main",{hash:sha("input\n"),size:6});expect(textOfV1(stored)).toBe("input\n");
++ const cached=await cluster.client.unary(`${NAMESPACE_V1}.ActionCache/GetActionResult`,{instance_name:"main",action_digest:action});expect(cached.exit_code).toBe(0);
++ const assigned=()=>cluster.events.filter(row=>row.startsWith("assigned")).length;
++ expect(assigned()).toBe(1);
++ const second=await cluster.execute(action);
++ expect(second.response.cached_result).toBe(true);expect(second.stages).not.toContain("EXECUTING");expect(assigned()).toBe(1);
++ const forced=await cluster.execute(action,{skipCacheLookup:true});expect(forced.response.cached_result).toBe(false);expect(assigned()).toBe(2);
++});
++
++test("a failing action reports its exit code and is not cached; a missing executable is reported as 127",async()=>{
++ const cluster=await start({workers:1}),failing=await cluster.action({arguments:["/bin/sh","-c","echo nope >&2; exit 3"]});
++ const run=await cluster.execute(failing);
++ expect([run.response.status.code,run.response.result.exit_code,textOfV1(run.response.result.stderr_raw)]).toEqual([0,3,"nope\n"]);
++ expect(await code(cluster.client.unary(`${NAMESPACE_V1}.ActionCache/GetActionResult`,{instance_name:"main",action_digest:failing}))).toBe(GRPC_CODES_V1.NOT_FOUND);
++ const again=await cluster.execute(failing);expect(again.response.cached_result).toBe(false);
++ const missing=await cluster.execute(await cluster.action({arguments:["tools/does-not-exist"]}));
++ expect(missing.response.result.exit_code).toBe(127);
++});
++
++test("directory outputs come back as a Tree with children, executable bits and symbolic links; symlink outputs are reported",async()=>{
++ const cluster=await start({workers:1}),script="mkdir -p out/sub; echo A > out/sub/a.txt; echo B > out/b.sh; chmod +x out/b.sh; ln -s sub/a.txt out/link; ln -s out/b.sh top-link; mkdir -p out/empty";
++ const action=await cluster.action({arguments:["/bin/sh","-c",script],outputDirectories:["out"],outputFiles:["top-link"]}),run=await cluster.execute(action),result=run.response.result;
++ expect(run.response.status.code).toBe(0);
++ expect(result.output_directories).toHaveLength(1);expect(result.output_directories[0].path).toBe("out");
++ const tree=decodeProtobufV1(REAPI_V1.tree,(await cluster.content.read("main",{hash:result.output_directories[0].tree_digest.hash,size:result.output_directories[0].tree_digest.size_bytes}))!);
++ expect(tree.root.files.map((row:any)=>[row.name,row.is_executable])).toEqual([["b.sh",true]]);
++ expect(tree.root.directories.map((row:any)=>row.name)).toEqual(["empty","sub"]);expect(tree.root.symlinks).toEqual([expect.objectContaining({name:"link",target:"sub/a.txt"})]);
++ expect(tree.children).toHaveLength(2);
++ const names=tree.children.flatMap((row:any)=>row.files.map((file:any)=>file.name));expect(names).toEqual(["a.txt"]);
++ expect(result.output_file_symlinks.map((row:any)=>[row.path,row.target])).toEqual([["top-link","out/b.sh"]]);expect(result.output_symlinks.map((row:any)=>row.path)).toEqual(["top-link"]);
++ expect(textOfV1(await cluster.content.read("main",{hash:sha("A\n"),size:2}))).toBe("A\n");
++});
++
++test("a missing input blob is a FAILED_PRECONDITION that names the blob, so the client can upload it and retry",async()=>{
++ const cluster=await start({workers:1}),absent={hash:sha("never uploaded"),size_bytes:14},root=await cluster.upload(encodeProtobufV1(REAPI_V1.directory,{files:[{name:"x.txt",digest:absent}]}));
++ const command=await cluster.upload(encodeProtobufV1(REAPI_V1.command,{arguments:["/bin/true"]})),action=await cluster.upload(encodeProtobufV1(REAPI_V1.action,{command_digest:command,input_root_digest:root}));
++ const run=await cluster.execute(action),status=run.response.status;
++ expect(status.code).toBe(GRPC_CODES_V1.FAILED_PRECONDITION);
++ const detail=decodeProtobufV1(REAPI_V1.preconditionFailure,status.details[0].value);expect(detail.violations).toEqual([expect.objectContaining({type:"MISSING",subject:`blobs/${absent.hash}/${absent.size_bytes}`})]);
++ const unknownAction=await cluster.execute({hash:sha("no such action"),size_bytes:14});expect(unknownAction.response.status.code).toBe(GRPC_CODES_V1.FAILED_PRECONDITION);
++});
++
++test("timeouts kill the whole process tree and report DEADLINE_EXCEEDED; cancelling the call stops a running action",async()=>{
++ const cluster=await start({workers:1,worker:ISOLATED}),directory=temporary();
++ const slow=(name:string,seconds?:number)=>cluster.action({arguments:["/bin/sh","-c",`(sleep 60 & echo $! > ${directory}/${name}.child; wait) & echo $! > ${directory}/${name}.pid; wait`],...(seconds?{timeoutSeconds:seconds}:{}),salt:name});
++ const timed=await cluster.execute(await slow("timed",1));expect(timed.response.status.code).toBe(GRPC_CODES_V1.DEADLINE_EXCEEDED);
++ const alive=(path:string)=>{try{process.kill(Number(readFileSync(path,"utf8").trim()),0);return true;}catch{return false;}};
++ await eventuallyV1(()=>!alive(`${directory}/timed.pid`)&&!alive(`${directory}/timed.child`),5000,"timed out processes must be gone");
++ const abort=new AbortController(),running=cluster.execute(await slow("cancelled"),{signal:abort.signal}).catch(error=>error);
++ await eventuallyV1(()=>existsSync(`${directory}/cancelled.child`),8000,"the action must start");abort.abort();await running;
++ await eventuallyV1(()=>!alive(`${directory}/cancelled.pid`)&&!alive(`${directory}/cancelled.child`),8000,"a cancelled action's processes must be gone");
++ await eventuallyV1(()=>(cluster.server.scheduler.status().counters.cancelled??0)>=1,5000,"the scheduler counts the cancellation");
++});
++
++test("identical requests in flight share one execution",async()=>{
++ const cluster=await start({workers:1,worker:ISOLATED}),directory=temporary(),action=await cluster.action({arguments:["/bin/sh","-c",`echo run >> ${directory}/runs.txt; sleep 1; echo shared > out.txt`],outputPaths:["out.txt"]});
++ const [left,right]=await Promise.all([cluster.execute(action),cluster.execute(action)]);
++ expect(readFileSync(`${directory}/runs.txt`,"utf8")).toBe("run\n");
++ expect(left.operation).toBe(right.operation);expect(left.response.result.output_files[0].digest).toEqual(right.response.result.output_files[0].digest);
++ expect(cluster.server.scheduler.status().counters.deduplicated).toBe(1);
++});
++
++test("actions are matched to workers by platform properties, and an action no worker can run fails with a clear status after the grace period",async()=>{
++ const cluster=await start({workers:1,scheduler:{unmatchedSeconds:1}});
++ const fits=await cluster.execute(await cluster.action({arguments:["/bin/true"],platform:HOST.map(row=>({...row}))}));expect(fits.response.status.code).toBe(0);
++ const nowhere=await cluster.execute(await cluster.action({arguments:["/bin/true"],platform:[{name:"OSFamily",value:"plan9"}]}));
++ expect(nowhere.response.status.code).toBe(GRPC_CODES_V1.FAILED_PRECONDITION);expect(nowhere.response.status.message).toMatch(/No worker offers the platform OSFamily=plan9/u);
++ const late=cluster.execute(await cluster.action({arguments:["/bin/sh","-c","echo late > out.txt"],outputPaths:["out.txt"],platform:[{name:"pool",value:"special"}],salt:"late"}));
++ cluster.startWorker({name:"special",properties:[...HOST,{name:"pool",value:"special"}]});
++ expect((await late).response.result.execution_metadata.worker).toBe("special");
++});
++
++const sandboxed=(()=>{try{return selectRemoteExecutionSandboxV1("auto").name!=="isolated-root";}catch{return false;}})();
++test.skipIf(!sandboxed)("the host sandbox confines an action to its input root: no writes elsewhere, no reads of other directories, no network",async()=>{
++ const secret=join(temporary(),"secret.txt"),outside=join(temporary(),"outside.txt");writeFileSync(secret,"classified\n");
++ let connections=0;const listener=await new Promise<ReturnType<typeof createServer>>(resolve=>{const server=createServer(socket=>{connections++;socket.end();});server.listen(0,"127.0.0.1",()=>resolve(server));});
++ const port=(listener.address() as {port:number}).port;
++ try{
++  const probe=`cat ${secret} > read.txt 2>/dev/null; echo "$?" > read.rc; echo x > ${outside} 2>/dev/null; echo "$?" > write.rc; (exec 3<>/dev/tcp/127.0.0.1/${port}) 2>/dev/null; echo "$?" > net.rc; echo inside > ok.txt`;
++  const run=async(sandbox:"auto"|"isolated-root")=>{
++   const cluster=await start({workers:1,worker:{sandbox}}),action=await cluster.action({arguments:["/bin/bash","-c",probe],outputPaths:["read.rc","write.rc","net.rc","ok.txt"]}),result=(await cluster.execute(action)).response.result;
++   const out:Record<string,string>={};for(const row of result.output_files)out[row.path]=textOfV1(await cluster.content.read("main",{hash:row.digest.hash,size:row.digest.size_bytes})).trim();
++   await cluster.stop();clusters.splice(clusters.indexOf(cluster),1);return out;
++  };
++  const confined=await run("auto");
++  expect(confined["ok.txt"]).toBe("inside");expect(confined["read.rc"]).not.toBe("0");expect(confined["write.rc"]).not.toBe("0");expect(confined["net.rc"]).not.toBe("0");expect(existsSync(outside)).toBe(false);
++  const connectedBefore=connections;
++  const open=await run("isolated-root");
++  expect(open["read.rc"],"without a sandbox the same action reads the secret").toBe("0");expect(open["write.rc"]).toBe("0");expect(existsSync(outside)).toBe(true);expect(connections).toBeGreaterThan(connectedBefore);
++ }finally{listener.close();}
++});
++
++test("a worker started as its own process joins, runs actions and leaves on SIGTERM",async()=>{
++ const cluster=await start({workers:0}),work=temporary(),entry=join(import.meta.dir,"..","🏃️entry","🟦️.ts");
++ const child=Bun.spawn(["bun",entry,"--join",cluster.server.workerUrl,"--name","proc-1","--concurrency","2","--sandbox","isolated-root","--work-directory",work,"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:work,env:{...process.env}});
++ try{
++  await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,20000,"the worker process must register");
++  const run=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c","echo from-process > out.txt"],outputPaths:["out.txt"]}));
++  expect(run.response.result.execution_metadata.worker).toBe("proc-1");expect(textOfV1(await cluster.content.read("main",{hash:sha("from-process\n"),size:13}))).toBe("from-process\n");
++  const status=await (await fetch(cluster.server.workerUrl+"/status")).json();requireRemoteExecutionShapeV1("ServerStatus",status,"status");
++  expect(status.workers.map((row:any)=>[row.name,row.sandbox,row.platform.split("-").length])).toEqual([["proc-1","isolated-root",2]]);expect(status.counters.completed).toBe(1);
++ }finally{child.kill("SIGTERM");}
++ expect(await child.exited).toBe(0);
++ await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===0,5000,"the worker must deregister");
++});
++
++test("work of a worker that dies is re-queued after its lease expires and finished by another worker",async()=>{
++ const cluster=await start({workers:0,scheduler:{leaseSeconds:2}}),work=temporary(),entry=join(import.meta.dir,"..","🏃️entry","🟦️.ts"),marker=join(work,"started");
++ const child=Bun.spawn(["bun",entry,"--join",cluster.server.workerUrl,"--name","doomed","--concurrency","1","--sandbox","isolated-root","--work-directory",join(work,"w"),"--lang","en"],{stdout:"ignore",stderr:"ignore",cwd:work,env:{...process.env}});
++ try{
++ await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,20000,"the doomed worker must register");
++ const run=cluster.execute(await cluster.action({arguments:["/bin/sh","-c",`echo go > ${marker}; sleep 2; echo survived > out.txt`],outputPaths:["out.txt"]}));
++ await eventuallyV1(()=>existsSync(marker),15000,"the action must start on the doomed worker");
++ child.kill("SIGKILL");cluster.startWorker({name:"rescuer",...ISOLATED});
++ const result=await run;
++ expect(result.response.status.code).toBe(0);expect(result.response.result.execution_metadata.worker).toBe("rescuer");
++ expect(cluster.events.some(row=>row.startsWith("retried"))).toBe(true);expect(cluster.events.some(row=>row.startsWith("worker-lost doomed"))).toBe(true);
++ }finally{child.kill("SIGKILL");}
++});
++
++test("tokens: no token is refused, a read token may look but not write, a write token executes, and the worker API needs the worker token",async()=>{
++ const tokens={read:"read-secret-1",write:"write-secret-2",worker:"worker-secret-3"},cluster=await start({workers:1,tokens});
++ const call=(method:string,request:object,token?:string)=>cluster.client.unary(method,request,token?{metadata:{authorization:`Bearer ${token}`}}:{});
++ const lookup={instance_name:"main",action_digest:{hash:"a".repeat(64),size_bytes:1}};
++ expect(await code(call(`${NAMESPACE_V1}.ActionCache/GetActionResult`,lookup))).toBe(GRPC_CODES_V1.UNAUTHENTICATED);
++ expect(await code(call(`${NAMESPACE_V1}.ActionCache/GetActionResult`,lookup,"wrong"))).toBe(GRPC_CODES_V1.UNAUTHENTICATED);
++ expect(await code(call(`${NAMESPACE_V1}.ActionCache/GetActionResult`,lookup,tokens.read))).toBe(GRPC_CODES_V1.NOT_FOUND);
++ expect(await code(call(`${NAMESPACE_V1}.ActionCache/UpdateActionResult`,{...lookup,action_result:{exit_code:0}},tokens.read))).toBe(GRPC_CODES_V1.PERMISSION_DENIED);
++ expect(await code(cluster.client.upload("google.bytestream.ByteStream/Write",[{resource_name:`main/uploads/x/blobs/${"a".repeat(64)}/1`,data:new Uint8Array(1),finish_write:true}],{metadata:{authorization:`Bearer ${tokens.read}`}}))).toBe(GRPC_CODES_V1.PERMISSION_DENIED);
++ const run=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c","echo authorised > out.txt"],outputPaths:["out.txt"]}));expect(run.response.status.code).toBe(0);
++ expect((await fetch(cluster.server.workerUrl+"/v1/workers/x/poll",{method:"POST"})).status).toBe(401);
++ expect((await fetch(cluster.server.workerUrl+"/status")).status).toBe(401);
++ expect((await fetch(cluster.server.workerUrl+"/status",{headers:{authorization:`Bearer ${tokens.read}`}})).status).toBe(200);
++ await expect(startClusterV1({tokens:{}, server:{host:"0.0.0.0"}})).rejects.toThrow(/Tokens are required/u);
++});
++
++test("ByteStream moves large blobs both ways with offsets, FindMissingBlobs and batches agree with the store, and empty blobs always exist",async()=>{
++ const cluster=await start({workers:0}),size=24*1048576+17,data=new Uint8Array(size);for(let index=0;index<size;index++)data[index]=(index*31+7)&255;
++ const digest={hash:sha(data),size_bytes:size},resource=`main/uploads/u1/blobs/${digest.hash}/${size}`;
++ const absent=await cluster.client.unary(`${NAMESPACE_V1}.ContentAddressableStorage/FindMissingBlobs`,{instance_name:"main",blob_digests:[digest,{hash:sha(""),size_bytes:0}]});expect(absent.missing_blob_digests).toEqual([digest]);
++ const pieces=function*(){for(let offset=0;offset<size;offset+=65536)yield {resource_name:offset===0?resource:"",write_offset:offset,data:data.subarray(offset,offset+65536),finish_write:offset+65536>=size};};
++ expect((await cluster.client.upload("google.bytestream.ByteStream/Write",pieces())).committed_size).toBe(size);
++ const present=await cluster.client.unary(`${NAMESPACE_V1}.ContentAddressableStorage/FindMissingBlobs`,{instance_name:"main",blob_digests:[digest]});expect(present.missing_blob_digests).toEqual([]);
++ const chunks:Uint8Array[]=[];for await(const piece of cluster.client.stream("google.bytestream.ByteStream/Read",{resource_name:`main/blobs/${digest.hash}/${size}`}))chunks.push(piece.data);
++ expect(sha(Buffer.concat(chunks))).toBe(digest.hash);
++ const tail:Uint8Array[]=[];for await(const piece of cluster.client.stream("google.bytestream.ByteStream/Read",{resource_name:`main/blobs/${digest.hash}/${size}`,read_offset:size-100}))tail.push(piece.data);expect(Buffer.concat(tail)).toEqual(Buffer.from(data.subarray(size-100)));
++ expect(await code(cluster.client.upload("google.bytestream.ByteStream/Write",[{resource_name:`main/uploads/u2/blobs/${sha("short")}/10`,data:new TextEncoder().encode("short"),finish_write:true}]))).toBe(GRPC_CODES_V1.INVALID_ARGUMENT);
++ const wrong=await cluster.client.unary(`${NAMESPACE_V1}.ContentAddressableStorage/BatchUpdateBlobs`,{instance_name:"main",requests:[{digest:{hash:sha("a"),size_bytes:1},data:new TextEncoder().encode("b")},{digest:{hash:sha("c"),size_bytes:1},data:new TextEncoder().encode("c")}]});
++ expect(wrong.responses.map((row:any)=>row.status.code)).toEqual([GRPC_CODES_V1.INVALID_ARGUMENT,0]);
++ const read=await cluster.client.unary(`${NAMESPACE_V1}.ContentAddressableStorage/BatchReadBlobs`,{instance_name:"main",digests:[{hash:sha("c"),size_bytes:1},{hash:sha("zzz"),size_bytes:3},{hash:sha(""),size_bytes:0}]});
++ expect(read.responses.map((row:any)=>row.status.code)).toEqual([0,GRPC_CODES_V1.NOT_FOUND,0]);expect(textOfV1(read.responses[0].data)).toBe("c");
++ const empty:Uint8Array[]=[];for await(const piece of cluster.client.stream("google.bytestream.ByteStream/Read",{resource_name:`main/blobs/${sha("")}/0`}))empty.push(piece.data);expect(empty).toHaveLength(0);
++ expect((await cluster.client.unary("google.bytestream.ByteStream/QueryWriteStatus",{resource_name:`main/uploads/u1/blobs/${digest.hash}/${size}`})).complete).toBe(true);
++});
++
++test("an action without inputs or outputs, an empty input root and a working directory all work; paths that escape the input root are refused",async()=>{
++ const cluster=await start({workers:1}),plain=await cluster.execute(await cluster.action({arguments:["/bin/echo","plain"]}));expect(textOfV1(plain.response.result.stdout_raw)).toBe("plain\n");
++ const nested=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c","pwd > where.txt; cat data.txt >> where.txt"],files:{"sub/dir/data.txt":"payload\n"},workingDirectory:"sub/dir",outputPaths:["where.txt"]}));
++ expect(nested.response.status.code).toBe(0);const file=nested.response.result.output_files[0];expect(textOfV1(await cluster.content.read("main",{hash:file.digest.hash,size:file.digest.size_bytes}))).toMatch(/sub\/dir\npayload\n$/u);
++ const escape=await cluster.execute(await cluster.action({arguments:["/bin/true"],outputPaths:["../escape.txt"]}));expect(escape.response.status.code).toBe(GRPC_CODES_V1.INVALID_ARGUMENT);
++ const linked=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c","rm -rf a; ln -s /etc a"],outputPaths:["a/hosts"]}));
++ expect(linked.response.status.code,"an output reached through a symbolic link out of the root is refused, not uploaded").toBe(GRPC_CODES_V1.INVALID_ARGUMENT);expect(linked.response.status.message).toMatch(/leaves the input root/u);
++ const inputs=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c","./tool.sh > out.txt"],files:{"tool.sh":{content:"#!/bin/sh\necho tool-ran\n",executable:true}},outputPaths:["out.txt"]}));expect(inputs.response.status.code).toBe(0);
++ const out=inputs.response.result.output_files[0];expect(textOfV1(await cluster.content.read("main",{hash:out.digest.hash,size:out.digest.size_bytes}))).toBe("tool-ran\n");
++});
++
++const lan=Object.values(networkInterfaces()).flat().find(row=>row&&row.family==="IPv4"&&!row.internal)?.address;
++test.skipIf(lan===undefined)("a worker on another network interface joins with tokens, fetches inputs from the shared store through the scheduler's address and runs an action",async()=>{
++ const tokens={read:"read-secret-1",write:"write-secret-2",worker:"worker-secret-3"},cluster=await start({workers:0,bind:"0.0.0.0",advertise:lan!,tokens}),work=temporary(),entry=join(import.meta.dir,"..","🏃️entry","🟦️.ts");
++ expect(cluster.server.workerUrl.startsWith(`http://${lan}:`)).toBe(true);
++ const child=Bun.spawn(["bun",entry,"--join",cluster.server.workerUrl,"--name","lan-worker","--concurrency","1","--sandbox","isolated-root","--work-directory",work,"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:work,env:{...process.env,SEMIO_REMOTE_EXECUTION_WORKER_TOKEN:tokens.worker,SEMIO_REMOTE_CACHE_TOKEN:tokens.write}});
++ try{
++  await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,30000,"the worker must register through the LAN address");
++  const run=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c","cat in.txt > out.txt"],files:{"in.txt":"over the network\n"},outputPaths:["out.txt"]}));
++  expect(run.response.result.execution_metadata.worker).toBe("lan-worker");expect(textOfV1(await cluster.content.read("main",{hash:sha("over the network\n"),size:17}))).toBe("over the network\n");
++  const wrong=await fetch(cluster.server.workerUrl+"/v1/workers",{method:"POST",headers:{authorization:"Bearer nope","content-type":"application/json"},body:"{}"});expect(wrong.status).toBe(401);
++ }finally{child.kill("SIGTERM");await child.exited;}
++});
++
++test("a client that lost its stream re-attaches to the running operation by name and receives the result; one that never returns cancels the work after the linger time",async()=>{
++ const cluster=await start({workers:1,worker:ISOLATED,scheduler:{lingerSeconds:3}}),directory=temporary(),action=await cluster.action({arguments:["/bin/sh","-c",`echo started > ${directory}/started; sleep 2; echo done > out.txt`],outputPaths:["out.txt"]});
++ const abort=new AbortController();let name="";
++ const first=(async()=>{try{for await(const row of cluster.client.stream(`${NAMESPACE_V1}.Execution/Execute`,{instance_name:"main",action_digest:action},{signal:abort.signal})){name=row.name;}}catch{}})();
++ await eventuallyV1(()=>name!==""&&existsSync(`${directory}/started`),15000,"the action must start");abort.abort();await first;
++ let response:any;for await(const row of cluster.client.stream(`${NAMESPACE_V1}.Execution/WaitExecution`,{name}))if(row.done)response=decodeProtobufV1(REAPI_V1.executeResponse,row.response.value);
++ expect(response.status.code).toBe(0);expect(response.result.output_files[0].path).toBe("out.txt");expect(cluster.server.scheduler.status().counters.cancelled).toBe(0);
++ expect(await code((async()=>{for await(const _ of cluster.client.stream(`${NAMESPACE_V1}.Execution/WaitExecution`,{name:"operations/unknown"}));})())).toBe(GRPC_CODES_V1.NOT_FOUND);
++});
+# stage-clean orphan staged=rexec-inhouse-tools/staged/worker.ts map=None
+--- /dev/null
++++ b/staged/rexec-inhouse-tools/staged/worker.ts
+@@ -0,0 +1,354 @@
++import {spawn,spawnSync} from "node:child_process";
++import {createHash,randomUUID} from "node:crypto";
++import {accessSync,constants,createReadStream,statSync} from "node:fs";
++import {chmod,copyFile,lstat,mkdir,readdir,readlink,realpath,rename,rm,stat,symlink,utimes,writeFile} from "node:fs/promises";
++import {hostname,platform as osPlatform} from "node:os";
++import {delimiter,dirname,isAbsolute,join,normalize,sep} from "node:path";
++import {decodeProtobufV1,encodeProtobufV1,REAPI_V1,type ProtobufMessageV1} from "../📡️wire/📦️protobuf/🟦️.ts";
++import {httpRemoteExecutionContentV1,RemoteExecutionContentErrorV1,type RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
++import {selectRemoteExecutionSandboxV1,type RemoteExecutionSandboxStrategyV1} from "../🔒️sandbox/🟦️.ts";
++import {readRemoteExecutionPolicyV1,remoteExecutionHostPropertiesV1,remoteExecutionDigestV1,requireRemoteExecutionShapeV1,type RemoteExecutionDigestV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionSandboxV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1} from "../🟦️.ts";
++
++const EMPTY_HASH="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
++
++/** 📣️ Something a worker did, for logs and progress. */
++export type RemoteExecutionWorkerEventV1=Readonly<{stage:"registered"|"reconnecting"|"started"|"finished"|"cancelled"|"stopped"|"sandbox";detail:string}>;
++
++/** ⚙️ Everything a worker needs: where the scheduler is, who it is, what it offers and where it works. */
++export type RemoteExecutionWorkerOptionsV1=Readonly<{
++ scheduler:string;token?:string|undefined;cacheToken?:string|undefined;name?:string;concurrency:number;directory:string;sandbox:"auto"|RemoteExecutionSandboxV1;materialize:"clone"|"copy";maximumBlobBytes:number;inlineOutputBytes:number;
++ properties?:readonly RemoteExecutionPropertyV1[];platform?:string;signal:AbortSignal;onEvent?:(event:RemoteExecutionWorkerEventV1)=>void;content?:RemoteExecutionContentV1;keepWork?:boolean;
++}>;
++
++/** 🎬️ What executing one action needs besides the store. */
++export type RemoteExecutionExecutionV1=Readonly<{
++ instance:string;action:RemoteExecutionDigestV1;timeoutSeconds:number;content:RemoteExecutionContentV1;directory:string;work?:string;workerName:string;sandbox:RemoteExecutionSandboxStrategyV1;materialize:"clone"|"copy";inlineOutputBytes:number;signal:AbortSignal;keepWork?:boolean;blobs?:RemoteExecutionBlobCacheV1;
++}>;
++
++/** 🏁️ How executing one action ended. */
++export type RemoteExecutionExecutionResultV1=Readonly<{outcome:"completed"|"failed"|"cancelled";status:RemoteExecutionTaskStatusV1;actionResult:Uint8Array|null}>;
++
++class MissingBlob extends Error{constructor(readonly digest:RemoteExecutionDigestV1){super(`Missing blob ${digest.hash}/${digest.size}`);}}
++
++const sha256=(data:Uint8Array|string):string=>createHash("sha256").update(data).digest("hex");
++const digestOf=(data:Uint8Array):RemoteExecutionDigestV1=>({hash:sha256(data),size:data.length});
++const wire=(digest:RemoteExecutionDigestV1)=>({hash:digest.hash,size_bytes:digest.size});
++const unwire=(digest:{hash:string;size_bytes:number}|undefined):RemoteExecutionDigestV1=>{
++ if(!digest)throw Error("Digest required");
++ return remoteExecutionDigestV1(digest.hash,digest.size_bytes);
++};
++const timestamp=(milliseconds:number)=>({seconds:Math.floor(milliseconds/1000),nanos:(milliseconds%1000)*1000000});
++
++async function limited<T>(items:readonly T[],limit:number,work:(item:T)=>Promise<void>):Promise<void>{
++ let next=0,failure:unknown;
++ await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{
++  while(failure===undefined){const index=next++;if(index>=items.length)return;try{await work(items[index]!);}catch(error){failure??=error;}}
++ }));
++ if(failure!==undefined)throw failure;
++}
++
++/** 💽️ The worker's local, bounded, content-addressed blob cache: every blob is fetched once, verified against its digest and written atomically; least recently used blobs are evicted beyond the bound. */
++export class RemoteExecutionBlobCacheV1{
++ private readonly pending=new Map<string,Promise<string>>();
++ constructor(readonly directory:string,private readonly content:RemoteExecutionContentV1,private readonly maximumBytes:number){}
++
++ private location(hash:string):string{return join(this.directory,hash.slice(0,2),hash);}
++
++ async path(instance:string,digest:RemoteExecutionDigestV1,signal?:AbortSignal):Promise<string>{
++  const file=this.location(digest.hash),known=await stat(file).catch(()=>undefined);
++  if(known&&known.size===digest.size){const now=new Date();await utimes(file,now,now).catch(()=>{});return file;}
++  const key=instance+"|"+digest.hash;let running=this.pending.get(key);
++  if(!running){running=this.fetch(instance,digest,file,signal).finally(()=>{this.pending.delete(key);});this.pending.set(key,running);}
++  return running;
++ }
++
++ private async fetch(instance:string,digest:RemoteExecutionDigestV1,file:string,signal?:AbortSignal):Promise<string>{
++  await mkdir(dirname(file),{recursive:true});
++  const temporary=`${file}.${process.pid}.${randomUUID()}.tmp`;
++  if(digest.size===0){await writeFile(temporary,"");await rename(temporary,file);return file;}
++  const source=await this.content.stream(instance,digest,signal);
++  if(!source)throw new MissingBlob(digest);
++  const hash=createHash("sha256"),handle=Bun.file(temporary).writer();let size=0;
++  try{
++   for await(const chunk of source){hash.update(chunk);size+=chunk.length;handle.write(chunk);}
++   await handle.end();
++   if(size!==digest.size||hash.digest("hex")!==digest.hash)throw new RemoteExecutionContentErrorV1(15,`Blob ${digest.hash} does not match its digest`);
++   await rename(temporary,file);return file;
++  }catch(error){try{await handle.end();}catch{}await rm(temporary,{force:true});throw error;}
++ }
++
++ /** 🧹️ Removes the least recently used blobs until the cache fits its bound. */
++ async prune(dryRun=false):Promise<number>{
++  const rows:{path:string;size:number;time:number}[]=[];let total=0;
++  for(const shard of await readdir(this.directory).catch(()=>[] as string[])){
++   for(const name of await readdir(join(this.directory,shard)).catch(()=>[] as string[])){
++    const path=join(this.directory,shard,name),info=await stat(path).catch(()=>undefined);
++    if(!info)continue;
++    if(name.endsWith(".tmp")){if(Date.now()-info.mtimeMs>3600000)await rm(path,{force:true});continue;}
++    rows.push({path,size:info.size,time:info.mtimeMs});total+=info.size;
++   }
++  }
++  rows.sort((left,right)=>left.time-right.time);let removed=0;
++  if(total<=this.maximumBytes)return 0;
++  for(const row of rows){if(total<=this.maximumBytes*0.9)break;if(!dryRun)await rm(row.path,{force:true});total-=row.size;removed++;}
++  return removed;
++ }
++}
++
++function safeName(name:string):string{
++ if(name===""||name==="."||name===".."||name.includes("/")||name.includes("\\")||name.includes("\0"))throw new RemoteExecutionContentErrorV1(3,`Valid path segment required: ${JSON.stringify(name)}`);
++ return name;
++}
++
++function safeRelative(path:string):string{
++ const clean=normalize(path.replace(/\/+$/u,""));
++ if(clean===""||clean==="."||isAbsolute(clean)||clean===".."||clean.startsWith(".."+sep))throw new RemoteExecutionContentErrorV1(3,`Relative path inside the input root required: ${path}`);
++ return clean;
++}
++
++async function placeFile(source:string,target:string,executable:boolean,mode:"clone"|"copy"):Promise<void>{
++ await copyFile(source,target,mode==="clone"?constants.COPYFILE_FICLONE:0);
++ await chmod(target,executable?0o755:0o644);
++}
++
++function killTree(pid:number|undefined):void{
++ if(pid===undefined)return;
++ try{
++  if(process.platform==="win32")spawnSync("taskkill",["/pid",String(pid),"/T","/F"],{stdio:"ignore"});
++  else process.kill(-pid,"SIGKILL");
++ }catch{}
++}
++
++function resolveExecutable(first:string,env:Readonly<Record<string,string>>,root:string,cwd:string):string|undefined{
++ const extensions=process.platform==="win32"?["",...(env.PATHEXT??".EXE;.CMD;.BAT").split(";")]:[""];
++ const usable=(path:string):boolean=>{for(const extension of extensions){try{if(statSync(path+extension).isFile()){accessSync(path+extension,constants.X_OK);return true;}}catch{}}return false;};
++ if(first.includes("/")||first.includes("\\")){const full=isAbsolute(first)?first:join(root,first);return usable(full)?full:undefined;}
++ for(const directory of (env.PATH??"").split(delimiter)){if(directory==="")continue;const full=join(isAbsolute(directory)?directory:join(cwd,directory),first);if(usable(full))return full;}
++ return undefined;
++}
++
++type Collected={exitCode:number;stdout:Uint8Array;stderr:Uint8Array;timedOut:boolean;cancelled:boolean};
++const LIMIT=64*1048576;
++
++function execute(argv:readonly string[],env:Readonly<Record<string,string>>,cwd:string,timeoutMilliseconds:number,signal:AbortSignal):Promise<Collected>{
++ return new Promise(resolve=>{
++  const out:Buffer[]=[],err:Buffer[]=[];let outSize=0,errSize=0,timedOut=false,cancelled=false,settled=false;
++  const finish=(exitCode:number,extra?:string):void=>{
++   if(settled)return;settled=true;clearTimeout(timer);signal.removeEventListener("abort",abort);
++   if(extra)err.push(Buffer.from(extra));
++   resolve({exitCode,stdout:Buffer.concat(out),stderr:Buffer.concat(err),timedOut,cancelled});
++  };
++  let child;
++  try{child=spawn(argv[0]!,argv.slice(1),{cwd,env:{...env},stdio:["ignore","pipe","pipe"],detached:process.platform!=="win32",windowsHide:true});}
++  catch(error){finish(127,`Cannot start ${argv[0]}: ${(error as Error).message}\n`);return;}
++  const abort=():void=>{cancelled=true;killTree(child.pid);},timer=setTimeout(()=>{timedOut=true;killTree(child.pid);},timeoutMilliseconds);
++  signal.addEventListener("abort",abort,{once:true});
++  child.stdout.on("data",(chunk:Buffer)=>{if(outSize<LIMIT){out.push(chunk);outSize+=chunk.length;}});
++  child.stderr.on("data",(chunk:Buffer)=>{if(errSize<LIMIT){err.push(chunk);errSize+=chunk.length;}});
++  child.on("error",error=>{finish(127,`Cannot start ${argv[0]}: ${error.message}\n`);});
++  child.on("close",(code,received)=>{killTree(child.pid);finish(code??(received?128+((({SIGHUP:1,SIGINT:2,SIGQUIT:3,SIGABRT:6,SIGKILL:9,SIGSEGV:11,SIGPIPE:13,SIGTERM:15}) as Record<string,number>)[received]??0):1));});
++  if(signal.aborted)abort();
++ });
++}
++
++type Directory=ProtobufMessageV1;
++
++/** 🧰️ Executes one action the way the protocol describes: fetch the action, its command and its input tree, build a private input root, run the command in the sandbox with exactly the declared environment, collect the declared outputs into the store and answer an ActionResult. Failures of the infrastructure are statuses, failures of the action are exit codes. */
++export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutionV1):Promise<RemoteExecutionExecutionResultV1>{
++ const started=Date.now(),task=randomUUID(),work=join(run.work??join(run.directory,"work"),task),root=join(work,"root"),blobs=run.blobs??new RemoteExecutionBlobCacheV1(join(run.directory,"blobs"),run.content,Number.MAX_SAFE_INTEGER);
++ const fail=(code:number,message:string,missing?:RemoteExecutionDigestV1[]):RemoteExecutionExecutionResultV1=>({outcome:"failed",status:{code,message,...(missing?{missing}:{})},actionResult:null});
++ const directories=new Map<string,Directory>();
++ const loadDirectory=async(digest:RemoteExecutionDigestV1):Promise<Directory>=>{
++  const known=directories.get(digest.hash);if(known)return known;
++  const bytes=digest.size===0?new Uint8Array(0):await run.content.read(run.instance,digest,run.signal);
++  if(!bytes)throw new MissingBlob(digest);
++  if(sha256(bytes)!==digest.hash)throw new RemoteExecutionContentErrorV1(15,`Directory ${digest.hash} does not match its digest`);
++  const directory=decodeProtobufV1(REAPI_V1.directory,bytes);directories.set(digest.hash,directory);return directory;
++ };
++ const materialize=async(digest:RemoteExecutionDigestV1,target:string,depth:number):Promise<void>=>{
++  if(depth>256)throw new RemoteExecutionContentErrorV1(3,"Input tree too deep");
++  const directory=await loadDirectory(digest);
++  await mkdir(target,{recursive:true});
++  const seen=new Set<string>();
++  for(const name of [...directory.files,...directory.directories,...directory.symlinks].map((node:{name:string})=>safeName(node.name))){if(seen.has(name))throw new RemoteExecutionContentErrorV1(3,`Duplicate name in input tree: ${name}`);seen.add(name);}
++  await limited(directory.files as {name:string;digest:{hash:string;size_bytes:number};is_executable:boolean}[],16,async node=>{
++   const source=await blobs.path(run.instance,unwire(node.digest),run.signal);
++   await placeFile(source,join(target,node.name),node.is_executable,run.materialize);
++  });
++  for(const node of directory.symlinks as {name:string;target:string}[])await symlink(node.target,join(target,node.name));
++  await limited(directory.directories as {name:string;digest:{hash:string;size_bytes:number}}[],8,node=>materialize(unwire(node.digest),join(target,node.name),depth+1));
++ };
++ try{
++  const actionBytes=await run.content.read(run.instance,run.action,run.signal);
++  if(!actionBytes)return fail(9,`Missing blob ${run.action.hash}/${run.action.size}`,[run.action]);
++  const action=decodeProtobufV1(REAPI_V1.action,actionBytes),commandDigest=unwire(action.command_digest),commandBytes=await run.content.read(run.instance,commandDigest,run.signal);
++  if(!commandBytes)return fail(9,`Missing blob ${commandDigest.hash}/${commandDigest.size}`,[commandDigest]);
++  const command=decodeProtobufV1(REAPI_V1.command,commandBytes) as {arguments:string[];environment_variables:{name:string;value:string}[];output_files:string[];output_directories:string[];output_paths:string[];working_directory:string};
++  if(command.arguments.length===0)return fail(3,"Command without arguments");
++  const rootDigest=action.input_root_digest?unwire(action.input_root_digest):{hash:EMPTY_HASH,size:0},fetchStart=Date.now();
++  await materialize(rootDigest,root,0);
++  const cwdRelative=command.working_directory===""?"":safeRelative(command.working_directory),cwd=cwdRelative===""?root:join(root,cwdRelative),legacy=command.output_paths.length===0,declared=legacy?[...command.output_files,...command.output_directories]:command.output_paths;
++  await mkdir(cwd,{recursive:true});
++  for(const path of declared){const clean=safeRelative(path),directory=dirname(join(cwd,clean));await mkdir(directory,{recursive:true});}
++  for(const path of legacy?command.output_directories:[])await mkdir(join(cwd,safeRelative(path)),{recursive:true});
++  const env:Record<string,string>={};
++  for(const variable of command.environment_variables)env[variable.name]=variable.value;
++  const scratch=join(root,".tmp");await mkdir(scratch,{recursive:true});
++  if(env.TMPDIR===undefined&&process.platform!=="win32")env.TMPDIR=scratch;
++  const first=command.arguments[0]!,executable=resolveExecutable(first,env,root,cwd),executionStart=Date.now();
++  const collected:Collected=executable===undefined?{exitCode:127,stdout:new Uint8Array(0),stderr:new TextEncoder().encode(`Executable not found: ${first}\n`),timedOut:false,cancelled:false}:await(async()=>{
++   const wrapped=run.sandbox.wrap({argv:[executable,...command.arguments.slice(1)],env,cwd,root,network:false});
++   return execute(wrapped.argv,wrapped.env,wrapped.cwd,run.timeoutSeconds*1000,run.signal);
++  })(),executionEnd=Date.now();
++  if(collected.cancelled||run.signal.aborted)return {outcome:"cancelled",status:{code:1,message:"Cancelled"},actionResult:null};
++  if(collected.timedOut)return fail(4,`Action exceeded its timeout of ${run.timeoutSeconds}s`);
++  const uploadStart=Date.now(),uploads=new Map<string,{digest:RemoteExecutionDigestV1;source:Uint8Array|string}>();
++  const stage=(digest:RemoteExecutionDigestV1,source:Uint8Array|string)=>{if(digest.size>0&&!uploads.has(digest.hash))uploads.set(digest.hash,{digest,source});};
++  const hashFile=(path:string):Promise<string>=>new Promise((resolve,reject)=>{const hash=createHash("sha256");createReadStream(path).on("data",chunk=>hash.update(chunk)).on("error",reject).on("end",()=>{resolve(hash.digest("hex"));});});
++  const fileNode=async(path:string,name:string)=>{const info=await stat(path),digest={hash:await hashFile(path),size:info.size};stage(digest,path);return {name,digest:wire(digest),is_executable:(info.mode&0o111)!==0};};
++  const walk=async(path:string,collect:Directory[]):Promise<RemoteExecutionDigestV1>=>{
++   const files:ProtobufMessageV1[]=[],children:ProtobufMessageV1[]=[],links:ProtobufMessageV1[]=[],entries=(await readdir(path)).sort();
++   for(const name of entries){
++    const full=join(path,name),info=await lstat(full);
++    if(info.isSymbolicLink())links.push({name,target:await readlink(full)});
++    else if(info.isDirectory())children.push({name,digest:wire(await walk(full,collect))});
++    else if(info.isFile())files.push(await fileNode(full,name));
++   }
++   const message={files,directories:children,symlinks:links},bytes=encodeProtobufV1(REAPI_V1.directory,message),digest=digestOf(bytes);collect.push(message);stage(digest,bytes);return digest;
++  };
++  const outputFiles:ProtobufMessageV1[]=[],outputDirectories:ProtobufMessageV1[]=[],outputSymlinks:ProtobufMessageV1[]=[],fileSymlinks:ProtobufMessageV1[]=[],directorySymlinks:ProtobufMessageV1[]=[];
++  const realRoot=await realpath(root);
++  for(const path of declared){
++   const clean=safeRelative(path),full=join(cwd,clean),parent=await realpath(dirname(full)).catch(()=>undefined);
++   if(parent!==undefined&&parent!==realRoot&&!parent.startsWith(realRoot+sep))return fail(3,`Output path leaves the input root: ${path}`);
++   const info=await lstat(full).catch(()=>undefined);
++   if(!info)continue;
++   if(info.isSymbolicLink()){
++    const row={path:clean,target:await readlink(full)};outputSymlinks.push(row);
++    if(legacy)(command.output_directories.includes(path)?directorySymlinks:fileSymlinks).push(row);
++   }else if(info.isDirectory()){
++    const collect:Directory[]=[],rootDirectory=await walk(full,collect),rootMessage=collect[collect.length-1]!,tree={root:rootMessage,children:collect.slice(0,-1)},treeBytes=encodeProtobufV1(REAPI_V1.tree,tree),treeDigest=digestOf(treeBytes);
++    stage(treeDigest,treeBytes);outputDirectories.push({path:clean,tree_digest:wire(treeDigest),root_directory_digest:wire(rootDirectory)});
++   }else if(info.isFile())outputFiles.push({path:clean,...(await fileNode(full,clean).then(({digest,is_executable})=>({digest,is_executable})))});
++  }
++  const stdoutDigest=digestOf(collected.stdout),stderrDigest=digestOf(collected.stderr);
++  const inlineOut=collected.stdout.length<=run.inlineOutputBytes,inlineErr=collected.stderr.length<=run.inlineOutputBytes;
++  if(!inlineOut)stage(stdoutDigest,collected.stdout);
++  if(!inlineErr)stage(stderrDigest,collected.stderr);
++  const rows=[...uploads.values()],absent=new Set((await run.content.missing(run.instance,rows.map(row=>row.digest),run.signal)).map(digest=>digest.hash));
++  await limited(rows.filter(row=>absent.has(row.digest.hash)),8,async row=>{
++   if(typeof row.source==="string"){
++    const stream=Bun.file(row.source).stream();
++    await run.content.write(run.instance,row.digest,(async function*(){for await(const chunk of stream as unknown as AsyncIterable<Uint8Array>)yield chunk;})(),run.signal);
++   }else await run.content.write(run.instance,row.digest,row.source,run.signal);
++  });
++  const end=Date.now(),result=encodeProtobufV1(REAPI_V1.actionResult,{
++   output_files:outputFiles.sort((left,right)=>left.path<right.path?-1:1),output_directories:outputDirectories,output_symlinks:outputSymlinks,...(legacy?{output_file_symlinks:fileSymlinks,output_directory_symlinks:directorySymlinks}:{}),
++   exit_code:collected.exitCode,...(inlineOut?{stdout_raw:collected.stdout}:{stdout_digest:wire(stdoutDigest)}),...(inlineErr?{stderr_raw:collected.stderr}:{stderr_digest:wire(stderrDigest)}),
++   execution_metadata:{worker:run.workerName,worker_start_timestamp:timestamp(started),input_fetch_start_timestamp:timestamp(fetchStart),input_fetch_completed_timestamp:timestamp(executionStart),execution_start_timestamp:timestamp(executionStart),execution_completed_timestamp:timestamp(executionEnd),output_upload_start_timestamp:timestamp(uploadStart),output_upload_completed_timestamp:timestamp(end),worker_completed_timestamp:timestamp(end)},
++  });
++  return {outcome:"completed",status:{code:0,message:""},actionResult:result};
++ }catch(error){
++  if(run.signal.aborted)return {outcome:"cancelled",status:{code:1,message:"Cancelled"},actionResult:null};
++  if(error instanceof MissingBlob)return fail(9,error.message,[error.digest]);
++  if(error instanceof RemoteExecutionContentErrorV1)return fail(error.code,error.message);
++  return fail(14,`Executing the action failed: ${error instanceof Error?error.message:String(error)}`);
++ }finally{
++  if(run.keepWork!==true)await rm(work,{recursive:true,force:true,maxRetries:3}).catch(()=>{});
++ }
++}
++
++/** 🧾️ Collects the workers' home for `repo cache gc`: trims the shared blob cache to its bound and removes private input roots that no running worker can still own (idle for a day); answers one language-neutral line for the ledger report. */
++export async function collectRemoteExecutionForLedgerV1(workspace:string,dryRun:boolean,signal:AbortSignal):Promise<string>{
++ const policy=readRemoteExecutionPolicyV1().worker,home=isAbsolute(policy.directory)?policy.directory:join(workspace,policy.directory),cache=new RemoteExecutionBlobCacheV1(join(home,"blobs"),undefined as never,policy.maximumBlobBytes);
++ if(!await stat(home).then(info=>info.isDirectory(),()=>false))return "absent";
++ let stale=0;
++ for(const worker of await readdir(join(home,"work")).catch(()=>[] as string[])){
++  for(const task of await readdir(join(home,"work",worker)).catch(()=>[] as string[])){
++   if(signal.aborted)return "cancelled";
++   const path=join(home,"work",worker,task),info=await stat(path).catch(()=>undefined);
++   if(info&&Date.now()-info.mtimeMs>86400000){stale++;if(!dryRun)await rm(path,{recursive:true,force:true}).catch(()=>{});}
++  }
++ }
++ const removed=await cache.prune(dryRun);
++ return `${dryRun?"would remove":"removed"} ${removed} blobs and ${stale} stale input roots`;
++}
++
++/** 📮️ Talks to the scheduler's worker API. */
++function schedulerClient(base:string,token:string|undefined){
++ const root=base.replace(/\/+$/u,"");
++ return async<T>(method:string,path:string,body:unknown,signal:AbortSignal,timeout=30000):Promise<T|undefined>=>{
++  const response=await fetch(root+path,{method,signal:AbortSignal.any([signal,AbortSignal.timeout(timeout)]),headers:{"content-type":"application/json",...(token?{authorization:`Bearer ${token}`}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})});
++  if(response.status===204){await response.body?.cancel();return undefined;}
++  if(!response.ok){const text=await response.text().catch(()=>"");throw Error(`Scheduler answered ${response.status}: ${text.trim()}`);}
++  return await response.json() as T;
++ };
++}
++
++/** 👷️ Runs a worker agent until its signal aborts: registers with the scheduler, long-polls for work while it has free slots, executes each action in its own private root and sandbox, heartbeats, honours cancellations, reports results and deregisters on the way out. */
++export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOptionsV1):Promise<void>{
++ const call=schedulerClient(options.scheduler,options.token),say=(stage:RemoteExecutionWorkerEventV1["stage"],detail:string)=>options.onEvent?.({stage,detail});
++ const sandbox=selectRemoteExecutionSandboxV1(options.sandbox),name=options.name??`${hostname()}-${process.pid}`,properties=options.properties??remoteExecutionHostPropertiesV1(),platform=options.platform??`${osPlatform()}-${process.arch}`;
++ say("sandbox",sandbox.name);
++ let registered:RemoteExecutionWorkerRegisteredV1|undefined,content=options.content;
++ const running=new Map<string,AbortController>();
++ const register=async():Promise<void>=>{
++  for(let delay=250;!options.signal.aborted;delay=Math.min(delay*2,5000)){
++   try{
++    const answer=await call<RemoteExecutionWorkerRegisteredV1>("POST","/v1/workers",{version:1,name,host:hostname(),platform,properties,concurrency:options.concurrency,sandbox:sandbox.name,runtime:`bun ${Bun.version}`},options.signal);
++    requireRemoteExecutionShapeV1("WorkerRegistered",answer,"Closed registration answer required");
++    registered=answer!;
++    if(!options.content){
++     const scheduler=new URL(options.scheduler),url=answer!.cache.relative?`${scheduler.protocol}//${scheduler.hostname.includes(":")?`[${scheduler.hostname}]`:scheduler.hostname}:${new URL(answer!.cache.url).port}`:answer!.cache.url;
++     content=httpRemoteExecutionContentV1({endpoint:url,token:options.cacheToken});
++    }
++    say("registered",`${answer!.id} cache ${answer!.cache.url}`);return;
++   }catch(error){
++    if(options.signal.aborted)return;
++    say("reconnecting",(error as Error).message);await Bun.sleep(delay);
++   }
++  }
++ };
++ await register();
++ if(!registered||!content)return;
++ const store=new RemoteExecutionBlobCacheV1(join(options.directory,"blobs"),content,options.maximumBlobBytes),workDirectory=join(options.directory,"work",name.replace(/[^A-Za-z0-9._-]/gu,"_"));
++ await rm(workDirectory,{recursive:true,force:true}).catch(()=>{});
++ await store.prune().catch(()=>0);let pruned=Date.now();
++ const cancel=(ids:readonly string[]):void=>{for(const id of ids)running.get(id)?.abort();};
++ const heartbeat=setInterval(()=>{
++  const id=registered!.id;
++  void call<RemoteExecutionHeartbeatAnswerV1>("POST",`/v1/workers/${id}/heartbeat`,{version:1,running:[...running.keys()]},options.signal,10000).then(answer=>{if(answer){if(!answer.known)void register();cancel(answer.cancel);}}).catch(()=>{});
++ },registered.heartbeatSeconds*1000);
++ heartbeat.unref();
++ let wake:(()=>void)|undefined;
++ const finishTask=async(task:RemoteExecutionTaskV1,controller:AbortController):Promise<void>=>{
++  say("started",`${task.id} ${task.action.hash.slice(0,12)}`);
++  const result=await executeRemoteExecutionActionV1({instance:task.instance,action:task.action,timeoutSeconds:task.timeoutSeconds,content:content!,directory:options.directory,work:workDirectory,workerName:name,sandbox,materialize:options.materialize,inlineOutputBytes:options.inlineOutputBytes,signal:controller.signal,...(options.keepWork?{keepWork:true}:{}),blobs:store});
++  const report:RemoteExecutionTaskResultV1={version:1,outcome:result.outcome,status:result.status,actionResult:result.actionResult?Buffer.from(result.actionResult).toString("base64"):null};
++  for(let attempt=0;attempt<5;attempt++){
++   try{await call("POST",`/v1/workers/${registered!.id}/tasks/${task.id}/result`,report,AbortSignal.timeout(30000));break;}
++   catch(error){if(attempt===4)say("reconnecting",`report lost: ${(error as Error).message}`);else await Bun.sleep(200*2**attempt);}
++  }
++  say(result.outcome==="cancelled"?"cancelled":"finished",`${task.id} ${result.outcome} ${result.status.code}`);
++  running.delete(task.id);wake?.();
++  if(Date.now()-pruned>30000){pruned=Date.now();void store.prune().catch(()=>{});}
++ };
++ try{
++  while(!options.signal.aborted){
++   if(running.size>=options.concurrency){await new Promise<void>(resolve=>{wake=resolve;options.signal.addEventListener("abort",()=>{resolve();},{once:true});});continue;}
++   let answer:RemoteExecutionPollAnswerV1|undefined;
++   try{answer=await call<RemoteExecutionPollAnswerV1>("POST",`/v1/workers/${registered.id}/poll?wait=${registered.pollSeconds*1000}`,{version:1},options.signal,registered.pollSeconds*1000+15000);}
++   catch(error){if(options.signal.aborted)break;say("reconnecting",(error as Error).message);await Bun.sleep(1000);continue;}
++   if(!answer)continue;
++   if(!answer.known){await register();continue;}
++   cancel(answer.cancel);
++   if(answer.task){const controller=new AbortController();running.set(answer.task.id,controller);void finishTask(answer.task,controller);}
++  }
++ }finally{
++  clearInterval(heartbeat);
++  for(const controller of running.values())controller.abort();
++  const settle=Date.now()+10000;while(running.size>0&&Date.now()<settle)await Bun.sleep(50);
++  await call("DELETE",`/v1/workers/${registered.id}`,undefined,AbortSignal.timeout(5000)).catch(()=>{});
++  say("stopped",name);
++ }
++}

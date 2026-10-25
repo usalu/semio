@@ -5,7 +5,7 @@
 use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_close, admit_retained_clone_progress, close_retained_binding};
 use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, hash::Hash, mem::size_of};
 
-/// 🧺️ Exposes one standard collection as a dense, immutable entry sequence plus a cold constructor.
+/// ❄️ Exposes one standard collection as a dense, immutable entry sequence plus a cold constructor.
 pub trait RetainedCloneEntries: RetainedClone {
     type Key: RetainedClone;
     type Value: RetainedClone;
@@ -75,7 +75,7 @@ impl<T: RetainedClone + Ord> RetainedCloneEntries for BTreeSet<T> {
     fn implicit_value() -> Option<()> { Some(()) }
 }
 
-/// 🧺️ Clones one entry per key, scaffold-close and insertion turn without pricing the standard backing.
+/// 🖱️ Clones one entry per key, scaffold-close and insertion turn without pricing the standard backing.
 pub struct RetainedCloneEntriesCursor<M: RetainedCloneEntries> {
     key_cursor: <M::Key as RetainedClone>::Cursor,
     value_cursor: <M::Value as RetainedClone>::Cursor,

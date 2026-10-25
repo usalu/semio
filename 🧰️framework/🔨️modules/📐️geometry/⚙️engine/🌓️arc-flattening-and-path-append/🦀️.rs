@@ -3,7 +3,7 @@
 use super::*;
 
 // #region 🔖️Shapes
-/// 🌓️ Adaptive cubic approximation used by [`Arc`] and [`RoundedRect`]. The sixth-root segment
+/// 🧮️ Adaptive cubic approximation used by [`Arc`] and [`RoundedRect`]. The sixth-root segment
 /// count and tangent-arm construction preserve the former `kurbo::Arc::append_iter` behavior for
 /// every positive tolerance while remaining first-party at runtime.
 pub(super) fn elliptical_arc_segments(center: Point, radii: (f64, f64), x_rotation: f64, start_angle: f64, sweep: f64, tolerance: f64) -> Vec<PathSeg> {
@@ -81,7 +81,7 @@ fn sample_ellipse(radii: (f64, f64), x_rotation: f64, angle: f64) -> (f64, f64) 
     (x * cos_r - y * sin_r, x * sin_r + y * cos_r)
 }
 
-/// 🌓️ The point at `angle` on the elliptical arc described by `radii`/`x_rotation`/`center` —
+/// 📍️ The point at `angle` on the elliptical arc described by `radii`/`x_rotation`/`center` —
 /// same parametrization [`Arc::eval`] uses, and the one [`elliptical_arc_segments`] samples.
 pub(super) fn elliptical_point(center: Point, radii: (f64, f64), x_rotation: f64, angle: f64) -> Point {
     point_from_offset(center, sample_ellipse(radii, x_rotation, angle))

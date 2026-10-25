@@ -12,7 +12,7 @@ const FIELDS:[(u16,&str,semio_framework_dsl_record::Shape,bool);6]=[
     (5,"blocks",semio_framework_dsl_record::Shape::Value,false),
     (6,"entities",semio_framework_dsl_record::Shape::Value,false),
 ];
-pub(crate) fn spec()->semio_framework_dsl_record::RecordSpec{
+pub fn spec()->semio_framework_dsl_record::RecordSpec{
     semio_framework_dsl_record::RecordSpec::new(None,semio_framework_dsl_record::RecordLayout::Lines,FIELDS.into_iter().map(|(id,key,shape,optional)|{let mut field=semio_framework_dsl_record::FieldSpec::new(id,key,shape);field.optional=optional;field}).collect())
 }
 fn spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,ValueError>{
@@ -23,7 +23,7 @@ fn spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&m
     })
 }
 /// 🏭️ Owns literal snapshot metadata independently under either native allocation controller.
-pub(crate) fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:spec,decoding:|control|spec_controlled(control),encoding:|control|spec_controlled(control)}}
+pub fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:spec,decoding:|control|spec_controlled(control),encoding:|control|spec_controlled(control)}}
 
 pub(crate) fn to_record(snapshot:&DxfSnapshot)->semio_framework_dsl_record::RecordValue{
     

@@ -9,7 +9,7 @@ const help=(...options:string[])=>spawnSync(process.execPath,[script,"repo","run
 test("every global option of the catalogue, in its equals spelling, reaches the selected operation of the full build script without refusing the declared selection",()=>{
  const globals=catalogue.flags.filter(flag=>(flag as {operations?:unknown}).operations===undefined&&flag.value==="required").map(flag=>`${flag.name}=${/^\{[a-z]+\}$/u.test((flag as {valueName?:string}).valueName??"")?"nx":((flag as {valueName?:string}).valueName??"x").split("|")[0]}`);
  expect(globals.length).toBeGreaterThanOrEqual(3);
- for(const option of [...globals,"--graph-policy=current"]){
+ for(const option of [...globals,"--graph-policy=current","--parallel=1"]){
   const result=help(option);
   expect(result.stderr,option).not.toContain("Undeclared original Repo build selection");
   expect(result.status,option).toBe(0);

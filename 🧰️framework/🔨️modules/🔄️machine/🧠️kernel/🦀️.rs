@@ -20,7 +20,7 @@ pub enum NodeKind {
     HistoryDeep,
 }
 
-/// 🌳️ One compiled state node. `NodeId(0)` is always the synthetic root wrapping
+/// 🔨️ One compiled state node. `NodeId(0)` is always the synthetic root wrapping
 /// the whole machine, so [`compute_domain`] always terminates.
 #[derive(Debug)]
 pub struct NodeDef {
@@ -57,7 +57,7 @@ pub enum TransitionKind {
     Internal,
 }
 
-/// 🔀️ One compiled transition. Guard/action indices are dense — the fn-pointer
+/// ➡️ One compiled transition. Guard/action indices are dense — the fn-pointer
 /// tables they index into live on [`MachineDefinition`], keyed by the consumer's `M`.
 #[derive(Debug)]
 pub struct TransitionDef {
@@ -76,17 +76,17 @@ pub const ROOT: NodeId = NodeId(0);
 /// 🧵️ Reads context+event, decides whether a guarded transition may fire. Pure — no I/O, no mutation.
 pub type GuardFn<M> = fn(&<M as Machine>::Context, Option<&<M as Machine>::Event>) -> bool;
 
-/// 🧵️ Mutates context and/or pushes commands; used for entry/exit/transition actions alike.
+/// 🎬️ Mutates context and/or pushes commands; used for entry/exit/transition actions alike.
 // 🧬️ A former `&mut dyn CommandSink<M>` — that trait had exactly one impl (`Vec<Command<M>>`), and
 // `impl Trait` is not nameable in a fn-pointer type, so per R11 ("exactly one impl ⇒ delete the
 // trait object, use the concrete type") this slot names the concrete sink directly; the trait was
 // then deleted outright (see 🔖️Commands below) once nothing referenced it any more.
 pub type ActionFn<M> = fn(&mut <M as Machine>::Context, Option<&<M as Machine>::Event>, &mut Vec<Command<M>>);
 
-/// 🧵️ Builds the initial context from consumer-supplied input.
+/// 📥️ Builds the initial context from consumer-supplied input.
 pub type InputFn<M> = fn(<M as Machine>::Input) -> <M as Machine>::Context;
 
-/// 🧵️ Builds the machine's output once the root reaches a fully-final configuration.
+/// 🖨️ Builds the machine's output once the root reaches a fully-final configuration.
 pub type OutputFn<M> = fn(&<M as Machine>::Context) -> <M as Machine>::Output;
 
 /// 📐️ The compiled, `'static` definition of a machine — dense tables, no HashMap, no string dispatch.
@@ -143,7 +143,7 @@ fn is_leafish(nodes: &[NodeDef], id: NodeId) -> bool {
     matches!(nodes[id.0 as usize].kind, NodeKind::Atomic | NodeKind::Final)
 }
 
-/// 🌳️ The transition domain per SCXML `getTransitionDomain` — the innermost compound/parallel
+/// 🧭️ The transition domain per SCXML `getTransitionDomain` — the innermost compound/parallel
 /// ancestor whose descendants fully cover source+targets. Always terminates at [`ROOT`].
 fn compute_domain(nodes: &[NodeDef], source: NodeId, targets: &[NodeId], kind: TransitionKind) -> NodeId {
     if targets.is_empty() {

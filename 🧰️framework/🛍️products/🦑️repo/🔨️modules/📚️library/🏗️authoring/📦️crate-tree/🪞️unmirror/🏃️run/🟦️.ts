@@ -6,7 +6,7 @@ import { dirname, join, posix, relative } from "node:path";
 import { Unmirror, type UnmirrorReport } from "../🟦️.ts";
 import { Universe, type CrateInfo } from "../🔍️resolver/🟦️.ts";
 import { addDependencyLines, declaredDependencies, removeDependencyLines, type DependencyAddition } from "../📝️manifest/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import { runToolSyncV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** ⚙️ Options of one run: the artifact directories to unwind, the path prefixes that must not be touched, whether to write and an optional staging directory. */

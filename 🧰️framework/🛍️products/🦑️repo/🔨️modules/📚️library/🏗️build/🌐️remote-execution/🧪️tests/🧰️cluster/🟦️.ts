@@ -1,4 +1,5 @@
 import {createHash} from "node:crypto";
+import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {mkdirSync,mkdtempSync,rmSync} from "node:fs";
 import {join} from "node:path";
 import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../🌐️remote-cache/🖥️server/🟦️.ts";
@@ -55,7 +56,7 @@ async function treeDigest(upload:(bytes:Uint8Array)=>Promise<ClusterDigestV1>,tr
 
 /** 🚀️ Starts the harness; `workers` in-process workers are started with the given options. */
 export async function startClusterV1(options:Readonly<{workers?:number;bind?:string;advertise?:string;worker?:Partial<RemoteExecutionWorkerOptionsV1>;tokens?:RemoteExecutionTokensV1;scheduler?:Partial<RemoteExecutionServerOptionsV1["scheduler"]>;server?:Partial<RemoteExecutionServerOptionsV1>;root?:string}>={}):Promise<ClusterV1>{
- const directory=mkdtempSync(join(options.root??"/private/tmp/rexec-inhouse","cluster-")),events:string[]=[],workerEvents:string[]=[],stoppers:(()=>Promise<void>)[]=[];
+ const directory=mkdtempSync(join(options.root??testScratchRootV1("rexec-inhouse"),"cluster-")),events:string[]=[],workerEvents:string[]=[],stoppers:(()=>Promise<void>)[]=[];
  mkdirSync(directory,{recursive:true});
  const token=options.tokens?.write??options.tokens?.read;
  const bind=options.bind??"127.0.0.1",cache=await startRemoteCacheServerV1({directory:join(directory,"cache"),host:bind,port:0,maximumBytes:1<<30,maximumEntryBytes:1<<28,maximumAgeDays:30,defaultInstance:"main",tokens:{read:options.tokens?.read,write:options.tokens?.write}});

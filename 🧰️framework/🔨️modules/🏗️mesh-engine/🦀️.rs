@@ -134,7 +134,7 @@ pub fn validate_polygon_mesh_attributes(vertex_count:usize,face_count:usize,half
     Ok(())
 }
 
-/// 🎨️ Validates material references and owned texture payload limits.
+/// 🕸️ Validates material references and owned texture payload limits.
 pub fn validate_mesh_surface_assets(materials:&HistoryFoldIndex<String,pack::value::DslValue>,textures:&HistoryFoldIndex<String,MeshTexture>)->Result<(),String> {
     if materials.len()>10_000 || textures.len()>256 || materials.keys().chain(textures.keys()).any(|name|!mesh_name_valid(name)) {return Err("mesh asset declaration limit exceeded".into());}
     let mut bytes=0usize;
@@ -166,7 +166,7 @@ pub(crate) fn validate_mesh_material_field(id:&str,name:&str,value:&pack::value:
     Ok(())
 }
 
-/// 🧭️ Validates one indexed channel using its declared domain and interpolation rule.
+/// 🗂️ Validates one indexed channel using its declared domain and interpolation rule.
 pub fn validate_mesh_attribute(name:&str,attribute:&MeshAttribute,vertex_count:usize,face_count:usize,halfedge_count:usize,materials:&HistoryFoldIndex<String,pack::value::DslValue>)->Result<(),String> {
     if !mesh_name_valid(name) {return Err("mesh attribute declaration limit exceeded".into());}
     let count=match attribute.domain {MeshAttributeDomain::Vertex=>vertex_count,MeshAttributeDomain::Face=>face_count,_=>halfedge_count};

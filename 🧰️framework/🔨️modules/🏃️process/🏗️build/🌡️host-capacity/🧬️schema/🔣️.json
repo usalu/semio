@@ -13,7 +13,17 @@
         "floorEnvironment": "SEMIO_HOST_CAPACITY_FLOOR_MEGABYTES",
         "maximumJobs": 1024,
         "maximumFileBytes": 65536,
-        "bootToleranceMilliseconds": 120000
+        "bootToleranceMilliseconds": 120000,
+        "handoverEnvironment": "SEMIO_HOST_CAPACITY_HANDOVER",
+        "handoverMaximumAgeMilliseconds": 120000,
+        "parkMaximumMilliseconds": 120000,
+        "handoverRefusals": [
+          "gone",
+          "token",
+          "expired",
+          "identity",
+          "operation"
+        ]
       }
     },
     "Level": {
@@ -262,7 +272,8 @@
             "maximumWaiters",
             "bypassMilliseconds",
             "maximumBypasses",
-            "agingMilliseconds"
+            "agingMilliseconds",
+            "lendAfterMilliseconds"
           ],
           "properties": {
             "pollMilliseconds": {
@@ -308,6 +319,11 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 86400000
+            },
+            "lendAfterMilliseconds": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 3600000
             }
           }
         },
@@ -588,6 +604,17 @@
         "session": {
           "type": "string",
           "pattern": "^[0-9a-f]{12}\\.[a-z][a-z0-9]{0,11}$"
+        },
+        "lentSinceMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resumedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "handover": {
+          "$ref": "#/definitions/Handover"
         }
       }
     },
@@ -760,9 +787,14 @@
         "bypassed",
         "status",
         "grant",
+        "grantLent",
         "waiter",
         "reasons",
-        "errors"
+        "errors",
+        "handover",
+        "adopted",
+        "handoverRefused",
+        "handoverReasons"
       ],
       "properties": {
         "waiting": {
@@ -830,6 +862,9 @@
         "grant": {
           "type": "string"
         },
+        "grantLent": {
+          "type": "string"
+        },
         "waiter": {
           "type": "string"
         },
@@ -880,6 +915,43 @@
               "type": "string"
             }
           }
+        },
+        "handover": {
+          "type": "string"
+        },
+        "adopted": {
+          "type": "string"
+        },
+        "handoverRefused": {
+          "type": "string"
+        },
+        "handoverReasons": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "gone",
+            "token",
+            "expired",
+            "identity",
+            "operation"
+          ],
+          "properties": {
+            "gone": {
+              "type": "string"
+            },
+            "token": {
+              "type": "string"
+            },
+            "expired": {
+              "type": "string"
+            },
+            "identity": {
+              "type": "string"
+            },
+            "operation": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -894,6 +966,7 @@
           "status": "[capacity] {available} MB available of {total} MB (floor {floor} MB, {spare} MB spare), pressure {pressure}, swap {swap} MB, load {load}, open files {files}, attached images {images}; {grants} running, {waiters} waiting",
           "grant": "[capacity]   running {id} {operation}: {jobs} job(s), {reserved} MB reserved, {observed} MB observed, pid {pid}, since {seconds}s",
           "waiter": "[capacity]   waiting {id} {operation}: wants {jobs} job(s), {need} MB, since {seconds}s, pid {pid}",
+          "grantLent": "[capacity]   lent {id} {operation}: its process only waits in a queue, so the {reserved} MB reserved and {cpu} core(s) count for nobody ({observed} MB observed, pid {pid}, since {seconds}s)",
           "reasons": {
             "memory": "not enough free memory",
             "swap": "swap use is above its ceiling",
@@ -917,6 +990,16 @@
             "countersUnavailable": "Linux memory counters unavailable",
             "platformUnsupported": "Host capacity does not support {platform}",
             "inheritedIdentifier": "Closed inherited host capacity grant identifier required"
+          },
+          "handover": "[capacity] keeping the {operation} grant ({jobs} job(s), {reserved} MB reserved) for the command that replaces this one: it does not queue again",
+          "adopted": "[capacity] took over the {operation} grant of the command this one replaces ({jobs} job(s), {reserved} MB reserved): no queue",
+          "handoverRefused": "[capacity] the grant of the command this one replaces cannot be taken over ({reason}): queueing like any other request",
+          "handoverReasons": {
+            "gone": "the grant is gone or no longer current",
+            "token": "the handover token does not match",
+            "expired": "the offer expired",
+            "identity": "this process is not the one the grant was offered to",
+            "operation": "it was granted for another operation"
           }
         },
         "de": {
@@ -928,6 +1011,7 @@
           "status": "[capacity] {available} MB verfügbar von {total} MB (Untergrenze {floor} MB, {spare} MB frei), Speicherdruck {pressure}, Auslagerung {swap} MB, Last {load}, offene Dateien {files}, eingehängte Images {images}; {grants} laufen, {waiters} warten",
           "grant": "[capacity]   läuft {id} {operation}: {jobs} Job(s), {reserved} MB reserviert, {observed} MB beobachtet, pid {pid}, seit {seconds} s",
           "waiter": "[capacity]   wartet {id} {operation}: möchte {jobs} Job(s), {need} MB, seit {seconds} s, pid {pid}",
+          "grantLent": "[capacity]   verliehen {id} {operation}: sein Prozess wartet nur in einer Schlange, darum zählen die {reserved} MB reserviert und {cpu} Kern(e) für niemanden ({observed} MB beobachtet, pid {pid}, seit {seconds} s)",
           "reasons": {
             "memory": "nicht genug freier Speicher",
             "swap": "die Auslagerung liegt über ihrer Obergrenze",
@@ -951,6 +1035,16 @@
             "countersUnavailable": "Linux-Speicherzähler nicht verfügbar",
             "platformUnsupported": "Die Rechnerkapazität unterstützt {platform} nicht",
             "inheritedIdentifier": "Eine gültige Kennung der geerbten Host-Kapazitätsfreigabe ist erforderlich"
+          },
+          "handover": "[capacity] die Zusage für {operation} ({jobs} Job(s), {reserved} MB reserviert) bleibt für den Befehl, der diesen ersetzt: er reiht sich nicht erneut ein",
+          "adopted": "[capacity] Zusage für {operation} des ersetzten Befehls übernommen ({jobs} Job(s), {reserved} MB reserviert): keine Warteschlange",
+          "handoverRefused": "[capacity] die Zusage des ersetzten Befehls kann nicht übernommen werden ({reason}): Anfrage reiht sich wie jede andere ein",
+          "handoverReasons": {
+            "gone": "die Zusage ist erloschen oder nicht mehr aktuell",
+            "token": "die Übergabemarke passt nicht",
+            "expired": "das Angebot ist abgelaufen",
+            "identity": "dieser Prozess ist nicht der, dem die Zusage angeboten wurde",
+            "operation": "sie wurde für eine andere Operation erteilt"
           }
         }
       }
@@ -1009,6 +1103,119 @@
         },
         "expected": {
           "type": "boolean"
+        }
+      }
+    },
+    "Handover": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "token",
+        "fromPid",
+        "fromStarted",
+        "offeredAtMs"
+      ],
+      "properties": {
+        "token": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{22}$"
+        },
+        "fromPid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fromStarted": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "offeredAtMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "HandoverFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grant",
+        "grantCurrent",
+        "offered",
+        "operation",
+        "parent",
+        "nowMs"
+      ],
+      "properties": {
+        "grant": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/Grant"
+            }
+          ]
+        },
+        "grantCurrent": {
+          "type": "boolean"
+        },
+        "offered": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "parent": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "pid",
+                "started"
+              ],
+              "properties": {
+                "pid": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "started": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          ]
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "HandoverCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object"
+        },
+        "expected": {
+          "type": "string"
         }
       }
     }

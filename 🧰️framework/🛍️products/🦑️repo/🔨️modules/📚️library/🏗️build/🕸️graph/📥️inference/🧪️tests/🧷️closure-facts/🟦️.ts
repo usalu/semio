@@ -1,6 +1,6 @@
 /** 🧷️ Contract: facts about a shared command closure are shaped, not bytes. A closure member, a data leaf or an entry script is admitted by its physical shape, code is consumed through its analysis fact, the partial inference runs in project scope without an all-or-nothing round; and the observation primitives behave accordingly: a shape fact survives an edit of the bytes, a content fact does not, and a project that raced an edit is stale on its own while the pass completes. */
 import {afterAll,beforeAll,expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {brotliDecompressSync} from "node:zlib";
 import {tmpdir} from "node:os";
@@ -28,7 +28,7 @@ for(const row of fixture.present)test("present: "+row.name,()=>{expect(body(row.
 for(const row of fixture.absent)test("absent: "+row.name,()=>{expect(body(row.function).includes(row.text)).toBe(false);});
 test("the independent text model reaches the same verdict",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });
 
@@ -69,7 +69,7 @@ test("a project that raced an edit is stale on its own while the pass completes 
 
 test("records that read the same closure share its fact blocks: small headers, identical rows, a bad block recomputes and heals",async()=>{
  const library=join(scratch,"library"),np=join(scratch,"np");mkdirSync(library,{recursive:true});
- const closure=Array.from({length:400},(_,i)=>{const path=join(library,"m"+i+".ts");writeFileSync(path,"export const v"+i+"="+i+";\n");return path;});
+ const closure=Array.from({length:800},(_,i)=>{const path=join(library,"m"+i+".ts");writeFileSync(path,"export const v"+i+"="+i+";\n");return path;});
  const privateFile=(name:string)=>{const path=join(scratch,name);writeFileSync(path,name);return path;};
  const first=privateFile("private-first.txt"),second=privateFile("private-second.txt");
  await Bun.sleep(2200);
@@ -85,13 +85,13 @@ test("records that read the same closure share its fact blocks: small headers, i
  const rowsA=readInferenceHeaderV1(join(np,"a.json")).observations,rowsB=readInferenceHeaderV1(join(np,"b.json")).observations;
  expect(rowsA.filter((row:any)=>row.kind==="file"&&closure.includes(row.path)).length).toBe(closure.length);
  expect(rowsA.some((row:any)=>row.path===first)).toBe(true);expect(rowsB.some((row:any)=>row.path===second)).toBe(true);
- const blockFiles=readdirSync(np).filter(name=>!name.startsWith("a.")&&!name.startsWith("b.")&&name.endsWith(".json"));
+ const blockFiles=readdirSync(join(np,"ob")).filter(name=>name.endsWith(".br"));
  expect(blockFiles.length).toBeLessThan(headerA.blocks.length+headerB.blocks.length-shared.length+1);
  expect(Buffer.byteLength(inferenceHeaderLine(join(np,"a.json"))!)).toBeLessThan(headerA.blocks.length*80+2000);
  const census=censusInferenceRecordsV1([join(np,"a.json"),join(np,"b.json")]);
  expect(census.records.map(row=>row[2])).toEqual([rowsA.length,rowsB.length]);expect(census.rows.length).toBeLessThan(rowsA.length+rowsB.length);
  const again=await record("a",first);expect(again).toEqual(a);expect(counts.a).toBe(1);
- const victim=join(np,headerA.blocks[0].slice(0,24)+".json"),moduleUrl=new URL("../../../../👁️observation/🟨️.mjs",import.meta.url).href;
+ const victim=join(np,"ob",headerA.blocks[0]+".br"),moduleUrl=new URL("../../../../👁️observation/🟨️.mjs",import.meta.url).href;
  const child=()=>{
   const script="const m=await import(process.env.MODULE);let ran=0;const files=JSON.parse(process.env.FILES);const value=await m.observeInference({cachePath:process.env.CACHE,key:['blocks','a']},()=>{ran++;let total=0;for(const p of files)total+=m.observedFs.readFileSync(p,'utf8').length;return{total,own:m.observedFs.readFileSync(process.env.OWN,'utf8')};});console.log(JSON.stringify({ran,total:value.total}));";
   const result=Bun.spawnSync([process.execPath,"-e",script],{env:{...process.env,MODULE:moduleUrl,CACHE:join(np,"a.json"),FILES:JSON.stringify(closure),OWN:first}});

@@ -87,9 +87,9 @@ pub const LIMIT_COMMANDS_PER_SECOND: &str = "PROCTOR_LIMIT_COMMANDS_PER_SECOND";
 pub const LIMIT_COMMANDS_BURST: &str = "PROCTOR_LIMIT_COMMANDS_BURST";
 /// 📖️ `PROCTOR_LIMIT_QUERIES_PER_SECOND`.
 pub const LIMIT_QUERIES_PER_SECOND: &str = "PROCTOR_LIMIT_QUERIES_PER_SECOND";
-/// 📚️ `PROCTOR_LIMIT_QUERIES_BURST`.
+/// 🔎️ `PROCTOR_LIMIT_QUERIES_BURST`.
 pub const LIMIT_QUERIES_BURST: &str = "PROCTOR_LIMIT_QUERIES_BURST";
-/// 🔌️ `PROCTOR_LIMIT_UPGRADES_PER_SECOND`.
+/// ⬆️ `PROCTOR_LIMIT_UPGRADES_PER_SECOND`.
 pub const LIMIT_UPGRADES_PER_SECOND: &str = "PROCTOR_LIMIT_UPGRADES_PER_SECOND";
 /// 🌩️ `PROCTOR_LIMIT_UPGRADES_BURST`.
 pub const LIMIT_UPGRADES_BURST: &str = "PROCTOR_LIMIT_UPGRADES_BURST";
@@ -126,7 +126,7 @@ const ALLOWED_ORIGINS_MAX: usize = 32;
 /// cursors of others visibly lag.
 pub const PRESENCE_TICK_MS_RANGE: std::ops::RangeInclusive<u64> = 10..=1000;
 
-/// 🖼️ The bounds of `PROCTOR_LIMIT_PRESENCE_FRAME_BYTES`: below, a frame no longer holds one state of
+/// 🎞️ The bounds of `PROCTOR_LIMIT_PRESENCE_FRAME_BYTES`: below, a frame no longer holds one state of
 /// the largest size next to another; above, a socket that stopped reading holds too much.
 pub const LIMIT_PRESENCE_FRAME_BYTES_RANGE: std::ops::RangeInclusive<u64> = 262_144..=1_048_576;
 
@@ -135,25 +135,25 @@ pub fn quiz_presence_settings() -> PresenceSettings {
     PresenceSettings { max_state_bytes: 128 * 1024, max_frame_bytes: 256 * 1024, ..PresenceSettings::default() }
 }
 
-/// 🚰️ The bounds of `PROCTOR_LIMIT_PRESENCE_BYTES_PER_SECOND`: below, a handful of sockets already
+/// 💧️ The bounds of `PROCTOR_LIMIT_PRESENCE_BYTES_PER_SECOND`: below, a handful of sockets already
 /// wait; above, the bound is none on any link a proctor is served over.
 pub const LIMIT_PRESENCE_BYTES_PER_SECOND_RANGE: std::ops::RangeInclusive<u64> = 65_536..=4_294_967_296;
 
-/// 📦️ The bounds of `PROCTOR_LIMIT_BODY_BYTES`: below, a legitimate answer no longer fits; above, the
+/// 📏️ The bounds of `PROCTOR_LIMIT_BODY_BYTES`: below, a legitimate answer no longer fits; above, the
 /// limit is no protection.
 pub const LIMIT_BODY_BYTES_RANGE: std::ops::RangeInclusive<u64> = 1024..=1_048_576;
 
-/// 🔢️ The bounds of every other `PROCTOR_LIMIT_*`: at least one, and nothing a counter cannot hold.
+/// 🧮️ The bounds of every other `PROCTOR_LIMIT_*`: at least one, and nothing a counter cannot hold.
 pub const LIMIT_RANGE: std::ops::RangeInclusive<u64> = 1..=1_000_000;
 
-/// 🏭️ Which posture the proctor runs in.
+/// 🎛️ Which posture the proctor runs in.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ProctorMode {
     Development,
     Production,
 }
 
-/// 🌍️ Which browser origins receive the CORS grant.
+/// 🚧️ Which browser origins receive the CORS grant.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CrossOriginPolicy {
     LoopbackDevelopment,
@@ -161,14 +161,14 @@ pub enum CrossOriginPolicy {
     Closed,
 }
 
-/// 🛡️ Whether forwarding headers are trusted.
+/// ↪️ Whether forwarding headers are trusted.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Forwarding {
     Untrusted,
     TerminatingProxy,
 }
 
-/// 🎚️ Everything the proctor reads from its environment.
+/// ⚙️ Everything the proctor reads from its environment.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProctorConfig {
     pub bind: IpAddr,
@@ -241,7 +241,7 @@ impl ProctorConfig {
         Ok(config)
     }
 
-    /// 🗄️ `PROCTOR_DATA` alone: all that `backup` and `restore` need of the environment.
+    /// 📂️ `PROCTOR_DATA` alone: all that `backup` and `restore` need of the environment.
     pub fn data_directory(read: impl Fn(&str) -> Option<String>) -> Result<PathBuf, ConfigError> {
         setting(&read, DATA).map(PathBuf::from).ok_or_else(|| ConfigError(format!("{DATA} must name the directory of proctor.sqlite")))
     }
@@ -267,7 +267,7 @@ impl ProctorConfig {
         }
     }
 
-    /// 🧭️ The request gate this configuration implies.
+    /// ⛩️ The request gate this configuration implies.
     pub fn gate(&self) -> Gate {
         Gate { origins: self.origins.clone(), forwarding: self.forwarding, limits: self.limits.clone() }
     }
@@ -277,7 +277,7 @@ impl ProctorConfig {
         self.limits.allowances.iter().find(|allowance| allowance.name == SIGN_UP).map_or(SIGN_UPS, |allowance| allowance.rate)
     }
 
-    /// 👥️ The presence socket's settings: the protocol's defaults at this configuration's tick,
+    /// 👁️ The presence socket's settings: the protocol's defaults at this configuration's tick,
     /// frame size and total flow.
     pub fn presence(&self) -> PresenceSettings {
         PresenceSettings { tick: self.presence_tick, max_frame_bytes: self.presence_frame_bytes, max_bytes_per_second: Some(self.presence_bytes_per_second), ..quiz_presence_settings() }
@@ -304,7 +304,7 @@ impl CrossOriginPolicy {
         }
     }
 
-    /// 🏷️ The word the startup line reports.
+    /// 🔖️ The word the startup line reports.
     pub fn label(&self) -> &'static str {
         match self {
             Self::LoopbackDevelopment => "loopback-development",
@@ -332,7 +332,7 @@ impl Forwarding {
         }
     }
 
-    /// 🏷️ The word the startup line reports.
+    /// 🪧️ The word the startup line reports.
     pub fn label(self) -> &'static str {
         match self {
             Self::Untrusted => "none",
@@ -379,7 +379,7 @@ fn limits(read: &impl Fn(&str) -> Option<String>) -> Result<Limits, ConfigError>
     })
 }
 
-/// 🔢️ One whole number inside `range`, or `default` when the variable is unset.
+/// 🧷️ One whole number inside `range`, or `default` when the variable is unset.
 fn bounded(read: &impl Fn(&str) -> Option<String>, name: &str, default: u64, range: &std::ops::RangeInclusive<u64>) -> Result<u64, ConfigError> {
     match setting(read, name) {
         Some(text) => text.parse().ok().filter(|value| range.contains(value)).ok_or_else(|| ConfigError(format!("{name} must be a whole number in {}..={}, got {text:?}", range.start(), range.end()))),

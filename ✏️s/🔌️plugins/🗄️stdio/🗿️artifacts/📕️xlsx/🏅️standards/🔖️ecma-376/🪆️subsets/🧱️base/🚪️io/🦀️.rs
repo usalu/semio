@@ -92,7 +92,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (next, diff) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            let (next, diff) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::ColdMutation::diff(&mutation, &self.snapshot));
             self.snapshot = next;
             (self, diff)
         }
@@ -203,10 +203,3 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: XlsxAnalyzer,
     composer: XlsxComposer,
 );
-
-impl semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot {
-    pub fn part_text(&self, path: &str) -> Option<String> {
-        let key = path.trim_start_matches('/');
-        self.xml_part(key).map(|part| semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text(&part.document)).or_else(|| self.opc.part_bytes(key).and_then(|bytes| String::from_utf8(bytes.to_vec()).ok()))
-    }
-}

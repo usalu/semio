@@ -41,7 +41,7 @@ async fn codec_compress(codec: CodecId, raw: &[u8]) -> Result<Vec<u8>, PackRefus
     }
 }
 
-/// 🧵️ Resolves `CodecId` to this crate's codec implementations for decompression.
+/// 🔎️ Resolves `CodecId` to this crate's codec implementations for decompression.
 pub(super) async fn codec_decompress(codec: CodecId, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackRefusal> {
     match codec.0 {
         0 => NoCompression.decompress(stored, raw_len, limit),

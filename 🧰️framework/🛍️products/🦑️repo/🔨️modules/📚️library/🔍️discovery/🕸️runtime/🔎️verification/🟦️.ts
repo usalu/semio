@@ -10,7 +10,7 @@ import { cargoInputDigestV1, cargoDirectoryEntriesV1, cargoProvenancePhysicalCon
 import { cargoDepInfoResolvedChecksumsV1, cargoDepInfoResolvedSourcesV1, cargoDepInfoSourcesV1, decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { blake3Hex } from "../../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import type {FileObservationControlV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
-import {CurrentPhysicalOwnerV1,type CurrentPhysicalPortV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
+import {CurrentPhysicalOwnerV1,type CurrentPhysicalPortV1} from "@semio-tech/framework-filesystem/observation/current";
 import {cmdBudgetMs} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { inspectRuntimeGraphV1, runtimeEcmaReferencesV1, runtimeRustReferencesV1, runtimeFixturePathV1, type RuntimeResourceReadOwnerV1, type RuntimeGraphEvidenceV1, type RuntimeGraphFindingV1 } from "../🟦️.ts";
@@ -22,7 +22,7 @@ import { cargoWorkspacePreparationInvocationV1 } from "../../../🗂️workspace
 import {withRuntimeVerificationStorageV1,runtimeVerificationMetadataV1} from "./💾️storage/🟦️.ts";
 import {withRepositoryCargoInputsV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 🧵️ Binds one actual verified-Blob import operation while preserving all other computed callers. */
 export function runtimeActorChildImportV1(source:string,child:string,actor:string,sha256:string){
@@ -102,7 +102,7 @@ export async function runtimeTrunkObservationCurrentV1(receipt:RuntimeTrunkObser
   return observation;
 }
 
-/** 🏗️ Binds the actual Trunk compiler query to the transformed bytes served at their mount. */
+/** ⚙️ Binds the actual Trunk compiler query to the transformed bytes served at their mount. */
 export function runtimeTrunkCompilationV1(receipt:{readonly rawSha256:string;readonly querySha256:string;readonly outputs:readonly {readonly path:string;readonly sha256:string}[]},read:(path:string)=>string|Uint8Array|undefined):readonly RuntimeGraphFindingV1[]{
   const findings:RuntimeGraphFindingV1[]=[];
   if(receipt.rawSha256!==receipt.querySha256)findings.push({code:"runtime-input-mismatch",path:receipt.outputs[0]?.path??"",detail:"Trunk raw compiler artifact differs from the unchanged actual Cargo artifact query"});
@@ -233,7 +233,7 @@ export function runtimeCargoConsumedInputsV1(unit:Pick<RuntimeCargoUnitV1,"depIn
   });
 }
 
-/** 🧭️ Derives target and requested feature selection from the original completed Cargo invocation. */
+/** 🦀️ Derives target and requested feature selection from the original completed Cargo invocation. */
 export function runtimeCargoInvocationV1(observation: RuntimeCargoObservationV1, root: string): { readonly target: string | null; readonly workspace: string; readonly features: readonly string[]; readonly packages: readonly string[]; readonly defaults: boolean; readonly allFeatures: boolean } {
   const values = (name: string, short?: string): string[] => observation.args.flatMap((value, index) => value === name || value === short ? [observation.args[index + 1] ?? ""] : value.startsWith(name + "=") ? [value.slice(name.length + 1)] : []);
   const manifests = values("--manifest-path");
@@ -298,7 +298,7 @@ export function runtimeCargoUnitInputsV1(observation: RuntimeCargoObservationV1,
   return { inputs, findings, verified: findings.length === 0 && unit.message.profile.test === false };
 }
 
-/** 🏗️ Tracks host build/proc-macro units separately from target libraries and their dependency closure. */
+/** 🔨️ Tracks host build/proc-macro units separately from target libraries and their dependency closure. */
 export function runtimeCargoUnitsV1(roots: readonly string[], packages: readonly CargoPackageV1[], nodes: readonly CargoNodeV1[]): readonly { readonly id: string; readonly host: boolean }[] {
   const pending = roots.map(id => ({ id, host: false })), units = new Map<string, { id: string; host: boolean }>();
   for (const unit of pending) {
@@ -317,7 +317,7 @@ export function runtimeDepInfoInputsV1(source: string, cwd: string): readonly st
   return [...new Set(cargoDepInfoSourcesV1(source).map(path => relative(cwd, resolve(cwd, path)).replaceAll("\\", "/")))].sort();
 }
 
-/** 🧾️ Normal and build dependency edges exclude test-only dependencies without guessing from crate names. */
+/** 🕸️ Normal and build dependency edges exclude test-only dependencies without guessing from crate names. */
 export function runtimeCargoPackagesV1(roots: readonly string[], nodes: readonly CargoNodeV1[]): readonly string[] {
   const index = new Map(nodes.map(node => [node.id, node])), reached = new Set<string>(), pending = [...roots];
   for (const id of pending) { if (reached.has(id)) continue; reached.add(id); for (const dependency of index.get(id)?.deps ?? []) if (dependency.dep_kinds.some(kind => kind.kind !== "dev")) pending.push(dependency.pkg); }
@@ -345,7 +345,7 @@ export function reconcileRuntimeMacroInputsV1(evidence: RuntimeGraphEvidenceV1, 
   return { ...evidence, nodes: [...new Set([...evidence.nodes, ...inputs])].sort(), edges: [...evidence.edges, ...inputs.filter(path => !evidence.nodes.includes(path)).map(to => ({ from: root, to, kind: "dependency" as const }))], findings: evidence.findings.filter(finding => !(finding.code === "runtime-unresolved-edge" && compiled.has(finding.path) && finding.detail.endsWith("! requires actual expansion/input provenance"))) };
 }
 
-/** 🏗️ Runs a neutral build producer with the original verification deadline and cancellation. */
+/** ▶️ Runs a neutral build producer with the original verification deadline and cancellation. */
 export async function runRuntimeBuildInvocationV1(root:string,args:readonly string[],invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,environment:NodeJS.ProcessEnv={}):Promise<void>{
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);
   process.stdout.write(await withIssuedResourceOperationV1(phaseControl,()=>captureOwnedCommandV1(process.execPath,["repo",...args],root,{control:phaseControl,env:scriptInvocationEnvironment(invocation,{...process.env,...environment}),output:{maximumBytes:1048576,maximumLines:8192}})));

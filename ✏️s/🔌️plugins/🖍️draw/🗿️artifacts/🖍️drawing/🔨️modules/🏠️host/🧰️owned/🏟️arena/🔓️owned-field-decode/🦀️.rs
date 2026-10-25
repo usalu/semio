@@ -11,7 +11,7 @@ pub type DrawingSnapshotRetirementFactory = semio_framework_value::OwnedValueRet
 pub type DrawingMutationRetirementFactory = semio_framework_value::OwnedValueRetirementFactory<DrawingMutation>;
 
 fn decode_drawing_snapshot_pack(bytes: &[u8]) -> Result<DrawingSnapshot, ()> {
-    <DrawingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
+    <DrawingSnapshot as store::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
 }
 
 fn decode_drawing_mutation_pack(bytes: &[u8]) -> Result<DrawingMutation, ()> {
@@ -110,7 +110,7 @@ macro_rules! drawing_owned_field_authority {
             }
         }
 
-        impl store::$authority_trait<$value> for $authority {
+        impl store::os_store::owned_schema_decode::$authority_trait<$value> for $authority {
             fn accept_token(
                 &mut self,
                 token: store::os_store::owned_schema_decode::OwnedSchemaToken,
@@ -148,7 +148,7 @@ macro_rules! drawing_owned_field_authority {
 
             fn publish_reserved(
                 &mut self,
-                target: &mut dyn store::$target_trait<$value>,
+                target: &mut dyn store::os_store::owned_schema_decode::$target_trait<$value>,
                 reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
                 _cx: &mut semio_framework_job::StepContext<'_>,
             ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {

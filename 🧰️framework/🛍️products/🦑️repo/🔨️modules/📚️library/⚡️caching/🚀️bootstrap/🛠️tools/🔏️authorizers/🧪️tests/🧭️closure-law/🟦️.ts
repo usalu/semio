@@ -7,7 +7,7 @@ import{captureNxAuthorizerSourcesV1,nxAuthorizerCapturedBytesV1,nxAuthorizerCapt
 import{closureRefusalV1,closureSpecifierKindV1,closureTargetSchemesV1}from"../../🧭️sites/🟦️.ts";
 import{astSitesV1}from"../../🧭️sites/🧪️tests/🔭️oracle/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json";
-import selection from"../../../../../../🏗️build/⌨️command/🧭️selection/🧬️schema/🔣️.json";
+import selection from"../../../../../../📦️packages/🟦️typescript/🏗️build/⌨️command/🧭️selection/🧬️schema/🔣️json/🟦️.ts";
 
 const posixRelative=(from:string,to:string)=>posix.relative(from,to),here=dirname(fileURLToPath(import.meta.url)),root=resolve(here,"../../../../../../../../../../.."),library="\u{1F9F0}️framework/\u{1F6CD}️products/\u{1F991}️repo/\u{1F528}️modules/\u{1F4DA}️library/",command=library+"\u{1F3D7}️build/⌨️command/";
 type Row={owner:string;count:number;roots:readonly string[]};
@@ -50,12 +50,12 @@ test("the command closures contain no site the capture would refuse",async()=>{
  expect(stale.sort(compare),"declared rows without a computed site in any command closure").toEqual([]);
 },600000);
 
-/** 🧪️ A data companion row the capture derives anyway is redundant and fails. */
+/** 🎥️ A data companion row the capture derives anyway is redundant and fails. */
 test("declared data companions are not derivable",()=>{
  for(const row of schema.$defs.RuntimeDataCompanions.const){const owner=readFileSync(join(root,row.owner),"utf8"),base=dirname(row.owner);for(const path of row.paths){const relative=posixRelative(base,path),literal=new RegExp("([\"'`])"+(relative.startsWith(".")?relative:"./"+relative).replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")+"\\1","u").test(owner);expect(path.startsWith(base+"/\u{1F9EC}\uFE0Fschema/")||literal,"derivable companion "+path).toBe(false);}}
 });
 
-/** 🧪️ Declared roots exist, enter every closure through their owner, and the derived package markers match the installed packages. */
+/** 🏠️ Declared roots exist, enter every closure through their owner, and the derived package markers match the installed packages. */
 test("declared roots and installed package markers hold",async()=>{
  const{files,imports,roots}=await kernelClosuresV1();
  for(const[owner,list]of roots){expect(files.has(owner),owner).toBe(true);for(const target of list){expect(existsSync(join(root,target)),target).toBe(true);expect(files.has(target),target).toBe(true);expect(imports.get(owner)![closureTargetSchemesV1.root+target],target).toBe(target);}}

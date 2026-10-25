@@ -30,7 +30,7 @@ import {fileURLToPath} from "node:url";
 import declarationSchema from "../🌱️sources/🧬️schema/🔣️.json";
 import {physicalSourceOriginV1} from "../../📥️inputs/🔏️revision/🟨️.mjs";
 import {captureNxAuthorizerSourcesV1,nxAuthorizerCapturedBytesV1,nxAuthorizerCapturedImportsV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {createIssuedResourceControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🌱️ Checks real compiler edges and callable dispatch against closed publisher DATA and SQLite. */

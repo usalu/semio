@@ -52,7 +52,7 @@ impl ActorStatus {
 //#endregion 🗂️ActorRecord
 
 //#region 🧩️ShardTable
-/// 🧩️ Which host EXECUTION SURFACE a shard runs on — `design-runtime.md` §2's "thread, worker, or
+/// 🖥️ Which host EXECUTION SURFACE a shard runs on — `design-runtime.md` §2's "thread, worker, or
 /// process" trio, unchanged by the P1c one-pool-worker-runtime refactor EXCEPT for what `Native`
 /// itself now means. A shard was never "a thread" as an identity here — `ShardTable` (below) only
 /// ever pinned an [`ActorId`] to a [`ShardId`], a bookkeeping integer; this crate's own purity rule
@@ -117,7 +117,7 @@ pub async fn clamp_native_shard_count(available_parallelism: u16) -> u16 {
     available_parallelism.saturating_sub(1).clamp(2, 8)
 }
 
-/// 🧮️ Host-side sizing policy: web `min(hardwareConcurrency-1, 4)`.
+/// 🕸️ Host-side sizing policy: web `min(hardwareConcurrency-1, 4)`.
 pub async fn clamp_web_shard_count(hardware_concurrency: u16) -> u16 {
     hardware_concurrency.saturating_sub(1).clamp(1, 4)
 }

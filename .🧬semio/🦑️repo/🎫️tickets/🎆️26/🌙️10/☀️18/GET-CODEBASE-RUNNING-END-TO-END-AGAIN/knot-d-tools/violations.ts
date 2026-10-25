@@ -1,0 +1,10 @@
+import { readFileSync } from "node:fs";
+const g = JSON.parse(readFileSync(process.argv[2]!, "utf8"));
+const scope = "🧰️framework/🛍️products/🦑️repo/";
+const v = (g.summary?.violations ?? []) as any[];
+console.log("violations", v.length);
+const inScope = v.filter((x) => x.from?.startsWith(scope) || x.to?.startsWith(scope));
+console.log("in dashboard scope", inScope.length);
+const by = new Map<string, number>(); for (const x of v) by.set(x.rule?.name ?? "?", (by.get(x.rule?.name ?? "?") ?? 0) + 1);
+console.log([...by]);
+for (const x of v.slice(0, 20)) console.log(x.rule?.name, x.from, "->", x.to, JSON.stringify(x.cycle ?? "").slice(0, 200));

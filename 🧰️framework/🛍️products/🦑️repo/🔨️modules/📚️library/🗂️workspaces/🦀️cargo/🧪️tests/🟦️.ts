@@ -244,9 +244,9 @@ test("Cargo preparation diagnostics observe only opted-in exact phases",async()=
  const logger=spyOn(console,"error").mockImplementation((line:unknown)=>{output.push(String(line));});
  try{
   process.env.SEMIO_CARGO_PREPARATION_TIMING=law.disabled;prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"),law.roots);
-  expect(output.filter(line=>line.startsWith("[DEBUG] cargo-preparation "))).toHaveLength(0);output.length=0;
+  expect(output.filter(line=>line.startsWith("[cargo-preparation-timing] "))).toHaveLength(0);output.length=0;
   process.env.SEMIO_CARGO_PREPARATION_TIMING=law.enabled;prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"),law.roots);
-  const records=output.filter(line=>line.startsWith("[DEBUG] cargo-preparation ")).map(line=>JSON.parse(line.slice("[DEBUG] cargo-preparation ".length)));
+  const records=output.filter(line=>line.startsWith("[cargo-preparation-timing] ")).map(line=>JSON.parse(line.slice("[cargo-preparation-timing] ".length)));
   expect([...new Set(records.map(row=>row.phase))].sort()).toEqual([...law.phases].sort());
   for(const record of records)expect(validate(record),JSON.stringify(validate.errors)).toBe(true);
   expect(records.filter(row=>row.phase==="recipe").map(row=>(TOML.parse(readFileSync(join(root,row.owner),"utf8")).package as {name:string}).name).sort()).toEqual(reached);
@@ -256,7 +256,7 @@ test("Cargo preparation diagnostics observe only opted-in exact phases",async()=
  const script=fileURLToPath(new URL("../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts",import.meta.url));
  const child=Bun.spawnSync([process.execPath,script,"prepare","--manifest","Cargo.toml",...law.roots.flatMap((name:string)=>["--package",name])],{cwd:root,env:{...cargoPreparationFixtureEnvironmentV1(root),SEMIO_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe",timeout:10_000});
  expect(child.exitCode,child.stderr.toString()).toBe(0);
- const records=stripVTControlCharacters(child.stderr.toString()).split("\n").filter(line=>line.startsWith("[DEBUG] cargo-preparation ")).map(line=>JSON.parse(line.slice("[DEBUG] cargo-preparation ".length)));
+ const records=stripVTControlCharacters(child.stderr.toString()).split("\n").filter(line=>line.startsWith("[cargo-preparation-timing] ")).map(line=>JSON.parse(line.slice("[cargo-preparation-timing] ".length)));
  expect(records.filter(row=>law.scriptPhases.includes(row.phase)).map(row=>row.phase)).toEqual(law.scriptPhases);
  for(const record of records)expect(validate(record),JSON.stringify(validate.errors)).toBe(true);
  expect((TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8")).workspace as {members:string[]}).members.sort()).toEqual(glob.sync("packages/*/Cargo.toml",{cwd:root,onlyFiles:true}).map(path=>path.slice(0,-"/Cargo.toml".length)).sort());
@@ -272,9 +272,9 @@ test("queued Cargo preparation exposes opted-in waiting before the protected ope
  const child=Bun.spawn([process.execPath,script,"prepare","--manifest",law.waiting.owner],{cwd:root,env:{...cargoPreparationFixtureEnvironmentV1(root),SEMIO_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe"});
  const reader=child.stderr.getReader();let timeout:ReturnType<typeof setTimeout>|undefined;
  try{
-  const observation=async():Promise<string>=>{const decoder=new TextDecoder();let buffered="";for(;;){const next=await reader.read();if(next.done)throw Error("Preparation closed before waiting observation");buffered+=decoder.decode(next.value,{stream:true});const lines=buffered.split("\n");buffered=lines.pop()!;const line=lines.map(line=>stripVTControlCharacters(line)).find(line=>line.startsWith("[DEBUG] cargo-preparation "));if(line)return line;}};
+  const observation=async():Promise<string>=>{const decoder=new TextDecoder();let buffered="";for(;;){const next=await reader.read();if(next.done)throw Error("Preparation closed before waiting observation");buffered+=decoder.decode(next.value,{stream:true});const lines=buffered.split("\n");buffered=lines.pop()!;const line=lines.map(line=>stripVTControlCharacters(line)).find(line=>line.startsWith("[cargo-preparation-timing] "));if(line)return line;}};
   const observed=await Promise.race([observation(),new Promise<never>((_,reject)=>{timeout=setTimeout(()=>reject(Error("No live stderr lease-wait observation")),law.waiting.maximumObservationMs);})]);
-  const record=JSON.parse(observed.slice("[DEBUG] cargo-preparation ".length));
+  const record=JSON.parse(observed.slice("[cargo-preparation-timing] ".length));
   expect(validate(record),JSON.stringify(validate.errors)).toBe(true);expect(record.phase).toBe(law.waiting.phase);expect(record.owner).toBe(law.waiting.owner);expect(record.items).toBe(law.waiting.items);expect(child.exitCode).toBe(null);
  }finally{if(timeout)clearTimeout(timeout);child.kill("SIGTERM");await child.exited;reader.releaseLock();lease.release();}
 },10000);
@@ -373,12 +373,10 @@ test("reachable inherited development aliases match Cargo metadata without expan
   const manifests=["Cargo.toml","application/Cargo.toml","dependency/Cargo.toml","observer/Cargo.toml"],before=manifests.map(path=>readFileSync(join(root,path),"utf8")),native=cargo(root,"application/Cargo.toml");expect(native.status===0,row.id+"\n"+native.text).toBe(row.valid);
   if(row.valid){const prepared=prepareCargoOwners(root,cargoWorkspaceForManifest(root,"application/Cargo.toml"),["selected-app"]);expect([...prepared.owners].sort()).toEqual(law.productionOwners);expect(JSON.parse(native.text).workspace_members).toHaveLength(1);}else expect(()=>prepareCargoOwners(root,cargoWorkspaceForManifest(root,"application/Cargo.toml"),["selected-app"])).toThrow("Missing inherited Cargo dependency");
   expect(manifests.map(path=>readFileSync(join(root,path),"utf8"))).toEqual(before);
-  console.log("[DEBUG] Cargo inherited alias case="+row.id+" valid="+row.valid+" productionOwners="+law.productionOwners.join(","));
  }
 });
 
 
  test("controlled native owner resolution preserves original cancellation and independent Cargo ownership",async()=>{
  for(const row of fixture.controlledSelection){const root=mkdtempSync(join(artifactRoot!,"ctrl-"));put(root,"Cargo.toml",workspace(["framework/*"]));put(root,"framework/kernel/Cargo.toml",pkg("neutral-kernel"));put(root,"framework/kernel/🦀️.rs","pub fn kernel() {}\n");const controller=new AbortController(),reason=Error("neutral original cancellation");let completed=0;if(row.cancelAfter===0)controller.abort(reason);const control={signal:controller.signal,async advance(){completed++;if(row.cancelAfter===completed)controller.abort(reason);}};if(row.expectedOwner===null){await expect(cargoWorkspaceForManifestControlledV1(root,row.manifest,control)).rejects.toBe(reason);expect(completed).toBe(row.cancelAfter);}else{const selected=await cargoWorkspaceForManifestControlledV1(root,row.manifest,control);expect(selected.directory).toBe(row.expectedOwner);const independent=cargo(root,selected.manifest);expect(independent.status,independent.text).toBe(0);expect(JSON.parse(independent.text).workspace_root.replaceAll("\\","/")).toBe(root.replaceAll("\\","/"));expect(completed).toBeGreaterThan(0);}}
- console.log("[DEBUG] controlled native owner neutral vectors=4 original cancellation preserved");
 });

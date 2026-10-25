@@ -9403,7 +9403,9 @@
       }
     ],
     "absentDescriptors": [
+      { "family": "geo-flow", "key": "mode", "reason": "Endpoint flow bands and arrows have no route geometry mode." },
       { "family": "geo-flow", "key": "samples", "reason": "Endpoint flow bands and arrows do not sample route interiors." },
+      { "family": "geo-flow", "key": "stations", "reason": "Endpoint flow bands and arrows have no route stations." },
       { "family": "spatial-vector-field", "key": "width", "reason": "Native field extent is controlled by columns and cell pitch." },
       { "family": "spatial-vector-field", "key": "height", "reason": "Native field extent is controlled by rows and cell pitch." }
     ],

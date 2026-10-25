@@ -261,7 +261,7 @@ pub(super) fn parse_extra_fields(bytes: &[u8]) -> Result<Vec<ZipExtraField>, Zip
 /// 🐘️ ZIP64 extended-info (0x0001) field values, consumed in APPNOTE 4.5.3 order: only the
 /// sub-fields whose classic 32/16-bit counterpart is the sentinel value are present, in the
 /// fixed order uncompressed-size, compressed-size, local-header-offset, disk-start-number.
-struct Zip64Fields {
+pub(super) struct Zip64Fields {
     pub(super) uncomp_size: Option<u64>,
     pub(super) comp_size: Option<u64>,
     pub(super) local_offset: Option<u64>,

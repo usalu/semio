@@ -16,7 +16,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-schema-composition = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { workspace = true }
+semio-framework-schema-state = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-s-artifact-block-5d-io-write = { workspace = true }
 pack = { workspace = true }
 semio-framework = { workspace = true }

@@ -33,7 +33,7 @@ async fn insert_then_remove_node_apply_and_inverse() {
         }
         other => panic!("unexpected node {other:?}"),
     }
-    let inverses = Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture");
+    let inverses = ::semio_framework_os_kernel::ColdMutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture");
     let mut restored = after.clone();
     for inv in &inverses {
         apply_mutation(&mut restored, inv);
@@ -45,11 +45,11 @@ async fn insert_then_remove_node_apply_and_inverse() {
 async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     let base = fixture();
     let m1 = HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![0, 0], name: "width".into(), value: Some(Some("99".into())) });
-    let d1 = Mutation::diff(&m1, &base);
+    let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&m1, &base);
     let after1 = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
     assert_eq!(element_attr(node_at(&after1, &[0, 0]).unwrap(), "width"), Some(&Some("99".to_string())));
     let mut restored1 = after1.clone();
-    for inv in Mutation::inverse(&m1, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&m1, &base).expect("valid retained mutation inverse fixture") {
         apply_mutation(&mut restored1, &inv);
     }
     assert_eq!(write_html_document(&restored1), write_html_document(&base));
@@ -58,7 +58,7 @@ async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     let mut after2 = base.clone();
     apply_mutation(&mut after2, &m2);
     assert_eq!(element_attr(node_at(&after2, &[0, 0]).unwrap(), "width"), Some(&None));
-    for inv in Mutation::inverse(&m2, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&m2, &base).expect("valid retained mutation inverse fixture") {
         apply_mutation(&mut after2, &inv);
     }
     assert_eq!(write_html_document(&after2), write_html_document(&base));
@@ -67,7 +67,7 @@ async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     let mut after3 = base.clone();
     apply_mutation(&mut after3, &m3);
     assert_eq!(element_attr(node_at(&after3, &[0, 0]).unwrap(), "width"), None);
-    for inv in Mutation::inverse(&m3, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&m3, &base).expect("valid retained mutation inverse fixture") {
         apply_mutation(&mut after3, &inv);
     }
     assert_eq!(write_html_document(&after3), write_html_document(&base));
@@ -76,7 +76,7 @@ async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     let mut after4 = base.clone();
     apply_mutation(&mut after4, &m4);
     assert_eq!(element_attr(node_at(&after4, &[0, 0]).unwrap(), "hidden"), Some(&None));
-    for inv in Mutation::inverse(&m4, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&m4, &base).expect("valid retained mutation inverse fixture") {
         apply_mutation(&mut after4, &inv);
     }
     assert_eq!(write_html_document(&after4), write_html_document(&base));
@@ -92,7 +92,7 @@ async fn remove_node_inverse_restores_removed_node() {
         HtmlNode::Element { children, .. } => assert_eq!(children, &vec![HtmlNode::Text { text: "\n".into() }], "removing body's only element leaves just the trailing-newline text node"),
         other => panic!("unexpected node {other:?}"),
     }
-    for inv in Mutation::inverse(&remove, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&remove, &base).expect("valid retained mutation inverse fixture") {
         apply_mutation(&mut after, &inv);
     }
     assert_eq!(write_html_document(&after), write_html_document(&base));
@@ -108,7 +108,7 @@ async fn set_element_name_apply_and_inverse() {
         HtmlNode::Element { name, .. } => assert_eq!(name, "div"),
         other => panic!("unexpected node {other:?}"),
     }
-    for inv in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+    for inv in ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
         apply_mutation(&mut after, &inv);
     }
     assert_eq!(write_html_document(&after), write_html_document(&base));
@@ -168,7 +168,7 @@ fn sample_mutations() -> Vec<HtmlMutation> {
 async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = fixture();
-        let diff_direct = Mutation::diff(&mutation, &base);
+        let diff_direct = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let applied_via_diff = protocol::apply_diff_cold(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
@@ -193,7 +193,7 @@ async fn inverse_law() {
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
-        let diff = Mutation::diff(&mutation, &base);
+        let diff = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let next = protocol::apply_diff_cold(diff.diff(), &base).unwrap();
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
         let restored = protocol::apply_diff_cold(&inverse_diff, &next).unwrap();
@@ -229,9 +229,9 @@ fn root_children_diff(diff: &HtmlDiff) -> &HtmlChildrenDiff {
 async fn absorb_law() {
     {
         let base = two_child_root("a", "b");
-        let d1 = Mutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 2, node: el("f", vec![], vec![]) }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 2, node: el("f", vec![], vec![]) }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&HtmlMutation::RemoveNode(remove_node::RemoveNode { parent: vec![], index: 0 }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&HtmlMutation::RemoveNode(remove_node::RemoveNode { parent: vec![], index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert_eq!(triple.removed, vec![0]);
@@ -242,9 +242,9 @@ async fn absorb_law() {
     }
     {
         let base = two_child_root("a", "b");
-        let d1 = Mutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 2, node: el("f", vec![], vec![]) }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 2, node: el("f", vec![], vec![]) }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 2, node: el("g", vec![], vec![]) }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 2, node: el("g", vec![], vec![]) }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
@@ -261,9 +261,9 @@ async fn absorb_law() {
     }
     {
         let base = two_child_root("a", "b");
-        let d1 = Mutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 1, node: el("f", vec![], vec![]) }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 1, node: el("f", vec![], vec![]) }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![1], name: "k".into(), value: Some(Some("v".into())) }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![1], name: "k".into(), value: Some(Some("v".into())) }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
@@ -273,9 +273,9 @@ async fn absorb_law() {
     }
     {
         let base = two_child_root("a", "b");
-        let d1 = Mutation::diff(&HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![1], name: "k".into(), value: Some(Some("v".into())) }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![1], name: "k".into(), value: Some(Some("v".into())) }), &base);
         let mid = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&HtmlMutation::RemoveNode(remove_node::RemoveNode { parent: vec![], index: 1 }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&HtmlMutation::RemoveNode(remove_node::RemoveNode { parent: vec![], index: 1 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_children_diff(&absorbed);
         assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
@@ -283,11 +283,11 @@ async fn absorb_law() {
     }
     {
         let base = two_child_root("a", "b");
-        let d1 = Mutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 2, node: el("f", vec![], vec![]) }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 2, node: el("f", vec![], vec![]) }), &base);
         let mid1 = protocol::apply_diff_cold(d1.diff(), &base).unwrap();
-        let d2 = Mutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 2, node: el("g", vec![], vec![]) }), &mid1);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&HtmlMutation::InsertNode(insert_node::InsertNode { parent: vec![], index: 2, node: el("g", vec![], vec![]) }), &mid1);
         let mid2 = protocol::apply_diff_cold(d2.diff(), &mid1).unwrap();
-        let d3 = Mutation::diff(&HtmlMutation::RemoveNode(remove_node::RemoveNode { parent: vec![], index: 0 }), &mid2);
+        let d3 = ::semio_framework_os_kernel::ColdMutation::diff(&HtmlMutation::RemoveNode(remove_node::RemoveNode { parent: vec![], index: 0 }), &mid2);
         let sequential = protocol::apply_diff_cold(d3.diff(), &mid2).unwrap();
 
         let mut left = d1.diff().clone();

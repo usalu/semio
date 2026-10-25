@@ -5,7 +5,7 @@ use super::*;
 // #region 🛂️Manifest
 //#region 🔖️Manifest
 //#region 🔖️Dialog
-/// 🗨️ A declared modal form dialog: a glass veil covers the screen and an info box (styled
+/// 💬️ A declared modal form dialog: a glass veil covers the screen and an info box (styled
 /// identically to every glass overlay box, see `ui_react`'s `GLASS_OVERLAY_BOX_CLASS`)
 /// presents `args` as a staged form. Submit dispatches `submit_action` with the merged effective
 /// args; empty `args` degenerates to a message/confirm dialog. Opened only via
@@ -25,7 +25,7 @@ pub struct DialogDefinition {
     /// 📇️ References an action owned by the active window kind, dispatched with merged args.
     pub submit_action: ActionRef,
     pub submit_label: LocalizedLabel,
-    /// 📇️ Optional active-window action reference dispatched on any dismissal (Escape, veil
+    /// ✖️ Optional active-window action reference dispatched on any dismissal (Escape, veil
     /// click, or the Cancel button).
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
@@ -42,7 +42,7 @@ pub struct DialogDefinition {
     pub choices: Vec<DialogChoice>,
 }
 
-/// 🔀️ The arg key a [`DialogChoice`] dispatch carries its own `id` under; reserved in a dialog with choices.
+/// ⌨️ The arg key a [`DialogChoice`] dispatch carries its own `id` under; reserved in a dialog with choices.
 pub const DIALOG_CHOICE_ARG: &str = "choice";
 
 /// 🎛️ One decision button of a [`DialogDefinition`]: a localized `label`, an optional `description` a
@@ -138,7 +138,7 @@ impl DialogDefinition {
         }
     }
 
-    /// 🔀️ Appends one decision offered beside the submit.
+    /// ➕️ Appends one decision offered beside the submit.
     pub fn choice(mut self, choice: DialogChoice) -> Self {
         self.choices.push(choice);
         self
@@ -165,7 +165,7 @@ impl DialogDefinition {
         Ok(())
     }
 
-    /// 📝️ Attaches explanatory body text shown below the title.
+    /// 📎️ Attaches explanatory body text shown below the title.
     pub fn body(mut self, body: impl Into<LocalizedLabel>) -> Self {
         self.body = Some(body.into());
         self

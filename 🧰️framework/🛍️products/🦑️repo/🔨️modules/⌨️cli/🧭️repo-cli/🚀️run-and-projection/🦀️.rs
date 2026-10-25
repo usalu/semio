@@ -77,7 +77,7 @@ pub fn graphql_roundtrip_json(records: &str, query: &str, variables: &str) -> Re
     Ok(go_json(&json!({ "ndjson": ndjson.out, "human": human.out, "markdown": markdown.out, "exitCode": ndjson.exit_code })))
 }
 
-/// 🕸️ The invocations the `test` verb would announce for one snapshot and one operand list, as
+/// 🧪️ The invocations the `test` verb would announce for one snapshot and one operand list, as
 /// JSON text: the `Running: …` lines in order plus the planner's refusals. Nothing executes.
 pub fn test_verb_lines_json(snapshot: &str, operands: &[String]) -> Result<String, String> {
     let snapshot: semio_framework_repo_test_runner::FilesystemSnapshot = serde_json::from_str(snapshot).map_err(|error| error.to_string())?;
@@ -169,7 +169,7 @@ pub fn mcp_conversation(profile: &str, requests: &[String]) -> Result<Vec<String
 
 //#region 🚀️Run
 
-/// 🚀️ Runs one repo CLI invocation on the process streams and answers its exit code.
+/// ▶️ Runs one repo CLI invocation on the process streams and answers its exit code.
 pub fn run(argv: &[String]) -> i32 {
     if argv.is_empty() || argv.first().is_some_and(|value| matches!(value.as_str(), "--help" | "-h")) { println!("Repository build commands: run, run-many, affected, exec, watch, dependencies, cargo, tools, reset, cache, preflight, show, graph, inputs, incremental, concurrency, capacity, leases, remote-execution\nHuman control plane: repo dashboard [arguments]\nMCP stdio: repo mcp (SEMIO_REPO_MCP_CLIENT selects the profile)\nOS MCP stdio: repo dev mcp stdio os [arguments]"); }
     use std::io::IsTerminal;
@@ -181,7 +181,7 @@ pub fn run(argv: &[String]) -> i32 {
     run_with(argv, &mut out, &mut err, is_tty)
 }
 
-/// 🚀️ Runs one repo CLI invocation on the given streams and answers its exit code.
+/// 🏃️ Runs one repo CLI invocation on the given streams and answers its exit code.
 pub fn run_with(argv: &[String], out: &mut dyn Write, err: &mut dyn Write, is_tty: bool) -> i32 {
     let root = root();
     let parsed = match parse(&root, argv) {

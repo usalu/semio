@@ -387,12 +387,9 @@
     "RegenerationCommand": {
       "description": "🏗️ Neutral repository target selection used by generated taxonomy plans.",
       "type": "array",
-      "minItems": 4,
-      "maxItems": 4,
+      "minItems": 3,
+      "maxItems": 3,
       "items": [
-        {
-          "const": "bun"
-        },
         {
           "const": "repo"
         },

@@ -367,12 +367,12 @@ impl WorkerPool {
         self.inner.deferred_wakes.pending(ticket, slot)
     }
 
-    /// 🧹️ Closes admission and removes a drained exact partition.
+    /// ➖️ Closes admission and removes a drained exact partition.
     pub fn remove_deferred_wake_partition(&self, ticket: WorkerDeferredWakeTicket) -> Result<bool, WorkerDeferredWakeError> {
         self.inner.deferred_wakes.remove(ticket)
     }
 
-    /// 🚦️ Attempts one hard-bounded admission without waiting for queue ownership. Failure
+    /// 🔏️ Attempts one hard-bounded admission without waiting for queue ownership. Failure
     /// returns the exact closure so a persistent operation owner can retry without losing state.
     pub fn try_submit(&self, lane: Lane, job: Job) -> Result<(), WorkerSubmitError> {
         if self.is_shutdown() {
@@ -394,7 +394,7 @@ impl WorkerPool {
         Ok(())
     }
 
-    /// ⏰️ Enqueues one finite job when the pool's monotonic clock reaches `deadline_ms`.
+    /// 🗓️ Enqueues one finite job when the pool's monotonic clock reaches `deadline_ms`.
     /// Waiting consumes no worker, lane permit, or admission slot. Transient lane contention
     /// retains the exact closure behind one timer-wheel callback until admission succeeds.
     pub fn submit_at(&self, deadline_ms: u64, lane: Lane, job: Job) {
@@ -420,7 +420,7 @@ impl WorkerPool {
         }
     }
 
-    /// 🔔️ Registers one bounded owner callback directly with the pool timer wheel. Unlike
+    /// 📞️ Registers one bounded owner callback directly with the pool timer wheel. Unlike
     /// [`WorkerPool::submit_at`], firing does not require a second lane admission, so an owner
     /// can use it to retry a previously rejected exact closure without depending on ingress.
     pub fn callback_at(&self, deadline_ms: u64, callback: impl FnOnce() + Send + 'static) {
@@ -459,7 +459,7 @@ impl WorkerPool {
         self.inner.trace_workers.active()
     }
 
-    /// 📊️ Permits currently checked out of this pool's own [`PermitLedger`] (sized to
+    /// 📒️ Permits currently checked out of this pool's own [`PermitLedger`] (sized to
     /// `worker_count`) — numerically the same as [`WorkerPool::active_workers`] for THIS pool's
     /// internal bookkeeping today, exposed separately because [`PermitLedger`] is also a
     /// standalone, independently reusable type.

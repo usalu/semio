@@ -269,7 +269,7 @@ return vec4<f32>(premultiplied / max(alpha, 0.000001), alpha);
 }
 "#;
 
-/// 🖼️ A Basic-material plane, so it blends and never writes depth. Its instance carries the
+/// 🏞️ A Basic-material plane, so it blends and never writes depth. Its instance carries the
 /// reference background, content opacity, and source transfer policy; `cull_mode: None` is React's
 /// `side={DoubleSide}` and `ALPHA_BLENDING` composites its encoded output over the scene.
 pub const WORLD3D_TEXTURED_PIPELINE: PipelineSpec = PipelineSpec {

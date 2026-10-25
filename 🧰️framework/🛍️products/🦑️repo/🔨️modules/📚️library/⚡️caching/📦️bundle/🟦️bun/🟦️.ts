@@ -4,12 +4,18 @@ import{readNativeCallerAuthorityV1}from"../../📦️artifacts/📋️native-orc
 import { findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readFileSync, lstatSync, realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { isAbsolute, relative, resolve, sep } from "node:path";
+import { extname, isAbsolute, relative, resolve, sep } from "node:path";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { runtimeBundleV1 } from "../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { runtimeBundleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
 
+
+/** 📝️ Extensions imported as text through an import attribute; the compiler reports their loader as `js` inside a load hook, so the hook names it. */
+const TEXT_EXTENSIONS_V1: ReadonlySet<string> = new Set([".sql"]);
+
+/** 🧭️ The loader a load hook returns for one package source file. */
+export function packageSourceLoaderV1(path: string, reported: string): string { return TEXT_EXTENSIONS_V1.has(extname(path)) ? "text" : reported; }
 
 /** 🧬️ An immutable compiler request whose captured source bytes are delivered through an owned pipe. */
 export type BunBundleRequest = Readonly<{ version: 1; mode: BuildMode }> & (Readonly<{ kind: "snapshot"; entrypoint: string; observe?: boolean; roots: readonly Readonly<{ name: string; path: string }>[] }> | Readonly<{ kind: "actor"; contents: string; runtime: Readonly<{ host: string; wasi: string }> }> | Readonly<{ kind: "module"; entrypoint: string; contents: string; external: readonly string[] }> | Readonly<{ kind: "bun-package"; entrypoint: string }>);
@@ -53,7 +59,7 @@ async function compileBunBundle(request: BunBundleRequest): Promise<BunBundleRes
         const path = realpathSync(args.path), before = lstatSync(path), bytes = readFileSync(path), after = lstatSync(path);
         if (!before.isFile() || bytes.byteLength !== before.size || ["dev", "ino", "size", "mtimeMs", "ctimeMs"].some(key => before[key as keyof typeof before] !== after[key as keyof typeof after])) throw new Error("Bun package source changed during capture");
         physicalInputs.set(path, { path, logicalPath: relative(workspace, path).split(sep).join("/"), sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength });
-        return { contents: bytes, loader: args.loader };
+        return { contents: bytes, loader: packageSourceLoaderV1(path, args.loader) as typeof args.loader };
       });
     } }] });
     if (!result.success) throw new Error("Bun package closure failed: " + result.logs.map(log => log.message).join("; "));

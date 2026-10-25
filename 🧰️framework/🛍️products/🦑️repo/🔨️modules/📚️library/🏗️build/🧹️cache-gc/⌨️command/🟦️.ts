@@ -1,4 +1,4 @@
-import {cacheLedgerV1,cacheTextV1,formatCacheBytesV1,formatCacheReportV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+import {cacheAreaDirectoryV1,cacheLedgerV1,cacheTextV1,formatCacheBytesV1,formatCacheReportV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import type {MemberScanControlV1,MemberVerifyReportV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts";
 import {cacheRunnerPortsV1,collectCacheV1,reportCacheLedgerV1,type CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
@@ -60,23 +60,45 @@ export async function runCacheLedgerCommandV1(args:readonly string[],context:Cac
 }
 
 /** 🚰️ Binds the graph reclaim to the real retained graph partition, its free space and the two shared scoped recoveries. */
-async function graphReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,phaseControl:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,leases:typeof import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),opening:typeof import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts")):Promise<string>{
+async function graphReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,phaseControl:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,leases:typeof import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),opening:typeof import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),partitions:typeof import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts"),headroom:typeof import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧹️headroom/🟦️.ts")):Promise<string>{
  const{reclaimGraphOptionalV1}=await import("../🚰️reclaim/🟦️.ts"),{nativeImageSpaceV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"),directory=opening.repositoryLeaseDirectoryV1(root);
- type Image=Awaited<ReturnType<typeof opening.openRepositoryCachePartitionV1>>;
+ type Image=Awaited<ReturnType<typeof partitions.openRepositoryCachePartitionV1>>;
  const exclusive=async(resource:string)=>{try{return await leases.acquireResourceLease({directory,resource,mode:"exclusive",signal:phaseControl.signal,control:phaseControl,timeoutMs:0});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return undefined;throw error;}};
  return reclaimGraphOptionalV1(root,cacheLedgerV1(),dryRun,language,{
   exclusive,
-  open:()=>opening.openRepositoryCachePartitionV1(root,"graph",phaseControl),
+  open:()=>partitions.openRepositoryCachePartitionV1(root,"graph",phaseControl),
+  supersede:async(image,dryRun)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),{buildGraphWriterResourceV1}=await import("../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs");return scan.supersedeBuildGraphObservationBlocksV1((image as Image).root,{lease:(kind,identity)=>exclusive(buildGraphWriterResourceV1(root,kind,identity))},{cancelled:()=>phaseControl.signal.aborted,progress:()=>{}},{dryRun});},
   index:async image=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),{buildGraphWriterResourceV1}=await import("../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs"),{resolve}=await import("node:path"),imageRoot=(image as Image).root;return scan.indexBuildGraphMembersV1(imageRoot,{lease:(kind,identity)=>exclusive(kind==="canonical"?"repository-graph-facts:"+resolve(root):buildGraphWriterResourceV1(root,kind,identity)),read:scan.closureReadChildPortV1(imageRoot,phaseControl)},{cancelled:()=>phaseControl.signal.aborted,progress:()=>{}});},
+  closures:async(image,dryRun)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),{buildGraphWriterResourceV1}=await import("../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs"),{resolve}=await import("node:path"),imageRoot=(image as Image).root;const resourceOf=(kind:"selection"|"dataset"|"canonical",identity:string)=>kind==="canonical"?"repository-graph-facts:"+resolve(root):buildGraphWriterResourceV1(root,kind,identity),{randomBytes}=await import("node:crypto");return scan.supersedeBuildGraphClosuresV1(imageRoot,{lease:(kind,identity)=>exclusive(resourceOf(kind,identity)),queue:async(kind,identity)=>{try{return await leases.acquireQueuedResourceLease({directory,resource:resourceOf(kind,identity),mode:"exclusive",owner:randomBytes(8).toString("hex"),signal:phaseControl.signal,control:phaseControl,timeoutMs:600000});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return undefined;throw error;}},read:scan.closureReadChildPortV1(imageRoot,phaseControl)},{cancelled:()=>phaseControl.signal.aborted,progress:()=>{}},{dryRun});},
   free:async image=>{const space=nativeImageSpaceV1((image as Image).root,(image as Image).filesystemBytes);return space.bavail*space.bsize;},
-  selected:(image,request)=>opening.recoverRepositoryCachePartitionSelectedHeadroomV1(root,image as Image,phaseControl,request),
-  optional:(image,request)=>opening.recoverRepositoryCachePartitionOptionalHeadroomV1(root,image as Image,phaseControl,request)
+  selected:(image,request)=>headroom.recoverRepositoryCachePartitionSelectedHeadroomV1(root,image as Image,phaseControl,request),
+  optional:(image,request)=>headroom.recoverRepositoryCachePartitionOptionalHeadroomV1(root,image as Image,phaseControl,request)
  });
+}
+
+/** 🌱️ Collects (or, in a dry run, only reports) the Cargo incremental sessions and then the stale build units of the mounted rust image: lock-aware (compiler locks and build leases), least recently used first, the pressure rule measured on the image itself. */
+async function cargoIncrementalReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,signal:AbortSignal):Promise<string>{
+ const{existsSync}=await import("node:fs"),{join}=await import("node:path"),ledger=cacheLedgerV1(),area=ledger.areas.find(row=>row.id==="rust")!,directory=cacheAreaDirectoryV1(root,ledger,area),store=directory===null?null:join(directory,"m");
+ if(store===null||!existsSync(store))return cacheTextV1(language,"gc.imageAbsent",{id:"cargo-store"});
+ const{collectIncrementalV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🌱️incremental/🟦️.ts"),{gcNeedBytesV1,measureVolumeV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts"),volume=measureVolumeV1(store,1),need=gcNeedBytesV1(volume.volumeBytes,volume.freeBytes),lines:string[]=[];
+ await collectIncrementalV1(store,{dryRun,volumeBytes:volume.volumeBytes,needBytes:()=>need,satisfied:()=>need>0&&measureVolumeV1(store,1).freeBytes-volume.freeBytes>=need,signal,report:{language,write:line=>lines.push(line)}});
+ const{collectUnitsV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🟦️.ts"),after=dryRun?volume:measureVolumeV1(store,1),remaining=dryRun?need:gcNeedBytesV1(after.volumeBytes,after.freeBytes);
+ await collectUnitsV1(store,{dryRun,needBytes:()=>remaining,satisfied:()=>remaining>0&&measureVolumeV1(store,1).freeBytes-after.freeBytes>=remaining,signal,report:{language,write:line=>lines.push(line)}});
+ const{fillRatesV1,fillReportV1,readFillSamplesV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/📈️fill/🟦️.ts"),current=measureVolumeV1(store,1);
+ lines.push(fillReportV1(fillRatesV1(readFillSamplesV1(join(store,"u")),Date.now()),current.freeBytes,language));
+ return lines.join("\n");
+}
+
+/** 🧪️ Retires the per-run test folders whose run has ended (no live task or run reader lease), oldest first, once the diagnostics image is above its high-water mark; a dry run only reports. */
+async function testRunsReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,phaseControl:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<string>{
+ const storage=await import("../../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🟦️.ts"),policy=(await import("../../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🔣️policy/🔣️json/🟦️.ts")).default;
+ const outcome=await storage.retainRepositoryTestArtifactsV1(root,invocation,phaseControl,{...policy,version:1},undefined,{dryRun});
+ return storage.repositoryTestRetentionReportV1(language,outcome,dryRun);
 }
 
 /** 🏗️ Binds the command to the running build CLI: its invocation for progress and cancellation, and the lease directory of the leases partition for the area leases. */
 export async function runCacheLedgerV1(root:string,args:readonly string[],invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl):Promise<void>{
- const routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),leases=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),opening=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),directory=opening.repositoryLeaseDirectoryV1(root);
+ const routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),leases=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),opening=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),partitions=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts"),headroom=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧹️headroom/🟦️.ts"),directory=opening.repositoryLeaseDirectoryV1(root);
  const ports=cacheRunnerPortsV1({
   signal:invocation.control.signal,
   progress:stage=>routing.advanceScriptInvocation(invocation,"cache:"+stage,"running"),
@@ -85,13 +107,15 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
    catch(error){if(/timed out/iu.test(String((error as Error).message)))return undefined;throw error;}
   },
   delegate:(owner,id,dryRun,language)=>{
-   if(owner==="graph"&&id==="graph-inference")return graphReclaim(root,dryRun,language,phaseControl,leases,opening);
+   if(owner==="graph"&&id==="graph-inference")return routing.withRequestedIssuedResourceControlV1(phaseControl,3600000,control=>graphReclaim(root,dryRun,language,control,leases,opening,partitions,headroom));
+   if(owner==="cargo"&&id==="cargo-store")return cargoIncrementalReclaim(root,dryRun,language,phaseControl.signal).catch(error=>"failed: "+String((error as Error).message));
+   if(owner==="test-evidence"&&id==="test-runs")return testRunsReclaim(root,dryRun,language,phaseControl,invocation).catch(error=>"failed: "+String((error as Error).message));
    if(owner==="remote-execution")return import("../../🌐️remote-execution/👷️worker/🟦️.ts").then(module=>module.collectRemoteExecutionForLedgerV1(root,dryRun,phaseControl.signal)).catch(error=>"failed: "+String((error as Error).message));
    if(owner==="remote-cache")return import("../../🌐️remote-cache/⌨️command/🟦️.ts").then(module=>module.collectRemoteCacheForLedgerV1(root,dryRun,phaseControl.signal)).catch(error=>"failed: "+String((error as Error).message));
-   return import("../../🔌️backends/🟦️.ts").then(async registry=>registry.buildBackendIdsV1().includes(owner)?(await registry.loadBuildBackendV1(owner)).collectCache?.({root,invocation,phase:phaseControl,dryRun,signal:phaseControl.signal}):undefined);
+   return import("../../🔌️backends/🟦️.ts").then(async registry=>registry.buildBackendIdsV1().includes(owner)?routing.withRequestedIssuedResourceControlV1(phaseControl,3600000,async control=>(await registry.loadBuildBackendV1(owner)).collectCache?.({root,invocation,phase:control,dryRun,signal:control.signal,area:id,language})):undefined);
   }
  });
- const verify=async(control:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts").MemberScanControlV1)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),image=await opening.openRepositoryCachePartitionV1(root,"graph",phaseControl);try{return await scan.verifyBuildGraphMembersDeepV1(image.root,control);}finally{await image.close();}};
+ const verify=async(control:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts").MemberScanControlV1)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),image=await partitions.openRepositoryCachePartitionV1(root,"graph",phaseControl);try{return await scan.verifyBuildGraphMembersDeepV1(image.root,control);}finally{await image.close();}};
  const code=await runCacheLedgerCommandV1(args,{workspace:root,environment:process.env,write:writeResultLineV1,verify},ports);
  if(code!==0)process.exitCode=code;
 }

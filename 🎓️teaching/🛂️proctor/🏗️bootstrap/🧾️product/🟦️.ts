@@ -1,4 +1,4 @@
-/** 🧾️ The proctor as a cached build product. `@teaching/proctor:build` compiles the executable through the repository's
+/** 🛍️ The proctor as a cached build product. `@teaching/proctor:build` compiles the executable through the repository's
  * issued Cargo launcher (`--store=shared`, the same code `repo cargo` runs) and leaves it at a content-addressed place,
  * `dist/build/<mode>/<sha256>/proctor`, beside `dist/build/<mode>/receipt.json`, which names that exact path, the digest,
  * the platform and every source file Cargo's dep-info says it read. Every consumer — the dev stack, `check`, the
@@ -20,10 +20,10 @@ import { chmod, copyFile, mkdir, open, readFile, readdir, rename, rm, stat, writ
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { createIssuedResourceControlV1, requireIssuedScriptInvocationV1, scriptInvocationEnvironment, type ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { writeOwnedCommandOutputV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import type { BuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import type { BuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import { launchRepositoryCargoV1, readRepositoryCargoLaunchV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
-import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { launchRepositoryCargoV1, readRepositoryCargoLaunchV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import { PROCTOR_PACKAGE, TEACHING_WORKSPACE, buildProctor, developmentDataSettled, launchProctor, LAUNCHER_SIGNALS, proctorBuildMode, proctorDevelopmentEnvironment, proctorSourceDirectories, type ProctorArtifact, type ProctorExecutable, type ProctorProcess } from "../🟦️.ts";
 import messages from "./💬️messages/🔣️.json" with { type: "json" };
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
@@ -44,14 +44,14 @@ export const PROCTOR_WORKSPACE_FILES = ["🎓️teaching/Cargo.toml", "🎓️te
 /** 🚫️ Directories whose files are build output or installed packages, never sources of the proctor. */
 export const PROCTOR_EXCLUDED_DIRECTORIES = ["target", "dist", "node_modules"] as const;
 
-/** 📥️ Which way the course obtains the proctor: from the built product, or (until the manifests declare the product as a
+/** 🎒️ Which way the course obtains the proctor: from the built product, or (until the manifests declare the product as a
  * dependency of every consumer) by the in-process build of {@link buildProctor}. */
 export const PROCTOR_ACQUISITION_DEFAULT: "product" | "build" = "product";
 
 /** 🏷️ The environment variable that selects the acquisition for one run. */
 export const PROCTOR_ACQUISITION_ENVIRONMENT = "SEMIO_PROCTOR_ACQUISITION";
 
-/** 🧾️ What `receipt.json` says; the schema is `./🧬️schema/🔣️.json`. */
+/** 🔣️ What `receipt.json` says; the schema is `./🧬️schema/🔣️.json`. */
 export interface ProctorProductReceipt {
   readonly version: 1;
   readonly package: "teaching-proctor";
@@ -81,7 +81,7 @@ export interface ProctorProduct {
 /** 🚦️ Why a product cannot be used. */
 export type ProctorProductFailure = "missing" | "stale" | "uncovered";
 
-/** 🔎️ Which property of a stale product failed. */
+/** 🥀️ Which property of a stale product failed. */
 export type ProctorProductReason = "unreadable" | "invalid" | "mode" | "platform" | "executable" | "size" | "hash";
 
 type MessageValue = string | number | { readonly reason: ProctorProductReason; readonly values: Readonly<Record<string, string | number>> };
@@ -130,12 +130,12 @@ export function proctorProductDirectory(repoRoot: string, mode: BuildMode): stri
   return join(resolve(repoRoot), ...PROCTOR_PRODUCT_DIRECTORY, mode);
 }
 
-/** 🖥️ This host. */
+/** 💻️ This host. */
 export function currentProctorHost(): ProctorProductHost {
   return { platform: process.platform, architecture: process.arch };
 }
 
-/** 🏷️ The file name of the executable on `platform`. */
+/** 🪪️ The file name of the executable on `platform`. */
 export function proctorExecutableName(platform: NodeJS.Platform): string {
   return platform === "win32" ? "proctor.exe" : "proctor";
 }
@@ -293,13 +293,13 @@ export function proctorSourceGlobs(roots: readonly string[], data: readonly stri
   ];
 }
 
-/** 📋️ The `proctorRust` named input a manifest declares, or `undefined` before the manifest declares one. */
+/** 🦀️ The `proctorRust` named input a manifest declares, or `undefined` before the manifest declares one. */
 export function declaredProctorInputs(manifest: { readonly namedInputs?: Record<string, unknown> }): string[] | undefined {
   const rows = manifest.namedInputs?.proctorRust;
   return Array.isArray(rows) && rows.every(row => typeof row === "string") ? (rows as string[]) : undefined;
 }
 
-/** 🧭️ The sources (workspace-relative) that `inputs` — the shapes {@link proctorSourceGlobs} writes — do not declare. */
+/** 🕳️ The sources (workspace-relative) that `inputs` — the shapes {@link proctorSourceGlobs} writes — do not declare. */
 export function uncoveredProctorSources(sources: readonly string[], inputs: readonly string[]): string[] {
   const include: ((file: string) => boolean)[] = [], exclude: ((file: string) => boolean)[] = [];
   for (const row of inputs) {
@@ -323,7 +323,7 @@ function manifestInputs(repoRoot: string): string[] | undefined {
   }
 }
 
-/** 🏗️ Options of {@link captureProctorProduct}. */
+/** ⚙️ Options of {@link captureProctorProduct}. */
 export interface CaptureProctorProductOptions {
   readonly host?: ProctorProductHost;
   readonly prune?: boolean;
@@ -393,7 +393,7 @@ export interface BuildProctorProductOptions {
   readonly env?: NodeJS.ProcessEnv;
 }
 
-/** 🏗️ `@teaching/proctor:build`: compiles the proctor through the issued Cargo launcher of the shared store (the code of
+/** 🔨️ `@teaching/proctor:build`: compiles the proctor through the issued Cargo launcher of the shared store (the code of
  * `repo cargo --store=shared --configuration=<mode> -- build …`, run in the teaching workspace under this invocation's
  * control, so progress and cancellation are the invocation's) and captures the result with {@link captureProctorProduct}
  * while the store is still retained. */
@@ -508,7 +508,7 @@ export function proctorAcquisition(env: Readonly<Record<string, string | undefin
   return chosen === "product" || chosen === "build" ? chosen : PROCTOR_ACQUISITION_DEFAULT;
 }
 
-/** 🧭️ The one way the course gets the proctor. With the product acquisition it resolves `@teaching/proctor:build`'s receipt for
+/** 🧲️ The one way the course gets the proctor. With the product acquisition it resolves `@teaching/proctor:build`'s receipt for
  * the original build mode (a missing or stale one is a {@link ProctorProductError}); with `rebuild` — the dev stack after a
  * Rust edit — it first runs {@link buildProctorProduct}, which is an explicit rebuild the developer asked for by editing.
  * `requestedMode` can only repeat the original mode. */
@@ -541,7 +541,7 @@ export async function runProctor(repoRoot: string, invocation: ScriptInvocation,
   }
 }
 
-/** 🛠️ `dev` of the proctor alone: settle the development data, saying what was set aside or why it ends here, then obtain the
+/** 🌱️ `dev` of the proctor alone: settle the development data, saying what was set aside or why it ends here, then obtain the
  * proctor, serve with the dev defaults and wait like {@link runProctor}. */
 export async function runDevelopmentProctor(repoRoot: string, invocation: ScriptInvocation, env: NodeJS.ProcessEnv = proctorDevelopmentEnvironment(repoRoot)): Promise<void> {
   if (await developmentDataSettled(repoRoot, env, line => console.warn(`[proctor] ${line}`))) await runProctor(repoRoot, invocation, ["serve"], env);

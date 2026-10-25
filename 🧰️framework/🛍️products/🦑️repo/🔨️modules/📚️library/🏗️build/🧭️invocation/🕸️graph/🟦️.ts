@@ -1,16 +1,62 @@
 import{readBuildGraphAncestorSelectionV1}from"../🟦️.ts";
 import{buildInvocationGraphSelectionV1,type BuildGraphSelectionV1}from"../../🕸️graph/🚪️admission/🟦️.ts";
-import type{BuildGraphV1}from"../../🕸️graph/🟦️.ts";
+import type { BuildGraphV1 } from "../../🕸️graph/📋️model/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{checkScriptInvocation,advanceScriptInvocation,requireIssuedResourceControlInvocationV1,type ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-/** 🕸️ Loads only the selected graph through the exact current phase and Original. */
-export async function loadBuildInvocationGraphV1(root:string,args:readonly string[],original:ScriptInvocation,current:ScriptInvocation,phaseControl:ResourceLeaseControl,reuse:boolean,read?:(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse:boolean;graph?:{policy?:"fresh"|"current";compact?:boolean}})=>Promise<BuildGraphV1>,graphPolicy?:"fresh"|"current",compact?:boolean):Promise<BuildGraphV1>{
+/** 🕸️ The options one invocation load passes to a Graph reader. */
+export type BuildInvocationGraphLoadOptionsV1={selection:BuildGraphSelectionV1;reuse:boolean;graph?:{policy?:"fresh"|"current";compact?:boolean}};
+
+/** 📖️ A Graph reader as the invocation load calls it. */
+export type BuildInvocationGraphReaderV1=(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:BuildInvocationGraphLoadOptionsV1)=>Promise<BuildGraphV1>;
+
+/** 🔨️ Loads only the selected graph through the exact current phase and Original; a reusing load reads the pinned snapshot through a Graph reader it opens itself (or the one its caller already holds), because a nested child process starts with none. */
+export async function loadBuildInvocationGraphV1(root:string,args:readonly string[],original:ScriptInvocation,current:ScriptInvocation,phaseControl:ResourceLeaseControl,reuse:boolean,read?:BuildInvocationGraphReaderV1,graphPolicy?:"fresh"|"current",compact?:boolean):Promise<BuildGraphV1>{
  requireIssuedResourceControlInvocationV1(phaseControl,current);checkResourceLeaseControl(phaseControl);checkScriptInvocation(original);if(current.control!==original.control||current.policy!==original.policy)throw Error("Original nested build process control changed");
- const selection=buildInvocationGraphSelectionV1(args),load=read??(await import("../../🕸️graph/🟦️.ts")).loadBuildGraphV1,ancestor=reuse?readBuildGraphAncestorSelectionV1(root,original.capabilities):undefined;
+ const selection=buildInvocationGraphSelectionV1(args),loader:BuildInvocationGraphReaderV1=read??(await import("../../🕸️graph/🟦️.ts")).loadBuildGraphV1,load:BuildInvocationGraphReaderV1=async(base:string,invocation:ScriptInvocation,control:ResourceLeaseControl,options:BuildInvocationGraphLoadOptionsV1)=>options.reuse?(await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts")).withRepositoryCacheStoreV1(base,"graph",invocation,control,(_store,actual)=>loader(base,invocation,actual,options)):loader(base,invocation,control,options),ancestor=reuse?readBuildGraphAncestorSelectionV1(root,original.capabilities):undefined;
  if(ancestor&&JSON.stringify(ancestor)!==JSON.stringify(selection)){
   if((current.capabilities as {native?:unknown}).native!==(original.capabilities as {native?:unknown}).native)throw Error("Original nested build native resources changed");
   await load(root,original,phaseControl,{selection:ancestor,reuse:true});checkResourceLeaseControl(phaseControl);checkScriptInvocation(original);await advanceScriptInvocation(original,"build:nested-selection","running");checkResourceLeaseControl(phaseControl);checkScriptInvocation(original);
   const graph=await load(root,current,phaseControl,{selection,reuse:false,...(graphPolicy||compact?{graph:{...(graphPolicy?{policy:graphPolicy}:{}),...(compact?{compact}:{})}}:{})});checkResourceLeaseControl(phaseControl);return graph;
  }
  const graph=await load(root,current,phaseControl,{selection,reuse,...(graphPolicy||compact?{graph:{...(graphPolicy?{policy:graphPolicy}:{}),...(compact?{compact}:{})}}:{})});checkResourceLeaseControl(phaseControl);return graph;
+}
+
+/** 🧊️ Names the plan file a graph child writes; the marker is set only in the environment of that child. */
+export const BUILD_GRAPH_PLAN_OUT_V1="SEMIO_BUILD_GRAPH_PLAN_OUT";
+
+/** 📌️ The sidecar of the plan file that names the generation the child served: the loader that reads the plan hands it to the commands its descendants start. */
+export const BUILD_GRAPH_PLAN_PIN_SUFFIX_V1=".pin";
+
+/** 👶️ Whether the graph of this process is planned by a child that exits: every graph construction (verification, refresh, assembly) fills a heap that JavaScriptCore never gives back, and a loader lives for the whole build phase (hours), so the construction runs in a child and the loader only reads the finished slice. Off for nested readers of a pinned graph and with `SEMIO_BUILD_GRAPH_ISOLATE=off`. */
+export function buildGraphPlanInChildV1(environment:Readonly<Record<string,string|undefined>>,reuse:boolean):boolean{return !reuse&&environment[BUILD_GRAPH_PLAN_OUT_V1]===undefined&&environment.SEMIO_BUILD_GRAPH_ISOLATE!=="off";}
+
+/** 📝️ Streams a graph slice to the plan file of the parent that is waiting for this child. */
+export async function writeBuildGraphPlanV1(file:string,graph:BuildGraphV1,signal?:AbortSignal):Promise<void>{
+ const{open,writeFile}=await import("node:fs/promises"),{writeJsonStreamV1}=await import("../../🕸️graph/🕰️generations/🌊️json-stream/🟨️.mjs"),handle=await open(file,"wx",0o600);
+ try{await writeJsonStreamV1(graph,text=>handle.write(text).then(()=>undefined),{signal});await handle.sync();}finally{await handle.close();}
+ const pin=(await import("../../🕸️graph/🟦️.ts")).sealedGenerationPinV1();if(pin!==undefined)await writeFile(file+BUILD_GRAPH_PLAN_PIN_SUFFIX_V1,pin,{flag:"wx",mode:0o600});
+}
+
+/** 🧠️ The memory JavaScriptCore is told the child may use, which sets how far it lets the heap grow before it collects: the megabytes the admission granted this invocation, at least 2 GiB. Without it the heap grows toward a quarter of the host before the first full collection. */
+export function buildGraphChildHeapBytesV1(environment:Readonly<Record<string,string|undefined>>):number{
+ let granted=0;try{const plan=JSON.parse(environment.SEMIO_HOST_CAPACITY_PLAN??"null") as {memoryMegabytes?:unknown;fixedMegabytes?:unknown}|null;const part=(value:unknown)=>typeof value==="number"&&Number.isFinite(value)&&value>0?value:0;granted=part(plan?.memoryMegabytes)+part(plan?.fixedMegabytes);}catch{}
+ return Math.max(2147483648,Math.floor(granted)*1048576);
+}
+
+/** 🏗️ Plans the graph in a child process of the same invocation and returns its slice: the child is the invocation's own declared request run again with the plan file marker (it inherits the capacity grant and the issued phase), loads exactly what this process would load, writes the slice and exits; nothing it allocated stays resident in the loader. */
+export async function loadBuildGraphInChildV1(root:string,args:readonly string[],parent:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<BuildGraphV1>{
+ requireIssuedResourceControlInvocationV1(phaseControl,parent);checkResourceLeaseControl(phaseControl);
+ const{mkdtempSync,rmSync,readFileSync,existsSync}=await import("node:fs"),{tmpdir}=await import("node:os"),{join}=await import("node:path"),{runOwnedCommand}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"),{projectOwnedBuildChildEnvironmentV1}=await import("../../📥️caller/📤️child/🟦️.ts"),{compilerAdmissionBudgetV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"),{scriptInvocationBudget}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
+ const directory=mkdtempSync(join(tmpdir(),"semio-graph-plan-")),file=join(directory,"graph.json");
+ try{
+  const environment=await projectOwnedBuildChildEnvironmentV1(root,args,parent,phaseControl);checkResourceLeaseControl(phaseControl);
+  const progress=async()=>{checkResourceLeaseControl(phaseControl);await advanceScriptInvocation(parent,"build:graph-plan","running");checkResourceLeaseControl(phaseControl);};await progress();
+  await runOwnedCommand(process.execPath,["repo",...args],root,"build:graph-plan",scriptInvocationBudget(parent,compilerAdmissionBudgetV1(phaseControl)),{env:{...environment,[BUILD_GRAPH_PLAN_OUT_V1]:file,BUN_JSC_forceRAMSize:String(buildGraphChildHeapBytesV1(process.env))},signal:phaseControl.signal,onProgress:progress,stdout:"stderr"});
+  checkResourceLeaseControl(phaseControl);
+  const{readBuildGraphV1}=await import("../../🕸️graph/🟦️.ts");
+  const graph=readBuildGraphV1(JSON.parse(readFileSync(file,"utf8"))),{recordSealedGenerationPinV1}=await import("../../🕸️graph/🟦️.ts");recordSealedGenerationPinV1(existsSync(file+BUILD_GRAPH_PLAN_PIN_SUFFIX_V1)?readFileSync(file+BUILD_GRAPH_PLAN_PIN_SUFFIX_V1,"utf8"):undefined);
+  const{renderGenerationMessageV1}=await import("../../🕸️graph/🕰️generations/🔌️load/🟨️.mjs"),{resolveLanguageV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts"),{CATALOG_LANGUAGES_V1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts");
+  process.stderr.write(renderGenerationMessageV1("planned",{count:Object.keys(graph.projects).length},resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language)+"\n");
+  return graph;
+ }finally{rmSync(directory,{recursive:true,force:true});}
 }

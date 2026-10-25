@@ -32,7 +32,7 @@ pub const MAGIC: [u8; 8] = [0x89, b'S', b'P', b'R', 0x0D, 0x0A, 0x1A, 0x0A];
 pub const HEADER_SIZE: usize = 32;
 /// 🔢️ The container format version this crate writes and reads.
 pub const FORMAT_VERSION_MAJOR: u16 = 1;
-/// 🔢️ The container format minor version this crate writes.
+/// 📝️ The container format minor version this crate writes.
 pub const FORMAT_VERSION_MINOR: u16 = 0;
 
 /// 🎭️ The union of `crate::REQUIRED_*` bits this crate understands; any bit outside
@@ -53,7 +53,7 @@ pub fn build_header_bytes(required_flags: u32, optional_flags: u32) -> [u8; HEAD
     buf
 }
 
-/// 📖️ Validates a source's 32-byte header in place: magic, self-CRC, `required_flags`
+/// ✅️ Validates a source's 32-byte header in place: magic, self-CRC, `required_flags`
 /// restricted to `REQUIRED_KNOWN_MASK` (0..=2), `version_major == 1`. Every failure mode reuses a
 /// `crate::codec::PackError` variant wrapped in `ProtocolError::Pack` — all are directly constructible
 /// (no protocol_core amendment needed, unlike the contract's fallback-deviation clause anticipated).
@@ -106,7 +106,7 @@ pub async fn read_header<S: PackSource>(source: &S) -> Result<Header, ProtocolEr
 //#endregion 🔖️Header
 
 //#region 🔖️Frame
-/// 🔢️ The wire width, in bytes, of `value` encoded as an unsigned LEB128 varint.
+/// 📡️ The wire width, in bytes, of `value` encoded as an unsigned LEB128 varint.
 async fn varint_width(value: u64) -> u64 {
     let mut buf = Vec::with_capacity(10);
     semio_framework_replication_codec::write_varint_u64(&mut buf, value);
@@ -211,7 +211,7 @@ impl<'a> RecordFrame<'a> {
         self.stored
     }
 
-    /// 📏️ Total on-disk bytes this frame occupies (the value its trailing `back_len` field
+    /// 🔲️ Total on-disk bytes this frame occupies (the value its trailing `back_len` field
     /// carries), recomputed from the visible fields rather than cached — every input to the
     /// computation is already public state, so there is nothing to desync.
     pub async fn frame_len(&self) -> u64 {
@@ -306,7 +306,7 @@ pub struct ReverseFrameCursor<'a> {
     pos: usize,
 }
 
-/// 📏️ The smallest possible on-disk frame: a 1-byte `body_len` varint (value 2, the minimum
+/// 🔳️ The smallest possible on-disk frame: a 1-byte `body_len` varint (value 2, the minimum
 /// legal body_len), 1 kind byte, 1 flags byte, 4 crc32c bytes, 4 back_len bytes.
 const MIN_FRAME_LEN: usize = 11;
 
@@ -342,10 +342,10 @@ impl<'a> ReverseFrameCursor<'a> {
 //#endregion 🔖️Frame
 
 //#region 🔖️Commit
-/// 📏️ Every commit frame's fixed total on-disk size: `1(body_len, single byte since 65 <
+/// 🖼️ Every commit frame's fixed total on-disk size: `1(body_len, single byte since 65 <
 /// 128) + 1(kind) + 1(flags) + 64(payload) + 4(crc32c) + 4(back_len)`.
 pub const COMMIT_FRAME_LEN: u64 = 75;
-/// 📏️ Fixed size of a `REC_COMMIT` frame's payload, in bytes.
+/// 🎒️ Fixed size of a `REC_COMMIT` frame's payload, in bytes.
 pub const COMMIT_PAYLOAD_LEN: usize = 64;
 
 /// ⛓️ The decoded fields of a `REC_COMMIT` frame's fixed 64-byte payload. Public — this is
@@ -361,7 +361,7 @@ pub struct CommitPayload {
     pub chain_hash: [u8; 32],
 }
 
-/// ✍️ Serializes a commit's fixed 64-byte payload per the contract's exact field offsets.
+/// 💾️ Serializes a commit's fixed 64-byte payload per the contract's exact field offsets.
 pub fn write_commit_payload(commit_seq: u64, prev_commit_offset: u64, records_len: u64, record_count: u32, chain_hash: &[u8; 32]) -> [u8; COMMIT_PAYLOAD_LEN] {
     let mut buf = [0u8; COMMIT_PAYLOAD_LEN];
     buf[0..8].copy_from_slice(&commit_seq.to_le_bytes());
@@ -372,7 +372,7 @@ pub fn write_commit_payload(commit_seq: u64, prev_commit_offset: u64, records_le
     buf
 }
 
-/// 📖️ Parses a commit frame's payload; the only structural requirement is the exact 64-byte
+/// 🔬️ Parses a commit frame's payload; the only structural requirement is the exact 64-byte
 /// length (already implied by `COMMIT_FRAME_LEN`, but checked directly since callers may hand this
 /// any `stored` slice, e.g. during `recover`'s source-backed reads). Public per the `CommitPayload`
 /// doc comment above — the sole intended entry point for decoding a `RecordFrame`'s `stored` bytes
@@ -403,7 +403,7 @@ pub struct WriteOptions {
 /// copying an already caller-owned payload slice.
 type PreparedPayload<'a> = (bool, Option<u64>, std::borrow::Cow<'a, [u8]>);
 
-/// 🗜️ Resolves `codec` for one `write_record` call.
+/// 📹️ Resolves `codec` for one `write_record` call.
 async fn prepare_payload(codec: semio_framework_replication_codec::CodecId, payload: &[u8]) -> Result<PreparedPayload<'_>, ProtocolError> {
     match codec.0 {
         0 => Ok((false, None, std::borrow::Cow::Borrowed(payload))),
@@ -477,7 +477,7 @@ impl<'a, S: PackSink> SprIdentityRecord<'a, S> {
 }
 
 impl<S: PackSink> SprWriter<S> {
-    /// 🚀️ Writes the 32-byte header and seeds `chain_0 = blake3(header bytes)`.
+    /// 🌱️ Writes the 32-byte header and seeds `chain_0 = blake3(header bytes)`.
     pub async fn begin(mut sink: S, options: &WriteOptions) -> Result<Self, SprWriteError<S::Error>> {
         let unknown = options.required_flags & !REQUIRED_KNOWN_MASK;
         if unknown != 0 {
@@ -564,7 +564,7 @@ impl<S: PackSink> SprWriter<S> {
         Ok(start_offset)
     }
 
-    /// ⛓️ Writes a `REC_COMMIT` frame covering everything since the last commit (or the
+    /// 📔️ Writes a `REC_COMMIT` frame covering everything since the last commit (or the
     /// header, for the first).await: `chain_n = blake3(chain_{n-1} || digest_1 || .. || digest_k)`.
     /// Returns the commit frame's start offset.
     pub async fn commit(&mut self) -> Result<u64, SprWriteError<S::Error>> {
@@ -588,7 +588,7 @@ impl<S: PackSink> SprWriter<S> {
         Ok(offset)
     }
 
-    /// 📤️ Unwraps the underlying sink (e.g. to hand a `Vec<u8>` or file handle onward).
+    /// 🚰️ Unwraps the underlying sink (e.g. to hand a `Vec<u8>` or file handle onward).
     pub async fn into_sink(self) -> S {
         self.sink
     }
@@ -600,7 +600,7 @@ impl<S: PackSink> SprWriter<S> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RecoveryReport {
     pub records_recovered: u64,
-    /// 📏️ Design choice: the absolute count of trusted bytes from the start of the file —
+    /// 🎨️ Design choice: the absolute count of trusted bytes from the start of the file —
     /// i.e. the offset callers should truncate/slice to (`&bytes[..bytes_recovered]`), not merely
     /// "bytes of record payload." Always `>= HEADER_SIZE` (the header itself always counts).
     pub bytes_recovered: u64,
@@ -626,7 +626,7 @@ pub enum VerificationLevel {
     Full,
 }
 
-/// 🔢️ Reads one LEB128 varint at an absolute source offset, one byte at a time so it never
+/// 🪵️ Reads one LEB128 varint at an absolute source offset, one byte at a time so it never
 /// over-reads a legitimately short remaining source. Mirrors `os_pack::format::read_varint_u64_at`.
 async fn read_varint_via_source<S: PackSource>(source: &S, offset: u64, total_len: u64) -> Result<(u64, u64), ProtocolError> where ProtocolError: From<S::Error> {
     let mut tmp: Vec<u8> = Vec::with_capacity(10);
@@ -651,11 +651,11 @@ async fn read_varint_via_source<S: PackSource>(source: &S, offset: u64, total_le
     Ok((value, i))
 }
 
-/// 👓️ `(kind, flags, raw_len, owned payload, frame_len)` — the owning twin of `RecordFrame`
+/// 🚩️ `(kind, flags, raw_len, owned payload, frame_len)` — the owning twin of `RecordFrame`
 /// for `PackSource`-backed reads, which cannot borrow zero-copy from a random-access source.
 type SourceFrame = (u8, u8, Option<u64>, Vec<u8>, u64);
 
-/// 👓️ Source-backed (owning, non-zero-copy) frame read at an absolute offset — the
+/// ⏪️ Source-backed (owning, non-zero-copy) frame read at an absolute offset — the
 /// `PackSource` twin of `decode_frame_in_slice`, used by `recover`'s forward scan and fast-path
 /// commit walk, both of which operate over `PackSource` rather than an in-memory slice. Validates
 /// `body_len` against `limits.max_frame_len` BEFORE allocating the body buffer.

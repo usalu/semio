@@ -48,7 +48,7 @@ await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner:
   new CheckScript(root, root, invocation).run([]);
   new PreviewGeneratedScript(root, root, invocation).run([]);
 });
-console.log("[DEBUG] independent Node product-removal loader: 58 entries, two planned projections, check and preview executed");`, resolveDir: repoRoot, sourcefile: "entity-removal-oracle.ts", loader: "ts" },
+console.log("[TRACE] independent Node product-removal loader: 58 entries, two planned projections, check and preview executed");`, resolveDir: repoRoot, sourcefile: "entity-removal-oracle.ts", loader: "ts" },
       bundle: true, write: false, platform: "node", format: "esm", logLevel: "silent",
       plugins: [{ name: "complete-product-removal", setup(api) {
         api.onResolve({ filter: /products/ }, args => ({ errors: [{ text: `product removed: ${args.path}` }] }));
@@ -62,8 +62,7 @@ console.log("[DEBUG] independent Node product-removal loader: 58 entries, two pl
     const reply = JSON.parse(preview);
     assert.equal(reply.contractId, "schema-entity-catalog");
     assert.deepEqual(reply.nodes.map((node: { path: string }) => node.path).sort(), [...fixture.generalOutputs].sort());
-    assert(node.stdout.includes("[DEBUG] independent Node product-removal loader"));
-    console.log(node.stdout.split("\n").filter(line => line.startsWith("[DEBUG]")).join("\n"));
+    assert(node.stdout.includes("[TRACE] independent Node product-removal loader"));
   } catch (error) { failures.push(`product removal loader: ${String(error)}`); }
   assert.deepEqual(failures, [], failures.join("\n"));
 }

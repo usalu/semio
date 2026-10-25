@@ -26,5 +26,4 @@ fn fixed_key_slots_match_portable_admission_and_stale_release(){
  assert!(!a.release(1,foreign));assert_eq!(a.lookup(1),Some(own));assert!(a.release(1,own));assert!(b.release(1,foreign));
  let mut exhausted=FixedKeySlots::<u64,1>::new();exhausted.generations[0]=u64::MAX;assert!(exhausted.claim(1).is_none());
  assert!(FixedKeySlots::<u64,0>::new().claim(1).is_none());
- println!("[DEBUG] {} exact fixed-slot fixture transitions preserve foreign and stale ownership; exhausted generations refuse; original registry construction/claim/lookup/release allocate and release zero heap bytes",law["actions"].as_array().unwrap().len());
 }

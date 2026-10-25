@@ -9,7 +9,7 @@ import { rootAliasModules } from "../../../🏗️authoring/📦️crate-tree/�
 import { rewriteMountPaths } from "../../../🏗️authoring/📦️crate-tree/📝️render/🟦️.ts";
 import { verifyAppliedLayout } from "../../../🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
 import { transformTestClosure } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts";
-import { absolutizeSuperPaths } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️shared/🟦️.ts";
+import { absolutizeSuperPaths } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️harness/🟦️.ts";
 import { tiny, weaveFiles } from "../🏗️virtual-crate/🟦️.ts";
 
 describe("artifact crate carve", () => {

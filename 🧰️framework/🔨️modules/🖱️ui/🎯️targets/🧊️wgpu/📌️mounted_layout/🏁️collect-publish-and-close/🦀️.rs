@@ -130,7 +130,6 @@ impl MountedLayoutJob {
         if let Some(owner)=self.runs.as_deref(){return list(owner)}
         if let Some(owner)=self.walk.as_deref(){return list(owner)}
         if let Some(owner)=self.nodes.as_deref(){return list(owner)}
-        if self.child_scratch.capacity()!=0{return self.child_scratch.capacity().checked_mul(size_of::<usize>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"layout scratch backing overflow"))}
         if !self.flex.close_is_empty(){return self.flex.next_close_release_byte_demand()}
         if self.atlas_candidate.pages.iter().any(Option::is_some){return Ok(LAYOUT_ATLAS_PAGE_BYTES)}
         self.text_worker.next_close_release_bytes()
@@ -145,7 +144,7 @@ impl MountedLayoutJob {
         quote_pop!(results,lines,glyph_previews,glyphs,runs,walk,nodes);
         macro_rules! quote_release{($($field:ident),+)=>{$(if let Some(owner)=self.$field.as_deref(){return depth(owner,false)})+}}
         quote_release!(results,lines,glyph_previews,glyphs,runs,walk,nodes);
-        if self.child_scratch.capacity()!=0{return Ok(1)}if !self.flex.close_is_empty(){return self.flex.next_close_depth_demand()}Ok(usize::from(!self.terminal_is_empty()))
+        if !self.flex.close_is_empty(){return self.flex.next_close_depth_demand()}Ok(usize::from(!self.terminal_is_empty()))
     }
     fn close_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
@@ -162,7 +161,6 @@ impl MountedLayoutJob {
             self.$field.take();return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})
         }}}
         close_list!(results);close_list!(lines);close_list!(glyph_previews);close_list!(glyphs);close_list!(runs);close_list!(walk);close_list!(nodes);
-        if self.child_scratch.capacity()!=0{drop(std::mem::take(&mut self.child_scratch));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})}
         if !self.flex.close_is_empty(){return self.flex.close_granted(grant)}
         if !self.atlas_candidate.is_empty(){self.atlas_candidate.close_one();return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})}
         Ok(if self.text_worker.terminal_is_empty(){Step::Complete{progress:empty}}else{Step::Blocked})
@@ -178,7 +176,7 @@ impl MountedLayoutJob {
     fn layout_is_empty(&self)->bool{
         self.fault_payload.terminal_is_empty()&&self.rejected_result.is_none()&&self.rejected_line.is_none()&&self.rejected_glyph.is_none()&&self.rejected_preview.is_none()&&self.rejected_run.is_none()&&self.rejected_walk.is_none()&&self.rejected_node.is_none()
         &&self.results.is_none()&&self.lines.is_none()&&self.glyph_previews.is_none()&&self.glyphs.is_none()&&self.runs.is_none()&&self.walk.is_none()&&self.nodes.is_none()
-        &&self.child_scratch.capacity()==0&&self.flex.close_is_empty()&&self.atlas_candidate.is_empty()
+        &&self.flex.close_is_empty()&&self.atlas_candidate.is_empty()
     }
 
 }

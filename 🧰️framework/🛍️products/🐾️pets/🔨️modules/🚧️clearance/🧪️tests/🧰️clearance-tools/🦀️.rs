@@ -18,7 +18,7 @@ const BITES: [(Ablation, u32, Ticks); 6] = [
     (|rules| Rules { eviction: false, ..rules }, 17, 40),
 ];
 
-/// 🧰️ A box by its four edges.
+/// 🔲️ A box by its four edges.
 pub(super) fn rect(x0: f64, y0: f64, x1: f64, y1: f64) -> Extent {
     Extent { x0, y0, x1, y1 }
 }

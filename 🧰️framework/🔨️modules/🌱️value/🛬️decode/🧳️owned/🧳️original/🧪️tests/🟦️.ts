@@ -11,5 +11,4 @@ test("native receiving keeps original custody through the declared close ladder"
   const closed=db.query("select name from owners order by rank").all()as{name:string}[];expect(closed.map(row=>row.name)).toEqual(["receiver","output","original-source","frame"]);
   for(let prefix=0;prefix<=closed.length;prefix++){const original=db.query("select count(*) as live from owners where name='original-source' and rank>=?").get(prefix)as{live:number};const receiver=db.query("select count(*) as live from owners where name='receiver' and rank>=?").get(prefix)as{live:number};expect(receiver.live<=original.live).toBe(true);}
  }finally{db.close();}
- console.log("[DEBUG] native receiving strict schema and SQLite closure frontier oracle passed");
 });

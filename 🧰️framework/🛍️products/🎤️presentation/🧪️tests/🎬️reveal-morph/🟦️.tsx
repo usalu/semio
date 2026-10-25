@@ -4,9 +4,9 @@
  * @see ../../🎯️targets/⚛️react/🟦️.tsx — the module under test
  */
 import { buildResolutionScope } from "@semio-tech/presentation";
-import type { Slide } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import type { Slide } from "@semio-tech/presentation-react";
 import { describe, expect, it } from "vitest";
-import { figureCropBackgroundVars, figureCropBackgroundVarsTargetGhost, isRevealAutoAnimatePairSource, morphFrameCssVars, presentationAutoAnimateMatcher, resolveRevealArrangement, revealInkMeasureForAutoAnimate, revealTextAutoAnimatePairOptions } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { figureCropBackgroundVars, figureCropBackgroundVarsTargetGhost, isRevealAutoAnimatePairSource, morphFrameCssVars, presentationAutoAnimateMatcher, resolveRevealArrangement, revealInkMeasureForAutoAnimate, revealTextAutoAnimatePairOptions } from "@semio-tech/presentation-react";
 import { stockRevealAutoAnimateMatcherHost } from "../🧰️presentation-deck-helpers/🟦️.tsx";
 
 describe("resolveRevealArrangement", () => {

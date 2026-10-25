@@ -4,6 +4,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use crate::schema::diff::{diff_move_node, node_origin, SemioDrawingDiff};
 use crate::schema::snapshot::SemioDrawingSnapshot;
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

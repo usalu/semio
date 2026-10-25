@@ -1,4 +1,4 @@
-/** ⏱️ Owns ordered test levels and their portable wall-clock budgets. */
+/** 🧪️ Owns ordered test levels and their portable wall-clock budgets. */
 export const TEST_LEVELS = ["fundamental", "quick", "long", "exhaustive"] as const;
 
 export type TestLevel = (typeof TEST_LEVELS)[number];
@@ -14,7 +14,7 @@ export function isTestLevel(value: string | undefined): value is TestLevel {
   return !!value && (TEST_LEVELS as readonly string[]).includes(value);
 }
 
-/** ⏱️Reads the active test level (`SEMIO_TEST_LEVEL`, defaulting to `fundamental`) — set by [[resolveTestLevel]]. */
+/** 📖️Reads the active test level (`SEMIO_TEST_LEVEL`, defaulting to `fundamental`) — set by [[resolveTestLevel]]. */
 export function activeTestLevel(): TestLevel {
   return isTestLevel(process.env.SEMIO_TEST_LEVEL) ? (process.env.SEMIO_TEST_LEVEL as TestLevel) : "fundamental";
 }
@@ -36,19 +36,19 @@ export function resolveTestLevel(segments: string[], minimum: TestLevel = "funda
   return { level, rest: isTestLevel(first) ? restIfLevel : segments };
 }
 
-/** 🎚️Numeric rank of a test level (0=fundamental..3=exhaustive), for `if (testLevelRank() >= testLevelRank("long"))`-style gating in test files. */
+/** 🔢️Numeric rank of a test level (0=fundamental..3=exhaustive), for `if (testLevelRank() >= testLevelRank("long"))`-style gating in test files. */
 export function testLevelRank(level: string | undefined = process.env.SEMIO_TEST_LEVEL): number {
   const idx = TEST_LEVELS.indexOf((isTestLevel(level) ? level : "fundamental") as TestLevel);
   return idx === -1 ? 0 : idx;
 }
 
-/** 🎚️True when the active level reaches `level` — the predicate behind level-gated test cases and level-gated `includeSource` entries. */
+/** 🪜️True when the active level reaches `level` — the predicate behind level-gated test cases and level-gated `includeSource` entries. */
 export function testLevelAtLeast(level: TestLevel): boolean {
   return testLevelRank() >= testLevelRank(level);
 }
 
 /**
- * 🎚️Level-gates one Vitest case factory: `atTestLevel(it, "long")` runs the case from `long` upwards and
+ * 🚦️Level-gates one Vitest case factory: `atTestLevel(it, "long")` runs the case from `long` upwards and
  * reports it as skipped below that, so a case that outgrows its level's wall-clock budget moves level
  * instead of being deleted or silently killed. Structurally typed on `runIf` so this library never
  * depends on Vitest's own types — and typed by what `runIf` RETURNS rather than by the factory itself,
@@ -63,7 +63,7 @@ export function testLevelBudgetMs(level: TestLevel = activeTestLevel()): number 
   return Number(process.env.SEMIO_TEST_BUDGET_MS ?? TEST_LEVEL_BUDGET_MS[level]);
 }
 
-/** ⏱️Wall-clock budget (seconds, rounded up) for the given test level — for toolchains that take second-granularity timeouts. */
+/** 💰️Wall-clock budget (seconds, rounded up) for the given test level — for toolchains that take second-granularity timeouts. */
 export function testLevelBudgetSeconds(level: TestLevel = activeTestLevel()): number {
   return Math.ceil(testLevelBudgetMs(level) / 1000);
 }

@@ -8,5 +8,5 @@ catch(error){failed=true;primary=error;}
 try{if(!uncertain){if(started){call(core,"FSEventStreamStop",stream);started=false;}if(scheduled)call(core,"FSEventStreamInvalidate",stream);if(late){uncertain=true;throw Error("Service callback after actual stop refused");}if(stream)call(core,"FSEventStreamRelease",stream);for(const value of[paths,mode,path])if(value)call(foundation,"CFRelease",value);if(callback)callback.close();if(foundation)foundation.close();if(core)core.close();}}
 catch(error){cleanupFailed=true;cleanupError=error;}
 if(failed){if(cleanupFailed&&!Object.is(primary,cleanupError))throw new AggregateError([primary,cleanupError],"Service preparation and distinct cleanup failed");throw primary;}if(cleanupFailed)throw cleanupError;if(uncertain||late||overflow||slices!==policy.slices)throw Error("Actual completely closed service preparation required");console.log(JSON.stringify({version:1,device:request.device,started:true,slices,callbacks,events,closed:true}));`;
-/** 🍎️ Gives the executable that runs the closed volume event program. */
+/** 🧲️ Gives the executable that runs the closed volume event program. */
 export const nativeVolumeEventPreparationProgramV1=():string=>process.versions.bun?process.execPath:"bun";

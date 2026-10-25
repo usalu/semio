@@ -85,6 +85,14 @@
     {
       "change": "selectedType",
       "valid": false
+    },
+    {
+      "change": "adapterMissing",
+      "valid": false
+    },
+    {
+      "change": "implementationMissing",
+      "valid": false
     }
   ],
   "expectedImports": [

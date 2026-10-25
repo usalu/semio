@@ -65,7 +65,7 @@ export async function acquireSelectedRuntimeActorsV1(port:SelectedRuntimeActorPu
 
 /** 🗺️ Required finite relative package roots selected by the owning workspace composition. */
 export type SelectedRuntimeGraphPackageRootsV1=readonly string[];
-/** 🛂️ Admits explicit coverage without an application inventory or a fallback root. */
+/** 🕸️ Admits explicit coverage without an application inventory or a fallback root. */
 export function parseSelectedRuntimeGraphPackageRootsV1(input:unknown):SelectedRuntimeGraphPackageRootsV1{
  if(!Array.isArray(input)||Object.getPrototypeOf(input)!==Array.prototype||input.length<1||input.length>128)refuse("required explicit graph package roots");
  for(const key of Reflect.ownKeys(input)){if(key==="length")continue;const descriptor=Object.getOwnPropertyDescriptor(input,key)!;if(typeof key!=="string"||! /^(0|[1-9][0-9]*)$/u.test(key)||!("value" in descriptor)||typeof descriptor.value!=="string")refuse("graph package root member");}

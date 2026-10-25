@@ -113,22 +113,8 @@ impl ToolJobFactory for Generation3dViewContributionsJobFactory {
         generation3d_view_contributions_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES, checkpoint_resume: false);
 
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("Generation3d viewer contributions command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
 }
 
 impl ArtifactOwnedToolJobFactory for Generation3dViewContributionsJobFactory {
@@ -208,22 +194,8 @@ impl ToolJobFactory for Generation3dViewExampleJobFactory {
         generation3d_view_example_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GENERATION3D_VIEW_EXAMPLE_RAW_BYTES, checkpoint_resume: false);
 
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > GENERATION3D_VIEW_EXAMPLE_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("Generation3d viewer example command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
 }
 
 impl ArtifactOwnedToolJobFactory for Generation3dViewExampleJobFactory {

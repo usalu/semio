@@ -80,7 +80,7 @@ function policySplitSubsetRel(subRel: string): PolicySubsetRel {
   };
 }
 
-/** 🌳️ Every distinct (plugin, artifact, standard, subset) row discovered under ✏️s/🔌️plugins today. */
+/** 🔪️ Every distinct (plugin, artifact, standard, subset) row discovered under ✏️s/🔌️plugins today. */
 function policyAllSubsetSplits(repoRoot: string): PolicySubsetRel[] {
   return policyListTopLevelSubsetDirs(repoRoot).map(policySplitSubsetRel);
 }
@@ -147,7 +147,7 @@ function policyExtractPathMountTargets(content: string): string[] {
   return targets;
 }
 
-/** 🧭️ Child dir names of `ownerRel` that are BOTH real on disk AND legal per `allowedChildDirs`. */
+/** 📁️ Child dir names of `ownerRel` that are BOTH real on disk AND legal per `allowedChildDirs`. */
 function policyExistingLegalChildren(repoRoot: string, ownerRel: string, allowedChildDirs: readonly string[]): string[] {
   return policyReaddirSafe(repoRoot, ownerRel)
     .filter((e) => e.isDirectory && allowedChildDirs.includes(e.name))
@@ -455,7 +455,7 @@ function policyIoExclusivityBreaches(repoRoot: string): BreachRecord[] {
 
 //#region 🔖️Policy5-IoDeclaration
 /**
- * 🚪️ Every `🚪️io` codec leaf dir (one carrying its own `🦀️.rs`) must be referenced BY NAME
+ * 🎒️ Every `🚪️io` codec leaf dir (one carrying its own `🦀️.rs`) must be referenced BY NAME
  * from its subset's `🚪️io/🦀️.rs` root, and carry a `🟦️.ts` twin (design.md §1:
  * "io() -> IoDeclaration / IoEntryDescriptor[] mirror").
  */
@@ -500,7 +500,7 @@ function policyIoDeclarationBreaches(repoRoot: string): BreachRecord[] {
 
 //#region 🔖️Policy6-SubsetStandalone
 /**
- * 🪆️ A subset's `🧬️schema/🦀️component.rs` must not be a bare `pub use …subsets::<other>::*`
+ * 🧬️ A subset's `🧬️schema/🦀️component.rs` must not be a bare `pub use …subsets::<other>::*`
  * re-export of a sibling subset, and the subset's `🧬️schema/**` subtree must declare its OWN
  * `…Snapshot` struct somewhere (design.md rule 2: "own snapshot/diff/mutations/inferences types").
  */

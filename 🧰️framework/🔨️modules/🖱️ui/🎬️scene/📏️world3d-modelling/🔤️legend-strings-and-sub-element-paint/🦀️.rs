@@ -17,7 +17,7 @@ pub struct World3dModellingStrings {
     pub mismatch: &'static str,
 }
 
-/// 🏷️ The fixed strings for a locale (German for `de*`, English otherwise); the React twin is `world3dModellingStrings`.
+/// 🗣️ The fixed strings for a locale (German for `de*`, English otherwise); the React twin is `world3dModellingStrings`.
 pub fn world3d_modelling_strings(locale: &str) -> World3dModellingStrings {
     if is_german(locale) {
         World3dModellingStrings { annotations: "Anmerkungen", dimension: "Bemaßung", angle: "Winkel", marker: "Markierung", leader: "Beschriftung", legend: "Legende", scale: "Skalenwerte", no_data: "Keine Daten", mismatch: "Das Skalarfeld passt nicht zum Netz" }
@@ -96,7 +96,7 @@ pub struct World3dLegendLine {
     pub rgb: [u8; 3],
 }
 
-/// 🌡️ The text of a scalar-field legend in one language: the title with its unit, one line per tick bottom to top, and the no-data caption when a value is missing.
+/// 📖️ The text of a scalar-field legend in one language: the title with its unit, one line per tick bottom to top, and the no-data caption when a value is missing.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct World3dLegendLines {
     pub title: String,
@@ -105,7 +105,7 @@ pub struct World3dLegendLines {
 }
 
 impl World3dScalarField {
-    /// 🌡️ The legend text for a locale; the React twin is `world3dLegendLines`, pinned against the same `legendLines` fixture.
+    /// 💬️ The legend text for a locale; the React twin is `world3dLegendLines`, pinned against the same `legendLines` fixture.
     pub fn legend_lines(&self, locale: &str) -> World3dLegendLines {
         let title = self.legend.title.resolve(locale);
         let unit = self.legend.unit.as_deref();
@@ -125,7 +125,7 @@ impl World3dSection {
     }
 }
 
-/// 🖍️ The theme defaults of sub-element hover and selection that a highlight token overrides.
+/// 🎨️ The theme defaults of sub-element hover and selection that a highlight token overrides.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct World3dSubElementDefaults<T> {
     pub select: T,
@@ -135,7 +135,7 @@ pub struct World3dSubElementDefaults<T> {
     pub vertex_mark_px: f64,
 }
 
-/// 🖍️ The one paint table of sub-element hover and selection per granularity.
+/// 🖌️ The one paint table of sub-element hover and selection per granularity.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct World3dSubElementPaint<T> {
     pub face_select: T,
@@ -172,7 +172,7 @@ pub fn world3d_modelling_lane_text<T: ToValue>(value: &T) -> String {
     to_json_string(value)
 }
 
-/// 🚚️ Decodes one lane text, refusing anything the schema or its semantic rules refuse.
+/// 🔓️ Decodes one lane text, refusing anything the schema or its semantic rules refuse.
 pub fn world3d_modelling_from_lane_text<T: FromValue>(text: &str) -> Result<T, ValueError> {
     from_json_str(text, JsonMemberPolicy::Reject)
 }

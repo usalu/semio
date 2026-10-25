@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 testkit = ["semio-framework-os-infinite-world-model/testkit", "semio-framework-os-infinite-world-components/testkit"]
 
 [dependencies]
+semio-framework-pixels = { path = "../../../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-job = { workspace = true }
@@ -47,7 +48,6 @@ semio-framework-ui-prepared = { path = "../../../../../../../../🔨️modules/�
 semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
 semio-framework-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
-image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
 semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
@@ -58,6 +58,7 @@ semio-framework-ui-theme = { path = "../../../../../../../../🔨️modules/🖱
 ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 
 [dev-dependencies]
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 semio-framework-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-infinite-world-components = { path = "../../../🧩️components/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }

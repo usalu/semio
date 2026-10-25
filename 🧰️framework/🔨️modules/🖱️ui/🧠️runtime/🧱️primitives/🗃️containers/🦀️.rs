@@ -6,7 +6,7 @@ use semio_framework_ui_runtime_presentation::{ComponentTree, TreeNode};
 
 //#region 🔖️Identity
 
-/// 🔑️ A node's reconciliation identity: which parent it hangs under (`None` only for the root, which
+/// 🪪️ A node's reconciliation identity: which parent it hangs under (`None` only for the root, which
 /// has no parent) plus its own sibling `key`. Two [`TreeNode`]s presented on different frames
 /// with the same identity are the SAME node as far as reconciliation is concerned, regardless of what
 /// position either occupied among its siblings — this is the one invariant every other rule here

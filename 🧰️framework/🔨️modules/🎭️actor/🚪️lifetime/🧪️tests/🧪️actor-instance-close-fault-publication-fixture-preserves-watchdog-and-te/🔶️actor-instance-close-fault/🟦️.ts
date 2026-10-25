@@ -1,5 +1,5 @@
 /** 🔶️ The actor instance close fault phase of registerTests1. */
-import type { TestSource } from "../🟢️shared/🟦️.ts";
+import type { TestSource } from "../🟢️harness/🟦️.ts";
 /** 🔷 Registers the actor instance close fault tests of registerTests1. */
 export function registerActorInstanceCloseFaultTests({ dependencies, vitest, source }: { readonly dependencies: Pick<typeof import("../../../🟦️.ts"), "ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES" | "actorInstanceCapturedReceiptMatches" | "actorInstanceCloseReceiptMatches" | "actorInstanceLifecycleReceiptEquals" | "actorInstanceLifetimeEquals" | "decodeActorInstanceLifecycle" | "encodeActorInstanceLifecycle">; readonly vitest: NonNullable<ImportMeta["vitest"]>; readonly source: TestSource }) {
   const { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifecycleReceiptEquals, actorInstanceLifetimeEquals, decodeActorInstanceLifecycle, encodeActorInstanceLifecycle } = dependencies;

@@ -25,7 +25,7 @@ pub static JOB_REPLAY_ABI_BYTES: AtomicUsize = AtomicUsize::new(0);
 static REPLAY_TEST_AUTHORITY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 #[cfg(any(test, feature = "testkit"))]
-pub(crate) struct ReplayTestAuthority;
+pub struct ReplayTestAuthority;
 
 #[cfg(any(test, feature = "testkit"))]
 pub fn replay_test_authority() -> ReplayTestAuthority {
@@ -42,7 +42,7 @@ impl Drop for ReplayTestAuthority {
     }
 }
 
-struct FixedReplaySeedPage {
+pub(super) struct FixedReplaySeedPage {
     storage: Option<Box<[MaybeUninit<u8>; JOB_REPLAY_SEED_PAGE_BYTES]>>,
     pub(super) length: usize,
 }

@@ -170,7 +170,7 @@ impl ToolRunStepRing {
         &self.steps
     }
 
-    /// 🧾️ Lends the wire-ordered rows to funded native receiving, which builds them without coalescing.
+    /// 👣️ Lends the wire-ordered rows to funded native receiving, which builds them without coalescing.
     pub fn original_steps_mut(&mut self) -> &mut VecDeque<ToolRunStep> {
         &mut self.steps
     }

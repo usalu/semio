@@ -1,9 +1,9 @@
-/** 🪜️ Contract: commit steps come from explicit `ct`/`cs`/`cp` words or, failing those, from the contributor's configured level, and prepare-only means no step at all or an explicit prepare word; the corpus is language-agnostic and `🐍️oracle.py` applies the same word-boundary grammar. */
+/** 🪜️ Contract: commit steps come from explicit `ct`/`cs`/`cp` words or, failing those, from the contributor's configured level, and prepare-only means no step at all or an explicit prepare word; the corpus is language-agnostic and `🐍️.py` applies the same word-boundary grammar. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {afterAll} from "bun:test";
 import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -28,6 +28,6 @@ test("explicit steps override the configured level and a missing file means no s
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

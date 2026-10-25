@@ -1,7 +1,7 @@
 import { lstatSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { noFollowDirectoryAncestry, workspaceAuthorityPath } from "../🧭️workspace-taxonomy-locator/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 🧾️ Repository-owned TOML boundary for pure Cargo provider manifest projections. */
 export interface CargoProviderTomlParser {
@@ -207,7 +207,7 @@ export interface CargoProviderBindingInput {
   readonly dependencyKey: string;
 }
 
-/** 🧷️ Bounded provider identity evidence for one selected local normal dependency. */
+/** 🔑️ Bounded provider identity evidence for one selected local normal dependency. */
 export interface CargoProviderBinding {
   readonly consumerManifestLocator: string;
   readonly workspaceManifestLocator: string;
@@ -295,7 +295,7 @@ function cargoProviderBindingNearestWorkspace(root: string, manifestLocator: str
   throw new Error("Cargo manifest has no governing workspace on its bounded ancestor chain.");
 }
 
-/** 🧭️ Resolves one selected normal local dependency without following a Cargo graph. */
+/** 🔎️ Resolves one selected normal local dependency without following a Cargo graph. */
 export function resolveCargoProviderBinding(input: CargoProviderBindingInput): CargoProviderBinding {
   const consumerManifestLocator = cargoProviderBindingLocator(input.consumerManifestLocator, "Cargo.toml");
   if (typeof input.dependencyKey !== "string" || input.dependencyKey.length === 0) throw new Error("Cargo provider dependency key is required.");

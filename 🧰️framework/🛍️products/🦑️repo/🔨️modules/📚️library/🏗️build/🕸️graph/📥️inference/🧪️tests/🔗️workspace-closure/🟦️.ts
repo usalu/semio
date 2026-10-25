@@ -1,6 +1,6 @@
 /** 🔗️ Contract: a target's command closure follows imports through workspace package specifiers and the literal module inputs it declares, agrees with esbuild and Bun's own bundler on the same fixture, and its content digest moves exactly when an imported module changes. The scenario lives in `./🔣️.json` as language-agnostic data. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";

@@ -10,11 +10,11 @@ import{verifyNxSdkBinaryLinksV1}from"../../🧊️binary/🔎️verification/�
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../🧬️schema.json"with{type:"json"};
 import policy from"../📋️policy.json"with{type:"json"};
-import{withResourceLeases,checkResourceLeaseControl,requireMaterializedPathV1,requireResourceLeaseCustodyV1,type ResourceLease,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{withResourceLeases,checkResourceLeaseControl,requireMaterializedPathV1,requireResourceLeaseCustodyV1,type ResourceLease,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireNativeStorageReservationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import{readPhysicalCargoSourceV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
-import type{RepositoryToolingStoreV1}from"../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import{readPhysicalCargoSourceV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
+import type{RepositoryToolingStoreV1}from"../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{repositoryLeaseDirectoryV1,repositoryCachePartitionRootV1}from"../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import type{NxSdkDerivativeProjectionV1}from"../../📥️source/🔗️derivative/📋️projection/🟦️.ts";
 import{verifyNxSdkSharedSourcesV1}from"../../📥️source/🔗️derivative/🔏️index/🟦️.ts";

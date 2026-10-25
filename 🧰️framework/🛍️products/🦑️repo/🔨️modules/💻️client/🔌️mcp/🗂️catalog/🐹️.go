@@ -72,9 +72,33 @@ type Catalogue struct {
 	Operations []CatalogueOperation `json:"operations"`
 }
 
-// 📖️ParseCatalogue reads the catalogue document and refuses an unknown version or a missing language.
-func ParseCatalogue(data []byte) (Catalogue, error) {
+// 🔌️ParseBackendIds reads the ids of the build backend registry in registry order.
+func ParseBackendIds(data []byte) ([]string, error) {
+	var registry struct {
+		Backends []struct {
+			ID string `json:"id"`
+		} `json:"backends"`
+	}
+	if err := json.Unmarshal(data, &registry); err != nil {
+		return nil, fmt.Errorf("mcp: backend registry: %w", err)
+	}
+	ids := make([]string, 0, len(registry.Backends))
+	for _, backend := range registry.Backends {
+		if backend.ID == "" || strings.ContainsAny(backend.ID, "|{}[]<>=, \"") {
+			return nil, fmt.Errorf("mcp: backend registry: unusable id %q", backend.ID)
+		}
+		ids = append(ids, backend.ID)
+	}
+	if len(ids) == 0 {
+		return nil, errors.New("mcp: backend registry: no backends")
+	}
+	return ids, nil
+}
+
+// 📖️ParseCatalogue reads the catalogue document, expands the `{backends}` placeholder to the registered backend ids and refuses an unknown version or a missing language.
+func ParseCatalogue(data []byte, backends []string) (Catalogue, error) {
 	var catalogue Catalogue
+	data = bytes.ReplaceAll(data, []byte("{backends}"), []byte(strings.Join(backends, "|")))
 	if err := json.Unmarshal(data, &catalogue); err != nil {
 		return Catalogue{}, fmt.Errorf("mcp: catalogue: %w", err)
 	}
@@ -93,13 +117,23 @@ func (catalogue Catalogue) operation(name string) (CatalogueOperation, bool) {
 	return CatalogueOperation{}, false
 }
 
-func (catalogue Catalogue) flag(name string) (CatalogueFlag, bool) {
-	for _, flag := range catalogue.Flags {
-		if flag.Name == name {
+func (catalogue Catalogue) flag(name, operation string) (CatalogueFlag, bool) {
+	var fallback *CatalogueFlag
+	for index, flag := range catalogue.Flags {
+		if flag.Name != name {
+			continue
+		}
+		if contains(flag.Operations, operation) {
 			return flag, true
 		}
+		if fallback == nil || (len(fallback.Operations) > 0 && len(flag.Operations) == 0) {
+			fallback = &catalogue.Flags[index]
+		}
 	}
-	return CatalogueFlag{}, false
+	if fallback == nil {
+		return CatalogueFlag{}, false
+	}
+	return *fallback, true
 }
 
 // #endregion 📖️CatalogueModel
@@ -130,6 +164,7 @@ type PolicyFlagType struct {
 	Minimum *int64   `json:"minimum"`
 	Maximum *int64   `json:"maximum"`
 	Items   []string `json:"items"`
+	Closed  bool     `json:"closed"`
 }
 
 type PolicyEnvironment struct {
@@ -204,6 +239,7 @@ type Policy struct {
 	Version      int                          `json:"version"`
 	Catalogue    string                       `json:"catalogue"`
 	BuildPolicy  string                       `json:"buildPolicy"`
+	Backends     string                       `json:"backends"`
 	Identity     PolicyIdentity               `json:"identity"`
 	Globals      []PolicyGlobal               `json:"globals"`
 	OmittedFlags []PolicyOmitted              `json:"omittedFlags"`
@@ -447,7 +483,7 @@ func Derive(catalogue Catalogue, policy Policy) ([]BuildTool, error) {
 			if omitted[flag] {
 				continue
 			}
-			row, ok := catalogue.flag(flag)
+			row, ok := catalogue.flag(flag, spec.Operation)
 			if !ok {
 				return nil, fmt.Errorf("mcp: tool %q accepts %s, which the catalogue does not define", name, flag)
 			}
@@ -484,7 +520,7 @@ func Derive(catalogue Catalogue, policy Policy) ([]BuildTool, error) {
 			}
 		}
 		for _, global := range policy.Globals {
-			row, ok := catalogue.flag(global.Flag)
+			row, ok := catalogue.flag(global.Flag, "")
 			if !ok {
 				return nil, fmt.Errorf("mcp: policy global %s is not in the catalogue", global.Flag)
 			}
@@ -570,11 +606,18 @@ func flagInput(row CatalogueFlag, override PolicyFlagType, required bool, fallba
 		input.Kind, input.Minimum, input.Maximum = InputInteger, override.Minimum, override.Maximum
 		schema.Type, schema.Minimum, schema.Maximum = "integer", override.Minimum, override.Maximum
 	case override.Type == "list":
-		input.Kind, input.Items = InputList, override.Items
+		items := override.Items
+		if override.Closed {
+			items = enumOf(row.ValueName)
+			if len(items) == 0 {
+				return Input{}, Schema{}, fmt.Errorf("flag %s is a closed list but the catalogue names no value set", row.Name)
+			}
+		}
+		input.Kind, input.Items = InputList, items
 		schema.Type, schema.MinItems, schema.UniqueItems = "array", 1, true
 		schema.Items = &Schema{Type: "string", MinLength: 1}
-		if len(override.Items) > 0 {
-			schema.Items.Enum = override.Items
+		if len(items) > 0 {
+			schema.Items.Enum = items
 		}
 	case row.Value == "optional":
 		return Input{}, Schema{}, fmt.Errorf("flag %s takes an optional value; omit it in the policy", row.Name)
@@ -622,7 +665,7 @@ func BuildResultOutputSchema() *Schema {
 		"tool":           text,
 		"operation":      text,
 		"subcommand":     text,
-		"buildTool":      {Type: "string", Enum: []string{"nx", "bazel"}},
+		"buildTool":      {Type: "string", MinLength: 1},
 		"ok":             flag,
 		"exitCode":       whole,
 		"cancelled":      flag,

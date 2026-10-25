@@ -137,8 +137,7 @@ pub mod standards {
                 pub mod io {
                     #[path = "."]
                     pub mod text {
-                        #[path = "../../../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
-                        pub mod diff;
+                        pub use semio_s_artifact_puzzle_2d_schema::standards::v1::subsets::any::io::text::diff;
                     }
                 }
             }

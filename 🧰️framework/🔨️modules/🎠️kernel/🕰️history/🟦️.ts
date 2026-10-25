@@ -73,7 +73,7 @@ export type HistoryTimeTravel = {
   readonly blocking?: boolean;
   readonly fault?: string;
   readonly acceptedCount?: number;
-  /** 🧭️ While reviewing: what the review shows. */
+  /** 🔍️ While reviewing: what the review shows. */
   readonly review?: HistoryTimeTravelReview;
   /** 🔁️ Whether `historyEditRerun` would start a replay now. */
   readonly rerunnable?: boolean;
@@ -93,7 +93,7 @@ export type HistoryEntry = {
   readonly seq: number;
   readonly editId?: string;
   readonly transaction?: HistoryTransaction;
-  /** ✏️ The `Supersede` history transition this row is — a history edit, or the undo or redo of one. */
+  /** 🔀️ The `Supersede` history transition this row is — a history edit, or the undo or redo of one. */
   readonly transitionId?: string;
   /** 🖋️ The actor who authored this row's edit or history transition. */
   readonly author?: string;
@@ -115,7 +115,7 @@ export type HistoryEntry = {
   readonly mutations?: readonly HistoryMutationEntry[];
 };
 
-/** 🏷️ The one text a history row shows on the requested axes. There is deliberately NO
+/** 🔖️ The one text a history row shows on the requested axes. There is deliberately NO
  * English fallback: `LocalizedLabel` is a `Record<ShellTerminology, Record<ShellLocale, string>>`
  * that the Rust carrier always fills for every axis, so an axis value the carrier does not carry is
  * a wire defect and renders as empty — visibly wrong — rather than silently as English. The shell's
@@ -140,11 +140,11 @@ export function historyEntryLabelText(label: LocalizedLabel, terminology: string
   return row?.[locale] ?? "";
 }
 
-/** 📡️ Which history change replays before adoption, mirrored from Rust `HistoryReprojectionKind`: another replica's change,
+/** 🦀️ Which history change replays before adoption, mirrored from Rust `HistoryReprojectionKind`: another replica's change,
  * this replica's own deferred history step (interior undo/redo, checkout, alternative switch) or a whole-document load. */
 export type HistoryReprojectionKind = "remote" | "step" | "load";
 
-/** 📡️ The replay a history change needs before this replica adopts it, mirrored from Rust `HistoryReprojection`: its
+/** 🎞️ The replay a history change needs before this replica adopts it, mirrored from Rust `HistoryReprojection`: its
  * `kind` (absent = remote), replayed operations of the total, whether the user paused a remote one, and the code of a
  * refused adoption. */
 export type HistoryReprojection = {
@@ -157,7 +157,7 @@ export type HistoryReprojection = {
 };
 
 //#region 🔖️HistoryReprojectionStatus
-/** 📡️ Framework-owned EN/DE copy of a history change replaying before adoption, by `<kind>.<part>` key, mirrored from Rust
+/** 🦜️ Framework-owned EN/DE copy of a history change replaying before adoption, by `<kind>.<part>` key, mirrored from Rust
  * `HISTORY_REPROJECTION_LABELS`: every shell announces it in a polite status region outside the History panel and the history
  * body titles its reprojection section with it. `{done}`/`{total}` are replayed operations, `{reason}` a refusal's notice. */
 export const HISTORY_REPROJECTION_LABELS = [
@@ -178,7 +178,7 @@ export const HISTORY_REPROJECTION_LABELS = [
 /** 📢️ What a shell announces while a history change replays before adoption — TS twin of Rust `HistoryReprojectionStatus`. */
 export type HistoryReprojectionStatus = Readonly<{ title: string; text: string; done: number; total: number; paused: boolean; fault: string | null }>;
 
-/** 📢️ The one status copy of a history change replaying before adoption — TS twin of Rust `kernel::history_reprojection_status`:
+/** 🚥️ The one status copy of a history change replaying before adoption — TS twin of Rust `kernel::history_reprojection_status`:
  * a refused adoption (a fault with nothing left to replay) reads `<kind>.refused` with the fault's placeholder-free
  * {@link historyNotice} or `reason.unnamed` (never a raw code); a paused remote change reads `remote.paused` (a step or a load is
  * never paused); anything else its kind's progress. Terminology-invariant framework copy. */
@@ -199,7 +199,7 @@ export function historyReprojectionStatus(reprojection: HistoryReprojection, _te
 }
 //#endregion 🔖️HistoryReprojectionStatus
 
-/** 🧾️ Ordered history delta carried with an accepted invocation response. */
+/** 🩹️ Ordered history delta carried with an accepted invocation response. */
 export type HistoryPatch = {
   readonly cursor: number;
   readonly upserts?: readonly HistoryEntry[];
@@ -208,11 +208,11 @@ export type HistoryPatch = {
   readonly activeAlternativeId?: string;
   readonly currentCheckpointId?: string;
   readonly commandFilter?: string;
-  /** ⏪️ The live history-edit session in full; absent while none is open. */
+  /** ⌛️ The live history-edit session in full; absent while none is open. */
   readonly timeTravel?: HistoryTimeTravel;
   /** 📡️ The history change (remote, or this replica's own step) waiting for its replay; absent while none waits. */
   readonly reprojection?: HistoryReprojection;
-  /** 🔢️ How many edits the document's history holds — the `{n}` of the `history.full` notice (absent = 0). */
+  /** 🧮️ How many edits the document's history holds — the `{n}` of the `history.full` notice (absent = 0). */
   readonly editCount?: number;
 };
 //#endregion InvocationResponse

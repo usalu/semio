@@ -73,5 +73,4 @@ fn window_utility_uses_exact_instance_ownership() {
         assert_eq!(actual, case["activeUtilityId"].as_str(), "{case}");
         assert_eq!(actual, view.window_utility(case["windowId"].as_str()));
     }
-    println!("[DEBUG] shared window utility routing preserves exact instance ownership");
 }

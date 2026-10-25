@@ -217,6 +217,13 @@
                 "observe",
                 "off"
               ]
+            },
+            "strictWait": {
+              "enum": [
+                "enforce",
+                "observe",
+                "off"
+              ]
             }
           }
         },
@@ -344,6 +351,11 @@
             },
             "reentrantShared": {
               "type": "boolean"
+            },
+            "writerPreferenceMilliseconds": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 3600000
             }
           }
         },
@@ -376,6 +388,12 @@
                 "maxLength": 128
               }
             }
+          }
+        },
+        "strictWaits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StrictWait"
           }
         }
       }
@@ -534,8 +552,56 @@
         "policyEnvironment": "SEMIO_LEASE_ORDER_POLICY",
         "modeEnvironment": "SEMIO_LEASE_ORDER",
         "inheritedEnvironment": "SEMIO_LEASE_INHERITED",
+        "invocationEnvironment": "SEMIO_BUILD_INVOCATION_PID",
+        "invocationChainEnvironment": "SEMIO_BUILD_INVOCATION_PIDS",
+        "maximumInvocationChain": 16,
         "maximumReportedResourceCharacters": 120,
         "maximumInherited": 64
+      }
+    },
+    "StrictWait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "held",
+        "requested",
+        "reason"
+      ],
+      "properties": {
+        "held": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "requested": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "reason": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
       }
     }
   }

@@ -27,7 +27,7 @@
   "targets": {
     "test-ci-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
         "{workspaceRoot}/package.json",
@@ -118,7 +118,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🌐️language/🔣️.json"
       ],
       "outputs": [],
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
@@ -806,7 +806,8 @@
                 "binary",
                 "proc-macro",
                 "build-script",
-                "build-script-run"
+                "build-script-run",
+                "effective-profile"
               ]
             }
           },

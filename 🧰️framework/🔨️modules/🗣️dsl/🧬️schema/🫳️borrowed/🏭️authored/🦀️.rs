@@ -51,4 +51,5 @@ impl<T:BorrowedDslField> BorrowedDslField for Vec<T>{const SHAPE:crate::Borrowed
 impl<T:BorrowedDslField,const N:usize> BorrowedDslField for semio_framework_value_persistent::list::PagedList<T,N>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::List(borrowed_field_shape::<T>);}
 impl<T:BorrowedDslField,const N:usize> BorrowedDslField for semio_framework_value::paged::PagedMap<T,N>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::Map(borrowed_field_shape::<T>);}
 impl<T:BorrowedDslField> BorrowedDslField for std::collections::BTreeMap<String,T>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::Map(borrowed_field_shape::<T>);}
+impl<T:BorrowedDslField> BorrowedDslField for semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String,T>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::Map(borrowed_field_shape::<T>);}
 impl<T:BorrowedDslField,const N:usize> BorrowedDslField for [T;N]{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::Tuple(borrowed_field_shape::<T>,Some(N));}

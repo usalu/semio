@@ -158,7 +158,7 @@ fn fixture_edit<'a>(_envelope: &'a directory::os_spr::MutationEnvelope) -> std::
     Box::pin(async { Ok(String::new()) })
 }
 
-fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], operations: &'a [u8]) -> directory::os_store::serialization::ArtifactCodecApplyFuture<'a> {
+fn fixture_apply<'a, 'b>(pack: &'a [u8], spr: &'a [u8], operations: &'a [u8], _identity: &'a mut directory::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> directory::os_store::serialization::ArtifactCodecApplyFuture<'a> {
     Box::pin(async move {
         let operations = directory::os_spr::decode_ops_vec(operations).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         if operations.len() != 1 {

@@ -1,4 +1,4 @@
-import { testScratchRootV1 } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🟦️.ts";
+import { testScratchRootV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash, webcrypto } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";

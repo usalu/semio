@@ -25,7 +25,7 @@ pub fn gap_space_token(token: Option<&str>) -> SpaceToken {
     }
 }
 
-/// 📐️ A [`SpaceToken`]'s own wire name, the vocabulary `reconcile::space_token` stamps onto a
+/// 🔤️ A [`SpaceToken`]'s own wire name, the vocabulary `reconcile::space_token` stamps onto a
 /// record-mounted node's legacy strings so that channel stays lossless for diffing.
 pub fn named_space_token(token: Option<&str>) -> Option<SpaceToken> {
     match token? {
@@ -42,7 +42,7 @@ pub fn named_space_token(token: Option<&str>) -> Option<SpaceToken> {
 
 pub use semio_framework_ui_layout::space_token_name;
 
-/// 📐️ The [`SpaceToken`] a legacy declarative `UiStackNode.padding` string names — one step looser
+/// 🪐️ The [`SpaceToken`] a legacy declarative `UiStackNode.padding` string names — one step looser
 /// than [`gap_space_token`] at `tight`/`loose`, the same relation the two private literal tables had.
 pub fn padding_space_token(token: Option<&str>) -> SpaceToken {
     match token {
@@ -52,7 +52,7 @@ pub fn padding_space_token(token: Option<&str>) -> SpaceToken {
     }
 }
 
-/// 📐️ A declarative gap string in px. `None`/`"standard"` stay theme-resolved (the theme's own
+/// 🕳️ A declarative gap string in px. `None`/`"standard"` stay theme-resolved (the theme's own
 /// `--ui-spacing` step); every named token resolves through [`SpaceToken::px`], the ONE ramp React's
 /// `spaceTokenRem` uses.
 pub fn gap_for_token(theme: &Theme, token: Option<&str>) -> f32 {
@@ -135,10 +135,10 @@ pub enum TreeDragRole {
     Transfer,
 }
 
-/// 🌳️ React's property-row value column: `controlValueColumnUiSpacing × --ui-spacing`.
+/// 🌲️ React's property-row value column: `controlValueColumnUiSpacing × --ui-spacing`.
 pub const TREE_ROW_CONTROL_WIDTH: f32 = (ui_styling::metrics::dom::CONTROL_VALUE_COLUMN_UI_SPACING * ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX) as f32;
 
-/// 🌳️ React's compact property-tree value column, measured from the actual mounted DOM.
+/// 🌴️ React's compact property-tree value column, measured from the actual mounted DOM.
 pub const TREE_ROW_COMPACT_CONTROL_WIDTH: f32 = 104.0;
 
 pub use semio_framework_ui_retained_tree::tree::TREE_ROW_MAX_DEPTH;
@@ -228,7 +228,7 @@ pub fn tree_drag_handle_reservation(metrics: &TreeRowMetrics) -> f32 {
     metrics.drag_handle_extent + metrics.gap * 2.0
 }
 
-/// 🌳️ A tree item row's own height: its row plus every expanded, visible nested row beneath it —
+/// 🍃️ A tree item row's own height: its row plus every expanded, visible nested row beneath it —
 /// exactly what `paint::retained_tree_node_step` advances its `row_y` cursor by for that item.
 pub fn tree_item_height(item: &UiTreeItemNode, metrics: &TreeRowMetrics) -> f32 {
     tree_item_height_at(item, metrics, 0)
@@ -248,7 +248,7 @@ fn tree_item_height_at(item: &UiTreeItemNode, metrics: &TreeRowMetrics, depth: u
     height
 }
 
-/// 🌳️ A tree section row's own height: its header row (only when it is labelled, matching the
+/// 🌿️ A tree section row's own height: its header row (only when it is labelled, matching the
 /// painter's own `section.label.is_some()` gate) plus every visible item row.
 pub fn tree_section_height(section: &UiTreeSectionNode, metrics: &TreeRowMetrics) -> f32 {
     tree_section_height_with_open(section, metrics, tree_section_default_open(section))
@@ -269,7 +269,7 @@ pub fn tree_section_height_with_open(section: &UiTreeSectionNode, metrics: &Tree
     height
 }
 
-/// 🌳️ A tree section's header band — `row_height` when the section is labelled, `0` when it is not.
+/// 🔖️ A tree section's header band — `row_height` when the section is labelled, `0` when it is not.
 pub fn tree_section_header_height(section: &UiTreeSectionNode, metrics: &TreeRowMetrics) -> f32 {
     if section.label.is_some() {
         metrics.header_height
@@ -278,7 +278,7 @@ pub fn tree_section_header_height(section: &UiTreeSectionNode, metrics: &TreeRow
     }
 }
 
-/// 🌳️ The section header band at the edge its block flow paints.
+/// 🩹️ The section header band at the edge its block flow paints.
 pub fn tree_section_header_band(rect: Rect, header_height: f32, reversed: bool) -> Rect {
     let header_height = header_height.min(rect.h);
     Rect::new(rect.x, if reversed { rect.y + rect.h - header_height } else { rect.y }, rect.w, header_height)
@@ -293,12 +293,12 @@ pub fn tree_item_chevron_rect(rect: Rect, depth: usize, metrics: &TreeRowMetrics
     Rect::new(x, row.y, width.min(row.w), row.h)
 }
 
-/// 🌳️ A whole `Tree` node's height: the sum of its visible sections.
+/// 🌱️ A whole `Tree` node's height: the sum of its visible sections.
 pub fn tree_node_height(node: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
     node.sections.iter().map(|section| tree_section_height(section, metrics)).sum()
 }
 
-/// 🌳️ The rect a row's inline control occupies, **relative to that row's own top-left** — the one
+/// ⬅️ The rect a row's inline control occupies, **relative to that row's own top-left** — the one
 /// definition `paint`'s control draw and `mounted_layout`'s arrange both take it from.
 pub fn tree_row_control_rect(row_width: f32, metrics: &TreeRowMetrics) -> Rect {
     tree_row_control_rect_with_height(row_width, metrics.control_height, metrics)
@@ -342,7 +342,7 @@ pub fn tree_row_action_rect(row_width: f32, row_height: f32, slot: usize, traili
     Rect::new(x, (row_height - extent) * 0.5, extent, extent)
 }
 
-/// 🎬️ The index of the Row-placed action whose slot holds the row-local point: every action takes one slot from the inline end
+/// 🎯️ The index of the Row-placed action whose slot holds the row-local point: every action takes one slot from the inline end
 /// in reverse authored order, exactly as `paint` counts them, and a Menu-placed one paints and hits nothing in its slot.
 pub fn tree_row_action_at(item: &UiTreeItemNode, row_width: f32, row_height: f32, trailing: f32, metrics: &TreeRowMetrics, x: f32, y: f32) -> Option<usize> {
     let actions = item.actions.as_deref()?;
@@ -359,7 +359,7 @@ pub fn table_actions_width(slots: usize, metrics: &TreeRowMetrics) -> f32 {
     }
 }
 
-/// 📊️ Column `column` of a `columns`-wide table row (or its header), relative to the row's own top-left: the materialised columns
+/// 🗄️ Column `column` of a `columns`-wide table row (or its header), relative to the row's own top-left: the materialised columns
 /// share the row's inline extent equally, `gap` apart, between the leading gap and the `actions` column — the flow `flex`'s
 /// `LayoutNodeKind::TableRow` lays an editable row's cell children in.
 pub fn table_column_rect(row_width: f32, row_height: f32, column: usize, columns: usize, actions: f32, metrics: &TreeRowMetrics) -> Rect {
@@ -382,7 +382,7 @@ pub fn tree_window_row_extent_px(extent: UiTreeWindowRowExtent) -> f32 {
     }
 }
 
-/// 🪟️ The `(leading, trailing)` spacer pitch one windowed container paints around its `materialised` children: `offset`
+/// 🔲️ The `(leading, trailing)` spacer pitch one windowed container paints around its `materialised` children: `offset`
 /// unmaterialised rows before them and `total − offset − materialised` after, each [`tree_window_row_extent_px`] tall. An
 /// unwindowed container (`None`) pitches nothing. There is no `+N` continuation row — the spacer IS the unloaded rows, which
 /// is what makes the scrollbar span the whole list and a scroll land on the real row index.

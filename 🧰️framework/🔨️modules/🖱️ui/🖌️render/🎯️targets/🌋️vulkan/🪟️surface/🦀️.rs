@@ -50,7 +50,7 @@ fn validate_surface_pair(display: &RawDisplayHandle, window: &RawWindowHandle) -
     }
 }
 
-/// 🪟️ Creates a Vulkan surface for an exact matching raw display/window pair.
+/// 🆕️ Creates a Vulkan surface for an exact matching raw display/window pair.
 ///
 /// # Safety
 ///

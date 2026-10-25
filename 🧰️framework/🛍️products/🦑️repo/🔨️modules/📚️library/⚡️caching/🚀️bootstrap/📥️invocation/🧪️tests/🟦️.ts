@@ -28,7 +28,7 @@ test("bootstrap wire keeps the inherited deadline, policy and capabilities",()=>
 
 test("both bootstrap dispatch branches live inside original scope and shared cleanup",()=>{
   const source=readFileSync(new URL("../../📜️script.ts",import.meta.url),"utf8"),file=ts.createSourceFile("bootstrap.ts",source,ts.ScriptTarget.Latest,true);
-  const main=file.statements.find((node):node is ts.IfStatement=>ts.isIfStatement(node)&&node.expression.getText(file)==="import.meta.main");expect(main).toBeDefined();
+  const main=file.statements.find((node):node is ts.IfStatement=>ts.isIfStatement(node)&&node.expression.getText(file)==="isMainModuleV1(import.meta.url)");expect(main).toBeDefined();
   if(!main||!ts.isBlock(main.thenStatement))throw Error("actual bootstrap main block required");
   const guard=main.thenStatement.statements.find((node):node is ts.TryStatement=>ts.isTryStatement(node)&&node.finallyBlock!==undefined);expect(guard).toBeDefined();
   if(!guard?.finallyBlock)throw Error("bootstrap original environment cleanup required");
@@ -38,11 +38,12 @@ test("both bootstrap dispatch branches live inside original scope and shared cle
   expect(body).toContain("original.control.signal.aborted?130:1");expect(body).toContain("scriptCompilerAdmissionControlV1(original");
 });
 
-test("Process suite runner keeps the incoming per-test timeout and exact law type check",()=>{
-  const source=readFileSync(new URL("../../../../../../../../🔨️modules/🏃️process/📜️script.ts",import.meta.url),"utf8");
-  expect(source).toContain('["test", "--timeout", String(scriptInvocationBudget(this.invocation, suite.budgetMs)), ...sources');
-  const check=source.split("\n").find(line=>line.includes("resolveTypescriptCompilerV1(this.root)")&&line.includes("suite.budgetMs"));expect(check).toContain('"exact-cargo-laws"');
-  expect(source).toContain("signal: this.invocation.control.signal");
+test("Process suite runner keeps the declared per-test timeout, the invocation signal and the exact law type check",()=>{
+  const runner=readFileSync(new URL("../../../../../../../../🔨️modules/🏃️process/🧪️testing/🗂️suites/🏃️run/🟦️.ts",import.meta.url),"utf8"),table=JSON.parse(readFileSync(new URL("../../../../../../../../🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json",import.meta.url),"utf8")) as{suites:{id:string;typecheck:string;budgetMs:number}[]};
+  expect(runner).toContain("timeoutMilliseconds:suite.budgetMs");
+  expect(runner).toContain("signal:invocation.control.signal");
+  expect(runner).toContain('if(suite.typecheck!=="none")await runOwnedCommand(');
+  expect(table.suites.find(row=>row.id==="exact-cargo-laws")?.typecheck).toBe("strict");
 });
 
 

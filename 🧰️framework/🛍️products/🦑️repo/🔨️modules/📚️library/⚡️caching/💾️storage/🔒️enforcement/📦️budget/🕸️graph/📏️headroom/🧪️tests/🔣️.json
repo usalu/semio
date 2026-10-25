@@ -373,7 +373,6 @@
       "events": [
         "selected",
         "scoped",
-        "optional",
         "close",
         "coarse",
         "close"

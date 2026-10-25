@@ -10,7 +10,7 @@
   "relativeScriptInputs": {
    "file": "scriptInputs",
    "start": "export async function relativeScriptInputs(",
-   "end": "/** 🔧️ Native leaves hash"
+   "end": "/** 🙈️ The resources the build policy declares presentation-only"
   },
   "targetScriptSources": {
    "file": "scriptInputs",

@@ -1,5 +1,21 @@
 mod typed_command_full_operation_tests {
-    use semio_framework_test_fixtures::fixture_path;
+    use semio_framework_actor::typed_operation_page::{TypedOperationResultPage,TypedOperationResultToken,TYPED_OPERATION_RESULT_PAGE_BYTES};
+    use semio_framework_plugin_decl_app::tool_contract::TYPED_OPERATION_FAULT_BYTES;
+    use semio_framework_plugin_instance_app::typed_operation_document_is_fresh;
+    use semio_framework_plugin_operation::TOOL_CANCELLATION_SLOTS;
+    use semio_framework_plugin_job::reserved_jobs::{plugin_job_yield_once,QualifiedToolProof};
+    use semio_framework_os_kernel::one_item_publication;
+use semio_framework_os_kernel::one_item::{ArtifactStoreOneItemCheckpoint,ArtifactStoreOneItemPreparationStep};
+use semio_framework_os_kernel::one_item;
+use semio_framework_plugin_decl_emission::ChildEmitGenesis;
+use semio_framework::ArgFormat::ArtifactRef;
+use semio_framework_plugin_operation::ArtifactDocumentAuthority;
+use semio_framework_plugin_operation::ToolOperationKey;
+use semio_framework::ArtifactDialect;
+use semio_framework_os_kernel::SchemaId;
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_os_kernel::LocalizedLabel;
+use semio_framework_test_fixtures::fixture_path;
 
     use super::*;
     use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};

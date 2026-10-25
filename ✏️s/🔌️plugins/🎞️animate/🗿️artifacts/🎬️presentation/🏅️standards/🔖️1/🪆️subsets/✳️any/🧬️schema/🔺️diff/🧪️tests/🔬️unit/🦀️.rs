@@ -5,6 +5,7 @@ use crate::FigureTileSource;
 use schema::ArtifactSchema;
 #[allow(unused_imports)]
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::default_presentation_snapshot;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;

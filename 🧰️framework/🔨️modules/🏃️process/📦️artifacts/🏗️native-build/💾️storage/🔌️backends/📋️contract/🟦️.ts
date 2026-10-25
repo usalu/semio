@@ -47,7 +47,7 @@ export function nativeStorageDispatchKeyV1(selection:NativeStorageSelectionV1={}
  if(key!=="darwin"&&key!=="linux"&&key!=="win32")throw Error("Declared native storage dispatch key required");return key;
 }
 
-/** 🔑️ Names the row of every platform-keyed schema table for the partition stored in a directory on this host. */
+/** 🗄️ Names the row of every platform-keyed schema table for the partition stored in a directory on this host. */
 export function nativeStorageDispatchKeyAtV1(directory:string,platform:string=nativeStorageSelectionV1().platform!):"darwin"|"linux"|"win32"{
  const key=nativeStorageBackendOfDirectoryV1(directory).dispatch[platform];
  if(key!=="darwin"&&key!=="linux"&&key!=="win32")throw Error("Declared native storage dispatch key required");return key;
@@ -59,7 +59,7 @@ export function nativeStorageBackingFilenameV1(id?:string):string{return id===un
 /** 🧿️ Tells whether the selected backend keeps its partitions as kernel-mounted volumes. */
 export function nativeStorageMountedVolumeV1(selection:NativeStorageSelectionV1={}):boolean{return selectedNativeStorageDeclarationV1(selection).capabilities.includes("mounted-volume");}
 
-/** 🧿️ Tells whether the partition stored in a directory is a kernel-mounted volume, by the backing file lying in it (the selected backend when none does). */
+/** 🗃️ Tells whether the partition stored in a directory is a kernel-mounted volume, by the backing file lying in it (the selected backend when none does). */
 export function nativeStorageMountedAtV1(directory:string):boolean{return nativeStorageBackendOfDirectoryV1(directory).capabilities.includes("mounted-volume");}
 
 /** 🌍️ Tells whether any declared backend with kernel-mounted volumes exists on this host, whatever is selected. */
@@ -70,9 +70,9 @@ export function nativeStorageBackendOfDirectoryV1(directory:string,selection:Nat
 
 const geometry=(id:string)=>{declaration(id);const value=geometries.get(id);if(!value)throw Error(refusals.unbound+": "+id);return value;};
 const ofImage=(image:string)=>nativeStorageBackendsV1.find(row=>row.backingFilename===image.split(/[\\/]/u).pop())??selectedNativeStorageDeclarationV1();
-/** 🔗️ Tells whether the root shows the attached volume of the backing file, by the backend that owns that file. */
+/** 🧲️ Tells whether the root shows the attached volume of the backing file, by the backend that owns that file. */
 export const nativeStorageAttachedV1=(image:string,root:string):boolean=>geometry(ofImage(image).id).attached(image,root);
-/** 📐️ Reports the whole-volume capacity of the backend that owns the root's backing file. */
+/** 💻️ Reports the whole-volume capacity of the backend that owns the root's backing file. */
 export const nativeStorageFilesystemBytesV1=(root:string,declared:number):number=>geometry(nativeStorageBackendOfDirectoryV1(dirname(root)).id).filesystemBytes(root,declared);
 /** 🧮️ Reports the bytes in use below the root by the backend that owns its backing file. */
 export const nativeStorageUsedBytesV1=(root:string):number=>geometry(nativeStorageBackendOfDirectoryV1(dirname(root)).id).usedBytes(root);

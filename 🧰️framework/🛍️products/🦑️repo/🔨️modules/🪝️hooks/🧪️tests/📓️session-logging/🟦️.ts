@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import { basename, extname } from "node:path";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region ⚙️Configuration

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "relation",
+          "expected"
+        ],
+        "properties": {
+          "relation": {
+            "enum": [
+              "issuer",
+              "narrowed-child",
+              "renewable-child",
+              "grandchild",
+              "retired-child",
+              "sibling",
+              "issuer-parent",
+              "unrelated-original-control",
+              "fabricated"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "accepted",
+              "refused"
+            ]
+          },
+          "failure": {
+            "enum": [
+              "Original issued native storage reservation required",
+              "Live Original resource control issuance required"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

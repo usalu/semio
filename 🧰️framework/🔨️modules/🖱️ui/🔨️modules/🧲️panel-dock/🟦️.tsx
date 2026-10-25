@@ -8,14 +8,14 @@ import { type Anchor } from "../⚓️panel-anchor/🟦️.ts";
 /** 🎯️ Where a dragged tab lands: `"insert"` places it among `parentPath`'s children at `index` (root when `parentPath` is empty); `"child"` appends it as the last child of the branch tab `parentId` (leaf targets never promote to branches in v1). */
 export type PanelTabDockTarget = { readonly kind: "insert"; readonly anchor: Anchor; readonly parentPath: readonly string[]; readonly index: number } | { readonly kind: "child"; readonly anchor: Anchor; readonly parentId: string };
 
-/** 🎯️ Where a dragged tree unit lands: `tabId`'s (a leaf's) unit list, at `index`. */
+/** 🏹️ Where a dragged tree unit lands: `tabId`'s (a leaf's) unit list, at `index`. */
 export interface PanelTreeUnitDockTarget {
   readonly anchor: Anchor;
   readonly tabId: string;
   readonly index: number;
 }
 
-/** 🎯️ A completed tree-unit drag from leaf `fromTabId` to `target`. */
+/** 🚚️ A completed tree-unit drag from leaf `fromTabId` to `target`. */
 export interface PanelTreeUnitDockMove {
   readonly unitId: string;
   readonly fromTabId: string;
@@ -38,26 +38,26 @@ const activePanelTreeUnitDragSession = ephemeralBox<PanelTreeUnitDragSession | n
 
 const panelTreeUnitDragListeners = ephemeralSet<() => void>("framework.modules.ui.packages.typescript.targets.react.index.tsx.panelTreeUnitDragListeners");
 
-/** 🌱️ Records the active tree-unit drag until drop or dragend. */
+/** ▶️ Records the active tree-unit drag until drop or dragend. */
 export function beginPanelTreeUnitDrag(session: PanelTreeUnitDragSession): void {
   activePanelTreeUnitDragSession.current = session;
   panelGhostSessionBridge?.begin(null);
   panelTreeUnitDragListeners.forEach((listener) => listener());
 }
 
-/** 🌱️ Clears the active tree-unit drag session. */
+/** ⏹️ Clears the active tree-unit drag session. */
 export function endPanelTreeUnitDrag(): void {
   activePanelTreeUnitDragSession.current = null;
   panelGhostSessionBridge?.end();
   panelTreeUnitDragListeners.forEach((listener) => listener());
 }
 
-/** 🌱️ Returns the in-flight tree-unit drag, if any. */
+/** 📖️ Returns the in-flight tree-unit drag, if any. */
 export function readActivePanelTreeUnitDrag(): PanelTreeUnitDragSession | null {
   return activePanelTreeUnitDragSession.current;
 }
 
-/** 🌱️ True while a tree-unit drag is in flight — re-renders drop-zone consumers. */
+/** 🔔️ True while a tree-unit drag is in flight — re-renders drop-zone consumers. */
 export function usePanelTreeUnitDragActive(): boolean {
   return reactHostPort.useSyncExternalStore(
     (listener) => {
@@ -81,7 +81,7 @@ export interface PanelDockContextValue {
 
 export const PanelDockContext = reactHostPort.createContext<PanelDockContextValue | null>(null);
 
-/** 🎛️ The enclosing {@link PanelDockProvider} contract, or `null` outside one, including Layout's private mobile panel. */
+/** 🔌️ The enclosing {@link PanelDockProvider} contract, or `null` outside one, including Layout's private mobile panel. */
 export function usePanelDockContext(): PanelDockContextValue | null {
   return reactHostPort.useContext(PanelDockContext);
 }

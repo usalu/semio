@@ -1,5 +1,5 @@
 import contract from "./🔣️.json" with { type: "json" };
-import identity from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json" with { type: "json" };
+import identity from "../../../../../../../📦️packages/🟦️typescript/🪪️identity/📁️installation/🧬️schema/🔣️json/🟦️.ts";
 import { parseInstallationDirectoryV1, type InstallationDirectoryV1 } from "../../../../../../../📦️packages/🟦️typescript/🪪️identity/📁️installation/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 

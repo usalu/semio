@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_value::retained_clone::RetainedCloneClose;
 use semio_framework_value::retirement::RetireOwned;
-use std::sync::Arc;
+use semio_framework_value::shared_issuance::SealedShared;
 fn retained_input(slot:&OriginalActorContextSlot,epoch:u64)->RetainedTurnInput{let owner=slot.context.as_ref().unwrap();let(operation,generation)=owner.identity.unwrap_or_else(||{let(operation,generation,_)=slot.binding.unwrap();(OperationId(operation),Generation(generation))});RetainedTurnInput{operation:operation.0,generation:generation.0,epoch,work:owner.remaining_work().unwrap(),grant:owner.remaining_grant().unwrap()}}
 fn close_source<T:RetireOwned+Send+Sync+'static>(slot:&mut OriginalActorContextSlot,raw:&mut Option<T>,epoch:&mut u64,policy:RetainedCloneGrant){
  let mut close=RetainedCloneClose::default();
@@ -17,14 +17,14 @@ fn original_actor_decoder_keeps_native_candidate_ledger_receipt_and_root_close_o
  loop{let input=if slot.context.is_none(){first}else{retained_input(&slot,epoch)};let(call,heap)=observe(||slot.admit_step(input,loan(policy,input.grant),fixture_clock));assert_eq!(heap,(call.receipt_spent.retained_capacity_bytes,call.receipt_spent.released_bytes));if call.result.unwrap().ready{break}epoch+=1;assert!(epoch<=5);}
  let mut ledger=None;let mut recipient=None;let mut physical_source=None;let mut source_recipient=None;
  for case in fixture["cases"].as_array().unwrap(){
-  let mut raw=Some(fixture["text"].as_str().unwrap().to_owned());let raw_pointer=raw.as_ref().unwrap().as_ptr();let mut output:Option<Arc<String>>=None;epoch+=1;let input=retained_input(&slot,epoch);let mut grant=loan(policy,input.grant);if case["capacity"]=="zero"{grant.maximum_capacity_bytes=0;}let mut external=Default::default();
+  let mut raw=Some(fixture["text"].as_str().unwrap().to_owned());let raw_pointer=raw.as_ref().unwrap().as_ptr();let mut output:Option<SealedShared<String>>=None;epoch+=1;let input=retained_input(&slot,epoch);let mut grant=loan(policy,input.grant);if case["capacity"]=="zero"{grant.maximum_capacity_bytes=0;}let mut external=Default::default();
   let(call,heap)=observe(||slot.dispatch_step(input,StepBudget::new(64,input.work.absolute_deadline_us,grant),&mut external,fixture_clock,|cx|{
    let source=cx.payload_authority_identity();if let Some(original)=physical_source{assert_eq!(source,original)}else{physical_source=Some(source)}let original_recipient=cx.original_recipient_identity();if let Some(original)=source_recipient{assert_eq!(original_recipient,original)}else{source_recipient=Some(original_recipient)}assert_eq!(cx.original_clock_binding(),Some(first.work.clock_binding));
    let result=cx.with_native_receiving::<_,ValueError>(|control|{if let Some(original)=ledger{assert_eq!(control.ledger_identity(),original)}else{ledger=Some(control.ledger_identity())}if let Some(original)=recipient{assert_eq!(control.retirement_recipient_identity(),Some(original))}else{recipient=control.retirement_recipient_identity()}control.receive_shared(&mut raw,&mut output,semio_framework_value::shared_issuance::SharedIssuer::owned())});
    let progress=match &result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};let accepted=cx.consume_receiving_retained(grant,progress);cx.consume_fuel(progress.copied_items as u64);accepted?;result?;
    if case["semanticFailure"].as_bool().unwrap(){return Err(OriginalTurnFailure::from(refusal("same original semantic failure after native admission")))}Ok(())
   }));assert_eq!(heap,(call.receipt_spent.retained_capacity_bytes,call.receipt_spent.released_bytes));assert_eq!(call.receipt_spent,external);assert_eq!(call.receipt().unwrap().remaining,slot.context.as_ref().unwrap().remaining_grant().unwrap());
-  assert_eq!(output.is_some(),case["admitted"].as_bool().unwrap());if let Some(output)=output.as_ref(){assert_eq!(output.as_ptr(),raw_pointer);assert!(raw.is_none());}else{assert_eq!(raw.as_ref().unwrap().as_ptr(),raw_pointer);assert_eq!(heap,(0,0));}
+  assert_eq!(output.is_some(),case["admitted"].as_bool().unwrap());if let Some(output)=output.as_ref(){assert_eq!(output.get().as_ptr(),raw_pointer);assert!(raw.is_none());}else{assert_eq!(raw.as_ref().unwrap().as_ptr(),raw_pointer);assert_eq!(heap,(0,0));}
   if case["semanticFailure"].as_bool().unwrap()&&case["admitted"].as_bool().unwrap(){assert!(matches!(call.result,Err(OriginalActorCallError::Semantic(_))));}else if case["admitted"].as_bool().unwrap(){assert!(call.result.is_ok());}
   close_source(&mut slot,&mut output,&mut epoch,policy);close_source(&mut slot,&mut raw,&mut epoch,policy);
  }

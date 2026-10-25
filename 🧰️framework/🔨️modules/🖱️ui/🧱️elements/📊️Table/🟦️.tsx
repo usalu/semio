@@ -27,7 +27,7 @@ import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 /** 📊️ Private interactive table-row presentation. */
 const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
 
-/** 📊️ Private selected table-row presentation. */
+/** ☑️ Private selected table-row presentation. */
 const tableRowSelectedClass = interactiveActiveFillClass;
 
 /**
@@ -80,7 +80,7 @@ export interface DragDropConfig {
   pointerActivationDelayMs?: number;
   /** ↔ Pointer movement tolerance (px) while waiting for {@link DragDropConfig.pointerActivationDelayMs}. */
   pointerActivationTolerancePx?: number;
-  /** ↔ Immediate drag after pointer movement (px); ignored when {@link DragDropConfig.pointerActivationDelayMs} is set. */
+  /** 📏️ Immediate drag after pointer movement (px); ignored when {@link DragDropConfig.pointerActivationDelayMs} is set. */
   pointerActivationDistancePx?: number;
   onDragStart?: (rowId: string) => void;
   onDragEnd?: (event: { active: string; over: string | null }) => void;
@@ -120,7 +120,7 @@ export interface TableProps<T = unknown> {
   onToggleRow?: (rowId: string) => void;
   renderDocumentControls?: (row: T & HierarchicalRowData) => React.ReactNode;
   dragDrop?: DragDropConfig;
-  /** 🖱️ Native (cross-window) HTML5 drag attributes for a row — for `declarativeTreeDragController`-style dataTransfer drags; independent of {@link TableProps.dragDrop}'s dnd-kit reordering. */
+  /** 🧲️ Native (cross-window) HTML5 drag attributes for a row — for `declarativeTreeDragController`-style dataTransfer drags; independent of {@link TableProps.dragDrop}'s dnd-kit reordering. */
   rowDragProps?: (row: T, index: number) => React.HTMLAttributes<HTMLTableRowElement>;
   wrapperComponent?: React.ComponentType<{ children: React.ReactNode }>;
 }

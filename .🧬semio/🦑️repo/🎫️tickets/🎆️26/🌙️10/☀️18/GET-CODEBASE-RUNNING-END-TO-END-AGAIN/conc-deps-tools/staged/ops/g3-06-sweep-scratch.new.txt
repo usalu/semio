@@ -1,3 +1,0 @@
-  const swept=sweepConcurrentTemporariesV1(store.root,Date.now(),options.neededBytes!==undefined||await concurrentFreeFractionV1(store.root)<concurrentProtocolV1.retention.pressureFreeFraction,checkpoint);
-  if(swept)await writeOwnedCommandOutputV1(process.stderr,"[DATA] Store dependency temporaries swept "+JSON.stringify({version:1,purpose:"current-dependency-temporaries-swept",count:swept})+"\n",control);
-  const pointers=readConcurrentPointersV1(store.root),current=new Set(

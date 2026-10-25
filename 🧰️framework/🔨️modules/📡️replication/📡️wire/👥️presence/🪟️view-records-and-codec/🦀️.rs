@@ -1,4 +1,4 @@
-//! 🪟️ Presence view: the window view, the view kind and the interface records with their value conversions and encoders. See [`super`].
+//! 👁️ Presence view: the window view, the view kind and the interface records with their value conversions and encoders. See [`super`].
 
 use super::*;
 
@@ -84,7 +84,7 @@ pub enum PresenceViewKind {
     Geo { lng: f64, lat: f64, zoom: f64, bearing: f64, pitch: f64 },
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above. Internally tagged on
+/// 🧰️ Hand-written, not derived — same DAG reason as `SelectionMode` above. Internally tagged on
 /// `"kind"`, mirroring `#[serde(tag = "kind", rename_all = "camelCase")]` byte-for-byte.
 impl semio_framework_value::ToValue for PresenceViewKind {
     fn to_value(&self) -> semio_framework_value::DslValue {
@@ -157,7 +157,7 @@ pub struct PresenceUi {
     pub pressed_path: Option<String>,
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// 💎️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for PresenceUi {
     fn to_value(&self) -> semio_framework_value::DslValue {
         let mut entries = Vec::new();

@@ -59,7 +59,7 @@ fn mutation(index:u64)->DagMutation{
   8=>DagMutation::ChangeNodeOperatorKind(ChangeNodeOperatorKind{id:text(),new_operator_kind:Some(text())}),
   9=>DagMutation::ReplaceNodeKind(ReplaceNodeKind{id:text(),new_kind:DagNodeKind::Note{text:text(),output:IoPortSpec::default()}}),
   10=>DagMutation::ReplaceNodeProperties(ReplaceNodeProperties{id:text(),new_properties:semio_framework_graph_manifest::PropertyBag::from([(text(),semio_framework_graph_manifest::PropertyValue::Object(semio_framework_graph_manifest::PropertyBag::from([(text(),semio_framework_graph_manifest::PropertyValue::String(text()))])))])}),
-  11=>DagMutation::ReorderNodes(ReorderNodes{order:vec![text(),String::with_capacity(128),text()]}),
+  11=>DagMutation::ReorderNodes(ReorderNodes{moves:vec![semio_framework_artifact_infinite_dag_vcs::NodeMove{id:text(),to:0},semio_framework_artifact_infinite_dag_vcs::NodeMove{id:String::with_capacity(128),to:1},semio_framework_artifact_infinite_dag_vcs::NodeMove{id:text(),to:2}]}),
   12=>DagMutation::ConnectNodes(ConnectNodes{id:text(),source:text(),target:text(),route_style:EdgeRouteStyle::SharpSz,properties:semio_framework_graph_manifest::PropertyBag::from([(text(),semio_framework_graph_manifest::PropertyValue::Number(f64::NAN))]),index:u64::MAX}),
   13=>DagMutation::DisconnectNodes(DisconnectNodes{id:text()}),
   _=>unreachable!(),

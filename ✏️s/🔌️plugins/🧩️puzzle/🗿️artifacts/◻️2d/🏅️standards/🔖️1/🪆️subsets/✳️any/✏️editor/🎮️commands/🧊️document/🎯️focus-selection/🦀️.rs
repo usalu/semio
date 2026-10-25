@@ -37,5 +37,5 @@ pub fn focus_selection(ctx: &mut Puzzle2dActionCtx<'_>) {
         "zoom": 1.0,
     });
     set_runtime_camera(&mut ctx.scene.runtime, &camera);
-    ctx.host.borrow_mut().set_camera(ctx.scene.runtime.camera_x, ctx.scene.runtime.camera_y, ctx.scene.runtime.camera_zoom);
+    { let mut host = ctx.host.borrow_mut(); let host = &mut *host; semio_framework_os_infinite::board_set_camera(&mut host.scene, &mut host.outbox, ctx.scene.runtime.camera_x, ctx.scene.runtime.camera_y, ctx.scene.runtime.camera_zoom); }
 }

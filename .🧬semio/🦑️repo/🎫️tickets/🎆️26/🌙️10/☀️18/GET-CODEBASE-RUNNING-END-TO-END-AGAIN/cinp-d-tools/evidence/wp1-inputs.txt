@@ -1,0 +1,4 @@
+//:t_2b47068189231fe7 inputs 10659 test-like 0
+//:t_89494d21613948da inputs 11353 test-like 0
+//:t_ed9c20287d15abca inputs 10670 test-like 0
+INFO: 4 processes: 4 action cache hit, 1 internal, 3 local.

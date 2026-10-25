@@ -45,7 +45,7 @@ pub fn write_timestamp(out: &mut ByteWriter, raw: &str, prev_epoch_ms: Option<i6
     }
 }
 
-/// ⏱️ Reads one tagged timestamp, returning the reconstructed string and, iff tag 1/2,
+/// 📖️ Reads one tagged timestamp, returning the reconstructed string and, iff tag 1/2,
 /// the `epoch_ms` to feed back in as `prev_epoch_ms` for the next call.
 pub fn read_timestamp(input: &mut ByteReader<'_>, prev_epoch_ms: Option<i64>) -> Result<(String, Option<i64>), PackRefusal> {
     let tag = input.read_u8()?;
@@ -171,7 +171,7 @@ fn parse_rfc3339_ms(s: &str) -> Option<i64> {
     Some(total_seconds * 1_000 + ms)
 }
 
-/// 📆️ Canonical UTC formatter: `YYYY-MM-DDTHH:MM:SSZ`, with `.fffZ` appended iff the
+/// 🕐️ Canonical UTC formatter: `YYYY-MM-DDTHH:MM:SSZ`, with `.fffZ` appended iff the
 /// millisecond component is nonzero. The single source of truth for the tag-1/2 round trip.
 pub fn format_rfc3339_ms(epoch_ms: i64) -> String {
     let days = epoch_ms.div_euclid(86_400_000);
@@ -202,7 +202,7 @@ fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
     era * 146_097 + doe - 719_468
 }
 
-/// 🌍️ Inverse of `days_from_civil`.
+/// ☀️ Inverse of `days_from_civil`.
 pub(crate) fn civil_from_days(z: i64) -> (i64, i64, i64) {
     let z = z + 719_468;
     let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
@@ -249,7 +249,7 @@ pub fn write_id(out: &mut ByteWriter, id: &str, mut intern: impl FnMut(&str) -> 
     Ok(())
 }
 
-/// 🪪️ Reads one tagged id, resolving dictrefs/ordinals through the supplied closures.
+/// 🔎️ Reads one tagged id, resolving dictrefs/ordinals through the supplied closures.
 pub fn read_id<'r>(input: &mut ByteReader<'_>, resolve: impl Fn(u32) -> Result<&'r str, PackRefusal>, ordinal_to_id: impl Fn(u64) -> Result<&'r str, PackRefusal>) -> Result<String, PackRefusal> {
     let tag = input.read_u8()?;
     match tag {

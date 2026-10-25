@@ -11,7 +11,7 @@ pub use semio_framework_tool_run::{
     tool_run_panel_new_runs, TOOL_RUN_ACTION_IDS, TOOL_RUN_DISMISS_ACTION_ID, TOOL_RUN_DISMISS_CHORD, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, TOOL_RUN_START_ACTION_ID, TOOL_RUN_STEP_ACTION_ID,
 };
 
-/// ⏯️ Whether any tool or utility of `app` declares a `ToolRunDefinition`.
+/// 🛠️ Whether any tool or utility of `app` declares a `ToolRunDefinition`.
 pub fn app_declares_tool_run(app: &AppDefinition) -> bool {
     app.tools.iter().any(|tool| tool.run.is_some()) || app.utilities.iter().any(|utility| utility.run.is_some())
 }

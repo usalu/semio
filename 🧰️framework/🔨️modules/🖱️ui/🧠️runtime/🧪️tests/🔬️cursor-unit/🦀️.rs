@@ -320,10 +320,10 @@ fn duplicate_sibling_keys_are_reported_even_when_component_tree_new_is_bypassed(
 /// attractions — the puzzle3d artifact panel whose stale `PANEL_RECONCILE_NODE_BUDGET = 16` this law
 /// replaces).
 const TREE_WINDOW_LAW_SECTIONS: usize = 4;
-/// 🪟️ Rows one section's `TreeWindow.total` declares: one full built child list
+/// 📑️ Rows one section's `TreeWindow.total` declares: one full built child list
 /// ([`ui_contract::UI_BUILT_CHILDREN_MAX`]).
 const TREE_WINDOW_LAW_SECTION_TOTAL: usize = ui_contract::UI_BUILT_CHILDREN_MAX;
-/// 🪟️ The per-section slice one presented document could carry if the RECORD arena were the only
+/// 📄️ The per-section slice one presented document could carry if the RECORD arena were the only
 /// bound: a surface document is [`ui_contract::UI_DOCUMENT_NODES`] records wide IN TOTAL
 /// (`UiSnapshotNodes`), and the tree root plus one record per section are spent before a single row
 /// is materialised, so `(128 − 1 − 4) / 4 = 30` — never the 128 a `BuiltChildren` list can hold. The
@@ -365,7 +365,7 @@ fn tree_window_law_args(key: &str) -> Option<ui_contract::UiMap> {
     }
     Some(builder.finish())
 }
-/// 🪟️ One presented document of the paged tree: every section stamps its FULL `total`, materialises
+/// 🌳️ One presented document of the paged tree: every section stamps its FULL `total`, materialises
 /// only `[offset, offset + rows)`, and never mints a continuation row.
 fn tree_window_law_document(offset: usize, rows_per_section: usize) -> crate::ComponentTree {
     let mut sections = Vec::with_capacity(TREE_WINDOW_LAW_SECTIONS);
@@ -388,7 +388,7 @@ fn tree_window_law_document(offset: usize, rows_per_section: usize) -> crate::Co
 fn census_law_table_row(index: usize) -> crate::TreeNode {
     census_law_table_row_shaped(index, true)
 }
-/// 📊️ A light table row: two cells and one row action on an argument-free target, no row activation.
+/// 🕯️ A light table row: two cells and one row action on an argument-free target, no row activation.
 fn census_law_light_table_row(index: usize) -> crate::TreeNode {
     census_law_table_row_shaped(index, false)
 }

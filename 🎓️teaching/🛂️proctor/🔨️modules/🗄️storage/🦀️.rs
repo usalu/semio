@@ -370,7 +370,7 @@ impl Database {
         })
     }
 
-    /// 🧾️ Run `work` inside one immediate transaction, committed only when it succeeds.
+    /// 💼️ Run `work` inside one immediate transaction, committed only when it succeeds.
     fn transaction<T>(&self, work: impl FnOnce(&rusqlite::Transaction<'_>) -> Result<T, StorageError>) -> Result<T, StorageError> {
         self.with(|connection| transact(connection, work))
     }
@@ -393,7 +393,7 @@ impl Database {
     }
 }
 
-/// 🧾️ Run `work` inside one immediate transaction of `connection`, committed only when it succeeds.
+/// 🤝️ Run `work` inside one immediate transaction of `connection`, committed only when it succeeds.
 fn transact<T>(connection: &mut Connection, work: impl FnOnce(&rusqlite::Transaction<'_>) -> Result<T, StorageError>) -> Result<T, StorageError> {
     let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(backend)?;
     let value = work(&transaction)?;
@@ -486,7 +486,7 @@ pub struct SqliteAuthorityStore {
     database: Database,
 }
 
-/// 📜️ One committed event with its position in the database-wide commit order.
+/// 🪵️ One committed event with its position in the database-wide commit order.
 #[derive(Clone, Debug, PartialEq)]
 pub struct LoggedEvent {
     pub position: u64,
@@ -667,7 +667,7 @@ fn append(transaction: &rusqlite::Transaction<'_>, actor: &ActorKey, events: &[E
     Ok(expected - 1)
 }
 
-/// 📸️ Replace `actor`'s snapshot inside `transaction`; one older than the stored one is a conflict.
+/// 💾️ Replace `actor`'s snapshot inside `transaction`; one older than the stored one is a conflict.
 fn replace_snapshot(transaction: &rusqlite::Transaction<'_>, actor: &ActorKey, revision: Revision, bytes: &[u8]) -> Result<(), StorageError> {
     let stored: Option<i64> = transaction.query_row("SELECT revision FROM proctor_snapshot WHERE tenant = ?1 AND kind = ?2 AND id = ?3", params![actor.tenant.0, actor.kind, actor.id], |row| row.get(0)).optional().map_err(backend)?;
     if let Some(stored) = stored.map(unsigned) {
@@ -697,7 +697,7 @@ impl AuthorityStore for SqliteAuthorityStore {
         self.database.transaction(|transaction| append(transaction, actor, events, outbox))
     }
 
-    /// 🧾️ One transaction for the whole batch — one flush however many turns it carries. A snapshot
+    /// 📤️ One transaction for the whole batch — one flush however many turns it carries. A snapshot
     /// older than the stored one is skipped; anything else a turn cannot write rolls the batch back,
     /// and every turn answers that error.
     async fn commit(&mut self, turns: &[TurnCommit<'_>]) -> Vec<Result<(), StorageError>> {
@@ -815,12 +815,12 @@ pub struct SqliteProjectionStore {
 }
 
 impl SqliteProjectionStore {
-    /// 🔗️ The projection role over `database`.
+    /// 🪟️ The projection role over `database`.
     pub fn new(database: Database) -> Self {
         Self { database }
     }
 
-    /// 🧾️ Write every entry and advance `checkpoint` in one transaction, so a fold is visible
+    /// ✔️ Write every entry and advance `checkpoint` in one transaction, so a fold is visible
     /// entirely or not at all and its checkpoint never runs ahead of (or behind) its entries.
     pub fn commit(&mut self, writes: &[ProjectionWrite], checkpoint: (&str, u64)) -> Result<(), StorageError> {
         self.database.remakeable(|transaction| {
@@ -876,7 +876,7 @@ pub struct SqliteBlobStore {
 }
 
 impl SqliteBlobStore {
-    /// 🔗️ The blob role over `database`.
+    /// 🧊️ The blob role over `database`.
     pub fn new(database: Database) -> Self {
         Self { database }
     }
@@ -912,7 +912,7 @@ pub struct SqliteSessionStore {
 }
 
 impl SqliteSessionStore {
-    /// 🔗️ The session role over `database`.
+    /// 🪪️ The session role over `database`.
     pub fn new(database: Database) -> Self {
         Self { database }
     }

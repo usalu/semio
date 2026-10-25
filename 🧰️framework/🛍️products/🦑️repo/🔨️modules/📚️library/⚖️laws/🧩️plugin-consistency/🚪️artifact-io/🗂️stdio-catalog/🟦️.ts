@@ -160,7 +160,7 @@ export function policyArtifactIsMigrated(repoRoot: string, artRel: string): bool
   return existsSync(join(repoRoot, `${artRel}/${standardsDirName}`));
 }
 
-/** ⚖️Legacy artifacts no longer own an explicit builder facet. */
+/** 🔨️Legacy artifacts no longer own an explicit builder facet. */
 export function policyArtifactBuilderBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
@@ -180,7 +180,7 @@ export function policyArtifactBuilderBreaches(repoRoot: string): BreachRecord[] 
   return breaches;
 }
 
-/** ⚖️Every not-yet-migrated plugin artifact exposes 🪓️decomposer with rs+ts implementing ArtifactDecomposer. */
+/** 🪓️Every not-yet-migrated plugin artifact exposes 🪓️decomposer with rs+ts implementing ArtifactDecomposer. */
 export function policyArtifactDecomposerBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
@@ -240,17 +240,17 @@ function policyDerivedArtifactFacetBreaches(repoRoot: string, facet: (typeof POL
   return breaches;
 }
 
-/** ⚖️Every migrated subset derives its builder from schema-owned construction. */
+/** 🏗️Every migrated subset derives its builder from schema-owned construction. */
 export function policyArtifactBuilderMigratedBreaches(repoRoot: string): BreachRecord[] {
   return policyDerivedArtifactFacetBreaches(repoRoot, POLICY_DERIVED_FACETS[0]);
 }
 
-/** ⚖️Every migrated subset derives its analyzer from schema-owned analysis. */
+/** 🔬️Every migrated subset derives its analyzer from schema-owned analysis. */
 export function policyArtifactAnalyzerBreaches(repoRoot: string): BreachRecord[] {
   return policyDerivedArtifactFacetBreaches(repoRoot, POLICY_DERIVED_FACETS[1]);
 }
 
-/** ⚖️Every migrated subset derives its composer from IO-owned composition. */
+/** 🎼️Every migrated subset derives its composer from IO-owned composition. */
 export function policyArtifactComposerBreaches(repoRoot: string): BreachRecord[] {
   return policyDerivedArtifactFacetBreaches(repoRoot, POLICY_DERIVED_FACETS[2]);
 }

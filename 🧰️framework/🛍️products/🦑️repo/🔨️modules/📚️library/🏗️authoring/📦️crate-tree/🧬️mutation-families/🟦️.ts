@@ -1,12 +1,12 @@
 import { rustTokenPairs, rustTokenSegments, rustTokens, type RustToken } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import { collectDecls, superReach, type ModuleDecl } from "../🧱️decl-tree/🟦️.ts";
-import { absolutizeSuperPaths, declaredNames } from "../🧪️test-closure/🟢️shared/🟦️.ts";
+import { absolutizeSuperPaths, declaredNames } from "../🧪️test-closure/🟢️harness/🟦️.ts";
 import { identifierSet, parseRustSourceTree, useLeafNames, type RustSourceItem } from "../🌳️module-tree/🟦️.ts";
 import { flattenUse, pruneUseLeaves } from "./🌳️use-tree/🟦️.ts";
 import { hoistAggregateSupport, type AggregateName, type AggregateScope } from "./🧰️support-hoist/🟦️.ts";
 import { absolutizeBeyond } from "../🪜️lift-kids/🟦️.ts";
 
-/** 🧬️ One variant of a transparent mutation aggregate: the single-field tuple wrapping a leaf payload. */
+/** 🎁️ One variant of a transparent mutation aggregate: the single-field tuple wrapping a leaf payload. */
 export type MutationVariant = { readonly variant: string; readonly payload: string; readonly path: string };
 
 /** 🧬️ A `#[derive(dsl::Mutations)]` enum and the leaf payloads it wraps. */
@@ -15,7 +15,7 @@ export type MutationAggregate = { readonly name: string; readonly file: string; 
 /** 🏗️ A leaf builder that returned the concrete aggregate and now stays generic over it. */
 export type LeafBuilder = { readonly name: string; readonly params: string; readonly args: string; readonly chain: string };
 
-/** 🧬️ What one conversion run rewrote and what it left for hand work. */
+/** 💼️ What one conversion run rewrote and what it left for hand work. */
 export type MutationFamilyResult = {
   readonly edits: Map<string, string>;
   readonly creates: Map<string, string>;

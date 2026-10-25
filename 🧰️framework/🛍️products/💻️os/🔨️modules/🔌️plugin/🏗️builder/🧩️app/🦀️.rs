@@ -130,10 +130,5 @@ pub struct AppBuilder {
     io: AppIo,
 }
 
-/// 🎯️ M1 retained typed-command bridge fixtures, kept separate from intent dispatch so
-/// cursor, cancellation, deadline, and depth regressions fail at their owner boundary.
-#[cfg(test)]
-include!("../../🧪️tests/🔬️app-merge-ui-values/🦀️.rs");
-
 #[cfg(test)]
 include!("../../🧪️tests/🔬️app-example-source/🦀️.rs");

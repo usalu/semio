@@ -108,7 +108,7 @@ export abstract class VerifyTaxonomyLanes extends Script {
   }
 
   /**
-   * ⚖️Standalone entry point for the `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`
+   * 🔗️Standalone entry point for the `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`
    * gate bundle (`policyMutationOutcomeMergePolicyBreaches`'s 16 rules) — the same checks `runGate()`'s
    * "mutation-outcome / merge-policy law" block enforces, runnable in isolation via
    * `repo ./📜️script.ts verify mutation-outcome-law` (the `mutation-outcome-law` build task in
@@ -172,7 +172,7 @@ export abstract class VerifyTaxonomyLanes extends Script {
   }
 
   /**
-   * 🚫️Standalone entry point for `policySemanticVocabularyBreaches` — the only consumer of
+   * 🗺️Standalone entry point for `policySemanticVocabularyBreaches` — the only consumer of
    * `policyRepositoryOwnedRoots()`, so this is also the runnable proof that the walk roots are the
    * taxonomy's `clean` areas and nothing else. `high` breaches fail; the `Set*` dispatch-variant rule is
    * advisory by its own declaration and is reported without failing.

@@ -167,7 +167,7 @@ pub enum OfflinePolicy {
 //#endregion 🔖️Command
 
 //#region 🔖️Query
-/// 🆔️ Identity of one query submission.
+/// 🪪️ Identity of one query submission.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct QueryId(pub String);
 
@@ -350,7 +350,7 @@ pub struct CommandDescriptor {
     pub offline: OfflinePolicy,
 }
 
-/// 📇️ What one query kind declares.
+/// 📖️ What one query kind declares.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryDescriptor {
@@ -379,7 +379,7 @@ pub struct PolicyGrant {
     pub action: String,
 }
 
-/// 🧾️ The declarative half of a server module — what it contributes, with no runtime types,
+/// 📋️ The declarative half of a server module — what it contributes, with no runtime types,
 /// so an instance definition can be inspected, diffed and served without constructing a server.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -408,7 +408,7 @@ impl ServerInstanceDefinition {
         self.modules.iter().flat_map(|module| &module.commands).find(|command| command.kind == kind)
     }
 
-    /// 📴️ The offline policy declared for `kind`; unknown kinds are authority-only by default.
+    /// 🔏️ The offline policy declared for `kind`; unknown kinds are authority-only by default.
     pub fn offline_policy(&self, kind: &str) -> OfflinePolicy {
         self.command(kind).map_or(OfflinePolicy::AuthorityRequired, |command| command.offline)
     }

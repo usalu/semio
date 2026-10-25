@@ -6,7 +6,7 @@ use std::mem::{MaybeUninit};
 #[derive(Debug,Clone,Copy,PartialEq,Eq)]
 pub enum JobOutcomeKind{Yield,PreviewReady,CheckpointReady{applied_progress:u64},Complete,Cancelled,Fault}
 
-/// 🎟️ Owns the original admission and immutable native payload addresses until a paid acknowledgement.
+/// 💼️ Owns the original admission and immutable native payload addresses until a paid acknowledgement.
 #[derive(Debug)]
 pub struct JobOutcomeDescriptor{kind:JobOutcomeKind,admission:JobOutcomeAdmission,original:[Option<usize>;2],acknowledged:bool}
 

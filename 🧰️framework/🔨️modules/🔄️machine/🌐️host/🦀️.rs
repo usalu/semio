@@ -4,14 +4,14 @@ use crate::{ActorId, InvokeId, Machine, TimerId};
 
 //#region 🔖️Host
 
-/// 🌐️ Executes the side effects a [`crate::Command`] describes. No `async fn` —
+/// ☁️ Executes the side effects a [`crate::Command`] describes. No `async fn` —
 /// hosts own their own tasks/timers and report completion back as ordinary events.
 pub trait Host<M: Machine> {
     /// 🎇️ Executes a consumer-defined effect requested by a running actor.
     fn execute_effect(&mut self, actor: ActorId, effect: M::Effect);
-    /// ⏱️ Schedules a delayed-transition timer for the given actor.
+    /// ⏰️ Schedules a delayed-transition timer for the given actor.
     fn schedule(&mut self, actor: ActorId, timer: TimerId, delay_ms: u64);
-    /// ⏱️ Cancels a previously scheduled timer (invoked when its owning state exits).
+    /// ✖️ Cancels a previously scheduled timer (invoked when its owning state exits).
     fn cancel_timer(&mut self, actor: ActorId, timer: TimerId);
     /// 🚀️ Starts the task/actor backing an `invoke` declaration.
     fn start_task(&mut self, actor: ActorId, invoke: InvokeId);
@@ -38,27 +38,27 @@ pub struct NativeHost<M: Machine> {
 }
 
 impl<M: Machine> NativeHost<M> {
-    /// 🖥️ A fresh host whose clock starts at zero.
+    /// 🆕️ A fresh host whose clock starts at zero.
     pub fn new() -> Self {
         Self { start: std::time::Instant::now(), effects: Vec::new(), pending_timers: Vec::new(), started_tasks: Vec::new(), cancelled_tasks: Vec::new() }
     }
 
-    /// 🎇️ Effects recorded so far, in emission order.
+    /// 📹️ Effects recorded so far, in emission order.
     pub fn effects(&self) -> &[(ActorId, M::Effect)] {
         &self.effects
     }
 
-    /// 🎇️ Drains and returns every recorded effect.
+    /// 🎙️ Drains and returns every recorded effect.
     pub fn drain_effects(&mut self) -> Vec<(ActorId, M::Effect)> {
         core::mem::take(&mut self.effects)
     }
 
-    /// 🚀️ Tasks started via `invoke`, still pending cancellation.
+    /// ▶️ Tasks started via `invoke`, still pending cancellation.
     pub fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
         &self.started_tasks
     }
 
-    /// ⏱️ Removes and returns every timer whose deadline has passed.
+    /// ⏲️ Removes and returns every timer whose deadline has passed.
     pub fn due_timers(&mut self) -> Vec<(ActorId, TimerId)> {
         let now = self.now_ms();
         let mut due = Vec::new();
@@ -122,22 +122,22 @@ pub struct TestHost<M: Machine> {
 }
 
 impl<M: Machine> TestHost<M> {
-    /// 🧪️ A fresh simulated host whose clock starts at zero.
+    /// 🕐️ A fresh simulated host whose clock starts at zero.
     pub fn new() -> Self {
         Self { clock_ms: 0, effects: Vec::new(), pending_timers: Vec::new(), started_tasks: Vec::new(), cancelled_tasks: Vec::new() }
     }
 
-    /// 🎇️ Effects recorded so far, in emission order.
+    /// ⏺️ Effects recorded so far, in emission order.
     pub fn effects(&self) -> &[(ActorId, M::Effect)] {
         &self.effects
     }
 
-    /// 🚀️ Tasks currently started (not yet cancelled), for invoke-lifecycle assertions.
+    /// 🔰️ Tasks currently started (not yet cancelled), for invoke-lifecycle assertions.
     pub fn started_tasks(&self) -> &[(ActorId, InvokeId)] {
         &self.started_tasks
     }
 
-    /// 🛑️ Tasks that have been cancelled, for invoke-lifecycle assertions.
+    /// 🧵️ Tasks that have been cancelled, for invoke-lifecycle assertions.
     pub fn cancelled_tasks(&self) -> &[(ActorId, InvokeId)] {
         &self.cancelled_tasks
     }

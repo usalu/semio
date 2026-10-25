@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "tool": "cargo",
+  "messages": {
+    "unregistered": {
+      "en": "[toolchain] The tool {tool} is not registered, so its pinned Rust toolchain cannot be read.",
+      "de": "[toolchain] Das Werkzeug {tool} ist nicht registriert, daher kann seine angeheftete Rust-Werkzeugkette nicht gelesen werden."
+    },
+    "unpinned": {
+      "en": "[toolchain] The tool {tool} has no pinned channel under {root}; tests must not run on the machine default.",
+      "de": "[toolchain] Das Werkzeug {tool} hat unter {root} keinen angehefteten Kanal; Tests duerfen nicht auf dem Maschinenstandard laufen."
+    },
+    "disagrees": {
+      "en": "[toolchain] The incoming toolchain {incoming} disagrees with the pinned channel {channel}.",
+      "de": "[toolchain] Die eingehende Werkzeugkette {incoming} widerspricht dem angehefteten Kanal {channel}."
+    }
+  }
+}

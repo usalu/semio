@@ -1,0 +1,1603 @@
+# stage-clean different staged=rcache-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts
+@@ -15,7 +15,7 @@
+  return Object.freeze({environment:Object.freeze({[NX_REMOTE_CACHE_VARIABLES_V1.server]:server,[NX_REMOTE_CACHE_VARIABLES_V1.token]:token}),rendering});
+ }
+ 
+-/** 🔌️ Nx's side of `remote-cache status`: it speaks the self-hosted cache API and proves reachability on the task archive route. */
++/** 🔌️ Nx's side of `cache remote status`: it speaks the self-hosted cache API and proves reachability on the task archive route. */
+ export function nxRemoteCacheToolV1():RemoteCacheToolV1{
+  return Object.freeze<RemoteCacheToolV1>({tool:"nx",protocol:"nx-self-hosted",probePath:"/v1/cache/semio-probe",render:(contract,environment)=>nxRemoteCacheV1(contract,environment).rendering});
+ }
+# stage-clean different staged=rcache-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/⌨️command/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/⌨️command/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/⌨️command/🟦️.ts
+@@ -1,150 +1,67 @@
+-import {stat} from "node:fs/promises";
+-import {isAbsolute,join,resolve} from "node:path";
++import {isAbsolute,resolve} from "node:path";
+ import {readRemoteCachePolicyV1,readRemoteCacheTokenV1,remoteCacheBaseUrlV1,remoteCacheEffectiveUploadV1,requireRemoteCacheShapeV1,resolveRemoteCacheContractV1,type RemoteCacheContractV1,type RemoteCacheRenderingV1} from "../🟦️.ts";
+-import type {RemoteCacheValidationV1} from "../🔬️action-result/🟦️.ts";
+-import {collectRemoteCacheDirectoryV1,scanRemoteCacheDirectoryV1,type RemoteCacheCollectionReportV1} from "../🧹️collector/🟦️.ts";
+-import {RemoteCacheDirectoryBusyV1,startRemoteCacheServerV1,type RemoteCacheServerStatusV1} from "../🖥️server/🟦️.ts";
+-import texts from "../📖️texts/🔣️.json" with {type:"json"};
++import {startRemoteCacheServerV1} from "../🖥️server/🟦️.ts";
+ 
+-/** 🔌️ The build tool's side of `remote-cache status`: which HTTP protocol it speaks, which read-only route proves reachability and credentials, and how it renders the contract. */
++/** 🔌️ The build tool's side of `cache remote status`: which HTTP protocol it speaks, which read-only route proves reachability and credentials, and how it renders the contract. */
+ export interface RemoteCacheToolV1{
+- readonly tool:string;
+- readonly protocol:string;
++ readonly tool:"nx"|"bazel";
++ readonly protocol:"bazel-http"|"nx-self-hosted";
+  readonly probePath:string;
+  render(contract:RemoteCacheContractV1,environment:Readonly<Record<string,string|undefined>>):RemoteCacheRenderingV1;
+ }
+ 
+-/** 🎛️ Carries the issued phase into the command: where the workspace is, the environment, cancellation, progress, output and the two build tools. */
+-export type RemoteCacheCommandContextV1=Readonly<{root:string;environment:Readonly<Record<string,string|undefined>>;signal:AbortSignal;progress:(stage:string)=>Promise<void>;write:(line:string)=>void;tools:()=>Promise<readonly RemoteCacheToolV1[]>}>;
++/** 🎛️ Carries the issued phase into the command: where the workspace is, the environment, cancellation, progress and output. */
++export type RemoteCacheCommandContextV1=Readonly<{root:string;environment:Readonly<Record<string,string|undefined>>;signal:AbortSignal;progress:(stage:string)=>Promise<void>;write:(line:string)=>void;tool:()=>Promise<RemoteCacheToolV1>}>;
+ 
+-/** 🏁️ How a command ended: the process exit code and an optional machine-readable document to print. */
+-export type RemoteCacheCommandResultV1=Readonly<{exitCode:number;result?:unknown}>;
++const VALUED=new Set(["--port","--host","--directory","--max-bytes"]);
+ 
+-/** 🗣️ The languages of all messages; there is no default among them. */
+-export type RemoteCacheLanguageV1="en"|"de";
+-
+-type Operation="serve"|"status"|"gc";
+-
+-const LANGUAGES=texts.languages as readonly RemoteCacheLanguageV1[],
+- OPTIONS:Readonly<Record<Operation,Readonly<{valued:readonly string[];plain:readonly string[]}>>>={
+-  serve:{valued:["--port","--host","--directory","--max-bytes","--tls-certificate","--tls-key","--lang"],plain:["--read-only"]},
+-  status:{valued:["--directory","--lang"],plain:[]},
+-  gc:{valued:["--directory","--max-bytes","--lang"],plain:["--dry-run","--json"]}
+- };
+-
+-/** 💬️ Renders one catalogue message in one language. */
+-export function remoteCacheTextV1(language:RemoteCacheLanguageV1,key:string,variables:Readonly<Record<string,string|number>>={}):string{
+- const message=(texts.messages as Readonly<Record<string,Readonly<Record<RemoteCacheLanguageV1,string>>>>)[key];
+- if(!message)throw Error(`Declared remote cache message required: ${key}`);
+- return message[language].replace(/\{([a-z]+)\}/gu,(_,name:string)=>{const value=variables[name];if(value===undefined)throw Error(`Remote cache message variable missing: ${name}`);return String(value);});
+-}
+-
+-/** 🗣️ Picks the output languages: the explicit request, else the one the environment names (`SEMIO_LANGUAGE`, then the locale), else all of them, because no language is the default. */
+-export function remoteCacheLanguagesV1(requested:string|undefined,environment:Readonly<Record<string,string|undefined>>):readonly RemoteCacheLanguageV1[]{
+- if(requested!==undefined){
+-  if(!LANGUAGES.includes(requested as RemoteCacheLanguageV1))throw Error(both("error.language",{language:requested}));
+-  return [requested as RemoteCacheLanguageV1];
++/** 🧭️ Parses `--name value` and `--name=value` pairs of the allowed names and refuses everything else. */
++export function parseRemoteCacheFlagsV1(args:readonly string[]):Readonly<Record<string,string>>{
++ const values:Record<string,string>={};
++ for(let index=0;index<args.length;index++){
++  const argument=args[index]!,separator=argument.indexOf("="),name=separator<0?argument:argument.slice(0,separator);
++  if(!VALUED.has(name))throw Error(`Unknown cache serve option: ${argument}`);
++  const value=separator<0?args[++index]:argument.slice(separator+1);
++  if(value===undefined||value===""||value.startsWith("--"))throw Error(`Value required for ${name}`);
++  values[name]=value;
+  }
+- for(const value of[environment.SEMIO_LANGUAGE,environment.LC_ALL,environment.LC_MESSAGES,environment.LANG]){const head=value?.slice(0,2).toLowerCase();if(head&&LANGUAGES.includes(head as RemoteCacheLanguageV1))return [head as RemoteCacheLanguageV1];}
+- return LANGUAGES;
+-}
+-
+-function both(key:string,variables:Readonly<Record<string,string|number>>={}):string{return LANGUAGES.map(language=>remoteCacheTextV1(language,key,variables)).join("\n");}
+-
+-/** 🔠️ Spells a byte count in binary units, deterministically. */
+-export function formatRemoteCacheBytesV1(bytes:number):string{
+- if(bytes<1024)return `${bytes} B`;
+- const units=["KiB","MiB","GiB","TiB"];let value=bytes,index=-1;
+- do{value/=1024;index++;}while(value>=1024&&index<units.length-1);
+- return `${value.toFixed(2)} ${units[index]}`;
+-}
+-
+-/** 📝️ The closed arguments of one `remote-cache` operation: valued options by name and the plain flags that were given. */
+-export type RemoteCacheArgumentsV1=Readonly<{operation:Operation;values:Readonly<Record<string,string>>;flags:ReadonlySet<string>}>;
+-
+-/** 🧭️ Reads `serve|status|gc` with its options (`--name value` or `--name=value`); every unknown, misplaced or repeated option is refused in both languages. */
+-export function parseRemoteCacheArgumentsV1(args:readonly string[]):RemoteCacheArgumentsV1{
+- const operation=args[0];
+- if(operation!=="serve"&&operation!=="status"&&operation!=="gc")throw Error(both("error.syntax"));
+- const allowed=OPTIONS[operation],seen=new Set<string>(),values:Record<string,string>={},flags=new Set<string>();
+- for(let index=1;index<args.length;index++){
+-  const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
+-  if(seen.has(name))throw Error(both("error.repeated",{option:name}));
+-  if(allowed.valued.includes(name)){
+-   const value=cut<0?args[++index]:argument.slice(cut+1);
+-   if(value===undefined||value===""||value.startsWith("--"))throw Error(both("error.value",{option:name}));
+-   values[name]=value;
+-  }else if(allowed.plain.includes(name)&&cut<0)flags.add(name);
+-  else throw Error(both("error.option",{operation,option:argument}));
+-  seen.add(name);
+- }
+- return Object.freeze({operation,values:Object.freeze(values),flags});
++ return Object.freeze(values);
+ }
+ 
+ const whole=(name:string,value:string,minimum:number,maximum:number):number=>{
+  const number=Number(value);
+- if(!/^[0-9]+$/u.test(value)||!Number.isSafeInteger(number)||number<minimum||number>maximum)throw Error(both("error.number",{option:name,minimum,maximum}));
++ if(!/^[0-9]+$/u.test(value)||!Number.isSafeInteger(number)||number<minimum||number>maximum)throw Error(`${name} must be a whole number from ${minimum} to ${maximum}`);
+  return number;
+ };
+ 
+-const where=(root:string,path:string):string=>isAbsolute(path)?path:resolve(root,path);
+-
+-function reporter(context:RemoteCacheCommandContextV1,languages:readonly RemoteCacheLanguageV1[]):(key:string,variables?:Readonly<Record<string,string|number>>)=>void{
+- return (key,variables)=>{
+-  for(const language of languages){
+-   const resolved:Record<string,string|number>={};
+-   for(const [name,value] of Object.entries(variables??{}))resolved[name]=typeof value=="string"&&value.startsWith("@")?remoteCacheTextV1(language,value.slice(1)):value;
+-   context.write(remoteCacheTextV1(language,key,resolved));
+-  }
+- };
+-}
+-
+ /** 🚀️ Runs the repository's own cache server until the phase is cancelled; progress covers the store scan, listening and every eviction. */
+-export async function serveRemoteCacheV1(args:readonly string[],context:RemoteCacheCommandContextV1):Promise<RemoteCacheCommandResultV1>{
+- const parsed=parseRemoteCacheArgumentsV1(["serve",...args]),flags=parsed.values,languages=remoteCacheLanguagesV1(flags["--lang"],context.environment),say=reporter(context,languages);
+- const all=readRemoteCachePolicyV1(),policy=all.server,names=policy.environment,read=context.environment[policy.tokenEnvironment.read],write=context.environment[policy.tokenEnvironment.write];
+- for(const token of[read,write])if(token!==undefined&&token!=="")requireRemoteCacheShapeV1("Token",token,"Closed remote cache server token required");
+- const variable=(name:string):string|undefined=>{const value=context.environment[name];return value===undefined||value===""?undefined:value;};
+- const tls=policy.tls as Readonly<{certificate:string;key:string}>|null,switched=variable(names.readOnly),readOnly=parsed.flags.has("--read-only")||(switched===undefined?policy.readOnly:switched==="true");
+- if(switched!==undefined&&switched!=="true"&&switched!=="false")throw Error(both("error.option",{operation:"serve",option:`${names.readOnly}=${switched}`}));
+- const certificate=flags["--tls-certificate"]??variable(names.tlsCertificate)??tls?.certificate,key=flags["--tls-key"]??variable(names.tlsKey)??tls?.key;
+- if((certificate===undefined)!==(key===undefined))throw Error(both("error.tls"));
+- const host=flags["--host"]??policy.host,tokens={read:read===""?undefined:read,write:write===""?undefined:write},loopback=["127.0.0.1","localhost","::1","[::1]"].includes(host);
+- if(!loopback&&tokens.read===undefined&&tokens.write===undefined)throw Error(both("error.token"));
+- const directory=where(context.root,flags["--directory"]??policy.directory),maximumBytes=flags["--max-bytes"]===undefined?policy.maximumBytes:whole("--max-bytes",flags["--max-bytes"],1048576,Number.MAX_SAFE_INTEGER);
+- await context.progress("remote-cache:open");say("serve.open",{directory});
++export async function serveRemoteCacheV1(args:readonly string[],context:RemoteCacheCommandContextV1):Promise<void>{
++ const policy=readRemoteCachePolicyV1().server,flags=parseRemoteCacheFlagsV1(args),read=context.environment[policy.tokenEnvironment.read],write=context.environment[policy.tokenEnvironment.write];
++ for(const token of [read,write])if(token!==undefined&&token!=="")requireRemoteCacheShapeV1("Token",token,"Closed remote cache server token required");
++ const directory=flags["--directory"]??policy.directory,instance=readRemoteCachePolicyV1().defaults.instance,maximumBytes=flags["--max-bytes"]===undefined?policy.maximumBytes:whole("--max-bytes",flags["--max-bytes"],1048576,Number.MAX_SAFE_INTEGER);
++ await context.progress("remote-cache:open");
+  const server=await startRemoteCacheServerV1({
+-  directory,host,
++  directory:isAbsolute(directory)?directory:resolve(context.root,directory),
++  host:flags["--host"]??policy.host,
+   port:flags["--port"]===undefined?policy.port:whole("--port",flags["--port"],0,65535),
+   maximumBytes,
+   maximumEntryBytes:Math.min(policy.maximumEntryBytes,Math.floor(maximumBytes/2)),
+   maximumAgeDays:policy.maximumAgeDays,
+-  defaultInstance:all.defaults.instance,
+-  tokens,readOnly,
+-  tls:certificate===undefined||key===undefined?undefined:{certificate:where(context.root,certificate),key:where(context.root,key)},
+-  validation:policy.actionResults as RemoteCacheValidationV1,
+-  maximumActionResultBytes:policy.maximumActionResultBytes,
+-  maintenanceSeconds:policy.maintenanceSeconds,
++  defaultInstance:instance,
++  tokens:{read:read===""?undefined:read,write:write===""?undefined:write},
+   signal:context.signal,
+   onEvent:event=>{
+-   if(event.stage==="listening"){
+-    context.write(`[remote-cache] listening ${event.url}`);void context.progress("remote-cache:serving");
+-    say("serve.listening",{url:event.url,access:readOnly?"@serve.access.read-only":"@serve.access.read-write",transport:event.url.startsWith("https")?"@serve.transport.https":"@serve.transport.http",validation:"@serve.validation."+policy.actionResults});
+-    if(tokens.read===undefined&&tokens.write===undefined)say("serve.open-access");
+-    say("serve.client",{url:event.url});
+-   }else if(event.stage==="scan")void context.progress("remote-cache:scan");
+-   else if(event.stage==="ready"){void context.progress("remote-cache:ready");say("serve.ready",{entries:event.entries,bytes:formatRemoteCacheBytesV1(event.bytes)});}
+-   else if(event.stage==="evict")say("serve.evicted",{entries:event.entries,bytes:formatRemoteCacheBytesV1(event.bytes)});
+-   else if(event.stage==="stopped"){context.write("[remote-cache] stopped");say("serve.stopped");}
++   if(event.stage==="listening"){context.write(`[cache] listening ${event.url}`);void context.progress("remote-cache:serving");}
++   else if(event.stage==="scan"||event.stage==="ready")void context.progress("remote-cache:"+event.stage);
++   else if(event.stage==="evict")context.write(`[cache] evicted ${event.entries} entries, ${event.bytes} bytes`);
++   else if(event.stage==="stopped")context.write("[cache] stopped");
+   }
+- }).catch(error=>{throw error instanceof RemoteCacheDirectoryBusyV1?Error(both("error.busy",{directory:error.directory})):error;});
++ });
+  await server.stopped;
+- return {exitCode:0};
+ }
+ 
+-type Probe={protocol:RemoteCacheToolV1["protocol"];reachable:boolean;authorized:boolean;status:number|null;milliseconds:number};
+-
+-async function probeRemoteCacheV1(contract:RemoteCacheContractV1,tool:RemoteCacheToolV1,token:string|undefined,signal:AbortSignal):Promise<Probe>{
++/** 🔬️ Asks the endpoint one read-only question on the route the selected tool uses; it stores nothing and ends at the contract's timeout or when cancelled. */
++async function probeRemoteCacheV1(contract:RemoteCacheContractV1,tool:RemoteCacheToolV1,token:string|undefined,signal:AbortSignal):Promise<{protocol:RemoteCacheToolV1["protocol"];reachable:boolean;authorized:boolean;status:number|null;milliseconds:number}>{
+  const started=performance.now(),elapsed=()=>Math.round(performance.now()-started),combined=AbortSignal.any([signal,AbortSignal.timeout(contract.timeoutSeconds*1000)]);
+  try{
+   const response=await fetch(remoteCacheBaseUrlV1(contract)+tool.probePath,{method:"GET",signal:combined,headers:token===undefined?{}:{authorization:`Bearer ${token}`}});
+@@ -156,77 +73,18 @@
+  }
+ }
+ 
+-async function askServerV1(contract:RemoteCacheContractV1,token:string|undefined,signal:AbortSignal):Promise<RemoteCacheServerStatusV1|null>{
+- try{
+-  const response=await fetch(`${contract.endpoint}/status`,{signal:AbortSignal.any([signal,AbortSignal.timeout(contract.timeoutSeconds*1000)]),headers:token===undefined?{}:{authorization:`Bearer ${token}`}});
+-  if(response.status!==200){await response.body?.cancel();return null;}
+-  const document=await response.json();
+-  requireRemoteCacheShapeV1("ServerStatus",document,"Closed remote cache server status required");
+-  return document as RemoteCacheServerStatusV1;
+- }catch(error){
+-  if(signal.aborted)throw error;
+-  return null;
+- }
+-}
+-
+-/** 📋️ Prints the resolved contract, how both build tools render it, whether the endpoint answers on both protocols, what the running server reports about itself and what the local store directory holds; secrets never appear, only whether the token variable is set. */
+-export async function remoteCacheStatusV1(args:readonly string[],context:RemoteCacheCommandContextV1):Promise<unknown>{
+- const parsed=parseRemoteCacheArgumentsV1(["status",...args]),all=readRemoteCachePolicyV1(),tools=await context.tools(),contract=resolveRemoteCacheContractV1(context.environment),directory=where(context.root,parsed.values["--directory"]??all.server.directory);
+- await context.progress("remote-cache:scan");
+- const root=join(directory,"v1"),present=await stat(root).then(info=>info.isDirectory(),()=>false);
+- let store=null;
+- if(present){
+-  const index=await scanRemoteCacheDirectoryV1(root,{signal:context.signal,onProgress:()=>{void context.progress("remote-cache:scan");}});
+-  let bytes=0;for(const row of index.values())bytes+=row.size;
+-  store={directory,entries:index.size,bytes,maximumBytes:all.server.maximumBytes};
+- }
+- if(contract===undefined)return {version:1,configured:false,contract:null,effectiveUpload:false,token:null,renderings:null,probes:null,server:null,store};
++/** 📋️ Prints the resolved contract, how the selected tool renders it and whether the endpoint answers; secrets never appear, only whether the token variable is set. */
++export async function remoteCacheStatusV1(context:RemoteCacheCommandContextV1):Promise<unknown>{
++ const tool=await context.tool(),contract=resolveRemoteCacheContractV1(context.environment);
++ if(contract===undefined)return {version:1,tool:tool.tool,configured:false,contract:null,effectiveUpload:false,token:null,rendering:null,probe:null};
+  await context.progress("remote-cache:probe");
+- const token=readRemoteCacheTokenV1(contract,context.environment),probes:Probe[]=[],renderings:Record<string,RemoteCacheRenderingV1>={};
+- for(const tool of tools){renderings[tool.tool]=tool.render(contract,context.environment);probes.push(await probeRemoteCacheV1(contract,tool,token,context.signal));}
+- const status={version:1,configured:true,contract,effectiveUpload:remoteCacheEffectiveUploadV1(contract),token:{environment:contract.auth.tokenEnvironment,present:token!==undefined},renderings,probes,server:await askServerV1(contract,token,context.signal),store};
++ const token=readRemoteCacheTokenV1(contract,context.environment),status={version:1,tool:tool.tool,configured:true,contract,effectiveUpload:remoteCacheEffectiveUploadV1(contract),token:{environment:contract.auth.tokenEnvironment,present:token!==undefined},rendering:tool.render(contract,context.environment),probe:await probeRemoteCacheV1(contract,tool,token,context.signal)};
+  requireRemoteCacheShapeV1("Status",status,"Closed remote cache status required");return status;
+ }
+ 
+-/** 🧹️ Collects the store directory like a running server would, from outside: removes unusable action results, entries idle for too long and the least recently used entries beyond the bound, under the collector lock; `--dry-run` only plans. Progress is published and cancelling stops at the next checkpoint. */
+-export async function collectRemoteCacheV1(args:readonly string[],context:RemoteCacheCommandContextV1):Promise<RemoteCacheCommandResultV1>{
+- const parsed=parseRemoteCacheArgumentsV1(["gc",...args]),languages=remoteCacheLanguagesV1(parsed.values["--lang"],context.environment),say=reporter(context,languages),policy=readRemoteCachePolicyV1().server;
+- const directory=where(context.root,parsed.values["--directory"]??policy.directory),maximumBytes=parsed.values["--max-bytes"]===undefined?policy.maximumBytes:whole("--max-bytes",parsed.values["--max-bytes"],1048576,Number.MAX_SAFE_INTEGER),dryRun=parsed.flags.has("--dry-run"),json=parsed.flags.has("--json");
+- const talk=json?()=>{}:say;
+- if(!await stat(join(directory,"v1")).then(info=>info.isDirectory(),()=>false)){
+-  talk("gc.absent",{directory});
+-  const absent={version:1,dryRun,directory,present:false};if(json)requireRemoteCacheShapeV1("GcResult",absent,"Closed remote cache gc result required");
+-  return {exitCode:0,...(json?{result:absent}:{})};
+- }
+- talk("gc.start",{directory,bytes:formatRemoteCacheBytesV1(maximumBytes),days:policy.maximumAgeDays,mode:dryRun?"@gc.mode.plan":"@gc.mode.apply"});
+- let report;
+- try{
+-  report=await collectRemoteCacheDirectoryV1({root:join(directory,"v1"),maximumBytes,maximumAgeMilliseconds:policy.maximumAgeDays*86400000,dryRun,verifyResults:policy.actionResults==="complete",signal:context.signal,onProgress:stage=>{void context.progress(`remote-cache:${stage}`);}});
+- }catch(error){
+-  if(context.signal.aborted){talk("gc.cancelled");return {exitCode:130};}
+-  throw error;
+- }
+- if(report.locked){talk("gc.locked",{lock:report.lock});return {exitCode:1};}
+- const value=report.value;
+- talk(dryRun?"gc.summary.plan":"gc.summary.apply",{entries:value.removed.entries,total:value.scanned.entries,bytes:formatRemoteCacheBytesV1(value.removed.bytes),age:value.removed.age,budget:value.removed.budget,dangling:value.removed.dangling,remaining:value.remaining.entries,left:formatRemoteCacheBytesV1(value.remaining.bytes)});
+- const document={directory,...value};if(json)requireRemoteCacheShapeV1("GcResult",document,"Closed remote cache gc result required");
+- return {exitCode:0,...(json?{result:document}:{})};
++/** 🎬️ Routes `cache serve` and `cache remote status`; `args` are the words after `cache`. */
++export async function runRemoteCacheCommandV1(args:readonly string[],context:RemoteCacheCommandContextV1):Promise<unknown>{
++ if(args[0]==="serve"){await serveRemoteCacheV1(args.slice(1),context);return undefined;}
++ if(args[0]==="remote"&&args[1]==="status"&&args.length===2)return remoteCacheStatusV1(context);
++ throw Error("Expected repo cache serve [--port <n>] [--host <address>] [--directory <path>] [--max-bytes <n>] or repo cache remote status");
+ }
+-
+-/** 🧾️ Collects the workspace's store for `repo cache gc` and answers one language-neutral line for its report; the ledger delegates its remote cache area here, so both commands apply the same bounds. */
+-export async function collectRemoteCacheForLedgerV1(workspace:string,dryRun:boolean,signal:AbortSignal):Promise<string>{
+- const policy=readRemoteCachePolicyV1().server,root=join(where(workspace,policy.directory),"v1");
+- if(!await stat(root).then(info=>info.isDirectory(),()=>false))return "absent";
+- const outcome=await collectRemoteCacheDirectoryV1({root,maximumBytes:policy.maximumBytes,maximumAgeMilliseconds:policy.maximumAgeDays*86400000,dryRun,verifyResults:policy.actionResults==="complete",signal});
+- if(outcome.locked)return `busy: ${outcome.lock}`;
+- const report:RemoteCacheCollectionReportV1=outcome.value;
+- return `${dryRun?"would remove":"removed"} ${report.removed.entries} of ${report.scanned.entries} entries (${formatRemoteCacheBytesV1(report.removed.bytes)})`;
+-}
+-
+-/** 🎬️ Routes `remote-cache serve|status|gc`; `args` are the words after `remote-cache`. */
+-export async function runRemoteCacheCommandV1(args:readonly string[],context:RemoteCacheCommandContextV1):Promise<RemoteCacheCommandResultV1>{
+- const parsed=parseRemoteCacheArgumentsV1(args);
+- if(parsed.operation==="serve")return serveRemoteCacheV1(args.slice(1),context);
+- if(parsed.operation==="gc")return collectRemoteCacheV1(args.slice(1),context);
+- return {exitCode:0,result:await remoteCacheStatusV1(args.slice(1),context)};
+-}
+# stage-clean different staged=rcache-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/💾️store/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/💾️store/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/💾️store/🟦️.ts
+@@ -1,8 +1,6 @@
+ import {createHash,randomUUID} from "node:crypto";
+-import {link,mkdir,open,readdir,readFile,rename,rm,stat,unlink,utimes} from "node:fs/promises";
++import {link,mkdir,open,readdir,rename,rm,stat,unlink,utimes} from "node:fs/promises";
+ import {join} from "node:path";
+-import {requireRemoteCacheShapeV1} from "../🟦️.ts";
+-import {planRemoteCacheCollectionV1,scanRemoteCacheDirectoryV1} from "../🧹️collector/🟦️.ts";
+ 
+ /** 🗂️ Names the three keyspaces one store partitions: Bazel action results, Bazel content blobs and Nx task archives. */
+ export type RemoteCacheKindV1="ac"|"cas"|"nx";
+@@ -25,9 +23,7 @@
+ /** 🔑️ Names how a write treats an existing value: `replace` overwrites, `keep` refuses to overwrite and `content` is idempotent because the key is the content digest. */
+ export type RemoteCachePutModeV1="replace"|"keep"|"content";
+ 
+-const NAMESPACE=/^[a-z0-9][a-z0-9._-]{0,63}$/u,KEYS:Readonly<Record<RemoteCacheKindV1,RegExp>>={ac:/^[0-9a-f]{64}$/u,cas:/^[0-9a-f]{64}$/u,nx:/^[a-z0-9_-]{1,128}$/u};
+-
+-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
++const NAMESPACE=/^[a-z0-9][a-z0-9._-]{0,63}$/u,KEYS:Readonly<Record<RemoteCacheKindV1,RegExp>>={ac:/^[0-9a-f]{64}$/u,cas:/^[0-9a-f]{64}$/u,nx:/^[a-z0-9_-]{1,128}$/u},LOW_WATER_NUMERATOR=9,LOW_WATER_DENOMINATOR=10;
+ 
+ /** 🔎️ Admits only namespaces and keys that map to exactly one portable file name. */
+ export function requireRemoteCacheAddressV1(namespace:string,kind:RemoteCacheKindV1,key:string):void{
+@@ -35,91 +31,73 @@
+  if(!KEYS[kind]?.test(key))throw Error(`Remote cache key for ${kind} required`);
+ }
+ 
+-/** 🏛️ Stores remote cache values as files in a bounded directory with atomic writes, content verification and least-recently-used eviction; one process owns a directory at a time, other processes may only collect it. */
++/** 🏛️ Stores remote cache values as files in a bounded directory with atomic writes, content verification and least-recently-used eviction. */
+ export class RemoteCacheStoreV1{
+  private readonly index=new Map<string,{size:number;accessed:number}>();
+  private bytes=0;
+  private reserved=0;
+  private clock=0;
+  private collecting:Promise<void>=Promise.resolve();
+- private readonly writing=join(".tmp",`${process.pid}-${randomUUID()}`);
+  private constructor(private readonly options:RemoteCacheStoreOptionsV1){}
+ 
+- /** 🚪️ Opens the directory, drops the partial writes of dead processes and indexes the stored values, publishing progress and stopping when cancelled. */
++ /** 🚪️ Opens the directory, drops leftover partial writes and indexes the stored values, publishing progress and stopping when cancelled. */
+  static async open(options:RemoteCacheStoreOptionsV1):Promise<RemoteCacheStoreV1>{
+-  requireRemoteCacheShapeV1("StoreBounds",Object.fromEntries(Object.entries({maximumBytes:options.maximumBytes,maximumEntryBytes:options.maximumEntryBytes,maximumAgeMilliseconds:options.maximumAgeMilliseconds}).filter(([,value])=>value!==undefined)),"Finite remote cache bounds required");
+-  if(options.maximumEntryBytes>options.maximumBytes)throw Error("Finite remote cache bounds required: an entry cannot exceed the store");
++  if(![options.maximumBytes,options.maximumEntryBytes].every(value=>Number.isSafeInteger(value)&&value>0)||options.maximumEntryBytes>options.maximumBytes)throw Error("Finite remote cache bounds required");
+   const store=new RemoteCacheStoreV1(options);
+-  await mkdir(store.root,{recursive:true});await mkdir(join(store.root,".tmp"),{recursive:true});
+-  for(const name of await readdir(join(store.root,".tmp")))if(!alive(Number.parseInt(name,10)))await rm(join(store.root,".tmp",name),{recursive:true,force:true});
+-  await mkdir(store.temporary,{recursive:true});
+-  await store.refresh();options.onEvent?.({stage:"ready",entries:store.index.size,bytes:store.bytes});return store;
++  await mkdir(store.root,{recursive:true});await rm(store.temporary,{recursive:true,force:true});await mkdir(store.temporary,{recursive:true});
++  await store.scan();await store.collect();options.onEvent?.({stage:"ready",entries:store.index.size,bytes:store.bytes});return store;
+  }
+ 
+- /** 📁️ The versioned root below the store directory. */
+- get root():string{return join(this.options.directory,"v1");}
+- private get temporary():string{return join(this.root,this.writing);}
+- private relative(namespace:string,kind:RemoteCacheKindV1,key:string):string{return `${namespace}/${kind}/${key.slice(0,2)}/${key}`;}
+- private path(relative:string):string{return join(this.root,...relative.split("/"));}
++ private get root():string{return join(this.options.directory,"v1");}
++ private get temporary():string{return join(this.root,".tmp");}
++ private relative(namespace:string,kind:RemoteCacheKindV1,key:string):string{return join(namespace,kind,key.slice(0,2),key);}
+  private checkpoint():void{this.options.signal?.throwIfAborted();}
+  private tick():number{return this.clock=Math.max(Date.now(),this.clock+1);}
+ 
+- /** 🔄️ Rebuilds the index from the files on disk, so values collected or removed by another process stop counting, then collects what exceeds the bounds. */
+- async refresh():Promise<void>{
+-  const found=await scanRemoteCacheDirectoryV1(this.root,{...this.options.signal?{signal:this.options.signal}:{},onProgress:(_stage,entries,bytes)=>this.options.onEvent?.({stage:"scan",entries,bytes})});
+-  this.index.clear();this.bytes=0;
+-  for(const[relative,row]of found){this.index.set(relative,row);this.clock=Math.max(this.clock,row.accessed);this.bytes+=row.size;}
+-  await this.collect();
++ private async scan():Promise<void>{
++  let visited=0;
++  const walk=async(directory:string,depth:number,prefix:string[]):Promise<void>=>{
++   this.checkpoint();
++   for(const row of await readdir(directory,{withFileTypes:true})){
++    if(depth===0&&row.name===".tmp")continue;
++    if(depth<3){if(row.isDirectory())await walk(join(directory,row.name),depth+1,[...prefix,row.name]);continue;}
++    if(!row.isFile())continue;
++    const info=await stat(join(directory,row.name)),relative=join(...prefix,row.name);
++    this.index.set(relative,{size:info.size,accessed:info.mtimeMs});this.clock=Math.max(this.clock,info.mtimeMs);this.bytes+=info.size;
++    if(++visited%256===0)this.options.onEvent?.({stage:"scan",entries:this.index.size,bytes:this.bytes});
++   }
++  };
++  await walk(this.root,0,[]);
++  this.options.onEvent?.({stage:"scan",entries:this.index.size,bytes:this.bytes});
+  }
+ 
+  /** 📊️ Reports the current fill. */
+  usage():RemoteCacheStoreUsageV1{return Object.freeze({entries:this.index.size,bytes:this.bytes,reservedBytes:this.reserved,maximumBytes:this.options.maximumBytes,maximumEntryBytes:this.options.maximumEntryBytes});}
+ 
+- /** 🔍️ Looks one value up on disk and marks it recently used; a value another process removed is forgotten. */
+- async read(namespace:string,kind:RemoteCacheKindV1,key:string):Promise<RemoteCacheEntryV1|undefined>{
++ /** 🔍️ Looks one value up and marks it recently used. */
++ read(namespace:string,kind:RemoteCacheKindV1,key:string):RemoteCacheEntryV1|undefined{
+   requireRemoteCacheAddressV1(namespace,kind,key);
+-  const relative=this.relative(namespace,kind,key),path=this.path(relative);let info;
+-  try{info=await stat(path);}catch(error){
+-   if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;
+-   const gone=this.index.get(relative);
+-   if(gone){this.index.delete(relative);this.bytes-=gone.size;}
+-   return undefined;
+-  }
+-  const now=this.tick(),row=this.index.get(relative);
+-  if(row){this.bytes+=info.size-row.size;row.size=info.size;row.accessed=now;}else{this.index.set(relative,{size:info.size,accessed:now});this.bytes+=info.size;}
+-  void utimes(path,now/1000,now/1000).catch(()=>{});
+-  return Object.freeze({path,size:info.size});
+- }
+-
+- /** 📖️ Reads one small value completely and marks it recently used; `undefined` when it is absent or larger than the limit. */
+- async readBytes(namespace:string,kind:RemoteCacheKindV1,key:string,limit:number):Promise<Uint8Array|undefined>{
+-  const entry=await this.read(namespace,kind,key);
+-  if(!entry||entry.size>limit)return undefined;
+-  try{return await readFile(entry.path);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}
++  const relative=this.relative(namespace,kind,key),row=this.index.get(relative);if(!row)return undefined;
++  const now=this.tick(),path=join(this.root,relative);row.accessed=now;void utimes(path,now/1000,now/1000).catch(()=>{});
++  return Object.freeze({path,size:row.size});
+  }
+ 
+  /** 🧪️ Tells whether a value exists without touching it. */
+  has(namespace:string,kind:RemoteCacheKindV1,key:string):boolean{requireRemoteCacheAddressV1(namespace,kind,key);return this.index.has(this.relative(namespace,kind,key));}
+ 
+- /** 🗑️ Removes one value; a missing value is not an error. */
+- async remove(namespace:string,kind:RemoteCacheKindV1,key:string):Promise<void>{
+-  requireRemoteCacheAddressV1(namespace,kind,key);
+-  const relative=this.relative(namespace,kind,key),row=this.index.get(relative);
+-  try{await unlink(this.path(relative));}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
+-  if(row){this.index.delete(relative);this.bytes-=row.size;}
+- }
+-
+  /** 🧹️ Drops values older than the authored idle age, then least-recently-used values until the fill is at most nine tenths of the bound; calls queue behind each other. */
+  collect(need:number=0):Promise<void>{
+   const run=async()=>{
+-   const plan=planRemoteCacheCollectionV1([...this.index].map(([key,row])=>({key,...row})),{maximumBytes:this.options.maximumBytes,maximumAgeMilliseconds:this.options.maximumAgeMilliseconds,now:Date.now(),need,reserved:this.reserved});
+-   let removedEntries=0,removedBytes=0;
+-   for(const drop of plan){
+-    this.checkpoint();
+-    try{await unlink(this.path(drop.key));}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")continue;}
+-    const row=this.index.get(drop.key);
+-    if(row){this.index.delete(drop.key);this.bytes-=row.size;}
+-    removedEntries++;removedBytes+=drop.size;
++   const maximum=this.options.maximumBytes,age=this.options.maximumAgeMilliseconds,now=Date.now();let removedEntries=0,removedBytes=0;
++   const drop=async(relative:string,row:{size:number}):Promise<void>=>{
++    try{await unlink(join(this.root,relative));}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")return;}
++    this.index.delete(relative);this.bytes-=row.size;removedEntries++;removedBytes+=row.size;
++   };
++   if(age>0)for(const[relative,row]of[...this.index])if(now-row.accessed>age)await drop(relative,row);
++   const target=Math.floor(maximum*LOW_WATER_NUMERATOR/LOW_WATER_DENOMINATOR)-need;
++   if(this.bytes+this.reserved>maximum-need){
++    const order=[...this.index].sort((left,right)=>left[1].accessed-right[1].accessed);
++    for(const[relative,row]of order){if(this.bytes+this.reserved<=target)break;this.checkpoint();await drop(relative,row);}
+    }
+    if(removedEntries)this.options.onEvent?.({stage:"evict",entries:removedEntries,bytes:removedBytes});
+   };
+@@ -155,11 +133,10 @@
+    await handle.close();handle=undefined;
+    if(declared!==undefined&&written!==declared)return "length-mismatch";
+    if(hash&&hash.digest("hex")!==key)return "digest-mismatch";
+-   await mkdir(this.path(`${namespace}/${kind}/${key.slice(0,2)}`),{recursive:true});
+-   const final=this.path(relative);
++   await mkdir(join(this.root,namespace,kind,key.slice(0,2)),{recursive:true});
++   const final=join(this.root,relative),previous=this.index.get(relative);
+    if(input.mode==="keep"){try{await link(temporary,final);}catch(error){if((error as NodeJS.ErrnoException).code==="EEXIST")return "exists";throw error;}}
+    else await rename(temporary,final);
+-   const previous=this.index.get(relative);
+    if(previous)this.bytes-=previous.size;this.bytes+=written;this.index.set(relative,{size:written,accessed:this.tick()});
+    return previous?"replaced":"created";
+   }finally{
+@@ -168,6 +145,6 @@
+   }
+  }
+ 
+- /** 🔚️ Removes this process's partial-write area; stored values stay for the next start. */
++ /** 🔚️ Removes the partial-write area; stored values stay for the next start. */
+  async close():Promise<void>{await this.collecting.catch(()=>{});await rm(this.temporary,{recursive:true,force:true});}
+ }
+# stage-clean different staged=rcache-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🖥️server/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🖥️server/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🖥️server/🟦️.ts
+@@ -1,32 +1,26 @@
+ import {createHash,timingSafeEqual} from "node:crypto";
+-import {runtimeFileV1,runtimeServeV1} from "../../../../../../../🔨️modules/⚙️runtime/🌍️serve/🟦️.ts";
+-import {mkdir,stat} from "node:fs/promises";
+-import {join} from "node:path";
+-import {parseRemoteCacheActionResultV1,validateRemoteCacheActionResultV1,type RemoteCacheValidationV1} from "../🔬️action-result/🟦️.ts";
+-import {acquireRemoteCacheLockV1,REMOTE_CACHE_COLLECTOR_LOCK_V1,REMOTE_CACHE_SERVER_LOCK_V1} from "../🧹️collector/🟦️.ts";
+ import {RemoteCacheStoreV1,type RemoteCacheKindV1,type RemoteCachePutModeV1,type RemoteCacheStoreEventV1} from "../💾️store/🟦️.ts";
+ 
+ /** 🔐️ Authorizes bearer tokens: with neither token the server is open, a read token allows GET and HEAD, a write token allows everything. */
+ export type RemoteCacheTokensV1=Readonly<{read?:string|undefined;write?:string|undefined}>;
+ 
+-/** 🧮️ Counts what one server did per keyspace since it started; `stale` counts action results that were dropped on a read because their blobs had left the store. */
+-export type RemoteCacheCountersV1=Record<RemoteCacheKindV1,{hits:number;misses:number;puts:number;conflicts:number;rejected:number;stale:number}>;
++/** 🧮️ Counts what one server did per keyspace since it started. */
++export type RemoteCacheCountersV1=Record<RemoteCacheKindV1,{hits:number;misses:number;puts:number;conflicts:number;rejected:number}>;
+ 
+ /** 📊️ The JSON document `GET /status` answers. */
+-export type RemoteCacheServerStatusV1=Readonly<{version:1;protocols:readonly ["bazel-http","nx-self-hosted"];entries:number;bytes:number;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number;readOnly:boolean;validation:RemoteCacheValidationV1;counters:RemoteCacheCountersV1;startedAt:string}>;
++export type RemoteCacheServerStatusV1=Readonly<{version:1;protocols:readonly ["bazel-http","nx-self-hosted"];entries:number;bytes:number;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number;counters:RemoteCacheCountersV1;startedAt:string}>;
+ 
+ /** 📜️ One answered request, published after the response head is decided. */
+ export type RemoteCacheRequestEventV1=Readonly<{stage:"request";method:string;path:string;status:number;milliseconds:number}>;
+ 
+ /** 🔌️ Everything the web-standard handler needs. */
+-export type RemoteCacheHandlerOptionsV1=Readonly<{store:RemoteCacheStoreV1;tokens:RemoteCacheTokensV1;defaultInstance:string;readOnly?:boolean;validation?:RemoteCacheValidationV1;maximumActionResultBytes?:number;startedAt?:Date;onRequest?:(event:RemoteCacheRequestEventV1)=>void}>;
++export type RemoteCacheHandlerOptionsV1=Readonly<{store:RemoteCacheStoreV1;tokens:RemoteCacheTokensV1;defaultInstance:string;startedAt?:Date;onRequest?:(event:RemoteCacheRequestEventV1)=>void}>;
+ 
+-const RESERVED=new Set(["ac","cas","v1","healthz","status"]),INSTANCE=/^[a-z0-9][a-z0-9._-]{0,63}$/u,DIGEST=/^[0-9a-f]{64}$/u,KEY=/^[a-z0-9_-]{1,128}$/u,TREE_BYTES=16*1048576,
++const RESERVED=new Set(["ac","cas","v1","healthz","status"]),INSTANCE=/^[a-z0-9][a-z0-9._-]{0,63}$/u,DIGEST=/^[0-9a-f]{64}$/u,KEY=/^[a-z0-9_-]{1,128}$/u,
+  text=(status:number,message:string,headers:Record<string,string>={})=>new Response(message+"\n",{status,headers:{"content-type":"text/plain",...headers}}),
+- digest=(value:string)=>createHash("sha256").update(value).digest(),
+- row=()=>({hits:0,misses:0,puts:0,conflicts:0,rejected:0,stale:0});
++ digest=(value:string)=>createHash("sha256").update(value).digest();
+ 
+-/** 🚰️ A request body read through its reader, because the runtime's stream iterator is not available for request bodies: `chunks` feeds the store and `drain` discards what is left, up to a bound, so a reply sent before the body was read is not lost to a connection reset. */
++/** 🚰️ A request body read through its reader, because Bun's own stream iterator is not available for request bodies: `chunks` feeds the store and `drain` discards what is left, up to a bound, so a reply sent before the body was read is not lost to a connection reset. */
+ export type RemoteCacheBodyV1=Readonly<{chunks:AsyncGenerator<Uint8Array>;drain:(limit:number)=>Promise<void>}>;
+ 
+ /** 🚰️ Wraps a request body stream. */
+@@ -53,9 +47,9 @@
+  return undefined;
+ }
+ 
+-/** 🏗️ Builds the protocol handler as a pure web-standard function, so any HTTP host can serve it: Bazel's HTTP cache (`/ac/<sha256>`, `/cas/<sha256>`) and the Nx self-hosted cache API (`/v1/cache/<hash>`), each optionally under a `/<instance>` prefix. Blobs are verified against their digest; action results are validated (and, when complete, answered only while every blob they name is still stored); a read-only handler refuses every write. */
++/** 🏗️ Builds the protocol handler as a pure web-standard function, so any HTTP host can serve it: Bazel's HTTP cache (`/ac/<sha256>`, `/cas/<sha256>`) and the Nx self-hosted cache API (`/v1/cache/<hash>`), each optionally under a `/<instance>` prefix. */
+ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):(request:Request)=>Promise<Response>{
+- const counters:RemoteCacheCountersV1={ac:row(),cas:row(),nx:row()},validation=options.validation??"complete",readOnly=options.readOnly===true,limit=options.maximumActionResultBytes??4194304,
++ const counters:RemoteCacheCountersV1={ac:{hits:0,misses:0,puts:0,conflicts:0,rejected:0},cas:{hits:0,misses:0,puts:0,conflicts:0,rejected:0},nx:{hits:0,misses:0,puts:0,conflicts:0,rejected:0}},
+   startedAt=(options.startedAt??new Date()).toISOString(),open=options.tokens.read===undefined&&options.tokens.write===undefined;
+  const authorize=(request:Request,write:boolean):Response|undefined=>{
+   if(open)return undefined;
+@@ -66,66 +60,37 @@
+   return write&&!writer?text(403,"Forbidden: read-only token"):undefined;
+  };
+  const mode=(kind:RemoteCacheKindV1):RemoteCachePutModeV1=>kind==="ac"?"replace":kind==="cas"?"content":"keep";
+- const blobs=(namespace:string)=>({has:(hash:string)=>options.store.has(namespace,"cas",hash),read:(hash:string)=>options.store.readBytes(namespace,"cas",hash,TREE_BYTES)});
+- const readResult=async(namespace:string,key:string,method:string):Promise<Response>=>{
+-  const counter=counters.ac;
+-  if(validation!=="complete"){
+-   const entry=await options.store.read(namespace,"ac",key);
+-   if(!entry){counter.misses++;return text(404,"Not found");}
+-   counter.hits++;return new Response(method==="GET"?entry.size===0?"":runtimeFileV1(entry.path).body():null,{headers:{"content-type":"application/octet-stream","content-length":String(entry.size)}});
+-  }
+-  const bytes=await options.store.readBytes(namespace,"ac",key,limit);
+-  if(bytes===undefined){counter.misses++;return text(404,"Not found");}
+-  try{
+-   const parsed=parseRemoteCacheActionResultV1(bytes);
+-   for(const value of[...parsed.references,...parsed.trees])if(!options.store.has(namespace,"cas",value.hash))throw Error("blob left the store");
+-  }catch{await options.store.remove(namespace,"ac",key);counter.stale++;counter.misses++;return text(404,"Not found");}
+-  counter.hits++;return new Response((method==="GET"?bytes:null) as BodyInit|null,{headers:{"content-type":"application/octet-stream","content-length":String(bytes.byteLength)}});
+- };
+  const answer=async(request:Request,body:RemoteCacheBodyV1):Promise<Response>=>{
+   const url=new URL(request.url),method=request.method;
+   if(url.pathname==="/healthz")return method==="GET"||method==="HEAD"?new Response(method==="GET"?'{"status":"ok"}\n':null,{headers:{"content-type":"application/json"}}):text(405,"Method not allowed",{allow:"GET, HEAD"});
+   if(url.pathname==="/status"){
+    const denied=authorize(request,false);if(denied)return denied;
+-   const usage=options.store.usage(),status:RemoteCacheServerStatusV1={version:1,protocols:["bazel-http","nx-self-hosted"],entries:usage.entries,bytes:usage.bytes,reservedBytes:usage.reservedBytes,maximumBytes:usage.maximumBytes,maximumEntryBytes:usage.maximumEntryBytes,readOnly,validation,counters,startedAt};
++   const usage=options.store.usage(),status:RemoteCacheServerStatusV1={version:1,protocols:["bazel-http","nx-self-hosted"],entries:usage.entries,bytes:usage.bytes,reservedBytes:usage.reservedBytes,maximumBytes:usage.maximumBytes,maximumEntryBytes:usage.maximumEntryBytes,counters,startedAt};
+    return Response.json(status);
+   }
+   const address=parseRemoteCachePathV1(url.pathname,options.defaultInstance);
+   if(!address)return text(404,"Not found");
+   if(method==="GET"||method==="HEAD"){
+    const denied=authorize(request,false);if(denied)return denied;
+-   if(address.kind==="ac")return readResult(address.namespace,address.key,method);
+-   const entry=await options.store.read(address.namespace,address.kind,address.key),counter=counters[address.kind];
+-   if(!entry){counter.misses++;return text(404,"Not found");}
+-   counter.hits++;const headers={"content-type":"application/octet-stream","content-length":String(entry.size)};
+-   return new Response(method==="GET"?entry.size===0?"":runtimeFileV1(entry.path).body():null,{headers});
++   const entry=options.store.read(address.namespace,address.kind,address.key),row=counters[address.kind];
++   if(!entry){row.misses++;return text(404,"Not found");}
++   row.hits++;const headers={"content-type":"application/octet-stream","content-length":String(entry.size)};
++   return new Response(method==="GET"?entry.size===0?"":Bun.file(entry.path):null,{headers});
+   }
+   if(method!=="PUT")return text(405,"Method not allowed",{allow:"GET, HEAD, PUT"});
+   const denied=authorize(request,true);if(denied)return denied;
+-  if(readOnly)return text(403,"Forbidden: this cache is read-only");
+-  const counter=counters[address.kind],length=request.headers.get("content-length");
++  const row=counters[address.kind],length=request.headers.get("content-length");
+   if(address.kind==="nx"&&length===null)return text(411,"Content-Length required");
+   const declared=length===null?undefined:Number(length);
+   if(declared!==undefined&&!Number.isSafeInteger(declared))return text(400,"Content-Length invalid");
+-  let source:AsyncIterable<Uint8Array>=body.chunks,known=declared;
+-  if(address.kind==="ac"&&validation!=="off"){
+-   if(declared!==undefined&&declared>limit){counter.rejected++;return text(413,"Action result exceeds the maximum size");}
+-   const parts:Uint8Array[]=[];let size=0;
+-   try{for await(const chunk of body.chunks){size+=chunk.byteLength;if(size>limit){counter.rejected++;return text(413,"Action result exceeds the maximum size");}parts.push(chunk);}}catch{return text(499,"Client closed request");}
+-   if(declared!==undefined&&size!==declared){counter.rejected++;return text(400,"Content-Length mismatch");}
+-   const bytes=new Uint8Array(size);let offset=0;for(const part of parts){bytes.set(part,offset);offset+=part.byteLength;}
+-   const verdict=await validateRemoteCacheActionResultV1(bytes,validation,blobs(address.namespace));
+-   if(!verdict.valid){counter.rejected++;return text(400,`Invalid action result: ${verdict.reason}`);}
+-   source=(async function*(){yield bytes;})();known=size;
+-  }
+-  const outcome=await options.store.put(address.namespace,address.kind,address.key,source,{mode:mode(address.kind),verify:address.kind==="cas",declaredLength:known});
++  const outcome=await options.store.put(address.namespace,address.kind,address.key,body.chunks,{mode:mode(address.kind),verify:address.kind==="cas",declaredLength:declared});
+   switch(outcome){
+-   case "created":case "replaced":counter.puts++;return text(200,"Stored");
+-   case "exists":if(address.kind==="nx"){counter.conflicts++;return text(409,"Conflict: cannot overwrite an existing cache entry");}return text(200,"Stored");
+-   case "digest-mismatch":counter.rejected++;return text(400,"Digest mismatch");
+-   case "length-mismatch":counter.rejected++;return text(400,"Content-Length mismatch");
+-   case "too-large":counter.rejected++;return text(413,"Entry exceeds the maximum entry size");
+-   case "capacity":counter.rejected++;return text(507,"Insufficient storage",{"retry-after":"5"});
++   case "created":case "replaced":row.puts++;return text(200,"Stored");
++   case "exists":if(address.kind==="nx"){row.conflicts++;return text(409,"Conflict: cannot overwrite an existing cache entry");}return text(200,"Stored");
++   case "digest-mismatch":row.rejected++;return text(400,"Digest mismatch");
++   case "length-mismatch":row.rejected++;return text(400,"Content-Length mismatch");
++   case "too-large":row.rejected++;return text(413,"Entry exceeds the maximum entry size");
++   case "capacity":row.rejected++;return text(507,"Insufficient storage",{"retry-after":"5"});
+    case "aborted":return text(499,"Client closed request");
+   }
+  };
+@@ -137,49 +102,25 @@
+  };
+ }
+ 
+-/** 🔒️ The certificate chain and private key of an optional TLS listener, as file paths. */
+-export type RemoteCacheTlsV1=Readonly<{certificate:string;key:string}>;
+-
+-/** ⚙️ Authors one running server: where to listen, what to store, who may use it and what it checks. */
+-export type RemoteCacheServerOptionsV1=Readonly<{directory:string;host:string;port:number;maximumBytes:number;maximumEntryBytes:number;maximumAgeDays:number;defaultInstance:string;tokens:RemoteCacheTokensV1;readOnly?:boolean;tls?:RemoteCacheTlsV1|undefined;validation?:RemoteCacheValidationV1;maximumActionResultBytes?:number;maintenanceSeconds?:number;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1|RemoteCacheRequestEventV1|Readonly<{stage:"listening";url:string}>|Readonly<{stage:"stopped"}>)=>void}>;
++/** ⚙️ Authors one running server: where to listen, what to store and who may use it. */
++export type RemoteCacheServerOptionsV1=Readonly<{directory:string;host:string;port:number;maximumBytes:number;maximumEntryBytes:number;maximumAgeDays:number;defaultInstance:string;tokens:RemoteCacheTokensV1;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1|RemoteCacheRequestEventV1|Readonly<{stage:"listening";url:string}>|Readonly<{stage:"stopped"}>)=>void}>;
+ 
+ /** 🛰️ A started server: its address, a live status and an orderly stop. */
+ export interface RemoteCacheServerV1{readonly url:string;readonly port:number;readonly store:RemoteCacheStoreV1;readonly stopped:Promise<void>;stop():Promise<void>}
+ 
+-/** 🚧️ Raised when another living server already owns the store directory. */
+-export class RemoteCacheDirectoryBusyV1 extends Error{constructor(readonly directory:string){super(`Another remote cache server uses ${directory}`);}}
+-
+ const LOOPBACK=new Set(["127.0.0.1","localhost","::1","[::1]"]);
+ 
+-/** 🚀️ Opens the store and serves the handler through the runtime interface, over TLS when a certificate is given; refuses to listen beyond loopback without a token, refuses a directory another server owns, keeps the store in step with outside collectors, and stops when `signal` aborts. */
++/** 🚀️ Opens the store and serves the handler with Bun; refuses to listen beyond loopback without a token, and stops when `signal` aborts. */
+ export async function startRemoteCacheServerV1(options:RemoteCacheServerOptionsV1):Promise<RemoteCacheServerV1>{
+  if(!LOOPBACK.has(options.host)&&options.tokens.read===undefined&&options.tokens.write===undefined)throw Error("A token is required to listen beyond loopback");
+  if(!INSTANCE.test(options.defaultInstance)||RESERVED.has(options.defaultInstance))throw Error("Valid default instance required");
+- if(options.tls){for(const path of[options.tls.certificate,options.tls.key])if(!(await stat(path).catch(()=>undefined))?.isFile())throw Error(`TLS file required: ${path}`);}
+- const root=join(options.directory,"v1");await mkdir(root,{recursive:true});
+- const owner=await acquireRemoteCacheLockV1(root,REMOTE_CACHE_SERVER_LOCK_V1);
+- if(owner.held)throw new RemoteCacheDirectoryBusyV1(options.directory);
+- let store:RemoteCacheStoreV1|undefined,timer:ReturnType<typeof setInterval>|undefined;
+- try{
+-  store=await RemoteCacheStoreV1.open({directory:options.directory,maximumBytes:options.maximumBytes,maximumEntryBytes:options.maximumEntryBytes,maximumAgeMilliseconds:options.maximumAgeDays*86400000,...(options.signal?{signal:options.signal}:{}),...(options.onEvent?{onEvent:options.onEvent}:{})});
+-  const opened=store,handler=createRemoteCacheHandlerV1({store:opened,tokens:options.tokens,defaultInstance:options.defaultInstance,...(options.readOnly===undefined?{}:{readOnly:options.readOnly}),...(options.validation===undefined?{}:{validation:options.validation}),...(options.maximumActionResultBytes===undefined?{}:{maximumActionResultBytes:options.maximumActionResultBytes}),...(options.onEvent?{onRequest:options.onEvent}:{})});
+-  const server=await runtimeServeV1({hostname:options.host,port:options.port,idleTimeoutSeconds:60,maximumRequestBodyBytes:options.maximumEntryBytes*2,...(options.tls?{tls:{certificate:options.tls.certificate,key:options.tls.key}}:{}),fetch:request=>handler(request)});
+-  const host=options.host.includes(":")&&!options.host.startsWith("[")?`[${options.host}]`:options.host,port=server.port,url=`${options.tls?"https":"http"}://${host}:${port}`;
+-  let finish!:()=>void;const stopped=new Promise<void>(resolve=>{finish=resolve;});let closing:Promise<void>|undefined;
+-  const stop=():Promise<void>=>closing??=(async()=>{if(timer)clearInterval(timer);await server.stop(true);await opened.close();await owner.release();options.onEvent?.({stage:"stopped"});finish();})();
+-  const maintenance=(options.maintenanceSeconds??0)*1000;
+-  if(maintenance>0){
+-   let running=false;
+-   timer=setInterval(()=>{
+-    if(running)return;running=true;
+-    void(async()=>{const lock=await acquireRemoteCacheLockV1(root,REMOTE_CACHE_COLLECTOR_LOCK_V1);if(lock.held)return;try{await opened.refresh();}finally{await lock.release();}})().catch(()=>{}).finally(()=>{running=false;});
+-   },maintenance);
+-   timer.unref();
+-  }
+-  if(options.signal){if(options.signal.aborted)await stop();else options.signal.addEventListener("abort",()=>{void stop();},{once:true});}
+-  options.onEvent?.({stage:"listening",url});
+-  return Object.freeze({url,port,store:opened,stopped,stop});
+- }catch(error){
+-  await store?.close().catch(()=>{});await owner.release();throw error;
+- }
++ const store=await RemoteCacheStoreV1.open({directory:options.directory,maximumBytes:options.maximumBytes,maximumEntryBytes:options.maximumEntryBytes,maximumAgeMilliseconds:options.maximumAgeDays*86400000,...(options.signal?{signal:options.signal}:{}),...(options.onEvent?{onEvent:options.onEvent}:{})});
++ const handler=createRemoteCacheHandlerV1({store,tokens:options.tokens,defaultInstance:options.defaultInstance,...(options.onEvent?{onRequest:options.onEvent}:{})});
++ const server=Bun.serve({hostname:options.host,port:options.port,idleTimeout:60,maxRequestBodySize:options.maximumEntryBytes*2,fetch:request=>handler(request)});
++ const host=options.host.includes(":")&&!options.host.startsWith("[")?`[${options.host}]`:options.host,port=server.port??options.port,url=`http://${host}:${port}`;
++ let finish!:()=>void;const stopped=new Promise<void>(resolve=>{finish=resolve;});let closing:Promise<void>|undefined;
++ const stop=():Promise<void>=>closing??=(async()=>{await server.stop(true);await store.close();options.onEvent?.({stage:"stopped"});finish();})();
++ if(options.signal){if(options.signal.aborted)await stop();else options.signal.addEventListener("abort",()=>{void stop();},{once:true});}
++ options.onEvent?.({stage:"listening",url});
++ return Object.freeze({url,port,store,stopped,stop});
+ }
+# stage-clean different staged=rcache-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🟦️.ts
+@@ -3,13 +3,13 @@
+ import buildPolicy from "../🔣️policy.json" with {type:"json"};
+ 
+ /** 🌐️ The resolved, secret-free contract of one enabled remote cache, shaped by `🌐️remote-cache.json`. */
+-export type RemoteCacheContractV1=Readonly<{version:1;endpoint:string;instance:string;access:"read-only"|"read-write";upload:boolean;compression:boolean;download:"toplevel"|"all";timeoutSeconds:number;retries:number;auth:Readonly<{tokenEnvironment:string}>}>;
++export type RemoteCacheContractV1=Readonly<{version:1;endpoint:string;instance:string;access:"read-only"|"read-write";upload:boolean;compression:boolean;download:"minimal"|"toplevel"|"all";timeoutSeconds:number;retries:number;auth:Readonly<{tokenEnvironment:string}>}>;
+ 
+ /** 📜️ The authored remote cache section of the build policy. */
+ export type RemoteCachePolicyV1=Readonly<typeof buildPolicy.remoteCache>;
+ 
+ /** 🧾️ Names which tools render the contract and what the selected one could not honour. */
+-export type RemoteCacheRenderingV1=Readonly<{mechanism:string;applied:readonly string[];unsupported:readonly ("compression"|"download"|"timeoutSeconds"|"retries")[];uploadEnforcedBy:"client"|"server"|"none"}>;
++export type RemoteCacheRenderingV1=Readonly<{mechanism:"bazel-flags"|"nx-environment";applied:readonly string[];unsupported:readonly ("compression"|"download"|"timeoutSeconds"|"retries")[];uploadEnforcedBy:"client"|"server"|"none"}>;
+ 
+ const definitions=schema.definitions;
+ 
+# stage-clean different staged=rcache-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🟦️.ts
+@@ -1,9 +1,8 @@
+ import {afterAll,expect,test} from "bun:test";
+-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+ import Ajv from "ajv";
+ import {createHash} from "node:crypto";
+ import {spawn,spawnSync} from "node:child_process";
+-import {cpSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
++import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
+ import {tmpdir} from "node:os";
+ import {dirname,join} from "node:path";
+ import schema from "../../🏃️execution/🧬️schema/🌐️remote-cache.json" with {type:"json"};
+@@ -16,17 +15,16 @@
+ import {nxRemoteCacheV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts";
+ import {RemoteCacheStoreV1,type RemoteCacheStoreEventV1} from "../💾️store/🟦️.ts";
+ import {startRemoteCacheServerV1,parseRemoteCachePathV1,type RemoteCacheServerV1} from "../🖥️server/🟦️.ts";
+-import {collectRemoteCacheV1,parseRemoteCacheArgumentsV1,remoteCacheLanguagesV1,remoteCacheStatusV1,remoteCacheTextV1,runRemoteCacheCommandV1,serveRemoteCacheV1,type RemoteCacheCommandContextV1} from "../⌨️command/🟦️.ts";
+-import texts from "../📖️texts/🔣️.json" with {type:"json"};
++import {parseRemoteCacheFlagsV1,remoteCacheStatusV1,runRemoteCacheCommandV1,serveRemoteCacheV1,type RemoteCacheCommandContextV1} from "../⌨️command/🟦️.ts";
+ import {bazelRemoteCacheToolV1} from "../../🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts";
+ import {nxRemoteCacheToolV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts";
+ 
+-const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`}),python=testPythonV1(),scratch:string[]=[];
++const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`}),python=Bun.which("python3"),scratch:string[]=[];
+ const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`rcache-${label}-`));scratch.push(path);return path;};
+ const digest=(value:string)=>createHash("sha256").update(value).digest("hex");
+ 
+ type Step={name:string;request:{method:string;path:string;headers?:Record<string,string>;body?:string};response:{status:number;body?:string;headers?:Record<string,string>}};
+-type Scenario={name:string;server:{tokens:{read?:string;write?:string};maximumBytes?:number;maximumEntryBytes?:number;readOnly?:boolean;validation?:"off"|"structure"|"complete"};steps:Step[]};
++type Scenario={name:string;server:{tokens:{read?:string;write?:string};maximumBytes?:number;maximumEntryBytes?:number};steps:Step[]};
+ type Answer={status:number;body:string;headers:Record<string,string>};
+ 
+ /** 🏃️ Runs a client process without blocking the event loop that serves it. */
+@@ -40,7 +38,7 @@
+ }
+ 
+ async function serve(options:Partial<Parameters<typeof startRemoteCacheServerV1>[0]>={}):Promise<RemoteCacheServerV1>{
+- return startRemoteCacheServerV1({directory:directory("store"),host:"127.0.0.1",port:0,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"default",tokens:{},validation:"off",...options});
++ return startRemoteCacheServerV1({directory:directory("store"),host:"127.0.0.1",port:0,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"default",tokens:{},...options});
+ }
+ 
+ test("the policy, the fixtures and the contract schema agree against an independent JSON-schema implementation",()=>{
+@@ -76,7 +74,7 @@
+ 
+ test("Bazel renders the neutral contract into exactly the fixture flags, environment and credential helper",()=>{
+  for(const row of fixture.bazel){
+-  const contract=resolveRemoteCacheContractV1(row.environment)!,options={helperDirectory:row.directory,platform:row.platform as NodeJS.Platform};
++  const contract=resolveRemoteCacheContractV1(row.environment)!,options={helperDirectory:row.directory,restoresOutputs:row.restoresOutputs,platform:row.platform as NodeJS.Platform};
+   if("refused" in row){expect(()=>bazelRemoteCacheV1(contract,row.environment,options),row.name).toThrow(row.refused);continue;}
+   const rendering=bazelRemoteCacheV1(contract,row.environment,options);
+   expect(rendering.flags,row.name).toEqual(row.flags);expect(rendering.environment,row.name).toEqual(row.tokenEnvironment as Record<string,string>);expect(rendering.helper??null,row.name).toEqual(row.helper);
+@@ -88,7 +86,7 @@
+ 
+ test("the generated credential helper answers Bazel's get request with a valid bearer header and never contains the token",()=>{
+  if(process.platform==="win32")return;
+- const row=fixture.bazel.find(candidate=>candidate.helper&&candidate.platform==="linux")!,contract=resolveRemoteCacheContractV1(row.environment)!,folder=directory("helper"),rendering=bazelRemoteCacheV1(contract,row.environment,{helperDirectory:folder,platform:"linux"}),helper=rendering.helper!;
++ const row=fixture.bazel.find(candidate=>candidate.helper&&candidate.platform==="linux")!,contract=resolveRemoteCacheContractV1(row.environment)!,folder=directory("helper"),rendering=bazelRemoteCacheV1(contract,row.environment,{helperDirectory:folder,restoresOutputs:true,platform:"linux"}),helper=rendering.helper!;
+  writeFileSync(helper.path,helper.content,{mode:helper.mode});
+  expect(helper.content).not.toContain("tok-123");
+  const result=spawnSync(helper.path,["get"],{input:JSON.stringify({uri:"https://cache.example.test:8443/team-a/ac/x"}),env:{PATH:process.env.PATH,CI_CACHE_TOKEN:"tok-123"},encoding:"utf8"});
+@@ -133,7 +131,7 @@
+ test("the wire fixture holds against the TypeScript client and against Python's http.client, both bit for bit",async()=>{
+  expect(wire.digests.hello).toBe(digest("hello"));expect(wire.digests.world).toBe(digest("world"));expect(wire.digests.empty).toBe(digest(""));
+  for(const scenario of wire.scenarios as unknown as Scenario[])for(const who of python?["typescript","python"]:["typescript"]){
+-  const server=await serve({tokens:scenario.server.tokens,...(scenario.server.maximumBytes?{maximumBytes:scenario.server.maximumBytes}:{}),...(scenario.server.maximumEntryBytes?{maximumEntryBytes:scenario.server.maximumEntryBytes}:{}),...(scenario.server.readOnly?{readOnly:true}:{}),...(scenario.server.validation?{validation:scenario.server.validation}:{})});
++  const server=await serve({tokens:scenario.server.tokens,...(scenario.server.maximumBytes?{maximumBytes:scenario.server.maximumBytes}:{}),...(scenario.server.maximumEntryBytes?{maximumEntryBytes:scenario.server.maximumEntryBytes}:{})});
+   try{
+    const rows=who==="typescript"?await typescriptClient(server.url,scenario):await pythonClient(server.url,scenario);
+    scenario.steps.forEach((step,index)=>{
+@@ -180,7 +178,7 @@
+  for(const row of bounds.cases){
+   const store=await RemoteCacheStoreV1.open({directory:directory("bound"),maximumBytes:row.maximumBytes,maximumEntryBytes:row.maximumEntryBytes,maximumAgeMilliseconds:0}),keys=bounds.keys as Record<string,string>;
+   for(const op of row.ops as {put?:string;size?:number;read?:string}[]){
+-   if(op.read!==undefined){await store.read("default","ac",keys[op.read]!);continue;}
++   if(op.read!==undefined){store.read("default","ac",keys[op.read]!);continue;}
+    const body=new Uint8Array(op.size!).fill(97);
+    expect(await store.put("default","ac",keys[op.put!]!,(async function*(){yield body;})(),{mode:"replace",declaredLength:op.size}),row.name).toMatch(/created|replaced/u);
+    expect(store.usage().bytes,row.name).toBeLessThanOrEqual(row.maximumBytes);
+@@ -240,140 +238,59 @@
+  await store.collect();expect(store.has("default","nx","old")).toBe(false);expect(store.has("default","nx","new")).toBe(true);await store.close();
+ });
+ 
+-test("the command words parse like the catalogue says and refuse everything else, in both languages",()=>{
+- expect(parseRemoteCacheArgumentsV1(["serve","--port","0","--host=127.0.0.1","--directory","cache","--max-bytes=1048576","--read-only","--tls-certificate","c.pem","--tls-key=k.pem"])).toMatchObject({operation:"serve",values:{"--port":"0","--host":"127.0.0.1","--directory":"cache","--max-bytes":"1048576","--tls-certificate":"c.pem","--tls-key":"k.pem"}});
+- expect(parseRemoteCacheArgumentsV1(["gc","--dry-run","--json"]).flags).toEqual(new Set(["--dry-run","--json"]));
+- for(const bad of [[],["clear"],["remote","status"],["serve","--port"],["serve","--port","--host"],["serve","--unknown","1"],["serve","--port="],["serve","--dry-run"],["gc","--read-only"],["status","--max-bytes","1"],["gc","--dry-run","--dry-run"],["serve","--read-only=true"]])expect(()=>parseRemoteCacheArgumentsV1(bad),bad.join(" ")).toThrow();
+- let message="";try{parseRemoteCacheArgumentsV1(["serve","--bogus"]);}catch(error){message=(error as Error).message;}
+- expect(message).toContain("Unknown option for remote-cache serve: --bogus");expect(message).toContain("Unbekannte Option für remote-cache serve: --bogus");
+- expect(remoteCacheLanguagesV1("de",{})).toEqual(["de"]);expect(remoteCacheLanguagesV1(undefined,{SEMIO_LANGUAGE:"en"})).toEqual(["en"]);expect(remoteCacheLanguagesV1(undefined,{LANG:"de_DE.UTF-8"})).toEqual(["de"]);
+- expect(remoteCacheLanguagesV1(undefined,{LANG:"C"}),"no default language: both are printed").toEqual(["en","de"]);
+- expect(()=>remoteCacheLanguagesV1("fr",{})).toThrow("Unbekannte Sprache");
+- expect(remoteCacheTextV1("de","serve.stopped")).toBe("Der Remote-Cache wurde beendet.");
+-});
+-
+-test("every message exists in English and German with the same placeholders",()=>{
+- const names=(value:string)=>[...value.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort();
+- for(const [key,row] of Object.entries(texts.messages as Record<string,{en:string;de:string}>)){
+-  expect(Object.keys(row).sort(),key).toEqual(["de","en"]);expect(names(row.de),key).toEqual(names(row.en));
+-  if(key!=="gc.mode.apply")expect(row.en.length>0&&row.de.length>0&&row.en!==row.de||key.startsWith("serve.transport"),key).toBe(true);
+- }
+-});
+-
+-const toolsFor=async()=>[nxRemoteCacheToolV1(),bazelRemoteCacheToolV1()];
+-
+-test("remote-cache status reports the contract, both renderings, a probe per protocol, the server and the store, redacts the token, and obeys the contract's token and cancellation",async()=>{
+- const folder=directory("status-store"),server=await serve({directory:folder,tokens:{read:"read-only-token-9",write:"write-token-7"}}),written:string[]=[];
+- const context=(environment:Record<string,string>,signal:AbortSignal=new AbortController().signal):RemoteCacheCommandContextV1=>({root:directory("root"),environment,signal,progress:async()=>{},write:line=>written.push(line),tools:toolsFor});
+- try{
+-  expect((await fetch(server.url+"/v1/cache/777",{method:"PUT",body:"payload",headers:{authorization:"Bearer write-token-7"}})).status).toBe(200);
+-  const on={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"write-token-7"};
+-  const off=await remoteCacheStatusV1([],context({}));
+-  expect(off).toEqual({version:1,configured:false,contract:null,effectiveUpload:false,token:null,renderings:null,probes:null,server:null,store:null});expect(validator("Status")(off),JSON.stringify(validator("Status").errors)).toBe(true);
+-  const status=await remoteCacheStatusV1(["--directory",folder],context(on)) as {configured:boolean;probes:{protocol:string;reachable:boolean;authorized:boolean;status:number}[];server:{readOnly:boolean;validation:string;entries:number};store:{entries:number;bytes:number}};
+-  expect(validator("Status")(status),JSON.stringify(validator("Status").errors)).toBe(true);
+-  expect(status).toMatchObject({configured:true,effectiveUpload:true,token:{present:true},renderings:{nx:{mechanism:"nx-environment"},bazel:{mechanism:"bazel-flags"}},server:{readOnly:false,validation:"off",entries:1},store:{entries:1,bytes:7}});
+-  expect(status.probes.map(probe=>probe.protocol)).toEqual(["nx-self-hosted","bazel-http"]);for(const probe of status.probes)expect(probe).toMatchObject({reachable:true,authorized:true,status:404});
+-  expect(JSON.stringify(status),"never prints the token").not.toContain("write-token-7");
+-  const denied=await remoteCacheStatusV1([],context({...on,SEMIO_REMOTE_CACHE_TOKEN:"wrong-token"})) as {probes:{authorized:boolean;status:number}[];server:null};
+-  for(const probe of denied.probes)expect(probe).toMatchObject({authorized:false,status:401});expect(denied.server).toBeNull();
+-  const custom=await remoteCacheStatusV1([],context({...on,SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT:"CI_CACHE_TOKEN",CI_CACHE_TOKEN:"read-only-token-9"})) as {token:{environment:string};probes:{authorized:boolean}[];server:{entries:number}};
+-  expect(custom.token.environment).toBe("CI_CACHE_TOKEN");for(const probe of custom.probes)expect(probe.authorized).toBe(true);expect(custom.server.entries).toBe(1);
+-  const unreachable=await remoteCacheStatusV1([],context({SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:1",SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS:"2"})) as {probes:{reachable:boolean;status:null}[]};
+-  for(const probe of unreachable.probes)expect(probe).toMatchObject({reachable:false,status:null});
+-  const cancelled=new AbortController();cancelled.abort();await expect(remoteCacheStatusV1([],context(on,cancelled.signal))).rejects.toThrow();
+-  expect(await runRemoteCacheCommandV1(["status"],context({}))).toEqual({exitCode:0,result:expect.objectContaining({configured:false})});
+-  await expect(runRemoteCacheCommandV1(["remote","clear"],context(on))).rejects.toThrow("Expected repo remote-cache serve|status|gc.");
++test("the command words parse like the catalogue says and refuse everything else",()=>{
++ expect(parseRemoteCacheFlagsV1(["--port","0","--host=127.0.0.1","--directory","cache","--max-bytes=1048576"])).toEqual({"--port":"0","--host":"127.0.0.1","--directory":"cache","--max-bytes":"1048576"});
++ for(const bad of [["--port"],["--port","--host"],["--unknown","1"],["--port="],["serve"]])expect(()=>parseRemoteCacheFlagsV1(bad),bad.join(" ")).toThrow();
++});
++
++test("cache remote status reports the contract, both renderings and a read-only probe, redacts the token, and obeys the contract's token and cancellation",async()=>{
++ const server=await serve({tokens:{read:"read-only-token-9",write:"write-token-7"}}),written:string[]=[];
++ const context=(environment:Record<string,string>,tool:()=>Promise<ReturnType<typeof bazelRemoteCacheToolV1>>,signal:AbortSignal=new AbortController().signal):RemoteCacheCommandContextV1=>({root:directory("root"),environment,signal,progress:async()=>{},write:line=>written.push(line),tool});
++ try{
++  const bazel=async()=>bazelRemoteCacheToolV1(),nx=async()=>nxRemoteCacheToolV1(),on={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"write-token-7"};
++  const off=await remoteCacheStatusV1(context({},bazel));
++  expect(off).toEqual({version:1,tool:"bazel",configured:false,contract:null,effectiveUpload:false,token:null,rendering:null,probe:null});expect(validator("Status")(off),JSON.stringify(validator("Status").errors)).toBe(true);
++  for(const [name,tool,mechanism,route] of [["bazel",bazel,"bazel-flags","bazel-http"],["nx",nx,"nx-environment","nx-self-hosted"]] as const){
++   const status=await remoteCacheStatusV1(context(on,tool)) as {tool:string;configured:boolean;effectiveUpload:boolean;token:{present:boolean};rendering:{mechanism:string};probe:{protocol:string;reachable:boolean;authorized:boolean;status:number}};
++   expect(validator("Status")(status),name+JSON.stringify(validator("Status").errors)).toBe(true);
++   expect(status).toMatchObject({tool:name,configured:true,effectiveUpload:true,token:{present:true},rendering:{mechanism},probe:{protocol:route,reachable:true,authorized:true,status:404}});
++   expect(JSON.stringify(status),name+" never prints the token").not.toContain("write-token-7");
++   const denied=await remoteCacheStatusV1(context({...on,SEMIO_REMOTE_CACHE_TOKEN:"wrong-token"},tool)) as {probe:{authorized:boolean;status:number}};expect(denied.probe).toMatchObject({authorized:false,status:401});
++   const custom=await remoteCacheStatusV1(context({...on,SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT:"CI_CACHE_TOKEN",CI_CACHE_TOKEN:"read-only-token-9"},tool)) as {token:{environment:string};probe:{authorized:boolean}};expect(custom.token.environment).toBe("CI_CACHE_TOKEN");expect(custom.probe.authorized).toBe(true);
++  }
++  const unreachable=await remoteCacheStatusV1(context({SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:1",SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS:"2"},bazel)) as {probe:{reachable:boolean;status:null}};expect(unreachable.probe).toMatchObject({reachable:false,status:null});
++  const cancelled=new AbortController();cancelled.abort();await expect(remoteCacheStatusV1(context(on,bazel,cancelled.signal))).rejects.toThrow();
++  await expect(runRemoteCacheCommandV1(["remote","clear"],context(on,bazel))).rejects.toThrow("Expected repo cache serve");
+  }finally{await server.stop();}
+ },60000);
+ 
+-async function listening(lines:string[]):Promise<string>{
+- return new Promise<string>((resolve,reject)=>{const started=Date.now(),timer=setInterval(()=>{const line=lines.find(candidate=>candidate.startsWith("[remote-cache] listening "));if(line){clearInterval(timer);resolve(line.slice(25));}else if(Date.now()-started>20000){clearInterval(timer);reject(Error("no listening line"));}},20);});
+-}
+-
+-test("remote-cache serve opens the store, announces its address in the chosen language, publishes progress and stops when cancelled",async()=>{
++test("cache serve opens the store, announces its address, publishes progress and stops when cancelled",async()=>{
+  const stages:string[]=[],lines:string[]=[],controller=new AbortController(),folder=directory("serve");
+- const context:RemoteCacheCommandContextV1={root:folder,environment:{SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN:"write-token-7"},signal:controller.signal,progress:async stage=>{stages.push(stage);},write:line=>lines.push(line),tools:toolsFor};
+- const running=serveRemoteCacheV1(["--port","0","--directory","store","--max-bytes","1048576","--lang","en"],context);
+- const address=await listening(lines);
++ const context:RemoteCacheCommandContextV1={root:folder,environment:{SEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN:"write-token-7"},signal:controller.signal,progress:async stage=>{stages.push(stage);},write:line=>lines.push(line),tool:async()=>bazelRemoteCacheToolV1()};
++ const running=serveRemoteCacheV1(["--port","0","--directory","store","--max-bytes","1048576"],context);
++ const address=await new Promise<string>((resolve,reject)=>{const started=Date.now(),timer=setInterval(()=>{const line=lines.find(candidate=>candidate.startsWith("[cache] listening "));if(line){clearInterval(timer);resolve(line.slice(18));}else if(Date.now()-started>20000){clearInterval(timer);reject(Error("no listening line"));}},20);});
+  expect(address).toMatch(/^http:\/\/127\.0\.0\.1:[0-9]+$/u);
+  expect((await fetch(address+"/healthz")).status).toBe(200);expect((await fetch(address+"/status")).status).toBe(401);
+  expect((await fetch(address+"/v1/cache/abc",{method:"PUT",body:"x",headers:{authorization:"Bearer write-token-7"}})).status).toBe(200);
+- controller.abort();expect(await running).toEqual({exitCode:0});
+- expect(stages).toEqual(expect.arrayContaining(["remote-cache:open","remote-cache:scan","remote-cache:ready","remote-cache:serving"]));
+- expect(lines.some(line=>line.startsWith("Serving the remote cache on "+address+" (read-write, plain HTTP, result validation complete)"))).toBe(true);
+- expect(lines.some(line=>line.includes("Clients set SEMIO_REMOTE_CACHE_ENDPOINT="+address))).toBe(true);expect(lines.some(line=>line.includes("No token is set"))).toBe(false);
+- expect(lines.slice(-2)).toEqual(["[remote-cache] stopped","The remote cache stopped."]);
++ controller.abort();await running;
++ expect(stages).toEqual(expect.arrayContaining(["remote-cache:open","remote-cache:scan","remote-cache:ready","remote-cache:serving"]));expect(lines.at(-1)).toBe("[cache] stopped");
+  await expect(fetch(address+"/healthz")).rejects.toThrow();
+- const german:string[]=[],second=new AbortController(),again=serveRemoteCacheV1(["--port","0","--directory","store","--lang","de","--read-only"],{...context,environment:{},signal:second.signal,write:line=>german.push(line)});
+- await listening(german);second.abort();await again;
+- expect(german.some(line=>line.startsWith("Der Remote-Cache läuft auf ")&&line.includes("nur lesend")&&line.includes("einfaches HTTP"))).toBe(true);expect(german.some(line=>line.includes("Kein Token gesetzt"))).toBe(true);expect(german.at(-1)).toBe("Der Remote-Cache wurde beendet.");
+- const both:string[]=[],third=new AbortController(),neutral=serveRemoteCacheV1(["--port","0","--directory","store"],{...context,environment:{LANG:"C"},signal:third.signal,write:line=>both.push(line)});
+- await listening(both);third.abort();await neutral;
+- expect(both.filter(line=>line==="The remote cache stopped."||line==="Der Remote-Cache wurde beendet.").length,"without a language both are printed").toBe(2);
+- expect(both.some(line=>line.includes("result validation complete"))&&both.some(line=>line.includes("Ergebnisprüfung vollständig")),"every part of a line follows its language").toBe(true);
+- const quiet=new AbortController();
+  await expect(serveRemoteCacheV1(["--port","70000"],context)).rejects.toThrow("--port must be a whole number from 0 to 65535");
+- await expect(serveRemoteCacheV1(["--host","0.0.0.0","--port","0"],{...context,environment:{},signal:quiet.signal})).rejects.toThrow("A token is required to listen beyond loopback.");
+- await expect(serveRemoteCacheV1(["--tls-certificate","only.pem"],context)).rejects.toThrow("TLS needs both a certificate and a key.");
+- await expect(serveRemoteCacheV1(["--tls-certificate","missing.pem","--tls-key","missing.key"],context)).rejects.toThrow("TLS file required");
+- const holder=new AbortController(),held:string[]=[],first=serveRemoteCacheV1(["--port","0","--directory","busy"],{...context,signal:holder.signal,write:line=>held.push(line)});
+- await listening(held);await expect(serveRemoteCacheV1(["--port","0","--directory","busy"],context)).rejects.toThrow("Ein anderer Remote-Cache-Server benutzt");
+- holder.abort();await first;
+-},90000);
+-
+-test("remote-cache gc plans first, then removes exactly the planned entries, in the chosen language, and reports JSON",async()=>{
+- const folder=directory("gc"),store=await RemoteCacheStoreV1.open({directory:folder,maximumBytes:2**22,maximumEntryBytes:2**20,maximumAgeMilliseconds:0}),lines:string[]=[];
+- for(let index=0;index<12;index++){await store.put("main","nx",`key${index}`,(async function*(){yield new Uint8Array(100_000).fill(index);})(),{mode:"keep",declaredLength:100_000});}
+- await store.close();
+- const context=(write:(line:string)=>void,environment:Record<string,string>={}):RemoteCacheCommandContextV1=>({root:directory("root"),environment,signal:new AbortController().signal,progress:async()=>{},write,tools:toolsFor});
+- expect(await collectRemoteCacheV1(["--directory",join(folder,"missing")],context(line=>lines.push(line),{SEMIO_LANGUAGE:"en"}))).toEqual({exitCode:0});expect(lines.at(-1)).toContain("does not exist; nothing to collect.");
+- const plan=await collectRemoteCacheV1(["--directory",folder,"--max-bytes","1048576","--dry-run","--json"],context(()=>{})) as {exitCode:number;result:{dryRun:boolean;scanned:{entries:number};removed:{entries:number;budget:number;bytes:number};remaining:{entries:number}}};
+- expect(plan.result).toMatchObject({dryRun:true,scanned:{entries:12},removed:{budget:plan.result.removed.entries},remaining:{entries:12-plan.result.removed.entries}});expect(plan.result.removed.entries).toBeGreaterThan(0);
+- const mixed:string[]=[];await collectRemoteCacheV1(["--directory",folder,"--dry-run"],context(line=>mixed.push(line),{LANG:"C"}));
+- expect(mixed.some(line=>line.includes("(plan only)"))&&mixed.some(line=>line.includes("(nur Plan)"))).toBe(true);
+- const store2=await RemoteCacheStoreV1.open({directory:folder,maximumBytes:2**30,maximumEntryBytes:2**20,maximumAgeMilliseconds:0});expect(store2.usage().entries,"a plan removes nothing").toBe(12);await store2.close();
+- const german:string[]=[],applied=await collectRemoteCacheV1(["--directory",folder,"--max-bytes","1048576","--lang","de"],context(line=>german.push(line)));
+- expect(applied).toEqual({exitCode:0});expect(german.at(-1)).toContain(`${plan.result.removed.entries} von 12 Einträgen entfernt`);expect(german[0]).toContain("Sammle");
+- const store3=await RemoteCacheStoreV1.open({directory:folder,maximumBytes:2**30,maximumEntryBytes:2**20,maximumAgeMilliseconds:0});expect(store3.usage().entries).toBe(plan.result.remaining.entries);expect(store3.usage().bytes).toBeLessThanOrEqual(1048576*0.9);
+- expect(store3.has("main","nx","key11"),"the newest entry survives").toBe(true);expect(store3.has("main","nx","key0"),"the oldest entry goes first").toBe(false);await store3.close();
+- const cancelling=new AbortController();cancelling.abort();
+- expect(await collectRemoteCacheV1(["--directory",folder,"--dry-run"],{...context(()=>{},{SEMIO_LANGUAGE:"en"}),signal:cancelling.signal})).toEqual({exitCode:130});
+-});
+-
+-test("the public JSON of the remote cache is schema-first: status, gc results and the message catalogue validate against the contract schema, and drifted documents are refused",async()=>{
+- const server=await serve({tokens:{}}),status=await (await fetch(server.url+"/status")).json() as Record<string,any>;
+- try{
+-  expect(validator("ServerStatus")(status),JSON.stringify(validator("ServerStatus").errors)).toBe(true);requireRemoteCacheShapeV1("ServerStatus",status,"x");
+-  const drifted:[string,(value:Record<string,any>)=>void][]=[["extra key",value=>{value.extra=1;}],["missing counter",value=>{delete value.counters.nx;}],["negative count",value=>{value.counters.ac.hits=-1;}],["extra counter field",value=>{value.counters.cas.errors=0;}],["unknown validation",value=>{value.validation="weird";}],["protocol order",value=>{value.protocols.reverse();}],["start time",value=>{value.startedAt="yesterday";}],["version",value=>{value.version=2;}]];
+-  for(const [name,mutate] of drifted){const copy=structuredClone(status);mutate(copy);expect(validator("ServerStatus")(copy),name).toBe(false);expect(()=>requireRemoteCacheShapeV1("ServerStatus",copy,"x"),name).toThrow();}
+-  expect(validator("TextCatalogue")(texts),JSON.stringify(validator("TextCatalogue").errors)).toBe(true);
+-  for(const bad of [{...texts,languages:["de","en"]},{...texts,messages:{...texts.messages,"x.y":{en:"only"}}},{...texts,messages:{...texts.messages,"Bad Key":{en:"a",de:"b"}}},{...texts,extra:true}])expect(validator("TextCatalogue")(bad)).toBe(false);
+-  const folder=directory("json"),store=await RemoteCacheStoreV1.open({directory:folder,maximumBytes:2**22,maximumEntryBytes:2**20,maximumAgeMilliseconds:0});
+-  for(let index=0;index<6;index++)await store.put("main","nx",`k${index}`,(async function*(){yield new Uint8Array(1000);})(),{mode:"keep",declaredLength:1000});await store.close();
+-  const context:RemoteCacheCommandContextV1={root:directory("root"),environment:{},signal:new AbortController().signal,progress:async()=>{},write:()=>{},tools:toolsFor};
+-  const results:unknown[]=[];
+-  for(const args of [["--directory",join(folder,"none"),"--json"],["--directory",folder,"--json","--dry-run"],["--directory",folder,"--json","--max-bytes","1048576"]]){const outcome=await collectRemoteCacheV1(args,context) as {result:unknown};results.push(outcome.result);expect(validator("GcResult")(outcome.result),JSON.stringify(validator("GcResult").errors)).toBe(true);}
+-  expect(results[0]).toMatchObject({present:false});expect(results[1]).toMatchObject({dryRun:true,scanned:{entries:6}});
+-  for(const bad of [{...(results[0] as object),present:true},{...(results[1] as object),extra:1},{version:1,dryRun:true,directory:"x"}])expect(validator("GcResult")(bad)).toBe(false);
+- }finally{await server.stop();}
+- for(const bad of [{maximumBytes:0,maximumEntryBytes:1,maximumAgeMilliseconds:0},{maximumBytes:10,maximumEntryBytes:1.5,maximumAgeMilliseconds:0},{maximumBytes:10,maximumEntryBytes:1,maximumAgeMilliseconds:-1},{maximumBytes:10,maximumEntryBytes:1,maximumAgeMilliseconds:0,extra:1},{maximumBytes:10,maximumEntryBytes:1}]){
+-  expect(validator("StoreBounds")(bad)).toBe(false);if(!("extra" in bad))await expect(RemoteCacheStoreV1.open({directory:directory("bounds"),...bad} as never)).rejects.toThrow("Finite remote cache bounds required");
+- }
+- expect(validator("StoreBounds")({maximumBytes:10,maximumEntryBytes:10,maximumAgeMilliseconds:0})).toBe(true);
+-});
++ await expect(serveRemoteCacheV1(["--host","0.0.0.0","--port","0"],{...context,environment:{},signal:new AbortController().signal})).rejects.toThrow("A token is required to listen beyond loopback");
++},60000);
++
+ const bazelBinary=process.env.SEMIO_TEST_BAZEL_BINARY;
+ 
+ test.skipIf(!bazelBinary)("a real Bazel client builds against the server, hits the remote cache after bazel clean, honours read-only and authenticates through the credential helper without writing the token to disk",async()=>{
+- const token="rcache-sentinel-4711-token",base=directory("bazel"),workspace=join(base,"ws"),output=join(base,"ob"),second=join(base,"ws2"),outputTwo=join(base,"ob2"),events:{method:string;path:string;status:number}[]=[];
++ const token="rcache-sentinel-4711-token",base=directory("bazel"),workspace=join(base,"ws"),output=join(base,"ob"),events:{method:string;path:string;status:number}[]=[];
+  mkdirSync(workspace,{recursive:true});
+  writeFileSync(join(workspace,"MODULE.bazel"),'module(name="scratch",version="0.0.0")\n');writeFileSync(join(workspace,"in.txt"),"hello\n");
+  writeFileSync(join(workspace,"BUILD.bazel"),'genrule(name="a",srcs=["in.txt"],outs=["a.txt"],cmd="cat $(SRCS) > $@ && echo a >> $@")\ngenrule(name="b",srcs=[":a"],outs=["b.txt"],cmd="cat $(SRCS) > $@ && echo b >> $@")\n');
+  const server=await serve({tokens:{read:"read-only-token-9",write:token},onEvent:event=>{if(event.stage==="request")events.push(event);}});
+- const run=async(environment:Record<string,string>,command:string[],extra:string[]=[],place:{cwd:string;output:string}={cwd:workspace,output})=>{
+-  const contract=resolveRemoteCacheContractV1(environment)!,rendering=bazelRemoteCacheV1(contract,environment,{helperDirectory:base});
++ const run=async(environment:Record<string,string>,command:string[],extra:string[]=[])=>{
++  const contract=resolveRemoteCacheContractV1(environment)!,rendering=bazelRemoteCacheV1(contract,environment,{helperDirectory:base,restoresOutputs:true});
+   if(rendering.helper)writeFileSync(rendering.helper.path,rendering.helper.content,{mode:rendering.helper.mode});
+-  return client(bazelBinary!,[`--output_user_root=${join(base,"root")}`,`--output_base=${place.output}`,`--install_base=${join(base,"install")}`,"--nosystem_rc","--nohome_rc","--max_idle_secs=15",...command,"--lockfile_mode=off","--incompatible_autoload_externally=",...(command[0]==="build"?[...rendering.flags,...extra]:[])],{cwd:place.cwd,timeout:300000,env:{PATH:process.env.PATH!,HOME:process.env.HOME!,LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8",...rendering.environment}});
++  return client(bazelBinary!,[`--output_user_root=${join(base,"root")}`,`--output_base=${output}`,`--install_base=${join(base,"install")}`,"--nosystem_rc","--nohome_rc","--max_idle_secs=15",...command,"--lockfile_mode=off","--incompatible_autoload_externally=",...(command[0]==="build"?[...rendering.flags,...extra]:[])],{cwd:workspace,timeout:300000,env:{PATH:process.env.PATH!,HOME:process.env.HOME!,LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8",...rendering.environment}});
+  };
+  const rw={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:token};
+  try{
+@@ -384,14 +301,6 @@
+   const produced=/Target \/\/:b up-to-date:\s+(\S+)/u.exec(warm.stderr)?.[1];expect(produced).toBeDefined();expect(readFileSync(join(workspace,produced!),"utf8")).toBe("hello\na\nb\n");
+   const status=await (await fetch(server.url+"/status",{headers:{authorization:"Bearer "+token}})).json() as {counters:{ac:{hits:number};cas:{hits:number}}};
+   expect(status.counters.ac.hits).toBeGreaterThanOrEqual(2);
+-  expect((await run(rw,["shutdown"])).status).toBe(0);
+-  cpSync(workspace,second,{recursive:true});
+-  const fresh=await run(rw,["build","//:b"],[],{cwd:second,output:outputTwo});expect(fresh.status,fresh.stderr).toBe(0);
+-  const summary=/INFO: [0-9]+ processes?: ([^\n]*?)\./u.exec(fresh.stderr);expect(summary,fresh.stderr).not.toBeNull();
+-  const kinds=summary![1]!.split(", ").map(part=>/^([0-9]+) (.+)$/u.exec(part.trim())!).filter(part=>part[2]!=="internal");
+-  expect(kinds.map(part=>part[2]),"a second output base in another directory runs nothing: every process is a remote cache hit").toEqual(["remote cache hit"]);expect(Number(kinds[0]![1])).toBe(2);
+-  expect(readFileSync(join(second,/Target \/\/:b up-to-date:\s+(\S+)/u.exec(fresh.stderr)![1]!),"utf8")).toBe("hello\na\nb\n");
+-  expect((await run(rw,["shutdown"],[],{cwd:second,output:outputTwo})).status).toBe(0);
+   expect((await run(rw,["clean"])).status).toBe(0);
+   const anonymous=await run({SEMIO_REMOTE_CACHE_ENDPOINT:server.url},["build","//:b"]);expect(anonymous.status,anonymous.stderr).toBe(0);expect(anonymous.stderr).not.toMatch(/remote cache hit/u);
+   expect(events.some(event=>event.status===401)).toBe(true);
+# stage-clean different staged=rcache-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🧫️fixtures/📡️wire.json map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🧫️fixtures/📡️wire.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🧫️fixtures/📡️wire.json
+@@ -647,218 +647,6 @@
+           }
+         }
+       ]
+-    },
+-    {
+-      "name": "read-only server: every write is refused, reads still work",
+-      "server": {
+-        "tokens": {},
+-        "readOnly": true
+-      },
+-      "steps": [
+-        {
+-          "name": "a blob cannot be written",
+-          "request": {
+-            "method": "PUT",
+-            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+-            "body": "hello"
+-          },
+-          "response": {
+-            "status": 403,
+-            "body": "Forbidden: this cache is read-only\n"
+-          }
+-        },
+-        {
+-          "name": "an Nx archive cannot be written",
+-          "request": {
+-            "method": "PUT",
+-            "path": "/v1/cache/1",
+-            "body": "x"
+-          },
+-          "response": {
+-            "status": 403
+-          }
+-        },
+-        {
+-          "name": "nothing was stored",
+-          "request": {
+-            "method": "GET",
+-            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+-          },
+-          "response": {
+-            "status": 404
+-          }
+-        },
+-        {
+-          "name": "health still answers",
+-          "request": {
+-            "method": "GET",
+-            "path": "/healthz"
+-          },
+-          "response": {
+-            "status": 200
+-          }
+-        }
+-      ]
+-    },
+-    {
+-      "name": "read-only server with tokens: a write token does not lift read-only, a missing token is still 401",
+-      "server": {
+-        "tokens": {
+-          "write": "writer-token"
+-        },
+-        "readOnly": true
+-      },
+-      "steps": [
+-        {
+-          "name": "no token",
+-          "request": {
+-            "method": "PUT",
+-            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+-            "body": "hello"
+-          },
+-          "response": {
+-            "status": 401
+-          }
+-        },
+-        {
+-          "name": "write token",
+-          "request": {
+-            "method": "PUT",
+-            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+-            "body": "hello",
+-            "headers": {
+-              "authorization": "Bearer writer-token"
+-            }
+-          },
+-          "response": {
+-            "status": 403,
+-            "body": "Forbidden: this cache is read-only\n"
+-          }
+-        },
+-        {
+-          "name": "read with the token",
+-          "request": {
+-            "method": "GET",
+-            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+-            "headers": {
+-              "authorization": "Bearer writer-token"
+-            }
+-          },
+-          "response": {
+-            "status": 404
+-          }
+-        }
+-      ]
+-    },
+-    {
+-      "name": "structure validation: a body that is no ActionResult is refused, an empty result is stored and read back",
+-      "server": {
+-        "tokens": {},
+-        "validation": "structure"
+-      },
+-      "steps": [
+-        {
+-          "name": "text is not a protobuf message",
+-          "request": {
+-            "method": "PUT",
+-            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+-            "body": "hello"
+-          },
+-          "response": {
+-            "status": 400,
+-            "body": "Invalid action result: wire type 4 is not allowed\n"
+-          }
+-        },
+-        {
+-          "name": "the refused result was not stored",
+-          "request": {
+-            "method": "GET",
+-            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+-          },
+-          "response": {
+-            "status": 404
+-          }
+-        },
+-        {
+-          "name": "the empty message is a valid result",
+-          "request": {
+-            "method": "PUT",
+-            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+-            "body": ""
+-          },
+-          "response": {
+-            "status": 200
+-          }
+-        },
+-        {
+-          "name": "it reads back empty",
+-          "request": {
+-            "method": "GET",
+-            "path": "/ac/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+-          },
+-          "response": {
+-            "status": 200,
+-            "headers": {
+-              "content-length": "0"
+-            },
+-            "body": ""
+-          }
+-        }
+-      ]
+-    },
+-    {
+-      "name": "complete validation: a result is accepted only after the blob it names is stored",
+-      "server": {
+-        "tokens": {},
+-        "validation": "complete"
+-      },
+-      "steps": [
+-        {
+-          "name": "the result names a blob that is not stored yet",
+-          "request": {
+-            "method": "PUT",
+-            "path": "/ac/486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7",
+-            "body": "\u0012I\n\u0001p\u0012D\n@2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824\u0010\u0005"
+-          },
+-          "response": {
+-            "status": 400,
+-            "body": "Invalid action result: blob 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824 is not in the content store\n"
+-          }
+-        },
+-        {
+-          "name": "the blob is stored",
+-          "request": {
+-            "method": "PUT",
+-            "path": "/cas/2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+-            "body": "hello"
+-          },
+-          "response": {
+-            "status": 200
+-          }
+-        },
+-        {
+-          "name": "now the result is accepted",
+-          "request": {
+-            "method": "PUT",
+-            "path": "/ac/486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7",
+-            "body": "\u0012I\n\u0001p\u0012D\n@2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824\u0010\u0005"
+-          },
+-          "response": {
+-            "status": 200
+-          }
+-        },
+-        {
+-          "name": "and read back byte for byte",
+-          "request": {
+-            "method": "GET",
+-            "path": "/ac/486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7"
+-          },
+-          "response": {
+-            "status": 200,
+-            "body": "\u0012I\n\u0001p\u0012D\n@2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824\u0010\u0005"
+-          }
+-        }
+-      ]
+     }
+   ]
+ }
+# stage-clean different staged=rcache-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🧫️fixtures/🔣️.json map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🧫️fixtures/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🧫️fixtures/🔣️.json
+@@ -222,13 +222,6 @@
+           "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+           "SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT": "my_token"
+         }
+-      },
+-      {
+-        "name": "minimal download would break the restore of cached outputs",
+-        "environment": {
+-          "SEMIO_REMOTE_CACHE_ENDPOINT": "http://h",
+-          "SEMIO_REMOTE_CACHE_DOWNLOAD": "minimal"
+-        }
+       }
+     ],
+     "message": "Closed remote cache contract required"
+@@ -318,6 +311,7 @@
+       },
+       "directory": "/h",
+       "platform": "linux",
++      "restoresOutputs": true,
+       "flags": [
+         "--remote_cache=http://127.0.0.1:6090/main",
+         "--remote_instance_name=main",
+@@ -342,6 +336,7 @@
+       },
+       "directory": "/h",
+       "platform": "linux",
++      "restoresOutputs": true,
+       "flags": [
+         "--remote_cache=https://cache.example.test:8443/team-a",
+         "--remote_instance_name=team-a",
+@@ -373,6 +368,7 @@
+       },
+       "directory": "C:\\h",
+       "platform": "win32",
++      "restoresOutputs": true,
+       "flags": [
+         "--remote_cache=https://cache.example.test:8443/team-a",
+         "--remote_instance_name=team-a",
+@@ -404,6 +400,7 @@
+       },
+       "directory": "/h",
+       "platform": "linux",
++      "restoresOutputs": true,
+       "flags": [
+         "--remote_cache=https://cache.example.test:8443/team-a",
+         "--remote_instance_name=team-a",
+@@ -428,6 +425,7 @@
+       },
+       "directory": "/h",
+       "platform": "linux",
++      "restoresOutputs": true,
+       "flags": [
+         "--remote_cache=http://127.0.0.1:6090/main",
+         "--remote_instance_name=main",
+@@ -450,6 +448,7 @@
+       },
+       "directory": "/h",
+       "platform": "linux",
++      "restoresOutputs": true,
+       "flags": [
+         "--remote_cache=http://[::1]:6090/main",
+         "--remote_instance_name=main",
+@@ -471,6 +470,39 @@
+       "uploadEnforcedBy": "client"
+     },
+     {
++      "name": "minimal is refused when the adapter restores snapshots",
++      "environment": {
++        "SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090",
++        "SEMIO_REMOTE_CACHE_DOWNLOAD": "minimal"
++      },
++      "directory": "/h",
++      "platform": "linux",
++      "restoresOutputs": true,
++      "refused": "needs remote cache download toplevel or all"
++    },
++    {
++      "name": "minimal is rendered when nothing is restored",
++      "environment": {
++        "SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090",
++        "SEMIO_REMOTE_CACHE_DOWNLOAD": "minimal"
++      },
++      "directory": "/h",
++      "platform": "linux",
++      "restoresOutputs": false,
++      "flags": [
++        "--remote_cache=http://127.0.0.1:6090/main",
++        "--remote_instance_name=main",
++        "--noremote_upload_local_results",
++        "--remote_cache_compression",
++        "--remote_download_outputs=minimal",
++        "--remote_timeout=30s",
++        "--remote_retries=3"
++      ],
++      "tokenEnvironment": {},
++      "helper": null,
++      "uploadEnforcedBy": "client"
++    },
++    {
+       "name": "a token with shell metacharacters is refused",
+       "environment": {
+         "SEMIO_REMOTE_CACHE_ENDPOINT": "http://127.0.0.1:6090",
+@@ -478,6 +510,7 @@
+       },
+       "directory": "/h",
+       "platform": "linux",
++      "restoresOutputs": true,
+       "refused": "Closed remote cache token required"
+     }
+   ],
+# stage-clean different staged=rcache-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🌐️remote-cache.json map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🌐️remote-cache.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🌐️remote-cache.json
+@@ -1,16 +1,11 @@
+ {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+-  "$id": "semio:remote-cache:v1",
+   "title": "Repository Remote Cache Contract",
+   "description": "🌐️ The one tool-neutral description of a shared remote task cache. Every build implementation renders the same resolved contract into its own switches: Bazel into --remote_cache and friends, Nx into its self-hosted remote cache environment. The contract holds no secret: the access token is read at run time from the environment variable the contract names and is never written to disk by the repository.",
+   "oneOf": [
+     { "$ref": "#/definitions/Contract" },
+     { "$ref": "#/definitions/Policy" },
+-    { "$ref": "#/definitions/Status" },
+-    { "$ref": "#/definitions/ServerStatus" },
+-    { "$ref": "#/definitions/CollectionReport" },
+-    { "$ref": "#/definitions/GcResult" },
+-    { "$ref": "#/definitions/TextCatalogue" }
++    { "$ref": "#/definitions/Status" }
+   ],
+   "definitions": {
+     "Endpoint": {
+@@ -29,8 +24,8 @@
+       "enum": ["read-only", "read-write"]
+     },
+     "Download": {
+-      "description": "Which outputs a build fetches from the cache: toplevel the outputs of the requested targets, all every output. Nx always fetches everything; Bazel's task adapter restores the snapshots of the requested targets from bazel-bin, so a mode that leaves them in the remote store (minimal) is not part of the contract: the restore would fail with ENOENT.",
+-      "enum": ["toplevel", "all"]
++      "description": "Which outputs a build fetches from the cache: minimal only what a later action needs, toplevel the outputs of the requested targets, all every output. Nx always fetches everything; Bazel's task adapter restores the snapshots of the requested targets and therefore refuses minimal.",
++      "enum": ["minimal", "toplevel", "all"]
+     },
+     "EnvironmentName": {
+       "type": "string",
+@@ -101,46 +96,17 @@
+       }
+     },
+     "ServerPolicy": {
+-      "description": "The bounds, switches and tokens of the repository's own cache server (repo remote-cache serve). The store is finite: it evicts least recently used entries beyond maximumBytes and entries idle for more than maximumAgeDays. actionResults says how far uploaded Bazel action results are checked: off, structure (a well-formed message) or complete (additionally every blob they name is stored, and a result is answered only while that holds).",
++      "description": "The bounds and tokens of the repository's own cache server (bun repo cache serve). The store is finite: it evicts least recently used entries beyond maximumBytes and entries idle for more than maximumAgeDays.",
+       "type": "object",
+       "additionalProperties": false,
+-      "required": ["host", "port", "directory", "maximumBytes", "maximumEntryBytes", "maximumAgeDays", "readOnly", "tls", "actionResults", "maximumActionResultBytes", "maintenanceSeconds", "environment", "tokenEnvironment"],
++      "required": ["host", "port", "directory", "maximumBytes", "maximumEntryBytes", "maximumAgeDays", "tokenEnvironment"],
+       "properties": {
+         "host": { "type": "string", "minLength": 1, "maxLength": 253 },
+         "port": { "type": "integer", "minimum": 0, "maximum": 65535 },
+-        "directory": { "description": "Relative to the workspace root; the default is the home the cache ledger declares for the remote cache.", "type": "string", "pattern": "^[^\\u0000/\\\\][^\\u0000]*$" },
++        "directory": { "description": "Relative to the workspace root.", "type": "string", "pattern": "^[^\\u0000/\\\\][^\\u0000]*$" },
+         "maximumBytes": { "type": "integer", "minimum": 1048576 },
+         "maximumEntryBytes": { "type": "integer", "minimum": 1024 },
+         "maximumAgeDays": { "type": "integer", "minimum": 0, "maximum": 3650 },
+-        "readOnly": { "description": "true refuses every write with 403, whatever token is presented.", "type": "boolean" },
+-        "tls": {
+-          "description": "null serves plain HTTP; otherwise the certificate chain and private key files (PEM) of an HTTPS listener.",
+-          "oneOf": [
+-            { "const": null },
+-            {
+-              "type": "object",
+-              "additionalProperties": false,
+-              "required": ["certificate", "key"],
+-              "properties": {
+-                "certificate": { "type": "string", "minLength": 1 },
+-                "key": { "type": "string", "minLength": 1 }
+-              }
+-            }
+-          ]
+-        },
+-        "actionResults": { "enum": ["off", "structure", "complete"] },
+-        "maximumActionResultBytes": { "type": "integer", "minimum": 1024, "maximum": 67108864 },
+-        "maintenanceSeconds": { "description": "How often a running server re-reads its directory, so entries collected by another process stop counting; 0 switches it off.", "type": "integer", "minimum": 0, "maximum": 86400 },
+-        "environment": {
+-          "type": "object",
+-          "additionalProperties": false,
+-          "required": ["readOnly", "tlsCertificate", "tlsKey"],
+-          "properties": {
+-            "readOnly": { "$ref": "#/definitions/EnvironmentName" },
+-            "tlsCertificate": { "$ref": "#/definitions/EnvironmentName" },
+-            "tlsKey": { "$ref": "#/definitions/EnvironmentName" }
+-          }
+-        },
+         "tokenEnvironment": {
+           "type": "object",
+           "additionalProperties": false,
+@@ -170,7 +136,7 @@
+       "additionalProperties": false,
+       "required": ["mechanism", "applied", "unsupported", "uploadEnforcedBy"],
+       "properties": {
+-        "mechanism": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
++        "mechanism": { "enum": ["bazel-flags", "nx-environment"] },
+         "applied": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+         "unsupported": { "type": "array", "uniqueItems": true, "items": { "enum": ["compression", "download", "timeoutSeconds", "retries"] } },
+         "uploadEnforcedBy": { "description": "client: the tool itself withholds uploads. server: the tool cannot, so uploads are only prevented by a read-only token on the server. none: uploads are wanted.", "enum": ["client", "server", "none"] }
+@@ -182,7 +148,7 @@
+       "additionalProperties": false,
+       "required": ["protocol", "reachable", "authorized", "status", "milliseconds"],
+       "properties": {
+-        "protocol": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
++        "protocol": { "enum": ["bazel-http", "nx-self-hosted"] },
+         "reachable": { "type": "boolean" },
+         "authorized": { "type": "boolean" },
+         "status": { "type": ["integer", "null"] },
+@@ -190,12 +156,13 @@
+       }
+     },
+     "Status": {
+-      "description": "What repo remote-cache status prints: the client contract, how both build tools render it, one probe per protocol, what the running server reports about itself and what the local store directory holds.",
++      "description": "What bun repo cache remote status prints.",
+       "type": "object",
+       "additionalProperties": false,
+-      "required": ["version", "configured", "contract", "effectiveUpload", "token", "renderings", "probes", "server", "store"],
++      "required": ["version", "tool", "configured", "contract", "effectiveUpload", "token", "rendering", "probe"],
+       "properties": {
+         "version": { "const": 1 },
++        "tool": { "enum": ["nx", "bazel"] },
+         "configured": { "type": "boolean" },
+         "contract": { "oneOf": [{ "$ref": "#/definitions/Contract" }, { "const": null }] },
+         "effectiveUpload": { "type": "boolean" },
+@@ -213,172 +180,8 @@
+             }
+           ]
+         },
+-        "renderings": {
+-          "oneOf": [
+-            { "const": null },
+-            {
+-              "description": "One rendering per build backend, keyed by the backend id.",
+-              "type": "object",
+-              "additionalProperties": false,
+-              "minProperties": 1,
+-              "patternProperties": { "^[a-z][a-z0-9-]{0,31}$": { "$ref": "#/definitions/Rendering" } }
+-            }
+-          ]
+-        },
+-        "probes": { "oneOf": [{ "const": null }, { "type": "array", "items": { "$ref": "#/definitions/Probe" } }] },
+-        "server": { "oneOf": [{ "const": null }, { "$ref": "#/definitions/ServerStatus" }] },
+-        "store": {
+-          "oneOf": [
+-            { "const": null },
+-            {
+-              "type": "object",
+-              "additionalProperties": false,
+-              "required": ["directory", "entries", "bytes", "maximumBytes"],
+-              "properties": {
+-                "directory": { "type": "string", "minLength": 1 },
+-                "entries": { "type": "integer", "minimum": 0 },
+-                "bytes": { "type": "integer", "minimum": 0 },
+-                "maximumBytes": { "type": "integer", "minimum": 1048576 }
+-              }
+-            }
+-          ]
+-        }
+-      }
+-    },
+-    "Counter": {
+-      "description": "What one keyspace of a running server did since it started; stale counts action results dropped on a read because a blob they name left the store.",
+-      "type": "object",
+-      "additionalProperties": false,
+-      "required": ["hits", "misses", "puts", "conflicts", "rejected", "stale"],
+-      "properties": {
+-        "hits": { "type": "integer", "minimum": 0 },
+-        "misses": { "type": "integer", "minimum": 0 },
+-        "puts": { "type": "integer", "minimum": 0 },
+-        "conflicts": { "type": "integer", "minimum": 0 },
+-        "rejected": { "type": "integer", "minimum": 0 },
+-        "stale": { "type": "integer", "minimum": 0 }
+-      }
+-    },
+-    "ServerStatus": {
+-      "description": "The document a running server answers on GET /status.",
+-      "type": "object",
+-      "additionalProperties": false,
+-      "required": ["version", "protocols", "entries", "bytes", "reservedBytes", "maximumBytes", "maximumEntryBytes", "readOnly", "validation", "counters", "startedAt"],
+-      "properties": {
+-        "version": { "const": 1 },
+-        "protocols": { "const": ["bazel-http", "nx-self-hosted"] },
+-        "entries": { "type": "integer", "minimum": 0 },
+-        "bytes": { "type": "integer", "minimum": 0 },
+-        "reservedBytes": { "type": "integer", "minimum": 0 },
+-        "maximumBytes": { "type": "integer", "minimum": 1 },
+-        "maximumEntryBytes": { "type": "integer", "minimum": 1 },
+-        "readOnly": { "type": "boolean" },
+-        "validation": { "enum": ["off", "structure", "complete"] },
+-        "counters": {
+-          "type": "object",
+-          "additionalProperties": false,
+-          "required": ["ac", "cas", "nx"],
+-          "properties": {
+-            "ac": { "$ref": "#/definitions/Counter" },
+-            "cas": { "$ref": "#/definitions/Counter" },
+-            "nx": { "$ref": "#/definitions/Counter" }
+-          }
+-        },
+-        "startedAt": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$" }
+-      }
+-    },
+-    "StoreBounds": {
+-      "description": "The finite bounds a store is opened with: total bytes, bytes per entry (not above the total) and the idle age in milliseconds after which an entry is dropped (0 keeps entries until space is needed).",
+-      "type": "object",
+-      "additionalProperties": false,
+-      "required": ["maximumBytes", "maximumEntryBytes", "maximumAgeMilliseconds"],
+-      "properties": {
+-        "maximumBytes": { "type": "integer", "minimum": 1 },
+-        "maximumEntryBytes": { "type": "integer", "minimum": 1 },
+-        "maximumAgeMilliseconds": { "type": "integer", "minimum": 0 }
+-      }
+-    },
+-    "Fill": {
+-      "type": "object",
+-      "additionalProperties": false,
+-      "required": ["entries", "bytes"],
+-      "properties": { "entries": { "type": "integer", "minimum": 0 }, "bytes": { "type": "integer", "minimum": 0 } }
+-    },
+-    "Removed": {
+-      "description": "What a collection removes, or would remove, by reason: dangling (unusable action results), age (idle for too long) and budget (least recently used beyond the bound).",
+-      "type": "object",
+-      "additionalProperties": false,
+-      "required": ["entries", "bytes", "dangling", "age", "budget"],
+-      "properties": {
+-        "entries": { "type": "integer", "minimum": 0 },
+-        "bytes": { "type": "integer", "minimum": 0 },
+-        "dangling": { "type": "integer", "minimum": 0 },
+-        "age": { "type": "integer", "minimum": 0 },
+-        "budget": { "type": "integer", "minimum": 0 }
+-      }
+-    },
+-    "CollectionReport": {
+-      "description": "What one collection of a store directory did or, for a plan, would do.",
+-      "type": "object",
+-      "additionalProperties": false,
+-      "required": ["version", "dryRun", "scanned", "removed", "remaining"],
+-      "properties": {
+-        "version": { "const": 1 },
+-        "dryRun": { "type": "boolean" },
+-        "scanned": { "$ref": "#/definitions/Fill" },
+-        "removed": { "$ref": "#/definitions/Removed" },
+-        "remaining": { "$ref": "#/definitions/Fill" }
+-      }
+-    },
+-    "GcResult": {
+-      "description": "What repo remote-cache gc --json prints: the collection report of the directory, or a marker that the directory does not exist.",
+-      "oneOf": [
+-        {
+-          "type": "object",
+-          "additionalProperties": false,
+-          "required": ["version", "dryRun", "directory", "present"],
+-          "properties": {
+-            "version": { "const": 1 },
+-            "dryRun": { "type": "boolean" },
+-            "directory": { "type": "string", "minLength": 1 },
+-            "present": { "const": false }
+-          }
+-        },
+-        {
+-          "type": "object",
+-          "additionalProperties": false,
+-          "required": ["version", "dryRun", "directory", "scanned", "removed", "remaining"],
+-          "properties": {
+-            "version": { "const": 1 },
+-            "dryRun": { "type": "boolean" },
+-            "directory": { "type": "string", "minLength": 1 },
+-            "scanned": { "$ref": "#/definitions/Fill" },
+-            "removed": { "$ref": "#/definitions/Removed" },
+-            "remaining": { "$ref": "#/definitions/Fill" }
+-          }
+-        }
+-      ]
+-    },
+-    "TextCatalogue": {
+-      "description": "The bilingual messages of the remote cache command: every key has exactly the two catalogue languages.",
+-      "type": "object",
+-      "additionalProperties": false,
+-      "required": ["version", "languages", "messages"],
+-      "properties": {
+-        "version": { "const": 1 },
+-        "languages": { "const": ["en", "de"] },
+-        "messages": {
+-          "type": "object",
+-          "additionalProperties": false,
+-          "patternProperties": {
+-            "^[a-z][a-z-]*(\\.[a-z][a-z-]*)+$": {
+-              "type": "object",
+-              "additionalProperties": false,
+-              "required": ["en", "de"],
+-              "properties": { "en": { "type": "string" }, "de": { "type": "string" } }
+-            }
+-          }
+-        }
++        "rendering": { "oneOf": [{ "$ref": "#/definitions/Rendering" }, { "const": null }] },
++        "probe": { "oneOf": [{ "$ref": "#/definitions/Probe" }, { "const": null }] }
+       }
+     }
+   }
+# stage-clean different staged=rcache-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts
+@@ -15,8 +15,9 @@
+  return Object.freeze({path,mode:0o755,content:`#!/bin/sh\ncat >/dev/null\nprintf '{"headers":{"Authorization":["Bearer %s"]}}\\n' "$${tokenEnvironment}"\n`});
+ }
+ 
+-/** 🎛️ Renders the neutral contract into Bazel: `--remote_cache`, `--remote_instance_name`, `--[no]remote_upload_local_results`, `--[no]remote_cache_compression`, `--remote_download_outputs`, `--remote_timeout`, `--remote_retries`, and the token through a credential helper scoped to the cache host, because `--remote_header` copies the token into Bazel's java.log and build event stream on disk. The contract has no `minimal` download, since the task adapter restores the snapshots of the requested targets from bazel-bin. */
+-export function bazelRemoteCacheV1(contract:RemoteCacheContractV1,environment:Readonly<Record<string,string|undefined>>,options:Readonly<{helperDirectory:string;platform?:NodeJS.Platform}>):BazelRemoteCacheV1{
++/** 🎛️ Renders the neutral contract into Bazel: `--remote_cache`, `--remote_instance_name`, `--[no]remote_upload_local_results`, `--[no]remote_cache_compression`, `--remote_download_outputs`, `--remote_timeout`, `--remote_retries`, and the token through a credential helper scoped to the cache host, because `--remote_header` copies the token into Bazel's java.log and build event stream on disk. `restoresOutputs` refuses `minimal`, since the task adapter restores the snapshots of the requested targets from bazel-bin. */
++export function bazelRemoteCacheV1(contract:RemoteCacheContractV1,environment:Readonly<Record<string,string|undefined>>,options:Readonly<{helperDirectory:string;restoresOutputs?:boolean;platform?:NodeJS.Platform}>):BazelRemoteCacheV1{
++ if(options.restoresOutputs&&contract.download==="minimal")throw Error("Bazel task adapter restores snapshots from bazel-bin and needs remote cache download toplevel or all");
+  const upload=remoteCacheEffectiveUploadV1(contract),token=readRemoteCacheTokenV1(contract,environment),host=new URL(contract.endpoint).hostname.replace(/^\[|\]$/gu,"");
+  const flags=[`--remote_cache=${remoteCacheBaseUrlV1(contract)}`,`--remote_instance_name=${contract.instance}`,`--${upload?"":"no"}remote_upload_local_results`,`--${contract.compression?"":"no"}remote_cache_compression`,`--remote_download_outputs=${contract.download}`,`--remote_timeout=${contract.timeoutSeconds}s`,`--remote_retries=${contract.retries}`];
+  const helper=token===undefined?undefined:bazelCredentialHelperV1(options.helperDirectory,contract.auth.tokenEnvironment,options.platform);
+@@ -25,7 +26,7 @@
+  return Object.freeze({flags:Object.freeze(flags),environment:Object.freeze(token===undefined?{}:{[contract.auth.tokenEnvironment]:token}),...(helper?{helper}:{}),rendering});
+ }
+ 
+-/** 🔌️ Bazel's side of `remote-cache status`: it speaks the HTTP cache protocol and proves reachability on the action cache route. */
++/** 🔌️ Bazel's side of `cache remote status`: it speaks the HTTP cache protocol and proves reachability on the action cache route. */
+ export function bazelRemoteCacheToolV1():RemoteCacheToolV1{
+  return Object.freeze<RemoteCacheToolV1>({tool:"bazel",protocol:"bazel-http",probePath:"/ac/"+"0".repeat(64),render:(contract,environment)=>bazelRemoteCacheV1(contract,environment,{helperDirectory:"<tmp>"}).rendering});
+ }

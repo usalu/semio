@@ -1,9 +1,9 @@
 /** 🔒 A cached Bazel task must produce every output it declares: the fixture is the contract, an independent Python implementation of the rule is the oracle. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import fixture from "./🔣️.json" with {type:"json"};
-import {bazelMissingOutputRefusedV1} from "../../📜️script.ts";
+import {bazelMissingOutputRefusedV1} from "../../🎬️executor/🟦️.ts";
 
 const python=`
 import json,sys

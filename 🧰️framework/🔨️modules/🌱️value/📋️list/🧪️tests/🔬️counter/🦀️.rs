@@ -136,5 +136,4 @@ fn retained_fixed_list_capacity_funding_preserves_original_pages_before_items(){
   let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_capacity_one_funded(count,grant).unwrap());assert_eq!(physical,(capacity,0));assert_eq!(result.copied_bytes,copy);assert!(result.fits(grant));born+=physical.0;
  }
  assert_eq!(owner.next_capacity_copy_byte_demand(count).unwrap(),0);let mut oracle=std::collections::VecDeque::new();for value in 0..count as u64{owner.push_reserved(value).unwrap();oracle.push_back(value);}while !oracle.is_empty(){assert_eq!(owner.pop(),oracle.pop_back());}let mut released=0;while !owner.terminal_is_empty(){let exact=owner.next_release_allocation_bytes().unwrap();let(step,physical)=crate::observe_retirement_allocations(||owner.release_empty_page(exact).unwrap());assert_eq!(physical,(0,step.released_allocation_bytes));released+=physical.1;}assert_eq!(born,released);
- println!("[DEBUG] independently funded full capacity retained every original allocation, refused all four underfunded axes, and matched VecDeque ordering");
 }

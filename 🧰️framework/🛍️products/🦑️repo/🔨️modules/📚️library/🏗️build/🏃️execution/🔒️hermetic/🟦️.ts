@@ -1,7 +1,7 @@
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔒️hermetic-classes.json" with {type: "json"};
 import table from "./🔣️.json" with {type: "json"};
-import {runtimeCommandNameV1} from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import {runtimeCommandNameV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 if (validateJsonSchemaSubset(schema, table, schema).length) throw new Error("Closed hermetic class table required");
 
@@ -16,7 +16,7 @@ export type HermeticFactsV1 = {readonly project: string; readonly target: string
 /** 🧮️ The declared inputs a hermetic action takes from the host besides files: environment values read once when the workspace is generated and third-party packages named by `externalDependencies`. */
 export type HermeticInputsV1 = {readonly env: Readonly<Record<string, string>>; readonly packages: readonly string[]};
 
-/** 🧾️ The authored table: classes in selection order, the shared runtime, the closed environment and the strategies per host. */
+/** 🏓️ The authored table: classes in selection order, the shared runtime, the closed environment and the strategies per host. */
 export const HERMETIC_TABLE_V1 = table;
 
 const expressions = new Map<string, RegExp>();
@@ -36,7 +36,7 @@ export function hermeticGlobV1(pattern: string): RegExp {
 }
 const matches = (patterns: readonly string[], text: string): boolean => patterns.some(pattern => hermeticGlobV1(pattern).test(text));
 
-/** 🎯️ Selects the first class whose target, project and root rules all hold; a declared exception for the exact target wins over every class. */
+/** ☑️ Selects the first class whose target, project and root rules all hold; a declared exception for the exact target wins over every class. */
 export function hermeticSelectV1(facts: HermeticFactsV1, source: {readonly classes: readonly HermeticClassV1[]; readonly exceptions: readonly {readonly project: string; readonly target: string; readonly reason: string}[]} = table): HermeticSelectionV1 {
   const row = source.classes.find(row => matches(row.select.targets, facts.target) && matches(row.select.projects, facts.project) && !matches(row.select.excludeRoots, facts.root));
   if (!row) return {kind: "unselected"};
@@ -51,7 +51,7 @@ export function hermeticToolchainV1(id: string): (typeof table.toolchains)[numbe
   return row;
 }
 
-/** 🧮️ Reads the environment and package inputs of a target: a named environment value enters as declared, a runtime command the toolchain and platform already determine is dropped, `externalDependencies` names packages; any other host input refuses, as does an environment name the table does not admit. */
+/** 📥️ Reads the environment and package inputs of a target: a named environment value enters as declared, a runtime command the toolchain and platform already determine is dropped, `externalDependencies` names packages; any other host input refuses, as does an environment name the table does not admit. */
 export function hermeticInputsV1(inputs: readonly unknown[], environment: Readonly<Record<string, string | undefined>>, toolchain: string = runtimeCommandNameV1()): HermeticInputsV1 | {readonly refused: "host-inputs"} {
   const env: Record<string, string> = {}, packages = new Set<string>(), admitted = new Set(table.environment.names), covered = new Set(table.runtime.covered), patterns = hermeticToolchainV1(toolchain).covered.map(source => new RegExp(source, "u"));
   for (const input of inputs) {

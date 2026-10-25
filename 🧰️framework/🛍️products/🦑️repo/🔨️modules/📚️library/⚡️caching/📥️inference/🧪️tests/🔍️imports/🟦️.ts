@@ -37,7 +37,6 @@ test("command import facts equal independent esbuild while cache never grants st
   expect(stats.bytes).toBeLessThanOrEqual(stats.limit);
 });
 
-import "../../../🧪️tests/🔗️import-edges/🔁️context/🟦️.ts";
 import { testImportEdgeEquality } from "../../../🧪️tests/🔗️import-edges/🟦️.ts";
 
 test("full registered repository import dependency equality remains intact", async () => {
@@ -46,6 +45,4 @@ test("full registered repository import dependency equality remains intact", asy
   await testImportEdgeEquality(process.cwd(), output);
 }, 120000);
 
-import "../../../🧪️tests/🔗️import-edges/🏛️graph/🟦️.ts";
 
-import "../../../🧪️tests/🔗️import-edges/🏛️graph/🔑️authority/🟦️.ts";

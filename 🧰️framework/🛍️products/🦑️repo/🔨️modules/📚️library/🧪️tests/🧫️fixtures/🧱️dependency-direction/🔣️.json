@@ -3858,14 +3858,6 @@
       "accept": true
     },
     {
-      "id": "actual-sdk-filesystem",
-      "owner": "🧰️framework/📦️packages/🟦️typescript",
-      "name": "@semio-tech/framework",
-      "subpath": "./filesystem",
-      "target": "./📁️filesystem/🟦️.ts",
-      "accept": true
-    },
-    {
       "id": "actual-quiz-react-.-🎨️.css",
       "owner": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
       "name": "@semio-tech/course-react",

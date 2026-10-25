@@ -5,7 +5,7 @@ import messages from "../../🏗️builder/🎚️mode/🔣️.json" with { type
 import schema from "../../🏗️builder/🎚️mode/🧬️schema/🔣️.json" with { type: "json" };
 import fixtures from "../../🏗️builder/🎚️mode/🧫️fixtures/🔣️.json" with { type: "json" };
 import { validateJsonSchemaSubset } from "../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import { createNativeBuildCallerCapabilitiesV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts";
+import { createNativeBuildCallerCapabilitiesV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/📥️caller/🟦️.ts";
 import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const ajv = new Ajv({ strict: true, allErrors: true });

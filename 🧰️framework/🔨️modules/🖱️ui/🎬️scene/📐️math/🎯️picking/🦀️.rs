@@ -265,7 +265,7 @@ fn marquee_rect_bounds(polygon: &[[f32; 2]]) -> Option<[f32; 4]> {
     Some([min_x, min_y, max_x, max_y])
 }
 
-/// 🎯️ Screen-space component (vertex/edge/face) picking within a marquee/lasso polygon; kept as a flat argument
+/// 🪢️ Screen-space component (vertex/edge/face) picking within a marquee/lasso polygon; kept as a flat argument
 /// list rather than a params struct because both `infinite/world/rs` call sites pass through the same shape
 /// positionally and this crate must not restructure a signature consumed outside its own scope.
 #[allow(clippy::too_many_arguments, reason = "flat picking-context args match the two infinite/world/rs call sites; a params struct would be a cross-crate signature change out of this crate's scope")]
@@ -495,7 +495,7 @@ fn aabb_overlaps_marquee(projected: [f32; 4], polygon: &[[f32; 2]], rectangle: b
     corners.iter().any(|corner| point_in_polygon(*corner, polygon)) || polygon.iter().any(|point| point[0] >= projected[0] && point[0] <= projected[2] && point[1] >= projected[1] && point[1] <= projected[3])
 }
 
-/// 🎯️ Screen-space whole-instance picking within a marquee/lasso polygon; kept as a flat argument list rather
+/// 🔲️ Screen-space whole-instance picking within a marquee/lasso polygon; kept as a flat argument list rather
 /// than a params struct for the same cross-crate-scope reason as `screen_select_components`.
 #[allow(clippy::too_many_arguments, reason = "flat picking-context args match the two infinite/world/rs call sites; a params struct would be a cross-crate signature change out of this crate's scope")]
 pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, Mesh3dLease>, draws: &[SceneDraw3d], view_proj: Mat4, projection_spec: Viewport3dProjectionSpec, width: f32, height: f32, polygon: &[[f32; 2]], rectangle: bool, crossing: bool) -> Vec<String> {

@@ -1,6 +1,6 @@
 /** 📜️ Law: the wire scenarios of the service are language-agnostic. A client that is not ours (curl over HTTP/2 prior knowledge) replays them against an empty service and a decoder that is not ours (the Python oracle, reading the generated schema) reads every request and response; the statuses and decoded responses equal the fixture's. */
 import {afterEach,expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";

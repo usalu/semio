@@ -10,7 +10,7 @@ import document from "./🔣️.json" with {type: "json"};
 
 if (validateJsonSchemaSubset(schema, document, schema).length) throw new Error("Closed pinned tool table required / Geschlossene Tabelle der gepinnten Werkzeuge erforderlich");
 
-/** 🔎️ How a pin is written: the value itself, or a pointer, pattern or row filter into the file that owns it. */
+/** 🧷️ How a pin is written: the value itself, or a pointer, pattern or row filter into the file that owns it. */
 export type ToolPinV1 =
   | Readonly<{format: "value"; value: string}>
   | Readonly<{format: "json"; file: string; pointer: string}>
@@ -29,13 +29,13 @@ export type ToolSetupKindV1 =
   | Readonly<{kind: "native"; tool: NativeToolV1}>
   | Readonly<{kind: "python"; interpreter: string}>
   | Readonly<{kind: "script"; script: string; prepare: readonly string[]; verify?: readonly string[]}>;
-/** 🧰️ One row of the table. */
+/** 🏓️ One row of the table. */
 export type ToolRowV1 = Omit<(typeof document.tools)[number], "pin" | "locate" | "setup"> & Readonly<{pin: ToolPinV1; locate: readonly ToolLocateV1[]; setup: ToolSetupKindV1}>;
 /** 🧾️ The authored table of every pinned tool: pins as pointers, probes, locations and provisioners. */
 export const TOOL_SETUP_V1: Omit<typeof document, "tools"> & Readonly<{tools: readonly ToolRowV1[]}> = document as unknown as Omit<typeof document, "tools"> & Readonly<{tools: readonly ToolRowV1[]}>;
 /** 🩺️ The verdict on one tool. */
 export type ToolStatusV1 = "ok" | "missing" | "differs" | "failed" | "deferred";
-/** 📋️ What verification found for one tool on this machine. */
+/** 📊️ What verification found for one tool on this machine. */
 export type ToolReportV1 = Readonly<{id: string; pin: string; found: string | null; status: ToolStatusV1; location: string | null; message?: string}>;
 /** 🔌️ Everything verification touches outside the pure table: files, child programs, the platform and the provisioned layouts; replaceable so every host and every failure is testable on any host. */
 export type ToolContextV1 = Readonly<{
@@ -85,7 +85,7 @@ export function toolPinValueV1(id: string, environment: Readonly<Record<string, 
 
 const at = (value: unknown, pointer: string): unknown => pointer.split("/").slice(1).reduce<unknown>((current, key) => (current as Record<string, unknown> | undefined)?.[key], value);
 
-/** 📌️ Reads the pin a row names from the pin file that owns it; the pin is never copied. */
+/** 📖️ Reads the pin a row names from the pin file that owns it; the pin is never copied. */
 export function resolvePinV1(row: ToolRowV1, context: Pick<ToolContextV1, "root" | "read" | "resolvePackage" | "environment">): string {
   const pin = row.pin, fail = (file: string): Error => new Error(toolSetupMessageV1("pinfile", {tool: row.id, file}, context.environment));
   if (pin.format === "value") return pin.value;
@@ -133,7 +133,7 @@ export function resolveSiblingPackageV1(root: string, name: string, from: string
   }
 }
 
-/** 📍️ Finds the first copy of a tool the row's locators name: provisioned in the tools partition first, then installed on the machine. */
+/** ⏮️ Finds the first copy of a tool the row's locators name: provisioned in the tools partition first, then installed on the machine. */
 export function locateToolV1(row: ToolRowV1, pin: string, context: ToolContextV1): string | undefined {
   const suffix = context.platform === "win32" ? ".exe" : "";
   for (const locate of row.locate) {
@@ -154,7 +154,7 @@ export function locateToolV1(row: ToolRowV1, pin: string, context: ToolContextV1
   return undefined;
 }
 
-/** 🩺️ Compares one tool with its pin: resolves the pin, finds a copy, asks it for its version and decides. */
+/** 🆚️ Compares one tool with its pin: resolves the pin, finds a copy, asks it for its version and decides. */
 export async function verifyToolV1(row: ToolRowV1, context: ToolContextV1, signal: AbortSignal): Promise<ToolReportV1> {
   signal.throwIfAborted();
   let pin: string;
@@ -183,7 +183,7 @@ export async function verifyToolV1(row: ToolRowV1, context: ToolContextV1, signa
   }
 }
 
-/** 🩺️ Verifies every row of a selection one after the other; a cancelled signal stops between tools. */
+/** ✅️ Verifies every row of a selection one after the other; a cancelled signal stops between tools. */
 export async function verifyToolsV1(rows: readonly ToolRowV1[], context: ToolContextV1, signal: AbortSignal): Promise<readonly ToolReportV1[]> {
   const reports: ToolReportV1[] = [];
   for (const row of rows) reports.push(await verifyToolV1(row, context, signal));
@@ -205,10 +205,15 @@ export function runtimeWarningV1(reports: readonly ToolReportV1[], running: stri
   return bun === undefined || running === undefined || toolVersionMatchesV1(running, bun.pin) ? undefined : toolSetupMessageV1("runtime", {found: running, pin: bun.pin}, environment);
 }
 
-/** 🔌️ What setting up one tool needs from the machine: the provisioner of its kind. */
+/** 🏃️ Names the Bun that runs the tools, where it lives and the pinned one, so a report always says which runtime judged it. */
+export function runningRuntimeLineV1(reports: readonly ToolReportV1[], running: string, executable: string, environment: Readonly<Record<string, string | undefined>> = process.env): string {
+  return toolSetupMessageV1("running", {found: running, path: executable, pin: reports.find(report => report.id === "bun")?.pin ?? "-"}, environment);
+}
+
+/** 🖥️ What setting up one tool needs from the machine: the provisioner of its kind. */
 export type ToolProvisionerV1 = (row: ToolRowV1, pin: string, signal: AbortSignal) => Promise<void>;
 
-/** 📦️ Whether the pin of a row is written in a package of the installed dependencies and those are not installed yet. */
+/** ⛓️ Whether the pin of a row is written in a package of the installed dependencies and those are not installed yet. */
 export function toolPinAwaitsDependenciesV1(row: ToolRowV1, context: Pick<ToolContextV1, "root" | "exists">): boolean {
   return row.pin.format === "rows" && row.pin.package !== undefined && !context.exists(join(context.root, "node_modules", row.pin.from ?? row.pin.package));
 }

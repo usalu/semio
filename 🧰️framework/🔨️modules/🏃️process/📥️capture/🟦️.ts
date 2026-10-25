@@ -1,5 +1,6 @@
 import {openSync,writeSync,closeSync,readFileSync} from "node:fs";
 import {spawn} from "node:child_process";
+import {settleOwnedChildV1} from "../🎛️owned-execution/🏁️settlement/🟦️.ts";
 import {terminateOwnedProcessTree} from "../🪓️termination/🟦️.ts";
 import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation, type ScriptProgress } from "../🧭️routing/📥️invocation/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -87,7 +88,7 @@ export async function captureOwnedProcess(command: string, args: string[], optio
       reason = "spawn-error";
       append(stderr, Buffer.from(error.message));
     });
-    child.on("close", (status, signal) => {
+    void settleOwnedChildV1(child, command).then(({code: status, signal}) => {
       if (finished) return;
       finished = true;
       clearTimeout(timer);

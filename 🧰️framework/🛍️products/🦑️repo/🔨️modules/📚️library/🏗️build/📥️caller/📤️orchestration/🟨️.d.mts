@@ -1,4 +1,4 @@
-import type {NativeBuildCallerCapabilitiesV1} from "../🟦️.ts";
+import type { NativeBuildCallerCapabilitiesV1 } from "../📋️contract/🟦️.ts";
 
 /** 🎯️ Names one declared neutral build task and its explicit mode. */
 export interface BuildOrchestrationTaskV1 {readonly project:string;readonly target:string;readonly configuration?:"prototype"|"release"}

@@ -1,4 +1,4 @@
-//! ⌨️ Typing tool: the typing statechart, its idle-timer host and the typing ledger that commits a buffer as one transaction.
+//! 🛠️ Typing tool: the typing statechart, its idle-timer host and the typing ledger that commits a buffer as one transaction.
 
 use super::*;
 
@@ -6,9 +6,9 @@ use super::*;
 /// ⌨️ The argument naming the text buffer a live typing delivery types into (its editor surface id); a dispatch without it is a
 /// plain one-shot edit (an agent's or a palette's).
 pub const TYPING_BUFFER_ARG: &str = "typing";
-/// 🏁️ The argument of a host's run commit signal ([`TypingCommit`]); such a dispatch carries no edit.
+/// 📡️ The argument of a host's run commit signal ([`TypingCommit`]); such a dispatch carries no edit.
 pub const TYPING_COMMIT_ARG: &str = "typingCommit";
-/// ⏱️ How long a typing run stays open after its last edit before it commits on its own.
+/// 💤️ How long a typing run stays open after its last edit before it commits on its own.
 pub const TYPING_IDLE_MS: u64 = 750;
 
 /// 🏁️ Why a typing run ended as ONE edit: the author paused, the caret jumped away, the editor lost focus, Enter in a
@@ -44,7 +44,7 @@ impl TypingCommit {
     }
 }
 
-/// ⌨️ Where one dispatch sits in its buffer's typing run: a typed edit, or the host's commit signal.
+/// ▶️ Where one dispatch sits in its buffer's typing run: a typed edit, or the host's commit signal.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TypingPhase {
     Edit { buffer: String },
@@ -78,7 +78,7 @@ pub enum TypingFold<M> {
     Split,
 }
 
-/// 📨️ What reaches a typing run: one typed edit's leaves, a commit, or a host abort (`baseMoved` conflict, `frozen`).
+/// 📥️ What reaches a typing run: one typed edit's leaves, a commit, or a host abort (`baseMoved` conflict, `frozen`).
 #[derive(Clone, Debug, PartialEq)]
 pub enum TypingInput<M> {
     Edit { buffer: String, leaves: Vec<M> },
@@ -93,7 +93,7 @@ pub struct TypingContext {
     pub keys: usize,
 }
 
-/// 📨️ The typing statechart's events (the idle lapse is its `after` timer, a host abort the runner's
+/// ⏸️ The typing statechart's events (the idle lapse is its `after` timer, a host abort the runner's
 /// [`ToolMachineRunner::abort`]).
 #[derive(Clone, Debug, PartialEq)]
 pub enum TypingEvent<M> {
@@ -120,7 +120,7 @@ impl<M: Clone> machine::StatechartEvent for TypingEvent<M> {
     }
 }
 
-/// ⌨️ The ONE typing tool: `idle → typing` on an edit, every edit of the same buffer replaces the run's net leaves (upsert by
+/// 🖥️ The ONE typing tool: `idle → typing` on an edit, every edit of the same buffer replaces the run's net leaves (upsert by
 /// position, retract the rest) and re-arms the idle timer, which commits the run [`TYPING_IDLE_MS`] after its last edit; a
 /// commit signal ends the run as ONE edit. Typing never aborts on its own: only a host abort (a conflicting base, a frozen
 /// document) drops a run with zero trace. Tables are M-independent and pinned against the `statechart!` compilation of the
@@ -140,7 +140,7 @@ const TYPING_TRANSITIONS: [machine::TransitionDef; 4] = [
     machine::TransitionDef { source: machine::NodeId(2), trigger: machine::Trigger::Event(machine::EventId(1)), guard: None, targets: &[machine::NodeId(1)], kind: machine::TransitionKind::External, actions: &[machine::ActionId(1)], doc_index: 3 },
 ];
 
-/// ⏱️ The typing chart's one `after` timer: the idle lapse of the `typing` state.
+/// ⏲️ The typing chart's one `after` timer: the idle lapse of the `typing` state.
 pub const TYPING_IDLE_TIMER: TimerId = TimerId(0);
 /// 🔏️ The `statechart!` fingerprint of the typing chart (restore gate of a persisted run).
 pub const TYPING_FINGERPRINT: u64 = 18324688487390181293;
@@ -218,7 +218,7 @@ impl<M: Clone + 'static> Host<TypingMachine<M>> for TypingHost {
     }
 }
 
-/// 💾️ One window's open typing run between dispatches (window transient, ephemeral local-only, never history): the
+/// 📬️ One window's open typing run between dispatches (window transient, ephemeral local-only, never history): the
 /// configuration by stable ids, the authoring tool `<appId>#<verb>` and actor, the buffer, the idle deadline, and the open
 /// transaction with its net leaves.
 #[derive(Clone, Debug, PartialEq)]
@@ -232,7 +232,7 @@ pub struct TypingState<M> {
     pub entries: Vec<(String, M)>,
 }
 
-/// ⌨️ One typing run: [`TypingMachine`] under a [`ToolMachineRunner`]. Every input runs on its own clock, which must be unique
+/// ✍️ One typing run: [`TypingMachine`] under a [`ToolMachineRunner`]. Every input runs on its own clock, which must be unique
 /// per author and tool (the run's id is minted from it); one input mints at most one transaction.
 pub struct Typing<M: Clone + 'static> {
     pub(crate) runner: ToolMachineRunner<TypingMachine<M>, TypingHost>,
@@ -257,12 +257,12 @@ impl<M: Clone + 'static> Typing<M> {
         Ok(Self { runner })
     }
 
-    /// 🆔️ The buffer the open run types into.
+    /// 📂️ The buffer the open run types into.
     pub fn buffer(&self) -> Option<&str> {
         self.runner.snapshot().context.buffer.as_deref()
     }
 
-    /// ⏱️ When the open run commits on its own.
+    /// ⌛️ When the open run commits on its own.
     pub fn deadline_ms(&self) -> Option<u64> {
         self.runner.host.deadline_ms
     }
@@ -381,7 +381,7 @@ impl<M: Clone + 'static> TypingLedger<M> {
         }
     }
 
-    /// 📨️ Runs one input of `window`'s run on `clock`: an open run of another tool in the window commits first (`selectionJump`).
+    /// 📮️ Runs one input of `window`'s run on `clock`: an open run of another tool in the window commits first (`selectionJump`).
     /// Answers every step in order.
     pub fn send(&mut self, window: &str, tool: &str, actor: &ActorId, input: TypingInput<M>, fold: impl Fn(&[M], &[M]) -> TypingFold<M>, clock: HybridLogicalTimestamp) -> Result<Vec<ToolStep<M>>, ToolRefusal> {
         let (mut typing, other) = self.run(window, tool, actor);
@@ -390,7 +390,7 @@ impl<M: Clone + 'static> TypingLedger<M> {
         steps.map(|steps| other.into_iter().chain(steps).collect())
     }
 
-    /// 🏁️ Commits `window`'s open run as ONE edit (`reason`); `Idle` when the window does not type.
+    /// ✏️ Commits `window`'s open run as ONE edit (`reason`); `Idle` when the window does not type.
     pub fn commit(&mut self, window: &str, reason: TypingCommit, clock: HybridLogicalTimestamp) -> Result<ToolStep<M>, ToolRefusal> {
         let Some(state) = self.windows.remove(window) else { return Ok(ToolStep::Idle) };
         let mut typing = Typing::resume(state)?;
@@ -400,13 +400,13 @@ impl<M: Clone + 'static> TypingLedger<M> {
         step
     }
 
-    /// 🏁️ Commits every open run (another verb needs the typed text first, the page is left): one step per window.
+    /// 🔓️ Commits every open run (another verb needs the typed text first, the page is left): one step per window.
     pub fn commit_all(&mut self, reason: TypingCommit, clock: HybridLogicalTimestamp) -> Vec<(String, Result<ToolStep<M>, ToolRefusal>)> {
         let windows: Vec<String> = self.windows.keys().cloned().collect();
         windows.into_iter().map(|window| (window.clone(), self.commit(&window, reason, clock))).collect()
     }
 
-    /// ⏱️ Fires the idle lapse of every run whose deadline `clock` reached: each commits as ONE edit, one step per lapsed window.
+    /// 🕰️ Fires the idle lapse of every run whose deadline `clock` reached: each commits as ONE edit, one step per lapsed window.
     pub fn lapse(&mut self, clock: HybridLogicalTimestamp) -> Vec<(String, Result<ToolStep<M>, ToolRefusal>)> {
         let lapsed: Vec<String> = self.windows.iter().filter(|(_, state)| state.deadline_ms <= clock.physical_ms).map(|(window, _)| window.clone()).collect();
         lapsed

@@ -78,7 +78,7 @@ impl Kernel {
         Ok(())
     }
 
-    /// 🔗️ The direct children [`Self::link_extension`] recorded for `parent` — empty for a leaf or an
+    /// 🧒️ The direct children [`Self::link_extension`] recorded for `parent` — empty for a leaf or an
     /// actor with no extensions.
     pub async fn children_of(&self, parent: ActorId) -> Vec<ActorId> {
         self.links.get(&parent).cloned().unwrap_or_default()
@@ -127,7 +127,7 @@ impl Kernel {
         order
     }
 
-    /// ✂️ Graceful cascade teardown: `root` and every extension hanging off it (transitively),
+    /// 🧹️ Graceful cascade teardown: `root` and every extension hanging off it (transitively),
     /// leaves-first, with **zero orphans** — no descendant is ever left registered after its ancestor
     /// is gone. The call site this ticket's own design names: a plugin closing, or an extension being
     /// uninstalled while live. Errors `UnknownActor` if `root` is not (or no longer) live.

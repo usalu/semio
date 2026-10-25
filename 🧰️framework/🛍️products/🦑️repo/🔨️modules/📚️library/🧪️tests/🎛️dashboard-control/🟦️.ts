@@ -1,4 +1,5 @@
 import { expect, spyOn, test } from "bun:test";
+import {evaluateExtractedFunctionV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 import Ajv from "ajv";
 import { Database } from "bun:sqlite";
 import Ajv2020 from "ajv/dist/2020";
@@ -26,7 +27,6 @@ test("the authored compiler project form uses the closed current diagnostic cont
   for(const row of cases.accepted){const parsed=ts.parseCommandLine(["--noEmit","-p",row.selection.project,...row.selection.args,"--incremental","true","--tsBuildInfoFile","owned/state.tsbuildinfo"]);expect(parsed.errors).toEqual([]);expect(parsed.options.noEmit).toBe(true);expect(parsed.options.project).toBe(row.selection.project);expect(parsed.options.tsBuildInfoFile).toBe("owned/state.tsbuildinfo");}
   const project=JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json")),target=project.targets["typecheck-project"],parameters=target.metadata.semio.dashboard.parameters;expect(target.options.command).toBe("repo ./📜️script.ts typecheck project");expect(parameters[0].id).toBe("config");expect(parameters[0].valuePositional).toBe(true);expect(parameters[1].values.flatMap((row:any)=>row.args??[]).sort()).toEqual([...current.definitions.Arguments.items.enum].sort());
   const registrySchema=JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json")),projectSchema={...registrySchema,$ref:"#/$defs/ProjectManifest"},metadataOracle=new Ajv2020({strict:false}).compile(projectSchema);expect(metadataOracle(project),JSON.stringify(metadataOracle.errors)).toBe(true);expect(compileJsonSchemaSubset(projectSchema).validate(project)).toEqual([]);expect(parameters[0].suggestions).toEqual({source:"configs"});
-  console.log("[DEBUG] Authored compiler form initializes its current owner and selects a physical workspace project with closed diagnostic arguments; compiler execution is separate");
 });
 
 test("native owner controls conserve build selections and all four supervised compounds", () => {
@@ -56,7 +56,6 @@ test("native owner controls conserve build selections and all four supervised co
   const owners=JSON.parse(read("📋️build-owners.json")),ownerSchema=JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️owners.json")),ownerOracle=new Ajv2020({strict:false}).compile(ownerSchema);expect(ownerOracle(owners),JSON.stringify(ownerOracle.errors)).toBe(true);expect(compileJsonSchemaSubset(ownerSchema).validate(owners)).toEqual([]);
   for(const name of cases.nativeOwners){const owner=owners.owners.find((owner:any)=>owner.name===name);expect(owner,name).toBeDefined();expect(JSON.parse(read(owner.manifest)).name).toBe(name);expect((Bun.TOML.parse(read(owner.root+"/Cargo.toml")) as {package?:unknown}).package).toBeDefined();}
   const course=JSON.parse(read(cases.course.file));expect(validate(course),JSON.stringify(validate.errors)).toBe(true);expect(own.validate(course)).toEqual([]);for(const target of cases.course.releaseTargets){const mode=course.targets[target].metadata?.semio?.dashboard?.parameters?.find((parameter:any)=>parameter.id==="execution-mode");expect(mode,target).toMatchObject({kind:"choice",default:"release",values:[{id:"release",env:{SEMIO_BUILD_MODE:"release"}}]});expect(Object.keys(mode.title).sort()).toEqual(["de","en"]);}for(const target of cases.course.readyTargets)expect(course.targets[target].metadata.semio.dashboard.ready).toEqual({port:6061,portEnv:"TEACHING_ARCHITECTURE_COURSE_PORT"});
-  console.log("[DEBUG] Native owner controls preserve backend selection, nine Bazel phases and four supervised compounds");
 });
 
 test("exec preview words and cache words declared by the registry are accepted by the build command line and the Nx translation", async () => {
@@ -99,7 +98,6 @@ test("generation and authoring expose neutral controls without IDE projections",
     const source = read(row.file);
     for (const symbol of row.absent) expect(source, `${row.file}: ${symbol}`).not.toContain(symbol);
   }
-  console.log("[DEBUG] Dashboard control retirement admits native owners and rejects IDE generation paths");
 });
 
 
@@ -122,7 +120,6 @@ test("retired generate launch invocations fail before producing editor configura
     expect(line).toContain("generate <config [--check]");
     expect(line).not.toContain("launch");
   }
-  console.log("[DEBUG] generate launch and generate launch --check reject with exit 1");
 });
 
 
@@ -138,7 +135,6 @@ test("source and registration regressions read neutral declarations without IDE 
     visit(source);
     expect(readers, path).toEqual([]);
   }
-  console.log("[DEBUG] Source and registration suites retain neutral metadata readers");
 }, 15_000);
 
 
@@ -156,7 +152,6 @@ test("setup instruction aliases retain only the current headless client contract
   expect(aliases).toEqual(fixture.instructionAliases);
   const rootReaders = read("🧪️tests/🧱️checked-in-asset-contracts/🟦️.ts");
   for (const path of [".cursor/mcp.json", ".vscode/mcp.json"]) expect(rootReaders).not.toContain(path);
-  console.log("[DEBUG] Setup aliases and root asset readers retain current headless controls only");
 });
 
 
@@ -173,7 +168,6 @@ test("build source inputs depend on neutral policies without retired IDE assets"
     }
     expect(inputs.filter((input: unknown) => typeof input === "string" && /(?:\.vscode(?:-insiders)?[/\\]|\.(?:sln|slnx|code-workspace)$)/u.test(input)), row.file).toEqual([]);
   }
-  console.log("[DEBUG] .NET and course named inputs retain existing neutral policies and reject retired IDE assets");
 });
 
 
@@ -215,10 +209,9 @@ test("ordinary build entry launches native dashboard commands before install and
       const events:string[]=[],opened=Object.freeze({}),phase=routing.createIssuedResourceControlV1(invocation,"dashboard:help-route",0);let expectedArgs:readonly string[]=row.args,captures=0;
       const load=async(module:string)=>{if(module.endsWith("/📥️caller/🟦️.ts"))return{readOwnedBuildInvocationV1:(_root:string,actual:unknown,args:unknown)=>{expect(actual).toBe(invocation);expect(args).toBe(expectedArgs);expect(args).toEqual(row.args);}};if(module.endsWith("/🧭️invocation/🟦️.ts"))return parser;if(module.endsWith("/📦️installation/🟦️.ts"))return native;if(module.endsWith("/📖️help/🟦️.ts"))return{buildHelpForArgumentsV1:()=>"help"};if(module.endsWith("/⌨️cli/🟦️.ts"))return{readNativeRepoRecoveryPlanV1:()=>undefined};if(module.endsWith("/🔤️options/🟦️.ts"))return{normalizeBuildOptionsV1};if(module.endsWith("/🌡️host-capacity/🟦️.ts"))return{withBuildCapacityV1:async(args:readonly string[],_env:unknown,body:(value:{args:readonly string[]})=>Promise<void>,options:{control:typeof phase})=>{expect(options.control).toBe(phase);routing.requireIssuedResourceControlInvocationV1(options.control,invocation);await body({args});}};if(module.endsWith("/🔏️revision/🟨️.mjs"))return{withImplementationPinV1:async(body:()=>Promise<void>)=>body()};throw Error("Undeclared dashboard help port: "+module);};
       const ports={process,console:{log:()=>{events.push("help");}},load,requireIssuedResourceControlInvocationV1:routing.requireIssuedResourceControlInvocationV1,checkResourceLeaseControl:leases.checkResourceLeaseControl,withRepositoryCommandDiagnosticsV1:async(workspace:string,original:unknown,actual:typeof phase)=>{expect(workspace).toBe(root);expect(original).toBe(invocation);expect(actual).toBe(phase);routing.requireIssuedResourceControlInvocationV1(actual,invocation);events.push("open");throw opened;}};
-      const runRuntime=new Function(...Object.keys(ports),admittedCode+";return runAdmittedBuildInvocationV1;")(...Object.values(ports)),preflightPorts={process,console:ports.console,readOwnedBuildInvocationV1:(_root:string,actual:unknown,args:unknown)=>{expect(actual).toBe(invocation);expect(args).toBe(expectedArgs);},parseBuildInvocationV1:parser.parseBuildInvocationV1,buildInvocationRequestsHelpV1:parser.buildInvocationRequestsHelpV1,buildHelpForArgumentsV1:()=>"help",runBuildPreflightV1:()=>{throw Error("Host preflight must not run for help");}},runPreflight=new Function(...Object.keys(preflightPorts),compile("const run="+preflightBody.getText(preflightTree)+";")+";return run;")(...Object.values(preflightPorts)),wrapperPorts={process,load,relative:path.relative,repositoryCommandKernelV1,executeCapturedBuildSourceV1:async(workspace:string,target:string,args:readonly string[],original:unknown,actual:typeof phase)=>{captures++;expect(workspace).toBe(root);expect(original).toBe(invocation);expect(actual).toBe(phase);routing.requireIssuedResourceControlInvocationV1(actual,invocation);leases.checkResourceLeaseControl(actual);expectedArgs=args;const kernel=repositoryCommandKernelV1(args,process.env);expect(target).toBe(path.relative(root,kernel.entry).split("\\").join("/"));if(kernel.kind==="preflight")await runPreflight(root,args,invocation,phase);else{expect(kernel.kind).toBe("runtime");await runRuntime(root,args,invocation,phase);}leases.checkResourceLeaseControl(actual);}};
-      try{await new Function(...Object.keys(wrapperPorts),entryCode+";return runOwnedBuildInvocationV1;")(...Object.values(wrapperPorts))(root,row.args,invocation,phase);}catch(error){expect(error).toBe(opened);}expect(captures).toBe(1);expect(events,JSON.stringify(row)).toEqual([row.expected]);
+      const runRuntime=evaluateExtractedFunctionV1(admittedCode,"runAdmittedBuildInvocationV1",ports),preflightPorts={process,console:ports.console,readOwnedBuildInvocationV1:(_root:string,actual:unknown,args:unknown)=>{expect(actual).toBe(invocation);expect(args).toBe(expectedArgs);},parseBuildInvocationV1:parser.parseBuildInvocationV1,buildInvocationRequestsHelpV1:parser.buildInvocationRequestsHelpV1,buildHelpForArgumentsV1:()=>"help",runBuildPreflightV1:()=>{throw Error("Host preflight must not run for help");}},runPreflight=new Function(...Object.keys(preflightPorts),compile("const run="+preflightBody.getText(preflightTree)+";")+";return run;")(...Object.values(preflightPorts)),wrapperPorts={process,load,relative:path.relative,repositoryCommandKernelV1,executeCapturedBuildSourceV1:async(workspace:string,target:string,args:readonly string[],original:unknown,actual:typeof phase)=>{captures++;expect(workspace).toBe(root);expect(original).toBe(invocation);expect(actual).toBe(phase);routing.requireIssuedResourceControlInvocationV1(actual,invocation);leases.checkResourceLeaseControl(actual);expectedArgs=args;const kernel=repositoryCommandKernelV1(args,process.env);expect(target).toBe(path.relative(root,kernel.entry).split("\\").join("/"));if(kernel.kind==="preflight")await runPreflight(root,args,invocation,phase);else{expect(kernel.kind).toBe("runtime");await runRuntime(root,args,invocation,phase);}leases.checkResourceLeaseControl(actual);}};
+      try{await evaluateExtractedFunctionV1(entryCode,"runOwnedBuildInvocationV1",wrapperPorts)(root,row.args,invocation,phase);}catch(error){expect(error).toBe(opened);}expect(captures).toBe(1);expect(events,JSON.stringify(row)).toEqual([row.expected]);
     });
-    console.log("[DEBUG] Actual build dispatch routes missing/installed dashboard commands and native help with Original control; authoring and backend selections retain build routing");
   } finally { database.close(); }
 });
 
@@ -231,7 +224,6 @@ test("shared developer tooling declarations and all lock scopes retain canonical
     for(const dependency of row.dependencies){const expected=canonical.dependencies?.[dependency.name]??canonical.devDependencies?.[dependency.name];expect(expected).toBe(dependency.version);expect(consumer[dependency.group][dependency.name]).toBe(expected);database.query("insert into provider values(?,?,?)").run("canonical",dependency.name,expected);database.query("insert into provider values(?,?,?)").run("consumer",dependency.name,consumer[dependency.group][dependency.name]);}
     for(const path of row.locks){const text=read(path),parsed=ts.parseConfigFileTextToJson(path,text);expect(parsed.error,path).toBeUndefined();const lock=JSON.parse(text);expect(parsed.config).toEqual(lock);const memberships=Object.entries(lock.workspaces).filter(([,value])=>(value as any).name===consumer.name);expect(memberships,path).toHaveLength(1);expect(resolve(root,dirname(path),memberships[0]![0]),path).toBe(resolve(root,dirname(row.consumer)));for(const dependency of row.dependencies){expect((memberships[0]![1]as any)[dependency.group][dependency.name]).toBe(dependency.version);const actual=provider(lock.packages,dependency.name);expect(actual,path+": "+dependency.name).toBe(dependency.name+"@"+dependency.version);database.query("insert into provider values(?,?,?)").run(path,dependency.name,String(actual).slice(dependency.name.length+1));}}
     expect(database.query("select p.scope,p.name,p.version from provider p join provider canonical on canonical.scope='canonical' and canonical.name=p.name where p.version<>canonical.version").all()).toEqual([]);
-    console.log("[DEBUG] Shared UI Source memberships resolve exact canonical provider versions in all six locks, including nested provider precedence");
   }finally{database.close();}
 });
 
@@ -242,7 +234,6 @@ test("all-command axes match neutral vectors and SQLite without enumerating the 
     for(const row of cases.cases){const parameter=row.parameter,scope=parameter.appliesTo,effect=Boolean(parameter.valueEnv||parameter.args?.length||parameter.env&&Object.keys(parameter.env).length),selected=database.query("select case when ?1='playground' then coalesce(json_extract(?2,'$.playground'),0)=1 when ?1='tool' then ?4=1 and ?2 is not null and (coalesce(json_extract(?2,'$.all'),0)=1 or exists(select 1 from json_each(?2,'$.verbs') where value=?3)) else ?2 is null or coalesce(json_extract(?2,'$.all'),0)=1 or exists(select 1 from json_each(?2,'$.verbs') where value=?3) end selected").get(row.command,scope===undefined?null:JSON.stringify(scope),row.verb,effect?1:0)as{selected:number};expect(Boolean(selected.selected),JSON.stringify(row)).toBe(row.expected);expect(axisApplies(parameter,row.verb,row.command),JSON.stringify(row)).toBe(row.expected);}
     const budget=JSON.parse(read("📋️project.json")).metadata.semio.dashboard.parameters.find((row:any)=>row.id==="build-budget");expect(budget.appliesTo).toEqual({all:true,playground:true});expect(budget.title).toEqual({en:"Process time limit",de:"Prozesszeitlimit"});expect(budget.valueEnv).toBe("SEMIO_BUILD_BUDGET_MS");
   }finally{database.close();}
-  console.log("[DEBUG] Process time limit covers current and future authored verbs, explicit playgrounds and effectful tools through independent schema/SQLite vectors");
 });
 
 test("selected process deadlines share numeric grammar and immutable elapsed-time vectors", () => {
@@ -253,7 +244,6 @@ test("selected process deadlines share numeric grammar and immutable elapsed-tim
     for(const row of vectors.expirationCases){const selected=database.query("select ?1<>0 and ?2>=?1 expired").get(row.milliseconds,row.elapsed)as{expired:number};expect(Boolean(selected.expired)).toBe(row.expired);}
     for(const row of vectors.continuations){const selected=database.query("select ?1>=100 expired").get(row.elapsed)as{expired:number};expect(Boolean(selected.expired),row.kind).toBe(row.expired);}
   }finally{database.close();}
-  console.log("[DEBUG] Central process deadline vectors match shared Number grammar, schema bounds and SQLite elapsed-time decisions without continuation renewal");
 });
 
 
@@ -365,8 +355,8 @@ test("physical IDE census and manifest references refuse unknown ignored owner c
       const document=censusManifestDocument(row.text,role)!;expect(independent.config).toEqual(document);expect(retiredManifestReferences(document,role==="ticket")).toEqual(row.expectedReferences);expect(manifestOracle(document,role==="ticket")).toEqual(row.expectedReferences);
     }
     await receiveScriptProcessInvocation(process.env,async original=>{
-    const queue=[""],retired:string[]=[],references:{file:string;values:string[]}[]=[],deadline=performance.now()+censusFixture.maximumMilliseconds;let entries=0,directories=0,manifests=0,nextContinuation=0,nextProgress=0;
-    const checkpoint=async():Promise<void>=>{checkScriptInvocation(original);const now=performance.now();if(now>deadline)throw Error(`Physical IDE census exceeded ${censusFixture.maximumMilliseconds} ms at ${entries} entries/${directories} directories`);if(now>=nextContinuation){await advanceScriptInvocation(original,"dashboard:ide-census","running");nextContinuation=performance.now()+250;}if(now>=nextProgress){console.log(`[DEBUG] IDE census active: ${entries} entries, ${directories} directories, ${manifests} manifests`);nextProgress=performance.now()+5000;}checkScriptInvocation(original);};
+    const queue=[""],retired:string[]=[],references:{file:string;values:string[]}[]=[],deadline=performance.now()+censusFixture.maximumMilliseconds;let entries=0,directories=0,manifests=0,nextContinuation=0;
+    const checkpoint=async():Promise<void>=>{checkScriptInvocation(original);const now=performance.now();if(now>deadline)throw Error(`Physical IDE census exceeded ${censusFixture.maximumMilliseconds} ms at ${entries} entries/${directories} directories`);if(now>=nextContinuation){await advanceScriptInvocation(original,"dashboard:ide-census","running");nextContinuation=performance.now()+250;}checkScriptInvocation(original);};
     while(queue.length){
       const relative=queue.pop()!,absolute=join(root,relative),before=lstatSync(absolute);expect(before.isSymbolicLink(),relative).toBe(false);expect(before.isDirectory(),relative).toBe(true);if(++directories>censusFixture.maximumDirectories)throw Error("Physical IDE census exceeded its directory bound: "+directories);await checkpoint();
       for(const entry of readdirSync(absolute,{withFileTypes:true})){
@@ -382,7 +372,7 @@ test("physical IDE census and manifest references refuse unknown ignored owner c
       }
       const after=lstatSync(absolute);if(before.dev!==after.dev||before.ino!==after.ino||after.isSymbolicLink())throw Error("Authored directory changed identity during IDE census: "+relative);
     }
-    expect(retired.sort()).toEqual([]);expect(references).toEqual([]);console.log(`[DEBUG] No-follow IDE census checked ${entries} physical entries, ${directories} authored directories and ${manifests} manifests; external/generated cache roots were pruned`);
+    expect(retired.sort()).toEqual([]);expect(references).toEqual([]);
     });
   }finally{database.close();}
 },330000);

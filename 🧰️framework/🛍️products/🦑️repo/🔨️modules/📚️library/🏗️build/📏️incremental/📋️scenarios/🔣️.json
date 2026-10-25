@@ -623,6 +623,96 @@
     "language": "ts",
     "file": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📜️script.ts"
    }
+  },
+  {
+   "id": "course-generators-unrelated",
+   "title": {
+    "en": "Comment in a course page: only the course build reads it, no generator may run again",
+    "de": "Kommentar in einer Kursseite: nur der Kurs-Build liest sie, kein Generator darf erneut laufen"
+   },
+   "area": "vite-app",
+   "target": "@teaching/architecture-course:build",
+   "kind": "comment-only",
+   "mutation": {
+    "op": "comment",
+    "language": "ts",
+    "file": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/⚖️legal/🟦️.tsx"
+   },
+   "tools": [
+    "bazel"
+   ]
+  },
+  {
+   "id": "typegen-unrelated",
+   "title": {
+    "en": "Comment in an unrelated framework TypeScript module: the actor typegen key stays",
+    "de": "Kommentar in einem fremden TypeScript-Modul des Frameworks: der Schlüssel des Actor-Typegen bleibt"
+   },
+   "area": "framework-ts",
+   "target": "@semio-tech/framework-actor-rs:typegen",
+   "kind": "unrelated-sibling",
+   "mutation": {
+    "op": "comment",
+    "language": "ts",
+    "file": "🧰️framework/📦️packages/🟦️typescript/⏪️time-travel/🟦️.ts"
+   },
+   "tools": [
+    "bazel"
+   ]
+  },
+  {
+   "id": "typegen-exporter",
+   "title": {
+    "en": "Comment in the exporter test of the actor typegen: its key changes",
+    "de": "Kommentar im Exporter-Test des Actor-Typegen: sein Schlüssel ändert sich"
+   },
+   "area": "rust-crate",
+   "target": "@semio-tech/framework-actor-rs:typegen",
+   "kind": "comment-only",
+   "mutation": {
+    "op": "comment",
+    "language": "rs",
+    "file": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧬️typegen/🦀️.rs"
+   },
+   "tools": [
+    "bazel"
+   ]
+  },
+  {
+   "id": "framework-generate-unrelated",
+   "title": {
+    "en": "Comment in an unrelated framework TypeScript module: the framework manifest generation key stays",
+    "de": "Kommentar in einem fremden TypeScript-Modul des Frameworks: der Schlüssel der Manifest-Generierung bleibt"
+   },
+   "area": "framework-ts",
+   "target": "@semio-tech/framework-rs:generate",
+   "kind": "unrelated-sibling",
+   "mutation": {
+    "op": "comment",
+    "language": "ts",
+    "file": "🧰️framework/📦️packages/🟦️typescript/⏪️time-travel/🟦️.ts"
+   },
+   "tools": [
+    "bazel"
+   ]
+  },
+  {
+   "id": "framework-generate-exporter",
+   "title": {
+    "en": "Comment in the exporter test of the framework manifest generation: its key changes",
+    "de": "Kommentar im Exporter-Test der Manifest-Generierung: ihr Schlüssel ändert sich"
+   },
+   "area": "rust-crate",
+   "target": "@semio-tech/framework-rs:generate",
+   "kind": "comment-only",
+   "mutation": {
+    "op": "comment",
+    "language": "rs",
+    "file": "🧰️framework/🔨️modules/🧬️schema/📽️projection/🧪️tests/🦀️.rs"
+   },
+   "tools": [
+    "bazel"
+   ]
   }
  ]
 }

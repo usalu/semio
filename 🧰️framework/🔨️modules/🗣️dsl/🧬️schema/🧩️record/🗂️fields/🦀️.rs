@@ -13,7 +13,7 @@ impl RecordFields{
     pub fn is_empty(&self)->bool{self.entries.is_empty()}
     /// 📏️ Reports actual allocated slot capacity.
     pub fn capacity(&self)->usize{self.entries.capacity()}
-    /// 🔎️ Borrows one field by its declared identity.
+    /// 🔑️ Borrows one field by its declared identity.
     pub fn get(&self,id:&u16)->Option<&FieldValue>{self.entries.binary_search_by_key(id,|(id,_)|*id).ok().map(|index|&self.entries[index].1)}
     /// 🪜️ Borrows one canonical field slot without scanning preceding identities.
     pub fn at(&self,index:usize)->Option<(u16,&FieldValue)>{self.entries.get(index).map(|(id,value)|(*id,value))}
@@ -27,15 +27,15 @@ impl RecordFields{
     pub fn remove(&mut self,id:&u16)->Option<FieldValue>{self.entries.binary_search_by_key(id,|(id,_)|*id).ok().map(|index|self.entries.remove(index).1)}
     /// 🧭️ Borrows identities in their canonical numeric order.
     pub fn keys(&self)->impl ExactSizeIterator<Item=&u16>+DoubleEndedIterator{self.entries.iter().map(|(id,_)|id)}
-    /// 🧭️ Borrows payloads in their canonical identity order.
+    /// 🔃️ Borrows payloads in their canonical identity order.
     pub fn values(&self)->impl ExactSizeIterator<Item=&FieldValue>+DoubleEndedIterator{self.entries.iter().map(|(_,value)|value)}
-    /// 🔧️ Borrows payloads for a declared owner mutation.
+    /// 🎒️ Borrows payloads for a declared owner mutation.
     pub fn values_mut(&mut self)->impl ExactSizeIterator<Item=&mut FieldValue>+DoubleEndedIterator{self.entries.iter_mut().map(|(_,value)|value)}
-    /// 🧭️ Borrows complete fields without materializing a mirror.
+    /// 🪞️ Borrows complete fields without materializing a mirror.
     pub fn iter(&self)->impl ExactSizeIterator<Item=(&u16,&FieldValue)>+DoubleEndedIterator{self.entries.iter().map(|(id,value)|(id,value))}
     /// ♻️ Moves all fields into a newly admitted buffer without implicit growth.
     pub fn replace_empty_slots(&mut self,mut entries:Vec<(u16,FieldValue)>){assert!(entries.is_empty()&&entries.capacity()>=self.entries.len());entries.append(&mut self.entries);self.entries=entries;}
-    /// 📤️ Transfers each field payload to its owning consumer.
+    /// ➡️ Transfers each field payload to its owning consumer.
     pub fn into_values(self)->impl ExactSizeIterator<Item=FieldValue>+DoubleEndedIterator{self.entries.into_iter().map(|(_,value)|value)}
 }
 impl FromIterator<(u16,FieldValue)> for RecordFields{fn from_iter<T:IntoIterator<Item=(u16,FieldValue)>>(items:T)->Self{let mut fields=Self::default();for(id,value)in items{fields.insert(id,value);}fields}}

@@ -1,0 +1,101 @@
+[
+ {
+  "id": "build-facets",
+  "budgetMs": 300000,
+  "typecheck": "none",
+  "trees": [
+   "🏗️build/🌡️host-capacity",
+   "🏗️build/🗣️language",
+   "🏗️build/📤️output",
+   "🏗️build/🗃️state",
+   "🏗️build/🎚️mode"
+  ]
+ },
+ {
+  "id": "module-basics",
+  "budgetMs": 300000,
+  "typecheck": "none",
+  "trees": [
+   "💾️state",
+   "📖️texts",
+   "📋️context",
+   "🧪️tests"
+  ]
+ },
+ {
+  "id": "native-storage",
+  "budgetMs": 300000,
+  "typecheck": "none",
+  "trees": [
+   "📦️artifacts/🏗️native-build/💾️storage"
+  ]
+ },
+ {
+  "id": "native-build",
+  "budgetMs": 300000,
+  "typecheck": "none",
+  "trees": [
+   "📦️artifacts/🏗️native-build"
+  ]
+ },
+ {
+  "id": "artifact-owners",
+  "budgetMs": 300000,
+  "typecheck": "none",
+  "trees": [
+   "📦️artifacts/💾️cache",
+   "📦️artifacts/📤️publication",
+   "📦️artifacts/🔢️checksum",
+   "📦️artifacts/🕸️wasm-build",
+   "📦️artifacts/🗃️archive",
+   "📦️artifacts/🗂️files",
+   "📦️packages"
+  ]
+ },
+ {
+  "id": "leases",
+  "budgetMs": 300000,
+  "typecheck": "none",
+  "trees": [
+   "🔒️leases"
+  ],
+  "capabilities": {
+   "artifacts": true
+  }
+ },
+ {
+  "id": "testing",
+  "budgetMs": 300000,
+  "typecheck": "none",
+  "trees": [
+   "🧪️testing"
+  ],
+  "capabilities": {
+   "artifacts": true
+  }
+ },
+ {
+  "id": "routing-owners",
+  "budgetMs": 300000,
+  "typecheck": "none",
+  "trees": [
+   "🧭️routing"
+  ]
+ },
+ {
+  "id": "tools",
+  "budgetMs": 300000,
+  "typecheck": "none",
+  "trees": [
+   "🧰️tools"
+  ]
+ },
+ {
+  "id": "cargo-workspace",
+  "budgetMs": 300000,
+  "typecheck": "none",
+  "trees": [
+   "🦀️cargo-workspace"
+  ]
+ }
+]

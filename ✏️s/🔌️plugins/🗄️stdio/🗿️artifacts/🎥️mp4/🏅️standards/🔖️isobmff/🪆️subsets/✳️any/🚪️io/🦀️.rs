@@ -142,7 +142,7 @@ pub mod playback {
         fn payload_schema_id(&self) -> &str { PAYLOAD_SCHEMA }
         fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
         fn execution_contract(&self) -> ToolExecutionContract { PLAYBACK_CONTRACT }
-        fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(payload) }
+        semio_framework_plugin::retained_command::reserved_tool_job_factory_admission!();
     }
     impl<A: ArtifactApp<Snapshot = Mp4Snapshot>> ArtifactOwnedToolJobFactory for Mp4MediaExportJobFactory<A> {
         type Owner = A;

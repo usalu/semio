@@ -6,13 +6,13 @@ use super::*;
 /// module's own doc for why this isn't an async SQLite driver.
 pub struct SqliteDirectory {
     pub(super) conn: Arc<Mutex<Connection>>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub(super) append_commit_ack_failure: Arc<std::sync::atomic::AtomicBool>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub(super) genesis_commit_ack_failure: Arc<std::sync::atomic::AtomicU8>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub(super) creation_read_failure: Arc<std::sync::atomic::AtomicBool>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub(super) event_read_failure: Arc<std::sync::atomic::AtomicBool>,
 }
 
@@ -30,13 +30,13 @@ impl SqliteDirectory {
         }
         Ok(Self {
             conn: Arc::new(Mutex::new(conn)),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             append_commit_ack_failure: Arc::new(std::sync::atomic::AtomicBool::new(false)),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             genesis_commit_ack_failure: Arc::new(std::sync::atomic::AtomicU8::new(0)),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             creation_read_failure: Arc::new(std::sync::atomic::AtomicBool::new(false)),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             event_read_failure: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         })
     }

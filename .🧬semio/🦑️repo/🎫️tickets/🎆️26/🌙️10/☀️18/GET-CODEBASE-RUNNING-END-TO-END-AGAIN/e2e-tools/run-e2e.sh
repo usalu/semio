@@ -4,7 +4,7 @@
 #   run-e2e.sh <play|demonstrator|course> [--tool=nx|bazel] [options] [-- <extra test-e2e arguments>]
 #
 # Chain (play, demonstrator):  activate-prototype -> serve (detached, port polled) -> test-e2e -> serve stopped
-# Chain (course, dev topology): test-e2e --topology dev   (the gate boots its own throw-away proctor + dev site)
+# Chain (course): test-e2e [--topology <t>]   (the gate boots its own throw-away proctor + dev site and release rehearsal; no --topology = what the target declares)
 #
 # Options:
 #   --tool=nx|bazel        passed to `bun repo` (default: the repo default, nx)
@@ -12,7 +12,7 @@
 #   --skip-activate        play/demonstrator: assume activate-prototype is already green
 #   --no-serve             play/demonstrator: skip the detached dev serve (test-e2e owns its own port-0 server either way)
 #   --serve                course: also start `course:dev` detached (port 6061) as a smoke before the gate; off by default
-#   --topology=<dev|rehearsal|both>   course topology (default dev; rehearsal/both need the release mode and a Linux-free host)
+#   --topology=<dev|rehearsal|both>   course topology (default: the topologies the target declares, both; rehearsal/both need --release)
 #   --proctor=<executable> course: run this proctor instead of building one (skips the cargo build)
 #   --release              export SEMIO_BUILD_MODE=release for the test-e2e step
 #   --warm-proctor         course: first run `@teaching/proctor:build` (cached cargo closure) so the gate's own proctor build is incremental
@@ -37,7 +37,7 @@ case "$1" in -h|--help) usage 0 ;; esac
 product="$1"; shift
 
 tool=()
-warm=0 check=0 install_browsers=0 skip_activate=0 serve=default release=0 keep=0 serial=0 topology=dev proctor=""
+warm=0 check=0 install_browsers=0 skip_activate=0 serve=default release=0 keep=0 serial=0 topology= proctor=""
 extra=()
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -67,6 +67,7 @@ case "$product" in
   course)       pkg="@teaching/architecture-course"; port=6061; activate=0; dev_target=dev ;;
   *) echo "unknown product: $product (play|demonstrator|course)" >&2; exit 2 ;;
 esac
+[ "$product" = course ] && [ "$topology" != dev ] && release=1
 [ "$release" = 1 ] && [ "$product" != course ] && { echo "--release applies to the course only" >&2; exit 2; }
 [ "$serve" = default ] && { if [ "$product" = course ]; then serve=0; else serve=1; fi; }
 
@@ -217,11 +218,12 @@ main() {
 
   local args=(run "$pkg:test-e2e")
   if [ "$product" = course ]; then
-    local gate=(--topology "$topology")
+    local gate=()
+    [ -n "$topology" ] && gate+=(--topology "$topology")
     [ "$keep" = 1 ] && gate+=(--keep)
     [ "$serial" = 1 ] && gate+=(--serial)
     [ -n "$proctor" ] && gate+=(--proctor "$proctor")
-    args+=(-- "${gate[@]}" --)
+    args+=(-- ${gate[@]+"${gate[@]}"} --)
     [ ${#extra[@]} -gt 0 ] && args+=("${extra[@]}")
   elif [ ${#extra[@]} -gt 0 ]; then
     log "note: play/demonstrator test-e2e accept no free arguments; ignoring: ${extra[*]}"

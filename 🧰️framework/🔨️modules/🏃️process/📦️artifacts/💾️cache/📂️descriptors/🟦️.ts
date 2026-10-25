@@ -63,7 +63,7 @@ export function readNativeMountPathsV1(observation:NativeCacheDescriptorObservat
  const bounds=schema.definitions.CompilerMountPolicy.const,wire=observation.stdout;if(observation.status!==0||observation.signal!==null||observation.reason!=="exit"||observation.stderr!==""||!wire.endsWith("\n")||Buffer.byteLength(wire)>bounds.maximumBytes)throw Error("Complete compiler mount inventory required");const lines=wire.slice(0,-1).split("\n"),mounts=new Set<string>();if(lines.length>bounds.maximumLines)throw Error("Bounded compiler mount inventory required");for(const line of lines){const split=line.indexOf(" on "),flags=line.lastIndexOf(" (");if(split<1||split!==line.lastIndexOf(" on ")||flags<=split+4||!line.endsWith(")")||line.length>bounds.maximumFieldCharacters||/[\x00-\x1f\x7f]/u.test(line))throw Error("Unambiguous compiler mount inventory required");const path=line.slice(split+4,flags);if(path!==posix.resolve(path)||/[\\\uFFFD]/u.test(path)||mounts.has(path))throw Error("Distinct physical compiler mounts required");mounts.add(path);}return Object.freeze([...mounts]);
 }
 
-/** 🏔️ Refuses missing or nested mounts before selecting the authenticated dedicated filesystem. */
+/** 🧲️ Refuses missing or nested mounts before selecting the authenticated dedicated filesystem. */
 export function assertNativeCompilerMountScopeV1(observation:NativeCacheDescriptorObservationV1,root:string,directories:readonly string[]):void{const mounts=new Set(readNativeMountPathsV1(observation));if(!mounts.has(root)||directories.some(path=>!path.startsWith(root+"/"))||[...mounts].some(path=>path.startsWith(root+"/")&&directories.some(directory=>path===directory||path.startsWith(directory+"/")||directory.startsWith(path+"/"))))throw Error("Original dedicated compiler filesystem scope required");
 }
 
@@ -71,3 +71,12 @@ function compilerDescriptorRootsV1(directories:readonly string[]):string[]{const
 
 /** 🧭️ Selected filesystem names must prove an absolute unambiguous location before scope filtering. */
 export function assertNativeCompilerSelectedDescriptorNamesV1(wire:string):void{if(!wire||Buffer.byteLength(wire)>policy.maximumBytes||!wire.endsWith("\n"))throw Error("Complete selected compiler descriptor names required");let names=0;for(const line of wire.split("\n")){if(line[0]!=="n")continue;if(++names>policy.maximumFields)throw Error("Bounded selected compiler names required");const path=decodeLsofPathV1(line.slice(1));if(!path||!posix.isAbsolute(path)||path!==posix.normalize(path)||/[\\\x00-\x1f\x7f]/u.test(path))throw Error("Absolute unambiguous selected compiler descriptor name required");}if(!names)throw Error("Positive selected compiler names required");}
+
+/** 🔁️ Repeats a selected census while only a bystander's descriptor (Finder, Spotlight and alike, which open a freshly mounted volume's directory for a moment) refuses it; every other refusal, the exhausted attempts and cancellation end it at once. Returns the attempts used. */
+export async function observeNativeSelectedCensusV1(observe:()=>Promise<void>,attempts:number,backoffMilliseconds:number,signal:AbortSignal):Promise<number>{
+ for(let attempt=1;;attempt++){
+  signal.throwIfAborted();
+  try{await observe();return attempt;}
+  catch(error){if(attempt>=attempts||!(error instanceof Error)||!error.message.startsWith("Exact own selected Native process required"))throw error;await new Promise<void>((accept,reject)=>{const timer=setTimeout(accept,backoffMilliseconds),abort=()=>{clearTimeout(timer);reject(signal.reason);};signal.addEventListener("abort",abort,{once:true});});}
+ }
+}

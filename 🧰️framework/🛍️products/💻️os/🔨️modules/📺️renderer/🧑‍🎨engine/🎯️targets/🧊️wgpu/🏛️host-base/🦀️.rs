@@ -28,7 +28,7 @@ use wasm_bindgen::prelude::*;
 /// direction (`GRANT_BUDGET_DEFAULT_MAX_FRAMES`).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn actor_budget_from_turn_budget(budget: semio_framework::kernel::Budget, original: semio_framework_plugin_host::shard::grant::ShardResourceBudget) -> semio_framework_plugin_host::shard::grant::ShardResourceBudget {
-    semio_framework_plugin_host::shard::grant::ShardResourceBudget { fuel: budget.fuel, wall_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames, ..original }
+    semio_framework_plugin_host::shard::grant::ShardResourceBudget { fuel: budget.fuel, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames, ..original }
 }
 //#endregion 🔖️ActorBudgetBridge
 

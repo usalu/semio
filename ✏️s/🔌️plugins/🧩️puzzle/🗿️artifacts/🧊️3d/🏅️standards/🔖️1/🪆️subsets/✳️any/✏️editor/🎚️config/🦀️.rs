@@ -434,10 +434,10 @@ impl Puzzle3dConfig {
             mutations.push(Puzzle3dConfigMutation::SetContactTolerance(Puzzle3dConfigSetContactTolerance{ value: next.contact_tolerance }));
         }
         if self.object_kind_weights != next.object_kind_weights {
-            mutations.push(Puzzle3dConfigMutation::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ value: next.object_kind_weights.clone() }));
+            mutations.push(Puzzle3dConfigMutation::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights::from_map(&next.object_kind_weights)));
         }
         if self.vortex_kind_weights != next.vortex_kind_weights {
-            mutations.push(Puzzle3dConfigMutation::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ value: next.vortex_kind_weights.clone() }));
+            mutations.push(Puzzle3dConfigMutation::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights::from_map(&next.vortex_kind_weights)));
         }
         if self.active_example_id != next.active_example_id {
             mutations.push(Puzzle3dConfigMutation::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId{ value: next.active_example_id.clone() }));
@@ -449,42 +449,86 @@ impl Puzzle3dConfig {
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation
-/// 🎚️ Payload of [`Puzzle3dConfigMutation::SetFillCount`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+/// 🎚️ One kind-weight row of a weights payload: the wire form of a `kind id -> weight` map entry, sorted by id.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "kind-weight")]
+pub struct Puzzle3dKindWeightRow {
+    pub id: String,
+    pub weight: f64,
+}
+
+fn kind_weight_rows(map: &HashMap<String, f64>) -> Vec<Puzzle3dKindWeightRow> {
+    let mut rows: Vec<Puzzle3dKindWeightRow> = map.iter().map(|(id, weight)| Puzzle3dKindWeightRow { id: id.clone(), weight: *weight }).collect();
+    rows.sort_by(|a, b| a.id.cmp(&b.id));
+    rows
+}
+
+fn kind_weight_map(rows: &[Puzzle3dKindWeightRow]) -> HashMap<String, f64> {
+    rows.iter().map(|row| (row.id.clone(), row.weight)).collect()
+}
+
+/// 🎚️ Payload of [`Puzzle3dConfigMutation::SetFillCount`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-fill-count")]
 pub struct Puzzle3dConfigSetFillCount {
     pub count: u32,
 }
 
 /// 🎚️ Payload of [`Puzzle3dConfigMutation::SetContactTolerance`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-contact-tolerance")]
 pub struct Puzzle3dConfigSetContactTolerance {
     pub value: f64,
 }
 
 /// 🎚️ Payload of [`Puzzle3dConfigMutation::SetObjectKindWeights`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-object-kind-weights")]
 pub struct Puzzle3dConfigSetObjectKindWeights {
-    pub value: HashMap<String, f64>,
+    pub value: Vec<Puzzle3dKindWeightRow>,
+}
+
+impl Puzzle3dConfigSetObjectKindWeights {
+    pub fn from_map(map: &HashMap<String, f64>) -> Self {
+        Self { value: kind_weight_rows(map) }
+    }
+
+    pub fn to_map(&self) -> HashMap<String, f64> {
+        kind_weight_map(&self.value)
+    }
 }
 
 /// 🎚️ Payload of [`Puzzle3dConfigMutation::SetVortexKindWeights`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-vortex-kind-weights")]
 pub struct Puzzle3dConfigSetVortexKindWeights {
-    pub value: HashMap<String, f64>,
+    pub value: Vec<Puzzle3dKindWeightRow>,
+}
+
+impl Puzzle3dConfigSetVortexKindWeights {
+    pub fn from_map(map: &HashMap<String, f64>) -> Self {
+        Self { value: kind_weight_rows(map) }
+    }
+
+    pub fn to_map(&self) -> HashMap<String, f64> {
+        kind_weight_map(&self.value)
+    }
 }
 
 /// 🎚️ Payload of [`Puzzle3dConfigMutation::SetActiveExampleId`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set-active-example-id")]
 pub struct Puzzle3dConfigSetActiveExampleId {
     pub value: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum Puzzle3dConfigMutation {
     SetFillCount(Puzzle3dConfigSetFillCount),
@@ -526,8 +570,8 @@ impl protocol::ColdMutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
         let diff = match self {
             Self::SetFillCount(Puzzle3dConfigSetFillCount{ count }) => Puzzle3dConfigDiff { fill_count: (count != &base.fill_count).then_some(*count), ..Default::default() },
             Self::SetContactTolerance(Puzzle3dConfigSetContactTolerance{ value }) => Puzzle3dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
-            Self::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ value }) => Puzzle3dConfigDiff { object_kind_weights: (value != &base.object_kind_weights).then(|| value.clone()), ..Default::default() },
-            Self::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ value }) => Puzzle3dConfigDiff { vortex_kind_weights: (value != &base.vortex_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ value }) => Puzzle3dConfigDiff { object_kind_weights: { let map = kind_weight_map(value); (map != base.object_kind_weights).then_some(map) }, ..Default::default() },
+            Self::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ value }) => Puzzle3dConfigDiff { vortex_kind_weights: { let map = kind_weight_map(value); (map != base.vortex_kind_weights).then_some(map) }, ..Default::default() },
             Self::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId{ value }) => Puzzle3dConfigDiff { active_example_id: (value != &base.active_example_id).then(|| value.clone()), ..Default::default() },
         };
         if protocol::DiffAlgebra::<Puzzle3dConfig>::is_empty(&diff) {
@@ -539,20 +583,22 @@ impl protocol::ColdMutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
         Ok(vec![match self {
             Self::SetFillCount(Puzzle3dConfigSetFillCount{ .. }) => Self::SetFillCount(Puzzle3dConfigSetFillCount{ count: base.fill_count }),
             Self::SetContactTolerance(Puzzle3dConfigSetContactTolerance{ .. }) => Self::SetContactTolerance(Puzzle3dConfigSetContactTolerance{ value: base.contact_tolerance }),
-            Self::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ .. }) => Self::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ value: base.object_kind_weights.clone() }),
-            Self::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ .. }) => Self::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ value: base.vortex_kind_weights.clone() }),
+            Self::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ .. }) => Self::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights::from_map(&base.object_kind_weights)),
+            Self::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ .. }) => Self::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights::from_map(&base.vortex_kind_weights)),
             Self::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId{ .. }) => Self::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId{ value: base.active_example_id.clone() }),
         }])
     }
 }
 
 impl protocol::OpBinary for Puzzle3dConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(semio_framework_pack_json::to_json_string(self).into_bytes()) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+        dsl::variants_binary::decode_op(bytes)
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(Puzzle3dConfigMutation);
 impl protocol::OpText for Puzzle3dConfigMutation {
     fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }

@@ -1,9 +1,9 @@
-/** 📈️ Contract: commit attribution assigns every changed path to exactly one bundle by label tokens, sums micro-commit uloc and byte deltas per bundle and per day over a real git range, and refuses unowned or doubly owned paths, missing days and non-additive totals; the corpus is language-agnostic and `🐍️oracle.py` replays the commits with the git CLI and recomputes assignment and sums from `git diff --numstat`. */
+/** 📈️ Contract: commit attribution assigns every changed path to exactly one bundle by label tokens, sums micro-commit uloc and byte deltas per bundle and per day over a real git range, and refuses unowned or doubly owned paths, missing days and non-additive totals; the corpus is language-agnostic and `🐍️.py` replays the commits with the git CLI and recomputes assignment and sums from `git diff --numstat`. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {afterAll} from "bun:test";
 import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -54,6 +54,6 @@ for(const row of corpus.commitErrors)test("commit attribution refuses "+row.name
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

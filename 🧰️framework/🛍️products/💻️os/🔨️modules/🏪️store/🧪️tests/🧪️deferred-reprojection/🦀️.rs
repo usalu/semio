@@ -81,7 +81,7 @@ async fn drive(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, budget: us
 }
 
 /// 🧳️ Captures the actual retained replay's diagnostic, convergence and cleanup cursors.
-fn replay_owner_work<M: Clone + super::Mutation<DemoSnapshot> + OpBinary>(store: &ArtifactStore<DemoSnapshot, M>) -> (usize, Option<(u64, bool)>, Option<usize>, bool) {
+fn replay_owner_work<M: Clone + super::Mutation<DemoSnapshot> + super::ColdMutation<DemoSnapshot> + OpBinary>(store: &ArtifactStore<DemoSnapshot, M>) -> (usize, Option<(u64, bool)>, Option<usize>, bool) {
     let replay = store.replay.pending_reprojection.as_ref().and_then(|pending| pending.replay.as_ref()).map(|(_, replay)| replay);
     replay.map_or((0, None, None, false), |replay| (replay.cursor, replay.message_settlement.as_ref().map(|settlement| (settlement.completed_work(), settlement.is_finished())), replay.convergence_search, replay.replay_retirement.is_some()))
 }
@@ -334,8 +334,8 @@ impl semio_framework_os_spr::ColdMutation<DemoSnapshot> for CountedOp {
 }
 }
 
-impl MemberStoreOwner<CountedOp> for DemoSnapshot {
-    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+impl MemberStoreProducer<DemoSnapshot, CountedOp> for semio_framework_os_store_testing_doubles::DemoMemberStoreProducer<CountedOp> {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         super::fixture_authoring_birth_demand::<CountedOp>()

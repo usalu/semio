@@ -155,7 +155,7 @@ let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal
         inverse: vec![DemoMutation::SetN(SetN { n: store.snapshot_ref().n.unwrap_or_default() })].into(),
         mutation_meta: vec![semio_framework_os_spr::MutationMeta {
             mutation_id: Some(semio_framework_os_spr::MutationId(format!("{edit_id}#0"))),
-            dependencies: (0..valid_dependencies).map(|index|crate::os_spr::MutationId(format!("dependency-{index}"))).chain(invalid_dependency.map(|value|crate::os_spr::MutationId(value.into()))).collect(),
+            dependencies: (0..valid_dependencies).map(|index|semio_framework_os_spr::MutationId(format!("dependency-{index}"))).chain(invalid_dependency.map(|value|semio_framework_os_spr::MutationId(value.into()))).collect(),
             base_version: store.cursor.generation,
             author_id: Some(semio_framework_os_spr::ActorId(actor)),
             timestamp: next_clock,
@@ -196,7 +196,6 @@ fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutatio
         assert!(step.progress() != Default::default() || matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)), "quoted fixture Store close blocked: {demand:?}, phase={}, displaced={}", store.close_owned_phase_witness(), store.close_displaced_witness());
 if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             assert!(semio_framework_os_store_space_member::lifted_store::SpaceMember::close_owned_terminal_is_empty(store));
-                        eprintln!("[DEBUG] durable fixture Store closed in {} quoted original turns",turn+1);
 return;
         }
     }

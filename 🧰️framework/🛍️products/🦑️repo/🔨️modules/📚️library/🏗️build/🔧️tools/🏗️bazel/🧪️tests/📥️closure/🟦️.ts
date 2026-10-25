@@ -1,6 +1,6 @@
 /** 🔗️ Contract: a closure marker in a hash-representation graph expands to the exact workspace files its content-addressed manifest names, so Bazel declares them and its action key moves with every imported module; a missing, tampered or unsafe manifest is refused instead of silently dropped. The scenario lives in `./🔣️.json` as language-agnostic data. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync} from "node:fs";

@@ -77,7 +77,7 @@ export function peerOverlayPath(scenePath: string, kind: PeerOverlayKind, index:
   return `${scenePath}/${segment}[${index}]#${key}`;
 }
 
-/** 👕️ Views filtered to matching `windowId`+`space`; own actor excluded. Marks fold only matching peers. */
+/** 🪟️ Views filtered to matching `windowId`+`space`; own actor excluded. Marks fold only matching peers. */
 export function peersForWindow(
   roster: readonly PresencePeerInput[],
   windowId: string,

@@ -38,12 +38,12 @@ export interface UiDriver {
   readonly hotkeys: UiDriverHotkeys;
 }
 
-/** 🚗️ Every affordance visible: drag handles, full labels, chrome and gumball always painted, rich tooltips. */
+/** 👁️ Every affordance visible: drag handles, full labels, chrome and gumball always painted, rich tooltips. */
 export const DEFAULT_UI_DRIVER: UiDriver = { id: "default", label: "Default", labels: "full", labelTier: "normal", drag: "handle", chrome: "always", gumball: "always", tooltips: "full", hotkeys: "inline" };
-/** 🚗️ Assumes the user knows the UI: icon-only chrome that reveals on hover, whole-surface drag, no tooltips. */
+/** 🗜️ Assumes the user knows the UI: icon-only chrome that reveals on hover, whole-surface drag, no tooltips. */
 export const COMPACT_UI_DRIVER: UiDriver = { id: "compact", label: "Compact", labels: "icons", labelTier: "normal", drag: "surface", chrome: "hover", gumball: "hover", tooltips: "none", hotkeys: "none" };
 
-/** 🚗️ The built-in drivers shipped with the shell. */
+/** 📦️ The built-in drivers shipped with the shell. */
 export function builtinUiDrivers(): readonly UiDriver[] {
   return [DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER];
 }
@@ -77,30 +77,30 @@ export function serializeUiDriver(driver: UiDriver): string {
   return JSON.stringify(driver, null, 2);
 }
 
-/** 🚗️ Resolves a driver id against custom drivers, falling back to a builtin, then {@link DEFAULT_UI_DRIVER}. */
+/** ⏪️ Resolves a driver id against custom drivers, falling back to a builtin, then {@link DEFAULT_UI_DRIVER}. */
 export function resolveUiDriver(id: string, custom: Record<string, UiDriver>): UiDriver {
   if (custom[id]) return custom[id];
   const builtin = builtinUiDrivers().find((driver) => driver.id === id);
   return builtin ?? DEFAULT_UI_DRIVER;
 }
 
-/** 🚗️ Storage key for the active driver id (builtin or `custom.<slug>`). */
+/** 🗝️ Storage key for the active driver id (builtin or `custom.<slug>`). */
 export const UI_CHROME_DRIVER_STORAGE_KEY = "ui.chrome.driver";
 
-/** 🚗️ Reads the persisted active driver id from the given shell's storage, defaulting to `"default"`. */
+/** 📖️ Reads the persisted active driver id from the given shell's storage, defaulting to `"default"`. */
 export function readStoredUiDriverId(storage: StoragePort): string {
   return storage.get(UI_CHROME_DRIVER_STORAGE_KEY) || DEFAULT_UI_DRIVER.id;
 }
 
-/** 🚗️ Persists the active driver id to the given shell's storage. */
+/** 📝️ Persists the active driver id to the given shell's storage. */
 export function writeStoredUiDriverId(storage: StoragePort, id: string): void {
   storage.set(UI_CHROME_DRIVER_STORAGE_KEY, id);
 }
 
-/** 🚗️ Storage key for the user's saved custom drivers, keyed by driver id. */
+/** 🗃️ Storage key for the user's saved custom drivers, keyed by driver id. */
 export const UI_CUSTOM_DRIVERS_STORAGE_KEY = "ui.drivers.custom";
 
-/** 🚗️ Reads the user's saved custom drivers from the given shell's storage; discards any entry that fails to parse. */
+/** 🏪️ Reads the user's saved custom drivers from the given shell's storage; discards any entry that fails to parse. */
 export function readStoredUiCustomDrivers(storage: StoragePort): Record<string, UiDriver> {
   const raw = storage.get(UI_CUSTOM_DRIVERS_STORAGE_KEY);
   if (!raw) return {};
@@ -118,12 +118,12 @@ export function readStoredUiCustomDrivers(storage: StoragePort): Record<string, 
   }
 }
 
-/** 🚗️ Persists the user's saved custom drivers to the given shell's storage. */
+/** 👤️ Persists the user's saved custom drivers to the given shell's storage. */
 export function writeStoredUiCustomDrivers(storage: StoragePort, drivers: Record<string, UiDriver>): void {
   storage.set(UI_CUSTOM_DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
 }
 
-/** 🚗️ Resolves the active driver from the given shell's storage (non-React fallback for non-hook consumers). */
+/** 🗄️ Resolves the active driver from the given shell's storage (non-React fallback for non-hook consumers). */
 export function readStoredUiDriver(storage: StoragePort): UiDriver {
   return resolveUiDriver(readStoredUiDriverId(storage), readStoredUiCustomDrivers(storage));
 }
@@ -132,24 +132,24 @@ const UiDriverContext = reactHostPort.createContext<UiDriver | null>(null);
 
 const _uiDriverProvider = ephemeralBox<(() => UiDriver) | null>("framework.modules.ui.elements.core.UiDriver.component.tsx._uiDriverProvider", null);
 
-/** 🚗️ Registers the active driver resolver for non-React consumers (e.g. {@link resolveTranslationLabel}). */
+/** ⚛️ Registers the active driver resolver for non-React consumers (e.g. {@link resolveTranslationLabel}). */
 export function setUiDriverProvider(fn: () => UiDriver): void {
   _uiDriverProvider.current = fn;
 }
 
-/** 🚗️ Resolves the active driver outside React render context. */
+/** 🖌️ Resolves the active driver outside React render context. */
 export function activeUiDriver(): UiDriver {
   return _uiDriverProvider.current ? _uiDriverProvider.current() : readStoredUiDriver(createBrowserStoragePort());
 }
 
-/** 🚗️ The active driver controlling labels, drag affordances, chrome/gumball reveal, and tooltips. */
+/** 🪝️ The active driver controlling labels, drag affordances, chrome/gumball reveal, and tooltips. */
 export function useUiDriver(): UiDriver {
   const contextValue = reactHostPort.useContext(UiDriverContext);
   if (contextValue !== null) return contextValue;
   return activeUiDriver();
 }
 
-/** 🚗️ Supplies driver state to a subtree, overriding the ambient/stored driver. */
+/** 🌳️ Supplies driver state to a subtree, overriding the ambient/stored driver. */
 export function UiDriverProvider({ driver, children }: { readonly driver: UiDriver; readonly children?: React.ReactNode }): React.ReactElement {
   reactHostPort.useEffect(() => {
     setUiDriverProvider(() => driver);
@@ -158,7 +158,7 @@ export function UiDriverProvider({ driver, children }: { readonly driver: UiDriv
   return <UiDriverContext.Provider value={driver}>{children}</UiDriverContext.Provider>;
 }
 
-/** 🫳️ True when the driver wants whole-surface dragging (no dedicated grip handle). */
+/** 🖱️ True when the driver wants whole-surface dragging (no dedicated grip handle). */
 export function useUiDriverDragSurface(): boolean {
   return useUiDriver().drag === "surface";
 }
@@ -174,19 +174,19 @@ export function useNativeDragArm(): { readonly armed: boolean; readonly arm: () 
 }
 
 
-/** 🎙️ The active driver's tooltip richness. */
+/** 💬️ The active driver's tooltip richness. */
 export function useUiDriverTooltips(): UiDriverTooltips {
   return useUiDriver().tooltips;
 }
 
 const _controlLabelIdResolver = ephemeralBox<(id: string) => string>("framework.modules.ui.elements.core.UiDriver.component.tsx._controlLabelIdResolver", (id) => id);
 
-/** 🏷️ Registers a product-specific mapper from shell control ids (`ui.*`) to i18n keys. */
+/** 🔖️ Registers a product-specific mapper from shell control ids (`ui.*`) to i18n keys. */
 export function setControlLabelIdResolver(resolver: (id: string) => string): void {
   _controlLabelIdResolver.current = typeof resolver === "function" ? resolver : (id) => id;
 }
 
-/** 🏷️ Maps shell control ids to i18n keys for inline labels (identity until a product resolver is set). */
+/** 🔑️ Maps shell control ids to i18n keys for inline labels (identity until a product resolver is set). */
 export function resolveControlLabelId(id: string): string {
   if (typeof _controlLabelIdResolver.current !== "function") _controlLabelIdResolver.current = (value) => value;
   const resolve = _controlLabelIdResolver.current;
@@ -238,7 +238,7 @@ export function resolveControlLabelId(id: string): string {
   return resolve(id);
 }
 
-/** 🏷️ Panel kind slug from a panel-toggle control id (`ui.panelToggle.*`, `playground.panel.*`, sketchpad navbar keys). */
+/** ⏯️ Panel kind slug from a panel-toggle control id (`ui.panelToggle.*`, `playground.panel.*`, sketchpad navbar keys). */
 export function panelKindFromPanelToggleControlId(id: string): string | undefined {
   if (id.startsWith("ui.panelToggle.")) return id.slice("ui.panelToggle.".length);
   if (id.startsWith("playground.panel.")) return id.slice("playground.panel.".length);
@@ -246,7 +246,7 @@ export function panelKindFromPanelToggleControlId(id: string): string | undefine
   return undefined;
 }
 
-/** 🏷️ True for internal engagement/search chrome element ids that must not surface as humanized tooltips. */
+/** ⚙️ True for internal engagement/search chrome element ids that must not surface as humanized tooltips. */
 export function isInternalChromeControlId(id: string | undefined | null): boolean {
   if (!id) return false;
   return id.startsWith("engagement-") || id.startsWith("engagement.") || id.startsWith("search-") || id.startsWith("search.");
@@ -262,13 +262,13 @@ export function humanizeControlSegment(segment: string): string {
   return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-/** 🔤️ Human-readable caption from the last segment of a dotted control id. */
+/** 🔚️ Human-readable caption from the last segment of a dotted control id. */
 export function humanizeControlId(id: string): string {
   const segment = id.split(".").filter(Boolean).pop() ?? id;
   return humanizeControlSegment(segment);
 }
 
-/** 🏷️ Turns an internal step id (`first_corner`) into readable status text (`First Corner`). */
+/** 🪜️ Turns an internal step id (`first_corner`) into readable status text (`First Corner`). */
 export function humanizeEngagementStepId(stepId: string): string {
   const trimmed = stepId.trim();
   if (!trimmed) return "";

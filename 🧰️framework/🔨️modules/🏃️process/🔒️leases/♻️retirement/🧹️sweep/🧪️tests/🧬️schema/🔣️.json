@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "idleMilliseconds", "cases", "nested", "modes", "interleaving"],
+  "properties": {
+    "version": { "const": 1 },
+    "idleMilliseconds": { "type": "integer", "minimum": 1 },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Case" } },
+    "nested": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Nested" } },
+    "modes": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Mode" } },
+    "interleaving": { "$ref": "#/definitions/Interleaving" }
+  },
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "state", "ageMilliseconds", "databaseRetired", "queueRetired", "ticketsReaped", "eventuallyRetired"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "state": { "enum": ["idle", "idle-queue", "orphan-queue", "held-shared", "held-exclusive", "live-ticket", "dead-ticket", "foreign-queue", "foreign-queue-directory-link", "fresh", "fresh-queue"] },
+        "ageMilliseconds": { "type": "integer", "minimum": 0 },
+        "databaseRetired": { "type": "boolean" },
+        "queueRetired": { "type": "boolean" },
+        "ticketsReaped": { "type": "boolean" },
+        "eventuallyRetired": { "type": "boolean" }
+      }
+    },
+    "Nested": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "state", "ageMilliseconds", "retired"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "state": { "enum": ["abandoned", "dead-ticket", "held", "fresh", "foreign-file", "live-ticket"] },
+        "ageMilliseconds": { "type": "integer", "minimum": 0 },
+        "retired": { "type": "boolean" }
+      }
+    },
+    "Mode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["freeRatio", "pressure", "idleMilliseconds", "candidates"],
+      "properties": {
+        "freeRatio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "pressure": { "type": "boolean" },
+        "idleMilliseconds": { "type": "integer", "minimum": 1 },
+        "candidates": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "Interleaving": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resources", "workers", "rounds", "sweeps", "queuedWorkers"],
+      "properties": {
+        "resources": { "type": "integer", "minimum": 1 },
+        "workers": { "type": "integer", "minimum": 2 },
+        "queuedWorkers": { "type": "integer", "minimum": 0 },
+        "rounds": { "type": "integer", "minimum": 1 },
+        "sweeps": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

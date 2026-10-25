@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️Lifecycle
-/// 🚦️ Lifecycle state of a non-empty ledger slot; "no run" is the absence of a slot.
+/// 📒️ Lifecycle state of a non-empty ledger slot; "no run" is the absence of a slot.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]

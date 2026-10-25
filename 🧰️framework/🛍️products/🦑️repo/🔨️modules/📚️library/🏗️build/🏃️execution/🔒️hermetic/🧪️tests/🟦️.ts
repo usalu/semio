@@ -1,6 +1,6 @@
 /** 🔒️ Contract: the hermetic class table is closed, selects targets exactly as an independent Python implementation does, admits only declared host inputs, declares a spawn strategy per host and selects the installed dependency closure of a generation layout like an independent Python walk. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";

@@ -13,6 +13,5 @@ test("immutable original list root clone preserves portable samples through inde
   for(const order of fixture.closeOrders){const before={source:{samples},output:{samples}};const closed=applyPatch(before,[{op:"remove",path:order==="sourceFirst"?"/source":"/output"}],true,false).newDocument;expect((closed.source??closed.output).samples).toEqual(row.expectedSamples);expect(before.source.samples).toEqual(row.expectedSamples);}
   for(const cut of fixture.cuts){const before={source:{samples},candidate:cut===2?{samples}:undefined};const closed=applyPatch(before,[{op:"remove",path:"/source"}],true,false).newDocument;expect(before.source.samples).toEqual(row.expectedSamples);if(cut===2)expect(closed.candidate!.samples).toEqual(row.expectedSamples);}
  }
- console.log("[DEBUG] four portable immutable list root outputs and independent close orders match SQLite ranked rows and JSON Patch; physical zero-copy/allocation obligations belong to actual native proof");
  }finally{database.close();}
 });

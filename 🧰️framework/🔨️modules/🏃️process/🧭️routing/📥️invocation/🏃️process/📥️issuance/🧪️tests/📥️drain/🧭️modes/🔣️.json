@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "modes": [
+    {"mode": "issuer-drain", "keys": ["acceptedChildRemainsLiveDuringDrain", "acceptedChildSettlesBeforeOriginalRetires", "delayedNewAdmissionRefused", "parentWaitsForAcceptedChild"]},
+    {"mode": "issuer-drain-interrupt", "keys": ["acceptedChildRemainsLiveDuringDrain", "acceptedChildSettlesBeforeOriginalRetires", "delayedNewAdmissionRefused", "interruptionDrainRetainsHandlersUntilChildStop", "interruptionDrainSettlesWithOriginalFailure", "parentWaitsForAcceptedChild"]},
+    {"mode": "issuer-drain-failure", "keys": ["detachedFailureRejectsOriginal", "detachedPublicFailureNeverUnhandled"]},
+    {"mode": "issuer-nested-drain", "keys": ["nestedChildSettlesBeforeParentRetires", "nestedLateAdmissionRefused", "nestedParentWaitsForAcceptedChild"]}
+  ]
+}

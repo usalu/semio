@@ -860,6 +860,29 @@
         }
       }
     },
+    "WasmLockFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "version",
+        "pinned"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pinned": {
+          "type": "string"
+        }
+      }
+    },
     "ToolsFacts": {
       "type": "object",
       "additionalProperties": false,
@@ -871,6 +894,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ToolRowFacts"
+          }
+        },
+        "wasmLocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WasmLockFacts"
           }
         }
       }

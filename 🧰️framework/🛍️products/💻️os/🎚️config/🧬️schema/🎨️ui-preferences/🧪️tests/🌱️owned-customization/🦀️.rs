@@ -47,6 +47,6 @@ fn config_owned_customization_native_external_facets_read_authored_schema(){
     assert_eq!(serde_json::from_value::<UiDriver>(external).unwrap(),driver);
     let schema=serde_json::to_value(schemars::schema_for!(UiPreferences)).unwrap();
     assert_eq!(schema["additionalProperties"],false);
-    assert_eq!(schema["definitions"]["OsConfigUiUiDriver"]["required"],serde_json::json!(["driverId","label","config"]));
+    let mut required=schema["definitions"]["OsConfigUiUiDriver"]["required"].as_array().unwrap().iter().map(|name|name.as_str().unwrap()).collect::<Vec<_>>();required.sort_unstable();assert_eq!(required,["config","driverId","label"]);
     assert_eq!(schema["definitions"]["OsConfigUiUserNamedLayout"]["properties"]["layout"]["$ref"],"#/definitions/OsConfigUiWindowLayout");
 }

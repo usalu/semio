@@ -156,7 +156,7 @@ export function classifyPackageRole(path: string, kindId: string | null, fixedId
   const contractId = fixedId ?? configurable?.[0];
   const disposition = contractId ? taxonomy.schema.packageSourceDispositions[contractId] : undefined;
   const sourceKind = kindId ? taxonomy.schema.fileKinds[kindId]?.role === "source" : false;
-  if (contractId && !sourceKind) return "configuration";
+  if (contractId && !sourceKind && disposition?.grammarId === undefined) return "configuration";
   if (!content) return contractId ? "unresolved" : "configuration";
   const grammar = requireTaxonomyValue(taxonomy.schema.packageGlueGrammar[disposition?.grammarId ?? location.rule.glueGrammarId],"taxonomy.schema.packageGlueGrammar[disposition?.grammarId ?? location.rule.glueGrammarId]");
   if (contractId && !disposition) return "unresolved";

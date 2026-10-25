@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/filesystem/observation/churn",
+  "title": "Concurrent edit churn policy",
+  "description": "One schema-first policy for every step that reads inputs other processes may edit at the same time. A step reads its inputs as a snapshot; when a concurrent edit is detected, the layer that owns the snapshot takes a new one and runs the step again, a bounded number of times with a growing pause, and says so in the declared languages. Only an edit that persists through every attempt of the widest layer fails, naming the path.",
+  "definitions": {
+    "Reason": {
+      "enum": ["bytes", "identity", "vanished", "appeared", "roster", "length", "ancestry", "output", "descriptor", "generation", "input"]
+    },
+    "Profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rank", "maximumAttempts", "backoffMs"],
+      "properties": {
+        "rank": {"type": "integer", "minimum": 1, "maximum": 8},
+        "maximumAttempts": {"type": "integer", "minimum": 1, "maximum": 16},
+        "backoffMs": {"type": "array", "maxItems": 15, "items": {"type": "integer", "minimum": 0, "maximum": 120000}}
+      }
+    },
+    "Text": {"type": "string", "minLength": 1, "maxLength": 512},
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "staleImplementationCode": "SEMIO_STALE_IMPLEMENTATION",
+        "concurrentEditCode": "SEMIO_CONCURRENT_EDIT",
+        "primaryFirstAggregates": ["Original physical body, drain and cleanup settlement failed"],
+        "staleImplementationCodes": ["SEMIO_STALE_IMPLEMENTATION", "BUILD_AUTHORITY_CHANGED"],
+        "languages": ["en", "de"],
+        "profiles": {
+          "read": {"rank": 1, "maximumAttempts": 6, "backoffMs": [10, 40, 160, 640, 2560]},
+          "snapshot": {"rank": 2, "maximumAttempts": 5, "backoffMs": [250, 1000, 4000, 12000]},
+          "build": {"rank": 3, "maximumAttempts": 4, "backoffMs": [2000, 8000, 30000]}
+        },
+        "reasons": {
+          "en": {
+            "bytes": "its bytes changed",
+            "identity": "its file identity changed",
+            "vanished": "it vanished",
+            "appeared": "it appeared",
+            "roster": "its directory roster changed",
+            "length": "its length changed",
+            "ancestry": "its parent directories changed",
+            "output": "a compiler output changed",
+            "descriptor": "its open descriptor no longer matched its path",
+            "generation": "the shared generation it belongs to moved",
+            "input": "one of its inputs changed"
+          },
+          "de": {
+            "bytes": "seine Bytes änderten sich",
+            "identity": "seine Dateiidentität änderte sich",
+            "vanished": "sie verschwand",
+            "appeared": "sie erschien",
+            "roster": "die Verzeichnisliste änderte sich",
+            "length": "seine Länge änderte sich",
+            "ancestry": "die übergeordneten Verzeichnisse änderten sich",
+            "output": "eine Compilerausgabe änderte sich",
+            "descriptor": "der offene Deskriptor passte nicht mehr zum Pfad",
+            "generation": "die geteilte Generation, zu der sie gehört, wechselte",
+            "input": "eine ihrer Eingaben änderte sich"
+          }
+        },
+        "texts": {
+          "en": {
+            "retry": "Another process edited {path} while it was read ({reason}). Taking a new snapshot, attempt {attempt} of {maximum}, in {delay} ms.",
+            "exhausted": "{path} kept changing in all {maximum} attempts ({reason}): another process edits it continuously. Run the command again once the edits have stopped."
+          },
+          "de": {
+            "retry": "Ein anderer Prozess änderte {path} während des Lesens ({reason}). Neuer Schnappschuss, Versuch {attempt} von {maximum}, in {delay} ms.",
+            "exhausted": "{path} änderte sich in allen {maximum} Versuchen ({reason}): ein anderer Prozess bearbeitet es laufend. Den Befehl erneut ausführen, sobald die Änderungen aufgehört haben."
+          }
+        }
+      }
+    }
+  }
+}

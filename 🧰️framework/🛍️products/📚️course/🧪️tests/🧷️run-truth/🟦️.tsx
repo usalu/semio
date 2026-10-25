@@ -35,7 +35,7 @@ const KITCHEN: Quiz = { ...QUIZ, id: "kitchen", emoji: "🍳", title: text("Kitc
 /** 🗄️ The household course with the kitchen quiz beside it. */
 const TWO_QUIZZES: CourseMaterial = { course: { ...COURSE, quizzes: ["household.json", "kitchen.json"] }, quizzes: [QUIZ, KITCHEN] };
 
-/** 🧷️ The run view of an open timed run of the household quiz with `answers` and `extra` members, for the pure folds. */
+/** ⏱️ The run view of an open timed run of the household quiz with `answers` and `extra` members, for the pure folds. */
 function heldRun(answers: RunView["answers"], extra: Partial<RunView> = {}): RunView {
   return { run: "b".repeat(32), learner: "a".repeat(32), quiz: QUIZ.id, status: "open", sheet: { quiz: QUIZ.id, seed: 1, challenge: "expert", title: QUIZ.title, description: QUIZ.description, tasks: [] }, answers, startedAt: 1, ...extra };
 }

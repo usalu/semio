@@ -12,7 +12,7 @@
 
 //#region 🔌️Adapters
 import { buildSchema, isEnumType, isInputObjectType, isInterfaceType, isObjectType, isScalarType, isUnionType, type GraphQLNamedType } from "graphql";
-import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🖼️Inventory

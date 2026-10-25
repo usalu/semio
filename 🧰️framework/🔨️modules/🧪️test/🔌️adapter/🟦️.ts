@@ -59,7 +59,7 @@ export type TestCasePlan = Readonly<{
   comparison: ComparisonProfile;
   /** 📥️ The subject artifact an oracle consumes when the feature declares an external byte decoder. */
   oracleInput: "subject-raw" | null;
-  /** 📦️ Raw outputs produced by subject hosts before this oracle host starts, per scenario id then implementation. */
+  /** 🔮️ Raw outputs produced by subject hosts before this oracle host starts, per scenario id then implementation. */
   subjectRawInputs?: SubjectRawInputs;
   /** ⚖️ The multi-artifact, externally-probed pipeline this case compares under, when it produces more than a projection. */
   comparisonPipeline: string | null;
@@ -89,29 +89,29 @@ export type AdapterContext = Readonly<{
   role: TestRole;
   repoRoot: string;
   workDir: string;
-  /** 🧫️ Absolute path of a resolved fixture; throws for an unresolved URI rather than returning a silent default. */
+  /** ⌨️ Absolute path of a resolved fixture; throws for an unresolved URI rather than returning a silent default. */
   input(uri: string): string;
-  /** 🧫️ Bytes of a resolved fixture. */
+  /** 🛠️ Bytes of a resolved fixture. */
   inputBytes(uri: string): Uint8Array;
-  /** 🧫️ Copies an immutable fixture into the case's work directory and returns the mutable copy's path. */
+  /** 🦜️ Copies an immutable fixture into the case's work directory and returns the mutable copy's path. */
   copyInput(uri: string, as?: string): string;
-  /** 📥️ Bytes THIS scenario's subject host produced in `implementation`, for an `@oracle-input-subject-raw` oracle; throws when absent. */
+  /** 🎯️ Bytes THIS scenario's subject host produced in `implementation`, for an `@oracle-input-subject-raw` oracle; throws when absent. */
   subjectRawBytes(implementation: Implementation): Uint8Array;
-  /** 📦️ Directory a handler writes its produced artifact bundle into. */
+  /** 📂️ Directory a handler writes its produced artifact bundle into. */
   artifactDir: string;
-  /** 📦️ Absolute path to write one named result artifact to — `<artifactDir>/<scenario id>/<role>/<filename>`, so a
+  /** 📝️ Absolute path to write one named result artifact to — `<artifactDir>/<scenario id>/<role>/<filename>`, so a
    *  scenario's artifacts never overwrite another's; creates parent directories. */
   artifact(role: string, filename: string): string;
   /** 🎲️ Deterministic seed for this scenario, from its `@seed-…` tag. */
   seed: string;
-  /** 🪆️ The Examples row id this scenario expands; throws for a plain scenario. */
+  /** 🪪️ The Examples row id this scenario expands; throws for a plain scenario. */
   row(): string;
 }>;
 
 export type AdapterOutcome = Readonly<{
   raw?: string | Uint8Array;
   projection: unknown;
-  /** 📦️ Named files this handler produced, relative to `ctx.artifactDir`. A BRep case returns its STEP and its mesh here rather than smuggling them through the projection. */
+  /** 🗃️ Named files this handler produced, relative to `ctx.artifactDir`. A BRep case returns its STEP and its mesh here rather than smuggling them through the projection. */
   artifacts?: readonly { role: string; path: string; mediaType: string }[];
   /** 🏭️ Set by a SUBJECT handler that invoked production dispatch. Omitting it is how a vector-replay adapter is detected. */
   productionDispatch?: { invoked: true; operation: string; bridgeVersion: number };
@@ -180,7 +180,7 @@ export type TestEvidence = Readonly<{
   manifestDir?: string;
 }>;
 
-/** 🧫️ Matches every explicit `shared://`, `local://`, `asset://` or `schema://` fixture reference in a text. */
+/** 🧪️ Matches every explicit `shared://`, `local://`, `asset://` or `schema://` fixture reference in a text. */
 export const TEST_INPUT_URI_RE = /\b(shared|local|asset|schema):\/\/([^\s"'`,;)\]]+)/g;
 
 /** 🖥️ This process's platform coordinate; never inferred from a hostname or a CI variable. */
@@ -190,7 +190,7 @@ export function currentPlatform(): PlatformId {
   return `${os}-${arch}` as PlatformId;
 }
 
-/** 📦️ The answer of a reader oracle whose expected state is committed, not computed: the one fixture the scenario's steps name whose URI ends with `/<leaf>`, copied into the artifact bundle under `role` with its URI and digest as the projection; a scenario naming no such fixture, or more than one, is an error. */
+/** 📖️ The answer of a reader oracle whose expected state is committed, not computed: the one fixture the scenario's steps name whose URI ends with `/<leaf>`, copied into the artifact bundle under `role` with its URI and digest as the projection; a scenario naming no such fixture, or more than one, is an error. */
 export function committedArtifact(ctx: AdapterContext, leaf: string, role: string, mediaType: string): AdapterOutcome {
   const uris = [...new Set(ctx.scenario.steps.flatMap((step) => [step.text, step.docString ?? ""]).flatMap((text) => [...text.matchAll(TEST_INPUT_URI_RE)].map((match) => match[0])))].filter((uri) => uri.endsWith(`/${leaf}`));
   if (uris.length !== 1) throw new Error(`scenario ${ctx.scenario.id} names ${uris.length} committed fixture(s) ending in /${leaf}; a reader oracle answers with exactly one`);

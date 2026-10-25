@@ -22,5 +22,4 @@ test("refused completion neutral ownership lifecycle matches SQLite",()=>{
       expect(count()===0).toBe(row.terminal);
     }
   }finally{oracle.close();}
-  console.log("[DEBUG] six neutral refused/cancelled completion ownership lifecycles match SQLite");
 });

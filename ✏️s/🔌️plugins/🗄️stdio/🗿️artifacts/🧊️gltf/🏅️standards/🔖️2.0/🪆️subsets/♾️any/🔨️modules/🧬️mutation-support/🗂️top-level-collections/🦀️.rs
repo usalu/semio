@@ -1,7 +1,7 @@
 //! 🔒 Read-only typed-reference scan and sparse row mechanics private to the top-level collection leaves. Nothing here writes
 //! into a snapshot: every function reads `base` and answers the sparse rows the owning leaf declares.
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::*;
-use protocol::list_delta::Keyed;
+use protocol::list_delta::{ByKeyed, KeyOf, Keyed};
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::*;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 pub use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
@@ -29,7 +29,12 @@ pub enum GltfTopLevelFamily {
 /// with its base and its after position.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn moves_to_order<R: Keyed>(items: &[R], order: &[usize]) -> Vec<(R::Key, usize, usize)> {
-    order.iter().enumerate().filter(|(new, old)| new != *old).map(|(new, old)| (items[*old].key(), *old, new)).collect()
+    moves_to_order_by::<ByKeyed, R>(items, order)
+}
+/// 📋️ [`moves_to_order`] for rows keyed by a local [`KeyOf`] marker.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn moves_to_order_by<K: KeyOf<R>, R>(items: &[R], order: &[usize]) -> Vec<(K::Key, usize, usize)> {
+    order.iter().enumerate().filter(|(new, old)| new != *old).map(|(new, old)| (K::key_of(&items[*old]), *old, new)).collect()
 }
 /// 📋️ The moves that rebuild a keyed list in the order `order` names by key; an unnamed key keeps the entry where it is.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -61,7 +66,7 @@ pub fn target_in_order(target: &GltfMorphTarget, order: &[usize]) -> GltfMorphTa
 /// 📋️ The delta that replaces the target at `index` by `next`: its removal and the insertion of the new value at the same position.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn target_replacement(targets: &[GltfMorphTarget], index: usize, next: GltfMorphTarget) -> GltfTargetsDelta {
-    GltfTargetsDelta::rows(vec![(targets[index].key(), index)], vec![(index, next)], Vec::new())
+    GltfTargetsDelta::rows(vec![(GltfMorphTargetKeys::key_of(&targets[index]), index)], vec![(index, next)], Vec::new())
 }
 //#endregion 🔖️PositionalMoves//#endregion 🔖️PositionalRows
 
@@ -162,14 +167,19 @@ fn optional(value: Option<usize>, remap: Remap<'_>) -> Option<usize> {
 /// 🧵️ The rows that rewrite every entry of a keyed list through `rewrite`: an entry it drops leaves, one it changes is removed at its base
 /// position and reinserted at its after position, one it keeps stays.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn rewritten<R: Keyed + Clone + PartialEq>(rows: &[R], mut rewrite: impl FnMut(&R) -> Option<R>) -> (Vec<(R::Key, usize)>, Vec<(usize, R)>) {
+fn rewritten<R: Keyed + Clone + PartialEq>(rows: &[R], rewrite: impl FnMut(&R) -> Option<R>) -> (Vec<(R::Key, usize)>, Vec<(usize, R)>) {
+    rewritten_by::<ByKeyed, R>(rows, rewrite)
+}
+/// 🧵️ [`rewritten`] for rows keyed by a local [`KeyOf`] marker.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rewritten_by<K: KeyOf<R>, R: Clone + PartialEq>(rows: &[R], mut rewrite: impl FnMut(&R) -> Option<R>) -> (Vec<(K::Key, usize)>, Vec<(usize, R)>) {
     let (mut removed, mut inserted, mut after) = (Vec::new(), Vec::new(), 0);
     for (at, row) in rows.iter().enumerate() {
         match rewrite(row) {
-            None => removed.push((row.key(), at)),
+            None => removed.push((K::key_of(row), at)),
             Some(next) => {
                 if &next != row {
-                    removed.push((row.key(), at));
+                    removed.push((K::key_of(row), at));
                     inserted.push((after, next));
                 }
                 after += 1;
@@ -232,7 +242,7 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap<'_>)
                 }
             }
             for (index, animation) in document.animations.iter().enumerate() {
-                let (removed, inserted) = rewritten(&animation.channels, |channel| Some(GltfAnimationChannel { target: GltfAnimationChannelTarget { node: optional(channel.target.node, remap), ..channel.target.clone() }, ..channel.clone() }));
+                let (removed, inserted) = rewritten_by::<GltfAnimationChannelKeys, _>(&animation.channels, |channel| Some(GltfAnimationChannel { target: GltfAnimationChannelTarget { node: optional(channel.target.node, remap), ..channel.target.clone() }, ..channel.clone() }));
                 if !removed.is_empty() || !inserted.is_empty() {
                     row(&mut diff.animations, index).channels = Some(GltfChannelsDelta::rows(removed, inserted, Vec::new()));
                 }
@@ -256,7 +266,7 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap<'_>)
                     if indices != primitive.indices {
                         primitive_row(&mut diff, index, position).indices = Some(indices);
                     }
-                    let (removed, inserted) = rewritten(&primitive.targets, |target| Some(GltfMorphTarget(target.0.iter().filter_map(|(semantic, accessor)| remap(*accessor).map(|mapped| (semantic.clone(), mapped))).collect())));
+                    let (removed, inserted) = rewritten_by::<GltfMorphTargetKeys, _>(&primitive.targets, |target| Some(GltfMorphTarget(target.0.iter().filter_map(|(semantic, accessor)| remap(*accessor).map(|mapped| (semantic.clone(), mapped))).collect())));
                     if !removed.is_empty() || !inserted.is_empty() {
                         primitive_row(&mut diff, index, position).targets = Some(GltfTargetsDelta::rows(removed, inserted, Vec::new()));
                     }
@@ -269,7 +279,7 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap<'_>)
                 }
             }
             for (index, animation) in document.animations.iter().enumerate() {
-                let (removed, inserted) = rewritten(&animation.samplers, |sampler| Some(GltfAnimationSampler { input: remap(sampler.input).unwrap_or(sampler.input), output: remap(sampler.output).unwrap_or(sampler.output), ..sampler.clone() }));
+                let (removed, inserted) = rewritten_by::<GltfAnimationSamplerKeys, _>(&animation.samplers, |sampler| Some(GltfAnimationSampler { input: remap(sampler.input).unwrap_or(sampler.input), output: remap(sampler.output).unwrap_or(sampler.output), ..sampler.clone() }));
                 if !removed.is_empty() || !inserted.is_empty() {
                     row(&mut diff.animations, index).samplers = Some(GltfAnimationSamplersDelta::rows(removed, inserted, Vec::new()));
                 }

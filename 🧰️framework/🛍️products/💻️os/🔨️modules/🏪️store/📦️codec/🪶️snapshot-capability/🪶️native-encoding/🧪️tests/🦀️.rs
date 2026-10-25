@@ -596,17 +596,21 @@ fn sqlite_snapshot_native_physical_pack_expression_has_controlled_literal_printe
     let output = semio_framework_os_pack::record::encode_record_body_controlled(&spec, &record, &options, &mut NativeEncodeControl::new(maximum, &mut |_| true)).unwrap();
     assert_eq!(output, semio_framework_os_pack::record::encode_record_body(&spec, &record, &options).unwrap());
     assert_eq!(semio_framework_os_pack::record::decode_record_body_exact(&output, &spec, &PackDecodeOptions::default()).unwrap(), record);
+    let cancel_at = case["cancelAt"].as_u64().unwrap() as usize;
     let mut reached = false;
+    let mut owned_at_cancel = usize::MAX;
     let mut cancel = |event: NativeEncodeProgress| {
-        if event.owned_bytes >= count && event.total == count && event.completed >= 65536 && event.completed < event.total {
+        if event.completed >= cancel_at && event.completed < count {
             reached = true;
+            owned_at_cancel = event.owned_bytes;
             false
         } else {
             true
         }
     };
     assert!(semio_framework_os_pack::record::encode_record_body_controlled(&spec, &record, &options, &mut NativeEncodeControl::new(maximum, &mut cancel)).is_err());
-    assert!(reached);
+    assert!(reached, "the printer must observe an interior position of the literal");
+    assert!(owned_at_cancel < count, "the streaming printer must not own a copy of the {count}-byte literal while scanning it: {owned_at_cancel}");
 }
 
 #[test]

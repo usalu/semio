@@ -34,7 +34,7 @@ mod input_root;
 
 //#region 🎫️UiThreadToken
 
-/// 🎫️ Zero-size, unforgeable proof that the calling code is running on the thread that owns the
+/// 🔏️ Zero-size, unforgeable proof that the calling code is running on the thread that owns the
 /// window/event-loop — the non-interchangeable half of the ticket's capability split (master plan
 /// Decision 2 / this ticket's own text). No public constructor: the only way to obtain one is
 /// [`UiThreadToken::mint`], `pub(crate)`, called exactly once per host at construction — see
@@ -51,7 +51,7 @@ impl UiThreadToken {
         Self(())
     }
 
-    /// 🎫️ The escape hatch for a host that cannot go through [`crate::window::native::NativeHost`]/
+    /// 🖥️ The escape hatch for a host that cannot go through [`crate::window::native::NativeHost`]/
     /// [`crate::window::browser::CanvasHost`] — e.g. a product with a two-phase boot handshake that
     /// hand-rolls its own `ApplicationHandler` (see the OS renderer's own `winit_app.rs` module
     /// docstring for a documented, real example). Same discipline as
@@ -127,7 +127,7 @@ pub struct MetricsSample {
     pub generation: InputGeneration,
 }
 
-/// 🖱️ Fixed, `Copy`-only coalescing state for replaceable pointer and metrics samples. No heap
+/// 🧷️ Fixed, `Copy`-only coalescing state for replaceable pointer and metrics samples. No heap
 /// allocation on any path — every field is a plain `Option<Copy struct>`.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct CoalesceSlot {
@@ -140,12 +140,12 @@ impl CoalesceSlot {
         Self::default()
     }
 
-    /// 🖱️ Overwrites any pending pointer-move sample — only the latest position matters for hit-test.
+    /// ♟️ Overwrites any pending pointer-move sample — only the latest position matters for hit-test.
     pub fn coalesce_pointer_move(&mut self, sample: PointerMoveSample) {
         self.pointer_move = Some(sample);
     }
 
-    /// 📐️ Overwrites any pending metrics sample — only the latest size/scale matters.
+    /// 📊️ Overwrites any pending metrics sample — only the latest size/scale matters.
     pub fn coalesce_metrics(&mut self, sample: MetricsSample) {
         self.metrics = Some(sample);
     }
@@ -155,7 +155,7 @@ impl CoalesceSlot {
         self.pointer_move.take()
     }
 
-    /// 🚿️ Takes the latest metrics sample independently of input dispatch order.
+    /// 🧪️ Takes the latest metrics sample independently of input dispatch order.
     fn take_metrics(&mut self) -> Option<MetricsSample> {
         self.metrics.take()
     }
@@ -224,7 +224,7 @@ impl EventQueue {
         Ok(true)
     }
 
-    /// 🔢️ The generation this queue is currently accumulating into — bumped by every `enqueue*` call
+    /// 🌊️ The generation this queue is currently accumulating into — bumped by every `enqueue*` call
     /// below. A caller reads this AFTER enqueueing to stamp whatever it derives from the event (e.g. a
     /// hit-test performed synchronously against the coalesced pointer position).
     pub fn current_generation(&self) -> InputGeneration {
@@ -254,7 +254,7 @@ impl EventQueue {
         outcome
     }
 
-    /// 📐️ [`crate::window::WindowMetrics`] funnels through here rather than [`Self::enqueue`] — it is
+    /// 🪟️ [`crate::window::WindowMetrics`] funnels through here rather than [`Self::enqueue`] — it is
     /// not a [`ui_render::DispatchEvent`] variant at all (see `window.rs`'s own `WindowDelegate::
     /// handle_metrics`), but is exactly as replaceable as pointer move/scroll.
     pub fn enqueue_metrics(&mut self, _ui: UiThreadToken, physical_width: u32, physical_height: u32, scale_factor: f32) -> EnqueueOutcome {
@@ -282,7 +282,7 @@ impl EventQueue {
         EnqueueOutcome::Accepted
     }
 
-    /// 🚿️ Drains one bounded ordered page and only exposes a retained pointer sample when no older
+    /// 📃️ Drains one bounded ordered page and only exposes a retained pointer sample when no older
     /// ordered event remains for a later page. Requires [`WorkerContext`]: draining feeds a frame
     /// build, which is worker-only work per this ticket's capability split.
     pub fn drain_page(&mut self, _worker: WorkerContext) -> DrainedEvents {
@@ -340,7 +340,7 @@ impl Default for EventQueue {
     }
 }
 
-/// 📤️ One drain's worth of input — a worker consumes this to advance input dispatch/hit-index state.
+/// ⌨️ One drain's worth of input — a worker consumes this to advance input dispatch/hit-index state.
 #[derive(Debug, Default)]
 pub struct DrainedEvents {
     pub pointer_move: Option<PointerMoveSample>,

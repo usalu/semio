@@ -1,5 +1,5 @@
 import {repositoryCargoPreparationStorageV1} from "../../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-import {runTool} from "../../../📦️dependencies/🟦️.ts";
+import {runTool} from "../../../../../📦️packages/🟦️typescript/💾️storage/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts";
 import type {NativeToolPortV1} from "../🟦️.ts";
 
 /** 🔌️ The system port of provisioning: the platform network, child programs through the repository runner, the standard log. */

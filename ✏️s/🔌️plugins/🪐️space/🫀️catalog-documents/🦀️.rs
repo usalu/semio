@@ -514,11 +514,11 @@ fn admit_space_retained_mutation<P, M: ::protocol::OpBinary + ::protocol::Mutati
 
 fn prepare_space_retained_one_item<P, M>(base: &P, mutation: &M, maximum_bytes: usize) -> Result<(P, Vec<M>), ValueError>
 where
-    M: ::protocol::Mutation<P> + ::protocol::OpBinary,
+    M: ::protocol::Mutation<P> + ::protocol::ColdMutation<P> + ::protocol::OpBinary,
 {
     admit_space_retained_mutation::<P, M>(mutation, maximum_bytes).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "s.space.retained.mutation-envelope"))?;
-    let inverse = ::protocol::Mutation::inverse(mutation, base)?;
-    let diff = ::protocol::Mutation::diff(mutation, base).into_parts().0;
+    let inverse = ::protocol::ColdMutation::inverse(mutation, base)?;
+    let diff = ::protocol::ColdMutation::diff(mutation, base).into_parts().0;
     let post = ::protocol::apply_diff_cold(&diff, base).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "s.space.retained.diff-apply"))?;
     Ok((post, inverse))
 }
@@ -554,7 +554,7 @@ struct SpaceOneItemPreparation<P: 'static, M: 'static> {
 impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M> for SpaceOneItemPreparationFactory<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: ::protocol::Mutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
+    M: ::protocol::Mutation<P> + ::protocol::ColdMutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
     fn begin_batch_digest(&self, edit: &mut Option<Box<::protocol::Edit<M>>>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>, RetainedCloneProgress)>, ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
@@ -572,6 +572,11 @@ where
             return Err(space_refusal("s.space.retained.lane"));
         }
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<SpaceOneItemPreparation<P, M>>(), depth: 1 })
+    }
+
+    fn begin_copy_byte_demand(&self, mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<usize, ValueError> {
+        self.begin_demand(mutation, lane)?;
+        size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>>().checked_add(size_of::<SpaceOneItemPreparation<P, M>>()).ok_or_else(|| space_refusal("s.space.retained.copy-quote-overflow"))
     }
 
     fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, RetainedCloneProgress), (ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
@@ -599,9 +604,9 @@ where
 impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M> for SpaceOneItemPreparation<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: ::protocol::Mutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
+    M: ::protocol::Mutation<P> + ::protocol::ColdMutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut ::protocol::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, ValueError> {
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -681,7 +686,7 @@ where
 pub fn space_retained_store_preparation<P, M>(prefix: &'static str, maximum_bytes: usize) -> Option<Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>>>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: ::protocol::Mutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
+    M: ::protocol::Mutation<P> + ::protocol::ColdMutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
     Some(Arc::new(SpaceOneItemPreparationFactory::<P, M>::new(prefix, maximum_bytes)))
 }

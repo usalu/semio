@@ -36,7 +36,7 @@ pub fn plan(p: &GltfUnbindPrimitiveAttributePayload, base: &GltfSnapshot) -> Res
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfUnbindPrimitiveAttributePayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_attribute::BindPrimitiveAttributeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::move_primitive_attribute::MovePrimitiveAttributeMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -87,7 +87,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for UnbindPrimitiveAttributeMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<UnbindPrimitiveAttributeMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<UnbindPrimitiveAttributeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_attribute::BindPrimitiveAttributeMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::move_primitive_attribute::MovePrimitiveAttributeMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

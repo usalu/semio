@@ -46,13 +46,13 @@ function stacked(order: VizStackOrder, offset?: VizStackOffset): VizStackSeries[
   return vizStack(ROWS, [...KEYS], offset === undefined ? { order } : { order, offset });
 }
 
-/** 🥞️ The baselines of one series of a stack, in the probe's key layout. */
+/** 🔑️ The baselines of one series of a stack, in the probe's key layout. */
 function baselines(series: readonly VizStackSeries[], key: string, prefix: string, side: 0 | 1): Record<string, (number | string)[]> {
   const found = series.find((entry) => entry.key === key)!;
   return { [`${prefix}/${key}/y${side}`]: grid(found.points.map((point) => point[side])) };
 }
 
-/** 🥞️ The sequence the series were laid on top of each other in, read off their stacking positions. */
+/** ⛓️ The sequence the series were laid on top of each other in, read off their stacking positions. */
 function sequence(series: readonly VizStackSeries[]): string[] {
   const out = new Array<string>(series.length);
   for (const entry of series) out[entry.index] = entry.key;
@@ -91,7 +91,7 @@ export default defineTestAdapter({
     },
     "order-ascending": {
       oracle: oracle("order-ascending"),
-      /** 🎯️ The twin's ascending order, with the stacking sequence read off separately. */
+      /** 📈️ The twin's ascending order, with the stacking sequence read off separately. */
       subject: () => {
         const series = stacked("ascending");
         return {
@@ -105,7 +105,7 @@ export default defineTestAdapter({
     },
     "order-reverse": {
       oracle: oracle("order-reverse"),
-      /** 🎯️ The twin's reverse order. */
+      /** ⏪️ The twin's reverse order. */
       subject: () => {
         const series = stacked("reverse");
         return {
@@ -119,7 +119,7 @@ export default defineTestAdapter({
     },
     "offset-expand": {
       oracle: oracle("offset-expand"),
-      /** 🎯️ The twin's expand offset. */
+      /** 📏️ The twin's expand offset. */
       subject: () => {
         const series = stacked("none", "expand");
         return {
@@ -133,7 +133,7 @@ export default defineTestAdapter({
     },
     "offset-silhouette": {
       oracle: oracle("offset-silhouette"),
-      /** 🎯️ The twin's silhouette offset. */
+      /** 🎭️ The twin's silhouette offset. */
       subject: () => {
         const series = stacked("none", "silhouette");
         return {
@@ -146,7 +146,7 @@ export default defineTestAdapter({
     },
     "offset-diverging": {
       oracle: oracle("offset-diverging"),
-      /** 🎯️ The twin's diverging offset over a series that changes sign. */
+      /** 🖊️ The twin's diverging offset over a series that changes sign. */
       subject: () => {
         const series = vizStack(SIGNED, [...SIGNED_KEYS], { offset: "diverging" });
         const projection: Record<string, (number | string)[]> = {};

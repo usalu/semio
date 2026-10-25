@@ -1,18 +1,26 @@
 import{createHash}from"node:crypto";
 import{GENERATION_POLICY_V1,canonicalJsonV1,compareCodePointsV1,createGenerationStoreV1,rowKeyV1}from"../🟨️.mjs";
 import{createGraphPhaseClockV1}from"../../⏱️phases/🟨️.mjs";
+import{decodeVerifiedScopeV1}from"../🔭️coverage/🟨️.mjs";
+import{readPinnedGenerationV1}from"../🧷️pin/🟨️.mjs";
 
 /** 🗣️ The bilingual texts of the graph generation; the schema file declares the same table and a law keeps both equal. */
 export const GENERATION_MESSAGES_V1=Object.freeze({
  en:Object.freeze({
   current:"graph: serving generation {generation} without verification (graph policy current)",
   verified:"graph: generation {generation} verified, {checked} facts checked",
-  waiting:"graph: waiting for the graph build of a peer to finish",
+  waiting:"graph: waiting for the graph build of a peer ({seconds} s in the queue, generation {generation} was the newest when this command queued)",
+  covered:"graph: generation {generation} was sealed by a peer after this command began and already covers it, nothing is checked again",
+  pinned:"graph: generation {generation} pinned by the invoking build serves this command ({count} projects), no queue and no check of the live tree",
   building:"graph: refreshing {dirty} projects (generation {generation})",
   published:"graph: generation {generation} published, {computed} projects refreshed in {seconds} s",
+  indexed:"graph: fact index of generation {generation}: {rows} facts of {owners} projects, {expanded} MB expanded ({percent} % of the {limit} MB limit), {packed} MB packed",
+  swept:"graph: {removed} superseded observation blocks removed ({megabytes} MB, {headers} records kept their blocks)",
   closure:"graph: {count} projects of the closure verified, no other project read",
   cold:"graph: no usable generation ({reason}), building the first one",
   stale:"graph: serving generation {generation} built by another implementation (graph policy current)",
+  planned:"graph: {count} projects planned by a child process that has exited",
+  summary:"graph: {rows} stale facts ({kinds}) leave {projects} projects stale",
   reason:"graph: {project} is stale: {why}",
   reasonStamp:"the inference protocol of {inferrer} changed from {recorded} to {current}",
   reasonInput:"the input file {path} changed",
@@ -31,12 +39,18 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
  de:Object.freeze({
   current:"Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
   verified:"Graph: Generation {generation} geprüft, {checked} Fakten kontrolliert",
-  waiting:"Graph: wartet auf den Graph-Aufbau eines anderen Prozesses",
+  waiting:"Graph: wartet auf den Graph-Aufbau eines anderen Prozesses ({seconds} s in der Warteschlange, Generation {generation} war beim Einreihen die neueste)",
+  covered:"Graph: Generation {generation} wurde von einem anderen Prozess nach dem Beginn dieses Befehls versiegelt und deckt ihn bereits ab, nichts wird erneut geprüft",
+  pinned:"Graph: die vom aufrufenden Build angeheftete Generation {generation} bedient diesen Befehl ({count} Projekte), ohne Warteschlange und ohne Prüfung des Arbeitsbaums",
   building:"Graph: {dirty} Projekte werden erneuert (Generation {generation})",
   published:"Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert",
+  indexed:"Graph: Faktenindex der Generation {generation}: {rows} Fakten von {owners} Projekten, {expanded} MB entpackt ({percent} % der Grenze von {limit} MB), {packed} MB gepackt",
+  swept:"Graph: {removed} überholte Beobachtungsblöcke entfernt ({megabytes} MB, {headers} Aufzeichnungen behalten ihre Blöcke)",
   closure:"Graph: {count} Projekte der Hülle geprüft, kein weiteres Projekt gelesen",
   cold:"Graph: keine brauchbare Generation ({reason}), die erste wird aufgebaut",
   stale:"Graph: Generation {generation} stammt von einer anderen Implementierung und wird geliefert (Graph-Richtlinie current)",
+  planned:"Graph: {count} Projekte von einem beendeten Kindprozess geplant",
+  summary:"Graph: {rows} veraltete Fakten ({kinds}) lassen {projects} Projekte veralten",
   reason:"Graph: {project} ist veraltet: {why}",
   reasonStamp:"das Inferenzprotokoll von {inferrer} wechselte von {recorded} zu {current}",
   reasonInput:"die Eingabedatei {path} hat sich geändert",
@@ -113,7 +127,7 @@ export function implementationDigestV1(rows){
 }
 
 /**
- * 🍰️ The owners a selected scope needs, as a fixpoint over the generation: every admitted owner admits the owners it imports (its dependency edges, transitively); only the active targets follow their `dependsOn` (`^target` over the dependency edges, `project:target`, `target`, objects with `projects` and `dependencies`, `*` for the active target only). Catalog provider owners join when an active owner lies below one of their consumer roots.
+ * 🍰️ The owners a selected scope needs, as a fixpoint over the generation: every admitted owner admits the owners it imports (its dependency edges, transitively); only the active targets follow the owners their `inputs` name as `projects` and their `dependsOn` (`^target` over the dependency edges, `project:target`, `target`, objects with `projects` and `dependencies`, `*` for the active target only). Catalog provider owners join when an active owner lies below one of their consumer roots.
  * `owners` maps every owner name to its root, `external` names the external nodes; `fragment(name)` yields `{edges, node}`. A task, a root or an edge to a name that is neither an owner nor an external node refuses with `GENERATION_UNKNOWN_OWNER`: a slice is never silently incomplete.
  */
 export async function sliceClosureV1({owners,fragment,selection,roots=[],providers=[],external=[]}){
@@ -129,10 +143,11 @@ export async function sliceClosureV1({owners,fragment,selection,roots=[],provide
   if(optional&&!(await get(name)).node?.targets?.[target])return;
   const set=active.get(name)??new Set();if(!set.has(target)){set.add(target);active.set(name,set);queue.push([name,target]);}
  };
- if(selection.kind==="tasks")for(const row of selection.tasks)await task(row.project,row.target,false);else for(const name of roots)await admit(name);
+ if(selection.kind==="tasks")for(const row of selection.tasks)await task(row.project,row.target,false);else{for(const name of roots)await admit(name);for(const name of roots)for(const target of selection.targets??[])await task(name,target,true);}
  while(queue.length){
   const[name,target]=queue.shift(),row=await get(name),operation=row.node?.targets?.[target];if(!operation)continue;
   const dependencies=[...new Set(row.edges.map(edge=>edge.target))].filter(value=>known.has(value));
+  for(const input of Array.isArray(operation.inputs)?operation.inputs:[])if(input&&typeof input==='object'&&input.projects!==undefined)for(const value of typeof input.projects==='string'?[input.projects]:Array.isArray(input.projects)?input.projects:[])if(known.has(value))await admit(value);
   for(const dependency of Array.isArray(operation.dependsOn)?operation.dependsOn:[]){
    if(typeof dependency==="string"){
     if(dependency.startsWith("^"))for(const value of dependencies)await task(value,dependency.slice(1),true);
@@ -152,6 +167,9 @@ export async function sliceClosureV1({owners,fragment,selection,roots=[],provide
  }
  return admitted;
 }
+
+/** 🪦️ The previous owners a build still knows: an owner whose config was removed is dropped by the generation, so it must neither stay a kept stub of the inference (its edges would be refreshed for an owner that no longer exists) nor a member of the graph context. */
+export function survivingStubsV1(stubs,removed){const gone=new Set(removed);return Object.fromEntries(Object.entries(stubs).filter(([name])=>!gone.has(name)));}
 
 /**
  * 🧩️ Shapes what one partial inference produced into the compute result of the store: every owner carries the facts of its own inference record plus the captured facts below its roots, edges go to their source owner, facts nobody consumed belong to the environment.
@@ -196,6 +214,7 @@ export function describeGenerationReasonV1(reason,{workspaceRoot,separator="/",c
 export function announceGenerationBuildV1(host,spec,rows){
  if(spec.cold){host.say("cold",{reason:spec.coldReason??"empty"});return;}
  host.say("building",{dirty:spec.owners.length,generation:spec.generation??0});
+ if(spec.staleKinds&&(spec.staleRows??0)>0)host.say("summary",{rows:spec.staleRows,kinds:Object.entries(spec.staleKinds).sort((x,y)=>y[1]-x[1]||(x[0]<y[0]?-1:1)).map(([kind,count])=>kind+" "+count).join(", "),projects:spec.owners.length});
  const current=new Map(rows.filter(row=>row.kind==="stamp").map(row=>[row.path,row.fact])),language=host.language;
  for(const reason of spec.reasons??[]){const row=describeGenerationReasonV1(reason,{workspaceRoot:host.workspaceRoot,separator:host.separator,current,language});host.say("reason",{project:row.project,why:row.why});}
  const listed=(spec.reasons??[]).filter(reason=>reason.row).length;
@@ -238,28 +257,36 @@ export async function expandStreamV1(entries,expand,{maximumProjects,maximumByte
 }
 
 /** 🕰️ Loads the all-workspace graph, the closure of some projects, or the slice of a selected scope (tasks or literal owners) from the newest sealed generation; `lean` answers only project and target names. A shared reader verifies and serves it without ever taking a writer; only a stale or missing generation enters the builder custody, where a holder that finds the work done by a peer serves that generation.
- * `host` binds the repository: `identity()`, `implementationRows()`, `withShared(body)`, `withBuilder(body)`, `storeOptions(store, control)`, `membership(previous, signal)`, `discoverPart(spec, signal)`, `expand(projects, control)`, `expansionLimits`, `readGraph(value)`, `readLean(value)`, `clock(control)`, `say(key, fields)` and the constants `workspaceRoot`, `namedInputs`, `registryDigest`, `signal`.
+ * `host` binds the repository: `release()` (optional: drops the in-process caches a construction filled, called once the graph is assembled so a process that goes on to run for hours keeps only the graph), `identity()`, `implementationRows()`, `withShared(body)`, `withBuilder(body)`, `storeOptions(store, control)`, `membership(previous, signal)`, `discoverPart(spec, signal)`, `expand(projects, control)`, `expansionLimits`, `readGraph(value)`, `readLean(value)`, `clock(control)`, `say(key, fields)` and the constants `workspaceRoot`, `namedInputs`, `registryDigest`, `signal`.
  */
-export async function loadGenerationGraphV1(host,{policy="fresh",closure,selection,slice,lean}={}){
- const identity=await host.identity(),roots=slice?[...new Set(slice.roots)]:closure?[...new Set(closure)]:undefined,rows=await host.implementationRows(),implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows),limits=host.expansionLimits??{maximumProjects:32,maximumBytes:16777216};
+export async function loadGenerationGraphV1(host,{policy="fresh",closure,selection,slice,lean,pin}={}){
+ const requestedAt=Date.now(),identity=await host.identity(),roots=slice?[...new Set(slice.roots)]:closure?[...new Set(closure)]:undefined,rows=pin===undefined?await host.implementationRows():[],implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows),limits=host.expansionLimits??{maximumProjects:32,maximumBytes:16777216};
  const attempt=async(builder,store,control)=>{
   const engine=createGenerationStoreV1(host.storeOptions(store,control)),progress=createGenerationProgressV1(host.clock(control));
   const compute=builder?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const part=await host.discoverPart(spec,signal,control);announceWithheldProjectsV1(host,part);return shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});}:async()=>{throw Error("A shared graph reader never computes");};
-  const base={identity,implementation,policy:builder?"fresh":policy,membership:host.membership,compute,signal:host.signal,progress,builder:builder?body=>body():needsBuild};
+  const base={identity,implementation,policy:builder?"fresh":policy,membership:host.membership,compute,signal:host.signal,progress,requestedAt,builder:builder?body=>body():needsBuild};
   const closeFn=slice?async(current)=>{const global=await engine.readGlobal(current.manifest);return sliceClosureV1({owners:Object.fromEntries(Object.entries(current.manifest.owners).map(([name,row])=>[name,row.root])),external:Object.keys(global.externalNodes??{}),fragment:name=>engine.readFragment(current.manifest.owners[name]).then(value=>{if(!value)throw Object.assign(Error("Fragment of "+name+" is missing"),{code:"GENERATION_INCOMPLETE"});return value;}),selection:slice.selection,roots:slice.roots,providers:slice.providers??[]});}:undefined;
-  const started=Date.now(),result=roots?await engine.refreshClosure({...base,roots,closure:closeFn}):await engine.refresh(base);
-  if(result.needsBuild)return{needsBuild:true};
+  const started=Date.now(),result=pin!==undefined?await readPinnedGenerationV1({engine,pin,identity,roots,closure:closeFn,signal:host.signal}):roots?await engine.refreshClosure({...base,roots,closure:closeFn}):await engine.refresh(base);
+  engine.dropIndexes();
+  if(result.needsBuild)return{needsBuild:true,generation:(await engine.read(host.signal))?.pointer.generation??-1};
   const generation=result.current.manifest.generation;
   if(result.served==="current")host.say(result.current.manifest.implementation===implementation?"current":"stale",{generation});
-  else if(result.served==="built"&&result.published)host.say("published",{generation,computed:result.computed,seconds:Math.round((Date.now()-started)/1000)});
+  else if(result.served==="covered")host.say("covered",{generation});
+  else if(result.served==="pinned")host.say("pinned",{generation,count:result.names?result.names.size:Object.keys(result.current.manifest.owners).length});
+  else if(result.served==="built"&&result.published){host.say("published",{generation,computed:result.computed,seconds:Math.round((Date.now()-started)/1000)});if(result.index)host.say("indexed",{generation,rows:result.index.rows,owners:result.index.owners,expanded:(result.index.expandedBytes/1048576).toFixed(1),percent:(100*result.index.expandedBytes/GENERATION_POLICY_V1.maximumIndexBytes).toFixed(1),limit:GENERATION_POLICY_V1.maximumIndexBytes/1048576,packed:(result.index.packedBytes/1048576).toFixed(1)});}
   else if(host.verbose||lean)host.say(roots?"closure":"verified",roots?{count:result.names.size}:{generation,checked:result.plan?.checked??0});
   if(lean){const listing=await engine.catalog(result.current,{signal:host.signal});return{graph:host.readLean({version:1,lean:true,projects:Object.fromEntries(listing.projects.map(row=>[row.name,{name:row.name,root:row.root,targets:Object.fromEntries(row.targets.map(target=>[target,{}]))}])),dependencies:[],...(listing.unavailable.length?{unavailable:listing.unavailable}:{})}),result};}
   const stream=engine.assembleStream(result.current,{names:result.names&&[...result.names],compare:(a,b)=>a.localeCompare(b),signal:host.signal,progress});
   const projects=await expandStreamV1(stream.nodes(),chunk=>host.expand(chunk,control),limits),assembled=await stream.finish(),closureDigest=selection?createHash("sha256").update(canonicalJsonV1([assembled.membership,[...result.names].sort()])).digest("hex"):assembled.membership;
   const graph=host.readGraph({version:1,projects,dependencies:assembled.dependencies,namedInputs:host.namedInputs,externalNodes:assembled.externalNodes,...(assembled.unavailable.length?{unavailable:assembled.unavailable}:{}),admission:{selection:selection??{kind:"all"},registry:host.registryDigest,closure:closureDigest}});
+  if(host.sealed){const manifest=result.current.manifest,owners=Object.keys(manifest.owners).sort(compareCodePointsV1);host.sealed({generation:manifest.generation,manifest:result.current.pointer.manifest,owners,covered:pin!==undefined?decodeVerifiedScopeV1(owners,pin.covered):result.names,atMs:pin!==undefined?pin.covered.atMs:requestedAt});}
   return{graph,result};
  };
  const first=await host.withShared((store,control)=>attempt(false,store,control));
- if(!first.needsBuild)return first.graph;
- return(await host.withBuilder((store,control)=>attempt(true,store,control))).graph;
+ if(!first.needsBuild){await host.release?.();return first.graph;}
+ const queued=Date.now();let held=false;
+ const notice=setInterval(()=>{if(!held)host.say("waiting",{seconds:Math.round((Date.now()-queued)/1000),generation:first.generation});},host.waitNoticeMilliseconds??GENERATION_POLICY_V1.waitNoticeMilliseconds);notice.unref?.();
+ let built;try{built=await host.withBuilder((store,control)=>{held=true;return attempt(true,store,control);});}finally{clearInterval(notice);}
+ await host.release?.();
+ return built.graph;
 }

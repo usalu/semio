@@ -132,7 +132,7 @@ fn the_placement_vocabulary_is_exactly_the_wit_enum() {
     }
 }
 
-/// 🧵 Every fixture transcript reaches exactly the completion the fixture declares.
+/// 🧫️ Every fixture transcript reaches exactly the completion the fixture declares.
 #[test]
 fn every_transcript_reaches_its_declared_completion() {
     let fixture = fixture();

@@ -392,7 +392,8 @@
           "foreign-source",
           "proc-macro",
           "build-script",
-          "build-script-run"
+          "build-script-run",
+          "effective-profile"
         ]
       }
     },
@@ -409,9 +410,28 @@
           "foreign-source",
           "proc-macro"
         ]
+      },
+      {
+        "unit": "workspace-lib",
+        "adapters": [
+          "effective-profile"
+        ]
+      },
+      {
+        "unit": "workspace-root",
+        "adapters": [
+          "foreign-source",
+          "proc-macro",
+          "build-script",
+          "build-script-run",
+          "effective-profile"
+        ]
       }
     ],
     "expected": [
+      "build-script",
+      "build-script-run",
+      "effective-profile",
       "foreign-source",
       "proc-macro"
     ],

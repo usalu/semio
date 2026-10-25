@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 import { ServerCallError, decodeQueryEnvelope, type HttpTransport } from "@semio-tech/framework-server";
 import { WIRE_VERSION, handleActorId, type Command } from "@semio-tech/course";
 import { ProctorClient, ProctorUnavailable, abortable, commandEnvelope, isTransient, newId, queryEnvelope, courseInstance, courseRejection, retryTransient } from "@semio-tech/course-react";
-import { TIMING, LEARNER, RUN, opening, reply } from "./🟢️shared/🟦️.tsx";
+import { TIMING, LEARNER, RUN, opening, reply } from "./🟢️harness/🟦️.tsx";
 import { registerCoalescesQueuedAnswersPerTests } from "./🔶️coalesces-queued-answers-per/🟦️.tsx";
 import { registerCoalescesOneTaskAcrossTests } from "./🔸️coalesces-one-task-across/🟦️.tsx";
 import { registerReAddressesQueuedCommandsTests } from "./🟠️re-addresses-queued-commands/🟦️.tsx";

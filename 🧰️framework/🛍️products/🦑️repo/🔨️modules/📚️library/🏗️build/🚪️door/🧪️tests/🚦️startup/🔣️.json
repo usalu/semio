@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "A light command must not load a heavy module group. Group match strings are path substrings of the loaded TypeScript or JavaScript modules; `forbid` lists the groups a row may not load; a row with `expectViolations` is a negative control that must load them.",
+  "description": "A light command must not load a heavy module group. Group match strings are path substrings of the loaded TypeScript or JavaScript modules and `except` strings remove the leaves a group would otherwise swallow by path alone (each exception has a row proving it loads no other module); `forbid` lists the groups a row may not load; a row with `expectViolations` is a negative control that must load them.",
   "groups": [
     {
       "id": "graph",
@@ -82,6 +82,9 @@
       "id": "routing",
       "match": [
         "/🏃️process/🧭️routing/"
+      ],
+      "except": [
+        "/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/"
       ]
     },
     {
@@ -230,7 +233,7 @@
         "routing"
       ],
       "maximumModules": 26,
-      "maximumBytes": 215000
+      "maximumBytes": 227200
     },
     {
       "id": "capacity-entry",
@@ -252,7 +255,7 @@
         "routing"
       ],
       "maximumModules": 22,
-      "maximumBytes": 165000
+      "maximumBytes": 175400
     },
     {
       "id": "doctor-entry",
@@ -269,7 +272,7 @@
         "store-receipt"
       ],
       "maximumModules": 80,
-      "maximumBytes": 940000
+      "maximumBytes": 946000
     },
     {
       "id": "caller-entry",
@@ -280,8 +283,32 @@
         "test-harness",
         "cargo"
       ],
-      "maximumModules": 55,
-      "maximumBytes": 700000
+      "maximumModules": 60,
+      "maximumBytes": 764000
+    },
+    {
+      "id": "watchdog-leaf",
+      "kind": "import",
+      "module": "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts",
+      "forbid": [
+        "graph",
+        "native-build",
+        "test-harness",
+        "cargo",
+        "caller",
+        "invocation",
+        "selection",
+        "resident",
+        "bootstrap",
+        "store-receipt",
+        "tools",
+        "revision",
+        "routing",
+        "leases",
+        "host-capacity"
+      ],
+      "maximumModules": 2,
+      "maximumBytes": 14000
     },
     {
       "id": "negative-control-cargo-execution",

@@ -235,7 +235,7 @@ function GumballHandles(props: {
   );
 }
 
-/** 🎛️ Rhino-style unified move / rotate / scale gumball for R3F scenes. */
+/** 🦏️ Rhino-style unified move / rotate / scale gumball for R3F scenes. */
 export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement | null {
   const config = reactHostPort.useMemo(() => resolveGumballConfig(props.config), [props.config]);
   const palette = useGumballVisualPalette();

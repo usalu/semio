@@ -42,7 +42,7 @@ pub use super::change_title::{change_title_operation, ChangeTitle};
 /// ↩️ Computes `mutation`'s inverse from the pre-state `snapshot`.
 pub fn inverse_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> Result<Vec<PlaybookMutation>, semio_framework_value::ValueError> {
     Ok({
-    protocol::Mutation::inverse(mutation, snapshot)?
+    protocol::ColdMutation::inverse(mutation, snapshot)?
 
     })
 }

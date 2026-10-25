@@ -82,7 +82,7 @@ impl Object {
         self.0.capacity().saturating_mul(size_of::<(String, Value)>())
     }
 
-    /// 🫴️ Transfers the actual owned member storage in insertion order without copying keys or descendants.
+    /// ⛔️ Transfers the actual owned member storage in insertion order without copying keys or descendants.
     pub fn into_entries(self) -> Vec<(String, Value)> {
         self.0
     }
@@ -156,7 +156,7 @@ impl Value {
         self.as_number().and_then(Number::as_u64)
     }
 
-    /// 🔎️ `serde_json::Value::as_array`'s own signature (`Option<&Vec<Value>>`, not a bare slice) —
+    /// 🖊️ `serde_json::Value::as_array`'s own signature (`Option<&Vec<Value>>`, not a bare slice) —
     /// on purpose: `Vec<Value>: Clone` lets `.and_then(Value::as_array).cloned()` call sites that
     /// used to target `serde_json::Value` keep compiling unchanged (`[Value]` alone is unsized and
     /// has no `Clone`).
@@ -197,7 +197,7 @@ impl Value {
         self.as_object_mut().and_then(|object| object.get_mut(key))
     }
 
-    /// 🔎️ Array-element lookup by position, mirroring `serde_json::Value::get(usize)` —
+    /// 📇️ Array-element lookup by position, mirroring `serde_json::Value::get(usize)` —
     /// `None` on any non-array or out-of-bounds index.
     pub fn get_index(&self, index: usize) -> Option<&Value> {
         self.as_array().and_then(|array| array.get(index))
@@ -239,7 +239,7 @@ impl std::ops::Index<&str> for Value {
     }
 }
 
-/// 🗝️ `value[index]`, mirroring `serde_json::Value`'s own `Index<usize>` — panics if `self` is
+/// 🔢️ `value[index]`, mirroring `serde_json::Value`'s own `Index<usize>` — panics if `self` is
 /// not an array, returns [`Value::Null`] for an out-of-bounds index.
 impl std::ops::Index<usize> for Value {
     type Output = Value;
@@ -383,7 +383,7 @@ pub fn array(items: impl IntoIterator<Item = Value>) -> Value {
     Value::Array(items.into_iter().collect())
 }
 
-/// 🏗️ Builds a [`Value::Object`] from any iterator of `(key, value)` pairs.
+/// 🔨️ Builds a [`Value::Object`] from any iterator of `(key, value)` pairs.
 pub fn object(pairs: impl IntoIterator<Item = (String, Value)>) -> Value {
     Value::Object(pairs.into_iter().collect())
 }

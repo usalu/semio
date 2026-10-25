@@ -86,7 +86,7 @@ test("explicit editor grants retain their original native resource bounds before
   const custom={...authored,native:{...authored.native,transport:{maximumBytes:12345,maximumLines:123},child:{maximumElapsedMilliseconds:123456}}};
   const admitted=readBuildAuthoringCapabilitiesV1(root,args,"nx",custom),schema=(await import("../../../🧬️schema/📥️authoring.json")).default;
   expect(new (require("ajv").default)({strict:false}).compile(schema)(custom)).toBe(true);expect(admitted.native).toEqual(custom.native);expect(admitted.tool).toBe("nx");
-  const actual=await createBuildBootstrapCapabilitiesV1(root,["repo",...args],{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(custom),SEMIO_BUILD_TOOL:"nx"});expect(actual).toEqual({...admitted,launches:[...admitted.launches,["nx","run","app:build"],["nx","run","workspace:deps-javascript","--output-style=stream"]]});
+  const actual=await createBuildBootstrapCapabilitiesV1(root,["repo",...args],{SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(custom),SEMIO_BUILD_TOOL:"nx"});expect(actual).toEqual({...admitted,launches:[...admitted.launches,["nx","run","app:build"]]});
   expect(()=>readBuildAuthoringCapabilitiesV1(root,["run","other:build"],"nx",custom)).toThrow("authored build request");
 });
 test.each(fixture.initialAuthoring.cases)("relative initial declarations preserve exact GUI resources through original orchestration and native task issuance ($name)",async row=>{

@@ -47,7 +47,7 @@ impl TracePath {
 }
 
 #[derive(Clone, Debug)]
-enum TracePointerWork {
+pub enum TracePointerWork {
     SelectionPaths {next:usize},
     SelectionBounds {next:usize},
     ControlNodes {next:usize},

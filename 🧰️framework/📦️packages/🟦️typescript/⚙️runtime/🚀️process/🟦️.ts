@@ -1,0 +1,2 @@
+/** 🚀️ Public `@semio-tech/framework/runtime/process` entry: explicit re-exports of the module that owns each member. */
+export { runtimeObserveSpawnV1, runtimeResolveV1, runtimeSleepV1, runtimeSpawnSyncV1, runtimeSpawnV1, runtimeStdinStreamV1, runtimeStdinTextV1, runtimeTestApiV1, runtimeTestArgumentsV1, runtimeTestPreloadV1, runtimeWhichV1 } from "../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";

@@ -78,7 +78,7 @@ pub mod io_registry {
 /// plugin root (`🗄️stdio/🦀️.rs`).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn register_schema_specs() {
-    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.deflate", DeflateSnapshot::__dsl_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.deflate", crate::DeflateSnapshot::__dsl_spec));
 }
 
 #[cfg(target_arch = "wasm32")]

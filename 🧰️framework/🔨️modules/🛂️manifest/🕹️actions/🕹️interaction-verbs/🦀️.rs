@@ -5,7 +5,7 @@ use super::*;
 // #region 🛂️Manifest
 //#region 🔖️Manifest
 //#region 🔖️Interaction
-/// 🕹️ The framework-owned action id a renderer dispatches to change a domain's selection (pick,
+/// 🎬️ The framework-owned action id a renderer dispatches to change a domain's selection (pick,
 /// marquee gather, keyboard range/toggle) — never in the palette: renderers translate raw
 /// pointer/keyboard input into this, the user never picks it from a menu.
 pub const INTERACTION_SELECT_ACTION_ID: &str = "interactionSelect";
@@ -36,20 +36,20 @@ pub const SET_INTERACTION_GRANULARITY_ACTION_ID: &str = "setInteractionGranulari
 pub enum InteractionVerb {
     /// 🖱️ `interactionSelect` — a pick, marquee gather or keyboard range/toggle.
     Select,
-    /// 🐁️ `interactionHover` — pointer motion, the highest-frequency verb in the shell.
+    /// 👆️ `interactionHover` — pointer motion, the highest-frequency verb in the shell.
     Hover,
-    /// 🧹️ `clearSelection` — every declared domain at once.
+    /// ❎️ `clearSelection` — every declared domain at once.
     ClearSelection,
-    /// 🗂️ `selectAll` — every target of every declared domain at its active granularity.
+    /// ☑️ `selectAll` — every target of every declared domain at its active granularity.
     SelectAll,
-    /// 🔀️ `setSelectionMode` — one domain's active `SelectionMode`.
+    /// 🎚️ `setSelectionMode` — one domain's active `SelectionMode`.
     SetSelectionMode,
-    /// 🪜️ `setInteractionGranularity` — one domain's active granularity.
+    /// 🔬️ `setInteractionGranularity` — one domain's active granularity.
     SetGranularity,
 }
 
 impl InteractionVerb {
-    /// 🎮️ The verb one dispatched action id stands for; `None` for every action that is not one of the
+    /// 🔎️ The verb one dispatched action id stands for; `None` for every action that is not one of the
     /// six (the same membership test `INTERACTION_ACTION_IDS` makes, as a typed answer).
     pub fn of_action(action: &str) -> Option<Self> {
         match action {
@@ -63,7 +63,7 @@ impl InteractionVerb {
         }
     }
 
-    /// 🎮️ The declared action id this verb is dispatched under — exact inverse of `of_action`.
+    /// 🆔️ The declared action id this verb is dispatched under — exact inverse of `of_action`.
     pub fn action_id(self) -> &'static str {
         match self {
             Self::Select => INTERACTION_SELECT_ACTION_ID,
@@ -75,7 +75,7 @@ impl InteractionVerb {
         }
     }
 
-    /// 🎮️ Every verb, in dispatch-id declaration order — what a law walks so a seventh verb cannot be
+    /// 🔃️ Every verb, in dispatch-id declaration order — what a law walks so a seventh verb cannot be
     /// added without an author deciding what it dirties.
     pub const ALL: [Self; 6] = [Self::Select, Self::Hover, Self::ClearSelection, Self::SelectAll, Self::SetSelectionMode, Self::SetGranularity];
 }
@@ -113,7 +113,7 @@ pub fn interaction_verb_surface_scope(verb: InteractionVerb, window_bodies: &[St
     }
 }
 
-/// 🐢️ The framework's own answer to "what does this verb repaint", for every app that implements no
+/// 🔄️ The framework's own answer to "what does this verb repaint", for every app that implements no
 /// `ArtifactApp::interaction_scope` of its own. `None` — and with it the framework's widest
 /// [`UiDirtyScope::Full`] — is the answer whenever NO declared window paints a touched
 /// domain, because then there is no declaration to derive from and narrowing would be a guess.

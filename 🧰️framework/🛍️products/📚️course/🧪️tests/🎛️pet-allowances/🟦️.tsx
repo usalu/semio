@@ -16,7 +16,7 @@ import { RunScreen } from "@semio-tech/course-react/modules/run/.tsx";
 import { COURSE, MENAGERIE, Pets, fakeSource, fakeStage, settle, text } from "../🪛️pet-companions-kit/🟦️.tsx";
 import shinyCases from "../../🧫️fixtures/✨️shiny-pets/🔣️.json";
 import contexts from "../../🧫️fixtures/🐾️pet-contexts/🔣️.json";
-import { SHEET, OPEN_RUN, homeAt, idleSession } from "./🟢️shared/🟦️.tsx";
+import { SHEET, OPEN_RUN, homeAt, idleSession } from "./🟢️harness/🟦️.tsx";
 import { registerWhatLearnerAllowsTests } from "./🔶️what-learner-allows/🟦️.tsx";
 import { registerHandTopicsTests } from "./🔸️hand-topics/🟦️.tsx";
 import { registerPlayPetsTests } from "./🟠️play-pets/🟦️.tsx";

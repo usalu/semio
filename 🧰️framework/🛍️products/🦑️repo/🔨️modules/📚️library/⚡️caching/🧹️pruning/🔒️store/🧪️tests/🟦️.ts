@@ -8,8 +8,8 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "@semio-tech/process/artifacts/native-build/lease/schema.json";
 import * as leaseApi from "@semio-tech/process/artifacts/native-build/lease";
 import * as pruneApi from "../../🟦️.ts";
-import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 test("Cargo cache maintenance excludes every live compiler profile and preserves cancellation",()=>withBuildTestInvocationV1(async original=>{

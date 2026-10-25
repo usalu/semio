@@ -49,7 +49,7 @@ const KINDS: Readonly<Record<string, VizProjectionKind>> = {
   albers: "albers",
 };
 
-/** 🗺️ The raw projection and the settings a fit has to carry through, per fitted kind. */
+/** 🎛️ The raw projection and the settings a fit has to carry through, per fitted kind. */
 const FITTED: Readonly<Record<string, { raw: VizRawProjection; settings: VizProjectionSettings }>> = {
   equirectangular: { raw: rawEquirectangular, settings: {} },
   mercator: { raw: rawMercator, settings: {} },
@@ -91,7 +91,7 @@ function oracle(id: string): (ctx: AdapterContext) => AdapterOutcome | Promise<A
 // #endregion 🧫️Vectors
 
 // #region 🎯️Subject
-/** 🗺️ Fits a geometry to a width alone: d3's `fitWidth` is `fitExtent` on the height the width buys. */
+/** 📐️ Fits a geometry to a width alone: d3's `fitWidth` is `fitExtent` on the height the width buys. */
 function fitWidth(width: number, kind: string): { scale: number; translate: readonly [number, number] } {
   const { raw, settings } = fittedOf(kind);
   const bounds = vizGeoBounds(REGIONS, vizProjection(raw, { ...settings, scale: 150, translate: [0, 0] }));
@@ -114,7 +114,7 @@ export default defineTestAdapter({
     },
     "fit-extent": {
       oracle: oracle("fit-extent"),
-      /** 🎯️ `vizGeoFitSize`, `vizGeoFitExtent` and the width fit over `demo-geo-regions`. */
+      /** 📏️ `vizGeoFitSize`, `vizGeoFitExtent` and the width fit over `demo-geo-regions`. */
       subject: (ctx: AdapterContext) => {
         const size: number[] = [];
         const extent: number[] = [];

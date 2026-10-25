@@ -7,7 +7,7 @@ use pack::snapshot::ArtifactPack;
 /// the framework's typed `PresenceInteraction` now (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM's "tiles" domain, `broadcast: true`) — this app
 /// has no OTHER app-specific ephemeral field left to carry, so the facet is genuinely empty.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "presentation.presence")]
@@ -15,7 +15,11 @@ use pack::snapshot::ArtifactPack;
 #[dsl(layout = "lines")]
 pub struct PresentationPresence {}
 
-impl store::ArtifactPresenceSnapshot for PresentationPresence {}
+impl store::ArtifactPresenceSnapshot for PresentationPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 /// 🔺️ Sparse delta over [`PresentationPresence`]: the presence record carries no field, so its delta names nothing.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]

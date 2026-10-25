@@ -40,7 +40,7 @@ pub use identity::{OriginalShardIdentity,OriginalShardIdentityIssuer,ShardIdenti
 pub use lifecycle::{ShardActorAllocation, ShardRegistrationReason, ShardRegistrationRejected};
 
 use semio_framework_plugin_host_guest_runtime::{GuestInstance, GuestRuntime, GuestRuntimes};
-use semio_framework_plugin_guest_contract::{JobBudget, JobStep, PluginHostError, TurnFault};
+use semio_framework_plugin_guest_contract::{JobStep, PluginHostError, TurnFault};
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_actor::{PackageHash, PackageId};
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
@@ -56,7 +56,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 #[path = "📨️shard-frame-and-budget-bridge/🦀️.rs"]
 mod shard_frame_and_budget_bridge;
 pub use shard_frame_and_budget_bridge::{IssuedShardRetainedRecipient, IssuedShardTurn, ShardFrame, to_actor_turn_result, turn_budget_from_grant, turn_events};
-use shard_frame_and_budget_bridge::{SHARD_TURN_ADMITTED_JOBS_MAXIMUM, job_budget_from_grant, to_actor_turn_result_in_place};
+use shard_frame_and_budget_bridge::{SHARD_TURN_ADMITTED_JOBS_MAXIMUM, to_actor_turn_result_in_place};
 
 #[path = "📊️shard-outcome-and-loop-state/🦀️.rs"]
 mod shard_outcome_and_loop_state;

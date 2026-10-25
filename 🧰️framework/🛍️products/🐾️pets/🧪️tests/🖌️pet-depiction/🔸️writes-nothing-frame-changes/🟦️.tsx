@@ -2,7 +2,7 @@
 import { expect, it, vi } from "vitest";
 import { type ActorFrame, type Frame, type Species } from "@semio-tech/pets";
 import { PAINT_LINEAR, PAINT_SHIFT, depictionMarkup, paint, stageScenery } from "@semio-tech/pets-react";
-import { OPEN, SPECIMEN, depicted, frameFor, groups, pieces, writes } from "../🟠️shared/🟦️.tsx";
+import { OPEN, SPECIMEN, depicted, frameFor, groups, pieces, writes } from "../🟠️harness/🟦️.tsx";
 
 /** 🔹 Registers the writes nothing frame changes tests of the pet depiction suite. */
 export function registerWritesNothingFrameChangesTests(): void {

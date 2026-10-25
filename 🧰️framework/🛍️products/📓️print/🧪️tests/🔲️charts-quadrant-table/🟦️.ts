@@ -27,7 +27,7 @@ function rows(ctx: AdapterContext): Record<string, string>[] {
   return body.map((row) => Object.fromEntries(header!.map((name, index) => [name, row[index] ?? ""])));
 }
 
-/** 🎯️ Compiles one committed fixture of this case and returns its whole projection. */
+/** 🔨️ Compiles one committed fixture of this case and returns its whole projection. */
 async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection: ProbeProjection }> {
   const records = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://🔲️charts-quadrant-table/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
@@ -35,7 +35,7 @@ async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection
 // #endregion 🧫️Vectors
 
 // #region 🔮️Oracles
-/** 🔮️ An unpadded d3-scale band scale per axis, walked column-major inside each row. */
+/** 🩹️ An unpadded d3-scale band scale per axis, walked column-major inside each row. */
 function quadrants(width: number, height: number, cells: number): number[] {
   const domain = Array.from({ length: cells }, (_, i) => String(i));
   const columns = scaleBand<string>().domain(domain).range([0, width]);
@@ -64,12 +64,12 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/rect": (await probe(ctx, "quadrant.tex")).projection["geometry/rect"] ?? [] } }),
     },
     "risk": {
-      /** 🔮️ The same construction with three cells per axis. */
+      /** 🚧️ The same construction with three cells per axis. */
       oracle: (ctx: AdapterContext) => {
         const row = rows(ctx)[0]!;
         return { projection: { "geometry/rect": quadrants(Number(row.width), Number(row.height), Number(row.cells)) } };
       },
-      /** 🎯️ The `geometry/rect` records the nine-box risk grid drew. */
+      /** 🗃️ The `geometry/rect` records the nine-box risk grid drew. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/rect": (await probe(ctx, "risk.tex")).projection["geometry/rect"] ?? [] } }),
     },
     "table": {
@@ -85,7 +85,7 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The header, rule and body anchors the plain table drew, sampled at the named rows. */
+      /** ⚓️ The header, rule and body anchors the plain table drew, sampled at the named rows. */
       subject: async (ctx: AdapterContext) => {
         const projection = (await probe(ctx, "table.tex")).projection;
         const text = (projection["geometry/text"] ?? []).map(Number);
@@ -100,11 +100,11 @@ export default defineTestAdapter({
       },
     },
     "table-bars": {
-      /** 📐️ The specification bars: one per body row, as wide as the value's column share. */
+      /** 📕️ The specification bars: one per body row, as wide as the value's column share. */
       oracle: (ctx: AdapterContext) => ({
         projection: { "geometry/rect": rows(ctx).flatMap((row) => [Number(row.x), Number(row.y), Number(row.w), Number(row.h)].map(grid)) },
       }),
-      /** 🎯️ The `geometry/rect` records the bar-in-cell table drew. */
+      /** 📊️ The `geometry/rect` records the bar-in-cell table drew. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/rect": (await probe(ctx, "table-bars.tex")).projection["geometry/rect"] ?? [] } }),
     },
   },

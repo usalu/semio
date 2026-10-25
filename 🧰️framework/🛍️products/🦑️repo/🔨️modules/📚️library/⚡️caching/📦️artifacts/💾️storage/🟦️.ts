@@ -12,7 +12,7 @@ export function typeScriptArtifactLayoutV1(root:string,request:unknown):Readonly
 
 import{randomBytes}from"node:crypto";
 import{lstat,mkdir,rm}from"node:fs/promises";
-import{acquireResourceLease,captureResourceLeaseWriterProofV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{acquireResourceLease,captureResourceLeaseWriterProofV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import{requireNativeStoragePathV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{requireIssuedScriptInvocationV1,requireIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,createRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,withAcceptedPhysicalCleanupV1,readAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1,checkAcceptedPhysicalCleanupV1,type ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -21,7 +21,7 @@ import{readScriptProcessJsonV1}from"../../../../../../../🔨️modules/🏃️p
 import{readNativeCallerAuthorityV1}from"../📋️native-orchestration/📥️invocation/🟦️.ts";
 import{withRepositoryCacheStoreConsumerV1}from"../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 
-/** 🧵️ Enrolls effects beneath both actual reservation and inherited carried phase controls without issuing new authority. */
+/** 🗃️ Enrolls effects beneath both actual reservation and inherited carried phase controls without issuing new authority. */
 export function withArtifactStorageOperationV1<T>(options:Readonly<{invocation:ScriptInvocation;storage:NativeStorageReservationV1;control:ResourceLeaseControl;phaseControl:ResourceLeaseControl}>,run:(actualPhase:ResourceLeaseControl)=>Promise<T>):Promise<T>{const{invocation,storage,control,phaseControl}=options;requireIssuedResourceControlInvocationV1(control,invocation);requireIssuedResourceControlInvocationV1(phaseControl,invocation);requireIssuedResourceControlRefinementV1(control,phaseControl);requireNativeStorageReservationV1(storage,control);if(storage.allocation.kind!=="artifact-publication"||typeof run!=="function")throw Error("Actual artifact storage operation required");const held=withRepositoryCacheStoreConsumerV1({invocation,storage,control,phaseControl},run);if(held!==undefined)return held;return withIssuedResourceOperationV1(control,()=>phaseControl===control?run(phaseControl):withIssuedResourceOperationV1(phaseControl,()=>run(phaseControl)));}
 
 declare const destinationBrand:unique symbol;

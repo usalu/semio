@@ -1,0 +1,258 @@
+{
+ "version": 1,
+ "graphs": [
+  {
+   "id": "live-deadlock-1023-1720",
+   "note": "The mixed-version deadlock of 10-23 17:20: shared writer holders wait (in child tasks) for the exclusive fetch lease; its holder waits (in a child task) for the writer shared, queued behind the exclusive writer request, which waits for the shared holders.",
+   "nodes": [
+    {
+     "id": "58932/1",
+     "holds": [
+      {
+       "key": "/w/.cache/b/l/m/data\u0000repo:compiler-writer:/m",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "id": "58932/2",
+     "holds": [],
+     "wait": {
+      "key": "/w/.cache/b/l/m/data\u0000cargo:registry-fetch:/h:-",
+      "mode": "exclusive",
+      "sinceMs": 100,
+      "queued": true
+     },
+     "ancestors": [
+      "58932/1"
+     ]
+    },
+    {
+     "id": "60642/1",
+     "holds": [
+      {
+       "key": "/w/.cache/b/l/m/data\u0000repo:compiler-writer:/m",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "id": "60642/2",
+     "holds": [],
+     "wait": {
+      "key": "/w/.cache/b/l/m/data\u0000cargo:registry-fetch:/h:-",
+      "mode": "exclusive",
+      "sinceMs": 110,
+      "queued": true
+     },
+     "ancestors": [
+      "60642/1"
+     ]
+    },
+    {
+     "id": "90648/1",
+     "holds": [
+      {
+       "key": "/w/.cache/b/l/m/data\u0000cargo:registry-fetch:/h:-",
+       "mode": "exclusive"
+      }
+     ]
+    },
+    {
+     "id": "90648/2",
+     "holds": [],
+     "wait": {
+      "key": "/w/.cache/b/l/m/data\u0000repo:compiler-writer:/m",
+      "mode": "shared",
+      "sinceMs": 120,
+      "queued": true
+     },
+     "ancestors": [
+      "90648/1"
+     ]
+    },
+    {
+     "id": "60788/1",
+     "holds": [],
+     "wait": {
+      "key": "/w/.cache/b/l/m/data\u0000repo:compiler-writer:/m",
+      "mode": "exclusive",
+      "sinceMs": 90,
+      "queued": true
+     }
+    }
+   ],
+   "cycle": true
+  },
+  {
+   "id": "same-shape-without-the-queued-writer",
+   "note": "Without the exclusive writer request the fetch holder's shared writer request is granted at once: no cycle.",
+   "nodes": [
+    {
+     "id": "58932/1",
+     "holds": [
+      {
+       "key": "/w/.cache/b/l/m/data\u0000repo:compiler-writer:/m",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "id": "58932/2",
+     "holds": [],
+     "wait": {
+      "key": "/w/.cache/b/l/m/data\u0000cargo:registry-fetch:/h:-",
+      "mode": "exclusive",
+      "sinceMs": 100,
+      "queued": true
+     },
+     "ancestors": [
+      "58932/1"
+     ]
+    },
+    {
+     "id": "90648/1",
+     "holds": [
+      {
+       "key": "/w/.cache/b/l/m/data\u0000cargo:registry-fetch:/h:-",
+       "mode": "exclusive"
+      }
+     ]
+    },
+    {
+     "id": "90648/2",
+     "holds": [],
+     "wait": {
+      "key": "/w/.cache/b/l/m/data\u0000repo:compiler-writer:/m",
+      "mode": "shared",
+      "sinceMs": 120,
+      "queued": true
+     },
+     "ancestors": [
+      "90648/1"
+     ]
+    }
+   ],
+   "cycle": false
+  },
+  {
+   "id": "declared-order-queue",
+   "note": "The declared order: the fetch holder already holds the writer shared, a recovery writer waits for it: a plain queue, no cycle.",
+   "nodes": [
+    {
+     "id": "1/1",
+     "holds": [
+      {
+       "key": "/w/.cache/b/l/m/data\u0000repo:compiler-writer:/m",
+       "mode": "shared"
+      },
+      {
+       "key": "/w/.cache/b/l/m/data\u0000cargo:registry-fetch:/h:-",
+       "mode": "exclusive"
+      }
+     ]
+    },
+    {
+     "id": "2/1",
+     "holds": [],
+     "wait": {
+      "key": "/w/.cache/b/l/m/data\u0000repo:compiler-writer:/m",
+      "mode": "exclusive",
+      "sinceMs": 90,
+      "queued": true
+     }
+    },
+    {
+     "id": "3/1",
+     "holds": [],
+     "wait": {
+      "key": "/w/.cache/b/l/m/data\u0000cargo:registry-fetch:/h:-",
+      "mode": "exclusive",
+      "sinceMs": 95,
+      "queued": true
+     }
+    }
+   ],
+   "cycle": false
+  },
+  {
+   "id": "parent-awaits-child",
+   "note": "A parent task holds the registry shared and awaits its child that waits for the exclusive registry resolution, which waits for the parent's hold.",
+   "nodes": [
+    {
+     "id": "7/1",
+     "holds": [
+      {
+       "key": "/w/.cache/b/l/m/data\u0000cargo:registry:/h",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "id": "7/2",
+     "holds": [],
+     "wait": {
+      "key": "/w/.cache/b/l/m/data\u0000cargo:registry-fetch:/h:-",
+      "mode": "exclusive",
+      "sinceMs": 50,
+      "queued": true
+     },
+     "ancestors": [
+      "7/1"
+     ]
+    },
+    {
+     "id": "8/1",
+     "holds": [
+      {
+       "key": "/w/.cache/b/l/m/data\u0000cargo:registry-fetch:/h:-",
+       "mode": "exclusive"
+      }
+     ],
+     "wait": {
+      "key": "/w/.cache/b/l/m/data\u0000cargo:registry:/h",
+      "mode": "exclusive",
+      "sinceMs": 60,
+      "queued": true
+     }
+    }
+   ],
+   "cycle": true
+  },
+  {
+   "id": "sibling-without-ancestry",
+   "note": "The same shape with unrelated sibling tasks (no ancestry) is no deadlock: the sibling can finish on its own.",
+   "nodes": [
+    {
+     "id": "7/1",
+     "holds": [
+      {
+       "key": "/w/.cache/b/l/m/data\u0000cargo:registry:/h",
+       "mode": "shared"
+      }
+     ]
+    },
+    {
+     "id": "7/2",
+     "holds": [],
+     "wait": {
+      "key": "/w/.cache/b/l/m/data\u0000cargo:registry-fetch:/h:-",
+      "mode": "exclusive",
+      "sinceMs": 50,
+      "queued": true
+     }
+    },
+    {
+     "id": "8/1",
+     "holds": [
+      {
+       "key": "/w/.cache/b/l/m/data\u0000cargo:registry-fetch:/h:-",
+       "mode": "exclusive"
+      }
+     ]
+    }
+   ],
+   "cycle": false
+  }
+ ]
+}

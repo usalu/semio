@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "owners": [
+    {
+      "id": "service-admission",
+      "owner": "🏗️build/📥️caller/🛰️service/🟦️.ts",
+      "forbidden": [
+        "🏗️build/📥️caller/📤️child/🟦️.ts",
+        "🏗️build/📥️caller/🟦️.ts"
+      ],
+      "port": "the door computation arrives through the injected bootstrap option"
+    },
+    {
+      "id": "nx-envelope",
+      "owner": "🏗️build/🔧️tools/🧶️nx/📨️envelope/🟦️.ts",
+      "forbidden": [
+        "🏗️build/📥️caller/🟦️.ts"
+      ],
+      "port": "the caller capabilities are read from their contract leaf"
+    },
+    {
+      "id": "recovery-frontend",
+      "owner": "🏗️build/🚀️bootstrap/⌨️cli/🟦️.ts",
+      "forbidden": [
+        "🏗️build/📥️caller/📤️child/🟦️.ts",
+        "🏗️build/🚀️bootstrap/⌨️cli/🔌️ports/🟦️.ts"
+      ],
+      "port": "the recovery owners are injected as ports of the selected plan"
+    },
+    {
+      "id": "inference-facade",
+      "owner": "📦️packages/🟦️typescript/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+      "forbidden": [
+        "🟨️.mjs"
+      ],
+      "port": "the plugin implementation identity has its own public entry"
+    },
+    {
+      "id": "dependency-read-context",
+      "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/📥️read-context/🟦️.ts",
+      "forbidden": [
+        "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+        "⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts",
+        "⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/💾️storage/🟦️.ts",
+        "⚡️caching/🚀️bootstrap/📦️dependencies/🪞️adopt/💾️storage/🟦️.ts"
+      ],
+      "port": "the leaf below the hub and every stage glue"
+    },
+    {
+      "id": "dependency-generation-glue",
+      "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts",
+      "forbidden": [
+        "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts"
+      ],
+      "port": "the receipt reads the walk through its own consumer-owned shape"
+    },
+    {
+      "id": "dependency-incremental-glue",
+      "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/🧾️incremental/💾️storage/🟦️.ts",
+      "forbidden": [
+        "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts"
+      ],
+      "port": "the ledger stage depends on the read-context leaf only"
+    },
+    {
+      "id": "dependency-adopt-glue",
+      "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/🪞️adopt/💾️storage/🟦️.ts",
+      "forbidden": [
+        "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts"
+      ],
+      "port": "the adoption stage depends on the generation glue only"
+    },
+    {
+      "id": "partition-opening",
+      "owner": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+      "forbidden": [
+        "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts",
+        "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧹️headroom/🟦️.ts",
+        "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+        "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🎟️reservation/🟦️.ts",
+        "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🟦️.ts",
+        "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
+        "🏗️build/📥️inputs/💾️storage/🟨️.mjs"
+      ],
+      "port": "the owner hands the lease opener, the enrollment and the development state opener to the layers above it"
+    },
+    {
+      "id": "recovering-opener",
+      "owner": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts",
+      "forbidden": [
+        "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts"
+      ],
+      "port": "the store charge lives in its own leaf"
+    },
+    {
+      "id": "store-charge",
+      "owner": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🎟️reservation/🟦️.ts",
+      "forbidden": [
+        "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+        "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts"
+      ],
+      "port": "the charge leaf sits below the store and the recovering opener"
+    },
+    {
+      "id": "graph-custody",
+      "owner": "🏗️build/📥️inputs/💾️storage/🔧️custody/🟨️.mjs",
+      "forbidden": [
+        "🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+        "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts"
+      ],
+      "port": "the custody core sits below the storage operations and closure retirement"
+    },
+    {
+      "id": "closure-retirement",
+      "owner": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts",
+      "forbidden": [
+        "🏗️build/📥️inputs/💾️storage/🟨️.mjs"
+      ],
+      "port": "retirement reads the maintenance custody from the custody core"
+    },
+    {
+      "id": "observation-root",
+      "owner": "../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts",
+      "forbidden": [
+        "../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts"
+      ],
+      "port": "the root owns the read primitives and the current-state owner imports them"
+    },
+    {
+      "id": "scene-lanes",
+      "owner": "../../../../🔨️modules/🖱️ui/🎬️scene/🛤️lanes/🟦️.ts",
+      "forbidden": [
+        "../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts"
+      ],
+      "port": "scene payload types live in the documents owner, below the lanes and the root"
+    },
+    {
+      "id": "registry-catalog-view",
+      "owner": "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+      "forbidden": [
+        "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+        "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts"
+      ],
+      "port": "the projection reads registry entry types from the schema leaf and playground entries from the playground contract"
+    },
+    {
+      "id": "playground-contract",
+      "owner": "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/📋️contract/🟦️.ts",
+      "forbidden": [
+        "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
+        "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+        "../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts"
+      ],
+      "port": "the playground entry vocabulary is a leaf below discovery and the catalog view"
+    }
+  ]
+}

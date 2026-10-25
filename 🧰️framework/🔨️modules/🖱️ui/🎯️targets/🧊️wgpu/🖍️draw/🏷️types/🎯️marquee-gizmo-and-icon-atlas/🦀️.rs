@@ -120,7 +120,7 @@ pub mod gizmo {
     use semio_framework_ui_scene_algebra::{Vec3, Vec3Math};
     use semio_framework_ui_theme::{Rgba, geometry::Rect};
 
-    /// 🧭️ Permanent X/Y/Z paints — the generated `primary`/`secondary`/`tertiary` palette tokens,
+    /// 🌈️ Permanent X/Y/Z paints — the generated `primary`/`secondary`/`tertiary` palette tokens,
     /// the exact triple React's `SPATIAL_AXIS_COLOR_REFS`/`resolveSpatialAxisColors` resolves. The
     /// previous hand-written channels were sRGB fractions stored in a linear-float `Rgba`, so every
     /// axis painted a different color than React's.
@@ -132,7 +132,7 @@ pub mod gizmo {
         }
     }
 
-    /// 🧭️ Mirrors `resolveSceneGizmoViewportPlacement` (`🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx:390`) — the
+    /// 🪐️ Mirrors `resolveSceneGizmoViewportPlacement` (`🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx:390`) — the
     /// navigation cube's CENTRE offset from the viewport's bottom-right corner. The two axes are NOT
     /// the same: the inline margin clears the pane's `--spacing-single` chrome inset, the block margin
     /// additionally clears the FOLDED projection pane (`h-medium`, 7 × ui-spacing) plus one more
@@ -152,7 +152,7 @@ pub mod gizmo {
         (preferred_x.min(max_fit(viewport.w)), preferred_y.min(max_fit(viewport.h)))
     }
 
-    /// 🧭️ Screen-space tip used for orbit-view gizmo hover hit-testing and paint.
+    /// 🛰️ Screen-space tip used for orbit-view gizmo hover hit-testing and paint.
     pub struct OrbitViewGizmoTip {
         pub screen_x: f32,
         pub screen_y: f32,

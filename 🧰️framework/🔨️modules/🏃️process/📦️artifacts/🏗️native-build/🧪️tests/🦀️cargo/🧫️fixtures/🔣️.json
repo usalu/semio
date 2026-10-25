@@ -12,5 +12,6 @@
   "detachAttempts": 5,
   "detachRetryMs": 200,
   "lawReserveBytes": 4194304,
-  "schedulerBuildMs": 900000
+  "schedulerBuildMs": 900000,
+  "compilerConfiguration": "[profile.prototype]\ninherits=\"dev\"\nopt-level=0\nincremental=true\nlto=false\ncodegen-units=256\n[profile.release]\nopt-level=3\nincremental=false\nlto=\"thin\"\ncodegen-units=1\n"
 }

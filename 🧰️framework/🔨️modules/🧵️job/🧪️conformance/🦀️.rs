@@ -3,7 +3,7 @@ use semio_framework_job::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_job_scope::JobScope;
 //#region 🔥️TortureJob
-/// 🎲️ A tiny, dependency-free xorshift64 step — deterministic given `x`, no allocation, no external
+/// ⛓️ A tiny, dependency-free xorshift64 step — deterministic given `x`, no allocation, no external
 /// RNG crate (this crate stays zero-third-party-dependency, mirroring `semio_framework_trace`'s own
 /// leaf-crate mandate). `| 1` on first seeding (see [`TortureJob::new`]) keeps the state off the
 /// all-zero fixed point xorshift can never escape.

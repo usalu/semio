@@ -1,0 +1,1665 @@
+# stage-clean orphan staged=boot-fast-tools/staged/files/caller-globals-test.ts.pre-r7 map=None
+--- /dev/null
++++ b/staged/boot-fast-tools/staged/files/caller-globals-test.ts.pre-r7
+@@ -0,0 +1,21 @@
++import {expect,test} from "bun:test";
++import {spawnSync} from "node:child_process";
++import {resolve} from "node:path";
++import catalogue from "../../../⚙️operations/🔣️catalog.json" with {type:"json"};
++
++const script=resolve(import.meta.dir,"../../../📜️script.ts"),cleanEnvironment=Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.startsWith("SEMIO_SCRIPT")&&!key.startsWith("SEMIO_BUILD_")&&key!=="SEMIO_LANGUAGE"));
++const help=(...options:string[])=>spawnSync(process.execPath,[script,"repo","run","--help",...options],{encoding:"utf8",timeout:90_000,env:{...cleanEnvironment,SEMIO_LANGUAGE:"en"}});
++
++test("every global option of the catalogue, in its equals spelling, reaches the selected operation of the full build script without refusing the declared selection",()=>{
++ const globals=catalogue.flags.filter(flag=>(flag as {operations?:unknown}).operations===undefined&&flag.value==="required").map(flag=>`${flag.name}=${((flag as {valueName?:string}).valueName??"x").split("|")[0]}`);
++ expect(globals.length).toBeGreaterThanOrEqual(3);
++ for(const option of [...globals,"--graph-policy=current"]){
++  const result=help(option);
++  expect(result.stderr,option).not.toContain("Undeclared original Repo build selection");
++  expect(result.status,option).toBe(0);
++  expect(result.stdout,option).toContain("repo run - Run one task of one project.");
++ }
++ const german=help("--lang=de");
++ expect(german.status).toBe(0);
++ expect(german.stdout).toContain("Verwendung");
++},180_000);
+# stage-clean orphan staged=boot-fast-tools/staged/files/door-script.ts map=None
+--- /dev/null
++++ b/staged/boot-fast-tools/staged/files/door-script.ts
+@@ -0,0 +1,9 @@
++import {isMainModuleV1} from "../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
++import {findBuildDoorRootV1,runBuildDoorV1} from "./🟦️.ts";
++import {profileMarkV1,profilePhaseV1} from "../⏱️profile/🟨️.mjs";
++
++if(isMainModuleV1(import.meta.url)){
++ profileMarkV1("boot.main");
++ const argv=process.argv.slice(2),root=findBuildDoorRootV1(import.meta.dirname);
++ if(await runBuildDoorV1(root,argv,process.env)==="full"){const{runBuildCliV1}=await import("../📜️script.ts");await profilePhaseV1("cli.run",()=>runBuildCliV1(root,argv));}
++}
+# stage-clean orphan staged=boot-fast-tools/staged/files/door-test.ts map=None
+--- /dev/null
++++ b/staged/boot-fast-tools/staged/files/door-test.ts
+@@ -0,0 +1,134 @@
++import {afterAll,expect,test} from "bun:test";
++import {spawnSync} from "node:child_process";
++import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {dirname,join,resolve} from "node:path";
++import Ajv from "ajv";
++import yargsParser from "yargs-parser";
++import catalogue from "../../⚙️operations/🔣️catalog.json" with {type:"json"};
++import policy from "../🔣️.json" with {type:"json"};
++import schema from "../🧬️schema/🔣️.json" with {type:"json"};
++import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
++import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
++import {findWorkspaceRoot} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
++import {buildDoorLightLoadersV1,buildDoorRequestsHelpV1,findBuildDoorRootV1,planBuildDoorV1,renderBuildDoorRefusalV1,runBuildDoorV1,selectBuildDoorArgumentsV1,type BuildDoorPlanV1,type BuildDoorPolicyV1} from "../🟦️.ts";
++import {buildHelpForArgumentsV1} from "../../⚙️operations/📖️help/🟦️.ts";
++import {buildInvocationRequestsHelpV1,parseBuildInvocationV1} from "../../🧭️invocation/🟦️.ts";
++
++const scratch=mkdtempSync(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"door-"));
++afterAll(()=>rmSync(scratch,{recursive:true,force:true}));
++const operations=catalogue.operations.map(operation=>operation.name).join(", "),subcommandsOf=(name:string)=>(catalogue.operations.find(operation=>operation.name===name)?.subcommands??[]).map(row=>row.name).join(", "),rules=policy as unknown as BuildDoorPolicyV1;
++const entry=resolve(import.meta.dir,"../📜️script.ts"),script=resolve(import.meta.dir,"../../📜️script.ts"),cleanEnvironment=Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.startsWith("SEMIO_SCRIPT")&&!key.startsWith("SEMIO_BUILD_")&&key!=="SEMIO_LANGUAGE"));
++const run=(program:string,args:readonly string[],language:string,extra:Record<string,string>={})=>spawnSync(process.execPath,[program,...args],{encoding:"utf8",timeout:60_000,env:{...cleanEnvironment,SEMIO_LANGUAGE:language,...extra}});
++
++test("the policy is closed, every refusal is bilingual with the same placeholders, and it only names what the catalogue declares",()=>{
++ const ajv=new Ajv({strict:true,allErrors:true}),validate=ajv.compile(schema);
++ expect(validate(policy),JSON.stringify(validate.errors)).toBe(true);
++ expect(validateJsonSchemaSubset(schema,policy)).toEqual([]);
++ const mutate=(change:(copy:any)=>void)=>{const copy=structuredClone(policy);change(copy);return copy;};
++ for(const bad of [mutate(copy=>{copy.light[0].call="spawn";}),mutate(copy=>{delete copy.texts.invalidValue.de;}),mutate(copy=>{copy.extra=1;}),mutate(copy=>{copy.refusedExitCode=1;}),mutate(copy=>{copy.light.push({operation:"Leases",export:"x",call:"args-options"});})]){
++  expect(validate(bad)).toBe(false);
++  expect(validateJsonSchemaSubset(schema,bad).length).toBeGreaterThan(0);
++ }
++ const names=new Map(catalogue.operations.map(operation=>[operation.name,operation]));
++ expect(Object.keys(buildDoorLightLoadersV1).sort()).toEqual(rules.light.map(row=>row.operation).sort());
++ for(const row of rules.light)expect(names.get(row.operation)?.requires,row.operation).toBe("none");
++ for(const name of rules.closedSubcommands)expect((names.get(name) as {subcommands?:unknown[]}|undefined)?.subcommands?.length,name).toBeGreaterThan(0);
++ for(const id of Object.keys(rules.texts) as (keyof BuildDoorPolicyV1["texts"])[]){
++  expect(Object.keys(rules.texts[id]).sort(),id).toEqual([...catalogue.languages].sort());
++  const placeholders=(text:string)=>[...text.matchAll(/\{([A-Za-z]+)\}/gu)].map(match=>match[1]).sort().join(",");
++  expect(new Set(catalogue.languages.map(language=>placeholders(rules.texts[id][language]!))).size,id).toBe(1);
++ }
++ expect(catalogue.flags.find(row=>row.name==="--workers")?.valueName).toMatch(/\|/u);
++ expect(catalogue.flags.find(row=>row.name==="--tool")?.valueName,"the build implementations come from the backend registry, so the door cannot close the list").not.toMatch(/\|/u);
++});
++
++test("every route vector plans as declared, in English and German, from the catalogue alone",()=>{
++ for(const row of fixture.plans){
++  const plan=planBuildDoorV1(row.args,{SEMIO_LANGUAGE:row.language,...(row as {environment?:Record<string,string>}).environment}),expected=structuredClone(row.route) as {values?:Record<string,string>};
++  if(expected.values?.known==="@operations")expected.values.known=operations;
++  if(expected.values?.known?.startsWith("@subcommands:"))expected.values.known=subcommandsOf(expected.values.known.slice(13));
++  expect(plan,row.name).toEqual({language:row.language,route:expected} as BuildDoorPlanV1);
++ }
++});
++
++test("the selection equals the invocation parser and the command equals yargs-parser, an independent reader",()=>{
++ for(const row of fixture.plans){
++  const typed=row.args,prefix=typed[0]==="repo"?1:0,body=typed.slice(prefix),environment={SEMIO_LANGUAGE:row.language,...(row as {environment?:Record<string,string>}).environment} as NodeJS.ProcessEnv;
++  if(["build","test"].includes(typed[0]!)||row.route.kind==="refused"&&(row.route as {id:string}).id==="invalidValue")continue;
++  const selection=selectBuildDoorArgumentsV1(body,environment);
++  if("refused" in selection)throw Error(row.name);
++  expect(selection.args,row.name).toEqual(parseBuildInvocationV1(body,environment).args);
++  expect(buildDoorRequestsHelpV1(selection.args),row.name).toBe(buildInvocationRequestsHelpV1(selection.args));
++  const boundary=body.indexOf("--"),head=body.slice(0,boundary<0?undefined:boundary),parsed=yargsParser(head,{string:["tool","workers","graph-policy","lang"],boolean:["help"],alias:{help:["h"]}});
++  const first=selection.args[0]??"";expect(parsed._[0]===undefined?"":String(parsed._[0]),row.name).toBe(first.startsWith("-")?"":first);
++  expect(parsed.help===true||selection.args.length===0,row.name).toBe(buildDoorRequestsHelpV1(selection.args));
++ }
++});
++
++test("a refusal renders in every catalogue language exactly as the fixture states",()=>{
++ for(const row of fixture.refusals)for(const language of catalogue.languages)expect(renderBuildDoorRefusalV1({kind:"refused",id:row.id as "unknownCommand",values:row.values},language),`${row.id} ${language}`).toBe(row.text[language as "en"|"de"]);
++ expect(()=>renderBuildDoorRefusalV1({kind:"refused",id:"invalidValue",values:{}},"fr")).toThrow(/No invalidValue text for fr/u);
++});
++
++test("the front door acts on its plan: help is rendered, refusals go to the error stream with the policy exit code, light commands get their declared call, the rest asks for the full implementation",async()=>{
++ const log:{write:string[];error:string[];exit:number[];load:string[];call:unknown[]}={write:[],error:[],exit:[],load:[],call:[]},environment={SEMIO_LANGUAGE:"de"} as NodeJS.ProcessEnv;
++ const ports=(modules:Record<string,Record<string,unknown>>)=>({write:(line:string)=>log.write.push(line),error:(line:string)=>log.error.push(line),exit:(code:number)=>log.exit.push(code),load:async(operation:string)=>{log.load.push(operation);return modules[operation]!;}});
++ const modules={leases:{runLeasesCliV1:async(...call:unknown[])=>{log.call.push(["leases",...call.slice(0,3)]);return 3;}},doctor:{runDoctorCliV1:async(...call:unknown[])=>{log.call.push(["doctor",...call.slice(0,3)]);return 4;}},capacity:{runCapacityCommandV1:async(...call:unknown[])=>{log.call.push(["capacity",call[0],(call[1] as {environment:{SEMIO_LANGUAGE:string}}).environment.SEMIO_LANGUAGE]);return 5;}}};
++ expect(await runBuildDoorV1("/w",["repo","run","--help"],environment,ports(modules))).toBe("handled");
++ expect(log.write).toEqual([buildHelpForArgumentsV1(["run","--help"],environment)]);
++ expect(await runBuildDoorV1("/w",["repo","tools","status"],environment,ports(modules))).toBe("handled");
++ expect(log.error).toEqual([rules.texts.unknownSubcommand.de!.replace("{subcommand}","status").replaceAll("{command}","tools").replace("{known}",subcommandsOf("tools"))]);
++ expect(log.exit).toEqual([rules.refusedExitCode]);
++ expect(await runBuildDoorV1("/w",["repo","leases","status","--json"],environment,ports(modules))).toBe("handled");
++ expect(await runBuildDoorV1("/w",["repo","doctor","--json"],environment,ports(modules))).toBe("handled");
++ expect(await runBuildDoorV1("/w",["repo","capacity","status"],environment,ports(modules))).toBe("handled");
++ expect(log.load).toEqual(["leases","doctor","capacity"]);
++ expect(log.call).toEqual([["leases","/w",["status","--json"],{...environment,SEMIO_LANGUAGE:"de"}],["doctor","/w",["--json"],{...environment,SEMIO_LANGUAGE:"de"}],["capacity",["status"],"de"]]);
++ expect(log.exit).toEqual([rules.refusedExitCode,3,4,5]);
++ const before=log.load.length;
++ expect(await runBuildDoorV1("/w",["repo","run","a:b"],environment,ports(modules))).toBe("full");
++ expect(await runBuildDoorV1("/w",["build","x"],environment,ports(modules))).toBe("full");
++ expect(log.load.length).toBe(before);
++ expect(await runBuildDoorV1("/w",["repo","--lang=fr","leases","status"],{},ports(modules))).toBe("handled");
++ expect(log.error.at(-1)).not.toBe("");
++ expect(log.exit.at(-1)).toBe(rules.refusedExitCode);
++});
++
++test("the front door finds the workspace root exactly as the routing module does",()=>{
++ expect(findBuildDoorRootV1(import.meta.dir)).toBe(findWorkspaceRoot(import.meta.dir));
++ for(const row of fixture.roots){
++  const base=mkdtempSync(join(scratch,"root-"));
++  for(const [name,text] of Object.entries(row.files)){mkdirSync(dirname(join(base,name)),{recursive:true});writeFileSync(join(base,name),text);}
++  const start=join(base,row.start);
++  if(row.expected===null){
++   const messages=[()=>findBuildDoorRootV1(start,{}),()=>findWorkspaceRoot(start)].map(call=>{try{call();return "";}catch(error){return (error as Error).message;}});
++   expect(messages[0],row.name).not.toBe("");
++   expect(messages[0],row.name).toBe(messages[1]!);
++  }else{
++   expect(findBuildDoorRootV1(start,{}),row.name).toBe(join(base,row.expected));
++   expect(findBuildDoorRootV1(start,{}),row.name).toBe(findWorkspaceRoot(start));
++  }
++ }
++});
++
++test("the real front door prints the same help as the build script, refuses before any storage in both languages, and delegates a full command",()=>{
++ for(const operation of ["leases","capacity","doctor"])for(const language of ["en","de"]){
++  const door=run(entry,["repo",operation,"--help"],language),old=run(script,["repo",operation,"--help"],language);
++  expect(door.status,`${operation} ${language}`).toBe(0);
++  expect(door.stdout,`${operation} ${language}`).toBe(old.stdout);
++  expect(door.stderr,`${operation} ${language}`).toBe("");
++ }
++ const bare=run(entry,["repo"],"en");
++ expect(bare.status).toBe(0);
++ expect(bare.stdout).toBe(`${buildHelpForArgumentsV1([],{SEMIO_LANGUAGE:"en"})}\n`);
++ const german=run(entry,["repo","run","--help","--lang=de"],"en");
++ expect(german.stdout).toContain("Verwendung");
++ const refused=run(entry,["repo","tools","status"],"de");
++ expect(refused.status).toBe(rules.refusedExitCode);
++ expect(refused.stdout).toBe("");
++ expect(refused.stderr).toContain("Unbekannter Unterbefehl");
++ const unknown=run(entry,["repo","nonsense"],"en");
++ expect(unknown.status).toBe(rules.refusedExitCode);
++ expect(unknown.stderr).toContain(operations);
++});
+# stage-clean orphan staged=boot-fast-tools/staged/files/door.ts map=None
+--- /dev/null
++++ b/staged/boot-fast-tools/staged/files/door.ts
+@@ -0,0 +1,123 @@
++import {lstatSync,readFileSync} from "node:fs";
++import {dirname,isAbsolute,join,parse,relative,resolve,sep} from "node:path";
++import catalogue from "../⚙️operations/🔣️catalog.json" with {type:"json"};
++import policy from "./🔣️.json" with {type:"json"};
++import {buildOperationArgumentsV1,normalizeBuildOptionsV1} from "../⚙️operations/🔤️options/🟦️.ts";
++import {buildHelpForArgumentsV1,resolveBuildCliLanguageV1} from "../⚙️operations/📖️help/🟦️.ts";
++import {profilePhaseV1} from "../⏱️profile/🟨️.mjs";
++
++/** 🛃️ The part of the neutral operations catalogue the front door reads: languages, global options with their allowed values, command and subcommand names. */
++export type BuildDoorCatalogueV1=Readonly<{languages:readonly string[];flags:readonly Readonly<{name:string;aliases?:readonly string[];value:string;valueName?:string;operations?:readonly string[]}>[];operations:readonly Readonly<{name:string;requires:string;subcommands?:readonly Readonly<{name:string}>[]}>[]}>;
++
++/** 🛅️ Which commands run without the build implementation, which subcommand sets are closed and the refusal texts. */
++export type BuildDoorPolicyV1=Readonly<{version:1;passthrough:readonly string[];fullTargetPrefixes:readonly string[];environment:Readonly<Record<"--tool"|"--workers",string>>;light:readonly Readonly<{operation:string;export:string;call:"root-args-environment"|"args-options"}>[];closedSubcommands:readonly string[];refusedExitCode:number;texts:Readonly<Record<BuildDoorRefusalIdV1,Readonly<Record<string,string>>>>}>;
++
++/** 🚧️ The refusals the front door can state before any storage, lease or graph exists. */
++export type BuildDoorRefusalIdV1="unknownCommand"|"unknownSubcommand"|"invalidValue";
++
++/** 🛣️ Where one invocation goes: help, a refusal, a light command that owns its closure, or the full implementation. */
++export type BuildDoorRouteV1=Readonly<{kind:"full"}>|Readonly<{kind:"help";args:readonly string[]}>|Readonly<{kind:"refused";id:BuildDoorRefusalIdV1;values:Readonly<Record<string,string>>}>|Readonly<{kind:"light";operation:string;args:readonly string[]}>;
++
++/** 🗺️ The language every later text uses and the route chosen once. */
++export type BuildDoorPlanV1=Readonly<{language:string;route:BuildDoorRouteV1}>;
++
++/** 🔌️ Replaceable sources, so a test can plan against another catalogue, policy or language rule. */
++export type BuildDoorSourcesV1=Readonly<{catalogue?:BuildDoorCatalogueV1;policy?:BuildDoorPolicyV1;language?:(args:readonly string[],environment:NodeJS.ProcessEnv)=>string}>;
++
++/** 🛄️ The only place a light command is named by module: each loader is a literal import, so bundlers and the closure laws see it. */
++export const buildDoorLightLoadersV1:Readonly<Record<string,()=>Promise<Readonly<Record<string,unknown>>>>>=Object.freeze({
++ leases:()=>import("../🔒️leases/⌨️command/🟦️.ts"),
++ doctor:()=>import("../🩺️doctor/⌨️command/🟦️.ts"),
++ capacity:()=>import("../🌡️host-capacity/⌨️command/🟦️.ts"),
++});
++
++const allowedValues=(source:BuildDoorCatalogueV1,option:string):readonly string[]|undefined=>{const name=source.flags.find(flag=>flag.name===option)?.valueName;return name!==undefined&&/^[A-Za-z0-9-]+(\|[A-Za-z0-9-]+)+$/u.test(name)?name.split("|"):undefined;};
++
++/** 🧮️ Names the operation arguments the way the invocation parser does (global selections consumed, the opaque tail kept) without loading it; a value outside the catalogue's enumeration is reported instead. */
++export function selectBuildDoorArgumentsV1(args:readonly string[],environment:NodeJS.ProcessEnv,source:BuildDoorCatalogueV1=catalogue as BuildDoorCatalogueV1,rules:BuildDoorPolicyV1=policy as BuildDoorPolicyV1):Readonly<{args:readonly string[]}>|Readonly<{refused:Readonly<{option:string;value:string;allowed:string}>}>{
++ const chosen:Record<"--tool"|"--workers",{value:string|undefined;from:string}>={"--tool":{value:environment[rules.environment["--tool"]],from:rules.environment["--tool"]},"--workers":{value:environment[rules.environment["--workers"]],from:rules.environment["--workers"]}},selected:string[]=[];
++ for(let index=0;index<args.length;index++){
++  const argument=args[index]!;
++  if(argument==="--"){selected.push(...args.slice(index));break;}
++  const option=argument==="--tool"||argument.startsWith("--tool=")?"--tool":argument==="--workers"||argument.startsWith("--workers=")?"--workers":undefined;
++  if(option!==undefined){chosen[option]={value:argument===option?args[++index]??"":argument.slice(option.length+1),from:option};continue;}
++  if(argument==="--graph-policy"){index++;continue;}
++  if(argument.startsWith("--graph-policy="))continue;
++  selected.push(argument);
++ }
++ for(const option of ["--tool","--workers"] as const){
++  const {value,from}=chosen[option],allowed=allowedValues(source,option);
++  if(value!==undefined&&(option==="--tool"||value!=="")&&allowed&&!allowed.includes(value))return {refused:{option:from,value,allowed:allowed.join("|")}};
++ }
++ return {args:buildOperationArgumentsV1(selected,source)};
++}
++
++/** 🆘️ Tells whether the operation arguments ask for help, as the invocation module does for a request before storage. */
++export function buildDoorRequestsHelpV1(args:readonly string[]):boolean{
++ const boundary=args.indexOf("--"),head=args.slice(0,boundary<0?undefined:boundary);
++ return head.length===0||head.some(argument=>argument==="--help"||argument==="-h");
++}
++
++/** 🎯️ Chooses the language and the route of one invocation from the catalogue alone; nothing else is loaded, read or spawned. */
++export function planBuildDoorV1(typed:readonly string[],environment:NodeJS.ProcessEnv,sources:BuildDoorSourcesV1={}):BuildDoorPlanV1{
++ const source=sources.catalogue??(catalogue as BuildDoorCatalogueV1),rules=sources.policy??(policy as BuildDoorPolicyV1),args=normalizeBuildOptionsV1(typed,source),language=(sources.language??resolveBuildCliLanguageV1)(args,environment),full={language,route:{kind:"full"} as const};
++ if(rules.passthrough.includes(args[0]??""))return full;
++ const selection=selectBuildDoorArgumentsV1(args.slice(args[0]==="repo"?1:0),environment,source,rules);
++ if("refused" in selection)return {language,route:{kind:"refused",id:"invalidValue",values:selection.refused}};
++ const operation=selection.args,command=operation[0];
++ if(command==="run"&&rules.fullTargetPrefixes.some(prefix=>operation[1]?.startsWith(prefix)))return full;
++ if(buildDoorRequestsHelpV1(operation))return {language,route:{kind:"help",args:operation}};
++ const row=command===undefined||command.startsWith("-")?undefined:source.operations.find(candidate=>candidate.name===command);
++ if(command!==undefined&&!command.startsWith("-")&&!row)return {language,route:{kind:"refused",id:"unknownCommand",values:{command,known:source.operations.map(candidate=>candidate.name).join(", ")}}};
++ const subcommand=operation[1];
++ if(row&&rules.closedSubcommands.includes(row.name)&&subcommand!==undefined&&!subcommand.startsWith("-")&&!row.subcommands?.some(candidate=>candidate.name===subcommand))return {language,route:{kind:"refused",id:"unknownSubcommand",values:{command:row.name,subcommand,known:(row.subcommands??[]).map(candidate=>candidate.name).join(", ")}}};
++ if(row&&rules.light.some(candidate=>candidate.operation===row.name))return {language,route:{kind:"light",operation:row.name,args:operation}};
++ return full;
++}
++
++/** 🚫️ Renders one refusal in the chosen language from the policy texts; every placeholder is named in the route values. */
++export function renderBuildDoorRefusalV1(route:Extract<BuildDoorRouteV1,{kind:"refused"}>,language:string,rules:BuildDoorPolicyV1=policy as BuildDoorPolicyV1):string{
++ const text=rules.texts[route.id][language];
++ if(text===undefined)throw Error(`No ${route.id} text for ${language}`);
++ return text.replace(/\{([A-Za-z]+)\}/gu,(_match,name:string)=>route.values[name]??`{${name}}`);
++}
++
++/** 🪛️ What the front door needs from its process: output, exit code and the loader of one light command. */
++export type BuildDoorPortsV1=Readonly<{write:(line:string)=>void;error:(line:string)=>void;exit:(code:number)=>void;load:(operation:string)=>Promise<Readonly<Record<string,unknown>>>}>;
++
++/** 🖥️ The ports of the real process. */
++export function buildDoorProcessPortsV1():BuildDoorPortsV1{
++ return {write:line=>console.log(line),error:line=>console.error(line),exit:code=>{process.exitCode=code;},load:operation=>{const loader=buildDoorLightLoadersV1[operation];if(!loader)throw Error(`No light loader for ${operation}`);return loader();}};
++}
++
++/** 🛎️ Serves help, refusals and light commands; returns `full` only when the build implementation has to start, so a command that needs none never loads it. */
++export async function runBuildDoorV1(root:string,typed:readonly string[],environment:NodeJS.ProcessEnv,ports:BuildDoorPortsV1=buildDoorProcessPortsV1(),sources:BuildDoorSourcesV1={}):Promise<"handled"|"full">{
++ const rules=sources.policy??(policy as BuildDoorPolicyV1);
++ let plan:BuildDoorPlanV1;
++ try{plan=await profilePhaseV1("door.plan",()=>planBuildDoorV1(typed,environment,sources));}catch(error){ports.error(error instanceof Error?error.message:String(error));ports.exit(rules.refusedExitCode);return "handled";}
++ if(environment===process.env)process.env.SEMIO_LANGUAGE=plan.language;
++ const route=plan.route,localized={...environment,SEMIO_LANGUAGE:plan.language};
++ if(route.kind==="full")return "full";
++ if(route.kind==="help"){ports.write(buildHelpForArgumentsV1(route.args,localized));return "handled";}
++ if(route.kind==="refused"){ports.error(renderBuildDoorRefusalV1(route,plan.language,rules));ports.exit(rules.refusedExitCode);return "handled";}
++ const row=rules.light.find(candidate=>candidate.operation===route.operation)!,run=(await profilePhaseV1("door.light-load",()=>ports.load(route.operation)))[row.export] as (...parameters:unknown[])=>Promise<number>;
++ ports.exit(row.call==="args-options"?await run(route.args.slice(1),{environment:localized,write:ports.write}):await run(root,route.args.slice(1),localized,ports.write));
++ return "handled";
++}
++
++/** 🛬️ Resolves the nearest workspace with both build and package markers like the routing module does, without loading it. */
++export function findBuildDoorRootV1(start:string,environment:NodeJS.ProcessEnv=process.env):string{
++ let directory=resolve(start.trim()||environment.SEMIO_WORKSPACE_ROOT?.trim()||environment.REPO_ROOT?.trim()||process.cwd());
++ const boundary=parse(directory).root,distance=relative(boundary,directory);
++ if(isAbsolute(distance)||distance===".."||distance.startsWith(`..${sep}`))throw Error("workspace root boundary must contain its start directory");
++ for(let depth=0;depth<32;depth++){
++  if(["📋️project.json","package.json"].every(filename=>lstatSync(join(directory,filename),{throwIfNoEntry:false})?.isFile())){
++   const {workspaces}=JSON.parse(readFileSync(join(directory,"package.json"),"utf8"));
++   if(Array.isArray(workspaces)||workspaces!==null&&typeof workspaces==="object")return directory;
++  }
++  const parent=dirname(directory);
++  if(parent===directory)break;
++  directory=parent;
++ }
++ throw Error("workspace root with paired build and package markers was not found");
++}
+# stage-clean orphan staged=boot-fast-tools/staged/files/startup-law.json map=None
+--- /dev/null
++++ b/staged/boot-fast-tools/staged/files/startup-law.json
+@@ -0,0 +1,302 @@
++{
++  "version": 1,
++  "description": "A light command must not load a heavy module group. Group match strings are path substrings of the loaded TypeScript or JavaScript modules; `forbid` lists the groups a row may not load; a row with `expectViolations` is a negative control that must load them.",
++  "groups": [
++    {
++      "id": "graph",
++      "match": [
++        "/🏗️build/🕸️graph/",
++        "/⚡️caching/🕸️graph/"
++      ]
++    },
++    {
++      "id": "native-build",
++      "match": [
++        "/🏗️native-build/"
++      ]
++    },
++    {
++      "id": "test-harness",
++      "match": [
++        "/🧪️testing/🏖️sandbox/",
++        "/🧪️testing/🦀️cargo/🟦️.ts",
++        "/🧪️testing/🦀️cargo/🎯️exact/",
++        "/🧪️testing/🦀️laws/"
++      ]
++    },
++    {
++      "id": "cargo",
++      "match": [
++        "/📚️library/🏃️process/🦀️cargo/"
++      ]
++    },
++    {
++      "id": "caller",
++      "match": [
++        "/🏗️build/📥️caller/"
++      ]
++    },
++    {
++      "id": "invocation",
++      "match": [
++        "/🏗️build/🧭️invocation/"
++      ]
++    },
++    {
++      "id": "selection",
++      "match": [
++        "/🏗️build/🧭️selection/"
++      ]
++    },
++    {
++      "id": "resident",
++      "match": [
++        "/🏗️build/🏡️resident/"
++      ]
++    },
++    {
++      "id": "bootstrap",
++      "match": [
++        "/⚡️caching/🚀️bootstrap/"
++      ]
++    },
++    {
++      "id": "store-receipt",
++      "match": [
++        "/🏗️build/🧾️store-receipt/"
++      ]
++    },
++    {
++      "id": "tools",
++      "match": [
++        "/🏗️build/🔧️tools/"
++      ]
++    },
++    {
++      "id": "revision",
++      "match": [
++        "/🏗️build/📥️inputs/🔏️revision/"
++      ]
++    },
++    {
++      "id": "routing",
++      "match": [
++        "/🏃️process/🧭️routing/"
++      ]
++    },
++    {
++      "id": "leases",
++      "match": [
++        "/🏃️process/🔒️leases/",
++        "/🏗️build/🔒️leases/"
++      ]
++    },
++    {
++      "id": "host-capacity",
++      "match": [
++        "/🏗️build/🌡️host-capacity/",
++        "/🏃️process/🏗️build/🌡️host-capacity/"
++      ]
++    }
++  ],
++  "rows": [
++    {
++      "id": "help",
++      "kind": "door",
++      "args": [
++        "repo",
++        "--help"
++      ],
++      "forbid": [
++        "graph",
++        "native-build",
++        "test-harness",
++        "cargo",
++        "caller",
++        "invocation",
++        "selection",
++        "resident",
++        "bootstrap",
++        "store-receipt",
++        "tools",
++        "revision",
++        "routing",
++        "leases",
++        "host-capacity"
++      ],
++      "maximumModules": 11,
++      "maximumBytes": 70000
++    },
++    {
++      "id": "command-help",
++      "kind": "door",
++      "args": [
++        "repo",
++        "run",
++        "--help"
++      ],
++      "forbid": [
++        "graph",
++        "native-build",
++        "test-harness",
++        "cargo",
++        "caller",
++        "invocation",
++        "selection",
++        "resident",
++        "bootstrap",
++        "store-receipt",
++        "tools",
++        "revision",
++        "routing",
++        "leases",
++        "host-capacity"
++      ],
++      "maximumModules": 11,
++      "maximumBytes": 70000
++    },
++    {
++      "id": "refusal",
++      "kind": "door",
++      "args": [
++        "repo",
++        "tools",
++        "status"
++      ],
++      "forbid": [
++        "graph",
++        "native-build",
++        "test-harness",
++        "cargo",
++        "caller",
++        "invocation",
++        "selection",
++        "resident",
++        "bootstrap",
++        "store-receipt",
++        "tools",
++        "revision",
++        "routing",
++        "leases",
++        "host-capacity"
++      ],
++      "maximumModules": 11,
++      "maximumBytes": 70000
++    },
++    {
++      "id": "unknown-command",
++      "kind": "door",
++      "args": [
++        "repo",
++        "nonsense"
++      ],
++      "forbid": [
++        "graph",
++        "native-build",
++        "test-harness",
++        "cargo",
++        "caller",
++        "invocation",
++        "selection",
++        "resident",
++        "bootstrap",
++        "store-receipt",
++        "tools",
++        "revision",
++        "routing",
++        "leases",
++        "host-capacity"
++      ],
++      "maximumModules": 11,
++      "maximumBytes": 70000
++    },
++    {
++      "id": "leases-entry",
++      "kind": "import",
++      "module": "../../../🔒️leases/⌨️command/🟦️.ts",
++      "forbid": [
++        "graph",
++        "native-build",
++        "test-harness",
++        "cargo",
++        "caller",
++        "invocation",
++        "selection",
++        "resident",
++        "bootstrap",
++        "store-receipt",
++        "tools",
++        "revision",
++        "routing"
++      ],
++      "maximumModules": 26,
++      "maximumBytes": 215000
++    },
++    {
++      "id": "capacity-entry",
++      "kind": "import",
++      "module": "../../../🌡️host-capacity/⌨️command/🟦️.ts",
++      "forbid": [
++        "graph",
++        "native-build",
++        "test-harness",
++        "cargo",
++        "caller",
++        "invocation",
++        "selection",
++        "resident",
++        "bootstrap",
++        "store-receipt",
++        "tools",
++        "revision",
++        "routing"
++      ],
++      "maximumModules": 22,
++      "maximumBytes": 165000
++    },
++    {
++      "id": "doctor-entry",
++      "kind": "import",
++      "module": "../../../🩺️doctor/⌨️command/🟦️.ts",
++      "forbid": [
++        "graph",
++        "test-harness",
++        "cargo",
++        "caller",
++        "invocation",
++        "selection",
++        "resident",
++        "store-receipt"
++      ],
++      "maximumModules": 80,
++      "maximumBytes": 940000
++    },
++    {
++      "id": "caller-entry",
++      "kind": "import",
++      "module": "../../../📥️caller/🟦️.ts",
++      "forbid": [
++        "native-build",
++        "test-harness",
++        "cargo"
++      ],
++      "maximumModules": 55,
++      "maximumBytes": 700000
++    },
++    {
++      "id": "negative-control-cargo-execution",
++      "kind": "import",
++      "module": "../../../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts",
++      "forbid": [
++        "native-build",
++        "test-harness",
++        "cargo"
++      ],
++      "expectViolations": [
++        "native-build",
++        "test-harness",
++        "cargo"
++      ]
++    }
++  ]
++}
+# stage-clean orphan staged=boot-fast-tools/staged/files/startup-law.ts map=None
+--- /dev/null
++++ b/staged/boot-fast-tools/staged/files/startup-law.ts
+@@ -0,0 +1,69 @@
++import {afterAll,expect,test} from "bun:test";
++import {spawnSync} from "node:child_process";
++import {existsSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync} from "node:fs";
++import {createRequire} from "node:module";
++import {tmpdir} from "node:os";
++import {dirname,join,resolve} from "node:path";
++import {build} from "esbuild";
++import fixture from "./🔣️.json" with {type:"json"};
++
++const scratch=mkdtempSync(join(tmpdir(),"startup-law-"));
++afterAll(()=>rmSync(scratch,{recursive:true,force:true}));
++const entry=resolve(import.meta.dir,"../../📜️script.ts"),doorCore=resolve(import.meta.dir,"../../🟦️.ts"),groups=fixture.groups;
++const plugin=join(scratch,"loaded-modules.ts"),driver=join(scratch,"import-driver.ts");
++writeFileSync(plugin,'import {readFileSync,writeFileSync} from "node:fs";const seen:string[]=[];Bun.plugin({name:"loaded-modules",setup(build){build.onLoad({filter:/\\.(ts|mjs)$/},args=>{seen.push(args.path);return {contents:readFileSync(args.path,"utf8"),loader:args.path.endsWith(".ts")?"ts":"js"};});}});process.on("exit",()=>{writeFileSync(process.env.LOADED_MODULES_OUT!,JSON.stringify(seen));});\n');
++writeFileSync(driver,'await import(process.argv[2]!);\n');
++
++/** 🚦️ Names the heavy groups a loaded module list reaches, by path substring. */
++const reached=(loaded:readonly string[],selected:readonly string[]):Record<string,string[]>=>Object.fromEntries(groups.filter(group=>selected.includes(group.id)).map(group=>[group.id,loaded.filter(path=>group.match.some(part=>path.includes(part)))]).filter(([,paths])=>(paths as string[]).length>0));
++
++const load=(row:{id:string;kind:string;args?:readonly string[];module?:string}):string[]=>{
++ const out=join(scratch,`${row.id}.json`),arguments_=row.kind==="door"?[entry,...row.args!]:[driver,resolve(import.meta.dir,row.module!)],result=spawnSync(process.execPath,["--preload",plugin,...arguments_],{encoding:"utf8",timeout:60_000,env:{...process.env,SEMIO_LANGUAGE:"en",LOADED_MODULES_OUT:out}});
++ if(result.status!==0&&result.status!==2)throw Error(`${row.id}: exit ${result.status}: ${result.stderr.slice(0,400)}`);
++ return JSON.parse(readFileSync(out,"utf8")) as string[];
++};
++
++test("a light command loads no heavy module group and stays within its module and byte budget; a negative control proves the trace sees the groups",()=>{
++ for(const row of fixture.rows){
++  const loaded=load(row),forbidden=(row as {forbid?:string[]}).forbid??[],expected=(row as {expectViolations?:string[]}).expectViolations,found=reached(loaded,forbidden);
++  if(expected){expect(Object.keys(found).sort(),row.id).toEqual([...expected].sort());continue;}
++  expect(found,`${row.id} reached heavy groups`).toEqual({});
++  const bytes=loaded.reduce((sum,path)=>sum+statSync(path).size,0);
++  expect(loaded.length,`${row.id} modules`).toBeLessThanOrEqual((row as {maximumModules:number}).maximumModules);
++  expect(bytes,`${row.id} bytes`).toBeLessThanOrEqual((row as {maximumBytes:number}).maximumBytes);
++ }
++});
++
++test("the group matcher flags exactly the modules whose path names a group",()=>{
++ const base="/w/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
++ const loaded=[`${base}/🏗️build/🕸️graph/🟦️.ts`,`${base}/🏗️build/⚙️operations/📖️help/🟦️.ts`,`/w/🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🟦️.ts`];
++ expect(reached(loaded,groups.map(group=>group.id))).toEqual({graph:[loaded[0]!],"test-harness":[loaded[2]!]});
++ expect(reached(loaded,["caller"])).toEqual({});
++});
++
++test("the traced front door equals the static closure an independent bundler computes",async()=>{
++ const traced=load({id:"closure-help",kind:"door",args:["repo","--help"]}).filter(path=>path!==entry&&!path.endsWith("/⚙️runtime/🏁️main/🟦️.ts")).sort();
++ const result=await build({entryPoints:[doorCore],bundle:true,format:"esm",platform:"node",write:false,outdir:join(scratch,"bundle"),metafile:true,external:["node:*","bun:*"],logLevel:"silent",plugins:[{name:"light-entries",setup(builder){builder.onResolve({filter:/.*/},args=>args.path.includes("⌨️command")?{path:args.path,external:true}:undefined);}}]});
++ const inputs=Object.keys(result.metafile.inputs).filter(path=>!path.endsWith(".json")).map(path=>resolve(process.cwd(),path)).sort();
++ expect(traced).toEqual([...new Set(inputs)].sort());
++});
++
++test("the Cargo execution contract the build caller loads lazily still resolves from the caller and exports its issuer, and the caller keeps no static import of it",()=>{
++ const caller=resolve(import.meta.dir,"../../../📥️caller/🟦️.ts"),source=readFileSync(caller,"utf8"),literals=[...source.matchAll(/createRequire\(import\.meta\.url\)\("([^"]+)"\)/gu)].map(match=>match[1]!);
++ expect(literals.length).toBe(1);
++ expect(/^import[^\n]*from\s*["'][^"']*🦀️cargo\/🏃️execution\//mu.test(source)).toBe(false);
++ const loaded=createRequire(caller)(resolve(dirname(caller),literals[0]!)) as {issueRepositoryCargoExecutionBackendV1?:unknown};
++ expect(typeof loaded.issueRepositoryCargoExecutionBackendV1).toBe("function");
++});
++
++test("the performance table states the startup objective this front door is held to",()=>{
++ const table=resolve(import.meta.dir,"../../../📏️incremental/🏎️bench/🎯️slo/🔣️.json");
++ if(!existsSync(table))return;
++ const {slos,probes}=JSON.parse(readFileSync(table,"utf8")) as {slos:{id:string;probe:string;statistic:string;goal:number|null;gate:number|null;enforcement:string;tools:string[]}[];probes:{id:string;kind:string}[]};
++ const row=slos.find(candidate=>candidate.id==="cli-help-p50");
++ expect(row).toBeDefined();
++ expect([row!.statistic,row!.tools,row!.enforcement]).toEqual(["p50",["neutral"],"blocking"]);
++ expect(probes.find(candidate=>candidate.id===row!.probe)?.kind).toBe("cli-help");
++ expect(row!.goal!).toBeLessThanOrEqual(100);
++ expect(row!.gate!).toBeLessThan(1000);
++});
+# stage-clean orphan staged=boot-fast-tools/staged/files/validator-block.txt map=None
+--- /dev/null
++++ b/staged/boot-fast-tools/staged/files/validator-block.txt
+@@ -0,0 +1,6 @@
++
++/** 🏎️ Schema patterns whose three look-aheads each scan the whole path again, with the regular expression that accepts exactly the same strings in one pass (the verdicts are checked against the original on every distinct pattern of the repository's schemas and against Ajv in the validator tests). */
++const jsonSchemaSubsetLinearPatterns: ReadonlyMap<string, string> = new Map([[String.raw`^(?!/)(?!.*(?:^|/)\.\.(?:/|$))(?!.*\\)(?!.*\u0000).+$`, String.raw`^(?=[^\n\r\u2028\u2029])(?!/)(?:(?!\.\.(?:/|$))[^/\\\u0000\n\r\u2028\u2029]*(?:/|$))+$`]]);
++
++/** 🔤️ Compiles one schema pattern in unicode mode, through its single-pass equivalent when one is known. */
++function jsonSchemaSubsetPattern(source: string): RegExp { return new RegExp(jsonSchemaSubsetLinearPatterns.get(source) ?? source, "u"); }
+# stage-clean orphan staged=boot-fast-tools/staged/files/validator-patterns.json.pre-r7 map=None
+--- /dev/null
++++ b/staged/boot-fast-tools/staged/files/validator-patterns.json.pre-r7
+@@ -0,0 +1,969 @@
++{
++ "version": 1,
++ "description": "Schema patterns of the repository (every distinct pattern of a schema JSON file under the framework) and the strings that must be accepted or refused exactly as the unicode regular expression decides; path is the shared relative path pattern with its expected verdicts.",
++ "atoms": [
++  "a",
++  "..",
++  ".",
++  "/",
++  "//",
++  "\\",
++  "\u0000",
++  "\n",
++  "\r",
++  "\u2028",
++  "\u2029",
++  "\ud83e\udd80\ufe0f",
++  "\ud83d\ude00",
++  "x y",
++  ":",
++  "*",
++  "?",
++  "\u00e9",
++  "-",
++  "1",
++  "0",
++  "A",
++  "_",
++  "@",
++  "Cargo.toml",
++  ".ts",
++  "\ud800",
++  "\ude00",
++  "",
++  "{",
++  "}"
++ ],
++ "path": {
++  "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!.*\\u0000).+$",
++  "verdicts": [
++   {
++    "value": "a",
++    "valid": true
++   },
++   {
++    "value": "a/b",
++    "valid": true
++   },
++   {
++    "value": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\udd80\ufe0frust/\ud83d\udccb\ufe0fproject.json",
++    "valid": true
++   },
++   {
++    "value": "a//b",
++    "valid": true
++   },
++   {
++    "value": "a/",
++    "valid": true
++   },
++   {
++    "value": "a/.b",
++    "valid": true
++   },
++   {
++    "value": "a/..b",
++    "valid": true
++   },
++   {
++    "value": "a..",
++    "valid": true
++   },
++   {
++    "value": "/a",
++    "valid": false
++   },
++   {
++    "value": "",
++    "valid": false
++   },
++   {
++    "value": "..",
++    "valid": false
++   },
++   {
++    "value": "../a",
++    "valid": false
++   },
++   {
++    "value": "a/..",
++    "valid": false
++   },
++   {
++    "value": "a/../b",
++    "valid": false
++   },
++   {
++    "value": "a\\b",
++    "valid": false
++   },
++   {
++    "value": "a\u0000b",
++    "valid": false
++   },
++   {
++    "value": "a\nb",
++    "valid": false
++   },
++   {
++    "value": "a\r",
++    "valid": false
++   },
++   {
++    "value": "a\u2028b",
++    "valid": false
++   }
++  ]
++ },
++ "patterns": [
++  "\"pick\"\n\ud83e\udde9\\",
++  "(",
++  "(?:^(?:\ud83e\uddeb\ufe0ffixtures|\ud83e\uddeb\ufe0fexamples|\ud83e\uddea\ufe0ffixtures|\ud83e\uddea\ufe0fexamples)(?:/|$)|(?:^|/)(?!\ud83d\udd28\ufe0fmodules/)[^/]+/(?:\ud83e\uddeb\ufe0ffixtures|\ud83e\uddeb\ufe0fexamples|\ud83e\uddea\ufe0ffixtures|\ud83e\uddea\ufe0fexamples)(?:/|$))",
++  "(?:^test_.+|.+_test)\\.py$",
++  "(?:^|/)\\.\\.?(?:/|$)",
++  "(?:^|/)\\.{1,2}(?:/|$)",
++  "(?:^|[^a-z])(?:generate|generator)(?:-|$)",
++  "(^|/)\\.(project|classpath|vsconfig|cursorrules|windsurfrules)$",
++  "(^|/)\\.(vscode|vscode-insiders|idea|fleet|zed|vs|run|nova|settings|metadata|windsurf|kiro|atom|brackets)(/|$)",
++  "(^|/)\\.cursor/(?!plans(?:/|$))",
++  "(^|/)\\.cursor/(mcp|hooks|settings)\\.json$",
++  "(^|/)\\.cursor/rules(/|$)",
++  "(^|/)\\.devcontainer/editor-overlay\\.json$",
++  "(^|/)cmakesettings\\.json$",
++  "(^|[^\"'`A-Za-z0-9_$])(withNativePersistentStateV1|withNativePersistentStateTaskV1|openPersistentNativeImageV1|withPersistentNative\\w*StorageV1|withRepositoryDevelopmentState\\w*|withDevLocalHubSessionV1)\\s*[(<]",
++  "(^|[^A-Za-z0-9_])\\.cache/b(\\b|/)|\u26a1\ufe0fcache|\\.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache",
++  "(localhost|127\\.0\\.0\\.1|\\[::1\\]|0\\.0\\.0\\.0):[1-9][0-9]{3,4}\\b",
++  "(process\\.cwd\\(\\)|import\\.meta\\.(dir|dirname)|repoRoot|workspaceRoot)[^;\\n]{0,80}\ud83c\udfab\ufe0ftickets[^;\\n]{0,160}\ud83d\uddd1\ufe0fgenerated",
++  "**/*",
++  "**/*.go",
++  "**/*.rs",
++  "**/*.test.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
++  "**/*.ts",
++  "**/*.{ts,tsx,py,cs,go,rs}",
++  "**/*.{ts,tsx}",
++  "**/*.{ts,{tsx,js}}",
++  "**/Cargo.toml",
++  "**/\\{source\\}/file.go",
++  "**/guest",
++  "**/guest/**",
++  "**/x,y.go",
++  "**/{source,tests}/**/*.go",
++  "**/{source}/file.go",
++  "**/\ud83c\udfc5\ufe0fstandards/**",
++  "**/\ud83d\udccb\ufe0fproject.json",
++  "**/\ud83d\udcdc\ufe0fscript.ts",
++  "**/\ud83d\udce6\ufe0fpackages/*/{Cargo.toml,package.json}",
++  "**/\ud83d\udd23\ufe0f.json",
++  "**/\ud83d\udfe6\ufe0f.ts",
++  "**/\ud83e\uddea\ufe0ftests/**/*",
++  "*.go",
++  "//",
++  "/Cargo\\.toml$",
++  "/directory/commands",
++  "/directory/event-page/v1",
++  "/directory/events",
++  "/directory/preference-page/v1",
++  "/directory/spaces",
++  "/directory/spaces/:spaceId",
++  ":$",
++  "?.go",
++  "?/Cargo.toml",
++  "Cargo.lock$",
++  "Cargo.toml",
++  "Target is unavailable.",
++  "Tests?\\.cs$",
++  "[!a-c]/Cargo.toml",
++  "[!a].go",
++  "[\"'`](/tmp|/private/tmp|/var/tmp)/[A-Za-z0-9._{$-]",
++  "[$`]",
++  "[\\\\:\\u0000-\\u001f]",
++  "[\\u0000-\\u001f\\u007f]",
++  "[\\uD800-\\uDFFF]",
++  "[^\\t\\n\\u000b\\f\\r \\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]",
++  "[^a].go",
++  "[a-c].go",
++  "[a-c]/Cargo.toml",
++  "[abc].go",
++  "\\$\\{index\\}.*\\$\\{total\\}",
++  "\\.(?:test|spec|e2e|integration)\\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$",
++  "\\.(sln|slnx|code-workspace|iml|ipr|iws|suo|user|userosscache|sln.docstates|sublime-project|sublime-workspace|sublime-build)$",
++  "\\.cursor[/\\\\](?!plans(?:[/\\\\]|$))",
++  "\\.cursor[/\\\\](?:mcp|hooks|settings)\\.json|\\.cursor[/\\\\]rules(?:[/\\\\]|$)|\\.(cursorrules|windsurfrules)\\b|\\.sublime-(project|workspace|build)\\b|cmakesettings\\.json",
++  "\\.listen\\(\\s*(port|Number\\([^)]*\\.port\\))\\s*,|\\bBun\\.serve\\(\\{[^}\\n]{0,80}\\bport\\s*[,}]",
++  "\\.rs$",
++  "\\.test-d\\.ts$",
++  "\\.vscode(?:-insiders)?[/\\\\]|\\.(idea|fleet|zed|vs|run|nova|settings|metadata|windsurf|kiro|atom|brackets)(/|\\\\)|launch\\.json|\ud83e\udde9\ufe0flaunch\\.seed\\.jsonc",
++  "\\S",
++  "\\b(fs::(write|create_dir_all|create_dir|remove_dir_all|remove_file|copy|rename)|File::create)\\([^;\\n]{0,200}?(CARGO_MANIFEST_DIR|current_dir\\(\\))",
++  "\\b(join|resolve)\\(\\s*(os\\.)?tmpdir\\(\\)\\s*,\\s*[\"'`][^\"'`$\\n]+[\"'`]\\s*\\)|temp_dir\\(\\)\\s*\\.join\\(\"[^\"{]*\"\\)|filepath\\.Join\\(os\\.TempDir\\(\\),\\s*\"[^\"]+\"\\)|[\"'`](/tmp|/private/tmp|/var/tmp)/[A-Za-z0-9._-]+[\"'`]\\s*[,)]\\s*(\\{[^}\\n]*recursive|[^;\\n]{0,40}(mkdir|writeFile|rmSync|rm\\())",
++  "\\b(listen|serve|Listen|ListenAndServe|ListenTCP)\\(\\s*(\\{[^}\\n]{0,120}\\bport\\s*:\\s*)?[1-9][0-9]{3,4}\\b|\\b(TcpListener|UdpSocket|UnixListener)::bind\\(\\s*\"[0-9.:a-zA-Z\\[\\]]*:[1-9][0-9]{3,4}\"|\\bnet\\.Listen\\(\"tcp[46]?\",\\s*\"[0-9.]*:[1-9][0-9]{3,4}\"|--port[ =]+[1-9][0-9]{3,4}\\b|\\bPORT=[1-9][0-9]{3,4}\\b",
++  "\\b(pkill|killall)\\b",
++  "\\b(withRepositoryBuildGraphFactStoreV1|withRepositoryBuildGraphArtifactV1|requireRepositoryBuildGraphWriterV1|withRepositoryBuildInferenceDatasetV1|withBuildGraphStateV1|withBuildGraphOptionalPublicationV1)\\(\\s*(process\\.cwd\\(\\)|workspace\\b)|\\bwithRepositoryCacheStoreV1\\(\\s*(process\\.cwd\\(\\)|workspace)\\s*,\\s*[\"'`](graph|dependencies|products|compiler|cargo|leases)[\"'`]",
++  "\\b(writeFileSync|appendFileSync|mkdirSync|rmSync|rmdirSync|unlinkSync|renameSync|truncateSync|createWriteStream|writeFile|appendFile|mkdir|rm|rmdir|unlink|rename|truncate|Bun\\.write)\\(\\s*((path\\.)?(join|resolve)\\(\\s*)?((^|[^A-Za-z0-9_])\\.cache(/|\\b)|\u26a1\ufe0fcache|\\.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache)|\\b(cpSync|copyFileSync|cp|copyFile|symlinkSync|symlink|linkSync|link|renameSync|rename)\\(\\s*[^,;\\n]{1,120},\\s*((path\\.)?(join|resolve)\\(\\s*)?((^|[^A-Za-z0-9_])\\.cache(/|\\b)|\u26a1\ufe0fcache|\\.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache)",
++  "\\b(writeFileSync|appendFileSync|mkdirSync|rmSync|rmdirSync|unlinkSync|renameSync|truncateSync|createWriteStream|writeFile|appendFile|mkdir|rm|rmdir|unlink|rename|truncate|Bun\\.write)\\(\\s*((path\\.)?(join|resolve)\\(\\s*)?(process\\.cwd\\(\\)|import\\.meta\\.(dir|dirname|path|url)\\b|__dirname|__filename)|\\b(cpSync|copyFileSync|cp|copyFile|symlinkSync|symlink|linkSync|link|renameSync|rename)\\(\\s*[^,;\\n]{1,120},\\s*((path\\.)?(join|resolve)\\(\\s*)?(process\\.cwd\\(\\)|import\\.meta\\.(dir|dirname|path|url)\\b|__dirname|__filename)",
++  "\\b(writeFileSync|appendFileSync|mkdirSync|rmSync|rmdirSync|unlinkSync|renameSync|truncateSync|createWriteStream|writeFile|appendFile|mkdir|rm|rmdir|unlink|rename|truncate|Bun\\.write)\\(\\s*((path\\.)?(join|resolve)\\(\\s*)?\\b(repoRoot|repositoryRoot|REPO_ROOT|workspaceRoot|WORKSPACE_ROOT|checkoutRoot|SEMIO_WORKSPACE_ROOT)\\b|\\b(cpSync|copyFileSync|cp|copyFile|symlinkSync|symlink|linkSync|link|renameSync|rename)\\(\\s*[^,;\\n]{1,120},\\s*((path\\.)?(join|resolve)\\(\\s*)?\\b(repoRoot|repositoryRoot|REPO_ROOT|workspaceRoot|WORKSPACE_ROOT|checkoutRoot|SEMIO_WORKSPACE_ROOT)\\b",
++  "\\bhomedir\\(\\)|process\\.env\\.(HOME|USERPROFILE)\\b|os\\.UserHomeDir|dirs::home_dir|env::var\\(\"HOME\"\\)",
++  "\\bnx(?:\\.js)?[\"']?\\s+run\\s+['\"]?@semio-tech\\/",
++  "\\bos\\.(WriteFile|MkdirAll|Mkdir|Create|Remove|RemoveAll|Rename|OpenFile)\\([^;\\n]{0,200}?(\\.\\./|os\\.Getwd|runtime\\.Caller)",
++  "\\bport\\s*(:|=)\\s*[1-9][0-9]{3,4}\\b",
++  "\\bprocess\\.chdir\\(|\\bos\\.Chdir\\(",
++  "\\{elapsed\\}",
++  "^!?\\{(?:projectRoot|workspaceRoot)\\}/",
++  "^!?\\{(?:workspaceRoot|projectRoot)\\}/\\S+$",
++  "^\"[0-9a-f]{64}\"$",
++  "^#[0-9a-fA-F]{6}$",
++  "^#[0-9a-f]{6}$",
++  "^(!|\\?|\\*|\\+|[0-9]+)$",
++  "^((compound|group):|repo:(ticket\\.(show|files|close|reopen):.|(draft\\.(start|discard)|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$))",
++  "^((ctrl|alt|shift)\\+)*(\\S|[a-z]+[0-9]*)$",
++  "^((ctrl|alt|shift)\\+)*(ctrl|alt)\\+((ctrl|alt|shift)\\+)*(\\S|[a-z]+[0-9]*)$",
++  "^((grpc|grpcs)://[^\\s\\u0000/][^\\s\\u0000]*|unix:[^\\s\\u0000]+)$",
++  "^(-|[0-9a-f]{64})$",
++  "^(/([^/~]|~[01])*)*$",
++  "^(/([^~/]|~[01])*)*$",
++  "^(/.*)?$",
++  "^(/[^/]+)+$",
++  "^(/|[A-Za-z]:[\\\\/])",
++  "^(0|-?([1-9][0-9]{0,17}|[1-8][0-9]{18}|9[01][0-9]{17}|92[01][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[01][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-7])|-9223372036854775808)$",
++  "^(0|-?[1-9][0-9]*)$",
++  "^(0|-?[1-9][0-9]{0,18})$",
++  "^(0|[1-9][0-9]*)$",
++  "^(0|[1-9][0-9]*)(:(0|[1-9][0-9]*)){6}$",
++  "^(0|[1-9][0-9]{0,10})$",
++  "^(0|[1-9][0-9]{0,15})$",
++  "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$",
++  "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|1844674407370955[0][0-9]{3}|18446744073709551[0-5][0-9]{2}|184467440737095516[0][0-9]|1844674407370955161[0-5])$",
++  "^(0|[1-9][0-9]{0,19})$",
++  "^(0|[1-9][0-9]{0,5})$",
++  "^(?! )(?!.*[\\u0000-\\u001f\\u007f-\\u009f\\ud800-\\udfff]).*[^ ]$",
++  "^(?!!?$)(?!!?/)(?!!?[A-Za-z]:/)(?!.*\\\\).+$",
++  "^(?!(?:/|[A-Za-z]:))(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\:\\u0000-\\u0020])(?:[^/]+/)*Cargo\\.toml$",
++  "^(?!(?:ac|cas|v1|healthz|status)$)[a-z0-9][a-z0-9._-]{0,63}$",
++  "^(?!(?:tag:|!))[^*?\\[\\]{}()\\\\]+$",
++  "^(?!(playground|tool|compound|group|ticket):)(?!repo:(ticket\\.(show|files|close|reopen):.|(draft\\.(start|discard)|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$))[^\\s:]+:\\S+$",
++  "^(?!.*(?:^|/)(?:\ud83d\udd24\ufe0ftokens|\ud83c\udfa8\ufe0fpalette)(?:/|$))[\\s\\S]+$",
++  "^(?!.*(?:^|/)(?:\ud83e\uddea\ufe0ftests|\ud83e\uddeb\ufe0ffixtures|\ud83e\udd16\ufe0fgenerated|node_modules|\\.\ud83e\uddecsemio|\\.git|dist|target|\\.vite|\\.stage)(?:/|$))[\\s\\S]+$",
++  "^(?!.*(?:^|/)\\.\\.?(/|$))[^/\\\\\\u0000:]+(?:/[^/\\\\\\u0000:]+)*$",
++  "^(?!.*(?:^|/)\\.{1,2}(?:/|$))/[^?#%\\\\\\s]+$",
++  "^(?!.*(?:^|/)\\.{1,2}(?:/|$))[^:/\\\\\\u0000]+(?:/[^:/\\\\\\u0000]+)*$",
++  "^(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\/\\u0000-\\u001f\\u007f:]+(?:/[^\\\\/\\u0000-\\u001f\\u007f:]+)*$",
++  "^(?!.*(?:^|[\\\\/])(?:\\.{1,2}|\\.semio-artifact\\.json)(?:[\\\\/]|$))[^\\\\/:\\u0000-\\u001f\\u007f]+(?:[\\\\/][^\\\\/:\\u0000-\\u001f\\u007f]+)*$",
++  "^(?!.*\\.\\.).+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\\\:\\u0000]).+/Cargo\\.toml$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!.*\\u0000).+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).*/\ud83e\udd80\ufe0f\\.rs$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).*Cargo\\.toml$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+\\.ts$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\\\u0000-\\u001f]+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\\\u0000]+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000-\\u001f]+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.?($|/))(?!.*\\\\).+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.?(/|$))(?!.*[\\\\:*?{}\\[\\]\\u0000]).+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*[\\\\:\\u0000-\\u001f]).+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\u0000]+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\:*?\"<>|\u0000-\u001f]+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000-\\u001F:]+$",
++  "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\u0000\\\\]+$",
++  "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*/$)[^\\\\\\u0000-\\u001f\\u007f]+$",
++  "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*[/:\\\\]$)[^:\\\\\\u0000-\\u001f]*$",
++  "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$",
++  "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\%?#\\u0000-\\u001f]+$",
++  "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\:\\u0000]+$",
++  "^(?!/)(?!.*[\\\\:*?\"<>|\\u0000-\\u001f])(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$)).+$",
++  "^(?!/)(?!.*[\\\\:\\u0000-\\u001f])(?!.*(?:^|/)\\.\\.?(/|$))(?!.*//).+/units/(prototype|release)/[a-f0-9]{20}$",
++  "^(?!/)(?!.*[\\\\:\\u0000-\\u001f])(?!.*(?:^|/)\\.\\.?(/|$))(?!.*//)[^\\u0000-\\u001f]+$",
++  "^(?!/)(?!.*[\\\\:\\x00-\\x1f])(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)[^/]+(?:/[^/]+)*$",
++  "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).*Cargo\\.toml$",
++  "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(/|$))[^\\\\\\u0000]+$",
++  "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000]+$",
++  "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*[/]$)[^\\\\%?#\\u0000-\\u001f]+$",
++  "^(?!/)(?![A-Za-z]:)(?!.*[\\\\\\u0000-\\u001f:*?\"<>|])(?!.*(?:^|/)(?:\\.|\\.\\.)(?:/|$))(?!.*//)(?!.* /)(?!compose(?:/|$))(?!temp/compose(?:/|$))[^/]+(?:/[^/]+)*$",
++  "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).*Cargo\\.toml$",
++  "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//).+[^/]$",
++  "^(?!/)(?![A-Za-z]:)(?!.*\\\\).+$",
++  "^(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?:.*/)?Cargo\\.toml$",
++  "^(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$",
++  "^(?!/)(?![A-Za-z]:/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?:Cargo\\.toml|.+/Cargo\\.toml)$",
++  "^(?!/)(?![A-Za-z]:/)(?!.*\\\\)(?:.*/)?\ud83d\udcdc\ufe0fscript\\.ts$",
++  "^(?!/)(?![\\s\\S]*(?:^|/)\\.{1,2}(?:/|$))(?![\\s\\S]*(?:[\\\\:\\u0000-\\u001f\\u007f]|//))[^/]+(?:/[^/]+)*$",
++  "^(?!/)(?!\\.semio-native-index(?:/|$))(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*[\\\\\\u0000-\\u001f])[^:]+$",
++  "^(?!/|[A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$",
++  "^(?!/|[A-Za-z]:)(?!.*//)(?!.*/$)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000]+$",
++  "^(?!0{32}$)[0-9a-f]{32}$",
++  "^(?!0{64}$)[0-9a-f]{64}$",
++  "^(?![/\\\\])(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$",
++  "^(?![/\\\\]|[A-Za-z]:)(?!.*[\\\\\\u0000-\\u001f])(?!.*(?:^|/)\\.(?:/|$))[^/]+(?:/[^/]+)*$",
++  "^(?![/~\\\\])(?![A-Za-z]:)(?!(.*/)?\\.\\.(/|$))[^\\u0000\\\\]*$",
++  "^(?![/~\\\\])(?![A-Za-z]:)(?!(.*/)?\\.\\.(/|$))[^\\u0000\\\\]+\\.json$",
++  "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*\\\\)(?:[^/]+/)*Cargo\\.toml$",
++  "^(?![A-Za-z]:)(?!/)(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000-\\u001f\\u007f]+[^/\\\\\\u0000-\\u001f\\u007f]$(?![\\s\\S])|^[^/\\\\.\\u0000-\\u001f\\u007f]$(?![\\s\\S])",
++  "^(?![A-Za-z]:)(?!/)(?!.*[\\\\\\u0000-\\u001f])(?!(?:.*\\/)?\\.{1,2}(?:\\/|$))[^/]+(?:/[^/]+)*$",
++  "^(?![A-Za-z]:)(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*[\\x00-\\x1f])[^/]+(?:/[^/]+)*$",
++  "^(?![\\\\/])(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\:?#%\\x00-\\x1f]+$",
++  "^(?![\ud83d\udcc1\ud83d\udcc2\ud83d\udcc4])(?:\\p{Extended_Pictographic}\\uFE0F(?:\\u200D\\p{Extended_Pictographic}\\uFE0F)*|[0-9#*]\\uFE0F\\u20E3)[a-z0-9]+(?:-[a-z0-9]+)*$",
++  "^(?!\\.)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_./-]+$",
++  "^(?!\\.\\.?/)[A-Za-z0-9_.-]+/(?!\\.\\.?$)[A-Za-z0-9_.-]+$",
++  "^(?!\\.semio-artifact\\.json(?:/|$))(?!/)(?![\\s\\S]*(?:[\\\\:\\u0000-\\u001f\\u007f]|//))(?![\\s\\S]*(?:^|/)\\.{1,2}(?:/|$))[^/]+(?:/[^/]+)*$",
++  "^(?!\\.{1,2}$)(?!.*[/:\\\\\\u0000-\\u001f])[^/]+$",
++  "^(?!\\.{1,2}$)(?![cC][oO][mM][pP][oO][sS][eE]$)[^/\\\\:*?{}\\u0000-\\u001f\\u2028\\u2029]+$",
++  "^(?!\\.{1,2}$)[^/\\\\\\u0000-\\u001f\\u007f?#%]+$",
++  "^(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))[^\\\\:/\\u0000-\\u001f]+(?:/[^\\\\:/\\u0000-\\u001f]+)*$",
++  "^(?!\\.|/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_+./-]+$",
++  "^(?!\\s)(?!.*\\s$)[^\\u0000-\\u001f\\u007f-\\u009f]+$",
++  "^(?!compose(?:/|$))(?!.*(?:^|/)compose(?:/|$)).+/\ud83e\uddec\ufe0fmutations/.+$",
++  "^(?!rpc\\.)[^\\u0000-\\u001f]+$",
++  "^(?!warming$)[^\\u0000-\\u001f\\u007f]+$",
++  "^(?:(?!\\.\\.?/)[^/\\\\:]+/)*Cargo\\.toml$",
++  "^(?:(?!\\.{1,2}/)[^/\\\\\\u0000-\\u001f\\u007f?#%]+/){0,15}(?!\\.{1,2}$)[^/\\\\\\u0000-\\u001f\\u007f?#%]+$",
++  "^(?:(?:job|pass|provenance|components):[A-Za-z0-9_.@-]{1,128}|[A-Za-z0-9_-]{1,128}:[a-z][a-z0-9-]{0,47})$",
++  "^(?:.*[/\\\\])?(?:[gG][iI][tT][kK][rR][aA][kK][eE][nN]|[cC][oO][dD][eE]|[cC][oO][dD][eE]-[iI][nN][sS][iI][dD][eE][rR][sS]|[cC][uU][rR][sS][oO][rR]|[wW][iI][nN][dD][sS][uU][rR][fF]|[zZ][eE][dD]|[fF][lL][eE][eE][tT]|[iI][dD][eE][aA]|[rR][iI][dD][eE][rR]|[dD][eE][vV][eE][nN][vV]|[sS][uU][bB][lL]|[sS][uU][bB][lL][iI][mM][eE]_[tT][eE][xX][tT]|[nN][vV][iI][mM]|[vV][iI][mM]|[gG][vV][iI][mM]|[eE][mM][aA][cC][sS]|[kK][aA][tT][eE]|[nN][oO][vV][aA]|[eE][cC][lL][iI][pP][sS][eE]|[nN][eE][tT][bB][eE][aA][nN][sS]|[sS][tT][uU][dD][iI][oO])(?:\\.[eE][xX][eE]|\\.[cC][mM][dD]|\\.[aA][pP][pP])?$",
++  "^(?:.*[/\\\\])?(?:[oO][pP][eE][nN]|[sS][tT][aA][rR][tT]|[cC][mM][dD]|[pP][oO][wW][eE][rR][sS][hH][eE][lL][lL]|[pP][wW][sS][hH])(?:\\.[eE][xX][eE]|\\.[cC][mM][dD]|\\.[aA][pP][pP])?$",
++  "^(?:/(?:[^~]|~[01])*)+$",
++  "^(?:/|[A-Za-z]:[\\\\/])",
++  "^(?:/|[A-Za-z]:[\\\\/])[^\\u0000]*$",
++  "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\)",
++  "^(?:0|(?:[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615))$",
++  "^(?:0|[1-9][0-9]*)$",
++  "^(?:0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4]|18446744073709551615)$",
++  "^(?:0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$",
++  "^(?:0|[1-9][0-9]{0,19})$",
++  "^(?:@[^/]+/)?[^/]+$",
++  "^(?:@[a-z0-9-]+/)?[a-z0-9][a-z0-9._-]*$",
++  "^(?:@[a-z0-9][a-z0-9-]*/)?[a-z0-9][a-z0-9-]*$",
++  "^(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*$",
++  "^(?:[0-9#*]\\uFE0F?\\u20E3|\\p{Extended_Pictographic})[\\uFE0F\\u200D\\p{Extended_Pictographic}\\p{Emoji_Modifier}]*[a-z0-9][a-z0-9.+-]*$",
++  "^(?:[0-9]+\\.[0-9]+\\.[0-9]+|workspace:\\*)$",
++  "^(?:[0-9]{1,19}|18446744073709551615|0[0-9]{19}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4])$",
++  "^(?:[0-9a-f]{16})*$",
++  "^(?:[0-9a-f]{20}){0,8}$",
++  "^(?:[0-9a-f]{2})*$",
++  "^(?:[0-9a-f]{2})+$",
++  "^(?:[0-9a-f]{40}|[0-9a-f]{64})$",
++  "^(?:[0-9a-f]{8}|[0-9a-f]{16})$",
++  "^(?:[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4]|18446744073709551615)$",
++  "^(?:[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$",
++  "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?$",
++  "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
++  "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$",
++  "^(?:[a-f0-9]{2})*$",
++  "^(?:[a-f0-9]{2})+$",
++  "^(?:[a-z0-9]+(?:-[a-z0-9]+)*)?$",
++  "^(?:\\*|[A-Za-z0-9][A-Za-z0-9._:/-]*)$",
++  "^(?:\\.|[^./\\\\:\\u0000][^/\\\\:\\u0000]*)$",
++  "^(?:\\.|[^/\\\\\\u0000][^\\\\\\u0000]*)$",
++  "^(?:\\.|[^/\\s*?{}][^*?{}]*)$",
++  "^(?:build|prepare|activate|wasm|native|package|bundle|cpp|publish|canonical|preview|setup|deps)(?:-|$)",
++  "^(?:canonical|authority)\\.json(?:\\.[a-f0-9-]{36})?$",
++  "^(?:check|lint|verify|typecheck|format-check|contract|schema|stdio)(?:-|$)|-check$",
++  "^(?:package[.]json|bun[.]lock|[.]semio-authorizer-source[.]json|[.]semio-authorizer-compiler[.]json|[.]semio-sdk-material[.]json|patches/[a-f0-9]{64}[.]patch)$",
++  "^(?:package[.]json|bun[.]lock|patches[/][a-f0-9]{64}[.]patch|[.]semio-authorizer-source[.]json|[.]semio-authorizer-compiler[.]json|[.]semio-sdk-material[.]json|[.]semio-nx-tooling[.]json)$",
++  "^(?:source|lock):[a-f0-9]{64}$",
++  "^(?:test|smoke|mutation|bench|e2e)(?:-|$)",
++  "^(?:|[a-f0-9]{64}\\.sqlite)$",
++  "^(?:|node_modules(?:/(?![.]{1,2}(?:/|$))[^/\\\\\\u0000]+)*)$",
++  "^(?=.*[0-9A-Za-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u0131\\u0134-\\u013E\\u0141-\\u0148\\u014A-\\u017E\\u0180-\\u01BA\\u01BC-\\u01BF\\u01CD-\\u01F0\\u01F4-\\u024F\\u1E00-\\u1E99\\u1E9C-\\u1EFF])[0-9A-Za-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u0131\\u0134-\\u013E\\u0141-\\u0148\\u014A-\\u017E\\u0180-\\u01BA\\u01BC-\\u01BF\\u01CD-\\u01F0\\u01F4-\\u024F\\u1E00-\\u1E99\\u1E9C-\\u1EFF'._-]+(?: [0-9A-Za-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u0131\\u0134-\\u013E\\u0141-\\u0148\\u014A-\\u017E\\u0180-\\u01BA\\u01BC-\\u01BF\\u01CD-\\u01F0\\u01F4-\\u024F\\u1E00-\\u1E99\\u1E9C-\\u1EFF'._-]+)*$",
++  "^(@[A-Za-z0-9._-]+/)?[A-Za-z0-9._-]+$",
++  "^([0-9]+\\.[0-9]+\\.[0-9]+)",
++  "^([0-9]+\\.[0-9]+\\.[0-9]+|[a-f0-9]{40})$",
++  "^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\\.([0-9]{1,7}))?Z\\s*$",
++  "^([0-9a-f]{16}|-)$",
++  "^([0-9a-f]{2})*$",
++  "^([0-9a-f]{2})+$",
++  "^([1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$",
++  "^([2-9]|[1-9][0-9]+)$",
++  "^([a-f0-9]{64})(?:\\.authority)?\\.json$",
++  "^([a-z0-9][a-z0-9._-]{0,63})?$",
++  "^([a-z][a-z0-9-]*)?$",
++  "^(app|mutation|plugin|history-filter|window-transient|timeTravel|toolRun|toolTransaction|transaction|interactive-job|artifact-envelope|artifact-store|window-config)(\\.[a-z][a-z0-9]*(-[a-z0-9]+)*)+$",
++  "^(a|[b-d]){1,4}$",
++  "^(closed divergence|shared callback|candidate-only callback)",
++  "^(concurrent|cancelGraceMs|progressIntervalMs|heartbeatMs|captureBytes|stdoutBytes|stderrBytes|dataBytes|textBytes|maxArguments|maxArgumentBytes)$",
++  "^(darwin|linux|win32)$",
++  "^(darwin|linux|windows)-(arm64|x64)$",
++  "^(ghcr\\.io/buildbarn/bb-[a-z-]+|docker\\.io/library/ubuntu)$",
++  "^(kernel|charts|hierarchy|network|flow|geo|spatial|matrix|diagram|scientific|timeline|table|annotation|dashboard|infographic|layout|scale|axis|legend|label|interactionstate|theme)(/[a-z0-9-]+)?$",
++  "^(linux|darwin|win32)-(x64|arm64)$",
++  "^(linux|macos|windows)-(prototype|release)$",
++  "^(nx|@nx/devkit)(/[A-Za-z0-9._/-]+)?$",
++  "^(nx|bazel)$",
++  "^(package\\.json|bun\\.lock|bunfig\\.toml|patches/(0|[1-9][0-9]*)\\.patch|w/(0|[1-9][0-9]*)/package\\.json)$",
++  "^(package\\.json|{{lockFile|re}}|{{scopeConfig|re}}|patches/(0|[1-9][0-9]*)\\.patch|w/(0|[1-9][0-9]*)/package\\.json)$",
++  "^(prefix|window|view)\\.[a-z][a-z0-9-]*$",
++  "^(private|pub|pub\\([^)]*\\))$",
++  "^(prototype|release)$",
++  "^(query|execute|maintain)$",
++  "^(registry-invalid|missing-root|missing-manifest|missing-native-root|cargo-row-shadows-project|row-in-excluded-tree|manifest-not-file|name-mismatch|package-missing|package-stale|provider-owner-root|provider-source|provider-consumer-root|project-without-row|cargo-without-row):.+$",
++  "^(role|literal):.+$",
++  "^(rust|typescript|go|python|dotnet)$",
++  "^(semio:framework/(pure|host-async)@1\\.0\\.0|wasi:(cli/(environment|exit|stdin|stdout|stderr|terminal-input|terminal-output|terminal-stdin|terminal-stdout|terminal-stderr)|clocks/(monotonic-clock|wall-clock)|io/(error|poll|streams))@0\\.2\\.0|wasi:random/(insecure-seed|random)@0\\.2\\.9)$",
++  "^(shared|asset|cas|schema)://.+$",
++  "^(shift\\+)*([a-z]{2,}[0-9]*|f[0-9]+)$",
++  "^(ticket\\.(show|files|close|reopen):.+|draft\\.(start|discard)|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$",
++  "^(~[/\\\\]|/(Users|home|root|private|tmp|var|opt|usr|etc|mnt|workspaces|Volumes)/|[A-Za-z]:[/\\\\])",
++  "^(\ud83d\udfe6\ufe0f\\.d\\.ts|\ud83e\uddec\ufe0ftypes/[a-f0-9]{24}\\.(d\\.ts|json))$",
++  "^--",
++  "^--(no)?[a-z][a-z_]*(=[^\\u0000]+)?$",
++  "^--?[A-Za-z][A-Za-z0-9_.-]*=?$",
++  "^--?[A-Za-z][^\\s\\u0000]*$",
++  "^--?[a-z][a-z-]*$",
++  "^--[a-zA-Z][a-zA-Z0-9.-]*(?:=.*)?$",
++  "^--[a-zA-Z][a-zA-Z0-9_]*(?:=.*)?$",
++  "^--[a-z][a-z-]*$",
++  "^--[a-z][a-z0-9-]*$",
++  "^--[a-z_]+(=\\S+)?$",
++  "^--test-name-pattern=.+$",
++  "^-?(0|[1-9][0-9]*)$",
++  "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?$",
++  "^-?[0-9]+$",
++  "^-?[0-9]{1,32}$",
++  "^.+:.+>.+$",
++  "^.+:[tb]$",
++  "^.+>.+$",
++  "^.+@.+$",
++  "^.+\\.(face|edge|vertex)\\.(0|[1-9][0-9]*)~[a-f0-9]{64}~[1-9][0-9]*~[a-f0-9]{64}$",
++  "^.+\\.ts$",
++  "^/",
++  "^/(?!(?:\\.{1,2})(?:/|$))(?!.*(?:[\\\\?#%:\\u0000-\\u001f]|/\\.{1,2}(?:/|$)))[A-Za-z0-9_.~-]+(?:/[A-Za-z0-9_.~-]+)*$",
++  "^//:(?:p|f)_[0-9a-f]{16}$",
++  "^//:t_[0-9a-f]{16}$",
++  "^/[A-Za-z0-9/_.-]*$",
++  "^/[^\\\\?#\\u0000-\\u001f\\u007f]*$",
++  "^/mesh/[^/\\\\%?#.]+\\.glb$",
++  "^/mesh/[^/\\\\%?#]+\\.glb$",
++  "^/|(^|/)\\.\\.(/|$)",
++  "^534a4832[0-9a-f]{8}$",
++  "^534a5331[0-9a-f]+$",
++  "^=[0-9]+\\.[0-9]+\\.[0-9]+(?:-[A-Za-z0-9.-]+)?(?:\\+[A-Za-z0-9.-]+)?$",
++  "^@",
++  "^@?[a-z0-9]+(?:[a-z0-9/-]*[a-z0-9])?$",
++  "^@[^/\\s]+/[^/\\s]+$",
++  "^@[^/]+/[^/]+$",
++  "^CARGO_",
++  "^Cargo\\.toml$",
++  "^EPERM: Operation not permitted: failed to link package: ",
++  "^Python 3\\.[0-9]+",
++  "^S-1-[0-9]+(-[0-9]+)+$",
++  "^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$",
++  "^SEMIO_TEST_[A-Z_]+$",
++  "^SEMIO_[A-Z0-9_]+$",
++  "^[/?#][^\\s\\u0000]*$",
++  "^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$",
++  "^[0-9]*$",
++  "^[0-9]+$",
++  "^[0-9]+(:[0-9]+){6}$",
++  "^[0-9]+(KB|MB|GB)$",
++  "^[0-9]+/[^/]+$",
++  "^[0-9]+:[0-9]+$",
++  "^[0-9]+:[0-9]+:[0-9]+$",
++  "^[0-9]+:[a-f0-9]{40}$",
++  "^[0-9]+[.][0-9]+[.][0-9]+$",
++  "^[0-9]+\\.[0-9]+\\.[0-9]+$",
++  "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$",
++  "^[0-9]{1,20}$",
++  "^[0-9]{1,2}$",
++  "^[0-9]{1,2}/[a-z0-9]+(-[a-z0-9]+)*$",
++  "^[0-9]{2}/[0-9]{2}/[0-9]{2}/[A-Z0-9-]+(?:/[A-Z0-9-]+)*$",
++  "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
++  "^[0-9]{4}-[0-9]{2}-[0-9]{2}T",
++  "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$",
++  "^[0-9a-f-]{36}$",
++  "^[0-9a-f]*$",
++  "^[0-9a-f]+$",
++  "^[0-9a-f]+(-[0-9a-f]+)*$",
++  "^[0-9a-f]{12}$",
++  "^[0-9a-f]{16}$",
++  "^[0-9a-f]{32}$",
++  "^[0-9a-f]{64}$",
++  "^[0-9a-f]{64}$(?![\\s\\S])",
++  "^[0-9a-f]{7,64}$",
++  "^[0-9a-f]{8}$",
++  "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
++  "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
++  "^[0-9a-z]+-[0-9]+-[0-9a-f]{16}$",
++  "^[0-9a-z]{6,32}$",
++  "^[1-5]$",
++  "^[1-5]\\.\\d{1,2}$",
++  "^[1-9][0-9]*$",
++  "^[1-9][0-9]*/[2-9][0-9]*$",
++  "^[1-9][0-9]{0,19}$",
++  "^[1-9][0-9]{0,3}$",
++  "^[@A-Za-z0-9_./-]+:[A-Za-z0-9_.-]+$",
++  "^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}$",
++  "^[A-Z0-9]+(?:-[A-Z0-9]+)*$",
++  "^[A-Z][A-Z0-9]+$",
++  "^[A-Z][A-Z0-9_]*$",
++  "^[A-Z][A-Z0-9_]{0,63}$",
++  "^[A-Z][A-Z_0-9]+$",
++  "^[A-Z][A-Za-z0-9]*$",
++  "^[A-Z][A-Za-z]+$",
++  "^[A-Z_]+$",
++  "^[A-Za-z0-9!#$&^_.+~-]+/[A-Za-z0-9!#$&^_.+~-]+$",
++  "^[A-Za-z0-9+/]*={0,2}$",
++  "^[A-Za-z0-9._-]+$",
++  "^[A-Za-z0-9._-]+\\.zip$",
++  "^[A-Za-z0-9._-]{1,64}$",
++  "^[A-Za-z0-9._:-]{1,64}$",
++  "^[A-Za-z0-9._:/-]+$",
++  "^[A-Za-z0-9._{}/-]+$",
++  "^[A-Za-z0-9._~+/=-]{1,4096}$",
++  "^[A-Za-z0-9][A-Za-z0-9._-]*$",
++  "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
++  "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}\\.json$",
++  "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
++  "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
++  "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$",
++  "^[A-Za-z0-9][A-Za-z0-9_-]*$",
++  "^[A-Za-z0-9_-]+$",
++  "^[A-Za-z0-9_-]+(?:\\.exe)?$",
++  "^[A-Za-z0-9_-]+\\.rlib$",
++  "^[A-Za-z0-9_-]+\\.rs$",
++  "^[A-Za-z0-9_-]{1,128}$",
++  "^[A-Za-z0-9_-]{1,64}$",
++  "^[A-Za-z0-9_-]{8,32}$",
++  "^[A-Za-z0-9_.-]+$",
++  "^[A-Za-z0-9_.-]{1,128}$",
++  "^[A-Za-z0-9_.:-]*$",
++  "^[A-Za-z0-9_.:-]{1,128}$",
++  "^[A-Za-z0-9_.:/@=-]{1,256}$",
++  "^[A-Za-z0-9_.@-]{1,128}$",
++  "^[A-Za-z0-9_/.-]+$",
++  "^[A-Za-z0-9_][A-Za-z0-9_-]*$(?![\\s\\S])",
++  "^[A-Za-z0-9_][A-Za-z0-9_.+-]*\\.whl$",
++  "^[A-Za-z0-9_][A-Za-z0-9_./?-]*$(?![\\s\\S])",
++  "^[A-Za-z0-9_]{1,128}$",
++  "^[A-Za-z]+(?: [A-Za-z]+)*$",
++  "^[A-Za-z]:\\\\",
++  "^[A-Za-z]:\\\\[^\\\\/:*?\"<>|\\u0000-\\u001f]+$",
++  "^[A-Za-z][A-Za-z0-9-]*!?$",
++  "^[A-Za-z][A-Za-z0-9]*$",
++  "^[A-Za-z][A-Za-z0-9_.-]{0,63}=[A-Za-z0-9_.:/@=-]{1,256}(,[A-Za-z][A-Za-z0-9_.-]{0,63}=[A-Za-z0-9_.:/@=-]{1,256}){0,15}$",
++  "^[A-Za-z_$][A-Za-z0-9_$]*$",
++  "^[A-Za-z_][A-Za-z0-9_-]*$",
++  "^[A-Za-z_][A-Za-z0-9_.-]*$",
++  "^[A-Za-z_][A-Za-z0-9_:]*$",
++  "^[A-Za-z_][A-Za-z0-9_]*$",
++  "^[A-Za-z_][A-Za-z_0-9]*$",
++  "^[A-Z\u00c4\u00d6\u00dc0-9].*[.!?]$",
++  "^[\\u0020-\\u007e]+$",
++  "^[\\x20-\\x7e]+$",
++  "^[^\u0000]*$",
++  "^[^\u0000]+$",
++  "^[^!]",
++  "^[^/\\\\\u0000]+$",
++  "^[^/\\\\%?#.]+(?:/[^/\\\\%?#.]+)*$",
++  "^[^/\\\\%?#.]+(?:/[^/\\\\%?#.]+)*\\.glb$",
++  "^[^/\\\\%?#.]+(?:/[^/\\\\%?#.]+)*\\.json$",
++  "^[^/\\\\.]+/\ud83d\udfe6\ufe0f\\.ts$",
++  "^[^/\\\\.]+/\ud83e\udd80\ufe0f\\.rs$",
++  "^[^/\\\\.]+\\.ts$",
++  "^[^/\\\\.][^\\\\]*\\.ts$",
++  "^[^/\\\\:*?\"<>|\\u0000-\\u001f.][^:*?\"<>|\\u0000-\\u001f]*$",
++  "^[^/\\\\:*?\"<>|\\u0000-\\u001f]+$",
++  "^[^/\\\\:*?\"<>|\\u0000-\\u001f]+(/[^/\\\\:*?\"<>|\\u0000-\\u001f]+){0,3}$",
++  "^[^/\\\\:*?\"<>|][^\\\\:*?\"<>|]*$",
++  "^[^/\\\\:*?\\u0000][^\\\\:*?\\u0000]*$",
++  "^[^/\\\\:\\u0000-\\u001f]+(?:/[^/\\\\:\\u0000-\\u001f]+)*$",
++  "^[^/\\\\\\s](?:[^/\\\\]*[^/\\\\\\s])?$",
++  "^[^/\\\\\\u0000]+$",
++  "^[^/\\\\\\u0000]+(?:/[^/\\\\\\u0000]+)*$",
++  "^[^/\\\\\\u0000]+\\.go$",
++  "^[^/\\\\\\u0000][^\\\\\\u0000]*$",
++  "^[^/\\\\]+$",
++  "^[^/\\\\]+(?:/[^/\\\\]+)*\\.tex$",
++  "^[^/\\\\][^\\\\]*$",
++  "^[^/\\s*?{}][^*?{}]*$",
++  "^[^/\\u0000][^\\u0000]*$",
++  "^[^/]+$",
++  "^[^/]+/$",
++  "^[^/]+/.+$",
++  "^[^:\\s\\u0000]+$",
++  "^[^=\\u0000]+$",
++  "^[^\\[\\]{}\\\\]+$",
++  "^[^\\\\/:*?\"<>|\\u0000-\\u001f]+$",
++  "^[^\\\\/\\u0000-\\u001f\\u007f:]+$",
++  "^[^\\\\:\u0000]+$",
++  "^[^\\\\\\u0000-\\u001f]+$",
++  "^[^\\\\]+$",
++  "^[^\\p{Cc}]+$",
++  "^[^\\s,]+$",
++  "^[^\\s-][^\\s]*$",
++  "^[^\\s:-][^\\s:]*$",
++  "^[^\\s:-][^\\s:]*:[^\\s:]+(:[^\\s:]+)?$",
++  "^[^\\s:]+:[^\\s:]+(:[^\\s:]+)?$",
++  "^[^\\s:]+:\\S+$",
++  "^[^\\s=\\u0000]+$",
++  "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
++  "^[^\\s\\u0000-\\u001f\\u007f]+(?![\\s\\S])",
++  "^[^\\s\\u0000]*$",
++  "^[^\\t\\n\\u000b\\f\\r \\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]+$",
++  "^[^\\u0000-\\u001F\\u007F]+$",
++  "^[^\\u0000-\\u001f\\u007f ](?:[^\\u0000-\\u001f\\u007f]*[^\\u0000-\\u001f\\u007f ])?$",
++  "^[^\\u0000-\\u001f\\u007f$`%!&|;<>\\\\'()*?\\[\\]{}~#]+$",
++  "^[^\\u0000-\\u001f\\u007f-\\u009f]+$",
++  "^[^\\u0000-\\u001f\\u007f]$",
++  "^[^\\u0000-\\u001f\\u007f]*$",
++  "^[^\\u0000-\\u001f\\u007f]+$",
++  "^[^\\u0000-\\u001f\\u007f]+(?![\\s\\S])",
++  "^[^\\u0000-\\u001f]+$",
++  "^[^\\u0000-\\u0020:]+$",
++  "^[^\\u0000-\\u0020:]+:[^\\u0000-\\u0020:]+$",
++  "^[^\\u0000-\\u0020\\u007f-\\u009f](?:[^\\u0000-\\u001f\\u007f-\\u009f]*[^\\u0000-\\u0020\\u007f-\\u009f])?$",
++  "^[^\\u0000/\\\\][^\\u0000]*$",
++  "^[^\\u0000\\r\\n]+$",
++  "^[^\\u0000]*$",
++  "^[^\\u0000]+$",
++  "^[^a-z0-9/\\\\]+[a-z0-9]+(?:-[a-z0-9]+)*$",
++  "^[^{}]*(?:\\{[a-z][A-Za-z0-9]*\\}[^{}]*)*$",
++  "^[^|]+\\|(workspace-specifier|external-package|seam-static|missing-entry)\\|[^|]+\\|[^|]+$",
++  "^[_A-Za-z][_A-Za-z0-9]*$",
++  "^[a-f0-9]+$",
++  "^[a-f0-9]{16}$",
++  "^[a-f0-9]{20,64}$",
++  "^[a-f0-9]{20}$",
++  "^[a-f0-9]{24}$",
++  "^[a-f0-9]{32}$",
++  "^[a-f0-9]{40}$",
++  "^[a-f0-9]{64}$",
++  "^[a-f0-9]{64}\\.(frontier|execution|closure)\\.ndjson$",
++  "^[a-f0-9]{64}\\.installed\\.ndjson$",
++  "^[a-f0-9]{64}\\.ownership\\.ndjson$",
++  "^[a-f0-9]{64}\\.queue$",
++  "^[a-f0-9]{8,32}$",
++  "^[a-f0-9]{8}$",
++  "^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$",
++  "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$",
++  "^[a-z",
++  "^[a-z-]+$",
++  "^[a-z0-9-]+$",
++  "^[a-z0-9-]+(/[a-z0-9-]+)*$",
++  "^[a-z0-9-]+/(light|dark)/(en|de)$",
++  "^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$",
++  "^[a-z0-9]+(-[a-z0-9]+)*$",
++  "^[a-z0-9]+(?:-[a-z0-9]+)*$",
++  "^[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])",
++  "^[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*$",
++  "^[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])",
++  "^[a-z0-9]+(?:-[a-z0-9]+)+$",
++  "^[a-z0-9]+(?:[.-][a-z0-9]+)*$",
++  "^[a-z0-9]+(?:[.-][a-z0-9]+)*(?:[./]v[0-9]+(?:\\.[0-9]+)*)$",
++  "^[a-z0-9]+(?:[.-][a-z0-9]+)*/v[0-9]+$",
++  "^[a-z0-9]+(?:[.-][a-z0-9]+)*[./]v[0-9]+$",
++  "^[a-z0-9]+(?:[.-][a-z0-9]+)*\\.json$",
++  "^[a-z0-9]+(?:[:-][a-z0-9]+)*$",
++  "^[a-z0-9]+([._-][a-z0-9]+)*$",
++  "^[a-z0-9][a-z0-9-]*$",
++  "^[a-z0-9][a-z0-9-]{0,127}$",
++  "^[a-z0-9][a-z0-9-]{0,63}$",
++  "^[a-z0-9][a-z0-9.-]*$",
++  "^[a-z0-9][a-z0-9.-]*-[0-9a-f]{16}$",
++  "^[a-z0-9][a-z0-9.-]*[a-z0-9]$",
++  "^[a-z0-9][a-z0-9./-]*$",
++  "^[a-z0-9][a-z0-9._-]{0,63}$",
++  "^[a-z0-9][a-z0-9:-]*$",
++  "^[a-z0-9]{1,12}$",
++  "^[a-z0-9]{1,8}$",
++  "^[a-z0-9_-]+$",
++  "^[a-z0-9{}-]+$",
++  "^[a-zA-Z0-9-]+$",
++  "^[a-zA-Z0-9._-]+$",
++  "^[a-zA-Z0-9._:-]+$",
++  "^[a-zA-Z0-9][a-zA-Z0-9_-]*$",
++  "^[a-zA-Z0-9_-]+$",
++  "^[a-zA-Z0-9_][a-zA-Z0-9._-]*$",
++  "^[a-zA-Z]+\\.[a-z-]+$",
++  "^[a-zA-Z][a-zA-Z0-9]*$",
++  "^[a-z]",
++  "^[a-z]+$",
++  "^[a-z]+(-[a-z]+)*$",
++  "^[a-z]+(?:-[a-z0-9]+)*$",
++  "^[a-z]+(?:-[a-z0-9]+)*@1$",
++  "^[a-z]+(?:-[a-z]+)*$",
++  "^[a-z]+(?:/[a-z]+)*$",
++  "^[a-z]+/[A-Za-z0-9.+-]+$",
++  "^[a-z]+/[a-z0-9.+-]+$",
++  "^[a-z]+:[a-z]+(:(prototype|release|staging))?$",
++  "^[a-z]+:[a-z]+(:[a-z]+)?$",
++  "^[a-z]+\\.[a-z0-9]+(-[a-z0-9]+)*$",
++  "^[a-z]+\\.rs$",
++  "^[a-z]-$",
++  "^[a-z][A-Za-z0-9]*$",
++  "^[a-z][A-Za-z0-9]*:(u8|u16|u32|u64|i16|i32|f32|f64)(le|be)?$",
++  "^[a-z][A-Za-z]+$",
++  "^[a-z][a-z-]*$",
++  "^[a-z][a-z0-9-]*$",
++  "^[a-z][a-z0-9-]*(/[a-z0-9-]+)*\\.[A-Za-z][A-Za-z0-9-]*$",
++  "^[a-z][a-z0-9-]*(?:/[a-z][a-z0-9-]*)*$",
++  "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)*$",
++  "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$",
++  "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$",
++  "^[a-z][a-z0-9-]*/[a-z0-9_-]+$",
++  "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*(?:@[0-9]+\\.[0-9]+\\.[0-9]+)?#[A-Za-z0-9._\\[\\]-]+$",
++  "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*@[0-9]+\\.[0-9]+\\.[0-9]+$",
++  "^[a-z][a-z0-9-]*@[0-9]+\\.[0-9]+\\.[0-9]+$",
++  "^[a-z][a-z0-9-]*\\.tex$",
++  "^[a-z][a-z0-9-]+$",
++  "^[a-z][a-z0-9-]{0,31}$",
++  "^[a-z][a-z0-9-]{0,31}(\\.[a-z][a-z0-9-]{0,31}){0,3}$",
++  "^[a-z][a-z0-9-]{0,31}/[a-f0-9]{20}$",
++  "^[a-z][a-z0-9-]{0,39}$",
++  "^[a-z][a-z0-9-]{0,47}$",
++  "^[a-z][a-z0-9-]{0,62}$",
++  "^[a-z][a-z0-9-]{0,7}$",
++  "^[a-z][a-z0-9-]{0,7}(/[a-z][a-z0-9-]{0,7})?$",
++  "^[a-z][a-z0-9-]{1,31}$",
++  "^[a-z][a-z0-9.-]*$",
++  "^[a-z][a-z0-9.-]*\\.xml$",
++  "^[a-z][a-z0-9.-]{0,31}$",
++  "^[a-z][a-z0-9.]{1,31}$",
++  "^[a-z][a-z0-9]*$",
++  "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
++  "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
++  "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*){2,}$",
++  "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*\\.tex$",
++  "^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$",
++  "^[a-z][a-z0-9]*(?:[.:/-][a-z0-9]+)*$",
++  "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$",
++  "^[a-z][a-z0-9_-]{0,79}$",
++  "^[a-z][a-z0-9_/]*$",
++  "^[a-z][a-z0-9_]*$",
++  "^[a-z][a-zA-Z0-9]*$",
++  "^[a-z]{2,3}$",
++  "^[a-z_][a-z0-9_]*(?:::[a-z_][a-z0-9_]*)+$",
++  "^[ax]$",
++  "^[gimsu]*$",
++  "^[sd][0-9]{1,2}$",
++  "^[wsa]:.+$",
++  "^\\$",
++  "^\\.(?:/.*)?$",
++  "^\\./(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\:\\x00-\\x1f])[^/]+(?:/[^/]+)+$",
++  "^\\./(?:[^/\\\\?#.][^/\\\\?#]*/)*[^/\\\\?#.][^/\\\\?#]*$",
++  "^\\./.+$",
++  "^\\./[^\\\\]+$",
++  "^\\.[a-z0-9]+$",
++  "^\\.\\.?/[^\\u0000\\\\]+$",
++  "^\\.cache/b/t/m/rc/[a-f0-9]{64}/entry\\.mjs$",
++  "^\\.cache/b/t/m/rc/[a-f0-9]{64}/receipt\\.json$",
++  "^\\.p[0-9a-f]{8}$",
++  "^\\.p[a-f0-9]{8}$",
++  "^\\.stage-[0-9a-f]{12}$",
++  "^\\.workspace-events/segments/[0-9a-f]{8}/[0-9a-z-]{1,64}\\.retained$",
++  "^\\??(?:text|bool|f64|u8|u16|u32|u64|usize|#[A-Za-z0-9]+|\\[(?:text|#[A-Za-z0-9]+)\\])$",
++  "^\\S(?:.*\\S)?$",
++  "^\\S(?:.*\\S)?@[0-9a-f]{64}$",
++  "^\\S+$",
++  "^\\S+:\\S+$",
++  "^\\[(?:\"[0-9]+\",){2}\"[0-9]+\"\\]$",
++  "^\\[(?:\"[0-9]+\",){4}\"[0-9]+\",\"-?[0-9]+\",\"-?[0-9]+\"\\]$",
++  "^\\[artifact-rust:fixture:build\\] running elapsedMs=[0-9]+$",
++  "^\\d+\\.\\d+\\.\\d+$",
++  "^\\d{2}/\\d{2}/\\d{2}/[A-Z0-9]+(?:-[A-Z0-9]+)*(?:/[A-Z0-9]+(?:-[A-Z0-9]+)*)*$",
++  "^\\d{4}-\\d{2}-\\d{2}(?:$|T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d+)?)?(?:Z|[+-]\\d{2}:\\d{2}))$",
++  "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
++  "^\\p{Extended_Pictographic}\\uFE0F[a-z]+(?:-[a-z]+)*$",
++  "^\\s*$",
++  "^\\{(?:projectRoot|workspaceRoot)\\}/(?!.*//)(?!(?:[^/]+/)*\\.{1,2}(?:/|$))(?!.*\\.d\\.[cm]?[jt]sx?$)[^\\u0000-\\u001f\\u007f\\\\:*?\"<>|{}\\[\\]]+\\.[cm]?[jt]sx?$",
++  "^\\{(?:projectRoot|workspaceRoot)\\}/(?!.*//)(?!(?:[^/]+/)*\\.{1,2}(?:/|$))[^\\u0000-\\u001f\\u007f\\\\:*?\"<>|{}\\[\\]]+$",
++  "^\\{(?:projectRoot|workspaceRoot)\\}/(?:[^*?{}\\[\\]]*/)?tsconfig(?:\\.[^/*?{}\\[\\]]+)?\\.json$",
++  "^\\{(?:workspaceRoot|projectRoot)\\}/(?!\\.{1,2}(?:/|$))(?!.*?/\\.{1,2}(?:/|$))[^*?\\[\\]\\\\\\x00-\\x1f\\x7f]+\\.(?:json|ts)$",
++  "^\\{workspaceRoot\\}/",
++  "^\\{workspaceRoot\\}/.+/\ud83d\udfe6\ufe0f\\.ts$",
++  "^actor://v1:[0-9]+:[0-9]+:",
++  "^actual rustc",
++  "^add-value delta=-?(0|[1-9][0-9]*)$",
++  "^artifact-[0-9a-f]{32}$",
++  "^back\\\\slash \\{1\\} \\^\\$\\|\\*\\?$",
++  "^bazel-[0-9]+\\.[0-9]+\\.[0-9]+-(windows|darwin|linux)-(x86_64|arm64)(\\.exe)?$",
++  "^binaryen-version_[0-9]+-[a-zA-Z0-9_-]+[.]tar[.]gz$",
++  "^browser-actor\\.(js|core[0-9]*\\.wasm)$",
++  "^btime ([0-9]{9,11})$",
++  "^build:graph-phase:[a-z]+:(?:0|[1-9][0-9]*):(?:0|[1-9][0-9]*)$",
++  "^bun-(windows|darwin|linux)-(x64|aarch64)(-musl)?(-baseline)?\\.zip$",
++  "^bun@[0-9]+\\.[0-9]+\\.[0-9]+$",
++  "^bun@\\d+\\.\\d+\\.\\d+$",
++  "^bundle-(prototype|release)-[A-Za-z0-9_-]+/(source\\.js|source\\.js\\.map|metadata\\.json)$",
++  "^cargo (\\S+)",
++  "^char:[^\\u0000-\\u001f\\u007f]$",
++  "^compose\\.",
++  "^compound:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$",
++  "^cooperative-maintenance instance=[0-9]+ turn=[0-9]+ generation=[0-9]+$",
++  "^count",
++  "^count[A-Z]",
++  "^demo(-[a-z0-9]+)*$",
++  "^development:local-state:[a-f0-9]{64}$",
++  "^file:",
++  "^file:///",
++  "^framework\\.section\\.[a-z]+$",
++  "^gf-[A-Za-z0-9]{6}$",
++  "^go version go(\\S+)",
++  "^group:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$",
++  "^grpc://127\\.0\\.0\\.1:[0-9]{4,5}$",
++  "^http://(127\\.0\\.0\\.1|localhost):\\d{2,5}/?$",
++  "^http://127\\.0\\.0\\.1:(?:[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])/(?:[A-Za-z0-9_-]+)(?:/[A-Za-z0-9_-]+)*$",
++  "^http://127\\.0\\.0\\.1:(?:[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])/session$",
++  "^http://127\\.0\\.0\\.1:[0-9]{1,5}$",
++  "^http://127\\.0\\.0\\.1:[1-9][0-9]{0,4}/$",
++  "^https://",
++  "^https://[^ ]+\\.tar$",
++  "^https://[^\\s]+$",
++  "^https://[a-z0-9.-]+/[A-Za-z0-9._/-]+$",
++  "^https://github.com/WebAssembly/binaryen/releases/download/version_[0-9]+$",
++  "^https://github.com/tectonic-typesetting/tectonic/releases/download/",
++  "^https://github\\.com/oven-sh/bun/releases/download/bun-v[0-9]+\\.[0-9]+\\.[0-9]+$",
++  "^https://releases\\.bazel\\.build/[0-9]+\\.[0-9]+\\.[0-9]+/release$",
++  "^https?://",
++  "^https?://(\\[[0-9A-Fa-f:]+\\]|[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?)(:[0-9]{1,5})?$",
++  "^https?://[^/?#@]+/?$",
++  "^https?://[^/]+$",
++  "^https?://[^\\s/]+",
++  "^https?://[^\\s]+$",
++  "^https?://[^\\u0000\\r\\n]+$",
++  "^hub\\.v1\\.[0-9a-f]{64}$",
++  "^independent syn callback",
++  "^inference/(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\u0000\\\\]+$",
++  "^job:[a-zA-Z0-9._-]+$",
++  "^local\\.",
++  "^mutation\\.[a-z0-9]+(?:-[a-z0-9]+)*$",
++  "^mutation\\.apply\\.[a-z0-9]+(?:-[a-z0-9]+)*$",
++  "^never$",
++  "^nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}$",
++  "^no-cross-package-relative-.+",
++  "^node_modules/(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000]+$",
++  "^node_modules/(nx|peer)/[a-z]+[.]part$",
++  "^open\\.v1\\.[A-Za-z0-9_-]{43}$",
++  "^os\\.directory\\.[a-z][a-z0-9-]*$",
++  "^package/",
++  "^paste:[^\\u0000-\\u001f\\u007f]*$",
++  "^plain name$",
++  "^playground:[^\\s:/]+$",
++  "^probe a\\.b\\(c\\)\\+\\[d\\]$",
++  "^probe a\\.b\\(c\\)\\+\\[d\\]x$",
++  "^probe birth carries the declared repository request$",
++  "^profile\\.(prototype|release)\\.",
++  "^q+$",
++  "^r[0-9a-f]{12,}$",
++  "^repo ",
++  "^repo (?:--watch )?(?:\"(?:[^\"\\r\\n]*[/\\\\])?\ud83d\udcdc\ufe0fscript\\.ts\"|(?:[^\\s\"\\r\\n]*[/\\\\])?\ud83d\udcdc\ufe0fscript\\.ts) [a-z][a-z0-9-]*(?: (?:[^\\s\"';&|<>\\r\\n]+|\"[^\"\\r\\n]*\"|'[^'\\r\\n]*')+)*$",
++  "^repo (cargo|run) ",
++  "^repo ./\ud83d\udcdc\ufe0fscript.ts test ",
++  "^repo [a-z]",
++  "^repo dashboard \\[--root PATH\\]",
++  "^repo repo run [@A-Za-z0-9][@A-Za-z0-9_./-]*:[A-Za-z0-9_./-]+(?::[A-Za-z0-9_./-]+)?(?: [A-Za-z0-9_./:@=,+-]+)*(?![\\s\\S])",
++  "^repo/breach/",
++  "^repo:(ticket\\.(show|files|close|reopen):\\S+|draft\\.(start|discard)|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$",
++  "^repo://session/",
++  "^repo:compiler:(prototype|release)$",
++  "^repository:(rust|tooling|graph|dependencies|products|diagnostics|nx|leases)-store$",
++  "^repository:[a-z][a-z0-9-]*$",
++  "^ripgrep [0-9]+",
++  "^rust-unit-[a-z][a-z0-9_-]{0,79}$",
++  "^rust-unit-[a-z][a-z0-9_-]{0,79}:compile$",
++  "^rustc [0-9]+\\.[0-9]+\\.[0-9]+(?:-[a-z]+)? \\([0-9a-f]{40}\\)$(?![\\s\\S])",
++  "^s/",
++  "^s\\.[a-z0-9-]+\\.[a-z0-9-]+@[^/]+/[^/]+$",
++  "^s\\.[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*$",
++  "^schema://[a-z0-9]+(?:[.-][a-z0-9]+)*/[A-Z][A-Za-z0-9]*$",
++  "^semio-[a-z0-9-]*artifact-[a-z0-9-]+$",
++  "^semio-[a-z0-9-]{1,48}$",
++  "^semio-framework-3d",
++  "^semio-framework-[a-z0-9-]+$",
++  "^semio-framework-os-kernel-db(-[a-z0-9-]+)?$",
++  "^semio-framework-ui-tui-[a-z0-9-]+$",
++  "^semio-selected-source-[0-9]+-[a-f0-9-]{36}\\.json$",
++  "^semio://",
++  "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$",
++  "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])",
++  "^semio\\.framework\\.abi\\.v[1-9][0-9]*$",
++  "^session\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$",
++  "^set-[a-z-]+$",
++  "^sha256:[0-9a-f]{64}$",
++  "^sha256:[a-f0-9]{64}$",
++  "^snippets/",
++  "^t_[0-9a-f]{16}$",
++  "^t_[a-f0-9]{16}$",
++  "^tectonic-[A-Za-z0-9_.-]+$",
++  "^ticket:\\d{2}/\\d{2}/\\d{2}/[^\\s/]+/[a-z0-9]+([._-][a-z0-9]+)*$",
++  "^tool:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$",
++  "^tx-[0-9a-f]{16}$",
++  "^uv ([0-9]+\\.[0-9]+\\.[0-9]+)",
++  "^v1:[0-9]+:[0-9]+:",
++  "^v1\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$",
++  "^v1\\.[A-Za-z0-9_-]{4,8192}\\.[A-Za-z0-9_-]{43}$",
++  "^v\\d{1,3}$",
++  "^warm$",
++  "^x$",
++  "^x-",
++  "^x-semio-",
++  "^\ud83d\udeaa\ufe0fio/",
++  "^\ud83e\uddea\ufe0f",
++  "a",
++  "a**b",
++  "a.b+c",
++  "a.go",
++  "a/**",
++  "a/**/*.go",
++  "a/*.go",
++  "a/*/two.go",
++  "a/one.go",
++  "a?/Cargo.toml",
++  "a?c",
++  "abc",
++  "a{,-b}.go",
++  "a{3,1}",
++  "a{b,c}d{e,f}.go",
++  "a{b.go",
++  "a}b.go",
++  "built at [0-9:-]+",
++  "cli: require\\.resolve\\(\"([^\"\\n]+)\"\\)",
++  "const daemon = createRequire\\(nxCli\\)\\.resolve\\(\"([^\"\\n]+)\"\\)",
++  "derivative issuer callback failure drains accepted copy",
++  "derivative publication callback failure drains accepted copy",
++  "e\u0301*.json",
++  "ide startup|reopen in vs code|all required vs code extensions|dev containers: reopen in container|vs code.*with.*dev containers extension",
++  "lib/*/\ud83d\udccb\ufe0fproject.json",
++  "lib/p?g/*.ts",
++  "lib/pkg/**/*",
++  "lib/pkg/\ud83d\udccb\ufe0fproject.json",
++  "lib/{pkg,other}/**/*",
++  "mod37plus11",
++  "native-fixed-image:[^\\n]{0,80}(process\\.cwd\\(\\)|\\.cache/b/[a-z]\\b)",
++  "packages/*/Cargo.toml",
++  "root*.json",
++  "root?.json",
++  "root?.ts",
++  "root[A-C][0-9].json",
++  "root[ab].md",
++  "rootfile(1)+.ts",
++  "sec = ([0-9]{9,11}), usec = ([0-9]{1,6})",
++  "src/!(generated)/a[0-9].ts",
++  "src/**",
++  "src/**/*.ts",
++  "src/**/a.{ts,js}",
++  "src/a?.ts",
++  "src/nested/+(c|d).ts",
++  "target=[^,]*/\\.(codeium|kiro|vscode|vscode-insiders|cursor|windsurf|idea|fleet|zed|atom|brackets)(/|,|$)",
++  "x/*.rs",
++  "zero",
++  "{a,b}",
++  "{a,b}/Cargo.toml",
++  "{a,{b,c}}/Cargo.toml",
++  "{a,{b,c}}/x.go",
++  "{a.go",
++  "{a}.go",
++  "{\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins,\ud83e\uddf0\ufe0fframework}/**/\ud83d\uddff\ufe0fartifacts/*/\ud83c\udfc5\ufe0fstandards/*/\ud83e\ude86\ufe0fsubsets/*",
++  "\u00e9*.json",
++  "\ud83c\udfab\ufe0ftickets|\ud83e\udd45\ufe0fgoals",
++  "\ud83d\udccb\ufe0fproject.json",
++  "\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/Cargo.toml",
++  "\ud83d\udd23\ufe0ffresh-session*.json",
++  "\ud83d\udd23\ufe0froot.json",
++  "\ud83d\udfe6\ufe0froot.ts",
++  "\ud83e\udde9\"\n",
++  "\ud83e\udde9\ufe0fdomain/**/*.tsx",
++  "\ud83e\uddea\ufe0froot/*",
++  "\ud83e\uddea\ufe0froot/**",
++  "\ud83e\uddea\ufe0froot/**/\ud83e\udd80\ufe0f.rs"
++ ]
++}

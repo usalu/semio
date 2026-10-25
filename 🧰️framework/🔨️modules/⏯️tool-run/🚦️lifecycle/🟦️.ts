@@ -1,4 +1,4 @@
-/** 🚦️ Tool run lifecycle: the pure transition table, events, effects, admission and the `ToolRunMachine` reducer. TypeScript twin of `🚦️lifecycle/🦀️.rs`. */
+/** 📊️ Tool run lifecycle: the pure transition table, events, effects, admission and the `ToolRunMachine` reducer. TypeScript twin of `🚦️lifecycle/🦀️.rs`. */
 
 //#region 🔖️Lifecycle
 export const TOOL_RUN_STATES = ["starting", "running", "paused", "complete", "finalizing", "finalized", "aborting", "aborted", "faulted"] as const;

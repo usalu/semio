@@ -97,8 +97,8 @@
     "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🫧️transient",
+    "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript",
-    "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react",
     "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/💻️os/🏛️ownership/🧮️compute",
@@ -269,7 +269,7 @@
     "mdast-util-from-markdown": "2.1.0",
     "micromatch": "^4.0.8",
     "minimatch": "9.0.3",
-    "npm-run-path": "^6.0.0",
+    "nx": "23.2.0",
     "opentype.js": "1.3.4",
     "p-limit": "3.1.0",
     "p-map": "7.1.1",
@@ -309,6 +309,7 @@
     "graphlib": "2.1.8",
     "lodash": "4.18.1",
     "three": "^0.182.0",
+    "three-mesh-bvh": "^0.9.14",
     "vite": "^7.3.1",
     "web-tree-sitter": "0.20.8",
     "whatwg-url": "14.2.0",
@@ -404,8 +405,7 @@
     "next": "^15.3.3",
     "pdfjs-dist": "^5.4.296",
     "pg-boss": "^10.3.2",
-    "sharp": "^0.34.5",
-    "three-mesh-bvh": "^0.9.14"
+    "sharp": "^0.34.5"
   },
   "overrides": {
     "@semio-tech/assets": "workspace:*",

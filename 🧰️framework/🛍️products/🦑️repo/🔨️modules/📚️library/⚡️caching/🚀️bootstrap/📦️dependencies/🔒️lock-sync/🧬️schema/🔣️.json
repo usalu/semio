@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:dependencies/lock-sync/v1",
+  "title": "Lock in sync",
+  "description": "Schema-first contract of the lock-in-sync preflight: before any capacity wait, store custody or installer, every dependency scope's lock file is compared with the manifests of its members; a stale lock is refused at once, naming the scope, the members that changed and the exact command that regenerates it, in every offered language. The installer's own refusal of a frozen install is translated into the same text.",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "languages": ["en", "de"],
+        "ownerPattern": "^\\*/([^*/]+)$",
+        "maximumListed": 6,
+        "command": "repo dependencies lock --scope {scope}",
+        "frozenRefusalPatterns": {
+          "bun": "lockfile had changes, but lockfile is frozen"
+        },
+        "stagedMember": "^w/([0-9]+)$"
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "stale": "The lock file of dependency scope {scope} is out of date: Bun would refuse its frozen installation, but only after the build has waited in its queue. Changed: {changes}. Regenerate the lock, review its diff and run the command again: {command}",
+          "refused": "Bun refused the frozen installation of dependency scope {scope}: its lock file no longer matches its manifests. Static comparison: {changes}. Regenerate the lock, review its diff and run the command again: {command}",
+          "unexplained": "no manifest difference found, a resolved package changed",
+          "root": "scope root",
+          "more": "and {count} more",
+          "workspace-missing": "{member} is a member the lock does not list",
+          "workspace-stale": "{member} is listed by the lock but is no member",
+          "identity-mismatch": "{member} {section} is {manifestVersion} but the lock says {lockVersion}",
+          "missing-in-lock": "{member} declares {section} {dependency} {manifestVersion}, which the lock lacks",
+          "stale-in-lock": "{member} no longer declares {section} {dependency}, which the lock still lists",
+          "version-mismatch": "{member} declares {section} {dependency} {manifestVersion}, the lock says {lockVersion}",
+          "invalid-lockfile": "{member} cannot be read",
+          "absent": "nothing"
+        },
+        "de": {
+          "stale": "Die Lock-Datei des Abhängigkeits-Scopes {scope} ist veraltet: Bun würde ihre eingefrorene Installation verweigern, aber erst nachdem der Build in seiner Warteschlange gewartet hat. Geändert: {changes}. Lock neu erzeugen, den Diff prüfen und den Befehl erneut ausführen: {command}",
+          "refused": "Bun hat die eingefrorene Installation des Abhängigkeits-Scopes {scope} verweigert: Die Lock-Datei passt nicht mehr zu den Manifesten. Statischer Vergleich: {changes}. Lock neu erzeugen, den Diff prüfen und den Befehl erneut ausführen: {command}",
+          "unexplained": "kein Manifest-Unterschied gefunden, ein aufgelöstes Paket hat sich geändert",
+          "root": "Scope-Wurzel",
+          "more": "und {count} weitere",
+          "workspace-missing": "{member} ist ein Mitglied, das der Lock nicht führt",
+          "workspace-stale": "{member} steht im Lock, ist aber kein Mitglied",
+          "identity-mismatch": "{member} {section} ist {manifestVersion}, der Lock sagt {lockVersion}",
+          "missing-in-lock": "{member} deklariert {section} {dependency} {manifestVersion}, was dem Lock fehlt",
+          "stale-in-lock": "{member} deklariert {section} {dependency} nicht mehr, der Lock führt es noch",
+          "version-mismatch": "{member} deklariert {section} {dependency} {manifestVersion}, der Lock sagt {lockVersion}",
+          "invalid-lockfile": "{member} ist nicht lesbar",
+          "absent": "nichts"
+        }
+      }
+    }
+  }
+}

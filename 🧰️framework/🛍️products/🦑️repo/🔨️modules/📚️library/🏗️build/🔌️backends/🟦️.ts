@@ -3,8 +3,8 @@ import registry from "./📋️registry/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import type {BuildGraphV1} from "../🕸️graph/🟦️.ts";
-import type {BuildCacheToolV1,CacheProbeToolV1} from "../⚙️operations/🟦️.ts";
+import type { BuildGraphV1 } from "../🕸️graph/📋️model/🟦️.ts";
+import type { BuildCacheToolV1, CacheProbeToolV1 } from "../⚙️operations/📋️contract/🟦️.ts";
 import type {RemoteCacheToolV1} from "../🌐️remote-cache/⌨️command/🟦️.ts";
 
 /** 🆔️ The identity of a build backend: any id the registry declares, never a closed list in code. */
@@ -38,7 +38,7 @@ export function buildBackendIdsV1():readonly BuildBackendIdV1[]{return rows.map(
 export function buildBackendDefaultIdV1():BuildBackendIdV1{return rows.find(row=>row.default===true)!.id;}
 /** 🧾️ The ids as a help-text alternation such as `a|b|c`. */
 export function buildBackendAlternationV1():string{return buildBackendIdsV1().join("|");}
-/** 🏷️ The first launch argument of every backend that nests its own tool; neutral code admits these next to `repo`. */
+/** 🔨️ The first launch argument of every backend that nests its own tool; neutral code admits these next to `repo`. */
 export function buildBackendNativeNamespacesV1():string[]{return rows.flatMap(row=>row.nativeCaller?[row.nativeCaller.namespace]:[]);}
 /** 🧭️ Where a registered backend's conformance driver module lives; the row path is relative to this module. */
 export function buildBackendDriverUrlV1(id:string):URL{return new URL(buildBackendRowV1(id).driver,import.meta.url);}
@@ -59,8 +59,8 @@ export function buildNativeSnapshotProtocolV1():Readonly<{variable:string;enviro
 
 /** 🎛️ What a backend operation receives: the workspace, the issued invocation and phase, the resolved arguments and the selected backend. */
 export type BackendContextV1=Readonly<{root:string;invocation:ScriptInvocation;phase:ResourceLeaseControl;args:readonly string[];tool:BuildBackendIdV1;workers?:"on"|"off"}>;
-/** 🪢️ A context that also carries the pinned build graph and the continuous task a watch re-runs. */
-export type BackendExecutionContextV1=BackendContextV1&Readonly<{graph:BuildGraphV1;watch?:string}>;
+/** 🪢️ A context that also carries the pinned build graph, the continuous task a watch re-runs and `release`, which a backend calls once it has planned from the graph: the content is dropped and only the pinned snapshot remains. */
+export type BackendExecutionContextV1=BackendContextV1&Readonly<{graph:BuildGraphV1;watch?:string;release:()=>Promise<void>}>;
 
 /** 🔌️ Everything neutral code needs from a build backend; neutral code reaches a backend only through the registry and this interface. */
 export interface BuildBackendV1{
@@ -74,7 +74,7 @@ export interface BuildBackendV1{
  affectedProjects?(context:BackendExecutionContextV1,files:readonly string[]):Promise<readonly string[]>;
  bootstrapArguments?(args:readonly string[]):readonly string[]|undefined;
  cacheProbe?(context:Readonly<{root:string;invocation:ScriptInvocation}>):Promise<CacheProbeToolV1>;
- collectCache?(context:Readonly<{root:string;invocation:ScriptInvocation;phase:ResourceLeaseControl;dryRun:boolean;signal:AbortSignal}>):Promise<string>;
+ collectCache?(context:Readonly<{root:string;invocation:ScriptInvocation;phase:ResourceLeaseControl;dryRun:boolean;signal:AbortSignal;area:string;language:"en"|"de"}>):Promise<string>;
 }
 
 const loaded=new Map<string,Promise<BuildBackendV1>>();
@@ -93,9 +93,11 @@ export async function loadBuildBackendV1(id:string):Promise<BuildBackendV1>{
  return pending;
 }
 
-/** 🧭️ The launch a backend's own tool needs for a command, asked of the backends the command concerns: the selected one, or the named one for `tools setup`; the namespace is the first argument the backend's nested launches carry. `undefined` when none launches anything. */
+/** 🚀️ The launch a backend's own tool needs for a command, asked of the backends the command concerns: the selected one, or the named one for `tools setup`; the namespace is the first argument the backend's nested launches carry. `undefined` when none launches anything. */
 export async function buildBackendBootstrapV1(args:readonly string[],tool:string):Promise<Readonly<{namespace:string;arguments:readonly string[]}>|undefined>{
- const target=args[0]==="tools"?args[2]??tool:tool,ids=target==="all"?buildBackendIdsV1():[requireBuildBackendIdV1(target)];
+ const setup=args[0]==="tools"&&args[1]==="setup";
+ if(setup&&args[2]==="toolchains")return undefined;
+ const target=setup?args[2]??tool:tool,ids=target==="all"?buildBackendIdsV1():[requireBuildBackendIdV1(target)];
  for(const id of ids){
   const launch=(await loadBuildBackendV1(id)).bootstrapArguments?.(args),namespace=buildBackendRowV1(id).nativeCaller?.namespace;
   if(launch){if(!namespace)throw Error(`Build backend ${id} launches its tool and must declare nativeCaller`);return {namespace,arguments:launch};}

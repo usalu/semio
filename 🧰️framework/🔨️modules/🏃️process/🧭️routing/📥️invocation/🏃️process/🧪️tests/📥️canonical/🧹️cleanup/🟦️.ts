@@ -5,6 +5,7 @@ import fixture from"./🔣️.json";
 import schema from"../../../🧬️schema/🧹️cleanup.json";
 import * as api from"../../../🟦️.ts";
 import type{AcceptedPhysicalCleanupV1,PhysicalCleanupRequestV1}from"../../../🧹️cleanup/🟦️.ts";
+import{acceptedPhysicalCleanupProgressV1,acceptedPhysicalCleanupWindowV1}from"../../../🧹️cleanup/🟦️.ts";
 
 /** 🛟️ Checks real canonical enrollment funding, exact-token custody and canceled-body cleanup drainage. */
 export async function proveAcceptedPhysicalCleanupV1():Promise<void>{
@@ -22,6 +23,23 @@ export async function proveAcceptedPhysicalCleanupV1():Promise<void>{
   });try{api.readAcceptedPhysicalCleanupV1(escaped!);}catch{result.retiredTokenRefused=true;}
  });
  const database=new Database(":memory:");try{await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"fixture:cleanup-ordinary",maximumElapsedMilliseconds:0},{fixture:"cleanup"},Date.now()),async original=>{let effects=0;await api.withAcceptedPhysicalCleanupV1(api.createIssuedResourceControlV1(original,"fixture:ordinary",0),{version:1,kind:"native-image",resource:"fixture:ordinary",reserveMilliseconds:100},async(token,body)=>{effects++;const facts=api.readAcceptedPhysicalCleanupV1(token);assert.equal(body.remainingMilliseconds(),null);await api.beginAcceptedPhysicalCleanupV1(token);const remaining=api.checkAcceptedPhysicalCleanupV1(token),oracle=database.query("select ?1 is null and ?2 is null and ?3=1 and ?4>0 and ?4<=?5 accepted").get(facts.deadlineEpochMilliseconds,facts.bodyDeadlineEpochMilliseconds,effects,remaining,facts.reserveMilliseconds)as{accepted:number};result.ordinaryAcceptedWithFixedReserve=Boolean(oracle.accepted);assert.equal(facts.cleanupSignal.aborted,false);});assert.equal(original.control.remainingMilliseconds(),null);assert.equal(original.control.signal.aborted,false);});}finally{database.close();}
+
+ const oracle=new Database(":memory:");try{
+  const renewalCase=new Ajv({strict:true}).addSchema(schema,"cleanup").compile({$ref:"cleanup#/definitions/RenewalCase"});
+  assert.deepEqual(acceptedPhysicalCleanupProgressV1,schema.definitions.ProgressProtocol.const);
+  for(const row of fixture.renewals){assert.equal(renewalCase(row),true);const expected=oracle.query("select max(0,min(?1,?3-max(0,?2))) window").get(row.reserveMilliseconds,row.elapsedMilliseconds,acceptedPhysicalCleanupProgressV1.maximumMilliseconds)as{window:number};assert.equal(expected.window,row.windowMilliseconds);assert.equal(acceptedPhysicalCleanupWindowV1(row.reserveMilliseconds,row.elapsedMilliseconds),row.windowMilliseconds);}
+  let retained:unknown;try{await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"fixture:cleanup-progress",maximumElapsedMilliseconds:0},{fixture:"cleanup"},Date.now()),async original=>{
+   const control=api.createIssuedResourceControlV1(original,"fixture:progress",0),reserve=400,step=100,steps=6,sleep=(milliseconds:number)=>new Promise<void>(done=>setTimeout(done,milliseconds));let signal:AbortSignal|undefined;
+   try{await api.withAcceptedPhysicalCleanupV1(control,{version:1,kind:"native-image",resource:"fixture:progress",reserveMilliseconds:reserve},async token=>{
+    assert.equal(api.readAcceptedPhysicalCleanupV1(token).deadlineEpochMilliseconds,null);await api.beginAcceptedPhysicalCleanupV1(token);signal=api.readAcceptedPhysicalCleanupV1(token).cleanupSignal;const began=performance.now();
+    for(let index=0;index<steps;index++){await sleep(step);await control.yieldContinuation();api.noteAcceptedPhysicalCleanupProgressV1(token);}
+    const elapsed=performance.now()-began,verdict=oracle.query("select ?1>?2 outlived, ?3 live").get(elapsed,reserve,signal.aborted?0:1)as{outlived:number;live:number};
+    result.ordinaryProgressRenewal=verdict.outlived===1&&verdict.live===1&&api.checkAcceptedPhysicalCleanupV1(token)>0;
+    await sleep(reserve+300);
+   });}catch(error){result.ordinaryIdleExpiry=signal?.aborted===true&&String(error instanceof Error?error.message:error).includes("Original physical cleanup deadline exhausted");}
+  });}catch(error){retained=error;}
+  assert.ok(String(retained instanceof Error?retained.message:retained).includes("Original physical cleanup deadline exhausted"));
+ }finally{oracle.close();}
  const observation=new Ajv({strict:true}).addSchema(schema,"cleanup").compile({$ref:"cleanup#/definitions/EnrollmentObservations"});assert.equal(observation(result),true);
  assert.deepEqual(result,fixture.observations);
 }

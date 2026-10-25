@@ -439,5 +439,4 @@ fn original_frame_directive_inline_retirement_preserves_the_full_independent_gra
     let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.limited(grant,|cx|job.close_step(cx)).unwrap());assert_eq!(step,InteractiveJobCloseStep::Pending{progress:receipt});assert_eq!(caller.receipt(),receipt);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(job.terminal_is_empty());
     assert_eq!(caller.limited(grant,|cx|job.close_step(cx)).unwrap(),InteractiveJobCloseStep::Complete{progress:Default::default()});assert_eq!(caller.receipt(),Default::default());
     let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));caller.finish();
-    eprintln!("[DEBUG] actual finite original frame directive: per-axis denial and candidate pointer retained, exact scalar copy{}, whole failure/receipt, unchanged zero heap, decoder and original roots paid closed",receipt.copied_bytes);
 }

@@ -29,6 +29,7 @@ semio_framework_ui_contract = { path = "../../../../../../../../../🔨️module
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [dev-dependencies]
+semio-framework-plugin-instance-ladders = { path = "../../../../../🪜️maintenance-ladder/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 serde_json = "1.0.140"

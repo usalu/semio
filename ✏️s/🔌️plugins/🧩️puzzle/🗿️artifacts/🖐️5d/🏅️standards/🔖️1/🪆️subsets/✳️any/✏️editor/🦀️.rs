@@ -35,6 +35,7 @@ use crate::editor::puzzle5d::commands::set_brush_placement_contact_tolerance;
 use crate::editor::puzzle5d::commands::set_camera;
 use crate::editor::puzzle5d::commands::set_camera_2d;
 use crate::editor::puzzle5d::commands::set_camera_3d;
+use crate::editor::puzzle5d::commands::focus_selection;
 use crate::editor::puzzle5d::commands::set_fill_count;
 use crate::editor::puzzle5d::commands::set_grid_factor;
 use crate::editor::puzzle5d::commands::set_grid_snap_enabled;
@@ -191,21 +192,7 @@ use session::*;
 
 //#region 🔖️Document
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle5dPart {
-    pub id: String,
-    #[value(rename = "partKind")]
-    pub part_kind: String,
-    #[value(default)]
-    pub anchor: Puzzle5dPartAnchor,
-    #[value(default, rename = "2d")]
-    pub part_2d: Puzzle5dPart2d,
-    #[value(default, rename = "3d")]
-    pub part_3d: Puzzle5dPart3d,
-    #[value(default)]
-    pub grips: Vec<Puzzle5dGrip>,
-}
+pub use crate::editor::puzzle5d::entities::Puzzle5dPart;
 
 pub use crate::standards::v1::subsets::any::schema::mutations::quat_from_axis_angle;
 

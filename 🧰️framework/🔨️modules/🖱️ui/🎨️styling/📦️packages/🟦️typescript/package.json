@@ -41,7 +41,8 @@
     "./builder/python/schema.json": "./🏗️builder/🐍️python/🧬️schema/🔣️json/🟦️.ts",
     "./builder/python/script": "./🏗️builder/🐍️python/📜️script.ts",
     "./chrome/text": "./🖌️ui/🟦️.ts",
-    "./palette/text": "./🎨️palette/🟦️.ts"
+    "./palette/text": "./🎨️palette/🟦️.ts",
+    "./iframe": "./🌐️iframe/🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/assets": "workspace:*",

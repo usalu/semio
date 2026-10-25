@@ -9,8 +9,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-frame-interlace")]
 pub struct SetFrameInterlace {
-    pub(crate) index: usize,
-    pub(crate) interlace: bool,
+    pub index: usize,
+    pub interlace: bool,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameInterlace {

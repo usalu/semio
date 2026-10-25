@@ -5,6 +5,7 @@ use super::*;
 // #region 🔖️Evaluate
 /// 🧾️ Publishes the original physical envelope with facts from its same execution owner.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct EvaluationReply {pub external_pending:bool,pub(super) pending_source:Option<neural_engine::PendingExtensionEval>,pub wire:Option<Vec<u8>>,pub complete:bool,pub faulted:bool,pub retirement_progress:RetainedCloneProgress,pub(super) retirement_posted:bool,pub returned_request:Option<EvaluateRequest>,pub refusal:Option<EvaluationFailure>}
 
 impl EvaluationReply{

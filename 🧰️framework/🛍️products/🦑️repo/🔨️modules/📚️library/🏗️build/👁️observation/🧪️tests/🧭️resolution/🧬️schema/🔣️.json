@@ -1,0 +1,12 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/schema/observation-resolution-law.json",
+ "type": "object",
+ "required": ["version", "cases", "generations"],
+ "additionalProperties": false,
+ "properties": {
+  "version": {"const": 1},
+  "cases": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["name", "input", "expected"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "input": {"type": "string"}, "expected": {"type": "string"}}}},
+  "generations": {"type": "object", "required": ["recorded", "current", "package", "file"], "additionalProperties": false, "properties": {"recorded": {"type": "string", "pattern": "^[0-9a-f]{20}$|^a{20}$"}, "current": {"type": "string", "pattern": "^[0-9a-f]{20}$|^b{20}$"}, "package": {"type": "string"}, "file": {"type": "string"}}}
+ }
+}

@@ -5,7 +5,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSyn
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
-import { testPythonV1 } from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import { testPythonV1 } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import { gitSpawnEnv } from "../../../../../../🏃️process/🌿️environment/🌳️git/🟦️.ts";
 import { policyTaxonomyBarrelShapeBreaches, policyTaxonomyLibShapeBreaches } from "../../🟦️.ts";
 import corpus from "./🔣️.json" with { type: "json" };
@@ -13,7 +13,7 @@ import corpusSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 type Breach = { id: string; kind: string; priority?: string; line?: number; summary?: string };
 const rules: Record<string, (root: string, row: any) => readonly any[]> = {
-  policyTaxonomyLibShapeBreaches: (root, row) => policyTaxonomyLibShapeBreaches(root, (row.crates ?? []).map((c: any) => ({ dir: c.dir, libRelPath: c.libRelPath, shape: c.shape, role: c.role, ownerRel: c.ownerRel, pluginId: c.pluginId }))),
+  policyTaxonomyLibShapeBreaches: (root, row) => policyTaxonomyLibShapeBreaches(root, (row.crates ?? []).map((c: any) => ({ dir: c.dir, libRelPath: c.libRelPath, role: c.role, ownerRel: c.ownerRel, pluginId: c.pluginId }))),
   policyTaxonomyBarrelShapeBreaches: (root) => policyTaxonomyBarrelShapeBreaches(root),
 };
 const artifacts = realpathSync(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir()));
@@ -38,7 +38,7 @@ const run = (row: any) => {
 };
 const modelled = (corpus.cases as any[]).filter((row) => row.oracle !== false);
 const model = (() => {
-  const run = spawnSync(testPythonV1() ?? "python3", ["-I", resolve(import.meta.dir, "./🐍️oracle.py"), resolve(import.meta.dir, "./🔣️.json")], { encoding: "utf8" });
+  const run = spawnSync(testPythonV1() ?? "python3", ["-I", resolve(import.meta.dir, "./🐍️.py"), resolve(import.meta.dir, "./🔣️.json")], { encoding: "utf8" });
   expect(run.status, run.stderr).toBe(0);
   return JSON.parse(run.stdout) as Record<string, unknown>;
 })();

@@ -5,7 +5,7 @@ import {GRPC_CODES_V1,GrpcErrorV1,startGrpcServerV1,type GrpcCallEventV1,type Gr
 import {RemoteExecutionContentErrorV1,type RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
 import {RemoteExecutionSchedulerV1,type RemoteExecutionSchedulerEventV1,type RemoteExecutionSchedulerOptionsV1,type RemoteExecutionSnapshotV1} from "../🗓️scheduler/🟦️.ts";
 import {remoteExecutionDigestV1,requireRemoteExecutionShapeV1,type RemoteExecutionDigestV1} from "../🟦️.ts";
-import {runtimeServeV1} from "../../../../../../../🔨️modules/⚙️runtime/🌍️serve/🟦️.ts";
+import {runtimeServeV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌍️serve/🟦️.ts";
 
 /** 🔐️ Bearer tokens: with none the service is open (loopback only), a read token allows lookups and downloads, a write token everything, a worker token the worker API. */
 export type RemoteExecutionTokensV1=Readonly<{read?:string|undefined;write?:string|undefined;worker?:string|undefined}>;

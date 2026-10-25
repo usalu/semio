@@ -82,13 +82,13 @@ fn tree_item_detail(document: &UiDocumentTree, props: &ui_contract::TreeItemProp
     Some(surface_scene_node(document, record, surface_props, surface, controller))
 }
 
-/// 🎛️ Rehydrates the explicit inline Toolbar relation without reinterpreting it as another
+/// 🧰️ Rehydrates the explicit inline Toolbar relation without reinterpreting it as another
 /// TreeItem. Its children stay ordinary Button nodes with their own ids and Activate bindings.
 fn tree_item_inline_toolbar(document: &UiDocumentTree, props: &ui_contract::TreeItemProps, controller: &str) -> Option<UiStackNode> {
     tree_toolbar(document, props.inline_toolbar?, controller)
 }
 
-/// 🎛️ Rehydrates a Tree row or section header's explicit Toolbar relation.
+/// 🔧️ Rehydrates a Tree row or section header's explicit Toolbar relation.
 pub(super) fn tree_toolbar(document: &UiDocumentTree, toolbar: UiNodeId, controller: &str) -> Option<UiStackNode> {
     let record = document.record(toolbar)?;
     let ui_contract::Component::Container(container) = &record.component else { return None };

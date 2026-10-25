@@ -15,7 +15,7 @@ import { Icon, cn, overviewCardChipClass, type IconName } from "@semio-tech/ui-r
 import { localized, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { CHALLENGE_LABELS } from "../⛰️challenge/🏷️labels/🟦️.ts";
 import { addressPages, pageLabel } from "../🏠️home/🗺️pages/🟦️.ts";
-import { stepAbove, stepAfter, stepBefore, type CourseState, type CourseStep } from "../🧭️session/🧮️state/🟦️.ts";
+import { sameStep, stepAbove, stepAfter, stepBefore, type CourseState, type CourseStep } from "../🧭️session/🧮️state/🟦️.ts";
 import { type CourseSession } from "../🧭️session/🟦️.ts";
 
 //#region 🏷️Places
@@ -32,10 +32,10 @@ export function placeName(step: CourseStep, state: Pick<CourseState, "course" | 
 //#endregion 🏷️Places
 
 //#region 🚏️Ways
-/** 🚏️ The ways the navbar offers, in the order it shows them. */
+/** 🧭️ The ways the navbar offers, in the order it shows them. */
 export const NAVIGATION_WAYS = ["overview", "back", "forward", "up"] as const;
 
-/** 🚏️ One way of the navbar. */
+/** 🔃️ One way of the navbar. */
 export type NavigationWay = (typeof NAVIGATION_WAYS)[number];
 
 const WAY_ICONS: { readonly [W in NavigationWay]: IconName } = { overview: "layout-grid", back: "arrow-left", forward: "arrow-right", up: "arrow-up" };
@@ -46,13 +46,13 @@ const WAY_LABELS: { readonly [W in Exclude<NavigationWay, "overview">]: { readon
   up: { bare: "course.nav.up", to: "course.nav.upTo" },
 };
 
-/** 🚏️ Where each way leads from `state`; nothing where it leads nowhere. */
+/** 🛤️ Where each way leads from `state`; nothing where it leads nowhere. */
 export function navigationWays(state: CourseState): { readonly [W in NavigationWay]: CourseStep | undefined } {
   const atOverview = state.step.screen === "home" && state.step.page === undefined;
   return { overview: atOverview ? undefined : { screen: "home" }, back: stepBefore(state), forward: stepAfter(state), up: stepAbove(state) };
 }
 
-/** 🚏️ The ways of the navbar as one group of buttons: each an icon and its word (Overview, Back, Forward, Up), and
+/** 🎛️ The ways of the navbar as one group of buttons: each an icon and its word (Overview, Back, Forward, Up), and
  * named — also for the pointer that rests on them — with the place it leads to. A way that leads nowhere stays in its
  * place and in the tab order and says that it is unavailable; Escape is named as Up's key while a home page is open. */
 export function NavigationControls(props: { readonly session: CourseSession; readonly state: CourseState; readonly locale: CourseLocale; readonly text: CourseText }): ReactElement {
@@ -96,19 +96,22 @@ export function addressPage(hash: string, pages: readonly string[]): string | un
   return pages.includes(named) ? named : undefined;
 }
 
-/** 🔗️ The hash that names `step`: its page of the overview; empty on the overview itself and on every other screen. */
+/** 🪜️ The hash that names `step`: its page of the overview; empty on the overview itself and on every other screen. */
 export function stepAddress(step: CourseStep): string {
   return step.screen === "home" && step.page !== undefined ? `#${step.page}` : "";
 }
 
-/** 🔗️ Binds the address to the current overview once its course is known. On arrival a hash that names a
+/** 🔂️ Binds the address to the current overview once its course is known. On arrival a hash that names a
  * page opens that page instead of the overview; afterwards the hash follows the step — replaced in place, never a new
  * entry of the browser's history, and left alone while it names no page and none shows (a skip link's target) — and a
- * hash changed from outside opens the page it names, or the overview when it was emptied. */
+ * hash changed from outside opens the page it names, or the overview when it was emptied. The hash is written only
+ * when the step moved: a course that arrives again (the proctor's answer after the one held on the device) changes
+ * nothing about the step, and a hash set from outside whose change has not been delivered yet is not a stale address. */
 export function useAddress(session: CourseSession, state: CourseState): void {
   const course = state.course;
   const pages = useMemo(() => (course === undefined ? undefined : addressPages(course)), [course]);
   const arrived = useRef(false);
+  const mirrored = useRef<CourseStep | undefined>(undefined);
   const { step } = state;
   useLayoutEffect(() => {
     if (pages === undefined) return;
@@ -118,6 +121,9 @@ export function useAddress(session: CourseSession, state: CourseState): void {
       arrived.current = true;
       if (named !== undefined && shown.screen === "home" && shown.page === undefined) return session.open({ screen: "home", page: named }, true);
     }
+    const moved = mirrored.current === undefined || !sameStep(mirrored.current, shown);
+    mirrored.current = shown;
+    if (!moved) return;
     const wanted = stepAddress(shown);
     if (wanted === "" ? named === undefined : window.location.hash === wanted) return;
     window.history.replaceState(window.history.state, "", wanted === "" ? window.location.pathname + window.location.search : wanted);

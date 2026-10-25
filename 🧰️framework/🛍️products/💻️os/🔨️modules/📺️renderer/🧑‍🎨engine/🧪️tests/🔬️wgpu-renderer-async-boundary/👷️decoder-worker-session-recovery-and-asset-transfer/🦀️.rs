@@ -137,7 +137,6 @@ fn native_asset_response_transfers_each_credited_page_without_losing_its_bytes()
         fetch.begin_close();let RendererAssetFetchOwner::Shared(owner)=fetch else{unreachable!()};assert!(authority.return_owner(owner).is_ok());authority.begin_close();for _ in 0..4096{if authority.close_step(){break}}assert!(authority.terminal_is_empty());
         if let Some(bytes)=rejected.as_ref(){let capacity=bytes.capacity();let mut caller=OriginalRendererFixture::new();caller.turn(|cx|{semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{release_bytes:capacity,depth:1,..Default::default()},|_|{rejected.take();Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()}))})?;Ok(())}).unwrap();assert!(rejected.is_none());}
         assert_eq!(accepted,case["accepted"].as_bool().unwrap());assert_eq!(observed as u64,case["transferredBytes"].as_u64().unwrap());assert_eq!(source_released,accepted);assert_eq!(retained_source,if accepted{0}else{length});
-        eprintln!("[DEBUG] exact World response page boundary {observed}/{length}, retained source on refusal, original backing pointer and authored byte pattern preserved");
     }
 }
 

@@ -19,7 +19,7 @@ import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦�
 import { runtimeTypeEnvironmentV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
 import { SqliteDatabaseV1 } from "../../../⚙️runtime/🗃️sqlite/🟦️.ts";
 
-/** 🔐️ Checks exclusive cursor transfer and shared quote admission against independent SQL. */
+/** 🔒️ Checks exclusive cursor transfer and shared quote admission against independent SQL. */
 class ExclusiveRetirementSourceScript extends BundleScript{
  async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-exclusive-retirement-source");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../♻️retirement/🔐️mutex/🧪️tests/🟦️.ts")],this.repoRoot,"value:exclusive-retirement:source",scriptInvocationBudget(this.invocation,30_000),{signal:this.invocation.control.signal});}
 }
@@ -64,7 +64,7 @@ export class TestScript extends BundleScript {
   }
 }
 /** 🛬️ Exercises canonical borrowed construction, allocation admission and owner retirement. */
-/** 🧮️ Executes closed Int64 scalar transport and actual test-only GraphQL mapping. */
+/** 🕸️ Executes closed Int64 scalar transport and actual test-only GraphQL mapping. */
 export class GraphqlInt64SourceTestScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("Expected test-graphql-int64-source");
@@ -115,7 +115,7 @@ export class RefusalPortableTestScript extends BundleScript {
   await runOwnedCommand(process.execPath, ["test", "--timeout", "30000", test], this.repoRoot, "value:refusal:portable", scriptInvocationBudget(this.invocation, 30000), { signal: this.invocation.control.signal });
  }
 }
-/** ⚠️ Proves controlled refusal transport against the closed schema and independent wire owners. */
+/** 🚫️ Proves controlled refusal transport against the closed schema and independent wire owners. */
 export class RefusalCodecTestScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("Expected test-refusal-codec");
@@ -125,7 +125,7 @@ export class RefusalCodecTestScript extends BundleScript {
   await runOwnedCommand(process.execPath, ["test","--timeout","30000",test], this.repoRoot, "value:refusal:codec:portable", scriptInvocationBudget(this.invocation, 30000), { signal: this.invocation.control.signal });
  }
 }
-/** 🛬️ Checks neutral decode discovery and the original schema and SQLite reference corpus. */
+/** 🎚️ Checks neutral decode discovery and the original schema and SQLite reference corpus. */
 export class DecodeOwnershipTestScript extends BundleScript {
  async run(args: string[]): Promise<void> {
   if (args.length) throw Error("Expected test-decode-ownership");
@@ -135,7 +135,7 @@ export class DecodeOwnershipTestScript extends BundleScript {
  }
 }
 
-/** 🔐️ Checks the complete neutral shared factory copy and cancellation matrix with its independent oracle. */
+/** 🏭️ Checks the complete neutral shared factory copy and cancellation matrix with its independent oracle. */
 export class SharedFactoryRetirementTestScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("Expected test-shared-factory-retirement");
@@ -267,7 +267,7 @@ export class PersistentTraversalCheckScript extends BundleScript{
  }
 }
 
-/** 🧮️ Verifies plain derived retirement widths against the neutral SQLite corpus. */
+/** 🧬️ Verifies plain derived retirement widths against the neutral SQLite corpus. */
 export class PlainElementRetirementSourceScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("test-plain-element-retirement-source accepts no arguments");
@@ -315,7 +315,7 @@ class BulkVecRetainedCheckScript extends BundleScript{
   if(args[0]==="native"){const policy=readCargoTestPolicyV1(process.env);await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,policy.buildBudgetMs>0?policy.buildBudgetMs:buildPreparationBudgetMs())},cwd:this.repoRoot,manifestPaths:{"semio-framework-value-retained-clone":resolve(this.root,"../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml")},groups:[{"package":"semio-framework-value-retained-clone","target":{"kind":"lib","name":"semio_framework_value_retained_clone"},"laws":["retained_clone::bulk_vec_tests::bulk_vector_clone_equals_the_clone_oracle_for_every_bitwise_element_shape","retained_clone::bulk_vec_tests::bulk_vector_clone_turn_count_is_bytes_over_page","retained_clone::bulk_vec_tests::bulk_vector_clone_capacity_accounting_is_exact","retained_clone::bulk_vec_tests::bulk_vector_clone_cancels_at_every_turn_and_releases_everything","retained_clone::bulk_vec_tests::bulk_run_elements_obeys_every_grant_axis","retained_clone::bulk_vec_tests::bulk_array_zero_sized_work_is_bounded_and_every_prefix_closes","retained_clone::bulk_vec_tests::bulk_clone_logical_body_survives_expanded_physical_headers"]}]});}
  }
 }
-/** 🔗️ Verifies paid original child receiving, immutable sealing and every controlled cancellation frontier. */
+/** 📩️ Verifies paid original child receiving, immutable sealing and every controlled cancellation frontier. */
 class NativeSharedReceivingCheckScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   assert(args.length===1&&["source","native"].includes(args[0]!),"test-native-shared-receive requires source or native");
@@ -325,7 +325,7 @@ class NativeSharedReceivingCheckScript extends BundleScript{
   if(args[0]==="native"){const policy=readCargoTestPolicyV1(process.env);await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,policy.buildBudgetMs>0?policy.buildBudgetMs:buildPreparationBudgetMs())},cwd:this.repoRoot,manifestPaths:{"semio-framework-value-native-owned":resolve(this.root,"../../🛬️decode/🧳️owned/📦️packages/🦀️rust/Cargo.toml")},groups:[{"package":"semio-framework-value-native-owned","target":{"kind":"lib","name":"semio_framework_value_native_owned"},"cargoArgs":["--locked"],"laws":["owned::shared::tests::native_shared_original_receive_exact_prefix_cancellation_and_transfer","owned::shared::tests::native_shared_original_callback_refusal_retains_paid_child_authority","owned::shared::tests::native_record32_single_active_child_fits4096_and_preserves_every_original_prefix","owned::shared::tests::native_flattened_original_record_preserves_source_schema_and_all_partial_custody"]}]});}
  }
 }
-/** 📇️ Verifies source-bound immutable key admission and sparse original ranked reuse. */
+/** 📬️ Verifies source-bound immutable key admission and sparse original ranked reuse. */
 class NamedRootReceivingCheckScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   assert(args.length===1&&["source","native"].includes(args[0]!),"test-named-root-receive requires source or native");
@@ -383,7 +383,7 @@ class PersistentBuildCheckScript extends BundleScript{
 }
 
 
-/** 🚚️ Verifies original typed sealed children use their caller's funded cleanup frontier. */
+/** 🔏️ Verifies original typed sealed children use their caller's funded cleanup frontier. */
 class SealedFrontierCheckScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   assert(args.length===1&&["source","native"].includes(args[0]!),"test-sealed-frontier requires source or native");
@@ -394,7 +394,7 @@ class SealedFrontierCheckScript extends BundleScript{
  }
 }
 
-/** 🔗️ Verifies immutable list root cloning through actual original pointer and physical retirement witnesses. */
+/** 🏠️ Verifies immutable list root cloning through actual original pointer and physical retirement witnesses. */
 class ImmutableRootCloneCheckScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   assert(args.length===1&&["source","native"].includes(args[0]!),"test-immutable-root-clone requires source or native");
@@ -437,7 +437,7 @@ class SliceEqualityCheckScript extends BundleScript{
  }
 }
 
-/** 🗂️ Verifies neutral named edits, exact paged keys and genuine original directory custody. */
+/** 🧵️ Verifies neutral named edits, exact paged keys and genuine original directory custody. */
 class OriginalVectorConcatCheckScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   assert(args.length===1&&["source","native"].includes(args[0]!),"test-original-vector-concat requires source or native");
@@ -469,7 +469,7 @@ class ExactKeyLookupCheckScript extends BundleScript{
  }
 }
 
-/** 🧮️ Verifies shared strict indexed admission, header streaming and original directory custody. */
+/** ✏️ Verifies shared strict indexed admission, header streaming and original directory custody. */
 class IndexedEditCheckScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   assert(args.length===1&&["source","native"].includes(args[0]!),"test-indexed-edit requires source or native");
@@ -482,7 +482,7 @@ class IndexedEditCheckScript extends BundleScript{
 }
 
 
-/** 🎟️ Executes exact registry admission, reuse and foreign-owner laws under original process authority. */
+/** 🗝️ Executes exact registry admission, reuse and foreign-owner laws under original process authority. */
 class FixedKeySlotsCheckScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   assert(args.length===1&&["source","native"].includes(args[0]!),"test-fixed-key-slots requires source or native");

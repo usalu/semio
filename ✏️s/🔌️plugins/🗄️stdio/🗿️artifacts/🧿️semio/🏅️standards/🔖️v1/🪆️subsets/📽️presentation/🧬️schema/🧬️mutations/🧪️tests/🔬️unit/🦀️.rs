@@ -136,7 +136,7 @@ fn apply_valid(diff: &SemioPresentationDiff, base: &SemioPresentationSnapshot) -
 async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = fixture();
-        let diff_direct = Mutation::diff(&mutation, &base);
+        let diff_direct = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
         let mut via_apply = base.clone();
@@ -162,7 +162,7 @@ async fn inverse_law() {
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
-        let diff = Mutation::diff(&mutation, &base);
+        let diff = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base);
         let next = apply_valid(diff.diff(), &base);
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
         let restored = apply_valid(&inverse_diff, &next);
@@ -191,9 +191,9 @@ async fn absorb_law() {
     {
         let base = fixture();
         let new_slide = || Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
-        let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 2, slide: new_slide() }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 2, slide: new_slide() }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: 0 }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = slides_triple(&absorbed);
         assert_eq!(triple.removed, vec![0]);
@@ -206,9 +206,9 @@ async fn absorb_law() {
         let base = fixture();
         let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
         let slide_g = Slide { id: "g".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
-        let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 2, slide: slide_f.clone() }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 2, slide: slide_f.clone() }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 2, slide: slide_g.clone() }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 2, slide: slide_g.clone() }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = slides_triple(&absorbed);
         assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
@@ -219,9 +219,9 @@ async fn absorb_law() {
     {
         let base = fixture();
         let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
-        let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 1, slide: slide_f }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 1, slide: slide_f }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: 1, layout_id: Some("patched".into()) }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: 1, layout_id: Some("patched".into()) }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = slides_triple(&absorbed);
         assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
@@ -231,9 +231,9 @@ async fn absorb_law() {
 
     {
         let base = fixture();
-        let d1 = Mutation::diff(&SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: 1, layout_id: Some("x".into()) }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: 1, layout_id: Some("x".into()) }), &base);
         let mid = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: 1 }), &mid);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: 1 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = slides_triple(&absorbed);
         assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
@@ -244,11 +244,11 @@ async fn absorb_law() {
         let base = fixture();
         let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
         let slide_g = Slide { id: "g".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
-        let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 2, slide: slide_f }), &base);
+        let d1 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 2, slide: slide_f }), &base);
         let mid1 = apply_valid(d1.diff(), &base);
-        let d2 = Mutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 2, slide: slide_g }), &mid1);
+        let d2 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 2, slide: slide_g }), &mid1);
         let mid2 = apply_valid(d2.diff(), &mid1);
-        let d3 = Mutation::diff(&SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: 0 }), &mid2);
+        let d3 = ::semio_framework_os_kernel::ColdMutation::diff(&SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: 0 }), &mid2);
         let sequential = apply_valid(d3.diff(), &mid2);
 
         let mut left = d1.diff().clone();

@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import {javascriptInstallSchemaV1 as materializedInstallSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {withCurrentBunWorkspaceOwnershipV1,readBunWorkspaceListingProjectionV1} from "../../../../../🗂️workspaces/🟦️bun/🟦️.ts";
 import {chmodSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,readlinkSync,realpathSync,renameSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
@@ -15,6 +15,7 @@ import {createNativeBuildCallerCapabilitiesV1} from "../../../../../🏗️build
 import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import * as issued from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import * as storage from "../../💾️storage/🟦️.ts";
+import * as readContext from "../../💾️storage/📥️read-context/🟦️.ts";
 import * as glue from "../💾️storage/🟦️.ts";
 
 const runtime:GenerationRuntimeV1={manager:"0.0.0",revision:"fixture",node:"0.0.0",platform:"fixture",arch:"fixture",sha256:"a".repeat(64)};
@@ -76,7 +77,7 @@ function mutate(root:string,place:(value:string)=>string,mutation:Mutation,env:R
  else throw Error("Closed mutation required");
 }
 const outcome=(result:{status:string;class?:string})=>result.status==="match"?"match":"mismatch:"+result.class;
-const keyingOracle=fileURLToPath(new URL("./🐍️keying.py",import.meta.url)),schemaPath=fileURLToPath(new URL("../🧬️schema/🔣️.json",import.meta.url)),python=()=>testPythonV1()??"python3";
+const keyingOracle=fileURLToPath(new URL("./🐍️.py",import.meta.url)),schemaPath=fileURLToPath(new URL("../🧬️schema/🔣️.json",import.meta.url)),python=()=>testPythonV1()??"python3";
 const oracleVerify=(root:string,store:string,receipt:GenerationReceiptV1)=>{
  const file=root+".receipt.json";writeFileSync(file,JSON.stringify(receipt));
  const run=spawnSync(python(),["-I",keyingOracle,"verify",file,root,store,JSON.stringify(runtime),schemaPath],{encoding:"utf8"});rmSync(file,{force:true});
@@ -285,13 +286,13 @@ test("generation receipt glue: a captured complete walk verifies under real read
  try{
   const generation="e".repeat(64),directory=join(store,"j",generation.slice(0,20)),bindings=join(directory,"bindings.json"),target=join(directory,"node_modules");
   mkdirSync(target,{recursive:true});writeFileSync(bindings,"{\"ready\":true}\n");mkdirSync(join(root,"pkgs/a"),{recursive:true});rmSync(join(root,"pkgs/a/node_modules"),{force:true});symlinkSync(target,join(root,"pkgs/a/node_modules"));
-  const phase=issued.createIssuedResourceControlV1(original,"dependencies:generation-glue",0),context:storage.JavascriptDependencyReadContextV1=Object.freeze({root:store,invocation:original,control:phase,check:(actual:storage.JavascriptDependencyReadContextV1["control"])=>issued.requireIssuedResourceControlRefinementV1(phase,actual),recheck:async(actual:storage.JavascriptDependencyReadContextV1["control"])=>{issued.requireIssuedResourceControlRefinementV1(phase,actual);}});
-  const pairs=[{sourceDirectory:join(root,"pkgs/a/node_modules"),targetDirectory:target}],observation=storage.observeJavascriptDependencyBindingsReadV1(context,pairs,phase),receipt=await storage.readJavascriptDependencyBindingReceiptReadV1(context,bindings,phase);
+  const phase=issued.createIssuedResourceControlV1(original,"dependencies:generation-glue",0),context:readContext.JavascriptDependencyReadContextV1=Object.freeze({root:store,invocation:original,control:phase,check:(actual:readContext.JavascriptDependencyReadContextV1["control"])=>issued.requireIssuedResourceControlRefinementV1(phase,actual),recheck:async(actual:readContext.JavascriptDependencyReadContextV1["control"])=>{issued.requireIssuedResourceControlRefinementV1(phase,actual);}});
+  const pairs=[{sourceDirectory:join(root,"pkgs/a/node_modules"),targetDirectory:target}],observation=readContext.observeJavascriptDependencyBindingsReadV1(context,pairs,phase),receipt=await readContext.readJavascriptDependencyBindingReceiptReadV1(context,bindings,phase);
   const walked=await withCurrentBunWorkspaceOwnershipV1(root,{kind:"all"},{signal:new AbortController().signal,advance:async()=>{}},async custody=>custody.observed());
   const providers=[join(store,"j/g1/node_modules/dep/package.json"),join(store,"j/g1/node_modules/dep"),join(root,"node_modules")].map(path=>{const f=facts(path);return{path,stamp:f?JSON.stringify(protocol.stampFields.map((key:string)=>String(f[key as keyof typeof f]))):null,anchor:f?JSON.stringify(protocol.anchorFields.map((key:string)=>String(f[key as keyof typeof f]))):null,kind:f?f.isDirectory()?"directory":"file":"missing",target:null,full:path.endsWith("package.json")};});
   const scopes=[{scope:".",sha256:"f".repeat(64)}],receipts=[{scope:".",generation,fingerprint:receipt.fingerprint}],sha256=generationSha256V1(JSON.stringify([receipts,[[".",observation]],scopes]));
   const f=lstatSync(join(root,"package.json"));
-  const walk={version:1 as const,required:["."],projection:{owners:{sha256:"d".repeat(64)},recipeSha256:"c".repeat(64),plans:[{scope:".",plan:{directory,generation,bindings:pairs,sources:[{path:join(root,"package.json"),kind:"file" as const,dev:String(f.dev),ino:String(f.ino),mode:f.mode,bytes:readFileSync(join(root,"package.json"))}]}}]},receipts,sha256,evidence:{scope:".",execution:{scopes,runtimeSha256:storage.javascriptDependencySourceOwnerRuntimeV1(),observations:providers},bindings:[[".",observation]]},observed:()=>walked};
+  const walk={version:1 as const,required:["."],projection:{owners:{sha256:"d".repeat(64)},recipeSha256:"c".repeat(64),plans:[{scope:".",plan:{directory,generation,bindings:pairs,sources:[{path:join(root,"package.json"),kind:"file" as const,dev:String(f.dev),ino:String(f.ino),mode:f.mode,bytes:readFileSync(join(root,"package.json"))}]}}]},receipts,sha256,evidence:{scope:".",execution:{scopes,runtimeSha256:readContext.javascriptDependencySourceOwnerRuntimeV1(),observations:providers},bindings:[[".",observation]]},observed:()=>walked};
   const subject=subjectOf(root),generationControl={signal:phase.signal,check:()=>{},tick:async()=>{}},captured=await glue.captureJavascriptDependencyGenerationReceiptV1(root,{root:store},generationControl,walk as never,walked,Date.now()+10000,subject);
   expect(captured.status).toBe("captured");if(captured.status!=="captured")return;
   expect(await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject)).toEqual({status:"absent"});

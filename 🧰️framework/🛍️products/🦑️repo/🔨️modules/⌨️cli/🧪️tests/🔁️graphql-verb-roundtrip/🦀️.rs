@@ -12,7 +12,7 @@ mod subject {
         Ok(String::from_utf8_lossy(&ctx.input_bytes("shared://🔁️graphql-verb-roundtrip/🗄️repo-records.json")?).to_string())
     }
 
-    /// 📥️ The committed vectors every scenario reads.
+    /// 🧪️ The committed vectors every scenario reads.
     fn vectors(ctx: &Context) -> Result<Vec<Json>, String> {
         Ok(ctx.input_json("shared://🔁️graphql-verb-roundtrip/🔁️verb-queries.json")?.array("vectors"))
     }
@@ -98,7 +98,7 @@ mod subject {
         Ok(Outcome::projection(Json::Object(vec![("refused".to_string(), Json::Array(rows))])))
     }
 
-    /// 🔁️ The same document rendered twice produces the same bytes.
+    /// 🖌️ The same document rendered twice produces the same bytes.
     pub fn rendering_is_deterministic(ctx: &Context) -> Result<Outcome, String> {
         let records = records(ctx)?;
         let mut rows: Vec<Json> = Vec::new();

@@ -1,0 +1,33 @@
+{
+  "name": "@semio-tech/trinity-jack-lsp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./pkg/trinity_jack_lsp.js",
+  "module": "./pkg/trinity_jack_lsp.js",
+  "types": "./pkg/trinity_jack_lsp.d.ts",
+  "files": [
+    "pkg/trinity_jack_lsp.js",
+    "pkg/trinity_jack_lsp.d.ts",
+    "pkg/trinity_jack_lsp_bg.wasm",
+    "pkg/trinity_jack_lsp_bg.wasm.d.ts"
+  ],
+  "exports": {
+    ".": {
+      "types": "./pkg/trinity_jack_lsp.d.ts",
+      "import": "./pkg/trinity_jack_lsp.js"
+    },
+    "./trinity_jack_lsp.js": {
+      "types": "./pkg/trinity_jack_lsp.d.ts",
+      "import": "./pkg/trinity_jack_lsp.js"
+    },
+    "./trinity_jack_lsp_bg.wasm": {
+      "types": "./pkg/trinity_jack_lsp_bg.wasm.d.ts",
+      "default": "./pkg/trinity_jack_lsp_bg.wasm"
+    }
+  },
+  "bundleKind": "library",
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
+  }
+}

@@ -96,7 +96,7 @@ function relativeValue(timestampMs: number, nowMs: number): readonly [number, In
   return [Math.round(seconds / 31_536_000), "year"];
 }
 
-/** 🧭 Formats one instant through the same Intl primitives that React uses. */
+/** 🌐️ Formats one instant through the same Intl primitives that React uses. */
 export function formatHostTemporalValueV1(
   value: HostTemporalValueV1,
   nowMs: number,
@@ -119,7 +119,7 @@ export function formatHostTemporalValueV1(
   }
 }
 
-/** 🧭 Formats a bounded batch and advances the host profile revision when Intl's resolved profile changes. */
+/** 📦️ Formats a bounded batch and advances the host profile revision when Intl's resolved profile changes. */
 export function formatHostTemporalValuesV1(
   request: HostTemporalFormatRequestV1,
   state: HostTemporalFormatPageStateV1,

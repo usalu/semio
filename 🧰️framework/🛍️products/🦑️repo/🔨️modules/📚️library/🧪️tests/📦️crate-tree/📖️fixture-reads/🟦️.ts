@@ -6,7 +6,7 @@ import { rebaseManifestDirPaths } from "../../../🏗️authoring/📦️crate-t
 import { dropBaseUnresolvedNames, unresolvedSubjects } from "../../../🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
 import { externalizeFacetLeaves } from "../../../🏗️authoring/📦️crate-tree/🧾️facet-leaves/🟦️.ts";
 import { FIXTURE_READER_CRATE, FIXTURE_READER_PACKAGE_DIR, resolveFixturePlaceholders } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts";
-import { fixturesToRuntime, importFixtureMacros } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️shared/🟦️.ts";
+import { fixturesToRuntime, importFixtureMacros } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️harness/🟦️.ts";
 
 describe("artifact crate carve", () => {
   test("moves test fixtures to runtime reads and resolves them against the crate directory", () => {

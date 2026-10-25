@@ -53,7 +53,7 @@ function schemaModuleDirOf(dirSegments: readonly string[], moduleDirName: string
   return at < 0 ? null : dirSegments.slice(0, at + 1).join("/");
 }
 
-/** 🧬️ Every `🧬️schema/` module directory the FILE WALK reaches that carries a schema definition. */
+/** 📁️ Every `🧬️schema/` module directory the FILE WALK reaches that carries a schema definition. */
 export function schemaModuleDirectoriesOnDisk(repoRoot: string, files: readonly string[] = schemaTreeFiles(repoRoot)): ReadonlySet<string> {
   const moduleDirName = schemaModuleDirName(repoRoot);
   const found = new Set<string>();

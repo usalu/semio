@@ -17,6 +17,7 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-job.workspace = true
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 dsl_derive = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }

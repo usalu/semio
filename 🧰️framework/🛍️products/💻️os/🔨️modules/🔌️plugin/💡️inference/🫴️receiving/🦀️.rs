@@ -3,7 +3,7 @@ use super::ArtifactDocumentPayload;
 use base64_codec::{Base64Control, Base64ControlError, Base64DecodeCursor, Base64Input};
 use semio_framework::action_bus::{admit_original_tool_construction_scoped, OriginalToolSourceBinding, ToolJobAdmissionDemand};
 use semio_framework_job::{close_original_retained_step, InteractiveJobCloseStep, OriginalTurnFailure, StepContext};
-use semio_framework_value::{ControlledRetirement, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{retirement::controlled::ControlledRetirement, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::{size_of, ManuallyDrop};
 
 #[derive(semio_framework_value::RetireOwned)]

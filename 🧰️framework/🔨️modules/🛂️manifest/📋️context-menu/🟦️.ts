@@ -10,7 +10,7 @@ export type UiMenuRef = {
 };
 
 /** 🌐️ A 3D world surface scene payload — mirrors the wasm `componentScene` node's `world3d` field. */
-/** 🖱️ One row of a resolved context menu — TS twin of the Rust `ContextMenuItemSpec`
+/** 📕️ One row of a resolved context menu — TS twin of the Rust `ContextMenuItemSpec`
  * (`🧰️framework/🔨️modules/🖱️ui/📜️declaration/🦀️.rs`). Plugins build these with
  * `MenuBuilder`; the host maps them through `ContextMenuController` (React) / `render_context_menu`
  * (wgpu) unchanged. */
@@ -33,7 +33,7 @@ export type ContextMenuItemSpec = {
   readonly children?: readonly ContextMenuItemSpec[];
 };
 
-/** 🗂️ Canonical ribbon-parent taxonomy — TS twin of the Rust `RIBBON_PARENT_CATEGORIES` const
+/** 🎀️ Canonical ribbon-parent taxonomy — TS twin of the Rust `RIBBON_PARENT_CATEGORIES` const
  * (`🧰️framework/🔨️modules/🖱️ui/📜️declaration/🦀️.rs`) and of ui-react's closed
  * `UiRibbonParentCategory` union (`🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx`).
  * Id spelling and order are load-bearing: `organizeContextMenu` sorts `menu.group.<category>`
@@ -43,7 +43,7 @@ const RIBBON_PARENT_CATEGORIES = [
   "methods", "mode", "targets", "export", "tools", "utilities", "sync",
 ] as const;
 
-/** 🗂️ Id prefix every category group row carries. A group row travels with `label: undefined` on
+/** 👥️ Id prefix every category group row carries. A group row travels with `label: undefined` on
  * purpose — the shell that renders the menu owns the chrome vocabulary and resolves the label from
  * the category behind this prefix (React: `contextMenuGroupLabel`; wgpu: `ribbon_parent_label`). */
 export const CONTEXT_MENU_GROUP_ID_PREFIX = "menu.group.";
@@ -60,7 +60,7 @@ function contextMenuIsBareSeparator(item: ContextMenuItemSpec): boolean {
   return item.separator === true && item.label === undefined;
 }
 
-/** 🗂️ D1: a separator carrying a `label` is a non-interactive section header, not a divider. */
+/** 🏷️ D1: a separator carrying a `label` is a non-interactive section header, not a divider. */
 function contextMenuIsHeader(item: ContextMenuItemSpec): boolean {
   return item.separator === true && item.label !== undefined;
 }
@@ -82,7 +82,7 @@ function contextMenuSeparatorRow(seed: number): ContextMenuItemSpec {
   return { id: `separator-organized-${seed}`, separator: true };
 }
 
-/** 🗂️ Collapses a run of consecutive bare (unlabeled) separators down to one, then drops a bare
+/** 🧹️ Collapses a run of consecutive bare (unlabeled) separators down to one, then drops a bare
  * separator left at the very start or end (nothing to separate from/to). A labeled separator (header,
  * see `contextMenuIsHeader`) is never touched by this — it always survives in place, adjacent bare
  * separators collapse/drop around it independently. */
@@ -103,7 +103,7 @@ function contextMenuNormalizeSeparators(items: readonly ContextMenuItemSpec[]): 
   return out;
 }
 
-/** 🗂️ Merges rows sharing a `menu.group.<category>` id at the position of the first occurrence,
+/** 🔀️ Merges rows sharing a `menu.group.<category>` id at the position of the first occurrence,
  * concatenating and deduping their `children` by id (first occurrence wins). */
 function contextMenuMergeGroupRows(items: readonly ContextMenuItemSpec[]): ContextMenuItemSpec[] {
   const out: ContextMenuItemSpec[] = [];
@@ -130,7 +130,7 @@ function contextMenuMergeGroupRows(items: readonly ContextMenuItemSpec[]): Conte
   return out;
 }
 
-/** 🗂️ ≤9-interactive-row emission (D2 rule): plain leaves/headers in emit order, then group rows in
+/** 💰️ ≤9-interactive-row emission (D2 rule): plain leaves/headers in emit order, then group rows in
  * taxonomy order (unknown categories after, emit order), then — only if any exist — a separator
  * followed by destructive leaves. */
 function contextMenuEmitWithinBudget(items: readonly ContextMenuItemSpec[]): ContextMenuItemSpec[] {
@@ -155,7 +155,7 @@ function contextMenuEmitWithinBudget(items: readonly ContextMenuItemSpec[]): Con
   return out;
 }
 
-/** 🗂️ >9-interactive-row emission (D2 rule): the first 5 plain leaves outside any header section stay
+/** 💲️ >9-interactive-row emission (D2 rule): the first 5 plain leaves outside any header section stay
  * primaries; every header's trailing run of leaves folds into a group keyed by that header's own
  * (slugified) label; every other plain leaf buckets into `menu.group.<categoryOf(action) ?? "actions">`;
  * pre-existing group rows pass through unchanged; groups then sort in taxonomy order and, if the
@@ -228,7 +228,7 @@ function contextMenuEmitOverBudget(
   return out;
 }
 
-/** 🗂️ Pure organizer enforced at every context-menu funnel — recurses into `children`, normalizes
+/** 💎️ Pure organizer enforced at every context-menu funnel — recurses into `children`, normalizes
  * separators (labeled = kept header, bare leading/trailing/doubled = dropped), merges duplicate
  * `menu.group.<category>` rows (deduping their children by id), then applies the ≤9-row / >9-row
  * emission policy from D2 of the grouped-context-menu mechanism design
@@ -251,7 +251,7 @@ export function organizeContextMenu(
     : contextMenuEmitOverBudget(normalized, categoryOf);
 }
 
-/** 🖱️ Scene-target info for an on-demand context-menu request — hit-test results from the
+/** 🎬️ Scene-target info for an on-demand context-menu request — hit-test results from the
  * surface's own picking (hover/selection), not cached across clicks. */
 export type UiContextMenuHit = {
   readonly domain: string;
@@ -259,7 +259,7 @@ export type UiContextMenuHit = {
   readonly label?: string;
 };
 
-/** 🗂️ The ids of one domain that are selected when a context menu is requested. */
+/** 🔑️ The ids of one domain that are selected when a context menu is requested. */
 export type UiContextMenuSelectionGroup = {
   readonly domain: string;
   readonly ids: readonly string[];
@@ -286,7 +286,7 @@ export type UiContextMenuSurfaceTarget = {
 /** 📍️ Screen point a context-menu request was raised at. */
 export type UiContextMenuPoint = { readonly x: number; readonly y: number };
 
-/** 🖱️ On-demand context-menu request — never cached, never batched into a refresh request.
+/** 📬️ On-demand context-menu request — never cached, never batched into a refresh request.
  * `menu` is the {@link MenuRef} the host resolved from `data-menu-id`/a scene surface convention id
  * (`"world3d"`, `"nodeGraph"`, `"window"`, `"panel:<tabId>"`, ...). */
 export type UiContextMenuRequest = {

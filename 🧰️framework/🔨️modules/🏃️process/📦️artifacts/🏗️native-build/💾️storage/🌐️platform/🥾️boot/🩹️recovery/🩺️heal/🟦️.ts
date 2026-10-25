@@ -97,7 +97,7 @@ function detacher(control:ResourceLeaseControl,host:NativeBootHostV1,roster:()=>
 const canonical=(path:string)=>{try{return realpathSync(path);}catch{return path;}};
 const processed=new Map<string,Promise<void>>();
 
-/** 🖼️ Sweeps abandoned scratch images and images of removed backing files off the kernel roster; at most one sweep per interval and cache runs, because a clean observation costs a roster read. */
+/** 💻️ Sweeps abandoned scratch images and images of removed backing files off the kernel roster; at most one sweep per interval and cache runs, because a clean observation costs a roster read. */
 export async function healNativeLeakedImagesV1(input:Readonly<{leaseDirectory:string;control:ResourceLeaseControl;host:NativeBootHostV1;roster:()=>Promise<readonly NativeBootRosterImageV1[]>;onProgress?:(event:NativeBootProgressV1)=>void}>):Promise<"swept"|"recent">{
  const{leaseDirectory,control,host,roster}=input,ledgerPath=nativeBootLedgerPathV1(nativeBootLedgerDirectoryV1(leaseDirectory),leaseDirectory+"#images"),stamp=ledgerPath+".stamp";
  try{if(Date.now()-lstatSync(stamp).mtimeMs<leaks.sweepMilliseconds)return"recent";}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}

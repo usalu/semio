@@ -8,7 +8,7 @@ use pack::snapshot::ArtifactPack;
 /// 👥️ Shareable live raster brush and camera state. Layer selection/hover
 /// deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): the `"layers"` interaction
 /// domain broadcasts automatically via the framework's typed `PresenceInteraction` field now.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "raster.presence")]
@@ -71,7 +71,11 @@ impl protocol::ColdDiffAlgebra<RasterPresence> for RasterPresenceDiff {
     }
 }
 
-impl store::ArtifactPresenceSnapshot for RasterPresence {}
+impl store::ArtifactPresenceSnapshot for RasterPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl pack::snapshot::ArtifactDsl for RasterPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;

@@ -11,13 +11,13 @@ import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🚧️WindowContentDeadLine
-/** 📐️ CSS variable for invisible top clearance below floating window chrome. */
+/** 📜️ CSS variable for invisible top clearance below floating window chrome. */
 export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance";
 
 /** 🏝️ CSS variable for the default cleared line under floating window chrome (dead-island). */
 export const windowContentDeadLineVar = "--window-content-dead-line";
 
-/** 🏝️ Chrome-aware scroll hosts stay edgeless but reserve scroll-padding for the dead line. */
+/** 🥀️ Chrome-aware scroll hosts stay edgeless but reserve scroll-padding for the dead line. */
 export const windowContentDeadLineScrollClass = "overscroll-contain [scroll-padding-top:var(--window-content-dead-line)]";
 
 /** 🪟️ Floating top chrome belongs only to its nearest window body. */
@@ -34,7 +34,7 @@ export function readWindowChromeScrollClearancePx(element?: Element | null, root
   return uiSpacingPx(9, rootPx);
 }
 
-/** 📐️ Measures live floating engagement/measures chrome height inside the nearest window body. */
+/** 📏️ Measures live floating engagement/measures chrome height inside the nearest window body. */
 export function measureWindowChromeScrollClearancePx(element?: Element | null): number {
   const windowBody = element?.closest('[data-slot="window-body"]');
   if (!windowBody) return 0;
@@ -49,7 +49,7 @@ export function measureWindowChromeScrollClearancePx(element?: Element | null): 
   return Math.max(0, Math.ceil(maxBottom - bodyTop));
 }
 
-/** 🏝️ True when an element scrolls inside a window with floating chrome overlays (not edgeless canvas bodies). */
+/** 🖥️ True when an element scrolls inside a window with floating chrome overlays (not edgeless canvas bodies). */
 export function isWindowContentDeadLineHost(element: Element | null): boolean {
   if (!element) return false;
   if (element.closest("[data-window-content-layout=edgeless]")) return false;
@@ -58,7 +58,7 @@ export function isWindowContentDeadLineHost(element: Element | null): boolean {
   return windowTopOverlays(windowBody).length > 0;
 }
 
-/** 🏝️ Resolves the default dead-line scroll offset for chrome-aware window bodies. */
+/** 📖️ Resolves the default dead-line scroll offset for chrome-aware window bodies. */
 export function readWindowContentDeadLinePx(element?: Element | null, rootPx = STYLING_COMPACT_ROOT_PX): number {
   if (!element || !isWindowContentDeadLineHost(element)) return 0;
   const windowBody = element.closest('[data-slot="window-body"]');
@@ -69,7 +69,7 @@ export function readWindowContentDeadLinePx(element?: Element | null, rootPx = S
   return readWindowChromeScrollClearancePx(element, rootPx);
 }
 
-/** 🏝️ True when a scroll host's content exceeds its viewport. */
+/** ☁️ True when a scroll host's content exceeds its viewport. */
 export function readScrollerContentOverflows(scroller: HTMLElement): boolean {
   if (scroller.clientHeight <= 0) return true;
   if (scroller.scrollHeight > scroller.clientHeight + 1) return true;

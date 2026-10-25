@@ -35,6 +35,7 @@ semio-s-artifact-puzzle-3d-mutations = { workspace = true }
 semio-s-artifact-puzzle-3d-viewer = { workspace = true }
 
 [dev-dependencies]
+semio-framework-plugin-reactor-app = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { workspace = true }
 pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }

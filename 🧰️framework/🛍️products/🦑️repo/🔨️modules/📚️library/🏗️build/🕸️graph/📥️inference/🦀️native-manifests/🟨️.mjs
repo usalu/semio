@@ -2,8 +2,8 @@
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, sep, join, relative, resolve } from "node:path";
 import { memoizedObservedComputationV1, memoizedFileRecord, observedSourceAnalysisV1, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
-import { runtimeParseTomlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
-import {runtimeKeyV1} from "../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
+import {runtimeKeyV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 const { existsSync, readdirSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
@@ -30,11 +30,11 @@ function cachedRustReferences(file, cache, snapshots) {
   });
 }
 
-/** 📥️ Resolves Cargo entry points and compact source references without running a compiler. */
-export function rustSourceFiles(entries, manifestRoot, cache = RUST_SOURCE_CACHE, snapshots = new Map()) {
+/** 📥️ Resolves Cargo entry points and compact source references without running a compiler; a `compiled` closure is what a compilation without `cfg(test)` reads, so the mounts and includes that only exist under `#[cfg(test)]` stay out of it. */
+export function rustSourceFiles(entries, manifestRoot, cache = RUST_SOURCE_CACHE, snapshots = new Map(), compiled = false) {
   let closures = RUST_INPUT_SNAPSHOTS.get(snapshots);
   if (!closures) { closures = new Map(); RUST_INPUT_SNAPSHOTS.set(snapshots, closures); }
-  const key = JSON.stringify([manifestRoot, entries.map(entry => resolve(entry))]);
+  const key = JSON.stringify([manifestRoot, entries.map(entry => resolve(entry)), compiled]);
   return [...memoizedObservedComputationV1(closures,key,()=>{
   const files = new Set(), visited = new Set();
   const literal = (value) => typeof value === "string" ? value : Array.isArray(value) ? value.map(literal).join("") : manifestRoot;
@@ -46,9 +46,12 @@ export function rustSourceFiles(entries, manifestRoot, cache = RUST_SOURCE_CACHE
     if (!file.endsWith(".rs")) return;
     const references = cachedRustReferences(file, cache, snapshots);
     if (references.error) throw new Error(references.error + ": " + file);
-    for (const expression of references.includes) visit(resolve(dirname(file), literal(expression)));
+    if (compiled && references.fileTest) return;
+    const skipped = compiled ? new Set(references.testIncludes ?? []) : new Set();
+    references.includes.forEach((expression, index) => { if (!skipped.has(index)) visit(resolve(dirname(file), literal(expression))); });
     const scope = (modules, base, fileScope) => {
-      for (const { name, path, modules: children } of modules) {
+      for (const { name, path, test, modules: children } of modules) {
+        if (compiled && test) continue;
         if (children) { scope(children, resolve(base, path ?? name), false); continue; }
         const candidates = path === undefined ? [join(base, name + ".rs"), join(base, name, "mod.rs")] : [resolve(fileScope ? dirname(file) : base, path)];
         if (!candidates.some(existsSync)) for (const child of candidates) files.add(child);
@@ -64,7 +67,7 @@ export function rustSourceFiles(entries, manifestRoot, cache = RUST_SOURCE_CACHE
 }
 
 /** 🧭️ Cargo owns compilation while the build graph tracks mounted sources and embedded assets. */
-export function cargoSourceInputs(root, workspaceRoot, facts, includeTests = true) {
+export function cargoSourceInputs(root, workspaceRoot, facts, includeTests = true, compiled = false) {
   const directory = join(workspaceRoot, root), manifest = join(directory, "Cargo.toml");
   if (!existsSync(manifest)) return undefined;
   const cargo = readToml(manifest), entries = [cargo.lib?.path ?? "src/lib.rs", "src/main.rs", ...(cargo.bin ?? []).map((target) => target.path), ...(includeTests ? [...(cargo.test ?? []), ...(cargo.bench ?? []), ...(cargo.example ?? [])].map((target) => target.path) : []), ...(cargo.package?.build === false ? [] : [typeof cargo.package?.build === "string" ? cargo.package.build : "build.rs"])].filter(Boolean).map((path) => resolve(directory, path)).filter(existsSync);
@@ -77,7 +80,7 @@ export function cargoSourceInputs(root, workspaceRoot, facts, includeTests = tru
     }
   }
   if (!entries.length) return undefined;
-  try { return rustSourceFiles(entries, directory, RUST_SOURCE_CACHE, facts).map((file) => `{workspaceRoot}/${buildPath(relative(workspaceRoot, file))}`); }
+  try { return rustSourceFiles(entries, directory, RUST_SOURCE_CACHE, facts, compiled).map((file) => `{workspaceRoot}/${buildPath(relative(workspaceRoot, file))}`); }
   catch { return undefined; }
 }
 

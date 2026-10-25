@@ -66,6 +66,10 @@ pub use mesh_records::{HalfEdge, HalfedgeMesh, MeshFace, MeshTransfer, MeshVerte
 #[path = "🕸️halfedge-mesh-operations/🦀️.rs"]
 mod halfedge_mesh_operations;
 
+#[path = "../🎨️surface/🦀️.rs"]
+mod surface;
+pub use surface::MeshSurfaceJob;
+
 #[path = "🔺️polygon-triangulation/🦀️.rs"]
 mod polygon_triangulation;
 use polygon_triangulation::{Vec3f64, cross2, normalize3, plane_basis, point_in_triangle, triangulate_indexed_polygon_with_holes};

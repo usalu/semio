@@ -314,7 +314,7 @@ pub(super) fn retained_table_header_step(
     }
 }
 
-/// 📊️ Advances one table row's cells by one glyph (`cursor.item` is the column): column `i` paints `TableRowProps::cells[i]` in
+/// 🏓️ Advances one table row's cells by one glyph (`cursor.item` is the column): column `i` paints `TableRowProps::cells[i]` in
 /// its `layout::table_column_rect` unless the row materialised a child for it — an editable row's input, paged draft or
 /// read-only surface, which paints itself in the same column (`LayoutNodeKind::TableRow`); then the row's trailing actions.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context")]
@@ -359,7 +359,7 @@ pub(super) fn retained_table_cells_step(
     }
 }
 
-/// 📊️ How far the paint cursor moves past one row: a table row's whole laid-out height (`mounted_layout::live_tree_item_height`
+/// 🌲️ How far the paint cursor moves past one row: a table row's whole laid-out height (`mounted_layout::live_tree_item_height`
 /// — a row whose cell hosts a draft or read-only surface is taller), a tree row's own band (its nested rows advance it themselves).
 pub(super) fn retained_tree_row_advance(retained: &UiTree, tree_id: NodeId, tree: &UiTreeNode, item: &UiTreeItemNode, cursor: &RetainedNodePaintCursor, metrics: &TreeRowMetrics, reversed: bool) -> f32 {
     let band = metrics.for_item(item).row_height;

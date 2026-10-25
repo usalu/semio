@@ -313,7 +313,7 @@ export function listDirectToolFilesV1(root: string): readonly string[] {
   return result.stdout.split("\0").filter(Boolean);
 }
 
-/** 🔬️ Scans files below a root; an empty file list is refused. */
+/** 🔧️ Scans files below a root; an empty file list is refused. */
 export function scanDirectToolDeclarationsV1(root: string, files: readonly string[], law = createDirectToolLawV1()): Readonly<{ scanned: number; findings: readonly DirectToolFindingV1[] }> {
   if (files.length === 0) throw new Error("direct-tool-declarations-empty-scope");
   const findings: DirectToolFindingV1[] = [];

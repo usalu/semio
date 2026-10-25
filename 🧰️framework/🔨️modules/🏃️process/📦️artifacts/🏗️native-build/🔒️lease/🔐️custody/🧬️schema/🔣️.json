@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.cargo-build/CargoCustodyV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["buildDirectory", "profile", "mode"],
+  "properties": {
+    "buildDirectory": {"type": "string", "minLength": 1, "maxLength": 256},
+    "profile": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$"},
+    "mode": {"const": "exclusive"}
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "namespace": "semio.cargo.custody-lease/v1",
+        "access": "exclusive",
+        "scope": "process-tree",
+        "ancestorDepth": 64,
+        "announceAfterMs": 5000,
+        "announceEveryMs": 300000,
+        "holderPosition": 1
+      }
+    },
+    "Messages": {
+      "const": {
+        "waiting": {
+          "en": "[cargo] The build directory {directory} ({profile}) is held by process {pid}. Two Cargo processes on one build directory can lock each other's compilation units forever, so this build waits for that process to finish ({seconds} s so far).",
+          "de": "[cargo] Das Build-Verzeichnis {directory} ({profile}) wird von Prozess {pid} gehalten. Zwei Cargo-Prozesse auf einem Build-Verzeichnis können sich gegenseitig die Kompilationseinheiten endlos sperren, daher wartet dieser Build, bis jener Prozess fertig ist ({seconds} s bisher)."
+        }
+      }
+    }
+  }
+}

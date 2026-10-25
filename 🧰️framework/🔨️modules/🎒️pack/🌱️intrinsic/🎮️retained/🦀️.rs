@@ -125,7 +125,7 @@ impl<'a,D:RetainedValueDriver> Materializer<'a,D>{
   match self.copy{Copy::Ready=>demand.copy_bytes=size_of::<DslValue>(),Copy::Symbol{symbol,index,..}=>demand.copy_bytes=self.cursor.symbol_char(symbol,index)?.ok_or_else(||invalid("missing original symbol scalar"))?.len_utf8(),_=>{let next=self.cursor.normal_demands()?;demand.capacity_bytes=next.capacity_bytes;demand.copy_bytes=next.copy_bytes+size_of::<Token>()+1;demand.depth=demand.depth.max(next.depth);}}
   Ok(demand)
  }
- /// 🎟️ Advances one funded frontier and returns its actual physical receipt without replacing source custody.
+ /// 🪜️ Advances one funded frontier and returns its actual physical receipt without replacing source custody.
  pub fn advance_original_step(&mut self,grant:RetainedCloneGrant,cancelled:bool)->RetainedIntrinsicOriginalCall{
   let empty=RetainedCloneProgress::default();let step=||RetainedIntrinsicStep{units:0,input_bytes:self.offset,admitted_bytes:self.admitted,complete:self.complete};
   if self.closing{return RetainedIntrinsicOriginalCall{result:Err(invalid("original advance after close")),progress:empty}}if self.original_failed{return RetainedIntrinsicOriginalCall{result:Ok(step()),progress:empty}}if self.fault.is_some(){if grant.maximum_items==0||grant.maximum_depth==0{return RetainedIntrinsicOriginalCall{result:Ok(step()),progress:empty}}self.original_failed=true;return RetainedIntrinsicOriginalCall{result:Err(self.fault.take().unwrap()),progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
@@ -196,7 +196,7 @@ impl RetainedValueDriver for BodyDriver{
  fn terminal_is_empty(&self)->bool{self.cursor.terminal_is_empty()}
 }
 macro_rules! operation{($name:ident,$driver:ty)=>{
- /// 🎮️ Retains explicit intrinsic framing, finite work and partial ownership through terminal close.
+ /// 💼️ Retains explicit intrinsic framing, finite work and partial ownership through terminal close.
  pub struct $name<'a>(Materializer<'a,$driver>);
  impl<'a> $name<'a>{
   pub fn new(input:RetainedIntrinsicInput<'a>,limits:PackLimits,maximum:usize)->Result<Self,(PackRefusal,RetainedIntrinsicInput<'a>)>{Materializer::new(input,limits,maximum).map(Self)}

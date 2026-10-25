@@ -494,7 +494,7 @@ fn handwritten_retained_clone_demands_close_every_original_prefix_with_funded_ow
     let body=law["maximumPayloadCopyBytes"].as_u64().unwrap() as usize;
     let maximum=law["maximumTurns"].as_u64().unwrap() as usize;
     for row in law["cases"].as_array().unwrap(){
-        macro_rules! run {($type:ty,$build:expr)=>{{let build=$build;let total=handwritten_frontier::<$type>(row,body,maximum,None,&build);for cancel in 0..=total{handwritten_frontier::<$type>(row,body,maximum,Some(cancel),&build);}eprintln!("[DEBUG] Handwritten clone {} normalTurns={total} everyPrefixClosed=true fiveAxes=true fundedOwnerMovement=true physicalConservation=true",row["name"]);}}}
+        macro_rules! run {($type:ty,$build:expr)=>{{let build=$build;let total=handwritten_frontier::<$type>(row,body,maximum,None,&build);for cancel in 0..=total{handwritten_frontier::<$type>(row,body,maximum,Some(cancel),&build);}}}}
         match row["kind"].as_str().unwrap(){
             "bytes"=>run!(PagedBytes<64>,|value:&serde_json::Value|PagedBytes::try_from_slice(&serde_json::from_value::<Vec<u8>>(value.clone()).unwrap()).unwrap()),
             "text"=>run!(PagedUtf8<64>,|value:&serde_json::Value|serde_json::from_value::<PagedUtf8<64>>(value.clone()).unwrap()),

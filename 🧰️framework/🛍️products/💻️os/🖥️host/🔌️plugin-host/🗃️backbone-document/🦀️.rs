@@ -230,7 +230,7 @@ where
 pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
 where
     P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
+    Op: Clone + ToValue + FromValue + Mutation<P> + store::ColdMutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
     with_backbone_envelope(document, |envelope| resolve_kernel_future(materialize_document_snapshot(envelope, applied_edit_ids)))
 }
@@ -272,7 +272,7 @@ where
 pub fn decode_backbone_payload<P, Op>(bytes: &[u8], expected_schema: &str) -> Result<BackboneDocument<P, Op>, VcsError>
 where
     P: Clone + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-    Op: Clone + protocol::OpText + protocol::OpBinary + Mutation<P> + 'static,
+    Op: Clone + protocol::OpText + protocol::OpBinary + Mutation<P> + store::ColdMutation<P> + 'static,
 {
     let (name_bytes, inner) = resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(bytes))?;
     let name = String::from_utf8(name_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;

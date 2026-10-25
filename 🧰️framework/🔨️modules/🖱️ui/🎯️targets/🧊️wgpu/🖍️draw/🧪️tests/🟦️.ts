@@ -134,7 +134,6 @@ test("opaque provider Source retains private real sessions and contains no exter
   const files=["🦀️.rs","📋️descriptors/🦀️.rs","🗺️conversion/🦀️.rs","🖌️commands/🦀️.rs","📥️platform/🦀️.rs","🧪️tests/🦀️.rs"];
   try{for(const file of files){const tree=parser.parse(readFileSync(resolve(owner,file),"utf8"));try{expect(tree.rootNode.hasError(),file).toBe(false);for(const node of tree.rootNode.descendantsOfType("function_item")){if(node.namedChildren.some(child=>child.type==="visibility_modifier"&&child.text==="pub")){const signature=node.text.slice(0,node.text.indexOf("{"));expect(signature,file).not.toContain("wgpu::");}}}finally{tree.delete();}}}finally{parser.delete();}
   const commands=readFileSync(resolve(owner,"🖌️commands/🦀️.rs"),"utf8");expect(commands).toContain("OwnedFailure::Returned{fault,resource:command}");expect(commands).toContain("on_submitted_work_done");expect(commands).not.toMatch(/Instant|elapsed|Duration/);
-  console.log("[DEBUG] Independent Rust AST validates opaque provider declarations/private session Source and callback completion; actual native device/session laws remain unexecuted");
 },20000);
 
 

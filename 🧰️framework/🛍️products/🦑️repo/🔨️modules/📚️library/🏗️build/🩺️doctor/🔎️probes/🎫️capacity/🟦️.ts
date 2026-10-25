@@ -1,6 +1,6 @@
 import {hostCapacityDirectoryV1,readHostCapacityStatusV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../../🌡️host-capacity/🟦️.ts";
-import type {DoctorProbeV1} from "../🟦️.ts";
+import type {DoctorProbeV1} from "../📋️contract/🟦️.ts";
 
 type GrantRow=Readonly<{operation:string;pid:number;jobs:number;reservedMegabytes:number;observedMegabytes:number|null;admittedAtMs:number}>;
 type WaiterRow=Readonly<{request:Readonly<{id:string;operation:string;fixedMegabytes:number;minimumJobs:number;perJobMegabytes:number}>;pid:number;arrivedAtMs:number}>;

@@ -104,7 +104,7 @@ impl FromValue for Canvas2dScene {
     }
 }
 
-/// 🚚️ The canvas-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the 2d twin of
+/// 🎒️ The canvas-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the 2d twin of
 /// [`World3dSceneLane`], pinned against `🧪️tests/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json` on both sides.
 /// `layers_json` stays in the spine: it is a bounded per-frame descriptor, while a trace delta scales
 /// with the run.
@@ -113,19 +113,19 @@ pub enum Canvas2dSceneLane {
     ToolRunTrace,
 }
 
-/// 🚚️ Reserved carrier-key namespace of the canvas-2d lanes.
+/// 🔑️ Reserved carrier-key namespace of the canvas-2d lanes.
 pub const CANVAS2D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.canvas2d.";
 
-/// 🚚️ Wire name of each [`Canvas2dSceneLane`], in `Canvas2dSceneLane::ALL` order.
+/// 📛️ Wire name of each [`Canvas2dSceneLane`], in `Canvas2dSceneLane::ALL` order.
 pub const CANVAS2D_SCENE_LANE_NAMES: [&str; 1] = ["toolRunTrace"];
 
-/// 🚚️ [`Canvas2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
+/// 📋️ [`Canvas2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
 pub const CANVAS2D_SCENE_LANE_FIELDS: [&str; 1] = ["toolRunTrace"];
 
-/// 🚚️ Reserved carrier key of each lane.
+/// 🗝️ Reserved carrier key of each lane.
 pub const CANVAS2D_SCENE_LANE_BODY_KEYS: [&str; 1] = ["framework.scene.canvas2d.toolRunTrace"];
 
-/// 🚚️ Whether each lane's [`Canvas2dScene`] field is an `Option<String>`.
+/// ❓️ Whether each lane's [`Canvas2dScene`] field is an `Option<String>`.
 pub const CANVAS2D_SCENE_LANE_OPTIONAL: [bool; 1] = [true];
 
 impl Canvas2dSceneLane {
@@ -136,7 +136,7 @@ impl Canvas2dSceneLane {
         CANVAS2D_SCENE_LANE_NAMES[self as usize]
     }
 
-    /// 🏷️ See [`CANVAS2D_SCENE_LANE_FIELDS`].
+    /// 🔖️ See [`CANVAS2D_SCENE_LANE_FIELDS`].
     pub fn field(self) -> &'static str {
         CANVAS2D_SCENE_LANE_FIELDS[self as usize]
     }
@@ -146,7 +146,7 @@ impl Canvas2dSceneLane {
         CANVAS2D_SCENE_LANE_BODY_KEYS[self as usize]
     }
 
-    /// 🏷️ See [`CANVAS2D_SCENE_LANE_OPTIONAL`].
+    /// ❔️ See [`CANVAS2D_SCENE_LANE_OPTIONAL`].
     pub fn optional(self) -> bool {
         CANVAS2D_SCENE_LANE_OPTIONAL[self as usize]
     }
@@ -156,7 +156,7 @@ impl Canvas2dSceneLane {
         Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
     }
 
-    /// 🔎️ Resolves a lane wire name back to its lane.
+    /// ↩️ Resolves a lane wire name back to its lane.
     pub fn from_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|lane| lane.name() == name)
     }

@@ -26,7 +26,7 @@ static ALLOCATOR: ObservedAllocator = ObservedAllocator;
 /// 🔢️ Counts allocation calls on this thread until [`allocations_end`].
 pub(crate) fn allocations_start() { CALLS.with(|calls| calls.set(Some(0))); }
 
-/// 🔢️ Stops counting and returns the allocation calls observed since [`allocations_start`].
+/// ⏹️ Stops counting and returns the allocation calls observed since [`allocations_start`].
 pub(crate) fn allocations_end() -> usize { CALLS.with(|calls| calls.replace(None)).unwrap_or(0) }
 
 /// 📏️ Runs `body` and returns its result with the bytes this thread allocated and freed meanwhile.

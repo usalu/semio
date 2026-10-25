@@ -9,7 +9,7 @@ import type {IncrementalCommandPortsV1} from "../../⌨️command/🟦️.ts";
 import type {ConcurrentReportV1} from "../../🤝️concurrent/🟦️.ts";
 import {runConcurrencyCommandV1} from "../../🤝️concurrent/⌨️command/🟦️.ts";
 import {benchCompareV1,benchHostV1,benchJudgeV1,benchMarkersV1,benchMutateV1,benchReportV1,benchSeriesV1,type BenchHostV1,type BenchLaneV1,type BenchPairV1,type BenchProbeV1,type BenchReasonV1,type BenchReportV1,type BenchRowV1,type BenchSampleV1,type BenchSeriesV1,type BenchSloSetV1,type BenchSloToolV1,type BenchStartKindV1,type BenchToolV1} from "../🟦️.ts";
-import {terminateOwnedChildTree} from "../../../../../../../..//🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import {terminateOwnedChildTree} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 const policy=schema.definitions.Policy.const;
 const both=(english:string,german:string)=>`${english}\n${german}`;

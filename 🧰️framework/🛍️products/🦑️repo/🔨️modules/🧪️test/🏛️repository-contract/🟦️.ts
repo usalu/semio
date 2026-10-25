@@ -90,7 +90,7 @@ export const MIGRATION_STATUSES = ["discovered", "surveyed", "contract-ready", "
 export type MigrationStatus = (typeof MIGRATION_STATUSES)[number];
 
 /**
- * 🔒️ Every owner's declared migration status, collected from the owners themselves. The framework
+ * 🚥️ Every owner's declared migration status, collected from the owners themselves. The framework
  * holds no list of owners, so an owner that is deleted takes its status with it.
  */
 export function migrationStatusByOwner(repoRoot: string): Record<string, string> {
@@ -129,7 +129,7 @@ export function caseContractBreaches(repoRoot: string, cases: readonly Discovere
   return breaches;
 }
 
-/** 🧾️ Repository-wide contract breaches. They read the FULL discovery and never a caller's selection, so narrowing a run to one case cannot change them.
+/** 🦑️ Repository-wide contract breaches. They read the FULL discovery and never a caller's selection, so narrowing a run to one case cannot change them.
  * A mutation vocabulary is the mutations facet of a schema module (`🧬️schema/🧬️mutations`); a fixture tree that mirrors the name holds vectors, not a vocabulary.
  * @see {@link oracleImportsInProduction} */
 export function repositoryContractBreaches(repoRoot: string, registry: OracleRegistry = loadOracleRegistry(repoRoot), allCases: readonly DiscoveredCase[] = discoverTestCases(repoRoot), oracleHits: readonly { path: string; oracle: string }[] = oracleImportsInProduction(repoRoot, registry, allCases)): BreachRecord[] {
@@ -182,7 +182,7 @@ export function repositoryContractBreaches(repoRoot: string, registry: OracleReg
   return breaches;
 }
 
-/** 🧾️ Repository-wide contract sweep: the selected cases' own contracts plus every repository-wide gate. */
+/** 🧬️ Repository-wide contract sweep: the selected cases' own contracts plus every repository-wide gate. */
 export function validateAllContracts(repoRoot: string, cases: readonly DiscoveredCase[] = discoverTestCases(repoRoot)): BreachRecord[] {
   const registry = loadOracleRegistry(repoRoot);
   return [...caseContractBreaches(repoRoot, cases, registry), ...repositoryContractBreaches(repoRoot, registry)];

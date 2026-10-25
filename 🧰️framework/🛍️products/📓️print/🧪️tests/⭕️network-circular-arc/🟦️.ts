@@ -56,7 +56,7 @@ function circularExpectation(ctx: AdapterContext): number[] {
   return flat;
 }
 
-/** 📋️ Shell: the ordering cut into the declared rings, each ring itself equally spaced. */
+/** 🐚️ Shell: the ordering cut into the declared rings, each ring itself equally spaced. */
 function shellExpectation(ctx: AdapterContext): number[] {
   const count = nodeIds(ctx).length;
   const flat: number[] = [];
@@ -73,14 +73,14 @@ function shellExpectation(ctx: AdapterContext): number[] {
   return flat;
 }
 
-/** 📋️ Arc: the ordering laid out along one axis at a constant spacing. */
+/** 🌈️ Arc: the ordering laid out along one axis at a constant spacing. */
 function arcExpectation(ctx: AdapterContext): number[] {
   const flat: number[] = [];
   for (const k of range(nodeIds(ctx).length)) flat.push(k + 1, SPACING * k, 0);
   return flat;
 }
 
-/** 📋️ Adjacency: only the permutation, as the feature's table names it. */
+/** 🏅️ Adjacency: only the permutation, as the feature's table names it. */
 function rankExpectation(ctx: AdapterContext): number[] {
   const table: Record<string, string> = {};
   for (const row of rows(ctx)) if ((row.node ?? "") !== "") table[row.node!] = row.rank!;

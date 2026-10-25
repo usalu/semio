@@ -9,15 +9,15 @@
       "releaseFails": false,
       "settlement": "settles",
       "trace": [
+        "lease",
         "request:1",
         "planning:1",
         "source:1",
-        "lease:1",
         "request:2",
         "run:2",
         "stop",
-        "release",
-        "remove"
+        "remove",
+        "release"
       ]
     },
     {
@@ -28,15 +28,15 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
+        "lease",
         "request:1",
         "planning:1",
         "source:1",
-        "lease:1",
         "request:2",
         "run:2",
         "stop",
-        "release",
-        "remove"
+        "remove",
+        "release"
       ]
     },
     {
@@ -47,15 +47,15 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
+        "lease",
         "request:1",
         "planning:1",
         "source:1",
-        "lease:1",
         "request:2",
         "run:2",
         "stop",
-        "release",
-        "remove"
+        "remove",
+        "release"
       ]
     },
     {
@@ -66,13 +66,13 @@
       "releaseFails": false,
       "settlement": "settles",
       "trace": [
+        "lease",
         "request:1",
         "planning:1",
         "source:1",
-        "lease:1",
         "run:1",
-        "release",
-        "stop"
+        "stop",
+        "release"
       ]
     },
     {
@@ -83,13 +83,13 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
+        "lease",
         "request:1",
         "planning:1",
         "source:1",
-        "lease:1",
         "run:1",
-        "release",
-        "stop"
+        "stop",
+        "release"
       ]
     },
     {
@@ -100,13 +100,13 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
+        "lease",
         "request:1",
         "planning:1",
         "source:1",
-        "lease:1",
         "run:1",
-        "release",
-        "stop"
+        "stop",
+        "release"
       ]
     },
     {
@@ -117,9 +117,9 @@
       "releaseFails": false,
       "settlement": "settles",
       "trace": [
+        "lease",
         "request:1",
         "capacity:1",
-        "lease:1",
         "admit:1",
         "run:1",
         "consume",
@@ -137,13 +137,13 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
+        "lease",
         "request:1",
         "capacity:1",
-        "lease:1",
         "admit:1",
         "run:1",
-        "release",
         "capacity-release",
+        "release",
         "remove",
         "remove"
       ]
@@ -156,13 +156,13 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
+        "lease",
         "request:1",
         "capacity:1",
-        "lease:1",
         "admit:1",
         "run:1",
-        "release",
         "capacity-release",
+        "release",
         "remove",
         "remove"
       ]
@@ -175,9 +175,9 @@
       "releaseFails": false,
       "settlement": "settles",
       "trace": [
+        "lease",
         "request:1",
         "capacity:1",
-        "lease:1",
         "admit:1",
         "run:1",
         "run:1",
@@ -196,7 +196,9 @@
       "releaseFails": false,
       "settlement": "rejects",
       "trace": [
-        "request:1"
+        "lease",
+        "request:1",
+        "release"
       ]
     },
     {
@@ -207,15 +209,15 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
+        "lease",
         "request:1",
         "planning:1",
         "source:1",
-        "lease:1",
         "request:2",
         "run:2",
         "stop",
-        "release",
-        "remove"
+        "remove",
+        "release"
       ]
     },
     {
@@ -226,7 +228,9 @@
       "releaseFails": false,
       "settlement": "rejects",
       "trace": [
-        "request:1"
+        "lease",
+        "request:1",
+        "release"
       ]
     },
     {
@@ -237,13 +241,13 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
+        "lease",
         "request:1",
         "planning:1",
         "source:1",
-        "lease:1",
         "run:1",
-        "release",
-        "stop"
+        "stop",
+        "release"
       ]
     },
     {
@@ -254,7 +258,9 @@
       "releaseFails": false,
       "settlement": "rejects",
       "trace": [
+        "lease",
         "request:1",
+        "release",
         "remove",
         "remove"
       ]
@@ -267,9 +273,9 @@
       "releaseFails": true,
       "settlement": "rejects",
       "trace": [
+        "lease",
         "request:1",
         "capacity:1",
-        "lease:1",
         "admit:1",
         "run:1",
         "consume",
@@ -284,17 +290,17 @@
     {
       "kind": "tests",
       "occurrence": 0,
-      "port": "lease"
+      "port": "planning"
     },
     {
       "kind": "lint",
       "occurrence": 0,
-      "port": "lease"
+      "port": "planning"
     },
     {
       "kind": "wasm",
       "occurrence": 0,
-      "port": "lease"
+      "port": "admit"
     }
   ]
 }

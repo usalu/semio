@@ -59,7 +59,7 @@ export async function runPreparedCargoDependencyPairV1(root:string,manifest:stri
 
 /** 🔌️ Receives the original native phase for each actual bounded dependency tool. */
 export type NativeDependencyToolRunnerV1=(command:string,args:string[],cwd:string,signal:AbortSignal,capture:boolean|"ignore",environment:Readonly<Record<string,string|undefined>>,storage:CargoPreparationStorageV1,phase:NativeCallerPhaseV1)=>Promise<string>;
-/** 🏃️ Runs native dependency children with the exact incoming signal and independent declared transport. */
+/** 🔧️ Runs native dependency children with the exact incoming signal and independent declared transport. */
 export async function runNativeDependencyToolV1(command:string,args:string[],cwd:string,signal:AbortSignal,capture:boolean|"ignore",environment:Readonly<Record<string,string|undefined>>,storage:CargoPreparationStorageV1,phase:NativeCallerPhaseV1):Promise<string>{
  if(signal!==phase.leaseControl.signal)throw Error("Original native tool signal required");phase.budget();parseCargoPreparationStorageV1(storage);
  const preparation=command==="cargo"?cargoWorkspacePreparationInvocationV1(storage,phase.authority.repositoryRoot,args,cwd,environment):undefined;
@@ -71,7 +71,7 @@ export async function runNativeDependencyToolV1(command:string,args:string[],cwd
 async function runBoundedNativeDependencyToolV1(command:string,args:string[],cwd:string,signal:AbortSignal,capture:boolean|"ignore",environment:Readonly<Record<string,string|undefined>>,storage:CargoPreparationStorageV1,phase:NativeCallerPhaseV1):Promise<string>{
  if(signal!==phase.leaseControl.signal)throw Error("Original native tool signal required");phase.budget();parseCargoPreparationStorageV1(storage);
  await phase.advance(command+":"+args[0]);let output="";
- try{await runOwnedCommand(command,args,cwd,"native-dependencies:"+command,phase.budget(),{...phase.options(environment),stdout:capture===true?"stderr":capture==="ignore"?"ignore":"inherit",onLine:capture===true?line=>{output+=line+"\n";}:undefined});phase.budget();return output;}
+ try{await runOwnedCommand(command,args,cwd,"native-dependencies:"+command,0,{...phase.options(environment),stdout:capture===true?"stderr":capture==="ignore"?"ignore":"inherit",onLine:capture===true?line=>{output+=line+"\n";}:undefined});phase.budget();return output;}
  catch(error){signal.throwIfAborted();throw error;}
 }
 

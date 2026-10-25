@@ -9,7 +9,7 @@ pub const GRAPH_REUSE: (&str, &str) = ("SEMIO_BUILD_REUSE_GRAPH", "true");
 /// 🧱️ The workspace files besides project manifests that define the project graph.
 pub const GRAPH_OWNERS: &[&str] = &["package.json"];
 
-/// ⚖️ What the dashboard decides for every process it starts, in one place.
+/// ⚙️ What the dashboard decides for every process it starts, in one place.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RunPolicy {
     /// ♻️ Finite build tasks start from the published project graph.

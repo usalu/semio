@@ -54,7 +54,7 @@ function oracle(id: string): (ctx: AdapterContext) => AdapterOutcome | Promise<A
   return handler;
 }
 
-/** 🎯️ Renders the specifier list through the twin in the transport encoding the probe uses. */
+/** 📡️ Renders the specifier list through the twin in the transport encoding the probe uses. */
 function rendered(language: VizLanguage): { projection: Record<string, string[]> } {
   return { projection: Object.fromEntries(SPECIFIERS.map(([specifier, value], index) => [`format/${index}`, [`|${vizFormat(specifier, language)(value as number).replaceAll(" ", "_")}`]])) };
 }
@@ -71,7 +71,7 @@ export default defineTestAdapter({
     },
     "de-locale": {
       oracle: oracle("de-locale"),
-      /** 🎯️ The twin's formatter with the German document language. */
+      /** 🪞️ The twin's formatter with the German document language. */
       subject: () => rendered("de"),
     },
   },

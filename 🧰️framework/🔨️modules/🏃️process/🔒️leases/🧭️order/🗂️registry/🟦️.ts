@@ -2,12 +2,12 @@ import {createHash} from "node:crypto";
 import {appendFileSync,mkdirSync,readdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {homedir} from "node:os";
 import {join} from "node:path";
-import type {LeaseCycleV1,LeaseModeV1,LeaseNodeV1,LeaseOrderPolicyV1,LeaseViolationV1} from "../🟦️.ts";
+import type {LeaseCycleV1,LeaseModeV1,LeaseNodeV1,LeaseOrderPolicyV1,LeaseViolationV1} from "../📋️contract/🟦️.ts";
 import {agentSessionAddressOfEnvironmentV1} from "../../../🪪️agent-sessions/🗄️store/🟦️.ts";
 
 /** 🗂️ One process's published leases for one lease directory: what it holds and what it waits for. */
-export type LeaseRegistryEntryV1=Readonly<{version:1;pid:number;startedAtMs:number;updatedAtMs:number;command:string;directory:string;session?:string;holds:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number}>[];waits:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[]}>;
-type Snapshot=Readonly<{holds:readonly Readonly<{directory:string;resource:string;mode:LeaseModeV1;atMs:number;task:number}>[];waits:readonly Readonly<{directory:string;resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[]}>;
+export type LeaseRegistryEntryV1=Readonly<{version:1;pid:number;startedAtMs:number;updatedAtMs:number;command:string;directory:string;session?:string;holds:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number}>[];waits:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[];ancestry?:Readonly<Record<string,readonly number[]>>}>;
+type Snapshot=Readonly<{ancestry?:Readonly<Record<string,readonly number[]>>;holds:readonly Readonly<{directory:string;resource:string;mode:LeaseModeV1;atMs:number;task:number}>[];waits:readonly Readonly<{directory:string;resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[]}>;
 type Source=Readonly<{snapshot:()=>Snapshot;cycle:(nodes:readonly LeaseNodeV1[],from:string)=>LeaseCycleV1|undefined}>;
 
 const HEARTBEAT_MILLISECONDS=60000,STALE_MILLISECONDS=300000;
@@ -61,16 +61,18 @@ export function readLeaseViolationsV1(root:string,directory:string,limit:number)
 
 /** 🕸️ Builds the wait-for graph nodes of one lease directory from the other processes' entries and this process's own fresh ledger. */
 export function leaseNodesV1(entries:readonly LeaseRegistryEntryV1[],own:Snapshot,directory:string,ownPid:number=process.pid):readonly LeaseNodeV1[]{
- const nodes=new Map<string,{holds:{key:string;mode:LeaseModeV1}[];wait?:{key:string;mode:LeaseModeV1;sinceMs:number;queued:boolean}}>();
+ const nodes=new Map<string,{holds:{key:string;mode:LeaseModeV1}[];wait?:{key:string;mode:LeaseModeV1;sinceMs:number;queued:boolean};ancestors?:string[]}>(),chains=new Map<string,string[]>();
  const node=(id:string)=>{let row=nodes.get(id);if(!row){row={holds:[]};nodes.set(id,row);}return row;};
  for(const entry of entries){
   if(entry.pid===ownPid)continue;
   for(const hold of entry.holds)node(`${entry.pid}/${hold.task}`).holds.push({key:key(directory,hold.resource),mode:hold.mode});
   for(const wait of entry.waits)node(`${entry.pid}/${wait.task}`).wait={key:key(directory,wait.resource),mode:wait.mode,sinceMs:wait.sinceMs,queued:wait.queued};
+  for(const[task,chain]of Object.entries(entry.ancestry??{}))if(Array.isArray(chain))chains.set(`${entry.pid}/${task}`,chain.map(value=>`${entry.pid}/${value}`));
  }
+ for(const[task,chain]of Object.entries(own.ancestry??{}))chains.set(`${ownPid}/${task}`,chain.map(value=>`${ownPid}/${value}`));
  for(const hold of own.holds)if(hold.directory===directory)node(`${ownPid}/${hold.task}`).holds.push({key:key(directory,hold.resource),mode:hold.mode});
  for(const wait of own.waits)if(wait.directory===directory)node(`${ownPid}/${wait.task}`).wait={key:key(directory,wait.resource),mode:wait.mode,sinceMs:wait.sinceMs,queued:wait.queued};
- return [...nodes.entries()].map(([id,row])=>Object.freeze({id,holds:Object.freeze(row.holds),...row.wait?{wait:Object.freeze(row.wait)}:{}}));
+ return [...nodes.entries()].map(([id,row])=>Object.freeze({id,holds:Object.freeze(row.holds),...row.wait?{wait:Object.freeze(row.wait)}:{},...chains.has(id)?{ancestors:Object.freeze(chains.get(id)!)}:{}}));
 }
 
 let source:Source|undefined;
@@ -82,13 +84,13 @@ const command=():string=>process.argv.slice(1).join(" ").slice(0,240);
 
 function flush(directory:string):void{
  if(disabled||!source)return;
- const policy=policies.get(directory),snapshot=source.snapshot(),holds=snapshot.holds.filter(row=>row.directory===directory).map(row=>({resource:row.resource,mode:row.mode,sinceMs:row.atMs,task:row.task})),waits=snapshot.waits.filter(row=>row.directory===directory).map(row=>({resource:row.resource,mode:row.mode,sinceMs:row.sinceMs,task:row.task,queued:row.queued}));
+ const policy=policies.get(directory),snapshot=source.snapshot(),holds=snapshot.holds.filter(row=>row.directory===directory).map(row=>({resource:row.resource,mode:row.mode,sinceMs:row.atMs,task:row.task})),waits=snapshot.waits.filter(row=>row.directory===directory).map(row=>({resource:row.resource,mode:row.mode,sinceMs:row.sinceMs,task:row.task,queued:row.queued})),tasks=new Set([...holds.map(row=>row.task),...waits.map(row=>row.task)]),ancestry=Object.fromEntries(Object.entries(snapshot.ancestry??{}).filter(([task])=>tasks.has(Number(task))));
  const path=entryPath(directory);
  try{
   if(holds.length===0&&waits.length===0){rmSync(path,{force:true});written.delete(directory);return;}
   const folder=leaseRegistryFolderV1(rootNow(),directory);mkdirSync(folder,{recursive:true,mode:0o700});
   if(!written.has(directory)){writeFileSync(join(folder,"directory.json"),JSON.stringify({version:1,directory}));if(!exitHooked){exitHooked=true;process.once("exit",()=>{for(const known of written)try{rmSync(entryPath(known),{force:true});}catch{}});}}
-  const address=agentSessionAddressOfEnvironmentV1(process.env),text=JSON.stringify({version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,...address===undefined?{}:{session:address},holds,waits});
+  const address=agentSessionAddressOfEnvironmentV1(process.env),text=JSON.stringify({version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,...address===undefined?{}:{session:address},holds,waits,...Object.keys(ancestry).length?{ancestry}:{}});
   if(text.length>(policy?.registry.maximumEntryBytes??65536))throw Error("Bounded lease registry entry required");
   const temporary=`${path}.tmp`;writeFileSync(temporary,text);renameSync(temporary,path);written.add(directory);
   if(!heartbeat){heartbeat=setInterval(()=>{for(const known of written)flush(known);},HEARTBEAT_MILLISECONDS);heartbeat.unref();}
@@ -113,6 +115,12 @@ export const leaseRegistryV1=Object.freeze({
   return found;
  },
  describeNode(_directory:string,node:string):string{return descriptions.get(node)??`process ${node}`;},
+ holdsShared(directory:string,resource:string,holder:number):boolean{
+  return readLeaseRegistryEntriesV1(rootNow(),directory,Date.now(),false).some(entry=>entry.pid===holder&&entry.holds.some(row=>row.resource===resource&&row.mode==="shared"));
+ },
+ otherHolders(directory:string,resource:string):readonly number[]{
+  return readLeaseRegistryEntriesV1(rootNow(),directory,Date.now(),false).filter(entry=>entry.pid!==process.pid&&entry.holds.some(row=>row.resource===resource)).map(entry=>entry.pid);
+ },
  holderOf(directory:string,resource:string,mode:LeaseModeV1):Readonly<{pid:number;heldSeconds:number}>|undefined{
   for(const entry of readLeaseRegistryEntriesV1(rootNow(),directory,Date.now(),false)){
    if(entry.pid===process.pid)continue;

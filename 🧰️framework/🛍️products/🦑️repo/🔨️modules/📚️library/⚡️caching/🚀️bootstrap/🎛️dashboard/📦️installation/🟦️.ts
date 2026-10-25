@@ -1,8 +1,8 @@
-import {buildPreparationBudgetMs} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import {buildPreparationBudgetMs,progressDeadlinePolicyV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import {withRepositoryToolingStoreV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {withRepositoryPublishedCargoExecutableV1} from "../../../../📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
 import {withResourceLeases,checkResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {scriptInvocationEnvironment,scriptResourceProcessEnvironmentV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptInvocationEnvironment,scriptResourceProcessEnvironmentV1,withRequestedIssuedResourceControlV1,withRenewableIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {type CargoDependencyNetworkV1} from "../../../../📦️packages/🟦️typescript/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts";
 import {readBuildMode,type BuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {compilerAdmissionBudgetV1,type CompilerAdmissionControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
@@ -17,8 +17,8 @@ import { readdir, stat, open } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { dirname, basename, join, relative, resolve, isAbsolute } from "node:path";
 import { spawn } from "node:child_process";
-import { terminateOwnedChildTree } from "../../../../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 const cache=(root:string)=>join(root,".🧬semio/🦑️repo/⚡️cache");
 const manifest=(root:string,mode:BuildMode)=>join(cache(root),"🎛️dashboard",readBuildMode(mode),"installed.json");
@@ -27,7 +27,7 @@ const slashes=(path:string)=>path.replaceAll("\\","/");
 /** 📦️ The crate directory of the dashboard executable; its sources live in the sibling modules of `🎛️dashboard`. */
 export const dashboardPackageRoot=resolve(import.meta.dirname,installationSchema.definitions.PackageOwner.const.installationRelative);
 
-/** 🧾️ The source trees an installation was built from and the cheap digest they had at that moment. */
+/** 🪵️ The source trees an installation was built from and the cheap digest they had at that moment. */
 export type DashboardSources={readonly roots:readonly string[];readonly manifests:readonly string[];readonly digest:string};
 
 /** 🧾️ Checks current host, mode and immutable path against the closed installation contract. */
@@ -146,7 +146,7 @@ export async function withInstalledDashboardV1<T>(root:string,options:DashboardE
  return withRepositoryToolingStoreV1(options.workspace,options.invocation,control,async tools=>{const executable=installedDashboard(root,mode,options.workspace),record=JSON.parse(readFileSync(manifest(root,mode),"utf8")),expected=join(tools.root,"dashboard-cli",mode,record.digest,process.platform==="win32"?"semio.exe":"semio");if(executable!==expected)throw Error("Original finite dashboard tools ownership changed");return withResourceLeases({directory:join(options.workspace,".cache/b/l/m/data"),control,signal:control.signal,resources:[{resource:"artifact:"+dirname(executable),mode:"shared"}]},async()=>{await tools.recheck();for(let parent=dirname(executable);;parent=dirname(parent)){const facts=lstatSync(parent);if(!facts.isDirectory()||facts.isSymbolicLink())throw Error("Physical dashboard tools ancestry required");if(parent===tools.root)break;}const facts=lstatSync(executable);if(!facts.isFile()||facts.isSymbolicLink()||facts.nlink!==1||facts.size!==record.bytes||(facts.mode&0o777)!==record.permissions||process.platform!=="win32"&&(facts.mode&0o111)===0)throw Error("Exact immutable dashboard executable required");const file=await open(executable,"r"),hash=createHash("sha256"),buffer=Buffer.alloc(65536);let bytes=0;try{for(;;){checkResourceLeaseControl(control);const row=await file.read(buffer,0,buffer.length,null);if(!row.bytesRead)break;bytes+=row.bytesRead;if(bytes>record.bytes)throw Error("Dashboard executable changed during admission");hash.update(buffer.subarray(0,row.bytesRead));if(bytes%4194304===0){await control.publish({resource:"dashboard:installed-reader",mode:"shared",elapsedMs:0});await control.yieldContinuation();}}}finally{await file.close();}if(bytes!==record.bytes||hash.digest("hex")!==record.digest)throw Error("Dashboard executable content changed");const result=await body(executable);await tools.recheck();checkResourceLeaseControl(control);return result;});});
 }
 
-/** 🧭️ Recognizes native installed-tool launches while retaining the build runner for authoring tasks. */
+/** 🚀️ Recognizes native installed-tool launches while retaining the build runner for authoring tasks. */
 export function dashboardInvocation(args:readonly string[]):string[]|undefined {
   if(args[0]!=="run")return;
   const prefix="@semio-tech/repo-dashboard-rs:",target=args[1]?.startsWith(prefix)?args[1].slice(prefix.length):undefined;
@@ -185,7 +185,7 @@ async function rebuildDashboard(reason:string,options:DashboardExecutionOptions)
 export async function launchDashboard(root:string,args:readonly string[],options:DashboardExecutionOptions):Promise<number> {
   const mode=readBuildMode(options.mode),control=options.control;compilerAdmissionBudgetV1(control);
   const reason=mayRunStale(args)&&dashboardInstalled(root,mode)?undefined:await staleDashboard(root,mode);compilerAdmissionBudgetV1(control);
-  if(reason)await withRequestedIssuedResourceControlV1(control,buildPreparationBudgetMs(),preparation=>rebuildDashboard(reason,{...options,control:preparation}));
+  if(reason)await withRenewableIssuedResourceControlV1(control,progressDeadlinePolicyV1("native-child",0,process.env,{maximumMilliseconds:buildPreparationBudgetMs()}),0,preparation=>rebuildDashboard(reason,{...options,control:preparation}));
   const controller=new AbortController(),signal=AbortSignal.any([control.signal,controller.signal]),budget=compilerAdmissionBudgetV1(control),stopTimeout=startOwnedCommandTimeoutV1(budget,()=>controller.abort(Error("Original dashboard launch deadline exhausted")));
   try{return await withInstalledDashboardV1(root,options,executable=>new Promise<number>((accept,reject)=>{
     const child=spawn(executable,args,{cwd:root,env:scriptInvocationEnvironment(options.invocation,{...process.env,SEMIO_BUILD_MODE:mode}),signal,stdio:"inherit",windowsHide:true});

@@ -60,9 +60,9 @@ test("registry catalog gitlink boundaries parses only stage-zero 160000 index ro
   ].join("\0") + "\0";
   for (const compiled of compilers(code)) {
     const calls: { command: string; args: string[]; cwd?: string }[] = [];
-    const execFileSyncStub = (command: string, args: string[], options: { cwd?: string }) => { calls.push({ command, args, cwd: options.cwd }); return rows; };
+    const execFileSyncStub = (command: string, args: string[], options: { cwd?: string }) => { calls.push({ command, args, cwd: options.cwd }); return { stdout: rows }; };
     const cache = new Map<string, ReadonlySet<string>>();
-    const implementation = new Function("execFileSync", "gitlinkBoundaryCache", `${compiled}\nreturn registryCatalogGitlinkBoundaries;`)(execFileSyncStub, cache);
+    const implementation = new Function("runToolSyncV1", "gitlinkBoundaryCache", `${compiled}\nreturn registryCatalogGitlinkBoundaries;`)(execFileSyncStub, cache);
     const boundaries = implementation(repoRoot);
     expect([...boundaries].sort()).toEqual([vector.boundary, decomposedPath.normalize("NFC")].sort());
     expect(decomposedPath.normalize("NFC")).not.toBe(decomposedPath);
@@ -89,12 +89,12 @@ test("registry catalog owner index keeps every owner ancestor and prunes tracked
   expect([...oracleKnown].sort()).toEqual([...known].sort());
   for (const compiled of compilers(code)) {
     const calls: { command: string; args: string[]; cwd?: string }[] = [];
-    const execFileSyncStub = (command: string, args: string[], options: { cwd?: string }) => { calls.push({ command, args, cwd: options.cwd }); return listing; };
-    const index = new Function("execFileSync", `${compiled}\nreturn registryCatalogOwnerIndex;`)(execFileSyncStub)(repoRoot, packagesDirName);
+    const execFileSyncStub = (command: string, args: string[], options: { cwd?: string }) => { calls.push({ command, args, cwd: options.cwd }); return { stdout: listing }; };
+    const index = new Function("runToolSyncV1", `${compiled}\nreturn registryCatalogOwnerIndex;`)(execFileSyncStub)(repoRoot, packagesDirName);
     expect([...index.known].sort()).toEqual([...known].sort());
     expect([...index.candidates].sort()).toEqual([...candidates].sort());
     expect(calls).toEqual([{ command: "git", args: ["ls-files", "-z", "--cached"], cwd: repoRoot }]);
-    const unavailable = new Function("execFileSync", `${compiled}\nreturn registryCatalogOwnerIndex;`)(() => { throw new Error("no git"); })(repoRoot, packagesDirName);
+    const unavailable = new Function("runToolSyncV1", `${compiled}\nreturn registryCatalogOwnerIndex;`)(() => { throw new Error("no git"); })(repoRoot, packagesDirName);
     expect(unavailable).toBeUndefined();
   }
 });

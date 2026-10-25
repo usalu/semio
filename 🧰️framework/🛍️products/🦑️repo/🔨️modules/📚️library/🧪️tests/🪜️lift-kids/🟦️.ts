@@ -8,7 +8,7 @@ import { buildSlices, collectDecls } from "../../🏗️authoring/📦️crate-t
 import { absolutizeBeyond, liftModuleKids, matchesLift } from "../../🏗️authoring/📦️crate-tree/🪜️lift-kids/🟦️.ts";
 import { convertMutationLeaves } from "../../🏗️authoring/📦️crate-tree/🧬️mutation-families/🟦️.ts";
 import { placeless } from "../../🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
-import { absolutizeSuperPaths } from "../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️shared/🟦️.ts";
+import { absolutizeSuperPaths } from "../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️harness/🟦️.ts";
 
 const root = (body: string): string => [
   "//! 🧪️ Lift fixture root.",

@@ -275,13 +275,23 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🟦️.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🟢️requires-fresh-clean-terminal/🟦️.ts",
       "owners": [
-        "🧹️normalization/🎮️command-contract/🟦️.ts",
+        "🧹️normalization/🎮️command-contract/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🔶️mutation-root-discovery-projects/🟦️.ts",
+      "owners": [
         "🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts",
+        "🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🟠️requires-one-enabled-reachable/🟦️.ts",
+      "owners": [
         "🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts",
         "🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts",
-        "🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts",
         "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"
       ]
     },

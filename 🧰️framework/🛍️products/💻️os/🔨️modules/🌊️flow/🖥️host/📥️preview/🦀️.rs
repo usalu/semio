@@ -18,6 +18,7 @@ fn compare_step(left:&String,right:&String,offset:usize,grant:RetainedCloneGrant
 pub struct FlowPreviewCompletedAddress<'a>{pub window_id:&'a str,pub window_kind_id:&'a str,pub handle:&'a str,pub node_hash:u64,pub tolerance:f64}
 impl FlowPreviewCompletedAddress<'_>{fn binding(&self)->[u64;8]{[self.window_id.as_ptr()as u64,self.window_id.len()as u64,self.window_kind_id.as_ptr()as u64,self.window_kind_id.len()as u64,self.handle.as_ptr()as u64,self.handle.len()as u64,self.node_hash,self.tolerance.to_bits()]}}
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Fields{source:Option<DslValue>,mesh:Option<MeshData>,insertion:Option<HistoryFoldIndexInsert<String,MeshData>>,displaced:Option<ControlledRetirement<(String,MeshData)>>}
 /// 🧳️ Intake refusal returns the exact parsed input or the whole original receiver.
 pub enum FlowPreviewCompletedIntakeSource{Value(DslValue),Receiver(FlowPreviewCompletedReceiver)}
@@ -88,6 +89,7 @@ impl Drop for FlowPreviewCompletedReceiver{fn drop(&mut self){assert!(std::threa
 #[derive(semio_framework_value::RetireOwned)]
 enum LedgerRow{Handle((u64,String))}
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct LedgerFields{removed:Option<ControlledRetirement<LedgerRow>>,insertion:Option<HistoryFoldIndexInsert<u64,PreviewTessellateProgress>>}
 /// 📒️ Each original request row closes before its admitted progress and addressed window settle.
 pub struct FlowPreviewLedgerFold{origin:(u64,u64),hash:u64,progress:PreviewTessellateProgress,phase:u8,slot:usize,fields:ManuallyDrop<Option<LedgerFields>>,close:Option<ControlledRetirement<LedgerFields>>,closing:bool}

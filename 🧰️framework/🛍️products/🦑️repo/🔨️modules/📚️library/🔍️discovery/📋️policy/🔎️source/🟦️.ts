@@ -14,7 +14,7 @@ export function interactivityCfgTestSameLineKind(item: string): "member" | "item
   return "item";
 }
 
-/** 🧪️ The line spans of `#[cfg(test)]` items — an attribute that names `test` without negating it (`cfg(not(test))` is production) —
+/** 📏️ The line spans of `#[cfg(test)]` items — an attribute that names `test` without negating it (`cfg(not(test))` is production) —
  * whether the item starts on the attribute's own line (`#[cfg(test)] hook: T,`, `#[cfg(test)] if armed {`) or on a later one. A
  * test-only parameter or field (`,`) keeps its enclosing production item. */
 export function interactivityCfgTestItemSpans(lines: readonly string[]): PolicyModSpan[] {
@@ -64,7 +64,7 @@ export function policyMaskLiterals(line: string): string {
 
 const POLICY_MOD_ANY_OPEN_RE = /^\s*(?:pub\s+)?mod\s+(\w+)\b.*\{\s*$/;
 
-/** 🧪️Brace-spans of `#[cfg(test)] mod … { … }` blocks — synthetic test fixtures (e.g. `App::builder` in a unit test) aren't real app registrations. */
+/** 🧱️Brace-spans of `#[cfg(test)] mod … { … }` blocks — synthetic test fixtures (e.g. `App::builder` in a unit test) aren't real app registrations. */
 export function policyTestModSpans(lines: readonly string[]): PolicyModSpan[] {
   const spans: PolicyModSpan[] = [];
   const stack: { name: string; startLine: number; depth: number; isTest: boolean }[] = [];

@@ -17,7 +17,7 @@ class Actor<M extends MachineSpec> {
   }
 }
 
-/** 🎬 Owns every spawned actor for one machine type and routes their {@link Command}s to a {@link
+/** 🖥️ Owns every spawned actor for one machine type and routes their {@link Command}s to a {@link
  * Host}. Mailboxes drain in round-robin order until quiescent. Rust's `ActorLogic`/`MachineLogic`
  * (a marker trait + its blanket impl, abstracting the actor's associated types) has no TS
  * counterpart here — {@link MachineSpec} already supplies those types structurally, so the marker
@@ -33,7 +33,7 @@ export class ActorSystem<M extends MachineSpec> {
     this.#machine = machine;
   }
 
-  /** 🎬 Initializes and registers a root actor, routing its initial commands immediately. */
+  /** 🆕️ Initializes and registers a root actor, routing its initial commands immediately. */
   spawnRoot(input: M["Input"]): ActorId {
     const id = ActorId(this.#nextId);
     this.#nextId += 1;
@@ -44,17 +44,17 @@ export class ActorSystem<M extends MachineSpec> {
     return id;
   }
 
-  /** 🎬 The current {@link Snapshot} of an actor, if it exists. */
+  /** 📸️ The current {@link Snapshot} of an actor, if it exists. */
   snapshot(id: ActorId): Snapshot<M> | undefined {
     return this.#actors.find((a) => a.id === id)?.snapshot;
   }
 
-  /** 🎬 Enqueues an event for delivery on the next {@link ActorSystem.drain}. */
+  /** 📮️ Enqueues an event for delivery on the next {@link ActorSystem.drain}. */
   send(to: ActorId, event: M["Event"]): void {
     this.#actors.find((a) => a.id === to)?.mailbox.push(event);
   }
 
-  /** 🎬 Delivers a {@link TimerId} elapsed notification straight to `macrostep`'s timer entry point for `to`. */
+  /** ⏰️ Delivers a {@link TimerId} elapsed notification straight to `macrostep`'s timer entry point for `to`. */
   timerElapsed(to: ActorId, timer: TimerId): StepReport | undefined {
     const actor = this.#actors.find((a) => a.id === to);
     if (!actor) return undefined;
@@ -64,7 +64,7 @@ export class ActorSystem<M extends MachineSpec> {
     return report;
   }
 
-  /** 🎬 Drains every actor's mailbox to quiescence, running one macrostep per delivered event. */
+  /** 📫️ Drains every actor's mailbox to quiescence, running one macrostep per delivered event. */
   drain(): StepReport[] {
     const reports: StepReport[] = [];
     for (;;) {
@@ -96,7 +96,7 @@ export class ActorSystem<M extends MachineSpec> {
   }
 }
 
-/** 🎬 Applies one {@link Command} to `host`/`snapshot`; returns a `send` command's `[to, event]` pair
+/** 🗺️ Applies one {@link Command} to `host`/`snapshot`; returns a `send` command's `[to, event]` pair
  * for the caller to route on, since a lone {@link Host}+{@link Snapshot} pair (no {@link ActorSystem})
  * has no other actor to deliver it to. */
 export function routeCommand<M extends MachineSpec>(host: Host<M>, snapshot: Snapshot<M>, actor: ActorId, command: Command<M>): readonly [ActorId, M["Event"]] | undefined {

@@ -136,7 +136,7 @@ fn construct<T: ArtifactSqliteSnapshotHost>(snapshot: &T, database: &SqliteDatab
 pub fn verify_snapshot_backing<T: ArtifactSqliteSnapshotHost + PartialEq + std::fmt::Debug>(snapshot: &T, database: &SqliteDatabase) {
     verify_snapshot_backing_by(snapshot, database, |actual, expected| assert_eq!(actual, expected));
 }
-/// 🔬️ Observes unchanged physical requests with explicit domain literal equality outside observation.
+/// 📸️ Observes unchanged physical requests with explicit domain literal equality outside observation.
 pub fn verify_snapshot_backing_by<T: ArtifactSqliteSnapshotHost>(snapshot: &T, database: &SqliteDatabase, verify: impl Fn(&T, &T)) {
     let defaults = SqliteDatabaseLimits::default();
     for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot] {

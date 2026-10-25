@@ -12,7 +12,7 @@ const HISTORY_BYTES: usize = 16_777_216;
 
 struct Edit { at: usize, removed: String, inserted: String, before: usize, after: usize }
 
-/// 📝️ A local document projection with bounded reversible edit events and a byte-offset caret.
+/// ✏️ A local document projection with bounded reversible edit events and a byte-offset caret.
 pub struct EditorState {
     pub value: String,
     pub cursor: usize,

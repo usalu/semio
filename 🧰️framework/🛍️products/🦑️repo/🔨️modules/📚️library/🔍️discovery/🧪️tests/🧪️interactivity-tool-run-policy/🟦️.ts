@@ -134,7 +134,7 @@ const CASES: readonly Case[] = [
   { name: "framework-reserved-literal-is-silent", predicate: "reserved", expect: "silent", edits: [[FRAMEWORK, '"toolRunStart";', '"toolRunStart";\npub const TOOL_RUN_ABORT_ACTION_ID: &str = "toolRunAbort";']] },
 ];
 
-/** 🧪️ Runs one tool-run predicate. */
+/** ▶️ Runs one tool-run predicate. */
 function runPredicate(predicate: Predicate, sources: readonly InteractivityToolRunSource[], rows: readonly InteractivityToolRunRequirement[]): readonly InteractivityToolRunFinding[] {
   switch (predicate) {
     case "lifecycle":

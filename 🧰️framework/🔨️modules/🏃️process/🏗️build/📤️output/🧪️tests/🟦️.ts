@@ -12,7 +12,7 @@ import corpusSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 type Child = (typeof corpus.child)[number];
 type Run = Readonly<{ stdout: string; stderr: string; status: number | null }>;
 
-const fixture = fileURLToPath(new URL("./🎭️fixture/🟦️.ts", import.meta.url)), oracleFile = fileURLToPath(new URL("./🐍️oracle.py", import.meta.url));
+const fixture = fileURLToPath(new URL("./🎭️fixture/🟦️.ts", import.meta.url)), oracleFile = fileURLToPath(new URL("./🐍️.py", import.meta.url));
 const lines = (text: string): string[] => text.split("\n").filter((line) => line !== "");
 const run = (row: Child): Promise<Run> => new Promise((accept, reject) => {
   const child = spawn(process.execPath, [fixture, row.mode, ...row.args], { env: { ...process.env, ...row.environment }, stdio: ["ignore", "pipe", "pipe"] });

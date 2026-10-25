@@ -14,8 +14,8 @@ import {readNativeOwnerCapabilities,type NativeOwnerCapabilities} from "../../..
 import nativeSchema from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json" with { type: "json" };
 import preparationPolicy from "../🛠️preparation/📋️policy/🔣️.json" with { type: "json" };
 import type {RepositoryExactCargoLawOptions} from "../🎯️exact/🟦️.ts";
-import { runtimeProgramV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeProgramV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 const endpoint=fileURLToPath(new URL("./📜️script.ts",import.meta.url));
 const identity=(path:string,status:BigIntStats):CargoExecutionSourceV1["file"]=>({path,device:String(status.dev),inode:String(status.ino)});
@@ -56,11 +56,15 @@ export function issueRepositoryCargoExecutionBackendV1(root:string,command:Nativ
  return readCargoExecutionContractV1("backend",{version:1,program:process.execPath,arguments:[endpoint,"execute"],cwd:root,sources:[original.source,declared.source],request,continuation});
 }
 
+/** 🧾️ The backend's canonical text without its program: the issuing wrapper and the receiving child are different processes of one runtime (the Bazel test launcher is a copy of the pinned Bun), so their executable paths differ by construction, and transport decodes null-prototype records that `isDeepStrictEqual` refuses to equate with plain ones. */
+const canonical=(value:unknown):string=>JSON.stringify(value,(_key,entry)=>entry&&typeof entry==="object"&&!Array.isArray(entry)?Object.fromEntries(Object.entries(entry).sort(([left],[right])=>left<right?-1:left>right?1:0)):entry);
+const comparableBackend=(backend:CargoExecutionBackendV1):string=>canonical({...backend,program:null});
+
 /** 🔐️ Revalidates the original command, exact backend and full Source snapshots before receiving work. */
 export function requireRepositoryCargoExecutionV1(root:string,request:unknown,invocation:ScriptInvocation):CargoExecutionBackendV1 {
  checkScriptInvocation(invocation);readCargoExecutionContractV1("request",request);const capabilities=readNativeOwnerCapabilities(invocation.capabilities),backend=readCargoExecutionContractV1("backend",capabilities.cargoExecutionBackend);
  if(capabilities.repositoryRoot!==root)throw Error("Original Cargo execution repository differs");const current=issueRepositoryCargoExecutionBackendV1(root,capabilities.command,capabilities.transport);
- if(!current||!isDeepStrictEqual(current,backend)||!isDeepStrictEqual(request,backend.request))throw Error("Original Cargo execution command, request or Source changed");return backend;
+ if(!current||comparableBackend(current)!==comparableBackend(backend)||canonical(request)!==canonical(backend.request))throw Error("Original Cargo execution command, request or Source changed");return backend;
 }
 
 /** 📥️ Receives bounded stdin only while the original selected descriptor and Source remain current. */

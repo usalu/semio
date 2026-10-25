@@ -1,8 +1,8 @@
-//! 🧰️ The fixture test kit of the schema twin: the shared documents under `🧪️tests/🧫️fixtures`, typed decoding, JSON projection and the
+//! 🧰️ The fixture test kit of the schema twin: the shared vectors under `🧫️fixtures`, typed decoding, JSON projection and the
 //! tolerant comparison every quiz test suite reads them with. Compiled for the schema's own tests and under the `testkit` feature.
 //!
 //! @see ../🔬️unit/🦀️.rs — the schema's own tests
-//! @see ../../../🧪️tests/🧫️fixtures — the shared documents
+//! @see ../../../🧫️fixtures — the shared vectors
 
 use super::*;
 use semio_framework_test_fixtures::fixture_path;
@@ -12,7 +12,7 @@ use serde_json::Value;
 const TOLERANCE: f64 = 1e-12;
 
 pub fn fixture(case: &str) -> Value {
-    let root = fixture_path!("../../../🧪️tests/🧫️fixtures");
+    let root = fixture_path!("../../../🧫️fixtures");
     let directory = std::fs::read_dir(&root).into_iter().flatten().flatten().map(|entry| entry.path()).find(|path| path.file_name().and_then(|name| name.to_str()).is_some_and(|name| name.ends_with(case)));
     let path = directory.unwrap_or_else(|| panic!("no fixture case {case} under {}", root.display())).join("🔣️.json");
     let text = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("{}: {error}", path.display()));

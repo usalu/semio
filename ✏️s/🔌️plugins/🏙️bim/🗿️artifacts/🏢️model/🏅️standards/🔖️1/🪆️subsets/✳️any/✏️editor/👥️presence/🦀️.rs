@@ -6,7 +6,7 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of an author's view: working storey, plan camera, the line being typed into a window's entry field.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "bim.presence")]
 #[dsl(layout = "lines")]
@@ -18,7 +18,11 @@ pub struct BimPresence {
     pub camera: store::Viewport2d,
 }
 
-impl store::ArtifactPresenceSnapshot for BimPresence {}
+impl store::ArtifactPresenceSnapshot for BimPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl Default for BimPresence {
     fn default() -> Self {

@@ -23,7 +23,7 @@ const SAMPLE = [
 
 const SORTED = [...SAMPLE].sort((a, b) => a - b);
 
-/** 🎯️ Compiles one committed fixture of this case and returns its whole projection. */
+/** 🔨️ Compiles one committed fixture of this case and returns its whole projection. */
 async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection: ProbeProjection }> {
   const records = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://📶️charts-histogram-density/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
@@ -36,7 +36,7 @@ const grid = (value: number): number => {
 // #endregion 🧫️Vectors
 
 // #region 🔮️Oracles
-/** 🔮️ d3-array's bin with a threshold count, split into the three projected sequences. */
+/** ✂️ d3-array's bin with a threshold count, split into the three projected sequences. */
 function bins(count: number): ProbeProjection {
   const layout = bin().thresholds(count)([...SAMPLE]);
   return {
@@ -46,13 +46,13 @@ function bins(count: number): ProbeProjection {
   };
 }
 
-/** 🔮️ Silverman's rule of thumb on d3-array's deviation and quartiles. */
+/** ⚖️ Silverman's rule of thumb on d3-array's deviation and quartiles. */
 function bandwidth(): number {
   const iqr = (quantileSorted(SORTED, 0.75)! - quantileSorted(SORTED, 0.25)!) / 1.349;
   return 1.06 * Math.min(deviation(SAMPLE)!, iqr) * SAMPLE.length ** -0.2;
 }
 
-/** 🔮️ A gaussian kernel density estimate of the sample on a regular grid. */
+/** 🏔️ A gaussian kernel density estimate of the sample on a regular grid. */
 function density(h: number, samples: number, lo: number, hi: number): number[] {
   return Array.from({ length: samples }, (_, i) => lo + ((hi - lo) * i) / (samples - 1)).map((x) =>
     grid(SAMPLE.reduce((sum, xi) => sum + Math.exp(-0.5 * ((x - xi) / h) ** 2), 0) / (SAMPLE.length * h * Math.sqrt(2 * Math.PI))),
@@ -71,13 +71,13 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await probe(ctx, "bins.tex")),
     },
     "bins-coarse": {
-      /** 🔮️ The same construction at four thresholds, where the last threshold is popped. */
+      /** 🔚️ The same construction at four thresholds, where the last threshold is popped. */
       oracle: () => ({ projection: bins(4) }),
-      /** 🎯️ The four-threshold bins the kernel produced. */
+      /** 🪣️ The four-threshold bins the kernel produced. */
       subject: async (ctx: AdapterContext) => (await probe(ctx, "bins-coarse.tex")),
     },
     "ticks": {
-      /** 🔮️ d3-array's ticks on an integer, a fractional and a sub-unit step. */
+      /** ⏱️ d3-array's ticks on an integer, a fractional and a sub-unit step. */
       oracle: () => ({
         projection: {
           "ticks-a": d3ticks(0, 12, 10).map(grid),
@@ -85,11 +85,11 @@ export default defineTestAdapter({
           "ticks-c": d3ticks(0, 1, 5).map(grid),
         },
       }),
-      /** 🎯️ The ticks `\semio_viz_stat_ticks:nnn` produced. */
+      /** ✔️ The ticks `\semio_viz_stat_ticks:nnn` produced. */
       subject: async (ctx: AdapterContext) => (await probe(ctx, "ticks.tex")),
     },
     "density": {
-      /** 🔮️ Silverman's bandwidth on d3-array's spread estimates plus the gaussian sum. */
+      /** ➕️ Silverman's bandwidth on d3-array's spread estimates plus the gaussian sum. */
       oracle: () => {
         const h = bandwidth();
         return {
@@ -101,18 +101,18 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The bandwidth and curve `\semio_viz_stat_kde:Nnnnn` produced. */
+      /** 📊️ The bandwidth and curve `\semio_viz_stat_kde:Nnnnn` produced. */
       subject: async (ctx: AdapterContext) => (await probe(ctx, "density.tex")),
     },
     "ecdf": {
-      /** 🔮️ The sorted sample and its i/n plotting positions. */
+      /** 🎲️ The sorted sample and its i/n plotting positions. */
       oracle: () => ({
         projection: {
           "ecdf-x": SORTED.map(grid),
           "ecdf-y": SORTED.map((_, i) => grid((i + 1) / SORTED.length)),
         },
       }),
-      /** 🎯️ The steps `\semio_viz_stat_ecdf:N` produced. */
+      /** 🪜️ The steps `\semio_viz_stat_ecdf:N` produced. */
       subject: async (ctx: AdapterContext) => (await probe(ctx, "ecdf.tex")),
     },
   },

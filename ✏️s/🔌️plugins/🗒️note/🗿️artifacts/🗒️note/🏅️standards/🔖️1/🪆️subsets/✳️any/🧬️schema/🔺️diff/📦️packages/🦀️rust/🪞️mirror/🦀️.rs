@@ -98,7 +98,6 @@ pub mod diff {
 pub mod editor {
     #[path = "."]
     pub mod note {
-        pub use semio_s_artifact_note_note_v1::editor::note::*;
         #[path = "../../../../../✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
         pub mod demo_session;
         #[cfg(test)]

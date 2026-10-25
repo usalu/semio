@@ -27,9 +27,10 @@ export function loadClassifiedBaseline(repoRoot: string): ClassifiedDependency[]
   const classified: ClassifiedDependency[] = baselineRaw.entries.map((entry) => {
     const linking = oraclesByLinkedPackage.get(entry.name) ?? [];
     const oracleIds = linking.length > 0 ? [...new Set(linking.map((oracle) => oracle.id))].sort() : (entry.oracleIds ?? []);
-    const kinds = [
+    const declaredKinds = [
       ...new Set(entry.kinds.map((kind) => (["production-runtime", "production-build", "repository-tooling", "test-runner", "test-oracle"].includes(kind) ? (kind as ClassifiedDependency["kinds"][number]) : classifyLegacyKind(kind, oracleIds)))),
     ];
+    const kinds = linking.length > 0 && !declaredKinds.some(isProductionClass) ? (["test-oracle"] as ClassifiedDependency["kinds"]) : declaredKinds;
     return {
       ecosystem: entry.ecosystem as DependencyEcosystem,
       name: entry.name,
@@ -68,7 +69,7 @@ export function loadClassifiedBaseline(repoRoot: string): ClassifiedDependency[]
   return classified.sort((a, b) => a.ecosystem.localeCompare(b.ecosystem) || a.name.localeCompare(b.name));
 }
 
-/** 🔒️ Multi-ecosystem dependency classification with production reachability and a shrink-only ratchet. */
+/** 📜️ Multi-ecosystem dependency classification with production reachability and a shrink-only ratchet. */
 export class DependencyScript extends Script {
   run(segments: string[]): void {
     const sorted = loadClassifiedBaseline(this.repoRoot);

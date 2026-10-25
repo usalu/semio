@@ -1,0 +1,11 @@
+{
+ "version": 1,
+ "cases": [
+  {"name": "posix path inside a generation", "input": "/w/.cache/b/d/m/j/1e9e1c0b154d91bb479c/node_modules/.bun/x@1.0.0/node_modules/x/index.js", "expected": "/w/.cache/b/d/m/j/*/node_modules/.bun/x@1.0.0/node_modules/x/index.js"},
+  {"name": "windows path inside a generation", "input": "C:\\w\\.cache\\b\\d\\m\\j\\25d5916f395455d1ffcb\\node_modules\\x\\index.js", "expected": "C:\\w\\.cache\\b\\d\\m\\j\\*\\node_modules\\x\\index.js"},
+  {"name": "workspace source file", "input": "/w/framework/modules/a.ts", "expected": "/w/framework/modules/a.ts"},
+  {"name": "other store partition", "input": "/w/.cache/b/o/m/j/1e9e1c0b154d91bb479c/x", "expected": "/w/.cache/b/o/m/j/1e9e1c0b154d91bb479c/x"},
+  {"name": "failure code", "input": "!MODULE_NOT_FOUND", "expected": "!MODULE_NOT_FOUND"}
+ ],
+ "generations": {"recorded": "aaaaaaaaaaaaaaaaaaaa", "current": "bbbbbbbbbbbbbbbbbbbb", "package": "pkg", "file": "index.js"}
+}

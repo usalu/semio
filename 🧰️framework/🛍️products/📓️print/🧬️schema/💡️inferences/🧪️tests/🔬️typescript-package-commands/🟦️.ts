@@ -1,8 +1,8 @@
 import type { ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { vizInferenceChecks } from "../../📦️packages/🟦️typescript/🔬️probes/🟦️.ts";
-import { VIZ_INFERENCE_LEVELS, type Level } from "../../📦️packages/🟦️typescript/🔬️probes/🧰️probe-kit/🟦️.ts";
+import { vizInferenceChecks } from "../../🔬️probes/🟦️.ts";
+import { VIZ_INFERENCE_LEVELS, type Level } from "../../🔬️probes/🧰️probe-kit/🟦️.ts";
 
 type Failure = { readonly path: string; readonly ours: unknown; readonly oracle: unknown };
 function compare(ours: unknown, oracle: unknown, tolerance: number, path = "$", failures: Failure[] = []): Failure[] {
@@ -71,7 +71,7 @@ export async function verifyVizChartInferences(segments: readonly string[] = [])
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
 export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> { await verifyVizChartInferences(segments); }
 
-/** 🏃️ Runs the `BuildScript` command under the caller's roots and invocation. */
+/** 🔨️ Runs the `BuildScript` command under the caller's roots and invocation. */
 export async function runBuildScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
   await runOwnedCommand(process.execPath, ["x", "tsc", "--noEmit", "--skipLibCheck", "--strict", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--types", "bun", "./🟦️.ts", "../../../../🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts"], context.root, "print-viz-inference-typecheck", buildBudgetMs(), { env: process.env });
   await runOwnedCommand(process.execPath, ["x", "tsc", "--noEmit", "--skipLibCheck", "--strict", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--types", "bun", "../../../../🧪️tests/🧬️native-chart-grammar/🟦️.ts"], context.root, "print-viz-native-grammar-typecheck", buildBudgetMs(), { env: process.env });

@@ -10,12 +10,12 @@ use super::*;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct OperationId(pub u64);
 
-/// 🔖️ Which retry/replay attempt of an [`OperationId`] a [`TraceEvent`] belongs to — bumped every time
+/// 🔁️ Which retry/replay attempt of an [`OperationId`] a [`TraceEvent`] belongs to — bumped every time
 /// the same logical operation restarts (a cancelled-then-retried interactive drag, a checkpoint replay).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Generation(pub u64);
 
-/// 🔖️ Opaque cross-cutting trace correlation id, orthogonal to [`OperationId`] — meant to carry a whole
+/// 🔗️ Opaque cross-cutting trace correlation id, orthogonal to [`OperationId`] — meant to carry a whole
 /// input→frame→operation→preview→commit chain that may span several operations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TraceId(pub u64);
@@ -41,7 +41,7 @@ pub fn allocate_operation_id_in_slot(slots: u64, slot: u64) -> OperationId {
 //#endregion 🪪️Operation
 
 //#region 🛰️Trace
-/// 🛰️ What stage of an operation's lifecycle a [`TraceEvent`] marks. [`TraceStage::StageChanged`]
+/// 🪜️ What stage of an operation's lifecycle a [`TraceEvent`] marks. [`TraceStage::StageChanged`]
 /// carries a `&'static str` label rather than growing a new variant per stage name —
 /// [`CANCEL_REQUESTED_STAGE_LABEL`] is the one label this crate itself gives meaning to (for
 /// [`cancellation_latency_us`]); every other label is caller-defined.
@@ -60,7 +60,7 @@ pub enum TraceStage {
 /// [`cancellation_latency_us`] can find "cancel requested" without a dedicated [`TraceStage`] variant.
 pub const CANCEL_REQUESTED_STAGE_LABEL: &str = "cancel_requested";
 
-/// 🛰️ One entry in the process-wide operation-trace ring: an [`OperationId`]/[`Generation`] pair, a
+/// 🎞️ One entry in the process-wide operation-trace ring: an [`OperationId`]/[`Generation`] pair, a
 /// monotonic `sequence` (for total order even when two events share a microsecond), the [`TraceStage`],
 /// and the [`now_us`] timestamp it was recorded at.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -72,7 +72,7 @@ pub struct TraceEvent {
     pub at_us: u64,
 }
 
-/// 🛰️ Ring capacity for the process-wide trace-event store.
+/// ⭕️ Ring capacity for the process-wide trace-event store.
 const TRACE_RING_CAPACITY: usize = 4096;
 
 static NEXT_SEQUENCE: AtomicU64 = AtomicU64::new(1);
@@ -86,7 +86,7 @@ fn push_trace_event(operation: OperationId, generation: Generation, stage: Trace
     record_trace_event_at(operation, generation, stage, try_now_us())
 }
 
-/// 🛰️ Records one trace event stamped with a reading its caller already holds — a step driver's
+/// 📹️ Records one trace event stamped with a reading its caller already holds — a step driver's
 /// entry or exit reading, a job's latest in-step reading — instead of reading the clock for it.
 pub fn record_trace_event_at(operation: OperationId, generation: Generation, stage: TraceStage, at_us: Option<u64>) -> Option<TraceEvent> {
     let Some(at_us) = at_us else {
@@ -110,7 +110,7 @@ pub fn record_stage_changed(operation: OperationId, generation: Generation, labe
     push_trace_event(operation, generation, TraceStage::StageChanged { label })
 }
 
-/// 🏷️ Convenience over [`record_stage_changed`] with [`CANCEL_REQUESTED_STAGE_LABEL`] — the start point
+/// ✖️ Convenience over [`record_stage_changed`] with [`CANCEL_REQUESTED_STAGE_LABEL`] — the start point
 /// [`cancellation_latency_us`] measures from.
 pub fn record_cancel_requested(operation: OperationId, generation: Generation) -> Option<TraceEvent> {
     record_stage_changed(operation, generation, CANCEL_REQUESTED_STAGE_LABEL)
@@ -164,7 +164,7 @@ pub fn preview_latency_us(operation: OperationId) -> Option<u64> {
     Some(preview.at_us.saturating_sub(started.at_us))
 }
 
-/// ⏱️ Microseconds from `operation`'s cancel-requested [`TraceStage::StageChanged`] (see
+/// 🛑️ Microseconds from `operation`'s cancel-requested [`TraceStage::StageChanged`] (see
 /// [`record_cancel_requested`]) to its terminal [`TraceStage::Cancelled`] event, or `None` if either
 /// hasn't happened yet.
 pub fn cancellation_latency_us(operation: OperationId) -> Option<u64> {

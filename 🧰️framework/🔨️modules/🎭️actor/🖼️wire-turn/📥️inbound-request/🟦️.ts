@@ -15,7 +15,7 @@ import { wireRespondAnswer } from "../🟦️.ts";
  * caller rather than leaving an outstanding completion forever. */
 export const INBOUND_REQUEST_TURN_BUDGET = 64;
 
-/** 📥️ One inbound call, as this side of the ABI states it. `originInstanceId` becomes the request's
+/** 📞️ One inbound call, as this side of the ABI states it. `originInstanceId` becomes the request's
  * `message-endpoint::shell` origin — the instance the answer is being fetched FOR; `0` means the
  * shell itself asked, owning no instance of the callee. */
 export type InboundRequestDrive = {
@@ -33,7 +33,7 @@ export type InboundRequestDrive = {
   readonly onProgress?: (progress: { readonly capability: string; readonly turns: number; readonly budget: number }) => void;
 };
 
-/** 🔁️ The slice of one turn result {@link driveInboundRequest} reads: the effects it scans for a
+/** 🍕️ The slice of one turn result {@link driveInboundRequest} reads: the effects it scans for a
  * matching `respond`, and the status that says whether the guest has work left to drain. */
 export type InboundRequestTurn = { readonly effects: readonly WireVariant[]; readonly status?: unknown };
 
@@ -43,7 +43,7 @@ export type InboundRequestAnswer =
   | { readonly status: "unanswered"; readonly turns: number };
 
 /**
- * 📥️ Drives ONE `Event::Request` to its `respond` on the callee's actor — the host half of the
+ * 📬️ Drives ONE `Event::Request` to its `respond` on the callee's actor — the host half of the
  * ABI's single inbound-call seam, shared verbatim by the React `PluginRuntime` door and the wgpu
  * `plugin-bridge` one so the two targets can never drift into two protocols (this module's own
  * header: the "third divergent copy" hazard).

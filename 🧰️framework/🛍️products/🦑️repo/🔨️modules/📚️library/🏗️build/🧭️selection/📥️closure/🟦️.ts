@@ -1,4 +1,4 @@
-import type {BuildGraphV1,BuildTargetV1} from "../../🕸️graph/🟦️.ts";
+import type { BuildGraphV1, BuildTargetV1 } from "../../🕸️graph/📋️model/🟦️.ts";
 import {resolveBuildTargetV1} from "../../🕸️graph/🟦️.ts";
 import {buildPatternV1,selectBuildProjectsV1} from "../🟦️.ts";
 import {checkScriptInvocation,advanceScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

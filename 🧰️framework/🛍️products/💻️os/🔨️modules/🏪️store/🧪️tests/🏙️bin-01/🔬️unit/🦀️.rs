@@ -11,10 +11,3 @@ include!("📜️edit-retirement-message-ledger-and-displaced-owner-laws/🦀️
 include!("🎫️completed-record-registry-and-envelope-decode-laws/🦀️.rs");
 include!("🔭️envelope-close-field-registry-and-snapshot-read-laws/🦀️.rs");
 
-/// ➕️ L3 for one fixture leaf: the concrete inverse's diffs sum to the negative of the forward diff on every listed demo document (`None` is the deleted value).
-pub(crate) async fn assert_fixture_sum_law<Op: semio_framework_os_spr::Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot,ReferenceDiff=DemoDiff>>(mutation: &Op, bases: &[Option<i32>]) {
-    for n in bases {
-        semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(mutation, &DemoSnapshot { n: *n }).await;
-    }
-}
-

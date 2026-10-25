@@ -1,4 +1,4 @@
-//! 📚️ The authored quiz documents: scalars and limits, quizzes with their tasks, and the course with its badges.
+//! 📘️ The authored quiz documents: scalars and limits, quizzes with their tasks, and the course with its badges.
 
 use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
@@ -24,7 +24,7 @@ pub const MAX_TIMESTAMP: Timestamp = (1 << 53) - 1;
 /// kind a proctor declares; raised with every change of the contract beyond its prose.
 pub type WireVersion = u32;
 
-/// 🤝️ The wire version of this contract (`$defs/WireVersion`).
+/// 📡️ The wire version of this contract (`$defs/WireVersion`).
 pub const WIRE_VERSION: WireVersion = 8;
 
 /// 💯️ A score or credit in `[0, 1]`.
@@ -108,7 +108,7 @@ pub struct Dimension {
     pub icon: Option<Icon>,
 }
 
-/// 🧭️ One spoke of a profile (spider diagram); values normalise to `(value − min) / (max − min)`.
+/// 🕷️ One spoke of a profile (spider diagram); values normalise to `(value − min) / (max − min)`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Axis {
@@ -217,7 +217,7 @@ pub struct QuestionPool {
     pub slots: Vec<Vec<Slug>>,
 }
 
-/// 🧺️ Assign every item to one category; categories may carry profiles on shared axes and a wrong
+/// 🪣️ Assign every item to one category; categories may carry profiles on shared axes and a wrong
 /// profile earns partial credit by profile similarity.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -314,7 +314,7 @@ impl Task {
         }
     }
 
-    /// 🖼️ The task icon, when the task has one.
+    /// 🎨️ The task icon, when the task has one.
     pub fn icon(&self) -> Option<&Icon> {
         match self {
             Self::Classification(ClassificationTask { icon, .. }) | Self::Sorting(SortingTask { icon, .. }) | Self::Matching(MatchingTask { icon, .. }) => icon.as_ref(),
@@ -385,7 +385,7 @@ pub struct Introduction {
 /// 🧭️ Page names reserved for the course's root navigation.
 pub const COURSE_ROOT_IDS: [&str; 11] = ["home", "identity", "introduction", "learner", "intro", "board", "badges", "prefs", "quizzes", "run", "results"];
 
-/// 🗂️ An ordered course group; an empty quiz list marks a placeholder.
+/// 🧩️ An ordered course group; an empty quiz list marks a placeholder.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Topic {

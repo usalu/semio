@@ -50,6 +50,10 @@ struct FlowHostEffectJob {
 }
 
 impl FlowHostEffectJob {
+    fn new(_operation: semio_framework_job::Operation, payload: FlowHostEffectPayload) -> Self {
+        Self { payload: Some(Arc::new(payload)), payload_close: None, decoder_close: None, completion_refusal: None, input: None, decoder: None, page: 0, byte: 0, validated: true, completed: false, closing: false }
+    }
+
     pub(super) fn fault() -> semio_framework_value::ValueError {
         semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original Flow host effect source refused its route")
     }
@@ -182,29 +186,7 @@ impl semio_framework::ToolJobFactory for FlowHostEffectJobFactory {
         semio_framework::ToolExecutionContract::resumable(FLOW_HOST_ONLY_RAW_BYTES, 256, 1, 16_384, 7_500, 1, 1)
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(FlowHostEffectJob { payload: Some(Arc::new(payload)), payload_close:None, decoder_close:None, completion_refusal:None, input: None, decoder: None, page: 0, byte: 0, validated: true, completed: false, closing: false })
-    }
-
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if checkpoint.is_some() || input.declared_bytes() > FLOW_HOST_ONLY_RAW_BYTES {
-            return Err((semio_framework::ToolJobFactoryError::new("Flow host-only job rejects checkpoint or oversized wire owner"), input, checkpoint));
-        }
-        let mut job = match self.create_job(operation, payload) {
-            Ok(job) => job,
-            Err(error) => return Err((error, input, None)),
-        };
-        job.input = Some(input);
-        job.decoder = Some(store::os_pack::record::scalar_witness::ScalarRecordWireWitness::new(job.payload.as_ref().unwrap().clone(), flow_host_wire_view));
-        job.validated = false;
-        Ok(job)
-    }
+    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Ok::<_, String>(FlowHostEffectJob::new(operation, payload)));
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFactory {
@@ -219,5 +201,27 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFa
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "flowEvalResolve", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     ];
+}
+
+/// 🧳️ Builds the host-only job from the original request, taking its wire owner into the decoder when the command arrived over the wire.
+pub(super) fn flow_build_host_only_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<FlowPlayApp>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    use semio_framework_plugin::__value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
+    let original = request.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Flow host-only request is absent"))?;
+    if original.checkpoint.is_some() || original.input.as_ref().is_some_and(|input| input.declared_bytes() > FLOW_HOST_ONLY_RAW_BYTES) {
+        return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Flow host-only job rejects checkpoint or oversized wire owner").into());
+    }
+    let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: std::mem::size_of::<FlowHostEffectJob>() + std::mem::size_of::<FlowHostEffectPayload>(), release_bytes: 0, depth: 1 };
+    semio_framework::action_bus::admit_original_tool_construction(cx, output, demand, |_| {
+        let mut taken = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Flow host-only request is absent"))?;
+        let input = taken.input.take();
+        let payload = FlowHostEffectPayload { command: *taken.command, snapshot: taken.snapshot, config: Arc::new(main::config::from_snapshot(taken.window_config.as_ref())), history: taken.history, children: taken.context.children.clone(), instance_owner: taken.instance_operation_owner, completion: taken.completion };
+        let mut job = FlowHostEffectJob::new(taken.operation, payload);
+        if let Some(input) = input {
+            job.decoder = Some(store::os_pack::record::scalar_witness::ScalarRecordWireWitness::new(job.payload.as_ref().expect("fresh Flow host-only payload").clone(), flow_host_wire_view));
+            job.input = Some(input);
+            job.validated = false;
+        }
+        Ok((semio_framework_plugin::ErasedToolJob::from_owned(Box::new(job)), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: std::mem::size_of::<FlowHostEffectJob>(), ..Default::default() }))
+    })
 }
 //#endregion 🧵️HostOnlyRetainedRoutes

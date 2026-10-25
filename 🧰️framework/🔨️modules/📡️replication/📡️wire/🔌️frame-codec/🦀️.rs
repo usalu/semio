@@ -81,7 +81,7 @@ pub async fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), se
     Ok((lane, frame))
 }
 
-/// 📤️ Encodes one `ServerFrame` on the given `Lane`: `lane u8 | tag u8 | fields`.
+/// 🎞️ Encodes one `ServerFrame` on the given `Lane`: `lane u8 | tag u8 | fields`.
 pub async fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
     let mut out = Vec::new();
     out.push(lane.to_byte().await);
@@ -183,7 +183,7 @@ fn read_artifact_bootstrap_chunk_bytes(bytes: &[u8], pos: &mut usize) -> Result<
     Ok(bytes)
 }
 
-/// 📥️ Decodes one `ServerFrame`, returning the `Lane` it was tagged with.
+/// ☁️ Decodes one `ServerFrame`, returning the `Lane` it was tagged with.
 pub async fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), semio_framework_replication_error::ProtocolError> {
     let lane_byte = match bytes.first() {
         Some(b) => *b,

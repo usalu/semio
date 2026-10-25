@@ -1,6 +1,7 @@
 import { describe, it, expect } from "bun:test";
 import { contrastRatio, WCAG_AA_LARGE_CONTRAST, WCAG_AA_CONTRAST, WCAG_AAA_CONTRAST, wcagContrastGrade, type Rgba8, contrastRatioRgba, themePaintContrast, type WcagContrastGrade, themePaintContrastPairs, THEME_CHROME_CONTRAST_PAIRS, type UiTheme, semioTheme, resolveThemeAppearancePalettes } from "../../../📦️packages/🟦️typescript/🟦️.ts";
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { contrastRatio01, hexToRgb01 } from "../🧮️color-math/🟦️.ts";
 
@@ -61,7 +62,7 @@ describe("custom theme contrast verdict", () => {
   });
 });
 
-/** ♿️ The text-on-surface pair law, replayed from `🧪️tests/🧫️fixtures/♿️chrome-contrast-pairs.json` — whose ratios
+/** 🥢️ The text-on-surface pair law, replayed from `🧪️tests/🧫️fixtures/♿️chrome-contrast-pairs.json` — whose ratios
  * were computed by an independent Python WCAG implementation, so this is a cross-language oracle too. */
 describe("chrome text-on-surface contrast pairs", () => {
   const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/♿️chrome-contrast-pairs.json"), "utf8")) as {
@@ -89,23 +90,23 @@ describe("chrome text-on-surface contrast pairs", () => {
     }
   });
 
-  /** ♿️ Every SHIPPED theme — the default `semio` theme built from `🎨️styling/🔣️.json` and the `mono` preset
+  /** 🎁️ Every SHIPPED theme — the default `semio` theme built from `🎨️styling/🔣️.json` and the `mono` preset
    * `🌓️theme/🔣️.json` — clears WCAG 2.2 AA (4.5:1) on every chrome text/surface pair in BOTH appearances, measured
-   * by this module and, as the independent oracle, by the third-party `color` package's WCAG contrast.
+   * by this module and, as the independent oracle, by the third-party `color-convert` package's unrounded sRGB-to-XYZ luminance.
    * U4 measured the untouched light default failing `mutedForeground` on `panel` (2.34) and `base` (3.54) and
    * `activeForeground` on `activeHover` (4.45); the dark appearance failed five pairs (ticket 26/09/23 S15). */
   it("every shipped theme passes AA on every chrome text/surface pair, both appearances, against a third-party oracle", async () => {
-    const thirdPartyColorSpecifier = "color";
-    const { default: Color } = (await import(thirdPartyColorSpecifier)) as { default: (value: string) => { contrast(other: unknown): number } };
+    const convert = createRequire(import.meta.url)("color-convert") as { rgb: { xyz: { raw(rgb: readonly number[]): readonly number[] } } };
+    const luminance = (paint: Rgba8) => convert.rgb.xyz.raw(paint.slice(0, 3))[1]! / 100;
     const mono = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../🌓️theme/🔣️.json"), "utf8")) as UiTheme;
-    const hex = (paint: Rgba8) => `#${paint.slice(0, 3).map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
     const failures: string[] = [];
     for (const [name, theme] of [["semio", semioTheme()], ["mono", mono]] as const) {
       for (const appearance of ["light", "dark"] as const) {
         const chrome = resolveThemeAppearancePalettes(theme, appearance).chrome;
         for (const pair of THEME_CHROME_CONTRAST_PAIRS) {
           const ratio = contrastRatioRgba(chrome[pair.text]!, chrome[pair.surface]!);
-          const oracle = Color(hex(chrome[pair.text]!)).contrast(Color(hex(chrome[pair.surface]!)));
+          const [lighter, darker] = [luminance(chrome[pair.text]!), luminance(chrome[pair.surface]!)].sort((a, b) => b - a);
+          const oracle = (lighter! + 0.05) / (darker! + 0.05);
           expect(ratio, `${name} ${appearance} ${pair.text}/${pair.surface} oracle`).toBeCloseTo(oracle, 2);
           if (ratio < WCAG_AA_CONTRAST) failures.push(`${name} ${appearance} ${pair.text}/${pair.surface}=${ratio.toFixed(2)}`);
         }

@@ -3,16 +3,16 @@
  * @see ../🧰️learner-journey-kit/🟦️.tsx — the shared quiz, proctor double and builders
  * @see ../../🎯️targets/⚛️react/🟦️.tsx — the client under test
  */
-import { type ReactElement } from "react";
+import { StrictMode, type ReactElement } from "react";
 import cancellation from "../../🧫️fixtures/🛑️cancellation/🔣️.json";
-import { ProctorLink } from "../../🎯️targets/⚛️react/🔨️modules/🧭️session/📡️proctor-link/🟦️.ts";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { ProctorLink } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/🧭️session/📡️proctor-link/🟦️.ts";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { type HttpTransport } from "@semio-tech/framework-server";
 import { WIRE_VERSION, learnerTag, runView, type RunView } from "@semio-tech/course";
-import { AGREEMENT_RECHECK_MS, Deputy, ProctorClient, ProctorUnavailable, COURSE_LOCALES, CourseSession, ScreenBoundary, connectionMessage, keysHidden, localStore, memoryStorageOrigin, newId, openRunOf, courseText, shownLeaderboard, waitingMessage, type StorageArea } from "@semio-tech/course-react";
-import { QUIZ, COURSE, FakeProctor, sloppyAnswer, TIMING, app, dismissWalkthrough, openQuizGrid, startedRun, MATERIAL, deputisedOn, perfectAnswer, playedRun, WHOLE_RUN } from "../🧰️learner-journey-kit/🟦️.tsx";
+import { AGREEMENT_RECHECK_MS, CourseApp, Deputy, ProctorClient, ProctorUnavailable, COURSE_LOCALES, CourseSession, ScreenBoundary, connectionMessage, keysHidden, localStore, memoryStorageOrigin, newId, openRunOf, courseText, shownLeaderboard, waitingMessage, type CourseMaterial, type CourseMaterialSource, type StorageArea } from "@semio-tech/course-react";
+import { QUIZ, COURSE, FakeProctor, QUIET_PRESENCE, sloppyAnswer, TIMING, app, dismissWalkthrough, openQuizGrid, startedRun, MATERIAL, deputisedOn, perfectAnswer, playedRun, WHOLE_RUN } from "../🧰️learner-journey-kit/🟦️.tsx";
 
 describe("🫡️ the deputy while the proctor is away", () => {
   it("never admits an already cancelled request into its patience window", async () => {
@@ -279,6 +279,69 @@ describe("🫡️ the deputy while the proctor is away", () => {
     await screen.findByText("Alle Antworten gespeichert", {}, { timeout: 10_000 });
     expect(proctor.envelopes.map((envelope) => envelope.kind)).toEqual(["course.identify-learner", "course.start-run"]);
     await waitFor(() => expect(document.querySelector("[data-board-local]")).toBeNull());
+  });
+
+  for (const locale of COURSE_LOCALES) {
+    it(`shows before its lazily fetched material has arrived and seats the deputy once it has, in ${locale}`, { timeout: 30_000 }, async () => {
+      const proctor = new FakeProctor();
+      proctor.away = true;
+      const text = courseText(locale);
+      const arrivals: ((material: CourseMaterial) => void)[] = [];
+      const requested = vi.fn<CourseMaterialSource>(() => new Promise((resolve) => arrivals.push(resolve)));
+      render(
+        <StrictMode>
+          <CourseApp proctor="" tenant={COURSE.id} material={requested} presence={QUIET_PRESENCE} transport={() => proctor.transport} storage={memoryStorageOrigin().tab()} languages={[locale]} timing={TIMING} />
+        </StrictMode>,
+      );
+      await screen.findByRole("heading", { level: 1, name: text("course.app.loading") });
+      expect(requested).toHaveBeenCalled();
+      expect(screen.queryByRole("heading", { level: 1, name: locale === "en" ? "Course" : "Kurs" })).toBeNull();
+      expect(screen.queryAllByText(text("course.connection.local"))).toEqual([]);
+      act(() => arrivals.forEach((arrive) => arrive(MATERIAL)));
+      await screen.findByRole("heading", { level: 1, name: locale === "en" ? "Course" : "Kurs" });
+      expect((await screen.findAllByText(text("course.connection.local"))).length).toBeGreaterThan(0);
+    });
+  }
+
+  for (const arrival of ["before the learner signs in", "while the learner signs in", "after the learner signs in"] as const) {
+    it(`registers anonymously and starts a run with the proctor as ever when the lazily fetched material arrives ${arrival}`, { timeout: 30_000 }, async () => {
+      const proctor = new FakeProctor();
+      const user = userEvent.setup();
+      const arrivals: ((material: CourseMaterial) => void)[] = [];
+      const arrive = () => act(() => arrivals.forEach((resolve) => resolve(MATERIAL)));
+      render(
+        <StrictMode>
+          <CourseApp proctor="" tenant={COURSE.id} material={() => new Promise((resolve) => arrivals.push(resolve))} presence={QUIET_PRESENCE} transport={() => proctor.transport} storage={memoryStorageOrigin().tab()} languages={["en"]} timing={TIMING} />
+        </StrictMode>,
+      );
+      await screen.findByRole("heading", { level: 1, name: "Course" });
+      await dismissWalkthrough(user);
+      if (arrival === "before the learner signs in") arrive();
+      await user.click(screen.getByRole("button", { name: "Sign in" }));
+      await screen.findByRole("dialog", { name: "How do you want to appear?" });
+      const signing = user.click(screen.getByRole("button", { name: "Continue" }));
+      if (arrival === "while the learner signs in") arrive();
+      await signing;
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      if (arrival === "after the learner signs in") arrive();
+      await openQuizGrid(user, "en");
+      const quizCard = await screen.findByRole("region", { name: "Household physics" });
+      await user.click(within(quizCard).getByRole("button", { name: "Start (Medium)" }));
+      await screen.findByRole("heading", { level: 1, name: "Household physics" });
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(proctor.envelopes.map((envelope) => envelope.kind)).toEqual(["course.identify-learner", "course.start-run"]);
+    });
+  }
+
+  it("goes on without a deputy when the lazily fetched material cannot be fetched", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    render(
+      <StrictMode>
+        <CourseApp proctor="" tenant={COURSE.id} material={() => Promise.reject(new Error("chunk gone"))} presence={QUIET_PRESENCE} transport={() => proctor.transport} storage={memoryStorageOrigin().tab()} languages={["en"]} timing={TIMING} />
+      </StrictMode>,
+    );
+    await screen.findByRole("heading", { level: 1, name: "Course" });
+    expect(screen.queryAllByText(courseText("en")("course.connection.local"))).toEqual([]);
   });
 });
 

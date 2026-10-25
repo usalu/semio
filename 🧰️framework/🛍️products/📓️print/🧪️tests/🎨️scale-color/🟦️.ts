@@ -35,7 +35,7 @@ async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjecti
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
 }
 
-/** 🌈️ Five samples of one two-stop ramp plus a sixth pair, in the probe's key layout. */
+/** 🔀️ Five samples of one two-stop ramp plus a sixth pair, in the probe's key layout. */
 function mixProjection(space: string, interpolator: (a: string, b: string) => (t: number) => string, extra: readonly [string, string, number]): Record<string, (number | string)[]> {
   const projection: Record<string, (number | string)[]> = {};
   [0, 0.25, 0.5, 0.75, 1].forEach((position, index) => {
@@ -58,39 +58,39 @@ export default defineTestAdapter({
         const inputs = [-20, 0, 25, 50, 75, 100, 140];
         return { projection: { "position/seq": grid(inputs.map((value) => plain(value))), "position/seqclamp": grid(inputs.map((value) => clamped(value))) } };
       },
-      /** 🎯️ The same sequential scales from the compiled probe. */
+      /** 🔨️ The same sequential scales from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "diverging-position": {
-      /** 🔮️ d3-scale's diverging scale with the identity interpolator. */
+      /** 🪪️ d3-scale's diverging scale with the identity interpolator. */
       oracle: () => {
         const centred = scaleDiverging<number>().domain([-10, 0, 30]).interpolator(IDENTITY);
         const offset = scaleDiverging<number>().domain([0, 2, 10]).interpolator(IDENTITY);
         return { projection: { "position/div": grid([-10, -5, 0, 15, 30].map((value) => centred(value))), "position/divoff": grid([0, 1, 2, 6, 10].map((value) => offset(value))) } };
       },
-      /** 🎯️ The same diverging scales from the compiled probe. */
+      /** ⚖️ The same diverging scales from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "interpolate-rgb": {
-      /** 🔮️ d3-interpolate's sRGB interpolator. */
+      /** 🔴️ d3-interpolate's sRGB interpolator. */
       oracle: () => ({ projection: mixProjection("rgb", interpolateRgb, ["000000", "ffffff", 0.5]) }),
-      /** 🎯️ The same mixes from the compiled probe. */
+      /** 🧪️ The same mixes from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "interpolate-lab": {
-      /** 🔮️ d3-interpolate's CIE Lab interpolator on the D50 white point. */
+      /** ⚪️ d3-interpolate's CIE Lab interpolator on the D50 white point. */
       oracle: () => ({ projection: mixProjection("lab", interpolateLab, ["fa9500", "001117", 0.5]) }),
-      /** 🎯️ The same mixes from the compiled probe. */
+      /** 🎨️ The same mixes from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "interpolate-hcl": {
-      /** 🔮️ d3-interpolate's HCL interpolator with shortest-path hue. */
+      /** 🛤️ d3-interpolate's HCL interpolator with shortest-path hue. */
       oracle: () => ({ projection: mixProjection("hcl", interpolateHcl, ["7eb77f", "a60009", 0.5]) }),
-      /** 🎯️ The same mixes from the compiled probe. */
+      /** 🎚️ The same mixes from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "ramp-stops": {
-      /** 🔮️ d3-interpolate's piecewise over three stops, in sRGB and in CIE Lab. */
+      /** 🔱️ d3-interpolate's piecewise over three stops, in sRGB and in CIE Lab. */
       oracle: () => {
         const stops = ["#ff344f", "#ffffff", "#34d1bf"];
         const srgb = piecewise(interpolateRgb, stops);
@@ -102,7 +102,7 @@ export default defineTestAdapter({
         projection["ramp/5"] = [`|${rgb(lab(0.125)).formatHex()}`];
         return { projection };
       },
-      /** 🎯️ The same ramp samples from the compiled probe. */
+      /** 📈️ The same ramp samples from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

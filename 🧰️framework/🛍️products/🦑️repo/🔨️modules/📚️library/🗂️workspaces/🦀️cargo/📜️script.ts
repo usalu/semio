@@ -2,13 +2,14 @@
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join } from "node:path";
 import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { nativeCommandPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { runRepositoryCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { getWorkspaceRoot } from "../🟦️.ts";
 import { CapabilityContractScript, RuntimeInputScript, MembersScript } from "./🧪️tests/🔬️script-commands/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
-import { runtimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeTestArgumentsV1 } from "../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeTestArgumentsV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 class RuntimeContractScript extends Script {
  async run(args:string[]):Promise<void>{if(args.length)throw new Error("runtime-contract-check accepts no overrides");await runRepositoryCommand(this.invocation,runtimeExecutableV1(),runtimeTestArgumentsV1([join(import.meta.dirname,"../../🕸️dependencies/🧩️runtime/📥️admission/🧪️tests/🟦️.ts")]),getWorkspaceRoot(),"runtime-input-contract",{version:1,maximumElapsedMilliseconds:15_000,output:{maximumBytes:134217728,maximumLines:65536}});}
@@ -17,7 +18,7 @@ class RuntimeContractScript extends Script {
 class NativeInputScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length !== 2 || args[0] !== "--manifest") throw new Error("native-input-check --manifest <current-owner>");
-    await runRepositoryCommand(this.invocation,"cargo",["metadata", "--no-deps", "--offline", "--locked", "--format-version", "1", "--manifest-path", join(getWorkspaceRoot(), args[1]!)],getWorkspaceRoot(),"native-input-admission",{version:1,maximumElapsedMilliseconds:30_000,output:{maximumBytes:134217728,maximumLines:65536}});
+    await runRepositoryCommand(this.invocation,"cargo",["metadata", "--no-deps", "--offline", "--locked", "--format-version", "1", "--manifest-path", join(getWorkspaceRoot(), args[1]!)],getWorkspaceRoot(),"native-input-admission",nativeCommandPolicyV1({maximumBytes:134217728,maximumLines:65536}));
   }
 }
 

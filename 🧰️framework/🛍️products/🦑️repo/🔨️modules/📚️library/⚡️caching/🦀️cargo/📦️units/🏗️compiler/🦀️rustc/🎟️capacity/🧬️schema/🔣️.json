@@ -44,7 +44,7 @@
     "Policy": {
       "const": {
         "boundedClass": "jobserver-codegen",
-        "exclusiveClass": "whole-host-backend"
+        "exclusiveClass": "counted-units"
       }
     }
   }

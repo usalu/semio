@@ -50,6 +50,7 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../../../../�
 semio-framework-ui-scene = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
+semio-s-artifact-puzzle-2d-board-host = { path = "../../../../✏️editor/⚙️engine/🎲️board-host/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-records = { path = "../../../🧱️records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-snapshot = { path = "../../../📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-3d = { workspace = true }

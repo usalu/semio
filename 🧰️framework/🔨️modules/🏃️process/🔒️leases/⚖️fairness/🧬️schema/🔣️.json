@@ -8,7 +8,8 @@
     "starvation",
     "reaping",
     "upgrade",
-    "observability"
+    "observability",
+    "turns"
   ],
   "properties": {
     "version": {
@@ -208,6 +209,111 @@
         "expectedQueued": {
           "type": "integer",
           "minimum": 2
+        }
+      }
+    },
+    "turns": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "writerPreferenceMilliseconds",
+        "cases"
+      ],
+      "properties": {
+        "writerPreferenceMilliseconds": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "requester",
+              "ahead",
+              "proceeds"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "requester": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "mode",
+                  "sharedCohort",
+                  "yielding",
+                  "holdsShared",
+                  "pid"
+                ],
+                "properties": {
+                  "mode": {
+                    "enum": [
+                      "shared",
+                      "exclusive"
+                    ]
+                  },
+                  "sharedCohort": {
+                    "type": "boolean"
+                  },
+                  "yielding": {
+                    "type": "boolean"
+                  },
+                  "holdsShared": {
+                    "type": "boolean"
+                  },
+                  "pid": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              "ahead": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "mode",
+                    "sharedCohort",
+                    "yielding",
+                    "ageMilliseconds",
+                    "pid"
+                  ],
+                  "properties": {
+                    "mode": {
+                      "enum": [
+                        "shared",
+                        "exclusive"
+                      ]
+                    },
+                    "sharedCohort": {
+                      "type": "boolean"
+                    },
+                    "yielding": {
+                      "type": "boolean"
+                    },
+                    "ageMilliseconds": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "pid": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              },
+              "proceeds": {
+                "type": "boolean"
+              }
+            }
+          }
         }
       }
     }

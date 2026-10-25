@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { HOME_GRID_TRACKS, HomeScreen, LEADERBOARD_POLL_MS, LeaderboardPage, homeCells, homeTrackTemplate, courseText, type CourseSession, type CourseState } from "@semio-tech/course-react";
 import { Home, PAGES, PREFERENCES, QUIZZES, STATE, boardOf, cardHost, fixture, held, pane, stubSession } from "../../🛠️home-grid-kit/🟦️.tsx";
-import { cards, moveMouseOver, weights } from "../🟣️shared/🟦️.tsx";
+import { cards, moveMouseOver, weights } from "../🟣️harness/🟦️.tsx";
 
 /** 🔹 Registers the opens page step front tests of the 🏠️ home overview suite. */
 export function registerOpensPageStepFrontTests(): void {

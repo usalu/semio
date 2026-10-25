@@ -98,12 +98,12 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     padding: {
-      /** 🔮️ Padding added to and taken off every child radius around the packing. */
+      /** ➕️ Padding added to and taken off every child radius around the packing. */
       oracle: () => ({ projection: { ...circles("padded", packed(DEEP, { size: [100, 100], padding: 3 })) } }),
       subject: async (ctx) => (await subject(ctx)),
     },
     "explicit-radius": {
-      /** 🔮️ The single-pass branch d3 takes as soon as a radius accessor is given. */
+      /** 🔂️ The single-pass branch d3 takes as soon as a radius accessor is given. */
       oracle: () => ({
         projection: {
           ...circles("value", packed(DEEP, { size: [100, 100], radius: "value" })),
@@ -113,7 +113,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     unbalanced: {
-      /** 🔮️ The unbalanced fixture, whose deeper branch draws more random numbers. */
+      /** 🎲️ The unbalanced fixture, whose deeper branch draws more random numbers. */
       oracle: () => ({
         projection: {
           id: preorder(root(UNBALANCED)).map((each) => each.id!),

@@ -22,7 +22,7 @@ impl RetainedJobPayload {
 
 impl RetainedJobPayloadWriter {
     pub fn next_close_byte_demand(&self)->usize{self.retirement_demands().expect("original job writer demand").release_bytes}
-    /// 📏️ Keeps staged page backing, its original ledger and committed payload demands distinct.
+    /// 📒️ Keeps staged page backing, its original ledger and committed payload demands distinct.
     pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{
         if let Some((_,source,_))=self.staged.as_ref(){return Ok(RetirementDemand{release_bytes:source.allocated_capacity_bytes(),depth:1,..Default::default()});}if let Some(source)=self.rejected.as_ref(){return Ok(RetirementDemand{release_bytes:source.allocated_capacity_bytes(),depth:1,..Default::default()});}
         if self.closing_ledger.is_some(){return Ok(ledger_demands(&self.closing_ledger));}

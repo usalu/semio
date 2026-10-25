@@ -4,7 +4,6 @@ import { resolve, join } from "node:path";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { Database } from "bun:sqlite";
-import "../../🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/⏱️timers/🟦️.ts";
 
 test("execution budgets follow portable environment laws and independent native oracles", async () => {
   const owner = resolve(import.meta.dir, ".."), source = join(owner, "🟦️.ts");
@@ -63,11 +62,115 @@ test("owned process timers preserve a single deadline beyond the native timer ra
   const{runOwnedCommand}=await import(source);
   for(const budget of[2147483647,2147483648,9007199254740991])await runOwnedCommand(process.execPath,["-e","setTimeout(()=>process.exit(0),60)"],process.cwd(),"process:large-timer",budget,{stdout:"ignore",input:""});
   await expect(runOwnedCommand(process.execPath,["-e","setTimeout(()=>process.exit(0),1000)"],process.cwd(),"process:short-timer",30,{stdout:"ignore",input:""})).rejects.toThrow(/timeout 30ms/u);
-  console.log("[DEBUG] process timer laws: 9 neutral cases, 3 real large-budget exits, 1 real finite expiry");
 },15000);
 
 
 test("public bounded timeout validates before scheduling and retires cancellation",async()=>{
  const owner=resolve(import.meta.dir,".."),corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8")),api=await import(resolve(owner,"../🎛️owned-execution/🟦️.ts")),require=createRequire(import.meta.url),valid=new(require("ajv").default)().compile({...schema,$ref:"#/$defs/TimerInputCase"}),db=new Database(":memory:");try{for(const row of corpus.timerInputs){expect(valid(row)).toBe(true);const oracle=db.query("SELECT json_type(?1,'$.budget') IN ('integer','real') AND json_extract(?1,'$.budget')>=0 AND json_extract(?1,'$.budget')<=9007199254740991 AND json_extract(?1,'$.budget')=cast(json_extract(?1,'$.budget')AS INTEGER) AND json_extract(?1,'$.callback')=1 accepted").get(JSON.stringify(row))as{accepted:number};expect(Boolean(oracle.accepted)).toBe(row.accepted);const create=()=>api.startOwnedCommandTimeoutV1(row.budget,row.callback?()=>{}:null);if(row.accepted){const stop=create();stop();stop();}else expect(create).toThrow();}
- let expired=0;const stop=api.startOwnedCommandTimeoutV1(20,()=>expired++);stop();await new Promise(resolve=>setTimeout(resolve,40));expect(expired).toBe(0);await new Promise<void>(resolve=>api.startOwnedCommandTimeoutV1(10,()=>{expired++;resolve();}));expect(expired).toBe(1);console.log("[DEBUG] public timeout rejects invalid DATA before scheduling, cancels its owned timer and expires a real finite deadline once");}finally{db.close();}
+ let expired=0;const stop=api.startOwnedCommandTimeoutV1(20,()=>expired++);stop();await new Promise(resolve=>setTimeout(resolve,40));expect(expired).toBe(0);await new Promise<void>(resolve=>api.startOwnedCommandTimeoutV1(10,()=>{expired++;resolve();}));expect(expired).toBe(1);}finally{db.close();}
+});
+
+const progressOwner = resolve(import.meta.dir, ".."), progressCorpus = (): any => JSON.parse(readFileSync(join(progressOwner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
+const progressSchemaDocument = (): any => JSON.parse(readFileSync(join(progressOwner, "🧬️schema/🔣️.json"), "utf8"));
+const python = process.platform === "win32" ? "python" : "python3";
+
+test("a progress deadline follows one law: the real activity ledger, the shared function and an independent Python model agree on every case", async () => {
+  const corpus = progressCorpus(), schema = progressSchemaDocument(), require = createRequire(import.meta.url), ajv = new (require("ajv").default)({ strict: false });
+  ajv.addSchema(schema);
+  const validate = ajv.compile({ $ref: schema.$id + "#/$defs/ProgressDeadlineCase" }), api = await import(join(progressOwner, "🟦️.ts")), watchdog = await import(join(progressOwner, "../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts"));
+  const realNow = Date.now;
+  let base = realNow() + 1e7;
+  const actual: any[] = [];
+  try {
+    for (const row of corpus.progressDeadlines) {
+      expect(validate(row), JSON.stringify(validate.errors)).toBe(true);
+      expect(row.expected.length).toBe(row.checks.length);
+      base += 1e7;
+      let at = 0;
+      Date.now = () => base + at;
+      const deadline = api.createProgressDeadlineV1({ idleMilliseconds: row.idleMilliseconds, maximumMilliseconds: row.maximumMilliseconds }, { now: () => Date.now() - base, idle: () => watchdog.scriptProcessActivityIdleMillisecondsV1(Date.now()) });
+      const events: { at: number; order: number; run: () => void }[] = [], leaves: (() => void)[] = [];
+      for (const time of row.progress) events.push({ at: time, order: 1, run: () => watchdog.noteScriptProcessActivityV1(Date.now()) });
+      row.waits.forEach(([from, to]: number[], index: number) => { events.push({ at: from, order: 0, run: () => { leaves[index] = watchdog.enterScriptProcessWaitV1(); } }); events.push({ at: to, order: 2, run: () => leaves[index]!() }); });
+      const checks = row.checks.map((time: number) => ({ at: time, order: 3, run: () => actual.push({ remaining: deadline.remaining(), expiry: deadline.expiry() }) }));
+      const mine: any[] = [];
+      for (const event of [...events, ...checks].sort((a, b) => a.at - b.at || a.order - b.order)) {
+        at = event.at;
+        if (checks.includes(event)) { event.run(); mine.push(actual.pop()); } else event.run();
+      }
+      for (const leave of leaves) leave?.();
+      expect(mine).toEqual(row.expected);
+    }
+  } finally { Date.now = realNow; }
+  const oracle = spawnSync(python, ["-I", "-c", `import sys,json
+rows=json.load(sys.stdin); out=[]
+for r in rows:
+    res=[]
+    for t in r['checks']:
+        last=0
+        for p in r['progress']:
+            if p<=t: last=max(last,p)
+        for a,b in r['waits']:
+            if a<=t: last=max(last,min(t,b))
+        mx=r['maximumMilliseconds']-t; idle=r['idleMilliseconds']-(t-last)
+        rem=min(mx,idle)
+        res.append({'remaining':rem,'expiry':('maximum' if mx<=0 else 'idle' if idle<=0 else None)})
+    out.append(res)
+print(json.dumps(out))`], { input: JSON.stringify(corpus.progressDeadlines), encoding: "utf8", timeout: 15000 });
+  expect(oracle.status, oracle.stderr).toBe(0);
+  expect(JSON.parse(oracle.stdout)).toEqual(corpus.progressDeadlines.map((row: any) => row.expected));
+});
+
+test("the class policy derives the idle window and the cost-derived maximum, refusing anything else, as an independent Python model does", async () => {
+  const corpus = progressCorpus(), schema = progressSchemaDocument(), require = createRequire(import.meta.url), ajv = new (require("ajv").default)({ strict: false });
+  ajv.addSchema(schema);
+  const validate = ajv.compile({ $ref: schema.$id + "#/$defs/ProgressDeadlineDerivationCase" }), api = await import(join(progressOwner, "🟦️.ts"));
+  const derived = corpus.progressDerivations.map((row: any) => { expect(validate(row), JSON.stringify(validate.errors)).toBe(true); try { return api.progressDeadlinePolicyV1(row.kind, row.units, row.environment); } catch { return null; } });
+  expect(derived).toEqual(corpus.progressDerivations.map((row: any) => row.expected));
+  const oracle = spawnSync(python, ["-I", "-c", `import sys,json
+doc=json.load(open(sys.argv[1])); pol=doc['$defs']['ProgressDeadlinePolicy']['const']; rows=json.load(sys.stdin); out=[]
+for r in rows:
+    c=pol['classes'][r['kind']]
+    if r['units']<0: out.append(None); continue
+    mx=min(pol['ceilingMilliseconds'],c['baseMilliseconds']+c['perUnitMilliseconds']*r['units'])
+    raw=r['environment'].get(pol['idleEnvironment'])
+    idle=c['idleMilliseconds']
+    if raw is not None:
+        if not raw.isdigit(): out.append(None); continue
+        idle=int(raw)
+    if idle<pol['minimumIdleMilliseconds'] or idle>pol['ceilingMilliseconds']: out.append(None); continue
+    out.append({'idleMilliseconds':min(idle,mx),'maximumMilliseconds':mx})
+print(json.dumps(out))`, join(progressOwner, "🧬️schema/🔣️.json")], { input: JSON.stringify(corpus.progressDerivations), encoding: "utf8", timeout: 15000 });
+  expect(oracle.status, oracle.stderr).toBe(0);
+  expect(JSON.parse(oracle.stdout)).toEqual(derived);
+});
+
+test("a progress deadline timer re-reads the deadline when it believes it is due, so progress moves the expiry and nothing else does", async () => {
+  const api = await import(join(progressOwner, "🟦️.ts")), started = performance.now();
+  let lastProgress = started, expired: { reason: string; at: number } | undefined;
+  const deadline = api.createProgressDeadlineV1({ idleMilliseconds: 160, maximumMilliseconds: 5000 }, { now: () => performance.now(), idle: () => performance.now() - lastProgress });
+  const stop = api.startProgressDeadlineV1(deadline, (reason: string) => { expired = { reason, at: performance.now() }; });
+  for (let step = 0; step < 4; step++) { await new Promise((accept) => setTimeout(accept, 100)); lastProgress = performance.now(); expect(expired).toBeUndefined(); }
+  const lastRenewal = lastProgress;
+  await new Promise((accept) => setTimeout(accept, 400));
+  stop(); stop();
+  expect(expired?.reason).toBe("idle");
+  expect(expired!.at - lastRenewal).toBeGreaterThanOrEqual(150);
+  expect(expired!.at - started).toBeGreaterThan(400);
+  const capped = api.createProgressDeadlineV1({ idleMilliseconds: 10000, maximumMilliseconds: 120 }, { now: () => performance.now(), idle: () => 0 });
+  let reason = "";
+  const stopCapped = api.startProgressDeadlineV1(capped, (why: string) => { reason = why; });
+  await new Promise((accept) => setTimeout(accept, 300));
+  stopCapped();
+  expect(reason).toBe("maximum");
+});
+
+test("a progress deadline is refused in every selected language", async () => {
+  const api = await import(join(progressOwner, "🟦️.ts")), policy = api.progressDeadlinePolicyV1("native-child", 2, {}), both = ["en", "de"] as const;
+  const idle = api.progressDeadlineNoticeV1("idle", "native:owner-command", policy, 31 * 60000, 2, both), maximum = api.progressDeadlineNoticeV1("maximum", "native:owner-command", policy, 0, 2, both);
+  expect(idle).toContain("native:owner-command stopped: no progress for 31 min (idle window 60 min)");
+  expect(idle).toContain("native:owner-command gestoppt: seit 31 Min. kein Fortschritt (Leerlauffenster 60 Min.)");
+  expect(maximum).toContain("maximum duration of 260 min derived from its declared cost (2 unit(s))");
+  expect(maximum).toContain("Höchstdauer von 260 Min. ist erreicht");
+  expect(api.progressDeadlineNoticeV1("idle", "x", policy, 0, 0, ["de"])).not.toContain("stopped");
 });

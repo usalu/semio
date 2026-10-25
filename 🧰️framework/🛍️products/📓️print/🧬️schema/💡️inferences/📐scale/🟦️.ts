@@ -1,4 +1,4 @@
-/** 📐️ Scales: the TypeScript twin of `semio-viz-scale`. Domain-to-range maps with the exact
+/** 🧭️ Scales: the TypeScript twin of `semio-viz-scale`. Domain-to-range maps with the exact
  * arithmetic of d3-scale — continuous, log, power, symlog, identity, ordinal, band, point,
  * quantile, quantize, threshold, sequential, diverging and temporal — plus the d3-array tick
  * algorithm and the d3-time calendar intervals they all rest on.
@@ -54,12 +54,12 @@ export function ticks(start: number, stop: number, count: number): number[] {
   return out;
 }
 
-/** 🔢️ The signed tick increment for a span, negative when it is the reciprocal of a step. */
+/** ➕️ The signed tick increment for a span, negative when it is the reciprocal of a step. */
 export function tickIncrement(start: number, stop: number, count: number): number {
   return tickSpec(start, stop, count)[2];
 }
 
-/** 🔢️ The tick step as a plain multiplier. */
+/** 🪜️ The tick step as a plain multiplier. */
 export function tickStep(start: number, stop: number, count: number): number {
   const reverse = stop < start;
   const inc = reverse ? tickIncrement(stop, start, count) : tickIncrement(start, stop, count);
@@ -78,7 +78,7 @@ export function bisectRight(values: readonly number[], x: number, lo = 0, hi = v
   return low;
 }
 
-/** 🎯️ Insertion index of `x` in a sorted array, left-biased exactly like `d3.bisectLeft`. */
+/** ⬅️ Insertion index of `x` in a sorted array, left-biased exactly like `d3.bisectLeft`. */
 export function bisectLeft(values: readonly number[], x: number, lo = 0, hi = values.length): number {
   let low = lo;
   let high = hi;
@@ -99,7 +99,7 @@ export function interpolateNumber(a: number, b: number): (t: number) => number {
   return (t) => from * (1 - t) + to * t;
 }
 
-/** 🔗️ Rounded number interpolation, the `round` variant of the range interpolator. */
+/** 🔘️ Rounded number interpolation, the `round` variant of the range interpolator. */
 export function interpolateRound(a: number, b: number): (t: number) => number {
   const from = +a;
   const to = +b;
@@ -172,7 +172,7 @@ type ContinuousConfig = {
   readonly unknown?: VizOptionValue | null;
 };
 
-/** 📐️ Continuous numeric scale with an optional monotone transform, exactly d3's `continuous()`. */
+/** 〰️ Continuous numeric scale with an optional monotone transform, exactly d3's `continuous()`. */
 export function scaleContinuous(config: ContinuousConfig): VizScale<number, number> {
   const transform = config.transform ?? ((x: number) => x);
   const untransform = config.untransform ?? ((x: number) => x);
@@ -202,7 +202,7 @@ export function scaleContinuous(config: ContinuousConfig): VizScale<number, numb
   return scale;
 }
 
-/** 📐️ Extends a domain outward onto round tick values, iterating exactly like d3's `nice`. */
+/** ✨️ Extends a domain outward onto round tick values, iterating exactly like d3's `nice`. */
 export function niceDomain(domain: readonly number[], count = 10): number[] {
   const d = [...domain];
   const i1 = d.length - 1;
@@ -247,17 +247,17 @@ function applyNice(domain: readonly number[], options: VizScaleOptions): readonl
   return niceDomain(domain, options.nice === true ? 10 : options.nice);
 }
 
-/** 📐️ `scaleLinear`. */
+/** 📏️ `scaleLinear`. */
 export function scaleLinear(domain: readonly number[] = [0, 1], range: readonly number[] = [0, 1], options: VizScaleOptions = {}): VizScale<number, number> {
   return scaleContinuous({ domain: applyNice(domain, options), range, clamp: options.clamp, round: options.round, unknown: options.unknown, kind: "linear" });
 }
 
-/** 📐️ `scaleIdentity`: domain and range are the same numbers, while ticks and formats still work. */
+/** 🪪️ `scaleIdentity`: domain and range are the same numbers, while ticks and formats still work. */
 export function scaleIdentity(domain: readonly number[] = [0, 1], options: VizScaleOptions = {}): VizScale<number, number> {
   return scaleContinuous({ domain, range: domain, unknown: options.unknown, kind: "identity" });
 }
 
-/** 📐️ `scalePow` with a signed power transform, so a negative domain keeps its sign. */
+/** 🔋️ `scalePow` with a signed power transform, so a negative domain keeps its sign. */
 export function scalePow(domain: readonly number[] = [0, 1], range: readonly number[] = [0, 1], options: VizScaleOptions = {}): VizScale<number, number> {
   const exponent = options.exponent ?? 1;
   const raise = (x: number) => (x < 0 ? -((-x) ** exponent) : x ** exponent);
@@ -265,14 +265,14 @@ export function scalePow(domain: readonly number[] = [0, 1], range: readonly num
   return scaleContinuous({ domain: applyNice(domain, options), range, clamp: options.clamp, round: options.round, unknown: options.unknown, transform: raise, untransform: lower, kind: "pow" });
 }
 
-/** 📐️ `scaleSqrt`, the power scale at exponent ½. */
+/** 🌱️ `scaleSqrt`, the power scale at exponent ½. */
 export function scaleSqrt(domain: readonly number[] = [0, 1], range: readonly number[] = [0, 1], options: VizScaleOptions = {}): VizScale<number, number> {
   const scale = scalePow(domain, range, { ...options, exponent: 0.5 });
   scale.kind = "sqrt";
   return scale;
 }
 
-/** 📐️ `scaleSymlog`: logarithmic away from zero and linear across it. */
+/** 🪞️ `scaleSymlog`: logarithmic away from zero and linear across it. */
 export function scaleSymlog(domain: readonly number[] = [0, 1], range: readonly number[] = [0, 1], options: VizScaleOptions = {}): VizScale<number, number> {
   const constant = options.constant ?? 1;
   const forward = (x: number) => Math.sign(x) * Math.log1p(Math.abs(x / constant));
@@ -338,7 +338,7 @@ function logTicks(domain: readonly number[], base: number, count: number): numbe
   return reverse ? z.reverse() : z;
 }
 
-/** 📐️ `scaleLog` with the base-aware tick, nice and tick-format behaviour of d3. */
+/** 🪵️ `scaleLog` with the base-aware tick, nice and tick-format behaviour of d3. */
 export function scaleLog(domain: readonly number[] = [1, 10], range: readonly number[] = [0, 1], options: VizScaleOptions = {}): VizScale<number, number> {
   const base = options.base ?? 10;
   const negative = (domain[0] ?? 1) < 0;
@@ -426,7 +426,7 @@ function groupThousands(text: string): string {
   return fraction === undefined ? grouped : `${grouped}.${fraction}`;
 }
 
-/** 🔢️ The compact format engine the scale ticks need; the full grammar lives in `🔢format`. */
+/** ⚙️ The compact format engine the scale ticks need; the full grammar lives in `🔢format`. */
 export function formatNumberSpec(specifier: string): (value: number) => string {
   const match = /^(?:(.)?([<>=^]))?([+\-( ])?([$#])?(0)?(\d+)?(,)?(\.\d+)?(~)?([a-z%])?$/i.exec(specifier);
   if (!match) throw new Error(`invalid format specifier: ${specifier}`);
@@ -445,7 +445,7 @@ export function formatNumberSpec(specifier: string): (value: number) => string {
   });
 }
 
-/** 🔢️ The tick formatter of a continuous scale: precision derived from the tick step. */
+/** 🖊️ The tick formatter of a continuous scale: precision derived from the tick step. */
 export function continuousTickFormat(start: number, stop: number, count: number, specifier?: string): (value: number) => string {
   if (specifier !== undefined) return formatNumberSpec(specifier);
   const step = tickStep(start, stop, count);
@@ -458,7 +458,7 @@ export function continuousTickFormat(start: number, stop: number, count: number,
 //#endregion 🔖️TickFormat
 
 //#region 🔖️Discrete
-/** 📐️ `scaleOrdinal`: an explicit domain mapped onto a cycling range. */
+/** 🔁️ `scaleOrdinal`: an explicit domain mapped onto a cycling range. */
 export function scaleOrdinal<I, O>(domain: readonly I[] = [], range: readonly O[] = [], unknown?: VizOptionValue | null): VizScale<I, O> {
   const explicitUnknown = arguments.length >= 3;
   const index = new Map<I, number>();
@@ -485,7 +485,7 @@ export function scaleOrdinal<I, O>(domain: readonly I[] = [], range: readonly O[
   return scale;
 }
 
-/** 📐️ `scaleBand`: a discrete domain onto contiguous, padded bands of the range. */
+/** 🩹️ `scaleBand`: a discrete domain onto contiguous, padded bands of the range. */
 export function scaleBand(domain: readonly string[] = [], range: readonly number[] = [0, 1], options: VizScaleOptions = {}): VizScale<string, number> {
   if (Object.hasOwn(options, "unknown")) throw new Error("band and point scales do not support unknown fallbacks");
   const paddingInner = options.paddingInner ?? options.padding ?? 0;
@@ -522,7 +522,7 @@ export function scaleBand(domain: readonly string[] = [], range: readonly number
   return scale;
 }
 
-/** 📐️ `scalePoint`: the band scale at zero bandwidth, positioning discrete points. */
+/** 📍️ `scalePoint`: the band scale at zero bandwidth, positioning discrete points. */
 export function scalePoint(domain: readonly string[] = [], range: readonly number[] = [0, 1], options: VizScaleOptions = {}): VizScale<string, number> {
   const scale = scaleBand(domain, range, { ...options, paddingInner: 1, paddingOuter: options.padding ?? 0 });
   scale.kind = "point";
@@ -542,7 +542,7 @@ export function quantileSorted(values: readonly number[], p: number): number {
   return value0 + (value1 - value0) * (i - i0);
 }
 
-/** 📐️ `scaleQuantile`: a sample split into as many equal-count classes as the range is long. */
+/** 🍰️ `scaleQuantile`: a sample split into as many equal-count classes as the range is long. */
 export function scaleQuantile<O>(sample: readonly number[], range: readonly O[], options: VizScaleOptions = {}): VizScale<number, O> & { thresholds(): number[] } {
   const sorted = [...sample].filter((value) => value !== null && !Number.isNaN(value)).sort((a, b) => a - b);
   const n = Math.max(1, range.length);
@@ -556,7 +556,7 @@ export function scaleQuantile<O>(sample: readonly number[], range: readonly O[],
   return scale;
 }
 
-/** 📐️ `scaleQuantize`: a continuous domain cut into uniform slices, one per range value. */
+/** 🍕️ `scaleQuantize`: a continuous domain cut into uniform slices, one per range value. */
 export function scaleQuantize<O>(domain: readonly number[], range: readonly O[], options: VizScaleOptions = {}): VizScale<number, O> & { thresholds(): number[] } {
   const d0 = domain[0]!;
   const d1 = domain[domain.length - 1]!;
@@ -572,7 +572,7 @@ export function scaleQuantize<O>(domain: readonly number[], range: readonly O[],
   return scale;
 }
 
-/** 📐️ `scaleThreshold`: explicit cut points, one more range value than there are thresholds. */
+/** ✂️ `scaleThreshold`: explicit cut points, one more range value than there are thresholds. */
 export function scaleThreshold<O>(thresholds: readonly number[], range: readonly O[], options: VizScaleOptions = {}): VizScale<number, O> {
   const scale = ((value: number) => (value == null || Number.isNaN(value) ? options.unknown : range[Number.isNaN(+value) ? 0 : bisectRight(thresholds, +value, 0, Math.min(thresholds.length, range.length - 1))]!)) as VizScale<number, O>;
   scale.kind = "threshold";
@@ -584,7 +584,7 @@ export function scaleThreshold<O>(thresholds: readonly number[], range: readonly
 //#endregion 🔖️Discrete
 
 //#region 🔖️SequentialDiverging
-/** 📐️ `scaleSequential`: a continuous domain onto `[0,1]` and through an interpolator. */
+/** ⏭️ `scaleSequential`: a continuous domain onto `[0,1]` and through an interpolator. */
 export function scaleSequential<O>(domain: readonly number[], interpolator: (t: number) => O, options: VizScaleOptions = {}): VizScale<number, O> {
   const d0 = domain[0]!;
   const d1 = domain[domain.length - 1]!;
@@ -599,7 +599,7 @@ export function scaleSequential<O>(domain: readonly number[], interpolator: (t: 
   return scale;
 }
 
-/** 📐️ `scaleDiverging`: a three-point domain folded symmetrically around its midpoint. */
+/** ↔️ `scaleDiverging`: a three-point domain folded symmetrically around its midpoint. */
 export function scaleDiverging<O>(domain: readonly number[], interpolator: (t: number) => O, options: VizScaleOptions = {}): VizScale<number, O> {
   const d0 = domain[0]!;
   const d1 = domain[1]!;
@@ -712,13 +712,13 @@ function timeInterval(floori: (date: Date) => void, offseti: (date: Date, step: 
   return interval;
 }
 
-/** 🕰️ Local millisecond ticks. */
+/** ⚡️ Local millisecond ticks. */
 export const timeMillisecond = timeInterval(
   () => {},
   (date, step) => date.setTime(+date + step),
 );
 
-/** 🕰️ Local second boundaries. */
+/** 🕐️ Local second boundaries. */
 export const timeSecond = timeInterval(
   (date) => date.setTime(Math.floor(+date / DURATION_SECOND) * DURATION_SECOND),
   (date, step) => date.setTime(+date + step * DURATION_SECOND),
@@ -726,7 +726,7 @@ export const timeSecond = timeInterval(
   (date) => date.getUTCSeconds(),
 );
 
-/** 🕰️ Local minute boundaries. */
+/** 🕑️ Local minute boundaries. */
 export const timeMinute = timeInterval(
   (date) => date.setTime(+date - date.getMilliseconds() - date.getSeconds() * DURATION_SECOND),
   (date, step) => date.setTime(+date + step * DURATION_MINUTE),
@@ -734,7 +734,7 @@ export const timeMinute = timeInterval(
   (date) => date.getMinutes(),
 );
 
-/** 🕰️ Local hour boundaries. */
+/** 🕒️ Local hour boundaries. */
 export const timeHour = timeInterval(
   (date) => date.setTime(+date - date.getMilliseconds() - date.getSeconds() * DURATION_SECOND - date.getMinutes() * DURATION_MINUTE),
   (date, step) => date.setTime(+date + step * DURATION_HOUR),
@@ -742,7 +742,7 @@ export const timeHour = timeInterval(
   (date) => date.getHours(),
 );
 
-/** 🕰️ Local midnights. */
+/** ☀️ Local midnights. */
 export const timeDay = timeInterval(
   (date) => date.setHours(0, 0, 0, 0),
   (date, step) => date.setDate(date.getDate() + step),
@@ -750,7 +750,7 @@ export const timeDay = timeInterval(
   (date) => date.getDate() - 1,
 );
 
-/** 🕰️ Local Sundays. */
+/** 📆️ Local Sundays. */
 export const timeWeek = timeInterval(
   (date) => {
     date.setDate(date.getDate() - (date.getDay() % 7));
@@ -760,7 +760,7 @@ export const timeWeek = timeInterval(
   (start, end) => (+end - +start - (end.getTimezoneOffset() - start.getTimezoneOffset()) * DURATION_MINUTE) / DURATION_WEEK,
 );
 
-/** 🕰️ Local month starts. */
+/** 🌙️ Local month starts. */
 export const timeMonth = timeInterval(
   (date) => {
     date.setDate(1);
@@ -771,7 +771,7 @@ export const timeMonth = timeInterval(
   (date) => date.getMonth(),
 );
 
-/** 🕰️ Local year starts. */
+/** 🎆️ Local year starts. */
 export const timeYear = timeInterval(
   (date) => {
     date.setMonth(0, 1);
@@ -803,7 +803,7 @@ const TICK_INTERVALS: readonly (readonly [VizTimeInterval, number, number])[] = 
   [timeYear, 1, DURATION_YEAR],
 ];
 
-/** 🕰️ The calendar interval d3-time would pick for a span and a target tick count. */
+/** 🔧️ The calendar interval d3-time would pick for a span and a target tick count. */
 export function timeTickInterval(start: Date, stop: Date, count: number): VizTimeInterval {
   const target = Math.abs(+stop - +start) / count;
   const index = bisectRight(
@@ -816,7 +816,7 @@ export function timeTickInterval(start: Date, stop: Date, count: number): VizTim
   return chosen[0].every(chosen[1]);
 }
 
-/** 🕰️ The d3-time tick sequence for a date span. */
+/** 📌️ The d3-time tick sequence for a date span. */
 export function timeTicks(start: Date, stop: Date, count = 10): Date[] {
   const reverse = +stop < +start;
   const lo = reverse ? stop : start;
@@ -861,7 +861,7 @@ function authoredTimeTicks(domain: readonly number[],count: number,interval: Non
   const values=selected.range(start,new Date(+stop+1)).map(Number);return reverse?values.reverse():values;
 }
 
-/** 📐️ `scaleTime`: a millisecond-linear scale that ticks on calendar boundaries. */
+/** ⏰️ `scaleTime`: a millisecond-linear scale that ticks on calendar boundaries. */
 export function scaleTemporal(domain: readonly (Date | number)[], range: readonly number[], options: VizScaleOptions = {}): VizScale<Date | number, number> & { tickDates(count?: number): Date[] } {
   const numeric = domain.map((value) => +value);
   const base = scaleContinuous({ domain: numeric, range, clamp: options.clamp, round: options.round, unknown: options.unknown, kind: "temporal" });
@@ -889,7 +889,7 @@ function rangeInterpolator(range: readonly (number | string)[], interpolator = "
   return value => { const position = value * segments.length; const index = Math.max(0, Math.min(segments.length - 1, Math.floor(position))); return segments[index]!(position - index); };
 }
 
-/** 📐️ Resolves authored scales and binds their tick, format and UTC interval controls. */
+/** 🔨️ Resolves authored scales and binds their tick, format and UTC interval controls. */
 export function buildVizScale(spec: VizScaleSpec,appearance: "light" | "dark" = "light"): VizScale<never,never> {
   const scale=buildVizScaleValue(spec,appearance),options=spec.options??{},ticks=scale.ticks,format=scale.tickFormat,nice=scale.nice;
   if(spec.kind==="temporal")scale.ticks=count=>options.tickValues?.map(authoredTime)??authoredTimeTicks(spec.domain.map(authoredTime),count??options.ticks??10,options.interval);
@@ -899,7 +899,7 @@ export function buildVizScale(spec: VizScaleSpec,appearance: "light" | "dark" = 
   return scale;
 }
 
-/** 📐️ Builds any scale from its declarative `VizScaleSpec`, the way `\SemioVizScale` dispatches. */
+/** 🏗️ Builds any scale from its declarative `VizScaleSpec`, the way `\SemioVizScale` dispatches. */
 function buildVizScaleValue(spec: VizScaleSpec, appearance: "light" | "dark" = "light"): VizScale<never, never> {
   const options = spec.options ?? {};
   if (options.reverse === true && options.scheme === undefined) return buildVizScale({ ...spec, range: [...spec.range].reverse(), options: { ...options, reverse: false } }, appearance);
@@ -959,7 +959,7 @@ function buildVizScaleValue(spec: VizScaleSpec, appearance: "light" | "dark" = "
   }
 }
 
-/** 📐️ The scale kinds this module builds from a declarative specification. */
+/** 📋️ The scale kinds this module builds from a declarative specification. */
 export const VIZ_BUILDABLE_SCALE_KINDS: readonly VizScaleKind[] = ["linear", "log", "pow", "sqrt", "symlog", "identity", "ordinal", "band", "point", "quantile", "quantize", "threshold", "sequential", "diverging", "temporal"];
 //#endregion 🔖️Dispatch
 

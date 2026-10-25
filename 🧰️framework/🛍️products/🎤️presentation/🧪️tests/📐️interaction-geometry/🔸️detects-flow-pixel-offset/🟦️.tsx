@@ -1,7 +1,7 @@
 /** 🔸️ The detects flow pixel offset tests of the presentation interaction geometry suite. */
 import { buildResolutionScope, expandThoughtSlides, intro, resolveArrangement, split } from "@semio-tech/presentation";
 import { expect, it } from "vitest";
-import { SLIDE_INTERACTIVE_ENLARGE_FRAME, buildInteractiveSlideLayout, flowPointerDeltaToLocal, groupBoundingRect, interactiveDispositionContentScale, interactiveDispositionContentScaleStyle, isFlowPixelOffsetTransform, isNormalizedSlideFrame, isUsableMeasuredRect, measureDispositionBoundsInContainer, measureDispositionBoundsInSection, resolveRevealArrangement, scaleRectWithinGroup, slideCoordinateRoot, tightElementBoundsRect, toggleEnlargeRect } from "../../../🎯️targets/⚛️react/🟦️.tsx";
+import { SLIDE_INTERACTIVE_ENLARGE_FRAME, buildInteractiveSlideLayout, flowPointerDeltaToLocal, groupBoundingRect, interactiveDispositionContentScale, interactiveDispositionContentScaleStyle, isFlowPixelOffsetTransform, isNormalizedSlideFrame, isUsableMeasuredRect, measureDispositionBoundsInContainer, measureDispositionBoundsInSection, resolveRevealArrangement, scaleRectWithinGroup, slideCoordinateRoot, tightElementBoundsRect, toggleEnlargeRect } from "@semio-tech/presentation-react";
 
 /** 🔹 Registers the detects flow pixel offset tests of the presentation interaction geometry suite. */
 export function registerDetectsFlowPixelOffsetTests(): void {

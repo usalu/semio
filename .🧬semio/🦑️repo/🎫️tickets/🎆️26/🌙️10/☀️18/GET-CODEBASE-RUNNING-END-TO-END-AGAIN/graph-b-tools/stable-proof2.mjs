@@ -1,0 +1,17 @@
+import{readFileSync,lstatSync,readdirSync,statSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";import{join}from"node:path";
+const root="/Users/ueli/Documents/semio",L=root+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const inference=await import(join(L,"🏗️build/🕸️graph/📥️inference/🟨️.mjs"));await inference.libraryBootstrap;inference.prepareSourceAnalysesV1();
+const obs=await import(join(L,"🏗️build/👁️observation/🟨️.mjs"));
+const gen=await import(join(L,"🏗️build/🕸️graph/🕰️generations/🟨️.mjs"));
+const g=root+"/.cache/b/g/m/generations",newest=d=>readdirSync(join(g,d)).map(f=>[f,statSync(join(g,d,f)).mtimeMs]).sort((a,b)=>b[1]-a[1])[0][0];
+const manifest=JSON.parse(readFileSync(join(g,"m",newest("m"))));
+const ld=f=>JSON.parse(brotliDecompressSync(readFileSync(f)).toString());
+const idx=ld(join(g,"x",manifest.factIndex+".json.br")),before=ld(join(g,"f",manifest.frontier+".json.br"));
+let t=performance.now();
+const live={capturedAt:Date.now(),directories:before.directories.map(([p])=>{try{const s=lstatSync(join(root,p));return[p,s.mtimeMs,Number(s.ino)]}catch{return[p,-1,-1]}})};
+console.log("frontier stat pass s",((performance.now()-t)/1000).toFixed(1));
+const stable=new Set([...gen.stableDirectoriesV1(before,live)].map(p=>join(root,p)));console.log("stable",stable.size,"of",before.directories.length);
+const sel=gen.selectFactClassesV1(idx,undefined),own=r=>r.kind==="field"||r.kind==="digest";
+const run=async(st,sym)=>{const hold=async rows=>{const plain=rows.filter(r=>!own(r));return plain.length?obs.observationsHold(plain,64,st,sym):true};const t0=performance.now();const r=await gen.staleFactRowsV1(idx,sel.ids,hold,{});return{secs:((performance.now()-t0)/1000).toFixed(1),stale:[...r.stale].sort((a,b)=>a-b)}};
+const b=await run(stable,true),a=await run(new Set(),new Set());
+console.log("full",a.secs,"s stale",a.stale.length,"| elided",b.secs,"s stale",b.stale.length,"| same stale set",JSON.stringify(a.stale)===JSON.stringify(b.stale));

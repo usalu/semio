@@ -16,7 +16,7 @@ function oracle(fixture: Fixture, source: string): boolean {
     && fixture.ui.locales.join(",") === "en,de" && fixture.ui.accessibleLabels && fixture.ui.customizableUi
     && exact(ids, expected) && exact(classifications, expected) && exact([...contracts.keys()], expected)
     && fixture.routes.every(({ id, lane }) => contracts.get(id) === lane)
-    && ["ToolExecutionContract::resumable", "semio_framework_plugin::bounded_first_step_tool_proofs!", "build_artifact_store_one_item_preparation_factory", "register_window_config_owners", "request.operation != request.authority.operation()", "request.generation != request.authority.generation()", "request.base_revision != request.authority.base_revision()", "authority.prepare_one_item", "fn cancel(&mut self)", "fn begin_close(&mut self)", "base.return_to_registry()", "fn terminal_is_empty(&self)", "LocalizedLabel::native", ".default_layout(edit::layout())"].every((anchor) => source.includes(anchor));
+    && ["ToolExecutionContract::resumable", "semio_framework_plugin::bounded_first_step_tool_proofs!", "build_artifact_store_one_item_preparation_factory", "register_window_config_owners", "request.operation != request.authority.operation()", "request.generation != request.authority.generation()", "request.base_revision != request.authority.base_revision()", "authority.prepare_one_item", "fn cancel(&mut self)", "fn begin_close(&mut self)", "fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant)", "fn terminal_is_empty(&self)", "LocalizedLabel::native", ".default_layout(edit::layout())"].every((anchor) => source.includes(anchor));
 }
 
 /** 📣️ Verifies the Equation app's eight literal publication routes and their authority laws. */
@@ -28,7 +28,7 @@ export async function verifyMathematicalPublicationAuthority(repoRoot: string, p
   if (JSON.stringify(scripts) !== JSON.stringify({ test: "repo run @semio-tech/mathematical-js:test" })) throw new Error("Mathematical package scripts do not match its Nx targets");
   if (manifest.dependencies !== undefined || devDependencies?.ajv !== "^8.20.0") throw new Error("Mathematical package has runtime dependencies or lacks its Ajv test dependency");
   const plugin = resolve(packageRoot, "../..");
-  const authority = resolve(plugin, "🧫️fixtures/📣️publication-authority");
+  const authority = resolve(plugin, "🧪️tests/🧫️fixtures/📣️publication-authority");
   const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
   const sourceDirectory = dirname(fixture.source);
   const source = (await Promise.all([fixture.source, ...fixture.mounted.map((mounted) => join(sourceDirectory, mounted))].map((path) => Bun.file(resolve(plugin, path)).text()))).join("\n");

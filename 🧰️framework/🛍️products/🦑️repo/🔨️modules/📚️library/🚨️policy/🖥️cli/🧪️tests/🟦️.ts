@@ -1,9 +1,9 @@
-/** 🖥️ Contract: the repo CLI client resolves its binaries from the environment or the cache by build mode, passes the query and variables as one closed argument vector and returns the last JSON line's `data`, failing with a fixed message on a non-zero exit, GraphQL errors or no JSON; the corpus is language-agnostic and `🐍️oracle.py` re-derives the last-line and error rules. */
+/** 🖥️ Contract: the repo CLI client resolves its binaries from the environment or the cache by build mode, passes the query and variables as one closed argument vector and returns the last JSON line's `data`, failing with a fixed message on a non-zero exit, GraphQL errors or no JSON; the corpus is language-agnostic and `🐍️.py` re-derives the last-line and error rules. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {afterAll} from "bun:test";
 import {chmodSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -42,6 +42,6 @@ test("the query, variables and repository are passed as arguments",()=>{
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

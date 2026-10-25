@@ -18,7 +18,8 @@ pub mod publication_mounted_unit_1 {
 
 #[doc(hidden)]
 pub mod publication_mounted_unit_2 {
-    use semio_framework_os_store_testing_doubles::store;
+    use semio_framework_os_kernel::ReferenceSpaceMember;
+use semio_framework_os_store_testing_doubles::store;
     use semio_framework_plugin_decl_emission::ActionMeta;
     use semio_framework_plugin_decl_app::ArtifactApp;
     use semio_framework_plugin_operation::ArtifactDocumentAuthority;

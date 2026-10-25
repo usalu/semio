@@ -8,9 +8,9 @@ use super::*;
 #[value(rename_all = "camelCase")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCell {
-    pub(crate) row_index: usize,
-    pub(crate) field_index: usize,
-    pub(crate) value: String,
+    pub row_index: usize,
+    pub field_index: usize,
+    pub value: String,
 }
 
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetCell {

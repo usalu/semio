@@ -1,6 +1,6 @@
 //! 👥️ Domain-neutral per-session presence palette contracts.
 //#region 🔖️Palette
-/// 🎨️ Resolved HSL triple for one presence palette entry — `h` in degrees `[0, 360)`, `s`/`l` in
+/// 🎚️ Resolved HSL triple for one presence palette entry — `h` in degrees `[0, 360)`, `s`/`l` in
 /// `[0.0, 1.0]`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PresenceHsl {

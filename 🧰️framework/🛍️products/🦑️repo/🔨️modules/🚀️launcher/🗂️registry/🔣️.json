@@ -244,6 +244,18 @@
    "en": "dev mcp stdio os [arguments]   MCP server of the OS over stdio.",
    "de": "dev mcp stdio os [Argumente]   MCP-Server des OS über stdio."
   },
+  "guardTest": {
+   "en": "Bun {running} runs this test, the repository pins {runtime} {version}. Run it through the repository instead: repo tools exec --light bun -- test {files} (and your options).",
+   "de": "Bun {running} führt diesen Test aus, das Repository pinnt {runtime} {version}. Führe ihn stattdessen über das Repository aus: repo tools exec --light bun -- test {files} (und deine Optionen)."
+  },
+  "guardMissing": {
+   "en": "Bun {running} runs this, the repository pins {runtime} {version}, which is not provisioned here, and the repo launcher is not on the PATH. Install the launcher once, it provisions the pinned runtime: {install}",
+   "de": "Bun {running} führt dies aus, das Repository pinnt {runtime} {version}, das hier nicht bereitgestellt ist, und der repo-Launcher liegt nicht im PATH. Installiere den Launcher einmalig, er stellt die gepinnte Laufzeit bereit: {install}"
+  },
+  "guardLoop": {
+   "en": "Bun {running} still runs this after the repository started the pinned {runtime} {version}; the provisioned runtime does not report the pinned version. Remove it and start again: the launcher provisions it anew.",
+   "de": "Bun {running} führt dies noch immer aus, nachdem das Repository das gepinnte {runtime} {version} gestartet hat; die bereitgestellte Laufzeit meldet nicht die gepinnte Version. Entferne sie und starte erneut: der Launcher stellt sie neu bereit."
+  },
   "versionRuntimeReady": {
    "en": "runtime {runtime} {version}: ready, {path}",
    "de": "Laufzeit {runtime} {version}: bereit, {path}"

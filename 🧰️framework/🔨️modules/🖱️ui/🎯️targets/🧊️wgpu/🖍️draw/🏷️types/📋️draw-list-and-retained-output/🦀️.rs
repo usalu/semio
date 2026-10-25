@@ -194,7 +194,7 @@ pub(super) fn prepared_scene_pass_usage(pass: &ScenePass3d) -> Option<(usize, us
     Some((items, bytes))
 }
 
-/// 🧾️ A retained draw grant could not be admitted or completed.
+/// ❌️ A retained draw grant could not be admitted or completed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RetainedOutputError {
     Allocation,
@@ -237,7 +237,7 @@ impl DrawList {
         }
     }
 
-    /// 🧾️ Publishes one balanced retained candidate after its producer reaches the accepted frame
+    /// ➕️ Publishes one balanced retained candidate after its producer reaches the accepted frame
     /// boundary. Indices are rebased onto the caller's existing frame and the caller's active clip
     /// and glass context continues across the appended layers.
     pub fn append_retained_candidate(&mut self, candidate: &mut Self) -> Result<(), RetainedOutputError> {

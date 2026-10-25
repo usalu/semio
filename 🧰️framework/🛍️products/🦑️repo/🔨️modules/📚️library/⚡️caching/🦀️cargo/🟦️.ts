@@ -8,7 +8,7 @@ import { admitNativeBuildPipelineV1, admitNativeBuildPlanV1, type NativeBuildGen
 import { ownerEnvironmentV1 } from "../📦️artifacts/📋️native-orchestration/🌱️environment/🟦️.ts";
 import { repoCacheDirectory } from "../🟦️.ts";
 import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 
 //#region 🧩️ReleaseComponentPlan

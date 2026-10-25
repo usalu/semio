@@ -11,7 +11,7 @@ import { learnerTag, type CourseView, type CursorState, type LeaderboardRow, typ
 import { type PresenceConnect, type PresenceSocket, type CoursePresenceSnapshot, type CourseState } from "@semio-tech/course-react";
 
 //#region 🔌️FakeSockets
-/** 🔌️ A socket the test plays the proctor for: it records what the client sends and delivers what the test says. */
+/** 🎮️ A socket the test plays the proctor for: it records what the client sends and delivers what the test says. */
 export class FakeSocket implements PresenceSocket {
   readyState = 1;
   onopen: ((event: Event) => void) | null = null;

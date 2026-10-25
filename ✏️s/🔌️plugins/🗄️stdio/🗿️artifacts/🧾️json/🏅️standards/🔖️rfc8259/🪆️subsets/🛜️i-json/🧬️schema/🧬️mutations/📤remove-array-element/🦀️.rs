@@ -7,8 +7,8 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveArrayElement {
-    pub(crate) path: JsonPath,
-    pub(crate) index: usize,
+    pub path: JsonPath,
+    pub index: usize,
 }
 
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RemoveArrayElement {

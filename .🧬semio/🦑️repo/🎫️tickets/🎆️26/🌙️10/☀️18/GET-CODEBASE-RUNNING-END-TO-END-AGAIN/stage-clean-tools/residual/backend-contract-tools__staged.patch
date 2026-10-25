@@ -1,0 +1,874 @@
+# stage-clean orphan staged=backend-contract-tools/staged/backends.registry.json map=None
+--- /dev/null
++++ b/staged/backend-contract-tools/staged/backends.registry.json
+@@ -0,0 +1,279 @@
++{
++ "version": 1,
++ "backends": [
++  {
++   "id": "nx",
++   "title": {
++    "en": "Nx with Bun",
++    "de": "Nx mit Bun"
++   },
++   "kind": "external",
++   "default": true,
++   "module": "../🔧️tools/🧶️nx/🔌️backend/🟦️.ts",
++   "driver": "../🔧️tools/🧶️nx/📐️conformance/🟦️.ts",
++   "dependencyModel": "consumers",
++   "processEnvironment": {
++    "NX_DAEMON": "false"
++   },
++   "nativeSnapshot": {
++    "variable": "SEMIO_NX_NATIVE_SOURCE_SNAPSHOT",
++    "environment": {
++     "NX_DAEMON": "false"
++    }
++   },
++   "nativeCaller": {
++    "namespace": "nx",
++    "schema": "../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json"
++   },
++   "cacheProof": {
++    "logMarker": "read the output from the cache|\\[local cache\\]|\\[existing outputs match the cache\\]"
++   },
++   "operations": {
++    "run": "native",
++    "run-many": "native",
++    "affected": "native",
++    "exec": "native",
++    "inputs": "adapter",
++    "reset": "adapter",
++    "tools": "adapter",
++    "cache": "adapter"
++   },
++   "capabilities": {
++    "plan": {
++     "support": "native"
++    },
++    "run": {
++     "support": "native"
++    },
++    "cache-restore": {
++     "support": "native"
++    },
++    "invalidation": {
++     "support": "native"
++    },
++    "early-cutoff": {
++     "support": "native"
++    },
++    "uncached": {
++     "support": "native"
++    },
++    "outputs": {
++     "support": "native"
++    },
++    "failure-isolation": {
++     "support": "native"
++    },
++    "test-results": {
++     "support": "native"
++    },
++    "affected": {
++     "support": "native"
++    },
++    "cancellation": {
++     "support": "native"
++    },
++    "progress": {
++     "support": "adapter",
++     "note": {
++      "en": "Task start and end are published by the repository adapter, not by Nx.",
++      "de": "Start und Ende einer Aufgabe veröffentlicht der Repository-Adapter, nicht Nx."
++     }
++    },
++    "parallelism": {
++     "support": "native"
++    },
++    "concurrent-invocations": {
++     "support": "native"
++    },
++    "single-flight": {
++     "support": "missing",
++     "note": {
++      "en": "Two Nx processes on one workspace do not coordinate: a cold task can run in both.",
++      "de": "Zwei Nx-Prozesse auf einem Workspace stimmen sich nicht ab: eine kalte Aufgabe kann in beiden laufen."
++     }
++    },
++    "remote-cache": {
++     "support": "native"
++    },
++    "run-record": {
++     "support": "native",
++     "note": {
++      "en": "Nx stores a run record with the cache status of every task.",
++      "de": "Nx speichert einen Laufbericht mit dem Cache-Status jeder Aufgabe."
++     }
++    }
++   }
++  },
++  {
++   "id": "bazel",
++   "title": {
++    "en": "Bazel",
++    "de": "Bazel"
++   },
++   "kind": "external",
++   "module": "../🔧️tools/🏗️bazel/🔌️backend/🟦️.ts",
++   "driver": "../🔧️tools/🏗️bazel/📐️conformance/🟦️.ts",
++   "dependencyModel": "all",
++   "cacheProof": {
++    "logMarker": "(?:disk|remote) cache hit",
++    "activity": true,
++    "spawnMarker": {
++     "executed": "[0-9]+ (?:linux-sandbox|darwin-sandbox|processwrapper-sandbox|windows-sandbox|local|worker)",
++     "completed": "Build completed successfully"
++    }
++   },
++   "operations": {
++    "run": "adapter",
++    "run-many": "adapter",
++    "affected": "adapter",
++    "exec": "adapter",
++    "inputs": "missing",
++    "reset": "adapter",
++    "tools": "adapter",
++    "cache": "adapter"
++   },
++   "capabilities": {
++    "plan": {
++     "support": "adapter"
++    },
++    "run": {
++     "support": "adapter"
++    },
++    "cache-restore": {
++     "support": "adapter"
++    },
++    "invalidation": {
++     "support": "adapter"
++    },
++    "early-cutoff": {
++     "support": "native",
++     "note": {
++      "en": "Action keys contain the digests of the inputs, so equal outputs stop propagation.",
++      "de": "Aktionsschlüssel enthalten die Digests der Eingaben, gleiche Ausgaben stoppen die Weitergabe."
++     }
++    },
++    "uncached": {
++     "support": "adapter"
++    },
++    "outputs": {
++     "support": "adapter"
++    },
++    "failure-isolation": {
++     "support": "adapter"
++    },
++    "test-results": {
++     "support": "adapter"
++    },
++    "affected": {
++     "support": "adapter"
++    },
++    "cancellation": {
++     "support": "adapter"
++    },
++    "progress": {
++     "support": "adapter"
++    },
++    "parallelism": {
++     "support": "adapter"
++    },
++    "concurrent-invocations": {
++     "support": "adapter"
++    },
++    "single-flight": {
++     "support": "native",
++     "note": {
++      "en": "One Bazel server per output base serialises invocations, so the second one finds the first one's result.",
++      "de": "Ein Bazel-Server pro Output-Base serialisiert Aufrufe, der zweite findet das Ergebnis des ersten."
++     }
++    },
++    "remote-cache": {
++     "support": "adapter"
++    },
++    "run-record": {
++     "support": "adapter",
++     "note": {
++      "en": "Read from Bazel's compact execution log.",
++      "de": "Aus Bazels kompaktem Ausführungsprotokoll gelesen."
++     }
++    }
++   }
++  },
++  {
++   "id": "semio",
++   "title": {
++    "en": "Semio build engine",
++    "de": "Semio-Build-Engine"
++   },
++   "kind": "in-house",
++   "module": "../🔧️tools/🐙️semio/🔌️backend/🟦️.ts",
++   "driver": "../🔧️tools/🐙️semio/📐️conformance/🟦️.ts",
++   "dependencyModel": "all",
++   "cacheProof": {
++    "activity": true
++   },
++   "operations": {
++    "run": "native",
++    "run-many": "native",
++    "affected": "native",
++    "exec": "native",
++    "inputs": "native",
++    "reset": "native",
++    "tools": "native",
++    "cache": "native"
++   },
++   "capabilities": {
++    "plan": {
++     "support": "native"
++    },
++    "run": {
++     "support": "native"
++    },
++    "cache-restore": {
++     "support": "native"
++    },
++    "invalidation": {
++     "support": "native"
++    },
++    "early-cutoff": {
++     "support": "native"
++    },
++    "uncached": {
++     "support": "native"
++    },
++    "outputs": {
++     "support": "native"
++    },
++    "failure-isolation": {
++     "support": "native"
++    },
++    "test-results": {
++     "support": "native"
++    },
++    "affected": {
++     "support": "native"
++    },
++    "cancellation": {
++     "support": "native"
++    },
++    "progress": {
++     "support": "native"
++    },
++    "parallelism": {
++     "support": "native"
++    },
++    "concurrent-invocations": {
++     "support": "native"
++    },
++    "single-flight": {
++     "support": "native"
++    },
++    "remote-cache": {
++     "support": "native"
++    },
++    "run-record": {
++     "support": "native"
++    }
++   }
++  }
++ ]
++}
+\ No newline at end of file
+# stage-clean orphan staged=backend-contract-tools/staged/backends.schema.json map=None
+--- /dev/null
++++ b/staged/backend-contract-tools/staged/backends.schema.json
+@@ -0,0 +1,74 @@
++{
++  "$schema": "http://json-schema.org/draft-07/schema#",
++  "title": "Build Backend Registry",
++  "description": "The authored list of build backends behind the neutral `repo` interface. One row per backend is everything neutral code knows about it; the adapter module named by the row implements BuildBackendV1.",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["version", "backends"],
++  "properties": {
++    "version": { "const": 1 },
++    "backends": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Backend" } }
++  },
++  "definitions": {
++    "Id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$" },
++    "Text": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["en", "de"],
++      "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } }
++    },
++    "Support": { "enum": ["native", "adapter", "neutral", "missing"] },
++    "Capability": {
++      "enum": ["plan", "run", "cache-restore", "invalidation", "early-cutoff", "uncached", "outputs", "failure-isolation", "test-results", "affected", "cancellation", "progress", "parallelism", "concurrent-invocations", "single-flight", "remote-cache", "run-record"]
++    },
++    "Claim": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["support"],
++      "properties": { "support": { "$ref": "#/definitions/Support" }, "note": { "$ref": "#/definitions/Text" } }
++    },
++    "Backend": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": ["id", "title", "kind", "module", "driver", "dependencyModel", "operations", "capabilities"],
++      "properties": {
++        "id": { "$ref": "#/definitions/Id" },
++        "title": { "$ref": "#/definitions/Text" },
++        "kind": { "enum": ["external", "in-house"] },
++        "default": { "type": "boolean" },
++        "module": { "type": "string", "pattern": "^\\.\\./.+\\.ts$" },
++        "driver": { "type": "string", "pattern": "^\\.\\./.+\\.ts$" },
++        "dependencyModel": { "enum": ["all", "consumers"] },
++        "processEnvironment": { "type": "object", "additionalProperties": { "type": "string" } },
++        "nativeSnapshot": {
++          "type": "object",
++          "additionalProperties": false,
++          "required": ["variable", "environment"],
++          "properties": { "variable": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" }, "environment": { "type": "object", "additionalProperties": { "type": "string" } } }
++        },
++        "nativeCaller": {
++          "type": "object",
++          "additionalProperties": false,
++          "required": ["namespace", "schema"],
++          "properties": { "namespace": { "$ref": "#/definitions/Id" }, "schema": { "type": "string", "pattern": "^\\.\\./.+\\.json$" } }
++        },
++        "cacheProof": {
++          "type": "object",
++          "additionalProperties": false,
++          "properties": {
++            "logMarker": { "type": "string", "minLength": 1 },
++            "activity": { "type": "boolean" },
++            "spawnMarker": {
++              "type": "object",
++              "additionalProperties": false,
++              "required": ["executed", "completed"],
++              "properties": { "executed": { "type": "string", "minLength": 1 }, "completed": { "type": "string", "minLength": 1 } }
++            }
++          }
++        },
++        "operations": { "type": "object", "propertyNames": { "type": "string", "pattern": "^[a-z][a-z-]*$" }, "additionalProperties": { "$ref": "#/definitions/Support" } },
++        "capabilities": { "type": "object", "propertyNames": { "$ref": "#/definitions/Capability" }, "additionalProperties": { "$ref": "#/definitions/Claim" } }
++      }
++    }
++  }
++}
+# stage-clean orphan staged=backend-contract-tools/staged/backends.ts map=None
+--- /dev/null
++++ b/staged/backend-contract-tools/staged/backends.ts
+@@ -0,0 +1,102 @@
++import schema from "./🧬️schema/🔣️.json" with {type:"json"};
++import registry from "./📋️registry/🔣️.json" with {type:"json"};
++import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
++import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
++import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
++import type {BuildGraphV1} from "../🕸️graph/🟦️.ts";
++import type {BuildCacheToolV1,CacheProbeToolV1} from "../⚙️operations/🟦️.ts";
++import type {RemoteCacheToolV1} from "../🌐️remote-cache/⌨️command/🟦️.ts";
++
++/** 🆔️ The identity of a build backend: any id the registry declares, never a closed list in code. */
++export type BuildBackendIdV1=string;
++/** 🏷️ How a backend or operation is provided: by the tool itself, by an adapter around it, by neutral code, or not at all. */
++export type BackendSupportV1="native"|"adapter"|"neutral"|"missing";
++/** 🧩️ A behaviour every backend is judged on by the conformance suite. */
++export type BackendCapabilityV1=typeof schema.definitions.Capability.enum[number];
++/** 🌍️ A text in both supported languages. */
++export type BackendTextV1=Readonly<{en:string;de:string}>;
++/** 🗒️ One backend as the registry declares it. */
++export type BackendRowV1=Readonly<{id:BuildBackendIdV1;title:BackendTextV1;kind:"external"|"in-house";default?:boolean;module:string;driver:string;dependencyModel:"all"|"consumers";processEnvironment?:Readonly<Record<string,string>>;nativeSnapshot?:Readonly<{variable:string;environment:Readonly<Record<string,string>>}>;nativeCaller?:Readonly<{namespace:string;schema:string}>;cacheProof?:Readonly<{logMarker?:string;activity?:boolean;spawnMarker?:Readonly<{executed:string;completed:string}>}>;operations:Readonly<Record<string,BackendSupportV1>>;capabilities:Readonly<Partial<Record<BackendCapabilityV1,Readonly<{support:BackendSupportV1;note?:BackendTextV1}>>>>}>;
++
++/** 📜️ Reads the authored registry once and refuses a row set that breaks its schema, repeats an id or names a missing default. */
++export function readBackendRegistryV1(value:unknown=registry):readonly BackendRowV1[]{
++ const issues=validateJsonSchemaSubset(schema,value,schema);
++ if(issues.length)throw Error(`Closed build backend registry required: ${issues.slice(0,3).join("; ")}`);
++ const rows=(value as {backends:BackendRowV1[]}).backends,ids=rows.map(row=>row.id);
++ if(new Set(ids).size!==ids.length)throw Error("Unique build backend ids required");
++ if(rows.filter(row=>row.default===true).length!==1)throw Error("Exactly one default build backend required");
++ return Object.freeze(rows.map(row=>Object.freeze(row)));
++}
++
++const rows=readBackendRegistryV1();
++
++/** 📇️ The registered backends in registry order. */
++export function buildBackendRowsV1():readonly BackendRowV1[]{return rows;}
++/** 🔢️ The registered backend ids in registry order. */
++export function buildBackendIdsV1():readonly BuildBackendIdV1[]{return rows.map(row=>row.id);}
++/** ⭐️ The backend that runs when nothing selects one: the registry row marked as default. */
++export function buildBackendDefaultIdV1():BuildBackendIdV1{return rows.find(row=>row.default===true)!.id;}
++/** 🧾️ The ids as a help-text alternation such as `a|b|c`. */
++export function buildBackendAlternationV1():string{return buildBackendIdsV1().join("|");}
++/** 🏷️ The first launch argument of every backend that nests its own tool; neutral code admits these next to `repo`. */
++export function buildBackendNativeNamespacesV1():string[]{return rows.flatMap(row=>row.nativeCaller?[row.nativeCaller.namespace]:[]);}
++/** 🧭️ Where a registered backend's conformance driver module lives; the row path is relative to this module. */
++export function buildBackendDriverUrlV1(id:string):URL{return new URL(buildBackendRowV1(id).driver,import.meta.url);}
++/** 🔎️ Finds one registered backend or refuses an unknown name with the list of valid ones. */
++export function buildBackendRowV1(id:string):BackendRowV1{
++ const row=rows.find(candidate=>candidate.id===id);
++ if(!row)throw Error(`Unknown build tool: ${id} (${buildBackendAlternationV1()})\nUnbekanntes Build-Werkzeug: ${id} (${buildBackendAlternationV1()})`);
++ return row;
++}
++/** ✔️ Admits a backend id and returns it. */
++export function requireBuildBackendIdV1(id:string):BuildBackendIdV1{return buildBackendRowV1(id).id;}
++/** 🛡️ The operations a backend does not provide: what the registry marks `missing`. */
++export function backendMissingOperationsV1(id:string):string[]{return Object.entries(buildBackendRowV1(id).operations).filter(([,support])=>support==="missing").map(([name])=>name).sort();}
++/** 🪪️ The declared native-snapshot protocol, owned by whichever backend declares one. */
++export function buildNativeSnapshotProtocolV1():Readonly<{variable:string;environment:Readonly<Record<string,string>>}>|undefined{return rows.find(row=>row.nativeSnapshot)?.nativeSnapshot;}
++
++/** 🎛️ What a backend operation receives: the workspace, the issued invocation and phase, the resolved arguments and the selected backend. */
++export type BackendContextV1=Readonly<{root:string;invocation:ScriptInvocation;phase:ResourceLeaseControl;args:readonly string[];tool:BuildBackendIdV1;workers?:"on"|"off"}>;
++/** 🪢️ A context that also carries the pinned build graph and the continuous task a watch re-runs. */
++export type BackendExecutionContextV1=BackendContextV1&Readonly<{graph:BuildGraphV1;watch?:string}>;
++
++/** 🔌️ Everything neutral code needs from a build backend; neutral code reaches a backend only through the registry and this interface. */
++export interface BuildBackendV1{
++ readonly id:BuildBackendIdV1;
++ setup(context:BackendContextV1):Promise<void>;
++ reset(context:BackendContextV1):Promise<void>;
++ prepareStorage(context:BackendContextV1,snapshotBytes:number):Promise<void>;
++ cache():Promise<BuildCacheToolV1>;
++ remoteCache():Promise<RemoteCacheToolV1>;
++ execute(context:BackendExecutionContextV1):Promise<void>;
++ affectedProjects?(context:BackendExecutionContextV1,files:readonly string[]):Promise<readonly string[]>;
++ bootstrapArguments?(args:readonly string[]):readonly string[]|undefined;
++ cacheProbe?(context:Readonly<{root:string;invocation:ScriptInvocation}>):Promise<CacheProbeToolV1>;
++ collectCache?(context:Readonly<{root:string;invocation:ScriptInvocation;phase:ResourceLeaseControl;dryRun:boolean;signal:AbortSignal}>):Promise<string>;
++}
++
++const loaded=new Map<string,Promise<BuildBackendV1>>();
++
++/** 🚚️ Loads the adapter module a registry row names and checks that it exports a backend of the same id. */
++export async function loadBuildBackendV1(id:string):Promise<BuildBackendV1>{
++ const row=buildBackendRowV1(id);
++ let pending=loaded.get(row.id);
++ if(!pending){
++  pending=import(new URL(row.module,import.meta.url).href).then((module:{backend?:BuildBackendV1})=>{
++   if(!module.backend||module.backend.id!==row.id)throw Error(`Build backend module ${row.module} must export backend with id ${row.id}`);
++   return module.backend;
++  });
++  loaded.set(row.id,pending);
++ }
++ return pending;
++}
++
++/** 🧭️ The launch a backend's own tool needs for a command, asked of the backends the command concerns: the selected one, or the named one for `tools setup`; the namespace is the first argument the backend's nested launches carry. `undefined` when none launches anything. */
++export async function buildBackendBootstrapV1(args:readonly string[],tool:string):Promise<Readonly<{namespace:string;arguments:readonly string[]}>|undefined>{
++ const target=args[0]==="tools"?args[2]??tool:tool,ids=target==="all"?buildBackendIdsV1():[requireBuildBackendIdV1(target)];
++ for(const id of ids){
++  const launch=(await loadBuildBackendV1(id)).bootstrapArguments?.(args),namespace=buildBackendRowV1(id).nativeCaller?.namespace;
++  if(launch){if(!namespace)throw Error(`Build backend ${id} launches its tool and must declare nativeCaller`);return {namespace,arguments:launch};}
++ }
++ return undefined;
++}
+# stage-clean orphan staged=backend-contract-tools/staged/backends_test.ts map=None
+--- /dev/null
++++ b/staged/backend-contract-tools/staged/backends_test.ts
+@@ -0,0 +1,123 @@
++/** 🔌️ The backend registry is the only place neutral code learns which backends exist: its schema and rows are valid and complete, every module and driver it names exists and exports what the interface demands, schemas, catalogue and help derive from it, and neutral files are ratcheted against naming a backend. */
++import {test,expect} from "bun:test";
++import Ajv from "ajv";
++import {existsSync,readFileSync} from "node:fs";
++import {join} from "node:path";
++import schema from "../🧬️schema/🔣️.json" with {type:"json"};
++import registry from "../📋️registry/🔣️.json" with {type:"json"};
++import policy from "../../🔣️policy.json" with {type:"json"};
++import catalog from "../../⚙️operations/🔣️catalog.json" with {type:"json"};
++import conformance from "../../📐️conformance/📋️scenarios/🔣️.json" with {type:"json"};
++import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
++import {buildBackendDefaultIdV1,backendMissingOperationsV1,buildBackendAlternationV1,buildBackendBootstrapV1,buildBackendNativeNamespacesV1,buildBackendIdsV1,buildBackendRowV1,buildBackendRowsV1,buildNativeSnapshotProtocolV1,loadBuildBackendV1,readBackendRegistryV1,requireBuildBackendIdV1} from "../🟦️.ts";
++import {renderBuildHelpV1,type BuildHelpCatalogV1} from "../../⚙️operations/📖️help/🟦️.ts";
++
++const ajv=new Ajv({strict:true,allowUnionTypes:true}),build=join(import.meta.dir,"../..");
++const mutated=(change:(copy:any)=>void)=>{const copy=structuredClone(registry) as any;change(copy);return copy;};
++
++test("the registry validates against its schema and refuses every broken row",()=>{
++ expect(ajv.validateSchema(schema)).toBe(true);
++ expect(ajv.compile(schema)(registry)).toBe(true);
++ expect(validateJsonSchemaSubset(schema,registry,schema)).toEqual([]);
++ expect(readBackendRegistryV1().map(row=>row.id)).toEqual(["nx","bazel","semio"]);
++ for(const[label,change]of [["id",(c:any)=>{c.backends[0].id="Nx";}],["duplicate",(c:any)=>{c.backends[1].id="nx";}],["module",(c:any)=>{c.backends[0].module="/abs/x.ts";}],["driver",(c:any)=>{delete c.backends[0].driver;}],["kind",(c:any)=>{c.backends[0].kind="cloud";}],["model",(c:any)=>{c.backends[0].dependencyModel="some";}],["capability",(c:any)=>{c.backends[0].capabilities.teleport={support:"native"};}],["support",(c:any)=>{c.backends[0].capabilities.plan.support="magic";}],["empty",(c:any)=>{c.backends=[];}],["extra",(c:any)=>{c.backends[0].secret=1;}],["note",(c:any)=>{c.backends[0].capabilities.plan.note={en:"x"};}]] as const)
++  expect(()=>readBackendRegistryV1(mutated(change)),label).toThrow();
++});
++
++test("every backend declares every capability and a claim for each scenario's capability, and every claim carries a note when the support is missing",()=>{
++ const capabilities=schema.definitions.Capability.enum;
++ for(const row of buildBackendRowsV1()){
++  expect(Object.keys(row.capabilities).sort(),row.id).toEqual([...capabilities].sort());
++  for(const[name,claim]of Object.entries(row.capabilities))if(claim!==undefined&&claim.support==="missing")expect(claim.note,`${row.id} ${name}`).toBeDefined();
++  for(const[,claim]of Object.entries(row.capabilities))if(claim?.note)expect(claim.note.de).not.toBe(claim.note.en);
++  expect(row.title.de.length).toBeGreaterThan(0);
++ }
++ for(const scenario of (conformance as any).scenarios)expect(capabilities).toContain(scenario.capability);
++});
++
++test("the policy default, the catalogue and the help derive from the registry",()=>{
++ expect(buildBackendIdsV1()).toContain(buildBackendDefaultIdV1());
++ expect(buildBackendRowsV1().filter(row=>row.default===true).length).toBe(1);
++ expect((policy as Record<string,unknown>).defaultTool).toBeUndefined();
++ const names=new Set((catalog as any).operations.map((row:any)=>row.name));
++ for(const row of buildBackendRowsV1())for(const operation of Object.keys(row.operations))expect(names.has(operation),`${row.id} ${operation}`).toBe(true);
++ for(const operation of (catalog as any).operations)expect(operation.implementations,operation.name).toBeUndefined();
++ for(const flag of (catalog as any).flags)if(flag.valueName?.includes("nx")||flag.valueName?.includes("bazel"))throw Error(`flag ${flag.name} names a backend in its value`);
++ const alternation=buildBackendAlternationV1();
++ expect(alternation).toBe(buildBackendIdsV1().join("|"));
++ for(const language of (catalog as any).languages){
++  const text=renderBuildHelpV1(catalog as unknown as BuildHelpCatalogV1,{},language);
++  expect(text).toContain(`repo [--tool=${alternation}]`);expect(text).not.toContain("{backends}");
++  expect(renderBuildHelpV1(catalog as unknown as BuildHelpCatalogV1,{operation:"tools"},language)).toContain(`tools setup [${alternation}|all]`);
++ }
++ expect(backendMissingOperationsV1("bazel")).toEqual(["inputs"]);expect(backendMissingOperationsV1("semio")).toEqual([]);
++ expect(()=>buildBackendRowV1("buck2")).toThrow("Unknown build tool: buck2 (nx|bazel|semio)");
++ expect(()=>requireBuildBackendIdV1("")).toThrow("Unbekanntes Build-Werkzeug");
++});
++
++test("the native-snapshot protocol is declared by exactly one backend and carries its variable and environment",()=>{
++ const owners=buildBackendRowsV1().filter(row=>row.nativeSnapshot);
++ expect(owners.length).toBe(1);
++ expect(buildNativeSnapshotProtocolV1()).toEqual(owners[0]!.nativeSnapshot);
++ expect(buildNativeSnapshotProtocolV1()!.variable).toMatch(/^SEMIO_[A-Z0-9_]+$/u);
++});
++
++test("nested native launches and cache proofs are declared per backend, never by neutral code",async()=>{
++ const rows=buildBackendRowsV1(),namespaces=buildBackendNativeNamespacesV1();
++ expect(namespaces).toEqual(rows.flatMap(row=>row.nativeCaller?[row.nativeCaller.namespace]:[]));
++ expect(new Set(namespaces).size).toBe(namespaces.length);
++ for(const row of rows.filter(candidate=>candidate.nativeCaller)){
++  expect(existsSync(join(build,"🔌️backends",row.nativeCaller!.schema)),row.id).toBe(true);
++  const launch=await buildBackendBootstrapV1(["tools","setup",row.id],row.id);
++  if(launch)expect(launch.namespace).toBe(row.nativeCaller!.namespace);
++ }
++ for(const row of rows){
++  expect(row.cacheProof,row.id).toBeDefined();
++  if(row.cacheProof?.logMarker)expect(()=>new RegExp(row.cacheProof!.logMarker!,"u")).not.toThrow();
++  for(const source of Object.values(row.cacheProof?.spawnMarker??{}))expect(()=>new RegExp(source,"u")).not.toThrow();
++ }
++ expect(readBackendRegistryV1({version:1,backends:rows.map(row=>({...row,cacheProof:{logMarker:"("}}))}).length).toBe(rows.length);
++});
++
++test("every module and driver a row names exists, and the in-house backend loads with its own id",async()=>{
++ for(const row of buildBackendRowsV1())for(const path of [row.module,row.driver])expect(existsSync(join(build,"🔌️backends",path)),`${row.id} ${path}`).toBe(true);
++ const semio=await loadBuildBackendV1("semio");
++ expect(semio.id).toBe("semio");
++ for(const method of ["setup","reset","prepareStorage","cache","remoteCache","execute"] as const)expect(typeof semio[method],method).toBe("function");
++ expect((await semio.cache()).tool).toBe("semio");
++ expect((await semio.remoteCache()).tool).toBe("semio");
++ expect(await loadBuildBackendV1("semio")).toBe(semio);
++ await expect(loadBuildBackendV1("buck2")).rejects.toThrow("Unknown build tool");
++ expect(await buildBackendBootstrapV1(["run","a:b"],"semio")).toBeUndefined();
++ expect(await buildBackendBootstrapV1(["tools","setup","semio"],"nx")).toBeUndefined();
++ await expect(buildBackendBootstrapV1(["tools","setup","nobody"],"nx")).rejects.toThrow("Unknown build tool");
++});
++
++const NEUTRAL_CLEAN=["🔌️backends/🟦️.ts","⚙️operations/🟦️.ts","🌐️remote-cache/⌨️command/🟦️.ts","🌐️remote-cache/🟦️.ts","🔧️tools/💾️storage/🟦️.ts","📥️inputs/🎯️selected/📦️snapshot/🟦️.ts","📥️inputs/🎯️selected/🦀️rust/🟦️.ts","⚙️operations/📖️help/🟦️.ts","⚙️operations/🔣️catalog.json","🧬️schema/🔣️.json","🏃️execution/🧬️schema/🌐️remote-cache.json","⚙️operations/🧬️schema/🔣️.json","📏️incremental/⌨️command/🟦️.ts","📏️incremental/🤝️concurrent/⌨️command/🟦️.ts","📐️conformance/🟦️.ts","📐️conformance/🏃️runner/🟦️.ts","📐️conformance/⌨️command/🟦️.ts","🧮️task-model/🟦️.ts","🧭️invocation/🟦️.ts","📥️caller/🟦️.ts","📥️caller/📤️orchestration/🟨️.mjs","📥️caller/📤️child/🟦️.ts","🧾️ci-report/🟦️.ts","🧾️ci-report/📜️script.ts","🌐️remote-cache/💾️store/🟦️.ts","🌐️remote-cache/🖥️server/🟦️.ts","🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs","🚀️bootstrap/⌨️cli/🟦️.ts"];
++const KNOWN_LEAKS:Record<string,number>={"📜️script.ts":1,"🏃️execution/🔒️hermetic/🚪️entry/🟦️.ts":1,"📏️incremental/🟦️.ts":2,"📏️incremental/🏃️runner/🟦️.ts":3,"📏️incremental/👁️observers/🟦️.ts":2,"📏️incremental/🤝️concurrent/🟦️.ts":4,"📏️incremental/🤝️concurrent/🏃️runner/🟦️.ts":3,"🪞️parity/🟦️.ts":16,"🪞️parity/🏃️collect/🟦️.ts":3};
++const literal=/(["'`])(nx|bazel)\1|\b(?:tool|selected\.tool)\s*[!=]==\s*["'](nx|bazel)["']/gu;
++test("neutral files never name a backend: the cleaned ones stay clean and the remaining ones may not grow",()=>{
++ for(const path of NEUTRAL_CLEAN){
++  const file=join(build,path);
++  if(!existsSync(file))continue;
++  const text=readFileSync(file,"utf8"),hits=[...text.matchAll(literal)].map(match=>match[0]);
++  expect(hits,path).toEqual([]);
++ }
++ for(const[path,limit]of Object.entries(KNOWN_LEAKS)){
++  const file=join(build,path);
++  if(!existsSync(file))continue;
++  expect([...readFileSync(file,"utf8").matchAll(literal)].length,path).toBeLessThanOrEqual(limit);
++ }
++});
++
++test("schemas that name a build tool accept every registered id and nothing else",()=>{
++ const ids=buildBackendIdsV1(),pattern=/^[a-z][a-z0-9-]{0,31}$/u;
++ for(const id of ids)expect(pattern.test(id)).toBe(true);
++ for(const bad of ["","Nx","a b","1x","x".repeat(40)])expect(pattern.test(bad)).toBe(false);
++ for(const path of ["🧬️schema/🔣️.json","🧬️schema/📥️authoring.json","🧬️schema/📥️caller.json","🏃️execution/🧬️schema/🌐️remote-cache.json","📏️incremental/🧬️schema/🔣️.json","🪞️parity/🧬️schema/🔣️.json","🧾️ci-report/🧬️schema/🔣️.json"]){
++  const file=join(build,path);
++  if(!existsSync(file))continue;
++  const text=readFileSync(file,"utf8");
++  expect(text,path).not.toMatch(/"enum":\s*\[\s*"nx",\s*"bazel"\s*\]/u);expect(text,path).not.toContain("^(nx|bazel)$");
++ }
++});
+# stage-clean orphan staged=backend-contract-tools/staged/bazel_backend.ts map=None
+--- /dev/null
++++ b/staged/backend-contract-tools/staged/bazel_backend.ts
+@@ -0,0 +1,54 @@
++import {join} from "node:path";
++import {readBuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
++import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
++import type {BackendContextV1,BackendExecutionContextV1,BuildBackendV1} from "../../../🔌️backends/🟦️.ts";
++
++/** 🔌️ bazel behind the neutral interface: its setup, reset, storage, cache tools and execution, moved here from the neutral CLI so that neutral code never names it. */
++export const backend:BuildBackendV1=Object.freeze({
++ id:"bazel",
++ async setup(context:BackendContextV1){const {root,invocation,phase:phaseControl}=context;
++    const bootstrap=await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts"),{requireBazelPlatformV1,bazelProgressLineV1,describeBazelReadinessV1}=await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🩺️readiness/🟦️.ts"),{prepareBazelModulesV1}=await import("../../../🔧️tools/🏗️bazel/📜️script.ts"),{withBazelSetupStorageV1}=await import("../../../🔧️tools/🏗️bazel/💾️storage/🟦️.ts"),{issueBuildTaskEnvironmentV1}=await import("../../../📥️caller/🟦️.ts"),publish=(stage:string)=>invocation.control.publish({owner:invocation.policy.owner,command:`build:tools:${stage}`,stage:"running"}),offline=issueBuildTaskEnvironmentV1(root,invocation,{kind:"noop"},[],process.env).CARGO_NET_OFFLINE==="true";
++    await requireBazelPlatformV1(root,phaseControl.signal);
++    await withBazelSetupStorageV1(root,invocation,phaseControl,async(storage,actualPhase)=>{
++      let last=0;const bazel=await bootstrap.prepareBazel(root,storage.tools,actualPhase,event=>{publish(event.phase);const step=bazelProgressLineV1(event,last);last=step.lastPercent;if(step.line)console.log(step.line);},offline);
++      publish("modules");const modules=await prepareBazelModulesV1(root,bazel,invocation,storage,actualPhase),row=bootstrap.bazelDistribution(process.platform,process.arch),report=await describeBazelReadinessV1({executable:bazel,platform:process.platform,arch:process.arch,sha256:row.sha256,lock:modules.lock,repository:modules.repository});
++      publish("ready");console.log(report.line);console.log(`[bazel] readiness ${JSON.stringify(report.readiness)}`);
++    });
++ },
++ async reset(context:BackendContextV1){const {root,invocation,phase:phaseControl}=context;
++  const{resetBazelBuildStateV1}=await import("../../../🔧️tools/🏗️bazel/💾️storage/🗑️reset/🟦️.ts");await resetBazelBuildStateV1(root,invocation,phaseControl);
++ },
++ async prepareStorage(context:BackendContextV1,snapshotBytes:number){const {root,invocation,phase:phaseControl}=context;
++  const {withBazelStorageV1}=await import("../../../🔧️tools/🏗️bazel/💾️storage/🟦️.ts");void snapshotBytes;await withBazelStorageV1(root,invocation,phaseControl,async storage=>{await storage.tools.recheck();await storage.dependencies.recheck();await storage.products.recheck();});
++ },
++ async cache(){return (await import("../../../🔧️tools/🏗️bazel/⚙️operations/🟦️.ts")).bazelBuildCacheToolV1();},
++ async cacheProbe(context:Readonly<{root:string;invocation:import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation}>){const {root,invocation}=context,[{withBazelSetupStorageV1},adapter,bootstrap,{bazelCacheProbeV1}]=await Promise.all([import("../../../🔧️tools/🏗️bazel/💾️storage/🟦️.ts"),import("../../../🔧️tools/🏗️bazel/📜️script.ts"),import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts"),import("../../../🔧️tools/🏗️bazel/🔁️probe/🟦️.ts")]);return withBazelSetupStorageV1(root,invocation,createIssuedResourceControlV1(invocation,"cache-verify:bazel",0),async(storage,phase)=>{const executable=await bootstrap.prepareBazel(root,storage.tools,phase,()=>{},false),modules=await adapter.prepareBazelModulesV1(root,executable,invocation,storage,phase);return bazelCacheProbeV1({version:bootstrap.BAZEL_VERSION,executable,installBase:join(storage.paths.install,bootstrap.BAZEL_VERSION,`${process.platform}-${process.arch}`),module:adapter.BAZEL_MODULE,lock:modules.lock,repository:modules.repository});});},
++ async remoteCache(){return (await import("../../../🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts")).bazelRemoteCacheToolV1();},
++ async execute(context:BackendExecutionContextV1){const {root,invocation,graph}=context,resolved={args:[...context.args],watch:context.watch},artifactPhase=context.phase,command=context.args[0]!;
++    if(command==="inputs")throw new Error("repo inputs is implemented for Nx; Bazel records the inputs of its spawns for repo verify build-parity");
++      const selection=await import("../../../🧭️selection/🟦️.ts");
++      process.env.SEMIO_BUILD_REUSE_GRAPH="true";
++      const adapter=await import("../../../🔧️tools/🏗️bazel/📜️script.ts");
++      const head=resolved.args.slice(0,resolved.args.indexOf("--")<0?undefined:resolved.args.indexOf("--")),dryRun=head.some(argument=>argument==="--dry-run"||argument==="--dry-run=true"||argument==="--graph"||argument.startsWith("--graph="));
++      const request=await selection.selectBuildTasksV1(root,graph,resolved.args,invocation,files=>dryRun?selection.affectedBuildProjectsV1(graph,files):adapter.bazelAffectedProjectsV1(root,graph,selection.affectedTouchesV1(graph,files),invocation,artifactPhase));
++      const planning=resolved.args.slice(0,resolved.args.indexOf("--")<0?undefined:resolved.args.indexOf("--")).some(argument=>argument==="--dry-run"||argument==="--dry-run=true"||argument==="--graph"||argument.startsWith("--graph=")),operations=await import("../../../🔧️tools/🏗️bazel/⚙️operations/🟦️.ts"),untouched=command==="affected"&&!request.tasks.length;
++      if(planning){
++        const plan=operations.bazelDryRunPlanV1(untouched?operations.bazelEmptyPlanV1:adapter.planBazelTasksV1(graph,adapter.bazelAuthorizedRequestV1(request,invocation))),output=selection.buildOptionV1(resolved.args,"graph");
++        if(output&&output!=="stdout"&&output!=="true"){
++          const {withRepositoryBuildReportV1}=await import("../../../📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,output,plan,invocation,async artifact=>{console.log(artifact.path);});
++        }else console.log(JSON.stringify(plan,null,2));
++        return;
++      }
++      if(untouched){console.log("[bazel] no affected tasks");return;}
++      if(resolved.watch){
++        const controller=new AbortController(),{withRequestedIssuedResourceControlV1}=await import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{readOwnedBuildInvocationV1}=await import("../../../📥️caller/🟦️.ts"),{runOwnedBuildChildInvocationV1}=await import("../../../📥️caller/📤️child/🟦️.ts");
++        await withRequestedIssuedResourceControlV1(artifactPhase,0,async childPhase=>{let watching:Promise<void>|undefined;
++        try{
++          await adapter.runBazelTasksV1(root,graph,request,invocation,childPhase,()=>{watching=selection.watchBuildInvocationV1(root,graph,["watch","--all","--include-global-files","--",process.execPath,join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"),"repo","run",resolved.watch!,"--output=stream"],invocation,childPhase,{initial:true,child:{readOwnedBuildInvocationV1,runOwnedBuildChildInvocationV1}});watching.catch(error=>controller.abort(error));});
++        }finally{controller.abort();await watching?.catch(error=>{if(!controller.signal.aborted)throw error;});}},controller.signal);
++        return;
++      }
++      const {storeReceiptTasksV1,withStoreReceiptsV1}=await import("../../../🧾️store-receipt/🟦️.ts");
++      await withStoreReceiptsV1({root,tasks:await storeReceiptTasksV1(root,graph,resolved.args,invocation,readBuildMode(process.env.SEMIO_BUILD_MODE)),run:async()=>{await adapter.runBazelTasksV1(root,graph,request,invocation,artifactPhase);},repair:async task=>{await adapter.runBazelTasksV1(root,graph,{...request,tasks:[task.id],args:request.tasks.includes(task.id)?request.args:[],skipCache:true,excludeDependencies:true},invocation,artifactPhase);}});
++ }
++});
+# stage-clean orphan staged=backend-contract-tools/staged/conformance_command.ts map=None
+--- /dev/null
++++ b/staged/backend-contract-tools/staged/conformance_command.ts
+@@ -0,0 +1,83 @@
++import {mkdir,mkdtemp,readFile,rm} from "node:fs/promises";
++import {tmpdir} from "node:os";
++import {join} from "node:path";
++import {advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
++import {resolveLanguageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
++import scenarios from "../📋️scenarios/🔣️.json" with {type:"json"};
++import {buildBackendAlternationV1,buildBackendDriverUrlV1,buildBackendIdsV1,buildBackendRowV1} from "../../🔌️backends/🟦️.ts";
++import {conformanceIssuesV1,renderConformanceReportV1,type ConformanceSetV1} from "../🟦️.ts";
++import type {ConformanceDriverV1,ConformanceHostV1} from "../🏃️runner/🟦️.ts";
++
++const operations=["list","plan","run"] as const,valuedOptions=Object.freeze(["--implementations","--scenario","--file","--lang"]),plainOptions=Object.freeze(["--json","--keep"]);
++const both=(english:string,german:string)=>`${english}\n${german}`;
++/** 📝️ The closed arguments of `repo conformance`. */
++export type ConformanceArgumentsV1=Readonly<{operation:typeof operations[number];backends:readonly string[]|"all";scenarios:readonly string[]|"all";file:string|undefined;json:boolean;keep:boolean;language:"en"|"de"|undefined}>;
++
++/** 🚩️ The option names `repo conformance` accepts, so the operations catalogue can be checked against the parser. */
++export function conformanceOptionNamesV1():{valued:readonly string[];plain:readonly string[]}{return {valued:valuedOptions,plain:plainOptions};}
++
++/** 🧷️ Reads `conformance list|plan|run` with its options; unknown, repeated and unvalued options are refused in both languages. */
++export function conformanceArgumentsV1(args:readonly string[]):ConformanceArgumentsV1{
++ const operation=args[0] as typeof operations[number];
++ if(!operations.includes(operation))throw Error(both("Expected repo conformance list|plan|run [options]","Erwartet: repo conformance list|plan|run [Optionen]"));
++ const seen=new Set<string>(),values:Record<string,string>={},flags=new Set<string>();
++ for(let index=1;index<args.length;index++){
++  const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
++  if(seen.has(name))throw Error(both(`Repeated option: ${name}`,`Wiederholte Option: ${name}`));
++  seen.add(name);
++  if(valuedOptions.includes(name)){const value=cut<0?args[++index]:argument.slice(cut+1);if(!value||value.startsWith("--"))throw Error(both(`Option ${name} needs a value`,`Option ${name} braucht einen Wert`));values[name]=value;}
++  else if(plainOptions.includes(name)&&cut<0)flags.add(name);
++  else throw Error(both(`Unknown conformance option: ${argument}`,`Unbekannte Option für conformance: ${argument}`));
++ }
++ const list=(name:string)=>values[name]?.split(",").filter(Boolean),backends=list("--implementations"),chosenScenarios=list("--scenario"),language=values["--lang"];
++ for(const id of backends??[])if(id!=="all")buildBackendRowV1(id);
++ const set=scenarios as unknown as ConformanceSetV1;
++ for(const id of chosenScenarios??[])if(id!=="all"&&!set.scenarios.some(row=>row.id===id))throw Error(both(`Unknown scenario: ${id} (${set.scenarios.map(row=>row.id).join("|")})`,`Unbekanntes Szenario: ${id} (${set.scenarios.map(row=>row.id).join("|")})`));
++ if(language!==undefined&&language!=="en"&&language!=="de")throw Error(both(`Unknown language: ${language} (en|de)`,`Unbekannte Sprache: ${language} (en|de)`));
++ return Object.freeze({operation,backends:!backends||backends.includes("all")?"all":backends,scenarios:!chosenScenarios||chosenScenarios.includes("all")?"all":chosenScenarios,file:values["--file"],json:flags.has("--json"),keep:flags.has("--keep"),language:language as "en"|"de"|undefined});
++}
++
++/** 🧾️ Reads a whole `repo conformance` request, which the build CLI hands over led by the command name. */
++export function conformanceRequestV1(args:readonly string[]):ConformanceArgumentsV1{
++ if(args[0]!=="conformance")throw Error(both("Expected the conformance command","Erwartet: der Befehl conformance"));
++ return conformanceArgumentsV1(args.slice(1));
++}
++
++/** 📋️ Lists the scenarios and what each backend claims for them. */
++export function renderConformanceListV1(set:ConformanceSetV1,language:"en"|"de"):string{
++ const ids=buildBackendIdsV1(),lines=[["scenario","capability",...ids].join(" | ")];
++ for(const scenario of set.scenarios)lines.push([scenario.id,scenario.capability,...ids.map(id=>buildBackendRowV1(id).capabilities[scenario.capability]?.support??"missing")].join(" | "),"   "+scenario.title[language]+((scenario.evidence??[]).length?"  ["+scenario.evidence!.map(item=>item.suite+":"+item.id).join(", ")+"]":""));
++ return lines.join("\n")+"\n";
++}
++
++/** 🚪️ The entry the build CLI calls for `repo conformance`; `args` are the whole request, led by the command name. */
++export async function runConformanceCommandV1(root:string,args:readonly string[],invocation:ScriptInvocation):Promise<void>{
++ const parsed=conformanceRequestV1(args),set=scenarios as unknown as ConformanceSetV1,issues=conformanceIssuesV1(set);
++ if(issues.length)throw Error(both("The conformance scenarios are inconsistent:\n","Die Konformitätsszenarien sind widersprüchlich:\n")+issues.join("\n"));
++ const language=parsed.language??(resolveLanguageV1(["en","de"],args,process.env).language as "en"|"de");
++ if(parsed.operation==="list"){console.log(renderConformanceListV1(set,language));return;}
++ const backends=parsed.backends==="all"?buildBackendIdsV1():parsed.backends,chosen=parsed.scenarios==="all"?set.scenarios.map(row=>row.id):parsed.scenarios;
++ if(parsed.operation==="plan"){console.log(backends.flatMap(backend=>chosen.map(scenario=>`${backend}: ${scenario}`)).join("\n"));return;}
++ const base=join(tmpdir(),"conformance-run");await mkdir(base,{recursive:true});
++ const scratch=await mkdtemp(join(base,"r-")),remotes:{stop():Promise<void>}[]=[];
++ const host:ConformanceHostV1={scratch,runtime:process.execPath,stubSource:await readStub(),signal:invocation.control.signal,
++  loadDriver:async id=>{const module=await import(buildBackendDriverUrlV1(id).href) as {driver:ConformanceDriverV1};return module.driver;},
++  startRemote:async()=>{
++   const {startRemoteCacheServerV1}=await import("../../🌐️remote-cache/🖥️server/🟦️.ts"),server=await startRemoteCacheServerV1({directory:join(scratch,"remote-"+remotes.length),host:"127.0.0.1",port:0,maximumBytes:1<<30,maximumEntryBytes:1<<28,maximumAgeDays:1,defaultInstance:"main",tokens:{}});
++   remotes.push(server);return {url:server.url+"/main",stop:()=>server.stop()};
++  },
++  now:()=>Date.now(),
++  progress:async stage=>{checkScriptInvocation(invocation);await advanceScriptInvocation(invocation,"conformance:"+stage,"running");}};
++ try{
++  const {runConformanceV1:run}=await import("../🏃️runner/🟦️.ts"),report=await run(set,backends,chosen,host);
++  const text=parsed.json?JSON.stringify(report,null,2):renderConformanceReportV1(report,set,language);
++  if(parsed.file){const {withRepositoryBuildReportV1}=await import("../../📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,parsed.file,report,invocation,async artifact=>{console.log(artifact.path);});}
++  else console.log(text);
++  if(report.failed>0)process.exitCode=1;
++ }finally{
++  for(const remote of remotes)await remote.stop().catch(()=>undefined);
++  if(!parsed.keep)await rm(scratch,{recursive:true,force:true});
++ }
++}
++
++async function readStub():Promise<string>{return readFile(new URL("../🎭️stub/🟦️.ts",import.meta.url),"utf8");}
+# stage-clean orphan staged=backend-contract-tools/staged/nx_backend.ts map=None
+--- /dev/null
++++ b/staged/backend-contract-tools/staged/nx_backend.ts
+@@ -0,0 +1,37 @@
++import {join} from "node:path";
++import {readBuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
++import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
++import {nxOperationArgumentsV1} from "../../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts";
++import {buildOperationHasNeutralBootstrapV1} from "../../../⚙️operations/🟦️.ts";
++import type {BackendContextV1,BackendExecutionContextV1,BuildBackendV1} from "../../../🔌️backends/🟦️.ts";
++
++/** 🔌️ nx behind the neutral interface: its setup, reset, storage, cache tools and execution, moved here from the neutral CLI so that neutral code never names it. */
++export const backend:BuildBackendV1=Object.freeze({
++ id:"nx",
++ bootstrapArguments(args:readonly string[]){const command=args[0];if(command==="tools")return ["--version"];if(command==="reset")return ["reset"];return command==="watch"||buildOperationHasNeutralBootstrapV1(command??"")?undefined:nxOperationArgumentsV1(args);},
++ async setup(context:BackendContextV1){const {root,invocation,phase:phaseControl}=context;
++  const adapter=await import("../../../../⚡️caching/🚀️bootstrap/📜️script.ts");await adapter.runOwnedNxInvocationV1(root,["--version"],invocation,phaseControl);
++ },
++ async reset(context:BackendContextV1){const {root,invocation,phase:phaseControl}=context;
++  const{invalidateBuildGraphV1}=await import("../../../🕸️graph/🟦️.ts");await invalidateBuildGraphV1(root,invocation,phaseControl);const {runOwnedNxInvocationV1}=await import("../../../../⚡️caching/🚀️bootstrap/📜️script.ts");await runOwnedNxInvocationV1(root,["reset"],invocation,phaseControl);
++ },
++ async prepareStorage(context:BackendContextV1,snapshotBytes:number){const {root,invocation,phase:phaseControl}=context;
++  const {prepareNxGraphCacheStorageV1}=await import("../../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts");await prepareNxGraphCacheStorageV1(root,invocation,phaseControl,snapshotBytes);
++ },
++ async cache(){return (await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts")).nxBuildCacheToolV1();},
++ async cacheProbe(context:Readonly<{root:string;invocation:import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation}>){const {root,invocation}=context;await (await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts")).prepareNxToolingStorageV1(root,invocation,createIssuedResourceControlV1(invocation,"cache-verify:nx",0));return (await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔁️probe/🟦️.ts")).nxCacheProbeV1(root);},
++ async remoteCache(){return (await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts")).nxRemoteCacheToolV1();},
++ async execute(context:BackendExecutionContextV1){const {root,invocation,graph}=context,resolved={args:[...context.args],watch:context.watch},artifactPhase=context.phase,command=context.args[0]!;
++    if(command==="exec"&&resolved.args.slice(0,resolved.args.indexOf("--")<0?undefined:resolved.args.indexOf("--")).some(argument=>argument==="--dry-run"||argument==="--dry-run=true"||argument==="--graph"||argument.startsWith("--graph="))){
++      const selection=await import("../../../🧭️selection/🟦️.ts"),{buildExecPlanV1}=await import("../../../⚙️operations/🟦️.ts"),listed=(names:string[])=>selection.buildOptionsV1(resolved.args,names).flatMap(value=>value.split(",").filter(Boolean));
++      console.log(JSON.stringify(buildExecPlanV1(selection.selectBuildProjectsV1(graph,listed(["projects","p"]),listed(["exclude"]))),null,2));
++      return;
++    }
++    const {runOwnedNxInvocationV1,publishBootstrapSources}=await import("../../../../⚡️caching/🚀️bootstrap/📜️script.ts"),{nxOperationArgumentsV1}=await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts");
++    publishBootstrapSources(root);
++    const {storeReceiptTasksV1,withStoreReceiptsV1}=await import("../../../🧾️store-receipt/🟦️.ts"),{storeRepairNxArgumentsV1}=await import("../../../🧾️store-receipt/🟨️.mjs"),boundary=resolved.args.indexOf("--"),forwarded=boundary<0?[]:resolved.args.slice(boundary+1);
++    const nx=async(nxArguments:string[])=>{const prior=process.exitCode;process.exitCode=undefined;try{await runOwnedNxInvocationV1(root,nxArguments,invocation,artifactPhase);if(process.exitCode)throw new Error(`Build invocation failed (${process.exitCode})`);}finally{process.exitCode=prior;}};
++    await withStoreReceiptsV1({root,tasks:await storeReceiptTasksV1(root,graph,resolved.args,invocation,readBuildMode(process.env.SEMIO_BUILD_MODE)),run:()=>nx(nxOperationArgumentsV1(resolved.args)!),repair:task=>nx(storeRepairNxArgumentsV1(task.id,task.id===resolved.args[1]?forwarded:[]))});
++    return;
++ }
++});
+# stage-clean orphan staged=backend-contract-tools/staged/nx_envelope.ts map=None
+--- /dev/null
++++ b/staged/backend-contract-tools/staged/nx_envelope.ts
+@@ -0,0 +1,15 @@
++import {resolve} from "node:path";
++import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
++import {readIssuedScriptProcessEnvelopeV1,readScriptProcessEnvelope,type ScriptInvocation,type ScriptProcessEnvelope} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
++import nxCallerSchema from "../../../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json" with {type:"json"};
++import schema from "../../../🧬️schema/📥️caller.json" with {type:"json"};
++import type {NativeBuildCallerCapabilitiesV1} from "../../../📥️caller/🟦️.ts";
++import {isStoreRepairSelectionV1} from "../../../🧾️store-receipt/🟨️.mjs";
++
++/** 📨️ Serializes only predeclared Nx child data while retaining the exact private parent invocation. */
++export function projectOwnedNxProcessEnvelopeV1(root:string,invocation:ScriptInvocation,selected:readonly string[]):ScriptProcessEnvelope{
++ const original=readIssuedScriptProcessEnvelopeV1(invocation),role=original.capabilities as NativeBuildCallerCapabilitiesV1,selection=["nx",...selected];let capabilities:object;
++ if(role.tool!==undefined){if(validateJsonSchemaSubset(schema,role).length||resolve(role.workspaceRoot)!==resolve(root)||role.arguments[0]!=="repo")throw Error("Original Repo-to-Nx caller required");const launches=role.launches.filter(launch=>launch[0]==="nx");if(!launches.length||!launches.some(launch=>JSON.stringify(launch)===JSON.stringify(selection))&&!isStoreRepairSelectionV1(selected))throw Error("Undeclared Repo-to-Nx child selection");capabilities={workspaceRoot:role.workspaceRoot,arguments:launches[0],selection,buildMode:role.buildMode,native:role.native,launches};}
++ else{const role=original.capabilities as import("../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts").NativeNxCallerCapabilitiesV1;if(validateJsonSchemaSubset(nxCallerSchema,role).length||resolve(role.workspaceRoot)!==resolve(root)||role.arguments[0]!=="nx"||!role.launches?.some(launch=>JSON.stringify(launch)===JSON.stringify(selection)))throw Error("Undeclared original Nx child selection");capabilities={...role,selection};}
++ if(validateJsonSchemaSubset(nxCallerSchema,capabilities).length)throw Error("Closed original Nx child data required");return readScriptProcessEnvelope({...original,capabilities},Date.now());
++}
+# stage-clean orphan staged=backend-contract-tools/staged/stub.ts map=None
+--- /dev/null
++++ b/staged/backend-contract-tools/staged/stub.ts
+@@ -0,0 +1,70 @@
++/** 🎭️ The task body every backend runs in the conformance workspace: reads declared files, writes declared outputs whose content is a pure function of them, and leaves start and end markers that no backend can fake. Self-contained: it imports only the runtime's built-ins. */
++import {appendFileSync,mkdirSync,readdirSync,readFileSync,statSync,writeFileSync} from "node:fs";
++import {createHash} from "node:crypto";
++import {dirname,join} from "node:path";
++
++/** 📋️ What the stub knows about one task. */
++export type StubTaskV1={id:string;reads:string[];outputs:string[];dependencyOutputs:string[];mode:"emit"|"fail"|"sleep";milliseconds?:number;normalize?:boolean;report?:boolean};
++/** 📒️ The spec file the stub reads: where to leave markers, and every task. */
++export type StubSpecV1={markers:string;tasks:Record<string,StubTaskV1>};
++
++const sha=(value:string)=>createHash("sha256").update(value).digest("hex");
++
++const escaped=(character:string)=>character.replace(/[.+^$()|\\[\]]/gu,"\\$&");
++const source=(pattern:string):string=>{
++ let text="";
++ for(let at=0;at<pattern.length;at++){
++  const character=pattern[at]!;
++  if(character==="*"){if(pattern[at+1]==="*"){at++;if(pattern[at+1]==="/"){at++;text+="(?:.*/)?";}else text+=".*";}else text+="[^/]*";}
++  else if(character==="?")text+="[^/]";
++  else if(character==="{"){const end=pattern.indexOf("}",at);if(end<0)throw Error("Unclosed { in "+pattern);text+="(?:"+pattern.slice(at+1,end).split(",").map(source).join("|")+")";at=end;}
++  else text+=escaped(character);
++ }
++ return text;
++};
++
++/** 🌐️ The stub's own matcher for the glob syntax the scenarios use (`*`, `**`, `?`, `{a,b}`), so that the files a task reads are decided without any runtime's glob: the reference every backend's selection is compared with. */
++export function stubGlobV1(pattern:string):RegExp{return new RegExp("^"+source(pattern)+"$","u");}
++
++/** 📚️ The workspace files, relative and sorted, that a pattern selects: dot entries are skipped and symlinks are followed; the walk starts at the literal directory prefix of the pattern. */
++export function stubSelectV1(pattern:string,root:string):string[]{
++ const matcher=stubGlobV1(pattern),first=pattern.search(/[*?{]/u),prefix=first<0?"":pattern.slice(0,first),start=prefix.slice(0,prefix.lastIndexOf("/")+1),found:string[]=[];
++ const walk=(directory:string):void=>{
++  let names:import("node:fs").Dirent[];
++  try{names=readdirSync(join(root,directory),{withFileTypes:true});}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT"||(error as NodeJS.ErrnoException).code==="ENOTDIR")return;throw error;}
++  for(const entry of names){
++   if(entry.name.startsWith("."))continue;
++   const path=directory+entry.name,facts=entry.isSymbolicLink()?statSync(join(root,path),{throwIfNoEntry:false}):undefined;
++   if(entry.isDirectory()||facts?.isDirectory())walk(path+"/");
++   else if((entry.isFile()||facts?.isFile())&&matcher.test(path))found.push(path);
++  }
++ };
++ if(first<0){try{if(statSync(join(root,pattern)).isFile())found.push(pattern);}catch{}}else walk(start);
++ return found.sort();
++}
++
++/** 🧮️ The reference content of every output of a task, from the files it reads and the outputs it depends on. `files` lists the workspace files the reads select, sorted. */
++export function stubOutputsV1(task:StubTaskV1,files:readonly string[],read:(path:string)=>string):Record<string,string>{
++ const text=(path:string)=>{const body=read(path);return task.normalize?body.split("\n").filter(line=>!line.startsWith("#")).join("\n"):body;};
++ const base=sha([task.id,...files.map(path=>path+"\0"+text(path)),...[...task.dependencyOutputs].sort().map(path=>path+"\0"+read(path))].join("\u0001"));
++ return Object.fromEntries(task.outputs.map(path=>[path,sha(base+"\n"+path)+"\n"]));
++}
++
++/** 🏃️ Runs one task in the current directory. With an output root, outputs are written below it and dependency outputs are read from it, which is how a backend that keeps products outside the workspace runs it; a stamp path receives an empty file when the task has no outputs. */
++export async function runStubV1(specPath:string,id:string,outputRoot?:string,stamp?:string):Promise<number>{
++ const spec=JSON.parse(readFileSync(specPath,"utf8")) as StubSpecV1,task=spec.tasks[id];
++ if(!task){process.stderr.write("Unknown conformance task "+id+"\n");return 2;}
++ appendFileSync(spec.markers,`start\t${id}\t${Date.now()}\n`);
++ if(task.mode==="sleep")await new Promise<void>(accept=>setTimeout(accept,task.milliseconds??1000));
++ if(task.mode==="fail"){appendFileSync(spec.markers,`fail\t${id}\t${Date.now()}\n`);return 1;}
++ const files:string[]=[];
++ for(const pattern of task.reads)files.push(...stubSelectV1(pattern,process.cwd()));
++ files.splice(0,files.length,...[...new Set(files)].sort());
++ const dependencies=new Set(task.dependencyOutputs),read=(path:string)=>readFileSync(dependencies.has(path)&&outputRoot?join(outputRoot,path):path,"utf8");
++ for(const[path,body]of Object.entries(stubOutputsV1(task,files,read))){const target=join(outputRoot??process.cwd(),path);mkdirSync(dirname(target),{recursive:true});writeFileSync(target,body);}
++ if(stamp&&!task.outputs.length){mkdirSync(dirname(stamp),{recursive:true});writeFileSync(stamp,"");}
++ appendFileSync(spec.markers,`end\t${id}\t${Date.now()}\n`);
++ return 0;
++}
++
++if(import.meta.main)process.exitCode=await runStubV1(process.argv[2]!,process.argv[3]!,process.argv[4]||undefined,process.argv[5]||undefined);

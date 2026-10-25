@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetRelationshipsNamespace {
-    pub(crate) namespace: String,
+    pub namespace: String,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxTransitionalMutation> for SetRelationshipsNamespace {

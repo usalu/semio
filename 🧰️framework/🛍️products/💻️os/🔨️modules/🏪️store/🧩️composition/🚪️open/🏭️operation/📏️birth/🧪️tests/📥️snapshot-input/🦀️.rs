@@ -3,6 +3,8 @@ use semio_framework_os_store_member_open::decoder::ArtifactPackSnapshotDecoder;
 use semio_framework_os_store_member_open::MemberOpenDiagnostic;
 use semio_framework_os_store_engine_owners::lifted_operation::MemberSnapshotOpenStep;
 use semio_framework_os_store_member_open_store::ProducedMemberSnapshotOpen;
+use semio_framework_value::ErasedSnapshotRetirement as _;
+use semio_framework_os_store_engine_owners::lifted_operation::MemberSnapshotOpenOperation as _;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_job::StepContext;
 use semio_framework_job::{root_cancel_token, Generation, OperationId, StepBudget};

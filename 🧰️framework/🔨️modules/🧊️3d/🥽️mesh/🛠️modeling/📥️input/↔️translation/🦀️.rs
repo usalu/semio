@@ -5,6 +5,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retaine
 
 /// 🧵️ Every partial clone, original alias, seam, attribute, material and texture remains in paid retirement custody.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct MeshTranslationProduction{identity:usize,offset:[f32;3],alias:Option<Arc<HalfedgeMesh>>,source:Option<RetainedCloneSource<HalfedgeMesh,Arc<HalfedgeMesh>>>,cursor:RetainedCloneOwner<HalfedgeMesh>,mesh:Option<HalfedgeMesh>,phase:u8,ordinal:usize,atoms:usize}
 impl MeshTranslationProduction{
  pub fn new(original:&Arc<HalfedgeMesh>,offset:[f32;3])->Result<Self,ValueError>{if offset.iter().any(|value|!value.is_finite()){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original mesh translation requires finite offset"))}Ok(Self{identity:Arc::as_ptr(original)as usize,offset,alias:None,source:None,cursor:Default::default(),mesh:None,phase:0,ordinal:0,atoms:0})}
@@ -23,7 +24,7 @@ impl MeshTranslationProduction{
   if self.identity!=Arc::as_ptr(original)as usize{return Err(changed())}if self.phase==7||grant.maximum_items==0{return Ok((None,Default::default()))}let demand=self.demand(body)?;if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok((None,Default::default()))}
   let metadata=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};let receipt=match self.phase{
    0=>{self.alias=Some(Arc::clone(original));self.phase=1;metadata},
-   1=>{let alias=self.alias.take().ok_or_else(changed)?;match RetainedCloneSource::<HalfedgeMesh>::admit_borrowed(alias,|mesh|&**mesh,grant){Ok((source,receipt))=>{self.source=Some(source);self.phase=2;receipt},Err((error,alias))=>{self.alias=Some(alias);return Err(error)}}},
+   1=>{let alias=self.alias.take().ok_or_else(changed)?;match RetainedCloneSource::<HalfedgeMesh,Arc<HalfedgeMesh>>::admit_borrowed(alias,|mesh|&**mesh,grant){Ok((source,receipt))=>{self.source=Some(source);self.phase=2;receipt},Err((error,alias))=>{self.alias=Some(alias);return Err(error)}}},
    2=>{let result=self.cursor.advance(self.source.as_ref().ok_or_else(changed)?.try_borrow()?,body,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})?;let receipt=result.progress();self.atoms=self.atoms.saturating_add(receipt.copied_items);if matches!(result,RetainedCloneStep::Complete(_)){self.mesh=self.cursor.take();if self.mesh.is_none(){return Err(changed())}self.phase=3;}receipt},
    3=>{let mesh=self.mesh.as_mut().ok_or_else(changed)?;if let Some(vertex)=mesh.vertices.get_mut(self.ordinal){let position:[f32;3]=std::array::from_fn(|axis|vertex.position[axis]+self.offset[axis]);if position.iter().any(|value|!value.is_finite()){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original mesh translated vertex exceeds finite coordinates"))}vertex.position=position;self.ordinal+=1;}else{self.phase=4;}metadata},
    4=>{let receipt=self.cursor.close_step(grant)?.progress();if self.cursor.terminal_is_empty(){self.phase=5;}receipt},

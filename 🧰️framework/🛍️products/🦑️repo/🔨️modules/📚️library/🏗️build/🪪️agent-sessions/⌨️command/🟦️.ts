@@ -36,7 +36,7 @@ const weightOf=(text:string|undefined):number|undefined=>{
  if(!Number.isSafeInteger(value)||value<rules.minimum||value>rules.maximum)throw new AgentSessionErrorV1("invalidWeight",{value:text,minimum:rules.minimum,maximum:rules.maximum});return value;
 };
 
-/** 📊️ Counts what a session holds: leases of the checkout's lease store, capacity grants and live test sandboxes. A probe that fails leaves its count out of the answer. */
+/** 🤖️ Counts what a session holds: leases of the checkout's lease store, capacity grants and live test sandboxes. A probe that fails leaves its count out of the answer. */
 export async function readAgentSessionUsageV1(root:string,session:AgentSessionV1,environment:NodeJS.ProcessEnv,parent?:string):Promise<AgentSessionUsageV1|undefined>{
  try{
   const address=agentSessionAddressV1(session),report=readLeaseReportV1(`${root}/${REPOSITORY_LEASE_DIRECTORY_V1}`,environment,Date.now(),0),control=createCapacityControlV1();

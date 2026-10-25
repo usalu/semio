@@ -37,7 +37,7 @@ pub enum ShellEvent {
     TabActivated { window_id: String },
 }
 
-/// 🪟️ Retained dock/split/tab/window-cap/navbar chrome, driven by declarative `WindowLayout`.
+/// 🐚️ Retained dock/split/tab/window-cap/navbar chrome, driven by declarative `WindowLayout`.
 pub struct Shell {
     tree: UiTree,
     layout: Option<WindowLayout>,
@@ -59,12 +59,12 @@ impl Shell {
         Self { tree: UiTree::new(), layout: None, navbar: Vec::new(), pressed: None, window_kind_icons: std::collections::HashMap::new(), window_roles: std::collections::HashMap::new(), locale }
     }
 
-    /// 🪟️ Maps window kind ids to Lucide icon ids for tab-cap painting in `set_window_layout`.
+    /// 🗺️ Maps window kind ids to Lucide icon ids for tab-cap painting in `set_window_layout`.
     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
         self.window_kind_icons = icons;
     }
 
-    /// 👁️✏️ Contract freeze §5: "a session is `(artifact_ref, AppRef)`; the role is read off the
+    /// 🎭️✏️ Contract freeze §5: "a session is `(artifact_ref, AppRef)`; the role is read off the
     /// resolved `AppDefinition.role`, never inferred from the id string at runtime" — the host looks
     /// up the resolved role and tells the shell which window it governs. Applies immediately if a
     /// layout is already set (re-runs `set_window_layout`'s build with the current layout), so a late
@@ -75,7 +75,7 @@ impl Shell {
         self.rebuild_if_layout_present();
     }
 
-    /// 👁️✏️ The reverse of `set_window_role` — a window with no known role again, e.g. its
+    /// ⏪️✏️ The reverse of `set_window_role` — a window with no known role again, e.g. its
     /// artifact/app session closed.
     pub fn clear_window_role(&mut self, window_id: &str) {
         if self.window_roles.remove(window_id).is_some() {
@@ -83,12 +83,12 @@ impl Shell {
         }
     }
 
-    /// 👁️✏️ The role currently associated with `window_id`, if any.
+    /// 🔖️✏️ The role currently associated with `window_id`, if any.
     pub fn window_role(&self, window_id: &str) -> Option<ChromeRole> {
         self.window_roles.get(window_id).copied()
     }
 
-    /// 🌐️ Sets the locale role-chrome strings resolve against; re-paints the current layout's chrome
+    /// 🗣️ Sets the locale role-chrome strings resolve against; re-paints the current layout's chrome
     /// immediately, same as `set_window_role`.
     pub fn set_locale(&mut self, locale: Locale) {
         if self.locale != locale {
@@ -141,12 +141,12 @@ impl Shell {
         &self.tree
     }
 
-    /// 🌳️ Mutable access to the shell's retained tree.
+    /// 🌲️ Mutable access to the shell's retained tree.
     pub fn tree_mut(&mut self) -> &mut UiTree {
         &mut self.tree
     }
 
-    /// 🧭️ The stub navbar item labels currently set via `set_navbar`.
+    /// 🔝️ The stub navbar item labels currently set via `set_navbar`.
     pub fn navbar(&self) -> &[String] {
         &self.navbar
     }
@@ -184,7 +184,7 @@ fn root_stack() -> UiNode {
     UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("shell.root".into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None })
 }
 
-/// 👁️✏️ Everything `build_root`/`build_axis`/`build_stack`/`build_window` need to paint role-aware
+/// 🎨️✏️ Everything `build_root`/`build_axis`/`build_stack`/`build_window` need to paint role-aware
 /// window-cap chrome, bundled so the recursive builders take one reference instead of growing a new
 /// parameter per role-chrome need (contract freeze §5) — mirrors the pre-existing
 /// `window_kind_icons`-threading idiom this module already used, generalized to a small context
@@ -228,7 +228,7 @@ fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode,
     }
 }
 
-/// 🪟️ One window-cap/tab-header hit target, keyed by `instance_id` (falling back to
+/// 🔨️ One window-cap/tab-header hit target, keyed by `instance_id` (falling back to
 /// `window_kind_id`). Modeled as a `Button` rather than a `Stack` specifically so `events::hit_test`
 /// treats it as a matchable leaf, not a pass-through container (see `set_window_layout`'s doc
 /// comment). 👁️✏️ Contract freeze §5: a window whose id resolves a `ChromeRole` in

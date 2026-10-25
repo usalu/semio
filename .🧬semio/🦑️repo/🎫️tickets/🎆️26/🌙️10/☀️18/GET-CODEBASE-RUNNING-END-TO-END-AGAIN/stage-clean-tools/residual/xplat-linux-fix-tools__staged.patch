@@ -1,0 +1,499 @@
+# stage-clean orphan staged=xplat-linux-fix-tools/staged/files/w/0662e917e440.json map=None
+--- /dev/null
++++ b/staged/xplat-linux-fix-tools/staged/files/w/0662e917e440.json
+@@ -0,0 +1,33 @@
++{
++  "version": 1,
++  "envelope": {
++    "filesystemBytes": 33554432,
++    "maximumPhysicalBytes": 34603008
++  },
++  "files": [
++    [
++      "a",
++      1
++    ],
++    [
++      "b",
++      5000
++    ],
++    [
++      "c",
++      100000
++    ],
++    [
++      "d",
++      1048576
++    ]
++  ],
++  "hostPlatforms": [
++    {
++      "platform": "darwin"
++    },
++    {
++      "platform": "freebsd"
++    }
++  ]
++}
+# stage-clean orphan staged=xplat-linux-fix-tools/staged/files/w/3b1c9686b9df.ts map=None
+--- /dev/null
++++ b/staged/xplat-linux-fix-tools/staged/files/w/3b1c9686b9df.ts
+@@ -0,0 +1,49 @@
++import {expect,test} from "bun:test";
++import Ajv from "ajv";
++import {existsSync,readdirSync,readFileSync,statSync} from "node:fs";
++import {dirname,join,resolve} from "node:path";
++import fixture from "./🧫️fixtures/🔣️.json";
++import {nativeStoragePlatformV1} from "../../🟦️.ts";
++
++const platformRoot=resolve(import.meta.dir,"../.."),storageRoot=resolve(platformRoot,"..");
++const repositoryRoot=(()=>{let current=import.meta.dir;for(let depth=0;depth<24;depth++){if(existsSync(join(current,".devcontainer","devcontainer.json")))return current;const parent=dirname(current);if(parent===current)break;current=parent;}return undefined;})();
++const walk=(directory:string):string[]=>readdirSync(directory,{withFileTypes:true}).flatMap(entry=>{const path=join(directory,entry.name);return entry.isDirectory()?walk(path):/\.(ts|mjs|json|py|feature)$/u.test(entry.name)?[path]:[];});
++
++test("the declared platform selects its backend: macOS the mounted image, Linux and Windows the directory partition",()=>{
++ const check=new Ajv({strict:true}).compile({type:"object",additionalProperties:false,required:["platform","backend","opens","retires"],properties:{platform:{enum:["darwin","linux","win32"]},backend:{enum:["macos","linux","windows"]},opens:{type:"string"},retires:{type:"string"}}});
++ const source=readFileSync(join(platformRoot,"🟦️.ts"),"utf8");
++ for(const row of fixture.platforms){
++  expect(check(row),JSON.stringify(check.errors)).toBe(true);expect(nativeStoragePlatformV1(row.platform),row.platform).toBe(row.backend);
++  const image=row.backend==="macos";
++  expect(source,row.platform).toContain(`const image=await(backend==="macos"?openNativeImageStorageV1(options):openNativeDirectoryImageStorageV1(options));`);
++  expect(source,row.platform).toContain(`return backend==="macos"?retireNativeImageStorageV1(options,admitted):retireNativeDirectoryImageStorageV1(options,admitted);`);
++  expect(image?row.opens==="openNativeImageStorageV1":row.opens==="openNativeDirectoryImageStorageV1",row.platform).toBe(true);
++ }
++ for(const platform of fixture.unsupported)expect(()=>nativeStoragePlatformV1(platform),platform).toThrow("Declared native fixed storage platform required");
++});
++
++test("only the macOS branch reaches the mounted-image module; the directory module refuses macOS and the image module refuses every other host",()=>{
++ const directory=readFileSync(join(storageRoot,"📁️image","🟦️.ts"),"utf8"),image=readFileSync(join(storageRoot,"🍎️image","🟦️.ts"),"utf8");
++ expect(directory).toContain('const directoryHost=()=>process.platform==="linux"||process.platform==="win32";');
++ expect(directory.match(/Directory partition backend unavailable on this platform/gu)?.length).toBe(2);
++ expect(image.match(/process\.platform!=="darwin"\)throw Error\("macOS fixed image enforcement is unavailable on this platform"\)/gu)?.length).toBeGreaterThanOrEqual(3);
++ const dispatch=readFileSync(join(platformRoot,"🟦️.ts"),"utf8");
++ expect(dispatch.match(/openNativeImageStorageV1/gu)?.length).toBe(2);expect(dispatch.match(/retireNativeImageStorageV1/gu)?.length).toBe(2);
++});
++
++test("no source below the storage module names a retired loop-device, image-file or privileged-mount identifier",()=>{
++ const own=join(platformRoot,"🧪️tests","🧭️dispatch"),offenders:string[]=[];
++ for(const path of walk(storageRoot)){
++  if(path.startsWith(own))continue;
++  const text=readFileSync(path,"utf8");
++  for(const word of fixture.retiredIdentifiers)if(text.includes(word))offenders.push(path.slice(storageRoot.length)+": "+word);
++ }
++ expect(offenders).toEqual([]);
++});
++
++test.skipIf(repositoryRoot===undefined)("the development container needs no privilege, capability, device or loop mount for the native partitions",()=>{
++ const compose=readFileSync(join(repositoryRoot!,".devcontainer","docker-compose.yml"),"utf8").split("\n").filter(line=>!/^\s*#/u.test(line)),definition=readFileSync(join(repositoryRoot!,".devcontainer","devcontainer.json"),"utf8");
++ for(const key of fixture.unprivilegedKeys)expect(compose.some(line=>new RegExp("^\\s*"+key+"\\s*:","u").test(line)),"docker-compose.yml: "+key).toBe(false);
++ for(const word of fixture.devcontainerForbidden)expect(definition.includes(word),"devcontainer.json: "+word).toBe(false);
++ expect(statSync(join(repositoryRoot!,".devcontainer")).isDirectory()).toBe(true);
++});
+# stage-clean orphan staged=xplat-linux-fix-tools/staged/files/w/5048b8e07b61.ts map=None
+--- /dev/null
++++ b/staged/xplat-linux-fix-tools/staged/files/w/5048b8e07b61.ts
+@@ -0,0 +1,80 @@
++import {expect,test} from "bun:test";
++import {testPythonV1} from "../../../../../../../🧪️testing/🧰️toolchain/🟦️.ts";
++import {mkdirSync,mkdtempSync,rmSync,statfsSync,writeFileSync,readFileSync} from "node:fs";
++import {join,resolve} from "node:path";
++import {tmpdir} from "node:os";
++import fixture from "./🧫️fixtures/🔣️.json";
++import {activateNativeDirectoryV1,allocateNativeDirectoryV1,deactivateNativeDirectoryV1,measureNativeDirectoryUsageV1,nativeDirectoryUsageV1,nativeDirectoryProtocolV1} from "../../../../📁️directory/🟦️.ts";
++import {nativeDirectoryUsedBytesSyncV1,nativePartitionOfV1,nativeStatfsSyncV1,nativeStatfsV1} from "../🟦️.ts";
++
++const protocol=nativeDirectoryProtocolV1();
++const scratch=()=>{const base=process.env.SEMIO_TEST_ARTIFACT_DIR?resolve(process.env.SEMIO_TEST_ARTIFACT_DIR):tmpdir();mkdirSync(base,{recursive:true});return mkdtempSync(join(base,"sfs-"));};
++const sh=(...args:string[])=>Bun.spawnSync(args,{stdout:"pipe",stderr:"pipe"});
++const partition=(base:string,name:string,attach:boolean)=>{const directory=join(base,name);mkdirSync(directory,{recursive:true});mkdirSync(join(directory,"m"));allocateNativeDirectoryV1({directory,filesystemBytes:fixture.envelope.filesystemBytes,maximumPhysicalBytes:fixture.envelope.maximumPhysicalBytes},()=>true);if(attach)activateNativeDirectoryV1(directory);return directory;};
++const walk=`import os,stat,sys
++seen=set();t=0
++def w(p):
++    global t
++    r=os.lstat(p)
++    if stat.S_ISREG(r.st_mode) and r.st_nlink>1:
++        k=(r.st_dev,r.st_ino)
++        if k in seen: return
++        seen.add(k)
++    t+=r.st_blocks*512
++    if stat.S_ISDIR(r.st_mode):
++        for n in os.listdir(p): w(os.path.join(p,n))
++w(sys.argv[1]);print(t)`;
++
++test("a path below the root of a directory partition resolves to the partition and nothing else does",()=>{
++ const base=scratch();try{
++  const directory=partition(base,"p",true),inside=join(directory,"m","deep","er");mkdirSync(inside,{recursive:true});
++  const found=nativePartitionOfV1(inside,"linux")!;
++  expect(found.directory).toBe(directory);expect(found.root).toBe(join(directory,"m"));expect(found.attached).toBe(true);expect(found.filesystemBytes).toBe(fixture.envelope.filesystemBytes);expect(found.maximumPhysicalBytes).toBe(fixture.envelope.maximumPhysicalBytes);
++  for(const row of fixture.hostPlatforms)expect(nativePartitionOfV1(inside,row.platform),row.platform).toBeUndefined();
++  expect(nativePartitionOfV1(join(base,"elsewhere"),"linux")).toBeUndefined();expect(nativePartitionOfV1(directory,"linux")).toBeUndefined();
++  deactivateNativeDirectoryV1(directory);expect(nativePartitionOfV1(join(directory,"m"),"linux")!.root).toBe(join(directory,protocol.volume));expect(nativePartitionOfV1(join(directory,"m"),"linux")!.attached).toBe(false);
++ }finally{rmSync(base,{recursive:true,force:true});}
++});
++
++test("statfs of a partition is the declared envelope minus the measured tree, in both number and bigint form, and agrees with an independent python walk",async()=>{
++ const base=scratch();try{
++  const directory=partition(base,"p",true),root=join(directory,"m");
++  for(const[name,size]of fixture.files)writeFileSync(join(root,String(name)),Buffer.alloc(Number(size),3));
++  const python=testPythonV1(),used=python?Number(sh(python,"-c",walk,root).stdout.toString()):measureNativeDirectoryUsageV1(root).allocatedBytes,unit=protocol.usage.blockBytes;
++  await nativeDirectoryUsageV1(root,fixture.envelope.maximumPhysicalBytes).fresh();
++  const wide=await nativeStatfsV1(root,{bigint:true,platform:"linux"}),narrow=await nativeStatfsV1(join(root,"."),{platform:"linux"}),sync=nativeStatfsSyncV1(root,{bigint:true,platform:"linux"});
++  expect(Number(wide.bsize)).toBe(unit);expect(Number(wide.blocks)*unit).toBe(fixture.envelope.filesystemBytes);
++  expect((Number(wide.blocks)-Number(wide.bfree))*unit).toBe(Math.ceil(used/unit)*unit);expect(wide.bavail).toBe(wide.bfree);
++  expect(typeof narrow.bsize).toBe("number");expect(narrow.bavail).toBe(Number(wide.bavail));expect(sync).toEqual(wide);
++  expect(typeof wide.bsize).toBe("bigint");
++  writeFileSync(join(root,"more"),Buffer.alloc(1048576,4));await nativeDirectoryUsageV1(root,fixture.envelope.maximumPhysicalBytes).fresh();
++  const after=await nativeStatfsV1(root,{bigint:true,platform:"linux"});expect(Number(wide.bavail)-Number(after.bavail)).toBe(1048576/unit);
++  const reading=nativeStatfsSyncV1(root,{platform:"linux"});expect(reading.bavail).toBe(Number(after.bavail));
++  writeFileSync(join(root,"again"),Buffer.alloc(2097152,5));
++  const cached=await nativeStatfsV1(root,{bigint:true,platform:"linux"}),exact=await nativeStatfsV1(root,{bigint:true,platform:"linux",fresh:true});
++  expect(cached.bavail,"a young measurement is served as is").toBe(after.bavail);expect(Number(after.bavail)-Number(exact.bavail),"a fresh request sees the new bytes").toBe(2097152/unit);
++ }finally{rmSync(base,{recursive:true,force:true});}
++});
++
++test("a young measurement is served as is, an older one is served while one shared walk refreshes it, and only a missing or ancient one blocks on a walk",async()=>{
++ const base=scratch();try{
++  const directory=partition(base,"p",true),root=join(directory,"m"),max=fixture.envelope.maximumPhysicalBytes;writeFileSync(join(root,"a"),Buffer.alloc(8192,1));
++  const start=Date.now(),first=nativeDirectoryUsedBytesSyncV1(root,max,()=>start);
++  writeFileSync(join(root,"b"),Buffer.alloc(65536,1));
++  expect(nativeDirectoryUsedBytesSyncV1(root,max,()=>start+protocol.usage.recentMilliseconds-1),"young").toBe(first);
++  expect(nativeDirectoryUsedBytesSyncV1(root,max,()=>start+protocol.usage.recentMilliseconds+1),"old but servable").toBe(first);
++  await nativeDirectoryUsageV1(root,max).fresh();
++  const refreshed=nativeDirectoryUsedBytesSyncV1(root,max,()=>Date.now());expect(refreshed,"the background walk replaced it").toBeGreaterThan(first);
++  writeFileSync(join(root,"c"),Buffer.alloc(131072,1));
++  expect(nativeDirectoryUsedBytesSyncV1(root,max,()=>Date.now()+protocol.usage.synchronousMaximumAgeMilliseconds+1000),"ancient: walked again").toBeGreaterThan(refreshed);
++ }finally{rmSync(base,{recursive:true,force:true});}
++});
++
++test("host paths keep the host answer and Windows reports free space without statfs",async()=>{
++ const base=scratch();try{
++  const host=statfsSync(base),viaShim=await nativeStatfsV1(base,{platform:"linux"});
++  expect(viaShim.bsize).toBe(host.bsize);expect(viaShim.blocks).toBe(host.blocks);
++  const windows=await nativeStatfsV1(base,{bigint:true,platform:"win32"});expect(Number(windows.bsize)).toBe(protocol.usage.blockBytes);expect(Number(windows.bavail)).toBeGreaterThan(0);expect(windows.bavail).toBe(windows.bfree);
++  expect(nativeStatfsSyncV1(base,{platform:"win32"}).bsize).toBe(protocol.usage.blockBytes);
++ }finally{rmSync(base,{recursive:true,force:true});}
++});
+# stage-clean orphan staged=xplat-linux-fix-tools/staged/files/w/56a316fae39b.ts map=None
+--- /dev/null
++++ b/staged/xplat-linux-fix-tools/staged/files/w/56a316fae39b.ts
+@@ -0,0 +1,32 @@
++import {expect,test} from "bun:test";
++import Ajv from "ajv";
++import {mkdirSync,mkdtempSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
++import {join,resolve} from "node:path";
++import {tmpdir} from "node:os";
++import fixture from "./🧫️fixtures/🔣️.json";
++import {hermeticShimsV1,type HermeticShimPortV1} from "../../📦️dependencies/🟦️.ts";
++
++const fail=(code:string)=>Object.assign(Error(code),{code});
++const check=new Ajv({strict:true}).compile({type:"object",additionalProperties:false,required:["name"],properties:{name:{type:"string"},list:{type:"array",items:{type:"string"}},listError:{type:"string"},targets:{type:"object",additionalProperties:{type:"string"}},expect:{type:"array"},throws:{type:"string"}}});
++const port=(row:{list?:string[];listError?:string;targets?:Record<string,string>}):HermeticShimPortV1=>({
++ list:()=>{if(row.listError)throw fail(row.listError);return [...(row.list??[])];},
++ target:path=>{const value=row.targets![path.split("/").pop()!]!;if(/^E[A-Z]+$/u.test(value))throw fail(value);return value;}
++});
++
++test("only an absent .bin and an entry that is not a link mean no shim; every other failure is thrown",()=>{
++ for(const row of fixture.cases){
++  expect(check(row),row.name+JSON.stringify(check.errors)).toBe(true);
++  const call=()=>hermeticShimsV1("/modules",port(row as never));
++  if("throws" in row)expect(call,row.name).toThrow(row.throws!);else expect(call(),row.name).toEqual(row.expect);
++ }
++});
++
++test("on the real file system a link, a regular file and a dangling link behave as declared and a refused directory is thrown",()=>{
++ const base=mkdtempSync(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"shims-"));try{
++  const modules=join(base,"node_modules"),bin=join(modules,".bin");mkdirSync(bin,{recursive:true});
++  symlinkSync("../tool/bin/tool",join(bin,"tool"));writeFileSync(join(bin,"plain"),"#!/bin/sh\n");symlinkSync("../missing/bin/x",join(bin,"dangling"));
++  expect(hermeticShimsV1(modules)).toEqual([["dangling","../missing/bin/x"],["tool","../tool/bin/tool"]]);
++  expect(hermeticShimsV1(join(base,"nowhere"))).toEqual([]);
++  writeFileSync(join(base,"file"),"x");expect(hermeticShimsV1(join(base,"file"))).toEqual([]);
++ }finally{rmSync(base,{recursive:true,force:true});}
++});
+# stage-clean orphan staged=xplat-linux-fix-tools/staged/files/w/6eec2c9c2110.json map=None
+--- /dev/null
++++ b/staged/xplat-linux-fix-tools/staged/files/w/6eec2c9c2110.json
+@@ -0,0 +1,12 @@
++{
++  "version": 1,
++  "platforms": [
++    {"platform": "darwin", "backend": "macos", "opens": "openNativeImageStorageV1", "retires": "retireNativeImageStorageV1"},
++    {"platform": "linux", "backend": "linux", "opens": "openNativeDirectoryImageStorageV1", "retires": "retireNativeDirectoryImageStorageV1"},
++    {"platform": "win32", "backend": "windows", "opens": "openNativeDirectoryImageStorageV1", "retires": "retireNativeDirectoryImageStorageV1"}
++  ],
++  "unsupported": ["freebsd", "aix", "sunos", "android"],
++  "retiredIdentifiers": ["losetup", "mkfs.ext4", "mkfs.ext", "fallocate", "/dev/loop", "nativeLinuxLoopMountV1", "withOwnedLinuxChildrenV1", "readFixedKernelText", "fixed.img", "fixed.vhd", "CAP_SYS_ADMIN"],
++  "unprivilegedKeys": ["privileged", "cap_add", "devices", "security_opt", "pid", "network_mode"],
++  "devcontainerForbidden": ["\"privileged\"", "\"capAdd\"", "--privileged", "--cap-add", "--device"]
++}
+# stage-clean orphan staged=xplat-linux-fix-tools/staged/files/w/756cc6ba06c6.json map=ref:sha256-global
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🧪️tests/🧫️fixtures/🔣️.json
+@@ -0,0 +1,41 @@
++{
++  "version": 1,
++  "stat": [
++    {"name": "plain command", "text": "812 (bun) S 640 812 640 34816 812 4194560 5000 0 1 0 12 3 0 0 20 0 11 0 987654 123456789 4096 18446744073709551615 1 1 0 0 0 0 0 0 0 0 0 0 17 3 0 0 0 0 0\n", "parent": 640, "started": "tick:987654"},
++    {"name": "command with spaces and parentheses", "text": "99 (a (b) c d) R 7 99 7 0 -1 4194304 1 0 0 0 1 1 0 0 20 0 1 0 42 1 1 18446744073709551615 0 0 0 0 0 0 0 0 0 0 0 0 17 0 0 0 0 0 0\n", "parent": 7, "started": "tick:42"},
++    {"name": "truncated line", "text": "5 (x) S 1\n", "parent": null, "started": null},
++    {"name": "no parenthesis", "text": "garbage", "parent": null, "started": null}
++  ],
++  "linuxChain": {
++    "files": {
++      "/proc/300/stat": "300 (bash) S 200 300 200 0 -1 4194304 1 0 0 0 1 1 0 0 20 0 1 0 3000 1 1 18446744073709551615 0 0 0 0 0 0 0 0 0 0 0 0 17 0 0 0 0 0 0\n",
++      "/proc/300/cmdline": "-bash\u0000",
++      "/proc/200/stat": "200 (claude) S 100 200 100 0 -1 4194304 1 0 0 0 1 1 0 0 20 0 1 0 2000 1 1 18446744073709551615 0 0 0 0 0 0 0 0 0 0 0 0 17 0 0 0 0 0 0\n",
++      "/proc/200/cmdline": "/home/u/.local/bin/claude\u0000--resume\u0000",
++      "/proc/100/stat": "100 (sshd) S 1 100 100 0 -1 4194304 1 0 0 0 1 1 0 0 20 0 1 0 1000 1 1 18446744073709551615 0 0 0 0 0 0 0 0 0 0 0 0 17 0 0 0 0 0 0\n",
++      "/proc/100/comm": "sshd\n"
++    },
++    "first": 300,
++    "rows": [
++      {"pid": 300, "started": "tick:3000", "command": "-bash"},
++      {"pid": 200, "started": "tick:2000", "command": "/home/u/.local/bin/claude --resume"},
++      {"pid": 100, "started": "tick:1000", "command": "sshd"}
++    ]
++  },
++  "windows": {
++    "listing": [
++      {"pid": 4, "ppid": 0, "started": "2026-10-20T06:00:00.0000000Z", "command": "System"},
++      {"pid": 1200, "ppid": 4, "started": "2026-10-20T06:01:00.0000000Z", "command": "\"C:\\Windows\\System32\\services.exe\" services.exe"},
++      {"pid": 5100, "ppid": 1200, "started": "2026-10-20T08:00:00.0000000Z", "command": "\"C:\\Users\\u\\AppData\\Local\\Programs\\claude\\claude.exe\" claude.exe"},
++      {"pid": 6200, "ppid": 5100, "started": "2026-10-20T08:05:00.0000000Z", "command": "C:\\Program Files\\Git\\bin\\bash.exe -l bash.exe"},
++      {"pid": 7300, "ppid": 6200, "started": "2026-10-20T08:06:00.0000000Z", "command": "bun.exe repo cargo bun.exe"},
++      {"pid": 8400, "ppid": 9999, "started": "2026-10-20T09:00:00.0000000Z", "command": "orphan.exe orphan.exe"},
++      {"pid": 9999, "ppid": 4, "started": "2026-10-20T09:30:00.0000000Z", "command": "recycled.exe recycled.exe"}
++    ],
++    "first": 7300,
++    "pids": [7300, 6200, 5100, 1200],
++    "orphanFirst": 8400,
++    "orphanPids": [8400],
++    "single": {"pid": 77, "ppid": 4, "started": "2026-10-20T10:00:00.0000000Z", "command": "single.exe single.exe"}
++  }
++}
+# stage-clean orphan staged=xplat-linux-fix-tools/staged/files/w/8d27541825ee.ts map=None
+--- /dev/null
++++ b/staged/xplat-linux-fix-tools/staged/files/w/8d27541825ee.ts
+@@ -0,0 +1,45 @@
++import {expect,test} from "bun:test";
++import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
++import Ajv from "ajv";
++import {copyFileSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
++import {dirname,join,resolve} from "node:path";
++import {tmpdir} from "node:os";
++import fixture from "./🧫️fixtures/🔣️.json";
++import {BAZEL_HERMETIC_RUNNER} from "../../🏭️runner/🟦️.ts";
++
++const line=BAZEL_HERMETIC_RUNNER.split("\n").find(row=>row.startsWith("const shim="))!;
++const build=(io:{symlinkSync:unknown;copyFileSync:unknown;readFileSync:unknown;writeFileSync:unknown},executable:string)=>new Function("symlinkSync","copyFileSync","readFileSync","writeFileSync","resolve","dirname","executable","fail",line+"\nreturn shim;")(io.symlinkSync,io.copyFileSync,io.readFileSync,io.writeFileSync,resolve,dirname,executable,(message:string)=>{throw Error(message);}) as (target:string,path:string,platform?:string)=>void;
++const check=new Ajv({strict:true}).compile({type:"object",additionalProperties:false,required:["name","platform","path","target","kind"],properties:{name:{type:"string"},platform:{enum:["win32","linux","darwin"]},path:{type:"string"},target:{type:"string"},kind:{enum:["cmd","exe","refuse","missing","link"]},real:{type:"string"},exists:{type:"boolean"}}});
++const python=testPythonV1()!==null;
++
++test("a Windows shim is a .cmd or .exe file, never a symbolic link or a hard link, and a POSIX shim stays a symbolic link",()=>{
++ expect(line,"the runner declares one shim function").toContain("const shim=");
++ for(const row of fixture.rows){
++  expect(check(row),row.name+JSON.stringify(check.errors)).toBe(true);
++  const calls:string[][]=[],io={symlinkSync:(...a:string[])=>calls.push(["symlink",...a]),copyFileSync:(...a:string[])=>calls.push(["copy",...a]),readFileSync:(path:string)=>{if(row.exists===false)throw Object.assign(Error("ENOENT"),{code:"ENOENT"});calls.push(["read",path]);return "";},writeFileSync:(...a:string[])=>calls.push(["write",...a])};
++  const shim=build(io,fixture.executable),run=()=>shim(row.target,row.path,row.platform);
++  if(row.kind==="link"){run();expect(calls,row.name).toEqual([["symlink",row.target,row.path]]);continue;}
++  if(row.kind==="refuse"){expect(run,row.name).toThrow("cannot be shimmed");expect(calls,row.name).toEqual([]);continue;}
++  if(row.kind==="missing"){expect(run,row.name).toThrow("ENOENT");expect(calls.some(call=>call[0]==="write"||call[0]==="symlink"),row.name).toBe(false);continue;}
++  run();
++  if(hasReal(row)&&python){const walked=Bun.spawnSync([testPythonV1()??"python3","-c","import os,sys;print(os.path.normpath(os.path.join(os.path.dirname(sys.argv[1]),sys.argv[2])))",row.path,row.target],{stdout:"pipe"}).stdout.toString().trim();expect(walked,row.name).toBe(row.real);}
++  if(row.kind==="cmd")expect(calls.filter(call=>call[0]==="write"),row.name).toEqual([["write",row.path+".cmd",'@"'+fixture.executable+'" "'+row.real+'" %*\r\n']]);
++  else expect(calls.filter(call=>call[0]==="copy"),row.name).toEqual([["copy",row.real,row.path+".exe"]]);
++  expect(calls.some(call=>call[0]==="symlink"),row.name+": no symbolic link on Windows").toBe(false);
++ }
++});
++const hasReal=(row:{real?:string}):row is {real:string}=>row.real!==undefined;
++
++test("on the real file system the Windows branch writes a shim file and copies an executable without sharing its inode",()=>{
++ const base=mkdtempSync(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"shim-"));try{
++  const directory=join(base,"node_modules"),bin=join(directory,".bin");mkdirSync(join(directory,"tool","bin"),{recursive:true});mkdirSync(bin,{recursive:true});
++  writeFileSync(join(directory,"tool","bin","tool.js"),"console.log(1)\n");writeFileSync(join(directory,"tool","bin","tool.exe"),"MZ");
++  const shim=build({symlinkSync,copyFileSync,readFileSync,writeFileSync},"/opt/bun");
++  shim("../tool/bin/tool.js",join(bin,"tool"),"win32");shim("../tool/bin/tool.exe",join(bin,"native"),"win32");
++  expect(readFileSync(join(bin,"tool.cmd"),"utf8")).toBe('@"/opt/bun" "'+join(directory,"tool","bin","tool.js")+'" %*\r\n');
++  expect(lstatSync(join(bin,"tool.cmd")).isSymbolicLink()).toBe(false);
++  const source=lstatSync(join(directory,"tool","bin","tool.exe")),copy=lstatSync(join(bin,"native.exe"));
++  expect(copy.isSymbolicLink()).toBe(false);expect(copy.nlink).toBe(1);expect(source.nlink).toBe(1);expect(copy.ino).not.toBe(source.ino);
++  shim("../tool/bin/tool.js",join(bin,"linked"),"linux");expect(lstatSync(join(bin,"linked")).isSymbolicLink()).toBe(true);
++ }finally{rmSync(base,{recursive:true,force:true});}
++});
+# stage-clean orphan staged=xplat-linux-fix-tools/staged/files/w/bcefce58f9f8.ts map=ref:sha256-global
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🧪️tests/🟦️.ts
+@@ -0,0 +1,55 @@
++import {expect,test} from "bun:test";
++import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
++import Ajv from "ajv";
++import fixture from "./🧫️fixtures/🔣️.json";
++import {linuxAncestryV1,parseProcStatV1,psAncestryV1,resolveLaneIdV1,systemAncestryV1,windowsAncestryV1,WINDOWS_PROCESS_LISTING_V1} from "../🟦️.ts";
++
++const python=(code:string,...args:string[])=>Bun.spawnSync([testPythonV1()??"python3","-c",code,...args],{stdout:"pipe",stderr:"pipe"});
++const hasPython=testPythonV1()!==null;
++
++test("the stat line is read after the last parenthesis, so a command name with spaces or parentheses cannot shift the fields, as an independent python parse agrees",()=>{
++ const check=new Ajv({strict:true}).compile({type:"object",additionalProperties:false,required:["name","text","parent","started"],properties:{name:{type:"string"},text:{type:"string"},parent:{type:["integer","null"]},started:{type:["string","null"]}}});
++ for(const row of fixture.stat){
++  expect(check(row),row.name+JSON.stringify(check.errors)).toBe(true);
++  const parsed=parseProcStatV1(row.text);expect(parsed?.parent??null,row.name).toBe(row.parent);expect(parsed?.started??null,row.name).toBe(row.started);
++  if(hasPython&&row.parent!==null){const answer=python("import sys\nt=sys.argv[1]\nf=t[t.rindex(')')+2:].split()\nprint(f[1],f[19])",row.text).stdout.toString().trim();expect(answer).toBe(row.parent+" "+row.started!.slice(5));}
++ }
++});
++
++test("the Linux chain is walked through /proc alone, ends at an unreadable process, and names the agent client so its sessions get their own lane",()=>{
++ const files=fixture.linuxChain.files as Record<string,string>,rows=linuxAncestryV1(path=>files[path]??null,fixture.linuxChain.first);
++ expect(rows).toEqual(fixture.linuxChain.rows);
++ const lane=resolveLaneIdV1({environment:{},ancestry:()=>rows});expect(lane).toMatch(/^a[0-9a-z]{1,10}$/u);
++ expect(resolveLaneIdV1({environment:{},ancestry:()=>linuxAncestryV1(path=>files[path]??null,fixture.linuxChain.first)})).toBe(lane);
++ const other:Record<string,string>={...files,"/proc/200/stat":files["/proc/200/stat"]!.replace(" 2000 "," 2001 ")};
++ expect(resolveLaneIdV1({environment:{},ancestry:()=>linuxAncestryV1(path=>other[path]??null,fixture.linuxChain.first)}),"a restarted client is a new lane").not.toBe(lane);
++ expect(linuxAncestryV1(()=>null,300)).toEqual([]);expect(linuxAncestryV1(path=>files[path]??null,1)).toEqual([]);
++});
++
++test("the Windows chain comes from one process listing, stops at a recycled parent id and names the client by its image",()=>{
++ const text=JSON.stringify(fixture.windows.listing),rows=windowsAncestryV1(text,fixture.windows.first);
++ expect(rows.map(row=>row.pid)).toEqual(fixture.windows.pids);
++ expect(windowsAncestryV1(text,fixture.windows.orphanFirst).map(row=>row.pid)).toEqual(fixture.windows.orphanPids);
++ expect(resolveLaneIdV1({environment:{},ancestry:()=>rows})).toMatch(/^a[0-9a-z]{1,10}$/u);
++ expect(resolveLaneIdV1({environment:{},ancestry:()=>windowsAncestryV1(JSON.stringify(fixture.windows.listing.slice(0,1)),fixture.windows.first)})).toBe("d");
++ expect(windowsAncestryV1(JSON.stringify(fixture.windows.single),77).map(row=>row.pid)).toEqual([77]);
++ expect(windowsAncestryV1("not json",77)).toEqual([]);expect(windowsAncestryV1("[{\"pid\":\"x\"}]",77)).toEqual([]);
++ for(const word of["Win32_Process","ConvertTo-Json -Compress","ToUniversalTime","CommandLine"])expect(WINDOWS_PROCESS_LISTING_V1).toContain(word);
++});
++
++test("the macOS ps chain keeps its meaning behind the injected runner",()=>{
++ const table:Record<number,string>={50:" 40 Mon Oct 20 10:00:00 2026 /Applications/Claude.app/claude\n",40:"  1 Mon Oct 20 09:00:00 2026 launchd\n"};
++ expect(psAncestryV1(pid=>table[pid]??null,50)).toEqual([{pid:50,started:"Mon Oct 20 10:00:00 2026",command:"/Applications/Claude.app/claude"},{pid:40,started:"Mon Oct 20 09:00:00 2026",command:"launchd"}]);
++ expect(psAncestryV1(()=>null,50)).toEqual([]);
++});
++
++test.skipIf(process.platform!=="linux")("on a real Linux host the /proc chain equals the ps chain",()=>{
++ const rows=systemAncestryV1("linux"),ps=Bun.spawnSync(["ps","-o","ppid=","-p",String(process.pid)],{stdout:"pipe"}).stdout.toString().trim();
++ expect(rows[0]!.pid).toBe(Number(ps));expect(rows.every(row=>row.command.length>0)).toBe(true);
++});
++test.skipIf(process.platform!=="darwin")("on a real macOS host the ps chain starts at the parent process",()=>{
++ const rows=systemAncestryV1("darwin");expect(rows[0]!.pid).toBe(process.ppid);
++});
++test.skipIf(process.platform!=="win32")("on a real Windows host the CIM listing starts at the parent process",()=>{
++ const rows=systemAncestryV1("win32");expect(rows[0]!.pid).toBe(process.ppid);
++});
+# stage-clean orphan staged=xplat-linux-fix-tools/staged/files/w/fc6ad0fc9417.ts map=None
+--- /dev/null
++++ b/staged/xplat-linux-fix-tools/staged/files/w/fc6ad0fc9417.ts
+@@ -0,0 +1,67 @@
++import{lstatSync,statfsSync,type BigIntStatsFs,type StatsFs}from"node:fs";
++import{statfs}from"node:fs/promises";
++import{basename,dirname,join,resolve}from"node:path";
++import{measureNativeDirectoryUsageV1,nativeDirectoryEntryBoundV1,nativeDirectoryHostAvailableBytesV1,nativeDirectoryProtocolV1,nativeDirectoryUsageV1,observeNativeDirectoryStateV1,readNativeDirectoryAnchorFileV1}from"../../../📁️directory/🟦️.ts";
++
++const protocol=nativeDirectoryProtocolV1();
++/** 🧭️ One directory partition found above a path: its directory, the volume root now holding the data and its declared envelope. */
++export type NativePartitionV1=Readonly<{directory:string;root:string;attached:boolean;filesystemBytes:number;maximumPhysicalBytes:number}>;
++type RowV1={bsize:number;blocks:number;bfree:number;bavail:number};
++
++/** 🔎️ Finds the directory partition that holds a path (the path lies in or at its root `m`, and `fixed.dir` sits beside it); undefined for every host path and on hosts that keep partitions as mounted images. */
++export function nativePartitionOfV1(path:string,platform:string=process.platform):NativePartitionV1|undefined{
++ if(platform!=="linux"&&platform!=="win32")return undefined;
++ let current=resolve(path);
++ for(let depth=0;depth<=protocol.maximumDepth;depth++){
++  if(basename(current)===protocol.root){
++   const directory=dirname(current);let anchored=false;
++   try{anchored=lstatSync(join(directory,protocol.anchor)).isFile();}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT"&&(error as NodeJS.ErrnoException).code!=="ENOTDIR")throw error;}
++   if(anchored){const anchor=readNativeDirectoryAnchorFileV1(directory);let state:"attached"|"inactive"="attached";try{state=observeNativeDirectoryStateV1(directory);}catch{}return Object.freeze({directory,root:join(directory,state==="attached"?protocol.root:protocol.volume),attached:state==="attached",filesystemBytes:anchor.filesystemBytes,maximumPhysicalBytes:anchor.maximumPhysicalBytes});}
++  }
++  const parent=dirname(current);if(parent===current)return undefined;current=parent;
++ }
++ return undefined;
++}
++
++function statsFor(bigint:true,row:RowV1):BigIntStatsFs;
++function statsFor(bigint:false,row:RowV1):StatsFs;
++function statsFor(bigint:boolean,row:RowV1):BigIntStatsFs|StatsFs{
++ const number=(value:number)=>bigint?BigInt(value):value;
++ return Object.freeze({type:number(0),bsize:number(row.bsize),blocks:number(row.blocks),bfree:number(row.bfree),bavail:number(row.bavail),files:number(0),ffree:number(0)}) as BigIntStatsFs|StatsFs;
++}
++const rowOf=(partition:NativePartitionV1,usedBytes:number):RowV1=>{
++ const bsize=protocol.usage.blockBytes,blocks=Math.floor(partition.filesystemBytes/bsize),used=Math.min(blocks,Math.ceil(usedBytes/bsize));
++ return{bsize,blocks,bfree:blocks-used,bavail:blocks-used};
++};
++const hostRow=(path:string):RowV1=>{
++ const bsize=protocol.usage.blockBytes,free=Math.floor(nativeDirectoryHostAvailableBytesV1(path)/bsize);
++ return{bsize,blocks:free,bfree:free,bavail:free};
++};
++
++/** 💽️ Answers statfs for any path: the host filesystem as before, except below a directory partition, where the volume is the declared envelope and its used bytes come from the shared measured usage, never from the host disk that merely stores the directories; Windows has no statfs, so host paths read the free space of their volume. Asynchronous callers share one walk and accept a measurement of a few seconds unless they ask for a fresh one, as a before-and-after delta does. */
++export function nativeStatfsV1(path:string,options?:{bigint?:false;platform?:string;fresh?:boolean}):Promise<StatsFs>;
++export function nativeStatfsV1(path:string,options:{bigint:true;platform?:string;fresh?:boolean}):Promise<BigIntStatsFs>;
++export async function nativeStatfsV1(path:string,options?:{bigint?:boolean;platform?:string;fresh?:boolean}):Promise<StatsFs|BigIntStatsFs>{
++ const bigint=options?.bigint===true,platform=options?.platform??process.platform,partition=nativePartitionOfV1(path,platform);
++ if(partition){const usage=nativeDirectoryUsageV1(partition.root,partition.maximumPhysicalBytes),bytes=options?.fresh===true?await usage.fresh():await usage.recent(protocol.usage.recentMilliseconds);return bigint?statsFor(true,rowOf(partition,bytes)):statsFor(false,rowOf(partition,bytes));}
++ if(platform==="win32")return bigint?statsFor(true,hostRow(path)):statsFor(false,hostRow(path));
++ return bigint?statfs(path,{bigint:true}):statfs(path);
++}
++
++/** 💽️ Synchronous statfs with the same meaning: below a directory partition it serves the last measurement of the shared usage cell, refreshes an old one in the background and walks the tree synchronously only when none is younger than a minute. */
++export function nativeStatfsSyncV1(path:string,options?:{bigint?:false;platform?:string}):StatsFs;
++export function nativeStatfsSyncV1(path:string,options:{bigint:true;platform?:string}):BigIntStatsFs;
++export function nativeStatfsSyncV1(path:string,options?:{bigint?:boolean;platform?:string}):StatsFs|BigIntStatsFs{
++ const bigint=options?.bigint===true,platform=options?.platform??process.platform,partition=nativePartitionOfV1(path,platform);
++ if(partition){const bytes=nativeDirectoryUsedBytesSyncV1(partition.root,partition.maximumPhysicalBytes);return bigint?statsFor(true,rowOf(partition,bytes)):statsFor(false,rowOf(partition,bytes));}
++ if(platform==="win32")return bigint?statsFor(true,hostRow(path)):statsFor(false,hostRow(path));
++ return bigint?statfsSync(path,{bigint:true}):statfsSync(path);
++}
++
++/** 🧮️ Reports the bytes in use below a partition volume without awaiting: a measurement younger than the recent bound as it is; an older one up to the synchronous bound as it is, while one shared asynchronous walk refreshes it in the background; one bounded synchronous walk only when nothing younger than that bound exists. */
++export function nativeDirectoryUsedBytesSyncV1(usedRoot:string,maximumPhysicalBytes:number,now:()=>number=Date.now):number{
++ const cell=nativeDirectoryUsageV1(usedRoot,maximumPhysicalBytes),known=cell.peek(),age=known?now()-known.atMs:Infinity;
++ if(known&&age<=protocol.usage.recentMilliseconds)return known.bytes;
++ if(known&&age<=protocol.usage.synchronousMaximumAgeMilliseconds){cell.fresh().catch(()=>undefined);return known.bytes;}
++ const bytes=measureNativeDirectoryUsageV1(usedRoot,nativeDirectoryEntryBoundV1(maximumPhysicalBytes)).allocatedBytes;cell.record(bytes,now());return bytes;
++}
+# stage-clean orphan staged=xplat-linux-fix-tools/staged/files/w/map.json map=None
+--- /dev/null
++++ b/staged/xplat-linux-fix-tools/staged/files/w/map.json
+@@ -0,0 +1,25 @@
++{
++ "files": {
++  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🐧️linux/🧫️fixtures/🔣️.json": "5c296bb52abd.json",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🟦️.ts": "fc6ad0fc9417.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🔒️sites/🟦️.ts": "820e85331647.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🔒️sites/🧫️fixtures/🔣️.json": "4cd72dc12067.json",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🟦️.ts": "5048b8e07b61.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🧫️fixtures/🔣️.json": "0662e917e440.json",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🕰️clock/🧪️tests/🟦️.ts": "a26aeeaaef82.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🕰️clock/🧪️tests/🧫️fixtures/🔣️.json": "7ff40fea934b.json",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧪️tests/🧭️dispatch/🟦️.ts": "3b1c9686b9df.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧪️tests/🧭️dispatch/🧫️fixtures/🔣️.json": "6eec2c9c2110.json",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📏️usage/🧪️tests/🟦️.ts": "910b45a9ba3c.ts",
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📏️usage/🧪️tests/🧫️fixtures/🔣️.json": "7cc252dfa4c6.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🧪️tests/🪟️free-space/🟦️.ts": "c72a50a1ab3d.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🧪️tests/🟦️.ts": "bcefce58f9f8.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🧪️tests/🧫️fixtures/🔣️.json": "756cc6ba06c6.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🧪️tests/🔗️shims/🟦️.ts": "56a316fae39b.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🔒️hermetic/🧪️tests/🔗️shims/🧫️fixtures/🔣️.json": "e280da80e440.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/📥️strategies/🟦️.ts": "a5724fa600ff.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/📥️strategies/🧫️fixtures/🔣️.json": "013e47dc93d3.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🪟️shim/🟦️.ts": "8d27541825ee.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🏃️execution/🧪️tests/🪟️shim/🧫️fixtures/🔣️.json": "c5154cc30805.json"
++ }
++}
+# stage-clean different staged=xplat-linux-fix-tools/staged/files/🧰️framework/🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts map=suffix
+--- a/🧰️framework/🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts
+@@ -2,7 +2,6 @@
+ import{chmodSync,lstatSync,readdirSync}from"node:fs";
+ import{join}from"node:path";
+ import protocol from"./🔣️.json"with{type:"json"};
+-import { runtimeWhichV1 } from "../../../⚙️runtime/🚀️process/🟦️.ts";
+ 
+ type CandidateV1=Readonly<{command:string;arguments?:readonly string[];platforms?:readonly string[]}>;
+ type ToolRowV1=Readonly<{candidates:readonly CandidateV1[];probe:readonly string[];pattern:string;locate?:readonly string[]}>;
+@@ -13,7 +12,7 @@
+ /** 🔎️ The outcome: an absolute program path, or null with the candidates that were tried. */
+ export type TestToolResolutionV1=Readonly<{tool:TestToolNameV1;path:string|null;tried:readonly string[]}>;
+ 
+-const systemPort:TestToolchainPortV1=Object.freeze({platform:process.platform,which:command=>runtimeWhichV1(command),run:(command,args)=>{const result=spawnSync(command,[...args],{encoding:"utf8",timeout:10000,windowsHide:true});return{status:result.status,stdout:(result.stdout??"")+(result.stderr??"")};},environment:process.env,write:text=>{process.stderr.write(text+"\n");}});
++const systemPort:TestToolchainPortV1=Object.freeze({platform:process.platform,which:command=>Bun.which(command),run:(command,args)=>{const result=spawnSync(command,[...args],{encoding:"utf8",timeout:10000,windowsHide:true});return{status:result.status,stdout:(result.stdout??"")+(result.stderr??"")};},environment:process.env,write:text=>{process.stderr.write(text+"\n");}});
+ 
+ /** 🔎️ Resolves one tool: the first declared candidate that exists on PATH and answers its probe like the wanted program (a Windows Store stub or a Python 2 answers differently and is skipped); a launcher such as `py -3` is turned into the interpreter it starts, so the answer is always one program path. */
+ export function resolveTestToolV1(tool:TestToolNameV1,port:TestToolchainPortV1=systemPort):TestToolResolutionV1{

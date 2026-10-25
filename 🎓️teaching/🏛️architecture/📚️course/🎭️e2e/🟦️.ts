@@ -23,7 +23,7 @@
  * @see ../🧱️stack/🟦️.ts — the parts the stacks are booted from
  * @see ../🧪️tests — the specs
  * https://playwright.dev/docs/test-cli */
-import { buildModeEnvironment } from "../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { buildModeEnvironment } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
@@ -35,10 +35,10 @@ import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️mod
 import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { scriptInvocationBudget, scriptInvocationEnvironment } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
-import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
-import { withViteArtifactV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🟦️.ts";
-import { ticketOutput } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🎫️output/🟦️.ts";
-import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/⚡️caching/🌐️vite/🟦️.ts";
+import { withViteArtifactV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/⚡️caching/🌐️vite/💾️storage/🟦️.ts";
+import { ticketOutput } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚡️caching/🎫️output/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import { LAUNCHER_SIGNALS, PROCTOR_DEV_COURSE, launchProctor, proctorReady, type ProctorArtifact, type ProctorProcess } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import { acquireProctor } from "../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
 import { siteArtifactProblems } from "../🚀️deploy/🌐️site/🟦️.ts";
@@ -51,7 +51,7 @@ import { startToolV1 } from "../../../../🧰️framework/🔨️modules/🏃️
 /** 🗺️ The topologies the gate boots, in the order they are named. */
 export const COURSE_E2E_TOPOLOGIES = ["dev", "rehearsal"] as const;
 
-/** 🗺️ One topology of the gate. */
+/** 🕸️ One topology of the gate. */
 export type CourseTopology = (typeof COURSE_E2E_TOPOLOGIES)[number];
 
 /** 🧾️ The variables a spec reads: the topology it runs in, the proctor origin of its stack and the stack's control
@@ -81,7 +81,7 @@ export const SHARED_WORKERS = 1;
 const PLAYWRIGHT_CLI = ["node_modules", "playwright", "cli.js"] as const;
 const PLAYWRIGHT_CONFIG = ["🎓️teaching", "🏛️architecture", "📚️course", "🎭️e2e", "🎚️config", "🟦️.ts"] as const;
 
-/** 🧭️ What a command line asks for: the topologies (all when none is named), whether they run one after the other,
+/** 📋️ What a command line asks for: the topologies (all when none is named), whether they run one after the other,
  * whether the run directory is kept, a proctor executable to run instead of building one, and the arguments of
  * `playwright test`. */
 export function endToEndPlan(segments: readonly string[]): { readonly topologies: readonly CourseTopology[]; readonly serial: boolean; readonly keep: boolean; readonly proctor: string | undefined; readonly playwright: readonly string[] } {
@@ -231,7 +231,7 @@ function holdSiteArtifact(run: Run): Promise<{ readonly path: string; release():
   });
 }
 
-/** 🧱️ Retains one ready topology and its artifact reader through the learner journeys, then stops every owned part. */
+/** 🥞️ Retains one ready topology and its artifact reader through the learner journeys, then stops every owned part. */
 async function withStack(topology: CourseTopology, run: Run, consume: (stack: Stack) => Promise<void>): Promise<void> {
   const ports = await endToEndPorts(run.signal);
   const taken = (await Promise.all([ports.site, ports.proctor].map(async (port) => ((await portFree(port, run.signal)) ? [] : [port])))).flat();
@@ -334,7 +334,7 @@ function runSpecs(stack: Stack, run: Run, browsers: string, output: string, forw
   });
 }
 
-/** 🎭️ `test-e2e` — builds the proctor once, boots the topologies of `segments`, runs the specs against each, and stops
+/** 🏁️ `test-e2e` — builds the proctor once, boots the topologies of `segments`, runs the specs against each, and stops
  * and deletes everything again. It fails when a stack does not boot or any spec fails. */
 export async function runCourseEndToEnd(invocation: ScriptInvocation, repoRoot: string, bundleRoot: string, script: string, portEnv: string, segments: readonly string[]): Promise<void> {
   const plan = endToEndPlan(segments);

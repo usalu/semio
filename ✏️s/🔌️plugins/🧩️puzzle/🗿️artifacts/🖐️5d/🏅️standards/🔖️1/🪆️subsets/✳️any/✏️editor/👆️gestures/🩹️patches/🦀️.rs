@@ -51,14 +51,14 @@ impl Default for Puzzle5dPatchPartWork {
 
 impl Puzzle5dPatchPartWork {
     /// 🪙️ The original construction quote owns the exact typed mutation buffer.
-    pub(super) fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let capacity = (crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(size_of::<Puzzle5dMutation>())
             .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dPatchPartWork backing extent overflow"))?;
         Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
     }
 
     /// 🏭️ Original scope custody precedes allocation and receives the actual native capacity.
-    pub(super) fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
         scope.admit_owner(Self::original_birth_demands()?)?;
         let work = Self { mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), ..Self::default() };
         let capacity = work.mutations.capacity() * size_of::<Puzzle5dMutation>();
@@ -238,14 +238,14 @@ impl Default for Puzzle5dPatchFastenerWork {
 
 impl Puzzle5dPatchFastenerWork {
     /// 🪙️ The original construction quote owns the exact typed mutation buffer.
-    pub(super) fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let capacity = (crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(size_of::<Puzzle5dMutation>())
             .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dPatchFastenerWork backing extent overflow"))?;
         Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
     }
 
     /// 🏭️ Original scope custody precedes allocation and receives the actual native capacity.
-    pub(super) fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
         scope.admit_owner(Self::original_birth_demands()?)?;
         let work = Self { mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), ..Self::default() };
         let capacity = work.mutations.capacity() * size_of::<Puzzle5dMutation>();
@@ -418,14 +418,14 @@ impl Default for Puzzle5dPatchGripWork {
 
 impl Puzzle5dPatchGripWork {
     /// 🪙️ The original construction quote owns the exact typed mutation buffer.
-    pub(super) fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let capacity = (crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(size_of::<Puzzle5dMutation>())
             .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dPatchGripWork backing extent overflow"))?;
         Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
     }
 
     /// 🏭️ Original scope custody precedes allocation and receives the actual native capacity.
-    pub(super) fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
         scope.admit_owner(Self::original_birth_demands()?)?;
         let work = Self { mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), ..Self::default() };
         let capacity = work.mutations.capacity() * size_of::<Puzzle5dMutation>();

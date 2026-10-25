@@ -280,3 +280,35 @@ pub fn cell_rect(snapshot: &Grid2dSnapshot, x: u32, y: u32) -> (f64, f64, f64, f
 
 
 
+
+/// 🔑️ The identity of a `WfcTile2d` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for WfcTile2d {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+/// 🔑️ The identity of a `WfcAdjacencyRule2d` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for WfcAdjacencyRule2d {
+    type Key = String;
+    fn key(&self) -> String {
+        self.id.clone()
+    }
+}
+
+/// 🔑️ The identity of a `WfcPinnedCell2d` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for WfcPinnedCell2d {
+    type Key = String;
+    fn key(&self) -> String {
+        format!("{},{}", self.x, self.y)
+    }
+}
+
+/// 🔑️ The identity of a `WfcCell2d` inside its list delta.
+impl semio_framework_os_kernel::list_delta::Keyed for WfcCell2d {
+    type Key = String;
+    fn key(&self) -> String {
+        format!("{},{}", self.x, self.y)
+    }
+}

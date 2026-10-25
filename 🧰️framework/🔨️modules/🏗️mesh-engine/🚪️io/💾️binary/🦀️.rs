@@ -347,7 +347,7 @@ fn gltf_trs_matrix(t: [f32; 3], r: [f32; 4], s: [f32; 3]) -> GlbMatrix {
     ]
 }
 
-/// 🧮️ A node's own local matrix: explicit `matrix` (already column-major, 16 floats) takes
+/// 🌐️ A node's own local matrix: explicit `matrix` (already column-major, 16 floats) takes
 /// precedence over `translation`/`rotation`/`scale` per spec.
 fn gltf_node_local_matrix(node: &json::Value) -> GlbMatrix {
     if let Some(m) = node.get("matrix").and_then(json::Value::as_array).filter(|values| values.len() == 16) {
@@ -427,7 +427,7 @@ fn gltf_append_node(mesh: &mut MeshData, document: &json::Value, node_index: usi
     Ok(())
 }
 
-/// 🧊️ Decodes every triangle primitive in the active GLB/glTF scene into one renderer-neutral
+/// 🎬️ Decodes every triangle primitive in the active GLB/glTF scene into one renderer-neutral
 /// mesh, via this crate's own glTF 2.0 codec (`pack::json` + `semio_framework_io_base64`) —
 /// never the `gltf` crate, which survives only as a `[dev-dependencies]` differential-test oracle.
 pub fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {

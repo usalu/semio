@@ -5,6 +5,8 @@ import { basename, dirname, join, parse as parsePath, relative, resolve, sep } f
 import fastGlob from "fast-glob";
 import { parse, type ParseError } from "jsonc-parser";
 import ts from "typescript";
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
+import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { authorArtifactScaffold, ArtifactScaffoldError, type ArtifactScaffoldProgress } from "../../🏗️builder/🟦️.ts";
 import { canonicalFilenameForKind, loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { semanticArtifactEmptyFacetProjectionAuthority } from "../../🔍️discovery/🗃️owned-file-projection/🟦️.ts";
@@ -410,36 +412,26 @@ test("registers empty-facet authoring through its closed canonical route", async
   expect(project.targets[registration.target]).toBeDefined();
   expect(project.targets[registration.target]).toMatchObject({ executor: "repo:script", cache: registration.cache, options: { cwd: packageRelative, command: `repo ./📜️script.ts test ${registration.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
-  expect(manifest.scripts[registration.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
-  const path = join(packageRoot, "📜️script.ts"),
-    source = readFileSync(path, "utf8"),
-    syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const declarations = syntax.statements.filter((node) => ts.isClassDeclaration(node) && node.name?.text === "TestScript");
+  expect(manifest.scripts[registration.target]).toBe(`repo run @semio-tech/repo-lib:${registration.target}`);
+  const family = readRegisteredTestRoute(repoRoot, registration.command),
+    syntax = ts.createSourceFile(family.path, family.text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const declarations = syntax.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name !== undefined && node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) === true);
   expect(declarations.length).toBe(1);
-  const environmentPath = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts");
-  const environmentSyntax = ts.createSourceFile(environmentPath, readFileSync(environmentPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const environmentOwner = environmentSyntax.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "repoTestArtifactEnvironment");
-  expect(environmentOwner).toBeDefined();
-  const code = `${environmentOwner!.getText(environmentSyntax).replace(/^export /u, "")}\n${declarations[0]!.getText(syntax)}\nreturn new TestScript();`;
+  const code = `${declarations[0]!.getText(syntax).replace(/^export\s+/u, "")}\nreturn ${declarations[0]!.name!.text};`;
   for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
     const invocations: { executable: string; args: string[]; options: { cwd: string; env: NodeJS.ProcessEnv } }[] = [];
-    class FixtureBundle {
-      root = packageRoot;
-      repoRoot = repoRoot;
-    }
-    const router = new Function("BundleScript", "join", "resolve", "mkdirSync", "runRepositoryTestCommand", "resolveTestLevel", javascript)(
-      FixtureBundle,
+    const route = new Function("join", "runRepositoryTestCommand", "repoTestArtifactEnvironment", "TEST_LEVEL_BUDGET_MS", "runTransactionV2", javascript)(
       join,
-      resolve,
-      mkdirSync,
       async (executable: string, args: string[], options: { cwd: string; env: NodeJS.ProcessEnv }) => {
         invocations.push({ executable, args, options });
       },
+      repoTestArtifactEnvironment,
+      {},
       () => {
         throw new Error("Empty-facet authoring fell through to generic routing");
       },
     );
-    await router.run([registration.command]);
+    expect(await route({ invocation: {}, repoRoot, root: packageRoot, run: () => { throw new Error("Empty-facet authoring re-entered routing"); } }, [registration.command])).toBe(true);
     expect(invocations).toHaveLength(1);
     expect(invocations[0]!.executable).toBe(process.execPath);
     expect(invocations[0]!.args).toEqual(["test", join(repoRoot, registration.source)]);

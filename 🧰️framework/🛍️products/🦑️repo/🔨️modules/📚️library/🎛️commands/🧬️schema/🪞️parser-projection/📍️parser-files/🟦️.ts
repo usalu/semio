@@ -21,10 +21,10 @@ export interface SourceTree {
 /** 🔎️ True when the file itself exports `parse<name>` (a re-export from elsewhere does not count). */
 export const ownsParser = (source: string, name: string): boolean => new RegExp(`^export\\s+(?:(?:async\\s+)?function|const|let)\\s+parse${escapeRegExp(name)}\\b`, "m").test(source);
 
-/** 🔎️ True when the file itself declares the type `name` (a re-export from elsewhere does not count). */
+/** 🔢️ True when the file itself declares the type `name` (a re-export from elsewhere does not count). */
 export const declaresHere = (source: string, name: string): boolean => new RegExp(`^\\s*(?:export\\s+)?(?:declare\\s+)?(?:interface|type|const|class)\\s+${escapeRegExp(name)}\\b`, "m").test(source);
 
-/** 🔎️ The parsers a file exports, in file order. */
+/** 🔤️ The parsers a file exports, in file order. */
 export const ownedParserNames = (source: string): string[] => [...source.matchAll(/^export\s+(?:(?:async\s+)?function|const|let)\s+parse([A-Z][A-Za-z0-9]*)\b/gmu)].map((match) => match[1]!);
 
 /** 🧭️ The file path a specifier names from `from`, always with a leading `./` or `../`. */
@@ -33,7 +33,7 @@ export function specifierBetween(from: string, to: string): string {
   return path.startsWith(".") ? path : `./${path}`;
 }
 
-/** 📍️ The files of one leaf that may hold its parsers, and where each parser belongs: the file that already defines it, else the parser folder of the file that declares its type, else the leaf (always the leaf for a `pinned` parser). A parser the leaf holds but a run is `moving` out of it belongs where a new one would go. */
+/** 🗃️ The files of one leaf that may hold its parsers, and where each parser belongs: the file that already defines it, else the parser folder of the file that declares its type, else the leaf (always the leaf for a `pinned` parser). A parser the leaf holds but a run is `moving` out of it belongs where a new one would go. */
 export class ParserFiles {
   constructor(private readonly sources: SourceTree, readonly leaf: string, private readonly pinned: (name: string) => boolean = () => false) {}
 
@@ -60,7 +60,7 @@ export class ParserFiles {
   }
 }
 
-/** 📌️ The file a parser lives in, for any leaf of a run: importers name this file, never the leaf. A shared leaf (named by a package specifier) keeps every parser itself. */
+/** ▶️ The file a parser lives in, for any leaf of a run: importers name this file, never the leaf. A shared leaf (named by a package specifier) keeps every parser itself. */
 export class ParserHomes {
   constructor(private readonly sources: SourceTree, private readonly pins: ReadonlyMap<string, ReadonlySet<string>>, private readonly shared: ReadonlySet<string>, private readonly moving: ReadonlyMap<string, ReadonlySet<string>>) {}
 
@@ -118,10 +118,10 @@ export function pinnedParsers(sources: SourceTree, leaf: string, names: readonly
 //#region 🔖️Regions
 const HEADER = "/** 🚪️ The typed `parse<Export>` entry points projected from the schema for the types declared next to this folder.\n * @see ../🟦️.ts\n */\n";
 
-/** 🚪️ A new parser file: its header and the parsers inside the parser region. */
+/** 📄️ A new parser file: its header and the parsers inside the parser region. */
 export const parserFileText = (parsers: string): string => `${HEADER}\n${PARSER_REGION}\n${parsers}\n${PARSER_REGION_END}\n`;
 
-/** 🚪️ `parsers` appended to the parser region of a parser file (inside it, before its end marker). */
+/** ➕️ `parsers` appended to the parser region of a parser file (inside it, before its end marker). */
 export function appendParsers(source: string, parsers: string): string {
   const end = source.lastIndexOf(PARSER_REGION_END);
   if (!source.includes(PARSER_REGION)) return `${source.trimEnd()}\n\n${PARSER_REGION}\n${parsers}\n${PARSER_REGION_END}\n`;
@@ -141,14 +141,14 @@ const EXPORTED = /^export\s+(?:declare\s+)?(?:abstract\s+)?(interface|type|const
 const DECLARED = /^(?:export\s+)?(?:declare\s+)?(?:abstract\s+)?(?:interface|type|const|let|var|class|enum|(?:async\s+)?function)\s+([A-Za-z_$][\w$]*)/gmu;
 const IMPORTS = /^import\s+(type\s+)?\{([^}]*)\}\s*from\s*"([^"\n]+)";?[ \t]*\n?/gmu;
 
-/** 🔗️ The names a file exports by declaration, each marked as a type or a value. */
+/** 📤️ The names a file exports by declaration, each marked as a type or a value. */
 export function exportedNames(source: string): Map<string, boolean> {
   const found = new Map<string, boolean>();
   for (const match of source.matchAll(EXPORTED)) found.set(match[2]!, match[1] === "interface" || match[1] === "type");
   return found;
 }
 
-/** 🔗️ The names a file imports under their own name, with the specifier and whether the import is type-only. */
+/** 📥️ The names a file imports under their own name, with the specifier and whether the import is type-only. */
 export function importedNames(source: string): Map<string, { readonly spec: string; readonly type: boolean }> {
   const found = new Map<string, { readonly spec: string; readonly type: boolean }>();
   for (const match of source.matchAll(IMPORTS)) {
@@ -161,10 +161,10 @@ export function importedNames(source: string): Map<string, { readonly spec: stri
   return found;
 }
 
-/** 🔗️ Every name a file declares or imports at its top level. */
+/** 🎚️ Every name a file declares or imports at its top level. */
 export const boundNames = (source: string): Set<string> => new Set([...[...source.matchAll(DECLARED)].map((match) => match[1]!), ...importedNames(source).keys()]);
 
-/** 🔗️ The table of the names the files of one module tree export (a declaration wins over an import of the same name). */
+/** 🔣️ The table of the names the files of one module tree export (a declaration wins over an import of the same name). */
 export function symbolTable(sources: SourceTree, files: readonly string[]): Map<string, Binding> {
   const table = new Map<string, Binding>();
   for (const file of files) for (const [name, type] of exportedNames(sources.read(file))) if (!table.has(name)) table.set(name, { from: file, type });
@@ -179,7 +179,7 @@ const LITERAL = /"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`/gu;
 /** ✂️ The identifiers a text mentions; with `literals` false the contents of string and template literals are left out. */
 export const identifiersOf = (text: string, literals: boolean): Set<string> => new Set((literals ? text : text.replace(LITERAL, '""')).match(/[A-Za-z_$][\w$]*/gu) ?? []);
 
-/** ✂️ A source without its import statements and its re-export statements. */
+/** 🧾️ A source without its import statements and its re-export statements. */
 export const withoutModuleLines = (source: string): string => source.replace(IMPORTS, "").replace(/^export\s+(?:type\s+)?\{[^}]*\}\s*from\s*"[^"\n]+";?[ \t]*\n?/gmu, "");
 
 /** 🧩️ The import statements `file` needs for the table names that `names` mention and the file neither declares nor imports; `skip` names are provided elsewhere. */
@@ -199,7 +199,7 @@ export function importStatements(file: string, source: string, names: Iterable<s
   });
 }
 
-/** ✂️ `source` without the imported `candidates` that nothing in the file mentions any more. */
+/** 🧹️ `source` without the imported `candidates` that nothing in the file mentions any more. */
 export function pruneImports(source: string, candidates: ReadonlySet<string>): string {
   const used = identifiersOf(withoutModuleLines(source), true);
   return source.replace(IMPORTS, (whole, type: string | undefined, list: string, spec: string) => {

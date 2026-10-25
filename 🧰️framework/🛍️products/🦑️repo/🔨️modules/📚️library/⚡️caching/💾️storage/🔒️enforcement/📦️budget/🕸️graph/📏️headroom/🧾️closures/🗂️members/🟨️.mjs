@@ -32,7 +32,7 @@ export function memberKindOfV1(name){
  if(name==="generations/current.json")return"generation-pointer";
  if(/^generations\/m\/[a-f0-9]{64}\.json$/u.test(name))return"generation-manifest";
  if(/^generations\/o\/[a-f0-9]{64}\.json\.br$/u.test(name))return"generation-fragment";
- if(/^generations\/x\/[a-f0-9]{64}\.json\.br$/u.test(name))return"generation-index";
+ if(/^generations\/x\/[a-f0-9]{64}\.facts\.br$/u.test(name))return"generation-index";
  if(/^generations\/f\/[a-f0-9]{64}\.json\.br$/u.test(name))return"generation-frontier";
  if(!name.startsWith("inference/"))return undefined;
  if(/\/ip\/[a-f0-9]{24}\.json$/u.test(name))return"precision";

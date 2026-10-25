@@ -26,10 +26,11 @@ fn editable_project_suggestions_share_keyboard_and_pointer_acceptance() {
 fn suggestion_help_uses_the_selected_locale_and_customized_bindings() {
     let mut harness = source_launcher();
     harness.state.preferences.bindings.insert("view.suggest-accept".into(), vec!["alt+y".into()]);
-    assert!(harness.state.screen().caption.contains("Alt+Y"));
+    let caption = harness.state.screen().caption;
+    assert!(caption.contains("Alt+y"), "{caption:?}");
     harness.state.set_locale(Locale::De);
     let caption = harness.state.screen().caption;
-    assert!(caption.contains("Alt+Y")); assert!(caption.contains("übernimmt"));
+    assert!(caption.contains("Alt+y") && caption.contains("übernimmt"), "{caption:?}");
 }
 
 fn fixture() -> serde_json::Value { serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }

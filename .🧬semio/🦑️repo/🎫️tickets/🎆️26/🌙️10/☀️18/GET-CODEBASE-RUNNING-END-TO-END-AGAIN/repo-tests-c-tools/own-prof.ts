@@ -1,0 +1,15 @@
+import glob from "fast-glob";
+import TOML from "@iarna/toml";
+import {readFileSync} from "node:fs";
+import {join,relative} from "node:path";
+import {cargoWorkspaceForManifest,cargoWorkspaceMembers} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+const t=(l:string,f:()=>any)=>{const s=performance.now();const r=f();console.log("[prof]",l,Math.round(performance.now()-s),"ms");return r;};
+const root="/Users/ueli/Documents/semio",framework=join(root,"🧰️framework");
+const doc:any=TOML.parse(readFileSync(join(framework,"Cargo.toml"),"utf8"));
+const adm=doc.workspace.metadata.semio.repository;
+console.log("[prof] patterns",JSON.stringify(adm["member-manifests"]),JSON.stringify(adm["exclude-patterns"]));
+const ind=t("glob",()=>glob.sync(adm["member-manifests"],{cwd:framework,onlyFiles:true,ignore:adm["exclude-patterns"]}));
+console.log("[prof] glob hits",ind.length);
+const scope=t("workspaceFor",()=>cargoWorkspaceForManifest(root,"🧰️framework/Cargo.toml"));
+const m=t("members",()=>cargoWorkspaceMembers(root,scope));
+console.log("[prof] members",m.length);

@@ -1,4 +1,4 @@
-/** 🎛 Owns the window engagement pane that edits the active tool parameters. */
+/** 🪟️ Owns the window engagement pane that edits the active tool parameters. */
 import * as React from "react";
 import { type IconName } from "@semio-tech/assets";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
@@ -31,7 +31,7 @@ export interface EngagementStatus {
   content: React.ReactNode;
 }
 
-/** 🔘️ One discrete option on an engagement {@link EngagementRingControl}. */
+/** 🍩️ One discrete option on an engagement {@link EngagementRingControl}. */
 export interface EngagementRingOption {
   id: string;
   label: string;
@@ -46,7 +46,7 @@ export interface EngagementSliderControl {
   value: number;
   min: number;
   max: number;
-  /** 🎚️ Absolute preloaded/ready extent on the fixed `[min, max]` range. */
+  /** 📗️ Absolute preloaded/ready extent on the fixed `[min, max]` range. */
   ready?: number;
   step?: number;
   unit?: string;
@@ -81,7 +81,7 @@ export interface EngagementRingControl {
   onSelect?: (id: string) => void;
 }
 
-/** 🔘️ One discrete option on an engagement {@link EngagementToggleGroupControl}. */
+/** ⏯️ One discrete option on an engagement {@link EngagementToggleGroupControl}. */
 export interface EngagementToggleGroupOption {
   id: string;
   label: string;
@@ -107,7 +107,7 @@ export interface EngagementSelectItem {
   label: string;
 }
 
-/** 🔽️ Engagement select dropdown for large enums. */
+/** ☑️ Engagement select dropdown for large enums. */
 export interface EngagementSelectControl {
   kind: "select";
   id?: string;
@@ -119,7 +119,7 @@ export interface EngagementSelectControl {
   onChange?: (value: string) => void;
 }
 
-/** 🎛️ Optional engagement UI control for the active action step. */
+/** 🪜️ Optional engagement UI control for the active action step. */
 export type EngagementControl = EngagementSliderControl | EngagementStepperControl | EngagementRingControl | EngagementToggleGroupControl | EngagementSelectControl;
 
 /** 🏷️ i18n keys for window engagement chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
@@ -127,7 +127,7 @@ export const UI_ENGAGEMENT = {
   actions: "ui.engagement.actions",
 } as const satisfies Record<string, UiTranslationKey>;
 
-/** 🏷️ Default English copy for window engagement chrome (matches `ui.engagement.*` en bundle). */
+/** 🔤️ Default English copy for window engagement chrome (matches `ui.engagement.*` en bundle). */
 export const ENGAGEMENT_USER = {
   actionsAria: "Actions",
 } as const;
@@ -137,9 +137,9 @@ export interface EngagementSpec {
   /** 🎯️ Ongoing engagement: chrome stays visible; {@link options} are step transitions. */
   sessionActive?: boolean;
   options?: EngagementOption[];
-  /** 🎛️ Optional slider, stepper, or ring control for the active step. */
+  /** ⭕️ Optional slider, stepper, or ring control for the active step. */
   control?: EngagementControl;
-  /** 🎛️ Optional additional controls rendered below the primary control. */
+  /** ➕️ Optional additional controls rendered below the primary control. */
   controls?: readonly EngagementControl[];
   status?: EngagementStatus[];
 }
@@ -264,7 +264,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
   );
 }
 
-/** 💬️ Top-aligned engagement: status heading, optional control, and option buttons. */
+/** 🔝️ Top-aligned engagement: status heading, optional control, and option buttons. */
 const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, control, controls, status, className = "" }) => {
   const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.actions);
   const primaryStepStatus = sessionActive ? status?.find((row) => row.id === "engagement-step") : undefined;

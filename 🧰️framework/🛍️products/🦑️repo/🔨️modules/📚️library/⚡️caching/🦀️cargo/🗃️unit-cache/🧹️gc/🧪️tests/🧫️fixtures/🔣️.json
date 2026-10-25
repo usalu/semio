@@ -37,18 +37,18 @@
       "name": "exactly at the high-water mark",
       "input": {
         "volumeBytes": 1000,
-        "freeBytes": 200,
+        "freeBytes": 125,
         "emergencyBytes": 100,
         "nowMs": 1000000,
         "lastLaunchMs": 999999
       },
-      "decision": "enough"
+      "decision": "throttled"
     },
     {
       "name": "one byte above the high-water mark launches the collector",
       "input": {
         "volumeBytes": 1000,
-        "freeBytes": 199,
+        "freeBytes": 124,
         "emergencyBytes": 100,
         "nowMs": 1000000,
         "lastLaunchMs": null
@@ -59,7 +59,7 @@
       "name": "above the high-water mark but launched a minute ago",
       "input": {
         "volumeBytes": 1000,
-        "freeBytes": 199,
+        "freeBytes": 124,
         "emergencyBytes": 100,
         "nowMs": 1000000,
         "lastLaunchMs": 940000
@@ -70,7 +70,7 @@
       "name": "above the high-water mark and launched exactly one interval ago",
       "input": {
         "volumeBytes": 1000,
-        "freeBytes": 199,
+        "freeBytes": 124,
         "emergencyBytes": 100,
         "nowMs": 1000000,
         "lastLaunchMs": 700000
@@ -98,6 +98,61 @@
         "lastLaunchMs": null
       },
       "decision": "launch"
+    },
+    {
+      "name": "between target and floor and never watched before launches the watching collector",
+      "input": {
+        "emergencyBytes": 100,
+        "nowMs": 1000000,
+        "volumeBytes": 1000,
+        "freeBytes": 200,
+        "lastLaunchMs": null
+      },
+      "decision": "watch"
+    },
+    {
+      "name": "between target and floor and launched a minute ago is throttled",
+      "input": {
+        "emergencyBytes": 100,
+        "nowMs": 1000000,
+        "volumeBytes": 1000,
+        "freeBytes": 200,
+        "lastLaunchMs": 940000
+      },
+      "decision": "throttled"
+    },
+    {
+      "name": "between target and floor and launched exactly one interval ago watches again",
+      "input": {
+        "emergencyBytes": 100,
+        "nowMs": 1000000,
+        "volumeBytes": 1000,
+        "freeBytes": 200,
+        "lastLaunchMs": 700000
+      },
+      "decision": "watch"
+    },
+    {
+      "name": "exactly at the target needs only maintenance",
+      "input": {
+        "emergencyBytes": 100,
+        "nowMs": 1000000,
+        "volumeBytes": 1000,
+        "freeBytes": 250,
+        "lastLaunchMs": 999999
+      },
+      "decision": "enough"
+    },
+    {
+      "name": "one byte below the target starts watching",
+      "input": {
+        "emergencyBytes": 100,
+        "nowMs": 1000000,
+        "volumeBytes": 1000,
+        "freeBytes": 249,
+        "lastLaunchMs": null
+      },
+      "decision": "watch"
     }
   ],
   "outOfSpaceVectors": [

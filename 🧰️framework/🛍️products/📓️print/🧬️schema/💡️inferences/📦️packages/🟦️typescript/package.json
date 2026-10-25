@@ -23,7 +23,7 @@
     "./probes": "./🔬️probes/🟦️.ts",
     "./render": "./🖼️render/🟦️.ts",
     "./scale": "./📐scale/🟦️.ts",
-    "./script": "./📜️script.ts",
+    "./verification": "./🧪️verification/🟦️.ts",
     "./theme": "./🎨theme/🟦️.ts",
     "./transform": "./🧮transform/🟦️.ts",
     "./validation": "./✅️validation/🟦️.ts"

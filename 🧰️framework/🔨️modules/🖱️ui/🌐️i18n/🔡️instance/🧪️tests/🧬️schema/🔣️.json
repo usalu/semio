@@ -1,0 +1,84 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "instances"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "instances": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "options",
+     "bundles",
+     "steps"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "language",
+       "fallbackLanguage",
+       "supportedLanguages"
+      ],
+      "properties": {
+       "language": {
+        "type": "string"
+       },
+       "fallbackLanguage": {
+        "type": "string"
+       },
+       "supportedLanguages": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "bundles": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "object"
+      }
+     },
+     "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+       "type": "object",
+       "required": [
+        "call"
+       ],
+       "properties": {
+        "call": {
+         "enum": [
+          "t",
+          "exists",
+          "fixed",
+          "language",
+          "resolvedLanguage",
+          "changeLanguage",
+          "addBundle"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

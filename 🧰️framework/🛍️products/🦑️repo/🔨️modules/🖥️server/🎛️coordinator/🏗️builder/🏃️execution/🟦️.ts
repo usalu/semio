@@ -1,3 +1,4 @@
+import {countedCompilerCapacityRequestV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {join,relative,resolve} from "node:path";
 import {createRequire} from "node:module";
 import {rm,symlink,readFile,writeFile,lstat} from "node:fs/promises";
@@ -22,12 +23,12 @@ import executionSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 const PACKAGE_DIR=resolve(import.meta.dirname,"../../📦️packages/🟦️typescript");
 /** 🏗️ Compiles the actual coordinator with a dedicated bounded compiler defining Source closure. */
 export async function buildCoordinatorNextV1(workspace:string,invocation:ScriptInvocation,segments:string[]=[]):Promise<void>{
-    if(validateJsonSchemaSubset(executionSchema,{version:1,command:"build",modes:["prototype","release"],maximumDefiningFiles:192}).length)throw new Error("Closed Next compiler command required");
+    if(validateJsonSchemaSubset(executionSchema,{version:1,command:"build",modes:["prototype","release"],maximumDefiningFiles:4096}).length)throw new Error("Closed Next compiler command required");
     if(segments.length)throw new Error("Next build configuration belongs to its authored owner");
     const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), require = createRequire(join(PACKAGE_DIR, "package.json"));
     const control = scriptCompilerAdmissionControlV1(invocation, "compiler:build", 600_000);
     await withCoordinatorNextInputsV1(workspace,invocation,control,async(inputs,inputPhase)=>withRepositoryCacheStoreV1(workspace,"dependencies",invocation,inputPhase,(_dependencies,dependencyPhase)=>withNextStorageV1(workspace,mode,invocation,dependencyPhase,async(store,layout,_temporary,actualPhase)=>{
-    await withCompilerState({capacity:{kind:"whole-host"}, root: layout.state, owner: "repo-coordinator:next", compiler: `next:${require("next/package.json").version}:node:${process.versions.node}`, configuration: JSON.stringify([PACKAGE_DIR, await readFile(join(PACKAGE_DIR, "next.config.mjs"), "utf8"), segments]), mode, control:actualPhase, storage:store.storage,storageControl:store.control, files: ["next", "node_modules", "tsconfig.json", "next.tsbuildinfo", "required-server-files-publication.json", "standalone-server.js", "standalone-package.json", "next-env.d.ts"], environment: {...devToolingEnv(),...store.environment} }, async (directory, compilerEnvironment,actualPhase) => {
+    await withCompilerState({capacity:countedCompilerCapacityRequestV1(), root: layout.state, owner: "repo-coordinator:next", compiler: `next:${require("next/package.json").version}:node:${process.versions.node}`, configuration: JSON.stringify([PACKAGE_DIR, await readFile(join(PACKAGE_DIR, "../../🏗️builder/🛠️next-config/🟨️.mjs"), "utf8"), segments]), mode, control:actualPhase, storage:store.storage,storageControl:store.control, files: ["next", "node_modules", "tsconfig.json", "next.tsbuildinfo", "required-server-files-publication.json", "standalone-server.js", "standalone-package.json", "next-env.d.ts"], environment: {...devToolingEnv(),...store.environment} }, async (directory, compilerEnvironment,actualPhase) => {
       await rm(join(directory, "node_modules"), { recursive: true, force: true });
       await symlink(join(PACKAGE_DIR, "node_modules"), join(directory, "node_modules"), process.platform === "win32" ? "junction" : "dir");
       const mutable = join(directory, "next"), destination = layout.output, typescript = join(directory, "tsconfig.json");

@@ -22,7 +22,7 @@ const appearanceBootFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "
   readonly deadKeyCases: readonly { name: string; deadKey: string; deadValue: string; prefersDark: boolean; resolved: "light" | "dark" }[];
 };
 
-/** 🌓️ Runs one boot script against a throwaway DOM and reports what the first painted frame would use. */
+/** 🚀️ Runs one boot script against a throwaway DOM and reports what the first painted frame would use. */
 async function runBootAppearanceScript(script: string, store: Record<string, string>, prefersDark: boolean): Promise<{ dark: boolean; appearance: string; bodyBackground: string }> {
   const vm = await import("node:vm");
   const documentElement = { classList: { values: new Set<string>(), toggle(name: string, on: boolean) { if (on) this.values.add(name); else this.values.delete(name); } }, dataset: {} as Record<string, string>, style: {} as Record<string, string> };

@@ -21,7 +21,7 @@ The server keeps a ring event log (a long session never loses its connection to 
 Scope `repo.client.mcp` (`https://json.schemas.assets.semio-tech.com/repo/client/mcp/schema.json`).
 
 - `🧬️schema/🔗️.graphql` — the normative SDL: the query, mutation, input, enum and object types the CLI
-  executor answers and the VS Code extension's typed documents are written against.
+  executor answers.
 - `🧬️schema/🔣️.json` — draft-07 facet of the same 62 exports, so a resolved selection or a mutation
   input can be validated outside a GraphQL runtime. Field arguments live in the SDL only; a JSON
   instance is one already-resolved selection, so every object field is optional and nullability is

@@ -1,0 +1,33 @@
+{
+ "extends": "../../../../../../../../🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false,
+  "skipLibCheck": true,
+  "composite": false
+ },
+ "include": [],
+ "files": [
+  "../../../../../../../../🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/📤️producer/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🪟️panels/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/📓️print/🔨️modules/📥️source-staging/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📥️refusal/📜️script.ts",
+  "../../../../../../../../🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/💾️storage/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/👓️reading/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🎯️destination/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧩️extension-package/🟦️.ts",
+  "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts",
+  "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🔌️provider/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🧪️tests/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🔌️providers/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🧪️tests/🎯️build-closures/🟦️.ts"
+ ]
+}

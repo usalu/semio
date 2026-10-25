@@ -405,7 +405,7 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
     let edit = |id: &str| fixture["edits"].as_array().unwrap().iter().find(|edit| edit["id"] == id).unwrap();
     let mut inverses = Vec::new();
     fn commit(snapshot: &mut DocxSnapshot, mutation: DocxMutation, inverses: &mut Vec<DocxMutation>) {
-        let inverse = Mutation::inverse(&mutation, &*snapshot).expect("valid retained mutation inverse fixture");
+        let inverse = ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &*snapshot).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse.len(), 1, "canonical edit has one compact inverse");
         let outcome = apply_docx_mutation(snapshot, &mutation);
         assert!(outcome.messages().is_empty(), "canonical edit refused: {:?}", outcome.messages());

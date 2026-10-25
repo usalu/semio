@@ -462,9 +462,13 @@ export type DevServeCommandV1 = Readonly<{ script: string; args: readonly string
 const DEV_SERVE_REACT_SCRIPT = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
 const DEV_SERVE_WGPU_SCRIPT = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts";
 
+/** 🖥️ The playground variant a serve hosts when the caller names none: `s`, the full OS shell with every plugin (an empty variant is refused by the serve script, so a bare `serve-hold --serve <url>` could never boot). */
+export const DEV_SERVE_DEFAULT_VARIANT_V1 = "s";
+
 /** 🧾️ Both spawn shapes, as data: HMR is off for either shell so no peer's edit reloads a page mid-run. */
 export function devServeCommandV1(request: DevServeSpawnRequestV1): DevServeCommandV1 {
   if (request.renderer === "wgpu" && (!request.compositionConfigPath || request.compositionConfigPath.length > 4096)) throw new Error("dev serve: explicit bounded composition configuration required");
+  if (request.renderer === "react" && request.variant === "") throw new Error("dev serve: the React shell serve requires a playground variant");
   const link = request.hubUrl === null ? { S_LOCAL_ONLY: "1", S_HUB_URL: null } : { S_LOCAL_ONLY: null, S_HUB_URL: request.hubUrl };
   const env = { SEMIO_PLUGIN: request.variant, SEMIO_RENDERER: request.renderer, SEMIO_VITE_HMR: "0", S_OS_PORT: String(request.port), ...link };
   return request.renderer === "react"
@@ -586,7 +590,7 @@ export async function ensureDevServe(options: DevServeOptionsV1): Promise<DevSer
   }
   options.signal?.throwIfAborted();
   const logPath = options.logPath ?? join(options.repoRoot, ".🧬semio", "🌐hub", "dev-serves", `serve-${options.port}.log`);
-  const child = world.spawnServe({ port: options.port, variant: options.variant ?? "", compositionConfigPath: options.compositionConfigPath, renderer: options.renderer ?? "react", profile: options.profile ?? "prototype", hubUrl: options.hubUrl?.trim().replace(/\/+$/u, "") || null, logPath });
+  const child = world.spawnServe({ port: options.port, variant: options.variant ?? DEV_SERVE_DEFAULT_VARIANT_V1, compositionConfigPath: options.compositionConfigPath, renderer: options.renderer ?? "react", profile: options.profile ?? "prototype", hubUrl: options.hubUrl?.trim().replace(/\/+$/u, "") || null, logPath });
   report({ kind: "spawning", url, pid: child.pid, logPath });
   let stopped: Promise<void> | null = null;
   const stop = (): Promise<void> =>

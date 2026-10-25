@@ -5,7 +5,7 @@ import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-auth
 import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 import { policyListPluginArtifactDirs } from "../../🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts";
 import { policyReadFileSafe, policyReaddirSafe } from "../../🔍️discovery/📖️source-access/🟦️.ts";
-import { TranspilerV1 } from "../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
 
 export type ArtifactIoArchitectureBreach = Readonly<{ id: string; summary: string; kind: string; scope: string; priority: "high"; reason: string; solution: string }>;
 export type ArtifactIoArchitectureOptions = Readonly<{ cancelled?: () => boolean; progress?: (event: Readonly<{ phase: "inventory" | "checking" | "complete"; path: string }>) => void }>;

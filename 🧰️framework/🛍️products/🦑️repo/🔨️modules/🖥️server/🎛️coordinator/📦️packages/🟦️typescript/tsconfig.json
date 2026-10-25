@@ -38,6 +38,21 @@
       ],
       "@/lib/source-index": [
         "../../../📚️library/🔎️source-index/🟦️.ts"
+      ],
+      "@semio-tech/repo-server-library/authentication": [
+        "../../../📚️library/🔐️authentication/🟦️.ts"
+      ],
+      "@semio-tech/repo-server-library/event": [
+        "../../../📚️library/📡️event/🟦️.ts"
+      ],
+      "@semio-tech/repo-server-library/persistence": [
+        "../../../📚️library/🗄️persistence/🟦️.ts"
+      ],
+      "@semio-tech/repo-server-library/source-index": [
+        "../../../📚️library/🔎️source-index/🟦️.ts"
+      ],
+      "@semio-tech/framework-transient": [
+        "../../../../../../../🔨️modules/🫧️transient/🟦️.ts"
       ]
     }
   },

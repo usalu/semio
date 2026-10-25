@@ -94,12 +94,12 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Transie
     }
 
     pub fn returned_reads_terminal_is_empty(&self) -> bool {
-        self.active_returned_read.is_none() && self.reads.as_ref().is_none_or(|reads| reads.terminal_is_empty())
+        self.active_returned_read.is_none() && self.reads.as_ref().is_none_or(|reads| (**reads).terminal_is_empty())
     }
 
     /// 🔒️ A live tracked read, not yet returned, is the only owner that keeps the read registry from terminal-empty custody.
     pub fn live_read_holds_registry(&self) -> bool {
-        self.active_returned_read.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !reads.terminal_is_empty())
+        self.active_returned_read.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !(**reads).terminal_is_empty())
     }
 
     pub fn current_weak(&self) -> std::sync::Weak<P> {
@@ -392,7 +392,7 @@ impl<P> TransientStoreRetirement<P> {
     }
     pub fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.reads.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.factory.is_none() && self.factory_close.is_none() }
     /// 🔒️ The retirement can only continue once the live tracked read that holds the registry is returned.
-    pub fn awaits_live_read(&self) -> bool { self.root.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !reads.terminal_is_empty()) }
+    pub fn awaits_live_read(&self) -> bool { self.root.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !(**reads).terminal_is_empty()) }
 }
 
 impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
@@ -420,7 +420,7 @@ impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
         if let Some(root) = self.root.take() {
             return match ReturnedSnapshotReadRetirement::admit(root, self.factory.as_ref().expect("retained transient factory").clone(), child) { Ok((owner, receipt)) => { *self.active_root = Some(owner); if !receipt.fits(child) || receipt.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "transient constructor changed admitted receipt")); } Ok(RetainedCloneStep::Progress(receipt)) }, Err((error, root, alias)) => { *self.root = Some(root); drop(alias); Err(error) } };
         }
-        if let Some(reads) = self.reads.as_ref() { if !reads.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(Default::default())); } return snapshot_registry_alias_close_step(&mut self.reads, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(reads) = self.reads.as_ref() { if !(**reads).terminal_is_empty() { return Ok(RetainedCloneStep::Progress(Default::default())); } return snapshot_registry_alias_close_step(&mut self.reads, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
         let factory = self.factory_close.as_mut().expect("retained transient factory ticket"); let step = factory.step(child)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "transient factory")?; if factory.terminal_is_empty() { self.factory_close = None; } Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }

@@ -3,20 +3,20 @@
 use super::*;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_group_code_bin(pair: &(i32, DxfValue), out: &mut Vec<u8>) {
+pub fn enc_group_code_bin(pair: &(i32, DxfValue), out: &mut Vec<u8>) {
     store::write_varint_i64(out, pair.0 as i64);
     enc_dxf_value_bin(&pair.1, out);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_group_code_bin(reader: &mut store::ByteReader<'_>) -> Result<(i32, DxfValue), String> {
+pub fn dec_group_code_bin(reader: &mut store::ByteReader<'_>) -> Result<(i32, DxfValue), String> {
     let code = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
     let value = dec_dxf_value_bin(reader)?;
     Ok((code, value))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_group_codes_bin(v: &[(i32, DxfValue)], out: &mut Vec<u8>) {
+pub fn enc_group_codes_bin(v: &[(i32, DxfValue)], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, v.len() as u64);
     for pair in v {
         enc_group_code_bin(pair, out);
@@ -24,7 +24,7 @@ pub(crate) fn enc_group_codes_bin(v: &[(i32, DxfValue)], out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_group_codes_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<(i32, DxfValue)>, String> {
+pub fn dec_group_codes_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<(i32, DxfValue)>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -34,7 +34,7 @@ pub(crate) fn dec_group_codes_bin(reader: &mut store::ByteReader<'_>) -> Result<
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_vertex_bin(v: &DxfVertex, out: &mut Vec<u8>) {
+pub fn enc_vertex_bin(v: &DxfVertex, out: &mut Vec<u8>) {
     write_f64_bin(out, v.x);
     write_f64_bin(out, v.y);
     write_f64_bin(out, v.z);
@@ -43,7 +43,7 @@ pub(crate) fn enc_vertex_bin(v: &DxfVertex, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_vertex_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfVertex, String> {
+pub fn dec_vertex_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfVertex, String> {
     let x = read_f64_bin(reader)?;
     let y = read_f64_bin(reader)?;
     let z = read_f64_bin(reader)?;
@@ -53,7 +53,7 @@ pub(crate) fn dec_vertex_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfVe
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_vertices_bin(vs: &[DxfVertex], out: &mut Vec<u8>) {
+pub fn enc_vertices_bin(vs: &[DxfVertex], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, vs.len() as u64);
     for v in vs {
         enc_vertex_bin(v, out);
@@ -61,7 +61,7 @@ pub(crate) fn enc_vertices_bin(vs: &[DxfVertex], out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_vertices_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<DxfVertex>, String> {
+pub fn dec_vertices_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<DxfVertex>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -204,7 +204,7 @@ pub fn dec_dxf_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfEntit
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_dxf_entities_bin(es: &[DxfEntity], out: &mut Vec<u8>) {
+pub fn enc_dxf_entities_bin(es: &[DxfEntity], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, es.len() as u64);
     for e in es {
         enc_dxf_entity_bin(e, out);
@@ -212,7 +212,7 @@ pub(crate) fn enc_dxf_entities_bin(es: &[DxfEntity], out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_dxf_entities_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<DxfEntity>, String> {
+pub fn dec_dxf_entities_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<DxfEntity>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {

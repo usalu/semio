@@ -133,7 +133,7 @@ mod host_only_retained_route;
 pub use host_only_retained_route::{
     flow_scalar_command_view, FlowHostEffectJobFactory, FLOW_HOST_ONLY_TOOL_IDS,
 };
-use host_only_retained_route::FlowHostEffectPayload;
+use host_only_retained_route::{FlowHostEffectPayload, flow_build_host_only_job};
 
 #[path = "🕸️graph-operation-route/🦀️.rs"]
 mod graph_operation_route;

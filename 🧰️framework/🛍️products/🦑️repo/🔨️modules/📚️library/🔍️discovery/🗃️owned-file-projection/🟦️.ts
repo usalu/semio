@@ -21,7 +21,7 @@ export interface SemanticOwnedFileProjectionFacts {
   readonly sourceByteLength: number;
 }
 
-/** 📌️ Exact authority decision for one owner-governed semantic leaf. */
+/** 🎯️ Exact authority decision for one owner-governed semantic leaf. */
 export interface SemanticOwnedFileProjectionAuthority {
   readonly contractId: string;
   readonly ownerPath: string;
@@ -68,7 +68,7 @@ export function semanticOwnedFileProjectionAuthority(facts: SemanticOwnedFilePro
   return { ...core, destinationPath, status, disposition: "problem", problems: ["Closed ticket important document must be exactly zero bytes."] };
 }
 
-/** 📓️ Filesystem-independent admitted facts for one historical ticket note. */
+/** 📜️ Filesystem-independent admitted facts for one historical ticket note. */
 export interface SemanticOwnedFileHistoryProjectionFacts {
   readonly ownerPath: string;
   readonly ownerFixedDirectoryContractIds: readonly string[];
@@ -94,7 +94,7 @@ export interface SemanticOwnedFileHistoryProjectionAuthority {
   readonly problems: readonly string[];
 }
 
-/** 🧭️ Resolves one historical note only through its exact ticket owner and residual lifecycle state. */
+/** 🕰️ Resolves one historical note only through its exact ticket owner and residual lifecycle state. */
 export function semanticOwnedFileHistoryProjectionAuthority(facts: SemanticOwnedFileHistoryProjectionFacts, taxonomy: Taxonomy = loadTaxonomy()): SemanticOwnedFileHistoryProjectionAuthority {
   if (!Number.isSafeInteger(facts.sourceByteLength) || facts.sourceByteLength < 0) throw new Error("sourceByteLength must be a non-negative safe integer.");
   const contractId = "ticket-important-history-markdown-v1" as const;
@@ -153,7 +153,7 @@ export interface SemanticOwnedPrimaryFileProjectionAuthority {
   readonly problems: readonly string[];
 }
 
-/** 🧭️ Drops the exact ticket document convention only under its registered semantic owner. */
+/** 📉️ Drops the exact ticket document convention only under its registered semantic owner. */
 export function semanticOwnedPrimaryFileProjectionAuthority(facts: SemanticOwnedPrimaryFileProjectionFacts, taxonomy: Taxonomy = loadTaxonomy()): SemanticOwnedPrimaryFileProjectionAuthority {
   const contractId = "ticket-document-primary-markdown-v1" as const;
   const contract = taxonomy.semanticOwnedFileProjectionContracts[contractId];
@@ -167,7 +167,7 @@ export function semanticOwnedPrimaryFileProjectionAuthority(facts: SemanticOwned
   return { ...core, destinationPath: `${facts.ownerPath}/${contract.destinationFilename}`, disposition: "project", problems: [] };
 }
 
-/** 🧭️ Resolves an empty-facet marker only through a complete registered semantic owner chain. */
+/** 🪫️ Resolves an empty-facet marker only through a complete registered semantic owner chain. */
 export function semanticArtifactEmptyFacetProjectionAuthority(facts: Readonly<{ sourcePath: string; sourceFileKindId: string }>, taxonomy: Taxonomy = loadTaxonomy()): Readonly<{ contractId: "artifact-empty-facet-primary-markdown-v1"; sourcePath: string; ownerForm?: string; destinationPath?: string; disposition: "project" | "unclaimed" }> {
   const contractId = "artifact-empty-facet-primary-markdown-v1" as const;
   const contract = taxonomy.semanticOwnedFileProjectionContracts[contractId];

@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
-import schema from "../../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json";
+import schema from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🧬️schema/🔣️json/🟦️.ts";
 import {agentSessionAddressV1,agentSessionStoreV1,agentSessionWorktreeKeyV1,currentAgentSessionV1,listAgentSessionsV1,openAgentSessionV1,deriveAgentSessionV1,resetAgentSessionsV1,touchAgentSessionV1,readAgentSessionV1,type AgentSessionV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 import {createTestSandboxV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {attachAgentSessionV1} from "../../🟦️.ts";

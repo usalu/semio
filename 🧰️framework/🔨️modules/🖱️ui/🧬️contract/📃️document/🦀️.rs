@@ -195,7 +195,7 @@ impl UiPatchOp {
     }
 }
 
-/// 🩹️ A revisioned batch of [`UiPatchOp`]s. Applies atomically: `base_revision` must equal the
+/// 💊️ A revisioned batch of [`UiPatchOp`]s. Applies atomically: `base_revision` must equal the
 /// receiver's current revision or the whole batch is rejected (never partially applied), and success
 /// advances the receiver to `revision`.
 // 🌱️ No `ToValue`/`FromValue` here: `ops: UiPatchOps` is `UiFixedList<UiPatchOp>`, and `UiPatchOp`
@@ -320,7 +320,7 @@ impl From<UiSnapshot> for UiSnapshotState {
     }
 }
 
-/// 🌲️ Iterator produced by [`UiSnapshotState::iter_subtree`] — preorder, stack-driven, non-recursive.
+/// 🌳️ Iterator produced by [`UiSnapshotState::iter_subtree`] — preorder, stack-driven, non-recursive.
 pub struct UiSubtreeIter<'a> {
     state: &'a UiSnapshotState,
     stack: crate::UiFixedList<UiNodeId, UI_DOCUMENT_NODES>,
@@ -355,7 +355,7 @@ pub use resident::*;
 pub const UI_DOCUMENT_LEASE_SLOTS: usize = UI_RESIDENT_SLOTS;
 pub const UI_DOCUMENT_LEASE_ALIASES: u64 = 8;
 
-/// 📐️ What a resident document holding `nodes` records COSTS the aggregate: the header, the terminal page
+/// 💲️ What a resident document holding `nodes` records COSTS the aggregate: the header, the terminal page
 /// and one record each at the size the contract gives a record, plus the fixed opening metadata. This is
 /// the one pricing arithmetic of the whole document contract — [`UiDocumentLease::try_publish`], the cold
 /// [`UiDocumentBuilder`] and [`UiDocumentAssembly::open_into`] all price through it, and a body that grows
@@ -725,7 +725,7 @@ impl UiDocumentLease {
         self.close_step_with_grant(1, 4096).expect("document lease retirement remains valid").complete
     }
 
-    /// 🧵️ Retains the exact final-alias document until every typed descendant is empty.
+    /// 📪️ Retains the exact final-alias document until every typed descendant is empty.
     pub fn close_step_with_grant(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<crate::UiValueRetirementStep, &'static str> {
         close_document_owner(&mut self.handle, &mut self.released, &mut self.claimed, maximum_items, maximum_bytes)
     }
@@ -757,7 +757,7 @@ pub use document_assembly::{UiDocumentAssembly, UiDocumentAssemblyError, UiDocum
 //#endregion 🪪️DocumentLease
 
 //#region 📜️PagedText
-/// 🧯️ Why a retained document could not be reassembled as one paged-text carrier.
+/// ❌️ Why a retained document could not be reassembled as one paged-text carrier.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UiPagedTextError {
     Lease(UiDocumentLeaseError),
@@ -806,7 +806,7 @@ impl UiDocumentLease {
 pub const UI_DOCUMENT_PUBLISH_STEP_BYTES: usize = 32 * 1024;
 const UI_DOCUMENT_PUBLISH_OPPORTUNITIES: usize = UI_DOCUMENT_PATCH_OPS + UI_DOCUMENT_NODES * UI_DOCUMENT_NODES + UI_DOCUMENT_LEASE_SLOTS;
 
-/// 🧯️ Why a host-held record list could not be published as a retained document.
+/// 📤️ Why a host-held record list could not be published as a retained document.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UiDocumentPublishError {
     Empty,

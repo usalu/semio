@@ -10,7 +10,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
     const tags = level === "exhaustive" ? ["-tags", "exhaustive"] : [];
-    await runCanonicalGoTests(import.meta.dirname, [...tags, ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, import.meta.dirname), ...rest]);
+    await runCanonicalGoTests(import.meta.dirname, [...tags, ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, import.meta.dirname), ...rest], this.invocation);
   }
 }
 

@@ -330,7 +330,7 @@ thread_local! {
 /// 🧷️ RAII guard naming the JSON-RPC request whose `tools/call` runs on this thread — with or
 /// without a progress token — so every job it mints is cancellable by `notifications/cancelled`.
 /// Dropping it forgets a cancel that named this request.
-pub(crate) struct RequestScope {
+pub struct RequestScope {
     pub previous: Option<String>,
     pub key: Option<String>,
 }
@@ -354,7 +354,7 @@ pub fn enter_request_scope(request_id: Option<&serde_json::Value>) -> RequestSco
 
 /// 🧷️ RAII guard for the thread-local binding — restoring the previous value on drop rather than
 /// clearing it, so a nested call can never silence its caller's progress.
-pub(crate) struct ProgressScope {
+pub struct ProgressScope {
     pub previous: Option<ProgressBinding>,
 }
 

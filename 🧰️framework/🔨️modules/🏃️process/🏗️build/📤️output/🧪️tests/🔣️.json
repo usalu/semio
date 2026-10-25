@@ -1,56 +1,203 @@
 {
   "version": 1,
   "requested": [
-    { "name": "the machine flag alone", "args": ["--json"], "expected": true },
-    { "name": "the machine flag after a command", "args": ["show", "targets", "--json"], "expected": true },
-    { "name": "the machine flag between options", "args": ["leases", "status", "--json", "--all"], "expected": true },
-    { "name": "no machine flag", "args": ["show", "targets"], "expected": false },
-    { "name": "no arguments", "args": [], "expected": false },
-    { "name": "the flag behind the separator belongs to a child", "args": ["run", "app:build", "--", "--json"], "expected": false },
-    { "name": "the flag before the separator still counts", "args": ["run", "app:build", "--json", "--", "--json"], "expected": true },
-    { "name": "a flag with a value is another flag", "args": ["show", "--json=true"], "expected": false },
-    { "name": "a different option that contains the name", "args": ["show", "--json-lines"], "expected": false }
+    {
+      "name": "the machine flag alone",
+      "args": [
+        "--json"
+      ],
+      "expected": true
+    },
+    {
+      "name": "the machine flag after a command",
+      "args": [
+        "show",
+        "targets",
+        "--json"
+      ],
+      "expected": true
+    },
+    {
+      "name": "the machine flag between options",
+      "args": [
+        "leases",
+        "status",
+        "--json",
+        "--all"
+      ],
+      "expected": true
+    },
+    {
+      "name": "no machine flag",
+      "args": [
+        "show",
+        "targets"
+      ],
+      "expected": false
+    },
+    {
+      "name": "no arguments",
+      "args": [],
+      "expected": false
+    },
+    {
+      "name": "the flag behind the separator belongs to a child",
+      "args": [
+        "run",
+        "app:build",
+        "--",
+        "--json"
+      ],
+      "expected": false
+    },
+    {
+      "name": "the flag before the separator still counts",
+      "args": [
+        "run",
+        "app:build",
+        "--json",
+        "--",
+        "--json"
+      ],
+      "expected": true
+    },
+    {
+      "name": "a flag with a value is another flag",
+      "args": [
+        "show",
+        "--json=true"
+      ],
+      "expected": false
+    },
+    {
+      "name": "a different option that contains the name",
+      "args": [
+        "show",
+        "--json-lines"
+      ],
+      "expected": false
+    }
   ],
   "child": [
     {
       "name": "under the machine flag the result is the only thing on the result stream",
       "mode": "noise",
-      "args": ["show", "projects", "--json"],
+      "args": [
+        "show",
+        "projects",
+        "--json"
+      ],
       "environment": {},
-      "stdout": ["{\"ok\":true}", "{\"ok\":\"second\"}"],
-      "stderr": ["[noise] console.log", "[noise] console.info", "[noise] console.debug", "[noise] process.stdout.write"]
+      "stdout": [
+        "{\"ok\":true}",
+        "{\"ok\":\"second\"}"
+      ],
+      "stderr": [
+        "[noise] console.log",
+        "[noise] console.info",
+        "[noise] console.debug",
+        "[noise] process.stdout.write"
+      ]
     },
     {
       "name": "without the machine flag nothing is diverted",
       "mode": "noise",
-      "args": ["show", "projects"],
+      "args": [
+        "show",
+        "projects"
+      ],
       "environment": {},
-      "stdout": ["[noise] console.log", "[noise] console.info", "[noise] console.debug", "[noise] process.stdout.write", "{\"ok\":true}", "{\"ok\":\"second\"}"],
+      "stdout": [
+        "[noise] console.log",
+        "[noise] console.info",
+        "[noise] console.debug",
+        "[noise] process.stdout.write",
+        "{\"ok\":true}",
+        "{\"ok\":\"second\"}"
+      ],
       "stderr": []
     },
     {
       "name": "behind the separator the flag belongs to a child and nothing is diverted",
       "mode": "noise",
-      "args": ["run", "app:build", "--", "--json"],
+      "args": [
+        "run",
+        "app:build",
+        "--",
+        "--json"
+      ],
       "environment": {},
-      "stdout": ["[noise] console.log", "[noise] console.info", "[noise] console.debug", "[noise] process.stdout.write", "{\"ok\":true}", "{\"ok\":\"second\"}"],
+      "stdout": [
+        "[noise] console.log",
+        "[noise] console.info",
+        "[noise] console.debug",
+        "[noise] process.stdout.write",
+        "{\"ok\":true}",
+        "{\"ok\":\"second\"}"
+      ],
       "stderr": []
     },
     {
       "name": "a progress line is a diagnostic line without the machine flag",
       "mode": "progress",
-      "args": ["show", "projects"],
-      "environment": { "SEMIO_LANGUAGE": "en" },
-      "stdout": ["{\"ok\":true}"],
-      "stderr": ["[steps] done."]
+      "args": [
+        "show",
+        "projects"
+      ],
+      "environment": {
+        "SEMIO_LANGUAGE": "en"
+      },
+      "stdout": [
+        "{\"ok\":true}"
+      ],
+      "stderr": [
+        "[steps] done."
+      ]
     },
     {
       "name": "a progress line is a diagnostic line under the machine flag",
       "mode": "progress",
-      "args": ["show", "projects", "--json"],
-      "environment": { "SEMIO_LANGUAGE": "de" },
-      "stdout": ["{\"ok\":true}"],
-      "stderr": ["[steps] fertig."]
+      "args": [
+        "show",
+        "projects",
+        "--json"
+      ],
+      "environment": {
+        "SEMIO_LANGUAGE": "de"
+      },
+      "stdout": [
+        "{\"ok\":true}"
+      ],
+      "stderr": [
+        "[steps] fertig."
+      ]
+    },
+    {
+      "name": "under the machine flag a forwarded child result reaches the result stream, not the diagnostic stream",
+      "mode": "forward",
+      "args": [
+        "show",
+        "projects",
+        "--json"
+      ],
+      "environment": {},
+      "stdout": [
+        "{\"child\":true}"
+      ],
+      "stderr": []
+    },
+    {
+      "name": "without the machine flag a forwarded child result stays on the result stream",
+      "mode": "forward",
+      "args": [
+        "show",
+        "projects"
+      ],
+      "environment": {},
+      "stdout": [
+        "{\"child\":true}"
+      ],
+      "stderr": []
     }
   ]
 }

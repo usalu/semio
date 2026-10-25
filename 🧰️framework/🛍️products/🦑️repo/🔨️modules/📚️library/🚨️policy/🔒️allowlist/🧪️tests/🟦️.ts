@@ -1,9 +1,9 @@
-/** 🔒️ Contract: a policy rule's allowlist is the union of the entries every area contributes through its own allowlist file, discovered by convention while build output, caches, tickets and generated trees are skipped and unreadable or mistyped files fail closed; the corpus is language-agnostic and `🐍️oracle.py` walks the same tree. */
+/** 🔒️ Contract: a policy rule's allowlist is the union of the entries every area contributes through its own allowlist file, discovered by convention while build output, caches, tickets and generated trees are skipped and unreadable or mistyped files fail closed; the corpus is language-agnostic and `🐍️.py` walks the same tree. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {afterAll} from "bun:test";
 import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -24,6 +24,6 @@ for(const row of corpus.defects)test.failing("allowlist defect: "+row.name,()=>{
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

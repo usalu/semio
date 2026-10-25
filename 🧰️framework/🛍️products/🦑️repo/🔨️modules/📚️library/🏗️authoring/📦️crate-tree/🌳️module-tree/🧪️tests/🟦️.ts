@@ -1,9 +1,9 @@
-/** 🌳️ Contract: the Rust module-tree reader parses the module and item skeleton of a file with exact text ranges, attributes, visibilities and `#[path]`, decides whether a `cfg` implies test, demotes dangling doc comments, extends starts over comments, and prunes and names `use` leaves; the corpus is language-agnostic and the tree-sitter Rust grammar is the independent third-party oracle for structure, `use` leaves, validity and identifiers, with `🐍️oracle.py` modelling the cfg logic and doc demotion. */
+/** 🌳️ Contract: the Rust module-tree reader parses the module and item skeleton of a file with exact text ranges, attributes, visibilities and `#[path]`, decides whether a `cfg` implies test, demotes dangling doc comments, extends starts over comments, and prunes and names `use` leaves; the corpus is language-agnostic and the tree-sitter Rust grammar is the independent third-party oracle for structure, `use` leaves, validity and identifiers, with `🐍️.py` modelling the cfg logic and doc demotion. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Parser from "web-tree-sitter";
 import {createRequire} from "node:module";
 import {cfgImpliesTest,demoteDanglingOuterDocs,identifierSet,parseRustSourceTree,prunedUse,referencedItemNames,rustItemStartWithComments,rustOuterDocStart,rustPathAttributeValue,useLeafNames,type RustModuleNode} from "../🟦️.ts";
@@ -99,6 +99,6 @@ for(const row of corpus.references)test("referenced item names of "+JSON.stringi
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

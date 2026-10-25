@@ -20,19 +20,19 @@ interface RustTestAttributes {
   readonly pathTarget: string | null;
 }
 
-/** 🧪️ Combines Rust test configurations without treating unknown cfg values as enabled. */
+/** 🎛️ Combines Rust test configurations without treating unknown cfg values as enabled. */
 function rustTestConfigurationAnd(left: RustTestConfiguration, right: RustTestConfiguration): RustTestConfiguration {
   if (left === "disabled" || right === "disabled") return "disabled";
   if (left === "ambiguous" || right === "ambiguous") return "ambiguous";
   return "enabled";
 }
 
-/** 🧪️ Negates the test-mode truth value of one parsed cfg predicate. */
+/** 🚫️ Negates the test-mode truth value of one parsed cfg predicate. */
 function rustTestConfigurationNot(value: RustTestConfiguration): RustTestConfiguration {
   return value === "enabled" ? "disabled" : value === "disabled" ? "enabled" : "ambiguous";
 }
 
-/** 🧪️ Evaluates only cfg predicates whose truth is proven by rustc --test. */
+/** ⚙️ Evaluates only cfg predicates whose truth is proven by rustc --test. */
 function rustTestConfigurationExpression(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): RustTestConfiguration {
   const head = tokens[start];
   if (!head || head.kind !== "identifier") return "ambiguous";
@@ -51,7 +51,7 @@ function rustTestConfigurationExpression(tokens: readonly RustToken[], pairs: Re
   return "ambiguous";
 }
 
-/** 🧪️ Reads consecutive inner attributes that configure their enclosing module or crate scope. */
+/** 📖️ Reads consecutive inner attributes that configure their enclosing module or crate scope. */
 function rustInnerAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): RustAttributes {
   const ranges: (readonly [number, number])[] = [];
   let index = start;
@@ -64,7 +64,7 @@ function rustInnerAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<nu
   return { ranges, next: index };
 }
 
-/** 🧪️ Recognizes whether an unresolved cfg_attr could change a test's executability or source identity. */
+/** 🔑️ Recognizes whether an unresolved cfg_attr could change a test's executability or source identity. */
 function rustTestAttributeCanAffectExecution(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): boolean {
   const name = tokens[start]?.text;
   if (name === "cfg" || name === "ignore" || name === "path") return true;
@@ -75,7 +75,7 @@ function rustTestAttributeCanAffectExecution(tokens: readonly RustToken[], pairs
   return parts.slice(1).some((part) => rustTestAttributeCanAffectExecution(tokens, pairs, ...part));
 }
 
-/** 🧪️ Resolves direct and test-enabled cfg_attr attributes without assuming unknown cfg values. */
+/** ❓️ Resolves direct and test-enabled cfg_attr attributes without assuming unknown cfg values. */
 function rustTestAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, attributes: RustAttributes): RustTestAttributes {
   let configuration: RustTestConfiguration = "enabled";
   let test = false;
@@ -114,7 +114,7 @@ function rustTestAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<num
   return { configuration, test, ignored, pathTarget };
 }
 
-/** 🧪️ Preserves only an exact, leaf-local path spelling for an inline module's child mount base. */
+/** 🏠️ Preserves only an exact, leaf-local path spelling for an inline module's child mount base. */
 function rustTestInlineMountBase(target: string | null, name: string): readonly string[] | null {
   if (target === null) return [name];
   if (!target || target.includes("\0") || target.includes("\\") || target.startsWith("/") || /^[A-Za-z]:/u.test(target)) return null;
@@ -122,7 +122,7 @@ function rustTestInlineMountBase(target: string | null, name: string): readonly 
   return segments.some((segment) => !segment || segment === "." || segment === "..") ? null : segments;
 }
 
-/** 🧪️ Extracts only top-level, enabled, non-ignored test functions and their explicit mounted modules. */
+/** 🔎️ Extracts only top-level, enabled, non-ignored test functions and their explicit mounted modules. */
 export function inspectRustRunnableTests(source: string): RustTestFacts {
   const tokens = rustTokens(source);
   const pairs = rustTokenPairs(tokens);

@@ -35,7 +35,7 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
-/// 🪟️ The solution-free course: quizzes (in the order given, i.e. course order) with their task
+/// 🆓️ The solution-free course: quizzes (in the order given, i.e. course order) with their task
 /// titles and kinds, and badges without rules.
 pub fn course_view(course: &Course, quizzes: &[Quiz]) -> CourseView {
     CourseView {
@@ -150,7 +150,7 @@ pub struct Transcript {
     pub badges: Vec<TranscriptBadge>,
 }
 
-/// 📜️ The transcript of a registered learner with a submitted run, `None` otherwise; it changes only
+/// ▶️ The transcript of a registered learner with a submitted run, `None` otherwise; it changes only
 /// when the learner submits a run, earns a badge or registers. A badge whose run is unknown is left
 /// out.
 pub fn transcript(state: &LearnerState) -> Option<Transcript> {
@@ -201,7 +201,7 @@ pub struct BoardScope {
 }
 
 impl BoardScope {
-    /// 🔭️ The scope of the leaderboard of `period` — of `quiz` only when it names one — at the
+    /// 🎯️ The scope of the leaderboard of `period` — of `quiz` only when it names one — at the
     /// instant `at`.
     pub fn of(period: LeaderboardPeriod, quiz: Option<&str>, at: Timestamp) -> Self {
         Self { window: period_window(period, at), quiz: quiz.map(str::to_string) }
@@ -251,7 +251,7 @@ impl Standing {
         LeaderboardRow { rank, tag: self.tag.clone(), identity: self.identity.clone(), total: self.total, reached_at: self.reached_at, best: self.best.clone(), badges: self.badges.clone(), runs: self.runs, last_activity: self.last_activity }
     }
 
-    /// 🎚️ What orders this standing.
+    /// 🔃️ What orders this standing.
     pub fn merit(&self) -> Merit {
         Merit { total: self.total, badges: self.badges.len(), reached_at: self.reached_at }
     }
@@ -267,7 +267,7 @@ pub fn standing(transcript: &Transcript, course: &CourseView, scope: &BoardScope
     Some(Standing { learner: transcript.learner.clone(), tag: transcript.tag.clone(), identity: transcript.identity.clone(), total: total(&best, course), reached_at: reached_at?, best, badges, runs: runs.len(), last_activity })
 }
 
-/// 🥈️ The order of the leaderboard: total descending, badge count descending, `reachedAt` ascending,
+/// ⚖️ The order of the leaderboard: total descending, badge count descending, `reachedAt` ascending,
 /// learner id ascending.
 pub fn compare_standings(left: &Standing, right: &Standing) -> Ordering {
     left.merit().compare(&left.learner, &right.merit(), &right.learner)

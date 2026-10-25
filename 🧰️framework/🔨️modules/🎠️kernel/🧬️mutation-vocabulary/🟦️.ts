@@ -14,7 +14,7 @@ export type ArtifactDiff = { readonly schema: string; readonly payload: readonly
 /** ↩️ Undo semantics for a single kernel operation. */
 export type UndoPolicy = "ExactBaseOnly" | "TransformAgainstConcurrent" | "SemanticUndo" | "CompensatingAction";
 
-/** ↩️ The true inverse of a kernel operation, recorded from the store's `Edit.backwards`. */
+/** 🗄️ The true inverse of a kernel operation, recorded from the store's `Edit.backwards`. */
 export type InverseMutation = {
   readonly targetMutation: string;
   readonly inverseDiff: ArtifactDiff;

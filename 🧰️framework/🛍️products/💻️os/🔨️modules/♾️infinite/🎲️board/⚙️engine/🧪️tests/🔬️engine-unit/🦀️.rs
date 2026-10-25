@@ -1,5 +1,6 @@
 //! 🧪️ engine tests (🔬️engine-unit): compiled against the `testkit` surface of the board crates.
 
+use semio_framework_graph_engine::PortModel;
 use semio_framework_os_infinite_board_engine::{GraphEngine, handle_position, InteractionMode, pick_merge_mode_for_modifiers, region_bounds, region_grip_at, region_grip_drag, REGION_HIT_TOLERANCE_PX, REGION_MIN_EXTENT_WORLD, RegionGrip, rotate_point_about, selection_drag_enclosing, selection_drag_enclosing_rectangle, snap_region_scalar, snap_transform_angle, transform_pivot_of, transform_ring_angle_delta, TRANSFORM_RING_GAP_PX, transform_ring_hit, TRANSFORM_RING_HIT_TOLERANCE_PX, TRANSFORM_RING_MIN_RADIUS_PX, transform_ring_radius_world};
 use semio_framework_canvas::{CubicBez, Point};
 use graph::{Directed, HandleRole, Normal, Ported, Undirected};

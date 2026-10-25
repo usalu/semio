@@ -5,3 +5,4 @@ cd /Users/ueli/Documents/semio || exit 1
 i=0; while [ $i -lt ${3:-55} ]; do kill -0 $2 2>/dev/null || break; /usr/bin/grep -q '^rc=' "$1" && break; sleep 10; i=$((i+1)); done
 tail -c 1500 "$1" | tail -6 | cut -c1-260
 df -h .cache/b/l/m | tail -1
+ps -axo pid,ppid,rss,etime,command | /usr/bin/grep -- "bun --eval" | /usr/bin/grep -v grep | awk '{printf "eval pid %s ppid %s rss %d MB etime %s\n",$1,$2,$3/1024,$4}' | sort -k6 -n -r | head -3

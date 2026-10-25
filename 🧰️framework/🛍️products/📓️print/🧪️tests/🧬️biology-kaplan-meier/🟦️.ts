@@ -48,7 +48,7 @@ function productLimit(records: readonly Record_[]): { steps: Array<[number, numb
 const mmSurvival = (steps: ReadonlyArray<readonly [number, number]>): number[] =>
   steps.flatMap(([time, survival]) => [(WIDTH * time) / TMAX, HEIGHT * survival]);
 
-/** 📐️ The cumulative-hazard window: the same times, −ln S drawn on a 0..2 axis. */
+/** ⚠️ The cumulative-hazard window: the same times, −ln S drawn on a 0..2 axis. */
 const mmHazard = (steps: ReadonlyArray<readonly [number, number]>): number[] =>
   steps.flatMap(([time, survival]) => [(WIDTH * time) / TMAX, (HEIGHT * -Math.log(Math.max(1e-6, survival))) / 2]);
 
@@ -76,7 +76,7 @@ export default defineTestAdapter({
       subject,
     },
     "two-groups": {
-      /** 🔮️ Two independent estimates, emitted in the order the groups are declared. */
+      /** 👥️ Two independent estimates, emitted in the order the groups are declared. */
       oracle: () => {
         const a = productLimit(GROUP_A);
         const b = productLimit(GROUP_B);
@@ -90,7 +90,7 @@ export default defineTestAdapter({
       subject,
     },
     "cumulative-hazard": {
-      /** 🔮️ The same walk, drawn on the hazard window the mode switches to. */
+      /** 🪟️ The same walk, drawn on the hazard window the mode switches to. */
       oracle: () => {
         const { steps, final } = productLimit(TREATMENT);
         return { projection: { "geometry/path": grid(mmHazard(steps)), "geometry/survival/final": grid([final]) } };

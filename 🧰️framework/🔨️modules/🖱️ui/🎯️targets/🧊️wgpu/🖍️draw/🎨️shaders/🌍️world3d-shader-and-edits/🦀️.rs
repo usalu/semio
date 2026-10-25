@@ -348,7 +348,7 @@ pub fn world3d_painted_shader() -> String {
     WORLD3D_PAINTED_SHADER_EDITS.iter().fold(WORLD3D_SHADER.to_string(), |shader, (anchor, edit)| shader.replacen(anchor, edit, 1))
 }
 
-/// 🎨️ The ordered edits that turn [`WORLD3D_SHADER`] into [`world3d_painted_shader`]: the paint map bindings, the UV
+/// ✏️ The ordered edits that turn [`WORLD3D_SHADER`] into [`world3d_painted_shader`]: the paint map bindings, the UV
 /// varyings, the sampled albedo with its mask test, and the sampled alpha. Every anchor occurs EXACTLY once in the lit
 /// shader (law `every_painted_shader_edit_finds_its_anchor_in_the_lit_shader_once`) — an anchor that stopped matching once
 /// dropped the `lit_color` declaration silently and every GPU context refused the painted shader module.
@@ -370,7 +370,7 @@ pub const WORLD3D_PAINTED_SHADER_EDITS: [(&str, &str); 6] = [
     ),
 ];
 
-/// 🎨️ Samples the five owned authored surface roles through the canonical lighting shader.
+/// 🔦️ Samples the five owned authored surface roles through the canonical lighting shader.
 pub fn world3d_authored_shader() -> String {
     let mut shader = world3d_painted_shader();
     shader = shader.replace("@group(2) @binding(1) var paint_sampler: sampler;", "@group(2) @binding(1) var paint_sampler: sampler;\n@group(2) @binding(2) var metallic_roughness_map: texture_2d<f32>;\n@group(2) @binding(3) var metallic_roughness_sampler: sampler;\n@group(2) @binding(4) var normal_map: texture_2d<f32>;\n@group(2) @binding(5) var normal_sampler: sampler;\n@group(2) @binding(6) var occlusion_map: texture_2d<f32>;\n@group(2) @binding(7) var occlusion_sampler: sampler;\n@group(2) @binding(8) var emissive_map: texture_2d<f32>;\n@group(2) @binding(9) var emissive_sampler: sampler;");

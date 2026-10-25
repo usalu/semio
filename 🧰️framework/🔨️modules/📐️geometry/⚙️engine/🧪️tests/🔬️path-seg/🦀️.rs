@@ -77,7 +77,7 @@ fn line_arclen_is_exact() {
     assert!((line.arclen(1e-9) - 5.0).abs() < 1e-12);
 }
 
-/// 🧪️ A cubic Bezier built from the standard `kappa ≈ 0.5522847498` construction approximates
+/// ⭕️ A cubic Bezier built from the standard `kappa ≈ 0.5522847498` construction approximates
 /// a quarter circle of radius `r` to within a few parts in 10,000 — a well-known analytic
 /// cross-check independent of `kurbo`.
 #[test]

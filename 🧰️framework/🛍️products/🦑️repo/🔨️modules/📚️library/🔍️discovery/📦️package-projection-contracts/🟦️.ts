@@ -35,7 +35,7 @@ export interface GeneratorContract {
   readonly reason: string;
 }
 
-/** 🏗️ Verifies known Nx identities and required tracked outputs against live workspace metadata. */
+/** ✅️ Verifies known Nx identities and required tracked outputs against live workspace metadata. */
 /** 🧾️ Frozen leaf ownership and byte preimage, independent of implementation language. */
 export interface OwnerProjectionEntry {
   readonly sourcePath: string;
@@ -49,7 +49,7 @@ export interface OwnerProjectionEntry {
   readonly preimage: Readonly<{ sha256: string; mode: string; size: number }>;
 }
 
-/** 📚️ One digest-locked owner catalog, including its concrete consumers and owner evidence. */
+/** 🔏️ One digest-locked owner catalog, including its concrete consumers and owner evidence. */
 export interface OwnerProjectionPolicy {
   readonly schemaVersion: 1;
   readonly kind: "owner-projection-policy";
@@ -79,7 +79,7 @@ export interface SemanticPackageAdapter {
   readonly content: string;
 }
 
-/** 🧷️ Exact source-owned replacement or registration merge, never a generated-output overwrite. */
+/** 🔀️ Exact source-owned replacement or registration merge, never a generated-output overwrite. */
 export interface SemanticPackageSourceSplice {
   readonly id: "library-adapter-replacement" | "renderer-registration-merge";
   readonly sourcePath: string;
@@ -107,7 +107,7 @@ export interface SemanticPackageGeneratedSourceRetirement {
   readonly sourceMode: 420;
 }
 
-/** 🧷️ Reviewed authored fragment, bound to its complete package source preimage. */
+/** 📝️ Reviewed authored fragment, bound to its complete package source preimage. */
 export interface SemanticPackageAuthoredSourceFragment {
   readonly id: string;
   readonly kind: "reference-path" | "cargo-runtime-coordinate" | "tool-producer";
@@ -204,7 +204,7 @@ export interface SemanticPackageJoinedPathBinding {
   readonly reads: readonly Readonly<{ binding: string; relativePath: string }>[];
 }
 
-/** 🧷️ One exact literal operand; executable source bytes are never synthesized. */
+/** 🔗️ One exact literal operand; executable source bytes are never synthesized. */
 export interface SemanticPackageJoinedPathReference {
   readonly start: number;
   readonly end: number;
@@ -227,7 +227,7 @@ export function semanticPackageJoinedPathBindingRecords(contract: SemanticPackag
   return { consumer, sourceDirectory, reads };
 }
 
-/** 🔐️ Proves three reviewed literal operands using a complete catalog source preimage. */
+/** 🪢️ Proves three reviewed literal operands using a complete catalog source preimage. */
 export function semanticPackageJoinedPathReferenceAuthority(
   facts: Readonly<{ path: string; content: string; layout: "source" | "destination" }>,
   contract: SemanticPackageJoinedPathBinding,
@@ -268,7 +268,7 @@ export interface SemanticPackageProjectionCatalog {
   readonly referenceTokenTransforms: Readonly<Record<string, Readonly<{ sourceToken: string; destinationToken: string }>>>;
 }
 
-/** 🪪️ Rejects noncanonical, colliding or historical coordinates for the single current JCO package. */
+/** 🌊️ Rejects noncanonical, colliding or historical coordinates for the single current JCO package. */
 export function parseCurrentJcoPackageDestination(input: unknown): CurrentJcoPackageDestination {
   const semanticOwnerRoot = "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest";
   const packageRoot = semanticOwnerRoot + "/📦️packages/🦀️rust";

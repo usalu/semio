@@ -1,6 +1,6 @@
 /** 🖱️ The window, drag and axis callbacks and effects of the docking mode shell. */
 import * as React from "react";
-import * as ResizablePrimitive from "react-resizable-panels";
+import type { ResizableGroupHandle } from "../../↔️Resizable/🟦️.tsx";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext/.forwardRef at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
@@ -202,7 +202,7 @@ export function useModeDragEffectsAndAxisCallbacks({ pendingDrag, dragState, dra
     setLayoutState((prev) => applyAxisSizes(prev, axisPath, sizes));
   }, []);
 
-  const registerAxisGroup = reactHostPort.useCallback((axisPath: ModeLayoutPath, group: ResizablePrimitive.GroupImperativeHandle | null) => {
+  const registerAxisGroup = reactHostPort.useCallback((axisPath: ModeLayoutPath, group: ResizableGroupHandle | null) => {
     if (group) axisGroupRefsRef.current.set(axisPath, group);
     else axisGroupRefsRef.current.delete(axisPath);
   }, []);

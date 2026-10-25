@@ -7,7 +7,7 @@
 export const UI_STATES = ["introducing", "celebrating", "previewed", "normal", "disabled", "hidden"] as const;
 export type UiState = (typeof UI_STATES)[number];
 
-/** 🧭️ The activity lifecycle of a UI element, orthogonal to {@link UiState} and composable with it. */
+/** 🚥️ The activity lifecycle of a UI element, orthogonal to {@link UiState} and composable with it. */
 export const UI_STATUSES = ["waiting", "loading", "idle", "finished"] as const;
 export type UiStatus = (typeof UI_STATUSES)[number];
 
@@ -20,7 +20,7 @@ export interface UiElementState {
 
 const DEFAULT_UI_ELEMENT_STATE: UiElementState = { state: "normal", status: "idle", hover: false, selected: false };
 
-/** 🧭️ Fills in every axis with its default (`normal`/`idle`/`false`/`false`) — the one place that convention lives. */
+/** 💤️ Fills in every axis with its default (`normal`/`idle`/`false`/`false`) — the one place that convention lives. */
 export function resolveElementState(partial?: Partial<UiElementState>): UiElementState {
   return { ...DEFAULT_UI_ELEMENT_STATE, ...partial };
 }
@@ -30,7 +30,7 @@ export function elementStateHidden(s: Pick<UiElementState, "state">): boolean {
   return s.state === "hidden";
 }
 
-/** 🧭️ The one function that emits the shared `data-ui-*` attribute vocabulary every element's
+/** 🏷️ The one function that emits the shared `data-ui-*` attribute vocabulary every element's
  * markup carries. Two axes carry a SECOND attribute alongside `data-ui-state`/`data-ui-status`:
  * `introducing` also stamps `data-introduced="true"` — the exact attribute `UIIntroduction`'s
  * tour-driven reveal already stamps imperatively (see `framework/ui/js/react/index.tsx`), so an authored

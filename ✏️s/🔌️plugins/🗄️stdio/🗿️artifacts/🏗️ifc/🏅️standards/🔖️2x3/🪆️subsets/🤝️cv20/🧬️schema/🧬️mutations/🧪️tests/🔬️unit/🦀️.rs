@@ -24,7 +24,7 @@ async fn round_trip(mutation: Ifc2x3Cv20Mutation) {
     let outcome = apply_ifc2x3_cv20_mutation(&mut mutated, &mutation);
     assert!(outcome.messages().is_empty(), "{mutation:?} was rejected: {:?}", outcome.messages());
     assert_ne!(mutated, start, "{mutation:?} changed nothing");
-    let inverse = Mutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture").into_iter().next().expect("one inverse");
+    let inverse = ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture").into_iter().next().expect("one inverse");
     apply_ifc2x3_cv20_mutation(&mut mutated, &inverse);
     assert_eq!(mvd::canonical(&mutated), mvd::canonical(&start), "{mutation:?} then its inverse must restore the base exchange structure");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &start).await;
@@ -64,7 +64,7 @@ async fn removing_a_middle_row_is_restored_at_its_original_index() {
     assert!(outcome.messages().is_empty(), "{created:?} was rejected: {:?}", outcome.messages());
     assert_eq!(mvd::position(&start, 99), Some(1), "the creation honours its index");
     let removal = Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: None, index: None, instance: None });
-    let inverse = Mutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
+    let inverse = ::semio_framework_os_kernel::ColdMutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: 99, entity: Some(Cv20StructuralEntity { type_name: "IFCSTRUCTURALANALYSISMODEL".into(), global_id: "probe".into(), name: "probe".into() }), index: Some(1), instance: None })], "the removal's inverse restores the row at its original index");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &start).await;
 }

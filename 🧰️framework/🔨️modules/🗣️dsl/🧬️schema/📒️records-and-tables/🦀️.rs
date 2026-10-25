@@ -46,7 +46,7 @@ fn parse_call_record(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Re
     Ok(record)
 }
 
-/// 🧾️ Parses a record's fields: positional fields in declaration order, then order-
+/// 📹️ Parses a record's fields: positional fields in declaration order, then order-
 /// independent `key=value` attributes (LL(2): an `Ident` followed by `=` is always a key), until a
 /// token that is neither a known key nor an unfilled positional slot — which ends the record (it
 /// belongs to whatever comes next: a new statement, a closing brace/paren, or EOF). Excludes any
@@ -150,7 +150,7 @@ fn shape_is_self_delimiting(shape: &Shape) -> bool {
     !matches!(shape, Shape::Statements(_) | Shape::Tuple(_, None))
 }
 
-/// 🚧️ Spec-build-time validation for a `Table`'s element `RecordSpec` — called wherever a
+/// 🗄️ Spec-build-time validation for a `Table`'s element `RecordSpec` — called wherever a
 /// `Shape::Table(spec_fn)` is first evaluated (both parse paths, and printing), since `spec_fn` is
 /// a lazy pointer rather than an eagerly-built value there is no earlier moment to check it at.
 pub(super) fn validate_table_columns(spec: &RecordSpec) -> Result<(), TextError> {

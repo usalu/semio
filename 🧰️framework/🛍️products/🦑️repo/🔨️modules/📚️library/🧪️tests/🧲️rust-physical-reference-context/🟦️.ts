@@ -13,6 +13,7 @@ import { applyTaxonomyPlan } from "../../🧹️normalization/🚀️apply/🟦�
 import { inventoryTaxonomy } from "../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
 import { planTaxonomy } from "../../🧹️normalization/🧠️planning/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 //#endregion Imports
 
 //#region Authority
@@ -135,7 +136,7 @@ test("registers the physical Rust reference gate through Nx with its neutral art
   const project = JSON.parse(readFileSync(join(root, packagePath, "📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
   expect(project.targets[expected.target]?.cache).toBe(expected.cache);
-  expect(readFileSync(join(root, packagePath, "📜️script.ts"), "utf8")).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...rest], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, ' + JSON.stringify(expected.artifactRoute) + ') });');
+  expect(readRegisteredTestRoute(root, expected.artifactRoute).text).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...rest], { cwd: context.repoRoot, env: repoTestArtifactEnvironment(context.repoRoot, ' + JSON.stringify(expected.artifactRoute) + ') });');
 });
 
 test("manifest-relative joins require immutable lexical bindings and exact loop ownership", () => {

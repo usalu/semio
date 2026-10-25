@@ -120,7 +120,7 @@ pub(super) const TABLE_PROPS: SchemaMetadata = SchemaMetadata {
  */
 export type TableProps = {
 /**
- * 🏷️ The table's accessible name — what assistive technology announces on entering it.
+ * 🔖️ The table's accessible name — what assistive technology announces on entering it.
  */
 label: Label,
 /**
@@ -144,7 +144,7 @@ actionsLabel: Label | null,
  */
 window: TreeWindow | null,
 /**
- * ↔️ The materialised slice of the logical column list.
+ * 🍕️ The materialised slice of the logical column list.
  */
 columnWindow: TreeWindow | null, };"####,
 };
@@ -163,7 +163,7 @@ export type TableRowProps = {
  */
 cells: Array<string>,
 /**
- * 🎬️ Row-scoped actions, rendered in the table's trailing actions column.
+ * 🔘️ Row-scoped actions, rendered in the table's trailing actions column.
  */
 rowActions: Array<RowAction>,
 /**
@@ -248,11 +248,11 @@ dimmed: boolean | null,
  */
 selected: boolean | null,
 /**
- * 🪟️ The materialised slice of this row's logical child list — see [`TreeWindow`].
+ * 🔪️ The materialised slice of this row's logical child list — see [`TreeWindow`].
  */
 window: TreeWindow | null,
 /**
- * 🎯️ The interaction granularity this row picks when the tree carries the domain binding: the
+ * 🏹️ The interaction granularity this row picks when the tree carries the domain binding: the
  * row is a pick target of the tree's `interaction_domain`, keyed by its own record key, so it
  * needs no argument map and no per-row binding of its own.
  */
@@ -269,7 +269,7 @@ inlineToolbar: UiNodeId | null,
  */
 detail: UiNodeId | null, rowActions: Array<RowAction>,
 /**
- * 🎯️ The one target `row_actions` and the activation fire on — present exactly when either is.
+ * 🧯️ The one target `row_actions` and the activation fire on — present exactly when either is.
  */
 target: RowTarget | null, };"####,
 };
@@ -306,7 +306,7 @@ pub(super) const TREE_SECTION_PROPS: SchemaMetadata = SchemaMetadata {
  */
 export type TreeSectionProps = { label: Label | null, defaultOpen: boolean | null, headerToolbar: UiNodeId | null,
 /**
- * 🪟️ The materialised slice of this section's logical child list — see [`TreeWindow`].
+ * 📇️ The materialised slice of this section's logical child list — see [`TreeWindow`].
  */
 window: TreeWindow | null, };"####,
 };

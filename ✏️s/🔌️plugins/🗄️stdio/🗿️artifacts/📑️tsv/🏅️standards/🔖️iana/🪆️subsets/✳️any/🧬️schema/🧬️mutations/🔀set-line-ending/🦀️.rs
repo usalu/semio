@@ -8,7 +8,7 @@ use super::*;
 #[value(rename_all = "camelCase")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetLineEnding {
-    pub(crate) line_ending: LineEnding,
+    pub line_ending: LineEnding,
 }
 
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetLineEnding {

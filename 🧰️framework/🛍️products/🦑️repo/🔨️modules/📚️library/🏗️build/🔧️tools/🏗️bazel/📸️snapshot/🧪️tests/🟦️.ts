@@ -1,6 +1,6 @@
 /** 📸️ Law: a capture publishes private regular copies of the declared sources whose bytes are the planned bytes whatever happens to the live checkout afterwards; the corpus is language agnostic and its content addresses come from an independent implementation. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {createHash} from "node:crypto";
 import {existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,symlinkSync,utimesSync,writeFileSync,chmodSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -9,6 +9,7 @@ import Ajv from "ajv";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema.json";
 import policySchema from "../🧬️schema/🔣️.json";
+import {collectBazelPoolV1} from "../../🧵️sessions/🔌️port/🟦️.ts";
 import {captureBazelSourceSnapshotV1,bazelSourceSnapshotDriftV1,readBazelSourceSnapshotV1,renderBazelSourceSnapshotV1} from "../🟦️.ts";
 
 const python=testPythonV1(),views={alias:"a",real:"s"},sha=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex"),alias=(directory:string)=>sha(directory).slice(0,corpus.alias.hexLength);
@@ -16,7 +17,7 @@ const bytesOf=(file:{text?:string;base64?:string})=>file.text!==undefined?Buffer
 const aliasPath=(space:string,path:string)=>{const cut=path.lastIndexOf("/");return join(space,views.alias,alias(cut<0?"":path.slice(0,cut)),path.slice(cut+1));},realPath=(space:string,path:string)=>join(space,views.real,...path.split("/"));
 const old=Date.now()/1000-86400;
 const populate=(checkout:string)=>{for(const file of corpus.files){const target=join(checkout,file.path);mkdirSync(dirname(target),{recursive:true});writeFileSync(target,bytesOf(file),{mode:file.executable?0o755:0o644});chmodSync(target,file.executable?0o755:0o644);utimesSync(target,old,old);}};
-const request=(checkout:string,space:string,options:{files?:string[];real?:string[];now?:()=>number}={})=>({root:checkout,directory:space,files:options.files??corpus.files.map(file=>file.path),real:new Set(options.real??corpus.real),views,alias,check:()=>{},progress:async()=>{},...(options.now?{now:options.now}:{})});
+const request=(checkout:string,space:string,options:{files?:string[];real?:string[];now?:()=>number;pool?:string}={})=>({root:checkout,directory:space,...options.pool?{pool:options.pool}:{},files:options.files??corpus.files.map(file=>file.path),real:new Set(options.real??corpus.real),views,alias,check:()=>{},progress:async()=>{},...(options.now?{now:options.now}:{})});
 const scratch=()=>{const directory=mkdtempSync(join(tmpdir(),"bazel-snapshot-")),checkout=join(directory,"checkout"),space=join(directory,"workspace");mkdirSync(checkout);mkdirSync(space);populate(checkout);return{directory,checkout,space};};
 
 test("snapshot corpus is closed and its content addresses are verified by an independent implementation",()=>{
@@ -142,3 +143,44 @@ test("the capture summary exists in English and German and names every count",()
  expect(english).not.toBe(german);expect(german).toContain("Dateien");
  expect(Object.keys(policySchema.definitions.Messages.const.en)).toEqual(Object.keys(policySchema.definitions.Messages.const.de));
 });
+
+test("a pool lets every package clone identical content: same bytes, modes and private inodes in all packages, one pool entry per content, and packages survive the pool being removed",async()=>{
+ const{directory,checkout}=scratch(),pool=join(directory,"pool"),spaces=["one","two","three"].map(name=>join(directory,name));
+ try{
+  const big=Buffer.alloc(32*1048576,7);writeFileSync(join(checkout,"lib/big.bin"),big);
+  const files=[...corpus.files.map(file=>file.path),"lib/big.bin"];
+  for(const space of spaces){mkdirSync(space);await captureBazelSourceSnapshotV1({...request(checkout,space,{files,pool}),pool});}
+  const entries=existsSync(pool)?readdirSync(pool).filter(name=>/^[0-9a-f]{2}$/u.test(name)).flatMap(name=>readdirSync(join(pool,name))):[];
+  for(const space of spaces){
+   for(const file of corpus.files){const copy=lstatSync(aliasPath(space,file.path));expect(readFileSync(aliasPath(space,file.path)).equals(bytesOf(file)),file.path).toBe(true);expect(copy.nlink,"never a hardlink: "+file.path).toBe(1);if(process.platform!=="win32")expect((copy.mode&0o111)!==0,"executable bit "+file.path).toBe(file.executable);}
+   expect(readFileSync(aliasPath(space,"lib/big.bin")).equals(big)).toBe(true);expect(existsSync(join(space,"snapshot-tmp"))).toBe(false);
+  }
+  expect(new Set(spaces.map(space=>lstatSync(aliasPath(space,"lib/big.bin")).ino)).size,"private inodes").toBe(3);
+  if(entries.length){
+   const contents=new Set(files.map(path=>sha(readFileSync(join(checkout,path)))));
+   expect(entries.length).toBeGreaterThanOrEqual(contents.size);expect(entries.every(name=>/^[0-9a-f]{64}(\.x)?$/u.test(name))).toBe(true);expect(entries.some(name=>name.startsWith(sha(big)))).toBe(true);
+   rmSync(pool,{recursive:true,force:true});expect(readFileSync(aliasPath(spaces[0]!,"lib/big.bin")).equals(big)).toBe(true);
+   writeFileSync(join(checkout,"lib/big.bin"),Buffer.alloc(1048576,9));const again=await captureBazelSourceSnapshotV1(request(checkout,spaces[0]!,{files,pool}));expect(again.captured).toBe(1);expect(readFileSync(aliasPath(spaces[0]!,"lib/big.bin")).length).toBe(1048576);expect(existsSync(pool)).toBe(true);
+  }else expect(existsSync(pool)?readdirSync(pool).filter(name=>/^[0-9a-f]{2}$/u.test(name)):[]).toEqual([]);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+},60000);
+
+test("a pool collector that removes entries and folders while captures run never fails a capture: bytes stay exact (independent Python hashing) and the pool is re-seeded",async()=>{
+ const directory=mkdtempSync(join(tmpdir(),"bazel-pool-race-")),checkout=join(directory,"checkout"),pool=join(directory,"pool"),spaces=["one","two","three"].map(name=>join(directory,name));
+ try{
+  mkdirSync(checkout);const files:string[]=[],expected:Record<string,string>={};
+  for(let index=0;index<450;index++){const path=`d${index%9}/e${index%4}/f${index}.txt`,text=`content ${index%40} `.repeat(200+index%40);mkdirSync(join(checkout,path,".."),{recursive:true});writeFileSync(join(checkout,path),text);files.push(path);expected[path]=sha(text);}
+  let running=true,removed=0,sweeps=0;
+  const collector=(async()=>{while(running){const result=await collectBazelPoolV1(pool,new AbortController().signal,{now:Date.now()+1e9,maximumAgeMs:0});removed+=result.entries;sweeps++;await new Promise(done=>setTimeout(done,1));}})();
+  for(const space of spaces)mkdirSync(space);
+  const results=await Promise.all(spaces.map(space=>captureBazelSourceSnapshotV1({...request(checkout,space,{files,real:[],pool}),pool})));
+  running=false;await collector;
+  expect(sweeps).toBeGreaterThan(0);expect(results.every(result=>result.captured===files.length&&result.vanished.length===0)).toBe(true);
+  const rows=files.flatMap(path=>spaces.map(space=>[aliasPath(space,path),expected[path]!]));
+  if(python){const run=Bun.spawnSync([python,"-I","-c","import hashlib,json,sys\nrows=json.loads(sys.stdin.read())\nprint(json.dumps([hashlib.sha256(open(p,'rb').read()).hexdigest()==h for p,h in rows]))"],{stdin:new TextEncoder().encode(JSON.stringify(rows))});expect(run.exitCode,run.stderr.toString()).toBe(0);expect(JSON.parse(run.stdout.toString()).every(Boolean)).toBe(true);}
+  for(const[path,hash]of rows)expect(sha(readFileSync(path)),path).toBe(hash);
+  expect(removed,"the collector really removed entries during the captures").toBeGreaterThan(0);
+  await captureBazelSourceSnapshotV1(request(checkout,join(directory,"four"),{files,real:[],pool}));
+  expect(readdirSync(pool).some(name=>/^[0-9a-f]{2}$/u.test(name))).toBe(true);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+},120000);

@@ -1,6 +1,6 @@
-/** 🎟️ Nx put slot laws over `./🧫️fixtures/🔣️.json` with the real lease library: the slot count parsing table, peak concurrency never above the slot count while every worker finishes (independent Python schedule model `./🐍️oracle.py`), first-in first-out admission, a probe of the other slots, release after a failing body, and cancellation of a waiter. */
+/** 🎟️ Nx put slot laws over `./🧫️fixtures/🔣️.json` with the real lease library: the slot count parsing table, peak concurrency never above the slot count while every worker finishes (independent Python schedule model `./🐍️.py`), first-in first-out admission, a probe of the other slots, release after a failing body, and cancellation of a waiter. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,readFileSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -27,7 +27,7 @@ test("concurrent publications never exceed the slots and all finish",()=>withEnv
   const controller=new AbortController();let active=0,peak=0,done=0;
   await Promise.all(Array.from({length:row.workers},()=>withNxPutSlotV1({root:image,leaseDirectory:lease,control:issue(original,new AbortController().signal),slots:row.slots},async()=>{active++;peak=Math.max(peak,active);await sleep(row.holdMilliseconds);active--;done++;})));
   expect(done).toBe(row.workers);expect(peak).toBeLessThanOrEqual(row.maximumConcurrent);expect(peak).toBe(row.maximumConcurrent);
-  const model=spawnSync(testPythonV1()??"python3",["-I",resolve(import.meta.dir,"./🐍️oracle.py"),String(row.slots),String(row.workers)],{encoding:"utf8"});expect(model.status).toBe(0);expect(JSON.parse(model.stdout).peak).toBe(peak);
+  const model=spawnSync(testPythonV1()??"python3",["-I",resolve(import.meta.dir,"./🐍️.py"),String(row.slots),String(row.workers)],{encoding:"utf8"});expect(model.status).toBe(0);expect(JSON.parse(model.stdout).peak).toBe(peak);
  }finally{rmSync(root,{recursive:true,force:true});}
 }),30000);
 
@@ -37,7 +37,7 @@ test("waiters are admitted first in, first out",()=>withEnvelope(async original=
   const controller=new AbortController(),order:number[]=[],runs:Promise<void>[]=[];
   for(let worker=0;worker<row.workers;worker++){runs.push(withNxPutSlotV1({root:image,leaseDirectory:lease,control:issue(original,new AbortController().signal),slots:row.slots},async()=>{order.push(worker);await sleep(row.holdMilliseconds);}));await sleep(30);}
   await Promise.all(runs);
-  const model=spawnSync(testPythonV1()??"python3",["-I",resolve(import.meta.dir,"./🐍️oracle.py"),String(row.slots),String(row.workers)],{encoding:"utf8"});expect(model.status).toBe(0);
+  const model=spawnSync(testPythonV1()??"python3",["-I",resolve(import.meta.dir,"./🐍️.py"),String(row.slots),String(row.workers)],{encoding:"utf8"});expect(model.status).toBe(0);
   expect(order).toEqual(JSON.parse(model.stdout).order);
  }finally{rmSync(root,{recursive:true,force:true});}
 }),30000);

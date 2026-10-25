@@ -6,7 +6,7 @@ import {spawnSync} from "node:child_process";
 
 process.env.SEMIO_AGENT_SESSION_DIRECTORY??=mkdtempSync(join(tmpdir(),"rs-"));
 export const HERE=import.meta.dir;
-export const ORACLE=join(HERE,"🐍️oracle.py");
+export const ORACLE=join(HERE,"🐍️.py");
 export const NATIVE=process.env.SEMIO_REPO_NATIVE_DIR??"";
 export const WATCHER=process.env.SEMIO_REPO_WATCH_BINARY??(NATIVE?NATIVE+"/semio-repo-watch":"");
 export const FAKETOOL=process.env.SEMIO_REPO_FAKETOOL_BINARY??(NATIVE?NATIVE+"/faketool":"");

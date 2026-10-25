@@ -53,7 +53,7 @@ const grid = (value: number): number => {
   return value === 0 ? 0 : Math.round(value * factor) / factor;
 };
 
-/** 🎯️ Compiles one committed fixture of this case and projects its rectangles. */
+/** 🔨️ Compiles one committed fixture of this case and projects its rectangles. */
 async function rectangles(ctx: AdapterContext, fixture: string): Promise<number[]> {
   const records = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://📊️charts-bar-layout/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   const projection: ProbeProjection = probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id);
@@ -62,7 +62,7 @@ async function rectangles(ctx: AdapterContext, fixture: string): Promise<number[
 // #endregion 🧫️Vectors
 
 // #region 🔮️Oracles
-/** 🔮️ Two nested d3 band scales plus a linear value scale — a grouped bar chart's whole geometry. */
+/** 👥️ Two nested d3 band scales plus a linear value scale — a grouped bar chart's whole geometry. */
 function groupedRects(f: Frame, horizontal: boolean): number[] {
   const band = horizontal
     ? scaleBand<string>().domain([...CATEGORIES]).range([f.y1, f.y0])
@@ -82,7 +82,7 @@ function groupedRects(f: Frame, horizontal: boolean): number[] {
   return out;
 }
 
-/** 🔮️ d3-shape's stack, with or without the expand offset, mapped through the value scale. */
+/** 🪵️ d3-shape's stack, with or without the expand offset, mapped through the value scale. */
 function stackedRects(f: Frame, expand: boolean): number[] {
   const table = CATEGORIES.map((category) => VALUES[category]!);
   const layout = stack<Record<string, number>>().keys([...SERIES]);
@@ -115,21 +115,21 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/rect": await rectangles(ctx, "grouped.tex") } }),
     },
     "horizontal": {
-      /** 🔮️ The same construction with the band running down the y range instead. */
+      /** ⬇️ The same construction with the band running down the y range instead. */
       oracle: (ctx: AdapterContext) => ({ projection: { "geometry/rect": groupedRects(frame(ctx), true) } }),
-      /** 🎯️ The rectangles the horizontally oriented bar family drew. */
+      /** 🧭️ The rectangles the horizontally oriented bar family drew. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/rect": await rectangles(ctx, "horizontal.tex") } }),
     },
     "stacked": {
-      /** 🔮️ d3-shape's stack with the default offset. */
+      /** 🏠️ d3-shape's stack with the default offset. */
       oracle: (ctx: AdapterContext) => ({ projection: { "geometry/rect": stackedRects(frame(ctx), false) } }),
-      /** 🎯️ The stacked rectangles the bar family drew. */
+      /** 🥞️ The stacked rectangles the bar family drew. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/rect": await rectangles(ctx, "stacked.tex") } }),
     },
     "percent": {
-      /** 🔮️ d3-shape's stack under stackOffsetExpand. */
+      /** ➗️ d3-shape's stack under stackOffsetExpand. */
       oracle: (ctx: AdapterContext) => ({ projection: { "geometry/rect": stackedRects(frame(ctx), true) } }),
-      /** 🎯️ The percent-stacked rectangles the bar family drew. */
+      /** 💯️ The percent-stacked rectangles the bar family drew. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/rect": await rectangles(ctx, "percent.tex") } }),
     },
     "diverging": {
@@ -139,7 +139,7 @@ export default defineTestAdapter({
           "geometry/rect": rows(ctx).flatMap((row) => [Number(row.x), Number(row.y), Number(row.w), Number(row.h)].map(grid)),
         },
       }),
-      /** 🎯️ The rectangles the diverging mode drew. */
+      /** ↔️ The rectangles the diverging mode drew. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/rect": await rectangles(ctx, "diverging.tex") } }),
     },
   },

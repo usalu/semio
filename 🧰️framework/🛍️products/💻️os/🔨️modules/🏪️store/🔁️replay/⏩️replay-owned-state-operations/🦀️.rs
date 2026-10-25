@@ -173,6 +173,8 @@ where
     pub(crate) fn step_with_operation_cap(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, original:Option<RetainedCloneGrant>, mut control:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         if maximum_operations == 0 && !self.finished { return Ok(ReplayStep::Pending(self.progress)); }
         let mut completed_operations = 0usize;
+        let cold = original.is_none() && self.operation_preparation_factory.is_none();
+        let original = if cold { Some(Self::cold_authority_grant()) } else { original };
         while !self.finished {
             if let Some(retirement) = self.replay_retirement.as_mut() {
                 let body = retirement.next_copy_byte_demand().map_err(VcsError::InverseRefused)?;
@@ -241,7 +243,15 @@ where
                 self.cursor+=1;self.operation=0;self.record();continue;
             }
             if self.operation < edit.forwards.len() {
-                if self.operation_preparation_factory.is_none(){return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its retained original preparation issuer")));}
+                if self.operation_preparation_factory.is_none(){
+                    if !cold{return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its retained original preparation issuer")));}
+                    self.replay_operation(edit)?;
+                    self.operation+=1;
+                    completed_operations=completed_operations.saturating_add(1);
+                    self.progress.done=self.progress.done.saturating_add(1);
+                    if deadline()||completed_operations>=maximum_operations{return Ok(ReplayStep::Pending(self.progress));}
+                    continue;
+                }
                 if !self.step_prepared_operation(edit,false,original,control.as_deref_mut(),deadline)?{deadline();return Ok(ReplayStep::Pending(self.progress));}
                 self.operation+=1;
                 completed_operations=completed_operations.saturating_add(1);
@@ -261,6 +271,11 @@ where
             if !self.finished && deadline() { return Ok(ReplayStep::Pending(self.progress)); }
         }
         Ok(ReplayStep::Finished(self.progress))
+    }
+
+    /// 🧊️ The grant of the unscheduled cold authority: a replay stepped without an original caller grant and without an installed preparation issuer folds on the cold diff arithmetic under exactly this unbounded envelope.
+    fn cold_authority_grant() -> RetainedCloneGrant {
+        RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: 1 << 16 }
     }
 
     /// 🫀️ Replays operation `self.operation` of `edit`: its effective input is re-diffed and re-inverted against the running

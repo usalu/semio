@@ -75,7 +75,7 @@ describe("raw process spawn law", () => {
     const wanted = [
       "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧵️executor/🐹️.go", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🌿️git/🐹️.go", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🐚️unix-host/🐹️.go",
-      "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/📋️clipboard-and-osc52/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🚇️pty/🦀️.rs", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🦀️rust/🦀️.rs",
+      "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/📋️clipboard-and-osc52/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🚇️pty/🦀️.rs", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🦀️.rs",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🚀️apply/🏁️transaction-run/🔧️transaction-steps/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts",
     ].filter(path => existsSync(join(repository, path)));
     expect(wanted.length).toBeGreaterThan(3);

@@ -2,7 +2,7 @@
 
 //#region 🔤️Pattern
 
-/// 🔤 Owned backtracking matcher for the ECMA-262 subset JSON Schema `pattern` needs — anchors,
+/// 🔣️ Owned backtracking matcher for the ECMA-262 subset JSON Schema `pattern` needs — anchors,
 /// classes, groups, lookahead, alternation and quantifiers over `char`s.
 ///
 /// Not reusing `semio-framework-math`'s `🎯️sampling` DFA: that engine is byte-level with no anchors

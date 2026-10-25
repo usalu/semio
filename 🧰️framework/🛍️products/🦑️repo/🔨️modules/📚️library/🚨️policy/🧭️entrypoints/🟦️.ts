@@ -16,7 +16,7 @@ export async function dispatchPolicyArgv(segments: string[], scriptUrl: string):
   return true;
 }
 
-/** 🚪️Policy-only bundle entry when no other subcommands are registered. */
+/** ▶️Policy-only bundle entry when no other subcommands are registered. */
 export async function runPolicyOnlyMain(scriptUrl: string): Promise<void> {
   const segments = process.argv.slice(2);
   if (await dispatchPolicyArgv(segments, scriptUrl)) return;
@@ -24,7 +24,7 @@ export async function runPolicyOnlyMain(scriptUrl: string): Promise<void> {
   process.exit(1);
 }
 
-/** 🚪️Workspace root `script.ts` entry (no policy dispatch). */
+/** 📜️Workspace root `script.ts` entry (no policy dispatch). */
 export async function runWorkspaceScriptMain(router: ScriptRouter): Promise<void> {
   const run = (invocation: ScriptInvocation) => runScriptMain(router, { invocation });
   if (process.env[SCRIPT_PROCESS_INVOCATION_ENV] !== undefined) return receiveScriptProcessInvocation(process.env, run);

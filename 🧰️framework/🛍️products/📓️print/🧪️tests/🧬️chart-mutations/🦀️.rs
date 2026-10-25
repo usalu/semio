@@ -34,6 +34,13 @@ fn semantic_chart_validation_borrows_authored_fields(){
  for row in neutral["validation"].as_array().unwrap(){let snapshot=ChartSnapshot{chart:DslValue::from(&row["chart"])};let before=serde_json::Value::from(&snapshot.chart);assert_eq!(crate::inferences::validate_chart(&snapshot).is_ok(),row["valid"].as_bool().unwrap(),"{row}");assert_eq!(serde_json::Value::from(&snapshot.chart),before);}
 }
 
+/// 🧮️ One fresh original step context for the operation and generation named by the inference requests of these laws.
+fn step_context() -> semio_framework_job::StepContext<'static> {
+    let sequence: &'static mut u64 = Box::leak(Box::new(0));
+    let progress: &'static mut semio_framework_value::retained_clone::RetainedCloneProgress = Box::leak(Box::default());
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
+    semio_framework_job::StepContext::new(semio_framework_job::OperationId(17), semio_framework_job::Generation(9), semio_framework_job::StepBudget::new(1_000_000, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), sequence, progress)
+}
 fn fixture() -> serde_json::Value { serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🧬️chart-mutations/🔣️.json")).unwrap() }
 pub(crate) fn assets() -> &'static ChartSchemaAssets {
     static ASSETS: std::sync::OnceLock<ChartSchemaAssets> = std::sync::OnceLock::new();
@@ -115,9 +122,9 @@ fn native_registry_dispatch_is_deterministic_and_controlled() {
     register_chart_artifact(&assets()).unwrap();
     register_chart_artifact(&assets()).unwrap();
     let published=semio_framework_plugin::app::artifact_inference_service(CHART_ARTIFACT_KIND,"framework.print.chart.inference").unwrap().unwrap();
-    assert_eq!(published.infer(&request).unwrap().execution.expect("terminal execution").canonical_payload,registry.infer(CHART_ARTIFACT_KIND,"framework.print.chart.inference",&request).unwrap().execution.expect("terminal execution").canonical_payload);
-    let first = registry.infer(CHART_ARTIFACT_KIND, "framework.print.chart.inference", &request).unwrap().execution.expect("terminal execution");
-    let second = registry.infer(CHART_ARTIFACT_KIND, "framework.print.chart.inference", &request).unwrap().execution.expect("terminal execution");
+    assert_eq!(published.infer(&request,&mut step_context()).unwrap().execution.expect("terminal execution").canonical_payload,registry.infer(CHART_ARTIFACT_KIND,"framework.print.chart.inference",&request,&mut step_context()).unwrap().execution.expect("terminal execution").canonical_payload);
+    let first = registry.infer(CHART_ARTIFACT_KIND, "framework.print.chart.inference", &request, &mut step_context()).unwrap().execution.expect("terminal execution");
+    let second = registry.infer(CHART_ARTIFACT_KIND, "framework.print.chart.inference", &request, &mut step_context()).unwrap().execution.expect("terminal execution");
     assert_eq!(first.canonical_payload, second.canonical_payload);
     let decoded = ChartTextOutput::from_value(protocol::pack_rt::decode_wire_value(first.canonical_payload.as_deref().expect("canonical payload")).unwrap()).unwrap();
     assert_eq!(decoded, ChartTextOutput::render(&base).unwrap());
@@ -128,7 +135,7 @@ fn native_registry_dispatch_is_deterministic_and_controlled() {
     assert!(crate::io::binary::inferences::execute_chart_inference_controlled(&request, &mut |work| { if work >= 1 { Err(ArtifactInferenceExecutionError::new("test.cancelled", "cancelled")) } else { Ok(()) } }).is_err());
     let invalid_payload=protocol::pack_rt::encode_wire_value(&ChartSnapshot::default().to_value());
     let invalid_request=ArtifactInferenceExecutionRequest{canonical_payload:&invalid_payload,..request};
-    let invalid=published.infer(&invalid_request).unwrap().execution.expect("terminal execution");
+    let invalid=published.infer(&invalid_request,&mut step_context()).unwrap().execution.expect("terminal execution");
     let decoded=ChartTextOutput::from_value(protocol::pack_rt::decode_wire_value(invalid.canonical_payload.as_deref().expect("canonical payload")).unwrap()).unwrap();
     assert!(!invalid.complete);assert!(!decoded.complete);assert!(decoded.tikz.is_empty());assert_eq!(decoded.diagnostics[0].path,"chart");
 }

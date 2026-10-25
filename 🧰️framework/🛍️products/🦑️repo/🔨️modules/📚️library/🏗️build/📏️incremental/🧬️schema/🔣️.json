@@ -47,7 +47,8 @@
         ],
         "label": "^t_[0-9a-f]{16}$",
         "bazelReport": "SEMIO_BUILD_TASK_REPORT",
-        "copyConcurrency": 32
+        "copyConcurrency": 32,
+        "inventoryFile": ".semio-incremental-inventory.json"
       }
     },
     "Tool": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$" },

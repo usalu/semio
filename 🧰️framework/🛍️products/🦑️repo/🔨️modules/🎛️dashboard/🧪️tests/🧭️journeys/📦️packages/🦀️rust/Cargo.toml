@@ -1,3 +1,5 @@
+cargo-features = ["trim-paths"]
+
 [package]
 name = "semio-dashboard-journeys"
 version = "0.1.0"

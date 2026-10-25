@@ -57,7 +57,7 @@ export function curveCardinalTension(tension: number): VizCurveFactory {
   };
 }
 
-/** ✒️ `curveCardinalClosed` at a given tension. */
+/** 📕️ `curveCardinalClosed` at a given tension. */
 export function curveCardinalClosedTension(tension: number): VizCurveFactory {
   const k = (1 - tension) / 6;
   return (context) => {
@@ -120,7 +120,7 @@ export function curveCardinalClosedTension(tension: number): VizCurveFactory {
   };
 }
 
-/** ✒️ `curveCardinalOpen` at a given tension. */
+/** 🔓️ `curveCardinalOpen` at a given tension. */
 export function curveCardinalOpenTension(tension: number): VizCurveFactory {
   const k = (1 - tension) / 6;
   return (context) => {
@@ -157,13 +157,13 @@ export function curveCardinalOpenTension(tension: number): VizCurveFactory {
   };
 }
 
-/** ✒️ `curveCardinal` at d3's default tension of 0. */
+/** 🧭️ `curveCardinal` at d3's default tension of 0. */
 export const curveCardinal = curveCardinalTension(0);
 
-/** ✒️ `curveCardinalClosed` at d3's default tension of 0. */
+/** 📪️ `curveCardinalClosed` at d3's default tension of 0. */
 export const curveCardinalClosed = curveCardinalClosedTension(0);
 
-/** ✒️ `curveCardinalOpen` at d3's default tension of 0. */
+/** 📂️ `curveCardinalOpen` at d3's default tension of 0. */
 export const curveCardinalOpen = curveCardinalOpenTension(0);
 
 //#endregion 🔖️CurvesCardinal
@@ -216,7 +216,7 @@ function measureCatmull(s: CatmullState, alpha: number, x: number, y: number): v
   }
 }
 
-/** ✒️ `curveCatmullRom` at a given α; α = 0 collapses onto the uniform cardinal spline. */
+/** 🧶️ `curveCatmullRom` at a given α; α = 0 collapses onto the uniform cardinal spline. */
 export function curveCatmullRomAlpha(alpha: number): VizCurveFactory {
   if (!(alpha > 0)) return curveCardinalTension(0);
   return (context) => {
@@ -254,7 +254,7 @@ export function curveCatmullRomAlpha(alpha: number): VizCurveFactory {
   };
 }
 
-/** ✒️ `curveCatmullRomClosed` at a given α. */
+/** 🔒️ `curveCatmullRomClosed` at a given α. */
 export function curveCatmullRomClosedAlpha(alpha: number): VizCurveFactory {
   if (!(alpha > 0)) return curveCardinalClosedTension(0);
   return (context) => {
@@ -313,7 +313,7 @@ export function curveCatmullRomClosedAlpha(alpha: number): VizCurveFactory {
   };
 }
 
-/** ✒️ `curveCatmullRomOpen` at a given α. */
+/** 🗝️ `curveCatmullRomOpen` at a given α. */
 export function curveCatmullRomOpenAlpha(alpha: number): VizCurveFactory {
   if (!(alpha > 0)) return curveCardinalOpenTension(0);
   return (context) => {
@@ -346,12 +346,12 @@ export function curveCatmullRomOpenAlpha(alpha: number): VizCurveFactory {
   };
 }
 
-/** ✒️ `curveCatmullRom` at d3's default α of ½. */
+/** 🪢️ `curveCatmullRom` at d3's default α of ½. */
 export const curveCatmullRom = curveCatmullRomAlpha(0.5);
 
-/** ✒️ `curveCatmullRomClosed` at d3's default α of ½. */
+/** 🔐️ `curveCatmullRomClosed` at d3's default α of ½. */
 export const curveCatmullRomClosed = curveCatmullRomClosedAlpha(0.5);
 
-/** ✒️ `curveCatmullRomOpen` at d3's default α of ½. */
+/** 📬️ `curveCatmullRomOpen` at d3's default α of ½. */
 export const curveCatmullRomOpen = curveCatmullRomOpenAlpha(0.5);
 //#endregion 🔖️CurvesCatmullRom

@@ -3,7 +3,7 @@ import {expect,test,setDefaultTimeout} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {join,resolve} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {acquireNxPackageSourceV1,NX_PACKAGE_SOURCE_HOST_V1,type NxPackageSourceHostV1} from "../../🟦️.ts";
 import policy from "../../../🗃️archive/📋️policy.json";
 import corpus from "./🔣️.json";

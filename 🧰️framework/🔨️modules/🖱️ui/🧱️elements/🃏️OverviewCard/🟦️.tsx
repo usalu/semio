@@ -47,12 +47,12 @@ export interface OverviewCardButtonProps extends OverviewCardBaseProps {
   readonly lifted?: boolean;
 }
 
-/** 🃏️ Props of {@link OverviewCard}. */
+/** ⚙️ Props of {@link OverviewCard}. */
 export type OverviewCardProps = OverviewCardSectionProps | OverviewCardButtonProps;
 
 const CARD_STACK_DATA = { "data-overview-card-stack": "" } as const;
 
-/** 🃏️ The overview card of semio's landing pages (play, the demonstrator, the quizzes): the design system's
+/** 💳️ The overview card of semio's landing pages (play, the demonstrator, the quizzes): the design system's
  * {@link WindowChrome} at dialog level, never `active`, with the title in its cap chip and actions in its footer chips.
  * Sharp corners, glass and the 1 px silhouette come from the chrome; the stack stays transparent through
  * `data-overview-card-stack`, and its outline is emphasised while the pointer is over the card.
@@ -143,7 +143,7 @@ export interface OverviewCardActionProps extends React.ButtonHTMLAttributes<HTML
   readonly primary?: boolean;
 }
 
-/** 🎬️ A real button in a card's footer chip, at least 24 px tall (WCAG 2.2 target size): the primary action reads in the
+/** 🖱️ A real button in a card's footer chip, at least 24 px tall (WCAG 2.2 target size): the primary action reads in the
  * foreground colour with a chevron that nudges on hover, a secondary one reads muted until hovered. The pointer zooms
  * the page behind the card only while it is over the primary action. */
 export const OverviewCardAction = React.forwardRef<HTMLButtonElement, OverviewCardActionProps>(({ primary = false, className, children, style, type, ...rest }, ref) => (

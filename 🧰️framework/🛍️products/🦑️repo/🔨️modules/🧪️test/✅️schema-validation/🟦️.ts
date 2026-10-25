@@ -184,22 +184,22 @@ export type SchemaFixtureStage = (typeof SCHEMA_FIXTURE_STAGES)[number];
 /** 🎯️ What a fixture binds to: a named export of a scope, in one format. Never a file path. */
 export type SchemaFixtureTarget = Readonly<{ scope: string; export: string; format: string }>;
 
-/** 🎯️ The stage, verdict and code a negative fixture asserts. */
+/** ❎️ The stage, verdict and code a negative fixture asserts. */
 export type SchemaStageExpectation = Readonly<{ stage: SchemaFixtureStage; result: "passed" | "failed"; code: string | null }>;
 
-/** 🧫️ One schema-bound fixture: an example that BINDS to an export and never defines one. */
+/** 🛠️ One schema-bound fixture: an example that BINDS to an export and never defines one. */
 export type SchemaTestExample = Readonly<{
   id: string;
   uri: string;
   target: SchemaFixtureTarget;
   /** 📄️ Case-relative data file. Mutually exclusive with `inline`. */
   data?: string;
-  /** 📄️ Inline example, for a case whose subject is small enough to read beside its expectation. */
+  /** 🔸️ Inline example, for a case whose subject is small enough to read beside its expectation. */
   inline?: unknown;
   expect: SchemaStageExpectation;
 }>;
 
-/** 🪜️ What one stage did. `skipped` means an earlier stage already decided the outcome. */
+/** 🎭️ What one stage did. `skipped` means an earlier stage already decided the outcome. */
 export type SchemaStageOutcome = Readonly<{ stage: SchemaFixtureStage; result: "passed" | "failed" | "skipped"; code: SchemaHarnessDiagnosticCode | null; detail: string }>;
 
 /** 📤️ One fixture's staged report — the shape `test schema` prints and a gate reads. */
@@ -212,7 +212,7 @@ function stage(name: SchemaFixtureStage, result: "passed" | "failed" | "skipped"
 }
 
 /**
- * 🪜️ Runs one schema-bound fixture through the six stages and reports every one of them.
+ * ▶️ Runs one schema-bound fixture through the six stages and reports every one of them.
  *
  * Execution STOPS at the first failing stage and the rest are reported as `skipped` rather than
  * silently omitted: a report that lists four stages when six exist reads as four passes.

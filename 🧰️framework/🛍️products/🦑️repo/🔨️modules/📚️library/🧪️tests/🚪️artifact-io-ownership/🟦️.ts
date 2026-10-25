@@ -272,7 +272,7 @@ test("artifact IO contracts and command registration parse independently", () =>
   for (const verb of ["test", "lint"]) {
     const id = `${verb}-artifact-io-ownership`;
     expect(targets[id].options.command).toBe(`repo ./📜️script.ts ${verb} artifact-io-ownership`);
-    expect(scripts[id]).toBe(`repo --cwd "${relative(packageRoot, resolve(library, "../../../../.."))}" repo run @semio-tech/repo-lib:${id}`);
+    expect(scripts[id]).toBe(`repo run @semio-tech/repo-lib:${id}`);
   }
 },{timeout:60000});
 

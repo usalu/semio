@@ -279,7 +279,7 @@ export const shellChromeDe = {
   },
 } satisfies Pick<UiTranslationSchema["ui"], "nav" | "search" | "palette" | "panel" | "tree" | "find" | "fullscreen" | "mobilePanel" | "panelToggle" | "display">;
 
-/** 🧭️ Shell navigation, search, panel and display chrome labels (`en`). */
+/** 🖥️ Shell navigation, search, panel and display chrome labels (`en`). */
 export const shellChromeEn = {
   nav: {
     back: {

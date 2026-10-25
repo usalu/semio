@@ -137,7 +137,7 @@ impl TimeTravelSession {
         pending.replacement == *self.start_of(pending)
     }
 
-    /// 🧾️ Why `Accept` would be refused; an unchanged input keeps the draft open.
+    /// 🛑️ Why `Accept` would be refused; an unchanged input keeps the draft open.
     pub fn accept_refusal(&self) -> Option<TimeTravelRefusal> {
         match (self.stage, self.pending.as_ref()) {
             (TimeTravelStage::Editing, Some(pending)) if self.unchanged(pending) => Some(TimeTravelRefusal::Unchanged),

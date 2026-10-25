@@ -113,7 +113,7 @@ export function mutationTaxonomySourceAdmission(repoRoot: string, options: Mutat
 }
 
 
-/** 🧾️ Selects only admitted regular files; this projection never traverses or reads the filesystem. */
+/** 📑️ Selects only admitted regular files; this projection never traverses or reads the filesystem. */
 export function mutationTaxonomySourceFiles(admission: TaxonomySourceInventory): string[] {
   if (admission.status !== "complete") throw new Error("[clean taxonomy --kind mutation] source admission is rejected.");
   return admission.observations

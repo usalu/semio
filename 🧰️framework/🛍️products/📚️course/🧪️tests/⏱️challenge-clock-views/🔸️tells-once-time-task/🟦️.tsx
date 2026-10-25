@@ -4,7 +4,7 @@ import { expect, it, vi } from "vitest";
 import { type SheetClassificationTask } from "@semio-tech/course";
 import { type CourseText } from "@semio-tech/course-react";
 import { en, said, sheetAt } from "../../🪞️challenge-views-kit/🟦️.ts";
-import { Run, clockSaid, runOf, start, stepClock, ticker } from "../🟠️shared/🟦️.tsx";
+import { Run, clockSaid, runOf, start, stepClock, ticker } from "../🟠️harness/🟦️.tsx";
 
 /** 🔹 Registers the tells once time task tests of the ⏱️ the clock of a timed task suite. */
 export function registerTellsOnceTimeTaskTests(): void {

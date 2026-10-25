@@ -61,7 +61,7 @@ export interface BuildInferenceInternalsV1 extends Readonly<Record<string,unknow
  targetPolicy<T extends object>(name:string,target:T,policy?:InferencePolicyV1):T&{cache:boolean;continuous?:boolean};
  withWasmTooling<T extends Readonly<Record<string,GeneratedTargetV1>>>(targets:T,required:boolean):T;
  componentBuildTargets(root:string,workspaceRoot:string):Readonly<Record<string,ComponentBuildTargetV1>>;
- relativeScriptInputs(entries:readonly string[],workspaceRoot:string,cache?:ScriptInputCacheV1,requiredSources?:boolean):Promise<string[]>;
+ relativeScriptInputs(entries:readonly string[],workspaceRoot:string,cache?:ScriptInputCacheV1,requiredSources?:boolean,resourceEntries?:readonly string[],commands?:ReadonlyMap<string,readonly string[]>):Promise<string[]>;
  projectInputs(json:Readonly<Record<string,unknown>>,root:string,workspaceRoot:string,facts:Map<string,unknown>,cache?:ScriptInputCacheV1,representation?:"source"|"hash",sourceGroups?:unknown,inputNames?:readonly string[],commandGroups?:Readonly<Record<string,unknown[]>>):Promise<Record<string,unknown[]>>;
  declaredSourceInputs(json:Readonly<Record<string,unknown>>,workspaceRoot:string,context?:ScriptInputContextV1,inputNames?:readonly string[]):Promise<Record<string,unknown[]>>;
  projectWithDefaults<T extends Readonly<Record<string,unknown>>>(json:T,root:string,projectDir:string,workspaceRoot:string,contracts?:Readonly<Record<string,unknown>>,facts?:Map<string,unknown>,commandInputs?:readonly string[],cache?:ScriptInputCacheV1,sourceGroups?:Readonly<Record<string,unknown[]>>,representation?:"source"|"hash",selectedTargets?:readonly string[],inputNames?:readonly string[]):Promise<T&GeneratedProjectV1>;
@@ -81,9 +81,11 @@ export interface BuildInferenceInternalsV1 extends Readonly<Record<string,unknow
  collectPlaygroundCatalog(configFiles:readonly string[],workspaceRoot:string,catalogContributions?:readonly import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts").CatalogBuildContributionV1[]):readonly PlaygroundCatalogRowV1[];
  cacheDecisionV1(decisionClass:string,reason:string):Readonly<{version:1;class:string;reason:string}>;
  targetClassV1(name:string,rows?:InferencePolicyV1["targetClasses"]):Readonly<{version:1;class:string;reason:string}>|undefined;
+ targetExclusionsV1(name:string,rows?:InferencePolicyV1["targetClasses"]):string|undefined;
+ excludedInputConflictV1(inputs:readonly unknown[],namedInputs:Readonly<Record<string,unknown>>,patterns:readonly string[],matches:(path:string,pattern:string)=>boolean,projectRoot:string):boolean;
  normalizedTargetName(name:string):string;
  cachedOutputsAdmittedV1<T extends object>(target:T):T;
- nativeTargetRunsTestsV1(name:string,execution:Readonly<{kind:string;scope?:string}>|undefined,commandSources:readonly string[]):boolean;
+ nativeTargetRunsTestsV1(name:string,execution:Readonly<{kind:string;scope?:string}>|undefined,reachesTestDriver:boolean):boolean;
  nativeAuthoredInputsV1(policyInputs:readonly unknown[],commandInputs:readonly unknown[]|undefined):unknown[];
  nativeTargetInputsV1(runsTests:boolean,generated:readonly unknown[],declared:readonly unknown[]):unknown[];
  pluginSiteTargetsForCrate(root:string,allPlaygrounds:readonly PlaygroundCatalogRowV1[],stagingProjectRoot:string|undefined,workspaceRoot:string):Record<string,GeneratedTargetV1>;
@@ -92,7 +94,8 @@ export interface BuildInferenceInternalsV1 extends Readonly<Record<string,unknow
  createRustSourceCache(limit?:number):RustSourceCacheV1;
  inferenceCandidates(configFiles:readonly string[],workspaceRoot:string):string[];
  playgroundSessionTargets(configFiles:readonly string[],workspaceRoot:string,catalogContributions?:readonly import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts").CatalogBuildContributionV1[]):Promise<Record<string,GeneratedTargetV1>>;
- rustSourceFiles(entries:readonly string[],manifestRoot:string,cache?:RustSourceCacheV1,snapshots?:Map<string,unknown>):string[];
+ rustSourceFiles(entries:readonly string[],manifestRoot:string,cache?:RustSourceCacheV1,snapshots?:Map<string,unknown>,compiled?:boolean):string[];
+ cargoSourceInputs(root:string,workspaceRoot:string,facts:Map<string,unknown>,includeTests?:boolean,compiled?:boolean):string[]|undefined;
  targetScriptSources(target:GeneratedTargetV1,workspaceRoot:string,scripts?:ScriptInputCacheV1,projectRoot?:string,nativeManifest?:string):Promise<{closure:string[]|undefined;fallback:boolean}>;
  moduleSourceRecordCacheRootV1(workspaceRoot:string):string|undefined;
  sourceAnalysisOwnerIdentityV1(url:string,revision:string):string;

@@ -1,4 +1,4 @@
-/** 📱 Owns the mobile layout context that tells chrome whether to adapt to a handheld surface. */
+/** 🧭️ Owns the mobile layout context that tells chrome whether to adapt to a handheld surface. */
 import * as React from "react";
 import { UI_MOBILE_MEDIA_QUERY } from "../../📱️device/🟦️.ts";
 import { reactHostPort } from "../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
@@ -12,7 +12,7 @@ export const UiMobileProvider: React.FC<{
   readonly children: React.ReactNode;
 }> = ({ mobile, children }) => <UiMobileContext.Provider value={mobile}>{children}</UiMobileContext.Provider>;
 
-/** 📱️ Returns the nearest {@link UiMobileProvider} flag, falling back to {@link UI_MOBILE_MEDIA_QUERY} for standalone usage (Storybook, tests). */
+/** 🪝️ Returns the nearest {@link UiMobileProvider} flag, falling back to {@link UI_MOBILE_MEDIA_QUERY} for standalone usage (Storybook, tests). */
 export function useUiMobile(): boolean {
   const media = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const ctx = reactHostPort.useContext(UiMobileContext);

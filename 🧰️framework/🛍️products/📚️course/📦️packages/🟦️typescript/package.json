@@ -8,7 +8,8 @@
   "exports": {
     ".": "./🟦️.ts",
     "./schema.json": "./🧬️schema/🔣️json/🟦️.ts",
-    "./schema/projection": "./🧬️schema/📽️projection/🟦️.ts"
+    "./schema/projection": "./🧬️schema/📽️projection/🟦️.ts",
+    "./schema": "./🧬️schema/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "semio": {

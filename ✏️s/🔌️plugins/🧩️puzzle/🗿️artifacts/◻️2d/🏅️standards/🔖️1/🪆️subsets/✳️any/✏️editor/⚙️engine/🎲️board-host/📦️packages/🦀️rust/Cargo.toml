@@ -19,6 +19,8 @@ path = "🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-s-artifact-puzzle-2d-tambour-single-storey = { path = "../../../🔣️icons/🌱️metabolism/🧩️tambour-single-storey/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-2d-tambour-end-storeys = { path = "../../../🔣️icons/🌱️metabolism/🧱️tambour-end-storeys/📦️packages/🦀️rust" }
 machine = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 pack = { workspace = true }
 semio-framework = { workspace = true }

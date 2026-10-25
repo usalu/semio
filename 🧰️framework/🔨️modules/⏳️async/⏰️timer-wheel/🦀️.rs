@@ -1,4 +1,4 @@
-//! ⏰️ `TimerWheel`: the deadline heap the worker pool fires from, and its `TimerSleep` future.
+//! ⏲️ `TimerWheel`: the deadline heap the worker pool fires from, and its `TimerSleep` future.
 
 use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashMap};
@@ -29,7 +29,7 @@ struct TimerWheelState {
     last_now_ms: u64,
 }
 
-/// ⏰️ Min-heap-of-deadlines timer primitive shared by `WorkerPool` (native: an idle-parked worker
+/// ⛏️ Min-heap-of-deadlines timer primitive shared by `WorkerPool` (native: an idle-parked worker
 /// calls [`TimerWheel::fire_due`] with its own elapsed-wall-clock reading each time it wakes; wasm:
 /// `WorkerPool::pump` calls it with the host-supplied `now_ms`) — the epoch-ticker OS thread Phase
 /// 0's census found (`🧵️shard/…host.rs` `"semio-epoch-ticker"`, 1 ms poll loop) disappears; deadline
@@ -70,7 +70,7 @@ impl TimerWheel {
         }
     }
 
-    /// ⏰️ A future that resolves once this wheel has been [`TimerWheel::fire_due`]'d with a
+    /// 💤️ A future that resolves once this wheel has been [`TimerWheel::fire_due`]'d with a
     /// `now_ms >= deadline_ms` (or was already, before this fn was even called).
     pub fn sleep_until(&self, deadline_ms: u64) -> TimerSleep<'_> {
         TimerSleep { wheel: self, deadline_ms, id: None }
@@ -118,14 +118,14 @@ impl TimerWheel {
         self.state.lock().unwrap_or_else(PoisonError::into_inner).last_now_ms
     }
 
-    /// ⏰️ The earliest still-pending deadline, if any — used by `WorkerPool`'s idle-park loop to
+    /// ⌛️ The earliest still-pending deadline, if any — used by `WorkerPool`'s idle-park loop to
     /// bound how long a worker sleeps before it must re-check timers.
     pub fn next_deadline_ms(&self) -> Option<u64> {
         let state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         state.heap.peek().map(|Reverse((deadline, _))| *deadline)
     }
 
-    /// ⏰️ Wakes every registration whose deadline is `<= now_ms`, returning how many fired. Stale
+    /// 🔥️ Wakes every registration whose deadline is `<= now_ms`, returning how many fired. Stale
     /// heap entries for already-[`TimerWheel::forget`]-ten ids are skipped lazily (never
     /// compacted eagerly — the heap only ever grows by live-registration count, bounded by however
     /// many `sleep_until` calls are outstanding at once).
@@ -178,7 +178,7 @@ impl Default for TimerWheel {
     }
 }
 
-/// ⏰️ Future returned by [`TimerWheel::sleep_until`]. Registers itself into the wheel on first
+/// 🌙️ Future returned by [`TimerWheel::sleep_until`]. Registers itself into the wheel on first
 /// poll (or resolves immediately if the wheel's last known `now_ms` already reached the deadline),
 /// then relies entirely on [`TimerWheel::fire_due`] waking it — no busy-polling.
 pub struct TimerSleep<'a> {

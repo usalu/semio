@@ -35,7 +35,7 @@ def glob_regex(pattern):
 
 def command_words(command):
     tokens = shlex.split(command)
-    if not tokens or tokens[0] != "bun":
+    if not tokens or tokens[0] not in ("bun", "repo"):
         return None
     for index, token in enumerate(tokens[1:], 1):
         if re.search(r"script\.ts$", token):

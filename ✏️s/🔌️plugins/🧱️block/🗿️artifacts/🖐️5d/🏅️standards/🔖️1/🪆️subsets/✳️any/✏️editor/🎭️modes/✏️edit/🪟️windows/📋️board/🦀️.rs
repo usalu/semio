@@ -3,7 +3,7 @@
 use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use crate::terminology::Block5dLabels;
 use crate::ui_label;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PluginAssemblyError;

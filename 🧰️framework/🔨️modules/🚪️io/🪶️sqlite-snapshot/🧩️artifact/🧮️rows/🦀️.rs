@@ -5,13 +5,13 @@ pub enum RowWriter<'c,'p>{Original{storage:&'c mut ProjectionStorage,control:&'c
 impl<'c,'p> RowWriter<'c,'p>{
     /// 🏛️ Constructs the owner's real SQL projection through the supplied control.
     pub fn new(sql:&str,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{Projection::new(sql,control).map(Self::Owned)}
-    /// 🔢️ Visits the same authored traversal with original table-local census identities.
+    /// 📝️ Visits the same authored traversal with original table-local census identities.
     pub fn census(storage:&'c mut ProjectionStorage,sql:&str,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{storage.initialize(sql,control)?;Ok(Self::Original{storage,control,census:true})}
     /// 🫙️ Borrows the same original output after its exact table-row preparation.
     pub fn new_into(storage:&'c mut ProjectionStorage,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{Ok(Self::Original{storage,control,census:false})}
     /// 🧭️ Loans the actual caller control to separately retained original scalar scratch.
     pub fn control(&mut self)->&mut SqliteSnapshotControl<'p>{match self{Self::Original{control,..}|Self::Borrowed{control,..}=>control,Self::Owned(projection)=>projection.control}}
-    /// 🧮️ Reserves the original row vectors after completing the exact table-local census.
+    /// 📊️ Reserves the original row vectors after completing the exact table-local census.
     pub fn finish_census(self)->Result<(),ValueError>{match self{Self::Original{storage,control,census:true}=>storage.prepare_rows(control),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original census writer required"))}}
     /// 🏁️ Orders completed original output without transferring its auxiliary prefix.
     pub fn finish_into(self)->Result<(),ValueError>{match self{Self::Original{storage,control,census:false}=>storage.finish(control),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original output writer required"))}}
@@ -27,7 +27,7 @@ impl<'c,'p> RowWriter<'c,'p>{
     pub fn allocate_frontier<T>(&mut self,count:usize)->Result<Vec<T>,ValueError>{match self{Self::Original{..}=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original projection requires a retained scalar frontier")),Self::Owned(value)=>value.allocate_frontier(count),Self::Borrowed{control,phase,..}=>{control.checkpoint(*phase,0,count)?;super::super::transfer::reserve(count,control)}}}
     /// 🪜️ Pays complete replacement backing before a traversal frontier grows.
     pub fn push_frontier<T>(&mut self,frontier:&mut Vec<T>,value:T)->Result<(),ValueError>{match self{Self::Original{control,..}=>{if frontier.len()==frontier.capacity(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original projection scalar frontier extent"))}control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,frontier.len(),frontier.capacity())?;frontier.push(value);Ok(())},Self::Owned(projection)=>projection.push_frontier(frontier,value),Self::Borrowed{control,phase,..}=>{super::super::transfer::grow(frontier,*phase,control)?;frontier.push(value);Ok(())}}}
-    /// 🧭️ Identifies the caller's actual semantic traversal phase.
+    /// 🌓️ Identifies the caller's actual semantic traversal phase.
     pub fn phase(&self)->SqliteSnapshotPhase{match self{Self::Original{..}|Self::Owned(_)=>SqliteSnapshotPhase::ProjectSnapshot,Self::Borrowed{phase,..}=>*phase}}
     /// 🗂️ Sorts a paid borrowed frontier through bounded caller work.
     pub fn sort_frontier<T>(&mut self,values:&mut[T],compare:impl FnMut(&T,&T,&mut SqliteSnapshotControl<'_>)->Result<std::cmp::Ordering,ValueError>)->Result<(),ValueError>{match self{Self::Original{control,..}=>super::super::transfer::heap_sort(values,SqliteSnapshotPhase::ProjectSnapshot,control,compare),Self::Owned(projection)=>projection.sort_frontier(values,compare),Self::Borrowed{control,phase,..}=>super::super::transfer::heap_sort(values,*phase,control,compare)}}

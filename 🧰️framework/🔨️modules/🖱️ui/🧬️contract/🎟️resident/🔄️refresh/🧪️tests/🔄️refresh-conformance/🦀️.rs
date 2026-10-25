@@ -48,7 +48,7 @@ fn open_surface(surface: &str, generation: u64, nodes: usize) -> Result<UiDocume
     Ok(lease.expect("a finished assembly publishes its lease"))
 }
 
-/// ♻️ Drives ONE lease to terminal the way the wgpu shell's retirement registry now does — a PAGE
+/// 🪦️ Drives ONE lease to terminal the way the wgpu shell's retirement registry now does — a PAGE
 /// grant, never one item per step.
 fn retire(lease: &mut UiDocumentLease, items: usize, bytes: usize) -> usize {
     for step in 0..1 << 20 {
@@ -184,7 +184,7 @@ fn retained_refresh_aggregate_admits_only_a_handful_of_ceiling_sized_surfaces() 
     assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
 }
 
-/// 🎟️ A COLD document — one that names no census before it opens — prices itself as an EMPTY document and
+/// ❄️ A COLD document — one that names no census before it opens — prices itself as an EMPTY document and
 /// climbs one record at a time, so every one of the [`UI_RESIDENT_SLOTS`] slots the slot ledger offers is
 /// reachable. Reserving the per-surface ceiling instead capped the item ledger at
 /// `UI_RESIDENT_AGGREGATE_ITEMS / UI_RESIDENT_SURFACE_ITEMS` = 31 concurrent roots, and the hostile
@@ -223,7 +223,7 @@ fn cold_document_roots_are_priced_from_their_census_and_reach_every_slot() {
     assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
 }
 
-/// 🎟️ A populated 128-node document reserves its complete record and assembly backing, so the byte
+/// 💯️ A populated 128-node document reserves its complete record and assembly backing, so the byte
 /// ledger reaches its independent ceiling before the sixty-four-position slot ledger.
 #[test]
 fn populated_full_documents_admit_sixty_and_refuse_the_sixty_first_on_bytes() {

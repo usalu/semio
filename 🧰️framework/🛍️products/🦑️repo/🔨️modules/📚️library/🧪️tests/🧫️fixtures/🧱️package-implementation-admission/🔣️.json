@@ -3,7 +3,13 @@
   "contractId": "package-implementation-admission-v1",
   "semantics": {
     "admissionCases": "Whether a package file at relativePath (below the language package root) may hold implementation under the rule's implementationAdmission. directoryFiles lists the file names next to it.",
-    "sourceCases": "The glue-grammar role of a package source. Every source parses with the language's own formatter (gofmt -e, rustfmt)."
+    "sourceCases": "The glue-grammar role of a package source. Every source parses with the language's own formatter (gofmt -e, rustfmt).",
+    "directoryCases": "Whether a directory below a package root may exist under the rule's implementationAdmission and directoryAdmissions: it is or leads to an admitted build unit (unitBelow), it lies on the way to an entry the manifest declares (declaredEntryDirectories), or it leads to a file of a fixed contract anchored below the package root (contractTreeBelow).",
+    "declaredEntryCases": "The directories (relative to the package root) on the way to the file targets of the named manifest fields. Targets that are not './'-relative or that leave the package root declare nothing. oracle=true cases are also resolved by the TypeScript compiler's bundler resolution and every resolved file must lie in a declared directory.",
+    "scanCases": "A synthetic package tree (files by path below the language package root, language directory as named) and the exact set of paths the repository scan reports as packaging violations.",
+    "contractTreePatterns": "The relative file patterns a rule's fixed contracts describe below the package root: only patterns anchored at the package's own prefix qualify.",
+    "gitVisibleCases": "A temporary git work tree: tracked and untracked-not-ignored files are authored package content, ignored build output is never judged.",
+    "bodyCases": "A synthetic package tree and the exact set of package-implementation findings the repository scan reports for it: a package stylesheet that only wires other stylesheets is glue, one that authors a rule is implementation."
   },
   "manifestFilenames": {
     "cargo-manifest": "Cargo.toml"
@@ -170,6 +176,460 @@
         "}"
       ],
       "expectedRole": "implementation"
+    }
+  ],
+  "directoryCases": [
+    {
+      "id": "go-directory-leading-to-a-unit-is-admitted",
+      "admission": {
+        "form": "nested-source-unit",
+        "unitSourceFileKindId": "go-source"
+      },
+      "relativePath": "🗄️store",
+      "unitBelow": true,
+      "directoryAdmissions": [],
+      "declaredEntryDirectories": [],
+      "contractTreeBelow": false,
+      "expected": true
+    },
+    {
+      "id": "go-directory-without-a-unit-is-not-admitted",
+      "admission": {
+        "form": "nested-source-unit",
+        "unitSourceFileKindId": "go-source"
+      },
+      "relativePath": "📂️assets",
+      "unitBelow": false,
+      "directoryAdmissions": [],
+      "declaredEntryDirectories": [],
+      "contractTreeBelow": false,
+      "expected": false
+    },
+    {
+      "id": "cargo-directory-leading-to-a-crate-is-admitted",
+      "admission": {
+        "form": "nested-manifest-unit",
+        "unitManifestContractId": "cargo-manifest"
+      },
+      "relativePath": "🧩️unit",
+      "unitBelow": true,
+      "directoryAdmissions": [],
+      "declaredEntryDirectories": [],
+      "contractTreeBelow": false,
+      "expected": true
+    },
+    {
+      "id": "cargo-module-directory-without-a-crate-is-not-admitted",
+      "admission": {
+        "form": "nested-manifest-unit",
+        "unitManifestContractId": "cargo-manifest"
+      },
+      "relativePath": "🪞️mirror",
+      "unitBelow": false,
+      "directoryAdmissions": [],
+      "declaredEntryDirectories": [],
+      "contractTreeBelow": false,
+      "expected": false
+    },
+    {
+      "id": "declared-entry-directory-is-admitted",
+      "admission": null,
+      "relativePath": "🏗️build/⚙️operations",
+      "unitBelow": false,
+      "directoryAdmissions": [
+        {
+          "form": "manifest-declared-entries",
+          "manifestContractId": "node-package-manifest",
+          "entryFields": [
+            "exports",
+            "main",
+            "types",
+            "module"
+          ]
+        }
+      ],
+      "declaredEntryDirectories": [
+        "🏗️build",
+        "🏗️build/⚙️operations"
+      ],
+      "contractTreeBelow": false,
+      "expected": true
+    },
+    {
+      "id": "undeclared-directory-is-not-admitted",
+      "admission": null,
+      "relativePath": "🧯️stray",
+      "unitBelow": false,
+      "directoryAdmissions": [
+        {
+          "form": "manifest-declared-entries",
+          "manifestContractId": "node-package-manifest",
+          "entryFields": [
+            "exports",
+            "main",
+            "types",
+            "module"
+          ]
+        }
+      ],
+      "declaredEntryDirectories": [
+        "🏗️build"
+      ],
+      "contractTreeBelow": false,
+      "expected": false
+    },
+    {
+      "id": "a-unit-never-admits-without-an-admission-rule",
+      "admission": null,
+      "relativePath": "🗄️store",
+      "unitBelow": true,
+      "directoryAdmissions": [],
+      "declaredEntryDirectories": [],
+      "contractTreeBelow": false,
+      "expected": false
+    },
+    {
+      "id": "a-declared-entry-never-admits-without-a-directory-rule",
+      "admission": {
+        "form": "nested-source-unit",
+        "unitSourceFileKindId": "go-source"
+      },
+      "relativePath": "🏗️build",
+      "unitBelow": false,
+      "directoryAdmissions": [],
+      "declaredEntryDirectories": [
+        "🏗️build"
+      ],
+      "contractTreeBelow": false,
+      "expected": false
+    },
+    {
+      "id": "fixed-contract-tree-directory-is-admitted",
+      "admission": null,
+      "directoryAdmissions": [
+        {
+          "form": "fixed-contract-trees"
+        }
+      ],
+      "relativePath": "app/api",
+      "unitBelow": false,
+      "declaredEntryDirectories": [],
+      "contractTreeBelow": true,
+      "expected": true
+    },
+    {
+      "id": "a-directory-without-a-contract-file-below-is-not-admitted",
+      "admission": null,
+      "directoryAdmissions": [
+        {
+          "form": "fixed-contract-trees"
+        }
+      ],
+      "relativePath": "assets",
+      "unitBelow": false,
+      "declaredEntryDirectories": [],
+      "contractTreeBelow": false,
+      "expected": false
+    },
+    {
+      "id": "a-contract-tree-never-admits-without-the-tree-rule",
+      "admission": null,
+      "directoryAdmissions": [
+        {
+          "form": "manifest-declared-entries",
+          "manifestContractId": "node-package-manifest",
+          "entryFields": [
+            "exports",
+            "main",
+            "types",
+            "module"
+          ]
+        }
+      ],
+      "relativePath": "app/api",
+      "unitBelow": false,
+      "declaredEntryDirectories": [],
+      "contractTreeBelow": true,
+      "expected": false
+    }
+  ],
+  "declaredEntryCases": [
+    {
+      "id": "exports-subpaths-declare-every-ancestor-directory",
+      "manifest": {
+        "name": "fixture",
+        "exports": {
+          "./build": "./🏗️build/🟦️.ts",
+          "./build/operations": "./🏗️build/⚙️operations/🟦️.ts"
+        }
+      },
+      "entryFields": [
+        "exports"
+      ],
+      "expectedDirectories": [
+        "🏗️build",
+        "🏗️build/⚙️operations"
+      ],
+      "oracle": true
+    },
+    {
+      "id": "conditional-targets-are-followed",
+      "manifest": {
+        "name": "fixture",
+        "exports": {
+          "./a": {
+            "types": "./🅰️a/🟦️.ts",
+            "import": "./🅰️a/🅱️b/🟦️.ts"
+          }
+        }
+      },
+      "entryFields": [
+        "exports"
+      ],
+      "expectedDirectories": [
+        "🅰️a",
+        "🅰️a/🅱️b"
+      ],
+      "oracle": true
+    },
+    {
+      "id": "root-entry-declares-no-directory",
+      "manifest": {
+        "name": "fixture",
+        "exports": "./🟦️.ts"
+      },
+      "entryFields": [
+        "exports"
+      ],
+      "expectedDirectories": [],
+      "oracle": true
+    },
+    {
+      "id": "targets-leaving-the-package-declare-nothing",
+      "manifest": {
+        "name": "fixture",
+        "exports": {
+          "./x": "../../🏗️outside/🟦️.ts",
+          "./y": "./🏗️in/../../escape/🟦️.ts"
+        }
+      },
+      "entryFields": [
+        "exports"
+      ],
+      "expectedDirectories": [],
+      "oracle": false
+    },
+    {
+      "id": "bare-specifiers-declare-nothing",
+      "manifest": {
+        "name": "fixture",
+        "exports": {
+          "./x": "fixture-other/🟦️.ts"
+        }
+      },
+      "entryFields": [
+        "exports"
+      ],
+      "expectedDirectories": [],
+      "oracle": false
+    },
+    {
+      "id": "main-and-types-declare-their-directories",
+      "manifest": {
+        "name": "fixture",
+        "main": "./📦️dist/🟨️.mjs",
+        "types": "./📦️dist/📜️types/🟦️.d.ts"
+      },
+      "entryFields": [
+        "exports",
+        "main",
+        "types"
+      ],
+      "expectedDirectories": [
+        "📦️dist",
+        "📦️dist/📜️types"
+      ],
+      "oracle": false
+    },
+    {
+      "id": "fields-outside-the-rule-declare-nothing",
+      "manifest": {
+        "name": "fixture",
+        "bin": "./🛠️tool/🟦️.ts"
+      },
+      "entryFields": [
+        "exports"
+      ],
+      "expectedDirectories": [],
+      "oracle": false
+    },
+    {
+      "id": "array-targets-are-followed",
+      "manifest": {
+        "name": "fixture",
+        "exports": {
+          "./x": [
+            "./🅰️a/🟦️.ts",
+            "./🅱️b/🟦️.ts"
+          ]
+        }
+      },
+      "entryFields": [
+        "exports"
+      ],
+      "expectedDirectories": [
+        "🅰️a",
+        "🅱️b"
+      ],
+      "oracle": false
+    }
+  ],
+  "scanCases": [
+    {
+      "id": "typescript-declared-facade-tree-is-admitted-and-a-stray-directory-is-not",
+      "language": "🟦️typescript",
+      "files": {
+        "package.json": "{\"name\": \"@semio/fixture\", \"semio\": {\"role\": \"framework\", \"id\": \"scan-ts\"}, \"exports\": {\"./build\": \"./\\ud83c\\udfd7\\ufe0fbuild/\\ud83d\\udfe6\\ufe0f.ts\", \"./build/operations\": \"./\\ud83c\\udfd7\\ufe0fbuild/\\u2699\\ufe0foperations/\\ud83d\\udfe6\\ufe0f.ts\"}}",
+        "🏗️build/🟦️.ts": "export * from \"./⚙️operations/🟦️.ts\";\n",
+        "🏗️build/⚙️operations/🟦️.ts": "export { run } from \"../../../../../../🧯️owner/🟦️.ts\";\n",
+        "🧯️stray/🟦️.ts": "export { run } from \"../../../../../🧯️owner/🟦️.ts\";\n"
+      },
+      "expectedViolations": [
+        "🧯️stray"
+      ]
+    },
+    {
+      "id": "go-modules-and-nested-packages-are-admitted-and-a-directory-without-go-source-is-not",
+      "language": "🐹️go",
+      "files": {
+        "go.mod": "module example.com/fixture\n\ngo 1.22\n",
+        "go.sum": "",
+        "📋️project.json": "{\"name\": \"fixture\", \"metadata\": {\"semio\": {\"role\": \"framework\", \"id\": \"scan-go\"}}}",
+        "🐹️.go": "package fixture\n",
+        "🌨️payloads/🐹️.go": "package payloads\n\nfunc Name() string { return \"payloads\" }\n",
+        "🗄️store/📥️inner/🐹️.go": "package inner\n\nfunc Name() string { return \"inner\" }\n",
+        "📂️assets/data.txt": "x\n"
+      },
+      "expectedViolations": [
+        "📂️assets",
+        "📂️assets/data.txt"
+      ]
+    },
+    {
+      "id": "cargo-crates-locks-are-admitted-and-a-module-directory-without-manifest-is-not",
+      "language": "🦀️rust",
+      "files": {
+        "Cargo.toml": "[package]\nname = \"scan-rust\"\nversion = \"0.0.0\"\n[package.metadata.semio]\nrole = \"framework\"\nid = \"scan-rust\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "Cargo.lock": "version = 4\n",
+        "🦀️.rs": "pub mod unit;\n",
+        "🧩️unit/Cargo.toml": "[package]\nname = \"scan-rust-unit\"\nversion = \"0.0.0\"\n",
+        "🧩️unit/🦀️.rs": "pub mod inner;\n",
+        "🪞️mirror/🦀️.rs": "pub mod x;\n"
+      },
+      "expectedViolations": [
+        "🪞️mirror"
+      ]
+    },
+    {
+      "id": "ignored-build-output-directories-are-never-judged",
+      "language": "🔷️dotnet",
+      "files": {
+        "🧪️Fixture.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>\n",
+        "obj/project.assets.json": "{}\n",
+        "bin/Fixture.dll": "x\n"
+      },
+      "expectedViolations": []
+    },
+    {
+      "id": "next-route-tree-is-admitted-and-a-directory-without-routes-is-not",
+      "language": "🟦️typescript",
+      "files": {
+        "package.json": "{\"name\": \"@semio/fixture\", \"semio\": {\"role\": \"framework\", \"id\": \"scan-next\"}}",
+        "app/api/v1/auth/route.ts": "export { handle as GET } from \"../../../../../../🧯️owner/🟦️.ts\";\n",
+        "app/layout.tsx": "export { Layout as default } from \"../../../../🧯️owner/🟦️.tsx\";\n",
+        "🧯️stray/notes.txt": "x\n"
+      },
+      "expectedViolations": [
+        "🧯️stray",
+        "🧯️stray/notes.txt"
+      ]
+    },
+    {
+      "id": "fixed-contract-files-without-a-file-kind-and-package-locks-are-admitted",
+      "language": "🔷️dotnet",
+      "files": {
+        "🧪️Fixture.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\"></Project>\n",
+        "packages.lock.json": "{\"version\":1,\"dependencies\":{}}\n"
+      },
+      "expectedViolations": []
+    }
+  ],
+  "contractTreePatterns": [
+    {
+      "id": "next-route-pattern-is-a-tree",
+      "packagePrefix": "📦️packages/🟦️typescript",
+      "patterns": [
+        "**/📦️packages/🟦️typescript/app/**/route.ts",
+        "**/📦️packages/🟦️typescript/next.config.mjs",
+        "**/📜️script.ts",
+        "**/package.json",
+        "**/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "expected": [
+        "app/**/route.ts"
+      ]
+    },
+    {
+      "id": "no-anchored-pattern-no-tree",
+      "packagePrefix": "📦️packages/🟦️typescript",
+      "patterns": [
+        "**/📜️script.ts",
+        "**/tsconfig.json"
+      ],
+      "expected": []
+    }
+  ],
+  "gitVisibleCases": [
+    {
+      "id": "ignored-build-output-is-never-judged-while-tracked-strays-are",
+      "language": "🐹️go",
+      "files": {
+        "go.mod": "module example.com/fixture\n\ngo 1.22\n",
+        "📋️project.json": "{\"name\": \"fixture\", \"metadata\": {\"semio\": {\"role\": \"framework\", \"id\": \"git-go\"}}}",
+        "🐹️.go": "package fixture\n",
+        "📦️main/🐹️.go": "package main\n",
+        "📦️main/main": "binary\n",
+        "📦️main/go.mod": "module example.com/fixture/main\n",
+        "stray.bin": "x\n"
+      },
+      "ignore": [
+        "📦️main/main"
+      ],
+      "expectedViolations": [
+        "stray.bin"
+      ]
+    }
+  ],
+  "bodyCases": [
+    {
+      "id": "stylesheet-import-facade-is-admitted",
+      "language": "🟦️typescript",
+      "files": {
+        "package.json": "{\"name\": \"@semio/fixture\", \"semio\": {\"role\": \"framework\", \"id\": \"scan-css\"}}",
+        "🎨️.css": "@import \"../../../../🎨️.css\";\n\n@source \".\";\n"
+      },
+      "expectedImplementations": []
+    },
+    {
+      "id": "stylesheet-with-an-authored-rule-is-implementation",
+      "language": "🟦️typescript",
+      "files": {
+        "package.json": "{\"name\": \"@semio/fixture\", \"semio\": {\"role\": \"framework\", \"id\": \"scan-css\"}}",
+        "🎨️.css": "@import \"../../../../🎨️.css\";\n.card { color: red; }\n"
+      },
+      "expectedImplementations": [
+        "🎨️.css"
+      ]
     }
   ]
 }

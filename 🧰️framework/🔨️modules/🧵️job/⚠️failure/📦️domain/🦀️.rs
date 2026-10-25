@@ -4,12 +4,12 @@ use semio_framework_value::{RetirementDemand,ValueRefusalKind,retained_clone::{R
 pub use semio_framework_dsl_record::native_encoding::{FieldProjectionSource as OriginalDomainProjection,FieldProjectionView as OriginalDomainView};
 
 /// 🧬️ Domain implementations lend their complete original fields and actual failed effects.
-pub trait OriginalDomainFailure:RetireOwned+OriginalDomainProjection+std::fmt::Debug{
+pub trait OriginalDomainFailure:RetireOwned+Sync+OriginalDomainProjection+std::fmt::Debug{
  fn domain_code(&self)->&str;
  fn domain_message(&self)->&str;
  fn domain_retained_progress(&self)->RetainedCloneProgress;
 }
-trait DomainOwner:Send{
+trait DomainOwner:Send+Sync{
  fn original(&self)->&dyn OriginalDomainProjection;
  fn code(&self)->&str;
  fn message(&self)->&str;
@@ -17,6 +17,8 @@ trait DomainOwner:Send{
  fn into_retirement(self:Box<Self>)->Box<dyn RetirementCursor>;
 }
 struct DomainFrame<T:OriginalDomainFailure>{owner:ControlledRetirement<T>}
+/// 🔒️ Shared access reads only the immutable original value; the retirement cursors, which are merely `Send`, are touched through `&mut self` alone.
+unsafe impl<T:OriginalDomainFailure> Sync for DomainFrame<T>{}
 impl<T:OriginalDomainFailure> DomainOwner for DomainFrame<T>{
  fn original(&self)->&dyn OriginalDomainProjection{self.owner.original().expect("original domain projection precedes retirement")}
  fn code(&self)->&str{self.owner.original().expect("original domain code precedes retirement").domain_code()}

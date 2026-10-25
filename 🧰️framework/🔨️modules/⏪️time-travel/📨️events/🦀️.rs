@@ -10,7 +10,7 @@ pub enum TimeTravelChoice {
     Alternative { name: String },
 }
 
-/// 📨️ User actions and driver observations; see the module docs for which carry a generation.
+/// 🎞️ User actions and driver observations; see the module docs for which carry a generation.
 #[derive(Clone, Debug, PartialEq)]
 pub enum TimeTravelEvent {
     Begin { target: TimeTravelTarget, original: InputReplacement },

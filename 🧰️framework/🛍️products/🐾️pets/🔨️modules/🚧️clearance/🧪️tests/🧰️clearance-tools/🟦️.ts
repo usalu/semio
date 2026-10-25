@@ -31,7 +31,7 @@ export const BITES: readonly { readonly rule: keyof Rules; readonly seed: number
   { rule: "eviction", seed: 17, ticks: 40 },
 ];
 
-/** 🧰️ A box by its four edges. */
+/** 📦️ A box by its four edges. */
 export function box(x0: number, y0: number, x1: number, y1: number): Extent {
   return { x0, y0, x1, y1 };
 }

@@ -58,7 +58,7 @@ impl semio_framework_value::FromValue for TransactionRef {
     }
 }
 
-/// 🧾️ Per-operation causal/undo metadata attached to one `Edit` slot. Moved from
+/// 📎️ Per-operation causal/undo metadata attached to one `Edit` slot. Moved from
 /// `crate::os_store::MutationMeta` (was `vcs/rs/lib.rs` L59) with the id-flavored fields upgraded from bare
 /// `String`/`Option<String>` to the `protocol_core` newtypes and `timestamp` upgraded from
 /// `Option<HybridLogicalTimestamp>` to a required field (an edit's op always has a tick by the time
@@ -101,7 +101,7 @@ pub struct MutationMeta {
     /// `.🧬semio/🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
     /// §1.
     pub origin: MutationOrigin,
-    /// 🧾️ The committed tool transaction that authored this operation (`None`: authored outside
+    /// 🔧️ The committed tool transaction that authored this operation (`None`: authored outside
     /// any tool transaction). Wire-omitted when `None`, like `group_id`.
     pub transaction: Option<TransactionRef>,
 }
@@ -207,7 +207,7 @@ pub struct Edit<Op> {
     pub forwards: Vec<Op>,
     pub inverse: semio_framework_value_persistent::list::PagedList<Op, {usize::MAX}>,
     pub mutation_meta: Vec<MutationMeta>,
-    /// 🏷️ The id of the action or command that authored this edit — never display text: history resolves it through
+    /// 🖊️ The id of the action or command that authored this edit — never display text: history resolves it through
     /// the authoring app's registry to its label in every locale at projection time, so a reload or a peer keeps it.
     pub verb: Option<String>,
     pub sequence_number: i32,
@@ -215,7 +215,7 @@ pub struct Edit<Op> {
     pub finished_at: Option<String>,
 }
 
-/// 🌉️ Hand-written, not derived — same DAG reason as the other replication-crate types above (and
+/// 🧰️ Hand-written, not derived — same DAG reason as the other replication-crate types above (and
 /// the actual trigger of the os-kernel cascade: `CursorRevisionAccumulator::edit_digest`/
 /// `reconcile_stack` already bound `Mutation: ToValue` and hash via `to_json_string`, which needs
 /// `Edit<Mutation>: ToValue` itself, not just its generic parameter). Mirrors
@@ -303,7 +303,7 @@ mod transaction_ref_tests;
 //#endregion 🔖️Meta
 
 //#region 🔖️Origin
-/// 🔀️ Provenance of one [`MutationMeta`]-described operation. `Owner` is the default (and
+/// 📍️ Provenance of one [`MutationMeta`]-described operation. `Owner` is the default (and
 /// the overwhelming common case), omitted from wire by `MutationMeta.origin`'s
 /// `skip_serializing_if`.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -326,7 +326,7 @@ impl MutationOrigin {
     }
 }
 
-/// 🌉️ Hand-written, not derived — same DAG reason as the other replication-crate types above.
+/// 🌱️ Hand-written, not derived — same DAG reason as the other replication-crate types above.
 /// `#[serde(tag = "kind")]` internal tagging has no adjacently-tagged (`tag` + `content`) shape the
 /// derive macro supports anyway, so this was always going to be hand-written; mirrors the wire
 /// shape (`kind` sibling to each struct variant's own fields) exactly.

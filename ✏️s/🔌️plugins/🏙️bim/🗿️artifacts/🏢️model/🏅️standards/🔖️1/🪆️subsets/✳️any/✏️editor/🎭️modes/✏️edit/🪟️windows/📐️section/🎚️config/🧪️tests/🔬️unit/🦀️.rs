@@ -2,7 +2,7 @@
 use crate::editor::bim::kit::window_config;
 use crate::editor::bim::modes::edit::windows::section::config::*;
 use protocol::{OpBinary, OpText};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn pinned() -> BimSectionWindowConfig {
     BimSectionWindowConfig { view: "v-section".into(), framed: true, viewport: store::Viewport2d { x: 4.0, y: -1.0, zoom: 30.0 } }

@@ -1,0 +1,148 @@
+[
+  {
+    "id": "initial",
+    "stage": "accepted",
+    "field": "none",
+    "initial": true,
+    "publicationTransitionExpected": false,
+    "changedFields": []
+  },
+  {
+    "id": "unchanged-staged",
+    "stage": "staged",
+    "field": "none",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": []
+  },
+  {
+    "id": "expected-published-rename",
+    "stage": "published",
+    "field": "ino",
+    "initial": false,
+    "publicationTransitionExpected": true,
+    "changedFields": [
+      "ino"
+    ]
+  },
+  {
+    "id": "observed-staged-rename",
+    "stage": "staged",
+    "field": "ino",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "ino"
+    ]
+  },
+  {
+    "id": "observed-dev",
+    "stage": "verified",
+    "field": "dev",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "dev"
+    ]
+  },
+  {
+    "id": "observed-mode",
+    "stage": "verified",
+    "field": "mode",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "mode"
+    ]
+  },
+  {
+    "id": "observed-nlink",
+    "stage": "verified",
+    "field": "nlink",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "nlink"
+    ]
+  },
+  {
+    "id": "observed-size",
+    "stage": "verified",
+    "field": "size",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "size"
+    ]
+  },
+  {
+    "id": "observed-blocks",
+    "stage": "verified",
+    "field": "blocks",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "blocks"
+    ]
+  },
+  {
+    "id": "observed-mtimeNs",
+    "stage": "verified",
+    "field": "mtimeNs",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "mtimeNs"
+    ]
+  },
+  {
+    "id": "observed-ctimeNs",
+    "stage": "terminal-failure",
+    "field": "ctimeNs",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "ctimeNs"
+    ]
+  },
+  {
+    "id": "observed-uid",
+    "stage": "verified",
+    "field": "uid",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "uid"
+    ]
+  },
+  {
+    "id": "observed-gid",
+    "stage": "verified",
+    "field": "gid",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "gid"
+    ]
+  },
+  {
+    "id": "observed-birthtimeNs",
+    "stage": "verified",
+    "field": "birthtimeNs",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "birthtimeNs"
+    ]
+  },
+  {
+    "id": "observed-sha256",
+    "stage": "verified",
+    "field": "sha256",
+    "initial": false,
+    "publicationTransitionExpected": false,
+    "changedFields": [
+      "sha256"
+    ]
+  }
+]

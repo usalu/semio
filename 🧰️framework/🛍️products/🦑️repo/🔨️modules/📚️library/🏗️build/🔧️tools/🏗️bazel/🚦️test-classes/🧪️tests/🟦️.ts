@@ -6,7 +6,7 @@ import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileS
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { admitBazelTestClassesV1, BAZEL_TEST_CLASSES_V1, bazelTestAttributesV1, bazelTestEnvironmentV1, bazelTestFallbackReportV1, bazelTestPlanV1, bazelTestWitnessV1, settleBazelTestV1, type BazelTestPlanV1, type BazelTestTableV1 } from "../🟦️.ts";
-import { TEST_LEVEL_BUDGET_MS } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { TEST_LEVEL_BUDGET_MS } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import table from "../🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };

@@ -397,7 +397,7 @@ export function policyMutationLeafHasRunnableTestView(view: MutationTaxonomyStru
 }
 
 
-/** 🧬️ Reports every mandatory direct-leaf structural invariant at high severity. */
+/** 👁️ Reports every mandatory direct-leaf structural invariant at high severity. */
 export function policyMutationStructuralBreachesView(view: MutationTaxonomyStructuralSourceView, mutationRoots: readonly string[] = view.roots): BreachRecord[] {
   const validatedRoots = policyStructuralMutationRoots(view, mutationRoots);
   const breaches: BreachRecord[] = [...policyMutationDirectOwnerBreachesView(view, validatedRoots)];

@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️Scrub
-/// 🎚️ The argument naming the press a continuous control's dispatch belongs to (`"<control>:<ms>"`); a dispatch
+/// 🎛️ The argument naming the press a continuous control's dispatch belongs to (`"<control>:<ms>"`); a dispatch
 /// without it is a plain one-shot edit.
 pub const SCRUB_GESTURE_ARG: &str = "gesture";
 /// 🏁️ The argument marking the release (`true`) of a press.
@@ -50,7 +50,7 @@ impl ScrubPhase {
     }
 }
 
-/// 📨️ What reaches a scrub: a live value's absolute leaves, the release's leaves, or a host cancel.
+/// 📥️ What reaches a scrub: a live value's absolute leaves, the release's leaves, or a host cancel.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ScrubInput<M> {
     Tick { gesture: String, leaves: Vec<M> },
@@ -65,7 +65,7 @@ pub struct ScrubContext {
     pub keys: usize,
 }
 
-/// 📨️ The scrub statechart's events; the host cancel is the runner's [`ToolMachineRunner::abort`], never an event.
+/// 📣️ The scrub statechart's events; the host cancel is the runner's [`ToolMachineRunner::abort`], never an event.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ScrubEvent<M> {
     Tick { gesture: String, leaves: Vec<M> },
@@ -91,7 +91,7 @@ impl<M: Clone> machine::StatechartEvent for ScrubEvent<M> {
     }
 }
 
-/// 🎚️ The ONE continuous-control tool: `idle → scrubbing` on a `Tick` (the press opens), `scrubbing → scrubbing` on a
+/// 🖥️ The ONE continuous-control tool: `idle → scrubbing` on a `Tick` (the press opens), `scrubbing → scrubbing` on a
 /// `Tick` of the same press, `Commit` of the same press back to `idle` (a `Commit` from `idle` is a one-shot press).
 /// Every tick replaces the transaction's entries with the tick's absolute leaves (upsert by position, retract the
 /// rest), so the transaction always holds the net value; the release commits ONE edit, a host abort leaves zero
@@ -185,7 +185,7 @@ impl<M: Clone + 'static> Host<ScrubMachine<M>> for ScrubHost {
     }
 }
 
-/// 💾️ One window's open scrub between dispatches (window transient, ephemeral local-only, never history): the
+/// 📂️ One window's open scrub between dispatches (window transient, ephemeral local-only, never history): the
 /// configuration by stable ids, the authoring tool `<appId>#<verb>` and actor, the press, the document revision it
 /// opened on, and the open transaction with its keyed leaves.
 #[derive(Clone, Debug, PartialEq)]
@@ -200,7 +200,7 @@ pub struct ScrubState<M> {
     pub entries: Vec<(String, M)>,
 }
 
-/// 🎚️ One press of a continuous control: [`ScrubMachine`] under a [`ToolMachineRunner`], opened on one document
+/// 🌀️ One press of a continuous control: [`ScrubMachine`] under a [`ToolMachineRunner`], opened on one document
 /// revision. A tick or release of ANOTHER press first host-aborts the open one (`captureLost`).
 pub struct Scrub<M: Clone + 'static> {
     pub(crate) runner: ToolMachineRunner<ScrubMachine<M>, ScrubHost>,
@@ -225,7 +225,7 @@ impl<M: Clone + 'static> Scrub<M> {
         Ok(Self { runner, base_revision: state.base_revision })
     }
 
-    /// 🆔️ The press the scrub follows, while one is open.
+    /// 🔓️ The press the scrub follows, while one is open.
     pub fn gesture(&self) -> Option<&str> {
         self.runner.snapshot().context.gesture.as_deref()
     }
@@ -308,7 +308,7 @@ impl<M: Clone + 'static> ScrubLedger<M> {
         self.windows.values().flat_map(|state| state.get().entries.iter().map(|(_, leaf)| leaf))
     }
 
-    /// 📨️ Runs one input of `window`'s press. A tick or release of the press the window last closed is a silent no-op;
+    /// 📮️ Runs one input of `window`'s press. A tick or release of the press the window last closed is a silent no-op;
     /// an open scrub of another tool or opened on another document revision is host-aborted first (`captureLost`,
     /// `baseMoved`, zero trace), so the input opens a fresh transaction on the current revision — the leaves are
     /// absolute. The release closes the press. A refused input leaves the ledger exactly as it was: the press stays open,
@@ -344,7 +344,7 @@ impl<M: Clone + 'static> ScrubLedger<M> {
         step
     }
 
-    /// 🧯️ Host cancel of `window`'s open scrub (only of the press `gesture` when named): zero trace, and the press is
+    /// 🛑️ Host cancel of `window`'s open scrub (only of the press `gesture` when named): zero trace, and the press is
     /// closed so its late ticks stay silent. `Aborted(ref, reason)`, or `Idle` when no such scrub was open.
     pub fn abort(&mut self, window: &str, gesture: Option<&str>, reason: ToolAbortReason) -> ToolStep<M> {
         if let Some(gesture) = gesture {
@@ -386,7 +386,7 @@ impl<M:Clone> ScrubLedger<M>{pub fn reference_fork(&self)->Self{assert!(self.win
 
 
 impl<M:Clone+Send+Sync+'static> ScrubLedger<M>{
- /// 🔎️ Locates the next original resident address without scanning preceding press slots.
+ /// ⏭️ Locates the next original resident address without scanning preceding press slots.
  pub fn next_retained_window(&self,after:Option<&str>)->Option<(&semio_framework_value::SharedUtf8,RetainedOriginalSlotKey)>{let next=match after{Some(after)=>self.windows.range::<str,_>((std::ops::Bound::Excluded(after),std::ops::Bound::Unbounded)).next(),None=>self.windows.iter().next()};next.map(|(key,slot)|(key,slot.key()))}
 
  /// 🔗️ Captures the exact original authored state slot without cloning its entries.

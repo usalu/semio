@@ -53,7 +53,7 @@ export function panelTabKindId(kind: PanelTabKind): string {
   }
 }
 
-/** 🌳️ Mirrors Rust `PanelTabDefinition` — a leaf carries `bodyKey`, a branch carries `children`; `group` is only meaningful on root entries. */
+/** 📑️ Mirrors Rust `PanelTabDefinition` — a leaf carries `bodyKey`, a branch carries `children`; `group` is only meaningful on root entries. */
 export type AppPanelTabDefinition = GeneratedPanelTabDefinition;
 
 /** 📦️ Mirrors Rust `AppDefinition` — generated 1:1 from `framework/core/rs/lib.rs` via the owned schema exporter, except
@@ -94,7 +94,7 @@ export type ProgramHotSwapEvent = {
 /** 🐢️ One requested window/panel section — `bodyKey` only applies to windows/panels; `hash` is the host's known fnv1a-64 hex of that section's last payload, or absent on first fetch. */
 export type PluginUiRefreshSectionRequest = { readonly key: string; readonly bodyKey?: string; readonly hash?: string };
 
-/** 🐢️ One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Utility bars are no longer a plugin section: the renderer derives them from the utility registry via {@link deriveUtilityNodes}. */
+/** 🔌️ One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Utility bars are no longer a plugin section: the renderer derives them from the utility registry via {@link deriveUtilityNodes}. */
 export type PluginUiRefreshRequest = {
   readonly viewState: PluginViewState;
   readonly windows?: readonly PluginUiRefreshSectionRequest[];
@@ -137,7 +137,7 @@ export function sectionViewContext(view: PluginViewState): PluginViewState {
   return { ...view };
 }
 
-/** 🐢️ `value` is present only when `hash` differs from what the request supplied — an unchanged section costs one hash compare instead of a full re-serialize. */
+/** 🔄️ `value` is present only when `hash` differs from what the request supplied — an unchanged section costs one hash compare instead of a full re-serialize. */
 export type PluginUiRefreshSectionResponse = { readonly key: string; readonly hash: string; readonly value?: unknown };
 
 export type PluginUiRefreshResponse = {
@@ -167,7 +167,7 @@ export type PluginContextMenuSurfaceTarget = UiContextMenuSurfaceTarget;
 
 export type PluginContextMenuPoint = UiContextMenuPoint;
 
-/** 🖱️ On-demand context-menu request — owned by the ui scene contract; never cached, never batched into {@link PluginUiRefreshRequest}. */
+/** 📬️ On-demand context-menu request — owned by the ui scene contract; never cached, never batched into {@link PluginUiRefreshRequest}. */
 export type PluginContextMenuRequest = UiContextMenuRequest;
 
 export type PluginContextMenuResponse = {

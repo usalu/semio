@@ -6,7 +6,7 @@ import type { CommandDefinition } from "../🔘️definitions-action-ids-and-she
 // #region 🛂️Manifest
 //#region 🔌️PluginAndAppContract
 //#region PluginRuntime
-/** 🗣️ Locale/terminology-aware label patch for an app's window-kind/panel-tab/mode labels, resolved fresh per {@link PluginViewState} — merge over the static {@link PluginManifest} app labels by id. */
+/** 🔖️ Locale/terminology-aware label patch for an app's window-kind/panel-tab/mode labels, resolved fresh per {@link PluginViewState} — merge over the static {@link PluginManifest} app labels by id. */
 export type PluginAppLabelsOverlay = {
   readonly windowKindLabels: Readonly<Record<string, string>>;
   readonly panelTabLabels: Readonly<Record<string, string>>;
@@ -33,7 +33,7 @@ export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
   groupLabels: {},
 };
 
-/** 🗣️ Rust's `skip_serializing_if` omits empty maps entirely, so a parsed overlay may be missing keys — fill them back in. */
+/** 🪫️ Rust's `skip_serializing_if` omits empty maps entirely, so a parsed overlay may be missing keys — fill them back in. */
 export function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> | null | undefined): PluginAppLabelsOverlay {
   return {
     windowKindLabels: raw?.windowKindLabels ?? {},
@@ -66,7 +66,7 @@ export type TopicContribution = {
 /** 📇️ Topic under which a plugin names the artifact-index document the os shell opens for a hub space; mirrors Rust `SPACE_INDEX_TOPIC`. The framework reads the contribution and never names the plugin that supplies it. */
 export const SPACE_INDEX_TOPIC = "os.space-index";
 
-/** 📇️ Payload of {@link SPACE_INDEX_TOPIC}: the dialect of the app that edits the space index and the document schema the shell opens it with — mirrors Rust `SpaceIndexContribution`. */
+/** 🪐️ Payload of {@link SPACE_INDEX_TOPIC}: the dialect of the app that edits the space index and the document schema the shell opens it with — mirrors Rust `SpaceIndexContribution`. */
 export type SpaceIndexContribution = {
   readonly dialect: ArtifactDialect;
   readonly documentSchema: string;
@@ -96,7 +96,7 @@ export type ManifestExample = {
   readonly dialect: ArtifactDialect;
 };
 
-/** 📚️ THE example-picker predicate — every example authored for `dialect`, in manifest order,
+/** 🧪️ THE example-picker predicate — every example authored for `dialect`, in manifest order,
  * deduplicated by id. Twinned by Rust `manifest::examples_for_dialect`, both pinned against
  * `🧫️fixtures/📚️example-picker.json` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 export function examplesForDialect<E extends { readonly id: string; readonly dialect?: ArtifactDialect }>(examples: readonly E[], dialect: ArtifactDialect): E[] {
@@ -126,7 +126,7 @@ export function exampleBodyAssetPrefix(example: { readonly id: string; readonly 
   return `📚️examples/${assetNameSegment(example.dialect.artifactKind)}.${assetNameSegment(example.dialect.standard)}.${assetNameSegment(example.dialect.subset)}/${assetNameSegment(example.id)}`;
 }
 
-/** 📦️ The `AssetDeclaration.name` an externalized INLINE example body travels under — TS twin of
+/** 🔤️ The `AssetDeclaration.name` an externalized INLINE example body travels under — TS twin of
  * Rust `describe::externalize_oversized_example_bodies`. A descriptor never inlines a body over
  * `DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES` (256 KiB); it keeps the row and declares the body as this
  * asset instead, so the 4 MiB descriptor bound cannot be breached by an authored document. */
@@ -134,7 +134,7 @@ export function exampleBodyAssetName(example: { readonly id: string; readonly di
   return `${exampleBodyAssetPrefix(example)}.json`;
 }
 
-/** 📚️ The examples one surface may offer — {@link examplesForDialect} against that surface's own
+/** 🎁️ The examples one surface may offer — {@link examplesForDialect} against that surface's own
  * dialect. Role plays no part: an editor and its viewer are two surfaces of ONE dialect and offer
  * exactly the same picker. */
 export function examplesForApp<E extends { readonly id: string; readonly dialect?: ArtifactDialect }>(examples: readonly E[], app: { readonly dialect?: ArtifactDialect }): E[] {
@@ -154,7 +154,7 @@ export type PluginManifest = {
     readonly yields: string;
   }[];
   readonly examples: readonly ManifestExample[];
-  /** 🗂️ Open plugin contributions — see `TopicContribution`. */
+  /** 🔌️ Open plugin contributions — see `TopicContribution`. */
   readonly topicContributions?: readonly TopicContribution[];
   /** 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused. */
   readonly commands?: readonly CommandDefinition[];

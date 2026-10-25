@@ -89,6 +89,6 @@ test("anonymous creates a new learner every time", async ({ device }) => {
   await secondary(card(again.page, "learner")).click();
   await primary(question).click();
   await identify(again, { kind: "anonymous" });
+  await expect.poll(() => learnerId(again)).not.toBe(before);
   expect(await learnerId(again)).toMatch(/^[0-9a-f]{32}$/u);
-  expect(await learnerId(again)).not.toBe(before);
 });

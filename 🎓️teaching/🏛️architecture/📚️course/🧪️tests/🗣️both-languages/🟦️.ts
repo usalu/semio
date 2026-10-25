@@ -42,8 +42,8 @@ async function storedNotice(device: Device): Promise<readonly string[]> {
 /** 🔤️ What the screen in front words: the names of its actions, its headings, labels and column heads, in order. What
  * no language changes (numbers, symbols, the names of the languages themselves) is left out. The same eight pet deeds
  * repeated for every member of the moving cast are read once. */
-async function wording(device: Device): Promise<readonly string[]> {
-  const texts = await device.page.locator("#course-main, header, footer").evaluateAll((roots) =>
+async function wording(device: Device, scope?: ReturnType<typeof screen>): Promise<readonly string[]> {
+  const texts = await (scope ?? device.page.locator("#course-main, header, footer")).evaluateAll((roots) =>
     roots.flatMap((root) => [...root.querySelectorAll<HTMLElement>("button, h1, h2, h3, h4, legend, label, th[scope=col], summary")].filter((element) => element.closest("[inert], [hidden], [aria-hidden=true]") === null && element.checkVisibility({ visibilityProperty: true }) && (element.closest("[data-pets-player]") === null || element.closest("[data-pets-player]") === element.closest("[data-pets-play]")?.querySelector("[data-pets-player]"))).map((element) => (element.getAttribute("aria-label") ?? element.innerText).replace(/\s+/gu, " ").trim())),
   );
   return texts.filter((text) => /\p{L}{2,}/u.test(text) && !["English", "Deutsch"].includes(text));
@@ -51,16 +51,27 @@ async function wording(device: Device): Promise<readonly string[]> {
 
 /** ⚖️ Checks the screen in front in `locale`, switches to the other language and back, and checks that everything the
  * client words changed with it while `data` (texts of the course or the learner in `locale`) is not held against it. */
-async function expectBothLanguages(device: Device, locale: Locale, where: string, data: readonly string[]): Promise<void> {
+/** 🪟️ A modal dialog in front: it makes the rest of the page inert, so the language is switched with it closed and it is opened again to read the other language. */
+interface Modal {
+  readonly scope: ReturnType<typeof screen>;
+  close(): Promise<void>;
+  open(): Promise<void>;
+}
+
+async function expectBothLanguages(device: Device, locale: Locale, where: string, data: readonly string[], modal?: Modal): Promise<void> {
   if (await device.page.locator("[data-layered-overview]").count()) await expect(pane(device.page, "board").locator("[data-board-count], [data-board-empty]")).toHaveCount(1);
   expect(await unresolvedLabels(device), `${where} in ${locale}`).toEqual([]);
-  const mine = await wording(device);
+  const mine = await wording(device, modal?.scope);
+  await modal?.close();
   await choose(device, other(locale));
+  await modal?.open();
   expect(await unresolvedLabels(device), `${where} in ${other(locale)}`).toEqual([]);
-  const theirs = await wording(device);
+  const theirs = await wording(device, modal?.scope);
+  await modal?.close();
   await choose(device, locale);
+  await modal?.open();
   expect(theirs.length, `${where}: the same controls in both languages`).toBe(mine.length);
-  const neutral = new Set(["Pseudonym", "Name", "Quiz", "Status", "Normal", "Minimum", "Maximum", ...COURSE.topics.flatMap((topic) => [topic.title.en, topic.title.de]), ...data]);
+  const neutral = new Set(["Pseudonym", "Name", "Quiz", "Status", "Normal", "Minimum", "Maximum", "Desktop", "Tablet", ...COURSE.topics.flatMap((topic) => [topic.title.en, topic.title.de]), ...data]);
   const untranslated = mine.filter((text, index) => text === theirs[index] && !/^[\d.,\s]+[\p{L}/()·²³]+$/u.test(text) && !neutral.has(text) && !data.some((entry) => entry !== "" && text.includes(entry)));
   expect(untranslated, `${where}: worded the same in ${locale} and ${other(locale)}`).toEqual([]);
 }
@@ -79,12 +90,17 @@ for (const locale of LOCALES) {
     await expectBothLanguages(learner, locale, "introduction", []);
 
     await readIntroduction(learner);
-    await screen(learner.page, "identity").locator('input[type="radio"][value="pseudonym"]').check();
-    await expectBothLanguages(learner, locale, "identity", []);
+    const identity = screen(learner.page, "identity");
+    await identity.locator('input[type="radio"][value="pseudonym"]').check();
+    await expectBothLanguages(learner, locale, "identity", [], {
+      scope: identity,
+      close: async () => { await learner.page.keyboard.press("Escape"); await expect(identity).toHaveCount(0); },
+      open: async () => { await primary(card(learner.page, "learner")).click(); await expect(identity).toBeVisible(); await identity.locator('input[type="radio"][value="pseudonym"]').check(); },
+    });
     await screen(learner.page, "identity").locator('input[type="text"]').fill(name);
     await primary(screen(learner.page, "identity")).click();
     await expect(activeOverview(learner.page)).toBeVisible();
-    expect(await shownName(learner)).toBe(name);
+    await expect.poll(() => shownName(learner)).toBe(name);
 
     await expectBothLanguages(learner, locale, "root overview", [name]);
     await openGrid(learner, "quizzes");

@@ -38,6 +38,5 @@ test("indexed edits preserve strict base/final coordinate admission and independ
     expect(output).toEqual(expected);
    }
   }
-  console.log(`[DEBUG] ${fixture.cases.length} strict indexed admission/stream outputs agree with independent SQLite ordering and array splice semantics`);
  }finally{database.close();}
 });

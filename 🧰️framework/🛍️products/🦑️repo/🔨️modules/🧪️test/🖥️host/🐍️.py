@@ -369,7 +369,8 @@ def snapshot_patch_inverse(snapshot: Any, patch: Dict[str, Any]) -> Dict[str, An
 
 # region 🔖️Runner
 def _repo_root_from(start: str) -> str:
-    directory = os.path.abspath(start)
+    declared = os.environ.get("SEMIO_WORKSPACE_ROOT")
+    directory = os.path.abspath(declared if declared else start)
     for _ in range(32):
         paths = [os.path.join(directory, name) for name in ("📋️project.json", "package.json")]
         if all(os.path.isfile(path) and not os.path.islink(path) for path in paths):

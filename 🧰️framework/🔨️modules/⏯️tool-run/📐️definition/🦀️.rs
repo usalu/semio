@@ -29,7 +29,7 @@ pub enum ToolRunRebasePolicy {
     Freeze,
 }
 
-/// 🎚️ How a run reacts to settings changes (§3.3).
+/// 🔧️ How a run reacts to settings changes (§3.3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -143,7 +143,8 @@ pub struct ToolRunDefinition {
     pub revalidate_job: Option<JobKindId>,
     #[serde(default, skip_serializing_if = "ToolRunSettingsReads::is_empty")]
     #[value(default, skip_serializing_if = "ToolRunSettingsReads::is_empty")]
-    pub settings: ToolRunSettingsReads,    /// 🪟️ Window kind ids whose bodies render this run's state (`ArtifactView::tool_run()`): every tick refreshes them
+    pub settings: ToolRunSettingsReads,
+    /// 🪟️ Window kind ids whose bodies render this run's state (`ArtifactView::tool_run()`): every tick refreshes them
     /// next to the ToolRun panel, and no other window.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -257,12 +258,12 @@ impl ToolRunDefinition {
 /// 🪧️ Key of the framework ToolRun panel root; each run is one child group [`tool_run_panel_group_id`].
 pub const TOOL_RUN_PANEL_ID: &str = "framework.toolRun";
 
-/// 🪧️ The key of run `run`'s group in the ToolRun panel; every id inside the group is scoped under it.
+/// 🔑️ The key of run `run`'s group in the ToolRun panel; every id inside the group is scoped under it.
 pub fn tool_run_panel_group_id(run: u64) -> String {
     format!("{TOOL_RUN_PANEL_ID}.{run}")
 }
 
-/// 🔎️ The run a ToolRun panel group key names; `None` for any other key (a key inside a group included).
+/// 🏃️ The run a ToolRun panel group key names; `None` for any other key (a key inside a group included).
 pub fn tool_run_panel_group_run(key: &str) -> Option<u64> {
     let digits = key.strip_prefix(TOOL_RUN_PANEL_ID)?.strip_prefix('.')?;
     (!digits.is_empty() && digits.bytes().all(|byte| byte.is_ascii_digit()) && (digits == "0" || !digits.starts_with('0'))).then(|| digits.parse().ok()).flatten()

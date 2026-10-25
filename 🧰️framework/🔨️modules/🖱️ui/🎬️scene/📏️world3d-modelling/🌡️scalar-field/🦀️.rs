@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️ScalarField
 string_enum! {
-    /// 🌡️ Which mesh element each scalar value belongs to.
+    /// 🕸️ Which mesh element each scalar value belongs to.
     World3dScalarDomain { Vertex => "vertex", Face => "face" }
 }
 
@@ -14,7 +14,7 @@ string_enum! {
 }
 
 impl World3dColorRamp {
-    /// 🎨️ Equally spaced sRGB stops; colours interpolate linearly per channel.
+    /// 🛑️ Equally spaced sRGB stops; colours interpolate linearly per channel.
     pub fn stops(self) -> &'static [[u8; 3]] {
         match self {
             Self::Viridis => &[[0x44, 0x01, 0x54], [0x3b, 0x52, 0x8b], [0x21, 0x91, 0x8c], [0x5e, 0xc9, 0x62], [0xfd, 0xe7, 0x25]],
@@ -24,7 +24,7 @@ impl World3dColorRamp {
         }
     }
 
-    /// 🎨️ The ramp colour at `t` (clamped to 0..1).
+    /// 🧪️ The ramp colour at `t` (clamped to 0..1).
     pub fn sample(self, t: f64) -> [u8; 3] {
         let stops = self.stops();
         let segments = stops.len() - 1;
@@ -40,7 +40,7 @@ impl World3dColorRamp {
     }
 }
 
-/// 🌡️ The value interval the ramp spans; values outside clamp to its ends.
+/// ↔️ The value interval the ramp spans; values outside clamp to its ends.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct World3dScalarRange {
@@ -107,14 +107,14 @@ impl FromValue for World3dScalarLegend {
     }
 }
 
-/// 🌡️ One legend tick: a value and the ramp colour it maps to.
+/// 📍️ One legend tick: a value and the ramp colour it maps to.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct World3dLegendTick {
     pub value: f64,
     pub rgb: [u8; 3],
 }
 
-/// 🌡️ A scalar analysis field painted as a heatmap on every instance of `mesh_id`: one value per vertex, or one per triangle. `None` is no data.
+/// 🔥️ A scalar analysis field painted as a heatmap on every instance of `mesh_id`: one value per vertex, or one per triangle. `None` is no data.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct World3dScalarField {
@@ -176,17 +176,17 @@ impl World3dScalarField {
         (value - self.range.min) / (self.range.max - self.range.min)
     }
 
-    /// 🌡️ The heatmap colour of one value; `None` is the no-data grey.
+    /// 🌈️ The heatmap colour of one value; `None` is the no-data grey.
     pub fn color_of(&self, value: Option<f64>) -> [u8; 3] {
         value.map_or(WORLD3D_SCALAR_NO_DATA_RGB, |value| self.ramp.sample(self.t(value)))
     }
 
-    /// 🌡️ Every value of the field as packed `r, g, b` bytes, ready for a vertex or triangle colour attribute.
+    /// 📦️ Every value of the field as packed `r, g, b` bytes, ready for a vertex or triangle colour attribute.
     pub fn color_bytes(&self) -> Vec<u8> {
         self.values.iter().flat_map(|value| self.color_of(*value)).collect()
     }
 
-    /// 🏷️ `legend.ticks` evenly spaced values from range min to max, each with its ramp colour.
+    /// 📏️ `legend.ticks` evenly spaced values from range min to max, each with its ramp colour.
     pub fn legend_ticks(&self) -> Vec<World3dLegendTick> {
         let count = usize::from(self.legend.ticks.max(2));
         (0..count)

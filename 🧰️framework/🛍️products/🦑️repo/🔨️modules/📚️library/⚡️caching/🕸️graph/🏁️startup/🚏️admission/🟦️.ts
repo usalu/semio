@@ -1,29 +1,33 @@
 import {createHash} from "node:crypto";
+import {refuseCachingV1} from "../../../📖️texts/🟦️.ts";
 import {totalmem} from "node:os";
 import {resolve} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {acquireResourceLease,type ResourceLease} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {repositoryLeaseDirectoryV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {nxDaemonNamespaceResourceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
+import {nxGraphYieldResourceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
 
 const policy=schema.definitions.Policy.const;
 /** 🚏️ The two daemon families that are counted separately: finite run daemons and dev watch daemons. */
 export type NxDaemonKindV1="finite"|"watch";
-/** 🚏️ The limits of this host and environment. */
-export type NxDaemonLimitsV1=Readonly<{finite:number;watch:number;idleMilliseconds:number;checkMilliseconds:number}>;
-/** 🚏️ The answer to "may this run use a daemon". */
+/** 🖥️ The limits of this host and environment. */
+export type NxDaemonLimitsV1=Readonly<{finite:number;watch:number;idleMilliseconds:number;checkMilliseconds:number;drainMilliseconds:number;yieldCheckMilliseconds:number}>;
+/** ▶️ The answer to "may this run use a daemon". */
 export type NxDaemonDecisionV1=Readonly<{enabled:boolean;reason:"explicit"|"reuse"|"admitted"|"saturated"|"disabled"|"refused"}>;
 
 const natural=(value:string|undefined):number|undefined=>value!==undefined&&/^\d{1,9}$/u.test(value)?Number(value):undefined;
 
-/** 📏️ Daemon limits: the authored maxima, the finite one reduced to the memory share (a quarter of the host memory divided by 2 GiB per daemon), overridable by `SEMIO_NX_DAEMONS=<finite>[,<watch>]` (0 turns the family off) and `SEMIO_NX_DAEMON_IDLE_MS`. */
+/** 📏️ Daemon limits: the authored maxima, the finite one reduced to the memory share (a quarter of the host memory divided by 2 GiB per daemon), overridable by `SEMIO_NX_DAEMONS=<finite>[,<watch>]` (0 turns the family off), `SEMIO_NX_DAEMON_IDLE_MS` and `SEMIO_NX_DAEMON_DRAIN_MS` (the longest a draining daemon may take to end before it exits). */
 export function nxDaemonLimitsV1(environment:Readonly<Record<string,string|undefined>>,totalMemoryBytes:number=totalmem()):NxDaemonLimitsV1{
  const budget=Math.floor(totalMemoryBytes/1048576/policy.memoryShareDenominator/policy.megabytesPerDaemon),[finiteText,watchText]=(environment.SEMIO_NX_DAEMONS??"").split(","),finiteOverride=natural(finiteText),watchOverride=natural(watchText);
  return Object.freeze({
   finite:Math.min(policy.maximumSlots,finiteOverride??Math.min(policy.finite,budget)),
   watch:Math.min(policy.maximumSlots,watchOverride??policy.watch),
   idleMilliseconds:natural(environment.SEMIO_NX_DAEMON_IDLE_MS)??policy.idleMilliseconds,
-  checkMilliseconds:policy.checkMilliseconds
+  checkMilliseconds:policy.checkMilliseconds,
+  drainMilliseconds:natural(environment.SEMIO_NX_DAEMON_DRAIN_MS)??policy.drainMilliseconds,
+  yieldCheckMilliseconds:policy.yieldCheckMilliseconds
  });
 }
 
@@ -38,6 +42,15 @@ export function decideNxDaemonV1(input:Readonly<{explicit:string|undefined;names
 /** 🕰️ True when a finite daemon has had no request open and none started for the idle period; watch daemons never idle out. */
 export function nxDaemonIdleV1(state:Readonly<{kind:NxDaemonKindV1;openRequests:number;lastActivity:number;now:number;idleMilliseconds:number}>):boolean{
  return state.kind==="finite"&&state.openRequests===0&&state.idleMilliseconds>0&&state.now-state.lastActivity>=state.idleMilliseconds;
+}
+
+/** 🤝️ True when a finite daemon with no open request must drain because an eviction asks for its namespace; watch daemons serve a developer and never yield. */
+export function nxDaemonYieldV1(state:Readonly<{kind:NxDaemonKindV1;openRequests:number;requested:boolean}>):boolean{return state.kind==="finite"&&state.openRequests===0&&state.requested;}
+
+/** 📬️ True while an eviction holds the yield resource of this namespace (probed with a shared try-lock released at once, so daemons never exclude each other). */
+export async function nxDaemonYieldRequestedV1(directory:string,namespaceDirectory:string,signal:AbortSignal):Promise<boolean>{
+ const resource=nxGraphYieldResourceV1(namespaceDirectory);
+ try{(await acquireResourceLease({directory,resource,mode:"shared",signal,timeoutMs:0})).release();return false;}catch(error){if(timedOut(resource)(error))return true;throw error;}
 }
 
 const key=(root:string)=>createHash("sha256").update(resolve(root).replaceAll("\\","/")).digest("hex").slice(0,16);
@@ -59,10 +72,13 @@ export async function countNxDaemonSlotsV1(directory:string,root:string,kind:NxD
  let live=0;for(let index=0;index<policy.maximumSlots;index++)if(await nxDaemonResourceHeldV1(directory,nxDaemonSlotResourceV1(root,kind,index),signal))live++;return live;
 }
 
+/** 🔑️ The key a daemon that found every slot taken prints, so a client that started it can run without a daemon. */
+export const NX_DAEMON_SLOTS_EXHAUSTED_KEY_V1="caching.daemon.slots-exhausted";
+
 /** 🧷️ A daemon takes the first free slot of its family for its whole life and refuses to start (throws) when all `limit` slots are in use, so the cap holds even when two clients admitted a daemon at the same moment. */
 export async function acquireNxDaemonSlotV1(directory:string,root:string,kind:NxDaemonKindV1,limit:number,signal:AbortSignal):Promise<ResourceLease>{
  for(let index=0;index<Math.min(limit,policy.maximumSlots);index++){const lease=await take(directory,nxDaemonSlotResourceV1(root,kind,index),signal);if(lease)return lease;}
- throw Error(`Nx daemon slots exhausted (${kind} limit ${limit})`);
+ throw refuseCachingV1("refused","daemon.slots-exhausted",{kind,limit:String(limit)});
 }
 
 /** 🚪️ Decides for one finite run whether Nx may use (and start) a daemon in the run's namespace. */

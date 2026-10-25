@@ -4,7 +4,7 @@ use super::*;
 
 // #region reconcile
 //#region 🔖️CompositeExpansion
-/// 🔽️ Synthesizes one retained `Button` row per `Select` item, keyed by the item's own `value` (via
+/// ☑️ Synthesizes one retained `Button` row per `Select` item, keyed by the item's own `value` (via
 /// `explicit_id`'s `UiNode::Button` arm) — `UiSelectItem.value` is already Select's stable per-option
 /// identity (it's what `UiSelectNode.value` itself holds to name the current choice), so reusing it as
 /// the row's key needs no extra bookkeeping.
@@ -59,7 +59,7 @@ pub(super) fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNo
     })
 }
 
-/// 🌳️ Synthesizes one retained `Stack` row per `Tree` item, keyed by `item.id`. Carries the item's own
+/// 🌲️ Synthesizes one retained `Stack` row per `Tree` item, keyed by `item.id`. Carries the item's own
 /// `presence` (already the single source of truth for selected/previewed/status — no more union with
 /// a tree-level id list) and `activate` (the row's click `action`) as a `UiStackNode`'s own fields,
 /// plus its embedded `control` (via `ui_control_to_node`), trailing `actions` (via
@@ -105,7 +105,7 @@ fn tree_item_row(item: &UiTreeItemNode) -> UiNode {
     })
 }
 
-/// 🌳️ Synthesizes one retained `Button` row per `UiTreeItemAction` (a `Tree` item's trailing/
+/// 🔘️ Synthesizes one retained `Button` row per `UiTreeItemAction` (a `Tree` item's trailing/
 /// row-placement action buttons). No stable id exists on `UiTreeItemAction` itself (unlike items/
 /// sections), so this leaves `UiButtonNode.id` unset — `node_key`'s positional fallback (keyed by the
 /// action's ordinal within its parent row's `actions` list) is already stable across re-renders for a

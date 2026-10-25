@@ -12,7 +12,7 @@ async function overflow(device: Device): Promise<number> {
   return device.page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 }
 
-/** ↔️ How many pixels the screen in front scrolls sideways at most: every box of it that scrolls, but for the frames in
+/** 📜️ How many pixels the screen in front scrolls sideways at most: every box of it that scrolls, but for the frames in
  * which a table scrolls on its own. */
 async function sideways(device: Device): Promise<number> {
   return device.page.evaluate(() =>

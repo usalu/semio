@@ -46,9 +46,9 @@ export type ArtifactPresencePeer = {
   readonly interaction?: ArtifactPresenceInteraction;
   /** 🎨️ Hub-assigned palette index (bit 6), normalized at authenticated ingress. */
   readonly color?: number;
-  /** 🪟️ Canonical plan-bound surface id (bit 7), normalized by the Hub. */
+  /** 🗓️ Canonical plan-bound surface id (bit 7), normalized by the Hub. */
   readonly surface?: string;
-  /** 🪟️ Every open window/surface's live camera + in-view pointer (bit 8, ARTIFACT scope), matched
+  /** 🔓️ Every open window/surface's live camera + in-view pointer (bit 8, ARTIFACT scope), matched
    * by `space`. Empty when the peer has no open windows for this document. */
   readonly views: readonly ArtifactPresenceWindowView[];
   /** 🖱️ Live `data-ui-path` hover/focus/press state (bit 9, APP scope). */
@@ -71,7 +71,7 @@ export type ArtifactPresencePeer = {
   readonly typing?: readonly ArtifactPresenceTyping[];
 };
 
-/** ⌨️ Twin of Rust `PresenceTyping`: one peer's pending typing run in one text window — what it deleted and typed so far,
+/** ✍️ Twin of Rust `PresenceTyping`: one peer's pending typing run in one text window — what it deleted and typed so far,
  * excerpts of at most {@link PRESENCE_TYPING_EXCERPT_BYTES} UTF-8 bytes each, cut at a scalar boundary. */
 export type ArtifactPresenceTyping = {
   readonly windowId: string;
@@ -94,7 +94,7 @@ export function presenceTypingExcerpt(text: string): string {
   return excerpt;
 }
 
-/** ⏪️ Twin of Rust `PresenceHistoryEditStage`: the `HistoryTimeTravelStage` wire spelling in binary tag order. */
+/** ✏️ Twin of Rust `PresenceHistoryEditStage`: the `HistoryTimeTravelStage` wire spelling in binary tag order. */
 export const PRESENCE_HISTORY_EDIT_STAGES = Object.freeze(["editing", "replaying", "reviewing", "choosing", "finalizing"] as const);
 
 /** 🔤️ One history-edit stage wire name. */
@@ -108,19 +108,19 @@ export type ArtifactPresenceHistoryEdit = {
   readonly drafts: number;
 };
 
-/** 🤖️ Twin of Rust `PresencePrincipalKind`, in binary tag order. An `agent` peer is an AI agent
+/** 🔃️ Twin of Rust `PresencePrincipalKind`, in binary tag order. An `agent` peer is an AI agent
  * acting under a credential a human delegated to it (`hub.auth`'s `AgentDelegationRecord`); it is a
  * principal in its own right, never the delegating human, so a roster shows it as its own row. */
 export const PRESENCE_PRINCIPAL_KINDS = Object.freeze(["human", "agent"] as const);
 
-/** 🔤️ One `PresencePrincipalKind` wire name. */
+/** 👤️ One `PresencePrincipalKind` wire name. */
 export type ArtifactPresencePrincipalKind = (typeof PRESENCE_PRINCIPAL_KINDS)[number];
 
 /** ⏳️ Twin of Rust `PresenceToolRunState`: the `ToolRunState` wire spelling (tool run contract §2.2) in binary tag order.
  * Duplicated because the tool run module layers above replication. */
 export const PRESENCE_TOOL_RUN_STATES = Object.freeze(["starting", "running", "paused", "complete", "finalizing", "finalized", "aborting", "aborted", "faulted"] as const);
 
-/** 🔤️ One `ToolRunState` wire name. */
+/** 🔧️ One `ToolRunState` wire name. */
 export type ArtifactPresenceToolRunState = (typeof PRESENCE_TOOL_RUN_STATES)[number];
 
 /** 📶️ Twin of Rust `PresenceToolRun`: `total` absent means indeterminate and `completed <= total` otherwise. */
@@ -149,20 +149,20 @@ export type ArtifactPresenceViewKind =
   | { readonly kind: "orbit"; readonly position: readonly [number, number, number]; readonly target: readonly [number, number, number]; readonly up: readonly [number, number, number]; readonly fov: number }
   | { readonly kind: "geo"; readonly lng: number; readonly lat: number; readonly zoom: number; readonly bearing: number; readonly pitch: number };
 
-/** 🖱️ Twin of Rust `PresenceUi`. */
+/** 🪞️ Twin of Rust `PresenceUi`. */
 export type ArtifactPresenceUi = {
   readonly hoveredPath?: string;
   readonly focusedPath?: string;
   readonly pressedPath?: string;
 };
 
-/** 🕹️ Twin of Rust `PresenceInteraction`. */
+/** 🦀️ Twin of Rust `PresenceInteraction`. */
 export type ArtifactPresenceInteraction = {
   readonly app_id: string;
   readonly domains: readonly ArtifactPresenceDomain[];
 };
 
-/** 🕹️ Twin of Rust `PresenceDomain` — one domain's granularity plus its selected/hovered ids. */
+/** 🏺️ Twin of Rust `PresenceDomain` — one domain's granularity plus its selected/hovered ids. */
 export type ArtifactPresenceDomain = {
   readonly domain: string;
   readonly granularity: string;
@@ -287,7 +287,7 @@ export type ServerFrame =
   | { readonly Presence: { readonly peers: readonly (readonly number[])[] } }
   | { readonly CreditGrant: { readonly n: number } }
   | { readonly Error: { readonly code: string; readonly message: string } }
-  /** 🎨️ The hub's one-time session assignment for this connection — see Rust `ServerFrame::Session`'s
+  /** ⌛️ The hub's one-time session assignment for this connection — see Rust `ServerFrame::Session`'s
    * doc comment. Sent exactly once per connection, after `Welcome` and before any `Presence` frame. */
   | { readonly Session: { readonly actor: string; readonly color: number } }
   | { readonly ArtifactBootstrapChunk: { readonly descriptor_hash: readonly number[]; readonly index: number; readonly bytes: readonly number[] } }
@@ -301,7 +301,7 @@ export type ServerFrame =
  * @see ../🔗️causal/🔀️transition/🦀️.rs */
 export const HISTORY_TRANSITION_DIFF_SCHEMA = "semio.history.transition";
 
-/** 🧾️ Twin of Rust `protocol::TransactionRef`: the committed tool transaction (`tx-<hex16>`) and the authoring
+/** 🔗️ Twin of Rust `protocol::TransactionRef`: the committed tool transaction (`tx-<hex16>`) and the authoring
  * action/tool id (`<appId>#<toolId>`) stamped on every operation that transaction produced.
  * @see ../🎮️mutation/🦀️.rs */
 export type TransactionRef = { readonly id: string; readonly tool: string };

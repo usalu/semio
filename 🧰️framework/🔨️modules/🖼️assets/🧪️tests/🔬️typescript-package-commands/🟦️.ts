@@ -13,7 +13,7 @@ export function runGenerateCatalogScript(context: Readonly<{ root: string; repoR
   console.log(`[asset] wrote ${artifacts.length} catalog artifacts → ${target}`);
 }
 
-/** 🏃️ Runs the `ExportLogoScript` command under the caller's roots and invocation. */
+/** ▶️ Runs the `ExportLogoScript` command under the caller's roots and invocation. */
 export async function runExportLogoScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw new Error("Logo video export requires caller-owned SEMIO_TEST_ARTIFACT_DIR");
@@ -25,7 +25,7 @@ export async function runExportLogoScript(context: Readonly<{ root: string; repo
   }
 }
 
-/** 🏃️ Runs the `PreviewGeneratedScript` command under the caller's roots and invocation. */
+/** 📜️ Runs the `PreviewGeneratedScript` command under the caller's roots and invocation. */
 export function runPreviewGeneratedScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
   process.stdout.write(previewAssetArtifacts(context.repoRoot));
 }

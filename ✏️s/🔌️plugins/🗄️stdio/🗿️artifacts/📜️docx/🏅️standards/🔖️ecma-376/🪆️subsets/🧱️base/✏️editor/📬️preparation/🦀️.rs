@@ -10,6 +10,9 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
 use semio_framework_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep};
+use semio_framework_value::retained_clone::{RetainedCloneRef, RetainedCloneStep};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::sync::Arc;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 
@@ -54,7 +57,7 @@ const OWNER_DEPTH: usize = 32;
 const TURN_BYTES: usize = 4_096;
 
 pub(crate) fn route(_prefix: &'static str) -> Option<NativeEditPreparationRoute<DocxSnapshot, DocxMutation>> {
-    Some(NativeEditPreparationRoute::new(DocxXmlEdit::recognizes, Arc::new(app_store::PagedOneItemPreparationFactory::<DocxSnapshot, DocxMutation, DocxXmlEdit>::default())))
+    None
 }
 
 pub(super) fn recognizes(mutation: &DocxMutation) -> bool {
@@ -220,6 +223,7 @@ pub fn prepare_set_run_text(snapshot: &DocxSnapshot, address: &DocxXmlAddress, t
 
 #[derive(Default)]
 pub(super) struct DocxXmlEdit {
+    closing: bool,
     reserve: Option<usize>,
 }
 
@@ -234,7 +238,12 @@ impl PagedOneItemEdit<DocxSnapshot, DocxMutation> for DocxXmlEdit {
         measure_mutation(mutation)
     }
 
-    fn advance(&mut self, post: &mut DocxSnapshot, mutation: &DocxMutation, grant: RetainedCloneGrant) -> Result<PagedOneItemEditStep<DocxMutation>, ValueError> {
+    fn advance_demands(&self, _before: RetainedCloneRef<'_, DocxSnapshot>, _mutation: RetainedCloneRef<'_, DocxMutation>, _post: &DocxSnapshot, _body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand::default())
+    }
+
+    fn advance(&mut self, _before: RetainedCloneRef<'_, DocxSnapshot>, mutation: RetainedCloneRef<'_, DocxMutation>, post: &mut DocxSnapshot, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<DocxMutation>, ValueError> {
+        let mutation = mutation.get();
         let Some(reserve) = self.reserve else {
             measure_snapshot(post).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
             let reserve = measure_mutation(mutation).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?.saturating_add(TURN_BYTES);
@@ -254,5 +263,22 @@ impl PagedOneItemEdit<DocxSnapshot, DocxMutation> for DocxXmlEdit {
             return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "stdio-docx-base-set-page.inverse-exceeds-capacity-grant"));
         }
         Ok(PagedOneItemEditStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: TURN_BYTES, retained_capacity_bytes: retained, released_bytes: 0 }, prepared.inverse))
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_demands(&self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<DocxMutation>, _body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand::default())
+    }
+
+    fn close_step(&mut self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<DocxMutation>, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.closing = true;
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
     }
 }

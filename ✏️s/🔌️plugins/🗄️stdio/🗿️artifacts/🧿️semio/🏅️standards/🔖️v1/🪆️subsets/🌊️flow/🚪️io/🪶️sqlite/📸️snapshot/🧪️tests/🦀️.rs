@@ -25,7 +25,7 @@ fn sqlite_snapshot_semio_flow_typed_exact_subset_dialect_and_document_guard(){le
 #[test]
 fn sqlite_snapshot_semio_flow_bounded_native_text_binary_admission() {
     let snapshot=fixture();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"flow".into()};
-    let provider=<SemioFlowSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let provider=<SemioFlowSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
         semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.preflight_sqlite_snapshot_encoding(encoding,control)).unwrap();
         let database=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.to_sqlite_database(control)).unwrap();
@@ -46,7 +46,7 @@ fn sqlite_snapshot_semio_flow_native_text_preserves_ieee_words(){
 
 #[test]
 fn sqlite_snapshot_semio_flow_explicit_controlled_native_owner(){
- use store::{pack::snapshot::ArtifactPack,pack::snapshot::ArtifactDsl};let f:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=fixture();
+ use store::{snapshot::ArtifactPack,snapshot::ArtifactDsl};let f:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=fixture();
  for payload in [store::io::IoPayload::Binary(expected.encode_pack()),store::io::IoPayload::Text(expected.print_dsl())]{
   let actual=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioFlowSnapshot::decode_sqlite_snapshot_native(&payload,control, native_owner))).unwrap();assert!(actual==expected,"controlled native output differs from the authored ordinary wire");assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|false, |control| semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioFlowSnapshot::decode_sqlite_snapshot_native(&payload,control, native_owner))).is_err());assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits{max_value_bytes:f["nativeAdmission"]["tinyBudgetBytes"].as_u64().unwrap() as usize,..SqliteDatabaseLimits::default()}, &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioFlowSnapshot::decode_sqlite_snapshot_native(&payload,control, native_owner))).is_err());assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits{max_rows:2,..SqliteDatabaseLimits::default()}, &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioFlowSnapshot::decode_sqlite_snapshot_native(&payload,control, native_owner))).is_err());
  }

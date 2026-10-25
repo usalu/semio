@@ -8,8 +8,8 @@ use super::*;
 #[value(rename_all = "camelCase")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertRow {
-    pub(crate) index: usize,
-    pub(crate) row: Vec<String>,
+    pub index: usize,
+    pub row: Vec<String>,
 }
 
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for InsertRow {

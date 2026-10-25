@@ -1,9 +1,9 @@
-/** 🔸️ Contract: commit bullets keep their leading emoji, normalize authored text, refuse reserved emojis, cover the staged areas and travel through the git directory; the corpus is language-agnostic and `🐍️oracle.py` classifies emoji by Unicode range and recomputes every verdict. */
+/** 🔸️ Contract: commit bullets keep their leading emoji, normalize authored text, refuse reserved emojis, cover the staged areas and travel through the git directory; the corpus is language-agnostic and `🐍️.py` classifies emoji by Unicode range and recomputes every verdict. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {MICRO_COMMIT_BULLET_RE,bulletEmojiValidationError,bulletLeadEmoji,formatMicroCommitBulletLine,listAddedTicketPaths,listCachedPaths,normalizeBulletLines,pathTokensForBulletCoverage,readPreparedBullets,ticketBullets,uncoveredStagedAreas,writePreparedBullets} from "../🟦️.ts";
@@ -43,6 +43,6 @@ test("staged added ticket files become emoji-title bullets",()=>{
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

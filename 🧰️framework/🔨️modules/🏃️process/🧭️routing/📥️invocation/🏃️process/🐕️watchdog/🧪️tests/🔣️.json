@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "stall": 900000,
+  "idleTree": 1800000,
+  "decisions": [
+    {
+      "name": "recent progress",
+      "state": {
+        "idleMilliseconds": 1000,
+        "liveChildren": 0,
+        "treeIdleMilliseconds": 0,
+        "waiting": 0
+      },
+      "decision": "healthy"
+    },
+    {
+      "name": "idle with a busy child tree",
+      "state": {
+        "idleMilliseconds": 5000000,
+        "liveChildren": 1,
+        "treeIdleMilliseconds": 60000,
+        "waiting": 0
+      },
+      "decision": "healthy"
+    },
+    {
+      "name": "idle one millisecond short",
+      "state": {
+        "idleMilliseconds": 899999,
+        "liveChildren": 0,
+        "treeIdleMilliseconds": 0,
+        "waiting": 0
+      },
+      "decision": "healthy"
+    },
+    {
+      "name": "idle at the stall period without child",
+      "state": {
+        "idleMilliseconds": 900000,
+        "liveChildren": 0,
+        "treeIdleMilliseconds": 0,
+        "waiting": 0
+      },
+      "decision": "stalled"
+    },
+    {
+      "name": "idle for hours without child",
+      "state": {
+        "idleMilliseconds": 18000000,
+        "liveChildren": 0,
+        "treeIdleMilliseconds": 0,
+        "waiting": 0
+      },
+      "decision": "stalled"
+    },
+    {
+      "name": "child tree used no CPU for less than the idle-tree period",
+      "state": {
+        "idleMilliseconds": 3000000,
+        "liveChildren": 2,
+        "treeIdleMilliseconds": 1799999,
+        "waiting": 0
+      },
+      "decision": "healthy"
+    },
+    {
+      "name": "child tree used no CPU for the idle-tree period and nothing progressed",
+      "state": {
+        "idleMilliseconds": 1800000,
+        "liveChildren": 2,
+        "treeIdleMilliseconds": 1800000,
+        "waiting": 0
+      },
+      "decision": "tree-stalled"
+    },
+    {
+      "name": "idle tree but fresh progress",
+      "state": {
+        "idleMilliseconds": 5000,
+        "liveChildren": 2,
+        "treeIdleMilliseconds": 9000000,
+        "waiting": 0
+      },
+      "decision": "healthy"
+    },
+    {
+      "name": "waiting in a queue for 30 minutes without child, output or progress",
+      "state": {
+        "idleMilliseconds": 1800000,
+        "liveChildren": 0,
+        "treeIdleMilliseconds": 0,
+        "waiting": 1
+      },
+      "decision": "healthy"
+    },
+    {
+      "name": "waiting for hours with an idle child tree",
+      "state": {
+        "idleMilliseconds": 18000000,
+        "liveChildren": 2,
+        "treeIdleMilliseconds": 9000000,
+        "waiting": 3
+      },
+      "decision": "healthy"
+    }
+  ]
+}

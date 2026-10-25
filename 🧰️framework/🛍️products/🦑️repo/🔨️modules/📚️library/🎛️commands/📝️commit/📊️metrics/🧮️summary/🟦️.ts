@@ -40,7 +40,7 @@ export function countUnifiedLocUnderPathPrefixes(root: string, prefixes: string[
   return total;
 }
 
-/** 📂️Sums on-disk bytes for tracked paths under prefixes (bundle-scoped size 💯️). */
+/** 🔢️Sums on-disk bytes for tracked paths under prefixes (bundle-scoped size 💯️). */
 export function countBytesUnderPathPrefixes(root: string, prefixes: string[]): number {
   const repoRoot = gitRepoRoot(root);
   let total = 0;
@@ -111,7 +111,7 @@ export function buildCommitMetrics(root: string, runner: MetricsRunner = createD
   };
 }
 
-/** 📊️Builds uloc + size metrics for a git revision range (optional path prefixes). */
+/** 🐙️Builds uloc + size metrics for a git revision range (optional path prefixes). */
 export function buildCommitMetricsForRange(root: string, base: string, head = "HEAD", pathPrefixes?: string[], runner: MetricsRunner = createDefaultMetricsRunner()): CommitMetricsBundle {
   const repoRoot = gitRepoRoot(root);
   const numstat = gitRangeNumstat(repoRoot, base, head);
@@ -125,7 +125,7 @@ export function buildCommitMetricsForRange(root: string, base: string, head = "H
   };
 }
 
-/** 📊️Builds micro-commit uloc metrics: repo uloc per language + staged git deltas. */
+/** 🔨️Builds micro-commit uloc metrics: repo uloc per language + staged git deltas. */
 export function buildMicroCommitMetrics(root: string, runner: MetricsRunner = createDefaultMetricsRunner()): MicroCommitLangMetrics[] {
   const repoRoot = gitRepoRoot(root);
   const deltas = accumulateStagedUlocDeltas(repoRoot);
@@ -133,7 +133,7 @@ export function buildMicroCommitMetrics(root: string, runner: MetricsRunner = cr
   return buildMicroCommitMetricsFromDeltas(codeByLang, deltas);
 }
 
-/** 📊️Builds uloc metrics for a git revision range (optional path prefixes). */
+/** 🏗️Builds uloc metrics for a git revision range (optional path prefixes). */
 export function buildMicroCommitMetricsForRange(root: string, base: string, head = "HEAD", pathPrefixes?: string[], runner: MetricsRunner = createDefaultMetricsRunner()): MicroCommitLangMetrics[] {
   const repoRoot = gitRepoRoot(root);
   const deltas = accumulateRangeUlocDeltas(repoRoot, base, head, pathPrefixes);
@@ -141,7 +141,7 @@ export function buildMicroCommitMetricsForRange(root: string, base: string, head
   return buildMicroCommitMetricsFromDeltas(codeByLang, deltas);
 }
 
-/** 📊️Sums per-language metric rows into one total. */
+/** ➕️Sums per-language metric rows into one total. */
 export function sumMicroCommitLangMetrics(metrics: MicroCommitLangMetrics[]): MicroCommitLangMetrics {
   const total: MicroCommitLangMetrics = {
     lang: "Total",
@@ -160,7 +160,7 @@ export function sumMicroCommitLangMetrics(metrics: MicroCommitLangMetrics[]): Mi
   return total;
 }
 
-/** 📊️Formats one per-language metric row for a kind. */
+/** 🌐️Formats one per-language metric row for a kind. */
 export function formatCommitMetricLine(kind: MetricKindId, m: MicroCommitLangMetrics): string {
   return formatMetricBody({
     kind,
@@ -173,7 +173,7 @@ export function formatCommitMetricLine(kind: MetricKindId, m: MicroCommitLangMet
   });
 }
 
-/** 📊️Formats one per-language `📊️metric🦀️rust📃uloc…` row. */
+/** 🦀️Formats one per-language `📊️metric🦀️rust📃uloc…` row. */
 export function formatMicroCommitMetricLine(m: MicroCommitLangMetrics): string {
   return formatCommitMetricLine("uloc", m);
 }
@@ -182,7 +182,7 @@ function commitMetricRowHasActivity(m: MicroCommitLangMetrics): boolean {
   return m.code > 0 || m.edited > 0 || m.added > 0 || m.removed > 0;
 }
 
-/** 📊️Renders commit metrics: repo totals per kind, then per-language uloc+size pairs. */
+/** 🖌️Renders commit metrics: repo totals per kind, then per-language uloc+size pairs. */
 export function formatCommitMetricsLines(bundle: CommitMetricsBundle): string[] {
   const { uloc, size } = bundle;
   if (uloc.length === 0 && size.length === 0) return [];
@@ -210,7 +210,7 @@ export function formatCommitMetricsLines(bundle: CommitMetricsBundle): string[] 
   return lines;
 }
 
-/** 📊️Renders the unified LOC block for uloc rows alone. */
+/** 🧱️Renders the unified LOC block for uloc rows alone. */
 export function formatMicroCommitMetricsLines(metrics: MicroCommitLangMetrics[]): string[] {
   return formatCommitMetricsLines({ uloc: metrics, size: [] });
 }
@@ -238,7 +238,7 @@ export function validateMicroCommitLangMetricsDeltaSum(metrics: MicroCommitLangM
   }
 }
 
-/** 🚫️Per-language delta sums for uloc and size footers. */
+/** ⚖️Per-language delta sums for uloc and size footers. */
 export function validateCommitMetricsDeltaSum(bundle: CommitMetricsBundle): void {
   validateMicroCommitLangMetricsDeltaSum(bundle.uloc, "uloc");
   validateMicroCommitLangMetricsDeltaSum(bundle.size, "size");

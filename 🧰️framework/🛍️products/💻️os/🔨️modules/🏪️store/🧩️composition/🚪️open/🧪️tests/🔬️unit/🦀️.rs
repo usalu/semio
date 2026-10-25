@@ -79,6 +79,7 @@ fn member_open_input_framing_is_canonical_scoped_and_budgeted() {
             let mut zero = StepContext::new(OperationId(1), Generation(1), StepBudget::new(0, 999, request_close_policy()), cancel.clone(), || Some(1), &mut sequence, &mut actual_retained_progress);
             assert!(matches!(request.step_input(&mut zero), MemberOpenInputStep::Pending(MemberOpenProgress { completed: 0, .. })));
             let mut outcome = None;
+            drop(zero);
             for _ in 0..16 {
                 let mut actual_retained_progress=RetainedCloneProgress::default();
                 let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(fuel, 999, request_close_policy()), cancel.clone(), || Some(1), &mut sequence, &mut actual_retained_progress);
@@ -102,6 +103,7 @@ fn member_open_input_framing_is_canonical_scoped_and_budgeted() {
                     assert_eq!(output[0], bytes[frame.snapshot_start]);
                     assert_eq!(&output[1..], &[0xcc; 7]);
                     let mut actual_retained_progress=RetainedCloneProgress::default();
+                    drop(cx);
                     let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(8, 999, request_close_policy()), cancel.clone(), || Some(1), &mut sequence, &mut actual_retained_progress);
                     let count = request.copy_history_chunk(0, &mut output, &mut cx).unwrap();
                     assert_eq!(&output[..count], &bytes[frame.history_start..frame.history_start + count]);
@@ -131,6 +133,7 @@ fn member_open_input_framing_is_canonical_scoped_and_budgeted() {
         assert_eq!(request.step_input(&mut cx), MemberOpenInputStep::Rejected(expected));
         assert_eq!(request.input_offset, 0);
         let mut actual_retained_progress=RetainedCloneProgress::default();
+        drop(cx);
         let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(8, 999, request_close_policy()), root_cancel_token(), || Some(1), &mut sequence, &mut actual_retained_progress);
         assert_eq!(request.step_input(&mut cx), MemberOpenInputStep::Rejected(expected));
         assert_eq!(request.retained_input_bytes(), 3);

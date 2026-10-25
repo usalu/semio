@@ -1,0 +1,41 @@
+{
+  "name": "@semio-tech/trinity-jack-lsp",
+  "$schema": "../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/**/*",
+      "{projectRoot}/**/*"
+    ]
+  },
+  "targets": {
+    "wasm": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts wasm"
+      },
+      "outputs": [
+        "{projectRoot}/.🧾️store/wasm.json"
+      ],
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust"
+          }
+        }
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "cache": true
+    }
+  }
+}

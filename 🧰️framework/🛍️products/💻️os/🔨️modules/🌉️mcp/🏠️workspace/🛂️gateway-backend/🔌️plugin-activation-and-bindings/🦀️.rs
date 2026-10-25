@@ -1,6 +1,8 @@
 //! 🔌️ Plugin activation and bindings of the headless workspace: activation attempts, artifact channel opening, shell route and action adapter binding, cancellable activation jobs and installed artifact bindings. See [`super`].
 
 use super::*;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_plugin_host::GuestRuntime as _;
 
 impl HeadlessWorkspace {
     /// 🔌️ Best-effort real activation attempt for `plugin_id` — see `activate_plugin_instance`'s own

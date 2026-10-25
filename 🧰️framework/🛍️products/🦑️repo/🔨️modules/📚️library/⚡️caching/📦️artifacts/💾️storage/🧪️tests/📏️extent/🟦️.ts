@@ -1,6 +1,6 @@
 import{test,expect}from"bun:test";
 import storage from"../../🧬️schema/🔣️.json";
-import sources from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧬️schema/🔣️.json";
+import sources from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/📥️sources/🧬️schema/🔣️json/🟦️.ts";
 
 const protocol=storage.definitions.Protocol.const,limits=Object.fromEntries(Object.entries(sources.properties).map(([name,row])=>[name,(row as{const?:unknown}).const])) as Record<string,number>;
 

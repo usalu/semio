@@ -3,7 +3,7 @@
 use super::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct DrawingSemanticDigestTotals {
+pub struct DrawingSemanticDigestTotals {
     pub semantic_items: usize,
     pub semantic_bytes: usize,
     pub maximum_field_bytes: usize,

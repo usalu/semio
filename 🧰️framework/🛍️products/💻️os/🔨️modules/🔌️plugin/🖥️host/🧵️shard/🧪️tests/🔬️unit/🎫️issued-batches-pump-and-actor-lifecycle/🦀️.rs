@@ -2,9 +2,9 @@
 
 #[semio_framework_async_macros::async_test]
 async fn issued_shard_batch_has_one_original_ledger_and_one_terminal_return(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📦️batch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let input:semio_framework_actor::RetainedTurnInput=serde_json::from_value(law["input"].clone()).unwrap();let budget=semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);let mut turn=IssuedShardTurn::new(budget,input,law["envelopes"].as_u64().unwrap()as usize).unwrap();let mut completions=0;let mut original=input;
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📦️batch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let input:semio_framework_actor::RetainedTurnInput=serde_json::from_value(law["input"].clone()).unwrap();let budget=semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);let mut turn=IssuedShardTurn::whole(budget,input,law["envelopes"].as_u64().unwrap()as usize).unwrap();let mut completions=0;let mut original=input;
  for (index,spent) in law["spent"].as_array().unwrap().iter().enumerate(){
-  let issued=turn.issue_envelope(index).unwrap();assert_eq!(issued,original);let progress=serde_json::from_value(spent.clone()).unwrap();let receipt=issued.return_original(progress).unwrap();let mut forged=receipt;forged.input.epoch+=1;
+  let issued=turn.issue_envelope(index).unwrap();assert_eq!(issued,original);let progress=serde_json::from_value(spent.clone()).unwrap();let receipt=issued.return_original(progress, 0).unwrap();let mut forged=receipt;forged.input.epoch+=1;
   let(refused,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||turn.settle_envelope(index,forged));assert!(refused.is_err());assert_eq!(serde_json::to_value([physical.requested_bytes,physical.released_bytes]).unwrap(),law["refusalHeap"]);
   let accepted=turn.settle_envelope(index,receipt).unwrap();original=semio_framework_actor::RetainedTurnInput{grant:receipt.remaining,..issued};if let Some(whole)=accepted{completions+=1;assert_eq!(index+1,law["envelopes"].as_u64().unwrap()as usize);whole.validate_for(input).unwrap();assert_eq!(serde_json::to_value(whole.remaining).unwrap(),law["remaining"])}else{assert!(index+1<law["envelopes"].as_u64().unwrap()as usize)}
   let(duplicate,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||turn.settle_envelope(index,receipt));assert_eq!(serde_json::to_value(duplicate.is_err()).unwrap(),law["duplicateRefused"]);assert_eq!(serde_json::to_value([physical.requested_bytes,physical.released_bytes]).unwrap(),law["refusalHeap"]);
@@ -17,7 +17,7 @@ async fn shard_grant_transports_original_retained_authority_independently_of_sca
     let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let original: semio_framework_actor::RetainedTurnInput = serde_json::from_value(law["input"].clone()).unwrap();
     let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).scaled(0.125).await;
-    let frame = ShardFrame::Grant { retained: original, actor: ActorId(71), budget, envelopes: Vec::new() };
+    let frame = ShardFrame::Grant { retained: original, retained_policy: original.grant, work_fuel: original.work.fuel, deadline_us: original.work.absolute_deadline_us, actor: ActorId(71), budget, envelopes: Vec::new() };
     let mut bytes = Vec::with_capacity(256);
     let backing = bytes.as_ptr();
     let (_, encoded) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_async::poll::resolve_ready(frame.pack_encode(&mut bytes)));
@@ -40,7 +40,7 @@ async fn shard_grant_transports_original_retained_authority_independently_of_sca
 #[semio_framework_async_macros::async_test]
 async fn shard_grant_invalid_original_operation_preserves_wire_backing_without_heap() {
     let mut original = original_retained_turn();original.operation = 0;
-    let frame = ShardFrame::Grant { retained: original, actor: ActorId(71), budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive), envelopes: Vec::new() };
+    let frame = ShardFrame::Grant { retained: original, retained_policy: original.grant, work_fuel: original.work.fuel, deadline_us: original.work.absolute_deadline_us, actor: ActorId(71), budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive), envelopes: Vec::new() };
     let mut bytes = Vec::with_capacity(256);bytes.extend_from_slice(&[11,13]);let pointer=bytes.as_ptr();let capacity=bytes.capacity();
     let(result,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(frame.pack_encode(&mut bytes)));
     assert_eq!(result.unwrap_err(),semio_framework_actor::pack::PackError::InvalidRetainedTurn("operation identity is absent"));assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));assert_eq!(bytes.as_ptr(),pointer);assert_eq!(bytes.capacity(),capacity);assert_eq!(bytes,[11,13]);let ShardFrame::Grant{retained,..}=frame else{unreachable!()};assert_eq!(retained,original);
@@ -74,7 +74,7 @@ async fn drain_replay_lifecycle(shard: &mut ShardLoop, actor: u64) {
         if shard.replay_seeds.iter().all(Option::is_none) && shard.replay_seed_refusals.iter().all(Option::is_none) {
             return;
         }
-        shard.granted_budgets.insert(actor, IssuedShardTurn::new(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
+        shard.granted_budgets.insert(actor, IssuedShardTurn::whole(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
         if !shard.drive_replay_refusal().await.expect("replay refusal close") {
             let _ = shard.drive_replay_seed().await;
         }
@@ -88,7 +88,7 @@ async fn retain_replay_seed(shard: &mut ShardLoop, actor: ActorId, job: u64) -> 
         if matches!(seed.phase, ReplaySeedPhase::Retained) {
             return seed.authority;
         }
-        shard.granted_budgets.insert(actor.0, IssuedShardTurn::new(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
+        shard.granted_budgets.insert(actor.0, IssuedShardTurn::whole(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
         assert!(shard.drive_replay_seed().await.expect("replay retention opportunity"));
     }
     panic!("bounded replay retention exhausted");
@@ -135,7 +135,7 @@ async fn pump_drives_one_turn_per_actor_and_reports_it_as_a_shard_outcome() {
     let actor = ActorId(7);
     let package = PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([1u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
     let mut scripted = MockGuestRuntime::idle_turn(original_retained_turn()).await;
     scripted.fuel_used = 42;
     mock.script_turn(actor, scripted).await;
@@ -185,7 +185,7 @@ async fn unregister_drops_the_instance_and_shrinks_actor_count() {
     let actor = ActorId(3);
     let package = PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([2u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("mock instantiate");
     let (transport, _probe) = LoopbackTransport::paired().await;
     let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);

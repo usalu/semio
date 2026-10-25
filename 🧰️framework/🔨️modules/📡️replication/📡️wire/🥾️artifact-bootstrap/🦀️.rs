@@ -236,7 +236,7 @@ impl ArtifactBootstrapAssembler {
         }
     }
 
-    /// 📈️ Current monotonic progress snapshot.
+    /// 📸️ Current monotonic progress snapshot.
     pub fn progress(&self) -> ArtifactBootstrapProgress {
         ArtifactBootstrapProgress { received_bytes: self.received_bytes, total_bytes: self.bootstrap.pack_length + self.bootstrap.spr_length, received_chunks: self.next_index, total_chunks: self.bootstrap.chunk_count }
     }
@@ -264,7 +264,7 @@ impl ArtifactBootstrapAssembler {
         Ok(())
     }
 
-    /// 🧩️ Appends exactly the next descriptor-bound, nonempty bounded chunk.
+    /// ⏭️ Appends exactly the next descriptor-bound, nonempty bounded chunk.
     pub fn push(&mut self, descriptor_hash: [u8; 32], index: u32, bytes: &[u8], control: &mut impl ArtifactBootstrapControl) -> Result<ArtifactBootstrapProgress, semio_framework_replication_error::ProtocolError> {
         self.guard(control)?;
         if self.inline {

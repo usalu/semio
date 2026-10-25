@@ -1,4 +1,4 @@
-import { runtimeCommandNameV1, runtimeCommandNamesV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1, runtimeCommandNamesV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { toolForCommandV1, TOOL_REGISTRY_V1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
 
 /** 🚩️ One place in a source file that starts a registered tool without the registry. */

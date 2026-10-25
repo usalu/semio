@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
 //#region 🔖️SchemaFormat
-/// 🗂️ One of the five schema formats a scope publishes, mirroring the taxonomy `schemaFormats` keys.
+/// 🪞️ One of the five schema formats a scope publishes, mirroring the taxonomy `schemaFormats` keys.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum SchemaFormat {
     Rust,
@@ -43,12 +43,12 @@ impl SchemaFormat {
         }
     }
 
-    /// 🔎 Parses either the ascii id or the taxonomy key.
+    /// 📖️ Parses either the ascii id or the taxonomy key.
     pub fn parse(id: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|format| format.id() == id || format.taxonomy_key() == id)
     }
 
-    /// 🍃 The leaf body this format occupies inside a [`FacetLeaves`].
+    /// 🌾️ The leaf body this format occupies inside a [`FacetLeaves`].
     pub fn leaf(self, leaves: &FacetLeaves) -> &'static str {
         match self {
             Self::Rust => leaves.rust,
@@ -79,7 +79,7 @@ pub struct FacetLeaves {
     pub proto: &'static str,
 }
 
-/// 🏷️ One named export of a scope — the `(export id, five format leaves)` pair the resolution key
+/// 🔤️ One named export of a scope — the `(export id, five format leaves)` pair the resolution key
 /// `(scope id, export id, format id)` needs beyond the four fixed facets.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SchemaExport {
@@ -118,7 +118,7 @@ impl std::fmt::Display for SchemaExportRegistryError {
 
 impl std::error::Error for SchemaExportRegistryError {}
 
-/// ⚠️ Why `(scope id, export id, format id)` did not resolve to a leaf body.
+/// ❌️ Why `(scope id, export id, format id)` did not resolve to a leaf body.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SchemaResolveError {
     UnknownScope { scope: String },
@@ -140,7 +140,7 @@ impl std::fmt::Display for SchemaResolveError {
 
 impl std::error::Error for SchemaResolveError {}
 
-/// 📇️ One resolvable `(scope id, export id, format id)` triple with a non-empty leaf body.
+/// 🪫️ One resolvable `(scope id, export id, format id)` triple with a non-empty leaf body.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SchemaExportEntry {
     pub scope: &'static str,
@@ -160,7 +160,7 @@ pub struct SchemaLeafDocument {
     pub path: &'static str,
 }
 
-/// 📚️ Reads the body of one repository-relative schema document; a host installs exactly one reader for the process.
+/// 🦑️ Reads the body of one repository-relative schema document; a host installs exactly one reader for the process.
 pub trait SchemaLeafReader: Send + Sync {
     fn read(&self, path: &str) -> Option<&'static str>;
 }
@@ -173,7 +173,7 @@ pub fn install_schema_leaf_reader(reader: &'static dyn SchemaLeafReader) -> bool
     LEAF_READER.set(reader).is_ok()
 }
 
-/// 📎️ Publishes the documents a crate serves instead of embedding; exact duplicates are accepted. Documents registered for the
+/// 📥️ Publishes the documents a crate serves instead of embedding; exact duplicates are accepted. Documents registered for the
 /// same `(scope, export, format)` are one leaf: a read answers their bodies concatenated in registration order.
 pub fn register_schema_leaf_documents(documents: &[SchemaLeafDocument]) {
     let mut served = SERVED_LEAF_DOCUMENTS.lock().expect("schema document lock");
@@ -184,7 +184,7 @@ pub fn register_schema_leaf_documents(documents: &[SchemaLeafDocument]) {
     }
 }
 
-/// 🍃 The body `leaves` holds for `format`, or, when that body is empty, the document the registering crate serves for `(scope, export, format)`; empty when neither exists.
+/// 🌿️ The body `leaves` holds for `format`, or, when that body is empty, the document the registering crate serves for `(scope, export, format)`; empty when neither exists.
 pub fn resolved_leaf_body(scope: &str, export: &str, format: SchemaFormat, leaves: &FacetLeaves) -> &'static str {
     let body = format.leaf(leaves);
     if !body.trim().is_empty() {
@@ -253,7 +253,7 @@ pub struct PackageAssetSchemaLeaves {
 }
 
 impl PackageAssetSchemaLeaves {
-    /// 🏗️ Reader over the guest's package asset lookup.
+    /// 🎁️ Reader over the guest's package asset lookup.
     pub const fn new(read: fn(&str) -> Option<&'static [u8]>) -> Self {
         Self { read, cache: Mutex::new(Vec::new()) }
     }
@@ -271,7 +271,7 @@ impl SchemaLeafReader for PackageAssetSchemaLeaves {
     }
 }
 
-/// 📎️ Installs the reader the build target of this process needs, so every artifact that serves schema documents makes the
+/// 🔨️ Installs the reader the build target of this process needs, so every artifact that serves schema documents makes the
 /// same choice: a `wasm32` guest reads the documents its host delivered as package assets (`package_asset` is the guest's
 /// lookup, `semio_framework_plugin::reactor::package_asset`), any other process reads them from the checkout that holds
 /// `manifest_directory` (found by [`workspace_root_above`]). Returns false when a reader is already installed or, off `wasm32`,
@@ -416,7 +416,7 @@ impl Scan<'_> {
 //#endregion 🔖️WorkspaceRoot
 
 //#region 🔖️SchemaExportRegistry
-/// 📚 Resolves `(scope id, export id, format id)` over every scope's four fixed facets plus its
+/// 💊️ Resolves `(scope id, export id, format id)` over every scope's four fixed facets plus its
 /// [`ScopeSchemaExports`]. Exact resolution only — no nearest-parent search, no glob, no
 /// fixture-local fallback.
 #[derive(Clone)]
@@ -432,12 +432,12 @@ impl Default for SchemaExportRegistry {
 }
 
 impl SchemaExportRegistry {
-    /// 🏗️ Empty registry.
+    /// ⬜️ Empty registry.
     pub fn new() -> Self {
         Self { facets: HashMap::new(), named: HashMap::new() }
     }
 
-    /// 📎 Adds one scope's four fixed facet leaves, positionally keyed by
+    /// 🎹️ Adds one scope's four fixed facet leaves, positionally keyed by
     /// [`RESERVED_FACET_EXPORT_IDS`]. Exact duplicates are accepted, conflicts are fatal.
     pub fn register_facet_leaves(&mut self, scope: &'static str, facets: [FacetLeaves; 4]) -> Result<(), SchemaExportRegistryError> {
         match self.facets.get(scope) {
@@ -450,7 +450,7 @@ impl SchemaExportRegistry {
         }
     }
 
-    /// 📎 Adds one scope's named exports. Export ids must be unique inside the scope; exact duplicate
+    /// 📝️ Adds one scope's named exports. Export ids must be unique inside the scope; exact duplicate
     /// declarations are accepted, conflicts are fatal.
     pub fn register_exports(&mut self, declaration: ScopeSchemaExports) -> Result<(), SchemaExportRegistryError> {
         for (index, export) in declaration.exports.iter().enumerate() {
@@ -476,7 +476,7 @@ impl SchemaExportRegistry {
         scopes
     }
 
-    /// 🧾 Every export id a scope publishes — the four fixed facets first, then the named exports in
+    /// 📮️ Every export id a scope publishes — the four fixed facets first, then the named exports in
     /// declaration order.
     pub fn exports(&self, scope: &str) -> Result<Vec<&'static str>, SchemaResolveError> {
         let facets = self.facets.get(scope);
@@ -499,7 +499,7 @@ impl SchemaExportRegistry {
         Ok(body)
     }
 
-    /// 🍃 The five format leaves behind one `(scope id, export id)` pair.
+    /// 🌱️ The five format leaves behind one `(scope id, export id)` pair.
     pub fn leaves(&self, scope: &str, export: &str) -> Result<FacetLeaves, SchemaResolveError> {
         let facets = self.facets.get(scope);
         let named = self.named.get(scope);
@@ -515,7 +515,7 @@ impl SchemaExportRegistry {
         }
     }
 
-    /// 🚶 Every resolvable `(scope, export, format)` triple with a non-empty leaf, in deterministic
+    /// ⛔️ Every resolvable `(scope, export, format)` triple with a non-empty leaf, in deterministic
     /// order — the cross-check input for the derived schema catalog.
     pub fn entries(&self) -> impl Iterator<Item = SchemaExportEntry> + '_ {
         self.scopes().into_iter().flat_map(move |scope| {
@@ -532,7 +532,7 @@ impl SchemaExportRegistry {
 //#endregion 🔖️SchemaExportRegistry
 
 
-/// 🧬️ Registered descriptor for one artifact's four schema facets.
+/// 🧱️ Registered descriptor for one artifact's four schema facets.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactSchemaDescriptor {
     pub id: &'static str,
@@ -558,7 +558,7 @@ pub struct ArtifactInferenceDescriptor {
 }
 
 
-/// 🧬️ Registered descriptor for one app owner's config + presence schema facets.
+/// 🎛️ Registered descriptor for one app owner's config + presence schema facets.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct AppSchemaDescriptor {
     pub id: &'static str,
@@ -568,7 +568,7 @@ pub struct AppSchemaDescriptor {
 
 
 //#region 🔖️ArtifactSchemaRegistry
-/// 📚 Runtime registry of [`ArtifactSchemaDescriptor`] values — same shape as [`SchemaCatalog`].
+/// ⚙️ Runtime registry of [`ArtifactSchemaDescriptor`] values — same shape as [`SchemaCatalog`].
 #[derive(Clone)]
 pub struct ArtifactSchemaRegistry {
     by_id: HashMap<&'static str, ArtifactSchemaDescriptor>,
@@ -581,22 +581,22 @@ impl Default for ArtifactSchemaRegistry {
 }
 
 impl ArtifactSchemaRegistry {
-    /// 🏗️ Empty registry.
+    /// 🆕️ Empty registry.
     pub fn new() -> Self {
         Self { by_id: HashMap::new() }
     }
 
-    /// 📎 Insert or replace a descriptor by id.
+    /// ➕️ Insert or replace a descriptor by id.
     pub fn register(&mut self, descriptor: ArtifactSchemaDescriptor) {
         self.by_id.insert(descriptor.id, descriptor);
     }
 
-    /// 🔎 Lookup by artifact schema id.
+    /// 🏺️ Lookup by artifact schema id.
     pub fn get(&self, id: &str) -> Option<&ArtifactSchemaDescriptor> {
         self.by_id.get(id)
     }
 
-    /// 🚶 Walk every registered descriptor.
+    /// 🎞️ Walk every registered descriptor.
     pub fn iter(&self) -> impl Iterator<Item = &ArtifactSchemaDescriptor> {
         self.by_id.values()
     }
@@ -614,7 +614,7 @@ impl ArtifactSchemaRegistry {
 //#endregion 🔖️ArtifactSchemaRegistry
 
 //#region 🔖️ArtifactInferenceRegistry
-/// 📚 Runtime registry of [`ArtifactInferenceDescriptor`] values.
+/// 🧠️ Runtime registry of [`ArtifactInferenceDescriptor`] values.
 #[derive(Clone)]
 pub struct ArtifactInferenceRegistry {
     by_id: HashMap<&'static str, ArtifactInferenceDescriptor>,
@@ -627,32 +627,32 @@ impl Default for ArtifactInferenceRegistry {
 }
 
 impl ArtifactInferenceRegistry {
-    /// 🏗️ Empty registry.
+    /// 🕳️ Empty registry.
     pub fn new() -> Self {
         Self { by_id: HashMap::new() }
     }
 
-    /// 📎 Insert or replace a descriptor by id.
+    /// 🔄️ Insert or replace a descriptor by id.
     pub fn register(&mut self, descriptor: ArtifactInferenceDescriptor) {
         self.by_id.insert(descriptor.id, descriptor);
     }
 
-    /// 🔎 Lookup by inference schema id.
+    /// 🔍️ Lookup by inference schema id.
     pub fn get(&self, id: &str) -> Option<&ArtifactInferenceDescriptor> {
         self.by_id.get(id)
     }
 
-    /// 🚶 Walk every registered descriptor.
+    /// 🔭️ Walk every registered descriptor.
     pub fn iter(&self) -> impl Iterator<Item = &ArtifactInferenceDescriptor> {
         self.by_id.values()
     }
 
-    /// 🔢 Count of registered inference schema ids.
+    /// 🔑️ Count of registered inference schema ids.
     pub fn len(&self) -> usize {
         self.by_id.len()
     }
 
-    /// 📭 Whether no inference schema ids are registered.
+    /// ⭕️ Whether no inference schema ids are registered.
     pub fn is_empty(&self) -> bool {
         self.by_id.is_empty()
     }
@@ -660,7 +660,7 @@ impl ArtifactInferenceRegistry {
 //#endregion 🔖️ArtifactInferenceRegistry
 
 //#region 🔖️AppSchemaRegistry
-/// 📚 Runtime registry of [`AppSchemaDescriptor`] values — app twin of [`ArtifactSchemaRegistry`].
+/// 📱️ Runtime registry of [`AppSchemaDescriptor`] values — app twin of [`ArtifactSchemaRegistry`].
 #[derive(Clone)]
 pub struct AppSchemaRegistry {
     by_id: HashMap<&'static str, AppSchemaDescriptor>,
@@ -673,38 +673,38 @@ impl Default for AppSchemaRegistry {
 }
 
 impl AppSchemaRegistry {
-    /// 🏗️ Empty registry.
+    /// 🧺️ Empty registry.
     pub fn new() -> Self {
         Self { by_id: HashMap::new() }
     }
 
-    /// 📎 Insert or replace a descriptor by owner id.
+    /// 🔀️ Insert or replace a descriptor by owner id.
     pub fn register(&mut self, descriptor: AppSchemaDescriptor) {
         self.by_id.insert(descriptor.id, descriptor);
     }
 
-    /// 🔎 Lookup by app schema owner id.
+    /// 🗝️ Lookup by app schema owner id.
     pub fn get(&self, id: &str) -> Option<&AppSchemaDescriptor> {
         self.by_id.get(id)
     }
 
-    /// 🚶 Walk every registered descriptor.
+    /// 🔁️ Walk every registered descriptor.
     pub fn iter(&self) -> impl Iterator<Item = &AppSchemaDescriptor> {
         self.by_id.values()
     }
 
-    /// 🔢 Count of registered app schema owner ids.
+    /// 🧮️ Count of registered app schema owner ids.
     pub fn len(&self) -> usize {
         self.by_id.len()
     }
 
-    /// 📭 Whether no owners are registered yet (A6 fills the catalog).
+    /// ⚪️ Whether no owners are registered yet (A6 fills the catalog).
     pub fn is_empty(&self) -> bool {
         self.by_id.is_empty()
     }
 }
 //#endregion 🔖️AppSchemaRegistry
-/// ⚠️ Schema descriptor registration rejects a conflicting established or batch descriptor.
+/// ⚔️ Schema descriptor registration rejects a conflicting established or batch descriptor.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SchemaDescriptorRegistryError {
     pub registry: &'static str,
@@ -811,47 +811,47 @@ fn register_descriptors<T: Descriptor>(descriptors: Vec<T>) -> Result<(), Schema
     Ok(())
 }
 
-/// 📎️ Publishes an artifact descriptor and its facets together, refusing mirror conflicts.
+/// 🗃️ Publishes an artifact descriptor and its facets together, refusing mirror conflicts.
 pub fn register_artifact_schema_descriptor(descriptor: ArtifactSchemaDescriptor) -> Result<(), SchemaDescriptorRegistryError> { register_descriptor(descriptor) }
-/// 📎️ Replaces one inference descriptor independently of other catalog families.
+/// 🧪️ Replaces one inference descriptor independently of other catalog families.
 pub fn register_artifact_inference_descriptor(descriptor: ArtifactInferenceDescriptor) -> Result<(), SchemaDescriptorRegistryError> { register_descriptor(descriptor) }
-/// 📎️ Replaces one app descriptor independently of other catalog families.
+/// 📲️ Replaces one app descriptor independently of other catalog families.
 pub fn register_app_schema_descriptor(descriptor: AppSchemaDescriptor) -> Result<(), SchemaDescriptorRegistryError> { register_descriptor(descriptor) }
 /// 🔬️ Observes artifact batch admission; publication independently validates under its lock.
 pub fn preflight_artifact_schema_descriptors(descriptors: &[ArtifactSchemaDescriptor]) -> Result<(), SchemaDescriptorRegistryError> { validate_descriptors(&catalog().lock().expect("schema catalog lock"), descriptors) }
-/// 🔬️ Observes inference batch admission without granting a publication permit.
+/// 🛂️ Observes inference batch admission without granting a publication permit.
 pub fn preflight_artifact_inference_descriptors(descriptors: &[ArtifactInferenceDescriptor]) -> Result<(), SchemaDescriptorRegistryError> { validate_descriptors(&catalog().lock().expect("schema catalog lock"), descriptors) }
-/// 🔬️ Observes app batch admission without granting a publication permit.
+/// 🛫️ Observes app batch admission without granting a publication permit.
 pub fn preflight_app_schema_descriptors(descriptors: &[AppSchemaDescriptor]) -> Result<(), SchemaDescriptorRegistryError> { validate_descriptors(&catalog().lock().expect("schema catalog lock"), descriptors) }
 /// 📌️ Validates and publishes a complete artifact batch and mirrors under one lock.
 pub fn register_artifact_schema_descriptors(descriptors: Vec<ArtifactSchemaDescriptor>) -> Result<(), SchemaDescriptorRegistryError> { register_descriptors(descriptors) }
-/// 📌️ Validates and publishes a complete inference batch under one lock.
+/// ✅️ Validates and publishes a complete inference batch under one lock.
 pub fn register_artifact_inference_descriptors(descriptors: Vec<ArtifactInferenceDescriptor>) -> Result<(), SchemaDescriptorRegistryError> { register_descriptors(descriptors) }
-/// 📌️ Validates and publishes a complete app batch under one lock.
+/// 🛬️ Validates and publishes a complete app batch under one lock.
 pub fn register_app_schema_descriptors(descriptors: Vec<AppSchemaDescriptor>) -> Result<(), SchemaDescriptorRegistryError> { register_descriptors(descriptors) }
-/// 🔎️ Whether an artifact descriptor is published.
+/// 📢️ Whether an artifact descriptor is published.
 pub fn artifact_schema_descriptor_registered(id: &str) -> bool { catalog().lock().expect("schema catalog lock").artifacts.by_id.contains_key(id) }
-/// 🔎️ Whether an inference descriptor is published.
+/// 🚀️ Whether an inference descriptor is published.
 pub fn artifact_inference_descriptor_registered(id: &str) -> bool { catalog().lock().expect("schema catalog lock").inferences.by_id.contains_key(id) }
-/// 🔎️ Whether an app descriptor is published.
+/// ❓️ Whether an app descriptor is published.
 pub fn app_schema_descriptor_registered(id: &str) -> bool { catalog().lock().expect("schema catalog lock").apps.by_id.contains_key(id) }
-/// 🔢️ Number of published artifact descriptors.
+/// 📏️ Number of published artifact descriptors.
 pub fn artifact_schema_catalog_len() -> usize { catalog().lock().expect("schema catalog lock").artifacts.len() }
-/// 🔢️ Number of published inference descriptors.
+/// 📐️ Number of published inference descriptors.
 pub fn artifact_inference_catalog_len() -> usize { catalog().lock().expect("schema catalog lock").inferences.len() }
-/// 🔢️ Number of published app descriptors.
+/// 📊️ Number of published app descriptors.
 pub fn app_schema_catalog_len() -> usize { catalog().lock().expect("schema catalog lock").apps.len() }
-/// 📚️ Visits an artifact snapshot after releasing the owner lock.
+/// 🔐️ Visits an artifact snapshot after releasing the owner lock.
 pub fn with_artifact_schema_registry<R>(visit: impl FnOnce(&ArtifactSchemaRegistry) -> R) -> R {
     let snapshot = catalog().lock().expect("schema catalog lock").artifacts.clone();
     visit(&snapshot)
 }
-/// 📚️ Visits an inference snapshot after releasing the owner lock.
+/// 👁️ Visits an inference snapshot after releasing the owner lock.
 pub fn with_artifact_inference_registry<R>(visit: impl FnOnce(&ArtifactInferenceRegistry) -> R) -> R {
     let snapshot = catalog().lock().expect("schema catalog lock").inferences.clone();
     visit(&snapshot)
 }
-/// 📚️ Visits an app snapshot after releasing the owner lock.
+/// 📷️ Visits an app snapshot after releasing the owner lock.
 pub fn with_app_schema_registry<R>(visit: impl FnOnce(&AppSchemaRegistry) -> R) -> R {
     let snapshot = catalog().lock().expect("schema catalog lock").apps.clone();
     visit(&snapshot)
@@ -860,42 +860,42 @@ pub fn with_app_schema_registry<R>(visit: impl FnOnce(&AppSchemaRegistry) -> R) 
 pub fn with_artifact_schema_catalog<R>(visit: impl FnOnce(&[ArtifactSchemaDescriptor]) -> R) -> R {
     with_artifact_schema_registry(|snapshot| { let mut entries: Vec<_> = snapshot.iter().copied().collect(); entries.sort_by_key(|entry| entry.id); visit(&entries) })
 }
-/// 📚️ Visits sorted inference descriptors after releasing the owner lock.
+/// 🔃️ Visits sorted inference descriptors after releasing the owner lock.
 pub fn with_artifact_inference_catalog<R>(visit: impl FnOnce(&[ArtifactInferenceDescriptor]) -> R) -> R {
     with_artifact_inference_registry(|snapshot| { let mut entries: Vec<_> = snapshot.iter().copied().collect(); entries.sort_by_key(|entry| entry.id); visit(&entries) })
 }
-/// 📚️ Visits sorted app descriptors after releasing the owner lock.
+/// 🗒️ Visits sorted app descriptors after releasing the owner lock.
 pub fn with_app_schema_catalog<R>(visit: impl FnOnce(&[AppSchemaDescriptor]) -> R) -> R {
     with_app_schema_registry(|snapshot| { let mut entries: Vec<_> = snapshot.iter().copied().collect(); entries.sort_by_key(|entry| entry.id); visit(&entries) })
 }
-/// 📎️ Registers a named export declaration under the canonical catalog lock.
+/// 🔏️ Registers a named export declaration under the canonical catalog lock.
 pub fn register_scope_schema_exports(declaration: ScopeSchemaExports) -> Result<(), SchemaExportRegistryError> { catalog().lock().expect("schema catalog lock").exports.register_exports(declaration) }
-/// 📎️ Registers fixed facets under the same lock as descriptor publication.
+/// 💠️ Registers fixed facets under the same lock as descriptor publication.
 pub fn register_scope_facet_leaves(scope: &'static str, facets: [FacetLeaves; 4]) -> Result<(), SchemaExportRegistryError> {
     let mut state = catalog().lock().expect("schema catalog lock");
     state.exports.register_facet_leaves(scope, facets)?;
     state.facet_publications.insert(scope, FacetPublication::External);
     Ok(())
 }
-/// 🔎️ Whether a scope publishes named exports.
+/// 📋️ Whether a scope publishes named exports.
 pub fn scope_schema_exports_registered(scope: &str) -> bool { catalog().lock().expect("schema catalog lock").exports.named.contains_key(scope) }
-/// 🔎️ Whether a scope publishes fixed facets.
+/// 🔧️ Whether a scope publishes fixed facets.
 pub fn scope_schema_facets_registered(scope: &str) -> bool { catalog().lock().expect("schema catalog lock").exports.facets.contains_key(scope) }
-/// 📚️ Visits an export snapshot after releasing the owner lock.
+/// 🔓️ Visits an export snapshot after releasing the owner lock.
 pub fn with_schema_export_registry<R>(visit: impl FnOnce(&SchemaExportRegistry) -> R) -> R {
     let snapshot = catalog().lock().expect("schema catalog lock").exports.clone();
     visit(&snapshot)
 }
-/// 🔎️ Resolves an exact published scope/export/format.
+/// 🎯️ Resolves an exact published scope/export/format.
 pub fn resolve_schema_export(scope: &str, export: &str, format: SchemaFormat) -> Result<&'static str, SchemaResolveError> { with_schema_export_registry(|registry| registry.resolve(scope, export, format)) }
-/// 🚶️ Snapshots all resolvable scope/export/format triples.
+/// 📸️ Snapshots all resolvable scope/export/format triples.
 pub fn schema_export_catalog_entries() -> Vec<SchemaExportEntry> { with_schema_export_registry(|registry| registry.entries().collect()) }
-/// 📎️ Publishes referenced documents once, preserving publication order.
+/// 🔂️ Publishes referenced documents once, preserving publication order.
 pub fn register_referenced_schema_documents(documents: &[&'static str]) {
     let mut state = catalog().lock().expect("schema catalog lock");
     for document in documents { if !state.documents.contains(document) { state.documents.push(document); } }
 }
-/// 🚶️ Every referenced schema document in publication order.
+/// 🔗️ Every referenced schema document in publication order.
 pub fn registered_referenced_schema_documents() -> Vec<&'static str> { catalog().lock().expect("schema catalog lock").documents.clone() }
 
 //#region 🔖️SchemaExportEntries
@@ -914,7 +914,7 @@ impl SchemaExportEntries {
     /// `rust-entries-contract-unknown` on any other value, so the two are changed together.
     pub const CONTRACT_ID: &'static str = "schema-export-registry-entries-v1";
 
-    /// 🚶 Snapshots the OS-wide catalog under the command that produced the snapshot, sorted and
+    /// 🌍️ Snapshots the OS-wide catalog under the command that produced the snapshot, sorted and
     /// deduplicated by `(scope, export, format)` in the ascii spelling the dump renders.
     pub fn from_catalog(generator: impl Into<String>) -> Self {
         let mut entries = schema_export_catalog_entries();
@@ -923,7 +923,7 @@ impl SchemaExportEntries {
         Self { contract_id: Self::CONTRACT_ID, generator: generator.into(), entries }
     }
 
-    /// 🧾 Renders the dump, one entry per line, exactly as the consumer parses it.
+    /// 🔣️ Renders the dump, one entry per line, exactly as the consumer parses it.
     pub fn to_json(&self) -> String {
         let entries: Vec<String> = self
             .entries

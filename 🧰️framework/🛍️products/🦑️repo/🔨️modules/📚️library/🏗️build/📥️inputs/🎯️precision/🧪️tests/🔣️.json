@@ -272,7 +272,14 @@
    "app/src/skip/x.ts": "export const skipped = 1;\n",
    "shared/types.ts": "export type Shape = { size: number };\n",
    "shared/package.json": "{ \"name\": \"shared\" }\n",
-   "unrelated/big.ts": "export const big = 1;\n"
+   "unrelated/big.ts": "export const big = 1;\n",
+   "crates/d/Cargo.toml": "[package]\nname = \"crate-d\"\nversion = \"0.1.0\"\n\n[dependencies]\ne = { path = \"../e\", package = \"crate-e\" }\n",
+   "crates/d/src/lib.rs": "pub fn d() {}\n",
+   "crates/d/tests/export.rs": "#[test]\nfn exports() {}\n",
+   "crates/d/generated/out.ts": "export {};\n",
+   "crates/e/Cargo.toml": "[package]\nname = \"crate-e\"\nversion = \"0.1.0\"\n",
+   "crates/e/src/lib.rs": "pub fn e() {}\n",
+   "crates/e/tests/unit.rs": "#[test]\nfn unit() {}\n"
   },
   "kinds": {
    "rust-source": {
@@ -308,6 +315,13 @@
    ],
    "owner": [
     "owner"
+   ],
+   "crates/d": [
+    "crates/d",
+    "crates/e"
+   ],
+   "crates/e": [
+    "crates/e"
    ]
   },
   "cargoSources": {
@@ -316,11 +330,25 @@
    ],
    "crates/b": [
     "{workspaceRoot}/crates/b/src/lib.rs"
+   ],
+   "crates/d": [
+    "{workspaceRoot}/crates/d/src/lib.rs",
+    "{workspaceRoot}/crates/d/tests/export.rs",
+    "{workspaceRoot}/crates/d/generated/out.ts"
+   ],
+   "crates/e": [
+    "{workspaceRoot}/crates/e/src/lib.rs",
+    "{workspaceRoot}/crates/e/tests/unit.rs"
    ]
   },
   "cargoToolchain": [
    "rust-toolchain.toml"
-  ]
+  ],
+  "cargoDependencySources": {
+   "crates/e": [
+    "{workspaceRoot}/crates/e/src/lib.rs"
+   ]
+  }
  },
  "document": {
   "version": 1,
@@ -542,6 +570,30 @@
      "default"
     ],
     "reads": []
+   },
+   {
+    "id": "cargo-export",
+    "evidence": "static",
+    "description": "A Cargo exporter reads the named crate with its test targets and the library closure of its dependencies; its own output is written, not read.",
+    "select": {
+     "project": "app",
+     "targets": [
+      "export"
+     ]
+    },
+    "replaces": [
+     "default",
+     "^default"
+    ],
+    "reads": [
+     {
+      "cargo": {
+       "directories": [
+        "crates/d"
+       ]
+      }
+     }
+    ]
    }
   ]
  },
@@ -607,6 +659,16 @@
     "project": "app",
     "target": "script",
     "command": "repo ./script.ts test"
+   }
+  },
+  {
+   "identity": {
+    "project": "app",
+    "target": "export",
+    "command": "repo ./script.ts export",
+    "outputs": [
+     "crates/d/generated"
+    ]
    }
   }
  ],
@@ -1050,6 +1112,37 @@
       "files": 8
      }
     ]
+   },
+   {
+    "rule": "cargo-export",
+    "drops": [
+     "default",
+     "^default"
+    ],
+    "patterns": [
+     "{workspaceRoot}/crates/d/Cargo.toml",
+     "{workspaceRoot}/crates/e/Cargo.toml",
+     "{workspaceRoot}/rust-toolchain.toml",
+     "!{workspaceRoot}/**/node_modules/**",
+     "!{workspaceRoot}/**/target/**"
+    ],
+    "groups": [
+     "sharedGlobals",
+     "{projectRoot}/📋️project.json"
+    ],
+    "files": [
+     "crates/d/src/lib.rs",
+     "crates/d/tests/export.rs",
+     "crates/e/src/lib.rs"
+    ],
+    "unresolved": [],
+    "reads": [
+     {
+      "read": "cargo:crates/d",
+      "patterns": 3,
+      "files": 4
+     }
+    ]
    }
   ],
   "unselected": [
@@ -1144,5 +1237,30 @@
     "error": null
    }
   }
+ },
+ "cargoExport": {
+  "identity": {
+   "project": "app",
+   "target": "export",
+   "command": "repo ./script.ts export",
+   "outputs": [
+    "crates/d/generated"
+   ]
+  },
+  "files": [
+   "crates/d/src/lib.rs",
+   "crates/d/tests/export.rs",
+   "crates/e/src/lib.rs"
+  ],
+  "absent": [
+   "crates/d/generated/out.ts",
+   "crates/e/tests/unit.rs"
+  ],
+  "withoutOutputs": [
+   "crates/d/generated/out.ts",
+   "crates/d/src/lib.rs",
+   "crates/d/tests/export.rs",
+   "crates/e/src/lib.rs"
+  ]
  }
 }

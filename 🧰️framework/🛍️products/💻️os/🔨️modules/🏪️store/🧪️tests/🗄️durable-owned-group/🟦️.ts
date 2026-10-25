@@ -62,7 +62,6 @@ export function testDurableOwnedGroupDecisionFixture(): void {
     assert.equal(row.originalCount, 3 - transfers, row.id);
     assert.equal(row.groupMetadataCount, grouped.slice(0, transfers).length, row.id);
   }
-  console.log(`[DEBUG] durable binding Ajv/RFC6902 oracle cases=${binding.durableExecution.cases.length} planning=${binding.durableExecution.planningSteps.length} original-refusal-restoration=passed`);
   
   
   assert.equal(fixture.version, 1);

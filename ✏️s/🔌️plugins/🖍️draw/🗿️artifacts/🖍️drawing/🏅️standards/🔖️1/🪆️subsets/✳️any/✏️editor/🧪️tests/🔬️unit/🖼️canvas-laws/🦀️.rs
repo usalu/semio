@@ -16,10 +16,10 @@ pub(super) fn canvas_scene(projection: String) -> semio_framework_plugin::Canvas
 }
 
 pub(super) async fn settle_drawing_geometry(app:&mut DrawingAppFixture,view:Option<&ViewModel>){
-    use semio_framework_plugin::reactor::jobs::{start_job,step_job,cancel_job,JobBudget,JobStep};
-    for effect in app.pending_effects(view).await{match effect{
-        Effect::CancelJob{job}=>cancel_job(job).await,
-        Effect::SpawnJob{job,kind,input,..}if kind=="semio.draw.mounted-vector"=>{start_job(job,&kind,&input).await;let mut complete=false;for _ in 0..100000{match step_job(job,JobBudget{fuel:65536,deadline_ms:8}).await{JobStep::Running(_)=>{},JobStep::Done(_)=>{complete=true;break;},JobStep::Failed(error)=>panic!("registered Drawing geometry failed: {}",String::from_utf8_lossy(&error))}}assert!(complete,"registered Drawing geometry must settle before its canvas witness");},
+    use semio_framework_plugin::reactor::jobs::{registry_driver::RegistryJobDriver,JobStep};
+    for effect in artifact_laws::fixture_pending_effects(&mut app.0,view).await.expect("registered Drawing pending effects"){match effect{
+        Effect::CancelJob{job}=>{RegistryJobDriver::generous(job).cancel().expect("registered Drawing geometry cancels");},
+        Effect::SpawnJob{job,kind,input,..}if kind=="semio.draw.mounted-vector"=>{let mut driver=RegistryJobDriver::generous(job);driver.start(&kind,input,None).expect("registered Drawing geometry admits");let mut complete=false;for _ in 0..100000{match driver.step().expect("registered Drawing geometry steps"){JobStep::Running(_)=>{},JobStep::Done(_)=>{complete=true;break;},JobStep::Failed(error)=>panic!("registered Drawing geometry failed: {}",String::from_utf8_lossy(&error))}}assert!(complete,"registered Drawing geometry must settle before its canvas witness");},
         _=>{},
     }}
 }

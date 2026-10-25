@@ -38,7 +38,7 @@ fn native_payload(snapshot: &SvgSnapshot, encoding: SnapshotEncoding) -> semio_f
 fn sqlite_snapshot_svg_native_long_unicode_carriers_and_interior_cancellation() {
     let snapshot = native_unicode_snapshot(); let f = native_control_fixture();
     let at = f["cancelAtBytes"].as_u64().unwrap() as usize;
-    let codec = <SvgSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().expect("actual SVG owner capability");
+    let codec = <SvgSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("actual SVG owner capability");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.svg".into(), standard: "1.1".into(), subset: "*".into() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let payload = native_payload(&snapshot, encoding);
@@ -65,7 +65,7 @@ async fn sqlite_snapshot_svg_native_limits_and_literal_typed_file_io() {
     let snapshot = native_unicode_snapshot(); let f = native_control_fixture();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.svg".into(), standard: "1.1".into(), subset: "*".into() };
     semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("SVG owned SQLite controls").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
-    let codec = <SvgSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let codec = <SvgSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     let wide = SvgSnapshot { schema: snapshot.schema.clone(), doc: SvgDocument { root: Some(SvgNode::Element { name: "svg".into(), attrs: vec![], children: (0..f["wideChildren"].as_u64().unwrap()).map(|_| SvgNode::Element { name: "g".into(), attrs: vec![], children: vec![] }).collect() }), ..SvgDocument::default() } };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let bytes = async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
@@ -151,7 +151,7 @@ fn sqlite_snapshot_svg_owned_tiny_basic_guard_matches_all_existing_conformance_r
 fn sqlite_snapshot_svg_erased_native_preflight_admission_and_limits() {
     let snapshot = snapshot();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.svg".into(), standard: "1.1".into(), subset: "*".into() };
-    let codec = <SvgSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let codec = <SvgSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
         let actual = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)("svg preflight", &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;

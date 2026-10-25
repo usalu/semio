@@ -11,7 +11,7 @@ pub enum NativeSnapshotEncoding { Binary,Text }
 #[derive(Clone,Copy,Debug)]
 pub enum NativeSnapshotInput<'a> {Binary(&'a [u8]),Text(&'a str)}
 
-/// 🫴️ Requires native construction and publication under the original caller controls.
+/// 📸️ Requires native construction and publication under the original caller controls.
 pub trait ArtifactNativeSnapshot:Sized {
  fn decode_native_snapshot(payload:NativeSnapshotInput<'_>,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>;
  fn encode_native_snapshot(&self,encoding:NativeSnapshotEncoding,control:&mut NativeEncodeControl<'_>)->Result<IoPayload,ValueError>;

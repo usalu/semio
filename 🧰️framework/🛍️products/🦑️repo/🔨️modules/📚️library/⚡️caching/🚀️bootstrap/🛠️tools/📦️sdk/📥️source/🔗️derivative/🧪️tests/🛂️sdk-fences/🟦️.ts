@@ -6,7 +6,7 @@ import*as filesystem from"node:fs/promises";
 import{join,dirname}from"node:path";
 import{createHash,randomUUID}from"node:crypto";
 import{registerBuildTestLawV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
-import{withRepositoryToolingStoreV1,type RepositoryToolingStoreV1}from"../../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import{withRepositoryToolingStoreV1,type RepositoryToolingStoreV1}from"../../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{nxSdkSnapshotIdentityV1}from"../../../../📥️snapshot/🟦️.ts";
 import{nxSdkBinaryReceiptV1}from"../../../../🧊️binary/🟦️.ts";
 import*as source from"../../🔏️index/🟦️.ts";

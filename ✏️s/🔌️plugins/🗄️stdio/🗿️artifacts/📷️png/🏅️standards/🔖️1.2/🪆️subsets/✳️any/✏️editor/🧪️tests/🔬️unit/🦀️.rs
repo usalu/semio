@@ -276,29 +276,26 @@ fn retained_pixel_region_accepts_dci_4k_raster_with_bounded_work() {
 #[test]
 fn registered_pixel_region_factory_cancellation_retires_without_publication() {
     use protocol::OpBinary;
-    use semio_framework_job::{Generation, InteractiveJob, Operation, OperationId, RevisionId, StepBudget, StepContext};
-    use semio_framework_action_bus::{ActionBus, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
+    use semio_framework_action_bus::{ActionBus, ToolFactoryKey};
+    use semio_framework_job::{Generation, Operation, OperationId, RevisionId};
     use semio_framework_plugin::app::ArtifactToolCompletion;
+    use semio_s_artifact_stdio_contract::testing::registered_job::{admit, close, snapshot_read, step_stage, wire, Session};
     use std::sync::Arc;
     let snapshot = Arc::new(rgba_snapshot(1_024, 512, vec![7; 1_024 * 512 * 4]));
     let command = PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(patch_pixel_region::PatchPixelRegion { x: 1, y: 0, width: 1, height: 512, red: 9, green: 8, blue: 7, alpha: 6 }));
-    let wire = command.encode_op().unwrap(); let completion = ArtifactToolCompletion::<EditorApp<PngEditor>>::test_new(); let consumer = completion.clone();
-    let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command, snapshot: snapshot.clone(), config: Arc::new(NoConfig::default()), history: Arc::new(semio_framework_plugin::HistoryView::empty()), interaction_state: Arc::new(Default::default()), interaction_hover: Arc::new(Default::default()), context: None, operation: AppOperationContext { app_instance_id: 1, parent_document_id: "png-registered-cancel".into(), operation_id: 41, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "png-cancel".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() }, completion }, png_editor_command_id, patch_pixel_region::MAXIMUM_RAW_BYTES, patch_pixel_region::CAPACITY.work_items(), Box::new(patch_pixel_region::PatchPixelRegionWork::default()));
+    let wire_bytes = command.encode_op().unwrap(); let completion = ArtifactToolCompletion::<EditorApp<PngEditor>>::test_new(); let consumer = completion.clone();
+    let (snapshot_read, lease) = snapshot_read(snapshot.clone(), 3, [4; 32]);
+    let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command, snapshot: snapshot.clone(), snapshot_read, config: Arc::new(NoConfig::default()), history: Arc::new(semio_framework_plugin::HistoryView::empty()), interaction_state: Arc::new(Default::default()), interaction_hover: Arc::new(Default::default()), context: None, operation: AppOperationContext { app_instance_id: 1, parent_document_id: "png-registered-cancel".into(), operation_id: 41, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "png-cancel".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() }, completion }, png_editor_command_id, patch_pixel_region::MAXIMUM_RAW_BYTES, patch_pixel_region::CAPACITY.work_items(), Box::new(patch_pixel_region::PatchPixelRegionWork::default()));
     let bus = ActionBus::new(); bus.register(PngPixelRegionFactory::new("png-cancel")).unwrap();
-    let (admission, mut input) = bus.begin_exact_wire("png-cancel", patch_pixel_region::ACTION_ID, patch_pixel_region::PAYLOAD_SCHEMA, wire.len()).unwrap();
-    for page in wire.chunks(TOOL_WIRE_PAGE_BYTES) { input.admit_page(ToolWirePage::try_copy_from(page).unwrap()).map_err(|(fault, _)| fault).unwrap(); } input.seal().unwrap();
     let operation = Operation::new(OperationId(41), RevisionId(2), Generation(3), 5);
-    let spec = ToolOperationSpec::new("png-cancel", patch_pixel_region::ACTION_ID, patch_pixel_region::PAYLOAD_SCHEMA, payload, operation);
-    let mut dispatched = bus.dispatch_wire_retained_with_spec(&admission, input, None, spec).map_err(|rejected| rejected.error).unwrap();
-    let mut sequence = 0; let mut patched = false;
+    let mut session = Session::new(operation);
+    let mut job = admit(&bus, &mut session, operation, ToolFactoryKey::new("png-cancel", patch_pixel_region::ACTION_ID), patch_pixel_region::PAYLOAD_SCHEMA, payload, Some(wire(&wire_bytes)), None);
+    let mut patched = false;
     for _ in 0..32 {
-        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
-        let outcome = dispatched.job.step(&mut cx).expect("registered pixel-region job step"); drop(outcome);
-        patched = cx.stage() == "png-pixel-region-patch"; if patched { break; }
+        patched = step_stage(&mut job, &mut session) == "png-pixel-region-patch"; if patched { break; }
     }
-    assert!(patched); dispatched.job.begin_close();
-    for _ in 0..10_000 { if dispatched.job.terminal_is_empty() { break; } dispatched.job.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant()); }
-    assert!(dispatched.job.terminal_is_empty()); assert!(consumer.test_take_emit().unwrap().is_none());
+    assert!(patched); close(&mut job, &mut session); drop(job); lease.close(&mut session.caller); session.finish();
+    assert!(consumer.test_take_emit().unwrap().is_none());
 }
 
 #[semio_framework_async_macros::async_test]

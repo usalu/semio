@@ -49,7 +49,7 @@ import { Worker, isMainThread, parentPort, workerData } from "node:worker_thread
 import { PROCTOR_DEV_COURSE, launchProctor, type ProctorArtifact, type ProctorProcess } from "../../🏗️bootstrap/🟦️.ts";
 import { acquireProctor } from "../../🏗️bootstrap/🧾️product/🟦️.ts";
 import { receiveScriptProcessInvocation, type ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { ticketOutput } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🎫️output/🟦️.ts";
+import { ticketOutput } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚡️caching/🎫️output/🟦️.ts";
 
 /** 🎫️ Locates disposable capacity work beneath the active ticket or development cache. */
 export function capacityWorkDirectory(repoRoot: string, environment: NodeJS.ProcessEnv = process.env): string {
@@ -83,7 +83,7 @@ export interface PhaseReport {
   readonly generatorLag: { readonly p50: number; readonly p95: number; readonly p99: number; readonly max: number };
 }
 
-/** 🧾️ The whole report of one capacity run; `beside` and `script` are absent from a run of the hall alone. */
+/** 📑️ The whole report of one capacity run; `beside` and `script` are absent from a run of the hall alone. */
 export interface CapacityReport {
   readonly options: CapacityOptions;
   readonly alone: PhaseReport;
@@ -193,7 +193,7 @@ function rosterViolations(roster: Roster | undefined, hall: number, script: Scri
   return violations;
 }
 
-/** ⚖️ Everything the script got away with: a flood that was never refused or was served more than its address's
+/** 🚨️ Everything the script got away with: a flood that was never refused or was served more than its address's
  * allowance over the time it ran — of commands, of queries, of sign-ups —, a body or frame past its limit that was
  * taken, more sockets than its address may hold. */
 function scriptViolations(script: ScriptReport): string[] {
@@ -228,7 +228,7 @@ function table(title: string, phase: PhaseReport): string {
   return [head, ...lines].join("\n");
 }
 
-/** 🏋️ Build the release proctor, serve it on a throw-away port and data directory with its default cap of learners, play
+/** 🚀️ Build the release proctor, serve it on a throw-away port and data directory with its default cap of learners, play
  * the hall alone and beside the script, stop the proctor, count its roster and return the report; `violations` is empty
  * exactly when the gate holds. */
 export async function runCapacity(repoRoot: string, invocation: ScriptInvocation, options: CapacityOptions = CAPACITY_DEFAULTS): Promise<CapacityReport> {

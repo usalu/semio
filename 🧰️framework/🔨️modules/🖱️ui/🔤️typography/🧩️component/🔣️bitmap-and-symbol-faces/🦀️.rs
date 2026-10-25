@@ -1,4 +1,4 @@
-//! 🔣️ Bitmap and symbol faces: the builtin bitmap font, the symbol face outlines and the zero-width format characters. See [`super`].
+//! 🔡️ Bitmap and symbol faces: the builtin bitmap font, the symbol face outlines and the zero-width format characters. See [`super`].
 
 use super::*;
 
@@ -148,7 +148,7 @@ pub(super) const SYMBOL_STROKE_UNITS: f32 = 78.0;
 /// of through a hand-declared per-glyph advance that could drift from the outline.
 pub(super) const SYMBOL_SIDE_BEARING_UNITS: f32 = 60.0;
 
-/// 🔣️ [`SYMBOL_FACE`]'s outline for `ch`, if this face owns it.
+/// 🛤️ [`SYMBOL_FACE`]'s outline for `ch`, if this face owns it.
 pub(super) fn symbol_face_path(ch: char) -> Option<&'static str> {
     SYMBOL_FACE.iter().find(|(symbol, _)| *symbol == ch).map(|(_, path)| *path)
 }

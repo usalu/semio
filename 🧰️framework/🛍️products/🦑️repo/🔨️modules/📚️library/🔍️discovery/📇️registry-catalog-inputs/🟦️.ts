@@ -3,7 +3,7 @@ import { ephemeralMap } from "../../../../../../🔨️modules/🫧️transient/
 import { extname } from "node:path";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 import { tomlTableBody } from "../🪧️owner-markers/🟦️.ts";
-import { TranspilerV1 } from "../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
+import { TranspilerV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
 import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🌳️ Logical preimage filesystem used equally by catalog generation and transaction revalidation. */
@@ -82,7 +82,7 @@ export function registryCatalogGitlinkBoundaries(repoRoot: string): ReadonlySet<
 /** 🧭️ What the git index knows about the directory tree: every directory holding tracked content, and the subset that is an owner or an ancestor of one (it has a `packagesDirName` directory at or beneath it). */
 export type RegistryCatalogOwnerIndex = Readonly<{ known: ReadonlySet<string>; candidates: ReadonlySet<string> }>;
 
-/** 🧭️ Derives the {@link RegistryCatalogOwnerIndex} from one `git ls-files --cached` listing (a sorted index read, no working-tree walk), so a catalog walk can skip every tracked directory without an owner beneath it and still read each directory the index does not know. `undefined` when no listing is available, which obliges the caller to walk the whole tree. The index only prunes: each directory it admits is still read and verified through the no-follow view, and a directory it has never seen is always walked. @see https://git-scm.com/docs/git-ls-files */
+/** 📚️ Derives the {@link RegistryCatalogOwnerIndex} from one `git ls-files --cached` listing (a sorted index read, no working-tree walk), so a catalog walk can skip every tracked directory without an owner beneath it and still read each directory the index does not know. `undefined` when no listing is available, which obliges the caller to walk the whole tree. The index only prunes: each directory it admits is still read and verified through the no-follow view, and a directory it has never seen is always walked. @see https://git-scm.com/docs/git-ls-files */
 export function registryCatalogOwnerIndex(repoRoot: string, packagesDirName: string): RegistryCatalogOwnerIndex | undefined {
   let stdout: string;
   try {
@@ -164,7 +164,7 @@ export function registryStaticImports(source: string, sourcePath: string): reado
 
 export type RegistryCompilerInputRole = "implementation-entry" | "static-import";
 
-/** 🔗️ Admits a caller-supplied role string, so the boundary check is expressible and the roles stay closed. */
+/** 🎭️ Admits a caller-supplied role string, so the boundary check is expressible and the roles stay closed. */
 function isRegistryCompilerInputRole(value: string): value is RegistryCompilerInputRole {
   return value === "implementation-entry" || value === "static-import";
 }

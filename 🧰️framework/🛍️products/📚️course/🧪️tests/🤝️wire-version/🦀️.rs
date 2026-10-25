@@ -52,7 +52,7 @@ mod subject {
         format!("{hashed:016x}")
     }
 
-    /// 🤝️ The wire version of the crate and the fingerprint of the schema without its prose.
+    /// 📡️ The wire version of the crate and the fingerprint of the schema without its prose.
     pub fn agreement(ctx: &Context) -> Result<Outcome, String> {
         let path = SCHEMA.iter().fold(ctx.repo_root.clone(), |path, segment| path.join(segment));
         let schema: Value = serde_json::from_slice(&std::fs::read(&path).map_err(|error| format!("{}: {error}", path.display()))?).map_err(|error| format!("{}: {error}", path.display()))?;

@@ -198,7 +198,7 @@ pub struct TableScene {
     pub drop_action_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sort_json: Option<String>,
-    /// 🪟️ The framework interaction domain a row pick selects in — `None` keeps row clicks plugin-private.
+    /// 🏷️ The framework interaction domain a row pick selects in — `None` keeps row clicks plugin-private.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub domain_id: Option<String>,
     /// 🎯️ `domain_id`'s granularity id a row is picked under.

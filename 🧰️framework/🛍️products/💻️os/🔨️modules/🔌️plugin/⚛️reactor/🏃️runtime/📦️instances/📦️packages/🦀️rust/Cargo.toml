@@ -43,3 +43,4 @@ semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱
 semio-framework-plugin-decl-app = { path = "../../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-plugin-reactor-lifecycle = { path = "../../../../📨️pending/📦️packages/🦀️rust", features = ["cleanup-probes"] }

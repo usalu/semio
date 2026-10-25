@@ -23,7 +23,7 @@ export type DefaultApp = {
   readonly app: AppRef;
 };
 
-/** 🎚️ `os.config.opening` materialized state — mirrors Rust `OpeningPreferences`
+/** 🔓️ `os.config.opening` materialized state — mirrors Rust `OpeningPreferences`
  * (`💻️os/🎚️config/🧬️schema/🦀️component.rs:26`). */
 export type OpeningPreferences = {
   readonly defaults: readonly DefaultApp[];
@@ -62,7 +62,7 @@ export type OpeningConfigMutation =
   | { readonly mutation: "setDefaultApp"; readonly dialect: ArtifactDialect; readonly role: AppRole; readonly app: AppRef }
   | { readonly mutation: "clearDefaultApp"; readonly dialect: ArtifactDialect; readonly role: AppRole };
 
-/** 📥️ Narrows a decoded JSON value into an {@link OpeningConfigMutation}, or `undefined` for
+/** ⚙️ Narrows a decoded JSON value into an {@link OpeningConfigMutation}, or `undefined` for
  * anything else — never throws, so a caller folding a mixed op log can skip what it doesn't
  * recognize instead of aborting the whole fold. */
 export function decodeOpeningConfigMutation(value: unknown): OpeningConfigMutation | undefined {

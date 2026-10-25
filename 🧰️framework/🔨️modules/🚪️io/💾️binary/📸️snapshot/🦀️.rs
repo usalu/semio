@@ -8,13 +8,13 @@ pub trait ArtifactPack: Sized {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError>;
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError>;
 
-    /// 📦️ `encode_pack_with` at default options — infallible in practice (mirrors
+    /// 🎒️ `encode_pack_with` at default options — infallible in practice (mirrors
     /// `ArtifactDsl::print_dsl`'s infallible signature); panics only on a `PackLimits` overflow.
     fn encode_pack(&self) -> Vec<u8> {
         self.encode_pack_with(&PackEncodeOptions::default()).expect("default-options pack encode is infallible")
     }
 
-    /// 📦️ `decode_pack_with` at default (Standard) verification.
+    /// 📕️ `decode_pack_with` at default (Standard) verification.
     fn decode_pack(bytes: &[u8]) -> Result<Self, PackError> {
         Self::decode_pack_with(bytes, &PackDecodeOptions::default())
     }

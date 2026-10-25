@@ -263,7 +263,7 @@ pub struct Pipelines {
 }
 
 impl Pipelines {
-    /// 🏗️ `surface_format` is the swapchain's pixel format (`scene_blit`, `glass` target it);
+    /// 🔨️ `surface_format` is the swapchain's pixel format (`scene_blit`, `glass` target it);
     /// `scene_format` is the offscreen scene color target's format (`blur_downsample` targets it, and
     /// every 2D/3D content pipeline targets it too, mirroring `render_scene_content` rendering into
     /// `scene_view` before `composite_to_swapchain` blits to the real swapchain view). The caller

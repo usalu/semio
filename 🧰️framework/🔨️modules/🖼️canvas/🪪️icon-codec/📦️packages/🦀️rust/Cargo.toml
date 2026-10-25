@@ -31,7 +31,7 @@ ui_styling = { path = "../../../../🖱️ui/🎨️styling/📦️packages/🦀
 compiler = { path = "../../../../📚️compiler/📦️packages/🦀️rust", package = "semio-framework-compiler" }
 serde = { workspace = true }
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
+semio-framework-pixels = { path = "../../../../🔲️pixels/📦️packages/🦀️rust" }
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
 semio-framework-intrinsic-size = { path = "../../../../📏️intrinsic-size/📦️packages/🦀️rust" }
 

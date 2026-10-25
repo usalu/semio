@@ -46,7 +46,7 @@ export interface MailboxEnvelope<T> {
   readonly payload: T;
 }
 
-/** 📬️ Bounded ring per actor: one FIFO queue per {@link Lane} (so `popNext` honors lane
+/** 📫️ Bounded ring per actor: one FIFO queue per {@link Lane} (so `popNext` honors lane
  * priority for free), a coalescing scan on `enqueue`, and eviction of the lowest-priority nonempty
  * lane before a hard `rejected`. */
 export interface BoundedMailbox<T> {
@@ -57,7 +57,7 @@ export interface BoundedMailbox<T> {
 }
 
 /**
- * 📬️ Creates a {@link BoundedMailbox} of `capacity` envelopes total across all four lanes —
+ * 🆕️ Creates a {@link BoundedMailbox} of `capacity` envelopes total across all four lanes —
  * the TypeScript twin of Rust `Mailbox::new`/`Mailbox::enqueue`/`Mailbox::pop_next`.
  *
  * `enqueue` first does a latest-wins coalescing scan within the incoming envelope's own lane
@@ -100,7 +100,7 @@ export function createBoundedMailbox<T>(capacity: number): BoundedMailbox<T> {
   const lanes: MailboxEnvelope<T>[][] = MAILBOX_LANE_ORDER.map(() => []);
   let len = 0;
 
-  /** 🔗️ Applies the `## causal order` rule: tail for unordered, otherwise before the earliest
+  /** 🔃️ Applies the `## causal order` rule: tail for unordered, otherwise before the earliest
    * queued envelope with a strictly larger `order` (ties and unordered neighbours are not passed). */
   function insertByOrder(lane: MailboxEnvelope<T>[], envelope: MailboxEnvelope<T>): void {
     const order = envelope.order;

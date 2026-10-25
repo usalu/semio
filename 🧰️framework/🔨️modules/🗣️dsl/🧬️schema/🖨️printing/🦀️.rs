@@ -1,4 +1,4 @@
-//! 🖨️ Original canonical Record text emission and retained physical writer.
+//! 📝️ Original canonical Record text emission and retained physical writer.
 pub use semio_framework_dsl_record_model::*;
 use semio_framework_dsl::format_f64;
 use semio_framework_dsl_notation as dsl_notation;
@@ -138,7 +138,7 @@ impl Writer {
         self.chunks.push(Chunk::NewRecord);
     }
 
-    /// 🧲️ Fuses the next pushed chunk onto whatever precedes it, with no separator, in
+    /// ⏭️ Fuses the next pushed chunk onto whatever precedes it, with no separator, in
     /// BOTH join modes — the mechanism behind every `key=value`/`key=[...]`/`key={...}` fusion in
     /// this printer. Replaces the old approach of mutating an already-pushed atom's string in
     /// place (which only worked for single-atom scalar values): `glue()` composes with arbitrarily
@@ -148,7 +148,7 @@ impl Writer {
         self.chunks.push(Chunk::Glue);
     }
 
-    /// 📜️ Pushes a `Shape::Embed` payload — content MAY contain raw newlines (unlike
+    /// 🎒️ Pushes a `Shape::Embed` payload — content MAY contain raw newlines (unlike
     /// [`Self::atom`], which forbids them), since Document mode renders it as a fence.
     pub fn verbatim(&mut self, lang: &str, content: &str) {
         self.chunks.push(Chunk::Verbatim { lang: lang.to_string(), content: content.to_string() });
@@ -306,7 +306,7 @@ pub fn print_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer)
     print_record_fields(value, spec, writer);
 }
 
-/// 📛️ Prints a `RecordLayout::Call` record: `<name> = <keyword>(args)`. The argument list
+/// 📓️ Prints a `RecordLayout::Call` record: `<name> = <keyword>(args)`. The argument list
 /// is built by [`print_record_fields`] — the exact same field-printing logic every other layout
 /// uses — rendered to its own `JoinMode::Inline` string and glued onto the keyword inside parens,
 /// so a positional/keyed field prints identically here as it would under `Inline` layout.
@@ -395,7 +395,7 @@ fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mut Writ
     }
 }
 
-/// 🧲️ `key=` was just pushed by the caller — glue the value onto it with no separator,
+/// ⌨️ `key=` was just pushed by the caller — glue the value onto it with no separator,
 /// then print it normally (composed, not string-spliced, so this handles arbitrarily structured
 /// values exactly like a bare `print_shape` call would).
 fn print_key_value(field: &FieldSpec, value: &FieldValue, writer: &mut Writer) {

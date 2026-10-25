@@ -19,7 +19,7 @@ export interface UiActivationLease {
 /** 🩹️ The facts of one patch a host hands to the instance. */
 export type UiPatchValue = { readonly activation: UiActivationLease; readonly lifetime: UiInstanceLifetime; readonly receipt: UiPatchReceipt; readonly surface: string; readonly baseRevision: number; readonly revision: number; readonly operationCount: number };
 
-/** 🩹️ A private claim on one host patch: its facts, its operations and its input accounting. */
+/** 🖥️ A private claim on one host patch: its facts, its operations and its input accounting. */
 export interface UiPatchSource {
   readonly value: UiPatchValue;
   readonly inputRetired: boolean;
@@ -28,7 +28,7 @@ export interface UiPatchSource {
   releaseInput(token: object): boolean;
 }
 
-/** 🪪️ The host's brand checks over its patch sources and submission receipts. */
+/** ✔️ The host's brand checks over its patch sources and submission receipts. */
 export interface UiPatchAuthority {
   matches(source: unknown, activation: UiActivationLease, lifetime: UiInstanceLifetime): source is UiPatchSource;
   matchesOwner(source: unknown, owner: unknown): source is UiPatchSource;
@@ -41,6 +41,6 @@ export function bindUiPatchAuthority(authority: UiPatchAuthority): void {
   if (patchAuthority) throw new Error("UI patch authority is already bound");
   patchAuthority = authority;
 }
-/** 🪪️ The bound host patch brand checks, or a refusing stand-in while unbound. */
+/** ☑️ The bound host patch brand checks, or a refusing stand-in while unbound. */
 export function uiPatchAuthority(): UiPatchAuthority { return patchAuthority ?? UNBOUND; }
 const UNBOUND: UiPatchAuthority = Object.freeze({ matches: (_source: unknown, _activation: UiActivationLease, _lifetime: UiInstanceLifetime): _source is UiPatchSource => false, matchesOwner: (_source: unknown, _owner: unknown): _source is UiPatchSource => false, matchesReceipt: () => false });

@@ -83,7 +83,7 @@ impl VulkanImage {
     }
 }
 
-/// 🧊️ One resident world3d mesh: interleaved position+normal vertex buffer, u32 index buffer — both
+/// 🕸️ One resident world3d mesh: interleaved position+normal vertex buffer, u32 index buffer — both
 /// `DEVICE_LOCAL`, uploaded once via staging and never rewritten in place (a changed mesh gets a new
 /// `MeshId`, per `ui_render::ResourceRegistry::request_mesh_upload`'s content-hash versioning).
 pub struct VulkanMesh {
@@ -110,7 +110,7 @@ impl VulkanMesh {
 
 //#region 🗃️GpuResources
 
-/// 🗃️ Owns every device-resident resource a `RenderPacket` can reference. `apply` is the only
+/// 🗄️ Owns every device-resident resource a `RenderPacket` can reference. `apply` is the only
 /// mutator; everything else is a lookup a render pass would consult while replaying batches (not yet
 /// wired — see this file's header).
 #[derive(Default)]
@@ -456,7 +456,7 @@ fn create_sampled_image(
     Ok(VulkanImage { image, memory, view, width, height })
 }
 
-/// 📤️ Staging-buffer-then-copy for a plain data buffer (vertex/index data) — same shape as
+/// 🧱️ Staging-buffer-then-copy for a plain data buffer (vertex/index data) — same shape as
 /// `create_sampled_image` without the layout transitions a buffer does not need.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn create_device_local_buffer(

@@ -28,39 +28,28 @@ compose_resolve_repo_cli() {
     echo "$REPO_CLI_BIN"
     return
   fi
-  if [ "$SEMIO_REPO_IMPLEMENTATION" = "go" ]; then
-    COMPOSE_REPO_CLI_CANDIDATES="$ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/semio-repo $ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/semio-repo.exe"
-  else
-    COMPOSE_REPO_CLI_CANDIDATES="$ROOT/target/release/semio $ROOT/target/release/semio.exe"
-  fi
-  for candidate in $COMPOSE_REPO_CLI_CANDIDATES; do
-    if [ -x "$candidate" ]; then
-      echo "$candidate"
+  NATIVE_PIN="$ROOT/.🧬semio/🦑️repo/native-repo-path"
+  if [ -f "$NATIVE_PIN" ]; then
+    REPO_CLI=$(sed -n '1p' "$NATIVE_PIN" 2>/dev/null)
+    if [ -n "$REPO_CLI" ] && [ -x "$REPO_CLI" ]; then
+      echo "$REPO_CLI"
       return
     fi
-  done
-}
-compose_resolve_bun() {
-  ROOT="$1"
-  if [ -n "$COMPOSE_BUN" ] && [ -x "$COMPOSE_BUN" ]; then
-    echo "$COMPOSE_BUN"
+  fi
+  if [ -n "$HOME" ] && [ -x "$HOME/.local/bin/repo" ]; then
+    echo "$HOME/.local/bin/repo"
     return
   fi
-  BUN_PIN="$ROOT/.🧬semio/🦑️repo/compose-micro-commit-bun"
-  if [ -f "$BUN_PIN" ]; then
-    BUN=$(sed -n '1p' "$BUN_PIN" 2>/dev/null)
-    if [ -n "$BUN" ] && [ -x "$BUN" ]; then
-      echo "$BUN"
-      return
-    fi
+  REPO_CLI=$(command -v repo 2>/dev/null) || return
+  if [ -n "$REPO_CLI" ] && [ -x "$REPO_CLI" ]; then
+    echo "$REPO_CLI"
   fi
-  command -v bun 2>/dev/null || true
 }
 [ ! -f "$GIT_DIR/compose-micro-commit-active" ] && {
   compose_micro_commit_seed_empty_gk
   exit 0
 }
-BUN=$(compose_resolve_bun "$ROOT")
-[ -z "$BUN" ] && { compose_micro_commit_disable_prepare; exit 0; }
-"$BUN" "$ROOT/📜️script.ts" micro-commit prepare-commit-msg "$1" "$2" 2>/dev/null || compose_micro_commit_disable_prepare
+CLI=$(compose_resolve_repo_cli "$ROOT")
+[ -z "$CLI" ] && { compose_micro_commit_disable_prepare; exit 0; }
+"$CLI" micro-commit prepare-commit-msg "$1" "$2" 2>/dev/null || compose_micro_commit_disable_prepare
 exit 0

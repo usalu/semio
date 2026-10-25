@@ -137,36 +137,26 @@
       ]
     }
   ],
-  "incrementalFree": [
+  "profileUnitGraph": [
     {
-      "profile": "dev",
-      "package": "semio-framework-os-kernel",
+      "mode": "prototype",
+      "producer": "artifact",
       "target": null
     },
     {
-      "profile": "test",
-      "package": "semio-framework-hash",
+      "mode": "release",
+      "producer": "artifact",
       "target": null
     },
     {
-      "profile": "release",
-      "package": "semio-framework-hash",
-      "target": null
-    },
-    {
-      "profile": "wasm-prototype",
-      "package": "semio-framework-os-kernel",
+      "mode": "prototype",
+      "producer": "wasm-component",
       "target": "wasm32-wasip2"
     },
     {
-      "profile": "wasm-release",
-      "package": "semio-framework-hash",
+      "mode": "release",
+      "producer": "wasm-component",
       "target": "wasm32-wasip2"
-    },
-    {
-      "profile": "dev",
-      "package": "semio-framework-hash",
-      "target": "wasm32-unknown-unknown"
     }
   ]
 }

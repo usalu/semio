@@ -14,7 +14,7 @@ import type { EcosystemSpec, GeneratorContractSpec, GeneratorOutputRootSpec, Gen
 import { generatorPreviewResourceLimits, generatorPreviewScriptArguments, generatorPreviewScriptPath } from "../../../🔍️discovery/🛠️generator-commands/🟦️.ts";
 import { parseGeneratorPreviewProgressPolicyV1 } from "../../../🏭️generator/👁️preview/📈️progress/🟦️.ts";
 import type { SemanticPackageGeneration } from "../../../🔍️discovery/📦️package-projection-contracts/🟦️.ts";
-import type { PackageImplementationAdmission } from "../../../🔍️discovery/🧱️package-implementation-admission/🟦️.ts";
+import type { PackageDirectoryAdmission, PackageImplementationAdmission } from "../../../🔍️discovery/🧱️package-implementation-admission/🟦️.ts";
 import { TAXONOMY_OPAQUE_PATH_EXCLUSIONS } from "../🧰️taxonomy-parse-helpers/🟦️.ts";
 
 function parseImplementationAdmission(value: unknown, name: string): PackageImplementationAdmission | null {
@@ -29,6 +29,24 @@ function parseImplementationAdmission(value: unknown, name: string): PackageImpl
     return { form: "nested-manifest-unit", unitManifestContractId: requireString(row.unitManifestContractId, `${name}.unitManifestContractId`) };
   }
   throw new Error(`Taxonomy v7 ${name}.form must be nested-source-unit or nested-manifest-unit`);
+}
+
+/** 📂️ Parses the directory admissions of one package boundary rule: a rule that declares none admits no directory beyond its semantic directory kinds. */
+function parseDirectoryAdmissions(value: unknown, name: string): readonly PackageDirectoryAdmission[] {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value)) throw new Error(`Taxonomy v7 ${name} must be an array`);
+  return value.map((entry, index) => {
+    const row = requireRecord(entry, `${name}[${index}]`);
+    if (row.form === "manifest-declared-entries") {
+      requireExactKeys(row, ["form", "manifestContractId", "entryFields"], `${name}[${index}]`);
+      return { form: "manifest-declared-entries" as const, manifestContractId: requireString(row.manifestContractId, `${name}[${index}].manifestContractId`), entryFields: requireStringArray(row.entryFields, `${name}[${index}].entryFields`) };
+    }
+    if (row.form === "fixed-contract-trees") {
+      requireExactKeys(row, ["form"], `${name}[${index}]`);
+      return { form: "fixed-contract-trees" as const };
+    }
+    throw new Error(`Taxonomy v7 ${name}[${index}].form must be manifest-declared-entries or fixed-contract-trees`);
+  });
 }
 
 /** ⚙ Parses the generator contracts and the ecosystems. */
@@ -115,7 +133,7 @@ export function parsePackageRulesAndDispositions({ grammarRows, boundaryRows, fi
   const packageGlueGrammar: Record<string, PackageGlueGrammar> = {};
   for (const [id, value] of Object.entries(grammarRows)) {
     const spec = requireRecord(value, `packageGlueGrammar.${id}`);
-    if (!["rust", "typescript", "javascript", "go", "python", "dotnet", "c-cpp", "tex"].includes(String(spec.analyzer))) throw new Error(`Taxonomy v7 packageGlueGrammar.${id}.analyzer is invalid`);
+    if (!["rust", "typescript", "javascript", "go", "python", "dotnet", "c-cpp", "tex", "css"].includes(String(spec.analyzer))) throw new Error(`Taxonomy v7 packageGlueGrammar.${id}.analyzer is invalid`);
     const allowedRoles = requireStringArray(spec.allowedRoles, `packageGlueGrammar.${id}.allowedRoles`) as PackageGlueGrammar["allowedRoles"];
     if (allowedRoles.some((role) => !["declaration", "registration", "bootstrap", "thin-delegation"].includes(role)) || new Set(allowedRoles).size !== allowedRoles.length) throw new Error(`Taxonomy v7 packageGlueGrammar.${id}.allowedRoles is invalid`);
     if (!Number.isSafeInteger(spec.maxDelegationStatements) || (spec.maxDelegationStatements as number) < 0) throw new Error(`Taxonomy v7 packageGlueGrammar.${id}.maxDelegationStatements is invalid`);
@@ -139,6 +157,7 @@ export function parsePackageRulesAndDispositions({ grammarRows, boundaryRows, fi
       uncertainRole: "problem",
       implementationRole: "problem",
       implementationAdmission: parseImplementationAdmission(spec.implementationAdmission, `packageBoundaryRules.${id}.implementationAdmission`),
+      directoryAdmissions: parseDirectoryAdmissions(spec.directoryAdmissions, `packageBoundaryRules.${id}.directoryAdmissions`),
     };
     const rule = packageBoundaryRules[id];
     if (rule.manifestContractId && !fixedFilenameContracts[rule.manifestContractId]) throw new Error(`Taxonomy v7 packageBoundaryRules.${id} references unknown manifest contract ${rule.manifestContractId}`);
@@ -158,7 +177,7 @@ export function parsePackageRulesAndDispositions({ grammarRows, boundaryRows, fi
   }
   if (Object.keys(packageBoundaryProfiles).length === 0) throw new Error("Taxonomy v7 packageBoundaryProfiles must not be empty");
   /** 🔖️ Each externally-mandated tool-config validator token is reserved for exactly one contract id, mirroring the pre-existing vitest-configuration/vitest-config-entry pinning. */
-  const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config", "vscode-test-configuration": "vscode-test-cli-config" };
+  const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config" };
   const packageSourceDispositions: Record<string, PackageSourceDisposition> = {};
   for (const [id, value] of Object.entries(sourceDispositionRows)) {
     const spec = requireRecord(value, `packageSourceDispositions.${id}`);
@@ -167,7 +186,7 @@ export function parsePackageRulesAndDispositions({ grammarRows, boundaryRows, fi
     if (spec.contractKind !== "fixed" && spec.contractKind !== "configurable" || spec.disposition !== "adapter-source" && spec.disposition !== "tool-metadata" || spec.validator !== "package-glue" && spec.validator !== "command-router" && configValidatorOwner === undefined || (configValidatorOwner !== undefined && id !== configValidatorOwner)) throw new Error(`Taxonomy v7 packageSourceDispositions.${id} is invalid`);
     const grammarId = spec.grammarId === undefined ? undefined : requireString(spec.grammarId, `packageSourceDispositions.${id}.grammarId`);
     if (grammarId !== undefined && !packageGlueGrammar[grammarId]) throw new Error(`Taxonomy v7 packageSourceDispositions.${id} references unknown grammar ${grammarId}`);
-    packageSourceDispositions[id] = { contractKind: spec.contractKind, disposition: spec.disposition, validator: requireLiteral(spec.validator, `packageSourceDispositions.${id}.validator`, ["package-glue", "command-router", "vitest-configuration", "tool-config-vitest", "tool-config-tailwind", "tool-config-postcss", "tool-config-eslint", "tool-config-dependency-cruiser", "pytest-configuration", "eslint-configuration", "vscode-test-configuration"] as const), ...(grammarId === undefined ? {} : { grammarId }), authority: requireString(spec.authority, `packageSourceDispositions.${id}.authority`), verification: requireString(spec.verification, `packageSourceDispositions.${id}.verification`) };
+    packageSourceDispositions[id] = { contractKind: spec.contractKind, disposition: spec.disposition, validator: requireLiteral(spec.validator, `packageSourceDispositions.${id}.validator`, ["package-glue", "command-router", "vitest-configuration", "tool-config-vitest", "tool-config-tailwind", "tool-config-postcss", "tool-config-eslint", "tool-config-dependency-cruiser", "pytest-configuration", "eslint-configuration"] as const), ...(grammarId === undefined ? {} : { grammarId }), authority: requireString(spec.authority, `packageSourceDispositions.${id}.authority`), verification: requireString(spec.verification, `packageSourceDispositions.${id}.verification`) };
   }
   if (Object.keys(packageSourceDispositions).length === 0) throw new Error("Taxonomy v7 packageSourceDispositions must not be empty");
   for (const [id, contract] of Object.entries(fixedFilenameContracts)) if (contract.scope.kind === "package-root" && !packageBoundaryRules[contract.scope.ecosystemId]) throw new Error(`Taxonomy v7 fixedFilenameContracts.${id} references unknown ecosystem ${contract.scope.ecosystemId}`);

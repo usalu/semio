@@ -34,3 +34,8 @@ pub mod schema {
         pub use component::*;
     }
 }
+semio_framework_value::artifact_retire_leaf!(schema::snapshot::SemioColorspace);
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioImageFrame { delay_ms, rgba8 });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioImageMetadataEntry { key, value });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioImageSnapshot { schema, width, height, colorspace, bit_depth, frames, icc, metadata });
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioImageSnapshot);

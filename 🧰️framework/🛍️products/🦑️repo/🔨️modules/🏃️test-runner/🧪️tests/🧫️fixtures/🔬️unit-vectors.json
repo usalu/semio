@@ -1,0 +1,960 @@
+{
+ "schema": "semio.repo.test-runner.unit-vectors/1",
+ "$comment": "🔬️ Expected answers for the cargo unit tests, computed by an independent Python model (json, re and string methods; no code shared with the Rust or Go implementation) of the seven runner report dialects and the scope selector arithmetic. `extra` are additional recorded-style transcripts that stress every parser branch. Regenerate with the model; never edit by hand.",
+ "oracle": {
+  "script": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/rtest-d-tools/oracle_test_runner.py",
+  "tool": "python3",
+  "libraries": [
+   "json",
+   "re"
+  ],
+  "model": "go test -json, vitest/jest json, pytest, libtest, nextest, dotnet, rspec parsers; flat; path_from_uri_path"
+ },
+ "extra": [
+  {
+   "id": "npm-runs-the-vitest-dialect",
+   "runner": "npm",
+   "output": {
+    "status": 0,
+    "stdout": "> app@1.0.0 test\n> vitest run --reporter=json\n{\"testResults\":[{\"name\":\"/r/a.test.ts\",\"assertionResults\":[{\"title\":\"only a title\",\"status\":\"passed\",\"duration\":2,\"failureMessages\":[]}]}]}\nchatter after\n",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "uv-runs-the-pytest-dialect",
+   "runner": "uv",
+   "output": {
+    "status": 1,
+    "stdout": "tests/test_a.py::test_one XPASS [ 10%]\ntests/test_a.py::test_two ERROR [ 20%]\ntests/test_a.py::test_three XFAIL (reason) [ 30%]\nnot a test line\nsingle\ntests/test_b.py::test_four WARNING\n",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "pytest-with-no-tests-collected",
+   "runner": "pytest",
+   "output": {
+    "status": 5,
+    "stdout": "collected 0 items\n",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "go-with-skips-package-events-and-crlf",
+   "runner": "go",
+   "output": {
+    "status": 0,
+    "stdout": "{\"Action\":\"start\",\"Package\":\"p\"}\r\n{\"Action\":\"output\",\"Package\":\"p\",\"Test\":\"TestA\",\"Output\":\"line one\\n\"}\r\n{\"Action\":\"skip\",\"Package\":\"p\",\"Test\":\"TestA\",\"Elapsed\":0}\r\n{\"Action\":\"pass\",\"Package\":\"p\",\"Elapsed\":0.5}\r\nnot json\r\n[1,2]\r\n{\"Action\":\"fail\",\"Package\":\"p\",\"Test\":\"TestB\"}\r\n{\"Action\":\"output\",\"Package\":\"p\",\"Test\":\"TestB\",\"Output\":\"late\\n\"}\r\n{\"Action\":\"pass\",\"Package\":\"q\",\"Test\":\"TestA\",\"Elapsed\":1}\r\n",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "go-failure-keeps-its-output-with-the-trailing-whitespace-trimmed",
+   "runner": "go",
+   "output": {
+    "status": 1,
+    "stdout": "{\"Action\":\"output\",\"Package\":\"p\",\"Test\":\"TestA\",\"Output\":\"=== RUN\\n\"}\n{\"Action\":\"output\",\"Package\":\"p\",\"Test\":\"TestA\",\"Output\":\"    a_test.go:1: boom\\n\\n\"}\n{\"Action\":\"fail\",\"Package\":\"p\",\"Test\":\"TestA\",\"Elapsed\":0.25}\n",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "cargo-with-two-failures-and-ignored-reasons",
+   "runner": "cargo",
+   "output": {
+    "status": 101,
+    "stdout": "running 4 tests\ntest a::one ... ok\ntest a::two ... FAILED\ntest a::three ... ignored, needs network\ntest b::four ... FAILED\ntest weird line without verdict\ntest c::five ... bench: 12 ns/iter\n\nfailures:\n\n---- a::two stdout ----\nthread 'a::two' panicked\nleft: 1\n\n---- b::four stdout ----\nboom\n\nfailures:\n    a::two\n    b::four\n\ntest result: FAILED. 1 passed; 2 failed; 1 ignored\n",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "cargo-failure-without-a-body",
+   "runner": "cargo",
+   "output": {
+    "status": 101,
+    "stdout": "test only::case ... FAILED\n",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "nextest-with-retries-and-stderr",
+   "runner": "cargo-nextest",
+   "output": {
+    "status": 100,
+    "stdout": "        PASS [   1.500s] crate-a a::fast\n        TRY 1 FAIL [   0.200s] crate-a a::flaky\n",
+    "stderr": "        FAIL [   0.004s] crate-b b::slow\n        SKIP [   0.000s] crate-b b::skipped\n        PASS [0.5s] crate-c lone_identifier\n        PASS [ nonsense ] crate-c c::no_duration\n        PASS no bracket here\n"
+   }
+  },
+  {
+   "id": "dotnet-with-units-and-summary-lines",
+   "runner": "dotnet",
+   "output": {
+    "status": 1,
+    "stdout": "  Passed A.B.One [3 ms]\n  Passed A.B.Two [1.5 s]\n  Failed A.B.Three [250 us]\n  Failed A.B.Four [7 parsecs]\n  Skipped A.B.Five\n  Passed! - Failed: 0, Passed: 2\n  Failed! - Failed: 2\n  Passed ! odd\n  Passed - dash\n  Passed\n",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "vitest-with-chatter-around-the-json-and-a-missing-full-name",
+   "runner": "npx",
+   "output": {
+    "status": 1,
+    "stdout": "RUN  v3.0.0\n{\"testResults\":[{\"name\":\"/r/a.test.ts\",\"assertionResults\":[{\"fullName\":\"suite does\",\"title\":\"does\",\"status\":\"failed\",\"duration\":1,\"failureMessages\":[\"first\",\"second\"]},{\"title\":\"plain title\",\"status\":\"todo\"}]},{\"name\":\"/r/empty.test.ts\",\"assertionResults\":[]}]}\nDuration 1s done\n",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "vitest-with-braces-in-the-trailing-chatter-finds-no-json",
+   "runner": "npx",
+   "output": {
+    "status": 0,
+    "stdout": "{\"testResults\":[]}\ntrailing {noise}\n",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "vitest-with-broken-json",
+   "runner": "npx",
+   "output": {
+    "status": 0,
+    "stdout": "{ \"testResults\": [ not json }",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "rspec-with-pending-and-exception",
+   "runner": "rspec",
+   "output": {
+    "status": 1,
+    "stdout": "{\"examples\":[{\"description\":\"only description\",\"status\":\"pending\",\"file_path\":\"./a_spec.rb\",\"run_time\":1},{\"full_description\":\"Thing breaks\",\"status\":\"failed\",\"file_path\":\"./b_spec.rb\",\"run_time\":0.25,\"exception\":{\"message\":\"expected 1 to eq 2\"}},{\"full_description\":\"No exception message\",\"status\":\"failed\",\"exception\":{}}]}",
+    "stderr": ""
+   }
+  },
+  {
+   "id": "green-run-with-a-nonzero-exit-is-failed",
+   "runner": "go",
+   "output": {
+    "status": 2,
+    "stdout": "{\"Action\":\"pass\",\"Package\":\"p\",\"Test\":\"TestA\",\"Elapsed\":0.001}\n",
+    "stderr": "panic: boom"
+   }
+  },
+  {
+   "id": "empty-output-and-zero-exit-is-passed-with-no-tests",
+   "runner": "pytest",
+   "output": {
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+   }
+  }
+ ],
+ "parsed": [
+  {
+   "id": "go-test-json",
+   "outcome": {
+    "runner": "go",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "TestAlphaOne",
+      "status": "passed",
+      "suite": "example.com/go-core/pkg",
+      "duration_ms": 12.0
+     },
+     {
+      "name": "TestAlphaTwo",
+      "status": "failed",
+      "suite": "example.com/go-core/pkg",
+      "duration_ms": 4.0,
+      "message": "    thing_test.go:12: want 2, got 3"
+     },
+     {
+      "name": "TestAlphaThree",
+      "status": "skipped",
+      "suite": "example.com/go-core/pkg",
+      "duration_ms": 0.0
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 1,
+     "skipped": 1,
+     "total": 3
+    },
+    "exit_status": 1
+   }
+  },
+  {
+   "id": "vitest-json",
+   "outcome": {
+    "runner": "npx",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "app renders",
+      "status": "passed",
+      "suite": "/repo/bundles/web/src/app.test.ts",
+      "duration_ms": 3.5
+     },
+     {
+      "name": "app explodes",
+      "status": "failed",
+      "suite": "/repo/bundles/web/src/app.test.ts",
+      "duration_ms": 1.25,
+      "message": "expected 1 to be 2"
+     },
+     {
+      "name": "app is pending",
+      "status": "skipped",
+      "suite": "/repo/bundles/web/src/app.test.ts",
+      "duration_ms": 0.0
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 1,
+     "skipped": 1,
+     "total": 3
+    },
+    "exit_status": 1
+   }
+  },
+  {
+   "id": "pytest-verbose",
+   "outcome": {
+    "runner": "pytest",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "test_one",
+      "status": "passed",
+      "suite": "tests/test_alpha.py"
+     },
+     {
+      "name": "test_two",
+      "status": "failed",
+      "suite": "tests/test_alpha.py"
+     },
+     {
+      "name": "test_three",
+      "status": "skipped",
+      "suite": "tests/test_beta.py"
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 1,
+     "skipped": 1,
+     "total": 3
+    },
+    "exit_status": 1
+   }
+  },
+  {
+   "id": "cargo-libtest",
+   "outcome": {
+    "runner": "cargo",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "planning::plans_a_bundle",
+      "status": "passed"
+     },
+     {
+      "name": "planning::plans_a_section",
+      "status": "failed",
+      "message": "assertion failed: left == right"
+     },
+     {
+      "name": "planning::plans_a_definition",
+      "status": "skipped"
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 1,
+     "skipped": 1,
+     "total": 3
+    },
+    "exit_status": 101
+   }
+  },
+  {
+   "id": "cargo-nextest",
+   "outcome": {
+    "runner": "cargo-nextest",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "planning::plans_a_bundle",
+      "status": "passed",
+      "suite": "semio-framework-repo-test-runner",
+      "duration_ms": 12.0
+     },
+     {
+      "name": "planning::plans_a_section",
+      "status": "failed",
+      "suite": "semio-framework-repo-test-runner",
+      "duration_ms": 4.0
+     },
+     {
+      "name": "planning::plans_a_definition",
+      "status": "skipped",
+      "suite": "semio-framework-repo-test-runner",
+      "duration_ms": 0.0
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 1,
+     "skipped": 1,
+     "total": 3
+    },
+    "exit_status": 100
+   }
+  },
+  {
+   "id": "dotnet-console-logger",
+   "outcome": {
+    "runner": "dotnet",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "Semio.Repo.Tests.PlanningTests.PlansABundle",
+      "status": "passed",
+      "duration_ms": 3.0
+     },
+     {
+      "name": "Semio.Repo.Tests.PlanningTests.PlansASection",
+      "status": "failed",
+      "duration_ms": 12.0
+     },
+     {
+      "name": "Semio.Repo.Tests.PlanningTests.PlansADefinition",
+      "status": "skipped"
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 1,
+     "skipped": 1,
+     "total": 3
+    },
+    "exit_status": 1
+   }
+  },
+  {
+   "id": "rspec-json",
+   "outcome": {
+    "runner": "rspec",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "Planning plans a bundle",
+      "status": "passed",
+      "suite": "./spec/planning_spec.rb",
+      "duration_ms": 2.0
+     },
+     {
+      "name": "Planning plans a section",
+      "status": "failed",
+      "suite": "./spec/planning_spec.rb",
+      "duration_ms": 1.0,
+      "message": "expected 1 to eq 2"
+     },
+     {
+      "name": "Planning plans a definition",
+      "status": "skipped",
+      "suite": "./spec/planning_spec.rb",
+      "duration_ms": 0.0
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 1,
+     "skipped": 1,
+     "total": 3
+    },
+    "exit_status": 1
+   }
+  },
+  {
+   "id": "green-go-run",
+   "outcome": {
+    "runner": "go",
+    "status": "passed",
+    "tests": [
+     {
+      "name": "TestAlphaOne",
+      "status": "passed",
+      "suite": "example.com/go-core/pkg",
+      "duration_ms": 10.0
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 0,
+     "skipped": 0,
+     "total": 1
+    },
+    "exit_status": 0
+   }
+  },
+  {
+   "id": "unparseable-output-yields-no-tests",
+   "outcome": {
+    "runner": "npx",
+    "status": "failed",
+    "tests": [],
+    "totals": {
+     "passed": 0,
+     "failed": 0,
+     "skipped": 0,
+     "total": 0
+    },
+    "exit_status": 2
+   }
+  },
+  {
+   "id": "npm-runs-the-vitest-dialect",
+   "outcome": {
+    "runner": "npm",
+    "status": "passed",
+    "tests": [
+     {
+      "name": "only a title",
+      "status": "passed",
+      "suite": "/r/a.test.ts",
+      "duration_ms": 2.0
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 0,
+     "skipped": 0,
+     "total": 1
+    },
+    "exit_status": 0
+   }
+  },
+  {
+   "id": "uv-runs-the-pytest-dialect",
+   "outcome": {
+    "runner": "uv",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "test_one",
+      "status": "passed",
+      "suite": "tests/test_a.py"
+     },
+     {
+      "name": "test_two",
+      "status": "failed",
+      "suite": "tests/test_a.py"
+     },
+     {
+      "name": "test_three",
+      "status": "skipped",
+      "suite": "tests/test_a.py"
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 1,
+     "skipped": 1,
+     "total": 3
+    },
+    "exit_status": 1
+   }
+  },
+  {
+   "id": "pytest-with-no-tests-collected",
+   "outcome": {
+    "runner": "pytest",
+    "status": "failed",
+    "tests": [],
+    "totals": {
+     "passed": 0,
+     "failed": 0,
+     "skipped": 0,
+     "total": 0
+    },
+    "exit_status": 5
+   }
+  },
+  {
+   "id": "go-with-skips-package-events-and-crlf",
+   "outcome": {
+    "runner": "go",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "TestA",
+      "status": "skipped",
+      "suite": "p",
+      "duration_ms": 0.0
+     },
+     {
+      "name": "TestB",
+      "status": "failed",
+      "suite": "p"
+     },
+     {
+      "name": "TestA",
+      "status": "passed",
+      "suite": "q",
+      "duration_ms": 1000.0
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 1,
+     "skipped": 1,
+     "total": 3
+    },
+    "exit_status": 0
+   }
+  },
+  {
+   "id": "go-failure-keeps-its-output-with-the-trailing-whitespace-trimmed",
+   "outcome": {
+    "runner": "go",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "TestA",
+      "status": "failed",
+      "suite": "p",
+      "duration_ms": 250.0,
+      "message": "=== RUN\n    a_test.go:1: boom"
+     }
+    ],
+    "totals": {
+     "passed": 0,
+     "failed": 1,
+     "skipped": 0,
+     "total": 1
+    },
+    "exit_status": 1
+   }
+  },
+  {
+   "id": "cargo-with-two-failures-and-ignored-reasons",
+   "outcome": {
+    "runner": "cargo",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "a::one",
+      "status": "passed"
+     },
+     {
+      "name": "a::two",
+      "status": "failed",
+      "message": "thread 'a::two' panicked\nleft: 1"
+     },
+     {
+      "name": "a::three",
+      "status": "skipped"
+     },
+     {
+      "name": "b::four",
+      "status": "failed",
+      "message": "boom"
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 2,
+     "skipped": 1,
+     "total": 4
+    },
+    "exit_status": 101
+   }
+  },
+  {
+   "id": "cargo-failure-without-a-body",
+   "outcome": {
+    "runner": "cargo",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "only::case",
+      "status": "failed"
+     }
+    ],
+    "totals": {
+     "passed": 0,
+     "failed": 1,
+     "skipped": 0,
+     "total": 1
+    },
+    "exit_status": 101
+   }
+  },
+  {
+   "id": "nextest-with-retries-and-stderr",
+   "outcome": {
+    "runner": "cargo-nextest",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "a::fast",
+      "status": "passed",
+      "suite": "crate-a",
+      "duration_ms": 1500.0
+     },
+     {
+      "name": "a::flaky",
+      "status": "failed",
+      "suite": "crate-a"
+     },
+     {
+      "name": "b::slow",
+      "status": "failed",
+      "suite": "crate-b",
+      "duration_ms": 4.0
+     },
+     {
+      "name": "b::skipped",
+      "status": "skipped",
+      "suite": "crate-b",
+      "duration_ms": 0.0
+     },
+     {
+      "name": "lone_identifier",
+      "status": "passed",
+      "suite": "crate-c",
+      "duration_ms": 500.0
+     },
+     {
+      "name": "c::no_duration",
+      "status": "passed",
+      "suite": "crate-c"
+     }
+    ],
+    "totals": {
+     "passed": 3,
+     "failed": 2,
+     "skipped": 1,
+     "total": 6
+    },
+    "exit_status": 100
+   }
+  },
+  {
+   "id": "dotnet-with-units-and-summary-lines",
+   "outcome": {
+    "runner": "dotnet",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "A.B.One",
+      "status": "passed",
+      "duration_ms": 3.0
+     },
+     {
+      "name": "A.B.Two",
+      "status": "passed",
+      "duration_ms": 1500.0
+     },
+     {
+      "name": "A.B.Three",
+      "status": "failed",
+      "duration_ms": 0.25
+     },
+     {
+      "name": "A.B.Four",
+      "status": "failed"
+     },
+     {
+      "name": "A.B.Five",
+      "status": "skipped"
+     }
+    ],
+    "totals": {
+     "passed": 2,
+     "failed": 2,
+     "skipped": 1,
+     "total": 5
+    },
+    "exit_status": 1
+   }
+  },
+  {
+   "id": "vitest-with-chatter-around-the-json-and-a-missing-full-name",
+   "outcome": {
+    "runner": "npx",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "suite does",
+      "status": "failed",
+      "suite": "/r/a.test.ts",
+      "duration_ms": 1.0,
+      "message": "first\nsecond"
+     },
+     {
+      "name": "plain title",
+      "status": "skipped",
+      "suite": "/r/a.test.ts"
+     }
+    ],
+    "totals": {
+     "passed": 0,
+     "failed": 1,
+     "skipped": 1,
+     "total": 2
+    },
+    "exit_status": 1
+   }
+  },
+  {
+   "id": "vitest-with-braces-in-the-trailing-chatter-finds-no-json",
+   "outcome": {
+    "runner": "npx",
+    "status": "passed",
+    "tests": [],
+    "totals": {
+     "passed": 0,
+     "failed": 0,
+     "skipped": 0,
+     "total": 0
+    },
+    "exit_status": 0
+   }
+  },
+  {
+   "id": "vitest-with-broken-json",
+   "outcome": {
+    "runner": "npx",
+    "status": "passed",
+    "tests": [],
+    "totals": {
+     "passed": 0,
+     "failed": 0,
+     "skipped": 0,
+     "total": 0
+    },
+    "exit_status": 0
+   }
+  },
+  {
+   "id": "rspec-with-pending-and-exception",
+   "outcome": {
+    "runner": "rspec",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "only description",
+      "status": "skipped",
+      "suite": "./a_spec.rb",
+      "duration_ms": 1000.0
+     },
+     {
+      "name": "Thing breaks",
+      "status": "failed",
+      "suite": "./b_spec.rb",
+      "duration_ms": 250.0,
+      "message": "expected 1 to eq 2"
+     },
+     {
+      "name": "No exception message",
+      "status": "failed"
+     }
+    ],
+    "totals": {
+     "passed": 0,
+     "failed": 2,
+     "skipped": 1,
+     "total": 3
+    },
+    "exit_status": 1
+   }
+  },
+  {
+   "id": "green-run-with-a-nonzero-exit-is-failed",
+   "outcome": {
+    "runner": "go",
+    "status": "failed",
+    "tests": [
+     {
+      "name": "TestA",
+      "status": "passed",
+      "suite": "p",
+      "duration_ms": 1.0
+     }
+    ],
+    "totals": {
+     "passed": 1,
+     "failed": 0,
+     "skipped": 0,
+     "total": 1
+    },
+    "exit_status": 2
+   }
+  },
+  {
+   "id": "empty-output-and-zero-exit-is-passed-with-no-tests",
+   "outcome": {
+    "runner": "pytest",
+    "status": "passed",
+    "tests": [],
+    "totals": {
+     "passed": 0,
+     "failed": 0,
+     "skipped": 0,
+     "total": 0
+    },
+    "exit_status": 0
+   }
+  }
+ ],
+ "selectors": [
+  {
+   "selector": "",
+   "flat": "",
+   "path": ""
+  },
+  {
+   "selector": "notavalidid",
+   "flat": "notavalidid",
+   "path": "notavalidid"
+  },
+  {
+   "selector": "repo://p/🧰/semio",
+   "flat": "repop🧰semio",
+   "path": "repo://p/🧰/semio"
+  },
+  {
+   "selector": "repo://p/🧰/semio/b/📚/go-core",
+   "flat": "repop🧰semiob📚gocore",
+   "path": "repo://p/🧰/semio/b/📚/go-core"
+  },
+  {
+   "selector": "repo://p/🧰/semio/b/📚/go-core/f/pkg/s/Alpha",
+   "flat": "repop🧰semiob📚gocorefpkgsalpha",
+   "path": "repo://p/🧰/semio/b/📚/go-core/f/pkg/s/Alpha"
+  },
+  {
+   "selector": "repo://p/🧰/semio/b/📚/go-core/f/pkg/d/🧪/testalphaone",
+   "flat": "repop🧰semiob📚gocorefpkgd🧪testalphaone",
+   "path": "repo://p/🧰/semio/b/📚/go-core/f/pkg/d/🧪/testalphaone"
+  },
+  {
+   "selector": "repo://f/bundles/go-core/pkg/thing_test.go",
+   "flat": "repofbundlesgocorepkgthingtestgo",
+   "path": "repo://f/bundles/go-core/pkg/thing_test.go"
+  },
+  {
+   "selector": "repo://f/some%20folder/s/Alpha",
+   "flat": "repofsome20foldersalpha",
+   "path": "repo://f/some folder/s/Alpha"
+  },
+  {
+   "selector": "repo://p/🧰/semio/b/📚/missing-bundle",
+   "flat": "repop🧰semiob📚missingbundle",
+   "path": "repo://p/🧰/semio/b/📚/missing-bundle"
+  },
+  {
+   "selector": "",
+   "flat": "",
+   "path": ""
+  },
+  {
+   "selector": "notavalidid",
+   "flat": "notavalidid",
+   "path": "notavalidid"
+  },
+  {
+   "selector": "repo://p/🧰/semio",
+   "flat": "repop🧰semio",
+   "path": "repo://p/🧰/semio"
+  },
+  {
+   "selector": "A B_c-D.e",
+   "flat": "abcde",
+   "path": "A B_c-D.e"
+  },
+  {
+   "selector": "ÄÖÜ äöü ß",
+   "flat": "äöüäöüß",
+   "path": "ÄÖÜ äöü ß"
+  },
+  {
+   "selector": "Name 123 !?",
+   "flat": "name123",
+   "path": "Name 123 !?"
+  },
+  {
+   "selector": "🧬️alpha.ts",
+   "flat": "🧬️alphats",
+   "path": "🧬️alpha.ts"
+  },
+  {
+   "selector": "x%20y/z%20w",
+   "flat": "x20yz20w",
+   "path": "x y/z w"
+  },
+  {
+   "selector": "%20",
+   "flat": "20",
+   "path": " "
+  },
+  {
+   "selector": "100%",
+   "flat": "100",
+   "path": "100%"
+  },
+  {
+   "selector": "a%2520b",
+   "flat": "a2520b",
+   "path": "a%2520b"
+  },
+  {
+   "selector": "a/b%20/c",
+   "flat": "ab20c",
+   "path": "a/b /c"
+  },
+  {
+   "selector": "%20%20",
+   "flat": "2020",
+   "path": "  "
+  },
+  {
+   "selector": "plain",
+   "flat": "plain",
+   "path": "plain"
+  },
+  {
+   "selector": "dir%20name/file%20name.go",
+   "flat": "dir20namefile20namego",
+   "path": "dir name/file name.go"
+  },
+  {
+   "selector": "UPPER lower",
+   "flat": "upperlower",
+   "path": "UPPER lower"
+  },
+  {
+   "selector": "tab\there",
+   "flat": "tabhere",
+   "path": "tab\there"
+  },
+  {
+   "selector": "ǅ ǆ Ǆ",
+   "flat": "ǆǆǆ",
+   "path": "ǅ ǆ Ǆ"
+  },
+  {
+   "selector": "İstanbul",
+   "flat": "İstanbul",
+   "path": "İstanbul"
+  },
+  {
+   "selector": "ΣΑΣ",
+   "flat": "σασ",
+   "path": "ΣΑΣ"
+  }
+ ]
+}

@@ -8,7 +8,7 @@ use semio_framework_value::ValueError;
 
 /// 🏗️ The authored native installation selects members, live bindings, genesis and format assembly.
 pub trait JackComposition:JackContentFactory+Default+Clone+Send+Sync+'static{
-    type Members:store::SpaceMember+store::MemberFactory+Send+'static;
+    type Members:store::ReferenceSpaceMember+store::MemberFactory+Send+'static;
     type Read<'a>:JackContentRead+'a;
     fn initial_snapshot()->JackSnapshot;
     fn example_snapshot(id:&str)->Option<JackSnapshot>;

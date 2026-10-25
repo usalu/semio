@@ -21,7 +21,7 @@ const INPUT_FILE = /^(?:package\.json|project\.json|📋️project\.json|pyproje
 /** 🏷️ The identity of one node: device, inode, size and both times; any content or entry change alters it. */
 type Stamp = readonly [dev: number, ino: number, size: number, mtimeMs: number, ctimeMs: number];
 
-/** 🔏️ Proof that a cached Nx project graph was computed from inputs that can be re-verified without recomputing it. */
+/** 🕸️ Proof that a cached Nx project graph was computed from inputs that can be re-verified without recomputing it. */
 export interface NxGraphSeal extends SealFactsV1 {
   readonly format: typeof NX_GRAPH_SEAL_FORMAT;
   readonly nx: string;
@@ -35,7 +35,7 @@ export interface NxGraphSeal extends SealFactsV1 {
 /** 📂️ One indexable directory: its stamp, the indexable child directories, graph-input files and symbolic links it holds (by name). */
 type DirectoryRow = readonly [path: string, stamp: Stamp, children: readonly string[], inputs: readonly string[], symlinks: readonly string[]];
 
-/** 🏷️ One node's stamp. */
+/** 🔖️ One node's stamp. */
 function stampOf(value: { dev: number; ino: number; size: number; mtimeMs: number; ctimeMs: number }): Stamp {
   return [value.dev, value.ino, value.size, value.mtimeMs, value.ctimeMs];
 }
@@ -121,12 +121,12 @@ async function liveFacts(workspaceData: string): Promise<Set<string>> {
   return names;
 }
 
-/** 🧭️ The absolute native path of a repository-relative POSIX path, built without re-normalizing (seal paths are already normal). */
+/** 🛤️ The absolute native path of a repository-relative POSIX path, built without re-normalizing (seal paths are already normal). */
 function nativePath(root: string, path: string): string {
   return path ? `${root}${sep}${sep === "/" ? path : path.replaceAll("/", sep)}` : root;
 }
 
-/** 🏷️ True when every recorded path still carries its stamp, checked `WALK_CONCURRENCY` at a time. */
+/** ☑️ True when every recorded path still carries its stamp, checked `WALK_CONCURRENCY` at a time. */
 async function stampsHold(root: string, rows: readonly (readonly [string, Stamp])[], read: (path: string) => Promise<{ dev: number; ino: number; size: number; mtimeMs: number; ctimeMs: number }>, ancestry=false,signal?:AbortSignal): Promise<boolean> {
   let next = 0, holds = true;
   const worker = async (): Promise<void> => {

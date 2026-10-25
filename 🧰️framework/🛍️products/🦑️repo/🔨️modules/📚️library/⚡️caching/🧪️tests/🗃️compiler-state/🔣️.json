@@ -13,7 +13,7 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/🟦️.ts",
       "count": 1,
       "owner": "store",
       "effects": [
@@ -101,39 +101,11 @@
       "calls": 1
     },
     {
-      "path": "🧰️framework/📦️packages/🟦️typescript/📜️script.ts",
-      "calls": 1
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🪁️typecheck/🟦️.ts",
+      "calls": 3
     },
     {
-      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
-      "calls": 1
-    },
-    {
-      "path": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
-      "calls": 1
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
-      "calls": 1
-    },
-    {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
-      "calls": 2
-    },
-    {
-      "path": "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/📜️script.ts",
-      "calls": 1
-    },
-    {
-      "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
-      "calls": 1
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
-      "calls": 1
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📜️script.ts",
+      "path": "✏️s/🧑‍💻dev/📜️script.ts",
       "calls": 1
     }
   ],

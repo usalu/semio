@@ -2,7 +2,7 @@
 use semio_framework_io_control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner};
 use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-/// 🫴️ A domain frame keeps its complete fallible status in original receiving custody.
+/// 🎞️ A domain frame keeps its complete fallible status in original receiving custody.
 pub trait NativeSqliteReceivingFrame:semio_framework_value::retirement::RetireOwned{
  fn receiving_status(&mut self)->&mut Option<Result<(),ValueError>>;
 }
@@ -13,7 +13,7 @@ macro_rules! original_sqlite_receiving{
   fn receive_sqlite_snapshot<F:NativeSqliteReceivingFrame,O:semio_framework_value::retirement::RetireOwned>(&mut self,control:&mut crate::SqliteSnapshotControl<'_>,construct:impl FnOnce()->F,operation:impl FnOnce(&mut F,&mut crate::artifact::receiving::Port<'_,'_,'_,NativeSnapshotBodyWallet>)->Result<(),ValueError>,publish:impl FnOnce(&mut F)->Result<O,ValueError>)->Result<O,ValueError>;
  }
  impl $trait for $owner<'_,'_>{
-  /// 🪶️ Adopts one complete domain frame through the original SQL and native receiving boundaries.
+  /// 📩️ Adopts one complete domain frame through the original SQL and native receiving boundaries.
   fn receive_sqlite_snapshot<F:NativeSqliteReceivingFrame,O:semio_framework_value::retirement::RetireOwned>(&mut self,control:&mut crate::SqliteSnapshotControl<'_>,construct:impl FnOnce()->F,operation:impl FnOnce(&mut F,&mut crate::artifact::receiving::Port<'_,'_,'_,NativeSnapshotBodyWallet>)->Result<(),ValueError>,publish:impl FnOnce(&mut F)->Result<O,ValueError>)->Result<O,ValueError>{
    let result=(||{self.native().checkpoint()?;let before=self.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original SQLite receiving extent overflow"))?;let settlement=crate::artifact::receiving::ReceivingSettlement::new(control,before,crate::SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
     let result=self.scoped_native(maximum,&mut observer,|owner|owner.receive::<F,O>(|slot,native,body|{

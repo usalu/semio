@@ -47,5 +47,4 @@ fn inverse_admission_follows_portable_outcomes_and_retires_each_diff() {
     let refused = MutationOutcome::new(Delta { empty: true }).admit_inverse::<()>(|| Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "foreign source refusal")));
     assert!(refused.is_err());
     assert_eq!(RETIRED.with(|count| count.get()), 1);
-    println!("[DEBUG] Inverse admission: {} portable outcomes gate inverse candidates with one cold retirement", corpus["cases"].as_array().unwrap().len());
 }

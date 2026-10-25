@@ -20,7 +20,7 @@ impl RetainedDiffPreflightAdvance{pub fn progress(&self)->RetainedCloneProgress{
 pub enum RetainedDiffPreflightStep{Progress(RetainedCloneProgress),Admitted(RetainedCloneProgress,Vec<MutationMessage>),Refused(RetainedCloneProgress,Vec<MutationMessage>)}
 impl RetainedDiffPreflightStep{pub fn progress(&self)->RetainedCloneProgress{match self{Self::Progress(value)|Self::Admitted(value,_)|Self::Refused(value,_)=>*value}}}
 
-/// 🪡️ Required typed diff plan keeps original D immutable and stages only its authored fragments.
+/// 🆚️ Required typed diff plan keeps original D immutable and stages only its authored fragments.
 /// Preflight borrows post read-only and resolves every fallible reference before completion.
 /// Commit starts only after explicit central preflight admission and consumes staged fields.
 /// Semantic refusal occurs before writes; resource failure after commit poisons unpublished post.
@@ -85,7 +85,7 @@ impl<P,D:RetainedDiffFragment<P>> RetainedDiffOwner<P,D>{
   }
   let mut demand=self.apply.as_ref().expect("required typed diff plan").preflight_demand(diff,original,post,body)?;demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<Option<bool>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"central diff preflight parent extent overflow"))?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"central diff preflight parent depth overflow"))?;Ok(demand)
  }
- /// 📏️ Commit requires the original admitted preflight and its still-live sources.
+ /// 🔏️ Commit requires the original admitted preflight and its still-live sources.
  pub fn commit_demand(&self,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:&P,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.admitted||self.refused||self.finished||self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"central diff commit lacks live admitted preflight"));}
   let mut demand=self.apply.as_ref().expect("required typed diff plan").commit_demand(diff,original,post,body.saturating_sub(size_of::<bool>()))?;demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<bool>()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"central diff commit parent extent overflow"))?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"central diff commit parent depth overflow"))?;Ok(demand)
@@ -118,7 +118,7 @@ impl<P,D:RetainedDiffFragment<P>> RetainedDiffOwner<P,D>{
  pub fn terminal_is_empty(&self)->bool{self.apply.is_none()&&self.diff.is_none()&&self.original.is_none()&&self.messages.is_none()}
 }
 
-/// 🛡️ Central read-only preflight admits receipts before transferring original diagnostics or authorizing inversion.
+/// 📖️ Central read-only preflight admits receipts before transferring original diagnostics or authorizing inversion.
 pub fn preflight_retained_diff<P,D:RetainedDiffFragment<P>>(owner:&mut RetainedDiffOwner<P,D>,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:&P,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightStep,ValueError>{
  let demand=owner.preflight_demand(diff,original,post,body)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedDiffPreflightStep::Progress(Default::default()));}
  if let Some(progress)=diff.bind(&mut owner.diff,grant)?{return Ok(RetainedDiffPreflightStep::Progress(progress));}

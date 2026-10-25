@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️State
-/// 🧠️ Everything a handler may reach, for one [`ServerInstance`]. Cloneable and cheap: every field
+/// ☁️ Everything a handler may reach, for one [`ServerInstance`]. Cloneable and cheap: every field
 /// is an [`Arc`], so the whole value is a bundle of handles rather than a bundle of data.
 pub struct ServerState<I: ServerInstance> {
     /// 🏛️ The command bus, serialized behind a mutex because a turn is by definition one at a time.
@@ -47,10 +47,10 @@ pub struct ServerState<I: ServerInstance> {
     /// than a path, because [`StorageProfile::Ephemeral`] owns no directory and a handler that
     /// asked for one would have been handed a fabricated empty path.
     pub profile: Arc<StorageProfile>,
-    /// 🧩️ The modules this instance was built from, asked at runtime by the hooks that need them
+    /// 🪝️ The modules this instance was built from, asked at runtime by the hooks that need them
     /// (presence admission).
     pub modules: Arc<Vec<I::Modules>>,
-    /// 👥️ The presence rooms of the presence socket.
+    /// 🪪️ The presence rooms of the presence socket.
     pub presence_rooms: Arc<PresenceRooms>,
     /// ⏱️ The presence socket's knobs.
     pub presence_settings: Arc<PresenceSettings>,
@@ -101,7 +101,7 @@ impl<I: ServerInstance> Clone for ServerState<I> {
 }
 
 impl<I: ServerInstance> ServerState<I> {
-    /// 🕰️ The next clock reading: wall-clock milliseconds, with the counter breaking ties so two
+    /// ⏰️ The next clock reading: wall-clock milliseconds, with the counter breaking ties so two
     /// commands stamped inside the same millisecond still order.
     pub fn now(&self) -> HybridLogicalClock {
         let millis = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_millis() as u64);
@@ -110,7 +110,7 @@ impl<I: ServerInstance> ServerState<I> {
         *clock
     }
 
-    /// ⚖️ Evaluate one policy question, turning a denial into [`ServerError::Forbidden`]. The
+    /// 🔏️ Evaluate one policy question, turning a denial into [`ServerError::Forbidden`]. The
     /// engine's reason travels in the error for whoever handles it in process; the caller of a route
     /// is told `forbidden` and nothing of what was missing.
     pub fn authorize(&self, request: &PolicyRequest) -> Result<(), ServerError> {
@@ -259,10 +259,10 @@ impl<I: ServerInstance> ServerState<I> {
 /// 📮️ The most queued commands one batch of the command lane takes.
 pub const COMMAND_BATCH: usize = 64;
 
-/// 📨️ One queued command and where its outcome is answered.
+/// 📬️ One queued command and where its outcome is answered.
 type Queued = (CommandEnvelope, oneshot::Sender<CommandOutcome>);
 
-/// 🛤️ The command lane's queue, whether a runner is draining it, and how many events and outbox
+/// 🚌️ The command lane's queue, whether a runner is draining it, and how many events and outbox
 /// rows the bus had committed when the runner last answered.
 #[derive(Default)]
 pub(super) struct CommandLane {
@@ -299,7 +299,7 @@ pub fn parse_content_hash(hex: &str) -> Option<protocol::codec::ids::ContentHash
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BlobReceipt {
-    /// #️⃣ The verified content address.
+    /// ✅️ The verified content address.
     pub hash: String,
     /// 📏️ How many bytes are stored under it.
     pub size: usize,
@@ -320,7 +320,7 @@ pub async fn put_blob<I: ServerInstance>(Path(hash): Path<String>, headers: Head
     Ok(Json(BlobReceipt { hash, size: body.len() }))
 }
 
-/// 📦️ Read bytes back by address.
+/// ⏪️ Read bytes back by address.
 pub async fn get_blob<I: ServerInstance>(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState<I>>) -> Result<Response, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
     state.authorize(&PolicyRequest { point: PolicyPoint::BlobRead, principal: resolved.principal, scope: None, resource: hash.clone(), action: "read".to_string() })?;
@@ -329,7 +329,7 @@ pub async fn get_blob<I: ServerInstance>(Path(hash): Path<String>, headers: Head
     Ok(([(header::CONTENT_TYPE, "application/octet-stream")], bytes).into_response())
 }
 
-/// ❓️ The cheap half of an upload negotiation: does this address already hold bytes.
+/// 📥️ The cheap half of an upload negotiation: does this address already hold bytes.
 pub async fn head_blob<I: ServerInstance>(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState<I>>) -> StatusCode {
     let resolved = state.identify(&headers, Some(peer)).await;
     let request = PolicyRequest { point: PolicyPoint::BlobRead, principal: resolved.principal, scope: None, resource: hash.clone(), action: "read".to_string() };
@@ -346,7 +346,7 @@ pub async fn head_blob<I: ServerInstance>(Path(hash): Path<String>, headers: Hea
 //#endregion 🔖️Blob
 
 //#region 🔖️Command
-/// 📨️ Submit one command. The envelope's principal is overwritten with the resolved one before the
+/// ✉️ Submit one command. The envelope's principal is overwritten with the resolved one before the
 /// turn runs — a client may address a command, it may never assert who is sending it. The command
 /// lane ([`ServerState::submit`]) publishes accepted events onto the actor's durable lane, so live
 /// subscribers see them without polling.
@@ -385,7 +385,7 @@ pub fn kept(outcome: &CommandOutcome) -> bool {
     }
 }
 
-/// ❓️ Answer one query from the projections, after checking the caller may read it.
+/// 🔎️ Answer one query from the projections, after checking the caller may read it.
 pub async fn post_query<I: ServerInstance>(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState<I>>, WireJson(envelope): WireJson<QueryEnvelope>) -> Result<Json<QueryResult>, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
     let mut envelope = envelope;

@@ -9,7 +9,7 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "remove-app-extension")]
 pub struct RemoveAppExtension {
-    pub(crate) index: usize,
+    pub index: usize,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveAppExtension {

@@ -10,7 +10,7 @@
 import { intro } from "@semio-tech/presentation";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { act } from "@semio-tech/ui-react/test";
-import { mountPresentation, unmountPresentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { mountPresentation, unmountPresentation } from "@semio-tech/presentation-react";
 import { globalsCssSource } from "../🧰️presentation-deck-helpers/🟦️.tsx";
 
 describe("PresentationDeck", () => {

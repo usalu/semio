@@ -107,10 +107,7 @@
       },
       "metadata": {
         "semio": {
-          "workspaceCommand": [
-            "test-persistent-canonical",
-            "source"
-          ]
+          "workspaceCommand":["verify","persistent-canonical","source"]
         }
       }
     },
@@ -130,10 +127,7 @@
       },
       "metadata": {
         "semio": {
-          "workspaceCommand": [
-            "test-persistent-canonical",
-            "native"
-          ]
+          "workspaceCommand":["verify","persistent-canonical","native"]
         }
       }
     },

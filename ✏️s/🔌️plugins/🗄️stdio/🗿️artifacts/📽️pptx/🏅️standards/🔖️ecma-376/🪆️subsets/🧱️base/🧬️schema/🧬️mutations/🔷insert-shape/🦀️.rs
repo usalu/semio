@@ -9,8 +9,8 @@ use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct InsertShape {
-    pub(crate) vacancy: PptxXmlVacancyAddress,
-    pub(crate) shape: XmlNode,
+    pub vacancy: PptxXmlVacancyAddress,
+    pub shape: XmlNode,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertShape {

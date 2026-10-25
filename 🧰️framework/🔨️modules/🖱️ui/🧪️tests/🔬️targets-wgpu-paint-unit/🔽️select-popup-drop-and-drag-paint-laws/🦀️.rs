@@ -173,7 +173,7 @@ fn opening_a_selects_popup_gives_its_synthesized_item_rows_real_hit_testable_lay
     assert!(bucket_b.y > bucket_a.y, "row \"b\" should be laid out below row \"a\"");
 }
 
-/// 🔽️ W15a item 7. `reconcile::children_of`/`apply_tree` — the only thing that ever synthesized an
+/// 🔄️ W15a item 7. `reconcile::children_of`/`apply_tree` — the only thing that ever synthesized an
 /// open `Select`'s option rows — are `cfg(test, testkit)`, so PRODUCTION materialized none: with
 /// `paint_select` itself `cfg(test)` and the retained `UiNode::Select` arm painting only the
 /// trigger, an open popup on the live renderer painted nothing, registered no row hit target and

@@ -127,7 +127,7 @@ export function clearGitCommitDraftState(root: string): void {
   removeGitDirPrefixed(root, "compose-micro-commit");
 }
 
-/** 🧹️Resets GK/git commit-template state without wiping the active draft message file (COMMIT_EDITMSG/MERGE_MSG/SQUASH_MSG). */
+/** 🐙️Resets GK/git commit-template state without wiping the active draft message file (COMMIT_EDITMSG/MERGE_MSG/SQUASH_MSG). */
 export function clearMicroCommitTemplatesOnly(root: string): void {
   resetGitCommitTemplateState(root);
   removeGitDirPrefixed(root, "compose-micro-commit");
@@ -137,7 +137,7 @@ export function clearStaleTemplatesBeforePrepare(root: string): void {
   if (!isPrepareActive(root)) clearGitCommitDraftState(root);
 }
 
-/** 🧹️Removes prepare state and resets GK/git templates to empty after a commit. */
+/** 🪦️Removes prepare state and resets GK/git templates to empty after a commit. */
 export function wipeAfterCommit(root: string): void {
   clearGitCommitDraftState(root);
 }

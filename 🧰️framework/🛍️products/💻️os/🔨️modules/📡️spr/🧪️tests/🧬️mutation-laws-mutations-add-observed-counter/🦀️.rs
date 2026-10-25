@@ -10,6 +10,6 @@ fn direct_fixture_contract() {
 #[should_panic(expected = "must not be empty")]
 async fn the_sum_law_catches_an_empty_inverse_for_a_state_change() {
     let observed = AddObservedCounter::default();
-    let _ = semio_framework_os_spr::MutationKind::<i64, CounterMutation>::diff(&observed, &10i64);
+    let _ = semio_framework_os_spr::ColdMutationKind::<i64, CounterMutation>::diff(&observed, &10i64);
     semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CounterMutation::AddObservedCounter(observed), &10i64).await;
 }

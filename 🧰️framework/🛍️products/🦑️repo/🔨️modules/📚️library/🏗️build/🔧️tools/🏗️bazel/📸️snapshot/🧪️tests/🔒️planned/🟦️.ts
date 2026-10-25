@@ -1,6 +1,6 @@
 /** 🔒️ Law: a hermetic action run by the real Bazel from a generated workspace sees the bytes of the plan, however the checkout changes between planning and the action; a later plan captures the new bytes, prunes what vanished and Bazel's own input digests agree with the corpus. */
 import {expect,test} from "bun:test";
-import {makeTestTreeWritableV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {makeTestTreeWritableV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";

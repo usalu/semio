@@ -38,7 +38,7 @@ fn ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
     );
 }
 
-/// 📐️ `surface_content_height` answers the DOCUMENT's own extent, never the viewport it was laid out
+/// 📏️ `surface_content_height` answers the DOCUMENT's own extent, never the viewport it was laid out
 /// against — it is the measure a floating panel hugs its content with (`anchor_panel_rect`'s
 /// `content_h`), so answering the caller's own input makes that hug a no-op and leaves every panel at
 /// its full column band. Measured live on 6118: the `framework.panel.toolRun` root reported 781.6

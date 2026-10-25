@@ -1,3 +1,4 @@
+import{staleImplementationV1}from"../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {receiveScriptProcessInvocation,createIssuedResourceControlV1} from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 // 🧪️ Nx plugin: one virtual project per test OWNER (the directory holding a `🧪️tests` directory of discovered cases).
 //
@@ -10,9 +11,9 @@ import {receiveScriptProcessInvocation,createIssuedResourceControlV1} from "../.
 // domain are all TAXONOMY DATA (`🔣️taxonomy.json`). This plugin declares none of them, so marking
 // another area exempt or relocating the domain is a vocabulary edit, never a code edit here.
 
-import { observeDependencies, observedFs, observeInference } from "../📚️library/🏗️build/👁️observation/🟨️.mjs";
-import { targetBuildModes } from "../📚️library/🏗️build/🎚️mode/🟨️.mjs";
-import {repositoryBuildGraphDataDirectoryV1,repositoryBuildGraphWriterDirectoryV1,withRepositoryBuildGraphFactStoreV1} from "../📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs";
+import { observeDependencies, observedFs, observeInference } from "../📚️library/📦️packages/🟦️typescript/🏗️build/🟨️.mjs";
+import { targetBuildModes } from "../📚️library/📦️packages/🟦️typescript/🏗️build/🟨️.mjs";
+import {repositoryBuildGraphDataDirectoryV1,repositoryBuildGraphWriterDirectoryV1,withRepositoryBuildGraphFactStoreV1} from "../📚️library/📦️packages/🟦️typescript/🏗️build/🟨️.mjs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -22,11 +23,11 @@ const nxPath = (p) => p.split("\\").join("/");
 const dependencyModule = new URL("./🕸️dependencies/🟨️.mjs", import.meta.url);
 const inputModule = new URL("../📚️library/🏗️build/📥️inputs/🟨️.mjs", import.meta.url);
 /** 🧲️ Loads the inference producer: a literal import in a captured closure so the capture reaches it, the plain URL otherwise. */
-const loadInferenceModuleV1 = () => import.meta.semioCapturedPhysicalSources ? import("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs") : import(new URL("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", import.meta.url).href);
+const loadInferenceModuleV1 = () => import.meta.semioCapturedPhysicalSources ? import("../📚️library/📦️packages/🟦️typescript/🏗️build/🕸️graph/📥️inference/🟨️.mjs") : import(new URL("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", import.meta.url).href);
 const dependencyRevision = createHash("sha256").update(readAuthoritySource(dependencyModule)).digest("hex");
 const inputRevision = createHash("sha256").update(readAuthoritySource(inputModule)).digest("hex");
 let cargoPackage, localPackagePath, rustSubjectPackage, ownerContributions, packagesForOwner, compactSourceInputs;
-const testBootstrap = Promise.all(import.meta.semioCapturedPhysicalSources ? [import("./🕸️dependencies/🟨️.mjs"), import("../📚️library/🏗️build/📥️inputs/🟨️.mjs")] : [import(`${dependencyModule.href}?revision=${dependencyRevision}`), import(`${inputModule.href}?revision=${inputRevision}`)]).then(([deps, inputs]) => {
+const testBootstrap = Promise.all(import.meta.semioCapturedPhysicalSources ? [import("./🕸️dependencies/🟨️.mjs"), import("../📚️library/📦️packages/🟦️typescript/🏗️build/📥️inputs/🟨️.mjs")] : [import(`${dependencyModule.href}?revision=${dependencyRevision}`), import(`${inputModule.href}?revision=${inputRevision}`)]).then(([deps, inputs]) => {
   cargoPackage = deps.cargoPackage;
   localPackagePath = deps.localPackagePath;
   rustSubjectPackage = deps.rustSubjectPackage;
@@ -342,7 +343,7 @@ async function invokeCurrentImplementationV1(kind, args) {
   const url = new URL(import.meta.url);
   url.searchParams.set("revision", revision);
   const current = await import(url.href);
-  if (current.default === plugin) throw new Error("The build graph runtime retained stale source code; restart the owned build invocation");
+  if (current.default === plugin) throw staleImplementationV1("The build graph runtime retained stale source code; restart the owned build invocation");
   return kind === "nodes" ? current.default.createNodesV2[1](...args) : current.createDependencies(...args);
 }
 

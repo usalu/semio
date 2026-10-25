@@ -38,7 +38,7 @@ export async function proctor(action: "stop" | "start"): Promise<void> {
 /** 🗣️ A language of the site. */
 export type Locale = "en" | "de";
 
-/** 🗣️ Both languages, in no order of preference. */
+/** 🌐️ Both languages, in no order of preference. */
 export const LOCALES: readonly Locale[] = ["en", "de"];
 
 /** 🌍️ A text of the course in both languages. */
@@ -91,7 +91,7 @@ export interface SourceQuiz {
 /** ⛰️ The challenge a run is played at, from the least to the most demanding. */
 export type Challenge = "easy" | "medium" | "hard" | "expert";
 
-/** ⛰️ Every challenge in rising order. */
+/** 🏔️ Every challenge in rising order. */
 export const CHALLENGES: readonly Challenge[] = ["easy", "medium", "hard", "expert"];
 
 /** 💰️ The points a perfect run earns at each challenge (design §1 of the challenge levels). */
@@ -122,24 +122,24 @@ function json<T>(path: string): T {
 /** 📚️ The course the site offers, as authored. */
 export const COURSE = json<{ readonly id: string; readonly title: Text; readonly introduction: { readonly title: Text; readonly paragraphs: readonly Text[] }; readonly quizzes: readonly string[]; readonly topics: readonly { readonly id: string; readonly emoji: string; readonly title: Text; readonly quizzes: readonly string[] }[]; readonly badges: readonly SourceBadge[] }>(resolve(site, "🔣️.json"));
 
-/** ❓️ The quizzes of the course in course order, with their solutions. */
+/** 🎓️ The quizzes of the course in course order, with their solutions. */
 export const QUIZZES: readonly SourceQuiz[] = COURSE.quizzes.map((path) => json<SourceQuiz>(resolve(site, path)));
 
-/** ❓️ The quiz `id` of the course. */
+/** 🧠️ The quiz `id` of the course. */
 export function quizOf(id: string): SourceQuiz {
   const quiz = QUIZZES.find((candidate) => candidate.id === id);
   if (quiz === undefined) throw new Error(`the course has no quiz ${id}`);
   return quiz;
 }
 
-/** 🏅️ The badge `id` of the course. */
+/** 🎖️ The badge `id` of the course. */
 export function badgeOf(id: string): SourceBadge {
   const badge = COURSE.badges.find((candidate) => candidate.id === id);
   if (badge === undefined) throw new Error(`the course has no badge ${id}`);
   return badge;
 }
 
-/** 🏅️ The badges a learner holds who has played exactly `perfect` (quiz ids) once each, without a mistake, at
+/** 🎗️ The badges a learner holds who has played exactly `perfect` (quiz ids) once each, without a mistake, at
  * `challenge`: a badge for perfection counts only from the least challenge its rule names. */
 export function badgesFor(perfect: readonly string[], challenge: Challenge = "medium"): readonly SourceBadge[] {
   const played = new Set(perfect);
@@ -152,14 +152,14 @@ export function badgesFor(perfect: readonly string[], challenge: Challenge = "me
   });
 }
 
-/** 📝️ The task `id` of `quiz` as authored. */
+/** 📋️ The task `id` of `quiz` as authored. */
 export function taskOf(quiz: SourceQuiz, id: string): SourceTask {
   const task = quiz.tasks.find((candidate) => candidate.id === id);
   if (task === undefined) throw new Error(`quiz ${quiz.id} has no task ${id}`);
   return task;
 }
 
-/** 🧩️ The item `id` of `task` as authored. */
+/** 🧱️ The item `id` of `task` as authored. */
 export function itemOf(task: SourceTask, id: string): SourceItem {
   const item = task.items.find((candidate) => candidate.id === id);
   if (item === undefined) throw new Error(`task ${task.id} has no item ${id}`);
@@ -272,8 +272,10 @@ export function activeOverview(page: Page): Locator {
   return page.locator('[data-course-grid][data-grid-active] > [data-layered-overview]');
 }
 
-/** 🌳️ Opens a grid's containing page through the address before its cards receive input. */
+/** 🌳️ Opens a grid's containing page through the address before its cards receive input — once the client stands: it mounts
+ * after its texts have arrived, and an address set before the mount is read as the arrival address, which a screen other than the overview discards. */
 export async function openGrid(device: Pick<Device, "page">, id?: string): Promise<void> {
+  await expect(device.page.locator("#course-main")).toBeAttached();
   await device.page.evaluate((target) => (window.location.hash = target ?? ""), id);
   await expect(device.page.locator(`[data-course-grid="${id ?? "root"}"][data-grid-active]`)).toBeVisible();
   const frame = await boxOf(device.page.locator('[data-course-grid="root"] > [data-layered-overview]'));
@@ -283,7 +285,7 @@ export async function openGrid(device: Pick<Device, "page">, id?: string): Promi
   }).toBeLessThan(0.5);
 }
 
-/** ❓️ Opens the overview containing an authored quiz, using the course's topic membership. */
+/** 📂️ Opens the overview containing an authored quiz, using the course's topic membership. */
 export async function openQuizGrid(device: Pick<Device, "page">, quiz: string): Promise<void> {
   await openGrid(device, COURSE.topics.find((topic) => topic.quizzes.includes(quiz))?.id ?? "quizzes");
 }
@@ -298,7 +300,7 @@ export function primary(scope: Locator | Page): Locator {
   return scope.locator('[data-overview-card-action="primary"]');
 }
 
-/** 🎬️ The other actions of a card. */
+/** 🎴️ The other actions of a card. */
 export function secondary(scope: Locator | Page): Locator {
   return scope.locator('[data-overview-card-action="secondary"]');
 }
@@ -315,7 +317,43 @@ export function screen(page: Page, name: string): Locator {
   return page.locator(`#course-main [data-card="${name}"]`).and(page.locator(":not([inert] *)"));
 }
 
-/** 🏷️ A random handle no other test uses. */
+/** 🤫️ Waits until the page has stopped replacing elements: a change of text size or viewport makes the overview measure its cards again
+ * and, when it changes between strip and swipe, mount its pages anew, which drops the focus a test has just set. Resolves after
+ * `quietMs` without a removed element outside the pet layer: that layer is decoration over the page that never moves a card, and
+ * the sparks of a flame or the puffs of a pet that arrives remove elements all the time. Gives up after `limitMs` and names
+ * who kept replacing what. */
+export async function layoutQuiet(page: Page, quietMs = 800, limitMs = 60_000): Promise<void> {
+  const culprits = await page.evaluate(([quiet, limit]) => new Promise<string[] | null>((resolve) => {
+    const seen = new Map<string, number>();
+    let timer = window.setTimeout(() => done(null), quiet);
+    const place = (node: Node): string => {
+      const chain: string[] = [];
+      for (let at = node instanceof Element ? node : node.parentElement; at !== null && chain.length < 4; at = at.parentElement) chain.push(`${at.tagName.toLowerCase()}${at.id === "" ? "" : `#${at.id}`}${typeof at.className === "string" && at.className !== "" ? `.${at.className.split(" ")[0]}` : ""}`);
+      return chain.join(" < ");
+    };
+    const observer = new MutationObserver((records) => {
+      const removing = records.filter((record) => record.removedNodes.length > 0 && !(record.target instanceof Element ? record.target : record.target.parentElement)?.closest(".pet-layer"));
+      if (removing.length === 0) return;
+      for (const record of removing) {
+        const key = `${place(record.target)} | ${[...record.removedNodes].map((node) => (node instanceof Element ? node.outerHTML.slice(0, 160) : node.nodeName)).join(",")}`;
+        seen.set(key, (seen.get(key) ?? 0) + 1);
+      }
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => done(null), quiet);
+    });
+    const hopeless = window.setTimeout(() => done([...seen.entries()].sort((one, other) => other[1] - one[1]).slice(0, 6).map(([where, times]) => `${times} x ${where}`)), limit);
+    function done(failed: string[] | null): void {
+      observer.disconnect();
+      window.clearTimeout(timer);
+      window.clearTimeout(hopeless);
+      resolve(failed);
+    }
+    observer.observe(document.body, { childList: true, subtree: true });
+  }), [quietMs, limitMs] as const);
+  if (culprits !== null) throw new Error(`the page kept replacing elements for ${limitMs} ms: ${culprits.join("; ")}`);
+}
+
+/** 🎲️ A random handle no other test uses. */
 export function handle(prefix: string): string {
   return `${prefix} ${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -340,7 +378,7 @@ export async function readIntroduction(device: Pick<Device, "page">): Promise<vo
   await expect(screen(device.page, "identity")).toBeVisible();
 }
 
-/** 🪪️ Chooses an identity on the identity step and waits for the overview. The step is submitted with a click, which
+/** 🔏️ Chooses an identity on the identity step and waits for the overview. The step is submitted with a click, which
  * leaves the pointer where the button was: whichever card comes to lie there shows its page clear. `atRest` leaves the
  * overview at rest instead — the pointer is moved to the corner of the navbar first and the step is submitted from the
  * keyboard, so the overview mounts with no card under the pointer and sees no pointer move its camera would follow. */
@@ -354,9 +392,10 @@ export async function identify(device: Device, identity: Identity, atRest = fals
     await (identity.kind === "anonymous" ? kind : form.locator('input[type="text"]')).press("Enter");
   } else await primary(form).click();
   await expect(activeOverview(device.page)).toBeVisible();
+  await expect.poll(() => learnerId(device), { message: "the identified learner is kept on the device", timeout: 20_000 }).not.toBe("");
 }
 
-/** 🚶️ The whole first visit: arrive, read the introduction, identify — onto an overview `atRest` when asked for. */
+/** 🛬️ The whole first visit: arrive, read the introduction, identify — onto an overview `atRest` when asked for. */
 export async function enter(device: Device, identity: Identity, atRest = false): Promise<void> {
   await arrive(device);
   await readIntroduction(device);
@@ -369,16 +408,16 @@ export async function shownName(device: Device): Promise<string> {
 }
 
 /** 🆔️ The id of the learner this device acts as (its only credential), as the client keeps it. */
-export async function learnerId(device: Device): Promise<string> {
+export async function learnerId(device: Pick<Device, "page">): Promise<string> {
   return device.page.evaluate((key) => (JSON.parse(localStorage.getItem(key) ?? "null") as { id: string } | null)?.id ?? "", `semio.course.${COURSE.id}.learner`);
 }
 
-/** ⛰️ The challenge the device remembers for the next run of `quiz`: the one last chosen on its page, at first `medium`. */
+/** 🧷️ The challenge the device remembers for the next run of `quiz`: the one last chosen on its page, at first `medium`. */
 export async function rememberedChallenge(device: Device, quiz: string): Promise<Challenge> {
   return device.page.evaluate(([key, id]) => (JSON.parse(localStorage.getItem(key) ?? "null") as { challenges?: Record<string, Challenge> } | null)?.challenges?.[id] ?? "medium", [`semio.course.${COURSE.id}.preferences`, quiz] as const);
 }
 
-/** ⛰️ Opens the page of `quiz` and chooses `challenge` in its chooser; the device remembers it for the next run. */
+/** ☑️ Opens the page of `quiz` and chooses `challenge` in its chooser; the device remembers it for the next run. */
 export async function chooseChallenge(device: Device, quiz: string, challenge: Challenge): Promise<void> {
   await device.page.evaluate((id) => (window.location.hash = id), quiz);
   const page = pane(device.page, quiz);
@@ -416,7 +455,7 @@ export async function openTask(device: Device, index: number): Promise<void> {
   await expect(step).toHaveAttribute("aria-current", "step");
 }
 
-/** 👉️ Opens the task `task` of the run on screen, wherever this sheet put it. */
+/** 📬️ Opens the task `task` of the run on screen, wherever this sheet put it. */
 export async function openTaskById(device: Device, task: string): Promise<void> {
   const steps = screen(device.page, "run").locator("nav button");
   for (let index = 0; index < (await steps.count()); index++) {
@@ -426,7 +465,7 @@ export async function openTaskById(device: Device, task: string): Promise<void> 
   throw new Error(`the run on screen has no task ${task}`);
 }
 
-/** 🏷️ The id of the task on screen. */
+/** 👁️ The id of the task on screen. */
 export async function shownTask(device: Device): Promise<string> {
   return ((await screen(device.page, "task").getAttribute("data-presence-anchor")) ?? "").replace(/^task:/u, "");
 }
@@ -457,7 +496,7 @@ export async function clockOf(device: Device): Promise<string | undefined> {
   return (await clock.count()) === 0 ? undefined : ((await clock.first().getAttribute("data-clock")) ?? undefined);
 }
 
-/** ⌨️ The text a learner types for `value` in the base `unit`: a whole mantissa with an exponent (`3828e23 W`), which
+/** 🔡️ The text a learner types for `value` in the base `unit`: a whole mantissa with an exponent (`3828e23 W`), which
  * reads the same in every language and needs no SI prefix. */
 export function typedValue(value: number, unit: string): string {
   const [mantissa = "", exponent = "0"] = value.toExponential().split("e");
@@ -479,13 +518,13 @@ export async function guessSorting(device: Device, item: string, value: number, 
   await typeGuess(screen(device.page, "task").locator(`[data-course-item="${item}"] input`), value, quantity.unit);
 }
 
-/** ⌨️ Types `value` (in the base unit of `quantity`) as the guess for `item` in the dimension at `dimension` (its place
+/** ✒️ Types `value` (in the base unit of `quantity`) as the guess for `item` in the dimension at `dimension` (its place
  * in the task) of the matching on screen that hides its cards, and commits it. */
 export async function guessMatching(device: Device, dimension: number, item: string, value: number, quantity: SourceQuantity): Promise<void> {
   await typeGuess(screen(device.page, "task").locator("section.course-match").nth(dimension).locator(`.course-slot[data-presence-anchor="item:${item}"] input`), value, quantity.unit);
 }
 
-/** 🔑️ Whether the task on screen hides its keys: a sorting or matching that asks for typed guesses. */
+/** 🗝️ Whether the task on screen hides its keys: a sorting or matching that asks for typed guesses. */
 export async function keysHidden(device: Device): Promise<boolean> {
   const task = screen(device.page, "task");
   return (await task.locator('[data-course-item] input, section[data-keys="hidden"]').count()) > 0;
@@ -580,7 +619,7 @@ export async function sortedItems(device: Device): Promise<readonly string[]> {
 /** 🫴️ The action of a sorting that keeps the order it was dealt. */
 const KEEP_ORDER: Text = { en: "Keep this order", de: "Reihenfolge übernehmen" };
 
-/** ↕️ Brings the sorting on screen into `order` (item ids, smallest first) with the move buttons — on the ladder of
+/** 🔃️ Brings the sorting on screen into `order` (item ids, smallest first) with the move buttons — on the ladder of
  * keys where the challenge shows them. An order the sheet dealt already is kept with the sorting's own "keep" action,
  * so the task counts as answered either way. */
 export async function sortInto(device: Device, order: readonly string[]): Promise<void> {
@@ -599,18 +638,18 @@ export async function sortInto(device: Device, order: readonly string[]): Promis
   expect(await sortedItems(device)).toEqual(order);
 }
 
-/** ↕️ Moves `item` of the sorting on screen one place down. */
+/** ⬇️ Moves `item` of the sorting on screen one place down. */
 export async function moveDown(device: Device, item: string): Promise<void> {
   await screen(device.page, "task").locator(`[data-course-item="${item}"] .course-sort-down`).click();
 }
 
-/** 🏷️ How the site writes `value` of an unprefixed `quantity` in the device's language. */
+/** ⚖️ How the site writes `value` of an unprefixed `quantity` in the device's language. */
 export async function shownQuantity(device: Device, value: number, quantity: SourceQuantity): Promise<string> {
   if (quantity.prefixed) throw new Error(`matching by a prefixed quantity (${quantity.unit}) is not driven yet`);
   return device.page.evaluate(([amount, unit, locale]) => `${new Intl.NumberFormat(locale as string, { maximumFractionDigits: 6 }).format(amount as number)} ${unit}`, [value, quantity.unit, device.locale] as const);
 }
 
-/** 🃏️ Gives `item` of the matching on screen a card showing `label` in `dimension`: the one it holds already, else one
+/** 🪢️ Gives `item` of the matching on screen a card showing `label` in `dimension`: the one it holds already, else one
  * no item uses. */
 export async function match(device: Device, dimension: string, item: string, label: string): Promise<void> {
   const choice = screen(device.page, "task").locator(`[data-course-drop="slot:${dimension}:${item}"] select`);
@@ -623,7 +662,7 @@ export async function match(device: Device, dimension: string, item: string, lab
   await expect(choice).toHaveValue(card);
 }
 
-/** 🃏️ Takes the card of `item` of the matching on screen away again in `dimension`. */
+/** ✂️ Takes the card of `item` of the matching on screen away again in `dimension`. */
 export async function unmatch(device: Device, dimension: string, item: string): Promise<void> {
   const row = screen(device.page, "task").locator(`[data-course-drop="slot:${dimension}:${item}"]`);
   await row.getByRole("button").click();
@@ -688,7 +727,7 @@ export async function swapExtremes(device: Device, task: SourceTask, dimension: 
   return [smallest, largest];
 }
 
-/** ✍️ Answers every task of the run on screen. */
+/** ✅️ Answers every task of the run on screen. */
 export async function answerRun(device: Device, quiz: SourceQuiz, how: "perfect" | "flawed"): Promise<void> {
   const steps = screen(device.page, "run").locator("nav button");
   await expect(steps).toHaveCount(quiz.tasks.length);
@@ -725,19 +764,19 @@ export function percent(text: string): number {
   return Number(found[1]!.replace(",", "."));
 }
 
-/** 🔢️ The amounts the site wrote in `text` (`261`, `87.5`, `87,5`), in order; amounts below 1000 never group. */
+/** 🧮️ The amounts the site wrote in `text` (`261`, `87.5`, `87,5`), in order; amounts below 1000 never group. */
 export function amounts(text: string): readonly number[] {
   return [...text.matchAll(/\d+(?:[.,]\d+)?/gu)].map((found) => Number(found[0].replace(",", ".")));
 }
 
-/** ⛰️ The challenge `text` names in the device's language. */
+/** 🔤️ The challenge `text` names in the device's language. */
 export function namedChallenge(device: Device, text: string): Challenge {
   const named = CHALLENGES.filter((challenge) => new RegExp(`(^|[^\\p{L}])${CHALLENGE_NAMES[challenge][device.locale]}([^\\p{L}]|$)`, "u").test(text));
   if (named.length !== 1) throw new Error(`no single challenge in ${JSON.stringify(text)}`);
   return named[0]!;
 }
 
-/** 💰️ Points as the site writes them, "Medium · Points: 174.5 of 200": the challenge, the points earned and the most. */
+/** 🏆️ Points as the site writes them, "Medium · Points: 174.5 of 200": the challenge, the points earned and the most. */
 export function scoredPoints(device: Device, text: string): { readonly challenge: Challenge; readonly points: number; readonly par: number } {
   const found = amounts(text);
   if (found.length < 2) throw new Error(`no points in ${JSON.stringify(text)}`);
@@ -762,7 +801,7 @@ export async function shownResults(device: Device): Promise<{ readonly score: nu
   return { score, ...scored, tasks };
 }
 
-/** 🏅️ The best run of `quiz` its card shows: its challenge and its points of the most that challenge gives. */
+/** 🥇️ The best run of `quiz` its card shows: its challenge and its points of the most that challenge gives. */
 export async function shownBest(device: Device, quiz: string): Promise<{ readonly challenge: Challenge; readonly points: number; readonly par: number }> {
   return scoredPoints(device, await device.page.locator(`[data-layered-card="${quiz}"]`).locator("ul > li").nth(1).innerText());
 }
@@ -800,7 +839,7 @@ export async function goHome(device: Device): Promise<void> {
   await expect(device.page.locator("[data-layered-pane][data-opened]")).toHaveCount(0);
 }
 
-/** 📶️ The connection indicator of the navigation; its `data-tone` is `calm` (saved), `busy` (saving) or `alert`
+/** 🔌️ The connection indicator of the navigation; its `data-tone` is `calm` (saved), `busy` (saving) or `alert`
  * (the proctor does not answer). */
 export function connection(device: Device): Locator {
   return device.page.locator("header [data-tone]");
@@ -818,7 +857,7 @@ export function count(text: string): number {
   return Number(found[0]);
 }
 
-/** 📐️ The box of the one element `target` matches, in viewport pixels. */
+/** 📦️ The box of the one element `target` matches, in viewport pixels. */
 export async function boxOf(target: Locator): Promise<{ readonly x: number; readonly y: number; readonly width: number; readonly height: number }> {
   const box = await target.boundingBox();
   if (box === null) throw new Error("the element has no box");
@@ -852,7 +891,7 @@ export async function touchSwipe(page: Page, dx: number, dy: number, ms = 160, s
   await cdp.detach();
 }
 
-/** 👆️ Swipes the overview of a phone one neighbouring page at a time — along the rows first, then along the columns — until
+/** 📱️ Swipes the overview of a phone one neighbouring page at a time — along the rows first, then along the columns — until
  * the card of `id` rests in front, and checks that every swipe lands on the cell it heads for. */
 export async function swipeTo(device: Pick<Device,"page">, id: string): Promise<void> {
   const page = device.page;

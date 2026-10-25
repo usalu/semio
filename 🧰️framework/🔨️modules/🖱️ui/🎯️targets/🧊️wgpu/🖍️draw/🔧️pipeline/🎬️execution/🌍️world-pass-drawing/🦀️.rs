@@ -90,11 +90,12 @@ impl UiPipelines {
         let Some(mesh) = mesh_store.get_versioned(&draw_call.mesh_key, draw_call.mesh_version) else {
             return;
         };
-        if mesh.index_count == 0 || draw_call.instance_count == 0 { return; }
+        if draw_call.instance_count == 0 { return; }
+        let (Some(vertex_buffer), Some(index_buffer)) = (&mesh.vertex_buffer, &mesh.index_buffer) else { return () };
         let byte_offset = draw_call.instance_offset as u64 * instance_stride;
-        pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+        pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         pass.set_vertex_buffer(1, instance_buffer.slice(byte_offset..byte_offset + draw_call.instance_count as u64 * instance_stride));
-        pass.set_index_buffer(mesh.index_buffer.slice(..), gpu_device::IndexFormat::Uint32);
+        pass.set_index_buffer(index_buffer.slice(..), gpu_device::IndexFormat::Uint32);
         pass.draw_indexed(0..mesh.index_count, 0, 0..draw_call.instance_count);
     }
 

@@ -111,7 +111,7 @@ function policyGroupDialectsByStandard(repoRoot: string): PolicyStandardManifest
 }
 
 /**
- * ⚖️ Ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES: every migrated standard declares
+ * 📕️ Ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES: every migrated standard declares
  * its real industry subset vocabulary (or, for non-stdio/"domain" artifacts, explicitly declares
  * none) in `🪆️subsets/🔣️.json`, and that declaration must always equal what's actually on
  * disk — in both directions, so a manifest can never silently drift ahead of or behind the real

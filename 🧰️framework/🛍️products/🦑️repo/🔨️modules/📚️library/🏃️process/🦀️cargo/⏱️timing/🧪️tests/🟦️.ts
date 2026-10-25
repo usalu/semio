@@ -1,5 +1,5 @@
 import{test,expect}from"bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{createHash}from"node:crypto";
 import{fileURLToPath}from"node:url";
 import{parseProcessClockV1,readOwnedProcessSnapshotV1,compareOwnedProcessSnapshotsV1,boundedOwnedProcessRecordV1,cargoTimingEventV1,cargoResourceWaitEventV1}from"../🟦️.ts";

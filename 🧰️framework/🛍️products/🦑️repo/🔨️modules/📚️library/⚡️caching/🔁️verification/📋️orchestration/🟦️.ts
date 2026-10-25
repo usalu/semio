@@ -7,8 +7,8 @@ import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/�
 import probeSchema from "../🧬️schema/🔣️.json" with { type: "json" };
 import probeData from "../🔣️probe.json" with { type: "json" };
 import buildPolicy from "../../../🏗️build/🔣️policy.json" with { type: "json" };
-import type { CacheProbeSpecV1, CacheProbeToolV1 } from "../../../🏗️build/⚙️operations/🟦️.ts";
-import { runtimeSpawnSyncV1, runtimeSpawnV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import type { CacheProbeSpecV1, CacheProbeToolV1 } from "../../../🏗️build/⚙️operations/📋️contract/🟦️.ts";
+import { runtimeSpawnSyncV1, runtimeSpawnV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 const probeSpecification = probeData as CacheProbeSpecV1;
 

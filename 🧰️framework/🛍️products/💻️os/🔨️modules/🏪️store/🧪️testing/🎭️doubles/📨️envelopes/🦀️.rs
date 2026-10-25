@@ -28,8 +28,11 @@ pub fn one_item_test_policy() -> ArtifactStoreOneItemGrant {
 
 //#region 🧺️BatchedPublication
 /// 🎟️ One spent item per turn, with the whole capacity a thirty-two to two-hundred item gesture reserves for its staged forwards, metadata and flags in a single turn.
+/// 🧮️ The per-turn copy credit that funds one quoted preparation birth (the retained preparation frame is about 6.4 KiB).
+pub const PREPARATION_TURN_COPY_BYTES: usize = 16384;
+
 pub fn batch_turn_grant() -> ArtifactStoreOneItemGrant {
-    ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 262144, maximum_depth: 4096 }
+    ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: PREPARATION_TURN_COPY_BYTES, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 262144, maximum_depth: 4096 }
 }
 
 

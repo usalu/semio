@@ -5,7 +5,7 @@ import {appendFileSync,chmodSync,closeSync,mkdirSync,openSync,readFileSync,renam
 import {dirname,join} from "node:path";
 import {randomBytes} from "node:crypto";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
-import {collectGarbageSingleFlightV1,gcPressureV1,measureVolumeV1,type GcPressureV1} from "../🧹️gc/🟦️.ts";
+import {collectGarbageSingleFlightV1,gcOutOfSpaceV1,gcPressureV1,measureVolumeV1,type GcPressureV1} from "../🧹️gc/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
 const policy=UNIT_CACHE_POLICY_V1;
@@ -75,14 +75,14 @@ const GIB=1024**3,collectorEnvironmentKeys=Object.freeze(["PATH","HOME","USERPRO
 const gib=(bytes:number):string=>(bytes/GIB).toFixed(1);
 
 /** 🚀️ Starts the background collector: detached, one priority step below its caller, its output in `gc.log` of the cache root; a start that fails is returned, never thrown. The throttle stamp is written first, so a storm of writers starts one process, not many. */
-export function startUnitCacheCollectorV1(options:Readonly<{root:string;capacityBytes:number;environment:Readonly<Record<string,string|undefined>>;runtime?:string;script?:string}>):Readonly<{state:"started"}|{state:"failed";reason:string}>{
+export function startUnitCacheCollectorV1(options:Readonly<{root:string;capacityBytes:number;environment:Readonly<Record<string,string|undefined>>;runtime?:string;script?:string;watch?:boolean}>):Readonly<{state:"started"}|{state:"failed";reason:string}>{
  try{
   const stamp=join(options.root,"gc.stamp"),log=join(options.root,"gc.log"),env:Record<string,string>={SEMIO_CACHE_BACKGROUND:"1"};
   for(const key of collectorEnvironmentKeys){const value=options.environment[key];if(value!==undefined)env[key]=value;}
   mkdirSync(options.root,{recursive:true});writeFileSync(stamp,String(Date.now()));
   const fd=openSync(log,"w");
   try{
-   const child=spawn(options.runtime??process.execPath,[options.script??UNIT_CACHE_SCRIPT_V1,"--semio-unit-cache","gc","--single-flight","--root",options.root,"--capacity",String(options.capacityBytes)],{env,detached:true,stdio:["ignore",fd,fd],windowsHide:true});
+   const child=spawn(options.runtime??process.execPath,[options.script??UNIT_CACHE_SCRIPT_V1,"--semio-unit-cache","gc","--single-flight",...options.watch?["--watch"]:[],"--root",options.root,"--capacity",String(options.capacityBytes)],{env,detached:true,stdio:["ignore",fd,fd],windowsHide:true});
    child.on("error",error=>{try{appendFileSync(log,"launch failed: "+error.message+"\n");}catch{}});child.unref();
    if(child.pid!==undefined)try{setPriority(child.pid,10);}catch(error){appendFileSync(log,"priority not lowered: "+String((error as Error).message)+"\n");}
   }finally{closeSync(fd);}
@@ -96,32 +96,55 @@ export async function relieveUnitCachePressureV1(options:Readonly<{root:string;c
   const nowMs=options.nowMs??Date.now(),volume=(options.measure??measureVolumeV1)(options.root,options.capacityBytes),start=options.start??startUnitCacheCollectorV1;let last:number|null=null;try{last=statSync(join(options.root,"gc.stamp")).mtimeMs;}catch{}
   const decision=gcPressureV1({...volume,emergencyBytes:options.emergencyBytes,nowMs,lastLaunchMs:last});
   if(decision==="maintain"){const started=start(options);if(started.state==="failed")options.report(laneMessageV1("collectorFailed",{reason:started.reason},options.language));}
+  else if(decision==="watch"){const started=start({...options,watch:true});if(started.state==="failed")options.report(laneMessageV1("collectorFailed",{reason:started.reason},options.language));}
   else if(decision==="launch"){
-   const started=start(options);
+   const started=start({...options,watch:true});
    options.report(started.state==="started"?laneMessageV1("collector",{usedPercent:Math.round(100*(volume.volumeBytes-volume.freeBytes)/volume.volumeBytes),highPercent:Math.round(100*policy.gc.highWaterShare)},options.language):laneMessageV1("collectorFailed",{reason:started.reason},options.language));
   }else if(decision==="collect-now"){
-   const result=await collectGarbageSingleFlightV1(options.root,options.capacityBytes,{nowMs});if(!result.running&&result.applied.lanes+result.applied.incremental+result.applied.objects>0)options.report(laneMessageV1("collected",result.applied,options.language));
+   const result=await collectGarbageSingleFlightV1(options.root,options.capacityBytes,{nowMs});if(!result.running&&result.applied.lanes+result.applied.incremental+result.applied.sessions+result.applied.units+result.applied.objects>0)options.report(laneMessageV1("collected",result.applied,options.language));
   }
   return decision;
  }catch{return "enough";}
 }
 
+/** 💧️ The pressure relief every compile start runs for an issued compiler store: the cache root is the store's `u` directory, the image is the store's own volume, below a floor of free space the single-flight background collector starts (and below `emergencyBytes` the compile collects first), so no launch needs its own copy of the rule. Never throws. */
+export function relieveUnitStorageV1(store:string,options:Readonly<{environment:Readonly<Record<string,string|undefined>>;language:"en"|"de";report:(line:string)=>void;emergencyBytes?:number}>):Promise<GcPressureV1>{
+ const root=unitCacheRootV1(store);return relieveUnitCachePressureV1({root,capacityBytes:measureVolumeV1(root,1).volumeBytes,emergencyBytes:options.emergencyBytes??policy.gc.emergencyFreeBytes,environment:options.environment,language:options.language,report:options.report});
+}
+
+/** ⏱️ Runs a long compile and, every `recheckMilliseconds`, looks at the image again with `recheck` (never awaited, never failing the compile): a Cargo process can write gigabytes after the launch decision was taken, so the watching collector is (re)started while the compile runs, not only before it. */
+export async function withUnitPressureRecheckV1<T>(recheck:()=>Promise<unknown>,body:()=>Promise<T>,intervalMilliseconds:number=policy.gc.recheckMilliseconds):Promise<T>{
+ const timer=setInterval(()=>{void recheck().catch(()=>undefined);},intervalMilliseconds);timer.unref?.();
+ try{return await body();}finally{clearInterval(timer);}
+}
+
+/** 🪐️ Runs a build once more after it failed with the operating system's out-of-space error: the unit cache of the store is collected right now (single-flight) and the failure that came back from the first run is only rethrown when the second run fails too or the error was something else. */
+export async function retryAfterOutOfSpaceV1<T>(options:Readonly<{store:string;language:"en"|"de";report:(line:string)=>void}>,run:()=>Promise<T>):Promise<T>{
+ try{return await run();}
+ catch(error){
+  const text=[(error as Error)?.message,(error as {cause?:{message?:string}})?.cause?.message,String(error)].filter(Boolean).join("\n");
+  if(!gcOutOfSpaceV1(text))throw error;
+  const root=unitCacheRootV1(options.store);await collectAfterOutOfSpaceV1({root,capacityBytes:measureVolumeV1(root,1).volumeBytes,language:options.language,report:options.report});
+  return await run();
+ }
+}
+
 /** 🛑️ After a compile ran out of space: collects once, right now, and says so in the selected language. The caller retries its command once and calls `reportUnitCacheStillFullV1` if that fails the same way. */
-export async function collectAfterOutOfSpaceV1(options:Readonly<{root:string;capacityBytes:number;language:"en"|"de";report:(line:string)=>void;nowMs?:number}>):Promise<Readonly<{lanes:number;incremental:number;objects:number}>>{
- const volume=measureVolumeV1(options.root,options.capacityBytes);let applied={lanes:0,incremental:0,objects:0};
+export async function collectAfterOutOfSpaceV1(options:Readonly<{root:string;capacityBytes:number;language:"en"|"de";report:(line:string)=>void;nowMs?:number}>):Promise<Readonly<{lanes:number;incremental:number;objects:number;sessions:number;units:number}>>{
+ const volume=measureVolumeV1(options.root,options.capacityBytes);let applied={lanes:0,incremental:0,objects:0,sessions:0,units:0};
  try{const result=await collectGarbageSingleFlightV1(options.root,options.capacityBytes,{nowMs:options.nowMs});if(!result.running)applied=result.applied;}catch{}
  options.report(laneMessageV1("outOfSpace",{freeGib:gib(volume.freeBytes),volumeGib:gib(volume.volumeBytes),...applied},options.language));
  return applied;
 }
 
-/** 🔁️ Runs a command; while it reports a full image and retries remain, collects and runs it again. The command that is returned is the last one run; `stillFull` is called when the last retry failed the same way. */
+/** 🔄️ Runs a command; while it reports a full image and retries remain, collects and runs it again. The command that is returned is the last one run; `stillFull` is called when the last retry failed the same way. */
 export async function retryWhenFullV1<E extends Readonly<{full:boolean}>>(run:()=>Promise<E>,ports:Readonly<{collect:()=>Promise<unknown>;stillFull:()=>void}>,retries:number=UNIT_CACHE_OUT_OF_SPACE_RETRIES_V1):Promise<E>{
  let execution=await run();
  for(let attempt=0;execution.full&&attempt<retries;attempt++){await ports.collect();execution=await run();if(execution.full)ports.stillFull();}
  return execution;
 }
 
-/** 🛑️ The retry failed the same way: the space is held by running lanes, not by anything collectable. */
+/** 🧾️ The retry failed the same way: the space is held by running lanes, not by anything collectable. */
 export function reportUnitCacheStillFullV1(options:Readonly<{root:string;capacityBytes:number;language:"en"|"de";report:(line:string)=>void}>):void{
  const volume=measureVolumeV1(options.root,options.capacityBytes);options.report(laneMessageV1("stillFull",{freeGib:gib(volume.freeBytes),volumeGib:gib(volume.volumeBytes)},options.language));
 }

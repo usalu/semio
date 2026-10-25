@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 import { toolJobRustBlock, toolJobProductionSource, toolJobPublicationFreshnessBeforeEveryTurn, toolJobRetainedDispatchSetup, toolJobTypedRouteFailsClosedBeforePreparation, toolJobTypedPersistentFoundation, toolJobEphemeralOneItemPublicationBounded, toolJobStoreBatchPublicationBounded, toolJobSourceMutation, toolJobStoreSource } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 import { retainedCloneWireSchemaUrl } from "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust/🧪️testing/🧫️fixtures/🟦️.ts";
-import type { buildBaseState } from "../🔶️base/🟦️.ts";
+import type { buildBaseState } from "../🔶️harness/🟦️.ts";
 
 /** 🔹 Builds rawClose, mutateRawClose, rawHostiles, childCloseFixture of toolJobLatestWinsSelfTests. */
 export function buildRawCloseState({ rawCloseBlock, rawSource, base, Ajv, source, body, ajv }: Pick<ReturnType<typeof buildBaseState>, "rawCloseBlock" | "rawSource" | "base" | "Ajv" | "source" | "body" | "ajv">) {

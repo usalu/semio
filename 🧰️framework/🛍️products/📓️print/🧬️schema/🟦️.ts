@@ -90,7 +90,7 @@ export type VizTaxonomyLeaf = {
 //#region 🔖️Readers
 const LEAF_PATTERN = /^- (.+) `([^`]+)` (mark|chart|layout|axis|scale)$/;
 
-/** 🍃️ Reads the terminal visualization identifiers and titles from the taxonomy source. */
+/** 🌿️ Reads the terminal visualization identifiers and titles from the taxonomy source. */
 export function parseVizTaxonomy(md: string): readonly { readonly section: string; readonly group: string; readonly slug: string; readonly title: string; readonly kind: VizEntryKind }[] {
   const leaves: { section: string; group: string; slug: string; title: string; kind: VizEntryKind }[] = [];
   let section = "";

@@ -6,7 +6,7 @@ import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import Ajv from "ajv";
 import fastGlob from "fast-glob";
-import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {declaredInputPatternV1,declaredModuleGlobsV1} from "../🟨️.mjs";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";

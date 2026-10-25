@@ -20,6 +20,7 @@ import { cargoProvenancePhysicalControlV1, writeCompletedCargoInvocationProvenan
 import { createHash } from "node:crypto";
 import { tmpdir,homedir } from "node:os";
 import {CurrentPhysicalOwnerV1} from "@semio-tech/framework-filesystem/observation/current";
+import {retryOnConcurrentEditV1} from "@semio-tech/framework-filesystem/observation/churn";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, readdirSync, renameSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { acquireCargoBuildLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
@@ -35,7 +36,13 @@ import { decodeCargoProvenanceV1 } from "../../../../../../🔨️modules/🏃�
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_DESCRIPTOR_MAX_BYTES, FRESH_IO_CHUNK_BYTES, CRATE_NAME, freshWasmArtifactSize, pluginWasmArtifactPath } from "../🏗️component-build/🟦️.ts";
 import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshCheckpoint, freshPathIsWithin, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1, type FreshBuildControlV1, type FreshComponentLeaseV1, type FreshComponentProducedV1, type FreshComponentReceiptV1, type FreshComponentRequestV1 } from "../🧾️source-epoch/🟦️.ts";
 
-export async function freshRun(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, control: FreshProcessControlV1, stage: string, completed: number, total: number): Promise<string | undefined> {
+/** 🔁️ Runs one fresh process; when another process edits an input while its compiler provenance is observed, the whole process runs again (Cargo only rebuilds what the edit touched), as the `build` layer of the churn policy declares.
+ * @see ../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🔣️.json */
+export function freshRun(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, control: FreshProcessControlV1, stage: string, completed: number, total: number): Promise<string | undefined> {
+  return retryOnConcurrentEditV1("build", () => freshRunOnce(command, args, cwd, env, control, stage, completed, total), { onRetry: event => { process.stderr.write(event.text + "\n"); freshCheckpoint(control, stage, completed, total); } });
+}
+
+async function freshRunOnce(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, control: FreshProcessControlV1, stage: string, completed: number, total: number): Promise<string | undefined> {
   const policy=parseFreshProcessPolicyV1(control.process),started=performance.now(),remaining=()=>Math.floor(Math.min(control.remainingMs(),policy.command.maximumElapsedMilliseconds-(performance.now()-started)));
   freshCheckpoint(control, stage, completed, total);
   const budgetMs = remaining();
@@ -106,7 +113,7 @@ export async function freshRun(command: string, args: string[], cwd: string, env
       const manifestIndex = selectedArgs.indexOf("--manifest-path");
       const manifest = resolve(cwd, manifestIndex >= 0 ? selectedArgs[manifestIndex + 1]! : selectedArgs.find(arg => arg.startsWith("--manifest-path="))?.slice("--manifest-path=".length) ?? "Cargo.toml");
       provenance = join(directories.build, "semio-cargo-provenance", trace.split(/[\\/]/u).at(-1) + ".json");
-      const physical=new CurrentPhysicalOwnerV1(cwd,cargoProvenancePhysicalControlV1({cancelled:()=>control.cancelled(),remainingMs:()=>remaining(),onProgress:()=>freshCheckpoint(control,"compiler-provenance",completed,total)}));
+      const physical=()=>new CurrentPhysicalOwnerV1(cwd,cargoProvenancePhysicalControlV1({cancelled:()=>control.cancelled(),remainingMs:()=>remaining(),onProgress:()=>freshCheckpoint(control,"compiler-provenance",completed,total)}));
       await writeCompletedCargoInvocationProvenanceV1(provenance, { manifest, cwd, command, args: argv, buildDirectory: directories.build, builtAtMs, status: result.status ?? -1, cancelled: reason !== "exit", units: messages.filter(message => message.reason === "compiler-artifact").map(message => ({message,evidence:{version:1,kind:"discovery",paths:[],producer:null}})), buildScripts: messages.filter(message => message.reason === "build-script-executed") },new Map(),resolve(env.CARGO_HOME??join(homedir(),".cargo")),physical);
     }
     writeFileSync(join(trace, "outcome.json"), JSON.stringify({ schema: "semio.plugin.fresh-process/v1", stage, command, args: argv, cargoTargetDir: env.CARGO_TARGET_DIR ?? null, status: result.status, signal: result.signal, reason }) + "\n", {

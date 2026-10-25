@@ -63,7 +63,7 @@ function centroidOf(ctx: AdapterContext): number[] {
   return [grid(DISC.cx + x), grid(DISC.cy - y)];
 }
 
-/** 🎛️ Both scenarios ask the same question of a different sweep, so they share one shape. */
+/** ❓️ Both scenarios ask the same question of a different sweep, so they share one shape. */
 const gaugeScenario = (fixture: string) => ({
   oracle: (ctx: AdapterContext) => ({ projection: { "gauge/arc-centroid": centroidOf(ctx) } }),
   subject: async (ctx: AdapterContext) => {
@@ -76,9 +76,9 @@ const gaugeScenario = (fixture: string) => ({
 export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
-    /** 🔮️/🎯️ The half-turn sweep of a radial gauge. */
+    /** ⏱️/🎯️ The half-turn sweep of a radial gauge. */
     "radial-gauge": gaugeScenario("radial-gauge.tex"),
-    /** 🔮️/🎯️ The full-turn sweep of a progress ring. */
+    /** ⭕️/🎯️ The full-turn sweep of a progress ring. */
     "progress-ring": gaugeScenario("progress-ring.tex"),
   },
 });

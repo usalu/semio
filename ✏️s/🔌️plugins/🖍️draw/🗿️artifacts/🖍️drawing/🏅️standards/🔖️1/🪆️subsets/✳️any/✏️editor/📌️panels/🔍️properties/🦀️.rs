@@ -8,7 +8,8 @@ fn color_text(color:[f64;4])->UiAssemblyResult<String>{let mut accepted=|_|true;
 fn dash_text(samples:Option<&semio_framework_value_persistent::list::PagedList<f64,{usize::MAX}>>)->UiAssemblyResult<String>{let mut values=[0.0;64];let length=samples.map_or(0,|samples|samples.len());if length>64{return Err(error());}if let Some(samples)=samples{for(index,sample)in samples.iter().enumerate(){values[index]=*sample;}}let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(128,&mut accepted);semio_s_artifact_draw_drawing_io::text::dash::encode_dash_text(Some(&values[..length]),&mut control).map_err(|_|error())}
 use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, FillStyle, PathSegment};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{InputKind, Trigger};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::Label;
 use semio_framework_ui_locale::LabelText;

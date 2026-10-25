@@ -5,7 +5,7 @@ use super::*;
 // #region 🛂️Manifest
 //#region 🔖️Manifest
 //#region 🔖️ActionArgFacets
-/// 🎛️ The UI-contract number facets of one input — the single mapping every renderer of an [`ActionArgDef`] shares (the
+/// 💠️ The UI-contract number facets of one input — the single mapping every renderer of an [`ActionArgDef`] shares (the
 /// time-travel editor, both shells' staged dialog fields): its key range (a slider's or dial's travel; a stepper's, number
 /// field's or vector axis' hard bounds, an excluded bound being none since no key lands on it), the step, the look (`Dial`
 /// for a dial presentation) and axis, the stored and shown unit as symbols ([`action_arg_unit_symbol`]), the display factor

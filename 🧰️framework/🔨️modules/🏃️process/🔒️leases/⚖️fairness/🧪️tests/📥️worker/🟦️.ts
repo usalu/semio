@@ -1,7 +1,7 @@
 import {pathToFileURL} from "node:url";
 
 /** ⚖️ One fairness participant: a separate OS process that exercises the lease implementation under its own runtime. */
-type Config={implementation:string;role:"reader"|"writer"|"waiter"|"holder"|"queued";api:"queued"|"raw";mode:"shared"|"exclusive";directory:string;resource:string;owner:string;holdMilliseconds:number;untilMilliseconds:number;offsetMilliseconds:number;timeoutMilliseconds?:number};
+type Config={implementation:string;role:"reader"|"writer"|"waiter"|"holder"|"queued";api:"queued"|"raw";mode:"shared"|"exclusive";directory:string;resource:string;owner:string;holdMilliseconds:number;untilMilliseconds:number;offsetMilliseconds:number;timeoutMilliseconds?:number;yielding?:boolean};
 const config:Config=JSON.parse(process.argv[2]!);
 const api=await import(pathToFileURL(config.implementation).href);
 const sleep=(milliseconds:number)=>new Promise<void>(resolve=>setTimeout(resolve,milliseconds));
@@ -9,7 +9,7 @@ const say=(value:Record<string,unknown>)=>console.log(JSON.stringify({role:confi
 const controller=new AbortController();
 process.once("SIGTERM",()=>controller.abort());
 const request=(mode:"shared"|"exclusive",timeoutMs?:number)=>config.api==="queued"
-  ?api.acquireQueuedResourceLease({directory:config.directory,resource:config.resource,mode,owner:config.owner,signal:controller.signal,sharedCohort:mode==="shared",...(timeoutMs===undefined?{}:{timeoutMs}),onWait:()=>{}})
+  ?api.acquireQueuedResourceLease({directory:config.directory,resource:config.resource,mode,owner:config.owner,signal:controller.signal,sharedCohort:mode==="shared",...(mode==="exclusive"&&config.yielding?{yielding:true}:{}),...(timeoutMs===undefined?{}:{timeoutMs}),onWait:()=>{}})
   :api.acquireResourceLease({directory:config.directory,resource:config.resource,mode,signal:controller.signal,...(timeoutMs===undefined?{}:{timeoutMs}),onWait:()=>{}});
 const cpu=()=>{const usage=process.cpuUsage();return(usage.user+usage.system)/1000;};
 await sleep(config.offsetMilliseconds);

@@ -1,0 +1,13 @@
+import{readFileSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";import{join}from"node:path";
+const L="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const inference=await import(join(L,"🏗️build/🕸️graph/📥️inference/🟨️.mjs"));await inference.libraryBootstrap;inference.prepareSourceAnalysesV1();
+const obs=await import(join(L,"🏗️build/👁️observation/🟨️.mjs"));
+const gen=await import(join(L,"🏗️build/🕸️graph/🕰️generations/🟨️.mjs"));
+const idx=JSON.parse(brotliDecompressSync(readFileSync(process.argv[2])).toString());
+const sel=gen.selectFactClassesV1(idx,undefined);
+const hold=async rows=>{const plain=rows.filter(r=>r.kind!=="closure"&&r.kind!=="field"&&r.kind!=="digest");return plain.length===0||obs.observationsHold(plain,64,new Set(),true);};
+const t=Date.now();const{stale,calls}=await gen.staleFactRowsV1(idx,sel.ids,hold,{});
+const names=gen.staleConsumersV1(idx,sel.classes,stale);
+console.log("ids",sel.ids.length,"stale rows",stale.size,"calls",calls,"dirty owners",names.size,"secs",(Date.now()-t)/1000);
+const kinds={};for(const id of stale){const r=idx.rows[id];kinds[r.kind]=(kinds[r.kind]||0)+1;}console.log(JSON.stringify(kinds));
+console.log("has 41792:",stale.has(+process.argv[3]));

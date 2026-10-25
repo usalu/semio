@@ -27,6 +27,5 @@ fn retained_byte_span_logical_body_survives_expanded_physical_headers(){
   span.begin_close();while !span.terminal_is_empty(){let grant=quote(span.close_demand(body).unwrap());let(step,heap)=observe(||span.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
   while !source.terminal_is_empty(){let grant=quote(source.next_close_demand(body).unwrap());assert!(source.close_step(grant).unwrap().progress().fits(grant));}
   assert_eq!(observe(||drop(span)).1,(0,0));unsafe{ManuallyDrop::drop(&mut value);}
-  eprintln!("[DEBUG] Original byte span body={body} preserves exact neutral output and five independent denied currencies");
  }
 }

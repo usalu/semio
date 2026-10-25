@@ -24,7 +24,7 @@ const defaultServe = (scenarioDefinition: TimeTravelScenarioV1<object> | undefin
   return serve;
 };
 
-/** 🧭️ Seats one run's configuration from its CLI segments, opens its output directory and its ndjson stream. */
+/** ⚙️ Seats one run's configuration from its CLI segments, opens its output directory and its ndjson stream. */
 export const configure = (segments: readonly string[], defaultOutDir: string, signal: AbortSignal, scenarioDefinition: TimeTravelScenarioV1<object> | undefined) => {
   setScenario(scenarioDefinition);
   setRenderer(flagValue(segments, "--renderer") === "wgpu" ? "wgpu" : "react");

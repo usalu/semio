@@ -5,7 +5,7 @@ use super::*;
 /// 🧸️ The live scene composed from the app's `content` member store (design §20.15: the parent holds no content).
 pub(super) async fn live_scene(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>) -> jack::standards::v1::subsets::any::schema::content::JackWorkingScene {
     use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
-    use store::{pack::snapshot::ArtifactPack, SpaceMember};
+    use store::{snapshot::ArtifactPack, SpaceMember};
     let snapshot = app.snapshot().expect("Jack parent projection");
     let bytes = app.child_store("content", &snapshot.content.child_id).await.expect("Jack content child").document_pack_bytes().await.expect("Jack content child pack");
     let (nodes, edges) = crate::content::working_from_jack_content_snapshot(&SemioGraphSnapshot::decode_pack(&bytes).expect("Jack content child snapshot")).expect("Jack content child scene");

@@ -24,7 +24,7 @@ const GROUPS: readonly (readonly [string, readonly number[]])[] = [
 ];
 const SAMPLE: readonly number[] = GROUPS.flatMap(([, values]) => values);
 
-/** 🧫️ The point set the regression scenario fits. */
+/** 📍️ The point set the regression scenario fits. */
 const POINTS: readonly (readonly [number, number])[] = [
   [1, 2.1],
   [2, 3.9],
@@ -82,11 +82,11 @@ export default defineTestAdapter({
           "aggregate/count": GROUPS.map(([, values]) => values.length),
         },
       }),
-      /** 🎯️ The same rollups from the compiled probe. */
+      /** 🔨️ The same rollups from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     quantiles: {
-      /** 🔮️ d3-array's R-7 quantile at the default and at four custom probabilities. */
+      /** 🎲️ d3-array's R-7 quantile at the default and at four custom probabilities. */
       oracle: () => {
         const defaults = [0, 0.25, 0.5, 0.75, 1];
         const custom = [0.1, 0.33, 0.66, 0.9];
@@ -99,11 +99,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same quantiles from the compiled probe. */
+      /** 🧮️ The same quantiles from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     kde: {
-      /** 🔮️ An independent implementation of the same density formula; d3 has no estimator. */
+      /** 🧪️ An independent implementation of the same density formula; d3 has no estimator. */
       oracle: () => {
         const low = Math.min(...SAMPLE);
         const high = Math.max(...SAMPLE);
@@ -115,11 +115,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same estimates from the compiled probe. */
+      /** 📊️ The same estimates from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     regression: {
-      /** 🔮️ d3-regression's five fits, renamed onto the library's constant-term-first convention. */
+      /** 🐛️ d3-regression's five fits, renamed onto the library's constant-term-first convention. */
       oracle: () => {
         const points = POINTS.map((point) => [...point] as [number, number]);
         const linear = regressionLinear().x(abscissa).y(ordinate)(points);
@@ -137,7 +137,7 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same fits from the compiled probe. */
+      /** 📈️ The same fits from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

@@ -47,7 +47,7 @@ pub trait ProjectionRebuildControl: Send + Sync {
     fn report(&self, progress: ProjectionRebuildProgress);
 }
 
-pub(crate) struct UncontrolledProjectionRebuild;
+pub struct UncontrolledProjectionRebuild;
 
 impl ProjectionRebuildControl for UncontrolledProjectionRebuild {
     fn is_cancelled(&self) -> bool {

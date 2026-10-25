@@ -11,7 +11,7 @@ use semio_framework_plugin::TopologyNode;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::{Camera, Node};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use crate::editor::rewriting::ids::*;
-use store::pack::snapshot::ArtifactPack;
+use store::snapshot::ArtifactPack;
 use semio_s_artifact_trinity_jack_semio_content::SemioJackContent;
 
 //#region 🔖️DocumentHelpers

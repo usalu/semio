@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 /// ▶️ Applies `mutation` via its diff. External call site: `derived_construction`'s
 /// `ArtifactBuilder::mutate` (`../🦀️.rs`).
 pub fn apply_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> protocol::MutationApplyResult<PlaybookSnapshot> {
-    protocol::apply_diff_cold(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
+    protocol::apply_diff_cold(protocol::ColdMutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
 /// 🧮️ Applies `mutation` to `base` and hands back the whole `protocol::MutationOutcome`, the

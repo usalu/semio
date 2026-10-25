@@ -65,13 +65,13 @@ pub fn example_body_asset_prefix(dialect: &ArtifactDialect, example_id: &str) ->
     )
 }
 
-/// 📦️ The full `AssetDeclaration.name` for one example body — [`example_body_asset_prefix`] plus the
+/// 🔤️ The full `AssetDeclaration.name` for one example body — [`example_body_asset_prefix`] plus the
 /// suffix of the bytes actually declared (`.json`, `.dsl.semio`, …).
 pub fn example_body_asset_name(dialect: &ArtifactDialect, example_id: &str, suffix: &str) -> String {
     format!("{}{}", example_body_asset_prefix(dialect, example_id), suffix)
 }
 
-/// 📚️ THE example-picker predicate — every example authored for `dialect`, in manifest order,
+/// 🧪️ THE example-picker predicate — every example authored for `dialect`, in manifest order,
 /// deduplicated by id. The react shell's navbar select (`ShellHost`'s `exampleOptions`) answers it,
 /// and so does the TypeScript twin `examplesForDialect` (`🛂️manifest/🟦️.ts`); both are pinned against the shared
 /// `🧫️fixtures/📚️example-picker.json` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
@@ -80,7 +80,7 @@ pub fn examples_for_dialect<'a>(examples: &'a [ExampleDefinition], dialect: &Art
     examples.iter().filter(|example| &example.dialect == dialect).filter(|example| seen.insert(example.id.clone())).collect()
 }
 
-/// 📚️ The examples one surface may offer — [`examples_for_dialect`] against that surface's own
+/// 🎁️ The examples one surface may offer — [`examples_for_dialect`] against that surface's own
 /// dialect. Role plays no part: an editor and its viewer are two surfaces of ONE dialect and offer
 /// exactly the same picker.
 pub fn examples_for_app<'a>(examples: &'a [ExampleDefinition], app: &AppDefinition) -> Vec<&'a ExampleDefinition> {
@@ -121,7 +121,7 @@ pub struct CommandVariantSpec {
     pub fields: Vec<ActionArgDef>,
 }
 
-/// 🎛️ An app's full typed binary command grammar — the manifest-level declaration
+/// ⌨️ An app's full typed binary command grammar — the manifest-level declaration
 /// `AppDefinition.command_grammar` carries. Empty until per-app waves populate it.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, Default)]

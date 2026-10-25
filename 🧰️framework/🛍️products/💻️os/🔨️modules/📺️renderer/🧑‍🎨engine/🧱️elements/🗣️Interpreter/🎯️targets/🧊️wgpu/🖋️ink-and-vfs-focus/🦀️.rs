@@ -350,10 +350,9 @@ pub fn queue_text_editor_clipboard_read(focus: FocusedTextEditor,input:&mut semi
 #[cfg(not(target_arch = "wasm32"))]
 pub fn rgba_png_data_url(width: u32, height: u32, bytes: Vec<u8>) -> Option<String> {
     use base64::Engine as _;
-    let image = image::RgbaImage::from_raw(width, height, bytes)?;
-    let mut png = Vec::new();
-    image::DynamicImage::ImageRgba8(image).write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).ok()?;
-    Some(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(png)))
+    let mut job = semio_framework_pixels::png_encoding::PngEncodeJob::new(semio_framework_pixels::RasterImage { width, height, pixels: bytes }).ok()?;
+    while !job.advance().ok()?.done {}
+    Some(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(job.into_result().ok()?.data)))
 }
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]

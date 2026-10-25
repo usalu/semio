@@ -268,21 +268,7 @@ impl ToolJobFactory for BinaryTextCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         binary_text_contract()
     }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > BINARY_TEXT_MAXIMUM_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("stdio binary text edit rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BINARY_TEXT_MAXIMUM_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl ArtifactOwnedToolJobFactory for BinaryTextCommandJobFactory {
@@ -293,42 +279,16 @@ impl ArtifactOwnedToolJobFactory for BinaryTextCommandJobFactory {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn build_binary_text_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<BinaryEditor>>) -> Result<Option<ToolOperationSpec>, Fault> {
-    if request.tool_id != BINARY_TEXT_ACTION_ID {
-        return Ok(None);
+fn build_binary_text_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<BinaryEditor>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    if original.tool_id != BINARY_TEXT_ACTION_ID {
+        return Ok(false);
     }
-    if binary_command_id(&request.command) != request.tool_id {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-binary-text-command-tool-mismatch"));
+    if binary_command_id(&original.command) != original.tool_id {
+        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-binary-text-command-tool-mismatch").into());
     }
-    let tool_id = binary_command_id(&request.command);
-    let operation = AppOperationContext {
-        app_instance_id: request.app_instance_id,
-        parent_document_id: request.parent_document_id,
-        operation_id: request.operation.operation.0,
-        generation: request.operation.generation.0,
-        canonical_base_revision: request.canonical_base_revision,
-        authoring_seed: request.authoring_seed.clone(),
-        retained: semio_s_artifact_stdio_contract::editing::ample_close_grant(),
-    };
-    let payload = ArtifactRetainedCommandPayload::new(
-        ArtifactRetainedCommandInputs {
-            command: *request.command,
-            snapshot: request.snapshot,
-            snapshot_read: request.snapshot_read,
-            config: request.config,
-            history: request.history,
-            interaction_state: request.interaction_state,
-            interaction_hover: request.interaction_hover,
-            context: Some(request.context),
-            operation,
-            completion: request.completion,
-        },
-        binary_command_id,
-        BINARY_TEXT_MAXIMUM_RAW_BYTES,
-        main::HEX_EDITOR_MAX_BYTES,
-        Box::new(BoundedArtifactCommandWork::new(tool_id, binary_text_reduce, binary_text_extent)),
-    );
-    Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    let tool_id = binary_command_id(&original.command);
+    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, binary_command_id, BINARY_TEXT_MAXIMUM_RAW_BYTES, main::HEX_EDITOR_MAX_BYTES, false, |request| BoundedArtifactCommandWork::new(tool_id, binary_text_reduce, binary_text_extent))
 }
 //#endregion 🧵️RetainedTextRoute
 

@@ -13,19 +13,19 @@ import { reactHostPort } from "../../🧱️elements/🔌️Ports/⚛️react/�
 /** 🧭️ Horizontal reading direction — `"rtl"` mirrors inline chrome. */
 export type FlowInline = "ltr" | "rtl";
 
-/** 🧭️ Vertical stacking direction — `"up"` grows content toward the display center. */
+/** ↕️ Vertical stacking direction — `"up"` grows content toward the display center. */
 export type FlowBlock = "down" | "up";
 
-/** 🧭️ Logical flow inherited by descendant chrome. */
+/** 🌊️ Logical flow inherited by descendant chrome. */
 export interface Flow {
   readonly inline: FlowInline;
   readonly block: FlowBlock;
 }
 
-/** 🧭️ Opaque provider children rendered by the React adapter. */
+/** 🌳️ Opaque provider children rendered by the React adapter. */
 type FlowProviderChildren = unknown;
 
-/** 🧭️ Partial logical-flow override supplied to a descendant subtree. */
+/** ⚙️ Partial logical-flow override supplied to a descendant subtree. */
 interface FlowProviderProps {
   readonly inline?: FlowInline;
   readonly block?: FlowBlock;
@@ -36,7 +36,7 @@ const DEFAULT_FLOW: Flow = { inline: "ltr", block: "down" };
 
 const FlowContext = reactHostPort.createContext<Flow>(DEFAULT_FLOW);
 
-/** 🧭️ Sets the flow for descendant chrome, merging partial overrides onto the parent flow. */
+/** 🔀️ Sets the flow for descendant chrome, merging partial overrides onto the parent flow. */
 export function FlowProvider({ inline, block, children }: FlowProviderProps) {
   const parent = reactHostPort.useContext(FlowContext);
   const value = reactHostPort.useMemo((): Flow => ({ inline: inline ?? parent.inline, block: block ?? parent.block }), [inline, block, parent]);

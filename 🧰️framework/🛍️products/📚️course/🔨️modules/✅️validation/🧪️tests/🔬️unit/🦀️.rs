@@ -60,8 +60,7 @@ fn pooled_timing_boundaries_have_shared_issue_codes() {
 
 #[test]
 fn architecture_topic_vectors_agree_with_the_read_model() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(5).unwrap();
-    let site = root.join("🎓️teaching/🏛️architecture/📚️course");
+    let site = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().map(|root| root.join("🎓️teaching/🏛️architecture/📚️course")).find(|site| site.is_dir()).unwrap();
     let read = |path: &std::path::Path| serde_json::from_str::<serde_json::Value>(&std::fs::read_to_string(path).unwrap()).unwrap();
     let fixture = read(&site.join("🧫️fixtures/🗂️topics/🔣️.json"));
     let document = read(&site.join("🔣️.json"));

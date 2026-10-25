@@ -1,7 +1,0 @@
-{
-  "name": "@semio-tech/replication-mutation-retained-field-rs",
-  "tags": [
-    "scope:framework",
-    "language:rust"
-  ]
-}

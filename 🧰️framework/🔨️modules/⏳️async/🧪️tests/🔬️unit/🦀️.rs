@@ -438,7 +438,7 @@ async fn semaphore_acquire_dropped_while_pending_does_not_leak_or_block_a_later_
     drop(third);
 }
 
-/// 🚨️ Stress test: many real OS threads hammering acquire/release in a tight loop must never
+/// 🧪️ Stress test: many real OS threads hammering acquire/release in a tight loop must never
 /// observe more concurrently-held permits than the semaphore's own capacity, and the process must
 /// not deadlock (the test itself times out via `join` never returning if it does).
 #[test]

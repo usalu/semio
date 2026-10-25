@@ -1,5 +1,5 @@
 /** 🗄️ Persisted browser installation records over the shared plugin module wire contract. */
-import storeSchemaModule from "../../../../../../../🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🔣️.json" with { type: "json" };
+import storeSchemaModule from "../../../../../../../📦️packages/🟦️typescript/🔌️plugin-module/🌎️hub-source/🧬️schema/🔣️json/🟦️.ts";
 import { validateTrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA } from "../../📦️deployment/🧬️schema/🟦️.ts";
 import { TrustedPluginModuleRefusalV1, type TrustedPluginModuleIndexEntryV1 } from "@semio-tech/framework/plugin-module";
 

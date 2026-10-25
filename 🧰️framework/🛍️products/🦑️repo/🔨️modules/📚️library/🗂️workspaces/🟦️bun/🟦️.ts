@@ -40,27 +40,27 @@ const physical=createBunWorkspaceOwnershipV1({ownershipPath:fileURLToPath(owners
 
 /** 🧬️ Admits the canonical first-party native workspace declaration. */
 export const parseBunWorkspaceDeclaration: (value: unknown) => BunWorkspaceDeclarationV1 = physical.parseBunWorkspaceDeclaration;
-/** 📦️ Resolves independently owned source packages through concrete authored export namespaces. */
+/** 📁️ Resolves independently owned source packages through concrete authored export namespaces. */
 export const bunWorkspacePackages: (root: string, scope: BunWorkspaceScope) => readonly string[] = physical.bunWorkspacePackages;
-/** 🧾️ Emits the complete escaped concrete projection of independently owned packages. */
+/** 💻️ Emits the complete escaped concrete projection of independently owned packages. */
 export const bunWorkspaceNativePatterns: (root: string, scope: BunWorkspaceScope) => readonly string[] = physical.bunWorkspaceNativePatterns;
 /** 🗂️ Reads fresh source ownership across independent installation scopes. */
 export const bunRepositoryMembership: (root: string) => BunRepositoryMembership = physical.bunRepositoryMembership;
-/** 🗂️ Reads the current admitted native installation scopes. */
+/** 🔏️ Reads the current admitted native installation scopes. */
 export const discoverBunWorkspaces: (root: string) => readonly BunWorkspaceScope[] = physical.discoverBunWorkspaces;
 /** 📦️ Unions current source package documents without fabricated absent membership. */
 export const bunRepositoryPackages: (root: string) => readonly string[] = physical.bunRepositoryPackages;
 
-/** 🎛️ Verifies selected native publication with one original controlled physical ownership computation. */
+/** 🧲️ Verifies selected native publication with one original controlled physical ownership computation. */
 export const inspectBunWorkspaceOwnership: (root: string, selection: BunWorkspaceSelection, control: BunWorkspaceControl) => Promise<BunWorkspaceOwnershipReport> = physical.inspectBunWorkspaceOwnership;
 
-/** 📣️ Refreshes only explicitly selected installation scopes through the original operation control. */
+/** 🎚️ Refreshes only explicitly selected installation scopes through the original operation control. */
 export const publishBunWorkspaceOwnership: (root: string, selection: BunWorkspaceSelection, control: BunWorkspaceControl) => Promise<BunWorkspaceOwnershipReport> = physical.publishBunWorkspaceOwnership;
 
 /** 🧭️ Admits current installation owners without computing package membership twice. */
 export const discoverCurrentBunWorkspaceScopesV1:(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl)=>Promise<readonly BunWorkspaceScope[]>=physical.discoverCurrentBunWorkspaceScopesV1;
 
-/** 🪢️ Keeps original Source and topology guards alive through installation and receiving publication. */
+/** 📮️ Keeps original Source and topology guards alive through installation and receiving publication. */
 export const withPublishedBunWorkspaceOwnershipV1:<T>(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl,body:(custody:BunWorkspaceInstallationCustodyV1)=>Promise<T>)=>Promise<T>=physical.withPublishedBunWorkspaceOwnershipV1;
 
 /** 👓️ Retains original current membership through a read-only callback without publishing Source. */

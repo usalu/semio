@@ -1,4 +1,4 @@
-/** 👁️ The presence view of the quiz client: the peers seen on a page as cursors, their places in words and the anchors they point at. */
+/** 🎓️ The presence view of the quiz client: the peers seen on a page as cursors, their places in words and the anchors they point at. */
 
 import { learnerTag, presenceRoster, type Anchor, type CourseView, type Cursor, type CursorState, type Identity, type Place, type PresenceRoster, type PresenceState, type ThinkingState } from "@semio-tech/course";
 import { localized, type CourseLocale, type CourseText } from "../../🌐️i18n/🟦️.ts";
@@ -33,14 +33,14 @@ export interface PresenceView {
   readonly thinking: ReadonlyMap<string, readonly ThinkingState[]>;
 }
 
-/** 👁️ Presence while nothing is shared. */
+/** 🕳️ Presence while nothing is shared. */
 export const EMPTY_PRESENCE_VIEW: PresenceView = { me: undefined, roster: undefined, colours: new Map(), peers: [], rooms: new Map(), thinking: new Map() };
 
 function isThinking(state: WatchedState): state is ThinkingState {
   return Object.hasOwn(state, "answers");
 }
 
-/** 👁️ The view of a snapshot, labelling learners in `text`'s language (anonymous learners by their tag); the own
+/** 📸️ The view of a snapshot, labelling learners in `text`'s language (anonymous learners by their tag); the own
  * sessions (any tab of the own learner) are left out of every room. */
 export function presenceView(snapshot: CoursePresenceSnapshot, text: CourseText): PresenceView {
   const rosterRoom = snapshot.roster;

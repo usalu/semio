@@ -17,6 +17,6 @@ pub fn set_selectable_kind(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>
         _ => return,
     }
     let kinds = *kinds;
-    ctx.host.borrow_mut().set_selection_options("rectangle", "replace", kinds.nodes, kinds.edges, kinds.handles);
+    ctx.host.borrow_mut().focus.set_selection_options("rectangle", "replace", kinds.nodes, kinds.edges, kinds.handles);
     *ctx.ui_scope = puzzle2d_window_and_measures_scope();
 }

@@ -7,9 +7,9 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import fg from "fast-glob";
-import { moduleSourceClosureDigest, openRecordStore, recordKey, type RecordStore } from "../🟦️.ts";
+import { moduleSourceClosureDigest, openRecordStore, RECORD_STORE_PACK_LIMIT, recordKey, type RecordStore } from "../🟦️.ts";
 
-type Operation = { op: "put" | "get" | "flush" | "reopen" | "crash" | "corrupt" | "retain"; store: string; key?: string; value?: string; expect?: string | null };
+type Operation = { op: "put" | "get" | "flush" | "reopen" | "crash" | "corrupt" | "retain" | "compact"; store: string; key?: string; value?: string; expect?: string | null };
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "./🧫️fixtures/🔣️.json"), "utf8")) as { schemaVersion: number; scenarios: { id: string; operations: Operation[] }[] };
 const validate = new Ajv({ strict: false, allErrors: true }).compile(JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️schema/🔣️.json"), "utf8")));
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
@@ -31,6 +31,7 @@ function replay(directory: string, operations: readonly Operation[], check: (ope
     else if (operation.op === "get") { const value = store.get(key(operation.key!)); check(operation, value === undefined ? null : Buffer.from(value).toString("utf8")); }
     else if (operation.op === "flush") store.flush();
     else if (operation.op === "retain") store.retainAccessed();
+    else if (operation.op === "compact") store.compact();
     else if (operation.op === "reopen") { store.close(); handles.delete(operation.store); }
     else if (operation.op === "crash") handles.delete(operation.store);
     else if (operation.op === "corrupt") {
@@ -53,6 +54,28 @@ function assertPublishedLayout(directory: string): void {
   for (const name of indexes) expect(validate(JSON.parse(readFileSync(join(directory, name), "utf8"))), `${name} ${JSON.stringify(validate.errors)}`).toBe(true);
   expect(fg.sync("*.pack", { cwd: directory }).sort()).toEqual(indexes.map((name) => `${name.slice(0, -4)}.pack`).sort());
 }
+
+test("compaction merges every pack of a store into one and keeps every record", () => {
+  const directory = mkdtempSync(join(artifacts, "record-store-compact-"));
+  try {
+    for (let writer = 0; writer < 6; writer++) {
+      const store = openRecordStore(directory);
+      store.put(recordKey("record-store-law", String(writer)), Buffer.from(`v${writer}`, "utf8"));
+      store.close();
+    }
+    expect(readdirSync(directory).filter((entry) => entry.endsWith(".idx")).length).toBe(6);
+    const store = openRecordStore(directory);
+    expect(store.stats.packs).toBeGreaterThan(RECORD_STORE_PACK_LIMIT);
+    store.compact();
+    expect(store.stats.packs).toBe(1);
+    store.close();
+    expect(readdirSync(directory).filter((entry) => entry.endsWith(".idx")).length).toBe(1);
+    const reopened = openRecordStore(directory);
+    for (let writer = 0; writer < 6; writer++) expect(Buffer.from(reopened.get(recordKey("record-store-law", String(writer)))!).toString("utf8")).toBe(`v${writer}`);
+    reopened.close();
+    assertPublishedLayout(directory);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
 
 test("fixture scenarios replay exactly", () => {
   expect(fixture.schemaVersion).toBe(1);

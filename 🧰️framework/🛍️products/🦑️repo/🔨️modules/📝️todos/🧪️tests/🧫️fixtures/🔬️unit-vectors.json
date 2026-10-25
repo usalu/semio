@@ -1,0 +1,617 @@
+{
+ "schema": "semio.repo.todos.unit-vectors/1",
+ "$comment": "🔬️ Expected answers for the cargo unit tests, computed by an independent Python model (the JavaScript grammars of the TS oracle restated as Python regular expressions, plus string methods) over the real line vectors and the committed scan tree. `scan.memory` follows no skip rule, `scan.filesystem` skips node_modules, dist, build and dotted directories. Regenerate with the model; never edit by hand.",
+ "oracle": {
+  "script": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/rtest-d-tools/oracle_todos.py",
+  "tool": "python3",
+  "libraries": [
+   "re",
+   "json"
+  ],
+  "model": "todo line grammars, rewrites, scan, comment openers, slugs"
+ },
+ "markdownParse": [
+  {
+   "id": "WRITE-GUIDE",
+   "name": "Write Guide",
+   "description": "the guide is missing",
+   "parent": "docs",
+   "file": "docs/.todos.md",
+   "line": 0,
+   "column": 0
+  },
+  {
+   "id": "BARE-ITEM",
+   "name": "Bare Item",
+   "description": "",
+   "parent": "docs",
+   "file": "docs/.todos.md",
+   "line": 0,
+   "column": 0
+  },
+  {
+   "id": "COLONS",
+   "name": "Colons",
+   "description": "a description: carrying a colon",
+   "parent": "docs",
+   "file": "docs/.todos.md",
+   "line": 0,
+   "column": 0
+  },
+  {
+   "id": "LAST-ITEM",
+   "name": "Last Item",
+   "description": "the final entry",
+   "parent": "docs",
+   "file": "docs/.todos.md",
+   "line": 0,
+   "column": 0
+  }
+ ],
+ "sourceParse": [
+  {
+   "id": "CACHE-RESULT",
+   "name": "Cache Result",
+   "description": "memoise the lookup",
+   "parent": "src/app.ts",
+   "file": "src/app.ts",
+   "line": 2,
+   "column": 1
+  },
+  {
+   "id": "INDENTED-COMMENT",
+   "name": "Indented Comment",
+   "description": "keeps its indentation",
+   "parent": "src/app.ts",
+   "file": "src/app.ts",
+   "line": 4,
+   "column": 1
+  },
+  {
+   "id": "HASH-TODO",
+   "name": "Hash Todo",
+   "description": "the hash opener counts",
+   "parent": "src/app.ts",
+   "file": "src/app.ts",
+   "line": 6,
+   "column": 1
+  },
+  {
+   "id": "DASH-TODO",
+   "name": "Dash Todo",
+   "description": "the dash opener counts",
+   "parent": "src/app.ts",
+   "file": "src/app.ts",
+   "line": 7,
+   "column": 1
+  }
+ ],
+ "markdownRewrites": [
+  {
+   "oldName": "Write Guide",
+   "newName": "Write Guide",
+   "newDescription": "the guide is still missing",
+   "result": {
+    "ok": "# Todos\n\n- TODO Write Guide: the guide is still missing\n- TODO Bare Item\n- TODO Colons: a description: carrying a colon\nprose between the items\n- TODO Last Item: the final entry\n"
+   },
+   "removed": "# Todos\n\n- TODO Bare Item\n- TODO Colons: a description: carrying a colon\nprose between the items\n- TODO Last Item: the final entry\n"
+  },
+  {
+   "oldName": "Colons",
+   "newName": "Renamed Colons",
+   "newDescription": "another: colon",
+   "result": {
+    "ok": "# Todos\n\n- TODO Write Guide: the guide is missing\n- TODO Bare Item\n- TODO Renamed Colons: another: colon\nprose between the items\n- TODO Last Item: the final entry\n"
+   },
+   "removed": "# Todos\n\n- TODO Write Guide: the guide is missing\n- TODO Bare Item\nprose between the items\n- TODO Last Item: the final entry\n"
+  },
+  {
+   "oldName": "Last Item",
+   "newName": "Final Item",
+   "newDescription": "",
+   "result": {
+    "ok": "# Todos\n\n- TODO Write Guide: the guide is missing\n- TODO Bare Item\n- TODO Colons: a description: carrying a colon\nprose between the items\n- TODO Final Item: \n"
+   },
+   "removed": "# Todos\n\n- TODO Write Guide: the guide is missing\n- TODO Bare Item\n- TODO Colons: a description: carrying a colon\nprose between the items\n"
+  },
+  {
+   "oldName": "Nothing Here",
+   "newName": "Ignored",
+   "newDescription": "no line carries that name",
+   "result": {
+    "err": "not-found"
+   },
+   "removed": "# Todos\n\n- TODO Write Guide: the guide is missing\n- TODO Bare Item\n- TODO Colons: a description: carrying a colon\nprose between the items\n- TODO Last Item: the final entry\n"
+  }
+ ],
+ "sourceRewrites": [
+  {
+   "line": 2,
+   "newName": "Cache Result",
+   "newDescription": "memoise the lookup twice",
+   "result": {
+    "ok": "export const value = 1;\n// TODO Cache Result: memoise the lookup twice\n\n  // TODO Indented Comment: keeps its indentation\nexport const other = 2;\n# TODO Hash Todo: the hash opener counts\n-- TODO Dash Todo: the dash opener counts\n"
+   },
+   "removed": "export const value = 1;\n\n  // TODO Indented Comment: keeps its indentation\nexport const other = 2;\n# TODO Hash Todo: the hash opener counts\n-- TODO Dash Todo: the dash opener counts\n"
+  },
+  {
+   "line": 4,
+   "newName": "Renamed Indented",
+   "newDescription": "still indented",
+   "result": {
+    "ok": "export const value = 1;\n// TODO Cache Result: memoise the lookup\n\n  // TODO Renamed Indented: still indented\nexport const other = 2;\n# TODO Hash Todo: the hash opener counts\n-- TODO Dash Todo: the dash opener counts\n"
+   },
+   "removed": "export const value = 1;\n// TODO Cache Result: memoise the lookup\n\nexport const other = 2;\n# TODO Hash Todo: the hash opener counts\n-- TODO Dash Todo: the dash opener counts\n"
+  },
+  {
+   "line": 1,
+   "newName": "Not A Todo",
+   "newDescription": "line one is no todo",
+   "result": {
+    "err": "not-found"
+   },
+   "removed": "// TODO Cache Result: memoise the lookup\n\n  // TODO Indented Comment: keeps its indentation\nexport const other = 2;\n# TODO Hash Todo: the hash opener counts\n-- TODO Dash Todo: the dash opener counts\n"
+  },
+  {
+   "line": 99,
+   "newName": "Out Of Range",
+   "newDescription": "the document is shorter than that",
+   "result": {
+    "err": "no-location"
+   },
+   "removed": "export const value = 1;\n// TODO Cache Result: memoise the lookup\n\n  // TODO Indented Comment: keeps its indentation\nexport const other = 2;\n# TODO Hash Todo: the hash opener counts\n-- TODO Dash Todo: the dash opener counts\n"
+  },
+  {
+   "line": 0,
+   "newName": "Zero",
+   "newDescription": "line numbers are one based",
+   "result": {
+    "err": "no-location"
+   },
+   "removed": "export const value = 1;\n// TODO Cache Result: memoise the lookup\n\n  // TODO Indented Comment: keeps its indentation\nexport const other = 2;\n# TODO Hash Todo: the hash opener counts\n-- TODO Dash Todo: the dash opener counts\n"
+  }
+ ],
+ "commentLines": [
+  {
+   "line": "export const value = 1;",
+   "parts": null
+  },
+  {
+   "line": "// TODO Cache Result: memoise the lookup",
+   "parts": [
+    "// TODO ",
+    "Cache Result",
+    "memoise the lookup"
+   ]
+  },
+  {
+   "line": "",
+   "parts": null
+  },
+  {
+   "line": "  // TODO Indented Comment: keeps its indentation",
+   "parts": [
+    "  // TODO ",
+    "Indented Comment",
+    "keeps its indentation"
+   ]
+  },
+  {
+   "line": "export const other = 2;",
+   "parts": null
+  },
+  {
+   "line": "# TODO Hash Todo: the hash opener counts",
+   "parts": [
+    "# TODO ",
+    "Hash Todo",
+    "the hash opener counts"
+   ]
+  },
+  {
+   "line": "-- TODO Dash Todo: the dash opener counts",
+   "parts": [
+    "-- TODO ",
+    "Dash Todo",
+    "the dash opener counts"
+   ]
+  },
+  {
+   "line": "",
+   "parts": null
+  },
+  {
+   "line": "// TODO",
+   "parts": null
+  },
+  {
+   "line": "// TODO ",
+   "parts": null
+  },
+  {
+   "line": "// TODO : empty name",
+   "parts": [
+    "// TODO ",
+    "",
+    "empty name"
+   ]
+  },
+  {
+   "line": "//TODO Tight: no space before TODO",
+   "parts": [
+    "//TODO ",
+    "Tight",
+    "no space before TODO"
+   ]
+  },
+  {
+   "line": "//\tTODO Tab: tab after the opener",
+   "parts": [
+    "//\tTODO ",
+    "Tab",
+    "tab after the opener"
+   ]
+  },
+  {
+   "line": "\t# TODO Tab Indent: x",
+   "parts": [
+    "\t# TODO ",
+    "Tab Indent",
+    "x"
+   ]
+  },
+  {
+   "line": "/// TODO Triple: the third slash is part of the name",
+   "parts": null
+  },
+  {
+   "line": "// todo Lower: the keyword is upper case",
+   "parts": null
+  },
+  {
+   "line": "x // TODO Trailing: not at the start",
+   "parts": null
+  },
+  {
+   "line": "// TODO A: b: c: d",
+   "parts": [
+    "// TODO ",
+    "A",
+    "b: c: d"
+   ]
+  },
+  {
+   "line": "# TODO Hash:",
+   "parts": [
+    "# TODO ",
+    "Hash",
+    ""
+   ]
+  },
+  {
+   "line": "-- TODO Dash: ünï cödé",
+   "parts": [
+    "-- TODO ",
+    "Dash",
+    "ünï cödé"
+   ]
+  },
+  {
+   "line": "// TODO   Spaces   Inside  :  padded  ",
+   "parts": [
+    "// TODO   ",
+    "Spaces   Inside",
+    "padded"
+   ]
+  },
+  {
+   "line": "/* TODO Block: no */",
+   "parts": null
+  },
+  {
+   "line": "TODO Bare: no opener",
+   "parts": null
+  },
+  {
+   "line": "  --TODO Dash2: ok",
+   "parts": [
+    "  --TODO ",
+    "Dash2",
+    "ok"
+   ]
+  }
+ ],
+ "openers": [
+  {
+   "path": "src/app.ts",
+   "opener": "//"
+  },
+  {
+   "path": "src/script.py",
+   "opener": "#"
+  },
+  {
+   "path": "src/query.sql",
+   "opener": "--"
+  },
+  {
+   "path": "src/deploy.sh",
+   "opener": "#"
+  },
+  {
+   "path": "src/values.yaml",
+   "opener": "#"
+  },
+  {
+   "path": "src/values.yml",
+   "opener": "#"
+  },
+  {
+   "path": "src/query.lua",
+   "opener": "--"
+  },
+  {
+   "path": "src/main.go",
+   "opener": "//"
+  },
+  {
+   "path": "README",
+   "opener": "//"
+  },
+  {
+   "path": "archive.tar.gz",
+   "opener": "//"
+  }
+ ],
+ "scan": {
+  "memory": [
+   {
+    "id": "RENAME-REGION",
+    "name": "Rename Region",
+    "description": "the header region has to be renamed",
+    "parent": "",
+    "file": ".todos.md",
+    "line": 0,
+    "column": 0
+   },
+   {
+    "id": "BARE-ITEM",
+    "name": "Bare Item",
+    "description": "",
+    "parent": "",
+    "file": ".todos.md",
+    "line": 0,
+    "column": 0
+   },
+   {
+    "id": "COLONS",
+    "name": "Colons",
+    "description": "a description: carrying a colon",
+    "parent": "",
+    "file": ".todos.md",
+    "line": 0,
+    "column": 0
+   },
+   {
+    "id": "INDENTED-ITEM",
+    "name": "Indented Item",
+    "description": "an item indented under another",
+    "parent": "",
+    "file": ".todos.md",
+    "line": 0,
+    "column": 0
+   },
+   {
+    "id": "SKIPPED-DOTTED",
+    "name": "Skipped Dotted",
+    "description": "a dotted directory is never scanned",
+    "parent": ".cache/tool.ts",
+    "file": ".cache/tool.ts",
+    "line": 1,
+    "column": 1
+   },
+   {
+    "id": "SKIPPED-BUILD",
+    "name": "Skipped Build",
+    "description": "a build output is never scanned",
+    "parent": "dist/bundle.js",
+    "file": "dist/bundle.js",
+    "line": 1,
+    "column": 1
+   },
+   {
+    "id": "WRITE-GUIDE",
+    "name": "Write Guide",
+    "description": "the guide is missing",
+    "parent": "docs",
+    "file": "docs/.todos.md",
+    "line": 0,
+    "column": 0
+   },
+   {
+    "id": "SKIPPED-DEPENDENCY",
+    "name": "Skipped Dependency",
+    "description": "a dependency is never scanned",
+    "parent": "node_modules/pkg/index.js",
+    "file": "node_modules/pkg/index.js",
+    "line": 1,
+    "column": 1
+   },
+   {
+    "id": "CACHE-RESULT",
+    "name": "Cache Result",
+    "description": "memoise the lookup",
+    "parent": "src/app.ts",
+    "file": "src/app.ts",
+    "line": 2,
+    "column": 1
+   },
+   {
+    "id": "INDENTED-COMMENT",
+    "name": "Indented Comment",
+    "description": "keeps its indentation",
+    "parent": "src/app.ts",
+    "file": "src/app.ts",
+    "line": 3,
+    "column": 1
+   },
+   {
+    "id": "TWO",
+    "name": "Two",
+    "description": "Colons: only the first one splits",
+    "parent": "src/app.ts",
+    "file": "src/app.ts",
+    "line": 6,
+    "column": 1
+   },
+   {
+    "id": "GO-TODO",
+    "name": "Go Todo",
+    "description": "the go file is scanned",
+    "parent": "src/component.go",
+    "file": "src/component.go",
+    "line": 3,
+    "column": 1
+   },
+   {
+    "id": "PYTHON-TODO",
+    "name": "Python Todo",
+    "description": "the hash opener counts",
+    "parent": "src/script.py",
+    "file": "src/script.py",
+    "line": 2,
+    "column": 1
+   }
+  ],
+  "filesystem": [
+   {
+    "id": "RENAME-REGION",
+    "name": "Rename Region",
+    "description": "the header region has to be renamed",
+    "parent": "",
+    "file": ".todos.md",
+    "line": 0,
+    "column": 0
+   },
+   {
+    "id": "BARE-ITEM",
+    "name": "Bare Item",
+    "description": "",
+    "parent": "",
+    "file": ".todos.md",
+    "line": 0,
+    "column": 0
+   },
+   {
+    "id": "COLONS",
+    "name": "Colons",
+    "description": "a description: carrying a colon",
+    "parent": "",
+    "file": ".todos.md",
+    "line": 0,
+    "column": 0
+   },
+   {
+    "id": "INDENTED-ITEM",
+    "name": "Indented Item",
+    "description": "an item indented under another",
+    "parent": "",
+    "file": ".todos.md",
+    "line": 0,
+    "column": 0
+   },
+   {
+    "id": "WRITE-GUIDE",
+    "name": "Write Guide",
+    "description": "the guide is missing",
+    "parent": "docs",
+    "file": "docs/.todos.md",
+    "line": 0,
+    "column": 0
+   },
+   {
+    "id": "CACHE-RESULT",
+    "name": "Cache Result",
+    "description": "memoise the lookup",
+    "parent": "src/app.ts",
+    "file": "src/app.ts",
+    "line": 2,
+    "column": 1
+   },
+   {
+    "id": "INDENTED-COMMENT",
+    "name": "Indented Comment",
+    "description": "keeps its indentation",
+    "parent": "src/app.ts",
+    "file": "src/app.ts",
+    "line": 3,
+    "column": 1
+   },
+   {
+    "id": "TWO",
+    "name": "Two",
+    "description": "Colons: only the first one splits",
+    "parent": "src/app.ts",
+    "file": "src/app.ts",
+    "line": 6,
+    "column": 1
+   },
+   {
+    "id": "GO-TODO",
+    "name": "Go Todo",
+    "description": "the go file is scanned",
+    "parent": "src/component.go",
+    "file": "src/component.go",
+    "line": 3,
+    "column": 1
+   },
+   {
+    "id": "PYTHON-TODO",
+    "name": "Python Todo",
+    "description": "the hash opener counts",
+    "parent": "src/script.py",
+    "file": "src/script.py",
+    "line": 2,
+    "column": 1
+   }
+  ]
+ },
+ "slugs": [
+  {
+   "title": "Sketch Of The Tree",
+   "slug": "SKETCH-OF-THE-TREE"
+  },
+  {
+   "title": "sketch of the tree",
+   "slug": "SKETCH-OF-THE-TREE"
+  },
+  {
+   "title": "///",
+   "slug": ""
+  },
+  {
+   "title": "",
+   "slug": ""
+  },
+  {
+   "title": "  Spaces  ",
+   "slug": "SPACES"
+  },
+  {
+   "title": "ÜberCool Draft",
+   "slug": "BER-COOL-DRAFT"
+  },
+  {
+   "title": "XMLParser 2",
+   "slug": "XML-PARSER-2"
+  },
+  {
+   "title": "a",
+   "slug": "A"
+  },
+  {
+   "title": "Ünï",
+   "slug": "N"
+  }
+ ]
+}

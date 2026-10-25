@@ -15,7 +15,7 @@ interface BoardRow {
   readonly own: boolean;
 }
 
-/** 📋️ The opened leaderboard page at one instant: its rows in the order shown, and how many learners it says it ranks.
+/** 🥇️ The opened leaderboard page at one instant: its rows in the order shown, and how many learners it says it ranks.
  * Totals follow the page language, so `1,000` and `1.000` are one thousand and `666.7` and `666,7` stay fractional. */
 async function standings(device: Device): Promise<{ readonly rows: readonly BoardRow[]; readonly learners: number }> {
   return pane(device.page, "board").evaluate((page) => {

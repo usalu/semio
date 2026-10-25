@@ -17,7 +17,7 @@ export function resolvePresentationAssetUrl(src: string): string {
   return `${base.endsWith("/") ? base : `${base}/`}${trimmed}`.replace(/\/{2,}/g, "/");
 }
 
-/** 📐️ Physical aspect of a normalized crop (width÷height in source pixels). */
+/** ✂️ Physical aspect of a normalized crop (width÷height in source pixels). */
 export function figureCropPhysicalAspect(crop: DispositionPosition, sourceAspect = 1): number {
   return (crop.width / crop.height) * sourceAspect;
 }
@@ -47,7 +47,7 @@ export function figureMosaicCellIndex(crop: DispositionPosition, mosaic: { reado
   return { column, row };
 }
 
-/** 🧩️ Edge-aligned background-position for one cell in a rows×columns sprite grid. */
+/** 🏠️ Edge-aligned background-position for one cell in a rows×columns sprite grid. */
 export function figureMosaicBackgroundPosition(column: number, row: number, columns: number, rows: number): { readonly posX: number; readonly posY: number } {
   return {
     posX: columns <= 1 ? 50 : (column / (columns - 1)) * 100,
@@ -55,7 +55,7 @@ export function figureMosaicBackgroundPosition(column: number, row: number, colu
   };
 }
 
-/** 📐️ Background-position along one axis when cover overflows (k≥1; k=1 → edge-aligned i/(n−1)). */
+/** 📍️ Background-position along one axis when cover overflows (k≥1; k=1 → edge-aligned i/(n−1)). */
 export function overflowAxisPosition(index: number, count: number, coverOverflowK: number): number {
   if (count <= 1) {
     return 50;
@@ -102,7 +102,7 @@ function figureCropIsFullImage(crop: DispositionPosition): boolean {
   return crop.width >= 1 - FIGURE_MOSAIC_ALIGN_EPSILON && crop.height >= 1 - FIGURE_MOSAIC_ALIGN_EPSILON;
 }
 
-/** 🖼️ Positions a normalized source crop when background width is `(100/crop.width)%` (uniform, no distortion). */
+/** 🎯️ Positions a normalized source crop when background width is `(100/crop.width)%` (uniform, no distortion). */
 export function figureCropBackgroundPosition(crop: DispositionPosition): {
   readonly posX: number;
   readonly posY: number;
@@ -118,7 +118,7 @@ export function figureCropBackgroundPosition(crop: DispositionPosition): {
   };
 }
 
-/** 🖼️ Uniform background-size: `cover` for full image, else `N% auto` / `auto N%` zoomed to the crop (never dual-axis `%`). */
+/** 📏️ Uniform background-size: `cover` for full image, else `N% auto` / `auto N%` zoomed to the crop (never dual-axis `%`). */
 export function figureCropBackgroundSize(crop: DispositionPosition, frame: DispositionPosition, sourceAspect = 1): string {
   if (figureCropIsFullImage(crop)) {
     return "cover";
@@ -138,7 +138,7 @@ export function figureCropBackgroundSize(crop: DispositionPosition, frame: Dispo
   return `auto ${zoomH * coverScale}%`;
 }
 
-/** 🖼️ Centered crop cover in a slide frame (non-mosaic / focus morph). */
+/** 🔲️ Centered crop cover in a slide frame (non-mosaic / focus morph). */
 function figureCropCoverVars(crop: DispositionPosition, frame: DispositionPosition, sourceAspect = 1): { readonly size: string; readonly posX: number; readonly posY: number } {
   const { posX, posY } = figureCropBackgroundPosition(crop);
   return {
@@ -148,7 +148,7 @@ function figureCropCoverVars(crop: DispositionPosition, frame: DispositionPositi
   };
 }
 
-/** 🪟️ Mosaic cell background vars (windowed cover of `mosaic.frame`). */
+/** 📔️ Mosaic cell background vars (windowed cover of `mosaic.frame`). */
 function figureMosaicCellCoverVars(crop: DispositionPosition, mosaic: FigureMosaicGrid, sourceAspect: number, slideAspect?: number): { readonly size: string; readonly posX: number; readonly posY: number } | null {
   const cell = figureMosaicCellIndex(crop, mosaic);
   if (!cell) {
@@ -158,7 +158,7 @@ function figureMosaicCellCoverVars(crop: DispositionPosition, mosaic: FigureMosa
   return mosaicWindowedCoverVars(cell, mosaic, mosaicFrame, sourceAspect, slideAspect);
 }
 
-/** 📐️ Reads `left`/`top`/`width`/`height` percent inline styles as a normalized disposition frame. */
+/** 📖️ Reads `left`/`top`/`width`/`height` percent inline styles as a normalized disposition frame. */
 export function readPercentDispositionFrame(element: HTMLElement): DispositionPosition | null {
   const read = (property: "left" | "top" | "width" | "height"): number | null => {
     const raw = element.style.getPropertyValue(property);
@@ -178,7 +178,7 @@ export function readPercentDispositionFrame(element: HTMLElement): DispositionPo
   return { x, y, width, height };
 }
 
-/** 📐️ Custom properties for morphing a canvas frame from `from` into `to` during reveal auto-animate. */
+/** 🪄️ Custom properties for morphing a canvas frame from `from` into `to` during reveal auto-animate. */
 export function morphFrameCssVars(from: DispositionPosition, to: DispositionPosition): CSSProperties {
   return {
     ["--presentation-morph-frame-left" as string]: `${from.x * 100}%`,
@@ -192,7 +192,7 @@ export function morphFrameCssVars(from: DispositionPosition, to: DispositionPosi
   };
 }
 
-/** 📐️ Writes {@link morphFrameCssVars} onto an element via `style.setProperty` (required for CSS variables). */
+/** 📝️ Writes {@link morphFrameCssVars} onto an element via `style.setProperty` (required for CSS variables). */
 export function applyMorphFrameCssVars(element: HTMLElement, from: DispositionPosition, to: DispositionPosition): void {
   for (const [key, value] of Object.entries(morphFrameCssVars(from, to))) {
     if (typeof value === "string") {
@@ -201,7 +201,7 @@ export function applyMorphFrameCssVars(element: HTMLElement, from: DispositionPo
   }
 }
 
-/** 🖼️ Applies figure crop CSS variables from a vars object via `setProperty`. */
+/** 🧷️ Applies figure crop CSS variables from a vars object via `setProperty`. */
 export function applyFigureCropCssVars(element: HTMLElement, vars: CSSProperties): void {
   for (const [key, value] of Object.entries(vars)) {
     if (typeof value === "string" && key.startsWith("--presentation-figure-bg-")) {
@@ -210,7 +210,7 @@ export function applyFigureCropCssVars(element: HTMLElement, vars: CSSProperties
   }
 }
 
-/** 🖼️ CSS vars for crop tiles: mosaic windowed cover at rest/grid; centered crop cover for focus morph. */
+/** 🀄️ CSS vars for crop tiles: mosaic windowed cover at rest/grid; centered crop cover for focus morph. */
 export function figureCropBackgroundVars(embodiment: FigureEmbodiment, crop: DispositionPosition, frame?: DispositionPosition, morphToFrame?: DispositionPosition, fromMorphToFrame?: DispositionPosition, slideAspect?: number): CSSProperties {
   const mosaic = embodiment.mosaic;
   const sourceAspect = embodiment.sourceAspect ?? 1;

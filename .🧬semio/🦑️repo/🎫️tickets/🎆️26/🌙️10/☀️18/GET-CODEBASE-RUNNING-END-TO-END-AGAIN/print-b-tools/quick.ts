@@ -1,0 +1,4 @@
+import {verifyPrintPdfGlyphPolicy,verifyPrintMacroStaging} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/📄️macro-and-pdf-verification/🟦️.ts";
+import {verifyPrintDocumentCatalog} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/🛡️command-and-publication-verification/🟦️.ts";
+import {verifyPrintToolchainManifest} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/⚡️quick-pipeline-verification/🟦️.ts";
+for (const [n,f] of [["glyph",verifyPrintPdfGlyphPolicy],["catalog",verifyPrintDocumentCatalog],["macro",verifyPrintMacroStaging],["toolchain",verifyPrintToolchainManifest]] as const){try{await (f as any)();console.log("[DEBUG] ok",n)}catch(e){console.log("[DEBUG] FAIL",n,String(e).slice(0,600))}}

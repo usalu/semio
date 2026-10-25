@@ -4,7 +4,7 @@ use crate::editor::note::terminology::NotePlayLabels;
 use crate::editor::note::support::{ui_label, NOTE_INTERACTION_BLOCKS, NOTE_INTERACTION_GRANULARITY, NOTE_PLAY_CONTROLLER_ID};
 use crate::schema::{block_icon, block_kind, block_name, block_tree_row_id, block_visible};
 use crate::{NoteBlockNode, NoteSnapshot};
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+use semio_framework_plugin::{Buildable, HasBase};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::tree_window_item;
 use semio_framework_plugin::ActionFactory;

@@ -51,7 +51,7 @@ function policyDiscoverGrammarAndProtocolSpecs(repoRoot: string): string[] {
 }
 
 /**
- * 📏️Normalized-hash collision rule: two `.grammar.semio`/`.protocol.semio` under ✏️s/ or 🧰️framework/
+ * 🔏️Normalized-hash collision rule: two `.grammar.semio`/`.protocol.semio` under ✏️s/ or 🧰️framework/
  * must not share a body after dialect name/start normalization.
  */
 function policySpecDistinctnessBreaches(repoRoot: string): BreachRecord[] {
@@ -88,7 +88,7 @@ function policySpecDistinctnessBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
- * 📏️Flags catch-all generic grammar shapes under ✏️s/ (prop IDENT=, untyped list/map/value with prop,
+ * 🚩️Flags catch-all generic grammar shapes under ✏️s/ (prop IDENT=, untyped list/map/value with prop,
  * bare IDENT assign* shells, json/blob/base64/payload field names).
  */
 function policyGenericSpecBreaches(repoRoot: string): BreachRecord[] {
@@ -128,7 +128,7 @@ function policyGenericSpecBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** 🔎️Loads `📖️family-*.grammar.semio` keyed by `family-*` id. */
+/** 📖️Loads `📖️family-*.grammar.semio` keyed by `family-*` id. */
 function policyLoadFamilyFragments(repoRoot: string): Map<string, { relPath: string; productions: readonly string[] }> {
   const out = new Map<string, { relPath: string; productions: readonly string[] }>();
   const files = policyWalkRelFiles(repoRoot, [POLICY_FAMILY_ROOT], (_p, name) => name.startsWith("📖️family-") && name.endsWith(".grammar.semio"));
@@ -148,7 +148,7 @@ function policyLoadFamilyFragments(repoRoot: string): Map<string, { relPath: str
 }
 
 /**
- * 📏️Every `use family-X` must reference at least one production symbol from that family fragment.
+ * 🔣️Every `use family-X` must reference at least one production symbol from that family fragment.
  */
 function policyDeclaredUseBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -201,7 +201,7 @@ function policyArtifactHasRegisterLanguage(repoRoot: string, artRel: string): bo
 }
 
 /**
- * 📏️Facet `🦀️.rs` must `include_str!` its sibling grammar/protocol spec; artifacts with any
+ * 💠️Facet `🦀️.rs` must `include_str!` its sibling grammar/protocol spec; artifacts with any
  * facet specs must call `register_language` somewhere under the artifact (engine preferred).
  */
 function policySpecWiringBreaches(repoRoot: string): BreachRecord[] {
@@ -259,7 +259,7 @@ function policySpecWiringBreaches(repoRoot: string): BreachRecord[] {
  * kind suffix (`.dsl.semio`, `.op.semio`, `.spr.semio`, `.pack.semio`, `.diff.semio`, `.cmd.semio`) and media.
  */
 /**
- * 📏️Empty/stub `.semio` under `📚️examples/** /🖼️assets/` (all kinds) — size ≤ 64 is a breach.
+ * 🕳️Empty/stub `.semio` under `📚️examples/** /🖼️assets/` (all kinds) — size ≤ 64 is a breach.
  * `POLICY_EMPTY_EXAMPLE_EXEMPTIONS` stays empty.
  */
 export function policyEmptyExampleBreaches(repoRoot: string): BreachRecord[] {
@@ -411,7 +411,7 @@ export function policyDeadExampleLeafBreaches(repoRoot: string, crates: readonly
   return breaches;
 }
 
-/** ⚖️Aggregates all P3/M4 handcrafted-grammar high-priority scanners for policy + verify gate. */
+/** 📕️Aggregates all P3/M4 handcrafted-grammar high-priority scanners for policy + verify gate. */
 export function policyHandcraftedSpecP3Breaches(repoRoot: string): BreachRecord[] {
   return [
     ...policySpecDistinctnessBreaches(repoRoot),
@@ -423,7 +423,7 @@ export function policyHandcraftedSpecP3Breaches(repoRoot: string): BreachRecord[
   ];
 }
 
-/** 📏️Every concrete mutation directory owns one authoritative direct Rust component. */
+/** 📂️Every concrete mutation directory owns one authoritative direct Rust component. */
 function policyMutationDirectOwnerBreaches(repoRoot: string, mutationRoots: readonly string[] = policyFindAllMutationsDirs(repoRoot)): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const mutationsRel of mutationRoots) {
@@ -447,7 +447,7 @@ function policyMutationDirectOwnerBreaches(repoRoot: string, mutationRoots: read
 }
 
 /**
- * 📏️A direct mutation component owns its semantic descriptor and mutation implementation.
+ * 🧩️A direct mutation component owns its semantic descriptor and mutation implementation.
  */
 function policyMutationImplPresenceBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -474,7 +474,7 @@ function policyMutationImplPresenceBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** 🔗️Plugin roots that may declare runtime dependencies: `✏️s/🔌️plugins/<plugin>` and its `🧩️extensions/<ext>`. */
+/** ⛓️Plugin roots that may declare runtime dependencies: `✏️s/🔌️plugins/<plugin>` and its `🧩️extensions/<ext>`. */
 function policyDependencyOwnerRoots(repoRoot: string): readonly string[] {
   const roots: string[] = [];
   for (const plugin of policyReaddirSafe(repoRoot, "✏️s/🔌️plugins").filter((e) => e.isDirectory && !e.name.startsWith("."))) {
@@ -488,7 +488,7 @@ function policyDependencyOwnerRoots(repoRoot: string): readonly string[] {
 }
 
 /**
- * 🔗️Component leaves that belong to `ownerRel` ITSELF, excluding any nested `🧩️extensions/<ext>/`
+ * 🍃️Component leaves that belong to `ownerRel` ITSELF, excluding any nested `🧩️extensions/<ext>/`
  * subtree — an extension is its own dependency owner (it appears separately in
  * [[policyDependencyOwnerRoots]]), so folding its files into its parent plugin's walk made the parent
  * inherit the extension's `.depends_on(...)` and demand a Cargo dependency the parent never needs. A
@@ -503,7 +503,7 @@ export function policyOwnerOwnComponentFiles(repoRoot: string, ownerRel: string)
   );
 }
 
-/** 🔗️An owner's DECLARED runtime plugin dependencies — `[package.metadata.semio].depends-on` plus,
+/** 🔌️An owner's DECLARED runtime plugin dependencies — `[package.metadata.semio].depends-on` plus,
  * for an extension, its `extends` host (contract freeze §4 rule 1 makes the host `dependsOn[0]`).
  * Deliberately NOT the crate's `[dependencies]`: a `semio-s-plugin-<id>` Cargo line is a build-time
  * rlib link (codecs, schema types) that says nothing about needing `<id>`'s own actor loaded. */
@@ -518,7 +518,7 @@ function policySemioMetadataDependsOnIds(repoRoot: string, ownerRel: string): { 
 }
 
 /**
- * 📏️The one declared runtime-dependency set of a plugin has two co-located mirrors that must agree:
+ * 🪞️The one declared runtime-dependency set of a plugin has two co-located mirrors that must agree:
  * `.depends_on("x", …)` on the owner's builder (`🦀️.rs`, the wire `PluginManifest.dependencies` the
  * host's load order, version checks and contribution gates read) and
  * `[package.metadata.semio].depends-on` in its Cargo manifest (what the plugin registry generator
@@ -569,7 +569,7 @@ export function policyPluginDependencyParityBreaches(repoRoot: string): BreachRe
 }
 
 /**
- * 📏️Every `ArtifactContribution::builder("s.<owner>.<artifact>")` must target an artifact whose
+ * 🎯️Every `ArtifactContribution::builder("s.<owner>.<artifact>")` must target an artifact whose
  * owning plugin the contributor declares as a direct dependency — contributing onto a plugin you do
  * not depend on is exactly the unowned-registration this ticket's contract forbids.
  */
@@ -613,7 +613,7 @@ export function policyContributionTargetBreaches(repoRoot: string): BreachRecord
 }
 
 /**
- * 📏️Every `🔧️op/*.grammar.semio` must declare `start mutation` (production `mutation =` follows in fan-out).
+ * ▶️Every `🔧️op/*.grammar.semio` must declare `start mutation` (production `mutation =` follows in fan-out).
  */
 function policyOpGrammarStartMutationBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -693,7 +693,7 @@ export function policyRepositoryOwnedRoots(): string[] {
 }
 
 /**
- * 📏️SEMANTIC-MUTATIONS-OVERHAUL rule 1: every repository-owned `.rs` file under a
+ * 🗺️SEMANTIC-MUTATIONS-OVERHAUL rule 1: every repository-owned `.rs` file under a
  * `🧬️mutations/` facet or a `🎮️commands/` app-command dir must not reference the banned generic mutation
  * vocabulary the new `SemanticDescriptor`/`MutationKind`/`#[derive(dsl_derive::Mutations)]` mechanism
  * (see `🧰️framework/…/📡️spr/🎮️command/🦀️.rs`'s `🔖️Semantics` region) replaces: `SetSnapshot`
@@ -780,7 +780,7 @@ function policyMutationDispatchCoverageBreaches(repoRoot: string): BreachRecord[
 }
 
 /**
- * 📏️SEMANTIC-MUTATIONS-OVERHAUL rule 3 (`policyMutationTsMirrorBreaches`): flags any `.ts` leaf anywhere
+ * 🦜️SEMANTIC-MUTATIONS-OVERHAUL rule 3 (`policyMutationTsMirrorBreaches`): flags any `.ts` leaf anywhere
  * under a `🧬️mutations/` facet whose content is trivially `export {};` (or empty) — near-universal today
  * (triad `.ts` leaves were scaffolded as stubs, see `policyIsConstitutionalTsFacadePath`'s explicit tolerance for this exact shape),
  * so this stays `"low"` advisory with no allowlist rather than seeding ~1000+ file paths for a finding that
@@ -873,7 +873,7 @@ function policyCommandFolderSemanticBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** ⚖️Aggregates Wave 2b mutation / ArtifactEngine / op-grammar scanners. */
+/** ⚙️Aggregates Wave 2b mutation / ArtifactEngine / op-grammar scanners. */
 export function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] {
   return [
     ...policyMutationStructuralBreaches(repoRoot),

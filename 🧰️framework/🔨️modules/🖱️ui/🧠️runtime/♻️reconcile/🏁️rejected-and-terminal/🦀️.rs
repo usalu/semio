@@ -161,7 +161,7 @@ impl SurfaceReconcileTerminal {
         self.close_step_with_grant(1, SURFACE_RECONCILE_PAGE_BYTES)
     }
 
-    /// 🧹️ Retires this terminal against the caller's PAGE grant — the same pricing
+    /// 📪️ Retires this terminal against the caller's PAGE grant — the same pricing
     /// [`SurfaceReconcileReadyPatch::close_step_with_grant`] and the pending-patch authority already
     /// take. A terminal holding a document-scaled retained surface keeps the reactor turn in
     /// `MoreWork`, and the host answers every `MoreWork` with one more round trip, so one owner per

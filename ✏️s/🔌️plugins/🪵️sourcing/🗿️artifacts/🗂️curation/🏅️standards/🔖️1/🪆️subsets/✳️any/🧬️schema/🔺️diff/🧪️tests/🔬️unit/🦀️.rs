@@ -4,6 +4,7 @@ use semio_framework_test_fixtures::fixture_text;
 use crate::ObjectKindExtra;
 #[allow(unused_imports)]
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 #[allow(unused_imports)]
 use framework_schema::ArtifactSchema;
 #[allow(unused_imports)]

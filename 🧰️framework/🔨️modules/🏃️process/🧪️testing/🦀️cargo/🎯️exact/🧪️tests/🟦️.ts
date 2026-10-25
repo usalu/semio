@@ -1,7 +1,5 @@
 import {exactExecutableFingerprint,generatedOutputHasLiveLease,originalNativeLibraryEnvironment,runExactCargoLaws,configuredExactCargoLawPolicyV1,type ExactCargoLawPort}from"../🟦️.ts";
 import {readExactCargoExecutableV1,selectExactCargoLawsV1,requireExactCargoLawResultV1,requireExactCargoFingerprintV1,requireExactCargoTargetBoundaryV1,readExactCargoLawNamesV1}from"../📋️protocol/🟦️.ts";
-import "./📥️inputs/🟦️.ts";
-import "./📦️executable/🟦️.ts";
 import {test,expect}from"bun:test";
 import type {IssuedScriptInvocationV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {withBuildTestInvocationV1}from"../../../../🧪️testing/📥️invocation/🟦️.ts";
@@ -38,7 +36,6 @@ test("compiler runtime loader matches neutral platform vectors and independent S
   expect(() => rustCompilerLoaderEnvironment("linux", {}, "relative")).toThrow();
   expect(() => rustCompilerLoaderEnvironment("win32", {}, "C:\\rust;injected")).toThrow();
   expect(() => rustCompilerLoaderEnvironment("darwin", {}, "/rust\n/injected")).toThrow();
-  console.log("[DEBUG] compiler loader environment matches seven portable cases and SQLite projection");
 });
 
 for (const outcome of ["admitted", "failed", "relative", "multiline", "cancelled"] as const) {
@@ -85,7 +82,7 @@ test("generated cleanup preserves fresh live managed owners and admits terminal,
     const directory = join(root, row.name), job = join(directory, "managed-verification", "job");
     mkdirSync(job, { recursive: true });
     writeFileSync(join(job, "state.json"), JSON.stringify({ name: "job", status: row.status, pid: row.alive ? process.pid : 2147483647 }));
-    writeFileSync(join(job, "output.log"), "[DEBUG] active verification output\n");
+    writeFileSync(join(job, "output.log"), "[TRACE] active verification output\n");
     const time = new Date(Date.now() - row.ageMs);
     utimesSync(join(job, "state.json"), time, time);
     utimesSync(join(job, "output.log"), time, time);
@@ -165,5 +162,4 @@ test("controlled fingerprint obeys neutral progress and interruption vectors wit
   else await expect(operation).rejects.toThrow(row.interruption.startsWith("deadline")?"Original Script deadline refused":"changed while hashing");
   expect(progress,row.name).toEqual(row.progress);
  }
- console.log("[DEBUG] controlled executable fingerprint matches seven neutral interruption vectors, awaited progress and noble SHA-256");
 });

@@ -3,8 +3,8 @@
  * 🧱️ Child module of {@link ../../🟦️.ts | os root}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import type { MutationMessage } from "../🎠️kernel/🔄️merge-outcome/🟦️.ts";
-import type { Severity } from "../🎠️kernel/🚨️fault/🟦️.ts";
+import type { MutationMessage } from "../🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts";
+import type { Severity } from "../🎠️kernel/📦️packages/🟦️typescript/🚨️fault/🟦️.ts";
 import type { LocalInteractionQueryCommand, LocalInteractionQueryReply, MutationEnvelope } from "../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import {
   readBool,

@@ -292,7 +292,7 @@
       "networkDuringExecution": false,
       "homepage": "https://www.i18next.com/principles/fallback",
       "hostPath": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-      "rationale": "Judges the language a browser's list preselects in @semio-tech/course-react inside its unit suite `🧪️tests/🌍️language-choice` (vitest, devDependency of the react package): for every browser language list of the shared vector, a fresh i18next instance configured with the offered languages and `fallbackLng: false` must negotiate the same language as the renderer's `preferredLocale` — and none where the vector says none, which is what makes the renderer ask instead of assuming a language. The renderer's own negotiation is a few lines over the primary language subtag and links nothing; i18next is otherwise used by the repo's shared i18n port, where the quiz always names its language explicitly."
+      "rationale": "Judges the language a browser's list preselects in @semio-tech/course-react inside its unit suite `🧪️tests/🌍️language-choice` (vitest, devDependency of the react package): for every browser language list of the shared vector, a fresh i18next instance configured with the offered languages and `fallbackLng: false` must negotiate the same language as the renderer's `preferredLocale` — and none where the vector says none, which is what makes the renderer ask instead of assuming a language. The renderer's own negotiation is a few lines over the primary language subtag and links nothing; i18next is otherwise only the independent oracle of the tests of the repo's own i18n engine, which the shared i18n port runs on."
     },
     {
       "id": "course-react-jsdom-session-history",

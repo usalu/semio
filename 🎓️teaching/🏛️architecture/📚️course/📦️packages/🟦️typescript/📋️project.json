@@ -263,7 +263,7 @@
       "inputs": [
         "default",
         { "env": "PROCTOR_URL" },
-        { "externalDependencies": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities", "@tailwindcss/vite", "@vitejs/plugin-react", "ajv", "i18next", "immer", "react", "react-dom", "react-i18next", "tailwindcss", "vite"] },
+        { "externalDependencies": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities", "@tailwindcss/vite", "@vitejs/plugin-react", "ajv", "immer", "react", "react-dom", "tailwindcss", "vite"] },
         "{workspaceRoot}/🎓️teaching/🏛️architecture/⚡️energy/**/❓️quiz/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"
       ],

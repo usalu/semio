@@ -15,7 +15,7 @@ async fn a_grants_budget_is_what_the_turn_actually_executes_under() {
     let actor = ActorId(71);
     let package = PackageRef { package: PackageId("grant-budget".to_string()), hash: PackageHash([21u8; 32]) };
     let compiled = runtime.compile(&package, &[]).await.expect("compile");
-    let instance = runtime.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
+    let instance = runtime.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("instantiate");
 
     let (transport, probe) = LoopbackTransport::paired().await;
     let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
@@ -34,7 +34,7 @@ async fn a_grants_budget_is_what_the_turn_actually_executes_under() {
         payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).unwrap() },
     };
     let mut bytes = Vec::new();
-    ShardFrame::Grant { retained: original_retained_turn(), actor, budget: first_budget, envelopes: vec![envelope] }.pack_encode(&mut bytes).await.expect("declared original frame authority");
+    ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget: first_budget, envelopes: vec![envelope] }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
     pump(&mut shard).await.expect("pump 1");
     assert_eq!(runtime.last_turn_budget.lock().unwrap().expect("execute_turn must have been called").fuel, 111_111, "the FIRST Grant's own fuel must reach execute_turn, not a constant");
@@ -52,7 +52,7 @@ async fn a_grants_budget_is_what_the_turn_actually_executes_under() {
         payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).unwrap() },
     };
     let mut bytes2 = Vec::new();
-    ShardFrame::Grant { retained: original_retained_turn(), actor, budget: second_budget, envelopes: vec![envelope2] }.pack_encode(&mut bytes2).await.expect("declared original frame authority");
+    ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget: second_budget, envelopes: vec![envelope2] }.pack_encode(&mut bytes2).await.expect("declared original frame authority");
     probe.push_inbound(bytes2).await;
     pump(&mut shard).await.expect("pump 2");
     assert_eq!(runtime.last_turn_budget.lock().unwrap().expect("execute_turn must have been called again").fuel, 222_222, "a DIFFERENT second Grant's fuel must reach execute_turn too — proving it travels per-Grant, not a fixed constant");
@@ -70,7 +70,7 @@ async fn job_step_uses_the_owning_actors_last_granted_budget() {
     let actor = ActorId(72);
     let package = PackageRef { package: PackageId("grant-job-budget".to_string()), hash: PackageHash([22u8; 32]) };
     let compiled = runtime.compile(&package, &[]).await.expect("compile");
-    let instance = runtime.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
+    let instance = runtime.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("instantiate");
 
     let (transport, probe) = LoopbackTransport::paired().await;
     let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
@@ -79,7 +79,7 @@ async fn job_step_uses_the_owning_actors_last_granted_budget() {
     let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
     budget.fuel = 333_333;
     let mut bytes = Vec::new();
-    ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![] }.pack_encode(&mut bytes).await.expect("declared original frame authority");
+    ShardFrame::Grant { retained: original_retained_turn(), retained_policy: original_retained_turn().grant, work_fuel: original_retained_turn().work.fuel, deadline_us: original_retained_turn().work.absolute_deadline_us, actor, budget, envelopes: vec![] }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
     assert_eq!(pump(&mut shard).await.expect("budget grant pump"), 0, "an empty Grant updates authority without driving a guest");
     let turn = test_job_turn(actor, 999, 0, 0);
@@ -120,7 +120,7 @@ async fn unregister_frame_drops_the_instance_exactly_like_the_direct_call() {
     let actor = ActorId(81);
     let package = PackageRef { package: PackageId("unreg-frame".to_string()), hash: PackageHash([23u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1, semio_framework_job::default_now_us().unwrap_or(0), 1, 1, 1, 1)).await.expect("mock instantiate");
     let (transport, probe) = LoopbackTransport::paired().await;
     let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);

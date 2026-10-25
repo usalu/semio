@@ -1,4 +1,4 @@
-//! 🖼️ Media and slot nodes: the retained paint steps of the image, component scene and external slot nodes. See [`super`].
+//! 🕸️ Media and slot nodes: the retained paint steps of the image, component scene and external slot nodes. See [`super`].
 
 use super::*;
 

@@ -23,7 +23,7 @@ pub trait OriginalActorJobProvider{
 #[value(rename_all="camelCase")]
 pub enum OriginalJobOutputState{Running,Done,Failed}
 semio_framework_value::artifact_retire_leaf!(OriginalJobOutputState);
-/// 📬️ The body remains in its original Entry owner until read and paid full retirement complete.
+/// 💼️ The body remains in its original Entry owner until read and paid full retirement complete.
 #[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,ToValue,FromValue,semio_framework_value::RetireOwned)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 #[value(rename_all="camelCase")]
@@ -39,7 +39,7 @@ pub struct OriginalJobOutputChunk{pub offset:u64,pub bytes:Option<Vec<u8>>,pub o
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 pub struct OriginalJobOutputReply{pub input:crate::RetainedTurnInput,pub spent:semio_framework_value::RetainedCloneProgress,pub work_units_spent:u64,pub chunk:Option<OriginalJobOutputChunk>,pub source_closed:bool,pub refusal:Option<crate::OriginalJobCallFailure>}
 
-/// 🤝️ A bounded original acknowledgement retires only the exact offered output source identity.
+/// 📤️ A bounded original acknowledgement retires only the exact offered output source identity.
 #[derive(Debug,serde::Serialize,serde::Deserialize,semio_framework_value::RetireOwned)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 pub struct OriginalJobOutputAckReply{pub input:crate::RetainedTurnInput,pub spent:semio_framework_value::RetainedCloneProgress,pub work_units_spent:u64,pub acknowledged:bool,pub source_closed:bool,pub refusal:Option<crate::OriginalJobCallFailure>}

@@ -1,11 +1,16 @@
 /** 🎯 Contract: the target cache policy of the build graph (name predicates, class lookup, the replay decision, output admission and execution contracts) equals the authored cases in `./🔣️.json` and an independent Python derivation, every decision it hands out conforms to the closed cache schema under Ajv, and unknown classes, foreign reasons and open records are refused with the authored messages. */
 import {expect,setDefaultTimeout,test} from "bun:test";
+import {readFileSync} from "node:fs";
+import {minimatch} from "minimatch";
 import {spawnSync} from "node:child_process";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import cacheSchema from "../../../../🏃️execution/🧬️schema/💾️cache.json";
 import executionSchema from "../../../../🏃️execution/🧬️schema/🔣️.json";
+import {buildTaskInputsV1} from "../../../../🧮️task-model/🟦️.ts";
+import {bazelTaskSourcePathsV1} from "../../../../🔧️tools/🏗️bazel/📜️script.ts";
+import {buildInputPathMatchesV1} from "../../../../📥️inputs/🟨️.mjs";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
 
@@ -56,6 +61,31 @@ test("the class lookup lets an exact name decide before any head, tail or token 
  for(const row of corpus.classRefusals){
   expect(outcome(()=>cacheInternals.targetClassV1(row.target,row.rows)).error,row.name).toBe(row.error);
   expect(ask([{kind:"classes",rows:row.rows,names:[row.target]}])[0][0].error,row.name).toBe(row.error);
+ }
+});
+
+test("a row names the exclusions of its targets exactly as it classes them and an explicit test read keeps the full inputs",()=>{
+ const [named]=ask([{kind:"exclusions",rows:corpus.classRows,names:corpus.exclusionCases.map(row=>row.target)}]);
+ for(const[index,row]of corpus.exclusionCases.entries()){
+  expect(cacheInternals.targetExclusionsV1(row.target,corpus.classRows)??null,row.name).toBe(row.exclusions);
+  expect(named[index]??null,row.name).toBe(row.exclusions);
+ }
+ const answers=ask(corpus.conflictCases.map(row=>({kind:"conflict",inputs:row.inputs,named:row.named,patterns:row.patterns,root:row.root})));
+ for(const[index,row]of corpus.conflictCases.entries()){
+  expect(cacheInternals.excludedInputConflictV1(row.inputs,row.named,row.patterns,buildInputPathMatchesV1,row.root),row.name).toBe(row.conflict);
+  expect(answers[index],row.name).toBe(row.conflict);
+ }
+});
+
+test("the exclusions keep a test, feature or story edit out of the selection of a class target and keep every source in it, equal to minimatch",()=>{
+ const policyInputs=JSON.parse(readFileSync(join(import.meta.dir,"../../../../🔣️policy.json"),"utf8")).namedInputs;
+ for(const row of corpus.selectionCases){
+  const graph={version:1,projects:{p:{name:"p",root:row.project.root,targets:{},namedInputs:row.project.namedInputs}},dependencies:[],namedInputs:policyInputs} as any;
+  const expanded=buildTaskInputsV1(graph,{project:"p",definition:{inputs:row.inputs}} as any).flatMap(input=>input.kind==="file"?[(input.exclude?"!":"")+input.pattern]:[]);
+  const selected=bazelTaskSourcePathsV1(expanded,row.inventory);
+  const oracle=row.inventory.filter(path=>expanded.some(pattern=>!pattern.startsWith("!")&&minimatch(path,pattern))&&!expanded.some(pattern=>pattern.startsWith("!")&&minimatch(path,pattern.slice(1))));
+  expect(selected,row.name).toEqual([...row.selected]);
+  expect([...oracle].sort(),row.name).toEqual([...row.selected]);
  }
 });
 

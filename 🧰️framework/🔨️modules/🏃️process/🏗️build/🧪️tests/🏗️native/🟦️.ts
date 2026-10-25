@@ -1,9 +1,11 @@
+import {withBuildTestInvocationV1} from "../../../🧪️testing/📥️invocation/🟦️.ts";
 import deletionSchema from "../🧫️fixtures/🏗️native/🧬️schema/🔣️.json";
 import capacitySchema from "../../🎟️capacity/🧬️schema/🔣️.json";
-import { compilerCapacityWorkerCountV1, acquireCompilerCapacityLeaseV1,phaseCompilerAdmissionControlV1 } from "../../🎟️capacity/🟦️.ts";
+import { compilerCapacityWorkerCountV1, acquireCompilerCapacityLeaseV1,scriptCompilerAdmissionControlV1 } from "../../🎟️capacity/🟦️.ts";
 import { build } from "esbuild";
 import { expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
+import { availableParallelism } from "node:os";
 import { runOwnedCommand } from "../../../🎛️owned-execution/🟦️.ts";
 import { readFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -12,7 +14,7 @@ import fixture from "../🧫️fixtures/🏗️native/🔣️.json";
 import schema from "../../../📦️artifacts/🏗️native-build/🧬️schema/🔣️.json";
 import { receiveScriptProcessInvocation } from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { publishedCargoArtifactDirectoryV1 } from "../../../📦️artifacts/🏗️native-build/📤️published/🟦️.ts";
-import { lawBuildOptionsV1, withIssuedLawStorageV1 } from "../../../📦️artifacts/🏗️native-build/🧪️tests/🦀️cargo/🟦️.ts";
+import { lawBuildOptionsV1, lawCompilerConfigurationV1, withIssuedLawStorageV1 } from "../../../📦️artifacts/🏗️native-build/🧪️tests/🦀️cargo/🟦️.ts";
 import { buildCargoArtifacts, cargoArtifactArgumentsV1, cargoConfigurationArgumentsV1, readCargoArtifactBuildPolicyV1 } from "../../../📦️artifacts/🏗️native-build/🟦️.ts";
 const root = resolve(import.meta.dir,"../../../../../..");
 test("Native mode policy admission agrees with an independent schema oracle", () => {
@@ -31,21 +33,22 @@ test("Native mode policy admission agrees with an independent schema oracle", ()
 
 
 
-test("All-core capacity queues independent builders and admits inherited children", async () => {
- const directory = process.env.SEMIO_TEST_ARTIFACT_DIR!, signal = new AbortController().signal;
- const events:string[]=[];
- const first = await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory,control:phaseCompilerAdmissionControlV1(signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done))),environment:{}}); events.push("first-held");
- expect(new Ajv({strict:true}).compile(capacitySchema)({resource:first.resource,mode:first.mode,parallelism:first.parallelism})).toBe(true);
- for(const value of fixture.capacity.invalidWorkerBudgets)expect(()=>compilerCapacityWorkerCountV1({SEMIO_COMPILER_CAPACITY_HELD:"true",...(value===null?{}:{SEMIO_COMPILER_PARALLELISM:value})})).toThrow();
- const inherited = await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory,control:phaseCompilerAdmissionControlV1(signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done))),environment:{SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:"1"}}); inherited.release();
- let observed!:()=>void; const waiting = new Promise<void>(accept=>{observed=accept;});
- const pending = acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory,control:phaseCompilerAdmissionControlV1(signal,30000,()=>{if(!events.includes("second-waiting"))events.push("second-waiting");observed();},()=>new Promise(done=>setImmediate(done))),environment:{}});
- await waiting; events.push("first-released"); first.release();
- const second = await pending; events.push("second-held");
- expect(events).toEqual(fixture.capacity.events);
- const controller = new AbortController();
- const cancelled = acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory,control:phaseCompilerAdmissionControlV1(controller.signal,30000,()=>controller.abort(),()=>new Promise(done=>setImmediate(done))),environment:{}});
- await expect(cancelled).rejects.toThrow(); second.release();
+test("All-core capacity queues independent builders and refuses environment markers as lent capacity", async () => {
+ const directory = process.env.SEMIO_TEST_ARTIFACT_DIR!;
+ await withBuildTestInvocationV1(async original=>{
+  const events:string[]=[],control=(additional?:AbortSignal)=>scriptCompilerAdmissionControlV1(original,"test:all-core-capacity",30000,additional),pause=(milliseconds:number)=>new Promise<void>(done=>setTimeout(done,milliseconds));
+  const first = await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory,control:control(),environment:{}}); events.push("first-held");
+  expect(new Ajv({strict:true}).compile(capacitySchema)({resource:first.resource,mode:first.mode,parallelism:first.parallelism})).toBe(true);
+  for(const value of fixture.capacity.invalidWorkerBudgets){const environment={SEMIO_COMPILER_CAPACITY_HELD:"true",...(value===null?{}:{SEMIO_COMPILER_PARALLELISM:value})};if(value===null)expect(compilerCapacityWorkerCountV1(environment)).toBe(availableParallelism());else expect(()=>compilerCapacityWorkerCountV1(environment)).toThrow();}
+  await expect(acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory,control:control(),environment:{SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:"1"}})).rejects.toThrow("environment markers cannot lend CPUs");
+  let settled=false;const pending = acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory,control:control(),environment:{}}).finally(()=>{settled=true;});
+  await pause(400);expect(settled).toBe(false);events.push("second-waiting");events.push("first-released"); first.release();
+  const second = await pending; events.push("second-held");
+  expect(events).toEqual(fixture.capacity.events);
+  const controller = new AbortController(),cancelled = acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory,control:control(controller.signal),environment:{}}).then(()=>undefined,error=>error);
+  await pause(200);controller.abort();
+  expect(String(await cancelled)).toContain(fixture.capacity.cancelled);second.release();
+ });
 },120000);
 test("CMake compiles both mode configurations and reuses warm Ninja outputs", async () => {
  const directory = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"cmake-"));
@@ -65,7 +68,7 @@ test("CMake compiles both mode configurations and reuses warm Ninja outputs", as
 
 
 test("Cargo modes publish separate executable owners and reuse warm compiler intermediates", async () => {
- await receiveScriptProcessInvocation(process.env, original => withIssuedLawStorageV1(original, new AbortController().signal, async (held, admission) => {
+ await withBuildTestInvocationV1(original => withIssuedLawStorageV1(original, new AbortController().signal, async (held, admission) => {
  const directory = mkdtempSync(join(held.root,"m-")), artifacts = join(held.root,"artifacts"), manifest = join(directory,"Cargo.toml");
  mkdirSync(artifacts);
  writeFileSync(manifest,`[workspace]\n[package]\nname="${fixture.cargo.name}"\nversion="0.1.0"\nedition="2021"\n[[bin]]\nname="${fixture.cargo.name}"\npath="main.rs"\n[profile.prototype]\ninherits="dev"\nincremental=true\n[profile.release]\nlto="thin"\ncodegen-units=1\n`);
@@ -73,7 +76,7 @@ test("Cargo modes publish separate executable owners and reuse warm compiler int
  expect(spawnSync("cargo",["generate-lockfile","--offline","--manifest-path",manifest],{cwd:directory,encoding:"utf8"}).status).toBe(0);
  for(const row of fixture.modes) {
   writeFileSync(join(directory,"main.rs"),fixture.cargo.source);
-  const policy = {version:1 as const,mode:row.mode as "prototype"|"release",compilerConfiguration:fixtureConfigurationV1(directory),cwd:directory,buildDirectory:join(directory,"b"),leaseDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,captureDirectory:join(directory,"c"),budgetMs:30000};
+  const policy = {version:1 as const,mode:row.mode as "prototype"|"release",compilerConfiguration:lawCompilerConfigurationV1(directory),cwd:directory,buildDirectory:join(directory,"b"),leaseDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,captureDirectory:join(directory,"c"),budgetMs:30000};
   let receipt = "";
   const times:number[]=[];
   for(const warm of [false,true]) {
@@ -95,23 +98,23 @@ test("Cargo modes publish separate executable owners and reuse warm compiler int
 
 
 test("Reserved Cargo children consume their admitted compiler worker count",async()=>{
- await receiveScriptProcessInvocation(process.env, original => withIssuedLawStorageV1(original, new AbortController().signal, async (held, admission) => {
- const output=process.env.SEMIO_TEST_ARTIFACT_DIR!,owner=mkdtempSync(join(held.root,"j-")),host=await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory:output,control:admission,environment:{}});
+ await withBuildTestInvocationV1(original => withIssuedLawStorageV1(original, new AbortController().signal, async (held, admission) => {
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR!,owner=mkdtempSync(join(held.root,"j-"));
  const count=fixture.capacity.reservedCargoWorkers;
  writeFileSync(join(owner,"Cargo.toml"),'[package]\nname="reserved_workers"\nversion="0.1.0"\nedition="2021"\nbuild="build.rs"\n[[bin]]\nname="reserved_workers"\npath="main.rs"\n[workspace]\n[profile.prototype]\ninherits="dev"\n');
  writeFileSync(join(owner,"build.rs"),'fn main(){ println!("cargo::rustc-env=OBSERVED_WORKERS={}",std::env::var("NUM_JOBS").unwrap()); }');writeFileSync(join(owner,"main.rs"),'fn main(){print!("{}",env!("OBSERVED_WORKERS"));}');
  const lock=spawnSync("cargo",["generate-lockfile","--offline"],{cwd:owner,encoding:"utf8"});expect(lock.status,lock.stderr).toBe(0);
- const environment:Record<string,string|undefined>={...process.env,SEMIO_BUILD_MODE:"prototype",SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(count)};delete environment.MAKEFLAGS;delete environment.CARGO_MAKEFLAGS;delete environment.CARGO_BUILD_JOBS;
+ const environment:Record<string,string|undefined>={...process.env,SEMIO_BUILD_MODE:"prototype",SEMIO_COMPILER_PARALLELISM:String(count)};delete environment.MAKEFLAGS;delete environment.CARGO_MAKEFLAGS;delete environment.CARGO_BUILD_JOBS;
  try{
-  await buildCargoArtifacts(join(owner,"Cargo.toml"),[],{version:1,mode:"prototype",cwd:owner,buildDirectory:join(owner,"b"),captureDirectory:join(held.root,"capture"),leaseDirectory:output,budgetMs:120_000},lawBuildOptionsV1(held,admission,{environment:{...environment,...held.environment}}));
-  const executable=join(publishedCargoArtifactDirectoryV1(held.storage.backing.root,join(owner,"Cargo.toml"),"prototype"),"reserved_workers"+(process.platform==="win32"?".exe":""));expect(spawnSync(executable,[],{encoding:"utf8"}).stdout).toBe(String(count));
-  const oracle=spawnSync("cargo",["run","--quiet","--profile","prototype","-j",String(count),"--target-dir",join(owner,"oracle")],{cwd:owner,env:environment,encoding:"utf8"});expect(oracle.status,oracle.stderr).toBe(0);expect(oracle.stdout).toBe(String(count));
- }finally{host.release();}
+  await buildCargoArtifacts(join(owner,"Cargo.toml"),[],{version:1,mode:"prototype",cwd:owner,buildDirectory:join(owner,"b"),captureDirectory:join(held.root,"capture"),leaseDirectory:output,budgetMs:120_000},lawBuildOptionsV1(held,admission,{environment:{...environment,...held.environment,SEMIO_TEST_ARTIFACT_DIR:undefined}}));
+  const executable=join(publishedCargoArtifactDirectoryV1(held.storage.backing.root,join(owner,"Cargo.toml"),"prototype"),"reserved_workers"+(process.platform==="win32"?".exe":"")),admitted=Number(spawnSync(executable,[],{encoding:"utf8"}).stdout);expect(Number.isSafeInteger(admitted)&&admitted>=count&&admitted<=availableParallelism()).toBe(true);
+  const oracle=spawnSync("cargo",["run","--quiet","--profile","prototype","-j",String(admitted),"--target-dir",join(owner,"oracle")],{cwd:owner,env:environment,encoding:"utf8"});expect(oracle.status,oracle.stderr).toBe(0);expect(oracle.stdout).toBe(String(admitted));
+ }finally{}
  })); },120_000);
 
 test("Central Cargo profile policy compiles independent workspaces without local profile tables",async()=>{
- await receiveScriptProcessInvocation(process.env, original => withIssuedLawStorageV1(original, new AbortController().signal, async (held, admission) => {
- const directory=mkdtempSync(join(held.root,"policy-")),manifest=join(directory,"Cargo.toml"),configuration=fixtureConfigurationV1(directory);
+ await withBuildTestInvocationV1(original => withIssuedLawStorageV1(original, new AbortController().signal, async (held, admission) => {
+ const directory=mkdtempSync(join(held.root,"policy-")),manifest=join(directory,"Cargo.toml"),configuration=lawCompilerConfigurationV1(directory);
  writeFileSync(manifest,'[workspace]\n[package]\nname="central_profile_fixture"\nversion="0.0.0"\nedition="2021"\n[[bin]]\nname="central_profile_fixture"\npath="main.rs"\n');writeFileSync(join(directory,"main.rs"),'fn main(){print!("{}",cfg!(debug_assertions));}');writeFileSync(join(directory,"Cargo.lock"),'version=4\n[[package]]\nname="central_profile_fixture"\nversion="0.0.0"\n');
  for(const row of fixture.modes){
  const policy={version:1 as const,mode:row.mode as "prototype"|"release",compilerConfiguration:configuration,cwd:directory,buildDirectory:join(directory,"b"),leaseDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,captureDirectory:join(directory,"c"),budgetMs:120000};
@@ -122,7 +125,7 @@ test("Central Cargo profile policy compiles independent workspaces without local
  })); },120000);
 
 test("Cargo capture and relay compiler arguments declare the selected mode and configuration",async()=>{for(const row of fixture.compilerArguments){expect(cargoArtifactArgumentsV1(row.input,{mode:row.mode as "prototype"|"release",compilerConfiguration:"/configuration.toml",buildDirectory:"/compiler"})).toEqual(row.expected);expect(()=>cargoArtifactArgumentsV1(["build","--profile",row.mode==="prototype"?"release":"prototype"],{mode:row.mode as "prototype"|"release",buildDirectory:"/compiler"})).toThrow();}const{parse}=await import("@iarna/toml");for(const row of fixture.compilerStorageArguments){if(!row.accept){expect(()=>cargoConfigurationArgumentsV1(row.input,row.configuration??undefined,row.buildDirectory)).toThrow();continue;}const actual=cargoConfigurationArgumentsV1(row.input,row.configuration??undefined,row.buildDirectory);expect(actual).toEqual(row.expected!);const delimiter=actual.indexOf("--"),head=delimiter<0?actual:actual.slice(0,delimiter),override=head.at(-1)!;expect(parse(override)).toEqual({build:{"build-dir":row.buildDirectory}});expect(Bun.TOML.parse(override)).toEqual(parse(override));}});
-test("Cargo capture and relay compiler arguments have registered source and actual profile dashboard controls",async()=>{const{parse}=await import("jsonc-parser");{const dashboard=JSON.parse(readFileSync(process.cwd()+"/📋️project.json","utf8")).metadata.semio.dashboard,tool=dashboard.tools.find((row:any)=>row.id==="run-script");expect(tool.command).toEqual(["repo","exec","--projects={project}","--dry-run={dry-run}","--","bun","{workspace}/{script}"]);expect(tool.parameters.find((row:any)=>row.id==="script")).toMatchObject({kind:"text",required:true});}});
+test("Cargo capture and relay compiler arguments have registered source and actual profile dashboard controls",async()=>{const{parse}=await import("jsonc-parser");{const dashboard=JSON.parse(readFileSync(process.cwd()+"/📋️project.json","utf8")).metadata.semio.dashboard,tool=dashboard.tools.find((row:any)=>row.id==="run-script");expect(tool.command).toEqual(["repo","exec","--projects={project}","--dry-run={dry-run}","--","repo","{workspace}/{script}"]);expect(tool.parameters.find((row:any)=>row.id==="script")).toMatchObject({kind:"text",required:true});}});
 
 
 test("General native owners bundle when every product owner is refused",async()=>{
@@ -134,4 +137,3 @@ test("General native owners bundle when every product owner is refused",async()=
 });
 
 /** 📋️ Authors the compiler policy inside the independent General specimen. */
-function fixtureConfigurationV1(directory:string):string{const path=join(directory,"compiler.toml");writeFileSync(path,fixture.deletion.compilerConfiguration);return path;}

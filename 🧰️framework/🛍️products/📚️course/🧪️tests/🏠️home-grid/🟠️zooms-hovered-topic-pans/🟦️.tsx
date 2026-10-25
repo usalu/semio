@@ -8,7 +8,7 @@ import { roomScope } from "@semio-tech/course";
 import { EMPTY_PRESENCE_VIEW, Glyph, LeaderboardCard, LeaderboardPage, PresenceProvider, courseText, textPresentation, type PresenceView, type CourseSession } from "@semio-tech/course-react";
 import { quizStylesheet as stylesheet } from "@semio-tech/course-react/stylesheet";
 import { COURSE, Home, PAGES, SNOW_EMOJI, STATE, fixture, pane, stubSession } from "../../🛠️home-grid-kit/🟦️.tsx";
-import { SNOW_TEXT, SPACING, gridStrip, gridVeil, layerRules, moveMouseOver, peer } from "../🟣️shared/🟦️.tsx";
+import { SNOW_TEXT, SPACING, gridStrip, gridVeil, layerRules, moveMouseOver, peer } from "../🟣️harness/🟦️.tsx";
 
 /** 🟡 Registers the zooms hovered topic pans tests of the 🏠️ home overview suite. */
 export function registerZoomsHoveredTopicPansTests(): void {

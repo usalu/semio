@@ -141,7 +141,8 @@
       "purpose": {
         "en": "Resource lease data.",
         "de": "Ressourcen-Lease-Daten."
-      }
+      },
+      "recreate": "derived"
     },
     {
       "id": "rust",
@@ -265,6 +266,26 @@
       }
     },
     {
+      "id": "test-runs",
+      "root": "native",
+      "kind": "nested",
+      "directory": "tests",
+      "partition": "diagnostics",
+      "budget": {
+        "bytes": 1073741824
+      },
+      "managed": {
+        "owner": "test-evidence"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/💾️storage/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Per-run folders of test tasks; ended runs are retired oldest first above the high-water mark, runs a live test holds are never touched.",
+        "de": "Ordner je Testlauf; beendete Läufe werden oberhalb der Hochwassermarke ältester zuerst entfernt, von laufenden Tests gehaltene Läufe bleiben unberührt."
+      }
+    },
+    {
       "id": "cargo-store",
       "root": "repository",
       "kind": "nested",
@@ -369,6 +390,40 @@
       }
     },
     {
+      "id": "bazel-workspaces",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "bazel/workspaces",
+      "partition": "products",
+      "budget": { "basisPoints": 1000 },
+      "managed": { "owner": "bazel" },
+      "reclaim": { "softAvailableBytes": 3221225472, "targetAvailableBytes": 6442450944 },
+      "writers": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts"],
+      "purpose": { "en": "Generated Bazel packages with their source snapshots, one set per session slot; collected by the session collector, which frees the oldest unprotected packages when the products image runs low.", "de": "Generierte Bazel-Pakete mit ihren Quell-Schnappschüssen, je Sitzungs-Slot; vom Sitzungs-Collector aufgeräumt, der die ältesten ungeschützten Pakete freigibt, wenn das Produkt-Image knapp wird." }
+    },
+    {
+      "id": "bazel-outputs",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "bazel/outputs",
+      "partition": "products",
+      "budget": { "basisPoints": 800 },
+      "managed": { "owner": "bazel" },
+      "writers": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🟦️.ts"],
+      "purpose": { "en": "Bazel output bases, one per session slot; idle ones go under pressure.", "de": "Bazel-Output-Bases, je Sitzungs-Slot; untätige gehen unter Druck." }
+    },
+    {
+      "id": "bazel-pool",
+      "root": "repository",
+      "kind": "nested",
+      "directory": "bazel/pool",
+      "partition": "products",
+      "budget": { "basisPoints": 600 },
+      "managed": { "owner": "bazel" },
+      "writers": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📸️snapshot/🟦️.ts"],
+      "purpose": { "en": "Content pool of the Bazel source snapshots: every package clones identical files from it instead of copying them; entries are accelerators and go after three days or under pressure.", "de": "Inhalts-Pool der Bazel-Quell-Schnappschüsse: jedes Paket klont identische Dateien daraus, statt sie zu kopieren; Einträge sind Beschleuniger und gehen nach drei Tagen oder unter Druck." }
+    },
+    {
       "id": "semio-actions",
       "root": "repository",
       "kind": "nested",
@@ -393,7 +448,8 @@
         "custody": "quiet"
       },
       "writers": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧰️tools/🌿️environment/🟦️.ts"
       ],
       "purpose": {
         "en": "Go build cache (GOCACHE).",
@@ -414,7 +470,8 @@
         "custody": "quiet"
       },
       "writers": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧰️tools/🌿️environment/🟦️.ts"
       ],
       "purpose": {
         "en": "Playwright browser downloads.",
@@ -1052,6 +1109,34 @@
           "id": "publication",
           "bytes": 536870912,
           "measuredBytes": 0
+        }
+      ]
+    },
+    {
+      "partition": "leases",
+      "measuredOn": "2026-10-23",
+      "headroomPercent": 10,
+      "floorBytes": 4194304,
+      "components": [
+        {
+          "id": "resources",
+          "bytes": 12582912,
+          "measuredBytes": 2596864
+        },
+        {
+          "id": "claims",
+          "bytes": 25165824,
+          "measuredBytes": 1683456
+        },
+        {
+          "id": "headroom",
+          "bytes": 4194304,
+          "measuredBytes": 4194304
+        },
+        {
+          "id": "nested-stores",
+          "bytes": 12779520,
+          "measuredBytes": 557056
         }
       ]
     }

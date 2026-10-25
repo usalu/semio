@@ -6,7 +6,8 @@ use crate::editor::puzzle5d::interaction::ui_label;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, Component, HasBase, HasChildren, NumberStepperProps, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Component, NumberStepperProps, Trigger};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 #[allow(unused_imports)]
 use semio_framework_plugin::ui_node_list;
 #[allow(unused_imports)]

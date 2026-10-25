@@ -13,35 +13,35 @@ import { cn } from "../🏷️class-name-composition/🟦️.ts";
 /** 🌀️ Dashed waiting border. */
 export const waitingBorderClass = "border-waiting";
 
-/** 🌀️ Active waiting border. */
+/** ⏸️ Active waiting border. */
 export const waitingBorderActiveClass = cn(waitingBorderClass, "border-waiting-active");
 
-/** 🌀️ Spinning loading border. */
+/** ⭕️ Spinning loading border. */
 export const loadingBorderClass = "border-loading";
 
-/** 🌀️ Active loading border. */
+/** 📥️ Active loading border. */
 export const loadingBorderActiveClass = cn(loadingBorderClass, "border-loading-active");
 
-/** 🌀️ Waiting border selected from state. */
+/** ⌛️ Waiting border selected from state. */
 export function waitingBorderStateClass(waiting: boolean, active = false): string {
   return waiting ? (active ? waitingBorderActiveClass : waitingBorderClass) : "";
 }
 
-/** 🌀️ Loading border selected from state. */
+/** 🔃️ Loading border selected from state. */
 export function loadingBorderStateClass(loading: boolean, active = false): string {
   return loading ? (active ? loadingBorderActiveClass : loadingBorderClass) : "";
 }
 
-/** 🌀️ Chrome status mapped to its border presentation. */
+/** 🚥️ Chrome status mapped to its border presentation. */
 export function chromeStatusBorderClass(status: UiStatus | undefined, active = false): string {
   if (status === "loading") return loadingBorderStateClass(true, active);
   if (status === "waiting") return waitingBorderStateClass(true, active);
   return "";
 }
 
-/** 🌀️ Loading border in the level-aware element color. */
+/** 🎚️ Loading border in the level-aware element color. */
 export const loadingBorderElementClass = cn(loadingBorderClass, "border-loading-element");
 
-/** 🌀️ Waiting border in the level-aware element color. */
+/** ⏳️ Waiting border in the level-aware element color. */
 export const waitingBorderElementClass = cn(waitingBorderClass, "border-waiting-element");
 // #endregion 🌀️StatusBorderPresentation

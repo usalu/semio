@@ -82,7 +82,7 @@ export async function captureSelectedGraphReuseReceiptV1(root:string,directory:s
  }catch(error){signal?.throwIfAborted();if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.NX_VERBOSE_LOGGING==="true"){}return null;}
 }
 
-/** ✅️ Public boolean proof delegates to the same exact narrowed custody capture. */
+/** ☑️ Public boolean proof delegates to the same exact narrowed custody capture. */
 export async function selectedGraphPublisherReceiptHoldsV1(root:string,directory:string,ports:SelectedGraphReusePortsV1,signal?:AbortSignal):Promise<boolean>{return await captureSelectedGraphReuseReceiptV1(root,directory,ports,signal)!==null;}
 
 /** 🔐️ Hashing and promotion recheck the exact handoff instead of re-reading unrelated graph sources. */

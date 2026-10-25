@@ -2,13 +2,16 @@
 //! (`GenerationPlayState.selected_generation_id`, restored when a saved document is loaded), or none. The selected row of
 //! a view is config (`SetSelectedGeneration`), never this leaf.
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️SelectGeneration
 /// 👆️ Selects the generation `generation_id` names, or clears the selection when it is `None`.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct SelectGeneration {
     pub generation_id: Option<String>,
 }

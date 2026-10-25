@@ -2,7 +2,7 @@
 import { expect, it } from "vitest";
 import type { StageEvent } from "@semio-tech/pets";
 import { FLOOR, PET_CONTROLS, PET_PRESS_CONTROLS, surfaceId, survey, wallId, watchPointer } from "@semio-tech/pets-react";
-import { card, ledger, place, pointer, viewport } from "../🟣️shared/🟦️.tsx";
+import { card, ledger, place, pointer, viewport } from "../🟣️harness/🟦️.tsx";
 
 /** 🟡 Registers the turns pointer stage events tests of the 📡️ surface survey suite. */
 export function registerTurnsPointerStageEventsTests(): void {

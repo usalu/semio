@@ -125,7 +125,9 @@ export function cargoLockInput(manifest, workspaceRoot) {
   return { env: `SEMIO_CARGO_LOCK_${key}` };
 }
 
-const INVENTORY_MEMO_V1 = new Map(), INVENTORY_MEMO_LIMIT_V1 = 512;
+const INVENTORY_MEMO_V1 = new Map(), INVENTORY_MEMO_LIMIT_V1 = 4096;
+/** 🕊️ Forgets the in-process memo of captured inventories and verified closure stamps (they only save recomputation). */
+export function releaseInputMemoryV1() { INVENTORY_MEMO_V1.clear(); VERIFIED_CLOSURES_V1.clear(); }
 
 /** 🗃️ Reuses the immutable captured inventory of an identical file roster: it is a pure function of the roster and the workspace root, and thousands of projects share the same command closure. */
 function capturedInventoryV1(files, workspaceRoot) {
@@ -159,6 +161,18 @@ async function warmCargoResolutionV1(workspaceRoot, scripts, manifest, context) 
   } catch {}
 }
 
+/** ✂️ Cuts a sorted roster into content-defined chunks: a chunk ends after the first path whose digest byte is a multiple of 128 once it holds 16 paths, so one added or removed path changes one or two chunks and every other chunk stays the identical content-addressed file. Rosters of thousands of targets differ in a few paths of a shared base; whole-roster files made every such difference a new 180 KB file (4 GB, +16 MiB per minute of graph building), chunks make it one new 12 KB file. */
+export function splitInputClosureV1(files) {
+  const chunks = []; let current = [];
+  for (const file of files) {
+    current.push(file);
+    if (current.length >= INPUT_CLOSURE_CHUNK_MINIMUM_V1 && createHash("sha256").update(file).digest()[0] % INPUT_CLOSURE_CHUNK_MODULUS_V1 === 0) { chunks.push(current); current = []; }
+  }
+  if (current.length) chunks.push(current);
+  return chunks;
+}
+const INPUT_CLOSURE_CHUNK_MINIMUM_V1 = 16, INPUT_CLOSURE_CHUNK_MODULUS_V1 = 128;
+
 /** 🧮️ Shares exact inventories while backends hash their current byte digest once per unique closure. */
 export function compactSourceInputs(inputs, workspaceRoot, root = ".") {
   const candidates = [...new Set(inputs.filter(input => typeof input === "string" && input.startsWith("{workspaceRoot}/") && !/[!*?{}[\]]/u.test(input.slice("{workspaceRoot}/".length))))].sort();
@@ -182,11 +196,10 @@ export function compactSourceInputs(inputs, workspaceRoot, root = ".") {
   }
   if (exact.length < 1) return residual;
   const helpers = ["./🟨️.mjs", "./🔏️revision/🟨️.mjs", "./🔏️revision/🧬️schema/🔣️.json", "./📋️data/🟨️.mjs", "./📋️data/📥️load/🟨️.mjs", "./📋️data/🧬️schema/🔣️.json", "./🧮️digest/📥️read/🟨️.mjs", "./🧮️digest/📥️read/🧬️schema/🔣️.json", "./🔒️lock/🔣️schema.json", "./💾️storage/🟨️.mjs", "./💾️storage/📒️ledger/🟨️.mjs", "./💾️storage/🧬️schema/🔣️.json", "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", "./🧮️digest/🟨️.mjs", "./🧮️digest/🔣️schema.json", "./🔒️lock/📥️read/🟨️.mjs", "./🔒️lock/🟨️.mjs"].map(path => relative(workspaceRoot, fileURLToPath(new URL(path, physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)))).split("\\").join("/"));
-  const files = [...new Set([...exact.map(input => input.slice("{workspaceRoot}/".length)), ...helpers])].sort(), captured = capturedInventoryV1(files, workspaceRoot), contract = captured.text;
-  const key = createHash("sha256").update(contract).digest("hex"), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-input-closures"), manifest = join(directory, `${key}.json`);
-  publishInputClosureV1(manifest,contract);
+  const files = [...new Set([...exact.map(input => input.slice("{workspaceRoot}/".length)), ...helpers])].sort(), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-input-closures");
+  const tokens = splitInputClosureV1(files).map(chunk => { const contract = capturedInventoryV1(chunk, workspaceRoot).text, key = createHash("sha256").update(contract).digest("hex"); publishInputClosureV1(join(directory, `${key}.json`), contract); return { env: `SEMIO_SOURCE_CLOSURE_${key}` }; });
   const script = fileURLToPath(new URL("./🧮️digest/🟨️.mjs", physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))), schema = fileURLToPath(new URL("./🧮️digest/🔣️schema.json", physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)));
-  return [...residual, `{workspaceRoot}/${relative(workspaceRoot, script).split("\\").join("/")}`, `{workspaceRoot}/${relative(workspaceRoot, schema).split("\\").join("/")}`, { env: `SEMIO_SOURCE_CLOSURE_${key}` }];
+  return [...residual, `{workspaceRoot}/${relative(workspaceRoot, script).split("\\").join("/")}`, `{workspaceRoot}/${relative(workspaceRoot, schema).split("\\").join("/")}`, ...tokens];
 }
 
 /** 🧬️ Keeps output negations only where a positive source scope can observe those outputs. */
@@ -224,7 +237,7 @@ export function internProjectInputGroups(groups) {
 
 /** 📥️ Projects source and compiler input ownership independently of target orchestration. The named input `cargoToolchain` of a Rust project is generated here (raw tool files plus the crate's resolution marker, which only a persisted graph carries), never authored: an authored definition of it is replaced; a persisted graph also refreshes the crate's resolution receipts. */
 export async function inferProjectInputs(json, root, workspaceRoot, facts, scripts, context) {
-  const { POLICY, TAXONOMY, LIBRARY_ROOT, SCRIPT_BASENAME, cargoSourceInputs, goManifest, buildPath, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, workspaceNegationClosed, declaredSourceInputs, owned } = context;
+  const { POLICY, TAXONOMY, LIBRARY_ROOT, SCRIPT_BASENAME, cargoSourceInputs, goManifest, buildPath, relativeScriptInputs, closureOf, resolveOutputPath, exampleCollectionInputs, workspaceNegationClosed, declaredSourceInputs, owned } = context;
   const nativeRoot = json.metadata?.nativeRoot ?? root, nativeManifest=cargoManifestInputV1(nativeRoot);
   const tools = ["javascript"];
   if (existsSync(join(workspaceRoot, root, "Cargo.toml")) || json.targets?.wasm) tools.push("cargo");
@@ -266,14 +279,14 @@ export async function inferProjectInputs(json, root, workspaceRoot, facts, scrip
   const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${nativeManifest}`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", ...examples, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript") && owner !== root && existsSync(join(workspaceRoot, root, SCRIPT_BASENAME));
   const artifactSource = join(workspaceRoot, owner, "🟦️.ts");
-  const artifactSources = artifactTypeScript ? [...await relativeScriptInputs([artifactSource], workspaceRoot, scripts), "{projectRoot}/package.json"] : [];
+  const artifactSources = artifactTypeScript ? await closureOf([artifactSource], ["{projectRoot}/package.json"]) : [];
   const javascript = POLICY.toolchains.javascript;
-  const artifactCommandSources = artifactTypeScript ? [...await relativeScriptInputs([join(workspaceRoot, root, SCRIPT_BASENAME)], workspaceRoot, scripts), `{workspaceRoot}/${javascriptManagerV1.scopeConfigName}`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }] : [];
+  const artifactCommandSources = artifactTypeScript ? await closureOf([join(workspaceRoot, root, SCRIPT_BASENAME)], [`{workspaceRoot}/${javascriptManagerV1.scopeConfigName}`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }]) : [];
   const cargoManifest = existsSync(join(workspaceRoot, nativeManifest)) ? nativeManifest : undefined, persisted = context.sourceRepresentation !== "source";
   if (persisted && cargoManifest && tools.includes("cargo")) await warmCargoResolutionV1(workspaceRoot, scripts, cargoManifest, context);
   const cargoToolchain = tools.includes("cargo") ? [...POLICY.toolchains.cargo.files.map((file) => `{workspaceRoot}/${file}`), ...(persisted && cargoManifest ? [cargoLockInput(cargoManifest, workspaceRoot)] : [])] : undefined;
   const groups = (sourceContracts) => ({ ...declarations, ...sourceContracts, ...(cargoToolchain ? { cargoToolchain } : {}), default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...inputs, ...(declarations.default ?? []), ...exclusions, ...production, ...(declarations.production ?? [])], nativeSources: workspaceNegationClosed([...native(nativeSources, true), ...(declarations.nativeSources ?? [])]), nativeTestSources: workspaceNegationClosed([...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])]), ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...exclusions, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) });
-  const sourceContracts = await declaredSourceInputs(json, workspaceRoot, groups({}));
+  const sourceContracts = await declaredSourceInputs(json, workspaceRoot, Object.fromEntries(Object.entries(groups({})).map(([name, inputs]) => [name, inputs.filter(item => !(item !== null && typeof item === "object" && typeof item.closureRef === "string"))])));
   const sourceScopes = [...inputs, ...Object.values(declarations).flat(), ...Object.values(sourceContracts).flat(), ...(nativeSources ?? []), ...(nativeTests ?? [])];
   for (const target of Object.values(json.targets ?? {})) for (const output of target.outputs ?? []) {
     const absolute = resolveOutputPath(output, root, workspaceRoot);
@@ -293,6 +306,8 @@ export async function inferProjectInputs(json, root, workspaceRoot, facts, scrip
       exclusions.push(`!{workspaceRoot}/${owner}/${glob}`, `!{workspaceRoot}/${owner}/${glob}/**/*`);
     }
   }
-  return internProjectInputGroups(Object.fromEntries(Object.entries(groups(sourceContracts)).map(([name, inputs]) => [name, context.sourceRepresentation === "source" ? deduplicateProjectInputs(inputs, root) : compactSourceInputs(deduplicateProjectInputs(inputs, root), workspaceRoot, root)])));
+  const named = Object.entries(groups(sourceContracts)), symbolic = named.filter(([, inputs]) => inputs.some(item => item !== null && typeof item === "object" && typeof item.closureRef === "string"));
+  const interned = internProjectInputGroups(Object.fromEntries(named.filter(([name]) => !symbolic.some(([other]) => other === name)).map(([name, inputs]) => [name, context.sourceRepresentation === "source" ? deduplicateProjectInputs(inputs, root) : compactSourceInputs(deduplicateProjectInputs(inputs, root), workspaceRoot, root)])));
+  return Object.assign(interned, Object.fromEntries(symbolic));
 }
 

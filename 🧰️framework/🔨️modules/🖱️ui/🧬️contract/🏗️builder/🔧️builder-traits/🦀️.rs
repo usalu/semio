@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️Builder
 //#region 🔧️Traits
-/// 🔧️ The chainable vocabulary every builder in this file carries — identity, style, visual state,
+/// 🧱️ The chainable vocabulary every builder in this file carries — identity, style, visual state,
 /// actions, and accessibility overrides. Set [`HasBase::id`] explicitly for any node whose position
 /// among its siblings can change: the positional fallback key ([`HasChildren::child`]) is what
 /// preserves a node's state across a re-present, and it only stays stable while sibling order and
@@ -39,7 +39,7 @@ pub trait HasBase: Sized {
         self
     }
 
-    /// 🎨️ Sets the [`crate::Tone`] color role.
+    /// 🎭️ Sets the [`crate::Tone`] color role.
     fn tone(mut self, tone: crate::Tone) -> Self {
         self.base_mut().style.tone = tone;
         self
@@ -85,7 +85,7 @@ pub trait HasBase: Sized {
         }
     }
 
-    /// 🎬️ Binds `trigger` to `action`, carrying `args` for the action to consume.
+    /// 🪢️ Binds `trigger` to `action`, carrying `args` for the action to consume.
     #[expect(clippy::result_large_err, reason = "A refused binding retains the builder and argument owner together for caller-directed retirement.")]
     fn try_on_with(mut self, trigger: crate::Trigger, action: crate::ActionId, args: crate::UiValue) -> Result<Self, (Self, crate::ActionBinding)> {
         let binding = crate::ActionBinding { trigger, action, args: Some(args), capability: None };
@@ -103,7 +103,7 @@ pub trait HasBase: Sized {
         Ok(self)
     }
 
-    /// ♿️ Sets the node's accessible description.
+    /// ℹ️ Sets the node's accessible description.
     fn try_describe(mut self, description: impl AsRef<str>) -> Result<Self, Self> {
         let Some(description) = crate::UiText::try_from_str(description.as_ref()).map(crate::Label) else { return Err(self) };
         self.base_mut().accessibility.description = Some(description);
@@ -131,7 +131,7 @@ pub trait HasBase: Sized {
 
 /// 👶️ Adds `.child(..)`/`.children(..)` to a builder whose component genuinely nests others.
 pub trait HasChildren: HasBase {
-    /// 👶️ Appends one already-built or still-buildable child. An omitted child key becomes
+    /// ➕️ Appends one already-built or still-buildable child. An omitted child key becomes
     /// `"#{position}"` at the moment it is pushed here — stable only while the number and order of its
     /// siblings do not change, which is why a node whose position can shift (a reorderable list row,
     /// for instance) should carry an explicit [`HasBase::id`] instead.
@@ -177,7 +177,7 @@ pub struct RetainedChildren<B, I> {
     pub remaining: I,
 }
 
-/// 📏️ Adds [`crate::StackLayout`] tuning to a builder whose default layout is
+/// 🥞️ Adds [`crate::StackLayout`] tuning to a builder whose default layout is
 /// [`crate::LayoutSpec::Stack`] — true of every implementor in this file, so these methods never fall
 /// through to a no-op in practice.
 pub trait HasStackLayout: HasBase {
@@ -189,7 +189,7 @@ pub trait HasStackLayout: HasBase {
         self
     }
 
-    /// 📐️ Sets the container's own padding.
+    /// 📦️ Sets the container's own padding.
     fn padding(mut self, padding: crate::EdgeSpace) -> Self {
         if let crate::LayoutSpec::Stack(stack) = &mut self.base_mut().layout {
             stack.padding = padding;
@@ -205,7 +205,7 @@ pub trait HasStackLayout: HasBase {
         self
     }
 
-    /// ↔️ Sets main-axis distribution.
+    /// 🏁️ Sets main-axis distribution.
     fn justify(mut self, justify: crate::Justify) -> Self {
         if let crate::LayoutSpec::Stack(stack) = &mut self.base_mut().layout {
             stack.justify = justify;

@@ -1,4 +1,4 @@
-//! 📒️ Overrun ledger of the trace primitives: the sustained-overrun quarantine steps, the step quarantine and the step overrun ledger with its counters. See [`super`].
+//! 🕵️ Overrun ledger of the trace primitives: the sustained-overrun quarantine steps, the step quarantine and the step overrun ledger with its counters. See [`super`].
 
 use super::*;
 
@@ -64,7 +64,7 @@ impl StepOverrunLedger {
         StepOverrunLedger { consecutive: 0, longest_run: 0, total: 0, worst_elapsed_us: 0 }
     }
 
-    /// ⚖️ Admits one verdict and returns this session's quarantine authority for it.
+    /// 🏛️ Admits one verdict and returns this session's quarantine authority for it.
     pub fn admit(&mut self, verdict: &CallbackVerdict) -> StepQuarantine {
         if let Some(fault) = verdict.clock_fault() {
             self.consecutive = 0;

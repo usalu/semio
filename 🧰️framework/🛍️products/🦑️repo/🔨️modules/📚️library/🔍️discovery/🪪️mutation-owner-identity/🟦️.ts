@@ -74,15 +74,15 @@ export function mutationDirectLeafInlinedBehaviorFacets(directLeafSource: string
   return [...found].sort();
 }
 
-/** 🧭️ Whether a `/`-joined facet path walks only declared dirs from an artifact root (supports `*` wildcard levels). */
+/** 💠️ Whether a `/`-joined facet path walks only declared dirs from an artifact root (supports `*` wildcard levels). */
 export function artifactFacetPathIsDeclared(facetPath: string, taxonomy: Taxonomy = loadTaxonomy()): boolean {
   const [root, ...rest] = facetPath.split("/");
   if (!root || !taxonomy.artifactComponentDirs.includes(root)) return false;
   const parents: string[] = [root];
   for (const segment of rest) {
-    if ((parents[0] === "🧬️schema" || parents[0] === "🚪️io" && parents.length >= 3) && (taxonomy.representationDirs ?? []).includes(segment)) return false;
     const level = artifactFacetChildLevel(parents, taxonomy);
     if (level.kind === "none") return false;
+    if ((parents[0] === "🧬️schema" || parents[0] === "🚪️io" && parents.length >= 3) && (taxonomy.representationDirs ?? []).includes(segment) && !(level.kind === "fixed" && level.dirs.includes(segment))) return false;
     const directMutationOwner = parents.length === 2 && parents[0] === "🧬️schema" && parents[1] === "🧬️mutations" || parents.length === 3 && parents[0] === "🚪️io" && parents[2] === "🧬️mutations";
     const directInferenceOwner = parents.length === 2 && parents[0] === "🧬️schema" && parents[1] === "💡️inferences" || parents.length === 3 && parents[0] === "🚪️io" && parents[2] === "💡️inferences";
     const wildcardAccepted = directMutationOwner ? mutationDirectoryNameIsValid(segment, taxonomy) : directInferenceOwner ? semanticDirectoryKindId(segment, taxonomy, { parentKindId: "inferences" }) !== null : parents.at(-1) === taxonomy.artifactsDirName ? semanticDirectoryKindId(segment, taxonomy, { parentKindId: "artifacts" }) !== null : isEmojiPrefixedSlugDir(segment, taxonomy);

@@ -111,35 +111,19 @@ impl ArtifactEditor for Block3dPlayApp {
         registry.register::<Block3dWorldWindowTransientOwner>()
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !BLOCK3D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !BLOCK3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id || block3d_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "block3d-retained-command-tool-mismatch"));
+        if original.command.command_id() != original.tool_id || block3d_retained_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "block3d-retained-command-tool-mismatch").into());
         }
-        let tool_id = request.command.command_id();
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match tool_id {
+        let tool_id = original.command.command_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Block3dCommand::command_id, BLOCK3D_RETAINED_RAW_BYTES, BLOCK3D_RETAINED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match tool_id {
             "worldSurfaceHover" | "worldSurfaceLeave" | "worldSurfacePlace" => Box::new(crate::Block3dWindowPreviewWork::new(tool_id)),
             _ => Box::new(BoundedArtifactCommandWork::new(tool_id, block3d_retained_reduce, block3d_retained_extent)),
-        };
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
-            Block3dCommand::command_id,
-            BLOCK3D_RETAINED_RAW_BYTES,
-            BLOCK3D_RETAINED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        } })
     }
 
     /// 🚀️ Boots on the `hexagonal-cut-concrete-forest-left` fixture instead of the empty document —

@@ -1,8 +1,9 @@
 /** 📡️ The prop events, cast reporting, time scale and rotation tests. */
 import { render } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { PET_LAYER_Z_INDEX, PetLayer, petCast } from "@semio-tech/pets-react";
-import { HOMELESS, MENAGERIE, layerOf, page, standing } from "../🧰️decorative-layer-fixtures/🟦️.tsx";
+import { castOf, type Menagerie } from "@semio-tech/pets";
+import { PET_LAYER_Z_INDEX, PET_SHUN_SECONDS, PetLayer, petCast } from "@semio-tech/pets-react";
+import { HOMELESS, MENAGERIE, layerOf, page, place, specimen, standing } from "../🧰️decorative-layer-fixtures/🟦️.tsx";
 
 /** ⏱ Registers the changed props events, the on stage report, the time scale, the cast rotation and the unknown scene tests. */
 export function registerEventsCastsAndTimeTests(): void {
@@ -129,6 +130,52 @@ export function registerEventsCastsAndTimeTests(): void {
       }
       resting.unmount();
     }
+  });
+  it("casts from the ground: a page that leaves room for slim pets only shows them within a survey, whatever the rotation would have cast", () => {
+    const wide = { ...specimen("wide", "#111111"), size: { width: 90, height: 44 } };
+    const slim = specimen("slim", "#222222");
+    const menagerie: Menagerie = { ...MENAGERIE, id: "narrow-ground", species: [wide, slim], bonds: [], casts: [{ scene: "home", core: ["wide", "slim"], rotation: [] }] };
+    const cast = petCast(menagerie, "home")!;
+    const blind = [1, 2, 3, 4, 5, 6].filter((seed) => castOf(cast, 1, 0, seed)[0] === "wide");
+    expect(blind.length, "seeds whose cast ignores the ground picks the wide pet that cannot stand").toBeGreaterThan(0);
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      const { first, second } = page();
+      place(first, { left: 100, top: 300, width: 60, height: 200 });
+      place(second, { left: 2000, top: 420, width: 400, height: 200 });
+      const floor = place(document.createElement("p"), { left: 0, top: 700, width: 1200, height: 100 });
+      document.body.append(floor);
+      const { container, unmount } = render(<PetLayer menagerie={menagerie} scene="home" mode="calm" seed={seed} capacity={1} />);
+      vi.advanceTimersByTime(3000);
+      expect(standing(layerOf(container)).map((pet) => pet.species), `seed ${seed}`).toEqual(["slim"]);
+      unmount();
+      document.body.replaceChildren();
+    }
+  });
+  it("settles on the species that leave room for themselves when a page takes the room a pet stood on by its very presence", async () => {
+    const long = { ...specimen("long", "#111111"), size: { width: 40, height: 44 } };
+    const short = specimen("short", "#222222");
+    const menagerie: Menagerie = { ...MENAGERIE, id: "reflow", species: [long, short], bonds: [], casts: [{ scene: "home", core: ["long", "short"], rotation: [] }] };
+    const cast = petCast(menagerie, "home")!;
+    const seed = [1, 2, 3, 4, 5, 6].find((candidate) => castOf(cast, 1, 0, candidate)[0] === "long")!;
+    const { first, second } = page();
+    place(first, { left: 2000, top: 300, width: 400, height: 200 });
+    place(second, { left: 2000, top: 420, width: 400, height: 200 });
+    const row = place(document.createElement("p"), { left: 0, top: 700, width: 1200, height: 100 });
+    const heard: string[] = [];
+    const listen = (species: readonly string[]): void => {
+      heard.push(species.join(" "));
+      if (species.includes("long")) document.body.append(row);
+      else row.remove();
+    };
+    const { container } = render(<PetLayer menagerie={menagerie} scene="home" mode="calm" seed={seed} capacity={1} onCast={listen} />);
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(PET_SHUN_SECONDS).toBeGreaterThan(10);
+    expect(standing(layerOf(container)).map((pet) => pet.species)).toEqual(["short"]);
+    expect(document.body.contains(row)).toBe(false);
+    const settled = heard.length;
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(heard.length, `the cast heard: ${heard.join(" | ")}`).toBe(settled);
+    expect(settled).toBeLessThanOrEqual(6);
   });
   it("shows nobody for an unknown scoped scene even when a home cast exists", () => {
     page();

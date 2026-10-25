@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-bim-model-viewer = { path = "../../../../👁️viewer/📦️packages/🦀️rust" }
 semio-framework-ui-contract.workspace = true
 semio-framework-job.workspace = true
 gltf = { version = "1.4.1", default-features = false, features = ["utils", "names", "extras"], optional = true }

@@ -11,9 +11,9 @@ import {nativeOwnerTestManifestRequestV1} from "./🗺️owner-test-manifests/�
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { BundleScript, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, scriptInvocationBudget, createRenewableIssuedResourceControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { advanceScriptInvocation, scriptInvocationEnvironment } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readNativeOwnerCapabilities } from "./📥️invocation/🟦️.ts";
+import { readNativeOwnerCapabilities, nativeChildDeadlinePolicyV1 } from "./📥️invocation/🟦️.ts";
 import { CARGO_RELAY_BUDGET_ENV, cargoStreamingStatus, runCmdStatus } from "../../../🏃️process/🟦️.ts";
 import {repositoryCargoTestPolicyV1} from "../../../🏃️process/🦀️cargo/🔣️policy/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -23,7 +23,7 @@ import { artifactRustCargoArguments } from "../🎛️native-input/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {requireRepositoryCargoExecutionV1} from "../../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 /** 🌊️ `repo ⚡️caching/🦀️cargo/📜️script.ts relay <cargo args…>` — the relay [[runCmd]] routes every POSIX `cargo` through
  * ([[cargoStreamingStatus]]): exits with cargo's status, 1 when cargo was stopped (budget, signal), after its forwarded output drained. */
@@ -69,10 +69,9 @@ export class NativeScript extends BundleScript {
       const preparation=repositoryCargoPreparationStorageV1(this.repoRoot);
       env.SEMIO_EXACT_CARGO_PREPARATION=JSON.stringify(readExactCargoLawPreparationV1({version:1,command:process.execPath,args:[preparation.program,"synchronize","--cargo-arguments"],cwd:this.repoRoot,environment:{SEMIO_WORKSPACE_ROOT:this.repoRoot,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(preparation)},maximumOutputLines:original.transport.maximumLines}));
       if (process.env.SEMIO_WASM_BUILD_REQUIRED === "1") Object.assign(env,ownerEnvironmentV1(cwd,["wasm"],undefined,callerEnvironment));
-      const remaining=this.invocation.control.remainingMilliseconds(),budget=remaining===null?original.child.maximumElapsedMilliseconds:Math.min(original.child.maximumElapsedMilliseconds,remaining);
-      if(!Number.isFinite(budget)||budget<=0)throw Error("Original native child deadline exhausted");
+      const childControl=createRenewableIssuedResourceControlV1(scriptCompilerAdmissionControlV1(this.invocation,"native:owner-command",0),nativeChildDeadlinePolicyV1(original.child),0);
       retain();
-      await runOwnedCommand(request.command,arguments_,cwd,"native:owner-command",budget,{env:scriptInvocationEnvironment(this.invocation,env),output:original.transport,signal,onProgress:async line=>{retain();await advanceScriptInvocation(this.invocation,"native:owner-command","running");retain();if(env.SEMIO_NATIVE_OWNER_PROGRESS!=="delegated")process.stderr.write(`${line}\n`);}});
+      await runOwnedCommand(request.command,arguments_,cwd,"native:owner-command",0,{env:scriptInvocationEnvironment(this.invocation,env),output:original.transport,signal:childControl.signal,onProgress:async line=>{retain();await advanceScriptInvocation(this.invocation,"native:owner-command","running");retain();if(env.SEMIO_NATIVE_OWNER_PROGRESS!=="delegated")process.stderr.write(`${line}\n`);}});
       retain();
       return;
     }

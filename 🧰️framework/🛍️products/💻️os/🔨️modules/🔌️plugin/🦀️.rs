@@ -218,6 +218,10 @@ pub mod plugin_app_close_prelude {
     pub use semio_framework::*;
     pub use semio_framework_os_kernel as protocol;
     pub use semio_framework_os_kernel as store;
+    pub use semio_framework_plugin_decl_app;
+    pub use semio_framework_plugin_decl_views;
+    pub use semio_framework_plugin_ownership;
+    pub use semio_framework_tool_run::ToolRunTraceCursor;
     pub use semio_framework_ui_contract::tree_item as tree_item_builder;
     pub use semio_framework_ui_contract::*;
     pub use semio_framework_ui_runtime::{ComponentTree, TreeNode};
@@ -233,7 +237,7 @@ pub use app::authoring_law;
 pub use app::time_travel::{history_mutation_entry, HistoryMutationPage, HistoryMutationPages, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
 pub use app::tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunLedger, ToolRunTickReceipt};
 pub use app::ActionFactory;
-pub use semio_framework::{IconName, Locale, Terminology};
+pub use semio_framework::{ErasedToolJob, IconName, Locale, Terminology};
 pub use semio_framework_ui_locale::LocalizedLabel;
 /// 🔀️ `dyn_enum_close!` for `PluginApp` resolves its captured dispatch macro through this root export.
 #[doc(hidden)]

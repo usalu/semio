@@ -39,7 +39,7 @@ export class NamedEditPlan{
  modifiedIndex(ordinal:number):number{if(!this.ready||this.directories[3][ordinal]===undefined)throw Error("modified ordinal is not admitted");return this.directories[3][ordinal]!;}
  /** 📐️ Quotes an original ordinal and fixed owned coordinate directory observation. */
  modifiedIndexDemand(ordinal:number):NamedEditDemand{if(!this.ready||!Number.isSafeInteger(ordinal)||ordinal<0||ordinal>=this.shape.modified||this.directories[3][ordinal]===undefined)throw Error("modified ordinal is not admitted");return{copyBytes:74,capacityBytes:0,depth:1};}
- /** 👁️ Reveals an admitted original coordinate only under its observation currencies. */
+ /** 🗂️ Reveals an admitted original coordinate only under its observation currencies. */
  observeModifiedIndex(ordinal:number,grant:NamedEditGrant):{index:number;receipt:NamedEditReceipt}|undefined{const demand=this.modifiedIndexDemand(ordinal);if(grant.maximumItems<1||grant.maximumCopyBytes<demand.copyBytes||grant.maximumDepth<demand.depth)return;return{index:this.modifiedIndex(ordinal),receipt:{copiedItems:1,copiedBytes:demand.copyBytes,retainedCapacityBytes:0}};}
  private keyCoordinates():readonly [readonly [NamedEditLane,number],readonly [NamedEditLane,number]]|undefined{
   if(this.phase===2||this.phase===12){const work=this.sort.next();if(work.kind!=="compare")return;const lane=this.phase===2?"base":"added",order=this.phase===2?this.baseOrder:this.directories[1];return[[lane,order[work.left]!],[lane,order[work.right]!]];}

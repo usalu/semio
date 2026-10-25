@@ -15,7 +15,10 @@ const PENDING_FLUSH_BYTES = 64 * 1024 * 1024;
 export const RECORD_STORE_DESCRIPTOR_LIMIT = 32;
 const openDescriptors = new Map<string, () => void>();
 
-/** 📊️ Counts the pack descriptors this process currently keeps open (tests and diagnostics). */
+/** 📦️ A store holding more packs than this is compacted into one pack once its writer flushed, so every process that adds records no longer leaves a pack and an index behind for good. */
+export const RECORD_STORE_PACK_LIMIT = 4;
+
+/** 📹️ Counts the pack descriptors this process currently keeps open (tests and diagnostics). */
 export function openRecordStoreDescriptorCount(): number { return openDescriptors.size; }
 
 /** 📇️ One pack index as persisted next to its pack: every record's key, byte range and value digest prefix. */
@@ -41,6 +44,7 @@ export interface RecordStore {
   put(key: string, value: Uint8Array): void;
   flush(): void;
   retainAccessed(): void;
+  compact(): void;
   close(): void;
   readonly stats: RecordStoreStats;
 }
@@ -151,6 +155,16 @@ export function openRecordStore(directory: string, options:RecordStoreOptionsV1=
     damaged.add(key);
     return undefined;
   };
+  const rewrite = (keys: Iterable<string>): void => {
+    store.flush();
+    const live = function* (): Generator<readonly [string, Uint8Array]> { for (const key of [...keys].sort()) { const value = read(key); if (value !== undefined) yield [key, value]; } };
+    const retired=[...packs],retiredBytes=retired.reduce((sum,pack)=>sum+statSync(join(root,`${pack}.idx`)).size+statSync(join(root,`${pack}.pack`)).size,0);
+    const index=writePack(root,live(),options,retiredBytes,()=>{for(const pack of retired){release(pack);for(const suffix of["idx","pack"])rmSync(join(root,`${pack}.${suffix}`));packs.delete(pack);}});
+    if(!index)return;
+    locations.clear();
+    for (const [key, offset, length, digest] of index.records) locations.set(key, { pack: index.pack, offset, length, digest });
+    packs.add(index.pack);
+  };
   const store: RecordStore = {
     has(key) { return pending.has(key) || locations.has(key) && !damaged.has(key); },
     get(key) {
@@ -177,16 +191,8 @@ export function openRecordStore(directory: string, options:RecordStoreOptionsV1=
       pending.clear();
       pendingBytes = 0;
     },
-    retainAccessed() {
-      store.flush();
-      const live = function* (): Generator<readonly [string, Uint8Array]> { for (const key of [...accessed].sort()) { const value = read(key); if (value !== undefined) yield [key, value]; } };
-      const retired=[...packs],retiredBytes=retired.reduce((sum,pack)=>sum+statSync(join(root,`${pack}.idx`)).size+statSync(join(root,`${pack}.pack`)).size,0);
-      const index=writePack(root,live(),options,retiredBytes,()=>{for(const pack of retired){release(pack);for(const suffix of["idx","pack"])rmSync(join(root,`${pack}.${suffix}`));packs.delete(pack);}});
-      if(!index)return;
-      locations.clear();
-      for (const [key, offset, length, digest] of index.records) locations.set(key, { pack: index.pack, offset, length, digest });
-      packs.add(index.pack);
-    },
+    retainAccessed() { rewrite(accessed); },
+    compact() { rewrite(locations.keys()); },
     close() {
       try{store.flush();}finally{
       for (const pack of [...descriptors.keys()]) release(pack);

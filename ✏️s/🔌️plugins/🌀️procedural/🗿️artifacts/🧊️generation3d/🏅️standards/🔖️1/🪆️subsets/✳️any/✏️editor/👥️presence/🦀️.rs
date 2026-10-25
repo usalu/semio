@@ -17,7 +17,7 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of procedural 3d camera and show-mode state.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "generation3d.presence")]
 #[dsl(layout = "lines")]
@@ -39,7 +39,11 @@ impl Default for Generation3dPresence {
 }
 
 /// 🫴️ Native presence snapshot — the framework's generic codec carries it.
-impl store::ArtifactPresenceSnapshot for Generation3dPresence {}
+impl store::ArtifactPresenceSnapshot for Generation3dPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 /// 🩹 Owned-field diff of [`Generation3dPresence`]: exactly the fields a leaf sets.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]

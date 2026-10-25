@@ -30,7 +30,7 @@ pub fn plan(p: &GltfDeleteTexturePayload, base: &GltfSnapshot) -> Result<GltfDif
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfDeleteTexturePayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_texture::CreateTextureMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -75,7 +75,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for DeleteTextureMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<DeleteTextureMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<DeleteTextureMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::create_texture::CreateTextureMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

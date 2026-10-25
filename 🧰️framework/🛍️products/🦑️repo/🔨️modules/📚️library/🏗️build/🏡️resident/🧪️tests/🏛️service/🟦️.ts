@@ -15,7 +15,7 @@ import {createFilterV1} from "../../🗃️state/🟨️.mjs";
 import {residentGraphSeamsV1} from "../../🕰️graph-hooks/🔌️host/🟨️.mjs";
 import {taskClosureV1} from "../../🔌️ports/🗺️graph/🟨️.mjs";
 import {WATCHER,cleanup,haveBinary,pick,rng,shortTempDirectory,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
-import {agentSessionAddressV1,agentSessionRegistryRootV1,agentSessionStoreV1,agentSessionWorktreeKeyV1,readAgentSessionTokenV1,readAgentSessionV1,listAgentSessionsV1} from "../../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts";
+import {agentSessionAddressV1,agentSessionRegistryRootV1,agentSessionStoreV1,agentSessionWorktreeKeyV1,readAgentSessionTokenV1,readAgentSessionV1,listAgentSessionsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 
 const native=haveBinary(WATCHER);
 const cleanups:(()=>Promise<void>|void)[]=[];

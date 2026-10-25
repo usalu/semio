@@ -1,4 +1,4 @@
-//! 🖱️ Introduction interaction: the logo, the placement, the interaction kinds, the points, the pointer buttons and key modifiers, the gestures, the cursors and the demonstration. See [`super`].
+//! 🎒️ Introduction interaction: the logo, the placement, the interaction kinds, the points, the pointer buttons and key modifiers, the gestures, the cursors and the demonstration. See [`super`].
 
 use super::*;
 
@@ -84,47 +84,47 @@ impl IntroductionInteraction {
         Self { on, label: label.into(), celebrate: None }
     }
 
-    /// 📇️ An interaction completing when the user activates action `id`.
+    /// 🧑️ An interaction completing when the user activates action `id`.
     pub async fn action(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Action(ActionRef::new(id.into())), label).await
     }
 
-    /// 🧰️ An interaction completing when the user activates utility `id`.
+    /// 👤️ An interaction completing when the user activates utility `id`.
     pub async fn utility(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Utility(UtilityRef::new(id.into())), label).await
     }
 
-    /// 🛠️ An interaction completing when the user activates tool `id`.
+    /// 🔧️ An interaction completing when the user activates tool `id`.
     pub async fn tool(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Tool(ToolRef::new(id.into()).await), label).await
     }
 
-    /// 📑️ An interaction completing when panel tab `id` opens.
+    /// 📂️ An interaction completing when panel tab `id` opens.
     pub async fn panel(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Panel(id.into()), label).await
     }
 
-    /// 🌲️ An interaction completing when tree section/item `id` expands.
+    /// 🌳️ An interaction completing when tree section/item `id` expands.
     pub async fn expand(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Expand(id.into()), label).await
     }
 
-    /// 🖐️ An interaction completing when the user pans 3D window `window_kind_id`.
+    /// 🔭️ An interaction completing when the user pans 3D window `window_kind_id`.
     pub async fn pan(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Pan(window_kind_id.into()), label).await
     }
 
-    /// 🔍️ An interaction completing when the user zooms 3D window `window_kind_id`.
+    /// 🔎️ An interaction completing when the user zooms 3D window `window_kind_id`.
     pub async fn zoom(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Zoom(window_kind_id.into()), label).await
     }
 
-    /// 🌐️ An interaction completing when the user orbits 3D window `window_kind_id`.
+    /// 🪐️ An interaction completing when the user orbits 3D window `window_kind_id`.
     pub async fn orbit(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
         Self::new(IntroductionInteractionKind::Orbit(window_kind_id.into()), label).await
     }
 
-    /// 🎉️ Overrides which element id is stamped `data-celebrated` on completion.
+    /// 📊️ Overrides which element id is stamped `data-celebrated` on completion.
     pub async fn celebrate(mut self, element_id: impl Into<String>) -> Self {
         self.celebrate = Some(element_id.into());
         self
@@ -152,18 +152,18 @@ pub enum IntroductionPoint {
     },
     /// 🖥️ Absolute viewport pixel.
     Screen { x: f64, y: f64 },
-    /// 🖥️ Normalized 0–1 of the viewport.
+    /// 📺️ Normalized 0–1 of the viewport.
     ScreenNormalized { x: f64, y: f64 },
     /// 🪟️ Pixel local to window/pane element `id`'s rect (top-left origin).
     Window { id: String, x: f64, y: f64 },
-    /// 🪟️ Normalized 0–1 within window/pane element `id`'s rect.
+    /// 🔲️ Normalized 0–1 within window/pane element `id`'s rect.
     WindowNormalized { id: String, x: f64, y: f64 },
     /// 🧊️ 3D world-space position in the scene shown by window `id`, projected through its live camera.
     Scene { id: String, position: [f64; 3] },
     /// 🗺️ 2D world-space coordinates (camera x/y/zoom) on the infinite-canvas surface shown by window
     /// `id` — the 2D sibling of `Scene`. On a 3D window this resolves via the ground plane (z = 0).
     Canvas { id: String, x: f64, y: f64 },
-    /// 🏷️ A live entity addressed semantically in the shell's established pick-target grammar (see
+    /// ⚒️ A live entity addressed semantically in the shell's established pick-target grammar (see
     /// `CanvasPickTarget`): `domain` is the surface's target domain ("vortex", "object", "attraction",
     /// "node", "edge", "handle", "position", "route", "block", "layer", …), `entity` its id verbatim
     /// (compound forms like `"objectId:vortexId"` or `"widgetId:port"` included; `"*"` = any — the
@@ -186,27 +186,27 @@ pub enum IntroductionPoint {
 }
 
 impl IntroductionPoint {
-    /// 🗺️ 2D world-space coordinates on the infinite-canvas surface shown by window `window_id`.
+    /// ♾️ 2D world-space coordinates on the infinite-canvas surface shown by window `window_id`.
     pub async fn canvas(window_id: impl Into<String>, x: f64, y: f64) -> Self {
         Self::Canvas { id: window_id.into(), x, y }
     }
 
-    /// 🏷️ A specific entity by domain + id, centered (no `offset`).
+    /// 🏹️ A specific entity by domain + id, centered (no `offset`).
     pub async fn entity(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>) -> Self {
         Self::Entity { id: window_id.into(), domain: domain.into(), entity: entity.into(), offset: None }
     }
 
-    /// 🏷️ Any entity in `domain` — the surface picks a representative, nearest the viewport center.
+    /// 👁️ Any entity in `domain` — the surface picks a representative, nearest the viewport center.
     pub async fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
         Self::entity(window_id, domain, "*").await
     }
 
-    /// 🪡️ A parametric point at `t` (0–1 by arc length) along an entity's curve geometry.
+    /// 📏️ A parametric point at `t` (0–1 by arc length) along an entity's curve geometry.
     pub async fn curve(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, t: f64) -> Self {
         Self::Curve { id: window_id.into(), domain: domain.into(), entity: entity.into(), t }
     }
 
-    /// 🎚️ A value mapped through an entity's live value domain (e.g. a slider's min..max).
+    /// 💎️ A value mapped through an entity's live value domain (e.g. a slider's min..max).
     pub async fn domain_value(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, value: f64) -> Self {
         Self::Domain { id: window_id.into(), domain: domain.into(), entity: entity.into(), value }
     }
@@ -283,7 +283,7 @@ pub enum IntroductionGesture {
         at: IntroductionPoint,
         delta_y: f64,
     },
-    /// 🌐️ A curved (not straight-line) drag around a pivot — camera orbit, distinct from `Drag`'s
+    /// 🌀️ A curved (not straight-line) drag around a pivot — camera orbit, distinct from `Drag`'s
     /// straight-line pan/reposition motion.
     Orbit {
         from: IntroductionPoint,
@@ -297,7 +297,7 @@ pub enum IntroductionGesture {
     },
 }
 
-/// 🖱️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
+/// 👻️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -329,12 +329,12 @@ pub struct IntroductionDemonstration {
 }
 
 impl IntroductionDemonstration {
-    /// 👆️ A left-click demonstration at `at`.
+    /// ⬅️ A left-click demonstration at `at`.
     pub async fn left_click(at: IntroductionPoint) -> Self {
         Self { gesture: IntroductionGesture::LeftClick { at }, cursor: None }
     }
 
-    /// 👆️ A right-click demonstration at `at`.
+    /// ➡️ A right-click demonstration at `at`.
     pub async fn right_click(at: IntroductionPoint) -> Self {
         Self { gesture: IntroductionGesture::RightClick { at }, cursor: None }
     }
@@ -349,7 +349,7 @@ impl IntroductionDemonstration {
         Self { gesture: IntroductionGesture::Scroll { at, delta_y }, cursor: None }
     }
 
-    /// 🌐️ A camera-orbit demonstration curving from `from` to `to`.
+    /// 🛰️ A camera-orbit demonstration curving from `from` to `to`.
     pub async fn orbit(from: IntroductionPoint, to: IntroductionPoint) -> Self {
         Self { gesture: IntroductionGesture::Orbit { from, to, button: IntroductionPointerButton::Right, modifiers: vec![IntroductionKeyModifier::Alt] }, cursor: None }
     }

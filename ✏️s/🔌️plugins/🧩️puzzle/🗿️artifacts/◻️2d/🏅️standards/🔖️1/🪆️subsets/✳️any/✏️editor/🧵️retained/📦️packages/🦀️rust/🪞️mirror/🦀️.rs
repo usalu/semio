@@ -105,7 +105,8 @@ pub mod editor {
             pub use semio_s_artifact_puzzle_2d_mut_any_6::editor::puzzle2d::commands::rotate_selection;
             #[path = "../../../../🎮️commands/🧊️document/📏️scale-selection/🦀️.rs"]
             pub mod scale_selection;
-            pub use semio_s_artifact_puzzle_2d_graph_manifest::editor::puzzle2d::commands::export_snapshot;
+            #[path = "../../../../🎮️commands/🧊️document/📤️export-snapshot/🦀️.rs"]
+            pub mod export_snapshot;
             #[path = "../../../../🎮️commands/🧊️document/📥️import-snapshot/🦀️.rs"]
             pub mod import_snapshot;
             #[path = "../../../../🎮️commands/🧊️document/🗂️open-import-snapshot/🦀️.rs"]
@@ -153,7 +154,7 @@ pub mod editor {
                         pub use component::*;
                         #[path = "."]
                         pub mod utilities {
-                            pub use semio_s_artifact_puzzle_2d_graph_manifest::editor::puzzle2d::modes::edit::windows::overview::utilities::brush;
+                            pub use semio_s_artifact_puzzle_2d_tests::editor::puzzle2d::modes::edit::windows::overview::utilities::brush;
                             pub use semio_s_artifact_puzzle_2d_tests::editor::puzzle2d::modes::edit::windows::overview::utilities::area_brush;
                             pub use semio_s_artifact_puzzle_2d_tests::editor::puzzle2d::modes::edit::windows::overview::utilities::select;
                         }

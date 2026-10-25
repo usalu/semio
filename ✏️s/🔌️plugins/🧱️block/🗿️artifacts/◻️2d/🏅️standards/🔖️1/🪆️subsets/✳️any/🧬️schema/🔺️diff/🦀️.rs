@@ -58,13 +58,29 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the handle kinds.
-    pub Block2dHandleKindsDelta { removal: Block2dHandleKindsRemoval, insertion: Block2dHandleKindsInsertion, relocation: Block2dHandleKindsRelocation, modification: Block2dHandleKindsPatchEntry, row: Block2dHandleKind, patch: Block2dHandleKindPatch, key: id }
+    pub Block2dHandleKindsDelta { removal: Block2dHandleKindsRemoval, insertion: Block2dHandleKindsInsertion, relocation: Block2dHandleKindsRelocation, modification: Block2dHandleKindsPatchEntry, row: Block2dHandleKind, patch: Block2dHandleKindPatch, list: Vec<Block2dHandleKind>, key: String = by Block2dHandleKindKeys }
+}
+
+/// 🔑️ Keys the foreign `Block2dHandleKind` rows of their list delta by `id`.
+pub(crate) struct Block2dHandleKindKeys;
+
+impl protocol::list_delta::KeyOf<Block2dHandleKind> for Block2dHandleKindKeys {
+    type Key = String;
+    fn key_of(row: &Block2dHandleKind) -> String { row.id.clone() }
 }
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the handle templates.
-    pub Block2dHandlesDelta { removal: Block2dHandlesRemoval, insertion: Block2dHandlesInsertion, relocation: Block2dHandlesRelocation, modification: Block2dHandlesPatchEntry, row: Block2dHandleTemplate, patch: Block2dHandleTemplatePatch, key: id }
+    pub Block2dHandlesDelta { removal: Block2dHandlesRemoval, insertion: Block2dHandlesInsertion, relocation: Block2dHandlesRelocation, modification: Block2dHandlesPatchEntry, row: Block2dHandleTemplate, patch: Block2dHandleTemplatePatch, list: Vec<Block2dHandleTemplate>, key: String = by Block2dHandleTemplateKeys }
+}
+
+/// 🔑️ Keys the foreign `Block2dHandleTemplate` rows of their list delta by `id`.
+pub(crate) struct Block2dHandleTemplateKeys;
+
+impl protocol::list_delta::KeyOf<Block2dHandleTemplate> for Block2dHandleTemplateKeys {
+    type Key = String;
+    fn key_of(row: &Block2dHandleTemplate) -> String { row.id.clone() }
 }
 //#endregion 🔖️Patches
 

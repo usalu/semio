@@ -28,7 +28,7 @@ pub struct MeshBuffers {
     pub index_count: u32,
 }
 
-/// 🗃️ Owns every device-resident resource a `RenderPacket` can reference. `apply_resources` is the
+/// 🗄️ Owns every device-resident resource a `RenderPacket` can reference. `apply_resources` is the
 /// only mutator; everything else is a lookup a render pass consults while replaying batches.
 #[derive(Default)]
 pub struct GpuResources {
@@ -197,7 +197,7 @@ fn replace_region(texture: &MetalTexture, width: u32, height: u32, pixels: &[u8]
     }
 }
 
-/// 🏗️ A `Shared`-storage buffer initialized by copy — mirrors `wgpu::util::DeviceExt::create_buffer_init`.
+/// 📋️ A `Shared`-storage buffer initialized by copy — mirrors `wgpu::util::DeviceExt::create_buffer_init`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn new_buffer_with_bytes(device: &Device, bytes: &[u8], label: &str) -> Result<Owned<MetalBuffer>, MetalGraphicsError> {
     if bytes.is_empty() {

@@ -21,7 +21,7 @@ export function isSectionAutoAnimating(sectionEl: HTMLElement): boolean {
   return state === "pending" || state === "running";
 }
 
-/** ⏳️ True while reveal.js auto-animate is measuring or running on this slide (or any slide in the deck). */
+/** ▶️ True while reveal.js auto-animate is measuring or running on this slide (or any slide in the deck). */
 export function isRevealSlideAutoAnimating(sectionEl: HTMLElement): boolean {
   if (isSectionAutoAnimating(sectionEl)) {
     return true;
@@ -33,7 +33,7 @@ export function isRevealSlideAutoAnimating(sectionEl: HTMLElement): boolean {
   return deck.querySelector('section[data-auto-animate="pending"], section[data-auto-animate="running"]') !== null;
 }
 
-/** ⏳️ Clears settled state on arrival so split tiles stay visible at rest; drops settled on slides no longer adjacent. */
+/** 🔄️ Clears settled state on arrival so split tiles stay visible at rest; drops settled on slides no longer adjacent. */
 export function syncArrangementSettledState(deckEl: HTMLElement, currentSlide: HTMLElement | null, previousSlide: HTMLElement | null): void {
   const settleSections = deckEl.querySelectorAll<HTMLElement>("section[data-settle-before-morph-to]");
   for (const section of settleSections) {
@@ -49,7 +49,7 @@ export function syncArrangementSettledState(deckEl: HTMLElement, currentSlide: H
   }
 }
 
-/** 🔗️ Resolves the reveal.js slide section at stack indices `h` / `v`. */
+/** 📑️ Resolves the reveal.js slide section at stack indices `h` / `v`. */
 export function resolveRevealSlideAt(deckEl: HTMLElement, indices: { readonly h: number; readonly v: number }): HTMLElement | null {
   const horizontal = deckEl.querySelectorAll<HTMLElement>(".slides > section")[indices.h];
   if (!horizontal) {
@@ -109,7 +109,7 @@ export function finalizeRevealAutoAnimateRestState(deckEl: HTMLElement): void {
 /** 🔀️ Slide class while auto-animating a `data-settle-before-morph-to` many-to-one run (focus tiles → label ghosts). */
 export const PRESENTATION_MANY_TO_ONE_MORPH_CLASS = "presentation-arrangement--many-to-one-morph";
 
-/** 🔀️ True when `fromSlide` settles into `toSlide` via `data-settle-before-morph-to` (arrangement id on `title`). */
+/** 📊️ True when `fromSlide` settles into `toSlide` via `data-settle-before-morph-to` (arrangement id on `title`). */
 export function isManyToOneMorphTransition(fromSlide: HTMLElement, toSlide: HTMLElement): boolean {
   const settleBefore = fromSlide.getAttribute("data-settle-before-morph-to");
   if (!settleBefore) {
@@ -122,14 +122,14 @@ export function isManyToOneMorphTransition(fromSlide: HTMLElement, toSlide: HTML
   return settleBefore.split(",").some((entry) => entry.trim() === toId);
 }
 
-/** 🧹️ Clears {@link PRESENTATION_MANY_TO_ONE_MORPH_CLASS} from all slides in the deck. */
+/** 🗑️ Clears {@link PRESENTATION_MANY_TO_ONE_MORPH_CLASS} from all slides in the deck. */
 export function clearManyToOneMorphArrangementClass(deckEl: HTMLElement): void {
   for (const slide of deckEl.querySelectorAll<HTMLElement>(`section.${PRESENTATION_MANY_TO_ONE_MORPH_CLASS}`)) {
     slide.classList.remove(PRESENTATION_MANY_TO_ONE_MORPH_CLASS);
   }
 }
 
-/** 🔀️ Marks the active many-to-one morph run on `fromSlide` and `toSlide` only. */
+/** ❎️ Marks the active many-to-one morph run on `fromSlide` and `toSlide` only. */
 export function syncManyToOneMorphArrangementClass(deckEl: HTMLElement, fromSlide: HTMLElement | null, toSlide: HTMLElement | null): void {
   clearManyToOneMorphArrangementClass(deckEl);
   if (fromSlide && toSlide && isManyToOneMorphTransition(fromSlide, toSlide)) {
@@ -138,7 +138,7 @@ export function syncManyToOneMorphArrangementClass(deckEl: HTMLElement, fromSlid
   }
 }
 
-/** ⏳️ Prepares settle + many-to-one frame/crop morph before reveal auto-animate measures FLIP. */
+/** 🎞️ Prepares settle + many-to-one frame/crop morph before reveal auto-animate measures FLIP. */
 export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSlide: HTMLElement): void {
   const deckEl = fromSlide.closest(".reveal");
   if (deckEl instanceof HTMLElement) {
@@ -180,7 +180,7 @@ function elementIsLabelMorphSource(element: HTMLElement): boolean {
   return element.classList.contains("presentation-affiliation-morph-source");
 }
 
-/** 🎯️ True when this node may be a reveal.js auto-animate pair endpoint (intro wrapper or canvas-framed tile). */
+/** 🥢️ True when this node may be a reveal.js auto-animate pair endpoint (intro wrapper or canvas-framed tile). */
 export function isRevealAutoAnimatePairSource(element: HTMLElement): boolean {
   if (!element.hasAttribute("data-id")) {
     return false;
@@ -194,7 +194,7 @@ export function isRevealAutoAnimatePairSource(element: HTMLElement): boolean {
   return true;
 }
 
-/** 📐️ Slide-local ink box for reveal.js `measure` (avoids viewport `getBoundingClientRect` fly-in when `center: true`). */
+/** 📏️ Slide-local ink box for reveal.js `measure` (avoids viewport `getBoundingClientRect` fly-in when `center: true`). */
 export function revealInkMeasureForAutoAnimate(element: HTMLElement): {
   readonly x: number;
   readonly y: number;
@@ -220,7 +220,7 @@ function isIntroFlowSlide(slide: HTMLElement): boolean {
   return slide.classList.contains("presentation-arrangement--intro") && !slide.classList.contains("presentation-arrangement--positioned");
 }
 
-/** 🎯️ reveal.js auto-animate options for canvas morph text (translate only). */
+/** 📄️ reveal.js auto-animate options for canvas morph text (translate only). */
 export function revealTextAutoAnimatePairOptions(_from: HTMLElement, _fromSlide: HTMLElement, _toSlide: HTMLElement): Record<string, unknown> {
   return {
     scale: false,
@@ -274,7 +274,7 @@ export function resolveMorphAutoAnimateTo(fromElement: HTMLElement, toSlide: HTM
   return candidates.find((candidate) => !elementIsSourceGhostAnchor(candidate) || (elementIsTargetGhostAnchor(candidate) && candidate.classList.contains("presentation-interactive-disposition"))) ?? null;
 }
 
-/** 🔗️ reveal.js auto-animate matcher: intro uses stock `data-id` pairing; catalogue uses ghost-aware pairing. */
+/** 🪄️ reveal.js auto-animate matcher: intro uses stock `data-id` pairing; catalogue uses ghost-aware pairing. */
 export function presentationAutoAnimateMatcher(this: AutoAnimateMatcherHost, fromSlide: HTMLElement, toSlide: HTMLElement): { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] {
   if (isIntroFlowSlide(fromSlide) && isIntroFlowSlide(toSlide)) {
     const pairs: { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] = [];
@@ -390,7 +390,7 @@ export function patchPresentationAutoAnimateStyleSheet(sheet: { innerHTML: strin
   sheet.innerHTML = css + presentationMorphGhostAutoAnimateCss(durationSeconds);
 }
 
-/** 🩹️ Applies reveal auto-animate sheet fixes for the current slide pair. */
+/** 💊️ Applies reveal auto-animate sheet fixes for the current slide pair. */
 export function patchPresentationAutoAnimateRunStyleSheet(sheet: { innerHTML: string }, durationSeconds: number, fromSlide: HTMLElement | undefined, toSlide: HTMLElement | undefined): void {
   if (fromSlide !== undefined && toSlide !== undefined && isIntroFlowSlide(fromSlide) && isIntroFlowSlide(toSlide)) {
     return;
@@ -422,7 +422,7 @@ export function resolvePresentationAutoAnimateRunSlides(explicit: PresentationAu
 
 //#region 🔖️HiddenPreflight
 /**
- * 🩹️ Lets reveal.js own slide visibility by relaxing Tailwind preflight's `[hidden]` reset.
+ * 👁️ Lets reveal.js own slide visibility by relaxing Tailwind preflight's `[hidden]` reset.
  *
  * `@semio-tech/ui-react` surface chrome ships Tailwind v4 preflight, whose layered
  * `[hidden]{display:none!important}` outranks reveal.js's inline `display:block` on the off-screen
@@ -458,7 +458,7 @@ export function relaxHiddenPreflight(): void {
 //#endregion 🔖️HiddenPreflight
 
 //#region 🔖️MorphView
-/** 🔀️ Copies live focus-tile frames from slide 8 onto label-slide target ghosts before many-to-one FLIP. */
+/** 🀄️ Copies live focus-tile frames from slide 8 onto label-slide target ghosts before many-to-one FLIP. */
 export function syncManyToOneGhostMorphFramesFromDom(fromSlide: HTMLElement, toSlide: HTMLElement): void {
   if (!isManyToOneMorphTransition(fromSlide, toSlide)) {
     return;

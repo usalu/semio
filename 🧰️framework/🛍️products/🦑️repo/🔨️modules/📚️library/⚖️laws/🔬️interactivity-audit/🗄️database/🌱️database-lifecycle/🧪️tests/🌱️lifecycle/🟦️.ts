@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { resolve, sep } from "node:path";
 import Ajv from "ajv";
-import { testPythonV1 } from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import { testPythonV1 } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import { policyReadFileSafe, policyReadModuleTreeSource } from "../../../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyReadRustPolicyFamily, policyReadRustPolicySource } from "../../../../../../🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
 import { readSourceFamilySource } from "../../../../../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
@@ -41,7 +41,7 @@ const measure = (row: any) => {
 };
 const modelled = (corpus.cases as any[]).filter((row) => row.oracle !== false);
 const model = (() => {
-  const run = spawnSync(testPythonV1() ?? "python3", ["-I", resolve(import.meta.dir, "./🐍️oracle.py"), resolve(import.meta.dir, "./🔣️.json")], { encoding: "utf8", maxBuffer: 1 << 28 });
+  const run = spawnSync(testPythonV1() ?? "python3", ["-I", resolve(import.meta.dir, "./🐍️.py"), resolve(import.meta.dir, "./🔣️.json")], { encoding: "utf8", maxBuffer: 1 << 28 });
   expect(run.status, run.stderr).toBe(0);
   return JSON.parse(run.stdout) as Record<string, { present: boolean }>;
 })();

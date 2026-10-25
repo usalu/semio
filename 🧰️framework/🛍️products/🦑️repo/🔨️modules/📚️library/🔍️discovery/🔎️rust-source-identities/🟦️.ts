@@ -4,7 +4,7 @@ import { inspectRustStructure } from "../🏛️rust-structure/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 import { loadTaxonomy } from "../🔐️taxonomy-authority/🟦️.ts";
 
-/** 🪪️ Lists top-level public Rust type declarations without comment or string decoys. */
+/** 🔎️ Lists top-level public Rust type declarations without comment or string decoys. */
 export function inspectRustPublicTypeNames(source: string): readonly string[] {
   const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), names: string[] = [];
   for (let index = 0; index < tokens.length;) {

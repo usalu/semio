@@ -111,6 +111,8 @@ pub struct IssuedShardTurn{pub budget:semio_framework_actor::Budget,pub(super) r
 
 impl IssuedShardTurn{
  pub fn new(budget:semio_framework_actor::Budget,input:semio_framework_actor::RetainedTurnInput,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64,envelopes:usize)->Result<Self,semio_framework_value::ValueError>{if deadline_us==0||deadline_us>input.work.absolute_deadline_us||work_fuel>input.work.fuel||retained_policy.maximum_items>input.grant.maximum_items||retained_policy.maximum_copy_bytes>input.grant.maximum_copy_bytes||retained_policy.maximum_capacity_bytes>input.grant.maximum_capacity_bytes||retained_policy.maximum_release_bytes>input.grant.maximum_release_bytes||retained_policy.maximum_depth>input.grant.maximum_depth{return Err(Self::refusal("original shard policy exceeds its held total source authority"))}Ok(Self{budget,retained_policy,work_fuel,deadline_us,original:semio_framework_actor::IssuedRetainedBatch::new(input,envelopes)?})}
+ /// 🎟️ Issues the whole held source authority of `input` as the shard policy, work fuel and deadline.
+ pub fn whole(budget:semio_framework_actor::Budget,input:semio_framework_actor::RetainedTurnInput,envelopes:usize)->Result<Self,semio_framework_value::ValueError>{Self::new(budget,input,input.grant,input.work.fuel,input.work.absolute_deadline_us,envelopes)}
  pub fn envelope_recipient(&mut self,index:usize)->Result<IssuedShardRetainedRecipient<'_>,semio_framework_value::ValueError>{Ok(IssuedShardRetainedRecipient{original:self.original.envelope_recipient(index)?})}
  fn resume_envelope_recipient(&mut self,index:usize)->Result<IssuedShardRetainedRecipient<'_>,semio_framework_value::ValueError>{Ok(IssuedShardRetainedRecipient{original:self.original.resume_envelope_recipient(index)?})}
  pub fn refusal(message:&'static str)->semio_framework_value::ValueError{semio_framework_actor::IssuedRetainedBatch::refusal(message)}
@@ -134,12 +136,6 @@ impl semio_framework_os_services::ComputeRetainedRecipient for IssuedShardRetain
 
 pub async fn turn_budget_from_grant(budget: &semio_framework_actor::Budget, retained: semio_framework_actor::RetainedTurnInput,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64) -> Budget {
     Budget { retained, retained_policy,work_fuel,fuel: budget.fuel, deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames }
-}
-
-/// 🔀️ Same `Grant` budget, `GuestRuntime::step_job`'s shape — `JobBudget` only ever carried
-/// `fuel`/`deadline_ms`, so this is a straight field mapping, no invented default needed.
-pub(super) async fn job_budget_from_grant(budget: &semio_framework_actor::Budget) -> JobBudget {
-    JobBudget { fuel: budget.fuel, deadline_ms: budget.wall_ms }
 }
 
 /// ⏯️ The events one granted turn hands the guest. A turn this shard cut on its wall deadline was

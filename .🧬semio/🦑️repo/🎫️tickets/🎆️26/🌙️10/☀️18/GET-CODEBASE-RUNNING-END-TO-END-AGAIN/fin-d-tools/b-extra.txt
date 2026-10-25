@@ -1,0 +1,3 @@
+x1|@semio-tech/framework-process|test-cargo-build-lease,test-cargo-build-custody,test-resource-leases
+x2|repo-mcp,@semio-tech/repo-codebase-go|test
+x3|@semio-tech/repo-test-domain|test-artifact-root-source

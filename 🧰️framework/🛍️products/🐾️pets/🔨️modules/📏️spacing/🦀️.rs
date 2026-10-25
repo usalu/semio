@@ -8,8 +8,8 @@
 
 use crate::draft::{carve, crowd_on, shoulders, Draft, Room};
 use semio_framework_pets_clearance::Body;
-use semio_framework_pets_contract::schema::{Activity, Point, Species, Ticks};
-use semio_framework_pets_kinematics::terrain::{hop_step, larger, perch_at, smaller, Flight, Hop};
+use semio_framework_pets_contract::schema::{Activity, Cast, Menagerie, Perch, Point, Rect, Slug, Species, Surface, Ticks};
+use semio_framework_pets_kinematics::terrain::{hop_step, larger, perch_at, perches_of, smaller, Flight, Hop};
 use semio_framework_pets_kinematics::trigonometry::clamp;
 use semio_framework_pets_contract::schema::Footing;
 use semio_framework_pets_contract::schema::Actor;
@@ -168,6 +168,80 @@ pub fn rooms_for(draft: &Draft<'_>, kind: &Species) -> Vec<Room> {
         rooms.push(Room { perch: at, stretches, span, crowd: crowd_on(draft, perch) });
     }
     rooms
+}
+
+/// 🌇️ The ground a survey offers: what the perches of a company are cut from.
+#[derive(Clone, Copy)]
+pub struct Ground<'a> {
+    pub surfaces: &'a [Surface],
+    pub keepouts: &'a [Rect],
+    pub width: f64,
+    pub height: f64,
+}
+
+/// 🏙️ The perches of a company on `ground`: clearance = the tallest of them plus its hover, minimum = the widest, so that every perch carries any of them; for nobody, the perches of nobody (every surface).
+pub fn perches_for(ground: Ground<'_>, company: &[&Species]) -> Vec<Perch> {
+    let mut tallest = 0.0;
+    let mut widest = 0.0;
+    for kind in company {
+        tallest = larger(tallest, kind.size.height + hover_of(kind));
+        widest = larger(widest, kind.size.width);
+    }
+    perches_of(ground.surfaces, ground.keepouts, ground.width, ground.height, tallest, widest)
+}
+
+/// 🗿️ Who of `species` (in the order given, a species the menagerie does not know left out) can stand on `ground` together: each one in its turn joins when the perches cut for it and everyone who joined before it still exist. Whoever does not fit is left out and the others do not wait for it, so one species too wide or too tall for every ground never takes the ground from those that fit; the first of them that fits alone always joins.
+pub fn standing<'m>(menagerie: &'m Menagerie, ground: Ground<'_>, species: &[Slug]) -> Vec<&'m Species> {
+    let mut company: Vec<&Species> = Vec::new();
+    for id in species {
+        let Some(kind) = menagerie.species.iter().find(|known| &known.id == id) else { continue; };
+        if company.iter().any(|joined| joined.id == kind.id) {
+            continue;
+        }
+        company.push(kind);
+        if perches_for(ground, &company).is_empty() {
+            company.pop();
+        }
+    }
+    company
+}
+
+/// 🎑️ The company of a stage: who stands on it already (its actors, in their order) and who is wanted (in `menagerie.species` order), as far as they can stand on its ground together ([`standing`]). Its perches are cut for them, and of the wanted only they arrive.
+pub fn company_of<'m>(menagerie: &'m Menagerie, draft: &Draft<'_>) -> Vec<&'m Species> {
+    let mut names: Vec<Slug> = draft.stage.actors.iter().map(|actor| actor.species.clone()).collect();
+    for kind in &menagerie.species {
+        if draft.stage.wanted.contains(&kind.id) && !names.contains(&kind.id) {
+            names.push(kind.id.clone());
+        }
+    }
+    standing(menagerie, Ground { surfaces: &draft.stage.surfaces, keepouts: &draft.stage.keepouts, width: draft.stage.width, height: draft.stage.height }, &names)
+}
+
+/// 🏰️ The troupe a scene casts, as far as `ground` carries it: of those who stood on the stage the turn before (`holding`) and of the `troupe` (in this order, as many as the troupe has seats), whoever stands on the ground even alone stays; every other seat goes to a species of the scene's core and rotation (in this order, once) that does, the `epoch`th of them first and the next ones round and round. A species to `avoid` (one the host has found does not stay on the ground it is shown on: its own presence takes the room it stood on) does not fit. A troupe that stands on the ground is cast as it is, and whoever held a seat keeps it while it fits, so a ground that changes under the pets recasts nobody who can stay and a page whose layout follows the pets cannot make the cast swing back and forth; when none of the scene's species can stand, nobody is cast.
+pub fn cast_on(menagerie: &Menagerie, ground: Ground<'_>, cast: &Cast, troupe: &[Slug], epoch: i64, holding: &[Slug], avoid: &[Slug]) -> Vec<Slug> {
+    let fits = |id: &Slug| !avoid.contains(id) && !standing(menagerie, ground, std::slice::from_ref(id)).is_empty();
+    let mut kept: Vec<Slug> = Vec::new();
+    for id in holding.iter().chain(troupe) {
+        if kept.len() < troupe.len() && !kept.contains(id) && fits(id) {
+            kept.push(id.clone());
+        }
+    }
+    if kept.len() == troupe.len() {
+        return kept;
+    }
+    let mut spare: Vec<Slug> = Vec::new();
+    for id in cast.core.iter().chain(&cast.rotation) {
+        if !spare.contains(id) && !kept.contains(id) && !troupe.contains(id) && fits(id) {
+            spare.push(id.clone());
+        }
+    }
+    let first = if spare.is_empty() { 0 } else { epoch.rem_euclid(spare.len() as i64) as usize };
+    let missing = troupe.len() - kept.len();
+    let open = if missing < spare.len() { missing } else { spare.len() };
+    for seat in 0..open {
+        kept.push(spare[(first + seat) % spare.len()].clone());
+    }
+    kept
 }
 
 /// 🏘️ The rooms a newcomer chooses among, so that a company spreads out over what the stage offers: those that hold the fewest actors, and of these the ones on the ground — the lowest perches of the stage — only when no higher one is as empty. Pets stand on things before they stand beneath them.

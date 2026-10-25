@@ -1,7 +1,7 @@
 /** 🦀️ Rust source evidence readers: production/test source pairs, store roots and comment stripping.
  * @see 📜️script.ts
  */
-import { memberStoreProducerSourceDeclarationV1, type ToolJobMemberStoreProducerSources, type MemberProducerSourceExtension } from "../../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
+import { memberStoreProducerSourceDeclarationV1, type ToolJobMemberStoreProducerSources, type MemberProducerSourceExtension } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source";
 import { inspectRustModuleGraphFacts } from "../../🌐️rust-module-graph/🟦️.ts";
 import { inspectRustStructure } from "../../🏛️rust-structure/🟦️.ts";
 import { POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadFileSafe, policyReadModuleTreeSource } from "../🟦️.ts";
@@ -56,7 +56,7 @@ export function policyReadOsStoreSource(repoRoot: string): string {
   return OS_STORE_ROOT_SOURCES.map((path) => policyReadFileSafe(repoRoot, path)).join("\n");
 }
 
-/** 🏪️ Rust evidence of the os Store: the decomposed production source of {@link OS_STORE_ROOT_SOURCES} plus the root's declared canonical tests. */
+/** 🗄️ Rust evidence of the os Store: the decomposed production source of {@link OS_STORE_ROOT_SOURCES} plus the root's declared canonical tests. */
 export function policyReadOsStoreEvidence(repoRoot: string): PolicyRustSourceEvidence {
   const evidence = policyReadRustSourceEvidence(repoRoot, OS_STORE_ROOT_SOURCES[0]);
   return { production: { path: evidence.production.path, source: policyReadOsStoreSource(repoRoot) }, tests: evidence.tests };

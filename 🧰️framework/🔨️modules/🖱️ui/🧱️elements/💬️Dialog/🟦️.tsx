@@ -113,7 +113,7 @@ function useDialogContext(): DialogContextValue {
   return context;
 }
 
-/** 🛑️ Creates a small owned preventable event without exposing a third-party event type. */
+/** 🔔️ Creates a small owned preventable event without exposing a third-party event type. */
 function preventableEvent<TEvent extends Event>(originalEvent?: TEvent): DialogPreventableEvent<TEvent> {
   let prevented = false;
   return {
@@ -260,7 +260,7 @@ function isInsideDialogIsolation(target: EventTarget | null, isolationRoot: HTML
   return isolationRoot === null || (target instanceof Node && isolationRoot.contains(target));
 }
 
-/** 🧭️ Detects whether an event target belongs to any currently modal scoped application root. */
+/** 🏝️ Detects whether an event target belongs to any currently modal scoped application root. */
 export function isInsideActiveScopedDialogIsolation(target: EventTarget | null): boolean {
   if (!(target instanceof Node)) return false;
   for (const [isolationRoot, stack] of dialogStacks) if (isolationRoot !== null && stack.length > 0 && isolationRoot.contains(target)) return true;
@@ -401,7 +401,7 @@ function DialogPortal({ children, container }: DialogPortalProps) {
   );
 }
 
-/** 🌑️ Paints the modal veil while dismissal remains owned by DialogContent. */
+/** 🌫️ Paints the modal veil while dismissal remains owned by DialogContent. */
 const DialogOverlay = React.forwardRef<HTMLDivElement, DialogOverlayProps>(function DialogOverlay({ className, style, ...props }, forwardedRef) {
   const context = useDialogContext();
   if (!context.open) return null;
@@ -418,7 +418,7 @@ const DialogOverlay = React.forwardRef<HTMLDivElement, DialogOverlayProps>(funct
   );
 });
 
-/** 🪟️ Owns modal isolation, focus trapping, topmost dismissal, and accessible associations. */
+/** 🔒️ Owns modal isolation, focus trapping, topmost dismissal, and accessible associations. */
 const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(function DialogContent(
   { className, style, showCloseButton = true, children, onOpenAutoFocus, onCloseAutoFocus, onEscapeKeyDown, onPointerDownOutside, onFocusOutside, onInteractOutside, ...props },
   forwardedRef,
@@ -587,7 +587,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="dialog-header" className={cn("flex flex-col gap-single text-center sm:text-start", className)} {...props} />;
 }
 
-/** 🧱️ Groups dialog actions without changing semantics. */
+/** 👥️ Groups dialog actions without changing semantics. */
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="dialog-footer" className={cn("flex flex-col-reverse gap-single sm:flex-row sm:justify-end", className)} {...props} />;
 }

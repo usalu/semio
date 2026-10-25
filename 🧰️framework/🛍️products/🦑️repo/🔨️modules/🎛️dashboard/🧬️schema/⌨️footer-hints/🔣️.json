@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/footer-hints.json",
+  "title": "⌨️ Footer hints fitted beside the notice of the status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "hints",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "hints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/Hint"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/Case"
+      }
+    }
+  },
+  "$defs": {
+    "Hint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "label"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "width",
+        "notice",
+        "kept"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "notice": {
+          "type": "string"
+        },
+        "kept": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

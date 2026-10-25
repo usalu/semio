@@ -22,7 +22,7 @@ export type ShardTurnCarriers = {
   readonly status?: unknown;
 };
 
-/** 🤫️ Whether one reactor turn result carried NOTHING the host could act on — no ui patch, no
+/** 🕳️ Whether one reactor turn result carried NOTHING the host could act on — no ui patch, no
  * effect, no presence, no wake, neither receipt, and both ingress lanes idle.
  *
  * This is the whole safety argument of the shard worker's silent-turn hold: a result this predicate
@@ -47,7 +47,7 @@ function isIdleIngress(status: unknown): boolean {
   return Boolean(status) && typeof status === "object" && (status as { readonly tag?: unknown }).tag === "idle";
 }
 
-/** 🚚️ How many consecutive guest turns ONE worker-owned drive may run before it crosses back anyway —
+/** 🪜️ How many consecutive guest turns ONE worker-owned drive may run before it crosses back anyway —
  * the wall the host GRANTED for this crossing, divided by what one guest turn measures.
  *
  * Twin of `⚛️reactor/🔄️turn/🦀️.rs`'s `more_work_drive_steps`, and held equal to it by the shared
@@ -67,7 +67,7 @@ export function shardTurnDriveStepsV1(grantWallMs: number, guestTurnCostMs: numb
   return Math.max(1, Math.floor(grantWallMs / guestTurnCostMs));
 }
 
-/** 🚚️ The WALL one drive may spend — the whole grant, never the grant rounded down to whole measured
+/** 💰️ The WALL one drive may spend — the whole grant, never the grant rounded down to whole measured
  * turns.
  *
  * The step count above is the grant's DERIVED EXPECTATION, and its job is the coherence law: it is what
@@ -90,7 +90,7 @@ export function shardTurnDriveBudgetMsV1(grantWallMs: number, guestTurnCostMs: n
   return Math.max(grantWallMs, guestTurnCostMs);
 }
 
-/** 🚚️ The WORKER-owned `MoreWork` drive, as a law rather than as inlined worker text.
+/** 👷️ The WORKER-owned `MoreWork` drive, as a law rather than as inlined worker text.
  *
  * In the browser the host round trip IS the guest's pump: there is no self-driving loop on the far
  * side of the worker boundary, so a reactor that answers `more-work` while publishing nothing costs a

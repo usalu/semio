@@ -38,7 +38,7 @@ pub const MUTATION_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️mutati
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use crate::text::mutations::*;
+use crate::text_mutations::*;
 use semio_s_artifact_block_2d_mutations::*;
 use semio_s_artifact_block_2d_diff::Block2dDiff;
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
@@ -105,4 +105,4 @@ pub fn block2d_mutation_report_json(base_json: &str, mutation_json: &str, after_
     Ok(semio_framework_pack_json::to_json_string(&report))
 }
 }
-pub use crate::text::mutations::mutations_codec::*;
+pub use crate::text_mutations::mutations_codec::*;

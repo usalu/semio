@@ -53,7 +53,7 @@ impl RangeTransport for FakeTransport {
     }
 }
 
-/// 🧪️ Retry waits use the process TimerWheel and make forward progress without
+/// ⚙️ Retry waits use the process TimerWheel and make forward progress without
 /// creating a per-wait OS thread.
 #[test]
 fn retry_runtime_sleep_resolves_via_worker_pool_timer_wheel() {

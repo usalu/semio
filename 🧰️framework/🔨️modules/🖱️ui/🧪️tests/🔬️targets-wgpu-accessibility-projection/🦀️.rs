@@ -253,7 +253,7 @@ fn windowed_rows_project_their_place_in_the_whole_list() {
     assert_eq!(place("mutation.7"), (Some(7), Some(7)));
 }
 
-/// ♿️ The headline: a mounted document answers the FULL projection the shared fixture declares, in
+/// 📄️ The headline: a mounted document answers the FULL projection the shared fixture declares, in
 /// pre-order and with the right depth — the tree an assistive technology reads.
 #[test]
 fn a_mounted_document_publishes_the_accessibility_tree_the_shared_fixture_declares() {
@@ -365,7 +365,7 @@ fn real_settings_fields_inherit_labels_and_explicit_control_names_win() {
     assert_eq!(projection.iter().find(|node| node.node_id == 2).unwrap().label.as_deref(), Some("Explicit control name"));
 }
 
-/// ♿️ LAW (live fault F18): a tree row whose own click is its target's activation (`RowTarget::activation`, never a record
+/// ➡️ LAW (live fault F18): a tree row whose own click is its target's activation (`RowTarget::activation`, never a record
 /// binding) is ACTIONABLE in the projection — the mirror forwards a click, Enter and Space on it as its activation — while
 /// a row without one, and a disabled row, are not.
 #[test]
@@ -394,7 +394,7 @@ fn a_row_with_an_activation_projects_actionable() {
     assert_eq!(actionable("action.gated"), ("treeitem", false), "a disabled row activates nothing");
 }
 
-/// ♿️ LAW (live finding on the history editor's dx / dy): a number input projects the `spinbutton` React's
+/// 🔢️ LAW (live finding on the history editor's dx / dy): a number input projects the `spinbutton` React's
 /// `<input type="number">` is — with its value, bounds and step, so the mirror builds a number field that follows the
 /// number-control law — while a text input stays a `textbox`.
 #[test]

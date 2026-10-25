@@ -32,5 +32,11 @@ pub mod schema {
         #[path = "../../🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "."]
+        pub mod native_binding {
+            #[path = "../../🧩️component/🌳️nodes/🦀️.rs"]
+            pub mod nodes;
+        }
     }
 }
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioDrawingSnapshot);

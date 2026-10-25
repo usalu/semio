@@ -1,0 +1,400 @@
+{
+ "version": 1,
+ "texts": [
+  {
+   "name": "a stale scope in English names the member and the command",
+   "kind": "stale",
+   "scope": "♻️mit-bestand",
+   "drift": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "../✏️s/x/package.json",
+     "frozen": true
+    }
+   ],
+   "languages": [
+    "en"
+   ]
+  },
+  {
+   "name": "the same scope in German",
+   "kind": "stale",
+   "scope": "♻️mit-bestand",
+   "drift": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "../✏️s/x/package.json",
+     "frozen": true
+    }
+   ],
+   "languages": [
+    "de"
+   ]
+  },
+  {
+   "name": "no language chosen offers both, English first",
+   "kind": "stale",
+   "scope": ".",
+   "drift": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "package.json",
+     "section": "devDependencies",
+     "dependency": "x",
+     "manifestVersion": "1",
+     "frozen": true
+    }
+   ],
+   "languages": [
+    "en",
+    "de"
+   ]
+  },
+  {
+   "name": "every kind, the scope root label, absent values and the list limit",
+   "kind": "stale",
+   "scope": "✏️s",
+   "drift": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "../✏️s/x/package.json",
+     "frozen": true
+    },
+    {
+     "kind": "workspace-stale",
+     "manifest": "old/package.json",
+     "frozen": true
+    },
+    {
+     "kind": "identity-mismatch",
+     "manifest": "package.json",
+     "section": "name",
+     "manifestVersion": "r2",
+     "lockVersion": "r",
+     "frozen": false
+    },
+    {
+     "kind": "missing-in-lock",
+     "manifest": "a/package.json",
+     "section": "dependencies",
+     "dependency": "d",
+     "manifestVersion": "1",
+     "frozen": true
+    },
+    {
+     "kind": "stale-in-lock",
+     "manifest": "a/package.json",
+     "section": "devDependencies",
+     "dependency": "e",
+     "lockVersion": "2",
+     "frozen": false
+    },
+    {
+     "kind": "version-mismatch",
+     "manifest": "b/package.json",
+     "section": "dependencies",
+     "dependency": "f",
+     "manifestVersion": "3",
+     "lockVersion": "4",
+     "frozen": false
+    },
+    {
+     "kind": "invalid-lockfile",
+     "manifest": "bun.lock",
+     "frozen": true
+    },
+    {
+     "kind": "identity-mismatch",
+     "manifest": "c/package.json",
+     "section": "version",
+     "manifestVersion": "1.0.1",
+     "frozen": false
+    }
+   ],
+   "languages": [
+    "en"
+   ]
+  },
+  {
+   "name": "every kind in German",
+   "kind": "stale",
+   "scope": "✏️s",
+   "drift": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "../✏️s/x/package.json",
+     "frozen": true
+    },
+    {
+     "kind": "workspace-stale",
+     "manifest": "old/package.json",
+     "frozen": true
+    },
+    {
+     "kind": "identity-mismatch",
+     "manifest": "package.json",
+     "section": "name",
+     "manifestVersion": "r2",
+     "lockVersion": "r",
+     "frozen": false
+    },
+    {
+     "kind": "missing-in-lock",
+     "manifest": "a/package.json",
+     "section": "dependencies",
+     "dependency": "d",
+     "manifestVersion": "1",
+     "frozen": true
+    },
+    {
+     "kind": "stale-in-lock",
+     "manifest": "a/package.json",
+     "section": "devDependencies",
+     "dependency": "e",
+     "lockVersion": "2",
+     "frozen": false
+    },
+    {
+     "kind": "version-mismatch",
+     "manifest": "b/package.json",
+     "section": "dependencies",
+     "dependency": "f",
+     "manifestVersion": "3",
+     "lockVersion": "4",
+     "frozen": false
+    },
+    {
+     "kind": "invalid-lockfile",
+     "manifest": "bun.lock",
+     "frozen": true
+    },
+    {
+     "kind": "identity-mismatch",
+     "manifest": "c/package.json",
+     "section": "version",
+     "manifestVersion": "1.0.1",
+     "frozen": false
+    }
+   ],
+   "languages": [
+    "de"
+   ]
+  },
+  {
+   "name": "a refusal without a static finding says a resolved package changed",
+   "kind": "refused",
+   "scope": "🌎️hub",
+   "drift": [],
+   "languages": [
+    "en",
+    "de"
+   ]
+  },
+  {
+   "name": "a refusal with findings lists them",
+   "kind": "refused",
+   "scope": "🏢️semio-tech",
+   "drift": [
+    {
+     "kind": "stale-in-lock",
+     "manifest": "pkgs/a/package.json",
+     "section": "dependencies",
+     "dependency": "ms",
+     "lockVersion": "2.1.3",
+     "frozen": false
+    }
+   ],
+   "languages": [
+    "en"
+   ]
+  }
+ ],
+ "scopes": [
+  {
+   "name": "scopes are the root and every owner directory with a lock; members are normalized, globs and missing members skipped",
+   "files": {
+    "package.json": "{\"name\": \"r\", \"workspaces\": [\"pkgs/a\", \"pkgs/*\", \"gone\"], \"semio\": {\"workspace\": {\"owners\": [\"*/package.json\"]}}}",
+    "bun.lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"}},\"packages\":{}}",
+    "pkgs/a/package.json": "{\"name\": \"a\"}",
+    "s1/package.json": "{\"name\": \"s1\", \"workspaces\": [\"../pkgs/a\", \"m/\", \"./n\"]}",
+    "s1/bun.lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"}},\"packages\":{}}",
+    "s1/m/package.json": "{\"name\": \"m\"}",
+    "s1/n/package.json": "{\"name\":\"n\", // comment\n}",
+    "s2/package.json": "{\"name\": \"s2\"}",
+    "plain/readme.md": "x"
+   },
+   "expected": {
+    "scopes": [
+     {
+      "scope": ".",
+      "manifests": [
+       "package.json",
+       "pkgs/a/package.json"
+      ]
+     },
+     {
+      "scope": "s1",
+      "manifests": [
+       "package.json",
+       "../pkgs/a/package.json",
+       "m/package.json",
+       "n/package.json"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "an owner pattern deeper than one level is refused by name",
+   "files": {
+    "package.json": "{\"name\": \"r\", \"semio\": {\"workspace\": {\"owners\": [\"**/package.json\"]}}}",
+    "bun.lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"}},\"packages\":{}}"
+   },
+   "expected": {
+    "error": "Declared one-level dependency scope owner pattern required: **/package.json"
+   }
+  }
+ ],
+ "staged": [
+  {
+   "name": "a staged lock names the original member behind w/<index>",
+   "scope": "s1",
+   "members": [
+    "../a",
+    "b"
+   ],
+   "manifest": {
+    "name": "r",
+    "workspaces": [
+     "w/0",
+     "w/1"
+    ]
+   },
+   "projected": {
+    "w/0": {
+     "name": "a"
+    },
+    "w/1": {
+     "name": "b",
+     "dependencies": {
+      "x": "1"
+     }
+    }
+   },
+   "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"},\"w/0\":{\"name\":\"a\"},\"w/1\":{\"name\":\"b\"}},\"packages\":{\"a\":[\"a@workspace:w/0\"],\"b\":[\"b@workspace:w/1\"]}}",
+   "expected": [
+    {
+     "kind": "missing-in-lock",
+     "manifest": "b/package.json",
+     "section": "dependencies",
+     "dependency": "x",
+     "manifestVersion": "1",
+     "frozen": true
+    }
+   ]
+  },
+  {
+   "name": "a staged lock that lacks a member row is a workspace finding of that member",
+   "scope": ".",
+   "members": [
+    "pkgs/a",
+    "pkgs/b/"
+   ],
+   "manifest": {
+    "name": "r",
+    "workspaces": [
+     "w/0",
+     "w/1"
+    ]
+   },
+   "projected": {
+    "w/0": {
+     "name": "a"
+    },
+    "w/1": {
+     "name": "b"
+    }
+   },
+   "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"},\"w/0\":{\"name\":\"a\"}},\"packages\":{\"a\":[\"a@workspace:w/0\"]}}",
+   "expected": [
+    {
+     "kind": "workspace-missing",
+     "manifest": "pkgs/b/package.json",
+     "frozen": true
+    }
+   ]
+  },
+  {
+   "name": "an in-sync staged lock has no finding",
+   "scope": ".",
+   "members": [
+    "pkgs/a"
+   ],
+   "manifest": {
+    "name": "r",
+    "workspaces": [
+     "w/0"
+    ]
+   },
+   "projected": {
+    "w/0": {
+     "name": "a"
+    }
+   },
+   "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"},\"w/0\":{\"name\":\"a\"}},\"packages\":{\"a\":[\"a@workspace:w/0\"]}}",
+   "expected": []
+  }
+ ],
+ "frozen": [
+  {
+   "name": "Bun's own frozen refusal becomes the scope message",
+   "scope": "♻️mit-bestand",
+   "stderr": "Resolving dependencies\nerror: lockfile had changes, but lockfile is frozen\nnote: try re-running without --frozen-lockfile and commit the updated lockfile\n",
+   "expectedContains": [
+    "Bun refused the frozen installation of dependency scope ♻️mit-bestand",
+    "no manifest difference found, a resolved package changed",
+    "repo dependencies lock --scope ♻️mit-bestand"
+   ],
+   "environment": {
+    "SEMIO_LANGUAGE": "en"
+   }
+  },
+  {
+   "name": "the same refusal in German when German is chosen",
+   "scope": "♻️mit-bestand",
+   "stderr": "error: lockfile had changes, but lockfile is frozen\n",
+   "environment": {
+    "SEMIO_LANGUAGE": "de"
+   },
+   "expectedContains": [
+    "Bun hat die eingefrorene Installation des Abhängigkeits-Scopes ♻️mit-bestand verweigert",
+    "kein Manifest-Unterschied gefunden",
+    "repo dependencies lock --scope ♻️mit-bestand"
+   ],
+   "expectedAbsent": [
+    "Bun refused"
+   ]
+  },
+  {
+   "name": "an unresolvable language falls back to both languages",
+   "scope": "🌎️hub",
+   "stderr": "error: lockfile had changes, but lockfile is frozen\n",
+   "environment": {
+    "SEMIO_LANGUAGE": "fr"
+   },
+   "expectedContains": [
+    "Bun refused the frozen installation of dependency scope 🌎️hub",
+    "Bun hat die eingefrorene Installation des Abhängigkeits-Scopes 🌎️hub verweigert"
+   ]
+  },
+  {
+   "name": "another installer failure is not translated",
+   "scope": ".",
+   "stderr": "error: connect ECONNREFUSED\n",
+   "expectedContains": null,
+   "environment": {
+    "SEMIO_LANGUAGE": "en"
+   }
+  }
+ ]
+}

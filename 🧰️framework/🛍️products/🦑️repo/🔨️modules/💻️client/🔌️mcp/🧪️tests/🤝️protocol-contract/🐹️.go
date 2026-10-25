@@ -157,6 +157,24 @@ func TestRepositoryEntrypointContract(t *testing.T) {
 	if _, err := resolveMCPProfile([]string{"mcp", "client"}, func(string) (string, bool) { return "", false }); err == nil {
 		t.Fatal("legacy CLI delegation arguments must be rejected")
 	}
+	for _, row := range []struct {
+		arguments []string
+		accepted  bool
+	}{
+		{[]string{"--repo", "chosen"}, true},
+		{[]string{"--repo=chosen"}, true},
+		{nil, false},
+		{[]string{"client"}, false},
+		{[]string{"--repo"}, false},
+		{[]string{"--repo", ""}, false},
+		{[]string{"--repo", "-chosen"}, false},
+		{[]string{"--repo="}, false},
+		{[]string{"--repo", "chosen", "client"}, false},
+	} {
+		if hasNativeMCPRootOption(row.arguments) != row.accepted {
+			t.Fatalf("root option %q accepted=%v want=%v", row.arguments, !row.accepted, row.accepted)
+		}
+	}
 }
 
 func TestRepositoryReopenPromptContract(t *testing.T) {

@@ -1,7 +1,7 @@
 /** 🟠️ The never writes way policy tests of the gear depiction suite. */
 import { expect, it, vi } from "vitest";
 import { equip, paintLadders, paintTools, rackLadders, type GearTool } from "@semio-tech/pets-react";
-import { SPECIMEN, bearing, css, writes } from "../🟢️shared/🟦️.tsx";
+import { SPECIMEN, bearing, css, writes } from "../🟢️harness/🟦️.tsx";
 
 /** 🟡 Registers the never writes way policy tests of the gear depiction suite. */
 export function registerNeverWritesWayPolicyTests(): void {

@@ -3,7 +3,7 @@ import {expect,setDefaultTimeout,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import actualRoster from "../../../🗂️components/🔣️.json";
 import {createRevisionIdentity,createRevisionLoader,importRevisionedComponents,readComponentRoster,registryKey,wireRevisionedComponents} from "../../🟨️.mjs";
 import corpus from "./🔣️.json";

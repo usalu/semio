@@ -16,7 +16,7 @@ static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAlloc
 #[cfg(test)]
 use semio_framework_dsl_record::RecordLayout;
 
-/// 🛫️ Emits a terminal record under caller-owned allocation and interior cancellation.
+/// 📹️ Emits a terminal record under caller-owned allocation and interior cancellation.
 pub fn encode_record_body_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{record_body(spec,record,options,control)}
 
 /// 📦️ Appends one exact Record body after the caller's existing prefix and returns its body length.
@@ -29,10 +29,10 @@ pub fn encode_projected_record_body_into<T:semio_framework_dsl_record::native_en
 /// 🎞️ Encodes a borrowed complete intrinsic value without a synthetic owned record.
 pub fn encode_value_record_body_controlled(field_id:u16,value:&DslValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{value_record_body(field_id,value,options,control)}
 
-/// 🎞️ Appends one complete intrinsic body to the caller's sink under the same options and control.
+/// 📝️ Appends one complete intrinsic body to the caller's sink under the same options and control.
 pub fn encode_value_record_body_into(field_id:u16,value:&DslValue,options:&EncodeOptions,output:&mut dyn semio_framework_replication_codec::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<usize,PackRefusal>{value_record_body_into(field_id,value,options,output,control)}
 
-/// 📦️ Emits symbols, literal document frames, chunks and footer under one ownership budget.
+/// 📄️ Emits symbols, literal document frames, chunks and footer under one ownership budget.
 pub fn encode_document_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{document(spec,record,options,control)}
 
 #[path="🧱️chunks/🦀️.rs"]
@@ -201,7 +201,7 @@ fn record_body_into(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,
     }))
 }
 
-/// 🎞️ Borrows one complete intrinsic owner through symbol admission and exact byte emission.
+/// 💎️ Borrows one complete intrinsic owner through symbol admission and exact byte emission.
 fn value_record_body(field_id:u16,value:&DslValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
     let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());
     control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{control.begin_stage(0)?;let mut symbols=Symbols{entries:Vec::new()};symbols.dynamic(value,0,options.limits.max_depth,control)?;symbols.finish(control)?;let mut encoder=Encoder{symbols:&symbols,options,control,writer:None,chunking:false,next_chunk:0};let mut measure=Output::measure();encoder.value_body(field_id,value,&mut measure)?;if measure.length as u64>options.limits.max_file_len{return Err(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::WorkLimit, "intrinsic wire exceeds max_file_len")))}if measure.length>maximum.saturating_sub(encoder.control.owned_bytes()){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"intrinsic wire exceeds caller allocation allowance").into())}let mut output=Output::allocated(measure.length,encoder.control)?;encoder.value_body(field_id,value,&mut output)?;if output.length!=measure.length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"intrinsic wire changed after byte admission").into())}Ok(output.bytes.unwrap())}))

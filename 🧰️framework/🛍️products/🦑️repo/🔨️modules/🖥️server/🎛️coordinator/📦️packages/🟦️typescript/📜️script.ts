@@ -1,79 +1,8 @@
 #!/usr/bin/env repo
-import{createIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import {withNextStorageV1} from "../../🏗️builder/💾️storage/🟦️.ts";
-import { withRepositoryCacheStoreV1 } from "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import { withRepositoryArtifactV1, withRepositoryArtifactTaskV1 } from "../../../../📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
-import storageSchema from "../../🏗️builder/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
-import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { createRequire } from "node:module";
-import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🧭️ Coordinator Next.js package router: `repo ./📜️script.ts build|dev|start|test|policy`. */
-import { join, relative } from "node:path";
-import {writeFile} from "node:fs/promises";
-import type { BundleLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
-import { defineLint, dependencyBoundaryBreachesForBundleDir } from "../../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
-import { devToolingEnv, runRepoScriptMain } from "../../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
-import { goLevelTestArgs, runCanonicalGoTests, runVitest } from "../../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
-import { BundleScript, ScriptRouter, scriptInvocationEnvironment, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runRepoScriptMain } from "../../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
+import { ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BuildScript, DevScript, StartScript, TestScript } from "../../🏗️builder/🛤️task-routes/🟦️.ts";
 
-export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLinter) => {
-  const repoRoot = getWorkspaceRoot();
-  return dependencyBoundaryBreachesForBundleDir(repoRoot, l.root());
-});
-
-/** ⚙️ Every Next.js invocation runs inside this package, never at the repository root. */
-const PACKAGE_DIR = import.meta.dirname;
-
-/** 🏗️ Delegates the coordinator's compile to its actual dedicated command owner. */
-class BuildScript extends BundleScript{async run(segments:string[]):Promise<void>{const {buildCoordinatorNextV1}=await import("../../🏗️builder/🏃️execution/🟦️.ts");await buildCoordinatorNextV1(this.repoRoot,this.invocation,segments);}}
-
-/** 🛠️ Serves the coordinator through Next's development server, rebuilding on every edit. */
-class DevScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    for(let index=0;index<segments.length;index+=2)if(!["--port","-p","--hostname","-H"].includes(segments[index]??"")||!segments[index+1])throw new Error("Next development accepts only owned listener settings");
-    await withRepositoryCacheStoreV1(this.repoRoot,"dependencies",this.invocation,createIssuedResourceControlV1(this.invocation,"cache:store-entry",0),()=>withNextStorageV1(this.repoRoot,"prototype",this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),async(store,_layout,temporary)=>{
-    const typescript = join(temporary, "tsconfig.json"), require = createRequire(join(PACKAGE_DIR, "package.json"));
-    await writeFile(typescript, JSON.stringify({ extends: join(PACKAGE_DIR, "tsconfig.json"), compilerOptions: { baseUrl: PACKAGE_DIR, strict: true, incremental: true, tsBuildInfoFile: join(temporary, "state.tsbuildinfo") }, include: [join(PACKAGE_DIR, "app/**/*.ts"), join(PACKAGE_DIR, "app/**/*.tsx"), join(PACKAGE_DIR, "lib/**/*.ts"), join(temporary, "next-env.d.ts"), join(temporary, "types/**/*.ts")], exclude: [join(PACKAGE_DIR, "node_modules"), join(PACKAGE_DIR, "dist"), join(PACKAGE_DIR, "📜️script.ts")] }));
-    try { await runOwnedCommand("node", ["--experimental-transform-types", require.resolve("next/dist/bin/next"), "dev", ...segments], PACKAGE_DIR, "repo-coordinator:dev", 0, { env: scriptInvocationEnvironment(this.invocation, { ...devToolingEnv(),...store.environment,SEMIO_BUILD_MODE:"prototype", SEMIO_NEXT_TYPESCRIPT_PROJECT: relative(PACKAGE_DIR, typescript).replaceAll("\\", "/"), SEMIO_NEXT_BUILD_DIRECTORY: relative(PACKAGE_DIR, temporary).replaceAll("\\", "/") }), signal: this.invocation.control.signal }); }
-    finally { await store.recheck(); }
-    }));
-  }
-}
-
-/** ▶️ Serves the standalone output produced by `build`. */
-class StartScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const mode=readBuildMode(process.env.SEMIO_BUILD_MODE);
-    await withNextStorageV1(this.repoRoot,mode,this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),async(store,layout)=>{
-    const standalone=requireNativeStoragePathV1(store.root,join(layout.output,"standalone")),environment:Record<string,string|undefined>={...devToolingEnv(),...store.environment,HOSTNAME:"0.0.0.0"};await withRepositoryArtifactV1({workspace:this.repoRoot,invocation:this.invocation,storage:store.storage,control:store.control,request:{version:1,path:layout.output,owner:`repo-coordinator:next:${mode}`,maximumBytes:storageSchema.definitions.Protocol.const.maximumOutputBytes,maximumFiles:storageSchema.definitions.Protocol.const.maximumOutputFiles}},reader=>withRepositoryArtifactTaskV1(reader,this.invocation,async artifact=>{
-    for (let index = 0; index < segments.length; index += 2) {
-      const key = segments[index], value = segments[index + 1];
-      if (!value || !key || !["--port", "-p", "--hostname", "-H"].includes(key)) throw new Error("Expected start [--port <port>] [--hostname <hostname>]");
-      environment[key === "--port" || key === "-p" ? "PORT" : "HOSTNAME"] = value;
-    }
-    if(!artifact.files.includes("standalone/server.js"))throw new Error("Original Next standalone entry required");
-    await artifact.recheck();await runOwnedCommand("node", [requireNativeStoragePathV1(store.root,join(standalone,"server.js"))], standalone, "repo-coordinator:start", 0, { env: environment, signal: artifact.control.signal });
-    }));
-    });
-  }
-}
-
-class TestScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    if (segments[0] === "next-rebuild") {
-      if (segments.length !== 1) throw new Error("Expected test next-rebuild");
-      await runOwnedCommand(process.execPath, ["test", join(PACKAGE_DIR, "../../🏗️builder/🎟️admission/🧪️tests/🟦️.ts")], this.repoRoot, "next:rebuild-tests", scriptInvocationBudget(this.invocation, 60_000), { signal: this.invocation.control.signal });
-      return;
-    }
-    const { level, rest } = resolveTestLevel(segments);
-    await runCanonicalGoTests(join(import.meta.dirname, "../.."), [...goLevelTestArgs(level), ...rest], this.invocation);
-    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
-  }
-}
-
+/** 🧭️ Coordinator Next.js package router: `repo ./📜️script.ts build|dev|start|test|policy`; the routes live in `🏗️builder/🛤️task-routes`. */
 const router = new ScriptRouter(import.meta.dirname).register("build", BuildScript).register("dev", DevScript).register("start", StartScript).register("test", TestScript);
-
-await runRepoScriptMain(router, import.meta.url, { defaultCommand: "build" });
+await runRepoScriptMain(router, import.meta.url, { defaultCommand: "build", policyModule: "../../🏗️builder/🛤️task-routes/🟦️.ts" });

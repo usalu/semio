@@ -323,7 +323,7 @@ pub(super) fn render_svg_tree_themed(scene: &mut Scene, tree: &usvg::Tree, fg: C
 }
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-/// 🏷️ Parses SVG source and renders it themed into `scene`.
+/// 🎨️ Parses SVG source and renders it themed into `scene`.
 pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color) -> Result<(), super::CanvasError> {
     let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| super::CanvasError::SvgParse(e.to_string()))?;
     render_svg_tree_themed(scene, &tree, fg, bg);
@@ -331,19 +331,19 @@ pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color)
 }
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-/// 🏷️ Parses SVG source and renders it with the default icon theme into `scene`.
+/// ➕️ Parses SVG source and renders it with the default icon theme into `scene`.
 pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), super::CanvasError> {
     append_svg_str_themed(scene, svg, super::theme::default_icon_fg(), super::theme::default_icon_bg())
 }
 
-/// 📐️ Parses SVG and returns visible content bounds in absolute SVG space.
+/// 📏️ Parses SVG and returns visible content bounds in absolute SVG space.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn svg_icon_content_bounds_from_str(svg: &str) -> Result<(f64, f64, f64, f64), super::CanvasError> {
     let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| super::CanvasError::SvgParse(e.to_string()))?;
     Ok(svg_icon_content_bounds(&tree))
 }
 
-/// 📐️ `wasm32-wasip2` arm: declared `width`/`height`/`viewBox` box
+/// 🔲️ `wasm32-wasip2` arm: declared `width`/`height`/`viewBox` box
 /// (`semio-framework-intrinsic-size`), NOT the painted-ink content bbox the native/browser
 /// arm above computes via `usvg` — a disclosed, intentional behavior difference (no `usvg`
 /// renderer is linked on this target). `x`/`y` are always `0.0`: a declared box has no

@@ -1,4 +1,4 @@
-/** 🌳 Hierarchies: the TypeScript twin of `semio-viz-hierarchy`. Node construction and stratify, the traversal and aggregation vocabulary and the seeded random stream shared with the layouts.
+/** 🪜️ Hierarchies: the TypeScript twin of `semio-viz-hierarchy`. Node construction and stratify, the traversal and aggregation vocabulary and the seeded random stream shared with the layouts.
  * @see ../../../🖋️latex/semio-viz-hierarchy.sty
  * @see ./🌲️tidy-tree-and-cluster/🟦️.ts — the Reingold–Tilford/Buchheim tree and the dendrogram cluster
  * @see ./🧱️treemap-tilings-and-partition/🟦️.ts — all six treemap tilings and the icicle partition
@@ -29,7 +29,7 @@ export function shuffleWith<T>(values: T[], random: () => number): T[] {
 
 //#endregion 🔖️Random
 //#region 🔖️Node
-/** 🌳 One node of a hierarchy, carrying every field the layouts write into. */
+/** 🍃️ One node of a hierarchy, carrying every field the layouts write into. */
 export class VizHierarchyNode<T> {
   data: T;
   depth = 0;
@@ -50,7 +50,7 @@ export class VizHierarchyNode<T> {
     this.data = data;
   }
 
-  /** 🌳 Pre-order traversal: a node before its children, children left to right. */
+  /** 🔃️ Pre-order traversal: a node before its children, children left to right. */
   eachBefore(callback: (node: VizHierarchyNode<T>, index: number) => void): this {
     const stack: VizHierarchyNode<T>[] = [this];
     let index = -1;
@@ -63,7 +63,7 @@ export class VizHierarchyNode<T> {
     return this;
   }
 
-  /** 🌳 Post-order traversal: every child before its parent. */
+  /** 📮️ Post-order traversal: every child before its parent. */
   eachAfter(callback: (node: VizHierarchyNode<T>, index: number) => void): this {
     const stack: VizHierarchyNode<T>[] = [this];
     const next: VizHierarchyNode<T>[] = [];
@@ -80,7 +80,7 @@ export class VizHierarchyNode<T> {
     return this;
   }
 
-  /** 🌳 Breadth-first traversal. */
+  /** ⏮️ Breadth-first traversal. */
   each(callback: (node: VizHierarchyNode<T>, index: number) => void): this {
     let index = -1;
     for (const node of this.descendants()) {
@@ -90,7 +90,7 @@ export class VizHierarchyNode<T> {
     return this;
   }
 
-  /** 🌳 Sums a leaf value into every ancestor, bottom up. */
+  /** ➕️ Sums a leaf value into every ancestor, bottom up. */
   sum(value: (data: T) => number): this {
     return this.eachAfter((node) => {
       let total = +value(node.data) || 0;
@@ -100,7 +100,7 @@ export class VizHierarchyNode<T> {
     });
   }
 
-  /** 🌳 Counts the leaves under every node into `value`. */
+  /** 🔢️ Counts the leaves under every node into `value`. */
   count(): this {
     return this.eachAfter((node) => {
       let total = 0;
@@ -111,14 +111,14 @@ export class VizHierarchyNode<T> {
     });
   }
 
-  /** 🌳 Sorts the children of every node in place. */
+  /** 📍️ Sorts the children of every node in place. */
   sort(compare: (a: VizHierarchyNode<T>, b: VizHierarchyNode<T>) => number): this {
     return this.eachBefore((node) => {
       if (node.children) node.children.sort(compare);
     });
   }
 
-  /** 🌳 Every node of the subtree in breadth-first order. */
+  /** 🌱️ Every node of the subtree in breadth-first order. */
   descendants(): VizHierarchyNode<T>[] {
     const out: VizHierarchyNode<T>[] = [];
     let queue: VizHierarchyNode<T>[] = [this];
@@ -133,7 +133,7 @@ export class VizHierarchyNode<T> {
     return out;
   }
 
-  /** 🌳 The childless nodes, in pre-order. */
+  /** 🍂️ The childless nodes, in pre-order. */
   leaves(): VizHierarchyNode<T>[] {
     const out: VizHierarchyNode<T>[] = [];
     this.eachBefore((node) => {
@@ -142,14 +142,14 @@ export class VizHierarchyNode<T> {
     return out;
   }
 
-  /** 🌳 This node and every ancestor up to the root. */
+  /** 👑️ This node and every ancestor up to the root. */
   ancestors(): VizHierarchyNode<T>[] {
     const out: VizHierarchyNode<T>[] = [];
     for (let node: VizHierarchyNode<T> | null = this; node !== null; node = node.parent) out.push(node);
     return out;
   }
 
-  /** 🌳 The parent–child edges of the subtree. */
+  /** 🔗️ The parent–child edges of the subtree. */
   links(): { readonly source: VizHierarchyNode<T>; readonly target: VizHierarchyNode<T> }[] {
     const out: { source: VizHierarchyNode<T>; target: VizHierarchyNode<T> }[] = [];
     for (const node of this.descendants()) if (node.parent !== null) out.push({ source: node.parent, target: node });
@@ -188,7 +188,7 @@ export function vizHierarchy<T>(data: T, children: (data: T) => readonly T[] | n
   return root;
 }
 
-/** 🌳 `\SemioVizHierarchy`: builds a hierarchy from a flat id/parent table. */
+/** 🌲️ `\SemioVizHierarchy`: builds a hierarchy from a flat id/parent table. */
 export function vizStratify<T>(data: readonly T[], options: { id?: (row: T) => string | null | undefined; parentId?: (row: T) => string | null | undefined } = {}): VizHierarchyNode<T> {
   const id = options.id ?? ((row: T) => (row as { id?: string }).id);
   const parentId = options.parentId ?? ((row: T) => (row as { parentId?: string }).parentId);

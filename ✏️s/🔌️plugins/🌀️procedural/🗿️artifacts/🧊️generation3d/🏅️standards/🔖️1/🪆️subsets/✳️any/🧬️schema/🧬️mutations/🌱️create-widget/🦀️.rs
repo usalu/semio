@@ -1,14 +1,17 @@
 //! ➕ `create-widget` payload — brings a new id-keyed [`Widget`] into existence at an insertion
 //! index (FINAL-state, per `📓️derivation-rules.md` rule 3's addressing convention).
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 //#region 🔖️CreateWidget
 /// ➕ Full initial payload for a new widget, placed at `index` if no widget with the same id
 /// already exists (upsert-by-id, matching the widgets delta's own dedupe rule).
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct CreateWidget {
     pub index: usize,
     pub widget: Widget,

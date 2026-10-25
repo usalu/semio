@@ -29,7 +29,7 @@ fn new_text(id: &str) -> Frame {
 }
 
 fn round_trip(doc: &LayoutSnapshot, operation: &LayoutMutation) -> LayoutSnapshot {
-    let forward = operation.diff(doc).diff().apply(doc).expect("valid mutation diff");
+    let forward = protocol::apply_diff_cold(operation.diff(doc).diff(), doc).expect("valid mutation diff");
     let backs = operation.inverse(doc).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backs {
@@ -440,7 +440,7 @@ fn scale_frames(targets: &[&str], pivot: (f64, f64), sx: f64, sy: f64) -> Layout
 }
 
 fn applied(document: &LayoutSnapshot, mutation: &LayoutMutation) -> LayoutSnapshot {
-    mutation.diff(document).diff().apply(document).expect("the frame-selection leaf applies")
+    protocol::apply_diff_cold(mutation.diff(document).diff(), document).expect("the frame-selection leaf applies")
 }
 
 fn bounds_of(document: &LayoutSnapshot, id: &str) -> LayoutBounds {
@@ -501,7 +501,7 @@ async fn a_drag_edited_in_history_replays_its_downstream() {
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     assert_eq!(ids.len(), 3, "one applied op per gesture");
     let edited = drag_frames(&["frame-1"], -5.0, 20.0);
-    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let drafts: protocol::HistoryInputDrafts = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
     let preview_base = store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref().clone();
     assert_eq!(preview_base, sample_doc(), "the preview base is the state right before the edited drag");
     let preview = applied(&preview_base, &edited);

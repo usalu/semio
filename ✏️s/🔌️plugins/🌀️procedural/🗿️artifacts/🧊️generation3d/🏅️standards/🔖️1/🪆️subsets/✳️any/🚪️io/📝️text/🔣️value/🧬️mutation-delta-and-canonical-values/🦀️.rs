@@ -1,5 +1,6 @@
 //! 🧬️ Mutation, delta and canonical values of generation3d: the mutation enum with its payload records, the widget, synapse and generation deltas, the typed widget input literals and the canonical JSON trees. See [`super`].
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use super::*;
 
 value_codec! {
@@ -382,8 +383,9 @@ pub fn widget_input_of_literal_as(literal: &semio_framework_value::DslValue, sch
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutations(snapshot = Generation3dSnapshot, diff = Generation3dDiff, schema = "generation.2d", reference = Generation3dSnapshot, reference_diff = Generation3dDiff)]
 pub enum Generation3dMutation {
     CreateWidget(create_widget::CreateWidget),
     UpdateWidget(update_widget::UpdateWidget),
@@ -411,16 +413,20 @@ pub enum Generation3dMutation {
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeSchema {
     pub new_schema: String,
 }
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct DisconnectSynapse {
     pub id: String,
 }
@@ -475,8 +481,10 @@ pub enum WidgetInputValue {
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ConnectSynapse {
     pub index: usize,
     pub synapse: SynapseSpec,
@@ -484,16 +492,20 @@ pub struct ConnectSynapse {
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct SelectGeneration {
     pub generation_id: Option<String>,
 }
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct MoveWidget {
     pub id: String,
     pub layout: WidgetLayout,
@@ -501,8 +513,10 @@ pub struct MoveWidget {
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct RenameGeneration {
     pub id: String,
     pub new_name: String,
@@ -510,8 +524,10 @@ pub struct RenameGeneration {
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeSliderValue {
     pub id: String,
     pub value: f64,
@@ -519,8 +535,10 @@ pub struct ChangeSliderValue {
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct MoveNodes {
     pub ids: Vec<String>,
     pub dx: f64,
@@ -529,16 +547,20 @@ pub struct MoveNodes {
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct DeleteGeneration {
     pub id: String,
 }
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct DeleteWidget {
     pub id: String,
 }
@@ -553,16 +575,20 @@ pub struct UpdateSynapse {
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct UpdateCamera {
     pub camera: CameraJson,
 }
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct CreateGeneration {
     pub generation: FormGeneration,
     /// 📍 Zero-based insertion position among the generations; `None` or past the end appends.
@@ -591,8 +617,10 @@ pub struct RotateTransforms {
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct ChangeGenerationValue {
     pub id: String,
     pub question_id: String,
@@ -612,8 +640,10 @@ pub struct ScaleTransforms {
 }
 
 value_codec! {
-#[derive(CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct CreateWidget {
     pub index: usize,
     pub widget: Widget,

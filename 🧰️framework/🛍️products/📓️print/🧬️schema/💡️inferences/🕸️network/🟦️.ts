@@ -1,4 +1,4 @@
-/** 🕸️ Networks: the TypeScript twin of `semio-viz-network`. A Barnes–Hut quadtree, the deterministic
+/** 📡️ Networks: the TypeScript twin of `semio-viz-network`. A Barnes–Hut quadtree, the deterministic
  * force simulation with the six d3 forces, the chord layout, and the arc, circular and layered
  * (Sugiyama) graph layouts. Every random draw comes from the same seeded generator as
  * `semio-viz-network.sty`, so a run is reproducible across implementations.
@@ -10,7 +10,7 @@ import { vizLcg } from "../🌳hierarchy/🟦️.ts";
 /** 🌲 An internal quadtree node: four quadrants, any of them absent. */
 export type VizQuadInternal<T> = [VizQuadNode<T> | undefined, VizQuadNode<T> | undefined, VizQuadNode<T> | undefined, VizQuadNode<T> | undefined] & { x?: number; y?: number; value?: number; r?: number };
 
-/** 🌲 A leaf of the quadtree: one datum plus the coincident data chained behind it. */
+/** 🍃️ A leaf of the quadtree: one datum plus the coincident data chained behind it. */
 export type VizQuadLeaf<T> = { data: T; next?: VizQuadLeaf<T>; x?: number; y?: number; value?: number; r?: number };
 
 export type VizQuadNode<T> = VizQuadInternal<T> | VizQuadLeaf<T>;
@@ -19,7 +19,7 @@ function isInternal<T>(node: VizQuadNode<T>): node is VizQuadInternal<T> {
   return Array.isArray(node);
 }
 
-/** 🌲 The point quadtree d3-force's Barnes–Hut approximation and collision detection walk. */
+/** 💥️ The point quadtree d3-force's Barnes–Hut approximation and collision detection walk. */
 export class VizQuadtree<T> {
   private readonly accessX: (d: T) => number;
   private readonly accessY: (d: T) => number;
@@ -34,7 +34,7 @@ export class VizQuadtree<T> {
     this.accessY = y;
   }
 
-  /** 🌲 Grows the covered square until it contains the point. */
+  /** 🔲️ Grows the covered square until it contains the point. */
   cover(x: number, y: number): this {
     if (Number.isNaN(x) || Number.isNaN(y)) return this;
     if (Number.isNaN(this.x0)) {
@@ -131,7 +131,7 @@ export class VizQuadtree<T> {
     parent[i] = leaf;
   }
 
-  /** 🌲 Adds every datum, covering their bounding square first exactly like d3. */
+  /** ➕️ Adds every datum, covering their bounding square first exactly like d3. */
   addAll(data: readonly T[]): this {
     const n = data.length;
     const xz = new Array<number>(n);
@@ -157,7 +157,7 @@ export class VizQuadtree<T> {
     return this;
   }
 
-  /** 🌲 Pre-order visit; returning `true` prunes the subtree. */
+  /** 🧭️ Pre-order visit; returning `true` prunes the subtree. */
   visit(callback: (node: VizQuadNode<T>, x0: number, y0: number, x1: number, y1: number) => boolean | void): this {
     const quads: { node: VizQuadNode<T>; x0: number; y0: number; x1: number; y1: number }[] = [];
     if (this.root !== undefined) quads.push({ node: this.root, x0: this.x0, y0: this.y0, x1: this.x1, y1: this.y1 });
@@ -175,7 +175,7 @@ export class VizQuadtree<T> {
     return this;
   }
 
-  /** 🌲 Post-order visit, the pass that accumulates charge and radius. */
+  /** 📮️ Post-order visit, the pass that accumulates charge and radius. */
   visitAfter(callback: (node: VizQuadNode<T>, x0: number, y0: number, x1: number, y1: number) => void): this {
     const quads: { node: VizQuadNode<T>; x0: number; y0: number; x1: number; y1: number }[] = [];
     const next: { node: VizQuadNode<T>; x0: number; y0: number; x1: number; y1: number }[] = [];
@@ -196,7 +196,7 @@ export class VizQuadtree<T> {
   }
 }
 
-/** 🌲 Builds a quadtree over the data with the given coordinate accessors. */
+/** 🔨️ Builds a quadtree over the data with the given coordinate accessors. */
 export function vizQuadtree<T>(data: readonly T[], x: (d: T) => number, y: (d: T) => number): VizQuadtree<T> {
   return new VizQuadtree(x, y).addAll(data);
 }
@@ -206,10 +206,10 @@ export function vizQuadtree<T>(data: readonly T[], x: (d: T) => number, y: (d: T
 /** 🧲 A simulation node; the layout writes position and velocity back into it. */
 export type VizForceNode = { index?: number; x: number; y: number; vx: number; vy: number; fx?: number | null; fy?: number | null };
 
-/** 🧲 A simulation link between two nodes, given by index or by reference. */
+/** 🔗️ A simulation link between two nodes, given by index or by reference. */
 export type VizForceLink<N extends VizForceNode> = { source: N | number; target: N | number; index?: number };
 
-/** 🧲 One force: it is initialised with the node array once and applied every tick. */
+/** 🧱️ One force: it is initialised with the node array once and applied every tick. */
 export type VizForce<N extends VizForceNode> = { initialize?(nodes: N[], random: () => number): void; apply(alpha: number): void };
 
 const INITIAL_RADIUS = 10;
@@ -219,7 +219,7 @@ function jiggle(random: () => number): number {
   return (random() - 0.5) * 1e-6;
 }
 
-/** 🧲 Places nodes on d3's phyllotaxis spiral — the deterministic initial configuration. */
+/** 🌀️ Places nodes on d3's phyllotaxis spiral — the deterministic initial configuration. */
 export function initializeVizForceNodes<N extends VizForceNode>(nodes: N[]): void {
   nodes.forEach((node, i) => {
     node.index = i;
@@ -238,10 +238,10 @@ export function initializeVizForceNodes<N extends VizForceNode>(nodes: N[]): voi
   });
 }
 
-/** 🧲 Options of `\SemioVizLayout{force}`; the defaults are d3's. */
+/** ⚙️ Options of `\SemioVizLayout{force}`; the defaults are d3's. */
 export type VizSimulationOptions = { readonly alpha?: number; readonly alphaMin?: number; readonly alphaDecay?: number; readonly alphaTarget?: number; readonly velocityDecay?: number; readonly seed?: number };
 
-/** 🧲 A deterministic force simulation: no clock, only an explicit number of ticks. */
+/** 🌌️ A deterministic force simulation: no clock, only an explicit number of ticks. */
 export class VizForceSimulation<N extends VizForceNode> {
   readonly nodes: N[];
   readonly random: () => number;
@@ -263,14 +263,14 @@ export class VizForceSimulation<N extends VizForceNode> {
     initializeVizForceNodes(nodes);
   }
 
-  /** 🧲 Registers a named force, in the order the simulation will apply it. */
+  /** 🔤️ Registers a named force, in the order the simulation will apply it. */
   force(name: string, force: VizForce<N>): this {
     this.forces.set(name, force);
     force.initialize?.(this.nodes, this.random);
     return this;
   }
 
-  /** 🧲 Advances the simulation by a fixed number of ticks. */
+  /** ⏱️ Advances the simulation by a fixed number of ticks. */
   tick(iterations = 1): this {
     for (let k = 0; k < iterations; k += 1) {
       this.alpha += (this.alphaTarget - this.alpha) * this.alphaDecay;
@@ -295,7 +295,7 @@ export class VizForceSimulation<N extends VizForceNode> {
     return this;
   }
 
-  /** 🧲 Runs until alpha falls below `alphaMin`, the settled configuration d3 would reach. */
+  /** 🛑️ Runs until alpha falls below `alphaMin`, the settled configuration d3 would reach. */
   settle(): this {
     while (this.alpha >= this.alphaMin) this.tick(1);
     return this;
@@ -304,7 +304,7 @@ export class VizForceSimulation<N extends VizForceNode> {
 //#endregion 🔖️ForceModel
 
 //#region 🔖️Forces
-/** 🧲 `link`: a spring pulling each edge toward its rest distance. */
+/** 🖇️ `link`: a spring pulling each edge toward its rest distance. */
 export function forceVizLink<N extends VizForceNode>(links: VizForceLink<N>[], options: { distance?: number | ((link: VizForceLink<N>, index: number) => number); strength?: number | ((link: VizForceLink<N>, index: number) => number); iterations?: number } = {}): VizForce<N> {
   let nodes: N[] = [];
   let random: () => number = vizLcg();
@@ -356,7 +356,7 @@ export function forceVizLink<N extends VizForceNode>(links: VizForceLink<N>[], o
   };
 }
 
-/** 🧲 `many-body`: the Barnes–Hut n-body force, repulsive at a negative strength. */
+/** 👥️ `many-body`: the Barnes–Hut n-body force, repulsive at a negative strength. */
 export function forceVizManyBody<N extends VizForceNode>(options: { strength?: number | ((node: N, index: number) => number); theta?: number; distanceMin?: number; distanceMax?: number } = {}): VizForce<N> {
   let nodes: N[] = [];
   let random: () => number = vizLcg();
@@ -456,7 +456,7 @@ export function forceVizManyBody<N extends VizForceNode>(options: { strength?: n
   };
 }
 
-/** 🧲 `center`: recentres the whole configuration without changing velocities. */
+/** 🎯️ `center`: recentres the whole configuration without changing velocities. */
 export function forceVizCenter<N extends VizForceNode>(x = 0, y = 0, strength = 1): VizForce<N> {
   let nodes: N[] = [];
   return {
@@ -482,7 +482,7 @@ export function forceVizCenter<N extends VizForceNode>(x = 0, y = 0, strength = 
   };
 }
 
-/** 🧲 `collide`: keeps circles of the given radius from overlapping. */
+/** 🚧️ `collide`: keeps circles of the given radius from overlapping. */
 export function forceVizCollide<N extends VizForceNode>(options: { radius?: number | ((node: N, index: number) => number); strength?: number; iterations?: number } = {}): VizForce<N> {
   let nodes: N[] = [];
   let random: () => number = vizLcg();
@@ -559,7 +559,7 @@ export function forceVizCollide<N extends VizForceNode>(options: { radius?: numb
   };
 }
 
-/** 🧲 `x`: pulls nodes toward a vertical line. */
+/** ↔️ `x`: pulls nodes toward a vertical line. */
 export function forceVizX<N extends VizForceNode>(options: { x?: number | ((node: N, index: number) => number); strength?: number | ((node: N, index: number) => number) } = {}): VizForce<N> {
   let nodes: N[] = [];
   let xz: number[] = [];
@@ -578,7 +578,7 @@ export function forceVizX<N extends VizForceNode>(options: { x?: number | ((node
   };
 }
 
-/** 🧲 `y`: pulls nodes toward a horizontal line. */
+/** ↕️ `y`: pulls nodes toward a horizontal line. */
 export function forceVizY<N extends VizForceNode>(options: { y?: number | ((node: N, index: number) => number); strength?: number | ((node: N, index: number) => number) } = {}): VizForce<N> {
   let nodes: N[] = [];
   let yz: number[] = [];
@@ -597,7 +597,7 @@ export function forceVizY<N extends VizForceNode>(options: { y?: number | ((node
   };
 }
 
-/** 🧲 `radial`: pulls nodes toward a circle around a centre. */
+/** 🔘️ `radial`: pulls nodes toward a circle around a centre. */
 export function forceVizRadial<N extends VizForceNode>(radius: number | ((node: N, index: number) => number), x = 0, y = 0, strength: number | ((node: N, index: number) => number) = 0.1): VizForce<N> {
   let nodes: N[] = [];
   let radii: number[] = [];
@@ -626,15 +626,15 @@ export function forceVizRadial<N extends VizForceNode>(radius: number | ((node: 
 /** 🎻 One angular span of a chord diagram. */
 export type VizChordSpan = { readonly index: number; readonly startAngle: number; readonly endAngle: number; readonly value: number };
 
-/** 🎻 One chord: the two spans it joins, the larger one first. */
+/** 🎼️ One chord: the two spans it joins, the larger one first. */
 export type VizChordArc = { source: VizChordSpan; target: VizChordSpan };
 
-/** 🎻 The chord layout of a square matrix. */
+/** 📊️ The chord layout of a square matrix. */
 export type VizChordLayout = { readonly chords: readonly VizChordArc[]; readonly groups: readonly VizChordSpan[] };
 
 const TAU = 2 * Math.PI;
 
-/** 🎻 `\SemioVizLayout{chord}`: turns a flow matrix into groups and chords on the circle. */
+/** 🔄️ `\SemioVizLayout{chord}`: turns a flow matrix into groups and chords on the circle. */
 export function vizChord(matrixIn: readonly (readonly number[])[], options: { padAngle?: number; sortGroups?: (a: number, b: number) => number; sortSubgroups?: (a: number, b: number) => number; sortChords?: (a: VizChordArc, b: VizChordArc) => number; transpose?: boolean } = {}): VizChordLayout {
   const n = matrixIn.length;
   const padAngle = options.padAngle ?? 0;
@@ -693,10 +693,10 @@ export function vizChord(matrixIn: readonly (readonly number[])[], options: { pa
 /** 🕸️ A plain graph the deterministic layouts consume. */
 export type VizGraph = { readonly nodes: readonly string[]; readonly edges: readonly (readonly [string, string])[] };
 
-/** 🕸️ A laid-out node: its identifier and its position in figure millimetres. */
+/** 📍️ A laid-out node: its identifier and its position in figure millimetres. */
 export type VizPlacedNode = { readonly id: string; readonly x: number; readonly y: number; readonly layer?: number; readonly order?: number };
 
-/** 🕸️ `circular`: nodes evenly spaced on a circle, in the given order. */
+/** ⭕️ `circular`: nodes evenly spaced on a circle, in the given order. */
 export function vizCircularLayout(graph: VizGraph, options: { radius?: number; cx?: number; cy?: number; startAngle?: number } = {}): VizPlacedNode[] {
   const radius = options.radius ?? 1;
   const cx = options.cx ?? 0;
@@ -709,7 +709,7 @@ export function vizCircularLayout(graph: VizGraph, options: { radius?: number; c
   });
 }
 
-/** 🕸️ `arc`: nodes on one axis, edges drawn as semicircles above it. */
+/** 🌈️ `arc`: nodes on one axis, edges drawn as semicircles above it. */
 export function vizArcLayout(graph: VizGraph, options: { length?: number; origin?: number; vertical?: boolean } = {}): VizPlacedNode[] {
   const length = options.length ?? 1;
   const origin = options.origin ?? 0;
@@ -718,10 +718,10 @@ export function vizArcLayout(graph: VizGraph, options: { length?: number; origin
   return graph.nodes.map((id, i) => (options.vertical === true ? { id, x: origin, y: origin + i * step, order: i } : { id, x: origin + i * step, y: origin, order: i }));
 }
 
-/** 🕸️ The layered result: nodes per layer, plus the dummy chain of every long edge. */
+/** 🥞️ The layered result: nodes per layer, plus the dummy chain of every long edge. */
 export type VizLayeredLayout = { readonly nodes: readonly VizPlacedNode[]; readonly layers: readonly (readonly string[])[]; readonly dummies: readonly (readonly VizPlacedNode[])[] };
 
-/** 🕸️ `layered` (Sugiyama): longest-path layering, barycentre ordering sweeps, then priority
+/** 🥪️ `layered` (Sugiyama): longest-path layering, barycentre ordering sweeps, then priority
  * coordinate assignment. Deterministic: the sweep count is fixed and ties break on the input order. */
 export function vizLayeredLayout(graph: VizGraph, options: { layerGap?: number; nodeGap?: number; sweeps?: number } = {}): VizLayeredLayout {
   const layerGap = options.layerGap ?? 1;

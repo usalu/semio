@@ -28,6 +28,7 @@ type Story = StoryObj<typeof meta>;
 // loop (see header note); `toPascalCase(pluginId)` names each export.
 export const Animate: Story = { args: { plugin: "animate" } satisfies OsBootHostProps };
 export const Architect: Story = { args: { plugin: "architect" } satisfies OsBootHostProps };
+export const Bim: Story = { args: { plugin: "bim" } satisfies OsBootHostProps };
 export const Block: Story = { args: { plugin: "block" } satisfies OsBootHostProps };
 export const Cad: Story = { args: { plugin: "cad" } satisfies OsBootHostProps };
 export const Dag: Story = { args: { plugin: "dag" } satisfies OsBootHostProps };
@@ -56,8 +57,18 @@ export const Shooting: Story = { args: { plugin: "shooting" } satisfies OsBootHo
 export const Sourcing: Story = { args: { plugin: "sourcing" } satisfies OsBootHostProps };
 export const Space: Story = { args: { plugin: "space" } satisfies OsBootHostProps };
 export const Stdio: Story = { args: { plugin: "stdio" } satisfies OsBootHostProps };
+export const StdioBim: Story = { args: { plugin: "stdio-bim" } satisfies OsBootHostProps };
+export const StdioBinary: Story = { args: { plugin: "stdio-binary" } satisfies OsBootHostProps };
+export const StdioCad: Story = { args: { plugin: "stdio-cad" } satisfies OsBootHostProps };
+export const StdioImage: Story = { args: { plugin: "stdio-image" } satisfies OsBootHostProps };
+export const StdioMedia: Story = { args: { plugin: "stdio-media" } satisfies OsBootHostProps };
+export const StdioMesh: Story = { args: { plugin: "stdio-mesh" } satisfies OsBootHostProps };
+export const StdioOffice: Story = { args: { plugin: "stdio-office" } satisfies OsBootHostProps };
+export const StdioPdf: Story = { args: { plugin: "stdio-pdf" } satisfies OsBootHostProps };
+export const StdioSemio: Story = { args: { plugin: "stdio-semio" } satisfies OsBootHostProps };
 export const Trinity: Story = { args: { plugin: "trinity" } satisfies OsBootHostProps };
 export const Vcs: Story = { args: { plugin: "vcs" } satisfies OsBootHostProps };
+export const Wfc: Story = { args: { plugin: "wfc" } satisfies OsBootHostProps };
 export const Writer: Story = { args: { plugin: "writer" } satisfies OsBootHostProps };
 // #endregion 🔖️PluginMatrix
 
@@ -73,6 +84,7 @@ function toPascalCase(pluginId: string): string {
 const EXPORTED_STORIES: Record<string, Story> = {
   Animate,
   Architect,
+  Bim,
   Block,
   Cad,
   Dag,
@@ -101,8 +113,18 @@ const EXPORTED_STORIES: Record<string, Story> = {
   Sourcing,
   Space,
   Stdio,
+  StdioBim,
+  StdioBinary,
+  StdioCad,
+  StdioImage,
+  StdioMedia,
+  StdioMesh,
+  StdioOffice,
+  StdioPdf,
+  StdioSemio,
   Trinity,
   Vcs,
+  Wfc,
   Writer,
 };
 

@@ -8,7 +8,7 @@ import {scriptInvocationEnvironment} from "@semio-tech/process/routing/invocatio
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeCommandNameV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /**
  * 🏭️ The language-neutral production mutation bridge an owner exposes. It is a plain executable
@@ -33,7 +33,7 @@ export function mutationBridgeFor(repoRoot: string, owner: string, manifest: Mut
 }
 
 /**
- * 🏭️ The runtime mutation inventory phase. Runs each owner's PRODUCTION dispatch bridge and records
+ * 📜️ The runtime mutation inventory phase. Runs each owner's PRODUCTION dispatch bridge and records
  * what it actually offers, so completeness becomes a measurement rather than a claim. This is the
  * phase v1 had no equivalent of: its mutation audit compared a catalog with checked-in evidence and
  * never consulted dispatch, so a mutation reachable in production and missing from the catalog left

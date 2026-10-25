@@ -27,7 +27,7 @@ mod tests;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use crate::binary::snapshot::*;
+use crate::binary_snapshot::*;
 use semio_s_artifact_block_5d_model::*;
 use semio_s_artifact_block_5d_model::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, BLOCK_5D_SCHEMA};
 use semio_s_plugin_block::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
@@ -56,7 +56,7 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()) }
 }
 }
-#[cfg(test)] pub use crate::binary::snapshot::snapshot_codec::*;
+#[cfg(test)] pub use crate::binary_snapshot::snapshot_codec::*;
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
 impl pack::snapshot::ArtifactNativeSnapshot for Block5dSnapshot {

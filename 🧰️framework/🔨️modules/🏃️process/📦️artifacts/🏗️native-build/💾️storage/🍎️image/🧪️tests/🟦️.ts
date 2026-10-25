@@ -88,10 +88,10 @@ export async function proveSharedNativeImageStorageV1(directory:string,leaseDire
  }finally{await second?.close();await first.close();await retireNativeImageStorageV1(options);}
 }
 
-/** 🧪️ Qualifies real bounded writes and retained host image size using the original controller. */
+/** 💾️ Qualifies real bounded writes and retained host image size using the original controller. */
 export async function proveNativeImageStorageV1(directory:string,control:ResourceLeaseControl):Promise<void>{
  return withNativeImageStorageV1({...{directory,filesystemBytes:fixture.image.filesystemBytes,maximumPhysicalBytes:fixture.image.maximumPhysicalBytes,control},leaseDirectory:join(directory,"..","leases")},async(image,control)=>{
-  const output=await captureOwnedCommandV1(process.execPath,["-e","const fs=require('node:fs');const path=require('node:path');let bytes=0;const fd=fs.openSync(path.join(process.argv[1],'fill'),'wx');const data=Buffer.alloc(1048576,37);try{for(let i=0;i<100;i++){bytes+=fs.writeSync(fd,data);}}catch(error){if(error.code!=='ENOSPC')throw error;console.log('[DEBUG] Real fixed filesystem refused oversized child output '+JSON.stringify({code:error.code,writtenBytes:bytes}));}finally{fs.closeSync(fd);}if(bytes>=33554432)throw Error('fixed limit not enforced');",image.root],image.root,{control,env:{...process.env,TMPDIR:image.root,TMP:image.root,TEMP:image.root}});
+  const output=await captureOwnedCommandV1(process.execPath,["-e","const fs=require('node:fs');const path=require('node:path');let bytes=0;const fd=fs.openSync(path.join(process.argv[1],'fill'),'wx');const data=Buffer.alloc(1048576,37);try{for(let i=0;i<100;i++){bytes+=fs.writeSync(fd,data);}}catch(error){if(error.code!=='ENOSPC')throw error;console.log('[TRACE] Real fixed filesystem refused oversized child output '+JSON.stringify({code:error.code,writtenBytes:bytes}));}finally{fs.closeSync(fd);}if(bytes>=33554432)throw Error('fixed limit not enforced');",image.root],image.root,{control,env:{...process.env,TMPDIR:image.root,TMP:image.root,TEMP:image.root}});
   if(!output.includes('"code":"ENOSPC"'))throw Error("Real filesystem cap-plus-one did not refuse");console.log(output.trim());await image.recheck();
   const actual=lstatSync(image.image);if(actual.blocks*512>image.maximumPhysicalBytes)throw Error("Host image allocation exceeded fixed bound");
  });

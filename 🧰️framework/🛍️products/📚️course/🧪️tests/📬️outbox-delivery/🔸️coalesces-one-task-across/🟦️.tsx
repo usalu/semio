@@ -3,7 +3,7 @@ import { expect, it } from "vitest";
 import { ServerCallError } from "@semio-tech/framework-server";
 import { type Command } from "@semio-tech/course";
 import { Outbox, ProctorClient, ProctorUnavailable, localStore, memoryStorageOrigin, newId, type CommandVerdict } from "@semio-tech/course-react";
-import { LEARNER, OTHER_RUN, RUN, TIMING, answer, deduplicatingProctor, gate, outboxOver, tick } from "../🟢️shared/🟦️.tsx";
+import { LEARNER, OTHER_RUN, RUN, TIMING, answer, deduplicatingProctor, gate, outboxOver, tick } from "../🟢️harness/🟦️.tsx";
 
 /** 🔹 Registers the coalesces one task across tests of the 📬️ answer outbox suite. */
 export function registerCoalescesOneTaskAcrossTests(): void {

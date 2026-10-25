@@ -1,7 +1,7 @@
 import { gitDeltaLineTotal } from "../🔀️deltas/🟦️.ts";
 import type { MetricKind, MetricKindId } from "../🏷️types/🟦️.ts";
 
-/** 📊️Appends `➕️` `✏️` `➖️` and total `🟰️` (sum of the three) when non-zero. */
+/** 🐙️Appends `➕️` `✏️` `➖️` and total `🟰️` (sum of the three) when non-zero. */
 export function appendGitDeltaSuffix(line: string, d: { added: number; removed: number; edited: number }): string {
   if (d.added > 0) line += `➕️${formatMetricLocCount(d.added)}`;
   if (d.edited > 0) line += `✏️${formatMetricLocCount(d.edited)}`;
@@ -23,12 +23,12 @@ export function formatBundleMetricSuffixes(
   return formatMetricBody({ kind: "uloc", code: ulocBloc, ...ulocDelta, langEmoji, langSlug }) + formatMetricBody({ kind: "size", code: sizeBloc, ...sizeDelta, langEmoji, langSlug });
 }
 
-/** 📊️Full `📊️uloc💯️…` metrics line from bloc and git deltas (bundle header, footer, languages). */
+/** 🎁️Full `📊️uloc💯️…` metrics line from bloc and git deltas (bundle header, footer, languages). */
 export function formatBundleUlocSuffix(d: { added: number; removed: number; edited: number }, code: number, langEmoji?: string, langSlug?: string): string {
   return formatMetricBody({ kind: "uloc", code, ...d, langEmoji, langSlug });
 }
 
-/** 🔢️Rounds to `digits` significant figures (preserves sign; 0 stays 0). */
+/** 🪧️Rounds to `digits` significant figures (preserves sign; 0 stays 0). */
 export function roundSignificant(n: number, digits = 3): number {
   if (!Number.isFinite(n) || n === 0) return 0;
   const sign = n < 0 ? -1 : 1;
@@ -49,7 +49,7 @@ function formatSignificantCoeff(n: number): string {
   return s.replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
 }
 
-/** 🔤️Expands a tiny positive value without scientific notation (1 significant digit). */
+/** 🌱️Expands a tiny positive value without scientific notation (1 significant digit). */
 function formatTinyPositive(n: number): string {
   const one = roundSignificant(n, 1);
   if (one === 0) {
@@ -59,7 +59,7 @@ function formatTinyPositive(n: number): string {
   return expandScientificDecimal(one);
 }
 
-/** 🔤️Decimal string for a finite number without `e` notation. */
+/** 🔬️Decimal string for a finite number without `e` notation. */
 function expandScientificDecimal(n: number): string {
   if (!Number.isFinite(n) || n === 0) return "0";
   const abs = Math.abs(n);
@@ -147,7 +147,7 @@ export function langMetricsSlug(lang: string): string {
     .slice(0, 24);
 }
 
-/** 🔢️Formats byte counts with 3 significant digits and B/KB/MB/GB. */
+/** 🧮️Formats byte counts with 3 significant digits and B/KB/MB/GB. */
 export function formatMetricSizeCount(n: number): string {
   const v = Math.abs(n);
   if (!Number.isFinite(v) || v <= 0) return "0";
@@ -166,10 +166,10 @@ export const METRIC_KIND_SIZE: MetricKind = { id: "size", token: "💾size", for
 
 export const METRIC_KINDS: Record<MetricKindId, MetricKind> = { uloc: METRIC_KIND_ULOC, size: METRIC_KIND_SIZE };
 
-/** 📊️Commit metrics block header. */
+/** 🚧️Commit metrics block header. */
 export const COMMIT_METRIC_HEADER = "📊️metric";
 
-/** 🔢️Emoji for the aggregate total row (internal sums only). */
+/** 💯️Emoji for the aggregate total row (internal sums only). */
 export const COMMIT_METRIC_TOTAL_EMOJI = "🔢️";
 
 export type MetricBodyInput = {
@@ -184,7 +184,7 @@ export type MetricBodyInput = {
 
 export type UlocMetricsBodyInput = MetricBodyInput & { kind?: MetricKindId };
 
-/** 📊️Renders one explicit `📊️metric…` line; omits empty segments. */
+/** 📏️Renders one explicit `📊️metric…` line; omits empty segments. */
 export function formatMetricBody(input: MetricBodyInput): string {
   const { kind, code, added, edited, removed, langEmoji, langSlug } = input;
   const metricKind = METRIC_KINDS[kind];
@@ -208,7 +208,7 @@ export function formatMetricBody(input: MetricBodyInput): string {
   return line;
 }
 
-/** 📊️Renders one explicit `📊️metric📃uloc…` line (uloc alias). */
+/** 🖌️Renders one explicit `📊️metric📃uloc…` line (uloc alias). */
 export function formatUlocMetricsBody(input: Omit<MetricBodyInput, "kind"> & { kind?: MetricKindId }): string {
   return formatMetricBody({ kind: input.kind ?? "uloc", code: input.code, added: input.added, edited: input.edited, removed: input.removed, langEmoji: input.langEmoji, langSlug: input.langSlug });
 }

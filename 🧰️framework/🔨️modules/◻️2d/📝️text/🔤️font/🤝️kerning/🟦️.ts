@@ -24,7 +24,7 @@ export class FontIndexCursor{
 }
 const popcount=(n:number):number=>{let total=0;while(n){total+=n&1;n>>>=1;}return total;};
 const pairValue=(r:FontReader,at:number,format:number):number=>{if(format&0xff00)throw Error("Unsupported font pair value");if(!(format&4))return 0;return r.i16(at+popcount(format&3)*2);};
-/** 🤝️ Sums every `kern` pair adjustment of the Latin script, falling back to the legacy `kern` table. */
+/** 💼️ Sums every `kern` pair adjustment of the Latin script, falling back to the legacy `kern` table. */
 export class FontKerningJob{
  private phase="start";private reader:FontReader|null=null;private legacyReader:FontReader|null=null;private scripts=0;private features=0;private lookups=0;private count=0;private at=0;private script=0;private fallback=0;private lang=0;private record=0;private recordCount=0;private recordAt=0;private selected:number[]=[];private selectedAt=0;private lookup=0;private lookupKind=0;private subCount=0;private subAt=0;private sub=0;private format=0;private sizes=[0,0];private formats=[0,0];private probe:FontIndexCursor|null=null;private cls=0;private low=0;private high=0;private set=0;private flags=0;private total=0;private output=0;private work=0;private aborted=false;private transferred=false;private failure:unknown=null;
  constructor(private face:FontFace,private left:number,private right:number,private maxWork:number){

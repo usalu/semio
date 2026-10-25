@@ -10,6 +10,7 @@ use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactOwnedDisposer};
+use semio_framework_plugin_instance_ladders::ladders_lifecycle_stores::{ORIGINAL_STORE_LANES, original_disposal_demands, original_disposal_step};
 use pack::snapshot::ArtifactPack;
 use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};

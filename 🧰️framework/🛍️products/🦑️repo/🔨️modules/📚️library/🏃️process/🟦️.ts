@@ -1,4 +1,4 @@
-import{withCompilerWorkspaceWriteV1}from"../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+import{withCompilerWorkspaceSharedWriteV1}from"../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,cargoPlanningOutputBytesV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
@@ -17,7 +17,7 @@ import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { randomUUID } from "node:crypto";
 import {homedir} from "node:os";
-import {CurrentPhysicalOwnerV1} from "../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
+import {CurrentPhysicalOwnerV1} from "@semio-tech/framework-filesystem/observation/current";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -33,7 +33,7 @@ import {cargoArtifactArgumentsV1,readCargoArtifactBuildPolicyV1,type CargoArtifa
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type { RunCmdOpts } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { readBuildMode, buildModeEnvironment, type BuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { isHostRuntimeCommandV1, runtimeCommandNameV1, runtimeExecutableV1 } from "../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { isHostRuntimeCommandV1, runtimeCommandNameV1, runtimeExecutableV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🧭️Selects the opt-in build budget for Cargo and command budget for other executables; both default to unlimited. */
 export function defaultBudgetMs(cmd: string): number {
@@ -48,20 +48,20 @@ export function budgetTimeoutHint(cmd: string, override?: string): string {
     : "Trim it, or raise its budget (`budgetMs`, `SEMIO_CMD_BUDGET_MS`, `SEMIO_BUILD_BUDGET_MS`).";
 }
 
-/** ⏱️[[RunCmdOpts]] preset for nx/script orchestrators — [[orchestratorBudgetMs]] and full CPU [[devToolingEnv]]. */
+/** 💰️[[RunCmdOpts]] preset for nx/script orchestrators — [[orchestratorBudgetMs]] and full CPU [[devToolingEnv]]. */
 export function orchestratorBudgetOpts(extra: Partial<NodeJS.ProcessEnv> = {}): RunCmdOpts {
   return { budgetMs: orchestratorBudgetMs(), env: devToolingEnv(extra) };
 }
 
-/** ⏱️[[RunCmdOpts]] preset for dev servers and long-lived daemons — [[daemonBudgetMs]] and [[devToolingEnv]]. */
+/** ☁️[[RunCmdOpts]] preset for dev servers and long-lived daemons — [[daemonBudgetMs]] and [[devToolingEnv]]. */
 export function daemonBudgetOpts(extra: Partial<NodeJS.ProcessEnv> = {}): RunCmdOpts {
   return { budgetMs: daemonBudgetMs(), env: devToolingEnv(extra) };
 }
 
-/** 🌊️ The library's cargo relay, `⚡️caching/🦀️cargo/📜️script.ts relay <cargo args…>` ([[cargoStreamingStatus]]). */
+/** 🦀️ The library's cargo relay, `⚡️caching/🦀️cargo/📜️script.ts relay <cargo args…>` ([[cargoStreamingStatus]]). */
 export const CARGO_RELAY_SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "..", "⚡️caching", "🦀️cargo", "📜️script.ts");
 
-/** 🌊️ Carries a relayed cargo's wall-clock budget (ms, `0` = unlimited) from [[runCmd]] into the relay. */
+/** 🎒️ Carries a relayed cargo's wall-clock budget (ms, `0` = unlimited) from [[runCmd]] into the relay. */
 export const CARGO_RELAY_BUDGET_ENV = "SEMIO_CARGO_RELAY_BUDGET_MS";
 
 const observesCargoInvocation = (args: readonly string[], env: NodeJS.ProcessEnv): boolean => Boolean(env.SEMIO_TEST_ARTIFACT_DIR) || args.some((arg, index) => /^--message-format=json/u.test(arg) || arg === "--message-format" && args[index + 1]?.startsWith("json"));
@@ -76,12 +76,14 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
   checkResourceLeaseControl(control);requireNativeStorageReservationV1(operation.storage,control);if(operation.storage.allocation.kind!=="compiler-workspace")throw Error("Original compiler workspace storage required");await operation.storage.recheck();
   for(const name of ["CARGO_HOME","CARGO_TARGET_DIR","CARGO_BUILD_BUILD_DIR","TMPDIR","TMP","TEMP"]){const path=env[name];if(!path)throw Error("Bounded original Cargo relay environment required: "+name);requireNativeStoragePathV1(operation.storage.backing.root,path);}
   await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot(env)),getWorkspaceRoot(env),args,cwd,env,control);
-  return withCompilerWorkspaceWriteV1(operation.storage,operation.policy.leaseDirectory,control,async()=>{
-  const compiles=["build","rustc","check","run","clippy","test","bench","doc"].includes(args[0]??""),observes=observesCargoInvocation(args,env),directories=cargoDirectories(getWorkspaceRoot(env),env),buildDirectory=observes?directories.build:undefined,provenanceRoot=env.SEMIO_TEST_ARTIFACT_DIR??(buildDirectory?join(buildDirectory,"semio-cargo-provenance"):undefined),builtAtMs=Date.now(),units:any[]=[],buildScripts:any[]=[];
-  if(policy.buildDirectory!==directories.build)throw Error("Cargo relay compiler store differs from its original policy");if(compiles){args=cargoArtifactArgumentsV1(args,policy);const workspace=getWorkspaceRoot(env),graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args,environment:env,maximumOutputBytes:cargoPlanningOutputBytesV1},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,operation.sourceBoundary,control,actualCargoSourceAdmissionPortV1(env,cwd,operation.storage));await operation.storage.recheck();}
-  if(provenanceRoot)requireNativeStoragePathV1(operation.storage.backing.root,provenanceRoot);
+  const compiles=["build","rustc","check","run","clippy","test","bench","doc"].includes(args[0]??""),directories=cargoDirectories(getWorkspaceRoot(env),env),observes=observesCargoInvocation(args,env);
+  if(policy.buildDirectory!==directories.build)throw Error("Cargo relay compiler store differs from its original policy");if(compiles)args=cargoArtifactArgumentsV1(args,policy);
   const lease=compiles?await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:directories.build,targetDirectory:directories.target,args,signal:control.signal,control}):undefined;
-  try{
+  try{return await withCompilerWorkspaceSharedWriteV1(operation.storage,operation.policy.leaseDirectory,control,async()=>{
+  const buildDirectory=observes?directories.build:undefined,provenanceRoot=env.SEMIO_TEST_ARTIFACT_DIR??(buildDirectory?join(buildDirectory,"semio-cargo-provenance"):undefined),builtAtMs=Date.now(),units:any[]=[],buildScripts:any[]=[];
+  if(compiles){const workspace=getWorkspaceRoot(env),graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args,environment:env,maximumOutputBytes:cargoPlanningOutputBytesV1},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,operation.sourceBoundary,control,actualCargoSourceAdmissionPortV1(env,cwd,operation.storage));await operation.storage.recheck();}
+  if(provenanceRoot)requireNativeStoragePathV1(operation.storage.backing.root,provenanceRoot);
+  {
   checkResourceLeaseControl(control);
   const child = startToolV1("cargo", [...args], { cwd, env: compiles||buildDirectory?{...env,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build,SEMIO_COMPILER_RESOURCE_ROOT:join(directories.build,"semio-compiler-resources")}:env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
   const observation = provenanceRoot ? (async () => { for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) { let message; try { message = JSON.parse(line); } catch { continue; } if (message.reason === "compiler-artifact") units.push({ message,evidence:{version:1,kind:"discovery",paths:[],producer:null} }); else if (message.reason === "build-script-executed") buildScripts.push(message); } })() : Promise.resolve();
@@ -115,8 +117,8 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
       if (provenanceRoot) {
         const { writeCompletedCargoInvocationProvenanceV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1 } = await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts");
         const manifest = cargoInvocationManifestV1(args, cwd);
-        const physical=new CurrentPhysicalOwnerV1(cwd,cargoProvenancePhysicalControlV1({cancelled:()=>Boolean(stopped)||control.signal.aborted,remainingMs:()=>control.remainingMilliseconds(),onProgress:cargoProvenanceProgressSinkV1(row=>console.log("[cargo-provenance] "+JSON.stringify(row)))}));
-        await writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot, `cargo-unit-provenance-cargo-relay-${randomUUID()}.json`), { manifest, cwd, command: "cargo", args: [...args], buildDirectory: buildDirectory!, builtAtMs, status, cancelled: Boolean(stopped), units, buildScripts },new Map(),resolve(env.CARGO_HOME??join(homedir(),".cargo")),physical);
+        const physical=()=>new CurrentPhysicalOwnerV1(cwd,cargoProvenancePhysicalControlV1({cancelled:()=>Boolean(stopped)||control.signal.aborted,remainingMs:()=>control.remainingMilliseconds(),onProgress:cargoProvenanceProgressSinkV1(row=>console.log("[cargo-provenance] "+JSON.stringify(row)))}));
+        await writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot, `cargo-unit-provenance-cargo-relay-${randomUUID()}.json`), { manifest, cwd, command: "cargo", args: [...args], buildDirectory: buildDirectory!, builtAtMs, status, cancelled: Boolean(stopped), units, buildScripts },new Map(),resolve(env.CARGO_HOME??join(homedir(),".cargo")),physical,{signal:control.signal});
       }
     } finally {
       control.signal.removeEventListener("abort",onOriginalAbort);
@@ -124,11 +126,11 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
       process.removeListener("SIGTERM", onSignal);
     }
   }
-  }finally{lease?.release()}
-  });
+  }
+  });}finally{lease?.release()}
 }
 
-/** ⏱️Shared `spawnSync` core for [[runCmd]]/[[runCmdStatus]]: throws on spawn error, budget timeout, or signal kill (printing `[budget]` first on timeout); otherwise returns the exit status. `cargo` runs through
+/** ⚙️Shared `spawnSync` core for [[runCmd]]/[[runCmdStatus]]: throws on spawn error, budget timeout, or signal kill (printing `[budget]` first on timeout); otherwise returns the exit status. `cargo` runs through
  * [[CARGO_RELAY_SCRIPT]] (POSIX), so it never writes to an inherited, possibly non-blocking descriptor ([[cargoStreamingStatus]]). */
 function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
@@ -173,7 +175,7 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
 }
 
 /**
- * 🏃️Runs a subprocess with inherited stdio and an opt-in wall-clock budget (default [[defaultBudgetMs]]);
+ * ▶️Runs a subprocess with inherited stdio and an opt-in wall-clock budget (default [[defaultBudgetMs]]);
  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
  */
@@ -182,13 +184,13 @@ export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void
   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
 }
 
-/** 🏃️Like [[runCmd]] but returns the exit status instead of throwing on non-zero exit — for call sites
+/** 🔙️Like [[runCmd]] but returns the exit status instead of throwing on non-zero exit — for call sites
  *  that branch on it. Budget exceed still prints `[budget]` and throws (never silently returns a status). */
 export function runCmdStatus(cmd: string, args: string[], opts: RunCmdOpts = {}): number {
   return runCmdInternal(cmd, args, opts);
 }
 
-/** 🏃️Like [[runCmd]] but ignores failures, including timeouts from an explicitly configured budget. */
+/** 🔂️Like [[runCmd]] but ignores failures, including timeouts from an explicitly configured budget. */
 export function tryRun(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
   try {
     runCmd(cmd, args, opts);
@@ -242,7 +244,7 @@ export function runNodeBinStatus(args: string[], cwd: string = process.cwd(), en
   return result.status ?? 1;
 }
 
-/** 🟢️Runs a CLI tool using `node` synchronously in `cwd`. */
+/** 🔧️Runs a CLI tool using `node` synchronously in `cwd`. */
 export function runNodeBin(args: string[], cwd: string = process.cwd(), env: NodeJS.ProcessEnv = process.env): void {
   const status = runNodeBinStatus(args, cwd, env);
   if (status !== 0) process.exit(status);
@@ -251,7 +253,7 @@ export function runNodeBin(args: string[], cwd: string = process.cwd(), env: Nod
 /** 🚦️ Compiler intent shared by all repository build families. */
 export type SemioBuildMode = BuildMode;
 
-/** 🚦️ Reads the explicit intent carried by Nx or the owning compiler invocation. */
+/** 🏗️ Reads the explicit intent carried by Nx or the owning compiler invocation. */
 export function semioBuildMode(): SemioBuildMode {
   return readBuildMode(process.env.SEMIO_BUILD_MODE);
 }

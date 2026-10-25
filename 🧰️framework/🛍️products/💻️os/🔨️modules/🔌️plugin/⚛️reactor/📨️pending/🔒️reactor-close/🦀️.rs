@@ -5,7 +5,7 @@ use crate::{REACTOR_CLOSES, instance_lifetime};
 use semio_framework_plugin_reactor_tasks::{REGISTRY, TASK_RESUMES};
 use semio_framework_plugin_actor_host::requests;
 
-struct ReactorCloseState {
+pub struct ReactorCloseState {
     pub key: instance_lifetime::NativeCloseKey,
     pub instance: u32,
     pub active: bool,

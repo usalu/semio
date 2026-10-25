@@ -50,6 +50,7 @@ impl semio_framework_value::retirement::RetirementCursor for PublicationHashReti
 #[derive(semio_framework_value::RetireOwned)]
 pub struct DrawingImagePublication{pub mutations:Vec<DrawingMutation>,pub selection:Vec<InteractionWrite>}
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct DrawingImagePublicationJob{hash:Option<PublicationHash>,seed_offset:usize,asset:Option<DrawingImageAsset>,asset_id:[u8;160],layer_id:[u8;160],asset_length:usize,layer_length:usize,texts:[Text;6],append:[AppendCursor;6],text:usize,phase:usize,root:usize,path:[usize;128],depth:usize,visited:usize,parent_seen:bool,layer:Option<DrawingLayerNode>,boxed_layer:Option<Box<DrawingLayerNode>>,mutations:Vec<DrawingMutation>,strings:[String;3],string_fill:bool,targets:Vec<protocol::InteractionTarget>,selection:Vec<InteractionWrite>}
 fn identity(output:&mut[u8;160],prefix:&[u8],parts:&[&[u8]])->usize{output[..prefix.len()].copy_from_slice(prefix);let mut at=prefix.len();for part in parts{for byte in *part{output[at]=b"0123456789abcdef"[(byte>>4)as usize];output[at+1]=b"0123456789abcdef"[(byte&15)as usize];at+=2;}}at}
 fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}

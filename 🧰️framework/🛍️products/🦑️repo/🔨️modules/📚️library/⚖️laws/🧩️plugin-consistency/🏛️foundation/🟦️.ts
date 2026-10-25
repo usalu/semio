@@ -36,7 +36,7 @@ function policyCanonicalComponent(segment: string): string {
 const policyPluginOwnerCache = new Map<string, readonly string[]>();
 
 /**
- * 🗂️Owner dirs of every discovered `role = "plugin"` package, longest first — the discovery-driven
+ * 🔌️Owner dirs of every discovered `role = "plugin"` package, longest first — the discovery-driven
  * replacement for the old hardcoded `✏️s/🔌️plugins` prefix constant (mechanism step M4): "which plugin
  * owns this path" is answered by the shared package catalog (`🔣️taxonomy.json` + `🟦️discovery.ts`)
  * instead of a path literal this file has to keep in sync. Nested non-plugin owners (trinity's
@@ -66,7 +66,7 @@ export function policyScopeKey(repoRoot: string, relPath: string): string {
   return "";
 }
 
-/** 🔑The `🎛️apps/<app>` id inside a crate path (ASCII, e.g. `"3d"`, `"5d"`), or `""` when the crate isn't nested under an app dir (plugin-root module/manifest crates). Used as the disambiguator for allowlist keys where the app id itself (not an enclosing `pub mod`, which no longer exists now each app is its own crate) is what distinguishes sibling crates of a multi-app plugin. */
+/** 🆔️The `🎛️apps/<app>` id inside a crate path (ASCII, e.g. `"3d"`, `"5d"`), or `""` when the crate isn't nested under an app dir (plugin-root module/manifest crates). Used as the disambiguator for allowlist keys where the app id itself (not an enclosing `pub mod`, which no longer exists now each app is its own crate) is what distinguishes sibling crates of a multi-app plugin. */
 export function policyAppIdFromCrateDir(cratePath: string): string {
   const segments = cratePath.split("/");
   const appsIdx = segments.indexOf("🎛️apps");
@@ -80,7 +80,7 @@ function policyFileSuffix(tailSegments: readonly string[], defaultFile: string):
 }
 
 /**
- * 🔑Canonical `<pluginId>/<component>` key for a *source file path* under `✏️s/🔌️plugins/` — maps the taxonomy
+ * 🧭️Canonical `<pluginId>/<component>` key for a *source file path* under `✏️s/🔌️plugins/` — maps the taxonomy
  * layout (`…/🗿️artifacts/<artifact>/<module>/🦀️.rs`) onto a string that stays stable when a component moves. Widens to
  * `<pluginId>/<appOrArtifact>/<component>` only when that disambiguator differs from the plugin id
  * itself (most plugins are single-app/single-artifact, where it doesn't — the 2-part key is the common
@@ -179,7 +179,7 @@ export const POLICY_ROOT_SCRIPT_OWNER_DIRECTORIES: readonly string[] = [
   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root",
 ];
 
-/** 🗂️ Directories whose `🟦️.ts` modules hold the logic a package `📜️script.ts` routes to (the script itself is found by the repo-wide `📜️script.ts` walk). */
+/** 📜️ Directories whose `🟦️.ts` modules hold the logic a package `📜️script.ts` routes to (the script itself is found by the repo-wide `📜️script.ts` walk). */
 export const POLICY_PACKAGE_SCRIPT_OWNER_DIRECTORIES: readonly string[] = [
   "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands",
 ];
@@ -211,7 +211,7 @@ export function policyRootScriptModulePaths(repoRoot: string): string[] {
   return ["📜️script.ts", ...policyOwnedModulePaths(repoRoot, POLICY_ROOT_SCRIPT_OWNER_DIRECTORIES)];
 }
 
-/** 📋️ Repo-relative paths of the modules owned by package scripts (`POLICY_PACKAGE_SCRIPT_OWNER_DIRECTORIES`). */
+/** 📦️ Repo-relative paths of the modules owned by package scripts (`POLICY_PACKAGE_SCRIPT_OWNER_DIRECTORIES`). */
 export function policyPackageScriptModulePaths(repoRoot: string): string[] {
   return policyOwnedModulePaths(repoRoot, POLICY_PACKAGE_SCRIPT_OWNER_DIRECTORIES);
 }
@@ -318,7 +318,7 @@ export function policyPascalAppStructName(id: string): string {
 }
 //#endregion 🔧️PolicyFnParsing
 
-/** 🔎️Repo-wide `*.rs` file paths (repo-relative), skipping the same dirs `policyDiscoverCrateDirs` skips. */
+/** 🦀️Repo-wide `*.rs` file paths (repo-relative), skipping the same dirs `policyDiscoverCrateDirs` skips. */
 export function policyAllRustFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {

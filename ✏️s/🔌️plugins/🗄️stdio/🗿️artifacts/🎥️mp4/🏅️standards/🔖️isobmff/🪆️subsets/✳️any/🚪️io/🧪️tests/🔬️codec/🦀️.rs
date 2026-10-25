@@ -152,7 +152,7 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     let changed_bytes = encode_mp4(&changed);
     assert_ne!(changed_bytes, bytes, "semantic mutation must materialize changed logical state");
 
-    let diff = protocol::Mutation::diff(&mutation, &snapshot).into_parts().0;
+    let diff = protocol::ColdMutation::diff(&mutation, &snapshot).into_parts().0;
     let after = protocol::apply_diff_cold(&diff, &snapshot).unwrap();
     let restored = protocol::apply_diff_cold(&diff.inverse(&snapshot), &after).unwrap();
     assert_eq!(restored, snapshot, "mutation inverse must reconstruct the logical snapshot");

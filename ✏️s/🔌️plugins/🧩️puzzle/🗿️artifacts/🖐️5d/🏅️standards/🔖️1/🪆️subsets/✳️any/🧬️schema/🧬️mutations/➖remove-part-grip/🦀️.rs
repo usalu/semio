@@ -43,7 +43,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for RemovePartGrip
 where
-    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<RemovePartGrip>,
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<RemovePartGrip> + From<crate::standards::v1::subsets::any::schema::mutations::add_part_grip::AddPartGrip> + From<crate::standards::v1::subsets::any::schema::mutations::connect_grips::ConnectGrips>,
 {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)

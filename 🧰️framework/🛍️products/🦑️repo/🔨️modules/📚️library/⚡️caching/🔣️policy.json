@@ -83,6 +83,7 @@
         "reason": "pure-function-of-inputs"
       },
       "exact": [
+        "build-storybook",
         "cpp-build",
         "cpp-configure",
         "generator-inputs",
@@ -132,6 +133,7 @@
         "preview-generated",
         "preview-playground-session",
         "preview-schema-index",
+        "preview-types",
         "publication-authority-audit",
         "router-effect-source-custody",
         "shared-schema",
@@ -167,6 +169,7 @@
         "class": "deterministic",
         "reason": "pure-function-of-inputs"
       },
+      "exclusions": "testSourceExclusions",
       "heads": [
         "build",
         "generate"

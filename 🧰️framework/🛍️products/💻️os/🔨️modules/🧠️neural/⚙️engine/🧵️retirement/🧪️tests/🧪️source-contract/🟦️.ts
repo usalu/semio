@@ -122,8 +122,6 @@ assert.equal(stableStringify({ node: { label: payload } }), JSON.stringify({ nod
 
 //#endregion 📸️EvaluationOwnership
 
-console.log("[DEBUG] actual Neural retirement independent UTF8/stable JSON, grant accounting, cache ownership and evaluation oracle assertions passed");
-
 const inputPolicy=ajv.compile({$ref:ownerSchema.$id+"#/$defs/InputPolicy"});
 const inputFixture=await Bun.file(new URL("../../../🧪️tests/🧫️fixtures/🚦️owned-controls.json",import.meta.url)).json();
 assert(inputPolicy(inputFixture.retainedBinding.physical));

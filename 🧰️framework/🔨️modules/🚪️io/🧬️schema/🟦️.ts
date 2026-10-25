@@ -4,7 +4,7 @@ import { parseArtifactDialect, type ArtifactDialect, type ArtifactRef } from "..
 /** 🗄️ Framework-owned carrier dialect for raw untyped bytes — mirrors Rust `io_schema::CARRIER_BINARY`, the payload law's binary exception. */
 export const CARRIER_BINARY: Readonly<ArtifactDialect> = Object.freeze({ artifactKind: "framework.io.binary", standard: "raw", subset: "*" });
 
-/** 🗄️ Framework-owned carrier dialect for raw untyped UTF-8 text — mirrors Rust `io_schema::CARRIER_TEXT`, the payload law's text exception. */
+/** 📄️ Framework-owned carrier dialect for raw untyped UTF-8 text — mirrors Rust `io_schema::CARRIER_TEXT`, the payload law's text exception. */
 export const CARRIER_TEXT: Readonly<ArtifactDialect> = Object.freeze({ artifactKind: "framework.io.text", standard: "utf-8", subset: "*" });
 
 /** 🪶️ Standalone SQLite carrier for one exact native artifact snapshot. */
@@ -22,7 +22,7 @@ export function dialectCoordinate(dialect: ArtifactDialect): string {
   return `${dialect.artifactKind}@${dialect.standard}/${dialect.subset}`;
 }
 
-/** 🧭️ Splits the first kind separator and final subset separator. */
+/** ⏮️ Splits the first kind separator and final subset separator. */
 export function parseDialectCoordinate(coordinate: string): ArtifactDialect {
   const at = coordinate.indexOf("@");
   if (at < 0) throw new Error("dialect coordinate is missing '@'");
@@ -38,7 +38,7 @@ export function artifactRefUri(reference: ArtifactRef): string {
   return `${reference.artifactId}!${dialectCoordinate(reference.dialect)}`;
 }
 
-/** 🔗️ Decodes an artifact URI using the same dialect codec. */
+/** 📦️ Decodes an artifact URI using the same dialect codec. */
 export function parseArtifactRefUri(uri: string): ArtifactRef {
   const separator = uri.indexOf("!");
   if (separator <= 0) throw new Error("artifact URI requires an identifier followed by '!'");
@@ -58,7 +58,7 @@ export function parseIoFidelity(value: unknown): IoFidelity {
   return value;
 }
 
-/** 🚪️ Decodes a registered IO entry's strict wire contract. */
+/** 📖️ Decodes a registered IO entry's strict wire contract. */
 export function parseIoEntryDescriptor(value: unknown): IoEntryDescriptor {
   const row = record(value, ["from", "into", "fidelity", "sniffs"]);
   if (typeof row.sniffs !== "boolean") throw new Error("IO entry sniffs must be a boolean");

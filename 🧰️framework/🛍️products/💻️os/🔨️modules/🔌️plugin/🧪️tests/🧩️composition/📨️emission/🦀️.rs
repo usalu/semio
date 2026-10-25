@@ -263,8 +263,8 @@ impl protocol::Mutation<TestSnapshot> for RefusingChildOperation {
 
 impl protocol::ColdMutation<TestSnapshot> for RefusingChildOperation {
     type ReferenceDiff = <TestMutation as protocol::Mutation<TestSnapshot>>::Diff;
-    fn diff(&self, base: &TestSnapshot) -> ::protocol::MutationOutcome<Self::ReferenceDiff> { protocol::Mutation::diff(&self.inner, base) }
-    fn inverse(&self, base: &TestSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> { Ok(protocol::Mutation::inverse(&self.inner, base)?.into_iter().map(|inner| Self { inner, refuse: self.refuse }).collect()) }
+    fn diff(&self, base: &TestSnapshot) -> ::protocol::MutationOutcome<Self::ReferenceDiff> { protocol::ColdMutation::diff(&self.inner, base) }
+    fn inverse(&self, base: &TestSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> { Ok(protocol::ColdMutation::inverse(&self.inner, base)?.into_iter().map(|inner| Self { inner, refuse: self.refuse }).collect()) }
 }
 
 impl protocol::SemanticMutation<TestSnapshot> for RefusingChildOperation {
@@ -334,7 +334,7 @@ impl protocol::Mutation<TestSnapshot> for TrackedChildOperation{
 
 impl protocol::ColdMutation<TestSnapshot> for TrackedChildOperation{
     type ReferenceDiff = <RefusingChildOperation as protocol::Mutation<TestSnapshot>>::Diff;
-    fn diff(&self,base:&TestSnapshot)->::protocol::MutationOutcome<Self::ReferenceDiff>{protocol::Mutation::diff(&self.inner,base)}
+    fn diff(&self,base:&TestSnapshot)->::protocol::MutationOutcome<Self::ReferenceDiff>{protocol::ColdMutation::diff(&self.inner,base)}
     fn inverse(&self,_:&TestSnapshot)->Result<Vec<Self>,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"tracked fixture mutation has no inverse source admission"))}
 }
 impl protocol::SemanticMutation<TestSnapshot> for TrackedChildOperation{

@@ -12,12 +12,12 @@ import { base64StandardDecode } from "../../🚪️io/🔤️base64/📦️packa
  * Rust `kernel::MEDIA_EXPORT_BASE64_ENCODING`. */
 export const MEDIA_EXPORT_BASE64_ENCODING = "base64";
 
-/** ⬇️ The textual encoding a producer may state EXPLICITLY (`puzzle3d`'s `exportSnapshot` does). It
+/** 🔡️ The textual encoding a producer may state EXPLICITLY (`puzzle3d`'s `exportSnapshot` does). It
  * means exactly what an absent `encoding` means: `data` IS the file. Twin of Rust
  * `kernel::MEDIA_EXPORT_UTF8_ENCODING`. */
 export const MEDIA_EXPORT_UTF8_ENCODING = "utf-8";
 
-/** ⬇️ Why a `downloadMediaExport` envelope could not become bytes — the TS twin of Rust
+/** ⛔️ Why a `downloadMediaExport` envelope could not become bytes — the TS twin of Rust
  * `kernel::MediaExportEncodingError`. Thrown, never swallowed: a shell that quietly saved `data` as
  * text is the defect this contract closes. */
 export class MediaExportEncodingError extends Error {
@@ -31,7 +31,7 @@ export class MediaExportEncodingError extends Error {
   }
 }
 
-/** ⬇️ The ONE rule that turns a `downloadMediaExport` envelope into the bytes the user saves — no
+/** 📩️ The ONE rule that turns a `downloadMediaExport` envelope into the bytes the user saves — no
  * `encoding` (or {@link MEDIA_EXPORT_UTF8_ENCODING}) means `data` IS the file, and
  * {@link MEDIA_EXPORT_BASE64_ENCODING} means `data` carries the bytes. Twin of Rust `kernel::media_export_bytes`; both drive
  * `🧫️fixtures/⬇️media-export-encoding/🔣️.json`.

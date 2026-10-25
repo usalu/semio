@@ -32,7 +32,7 @@ export function isJsonSchemaDefinition(document: unknown): boolean {
   return typeof dialect === "string" && /^https?:\/\/json-schema\.org\//u.test(dialect);
 }
 
-/** 🧬️ Whether a schema definition declares the one dialect the taxonomy names. */
+/** 📑️ Whether a schema definition declares the one dialect the taxonomy names. */
 export function isDeclaredDialectDefinition(repoRoot: string, document: unknown): boolean {
   return isJsonSchemaDefinition(document) && (document as { $schema: string }).$schema === schemaJsonDialect(repoRoot);
 }
@@ -46,7 +46,7 @@ export function readJson(abs: string): unknown | undefined {
 }
 
 /**
- * 🧬️ Reads a file only far enough to decide whether it DEFINES a schema.
+ * 📖️ Reads a file only far enough to decide whether it DEFINES a schema.
  *
  * A definition necessarily names a json-schema.org meta-schema, so the substring test settles the
  * overwhelming majority of a monorepo's JSON without parsing it. The parse still decides — the

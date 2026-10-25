@@ -34,7 +34,7 @@ pub enum DocPathSegment {
 
 /// 🧭️ Addresses one block-list slot: `segments` navigate through nested containers, `index` is
 /// the slot within the innermost `Vec<DocBlock>`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocBlockPath {

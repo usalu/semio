@@ -21,7 +21,7 @@ pub fn puzzle3d_top_camera(zoom: f32) -> Camera3d {
     }
 }
 
-/// 🎥️ The puzzle 3d `Perspective` pane's camera, verbatim off the same wire.
+/// 🧩️ The puzzle 3d `Perspective` pane's camera, verbatim off the same wire.
 pub fn puzzle3d_perspective_camera() -> Camera3d {
     Camera3d {
         position: vec3_new_m(9.17, -5.67, 4.2575),

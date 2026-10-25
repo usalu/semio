@@ -1,4 +1,4 @@
-//! 🗂️ The static app host, the install registry and the app routes.
+//! 🖥️ The static app host, the install registry and the app routes.
 
 use super::*;
 
@@ -16,7 +16,7 @@ pub struct StaticAppHost {
 }
 
 impl StaticAppHost {
-    /// 🏠️ Serve this directory.
+    /// 📂️ Serve this directory.
     pub fn new(root: impl Into<PathBuf>) -> Self {
         Self { root: root.into() }
     }
@@ -136,7 +136,7 @@ impl AppRegistry {
         names
     }
 
-    /// 🧩️ The `install.json` entries under one registered app's root.
+    /// 🔣️ The `install.json` entries under one registered app's root.
     pub fn installs(&self, name: &str) -> Vec<AppInstall> {
         self.host(name).map(|host| scan_installs(host.root())).unwrap_or_default()
     }
@@ -144,12 +144,12 @@ impl AppRegistry {
 //#endregion 🔖️Apps
 
 //#region 🔖️AppRoutes
-/// 📋️ The names of every app this instance hosts.
+/// 📚️ The names of every app this instance hosts.
 pub async fn get_apps<I: ServerInstance>(State(state): State<ServerState<I>>) -> Json<Vec<String>> {
     Json(state.apps.names())
 }
 
-/// 🧩️ The `install.json` entries under one app's root.
+/// 📜️ The `install.json` entries under one app's root.
 pub async fn get_app_installs<I: ServerInstance>(Path(app): Path<String>, State(state): State<ServerState<I>>) -> Result<Json<Vec<AppInstall>>, ServerError> {
     let host = state.apps.host(&app).ok_or_else(|| ServerError::NotFound(format!("no app '{app}'")))?;
     Ok(Json(scan_installs(host.root())))

@@ -84,7 +84,7 @@ fn checkpoint_restart_transient_close_retains_the_exact_store_until_granted() {
 /// arguments the WIT bridge instantiates.
 fn reactor_turn_future_bytes() -> usize {
     let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-    let budget = Budget { retained: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 };
+    let budget = Budget::from_retained(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 64, 16, 65536, 16);
     let mut identity = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity();
     let mut context = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step_context();
     let future = semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut None, None, None, budget, &mut identity, &mut context);

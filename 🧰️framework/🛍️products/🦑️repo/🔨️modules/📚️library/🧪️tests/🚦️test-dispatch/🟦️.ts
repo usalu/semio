@@ -1,5 +1,5 @@
 import {AsyncLocalStorage} from "node:async_hooks";
-import {withBuildTestInvocationV1,registerBuildTestFixtureV1,type BuildTestFixtureV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1,registerBuildTestFixtureV1,type BuildTestFixtureV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";

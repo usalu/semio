@@ -1,4 +1,0 @@
-export function isolateRequestV1(request:{env?:Record<string,string|null>;cwd?:string},body:()=>Promise<void>,state?:{env:Record<string,string|undefined>;cwd():string;chdir(path:string):void;exitCode?:number|string|undefined}):Promise<number>;
-export function serveExecutorV1<Control=unknown>(options:{lines:AsyncIterable<string>;write:(text:string)=>unknown;openSession:()=>Promise<{run<T>(body:(control:Control)=>Promise<T>,options?:{signal?:AbortSignal}):Promise<T>;close():Promise<unknown>}>;run:(request:any,control:Control,signal:AbortSignal)=>Promise<unknown>;limits:{maximumRequests:number;maximumAgeMilliseconds:number;idleMilliseconds?:number};now?:()=>number;state?:any;onFatal?:(error:unknown)=>void}):Promise<{served:number;reason:string}>;
-export function readLinesV1(stream:NodeJS.ReadableStream):AsyncIterable<string>;
-export const executorEndMarkerV1:(id:number)=>string;

@@ -1,4 +1,4 @@
-//! 🎯️ Hit testing: the frame node, hitbox and focus ids, the dispatch flags and the hit test of a point against the hitbox tree. See [`super`].
+//! 🧪️ Hit testing: the frame node, hitbox and focus ids, the dispatch flags and the hit test of a point against the hitbox tree. See [`super`].
 
 use super::*;
 
@@ -8,12 +8,12 @@ use super::*;
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct FrameNodeId(pub(super) u32);
 
-/// 🧮️ A [`Hitbox`]'s index within one [`DispatchTree::hitboxes`] — same per-frame-only validity as
+/// 🗂️ A [`Hitbox`]'s index within one [`DispatchTree::hitboxes`] — same per-frame-only validity as
 /// [`FrameNodeId`].
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct HitboxId(pub(super) u32);
 
-/// 🧮️ A [`DispatchNode`]'s slot in the focus ring — present exactly when the node carries
+/// ⭕️ A [`DispatchNode`]'s slot in the focus ring — present exactly when the node carries
 /// [`DispatchFlags::FOCUSABLE`]. A thin wrapper over [`FrameNodeId`] rather than a separate allocation,
 /// since a focus target always *is* a dispatch node.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -69,14 +69,14 @@ pub(super) fn rect_contains(bounds: Bounds, x: f32, y: f32) -> bool {
     x >= bounds.x && x < bounds.x + bounds.w && y >= bounds.y && y < bounds.y + bounds.h
 }
 
-/// 📐️ A node's absolute bounds, if it has a hitbox — `None` for a purely logical node with no
+/// 📏️ A node's absolute bounds, if it has a hitbox — `None` for a purely logical node with no
 /// geometry of its own.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn node_bounds(tree: &DispatchTree, id: FrameNodeId) -> Option<Bounds> {
     tree.node(id)?.hitbox.map(|hitbox| tree.bounds(hitbox))
 }
 
-/// 🌳️ Ported from `events.rs::is_plain_stack_container` — see this file's module docstring for why
+/// 🥞️ Ported from `events.rs::is_plain_stack_container` — see this file's module docstring for why
 /// the check is now flag-driven instead of a variant match. Every exception is preserved verbatim: a
 /// [`DispatchFlags::LAYOUT_CONTAINER`] node stops being a pass-through the moment it carries any
 /// binding of its own, or is a registered [`DispatchFlags::DRAG_SOURCE`].
@@ -120,7 +120,7 @@ fn hit_test_node(tree: &DispatchTree, id: FrameNodeId, x: f32, y: f32) -> Option
     }
 }
 
-/// 🎯️ Ported from `events.rs::hit_test_subtree`, simplified: since [`Hitbox::bounds`] is already
+/// 🔬️ Ported from `events.rs::hit_test_subtree`, simplified: since [`Hitbox::bounds`] is already
 /// window-absolute (unlike `wgpu-old`'s parent-relative `layout.x`/`layout.y`), no re-basing into the
 /// subtree's own coordinate frame is needed — this is exactly [`hit_test`] with a non-root starting
 /// point.

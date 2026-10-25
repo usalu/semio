@@ -21,7 +21,7 @@ import { fixtureBlobRoot, testEvidenceRoot } from "../🗄️blob-storage/🟦�
 /** 🧹️ One removable generated test artifact, classified for the report. */
 export type TestCleanRemoval = Readonly<{ category: string; path: string; files: number; bytes: number; reason: "all" | "stale" | "incomplete" | "oversized" }>;
 
-/** 🧹️ What a clean run did (or, in dry mode, would do) — identical structure either way. */
+/** 🧼️ What a clean run did (or, in dry mode, would do) — identical structure either way. */
 export type TestCleanReport = Readonly<{ dry: boolean; removals: readonly TestCleanRemoval[]; protectedPaths: readonly string[]; skippedUnmarked: readonly string[]; retained: readonly { category: string; path: string; files: number; bytes: number }[] }>;
 
 function countTree(abs: string): { files: number; bytes: number } {
@@ -47,7 +47,7 @@ function countTree(abs: string): { files: number; bytes: number } {
 }
 
 /**
- * 🧹️ Removes generated test state and nothing else. Every candidate is resolved and proven to sit
+ * 🖨️ Removes generated test state and nothing else. Every candidate is resolved and proven to sit
  * beneath the canonical test-output root, must carry an ownership marker, and symlinks are never
  * followed — so no tracked fixture, no source file and no excluded path can be reached from here.
  */
@@ -95,7 +95,7 @@ export function cleanTestOutputs(repoRoot: string, opts: { dry?: boolean; stale?
   return { dry, removals, protectedPaths, skippedUnmarked, retained };
 }
 
-/** 🧹️ Renders a clean report; dry-run and applied output differ only in the action verb. */
+/** 📊️ Renders a clean report; dry-run and applied output differ only in the action verb. */
 export function formatCleanReport(repoRoot: string, report: TestCleanReport): string {
   const verb = report.dry ? "would-remove" : "removed";
   const totals = report.removals.reduce((acc, row) => ({ files: acc.files + row.files, bytes: acc.bytes + row.bytes }), { files: 0, bytes: 0 });
@@ -114,10 +114,10 @@ export function formatCleanReport(repoRoot: string, report: TestCleanReport): st
 //#endregion 🧹️Clean
 
 //#region 🧹️GarbageCollection
-/** 🧹️ One candidate the sweep considered, with everything a reader needs to judge the decision. */
+/** ⚖️ One candidate the sweep considered, with everything a reader needs to judge the decision. */
 export type GcCandidate = Readonly<{ path: string; bytes: number; files: number; retention: RetentionClass; runId: string | null; agentId: string | null; lastAccessMs: number; eligible: boolean; reason: string; heldBy: readonly string[] }>;
 
-/** 🧹️ The result of one mark-and-sweep pass. `dry` is the default everywhere it is offered. */
+/** 🚩️ The result of one mark-and-sweep pass. `dry` is the default everywhere it is offered. */
 export type GcReport = Readonly<{ dry: boolean; candidates: readonly GcCandidate[]; removed: readonly string[]; markedBlobs: number; sweptBlobs: number; reclaimedBytes: number }>;
 
 function directorySize(abs: string): { bytes: number; files: number } {
@@ -149,7 +149,7 @@ function directorySize(abs: string): { bytes: number; files: number } {
 }
 
 /**
- * 🧹️ Marks every blob any committed fixture manifest, retained run manifest or pinned evidence
+ * 🧫️ Marks every blob any committed fixture manifest, retained run manifest or pinned evidence
  * references. Sweeping is the complement, so an unreachable blob is one nothing can reach — never one
  * that merely looks old.
  */
@@ -196,7 +196,7 @@ export function markReferencedBlobs(repoRoot: string, registry: OracleRegistry):
 }
 
 /**
- * 🧹️ Mark-and-sweep over the fixture blob store plus a retention-aware scan of run directories.
+ * 🗃️ Mark-and-sweep over the fixture blob store plus a retention-aware scan of run directories.
  * Refuses to act at all unless the cache root looks like this repository's cache, and never follows a
  * symlink out of it — the two failure modes that turn a cleaner into a data-loss incident.
  */
@@ -290,7 +290,7 @@ export function collectGarbage(repoRoot: string, registry: OracleRegistry, opts:
   return { dry, candidates, removed, markedBlobs: marked.size, sweptBlobs, reclaimedBytes };
 }
 
-/** 🧹️ Renders a GC pass so every decision is legible: what, how big, whose, and why it was or was not eligible. */
+/** 🎟️ Renders a GC pass so every decision is legible: what, how big, whose, and why it was or was not eligible. */
 export function formatGcReport(report: GcReport): string {
   const lines = [`[gc] ${report.dry ? "DRY RUN — nothing removed" : "SWEEPING"} — ${report.candidates.length} candidate(s), ${report.markedBlobs} blob(s) marked reachable`];
   for (const candidate of [...report.candidates].sort((a, b) => b.bytes - a.bytes)) {

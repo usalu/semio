@@ -20,7 +20,9 @@ pub mod standards {
                     #[path = "../../🦀️.rs"]
                     mod component;
                     pub use component::*;
-                    pub use semio_s_artifact_puzzle_2d_graph_manifest::standards::v1::subsets::any::schema::graph_manifest;
+                    pub mod graph_manifest {
+                        pub use semio_s_artifact_puzzle_2d_graph_manifest::*;
+                    }
                     pub use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::records;
                     #[path = "."]
                     pub mod lookup {
@@ -44,6 +46,11 @@ pub mod standards {
                     #[path = "."]
                     pub mod binary {
                         #[path = "../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+                        pub mod diff;
+                    }
+                    #[path = "."]
+                    pub mod text {
+                        #[path = "../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
                         pub mod diff;
                     }
                 }

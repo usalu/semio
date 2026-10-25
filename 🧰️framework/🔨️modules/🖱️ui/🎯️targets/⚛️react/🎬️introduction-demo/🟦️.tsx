@@ -436,7 +436,7 @@ export const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration
   );
 };
 
-/** 🎬️ The default demonstration for a purely informational step (`interactions.length === 0`, the
+/** ⏭️ The default demonstration for a purely informational step (`interactions.length === 0`, the
  * Next/Done button is the only way to continue) — clicking `ui.introduction.next`, the stable id every
  * such button renders under regardless of its Next/Done label. Used by `UIIntroduction` whenever the step
  * doesn't declare its own `demonstration`, so authors never have to spell this out per step. */

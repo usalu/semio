@@ -52,7 +52,7 @@ export type OracleEntry = Readonly<{
 export type OracleLinkedPackage = Readonly<{ package: string; version: string; license: string; homepage?: string; role: string }>;
 
 /**
- * 🧩️ Every third-party package one registered oracle actually links, each with its own pin. Most name
+ * 📦️ Every third-party package one registered oracle actually links, each with its own pin. Most name
  * a single package; a composed reference names several, because some formats have no single credible
  * crate — an OOXML container needs an archive reader AND an XML reader, and a spreadsheet needs a
  * reader AND a writer. Declaring only one of them would leave the other unclassified, which is
@@ -65,7 +65,7 @@ export function oracleLinkedPackages(entry: OracleEntry): OracleLinkedPackage[] 
   return [...byName.values()];
 }
 
-/** 🧩️ The names alone of every package one registered oracle links — what the import probe scans for. */
+/** 🔗️ The names alone of every package one registered oracle links — what the import probe scans for. */
 export function oraclePackages(entry: OracleEntry): string[] {
   return oracleLinkedPackages(entry).map((linked) => linked.package);
 }
@@ -79,14 +79,14 @@ export const ADAPTER_SUBJECT_REGISTRATION: Readonly<Record<Implementation, RegEx
   dotnet: /\.Subject\(/,
 };
 
-/** 🎯️ Whether the case's adapter in `implementation` registers any subject handler — read from its source, like its entry point. */
+/** 🔌️ Whether the case's adapter in `implementation` registers any subject handler — read from its source, like its entry point. */
 export function adapterRegistersSubject(repoRoot: string, discovered: DiscoveredCase, implementation: Implementation): boolean {
   const path = discovered.adapters[implementation];
   return path !== undefined && ADAPTER_SUBJECT_REGISTRATION[implementation].test(readFileSync(join(repoRoot, path), "utf8"));
 }
 
 /**
- * 🧭️ The case adapter language an oracle runs in: a `native` reference is driven from the adapter its
+ * ▶️ The case adapter language an oracle runs in: a `native` reference is driven from the adapter its
  * entry names in `hostImplementation`, a `javascript` package from the TypeScript adapter, anything
  * else from the adapter of its own ecosystem. `undefined` when a native reference names no host.
  */
@@ -108,7 +108,7 @@ export const ADAPTER_ENTRY_POINTS: Readonly<Record<Implementation, { signature: 
   dotnet: { signature: "`static class Adapter { static Semio.Repo.Test.Adapter Create() }`", pattern: /\bstatic\s+Semio\.Repo\.Test\.Adapter\s+Create\(\)/ },
 };
 
-/** 📇️ A recorded decision that a capability legitimately has no credible reference implementation. */
+/** 📘️ A recorded decision that a capability legitimately has no credible reference implementation. */
 export type NoOracleDecision = Readonly<{ id: string; capabilities: readonly string[]; rationale: string; substitutes: readonly string[]; coversMutations?: boolean; referenceSurvey?: ReferenceSurvey }>;
 
 /** 🔍️ The recorded negative search behind a justified mutation reference gap. */
@@ -125,7 +125,7 @@ export function isJustifiedMutationDecision(decision: NoOracleDecision): boolean
 }
 
 /**
- * 🧩️ A package an owner contributes so its adapters can reach their reference libraries.
+ * 🖥️ A package an owner contributes so its adapters can reach their reference libraries.
  *
  * `path` is what separates the two kinds. WITH a path the entry names LOCAL source linked by path —
  * an in-repo crate, module or workspace package — which is not an external dependency and is
@@ -142,7 +142,7 @@ export type OracleHostPackage = Readonly<{ implementation: Implementation; packa
 /** 🧱️ A local package the generated SUBJECT host links beside the owner's own package — a subject spanning several packages. */
 export type SubjectHostPackage = Readonly<{ implementation: Implementation; package: string; path: string; rationale: string }>;
 
-/** 🧩️ The name a host imports a contributed package by — the declared module, else the package name. */
+/** ☁️ The name a host imports a contributed package by — the declared module, else the package name. */
 export function oracleHostModule(entry: OracleHostPackage): string {
   return entry.module ?? entry.package.replace(/-/g, "_");
 }

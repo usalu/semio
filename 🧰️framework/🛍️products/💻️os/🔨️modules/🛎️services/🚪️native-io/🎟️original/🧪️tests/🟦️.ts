@@ -43,5 +43,4 @@ test("native I/O residuals retain original backing until independently admitted 
   expect(source).toContain("close_original_retained_step(cx, demand");
   expect(source).not.toContain("fn native_io_close_grant");
   expect(source).toContain("cx.consume_fuel(1)");
-  console.log("[DEBUG] native I/O original residual quote denial0 and exact release544 match independent Ajv/SQLite; same-source native allocator laws authored separately");
 });

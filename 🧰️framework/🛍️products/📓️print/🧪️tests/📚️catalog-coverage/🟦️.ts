@@ -41,7 +41,7 @@ export function markdownItLeaves(md: string): readonly string[] {
   return leaves;
 }
 
-/** 🥒️ Validates the catalogue document against its JSON Schema with ajv in draft 2020-12 mode. */
+/** ❌️ Validates the catalogue document against its JSON Schema with ajv in draft 2020-12 mode. */
 export function ajvErrors(): readonly string[] {
   const ajv = new Ajv2020({ allErrors: true, strict: false });
   const validate = ajv.compile(loadVizSchema());
@@ -50,12 +50,12 @@ export function ajvErrors(): readonly string[] {
 //#endregion 🔖️Oracles
 
 //#region 🔖️Scenarios
-/** 🧪️ `@id-schema`: ajv accepts the catalogue. */
+/** 🧬️ `@id-schema`: ajv accepts the catalogue. */
 export function scenarioSchema(): void {
   assert.deepEqual(ajvErrors(), []);
 }
 
-/** 🧪️ `@id-leaves`: every markdown-it leaf is covered exactly once and nothing else is. */
+/** 🍃️ `@id-leaves`: every markdown-it leaf is covered exactly once and nothing else is. */
 export function scenarioLeaves(): void {
   const oracle = markdownItLeaves(readFileSync(join(productRoot, "🖼️assets/📊️viz-taxonomy.md"), "utf8"));
   const covered = new Map<string, number>();
@@ -64,14 +64,14 @@ export function scenarioLeaves(): void {
   assert.deepEqual([...covered.keys()].filter((leaf) => !oracle.includes(leaf)), []);
 }
 
-/** 🧪️ `@id-slugs`: slugs are global, section-free and unique. */
+/** 🔖️ `@id-slugs`: slugs are global, section-free and unique. */
 export function scenarioSlugs(): void {
   const slugs = loadVizCatalog().kinds.map((entry) => entry.slug);
   assert.deepEqual(slugs.filter((slug) => /-(?:[0-9]|[1-7][0-9])$/.test(slug)), []);
   assert.equal(new Set(slugs).size, slugs.length);
 }
 
-/** 🧪️ `@id-families`: every catalogue family is registered once by a LaTeX package. */
+/** 🏭️ `@id-families`: every catalogue family is registered once by a LaTeX package. */
 export function scenarioFamilies(): void {
   const occurrences = new Map<string, string[]>();
   for (const name of readdirSync(LATEX_DIR).filter((file) => file.endsWith(".sty"))) {
@@ -84,7 +84,7 @@ export function scenarioFamilies(): void {
   assert.deepEqual([...new Set(loadVizCatalog().kinds.map((entry) => entry.family))].filter((family) => !registered.has(family)), []);
 }
 
-/** 🧪️ `@id-options`: every option key and demo table an entry names is declared in the schema, and
+/** 🎛️ `@id-options`: every option key and demo table an entry names is declared in the schema, and
  * an entry carries `variant` exactly when its family's schema vocabulary declares the key. */
 export function scenarioOptions(): void {
   const report = vizCoverageReport();
@@ -93,7 +93,7 @@ export function scenarioOptions(): void {
   assert.deepEqual(report.missingVariant, []);
 }
 
-/** 🧪️ `@id-implemented-keys-documented`: the schema's per-family vocabulary equals what the
+/** 🔑️ `@id-implemented-keys-documented`: the schema's per-family vocabulary equals what the
  * LaTeX sources implement, in both directions. */
 export function scenarioImplementedKeysDocumented(): void {
   const report = vizCoverageReport();
@@ -101,13 +101,13 @@ export function scenarioImplementedKeysDocumented(): void {
   assert.deepEqual(report.phantomOptions, []);
 }
 
-/** 🧪️ `@id-distinctness`: family plus option list identifies exactly one chart kind. */
+/** 🦄️ `@id-distinctness`: family plus option list identifies exactly one chart kind. */
 export function scenarioDistinctness(): void {
   const signatures = loadVizCatalog().kinds.map((entry) => `${entry.family}|${vizOptionList(entry.options)}`);
   assert.equal(new Set(signatures).size, signatures.length);
 }
 
-/** 🧪️ `@id-languages`: both document languages carry a title everywhere. */
+/** 🌐️ `@id-languages`: both document languages carry a title everywhere. */
 export function scenarioLanguages(): void {
   const catalog = loadVizCatalog();
   const schema = loadVizSchema();
@@ -121,7 +121,7 @@ export function scenarioLanguages(): void {
   assert.equal((labels.match(/^\\SemioVizKindLabel\{/gm) ?? []).length, catalog.kinds.length);
 }
 
-/** 🧪️ `@id-generated`: the checked-in generated files equal what the generator would write. */
+/** 🏺️ `@id-generated`: the checked-in generated files equal what the generator would write. */
 export function scenarioGenerated(): void {
   for (const file of vizGeneratedFiles()) {
     assert.equal(readFileSync(join(repoRoot, file.path), "utf8"), file.content, `stale generated file ${file.path}`);
@@ -129,7 +129,7 @@ export function scenarioGenerated(): void {
   }
 }
 
-/** 🧪️ Runs the fundamental scenarios: everything that needs no LaTeX package to exist yet. */
+/** 📚️ Runs the fundamental scenarios: everything that needs no LaTeX package to exist yet. */
 export function runCatalogCoverageCase(): void {
   scenarioSchema();
   scenarioLeaves();
@@ -142,7 +142,7 @@ export function runCatalogCoverageCase(): void {
   console.log("print: catalog-coverage — 8 fundamental scenarios passed");
 }
 
-/** 🧪️ Runs the long scenario: every catalogue family is registered by a namespace package. */
+/** 🏗️ Runs the long scenario: every catalogue family is registered by a namespace package. */
 export function runCatalogFamilyRegistration(): void {
   scenarioFamilies();
   console.log("print: catalog-coverage — family registration complete");
@@ -157,12 +157,12 @@ function coverCounts(leaves: readonly string[]): Record<string, number> {
   return counts;
 }
 
-/** 🧫️ Every leaf identifier the catalogue claims to cover, in catalogue order. */
+/** 🍂️ Every leaf identifier the catalogue claims to cover, in catalogue order. */
 function catalogLeaves(): string[] {
   return loadVizCatalog().kinds.flatMap((entry) => entry.covers);
 }
 
-/** 🧫️ Turns a conformance check into the pair of finding lists the profile compares: the
+/** 🩺️ Turns a conformance check into the pair of finding lists the profile compares: the
  * specification says the list is empty, so the oracle side is the empty list by construction. */
 function findings(actual: readonly unknown[]): { projection: { findings: readonly unknown[] } } {
   return { projection: { findings: actual } };
@@ -177,7 +177,7 @@ function slugFindings(): string[] {
   return [...slugs.filter((slug) => /-(?:[0-9]|[1-7][0-9])$/.test(slug)), ...duplicates];
 }
 
-/** 🔍️ Every family that two packages register, and every family no package registers. */
+/** 📦️ Every family that two packages register, and every family no package registers. */
 function familyFindings(): string[] {
   const occurrences = new Map<string, string[]>();
   for (const name of readdirSync(LATEX_DIR).filter((file) => file.endsWith(".sty"))) {
@@ -192,21 +192,21 @@ function familyFindings(): string[] {
   ];
 }
 
-/** 🔍️ Every option key and demo table an entry names that the schema does not declare, and every
+/** 📋️ Every option key and demo table an entry names that the schema does not declare, and every
  * entry missing a `variant` its family declares. The schema is the authority on both. */
 function optionFindings(): string[] {
   const report = vizCoverageReport();
   return [...report.unknownOptions, ...report.unknownDemoTables, ...report.missingVariant];
 }
 
-/** 🔍️ Every key a family implements that the schema is silent about, and every key the schema
+/** 🗝️ Every key a family implements that the schema is silent about, and every key the schema
  * declares that no family path actually installs. */
 function implementedKeyFindings(): string[] {
   const report = vizCoverageReport();
   return [...report.undocumentedOptions.map((entry) => `undocumented ${entry}`), ...report.phantomOptions.map((entry) => `phantom ${entry}`)];
 }
 
-/** 🔍️ Every family plus option list that identifies more than one chart kind. */
+/** 🍕️ Every family plus option list that identifies more than one chart kind. */
 function distinctnessFindings(): string[] {
   const seen = new Set<string>();
   const duplicates: string[] = [];
@@ -218,7 +218,7 @@ function distinctnessFindings(): string[] {
   return duplicates;
 }
 
-/** 🔍️ Everything that is missing a title in one of the two document languages. */
+/** 🗣️ Everything that is missing a title in one of the two document languages. */
 function languageFindings(): string[] {
   const catalog = loadVizCatalog();
   const schema = loadVizSchema();
@@ -237,21 +237,21 @@ function languageFindings(): string[] {
 
 const VIZ_API_ARTIFACT = "🧰️framework/🛍️products/📓️print/🖼️assets/🔣️viz-api.json";
 
-/** 🔍️ One generated file measured against what the generator would write, right now. */
+/** 🧾️ One generated file measured against what the generator would write, right now. */
 function generatedFinding(file: { path: string; content: string }): string[] {
   const disk = readFileSync(join(repoRoot, file.path), "utf8");
   if (disk !== file.content) return [`stale ${file.path}`];
   return marksItselfGenerated(file.path, file.content) ? [] : [`unmarked ${file.path}`];
 }
 
-/** 🔍️ The catalogue-derived artifacts — the two packages and the gallery documents — out of step. */
+/** 📑️ The catalogue-derived artifacts — the two packages and the gallery documents — out of step. */
 function generatedFindings(): string[] {
   return vizGeneratedFiles()
     .filter((file) => file.path !== VIZ_API_ARTIFACT)
     .flatMap((file) => generatedFinding(file));
 }
 
-/** 🔍️ The API reference out of step with the LaTeX sources it is derived from. */
+/** 📘️ The API reference out of step with the LaTeX sources it is derived from. */
 function apiReferenceFindings(): string[] {
   return [...vizApiReferenceFindings()];
 }
@@ -266,57 +266,57 @@ export default defineTestAdapter({
       subject: () => findings(ajvErrors()),
     },
     leaves: {
-      /** 🔮️ The leaf identifiers markdown-it reads out of the taxonomy, each expected exactly once. */
+      /** 📖️ The leaf identifiers markdown-it reads out of the taxonomy, each expected exactly once. */
       oracle: () => ({ projection: { covers: coverCounts(markdownItLeaves(readFileSync(join(productRoot, "🖼️assets/📊️viz-taxonomy.md"), "utf8"))) } }),
-      /** 🎯️ The leaf identifiers the catalogue's own `covers` lists claim, with their multiplicity. */
+      /** 📔️ The leaf identifiers the catalogue's own `covers` lists claim, with their multiplicity. */
       subject: () => ({ projection: { covers: coverCounts(catalogLeaves()) } }),
     },
     slugs: {
-      /** 🔮️ Architecture §4: slugs are global, carry no section suffix and are unique. */
+      /** 🏛️ Architecture §4: slugs are global, carry no section suffix and are unique. */
       oracle: () => NONE,
-      /** 🎯️ The slugs that break that rule. */
+      /** ☕️ The slugs that break that rule. */
       subject: () => findings(slugFindings()),
     },
     families: {
-      /** 🔮️ Architecture §4: one family name, one owning package, and every catalogue family registered. */
+      /** 🧩️ Architecture §4: one family name, one owning package, and every catalogue family registered. */
       oracle: () => NONE,
-      /** 🎯️ The families registered twice or not at all. */
+      /** 🔁️ The families registered twice or not at all. */
       subject: () => findings(familyFindings()),
     },
     options: {
-      /** 🔮️ Architecture §4: every option key and demo table an entry names lives in the schema vocabulary. */
+      /** 🗃️ Architecture §4: every option key and demo table an entry names lives in the schema vocabulary. */
       oracle: () => NONE,
-      /** 🎯️ The option keys, demo tables and missing `variant` values that are not declared. */
+      /** ⌨️ The option keys, demo tables and missing `variant` values that are not declared. */
       subject: () => findings(optionFindings()),
     },
     "implemented-keys-documented": {
-      /** 🔮️ The specification: the schema's vocabulary of a family is exactly what the family implements. */
+      /** 📕️ The specification: the schema's vocabulary of a family is exactly what the family implements. */
       oracle: () => NONE,
-      /** 🎯️ The keys the LaTeX sources implement but the schema omits, and the ones it invents. */
+      /** 🔐️ The keys the LaTeX sources implement but the schema omits, and the ones it invents. */
       subject: () => findings(implementedKeyFindings()),
     },
     distinctness: {
-      /** 🔮️ Architecture §4: family plus option list identifies exactly one chart kind. */
+      /** 🔬️ Architecture §4: family plus option list identifies exactly one chart kind. */
       oracle: () => NONE,
-      /** 🎯️ The signatures two kinds share. */
+      /** 🪢️ The signatures two kinds share. */
       subject: () => findings(distinctnessFindings()),
     },
     languages: {
-      /** 🔮️ Both document languages carry a title everywhere, and the generated labels package declares them all. */
+      /** 📄️ Both document languages carry a title everywhere, and the generated labels package declares them all. */
       oracle: () => NONE,
-      /** 🎯️ What is untitled in one language, and a label package out of step with the catalogue. */
+      /** 🪧️ What is untitled in one language, and a label package out of step with the catalogue. */
       subject: () => findings(languageFindings()),
     },
     generated: {
-      /** 🔮️ The generated packages and gallery documents equal what `generate viz` would write. */
+      /** 🖼️ The generated packages and gallery documents equal what `generate viz` would write. */
       oracle: () => NONE,
-      /** 🎯️ The generated files that are stale or miss the generated-file header. */
+      /** 🥀️ The generated files that are stale or miss the generated-file header. */
       subject: () => findings(generatedFindings()),
     },
     "api-reference": {
-      /** 🔮️ `🔣️viz-api.json` equals what `generate viz` would write from today's LaTeX sources. */
+      /** 🔣️ `🔣️viz-api.json` equals what `generate viz` would write from today's LaTeX sources. */
       oracle: () => NONE,
-      /** 🎯️ The API reference if it lags the packages, commands and keys it describes. */
+      /** 🛤️ The API reference if it lags the packages, commands and keys it describes. */
       subject: () => findings(apiReferenceFindings()),
     },
   },

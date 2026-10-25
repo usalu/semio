@@ -9,7 +9,7 @@ use bytemuck::{Pod, Zeroable};
 
 //#region 🔖️GpuUniforms
 
-/// 🌐️ Mirrors `UI_SHADER`'s `Globals { screen_size: vec2<f32>, _pad: vec2<f32> }`; `_pad.x` doubles
+/// 📺️ Mirrors `UI_SHADER`'s `Globals { screen_size: vec2<f32>, _pad: vec2<f32> }`; `_pad.x` doubles
 /// as elapsed seconds, driving the animated border kinds.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]

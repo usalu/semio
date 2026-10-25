@@ -1,5 +1,5 @@
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
+import {selectPackageManagerV1,packageManagerRegistryV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 const javascriptManagerV1=selectPackageManagerV1("javascript"),javascriptLockV1=javascriptManagerV1.primaryLockName();
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import {verifyNxSdkBinaryLinksV1} from "../🧊️binary/🔎️verification/🟦️.ts";
@@ -13,7 +13,7 @@ import corpus from "./🧪️tests/🔣️.json" with { type: "json" };
 import{nxToolingInstallIdentityV1}from"../🪪️identity/🟦️.ts";
 import{nxAuthorizerReceiptHoldsV1}from"../../🔏️authorizers/📤️receipt/🟦️.ts";
 import {nxSdkSnapshotReceiptHoldsV1,nxSdkSnapshotIdentityV1} from "../📥️snapshot/🟦️.ts";
-import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
 import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import {readPhysicalCargoSourceV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";

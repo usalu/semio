@@ -27,7 +27,7 @@
     "package": "capture-original",
     "binary": "capture-original",
     "stdout": "{\"cargo\":\"actual-json\"}\n",
-    "stderr": "[DEBUG] actual finite Cargo capture\n",
+    "stderr": "[TRACE] actual finite Cargo capture\n",
     "status": 0
   },
   "generated": {

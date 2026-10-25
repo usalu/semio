@@ -122,12 +122,7 @@ pub mod editor {
         #[path = "."]
         pub mod engine {
             pub use semio_s_artifact_puzzle_2d_engine::editor::puzzle2d::engine::*;
-            #[path = "."]
-            pub mod icons {
-                pub use semio_s_artifact_puzzle_2d_engine::editor::puzzle2d::engine::icons::*;
-                #[path = "../../../../✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🦀️.rs"]
-                pub mod board_metabolism_icons;
-            }
+            pub use semio_s_artifact_puzzle_2d_board_host::editor::puzzle2d::engine::icons;
             pub use semio_s_artifact_puzzle_2d_board_host::editor::puzzle2d::engine::board_host;
         }
     }

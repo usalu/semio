@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 [dependencies]
 
 [dev-dependencies]
+semio-framework-value-retirement-queue = { path = "../../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }
 semio-framework-plugin = { path = "../../../../📦️packages/🦀️rust", features = ["artifact-app-testing", "media-turn-testing", "reserved-producer-testing", "original-actor-context-testing"] }
 semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust", features = ["media-turn-testing"] }
 semio-framework-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust", features = ["artifact-app-testing"] }

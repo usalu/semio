@@ -21,7 +21,7 @@ export interface UiInputFragment {
   byteAt(index: number, builder: unknown): number;
   release(proof: unknown): UiInputRelease | null;
 }
-/** 🏷️ One selected operation field and its admitted consumer. */
+/** ☑️ One selected operation field and its admitted consumer. */
 export interface UiInputField {
   readonly value: UiInputFieldValue;
   readonly owner: object;
@@ -72,7 +72,7 @@ export function bindUiInputHost(host: UiInputHost): void {
   if (inputHost) throw new Error("UI input host is already bound");
   inputHost = host;
 }
-/** 🪪️ The bound kernel input brand checks; an unbound seam is a wiring fault. */
+/** ✅️ The bound kernel input brand checks; an unbound seam is a wiring fault. */
 export function uiInputHost(): UiInputHost {
   if (!inputHost) throw new Error("UI input host is unbound");
   return inputHost;

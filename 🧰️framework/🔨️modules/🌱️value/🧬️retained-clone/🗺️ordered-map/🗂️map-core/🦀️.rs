@@ -43,6 +43,11 @@ impl<K, V> RetainedOrderedMap<K, V> {
         self.pages.iter().flat_map(|page| page.iter().map(|(key, value)| (key, value)))
     }
 
+    /// 🧺️ Surrenders every entry in key order so a failed construction retires each value through its own owner.
+    pub fn into_entries(self) -> impl Iterator<Item = (K, V)> {
+        self.pages.into_iter().flatten()
+    }
+
     #[cfg(test)]
     pub(crate) fn from_sorted_entries_for_test(entries: Vec<(K, V)>) -> Result<Self, crate::ValueError>
     where

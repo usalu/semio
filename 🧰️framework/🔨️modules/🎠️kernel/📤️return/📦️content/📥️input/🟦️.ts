@@ -147,7 +147,7 @@ export class OwnedKernelReturnInputField {
   static matchesBuilder(field: unknown, builder: unknown): builder is OwnedUiOperationPayloadBuilder {
     return field !== null && typeof field === "object" && #builder in field && OwnedUiOperationPayloadBuilder.hasBrand(builder) && field.#builder === builder;
   }
-  /** 🪢️ Observes the same private proof held after the original binding was detached. */
+  /** 🔨️ Observes the same private proof held after the original binding was detached. */
   static matchesBuilderDetached(field: unknown, proof: unknown): boolean { return field !== null && typeof field === "object" && #builder in field && field.#builder !== null && field.#builder !== BUILDER_CONSUMED && !OwnedUiOperationPayloadBuilder.hasBrand(field.#builder) && field.#builder === proof; }
   /** 🧵️ Settled observation still requires the original UI parent to hold its exact field/proof pair. */
   static matchesBuilderSettled(field: unknown, proof: unknown): boolean { return field !== null && typeof field === "object" && #builder in field && field.#builder === BUILDER_CONSUMED && OwnedUiResidentBuilderRetirement.matchesSourceBinding(proof, field); }
@@ -204,7 +204,7 @@ export class OwnedKernelReturnInputField {
     if (releaseKind(release) === "copied" && !this.#closing && !this.#state.closing && (this.#advanced !== fragment.length || this.#consumed !== fragment.offset + BigInt(fragment.length))) return result("rejected");
     detachFragmentField(fragment); detachInputRelease(release); return result("pending", 64);
   }
-  /** 🧵️ Keeps next-range admission fenced until the original UI evidence detaches. */
+  /** 📥️ Keeps next-range admission fenced until the original UI evidence detaches. */
   settleInputRelease(release: OwnedKernelReturnInputRelease, proof: unknown, grant: KernelReturnInputGrant): KernelReturnInputStep {
     if (!payloadGrant(grant)) return result("blocked");
     const fragment = this.#fragment;
@@ -244,7 +244,7 @@ export class OwnedKernelReturnInputField {
 //#endregion 🏷️PrivateField
 
 //#region 💾️PayloadAssociation
-/** 🪢️ One original observation retains temporary UI aliases only until exact two-way settlement. */
+/** 🎒️ One original observation retains temporary UI aliases only until exact two-way settlement. */
 export class OwnedKernelReturnPayloadDetachment {
   #payload: OwnedUiResidentPayload | null = null;
   #proof: OwnedUiResidentPayloadSourceRelease | null = null;

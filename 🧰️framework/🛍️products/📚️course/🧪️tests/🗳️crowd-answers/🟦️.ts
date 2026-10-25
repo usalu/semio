@@ -479,7 +479,7 @@ describe("presented", () => {
 });
 
 describe("thinking", () => {
-  /** 💭️ The thinking issues, checked against ajv: schema-valid exactly when only the size bound fires. */
+  /** ✅️ The thinking issues, checked against ajv: schema-valid exactly when only the size bound fires. */
   function checked(state: unknown): ValidationIssue[] {
     const issues = thinkingIssues(state);
     expect(AJV_THINKING(state), JSON.stringify(issues)).toBe(issues.every((issue) => ["too-many", "duplicate-id"].includes(issue.code)));

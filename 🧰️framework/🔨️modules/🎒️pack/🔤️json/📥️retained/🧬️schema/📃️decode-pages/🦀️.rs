@@ -15,9 +15,9 @@ pub struct OwnedSchemaDecodePage {
 impl OwnedSchemaDecodePage {
     /// 🫙️ Fixed inline storage admits no heap allocation before the first source copy.
     pub const fn empty()->Self{Self{bytes:[0;OWNED_SCHEMA_DECODE_PAGE_BYTES],len:0}}
-    /// 📄️ Wraps one bounded producer buffer or returns it untouched when the extent exceeds the inline capacity.
+    /// ↩️ Wraps one bounded producer buffer or returns it untouched when the extent exceeds the inline capacity.
     pub fn try_from_array(bytes:[u8;OWNED_SCHEMA_DECODE_PAGE_BYTES],len:usize)->Result<Self,[u8;OWNED_SCHEMA_DECODE_PAGE_BYTES]>{if len>OWNED_SCHEMA_DECODE_PAGE_BYTES{return Err(bytes)}Ok(Self{bytes,len:len as u16})}
-    /// 📄️ Wraps one producer buffer whose extent the caller already admitted against the inline capacity.
+    /// 🔏️ Wraps one producer buffer whose extent the caller already admitted against the inline capacity.
     pub fn from_preflighted_array(bytes:[u8;OWNED_SCHEMA_DECODE_PAGE_BYTES],len:usize)->Self{debug_assert!(len<=OWNED_SCHEMA_DECODE_PAGE_BYTES);Self{bytes,len:len as u16}}
     /// 📋️ Borrows the exact ordered byte prefix without copying or materializing a page.
     pub fn as_slice(&self)->&[u8]{&self.bytes[..self.len()]}
@@ -83,7 +83,7 @@ impl OwnedSchemaDecodePages {
     pub fn allocation_byte_demand(&self)->usize{self.slots.len().checked_mul(size_of::<OwnedSchemaDecodePage>()).expect("admitted decode slots have a representable allocation")}
     /// 🪪️ Names the fixed slot allocation by its address, the stable identity of this page owner.
     pub fn slot_address(&self)->usize{self.slots.as_ptr() as usize}
-    /// 📐️ Prices a fixed slot birth before any original source owner transfers.
+    /// 🔧️ Prices a fixed slot birth before any original source owner transfers.
     pub fn allocation_byte_demand_for(maximum_pages:usize)->Option<usize>{maximum_pages.checked_mul(size_of::<OwnedSchemaDecodePage>())}
     /// 🎫️ Reserves fixed page and byte authority before any input owner is admitted.
     pub fn try_with_credits(credits: OwnedSchemaDecodeCredits) -> Result<Self, OwnedSchemaDecodeAdmissionFault> {
@@ -138,7 +138,7 @@ impl OwnedSchemaDecodePages {
         self.byte_count = next_bytes;
     }
 
-    /// 🔒️ Seals the exact admitted byte extent before tokenization begins.
+    /// 🔐️ Seals the exact admitted byte extent before tokenization begins.
     pub fn seal(&mut self) -> Result<(), OwnedSchemaDecodeAdmissionFault> {
         if self.sealed {
             return Err(OwnedSchemaDecodeAdmissionFault::Sealed);
@@ -154,7 +154,7 @@ impl OwnedSchemaDecodePages {
     pub fn page_count(&self) -> usize {
         self.page_count
     }
-    /// 🔎️ Borrows one admitted page in original source order without transferring authority.
+    /// 🔃️ Borrows one admitted page in original source order without transferring authority.
     pub fn admitted_page(&self,index:usize)->Option<&OwnedSchemaDecodePage>{(index<self.page_count).then(||unsafe{self.slots[index].assume_init_ref()})}
 
     pub fn byte_count(&self) -> usize {
@@ -185,7 +185,7 @@ impl OwnedSchemaDecodePages {
         Some(page)
     }
 
-    /// 🧹️ Releases the original whole directory only after its admitted inline pages are retired.
+    /// 📪️ Releases the original whole directory only after its admitted inline pages are retired.
     pub fn close_backing_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.page_count!=0 || self.byte_count!=0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"decode directory still retains inline pages")); }
         if self.slots.is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }

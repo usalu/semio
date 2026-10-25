@@ -8,7 +8,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::component::{pack, ActivationEvent, ActorId, Decision, Envelope, Kernel, KernelError, ShardKind, TurnResult};
 
-/// 🌉️ wasm-bindgen wrapper around [`Kernel`] for the React-web / wgpu-web hosts (see design
+/// 🖥️ wasm-bindgen wrapper around [`Kernel`] for the React-web / wgpu-web hosts (see design
 /// §1's three-host list). Every method takes/returns pack-encoded bytes only — this type owns
 /// no logic of its own beyond (de)serializing at the boundary and delegating to `Kernel`.
 #[wasm_bindgen]

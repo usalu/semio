@@ -13,7 +13,7 @@ test("test commands require explicit budgets and preserve failure and cancellati
   const temporary = mkdtempSync(join(output, "test-command-")), module = join(temporary, "execution.mjs");
   try {
     const bundle = await require("esbuild").build({ entryPoints: [source], outfile: module, bundle: true, platform: "node", format: "esm", metafile: true });
-    expect(Object.keys(bundle.metafile.inputs).every(path => path.startsWith("🧰️framework/🔨️modules/🏃️process/"))).toBe(true);
+    expect(Object.keys(bundle.metafile.inputs).every(path => path.startsWith("🧰️framework/🔨️modules/🏃️process/")||path.startsWith("🧰️framework/🔨️modules/⚙️runtime/")||path.startsWith("🧰️framework/🔨️modules/🧬️schema/✅️validator/"))).toBe(true);
     for (const row of fixture.cases) {
       if (!row.throwOnFailure) continue;
       const cancellation = new AbortController(), timer = row.abortMs === null ? undefined : setTimeout(() => cancellation.abort(), row.abortMs);

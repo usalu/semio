@@ -121,7 +121,7 @@ impl PolicyEngine {
         self.templates.insert(template.name.clone(), template);
     }
 
-    /// 📇️ Template auto-applied to every non-anonymous principal (session-authenticated callers).
+    /// 🪄️ Template auto-applied to every non-anonymous principal (session-authenticated callers).
     pub fn set_authenticated_template(&mut self, template_name: String) {
         self.authenticated = Some(template_name);
     }
@@ -266,7 +266,7 @@ impl<R: PrincipalResolver> Default for ResolverChain<R> {
 }
 
 impl<R: PrincipalResolver> ResolverChain<R> {
-    /// 🌿️ An empty ladder, which resolves everything to [`Principal::Anonymous`].
+    /// 🕳️ An empty ladder, which resolves everything to [`Principal::Anonymous`].
     pub fn new() -> Self {
         Self::default()
     }

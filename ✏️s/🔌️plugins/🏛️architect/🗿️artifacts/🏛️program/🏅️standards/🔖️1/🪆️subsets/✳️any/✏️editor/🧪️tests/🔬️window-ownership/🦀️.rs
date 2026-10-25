@@ -115,7 +115,7 @@ use crate::editor::architect::*;
 use crate::editor::architect::modes::edit::windows::register::config::*;
 use crate::editor::architect::modes::edit::windows::{adjacency, graph, report};
 use protocol::{ColdMutation, Mutation, OpBinary, OpText};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn block_on_architect_windows<F: std::future::Future>(mut future: std::pin::Pin<Box<F>>) -> F::Output {
     let waker = std::task::Waker::noop();

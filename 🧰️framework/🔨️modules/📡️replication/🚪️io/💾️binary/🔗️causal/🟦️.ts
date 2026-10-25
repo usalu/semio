@@ -27,7 +27,7 @@ export function mutationEnvelopeToWire(envelope: MutationEnvelope, timestamp: Wi
   };
 }
 
-/** 🌉️ Inverse of {@link mutationEnvelopeToWire}. */
+/** 📩️ Inverse of {@link mutationEnvelopeToWire}. */
 export function mutationEnvelopeFromWire(envelope: WireMutationEnvelope, codec: ReplicationPackCodec): MutationEnvelope {
   const decodePayload = (bytes: readonly number[]) => codec.decode(new Uint8Array(bytes));
   const payload = decodePayload(envelope.diff.payload);
@@ -155,7 +155,7 @@ export function encodeEnvelopeFields(out: number[], envelope: Omit<WireMutationE
   if (envelope.line !== null) writeStr(out, envelope.line);
 }
 
-/** 🎯️ Inverse of {@link encodeEnvelope} — the TS twin of Rust `protocol_causal::decode_envelope`. */
+/** 📨️ Inverse of {@link encodeEnvelope} — the TS twin of Rust `protocol_causal::decode_envelope`. */
 export function decodeEnvelope(bytes: Uint8Array, pos: [number]): WireMutationEnvelope {
   const mutation_id = readStr(bytes, pos);
   const document_id = readStr(bytes, pos);
@@ -178,7 +178,7 @@ export function decodeEnvelope(bytes: Uint8Array, pos: [number]): WireMutationEn
   return { mutation_id, document_id, actor, dependencies, observed, target, diff: { schema: diffSchema, payload: diffPayload }, inverse: { schema: inverseSchema, payload: inversePayload }, timestamp, transaction, verb, line };
 }
 
-/** 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq varint |
+/** 📄️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq varint |
  * chain_hash 32` — the TS twin of Rust `protocol_causal::encode_frontier`. */
 export function encodeFrontier(out: number[], frontier: WireFrontierSummary): void {
   writeStr(out, frontier.document_id);
@@ -188,7 +188,7 @@ export function encodeFrontier(out: number[], frontier: WireFrontierSummary): vo
   writeHash32(out, frontier.chain_hash);
 }
 
-/** 🎯️ Inverse of {@link encodeFrontier} — the TS twin of Rust `protocol_causal::decode_frontier`. */
+/** ↩️ Inverse of {@link encodeFrontier} — the TS twin of Rust `protocol_causal::decode_frontier`. */
 export function decodeFrontier(bytes: Uint8Array, pos: [number]): WireFrontierSummary {
   const document_id = readStr(bytes, pos);
   const head_edit_ordinal = readVarintU64(bytes, pos);

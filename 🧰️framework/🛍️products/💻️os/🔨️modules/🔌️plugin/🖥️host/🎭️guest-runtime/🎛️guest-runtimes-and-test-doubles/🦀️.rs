@@ -185,7 +185,7 @@ impl GuestRuntime for RecordingRuntime {
     async fn drop_instance(&self, _inst: GuestInstance) {}
     async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         *self.last_turn_budget.lock().expect("lock") = Some(budget);
-        let retained_receipt = budget.retained.return_original(semio_framework_value::RetainedCloneProgress::default()).expect("recorded idle turn spends nothing");
+        let retained_receipt = budget.retained.return_original(semio_framework_value::RetainedCloneProgress::default(),0).expect("recorded idle turn spends nothing");
         Ok(TurnResult {
             retained_receipt,
             ui_patches: semio_framework::kernel::UiTurnPatches::default(),

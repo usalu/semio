@@ -128,14 +128,14 @@ export const FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID = "framework.panel.parameter
 export const FRAMEWORK_PANEL_TAB_HISTORY_ID = "framework.panel.history";
 export const FRAMEWORK_PANEL_TAB_HISTORY_LABEL = "History";
 export const FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID = "framework.panel.history";
-/** 🕰️ Mirrors Rust `FRAMEWORK_HISTORY_BODY_KEY` — the reserved panel body every renderer fetches for the
+/** ⌨️ Mirrors Rust `FRAMEWORK_HISTORY_BODY_KEY` — the reserved panel body every renderer fetches for the
  * command-history list, and the one surface a completion's history patch dirties on its own. */
 export const FRAMEWORK_HISTORY_BODY_KEY = "framework.body.history";
 /** ⏯️ Mirrors Rust `FRAMEWORK_PANEL_TAB_TOOL_RUN_ID` — auto-injected into the `panelTabs` of every app that declares a tool run. */
 export const FRAMEWORK_PANEL_TAB_TOOL_RUN_ID = "framework.panel.toolRun";
 export const FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL = "Tool runs";
 export const FRAMEWORK_PANEL_TAB_TOOL_RUN_ICON_ID = "framework.panel.toolRun";
-/** ⏯️ Mirrors Rust `FRAMEWORK_TOOL_RUN_BODY_KEY` — the reserved body of the framework ToolRun panel. */
+/** 🔧️ Mirrors Rust `FRAMEWORK_TOOL_RUN_BODY_KEY` — the reserved body of the framework ToolRun panel. */
 export const FRAMEWORK_TOOL_RUN_BODY_KEY = "framework.body.toolRun";
 
 export const UI_INSPECTOR_MIXED_PLACEHOLDER = "Mixed";
@@ -159,7 +159,7 @@ export type CanvasHoverFocus = {
   readonly target: CanvasPickTarget | null;
 };
 
-/** 🧬️ Generated from Rust `ActionDescriptor` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
+/** 🎬️ Generated from Rust `ActionDescriptor` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type ActionDescriptor = GeneratedActionDescriptor;
 
 export type UiPresence = GeneratedUiPresence;

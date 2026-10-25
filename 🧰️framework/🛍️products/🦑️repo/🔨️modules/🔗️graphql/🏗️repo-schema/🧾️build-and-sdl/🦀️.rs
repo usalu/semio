@@ -80,7 +80,7 @@ fn reachable(schema: &Schema) -> Vec<String> {
     seen
 }
 
-/// 📜️ Renders one field in SDL.
+/// 🖌️ Renders one field in SDL.
 fn render_field(field: &Field) -> String {
     let arguments = if field.args.is_empty() {
         String::new()
@@ -90,7 +90,7 @@ fn render_field(field: &Field) -> String {
     format!("  {}{}: {}", field.name, arguments, field.ty.render())
 }
 
-/// 📜️ Renders the schema as the SDL both implementations must serve.
+/// 🧬️ Renders the schema as the SDL both implementations must serve.
 ///
 /// Deterministic by construction: reachable types only, sorted by name, fields in declaration
 /// order — so the dump is a comparable artifact rather than a map walk.
@@ -149,7 +149,7 @@ pub fn render_sdl(schema: &Schema) -> String {
     format!("{trimmed}\n")
 }
 
-/// 📜️ The language-neutral inventory of the served schema: what a conforming reader finds in the
+/// 📋️ The language-neutral inventory of the served schema: what a conforming reader finds in the
 /// SDL, in the one order both implementations can agree on.
 pub fn schema_inventory(schema: &Schema) -> Json {
     let field_row = |field: &Field| {

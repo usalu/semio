@@ -94,9 +94,7 @@ impl NativeTerminal {
 }
 
 impl TerminalBackend for NativeTerminal {
-            fn width_mode(&self) -> semio_framework_ui_tui_core::text::WidthMode { semio_framework_ui_tui_core::text::WidthMode::WindowsConsole }
-
-fn size(&self) -> io::Result<Size> {
+    fn size(&self) -> io::Result<Size> {
         unsafe {
             let mut ws: libc::winsize = std::mem::zeroed();
             if libc::ioctl(self.fd, libc::TIOCGWINSZ, &mut ws) != 0 {

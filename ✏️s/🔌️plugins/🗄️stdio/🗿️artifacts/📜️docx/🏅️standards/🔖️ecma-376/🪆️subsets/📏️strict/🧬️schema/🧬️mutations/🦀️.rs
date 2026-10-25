@@ -23,7 +23,7 @@
 use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
-#[cfg(test)]use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr};
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypesDiff, OpcDiff, OpcOwnerModification, OpcOwnerPatch, OpcOwnersDelta, OpcPartsDelta, OpcRelationshipModification, OpcRelationshipPatch, OpcRelationshipsDelta};
 use semio_framework_replication_mutation::{ColdMutation, Mutation};
@@ -107,7 +107,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-relationship-base", "set
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(any(test, feature = "testkit"))]
 pub fn apply_docx_strict_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxStrictMutation) -> protocol::MutationOutcome<DocxDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
+    let outcome = ::semio_framework_os_kernel::ColdMutation::diff(mutation, snapshot);
     match protocol::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;

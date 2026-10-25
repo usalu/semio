@@ -63,9 +63,9 @@ fn sibling_field_commands_and_inverse_preserve_concurrent_intent(){
     let combined=vcs::apply_mutation(&vcs::apply_mutation(&base,&second).unwrap().0,&first).unwrap().0;
     assert_eq!(combined,first_then_second);
     assert_eq!(combined.solids[0].name,"Mine");assert_eq!(combined.solids[0].height,0.3);
-    let mut undo=combined.clone();for inverse in protocol::Mutation::inverse(&first,&base).unwrap().iter().rev(){undo=vcs::apply_mutation(&undo,inverse).unwrap().0;}
+    let mut undo=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undo=vcs::apply_mutation(&undo,inverse).unwrap().0;}
     assert_eq!(undo,vcs::apply_mutation(&base,&second).unwrap().0,"undo owns no sibling field");
-    let first_diff=protocol::Mutation::diff(&first,&base).into_parts().0;let second_diff=protocol::Mutation::diff(&second,&base).into_parts().0;
+    let first_diff=protocol::ColdMutation::diff(&first,&base).into_parts().0;let second_diff=protocol::ColdMutation::diff(&second,&base).into_parts().0;
     let mut sum=first_diff.clone();protocol::ColdMutationDiff::absorb(&mut sum,second_diff);
     assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
     assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);

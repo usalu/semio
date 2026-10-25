@@ -1,4 +1,4 @@
-//! 📊️ Table, image, surface and extension builders: the table and table row builders, the typestate image builder, the surface builder and the extension builder. See [`super`].
+//! 🔨️ Table, image, surface and extension builders: the table and table row builders, the typestate image builder, the surface builder and the extension builder. See [`super`].
 
 use super::*;
 
@@ -17,7 +17,7 @@ pub struct TableBuilder {
     column_window: Option<crate::TreeWindow>,
 }
 
-/// 📊️ A table named `label` whose header reads `columns`. Its accessible name defaults to `label`.
+/// 🏓️ A table named `label` whose header reads `columns`. Its accessible name defaults to `label`.
 pub fn table(label: crate::Label, columns: crate::UiFixedList<crate::Label>) -> TableBuilder {
     let mut base = NodeBase::stack(crate::Axis::Vertical);
     base.accessibility.label = Some(label.clone());
@@ -79,7 +79,7 @@ impl From<TableBuilder> for BuiltNode {
     }
 }
 
-/// 📊️ One table row — `Component::TableRow`. Cells, row actions and target are props, never child
+/// 🗄️ One table row — `Component::TableRow`. Cells, row actions and target are props, never child
 /// records. Build with [`table_row`].
 pub struct TableRowBuilder {
     pub(super) base: NodeBase,
@@ -88,13 +88,13 @@ pub struct TableRowBuilder {
     pub(super) target: Option<crate::RowTarget>,
 }
 
-/// 📊️ A table row reading `cells`, positional to its table's columns.
+/// 📋️ A table row reading `cells`, positional to its table's columns.
 pub fn table_row(cells: crate::UiFixedList<crate::UiText>) -> TableRowBuilder {
     TableRowBuilder { base: NodeBase::stack(crate::Axis::Horizontal), cells, row_actions: crate::UiFixedList::default(), target: None }
 }
 
 impl TableRowBuilder {
-    /// 🎬️ Appends one row action — a verb on the row's [`crate::RowTarget`].
+    /// ➕️ Appends one row action — a verb on the row's [`crate::RowTarget`].
     #[expect(clippy::result_large_err, reason = "A full row-action list returns its builder and original action owner for caller-directed retirement.")]
     pub fn try_row_action(mut self, row_action: crate::RowAction) -> Result<Self, (Self, crate::RowAction)> {
         match self.row_actions.try_push(row_action) {
@@ -126,7 +126,7 @@ impl From<TableRowBuilder> for BuiltNode {
 //#endregion 📊️Table
 
 //#region 🖼️Image
-/// 🖼️ Typestate marker: [`ImageBuilder::alt`]/[`ImageBuilder::decorative`] not yet called. An
+/// 📍️ Typestate marker: [`ImageBuilder::alt`]/[`ImageBuilder::decorative`] not yet called. An
 /// `ImageBuilder<NoAlt>` has no `build()` at all — there is no inherent `build` on this state, and the
 /// blanket [`Buildable`] impl only applies to `T: Into<BuiltNode>`, which `ImageBuilder<NoAlt>` is not
 /// (only `ImageBuilder<HasAlt>` implements [`From`] into [`BuiltNode`]). Calling `.build()` on this
@@ -134,7 +134,7 @@ impl From<TableRowBuilder> for BuiltNode {
 /// this module's own accessible-UI mandate in [`crate`]'s docs and the compile-fail example below.
 pub struct NoAlt;
 
-/// 🖼️ Typestate marker: [`ImageBuilder::alt`] or [`ImageBuilder::decorative`] was called, so the image
+/// 📌️ Typestate marker: [`ImageBuilder::alt`] or [`ImageBuilder::decorative`] was called, so the image
 /// carries a decided accessible name (either real alt text or an explicit decorative opt-out). Only
 /// `ImageBuilder<HasAlt>` implements `Into<BuiltNode>`, which is what makes [`Buildable::build`]
 /// available on it and not on `ImageBuilder<NoAlt>`.
@@ -149,7 +149,7 @@ enum ImageAlt {
     Decorative,
 }
 
-/// 🖼️ An image — `Component::Image`. Build with [`image`], which returns `ImageBuilder<NoAlt>`; call
+/// 💿️ An image — `Component::Image`. Build with [`image`], which returns `ImageBuilder<NoAlt>`; call
 /// [`ImageBuilder::alt`] or [`ImageBuilder::decorative`] to obtain an `ImageBuilder<HasAlt>` before
 /// [`Buildable::try_build`] is even callable — CLAUDE.md's accessible-UI mandate
 /// makes an image's accessible name non-optional, and a **typestate**, not a runtime panic, is the
@@ -164,7 +164,7 @@ pub struct ImageBuilder<State = NoAlt> {
     pub(super) alt: State,
 }
 
-/// 🖼️ An image loaded from `src`, in state [`NoAlt`] — call [`ImageBuilder::alt`] or
+/// 📥️ An image loaded from `src`, in state [`NoAlt`] — call [`ImageBuilder::alt`] or
 /// [`ImageBuilder::decorative`] before `.try_build()` becomes callable at all.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn image(src: crate::UiText) -> ImageBuilder<NoAlt> {
@@ -216,7 +216,7 @@ pub struct SurfaceBuilder {
     pub(super) props: crate::SurfaceProps,
 }
 
-/// 🗺️ A surface carrying `props` verbatim — every field of [`crate::SurfaceProps`] is the product's
+/// 🎒️ A surface carrying `props` verbatim — every field of [`crate::SurfaceProps`] is the product's
 /// own concern, not something this builder second-guesses.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn surface(props: crate::SurfaceProps) -> SurfaceBuilder {
@@ -252,7 +252,7 @@ pub struct ExtensionBuilder {
     pub(super) props: crate::UiValue,
 }
 
-/// 🧩️ An extension slot addressed by `name`.
+/// 🔌️ An extension slot addressed by `name`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn extension(name: crate::UiText) -> ExtensionBuilder {
     ExtensionBuilder { base: NodeBase::leaf(), extension: name, props: crate::UiValue::Null }

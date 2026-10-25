@@ -3,12 +3,12 @@
 use super::*;
 
 //#region 🗃️Ledgers
-struct HandleSlot<T> {
+pub(super) struct HandleSlot<T> {
     pub(super) generation: u32,
     pub(super) value: Option<T>,
 }
 
-/// 🗃️ Fixed-capacity owned handle table with generation-preserving slot reuse.
+/// 🏓️ Fixed-capacity owned handle table with generation-preserving slot reuse.
 pub struct AbiHandleTable<T> {
     pub(super) slots: Vec<HandleSlot<T>>,
     free: Vec<usize>,

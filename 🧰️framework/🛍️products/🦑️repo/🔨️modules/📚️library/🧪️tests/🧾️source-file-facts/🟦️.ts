@@ -27,7 +27,7 @@ function suppliedObservation(row: Case): TaxonomySourceObservation {
   return { sourcePath: row.sourcePath, observedKind: row.observedKind, worktreeMode: row.mode, explicitDirectory: row.observedKind === "directory", origins: indexEntries.length ? ["tracked"] : [], indexEntries, generatorOutputs: [], repositoryBoundary: row.repositoryBoundary };
 }
 
-/** 🧫️ Builds an explicit supplied-observation inventory; no collector claim is made. */
+/** 🔏️ Builds an explicit supplied-observation inventory; no collector claim is made. */
 function admission(status: "complete" | "rejected", rows: readonly Case[]): TaxonomySourceInventory {
   return {
     schemaVersion: 1,
@@ -42,7 +42,7 @@ function admission(status: "complete" | "rejected", rows: readonly Case[]): Taxo
   };
 }
 
-/** 🧫️ Supplies a closed pure-projector candidate with explicit physical/index/provenance facts. */
+/** 📕️ Supplies a closed pure-projector candidate with explicit physical/index/provenance facts. */
 function candidate(row: Case): TaxonomySourceCandidateObservation {
   const observation = suppliedObservation(row);
   return { sourcePath: observation.sourcePath, observedKind: observation.observedKind, worktreeMode: observation.worktreeMode, explicitDirectory: observation.explicitDirectory, origins: observation.origins, indexEntries: observation.indexEntries, unsafeAncestor: false };

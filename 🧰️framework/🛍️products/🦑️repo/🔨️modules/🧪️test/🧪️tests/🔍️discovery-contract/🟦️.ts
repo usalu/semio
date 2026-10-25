@@ -9,15 +9,15 @@ import { withBuildTestInvocationV1 } from "@semio-tech/process/testing/invocatio
 import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, join, relative, sep } from "node:path";
 import { minimatch } from "minimatch";
 import { clearContributionCache, isTestOraclePath, scanDeclaredDependencies } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { isBlockingBreach } from "@semio-tech/repo-lib/policy";
 import { repoTestArtifactEnvironment } from "@semio-tech/repo-lib/process";
 import oracleDirectoryCases from "../🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json";
 import { type TestCasePlan, type FeatureScenario } from "@semio-tech/framework/test/adapter";
-import { CORE_COMPARISON_PROFILES, mutationVocabularyRequiresCatalog, discoverTestContributions, oracleImportsInProduction, cleanTestOutputs, discoverTestCases, isExcludedTestPath, markOutputDir, readOutputMarker, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, subjectRawInputsByScenario, makeAdapterContext } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { exemptAreas, HOST_PROTOCOL_PARITY_CASE_DIR, implementationAreas, repoCases, repoContributions, repoRegistry, repoRoot, repoWideBreaches } from "../🧰️repository-scan/🟦️.ts";
+import { CORE_COMPARISON_PROFILES, mutationVocabularyRequiresCatalog, discoverTestContributions, oracleImportsInProduction, cleanTestOutputs, discoverTestCases, isExcludedTestPath, markOutputDir, readOutputMarker, testCacheDir, testCacheRoot, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, subjectRawInputsByScenario, makeAdapterContext } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { exemptAreas, HOST_PROTOCOL_PARITY_CASE_DIR, implementationAreas, repoCases, repoContributions, repoRegistry, repoRoot, repoWideBreaches, withTestArtifacts } from "../🧰️repository-scan/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧪️Tests
@@ -90,49 +90,58 @@ describe("🔍️ discovery and contract", () => {
 });
 
 describe("🧹️ clean safety", () => {
-  test("removes marked outputs, never unmarked directories, and reports identically in dry mode", () => {
+  const CLEAN_SCOPE = "law/clean-safety";
+  const populate = () => withTestArtifacts(() => {
     const work = testCacheDir(repoRoot, "work");
     const marked = join(work, "🧪️clean-self-test-marked");
     const unmarked = join(work, "🧪️clean-self-test-unmarked");
-    rmSync(marked, { recursive: true, force: true });
-    rmSync(unmarked, { recursive: true, force: true });
     markOutputDir(repoRoot, marked, { testId: "self-test::clean", cacheKey: "self-test" });
     writeFileSync(join(marked, "artifact.bin"), "x");
     mkdirSync(unmarked, { recursive: true });
     writeFileSync(join(unmarked, "🚨️sentinel-do-not-delete"), "sentinel");
-
     expect(readOutputMarker(repoRoot, marked)?.testId).toBe("self-test::clean");
     expect(readOutputMarker(repoRoot, unmarked)).toBeNull();
+    return { marked, unmarked };
+  }, "shared", CLEAN_SCOPE);
 
-    const dry = cleanTestOutputs(repoRoot, { dry: true });
-    expect(dry.removals.some((row) => row.path.endsWith("🧪️clean-self-test-marked"))).toBe(true);
-    expect(dry.skippedUnmarked.some((path) => path.endsWith("🧪️clean-self-test-unmarked"))).toBe(true);
-    expect(existsSync(marked)).toBe(true);
+  test("removes marked outputs, never unmarked directories, and reports identically in dry mode", async () => {
+    const { marked, unmarked } = await populate();
+    await withTestArtifacts(() => {
+      const dry = cleanTestOutputs(repoRoot, { dry: true });
+      expect(dry.removals.some((row) => row.path.endsWith("🧪️clean-self-test-marked"))).toBe(true);
+      expect(dry.skippedUnmarked.some((path) => path.endsWith("🧪️clean-self-test-unmarked"))).toBe(true);
+      expect(existsSync(marked)).toBe(true);
 
-    const applied = cleanTestOutputs(repoRoot, { dry: false });
-    expect(applied.removals.map((row) => row.path).sort()).toEqual(dry.removals.map((row) => row.path).sort());
-    expect(existsSync(marked)).toBe(false);
-    expect(existsSync(join(unmarked, "🚨️sentinel-do-not-delete"))).toBe(true);
-
-    rmSync(unmarked, { recursive: true, force: true });
+      const applied = cleanTestOutputs(repoRoot, { dry: false });
+      expect(applied.removals.map((row) => row.path).sort()).toEqual(dry.removals.map((row) => row.path).sort());
+      expect(existsSync(marked)).toBe(false);
+      expect(existsSync(join(unmarked, "🚨️sentinel-do-not-delete"))).toBe(true);
+      rmSync(testCacheRoot(repoRoot), { recursive: true, force: true });
+    }, "exclusive", CLEAN_SCOPE);
   }, 60_000);
 
-  test("no tracked fixture, source file or compose path is ever a clean candidate", () => {
-    const sentinelFixture = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📡️protocol-vector.txt");
-    const before = readFileSync(sentinelFixture, "utf8");
-    const report = cleanTestOutputs(repoRoot, { dry: true });
-    for (const row of report.removals) {
-      expect(row.path.startsWith(".🧬semio/🦑️repo/⚡️cache/tests")).toBe(true);
-      for (const area of exemptAreas()) expect(row.path.includes(`${area}/`), `clean candidate inside the exempt area ${area}`).toBe(false);
-    }
-    expect(readFileSync(sentinelFixture, "utf8")).toBe(before);
-    expect(report.removals.some((row) => row.path.endsWith("compose.yaml"))).toBe(false);
-    expect(existsSync(join(repoRoot, "🌎️hub/compose.yaml"))).toBe(true);
-  });
+  test("no tracked fixture, source file or compose path is ever a clean candidate", async () => {
+    await populate();
+    await withTestArtifacts(() => {
+      const sentinelFixture = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/📡️protocol-vector.txt");
+      const before = readFileSync(sentinelFixture, "utf8");
+      const report = cleanTestOutputs(repoRoot, { dry: true });
+      const outputRoot = `${relative(repoRoot, testCacheRoot(repoRoot)).split(sep).join("/")}/`;
+      expect(report.removals.length).toBeGreaterThan(0);
+      for (const row of report.removals) {
+        expect(row.path.startsWith(outputRoot)).toBe(true);
+        for (const area of exemptAreas()) expect(row.path.includes(`${area}/`), `clean candidate inside the exempt area ${area}`).toBe(false);
+      }
+      expect(readFileSync(sentinelFixture, "utf8")).toBe(before);
+      expect(report.removals.some((row) => row.path.endsWith("compose.yaml"))).toBe(false);
+      expect(existsSync(join(repoRoot, "🌎️hub/compose.yaml"))).toBe(true);
+      rmSync(testCacheRoot(repoRoot), { recursive: true, force: true });
+    }, "exclusive", CLEAN_SCOPE);
+  }, 60_000);
 
-  test("marking a directory outside the test cache root is refused", () => {
-    expect(() => markOutputDir(repoRoot, join(repoRoot, "✏️s"), { testId: "x", cacheKey: "y" })).toThrow();
-  });
+  test("marking a directory outside the test cache root is refused", () => withTestArtifacts(() => {
+    expect(() => markOutputDir(repoRoot, join(repoRoot, "✏️s"), { testId: "x", cacheKey: "y" })).toThrow("outside the test cache root");
+  }));
 });
 
 describe("📥️ subject raw routing", () => {
@@ -272,10 +281,11 @@ describe("🧩️ open/closed", () => {
     }
   });
 
-  test("the framework Rust host declares no dependency at all", () => {
+  test("the framework Rust host declares no third-party dependency: only path crates of the framework itself", () => {
     const manifest = readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"), "utf8");
     const dependencyTable = manifest.split(/^\[dependencies\]$/m)[1] ?? "";
-    expect(dependencyTable.split(/\r?\n/).filter((line) => /^[a-z0-9_-]+\s*=/.test(line.trim()))).toEqual([]);
+    const declared = dependencyTable.split(/\r?\n/).filter((line) => /^[a-z0-9_-]+\s*=/.test(line.trim()));
+    expect(declared.filter((line) => !/^semio-framework-[a-z0-9-]+\s*=\s*\{\s*path\s*=\s*"(?:\.\.\/)+🔨️modules\/[^"]+"\s*\}$/u.test(line.trim()))).toEqual([]);
   });
 
   test("a Rust host build resolves Cargo's executable before the finite scenario budget starts", async () => {
@@ -296,9 +306,9 @@ describe("🧩️ open/closed", () => {
     ].join("\n");
     expect(resolveExecutable(cargoOutput)).toBe("/tmp/target/aarch64/debug/host");
     const executeText = execute!.getText(executionSource);
-    expect(executeText).toContain("budgetMs: buildBudgetMs()");
-    expect(executeText).toContain("budgetMs: testLevelBudgetMs(level)");
-    expect(executeText.indexOf("budgetMs: buildBudgetMs()")).toBeLessThan(executeText.indexOf("budgetMs: testLevelBudgetMs(level)"));
+    expect(executeText).toContain("host.preparation.args,buildBudgetMs()");
+    expect(executeText).toContain("host.args,testLevelBudgetMs(level)");
+    expect(executeText.indexOf("host.preparation.args,buildBudgetMs()")).toBeLessThan(executeText.indexOf("host.args,testLevelBudgetMs(level)"));
   });
 
   test("the framework test domain's sources name no implementation area", () => {

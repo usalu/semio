@@ -1,5 +1,5 @@
 /** 🧱️ Shared fixtures and pointer helpers of the interaction DOM suites: the test PDF port, the positioned and two-slide decks, click, drag, rect mocking and the PDF canvas wait. */
-import type { PdfCanvasDocument, PdfCanvasPort, Presentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import type { PdfCanvasDocument, PdfCanvasPort, Presentation } from "@semio-tech/presentation-react";
 import { act } from "@semio-tech/ui-react/test";
 
 export const testPdfCanvasPort: PdfCanvasPort = {

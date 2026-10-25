@@ -1,4 +1,4 @@
-//! 🚨️ JSON error: every parse failure with its byte offset, the nesting depth limit and the error conversions. See [`super`].
+//! ❌️ JSON error: every parse failure with its byte offset, the nesting depth limit and the error conversions. See [`super`].
 
 use super::*;
 

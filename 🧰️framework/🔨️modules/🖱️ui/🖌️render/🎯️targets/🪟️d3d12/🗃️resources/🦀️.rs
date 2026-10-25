@@ -199,7 +199,7 @@ fn create_srv(device: &Device, resource: &ID3D12Resource, format: DXGI_FORMAT, h
 
 //#region 🗃️GpuResources
 
-/// 🗃️ Owns every device-resident resource a `RenderPacket` can reference. `apply` is the only
+/// 🧰️ Owns every device-resident resource a `RenderPacket` can reference. `apply` is the only
 /// mutator; everything else is a lookup a render pass consults while replaying batches.
 pub struct GpuResources {
     table: ResidentSrvTable,
@@ -224,7 +224,7 @@ pub struct GpuResources {
 }
 
 impl GpuResources {
-    /// 🕳️ Seeds the glyph/icon atlas slots with 1x1 dummy textures so the UI megashader always has
+    /// 🎲️ Seeds the glyph/icon atlas slots with 1x1 dummy textures so the UI megashader always has
     /// something bound at `t0`/`t1` even on a frame painted before any glyph/icon has ever been
     /// requested — mirrors the Metal backend's identical seeding and its identical reasoning
     /// (`NullBackend` has no such gap because it never touches a device at all; a real backend must

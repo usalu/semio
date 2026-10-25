@@ -30,7 +30,7 @@ export const SHARD_WORKER_URL = "/🔌️plugin-modules/🧵️shard/🟨️shar
  * wgpu UI isolate reads the same switch without pulling `ShardClient` into its boot bundle. */
 export { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, shardRuntimeDiagnosticsArmed, stampShardWorkerDiagnostics } from "../🩺️diagnostics/🟦️.ts";
 
-/** 🩺️ {@link SHARD_WORKER_URL}, plus the diagnostics stamp when this page armed them. Every
+/** 🐝️ {@link SHARD_WORKER_URL}, plus the diagnostics stamp when this page armed them. Every
  * `new Worker(...)` in the repo goes through this so the guest's own `[TRACE]` trace sites are
  * reachable from a browser session without a second build. */
 export function shardWorkerUrl(): string {

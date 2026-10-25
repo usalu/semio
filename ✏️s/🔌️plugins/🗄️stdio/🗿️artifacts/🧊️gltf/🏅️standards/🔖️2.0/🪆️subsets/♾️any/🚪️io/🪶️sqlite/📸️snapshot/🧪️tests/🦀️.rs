@@ -251,7 +251,7 @@ fn sqlite_snapshot_gltf_deep_owned_extras_erased_payloads_have_bounded_wire_dept
     snapshot.document.extras = Some(extras);
     let limits = SqliteDatabaseLimits::default();
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
-    let codec = <GltfSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().expect("actual GLTF owned provider");
+    let codec = <GltfSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().expect("actual GLTF owned provider");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema, &dialect, &mut Some(database.clone()), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;

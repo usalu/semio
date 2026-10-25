@@ -25,8 +25,8 @@ use crate::standards::v1_1::subsets::basic::schema::mutations::set_basic_attribu
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetClipPathReference {
-    pub(crate) path: NodePath,
-    pub(crate) clip_path_id: Option<String>,
+    pub path: NodePath,
+    pub clip_path_id: Option<String>,
 }
 
 impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetClipPathReference

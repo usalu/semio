@@ -11,17 +11,17 @@ import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️proces
  * subpaths; test-domain code (the taxonomy's tests, fixtures, examples, oracles, probes, generators) may use it as an oracle. */
 export const INTERFACE_OWNED_PACKAGES: Readonly<Record<string, string>> = Object.freeze(Object.fromEntries(Object.entries(DEPENDENCY_INTERFACE_OWNERS).filter(([, owner]) => owner.ecosystem === "js").map(([name, owner]) => [name, owner.directory])));
 
-/** 🧱️ One import of an interface-owned package outside its owner. */
+/** 📦️ One import of an interface-owned package outside its owner. */
 export type InterfaceImportHit = Readonly<{ path: string; line: number; specifier: string; owner: string }>;
 
 const MODULE_SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|^\s*import\s+)["']([^"'\n]+)["']/gmu;
 
-/** 🧱️ Whether a path belongs to the test domain: under the domain root or below one of its directory names. */
+/** 🧪️ Whether a path belongs to the test domain: under the domain root or below one of its directory names. */
 export function isTestDomainPath(path: string, testDomain: Readonly<{ directoryNames: readonly string[]; domainPath: string }>): boolean {
   return path.startsWith(`${testDomain.domainPath}/`) || path.split("/").slice(0, -1).some((segment) => testDomain.directoryNames.includes(segment));
 }
 
-/** 🧱️ The imports of interface-owned packages in one production source outside their owners. */
+/** 📖️ The imports of interface-owned packages in one production source outside their owners. */
 export function interfaceImportHitsOfText(path: string, text: string, owners: Readonly<Record<string, string>> = INTERFACE_OWNED_PACKAGES): InterfaceImportHit[] {
   const hits: InterfaceImportHit[] = [];
   for (const match of text.matchAll(MODULE_SPECIFIER)) {
@@ -34,7 +34,7 @@ export function interfaceImportHitsOfText(path: string, text: string, owners: Re
   return hits;
 }
 
-/** 🧱️ The interface-ownership census over every tracked TypeScript / JavaScript production source (the test domain read from
+/** ▶️ The interface-ownership census over every tracked TypeScript / JavaScript production source (the test domain read from
  * the taxonomy), cross-checked line for line against `git grep` (the oracle). */
 export function runInterfaceImportCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
   const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Record<string, unknown>;

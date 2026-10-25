@@ -24,7 +24,7 @@ impl Json {
         }
     }
 
-    /// 🔎️ String value, or `""` for anything else — plans are validated before a host ever sees them.
+    /// 🔤️ String value, or `""` for anything else — plans are validated before a host ever sees them.
     pub fn str(&self, key: &str) -> String {
         match self.get(key) {
             Some(Json::String(value)) => value.clone(),
@@ -32,7 +32,7 @@ impl Json {
         }
     }
 
-    /// 🔎️ Array members, or an empty slice.
+    /// 🍕️ Array members, or an empty slice.
     pub fn array(&self, key: &str) -> Vec<Json> {
         match self.get(key) {
             Some(Json::Array(items)) => items.clone(),
@@ -103,7 +103,7 @@ fn write_string(value: &str, out: &mut String) {
     out.push('"');
 }
 
-/// 🔣️ Parses one JSON document. Errors carry a byte offset so a malformed plan fails loudly.
+/// 📖️ Parses one JSON document. Errors carry a byte offset so a malformed plan fails loudly.
 pub fn parse_json(source: &str) -> Result<Json, String> {
     let bytes: Vec<char> = source.chars().collect();
     let mut cursor = 0usize;
@@ -285,7 +285,7 @@ pub fn digest(input: &[u8]) -> String {
     sha256_hex(input)[..32].to_string()
 }
 
-/// #⃣ The FULL 64-character SHA-256 hex. Protocol v2 addresses fixture blobs and result artifacts by
+/// 💯️ The FULL 64-character SHA-256 hex. Protocol v2 addresses fixture blobs and result artifacts by
 /// content, and a truncated digest is not a content address — the store's whole safety argument is
 /// that a blob's name IS its content.
 pub fn sha256_hex(input: &[u8]) -> String {
@@ -367,7 +367,7 @@ pub struct Scenario {
     pub doc_strings: Vec<String>,
     /// 📊️ Data tables attached to this scenario's steps, in step order — header row first.
     pub data_tables: Vec<Vec<Vec<String>>>,
-    /// 🪆️ The `@id-<base>` of the Scenario Outline this row expands, empty for a plain scenario. An
+    /// 📑️ The `@id-<base>` of the Scenario Outline this row expands, empty for a plain scenario. An
     /// adapter registered under the outline's base id serves every row the feature declares.
     pub outline_of: String,
 }
@@ -413,7 +413,7 @@ pub struct Plan {
 }
 
 impl Plan {
-    /// 📋️ Reads a coordinator-written plan file.
+    /// 🗓️ Reads a coordinator-written plan file.
     pub fn from_json(value: &Json) -> Plan {
         let inputs = value.array("inputs").iter().map(|entry| TestInput { uri: entry.str("uri"), scope: entry.str("scope"), name: entry.str("name"), path: entry.str("path"), digest: entry.str("digest") }).collect();
         let scenarios = value
@@ -504,13 +504,13 @@ impl Plan {
         }
     }
 
-    /// 🧫️ Absolute path of a resolved fixture; an undeclared URI is an error, never a silent default.
+    /// ⌨️ Absolute path of a resolved fixture; an undeclared URI is an error, never a silent default.
     pub fn input(&self, uri: &str) -> Result<std::path::PathBuf, String> {
         let fixture = self.inputs.iter().find(|entry| entry.uri == uri).ok_or_else(|| format!("fixture {} is not part of this plan — declare it in the feature file", uri))?;
         Ok(std::path::PathBuf::from(&fixture.path))
     }
 
-    /// 📦️ Absolute path this host writes one named result artifact to, creating parent directories.
+    /// 📝️ Absolute path this host writes one named result artifact to, creating parent directories.
     pub fn artifact(&self, role: &str, filename: &str) -> Result<std::path::PathBuf, String> {
         let dir = std::path::PathBuf::from(if self.artifact_dir.is_empty() { self.work_dir.clone() } else { self.artifact_dir.clone() }).join(role);
         std::fs::create_dir_all(&dir).map_err(|error| format!("cannot create artifact directory {}: {error}", dir.display()))?;
@@ -520,7 +520,7 @@ impl Plan {
 //#endregion 🔖️Plan
 
 //#region 🔖️Outcome
-/// 📦️ One file this handler produced, addressed by ROLE so no comparison stage ever names a path.
+/// 🎭️ One file this handler produced, addressed by ROLE so no comparison stage ever names a path.
 #[derive(Debug, Clone)]
 pub struct ResultArtifact {
     pub role: String,
@@ -546,23 +546,23 @@ pub struct Outcome {
 }
 
 impl Outcome {
-    /// 🎯️ Projection-only outcome, for behaviours with no serialized artifact.
+    /// ➡️ Projection-only outcome, for behaviours with no serialized artifact.
     pub fn projection(projection: Json) -> Outcome {
         Outcome { raw: None, projection, artifacts: Vec::new(), production_dispatch: None, diagnostics: Vec::new() }
     }
 
-    /// 🎯️ Outcome carrying both the produced bytes and their semantic projection.
+    /// 🎒️ Outcome carrying both the produced bytes and their semantic projection.
     pub fn with_raw(raw: Vec<u8>, projection: Json) -> Outcome {
         Outcome { raw: Some(raw), projection, artifacts: Vec::new(), production_dispatch: None, diagnostics: Vec::new() }
     }
 
-    /// 📦️ Adds one produced file to the bundle under its role.
+    /// ➕️ Adds one produced file to the bundle under its role.
     pub fn artifact(mut self, role: &str, path: &std::path::Path, media_type: &str) -> Outcome {
         self.artifacts.push(ResultArtifact { role: role.to_string(), path: path.display().to_string(), media_type: media_type.to_string() });
         self
     }
 
-    /// 🏭️ Records that this outcome came out of PRODUCTION dispatch rather than a committed vector.
+    /// 📹️ Records that this outcome came out of PRODUCTION dispatch rather than a committed vector.
     pub fn dispatched(mut self, operation: &str, bridge_version: u32) -> Outcome {
         self.production_dispatch = Some(ProductionDispatch { operation: operation.to_string(), bridge_version });
         self

@@ -146,7 +146,7 @@ type JsonSchemaSubsetCheck = (value: unknown, path: string) => string[];
 /** 🏎️ Schema patterns whose three look-aheads each scan the whole path again, with the regular expression that accepts exactly the same strings in one pass (the verdicts are checked against the original on every distinct pattern of the repository's schemas and against Ajv in the validator tests). */
 const jsonSchemaSubsetLinearPatterns: ReadonlyMap<string, string> = new Map([[String.raw`^(?!/)(?!.*(?:^|/)\.\.(?:/|$))(?!.*\\)(?!.*\u0000).+$`, String.raw`^(?=[^\n\r\u2028\u2029])(?!/)(?:(?!\.\.(?:/|$))[^/\\\u0000\n\r\u2028\u2029]*(?:/|$))+$`]]);
 
-/** 🔤️ Compiles one schema pattern in unicode mode, through its single-pass equivalent when one is known. */
+/** 🧬️ Compiles one schema pattern in unicode mode, through its single-pass equivalent when one is known. */
 function jsonSchemaSubsetPattern(source: string): RegExp { return new RegExp(jsonSchemaSubsetLinearPatterns.get(source) ?? source, "u"); }
 
 /** 🧱️ An explicitly prepared snapshot owns reusable schema decisions and observes each supplied value anew. */
@@ -245,7 +245,7 @@ export function compileJsonSchemaSubset(schema: unknown, root: unknown = schema,
   return Object.freeze({ validate: (value: unknown) => check(value, "") });
 }
 
-/** 🧭️ Validates the owned Draft-07 subset from current schema input; prepared callers reuse explicit immutable snapshots. */
+/** ✅️ Validates the owned Draft-07 subset from current schema input; prepared callers reuse explicit immutable snapshots. */
 export function validateJsonSchemaSubset(schema: unknown, value: unknown, root: unknown = schema, documents: readonly unknown[] = []): string[] {
   return compileJsonSchemaSubset(schema, root, documents).validate(value);
 }

@@ -9,7 +9,7 @@ use semio_framework_2d_engine::{PathSegment, Vec2};
 /// 🕐️ Work steps granted to the arrangement job between two `control` calls.
 pub const GRANT: usize = 4096;
 
-/// 🧱️ Polygon with holes; the outer ring is counter-clockwise, holes are clockwise.
+/// 💠️ Polygon with holes; the outer ring is counter-clockwise, holes are clockwise.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Region {
     pub outer: Vec<Vec2>,
@@ -53,12 +53,12 @@ fn inside(ring: &[Vec2], p: Vec2) -> bool {
 }
 
 impl Region {
-    /// 🧱️ Region from rings of any orientation (normalised).
+    /// 🍩️ Region from rings of any orientation (normalised).
     pub fn new(outer: &[Vec2], holes: &[Vec<Vec2>]) -> Self {
         Self { outer: oriented(outer, true), holes: holes.iter().map(|h| oriented(h, false)).collect() }
     }
 
-    /// 📐️ Area of the outer ring minus the holes.
+    /// ➖️ Area of the outer ring minus the holes.
     pub fn area(&self) -> f64 {
         signed_area(&self.outer) + self.holes.iter().map(|h| signed_area(h)).sum::<f64>()
     }
@@ -88,7 +88,7 @@ fn run(operation: BooleanOperation, operands: Vec<BooleanOperand>, control: &mut
     Ok(regions_from_path(&job.into_result()?))
 }
 
-/// 🧱️ Groups the closed contours of a boolean result into regions (positive rings are outers, negative rings are holes of the smallest enclosing outer).
+/// 🛤️ Groups the closed contours of a boolean result into regions (positive rings are outers, negative rings are holes of the smallest enclosing outer).
 pub fn regions_from_path(path: &[PathSegment]) -> Vec<Region> {
     let mut rings: Vec<Vec<Vec2>> = Vec::new();
     let mut current: Vec<Vec2> = Vec::new();

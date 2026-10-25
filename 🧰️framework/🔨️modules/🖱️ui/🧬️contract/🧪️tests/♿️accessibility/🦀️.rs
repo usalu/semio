@@ -73,7 +73,7 @@ fn every_toggle_appearance_projects_only_its_native_state_channel() {
     }
 }
 
-/// ♿️ The per-node projection of a real published snapshot, field for field.
+/// 📹️ The per-node projection of a real published snapshot, field for field.
 #[test]
 fn every_published_record_projects_the_way_the_shared_fixture_declares() {
     let fixture: serde_json::Value = serde_json::from_str(PROJECTION_FIXTURE).expect("♿️ the projection fixture parses");
@@ -106,7 +106,7 @@ fn every_published_record_projects_the_way_the_shared_fixture_declares() {
     assert_eq!(announced, declared, "exactly the reachable, named nodes");
 }
 
-/// ♿️ A hidden node is KEPT, carrying `hidden`, never dropped — a consumer that dropped it would
+/// 🙈️ A hidden node is KEPT, carrying `hidden`, never dropped — a consumer that dropped it would
 /// disagree with the DOM renderer (which renders the element and marks it `aria-hidden`) about what
 /// exists on the surface at all.
 #[test]
@@ -152,7 +152,7 @@ pub(crate) fn assert_value_matches(node: &AccessibilityProjectionNode, row: &ser
     assert!(!node.invalid && node.set_size.is_none() && node.pos_in_set.is_none(), "{}: a draft's refusal and a window place are a renderer's live state", node.key);
 }
 
-/// 📶️ Every case of the shared progress law announces exactly the value attributes it declares:
+/// ⏳️ Every case of the shared progress law announces exactly the value attributes it declares:
 /// min/max/now/valuetext while determinate, only `busy` while indeterminate.
 #[test]
 fn every_progress_case_announces_the_value_the_shared_fixture_declares() {

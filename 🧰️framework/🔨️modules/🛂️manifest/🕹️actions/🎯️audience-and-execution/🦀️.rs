@@ -5,7 +5,7 @@ use super::*;
 // #region 🛂️Manifest
 //#region 🔖️Manifest
 //#region 🔖️ActionSemantics
-/// 🎯️ WHO a declared action/command is addressed to. Orthogonal to [`ActionKind`] (which says
+/// 🎬️ WHO a declared action/command is addressed to. Orthogonal to [`ActionKind`] (which says
 /// how a verb relates to VCS history) and to `in_palette` (which says whether a human sees it in the
 /// command palette): an agent driving the artifact through the semio MCP needs to tell an
 /// intent-level document verb (`addLayer`, `patchLayer`, `exportDocument`) apart from the raw
@@ -45,13 +45,13 @@ pub fn derive_audience(kind: ActionKind, in_palette: bool) -> CapabilityAudience
     }
 }
 
-/// 🧭️ This action's audience — its own declaration when it has one, otherwise
+/// 🔎️ This action's audience — its own declaration when it has one, otherwise
 /// [`derive_audience`] over `kind`/`in_palette`.
 pub fn resolve_audience(action: &ActionDefinition) -> CapabilityAudience {
     action.semantics.audience.unwrap_or_else(|| derive_audience(action.kind, action.in_palette))
 }
 
-/// 🧭️ This command's audience — see [`resolve_audience`].
+/// 👥️ This command's audience — see [`resolve_audience`].
 pub fn resolve_command_audience(command: &CommandDefinition) -> CapabilityAudience {
     command.semantics.audience.unwrap_or_else(|| derive_audience(command.kind, command.in_palette))
 }

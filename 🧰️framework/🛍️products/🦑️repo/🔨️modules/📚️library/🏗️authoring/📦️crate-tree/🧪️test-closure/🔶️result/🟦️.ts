@@ -2,8 +2,8 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { identifierSet, parseRustSourceTree, useLeafNames, type RustModuleNode } from "../../🌳️module-tree/🟦️.ts";
-import { absolutizeSuperPaths, declaredNames, widenHostItems } from "../🟢️shared/🟦️.ts";
-import type { TestMount, TestTransformResult } from "../🟢️shared/🟦️.ts";
+import { absolutizeSuperPaths, declaredNames, widenHostItems } from "../🟢️harness/🟦️.ts";
+import type { TestMount, TestTransformResult } from "../🟢️harness/🟦️.ts";
 
 /** 🔷 Builds result, overlay, readText, setText of transformTestClosure. */
 export function useResultState({ rootSource, rootFile }: { readonly rootSource: string; readonly rootFile: string }) {

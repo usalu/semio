@@ -126,7 +126,7 @@ impl PluginArtifactChannel {
         let runtime = Arc::clone(&self.runtime);
         let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("exchange", format!("no open instance {instance}")))?;
         self.pending_command_closes.prepare_suspend(u64::from(instance), seq).map_err(|fault| Self::not_wired("suspending command owner", format!("{}: {}", fault.code.0, fault.message)))?;
-        let outcome = semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_ref(&event), headless_command_budget()));
+        let outcome = with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_ref(&event), headless_command_budget(), identity)));
         let turn = match outcome {
             Ok(turn) => {
                 self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
@@ -254,7 +254,7 @@ impl PluginArtifactChannel {
         while matches!(response, PendingResponsePage::Empty) {
             let runtime = Arc::clone(&self.runtime);
             let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("response", format!("no open instance {instance}")))?;
-            let turn = match semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_ref(&semio_framework::kernel::Event::Wake), headless_command_budget())) {
+            let turn = match with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_ref(&semio_framework::kernel::Event::Wake), headless_command_budget(), identity))) {
                 Ok(turn) => turn,
                 Err(error) => {
                     self.discard_instance(instance);

@@ -1,6 +1,6 @@
 /** 🎒️ One simulated learner of the lecture hall: enrolment, rooms, polling, two quizzes at two challenges with revisions, submission and results, and the Wi-Fi drop. */
-import { CHALLENGES, challengeRules, learnerTag, rosterScope, thinkingAnswer, thinkingScope, type Answer, type Command, type IdentityClaim, type PresenceState, type RunView, type SheetTask, type ThinkingAnswer } from "../../../../../🧰️framework/🛍️products/📚️course/🟦️.ts";
-import { ProctorClient, RETRY_TIMING, newId, retryTransient, type CommandVerdict } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
+import { CHALLENGES, challengeRules, learnerTag, rosterScope, thinkingAnswer, thinkingScope, type Answer, type Command, type IdentityClaim, type PresenceState, type RunView, type SheetTask, type ThinkingAnswer } from "../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🟦️.ts";
+import { ProctorClient, RETRY_TIMING, newId, retryTransient, type CommandVerdict } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/🛂️proctor/🟦️.ts";
 import { CLOCK_MARGIN_MS, CURSOR, capacityProgress, fail, GIVE_UP_MS, HALL, LAG_PROBE_MS, measurements, type Measurements, REAL, record } from "../📊️settings-and-measurements/🟦️.ts";
 import { between, pause, Room, transport } from "../🚚️transport/🟦️.ts";
 
@@ -171,7 +171,7 @@ async function storm(hall: Hall): Promise<number> {
   return rooms.length;
 }
 
-/** 🏫️ What one thread of the hall is told: the learners of one lecture it plays. */
+/** 📜️ What one thread of the hall is told: the learners of one lecture it plays. */
 export interface HallOrders {
   readonly progressFile?: string;
   readonly role: "hall";
@@ -195,7 +195,7 @@ export interface HallSlice {
   readonly lag: number[];
 }
 
-/** 🏫️ One thread's part of a lecture: its learners attend, and when `dropped` resolves its sockets drop once. */
+/** 🎤️ One thread's part of a lecture: its learners attend, and when `dropped` resolves its sockets drop once. */
 export async function lecture(orders: HallOrders, dropped: Promise<void>): Promise<HallSlice> {
   const measured = measurements();
   const hall: Hall = { base: orders.base, tenant: orders.tenant, quizzes: orders.quizzes, scale: orders.scale, measured: () => measured, rooms: new Set() };

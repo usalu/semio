@@ -1,6 +1,12 @@
 {
  "version": 1,
  "owner": "repository:test-sandbox",
+ "messages": {
+  "artifactInManagedParent": {
+   "en": "The test artifact directory {path} lies inside the managed native parent {parent}: images mounted there are verified as the parent's own funded children and break every build while attached. Use a directory outside every managed native parent or leave SEMIO_TEST_ARTIFACT_DIR unset.",
+   "de": "Das Test-Artefaktverzeichnis {path} liegt im verwalteten nativen Elternteil {parent}: dort eingehaengte Abbilder werden als dessen eigene finanzierte Kinder geprueft und brechen jeden Build, solange sie eingehaengt sind. Ein Verzeichnis ausserhalb jedes verwalteten nativen Elternteils nutzen oder SEMIO_TEST_ARTIFACT_DIR nicht setzen."
+  }
+ },
  "environment": {
   "sandbox": "SEMIO_TEST_SANDBOX",
   "artifacts": "SEMIO_TEST_ARTIFACT_DIR",
@@ -20,6 +26,8 @@
    "cache"
   ],
   "maximumRootLength": 90,
+  "sessionRootCharacters": 6,
+  "idCharacters": 8,
   "heartbeatMilliseconds": 30000,
   "staleHeartbeatMilliseconds": 3600000,
   "graceMilliseconds": 60000,
@@ -366,7 +374,7 @@
     "(^|[^\"'`A-Za-z0-9_$])(withNativeImageStorageV1|openNativeImageStorageV1|publishNativeImagePublicationV1|openNativeDirectoryImageStorageV1|withIssuedNativeImageV1)\\s*[(<]|\\b(spawnSync|execFileSync|spawn|execFile|runCmd|captureOwnedCommandV1)\\(\\s*[\"']hdiutil[\"']"
    ],
    "none": [
-    "\\b(mkdtemp(Sync)?|tmpdir\\(\\)|createTestSandbox\\w*|withTestSandbox\\w*|SEMIO_TEST_SANDBOX|SEMIO_TEST_ARTIFACT_DIR|testSandbox\\w*|repoTestArtifactEnvironment|temporaryDirectory|withTemporary\\w*|createTemporary\\w*|scratchRoot\\w*|ScratchRoot\\w*)\\b"
+    "\\b(createTestSandbox\\w*|withTestSandbox\\w*|testSandbox\\w*|testScratchRootV1|SEMIO_TEST_SANDBOX|SEMIO_TEST_ARTIFACT_DIR|SEMIO_TEST_IMAGE_ROOT|repoTestArtifactEnvironment|repositoryTestArtifact\\w*|withRepositoryTestArtifacts\\w*)\\b"
    ],
    "message": {
     "en": "Creates or attaches disk images without any sandbox root, so a crash leaks a mount.",

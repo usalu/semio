@@ -51,3 +51,4 @@ semio-framework-ui-locale = { workspace = true }
 semio-s-artifact-draw-drawing-scene = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-draw-drawing-editor-commands-2 = { workspace = true, features = ["testkit"] }

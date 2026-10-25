@@ -6,14 +6,14 @@ import { fileURLToPath } from "node:url";
 import { asDict, isDict } from "../🔡️json-text/🟦️.ts";
 
 //#region 🔖️Registry
-/** 🧱️ One hand-written parser (`path` is its repository-relative leaf) and why its schema cannot own it (a key of `reasons`). */
+/** 🦑️ One hand-written parser (`path` is its repository-relative leaf) and why its schema cannot own it (a key of `reasons`). */
 export interface UnownedParser {
   readonly path: string;
   readonly name: string;
   readonly reason: string;
 }
 
-/** 🧱️ The registry file: the reasons with their explanation, and the listed parsers. */
+/** 📚️ The registry file: the reasons with their explanation, and the listed parsers. */
 export interface UnownedRegistry {
   readonly reasons: Readonly<Record<string, string>>;
   readonly parsers: readonly UnownedParser[];

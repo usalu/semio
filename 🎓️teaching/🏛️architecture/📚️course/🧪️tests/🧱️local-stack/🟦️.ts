@@ -37,15 +37,15 @@ import runtimeCases from "../../🧫️fixtures/🪁️runtime/🔣️.json" wit
 import outputCases from "../../🧫️fixtures/🎭️e2e-output/🔣️.json" with { type: "json" };
 import proctorPathCases from "../../🧫️fixtures/🎭️e2e-proctor/🔣️.json" with { type: "json" };
 import proctorPathSchema from "../../🧫️fixtures/🎭️e2e-proctor/🧬️schema/🔣️.json" with { type: "json" };
-import viteStorageSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧬️schema/🔣️.json" with { type: "json" };
-import { viteDevInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
-import { closeProxiedSocketWithBrowser, type ProxiedUpgradeProxy } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import viteStorageSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/⚡️caching/🌐️vite/💾️storage/🧬️schema/🔣️json/🟦️.ts" with { type: "json" };
+import { viteDevInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🍞️bun/🟦️.ts";
+import { closeProxiedSocketWithBrowser, type ProxiedUpgradeProxy } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
 import { bootOrder, endToEndPlan, endToEndPorts, endToEndProctorPath, endToEndWorkDirectory, portFree, rehearsalBuildEnvironment, rehearsalBuildPlan } from "../../🎭️e2e/🟦️.ts";
 import { SITE_MEDIA_TYPES, awaitReady, courseFiles, httpAnswers, launchOwned, relaunchDelay, serveStaticSite } from "../../🧱️stack/🟦️.ts";
 import { cargoPackageClosure } from "../../../../🛂️proctor/🏗️bootstrap/🕸️manifest-closure/🟦️.ts";
 import { DevelopmentDataRefused, PROCTOR_DATABASE_FILE, PROCTOR_DEV_DATA_DIRECTORY, PROCTOR_STORAGE_FORMAT, developmentDataSettled, proctorDevelopmentEnvironment, proctorSourceChanged, proctorSourceDirectories, settleDevelopmentData, storedProctorFormat } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import { proctorCargoArguments } from "../../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
-import { readRepositoryCargoLaunchV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
+import { readRepositoryCargoLaunchV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
 import { capacityWorkDirectory, hallViolations, type PhaseReport } from "../../../../🛂️proctor/🧪️tests/🏋️capacity/🟦️.ts";
 import { CapacityWire } from "../../../../🛂️proctor/🧪️tests/🏋️capacity/🎭️abusive-script/🟦️.ts";
 
@@ -264,7 +264,7 @@ describe("the supervision of the dev proctor", () => {
 /** 🧱️ A manifest of the synthetic workspace: `body` follows a `[package]` of `name`. */
 const manifest = (name: string, body = ""): string => `[package]\nname = "${name}"\nversion = "0.1.0"\n${body}`;
 
-/** 🧪️ A repository root holding a teaching workspace whose members `teaching-proctor` and `extra` depend on a graph of
+/** 🧫️ A repository root holding a teaching workspace whose members `teaching-proctor` and `extra` depend on a graph of
  * crates that exercises every rule of the Cargo reference the closure follows. */
 function syntheticRepository(): string {
   const lib = (name: string, body = "") => ({ [`lib/${name}/Cargo.toml`]: manifest(name, body) });

@@ -19,6 +19,6 @@ async fn config_replace_diff_names_only_the_changed_fields() {
     let mut snapshot = base.clone();
     snapshot.run_output_json = r#"{"counter":1}"#.into();
     let operation = ImperativeConfigMutation::ReplaceConfig(ReplaceConfig { config: snapshot.clone() });
-    assert_eq!(protocol::Mutation::diff(&operation, &base).diff(), &ImperativeConfigDiff { run_output_json: Some(snapshot.run_output_json.clone()), contributions_json: None });
+    assert_eq!(protocol::ColdMutation::diff(&operation, &base).diff(), &ImperativeConfigDiff { run_output_json: Some(snapshot.run_output_json.clone()), contributions_json: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&operation, &base).await;
 }

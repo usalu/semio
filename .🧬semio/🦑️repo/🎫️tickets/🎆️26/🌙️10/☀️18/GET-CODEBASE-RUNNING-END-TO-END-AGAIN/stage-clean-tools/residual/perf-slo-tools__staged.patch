@@ -1,0 +1,4507 @@
+# stage-clean orphan staged=perf-slo-tools/staged/command.ts map=None
+--- /dev/null
++++ b/staged/perf-slo-tools/staged/command.ts
+@@ -0,0 +1,101 @@
++import {mkdir,readFile,rm,writeFile} from "node:fs/promises";
++import {dirname,join,resolve} from "node:path";
++import schema from "../🧬️schema/🔣️.json" with {type:"json"};
++import slo from "../🎯️slo/🔣️.json" with {type:"json"};
++import {incrementalDisposableV1} from "../../🏃️runner/🟦️.ts";
++import {incrementalCommandPortsV1,incrementalDefaultRootV1,incrementalLanguageV1,runIncrementalCommandV1,type IncrementalCommandPortsV1} from "../../⌨️command/🟦️.ts";
++import {benchBaselineV1,benchCompareV1,benchSelectV1,benchSloIssuesV1,renderBenchComparisonV1,renderBenchListV1,renderBenchReportV1,type BenchReportV1,type BenchSloSetV1,type BenchToolV1} from "../🟦️.ts";
++import {benchCliPortsV1,benchRunV1,type BenchHostPortsV1} from "../🏃️runner/🟦️.ts";
++
++const policy=schema.definitions.Policy.const,tools:readonly BenchToolV1[]=["nx","bazel"],operations=["list","run","compare"] as const,script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",catalog="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json";
++
++/** 🍘️ The closed arguments of `repo bench`. */
++export type BenchArgumentsV1=Readonly<{operation:typeof operations[number];slo:readonly string[]|"all";runs:number|undefined;baseline:string|undefined;saveBaseline:string|undefined;current:string|undefined;markdown:string|undefined;maxLoad:number|undefined;tools:readonly BenchToolV1[];root:string|undefined;file:string|undefined;json:boolean;prepare:boolean;language:"en"|"de"|undefined}>;
++
++const both=(english:string,german:string)=>`${english}\n${german}`,valuedOptions=Object.freeze(["--slo","--runs","--baseline","--save-baseline","--current","--markdown","--max-load","--implementations","--root","--file","--lang"]),plainOptions=Object.freeze(["--json","--prepare"]);
++
++/** 🍙️ The option names `repo bench` accepts, so the operations catalogue can be checked against the parser. */
++export function benchOptionNamesV1():{valued:readonly string[];plain:readonly string[]}{return {valued:valuedOptions,plain:plainOptions};}
++
++/** 🍚️ Reads `bench list|run|compare` with its options; every unknown or repeated option is refused in both languages. */
++export function benchArgumentsV1(args:readonly string[]):BenchArgumentsV1{
++ const operation=args[0] as typeof operations[number];
++ if(!operations.includes(operation)||args.length>1&&args[1]!.startsWith("-")===false)throw Error(both("Expected repo bench list|run|compare [options]","Erwartet: repo bench list|run|compare [Optionen]"));
++ const seen=new Set<string>(),values:Record<string,string>={},flags=new Set<string>(),valued=new Set(valuedOptions),plain=new Set(plainOptions);
++ for(let index=1;index<args.length;index++){
++  const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
++  if(seen.has(name))throw Error(both(`Repeated option: ${name}`,`Wiederholte Option: ${name}`));
++  seen.add(name);
++  if(valued.has(name)){const value=cut<0?args[++index]:argument.slice(cut+1);if(!value||value.startsWith("--"))throw Error(both(`Option ${name} needs a value`,`Option ${name} braucht einen Wert`));values[name]=value;}
++  else if(plain.has(name)&&cut<0)flags.add(name);
++  else throw Error(both(`Unknown bench option: ${argument}`,`Unbekannte Option für bench: ${argument}`));
++ }
++ const list=(name:string)=>values[name]?.split(",").filter(Boolean),chosen=list("--implementations")??[...tools],language=values["--lang"],picked=list("--slo");
++ for(const tool of chosen)if(!tools.includes(tool as BenchToolV1))throw Error(both(`Unknown implementation: ${tool} (nx|bazel)`,`Unbekannte Implementierung: ${tool} (nx|bazel)`));
++ if(language!==undefined&&language!=="en"&&language!=="de")throw Error(both(`Unknown language: ${language} (en|de)`,`Unbekannte Sprache: ${language} (en|de)`));
++ const runs=values["--runs"]===undefined?undefined:Number(values["--runs"]);
++ if(runs!==undefined&&(!/^[1-9][0-9]*$/u.test(values["--runs"]!)||runs>policy.maximumRuns))throw Error(both(`Runs must be a whole number from 1 to ${policy.maximumRuns}`,`Läufe müssen eine ganze Zahl von 1 bis ${policy.maximumRuns} sein`));
++ const maxLoad=values["--max-load"]===undefined?undefined:Number(values["--max-load"]);
++ if(maxLoad!==undefined&&(!/^[0-9]+(\.[0-9]+)?$/u.test(values["--max-load"]!)||!(maxLoad>0)))throw Error(both("The load limit must be a positive number (load per core)","Die Lastgrenze muss eine positive Zahl sein (Last je Kern)"));
++ if(operation==="compare"&&(!values["--current"]||!values["--baseline"]))throw Error(both("bench compare needs --current=<report> and --baseline=<report>","bench compare braucht --current=<Bericht> und --baseline=<Bericht>"));
++ if(operation!=="compare"&&values["--current"]!==undefined)throw Error(both("--current belongs to bench compare","--current gehört zu bench compare"));
++ if(operation!=="run"&&(flags.has("--prepare")||values["--save-baseline"]!==undefined||runs!==undefined||maxLoad!==undefined))throw Error(both("--prepare, --runs, --max-load and --save-baseline belong to bench run","--prepare, --runs, --max-load und --save-baseline gehören zu bench run"));
++ return Object.freeze({operation,slo:picked===undefined||picked.includes("all")?"all":picked,runs,baseline:values["--baseline"],saveBaseline:values["--save-baseline"],current:values["--current"],markdown:values["--markdown"],maxLoad,tools:[...new Set(chosen)] as BenchToolV1[],root:values["--root"],file:values["--file"],json:flags.has("--json"),prepare:flags.has("--prepare"),language:language as "en"|"de"|undefined});
++}
++
++/** 📮️ What `repo bench` needs besides the incremental command ports: reading and writing plain files such as the baseline and the markdown report. */
++export type BenchCommandPortsV1=IncrementalCommandPortsV1&Readonly<{readText(path:string):Promise<string>;writeText(path:string,text:string):Promise<void>;overrides?:Partial<BenchHostPortsV1>}>;
++
++const readReport=async(ports:BenchCommandPortsV1,path:string):Promise<BenchReportV1>=>{
++ let value:unknown;
++ try{value=JSON.parse(await ports.readText(path));}catch(error){throw Error(both(`Cannot read the report ${path}: ${(error as Error).message}`,`Der Bericht ${path} ist nicht lesbar: ${(error as Error).message}`));}
++ return benchBaselineV1(value);
++};
++
++/** 🍛️ Runs `repo bench`: lists the objectives, measures them in the prepared checkout copy with the chosen implementations and judges them, or compares two stored reports. Reports go to the screen as text or JSON and optionally to a JSON file, a markdown file and a baseline file; the exit code fails only for blocking objectives that failed or regressed. */
++export async function runBenchCommandV1(live:string,args:readonly string[],ports:BenchCommandPortsV1):Promise<void>{
++ const parsed=benchArgumentsV1(args.slice(args[0]==="bench"?1:0)),set=slo as unknown as BenchSloSetV1,issues=benchSloIssuesV1(set);
++ if(issues.length)throw Error(`Closed SLO table required: ${issues.join("; ")}`);
++ const lang=incrementalLanguageV1(parsed.language,ports.environment),root=parsed.root??incrementalDefaultRootV1(ports.platform,ports.tmpdir());
++ if(parsed.operation==="list"){ports.write(parsed.json?JSON.stringify(set,null,2):renderBenchListV1(set,lang,"text"));return;}
++ const emit=async(report:BenchReportV1|null,comparison:ReturnType<typeof benchCompareV1>|null):Promise<void>=>{
++  if(report&&parsed.file)await ports.report(parsed.file,report);
++  if(report&&parsed.saveBaseline)await ports.writeText(parsed.saveBaseline,JSON.stringify(report,null,2)+"\n");
++  if(parsed.markdown)await ports.writeText(parsed.markdown,(report?renderBenchReportV1(report,set,lang,"markdown"):renderBenchComparisonV1(comparison!,set,lang,"markdown"))+"\n");
++  ports.write(parsed.json?JSON.stringify(report??comparison,null,2):report?renderBenchReportV1(report,set,lang,"text"):renderBenchComparisonV1(comparison!,set,lang,"text"));
++ };
++ if(parsed.operation==="compare"){
++  await ports.progress("compare");
++  const comparison=benchCompareV1(set,await readReport(ports,parsed.current!),await readReport(ports,parsed.baseline!));
++  await emit(null,comparison);
++  if(comparison.tally.blockingRegressed)throw Error(both(`Performance regressed in ${comparison.tally.blockingRegressed} blocking objectives`,`Die Leistung hat sich bei ${comparison.tally.blockingRegressed} verbindlichen Zielen verschlechtert`));
++  return;
++ }
++ const pairs=benchSelectV1(set,parsed.slo,parsed.tools),baseline=parsed.baseline?await readReport(ports,parsed.baseline):null;
++ await incrementalDisposableV1(live,root);
++ if(parsed.prepare){
++  await ports.progress("prepare");
++  await runIncrementalCommandV1(live,["incremental","prepare","--fresh",`--root=${root}`],{...ports,write:()=>{},progress:stage=>ports.progress(`prepare:${stage}`)});
++ }
++ else if(!await ports.exists(join(root,script)))throw Error(both(`Prepare the disposable root first: repo incremental prepare --root=${root} (or pass --prepare)`,`Bereite zuerst das Wegwerf-Verzeichnis vor: repo incremental prepare --root=${root} (oder --prepare übergeben)`));
++ const scratch=await ports.scratch();
++ let files:Promise<readonly string[]>|undefined;
++ try{
++  const host:BenchHostPortsV1={live,root,script,executable:process.execPath,scratch,signal:ports.signal,environment:ports.environment,run:ports.run,nxRecord:ports.nxRecord,adapter:ports.adapter,inventory:()=>files??=ports.files(live,ports.signal),now:ports.now,check:ports.check,progress:ports.progress,fresh:parsed.prepare,catalog,commandPorts:ports,...ports.overrides};
++  const report=await benchRunV1(set,pairs,{override:parsed.runs??null,tools:parsed.tools,maxLoad:parsed.maxLoad??null,baseline},benchCliPortsV1(host,ports.signal));
++  await emit(report,report.comparison);
++  if(report.tally.blockingFailed)throw Error(both(`${report.tally.blockingFailed} blocking performance objectives failed`,`${report.tally.blockingFailed} verbindliche Leistungsziele verletzt`));
++  if(report.comparison?.tally.blockingRegressed)throw Error(both(`Performance regressed in ${report.comparison.tally.blockingRegressed} blocking objectives`,`Die Leistung hat sich bei ${report.comparison.tally.blockingRegressed} verbindlichen Zielen verschlechtert`));
++ }finally{await rm(scratch,{recursive:true,force:true});}
++}
++
++/** 🔩️ Binds the command to the running build CLI: the incremental harness's ports with progress published under `bench:`, a high resolution clock and plain file access for baselines and reports. */
++export async function benchCommandPortsV1(root:string,invocation:import("../../../../../../../..//🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<BenchCommandPortsV1>{
++ const base=await incrementalCommandPortsV1(root,invocation),routing=await import("../../../../../../../..//🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
++ return Object.freeze({...base,now:()=>performance.now(),progress:(stage:string)=>routing.advanceScriptInvocation(invocation,"bench:"+stage,"running"),readText:(path:string)=>readFile(resolve(path),"utf8"),writeText:async(path:string,text:string)=>{const target=resolve(path);if(target.length>policy.maximumPathLength)throw Error(`Path exceeds ${policy.maximumPathLength} characters: ${target}`);await mkdir(dirname(target),{recursive:true});await writeFile(target,text);}});
++}
++
++/** 🍜️ The entry the build CLI calls for `repo bench`. */
++export async function runBenchV1(root:string,args:readonly string[],invocation:import("../../../../../../../..//🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<void>{
++ await runBenchCommandV1(root,args,await benchCommandPortsV1(root,invocation));
++}
+# stage-clean orphan staged=perf-slo-tools/staged/schema.json map=None
+--- /dev/null
++++ b/staged/perf-slo-tools/staged/schema.json
+@@ -0,0 +1,2146 @@
++{
++  "$schema": "http://json-schema.org/draft-07/schema#",
++  "title": "Performance SLO Table and Bench",
++  "description": "The service level objectives of the build system (hot-cache latency, edit to rebuild, cache hit rate, graph, memory, concurrency), the probes that measure them on a disposable checkout copy behind the tool-neutral interface, and the report and regression comparison of `repo bench`; every build implementation is held to the same table.",
++  "type": "object",
++  "additionalProperties": false,
++  "required": [
++    "version"
++  ],
++  "properties": {
++    "version": {
++      "const": 1
++    }
++  },
++  "definitions": {
++    "Policy": {
++      "const": {
++        "version": 1,
++        "id": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
++        "taskId": "^\\S+:\\S+$",
++        "nonce": "^[0-9a-z]{6,32}$",
++        "kinds": [
++          "cli-help",
++          "noop",
++          "edit",
++          "graph",
++          "cache",
++          "concurrency"
++        ],
++        "order": [
++          "cli-help",
++          "noop",
++          "edit",
++          "graph",
++          "cache",
++          "concurrency"
++        ],
++        "metrics": {
++          "cli-help": {
++            "plain": [
++              "wallMs"
++            ],
++            "memory": []
++          },
++          "noop": {
++            "plain": [
++              "wallMs"
++            ],
++            "memory": [
++              "peakRssBytes"
++            ]
++          },
++          "edit": {
++            "plain": [
++              "startMs",
++              "greenMs"
++            ],
++            "memory": [
++              "peakRssBytes"
++            ]
++          },
++          "graph": {
++            "plain": [
++              "wallMs"
++            ],
++            "memory": []
++          },
++          "cache": {
++            "plain": [
++              "hitRatio"
++            ],
++            "memory": []
++          },
++          "concurrency": {
++            "plain": [
++              "makespanMs",
++              "maxUnrelatedWaitMs",
++              "speedup"
++            ],
++            "memory": []
++          }
++        },
++        "units": {
++          "wallMs": "ms",
++          "startMs": "ms",
++          "greenMs": "ms",
++          "peakRssBytes": "bytes",
++          "hitRatio": "ratio",
++          "makespanMs": "ms",
++          "maxUnrelatedWaitMs": "ms",
++          "speedup": "ratio"
++        },
++        "statistics": [
++          "min",
++          "p50",
++          "p95",
++          "p99",
++          "max",
++          "mean"
++        ],
++        "percentileMethod": "linear-inclusive",
++        "minimumSamples": {
++          "min": 1,
++          "p50": 3,
++          "p95": 20,
++          "p99": 100,
++          "max": 1,
++          "mean": 3
++        },
++        "loadPerCore": {
++          "quietBelow": 0.5,
++          "saturatedFrom": 1.5
++        },
++        "maximumRuns": 1000,
++        "maximumWarmup": 20,
++        "maximumPathLength": 255,
++        "maximumLines": 200000,
++        "maximumLogBytes": 268435456,
++        "memoryIntervalMilliseconds": 100,
++        "markers": {
++          "nx": [
++            "^> nx run "
++          ],
++          "bazel": [
++            "^(?:INFO: )?(?:Analyzing|Analyzed)\\b",
++            "^\\[\\d+ / \\d+\\]"
++          ],
++          "neutral": []
++        },
++        "scriptRow": "^\\[script\\] (\\{.*\\})$",
++        "defaultTolerance": {
++          "relative": 0.15,
++          "absolute": 25
++        },
++        "oneshotFlag": "--service=off",
++        "residentFlag": "--service=require",
++        "serviceOperation": "service",
++        "sources": [
++          "user-goal",
++          "cli-latency",
++          "graph-speed",
++          "hot-cache",
++          "conc-harness",
++          "provisional"
++        ],
++        "reasons": [
++          "no-samples",
++          "too-few-samples",
++          "probe-failed",
++          "unavailable",
++          "not-cold",
++          "host-saturated",
++          "service-unavailable",
++          "unsupported",
++          "host-class",
++          "schema",
++          "start-unobserved"
++        ],
++        "statuses": [
++          "pass",
++          "warn",
++          "fail",
++          "unproven",
++          "recorded"
++        ],
++        "compareStatuses": [
++          "improved",
++          "same",
++          "regressed",
++          "inconclusive",
++          "incomparable",
++          "new",
++          "missing"
++        ]
++      }
++    },
++    "Id": {
++      "type": "string",
++      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
++    },
++    "TaskId": {
++      "type": "string",
++      "pattern": "^\\S+:\\S+$"
++    },
++    "Path": {
++      "type": "string",
++      "minLength": 1,
++      "maxLength": 255
++    },
++    "LocalizedText": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "en",
++        "de"
++      ],
++      "properties": {
++        "en": {
++          "type": "string",
++          "minLength": 1
++        },
++        "de": {
++          "type": "string",
++          "minLength": 1
++        }
++      }
++    },
++    "Tool": {
++      "enum": [
++        "nx",
++        "bazel"
++      ]
++    },
++    "SloTool": {
++      "enum": [
++        "nx",
++        "bazel",
++        "neutral"
++      ]
++    },
++    "Kind": {
++      "enum": [
++        "cli-help",
++        "noop",
++        "edit",
++        "graph",
++        "cache",
++        "concurrency"
++      ]
++    },
++    "Lane": {
++      "enum": [
++        "oneshot",
++        "resident"
++      ]
++    },
++    "Metric": {
++      "enum": [
++        "wallMs",
++        "startMs",
++        "greenMs",
++        "peakRssBytes",
++        "hitRatio",
++        "makespanMs",
++        "maxUnrelatedWaitMs",
++        "speedup"
++      ]
++    },
++    "Statistic": {
++      "enum": [
++        "min",
++        "p50",
++        "p95",
++        "p99",
++        "max",
++        "mean"
++      ]
++    },
++    "Direction": {
++      "enum": [
++        "lower",
++        "higher"
++      ]
++    },
++    "Unit": {
++      "enum": [
++        "ms",
++        "bytes",
++        "ratio"
++      ]
++    },
++    "Enforcement": {
++      "enum": [
++        "advisory",
++        "blocking"
++      ]
++    },
++    "Source": {
++      "enum": [
++        "user-goal",
++        "cli-latency",
++        "graph-speed",
++        "hot-cache",
++        "conc-harness",
++        "provisional"
++      ]
++    },
++    "Language": {
++      "enum": [
++        "ts",
++        "rs",
++        "go",
++        "py"
++      ]
++    },
++    "EditOp": {
++      "enum": [
++        "comment",
++        "private-body",
++        "public-api"
++      ]
++    },
++    "Reason": {
++      "enum": [
++        "no-samples",
++        "too-few-samples",
++        "probe-failed",
++        "unavailable",
++        "not-cold",
++        "host-saturated",
++        "service-unavailable",
++        "unsupported",
++        "host-class",
++        "schema",
++        "start-unobserved"
++      ]
++    },
++    "Status": {
++      "enum": [
++        "pass",
++        "warn",
++        "fail",
++        "unproven",
++        "recorded"
++      ]
++    },
++    "CompareStatus": {
++      "enum": [
++        "improved",
++        "same",
++        "regressed",
++        "inconclusive",
++        "incomparable",
++        "new",
++        "missing"
++      ]
++    },
++    "LoadClass": {
++      "enum": [
++        "quiet",
++        "busy",
++        "saturated",
++        "unknown"
++      ]
++    },
++    "StartKind": {
++      "enum": [
++        "marker",
++        "first-output",
++        "exit"
++      ]
++    },
++    "EditUnit": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "id",
++        "language",
++        "target",
++        "file",
++        "op",
++        "title"
++      ],
++      "properties": {
++        "id": {
++          "$ref": "#/definitions/Id"
++        },
++        "language": {
++          "$ref": "#/definitions/Language"
++        },
++        "target": {
++          "$ref": "#/definitions/TaskId"
++        },
++        "file": {
++          "$ref": "#/definitions/Path"
++        },
++        "op": {
++          "$ref": "#/definitions/EditOp"
++        },
++        "title": {
++          "$ref": "#/definitions/LocalizedText"
++        }
++      }
++    },
++    "Probe": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "id",
++        "kind",
++        "title",
++        "runs",
++        "warmup"
++      ],
++      "properties": {
++        "id": {
++          "$ref": "#/definitions/Id"
++        },
++        "kind": {
++          "$ref": "#/definitions/Kind"
++        },
++        "title": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "lane": {
++          "$ref": "#/definitions/Lane"
++        },
++        "target": {
++          "$ref": "#/definitions/TaskId"
++        },
++        "unit": {
++          "$ref": "#/definitions/Id"
++        },
++        "workload": {
++          "$ref": "#/definitions/Id"
++        },
++        "sessions": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 8
++        },
++        "runs": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 1000
++        },
++        "warmup": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 20
++        },
++        "cold": {
++          "type": "boolean"
++        },
++        "memory": {
++          "type": "boolean"
++        }
++      }
++    },
++    "Tolerance": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "relative",
++        "absolute"
++      ],
++      "properties": {
++        "relative": {
++          "type": "number",
++          "minimum": 0
++        },
++        "absolute": {
++          "type": "number",
++          "minimum": 0
++        }
++      }
++    },
++    "Slo": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "id",
++        "title",
++        "probe",
++        "metric",
++        "statistic",
++        "direction",
++        "goal",
++        "gate",
++        "tools",
++        "enforcement",
++        "tolerance",
++        "source"
++      ],
++      "properties": {
++        "id": {
++          "$ref": "#/definitions/Id"
++        },
++        "title": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "probe": {
++          "$ref": "#/definitions/Id"
++        },
++        "metric": {
++          "$ref": "#/definitions/Metric"
++        },
++        "statistic": {
++          "$ref": "#/definitions/Statistic"
++        },
++        "direction": {
++          "$ref": "#/definitions/Direction"
++        },
++        "goal": {
++          "oneOf": [
++            {
++              "type": "number"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "gate": {
++          "oneOf": [
++            {
++              "type": "number"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "tools": {
++          "type": "array",
++          "minItems": 1,
++          "uniqueItems": true,
++          "items": {
++            "$ref": "#/definitions/SloTool"
++          }
++        },
++        "enforcement": {
++          "$ref": "#/definitions/Enforcement"
++        },
++        "tolerance": {
++          "$ref": "#/definitions/Tolerance"
++        },
++        "source": {
++          "$ref": "#/definitions/Source"
++        }
++      }
++    },
++    "Labels": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "title",
++        "name",
++        "list",
++        "probes",
++        "slos",
++        "host",
++        "platform",
++        "cpus",
++        "memory",
++        "load",
++        "hostClass",
++        "probe",
++        "slo",
++        "tool",
++        "lane",
++        "oneshot",
++        "resident",
++        "neutral",
++        "metric",
++        "statistic",
++        "value",
++        "goal",
++        "gate",
++        "samples",
++        "status",
++        "reason",
++        "tolerance",
++        "enforcement",
++        "advisory",
++        "blocking",
++        "pass",
++        "warn",
++        "fail",
++        "unproven",
++        "recorded",
++        "improved",
++        "same",
++        "regressed",
++        "inconclusive",
++        "incomparable",
++        "new",
++        "missing",
++        "comparison",
++        "baseline",
++        "current",
++        "delta",
++        "relative",
++        "summary",
++        "series",
++        "quiet",
++        "busy",
++        "saturated",
++        "unknown",
++        "runs",
++        "warmup",
++        "kind",
++        "unit",
++        "source",
++        "progress",
++        "started",
++        "finished",
++        "startKinds",
++        "marker",
++        "first-output",
++        "exit",
++        "inflated",
++        "blockingFailed",
++        "blockingRegressed",
++        "notes",
++        "note-load",
++        "note-percentile",
++        "note-start",
++        "note-recorded",
++        "note-marks",
++        "cold",
++        "target",
++        "workload",
++        "sessions",
++        "file",
++        "language",
++        "edit",
++        "cache",
++        "graph",
++        "noop",
++        "cli-help",
++        "concurrency",
++        "nx",
++        "bazel",
++        "ms",
++        "bytes",
++        "ratio",
++        "wallMs",
++        "startMs",
++        "greenMs",
++        "peakRssBytes",
++        "hitRatio",
++        "makespanMs",
++        "maxUnrelatedWaitMs",
++        "speedup",
++        "no-samples",
++        "too-few-samples",
++        "probe-failed",
++        "unavailable",
++        "not-cold",
++        "host-saturated",
++        "service-unavailable",
++        "unsupported",
++        "host-class",
++        "schema",
++        "start-unobserved"
++      ],
++      "properties": {
++        "title": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "name": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "list": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "probes": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "slos": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "host": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "platform": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "cpus": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "memory": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "load": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "hostClass": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "probe": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "slo": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "tool": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "lane": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "oneshot": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "resident": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "neutral": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "metric": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "statistic": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "value": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "goal": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "gate": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "samples": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "status": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "reason": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "tolerance": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "enforcement": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "advisory": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "blocking": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "pass": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "warn": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "fail": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "unproven": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "recorded": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "improved": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "same": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "regressed": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "inconclusive": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "incomparable": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "new": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "missing": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "comparison": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "baseline": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "current": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "delta": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "relative": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "summary": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "series": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "quiet": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "busy": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "saturated": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "unknown": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "runs": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "warmup": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "kind": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "unit": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "source": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "progress": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "started": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "finished": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "startKinds": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "marker": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "first-output": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "exit": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "inflated": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "blockingFailed": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "blockingRegressed": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "notes": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "note-load": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "note-percentile": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "note-start": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "note-recorded": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "note-marks": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "cold": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "target": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "workload": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "sessions": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "file": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "language": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "edit": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "cache": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "graph": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "noop": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "cli-help": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "concurrency": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "nx": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "bazel": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "ms": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "bytes": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "ratio": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "wallMs": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "startMs": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "greenMs": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "peakRssBytes": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "hitRatio": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "makespanMs": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "maxUnrelatedWaitMs": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "speedup": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "no-samples": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "too-few-samples": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "probe-failed": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "unavailable": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "not-cold": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "host-saturated": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "service-unavailable": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "unsupported": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "host-class": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "schema": {
++          "$ref": "#/definitions/LocalizedText"
++        },
++        "start-unobserved": {
++          "$ref": "#/definitions/LocalizedText"
++        }
++      }
++    },
++    "SloSet": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "version",
++        "labels",
++        "units",
++        "probes",
++        "slos"
++      ],
++      "properties": {
++        "version": {
++          "const": 1
++        },
++        "labels": {
++          "$ref": "#/definitions/Labels"
++        },
++        "units": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "$ref": "#/definitions/EditUnit"
++          }
++        },
++        "probes": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "$ref": "#/definitions/Probe"
++          }
++        },
++        "slos": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "$ref": "#/definitions/Slo"
++          }
++        }
++      }
++    },
++    "Values": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [],
++      "properties": {
++        "wallMs": {
++          "type": "number",
++          "minimum": 0
++        },
++        "startMs": {
++          "type": "number",
++          "minimum": 0
++        },
++        "greenMs": {
++          "type": "number",
++          "minimum": 0
++        },
++        "peakRssBytes": {
++          "type": "number",
++          "minimum": 0
++        },
++        "hitRatio": {
++          "type": "number",
++          "minimum": 0
++        },
++        "makespanMs": {
++          "type": "number",
++          "minimum": 0
++        },
++        "maxUnrelatedWaitMs": {
++          "type": "number",
++          "minimum": 0
++        },
++        "speedup": {
++          "type": "number",
++          "minimum": 0
++        }
++      }
++    },
++    "Sample": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "index",
++        "ok",
++        "exit",
++        "values",
++        "startKind",
++        "loadPerCore"
++      ],
++      "properties": {
++        "index": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "ok": {
++          "type": "boolean"
++        },
++        "exit": {
++          "type": [
++            "integer",
++            "null"
++          ]
++        },
++        "values": {
++          "$ref": "#/definitions/Values"
++        },
++        "startKind": {
++          "oneOf": [
++            {
++              "$ref": "#/definitions/StartKind"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "loadPerCore": {
++          "oneOf": [
++            {
++              "type": "number",
++              "minimum": 0
++            },
++            {
++              "type": "null"
++            }
++          ]
++        }
++      }
++    },
++    "Stats": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "n",
++        "min",
++        "p50",
++        "p95",
++        "p99",
++        "max",
++        "mean"
++      ],
++      "properties": {
++        "n": {
++          "type": "integer",
++          "minimum": 1
++        },
++        "min": {
++          "type": "number",
++          "minimum": 0
++        },
++        "p50": {
++          "type": "number",
++          "minimum": 0
++        },
++        "p95": {
++          "type": "number",
++          "minimum": 0
++        },
++        "p99": {
++          "type": "number",
++          "minimum": 0
++        },
++        "max": {
++          "type": "number",
++          "minimum": 0
++        },
++        "mean": {
++          "type": "number",
++          "minimum": 0
++        }
++      }
++    },
++    "StatsMap": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [],
++      "properties": {
++        "wallMs": {
++          "$ref": "#/definitions/Stats"
++        },
++        "startMs": {
++          "$ref": "#/definitions/Stats"
++        },
++        "greenMs": {
++          "$ref": "#/definitions/Stats"
++        },
++        "peakRssBytes": {
++          "$ref": "#/definitions/Stats"
++        },
++        "hitRatio": {
++          "$ref": "#/definitions/Stats"
++        },
++        "makespanMs": {
++          "$ref": "#/definitions/Stats"
++        },
++        "maxUnrelatedWaitMs": {
++          "$ref": "#/definitions/Stats"
++        },
++        "speedup": {
++          "$ref": "#/definitions/Stats"
++        }
++      }
++    },
++    "StartKinds": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "marker",
++        "first-output",
++        "exit"
++      ],
++      "properties": {
++        "marker": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "first-output": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "exit": {
++          "type": "integer",
++          "minimum": 0
++        }
++      }
++    },
++    "Series": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "probe",
++        "tool",
++        "lane",
++        "status",
++        "reason",
++        "samples",
++        "failed",
++        "stats",
++        "loadClass",
++        "startKinds"
++      ],
++      "properties": {
++        "probe": {
++          "$ref": "#/definitions/Id"
++        },
++        "tool": {
++          "$ref": "#/definitions/SloTool"
++        },
++        "lane": {
++          "oneOf": [
++            {
++              "$ref": "#/definitions/Lane"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "status": {
++          "enum": [
++            "measured",
++            "unavailable"
++          ]
++        },
++        "reason": {
++          "oneOf": [
++            {
++              "$ref": "#/definitions/Reason"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "samples": {
++          "type": "array",
++          "items": {
++            "$ref": "#/definitions/Sample"
++          }
++        },
++        "failed": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "stats": {
++          "$ref": "#/definitions/StatsMap"
++        },
++        "loadClass": {
++          "$ref": "#/definitions/LoadClass"
++        },
++        "startKinds": {
++          "$ref": "#/definitions/StartKinds"
++        }
++      }
++    },
++    "Host": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "platform",
++        "arch",
++        "cpus",
++        "memoryBytes",
++        "load1",
++        "loadPerCore",
++        "loadClass",
++        "hostClass"
++      ],
++      "properties": {
++        "platform": {
++          "type": "string",
++          "minLength": 1
++        },
++        "arch": {
++          "type": "string",
++          "minLength": 1
++        },
++        "cpus": {
++          "type": "integer",
++          "minimum": 1
++        },
++        "memoryBytes": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "load1": {
++          "oneOf": [
++            {
++              "type": "number",
++              "minimum": 0
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "loadPerCore": {
++          "oneOf": [
++            {
++              "type": "number",
++              "minimum": 0
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "loadClass": {
++          "$ref": "#/definitions/LoadClass"
++        },
++        "hostClass": {
++          "type": "string",
++          "minLength": 1
++        }
++      }
++    },
++    "Row": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "slo",
++        "tool",
++        "probe",
++        "metric",
++        "statistic",
++        "direction",
++        "unit",
++        "value",
++        "goal",
++        "gate",
++        "n",
++        "status",
++        "reason",
++        "inflated",
++        "enforcement",
++        "loadClass"
++      ],
++      "properties": {
++        "slo": {
++          "$ref": "#/definitions/Id"
++        },
++        "tool": {
++          "$ref": "#/definitions/SloTool"
++        },
++        "probe": {
++          "$ref": "#/definitions/Id"
++        },
++        "metric": {
++          "$ref": "#/definitions/Metric"
++        },
++        "statistic": {
++          "$ref": "#/definitions/Statistic"
++        },
++        "direction": {
++          "$ref": "#/definitions/Direction"
++        },
++        "unit": {
++          "$ref": "#/definitions/Unit"
++        },
++        "value": {
++          "oneOf": [
++            {
++              "type": "number"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "goal": {
++          "oneOf": [
++            {
++              "type": "number"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "gate": {
++          "oneOf": [
++            {
++              "type": "number"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "n": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "status": {
++          "$ref": "#/definitions/Status"
++        },
++        "reason": {
++          "oneOf": [
++            {
++              "$ref": "#/definitions/Reason"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "inflated": {
++          "type": "boolean"
++        },
++        "enforcement": {
++          "$ref": "#/definitions/Enforcement"
++        },
++        "loadClass": {
++          "$ref": "#/definitions/LoadClass"
++        }
++      }
++    },
++    "Tally": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "pass",
++        "warn",
++        "fail",
++        "unproven",
++        "recorded",
++        "blockingFailed"
++      ],
++      "properties": {
++        "pass": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "warn": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "fail": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "unproven": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "recorded": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "blockingFailed": {
++          "type": "integer",
++          "minimum": 0
++        }
++      }
++    },
++    "CompareRow": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "slo",
++        "tool",
++        "metric",
++        "statistic",
++        "direction",
++        "unit",
++        "base",
++        "current",
++        "delta",
++        "relative",
++        "toleranceRelative",
++        "toleranceAbsolute",
++        "status",
++        "enforcement",
++        "reason"
++      ],
++      "properties": {
++        "slo": {
++          "$ref": "#/definitions/Id"
++        },
++        "tool": {
++          "$ref": "#/definitions/SloTool"
++        },
++        "metric": {
++          "$ref": "#/definitions/Metric"
++        },
++        "statistic": {
++          "$ref": "#/definitions/Statistic"
++        },
++        "direction": {
++          "$ref": "#/definitions/Direction"
++        },
++        "unit": {
++          "$ref": "#/definitions/Unit"
++        },
++        "base": {
++          "oneOf": [
++            {
++              "type": "number"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "current": {
++          "oneOf": [
++            {
++              "type": "number"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "delta": {
++          "oneOf": [
++            {
++              "type": "number"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "relative": {
++          "oneOf": [
++            {
++              "type": "number"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "toleranceRelative": {
++          "type": "number",
++          "minimum": 0
++        },
++        "toleranceAbsolute": {
++          "type": "number",
++          "minimum": 0
++        },
++        "status": {
++          "$ref": "#/definitions/CompareStatus"
++        },
++        "enforcement": {
++          "$ref": "#/definitions/Enforcement"
++        },
++        "reason": {
++          "oneOf": [
++            {
++              "$ref": "#/definitions/Reason"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        }
++      }
++    },
++    "CompareTally": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "improved",
++        "same",
++        "regressed",
++        "inconclusive",
++        "incomparable",
++        "new",
++        "missing",
++        "blockingRegressed"
++      ],
++      "properties": {
++        "improved": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "same": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "regressed": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "inconclusive": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "incomparable": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "new": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "missing": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "blockingRegressed": {
++          "type": "integer",
++          "minimum": 0
++        }
++      }
++    },
++    "Comparison": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "version",
++        "currentHostClass",
++        "baselineHostClass",
++        "rows",
++        "tally"
++      ],
++      "properties": {
++        "version": {
++          "const": 1
++        },
++        "currentHostClass": {
++          "type": "string",
++          "minLength": 1
++        },
++        "baselineHostClass": {
++          "type": "string",
++          "minLength": 1
++        },
++        "rows": {
++          "type": "array",
++          "items": {
++            "$ref": "#/definitions/CompareRow"
++          }
++        },
++        "tally": {
++          "$ref": "#/definitions/CompareTally"
++        }
++      }
++    },
++    "Report": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "version",
++        "kind",
++        "startedAt",
++        "finishedAt",
++        "host",
++        "hostAfter",
++        "tools",
++        "runsOverride",
++        "series",
++        "rows",
++        "tally",
++        "comparison"
++      ],
++      "properties": {
++        "version": {
++          "const": 1
++        },
++        "kind": {
++          "const": "bench-report"
++        },
++        "startedAt": {
++          "type": "string",
++          "minLength": 1
++        },
++        "finishedAt": {
++          "type": "string",
++          "minLength": 1
++        },
++        "host": {
++          "$ref": "#/definitions/Host"
++        },
++        "hostAfter": {
++          "$ref": "#/definitions/Host"
++        },
++        "tools": {
++          "type": "array",
++          "items": {
++            "$ref": "#/definitions/Tool"
++          }
++        },
++        "runsOverride": {
++          "oneOf": [
++            {
++              "type": "integer",
++              "minimum": 1,
++              "maximum": 1000
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "series": {
++          "type": "array",
++          "items": {
++            "$ref": "#/definitions/Series"
++          }
++        },
++        "rows": {
++          "type": "array",
++          "items": {
++            "$ref": "#/definitions/Row"
++          }
++        },
++        "tally": {
++          "$ref": "#/definitions/Tally"
++        },
++        "comparison": {
++          "oneOf": [
++            {
++              "$ref": "#/definitions/Comparison"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        }
++      }
++    },
++    "Fixture": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "version",
++        "percentiles",
++        "loads",
++        "judgements",
++        "comparisons",
++        "tallies",
++        "series",
++        "selection",
++        "mutations",
++        "markers",
++        "memory"
++      ],
++      "properties": {
++        "version": {
++          "const": 1
++        },
++        "percentiles": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "values",
++              "expected"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "values": {
++                "type": "array",
++                "items": {
++                  "type": "number"
++                }
++              },
++              "expected": {
++                "type": "object",
++                "additionalProperties": false,
++                "required": [
++                  "n",
++                  "min",
++                  "p50",
++                  "p95",
++                  "p99",
++                  "max",
++                  "mean"
++                ],
++                "properties": {
++                  "n": {
++                    "type": "integer",
++                    "minimum": 0
++                  },
++                  "min": {
++                    "type": "number"
++                  },
++                  "p50": {
++                    "type": "number"
++                  },
++                  "p95": {
++                    "type": "number"
++                  },
++                  "p99": {
++                    "type": "number"
++                  },
++                  "max": {
++                    "type": "number"
++                  },
++                  "mean": {
++                    "type": "number"
++                  }
++                }
++              }
++            }
++          }
++        },
++        "loads": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "perCore",
++              "class"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "perCore": {
++                "oneOf": [
++                  {
++                    "type": "number",
++                    "minimum": 0
++                  },
++                  {
++                    "type": "null"
++                  }
++                ]
++              },
++              "class": {
++                "$ref": "#/definitions/LoadClass"
++              }
++            }
++          }
++        },
++        "judgements": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "slo",
++              "series",
++              "row"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "slo": {
++                "$ref": "#/definitions/Slo"
++              },
++              "series": {
++                "oneOf": [
++                  {
++                    "$ref": "#/definitions/Series"
++                  },
++                  {
++                    "type": "null"
++                  }
++                ]
++              },
++              "row": {
++                "$ref": "#/definitions/Row"
++              }
++            }
++          }
++        },
++        "comparisons": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "slos",
++              "current",
++              "baseline",
++              "comparison"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "slos": {
++                "type": "array",
++                "items": {
++                  "$ref": "#/definitions/Slo"
++                }
++              },
++              "current": {
++                "$ref": "#/definitions/Report"
++              },
++              "baseline": {
++                "$ref": "#/definitions/Report"
++              },
++              "comparison": {
++                "$ref": "#/definitions/Comparison"
++              }
++            }
++          }
++        },
++        "tallies": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "rows",
++              "tally"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "rows": {
++                "type": "array",
++                "items": {
++                  "$ref": "#/definitions/Row"
++                }
++              },
++              "tally": {
++                "$ref": "#/definitions/Tally"
++              }
++            }
++          }
++        },
++        "series": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "input",
++              "series"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "input": {},
++              "series": {
++                "$ref": "#/definitions/Series"
++              }
++            }
++          }
++        },
++        "selection": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "set",
++              "ids",
++              "tools",
++              "pairs",
++              "error"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "set": {},
++              "ids": {},
++              "tools": {
++                "type": "array",
++                "items": {
++                  "$ref": "#/definitions/Tool"
++                }
++              },
++              "pairs": {
++                "type": "array",
++                "items": {
++                  "type": "string",
++                  "minLength": 1
++                }
++              },
++              "error": {
++                "oneOf": [
++                  {
++                    "type": "string",
++                    "minLength": 1
++                  },
++                  {
++                    "type": "null"
++                  }
++                ]
++              }
++            }
++          }
++        },
++        "mutations": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "text",
++              "op",
++              "language",
++              "nonce",
++              "result"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "text": {
++                "type": "string"
++              },
++              "op": {
++                "$ref": "#/definitions/EditOp"
++              },
++              "language": {
++                "$ref": "#/definitions/Language"
++              },
++              "nonce": {
++                "type": "string",
++                "minLength": 1
++              },
++              "result": {
++                "type": "string"
++              }
++            }
++          }
++        },
++        "markers": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "tool",
++              "lines",
++              "first"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "tool": {
++                "$ref": "#/definitions/SloTool"
++              },
++              "lines": {
++                "type": "array",
++                "items": {
++                  "type": "string"
++                }
++              },
++              "first": {
++                "oneOf": [
++                  {
++                    "type": "integer",
++                    "minimum": 0
++                  },
++                  {
++                    "type": "null"
++                  }
++                ]
++              }
++            }
++          }
++        },
++        "memory": {
++          "type": "array",
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "name",
++              "table",
++              "pid",
++              "system",
++              "rss"
++            ],
++            "properties": {
++              "name": {
++                "type": "string",
++                "minLength": 1
++              },
++              "table": {
++                "type": "string"
++              },
++              "pid": {
++                "type": "integer",
++                "minimum": 1
++              },
++              "system": {
++                "type": "string",
++                "minLength": 1
++              },
++              "rss": {
++                "oneOf": [
++                  {
++                    "type": "integer",
++                    "minimum": 0
++                  },
++                  {
++                    "type": "null"
++                  }
++                ]
++              }
++            }
++          }
++        }
++      }
++    }
++  }
++}
+# stage-clean orphan staged=perf-slo-tools/staged/slo.json map=None
+--- /dev/null
++++ b/staged/perf-slo-tools/staged/slo.json
+@@ -0,0 +1,1480 @@
++{
++ "version": 1,
++ "labels": {
++  "title": {
++   "en": "Performance objectives",
++   "de": "Leistungsziele"
++  },
++  "name": {
++   "en": "Name",
++   "de": "Name"
++  },
++  "list": {
++   "en": "Objectives",
++   "de": "Ziele"
++  },
++  "probes": {
++   "en": "Probes",
++   "de": "Messungen"
++  },
++  "slos": {
++   "en": "Objectives",
++   "de": "Ziele"
++  },
++  "host": {
++   "en": "Host",
++   "de": "Rechner"
++  },
++  "platform": {
++   "en": "Platform",
++   "de": "Plattform"
++  },
++  "cpus": {
++   "en": "Cores",
++   "de": "Kerne"
++  },
++  "memory": {
++   "en": "Memory",
++   "de": "Arbeitsspeicher"
++  },
++  "load": {
++   "en": "Load per core",
++   "de": "Last je Kern"
++  },
++  "hostClass": {
++   "en": "Host class",
++   "de": "Rechnerklasse"
++  },
++  "probe": {
++   "en": "Probe",
++   "de": "Messung"
++  },
++  "slo": {
++   "en": "Objective",
++   "de": "Ziel"
++  },
++  "tool": {
++   "en": "Implementation",
++   "de": "Implementierung"
++  },
++  "lane": {
++   "en": "Lane",
++   "de": "Pfad"
++  },
++  "oneshot": {
++   "en": "one-shot",
++   "de": "Einzelaufruf"
++  },
++  "resident": {
++   "en": "resident service",
++   "de": "residenter Dienst"
++  },
++  "neutral": {
++   "en": "neutral",
++   "de": "neutral"
++  },
++  "metric": {
++   "en": "Metric",
++   "de": "Messgröße"
++  },
++  "statistic": {
++   "en": "Statistic",
++   "de": "Statistik"
++  },
++  "value": {
++   "en": "Value",
++   "de": "Wert"
++  },
++  "goal": {
++   "en": "Goal",
++   "de": "Ziel"
++  },
++  "gate": {
++   "en": "Gate",
++   "de": "Schwelle"
++  },
++  "samples": {
++   "en": "Samples",
++   "de": "Stichproben"
++  },
++  "status": {
++   "en": "Status",
++   "de": "Status"
++  },
++  "reason": {
++   "en": "Reason",
++   "de": "Grund"
++  },
++  "tolerance": {
++   "en": "Tolerance",
++   "de": "Toleranz"
++  },
++  "enforcement": {
++   "en": "Enforcement",
++   "de": "Durchsetzung"
++  },
++  "advisory": {
++   "en": "advisory",
++   "de": "beratend"
++  },
++  "blocking": {
++   "en": "blocking",
++   "de": "verbindlich"
++  },
++  "pass": {
++   "en": "pass",
++   "de": "erfüllt"
++  },
++  "warn": {
++   "en": "goal missed",
++   "de": "Ziel verfehlt"
++  },
++  "fail": {
++   "en": "fail",
++   "de": "verletzt"
++  },
++  "unproven": {
++   "en": "unproven",
++   "de": "unbewiesen"
++  },
++  "recorded": {
++   "en": "recorded",
++   "de": "erfasst"
++  },
++  "improved": {
++   "en": "improved",
++   "de": "verbessert"
++  },
++  "same": {
++   "en": "same",
++   "de": "gleich"
++  },
++  "regressed": {
++   "en": "regressed",
++   "de": "verschlechtert"
++  },
++  "inconclusive": {
++   "en": "inconclusive",
++   "de": "nicht aussagekräftig"
++  },
++  "incomparable": {
++   "en": "incomparable",
++   "de": "nicht vergleichbar"
++  },
++  "new": {
++   "en": "new",
++   "de": "neu"
++  },
++  "missing": {
++   "en": "missing",
++   "de": "fehlt"
++  },
++  "comparison": {
++   "en": "Comparison with the baseline",
++   "de": "Vergleich mit der Referenz"
++  },
++  "baseline": {
++   "en": "Baseline",
++   "de": "Referenz"
++  },
++  "current": {
++   "en": "Current",
++   "de": "Aktuell"
++  },
++  "delta": {
++   "en": "Change",
++   "de": "Änderung"
++  },
++  "relative": {
++   "en": "Relative",
++   "de": "Relativ"
++  },
++  "summary": {
++   "en": "Summary",
++   "de": "Zusammenfassung"
++  },
++  "series": {
++   "en": "Series",
++   "de": "Reihen"
++  },
++  "quiet": {
++   "en": "quiet",
++   "de": "ruhig"
++  },
++  "busy": {
++   "en": "busy",
++   "de": "ausgelastet"
++  },
++  "saturated": {
++   "en": "saturated",
++   "de": "überlastet"
++  },
++  "unknown": {
++   "en": "unknown",
++   "de": "unbekannt"
++  },
++  "runs": {
++   "en": "Runs",
++   "de": "Läufe"
++  },
++  "warmup": {
++   "en": "Warm-up",
++   "de": "Aufwärmläufe"
++  },
++  "kind": {
++   "en": "Kind",
++   "de": "Art"
++  },
++  "unit": {
++   "en": "Unit",
++   "de": "Einheit"
++  },
++  "source": {
++   "en": "Source",
++   "de": "Quelle"
++  },
++  "progress": {
++   "en": "Measured",
++   "de": "Gemessen"
++  },
++  "started": {
++   "en": "Started",
++   "de": "Gestartet"
++  },
++  "finished": {
++   "en": "Finished",
++   "de": "Beendet"
++  },
++  "startKinds": {
++   "en": "Start observed by",
++   "de": "Start beobachtet durch"
++  },
++  "marker": {
++   "en": "tool marker",
++   "de": "Werkzeugmarke"
++  },
++  "first-output": {
++   "en": "first output",
++   "de": "erste Ausgabe"
++  },
++  "exit": {
++   "en": "process exit",
++   "de": "Prozessende"
++  },
++  "inflated": {
++   "en": "inflated by host load",
++   "de": "durch Rechnerlast überhöht"
++  },
++  "blockingFailed": {
++   "en": "blocking objectives failed",
++   "de": "verbindliche Ziele verletzt"
++  },
++  "blockingRegressed": {
++   "en": "blocking objectives regressed",
++   "de": "verbindliche Ziele verschlechtert"
++  },
++  "notes": {
++   "en": "Notes",
++   "de": "Hinweise"
++  },
++  "note-load": {
++   "en": "Times on a saturated host are upper bounds: a missed gate there stays unproven, a met goal stays met.",
++   "de": "Zeiten auf einem überlasteten Rechner sind obere Schranken: eine verfehlte Schwelle bleibt dort unbewiesen, ein erreichtes Ziel bleibt erreicht."
++  },
++  "note-percentile": {
++   "en": "Percentiles interpolate linearly between ranks (inclusive method); p95 needs 20 samples, p99 needs 100.",
++   "de": "Perzentile interpolieren linear zwischen den Rängen (inklusive Methode); p95 braucht 20 Stichproben, p99 braucht 100."
++  },
++  "note-start": {
++   "en": "Edit to rebuild start ends at the first tool marker line. Without a marker the value is only a bound (first output line: lower, process exit: upper) and the objective stays unproven unless the bound already decides it.",
++   "de": "Von der Änderung bis zum Start des Neubaus zählt bis zur ersten Werkzeugmarke. Ohne Marke ist der Wert nur eine Schranke (erste Ausgabezeile: untere, Prozessende: obere) und das Ziel bleibt unbewiesen, solange die Schranke es nicht entscheidet."
++  },
++  "note-marks": {
++   "en": "! marks a blocking objective, * a value inflated by host load.",
++   "de": "! kennzeichnet ein verbindliches Ziel, * einen durch Rechnerlast überhöhten Wert."
++  },
++  "note-recorded": {
++   "en": "Objectives without goal and gate only record the value; the baseline comparison guards them.",
++   "de": "Ziele ohne Zielwert und Schwelle erfassen nur den Wert; der Vergleich mit der Referenz schützt sie."
++  },
++  "cold": {
++   "en": "cold",
++   "de": "kalt"
++  },
++  "target": {
++   "en": "Target",
++   "de": "Ziel"
++  },
++  "workload": {
++   "en": "Workload",
++   "de": "Arbeitslast"
++  },
++  "sessions": {
++   "en": "Sessions",
++   "de": "Sitzungen"
++  },
++  "file": {
++   "en": "File",
++   "de": "Datei"
++  },
++  "language": {
++   "en": "Language",
++   "de": "Sprache"
++  },
++  "edit": {
++   "en": "edit to rebuild",
++   "de": "Änderung bis Neubau"
++  },
++  "cache": {
++   "en": "cache hit rate",
++   "de": "Cache-Trefferquote"
++  },
++  "graph": {
++   "en": "graph",
++   "de": "Graph"
++  },
++  "noop": {
++   "en": "warm no-op",
++   "de": "warmer Leerlauf"
++  },
++  "cli-help": {
++   "en": "command line help",
++   "de": "Kommandozeilenhilfe"
++  },
++  "concurrency": {
++   "en": "concurrent agents",
++   "de": "gleichzeitige Agenten"
++  },
++  "nx": {
++   "en": "Nx",
++   "de": "Nx"
++  },
++  "bazel": {
++   "en": "Bazel",
++   "de": "Bazel"
++  },
++  "ms": {
++   "en": "ms",
++   "de": "ms"
++  },
++  "bytes": {
++   "en": "bytes",
++   "de": "Bytes"
++  },
++  "ratio": {
++   "en": "ratio",
++   "de": "Verhältnis"
++  },
++  "wallMs": {
++   "en": "wall time",
++   "de": "Laufzeit"
++  },
++  "startMs": {
++   "en": "edit to rebuild start",
++   "de": "Änderung bis Start des Neubaus"
++  },
++  "greenMs": {
++   "en": "edit to green",
++   "de": "Änderung bis grün"
++  },
++  "peakRssBytes": {
++   "en": "peak resident memory",
++   "de": "Speicherspitze"
++  },
++  "hitRatio": {
++   "en": "cache hit ratio",
++   "de": "Cache-Trefferquote"
++  },
++  "makespanMs": {
++   "en": "makespan",
++   "de": "Gesamtdauer"
++  },
++  "maxUnrelatedWaitMs": {
++   "en": "longest wait for an unrelated project",
++   "de": "längste Wartezeit auf ein fremdes Projekt"
++  },
++  "speedup": {
++   "en": "speed-up over serial",
++   "de": "Beschleunigung gegenüber seriell"
++  },
++  "no-samples": {
++   "en": "no samples",
++   "de": "keine Stichproben"
++  },
++  "too-few-samples": {
++   "en": "too few samples for the statistic",
++   "de": "zu wenige Stichproben für die Statistik"
++  },
++  "probe-failed": {
++   "en": "the measured command failed",
++   "de": "der gemessene Befehl ist fehlgeschlagen"
++  },
++  "unavailable": {
++   "en": "not available",
++   "de": "nicht verfügbar"
++  },
++  "not-cold": {
++   "en": "the copy was not freshly prepared (use --prepare)",
++   "de": "die Kopie ist nicht frisch vorbereitet (--prepare verwenden)"
++  },
++  "host-saturated": {
++   "en": "the host is saturated",
++   "de": "der Rechner ist überlastet"
++  },
++  "service-unavailable": {
++   "en": "the resident service is not part of this checkout",
++   "de": "der residente Dienst ist nicht Teil dieses Checkouts"
++  },
++  "unsupported": {
++   "en": "not supported here",
++   "de": "hier nicht unterstützt"
++  },
++  "host-class": {
++   "en": "another host class",
++   "de": "andere Rechnerklasse"
++  },
++  "schema": {
++   "en": "another report version",
++   "de": "andere Berichtsversion"
++  },
++  "start-unobserved": {
++   "en": "the rebuild start was not observed through a tool marker line, so the value is only a bound",
++   "de": "der Start des Neubaus wurde nicht durch eine Werkzeugmarke beobachtet, der Wert ist nur eine Schranke"
++  }
++ },
++ "units": [
++  {
++   "id": "ts",
++   "language": "ts",
++   "target": "@semio-tech/framework-graph:test",
++   "file": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts",
++   "op": "private-body",
++   "title": {
++    "en": "TypeScript package",
++    "de": "TypeScript-Paket"
++   }
++  },
++  {
++   "id": "rust",
++   "language": "rs",
++   "target": "@teaching/proctor:build",
++   "file": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/🦀️.rs",
++   "op": "private-body",
++   "title": {
++    "en": "Rust crate",
++    "de": "Rust-Crate"
++   }
++  },
++  {
++   "id": "go",
++   "language": "go",
++   "target": "@semio-tech/repo-move-go:test",
++   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go/🐹️.go",
++   "op": "private-body",
++   "title": {
++    "en": "Go module",
++    "de": "Go-Modul"
++   }
++  },
++  {
++   "id": "python",
++   "language": "py",
++   "target": "@semio-tech/ui-styling-py:test",
++   "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/🎨️styling/__init__.py",
++   "op": "private-body",
++   "title": {
++    "en": "Python package",
++    "de": "Python-Paket"
++   }
++  }
++ ],
++ "probes": [
++  {
++   "id": "cli-help",
++   "kind": "cli-help",
++   "title": {
++    "en": "repo --help",
++    "de": "repo --help"
++   },
++   "runs": 100,
++   "warmup": 3
++  },
++  {
++   "id": "noop-run-oneshot",
++   "kind": "noop",
++   "title": {
++    "en": "Warm no-op run, one-shot",
++    "de": "Warmer Leerlauf run, Einzelaufruf"
++   },
++   "lane": "oneshot",
++   "target": "@teaching/proctor:build",
++   "runs": 30,
++   "warmup": 2
++  },
++  {
++   "id": "noop-test-oneshot",
++   "kind": "noop",
++   "title": {
++    "en": "Warm no-op test, one-shot",
++    "de": "Warmer Leerlauf test, Einzelaufruf"
++   },
++   "lane": "oneshot",
++   "target": "@semio-tech/framework-graph:test",
++   "runs": 30,
++   "warmup": 2
++  },
++  {
++   "id": "noop-run-resident",
++   "kind": "noop",
++   "title": {
++    "en": "Warm no-op run, resident service",
++    "de": "Warmer Leerlauf run, residenter Dienst"
++   },
++   "lane": "resident",
++   "target": "@teaching/proctor:build",
++   "runs": 30,
++   "warmup": 2
++  },
++  {
++   "id": "noop-test-resident",
++   "kind": "noop",
++   "title": {
++    "en": "Warm no-op test, resident service",
++    "de": "Warmer Leerlauf test, residenter Dienst"
++   },
++   "lane": "resident",
++   "target": "@semio-tech/framework-graph:test",
++   "runs": 30,
++   "warmup": 2
++  },
++  {
++   "id": "edit-ts-oneshot",
++   "kind": "edit",
++   "title": {
++    "en": "Edit and rebuild, TypeScript package, one-shot",
++    "de": "Ändern und neu bauen, TypeScript-Paket, Einzelaufruf"
++   },
++   "lane": "oneshot",
++   "unit": "ts",
++   "runs": 10,
++   "warmup": 1
++  },
++  {
++   "id": "edit-ts-resident",
++   "kind": "edit",
++   "title": {
++    "en": "Edit and rebuild, TypeScript package, resident service",
++    "de": "Ändern und neu bauen, TypeScript-Paket, residenter Dienst"
++   },
++   "lane": "resident",
++   "unit": "ts",
++   "runs": 20,
++   "warmup": 1
++  },
++  {
++   "id": "edit-rust-oneshot",
++   "kind": "edit",
++   "title": {
++    "en": "Edit and rebuild, Rust crate, one-shot",
++    "de": "Ändern und neu bauen, Rust-Crate, Einzelaufruf"
++   },
++   "lane": "oneshot",
++   "unit": "rust",
++   "runs": 10,
++   "warmup": 1
++  },
++  {
++   "id": "edit-rust-resident",
++   "kind": "edit",
++   "title": {
++    "en": "Edit and rebuild, Rust crate, resident service",
++    "de": "Ändern und neu bauen, Rust-Crate, residenter Dienst"
++   },
++   "lane": "resident",
++   "unit": "rust",
++   "runs": 20,
++   "warmup": 1
++  },
++  {
++   "id": "edit-go-oneshot",
++   "kind": "edit",
++   "title": {
++    "en": "Edit and rebuild, Go module, one-shot",
++    "de": "Ändern und neu bauen, Go-Modul, Einzelaufruf"
++   },
++   "lane": "oneshot",
++   "unit": "go",
++   "runs": 10,
++   "warmup": 1
++  },
++  {
++   "id": "edit-go-resident",
++   "kind": "edit",
++   "title": {
++    "en": "Edit and rebuild, Go module, resident service",
++    "de": "Ändern und neu bauen, Go-Modul, residenter Dienst"
++   },
++   "lane": "resident",
++   "unit": "go",
++   "runs": 20,
++   "warmup": 1
++  },
++  {
++   "id": "edit-python-oneshot",
++   "kind": "edit",
++   "title": {
++    "en": "Edit and rebuild, Python package, one-shot",
++    "de": "Ändern und neu bauen, Python-Paket, Einzelaufruf"
++   },
++   "lane": "oneshot",
++   "unit": "python",
++   "runs": 10,
++   "warmup": 1
++  },
++  {
++   "id": "edit-python-resident",
++   "kind": "edit",
++   "title": {
++    "en": "Edit and rebuild, Python package, resident service",
++    "de": "Ändern und neu bauen, Python-Paket, residenter Dienst"
++   },
++   "lane": "resident",
++   "unit": "python",
++   "runs": 20,
++   "warmup": 1
++  },
++  {
++   "id": "graph-scope-warm",
++   "kind": "graph",
++   "title": {
++    "en": "Graph of the selected scope, warm",
++    "de": "Graph des gewählten Umfangs, warm"
++   },
++   "lane": "oneshot",
++   "target": "@semio-tech/framework-graph:test",
++   "runs": 10,
++   "warmup": 1
++  },
++  {
++   "id": "graph-scope-cold",
++   "kind": "graph",
++   "title": {
++    "en": "Graph of the selected scope, cold",
++    "de": "Graph des gewählten Umfangs, kalt"
++   },
++   "lane": "oneshot",
++   "target": "@semio-tech/framework-graph:test",
++   "runs": 1,
++   "warmup": 0,
++   "cold": true
++  },
++  {
++   "id": "cache-second-run-build",
++   "kind": "cache",
++   "title": {
++    "en": "Second run of build, cache hits",
++    "de": "Zweiter Lauf von build, Cache-Treffer"
++   },
++   "target": "@teaching/proctor:build",
++   "runs": 3,
++   "warmup": 0
++  },
++  {
++   "id": "cache-second-run-test",
++   "kind": "cache",
++   "title": {
++    "en": "Second run of test, cache hits",
++    "de": "Zweiter Lauf von test, Cache-Treffer"
++   },
++   "target": "@semio-tech/framework-graph:test",
++   "runs": 3,
++   "warmup": 0
++  },
++  {
++   "id": "mem-noop-run",
++   "kind": "noop",
++   "title": {
++    "en": "Peak memory of a warm no-op run",
++    "de": "Speicherspitze eines warmen Leerlaufs"
++   },
++   "lane": "oneshot",
++   "target": "@teaching/proctor:build",
++   "runs": 5,
++   "warmup": 1,
++   "memory": true
++  },
++  {
++   "id": "mem-edit-ts",
++   "kind": "edit",
++   "title": {
++    "en": "Peak memory of a TypeScript edit and rebuild",
++    "de": "Speicherspitze von Ändern und Neubau in TypeScript"
++   },
++   "lane": "oneshot",
++   "unit": "ts",
++   "runs": 3,
++   "warmup": 1,
++   "memory": true
++  },
++  {
++   "id": "concurrency-disjoint",
++   "kind": "concurrency",
++   "title": {
++    "en": "Three agents on disjoint projects",
++    "de": "Drei Agenten auf getrennten Projekten"
++   },
++   "workload": "disjoint-projects",
++   "sessions": 3,
++   "runs": 1,
++   "warmup": 0
++  },
++  {
++   "id": "concurrency-warm-fanout",
++   "kind": "concurrency",
++   "title": {
++    "en": "Three agents build the same warm target",
++    "de": "Drei Agenten bauen dasselbe warme Ziel"
++   },
++   "workload": "warm-fanout",
++   "sessions": 3,
++   "runs": 1,
++   "warmup": 0
++  }
++ ],
++ "slos": [
++  {
++   "id": "cli-help-p95",
++   "title": {
++    "en": "Command line help, 95th percentile",
++    "de": "Kommandozeilenhilfe, 95. Perzentil"
++   },
++   "probe": "cli-help",
++   "metric": "wallMs",
++   "statistic": "p95",
++   "direction": "lower",
++   "goal": 200,
++   "gate": 400,
++   "tools": [
++    "neutral"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.15,
++    "absolute": 25
++   },
++   "source": "cli-latency"
++  },
++  {
++   "id": "cli-help-p99",
++   "title": {
++    "en": "Command line help, 99th percentile",
++    "de": "Kommandozeilenhilfe, 99. Perzentil"
++   },
++   "probe": "cli-help",
++   "metric": "wallMs",
++   "statistic": "p99",
++   "direction": "lower",
++   "goal": null,
++   "gate": 1000,
++   "tools": [
++    "neutral"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.25,
++    "absolute": 50
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "noop-run-oneshot-p50",
++   "title": {
++    "en": "Warm no-op run, one-shot, median",
++    "de": "Warmer Leerlauf run, Einzelaufruf, Median"
++   },
++   "probe": "noop-run-oneshot",
++   "metric": "wallMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": 300,
++   "gate": 1000,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.15,
++    "absolute": 25
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "noop-test-oneshot-p50",
++   "title": {
++    "en": "Warm no-op test, one-shot, median",
++    "de": "Warmer Leerlauf test, Einzelaufruf, Median"
++   },
++   "probe": "noop-test-oneshot",
++   "metric": "wallMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": 300,
++   "gate": 1000,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.15,
++    "absolute": 25
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "noop-run-resident-p95",
++   "title": {
++    "en": "Warm no-op run, resident service, 95th percentile",
++    "de": "Warmer Leerlauf run, residenter Dienst, 95. Perzentil"
++   },
++   "probe": "noop-run-resident",
++   "metric": "wallMs",
++   "statistic": "p95",
++   "direction": "lower",
++   "goal": 300,
++   "gate": 300,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "blocking",
++   "tolerance": {
++    "relative": 0.15,
++    "absolute": 25
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "noop-test-resident-p95",
++   "title": {
++    "en": "Warm no-op test, resident service, 95th percentile",
++    "de": "Warmer Leerlauf test, residenter Dienst, 95. Perzentil"
++   },
++   "probe": "noop-test-resident",
++   "metric": "wallMs",
++   "statistic": "p95",
++   "direction": "lower",
++   "goal": 300,
++   "gate": 300,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "blocking",
++   "tolerance": {
++    "relative": 0.15,
++    "absolute": 25
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "edit-ts-oneshot-start-p50",
++   "title": {
++    "en": "Edit to rebuild start, TypeScript package, one-shot, median",
++    "de": "Änderung bis Start des Neubaus, TypeScript-Paket, Einzelaufruf, Median"
++   },
++   "probe": "edit-ts-oneshot",
++   "metric": "startMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": 500,
++   "gate": 2000,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 50
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "edit-ts-oneshot-green-p50",
++   "title": {
++    "en": "Edit to green, TypeScript package, one-shot, median",
++    "de": "Änderung bis grün, TypeScript-Paket, Einzelaufruf, Median"
++   },
++   "probe": "edit-ts-oneshot",
++   "metric": "greenMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": null,
++   "gate": null,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 250
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "edit-ts-resident-start-p95",
++   "title": {
++    "en": "Edit to rebuild start, TypeScript package, resident service, 95th percentile",
++    "de": "Änderung bis Start des Neubaus, TypeScript-Paket, residenter Dienst, 95. Perzentil"
++   },
++   "probe": "edit-ts-resident",
++   "metric": "startMs",
++   "statistic": "p95",
++   "direction": "lower",
++   "goal": 500,
++   "gate": 500,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "blocking",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 50
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "edit-ts-resident-green-p50",
++   "title": {
++    "en": "Edit to green, TypeScript package, resident service, median",
++    "de": "Änderung bis grün, TypeScript-Paket, residenter Dienst, Median"
++   },
++   "probe": "edit-ts-resident",
++   "metric": "greenMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": null,
++   "gate": null,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 250
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "edit-rust-oneshot-start-p50",
++   "title": {
++    "en": "Edit to rebuild start, Rust crate, one-shot, median",
++    "de": "Änderung bis Start des Neubaus, Rust-Crate, Einzelaufruf, Median"
++   },
++   "probe": "edit-rust-oneshot",
++   "metric": "startMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": 500,
++   "gate": 2000,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 50
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "edit-rust-oneshot-green-p50",
++   "title": {
++    "en": "Edit to green, Rust crate, one-shot, median",
++    "de": "Änderung bis grün, Rust-Crate, Einzelaufruf, Median"
++   },
++   "probe": "edit-rust-oneshot",
++   "metric": "greenMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": null,
++   "gate": null,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 250
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "edit-rust-resident-start-p95",
++   "title": {
++    "en": "Edit to rebuild start, Rust crate, resident service, 95th percentile",
++    "de": "Änderung bis Start des Neubaus, Rust-Crate, residenter Dienst, 95. Perzentil"
++   },
++   "probe": "edit-rust-resident",
++   "metric": "startMs",
++   "statistic": "p95",
++   "direction": "lower",
++   "goal": 500,
++   "gate": 500,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "blocking",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 50
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "edit-rust-resident-green-p50",
++   "title": {
++    "en": "Edit to green, Rust crate, resident service, median",
++    "de": "Änderung bis grün, Rust-Crate, residenter Dienst, Median"
++   },
++   "probe": "edit-rust-resident",
++   "metric": "greenMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": null,
++   "gate": null,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 250
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "edit-go-oneshot-start-p50",
++   "title": {
++    "en": "Edit to rebuild start, Go module, one-shot, median",
++    "de": "Änderung bis Start des Neubaus, Go-Modul, Einzelaufruf, Median"
++   },
++   "probe": "edit-go-oneshot",
++   "metric": "startMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": 500,
++   "gate": 2000,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 50
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "edit-go-oneshot-green-p50",
++   "title": {
++    "en": "Edit to green, Go module, one-shot, median",
++    "de": "Änderung bis grün, Go-Modul, Einzelaufruf, Median"
++   },
++   "probe": "edit-go-oneshot",
++   "metric": "greenMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": null,
++   "gate": null,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 250
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "edit-go-resident-start-p95",
++   "title": {
++    "en": "Edit to rebuild start, Go module, resident service, 95th percentile",
++    "de": "Änderung bis Start des Neubaus, Go-Modul, residenter Dienst, 95. Perzentil"
++   },
++   "probe": "edit-go-resident",
++   "metric": "startMs",
++   "statistic": "p95",
++   "direction": "lower",
++   "goal": 500,
++   "gate": 500,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "blocking",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 50
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "edit-go-resident-green-p50",
++   "title": {
++    "en": "Edit to green, Go module, resident service, median",
++    "de": "Änderung bis grün, Go-Modul, residenter Dienst, Median"
++   },
++   "probe": "edit-go-resident",
++   "metric": "greenMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": null,
++   "gate": null,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 250
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "edit-python-oneshot-start-p50",
++   "title": {
++    "en": "Edit to rebuild start, Python package, one-shot, median",
++    "de": "Änderung bis Start des Neubaus, Python-Paket, Einzelaufruf, Median"
++   },
++   "probe": "edit-python-oneshot",
++   "metric": "startMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": 500,
++   "gate": 2000,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 50
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "edit-python-oneshot-green-p50",
++   "title": {
++    "en": "Edit to green, Python package, one-shot, median",
++    "de": "Änderung bis grün, Python-Paket, Einzelaufruf, Median"
++   },
++   "probe": "edit-python-oneshot",
++   "metric": "greenMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": null,
++   "gate": null,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 250
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "edit-python-resident-start-p95",
++   "title": {
++    "en": "Edit to rebuild start, Python package, resident service, 95th percentile",
++    "de": "Änderung bis Start des Neubaus, Python-Paket, residenter Dienst, 95. Perzentil"
++   },
++   "probe": "edit-python-resident",
++   "metric": "startMs",
++   "statistic": "p95",
++   "direction": "lower",
++   "goal": 500,
++   "gate": 500,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "blocking",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 50
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "edit-python-resident-green-p50",
++   "title": {
++    "en": "Edit to green, Python package, resident service, median",
++    "de": "Änderung bis grün, Python-Paket, residenter Dienst, Median"
++   },
++   "probe": "edit-python-resident",
++   "metric": "greenMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": null,
++   "gate": null,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 250
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "graph-scope-warm-p50",
++   "title": {
++    "en": "Graph of the selected scope, warm, median",
++    "de": "Graph des gewählten Umfangs, warm, Median"
++   },
++   "probe": "graph-scope-warm",
++   "metric": "wallMs",
++   "statistic": "p50",
++   "direction": "lower",
++   "goal": 300,
++   "gate": 2000,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 50
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "graph-scope-cold-max",
++   "title": {
++    "en": "Graph of the selected scope, cold",
++    "de": "Graph des gewählten Umfangs, kalt"
++   },
++   "probe": "graph-scope-cold",
++   "metric": "wallMs",
++   "statistic": "max",
++   "direction": "lower",
++   "goal": null,
++   "gate": 300000,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.25,
++    "absolute": 1000
++   },
++   "source": "graph-speed"
++  },
++  {
++   "id": "cache-second-run-build-min",
++   "title": {
++    "en": "Second run of build: every cacheable task restored",
++    "de": "Zweiter Lauf von build: jeder cachebare Task wiederhergestellt"
++   },
++   "probe": "cache-second-run-build",
++   "metric": "hitRatio",
++   "statistic": "min",
++   "direction": "higher",
++   "goal": 1,
++   "gate": 1,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "blocking",
++   "tolerance": {
++    "relative": 0,
++    "absolute": 0
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "cache-second-run-test-min",
++   "title": {
++    "en": "Second run of test: every cacheable task restored",
++    "de": "Zweiter Lauf von test: jeder cachebare Task wiederhergestellt"
++   },
++   "probe": "cache-second-run-test",
++   "metric": "hitRatio",
++   "statistic": "min",
++   "direction": "higher",
++   "goal": 1,
++   "gate": 1,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "blocking",
++   "tolerance": {
++    "relative": 0,
++    "absolute": 0
++   },
++   "source": "user-goal"
++  },
++  {
++   "id": "mem-noop-run-max",
++   "title": {
++    "en": "Peak memory of a warm no-op run",
++    "de": "Speicherspitze eines warmen Leerlaufs"
++   },
++   "probe": "mem-noop-run",
++   "metric": "peakRssBytes",
++   "statistic": "max",
++   "direction": "lower",
++   "goal": 536870912,
++   "gate": 1073741824,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 16777216
++   },
++   "source": "hot-cache"
++  },
++  {
++   "id": "mem-edit-ts-max",
++   "title": {
++    "en": "Peak memory of a TypeScript edit and rebuild",
++    "de": "Speicherspitze von Ändern und Neubau in TypeScript"
++   },
++   "probe": "mem-edit-ts",
++   "metric": "peakRssBytes",
++   "statistic": "max",
++   "direction": "lower",
++   "goal": null,
++   "gate": null,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.2,
++    "absolute": 16777216
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "concurrency-disjoint-wait-max",
++   "title": {
++    "en": "Longest wait of an agent for an unrelated project",
++    "de": "Längste Wartezeit eines Agenten auf ein fremdes Projekt"
++   },
++   "probe": "concurrency-disjoint",
++   "metric": "maxUnrelatedWaitMs",
++   "statistic": "max",
++   "direction": "lower",
++   "goal": 1000,
++   "gate": 5000,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.25,
++    "absolute": 250
++   },
++   "source": "conc-harness"
++  },
++  {
++   "id": "concurrency-disjoint-makespan-max",
++   "title": {
++    "en": "Makespan of three agents on disjoint projects",
++    "de": "Gesamtdauer dreier Agenten auf getrennten Projekten"
++   },
++   "probe": "concurrency-disjoint",
++   "metric": "makespanMs",
++   "statistic": "max",
++   "direction": "lower",
++   "goal": null,
++   "gate": null,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.25,
++    "absolute": 1000
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "concurrency-warm-fanout-makespan-max",
++   "title": {
++    "en": "Makespan of three agents on one warm target",
++    "de": "Gesamtdauer dreier Agenten auf einem warmen Ziel"
++   },
++   "probe": "concurrency-warm-fanout",
++   "metric": "makespanMs",
++   "statistic": "max",
++   "direction": "lower",
++   "goal": null,
++   "gate": null,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.25,
++    "absolute": 1000
++   },
++   "source": "provisional"
++  },
++  {
++   "id": "concurrency-warm-fanout-wait-max",
++   "title": {
++    "en": "Longest wait of an agent on one warm target",
++    "de": "Längste Wartezeit eines Agenten auf einem warmen Ziel"
++   },
++   "probe": "concurrency-warm-fanout",
++   "metric": "maxUnrelatedWaitMs",
++   "statistic": "max",
++   "direction": "lower",
++   "goal": 1000,
++   "gate": 5000,
++   "tools": [
++    "nx",
++    "bazel"
++   ],
++   "enforcement": "advisory",
++   "tolerance": {
++    "relative": 0.25,
++    "absolute": 250
++   },
++   "source": "conc-harness"
++  }
++ ]
++}
+# stage-clean orphan staged=perf-slo-tools/staged/test.ts map=None
+--- /dev/null
++++ b/staged/perf-slo-tools/staged/test.ts
+@@ -0,0 +1,764 @@
++/** 🍳️ Performance SLO and bench conformance: statistics, verdicts, series, baseline comparison, selection, edits, tool markers and process-tree memory are checked against language-agnostic fixtures, an independent Python oracle (standard library `statistics`, NumPy as the third-party reference) and the repository validator next to Ajv; the probes run against scripted ports with stub measurements, the spawner and the whole command against a stand-in CLI as real processes; the CI job definition is parsed. */
++import {test,expect} from "bun:test";
++import Ajv from "ajv";
++import {spawnSync} from "node:child_process";
++import {copyFileSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
++import {tmpdir} from "node:os";
++import {dirname,join} from "node:path";
++import schema from "../🧬️schema/🔣️.json" with {type:"json"};
++import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
++import table from "../🎯️slo/🔣️.json" with {type:"json"};
++import catalog from "../../../⚙️operations/🔣️catalog.json" with {type:"json"};
++import {benchBaselineV1,benchCompareV1,benchHostV1,benchJudgeV1,benchLoadClassV1,benchMarkersV1,benchMutateV1,benchReportV1,benchSelectV1,benchSeriesV1,benchSloIssuesV1,benchStatsV1,benchTallyV1,renderBenchComparisonV1,renderBenchListV1,renderBenchReportV1,type BenchProbeV1,type BenchReportV1,type BenchRowV1,type BenchSampleV1,type BenchSeriesV1,type BenchSloSetV1,type BenchSloV1,type BenchToolV1} from "../🟦️.ts";
++import {benchCliPortsV1,benchConcurrencyFromReportV1,benchRunArgumentsV1,benchRunProbeV1,benchRunV1,benchSpawnV1,benchTreeRssV1,type BenchHostPortsV1,type BenchPortsV1,type BenchRunV1,type BenchSpawnSpecV1} from "../🏃️runner/🟦️.ts";
++import {benchArgumentsV1,benchOptionNamesV1,runBenchCommandV1,type BenchCommandPortsV1} from "../⌨️command/🟦️.ts";
++import {validateJsonSchemaSubset} from "../../../../../../../..//🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
++
++const set=table as unknown as BenchSloSetV1,policy=schema.definitions.Policy.const,plain=(value:unknown):any=>JSON.parse(JSON.stringify(value));
++const ajv=new Ajv({strict:true,allowUnionTypes:true}),define=(name:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${name}`});
++const oracle=join(import.meta.dir,"🐍️oracle/🐍️.py"),schemaPath=join(import.meta.dir,"../🧬️schema/🔣️.json"),stubPath=join(import.meta.dir,"🎭️stub/🟦️.ts");
++const python=(op:string,cases:readonly unknown[]):any[]|null=>{const run=spawnSync("python3",["-I",oracle],{input:JSON.stringify({op,schemaPath,cases}),encoding:"utf8",maxBuffer:64*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
++const differences=(actual:any,expected:any,path="$"):string[]=>{
++ if(typeof actual==="number"&&typeof expected==="number")return Math.abs(actual-expected)<=1e-9*Math.max(1,Math.abs(actual),Math.abs(expected))?[]:[`${path}: ${actual} != ${expected}`];
++ if(Array.isArray(actual)&&Array.isArray(expected))return actual.length!==expected.length?[`${path}: length ${actual.length} != ${expected.length}`]:actual.flatMap((value,at)=>differences(value,expected[at],`${path}[${at}]`));
++ if(actual&&expected&&typeof actual==="object"&&typeof expected==="object"){const keys=new Set([...Object.keys(actual),...Object.keys(expected)]);return [...keys].flatMap(key=>differences(actual[key],expected[key],`${path}.${key}`));}
++ return Object.is(actual,expected)?[]:[`${path}: ${JSON.stringify(actual)} != ${JSON.stringify(expected)}`];
++};
++const same=(actual:unknown,expected:unknown)=>expect(differences(plain(actual),plain(expected))).toEqual([]);
++const text=(value:{en:string;de:string})=>value;
++const rowOf=(slo:BenchSloV1,series:BenchSeriesV1|undefined,tool:"nx"|"bazel"|"neutral"="nx")=>benchJudgeV1(slo,tool,series);
++
++test("the schema is valid and validates the fixture, the SLO table and the result shapes the way the repository validator does",()=>{
++ expect(ajv.validateSchema(schema)).toBe(true);
++ expect(define("Fixture")(fixture)).toBe(true);
++ expect(define("SloSet")(table)).toBe(true);
++ expect(validateJsonSchemaSubset(schema.definitions.SloSet,table,schema)).toEqual([]);
++ const title=text({en:"a",de:"b"}),values={wallMs:1},sample={index:0,ok:true,exit:0,values,startKind:null,loadPerCore:0.1},stats={n:1,min:1,p50:1,p95:1,p99:1,max:1,mean:1};
++ const slo={id:"a",title,probe:"p",metric:"wallMs",statistic:"p50",direction:"lower",goal:1,gate:2,tools:["nx"],enforcement:"advisory",tolerance:{relative:0,absolute:0},source:"user-goal"};
++ for(const[name,value,ok]of [
++  ["Sample",sample,true],["Sample",{...sample,values:{bogus:1}},false],["Sample",{...sample,values:{wallMs:-1}},false],["Sample",{...sample,startKind:"nope"},false],["Sample",{...sample,loadPerCore:null,exit:null},true],["Sample",{...sample,index:-1},false],
++  ["Stats",stats,true],["Stats",{...stats,n:0},false],["Stats",{...stats,p50:"1"},false],
++  ["Slo",slo,true],["Slo",{...slo,statistic:"p90"},false],["Slo",{...slo,goal:null,gate:null},true],["Slo",{...slo,tools:[]},false],["Slo",{...slo,tools:["cargo"]},false],["Slo",{...slo,enforcement:"maybe"},false],["Slo",{...slo,source:"hunch"},false],["Slo",{...slo,tolerance:{relative:-1,absolute:0}},false],["Slo",{...slo,extra:1},false],
++  ["Probe",{id:"p",kind:"noop",title,runs:3,warmup:0},true],["Probe",{id:"p",kind:"noop",title,runs:0,warmup:0},false],["Probe",{id:"p",kind:"noop",title,runs:3,warmup:21},false],["Probe",{id:"P",kind:"noop",title,runs:3,warmup:0},false],["Probe",{id:"p",kind:"other",title,runs:3,warmup:0},false],["Probe",{id:"p",kind:"concurrency",title,runs:1,warmup:0,sessions:9},false],
++  ["EditUnit",{id:"u",language:"ts",target:"a:b",file:"x.ts",op:"private-body",title},true],["EditUnit",{id:"u",language:"cobol",target:"a:b",file:"x.ts",op:"private-body",title},false],["EditUnit",{id:"u",language:"ts",target:"nocolon",file:"x.ts",op:"private-body",title},false],["EditUnit",{id:"u",language:"ts",target:"a:b",file:"x".repeat(256),op:"private-body",title},false],
++  ["Host",benchHostV1({platform:"p",arch:"a",cpus:4,memoryBytes:1,load1:1}),true],["Host",{...benchHostV1({platform:"p",arch:"a",cpus:0,memoryBytes:1,load1:1})},false],
++  ["Tally",{pass:0,warn:0,fail:0,unproven:0,recorded:0,blockingFailed:0},true],["Tally",{pass:0,warn:0,fail:0,unproven:0,recorded:0},false],
++  ["CompareTally",{improved:0,same:0,regressed:0,inconclusive:0,incomparable:0,new:0,missing:0,blockingRegressed:0},true],["Reason",{},false],["Reason","host-saturated",true],["Reason","bored",false]
++ ]as const){
++  const own=validateJsonSchemaSubset(schema.definitions[name as keyof typeof schema.definitions],value,schema).length===0;
++  expect(own,`${name} ${JSON.stringify(value)}`).toBe(ok);
++  expect(define(name)(value),`ajv ${name} ${JSON.stringify(value)}`).toBe(ok);
++ }
++});
++
++test("the authored SLO table is admitted and every inconsistency is found",()=>{
++ expect(benchSloIssuesV1(table)).toEqual([]);
++ const mutate=(change:(copy:any)=>void)=>{const copy=plain(table);change(copy);return benchSloIssuesV1(copy);};
++ const has=(issues:string[],part:string)=>expect(issues.some(issue=>issue.includes(part)),`${part} in ${JSON.stringify(issues)}`).toBe(true);
++ has(mutate(copy=>{copy.slos.push({...copy.slos[0]});}),"duplicate objective");
++ has(mutate(copy=>{copy.probes.push({...copy.probes[0]});}),"duplicate probe");
++ has(mutate(copy=>{copy.units.push({...copy.units[0]});}),"duplicate unit");
++ has(mutate(copy=>{copy.slos[0].probe="nope";}),"unknown probe");
++ has(mutate(copy=>{copy.slos[0].metric="startMs";}),"does not yield startMs");
++ has(mutate(copy=>{copy.slos.find((row:any)=>row.id==="cli-help-p99").statistic="p99";copy.probes.find((row:any)=>row.id==="cli-help").runs=50;}),"needs 100 samples");
++ has(mutate(copy=>{copy.slos[0].goal=500;copy.slos[0].gate=400;}),"beyond the gate");
++ has(mutate(copy=>{copy.slos[0].gate=null;}),"a goal needs a gate");
++ has(mutate(copy=>{const row=copy.slos.find((value:any)=>value.metric==="startMs");row.direction="higher";}),"a start time is judged downwards");
++ has(mutate(copy=>{copy.slos.find((row:any)=>row.enforcement==="blocking").goal=null;copy.slos.find((row:any)=>row.enforcement==="blocking").gate=null;}),"blocking objective needs a gate");
++ has(mutate(copy=>{copy.slos[0].tools=["nx"];}),"neutral belongs to cli-help");
++ has(mutate(copy=>{copy.slos.find((row:any)=>row.probe==="noop-run-oneshot").tools=["neutral"];}),"neutral belongs to cli-help");
++ has(mutate(copy=>{delete copy.probes.find((row:any)=>row.id==="noop-run-oneshot").target;}),"target is required for noop");
++ has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="cli-help").target="a:b";}),"target is not allowed for cli-help");
++ has(mutate(copy=>{copy.probes.find((row:any)=>row.kind==="edit").unit="ghost";}),"unknown unit");
++ has(mutate(copy=>{delete copy.probes.find((row:any)=>row.kind==="concurrency").workload;}),"workload is required");
++ has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="graph-scope-cold").runs=2;}),"a cold probe runs once");
++ has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="cli-help").cold=true;}),"only a graph probe can be cold");
++ has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="cli-help").memory=true;}),"only noop and edit probes measure memory");
++ has(mutate(copy=>{copy.probes.find((row:any)=>row.id==="graph-scope-warm").lane="resident";}),"no resident lane");
++ expect(mutate(copy=>{copy.units[0].file="x".repeat(300);}).length).toBeGreaterThan(0);
++ expect(mutate(copy=>{delete copy.labels.pass;}).length).toBeGreaterThan(0);
++ expect(mutate(copy=>{copy.version=2;}).length).toBeGreaterThan(0);
++});
++
++test("the objectives the user asked for are in the table, enforced where they are reachable and recorded where they are not",()=>{
++ const by=new Map(set.slos.map(row=>[row.id,row])),probes=new Map(set.probes.map(row=>[row.id,row]));
++ for(const verb of ["run","test"]){
++  const resident=by.get(`noop-${verb}-resident-p95`)!;
++  expect([resident.goal,resident.gate,resident.statistic,resident.metric,resident.enforcement,resident.source,probes.get(resident.probe)!.lane]).toEqual([300,300,"p95","wallMs","blocking","user-goal","resident"]);
++  expect(resident.tools).toEqual(["nx","bazel"]);
++  const oneshot=by.get(`noop-${verb}-oneshot-p50`)!;
++  expect([oneshot.goal,oneshot.gate,oneshot.enforcement]).toEqual([300,1000,"advisory"]);
++ }
++ for(const unit of set.units){
++  const start=by.get(`edit-${unit.id}-resident-start-p95`)!;
++  expect([start.goal,start.gate,start.statistic,start.metric,start.enforcement,start.source]).toEqual([500,500,"p95","startMs","blocking","user-goal"]);
++  expect(by.get(`edit-${unit.id}-oneshot-start-p50`)!.goal).toBe(500);
++  for(const lane of ["oneshot","resident"]){const green=by.get(`edit-${unit.id}-${lane}-green-p50`)!;expect([green.goal,green.gate,green.metric]).toEqual([null,null,"greenMs"]);}
++  expect(probes.get(`edit-${unit.id}-resident`)!.runs).toBeGreaterThanOrEqual(policy.minimumSamples.p95);
++ }
++ expect(set.units.map(row=>row.language).sort()).toEqual(["go","py","rs","ts"]);
++ for(const verb of ["build","test"]){const hit=by.get(`cache-second-run-${verb}-min`)!;expect([hit.goal,hit.gate,hit.direction,hit.statistic,hit.metric,hit.enforcement,hit.tolerance.relative,hit.tolerance.absolute]).toEqual([1,1,"higher","min","hitRatio","blocking",0,0]);}
++ expect(by.get("cli-help-p95")!.goal).toBe(200);
++ expect(by.get("graph-scope-cold-max")!.gate).toBe(300000);
++ expect(probes.get("graph-scope-cold")!.cold).toBe(true);
++ expect(set.slos.filter(row=>row.metric==="peakRssBytes").length).toBe(2);
++ for(const slo of set.slos)expect(policy.sources).toContain(slo.source);
++});
++
++test("percentiles, mean and extremes equal the oracle (statistics.quantiles) and NumPy's linear percentile",()=>{
++ for(const row of fixture.percentiles)same(benchStatsV1(row.values),row.expected);
++ const cases:{values:number[]}[]=[];let seed=12345;const next=()=>{seed=(seed*1103515245+12345)%2147483648;return seed/2147483648;};
++ for(let at=0;at<150;at++)cases.push({values:Array.from({length:1+Math.floor(next()*140)},()=>Math.round(next()*1e6)/100)});
++ const expected=python("stats",cases)!;
++ cases.forEach((row,at)=>same(benchStatsV1(row.values),expected[at]));
++ const numpy=python("stats-numpy",cases);
++ if(numpy===null)console.log("numpy is not installed: third-party percentile check skipped");
++ else cases.forEach((row,at)=>{if(row.values.length>=1)same(benchStatsV1(row.values),numpy[at]);});
++ expect(benchStatsV1([])).toBeNull();
++ expect(benchStatsV1([7])).toEqual({n:1,min:7,p50:7,p95:7,p99:7,max:7,mean:7});
++ expect(benchStatsV1([1,2,3,4,5,6,7,8,9,10])!.p50).toBe(5.5);
++});
++
++test("the load of the host is classified per core, a host without a load is unknown",()=>{
++ for(const row of fixture.loads)expect(benchLoadClassV1(row.perCore)).toBe(row.class as never);
++ expect(python("load",fixture.loads.map(row=>({perCore:row.perCore})))).toEqual(fixture.loads.map(row=>row.class));
++ expect(benchLoadClassV1(Number.NaN)).toBe("unknown");
++ const host=benchHostV1({platform:"darwin",arch:"arm64",cpus:10,memoryBytes:100,load1:25});
++ expect([host.loadPerCore,host.loadClass,host.hostClass]).toEqual([2.5,"saturated","darwin-arm64-10"]);
++ expect(benchHostV1({platform:"win32",arch:"x64",cpus:8,memoryBytes:100,load1:null}).loadClass).toBe("unknown");
++});
++
++test("series built from samples equal the oracle: failed samples are counted and left out, the load class is the busiest moment",()=>{
++ for(const row of fixture.series)same(benchSeriesV1(row.input as never),row.series);
++ const random=(seed:number):any[]=>{let state=seed;const next=()=>{state=(state*1103515245+12345)%2147483648;return state/2147483648;};return Array.from({length:6},(_,index)=>({index,ok:next()>0.2,exit:0,values:next()>0.1?{wallMs:Math.round(next()*1e4)/10,startMs:Math.round(next()*1e3)/10}:{},startKind:["marker","first-output","exit",null][Math.floor(next()*4)],loadPerCore:next()>0.2?Math.round(next()*30)/10:null}));};
++ const cases=Array.from({length:40},(_,at)=>({probe:"p",tool:"nx",lane:null,status:"measured",reason:null,samples:random(at+1)})),expected=python("series",cases)!;
++ cases.forEach((row,at)=>same(benchSeriesV1(row as never),expected[at]));
++});
++
++test("an objective is judged from its series exactly as the oracle judges it, including sample minimums and saturated hosts",()=>{
++ for(const row of fixture.judgements)same(benchJudgeV1(row.slo as never,row.slo.tools[0] as BenchToolV1,row.series as never),row.row);
++ const byName=new Map(fixture.judgements.map(row=>[row.name,row.row]));
++ expect(byName.get("fail-saturated-is-unproven")).toMatchObject({status:"unproven",reason:"host-saturated",inflated:true});
++ expect(byName.get("pass-saturated-stays-pass")).toMatchObject({status:"pass",inflated:false});
++ expect(byName.get("p95-19-samples")).toMatchObject({status:"unproven",reason:"too-few-samples",n:19});
++ expect(byName.get("p95-20-samples")!.status).toBe("pass");
++ expect(byName.get("p99-99-samples")!.status).toBe("unproven");
++ expect(byName.get("p99-100-samples")!.status).toBe("pass");
++ expect(byName.get("higher-warn")!.status).toBe("warn");
++ expect(byName.get("recorded")!.status).toBe("recorded");
++ expect([byName.get("equals-goal-passes")!.status,byName.get("equals-gate-warns")!.status,byName.get("equals-gate-only-passes")!.status]).toEqual(["pass","warn","pass"]);
++ expect(["start-all-markers-pass","start-first-output-pass-is-unproven","start-first-output-fail-is-fail","start-exit-pass-is-pass","start-exit-fail-is-unproven","start-mixed-fail-is-unproven","start-first-output-recorded","start-first-output-fail-saturated"].map(name=>byName.get(name)!.status)).toEqual(["pass","unproven","fail","pass","unproven","unproven","recorded","unproven"]);
++ expect(byName.get("start-mixed-pass-is-unproven")).toMatchObject({status:"unproven",reason:"start-unobserved",value:100});
++ expect(byName.get("start-first-output-fail-saturated")).toMatchObject({reason:"host-saturated"});
++ const slos:any[]=[],sampleSets:any[]=[];let seed=99;const next=()=>{seed=(seed*1103515245+12345)%2147483648;return seed/2147483648;};
++ for(let at=0;at<120;at++){
++  const statistic=policy.statistics[Math.floor(next()*policy.statistics.length)]!,lower=next()>0.3,goal=next()>0.3?Math.round(next()*500):null,gate=goal===null?(next()>0.5?Math.round(next()*900):null):goal+(lower?1:-1)*Math.round(next()*400),count=Math.floor(next()*40);
++  slos.push({id:"x",title:{en:"x",de:"x"},probe:"p",metric:"wallMs",statistic,direction:lower?"lower":"higher",goal,gate,tools:["nx"],enforcement:"advisory",tolerance:{relative:0.1,absolute:5},source:"provisional"});
++  sampleSets.push({probe:"p",tool:"nx",lane:null,status:"measured",reason:null,samples:Array.from({length:count},(_,index)=>({index,ok:next()>0.1,exit:0,values:{wallMs:Math.round(next()*1000)},startKind:null,loadPerCore:next()>0.5?3:0.1}))});
++ }
++ const built=python("series",sampleSets)!,expected=python("judge",slos.map((value,at)=>({slo:value,tool:"nx",series:built[at]})))!;
++ slos.forEach((value,at)=>same(benchJudgeV1(value,"nx",built[at]),expected[at]));
++});
++
++test("the verdicts are counted and only failed blocking objectives count as blocking failures",()=>{
++ for(const row of fixture.tallies)expect(benchTallyV1(row.rows as never)).toEqual(row.tally);
++ const rows=fixture.judgements.map(row=>row.row);
++ expect(benchTallyV1(rows as never).blockingFailed).toBe(rows.filter(row=>row.status==="fail"&&row.enforcement==="blocking").length);
++ expect(benchTallyV1(rows as never).blockingFailed).toBeGreaterThan(0);
++});
++
++test("a report is compared with a baseline like the oracle does: tolerance edges, direction, host class, saturation, new and missing rows",()=>{
++ for(const row of fixture.comparisons)same(benchCompareV1({version:1,labels:set.labels,units:[],probes:[],slos:row.slos} as never,row.current as never,row.baseline as never),row.comparison);
++ const find=(name:string)=>fixture.comparisons.find(row=>row.name===name)!.comparison;
++ expect(find("boundary-exact-is-same").rows[0]!.status).toBe("same");
++ expect(find("boundary-over-regressed").rows[0]!.status).toBe("regressed");
++ expect(find("boundary-lower-exact").rows[0]!.status).toBe("same");
++ expect(find("boundary-lower-over-improved").rows[0]!.status).toBe("improved");
++ expect(find("regressed-and-blocking").tally.blockingRegressed).toBe(1);
++ expect(find("saturated-current-inconclusive").rows[0]).toMatchObject({status:"inconclusive",reason:"host-saturated"});
++ expect(find("saturated-improvement-stays").rows[0]!.status).toBe("improved");
++ expect(find("host-class-differs").tally.incomparable).toBe(3);
++ expect(find("not-missing-when-probe-absent").tally.missing).toBe(0);
++ const random=(seed:number)=>{let state=seed;const next=()=>{state=(state*1103515245+12345)%2147483648;return state/2147483648;};return next;};
++ const next=random(4242),slos:BenchSloV1[]=[
++  {id:"a",title:{en:"a",de:"a"},probe:"p",metric:"wallMs",statistic:"p50",direction:"lower",goal:300,gate:900,tools:["nx"],enforcement:"advisory",tolerance:{relative:0.15,absolute:10},source:"provisional"},
++  {id:"h",title:{en:"h",de:"h"},probe:"c",metric:"hitRatio",statistic:"min",direction:"higher",goal:1,gate:1,tools:["nx"],enforcement:"blocking",tolerance:{relative:0.02,absolute:0},source:"user-goal"}];
++ const build=(load:number)=>{
++  const series=[benchSeriesV1({probe:"p",tool:"nx",lane:null,status:"measured",reason:null,samples:Array.from({length:5},(_,index)=>({index,ok:true,exit:0,values:{wallMs:Math.round(100+next()*400)},startKind:null,loadPerCore:load}))}),
++   benchSeriesV1({probe:"c",tool:"nx",lane:null,status:"measured",reason:null,samples:Array.from({length:3},(_,index)=>({index,ok:true,exit:0,values:{hitRatio:next()>0.5?1:Math.round((0.8+next()*0.2)*100)/100},startKind:null,loadPerCore:0.2}))})];
++  const rows=[benchJudgeV1(slos[0]!,"nx",series[0]),benchJudgeV1(slos[1]!,"nx",series[1])],host=benchHostV1({platform:"x",arch:"y",cpus:10,memoryBytes:1,load1:load*10});
++  return benchReportV1({startedAt:"a",finishedAt:"b",host,hostAfter:host,tools:["nx"],runsOverride:null,series,rows,comparison:null});
++ };
++ const cases=Array.from({length:80},()=>({slos,current:build(next()>0.7?2:0.2),baseline:build(next()>0.7?2:0.2)})),expected=python("compare",cases.map(row=>plain(row)))!;
++ cases.forEach((row,at)=>same(benchCompareV1({version:1,labels:set.labels,units:[],probes:[],slos} as never,row.current,row.baseline),expected[at]));
++ expect(()=>benchBaselineV1({version:2})).toThrow(/Bench-Bericht/u);
++ expect(()=>benchBaselineV1(null)).toThrow();
++ expect(benchBaselineV1(plain(fixture.comparisons[0]!.baseline)).kind).toBe("bench-report");
++});
++
++test("objectives are selected by id, probe, kind or all, probes are paired with the chosen implementations and cold probes run first",()=>{
++ for(const row of fixture.selection){
++  if(row.error!==null)expect(()=>benchSelectV1(row.set as never,row.ids as never,row.tools as never),row.name).toThrow();
++  else expect(benchSelectV1(row.set as never,row.ids as never,row.tools as never).map(pair=>`${pair.probe.id}|${pair.tool}|${pair.slos.map(slo=>slo.id).join(",")}`),row.name).toEqual(row.pairs);
++ }
++ expect(python("select",fixture.selection.map(row=>({set:row.set,ids:row.ids,tools:row.tools})))!.map((row:any)=>row.pairs)).toEqual(fixture.selection.map(row=>row.pairs));
++ const all=benchSelectV1(set,"all",["nx","bazel"]);
++ expect(all[0]!.probe.cold).toBe(true);
++ expect(all.filter(pair=>pair.tool==="neutral").length).toBe(1);
++ expect(all.length).toBe(set.probes.length*2-1);
++ expect(benchSelectV1(set,["kind:cache"],["nx"]).map(pair=>pair.probe.id)).toEqual(["cache-second-run-build","cache-second-run-test"]);
++ expect(()=>benchSelectV1(set,["kind:cache"],[])).toThrow(/Implementierungen/u);
++ expect(()=>benchSelectV1(set,["nope"],["nx"])).toThrow(/Unbekanntes Ziel/u);
++});
++
++test("edits append one line per language, equal to the oracle, never change an existing line and always differ from the input",()=>{
++ for(const row of fixture.mutations){
++  const unit={id:"u",language:row.language,target:"a:b",file:"f",op:row.op,title:{en:"a",de:"b"}} as never;
++  expect(benchMutateV1(row.text,unit,row.nonce),row.name).toBe(row.result);
++  expect(row.result.startsWith(row.text)).toBe(true);
++  expect(row.result).not.toBe(row.text);
++ }
++ expect(()=>benchMutateV1("x",{id:"u",language:"ts",target:"a:b",file:"f",op:"private-body",title:{en:"a",de:"b"}},"BAD")).toThrow();
++});
++
++test("tool marker lines are found like the oracle finds them and only at the start of a line",()=>{
++ for(const row of fixture.markers){const patterns=benchMarkersV1(row.tool as never),at=row.lines.findIndex(line=>patterns.some(pattern=>pattern.test(line)));expect(at<0?null:at,row.name).toBe(row.first);}
++ expect(benchMarkersV1("neutral")).toEqual([]);
++});
++
++test("the resident memory of a process tree is summed from a process table of either system and the answer equals the oracle",()=>{
++ for(const row of fixture.memory)expect(benchTreeRssV1(row.table,row.pid,row.system),row.name).toBe(row.rss);
++ expect(python("tree",fixture.memory.map(row=>({table:row.table,pid:row.pid,system:row.system})))).toEqual(fixture.memory.map(row=>row.rss));
++ const live=spawnSync("ps",["-A","-o","pid=,ppid=,rss="],{encoding:"utf8"});
++ if(live.status===0){const mine=benchTreeRssV1(live.stdout,process.pid,process.platform);expect(mine).not.toBeNull();expect(mine!).toBeGreaterThan(10*1024*1024);}
++});
++
++test("a run of a probe is built from the exact commands: the lanes differ only by the service flag",()=>{
++ expect(benchRunArgumentsV1("a:b","oneshot",false)).toEqual(["run","a:b"]);
++ expect(benchRunArgumentsV1("a:b","oneshot",true)).toEqual(["run","a:b",policy.oneshotFlag]);
++ expect(benchRunArgumentsV1("a:b","resident",true)).toEqual(["run","a:b",policy.residentFlag]);
++ expect(benchRunArgumentsV1("a:b",null,true,["--dry-run"])).toEqual(["run","a:b","--dry-run",policy.oneshotFlag]);
++});
++
++const title=text({en:"x",de:"x"});
++const unit={id:"u",language:"ts" as const,target:"@x/y:test",file:"src/u.ts",op:"private-body" as const,title};
++const probe=(over:Partial<BenchProbeV1>&{id:string;kind:BenchProbeV1["kind"]}):BenchProbeV1=>({title,runs:4,warmup:1,...over});
++const mini=(probes:BenchProbeV1[],slos:BenchSloV1[]=[]):BenchSloSetV1=>({version:1,labels:set.labels,units:[unit],probes,slos});
++const slo=(over:Partial<BenchSloV1>&{id:string;probe:string}):BenchSloV1=>({title,metric:"wallMs",statistic:"p50",direction:"lower",goal:300,gate:1000,tools:["nx"],enforcement:"advisory",tolerance:{relative:0.15,absolute:25},source:"provisional",...over});
++const finished=(over:Partial<BenchRunV1>={}):BenchRunV1=>({exit:0,wallMs:100,startedMs:1000,firstOutputMs:10,markerMs:null,peakRssBytes:null,...over});
++type ScriptV1=Partial<{spawn:(spec:BenchSpawnSpecV1,call:number,files:Map<string,string>)=>BenchRunV1|Error;cache:BenchPortsV1["cache"];concurrency:BenchPortsV1["concurrency"];fresh:boolean;service:boolean;load:number|null;files:Record<string,string>;cancelAtCheck:number;abortAtSpawn:number}>;
++const scripted=(script:ScriptV1={})=>{
++ const calls:BenchSpawnSpecV1[]=[],log:string[]=[],progress:string[]=[],files=new Map(Object.entries(script.files??{[unit.file]:"export const a=1;\n"})),controller=new AbortController();
++ let sequence=0,checks=0;
++ const ports:BenchPortsV1={
++  read:async path=>files.get(path)!,
++  write:async(path,content)=>{files.set(path,content);log.push(`write:${path}`);},
++  spawn:async(spec,signal)=>{calls.push(spec);log.push(`spawn:${spec.args.join(" ")}`);if(signal.aborted)throw signal.reason;const outcome=(script.spawn??(()=>finished()))(spec,calls.length-1,files);if(script.abortAtSpawn!==undefined&&calls.length-1===script.abortAtSpawn)controller.abort(Error("stop now"));if(outcome instanceof Error)throw outcome;return outcome;},
++  cache:script.cache??(async()=>({cacheable:4,executedCacheable:0,uncachedExecuted:1,total:5})),
++  concurrency:script.concurrency??(async()=>({makespanMs:1000,serialMs:2500,maxUnrelatedWaitMs:0,failedRules:0})),
++  service:{available:async()=>script.service??false,start:async()=>{log.push("service:start");},stop:async()=>{log.push("service:stop");}},
++  host:()=>benchHostV1({platform:"test",arch:"x",cpus:10,memoryBytes:1e10,load1:script.load===undefined?2:script.load===null?null:script.load*10}),
++  clock:()=>"2026-10-21T00:00:00.000Z",fresh:script.fresh??false,now:()=>1000,nonce:()=>(++sequence).toString(36).padEnd(8,"a"),
++  check:()=>{checks++;if(script.cancelAtCheck&&checks>=script.cancelAtCheck){controller.abort(Error("cancelled"));throw controller.signal.reason;}},
++  progress:async stage=>{progress.push(stage);},signal:controller.signal
++ };
++ return {ports,calls,log,progress,files,controller};
++};
++const runProbe=(value:BenchProbeV1,script:ScriptV1={},tool:"nx"|"bazel"|"neutral"="nx",override:number|null=null)=>{const world=scripted({...script,load:script.load===undefined?0.1:script.load});return benchRunProbeV1(mini([value]),value,tool,{override,service:script.service??false},world.ports).then(series=>({series,world}));};
++
++test("the command line help probe discards the warm-up, measures every run and runs without an implementation",async()=>{
++ const{series,world}=await runProbe(probe({id:"cli-help",kind:"cli-help",runs:4,warmup:1}),{spawn:(_,call)=>finished({wallMs:(call+1)*10})},"neutral");
++ expect(world.calls.length).toBe(5);
++ expect(world.calls.every(call=>call.tool==="neutral"&&call.args.join(" ")==="--help"&&!call.memory)).toBe(true);
++ expect(series.samples.map(row=>row.values.wallMs)).toEqual([20,30,40,50]);
++ expect(series.stats.wallMs!.p50).toBe(35);
++ expect(series.failed).toBe(0);
++ const broken=await runProbe(probe({id:"cli-help",kind:"cli-help",runs:3,warmup:0}),{spawn:(_,call)=>call===1?Error("boom"):call===2?finished({exit:1}):finished()},"neutral");
++ expect([broken.series.failed,broken.series.stats.wallMs!.n]).toEqual([2,1]);
++ expect(world.progress[0]).toBe("cli-help:neutral:1/5");
++ const counted=await runProbe(probe({id:"cli-help",kind:"cli-help",runs:100,warmup:3}),{},"neutral",5);
++ expect(counted.world.calls.length).toBe(8);
++});
++
++test("a warm no-op primes once, then measures; a failing prime makes the probe unproven instead of slow",async()=>{
++ const first=await runProbe(probe({id:"n",kind:"noop",lane:"oneshot",target:"@x/y:build",runs:4,warmup:1}),{spawn:(_,call)=>finished({wallMs:call===0?9999:call*10})});
++ expect(first.world.calls.length).toBe(6);
++ expect(first.series.samples.map(row=>row.values.wallMs)).toEqual([20,30,40,50]);
++ expect(first.world.log.filter(line=>line.startsWith("write:")).length).toBe(0);
++ const withService=await runProbe(probe({id:"n",kind:"noop",lane:"oneshot",target:"@x/y:build",runs:1,warmup:0}),{service:true});
++ expect(withService.world.calls.every(call=>call.args.includes(policy.oneshotFlag))).toBe(true);
++ const bad=await runProbe(probe({id:"n",kind:"noop",lane:"oneshot",target:"@x/y:build"}),{spawn:()=>finished({exit:1})});
++ expect([bad.world.calls.length,bad.series.samples.length,bad.series.failed]).toEqual([1,1,1]);
++ const row=benchJudgeV1(slo({id:"s",probe:"n"}),"nx",bad.series);
++ expect([row.status,row.reason]).toEqual(["unproven","probe-failed"]);
++});
++
++test("the resident lane needs the service: it is unavailable without it, started before and stopped after, also on failure and cancellation",async()=>{
++ const resident=probe({id:"r",kind:"noop",lane:"resident",target:"@x/y:build",runs:2,warmup:0});
++ const absent=await runProbe(resident,{service:false});
++ expect([absent.series.status,absent.series.reason,absent.world.calls.length]).toEqual(["unavailable","service-unavailable",0]);
++ expect(benchJudgeV1(slo({id:"s",probe:"r"}),"nx",absent.series)).toMatchObject({status:"unproven",reason:"service-unavailable"});
++ const present=await runProbe(resident,{service:true});
++ expect(present.world.log.filter(line=>line.startsWith("service:")||line.startsWith("spawn:"))).toEqual(["service:start","spawn:run @x/y:build --service=require","spawn:run @x/y:build --service=require","spawn:run @x/y:build --service=require","service:stop"]);
++ const failing=scripted({service:true,spawn:(_,call)=>call===1?Error("tool crashed"):finished(),load:0.1});
++ const series=await benchRunProbeV1(mini([resident]),resident,"nx",{override:null,service:true},failing.ports);
++ expect(series.failed).toBe(1);
++ expect(failing.log.at(-1)).toBe("service:stop");
++ const cancelled=scripted({service:true,cancelAtCheck:3,load:0.1});
++ await expect(benchRunProbeV1(mini([resident]),resident,"nx",{override:null,service:true},cancelled.ports)).rejects.toThrow("cancelled");
++ expect(cancelled.log.at(-1)).toBe("service:stop");
++ const aborted=scripted({service:true,load:0.1,abortAtSpawn:1});
++ await expect(benchRunProbeV1(mini([resident]),resident,"nx",{override:null,service:true},aborted.ports)).rejects.toThrow("stop now");
++ expect(aborted.log.at(-1)).toBe("service:stop");
++});
++
++test("an edit probe edits for every sample, times the start from the edit, restores the file byte for byte and tells how the start was seen",async()=>{
++ const original="export const a=1;\n",editProbe=probe({id:"e",kind:"edit",lane:"oneshot",unit:"u",runs:3,warmup:1}),seen:string[]=[];
++ const{series,world}=await runProbe(editProbe,{spawn:(_,call,files)=>{seen.push(files.get(unit.file)!);return finished({startedMs:1005,wallMs:100,firstOutputMs:20,markerMs:call%2?40:null});}});
++ expect(seen[0]).toBe(original);
++ expect(seen.slice(1).every(content=>content.startsWith(original)&&content.length>original.length&&/void \d+;\n$/u.test(content))).toBe(true);
++ expect(new Set(seen.slice(1)).size).toBe(4);
++ expect(world.files.get(unit.file)).toBe(original);
++ expect(world.log.filter(line=>line==="write:src/u.ts").length).toBe(8);
++ const marked=series.samples.filter(row=>row.startKind==="marker"),firstOutput=series.samples.filter(row=>row.startKind==="first-output");
++ expect(marked.every(row=>row.values.startMs===45&&row.values.greenMs===105)).toBe(true);
++ expect(firstOutput.every(row=>row.values.startMs===25&&row.values.greenMs===105)).toBe(true);
++ expect(series.startKinds.marker+series.startKinds["first-output"]).toBe(3);
++ const silent=await runProbe(editProbe,{spawn:()=>finished({startedMs:1005,wallMs:100,firstOutputMs:null,markerMs:null})});
++ expect(silent.series.samples.every(row=>row.startKind==="exit"&&row.values.startMs===105)).toBe(true);
++ const red=await runProbe(editProbe,{spawn:(_,call)=>call===0?finished():finished({exit:1,markerMs:30,startedMs:1002})});
++ expect(red.series.samples.every(row=>!row.ok&&row.startKind==="marker"&&Object.keys(row.values).length===0)).toBe(true);
++ expect(benchJudgeV1(slo({id:"s",probe:"e",metric:"startMs"}),"nx",red.series)).toMatchObject({status:"unproven",reason:"probe-failed"});
++ expect(red.world.files.get(unit.file)).toBe(original);
++ const broken=await runProbe(editProbe,{spawn:(_,call)=>call===0?finished({exit:1}):finished()});
++ expect([broken.world.calls.length,broken.series.failed,broken.world.files.get(unit.file)]).toEqual([1,1,original]);
++ await expect(runProbe(probe({id:"e",kind:"edit",lane:"oneshot",unit:"ghost"}),{})).rejects.toThrow(/Unbekannte Einheit/u);
++});
++
++test("cancelling in the middle of an edit probe restores the edited file",async()=>{
++ const world=scripted({load:0.1,abortAtSpawn:3}),editProbe=probe({id:"e",kind:"edit",lane:"oneshot",unit:"u",runs:5,warmup:0});
++ await expect(benchRunProbeV1(mini([editProbe]),editProbe,"nx",{override:null,service:false},world.ports)).rejects.toThrow("stop now");
++ expect(world.files.get(unit.file)).toBe("export const a=1;\n");
++ const checked=scripted({load:0.1,cancelAtCheck:4});
++ await expect(benchRunProbeV1(mini([editProbe]),editProbe,"nx",{override:null,service:false},checked.ports)).rejects.toThrow("cancelled");
++ expect(checked.files.get(unit.file)).toBe("export const a=1;\n");
++});
++
++test("the cold graph probe runs once on a freshly prepared copy and says so when the copy is not fresh",async()=>{
++ const cold=probe({id:"g",kind:"graph",lane:"oneshot",target:"@x/y:test",runs:1,warmup:0,cold:true});
++ const stale=await runProbe(cold,{fresh:false});
++ expect([stale.series.status,stale.series.reason,stale.world.calls.length]).toEqual(["unavailable","not-cold",0]);
++ const fresh=await runProbe(cold,{fresh:true},"nx",9);
++ expect(fresh.world.calls.map(call=>call.args.join(" "))).toEqual(["run @x/y:test --dry-run"]);
++ expect(fresh.series.samples.length).toBe(1);
++ const warm=await runProbe(probe({id:"g",kind:"graph",lane:"oneshot",target:"@x/y:test",runs:2,warmup:1}),{});
++ expect(warm.world.calls.map(call=>call.args.join(" "))).toEqual(Array(4).fill("run @x/y:test --dry-run"));
++});
++
++test("memory probes keep the peak of the process tree and are unsupported where no sample could be taken",async()=>{
++ const memory=probe({id:"m",kind:"noop",lane:"oneshot",target:"@x/y:build",runs:3,warmup:0,memory:true});
++ const measured=await runProbe(memory,{spawn:(spec,call)=>finished({peakRssBytes:spec.memory?100+call:null})});
++ expect(measured.world.calls.slice(1).every(call=>call.memory)).toBe(true);
++ expect(measured.series.samples.map(row=>row.values)).toEqual([{peakRssBytes:101},{peakRssBytes:102},{peakRssBytes:103}]);
++ const none=await runProbe(memory,{});
++ expect([none.series.status,none.series.reason]).toEqual(["unavailable","unsupported"]);
++});
++
++test("the cache probe judges the second run: cacheable tasks that executed are misses, uncached tasks are not counted",async()=>{
++ const hit=probe({id:"c",kind:"cache",target:"@x/y:build",runs:3,warmup:0}),counts=[{cacheable:4,executedCacheable:0,uncachedExecuted:1,total:5},{cacheable:4,executedCacheable:1,uncachedExecuted:1,total:5},{cacheable:8,executedCacheable:0,uncachedExecuted:0,total:8},{cacheable:4,executedCacheable:2,uncachedExecuted:0,total:4}];
++ const{series,world}=await runProbe(hit,{cache:async()=>counts.shift()!},"bazel");
++ expect(world.calls.length).toBe(0);
++ expect(series.samples.map(row=>row.values.hitRatio)).toEqual([0.75,1,0.5]);
++ expect(series.stats.hitRatio!.min).toBe(0.5);
++ const none=await runProbe(hit,{cache:async()=>({cacheable:0,executedCacheable:0,uncachedExecuted:0,total:2})});
++ expect(none.series.failed).toBe(3);
++ const crash=await runProbe(hit,{cache:async()=>{throw Error("no graph");}});
++ expect([crash.series.samples.length,crash.series.failed]).toEqual([1,1]);
++ const row=benchJudgeV1(slo({id:"h",probe:"c",metric:"hitRatio",statistic:"min",direction:"higher",goal:1,gate:1,enforcement:"blocking"}),"nx",series);
++ expect([row.status,row.value]).toEqual(["fail",0.5]);
++});
++
++test("the concurrency probe reports makespan, the longest wait for an unrelated project and the speed-up over the serial reference",async()=>{
++ const conc=probe({id:"k",kind:"concurrency",workload:"disjoint-projects",sessions:3,runs:2,warmup:0}),asked:string[]=[];
++ const{series}=await runProbe(conc,{concurrency:async(tool,workload,sessions)=>{asked.push(`${tool}/${workload}/${sessions}`);return {makespanMs:1000,serialMs:2500,maxUnrelatedWaitMs:120,failedRules:2};}},"bazel");
++ expect(asked).toEqual(["bazel/disjoint-projects/3","bazel/disjoint-projects/3"]);
++ expect(series.samples[0]!.values).toEqual({makespanMs:1000,maxUnrelatedWaitMs:120,speedup:2.5});
++ const zero=await runProbe(conc,{concurrency:async()=>({makespanMs:0,serialMs:0,maxUnrelatedWaitMs:0,failedRules:0})});
++ expect(zero.series.samples[0]!.values).toEqual({makespanMs:0,maxUnrelatedWaitMs:0});
++});
++
++test("the concurrency report of the harness is condensed to makespan, serial span, longest unrelated wait and failed rules",()=>{
++ const wait=(waitMs:number,relation:string)=>({class:"x",resource:"r",mode:"shared",source:"lease",precise:true,startMs:0,endMs:waitMs,waitMs,holderPid:null,position:null,relation});
++ const step=(waits:unknown[])=>({index:0,kind:"run",command:[],startMs:0,endMs:1,exit:0,waits,observation:null,observed:"none",outputs:null,stdout:null});
++ const report={version:1,passed:1,failed:1,skipped:0,owners:[],runs:[{workload:"w",tool:"nx",criteria:"default",rules:[{rule:"a",kind:"no-failure",owners:["x"],status:"fail",value:null,limit:null,detail:[]},{rule:"b",kind:"no-failure",owners:["x"],status:"pass",value:null,limit:null,detail:[]}],measurement:{workload:"w",tool:"nx",uncached:[],sessions:[{id:"a",group:"g1",startMs:0,endMs:1000,steps:[step([wait(700,"unrelated"),wait(4000,"related")])]},{id:"b",group:"g2",startMs:100,endMs:1500,steps:[step([wait(50,"external")])]}],serial:[{id:"a",group:"g1",startMs:0,endMs:800,steps:[]},{id:"b",group:"g2",startMs:800,endMs:1700,steps:[]}]}}]};
++ expect(benchConcurrencyFromReportV1(report as never)).toEqual({makespanMs:1500,serialMs:1700,maxUnrelatedWaitMs:700,failedRules:1});
++ expect(()=>benchConcurrencyFromReportV1({...report,runs:[]} as never)).toThrow(/Gleichzeitigkeitsbericht/u);
++ const lonely=plain(report);lonely.runs[0].measurement.serial=null;lonely.runs[0].measurement.sessions=[];
++ expect(benchConcurrencyFromReportV1(lonely)).toEqual({makespanMs:0,serialMs:0,maxUnrelatedWaitMs:0,failedRules:1});
++});
++
++const fullSet=():BenchSloSetV1=>{
++ const probes=[probe({id:"help",kind:"cli-help",runs:3,warmup:0}),probe({id:"cold",kind:"graph",lane:"oneshot",target:"@x/y:test",runs:1,warmup:0,cold:true}),probe({id:"noop",kind:"noop",lane:"oneshot",target:"@x/y:build",runs:3,warmup:0}),probe({id:"res",kind:"noop",lane:"resident",target:"@x/y:build",runs:3,warmup:0}),probe({id:"hit",kind:"cache",target:"@x/y:build",runs:3,warmup:0})];
++ return mini(probes,[
++  slo({id:"help-p50",probe:"help",tools:["neutral"],goal:100,gate:200}),slo({id:"cold-max",probe:"cold",statistic:"max",goal:null,gate:5000}),slo({id:"noop-p50",probe:"noop",tools:["nx","bazel"],goal:100,gate:150}),
++  slo({id:"res-p50",probe:"res",goal:50,gate:50,enforcement:"blocking"}),slo({id:"hit-min",probe:"hit",metric:"hitRatio",statistic:"min",direction:"higher",goal:1,gate:1,enforcement:"blocking"}),slo({id:"noop-rec",probe:"noop",goal:null,gate:null,tools:["nx"]})]);
++};
++
++test("a whole run measures the selected probes in order, judges every objective, annotates the host and compares with the baseline",async()=>{
++ const behave=(spec:BenchSpawnSpecV1,call:number)=>finished({wallMs:spec.args[0]==="--help"?80:call*40+100}),world=scripted({load:0.1,fresh:true,service:false,spawn:behave}),full=fullSet(),pairs=benchSelectV1(full,"all",["nx","bazel"]);
++ const report=await benchRunV1(full,pairs,{override:null,tools:["nx","bazel"],maxLoad:null,baseline:null},world.ports);
++ expect(pairs.map(pair=>`${pair.probe.id}/${pair.tool}`)).toEqual(["cold/nx","help/neutral","noop/bazel","noop/nx","res/nx","hit/nx"]);
++ expect(world.progress.filter(line=>/^[a-z]+:[a-z]+:\d+\/6$/u.test(line)).slice(0,2)).toEqual(["cold:nx:1/6","help:neutral:2/6"]);
++ expect(report.rows.map(row=>`${row.slo}/${row.tool}`)).toEqual(["help-p50/neutral","cold-max/nx","noop-p50/bazel","noop-p50/nx","res-p50/nx","hit-min/nx","noop-rec/nx"]);
++ const rows=new Map(report.rows.map(row=>[`${row.slo}/${row.tool}`,row]));
++ expect(rows.get("help-p50/neutral")).toMatchObject({status:"pass",value:80,n:3});
++ expect(rows.get("cold-max/nx")).toMatchObject({status:"pass",value:100,n:1});
++ expect(rows.get("res-p50/nx")).toMatchObject({status:"unproven",reason:"service-unavailable"});
++ expect(rows.get("hit-min/nx")).toMatchObject({status:"pass",value:1});
++ expect(rows.get("noop-rec/nx")!.status).toBe("recorded");
++ expect(report.host.hostClass).toBe("test-x-10");
++ expect([report.tally.blockingFailed,report.tally.recorded]).toEqual([0,1]);
++ expect(report.tally.unproven).toBe(1);
++ expect(report.kind).toBe("bench-report");
++ expect(define("Report")(plain(report)),JSON.stringify(define("Report").errors)).toBe(true);
++ const second=await benchRunV1(full,pairs,{override:null,tools:["nx","bazel"],maxLoad:null,baseline:report},scripted({load:0.1,fresh:true,spawn:behave}).ports);
++ expect(second.comparison).not.toBeNull();
++ expect(second.comparison!.rows.map(row=>row.status).sort()).toEqual(["incomparable","same","same","same","same","same","same"]);
++ const slower=await benchRunV1(full,pairs,{override:null,tools:["nx","bazel"],maxLoad:null,baseline:report},scripted({load:0.1,fresh:true,spawn:(spec,call)=>finished({wallMs:spec.args[0]==="--help"?800:call*40+900})}).ports);
++ expect(slower.comparison!.tally.regressed).toBeGreaterThan(0);
++ expect(slower.comparison!.rows.find(row=>row.slo==="help-p50")).toMatchObject({status:"regressed",base:80,current:800});
++});
++
++test("a blocking objective that fails is counted, advisory failures are not, and a run refuses a busy host",async()=>{
++ const full=mini([probe({id:"hit",kind:"cache",target:"@x/y:build",runs:3,warmup:0}),probe({id:"noop",kind:"noop",lane:"oneshot",target:"@x/y:build",runs:3,warmup:0})],[
++  slo({id:"hit-min",probe:"hit",metric:"hitRatio",statistic:"min",direction:"higher",goal:1,gate:1,enforcement:"blocking"}),slo({id:"noop-p50",probe:"noop",goal:100,gate:200})]);
++ const world=scripted({load:0.1,cache:async()=>({cacheable:10,executedCacheable:1,uncachedExecuted:0,total:10}),spawn:()=>finished({wallMs:5000})});
++ const report=await benchRunV1(full,benchSelectV1(full,"all",["nx"]),{override:null,tools:["nx"],maxLoad:null,baseline:null},world.ports);
++ expect([report.tally.fail,report.tally.blockingFailed]).toEqual([2,1]);
++ const busy=scripted({load:2.5});
++ await expect(benchRunV1(full,benchSelectV1(full,"all",["nx"]),{override:null,tools:["nx"],maxLoad:2,baseline:null},busy.ports)).rejects.toThrow(/Last je Kern 2\.50/u);
++ expect(busy.calls.length).toBe(0);
++ const unknown=scripted({load:null});
++ const report2=await benchRunV1(full,benchSelectV1(full,"all",["nx"]),{override:null,tools:["nx"],maxLoad:2,baseline:null},unknown.ports);
++ expect(report2.host.loadClass).toBe("unknown");
++ const stopped=scripted({load:0.1,cancelAtCheck:2});
++ await expect(benchRunV1(full,benchSelectV1(full,"all",["nx"]),{override:null,tools:["nx"],maxLoad:null,baseline:null},stopped.ports)).rejects.toThrow("cancelled");
++});
++
++test("reports render in both languages as text and markdown without a missing label, and the markdown table is well formed",()=>{
++ const sample=fixture.comparisons.find(row=>row.name==="regressed-and-blocking")!,report=plain(sample.current) as BenchReportV1,comparison=benchCompareV1({version:1,labels:set.labels,units:[],probes:[],slos:sample.slos} as never,report,plain(sample.baseline));
++ const withComparison={...report,comparison} as BenchReportV1,misses=new Set<string>();
++ const probing=new Proxy(set.labels,{get(target,key){if(typeof key==="string"&&!(key in target))misses.add(key);return (target as any)[key];}});
++ const view:BenchSloSetV1={...set,labels:probing as never,slos:sample.slos as never};
++ const outputs:Record<string,string>={};
++ for(const language of ["en","de"] as const)for(const format of ["text","markdown"] as const){
++  const rendered=renderBenchReportV1(withComparison,view,language,format);
++  outputs[`${language}-${format}`]=rendered;
++  expect(rendered).toContain(language==="en"?"Performance objectives":"Leistungsziele");
++  expect(rendered).toContain(language==="en"?"Comparison with the baseline":"Vergleich mit der Referenz");
++  for(const row of sample.slos)expect(rendered).toContain(row.id);
++  expect(renderBenchComparisonV1(comparison,view,language,format).length).toBeGreaterThan(50);
++  expect(renderBenchListV1(set,language,format)).toContain("noop-run-resident-p95");
++ }
++ expect([...misses]).toEqual([]);
++ expect(outputs["en-text"]).not.toBe(outputs["de-text"]);
++ const tables:string[][]=[];let current:string[]=[];
++ for(const line of outputs["en-markdown"]!.split("\n")){if(line.startsWith("|"))current.push(line);else if(current.length){tables.push(current);current=[];}}
++ if(current.length)tables.push(current);
++ expect(tables.length).toBe(2);
++ for(const block of tables){const pipes=(line:string)=>line.replaceAll("\\|","").split("|").length;expect(block.length).toBeGreaterThan(3);expect(/^\| :?-+/u.test(block[1]!)).toBe(true);for(const line of block)expect(pipes(line)).toBe(pipes(block[0]!));}
++ expect(outputs["en-text"]).toContain("!");
++ expect(renderBenchListV1(set,"en","text")).toContain("user-goal");
++});
++
++test("the option parser accepts every documented form, refuses every other and matches the operations catalogue",()=>{
++ const ok=(args:string[])=>benchArgumentsV1(args);
++ expect(ok(["list"]).operation).toBe("list");
++ expect(ok(["run"])).toMatchObject({slo:"all",tools:["nx","bazel"],json:false,prepare:false,runs:undefined});
++ expect(ok(["run","--slo=a,kind:edit","--runs=25","--baseline","x.json","--save-baseline=y.json","--markdown=z.md","--max-load=1.5","--implementations=nx","--root=/r","--file=f","--json","--prepare","--lang=de"])).toMatchObject({slo:["a","kind:edit"],runs:25,baseline:"x.json",saveBaseline:"y.json",markdown:"z.md",maxLoad:1.5,tools:["nx"],root:"/r",file:"f",json:true,prepare:true,language:"de"});
++ expect(ok(["run","--slo=all,a"]).slo).toBe("all");
++ expect(ok(["compare","--current=a","--baseline=b","--markdown=m"])).toMatchObject({operation:"compare",current:"a",baseline:"b"});
++ for(const bad of [[],["frobnicate"],["run","extra"],["run","--runs=0"],["run","--runs=1001"],["run","--runs=x"],["run","--runs=1.5"],["run","--max-load=0"],["run","--max-load=-1"],["run","--max-load=abc"],["run","--slo"],["run","--slo","--json"],["run","--slo=a","--slo=b"],["run","--json=1"],["run","--implementations=cargo"],["run","--lang=fr"],["run","--nope"],["compare"],["compare","--current=a"],["compare","--baseline=b"],["run","--current=a"],["list","--prepare"],["list","--runs=3"],["compare","--current=a","--baseline=b","--save-baseline=c"],["compare","--current=a","--baseline=b","--max-load=1"]])expect(()=>ok(bad),JSON.stringify(bad)).toThrow(/Erwartet|Unbekannt|braucht|Wiederholte|gehört|gehören|ganze Zahl|positive Zahl/u);
++ const entry=(catalog as any).operations.find((row:any)=>row.name==="bench"),names=benchOptionNamesV1(),flags=(catalog as any).flags;
++ expect(entry).toBeDefined();
++ expect(entry.requires).toBe("none");
++ expect([...entry.flags].sort()).toEqual([...names.valued,...names.plain].filter(name=>name!=="--lang").sort());
++ for(const name of names.valued.filter(value=>value!=="--lang")){const flag=flags.find((row:any)=>row.name===name);expect(flag.value,name).toBe("required");expect(flag.operations).toContain("bench");}
++ for(const name of names.plain){const flag=flags.find((row:any)=>row.name===name);expect(flag.value,name).toBe("none");expect(flag.operations).toContain("bench");}
++ expect(entry.subcommands.map((row:any)=>row.name)).toEqual(["list","run","compare"]);
++ for(const sub of entry.subcommands){expect(sub.synopsis.startsWith("bench ")).toBe(true);for(const flag of sub.flags??[])expect(entry.flags).toContain(flag);expect(sub.summary.en).not.toBe(sub.summary.de);}
++ expect(entry.summary.en).not.toBe(entry.summary.de);
++ expect(entry.implementations).toEqual({nx:"neutral",bazel:"neutral"});
++ expect([entry.progress,entry.cancellable,entry.dryRun]).toEqual([true,true,false]);
++});
++
++const makeRoot=(prefix:string)=>{
++ const base=mkdtempSync(join(tmpdir(),prefix)),script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",catalogPath="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json";
++ mkdirSync(dirname(join(base,script)),{recursive:true});copyFileSync(stubPath,join(base,script));
++ mkdirSync(dirname(join(base,catalogPath)),{recursive:true});writeFileSync(join(base,catalogPath),JSON.stringify({operations:[{name:"run"}]}));
++ mkdirSync(join(base,"src"),{recursive:true});writeFileSync(join(base,"src","u.ts"),"export const a=1;\n");
++ return {base,script,catalogPath};
++};
++const hostPorts=(root:string,script:string,environment:Record<string,string|undefined>,signal:AbortSignal,over:Partial<BenchHostPortsV1>={}):BenchHostPortsV1=>({live:"/nonexistent-live",root,script,executable:process.execPath,scratch:root,signal,environment,run:async()=>"",nxRecord:()=>"",adapter:async()=>{throw Error("no adapter");},inventory:async()=>[],now:()=>performance.now(),check:()=>{},progress:async()=>{},fresh:false,catalog:"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json",...over});
++
++test("the spawner measures wall time, the first output and the first tool marker of a real process on a monotonic clock",async()=>{
++ const{base,script}=makeRoot("bench-spawn-");
++ try{
++  const ports=benchCliPortsV1(hostPorts(base,script,{...process.env,BENCH_STUB_PRELUDE_MS:"60",BENCH_STUB_START_MS:"250",BENCH_STUB_RUN_MS:"150"},new AbortController().signal),new AbortController().signal);
++  const nx=await ports.spawn({tool:"nx",args:["run","a:b"],memory:false},new AbortController().signal);
++  expect(nx.exit).toBe(0);
++  expect(nx.firstOutputMs!).toBeGreaterThanOrEqual(55);
++  expect(nx.markerMs!).toBeGreaterThanOrEqual(240);
++  expect(nx.markerMs!).toBeGreaterThan(nx.firstOutputMs!);
++  expect(nx.wallMs).toBeGreaterThanOrEqual(nx.markerMs!+140);
++  expect(nx.startedMs).toBeGreaterThan(0);
++  expect(nx.peakRssBytes).toBeNull();
++  const bazel=await ports.spawn({tool:"bazel",args:["run","a:b"],memory:false},new AbortController().signal);
++  expect(bazel.markerMs!).toBeGreaterThanOrEqual(240);
++  const neutral=await ports.spawn({tool:"neutral",args:["run","a:b"],memory:false},new AbortController().signal);
++  expect(neutral.markerMs).toBeNull();
++  expect(neutral.firstOutputMs!).toBeGreaterThanOrEqual(55);
++  const help=await ports.spawn({tool:"neutral",args:["--help"],memory:false},new AbortController().signal);
++  expect([help.exit,help.markerMs]).toEqual([0,null]);
++  const unknown=await ports.spawn({tool:"nx",args:["frobnicate"],memory:false},new AbortController().signal);
++  expect(unknown.exit).toBe(2);
++ }finally{rmSync(base,{recursive:true,force:true});}
++},60000);
++
++test("the spawner samples the peak memory of the whole process tree and terminates the tree when cancelled",async()=>{
++ const{base,script}=makeRoot("bench-mem-");
++ try{
++  const env={...process.env,BENCH_STUB_ALLOC_MB:"200",BENCH_STUB_RUN_MS:"900"},ports=benchCliPortsV1(hostPorts(base,script,env,new AbortController().signal),new AbortController().signal);
++  const ps=spawnSync("ps",["-A","-o","pid=,ppid=,rss="],{encoding:"utf8"});
++  const measured=await ports.spawn({tool:"nx",args:["run","a:b"],memory:true},new AbortController().signal);
++  if(ps.status===0){expect(measured.peakRssBytes!).toBeGreaterThan(150*1024*1024);expect(measured.peakRssBytes!).toBeLessThan(4*1024*1024*1024);}
++  else expect(measured.peakRssBytes).toBeNull();
++  const tiny=await ports.spawn({tool:"nx",args:["run","a:b"],memory:false},new AbortController().signal);
++  expect(tiny.peakRssBytes).toBeNull();
++  const slow=benchCliPortsV1(hostPorts(base,script,{...process.env,BENCH_STUB_RUN_MS:"30000"},new AbortController().signal),new AbortController().signal),controller=new AbortController(),started=performance.now();
++  const pending=slow.spawn({tool:"nx",args:["run","a:b"],memory:false},controller.signal);
++  setTimeout(()=>controller.abort(Error("enough")),400);
++  await expect(pending).rejects.toThrow("enough");
++  expect(performance.now()-started).toBeLessThan(15000);
++  await expect(slow.spawn({tool:"nx",args:["run","a:b"],memory:false},controller.signal)).rejects.toThrow("enough");
++ }finally{rmSync(base,{recursive:true,force:true});}
++},90000);
++
++test("real ports run an edit probe against a stand-in CLI: the edit is seen by the process, a red build is a failed sample, the file is restored",async()=>{
++ const{base,script}=makeRoot("bench-edit-"),file=join(base,"src","u.ts"),original=readFileSync(file,"utf8");
++ try{
++  const env={...process.env,BENCH_STUB_WATCH:file,BENCH_STUB_FAIL_TOKEN:"@@never@@",BENCH_STUB_PRELUDE_MS:"20",BENCH_STUB_START_MS:"120",BENCH_STUB_RUN_MS:"40"},signal=new AbortController().signal,real=benchCliPortsV1(hostPorts(base,script,env,signal),signal);
++  const editProbe=probe({id:"e",kind:"edit",lane:"oneshot",unit:"u",runs:3,warmup:0}),full=mini([editProbe]);
++  const green=await benchRunProbeV1(full,editProbe,"nx",{override:null,service:false},real);
++  expect(green.failed).toBe(0);
++  expect(green.samples.every(row=>row.startKind==="marker"&&row.values.startMs!>=110&&row.values.greenMs!>row.values.startMs!)).toBe(true);
++  expect(readFileSync(file,"utf8")).toBe(original);
++  const redEnv={...env,BENCH_STUB_FAIL_TOKEN:"void"},red=benchCliPortsV1(hostPorts(base,script,redEnv,signal),signal);
++  const broken=await benchRunProbeV1(full,editProbe,"bazel",{override:null,service:false},red);
++  expect([broken.failed,broken.samples.length]).toEqual([3,3]);
++  expect(readFileSync(file,"utf8")).toBe(original);
++  const outside=benchCliPortsV1(hostPorts(base,script,env,signal),signal);
++  await expect(outside.read("../escape.txt")).rejects.toThrow(/Wegwerf-Verzeichnis|disposable|repository-relative/u);
++  await expect(outside.write("/abs/path",""))
++   .rejects.toThrow();
++ }finally{rmSync(base,{recursive:true,force:true});}
++},90000);
++
++test("real ports observe a cached run through the incremental harness: cacheable tasks that executed are misses, uncached tasks are counted apart",async()=>{
++ const{base,script}=makeRoot("bench-cache-"),signal=new AbortController().signal,record=join(base,"run.json"),executed=new Set<string>(),commands:string[]=[];
++ const plan={tasks:{tasks:{"a:build":{},"b:build":{}},dependencies:{"a:build":["b:build"],"b:build":[]}}};
++ const run=async(_command:string,args:readonly string[])=>{
++  const words=args.slice(3);commands.push(words.join(" "));
++  if(words[0]==="graph"){const file=words[1]!.slice("--file=".length);writeFileSync(file,"{}");return file+"\n";}
++  if(words[0]==="run"&&words.includes("--dry-run"))return "[script] planning\n{\n"+JSON.stringify(plan,null,1).slice(2);
++  writeFileSync(record,JSON.stringify({tasks:[...executed].map(taskId=>({taskId,cacheStatus:"cache-miss",status:0})).concat(["a:build","b:build"].filter(id=>!executed.has(id)).map(taskId=>({taskId,cacheStatus:"local-cache-hit",status:0})))}));
++  return "";
++ };
++ const adapter=async()=>({
++  planBazelTasksV1:()=>({selected:["a:build"],tasks:{"a:build":{id:"a:build",dependencies:["b:build"],definition:{inputs:[],outputs:["x"]}},"b:build":{id:"b:build",dependencies:[],definition:{inputs:[],outputs:[]}}}}),
++  bazelCacheDecisionV1:(task:{id:string})=>({cache:task.id==="a:build"}),bazelTaskCoverageV1:()=>({family:"aggregate"}),
++  bazelSourceIndexV1:(inventory:readonly string[])=>({files:inventory,selectAll:()=>({marks:new Uint8Array(inventory.length)})}),bazelTaskInputsV1:()=>[]
++ });
++ try{
++  const ports=benchCliPortsV1(hostPorts(base,script,{...process.env},signal,{run,adapter:adapter as never,nxRecord:()=>record,scratch:base}),signal);
++  executed.add("b:build");
++  expect(await ports.cache("nx","@x/y:build")).toEqual({cacheable:1,executedCacheable:0,uncachedExecuted:1,total:2});
++  executed.add("a:build");
++  expect(await ports.cache("nx","@x/y:build")).toEqual({cacheable:1,executedCacheable:1,uncachedExecuted:1,total:2});
++  expect(commands.filter(command=>command.startsWith("graph")).length).toBe(1);
++  expect(commands.filter(command=>command.includes("--dry-run")).length).toBe(1);
++  const hit=probe({id:"c",kind:"cache",target:"@x/y:build",runs:2,warmup:0});
++  executed.delete("a:build");
++  const series=await benchRunProbeV1(mini([hit]),hit,"nx",{override:null,service:false},ports);
++  expect(series.samples.map(row=>row.values.hitRatio)).toEqual([1,1]);
++ }finally{rmSync(base,{recursive:true,force:true});}
++},60000);
++
++test("real ports run the concurrency harness for one workload and implementation and read its JSON report, also when its criteria fail",async()=>{
++ const{base,script}=makeRoot("bench-conc-"),signal=new AbortController().signal,asked:string[][]=[];
++ const wait=(waitMs:number,relation:string)=>({class:"x",resource:"r",mode:"shared",source:"lease",precise:true,startMs:0,endMs:waitMs,waitMs,holderPid:null,position:null,relation});
++ const step=(waits:unknown[])=>({index:0,kind:"run",command:[],startMs:0,endMs:1,exit:0,waits,observation:null,observed:"none",outputs:null,stdout:null});
++ const report={version:1,passed:0,failed:1,skipped:0,owners:[],runs:[{workload:"w",tool:"bazel",criteria:"default",rules:[{rule:"a",kind:"no-failure",owners:["x"],status:"fail",value:null,limit:null,detail:[]}],measurement:{workload:"w",tool:"bazel",uncached:[],sessions:[{id:"a",group:"g",startMs:0,endMs:900,steps:[step([wait(300,"unrelated")])]},{id:"b",group:"h",startMs:50,endMs:1000,steps:[step([])]}],serial:[{id:"a",group:"g",startMs:0,endMs:800,steps:[]},{id:"b",group:"h",startMs:800,endMs:1600,steps:[]}]}}]};
++ try{
++  const commandPorts={} as BenchCommandPortsV1,failing=async(_live:string,args:readonly string[],ports:BenchCommandPortsV1)=>{asked.push([...args]);ports.write(JSON.stringify(report));throw Error("Konformität der Gleichzeitigkeit verletzt");};
++  const ports=benchCliPortsV1(hostPorts(base,script,{...process.env},signal,{commandPorts,concurrencyCommand:failing as never}),signal);
++  expect(await ports.concurrency("bazel","disjoint-projects",3)).toEqual({makespanMs:1000,serialMs:1600,maxUnrelatedWaitMs:300,failedRules:1});
++  expect(asked[0]).toEqual(["concurrency","run","--workloads=disjoint-projects","--sessions=3","--implementations=bazel","--json",`--root=${base}`]);
++  const silent=benchCliPortsV1(hostPorts(base,script,{...process.env},signal,{commandPorts,concurrencyCommand:(async()=>{throw Error("not prepared");}) as never}),signal);
++  await expect(silent.concurrency("nx","w",1)).rejects.toThrow("not prepared");
++  const without=benchCliPortsV1(hostPorts(base,script,{...process.env},signal),signal);
++  await expect(without.concurrency("nx","w",1)).rejects.toThrow(/Befehlsanschlüsse/u);
++ }finally{rmSync(base,{recursive:true,force:true});}
++},60000);
++
++test("real ports find the resident service in the operations catalogue of the copy and start and stop it through the CLI",async()=>{
++ const{base,script,catalogPath}=makeRoot("bench-svc-"),flag=join(base,"service.flag"),signal=new AbortController().signal;
++ try{
++  const env={...process.env,BENCH_STUB_SERVICE:flag},calls:string[]=[];
++  const host=hostPorts(base,script,env,signal,{run:async(command,args)=>{calls.push(args.slice(2).join(" "));const done=spawnSync(command,[...args],{env:env as never,encoding:"utf8"});expect(done.status).toBe(0);return done.stdout;}});
++  const ports=benchCliPortsV1(host,signal);
++  expect(await ports.service.available()).toBe(false);
++  writeFileSync(join(base,catalogPath),JSON.stringify({operations:[{name:"run"},{name:"service"}]}));
++  expect(await ports.service.available()).toBe(true);
++  await ports.service.start();expect(existsSync(flag)).toBe(true);
++  await ports.service.stop();expect(existsSync(flag)).toBe(false);
++  expect(calls).toEqual(["service start","service stop"]);
++  writeFileSync(join(base,catalogPath),"not json");
++  expect(await ports.service.available()).toBe(false);
++ }finally{rmSync(base,{recursive:true,force:true});}
++},60000);
++
++const commandPorts=(live:string,root:string,environment:Record<string,string|undefined>,over:Partial<BenchCommandPortsV1>={}):{ports:BenchCommandPortsV1;out:string[];reports:Map<string,unknown>;texts:Map<string,string>;progress:string[]}=>{
++ const out:string[]=[],reports=new Map<string,unknown>(),texts=new Map<string,string>(),progress:string[]=[],controller=new AbortController();
++ const ports:BenchCommandPortsV1={
++  write:line=>{out.push(line);},progress:async stage=>{progress.push(stage);},check:()=>{},signal:controller.signal,environment,platform:process.platform,tmpdir:()=>tmpdir(),now:()=>performance.now(),
++  run:async()=>"",report:async(file,value)=>{reports.set(file,value);},files:async()=>["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json"],adapter:async()=>{throw Error("no adapter");},nxRecord:()=>"",exists:async path=>existsSync(path),
++  scratch:async()=>mkdtempSync(join(tmpdir(),"bench-scratch-")),readText:async path=>{const found=texts.get(path);if(found===undefined)throw Error("ENOENT "+path);return found;},writeText:async(path,content)=>{texts.set(path,content);},...over
++ };
++ return {ports,out,reports,texts,progress};
++};
++
++test("the command lists, runs against a stand-in CLI, stores a baseline and compares with it; blocking failures and regressions fail the exit code after the reports are written",async()=>{
++ const{base,script}=makeRoot("bench-cmd-"),live=mkdtempSync(join(tmpdir(),"bench-live-")),env={...process.env,BENCH_STUB_HELP_MS:"30",BENCH_STUB_PRELUDE_MS:"10",BENCH_STUB_START_MS:"40",BENCH_STUB_RUN_MS:"20",SEMIO_LANGUAGE:"en"};
++ try{
++  const listed=commandPorts(live,base,env);
++  await runBenchCommandV1(live,["bench","list","--lang=de"],listed.ports);
++  expect(listed.out[0]).toContain("Ziele");
++  const asJson=commandPorts(live,base,env);
++  await runBenchCommandV1(live,["bench","list","--json"],asJson.ports);
++  expect(JSON.parse(asJson.out[0]!).slos.length).toBe(set.slos.length);
++  const missing=commandPorts(live,join(base,"nowhere"),env);
++  await expect(runBenchCommandV1(live,["bench","run","--slo=cli-help-p95","--root",join(base,"nowhere")],missing.ports)).rejects.toThrow(/Prepare the disposable root/u);
++  await expect(runBenchCommandV1(live,["bench","run","--slo=nope","--root",base],commandPorts(live,base,env).ports)).rejects.toThrow(/Unbekanntes Ziel/u);
++  await expect(runBenchCommandV1(live,["bench","run","--root",live],commandPorts(live,live,env).ports)).rejects.toThrow(/separate|getrennt/u);
++  const run=commandPorts(live,base,env,{});
++  await runBenchCommandV1(live,["bench","run","--slo=probe:cli-help,probe:noop-run-oneshot,probe:cache-second-run-build","--implementations=nx","--runs=25","--root",base,"--file","report.json","--markdown","report.md","--save-baseline","baseline.json","--lang=en"],{...run.ports,overrides:{cache:async()=>({cacheable:6,executedCacheable:0,uncachedExecuted:2,total:8})}});
++  const report=run.reports.get("report.json") as BenchReportV1;
++  expect(define("Report")(plain(report)),JSON.stringify(define("Report").errors)).toBe(true);
++  expect(report.rows.map(row=>row.slo)).toEqual(["cli-help-p95","cli-help-p99","noop-run-oneshot-p50","cache-second-run-build-min"]);
++  const rows=new Map(report.rows.map(row=>[row.slo,row]));
++  expect(rows.get("cli-help-p95")!.n).toBe(25);
++  expect(rows.get("cli-help-p95")!.value!).toBeGreaterThanOrEqual(30);
++  expect(rows.get("cli-help-p99")).toMatchObject({status:"unproven",reason:"too-few-samples"});
++  expect(rows.get("noop-run-oneshot-p50")!.n).toBe(25);
++  expect(rows.get("cache-second-run-build-min")).toMatchObject({status:"pass",value:1});
++  expect(run.texts.get("report.md")).toContain("| ");
++  expect(JSON.parse(run.texts.get("baseline.json")!).kind).toBe("bench-report");
++  expect(run.out[0]).toContain("Performance objectives");
++  expect(run.progress.some(stage=>/^cli-help:neutral:1\/\d+$/u.test(stage))).toBe(true);
++  const again=commandPorts(live,base,env);
++  again.texts.set("baseline.json",run.texts.get("baseline.json")!);
++  await runBenchCommandV1(live,["bench","run","--slo=probe:cache-second-run-build","--implementations=nx","--root",base,"--baseline","baseline.json","--json"],{...again.ports,overrides:{cache:async()=>({cacheable:6,executedCacheable:0,uncachedExecuted:2,total:8})}});
++  const compared=JSON.parse(again.out[0]!) as BenchReportV1;
++  expect(compared.comparison!.rows.map(row=>row.status)).toEqual(["same"]);
++  const failing=commandPorts(live,base,env);
++  await expect(runBenchCommandV1(live,["bench","run","--slo=probe:cache-second-run-build","--implementations=nx","--root",base,"--file","fail.json","--markdown","fail.md","--lang=de"],{...failing.ports,overrides:{cache:async()=>({cacheable:6,executedCacheable:2,uncachedExecuted:0,total:6})}})).rejects.toThrow(/verbindliche Leistungsziele verletzt/u);
++  expect((failing.reports.get("fail.json") as BenchReportV1).tally.blockingFailed).toBe(1);
++  expect(failing.texts.get("fail.md")).toContain("Leistungsziele");
++  const regress=commandPorts(live,base,env);
++  regress.texts.set("baseline.json",run.texts.get("baseline.json")!);
++  await expect(runBenchCommandV1(live,["bench","run","--slo=probe:cache-second-run-build","--implementations=nx","--root",base,"--baseline","baseline.json"],{...regress.ports,overrides:{cache:async()=>({cacheable:6,executedCacheable:1,uncachedExecuted:0,total:6})}})).rejects.toThrow(/blocking performance objectives failed/u);
++  const cmp=commandPorts(live,base,env);
++  cmp.texts.set("cur.json",JSON.stringify(report));cmp.texts.set("base.json",run.texts.get("baseline.json")!);
++  await runBenchCommandV1(live,["bench","compare","--current=cur.json","--baseline=base.json","--markdown=cmp.md"],cmp.ports);
++  expect(cmp.out[0]).toContain("Comparison with the baseline");
++  expect(cmp.texts.get("cmp.md")).toContain("| ");
++  const worse=plain(report) as BenchReportV1&{rows:BenchRowV1[]};
++  const cache=worse.rows.find(row=>row.slo==="cache-second-run-build-min")!;(cache as any).value=0.5;(cache as any).status="fail";
++  const worseCmp=commandPorts(live,base,env);
++  worseCmp.texts.set("cur.json",JSON.stringify(worse));worseCmp.texts.set("base.json",JSON.stringify(report));
++  await expect(runBenchCommandV1(live,["bench","compare","--current=cur.json","--baseline=base.json","--json"],worseCmp.ports)).rejects.toThrow(/Die Leistung hat sich bei 1 verbindlichen Zielen verschlechtert/u);
++  expect(JSON.parse(worseCmp.out[0]!).tally.blockingRegressed).toBe(1);
++  const junk=commandPorts(live,base,env);junk.texts.set("cur.json","{}");junk.texts.set("base.json","nope");
++  await expect(runBenchCommandV1(live,["bench","compare","--current=cur.json","--baseline=base.json"],junk.ports)).rejects.toThrow(/Bericht .* nicht lesbar|Cannot read the report|Bench-Bericht/u);
++ }finally{rmSync(base,{recursive:true,force:true});rmSync(live,{recursive:true,force:true});}
++},120000);
++
++test("the command measures an edit probe of the authored table end to end: markers of both implementations, restored file, start and green judged",async()=>{
++ const{base}=makeRoot("bench-e2e-"),live=mkdtempSync(join(tmpdir(),"bench-live-")),unitOf=set.units.find(row=>row.id==="ts")!,file=join(base,unitOf.file),original="export const a=1;\n";
++ mkdirSync(dirname(file),{recursive:true});writeFileSync(file,original);
++ try{
++  const env={...process.env,SEMIO_LANGUAGE:"en",BENCH_STUB_WATCH:file,BENCH_STUB_FAIL_TOKEN:"@@never@@",BENCH_STUB_PRELUDE_MS:"10",BENCH_STUB_START_MS:"80",BENCH_STUB_RUN_MS:"30"},world=commandPorts(live,base,env);
++  await runBenchCommandV1(live,["bench","run","--slo=edit-ts-oneshot-start-p50,edit-ts-oneshot-green-p50","--runs=3","--root",base,"--json"],world.ports);
++  const report=JSON.parse(world.out[0]!) as BenchReportV1,rows=new Map(report.rows.map(row=>[`${row.slo}/${row.tool}`,row]));
++  expect([...rows.keys()]).toEqual(["edit-ts-oneshot-start-p50/bazel","edit-ts-oneshot-start-p50/nx","edit-ts-oneshot-green-p50/bazel","edit-ts-oneshot-green-p50/nx"]);
++  for(const tool of ["nx","bazel"]){
++   const start=rows.get(`edit-ts-oneshot-start-p50/${tool}`)!,green=rows.get(`edit-ts-oneshot-green-p50/${tool}`)!,series=report.series.find(row=>row.probe==="edit-ts-oneshot"&&row.tool===tool)!;
++   expect(series.startKinds).toEqual({marker:3,"first-output":0,exit:0});
++   expect(start.value!).toBeGreaterThanOrEqual(75);
++   expect(start.status===("pass")||start.status==="unproven",`${tool} ${start.status}`).toBe(true);
++   expect(green.status).toBe("recorded");
++   expect(green.value!).toBeGreaterThan(start.value!);
++  }
++  expect(readFileSync(file,"utf8")).toBe(original);
++  expect(world.progress.some(stage=>/^edit-ts-oneshot:bazel:\d+\/4$/u.test(stage))).toBe(true);
++ }finally{rmSync(base,{recursive:true,force:true});rmSync(live,{recursive:true,force:true});}
++},120000);
++
++test("the command prepares a fresh copy on request so that the cold graph probe measures, and cancelling restores the edited files",async()=>{
++ const live=mkdtempSync(join(tmpdir(),"bench-live-")),prepared=join(mkdtempSync(join(tmpdir(),"bench-root-")),"sinc"),script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",catalogPath="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🔣️catalog.json";
++ try{
++  for(const path of [script,catalogPath]){mkdirSync(dirname(join(live,path)),{recursive:true});}
++  copyFileSync(stubPath,join(live,script));writeFileSync(join(live,catalogPath),JSON.stringify({operations:[{name:"run"}]}));
++  const env={...process.env,SEMIO_LANGUAGE:"en",BENCH_STUB_START_MS:"10"},steps:string[][]=[],world=commandPorts(live,prepared,env,{run:async(_command,args)=>{steps.push([...args].slice(3));return "";}});
++  await runBenchCommandV1(live,["bench","run","--slo=graph-scope-cold-max","--implementations=nx","--prepare","--root",prepared,"--json"],world.ports);
++  const report=JSON.parse(world.out[0]!) as BenchReportV1;
++  expect(existsSync(join(prepared,script))).toBe(true);
++  expect(steps.map(step=>step.join(" "))).toEqual(["preflight","tools setup all","dependencies sync --all"]);
++  expect(report.rows[0]).toMatchObject({slo:"graph-scope-cold-max",status:"pass",n:1});
++  const warm=commandPorts(live,prepared,env);
++  await runBenchCommandV1(live,["bench","run","--slo=graph-scope-cold-max","--implementations=nx","--root",prepared,"--json"],warm.ports);
++  expect(JSON.parse(warm.out[0]!).rows[0]).toMatchObject({status:"unproven",reason:"not-cold"});
++  expect(world.progress.some(stage=>stage.startsWith("prepare"))).toBe(true);
++ }finally{rmSync(live,{recursive:true,force:true});rmSync(dirname(prepared),{recursive:true,force:true});}
++},120000);
++
++test("the build workflow carries the bench job: after smoke, not blocking, pinned actions, no implementation named, a baseline kept per runner class",()=>{
++ const find=(from:string):string=>{for(let at=from;;at=dirname(at)){const path=join(at,".github","workflows","build-system.yml");if(existsSync(path))return path;if(dirname(at)===at)throw Error("build workflow not found");}};
++ const raw=readFileSync(find(import.meta.dir),"utf8"),workflow=(Bun as any).YAML.parse(raw) as any,job=workflow.jobs.bench;
++ expect(Object.keys(workflow.jobs)).toEqual(expect.arrayContaining(["plan","smoke","affected","parity","bench"]));
++ expect(job).toBeDefined();
++ expect(job["continue-on-error"]).toBe(true);
++ expect(job.needs).toEqual(["smoke"]);
++ expect(job["timeout-minutes"]).toBeLessThanOrEqual(180);
++ expect(job.strategy["fail-fast"]).toBe(false);
++ expect(job.strategy.matrix.include.map((row:any)=>row.name)).toEqual(["linux","macos"]);
++ const steps:any[]=job.steps,runs=steps.flatMap(step=>step.run?[String(step.run)]:[]).join("\n");
++ for(const wanted of ["bun repo preflight","bun repo tools setup all","bun repo dependencies sync --all","bun repo bench list","bun repo incremental prepare --fresh",'bun repo bench run "${args[@]}"',"--save-baseline","--baseline"])expect(runs,wanted).toContain(wanted);
++ expect(runs).not.toMatch(/\b(nx|bazel|bazelisk|cargo|npx)\b/u);
++ for(const step of steps)if(step.uses&&!step.uses.startsWith("./"))expect(step.uses,step.uses).toMatch(/^[\w.-]+\/[\w./-]+@[0-9a-f]{40}$/u);
++ const names=steps.map(step=>step.name);
++ expect(names.indexOf("Restore the baseline of this runner class")).toBeLessThan(names.indexOf("Measure the objectives and compare with the baseline"));
++ expect(names.indexOf("Prepare the disposable copy")).toBeLessThan(names.indexOf("Measure the objectives and compare with the baseline"));
++ const save=steps.find(step=>step.name==="Save the baseline (default branch)");
++ expect(save.if).toContain("promoted");
++ const measure=steps.find(step=>step.name==="Measure the objectives and compare with the baseline");
++ expect(measure.env.REF).toBe("${{ github.ref }}");
++ expect(String(measure.run)).not.toContain("${{");
++ const upload=steps.find(step=>step.uses?.startsWith("actions/upload-artifact"));
++ expect(upload.with["retention-days"]).toBeLessThanOrEqual(90);
++ expect(workflow.permissions).toEqual({contents:"read"});
++ for(const other of ["plan","smoke","affected","parity"])expect(workflow.jobs[other].steps.length).toBeGreaterThan(0);
++ expect(raw).toContain("#   bench    -");
++ for(const step of steps)if(step.uses&&!step.uses.startsWith("./"))expect(raw,step.uses).toContain(`${step.uses} # v`);
++});

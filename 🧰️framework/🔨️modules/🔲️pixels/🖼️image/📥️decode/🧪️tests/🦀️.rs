@@ -33,3 +33,76 @@ fn image_sources_original_funding_and_jpeg_allocator_custody(){
  }
  for phase in fixture["interruptionPhases"].as_array().unwrap().iter().filter(|phase|phase.as_str()!=Some("png")){assert!(phases.contains(phase.as_str().unwrap()));}
 }
+
+//#region BlockingDecodeAndOrientation
+use crate::{Orientation,apply_orientation,encoded_orientation,tiff_orientation};
+fn encoded_bytes(text:&str)->Vec<u8>{if text.get(..5).is_some_and(|s|s.eq_ignore_ascii_case("data:")){let(header,body)=text.split_once(',').unwrap();let bytes=percent_encoding::percent_decode_str(body).collect::<Vec<_>>();if header.to_ascii_lowercase().ends_with(";base64"){base64::engine::general_purpose::STANDARD.decode(bytes).unwrap()}else{bytes}}else{base64::engine::general_purpose::STANDARD.decode(text).unwrap()}}
+fn never()->bool{false}
+fn limits()->EncodedDecodeLimits{EncodedDecodeLimits::MAXIMUM}
+fn fixture_orientation()->serde_json::Value{serde_json::from_str(crate::text("🖼️image/📥️decode/🧪️tests/🧫️fixtures/🧭️orientation/🔣️.json")).unwrap()}
+fn numbers(value:&serde_json::Value)->Vec<u8>{value.as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect()}
+fn hex(text:&str)->Vec<u8>{(0..text.len()).step_by(2).map(|i|u8::from_str_radix(&text[i..i+2],16).unwrap()).collect()}
+fn crc32(bytes:&[u8])->u32{let mut crc=0xFFFF_FFFFu32;for byte in bytes{crc^=*byte as u32;for _ in 0..8{crc=if crc&1==1{(crc>>1)^0xEDB8_8320}else{crc>>1};}}!crc}
+fn gradient(width:u32,height:u32)->image::RgbaImage{image::RgbaImage::from_fn(width,height,|x,y|image::Rgba([(x*40+y*3)as u8,(y*50+x*2)as u8,(x*y*5)as u8,255]))}
+fn png_bytes(image:&image::RgbaImage)->Vec<u8>{let mut out=Vec::new();image::DynamicImage::ImageRgba8(image.clone()).write_to(&mut std::io::Cursor::new(&mut out),image::ImageFormat::Png).unwrap();out}
+fn jpeg_bytes(image:&image::RgbaImage)->Vec<u8>{let mut out=Vec::new();image::DynamicImage::ImageRgb8(image::DynamicImage::ImageRgba8(image.clone()).to_rgb8()).write_to(&mut std::io::Cursor::new(&mut out),image::ImageFormat::Jpeg).unwrap();out}
+fn tiff_for(orientation:u16)->Vec<u8>{let mut tiff=b"II*\0".to_vec();tiff.extend_from_slice(&8u32.to_le_bytes());tiff.extend_from_slice(&1u16.to_le_bytes());for part in [0x0112u16,3]{tiff.extend_from_slice(&part.to_le_bytes());}tiff.extend_from_slice(&1u32.to_le_bytes());tiff.extend_from_slice(&orientation.to_le_bytes());tiff.extend_from_slice(&[0,0]);tiff}
+fn jpeg_with_orientation(mut jpeg:Vec<u8>,orientation:u16)->Vec<u8>{let tiff=tiff_for(orientation);let mut segment=vec![0xff,0xe1];segment.extend_from_slice(&((tiff.len()+8)as u16).to_be_bytes());segment.extend_from_slice(b"Exif\0\0");segment.extend_from_slice(&tiff);jpeg.splice(2..2,segment);jpeg}
+fn png_with_orientation(mut png:Vec<u8>,orientation:u16)->Vec<u8>{let tiff=tiff_for(orientation);let end=png.len()-12;let mut chunk=(tiff.len()as u32).to_be_bytes().to_vec();let mut body=b"eXIf".to_vec();body.extend_from_slice(&tiff);chunk.extend_from_slice(&body);chunk.extend_from_slice(&crc32(&body).to_be_bytes());png.splice(end..end,chunk);png}
+#[test]
+fn blocking_decode_matches_the_independent_png_oracle_for_every_shared_row(){
+ let rows=rows();let mut checked=0;
+ for row in rows.as_array().unwrap(){if !row["input"]["mime"].as_str().unwrap().eq_ignore_ascii_case("image/png"){continue;}
+  let data=row["input"]["data"].as_str().unwrap();let image=decode_encoded_blocking(encoded_bytes(data),limits(),&never).unwrap().image;
+  assert_eq!(image.pixels,oracle(data),"{}",row["name"]);assert_eq!((image.width as u64,image.height as u64),(row["expected"]["width"].as_u64().unwrap(),row["expected"]["height"].as_u64().unwrap()),"{}",row["name"]);checked+=1;
+ }
+ assert!(checked>=40);
+}
+#[test]
+fn blocking_decode_reads_jpeg_within_the_oracle_tolerance_and_png_exactly(){
+ let source=gradient(13,9);
+ let png=decode_encoded_blocking(png_bytes(&source),limits(),&never).unwrap().image;assert_eq!(png.pixels,source.as_raw().to_vec());
+ let jpeg=jpeg_bytes(&source);let reference=image::load_from_memory_with_format(&jpeg,image::ImageFormat::Jpeg).unwrap().into_rgba8();
+ let ours=decode_encoded_blocking(jpeg,limits(),&never).unwrap().image;assert_eq!((ours.width,ours.height),reference.dimensions());
+ for(actual,expected)in ours.pixels.iter().zip(reference.as_raw()){assert!(actual.abs_diff(*expected)<=4,"JPEG oracle difference {}",actual.abs_diff(*expected));}
+}
+#[test]
+fn blocking_decode_refuses_unknown_formats_over_limit_sources_and_cancellation(){
+ let source=png_bytes(&gradient(4,4));
+ assert_eq!(decode_encoded_blocking(b"GIF89a\x01\0\x01\0\0\0\0;".to_vec(),limits(),&never).unwrap_err(),ImageDecodeError::UnsupportedMime);
+ assert!(decode_encoded_blocking(source.clone(),EncodedDecodeLimits{max_pixels:15,..limits()},&never).is_err());
+ assert!(decode_encoded_blocking(source.clone(),EncodedDecodeLimits{max_source_bytes:source.len()-1,..limits()},&never).is_err());
+ assert_eq!(decode_encoded_blocking(source.clone(),limits(),&||true).unwrap_err(),ImageDecodeError::Cancelled);
+ assert!(decode_encoded_blocking(source[..source.len()/2].to_vec(),limits(),&never).is_err());
+}
+#[test]
+fn tiff_orientation_matches_the_shared_vectors(){
+ for row in fixture_orientation()["tiff"].as_array().unwrap(){let expected=row["expected"].as_u64().map(|value|Orientation::from_exif(value as u16).unwrap());assert_eq!(tiff_orientation(&hex(row["hex"].as_str().unwrap())),expected,"{}",row["name"]);}
+}
+#[test]
+fn apply_orientation_matches_the_shared_vectors_and_the_image_crate(){
+ for row in fixture_orientation()["apply"].as_array().unwrap(){
+  let exif=row["exif"].as_u64().unwrap()as u16;let orientation=Orientation::from_exif(exif).unwrap();
+  let source=RasterImage{width:row["width"].as_u64().unwrap()as u32,height:row["height"].as_u64().unwrap()as u32,pixels:numbers(&row["pixels"])};
+  let ours=apply_orientation(&source,orientation);
+  assert_eq!((ours.width as u64,ours.height as u64,ours.pixels.clone()),(row["expected"]["width"].as_u64().unwrap(),row["expected"]["height"].as_u64().unwrap(),numbers(&row["expected"]["pixels"])),"exif {exif}");
+  let mut oracle=image::DynamicImage::ImageRgba8(image::RgbaImage::from_raw(source.width,source.height,source.pixels.clone()).unwrap());oracle.apply_orientation(image::metadata::Orientation::from_exif(exif as u8).unwrap());
+  assert_eq!((ours.width,ours.height,ours.pixels),(oracle.width(),oracle.height(),oracle.into_rgba8().into_raw()),"exif {exif} against image");
+ }
+}
+#[test]
+fn encoded_orientation_reads_jpeg_exif_and_png_exif_like_the_image_crate(){
+ use image::ImageDecoder as _;
+ let source=gradient(6,4);
+ assert_eq!(encoded_orientation(&jpeg_bytes(&source)),Orientation::NoTransforms);assert_eq!(encoded_orientation(&png_bytes(&source)),Orientation::NoTransforms);assert_eq!(encoded_orientation(b"GIF89a"),Orientation::NoTransforms);assert_eq!(encoded_orientation(&[]),Orientation::NoTransforms);
+ for exif in 1u16..=8{
+  let jpeg=jpeg_with_orientation(jpeg_bytes(&source),exif);let png=png_with_orientation(png_bytes(&source),exif);
+  let mut jpeg_decoder=image::codecs::jpeg::JpegDecoder::new(std::io::Cursor::new(&jpeg)).unwrap();let mut png_decoder=image::codecs::png::PngDecoder::new(std::io::Cursor::new(&png)).unwrap();
+  let expected=Orientation::from_exif(exif).unwrap();assert_eq!(jpeg_decoder.orientation().unwrap().to_exif() as u16,exif);assert_eq!(png_decoder.orientation().unwrap().to_exif() as u16,exif);
+  assert_eq!(encoded_orientation(&jpeg),expected,"jpeg {exif}");assert_eq!(encoded_orientation(&png),expected,"png {exif}");
+  let decoded=decode_encoded_blocking(png,limits(),&never).unwrap();assert_eq!(decoded.orientation,expected);assert_eq!((decoded.image.width,decoded.image.height),source.dimensions());let upright=decoded.upright();let mut oracle=image::DynamicImage::ImageRgba8(source.clone());oracle.apply_orientation(image::metadata::Orientation::from_exif(exif as u8).unwrap());
+  assert_eq!((upright.width,upright.height,upright.pixels),(oracle.width(),oracle.height(),oracle.into_rgba8().into_raw()),"png upright {exif}");
+ }
+ for truncated in [3usize,5,9,20]{assert_eq!(encoded_orientation(&jpeg_with_orientation(jpeg_bytes(&source),6)[..truncated]),Orientation::NoTransforms);}
+}
+//#endregion BlockingDecodeAndOrientation

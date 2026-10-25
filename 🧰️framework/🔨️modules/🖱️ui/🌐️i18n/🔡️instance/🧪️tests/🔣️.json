@@ -1,0 +1,697 @@
+{
+ "version": 1,
+ "instances": [
+  {
+   "name": "nested key, own language first, fallback language for a key the language lacks",
+   "options": {
+    "language": "de",
+    "fallbackLanguage": "en",
+    "supportedLanguages": [
+     "en",
+     "de"
+    ]
+   },
+   "bundles": {
+    "en": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Back",
+        "beginner": "Go back"
+       }
+      },
+      "title": "Hello {{name}}"
+     },
+     "only": {
+      "en": "English only"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} of {{count}}"
+     },
+     "nested": {
+      "user": "{{user.name}} ({{ user.id }})"
+     },
+     "plain": "Plain",
+     "empty": ""
+    },
+    "de": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Zurück",
+        "beginner": "Zurück gehen"
+       }
+      },
+      "title": "Hallo {{name}}"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} von {{count}}"
+     },
+     "plain": "Schlicht"
+    }
+   },
+   "steps": [
+    {
+     "call": "t",
+     "key": "plain",
+     "expected": "Schlicht"
+    },
+    {
+     "call": "t",
+     "key": "nav.title",
+     "expected": "Hallo {{name}}"
+    },
+    {
+     "call": "t",
+     "key": "only.en",
+     "expected": "English only"
+    },
+    {
+     "call": "t",
+     "key": "nav.title",
+     "expected": "Hallo Ada",
+     "options": {
+      "name": "Ada"
+     }
+    },
+    {
+     "call": "t",
+     "key": "plain",
+     "expected": "Plain",
+     "options": {
+      "lng": "en"
+     }
+    },
+    {
+     "call": "changeLanguage",
+     "language": "de"
+    },
+    {
+     "call": "language",
+     "expected": "de"
+    },
+    {
+     "call": "resolvedLanguage",
+     "expected": "de"
+    }
+   ]
+  },
+  {
+   "name": "a missing key answers itself, a default value answers in its place, an empty string is a translation",
+   "options": {
+    "language": "de",
+    "fallbackLanguage": "en",
+    "supportedLanguages": [
+     "en",
+     "de"
+    ]
+   },
+   "bundles": {
+    "en": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Back",
+        "beginner": "Go back"
+       }
+      },
+      "title": "Hello {{name}}"
+     },
+     "only": {
+      "en": "English only"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} of {{count}}"
+     },
+     "nested": {
+      "user": "{{user.name}} ({{ user.id }})"
+     },
+     "plain": "Plain",
+     "empty": ""
+    },
+    "de": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Zurück",
+        "beginner": "Zurück gehen"
+       }
+      },
+      "title": "Hallo {{name}}"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} von {{count}}"
+     },
+     "plain": "Schlicht"
+    }
+   },
+   "steps": [
+    {
+     "call": "t",
+     "key": "nav.missing",
+     "expected": "nav.missing"
+    },
+    {
+     "call": "t",
+     "key": "nav.missing",
+     "expected": "fallback Ada",
+     "options": {
+      "defaultValue": "fallback {{name}}",
+      "name": "Ada"
+     }
+    },
+    {
+     "call": "t",
+     "key": "empty",
+     "expected": ""
+    },
+    {
+     "call": "t",
+     "key": "nav.title.deeper",
+     "expected": "nav.title.deeper"
+    }
+   ]
+  },
+  {
+   "name": "interpolation: spaces, numbers, repeated names, dotted variable paths, absent variables stay as written",
+   "options": {
+    "language": "de",
+    "fallbackLanguage": "en",
+    "supportedLanguages": [
+     "en",
+     "de"
+    ]
+   },
+   "bundles": {
+    "en": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Back",
+        "beginner": "Go back"
+       }
+      },
+      "title": "Hello {{name}}"
+     },
+     "only": {
+      "en": "English only"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} of {{count}}"
+     },
+     "nested": {
+      "user": "{{user.name}} ({{ user.id }})"
+     },
+     "plain": "Plain",
+     "empty": ""
+    },
+    "de": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Zurück",
+        "beginner": "Zurück gehen"
+       }
+      },
+      "title": "Hallo {{name}}"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} von {{count}}"
+     },
+     "plain": "Schlicht"
+    }
+   },
+   "steps": [
+    {
+     "call": "t",
+     "key": "list.count",
+     "expected": "Knoten, 2 von 5",
+     "options": {
+      "node": "Knoten",
+      "position": 2,
+      "count": 5
+     }
+    },
+    {
+     "call": "t",
+     "key": "list.count",
+     "expected": "{{node}}, 2 von {{count}}",
+     "options": {
+      "position": 2
+     }
+    },
+    {
+     "call": "t",
+     "key": "nested.user",
+     "expected": "Ada (7)",
+     "options": {
+      "lng": "en",
+      "user": {
+       "name": "Ada",
+       "id": 7
+      }
+     }
+    },
+    {
+     "call": "t",
+     "key": "nav.title",
+     "expected": "Hallo Bob",
+     "options": {
+      "replace": {
+       "name": "Bob"
+      }
+     }
+    },
+    {
+     "call": "t",
+     "key": "nav.title",
+     "expected": "Hallo <b>&amp;",
+     "options": {
+      "name": "<b>&amp;"
+     }
+    }
+   ]
+  },
+  {
+   "name": "a group resolves to a copy of its tree with every string interpolated",
+   "options": {
+    "language": "de",
+    "fallbackLanguage": "en",
+    "supportedLanguages": [
+     "en",
+     "de"
+    ]
+   },
+   "bundles": {
+    "en": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Back",
+        "beginner": "Go back"
+       }
+      },
+      "title": "Hello {{name}}"
+     },
+     "only": {
+      "en": "English only"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} of {{count}}"
+     },
+     "nested": {
+      "user": "{{user.name}} ({{ user.id }})"
+     },
+     "plain": "Plain",
+     "empty": ""
+    },
+    "de": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Zurück",
+        "beginner": "Zurück gehen"
+       }
+      },
+      "title": "Hallo {{name}}"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} von {{count}}"
+     },
+     "plain": "Schlicht"
+    }
+   },
+   "steps": [
+    {
+     "call": "t",
+     "key": "nav.back",
+     "expected": {
+      "label": {
+       "normal": "Zurück",
+       "beginner": "Zurück gehen"
+      }
+     }
+    },
+    {
+     "call": "t",
+     "key": "nav.back",
+     "expected": {
+      "label": {
+       "normal": "Back",
+       "beginner": "Go back"
+      }
+     },
+     "options": {
+      "lng": "en"
+     }
+    },
+    {
+     "call": "exists",
+     "key": "nav.back",
+     "expected": true
+    },
+    {
+     "call": "exists",
+     "key": "nav",
+     "expected": true
+    },
+    {
+     "call": "exists",
+     "key": "nav.back.label.normal",
+     "expected": true
+    }
+   ]
+  },
+  {
+   "name": "exists follows the fallback chain and the lng call option, and refuses unknown keys",
+   "options": {
+    "language": "de",
+    "fallbackLanguage": "en",
+    "supportedLanguages": [
+     "en",
+     "de"
+    ]
+   },
+   "bundles": {
+    "en": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Back",
+        "beginner": "Go back"
+       }
+      },
+      "title": "Hello {{name}}"
+     },
+     "only": {
+      "en": "English only"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} of {{count}}"
+     },
+     "nested": {
+      "user": "{{user.name}} ({{ user.id }})"
+     },
+     "plain": "Plain",
+     "empty": ""
+    },
+    "de": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Zurück",
+        "beginner": "Zurück gehen"
+       }
+      },
+      "title": "Hallo {{name}}"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} von {{count}}"
+     },
+     "plain": "Schlicht"
+    }
+   },
+   "steps": [
+    {
+     "call": "exists",
+     "key": "only.en",
+     "expected": true
+    },
+    {
+     "call": "exists",
+     "key": "only.en",
+     "expected": true,
+     "options": {
+      "lng": "de"
+     }
+    },
+    {
+     "call": "exists",
+     "key": "nav.nope",
+     "expected": false
+    },
+    {
+     "call": "exists",
+     "key": "plain.deeper",
+     "expected": false
+    },
+    {
+     "call": "exists",
+     "key": "",
+     "expected": false
+    }
+   ]
+  },
+  {
+   "name": "changing the language moves language and resolvedLanguage; a regional tag negotiates to its base language",
+   "options": {
+    "language": "de",
+    "fallbackLanguage": "en",
+    "supportedLanguages": [
+     "en",
+     "de"
+    ]
+   },
+   "bundles": {
+    "en": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Back",
+        "beginner": "Go back"
+       }
+      },
+      "title": "Hello {{name}}"
+     },
+     "only": {
+      "en": "English only"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} of {{count}}"
+     },
+     "nested": {
+      "user": "{{user.name}} ({{ user.id }})"
+     },
+     "plain": "Plain",
+     "empty": ""
+    },
+    "de": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Zurück",
+        "beginner": "Zurück gehen"
+       }
+      },
+      "title": "Hallo {{name}}"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} von {{count}}"
+     },
+     "plain": "Schlicht"
+    }
+   },
+   "steps": [
+    {
+     "call": "changeLanguage",
+     "language": "en"
+    },
+    {
+     "call": "language",
+     "expected": "en"
+    },
+    {
+     "call": "resolvedLanguage",
+     "expected": "en"
+    },
+    {
+     "call": "t",
+     "key": "plain",
+     "expected": "Plain"
+    },
+    {
+     "call": "changeLanguage",
+     "language": "de-AT"
+    },
+    {
+     "call": "language",
+     "expected": "de-AT"
+    },
+    {
+     "call": "resolvedLanguage",
+     "expected": "de"
+    },
+    {
+     "call": "t",
+     "key": "plain",
+     "expected": "Schlicht"
+    },
+    {
+     "call": "t",
+     "key": "only.en",
+     "expected": "English only"
+    }
+   ]
+  },
+  {
+   "name": "a fixed translator keeps its language while the instance changes",
+   "options": {
+    "language": "de",
+    "fallbackLanguage": "en",
+    "supportedLanguages": [
+     "en",
+     "de"
+    ]
+   },
+   "bundles": {
+    "en": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Back",
+        "beginner": "Go back"
+       }
+      },
+      "title": "Hello {{name}}"
+     },
+     "only": {
+      "en": "English only"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} of {{count}}"
+     },
+     "nested": {
+      "user": "{{user.name}} ({{ user.id }})"
+     },
+     "plain": "Plain",
+     "empty": ""
+    },
+    "de": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Zurück",
+        "beginner": "Zurück gehen"
+       }
+      },
+      "title": "Hallo {{name}}"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} von {{count}}"
+     },
+     "plain": "Schlicht"
+    }
+   },
+   "steps": [
+    {
+     "call": "changeLanguage",
+     "language": "en"
+    },
+    {
+     "call": "fixed",
+     "language": "de",
+     "key": "plain",
+     "expected": "Schlicht"
+    },
+    {
+     "call": "fixed",
+     "language": "en",
+     "key": "plain",
+     "expected": "Plain"
+    },
+    {
+     "call": "t",
+     "key": "plain",
+     "expected": "Plain"
+    }
+   ]
+  },
+  {
+   "name": "bundles added later merge deeply and overwrite equal paths, in a language that had none or one",
+   "options": {
+    "language": "en",
+    "fallbackLanguage": "en",
+    "supportedLanguages": [
+     "en",
+     "de"
+    ]
+   },
+   "bundles": {
+    "en": {
+     "a": {
+      "x": "1",
+      "y": "2"
+     }
+    }
+   },
+   "steps": [
+    {
+     "call": "t",
+     "key": "a.x",
+     "expected": "1"
+    },
+    {
+     "call": "t",
+     "key": "b.z",
+     "expected": "b.z"
+    },
+    {
+     "call": "addBundle",
+     "language": "en",
+     "tree": {
+      "a": {
+       "y": "two",
+       "w": "3"
+      },
+      "b": {
+       "z": "zed"
+      }
+     }
+    },
+    {
+     "call": "t",
+     "key": "a.x",
+     "expected": "1"
+    },
+    {
+     "call": "t",
+     "key": "a.y",
+     "expected": "two"
+    },
+    {
+     "call": "t",
+     "key": "a.w",
+     "expected": "3"
+    },
+    {
+     "call": "t",
+     "key": "b.z",
+     "expected": "zed"
+    },
+    {
+     "call": "addBundle",
+     "language": "de",
+     "tree": {
+      "a": {
+       "x": "eins"
+      }
+     }
+    },
+    {
+     "call": "changeLanguage",
+     "language": "de"
+    },
+    {
+     "call": "t",
+     "key": "a.x",
+     "expected": "eins"
+    },
+    {
+     "call": "t",
+     "key": "a.y",
+     "expected": "two"
+    }
+   ]
+  }
+ ]
+}

@@ -43,7 +43,7 @@ impl From<MutationRefusal> for String {
 
 /// ▶️ Applies `operation` to `snapshot` through its own diff and refuses — leaving `snapshot` untouched — when the
 /// outcome carries a message, so a case adapter sees a rejection, by code, instead of encoding an unchanged model.
-pub fn apply_mutation_checked<P, M: kernel::Mutation<P>>(snapshot: &mut P, operation: &M) -> Result<(), MutationRefusal> {
+pub fn apply_mutation_checked<P: Clone, M: kernel::ColdMutation<P>>(snapshot: &mut P, operation: &M) -> Result<(), MutationRefusal> {
     let outcome = operation.diff(snapshot);
     if let Some(message) = outcome.messages().first() {
         return Err(MutationRefusal { code: message.code.0.to_string(), message: message.message.to_string() });
@@ -55,7 +55,7 @@ pub fn apply_mutation_checked<P, M: kernel::Mutation<P>>(snapshot: &mut P, opera
 /// ▶️ The central apply for a caller that holds a snapshot (an io drain, an editor, an oracle, a test): the mutation's sparse diff goes through
 /// [`kernel::apply_diff`], the only applier, and a rejected apply leaves `snapshot` untouched and answers a fatal outcome carrying the apply error.
 /// Artifacts re-export it under their own `apply_<artifact>_mutation` name; no schema module applies a diff itself.
-pub fn apply_mutation<P, M: kernel::Mutation<P>>(snapshot: &mut P, mutation: &M) -> kernel::MutationOutcome<M::Diff> {
+pub fn apply_mutation<P: Clone, M: kernel::ColdMutation<P>>(snapshot: &mut P, mutation: &M) -> kernel::MutationOutcome<M::ReferenceDiff> {
     let outcome = mutation.diff(snapshot);
     match kernel::apply_diff_cold(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -176,9 +176,9 @@ pub fn ordered_by_key<T: Clone, K: Ord>(rows: &[T], key: impl Fn(&T) -> K) -> Ve
 }
 //#endregion 🔢️OrderedRows
 
-/// ↩️ [`kernel::Mutation::inverse`] against `base`, reachable from a crate that cannot name the kernel trait — the
+/// ↩️ [`kernel::ColdMutation::inverse`] against `base`, reachable from a crate that cannot name the kernel trait — the
 /// production inverse itself, never a copy of its rules.
-pub fn mutation_inverse<P, M: kernel::Mutation<P>>(operation: &M, base: &P) -> Result<Vec<M>, semio_framework_value::ValueError> {
+pub fn mutation_inverse<P, M: kernel::ColdMutation<P>>(operation: &M, base: &P) -> Result<Vec<M>, semio_framework_value::ValueError> {
     Ok(operation.inverse(base)?)
 }
 //#endregion 🧾️PayloadWire

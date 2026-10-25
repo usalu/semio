@@ -1,4 +1,4 @@
-/** 💾️ Persisted local-only storage of the quiz client, shared by every tab of the site.
+/** 🛢️ Persisted local-only storage of the quiz client, shared by every tab of the site.
  *
  * Every tab reads and writes the same origin-wide area, so nothing that several tabs change may be stored as one value:
  * single-valued slices (introduction seen, learner, cached course and learner view, preferences) are last-writer-wins,
@@ -108,7 +108,7 @@ export function memoryStorageOrigin(): { readonly tab: () => StorageArea } {
 //#endregion 🗄️Area
 
 //#region 💾️Store
-/** 🗄️ The single-valued persisted local-only slices of one tenant. */
+/** 🍕️ The single-valued persisted local-only slices of one tenant. */
 export type LocalSlice = "introduced" | "learner" | "course" | "learner-view" | "preferences";
 
 /** 🗃️ The persisted local-only collections of one tenant, one storage key per record. */
@@ -152,7 +152,7 @@ export function localChange(key: string | null, prefix: string): LocalChange | u
   return COLLECTIONS.includes(collection) ? { kind: "record", collection: collection as LocalCollection, id: rest.slice(slash + 1) } : undefined;
 }
 
-/** 💾️ A {@link LocalStore} over `area`: slices at `semio.course.<tenant>.<slice>`, records at
+/** 🏪️ A {@link LocalStore} over `area`: slices at `semio.course.<tenant>.<slice>`, records at
  * `semio.course.<tenant>.<collection>/<id>`. */
 export function localStore(area: StorageArea, tenant: string): LocalStore {
   const prefix = `semio.course.${tenant}.`;

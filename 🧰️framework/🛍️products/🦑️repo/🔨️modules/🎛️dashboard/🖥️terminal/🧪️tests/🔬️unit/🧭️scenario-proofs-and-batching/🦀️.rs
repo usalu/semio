@@ -85,7 +85,7 @@ fn restoring_before_the_first_snapshot_focuses_the_replayed_task() {
 
 #[test]
 fn launcher_batched_navigation_edits_the_new_field_before_any_frame() {
-    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧫️fixtures/⌨️batch/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧫️fixtures/⌨️batch/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let (mut dashboard, mut tui) = view();
         press(&mut dashboard, &mut tui, &[ctrl('b'), key('n')]);
@@ -105,8 +105,8 @@ fn launcher_batched_navigation_edits_the_new_field_before_any_frame() {
 
 #[test]
 fn launcher_pointer_focus_is_synchronized_before_the_next_character() {
-    let vectors: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧫️fixtures/⌨️batch/🔣️.json")).unwrap();
-    let metadata: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧫️fixtures/🌐️metadata/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧫️fixtures/⌨️batch/🔣️.json")).unwrap();
+    let metadata: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧫️fixtures/🌐️metadata/🔣️.json")).unwrap();
     let facts: Facts = serde_json::from_value(metadata["workspace"].clone()).unwrap();
     for row in vectors["pointerCases"].as_array().unwrap() {
         let (mut dashboard, mut tui) = dashboard_with(Preferences { language:Some(row["locale"].as_str().unwrap().into()), ..Default::default() });

@@ -537,6 +537,7 @@ pub fn sync_session_from_row(row: &neo4rs::Row, document_id: &str) -> DirectoryR
 pub fn event_from_node(row: &neo4rs::Row) -> DirectoryResult<DirectoryEvent> {
     let node: neo4rs::Node = row.get("e").map_err(backend)?;
     let payload: String = node.get("payload").map_err(backend)?;
+    use directory::FromValue as _;
     let body = DirectoryEventBody::from_value(directory::DslValue::from(serde_json::from_str::<serde_json::Value>(&payload).map_err(backend)?)).map_err(backend)?;
     let actor_kind: String = node.get("actorKind").map_err(backend)?;
     let seq = u64::try_from(node.get::<i64>("seq").map_err(backend)?).map_err(backend)?;

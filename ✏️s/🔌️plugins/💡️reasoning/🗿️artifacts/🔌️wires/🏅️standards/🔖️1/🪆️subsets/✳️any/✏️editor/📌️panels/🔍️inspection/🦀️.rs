@@ -5,7 +5,7 @@ use crate::schema::{board_snapshot_nodes};
 use crate::standards::v1::subsets::any::io::text::snapshot::{board_snapshot_json_string};
 use crate::MINDMAP_WIRES_SCHEMA;
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+use semio_framework_plugin::{Buildable, HasBase};
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

@@ -73,7 +73,7 @@ wfc_patch!(/// 🀄️ Field patch over a tile (its id is the row identity).
 
 protocol::list_delta! {
     /// 📂 Row delta over the tiles.
-    pub Grid2dTilesDelta { removal: Grid2dTilesRemoval, insertion: Grid2dTilesInsertion, relocation: Grid2dTilesRelocation, modification: Grid2dTilesModification, row: WfcTile2d, patch: Grid2dTilePatch, key: id, values_only }
+    pub Grid2dTilesDelta { removal: Grid2dTilesRemoval, insertion: Grid2dTilesInsertion, relocation: Grid2dTilesRelocation, modification: Grid2dTilesModification, row: WfcTile2d, patch: Grid2dTilePatch, list: Vec<WfcTile2d>, key: String = keyed, values_only }
 }
 
 impl Grid2dRow for WfcAdjacencyRule2d {
@@ -87,7 +87,7 @@ wfc_patch!(/// ⛓️ Field patch over an adjacency rule (its id is the row iden
 
 protocol::list_delta! {
     /// 📂 Row delta over the rules.
-    pub Grid2dRulesDelta { removal: Grid2dRulesRemoval, insertion: Grid2dRulesInsertion, relocation: Grid2dRulesRelocation, modification: Grid2dRulesModification, row: WfcAdjacencyRule2d, patch: Grid2dRulePatch, key: id, values_only }
+    pub Grid2dRulesDelta { removal: Grid2dRulesRemoval, insertion: Grid2dRulesInsertion, relocation: Grid2dRulesRelocation, modification: Grid2dRulesModification, row: WfcAdjacencyRule2d, patch: Grid2dRulePatch, list: Vec<WfcAdjacencyRule2d>, key: String = keyed, values_only }
 }
 
 impl Grid2dRow for WfcPinnedCell2d {
@@ -101,7 +101,7 @@ wfc_patch!(/// 📌️ Field patch over a pinned cell (its `x,y` is the row iden
 
 protocol::list_delta! {
     /// 📂 Row delta over the pinned.
-    pub Grid2dPinnedDelta { removal: Grid2dPinnedRemoval, insertion: Grid2dPinnedInsertion, relocation: Grid2dPinnedRelocation, modification: Grid2dPinnedModification, row: WfcPinnedCell2d, patch: Grid2dPinnedPatch, list: Vec<WfcPinnedCell2d>, key: String = |row| format!("{},{}", row.x, row.y), values_only }
+    pub Grid2dPinnedDelta { removal: Grid2dPinnedRemoval, insertion: Grid2dPinnedInsertion, relocation: Grid2dPinnedRelocation, modification: Grid2dPinnedModification, row: WfcPinnedCell2d, patch: Grid2dPinnedPatch, list: Vec<WfcPinnedCell2d>, key: String = keyed, values_only }
 }
 
 impl Grid2dRow for WfcCell2d {
@@ -115,7 +115,7 @@ wfc_patch!(/// 🕳️ Field patch over a masked cell (a masked cell has no fiel
 
 protocol::list_delta! {
     /// 📂 Row delta over the masked.
-    pub Grid2dMaskedDelta { removal: Grid2dMaskedRemoval, insertion: Grid2dMaskedInsertion, relocation: Grid2dMaskedRelocation, modification: Grid2dMaskedModification, row: WfcCell2d, patch: Grid2dMaskedPatch, list: Vec<WfcCell2d>, key: String = |row| format!("{},{}", row.x, row.y), values_only }
+    pub Grid2dMaskedDelta { removal: Grid2dMaskedRemoval, insertion: Grid2dMaskedInsertion, relocation: Grid2dMaskedRelocation, modification: Grid2dMaskedModification, row: WfcCell2d, patch: Grid2dMaskedPatch, list: Vec<WfcCell2d>, key: String = keyed, values_only }
 }
 
 //#endregion 🔖️RowTypes

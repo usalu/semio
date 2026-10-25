@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 
 
 async function lines(handle: (line: string) => boolean | void): Promise<void> {
@@ -34,7 +34,23 @@ export async function runScriptProgram(): Promise<void> {
     out(`EXITING with ${rest[0] ?? "3"}`);
     process.exit(Number(rest[0] ?? "3"));
   } else if (mode === "env") {
-    out(`ENV mark=${mark} cwd=${process.cwd().length > 0}`);
+    out(`ENV mark=${mark} cwd=${process.cwd().length > 0} lang=${process.env.SEMIO_LANGUAGE ?? "unset"}`);
+  } else if (mode === "configured") {
+    out(`CONFIGURED ${JSON.stringify({ message: mark, flavor: process.env.JOURNEY_FLAVOR ?? "unset", enabled: process.env.JOURNEY_ENABLED === "yes", args: rest, extra: process.env.JOURNEY_EXTRA ?? "unset" })}`);
+  } else if (mode === "open-url") {
+    const delay = Number(process.env.JOURNEY_OPEN_DELAY ?? "0");
+    writeFileSync(process.env.JOURNEY_OPEN_RECORD!, JSON.stringify({ url: rest[0], ...(delay > 0 ? { pid: process.pid } : {}) }));
+    if (delay > 0) await Bun.sleep(delay);
+  } else if (mode === "terminal") {
+    const { parseDeveloperArguments, planDeveloperRequest } = await import("../../../../../💻️client/🛠️developer-tools/🟦️.ts");
+    const { developerMessageV1 } = await import("../../../../../💻️client/🛠️developer-tools/🏃️process/🟦️.ts");
+    const root = process.cwd();
+    const request = parseDeveloperArguments(["terminal", ...rest]);
+    writeFileSync(process.env.JOURNEY_TERMINAL_RECORD!, JSON.stringify({ args: rest, root }));
+    out(`[developer-tools] ${developerMessageV1("running")}: terminal`);
+    const plan = await planDeveloperRequest(root, request, process.platform, process.env);
+    const shell = Bun.spawn([plan.command, ...plan.args], { cwd: plan.cwd, stdin: "inherit", stdout: "inherit", stderr: "inherit" });
+    process.exit(await shell.exited);
   } else if (mode === "probe") {
     const response = await fetch(rest[0]!);
     out(`PROBE ${response.status} ${await response.text()}`);

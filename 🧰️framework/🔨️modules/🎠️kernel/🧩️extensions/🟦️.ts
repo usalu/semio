@@ -39,7 +39,7 @@ export type ExternalSlotResolverContext = {
   readonly onError?: (extension: string, error: unknown) => void;
 };
 
-/** 🧩️ Identifies parent bodies whose embedded content must refresh even when the parent hash is unchanged. */
+/** 🔄️ Identifies parent bodies whose embedded content must refresh even when the parent hash is unchanged. */
 export function hasExternalSlots(node: BuiltNode): boolean {
   return node.component.type === "extension" || node.children.some(hasExternalSlots);
 }
@@ -51,7 +51,7 @@ export async function retireContributorInstances(instances: Map<string, Contribu
   await Promise.allSettled(retiring.map(async (entry) => { await entry.pending.catch(() => {}); await entry.handle.destroyApp(await entry.instance); }));
 }
 
-/** 🎟️ Publishes the creation promise before its first await; parallel refreshes share the exact lease. */
+/** 🆕️ Publishes the creation promise before its first await; parallel refreshes share the exact lease. */
 export function ensureContributorInstance(pluginId: string, appId: string, path: readonly string[], context: ExternalSlotResolverContext): ContributorInstance | null {
   const handle = context.plugins.get(pluginId);
   if (!handle) return null;

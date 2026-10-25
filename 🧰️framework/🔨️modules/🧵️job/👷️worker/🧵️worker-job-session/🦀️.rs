@@ -112,7 +112,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         Some(self.inner.last_step_end_us.load(Ordering::Acquire)).filter(|end_us| *end_us != u64::MAX)
     }
 
-    /// 🧵️ Executes one exact owner turn from a retained scheduler already running inside its worker.
+    /// 🪜️ Executes one exact owner turn from a retained scheduler already running inside its worker.
     pub fn try_step_on_worker(&self,retained:RetainedCloneGrant) -> Result<(WorkerJobTicket, WorkerJobPoll), WorkerJobContention> {
         self.try_step_inline(retained)
     }
@@ -144,7 +144,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         self.inner.register_waker(waker)
     }
 
-    /// 🔔️ Replaces a stale session wake with the exact job-owned close wake when available.
+    /// 📪️ Replaces a stale session wake with the exact job-owned close wake when available.
     pub fn register_close_wake(&self, waker: &Waker) -> Result<bool, WorkerJobContention> {
         if self.inner.0.is_none(){return Ok(false)}
         loop {
@@ -170,7 +170,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         self.inner.wake_pending.swap(false, Ordering::AcqRel)
     }
 
-    /// 🧵️ `J: Send` is stated here rather than on [`InteractiveJob`]: this is the one call that
+    /// 👣️ `J: Send` is stated here rather than on [`InteractiveJob`]: this is the one call that
     /// actually hands the job to another thread, so the requirement belongs to it. Targets with no
     /// second thread (the browser wasm build) never reach this and keep their `Rc`-owning jobs.
     pub fn try_submit_step(&self, pool: &WorkerPool, lane: Lane,retained:RetainedCloneGrant) -> Result<WorkerJobTicket, WorkerJobSubmitFault>
@@ -246,7 +246,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
     /// 🪢️ Returns only the original cancellation alias witnessed by the caller's still-live matching root.
     pub fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->Result<bool,WorkerJobDemandError>{if self.inner.0.is_none(){return Ok(false)}let phase=self.inner.phase();if phase==SESSION_EMPTY{return Ok(false)}if phase!=SESSION_CLOSE||self.inner.phase.compare_exchange(phase,SESSION_TRANSITION,Ordering::AcqRel,Ordering::Acquire).is_err(){return Err(WorkerJobDemandError::Contention(self.contention()))}let authority=unsafe{self.inner.take_authority()};let original=authority.has_original_cancel_alias_witness(witness);unsafe{self.inner.put_authority_quiet(authority,phase)};Ok(original)}
 
-    /// 🪢️ Returns only the original cancellation alias witnessed by the caller's still-live matching root.
+    /// 🛑️ Returns only the original cancellation alias witnessed by the caller's still-live matching root.
     pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,WorkerJobDemandError>{if self.inner.0.is_none(){return Ok(None)}let phase=self.inner.phase();if phase==SESSION_EMPTY{return Ok(None)}if phase!=SESSION_CLOSE||self.inner.phase.compare_exchange(phase,SESSION_TRANSITION,Ordering::AcqRel,Ordering::Acquire).is_err(){return Err(WorkerJobDemandError::Contention(self.contention()))}let mut authority=unsafe{self.inner.take_authority()};let result=authority.return_original_cancel_alias_step(witness,grant).map_err(|error|match error{semio_framework_async::CancelTokenRetirementError::Refused(error)=>WorkerJobDemandError::Refused(error),semio_framework_async::CancelTokenRetirementError::Blocked(_)=>WorkerJobDemandError::Contention(WorkerJobContention::CheckedOut(self.inner.generation))});unsafe{self.inner.put_authority_quiet(authority,phase)};result}
     /// 🔐️ Inspect under the same exclusive phase admission used by the close cursor.
     pub fn retirement_demands(&self,maximum_copy_bytes:usize) -> Result<RetirementDemand,WorkerJobDemandError> {

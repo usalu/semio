@@ -7,7 +7,7 @@ use super::{PatternMatcher, SchemaFragmentContextRefusal, SchemaFragmentError, S
 
 //#region 🧬️Compile
 
-/// 🔗 Resolution context: the document a local `#/...` pointer walks, plus every sibling document a
+/// 🔎️ Resolution context: the document a local `#/...` pointer walks, plus every sibling document a
 /// cross-scope `$ref` may name by `$id`.
 #[derive(Clone, Copy)]
 pub(super) struct Scope<'a> {

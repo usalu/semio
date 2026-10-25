@@ -3,13 +3,14 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { join } from "node:path";
 import { buildCargoArtifacts } from "../../🟦️.ts";
 import { publishedCargoArtifactDirectoryV1 } from "../../📤️published/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+
 import { lawBuildOptionsV1, withIssuedLawStorageV1 } from "../🦀️cargo/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../🧪️testing/📥️invocation/🟦️.ts";
 
 /** 🦀️ Compares a captured executable with Cargo while retaining shared intermediates and retiring private outputs. */
 export async function testCargoArtifactPublication(output: string): Promise<void> {
   const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url), "utf8")).cargo;
-  await receiveScriptProcessInvocation(process.env, original => withIssuedLawStorageV1(original, new AbortController().signal, async (held, admission) => {
+  await withBuildTestInvocationV1(original => withIssuedLawStorageV1(original, new AbortController().signal, async (held, admission) => {
   const root = mkdtempSync(join(held.root, "p-"));
   try {
     mkdirSync(join(root, ".cargo"));

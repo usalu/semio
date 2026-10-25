@@ -88,7 +88,6 @@ export function testWindowViewContext(): void {
     const armedMenu = hostArmedViewContext(view, "fill", "left");
     assert.equal(armedMenu?.activeToolId, "fill", "windowed requestContextMenu must use hostArmedViewContext so the tool overlay is present");
 
-    console.log(`[DEBUG] window-view-context cases=${fixture.cases.length} hostArmed=${fixture.hostArmed.length} utilities=${fixture.utilityCases.length} sqlite=matched isolation=valid preferences=preserved`);
   } finally {
     oracle.close();
   }

@@ -1,4 +1,4 @@
-//! 🦴️ The rig and the animation of the pets contract: bones, shapes, parts, eyes, mouths and faces, and the keys, tracks, clips and repertoire that move them.
+//! 🐾️ The rig and the animation of the pets contract: bones, shapes, parts, eyes, mouths and faces, and the keys, tracks, clips and repertoire that move them.
 //!
 //! @see ../🦀️.rs — the contract these types belong to
 //! @see ../🔣️.json — the normative contract

@@ -6,7 +6,19 @@ use super::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::Mutation as _;
 use protocol::MutationDiff as _;
-use store::{pack::snapshot::ArtifactDsl, BlobStore};
+use semio_framework_os_kernel::os_pack::snapshot::ArtifactDsl;use store::BlobStore;
+
+/// 🛂️ Binds a finite test caller identity authority, the one every authored space edit is admitted through.
+macro_rules! test_identity {
+    ($identity:ident) => {
+        test_identity!($identity, 1 << 20);
+    };
+    ($identity:ident, $maximum:expr) => {
+        let mut observer_function = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+        let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer_function;
+        let mut $identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new($maximum, observer).expect("finite test identity admission");
+    };
+}
 
 //#region 🧸️Fixtures
 fn demo_user(id: &str, role: SpaceRole) -> SpaceUser {

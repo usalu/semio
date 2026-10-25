@@ -1,10 +1,10 @@
 import {chmod,lstat,mkdir,readdir,readFile,rename,rmdir,unlink,writeFile} from "node:fs/promises";
 import {nativePartitionOfV1,nativeStatfsV1,nativeStorageBackendOfDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {isAbsolute,join,relative,resolve,sep} from "node:path";
-import ticket from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json" with {type:"json"};
+import ticket from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧬️schema/📜️ticket/🔣️json/🟦️.ts";
 import budgetPolicy from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {CACHE_RUNTIME_V1,CACHE_SIZE_FILE_V1,cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheRootDirectoryV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,formatCacheReasonV1,planCacheCollectionV1,readCacheSizeLedgerV1,type CacheAreaRowV1,type CacheEntryRowV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1,type CachePartitionRowV1,type CacheRemovalV1,type CacheReportV1,type CacheRootIdV1,type CacheSizeLedgerV1,type CacheSizeRecordV1,type CacheSourceV1,type CacheTargetPlanV1,type CacheTargetV1,type CacheUnitV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
-import { SqliteDatabaseV1 } from "../../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
+import { SqliteDatabaseV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
 
 const runtime=CACHE_RUNTIME_V1,protocol=ticket.definitions.Protocol.const,mount="m",tickets=new RegExp(protocol.ticketPattern,"u");
 

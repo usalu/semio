@@ -13,7 +13,7 @@ import fixtures from "./🧫️fixtures/🔣️.json" with { type: "json" };
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = (() => { for (let directory = here; ; directory = dirname(directory)) { if (existsSync(join(directory, "MODULE.bazel"))) return directory; if (dirname(directory) === directory) return process.cwd(); } })();
-const oracle = join(here, "🐍️oracle.py");
+const oracle = join(here, "🐍️.py");
 const law = createDirectToolLawV1();
 
 describe("direct tool declarations: pattern document", () => {

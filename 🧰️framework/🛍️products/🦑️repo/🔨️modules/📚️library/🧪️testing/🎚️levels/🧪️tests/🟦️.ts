@@ -1,9 +1,9 @@
-/** 🎚️ Contract: each test toolchain gets cumulative level arguments — per-level timeouts, `-short` through quick, a skip or marker filter for every higher level — from one ordered level list and one budget table; the corpus is language-agnostic and `🐍️oracle.py` derives the same argument vectors. */
+/** 🎚️ Contract: each test toolchain gets cumulative level arguments — per-level timeouts, `-short` through quick, a skip or marker filter for every higher level — from one ordered level list and one budget table; the corpus is language-agnostic and `🐍️.py` derives the same argument vectors. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {bunTestLevelArgs,dotnetLevelArgs,goLevelTestArgs,playwrightTestTimeoutMs,pytestLevelArgs,vitestLevelArgs} from "../🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
@@ -24,6 +24,6 @@ test("the active level comes from the environment and an unknown value falls bac
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

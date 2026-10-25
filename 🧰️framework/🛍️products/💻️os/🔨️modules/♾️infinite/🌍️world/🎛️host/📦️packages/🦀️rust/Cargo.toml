@@ -53,7 +53,6 @@ semio-framework-ui-theme = { path = "../../../../../../../../🔨️modules/🖱
 semio-framework-ui-wgpu-input = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
 semio-framework-ui-wgpu-widget-kit = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
 ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
-image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
 semio-framework-ui-action = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
@@ -120,3 +119,6 @@ required-features = ["testkit"]
 name = "world_host_scene_input_residency"
 path = "../../🧪️tests/🧲️scene-input-residency/🦀️.rs"
 required-features = ["testkit"]
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dev-dependencies]
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }

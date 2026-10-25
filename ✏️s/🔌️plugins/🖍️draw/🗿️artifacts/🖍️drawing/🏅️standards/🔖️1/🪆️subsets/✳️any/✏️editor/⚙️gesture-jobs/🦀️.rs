@@ -70,6 +70,19 @@ pub struct DrawingGestureOperationJob {
 }
 
 impl DrawingGestureOperationJob {
+    pub(super) fn new(payload: DrawingGestureOperationPayload) -> Self {
+        DrawingGestureOperationJob { payload: Some(payload), pending_completion_rejection: None, raw_input: None, raw_page_cursor: 0, raw_byte_cursor: 0, decoder: None, raw_validated: true, completed: false, closing: false, outcomes: semio_s_artifact_draw_drawing_host::outcome::DrawingJobOutcomes::new() }
+    }
+
+    pub(super) fn from_wire(payload: DrawingGestureOperationPayload, input: semio_framework_action_bus::RetainedToolWireInput) -> Self {
+        let expected_verb = payload.command.command_id();
+        let mut job = Self::new(payload);
+        job.raw_input = Some(input);
+        job.decoder = Some(DrawingRetainedCommandDecoder::new(expected_verb));
+        job.raw_validated = false;
+        job
+    }
+
     pub(super) fn turn(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_s_artifact_draw_drawing_host::outcome::DrawingJobTurn {
         use semio_s_artifact_draw_drawing_host::outcome::DrawingJobTurn;
         if self.outcomes.faulted() {
@@ -284,32 +297,7 @@ impl semio_framework::ToolJobFactory for DrawingGestureOperationJobFactory {
         semio_framework::ToolExecutionContract::resumable(DRAWING_GESTURE_RAW_BYTES, 32, 1, 16_384, 7_500, 1, 1)
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(DrawingGestureOperationJob { payload: Some(payload), pending_completion_rejection: None, raw_input: None, raw_page_cursor: 0, raw_byte_cursor: 0, decoder: None, raw_validated: true, completed: false, closing: false, outcomes: semio_s_artifact_draw_drawing_host::outcome::DrawingJobOutcomes::new() })
-    }
-
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if checkpoint.is_some() || input.declared_bytes() > DRAWING_GESTURE_RAW_BYTES {
-            return Err((semio_framework::ToolJobFactoryError::new("Drawing gesture retained ingress rejects a checkpoint or oversized wire owner"), input, checkpoint));
-        }
-        let mut job = match self.create_job(operation, payload) {
-            Ok(job) => job,
-            Err(error) => return Err((error, input, None)),
-        };
-        let Some(expected_verb) = job.payload.as_ref().map(|payload| payload.command.command_id()) else {
-            return Err((semio_framework::ToolJobFactoryError::new("Drawing gesture retained decoder has no exact typed command owner"), input, None));
-        };
-        job.raw_input = Some(input);
-        job.decoder = Some(DrawingRetainedCommandDecoder::new(expected_verb));
-        job.raw_validated = false;
-        Ok(job)
-    }
+    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Ok::<_, String>(DrawingGestureOperationJob::new(payload)));
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingGestureOperationJobFactory {
@@ -317,5 +305,57 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingGestureOpera
     const TOOL_IDS: &'static [&'static str] = DRAWING_GESTURE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = DRAWING_GESTURE_PUBLICATION_CONTRACTS;
+}
+
+/// 🏗️ The gesture half of `DrawingPlayApp::build_tool_job` — the Canvas window's live view, config and transient plus the retained wire owner of the command enter one gesture job.
+pub(super) fn drawing_gesture_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<DrawingPlayApp>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    use semio_framework_plugin::__value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
+    let original = request.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Drawing gesture request is absent"))?;
+    if original.command.command_id() != original.tool_id {
+        return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "Drawing gesture command does not match its exact registered tool").into());
+    }
+    if original.context.view_state.is_none() {
+        return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Drawing gesture commands require one concrete Canvas window instance").into());
+    }
+    if original.checkpoint.is_some() || original.input.as_ref().is_some_and(|input| input.declared_bytes() > DRAWING_GESTURE_RAW_BYTES) {
+        return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Drawing gesture retained ingress rejects a checkpoint or oversized wire owner").into());
+    }
+    let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: std::mem::size_of::<DrawingGestureOperationJob>() + std::mem::size_of::<DrawingGestureOperationPayload>(), release_bytes: 0, depth: 1 };
+    semio_framework::action_bus::admit_original_tool_construction(cx, output, demand, |_| {
+        let mut request = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Drawing gesture request is absent"))?;
+        let view_state = request.context.view_state.clone().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "Drawing gesture commands require one concrete Canvas window instance"))?;
+        let window_config = canvas_window::config::from_snapshot(request.context.window_config.as_ref());
+        let window_transient = canvas_window::transient::from_snapshot(request.context.window_transient.as_ref());
+        let input = request.input.take();
+        let operation_context = semio_framework_plugin::AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id,
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
+            authoring_seed: request.authoring_seed.clone(),
+        };
+        let payload = DrawingGestureOperationPayload {
+            source_identity: SceneIdentity { instance: request.app_instance_id, base: request.operation.base_revision.0, generation: request.operation.generation.0, revision: request.canonical_base_revision },
+            command: *request.command,
+            snapshot: request.snapshot,
+            config: request.config,
+            window_config,
+            window_transient,
+            view_state,
+            history: request.history,
+            interaction_state: request.interaction_state,
+            instance_owner: request.instance_operation_owner,
+            operation_context,
+            active_utility_id: request.context.view_state.as_ref().map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility).to_owned(),
+            completion: request.completion,
+        };
+        let job = match input {
+            Some(input) => DrawingGestureOperationJob::from_wire(payload, input),
+            None => DrawingGestureOperationJob::new(payload),
+        };
+        Ok((semio_framework_plugin::ErasedToolJob::from_owned(Box::new(job)), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: std::mem::size_of::<DrawingGestureOperationJob>(), ..Default::default() }))
+    })
 }
 //#endregion 🧵️GestureOperationJobs

@@ -91,7 +91,7 @@ fn every_composition_joins_its_run_like_the_fixture() {
     }
 }
 
-/// ⚖️ LAW: one author typing through `texts` folds the `from_edit` splice of every step into exactly the fixture's runs — a
+/// 🧶️ LAW: one author typing through `texts` folds the `from_edit` splice of every step into exactly the fixture's runs — a
 /// disjoint step starts a new run, a cancelled run leaves none — and the runs take the first text to the last.
 #[test]
 fn every_typing_session_folds_into_the_fixture_runs() {
@@ -117,14 +117,14 @@ fn every_typing_session_folds_into_the_fixture_runs() {
     }
 }
 
-/// ⚖️ LAW: the host's typing-run protocol constants are the tool-machine owner's (typing-law fixture).
+/// 📌️ LAW: the host's typing-run protocol constants are the tool-machine owner's (typing-law fixture).
 #[test]
 fn the_typing_protocol_constants_are_the_tool_machine_owners() {
     let law: Value = serde_json::from_str(include_str!("../../../../🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️typing-law/🔣️.json")).expect("typing law");
     assert_eq!((law["args"]["buffer"].as_str(), law["args"]["commit"].as_str(), law["idleMs"].as_u64()), (Some(TEXT_EDITOR_TYPING_BUFFER_ARG), Some(TEXT_EDITOR_TYPING_COMMIT_ARG), Some(TEXT_EDITOR_TYPING_IDLE_MS)));
 }
 
-/// ⚖️ LAW: every host signal of the corpus appears once and ends the run with a reason the tool machine knows (typing-law
+/// 📡️ LAW: every host signal of the corpus appears once and ends the run with a reason the tool machine knows (typing-law
 /// `reasons`), so a host commit signal is never refused.
 #[test]
 fn every_host_signal_commits_with_a_tool_machine_reason() {

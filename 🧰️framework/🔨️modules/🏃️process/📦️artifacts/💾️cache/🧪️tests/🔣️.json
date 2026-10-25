@@ -3252,7 +3252,7 @@
     },
     {
       "action": "foreign",
-      "queries": 1,
+      "queries": 6,
       "accepted": false,
       "phase": "mounted"
     },
@@ -3307,7 +3307,7 @@
     {
       "action": "foreign",
       "phase": "inactive",
-      "queries": 1,
+      "queries": 6,
       "accepted": false
     },
     {

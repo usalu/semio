@@ -27,7 +27,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-#[cfg(test)] use crate::binary::mutations::*;
+#[cfg(test)] use crate::binary_mutations::*;
 use semio_s_artifact_block_5d_mutations::Block5dMutation;
 #[cfg(test)] use semio_s_artifact_block_5d_mutations::inverse_block5d_mutation;
 

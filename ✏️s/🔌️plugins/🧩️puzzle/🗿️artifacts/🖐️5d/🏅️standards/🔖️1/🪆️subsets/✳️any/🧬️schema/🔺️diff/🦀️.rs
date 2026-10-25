@@ -220,11 +220,31 @@ pub struct Puzzle5dMetaPatch {
 //#endregion 🔖️Patches
 
 //#region 🔖️Deltas
-protocol::list_delta! { pub Puzzle5dGripsDelta { removal: Puzzle5dGripRemoval, insertion: Puzzle5dGripInsertion, relocation: Puzzle5dGripRelocation, modification: Puzzle5dGripModification, row: Puzzle5dGrip, patch: Puzzle5dGripPatch, list: Vec<Puzzle5dGrip>, key: String = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle5dPartsDelta { removal: Puzzle5dPartRemoval, insertion: Puzzle5dPartInsertion, relocation: Puzzle5dPartRelocation, modification: Puzzle5dPartModification, row: Puzzle5dPart, patch: Puzzle5dPartPatch, list: Vec<Puzzle5dPart>, key: String = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle5dFastenersDelta { removal: Puzzle5dFastenerRemoval, insertion: Puzzle5dFastenerInsertion, relocation: Puzzle5dFastenerRelocation, modification: Puzzle5dFastenerModification, row: Puzzle5dFastener, patch: Puzzle5dFastenerPatch, list: Vec<Puzzle5dFastener>, key: String = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle5dTargetVolumesDelta { removal: Puzzle5dTargetVolumeRemoval, insertion: Puzzle5dTargetVolumeInsertion, relocation: Puzzle5dTargetVolumeRelocation, modification: Puzzle5dTargetVolumeModification, row: Puzzle5dTargetVolume, patch: Puzzle5dTargetVolumePatch, list: Vec<Puzzle5dTargetVolume>, key: String = |item| item.id.clone() } }
-protocol::list_delta! { pub Puzzle5dKindCompatibilityDelta { removal: Puzzle5dKindCompatibilityRemoval, insertion: Puzzle5dKindCompatibilityInsertion, relocation: Puzzle5dKindCompatibilityRelocation, modification: Puzzle5dKindCompatibilityModification, row: Puzzle5dKindCompatibility, patch: Puzzle5dKindCompatibilityPatch, list: Vec<Puzzle5dKindCompatibility>, key: Puzzle5dKindCompatibilityKey = |item| Puzzle5dKindCompatibilityKey { source: item.source.clone(), target: item.target.clone() } } }
+protocol::list_delta! { pub Puzzle5dGripsDelta { removal: Puzzle5dGripRemoval, insertion: Puzzle5dGripInsertion, relocation: Puzzle5dGripRelocation, modification: Puzzle5dGripModification, row: Puzzle5dGrip, patch: Puzzle5dGripPatch, list: Vec<Puzzle5dGrip>, key: String = by Puzzle5dGripKeys } }
+protocol::list_delta! { pub Puzzle5dPartsDelta { removal: Puzzle5dPartRemoval, insertion: Puzzle5dPartInsertion, relocation: Puzzle5dPartRelocation, modification: Puzzle5dPartModification, row: Puzzle5dPart, patch: Puzzle5dPartPatch, list: Vec<Puzzle5dPart>, key: String = by Puzzle5dPartKeys } }
+protocol::list_delta! { pub Puzzle5dFastenersDelta { removal: Puzzle5dFastenerRemoval, insertion: Puzzle5dFastenerInsertion, relocation: Puzzle5dFastenerRelocation, modification: Puzzle5dFastenerModification, row: Puzzle5dFastener, patch: Puzzle5dFastenerPatch, list: Vec<Puzzle5dFastener>, key: String = by Puzzle5dFastenerKeys } }
+protocol::list_delta! { pub Puzzle5dTargetVolumesDelta { removal: Puzzle5dTargetVolumeRemoval, insertion: Puzzle5dTargetVolumeInsertion, relocation: Puzzle5dTargetVolumeRelocation, modification: Puzzle5dTargetVolumeModification, row: Puzzle5dTargetVolume, patch: Puzzle5dTargetVolumePatch, list: Vec<Puzzle5dTargetVolume>, key: String = by Puzzle5dTargetVolumeKeys } }
+protocol::list_delta! { pub Puzzle5dKindCompatibilityDelta { removal: Puzzle5dKindCompatibilityRemoval, insertion: Puzzle5dKindCompatibilityInsertion, relocation: Puzzle5dKindCompatibilityRelocation, modification: Puzzle5dKindCompatibilityModification, row: Puzzle5dKindCompatibility, patch: Puzzle5dKindCompatibilityPatch, list: Vec<Puzzle5dKindCompatibility>, key: Puzzle5dKindCompatibilityKey = by Puzzle5dKindCompatibilityKeys } }
+/// 🔑️ Keys the foreign `Puzzle5dGrip` rows of their list delta by `id`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle5dGripKeys;
+impl protocol::list_delta::KeyOf<Puzzle5dGrip> for Puzzle5dGripKeys { type Key = String; fn key_of(row: &Puzzle5dGrip) -> String { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle5dPart` rows of their list delta by `id`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle5dPartKeys;
+impl protocol::list_delta::KeyOf<Puzzle5dPart> for Puzzle5dPartKeys { type Key = String; fn key_of(row: &Puzzle5dPart) -> String { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle5dFastener` rows of their list delta by `id`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle5dFastenerKeys;
+impl protocol::list_delta::KeyOf<Puzzle5dFastener> for Puzzle5dFastenerKeys { type Key = String; fn key_of(row: &Puzzle5dFastener) -> String { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle5dTargetVolume` rows of their list delta by `id`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle5dTargetVolumeKeys;
+impl protocol::list_delta::KeyOf<Puzzle5dTargetVolume> for Puzzle5dTargetVolumeKeys { type Key = String; fn key_of(row: &Puzzle5dTargetVolume) -> String { row.id.clone() } }
+/// 🔑️ Keys the foreign `Puzzle5dKindCompatibility` rows of their list delta by their kind pair.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle5dKindCompatibilityKeys;
+impl protocol::list_delta::KeyOf<Puzzle5dKindCompatibility> for Puzzle5dKindCompatibilityKeys { type Key = Puzzle5dKindCompatibilityKey; fn key_of(row: &Puzzle5dKindCompatibility) -> Puzzle5dKindCompatibilityKey { Puzzle5dKindCompatibilityKey { source: row.source.clone(), target: row.target.clone() } } }
 //#endregion 🔖️Deltas
 
 //#region 🔖️Algebra

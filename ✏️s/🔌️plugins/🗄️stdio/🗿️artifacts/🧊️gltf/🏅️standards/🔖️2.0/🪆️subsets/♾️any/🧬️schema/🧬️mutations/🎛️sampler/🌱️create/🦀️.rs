@@ -31,7 +31,7 @@ pub fn plan(p: &GltfCreateSamplerPayload, base: &GltfSnapshot) -> Result<GltfDif
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfCreateSamplerPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_sampler::DeleteSamplerMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -73,7 +73,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for CreateSamplerMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<CreateSamplerMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<CreateSamplerMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::delete_sampler::DeleteSamplerMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

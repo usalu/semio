@@ -8,7 +8,7 @@ export const NORMALIZATION_ENGINE_OWNERS: readonly string[] = ["📜️plan-cont
 /** 📸️ Captures exact current owner bytes independently of compiler declaration selection. */
 export function normalizationSourceFiles(normalizationDirectory: string, read: (path: string) => Buffer = readFileSync): ReadonlyMap<string, Buffer> {
   const root = normalizationDirectory;
-  const owners = [...NORMALIZATION_ENGINE_OWNERS, "🛣️path/🟦️.ts", "📁️input/🟦️.ts", "🏃️operation/🟦️.ts", "🔣️taxonomy/📐️kind-specs/🟦️.ts", "🔣️taxonomy/🗃️owned-file-projection/🟦️.ts", "🔣️taxonomy/🧭️path-projection/🟦️.ts", "🔣️taxonomy/🌳️descendants/🟦️.ts", "🔣️taxonomy/🏭️generators-packages/🟦️.ts", "🔣️taxonomy/📚️loaded/🟦️.ts", "🔣️taxonomy/🟦️.ts", "🚪️source-admission/🟦️.ts", "🚪️source-admission/📁️io/🟦️.ts", "../🧾️serialization/🔣️json/🟦️.ts", "../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts"];
+  const owners = [...NORMALIZATION_ENGINE_OWNERS, "🛣️path/🟦️.ts", "📁️input/🟦️.ts", "🏃️operation/🟦️.ts", "🔣️taxonomy/📐️kind-specs/🟦️.ts", "🔣️taxonomy/🗃️owned-file-projection/🟦️.ts", "🔣️taxonomy/🧭️path-projection/🟦️.ts", "🔣️taxonomy/🌳️descendants/🟦️.ts", "🔣️taxonomy/🏭️generators-packages/🟦️.ts", "🔣️taxonomy/📚️loaded/🟦️.ts", "🔣️taxonomy/🧰️taxonomy-parse-helpers/🟦️.ts", "🔣️taxonomy/🏷️filenames/🟦️.ts", "🔣️taxonomy/🧱️kinds-and-fixed-contracts/🟦️.ts", "🔣️taxonomy/🌳️members-renderers-and-descendants/🟦️.ts", "🔣️taxonomy/🪞️projections-and-consumers/🟦️.ts", "🔣️taxonomy/🏭️generators-packages-and-exclusions/🟦️.ts", "🔣️taxonomy/🟦️.ts", "🚪️source-admission/🟦️.ts", "🚪️source-admission/📁️io/🟦️.ts", "../🧾️serialization/🔣️json/🟦️.ts", "../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts"];
   return new Map(owners.map((owner) => { const path = join(root, owner); return [path, read(path)]; }));
 }
 
@@ -21,7 +21,7 @@ export function normalizationSourceDeclarations(normalizationDirectory: string, 
   }).join("\n");
 }
 
-/** 🏭️ Reads the declarations of the normalization engine alone, in dependency order and without export modifiers, for isolated compiler oracles. */
+/** ⚙️ Reads the declarations of the normalization engine alone, in dependency order and without export modifiers, for isolated compiler oracles. */
 export function normalizationEngineDeclarations(normalizationDirectory: string, read: (path: string) => Buffer = readFileSync): string {
   const root = normalizationDirectory;
   return NORMALIZATION_ENGINE_OWNERS.flatMap((owner) => {

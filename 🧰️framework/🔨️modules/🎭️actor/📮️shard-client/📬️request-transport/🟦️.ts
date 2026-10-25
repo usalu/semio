@@ -30,7 +30,7 @@ export class ShardRequestTransport {
     return slot;
   }
 
-  /** 📬️ Per-worker inbound dispatch. `"frame"` is checked BEFORE the generic `pending`-lookup path
+  /** 💬️ Per-worker inbound dispatch. `"frame"` is checked BEFORE the generic `pending`-lookup path
    * below (`"result"`'s implicit fallthrough) — mirroring `🟨️shard-worker.js`'s own `deliverEffectResult`
    * ordering note (🧪️ terra-web-bridges): an inbound `"frame"` carries no `requestId` of its own and is
    * never an answer this class is waiting on, so falling through to the generic path would look up a

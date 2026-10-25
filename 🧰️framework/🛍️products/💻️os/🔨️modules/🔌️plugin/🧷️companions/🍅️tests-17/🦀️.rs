@@ -4,6 +4,7 @@
 
 #[cfg(test)]
 extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_plugin_testing_laws as app_testing;
 #[cfg(test)]
 extern crate semio_framework_os_kernel as protocol;
 #[cfg(test)]

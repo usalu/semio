@@ -5,7 +5,7 @@ import { dirname, join, relative, sep } from "node:path";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
-/** 🗃️ Stage cache policy: warm and fresh store names, the entry manifest and the temporary prefix. */
+/** 🔏️ Stage cache policy: warm and fresh store names, the entry manifest and the temporary prefix. */
 export const STAGE_CACHE_POLICY_V1 = schema.definitions.Policy.const;
 
 /** 🔑️ What a post-link stage is a pure function of: the digests of its inputs, the identities of its tools and its own schema version (`StageKeyV1`). */
@@ -44,7 +44,7 @@ function canonical(value: unknown): unknown {
   return Object.fromEntries(Object.keys(value).sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right))).map((key) => [key, canonical((value as Record<string, unknown>)[key])]));
 }
 
-/** 🧾️ The canonical bytes of a stage key: recursively ordered keys, no whitespace, UTF-8. */
+/** ⌨️ The canonical bytes of a stage key: recursively ordered keys, no whitespace, UTF-8. */
 export function stageKeyCanonicalV1(key: StageKeyV1): string {
   return JSON.stringify(canonical(admitDefinition<StageKeyV1>("StageKeyV1", key)));
 }
@@ -55,7 +55,7 @@ export function stageKeyDigestV1(key: StageKeyV1): string {
   return createHash("sha256").update(stageKeyCanonicalV1(key)).digest("hex");
 }
 
-/** #️⃣ Streams one file through SHA-256. */
+/** 🗂️ Streams one file through SHA-256. */
 export function fileSha256V1(path: string): Promise<string> {
   return new Promise((accept, reject) => {
     const hash = createHash("sha256");
@@ -102,7 +102,7 @@ async function readEntry(entry: string, digest: string): Promise<StageEntryV1 | 
   return value;
 }
 
-/** 🗃️ Opens the stage cache at `root` (`⚡️cache/stages` for a warm build, `<generation>/s` for a fresh one). A request whose key is stored restores its files; a
+/** 🔓️ Opens the stage cache at `root` (`⚡️cache/stages` for a warm build, `<generation>/s` for a fresh one). A request whose key is stored restores its files; a
  * miss runs `produce` into a private directory, records every file with its digest and publishes the entry by one atomic rename, so concurrent builders of
  * one key never see a half-written entry and the second publisher keeps the first entry. Outputs are restored, never linked, so a consumer cannot alter an entry.
  * @see ./🧬️schema/🔣️.json

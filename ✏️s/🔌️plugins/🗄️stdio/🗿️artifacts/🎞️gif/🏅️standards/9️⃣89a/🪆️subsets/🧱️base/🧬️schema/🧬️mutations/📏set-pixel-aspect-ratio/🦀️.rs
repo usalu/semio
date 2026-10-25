@@ -9,7 +9,7 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-pixel-aspect-ratio")]
 pub struct SetPixelAspectRatio {
-    pub(crate) ratio: u8,
+    pub ratio: u8,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetPixelAspectRatio {

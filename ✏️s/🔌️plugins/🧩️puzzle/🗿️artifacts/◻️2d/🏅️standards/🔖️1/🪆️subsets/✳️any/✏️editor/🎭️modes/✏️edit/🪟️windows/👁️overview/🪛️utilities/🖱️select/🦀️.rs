@@ -11,6 +11,7 @@
 //! mutations are (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §8).
 #![allow(unexpected_cfgs)]
 
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::puzzle2d_occupied_handles, crate::editor::puzzle2d::snapshot::puzzle2d_push_edge, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_GESTURE_MAX};
 use {crate::standards::v1::subsets::any::schema::mutations::connect_handles_in_proximity, crate::standards::v1::subsets::any::schema::mutations::drag_selection, crate::standards::v1::subsets::any::schema::puzzle2d_handle_distance, crate::standards::v1::subsets::any::schema::mutations::rotate_selection, crate::standards::v1::subsets::any::schema::mutations::scale_selection, crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation};
 

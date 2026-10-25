@@ -8,7 +8,7 @@ import{brotliCompressSync}from"node:zlib";
 import{fileURLToPath,pathToFileURL}from"node:url";
 import closures from"../../../🧬️schema/🔣️.json";
 
-const sha=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex"),worker=fileURLToPath(new URL("../../../👷️read.mjs",import.meta.url)),P=closures.definitions.Protocol.const;
+const sha=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex"),worker=fileURLToPath(new URL("../../../👷️closure-read-worker/🟨️.mjs",import.meta.url)),P=closures.definitions.Protocol.const;
 const SESSION_CREDIT_V1=16764800;
 const readSessionV1=(worker:string,cwd:string,packets:readonly string[]):string[]=>{
  const input=packets.map(packet=>JSON.stringify({version:1,maximumReplyBytes:SESSION_CREDIT_V1})+"\n"+packet+"\n").join("")+"null\n",run=spawnSync(process.versions.bun?"node":process.execPath,["--max-old-space-size="+P.heapMiB,"--input-type=module","-e","const module=await import(process.argv[1]);await module.runCapturedBuildSourceV1();",pathToFileURL(worker).href],{input,cwd,encoding:"utf8",maxBuffer:P.maximumResultBytes});

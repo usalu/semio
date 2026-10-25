@@ -67,7 +67,7 @@ pub struct Entity<T: 'static> {
 }
 
 impl<T: 'static> Entity<T> {
-    /// 🪪️ The stable generational address of this entity, shared with `crate::DependencyTracker`.
+    /// 🕸️ The stable generational address of this entity, shared with `crate::DependencyTracker`.
     pub fn id(&self) -> EntityId {
         self.id
     }
@@ -100,7 +100,7 @@ impl<T: 'static> PartialEq for Entity<T> {
 
 impl<T: 'static> Eq for Entity<T> {}
 
-/// 🪶️ A non-owning reference to an entity. [`WeakEntity::upgrade`] fails once the last strong
+/// 🔗️ A non-owning reference to an entity. [`WeakEntity::upgrade`] fails once the last strong
 /// [`Entity<T>`] handle has dropped, even if the slot has not been physically freed yet.
 pub struct WeakEntity<T: 'static> {
     pub(crate) id: EntityId,
@@ -109,7 +109,7 @@ pub struct WeakEntity<T: 'static> {
 }
 
 impl<T: 'static> WeakEntity<T> {
-    /// 🪪️ The generational address this weak handle targets.
+    /// 🎯️ The generational address this weak handle targets.
     pub fn id(&self) -> EntityId {
         self.id
     }
@@ -170,7 +170,7 @@ impl EntityStore {
         Entity { id, handle, _marker: PhantomData }
     }
 
-    /// 👁️ Reads the entity, or `None` if it is leased, released, or the id is stale.
+    /// 📖️ Reads the entity, or `None` if it is leased, released, or the id is stale.
     pub fn try_read<T: 'static>(&self, entity: &Entity<T>) -> Option<&T> {
         let slot = self.slots.get(entity.id.slot() as usize)?;
         if slot.generation != entity.id.generation() {
@@ -182,7 +182,7 @@ impl EntityStore {
         }
     }
 
-    /// 👁️ [`EntityStore::try_read`], panicking instead of returning `None`.
+    /// 🔓️ [`EntityStore::try_read`], panicking instead of returning `None`.
     pub fn read<T: 'static>(&self, entity: &Entity<T>) -> &T {
         self.try_read(entity).expect("🚫️ entity read rejected: leased, released, or a stale generation")
     }
@@ -203,7 +203,7 @@ impl EntityStore {
         }
     }
 
-    /// 🔔️ Dispatches exactly the `notify`/`emit` effects queued *before* this call to their
+    /// 🚰️ Dispatches exactly the `notify`/`emit` effects queued *before* this call to their
     /// listeners — one bounded cycle, not a live drain. A listener that queues a fresh notify lands
     /// in the *next* cycle, which is what lets `runtime-transact` loop this to a fixpoint under its
     /// own 64-cycle EffectStorm budget instead of one call spinning unboundedly on its own. Returns
@@ -236,12 +236,12 @@ impl EntityStore {
         self.effects.notify.iter().copied()
     }
 
-    /// 🔔️ The entities whose emitted event is still queued, in queue order.
+    /// ⌛️ The entities whose emitted event is still queued, in queue order.
     pub fn pending_emit_sources(&self) -> impl Iterator<Item = EntityId> + '_ {
         self.effects.emit.iter().map(|(id, _)| *id)
     }
 
-    /// 📤️ Hands the embedder every future queued via `Context::spawn_local` since the last drain.
+    /// 🧵️ Hands the embedder every future queued via `Context::spawn_local` since the last drain.
     /// This crate never polls a future itself — the embedder's executor owns that.
     pub fn drain_tasks(&mut self) -> Vec<PendingTask> {
         self.effects.tasks.drain(..).collect()

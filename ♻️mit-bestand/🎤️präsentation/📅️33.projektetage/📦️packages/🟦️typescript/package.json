@@ -25,12 +25,12 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
-    "directory": "mit-bestand/präsentation/33.projektetage"
+    "directory": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript"
   },
   "bundleKind": "application",
   "exports": {
     ".": "./🟦️.ts",
-    "./spec": "./🔖️spec.ts"
+    "./spec": "./🔖️spec/🟦️.ts"
   },
   "semio": {
     "app": {
@@ -38,7 +38,7 @@
       "aliases": [
         "projektetage"
       ],
-      "packageRoot": "mit-bestand/präsentation/33.projektetage",
+      "packageRoot": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage",
       "corePackage": "@semio-tech/mit-bestand-praesentation-projektetage",
       "definitionExport": "projektetagePlayAppDefinition",
       "hostKind": "projektetage",

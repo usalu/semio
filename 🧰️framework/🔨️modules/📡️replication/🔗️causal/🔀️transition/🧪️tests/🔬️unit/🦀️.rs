@@ -132,7 +132,7 @@ fn none() -> std::collections::HashSet<String> {
     std::collections::HashSet::new()
 }
 
-/// 🪪️ Operation ownership is unique and tied HLC events follow UTF-8 order across reload and arrival permutations.
+/// 🎚️ Operation ownership is unique and tied HLC events follow UTF-8 order across reload and arrival permutations.
 #[test]
 fn history_invariants_follow_portable_ownership_and_utf8_vectors() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️history-invariants/🔣️.json")).expect("history invariants fixture");
@@ -164,7 +164,6 @@ fn history_invariants_follow_portable_ownership_and_utf8_vectors() {
             }
         }
     }
-    eprintln!("[DEBUG] history ownership and tied-HLC UTF-8 vectors preserve author-scoped undo across arrival permutations");
 }
 
 /// 🧮️ Edits fold into HLC order regardless of the order they are listed in.
@@ -198,7 +197,7 @@ fn an_authors_new_edit_clears_only_its_own_redo() {
     assert_eq!(fold.redo, vec!["b"]);
 }
 
-/// 🛂️ An undo belongs to its author: a revert or reinstate naming another actor's operation — alone or beside the
+/// ↩️ An undo belongs to its author: a revert or reinstate naming another actor's operation — alone or beside the
 /// actor's own — withdraws or restores nothing and is listed as refused, on every replica.
 #[test]
 fn a_transition_naming_another_actors_operation_is_refused_whole() {
@@ -323,14 +322,14 @@ fn excluded_edits_stay_inactive() {
     assert_eq!(fold_history(&ArtifactId("doc".into()), &edits, &transitions, &excluded).expect("fold").applied, vec!["a"]);
 }
 
-/// 🚫️ A transition naming an unknown operation or checkpoint is refused instead of silently skipped.
+/// 🛑️ A transition naming an unknown operation or checkpoint is refused instead of silently skipped.
 #[test]
 fn dangling_references_are_refused() {
     assert!(fold_history(&ArtifactId("doc".into()), &[], &[at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-ghost".into())] }, "x", 1)], &none()).is_err());
     assert!(fold_history(&ArtifactId("doc".into()), &[], &[at(HistoryTransition::Checkout { checkpoint_id: "ghost".into(), alternative_id: None }, "x", 1)], &none()).is_err());
 }
 
-/// 🚫️ The event set is a set: a transition delivered twice into one log is refused, never folded twice.
+/// 🔂️ The event set is a set: a transition delivered twice into one log is refused, never folded twice.
 #[test]
 fn a_repeated_transition_is_refused() {
     let edits = [edit("a", "x", 1)];
@@ -496,7 +495,7 @@ fn the_language_agnostic_fixture_matches_the_codec_byte_for_byte() {
     assert_eq!(every_transition().iter().map(HistoryTransition::kind).collect::<std::collections::HashSet<_>>().len(), HistoryTransitionKind::ALL.len(), "every kind is exercised");
 }
 
-/// 🛂️ Authoring refuses exactly what the codec refuses: no input, a repeated target, an oversized scope or payload.
+/// 📝️ Authoring refuses exactly what the codec refuses: no input, a repeated target, an oversized scope or payload.
 #[test]
 fn supersede_validation_refuses_what_the_codec_refuses() {
     let valid = TransitionSupersede { scope: Some("s".repeat(SUPERSEDE_SCOPE_MAX_BYTES)), inputs: vec![input("op-a", &vec![0; SUPERSEDE_PAYLOAD_MAX_BYTES])] };

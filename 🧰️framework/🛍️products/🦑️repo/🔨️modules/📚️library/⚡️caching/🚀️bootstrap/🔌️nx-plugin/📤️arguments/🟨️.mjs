@@ -12,10 +12,10 @@ const nativeSchema=JSON.parse(readFileSync(new URL("../../../📦️artifacts/�
 import {encodeOwnerArgumentsV1,conformsOwnerContractV1 as conforms} from "../../../../🏗️build/📤️arguments/🟨️.mjs";
 import {readPrivateNxBuildGraphV1} from "../📌️graph-pin/🟨️.mjs";
 import {nxBuildDependencySourceIdentityV1} from "../🔏️implementation/🟨️.mjs";
-import {issueStoreReceiptV1} from "../../../../🏗️build/🧾️store-receipt/🟨️.mjs";
+import {issueStoreReceiptV1,settleStoreReceiptV1} from "../../../../🏗️build/🧾️store-receipt/🟨️.mjs";
 
-/** 🧾️ Starts a task that declares a store receipt from no receipt and names the receipt to its handler. */
-function storeReceiptEnvironmentV1(context){const project=context.projectsConfigurations?.projects?.[context.projectName];return issueStoreReceiptV1({workspaceRoot:context.root,projectRoot:project?.root??".",target:context.targetName,outputs:project?.targets?.[context.targetName]?.outputs});}
+/** 🧾️ Starts a task that declares a store receipt and names its private pending receipt to the handler. */
+function storeReceiptDeclarationV1(context){const project=context.projectsConfigurations?.projects?.[context.projectName];return {workspaceRoot:context.root,projectRoot:project?.root??".",target:context.targetName,outputs:project?.targets?.[context.targetName]?.outputs};}
 
 const taskAuthority=(captured=false)=>createHash('sha256').update(JSON.stringify([buildOrchestrationSourceIdentityV1(),...taskAuthorityPaths.map((path,index)=>createHash('sha256').update(captured?taskAuthorityBytes[index]:readFileSync(path)).digest('hex'))])).digest('hex'),loadedTaskAuthority=taskAuthority(true);
 /** 🔏️ Refuses executor code or delegation contracts changed after actual module evaluation. */
@@ -39,9 +39,12 @@ export async function executeLiteralBuildArgumentsV1(options,context,delegate){
   const bridge=(process.platform==="win32"?'repo "%SEMIO_NX_COMMAND_RUNNER%"':'repo "$SEMIO_NX_COMMAND_RUNNER"')+" "+digest;
   return typeof operation==="string"?bridge:{...operation,command:bridge,forwardAllArgs:false};
  };
- const plan={...options,...(ready===undefined?{}:{readyWhen:readinessMarker}),args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...process.env,...options.env,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:context.root,SEMIO_TASK_PROJECT:context.projectName,SEMIO_TASK_TARGET:context.targetName,...storeReceiptEnvironmentV1(context),...(context.configurationName?{SEMIO_TASK_CONFIGURATION:context.configurationName}:{}),SEMIO_NX_COMMAND_DIRECTORY:directory,SEMIO_NX_COMMAND_RUNNER:fileURLToPath(new URL("./📜️script.ts",import.meta.url)),...(orchestration?{SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(orchestration),SEMIO_SCRIPT_CAPABILITIES:undefined}:{})}};
+ const declaration=storeReceiptDeclarationV1(context),issued=issueStoreReceiptV1(declaration),startedAtMs=Date.now();
+ const plan={...options,...(ready===undefined?{}:{readyWhen:readinessMarker}),args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...process.env,...options.env,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:context.root,SEMIO_TASK_PROJECT:context.projectName,SEMIO_TASK_TARGET:context.targetName,...issued,...(context.configurationName?{SEMIO_TASK_CONFIGURATION:context.configurationName}:{}),SEMIO_NX_COMMAND_DIRECTORY:directory,SEMIO_NX_COMMAND_RUNNER:fileURLToPath(new URL("./📜️script.ts",import.meta.url)),...(orchestration?{SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(orchestration),SEMIO_SCRIPT_CAPABILITIES:undefined}:{})}};
  if(options.command!==undefined)plan.command=await wrap(options.command);else{plan.commands=[];for(const command of options.commands)plan.commands.push(await wrap(command));}
- return delegate(plan,context);
+ let result;try{result=await delegate(plan,context);}catch(error){await settleStoreReceiptV1(declaration,issued,{succeeded:false,startedAtMs}).catch(()=>undefined);throw error;}
+ await settleStoreReceiptV1(declaration,issued,{succeeded:result?.success!==false,startedAtMs});
+ return result;
 }
 
 /** 📥️ Issues the exact discovered descendant with the original caller's unchanged deadline and resources. */
@@ -107,12 +110,14 @@ export async function executeOwnerArgumentsV1(options,context,delegate){
  if(options.args!==undefined&&!Array.isArray(options.args))throw Error("Owner executor requires literal argument arrays");
  if(options.forwardAllArgs!==false&&!Array.isArray(options.__unparsed__))throw Error("Nx did not admit the original forwarded arguments");
  const arguments_=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]];
- const environment={...process.env,...options.env,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:context.root,SEMIO_TASK_PROJECT:context.projectName,SEMIO_TASK_TARGET:context.targetName,...storeReceiptEnvironmentV1(context)};
+ const declaration=storeReceiptDeclarationV1(context),issued=issueStoreReceiptV1(declaration),startedAtMs=Date.now(),environment={...process.env,...options.env,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:context.root,SEMIO_TASK_PROJECT:context.projectName,SEMIO_TASK_TARGET:context.targetName,...issued};
  const orchestration=await issueNxBuildOrchestrationV1(options,context,environment,Date.now());if(orchestration){environment.SEMIO_SCRIPT_PROCESS_INVOCATION=JSON.stringify(orchestration);delete environment.SEMIO_SCRIPT_CAPABILITIES;}
  if(options.nativeOwnerCommand!==undefined){environment.SEMIO_SCRIPT_PROCESS_INVOCATION=JSON.stringify(await issueNativeOwnerInvocationV1(options,context,environment,Date.now()));delete environment.SEMIO_SCRIPT_CAPABILITIES;}
  else if(/ native owner-command /u.test(options.command))throw Error("Original discovered native request required");
  const plan={...options,args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...environment,[key]:encodeOwnerArgumentsV1(arguments_)}};
- return delegate(plan,context);
+ let result;try{result=await delegate(plan,context);}catch(error){await settleStoreReceiptV1(declaration,issued,{succeeded:false,startedAtMs}).catch(()=>undefined);throw error;}
+ await settleStoreReceiptV1(declaration,issued,{succeeded:result?.success!==false,startedAtMs});
+ return result;
 }
 
 /** 🚀️ Delegates the registered native/process owner route through the current Nx lifecycle. */

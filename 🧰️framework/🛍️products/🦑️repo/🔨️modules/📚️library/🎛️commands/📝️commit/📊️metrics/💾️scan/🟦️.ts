@@ -104,7 +104,7 @@ function writeMetricsCache(root: string, uloc: UlocByLanguage, size: UlocByLangu
   writeFileSync(metricsCachePath(root), JSON.stringify(payload));
 }
 
-/** 📊️Scans all git-tracked paths and sums unified LOC per language bucket. */
+/** 🛤️Scans all git-tracked paths and sums unified LOC per language bucket. */
 export function scanRepoUnifiedLocUncached(root: string): UlocByLanguage {
   const repoRoot = gitRepoRoot(root);
   const out: UlocByLanguage = {};
@@ -135,7 +135,7 @@ export function scanRepoUnifiedLocUncached(root: string): UlocByLanguage {
   return out;
 }
 
-/** 📊️Scans tracked paths and sums on-disk byte size per language (includes binaries and large files). */
+/** 🌐️Scans tracked paths and sums on-disk byte size per language (includes binaries and large files). */
 export function scanRepoSizeByLanguageUncached(root: string): UlocByLanguage {
   const repoRoot = gitRepoRoot(root);
   const out: UlocByLanguage = {};
@@ -156,7 +156,7 @@ export function scanRepoSizeByLanguageUncached(root: string): UlocByLanguage {
   return out;
 }
 
-/** 📊️Repo uloc with per-HEAD cache under `.git/compose-metrics-cache.json`. */
+/** 🐙️Repo uloc with per-HEAD cache under `.git/compose-metrics-cache.json`. */
 export function scanRepoUnifiedLoc(root: string): UlocByLanguage {
   const cached = readMetricsCache(root);
   if (cached) return cached.uloc;
@@ -166,7 +166,7 @@ export function scanRepoUnifiedLoc(root: string): UlocByLanguage {
   return uloc;
 }
 
-/** 📊️Repo byte size per language with per-HEAD cache. */
+/** ⚡️Repo byte size per language with per-HEAD cache. */
 export function scanRepoSizeByLanguage(root: string): UlocByLanguage {
   const cached = readMetricsCache(root);
   if (cached) return cached.size;

@@ -5,7 +5,8 @@ import {Database} from "bun:sqlite";
 import schema from "../🧬️schema/🔣️.json";
 import policy from "../🔣️policy.json";
 import fixture from "./🧫️fixtures/🔣️.json";
-import {readRepositoryCacheBudgetV1} from "../🟦️.ts";
+import {elasticCapacityV1,readRepositoryCacheBudgetV1} from "../🟦️.ts";
+import {repositoryStrictStorageV1} from "../../🟦️.ts";
 import {cleanProtectedPrefixes,cleanRemovalProtection} from "../../../../../🧼️workspace-cleanup/🛡️protection/🟦️.ts";
 import {cleanRemovePath} from "../../../../../🧼️workspace-cleanup/🗑️removal/🟦️.ts";
 import {resolve,join} from "node:path";
@@ -77,3 +78,64 @@ test("tiny cache partitions bound their logical limit by the usable bytes of the
   for(const[id,partition]of Object.entries(actual))if(partition.capacityBytes>schema.$defs.filesystemOverhead.const.tinyCapacityBytes)expect(partition.usableBytes,id).toBeLessThan(partition.filesystemBytes);
  }finally{database.close();}
 });
+
+test("the elastic products capacity sizes a new image from need and host, never recreates the existing image automatically, and agrees with an independent Python model",()=>{
+ const validate=new Ajv({strict:true}).compile(schema.$defs.elasticCapacityCase),rule=policy.elastic.products,declared=policy.partitions.products.capacityBytes;
+ expect(new Ajv({strict:true}).compile(schema.$defs.elasticPartition)(rule)).toBe(true);expect(rule.automatic).toBe(true);expect(rule.pressureFreeBytes).toBeLessThan(3*2**30);
+ const model=`import json,sys
+rule,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
+out={}
+for row in rows:
+    wanted=-(-rule["needBytes"]*(100+rule["headroomPercent"])//100)
+    ceiling=min(rule["maximumBytes"],row["hostFreeBytes"]*(100-rule["hostFreeReservePercent"])//100)
+    target=min(wanted,max(ceiling,row["minimumBytes"]))
+    out[row["id"]]=max(row["minimumBytes"],target//rule["alignBytes"]*rule["alignBytes"])
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rule),JSON.stringify(fixture.elasticProductsCapacity)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);
+ const independent=JSON.parse(run.stdout.toString());
+ for(const row of fixture.elasticProductsCapacity){expect(validate(row),row.id).toBe(true);expect(elasticCapacityV1(rule,row.minimumBytes,row.hostFreeBytes),row.id).toBe(row.capacityBytes);expect(independent[row.id],row.id).toBe(row.capacityBytes);expect(row.capacityBytes%1048576).toBe(0);expect(row.capacityBytes).toBeGreaterThanOrEqual(row.minimumBytes);}
+ expect(elasticCapacityV1(rule,declared,0)).toBe(declared);
+ const grown=structuredClone(policy);grown.partitions.products.capacityBytes=31*2**30;grown.partitions.products.maximumLogicalBytes=31*2**30-1048576;grown.maximumBytes+=31*2**30-declared;
+ const budget=readRepositoryCacheBudgetV1(grown);expect(budget.partitions.products.filesystemBytes).toBe(31*2**30-1048576);expect(budget.partitionBytes).toBe(readRepositoryCacheBudgetV1(policy).partitionBytes+31*2**30-declared);expect(budget.headroomBytes).toBe(readRepositoryCacheBudgetV1(policy).headroomBytes);
+});
+
+test("the elastic rust capacity sizes a new compiler image from need and host, the strict storage envelope follows the same rule, and agrees with an independent Python model",()=>{
+ const validate=new Ajv({strict:true}).compile(schema.$defs.elasticCapacityCase),rule=policy.elastic.rust,declared=policy.partitions.rust.capacityBytes;
+ expect(new Ajv({strict:true}).compile(schema.$defs.elasticPartition)(rule)).toBe(true);expect(rule.automatic).toBe(true);expect(rule.pressureFreeBytes).toBeLessThanOrEqual(8*2**30);expect(rule.needBytes).toBe(declared);
+ const model=`import json,sys
+rule,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
+out={}
+for row in rows:
+    wanted=-(-rule["needBytes"]*(100+rule["headroomPercent"])//100)
+    ceiling=min(rule["maximumBytes"],row["hostFreeBytes"]*(100-rule["hostFreeReservePercent"])//100)
+    target=min(wanted,max(ceiling,row["minimumBytes"]))
+    out[row["id"]]=max(row["minimumBytes"],target//rule["alignBytes"]*rule["alignBytes"])
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rule),JSON.stringify(fixture.elasticRustCapacity)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);
+ const independent=JSON.parse(run.stdout.toString());
+ for(const row of fixture.elasticRustCapacity){expect(validate(row),row.id).toBe(true);expect(elasticCapacityV1(rule,row.minimumBytes,row.hostFreeBytes),row.id).toBe(row.capacityBytes);expect(independent[row.id],row.id).toBe(row.capacityBytes);expect(row.capacityBytes%1048576).toBe(0);expect(row.capacityBytes).toBeGreaterThanOrEqual(row.minimumBytes);expect(row.capacityBytes).toBeLessThanOrEqual(rule.maximumBytes);}
+ const grown=structuredClone(policy);grown.partitions.rust.capacityBytes=60*2**30;grown.partitions.rust.maximumLogicalBytes=60*2**30-1048576;grown.maximumBytes+=60*2**30-declared;
+ const budget=readRepositoryCacheBudgetV1(grown);expect(budget.partitions.rust.filesystemBytes).toBe(60*2**30-1048576);expect(budget.headroomBytes).toBe(readRepositoryCacheBudgetV1(policy).headroomBytes);
+ const strict=repositoryStrictStorageV1(process.cwd());expect(strict.capacityBytes).toBeGreaterThanOrEqual(declared);expect(strict.filesystemBytes).toBe(strict.capacityBytes-1048576);
+});
+
+test("the elastic graph capacity follows need and host free space, never below the declared capacity, and agrees with an independent Python model",()=>{
+ const validate=new Ajv({strict:true}).compile(schema.$defs.elasticCapacityCase),rule=policy.elastic.graph,declared=policy.partitions.graph.capacityBytes;
+ expect(new Ajv({strict:true}).compile(schema.$defs.elasticPartition)(rule)).toBe(true);
+ expect(readRepositoryCacheBudgetV1(policy).partitions.graph.capacityBytes).toBe(declared);
+ const model=`import json,sys
+rule,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
+out={}
+for row in rows:
+    wanted=-(-rule["needBytes"]*(100+rule["headroomPercent"])//100)
+    ceiling=min(rule["maximumBytes"],row["hostFreeBytes"]*(100-rule["hostFreeReservePercent"])//100)
+    target=min(wanted,max(ceiling,row["minimumBytes"]))
+    out[row["id"]]=max(row["minimumBytes"],target//rule["alignBytes"]*rule["alignBytes"])
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rule),JSON.stringify(fixture.elasticCapacity)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);
+ const independent=JSON.parse(run.stdout.toString());
+ for(const row of fixture.elasticCapacity){expect(validate(row),row.id).toBe(true);expect(elasticCapacityV1(rule,row.minimumBytes,row.hostFreeBytes),row.id).toBe(row.capacityBytes);expect(independent[row.id],row.id).toBe(row.capacityBytes);expect(row.capacityBytes%1048576).toBe(0);}
+ const grown=structuredClone(policy);grown.partitions.graph.capacityBytes=12*2**30;grown.partitions.graph.maximumLogicalBytes=12*2**30-1048576;grown.maximumBytes+=6*2**30;
+ const budget=readRepositoryCacheBudgetV1(grown);expect(budget.partitions.graph.filesystemBytes).toBe(12*2**30-1048576);expect(budget.partitionBytes).toBe(readRepositoryCacheBudgetV1(policy).partitionBytes+6*2**30);expect(budget.headroomBytes).toBe(readRepositoryCacheBudgetV1(policy).headroomBytes);
+});
+

@@ -2,24 +2,24 @@
 use semio_framework_ui_theme::{geometry::Rect, Theme};
 
 //#region 🔖️Geometry
-/// 📏️ `SelectContent`'s `sideOffset` default — the gap between trigger and popup (`🟦️.tsx:476`).
+/// 🔲️ `SelectContent`'s `sideOffset` default — the gap between trigger and popup (`🟦️.tsx:476`).
 pub const SELECT_SIDE_OFFSET: f32 = 4.0;
 
-/// 📏️ `SelectContent`'s `collisionPadding` default — the viewport inset the popup keeps clear on
+/// 💥️ `SelectContent`'s `collisionPadding` default — the viewport inset the popup keeps clear on
 /// every edge, and the floor a flipped popup's top is clamped to (`🟦️.tsx:477`).
 pub const SELECT_COLLISION_PADDING: f32 = 8.0;
 
 /// 📏️ `min-w-32` at the canonical 16 px root used by the mounted React oracle.
 pub const SELECT_CONTENT_MIN_WIDTH: f32 = 128.0;
 
-/// 📏️ One popup row's height: a `text-sm` line box plus `py-single` on both sides — React's
+/// 🧮️ One popup row's height: a `text-sm` line box plus `py-single` on both sides — React's
 /// `SelectItem` is `py-single … text-sm` (`🟦️.tsx:729`), never a `--size-*` control height, which is
 /// why this does NOT reuse `Theme::control_height` the way the pre-parity literal did.
 pub fn select_row_height(theme: &Theme) -> f32 {
     semio_framework_ui_theme::metrics::line_height(theme.font_size_body) + theme.padding_standard * 2.0
 }
 
-/// 📏️ The popup's own height for `items` rows — rows plus the viewport's `p-single` inset
+/// 🏔️ The popup's own height for `items` rows — rows plus the viewport's `p-single` inset
 /// (`🟦️.tsx`'s `select-viewport`).
 pub fn select_menu_height(items: usize, theme: &Theme) -> f32 {
     items as f32 * select_row_height(theme) + theme.padding_standard * 2.0
@@ -45,7 +45,7 @@ pub fn select_menu_top(trigger_abs_y: f32, trigger_h: f32, menu_h: f32, viewport
     }
 }
 
-/// 📏️ React's `availableHeight` (`🟦️.tsx:255-258`): the room the popup actually has on the side it
+/// 🌌️ React's `availableHeight` (`🟦️.tsx:255-258`): the room the popup actually has on the side it
 /// settled on, which `SelectContent` applies as `max-h-(--semio-select-content-available-height)`
 /// and the viewport scrolls inside. A zero/unknown `viewport_h` answers `f32::INFINITY` — an
 /// unmeasured caller must not clamp the popup to nothing.
@@ -62,7 +62,7 @@ pub fn select_available_height(trigger_abs_y: f32, trigger_h: f32, menu_h: f32, 
     }
 }
 
-/// 📏️ The popup's PAINTED height: its natural height clamped to React's `availableHeight`. This is
+/// 🖌️ The popup's PAINTED height: its natural height clamped to React's `availableHeight`. This is
 /// the half of `resolveSelectPlacement` that `select_menu_top` alone never applied, which is why a
 /// long `Select` used to draw past the surface edge instead of scrolling.
 pub fn select_menu_painted_height(items: usize, theme: &Theme, trigger_abs_y: f32, trigger_h: f32, viewport_h: f32) -> f32 {
@@ -82,23 +82,23 @@ pub fn select_visible_rows(items: usize, theme: &Theme, painted_height: f32) -> 
     ((inner / row).floor() as usize).min(items)
 }
 
-/// 🔼️ One scroll button's height: `py-single` twice plus a `size-tiny` chevron — React's
+/// 🔘️ One scroll button's height: `py-single` twice plus a `size-tiny` chevron — React's
 /// `SelectScrollUpButton`/`SelectScrollDownButton` are `py-single` with a `size-tiny` icon
 /// (`🟦️.tsx:790-795`, `:813-818`).
 pub fn select_scroll_button_height(theme: &Theme) -> f32 {
     semio_framework_ui_theme::metrics::ICON_TINY + theme.padding_standard * 2.0
 }
 
-/// 🔼️ The pixels one scroll-button press moves the viewport — React's `scrollSelectViewport`
+/// 🪜️ The pixels one scroll-button press moves the viewport — React's `scrollSelectViewport`
 /// (`🟦️.tsx:769-775`): `max(24, floor(clientHeight * 0.8))`, signed by the direction.
 pub fn select_scroll_step(viewport_height: f32) -> f32 {
     (viewport_height * 0.8).floor().max(SELECT_SCROLL_MIN_STEP)
 }
 
-/// 🔼️ React's own floor for a scroll-button step (`🟦️.tsx:771`).
+/// ⛏️ React's own floor for a scroll-button step (`🟦️.tsx:771`).
 pub const SELECT_SCROLL_MIN_STEP: f32 = 24.0;
 
-/// 🔼️ A scroll offset clamped to what the popup can actually scroll: `content - viewport`, never
+/// 🗜️ A scroll offset clamped to what the popup can actually scroll: `content - viewport`, never
 /// negative. The viewport is `overflow-y-auto`, so the DOM clamps this for React.
 pub fn select_clamped_scroll(items: usize, theme: &Theme, viewport_height: f32, offset: f32) -> f32 {
     let content = items as f32 * select_row_height(theme);
@@ -116,17 +116,17 @@ pub fn select_clamped_scroll(items: usize, theme: &Theme, viewport_height: f32, 
 // per open select, cleared by `clear_select_scroll` when the popup closes — no new state type, and
 // nothing that grows per frame.
 
-/// 🔼️ The slot holding one popup's current scroll offset in pixels.
+/// 🔑️ The slot holding one popup's current scroll offset in pixels.
 pub fn select_scroll_key(id: &str) -> String {
     format!("select.{id}.scroll")
 }
 
-/// 🔼️ The slot holding one popup's UNAPPLIED chevron direction (`-1.0` up, `+1.0` down, `0.0` idle).
+/// ⏳️ The slot holding one popup's UNAPPLIED chevron direction (`-1.0` up, `+1.0` down, `0.0` idle).
 pub fn select_scroll_pending_key(id: &str) -> String {
     format!("select.{id}.scrollStep")
 }
 
-/// 🔼️ The control id one scroll chevron registers its hit under — `SelectScrollUpButton` /
+/// 🆔️ The control id one scroll chevron registers its hit under — `SelectScrollUpButton` /
 /// `SelectScrollDownButton` (`🟦️.tsx:790-818`).
 pub fn select_scroll_control_id(id: &str, up: bool) -> String {
     if up {
@@ -136,7 +136,7 @@ pub fn select_scroll_control_id(id: &str, up: bool) -> String {
     }
 }
 
-/// 🔼️ Splits a `{select}.scroll.{up|down}` control id back into `(select id, direction)`.
+/// ✂️ Splits a `{select}.scroll.{up|down}` control id back into `(select id, direction)`.
 pub fn select_scroll_control_parts(control_id: &str) -> Option<(&str, f32)> {
     if let Some(id) = control_id.strip_suffix(".scroll.up") {
         return Some((id, -1.0));
@@ -144,20 +144,20 @@ pub fn select_scroll_control_parts(control_id: &str) -> Option<(&str, f32)> {
     control_id.strip_suffix(".scroll.down").map(|id| (id, 1.0))
 }
 
-/// 🔼️ The scrollable viewport's `clientHeight`, including its `p-single` padding exactly as the DOM
+/// 🪟️ The scrollable viewport's `clientHeight`, including its `p-single` padding exactly as the DOM
 /// reports it to React's `scrollSelectViewport`.
 pub fn select_scroll_viewport_height(_theme: &Theme, viewport_height: f32) -> f32 {
     viewport_height.max(0.0)
 }
 
-/// 🔼️ Applies one pending chevron `direction` to `offset` and clamps the result — the ONE place both
+/// ➕️ Applies one pending chevron `direction` to `offset` and clamps the result — the ONE place both
 /// scroll functions are consumed, shared by the immediate-mode kit below and any other popup painter.
 pub fn select_scrolled_offset(items: usize, theme: &Theme, painted_height: f32, offset: f32, direction: f32) -> f32 {
     let stepped = offset + direction * select_scroll_step(select_scroll_viewport_height(theme, painted_height));
     select_clamped_scroll(items, theme, painted_height, stepped)
 }
 
-/// 🔼️ The first row index a popup scrolled by `offset` draws, and how many rows cover the viewport
+/// 🍕️ The first row index a popup scrolled by `offset` draws, and how many rows cover the viewport
 /// (one extra so a partially scrolled band is never short a row at its bottom edge).
 pub fn select_scrolled_row_window(items: usize, theme: &Theme, painted_height: f32, offset: f32) -> (usize, usize) {
     let row = select_row_height(theme);
@@ -262,7 +262,7 @@ pub fn select_scroll_direction_at(popup: SelectPopupGeometry, x: f32, y: f32) ->
 }
 //#endregion 🔼️ScrollSlots
 
-/// 📐️ One popup row's `(x, y, w, h)` relative to the trigger's own top-left, given the popup top
+/// 🎯️ One popup row's `(x, y, w, h)` relative to the trigger's own top-left, given the popup top
 /// [`select_menu_top`] resolved. Shared by `paint`'s retained row layout, `paint_select`, and
 /// [`render_select_menu`] so geometry and hit-testing can never disagree.
 pub fn select_row_rect(trigger_w: f32, index: usize, menu_top: f32, theme: &Theme) -> Rect {
@@ -286,11 +286,11 @@ pub enum SelectOpenIntent {
     Selected,
     /// ⬆️ `ArrowUp`: the last row.
     Last,
-    /// 🔤️ A printable key: the first row matching it, as a one-character typeahead query.
+    /// 🔡️ A printable key: the first row matching it, as a one-character typeahead query.
     Typeahead(char),
 }
 
-/// 🧭️ Highlight movement inside the OPEN popup (`🟦️.tsx:644`'s `movement` map).
+/// 🔦️ Highlight movement inside the OPEN popup (`🟦️.tsx:644`'s `movement` map).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SelectMove {
     Next,
@@ -301,7 +301,7 @@ pub enum SelectMove {
     PagePrevious,
 }
 
-/// ⌨️ What one key does to a `Select` — the single decision table `events` routes through, so the
+/// 🗝️ What one key does to a `Select` — the single decision table `events` routes through, so the
 /// open and closed halves of React's two `onKeyDown` handlers stay together.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SelectKey {
@@ -348,7 +348,7 @@ fn single_char(key: &str) -> Option<char> {
     chars.next().is_none().then_some(first).filter(|char| !char.is_control())
 }
 
-/// 🧭️ The row `movement` highlights next, wrapping on `Next`/`Previous` and clamping on the paged
+/// 🔢️ The row `movement` highlights next, wrapping on `Next`/`Previous` and clamping on the paged
 /// steps — arithmetic ported verbatim from `moveActive` (`🟦️.tsx:435-452`), including its treatment
 /// of "nothing highlighted yet" as index `-1`.
 pub fn select_moved_index(active: Option<usize>, len: usize, movement: SelectMove) -> Option<usize> {
@@ -368,7 +368,7 @@ pub fn select_moved_index(active: Option<usize>, len: usize, movement: SelectMov
     usize::try_from(next).ok().filter(|index| *index < len)
 }
 
-/// 🔤️ The Latin-1 Supplement's canonical decompositions, `U+00C0..=U+00FF` in order — the only block
+/// 🧱️ The Latin-1 Supplement's canonical decompositions, `U+00C0..=U+00FF` in order — the only block
 /// [`normalize_select_text`] needs a table for, since it carries every accented letter German
 /// ("Ärger") and the other shipped locales actually use. Characters with no decomposition (`Æ`, `Ø`,
 /// `ß`, `×`, `÷`, `Ð`, `Þ`) map to themselves, exactly as NFKD leaves them.
@@ -391,7 +391,7 @@ fn push_nfkd_base(value: char, out: &mut String) {
     }
 }
 
-/// 🔤️ The shared bounded normalization owner for Select typeahead and the shell palettes. It
+/// 🧹️ The shared bounded normalization owner for Select typeahead and the shell palettes. It
 /// projects the shipped EN/DE NFKD repertoire, strips Unicode mark ranges, folds case, optionally
 /// collapses whitespace, and applies the consumer's scalar limit. The neutral ShellSearch fixture
 /// pins precomposed/decomposed German, fullwidth compatibility forms and presentation ligatures.
@@ -415,12 +415,12 @@ pub fn normalize_nfkd_text(value: &str, collapse_whitespace: bool, limit: usize)
     out.trim().chars().take(limit).collect()
 }
 
-/// 🔤️ React's `normalizeSelectText` (`🟦️.tsx:194-200`).
+/// 🧼️ React's `normalizeSelectText` (`🟦️.tsx:194-200`).
 pub fn normalize_select_text(value: &str) -> String {
     normalize_nfkd_text(value, true, usize::MAX)
 }
 
-/// 🔤️ The first row at or after the one following `active` whose label starts with `query` — the
+/// 🔖️ The first row at or after the one following `active` whose label starts with `query` — the
 /// cyclic scan `findTypeaheadOption` performs (`🟦️.tsx:455-466`).
 pub fn select_typeahead_index<'a>(labels: impl IntoIterator<Item = &'a str>, query: &str, active: Option<usize>) -> Option<usize> {
     let normalized: Vec<String> = labels.into_iter().map(normalize_select_text).collect();
@@ -438,7 +438,7 @@ pub fn select_typeahead_index<'a>(labels: impl IntoIterator<Item = &'a str>, que
     None
 }
 
-/// 🎬️ Where the highlight lands when the popup OPENS: the selected row, the last row, or the first
+/// 🔓️ Where the highlight lands when the popup OPENS: the selected row, the last row, or the first
 /// typeahead match (`🟦️.tsx:538-546`). Falls back to the first row when nothing matches, so an open
 /// popup always has exactly one highlighted row for `Enter` to commit.
 pub fn select_open_index<'a>(intent: SelectOpenIntent, labels: impl IntoIterator<Item = &'a str>, selected: Option<usize>) -> Option<usize> {

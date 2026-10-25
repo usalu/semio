@@ -95,8 +95,8 @@ pub mod schema {
         }
 
         /// 🔗️ The aggregate-facing contract of every table leaf: an operation enum that diffs a table snapshot into a table diff and wraps each leaf.
-        pub trait SemioTableOp: protocol::Mutation<SemioTableSnapshot, Diff = SemioTableDiff> + From<create_column::CreateColumn> + From<delete_column::DeleteColumn> + From<rename_column::RenameColumn> + From<reorder_columns::ReorderColumns> + From<insert_row::InsertRow> + From<remove_row::RemoveRow> + From<reorder_rows::ReorderRows> + From<edit_cell::EditCell> {}
+        pub trait SemioTableOp: protocol::Mutation<SemioTableSnapshot, Diff = SemioTableDiff> + protocol::ColdMutation<SemioTableSnapshot, ReferenceDiff = SemioTableDiff> + From<create_column::CreateColumn> + From<delete_column::DeleteColumn> + From<rename_column::RenameColumn> + From<reorder_columns::ReorderColumns> + From<insert_row::InsertRow> + From<remove_row::RemoveRow> + From<reorder_rows::ReorderRows> + From<edit_cell::EditCell> {}
 
-        impl<T> SemioTableOp for T where T: protocol::Mutation<SemioTableSnapshot, Diff = SemioTableDiff> + From<create_column::CreateColumn> + From<delete_column::DeleteColumn> + From<rename_column::RenameColumn> + From<reorder_columns::ReorderColumns> + From<insert_row::InsertRow> + From<remove_row::RemoveRow> + From<reorder_rows::ReorderRows> + From<edit_cell::EditCell> {}
+        impl<T> SemioTableOp for T where T: protocol::Mutation<SemioTableSnapshot, Diff = SemioTableDiff> + protocol::ColdMutation<SemioTableSnapshot, ReferenceDiff = SemioTableDiff> + From<create_column::CreateColumn> + From<delete_column::DeleteColumn> + From<rename_column::RenameColumn> + From<reorder_columns::ReorderColumns> + From<insert_row::InsertRow> + From<remove_row::RemoveRow> + From<reorder_rows::ReorderRows> + From<edit_cell::EditCell> {}
     }
 }

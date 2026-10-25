@@ -9,7 +9,7 @@ import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/�
 const policy=AGENT_SESSION_POLICY_V1,live=policy.liveness,files={record:".json",seen:".seen",token:".token",lock:".lock"};
 /** 🗄️ One worktree's directory inside the per-user registry. */
 export type AgentSessionStoreV1=Readonly<{root:string;worktree:string;directory:string}>;
-/** 📋️ One session with the facts a status needs. */
+/** 🤖️ One session with the facts a status needs. */
 export type AgentSessionRowV1=Readonly<{session:AgentSessionV1;state:AgentSessionStateV1;lastSeenMs:number;shareBasisPoints:number}>;
 /** 🔌️ The process facts the store depends on, replaceable in tests. */
 export type AgentSessionPortsV1=Readonly<{alive?:(pid:number)=>boolean;now?:number}>;
@@ -33,22 +33,22 @@ export function agentSessionWorktreeKeyV1(worktree:string|undefined,platform:Nod
  return createHash("sha256").update(policy.identity.domain+"\0worktree\0"+folded).digest("hex").slice(0,policy.store.worktreeCharacters);
 }
 
-/** 🗄️ Binds a store to a registry root and a worktree key. */
+/** 🗃️ Binds a store to a registry root and a worktree key. */
 export function agentSessionStoreV1(root:string,worktree:string):AgentSessionStoreV1{return Object.freeze({root,worktree,directory:join(root,worktree)});}
 
 /** 🧭️ The wire form of a session in the environment: worktree key, a dot and the session identifier. */
 export const agentSessionAddressV1=(session:Pick<AgentSessionV1,"worktree"|"id">):string=>`${session.worktree}.${session.id}`;
-/** 🧭️ Splits an address into its worktree key and identifier, or answers undefined. */
+/** ⌨️ Splits an address into its worktree key and identifier, or answers undefined. */
 export function parseAgentSessionAddressV1(text:string|undefined):Readonly<{worktree:string;id:string}>|undefined{
  const match=text===undefined?null:new RegExp(policy.store.addressPattern,"u").exec(text);return match?{worktree:match[1]!,id:match[2]!}:undefined;
 }
 
-/** 🧭️ The address of the session an environment names, or undefined; a cheap read that touches no file. */
+/** 🔤️ The address of the session an environment names, or undefined; a cheap read that touches no file. */
 export const agentSessionAddressOfEnvironmentV1=(environment:Readonly<Record<string,string|undefined>>=process.env):string|undefined=>{
  const text=environment[policy.environment.session];return parseAgentSessionAddressV1(text)===undefined?undefined:text;
 };
 
-/** 🗺️ The directories a session owns on this host below the host-wide sandbox parent: the root of its test sandboxes and its temp root. */
+/** 📂️ The directories a session owns on this host below the host-wide sandbox parent: the root of its test sandboxes and its temp root. */
 export function agentSessionPathsV1(session:Pick<AgentSessionV1,"resources">,parent:string):Readonly<{sandboxes:string;temp:string}>{
  const sandboxes=join(parent,session.resources.tests.root);return Object.freeze({sandboxes,temp:join(sandboxes,policy.store.testsFolder)});
 }
@@ -148,10 +148,10 @@ export function listAgentSessionsV1(store:AgentSessionStoreV1,ports:AgentSession
 /** 🥧️ What one session holds of the machine's admission gate. */
 export type AgentSessionCapacityRowV1=Readonly<{address:string;agent:string;grants:number;reservedMegabytes:number;waiters:number;weight:number;shareBasisPoints:number}>;
 
-/** 🥧️ Groups the grants and waiters of the admission gate by the session that owns them and adds each session's agent, weight and share of the live budget; rows without a readable session keep their address as the agent. */
-export function agentSessionCapacityRowsV1(input:Readonly<{grants:readonly Readonly<{session?:string;reservedMegabytes:number}>[];waiters:readonly Readonly<{session?:string;weight?:number}>[]}>,registry:string,ports:AgentSessionPortsV1={}):readonly AgentSessionCapacityRowV1[]{
+/** 👥️ Groups the grants and waiters of the admission gate by the session that owns them and adds each session's agent, weight and share of the live budget; rows without a readable session keep their address as the agent. */
+export function agentSessionCapacityRowsV1(input:Readonly<{grants:readonly Readonly<{session?:string;reservedMegabytes:number;lentSinceMs?:number}>[];waiters:readonly Readonly<{session?:string;weight?:number}>[]}>,registry:string,ports:AgentSessionPortsV1={}):readonly AgentSessionCapacityRowV1[]{
  const rows=new Map<string,{grants:number;reservedMegabytes:number;waiters:number;weight?:number}>(),row=(address:string)=>{let found=rows.get(address);if(found===undefined){found={grants:0,reservedMegabytes:0,waiters:0};rows.set(address,found);}return found;};
- for(const grant of input.grants)if(grant.session!==undefined){const found=row(grant.session);found.grants++;found.reservedMegabytes+=grant.reservedMegabytes;}
+ for(const grant of input.grants)if(grant.session!==undefined){const found=row(grant.session);found.grants++;if(grant.lentSinceMs===undefined)found.reservedMegabytes+=grant.reservedMegabytes;}
  for(const waiter of input.waiters)if(waiter.session!==undefined){const found=row(waiter.session);found.waiters++;if(waiter.weight!==undefined)found.weight=waiter.weight;}
  const lists=new Map<string,readonly AgentSessionRowV1[]>(),result:AgentSessionCapacityRowV1[]=[];
  for(const [address,counts] of [...rows].sort(([left],[right])=>left<right?-1:left>right?1:0)){
@@ -167,7 +167,7 @@ export function agentSessionCapacityRowsV1(input:Readonly<{grants:readonly Reado
 
 /** 🔏️ Stores the capability token of a session in a private file; the record never carries it. */
 export function writeAgentSessionTokenV1(store:AgentSessionStoreV1,id:string,token:string):void{mkdirSync(store.directory,{recursive:true,mode:0o700});atomic(path(store,id,"token"),token,0o600);}
-/** 🔏️ Reads the capability token of a session. */
+/** 🎨️ Reads the capability token of a session. */
 export function readAgentSessionTokenV1(store:AgentSessionStoreV1,id:string):string|undefined{try{return readFileSync(path(store,id,"token"),"utf8");}catch{return undefined;}}
 
 /** 🔒️ Removes a session's record, use marker and token. */
@@ -182,10 +182,10 @@ export function closeAgentSessionV1(store:AgentSessionStoreV1,id:string,reason:s
 
 /** 🧹️ What a reclaimer reports for one session: resources released and resources kept because something still uses them. */
 export type AgentSessionReclaimV1=(session:AgentSessionV1)=>Readonly<{released:number;kept:number}>;
-/** 🧹️ One collected session. */
+/** 📚️ One collected session. */
 export type AgentSessionCollectionV1=Readonly<{session:AgentSessionV1;released:number;kept:number;removed:boolean}>;
 
-/** 🧹️ Collects the gone sessions: each one's resources are reclaimed first and the record goes only when nothing was kept; the default session is never collected. */
+/** 🗑️ Collects the gone sessions: each one's resources are reclaimed first and the record goes only when nothing was kept; the default session is never collected. */
 export function collectAgentSessionsV1(store:AgentSessionStoreV1,reclaim:AgentSessionReclaimV1,options:AgentSessionPortsV1&Readonly<{dryRun?:boolean;only?:readonly string[];reason?:string}>={}):readonly AgentSessionCollectionV1[]{
  const now=options.now??Date.now(),rows:AgentSessionCollectionV1[]=[];
  for(const row of listAgentSessionsV1(store,options)){

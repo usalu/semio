@@ -44,6 +44,18 @@
       { "op": "reopen", "store": "a" },
       { "op": "get", "store": "a", "key": "k1", "expect": "alpha" },
       { "op": "get", "store": "a", "key": "k2", "expect": null }
+    ] },
+    { "id": "compact-keeps-every-record-including-unaccessed", "operations": [
+      { "op": "put", "store": "a", "key": "k1", "value": "alpha" },
+      { "op": "flush", "store": "a" },
+      { "op": "put", "store": "a", "key": "k2", "value": "beta" },
+      { "op": "flush", "store": "a" },
+      { "op": "reopen", "store": "a" },
+      { "op": "get", "store": "a", "key": "k1", "expect": "alpha" },
+      { "op": "compact", "store": "a" },
+      { "op": "reopen", "store": "a" },
+      { "op": "get", "store": "a", "key": "k1", "expect": "alpha" },
+      { "op": "get", "store": "a", "key": "k2", "expect": "beta" }
     ] }
   ]
 }

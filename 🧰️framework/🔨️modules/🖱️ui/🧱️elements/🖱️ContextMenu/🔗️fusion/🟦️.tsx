@@ -45,14 +45,14 @@ const CONTEXT_MENU_SUBMENU_HOVER_DELAY_MS = 150;
 /** ↔️ Gap between a parent row and its submenu panel, in px. */
 const CONTEXT_MENU_SUBMENU_GAP_PX = 0;
 
-/** 📐️ Viewport-fixed placement of a submenu panel beside its parent row. */
+/** 📍️ Viewport-fixed placement of a submenu panel beside its parent row. */
 export interface ContextMenuSubmenuPlacement {
   readonly left: number;
   readonly top: number;
   readonly flipped: boolean;
 }
 
-/** 📂 One fused submenu column beside its parent row inside the shared {@link ContextMenuChrome}. */
+/** 🧩️ One fused submenu column beside its parent row inside the shared {@link ContextMenuChrome}. */
 export interface ContextMenuFusionPanel {
   readonly parentPath: readonly number[];
   readonly items: readonly ContextMenuItem[];
@@ -86,7 +86,7 @@ export function contextMenuOpenFusionPanels(
 }
 
 /**
- * 📐️ Places a submenu panel beside its anchor row in viewport coordinates, flipping to the
+ * ⚓️ Places a submenu panel beside its anchor row in viewport coordinates, flipping to the
  * anchor's start side when the end side would overflow and clamping the top edge into view.
  **/
 export function contextMenuSubmenuPlacement(input: {
@@ -115,7 +115,7 @@ type ContextMenuSubmenuRowProps = {
   readonly registerRow: FixedContextMenuRenderOptions["registerRow"];
 };
 
-/** 📂️ Parent-row button for a submenu: click toggles it open/closed; hover opens it after a short delay. Child rows render in fused columns beside this row. */
+/** 🔘️ Parent-row button for a submenu: click toggles it open/closed; hover opens it after a short delay. Child rows render in fused columns beside this row. */
 function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, setActivePath, registerRow }: ContextMenuSubmenuRowProps): React.ReactElement {
   const hoverTimerRef = reactHostPort.useRef<number | undefined>(undefined);
   const pathKey = contextMenuPathKey(rowPath);

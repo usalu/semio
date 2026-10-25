@@ -8,10 +8,10 @@ use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::s
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetAttribute {
-    pub(crate) path: NodePath,
-    pub(crate) name: String,
+    pub path: NodePath,
+    pub name: String,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub(crate) value: Option<Option<String>>,
+    pub value: Option<Option<String>>,
 }
 
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetAttribute {

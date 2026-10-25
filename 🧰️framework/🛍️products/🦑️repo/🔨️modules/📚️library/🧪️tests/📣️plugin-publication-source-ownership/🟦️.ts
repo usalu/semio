@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { basename, dirname, relative, resolve } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 import Ajv from "ajv";
 import ts from "typescript";
 import { semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
@@ -186,8 +187,8 @@ describe("plugin publication source ownership", () => {
     const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
     expect(project.targets[fixture.registration.target]?.options?.command).toBe("repo ./📜️script.ts test plugin-publication-source-ownership");
     const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
-    expect(manifest.scripts[fixture.registration.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
-    const commandSource = readFileSync(resolve(libraryRoot, "🧪️tests/🔬️typescript-package-commands/🟦️.ts"), "utf8");
+    expect(manifest.scripts[fixture.registration.target]).toBe(`repo run @semio-tech/repo-lib:${fixture.registration.target}`);
+    const commandSource = readRegisteredTestRoute(repoRoot, "plugin-publication-source-ownership").text;
     expect(commandSource).toContain('segments[0] === "plugin-publication-source-ownership"');
   });
 });

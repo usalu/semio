@@ -22,10 +22,10 @@ import { continuationCaseFaults, runContinuationCase, runContinuationCaseLive, t
 /** 📏️ Slack allowed between a fixture's declared millisecond and the real loop's wall clock — a
  * timer never fires early, and a loaded machine can be late. */
 const LIVE_TOLERANCE_MS = 250;
-/** 📏️ The throttled-`setTimeout` floor this whole lane exists to escape: a hidden Chrome renderer
+/** ⏲️ The throttled-`setTimeout` floor this whole lane exists to escape: a hidden Chrome renderer
  * clamps a nested zero-delay timer chain to roughly one tick per second. */
 const THROTTLED_TIMER_FLOOR_MS = 1_000;
-/** 📏️ Hops in the chained re-arm the regression law drives. */
+/** ⛓️ Hops in the chained re-arm the regression law drives. */
 const CHAIN_HOPS = 10;
 
 const suite = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🔣️.json"), "utf8")) as ContinuationSuite;

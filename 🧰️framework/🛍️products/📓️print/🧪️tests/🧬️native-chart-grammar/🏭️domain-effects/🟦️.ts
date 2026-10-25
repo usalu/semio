@@ -28,7 +28,7 @@ import chartSchema from "../../../🧬️schema/🔣️.json";
 import Ajv2020 from "ajv/dist/2020.js";
 import { equal } from "../🧰️grammar-kit/🟦️.ts";
 
-/** 📋️ Compiles source-owned process controls against independent D3 hierarchy and actual bounded PDF paint. */
+/** 🔨️ Compiles source-owned process controls against independent D3 hierarchy and actual bounded PDF paint. */
 export async function compileNativeProcessControlEffects(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/process-control-effects",async({directory:workDir,execution})=>{
   const control=fixture.nativeProcessControlEffects,{stratify}=await import("d3-hierarchy");
   
@@ -246,7 +246,7 @@ export async function compileNativeSpatialGroupControls(execution:PrintExecution
   if(JSON.stringify(control)!==before)throw Error("Spatial group fixture changed");if(failures.length)throw Error("Native spatial group effects:\n"+failures.join("\n"));
 });}
 
-/** 🗓️ Verifies stable-ID planning swimlanes and lineage captions through canonical mutations and independently measured native paint. */
+/** 📆️ Verifies stable-ID planning swimlanes and lineage captions through canonical mutations and independently measured native paint. */
 export async function compileNativePlanningControlEffects(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/planning-control-effects",async({directory:workDir,execution})=>{
   const control=fixture.nativePlanningControlEffects,before=JSON.stringify(control),failures:string[]=[],cases=[...control.laneBindings.flatMap(binding=>control.schedules.flatMap(schedule=>control.languages.map(language=>({id:"gantt-"+binding+"-"+schedule+"-"+language,family:"gantt",binding,schedule,language,orientation:"horizontal",labels:true})))),...control.captionBindings.flatMap(binding=>control.orientations.flatMap(orientation=>[true,false].flatMap(labels=>control.languages.map(language=>({id:"commit-"+binding+"-"+orientation+"-"+labels+"-"+language,family:"commit",binding,schedule:"cpm",language,orientation,labels})))))];
   
@@ -365,7 +365,7 @@ export async function compileNativeUpSetModeControls(execution:PrintExecutionV1)
   for(const variant of ["main","zero","empty"]as const)await compileNativeUpSetCaseSet(execution,variant);
 });}
 
-/** 🧩️ Applies one neutral zero/empty policy to all four declared set modes without mutating source vectors. */
+/** 🪫️ Applies one neutral zero/empty policy to all four declared set modes without mutating source vectors. */
 async function compileNativeUpSetCaseSet(execution:PrintExecutionV1,variant:"main"|"zero"|"empty"):Promise<void>{if(["PRINT_NATIVE_UPSET_REPLAY"].some(key=>process.env[key]!==undefined))throw Error("Actual owned probe required; environment path replay refused");return withPrintScratchV1(execution,"native/up-set-case-set",async({directory:workDir,execution})=>{
   const contract=fixture.nativeUpSetModeControls,c=structuredClone(contract.vectors) as unknown as {modes:string[];sets:[string,number][];intersections:[string[],number][];cell:number;barHeight:number;width:number;height:number;toleranceMm:number},{pointRadial}=await import("d3-shape"),{sum}=await import("d3-array"),failures:string[]=[];
   

@@ -32,7 +32,7 @@ export type NodeGraphNodeRecord = {
   readonly icon?: string;
 };
 
-/** 🕸️ One node-graph edge between two node/port endpoints. */
+/** 🔗️ One node-graph edge between two node/port endpoints. */
 export type NodeGraphEdgeRecord = {
   readonly id: string;
   readonly sourceNodeId: string;
@@ -52,7 +52,7 @@ export type NodeGraphFindItem = {
 /** 🖱️ Hovered node id, if any. */
 export type NodeGraphHover = {
   readonly nodeId?: string;
-  /** 🔌️ Hovered channel (port) id on `nodeId`, matching the `"{nodeId}@{portId}"` pick id. */
+  /** 🔆️ Hovered channel (port) id on `nodeId`, matching the `"{nodeId}@{portId}"` pick id. */
   readonly portId?: string;
 };
 
@@ -63,7 +63,7 @@ export type NodeGraphOperatorVariadicRecord = {
   readonly max?: number;
 };
 
-/** 🔌️ Declared operator channel (input or output); `cardinality` rides as its serialized symbol
+/** 📡️ Declared operator channel (input or output); `cardinality` rides as its serialized symbol
  * string (`"!"`/`"?"`/`"*"`/`"+"`/digits). */
 export type NodeGraphOperatorChannelRecord = {
   readonly code: string;
@@ -105,7 +105,7 @@ export type AppCatalogueItem = {
   readonly summary: string;
 };
 
-/** 🛍️ One palette section — mirrors the Rust `CatalogueSection`/`CatalogueGroup` pair. */
+/** 📑️ One palette section — mirrors the Rust `CatalogueSection`/`CatalogueGroup` pair. */
 export type AppCatalogueSection = {
   readonly id: string;
   readonly title: string;
@@ -114,7 +114,7 @@ export type AppCatalogueSection = {
 };
 
 /**
- * 🛍️ The APP-STATIC catalogue an app publishes ONCE per instance on the reserved
+ * 📚️ The APP-STATIC catalogue an app publishes ONCE per instance on the reserved
  * `framework.section.catalogue` retained surface — mirrors the Rust `FlowAppCatalogue`
  * (`🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗂️catalogue/🦀️.rs`).
  *
@@ -137,16 +137,16 @@ export type NodeGraphInteractionDomain = {
   readonly handleTargetPrefix: string;
 };
 
-/** 🕸️ A node-graph surface scene payload — mirrors the wasm `componentScene` node's `nodeGraph` field. */
+/** 🎬️ A node-graph surface scene payload — mirrors the wasm `componentScene` node's `nodeGraph` field. */
 export type NodeGraphScene = {
   readonly lanes?: readonly SceneLaneRef[];
   readonly nodes: readonly NodeGraphNodeRecord[];
   readonly edges: readonly NodeGraphEdgeRecord[];
   readonly viewport?: Viewport2d;
   readonly editable?: boolean;
-  /** 🎯️ The complete interaction address; absent surfaces publish no selection or hover. */
+  /** ✅️ The complete interaction address; absent surfaces publish no selection or hover. */
   readonly interactionDomain?: NodeGraphInteractionDomain;
-  /** 🔌️ DOCUMENT-DERIVED operator records only — one per node this graph holds (the OS workflow window
+  /** ⚙️ DOCUMENT-DERIVED operator records only — one per node this graph holds (the OS workflow window
    * derives one per workflow node so the canvas can lay its ports out). The app's REGISTERED operator
    * catalogue rides {@link AppCatalogue} on the reserved `framework.section.catalogue` surface instead;
    * a flow-backed scene leaves this empty. */
@@ -205,7 +205,7 @@ export const TEXT_EDITOR_SCENE_LANES: readonly SceneLane<TextEditorScene>[] = [
   { lane: "buffer", field: "buffer", bodyKey: "framework.scene.text.buffer", optional: false },
 ];
 
-/** 🚚️ Restores a text editor's complete source from its paged buffer carrier. */
+/** ✏️ Restores a text editor's complete source from its paged buffer carrier. */
 export function textEditorSceneFromLanes(spine: TextEditorScene, laneTexts: ReadonlyMap<string, string>): TextEditorScene {
   return sceneFromLanes(spine, laneTexts, TEXT_EDITOR_SCENE_LANES);
 }
@@ -219,7 +219,7 @@ export const nodeGraphActions = {
   spotlightCommit: "spotlightCommit",
 } as const;
 
-/** 🚚️ Node graph carriers declared by the language-neutral scene lane schema. */
+/** 🛤️ Node graph carriers declared by the language-neutral scene lane schema. */
 export const NODE_GRAPH_SCENE_LANES: readonly SceneLane<NodeGraphScene>[] = [
   {"lane": "nodes", "field": "nodes", "bodyKey": "framework.scene.nodeGraph.nodes", "optional": false, "encoding": "json"},
   {"lane": "edges", "field": "edges", "bodyKey": "framework.scene.nodeGraph.edges", "optional": false, "encoding": "json"},
@@ -239,7 +239,7 @@ export const NODE_GRAPH_SCENE_LANES: readonly SceneLane<NodeGraphScene>[] = [
   {"lane": "eval", "field": "evalJson", "bodyKey": "framework.scene.nodeGraph.eval", "optional": true},
 ];
 
-/** 🕸️ Restores typed node graph records and opaque JSON fields from complete carriers. */
+/** ♻️ Restores typed node graph records and opaque JSON fields from complete carriers. */
 export function nodeGraphSceneFromLanes(spine: NodeGraphScene, laneTexts: ReadonlyMap<string, string>): NodeGraphScene {
   return sceneFromLanes(spine, laneTexts, NODE_GRAPH_SCENE_LANES);
 }

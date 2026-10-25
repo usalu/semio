@@ -18,7 +18,7 @@ use std::collections::{BTreeMap,HashMap,HashSet};
 pub struct HoverSpec {
     #[serde(default = "default_true")]
     pub enabled: bool,
-    /// 🌳️ Whether hovering a target expands to its descendant closure (root first) — requires
+    /// 🏹️ Whether hovering a target expands to its descendant closure (root first) — requires
     /// `hierarchy != HierarchyProvider::Flat`.
     #[serde(default)]
     pub transitive: bool,
@@ -83,16 +83,16 @@ pub struct SelectionSpec {
     pub modes: Vec<SelectionMode>,
     pub methods: Vec<SelectionMethod>,
     pub merges: Vec<MergeMode>,
-    /// 🌳️ Whether selecting a target expands to its descendant closure — requires
+    /// ☑️ Whether selecting a target expands to its descendant closure — requires
     /// `hierarchy != HierarchyProvider::Flat`.
     #[serde(default)]
     pub transitive: bool,
-    /// 📣️ Whether this domain's own selection mirrors into `PresenceInteraction` for peers.
+    /// 📢️ Whether this domain's own selection mirrors into `PresenceInteraction` for peers.
     #[serde(default = "default_true")]
     pub broadcast: bool,
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// 🧰️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for SelectionSpec {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![
@@ -149,7 +149,7 @@ pub enum HierarchyProvider {
     PathDelimited { delimiter: String },
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above. Internally tagged on
+/// 💎️ Hand-written, not derived — same DAG reason as `SelectionMode` above. Internally tagged on
 /// `"kind"`, mirroring `#[serde(tag = "kind", rename_all = "camelCase")]` byte-for-byte
 /// (`rename_all_fields` dropped per the derive's own doc: redundant when it matches `rename_all`).
 impl semio_framework_value::ToValue for HierarchyProvider {
@@ -206,7 +206,7 @@ impl semio_framework_value::retirement::RetireOwned for SelectionMode {
     fn controlled_retirement_supported()->bool{true}
 }
 
-/// 🎯️ How a surface gathers targets for one `interactionSelect` dispatch.
+/// 🧲️ How a surface gathers targets for one `interactionSelect` dispatch.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SelectionMethod {
@@ -215,7 +215,7 @@ pub enum SelectionMethod {
     Lasso,
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// 🧬️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for SelectionMethod {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::String(match self { SelectionMethod::Pick => "pick", SelectionMethod::Rectangle => "rectangle", SelectionMethod::Lasso => "lasso" }.to_string())
@@ -248,7 +248,7 @@ pub enum MergeMode {
 
 semio_framework_value::artifact_retire_leaf!(MergeMode);
 impl MergeMode {
-    /// 🎯️ The ONE wire spelling of a merge mode — the `MergeMode` enum of
+    /// 🔖️ The ONE wire spelling of a merge mode — the `MergeMode` enum of
     /// `🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🔣️.json`, pinned by
     /// `🕹️interaction/🧫️fixtures/🎯️merge-modes.json` and its two twins. Every producer
     /// (renderer hosts, the wgpu world, plugin emits) and every consumer (`parse_merge_mode`,
@@ -267,7 +267,7 @@ impl MergeMode {
         }
     }
 
-    /// 🎯️ Inverse of [`MergeMode::wire_label`] — `None` for every word outside the schema enum, so a
+    /// 🔀️ Inverse of [`MergeMode::wire_label`] — `None` for every word outside the schema enum, so a
     /// caller decides whether an unknown merge is a fault (the domain path) or a skipped optimistic
     /// preview (the local wgpu world).
     pub fn from_wire_label(raw: &str) -> Option<Self> {
@@ -282,7 +282,7 @@ impl MergeMode {
     }
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// 🖋️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for MergeMode {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::String(self.wire_label().to_string())
@@ -313,7 +313,7 @@ pub struct InteractionTarget {
     pub id: String,
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// 🪡️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for InteractionTarget {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![("granularity".to_string(), semio_framework_value::ToValue::to_value(&self.granularity)), ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id))])
@@ -340,7 +340,7 @@ impl semio_framework_value::FromValue for InteractionTarget {
     }
 }
 
-/// 🖱️ One domain's current selection: the active granularity, the selected ids, and the anchor id
+/// 🎚️ One domain's current selection: the active granularity, the selected ids, and the anchor id
 /// range selection pivots from.
 /// 🌱️ Carries serde's derives ALONGSIDE the hand-written `ToValue`/`FromValue` below, which is the
 /// transitional state the serde-fanout playbook prescribes ("add alongside — do not blind-swap").
@@ -361,7 +361,7 @@ pub struct DomainSelection {
 
 semio_framework_value::artifact_retire_struct!(DomainSelection {granularity,ids,anchor_id});
 
-/// 🐁️ One domain's current hover on one channel: the transitive closure (root first) when
+/// 🌊️ One domain's current hover on one channel: the transitive closure (root first) when
 /// `HoverSpec::transitive`, otherwise just the raw hovered ids.
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -390,7 +390,7 @@ semio_framework_value::artifact_retire_struct!(InteractionState {selection,hover
 //#endregion 🔖️Runtime
 
 //#region 🔖️Topology
-/// 🌳️ One node of a domain's topology: its own granularity and its parent id (`None` = a root).await.
+/// 🌿️ One node of a domain's topology: its own granularity and its parent id (`None` = a root).await.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TopologyNode {
     pub id: String,
@@ -398,7 +398,7 @@ pub struct TopologyNode {
     pub parent: Option<String>,
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// ✋️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for TopologyNode {
     fn to_value(&self) -> semio_framework_value::DslValue {
         let mut entries = vec![("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)), ("granularity".to_string(), semio_framework_value::ToValue::to_value(&self.granularity))];
@@ -432,14 +432,14 @@ impl semio_framework_value::FromValue for TopologyNode {
     }
 }
 
-/// 🌲️ One domain's topology, pre-order: `ordered`'s sequence IS the range-selection order, and every
+/// 🔃️ One domain's topology, pre-order: `ordered`'s sequence IS the range-selection order, and every
 /// node's descendants form a contiguous run immediately following it.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct DomainTopology {
     pub ordered: Vec<TopologyNode>,
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// 🤲️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for DomainTopology {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![("ordered".to_string(), semio_framework_value::ToValue::to_value(&self.ordered))])
@@ -490,7 +490,7 @@ impl DomainTopology {
         children
     }
 
-    /// 🌳️ `root_id` plus every descendant, pre-order (root first) — empty when `root_id` is absent.
+    /// ➕️ `root_id` plus every descendant, pre-order (root first) — empty when `root_id` is absent.
     pub async fn descendant_closure(&self, root_id: &str) -> Vec<String> {
         if !self.contains(root_id).await {
             return Vec::new();
@@ -498,7 +498,7 @@ impl DomainTopology {
         expand_interaction_ids(self, &[InteractionTarget { granularity: String::new(), id: root_id.to_string() }], true).await
     }
 
-    /// 🪜️ `id`'s ancestor chain, nearest parent first, root last.
+    /// ⛓️ `id`'s ancestor chain, nearest parent first, root last.
     pub async fn ancestors(&self, id: &str) -> Vec<String> {
         let mut out = Vec::new();
         let parents: HashMap<&str, Option<&str>> = self.ordered.iter().map(|node| (node.id.as_str(), node.parent.as_deref())).collect();
@@ -529,14 +529,14 @@ async fn expand_interaction_ids(topo: &DomainTopology, targets: &[InteractionTar
     out
 }
 
-/// 🗺️ Every domain's topology for one app instance, keyed by domain id — `ArtifactApp::interaction_topology`
+/// 🔐️ Every domain's topology for one app instance, keyed by domain id — `ArtifactApp::interaction_topology`
 /// returns this (wave 3).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct InteractionTopology {
     pub domains: BTreeMap<String, DomainTopology>,
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// ✍️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for InteractionTopology {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![("domains".to_string(), semio_framework_value::ToValue::to_value(&self.domains))])
@@ -559,7 +559,7 @@ impl semio_framework_value::FromValue for InteractionTopology {
 //#endregion 🔖️Topology
 
 //#region 🔖️SelectionMachine
-/// 🖱️ One `next_selection` call's input: the batch of targets (a single pick or a marquee gather),
+/// ⌨️ One `next_selection` call's input: the batch of targets (a single pick or a marquee gather),
 /// the merge mode to apply, and the currently active selection mode.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SelectionInput {
@@ -568,7 +568,7 @@ pub struct SelectionInput {
     pub mode: SelectionMode,
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// 🔨️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for SelectionInput {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![
@@ -602,7 +602,7 @@ impl semio_framework_value::FromValue for SelectionInput {
     }
 }
 
-/// 🖱️ Computes the next `DomainSelection` for one domain — the generalization of Tree's
+/// ➡️ Computes the next `DomainSelection` for one domain — the generalization of Tree's
 /// `getTreeNextSelectionState` (`🖱️ui/🧱️elements/🪵️Tree/🟦️.tsx:946-968`), preserving its
 /// exact single/range/toggle semantics while adding batch targets, `Additive`/`Subtractive` as
 /// distinct merges, and transitive descendant-closure expansion.
@@ -674,14 +674,14 @@ async fn dedup_preserving_order(ids: Vec<String>) -> Vec<String> {
 //#endregion 🔖️SelectionMachine
 
 //#region 🔖️HoverMachine
-/// 🐁️ One `next_hover` call's input: the channel and the batch of hovered targets (empty = clear).
+/// 📥️ One `next_hover` call's input: the channel and the batch of hovered targets (empty = clear).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HoverInput {
     pub channel: String,
     pub targets: Vec<InteractionTarget>,
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// 🛠️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for HoverInput {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![("channel".to_string(), semio_framework_value::ToValue::to_value(&self.channel)), ("targets".to_string(), semio_framework_value::ToValue::to_value(&self.targets))])
@@ -708,7 +708,7 @@ impl semio_framework_value::FromValue for HoverInput {
     }
 }
 
-/// 🐁️ Computes the next `DomainHover` for one channel: always REPLACES the channel's id list (hover
+/// ⏭️ Computes the next `DomainHover` for one channel: always REPLACES the channel's id list (hover
 /// has no merge algebra). When `spec.transitive`, each target expands to its descendant closure with
 /// the hovered root first; multiple targets concatenate in input order, deduplicated. Disabled specs
 /// and empty target batches both clear the channel.
@@ -728,12 +728,12 @@ pub async fn next_hover(spec: &HoverSpec, topo: &DomainTopology, input: &HoverIn
 #[derive(Clone, Debug, PartialEq)]
 pub struct InteractionOutline {
     pub id: String,
-    /// 🪜️ Non-empty; the first entry is the domain's default granularity.
+    /// 🪫️ Non-empty; the first entry is the domain's default granularity.
     pub granularity_ids: Vec<String>,
     pub selection: SelectionSpec,
 }
 
-/// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
+/// 🧶️ Hand-written, not derived — same DAG reason as `SelectionMode` above.
 impl semio_framework_value::ToValue for InteractionOutline {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object(vec![

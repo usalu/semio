@@ -18,7 +18,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     /// 🧹️ Test-only probe: whether a cancelled segmented output still waits in bounded cleanup.
     #[cfg(test)]
     pub fn test_segmented_closure_contains(&self, operation_id: u64) -> bool {
-        self.segmented_closures.contains(operation_id)
+        self.segmented_closures.get(operation_id).is_some()
     }
 
     /// 🧬️ Shared dispatch tail for `handle_action`/`handle_command`/`import_media`: given the

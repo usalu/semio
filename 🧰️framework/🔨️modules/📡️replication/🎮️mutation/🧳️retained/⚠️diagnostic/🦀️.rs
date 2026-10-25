@@ -43,7 +43,7 @@ impl<const N:usize> RetainedDiagnosticPreparation<N>{
  }
  /// 📏️ Quotes one target field, literal, backing allocation or original ledger transfer.
  pub fn demand(&self,target:[RetainedCloneRef<'_,String>;N],body:usize)->Result<RetirementDemand,ValueError>{self.target_demand(target.map(RetainedDiagnosticTarget::Original),body)}
- /// 📏️ Declared literal targets use the same original address and diagnostic row custody.
+ /// 🎯️ Declared literal targets use the same original address and diagnostic row custody.
  pub fn target_demand(&self,target:[RetainedDiagnosticTarget<'_>;N],body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing||self.transferred{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"semantic diagnostic not available for preparation"));}
   let spec=self.spec.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"semantic diagnostic declaration missing"))?;
@@ -68,7 +68,7 @@ impl<const N:usize> RetainedDiagnosticPreparation<N>{
  }
  /// ▶️ Builds only the admitted next original child and retains custody before validating actual receipts.
  pub fn advance(&mut self,target:[RetainedCloneRef<'_,String>;N],body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.advance_targets(target.map(RetainedDiagnosticTarget::Original),body,grant)}
- /// ▶️ Literal and original address fragments share one bounded publication owner.
+ /// 🏹️ Literal and original address fragments share one bounded publication owner.
  pub fn advance_targets(&mut self,target:[RetainedDiagnosticTarget<'_>;N],body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let demand=self.target_demand(target,body)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};

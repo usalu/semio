@@ -5,7 +5,7 @@
 
 // #region 🎠️Kernel
 //#region InvocationResponse
-/** 🩺️ Canonical severity for faults and diagnostics — TS twin of Rust `os_dsl::Severity`
+/** ⚠️ Canonical severity for faults and diagnostics — TS twin of Rust `os_dsl::Severity`
  * (`🗣️dsl/⚠️diagnostic/🦀️.rs`, `#[serde(rename_all = "camelCase")]`). Declaration order
  * `Info < Warning < Error < Fatal` (0..3, `as_u8`/`from_u8`) mirrors Rust's `derive(Ord)`; `Hint` was
  * removed repo-wide by ticket `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`
@@ -19,7 +19,7 @@ export function severityAsU8(severity: Severity): number {
   return SEVERITY_ORDER.indexOf(severity);
 }
 
-/** 🔢️ TS twin of Rust `Severity::from_u8`; `undefined` for any value outside 0..3. */
+/** 🪞️ TS twin of Rust `Severity::from_u8`; `undefined` for any value outside 0..3. */
 export function severityFromU8(value: number): Severity | undefined {
   return SEVERITY_ORDER[value];
 }
@@ -65,7 +65,7 @@ export type Diagnostic = {
   readonly span?: TextSpan;
 };
 
-/** 🧯️ Error subclass carrying a structured {@link Fault}. */
+/** ❌️ Error subclass carrying a structured {@link Fault}. */
 export class SemioFaultError extends Error {
   readonly fault: Fault;
   constructor(fault: Fault) {

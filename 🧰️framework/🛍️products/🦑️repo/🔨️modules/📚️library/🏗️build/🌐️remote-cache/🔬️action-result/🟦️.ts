@@ -124,7 +124,7 @@ export function parseRemoteCacheTreeV1(bytes:Uint8Array):readonly RemoteCacheDig
  return Object.freeze(files);
 }
 
-/** ⚖️ Judges an uploaded action result at the requested level: malformed messages are refused at `structure`; at `complete` every blob the result names, and every file of its output trees, must already be in the content store, because Bazel uploads blobs before the result that points at them. */
+/** 🎬️ Judges an uploaded action result at the requested level: malformed messages are refused at `structure`; at `complete` every blob the result names, and every file of its output trees, must already be in the content store, because Bazel uploads blobs before the result that points at them. */
 export async function validateRemoteCacheActionResultV1(bytes:Uint8Array,level:RemoteCacheValidationV1,blobs:RemoteCacheBlobsV1):Promise<RemoteCacheActionVerdictV1>{
  if(level==="off")return {valid:true};
  let parsed:RemoteCacheActionResultV1;

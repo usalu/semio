@@ -1,5 +1,6 @@
 //! 🧪️ Actual retained input and production SPR writer exercise the neutral owner contract.
 
+use semio_framework_value::ErasedSnapshotRetirement as _;
 use semio_framework_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification};
 use semio_framework_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
 use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenRequest};
@@ -139,6 +140,7 @@ fn verified_input(fixture: &Value, row: &Value, history: &[u8]) -> VerifiedMembe
             MemberHistoryInputStep::Pending(_) => {}
             MemberHistoryInputStep::Ready => {
                 let mut original_retained_progress_2 = semio_framework_value::RetainedCloneProgress::default();
+                drop(cx);
                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);
                 let input = owner.take_ready(&mut cx).unwrap().unwrap();
                 assert!(owner.terminal_is_empty());
@@ -323,6 +325,7 @@ async fn member_history_dictionary_retains_every_denied_owner_until_exact_close(
                 _ => || Some(1),
             };
             let mut original_retained_progress_7 = semio_framework_value::RetainedCloneProgress::default();
+            drop(cx);
             let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(7, 999, semio_framework_value::testing::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_7);
             if let Some(witness) = witness.as_mut() {
                 assert_eq!(witness.schema, fixture["expected"]["schema"].as_str().unwrap());

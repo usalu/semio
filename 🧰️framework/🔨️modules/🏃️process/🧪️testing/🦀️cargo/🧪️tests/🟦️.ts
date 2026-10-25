@@ -149,7 +149,7 @@ test("Cargo coverage paths preserve native Unicode custody with an ASCII Windows
   await expect(api.cargoCoverageRuntimeDirectoryV1("C:\\🧬️repo","win32",async()=>"C:\\🧬️repo")).rejects.toThrow("ASCII");
   if(process.platform==="win32"){
    const directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"profile-"));
-   try{const native=await api.cargoCoverageRuntimeDirectoryV1(directory,process.platform),file=join(native,"identity.txt"),child=spawnSync("node",["-e","require('node:fs').writeFileSync(process.argv[1],'same-directory')",file],{encoding:"utf8"});expect(child.status).toBe(0);expect(readFileSync(join(directory,"identity.txt"),"utf8")).toBe("same-directory");console.log("[DEBUG] Windows kernel32 profile alias and independent Node filesystem preserve the exact caller directory");}finally{rmSync(directory,{recursive:true,force:true});}
+   try{const native=await api.cargoCoverageRuntimeDirectoryV1(directory,process.platform),file=join(native,"identity.txt"),child=spawnSync("node",["-e","require('node:fs').writeFileSync(process.argv[1],'same-directory')",file],{encoding:"utf8"});expect(child.status).toBe(0);expect(readFileSync(join(directory,"identity.txt"),"utf8")).toBe("same-directory");}finally{rmSync(directory,{recursive:true,force:true});}
   }
  }finally{oracle.close();}
 });

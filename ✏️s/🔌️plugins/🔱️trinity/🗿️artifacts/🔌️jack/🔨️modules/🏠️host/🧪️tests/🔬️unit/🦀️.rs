@@ -287,7 +287,7 @@ fn close_jack_initializer(authority: &mut JackStoreInitializationAuthority) {
     for _ in 0..100_000 {
         let demand = semio_framework_plugin::ArtifactStoreInitializationAuthority::retirement_demands(authority, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
         let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
-        match semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(authority, grant).expect("Jack initializer close") {
+        match semio_framework_job::close_with_self_funded_context(grant, |cx| semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(authority, cx)).expect("Jack initializer close") {
             RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
             RetainedCloneStep::Complete(progress) => {
                 assert!(progress.fits(grant));
@@ -323,12 +323,12 @@ fn jack_initializer_close_preserves_typed_refusal_and_owned_message() {
         let mut authority = empty_jack_initializer(semio_framework_job::OperationId(503), semio_framework_job::Generation(17));
         *authority.active = Some(Box::new(JackCloseRefusalOwner { kind, message: Some(row["message"].as_str().expect("refusal message").to_owned()) }));
         let demand = semio_framework_plugin::ArtifactStoreInitializationAuthority::retirement_demands(&authority, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
-        let zero_grant = semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, RetainedCloneGrant { maximum_items: 0, ..crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand) });
-        let result = semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand));
+        let zero_grant = semio_framework_job::close_with_self_funded_context(RetainedCloneGrant { maximum_items: 0, ..crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand) }, |cx| semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, cx));
+        let result = semio_framework_job::close_with_self_funded_context(crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand), |cx| semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, cx));
         close_jack_initializer(&mut authority);
         drop(authority);
         assert_eq!(zero_grant.expect("zero grant retains owner"), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-        let error = result.expect_err("typed retirement refusal");
+        let error = result.expect_err("typed retirement refusal").primary_value().expect("value primary of the close refusal").clone();
         let fault = semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, error.kind.as_str(), error.into_message());
         let oracle: serde_json::Value = serde_json::from_slice(&semio_framework_diagnostic::encode_fault_bytes(&fault)).expect("independent JSON fault oracle");
         assert_eq!(oracle, row["expected"]);

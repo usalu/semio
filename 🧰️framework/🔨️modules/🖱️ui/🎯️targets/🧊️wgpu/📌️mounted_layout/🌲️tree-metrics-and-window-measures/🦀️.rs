@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🧵️MountedLayoutText
-pub const LAYOUT_NODE_CREDITS: usize = 4_096;
+pub const LAYOUT_NODE_CREDITS: usize = semio_framework_ui_wgpu_layout::flex::FLEX_NODE_CREDITS;
 
 pub const LAYOUT_GLYPH_CREDITS: usize = 16_384;
 
@@ -43,10 +43,10 @@ pub fn host_content_height(params_json: &str, theme: &Theme) -> f32 {
     declared.unwrap_or(theme.control_height * HOST_CONTENT_DEFAULT_ROWS).clamp(0.0, HOST_CONTENT_MAX_HEIGHT_PX)
 }
 
-/// 🧩️ Control rows a host-provided leaf reserves when its host declares no height.
+/// 🖥️ Control rows a host-provided leaf reserves when its host declares no height.
 const HOST_CONTENT_DEFAULT_ROWS: f32 = 6.0;
 
-/// 🧩️ The ceiling one host-provided leaf may reserve, so a malformed number cannot ask for a band no
+/// 🏔️ The ceiling one host-provided leaf may reserve, so a malformed number cannot ask for a band no
 /// viewport could hold (the host scrolls inside its own rect instead).
 const HOST_CONTENT_MAX_HEIGHT_PX: f32 = 4096.0;
 
@@ -84,7 +84,7 @@ pub fn find_tree_item<'a>(items: &'a [UiTreeItemNode], id: &str, depth: usize) -
     None
 }
 
-/// 🌳️ Resolves the owning Tree's presentation and nearest authored item for one mounted node.
+/// 🌴️ Resolves the owning Tree's presentation and nearest authored item for one mounted node.
 pub fn retained_tree_row_metrics(tree: &UiTree, id: NodeId, metrics: &TreeRowMetrics) -> TreeRowMetrics {
     let owner = match tree.node(id).map(|node| &node.spec.0) {
         Some(UiNode::Tree(owner)) => Some(owner),
@@ -126,7 +126,7 @@ pub fn retained_section_title_height(tree: &UiTree, id: NodeId) -> f32 {
         .unwrap_or(semio_framework_ui_wgpu_layout::flex::SECTION_TITLE_LINE_HEIGHT)
 }
 
-/// 🌳️ Classifies the synthesized row `id` against the `Tree` that owns it — a section row when its
+/// 🔖️ Classifies the synthesized row `id` against the `Tree` that owns it — a section row when its
 /// parent is the tree itself and its key names one of that tree's sections, an item row when its
 /// parent is already a row and its key names one of that tree's items. Anything else is an ordinary
 /// container that merely happens to live inside a tree, and keeps its own kind.
@@ -229,7 +229,7 @@ pub fn document_table(tree: &UiTree, id: NodeId) -> Option<&ui_contract::TablePr
     Some(props)
 }
 
-/// 📊️ The `TableRowProps` of the mounted table row `id` — its cells, positional to the table's columns.
+/// 🗄️ The `TableRowProps` of the mounted table row `id` — its cells, positional to the table's columns.
 pub fn document_table_row(tree: &UiTree, id: NodeId) -> Option<&ui_contract::TableRowProps> {
     let ui_contract::Component::TableRow(props) = &tree.document()?.record(tree.document_id(id)?)?.component else { return None };
     Some(props)
@@ -247,7 +247,7 @@ pub fn document_row_action_id(tree: &UiTree, id: NodeId, index: usize) -> Option
     Some(target.action_id(row_actions.get(index)?))
 }
 
-/// 📊️ A table's trailing actions column: one `layout::tree_row_action_rect` slot per action of its widest materialised row, as
+/// 📏️ A table's trailing actions column: one `layout::tree_row_action_rect` slot per action of its widest materialised row, as
 /// React sizes its actions track by the widest action strip.
 pub fn table_actions_width_of(node: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
     semio_framework_ui_wgpu_layout::layout::table_actions_width(node.sections.iter().flat_map(|section| section.items.iter()).map(|item| item.actions.as_ref().map_or(0, Vec::len)).max().unwrap_or(0), metrics)
@@ -273,7 +273,7 @@ fn window_lead(window: Option<&semio_framework_ui_declaration::ui::UiTreeWindow>
     }
 }
 
-/// 🪟️ The leading spacer before the retained row `id` (authored key `key`): its parent is a windowed section or item.
+/// 🛤️ The leading spacer before the retained row `id` (authored key `key`): its parent is a windowed section or item.
 fn row_window_lead(tree: &UiTree, id: NodeId, key: &str, owner: &UiTreeNode) -> f32 {
     let Some(NodeKey::Explicit(parent_key)) = tree.node(id).and_then(|node| node.parent).and_then(|parent| tree.node(parent)).map(|parent| &parent.key) else { return 0.0 };
     if let Some(section) = owner.sections.iter().find(|section| &section.id == parent_key) {
@@ -299,11 +299,11 @@ pub fn retained_tree_height(tree: &UiTree, id: NodeId, node: &UiTreeNode, metric
 }
 
 //#region 🪟️TreeWindowMeasure
-/// 🪟️ Node visits one measurement pass may spend walking to a surface's trees — the surface's own document ceiling several
+/// ⏱️ Node visits one measurement pass may spend walking to a surface's trees — the surface's own document ceiling several
 /// times over; a tree's rows are walked through its spec, not the arena.
 const TREE_WINDOW_MEASURE_NODES: usize = 4 * ui_contract::UI_DOCUMENT_NODES;
 
-/// 🪟️ Every windowed container of `tree`, measured against the scroll viewport its first `Tree` paints in (content origin 0)
+/// 🔭️ Every windowed container of `tree`, measured against the scroll viewport its first `Tree` paints in (content origin 0)
 /// — the wgpu twin of `treeWindowContainersUnder` (`🗣️Interpreter/🟦️.tsx`): the key is the container's WINDOW PATH (enclosing
 /// windowed containers' keys, outermost first, joined by `TREE_WINDOW_PATH_SEPARATOR`), the extent spans its spacers, rows and
 /// nested content, and the rows carry their real tops. An up-flow (`reversed`) tree is measured in MIRRORED viewport space, so
@@ -333,7 +333,7 @@ pub fn tree_window_measures(tree: &UiTree, theme: &Theme, viewport: (f32, f32), 
     (!containers.is_empty()).then(|| (f64::from(frame.h), containers))
 }
 
-/// 🪟️ The painted box of the nearest scrolling ancestor of `id` — the viewport its rows scroll through.
+/// 📜️ The painted box of the nearest scrolling ancestor of `id` — the viewport its rows scroll through.
 fn scroll_frame_of(tree: &UiTree, id: NodeId) -> Option<semio_framework_ui_theme::geometry::Rect> {
     let mut cursor = tree.node(id)?.parent;
     while let Some(ancestor) = cursor {
@@ -398,7 +398,7 @@ fn measure_item_windows(tree: &UiTree, id: NodeId, item: &UiTreeItemNode, parent
     }
 }
 
-/// 🪟️ One container's measure: its content band below its own chrome (`band`: a section's header, a table's column header, an
+/// 🧮️ One container's measure: its content band below its own chrome (`band`: a section's header, a table's column header, an
 /// item's own row chrome), in viewport space — mirrored for an up-flow tree, where the chrome sits BELOW the rows.
 #[allow(clippy::too_many_arguments, reason = "one container's whole geometry, gathered by the two walks above")]
 fn push_window_measure(

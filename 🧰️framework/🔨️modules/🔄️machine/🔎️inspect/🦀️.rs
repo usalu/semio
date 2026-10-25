@@ -5,7 +5,7 @@ use crate::{Machine, NodeId};
 
 //#region 🔖️Inspection
 
-/// 🔎️ One structured observation emitted while a macrostep runs to completion.
+/// ▶️ One structured observation emitted while a macrostep runs to completion.
 pub enum InspectionEvent<'a, M: Machine> {
     /// 🏁️ A macrostep began processing an external event or timer.
     MacrostepStart,
@@ -17,27 +17,27 @@ pub enum InspectionEvent<'a, M: Machine> {
     Settled { microsteps: u32 },
 }
 
-/// 🔎️ Observer of [`InspectionEvent`]s — implemented by hosts/tooling that need microstep visibility.
+/// 🔭️ Observer of [`InspectionEvent`]s — implemented by hosts/tooling that need microstep visibility.
 pub trait Inspector<M: Machine> {
     /// 👀️ Called once per [`InspectionEvent`] in emission order.
     fn observe(&mut self, event: InspectionEvent<'_, M>);
 }
 
-/// 🔎️ An [`Inspector`] that discards every event — the default for callers that don't need tracing.
+/// 🗑️ An [`Inspector`] that discards every event — the default for callers that don't need tracing.
 pub struct NullInspector;
 
 impl<M: Machine> Inspector<M> for NullInspector {
     fn observe(&mut self, _event: InspectionEvent<'_, M>) {}
 }
 
-/// 🔎️ One recorded microstep — the exited/entered node sets, in kernel-execution order.
+/// 🕵️ One recorded microstep — the exited/entered node sets, in kernel-execution order.
 #[derive(Clone, Debug, Default)]
 pub struct MicrostepTrace {
     pub exited: Vec<NodeId>,
     pub entered: Vec<NodeId>,
 }
 
-/// 🔎️ An [`Inspector`] that records every microstep for later assertion/replay.
+/// 👣️ An [`Inspector`] that records every microstep for later assertion/replay.
 pub struct TraceInspector<M: Machine> {
     pub entries: Vec<MicrostepTrace>,
     _marker: core::marker::PhantomData<M>,

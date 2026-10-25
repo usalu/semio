@@ -1,12 +1,16 @@
 import { testLevelAtLeast } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 //#region 🔌️Adapters
 import Ajv from "ajv/dist/2020";
-import { describe, expect, test } from "bun:test";
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import { beforeAll, describe, expect, test } from "bun:test";
+import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
+import { captureOwnedCommandV1 } from "@semio-tech/process/owned-execution";
+import { createIssuedResourceControlV1 } from "@semio-tech/process/routing";
+import { withBuildTestInvocationV1 } from "@semio-tech/process/testing/invocation";
 import ts from "typescript";
+import postcss from "postcss";
 import { classifyPackageSource, classifyPackageSourceDisposition, type PackageSourceRole } from "../../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
 import { clearDiscoveryCache, discoverPackageProblems, fixedSourceDispositionDecision } from "../../../🔍️discovery/🔭️repository-scan/🟦️.ts";
 import { fixedFilenameContractIdsForPath } from "../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
@@ -20,7 +24,7 @@ import { inventoryTaxonomy, inventoryTaxonomyWithCapturedSourceRead } from "../.
 //#region 🧬️Contract
 const vectors = JSON.parse(readFileSync(new URL("../🧫️fixtures/📦️package-boundary-classification/🔣️.json", import.meta.url), "utf8")) as {
   schemaVersion: 1;
-  glueRoleCases: readonly { id: string; analyzer: PackageGlueGrammarSpec["analyzer"]; maxDelegationStatements: number; content: string; expectedRole: PackageSourceRole; expectedEvidence: string; oracle: "typescript-compiler" | "rust-syn" | "go-parser" | "python-parser" | "c-compiler"; dispositionValidator?: PackageSourceDisposition["validator"]; expectedDispositionRole?: PackageSourceRole; expectedSemanticDiagnostics?: readonly number[]; expectedExecuteBinding?: "import" | "local" }[];
+  glueRoleCases: readonly { id: string; analyzer: PackageGlueGrammarSpec["analyzer"]; maxDelegationStatements: number; content: string; expectedRole: PackageSourceRole; expectedEvidence: string; oracle: "typescript-compiler" | "rust-syn" | "go-parser" | "python-parser" | "c-compiler" | "postcss-parser"; dispositionValidator?: PackageSourceDisposition["validator"]; expectedDispositionRole?: PackageSourceRole; expectedSemanticDiagnostics?: readonly number[]; expectedExecuteBinding?: "import" | "local" }[];
   fixedScriptCases: readonly { id: string; placement: "root" | "domain" | "package"; manifest: "present" | "absent" | "not-applicable"; path: string; content: string; expectedDispositionRole: "tool-metadata" | "unresolved"; expectedFinding: "fixed-source-disposition-unresolved" | null; expectedSemanticDiagnostics?: readonly number[] }[];
   fixedScriptReadFailureCases: readonly { id: string; path: string; content: string; expectedFixedContractId: "root-script"; expectedFileKind: null; expectedPackageRole: "configuration" | "not-package"; expectedViolations: readonly ["fixed-source-content-unreadable", "path-read-failed"] }[];
   manifestPresenceCases: readonly { id: string; manifest: "present" | "absent"; content: string; expectedProblem: "package-implementation" | null }[];
@@ -32,9 +36,8 @@ const validator = new Ajv({ strict: true, allErrors: true });
 
 
 function fixedScriptControlRoot(prefix: string): string {
-  const base = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR?.trim() || join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/🧪️tests/fixed-script-semantic-enforcement"));
-  const baseRelative = relative(repoRoot, base);
-  if (baseRelative === ".." || baseRelative.startsWith(`..${sep}`) || isAbsolute(baseRelative)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must remain inside the repository");
+  const inside = (path: string): boolean => { const row = relative(repoRoot, path); return row !== ".." && !row.startsWith(`..${sep}`) && !isAbsolute(row); };
+  const configured = process.env.SEMIO_TEST_ARTIFACT_DIR?.trim(), base = configured && inside(resolve(configured)) ? resolve(configured) : join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/🧪️tests/fixed-script-semantic-enforcement");
   let current = repoRoot;
   for (const segment of relative(repoRoot, base).split(sep).filter(Boolean)) {
     current = join(current, segment);
@@ -49,6 +52,27 @@ function fixedScriptControlRoot(prefix: string): string {
     }
   }
   return mkdtempSync(join(base, prefix));
+}
+
+/** 🎨️ Independent postcss reading of a package stylesheet: wiring at-rules without a block are declarations, any rule, declaration or block at-rule is implementation, any other at-rule or a syntax error is unresolved. */
+function cssOracle(content: string): PackageSourceRole {
+  let nodes: readonly postcss.ChildNode[];
+  try { nodes = postcss.parse(content).nodes; } catch { return "unresolved"; }
+  for (const node of nodes) {
+    if (node.type === "comment") continue;
+    if (node.type === "atrule" && (node.name === "import" || node.name === "source") && node.nodes === undefined) continue;
+    if (node.type === "rule" || node.type === "decl" || node.type === "atrule" && node.nodes !== undefined) return "implementation";
+    return "unresolved";
+  }
+  return "declaration";
+}
+
+/** 📇️ Independent TypeScript-AST reading of the CommonJS re-export form: `module.exports = require("<literal>")` or `Object.assign(module.exports, require("<literal>"))`. */
+function commonJsReexportOracle(expression: ts.Expression): boolean {
+  const requireLiteral = (node: ts.Expression): boolean => ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "require" && node.arguments.length === 1 && ts.isStringLiteralLike(node.arguments[0]!);
+  const moduleExports = (node: ts.Expression): boolean => ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "module" && node.name.text === "exports";
+  if (ts.isBinaryExpression(expression) && expression.operatorToken.kind === ts.SyntaxKind.EqualsToken) return moduleExports(expression.left) && requireLiteral(expression.right);
+  return ts.isCallExpression(expression) && ts.isPropertyAccessExpression(expression.expression) && expression.expression.expression.getText() === "Object" && expression.expression.name.text === "assign" && expression.arguments.length === 2 && moduleExports(expression.arguments[0]!) && requireLiteral(expression.arguments[1]!);
 }
 
 function ecmaOracle(content: string, analyzer: "typescript" | "javascript", maximum: number): PackageSourceRole {
@@ -106,6 +130,10 @@ function ecmaOracle(content: string, analyzer: "typescript" | "javascript", maxi
     }
     if (ts.isExportAssignment(statement)) {
       if (!delegatedExpression(statement.expression) && !ts.isObjectLiteralExpression(statement.expression)) return "implementation";
+      role = "thin-delegation";
+      continue;
+    }
+    if (ts.isExpressionStatement(statement) && commonJsReexportOracle(statement.expression)) {
       role = "thin-delegation";
       continue;
     }
@@ -542,14 +570,32 @@ function ecmaTypeScriptSemanticEvidence(rows: readonly { readonly id: string; re
   return { diagnostics, executeBindings };
 }
 
+const oracleRoot = resolve(import.meta.dir, "../../🔮️oracles/📦️package-boundary-classification");
+let rustOracleBinary = "";
+
+/** 🦀️ Compiles the independent `syn` oracle once through the repository's issued Cargo entry (a direct `cargo` is refused by the compiler ingress) and copies the binary out of the shared store. */
+function buildRustOracle(): Promise<string> {
+  return withBuildTestInvocationV1(async (original) => {
+    const manifest = join(oracleRoot, "📦️packages/🦀️rust/Cargo.toml");
+    let repository = dirname(manifest);
+    while (!existsSync(join(repository, "package.json")) || !JSON.parse(readFileSync(join(repository, "package.json"), "utf8")).scripts?.repo) { if (dirname(repository) === repository) throw Error("The Rust oracle requires the repository that issues the compiler store"); repository = dirname(repository); }
+    const control = createIssuedResourceControlV1(original, "law:package-body-rust-oracle", 900_000, AbortSignal.timeout(900_000));
+    const text = await captureOwnedCommandV1(process.execPath, ["repo", "cargo", "--store=shared", "--configuration=prototype", "--", "build", "--quiet", "--message-format=json", "--manifest-path", manifest], repository, { control, env: { ...process.env, SEMIO_BUILD_MODE: "prototype" }, output: { maximumBytes: 16777216, maximumLines: 65536 } });
+    const executable = text.split("\n").flatMap((line) => { try { const message = JSON.parse(line); return message.reason === "compiler-artifact" && message.target?.name === "semio-package-body-oracle" && typeof message.executable === "string" ? [message.executable as string] : []; } catch { return []; } }).at(-1);
+    if (!executable) throw Error("The Rust oracle build reported no executable");
+    const output = mkdtempSync(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir()), "rust-oracle-")), copy = join(output, "semio-package-body-oracle");
+    copyFileSync(executable, copy);
+    chmodSync(copy, 0o755);
+    return copy;
+  });
+}
+
 function nativeOracle(row: (typeof vectors.glueRoleCases)[number], root: string): PackageSourceRole {
   const extension = row.oracle === "rust-syn" ? "rs" : row.oracle === "go-parser" ? "go" : row.oracle === "python-parser" ? "py" : "c";
   const source = join(root, `source.${extension}`);
   writeFileSync(source, row.content);
-  const oracleRoot = resolve(import.meta.dir, "../../🔮️oracles/📦️package-boundary-classification");
-  const rustOraclePackageRoot = join(oracleRoot, "📦️packages/🦀️rust");
   const run = row.oracle === "rust-syn"
-    ? Bun.spawnSync(["cargo", "run", "--quiet", "--manifest-path", join(rustOraclePackageRoot, "Cargo.toml"), "--", source, String(row.maxDelegationStatements)], { cwd: rustOraclePackageRoot, env: { ...process.env, CARGO_TARGET_DIR: join(root, "target") }, stdout: "pipe", stderr: "pipe" })
+    ? Bun.spawnSync([rustOracleBinary, source, String(row.maxDelegationStatements)], { cwd: root, stdout: "pipe", stderr: "pipe" })
     : row.oracle === "go-parser"
       ? Bun.spawnSync(["go", "run", join(oracleRoot, "🐹️.go"), "--", source, String(row.maxDelegationStatements)], { cwd: root, stdout: "pipe", stderr: "pipe" })
       : row.oracle === "python-parser"
@@ -566,6 +612,8 @@ function nativeOracle(row: (typeof vectors.glueRoleCases)[number], root: string)
 
 //#region 🧪️Classification
 describe("package boundary glue-content classification", () => {
+  beforeAll(async () => { rustOracleBinary = await buildRustOracle(); }, 900_000);
+
   test("fixture vectors satisfy the independent schema implementation", () => {
     expect(vectors["schemaVersion"]).toEqual(1);
     const ids = vectors.glueRoleCases.map((row) => row.id);
@@ -673,12 +721,13 @@ describe("package boundary glue-content classification", () => {
       if (row.oracle === "typescript-compiler") expect(ecmaDispositionOracle(row.content, row.analyzer as "typescript" | "javascript", row.dispositionValidator, row.maxDelegationStatements)).toBe<typeof row.expectedDispositionRole>(row.expectedDispositionRole);
     }
     if (row.oracle === "typescript-compiler") expect(ecmaOracle(row.content, row.analyzer as "typescript" | "javascript", row.maxDelegationStatements)).toBe(row.expectedRole);
+    else if (row.oracle === "postcss-parser") expect(cssOracle(row.content)).toBe(row.expectedRole);
     else {
       const root = mkdtempSync(join(tmpdir(), "semio-package-body-"));
       try { expect(nativeOracle(row, root)).toBe(row.expectedRole); }
       finally { rmSync(root, { recursive: true, force: true }); }
     }
-  }, row.oracle === "typescript-compiler" ? 5_000 : 30_000);
+  }, row.oracle === "typescript-compiler" || row.oracle === "postcss-parser" ? 5_000 : 30_000);
 
   test("runtime value imports, type-only imports, and later lexical bindings follow TypeScript semantics", () => {
     const rows = vectors.glueRoleCases.filter((row): row is typeof row & { expectedSemanticDiagnostics: readonly number[] } => row.expectedSemanticDiagnostics !== undefined);
@@ -747,6 +796,24 @@ describe("package boundary glue-content classification", () => {
     }
   });
 
+  test("installed directories linked into a package leaf and hidden tool state directories are never judged as authored package content", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-installed-link-"));
+    const packageRoot = join(root, "🧰️framework/🔨️modules/🎫️ticket/📦️packages/🟦️typescript");
+    try {
+      mkdirSync(join(root, "installed/node_modules"), { recursive: true });
+      mkdirSync(packageRoot, { recursive: true });
+      writeFileSync(join(packageRoot, "package.json"), JSON.stringify({ name: "@semio/fixture", semio: { role: "framework", id: "installed-link" } }));
+      symlinkSync(join(root, "installed/node_modules"), join(packageRoot, "node_modules"), "dir");
+      clearDiscoveryCache();
+      mkdirSync(join(packageRoot, ".🧾️store"), { recursive: true });
+      writeFileSync(join(packageRoot, ".🧾️store/build.json"), "{}");
+      expect(discoverPackageProblems(root, loadCatalogTaxonomy()).filter((problem) => problem.path.endsWith("/node_modules") || problem.path.includes("/.🧾️store"))).toEqual([]);
+    } finally {
+      clearDiscoveryCache();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("a rejected fixed command router cannot fall through to generic package glue", () => {
     const root = mkdtempSync(join(tmpdir(), "semio-command-router-fallback-"));
     const packageRoot = join(root, "🧰️framework/🔨️modules/🎫️ticket/📦️packages/🟦️typescript");
@@ -787,7 +854,7 @@ describe("package boundary glue-content classification", () => {
     expect(classify("🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust/📜️script.ts", "root-script")).toBe("tool-metadata");
     expect(classify("🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/📜️script.ts", "root-script")).toBe("tool-metadata");
     expect(classify("🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript/📜️script.ts", "root-script")).toBe("tool-metadata");
-    expect(classify("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts", "root-script")).toBe("unresolved");
+    expect(classify("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts", "root-script")).toBe("tool-metadata");
   });
 
   test("scope-kind specificity is strictly increasing in the documented, narrowest-wins order", () => {
@@ -804,7 +871,7 @@ describe("package boundary glue-content classification", () => {
     const project = JSON.parse(readFileSync(join(libraryPackageRoot, "📋️project.json"), "utf8"));
     const libraryPackage = JSON.parse(readFileSync(join(libraryPackageRoot, "package.json"), "utf8"));
     expect(project.targets["test-package-body-policy"].options.command).toBe("repo ./📜️script.ts test package-body-policy");
-    expect(libraryPackage.scripts["test-package-body-policy"]).toBe("repo --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-package-body-policy");
+    expect(libraryPackage.scripts["test-package-body-policy"]).toBe("repo run @semio-tech/repo-lib:test-package-body-policy");
   });
 
   test("the remaining package-purity fixture stays a non-authoritative testing example outside production coordinate metadata", () => {

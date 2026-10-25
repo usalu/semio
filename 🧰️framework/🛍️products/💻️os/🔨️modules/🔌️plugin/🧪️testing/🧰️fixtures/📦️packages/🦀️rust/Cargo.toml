@@ -44,5 +44,6 @@ semio-framework-os-command = { path = "../../../../../📡️spr/🎮️command/
 semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-async-macros = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item = { path = "../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }

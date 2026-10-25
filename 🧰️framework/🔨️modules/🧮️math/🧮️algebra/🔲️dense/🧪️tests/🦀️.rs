@@ -25,7 +25,6 @@ fn retained_dense_matches_portable_oracle_with_exact_resume_and_refusal() {
     DenseSolveStatus::Pending=>{},DenseSolveStatus::Refused(_)=>panic!("funded action refused")
    }assert!(turns<10000);
   }
-  println!("[DEBUG] shared dense original {} completed in {} bounded turns",case["id"],turns);
  }
 }
 
@@ -35,5 +34,4 @@ fn retained_dense_reports_nonfinite_and_overflow_without_substituting_physics() 
  let mut a=[1e-308];let mut b=[1e308];let mut cursor=DenseSolveCursor::new(1,1,1);
  loop {match cursor.step(&mut a,&mut b,generous()).status {DenseSolveStatus::Pending=>{},status=>{assert_eq!(status,DenseSolveStatus::Fault(DenseSolveFault::NonFiniteArithmetic));break;}}}
  assert_eq!(b,[1e308]);assert!(DenseSolveCursor::from_snapshot([0;12]).is_err());
- println!("[DEBUG] shared dense typed faults preserve original nonfinite input and reject arithmetic overflow");
 }

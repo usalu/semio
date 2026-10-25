@@ -98,11 +98,11 @@ impl MutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
 
 impl ColdMutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
     fn absorb(&mut self, other: Self) {
-        MutationDiff::<Puzzle5dSnapshot>::absorb(self, other);
+        <Self as protocol::ColdMutationDiff<Puzzle5dSnapshot>>::absorb(self, other);
     }
 
     fn apply(&self, projection: &mut Puzzle5dPlaySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
-        MutationDiff::<Puzzle5dSnapshot>::apply(self, std::sync::Arc::make_mut(&mut projection.typed), capability).map_err(|error| error.under(["document"]))?;
+        <Self as protocol::ColdMutationDiff<Puzzle5dSnapshot>>::apply(self, std::sync::Arc::make_mut(&mut projection.typed), capability).map_err(|error| error.under(["document"]))?;
         projection.value = std::sync::OnceLock::new();
         Ok(())
     }
@@ -111,13 +111,13 @@ impl ColdMutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
 impl DiffAlgebra<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
 
     fn is_empty(&self) -> bool {
-        DiffAlgebra::<Puzzle5dSnapshot>::is_empty(self)
+        <Self as DiffAlgebra<Puzzle5dSnapshot>>::is_empty(self)
     }
 }
 
 impl ColdDiffAlgebra<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
     fn inverse(&self, base: &Puzzle5dPlaySnapshot) -> Self {
-        DiffAlgebra::<Puzzle5dSnapshot>::inverse(self, base.typed())
+        <Self as ColdDiffAlgebra<Puzzle5dSnapshot>>::inverse(self, base.typed())
     }
 }
 
@@ -168,11 +168,11 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
 impl protocol::ColdMutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
     type ReferenceDiff = Puzzle5dDiff;
     fn diff(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
-        Mutation::<Puzzle5dSnapshot>::diff(self, projection.typed())
+        <Self as protocol::ColdMutation<Puzzle5dSnapshot>>::diff(self, projection.typed())
     }
     fn inverse(&self, projection: &Puzzle5dPlaySnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
     Ok({
-        Mutation::<Puzzle5dSnapshot>::inverse(self, projection.typed())?
+        <Self as protocol::ColdMutation<Puzzle5dSnapshot>>::inverse(self, projection.typed())?
     
     })
 }

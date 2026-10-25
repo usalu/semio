@@ -52,11 +52,11 @@ impl Default for SurfaceSemanticCensusCursor {
     }
 }
 
-/// 📏️ Allocation items a fresh reconciliation charges per census item, as `numerator / denominator` — measured
+/// 🆕️ Allocation items a fresh reconciliation charges per census item, as `numerator / denominator` — measured
 /// 0.17–0.35 on tree pick rows, bound tree rows, Home-shaped table rows and their containers; priced at 1/2.
 pub const SURFACE_RECONCILE_ALLOCATION_ITEMS_PER_CENSUS_ITEM: (usize, usize) = (1, 2);
 
-/// 📏️ An upper bound of the items `node` and its whole subtree charge a fresh reconciliation against
+/// 🌳️ An upper bound of the items `node` and its whole subtree charge a fresh reconciliation against
 /// [`SurfaceReconcileLimits::max_items`]. Per record: the reconciler's own semantic census, plus
 /// [`SURFACE_RECONCILE_ALLOCATION_ITEMS_PER_CENSUS_ITEM`] of it for the allocation items the copy, bindings and
 /// assembly stages charge on top (one per allocated page of what the census priced), plus one per page an
@@ -91,7 +91,7 @@ impl SurfaceSemanticCensusCursor {
         *self = Self { field: 0, container: 0, entry: 0, binding: 0, action: 0, data_attribute: 0, string_byte: 0, depth: 0, value_stack, oversized_pages: 0 };
     }
 
-    /// 📏️ UiText storage is inline in the already-counted enclosing payload; traversal remains work.
+    /// 🔠️ UiText storage is inline in the already-counted enclosing payload; traversal remains work.
     fn inline_text(&self, _value: &ui_contract::UiText) -> SurfaceSemanticUsage {
         SurfaceSemanticUsage { items: 1, bytes: 0 }
     }
@@ -206,7 +206,7 @@ impl SurfaceSemanticCensusCursor {
         SurfaceSemanticCensusStep::Progress(usage)
     }
 
-    /// 📏️ A row's verbs from component stage `first` on: its row-action backing, each action's icon, label and verb, then
+    /// 🪜️ A row's verbs from component stage `first` on: its row-action backing, each action's icon, label and verb, then
     /// its ONE target — scope, argument map and activation verb. A row names N verbs, never N argument maps.
     fn row_verbs_step(&mut self, row_actions: &ui_contract::UiFixedList<ui_contract::RowAction>, target: Option<&ui_contract::RowTarget>, first: u8) -> SurfaceSemanticCensusStep {
         let progress = |usage| SurfaceSemanticCensusStep::Progress(usage);

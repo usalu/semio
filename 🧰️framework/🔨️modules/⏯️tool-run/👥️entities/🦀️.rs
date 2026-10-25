@@ -28,7 +28,7 @@ impl<K:BoundedOrd+RetainedClone+Copy> Editor<K> {
 }
 #[derive(semio_framework_value::RetireOwned)]
 struct State<K:BoundedOrd+RetainedClone+Copy> {map:Option<RetainedOrderedMap<K,()>>,targets:Vec<K>,index:usize,kind:ToolRunEntityEditKind,editor:Option<Editor<K>>,phase:u8,capacity_bound:usize,cancelled:bool}
-/// 👥️ Owns genuine map leaves and target backing until a funded transfer or close.
+/// ✏️ Owns genuine map leaves and target backing until a funded transfer or close.
 pub struct ToolRunEntityEdit<K:BoundedOrd+RetainedClone+Copy=u64> {state:ManuallyDrop<State<K>>,transferred:bool}
 impl<K:BoundedOrd+RetainedClone+Copy> ToolRunEntityEdit<K> {
  pub fn capacity_bound_for(entries:usize,targets:usize)->Option<usize>{entries.checked_add(targets).and_then(|len|len.checked_add(RETAINED_ORDERED_MAP_PAGE_CAPACITY-1)).map(|len|len/RETAINED_ORDERED_MAP_PAGE_CAPACITY).and_then(|pages|pages.checked_mul(2)).and_then(|pages|pages.checked_add(1)).and_then(|pages|pages.checked_mul(size_of::<Vec<(K,())>>())).map(|bytes|bytes.max(RETAINED_ORDERED_MAP_PAGE_CAPACITY*size_of::<(K,())>()))}

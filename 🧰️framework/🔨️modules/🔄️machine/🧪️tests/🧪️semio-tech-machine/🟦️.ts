@@ -1,4 +1,4 @@
-/** 🚦️ The statechart vocabulary this extracted suite builds machines against; type-only, so the runtime cycle with the module that hosts this suite stays erased. */
+/** 🔨️ The statechart vocabulary this extracted suite builds machines against; type-only, so the runtime cycle with the module that hosts this suite stays erased. */
 import type { Command, GuardFn, Machine, MachineSpec, NodeDef, StatechartEvent, TransitionDef } from "../../🟦️.ts";
 
 type TestSource = { readonly directory: string; readonly url: string };

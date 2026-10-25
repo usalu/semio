@@ -182,7 +182,7 @@ macro_rules! snapshot_editing_bounded_first_step_tool_proofs {
 macro_rules! snapshot_editing_publication_authority {
     () => {
         fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-            Some(semio_framework_plugin::plugin_app_close_prelude::store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+            Some(semio_framework_plugin::plugin_app_close_prelude::store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
         }
     };
 }
@@ -242,19 +242,30 @@ macro_rules! snapshot_details_editor_support {
         }
 
         fn build_tool_job(
-            request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>,
-        ) -> Result<Option<semio_framework_plugin::ToolOperationSpec>, semio_framework_plugin::Fault> {
-            if $crate::is_snapshot_edit_action(&request.tool_id) {
-                return $crate::build_snapshot_edit_tool_job::<Self>(request);
+            request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>,
+            output: &mut Option<semio_framework_plugin::ErasedToolJob>,
+            cx: &mut semio_framework_plugin::__job::StepContext<'_>,
+        ) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+            let (is_snapshot_edit, is_bounded_native) = {
+                let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+                (
+                    $crate::is_snapshot_edit_action(&original.tool_id),
+                    false $(|| {
+                        let _ = stringify!($bounded_native);
+                        <$crate::BoundedNativeEditToolJobFactory<Self> as semio_framework_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS.contains(&original.tool_id.as_str())
+                    })?,
+                )
+            };
+            if is_snapshot_edit {
+                return $crate::build_snapshot_edit_tool_job::<Self>(request, output, cx);
             }
-            $(
-                let _ = stringify!($bounded_native);
-                if <$crate::BoundedNativeEditToolJobFactory<Self> as semio_framework_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS.contains(&request.tool_id.as_str()) {
-                    return $crate::build_bounded_native_edit_tool_job::<Self>(request);
-                }
-            )?
-            $(return $native_build(request);)?
-            Ok(None)
+            if is_bounded_native {
+                $(let _ = stringify!($bounded_native);
+                return $crate::build_bounded_native_edit_tool_job::<Self>(request, output, cx);)?
+            }
+            $(return $native_build(request, output, cx);)?
+            #[allow(unreachable_code)]
+            Ok(false)
         }
 
         $(
@@ -265,7 +276,7 @@ macro_rules! snapshot_details_editor_support {
 
         fn build_artifact_store_one_item_preparation_factory(
         ) -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-            let factory = semio_framework_plugin::plugin_app_close_prelude::store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>();
+            let factory = semio_framework_plugin::plugin_app_close_prelude::store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>();
             $(
                 let _ = stringify!($bounded_native);
                 let factory = $crate::routed_native_edit_preparation_factory(

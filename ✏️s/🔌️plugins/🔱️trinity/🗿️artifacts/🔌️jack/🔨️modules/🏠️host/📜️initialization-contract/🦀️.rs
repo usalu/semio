@@ -8,7 +8,58 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
         self.close_demands(maximum_copy_bytes, true)
     }
 
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        self.step_turn(cx).map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
+        match descriptor.kind() {
+            semio_framework_job::JobOutcomeKind::Yield => descriptor.yielded(),
+            semio_framework_job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            semio_framework_job::JobOutcomeKind::Complete if self.phase == JackStoreInitializationPhase::Complete => descriptor.complete(None, None),
+            semio_framework_job::JobOutcomeKind::Fault if self.fault.is_some() => self.fault_publication.borrow_outcome(descriptor),
+            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "jack initializer cannot resolve this outcome kind")),
+        }
+    }
+
+    fn request_cancel(&mut self) {
+        self.cancel_requested = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.cancel_requested = true;
+        if !matches!(self.phase, JackStoreInitializationPhase::Cancelled | JackStoreInitializationPhase::Fault) {
+            self.phase = JackStoreInitializationPhase::RetireCancelled;
+        }
+    }
+
+    fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<RetainedCloneStep, semio_framework_job::OriginalTurnFailure> {
+        self.begin_close();
+        if self.terminal_is_empty_inner() {
+            return Ok(RetainedCloneStep::Complete(Default::default()));
+        }
+        let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes, true)?;
+        let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| self.close_original(grant, true))?;
+        Ok(if self.terminal_is_empty_inner() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
+    }
+
+    fn take_candidate(&mut self) -> Option<store::ArtifactStore<JackSnapshot, TrinityGraphMutation>> {
+        if self.phase != JackStoreInitializationPhase::Complete || self.terminal_handoff {
+            return None;
+        }
+        let candidate = self.candidate.take()?;
+        self.terminal_handoff = true;
+        Some(candidate)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.terminal_is_empty_inner()
+    }
+}
+
+/// 🧭️ One bounded initializer turn; its value refusals become the original turn failure at the trait boundary.
+impl JackStoreInitializationAuthority {
+    pub(super) fn step_turn<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, ValueError> {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             self.fail(b"jack-store.initializer-stale-authority");
         }
@@ -277,45 +328,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                 None => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "jack initializer fault phase lost its fault")),
             },
         }
-    }
-
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
-        match descriptor.kind() {
-            semio_framework_job::JobOutcomeKind::Yield => descriptor.yielded(),
-            semio_framework_job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
-            semio_framework_job::JobOutcomeKind::Complete if self.phase == JackStoreInitializationPhase::Complete => descriptor.complete(None, None),
-            semio_framework_job::JobOutcomeKind::Fault if self.fault.is_some() => self.fault_publication.borrow_outcome(descriptor),
-            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "jack initializer cannot resolve this outcome kind")),
-        }
-    }
-
-    fn request_cancel(&mut self) {
-        self.cancel_requested = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.cancel_requested = true;
-        if !matches!(self.phase, JackStoreInitializationPhase::Cancelled | JackStoreInitializationPhase::Fault) {
-            self.phase = JackStoreInitializationPhase::RetireCancelled;
-        }
-    }
-
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        self.begin_close();
-        self.close_original(grant, true)
-    }
-
-    fn take_candidate(&mut self) -> Option<store::ArtifactStore<JackSnapshot, TrinityGraphMutation>> {
-        if self.phase != JackStoreInitializationPhase::Complete || self.terminal_handoff {
-            return None;
-        }
-        let candidate = self.candidate.take()?;
-        self.terminal_handoff = true;
-        Some(candidate)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.terminal_is_empty_inner()
     }
 }
 

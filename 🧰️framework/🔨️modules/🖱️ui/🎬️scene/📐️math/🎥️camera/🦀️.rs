@@ -1,4 +1,4 @@
-//! 🎥️ Orbit and parallel cameras, projection-spec matrices, framing, gumball and ray math, and the level-of-detail grid — the renderer-neutral camera half of the scene math.
+//! 🪐️ Orbit and parallel cameras, projection-spec matrices, framing, gumball and ray math, and the level-of-detail grid — the renderer-neutral camera half of the scene math.
 //!
 //! Carved out of the former `semio-framework-ui-scene` math module by ticket `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`.
 
@@ -9,7 +9,7 @@ use semio_framework_ui_viewport::{
 };
 
 //#region Camera
-/// 📐️ The two camera families React mounts — drei's `<PerspectiveCamera>` and its
+/// ⚛️ The two camera families React mounts — drei's `<PerspectiveCamera>` and its
 /// `<OrthographicCamera>`. React derives it from the pane's projection spec
 /// (`worldProjectionFamily`, `🎨️r3f/🟦️.tsx`): `orthographic | axonometric | oblique` are parallel,
 /// every other mode is perspective.
@@ -21,7 +21,7 @@ pub enum CameraProjection3d {
 }
 
 impl CameraProjection3d {
-    /// 📐️ React's `worldProjectionFamily` over the wire's mode kind.
+    /// ➡️ React's `worldProjectionFamily` over the wire's mode kind.
     pub fn from_mode_kind(kind: &str) -> Self {
         match kind {
             "orthographic" | "axonometric" | "oblique" => Self::Orthographic,
@@ -34,7 +34,7 @@ impl CameraProjection3d {
     }
 }
 
-/// 📐️ Resolves the camera family from the renderer-neutral projection schema.
+/// 🎬️ Resolves the camera family from the renderer-neutral projection schema.
 pub fn projection_spec_family(spec: Viewport3dProjectionSpec) -> CameraProjection3d {
     match spec.mode {
         Viewport3dProjectionMode::Orthographic {} | Viewport3dProjectionMode::Axonometric { .. } | Viewport3dProjectionMode::Oblique { .. } => CameraProjection3d::Orthographic,
@@ -42,7 +42,7 @@ pub fn projection_spec_family(spec: Viewport3dProjectionSpec) -> CameraProjectio
     }
 }
 
-/// 📐️ Resolves the effective perspective field of view used by React's projection rig.
+/// 👁️ Resolves the effective perspective field of view used by React's projection rig.
 pub fn projection_spec_fov_degrees(spec: Viewport3dProjectionSpec) -> f32 {
     match spec.mode {
         Viewport3dProjectionMode::OnePoint { fov } | Viewport3dProjectionMode::TwoPoint { fov, .. } | Viewport3dProjectionMode::ThreePoint { fov } => fov as f32,
@@ -62,7 +62,7 @@ pub fn projection_spec_oblique_shear(mode: Viewport3dProjectionMode) -> Mat4 {
     shear
 }
 
-/// 📐️ Builds the exact Three projection matrix for a complete viewport projection spec.
+/// 🏗️ Builds the exact Three projection matrix for a complete viewport projection spec.
 pub fn projection_spec_matrix(camera: &Camera3d, spec: Viewport3dProjectionSpec, width: f32, height: f32) -> Mat4 {
     let mut camera = camera.clone();
     camera.projection = projection_spec_family(spec);
@@ -76,7 +76,7 @@ pub fn projection_spec_matrix(camera: &Camera3d, spec: Viewport3dProjectionSpec,
     projection
 }
 
-/// 📐️ Composes one accepted projection spec with the live orbit view matrix.
+/// 🛰️ Composes one accepted projection spec with the live orbit view matrix.
 pub fn projection_spec_view_proj(camera: &Camera3d, spec: Viewport3dProjectionSpec, width: f32, height: f32) -> Mat4 {
     projection_spec_matrix(camera, spec, width, height).mul_m(camera.view_matrix())
 }
@@ -96,7 +96,7 @@ pub fn projection_spec_unproject_ndc(spec: Viewport3dProjectionSpec, ndc: [f32; 
     [scaled[0] * scale / aspect, scaled[1] * scale]
 }
 
-/// 🐟️ Maps one linear capture-space NDC point onto the visible curvilinear surface.
+/// 📍️ Maps one linear capture-space NDC point onto the visible curvilinear surface.
 pub fn projection_spec_project_ndc(spec: Viewport3dProjectionSpec, ndc: [f32; 2], aspect: f32) -> [f32; 2] {
     let Viewport3dProjectionMode::Curvilinear { fov, strength, .. } = spec.mode else { return ndc };
     let aspect = aspect.max(1e-6);
@@ -121,7 +121,7 @@ pub fn projection_spec_project_ndc(spec: Viewport3dProjectionSpec, ndc: [f32; 2]
     [scaled[0] * scale / aspect, scaled[1] * scale]
 }
 
-/// 🐟️ Projects a world point through the linear camera and the accepted curvilinear image pass.
+/// 🌐️ Projects a world point through the linear camera and the accepted curvilinear image pass.
 pub fn projection_spec_project_point(view_proj: Mat4, spec: Viewport3dProjectionSpec, point: Vec3, width: f32, height: f32) -> Option<[f32; 2]> {
     let clip = view_proj.transform_point_m(point);
     if clip.z < 0.0 || clip.z > 1.0 {
@@ -164,7 +164,7 @@ pub fn projection_spec_project_segment(view_proj: Mat4, spec: Viewport3dProjecti
     Some(ProjectedSegment3d { points: [point(lower), point(upper)], screen: [project(lower)?, project(upper)?] })
 }
 
-/// 📐️ Returns the shared default for a newly mounted perspective World surface.
+/// 🏠️ Returns the shared default for a newly mounted perspective World surface.
 pub fn default_projection_spec() -> Viewport3dProjectionSpec {
     Viewport3dProjectionSpec { mode: Viewport3dProjectionMode::ThreePoint { fov: 50.0 }, orientation: Viewport3dProjectionOrientation::Free {} }
 }
@@ -262,7 +262,7 @@ impl Default for Camera3d {
 }
 
 impl Camera3d {
-    /// 📐️ Half of the parallel frustum in world units — drei seeds `left = -width / 2` … from the
+    /// 🔳️ Half of the parallel frustum in world units — drei seeds `left = -width / 2` … from the
     /// canvas size in PIXELS, so a `zoom` of 1 shows exactly `width` world units across
     /// (`WorldProjectionContentFrame`, `🌐️World3dHost/🟦️.tsx`).
     pub fn orthographic_half_extent(&self, width: f32, height: f32) -> (f32, f32) {
@@ -292,7 +292,7 @@ impl Camera3d {
         self.projection_matrix(width, height).mul_m(self.view_matrix())
     }
 
-    /// 📡️ The world-space pick ray through a viewport pixel, built the way three's
+    /// 🔦️ The world-space pick ray through a viewport pixel, built the way three's
     /// `Raycaster::setFromCamera` builds it.
     ///
     /// 🩸️ It used to be `unproject(ndc, z = 1) - unproject(ndc, z = 0)`. At React's adaptive far
@@ -318,7 +318,7 @@ impl Camera3d {
         }
     }
 
-    /// 🧭️ The requested up vector, or the world twin that is not parallel to the view axis — a plan
+    /// ⬆️ The requested up vector, or the world twin that is not parallel to the view axis — a plan
     /// view whose up is `+Z` degenerates `look_at`'s cross product into `NaN`, which is exactly what
     /// a `Top` pane seeded with the orbit's hard-wired Z-up used to render.
     fn stable_up(&self) -> Vec3 {
@@ -383,7 +383,7 @@ impl OrbitController {
         self.target = self.target.add_m(right.scale_m(-dx * scale)).add_m(up.scale_m(dy * scale));
     }
 
-    /// 🔎️ Wheel dolly. A parallel camera cannot dolly — three's `OrbitControls` scales its `zoom`
+    /// 🔍️ Wheel dolly. A parallel camera cannot dolly — three's `OrbitControls` scales its `zoom`
     /// instead, which is why React's `captureNavigationSnapshot` reports the live `camera.zoom` for
     /// an orthographic pane and a bare `1` for a perspective one.
     pub fn zoom(&mut self, delta: f32) {
@@ -400,7 +400,7 @@ impl OrbitController {
 /// edge" and "the user sees the whole example with air around it".
 pub const WORLD_FRAME_BOUNDS_MARGIN: f32 = 1.12;
 
-/// 📐️ How far a perspective eye must stand off a bounding sphere of `radius` for the WHOLE sphere
+/// 🔭️ How far a perspective eye must stand off a bounding sphere of `radius` for the WHOLE sphere
 /// to project inside a `fov_y`/`aspect` frustum, times `margin`.
 ///
 /// ⚖️ The BINDING half-angle is the smaller of the vertical and horizontal ones: a wide viewport
@@ -426,7 +426,7 @@ pub fn world_projection_ortho_zoom(half_width: f32, half_height: f32, viewport_w
     zoom_x.min(zoom_y).max(1e-3)
 }
 
-/// 📐️ The six cardinal views React's `WorldProjectionSpec` orientation can name
+/// 🎲️ The six cardinal views React's `WorldProjectionSpec` orientation can name
 /// (`worldProjectionCardinalLook`, `🎨️r3f/🟦️.tsx`). `plan` is React's own alias for `top`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum WorldCardinalView {
@@ -453,7 +453,7 @@ impl WorldCardinalView {
     }
 }
 
-/// 📐️ React's `WorldProjectionSpec["orientation"]` reduced to what the framing reads: which cardinal
+/// 🔄️ React's `WorldProjectionSpec["orientation"]` reduced to what the framing reads: which cardinal
 /// view a pane is locked to, or a free one.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum WorldProjectionOrientation {
@@ -462,7 +462,7 @@ pub enum WorldProjectionOrientation {
     Free,
 }
 
-/// 📐️ React's `worldProjectionViewHalfExtent` (`🎨️r3f/🟦️.tsx`) VERBATIM: the half-width/height of a
+/// 📺️ React's `worldProjectionViewHalfExtent` (`🎨️r3f/🟦️.tsx`) VERBATIM: the half-width/height of a
 /// content box in the projection's own view plane, read off the box's CARDINAL half-extent.
 ///
 /// ⚖️ A cardinal view takes the two axes its plane spans — `(hx, hy)` for top/bottom, `(hx, hz)` for
@@ -491,7 +491,7 @@ pub fn world_projection_view_half_extent(orientation: WorldProjectionOrientation
     (span, span)
 }
 
-/// 📷️ React's `frameWorldProjectionPose` for a PARALLEL pane: the content box's view-plane half
+/// 🔲️ React's `frameWorldProjectionPose` for a PARALLEL pane: the content box's view-plane half
 /// extent through [`world_projection_view_half_extent`], then [`world_projection_ortho_zoom`] into
 /// drei's pixel frustum. The look direction is the pane's own — React rebuilds it from the spec,
 /// and this renderer is already sitting on the pose that spec delivered.
@@ -502,7 +502,7 @@ pub fn frame_projection_orbit_to_bounds(orbit: &OrbitController, orientation: Wo
     OrbitController { target: center, zoom: world_projection_ortho_zoom(half_width, half_height, width, height, padding.max(1.0)), ..orbit.clone() }
 }
 
-/// 📷️ Frames a camera from the complete viewport projection spec, matching React's
+/// 📸️ Frames a camera from the complete viewport projection spec, matching React's
 /// `frameWorldProjectionPose`: the spec owns look direction, up, family and FOV; content owns target,
 /// distance and, for a parallel family, the viewport-aware zoom.
 pub fn frame_projection_orbit_to_spec_bounds(_orbit: &OrbitController, spec: Viewport3dProjectionSpec, minimum: [f32; 3], maximum: [f32; 3], width: f32, height: f32, padding: f32) -> OrbitController {
@@ -536,7 +536,7 @@ pub fn frame_projection_orbit_to_spec_bounds(_orbit: &OrbitController, spec: Vie
     }
 }
 
-/// 🎯️ Frames an orbit on an axis-aligned box while keeping its current look direction — the ONE
+/// 🖼️ Frames an orbit on an axis-aligned box while keeping its current look direction — the ONE
 /// framing rule the wgpu world surface and its React twin (`world3dFrameOrbitToBounds`) both obey.
 ///
 /// ⚖️ React's `WorldAutoFit` uses the sphere-fit formula for perspective and parallel
@@ -550,7 +550,7 @@ pub fn frame_orbit_to_bounds(orbit: &OrbitController, minimum: [f32; 3], maximum
     OrbitController { target: center, distance: frame_distance_for_radius(radius, orbit.fov_y, aspect, margin), ..orbit.clone() }
 }
 
-/// 📐️ Half-extent of an axis-aligned box on the camera's own screen axes — React's
+/// 🗃️ Half-extent of an axis-aligned box on the camera's own screen axes — React's
 /// `worldProjectionViewHalfExtent` generalised past its cardinal cases: it reads `(hx, hy)` for a
 /// plan view and `(hy, hz)` for a side one, which is exactly what projecting the eight corners onto
 /// the view basis answers for those orientations, and stays correct for every other one.
@@ -614,7 +614,7 @@ pub fn gumball_project_ray_onto_axis(origin: Vec3, dir: Vec3, pivot: Vec3, axis:
     Some(hit.sub_m(pivot).dot_m(axis.normalize_m()))
 }
 
-/// 🪡️ Closest finite geometry points retain the authored segment and the forward ray separately.
+/// 🧷️ Closest finite geometry points retain the authored segment and the forward ray separately.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct RaySegmentClosest {
     pub distance: f32,
@@ -622,7 +622,7 @@ pub struct RaySegmentClosest {
     pub segment_point: Vec3,
 }
 
-/// 🎯️ Resolves the closest pair on a forward ray and a finite segment, including endpoint constraints.
+/// 🥢️ Resolves the closest pair on a forward ray and a finite segment, including endpoint constraints.
 pub fn ray_segment_closest(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3) -> Option<RaySegmentClosest> {
     let ab = b.sub_m(a);
     let len_sq = ab.dot_m(ab);
@@ -715,7 +715,7 @@ pub const LOD_GRID_MEDIUM_QUANTUM: f64 = 2.5;
 pub const LOD_GRID_SMALL_QUANTUM: f64 = 0.5;
 pub const LOD_GRID_MICRO_QUANTUM: f64 = 0.1;
 pub const WORLD_LOD_GRID_MAX_LOD: f64 = 1000.0;
-/// 📐️ React's `WORLD_LOD_GRID_BASE_LOD` — the LOD one grid factor already covers, so the drawn
+/// 🧱️ React's `WORLD_LOD_GRID_BASE_LOD` — the LOD one grid factor already covers, so the drawn
 /// spacing only starts growing past it.
 pub const WORLD_LOD_GRID_BASE_LOD: f64 = 2.0;
 pub const WORLD_LOD_GRID_MEDIUM_MAX_LOD: f64 = 50.0;
@@ -725,30 +725,30 @@ pub const LOD_GRID_LAYER_OPACITY: [f32; 4] = [1.0, 0.72, 0.48, 0.32];
 /// 🌫️ The viewport-free coverage multiplier React's `cameraGridFadeDistance` uses on the camera's
 /// height above the grid plane (`🎨️r3f/🟦️.tsx` `WORLD_LOD_GRID_FADE_HEIGHT_FACTOR`).
 pub const WORLD_LOD_GRID_FADE_HEIGHT_FACTOR: f32 = 32.0;
-/// 🌫️ The smallest number of cells the grid always covers, whatever the camera height.
+/// 🔢️ The smallest number of cells the grid always covers, whatever the camera height.
 pub const WORLD_LOD_GRID_MIN_FADE_CELLS: f64 = 24.0;
-/// 🌫️ The exponent the grid's alpha falls off with across its fade radius — React's drei `fadeStrength`.
+/// 💨️ The exponent the grid's alpha falls off with across its fade radius — React's drei `fadeStrength`.
 pub const WORLD_LOD_GRID_FADE_STRENGTH: f32 = 1.5;
-/// 🌫️ React's `WORLD_LOD_GRID_COVERAGE_MARGIN` — how far past the live frustum radius the grid plane
+/// 🛡️ React's `WORLD_LOD_GRID_COVERAGE_MARGIN` — how far past the live frustum radius the grid plane
 /// reaches so its corners never reveal a hard edge.
 pub const WORLD_LOD_GRID_COVERAGE_MARGIN: f32 = 32.0;
-/// 📷️ The orbit camera's near plane — React's `near={0.2}` on both camera components.
+/// 🔜️ The orbit camera's near plane — React's `near={0.2}` on both camera components.
 pub const WORLD_ORBIT_CAMERA_NEAR: f32 = 0.2;
-/// 📷️ The floor React's `adaptiveOrbitCameraFar` never goes below (`WORLD_ORBIT_CAMERA_MIN_FAR`).
+/// 🛣️ The floor React's `adaptiveOrbitCameraFar` never goes below (`WORLD_ORBIT_CAMERA_MIN_FAR`).
 pub const WORLD_ORBIT_CAMERA_MIN_FAR: f32 = 524_288.0;
-/// 📷️ How many orbit distances React's far plane covers before it grows (`WORLD_ORBIT_CAMERA_FAR_DISTANCE_FACTOR`).
+/// 🛤️ How many orbit distances React's far plane covers before it grows (`WORLD_ORBIT_CAMERA_FAR_DISTANCE_FACTOR`).
 pub const WORLD_ORBIT_CAMERA_FAR_DISTANCE_FACTOR: f32 = 1_024.0;
 /// 📶️ React's `WORLD_LOD_REFERENCE_FOV_DEG` — the field a parallel `zoom` is mapped through so the
 /// LOD bands retune when an orthographic pane scrolls.
 pub const WORLD_LOD_REFERENCE_FOV_DEG: f32 = 50.0;
-/// 📷️ React's `orbitCameraZoomForProjection` default for a freshly parallel pane.
+/// 🎚️ React's `orbitCameraZoomForProjection` default for a freshly parallel pane.
 pub const WORLD_ORBIT_PARALLEL_DEFAULT_ZOOM: f32 = 50.0;
 pub const WORLD_ORBIT_PARALLEL_ZOOM_MIN: f32 = 1e-3;
 pub const WORLD_ORBIT_PARALLEL_ZOOM_MAX: f32 = 1e5;
-/// 📷️ React's `WORLD_PROJECTION_FRAME_PADDING` — the air a parallel fit leaves around content.
+/// 🪟️ React's `WORLD_PROJECTION_FRAME_PADDING` — the air a parallel fit leaves around content.
 pub const WORLD_PROJECTION_FRAME_PADDING: f32 = 1.35;
 
-/// 📷️ Quantized far plane that follows an arbitrarily large orbit distance — React's
+/// 🌌️ Quantized far plane that follows an arbitrarily large orbit distance — React's
 /// `adaptiveOrbitCameraFar` (`🎨️r3f/🟦️.tsx`), run by `LodFrameRunner` on every frame.
 pub fn adaptive_orbit_camera_far(distance: f32) -> f32 {
     let target = WORLD_ORBIT_CAMERA_MIN_FAR.max(distance.max(0.0) * WORLD_ORBIT_CAMERA_FAR_DISTANCE_FACTOR);
@@ -761,13 +761,13 @@ pub fn world_projection_matched_ortho_zoom(fov_deg: f32, distance: f32, viewport
     viewport_height.max(1.0) / (2.0 * distance.max(1e-4) * (fov_deg.to_radians() * 0.5).tan())
 }
 
-/// 📐️ The inverse: the orbit distance a parallel `zoom` looks like — React's
+/// ↔️ The inverse: the orbit distance a parallel `zoom` looks like — React's
 /// `worldProjectionMatchedPerspectiveDistance`, the input automatic LOD reads.
 pub fn world_projection_matched_perspective_distance(fov_deg: f32, zoom: f32, viewport_height: f32) -> f32 {
     viewport_height.max(1.0) / (2.0 * zoom.max(1e-6) * (fov_deg.to_radians() * 0.5).tan())
 }
 
-/// 📶️ The distance automatic LOD bands on — React's `lodOrbitDistanceForCamera`: a parallel camera
+/// 🎛️ The distance automatic LOD bands on — React's `lodOrbitDistanceForCamera`: a parallel camera
 /// never dollies, so its `zoom` stands in for the eye→target distance.
 pub fn lod_orbit_distance_for_camera(camera: &Camera3d, orbit_distance: f32, viewport_height: f32) -> f32 {
     if camera.projection.is_parallel() {
@@ -777,7 +777,7 @@ pub fn lod_orbit_distance_for_camera(camera: &Camera3d, orbit_distance: f32, vie
     }
 }
 
-/// 🌫️ World-space radius of the camera frustum on the grid plane — React's `cameraGridVisibleRadius`.
+/// 👀️ World-space radius of the camera frustum on the grid plane — React's `cameraGridVisibleRadius`.
 pub fn camera_grid_visible_radius(camera: &Camera3d, plane_z: f32, width: f32, height: f32) -> f32 {
     let width = width.max(1.0);
     let height = height.max(1.0);
@@ -791,7 +791,7 @@ pub fn camera_grid_visible_radius(camera: &Camera3d, plane_z: f32, width: f32, h
     half_width.hypot(half_height)
 }
 
-/// 🌫️ World-space radius the grid reaches before it fades out — the Rust twin of React's
+/// 🌅️ World-space radius the grid reaches before it fades out — the Rust twin of React's
 /// `cameraGridFadeDistance`, viewport branch and all, now that the orbit camera grows its own far
 /// plane like React's ([`adaptive_orbit_camera_far`]).
 pub fn camera_grid_fade_distance(camera: &Camera3d, plane_z: f32, step_world: f64, width: f32, height: f32) -> f32 {
@@ -806,7 +806,7 @@ pub fn camera_grid_fade_distance(camera: &Camera3d, plane_z: f32, step_world: f6
     coverage.max(fade.min(far_cap.max(coverage))) as f32
 }
 
-/// 🌫️ The grid line's alpha at `radius` from the grid centre — React's drei `fadeStrength` curve.
+/// 🌁️ The grid line's alpha at `radius` from the grid centre — React's drei `fadeStrength` curve.
 pub fn lod_grid_fade_alpha(radius: f32, fade_distance: f32) -> f32 {
     if !(fade_distance > 0.0) {
         return 0.0;
@@ -881,7 +881,7 @@ pub fn lod_progressive_grid_layer_key(lod: f64, grid_factor: f64) -> String {
     layers.iter().map(|(step, _)| step.to_string()).collect::<Vec<_>>().join("|")
 }
 
-/// 📐️ The ONE spacing React's `WorldLodGridHelper` draws — its `lodGridStepWorld`: the configured
+/// 🪜️ The ONE spacing React's `WorldLodGridHelper` draws — its `lodGridStepWorld`: the configured
 /// factor times a regular 1 · 2.5 · 5 · 10 quantum of the band's own magnitude.
 ///
 /// ⚖️ This is the drawn grid's contract. [`lod_progressive_grid_layers`] is a different, local idea

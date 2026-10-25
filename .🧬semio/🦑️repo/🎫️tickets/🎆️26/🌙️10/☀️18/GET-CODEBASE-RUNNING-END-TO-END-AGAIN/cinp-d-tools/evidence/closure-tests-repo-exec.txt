@@ -1,0 +1,7 @@
+ 1 pass
+ 3 fail
+(fail) (unnamed) [0.91ms]
+(fail) actual Node immutable images expose only their validated resolution projection [0.90ms]
+(fail) actual admitted child captures a nested Source query without directory resolution [3317.66ms]
+184 |       throw Error("External implementation runtime dependency refused: " + path);
+error: External implementation runtime dependency refused: .cache/b/o/m/tests/e2885f2bbe3d7a8b08e328b9/a5d22870ecef081d/rq-OK11Uj/worker.ts

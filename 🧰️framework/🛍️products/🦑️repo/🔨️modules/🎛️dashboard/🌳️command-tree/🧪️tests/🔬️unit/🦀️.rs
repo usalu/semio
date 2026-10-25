@@ -36,7 +36,7 @@ fn playground_renderers_and_examples_select_actual_nx_targets() {
                     if example != "all" { parameters.push(("example".into(), example.into())); }
                     let launch = registry.resolve_with(&leaf.id, &Request::with_parameters(parameters), RunPolicy::default()).unwrap();
                     let process = &launch.processes[0];
-                    let mut args = vec!["repo".to_string(), "run".into(), format!("@semio-tech/framework-os-dev:{}", renderer["target"].as_str().unwrap())];
+                    let mut args = vec!["run".to_string(), format!("@semio-tech/framework-os-dev:{}", renderer["target"].as_str().unwrap())];
                     if renderer["id"] == "wgpu-native" && example != "all" { args.extend(["--".into(), "--example".into(), example.into()]); }
                     assert_eq!(process.args, args);
                     let env = |key: &str| process.env.iter().find(|(name, _)| name == key).map(|(_, value)| value.as_str());
@@ -55,6 +55,8 @@ fn every_listed_command_is_a_leaf_of_the_tree_and_a_row_of_the_launcher_and_name
     let root = temp_root("workspace");
     fs::write(root.join("📋️project.json"), r#"{"name":"workspace","targets":{"build":{},"test":{}}}"#).unwrap();
     fs::write(root.join("package.json"), r#"{"scripts":{"nx":"bun bootstrap nx","test:quiz":"repo run quiz:test","dashboard":"repo run repo:run"}}"#).unwrap();
+    fs::create_dir_all(root.join("catalog")).unwrap();
+    fs::write(root.join("catalog").join("🚀️playgrounds.json"), "[]").unwrap();
     let registry = crate::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
     let (mut in_tree, rows) = (Vec::new(), launcher(&registry));
     leaves(&tree(&registry, false), &mut in_tree);

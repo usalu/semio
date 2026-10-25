@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetConformanceAttribute {
-    pub(crate) value: String,
+    pub value: String,
 }
 
 impl protocol::MutationKind<DocxSnapshot, DocxTransitionalMutation> for SetConformanceAttribute {

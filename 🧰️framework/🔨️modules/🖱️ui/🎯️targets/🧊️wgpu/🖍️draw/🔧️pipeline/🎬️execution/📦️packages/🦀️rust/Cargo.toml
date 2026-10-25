@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-testkit = ["semio-framework-ui-wgpu-pipelines/testkit"]
+testkit = ["semio-framework-ui-wgpu-pipelines/testkit", "semio-framework-ui-wgpu-raster/testkit"]
 
 [dependencies]
 semio-framework-ui-wgpu-device = { path = "../../../../🎮️execution/🔌️device/📦️packages/🦀️rust" }

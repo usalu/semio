@@ -227,7 +227,7 @@ impl ToolJobFactory for RasterMediaExportJobFactory {
     fn payload_schema_id(&self)->&str {PAYLOAD_SCHEMA}
     fn classification(&self)->InteractiveJobClassification {InteractiveJobClassification::Migrated}
     fn execution_contract(&self)->ToolExecutionContract {ToolExecutionContract::resumable(4096,4096,1,ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES,2000,64,1)}
-    fn create_job(&mut self,_operation:Operation,payload:Self::Payload)->Result<Self::Job,ToolJobFactoryError>{Ok(payload)}
+    semio_framework_plugin::retained_command::reserved_tool_job_factory_admission!();
 }
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RasterMediaExportJobFactory {
     type Owner=EditorApp<RasterPlayApp>;
@@ -237,10 +237,16 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RasterMediaExportJo
 }
 
 /// 🧾️ The command runtime retains its snapshot and completion while this private output queue is built.
-pub fn build_download_job(request:ArtifactOwnedToolJobRequest<EditorApp<RasterPlayApp>>)->Result<Option<semio_framework::ToolOperationSpec>,Fault> {
-    if request.tool_id!="exportPng"||!matches!(*request.command,RasterCommand::ExportPng(_)){return Err(Fault::from("raster.export-command-mismatch"));}
-    let job=RasterImageExportJob {source_identity:(request.operation.operation,request.operation.generation),request_metadata:std::mem::ManuallyDrop::new(None),metadata_retirement:std::mem::ManuallyDrop::new(None),operation:request.operation.clone(),snapshot:Some(request.snapshot),snapshot_close:None,work:ImageExportWork::default(),chunks:Some(ArtifactOutputChunks::new(ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES)),credit:None,completion:None,publication:RetainedJobPublication::new(),publishing:None,source:Vec::new(),delivered:false,pending_result:std::mem::ManuallyDrop::new(None),result_published:false,completed:false,closing:false,units:0,download:Some(request.completion),raw_input:None,raw_bytes:Vec::new(),raw_cursor:0,raw_validated:true,rejected_download:None,active:None,encoded_retiring:None};
-    Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id,request.tool_id,request.payload_schema_id,job,request.operation)))
+pub fn build_download_job(request:&mut Option<ArtifactOwnedToolJobRequest<EditorApp<RasterPlayApp>>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_plugin::__job::StepContext<'_>)->Result<bool,semio_framework_plugin::__job::OriginalTurnFailure> {
+    let original=request.as_ref().ok_or_else(||semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated,"original raster export request is absent"))?;
+    if original.tool_id!="exportPng"||!matches!(*original.command,RasterCommand::ExportPng(_)){return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated,"raster.export-command-mismatch").into());}
+    let demand=semio_framework::action_bus::ToolJobAdmissionDemand{items:1,copy_bytes:0,capacity_bytes:std::mem::size_of::<RasterImageExportJob>(),release_bytes:0,depth:1};
+    semio_framework::action_bus::admit_original_tool_construction(cx,output,demand,|_|{
+        let mut taken=request.take().ok_or_else(||semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated,"original raster export request is absent"))?;
+        let mut job=RasterImageExportJob {source_identity:(taken.operation.operation,taken.operation.generation),request_metadata:std::mem::ManuallyDrop::new(None),metadata_retirement:std::mem::ManuallyDrop::new(None),operation:taken.operation.clone(),snapshot:Some(taken.snapshot),snapshot_close:None,work:ImageExportWork::default(),chunks:Some(ArtifactOutputChunks::new(ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES)),credit:None,completion:None,publication:RetainedJobPublication::new(),publishing:None,source:Vec::new(),delivered:false,pending_result:std::mem::ManuallyDrop::new(None),result_published:false,completed:false,closing:false,units:0,download:Some(taken.completion),raw_input:None,raw_bytes:Vec::new(),raw_cursor:0,raw_validated:true,rejected_download:None,active:None,encoded_retiring:None};
+        job.raw_input=taken.input.take();
+        Ok((semio_framework::ErasedToolJob::from_owned(Box::new(job)),semio_framework_plugin::__value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:std::mem::size_of::<RasterImageExportJob>(),..Default::default()}))
+    })
 }
 
 pub struct RasterDownloadJobFactory {keys:[ToolFactoryKey;1]}

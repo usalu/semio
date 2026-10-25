@@ -1,0 +1,23 @@
+000-🧿️semio	laws-5 lacked normal dep semio-framework-value-native-owned (fixed 01:55 UTC, group not re-run yet)
+001-📼️avi	avi-tests: RiffEntry private (fixed pub(super)), group not re-run yet
+003-💾️binary	2 fails = WorkLimit "snapshot retirement exhausted original item grant" (io/control/snapshot receiving frame, 65536 items); binary overrides validate: independent of print-c change
+004-🖊️dwg	test compile: DwgEvaluationVariant import + ArtifactPack::sqlite_snapshot_codec moved to ArtifactStoreSnapshot (fixed everywhere, 69 sites); not re-run yet
+005-📝️md	md-snapshot testkit thread_local gated cfg(test) (fixed), not re-run yet
+006-🎵️mp3	BLOCKED: cargo capture walks 🌎️hub/…/🗑️generated/test-artifacts, 112k entries, paths up to 326 chars (limit 256); no source file is too long
+008-🧱️ply	1 fail: UnsupportedOwner "SQLite backing requires the original receiving allocation port" in testing::io_run export route; with the default validate replaced by the pre-change bare-control validate the SAME test fails earlier (line 53 instead of 55) with the same error: pre-existing, print-c change only moves it forward
+010-🎨️svg	2 fails: "SQLite secondary allocation exceeds original native receipt" (artifact::receiving::settle); identical failures with validate overridden to the pre-change behaviour: independent of the print-c change
+011-📑️tsv	11 fails: 8 x `receiving::tests::*` assertion left==right (drift of expected receiving counters), 2 x WorkLimit "snapshot retirement exhausted original item grant" (same as binary), 1 native_input_interior; tsv overrides validate -> independent of print-c
+012-🔤️txt	1 fail: OwnershipLimit "native decoding ownership exceeds caller limit" at line 22 (txt overrides validate -> independent of print-c)
+013-📰️xml	test compile: XmlDocumentOwner tuple field pub(crate) across carve (fixed: pub); not re-run yet
+015-🪟️bmp	bmp-editor RetainedCloneEditCursor trait drift: factory reduced to `cold_mutation_apply_preparation_factory` (png/mp3/tiff convention), cursor + its tests unmounted; not re-run yet
+017-📜️docx	pptx-base-model/xlsx diff `apply(&snapshot)` returned a value, trait now in-place `apply(&mut P)`: fixed in pptx + xlsx diffs; not re-run yet (this group alone took 44 min on the saturated host)
+018-🖋️dxf	test compile: text snapshot `spec`/`spec_producer` pub(crate) across carve (fixed: pub); not re-run yet
+019-🌦️epw	infra: "Original Script process terminated" (host out of file descriptors at 04:47 UTC); re-run
+021-🌐️html	4 fails: "native decode has no available explicit retirement slot" (the kernel owner-slot machinery red already listed by snap-d) -> independent of validate
+022-📸️jpg	jpg-inferences: `pub(crate)` consts/fns of io/transforms-and-tables (STD_LUMA_Q, rgb_to_ycbcr...) invisible across the carve crates: made pub; not re-run yet
+024-🗽️obj	obj-diff unit test lacked `DiffText`/`DiffBinary` trait imports (fixed); not re-run yet
+026-📽️pptx	pptx-base-mutations: `demo_fixture` gated cfg(test) but used by the testkit-gated `demo_mutation_cases` (fixed to any(test, testkit)); not re-run yet
+027-🖼️tiff	jpg-mutations (dependency): leaf `replace-image` still has `fn diff` inside `impl MutationKind` (E0407) and lacks `ColdMutationKind` impl: NOT fixed (move diff/inverse into `impl ColdMutationKind<JpgSnapshot,JpgMutation>` like the other leaves)
+028-🔊️wav	no `running N tests` line and no compile error: infra/killed run, re-run
+000-🧿️semio	stdio-semio lib test: native.rs lacked `use store::bare_artifact_codec`; unit.rs used removed `SpaceMember::undo/envelope_pack_bytes/document_pack_bytes` -> `ReferenceSpaceMember` (fixed 12:50 CET, not re-run)
+001-📼️avi	framework plugin-testing-acceptance (history-edit-acceptance) Cargo.toml had serde_json moved to dev-deps by a peer edit at 12:37 while ungated lib code uses it (E0432 x7): restored to [dependencies] at 13:25 (git diff vs HEAD empty); re-run

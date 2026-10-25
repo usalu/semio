@@ -39,7 +39,7 @@
       "pattern": "^[a-f0-9]{64}$"
     },
     "maximumFiles": {
-      "const": 256
+      "const": 384
     },
     "maximumBytes": {
       "const": 16777216

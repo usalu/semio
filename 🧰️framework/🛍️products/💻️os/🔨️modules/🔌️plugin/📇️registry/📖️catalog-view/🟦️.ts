@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { runtimeComponentClosure } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟨️.mjs";
-import type { ComponentSourceOwnerV1, DeployedRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
+import type { ComponentSourceOwnerV1, DeployedRegistryEntryV1 } from "../🔎️discovery/🧬️schema/🟦️.ts";
 import {parsePluginBuildTargetV1, parseDeployedRegistryEntryV1 } from "../🔎️discovery/🧬️schema/🟦️.ts";
-import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
+import type { PlaygroundEntry } from "../🎮️playground/📋️contract/🟦️.ts";
 import { parseModuleDirectories, type ModuleDirectory } from "../📦️deployment/🟦️.ts";
 
 export type GeneratedCatalogProjection = { readonly entries: readonly DeployedRegistryEntryV1[]; readonly playgrounds: readonly PlaygroundEntry[] };

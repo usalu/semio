@@ -56,7 +56,7 @@ export function registerSafegitenvReplacesUnusableConfiguredTests(): void {
     const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" };
     const bumped = bumpCounterFromHistory(["🦢️other🎆️26🌙️07☀️31🚩️999", "🐙️ueli🎆️26🌙️06☀️04🚩️397", "🐙️ueli🎆️26🌙️06☀️04🚩️396"], contributor, new Date("2026-07-31T12:00:00"));
     expect(bumped).toEqual({ line1Base: "🐙️ueli🎆️26🌙️06☀️04", nnn: "398" });
-    expect(() => bumpCounterFromHistory(["🐙️ueli🎆️26🌙️6☀️04🚩️397"], contributor, new Date("2026-07-31T12:00:00"))).toThrow("refusing to reset counter to 001");
+    expect(() => bumpCounterFromHistory(["🐙️ueli🎆️26🌙️6☀️04🚩️397"], contributor, new Date("2026-07-31T12:00:00"))).toThrow("commit.counter.refusing-to-reset-to-because");
   });
   test("bumpCounterFromHistory continues numeric GitKraken subjects with WIP epoch", async () => {
     const { bumpCounterFromHistory } = await import("../../../../🎛️commands/📝️commit/🔢️counter/🟦️.ts");
@@ -124,7 +124,7 @@ export function registerSafegitenvReplacesUnusableConfiguredTests(): void {
           countRepoUlocByLanguage: () => ({}),
           countRepoSizeByLanguage: () => ({}),
         }),
-      ).toThrow("required 📊️metric footer");
+      ).toThrow("commit.message.required-metric-footer-could-not");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

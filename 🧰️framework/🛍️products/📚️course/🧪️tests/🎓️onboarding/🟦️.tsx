@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { CourseView } from "@semio-tech/course";
-import { HomeScreen, IdentityScreen, ProctorUnavailable, CourseApp, CourseIntroduction, evolveCourseState, homePages, initialCourseState, localStore, memoryStorageOrigin, courseIntroduction, courseText, readPreferences, type CourseSession } from "@semio-tech/course-react";
+import { HomeScreen, IdentityScreen, ProctorUnavailable, CourseApp, COURSE_LANGUAGE_ANCHOR, CourseIntroduction, evolveCourseState, homePages, initialCourseState, localStore, memoryStorageOrigin, courseIntroduction, courseText, readPreferences, type CourseSession } from "@semio-tech/course-react";
 import fixture from "../../🧫️fixtures/🎓️onboarding/🔣️.json";
 
 const course: CourseView = {
@@ -31,6 +31,7 @@ describe("overview onboarding", () => {
     const user = userEvent.setup();
     const dismiss = vi.fn();
     expect(courseIntroduction(course, locale).steps.map(step => step.introduce)).toEqual(fixture.anchors);
+    expect(courseIntroduction(course, locale).steps.map(step => step.show)).toEqual(fixture.anchors.map(anchor => anchor === null ? [COURSE_LANGUAGE_ANCHOR] : []));
     render(<CourseIntroduction course={course} locale={locale} onDismiss={dismiss} />);
     await waitFor(() => expect(document.querySelector('[data-slot="introduction-veil"]')).not.toBeNull(), { timeout: 20_000 });
     expect(document.querySelector('[data-slot="introduction-info-box-title"]')?.textContent).toBe(course.introduction.title[locale]);

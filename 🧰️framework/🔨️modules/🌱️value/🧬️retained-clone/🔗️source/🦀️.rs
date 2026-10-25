@@ -39,9 +39,9 @@ impl Drop for RetainedCloneLeaseOwner{fn drop(&mut self){assert!(std::thread::pa
 /// 🎟️ Returns either one funded alias-closure turn or the exact original authority after every projection alias has returned.
 pub enum RetainedCloneSourceTake<A>{Pending(RetainedCloneProgress),Ready(A,RetainedCloneProgress)}
 
-/// 🔗️ Captures one original authority in a strong-only shared handle and lends a typed projection of it through sealed leases.
+/// 🪵️ Captures one original authority in a strong-only shared handle and lends a typed projection of it through sealed leases.
 pub struct RetainedCloneSource<T:Sync+'static,A:RetireOwned+Sync=T>{owner:ManuallyDrop<Option<SealedShared<A>>>,value:NonNull<T>,lease:Option<RetainedCloneBinding>,owner_close:ManuallyDrop<Option<RetainedOwnerGate<ControlledRetirement<SealedShared<A>>>>>}
-/// 🧷️ The projected value lives inside the immutable shared authority that the source or its lease keeps alive.
+/// 📮️ The projected value lives inside the immutable shared authority that the source or its lease keeps alive.
 unsafe impl<T:Sync+'static,A:RetireOwned+Sync> Send for RetainedCloneSource<T,A>{}
 /// 🪢️ Shared references retain immutable values; closing cursor queries acquire exclusive inline custody.
 unsafe impl<T:Sync+'static,A:RetireOwned+Sync> Sync for RetainedCloneSource<T,A>{}
@@ -53,13 +53,13 @@ fn constructor_capacity<A:RetireOwned+Sync,B:RetireOwned>()->usize{SealedShared:
 impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
  /// 📐️ Measures the alias copy that hands the original authority to its projection lease.
  pub fn constructor_copy_bytes()->usize{0}
- /// 📐️ Measures both shared headers and the lease payload scaffold before anything is allocated.
+ /// 🏗️ Measures both shared headers and the lease payload scaffold before anything is allocated.
  pub fn constructor_capacity_bytes<B:RetireOwned>()->usize{constructor_capacity::<A,B>()}
  pub fn constructor_demand<B:RetireOwned>()->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:Self::constructor_capacity_bytes::<B>(),depth:1}}
- /// 📐️ Measures the constructor of an owned source with a distinct authority.
+ /// 📏️ Measures the constructor of an owned source with a distinct authority.
  pub fn owned_constructor_capacity_bytes<B:RetireOwned>()->usize{Self::constructor_capacity_bytes::<B>()}
  pub fn owned_constructor_demand<B:RetireOwned>()->RetainedCloneBirthDemand{Self::constructor_demand::<B>()}
- /// 📐️ Measures the constructor that borrows a projection from an original authority of another type.
+ /// ➡️ Measures the constructor that borrows a projection from an original authority of another type.
  pub fn borrowed_constructor_capacity_bytes<X:RetireOwned+Sync>()->usize{constructor_capacity::<X,()>()}
  pub fn borrowed_constructor_copy_bytes<X:RetireOwned+Sync>()->usize{0}
  pub fn borrowed_constructor_demand<X:RetireOwned+Sync>()->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:Self::borrowed_constructor_capacity_bytes::<X>(),depth:1}}
@@ -141,13 +141,13 @@ impl<T:Sync+'static,A:RetireOwned+Sync> Drop for SourceRetirement<T,A>{fn drop(&
 impl<T:Sync+'static,A:RetireOwned+Sync> RetireOwned for RetainedCloneSource<T,A>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(SourceRetirement(ManuallyDrop::new(self)))}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<SourceRetirement<T,A>>())}fn controlled_retirement_supported()->bool{true}}
 
 impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
- /// 🎟️ Moves one original authority and its projection into sealed custody only after one complete constructor grant.
+ /// 🏛️ Moves one original authority and its projection into sealed custody only after one complete constructor grant.
  pub fn admit_borrowed<F>(authority:A,project:F,grant:RetainedCloneGrant)->Result<(RetainedCloneSource<T,A>,RetainedCloneProgress),(ValueError,A)> where F:for<'source>FnOnce(&'source A)->&'source T{
   RetainedCloneSource::<T,A>::admit_with(authority,(),project,false,grant).map_err(|(error,authority,())|(error,authority))
  }
 }
 impl<A:RetireOwned+Sync> RetainedCloneSource<A,A>{
- /// 🎟️ Moves the original owner and a distinct authority into sealed custody only after one complete constructor grant.
+ /// 🔏️ Moves the original owner and a distinct authority into sealed custody only after one complete constructor grant.
  pub fn admit_owned<B:RetireOwned>(owner:A,authority:B,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,A,B)>{Self::admit_with(owner,authority,identity,true,grant)}
 }
 

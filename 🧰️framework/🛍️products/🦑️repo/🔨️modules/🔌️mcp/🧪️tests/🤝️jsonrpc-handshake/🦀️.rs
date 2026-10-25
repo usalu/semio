@@ -94,7 +94,7 @@ fn pipelined_burst_projection(replies: &[Json]) -> Json {
     ])
 }
 
-/// 🧾️ Reduces the replies to the request ids answered and the closed-session refusals among them.
+/// 💥️ Reduces the replies to the request ids answered and the closed-session refusals among them.
 fn burst_projection(replies: &[Json]) -> Json {
     let mut answered: Vec<String> = replies.iter().map(|reply| reply.get("id").map(Json::to_string).unwrap_or_default()).collect();
     answered.sort();

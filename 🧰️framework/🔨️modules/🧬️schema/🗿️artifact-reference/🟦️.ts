@@ -3,7 +3,7 @@ import contract from "./🔣️.json" with { type: "json" };
 
 const artifactKindPattern = new RegExp(contract.$defs.ArtifactKindId.pattern, "u");
 
-/** 🪪️ Admits exactly one canonical domain, plugin and artifact coordinate. */
+/** 🔌️ Admits exactly one canonical domain, plugin and artifact coordinate. */
 export function isCanonicalArtifactKind(value: unknown): value is string {
   return typeof value === "string" && artifactKindPattern.test(value);
 }
@@ -18,7 +18,7 @@ function record(value: unknown, keys: readonly string[]): Record<string, unknown
   return row;
 }
 
-/** 🪪️ Decodes the three canonical dialect components. */
+/** 📖️ Decodes the three canonical dialect components. */
 export function parseArtifactDialect(value: unknown): ArtifactDialect {
   const row = record(value, ["artifactKind", "standard", "subset"]);
   if (typeof row.artifactKind !== "string" || typeof row.standard !== "string" || typeof row.subset !== "string") throw new Error("artifact dialect components must be strings");

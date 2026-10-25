@@ -30,7 +30,7 @@ export function formatBundleTagName(contributor: Contributor, now = new Date()):
   return `${contributor.emoji}${contributor.alias}🎆️${yy}🌙️${mm}☀️${dd}🚩️`;
 }
 
-/** 🔀️Bundle squash commit subject (`…🔀️`). */
+/** 📦️Bundle squash commit subject (`…🔀️`). */
 export function formatBundleSubject(contributor: Contributor, now = new Date()): string {
   const yy = pad2(now.getFullYear() % 100);
   const mm = pad2(now.getMonth() + 1);

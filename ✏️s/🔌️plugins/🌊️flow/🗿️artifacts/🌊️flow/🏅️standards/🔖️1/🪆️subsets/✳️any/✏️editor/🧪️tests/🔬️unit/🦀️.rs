@@ -155,7 +155,7 @@ fn retained_content_child_factory_is_exact_and_legacy_closed() {
 #[semio_framework_async_macros::async_test]
 async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires() {
     use semio_framework_plugin::app::TypedOperationResultLane;
-    use store::{pack::snapshot::ArtifactPack, SpaceMember};
+    use store::{snapshot::ArtifactPack, SpaceMember, ReferenceSpaceMember};
 
     let fixture: Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🧵️add-widget-retained/🔣️.json")).expect("retained addWidget fixture");
     let mut app = flow_app_with_registry().await;
@@ -456,7 +456,7 @@ async fn retained_move_media_node_preserves_absolute_drop_and_undo() {
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::artifact_app_laws::{settle_history_verb, settle_registered_typed_operation};
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-    use store::{pack::snapshot::ArtifactPack, SpaceMember};
+    use store::{snapshot::ArtifactPack, SpaceMember, ReferenceSpaceMember};
 
     let mut app = flow_app_with_registry().await;
     let receiver = meta("local").instance_id;
@@ -480,7 +480,7 @@ async fn retained_move_media_node_preserves_absolute_drop_and_undo() {
 /// 🧩️ The `content` child's node count — the authoritative witness for every `Child`-lane verb.
 async fn flow_child_node_count(app: &FlowAppFixture, child_id: &str) -> usize {
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-    use store::{pack::snapshot::ArtifactPack, SpaceMember};
+    use store::{snapshot::ArtifactPack, SpaceMember, ReferenceSpaceMember};
 
     SemioFlowSnapshot::decode_pack(&app.child_store("content", child_id).await.expect("Flow content child").document_pack_bytes().await.expect("Flow content child pack"))
         .expect("Flow content child snapshot")
@@ -530,7 +530,7 @@ async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
 async fn two_instances_converge_on_disjoint_edits() {
     use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-    use store::{pack::snapshot::ArtifactPack, os_store::backbone::MemoryBackbone, SpaceMember};
+    use store::{snapshot::ArtifactPack, os_store::backbone::MemoryBackbone, SpaceMember, ReferenceSpaceMember};
     async fn probe(app: &FlowAppFixture) -> Vec<(String, i64, i64)> {
         let child_id = app.snapshot().expect("Flow parent snapshot").content.child_id.clone();
         let child = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow content child").document_pack_bytes().await.expect("Flow content child pack")).expect("decode Flow content child");

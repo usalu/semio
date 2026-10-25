@@ -30,7 +30,7 @@ impl<T:std::fmt::Debug+Send+Sync+'static> std::fmt::Debug for SealedShared<T>{fn
 impl<T:PartialEq+Send+Sync+'static> PartialEq for SealedShared<T>{fn eq(&self,other:&Self)->bool{self.get()==other.get()}}
 impl<T:Eq+Send+Sync+'static> Eq for SealedShared<T>{}
 
-/// 🎟️ Reserves a genuine original issuance before any dependent candidate allocation.
+/// 🟢️ Reserves a genuine original issuance before any dependent candidate allocation.
 pub struct SealedSharedBirth<T:Send+Sync+'static>{issuance:u64,grant:RetainedCloneGrant,marker:std::marker::PhantomData<T>}
 impl<T:Send+Sync+'static> SealedSharedBirth<T>{pub fn materialize(self,value:T,issuer:SharedIssuer<T>)->(SealedShared<T>,RetainedCloneProgress){(SealedShared{source:ManuallyDrop::new(Some(SharedOriginalStorage::admit(value,self.grant).unwrap_or_else(|_|unreachable!("issued shared storage birth")).0)),issuer,issuance:self.issuance},RetainedCloneProgress{copied_items:1,retained_capacity_bytes:SealedShared::<T>::birth_bytes(),..Default::default()})}}
 /// 📥️ One admitted original alias has one fixed issuer return slot without heap backing.

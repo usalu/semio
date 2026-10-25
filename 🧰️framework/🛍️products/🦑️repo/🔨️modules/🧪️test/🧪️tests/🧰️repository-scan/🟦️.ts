@@ -14,6 +14,9 @@
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
+import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { withBuildTestInvocationV1 } from "@semio-tech/process/testing/invocation";
+import { withRepositoryTestArtifactsV1 } from "../../💾️storage/🟦️.ts";
 import { discoverTestContributions, profileTable, oracleImportsInProduction, discoverTestCases, loadOracleRegistry, repoRootFromHere, testTaxonomy, repositoryContractBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -21,6 +24,18 @@ import { discoverTestContributions, profileTable, oracleImportsInProduction, dis
 export const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
 
 export const repoRoot = repoRootFromHere();
+
+/** 💾️ Runs one body under the original finite test artifact custody: the platform refuses every ambient output root, so a test that writes or reads the test cache does it inside this callback. A named `scope` (`group/label`) gives the body its own task shard, and `exclusive` access is the custody a retirement needs. */
+export const withTestArtifacts = async <T>(body: () => T | Promise<T>, access: "shared" | "exclusive" = "shared", scope?: string): Promise<T> => {
+  const previous = process.env.SEMIO_TEST_OUTPUT_SCOPE;
+  if (scope !== undefined) process.env.SEMIO_TEST_OUTPUT_SCOPE = scope;
+  try {
+    return await withBuildTestInvocationV1((original) => withRepositoryTestArtifactsV1(repoRoot, original, createIssuedResourceControlV1(original, "test:artifact-entry", 0), async () => body(), access));
+  } finally {
+    if (previous === undefined) delete process.env.SEMIO_TEST_OUTPUT_SCOPE;
+    else process.env.SEMIO_TEST_OUTPUT_SCOPE = previous;
+  }
+};
 
 /**
  * 🧩️ The repository-wide contribution scan and the registry built on it, taken ONCE for this file.
@@ -37,14 +52,14 @@ export const repoContributions = discoverTestContributions(repoRoot);
 export const repoRegistry = loadOracleRegistry(repoRoot);
 
 /**
- * 🧩️ The repository's discovered cases, its oracle-purity scan and its repository-wide contract breaches, taken ONCE
+ * 🔮️ The repository's discovered cases, its oracle-purity scan and its repository-wide contract breaches, taken ONCE
  * for this file for the same reason as the contribution scan above: each is a full walk or read of the repository, and
  * several laws below each paid for them again inside their own time budget. A law now measures its assertion over
  * these outcomes; a budget no longer measures how loaded the machine is.
  */
 export const repoCases = discoverTestCases(repoRoot);
 export const repoOracleHits = oracleImportsInProduction(repoRoot, repoRegistry, repoCases);
-export const repoWideBreaches = repositoryContractBreaches(repoRoot, repoRegistry, repoCases, repoOracleHits);
+export const repoWideBreaches = await withTestArtifacts(() => repositoryContractBreaches(repoRoot, repoRegistry, repoCases, repoOracleHits));
 
 /** 🖥️ This module's own committed case — the one discovery must always find, named as it sits on disk. */
 export const HOST_PROTOCOL_PARITY_CASE_DIR = `${testTaxonomy(repoRoot).testDomainPath}/${testTaxonomy(repoRoot).testsDirName}/🖥️host-protocol-parity`;

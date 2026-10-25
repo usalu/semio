@@ -1,4 +1,4 @@
-//! 📚️ Registry record: the registry with its entries, index and axes, the playground constants and the playground target. See [`super`].
+//! 📹️ Registry record: the registry with its entries, index and axes, the playground constants and the playground target. See [`super`].
 
 use super::*;
 
@@ -15,6 +15,8 @@ pub struct Registry {
     pub(super) axes: Vec<Parameter>,
     pub(super) axes_source: String,
     pub(super) problems: Vec<Problem>,
+    pub(super) catalog_configured: bool,
+    pub(super) graph_unpublished: bool,
     pub(super) definitions: Vec<String>,
     pub(super) basis: std::sync::Mutex<Option<GraphBasis>>,
 }

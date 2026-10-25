@@ -1,4 +1,4 @@
-/** 🧪️ `test` and `bench` commands: the thin test router and the bench pointer.
+/** 🔧️ `test` and `bench` commands: the thin test router and the bench pointer.
  * @see 📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
@@ -22,7 +22,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createServer } from "node:net";
 import { repoTaxonomy } from "../../🧹️normalization/🔣️taxonomy/🏷️filenames/🟦️.ts";
-import { runtimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 const REPO_CLIENT_DIR = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client");
 const REPO_CLIENT_GO = join(REPO_CLIENT_DIR, "⌨️cli");

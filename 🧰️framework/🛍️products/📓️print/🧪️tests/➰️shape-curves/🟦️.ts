@@ -59,7 +59,7 @@ const CURVES: Record<string, unknown> = {
   natural: shape.curveNatural,
 };
 
-/** 🔮️ The SVG path d3 writes for one curve over one series. */
+/** 🛤️ The SVG path d3 writes for one curve over one series. */
 function path(curve: unknown, points: readonly (readonly [number, number])[]): (number | string)[] {
   const line = shape.line().curve(curve as shape.CurveFactory).digits(15);
   return tokens(line(points as [number, number][]));
@@ -81,11 +81,11 @@ export default defineTestAdapter({
       oracle: () => ({
         projection: Object.fromEntries(Object.entries(CURVES).map(([name, curve]) => [`curve/${name}`, path(curve, SERIES)])),
       }),
-      /** 🎯️ The same interpolators, transcribed into expl3 and run inside a compiled document. */
+      /** 🔨️ The same interpolators, transcribed into expl3 and run inside a compiled document. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     parameters: {
-      /** 🔮️ The parameterised factories, with the parameter the feature table names. */
+      /** 🏭️ The parameterised factories, with the parameter the feature table names. */
       oracle: () => ({
         projection: {
           "curve/cardinal-tension": path(shape.curveCardinal.tension(0.5), SERIES),
@@ -94,11 +94,11 @@ export default defineTestAdapter({
           "curve/bundle-beta": path(shape.curveBundle.beta(0.5), SERIES),
         },
       }),
-      /** 🎯️ The same parameters, given as curve options in the probe document. */
+      /** 📄️ The same parameters, given as curve options in the probe document. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     degenerate: {
-      /** 🔮️ d3 closes a one-point line and straightens a two-point one. */
+      /** 📍️ d3 closes a one-point line and straightens a two-point one. */
       oracle: () => ({
         projection: {
           "curve/one-point": path(shape.curveLinear, [[2, 7]]),
@@ -107,7 +107,7 @@ export default defineTestAdapter({
           "curve/three-points": path(shape.curveCatmullRom, [[2, 7], [4, 9], [6, 3]]),
         },
       }),
-      /** 🎯️ The same short series through the transcribed state machines. */
+      /** 🎰️ The same short series through the transcribed state machines. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

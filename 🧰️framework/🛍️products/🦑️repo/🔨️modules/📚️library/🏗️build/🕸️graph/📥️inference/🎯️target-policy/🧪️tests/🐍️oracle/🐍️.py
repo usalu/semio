@@ -79,6 +79,10 @@ def run(request, schemas):
             return {"result": policy(request["name"], request["target"], request["policy"], schemas)}
         except Refused as error:
             return {"error": str(error)}
+    if kind == "exclusions":
+        return [exclusions(n, request["rows"]) for n in request["names"]]
+    if kind == "conflict":
+        return conflict(request["inputs"], request["named"], request["patterns"], request["root"])
     if kind == "outputs":
         return admitted(request["target"], schemas)
     if kind == "execution":
@@ -154,6 +158,53 @@ def target_class(name, rows, schemas):
     n = bare(name)
     row = next((r for r in rows if n in r.get("exact", [])), None) or next((r for r in rows if any(has_head(n, h) for h in r.get("heads", [])) or any(has_tail(n, t) for t in r.get("tails", [])) or any(has_token(n, t) for t in r.get("tokens", []))), None)
     return decision(row["decision"]["class"], row["decision"]["reason"], schemas) if row else None
+
+
+def find_row(n, rows):
+    return next((r for r in rows if n in r.get("exact", [])), None) or next((r for r in rows if any(has_head(n, h) for h in r.get("heads", [])) or any(has_tail(n, t) for t in r.get("tails", [])) or any(has_token(n, t) for t in r.get("tokens", []))), None)
+
+
+def exclusions(name, rows):
+    row = find_row(bare(name), rows)
+    return row.get("exclusions") if row else None
+
+
+def glob_regex(pattern):
+    out, i = "", 0
+    while i < len(pattern):
+        c = pattern[i]
+        if c == "*" and pattern[i + 1:i + 2] == "*":
+            if pattern[i + 2:i + 3] == "/":
+                out += "(?:.*/)?"
+                i += 3
+            else:
+                out += ".*"
+                i += 2
+        elif c == "*":
+            out += "[^/]*"
+            i += 1
+        elif c == "?":
+            out += "[^/]"
+            i += 1
+        elif c == "{":
+            end = pattern.index("}", i)
+            out += "(?:" + "|".join(glob_regex(part)[1:-1] for part in pattern[i + 1:end].split(",")) + ")"
+            i = end + 1
+        else:
+            out += re.escape(c)
+            i += 1
+    return "^" + out + "$"
+
+
+def conflict(inputs, named, patterns, root):
+    prefix = "" if root == "." else root + "/"
+    for item in inputs:
+        if not isinstance(item, str) or item.startswith("^") or item.startswith("!") or item in named:
+            continue
+        path = item.replace("{projectRoot}/", prefix).replace("{workspaceRoot}/", "")
+        if any(re.match(glob_regex(pattern), path, re.S) for pattern in patterns):
+            return True
+    return False
 
 
 def policy(name, target, p, schemas):

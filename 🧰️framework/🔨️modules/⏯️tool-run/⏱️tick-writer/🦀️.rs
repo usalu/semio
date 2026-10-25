@@ -189,7 +189,7 @@ impl ToolRunTickWriter {
         self.identity
     }
 
-    /// 🔢️ The original monotonic wire sequence also seeds a ranged publication identity.
+    /// ⛓️ The original monotonic wire sequence also seeds a ranged publication identity.
     pub fn original_sequence(&self)->u64{self.next_sequence}
 
     /// ⏭️ After original wire acknowledgement, admits only an empty continuation and leaves all original columns owned.
@@ -265,7 +265,7 @@ impl ToolRunTickWriter {
         self.append_ops.push(original.take().unwrap());self.pending_bytes=pending;Ok(S::Complete(P{copied_items:1,..Default::default()}))
     }
 
-    /// 🪙️ Preserves the same original entity until each native column has its own paid backing.
+    /// 🧲️ Preserves the same original entity until each native column has its own paid backing.
     pub fn admit_original_entity(&mut self,original:&mut Option<u64>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
      use semio_framework_value::{RetainedCloneStep as S,RetainedCloneProgress as P,ValueError,ValueRefusalKind};if original.is_none(){return Ok(S::Complete(P::default()))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(S::Progress(P::default()))}if let Some(progress)=admit_original_column(&mut self.entity_marks,grant)?{return Ok(S::Progress(progress))}if let Some(progress)=admit_original_column(&mut self.append_entities,grant)?{return Ok(S::Progress(progress))}let pending=self.pending_bytes.checked_add(8).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original entity pending extent overflow"))?;self.entity_marks.push(self.provisional_len());self.append_entities.push(original.take().unwrap());self.pending_bytes=pending;Ok(S::Complete(P{copied_items:1,..Default::default()}))
     }
@@ -285,7 +285,7 @@ impl ToolRunTickWriter {
      use semio_framework_value::{RetainedCloneStep as S,RetainedCloneProgress as P,ValueError,ValueRefusalKind};if original.is_none(){return Ok(S::Complete(P::default()))}if self.progress.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original progress binding requires previous tick acknowledgement"))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(S::Progress(P::default()))}self.progress=original.take();Ok(S::Complete(P{copied_items:1,..Default::default()}))
     }
 
-    /// 📨️ Births exact native payload backing before incrementally copying the original caller's octets.
+    /// 📬️ Births exact native payload backing before incrementally copying the original caller's octets.
     pub fn admit_original_payload(&mut self,source:&[u8],cursor:&mut usize,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
      use semio_framework_value::{RetainedCloneStep as S,RetainedCloneProgress as P,ValueError,ValueRefusalKind};if *cursor>source.len(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original payload cursor exceeds source"))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(S::Progress(P::default()))}let identity=(source.as_ptr()as usize,source.len());if self.original_payload_source.is_some_and(|original|original!=identity){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original payload requires same borrowed source pointer and extent"))}if self.original_payload_source.is_none(){if self.payload.is_some()||*cursor!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original payload source cannot replace pending owner"))}let copy=size_of::<Option<(usize,usize)>>()+size_of::<Option<ToolRunPayloadUpdate>>();if grant.maximum_copy_bytes<copy{return Ok(S::Progress(P::default()))}self.original_payload_source=Some(identity);self.payload_update=Some(ToolRunPayloadUpdate::Replace);return Ok(S::Progress(P{copied_items:1,copied_bytes:copy,..Default::default()}))}if self.payload.is_none(){if *cursor!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original payload backing cannot resume substituted source"))}if grant.maximum_capacity_bytes<source.len(){return Ok(S::Progress(P::default()))}let pending=self.pending_bytes.checked_add(source.len()).and_then(|n|n.checked_add(6)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original payload pending extent overflow"))?;let mut target=Vec::new();target.try_reserve_exact(source.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original payload native allocation refused"))?;self.payload=Some(target);self.pending_bytes=pending;return Ok(S::Progress(P{copied_items:1,retained_capacity_bytes:source.len(),..Default::default()}))}let target=self.payload.as_mut().unwrap();if target.len()!=*cursor||target.capacity()<source.len(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original payload source does not match retained native extent"))}if *cursor==source.len(){return Ok(S::Complete(P::default()))}let count=grant.maximum_copy_bytes.min(source.len()-*cursor);if count==0{return Ok(S::Progress(P::default()))}target.extend_from_slice(&source[*cursor..*cursor+count]);*cursor+=count;let progress=P{copied_items:1,copied_bytes:count,..Default::default()};Ok(if *cursor==source.len(){S::Complete(progress)}else{S::Progress(progress)})
     }
@@ -303,7 +303,7 @@ impl ToolRunTickWriter {
      use semio_framework_value::{RetainedCloneStep as S,RetainedCloneProgress as P,ValueError,ValueRefusalKind};if grant.maximum_items==0||grant.maximum_depth==0{return Ok(S::Progress(P::default()))}let kept=if len>=self.provisional_base{(len-self.provisional_base)as usize}else{0};if self.append_ops.len()>kept{let source=self.append_ops.last().unwrap();let released=source.capacity();if grant.maximum_release_bytes<released{return Ok(S::Progress(P::default()))}let pending=self.pending_bytes.checked_sub(source.len()+6).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original retraction byte count lacks wire owner"))?;drop(self.append_ops.pop());self.pending_bytes=pending;return Ok(S::Progress(P{copied_items:1,released_bytes:released,..Default::default()}))}if self.entity_marks.last().is_some_and(|mark|*mark>len){if self.entity_marks.len()!=self.append_entities.len(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original entity marks disagree with owner column"))}let pending=self.pending_bytes.checked_sub(8).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original retraction byte count lacks entity"))?;self.entity_marks.pop();self.append_entities.pop();self.pending_bytes=pending;return Ok(S::Progress(P{copied_items:1,..Default::default()}))}if len<self.provisional_base{self.retract_to=Some(self.retract_to.map_or(len,|previous|previous.min(len)));self.provisional_base=len;return Ok(S::Complete(P{copied_items:1,..Default::default()}))}Ok(S::Complete(P::default()))
     }
 
-    /// 🪚️ Truncates the provisional list to `len` ops; pending appends beyond it are dropped, and so is
+    /// ✂️ Truncates the provisional list to `len` ops; pending appends beyond it are dropped, and so is
     /// every pending entity appended once the list was longer than `len`.
     pub fn retract_to(&mut self, len: u32) {
         if len >= self.provisional_base {
@@ -326,7 +326,7 @@ impl ToolRunTickWriter {
     /// 📊️ Borrows the original progress owner for separately admitted native counter construction.
     pub fn original_progress_mut(&mut self)->Option<&mut ToolRunProgress>{self.progress.as_mut()}
 
-    /// 📨️ Sets the pending tick's plugin payload; a later call before `finish` replaces it.
+    /// 🎒️ Sets the pending tick's plugin payload; a later call before `finish` replaces it.
     pub fn payload(&mut self, payload: Vec<u8>) {
         self.pending_bytes = self.pending_bytes.saturating_sub(self.payload.as_ref().map_or(0, |previous| previous.len() + 6)) + payload.len() + 6;
         self.payload = Some(payload);

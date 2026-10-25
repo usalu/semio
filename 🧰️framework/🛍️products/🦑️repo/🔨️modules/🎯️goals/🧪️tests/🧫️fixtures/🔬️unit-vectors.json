@@ -1,0 +1,262 @@
+{
+  "schema": "semio.repo.goals.unit-vectors/1",
+  "$comment": "🔬️ Expected answers for the cargo unit tests, computed by an independent Python model (regular expressions and the standard library, no code shared with the Rust or Go implementation) over the inputs of 🪪️id-vectors.json and 🌳️tree-vectors.json. Regenerate with the model; never edit by hand.",
+  "oracle": {
+    "script": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/rtest-d-tools/oracle_goals.py",
+    "tool": "python3",
+    "libraries": [
+      "re",
+      "json"
+    ],
+    "model": "goals identifier scheme, goal forest and its plain-line rendering"
+  },
+  "paths": [
+    {
+      "path": "AI-OPTIMIZED-REPO",
+      "depth": 0,
+      "root": true,
+      "firstGen": false,
+      "deeper": false,
+      "filesystem": "AI-OPTIMIZED-REPO",
+      "rootId": "AI-OPTIMIZED-REPO",
+      "parentId": "",
+      "compose": "🎯aioptimizedrepo",
+      "composeBack": "aioptimizedrepo"
+    },
+    {
+      "path": "AI-OPTIMIZED-REPO/CONSISTENT-REPO-HISTORY",
+      "depth": 1,
+      "root": false,
+      "firstGen": true,
+      "deeper": false,
+      "filesystem": "AI-OPTIMIZED-REPO/CONSISTENT-REPO-HISTORY",
+      "rootId": "AI-OPTIMIZED-REPO",
+      "parentId": "AI-OPTIMIZED-REPO",
+      "compose": "🎯aioptimizedrepo🎯consistentrepohistory",
+      "composeBack": "aioptimizedrepo/consistentrepohistory"
+    },
+    {
+      "path": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+      "depth": 3,
+      "root": false,
+      "firstGen": false,
+      "deeper": true,
+      "filesystem": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+      "rootId": "AI-OPTIMIZED-REPO",
+      "parentId": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY",
+      "compose": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+      "composeBack": "aioptimizedrepo/repoclient/repobinary/repocli"
+    },
+    {
+      "path": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI/REPO-CLI-FILTERS",
+      "depth": 4,
+      "root": false,
+      "firstGen": false,
+      "deeper": true,
+      "filesystem": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI/REPO-CLI-FILTERS",
+      "rootId": "AI-OPTIMIZED-REPO",
+      "parentId": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+      "compose": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters",
+      "composeBack": "aioptimizedrepo/repoclient/repobinary/repocli/repoclifilters"
+    },
+    {
+      "path": "ANIMATE",
+      "depth": 0,
+      "root": true,
+      "firstGen": false,
+      "deeper": false,
+      "filesystem": "ANIMATE",
+      "rootId": "ANIMATE",
+      "parentId": "",
+      "compose": "🎯animate",
+      "composeBack": "animate"
+    },
+    {
+      "path": "🎯️aioptimizedrepo",
+      "depth": 0,
+      "root": true,
+      "firstGen": false,
+      "deeper": false,
+      "filesystem": "️aioptimizedrepo",
+      "rootId": "️aioptimizedrepo",
+      "parentId": "",
+      "compose": "🎯🎯️aioptimizedrepo",
+      "composeBack": "️aioptimizedrepo"
+    },
+    {
+      "path": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+      "depth": 0,
+      "root": true,
+      "firstGen": false,
+      "deeper": false,
+      "filesystem": "️aioptimizedrepo/️repoclient/️repobinary/️repocli",
+      "rootId": "️aioptimizedrepo",
+      "parentId": "️aioptimizedrepo/️repoclient/️repobinary",
+      "compose": "🎯🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+      "composeBack": "️aioptimizedrepo/️repoclient/️repobinary/️repocli"
+    },
+    {
+      "path": "🎯️animate",
+      "depth": 0,
+      "root": true,
+      "firstGen": false,
+      "deeper": false,
+      "filesystem": "️animate",
+      "rootId": "️animate",
+      "parentId": "",
+      "compose": "🎯🎯️animate",
+      "composeBack": "️animate"
+    },
+    {
+      "path": "  AI-OPTIMIZED-REPO  ",
+      "depth": 0,
+      "root": true,
+      "firstGen": false,
+      "deeper": false,
+      "filesystem": "AI-OPTIMIZED-REPO",
+      "rootId": "AI-OPTIMIZED-REPO",
+      "parentId": "",
+      "compose": "🎯aioptimizedrepo",
+      "composeBack": "aioptimizedrepo"
+    },
+    {
+      "path": "",
+      "depth": 0,
+      "root": true,
+      "firstGen": false,
+      "deeper": false,
+      "filesystem": "",
+      "rootId": "",
+      "parentId": "",
+      "compose": "",
+      "composeBack": ""
+    },
+    {
+      "path": "NOT-A-COMPOSE-ID",
+      "depth": 0,
+      "root": true,
+      "firstGen": false,
+      "deeper": false,
+      "filesystem": "NOT-A-COMPOSE-ID",
+      "rootId": "NOT-A-COMPOSE-ID",
+      "parentId": "",
+      "compose": "🎯notacomposeid",
+      "composeBack": "notacomposeid"
+    }
+  ],
+  "titles": [
+    {
+      "parent": "",
+      "title": "AI-optimized Repo",
+      "id": "AI-OPTIMIZED-REPO"
+    },
+    {
+      "parent": "AI-OPTIMIZED-REPO",
+      "title": "Repo CLI Filters",
+      "id": "AI-OPTIMIZED-REPO/REPO-CLI-FILTERS"
+    },
+    {
+      "parent": "AI-OPTIMIZED-REPO/REPO-CLIENT",
+      "title": "XMLHttpRequest Support",
+      "id": "AI-OPTIMIZED-REPO/REPO-CLIENT/XML-HTTP-REQUEST-SUPPORT"
+    },
+    {
+      "parent": "",
+      "title": "Grüße aus Hannover",
+      "id": "GR-E-AUS-HANNOVER"
+    },
+    {
+      "parent": "",
+      "title": "  spaced   out  ",
+      "id": "SPACED-OUT"
+    },
+    {
+      "parent": "A",
+      "title": "aBcDeF",
+      "id": "A/A-BC-DE-F"
+    },
+    {
+      "parent": "",
+      "title": "SWE-1.5 Evaluation",
+      "id": "SWE-1-5-EVALUATION"
+    }
+  ],
+  "references": [
+    {
+      "reference": "https://github.com/usalu/semio/milestone/39",
+      "milestone": 39,
+      "issue": 39
+    },
+    {
+      "reference": "https://github.com/usalu/semio/issues/395",
+      "milestone": 395,
+      "issue": 395
+    },
+    {
+      "reference": "39",
+      "milestone": 39,
+      "issue": 39
+    },
+    {
+      "reference": "0",
+      "milestone": 0,
+      "issue": 0
+    },
+    {
+      "reference": "milestone/not-a-number",
+      "milestone": null,
+      "issue": null
+    },
+    {
+      "reference": "",
+      "milestone": null,
+      "issue": null
+    }
+  ],
+  "tree": {
+    "text": "goal ORPHANED/SUBGOAL Orphaned Subgoal [open] 2026-06-01\ngoal AI-OPTIMIZED-REPO AI-optimized Repo [open] 2026-12-31\n├️─️─️ goal AI-OPTIMIZED-REPO/REPO-SERVER Repo Server [closed] 2026-01-01\n└️─️─️ goal AI-OPTIMIZED-REPO/REPO-CLIENT Repo Client [open] 2026-02-15\n    ├️─️─️ goal AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION Repo VSCode Extension [open] 2026-03-01\n    ├️─️─️ goal AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY Repo Binary [open] \n    └️─️─️ ticket REPO-RUST-IMPLEMENTATION Repo Rust Implementation [open] repo://ticket/🎫reporustimplementation\n        ├️─️─️ ticket REPO-RUST-GOALS Repo Rust Goals [open] repo://ticket/🎫reporustgoals\n        └️─️─️ ticket REPO-RUST-TODOS Repo Rust Todos [closed] repo://ticket/🎫reporusttodos\ngoal ANIMATE Animate [open] 2026-12-31\n└️─️─️ ticket ANIMATE-SCENE-GRAPH Animate Scene Graph [open] repo://ticket/🎫animatescenegraph\ngoal  No Goal [] \n├️─️─️ ticket NO-GOAL-TICKET No Goal Ticket [open] repo://ticket/🎫nogoalticket\n└️─️─️ ticket UNKNOWN-GOAL-TICKET Unknown Goal Ticket [closed] repo://ticket/🎫unknowngoalticket\n",
+    "markdown": "- goal ORPHANED/SUBGOAL Orphaned Subgoal [open] 2026-06-01\n- goal AI-OPTIMIZED-REPO AI-optimized Repo [open] 2026-12-31\n  - goal AI-OPTIMIZED-REPO/REPO-SERVER Repo Server [closed] 2026-01-01\n  - goal AI-OPTIMIZED-REPO/REPO-CLIENT Repo Client [open] 2026-02-15\n    - goal AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION Repo VSCode Extension [open] 2026-03-01\n    - goal AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY Repo Binary [open] \n    - ticket REPO-RUST-IMPLEMENTATION Repo Rust Implementation [open] repo://ticket/🎫reporustimplementation\n      - ticket REPO-RUST-GOALS Repo Rust Goals [open] repo://ticket/🎫reporustgoals\n      - ticket REPO-RUST-TODOS Repo Rust Todos [closed] repo://ticket/🎫reporusttodos\n- goal ANIMATE Animate [open] 2026-12-31\n  - ticket ANIMATE-SCENE-GRAPH Animate Scene Graph [open] repo://ticket/🎫animatescenegraph\n- goal  No Goal [] \n  - ticket NO-GOAL-TICKET No Goal Ticket [open] repo://ticket/🎫nogoalticket\n  - ticket UNKNOWN-GOAL-TICKET Unknown Goal Ticket [closed] repo://ticket/🎫unknowngoalticket\n",
+    "counts": [
+      {
+        "id": "ORPHANED/SUBGOAL",
+        "openSubgoals": 0,
+        "openTickets": 0
+      },
+      {
+        "id": "AI-OPTIMIZED-REPO",
+        "openSubgoals": 3,
+        "openTickets": 2
+      },
+      {
+        "id": "AI-OPTIMIZED-REPO/REPO-SERVER",
+        "openSubgoals": 0,
+        "openTickets": 0
+      },
+      {
+        "id": "AI-OPTIMIZED-REPO/REPO-CLIENT",
+        "openSubgoals": 2,
+        "openTickets": 2
+      },
+      {
+        "id": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
+        "openSubgoals": 0,
+        "openTickets": 0
+      },
+      {
+        "id": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY",
+        "openSubgoals": 0,
+        "openTickets": 0
+      },
+      {
+        "id": "ANIMATE",
+        "openSubgoals": 0,
+        "openTickets": 1
+      },
+      {
+        "id": "",
+        "openSubgoals": 0,
+        "openTickets": 1
+      }
+    ]
+  }
+}

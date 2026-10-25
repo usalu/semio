@@ -29,7 +29,7 @@ export function readDocumentFullscreenActive(doc: Document = document): boolean 
   return !!(typed.fullscreenElement ?? typed.webkitFullscreenElement);
 }
 
-/** 🖥️ Enter or exit browser fullscreen. `root` is the element requesting fullscreen — a shell's
+/** ⏯️ Enter or exit browser fullscreen. `root` is the element requesting fullscreen — a shell's
  * own root (e.g. `ShellScope.rootRef.current`) so going fullscreen from within one embedded shell fills
  * the screen with just that shell's content, not the whole page (other mounted shells included);
  * omitted, defaults to `document.documentElement` (the single-shell-per-page case, unchanged). The
@@ -47,7 +47,7 @@ export async function toggleDocumentFullscreen(root: Element = document.document
   else typedRoot.webkitRequestFullscreen?.();
 }
 
-/** 🖥️ Tracks browser fullscreen state for shell chrome. `root` scopes which element requests
+/** 👣️ Tracks browser fullscreen state for shell chrome. `root` scopes which element requests
  * fullscreen — see {@link toggleDocumentFullscreen}'s doc. */
 export function useDocumentFullscreen(root?: Element): { isFullscreen: boolean; toggle: () => void } {
   const [isFullscreen, setIsFullscreen] = reactHostPort.useState(() => (typeof document !== "undefined" ? readDocumentFullscreenActive() : false));
@@ -96,7 +96,7 @@ function NavbarFullscreenToggle({ onToggle }: { readonly onToggle?: () => void }
   );
 }
 
-/** 🖥️ Navbar trailing chrome (chat toggle, fullscreen, …) — parks width so center labels do not collapse when panels open. */
+/** 💬️ Navbar trailing chrome (chat toggle, fullscreen, …) — parks width so center labels do not collapse when panels open. */
 export function NavbarTrailingChromeSlot({
   beforeFullscreen,
   showFullscreenToggle = true,
@@ -147,7 +147,7 @@ export interface DesktopTitlebarProps {
   children?: React.ReactNode;
 }
 
-/** 🪟️ Draggable title bar row with a title, extra chrome, and window controls. @see https://www.electronjs.org/docs/latest/tutorial/custom-title-bar */
+/** 🎛️ Draggable title bar row with a title, extra chrome, and window controls. @see https://www.electronjs.org/docs/latest/tutorial/custom-title-bar */
 export function DesktopTitlebar({ title, controls, children }: DesktopTitlebarProps): React.ReactElement {
   const minimizeLabel = useLabel("ui.common.minimize");
   const maximizeLabel = useLabel("ui.common.maximize");

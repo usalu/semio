@@ -50,7 +50,7 @@ describe("generic-stem collision resolution (26/08/17/END-TO-END-TAXONOMY-NORMAL
     expect(role, `${row.path} classifies as "${role}" — a struct/enum/trait/union/impl crept back into package glue, which packageImplementationDestination will hoist onto the owner's canonical slot`).toBe("declaration");
   });
 
-  /** 🐙️ A stricter variant of the same defect: `📦️packages/🟦️typescript/🟦️.ts` (the package's
+  /** 🐛️ A stricter variant of the same defect: `📦️packages/🟦️typescript/🟦️.ts` (the package's
    * own implementation) and any OTHER generic/empty-stem TypeScript file inside that SAME package
    * boundary both classify `role: "implementation"` and both get unconditionally hoisted to
    * `${owner}/${kindOnly}` by `packageImplementationDestination` — with no check that the slot is

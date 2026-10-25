@@ -33,13 +33,13 @@ pub trait WorkerJobAdmissionControl {
     fn admission_identity(&self)->(OperationId,Generation);
     fn admission_grant(&self)->Result<RetainedCloneGrant,ValueError>;
     fn admission_is_open(&self)->bool;
-    /// ♻️ Cancellation keeps paid cleanup available within the original fuel and deadline.
+    /// 🔓️ Cancellation keeps paid cleanup available within the original fuel and deadline.
     fn retirement_is_open(&self)->bool;
-    /// 🪪️ The original cancellation token of the admitting context, when it carries one.
+    /// ✖️ The original cancellation token of the admitting context, when it carries one.
     fn admission_cancel(&self)->Option<&CancelToken>{None}
     fn receive_admission(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>;
 }
-/// 🧾️ Borrows a caller-authored normal budget and recipient without allocating another context ledger.
+/// 💼️ Borrows a caller-authored normal budget and recipient without allocating another context ledger.
 pub struct WorkerJobAdmissionContext<'recipient>{operation:OperationId,generation:Generation,budget:StepBudget,now_us:fn()->Option<u64>,recipient:&'recipient mut RetainedCloneProgress}
 impl<'recipient> WorkerJobAdmissionContext<'recipient>{
     pub fn new(operation:OperationId,generation:Generation,budget:StepBudget,now_us:fn()->Option<u64>,recipient:&'recipient mut RetainedCloneProgress)->Result<Self,ValueError>{if !recipient.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session admission recipient exceeds its original normal authority"))}Ok(Self{operation,generation,budget,now_us,recipient})}
@@ -143,14 +143,14 @@ struct NativeWorkerAuthorityState<J> {
     source_initialized: bool,
 }
 
-/// ♻️ Names only the original authority's child-custody frontier; native session scaffolds remain above it.
+/// 🐝️ Names only the original authority's child-custody frontier; native session scaffolds remain above it.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum OriginalWorkerAuthorityPhase{QuarantinedOutcome,Outcome,OriginalFailure,AdmissionPage,BeginClose,Fault,Job,JobRelease,Parameters,Ledger,Empty}
 
 /// 🪪️ Opaque equality witness for the unchanged original native allocation.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct OriginalWorkerAuthorityIdentity(usize);
-/// 🎟️ Owns one original native authority allocation and all of its producer, receipt and retirement custody.
+/// 🧵️ Owns one original native authority allocation and all of its producer, receipt and retirement custody.
 pub struct OriginalWorkerJobAuthority<J>{original:NativeWorkerAuthorityOwner<J>}
 impl<J> OriginalWorkerJobAuthority<J>{
  pub fn admission_demand()->RetirementDemand{NativeWorkerAuthorityState::<J>::admission_demand()}
@@ -192,7 +192,7 @@ impl<J> OriginalWorkerJobAuthority<J>{
  pub fn close_phase(&self)->OriginalWorkerAuthorityPhase{if self.original.0.is_empty(){OriginalWorkerAuthorityPhase::Empty}else{self.original.close_phase()}}
  pub fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->bool{self.original.has_original_cancel_alias_witness(witness)}
  pub fn return_original_cancel_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,semio_framework_async::CancelTokenRetirementError>{self.original.return_original_cancel_alias_step(witness,grant)}
- /// 🧩️ Publishes already-admitted owned sources into this same unpublished native allocation.
+ /// 🪵️ Publishes already-admitted owned sources into this same unpublished native allocation.
  /// # Safety
  /// The enclosing atomic producer must admit the complete source move before entry.
  pub unsafe fn write_owned_source_prepaid(&mut self,job:&mut Option<J>,params:&mut Option<BatchJobParams>){unsafe{self.original.write_owned_source_prepaid(job,params)}}
@@ -256,16 +256,16 @@ impl<J> NativeWorkerAuthorityState<J>{
  pub fn job_mut(&mut self)->Result<&mut J,ValueError>{if self.retained_receipt_pending||!self.outcome.is_empty()||!self.quarantined_outcome.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original semantic result requires acknowledgement before mutable job access"))}Ok(self.job.original_mut().expect("original authority retains its producer"))}
  pub fn child_custody_is_empty(&self)->bool{self.job.is_empty()&&self.params.is_none()&&self.cancel_retirement.is_none()&&!self.payload.has_unpublished_page()&&self.payload.fault_is_empty()&&!self.payload.ledger_is_present()&&self.outcome.is_empty()&&self.quarantined_outcome.is_empty()&&self.step_fault.is_none()&&self.step_fault_retirement.is_none()&&self.panic_fault.is_none()}
  pub fn close_phase(&self)->OriginalWorkerAuthorityPhase{if !self.quarantined_outcome.is_empty(){return OriginalWorkerAuthorityPhase::QuarantinedOutcome}if !self.outcome.is_empty(){return OriginalWorkerAuthorityPhase::Outcome}if self.step_fault.is_some()||self.step_fault_retirement.is_some()||self.panic_fault.is_some(){return OriginalWorkerAuthorityPhase::OriginalFailure}if self.payload.has_unpublished_page(){return OriginalWorkerAuthorityPhase::AdmissionPage}if self.close_stage==0{return OriginalWorkerAuthorityPhase::BeginClose}if !self.payload.fault_is_empty(){return OriginalWorkerAuthorityPhase::Fault}match self.close_stage{1=>OriginalWorkerAuthorityPhase::Job,2=>OriginalWorkerAuthorityPhase::JobRelease,3=>OriginalWorkerAuthorityPhase::Parameters,_ if self.payload.ledger_is_present()=>OriginalWorkerAuthorityPhase::Ledger,_=>OriginalWorkerAuthorityPhase::Empty}}
- fn terminal_authority_demands(&self)->Result<RetirementDemand,ValueError>{Ok(if self.payload.ledger_is_present(){RetirementDemand{release_bytes:OriginalWorkerPayload::ledger_release_bytes(),depth:1,..Default::default()}}else{Default::default()})}
+ fn terminal_authority_demands(&self)->Result<RetirementDemand,ValueError>{Ok(self.payload.ledger_demands())}
  fn original_admission_page_demands(&self)->RetirementDemand{self.payload.unpublished_demands()}
  fn close_original_admission_page(&mut self,grant:RetainedCloneGrant)->WorkerJobCloseStep{match self.payload.close_unpublished(grant){RetainedCloneStep::Complete(progress)=>WorkerJobCloseStep::Complete{progress},step=>WorkerJobCloseStep::Pending{progress:step.progress()}}}
  pub fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->bool{self.close_stage==3&&self.params.is_none()&&self.cancel_retirement.as_ref().is_some_and(|owner|owner.is_original_alias_witness(witness))}
  pub fn return_original_cancel_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,semio_framework_async::CancelTokenRetirementError>{if self.close_stage!=3||self.params.is_some(){return Ok(None)}match self.cancel_retirement.as_mut(){Some(original)if !original.terminal_is_empty()=>original.return_alias_step(witness,grant).map(Some),_=>Ok(None)}}
- /// 🧩️ Installs the original owned sources after their single enclosing native admission.
+ /// 📝️ Installs the original owned sources after their single enclosing native admission.
  /// # Safety
  /// The caller must have admitted the complete source move and must retain exclusive unpublished native storage.
  pub unsafe fn write_owned_source_prepaid(&mut self,job:&mut Option<J>,params:&mut Option<BatchJobParams>){assert!(!self.job.present&&self.params.is_none()&&self.is_initialized());let original=params.as_ref().expect("prepaid original parameters");assert_eq!((original.operation,original.generation),(self.job.operation,self.job.generation));self.job.original.write(job.take().expect("prepaid original producer"));self.job.present=true;self.source_initialized=true;self.params=params.take();self.close_stage=0;}
- /// 🔏️ Publishes only the completed original initializer into the same prepaid native header.
+ /// 🧲️ Publishes only the completed original initializer into the same prepaid native header.
  /// # Safety
  /// The enclosing caller must admit the presence handoff before entry and retain the same parameter owner.
  pub unsafe fn publish_initialized_source_prepaid(&mut self,params:&mut Option<BatchJobParams>){assert!(self.source_initialized&&!self.job.present&&self.params.is_none());let original=params.as_ref().expect("prepaid original parameters");assert_eq!((original.operation,original.generation),(self.job.operation,self.job.generation));self.job.present=true;self.params=params.take();self.close_stage=0;}
@@ -393,7 +393,7 @@ fn worker_job_authority_close_demands<J:InteractiveJob>(authority:&NativeWorkerA
 
 fn worker_payload_step(step:RetainedCloneStep)->WorkerJobCloseStep{WorkerJobCloseStep::Pending{progress:step.progress()}}
 
-/// 🪙️ Posts only original wrapper effects not already charged by its nested original caller.
+/// 📪️ Posts only original wrapper effects not already charged by its nested original caller.
 pub fn receive_original_worker_close_effects(cx:&mut StepContext<'_>,before:RetainedCloneProgress,step:WorkerJobCloseStep)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
     let after=cx.retained_progress();let report=step.progress();let subtract=|reported:usize,initial:usize,current:usize|current.checked_sub(initial).and_then(|posted|reported.checked_sub(posted)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker close reported fewer effects than its original recipient"));
     let progress=RetainedCloneProgress{copied_items:subtract(report.copied_items,before.copied_items,after.copied_items)?,copied_bytes:subtract(report.copied_bytes,before.copied_bytes,after.copied_bytes)?,retained_capacity_bytes:subtract(report.retained_capacity_bytes,before.retained_capacity_bytes,after.retained_capacity_bytes)?,released_bytes:subtract(report.released_bytes,before.released_bytes,after.released_bytes)?};cx.consume_fuel(progress.copied_items as u64);cx.consume_retained(progress)?;Ok(step)
@@ -403,7 +403,7 @@ pub fn receive_original_worker_close_result(cx:&mut StepContext<'_>,before:Retai
 
 
 impl<J> NativeWorkerAuthorityState<J>{
- /// 🧱️ Initializes the actual prepaid native authority in its enclosing owners uninitialized stable slot.
+ /// ⏳️ Initializes the actual prepaid native authority in its enclosing owners uninitialized stable slot.
  /// # Safety
  /// The caller must exclusively own this aligned storage and must admit its actual native extent and page reservation before entry.
     pub unsafe fn initialize_pending_at(target:*mut Self,operation:OperationId,generation:Generation,reservation:OriginalWorkerPageReservation){
@@ -483,11 +483,11 @@ impl<J> NativeWorkerAuthorityOwner<J> {
 
 impl<J> NativeWorkerAuthorityOwner<J>{
     fn terminal_authority_demands(&self)->Result<RetirementDemand,ValueError>{
-        if self.payload.ledger_is_present(){return Ok(RetirementDemand{copy_bytes:0,release_bytes:OriginalWorkerPayload::ledger_release_bytes(),depth:1,..Default::default()});}
+        if self.payload.ledger_is_present(){return Ok(self.payload.ledger_demands());}
         let release_bytes=self.0.capacity().checked_mul(size_of::<NativeWorkerAuthorityState<J>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"worker authority physical backing overflow"))?;
         Ok(RetirementDemand{copy_bytes:0,release_bytes,depth:1,..Default::default()})
     }
-    /// 🧺️ Releases the original ledger before dropping its terminal authority in place and its vector backing.
+    /// 👷️ Releases the original ledger before dropping its terminal authority in place and its vector backing.
     fn close_terminal_worker_authority(&mut self,grant:RetainedCloneGrant)->Result<WorkerJobCloseStep,ValueError>{
         let authority=self;let demand=authority.terminal_authority_demands()?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}

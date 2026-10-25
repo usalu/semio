@@ -25,11 +25,11 @@ use crate::standards::v1_1::subsets::basic::schema::mutations::support::resolve_
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetBasicAttribute {
-    pub(crate) path: NodePath,
-    pub(crate) name: String,
-    pub(crate) value: Option<SvgAttributeValue>,
+    pub path: NodePath,
+    pub name: String,
+    pub value: Option<SvgAttributeValue>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
 }
 
 impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetBasicAttribute

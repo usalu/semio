@@ -114,7 +114,7 @@ pub struct Version {
     pub patch: u64,
 }
 
-/// 🌉️ Hand-written, not derived: `#[value(…)]` has no `into`/`try_from` equivalent — this mirrors
+/// 🌱️ Hand-written, not derived: `#[value(…)]` has no `into`/`try_from` equivalent — this mirrors
 /// the retired `#[serde(into = "String", try_from = "String")]` bridge via the existing
 /// `Display`/`FromStr` impls below.
 impl ToValue for Version {
@@ -155,7 +155,7 @@ impl Version {
         Self { major, minor, patch }
     }
 
-    /// 🔢️ Parses a strict `major.minor.patch` triple — no pre-release/build metadata, no leniency.
+    /// 💊️ Parses a strict `major.minor.patch` triple — no pre-release/build metadata, no leniency.
     pub fn parse(input: &str) -> Result<Self, VersionParseError> {
         let mut segments = input.split('.');
         let (Some(major), Some(minor), Some(patch), None) = (segments.next(), segments.next(), segments.next(), segments.next()) else {
@@ -200,14 +200,14 @@ impl TryFrom<String> for Version {
 pub struct VersionPin(pub Version);
 
 impl VersionPin {
-    /// 🔢️ Parses the one wire form, `=X.Y.Z`; every range (`*`, `^`, `~`, `>=`, a bare triple) is refused.
+    /// 📡️ Parses the one wire form, `=X.Y.Z`; every range (`*`, `^`, `~`, `>=`, a bare triple) is refused.
     pub fn parse(input: &str) -> Result<Self, VersionPinParseError> {
         let trimmed = input.trim();
         let Some(rest) = trimmed.strip_prefix('=') else { return Err(VersionPinParseError::NotExact(trimmed.to_string())) };
         Ok(Self(Version::parse(rest)?))
     }
 
-    /// 📌️ Pins the version a crate of this tree is compiled at. [`tree_pin!`](crate::tree_pin) evaluates it in a
+    /// 🌳️ Pins the version a crate of this tree is compiled at. [`tree_pin!`](crate::tree_pin) evaluates it in a
     /// `const` over the declaring crate's own `CARGO_PKG_VERSION`, so a version that is not a strict
     /// `major.minor.patch` triple is a compile error in that crate, never a guest trap.
     pub const fn of_tree(crate_version: &str) -> Self {
@@ -243,7 +243,7 @@ impl VersionPin {
         &self.0 == version
     }
 
-    /// ✅️ Convenience for the dependency graph: parses `raw` and compares; an unparsable target version never matches.
+    /// 🕸️ Convenience for the dependency graph: parses `raw` and compares; an unparsable target version never matches.
     pub fn matches_raw(&self, raw: &str) -> bool {
         Version::parse(raw).is_ok_and(|version| self.matches(&version))
     }
@@ -255,7 +255,7 @@ impl std::fmt::Display for VersionPin {
     }
 }
 
-/// 🚧️ Failure parsing a `VersionPin`: anything but `=X.Y.Z` (a range such as `*`, `^`, `~` or `>=` included).
+/// ❌️ Failure parsing a `VersionPin`: anything but `=X.Y.Z` (a range such as `*`, `^`, `~` or `>=` included).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum VersionPinParseError {
     NotExact(String),
@@ -317,7 +317,7 @@ impl<'de> Deserialize<'de> for VersionPin {
     }
 }
 
-/// 📌️ The exact pin of the tree the invoking crate is compiled from: `semio_framework::tree_pin!()` expands in the
+/// 🧷️ The exact pin of the tree the invoking crate is compiled from: `semio_framework::tree_pin!()` expands in the
 /// declaring crate, so `CARGO_PKG_VERSION` is that crate's own workspace version, checked at compile time.
 #[macro_export]
 macro_rules! tree_pin {
@@ -347,7 +347,7 @@ impl PluginDependency {
 //#endregion 🔖️PluginDependency
 //#region 🔖️ArtifactContribution
 
-/// 🗂️ The `verb`/`entity`/`kind`/`record` semantic identity of one contributed mutation, carried as
+/// 📹️ The `verb`/`entity`/`kind`/`record` semantic identity of one contributed mutation, carried as
 /// owned strings on the wire (the native `SemanticDescriptor` this mirrors lives in the os-kernel
 /// protocol crate, which `semio-framework` must not require plugin manifests to link against).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
@@ -361,7 +361,7 @@ pub struct ContributedMutationSemantics {
     pub record: String,
 }
 
-/// 🗂️ One mutation a plugin contributes onto an artifact kind it depends on — the manifest-declared
+/// 🏺️ One mutation a plugin contributes onto an artifact kind it depends on — the manifest-declared
 /// counterpart of a `contributor.list-artifact-mutations` roster entry (contract freeze §3/§6).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -396,7 +396,7 @@ pub struct ContributedInferenceMetadata {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub depends_on: Vec<String>,
-    /// 📜️ The PUBLISHED request/response contract of this inference — what a generic client has to
+    /// 🧬️ The PUBLISHED request/response contract of this inference — what a generic client has to
     /// send and what it gets back. Absent for an inference whose owner has not declared one: a
     /// gateway that cannot read a contract refuses the call by name instead of dispatching a body
     /// the guest will reject after minutes of guest time (`📓️pz2-puzzle-describe-under-budget.md`
@@ -431,7 +431,7 @@ pub struct InferencePayloadContract {
     pub commit: Option<InferenceCommitBinding>,
 }
 
-/// 📌️ How one inference's result becomes a document edit: the artifact action that commits it. The
+/// 🪢️ How one inference's result becomes a document edit: the artifact action that commits it. The
 /// action receives the result's fields it declares as arguments, and runs through the ordinary edit
 /// path — its own policy, undo and ledger — so a committed result is an edit like any other.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
@@ -442,7 +442,7 @@ pub struct InferenceCommitBinding {
     pub action: String,
 }
 
-/// 🔗️ How one inference's canonical request is BOUND to an artifact document. An inference over an
+/// 📄️ How one inference's canonical request is BOUND to an artifact document. An inference over an
 /// artifact cannot be expressed by a client at all — nobody can type 4 096 bitmap cells into a tool
 /// call — so the plugin declares the payload field its own document goes into and the host fills it
 /// from the artifact the caller named. Declared, never invented: the host writes exactly the field
@@ -463,7 +463,7 @@ pub struct InferenceArtifactBinding {
 /// cannot read.
 pub const INFERENCE_ARTIFACT_PACK_BASE64: &str = "artifact-pack-base64";
 
-/// 🗂️ Everything one plugin contributes onto one artifact kind it depends on — see the registration
+/// 🎁️ Everything one plugin contributes onto one artifact kind it depends on — see the registration
 /// gates in contract freeze §4 (accepted only when `artifact_kind`'s owner is a direct
 /// `PluginManifest.dependencies` entry).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
@@ -481,7 +481,7 @@ pub struct ArtifactContributionDescriptor {
 }
 
 //#endregion 🔖️ArtifactContribution
-/// 🧩️ One host-aggregated plugin contribution entry — the element shape of the paged
+/// 🔌️ One host-aggregated plugin contribution entry — the element shape of the paged
 /// `setContributions` command payload, never a view-state field.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
@@ -491,7 +491,7 @@ pub struct ProgramContributionEntry {
     pub topic_contribution: Option<TopicContribution>,
 }
 
-/// 📕️ Parses one assembled `setContributions` payload into typed entries — the ONE route
+/// 📖️ Parses one assembled `setContributions` payload into typed entries — the ONE route
 /// contributions reach a guest by.
 pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
     semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
@@ -503,7 +503,7 @@ pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
 /// 📇️ Topic under which a plugin names the artifact-index document the os shell opens for a hub space; the framework reads the contribution and never names the plugin that supplies it.
 pub const SPACE_INDEX_TOPIC: &str = "os.space-index";
 
-/// 📇️ Payload of [`SPACE_INDEX_TOPIC`]: the dialect of the app that edits the space index and the document schema the shell opens it with.
+/// 🪐️ Payload of [`SPACE_INDEX_TOPIC`]: the dialect of the app that edits the space index and the document schema the shell opens it with.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SpaceIndexContribution {

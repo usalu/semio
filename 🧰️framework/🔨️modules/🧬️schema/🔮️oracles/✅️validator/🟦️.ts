@@ -1,4 +1,4 @@
-/** 🧬️ The one strict Ajv oracle for semio JSON schemas: Ajv in strict mode with the `x-semio-*` vendor annotation vocabulary
+/** 🔮️ The one strict Ajv oracle for semio JSON schemas: Ajv in strict mode with the `x-semio-*` vendor annotation vocabulary
  * (`../../🧬️vendor-annotation-vocabulary/🔣️.json`) registered as annotation keywords, each with its value's meta-schema. Every schema law builds its validator here
  * instead of registering vendor keywords one call site at a time, so a schema that gains an annotation (e.g. `x-semio-note` in
  * `📇️directory/🧬️schema/🔣️.json`) keeps compiling everywhere, and a keyword outside the vocabulary still fails
@@ -20,7 +20,7 @@ export const SEMIO_SCHEMA_VENDOR_VOCABULARY_DOCUMENTS_V1: readonly { readonly $i
  * string formats, checked by `ajv-formats`, and the proto-derived spellings that stay annotations and never reject. */
 export const SEMIO_SCHEMA_FORMAT_POLICY_V1: { readonly asserted: readonly FormatName[]; readonly annotation: readonly string[] } = { asserted: formatPolicy.asserted as FormatName[], annotation: formatPolicy.annotation };
 
-/** 🧬️ A strict Ajv (`options` override the defaults) that knows every declared `x-semio-*` annotation and every pinned `format`. */
+/** 🏠️ A strict Ajv (`options` override the defaults) that knows every declared `x-semio-*` annotation and every pinned `format`. */
 export function semioSchemaAjvV1(options: Options = {}): Ajv {
   const ajv = new Ajv({ strict: true, ...options });
   addFormats(ajv, [...SEMIO_SCHEMA_FORMAT_POLICY_V1.asserted]);

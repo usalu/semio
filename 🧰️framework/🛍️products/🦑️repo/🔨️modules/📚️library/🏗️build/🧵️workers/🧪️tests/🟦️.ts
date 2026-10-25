@@ -1,6 +1,6 @@
 /** 🧵️ Contract: the worker pool returns exactly what a serial run returns (cross-checked against Python hashlib), keeps input order, bounds its threads, reports progress, cancels promptly as a pool and per task, and survives a failing or crashing task. The scenarios live in `./🔣️.json` as language-agnostic data. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {createHash} from "node:crypto";
 import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";

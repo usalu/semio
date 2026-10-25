@@ -113,7 +113,6 @@ fn original_turn_failure_receiving_preserves_five_owned_causes(){
   for denied in [RetainedCloneGrant{maximum_items:0,..closing},RetainedCloneGrant{maximum_depth:0,..closing}]{let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(denied));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.original().unwrap().primary_receiving().unwrap().primary.as_ref().unwrap().message.as_ptr(),pointers[0]);}
   for turn in 0..100000{if owner.terminal_is_empty(){break}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(closing));let effects=result.unwrap().progress();assert!(effects.fits(closing));assert_eq!((heap.requested_bytes,heap.released_bytes),(effects.retained_capacity_bytes,effects.released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;assert!(turn<99999)}assert!(owner.terminal_is_empty());assert_eq!(born,freed);assert_eq!(semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner)).1,Default::default());
  }
- eprintln!("[DEBUG] five original receiving causes captureHeap0=true projectionHeap0=true samePointers=true deniedSystem0=true copies1_3_64=true fullClose=true");
 }
 
 /// 🧾️ One real original caller retains the cumulative copy span independently of its last primary receipt.
@@ -130,5 +129,4 @@ fn original_turn_failure_enclosing_effects_preserve_last_primary_and_same_caller
  let pointer=failure.primary.message().as_ptr();let projected=semio_framework_job::project_original_turn_failure(&failure,&[1,1]).unwrap();assert!(matches!(projected,V::IntrinsicNumber(semio_framework_value::Number::UInt(24))));assert_eq!(failure.primary.message().as_ptr(),pointer);
  failure.receipt_refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"Distinct original receipt refusal"));failure.context_refusal=Some(ValueError::literal(ValueRefusalKind::WorkLimit,"Distinct original context refusal"));
  let mut owner=ControlledRetirement::retain(failure);for _ in 0..100000{if owner.terminal_is_empty(){break}caller.turn(stock,|cx|{let demand=owner.next_demand(7)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;Ok(())}).unwrap();}assert!(owner.terminal_is_empty());caller.retire(stock);
- eprintln!("[DEBUG] actual original source/copy recipient retains span24 independently of last7, heap0 construction/projection, same caller paid close; native execution required");
 }

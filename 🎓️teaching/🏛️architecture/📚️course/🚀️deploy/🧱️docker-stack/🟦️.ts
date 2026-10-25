@@ -37,7 +37,7 @@ async function mintLocalCertificate(caddyImage: string, signal: AbortSignal): Pr
   return `${minted.stdout}\n`;
 }
 
-/** 🧱️ `docker-stack-check [--tag <tag>] [--http-port <n>] [--https-port <n>] [--keep]` — the stack as a host gets and
+/** ✅️ `docker-stack-check [--tag <tag>] [--http-port <n>] [--https-port <n>] [--keep]` — the stack as a host gets and
  * runs it: the two stack files copied out of the image into an empty directory, an `.env` of overrides beside them (the
  * proctor host `localhost` — Caddy's internal CA, no public certificate —, the tag, the ports and a request body limit
  * for both services), `docker compose config`, `caddy fmt` and `caddy validate` in the Caddy image, `up --wait` on a

@@ -1,6 +1,7 @@
 //! 🤝️ `engagement-submit` command.
 
 use crate::set_fill_count;
+use semio_framework_tool_run::{TOOL_RUN_ARG_TOOL_ID};
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::apply_puzzle3d_focus_selection, semio_s_artifact_puzzle_3d_editor_session::drive_precompute, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_SELECTION_METHOD_LASSO, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_SELECTION_METHOD_PICK, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_SELECTION_METHOD_RECTANGLE};
 use semio_framework_pack_json::Value;

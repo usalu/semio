@@ -5,7 +5,7 @@
 //!
 //! 🔗️ [Least squares conformal maps](https://doi.org/10.1145/566654.566590)
 
-use semio_framework_3d_mesh_document::*;
+use super::*;
 use std::collections::BTreeMap;
 
 

@@ -1,4 +1,4 @@
-//! 🔪️ Plane sections of triangle meshes as oriented 2D linework (plan cuts, elevations, sections).
+//! 📑️ Plane sections of triangle meshes as oriented 2D linework (plan cuts, elevations, sections).
 //!
 //! The plane is treated as nudged infinitesimally so that vertices exactly on it count as being on its positive side (symbolic perturbation): every closed mesh then yields closed, non-degenerate chains and coplanar faces yield nothing.
 //! Segments are directed so that the material lies on their left; chained outer boundaries are counter-clockwise, holes clockwise.
@@ -15,7 +15,7 @@ pub struct Polyline {
     pub closed: bool,
 }
 
-/// 🔪️ Section of `mesh` with the plane through `origin` with `normal`; 2D coordinates are `(dot(p - origin, u), dot(p - origin, v))` with `u` the projection of `u_axis` onto the plane and `v = normal x u`. `eps` is the classification band for the signed distance.
+/// ◻️ Section of `mesh` with the plane through `origin` with `normal`; 2D coordinates are `(dot(p - origin, u), dot(p - origin, v))` with `u` the projection of `u_axis` onto the plane and `v = normal x u`. `eps` is the classification band for the signed distance.
 pub fn section_plane(mesh: &TriMesh, origin: Xyz, normal: Xyz, u_axis: Xyz, eps: f64) -> Vec<[Point; 2]> {
     let n = normalize3(normal);
     let u = normalize3(sub3(u_axis, [n[0] * dot3(u_axis, n), n[1] * dot3(u_axis, n), n[2] * dot3(u_axis, n)]));
@@ -100,7 +100,7 @@ fn drop_collinear(points: Vec<Point>, closed: bool, eps: f64) -> Vec<Point> {
     (0..n).filter(|&i| keep(i)).map(|i| points[i]).collect()
 }
 
-/// 〰️ Chains directed segments end-to-start (endpoints closer than `eps` coincide) into polylines with collinear intermediate points removed; open chains start where no segment arrives.
+/// 🏁️ Chains directed segments end-to-start (endpoints closer than `eps` coincide) into polylines with collinear intermediate points removed; open chains start where no segment arrives.
 pub fn chain(segments: &[[Point; 2]], eps: f64) -> Vec<Polyline> {
     let mut snap = Snap { eps: eps.max(1e-12), cells: BTreeMap::new(), points: Vec::new() };
     let edges: Vec<(usize, usize)> = segments.iter().map(|s| (snap.node(s[0]), snap.node(s[1]))).filter(|(a, b)| a != b).collect();

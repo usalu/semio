@@ -16,7 +16,7 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of lowpoly camera and paint state.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value_derive::NativeReceive)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "lowpoly.presence")]
 #[dsl(layout = "lines")]
@@ -27,7 +27,11 @@ pub struct LowpolyPresence {
     pub paint_utility: String,
 }
 
-impl store::ArtifactPresenceSnapshot for LowpolyPresence {}
+impl store::ArtifactPresenceSnapshot for LowpolyPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl Default for LowpolyPresence {
     fn default() -> Self {

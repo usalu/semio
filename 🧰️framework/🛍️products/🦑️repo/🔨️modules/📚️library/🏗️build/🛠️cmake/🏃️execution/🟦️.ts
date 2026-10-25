@@ -20,7 +20,7 @@ import{readCmakeCacheFactsV1,cmakeIntentV1,cmakeEnvironmentV1}from"../📡️dat
 import{withCmakeInputsV1,cmakeInputBytesV1,cmakeInputFactsV1,recheckCmakeInputsV1,type CmakeInputsV1}from"../📥️inputs/🟦️.ts";
 import{runCmakeOwnedStageV1}from"../🎬️stage/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json" with { type: "json" };
-import { runtimeWhichV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeWhichV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 const policy=schema.definitions.Policy.const,hash=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).digest("hex");
 function program(name:string,environment:Readonly<Record<string,string|undefined>>):string{const path=runtimeWhichV1(name,{PATH:environment.PATH??Object.entries(environment).find(([key])=>key.toLowerCase()==="path")?.[1]});if(!path)throw Error("CMake prerequisite missing; native bootstrap must provide "+name);return realpathSync(path);}
 function requireRoot(inputs:CmakeInputsV1):void{for(const[name,expected]of Object.entries(policy.source))if(cmakeInputFactsV1(inputs).find(row=>row.name==="source/"+name)?.sha256!==expected)throw Error("Current closed CMake root changed; explicit dependency/target design required");}

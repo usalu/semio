@@ -1,4 +1,4 @@
-//! 🔺️ Polygon triangulation with holes: hole bridging (Eberly) followed by ear clipping.
+//! 💠️ Polygon triangulation with holes: hole bridging (Eberly) followed by ear clipping.
 //!
 //! Deterministic, exact on the input vertices (no Steiner points): every triangle corner is an input vertex, so the triangle areas sum to the polygon area minus the hole areas.
 //! Collinear boundary vertices are kept (a vertex lying on a boundary edge splits the adjacent triangle), so the boundary of the triangulation equals the input rings vertex for vertex; this keeps developed curved faces crack-free.
@@ -147,7 +147,7 @@ fn unlink(nodes: &mut Nodes, node: usize) -> usize {
     n
 }
 
-/// 🔺️ Triangulates `outer` with `holes`; degenerate rings (fewer than three vertices) are ignored.
+/// 🔻️ Triangulates `outer` with `holes`; degenerate rings (fewer than three vertices) are ignored.
 pub fn triangulate(outer: &[Point], holes: &[Vec<Point>]) -> Triangulation {
     let mut vertices: Vec<Point> = outer.to_vec();
     let mut offsets = vec![0usize];

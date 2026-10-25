@@ -107,7 +107,7 @@ impl TextSystem {
         self.shape_misses
     }
 
-    /// 🧱️ Shapes a wrapped, aligned paragraph — [`Self::shape`]/[`Self::layout_for`]'s minimal
+    /// 📝️ Shapes a wrapped, aligned paragraph — [`Self::shape`]/[`Self::layout_for`]'s minimal
     /// unwrapped run plus weight/line-height/letter-spacing/alignment, for a caller (e.g. a page-layout
     /// text frame) that needs real paragraph typesetting rather than a single measured run. Uncached
     /// like [`Self::measure_wrapped`] — `max_width` and `style`'s extra fields vary too continuously
@@ -144,7 +144,7 @@ impl TextSystem {
 //#endregion 🔖️Shape
 
 //#region 🔖️Atlas
-/// 🅰️ One rasterized glyph's atlas placement: origin, size and bearings a painter needs to position the
+/// 📋️ One rasterized glyph's atlas placement: origin, size and bearings a painter needs to position the
 /// glyph quad, plus which page it landed on. UV coordinates are deliberately NOT stored here — call
 /// [`Self::uv_rect`] with the atlas's *current* dimensions at paint time. This is what makes atlas
 /// growth (see [`AtlasPage::place`]) safe without invalidating any previously returned `GlyphEntry`:
@@ -163,7 +163,7 @@ pub struct GlyphEntry {
 }
 
 impl GlyphEntry {
-    /// 📐️ `[u0, v0, u1, v1]` normalized against `atlas_width`/`atlas_height` — pass
+    /// ➗️ `[u0, v0, u1, v1]` normalized against `atlas_width`/`atlas_height` — pass
     /// [`TextSystem::atlas_dimensions`]/[`TextSystem::color_atlas_dimensions`] (matching
     /// [`Self::is_color`]) here, read fresh every paint call, never cached.
     pub fn uv_rect(&self, atlas_width: u32, atlas_height: u32) -> [f32; 4] {
@@ -220,7 +220,7 @@ impl AtlasPage {
         Self { key, channels, width, height, pixels: vec![0; (width * height * channels) as usize], cursor_x: 1, cursor_y: 1, row_height: 0, generation: 0, id: None }
     }
 
-    /// 📐️ Bin-packs `w`×`h` into the current row, wrapping and growing as needed, blits `bitmap`, and
+    /// 📍️ Bin-packs `w`×`h` into the current row, wrapping and growing as needed, blits `bitmap`, and
     /// returns the placement. Never panics on a pathological glyph wider than the whole page — worst
     /// case it silently clips via [`Self::blit`]'s own bounds checks, which real UI glyph sizes never
     /// approach.

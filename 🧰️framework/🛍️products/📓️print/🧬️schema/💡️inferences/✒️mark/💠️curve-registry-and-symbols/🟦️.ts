@@ -61,7 +61,7 @@ const STAR_KR = Math.sin(Math.PI / 10) / Math.sin((7 * Math.PI) / 10);
 const STAR_KX = Math.sin(TAU / 10) * STAR_KR;
 const STAR_KY = -Math.cos(TAU / 10) * STAR_KR;
 
-/** ✒️ Draws one symbol of the given area into a path context, centred on the origin. */
+/** 🖍️ Draws one symbol of the given area into a path context, centred on the origin. */
 export function drawVizSymbol(kind: VizSymbolKind, context: VizPathContext, size: number): void {
   switch (kind) {
     case "cross": {
@@ -208,7 +208,7 @@ export function drawVizSymbol(kind: VizSymbolKind, context: VizPathContext, size
   }
 }
 
-/** ✒️ `\SemioVizSymbol`: one glyph of the given area recorded as path commands. */
+/** 🔣️ `\SemioVizSymbol`: one glyph of the given area recorded as path commands. */
 export function vizSymbol(kind: VizSymbolKind, size = 64, at: VizPoint = [0, 0]): VizPathCommand[] {
   const recorder = vizPathRecorder();
   const shifted: VizPathContext = {

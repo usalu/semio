@@ -3,7 +3,8 @@
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use crate::terminology::Block2dLabels;
 use crate::{block2d_action, ui_label, ui_text, ui_value_map, ui_value_text};
-use semio_framework_plugin::plugin_app_close_prelude::{input, Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{input, InputKind, Trigger};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

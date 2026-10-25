@@ -4,7 +4,7 @@ import {join} from "node:path";
 
 /** 📌️ Format of the persisted generation receipt; see `./🧬️schema/🔣️.json`. */
 export const NX_GENERATION_FORMAT=1;
-/** 📌️ File name of the receipt inside one Nx workspace data namespace. */
+/** 📄️ File name of the receipt inside one Nx workspace data namespace. */
 export const NX_GENERATION_FILE="semio-nx-generation.json";
 /** 🗂️ The graph files one finished construction leaves in the namespace; all three must exist for a reusable generation. */
 export const NX_GENERATION_GRAPH_FILES=["project-graph.json","file-map.json","source-maps.json"] as const;
@@ -16,7 +16,7 @@ type Stamp=readonly [dev:number,ino:number,size:number,mtimeMs:number,ctimeMs:nu
 /** 🎫️ What a generation was built from: the sealed portable graph it projects, the plugin implementation and the Nx tooling. */
 export interface NxGenerationClaimV1 {readonly graphDigest:string;readonly implementation:string;readonly tooling:string;readonly identity:string}
 
-/** 📌️ The persisted proof that the graph files of a namespace belong to exactly one claim. */
+/** 🧾️ The persisted proof that the graph files of a namespace belong to exactly one claim. */
 export interface NxGenerationReceiptV1 {readonly format:typeof NX_GENERATION_FORMAT;readonly claim:NxGenerationClaimV1;readonly graph:Readonly<Record<(typeof NX_GENERATION_GRAPH_FILES)[number],Stamp>>}
 
 const sha256=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex");
@@ -30,7 +30,7 @@ export async function nxGenerationIdentityV1(root:string):Promise<string>{
  return sha256(Buffer.concat(parts.flatMap(part=>[Buffer.from(`${part.byteLength}:`),part])));
 }
 
-/** 🎫️ Builds the claim of one invocation from its pin, implementation and tooling identities. */
+/** 🔧️ Builds the claim of one invocation from its pin, implementation and tooling identities. */
 export async function nxGenerationClaimV1(root:string,environment:Readonly<Record<string,string|undefined>>):Promise<NxGenerationClaimV1|undefined>{
  const graphDigest=environment.SEMIO_BUILD_GRAPH_DIGEST,implementation=environment.SEMIO_NX_IMPLEMENTATION_IDENTITY,tooling=environment.SEMIO_NX_TOOLING_IDENTITY;
  if(!graphDigest||!implementation||!tooling||![graphDigest,implementation,tooling].every(value=>hex.test(value)))return undefined;

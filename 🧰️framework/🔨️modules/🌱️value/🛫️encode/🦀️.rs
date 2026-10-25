@@ -65,7 +65,7 @@ impl<'a> NativeEncodeControl<'a> {
         self.checkpoint()?;self.charge(capacity)?;self.retirement.as_mut().unwrap().close_step(grant)
     }
 
-    /// 🫴️ Installs one explicit caller recipient before any retained encoder ownership is created.
+    /// 🆕️ Installs one explicit caller recipient before any retained encoder ownership is created.
     pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeEncodeRetirementRecipient)->Result<(),ValueError>{
         if self.retirement.is_some()||!recipient.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native encode requires one empty explicit retirement recipient"));}
         self.retirement=Some(recipient);Ok(())

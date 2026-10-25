@@ -39,7 +39,7 @@ export type TextSize = "normal" | "large" | "larger" | "largest";
 /** 📱️ Desktop or tablet, the two layouts a window that is not a phone can pin. */
 export type CourseDevice = "desktop" | "tablet";
 
-/** 📱️ Every {@link CourseDevice} with its label and icon. */
+/** 🖥️ Every {@link CourseDevice} with its label and icon. */
 export const COURSE_DEVICES: readonly { readonly value: CourseDevice; readonly label: CourseLabelKey; readonly icon: IconName }[] = [
   { value: "desktop", label: "course.preferences.deviceDesktop", icon: "monitor" },
   { value: "tablet", label: "course.preferences.deviceTablet", icon: "tablet" },
@@ -69,16 +69,16 @@ export const LOCALE_ICONS: { readonly [L in CourseLocale]: IconName } = { en: "g
 /** 🐾️ The label of every {@link PetChoice}. */
 export const PET_CHOICE_LABELS: { readonly [C in PetChoice]: CourseLabelKey } = { off: "course.preferences.petsOff", still: "course.preferences.petsStill", calm: "course.preferences.petsCalm", lively: "course.preferences.petsLively" };
 
-/** 🐾️ The icon of every {@link PetChoice}. */
+/** 🐈️ The icon of every {@link PetChoice}. */
 export const PET_CHOICE_ICONS: { readonly [C in PetChoice]: IconName } = { off: "eye-off", still: "pause", calm: "smile", lively: "sparkles" };
 
 /** 👥️ The label of every {@link OthersChoice}. */
 export const OTHERS_CHOICE_LABELS: { readonly [C in OthersChoice]: CourseLabelKey } = { never: "course.preferences.othersNever", submitted: "course.preferences.othersSubmitted", always: "course.preferences.othersAlways" };
 
-/** 👥️ The icon of every {@link OthersChoice}. */
+/** 👤️ The icon of every {@link OthersChoice}. */
 export const OTHERS_CHOICE_ICONS: { readonly [C in OthersChoice]: IconName } = { never: "eye-off", submitted: "check", always: "users" };
 
-/** 📱️ The display preferences of one device. */
+/** ⚙️ The display preferences of one device. */
 export interface CoursePreferences {
   readonly locale?: CourseLocale;
   readonly theme: ThemeChoice;

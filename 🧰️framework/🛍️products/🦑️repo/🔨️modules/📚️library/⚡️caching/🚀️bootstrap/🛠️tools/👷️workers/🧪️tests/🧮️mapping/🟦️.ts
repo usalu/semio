@@ -3,9 +3,9 @@ import {expect,test,setDefaultTimeout} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {nxBatchCapableV1,nxWorkerSettingsV1} from "../../🟦️.ts";
-import {requireWorkerPlanV1,workerContractFieldsV1} from "../../../../../../🏗️build/👷️workers/🟦️.ts";
+import {requireWorkerPlanV1,workerContractFieldsV1} from "../../../../../../📦️packages/🟦️typescript/🏗️build/👷️workers/🟦️.ts";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
 

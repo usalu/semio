@@ -1,5 +1,5 @@
 import {afterAll, expect, test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
@@ -73,7 +73,7 @@ function fixtureHost(tree: Record<string, string> = files, options: {receipts?: 
     },
     cargoManifests: () => Object.keys(tree).filter((path) => path.endsWith("Cargo.toml")).map((path) => path.slice(0, -"Cargo.toml".length).replace(/\/$/u, "")),
     cargoRoots: (crate) => (fixture.workspace.cargoRoots as Record<string, string[]>)[crate] ?? [crate],
-    cargoSources: (root) => (fixture.workspace.cargoSources as Record<string, string[]>)[root],
+    cargoSources: (root, named) => ((named ? undefined : (fixture.workspace.cargoDependencySources as Record<string, string[]>)[root]) ?? (fixture.workspace.cargoSources as Record<string, string[]>)[root]),
     cargoToolchain: fixture.workspace.cargoToolchain,
   };
 }
@@ -142,6 +142,18 @@ test("every fixture target derives the frozen narrowest inputs, and unselected t
   expect(unselected).toEqual(frozen.unselected);
 });
 
+test("a Cargo exporter reads the named crate with its test targets and only the library of its dependencies, and never the output it writes", async () => {
+  const host = fixtureHost(), rule = selectRuleV1(document, fixture.cargoExport.identity as any)!, strip = (files: readonly string[]) => files.map((file) => file.replace("{workspaceRoot}/", ""));
+  const derived = await deriveInputsV1(document, rule, fixture.cargoExport.identity as any, host);
+  expect(strip(derived.files)).toEqual(fixture.cargoExport.files);
+  for (const path of fixture.cargoExport.absent) expect(strip(derived.files), path).not.toContain(path);
+  const unwritten = await deriveInputsV1(document, rule, {...fixture.cargoExport.identity, outputs: []} as any, host);
+  expect(strip(unwritten.files)).toEqual(fixture.cargoExport.withoutOutputs);
+  expect(derived.drops).toEqual(["default", "^default"]);
+  expect(derived.patterns).toContain("{workspaceRoot}/crates/d/Cargo.toml");
+  expect(derived.patterns).toContain("{workspaceRoot}/crates/e/Cargo.toml");
+});
+
 test("every narrowed target keeps the retained toolchain identity its replaced groups carried", () => {
   expect(document.retained).toEqual(["sharedGlobals", "{projectRoot}/📋️project.json"]);
   for (const row of frozen.derive as any[]) {
@@ -169,7 +181,7 @@ test("a document or derivation that cannot be bounded is refused with the stated
   }
 });
 
-/** 🔬️ The files `tsc -p <tsconfig> --listFilesOnly` lists for a tree: the third-party oracle of the program closure. */
+/** 📋️ The files `tsc -p <tsconfig> --listFilesOnly` lists for a tree: the third-party oracle of the program closure. */
 function tscListed(tree: Record<string, string>): string[] {
   const root = mkdtempSync(join(tmpdir(), "input-precision-"));
   try {

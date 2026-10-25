@@ -9,7 +9,7 @@ test("pinned Cargo launches a large static graph and its procedural macro withou
   if(!artifact)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
   const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/📚️library-search-path/🔣️.json"),"utf8"));
   expect(fixture.libraries*fixture.libraryValue+fixture.macroValue).toBe(fixture.expected);
-  const root=mkdtempSync(join(artifact,"cargo-library-path-")), build=join(root,fixture.buildDirectory), members:string[]=[], dependencies:Record<string,{path:string}>={};
+  const root=mkdtempSync(join(artifact,"cargo-library-path-")), members:string[]=[], dependencies:Record<string,{path:string}>={};
   const write=(path:string,content:string):void => {mkdirSync(resolve(path,".."),{recursive:true});writeFileSync(path,content);};
   for(let index=0;index<fixture.libraries;index++) {
     const name="library_"+String(index).padStart(3,"0");members.push(name);dependencies[name]={path:"../"+name};
@@ -22,6 +22,7 @@ test("pinned Cargo launches a large static graph and its procedural macro withou
   write(join(root,"application/Cargo.toml"),stringify({package:{name:"application",version:"0.1.0",edition:"2021"},dependencies}));
   write(join(root,"application/build.rs"),'fn main() { println!("cargo:rerun-if-changed=build.rs"); }\n');
   write(join(root,"application/src/main.rs"),`fn main() { println!("{}", ${members.filter(name=>name.startsWith("library_")).map(name=>name+"::answer()").join(" + ")} + macro_value::answer!()); }\n`);
+  let build=join(root,fixture.buildDirectory);const outputs=()=>members.map(name=>join(build,"debug/build",name,"0123456789abcdef/out")).join(";").length;while(outputs()<=fixture.minimumUnfilteredCharacters)build=join(build,"padding"+"x".repeat(32));
   const manifest=stringify({workspace:{members,resolver:"2"}});write(join(root,"Cargo.toml"),manifest);
   expect(Bun.TOML.parse(manifest)).toEqual(parse(manifest));
   expect(members.map(name=>join(build,"debug/build",name,"0123456789abcdef/out")).join(";").length).toBeGreaterThan(fixture.minimumUnfilteredCharacters);

@@ -6,7 +6,7 @@ use pack::snapshot::ArtifactPack;
 /// 👥️ Shareable live node-graph view state — viewport camera only; peer selection/hover now ride the
 /// framework's own typed `PresenceInteraction` for the `graph` domain (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), not this app-opaque facet.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -19,7 +19,11 @@ pub struct DagPresence {
     pub camera_zoom: f64,
 }
 
-impl store::ArtifactPresenceSnapshot for DagPresence {}
+impl store::ArtifactPresenceSnapshot for DagPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl Default for DagPresence {
     fn default() -> Self {

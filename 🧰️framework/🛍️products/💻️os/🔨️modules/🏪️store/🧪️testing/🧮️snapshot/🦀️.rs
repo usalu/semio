@@ -24,6 +24,13 @@ pub fn assert_fixture_descriptor<T: semio_framework_os_spr::MutationLeaf>(descri
     assert!(T::DESCRIPTOR.validate().is_ok());
 }
 
+/// ➕️ L3 for one fixture leaf: the concrete inverse's diffs sum to the negative of the forward diff on every listed demo document (`None` is the deleted value).
+pub async fn assert_fixture_sum_law<Op: semio_framework_os_spr::Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot, ReferenceDiff = DemoDiff>>(mutation: &Op, bases: &[Option<i32>]) {
+    for n in bases {
+        semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(mutation, &DemoSnapshot { n: *n }).await;
+    }
+}
+
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_dsl::DslArtifact, semio_framework_value_derive::RetainedClone, semio_framework_value_derive::RetireOwned)]
 #[artifact(id = "demo.doc", extension = "demo")]
@@ -31,7 +38,7 @@ pub struct DemoSnapshot {
     pub n: Option<i32>,
 }
 
-std::thread_local! { static DEMO_PROJECTION_CLONES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+std::thread_local! { pub static DEMO_PROJECTION_CLONES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
 
 impl Clone for DemoSnapshot {
     fn clone(&self) -> Self { DEMO_PROJECTION_CLONES.with(|count| count.set(count.get() + 1)); Self { n: self.n } }

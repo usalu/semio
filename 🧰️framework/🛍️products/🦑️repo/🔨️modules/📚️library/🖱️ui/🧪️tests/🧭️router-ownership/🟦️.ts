@@ -12,6 +12,7 @@ import { build, type Plugin } from "esbuild";
 import { BundleScript, findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import corpus from "../🧫️fixtures/🧭️router-ownership/🔣️.json";
+import { runtimeExecutableV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 
 const root = findWorkspaceRoot(import.meta.dir);
@@ -105,14 +106,14 @@ test("the original Storybook handlers preserve root commands, caller arguments a
   expect(declarations).toHaveLength(corpus.storybookCases.length * 2 + 1);
   const calls: { command: string; args: string[]; options: { cwd: string; env: Record<string, string> } }[] = [];
   const environment = { WATCHPACK_POLLING: "explicit-watch", CHOKIDAR_USEPOLLING: "explicit-chokidar" };
-  const context = { BundleScript, process: { env: environment }, devToolingEnv: (env: Record<string, string>) => ({ ...environment, ...env }), runCmd: (command: string, args: string[], options: { cwd: string; env: Record<string, string> }) => calls.push({ command, args, options }), root, invocation };
+  const context = { BundleScript, runtimeExecutableV1, process: { env: environment }, devToolingEnv: (env: Record<string, string>) => ({ ...environment, ...env }), runCmd: (command: string, args: string[], options: { cwd: string; env: Record<string, string> }) => calls.push({ command, args, options }), root, invocation };
   const executable = ts.transpileModule(declarations.join("\n") + "\nglobalThis.handlers = [new DevScript(root, root, invocation), new BuildScript(root, root, invocation)];", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   const handlers = runInNewContext(executable + "\nhandlers;", context) as BundleScript[];
   for (let index = 0; index < corpus.storybookCases.length; index++) {
     const row = corpus.storybookCases[index]!;
     await handlers[index]!.run(["--owner-proof"]);
     const call = calls[index]!;
-    expect(call.command).toBe("bun");
+    expect(call.command).toBe(runtimeExecutableV1());
     expect([...call.args]).toEqual(row.arguments);
     expect(call.options.cwd).toBe(root);
     expect(call.options.env.WATCHPACK_POLLING).toBe(environment.WATCHPACK_POLLING);

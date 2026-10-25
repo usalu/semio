@@ -30,7 +30,7 @@ pub fn forward(before: &str, operation: &str, after: &str, diff: &str) {
     let produced = applied(&base, &operation);
     assert_eq!(produced, snapshot(after), "the applied state is the committed after-snapshot");
     assert_ne!(produced, base, "a forward vector moves the model");
-    assert_eq!(semio_framework_value::ToValue::to_value(protocol::Mutation::diff(&operation, &base).diff()), value(diff), "the produced delta is the committed one");
+    assert_eq!(semio_framework_value::ToValue::to_value(protocol::ColdMutation::diff(&operation, &base).diff()), value(diff), "the produced delta is the committed one");
     assert_eq!(<Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::semantics(&operation).kind, "move-selection");
 }
 
@@ -47,7 +47,7 @@ pub fn decoded_mutation(text: &str) -> Fem3dMutation {
 /// ↩️ The inverse restores `before` exactly, one whole-record replacement per moved node and solid.
 pub fn inverse_restores(before: &str, operation: &str) {
     let (base, operation) = (snapshot(before), mutation(operation));
-    let inverse = protocol::Mutation::inverse(&operation, &base).expect("valid retained mutation inverse fixture");
+    let inverse = protocol::ColdMutation::inverse(&operation, &base).expect("valid retained mutation inverse fixture");
     let moved = applied(&base, &operation);
     let changed = moved.nodes.iter().filter(|node| !base.nodes.contains(node)).count() + moved.solids.iter().filter(|solid| !base.solids.contains(solid)).count();
     assert_eq!(inverse.len(), changed, "one inverse step per moved record: {inverse:?}");
@@ -59,7 +59,7 @@ pub fn inverse_restores(before: &str, operation: &str) {
 pub fn declared_outcome(before: &str, operation: &str, outcome: &str) {
     let declared = value(outcome);
     assert_eq!(declared.get("status").and_then(semio_framework_value::DslValue::as_str), Some("applied"));
-    let produced = protocol::Mutation::diff(&mutation(operation), &snapshot(before));
+    let produced = protocol::ColdMutation::diff(&mutation(operation), &snapshot(before));
     let emitted: Vec<(String, Vec<String>)> = produced.messages().iter().map(|message| (message.code.0.clone(), message.target.clone())).collect();
     let expected: Vec<(String, Vec<String>)> = declared.get("messages").and_then(semio_framework_value::DslValue::as_array).expect("declared messages").iter().map(|message| (message.get("code").and_then(semio_framework_value::DslValue::as_str).expect("code").to_string(), message.get("target").and_then(semio_framework_value::DslValue::as_array).map(|target| target.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect()).unwrap_or_default())).collect();
     assert_eq!(emitted, expected, "the emitted diagnostics are the declared ones");
@@ -72,7 +72,7 @@ pub fn refusal(before: &str, operation: &str, after: &str, outcome: &str) {
     assert_eq!(before, after, "a refusal changes nothing: the committed snapshots are byte-identical");
     let (base, operation) = (snapshot(before), mutation(operation));
     assert_eq!(applied(&base, &operation), base);
-    let produced = protocol::Mutation::diff(&operation, &base);
+    let produced = protocol::ColdMutation::diff(&operation, &base);
     assert_eq!(produced.diff(), &Fem3dDiff::default(), "a refusal carries the empty delta");
     let declared = value(outcome);
     let messages = produced.messages();
@@ -90,7 +90,7 @@ pub fn refusal(before: &str, operation: &str, after: &str, outcome: &str) {
         }
         other => panic!("a refusal vector declares rejected or no-op, not {other:?}"),
     }
-    assert!(protocol::Mutation::inverse(&operation, &base).expect("valid retained mutation inverse fixture").is_empty(), "nothing moved, nothing to restore");
+    assert!(protocol::ColdMutation::inverse(&operation, &base).expect("valid retained mutation inverse fixture").is_empty(), "nothing moved, nothing to restore");
 }
 
 /// 🔣️ Every committed JSON file is canonical: decode→encode is a fixed point.

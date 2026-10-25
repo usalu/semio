@@ -80,7 +80,7 @@ export function pdfCoverScale(containerWidth: number, containerHeight: number, p
   return Math.max(containerWidth / pageWidth, containerHeight / pageHeight);
 }
 
-/** 📐️ Uniform PDF canvas scale for one-axis cover scroll (fit width or height, overflow the other). */
+/** ⚖️ Uniform PDF canvas scale for one-axis cover scroll (fit width or height, overflow the other). */
 export function pdfScrollCoverScale(containerWidth: number, containerHeight: number, pageWidth: number, pageHeight: number): number | null {
   if (containerWidth <= 0 || containerHeight <= 0 || pageWidth <= 0 || pageHeight <= 0) {
     return null;
@@ -96,12 +96,12 @@ export function pdfScrollCoverScale(containerWidth: number, containerHeight: num
   return Math.min(containerWidth / pageWidth, containerHeight / pageHeight);
 }
 
-/** 📑️ Ordered PDF page numbers for navigation; empty means all document pages. */
+/** 📋️ Ordered PDF page numbers for navigation; empty means all document pages. */
 export function pdfEmbodimentPageList(embodiment: PdfEmbodiment): readonly number[] {
   return embodiment.pages ?? [];
 }
 
-/** 📄️ Starting page for a pdf embodiment (subset or single page). */
+/** 🆕️ Starting page for a pdf embodiment (subset or single page). */
 export function pdfEmbodimentInitialPage(embodiment: PdfEmbodiment): number {
   const pages = pdfEmbodimentPageList(embodiment);
   if (pages.length > 0) {
@@ -161,7 +161,7 @@ export function pdfAdjacentPage(currentPage: number, direction: "prev" | "next",
   return next;
 }
 
-/** 📐️ Measures the PDF canvas viewport from the disposition frame or enlarged slide content box. */
+/** 📦️ Measures the PDF canvas viewport from the disposition frame or enlarged slide content box. */
 export function usePdfContainerSize(anchorRef: RefObject<HTMLDivElement | null>, position: DispositionPosition | undefined, slideEpoch: number, enlarged: boolean): { readonly width?: number; readonly height?: number } {
   const [size, setSize] = useState<{ readonly width?: number; readonly height?: number }>({});
   useEffect(() => {

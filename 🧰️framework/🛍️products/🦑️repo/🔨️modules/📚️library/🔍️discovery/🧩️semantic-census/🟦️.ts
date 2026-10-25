@@ -9,7 +9,7 @@ import { loadTaxonomy, pathIsExcluded, validateTaxonomy } from "../🔐️taxono
 import { discoverPackageProblems, discoverPackages } from "../🔭️repository-scan/🟦️.ts";
 import { componentFilenames } from "../⚖️fixed-contract-resolution/🟦️.ts";
 import { fileKindIdForFilename, semanticManifestFilenameForCollection } from "../🗂️file-kind-resolution/🟦️.ts";
-import { runtimeIdsV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeIdsV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🔗️ One resolved source dependency between repository-owned semantic components. */
 export interface SemanticConsumerEdge {
@@ -329,7 +329,7 @@ function semanticImportSpecs(source: SemanticSource): string[] {
   return semanticUnique(specs);
 }
 
-/** 🦀️ Relative Rust namespaces are imports too; they must resolve to their semantic member, not a crate barrel. */
+/** 📕️ Relative Rust namespaces are imports too; they must resolve to their semantic member, not a crate barrel. */
 function semanticRustUseSpecs(source: SemanticSource): string[] {
   if (!source.rel.endsWith(".rs")) return [];
   const specs: string[] = [];
@@ -337,7 +337,7 @@ function semanticRustUseSpecs(source: SemanticSource): string[] {
   return semanticUnique(specs);
 }
 
-/** 🧭️ Resolves a logical Rust namespace to its closest physical taxonomy directory. */
+/** 📇️ Resolves a logical Rust namespace to its closest physical taxonomy directory. */
 function semanticRustNamespaceDirectory(base: string, segment: string): string | null {
   let current = base;
   for (;;) {
@@ -412,7 +412,7 @@ function semanticRuntimeEvidence(source: SemanticSource, pattern: RegExp): strin
   return evidence;
 }
 
-/** 🦀️ Resolves nested Rust path attributes with the enclosing module's cumulative base. */
+/** 🪆️ Resolves nested Rust path attributes with the enclosing module's cumulative base. */
 export function resolveRustPathAttributes(sourcePath: string, content: string): RustResolvedPath[] {
   const resolved: RustResolvedPath[] = [];
   const scopes: { readonly base: string; readonly depth: number }[] = [{ base: dirname(sourcePath), depth: 0 }];
@@ -439,7 +439,7 @@ export function resolveRustPathAttributes(sourcePath: string, content: string): 
   return resolved.sort((a, b) => semanticCompare(a.target, b.target));
 }
 
-/** 🦀️ Resolves `use super::…` through emoji-prefixed sibling directories to immediate semantic component leaves. */
+/** 🗂️ Resolves `use super::…` through emoji-prefixed sibling directories to immediate semantic component leaves. */
 function resolveRustRelativeUses(source: SemanticSource, componentRoot: string, componentLeaves: ReadonlyMap<string, string>): RustResolvedPath[] {
   const resolved: RustResolvedPath[] = [];
   for (const specifier of semanticRustUseSpecs(source)) {
@@ -544,7 +544,7 @@ function semanticDisposition(kind: SemanticKind, productionConsumers: readonly s
   return lca === currentOwner ? "retain" : "relocate";
 }
 
-/** 🕸️ Follows reverse module edges until independent non-module production components; intermediary modules never qualify. */
+/** 🖥️ Follows reverse module edges until independent non-module production components; intermediary modules never qualify. */
 function semanticTerminalProductionConsumers(componentId: string, edges: readonly SemanticConsumerEdge[], drafts: ReadonlyMap<string, SemanticRecordDraft>): string[] {
   const incoming = new Map<string, SemanticConsumerEdge[]>();
   for (const edge of edges) incoming.set(edge.to, [...(incoming.get(edge.to) ?? []), edge]);
@@ -573,7 +573,7 @@ function semanticCommonPath(paths: readonly string[]): string | null {
   return common.length === 0 ? null : common.join("/");
 }
 
-/** 🧭️ Resolves a semantic-id scope to its real owner boundary so unclassified collection findings remain visible. */
+/** 🌳️ Resolves a semantic-id scope to its real owner boundary so unclassified collection findings remain visible. */
 function semanticScopeRoots(records: readonly SemanticCensusRecord[], scope: string): string[] {
   const matched = records.filter((record) => semanticScopeMatchesId(record.id, scope) || record.currentPath === scope || record.currentPath.startsWith(`${scope}/`));
   if (matched.length === 0) return [];
@@ -587,7 +587,7 @@ function semanticPathInRoots(path: string, roots: readonly string[]): boolean {
   return roots.some((root) => path === root || path.startsWith(`${root}/`));
 }
 
-/** 📊️ Builds the timestamp-free semantic census from taxonomy-defined active scope. */
+/** 🔨️ Builds the timestamp-free semantic census from taxonomy-defined active scope. */
 export function buildSemanticCensus(repoRoot: string, options: { readonly scope?: string } = {}, taxonomy: Taxonomy = loadTaxonomy()): SemanticCensus {
   repoRoot = realpathSync(repoRoot);
   const problems: SemanticProblem[] = validateTaxonomy(taxonomy).map((message) => ({ code: "taxonomy-schema", severity: "error", path: "📋️project.json#metadata.semio.taxonomy", message }));
@@ -795,12 +795,12 @@ export function renderSemanticCensusMarkdown(census: SemanticCensus): string {
   return `${lines.join("\n")}\n`;
 }
 
-/** 🧬️ Stable machine-readable duplicate-candidate representation. */
+/** 🔣️ Stable machine-readable duplicate-candidate representation. */
 export function renderSemanticDuplicatesJson(census: SemanticCensus): string {
   return `${JSON.stringify({ duplicates: census.duplicates }, null, 2)}\n`;
 }
 
-/** 📓️ Stable duplicate evidence companion without semantic conclusions. */
+/** 🧾️ Stable duplicate evidence companion without semantic conclusions. */
 export function renderSemanticDuplicatesMarkdown(census: SemanticCensus): string {
   const lines = ["# Semantic Duplicate Evidence", "", "Similarity is evidence only. It never authorizes extraction, relocation, or deletion.", ""];
   for (const cluster of census.duplicates) {

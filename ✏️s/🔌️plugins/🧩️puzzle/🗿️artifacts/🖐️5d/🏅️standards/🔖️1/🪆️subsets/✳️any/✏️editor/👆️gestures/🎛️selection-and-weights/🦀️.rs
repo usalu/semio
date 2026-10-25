@@ -230,6 +230,7 @@ enum Puzzle5dKindWeightStage {
 
 /// ♻️ The owners one `Puzzle5dKindWeightWork` still holds when its job closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Puzzle5dKindWeightWorkOwners {
     pub ids: Vec<String>,
     pub result: Puzzle5dKindWeights,
@@ -260,6 +261,21 @@ pub struct Puzzle5dKindWeightWork {
 }
 
 impl Puzzle5dKindWeightWork {
+    /// 🪙️ Exact typed backing storage belongs to the initiating original construction scope.
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let capacity = (crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS as usize).checked_mul(size_of::<String>())
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dKindWeightWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    /// 🏭️ The scope authorizes every typed buffer before its owner is born and receives actual capacities.
+    pub fn from_original_construction(tool_id: &'static str, scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self { ids: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS), ..Self::new(tool_id) };
+        let capacity = work.ids.capacity() * size_of::<String>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+
     pub fn new(tool_id: &'static str) -> Self {
         Self { close_owners: Default::default(),
             tool_id,
@@ -523,9 +539,9 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dKindWeightStage::Publish => {
                 self.stage = Puzzle5dKindWeightStage::Complete;
                 let mutation = if self.tool_id == "setPartKindWeight" {
-                    Puzzle5dConfigMutation::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights{ value: std::mem::take(&mut self.result) })
+                    Puzzle5dConfigMutation::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights::from_map(&std::mem::take(&mut self.result)))
                 } else {
-                    Puzzle5dConfigMutation::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights{ value: std::mem::take(&mut self.result) })
+                    Puzzle5dConfigMutation::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights::from_map(&std::mem::take(&mut self.result)))
                 };
                 Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { config_mutations: vec![mutation], ui_scope: UiDirtyScope::Full, ..Default::default() }))
             }

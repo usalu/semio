@@ -18,6 +18,5 @@ fn native_delta_vocabulary_does_not_require_cold_coalescing_or_receiving(){
   assert_eq!(diff.is_empty(),item["expected"]["empty"].as_bool().unwrap());assert_eq!(diff.to_value(),expected);
   let mut close=ControlledRetirement::new(diff).map_err(|(error,_)|error).unwrap();
   while !close.terminal_is_empty(){let demand=close.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert!(close.step(grant).unwrap().progress().fits(grant));}
-  eprintln!("[DEBUG] native-only delta {:?}: complete neutral output, explicit native retirement, no cold decoder/coalescer",item["name"]);
  }
 }

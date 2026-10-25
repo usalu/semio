@@ -1,3 +1,4 @@
+use semio_framework_plugin_reactor_core::PRESENCE;
 use semio_framework::kernel::{Event, UiPatch};
 use semio_framework_plugin_reactor_tasks::{INSTANCE_METADATA, REGISTRY, TASK_EXECUTOR, TASK_RECORDS, TASK_RESUMES};
 use semio_framework_plugin_reactor_tasks::tasks_instance_metadata::InstanceMetadataRegistry;

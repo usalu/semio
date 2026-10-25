@@ -1,6 +1,7 @@
 //! 🧠️ Whole-map inference of the GIS map artifact: the executable inference service, its request admission and the controlled fold. See [`super`].
 
 use crate::schema::snapshot::GisMapSnapshot;
+use semio_s_artifact_gis_gismap_snapshot::gis_map_inference_demands;
 
 //#region 💡️InferenceService
 /// 💡️ The single executable whole-map inference matching the declared schema family.
@@ -98,6 +99,6 @@ pub fn infer_gis_map_controlled(
 
 /// 🧠️ Whole-map native entry uses the same controlled fold with its finite request budgets.
 fn infer_gis_map(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
-    infer_gis_map_controlled(request, &mut |_| Ok(()))
+    infer_gis_map_controlled(request, &mut |_| Ok(()), cx)
 }
 //#endregion 💡️InferenceService

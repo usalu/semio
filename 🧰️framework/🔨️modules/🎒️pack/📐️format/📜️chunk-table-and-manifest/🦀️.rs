@@ -16,7 +16,7 @@ pub(super) struct ChunkTableEntry {
     pub(super) blake3: [u8; 32],
 }
 
-/// 📖️ Parses the chunk table, rejecting a count over `limits.max_items` or an entry
+/// 🏓️ Parses the chunk table, rejecting a count over `limits.max_items` or an entry
 /// length over `limits.max_segment_len` before allocating.
 pub(super) async fn decode_chunk_table(payload: &[u8], limits: &PackLimits) -> Result<Vec<ChunkTableEntry>, PackRefusal> {
     let mut pos = 0usize;
@@ -76,7 +76,7 @@ pub struct Manifest {
     pub symbol_count: u64,
 }
 
-/// 🗺️ The wire-level manifest fields before `schema_symref` has been resolved against a
+/// 🧬️ The wire-level manifest fields before `schema_symref` has been resolved against a
 /// symbol table (on decode) or after it has been resolved to a symref (on encode).
 pub struct RawManifest {
     pub schema_symref: u64,

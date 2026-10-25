@@ -20,7 +20,6 @@ test("sealed Rust code reader preserves neutral receipt identity and refusals",(
  try{expect(sourceSha256).toBe(corpus.sourceSha256);expect(receipt.sourceDigest).toBe(corpus.sourceDigest);expect(validate(receipt)).toBe(true);expect(JSON.stringify(readRustUnitCodeReceiptV1(receipt))).toBe(JSON.stringify(receipt));expect((db.query("select json_array_length(?,'$.source.sources') n").get(JSON.stringify(receipt))as{n:number}).n).toBe(1);
  for(const field of fixture.invalidations){const changed=structuredClone(receipt)as any;if(field==="sourceDigest")changed.sourceDigest="2".repeat(64);else if(field==="sourceSha256")changed.sourceSha256="3".repeat(64);else if(field==="parent-entry")changed.source.entry="../compiler.ts";else if(field==="duplicate-source")changed.source.sources.push(...changed.source.sources);else changed.grant=true;expect(()=>readRustUnitCodeReceiptV1(changed),field).toThrow();}
  const missing=structuredClone(receipt)as any;delete missing.source.resolutions;expect(validate(missing)).toBe(false);expect(()=>readRustUnitCodeReceiptV1(missing)).toThrow();
- console.log("[DEBUG] Neutral sealed receipt retains independent Python SHA constants, Ajv shape, SQLite census and all existing refusals");
  }finally{db.close();}
 });
 registerBuildTestLawV1("sealed Rust code reader ownership excludes publication and compiler capture","sdk-fence",original=>withIssuedResourceControlV1(original,"rust-code:reader-source",0,async control=>{
@@ -31,6 +30,5 @@ registerBuildTestLawV1("sealed Rust code reader ownership excludes publication a
  const captured=await captureNxAuthorizerSourcesV1(root,corpus.entry,control.signal),contents=nxAuthorizerCapturedBytesV1(captured),paths=captured.manifest.sources.map(row=>row.path),bytes=[...contents.values()].reduce((n,row)=>n+row.byteLength,0),db=new Database(":memory:");
  try{expect(paths.length).toBeLessThanOrEqual(corpus.maximumFiles);expect(bytes).toBeLessThanOrEqual(corpus.maximumBytes);for(const forbidden of corpus.forbidden){expect(paths).not.toContain(forbidden);expect((db.query("select count(*) n from json_each(?) where value=?").get(JSON.stringify(paths),forbidden)as{n:number}).n).toBe(0);}
  const mode=Object.getOwnPropertyDescriptor(original.capabilities,"buildMode")?.value;if(mode!=="prototype"&&mode!=="release")throw Error("Original build mode required");const sink=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!sink)throw Error("Original ticket artifact sink required");await writeFile(join(sink,"rust-code-reader-source-"+mode+".json"),JSON.stringify({version:1,nativeBuild:false,files:paths.length,bytes,manifest:captured.manifest,digest:captured.digest},null,2)+"\n");
- console.log("[DEBUG] Actual sealed code-reader Source closure "+JSON.stringify({files:paths.length,bytes,forbidden:corpus.forbidden.length,nativeBuild:false}));
  }finally{db.close();}
 }));

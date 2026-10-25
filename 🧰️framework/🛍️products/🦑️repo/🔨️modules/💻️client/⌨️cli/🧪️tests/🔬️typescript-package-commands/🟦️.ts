@@ -36,7 +36,7 @@ export async function runTestScript(context: Readonly<{ root: string; repoRoot: 
   });
 }
 
-/** 🏃️ Runs the `PreviewEntityKindsScript` command under the caller's roots and invocation. */
+/** ▶️ Runs the `PreviewEntityKindsScript` command under the caller's roots and invocation. */
 export function runPreviewEntityKindsScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
   const target = repoEntityKindTarget(context.repoRoot, readEntityCatalog(context.repoRoot));
   const nodes = [{ bytesBase64: Buffer.from(target.content).toString("base64"), mode: 0o644, nodeKind: "file", path: relative(context.repoRoot, target.path).replaceAll("\\", "/").normalize("NFC") }];

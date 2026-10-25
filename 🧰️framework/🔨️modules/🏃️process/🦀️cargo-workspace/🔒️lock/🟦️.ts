@@ -1,7 +1,7 @@
 import{createHash,randomBytes}from"node:crypto";
 import{existsSync,mkdirSync,readFileSync,renameSync,rmSync,writeFileSync}from"node:fs";
 import{dirname,join,resolve}from"node:path";
-import{runtimeParseTomlV1}from"../../../⚙️runtime/📄️parse/🟦️.ts";
+import{runtimeParseTomlV1}from"../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
@@ -33,9 +33,9 @@ export class CargoLockRefusedV1 extends Error{
 const fill=(template:string,values:Readonly<Record<string,string|number>>):string=>template.replace(/\{([A-Za-z]+)\}/gu,(_,name:string)=>String(values[name]??""));
 const text=(key:keyof typeof messages,language:CargoLockLanguageV1,values:Readonly<Record<string,string|number>>):string=>fill(messages[key][language],values);
 
-/** 🔎️ Tells whether a Cargo failure says its lockfile lags the manifests while `--locked` forbade the update. */
+/** 🔐️ Tells whether a Cargo failure says its lockfile lags the manifests while `--locked` forbade the update. */
 export function cargoLockStaleOutputV1(output:string):boolean{return stale.some(pattern=>pattern.test(output));}
-/** 🔎️ Tells whether any failure of a Cargo child, in its message or its streams, is a stale lockfile. */
+/** 🔒️ Tells whether any failure of a Cargo child, in its message or its streams, is a stale lockfile. */
 export function cargoLockStaleFailureV1(error:unknown):boolean{return cargoLockStaleOutputV1(error instanceof Error?error.message:String(error));}
 /** 🔎️ Names the crate a failed resolution could not find, or null when the failure names none. */
 export function cargoLockMissingCrateV1(output:string):string|null{for(const pattern of missing){const match=pattern.exec(output);if(match?.[1])return match[1];}return null;}

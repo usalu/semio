@@ -14,7 +14,7 @@ import { gzipSync } from "node:zlib";
 import { withViteArtifactV1 } from "@semio-tech/repo-lib/dev";
 import { type ScriptInvocation } from "@semio-tech/process/routing";
 import course from "../../🔣️.json" with { type: "json" };
-import { COURSE_BUNDLE_DIRECTORY, COURSE_PAGES_DIRECTORY, COURSE_PROCTOR_ORIGIN, COURSE_SITE_BUDGET, COURSE_SITE_HEADERS, COURSE_SITE_HOST, COURSE_SITE_ORIGIN, say } from "../🟦️.ts";
+import { COURSE_BUNDLE_DIRECTORY, COURSE_PAGES_DIRECTORY, COURSE_PROCTOR_ORIGIN, COURSE_SITE_BUDGET, COURSE_SITE_HEADERS, COURSE_SITE_HOST, COURSE_SITE_ORIGIN, courseSiteTopology, say } from "../🟦️.ts";
 
 //#region 🌐️Site
 /** 🧭️ The proctor origin a release build bakes in: `PROCTOR_URL`, else the proctor origin of `🔣️.json`. */
@@ -71,7 +71,9 @@ export function siteDocumentProblems(html: string, proctorOrigin: string): strin
  * markers (`404.html` being the same document as `index.html`), `CNAME` naming the site host, a sealed document
  * ({@link siteDocumentProblems}) whose scripts and stylesheets exist, content-hashed file names under `assets/` (they are
  * served as immutable), the proctor origin in the code and no loopback address outside it, no source map and no
- * development leftover, and the size budget ({@link COURSE_SITE_BUDGET}). */
+ * development leftover, and the size budget ({@link COURSE_SITE_BUDGET}) of the topology the build was baked for: the scripts
+ * the document runs and the stylesheets it links are charged, the lazy chunks it only hints at low priority
+ * (`fetchpriority="low"`) are not. */
 export function siteArtifactProblems(dist: string, proctorOrigin: string): string[] {
   const problems: string[] = [];
   const files = siteFiles(dist, STAGED_DIRECTORIES);
@@ -82,9 +84,10 @@ export function siteArtifactProblems(dist: string, proctorOrigin: string): strin
     const html = text("index.html");
     if (files.includes("404.html") && text("404.html") !== html) problems.push("404.html is not the document of index.html");
     problems.push(...siteDocumentProblems(html, proctorOrigin));
-    const linked = [...html.matchAll(/<(?:script|link)\b[^>]*\s(?:src|href)="\/(assets\/[^"]+)"/gu)].map((tag) => tag[1]!);
-    for (const path of linked) if (!files.includes(path)) problems.push(`the document loads ${path}, which the artifact lacks`);
-    for (const [kind, extension, budget] of [["script", ".js", COURSE_SITE_BUDGET.scriptGzipBytes], ["stylesheet", ".css", COURSE_SITE_BUDGET.styleGzipBytes]] as const) {
+    const tags = [...html.matchAll(/<(?:script|link)\b[^>]*\s(?:src|href)="\/(assets\/[^"]+)"[^>]*>/gu)].map((tag) => ({ path: tag[1]!, idle: /\sfetchpriority="low"/u.test(tag[0]) }));
+    for (const { path } of tags) if (!files.includes(path)) problems.push(`the document loads ${path}, which the artifact lacks`);
+    const linked = tags.filter(({ idle }) => !idle).map(({ path }) => path);
+    for (const [kind, extension, budget] of [["script", ".js", COURSE_SITE_BUDGET.scriptGzipBytes[courseSiteTopology(proctorOrigin)]], ["stylesheet", ".css", COURSE_SITE_BUDGET.styleGzipBytes]] as const) {
       const weight = linked.filter((path) => path.endsWith(extension) && files.includes(path)).reduce((sum, path) => sum + gzipSync(readFileSync(join(dist, path))).length, 0);
       if (weight > budget) problems.push(`the document's ${kind}s weigh ${weight} bytes compressed, over the budget of ${budget}`);
     }
@@ -109,7 +112,7 @@ export function courseSiteBuildPlan(repoRoot: string, bundleRoot: string, mode: 
   return { workspace: repoRoot, root: bundleRoot, config: resolve(bundleRoot, "../../🏗️builder/🌐️vite/🟦️.ts"), mode, owner: COURSE_SITE_OWNER, environment: buildModeEnvironment(mode, { PROCTOR_URL: releaseProctorOrigin(environment) }) };
 }
 
-/** 📦️ Builds the site for the original caller's mode under the plan's owner. The product lives in the products store behind a store receipt, so a warm `build` is a cache hit and never reaches here. */
+/** 🔨️ Builds the site for the original caller's mode under the plan's owner. The product lives in the products store behind a store receipt, so a warm `build` is a cache hit and never reaches here. */
 export async function buildCourseSite(repoRoot: string, bundleRoot: string, invocation: ScriptInvocation): Promise<void> {
   const mode = courseOriginalBuildModeV1(invocation, "dev");
   await buildViteArtifact({ ...courseSiteBuildPlan(repoRoot, bundleRoot, mode), invocation, control: scriptCompilerAdmissionControlV1(invocation, "vite:course-site", 0), signal: invocation.control.signal, timeoutMs: courseBudgetMs(invocation) });

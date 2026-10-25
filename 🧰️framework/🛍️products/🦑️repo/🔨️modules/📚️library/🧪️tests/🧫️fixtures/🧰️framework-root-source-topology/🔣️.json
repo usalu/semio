@@ -15,7 +15,9 @@
       "kind": "typescript",
       "anchor": "export function createLeasePool",
       "consumer": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
-      "reference": "@semio-tech/framework-async/lease-pool"
+      "reference": "@semio-tech/framework-async/lease-pool",
+      "referenceManifest": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/package.json",
+      "referenceExport": "./lease-pool"
     },
     {
       "source": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
@@ -23,7 +25,9 @@
       "kind": "typescript",
       "anchor": "export async function retryWithJitteredBackoff",
       "consumer": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
-      "reference": "@semio-tech/framework-async/jittered-backoff"
+      "reference": "@semio-tech/framework-async/jittered-backoff",
+      "referenceManifest": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/package.json",
+      "referenceExport": "./jittered-backoff"
     },
     {
       "source": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
@@ -31,7 +35,9 @@
       "kind": "typescript",
       "anchor": "export function latestWins",
       "consumer": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
-      "reference": "@semio-tech/framework-async/latest-wins"
+      "reference": "@semio-tech/framework-async/latest-wins",
+      "referenceManifest": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/package.json",
+      "referenceExport": "./latest-wins"
     },
     {
       "source": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
@@ -47,7 +53,9 @@
       "kind": "typescript",
       "anchor": "export function waitForEvent",
       "consumer": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
-      "reference": "@semio-tech/framework-async/event-wait"
+      "reference": "@semio-tech/framework-async/event-wait",
+      "referenceManifest": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/package.json",
+      "referenceExport": "./event-wait"
     }
   ],
   "packages": {

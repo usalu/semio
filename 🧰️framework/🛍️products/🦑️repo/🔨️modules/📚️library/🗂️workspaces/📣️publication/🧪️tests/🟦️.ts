@@ -1,9 +1,9 @@
-/** 📣️ Contract: workspace publication compares the root package document's membership with discovery, reports missing, stale and reordered entries on stderr and fails a stale check, rewrites the root document with the discovered membership and a trailing newline on write, writes nothing when already fresh and refuses a document that is not a regular file or changes during discovery; the corpus is language-agnostic and `🐍️oracle.py` checks the written file against `json.dumps`. */
+/** 📣️ Contract: workspace publication compares the root package document's membership with discovery, reports missing, stale and reordered entries on stderr and fails a stale check, rewrites the root document with the discovered membership and a trailing newline on write, writes nothing when already fresh and refuses a document that is not a regular file or changes during discovery; the corpus is language-agnostic and `🐍️.py` checks the written file against `json.dumps`. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {afterAll} from "bun:test";
 import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -28,7 +28,7 @@ test("a write regenerates the root document with the discovered membership and a
  const root=build(corpus.rootDocument),first=publishWorkspaceMembership(root,"write",{report:()=>{}});expect(first.written).toBe(true);expect(first.missing).toEqual(["b/c"]);expect(first.stale).toEqual([]);
  const text=readFileSync(join(root,"package.json"),"utf8");expect(JSON.parse(text).workspaces).toEqual(corpus.expected);expect(text.endsWith("\n")).toBe(true);expect(JSON.parse(text).scripts).toEqual(corpus.rootDocument.scripts);
  expect(publishWorkspaceMembership(root,"write",{report:()=>{}}).written).toBe(false);expect(publishWorkspaceMembership(root,"check",{report:()=>{}}).fresh).toBe(true);
- if(python){const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json"),join(root,"package.json")]);expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});}
+ if(python){const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json"),join(root,"package.json")]);expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});}
 });
 test("a document that changes during discovery is refused",()=>{
  const root=build(corpus.rootDocument);let reads=0;
@@ -45,6 +45,6 @@ test("a malformed or ill-typed root document is refused before any discovery",()
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

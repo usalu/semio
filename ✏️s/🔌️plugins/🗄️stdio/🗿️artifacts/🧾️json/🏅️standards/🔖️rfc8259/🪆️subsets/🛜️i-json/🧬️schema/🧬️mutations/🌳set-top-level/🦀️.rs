@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetTopLevel {
-    pub(crate) root: JsonIJsonRoot,
+    pub root: JsonIJsonRoot,
 }
 
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetTopLevel {

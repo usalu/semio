@@ -1,4 +1,4 @@
-//! 📍 Source spans for DSL diagnostics and tokens.
+//! 🩺️ Source spans for DSL diagnostics and tokens.
 // 🚫️async: E1 pure accessor consumed by external-trait impls (serde/Display) — see R9
 
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,7 @@ pub struct TextSpan {
     pub length: u32,
 }
 
-/// 🌉️ Owned Value conversion preserves the span's literal camelCase wire keys.
+/// 🌱️ Owned Value conversion preserves the span's literal camelCase wire keys.
 /// All three scalar field names retain their declared diagnostic identity.
 impl semio_framework_value::ToValue for TextSpan {
     fn to_value_controlled(&self, c: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { crate::component::controlled::encode_span(self, c) }

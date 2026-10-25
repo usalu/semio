@@ -10,5 +10,4 @@ fn retained_factory_quotes_exact_frame_raw_bytes_and_refuses_before_transfer(){
   else{assert_eq!(quote.unwrap_err().kind,ValueRefusalKind::InvalidValue);}
  }
  assert!(quote::<[u8;13],[u8;29]>(Some(usize::MAX),None,usize::MAX,false,usize::MAX,true).is_err());
- eprintln!("[DEBUG] retained factory declares exact frame plus eligible raw reservation, preserves explicit checkpoint policy and refuses overflow before source transfer");
 }

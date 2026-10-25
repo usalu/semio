@@ -50,6 +50,28 @@ fn emoji_svg_contains_an_embedded_png_image() {
 }
 
 #[test]
+fn emoji_image_payload_is_the_standard_base64_of_a_png_the_third_party_oracle_decodes() {
+    use base64::Engine as _;
+    with_fonts(|layout_ctx, svg_ctx| {
+        let svg = render_src(layout_ctx, svg_ctx, ":rocket:");
+        let payload = svg.split("data:image/png;base64,").nth(1).and_then(|rest| rest.split('"').next()).expect("embedded payload");
+        let decoded = base64::engine::general_purpose::STANDARD.decode(payload).expect("the oracle decodes the payload");
+        assert!(decoded.starts_with(b"\x89PNG\r\n\x1a\n"), "payload must be a PNG");
+        assert_eq!(base64::engine::general_purpose::STANDARD.encode(&decoded), payload);
+        assert_eq!(semio_framework_io_base64::base64_standard_decode(payload).expect("first-party decode"), decoded);
+    });
+}
+
+#[test]
+fn rfc4648_vectors_encode_identically_in_the_first_party_codec_and_the_oracle() {
+    use base64::Engine as _;
+    for (plain, encoded) in [("", ""), ("f", "Zg=="), ("fo", "Zm8="), ("foo", "Zm9v"), ("foob", "Zm9vYg=="), ("fooba", "Zm9vYmE="), ("foobar", "Zm9vYmFy")] {
+        assert_eq!(semio_framework_io_base64::base64_standard_encode(plain.as_bytes()), encoded);
+        assert_eq!(base64::engine::general_purpose::STANDARD.encode(plain.as_bytes()), encoded);
+    }
+}
+
+#[test]
 fn viewbox_dimensions_are_positive_and_account_for_margin() {
     with_fonts(|layout_ctx, svg_ctx| {
         let svg = render_src(layout_ctx, svg_ctx, "x");

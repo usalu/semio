@@ -33,7 +33,7 @@ export function gumballNdcFromPointer(clientX: number, clientY: number, rect: DO
 const _gumballPickRaycaster = new THREE.Raycaster();
 const _gumballPickNdc = new THREE.Vector2();
 
-/** 🎯️ World-space depth bias so gumball handles win picking over occluding scene geometry (see puzzle vortex pick priority). */
+/** 🏔️ World-space depth bias so gumball handles win picking over occluding scene geometry (see puzzle vortex pick priority). */
 const GUMBALL_PICK_DEPTH_BIAS = 1.5;
 
 /** 🎯️ Mesh raycast biasing gumball hits closer so occluding meshes do not swallow handle interaction. */
@@ -70,10 +70,10 @@ export function gumballRaycastOwnedAtClientPoint(camera: THREE.Camera, canvas: H
   return null;
 }
 
-/** 🎛️ True while a gumball handle owns the active canvas pointer (blocks marquee / background pick). */
+/** 🧲️ True while a gumball handle owns the active canvas pointer (blocks marquee / background pick). */
 export const gumballPointerConsumesCanvasEventRef = { current: false };
 
-/** 🎛️ Reads a gumball handle kind from a raycast hit object or its parents. */
+/** 📖️ Reads a gumball handle kind from a raycast hit object or its parents. */
 export function gumballKindFromRaycastObject(object: THREE.Object3D | null): GumballHandleKind | null {
   let node: THREE.Object3D | null = object;
   while (node) {
@@ -84,7 +84,7 @@ export function gumballKindFromRaycastObject(object: THREE.Object3D | null): Gum
   return null;
 }
 
-/** 🎛️ Raycasts the scene for a gumball handle at a client-space pointer (any depth; not limited to the closest scene hit). */
+/** 📍️ Raycasts the scene for a gumball handle at a client-space pointer (any depth; not limited to the closest scene hit). */
 export function gumballRaycastAtClientPoint(scene: THREE.Scene, camera: THREE.Camera, canvas: HTMLElement, clientX: number, clientY: number): { readonly kind: GumballHandleKind; readonly object: THREE.Object3D } | null {
   const rect = canvas.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return null;
@@ -99,7 +99,7 @@ export function gumballRaycastAtClientPoint(scene: THREE.Scene, camera: THREE.Ca
   return null;
 }
 
-/** 🎛️ Raycasts the scene for a gumball handle kind at a client-space pointer. */
+/** 🔦️ Raycasts the scene for a gumball handle kind at a client-space pointer. */
 export function gumballRaycastKindAtClientPoint(scene: THREE.Scene, camera: THREE.Camera, canvas: HTMLElement, clientX: number, clientY: number): GumballHandleKind | null {
   return gumballRaycastAtClientPoint(scene, camera, canvas, clientX, clientY)?.kind ?? null;
 }

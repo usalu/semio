@@ -317,7 +317,7 @@
     },
     "test-catalog-reservation-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/📜️script.ts",
@@ -364,7 +364,7 @@
     },
     "test-inline-symbol-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/📜️script.ts",

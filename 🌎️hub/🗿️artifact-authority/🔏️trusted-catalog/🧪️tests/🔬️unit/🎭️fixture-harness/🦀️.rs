@@ -552,12 +552,16 @@ fn fixture_edit<'a>(_envelope: &'a directory::os_spr::MutationEnvelope) -> std::
     Box::pin(async { Ok(String::new()) })
 }
 
-fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], _operations: &'a [u8]) -> directory::os_store::serialization::ArtifactCodecApplyFuture<'a> {
+fn fixture_apply<'a, 'b>(pack: &'a [u8], spr: &'a [u8], _operations: &'a [u8], _identity: &'a mut directory::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> directory::os_store::serialization::ArtifactCodecApplyFuture<'a> {
+    Box::pin(async move { Ok((pack.to_vec(), spr.to_vec(), String::new())) })
+}
+
+fn fixture_replay<'a>(pack: &'a [u8], spr: &'a [u8], _envelopes: &'a [u8]) -> directory::os_store::serialization::ArtifactCodecApplyFuture<'a> {
     Box::pin(async move { Ok((pack.to_vec(), spr.to_vec(), String::new())) })
 }
 
 fn fixture_codec(schema: &str, pack_schema_hash: [u8; 32]) -> ArtifactCodec {
-    ArtifactCodec { schema: schema.to_string(), extension: "fixture", native_identity: directory::os_store::serialization::ArtifactNativeSnapshotIdentity::typed::<Vec<u8>>(), snapshot_sqlite: None, pack_schema_hash, compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_apply }
+    ArtifactCodec { schema: schema.to_string(), extension: "fixture", native_identity: directory::os_store::serialization::ArtifactNativeSnapshotIdentity::typed::<Vec<u8>>(), snapshot_sqlite: None, pack_schema_hash, compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_replay }
 }
 
 async fn expect_load_error(fixture: &FixtureDirectory, bindings: &[NativeCodecBinding], control: &TestControl) -> AuthorityError {

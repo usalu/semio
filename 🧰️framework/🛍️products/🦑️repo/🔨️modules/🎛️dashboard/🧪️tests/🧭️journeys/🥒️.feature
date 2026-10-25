@@ -331,6 +331,18 @@ Feature: The dashboard is the only control plane for developer processes
     And reopening with the same unresolved environment uses that event without prompting again
 
   @pty
+  Scenario: A task speaks the language the command line speaks
+    Given a workspace task that prints the language it was told
+    When the developer runs it with the German and then the English language
+    Then the task printed German and then English, whatever the operating system language is
+
+  @pty
+  Scenario: A task speaks the language the dashboard speaks
+    Given a German dashboard and an English dashboard of one workspace
+    When each dashboard starts the same finite task from its launcher
+    Then the task started from the German dashboard printed German and the other printed English
+
+  @pty
   Scenario: Maximum native document stays responsive
     Given a 1 MiB Unicode document inside a dedicated directory of 4096 entries
     When I browse and load it within the authored 5000 millisecond budgets

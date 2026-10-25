@@ -17,7 +17,7 @@ test("Bazel snapshot link metadata agrees with an independent closed schema orac
 });
 
 test.skipIf(!process.env.SEMIO_TEST_ARTIFACT_DIR)("Bazel restores explicit directory and file link kinds before their targets",()=>withBuildTestInvocationV1(async original=>{
- const{captureBazelSnapshotV1,restoreBazelSnapshotV1}=await import("../../📜️script.ts"),root=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"links-"+randomUUID().slice(0,8)),snapshot=join(root,"snapshot"),directory=join(root,"out/long-directory"),data=Buffer.from("captured-output\n"),types:unknown[]=[];let observer:{mockRestore():void}|undefined;
+ const{captureBazelSnapshotV1,restoreBazelSnapshotV1}=await import("../../🎬️executor/🟦️.ts"),root=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"links-"+randomUUID().slice(0,8)),snapshot=join(root,"snapshot"),directory=join(root,"out/long-directory"),data=Buffer.from("captured-output\n"),types:unknown[]=[];let observer:{mockRestore():void}|undefined;
  try{
   await fs.mkdir(directory,{recursive:true});await fs.writeFile(join(directory,"value.txt"),data);
   for(const entry of fixture.entries)await fs.symlink(entry.link,join(root,entry.path),entry.linkKind==="directory"?"dir":"file");
@@ -34,7 +34,7 @@ test.skipIf(!process.env.SEMIO_TEST_ARTIFACT_DIR)("Bazel restores explicit direc
 }));
 
 test.skipIf(!process.env.SEMIO_TEST_ARTIFACT_DIR)("Bazel snapshot directory handles close without replacing a primary failure",()=>withBuildTestInvocationV1(async original=>{
- const{captureBazelSnapshotV1,restoreBazelSnapshotV1}=await import("../../📜️script.ts"),database=new Database(":memory:"),admit=new Ajv({strict:true}).compile(fixture.modeCleanupSchema),oracle=database.query("select case when ? != 'success' then 'body' when ? != 'success' then 'close' else 'success' end as outcome");
+ const{captureBazelSnapshotV1,restoreBazelSnapshotV1}=await import("../../🎬️executor/🟦️.ts"),database=new Database(":memory:"),admit=new Ajv({strict:true}).compile(fixture.modeCleanupSchema),oracle=database.query("select case when ? != 'success' then 'body' when ? != 'success' then 'close' else 'success' end as outcome");
  try{for(const row of fixture.modeCleanup){
   expect(admit(row)).toBe(true);expect((oracle.get(row.body,row.close)as{outcome:string}).outcome).toBe(row.expected);
   const root=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"mode-close-"+randomUUID().slice(0,8)),target=join(root,"out"),snapshot=join(root,"snapshot"),primary=row.body==="undefined"?undefined:Error("mode-primary"),secondary=Error("mode-close"),observers:{mockRestore():void}[]=[];let closed=0,failed=false,received:unknown,handle:Awaited<ReturnType<typeof fs.open>>|undefined;
@@ -48,7 +48,7 @@ test.skipIf(!process.env.SEMIO_TEST_ARTIFACT_DIR)("Bazel snapshot directory hand
 }));
 
 test.skipIf(!process.env.SEMIO_TEST_ARTIFACT_DIR)("Bazel snapshot directory modes never follow a replacement symlink",()=>withBuildTestInvocationV1(async original=>{
- const{captureBazelSnapshotV1,restoreBazelSnapshotV1}=await import("../../📜️script.ts"),database=new Database(":memory:"),oracle=database.query("select case when ? = 1 then ? else ? end as mode");
+ const{captureBazelSnapshotV1,restoreBazelSnapshotV1}=await import("../../🎬️executor/🟦️.ts"),database=new Database(":memory:"),oracle=database.query("select case when ? = 1 then ? else ? end as mode");
  try{for(const row of fixture.modeRaces){
   const root=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"mode-"+randomUUID().slice(0,8)),target=join(root,"out/nested"),moved=join(root,"moved"),foreign=join(root,"foreign"),snapshot=join(root,"snapshot"),observers:{mockRestore():void}[]=[];let swaps=0,refused=false;
   try{

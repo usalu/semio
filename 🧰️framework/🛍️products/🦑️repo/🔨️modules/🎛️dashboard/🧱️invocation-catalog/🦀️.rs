@@ -2,7 +2,7 @@
 //! environment a playground session boots with and the content hash every persistent name of the dashboard derives from.
 //! Every other crate of the dashboard may depend on these; nothing here depends on any of them.
 //!
-//! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/🦀️.rs
+//! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🦀️.rs
 
 // #region 🔖️Args
 pub mod args {

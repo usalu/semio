@@ -34,7 +34,7 @@ impl<'a> JobOutcomeBorrow<'a> {
 
  pub fn admission(&self)->&JobOutcomeAdmission{match self{Self::Yield{admission}|Self::PreviewReady{admission,..}|Self::CheckpointReady{admission,..}|Self::Complete{admission,..}|Self::Cancelled{admission}|Self::Fault{admission,..}=>admission}}
  pub fn is_terminal(&self)->bool{matches!(self,Self::Complete{..}|Self::Cancelled{..}|Self::Fault{..})}
- /// 🎟️ Transfers only the original paid semantic admission and native reference witnesses into exclusive worker custody.
+ /// 🧲️ Transfers only the original paid semantic admission and native reference witnesses into exclusive worker custody.
  pub fn into_descriptor(self)->JobOutcomeDescriptor{match self{Self::Yield{admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::Yield,admission,[None,None]),Self::PreviewReady{payload,admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::PreviewReady,admission,[Some(payload),None]),Self::CheckpointReady{state,applied_progress,admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::CheckpointReady{applied_progress},admission,[Some(state),None]),Self::Complete{state,output,admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::Complete,admission,[state,output]),Self::Cancelled{admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::Cancelled,admission,[None,None]),Self::Fault{detail,admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::Fault,admission,[Some(detail),None])}}
 }
 

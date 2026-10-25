@@ -19,7 +19,7 @@ function bundleOf(step: string, policy: MutationFixtureDeclarationPolicy): strin
   return facet < 1 ? null : segments.slice(0, facet).join("/").replaceAll("️", "").normalize("NFC");
 }
 
-/** 🥒️ Every `<directory>/<fixture>` bundle the feature source declares through its step URIs. */
+/** 🧫️ Every `<directory>/<fixture>` bundle the feature source declares through its step URIs. */
 export function mutationFixturesDeclaredByFeature(source: string, policy: MutationFixtureDeclarationPolicy): ReadonlySet<string> {
   const declared = new Set<string>();
   let templates: string[] = [];

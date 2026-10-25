@@ -1,0 +1,144 @@
+# stage-clean different staged=bzl-rust-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🏃️action/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🏃️action/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🏃️action/🟦️.ts
+@@ -2,7 +2,6 @@
+ import {createHash} from "node:crypto";
+ import {spawn} from "node:child_process";
+ import {dirname,join} from "node:path";
+-import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+ 
+ /** 📦️ Selects the published files of one package from Cargo's JSON messages; the typed module renders the same selection and a shared corpus keeps both equal. */
+ export function selectCargoArtifactsV1(lines:readonly string[],pack:string,suffixes:readonly string[]):string[]{
+@@ -33,4 +32,4 @@
+  await writeFile(join(out,"receipt.json"),JSON.stringify({version:1,id:manifest.id,status:0,artifacts}));
+ }
+ 
+-if(isMainModuleV1(import.meta.url))await main(process.argv[2]!,process.argv[3]!);
++if(import.meta.main)await main(process.argv[2]!,process.argv[3]!);
+# stage-clean different staged=bzl-rust-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🟦️.ts
+@@ -16,17 +16,15 @@
+ /** 🔁️ The local CPU request that makes one Cargo action own the machine: Bazel clamps it to the host, so Cargo actions run one at a time and waiting actions hold no process, like the compiler lease the ingress takes. */
+ export const BAZEL_CARGO_EXCLUSIVE_V1=policy.exclusive;
+ 
+-/** 🧮️ Names the Cargo subcommand and manifest of a native task from its authored command, or the `build` of a component task (its driver compiles the one crate); every other task is not a Cargo task. */
++/** 🧮️ Names the Cargo subcommand and manifest of a native task from its authored command; every other task is not a Cargo task. */
+ export function bazelCargoClassV1(task:{definition:{execution:{command?:string};metadata?:unknown}}):BazelCargoClassV1|undefined{
+  const kind=(task.definition.metadata as {semio?:{execution?:{kind?:string}}}|undefined)?.semio?.execution?.kind,command=task.definition.execution.command;
+- if(typeof command!=="string")return undefined;
+- if(kind==="orchestration"){const match=new RegExp(policy.componentCommand,"u").exec(command);return match?{subcommand:"build",manifest:match[1]!.replace(/^"|"$/gu,"")}:undefined;}
+- if(kind!=="native")return undefined;
++ if(kind!=="native"||typeof command!=="string")return undefined;
+  const match=new RegExp(policy.nativeCommand,"u").exec(command);
+  return match?{subcommand:match[1] as BazelCargoClassV1["subcommand"],manifest:match[2]!.replace(/^"|"$/gu,"")}:undefined;
+ }
+ 
+-/** 🚪️ Renders the exact argument vector after `repo`: launcher options first, the Cargo subcommand next, the machine-readable message format last, so Bazel keys what the ingress receives. */
++/** 🚪️ Renders the exact argument vector after `bun repo`: launcher options first, the Cargo subcommand next, the machine-readable message format last, so Bazel keys what the ingress receives. */
+ export function bazelCargoArgumentsV1(action:BazelCargoActionV1):string[]{
+  if(validateJsonSchemaSubset(actionSchema,action,componentSchema).length)throw new Error(`Closed Bazel Cargo action required: ${action.id}`);
+  return[policy.launcher.command,"--store="+policy.launcher.store,"--configuration="+action.configuration,"--parallelism="+policy.launcher.parallelism,policy.launcher.delimiter,action.subcommand,"--manifest-path",action.manifest,"-p",action.package,action.selection,...(action.target?["--target",action.target]:[]),...(action.features?.length?["--features",[...action.features].sort().join(",")]:[]),policy.messageFormat];
+# stage-clean different staged=bzl-rust-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🔣️.json map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🔣️.json
+@@ -12,7 +12,7 @@
+   {
+    "name": "build unquoted",
+    "kind": "native",
+-   "command": "repo a/script.ts native cargo build --manifest p/Cargo.toml",
++   "command": "bun a/script.ts native cargo build --manifest p/Cargo.toml",
+    "expected": {
+     "subcommand": "build",
+     "manifest": "p/Cargo.toml"
+@@ -28,36 +28,6 @@
+    }
+   },
+   {
+-   "name": "component driver",
+-   "kind": "orchestration",
+-   "command": "bun \"🧰️x/🏗️build/🧩️driver-stages/📜️script.ts\" component --manifest \"🌎️y/🧩️component/📦️packages/🦀️rust/Cargo.toml\"",
+-   "expected": { "subcommand": "build", "manifest": "🌎️y/🧩️component/📦️packages/🦀️rust/Cargo.toml" }
+-  },
+-  {
+-   "name": "component driver unquoted",
+-   "kind": "orchestration",
+-   "command": "repo a/script.ts component --manifest p/Cargo.toml",
+-   "expected": { "subcommand": "build", "manifest": "p/Cargo.toml" }
+-  },
+-  {
+-   "name": "component command of a native task is no cargo task",
+-   "kind": "native",
+-   "command": "bun \"a/script.ts\" component --manifest \"p/Cargo.toml\"",
+-   "expected": null
+-  },
+-  {
+-   "name": "native cargo command of an orchestration is no cargo task",
+-   "kind": "orchestration",
+-   "command": "bun \"a/script.ts\" native cargo build --manifest \"p/Cargo.toml\"",
+-   "expected": null
+-  },
+-  {
+-   "name": "component command with a flag is no cargo task",
+-   "kind": "orchestration",
+-   "command": "bun \"a/script.ts\" component --manifest \"p/Cargo.toml\" --release",
+-   "expected": null
+-  },
+-  {
+    "name": "source kind is no cargo task",
+    "kind": "source",
+    "command": "bun \"a/script.ts\" native cargo check --manifest \"p/Cargo.toml\"",
+@@ -66,7 +36,7 @@
+   {
+    "name": "other command",
+    "kind": "native",
+-   "command": "repo ./script.ts test",
++   "command": "bun ./script.ts test",
+    "expected": null
+   },
+   {
+@@ -334,7 +304,7 @@
+       "lint": {
+        "execution": {
+         "kind": "command",
+-        "command": "repo ./script.ts lint"
++        "command": "bun ./script.ts lint"
+        },
+        "cache": true,
+        "outputs": [],
+# stage-clean different staged=bzl-rust-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🟦️.ts map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧪️tests/🟦️.ts
+@@ -1,6 +1,5 @@
+ /** 🏷️ Contract: typed Cargo actions render the exact ingress argv, a closed host-independent manifest, deterministic BUILD text and a spawn-free toolchain identity; native Cargo tasks are the only exclusive actions. */
+ import {expect,test} from "bun:test";
+-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+ import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
+ import {tmpdir} from "node:os";
+ import {join} from "node:path";
+@@ -11,10 +10,10 @@
+ import * as cargo from "../🟦️.ts";
+ import {selectCargoArtifactsV1} from "../🏃️action/🟦️.ts";
+ 
+-const api=await import("../../📜️script.ts"),python=testPythonV1(),oracle=(source:string,input:unknown):any=>{const run=spawnSync(python!,["-I","-c",source],{input:JSON.stringify(input),encoding:"utf8"});if(run.status!==0)throw new Error(run.stderr);return JSON.parse(run.stdout);};
++const api=await import("../../📜️script.ts"),python=Bun.which("python3"),oracle=(source:string,input:unknown):any=>{const run=spawnSync(python!,["-I","-c",source],{input:JSON.stringify(input),encoding:"utf8"});if(run.status!==0)throw new Error(run.stderr);return JSON.parse(run.stdout);};
+ 
+ test("native Cargo commands classify by their authored command and execution kind",()=>{
+- for(const row of corpus.classes)expect<unknown>(cargo.bazelCargoClassV1({definition:{execution:{command:row.command},metadata:{semio:{execution:{kind:row.kind}}}}}) ?? null,row.name).toEqual(row.expected);
++ for(const row of corpus.classes)expect(cargo.bazelCargoClassV1({definition:{execution:{command:row.command},metadata:{semio:{execution:{kind:row.kind}}}}}) ?? null,row.name).toEqual(row.expected);
+ });
+ 
+ test("actions render the ingress argument vector exactly like an independent implementation and refuse everything outside the closed schema",()=>{
+# stage-clean different staged=bzl-rust-tools/staged/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧬️schema/🔣️.json map=suffix
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🦀️cargo/🧬️schema/🔣️.json
+@@ -25,8 +25,7 @@
+      "--all-targets"
+     ],
+     "messageFormat": "--message-format=json-render-diagnostics",
+-    "nativeCommand": "^repo (?:\"[^\"]+\"|\\S+) native cargo (check|build|test) --manifest (\"[^\"]+\"|\\S+)$",
+-    "componentCommand": "^repo (?:\"[^\"]+\"|\\S+) component --manifest (\"[^\"]+\"|\\S+)$",
++    "nativeCommand": "^bun (?:\"[^\"]+\"|\\S+) native cargo (check|build|test) --manifest (\"[^\"]+\"|\\S+)$",
+     "toolchain": {
+      "file": "rust-toolchain.toml",
+      "manifest": "lib/rustlib/multirust-channel-manifest.toml",

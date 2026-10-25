@@ -1,4 +1,4 @@
-import{appendCargoProfileConfigurationArgumentsV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/⚙️cargo/🟦️.ts";
+import{appendCargoProfileConfigurationArgumentsV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/⚙️cargo/🟦️.ts";
 import{createHash}from"node:crypto";
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{BROWSER_CANVAS_HOT_CRATES}from"../../../../../../../🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts";
@@ -54,7 +54,7 @@ export function verifyCargoProfileConfigurationV1(rendered:CargoProfileRenderedC
 /** 🎬️ Closes an explicit compiler operation without deriving storage or Original authority. */
 export function cargoProfileCompilerConsumptionV1(producer:CargoProfilePolicyRequestV1["producer"],operation:string):CargoProfileConsumptionV1{return readCargoProfileConsumptionV1({kind:"compiler",producer,operation});}
 
-/** 📥️ Carries finite profile selectors before the opaque program delimiter without issuing compiler authority. */
+/** ➕️ Carries finite profile selectors before the opaque program delimiter without issuing compiler authority. */
 export function appendCargoProfileSelectorsV1(args:readonly string[],profile:CargoProfileRenderedConfigurationV1):readonly string[]{return appendCargoProfileConfigurationArgumentsV1(args,profile.plan.profile,profile.selectors);}
 
 /** 🦀️ Converts native release syntax only when it agrees with the actual selected intent. */

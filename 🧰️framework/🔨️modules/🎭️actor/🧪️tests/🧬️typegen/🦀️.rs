@@ -3,7 +3,7 @@
 mod schema_metadata {
     use std::collections::HashSet;
 
-    /// 🧬️ One versioned wire type and its owned TypeScript projection.
+    /// 📜️ One versioned wire type and its owned TypeScript projection.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct SchemaMetadata {
         pub name: &'static str,

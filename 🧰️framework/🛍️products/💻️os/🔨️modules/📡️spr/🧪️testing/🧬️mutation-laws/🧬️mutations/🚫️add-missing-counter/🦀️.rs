@@ -14,6 +14,9 @@ pub struct AddMissingCounter {}
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddMissingCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "missing-counter", kind: "add-missing-counter", record: "AddedMissingCounter" };
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add to missing counter", "Zum fehlenden Zähler addieren")
+    }
 
 
 }
@@ -28,9 +31,6 @@ impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddMissi
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add to missing counter", "Zum fehlenden Zähler addieren")
-    }
 }
 //#endregion ⚙️Behavior
 

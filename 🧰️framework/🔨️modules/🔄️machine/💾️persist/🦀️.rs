@@ -1,4 +1,4 @@
-//! 💾️ Versioned persistence — stable string state ids, fingerprint-checked restore.
+//! 🌿️ Versioned persistence — stable string state ids, fingerprint-checked restore.
 //!
 //! Never serializes JS promises, futures, callbacks, timer handles, or actor
 //! references — only the logical configuration, history and context survive.
@@ -21,7 +21,7 @@ pub struct PersistedSnapshot {
     pub done: bool,
 }
 
-/// 💾️ Why [`restore`] could not rebuild a [`Snapshot`].
+/// ♻️ Why [`restore`] could not rebuild a [`Snapshot`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RestoreError {
     /// 👆️ No [`Migration`] bridges the persisted fingerprint to the current machine.
@@ -30,7 +30,7 @@ pub enum RestoreError {
     UnknownStableId(String),
 }
 
-/// 💾️ Migrates a [`PersistedSnapshot`] captured under an older machine fingerprint.
+/// 📸️ Migrates a [`PersistedSnapshot`] captured under an older machine fingerprint.
 #[dyn_enum]
 pub trait Migration {
     /// 🔏️ The fingerprint this migration accepts as input.
@@ -50,7 +50,7 @@ dyn_enum_close! {
     pub enum NoMigrations: Migration {}
 }
 
-/// 💾️ Captures a running [`Snapshot`] as a portable, stable-id-addressed value.
+/// 📷️ Captures a running [`Snapshot`] as a portable, stable-id-addressed value.
 pub fn persist<M: Machine>(snapshot: &Snapshot<M>) -> PersistedSnapshot {
     let def = M::definition();
     let states = snapshot.configuration.iter_ones().map(|id| def.nodes[id.0 as usize].stable_id.to_string()).collect();
@@ -62,7 +62,7 @@ fn stable_id_to_node(def_nodes: &[super::kernel::NodeDef], stable_id: &str) -> R
     def_nodes.iter().position(|n| n.stable_id == stable_id).map(|idx| NodeId(idx as u16)).ok_or_else(|| RestoreError::UnknownStableId(stable_id.to_string()))
 }
 
-/// 💾️ Rebuilds a [`Snapshot`] from a [`PersistedSnapshot`], applying `migrations` in
+/// 🔄️ Rebuilds a [`Snapshot`] from a [`PersistedSnapshot`], applying `migrations` in
 /// sequence until the fingerprint matches the current machine, then re-resolving
 /// stable ids back to dense [`NodeId`]s. `context` is supplied by the caller since
 /// the consumer's `Context` may itself need domain-specific deserialization.

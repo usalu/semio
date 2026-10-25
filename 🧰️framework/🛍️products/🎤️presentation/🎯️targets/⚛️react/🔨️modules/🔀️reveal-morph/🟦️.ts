@@ -28,9 +28,9 @@ export interface RevealResolvedDisposition extends ResolvedDisposition {
   readonly revealMorphCompanion?: RevealMorphCompanionKind;
   /** 📐️ Source slide frame for target ghosts: paired with {@link ResolvedDisposition.position} for frame and crop morph during auto-animate. */
   readonly revealMorphFromFrame?: DispositionPosition;
-  /** 📐️ Target slide frame for source tiles: paired with {@link ResolvedDisposition.position} when the next slide morphFrom references this participant. */
+  /** 🎞️ Target slide frame for source tiles: paired with {@link ResolvedDisposition.position} when the next slide morphFrom references this participant. */
   readonly revealMorphToFrame?: DispositionPosition;
-  /** 📐️ Previous-slide morphTo slot frame (catalogue grid) for crop morph into {@link ResolvedDisposition.position}. */
+  /** 🔲️ Previous-slide morphTo slot frame (catalogue grid) for crop morph into {@link ResolvedDisposition.position}. */
   readonly revealMorphFromMorphToFrame?: DispositionPosition;
 }
 
@@ -138,7 +138,7 @@ function revealMorphFromMorphToFrameByParticipant(previousSlide: Slide): Map<str
   return map;
 }
 
-/** 🔀️ Resolves an arrangement and appends reveal.js morph companions for one-to-many / many-to-one. */
+/** 🐾️ Resolves an arrangement and appends reveal.js morph companions for one-to-many / many-to-one. */
 export function resolveRevealArrangement(scope: ReturnType<typeof buildResolutionScope>, arrangement: Arrangement, context: { readonly previousSlide?: Slide; readonly nextSlide?: Slide }): RevealResolvedDisposition[] {
   const resolved = resolveArrangement(scope, arrangement) as RevealResolvedDisposition[];
   const companions: RevealResolvedDisposition[] = [];

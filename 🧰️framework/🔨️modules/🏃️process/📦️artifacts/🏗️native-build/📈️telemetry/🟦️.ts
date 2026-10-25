@@ -29,7 +29,7 @@ export type StageRecordV1 = Readonly<{ component: string; stage: string; readyMs
 /** 🧗️ One segment of the critical path (`CriticalSegmentV1`): the unit, what unblocked it, when it was ready and when it ran. */
 export type CriticalSegmentV1 = Readonly<{ id: string; label: string; edge: "root" | "rmeta" | "full" | "run"; readyMs: number; startMs: number; endMs: number }>;
 
-/** 🧗️ A build's critical path and every unit's remaining path to the end of the build. */
+/** 🔨️ A build's critical path and every unit's remaining path to the end of the build. */
 export type CriticalPathV1 = Readonly<{ segments: readonly CriticalSegmentV1[]; remainingMs: ReadonlyMap<string, number> }>;
 
 /** 🛂️ Validates one value against a named telemetry definition. */
@@ -58,7 +58,7 @@ export function parseMemoryCountersV1(platform:"darwin"|"linux",first:string,sec
  const counters=platform==="darwin"?parseDarwinCountersV1(first,second,""):parseLinuxCountersV1(first,second,null,null,null);
  return Object.freeze({availableBytes:counters.availableBytes,swapUsedBytes:counters.swapUsedBytes,swappedOutBytes:counters.swappedOutBytes});
 }
-/** 🧠️ Reads finite platform counters beneath the actual carried sample phase. */
+/** 🐘️ Reads finite platform counters beneath the actual carried sample phase. */
 export function memoryCountersV1(control:ResourceLeaseControl,platform:NodeJS.Platform=process.platform):Promise<Readonly<{availableBytes:number|null;swapUsedBytes:number|null;swappedOutBytes:number|null}>>{
  requireIssuedResourceControlV1(control);
  return withRequestedIssuedResourceControlV1(control,TELEMETRY_POLICY_V1.maximumSampleMilliseconds,async actual=>{
@@ -76,13 +76,13 @@ export function memoryCountersV1(control:ResourceLeaseControl,platform:NodeJS.Pl
 /** 🎛️ The driver-side counters a timeline row records beside the machine sample. */
 export type TimelineCountersV1 = Omit<TimelineRowV1, "v" | "atMs" | "cpuPercent" | "cores" | "memoryTotalBytes" | "memoryAvailableBytes" | "swapUsedBytes" | "swapOutBytesPerSecond">;
 
-/** 🕒️ A running timeline sampler. */
+/** ▶️ A running timeline sampler. */
 export interface TimelineSamplerV1 {
   rows(): readonly TimelineRowV1[];
   stop(): Promise<readonly TimelineRowV1[]>;
 }
 
-/** 🕒️ Samples machine CPU, memory and swap plus the driver's counters at start, every `intervalMs` and at stop, appends each row to `path` and hands it to `onRow`. */
+/** 🔰️ Samples machine CPU, memory and swap plus the driver's counters at start, every `intervalMs` and at stop, appends each row to `path` and hands it to `onRow`. */
 export function startTimelineV1(options:Readonly<{control:ResourceLeaseControl;path:string;intervalMs?:number;counters:()=>TimelineCountersV1;onRow?:(row:TimelineRowV1,control:ResourceLeaseControl)=>Promise<void>;now?:()=>number}>):TimelineSamplerV1{
  requireIssuedResourceControlV1(options.control);const {control,path,intervalMs,counters,onRow}=options,now=options.now??Date.now,rows:TimelineRowV1[]=[];
  mkdirSync(dirname(path),{recursive:true});let previous=cpuTimesV1(),swapped:{atMs:number;bytes:number}|null=null;
@@ -95,7 +95,7 @@ export function startTimelineV1(options:Readonly<{control:ResourceLeaseControl;p
  return Object.freeze({rows:()=>Object.freeze([...rows]),stop:async()=>{await sampler.stop();return Object.freeze([...rows]);}});
 }
 
-/** 🧗️ The critical path recomputed from the observed unit graph: every unit's dependencies are the artifacts its `--extern`s name (metadata edges pipeline on rmeta,
+/** 📂️ The critical path recomputed from the observed unit graph: every unit's dependencies are the artifacts its `--extern`s name (metadata edges pipeline on rmeta,
  * library edges wait for the full unit) plus the build-script run whose `OUT_DIR` it compiles against. A unit's unblocker is the dependency available last;
  * the path walks unblockers back from the unit that finished last. `remainingMs` is each unit's longest duration path to a sink, the admission priority.
  * Build-script runs are timed by Cargo's message; their start is the end of their compiled script. */
@@ -186,7 +186,7 @@ export function relinkFanOutV1(units: readonly UnitRecordV1[]): readonly Readonl
 /** 🗒️ What one build report summarises. */
 export type BuildReportInputV1 = Readonly<{ title: string; startedMs: number; endedMs: number; timeline: readonly TimelineRowV1[]; units: readonly UnitRecordV1[]; runs: readonly BuildScriptRunV1[]; stages: readonly StageRecordV1[]; passes: readonly Readonly<{ id: string; manifest: string; profile: string; target: string; startMs: number; endMs: number; exit: number; failed: readonly string[] }>[]; critical: CriticalPathV1; sections?: readonly Readonly<{ title: string; rows: readonly (readonly [string, string | number])[] }>[] }>;
 
-/** 🗒️ Renders `report.md`: wall, CPU-h and utilisation by phase, passes, critical path, top units by CPU and peak, idle windows with cause, relink fan-out and stage overlap. */
+/** 👷️ Renders `report.md`: wall, CPU-h and utilisation by phase, passes, critical path, top units by CPU and peak, idle windows with cause, relink fan-out and stage overlap. */
 export function renderBuildReportV1(input: BuildReportInputV1): string {
   const seconds = (ms: number): string => (ms / 1000).toFixed(1), gib = (bytes: number): string => (bytes / 1024 ** 3).toFixed(2);
   const ok = input.units.filter((unit) => unit.exit === 0), cpuMs = ok.reduce((sum, unit) => sum + unit.userMs + unit.sysMs, 0);

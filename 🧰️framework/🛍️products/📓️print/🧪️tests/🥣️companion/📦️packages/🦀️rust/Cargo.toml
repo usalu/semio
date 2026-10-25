@@ -28,6 +28,8 @@ semio-framework-test-fixtures = { path = "../../../../../../🔨️modules/🧪�
 
 [dev-dependencies]
 semio-framework-artifact-reference = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-space-testing-sqlite-native-caller = { path = "../../../../../💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true }
 semio-framework-value = { workspace = true }

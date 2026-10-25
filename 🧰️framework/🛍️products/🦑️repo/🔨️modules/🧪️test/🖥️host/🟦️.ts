@@ -21,14 +21,14 @@ import { receiveScriptProcessInvocation,withIssuedResourceControlV1,withRequeste
 import type { ResourceLeaseControl } from "@semio-tech/process/leases";
 import { testLevelBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { type ResultArtifact, type TestResult, contentDigestOf, digest, makeAdapterContext, projectionHash, registeredHandler, repoRootFromHere, setDigest, testId, validateRegistration } from "../📦️packages/🟦️typescript/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🎛️Arguments
 /** 🎛️ The three things a host is ever told: the plan, where to write results, and which adapter to load. */
 export type HostArgs = Readonly<{ planPath: string; outPath: string; adapterPath: string | null }>;
 
-/** 🎛️ Parses the uniform host argument vector every language host accepts. */
+/** 📖️ Parses the uniform host argument vector every language host accepts. */
 export function parseHostArgs(argv: readonly string[]): HostArgs {
   const read = (flag: string): string | null => {
     const index = argv.indexOf(flag);
@@ -88,7 +88,7 @@ export function resultFor(plan: TestCasePlan, scenarioId: string, level: TestRes
   };
 }
 
-/** 🏃️ Executes every planned scenario against one loaded adapter, in plan order. */
+/** 🔌️ Executes every planned scenario against one loaded adapter, in plan order. */
 export async function runAdapter(repoRoot: string, plan: TestCasePlan, adapter: TestAdapter, invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): Promise<TestResult[]> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);
   const results: TestResult[] = [];

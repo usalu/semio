@@ -56,7 +56,7 @@ function tokens(path: string | null): (number | string)[] {
   return out;
 }
 
-/** 🎯️ The SVG path the twin writes for one curve over one series; the twin computes the geometry
+/** 🛤️ The SVG path the twin writes for one curve over one series; the twin computes the geometry
  *  and d3-path only formats it, so the two subjects differ in nothing but the geometry. */
 function path(curve: VizCurveFactory, points: readonly (readonly [number, number])[]): (number | string)[] {
   const context = pathRound(15);
@@ -85,7 +85,7 @@ export default defineTestAdapter({
     },
     parameters: {
       oracle: oracle("parameters"),
-      /** 🎯️ The parameterised factories, with the parameter the feature table names. */
+      /** 🏭️ The parameterised factories, with the parameter the feature table names. */
       subject: () => ({
         projection: {
           "curve/cardinal-tension": path(vizCurve("cardinal", { tension: 0.5 }), SERIES),
@@ -97,7 +97,7 @@ export default defineTestAdapter({
     },
     degenerate: {
       oracle: oracle("degenerate"),
-      /** 🎯️ The twin closes a one-point line and straightens a two-point one. */
+      /** 📍️ The twin closes a one-point line and straightens a two-point one. */
       subject: () => ({
         projection: {
           "curve/one-point": path(vizCurve("linear"), [[2, 7]]),

@@ -538,7 +538,7 @@ export class OwnedUiResidentPayload {
   }
   terminalIsEmpty(): boolean { const state = this.#state; return state.closed && !state.instance && !state.facade && !state.head && !state.tail && !state.cursor && !state.previous && !state.next && !state.builder && !state.storageCell && !state.reader && !state.field && !state.record && !state.cell && !state.witness && !state.parentSlot && !state.pending && state.failure === NO_POOL_FAULT && !state.evidence; }
 }
-/** 🧾️ One privately preadmitted payload witness changes phase without retaining a permanent source-field backlink. */
+/** 🪵️ One privately preadmitted payload witness changes phase without retaining a permanent source-field backlink. */
 export class OwnedUiResidentPayloadSourceRelease {
   readonly #payload: OwnedUiResidentPayload;
   #phase: "constructed" | "body-retired" | "source-detached" | "source-settled" | "domain-retired" | "registration-retired" = "constructed";
@@ -755,7 +755,7 @@ export class OwnedUiResidentPayloadReader {
   advance(grant: UiIndexGrant): OwnedUiResidentReaderStep { return advanceReader(this.#state, grant); }
   terminalIsEmpty(): boolean { return this.#state.phase === "registration-retired" && readerDomainEmpty(this.#state); }
 }
-/** 🧾️ The same original witness traverses body, builder-binding and domain retirement. */
+/** 👷️ The same original witness traverses body, builder-binding and domain retirement. */
 export class OwnedUiResidentReaderRetirement {
   readonly #original: OwnedUiResidentPayloadReader;
   #phase: "constructed" | "body-retired" | "detached" | "settled" | "terminal" = "constructed";

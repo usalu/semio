@@ -7,7 +7,7 @@ import type {BuildMode} from "../../../../../../../../🔨️modules/🏃️proc
 
 /** 🦀️ Per-request bounds of a session launch: its own deadline and cancellation, independent of every other request. */
 export type RepositoryCargoSessionRunV1=Readonly<{maximumMilliseconds?:number;signal?:AbortSignal}>;
-/** 🦀️ Many admitted Cargo commands under ONE compiler-store custody: the image opens, reservation, toolchain generation and tooling store are paid once. */
+/** 🏪️ Many admitted Cargo commands under ONE compiler-store custody: the image opens, reservation, toolchain generation and tooling store are paid once. */
 export type RepositoryCargoSessionV1=Readonly<{
  stream(request:RepositoryCargoLaunchV1,cwd:string,run?:RepositoryCargoSessionRunV1):Promise<number>;
  capture<T>(request:RepositoryCargoLaunchV1,cwd:string,options:Readonly<{limits:RepositoryCargoCapturePolicyV1;generated?:RepositoryCargoGeneratedCapturePolicyV1;consume(result:OwnedCommandCaptureV1,context:RepositoryCargoCaptureContextV1):Promise<T>}>,run?:RepositoryCargoSessionRunV1):Promise<T>;
@@ -15,7 +15,7 @@ export type RepositoryCargoSessionV1=Readonly<{
  closed:Promise<void>;
 }>;
 
-/** 🦀️ Opens the compiler store of `configuration` once for an issued invocation; `stream` and `capture` are `launchRepositoryCargoV1` with the held custody, so ingress gate, profile injection, leases and capacity admission run per command exactly as in a standalone call. */
+/** 🔓️ Opens the compiler store of `configuration` once for an issued invocation; `stream` and `capture` are `launchRepositoryCargoV1` with the held custody, so ingress gate, profile injection, leases and capacity admission run per command exactly as in a standalone call. */
 export async function openRepositoryCargoSessionV1(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,workspace:string,configuration:BuildMode,environment:Readonly<Record<string,string|undefined>>):Promise<RepositoryCargoSessionV1>{
  const custody:RepositoryCustodySessionV1=await openRepositoryCustodySessionV1({workspace,invocation,control:phaseControl,partitions:[],compiler:{mode:configuration,environment}});
  const admitted=(request:RepositoryCargoLaunchV1)=>{if(request.configuration!==configuration)throw Error("Cargo session configuration differs from the command configuration");};

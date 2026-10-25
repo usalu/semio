@@ -152,15 +152,15 @@ export function runDocstringEmojiCensus(repoRoot: string, signal: AbortSignal, o
 /** 🐞️ One line carrying the `[DEBUG]` tag, which AGENTS.md reserves for temporary logs removed before a change lands. */
 export type DebugTagHit = Readonly<{ path: string; line: number; text: string }>;
 
-/** 🐞️ Every line of one source that carries the `[DEBUG]` tag. */
+/** 📖️ Every line of one source that carries the `[DEBUG]` tag. */
 export function debugTagHitsOfText(path: string, text: string): DebugTagHit[] {
   return text.split("\n").flatMap((line, index) => (line.includes("[DEBUG]") ? [{ path, line: index + 1, text: line.trim().slice(0, 120) }] : []));
 }
 
-/** 🐞️ The census's own rule vocabulary — this module and the source-census fixture name the tag they look for. */
+/** 📊️ The census's own rule vocabulary — this module and the source-census fixture name the tag they look for. */
 export const DEBUG_TAG_CENSUS_EXEMPT: readonly string[] = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/📝️docstring-and-debug-census/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧪️tests/🧫️fixtures/🧮️source-census/🔣️.json"];
 
-/** 🐞️ The `[DEBUG]` census over every tracked text source outside the ticket tree, Markdown prose and
+/** ▶️ The `[DEBUG]` census over every tracked text source outside the ticket tree, Markdown prose and
  * {@link DEBUG_TAG_CENSUS_EXEMPT}, cross-checked file by file against `git grep -c` (the oracle). Progress every 5000
  * files; the signal stops the walk. */
 export function runDebugTagCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {

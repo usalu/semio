@@ -151,7 +151,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
          });
          // The child now owns dup'd copies of the descriptors, so release ours.
          (0, node_fs_1.closeSync)(outFd);
-@@ -1119,8 +1167,21 @@
+@@ -1119,8 +1167,20 @@
          // EPERM/EACCES, which is the only way that errno reaches this process.
          // Attached before `unref` so the listener is registered before the child can
          // exit; `unref` only stops the child holding the event loop open.
@@ -168,13 +168,11 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
 +        void terminal.then(() => clearTimeout(killTimer));
 +        semioControl.signal.addEventListener('abort', cancel, { once: true });
          let daemonRefusedSocket = false;
--        backgroundProcess.once('exit', (code) => {
-+        backgroundProcess.once('exit', (code, signal) => {
-+            if (process.env.NX_VERBOSE_LOGGING === 'true') logger_1.clientLogger.log('[DEBUG] Owned Nx daemon exited ' + JSON.stringify({ pid: backgroundProcess.pid, code, signal }));
+         backgroundProcess.once('exit', (code) => {
              daemonRefusedSocket = code === socket_refused_exit_code_1.SOCKET_REFUSED_EXIT_CODE;
          });
          // if this process is the process that spawned the daemon,
-@@ -1130,9 +1191,12 @@
+@@ -1130,9 +1190,12 @@
          /**
           * Ensure the server is actually available to connect to via IPC before resolving
           */
@@ -188,7 +186,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
              return backgroundProcess.pid;
          }
          else {
-@@ -1159,22 +1223,33 @@
+@@ -1159,22 +1222,33 @@
                      ? (0, sandbox_socket_hint_1.sandboxSocketHint)({ certain: daemonRefusedSocket })
                      : []),
              ].join('\n'));
@@ -239,7 +237,7 @@ diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
 +            this.reset();
 +        });
 +    }
-@@ -1235,7 +1310,18 @@
+@@ -1235,7 +1309,18 @@
      // which is exactly when the daemon is most likely to fail to start.
      let body = message;
      try {
@@ -1026,7 +1024,7 @@ diff --git a/dist/src/project-graph/nx-deps-cache.js b/dist/src/project-graph/nx
  function getNxJsonPluginsData(nxJson, packageJsonDeps) {
      return (nxJson?.plugins || []).map((p) => {
          const [plugin, options] = typeof p === 'string' ? [p] : [p.plugin, p.options];
-@@ -343,3 +238,27 @@
+@@ -343,3 +238,25 @@
          };
      });
  }
@@ -1044,13 +1042,11 @@ diff --git a/dist/src/project-graph/nx-deps-cache.js b/dist/src/project-graph/nx
 +    const publish = body => publication ? body(publication.control) : frozen.authorizers.withGraphPublisherControlV1({ ...context.environment, SEMIO_SCRIPT_PROCESS_INVOCATION: context.invocation }, body);
 +    let sealed = false;
 +    if (toolingIdentity && toolingIdentity === frozen.toolingIdentity) {
-+        sealed = await publish(control => frozen.authorizers.writeSelectedGraphPublisherReceiptV1(workspace, data, context.startedAt, { toolingIdentity, environment: context.environment, control, publication, generationHolds: () => context.pid === process.pid && environment.getDaemonClientEnvGeneration() === context.generation, capture: async scope => { const witness = await observer.captureSemioFilesystemJournalV1(scope, control); if (!witness) throw Error('Original live graph observer unavailable'); return witness; } })).catch(error => { if (process.env.NX_VERBOSE_LOGGING === 'true') console.log('[DEBUG] Original selected graph publication refused: '+String(error)); return false; });
-+        if (process.env.NX_VERBOSE_LOGGING === 'true') console.log(`[DEBUG] Selected graph publisher sealed=${sealed}`);
++        sealed = await publish(control => frozen.authorizers.writeSelectedGraphPublisherReceiptV1(workspace, data, context.startedAt, { toolingIdentity, environment: context.environment, control, publication, generationHolds: () => context.pid === process.pid && environment.getDaemonClientEnvGeneration() === context.generation, capture: async scope => { const witness = await observer.captureSemioFilesystemJournalV1(scope, control); if (!witness) throw Error('Original live graph observer unavailable'); return witness; } })).catch(() => false);
 +    }
 +    if (environment.getDaemonClientEnvGeneration() !== context.generation) return false;
 +    if (/^[a-f0-9]{64}$/.test(context.membership ?? '')) {
-+        const whole = await publish(control => frozen.authorizers.writeNxGraphSeal(workspace, data, process.pid, context.startedAt, context.membership, process.env, control.signal)).catch(() => false);
-+        if (process.env.SEMIO_BUILD_PROFILE_INPUTS === '1') console.log(`[nx] Graph publisher sealed=${whole}`);
++        await publish(control => frozen.authorizers.writeNxGraphSeal(workspace, data, process.pid, context.startedAt, context.membership, process.env, control.signal)).catch(() => false);
 +    }
 +    return sealed;
 +}
@@ -1542,7 +1538,7 @@ diff --git a/dist/src/daemon/server/watcher.js b/dist/src/daemon/server/watcher.
 +        const workerGeneration = require('node:crypto').randomBytes(16).toString('hex'), directory = path_1.join(require('../../utils/cache-directory').workspaceDataDirectory, 'semio-journal'), socketPath = process.platform === 'win32' ? '\\\\.\\pipe\\semio-journal-' + workerGeneration : require('../socket-utils').getFullOsSocketPath().replace(/d\.sock$/u, 'j.sock');
 +        semioThread = loaded.authorizers.createNxDaemonJournalWorkerV1(socketPath, deployment => new (require('node:worker_threads').Worker)(loaded.entry, { workerData: deployment }));
 +        const owned = semioThread; lifetime.signal.addEventListener('abort', () => { void stopSemioJournalThreadV1(owned); }, { once: true });
-+        semioThread.on('message', message => { if (generation !== semioGeneration) return; if (message.type === 'refused') { semioError = new Error(message.reason); if (process.env.NX_VERBOSE_LOGGING === 'true') require('../logger').serverLogger.log('[DEBUG] filesystem-journal worker refused', message.reason); void owned.terminate(); } else if (message.type === 'progress') require('../logger').serverLogger.log('[filesystem-journal]', message.progress.resource); else if (message.type === 'query-refused' && process.env.NX_VERBOSE_LOGGING === 'true') require('../logger').serverLogger.log('[DEBUG] filesystem-journal query refused', message.reason); });
++        semioThread.on('message', message => { if (generation !== semioGeneration) return; if (message.type === 'refused') { semioError = new Error(message.reason); void owned.terminate(); } else if (message.type === 'progress') require('../logger').serverLogger.log('[filesystem-journal]', message.progress.resource); });
 +        semioThread.on('error', error => { if (generation === semioGeneration) semioError = error; });
 +        return semioThread;
 +    })().catch(error => { if (generation === semioGeneration) semioError = error; return null; });
@@ -1922,22 +1918,6 @@ diff --git a/dist/src/utils/cache-directory.js b/dist/src/utils/cache-directory.
 +        if (process.env.SEMIO_NX_FIXED_STORAGE !== owned || process.env.NX_CACHE_DIRECTORY !== declared) throw Error('Original bounded Nx namespace required');
 +    }
      const cacheDirFromEnv = process.env.NX_CACHE_DIRECTORY;
-diff --git a/dist/src/project-graph/utils/retrieve-workspace-files.js b/dist/src/project-graph/utils/retrieve-workspace-files.js
---- a/dist/src/project-graph/utils/retrieve-workspace-files.js
-+++ b/dist/src/project-graph/utils/retrieve-workspace-files.js
-@@ -49,5 +49,10 @@
-     const defaultGlobPatterns = getGlobPatternsOfPlugins(defaultWithCreateNodes);
-+    const profiledGlob = async (role, globs) => {
-+        const started = perf_hooks_1.performance.now(), files = await (0, workspace_context_1.multiGlobWithWorkspaceContext)(workspaceRoot, globs);
-+        if (process.env.SEMIO_BUILD_PROFILE_INPUTS === '1') console.log('[DEBUG] Nx configuration globs ' + JSON.stringify({ role, globs, milliseconds: perf_hooks_1.performance.now() - started, files: files.flat().length }));
-+        return files;
-+    };
-     const [specifiedPluginFiles, defaultPluginFiles] = await Promise.all([
--        (0, workspace_context_1.multiGlobWithWorkspaceContext)(workspaceRoot, specifiedGlobPatterns),
--        (0, workspace_context_1.multiGlobWithWorkspaceContext)(workspaceRoot, defaultGlobPatterns),
-+        profiledGlob('specified', specifiedGlobPatterns),
-+        profiledGlob('default', defaultGlobPatterns),
-     ]);
 diff --git a/dist/bin/nx.js b/dist/bin/nx.js
 --- a/dist/bin/nx.js
 +++ b/dist/bin/nx.js
@@ -2021,7 +2001,7 @@ diff --git a/dist/src/utils/handle-import.js b/dist/src/utils/handle-import.js
 +        const authorizers = await semioGraphAuthorizers.module, current = inspect(); semioGraphAuthorizers.value = authorizers;
 +        if (!current || current.toolingIdentity !== original.toolingIdentity || current.authority !== original.authority || current.markerSha256 !== original.markerSha256 || current.outputSha256 !== original.outputSha256 || ['createRepositoryFilesystemJournalV1', 'repositoryFilesystemJournalPolicyV1', 'readFilesystemJournalRpcRequestV1', 'readFilesystemJournalRpcResponseV1', 'isGlobalGraphIdentityPathV1', 'writeSelectedGraphPublisherReceiptV1', 'selectedTaskScopeV1', 'nativeSelectedTaskPlannerV1', 'withNxDaemonServiceV1', 'withNxDaemonRequestV1', 'requestNxDaemonShutdownV1', 'completeNxDaemonShutdownV1', 'beginNxDaemonShutdownV1', 'markNxDaemonServerClosedV1', 'requireNxGraphNativeDirectoryV1', 'withOriginalNxGraphNativeStorageV1', 'requireNxGraphDiagnosticDirectoryV1', 'readGraphPublicationSnapshotV1', 'nxGraphDaemonDisabledMarkerV1'].some(name => typeof authorizers[name] !== 'function')) return null;
 +        return { toolingIdentity: original.toolingIdentity, authorizers, entry: original.entry };
-+    } catch (error) { if (process.env.NX_VERBOSE_LOGGING === 'true') console.error('[DEBUG] Immutable graph authorizer refused:', String(error)); return null; }
++    } catch (error) { return null; }
 +}
 +exports.loadedSemioGraphAuthorizersV1 = () => semioGraphAuthorizers?.value;
 diff --git a/dist/src/daemon/server/start.js b/dist/src/daemon/server/start.js

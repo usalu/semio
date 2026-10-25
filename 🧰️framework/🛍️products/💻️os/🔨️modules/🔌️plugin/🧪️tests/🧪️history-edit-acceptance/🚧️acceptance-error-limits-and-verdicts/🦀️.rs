@@ -1,6 +1,7 @@
 //! 🚧️ Acceptance error, limits and verdicts: the acceptance error with its conversions, the per-leaf limits, the acceptance case, the verdict and the seed fault. See [`super`].
 
 #[derive(Debug,semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub(super) struct AcceptanceError{pub message:String,pub original:Option<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>}
 
 impl AcceptanceError{pub fn context(mut self,message:String)->Self{self.message=if self.message.is_empty(){message}else{format!("{message}: {}",self.message)};self}}

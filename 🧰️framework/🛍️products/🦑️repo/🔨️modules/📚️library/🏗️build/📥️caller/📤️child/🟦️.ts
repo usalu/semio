@@ -1,4 +1,4 @@
-import type{NativeBuildCallerCapabilitiesV1}from"../🟦️.ts";
+import type { NativeBuildCallerCapabilitiesV1 } from "../📋️contract/🟦️.ts";
 import callerSchema from"../../🧬️schema/📥️caller.json" with { type: "json" };
 import {buildOperationHasNeutralBootstrapV1} from "../../⚙️operations/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -45,7 +45,7 @@ async function expandBuildBootstrapCapabilitiesV1(root:string,args:readonly stri
   const capabilities={...grant,launches};if(validateJsonSchemaSubset(callerSchema,capabilities).length)throw Error("Closed build bootstrap capabilities required");return capabilities;
 }
 
-/** 📨️ Projects a declared neutral child beneath the same exact active issued phase. */
+/** 📨️ Projects a declared neutral child beneath the same exact active issued phase. The child is its own root with its own declared request, so it never inherits the pinned graph of its parent: that graph admits only the parent's selection and the child plans (or reads from the sealed generation) exactly its own. */
 export async function projectOwnedBuildChildEnvironmentV1(root:string,args:readonly string[],parent:ScriptInvocation,phaseControl:ResourceLeaseControl,changes?:import("../../🧭️selection/👁️watch/🟦️.ts").BuildWatchChangesV1):Promise<NodeJS.ProcessEnv>{
  requireIssuedResourceControlInvocationV1(phaseControl,parent);checkResourceLeaseControl(phaseControl);
  const labels=changes===undefined?{}:(await import("../../🧭️selection/👁️watch/🟦️.ts")).buildWatchChangesEnvironmentV1(changes);checkResourceLeaseControl(phaseControl);
@@ -54,7 +54,7 @@ export async function projectOwnedBuildChildEnvironmentV1(root:string,args:reado
  const{readIssuedScriptProcessEnvelopeV1,scriptProcessEnvironment}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");checkResourceLeaseControl(phaseControl);
  const original=readIssuedScriptProcessEnvelopeV1(parent),caller=readOwnedBuildInvocationV1(root,parent,args),selected=parseBuildInvocationV1(args,{SEMIO_BUILD_TOOL:caller.tool}).args,request=["repo",...selected],declared={...caller,arguments:request,selection:request,launches:[request]},environment={...process.env,SEMIO_BUILD_TOOL:caller.tool,SEMIO_BUILD_MODE:caller.buildMode,CARGO_NET_OFFLINE:String(caller.native.network.offline),CARGO_TARGET_DIR:caller.native.artifactDirectory,SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(declared)},capabilities=await expandBuildBootstrapCapabilitiesV1(root,selected,environment,declared);
  checkResourceLeaseControl(phaseControl);if(JSON.stringify((capabilities as any).native)!==JSON.stringify(caller.native))throw Error("Original neutral child native resources changed");
- return scriptProcessEnvironment({...original,capabilities},{...environment,...labels,...(changes===undefined?{}:{SEMIO_BUILD_GRAPH_PATH:undefined,SEMIO_BUILD_GRAPH_DIGEST:undefined,SEMIO_BUILD_REUSE_GRAPH:undefined}),SEMIO_SCRIPT_CAPABILITIES:undefined,SEMIO_SCRIPT_POLICY:JSON.stringify(original.policy)});
+ return scriptProcessEnvironment({...original,capabilities},{...environment,...labels,SEMIO_BUILD_GRAPH_PATH:undefined,SEMIO_BUILD_GRAPH_DIGEST:undefined,SEMIO_BUILD_REUSE_GRAPH:undefined,SEMIO_SCRIPT_CAPABILITIES:undefined,SEMIO_SCRIPT_POLICY:JSON.stringify(original.policy)});
 }
 
 /** 🧷️ Launches a predeclared neutral descendant within its actual parent's finite phase and signal. */

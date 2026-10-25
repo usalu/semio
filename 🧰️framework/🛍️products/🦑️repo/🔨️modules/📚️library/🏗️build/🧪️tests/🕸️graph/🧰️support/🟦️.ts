@@ -1,4 +1,4 @@
-/** Shared fixtures, issued invocations and one-time module warm-up for the build graph behaviour groups. */
+/** 🧰️ Shared fixtures, issued invocations and one-time module warm-up for the build graph behaviour groups. */
 import storageSchema from "../../../📥️inputs/💾️storage/🧬️schema/🔣️.json";
 import {mkdtemp,rm} from "node:fs/promises";
 import {join,resolve} from "node:path";

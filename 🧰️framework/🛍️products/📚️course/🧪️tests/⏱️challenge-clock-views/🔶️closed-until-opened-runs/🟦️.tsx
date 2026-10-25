@@ -6,7 +6,7 @@ import { type SheetClassificationTask, type SheetMatchingTask } from "@semio-tec
 import { formatCountdown, formatDuration, courseText } from "@semio-tech/course-react";
 import { clockStage } from "@semio-tech/course-react/modules/run/.tsx";
 import { sheetAt } from "../../🪞️challenge-views-kit/🟦️.ts";
-import { Run, clockSaid, runOf, start, stepClock, ticker } from "../🟠️shared/🟦️.tsx";
+import { Run, clockSaid, runOf, start, stepClock, ticker } from "../🟠️harness/🟦️.tsx";
 
 /** 🔷 Registers the closed until opened runs tests of the ⏱️ the clock of a timed task suite. */
 export function registerClosedUntilOpenedRunsTests(): void {

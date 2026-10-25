@@ -146,7 +146,6 @@ export async function registerTypedOperationPagesTests(vitest: PluginRuntimeVite
         expect(owner.diagnosticProgress).toEqual({ bytes: encoded.length, nodes: expect.any(Number) });
         expect(owner.diagnosticOwnedBytes).toBeGreaterThan(0);
         owner.close(); observer.close(); expect(reported).toEqual([]);
-        console.log("[DEBUG] mounted host diagnostic owner: same operation/different generation isolated, original command receives warning/expected/span/scope once before ACK, actual decode progress retained");
       });
 
 
@@ -175,7 +174,6 @@ export async function registerTypedOperationPagesTests(vitest: PluginRuntimeVite
             expect(owner.takeDiagnosticEffects()).toEqual([]);
           });
           expect(crossings).toBe(1); expect(failures).toHaveLength(1); expect(received).toEqual([{ token, diagnostic }]);
-          console.log("[DEBUG] actual mounted diagnostic delivery: refused UI listener isolated, later original listener retained, exact command row and guest acknowledgement delivered once");
         } finally { operationDiagnosticFanouts.delete(token.receiver); teardownPluginActor(actorId); }
       });
 
@@ -195,7 +193,6 @@ export async function registerTypedOperationPagesTests(vitest: PluginRuntimeVite
           expect(crossings).toBe(0);
         });
         teardownPluginActor(actorId);
-        console.log("[DEBUG] mounted host diagnostic terminal: partial original row refuses before any acknowledgement crossing");
       });
 
       it("keeps the command reply when publication supplies only an unsolicited UI scope", async () => {

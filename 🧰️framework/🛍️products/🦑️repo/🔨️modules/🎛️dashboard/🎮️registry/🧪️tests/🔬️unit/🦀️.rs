@@ -161,8 +161,8 @@ fn a_target_resolves_axes_then_parameters_then_extra_arguments_after_the_double_
     let (root, registry) = fixture("target");
     let launch = resolve(&registry, "workspace:test", &request(&[("test-level", "quick"), ("cache", "skip-local"), ("dependencies", "true"), ("cargo-jobs", "2")], &["--filter", "x"], &[("EXTRA", "1")]));
     let process = &launch.processes[0];
-    assert_eq!((process.cmd.as_str(), process.cwd.as_path()), ("bun", root.as_path()));
-    assert_eq!(process.args, ["repo", "run", "workspace:test", "--skip-cache", "--exclude-dependencies", "--", "--filter", "x"]);
+    assert_eq!((process.cmd.as_str(), process.cwd.as_path()), ("repo", root.as_path()));
+    assert_eq!(process.args, ["run", "workspace:test", "--skip-cache", "--exclude-dependencies", "--", "--filter", "x"]);
     assert_eq!((env_of(process, "SEMIO_TEST_LEVEL"), env_of(process, "CARGO_BUILD_JOBS"), env_of(process, "EXTRA")), (Some("quick"), Some("2"), Some("1")));
     assert_eq!(env_of(process, "SEMIO_BUILD_TERMINAL"), Some("false"));
     assert_eq!(launch.label, TaskLabel { verb: "test".into(), owner: vec!["workspace".into()], subject: "workspace".into(), qualifier: String::new(), parameters: vec![("cache".into(), "skip-local".into()), ("test-level".into(), "quick".into()), ("dependencies".into(), "true".into()), ("cargo-jobs".into(), "2".into())], members: 0 });
@@ -173,7 +173,7 @@ fn a_required_parameter_must_be_chosen_and_a_choice_must_be_one_of_its_values() 
     let (_, registry) = fixture("required");
     assert!(registry.resolve_with("workspace:verify", &Request::default(), RunPolicy::default()).unwrap_err().contains("\"rule\" is required"));
     assert!(registry.resolve_with("workspace:verify", &request(&[("rule", "nope")], &[], &[]), RunPolicy::default()).unwrap_err().contains("choose dependencies, literal-external"));
-    assert_eq!(resolve(&registry, "workspace:verify", &request(&[("rule", "literal-external")], &[], &[])).processes[0].args, ["repo", "run", "workspace:verify", "--", "dependencies", "literal-external"]);
+    assert_eq!(resolve(&registry, "workspace:verify", &request(&[("rule", "literal-external")], &[], &[])).processes[0].args, ["run", "workspace:verify", "--", "dependencies", "literal-external"]);
     assert!(registry.resolve_with("workspace:verify", &request(&[("rule", "dependencies"), ("ghost", "1")], &[], &[]), RunPolicy::default()).unwrap_err().contains("unknown parameter \"ghost\""));
 }
 
@@ -197,7 +197,7 @@ fn a_printed_ready_takes_the_whole_printed_address() {
     assert_eq!(launch.processes[0].ready, Some(Ready { port: 6280, path: String::new(), printed: true }));
     assert_eq!(registry.launch_plan_json(&launch)["processes"][0]["ready"], serde_json::json!({ "port": 6280, "path": "", "printed": true }));
     let facts = Facts { projects: vec![ProjectFacts { name: "p".into(), root: ".".into(), manifest: "📋️project.json".into(), dashboard: Some(serde_json::json!({ "tools": [{ "id": "t", "command": ["x"], "ready": { "port": 1, "printed": true, "path": "/x" } }] })), targets: Vec::new() }], ..Default::default() };
-    assert!(Registry::build(Path::new("/w"), &facts).problems().iter().any(|problem| problem.message.contains("`printed` takes the whole printed address")));
+    assert!(Registry::build(Path::new("/w"), &facts).problems().iter().any(|problem| problem.message.en.contains("`printed` takes the whole printed address")));
 }
 
 #[test]
@@ -234,10 +234,10 @@ fn a_compound_starts_its_members_in_order_with_pins_and_member_environment() {
 fn a_group_runs_several_targets_over_project_patterns_unchanged() {
     let (_, registry) = fixture("group");
     let tests = resolve(&registry, "group:workspace/artifact-tests", &request(&[("test-level", "long")], &[], &[]));
-    assert_eq!(tests.processes[0].args, ["repo", "run-many", "-t", "test", "-p", "@fixture/artifact-*,!@fixture/artifact-contract"]);
+    assert_eq!(tests.processes[0].args, ["run-many", "-t", "test", "-p", "@fixture/artifact-*,!@fixture/artifact-contract"]);
     assert_eq!(env_of(&tests.processes[0], "SEMIO_TEST_LEVEL"), Some("long"));
     let both = resolve(&registry, "group:workspace/all-builds", &Request::default());
-    assert_eq!(both.processes[0].args, ["repo", "run-many", "-t", "build,test", "-p", "hub,@fixture/quiz"]);
+    assert_eq!(both.processes[0].args, ["run-many", "-t", "build,test", "-p", "hub,@fixture/quiz"]);
     assert_eq!(registry.find("group:workspace/all-builds").map(|entry| (entry.verb.as_str(), entry.qualifier.as_str())), Some(("build", "build+test")));
 }
 
@@ -247,9 +247,9 @@ fn global_axes_select_tools_by_verb_and_build_flags_do_not_reach_them() {
     let tool = registry.find("tool:workspace/bun-test").unwrap();
     let ids: Vec<String> = registry.parameters(tool).iter().map(|parameter| parameter.id.clone()).collect();
     assert_eq!(ids, ["test-level", "build-mode", "cargo-jobs", "project", "file", "bail"]);
-    let launch = resolve(&registry, "tool:workspace/bun-test", &request(&[("file", "a.test.ts"), ("build-mode", "release"), ("test-level", "quick"), ("bail", "true")], &[], &[]));
+    let launch = resolve(&registry, "tool:workspace/bun-test", &request(&[("file", "a.test.ts"), ("build-mode", "ship"), ("test-level", "quick"), ("bail", "true")], &[], &[]));
     let process = &launch.processes[0];
-    assert_eq!(process.args, ["repo", "exec", "--projects=workspace", "--", "bun", "test", "a.test.ts", "--bail"]);
+    assert_eq!(process.args, ["exec", "--projects=workspace", "--", "bun", "test", "a.test.ts", "--bail"]);
     assert_eq!((env_of(process, "SEMIO_BUILD_MODE"), env_of(process, "SEMIO_TEST_LEVEL"), env_of(process, "BUN_TEST_BAIL")), (Some("release"), Some("quick"), Some("workspace")));
     assert!(!process.args.iter().any(|word| word.starts_with("--skip")), "buildFlags of an axis are ignored on a tool");
     let viewer = registry.find("tool:workspace/viewer").unwrap();
@@ -309,7 +309,7 @@ fn the_check_reports_ports_that_commands_of_different_owners_claim_together_and_
         project("a", "a", serde_json::json!({ "tools": [tool("one", 7002), tool("two", 7002)] })),
         project("b", "b", serde_json::json!({ "tools": [tool("three", 7002), tool("clash", 7001)] })),
     ], playgrounds: vec![PlaygroundFacts { variant: "p".into(), plugin: "x".into(), react: 7100, wgpu: 7101, user_react: vec![7002], ..Default::default() }], ..Default::default() };
-    let messages: Vec<String> = Registry::build(Path::new("/w"), &facts).check().iter().map(|problem| problem.message.clone()).collect();
+    let messages: Vec<String> = Registry::build(Path::new("/w"), &facts).check().iter().map(|problem| problem.message.en.clone()).collect();
     let claims: Vec<&String> = messages.iter().filter(|message| message.starts_with("port ")).collect();
     assert_eq!(claims.len(), 2, "{messages:#?}");
     assert!(claims.iter().any(|message| message.starts_with("port 7001 ") && message.contains("a:dev") && message.contains("tool:b/clash")), "{claims:?}");
@@ -322,13 +322,13 @@ fn the_check_reports_a_playground_renderer_whose_build_target_the_graph_lacks() 
     let owner = |targets: &[&str]| ProjectFacts { name: "@semio-tech/framework-os-dev".into(), root: "dev".into(), targets: targets.iter().map(|name| TargetFacts { name: (*name).into(), continuous: Some(true), ..Default::default() }).collect(), ..Default::default() };
     let playgrounds = vec![PlaygroundFacts { variant: "p".into(), plugin: "x".into(), react: 7100, wgpu: 7101, ..Default::default() }];
     let complete = Registry::build(Path::new("/w"), &Facts { projects: vec![owner(&["dev-p-react-dev", "dev-p-wgpu-dev", "run-p-native-dev"])], playgrounds: playgrounds.clone(), ..Default::default() });
-    assert!(complete.check().iter().all(|problem| !problem.message.contains("project graph does not have")));
+    assert!(complete.check().iter().all(|problem| !problem.message.en.contains("project graph does not have")));
     let missing = Registry::build(Path::new("/w"), &Facts { projects: vec![owner(&["dev-p-react-dev"])], playgrounds: playgrounds.clone(), ..Default::default() }).check();
-    let lacking: Vec<&str> = missing.iter().filter(|problem| problem.message.contains("project graph does not have")).map(|problem| problem.message.as_str()).collect();
+    let lacking: Vec<&str> = missing.iter().filter(|problem| problem.message.en.contains("project graph does not have")).map(|problem| problem.message.en.as_str()).collect();
     assert_eq!(lacking.len(), 2, "{lacking:?}");
     assert!(lacking[0].contains("renderer wgpu-wasm resolves to the build target @semio-tech/framework-os-dev:dev-p-wgpu-dev") && lacking[1].contains("run-p-native-dev"));
     let nothing = Registry::build(Path::new("/w"), &Facts { playgrounds, ..Default::default() }).check();
-    assert_eq!(nothing.iter().filter(|problem| problem.message.contains("project graph does not have")).count(), 3, "no owner project at all: every renderer is reported");
+    assert_eq!(nothing.iter().filter(|problem| problem.message.en.contains("project graph does not have")).count(), 3, "no owner project at all: every renderer is reported");
 }
 
 #[test]
@@ -362,7 +362,7 @@ fn a_playground_example_locks_the_shell_to_it_and_native_renderers_pass_it_as_an
     let react = resolve(&registry, "playground:shell", &request(&[("example", "tower")], &[], &[]));
     assert_eq!((env_of(&react.processes[0], "PLAYGROUND_LOCKED_EXAMPLE_ID"), react.processes[0].args.last().map(String::as_str)), (Some("tower"), Some("@semio-tech/framework-os-dev:dev-shell-react-dev")));
     let native = resolve(&registry, "playground:shell", &request(&[("example", "tower"), ("renderer", "wgpu-native")], &[], &[]));
-    assert_eq!(native.processes[0].args, ["repo", "run", "@semio-tech/framework-os-dev:run-shell-native-dev", "--", "--example", "tower"]);
+    assert_eq!(native.processes[0].args, ["run", "@semio-tech/framework-os-dev:run-shell-native-dev", "--", "--example", "tower"]);
     assert!(native.processes[0].ready.is_none());
 }
 
@@ -380,7 +380,7 @@ fn a_catalog_example_is_chosen_by_its_slug_or_its_bare_id() {
 fn a_target_with_configurations_resolves_the_configuration_into_its_identity() {
     let (_, registry) = fixture("configuration");
     let launch = resolve(&registry, "hub:build:production", &Request::default());
-    assert_eq!((launch.command_id.as_str(), launch.processes[0].args.as_slice(), launch.label.qualifier.as_str()), ("hub:build:production", ["repo", "run", "hub:build:production"].map(String::from).as_slice(), "production"));
+    assert_eq!((launch.command_id.as_str(), launch.processes[0].args.as_slice(), launch.label.qualifier.as_str()), ("hub:build:production", ["run", "hub:build:production"].map(String::from).as_slice(), "production"));
     assert!(registry.resolve_with("hub:build:nope", &Request::default(), RunPolicy::default()).is_err());
 }
 
@@ -408,6 +408,21 @@ fn repo_commands_follow_the_policy_that_picks_the_implementation() {
 }
 
 #[test]
+fn a_playground_reference_is_unproved_without_a_catalog_and_wrong_with_one() {
+    let project = |dashboard: serde_json::Value| ProjectFacts { name: "p".into(), root: ".".into(), manifest: "📋️project.json".into(), dashboard: Some(dashboard), targets: vec![TargetFacts { name: "build".into(), ..Default::default() }] };
+    let declared = serde_json::json!({
+        "compounds": [{ "id": "c", "members": ["playground:s", "p:build"] }],
+        "tools": [{ "id": "t", "command": ["x"], "requires": ["playground:s"] }]
+    });
+    for (configured, expected) in [(false, 0), (true, 2)] {
+        let facts = Facts { projects: vec![project(declared.clone())], catalog_configured: configured, ..Default::default() };
+        let problems = Registry::build(Path::new("/w"), &facts).check();
+        assert_eq!(problems.len(), expected, "catalog configured {configured}: {problems:?}");
+        for problem in &problems { assert!(problem.message.en != problem.message.de, "{problem:?}"); }
+    }
+}
+
+#[test]
 fn references_that_name_nothing_are_problems_not_panics() {
     let facts = Facts { projects: vec![ProjectFacts { name: "p".into(), root: ".".into(), manifest: "📋️project.json".into(), dashboard: Some(serde_json::json!({
         "compounds": [{ "id": "c", "members": ["p:ghost", { "run": "p:build", "parameters": { "ghost": "1" }, "env": { "A": "{nope}" } }] }],
@@ -415,12 +430,12 @@ fn references_that_name_nothing_are_problems_not_panics() {
         "tools": [{ "id": "t", "command": ["x"], "requires": ["p:ghost", { "run": "p:build", "env": { "NX_DAEMON": "1" } }] }]
     })), targets: vec![TargetFacts { name: "build".into(), ..Default::default() }] }], ..Default::default() };
     let registry = Registry::build(Path::new("/w"), &facts);
-    let text: Vec<String> = registry.problems().iter().map(ToString::to_string).collect();
+    let text: Vec<String> = registry.problems().iter().map(|problem| problem.render(dashboard_registry::Locale::En)).collect();
     for expected in ["member \"p:ghost\" names no command", "has no parameter \"ghost\"", "environment token `{nope}`", "a group needs `targets`", "requires \"p:ghost\" names no command", "NX_DAEMON belongs to the dashboard's run policy"] {
         assert!(text.iter().any(|line| line.contains(expected)), "{expected} in {text:#?}");
     }
     let old = Facts { projects: vec![ProjectFacts { name: "p".into(), root: ".".into(), manifest: "📋️project.json".into(), dashboard: Some(serde_json::json!({ "groups": [{ "id": "h", "target": "build", "projects": ["p"] }] })), targets: Vec::new() }], ..Default::default() };
-    assert!(Registry::build(Path::new("/w"), &old).problems().iter().any(|problem| problem.message.contains("unknown field `target`")), "the single-target group key no longer exists");
+    assert!(Registry::build(Path::new("/w"), &old).problems().iter().any(|problem| problem.message.en.contains("unknown field `target`")), "the single-target group key no longer exists");
 }
 
 #[test]
@@ -498,12 +513,12 @@ fn a_tool_that_is_an_mcp_server_lists_the_clients_that_start_it_and_a_wrong_expo
     let listed = registry.entry_json(entry);
     assert_eq!(listed["mcp"], serde_json::json!({ "server": "bun-test", "clients": { "claude-code": {}, "codex": { "parameters": { "project": "workspace" } } } }));
     assert!(registry.find("tool:workspace/printer").unwrap().mcp.is_none() && registry.entry_json(registry.find("tool:workspace/printer").unwrap()).get("mcp").is_none());
-    for (from, to, message) in [(r#""claude-code": {}"#, r#""emacs": {}"#, "mcp client \"emacs\""), (r#""project": "workspace" } } }"#, r#""nothing": "x" } } }"#, "states \"nothing\""), (r#""server": "bun-test""#, r#""server": "Bun Test""#, "mcp server")] {
+    for (from, to, message, deutsch) in [(r#""claude-code": {}"#, r#""emacs": {}"#, "mcp client \"emacs\"", "mcp-Client \"emacs\""), (r#""project": "workspace" } } }"#, r#""nothing": "x" } } }"#, "states \"nothing\"", "nennt \"nothing\""), (r#""server": "bun-test""#, r#""server": "Bun Test""#, "mcp server", "mcp-Server")] {
         let (_, broken) = {
             let root = materialise_text("mcp-broken", &FIXTURE.replace(from, to));
             (root.clone(), crate::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog"))))
         };
-        assert!(broken.problems().iter().any(|problem| problem.message.contains(message)), "{message}: {:?}", broken.problems());
+        assert!(broken.problems().iter().any(|problem| problem.message.en.contains(message) && problem.message.de.contains(deutsch) && problem.render(dashboard_registry::Locale::De).contains(deutsch) && !problem.render(dashboard_registry::Locale::De).contains(message)), "{message}: {:?}", broken.problems());
     }
 }
 

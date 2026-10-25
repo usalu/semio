@@ -1,12 +1,13 @@
 //! 🧪️ Original product tick payload keeps caller authority, source identity and physical closure.
 use super::advance_original_tick_payload;
 use super::close_original_tick_payload;
-use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict};
+use semio_framework_tool_run::{ToolRunPayloadUpdate, ToolRunId, ToolRunIdentity, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict};
 use semio_framework_tool_run_tick_wire::{ToolRunTickWireCursor, ToolRunTickPayloadSource};
 use semio_framework_value::RetainedCloneGrant as Grant;
 
 struct OriginalBytes<'a>(&'a[u8]);
 impl ToolRunTickPayloadSource for OriginalBytes<'_>{
+ fn update(&self)->ToolRunPayloadUpdate{ToolRunPayloadUpdate::Replace}
  fn original_identity(&self)->usize{self.0.as_ptr()as usize}
  fn byte_len(&self)->usize{self.0.len()}
  fn range_demands(&self,offset:usize,count:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{assert!(offset+count<=self.0.len());Ok(semio_framework_value::RetirementDemand{copy_bytes:count*2,depth:1,..Default::default()})}

@@ -20,10 +20,10 @@ pub fn resolve_native_mcp_root(arguments: &[String], current: &std::path::Path) 
  semio_framework_repo_workspace::select_repo_root(current, selected.as_deref().map(std::path::Path::new))
 }
 
-/// 🎯️ Selects the process port before domain flag parsing.
+/// 🧲️ Selects the process port before domain flag parsing.
 pub fn plan_native_entrypoint(argv: &[String]) -> NativeEntrypointPlan { plan_native_entrypoint_with(&build_verbs(), argv) }
 
-/// 🎯️ Plans with explicit build verbs.
+/// 🔨️ Plans with explicit build verbs.
 pub fn plan_native_entrypoint_with(verbs: &[String], argv: &[String]) -> NativeEntrypointPlan {
  if argv.len() >= 4 && argv[..4].iter().map(String::as_str).eq(["dev", "mcp", "stdio", "os"]) { return NativeEntrypointPlan { kind: "workspace", arguments: argv.to_vec() }; }
  let mut prefix = 0;
@@ -42,14 +42,14 @@ pub fn plan_native_entrypoint_with(verbs: &[String], argv: &[String]) -> NativeE
 /// 📜️ The script file extensions a script route accepts (neutral vector `scriptExtensions`).
 const SCRIPT_EXTENSIONS: [&str; 3] = [".ts", ".mjs", ".js"];
 
-/// 📜️ The index of the script argument when only the neutral watch and cwd options precede it.
+/// 🔢️ The index of the script argument when only the neutral watch and cwd options precede it.
 fn script_index(argv: &[String]) -> Option<usize> {
  let mut index = 0;
  while index < argv.len() { if argv[index] == "--watch" || argv[index].starts_with("--cwd=") { index += 1; } else if argv[index] == "--cwd" { index += 2; } else { break; } }
  (index < argv.len() && SCRIPT_EXTENSIONS.iter().any(|extension| argv[index].ends_with(extension))).then_some(index)
 }
 
-/// 🏗️ The launcher registry names the neutral operations catalogue whose operation names are the build verbs.
+/// 📚️ The launcher registry names the neutral operations catalogue whose operation names are the build verbs.
 const LAUNCHER_REGISTRY: &str = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json";
 
 fn read_build_verbs(root: &std::path::Path, registry: &std::path::Path) -> Option<Vec<String>> {

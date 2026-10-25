@@ -74,15 +74,15 @@ class TestScript extends BundleScript {
 
 /** 🧪️ Runs only `🔬️conformance.rs`'s corpus harness — every fixture under
  * `🧪️tests/🧫️fixtures/🧪️conformance` deserializes, validates/patches through this crate's own
- * `validate_snapshot`/`apply_patch`, and matches its declarative expectation. Same test binary as
- * `test`, filtered to the `conformance::` module path so iterating on the corpus does not pay for the
- * whole crate's suite. */
+ * `validate_snapshot`/`apply_patch`, and matches its declarative expectation. The validation crate's
+ * test binary, filtered to the `conformance::` module path so iterating on the corpus does not pay for
+ * the whole crate's suite. */
 class ConformanceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const { rest } = resolveTestLevel(segments);
     console.log(`conformance-corpus-catalog cases=${conformanceCorpusSelfTests()}`);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--all-features", ...rest, "--", "conformance::"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-contract-validation"], cwd: this.root, extraArgs: ["--all-features", ...rest, "--", "conformance::"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 //#endregion 🔖️conformance

@@ -9,8 +9,8 @@ use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema:
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetElementName {
-    pub(crate) path: NodePath,
-    pub(crate) name: String,
+    pub path: NodePath,
+    pub name: String,
 }
 
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetElementName {

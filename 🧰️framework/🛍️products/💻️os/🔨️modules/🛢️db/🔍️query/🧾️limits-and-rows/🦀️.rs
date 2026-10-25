@@ -196,7 +196,7 @@ static QUERY_RETIRED_ROWS_RESERVATIONS: [std::sync::atomic::AtomicU64; 3] = [con
 pub(super) static QUERY_RETIREMENT_PRESSURE_FAULT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 #[derive(Clone, Copy, Debug)]
-struct QueryRowsRetirementReservation {
+pub(super) struct QueryRowsRetirementReservation {
     pub(super) tier: u8,
     pub(super) index: u8,
 }

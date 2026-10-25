@@ -1,5 +1,6 @@
 use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::*;
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
+use protocol::ColdMutationDiff;
 #[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
 #[semio_framework_async_macros::async_test]

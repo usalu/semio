@@ -484,7 +484,6 @@ describe("exact analytic component interaction targets", () => {
         expect(Array.from(visuals.edge?.getAttribute("position").array ?? []), row.kind).toEqual(Array.from(edgeOracle.getAttribute("position").array));
         expect(aabb(visuals.geometry, visuals.edge), row.kind).toEqual(row.bounds);
         expect(aabb(oracle, edgeOracle), row.kind).toEqual(row.bounds);
-        console.info(`[DEBUG] React zero-index ${row.kind}: vertices=${row.vertexIds.length} edges=${row.edgeIds.length} indices=0 bounds=${JSON.stringify(row.bounds)}`);
       } finally {
         disposeMeshVisuals(visuals);
         oracle.dispose();

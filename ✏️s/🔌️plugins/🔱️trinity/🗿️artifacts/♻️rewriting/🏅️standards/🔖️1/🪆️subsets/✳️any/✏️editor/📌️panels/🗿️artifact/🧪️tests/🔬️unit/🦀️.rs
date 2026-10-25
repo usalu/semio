@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::TreeWindows;
 #[allow(unused_imports)]
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+use semio_framework_plugin::{Buildable, HasBase};
 #[allow(unused_imports)]
 use semio_framework_plugin::PanelTreeBuilder;
 #[allow(unused_imports)]

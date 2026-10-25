@@ -16,7 +16,7 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of process3d engagement and camera state.
-#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "process3d.presence")]
 #[dsl(layout = "lines")]
@@ -105,7 +105,11 @@ impl protocol::ColdDiffAlgebra<Process3dPresence> for Process3dPresenceDiff {
 }
 
 /// 📸️ Native snapshot codec: the canonical JSON of the value projection, no hand-written frame.
-impl store::ArtifactPresenceSnapshot for Process3dPresence {}
+impl store::ArtifactPresenceSnapshot for Process3dPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        store::decode_presence_json(bytes, owner)
+    }
+}
 
 impl pack::snapshot::ArtifactDsl for Process3dPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;

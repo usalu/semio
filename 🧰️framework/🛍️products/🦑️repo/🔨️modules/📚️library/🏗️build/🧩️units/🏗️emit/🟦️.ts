@@ -9,7 +9,7 @@ export function unitTargetNameV1(id: string): string {
 /** 📄️ Paths of the two small files every unit publishes below the output root: `iface.json` (interface digest, closure and artifact) and `out.json` (output digest). Dependents hash these and never the unit's sources or bulk outputs. */
 export const unitInterfacePathV1 = (outputRoot: string, id: string): string => `${outputRoot}/${unitTargetNameV1(id)}/iface.json`;
 export const unitOutputPathV1 = (outputRoot: string, id: string): string => `${outputRoot}/${unitTargetNameV1(id)}/out.json`;
-/** 📋️ The spec file of one unit: the unit itself, which `units exec` reads. One file per unit keeps the inputs of a unit independent of every other unit. */
+/** 📕️ The spec file of one unit: the unit itself, which `units exec` reads. One file per unit keeps the inputs of a unit independent of every other unit. */
 export const unitSpecPathV1 = (specRoot: string, id: string): string => `${specRoot}/${unitTargetNameV1(id)}.json`;
 /** 📋️ The spec files of a plan (path to text). */
 export function unitSpecsV1(plan: UnitPlanV1, specRoot: string): Readonly<Record<string, string>> {
@@ -27,7 +27,7 @@ export type NxUnitTargetV1 = {
   readonly outputs: readonly string[];
   readonly dependsOn: readonly string[];
 };
-/** 🎯️ Emits the Nx targets of a plan, in dependency order. The command is `[...command, "exec", "--spec", <spec file>, "--out-root", outputRoot]`; `units exec` finds the files of its dependencies by the naming convention below the output root. */
+/** 🏹️ Emits the Nx targets of a plan, in dependency order. The command is `[...command, "exec", "--spec", <spec file>, "--out-root", outputRoot]`; `units exec` finds the files of its dependencies by the naming convention below the output root. */
 export function nxUnitTargetsV1(plan: UnitPlanV1, options: {readonly outputRoot: string; readonly specRoot: string; readonly command: readonly string[]}): readonly NxUnitTargetV1[] {
   return plan.order.map(id => {
     const unit = plan.byId.get(id)!, consumed = new Set(unit.dependencies.map(dependency => dependency.use));
@@ -44,7 +44,7 @@ export function nxUnitTargetsV1(plan: UnitPlanV1, options: {readonly outputRoot:
 
 const quote = (value: string): string => JSON.stringify(value);
 const list = (values: readonly string[]): string => values.length ? "[" + values.map(quote).join(", ") + "]" : "[]";
-/** 🏗️ The Starlark rule every unit uses. A unit consumes the `iface.json` of each interface dependency (direct only: the file carries the closure) and the `out.json` files of the whole implementation closure of each implementation dependency, so Bazel's own action cache cuts off at an unchanged interface. `dep_srcs` lists dependency sources for tools that read them (policy `bazel: sources`). */
+/** ⚖️ The Starlark rule every unit uses. A unit consumes the `iface.json` of each interface dependency (direct only: the file carries the closure) and the `out.json` files of the whole implementation closure of each implementation dependency, so Bazel's own action cache cuts off at an unchanged interface. `dep_srcs` lists dependency sources for tools that read them (policy `bazel: sources`). */
 export const UNITS_BZL_V1 = `UnitInfo = provider(fields = ["iface", "out", "outs"])
 
 def _unit_impl(ctx):

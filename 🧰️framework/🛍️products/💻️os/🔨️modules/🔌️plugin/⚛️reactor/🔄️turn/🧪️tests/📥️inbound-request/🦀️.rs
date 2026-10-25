@@ -52,7 +52,7 @@ fn inbound_request_fixture() -> InboundRequestFixture {
 }
 
 fn inbound_request_budget() -> semio_framework::kernel::Budget {
-    semio_framework::kernel::Budget { retained: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1_000, max_effects: 16, max_patch_bytes: 65_536, max_frames: 16 }
+    semio_framework::kernel::Budget::from_retained(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 64, 16, 65_536, 16)
 }
 
 /// 🧩️ A bundle whose one handler mirrors what every real flow extension installs: a pure

@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import ts from "typescript";
 import {readFile} from "node:fs/promises";
 import {posix,win32} from "node:path";
-import {testReportPathV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🚦️protocol/🟦️.ts";
+import {testReportPathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🚦️protocol/🟦️.ts";
 import reportProject0 from "../../../../../⌨️cli/📦️packages/🐹️go/📋️project.json";
 import reportProject1 from "../../../../../🏠️workspace/📦️packages/🐹️go/📋️project.json";
 import reportProject2 from "../../../../../🔗️graphql/📦️packages/🐹️go/📋️project.json";

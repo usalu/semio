@@ -131,57 +131,24 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
         Ok(Some(Box::new(preview_eval::PreviewEvalRunJob::<Generation3dViewInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, preview_widget_ids)?)))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<ViewerApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !GENERATION3D_VIEW_TOOL_IDS.contains(&request.tool_id.as_str())
-            && !GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.contains(&request.tool_id.as_str())
-            && !GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str())
-            && !GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.contains(&request.tool_id.as_str())
-            && !GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.contains(&request.tool_id.as_str())
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !GENERATION3D_VIEW_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.contains(&original.tool_id.as_str())
+            && !GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.contains(&original.tool_id.as_str())
         {
-            return Ok(None);
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the generation 3d view command does not match its exact registered tool"));
+        if original.command.command_id() != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the generation 3d view command does not match its exact registered tool").into());
         }
-        let tool_id = request.command.command_id();
+        let tool_id = original.command.command_id();
         let contributions = GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
         let example = GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.contains(&tool_id);
         let flow_eval = GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.contains(&tool_id);
-        let work: Box<dyn ArtifactCommandWork<ViewerApp<Generation3dViewer>>> = if GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.contains(&tool_id) {
-            Box::new(Generation3dViewDocumentIoWork { instance_owner: request.instance_operation_owner, consumed: false })
-        } else if contributions {
-            Box::new(Generation3dViewContributionsWork { instance_owner: request.instance_operation_owner, consumed: false })
-        } else if GENERATION3D_VIEW_FLOW_EVAL_WINDOW_TOOL_IDS.contains(&tool_id) {
-            Box::new(Generation3dViewFlowEvalWindowWork::new(tool_id, request.instance_operation_owner))
-        } else if flow_eval {
-            Box::new(Generation3dViewFlowResolveWork { tool_id, instance_owner: request.instance_operation_owner, consumed: false })
-        } else {
-            Box::new(Generation3dViewCommandWork::new(tool_id, request.instance_operation_owner))
-        };
-        let operation_context = AppOperationContext {
-            retained: request.retained,
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            Generation3dViewCommand::command_id,
-            if contributions {
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Generation3dViewCommand::command_id, if contributions {
                 GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES
             } else if flow_eval {
                 GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES
@@ -191,11 +158,17 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
                 GENERATION3D_VIEW_DOCUMENT_IO_RAW_BYTES
             } else {
                 GENERATION3D_VIEW_RAW_BYTES
-            },
-            GENERATION3D_VIEW_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+            }, GENERATION3D_VIEW_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<ViewerApp<Generation3dViewer>>> { if GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.contains(&tool_id) {
+            Box::new(Generation3dViewDocumentIoWork { instance_owner: request.instance_operation_owner.clone(), consumed: false })
+        } else if contributions {
+            Box::new(Generation3dViewContributionsWork { instance_owner: request.instance_operation_owner.clone(), consumed: false })
+        } else if GENERATION3D_VIEW_FLOW_EVAL_WINDOW_TOOL_IDS.contains(&tool_id) {
+            Box::new(Generation3dViewFlowEvalWindowWork::new(tool_id, request.instance_operation_owner.clone()))
+        } else if flow_eval {
+            Box::new(Generation3dViewFlowResolveWork { tool_id, instance_owner: request.instance_operation_owner.clone(), consumed: false })
+        } else {
+            Box::new(Generation3dViewCommandWork::new(tool_id, request.instance_operation_owner.clone()))
+        } })
     }
 
     /// 🧾️ ALL THREE factories' proofs, in registration order. The bounded rows read their contract

@@ -30,7 +30,7 @@ impl<T: RetainedClone> DrawingNativeCloneAuthority<T> {
         let grant = cx.retained_grant();
         match self.phase {
             0 => {
-                let step = self.cursor.advance(source, grant).map_err(|_| "drawing-store.layer-native-clone")?;
+                let step = self.cursor.advance(source, grant.maximum_copy_bytes, grant).map_err(|_| "drawing-store.layer-native-clone")?;
                 cx.consume_retained(step.progress()).map_err(|_| "drawing-store.layer-native-clone-grant")?;
                 cx.consume_fuel(step.progress().copied_items.max(1) as u64);
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 1; }

@@ -10,6 +10,9 @@ import cachingPolicy from "../../../../🔣️policy.json" with {type:"json"};
 import unitCacheSchema from "../../../../🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json" with {type:"json"};
 import {cacheAreaBudgetBytesV1,cacheNeedRequiredBytesV1,readCacheLedgerV1,type CacheNeedV1} from "../../🟦️.ts";
 import {readImageEnvelopeV1} from "../../../../../🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts";
+import sweepSchema from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/♻️retirement/🧬️schema/🔣️json/🟦️.ts";
+import metadataSchema from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📦️metadata/🧬️schema/🔣️json/🟦️.ts";
+import authoritySchema from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧬️schema/📜️ticket/🔣️json/🟦️.ts";
 
 const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value)),ledger=readCacheLedgerV1(policy),GIB=1024**3,unitCachePolicy=unitCacheSchema.definitions.Policy.const;
 
@@ -49,6 +52,15 @@ test("a partition smaller than its measured need, a bad reclaim and a bad recrea
   ["unknown recreate mode",document=>{document.areas.find((row:any)=>row.id==="graph").recreate="always";}]
  ];
  for(const[name,mutate]of mutations){const document=clone(policy);mutate(document);expect(()=>readCacheLedgerV1(document),name).toThrow();}
+});
+
+test("the Bazel workspaces reclaim rule may aim beyond the graph headroom schema, but never leave less free space than its soft threshold or stand on the wrong partition",()=>{
+ const rule=policy.areas.find(row=>row.id==="bazel-workspaces")?.reclaim;if(!rule)throw Error("The Bazel workspaces area declares a reclaim rule");
+ expect(rule.targetAvailableBytes).toBeGreaterThan(2684354560);expect(()=>readCacheLedgerV1(policy)).not.toThrow();
+ const beyond:any=clone(policy);beyond.areas.find((row:any)=>row.id==="bazel-workspaces").reclaim.softAvailableBytes=22*GIB;beyond.areas.find((row:any)=>row.id==="bazel-workspaces").reclaim.targetAvailableBytes=23*GIB;
+ expect(()=>readCacheLedgerV1(beyond)).toThrow();
+ const inverted:any=clone(policy);Object.assign(inverted.areas.find((row:any)=>row.id==="bazel-workspaces").reclaim,{softAvailableBytes:rule.targetAvailableBytes,targetAvailableBytes:rule.softAvailableBytes});
+ expect(()=>readCacheLedgerV1(inverted)).toThrow();
 });
 
 test("the envelope an image was born with is read from its image.json, and nothing else counts",async()=>{
@@ -106,5 +118,29 @@ test("the unit cache keeps its collection shares, one compile of room above the 
  ];
  for(const[name,mutate]of mutations){const document=clone(policy);mutate(document);expect(()=>readCacheLedgerV1(document),name).toThrow();}
  const small=clone(budgetPolicy.partitions);small.rust.capacityBytes=16*GIB;small.rust.maximumLogicalBytes=16*GIB-1048576;
+ expect(()=>readCacheLedgerV1(policy,small)).toThrow("smaller than its measured need");
+});
+
+test("the leases partition is declared large enough for the store the sweep keeps: entries at their bytes, the headroom file, the nested test stores and one claim turn of floor",()=>{
+ const need=ledger.needs!.find(row=>row.partition==="leases")!,required=cacheNeedRequiredBytesV1(ledger,need),leases=budgetPolicy.partitions.leases,store=sweepSchema.definitions.Store.const,idle=sweepSchema.definitions.Idle.const,part=(id:string)=>need.components.find(row=>row.id===id)!;
+ const database=new Database(":memory:");
+ try{
+  const caps=need.components.map(row=>row.bytes!),row=database.query("SELECT CAST((?1+0.0)*(100+?2)/100 + 0.999999 AS INTEGER)+?3 AS bytes").get(caps.reduce((sum,value)=>sum+value,0),need.headroomPercent,need.floorBytes) as {bytes:number};
+  expect(required).toBe(row.bytes);
+  const fit=database.query("SELECT ?1>=?2 AS fits,?1-?2<?3 AS tight,?4+?5 AS logical,?6 AS declared").get(leases.capacityBytes,required,16*1048576,leases.maximumLogicalBytes,4194304,leases.capacityBytes) as {fits:number;tight:number;logical:number;declared:number};
+  expect(fit).toEqual({fits:1,tight:1,logical:leases.capacityBytes,declared:leases.capacityBytes});
+  const mix=database.query("SELECT ?1*?2 AS resources,?3*?4 AS claims,?5*?6 AS nested").get(store.resourceEntries,store.databaseBytes,store.claimEntries,store.claimBytes,store.nestedStores,store.nestedStoreBytes) as {resources:number;claims:number;nested:number};
+  expect(part("resources").bytes).toBe(mix.resources);expect(part("claims").bytes).toBe(mix.claims);expect(part("nested-stores").bytes).toBe(mix.nested);
+ }finally{database.close();}
+ expect(leases.capacityBytes).toBe(64*1048576);
+ expect(part("headroom").bytes).toBe(metadataSchema.properties.capacityBytes.const);
+ expect(need.floorBytes).toBe(metadataSchema.properties.capacityBytes.const);
+ expect(need.floorBytes).toBeGreaterThanOrEqual(authoritySchema.definitions.ClaimRetentionPolicy.properties.maximumClaimsPerTurn.const*store.claimBytes);
+ expect(store.nestedStoreBytes).toBeGreaterThan(metadataSchema.properties.capacityBytes.const);
+ for(const row of need.components)expect(row.measuredBytes,row.id).toBeLessThanOrEqual(row.bytes!);
+ expect(idle.pressureFreeRatio*leases.capacityBytes).toBeGreaterThanOrEqual(need.floorBytes);
+ expect(idle.nestedIdleMilliseconds).toBeGreaterThan(idle.idleMilliseconds);
+ expect(ledger.areas.find(area=>area.id==="leases")!.recreate).toBe("derived");
+ const small=clone(budgetPolicy.partitions);small.leases.capacityBytes=48*1048576;small.leases.maximumLogicalBytes=48*1048576-1048576;
  expect(()=>readCacheLedgerV1(policy,small)).toThrow("smaller than its measured need");
 });

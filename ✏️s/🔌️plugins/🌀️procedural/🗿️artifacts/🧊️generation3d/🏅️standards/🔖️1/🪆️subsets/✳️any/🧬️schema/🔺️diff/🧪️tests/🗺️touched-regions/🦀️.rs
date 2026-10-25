@@ -108,7 +108,7 @@ fn every_leafs_applied_diff_changes_only_covered_regions_and_covers_every_change
     for (kind, before, mutation) in quintets() {
         let base = decode_snapshot(&before);
         let mutation: semio_s_artifact_procedural_3d_mutations::Generation3dMutation = semio_framework_pack_json::from_json_str(&mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation decodes");
-        let (diff, _messages) = protocol::Mutation::diff(&mutation, &*base).into_parts();
+        let (diff, _messages) = protocol::ColdMutation::diff(&mutation, &*base).into_parts();
         let diff = Generation3dDiffRead::new(diff);
         let next = Generation3dSnapshotRead::new(protocol::apply_diff_cold(&diff, &base).expect("the committed quintet's diff applies"));
         let changed = changed_regions(&json(&base), &json(&next));
@@ -133,7 +133,7 @@ fn topology_reads_are_sound_for_every_leaf() {
     for (kind, before, mutation) in quintets() {
         let base = decode_snapshot(&before);
         let mutation: semio_s_artifact_procedural_3d_mutations::Generation3dMutation = semio_framework_pack_json::from_json_str(&mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation decodes");
-        let (diff, _messages) = protocol::Mutation::diff(&mutation, &*base).into_parts();
+        let (diff, _messages) = protocol::ColdMutation::diff(&mutation, &*base).into_parts();
         let diff = Generation3dDiffRead::new(diff);
         let next = Generation3dSnapshotRead::new(protocol::apply_diff_cold(&diff, &base).expect("the committed quintet's diff applies"));
         let moved = semio_s_artifact_procedural_3d_inferences::Generation3dInference::infer(&crate::test_geometry::geometry_input(&base)).expect("topology infers") != semio_s_artifact_procedural_3d_inferences::Generation3dInference::infer(&crate::test_geometry::geometry_input(&next)).expect("topology infers");

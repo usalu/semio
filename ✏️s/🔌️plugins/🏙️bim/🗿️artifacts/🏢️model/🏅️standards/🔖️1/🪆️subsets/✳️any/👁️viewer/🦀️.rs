@@ -276,22 +276,8 @@ impl semio_framework_plugin::ToolJobFactory for BimViewCommandJobFactory {
         bim_view_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BIM_VIEW_RAW_BYTES, checkpoint_resume: false);
 
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > BIM_VIEW_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("the bounded BIM view command rejects an oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BimViewCommandJobFactory {
@@ -417,43 +403,16 @@ impl ArtifactViewer for BimModelViewer {
         registry.register(BimViewCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<ViewerApp<Self>>) -> Result<Option<semio_framework_plugin::ToolOperationSpec>, Fault> {
-        if !BIM_VIEW_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !BIM_VIEW_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.action_id() != request.tool_id {
+        if original.command.action_id() != original.tool_id {
             return Err(refusal("app.command.tool-mismatch", "the BIM view command does not match its exact registered tool"));
         }
-        let tool_id = request.command.action_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, bim_view_reduce, bim_view_extent));
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id,
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            BimViewCommand::action_id,
-            BIM_VIEW_RAW_BYTES,
-            1,
-            work,
-        );
-        Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        let tool_id = original.command.action_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, BimViewCommand::action_id, BIM_VIEW_RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool_id, bim_view_reduce, bim_view_extent))
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {

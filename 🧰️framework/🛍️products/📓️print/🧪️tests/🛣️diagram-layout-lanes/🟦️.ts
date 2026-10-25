@@ -32,7 +32,7 @@ function namedNodes(ctx: AdapterContext): number[] {
   return flat;
 }
 
-/** 📋️ The lane bands the scenario writes out; a blank row is a lane that repeats an earlier one. */
+/** 🚦️ The lane bands the scenario writes out; a blank row is a lane that repeats an earlier one. */
 function namedLanes(ctx: AdapterContext): number[] {
   const flat: number[] = [];
   for (const row of rows(ctx)) if ((row.bottom ?? "") !== "") flat.push(Number(row.bottom), Number(row.top));
@@ -68,17 +68,17 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     "grid-placement": {
-      /** 📋️ The millimetres the placement formula gives for this table. */
+      /** 📐️ The millimetres the placement formula gives for this table. */
       oracle: (ctx: AdapterContext) => ({ projection: roundProjectionNumbers({ "geometry/diagram-node": namedNodes(ctx) }, DECIMALS) }),
       subject: async (ctx: AdapterContext) => (await subject(ctx, "routing=orthogonal", "geometry/diagram-node")),
     },
     "direction-transposes-the-grid": {
-      /** 📋️ The same formula on the transposed grid. */
+      /** 🔄️ The same formula on the transposed grid. */
       oracle: (ctx: AdapterContext) => ({ projection: roundProjectionNumbers({ "geometry/diagram-node": namedNodes(ctx) }, DECIMALS) }),
       subject: async (ctx: AdapterContext) => (await subject(ctx, "direction=right", "geometry/diagram-node")),
     },
     "lane-bands": {
-      /** 📋️ The band edges the feature specifies, one pair per distinct lane. */
+      /** 🥢️ The band edges the feature specifies, one pair per distinct lane. */
       oracle: (ctx: AdapterContext) => ({ projection: roundProjectionNumbers({ "geometry/diagram-lane": namedLanes(ctx) }, DECIMALS) }),
       subject: async (ctx: AdapterContext) => (await subject(ctx, "lanes=row", "geometry/diagram-lane")),
     },

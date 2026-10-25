@@ -27,7 +27,7 @@ mod tests;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use crate::binary::snapshot::*;
+use crate::binary_snapshot::*;
 use semio_s_artifact_block_3d_model::*;
 use semio_s_artifact_block_3d_model::{Block3dVortexKindExtra, Block3dVortexTemplate, BLOCK_3D_SCHEMA};
 use semio_s_plugin_block::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
@@ -57,7 +57,7 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()) }
 }
 }
-#[cfg(test)] pub use crate::binary::snapshot::snapshot_codec::*;
+#[cfg(test)] pub use crate::binary_snapshot::snapshot_codec::*;
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
 impl pack::snapshot::ArtifactNativeSnapshot for Block3dSnapshot {

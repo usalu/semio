@@ -28,7 +28,7 @@ export type MutationVectorScenario = Readonly<{ id: string; directoryName: strin
 /** 🧬️ One physical mutation directory and every scenario bundle it contributes to projection. */
 export type MutationVector = Readonly<{ mutationId: string; sourceMutationDirectoryName: string; mutationDirectoryName: string; scenarios: readonly MutationVectorScenario[] }>;
 
-/** 🦠️ Runtime capability vocabulary plus its independent physical projection registry. */
+/** 📚️ Runtime capability vocabulary plus its independent physical projection registry. */
 export type MutationCatalog = Readonly<{
   id: string;
   capability: string;
@@ -41,7 +41,7 @@ export type MutationCatalog = Readonly<{
 
 const MUTATION_ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-/** 🪆️The path segment that marks an owner as carrying standards/subsets profile coordinates. */
+/** 📍️The path segment that marks an owner as carrying standards/subsets profile coordinates. */
 export const PROFILE_MARKER = "/🏅️standards/";
 
 /** 🏷️The logical slug a standard or subset directory renders after its semantic emoji (`🔖️1.1`, `9️⃣89a`, `✉️base`, `1️⃣cc1`). */
@@ -57,7 +57,7 @@ export function profileDirectoryIsCanonical(name: string, taxonomy: MutationCata
   return identity.emoji.length > 0 && PROFILE_SLUG_RE.test(identity.rest) && pathEmojiStatuteFindings([{ path: name, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length === 0;
 }
 
-/** 🪆️Whether the first standards marker in an owner contains these exact subset coordinates. */
+/** ⏮️Whether the first standards marker in an owner contains these exact subset coordinates. */
 function ownerContainsProfile(owner: string, standardDirectoryName: string, subsetDirectoryName: string): boolean {
   const markerIndex = owner.indexOf(PROFILE_MARKER);
   if (markerIndex < 0) return false;
@@ -158,7 +158,7 @@ export function mutationCatalogProblems(value: unknown, owner?: string, taxonomy
 }
 
 /**
- * 🧾️ Reads an owner's catalogs and REPORTS what is malformed instead of throwing.
+ * 📖️ Reads an owner's catalogs and REPORTS what is malformed instead of throwing.
  *
  * Throwing here was a blinding failure: `discoverTestContributions` walks the whole repository, so
  * one bad manifest aborted the scan and every other owner's catalogs, oracles, probes and fixtures

@@ -12,7 +12,7 @@ export type TimeTravelBlockV1 = Readonly<{ name: string; prerequisite: string; e
 /** 👣️ One scenario step; the method form keeps a step over a narrower context assignable to the harness's. */
 export type TimeTravelStepV1<Context extends object = object> = { run(context: Context): Promise<void> }["run"];
 
-/** 🧩️ What a plugin supplies to the time-travel harness: the playground it drives, where its serve listens, the steps of its journey and the hooks the harness calls around them. The harness owns the CLI, the browser, the report and the plugin-neutral universal step. */
+/** 📋️ What a plugin supplies to the time-travel harness: the playground it drives, where its serve listens, the steps of its journey and the hooks the harness calls around them. The harness owns the CLI, the browser, the report and the plugin-neutral universal step. */
 export type TimeTravelScenarioV1<Context extends object = object> = Readonly<{
   variant: string;
   defaultServes: Readonly<Record<Renderer, string>>;

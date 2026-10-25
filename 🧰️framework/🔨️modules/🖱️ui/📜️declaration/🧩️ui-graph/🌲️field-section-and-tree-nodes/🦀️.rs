@@ -118,12 +118,12 @@ pub struct UiTreeWindow {
 }
 
 impl UiTreeWindow {
-    /// 🪟️ Rows of empty pitch a renderer paints BEFORE the materialised children.
+    /// ⬆️ Rows of empty pitch a renderer paints BEFORE the materialised children.
     pub fn leading_rows(&self) -> u32 {
         self.offset.min(self.total)
     }
 
-    /// 🪟️ Rows of empty pitch a renderer paints AFTER `materialised` children.
+    /// ⬇️ Rows of empty pitch a renderer paints AFTER `materialised` children.
     pub fn trailing_rows(&self, materialised: usize) -> u32 {
         self.total.saturating_sub(self.leading_rows()).saturating_sub(u32::try_from(materialised).unwrap_or(u32::MAX))
     }
@@ -189,7 +189,7 @@ pub struct UiTreeItemNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub menu: Option<UiMenuRef>,
-    /// 🪟️ The materialised slice of this row's logical child list — see [`UiTreeWindow`]. A row
+    /// 🍕️ The materialised slice of this row's logical child list — see [`UiTreeWindow`]. A row
     /// with `window.total > 0` is expandable even while `items` is empty or absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -247,7 +247,7 @@ impl UiTreeItemNode {
 #[value(rename_all = "camelCase")]
 pub struct UiTreeSectionNode {
     pub id: String,
-    /// 🎛️ Horizontal toolbar rendered inside this section's header.
+    /// 🧰️ Horizontal toolbar rendered inside this section's header.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub header_toolbar: Option<UiStackNode>,
@@ -261,7 +261,7 @@ pub struct UiTreeSectionNode {
     #[value(default, skip_serializing_if = "UiPresence::is_default")]
     pub presence: UiPresence,
     pub items: Vec<UiTreeItemNode>,
-    /// 🪟️ The materialised slice of this section's logical child list — see [`UiTreeWindow`].
+    /// 🔪️ The materialised slice of this section's logical child list — see [`UiTreeWindow`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub window: Option<UiTreeWindow>,

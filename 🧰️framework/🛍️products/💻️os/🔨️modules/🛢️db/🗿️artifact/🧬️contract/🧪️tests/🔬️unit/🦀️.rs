@@ -53,12 +53,12 @@ mod bridge {
         fn inverse(&self, _base: &Counter) -> Self {
             Self { amount: -self.amount }
         }
-        fn absorb(&mut self, other: Self) {
-            self.amount += other.amount;
-        }
     }
 
     impl protocol::ColdMutationDiff<Counter> for AddDiff {
+        fn absorb(&mut self, other: Self) {
+            self.amount += other.amount;
+        }
         fn apply(&self, base: &mut Counter, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
             base.value = base.value + self.amount;
             Ok(())

@@ -17,7 +17,7 @@ const DECIMALS = 6;
 
 type Row = readonly [id: string, parent: string, value: number];
 
-/** 🌳️ `demo-hierarchy-deep` of `semio-viz-hierarchy.sty`, region 🔖️DemoData. */
+/** 🪜️ `demo-hierarchy-deep` of `semio-viz-hierarchy.sty`, region 🔖️DemoData. */
 const DEEP: readonly Row[] = [
   ["root", "", 0], ["a", "root", 0], ["b", "root", 0], ["c", "root", 0],
   ["a1", "a", 6], ["a2", "a", 3], ["a3", "a", 2],
@@ -113,7 +113,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     "tree-node-size": {
-      /** 🔮️ d3 tree().nodeSize([12,20]) — the branch that never normalises. */
+      /** 📏️ d3 tree().nodeSize([12,20]) — the branch that never normalises. */
       oracle: () => ({
         projection: {
           ...placed("deep", treeOf(DEEP, { nodeSize: [12, 20] }), false),
@@ -123,7 +123,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     "tree-separation": {
-      /** 🔮️ d3 tree().separation() feeding both the first walk and the normalisation. */
+      /** ⏮️ d3 tree().separation() feeding both the first walk and the normalisation. */
       oracle: () => ({
         projection: {
           "x/deep": grid(preorder(treeOf(DEEP, { size: [100, 60], separation: [1, 2.5] })).map((each) => each.x!)),
@@ -133,7 +133,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     "cluster-size": {
-      /** 🔮️ d3 cluster().size([100,60]) on both fixtures. */
+      /** 🧫️ d3 cluster().size([100,60]) on both fixtures. */
       oracle: () => ({
         projection: {
           ...placed("deep", clusterOf(DEEP, { size: [100, 60] }), true),
@@ -143,7 +143,7 @@ export default defineTestAdapter({
       subject: async (ctx) => (await subject(ctx)),
     },
     "cluster-node-size": {
-      /** 🔮️ d3 cluster().nodeSize(), which anchors the whole tree on its root. */
+      /** ⚓️ d3 cluster().nodeSize(), which anchors the whole tree on its root. */
       oracle: () => ({
         projection: {
           ...placed("deep", clusterOf(DEEP, { nodeSize: [12, 20] }), false),

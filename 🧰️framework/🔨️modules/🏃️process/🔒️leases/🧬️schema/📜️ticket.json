@@ -60,6 +60,9 @@
         },
         "sharedCohort": {
           "type": "boolean"
+        },
+        "yielding": {
+          "const": true
         }
       }
     },

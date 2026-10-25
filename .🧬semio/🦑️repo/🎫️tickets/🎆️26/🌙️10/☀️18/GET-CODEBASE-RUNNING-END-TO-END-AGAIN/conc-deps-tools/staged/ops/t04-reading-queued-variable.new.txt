@@ -1,1 +1,0 @@
-let storeOpens=0,accepted=true;const ports=

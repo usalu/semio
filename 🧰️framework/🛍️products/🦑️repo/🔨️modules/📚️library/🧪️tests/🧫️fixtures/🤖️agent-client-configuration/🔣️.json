@@ -66,6 +66,34 @@
         }
       },
       {
+        "id": "gamma-mcp",
+        "verb": "dev",
+        "command": [
+          "repo",
+          "mcp"
+        ],
+        "continuous": true,
+        "parameters": [
+          {
+            "id": "client",
+            "kind": "text",
+            "default": "client",
+            "valueEnv": "GAMMA_CLIENT"
+          }
+        ],
+        "mcp": {
+          "server": "gamma",
+          "clients": {
+            "claude-code": {},
+            "codex": {
+              "parameters": {
+                "client": "codex"
+              }
+            }
+          }
+        }
+      },
+      {
         "id": "not-mcp",
         "verb": "run",
         "command": [
@@ -96,6 +124,16 @@
           "a.read,b.write",
           "--folder=space"
         ]
+      },
+      {
+        "name": "gamma",
+        "command": "repo",
+        "args": [
+          "mcp"
+        ],
+        "env": {
+          "GAMMA_CLIENT": "client"
+        }
       }
     ],
     "codex": [
@@ -118,22 +156,30 @@
           "a.read,b.write",
           "--folder=space"
         ]
+      },
+      {
+        "name": "gamma",
+        "command": "repo",
+        "args": [
+          "mcp"
+        ],
+        "env": {
+          "GAMMA_CLIENT": "codex"
+        }
       }
     ]
   },
   "files": {
-    ".mcp.json": "{\n  \"mcpServers\": {\n    \"alpha\": {\n      \"type\": \"stdio\",\n      \"command\": \"bun\",\n      \"args\": [\n        \"./run.ts\",\n        \"serve\",\n        \"base\"\n      ]\n    },\n    \"beta.gateway\": {\n      \"type\": \"stdio\",\n      \"command\": \"bun\",\n      \"args\": [\n        \"./run.ts\",\n        \"gateway\",\n        \"--scopes\",\n        \"a.read,b.write\",\n        \"--folder=space\"\n      ]\n    }\n  }\n}\n",
-    ".codex/config.toml": "[mcp_servers.alpha]\ncommand = \"bun\"\nargs = [\"./run.ts\", \"serve\", \"codex\"]\nenabled = true\ncwd = \".\"\n\n[mcp_servers.\"beta.gateway\"]\ncommand = \"bun\"\nargs = [\"./run.ts\", \"gateway\", \"--scopes\", \"a.read,b.write\", \"--folder=space\"]\nenabled = true\ncwd = \".\"\n"
+    ".mcp.json": "{\n  \"mcpServers\": {\n    \"alpha\": {\n      \"type\": \"stdio\",\n      \"command\": \"bun\",\n      \"args\": [\n        \"./run.ts\",\n        \"serve\",\n        \"base\"\n      ]\n    },\n    \"beta.gateway\": {\n      \"type\": \"stdio\",\n      \"command\": \"bun\",\n      \"args\": [\n        \"./run.ts\",\n        \"gateway\",\n        \"--scopes\",\n        \"a.read,b.write\",\n        \"--folder=space\"\n      ]\n    },\n    \"gamma\": {\n      \"type\": \"stdio\",\n      \"command\": \"repo\",\n      \"args\": [\n        \"mcp\"\n      ],\n      \"env\": {\n        \"GAMMA_CLIENT\": \"client\"\n      }\n    }\n  }\n}\n",
+    ".codex/config.toml": "[mcp_servers.alpha]\ncommand = \"bun\"\nargs = [\"./run.ts\", \"serve\", \"codex\"]\nenabled = true\ncwd = \".\"\n\n[mcp_servers.\"beta.gateway\"]\ncommand = \"bun\"\nargs = [\"./run.ts\", \"gateway\", \"--scopes\", \"a.read,b.write\", \"--folder=space\"]\nenabled = true\ncwd = \".\"\n\n[mcp_servers.gamma]\ncommand = \"repo\"\nargs = [\"mcp\"]\nenv = { GAMMA_CLIENT = \"codex\" }\nenabled = true\ncwd = \".\"\n"
   },
   "launchers": [
     {
       "server": "alpha",
-      "root": "/work",
-      "runtime": "/opt/bun",
       "expected": {
-        "command": "/opt/bun",
+        "command": "bun",
         "args": [
-          "/work/run.ts",
+          "./run.ts",
           "serve",
           "base"
         ]
@@ -141,13 +187,20 @@
     },
     {
       "server": "beta.gateway",
-      "root": "/work",
-      "runtime": "/opt/bun",
       "expected": {
-        "command": "/opt/bun",
+        "command": "bun",
         "args": [
-          "/work/run.ts",
+          "./run.ts",
           "gateway"
+        ]
+      }
+    },
+    {
+      "server": "gamma",
+      "expected": {
+        "command": "repo",
+        "args": [
+          "mcp"
         ]
       }
     }
@@ -233,7 +286,7 @@
           }
         }
       },
-      "message": "positional or a flag"
+      "message": "a flag or an environment variable"
     },
     {
       "id": "retired-ide-vscode",

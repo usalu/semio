@@ -1,8 +1,8 @@
 /** 👻️ The presentation react deck, rendering of auto-animate targets, settled state, many-to-one ghost frames, one-to-many source ghosts and slot labels. */
-import type { AutoAnimateMatcherHost, Presentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import type { AutoAnimateMatcherHost, Presentation } from "@semio-tech/presentation-react";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { act } from "@semio-tech/ui-react/test";
-import { PRESENTATION_MANY_TO_ONE_MORPH_CLASS, clearRevealAutoAnimateInlineLayout, finalizeRevealAutoAnimateRestState, isManyToOneMorphTransition, isRevealSlideAutoAnimating, isSectionAutoAnimating, mountPresentation, prepareArrangementBeforeAutoAnimate, presentationAutoAnimateMatcher, readPresentationSlideIndicesFromUrl, relaxHiddenPreflight, slidesShareAutoAnimateId, syncArrangementSettledState, syncManyToOneGhostMorphFramesFromDom, unmountPresentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { PRESENTATION_MANY_TO_ONE_MORPH_CLASS, clearRevealAutoAnimateInlineLayout, finalizeRevealAutoAnimateRestState, isManyToOneMorphTransition, isRevealSlideAutoAnimating, isSectionAutoAnimating, mountPresentation, prepareArrangementBeforeAutoAnimate, presentationAutoAnimateMatcher, readPresentationSlideIndicesFromUrl, relaxHiddenPreflight, slidesShareAutoAnimateId, syncArrangementSettledState, syncManyToOneGhostMorphFramesFromDom, unmountPresentation } from "@semio-tech/presentation-react";
 import { source } from "../🧰️presentation-deck-helpers/🟦️.tsx";
 
 describe("PresentationDeck", () => {

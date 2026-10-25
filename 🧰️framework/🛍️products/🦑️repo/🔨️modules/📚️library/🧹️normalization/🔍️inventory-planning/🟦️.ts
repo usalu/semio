@@ -27,7 +27,7 @@ import { canonicalDirectory, canonicalFile, classifyPackageRole, packageImplemen
 import { projectNestedCargoPackages, validateMutationPayloadSchemas, validateTicketImportantDirectories } from "../🗺️artifact-projection-catalogs/🟦️.ts";
 import { assertGeneratorPreviewTarget } from "../🧐️preimage-assertions/🟦️.ts";
 import { projectArtifactCatalogs, projectArtifactEmptyFacetFiles, projectExactOwnedFiles, projectTicketDocumentFiles, projectTicketImportantFiles } from "../📂️owned-file-projection/🟦️.ts";
-import { type TaxonomyRepositoryCapture, inheritReferenceInventoryContext, inventoryCaptures, referenceInventoryContexts } from "../🔗️reference-inventory/🟦️.ts";
+import { type TaxonomyRepositoryCapture, historicalDocumentEvidence, inheritReferenceInventoryContext, inventoryCaptures, referenceInventoryContexts } from "../🔗️reference-inventory/🟦️.ts";
 import { normalizationRevision, referenceTokenStore, textualPath } from "../🧮️reference-digests/🟦️.ts";
 import { referenceGraph } from "../🕸️reference-graph/🟦️.ts";
 
@@ -84,6 +84,8 @@ export function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInvent
       parent = dirname(parent);
     }
   }
+  const historicalManifestDirectories = new Map<string, boolean>();
+  const historical = (path: string): boolean => historicalDocumentEvidence(path, taxonomy, repoRoot, historicalManifestDirectories);
   const entries = new Map<string, MutableInventoryEntry>();
   const canonicalDirectoryByPath = new Map<string, string>();
   const directoryKindByPath = new Map<string, string>();
@@ -97,7 +99,7 @@ export function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInvent
 
     const parentCanonical = canonicalDirectoryByPath.get(dirname(path)) ?? "";
     const parentContextId = directoryKindByPath.get(dirname(path)) ?? fixedDirectoryContractByPath.get(dirname(path));
-    const canonical = canonicalDirectory(path, parentCanonical, parentContextId, ancestorDirectoryKindIds(path, directoryKindByPath), taxonomy, mutationLeaves);
+    const canonical: ReturnType<typeof canonicalDirectory> = historical(path) ? { path: parentCanonical ? `${parentCanonical}/${basename(path)}` : basename(path), kindId: null, violations: [] } : canonicalDirectory(path, parentCanonical, parentContextId, ancestorDirectoryKindIds(path, directoryKindByPath), taxonomy, mutationLeaves);
     canonicalDirectoryByPath.set(path, canonical.path);
     if (canonical.kindId) directoryKindByPath.set(path, canonical.kindId);
     if (canonical.fixedId) fixedDirectoryContractByPath.set(path, canonical.fixedId);
@@ -113,7 +115,7 @@ export function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInvent
       contentHash: "",
       referencesIn: [],
       referencesOut: [],
-      violations: [...canonical.violations, ...pathPolicyViolations(canonical.path, taxonomy)],
+      violations: historical(path) ? [] : [...canonical.violations, ...pathPolicyViolations(canonical.path, taxonomy)],
       mode: (lstatOrNull(absolutePath(repoRoot, path))?.mode ?? 0) & 0o7777,
       size: 0,
     });
@@ -151,11 +153,12 @@ export function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInvent
     const parent = dirname(row.path) === "." ? "" : dirname(row.path);
     const contentKind: ContentKindHint = content.kind === "file" ? extensionlessContentKind(row.path, basename(row.path).includes(".") ? undefined : content.bytes(), taxonomy) : { kindId: null };
     const parentContextId = directoryKindByPath.get(parent) ?? fixedDirectoryContractByPath.get(parent);
+    const exempt = historical(row.path);
     const canonical = canonicalFile(row.path, canonicalDirectoryByPath.get(parent) ?? "", parentContextId, ancestorDirectoryKindIds(row.path, directoryKindByPath), directoryKindByPath, fixedDirectoryContractByPath, siblingFixedFilenameContractIdsByParent, authorizedCargoBuildScriptPaths, taxonomy, contentKind.kindId ?? undefined);
-    const violations = [...canonical.violations];
-    if (content.violation) violations.push(content.violation);
-    if (contentKind.violation && !canonical.fixedId) violations.push(contentKind.violation);
-    const textual = content.kind === "file" && content.violation === undefined && content.size <= TEXT_LIMIT_BYTES && (textualPath(row.path) || (contentKind.kindId !== null && contentKind.kindId !== "binary")) && content.utf8() === true;
+    const violations = exempt ? [] : [...canonical.violations];
+    if (content.violation && !exempt) violations.push(content.violation);
+    if (contentKind.violation && !canonical.fixedId && !exempt) violations.push(contentKind.violation);
+    const textual = content.kind === "file" && content.violation === undefined && content.size <= TEXT_LIMIT_BYTES && (textualPath(row.path) || (contentKind.kindId !== null && contentKind.kindId !== "binary") || (canonical.fixedId !== undefined && taxonomy.schema.packageSourceDispositions[canonical.fixedId]?.grammarId !== undefined)) && content.utf8() === true;
     let decoded: string | undefined;
     const text = (): string | null => textual ? decoded ??= new TextDecoder("utf-8").decode(content.bytes()) : null;
     if (stamps && content.stat && content.observedAt !== undefined) stamps.set(row.path, { dev: content.stat.dev, ino: content.stat.ino, size: content.stat.size, mtimeMs: content.stat.mtimeMs, ctimeMs: content.stat.ctimeMs, mode: content.mode, observedAt: content.observedAt, utf8: textual });
@@ -164,16 +167,16 @@ export function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInvent
     if (fixedSource?.finding === "fixed-source-disposition-unresolved") violations.push(violation(fixedSource.finding, row.path, `Fixed source contract ${fixedSource.contractId} rejected the body with its declared semantic validator`));
     const admitted = packageImplementationAdmittedAt(row.path, canonical.fileKind, taxonomy, (candidate) => leafPaths.has(candidate));
     const role = packageLocation(row.path, taxonomy) ? storedClassification(leafStore, () => recordKey("taxonomy-package-role-v2", normalizationRevision(), taxonomy.input.contentHash, row.path, canonical.fileKind ?? "", canonical.fixedId ?? "", content.hash, String(textual), String(admitted)), () => classifyPackageRole(row.path, canonical.fileKind, canonical.fixedId, text(), taxonomy, admitted)) : classifyPackageRole(row.path, canonical.fileKind, canonical.fixedId, null, taxonomy);
-    let normalizedPath = canonical.path;
-    if (role === "implementation") {
+    let normalizedPath = exempt ? row.path : canonical.path;
+    if (role === "implementation" && !exempt) {
       const extracted = packageImplementationDestination(row.path, canonical, canonicalDirectoryByPath, directoryKindByPath, taxonomy);
       if (extracted) {
         normalizedPath = extracted;
         violations.push(violation("package-implementation-file", row.path, `Package implementation must move to ${extracted}`, "warning"));
       } else violations.push(violation("package-implementation-destination-unresolved", row.path, "Package implementation has no deterministic semantic owner"));
     }
-    if (role === "unresolved") violations.push(violation("package-role-unresolved", row.path, "Package role cannot be proven by the configured glue grammar"));
-    violations.push(...pathPolicyViolations(normalizedPath, taxonomy));
+    if (role === "unresolved" && !exempt) violations.push(violation("package-role-unresolved", row.path, "Package role cannot be proven by the configured glue grammar"));
+    if (!exempt) violations.push(...pathPolicyViolations(normalizedPath, taxonomy));
     if (content.kind === "symlink") {
       try {
         const target = readlinkSync(absolutePath(repoRoot, row.path));

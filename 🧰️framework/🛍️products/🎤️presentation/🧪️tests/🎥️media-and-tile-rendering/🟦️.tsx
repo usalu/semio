@@ -1,9 +1,9 @@
 /** 🎥️ The presentation react deck, rendering of media and tiles: video and pdf embodiments, teaser veils, absolute positions, split figure tiles, catalogue morph anchors and listed dispositions. */
 import { remapSplitDispositions, split } from "@semio-tech/presentation";
-import type { AutoAnimateMatcherHost, Presentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import type { AutoAnimateMatcherHost, Presentation } from "@semio-tech/presentation-react";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { act } from "@semio-tech/ui-react/test";
-import { mountPresentation, presentationAutoAnimateMatcher, unmountPresentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { mountPresentation, presentationAutoAnimateMatcher, unmountPresentation } from "@semio-tech/presentation-react";
 
 describe("PresentationDeck", () => {
   let container: HTMLDivElement;

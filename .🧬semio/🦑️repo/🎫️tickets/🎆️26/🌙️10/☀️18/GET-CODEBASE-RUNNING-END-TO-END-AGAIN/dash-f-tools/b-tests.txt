@@ -1,0 +1,3 @@
+d-tests|@semio-tech/repo-dashboard-rs|test-unit,test-windows,test-process-deadline,test-dispatch,test-ci-source,test-language,test-source-freshness
+d-heavy|@semio-tech/repo-dashboard-rs|test-journeys,test-authority
+d-test|@semio-tech/repo-dashboard-rs|test

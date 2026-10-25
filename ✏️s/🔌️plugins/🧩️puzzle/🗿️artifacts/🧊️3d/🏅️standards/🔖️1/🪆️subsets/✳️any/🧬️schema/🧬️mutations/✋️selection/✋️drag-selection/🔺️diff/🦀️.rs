@@ -1,6 +1,7 @@
 //! 📦️ by the payload offset, read off the BASE origin, so the leaf replays on any base. The attraction graph is
 //! 🔺️ Sparse diff builder for `DragSelection` — every unlocked addressed object and target volume moves
 //! re-solved: attracted objects are re-placed from their moved parents, other touched attractions re-derive.
+use protocol::list_delta::RowPatch;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumePatch;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumeModification;

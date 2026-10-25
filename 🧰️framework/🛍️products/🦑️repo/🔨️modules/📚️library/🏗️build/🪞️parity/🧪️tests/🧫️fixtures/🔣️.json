@@ -3603,6 +3603,31 @@
       "exit": 1
      }
     }
+   },
+   {
+    "name": "two spawns joined without a newline exactly as the pinned Bazel 8.4.2 writes a multi-spawn log",
+    "text": "{\n  \"commandArgs\": [\"/bin/bash\", \"-c\", \"cat $@ \\u003e bazel-out/darwin_arm64-fastbuild/bin/t_cached.out\", \"\", \"a.txt\"],\n  \"environmentVariables\": [],\n  \"platform\": {\n    \"properties\": []\n  },\n  \"inputs\": [{\n    \"path\": \"a.txt\",\n    \"digest\": {\n      \"hash\": \"5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03\",\n      \"sizeBytes\": \"6\",\n      \"hashFunctionName\": \"SHA-256\"\n    },\n    \"isTool\": false,\n    \"symlinkTargetPath\": \"\"\n  }],\n  \"listedOutputs\": [\"bazel-out/darwin_arm64-fastbuild/bin/t_cached.out\"],\n  \"remotable\": true,\n  \"cacheable\": true,\n  \"timeoutMillis\": \"0\",\n  \"mnemonic\": \"Action\",\n  \"actualOutputs\": [{\n    \"path\": \"bazel-out/darwin_arm64-fastbuild/bin/t_cached.out\",\n    \"digest\": {\n      \"hash\": \"5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03\",\n      \"sizeBytes\": \"6\",\n      \"hashFunctionName\": \"SHA-256\"\n    },\n    \"isTool\": false,\n    \"symlinkTargetPath\": \"\"\n  }],\n  \"runner\": \"local\",\n  \"cacheHit\": false,\n  \"status\": \"\",\n  \"exitCode\": 0,\n  \"remoteCacheable\": true,\n  \"targetLabel\": \"//:t_cached\",\n  \"digest\": {\n    \"hash\": \"1b016801a9737cd1b20199df18fbbeb730b393d00479effba8c49bacb819c590\",\n    \"sizeBytes\": \"147\",\n    \"hashFunctionName\": \"SHA256\"\n  },\n  \"metrics\": {\n    \"totalTime\": \"0.025s\",\n    \"executionWallTime\": \"0.024s\",\n    \"inputBytes\": \"0\",\n    \"inputFiles\": \"1\",\n    \"memoryEstimateBytes\": \"0\",\n    \"inputBytesLimit\": \"0\",\n    \"inputFilesLimit\": \"0\",\n    \"outputBytesLimit\": \"0\",\n    \"outputFilesLimit\": \"0\",\n    \"memoryBytesLimit\": \"0\",\n    \"startTime\": \"2026-10-24T15:54:26.186Z\"\n  }\n}{\n  \"commandArgs\": [\"/bin/bash\", \"-c\", \"cat $@ \\u003e bazel-out/darwin_arm64-fastbuild/bin/t_uncached.out\", \"\", \"a.txt\"],\n  \"environmentVariables\": [],\n  \"platform\": {\n    \"properties\": []\n  },\n  \"inputs\": [{\n    \"path\": \"a.txt\",\n    \"digest\": {\n      \"hash\": \"5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03\",\n      \"sizeBytes\": \"6\",\n      \"hashFunctionName\": \"SHA-256\"\n    },\n    \"isTool\": false,\n    \"symlinkTargetPath\": \"\"\n  }],\n  \"listedOutputs\": [\"bazel-out/darwin_arm64-fastbuild/bin/t_uncached.out\"],\n  \"remotable\": true,\n  \"cacheable\": false,\n  \"timeoutMillis\": \"0\",\n  \"mnemonic\": \"Action\",\n  \"actualOutputs\": [{\n    \"path\": \"bazel-out/darwin_arm64-fastbuild/bin/t_uncached.out\",\n    \"digest\": {\n      \"hash\": \"5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03\",\n      \"sizeBytes\": \"6\",\n      \"hashFunctionName\": \"SHA-256\"\n    },\n    \"isTool\": false,\n    \"symlinkTargetPath\": \"\"\n  }],\n  \"runner\": \"local\",\n  \"cacheHit\": false,\n  \"status\": \"\",\n  \"exitCode\": 0,\n  \"remoteCacheable\": false,\n  \"targetLabel\": \"//:t_uncached\",\n  \"metrics\": {\n    \"totalTime\": \"0.056s\",\n    \"queueTime\": \"0.003s\",\n    \"setupTime\": \"0.004s\",\n    \"executionWallTime\": \"0.036s\",\n    \"inputBytes\": \"0\",\n    \"inputFiles\": \"1\",\n    \"memoryEstimateBytes\": \"0\",\n    \"inputBytesLimit\": \"0\",\n    \"inputFilesLimit\": \"0\",\n    \"outputBytesLimit\": \"0\",\n    \"outputFilesLimit\": \"0\",\n    \"memoryBytesLimit\": \"0\",\n    \"startTime\": \"2026-10-24T15:54:26.132Z\"\n  }\n}",
+    "labelToTask": {
+     "//:t_cached": "p:t",
+     "//:t_uncached": "q:u"
+    },
+    "declaredEnvironment": {},
+    "expected": {
+     "p:t": {
+      "inputs": [
+       "a.txt"
+      ],
+      "env": [],
+      "exit": 0
+     },
+     "q:u": {
+      "inputs": [
+       "a.txt"
+      ],
+      "env": [],
+      "exit": 0
+     }
+    }
    }
   ],
   "events": [

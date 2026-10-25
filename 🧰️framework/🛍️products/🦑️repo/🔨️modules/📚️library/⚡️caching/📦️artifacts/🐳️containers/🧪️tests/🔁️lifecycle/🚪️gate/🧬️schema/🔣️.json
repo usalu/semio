@@ -25,6 +25,11 @@
         "metadata": {
           "semio": {
             "sourceInputObservation": "freshness",
+            "cache": {
+              "version": 1,
+              "class": "live",
+              "reason": "exercises-host-resources"
+            },
             "runtimeSourceEntries": [
               "{projectRoot}/📦️artifacts/🐳️containers/🧪️tests/🔁️lifecycle/🟦️.ts"
             ]

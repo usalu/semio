@@ -182,7 +182,7 @@ impl EventRouter {
         self.toggle_disclosure(tree, id)
     }
 
-    /// 🧭️ This window's logical flow.
+    /// 🌊️ This window's logical flow.
     pub fn flow(&self) -> UiFlow {
         self.flow
     }
@@ -192,7 +192,7 @@ impl EventRouter {
         self.flow.inline
     }
 
-    /// 🧭️ Replaces this window's flow. Answers whether it changed, so the caller can invalidate the
+    /// 🪟️ Replaces this window's flow. Answers whether it changed, so the caller can invalidate the
     /// layout generation the way `Ui::set_viewport` does for metrics.
     pub fn set_flow(&mut self, flow: UiFlow) -> bool {
         if self.flow == flow {
@@ -262,7 +262,7 @@ impl EventRouter {
     }
 
     //#region 🎬️IntentApi
-    /// 🎬️ Turns one fired gesture into an addressed [`UiIntentCommand`] — the wgpu twin of React's
+    /// 🔨️ Turns one fired gesture into an addressed [`UiIntentCommand`] — the wgpu twin of React's
     /// `dispatchTrigger` → `emitIntent` → `UiDocumentStore::buildIntent` chain.
     ///
     /// Three things happen here and nowhere else: the node's stamped address supplies
@@ -292,13 +292,13 @@ impl EventRouter {
         Some(UiIntentCommand { address, trigger: fired.trigger, action, args: fired.action.args, input: fired.input, seq })
     }
 
-    /// 🎬️ [`Self::build_intent`] wrapped as the command the host drains. `None` when the gesture was
+    /// 🎁️ [`Self::build_intent`] wrapped as the command the host drains. `None` when the gesture was
     /// dropped as stale or could not be addressed.
     pub(super) fn app_command(&mut self, tree: &UiTree, node: NodeId, fired: FiredAction) -> Option<UiCommand> {
         Some(UiCommand::App { window_id: self.window_id.clone(), intent: self.build_intent(tree, node, fired)? })
     }
 
-    /// 🎬️ [`Self::app_command`] for a caller that already owns the command list.
+    /// 📋️ [`Self::app_command`] for a caller that already owns the command list.
     pub(super) fn push_app_command(&mut self, tree: &UiTree, node: NodeId, fired: FiredAction, out: &mut Vec<UiCommand>) {
         if let Some(command) = self.app_command(tree, node, fired) {
             out.push(command);
@@ -321,7 +321,7 @@ impl EventRouter {
         Some(UiCommand::App { window_id: self.window_id.clone(), intent: UiIntentCommand { address, trigger: Trigger::Activate, action, args, input: None, seq } })
     }
 
-    /// 🎬️ The index of the Row-placed action whose trailing slot (`layout::tree_row_action_at`, the slots `paint` draws) holds the
+    /// 🔢️ The index of the Row-placed action whose trailing slot (`layout::tree_row_action_at`, the slots `paint` draws) holds the
     /// pointer on a tree or table row — a click there fires that action, never the row's activation or disclosure.
     pub(super) fn pointer_row_action(&self, tree: &UiTree, id: NodeId, x: f32, y: f32) -> Option<usize> {
         let item = tree.authored_tree_item(id)?;

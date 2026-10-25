@@ -4,6 +4,7 @@ import type{ResourceLeaseControl}from"../🎛️control/🟦️.ts";
 import {lstatSync,statSync,type Stats} from "node:fs";
 import {isSystemLeaseLinkV1} from "../🎛️control/🟦️.ts";
 import {createHash} from "node:crypto";
+import {SqliteDatabaseV1} from "../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
 import {dirname,join,resolve} from "node:path";
 import authoritySchema from "../🧬️schema/📜️ticket.json" with {type:"json"};
 import scanSchema from"./🧬️schema/🔣️.json" with{type:"json"};
@@ -11,10 +12,19 @@ const schema=authoritySchema.definitions.RetirementPolicy;
 /** 📐️ Bounds cooperative scanning even when unfinished entries consume no candidate slot. */
 export const resourceLeaseRetirementScanLimitsV1=Object.freeze({...scanSchema.definitions.Scan.const});
 
+/** 🔒️ Closed idle, slice and message policy of the incremental lease store sweep (`🧬️schema/🔣️.json`). */
+export const resourceLeaseRetirementIdlePolicyV1=Object.freeze({...scanSchema.definitions.Idle.const});
+/** 🗣️ Closed English and German messages of the sweep. */
+export const resourceLeaseRetirementMessagesV1=Object.freeze({...scanSchema.definitions.Messages.const});
 /** 🪨️ Keeps both native SQLite implementations behind one repository-owned contract. */
 export interface ResourceLeaseDatabaseV1{exec(sql:string):void;read(sql:string,...values:string[]):Record<string,unknown>|undefined;close():void;}
 /** 📸️ Retains the exact immediate owned candidate before SQLite opens it. */
-export type ResourceLeaseCandidateV1=Readonly<{path:string;directory:string;file:Readonly<{dev:number;ino:number}>;parent:Readonly<{dev:number;ino:number}>;allocatedBytes:number}>;
+export type ResourceLeaseCandidateV1=Readonly<{path:string;directory:string;file:Readonly<{dev:number;ino:number;mtimeMs:number}>;parent:Readonly<{dev:number;ino:number}>;allocatedBytes:number}>;
+/** 🗃️ Opens one lease database through the hosting runtime's system SQLite; closing is idempotent. */
+export async function openResourceLeaseDatabaseV1(path:string,readonly=false,create=!readonly):Promise<ResourceLeaseDatabaseV1>{
+ const database=new SqliteDatabaseV1(path,{readonly,readwrite:!readonly,create});let closed=false;
+ return{exec:sql=>database.exec(sql),read:(sql,...values)=>{const statement=database.prepare(sql);try{return statement.get(...values) as Record<string,unknown>|undefined;}finally{statement.finalize();}},close:()=>{if(!closed){database.close(true);closed=true;}}};
+}
 /** 🚥️ Recognizes only actual SQLite contention and the owner's closed nonwaiting refusal. */
 export function resourceLeaseBusyV1(error:unknown):boolean{const value=error!==null&&typeof error==="object"?error as{code?:string;errcode?:number;errno?:number}:undefined;return value?.code==="SQLITE_BUSY"||value?.code==="SQLITE_LOCKED"||[5,6].includes((value?.errcode??value?.errno??-1)&255)||error instanceof Error&&error.message.startsWith("Resource lease timed out: ");}
 /** 🧹️ Attempts every cleanup independently while preserving any arbitrary primary failure. */

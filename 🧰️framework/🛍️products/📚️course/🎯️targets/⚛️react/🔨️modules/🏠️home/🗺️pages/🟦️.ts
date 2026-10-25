@@ -39,7 +39,7 @@ export interface PreviewCamera {
   readonly y: number;
 }
 
-/** 🖱️ The camera a grid applies to its own strip. The active grid zooms while the pointer is over a card's explore control and follows its own pointer, so it
+/** 🎥️ The camera a grid applies to its own strip. The active grid zooms while the pointer is over a card's explore control and follows its own pointer, so it
  * takes a camera only while a followed peer supplies one. Every grid behind that follows the inherited pointer and does not zoom.
  * @see ../🟦️.tsx — the overview that publishes the active pointer and paints inherited cameras */
 export function previewCamera(active: boolean, followed: PreviewCamera | undefined, inherited: PreviewCamera | undefined): PreviewCamera | undefined {

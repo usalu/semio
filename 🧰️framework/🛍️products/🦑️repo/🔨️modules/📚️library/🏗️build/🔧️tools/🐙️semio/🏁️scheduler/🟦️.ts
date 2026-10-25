@@ -1,15 +1,15 @@
 import {availableParallelism} from "node:os";
 import {lstat,readdir} from "node:fs/promises";
 import {dirname,join,resolve} from "node:path";
-import {gitV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🌿️git/🟦️.ts";
-import {ToolErrorV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
+import {gitV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🌿️git/🟦️.ts";
+import {ToolErrorV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🏃️run/🟦️.ts";
 import {semioActionKeyV1,semioCanonicalV1,semioHashV1,semioSelectFilesV1,type SemioEntryV1,type SemioEventV1,type SemioRecordTaskV1,type SemioRecordV1,type SemioStatusV1} from "../🟦️.ts";
 import {SemioStoreV1,semioFileDigestV1} from "../🗄️store/🟦️.ts";
 import {packSemioEntryV1,unpackSemioEntryV1,type SemioRemoteV1} from "../🌐️remote/🟦️.ts";
 import type {SemioExecutorV1} from "../🚀️exec/🟦️.ts";
 import {readReadinessDeclarationV1,resolveReadinessV1,watchReadinessV1,type ReadinessWatchV1} from "../../../🟢️readiness/🟦️.ts";
 import {buildCacheDecisionV1,buildTaskInputsV1,planBuildTasksV1,type BuildTaskRequestV1,type BuildTaskV1} from "../../../🧮️task-model/🟦️.ts";
-import type {BuildGraphV1} from "../../../🕸️graph/🟦️.ts";
+import type { BuildGraphV1 } from "../../../🕸️graph/📋️model/🟦️.ts";
 
 /** 🔌️ What a run needs from the outside: the workspace, the stores, how to list files, how to run a task body, the environment, a clock and a log. */
 export type SemioPortsV1=Readonly<{workspace:string;store:SemioStoreV1;remote?:SemioRemoteV1;inventory():Promise<readonly string[]>;execute:SemioExecutorV1;environment:Readonly<Record<string,string|undefined>>;now():number;write(chunk:string):void;runtime?(command:string,signal:AbortSignal):Promise<string>}>;

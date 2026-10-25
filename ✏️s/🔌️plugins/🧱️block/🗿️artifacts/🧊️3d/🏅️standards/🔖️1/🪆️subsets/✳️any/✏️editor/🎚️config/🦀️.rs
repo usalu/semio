@@ -123,7 +123,15 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the per-window views.
-    pub Block3dWindowsDelta { removal: Block3dWindowsRemoval, insertion: Block3dWindowsInsertion, relocation: Block3dWindowsRelocation, modification: Block3dWindowsPatchEntry, row: Block3dWindowView, patch: Block3dWindowViewPatch, key: window_id }
+    pub Block3dWindowsDelta { removal: Block3dWindowsRemoval, insertion: Block3dWindowsInsertion, relocation: Block3dWindowsRelocation, modification: Block3dWindowsPatchEntry, row: Block3dWindowView, patch: Block3dWindowViewPatch, list: Vec<Block3dWindowView>, key: String = by Block3dWindowViewKeys }
+}
+
+/// 🔑️ Keys the foreign `Block3dWindowView` rows of their list delta by `window_id`.
+pub(crate) struct Block3dWindowViewKeys;
+
+impl protocol::list_delta::KeyOf<Block3dWindowView> for Block3dWindowViewKeys {
+    type Key = String;
+    fn key_of(row: &Block3dWindowView) -> String { row.window_id.clone() }
 }
 
 /// 🔺️ Field-sparse diff of [`Block3dConfig`]: each field is an optional absolute value, window views are id-keyed rows.
@@ -322,6 +330,7 @@ impl protocol::OpBinary for Block3dConfigMutation {
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(Block3dConfigMutation);
 
 //#endregion 🔖️OpCodec
 

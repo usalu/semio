@@ -19,7 +19,7 @@ mod backing;
 fn sqlite_snapshot_forms_declared_native_owner_has_semantic_sqlite_capability(){
  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  assert_eq!(fixture["schema"],crate::FORMS_DOCUMENT_SCHEMA);
- assert!(<FormsSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().is_some(),"the actual owning Forms native declaration must expose its semantic SQLite snapshot codec");
+ assert!(<FormsSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some(),"the actual owning Forms native declaration must expose its semantic SQLite snapshot codec");
 }
 
 
@@ -84,7 +84,7 @@ fn sqlite_snapshot_forms_independent_relational_cycles_and_duplicate_metadata_re
 }
 #[test]
 fn sqlite_snapshot_forms_actual_erased_native_import_requires_owned_output(){
- use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};let value=specimen();let expected=database(&value);let codec=<FormsSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.forms.forms".into(),standard:"1".into(),subset:"*".into()};
+ use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};let value=specimen();let expected=database(&value);let codec=<FormsSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.forms.forms".into(),standard:"1".into(),subset:"*".into()};
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,Default::default());let payload=original_owners::with_encoding(|native_owner|(codec.import)(crate::FORMS_DOCUMENT_SCHEMA,&dialect, &mut Some(expected.clone()),encoding,&mut control, native_owner)).expect("actual owned native output");let mut control=SqliteSnapshotControl::new(&mut callback,Default::default());let restored=original_owners::with_decoding(|native_owner|(codec.export)(crate::FORMS_DOCUMENT_SCHEMA,&dialect,&payload.value,&mut control, native_owner)).expect("actual owned native input");assert_eq!(restored.value,expected);}
 }
 

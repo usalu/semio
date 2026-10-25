@@ -104,7 +104,7 @@ fn axis_cursor(axis: DragAxis) -> SemioCursor {
     }
 }
 
-/// 🖱️ M5's retained-tree counterpart to `resolve_semio_cursor`: derives a cursor from the
+/// 👆️ M5's retained-tree counterpart to `resolve_semio_cursor`: derives a cursor from the
 /// `events::EventRouter`'s own hovered/capture `NodeId`s (via its `hovered()`/`capture()` accessors)
 /// rather than the immediate-mode `input::HitTarget`. Mostly wiring existing pieces together — an
 /// active `CaptureKind` wins outright (dragging/scrolling a thumb never re-derives from whatever's

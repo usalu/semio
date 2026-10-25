@@ -1,5 +1,6 @@
 //! 🔧️ Play app, retained commands and tool proofs: the puzzle2d play app with its render body, the retained command job factory and the bounded first-step tool proofs. See [`super`].
 
+use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 use super::*;
 use semio_s_artifact_puzzle_2d_snapshot::editor::puzzle2d::window;
 use crate::mirror::editor::puzzle2d::modes::edit::windows::overview;
@@ -178,9 +179,13 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
 /// 📜️ The retained command catalog's own bounded first-step proofs — one per
 /// [`PUZZLE2D_RETAINED_TOOL_IDS`] entry, all joined to the single concrete
 /// [`Puzzle2dRetainedCommandJobFactory`].
-pub(super) struct Puzzle2dRetainedCommandProofs;
+pub struct Puzzle2dRetainedCommandProofs;
 
 impl Puzzle2dRetainedCommandProofs {
+    pub fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -256,9 +261,13 @@ impl Puzzle2dRetainedCommandProofs {
 /// `factory_type`): they are not app-owned retained tools — [`Puzzle2dRetainedCommandJobFactory`]
 /// never claims them — they only need the wire admission and output budget `dispatch_action`'s
 /// host-configuration branch asks for before it applies `host_configuration_mutation`.
-pub(super) struct Puzzle2dHostConfigurationProofs;
+pub struct Puzzle2dHostConfigurationProofs;
 
 impl Puzzle2dHostConfigurationProofs {
+    pub fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Puzzle2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",

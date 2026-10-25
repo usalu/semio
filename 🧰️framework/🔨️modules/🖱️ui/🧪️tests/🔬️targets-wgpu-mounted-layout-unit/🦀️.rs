@@ -1,7 +1,15 @@
 use super::*;
 use semio_framework_ui_declaration::layout::ActionDescriptor;
 use semio_framework_ui_declaration::ui::{UiButtonNode, UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
+use semio_framework_job_worker::OriginalWorkerFixtureCaller;
 use semio_framework_ui_locale::Label;
+
+#[global_allocator]
+static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+fn original_stock() -> semio_framework_job::RetainedCloneGrant {
+    semio_framework_job::RetainedCloneGrant { maximum_items: 100_000, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 128 }
+}
 
 fn observe_layout_step(job: &mut MountedLayoutJob, cx: &mut semio_framework_job::StepContext<'_>) -> Option<semio_framework_job::JobOutcomeKind> {
     let outcome = semio_framework_job::InteractiveJob::step(job, cx).expect("original layout step").map(semio_framework_job::JobOutcomeBorrow::into_descriptor);
@@ -125,7 +133,11 @@ fn mounted_layout_actual_node_max_plus_one_retains_the_exact_rejected_tree_owner
     assert!(tree.contains(rejected.id));
     assert!(!job.nodes.as_deref().expect("original layout owner").iter().any(|retained| retained.id == rejected.id));
     job.begin_close();
-    while !job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap() {}
+    let mut turns = 0;
+    while !job.close_one(ui_contract::UI_WORKER_RETIREMENT_POLICY).unwrap() {
+        turns += 1;
+        assert!(turns < 1_000_000, "a maximum-size layout job closes inside its release policy");
+    }
     assert!(job.terminal_is_empty());
 }
 
@@ -174,7 +186,7 @@ fn mounted_layout_multi_page_unicode_uses_one_glyph_or_atlas_boundary_per_turn()
 fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
     let (tree, root) = text_tree("worker".to_string());
     let mut job = text_job(&tree, root);
-    let source=ui_contract::UI_WORKER_RETIREMENT_POLICY;let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(29),semio_framework_job::Generation(11),source,clock_zero,1000,1);
+    let source=ui_contract::UI_WORKER_RETIREMENT_POLICY;let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(29),semio_framework_job::Generation(11),original_stock(),clock_zero,1000,10000);
     assert!(matches!(admit(&mut job, &tree, caller.cancel()), LayoutJobStep::Yield { .. }));
     let params = semio_framework_job_worker_authority::BatchJobParams {
         operation: semio_framework_job::OperationId(29),
@@ -235,7 +247,7 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
 fn mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained() {
     let (tree, root) = text_tree("cancel".to_string());
     let source=ui_contract::UI_WORKER_RETIREMENT_POLICY;
-    let mut before_caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(31),semio_framework_job::Generation(11),source,clock_zero,u64::MAX,1);
+    let mut before_caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(31),semio_framework_job::Generation(11),original_stock(),clock_zero,u64::MAX,10000);
     let(mut before,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||text_job(&tree,root));let(mut born,mut released)=(birth.requested_bytes,birth.released_bytes);
     loop{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||before_caller.turn(source,|cx|Ok(before.admit_one(&tree,cx))).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(before_caller.receipt().retained_capacity_bytes,before_caller.receipt().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;if before.is_admitted(){assert!(matches!(step,LayoutJobStep::Yield{..}));break}}
     before_caller.cancel().cancel_now();
@@ -246,7 +258,7 @@ fn mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained(
     }
     let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(before));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);before_caller.retire(source);
 
-    let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(37),semio_framework_job::Generation(11),source,clock_zero,u64::MAX,1);
+    let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(37),semio_framework_job::Generation(11),original_stock(),clock_zero,u64::MAX,10000);
     let(mut after,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||text_job(&tree,root));let(mut born,mut released)=(birth.requested_bytes,birth.released_bytes);
     loop{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(source,|cx|Ok(after.admit_one(&tree,cx))).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;if after.is_admitted(){assert!(matches!(step,LayoutJobStep::Yield{..}));break}}
     after.cancel_after_shape(caller.admit_alias(source));
@@ -350,7 +362,7 @@ fn solved(tree: &UiTree, id: NodeId) -> (f32, f32, f32, f32) {
     tree.mounted_layout(id).unwrap_or_else(|| panic!("published layout"))
 }
 
-/// 📐️ Layout resolves in fractional logical pixels, the way a DOM rect does — the shared ramp's
+/// 🔎️ Layout resolves in fractional logical pixels, the way a DOM rect does — the shared ramp's
 /// `Xxl` is 38.4px, not 38 — so a fixture compares within a hairline instead of demanding equality.
 fn close(left: f32, right: f32) -> bool {
     (left - right).abs() < 0.01
@@ -605,7 +617,7 @@ fn a_host_content_slot_reserves_the_band_its_host_declared() {
     assert!(width > 0.0, "🧩️ and the slot fills its parent's width rather than measuring nothing");
 }
 
-/// 🧩️ A slot whose host declares no height still gets a visible box, and an absurd number is clamped
+/// ⏪️ A slot whose host declares no height still gets a visible box, and an absurd number is clamped
 /// rather than asking for a band no viewport could hold.
 #[test]
 fn a_host_content_slot_without_a_declared_height_falls_back_and_clamps() {
@@ -665,11 +677,169 @@ fn mounted_layout_original_fault_descriptor_preserves_custody_and_paid_acknowled
     assert_eq!(serde_json::to_value(job.fault.unwrap().label()).unwrap(), serde_json::json!("layout.solver"));
     job.begin_close();
     for _ in 0..law["maximumCloseTurns"].as_u64().unwrap() {
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.close_step(grant));
-        let progress = step.progress();
+        let mut turn = RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(law["operation"].as_u64().unwrap()), semio_framework_job::Generation(law["generation"].as_u64().unwrap()), semio_framework_job::StepBudget::new(1, u64::MAX, grant), cancel.clone(), clock_zero, &mut preview, &mut turn);
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| InteractiveJob::close_step(&mut job, &mut cx));
+        let progress = step.expect("original layout close step").progress();
         assert!(progress.fits(grant));
         assert_eq!((progress.retained_capacity_bytes, progress.released_bytes), (heap.requested_bytes, heap.released_bytes));
         if job.terminal_is_empty() { break; }
     }
     assert!(job.terminal_is_empty());
 }
+
+//#region 🧾️MeasureArrangeReceiptLaw
+fn grid_spec(columns: &[GridTrack], rows: &[GridTrack]) -> LayoutSpec {
+    let mut grid = GridLayout::default();
+    for column in columns {
+        assert_eq!(grid.try_push_column(*column), Ok(()));
+    }
+    for row in rows {
+        assert_eq!(grid.try_push_row(*row), Ok(()));
+    }
+    LayoutSpec::Grid(grid)
+}
+
+fn add_spec(tree: &mut UiTree, ordinal: &mut u32, parent: NodeId, node: UiNode, spec: LayoutSpec) -> NodeId {
+    *ordinal += 1;
+    mount(tree, Some(parent), *ordinal, node, spec)
+}
+
+fn text_node(value: &str) -> UiNode {
+    UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
+}
+
+/// 🌳️ One column root carrying every container dialect the solver owns: a plain row, a wrapped row, a three-column grid with
+/// implicit rows, a text run in a narrow column and a nested stack — each of them a different measure and arrange path.
+fn every_container_tree() -> (UiTree, NodeId) {
+    let mut tree = UiTree::new();
+    let mut ordinal = 0;
+    let root = mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Vertical, Align::Stretch, Justify::Start, false));
+    let row = add_spec(&mut tree, &mut ordinal, root, leaf(), stack_spec(Axis::Horizontal, Align::Center, Justify::SpaceBetween, false));
+    for _ in 0..5 {
+        add_spec(&mut tree, &mut ordinal, row, leaf(), fixed_leaf_spec());
+    }
+    let wrapped = add_spec(&mut tree, &mut ordinal, root, leaf(), stack_spec(Axis::Horizontal, Align::Start, Justify::Start, true));
+    for _ in 0..7 {
+        add_spec(&mut tree, &mut ordinal, wrapped, leaf(), fixed_leaf_spec());
+    }
+    let grid = add_spec(&mut tree, &mut ordinal, root, leaf(), grid_spec(&[GridTrack::Fraction(1), GridTrack::Auto, GridTrack::Fraction(2)], &[GridTrack::Auto]));
+    for _ in 0..8 {
+        add_spec(&mut tree, &mut ordinal, grid, leaf(), fixed_leaf_spec());
+    }
+    let column = add_spec(&mut tree, &mut ordinal, root, leaf(), stack_spec(Axis::Vertical, Align::Stretch, Justify::Start, false));
+    add_spec(&mut tree, &mut ordinal, column, text_node("alpha beta gamma delta epsilon"), LayoutSpec::default());
+    add_spec(&mut tree, &mut ordinal, column, leaf(), fixed_leaf_spec());
+    tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+    (tree, root)
+}
+
+/// 🧾️ LAW: every step of the layout job — admission, shaping, measuring, arranging, collecting, closing — allocates exactly what
+/// its own receipt funded and frees exactly what its receipt released. A solver that borrows a scratch `Vec`, a local solver tree or
+/// any other unfunded allocation inside a step shows up as a heap/receipt mismatch on that step.
+#[test]
+fn every_layout_step_allocates_only_through_its_own_receipt() {
+    use semio_framework_job::{InteractiveJob, JobOutcomeBorrow, RetainedCloneProgress};
+    let policy = ui_contract::UI_WORKER_RETIREMENT_POLICY;
+    let (mut tree, root) = every_container_tree();
+    let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(9, 3), generation: 5, revision: 0, theme_revision: 0, viewport_revision: 0 };
+    let (job, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| MountedLayoutJob::try_new(&tree, root, identity, Theme::default(), 120.0, 400.0, false, ui_contract::FlowInline::Ltr).expect("layout job"));
+    let mut job = job;
+    let (mut born, mut released) = (birth.requested_bytes, birth.released_bytes);
+    let cancel = semio_framework_job::CancelToken::root_now();
+    let mut preview = 0;
+    let mut stages: std::collections::BTreeMap<&'static str, (usize, usize)> = Default::default();
+    let mut mismatches: Vec<String> = Vec::new();
+    fn record(stages: &mut std::collections::BTreeMap<&'static str, (usize, usize)>, label: &'static str, receipt: RetainedCloneProgress, heap: semio_framework_trace::HeapAllocationObservation, mismatches: &mut Vec<String>) -> (usize, usize) {
+        let entry = stages.entry(label).or_default();
+        entry.0 += 1;
+        entry.1 += receipt.retained_capacity_bytes;
+        if (receipt.retained_capacity_bytes, receipt.released_bytes) != (heap.requested_bytes, heap.released_bytes) {
+            mismatches.push(format!("{label}: receipt {}/{} B, heap {}/{} B", receipt.retained_capacity_bytes, receipt.released_bytes, heap.requested_bytes, heap.released_bytes));
+        }
+        (heap.requested_bytes, heap.released_bytes)
+    }
+    while !job.is_admitted() {
+        let mut receipt = RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(71), semio_framework_job::Generation(5), semio_framework_job::StepBudget::new(1, u64::MAX, policy), cancel.clone(), clock_zero, &mut preview, &mut receipt);
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.admit_one(&tree, &mut cx));
+        assert!(!matches!(step, LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled), "admission: {step:?}");
+        let receipt = cx.retained_progress();
+        let (requested, freed) = record(&mut stages, "admit", receipt, heap, &mut mismatches);
+        born += requested;
+        released += freed;
+    }
+    while job.stage() != LayoutJobStage::PublishResults {
+        let label = job.stage_label();
+        let mut receipt = RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(71), semio_framework_job::Generation(5), semio_framework_job::StepBudget::new(1, u64::MAX, policy), cancel.clone(), clock_zero, &mut preview, &mut receipt);
+        let (outcome, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| InteractiveJob::step(&mut job, &mut cx).expect("layout step").map(JobOutcomeBorrow::into_descriptor));
+        let receipt = cx.retained_progress();
+        let (requested, freed) = record(&mut stages, label, receipt, heap, &mut mismatches);
+        born += requested;
+        released += freed;
+        if let Some(mut descriptor) = outcome {
+            assert!(!matches!(descriptor.kind(), semio_framework_job::JobOutcomeKind::Fault | semio_framework_job::JobOutcomeKind::Cancelled), "{label} faulted");
+            descriptor.acknowledge(policy);
+        }
+    }
+    for stage in ["Layout.MeasureLayout", "Layout.SolveLayout"] {
+        assert!(stages.get(stage).is_some_and(|(turns, _)| *turns > 0), "the law must drive {stage}: {stages:?}");
+    }
+    let funded: usize = ["Layout.MeasureLayout", "Layout.SolveLayout"].iter().map(|stage| stages[stage].1).sum();
+    assert!(funded > 0, "the grid's track table is funded inside a measure or arrange step: {stages:?}");
+    let published = job.identity();
+    while !matches!(job.publish_one(&mut tree, published), LayoutJobStep::Complete) {}
+    job.begin_close();
+    let mut turns = 0;
+    while !job.terminal_is_empty() {
+        let mut receipt = RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(71), semio_framework_job::Generation(5), semio_framework_job::StepBudget::new(1, u64::MAX, policy), cancel.clone(), clock_zero, &mut preview, &mut receipt);
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| InteractiveJob::close_step(&mut job, &mut cx));
+        step.expect("layout close step");
+        let receipt = cx.retained_progress();
+        let (requested, freed) = record(&mut stages, "close", receipt, heap, &mut mismatches);
+        born += requested;
+        released += freed;
+        turns += 1;
+        assert!(turns < 1_000_000, "close terminates");
+    }
+    let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(job));
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+    assert!(mismatches.is_empty(), "{} steps allocated outside their receipt, first: {:?}", mismatches.len(), &mismatches[..mismatches.len().min(8)]);
+    assert_eq!(born, released, "every funded byte is released again");
+}
+
+/// ⏱️ LAW: a 4000-node surface lays out inside a coarse wall-clock budget in each container dialect — the budget only trips on an
+/// algorithmic regression (a quadratic child walk, a per-turn rescan), never on a load flake: best of five.
+#[test]
+fn a_four_thousand_node_surface_lays_out_inside_its_budget_in_every_dialect() {
+    let build = |dialect: &str| {
+        let mut tree = UiTree::new();
+        let mut ordinal = 0;
+        let (root, spec) = match dialect {
+            "flow" => (mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Vertical, Align::Stretch, Justify::Start, false)), None),
+            "wrapped" => (mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Horizontal, Align::Start, Justify::Start, true)), None),
+            _ => (mount(&mut tree, None, 0, leaf(), grid_spec(&[GridTrack::Fraction(1), GridTrack::Auto, GridTrack::Fraction(2)], &[GridTrack::Auto])), None::<LayoutSpec>),
+        };
+        let _ = spec;
+        for _ in 0..4000 {
+            add_spec(&mut tree, &mut ordinal, root, leaf(), fixed_leaf_spec());
+        }
+        tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+        (tree, root)
+    };
+    for dialect in ["flow", "wrapped", "grid"] {
+        let mut best = std::time::Duration::MAX;
+        for _ in 0..5 {
+            let (mut tree, root) = build(dialect);
+            let start = std::time::Instant::now();
+            assert!(crate::layout_tree_now(&mut tree, root, Theme::default(), 640.0, 480.0), "{dialect} lays out");
+            best = best.min(start.elapsed());
+        }
+        assert!(best < std::time::Duration::from_millis(PERF_BUDGET_MS), "{dialect}: {best:?} exceeds {PERF_BUDGET_MS} ms");
+    }
+}
+
+const PERF_BUDGET_MS: u64 = 1_000;
+//#endregion 🧾️MeasureArrangeReceiptLaw

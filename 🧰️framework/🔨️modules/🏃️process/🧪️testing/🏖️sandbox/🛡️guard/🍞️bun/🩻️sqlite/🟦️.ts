@@ -1,4 +1,4 @@
-import { SqliteDatabaseV1 as RealDatabase } from "../../../../../../⚙️runtime/🗃️sqlite/🟦️.ts";
+import { SqliteDatabaseV1 as RealDatabase } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
 
 export * from "bun:sqlite";
 type Guard = { write(fn: string, args: readonly unknown[]): void };

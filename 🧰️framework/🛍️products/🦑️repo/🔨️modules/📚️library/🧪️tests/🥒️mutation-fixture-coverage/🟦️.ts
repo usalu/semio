@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import fixture from "../🧫️fixtures/🥒️mutation-fixture-coverage/🔣️.json";
 import { mutationFixturesDeclaredByFeature } from "../../🔍️discovery/🥒️mutation-fixture-coverage/🟦️.ts";
-import { parseFeature } from "../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
+import { parseFeature } from "../../../../../../📦️packages/🟦️typescript/🧪️test/🥒️gherkin/🟦️.ts";
 
 const declaredByPlan = (source: string): string[] => {
   const plan = parseFeature(source), found: string[] = [];

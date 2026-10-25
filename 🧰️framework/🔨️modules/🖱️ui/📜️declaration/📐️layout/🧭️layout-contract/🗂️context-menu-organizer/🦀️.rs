@@ -1,4 +1,4 @@
-//! 🗂️ Context menu organizer: the menu reference, the context menu item spec, the ribbon parent categories and the group, separator and budget organizing with the shell menu actions. See [`super`].
+//! 🧹️ Context menu organizer: the menu reference, the context menu item spec, the ribbon parent categories and the group, separator and budget organizing with the shell menu actions. See [`super`].
 
 use super::*;
 
@@ -18,7 +18,7 @@ pub struct UiMenuRef {
     pub args: Option<DslValue>,
 }
 
-/// 🖱️ One row of a resolved context menu — serde camelCase twin of TS `ContextMenuItemSpec`
+/// 📕️ One row of a resolved context menu — serde camelCase twin of TS `ContextMenuItemSpec`
 /// (`framework/core/js/index.ts`). Plugins build these with `MenuBuilder`; the host maps them
 /// through `ContextMenuController` (React) / `render_context_menu` (wgpu) unchanged.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -86,7 +86,7 @@ impl ContextMenuItemSpec {
 }
 
 //#region 🗂️ContextMenuOrganizer
-/// 🗂️ Canonical ribbon-parent taxonomy — Rust twin of ui-react's closed `UiRibbonParentCategory`
+/// 🎀️ Canonical ribbon-parent taxonomy — Rust twin of ui-react's closed `UiRibbonParentCategory`
 /// union (`🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🟦️.tsx` ~3317). Id
 /// spelling and order are load-bearing: `organize_context_menu` sorts `menu.group.<category>` rows by
 /// this order (unknown categories sort after, in emit order) and `ribbon_parent_label` covers exactly
@@ -94,7 +94,7 @@ impl ContextMenuItemSpec {
 pub const RIBBON_PARENT_CATEGORIES: [&str; 20] =
     ["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings", "methods", "mode", "targets", "export", "tools", "utilities", "sync"];
 
-/// 🗂️ EN/DE label for a `RIBBON_PARENT_CATEGORIES` id — hand-maintained Rust twin of ui-react's
+/// 🔖️ EN/DE label for a `RIBBON_PARENT_CATEGORIES` id — hand-maintained Rust twin of ui-react's
 /// `uiRibbonParentEn`/`uiRibbonParentDe` bundles (same file as above, ~3826/~3797). `None` for any id
 /// outside the closed 20-id taxonomy — callers (`shell_context_menu_item_from_spec`) fall back to the
 /// raw category id in that case.
@@ -144,7 +144,7 @@ pub fn ribbon_parent_label(category: &str, is_de: bool) -> Option<&'static str> 
     })
 }
 
-/// 🗂️ Every context-menu GROUP row id carries this prefix — the one spelling `organize_context_menu`
+/// 👥️ Every context-menu GROUP row id carries this prefix — the one spelling `organize_context_menu`
 /// synthesizes and `shell_context_menu_item_from_spec` resolves against. Twin of ui-react's
 /// `CONTEXT_MENU_GROUP_ID_PREFIX` (`🧰️framework/🔨️modules/🔺️mesh/🟦️.ts`).
 pub const CONTEXT_MENU_GROUP_ID_PREFIX: &str = "menu.group.";
@@ -154,7 +154,7 @@ pub const CONTEXT_MENU_GROUP_ID_PREFIX: &str = "menu.group.";
 /// `CONTEXT_MENU_OVERFLOW_CATEGORY`.
 pub const CONTEXT_MENU_OVERFLOW_CATEGORY: &str = "more";
 
-/// 🗂️ EN/DE display label for a `menu.group.<category>` row, which the guest emits with `label: None`
+/// 🏷️ EN/DE display label for a `menu.group.<category>` row, which the guest emits with `label: None`
 /// by contract (the host owns the chrome vocabulary). Taxonomy categories resolve through
 /// [`ribbon_parent_label`]; [`CONTEXT_MENU_OVERFLOW_CATEGORY`] — the one id outside the closed 20-id
 /// taxonomy, and therefore the one that used to render with an EMPTY label — resolves here. `None`
@@ -177,7 +177,7 @@ fn context_menu_is_bare_separator(item: &ContextMenuItemSpec) -> bool {
     item.separator == Some(true) && item.label.is_none()
 }
 
-/// 🗂️ D1: a separator carrying a `label` is a non-interactive section header, not a divider.
+/// 📌️ D1: a separator carrying a `label` is a non-interactive section header, not a divider.
 // 🚫️async: E1 pure accessor consumed by sync-only std call sites (Option::map fn-value, sort_by_key comparator) — see R9
 fn context_menu_is_header(item: &ContextMenuItemSpec) -> bool {
     item.separator == Some(true) && item.label.is_some()
@@ -202,7 +202,7 @@ fn context_menu_separator_row(seed: usize) -> ContextMenuItemSpec {
     ContextMenuItemSpec { id: format!("separator-organized-{seed}"), separator: Some(true), ..Default::default() }
 }
 
-/// 🗂️ Collapses a run of consecutive bare (unlabeled) separators down to one, then drops a bare
+/// ➖️ Collapses a run of consecutive bare (unlabeled) separators down to one, then drops a bare
 /// separator left at the very start or end (nothing to separate from/to). A labeled separator (header,
 /// see `context_menu_is_header`) is never touched by this — it always survives in place, adjacent bare
 /// separators collapse/drop around it independently.
@@ -223,7 +223,7 @@ fn context_menu_normalize_separators(items: Vec<ContextMenuItemSpec>) -> Vec<Con
     out
 }
 
-/// 🗂️ Merges rows sharing a `menu.group.<category>` id at the position of the first occurrence,
+/// 🔀️ Merges rows sharing a `menu.group.<category>` id at the position of the first occurrence,
 /// concatenating and deduping their `children` by id (first occurrence wins).
 fn context_menu_merge_group_rows(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
     let mut out: Vec<ContextMenuItemSpec> = Vec::with_capacity(items.len());
@@ -248,7 +248,7 @@ fn context_menu_merge_group_rows(items: Vec<ContextMenuItemSpec>) -> Vec<Context
     out
 }
 
-/// 🗂️ ≤9-interactive-row emission (D2 rule): plain leaves/headers in emit order, then group rows in
+/// 💰️ ≤9-interactive-row emission (D2 rule): plain leaves/headers in emit order, then group rows in
 /// taxonomy order (unknown categories after, emit order), then — only if any exist — a separator
 /// followed by destructive leaves.
 fn context_menu_emit_within_budget(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
@@ -274,7 +274,7 @@ fn context_menu_emit_within_budget(items: Vec<ContextMenuItemSpec>) -> Vec<Conte
     out
 }
 
-/// 🗂️ >9-interactive-row emission (D2 rule): the first 5 plain leaves outside any header section stay
+/// 💸️ >9-interactive-row emission (D2 rule): the first 5 plain leaves outside any header section stay
 /// primaries; every header's trailing run of leaves folds into a group keyed by that header's own
 /// (slugified) label; every other plain leaf buckets into `menu.group.<category_of(action) ?? "actions">`;
 /// pre-existing group rows pass through unchanged; groups then sort in taxonomy order and, if the
@@ -348,7 +348,7 @@ fn context_menu_emit_over_budget(items: Vec<ContextMenuItemSpec>, category_of: &
     out
 }
 
-/// 🗂️ Pure organizer enforced at every context-menu funnel (SDK `VcsArtifactApp::context_menu`, shell
+/// 🗃️ Pure organizer enforced at every context-menu funnel (SDK `VcsArtifactApp::context_menu`, shell
 /// builders) — recurses into `children`, normalizes separators (labeled = kept header, bare
 /// leading/trailing/doubled = dropped), merges duplicate `menu.group.<category>` rows (deduping their
 /// children by id), then applies the ≤9-row / >9-row emission policy from D2 of the grouped-context-menu
@@ -372,7 +372,7 @@ pub fn organize_context_menu(items: Vec<ContextMenuItemSpec>, category_of: &dyn 
     }
 }
 
-/// 🗂️ Declarative input row for `build_shell_context_menu_specs` — Rust twin of the TS `ShellMenuAction`
+/// 🎬️ Declarative input row for `build_shell_context_menu_specs` — Rust twin of the TS `ShellMenuAction`
 /// the shell fallback builder consumes (`buildShellContextMenuItems`, renderer). `kind` is the raw
 /// `ActionKind`/`CommandKind` discriminant string, carried through for host-side styling parity (unused
 /// by the builder itself).
@@ -388,7 +388,7 @@ pub struct ShellMenuAction {
     pub arg_carrying: bool,
 }
 
-/// 🗂️ Shell fallback context menu (window-background right-click, "no plugin resolved a menu") builder
+/// 🔨️ Shell fallback context menu (window-background right-click, "no plugin resolved a menu") builder
 /// — filters to `in_palette` actions, emits one leaf per action (an `arg_carrying` action routes
 /// through the reserved `"shell.openActionPane"` action id with `{"actionId": id}` args so the host can
 /// prompt for arguments before dispatch), appends a fixed `"shell.openPalette"` leaf when

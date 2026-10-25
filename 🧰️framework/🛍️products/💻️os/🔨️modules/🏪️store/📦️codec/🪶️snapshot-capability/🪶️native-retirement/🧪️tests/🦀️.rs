@@ -259,6 +259,41 @@ fn sqlite_snapshot_codec_default_receiving_validators_apply_the_authored_subset_
  }
 }
 
+/// 🧮️ A validator that admits backing allocation through its control, as the authored subset policies of handwritten snapshots may.
+#[derive(semio_framework_value::RetireOwned)]
+struct AllocatingValidator{bytes:usize}
+impl ArtifactSqliteSnapshotHost for AllocatingValidator{
+ fn validate_sqlite_snapshot_subset(&self,_:&semio_framework_artifact_reference::ArtifactDialect,_:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->crate::io_schema::IoResult<()>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(crate::io_schema::IoError::from_value_error)?;control.admit_allocation_bytes(self.bytes).map_err(crate::io_schema::IoError::from_value_error)?;Ok(crate::io_schema::IoOutcome::clean(()))}
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for AllocatingValidator {
+const SQLITE_SCHEMA:&'static str=RetainedSnapshot::SQLITE_SCHEMA;
+fn to_sqlite_database(&self,_:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"validator fixture has no projection"))}
+fn from_sqlite_database(_:&SqliteDatabase,_:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"validator fixture has no reconstruction"))}
+}
+
+#[test]
+fn sqlite_snapshot_codec_default_receiving_validators_allocate_only_through_the_original_receiving_port(){
+ let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();let maximum=fixture["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;
+ let database=value_database(7);let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"default.receiving".into(),standard:"1".into(),subset:"*".into()};
+ for case in fixture["validationAllocationCases"].as_array().unwrap(){
+  let id=case["id"].as_str().unwrap();let snapshot=AllocatingValidator{bytes:case["validatorBytes"].as_u64().unwrap()as usize};let direct=case["entry"].as_str()==Some("direct");
+  for decoding in[true,false]{
+   let mut sql_callback=|_|true;let mut decode_callback=|_|true;let mut encode_callback=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut decode_callback);let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut encode_callback);
+   let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();decode.install_retirement_recipient(&mut recipient).unwrap();let mut encode_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();encode.install_retirement_recipient(&mut encode_recipient).unwrap();
+   let mut control=SqliteSnapshotControl::new(&mut sql_callback,SqliteDatabaseLimits{max_allocation_bytes:case["limitBytes"].as_u64().unwrap()as usize,..Default::default()});
+   let result={let mut scope=control.receiving_scope();
+    if direct{snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut scope)}
+    else if decoding{let mut owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut decode,grant);snapshot.validate_sqlite_snapshot_subset_decoding(&dialect,&database,&mut scope,&mut owner)}
+    else{let mut owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut encode,grant);snapshot.validate_sqlite_snapshot_subset_encoding(&dialect,&database,&mut scope,&mut owner)}
+   };
+   assert_eq!(result.is_ok(),case["accepted"].as_bool().unwrap(),"{id} decoding={decoding}: {:?}",result.as_ref().err().map(|error|&error.cause));
+   if let Err(error)=&result{assert_eq!(Some(error.cause.kind.as_str()),case["kind"].as_str(),"{id} decoding={decoding}")}
+   assert_eq!(control.allocation_bytes(),case["chargedBytes"].as_u64().unwrap()as usize,"{id} decoding={decoding}");
+   while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).unwrap();}while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).unwrap();}
+  }
+ }
+}
+
 #[test]
 fn sqlite_snapshot_codec_relocation_retains_every_original_across_partial_moves(){
  use crate::sqlite_snapshot::artifact::receiving::{Port,Direction,relocate_vector};

@@ -23,7 +23,7 @@ fn yielded(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     }
 }
 
-/// ✋️ Lift a pet by its scruff and remember its perch origin for cancellation.
+/// 🐾️ Lift a pet by its scruff and remember its perch origin for cancellation.
 pub fn lift(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let kind = draft.kinds[index];
     release(draft, index, now);

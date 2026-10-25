@@ -3,7 +3,7 @@
 use super::*;
 
 // #region 🔖️Shapes
-/// 🧮️ Six-coefficient 2D affine `[a, b, c, d, e, f]` — same layout as `kurbo::Affine`:
+/// 📐️ Six-coefficient 2D affine `[a, b, c, d, e, f]` — same layout as `kurbo::Affine`:
 /// `x' = a*x + c*y + e`, `y' = b*x + d*y + f`. `Mul` composes "self after other" (matrix product
 /// `self * other`), matching `kurbo::Affine`'s own composition order — see `affine_tests`'s
 /// differential proof against the real `kurbo::Affine`.

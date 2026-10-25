@@ -1,4 +1,4 @@
-/** ⚡️ Test output cache
+/** 💾️ Test output cache
  *
  * Cache roots, per-test directories and the output markers that make a directory safe to clean.
  */
@@ -18,7 +18,7 @@ export function testCacheRoot(repoRoot: string): string {
   return repositoryTestArtifactRootV1(repoRoot);
 }
 
-/** ⚡️ One of the six generated output roots (`work`, `hosts`, `oracles`, `results`, `diffs`, `reports`). */
+/** 📁️ One of the six generated output roots (`work`, `hosts`, `oracles`, `results`, `diffs`, `reports`). */
 export function testCacheDir(repoRoot: string, child: string): string {
   const taxonomy = testTaxonomy(repoRoot);
   if (!taxonomy.testOutputChildDirs.includes(child)) throw new Error(`unknown test cache child dir ${JSON.stringify(child)}`);
@@ -39,7 +39,7 @@ export function agentCacheRoot(repoRoot: string, agentId = sessionAgentId()): st
 /** 🧾️ Ownership marker written into every generated output root; only marked trees are deletable. */
 export type OutputMarker = Readonly<{ kind: string; testId: string; cacheKey: string }>;
 
-/** 🧾️ Creates a generated directory and stamps it with its ownership marker. */
+/** 🚩️ Creates a generated directory and stamps it with its ownership marker. */
 export function markOutputDir(repoRoot: string, absDir: string, marker: Omit<OutputMarker, "kind">): void {
   const taxonomy = testTaxonomy(repoRoot);
   const root = resolve(testCacheRoot(repoRoot));
@@ -61,7 +61,7 @@ export function markOutputDir(repoRoot: string, absDir: string, marker: Omit<Out
   writeFileSync(markerPath, `${JSON.stringify({ kind: taxonomy.testOutputMarkerKind, ...marker }, null, 2)}\n`);
 }
 
-/** 🧾️ Reads a directory's ownership marker, or `null` when it carries none. */
+/** 📖️ Reads a directory's ownership marker, or `null` when it carries none. */
 export function readOutputMarker(repoRoot: string, absDir: string): OutputMarker | null {
   const taxonomy = testTaxonomy(repoRoot);
   const path = join(absDir, testFilenameForKind(taxonomy, taxonomy.testOutputMarkerFileKindId));

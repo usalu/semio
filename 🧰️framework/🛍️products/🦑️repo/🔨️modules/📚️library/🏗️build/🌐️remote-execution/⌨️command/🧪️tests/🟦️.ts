@@ -13,6 +13,7 @@ import texts from "../../📖️texts/🔣️.json";
 import {readRemoteExecutionPolicyV1,requireRemoteExecutionShapeV1} from "../../🟦️.ts";
 import {eventuallyV1,startClusterV1} from "../../🧪️tests/🧰️cluster/🟦️.ts";
 import {parseRemoteExecutionArgumentsV1,REMOTE_EXECUTION_OPTIONS_V1,remoteExecutionStatusV1,remoteExecutionTextV1,runRemoteExecutionCommandV1,type RemoteExecutionCommandContextV1} from "../🟦️.ts";
+import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 
 const definitions=schema.definitions as Record<string,unknown>,here=import.meta.dir,ajv=new Ajv({strict:true,allErrors:true,validateFormats:false});
 const independent=(name:string,value:unknown):boolean=>{const validate=ajv.compile({$ref:`#/definitions/${name}`,definitions} as never);return validate(value) as boolean;};
@@ -40,8 +41,8 @@ test("the catalogue row lists exactly the options the command accepts, every fla
  const accepted=(name:"serve"|"status"|"workers")=>[...REMOTE_EXECUTION_OPTIONS_V1[name].valued,...REMOTE_EXECUTION_OPTIONS_V1[name].plain].filter(flag=>flag!=="--lang");
  for(const subcommand of operation.subcommands)expect([...subcommand.flags].sort(),subcommand.name).toEqual(accepted(subcommand.name).sort());
  expect([...operation.flags].sort()).toEqual([...new Set(["serve","status","workers"].flatMap(name=>accepted(name as "serve")))].sort());
- const defined=new Map((catalog.flags as any[]).map(row=>[row.name,row]));
- for(const flag of operation.flags){const row=defined.get(flag);expect(row,flag).toBeDefined();expect(row.operations,flag).toContain("remote-execution");expect(row.description.en.length).toBeGreaterThan(10);expect(row.description.de.length).toBeGreaterThan(10);}
+ const defined=(flag:string)=>(catalog.flags as any[]).find(row=>row.name===flag&&(row.operations??[]).includes("remote-execution"));
+ for(const flag of operation.flags){const row=defined(flag);expect(row,flag).toBeDefined();expect(row.operations,flag).toContain("remote-execution");expect(row.description.en.length).toBeGreaterThan(10);expect(row.description.de.length).toBeGreaterThan(10);}
  for(const row of catalog.flags as any[])if(!operation.flags.includes(row.name))expect(row.operations??[]).not.toContain("remote-execution");
  for(const example of operation.examples)expect(example.command.startsWith("repo remote-execution ")).toBe(true);
  expect(operation.notes.every((note:any)=>note.en&&note.de)).toBe(true);
@@ -74,7 +75,7 @@ test("arguments are parsed strictly and every refusal is spelled in both languag
 const context=(root:string,overrides:Partial<RemoteExecutionCommandContextV1>&{lines?:string[]}={}):RemoteExecutionCommandContextV1=>({root,environment:{PATH:process.env.PATH},signal:new AbortController().signal,progress:async()=>{},write:line=>{overrides.lines?.push(line);},spawnWorker:()=>{throw Error("no worker");},...overrides});
 
 test("status describes the contract, probes the endpoint with the protocol's capabilities call and reads the scheduler; nothing configured means local execution",async()=>{
- const root=mkdtempSync("/private/tmp/rexec-inhouse/cmd-");
+ const root=mkdtempSync(join(testScratchRootV1("rexec-inhouse"),"cmd-"));
  try{
   const empty=await remoteExecutionStatusV1([],context(root)) as any;
   expect(empty).toMatchObject({configured:false,contract:null,scheduler:null,grpc:null,server:null,token:null});expect(independent("Status",empty)).toBe(true);
@@ -93,7 +94,7 @@ test("status describes the contract, probes the endpoint with the protocol's cap
 });
 
 test("serve starts the store, the service and a worker process, prints what a client sets and a machine joins with in the chosen language, runs an action and stops cleanly when cancelled",async()=>{
- const root=mkdtempSync("/private/tmp/rexec-inhouse/cmd-"),controller=new AbortController(),lines:string[]=[],stages:string[]=[],entry=join(here,"..","..","🏃️entry","🟦️.ts"),children:ReturnType<typeof Bun.spawn>[]=[];
+ const root=mkdtempSync(join(testScratchRootV1("rexec-inhouse"),"cmd-")),controller=new AbortController(),lines:string[]=[],stages:string[]=[],entry=join(here,"..","..","🏃️entry","🟦️.ts"),children:ReturnType<typeof Bun.spawn>[]=[];
  try{
   const running=runRemoteExecutionCommandV1(["serve","--grpc-port","0","--worker-port","0","--local-workers","1","--sandbox","isolated-root","--concurrency","2","--lang","de"],{
    root,environment:{PATH:process.env.PATH},signal:controller.signal,progress:async stage=>{stages.push(stage);},write:line=>{lines.push(line);},
@@ -121,7 +122,7 @@ test("serve starts the store, the service and a worker process, prints what a cl
 });
 
 test("workers refuses to start without a scheduler and serve refuses to listen beyond loopback without tokens, in both languages",async()=>{
- const root=mkdtempSync("/private/tmp/rexec-inhouse/cmd-");
+ const root=mkdtempSync(join(testScratchRootV1("rexec-inhouse"),"cmd-"));
  try{
   await expect(runRemoteExecutionCommandV1(["workers"],context(root))).rejects.toThrow(/SEMIO_REMOTE_EXECUTION_SCHEDULER[\s\S]*SEMIO_REMOTE_EXECUTION_SCHEDULER/u);
   await expect(runRemoteExecutionCommandV1(["serve","--bind","0.0.0.0"],context(root))).rejects.toThrow(/Tokens are required[\s\S]*Tokens sind|Außerhalb von Loopback/u);

@@ -1,5 +1,5 @@
 /** 🏖️ Per-run test sandbox: one test-environment API for temp roots, image roots, port leases, reclaim, the runtime guard and the concurrency law scanner. */
-export { readTestSandboxProtocolV1, testSandboxParentV1, testPathInsideV1, testProcessAliveV1 } from "./📐️layout/🟦️.ts";
+export { managedNativeParentOfV1, requireArtifactOutsideManagedParentV1, safeTemporaryDirectoryV1, readTestSandboxProtocolV1, testSandboxParentV1, testPathInsideV1, testProcessAliveV1 } from "./📐️layout/🟦️.ts";
 export type { TestSandboxProtocolV1 } from "./📐️layout/🟦️.ts";
 export { attachedDiskImagesV1, detachDiskImagesUnderV1, mayHoldDiskImageV1 } from "./🖼️images/🟦️.ts";
 export { createTestSandboxV1, withTestSandboxV1, testSandboxEnvironmentV1, testScratchRootV1, adoptedTestSandboxRootV1, liveTestSandboxesV1 } from "./📁️root/🟦️.ts";

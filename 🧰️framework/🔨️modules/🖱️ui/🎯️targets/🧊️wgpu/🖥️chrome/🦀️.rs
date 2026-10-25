@@ -150,7 +150,7 @@ pub enum UiDriverReveal {
     Hover,
 }
 
-/// 🎙️ React's `UiDriverTooltips` axis — how rich a chrome control's hover tooltip may be
+/// 💬️ React's `UiDriverTooltips` axis — how rich a chrome control's hover tooltip may be
 /// (`🧱️elements/🚗️UiDriver/🟦️.tsx:23`). `None` is what `COMPACT_UI_DRIVER` ships, and it is the axis
 /// value `useControlTooltipText` reads FIRST (`🏷️Label/🟦️.tsx:188`: `if (driver.tooltips === "none")
 /// return undefined`).
@@ -169,7 +169,7 @@ pub enum UiDriverTooltips {
 }
 
 impl UiDriverTooltips {
-    /// 🎙️ `parseUiDriver`'s own allowed values (`🚗️UiDriver/🟦️.tsx:69`); an unknown string is not a
+    /// 🔤️ `parseUiDriver`'s own allowed values (`🚗️UiDriver/🟦️.tsx:69`); an unknown string is not a
     /// driver axis value, and React throws on it — a renderer cannot, so it keeps the default.
     pub fn from_axis(value: &str) -> Option<Self> {
         match value {
@@ -204,14 +204,14 @@ pub struct UiDriverChrome {
 }
 
 impl UiDriverChrome {
-    /// 🚗️ `DEFAULT_UI_DRIVER` (`🚗️UiDriver/🟦️.tsx:41`).
+    /// 🏠️ `DEFAULT_UI_DRIVER` (`🚗️UiDriver/🟦️.tsx:41`).
     pub const DEFAULT: Self =
         Self { labels: UiDriverLabels::Full, label_tier: UiDriverLabelTier::Normal, drag: UiDriverDrag::Handle, chrome: UiDriverReveal::Always, gumball: UiDriverReveal::Always, tooltips: UiDriverTooltips::Full, hotkeys: UiDriverHotkeys::Inline };
-    /// 🚗️ `COMPACT_UI_DRIVER` (`🚗️UiDriver/🟦️.tsx:43`) — icon-only chrome and NO tooltips.
+    /// 🗜️ `COMPACT_UI_DRIVER` (`🚗️UiDriver/🟦️.tsx:43`) — icon-only chrome and NO tooltips.
     pub const COMPACT: Self =
         Self { labels: UiDriverLabels::Icons, label_tier: UiDriverLabelTier::Normal, drag: UiDriverDrag::Surface, chrome: UiDriverReveal::Hover, gumball: UiDriverReveal::Hover, tooltips: UiDriverTooltips::None, hotkeys: UiDriverHotkeys::None };
 
-    /// 🚗️ The builtin driver named by `id`, falling back to the default exactly as
+    /// 📦️ The builtin driver named by `id`, falling back to the default exactly as
     /// `resolveUiDriver` does for an id no driver carries.
     pub fn builtin(id: &str) -> Self {
         match id {
@@ -220,7 +220,7 @@ impl UiDriverChrome {
         }
     }
 
-    /// 🚗️ Overrides every axis declared by the shared driver document.
+    /// 🎚️ Overrides every axis declared by the shared driver document.
     pub fn with_axes(mut self, labels: Option<&str>, label_tier: Option<&str>, drag: Option<&str>, chrome: Option<&str>, gumball: Option<&str>, tooltips: Option<&str>, hotkeys: Option<&str>) -> Self {
         if let Some("icons") = labels {
             self.labels = UiDriverLabels::Icons;

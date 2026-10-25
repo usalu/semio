@@ -254,7 +254,7 @@ export class OwnedResidentRecordDetachment {
 //#endregion 🪪️DomainRecordCapability
 
 //#region 🪪️StrongOwner
-/** 🪪️ Intrinsic storage registration, not an actor/UI lifetime or semantic close certificate. */
+/** 🗃️ Intrinsic storage registration, not an actor/UI lifetime or semantic close certificate. */
 export class OwnedResidentOwner {
   readonly #state: Owner;
   private constructor(mint: object, state: Owner) {
@@ -409,7 +409,7 @@ export class OwnedResidentExternalBacking {
   terminalIsEmpty(): boolean { const state = this.#state; return state.closed && !state.admission && !state.owner && !state.facade && !state.previous && !state.next && !state.backing && !state.data && state.references === 0; }
   get retirement(): OwnedResidentRetirement | null { return this.#state.final.terminal ? this.#state.final.facade : null; }
 }
-/** 🧾️ Exact intrinsic backing custody, not worker/request correlation or a native input acknowledgement. */
+/** ⏪️ Exact intrinsic backing custody, not worker/request correlation or a native input acknowledgement. */
 export class OwnedResidentBackingCustody {
   readonly #state: External;
   private constructor(mint: object, state: External) { if (mint !== MINT) throw new Error("Invalid resident custody authority"); this.#state = state; state.custody = this; Object.freeze(this); }
@@ -422,7 +422,7 @@ export class OwnedResidentBackingCustody {
 //#endregion 📥️ExternalBacking
 
 //#region 🧾️ExactRetirement
-/** 🧾️ Preadmitted fixed proof of intrinsic retirement; retained empty facades are not a physical-GC certificate. */
+/** 🔧️ Preadmitted fixed proof of intrinsic retirement; retained empty facades are not a physical-GC certificate. */
 export class OwnedResidentRetirement {
   readonly #state: Final;
   private constructor(mint: object, state: Final, root: object) { if (mint !== MINT) throw new Error("Invalid resident retirement authority"); this.#state = state; state.root = root; state.facade = this; Object.freeze(this); }

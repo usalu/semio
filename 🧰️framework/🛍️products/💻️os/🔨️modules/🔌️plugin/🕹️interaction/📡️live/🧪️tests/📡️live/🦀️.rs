@@ -294,7 +294,7 @@ fn local_interaction_live_partial_error_preserves_wrapper_emission_and_retiremen
         let expected = fixture["partialError"]["expectedPrefix"].as_str().unwrap().len();
         assert_eq!(emitted, expected);
         let payload = expected + fixture["partialError"]["first"].as_str().unwrap().len() + fixture["partialError"]["error"].as_str().unwrap().len();
-        assert_eq!(retired + closed, payload, "[DEBUG] retired={retired} closed={closed} bytes={bytes}");
+        assert_eq!(retired + closed, payload, "retired={retired} closed={closed} bytes={bytes}");
     }
 }
 

@@ -13,7 +13,7 @@ mod add_n {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    crate::os_store::component::tests::assert_fixture_sum_law(&DemoMutation::AddN(AddN { delta: 4 }), &[Some(3)]).await;
+    semio_framework_os_store_testing_fixtures::assert_fixture_sum_law(&DemoMutation::AddN(AddN { delta: 4 }), &[Some(3)]).await;
 }
 }
 
@@ -28,8 +28,8 @@ mod assign_n {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    crate::os_store::component::tests::assert_fixture_sum_law(&DemoMutation::AssignN(AssignN { n: Some(5) }), &[Some(3), None]).await;
-    crate::os_store::component::tests::assert_fixture_sum_law(&DemoMutation::AssignN(AssignN { n: None }), &[Some(3)]).await;
+    semio_framework_os_store_testing_fixtures::assert_fixture_sum_law(&DemoMutation::AssignN(AssignN { n: Some(5) }), &[Some(3), None]).await;
+    semio_framework_os_store_testing_fixtures::assert_fixture_sum_law(&DemoMutation::AssignN(AssignN { n: None }), &[Some(3)]).await;
 }
 }
 
@@ -44,7 +44,7 @@ mod delete_n {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    crate::os_store::component::tests::assert_fixture_sum_law(&DemoMutation::DeleteN(DeleteN {}), &[Some(3)]).await;
+    semio_framework_os_store_testing_fixtures::assert_fixture_sum_law(&DemoMutation::DeleteN(DeleteN {}), &[Some(3)]).await;
 }
 }
 
@@ -59,6 +59,6 @@ mod set_n {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    crate::os_store::component::tests::assert_fixture_sum_law(&DemoMutation::SetN(SetN { n: 9 }), &[Some(3)]).await;
+    semio_framework_os_store_testing_fixtures::assert_fixture_sum_law(&DemoMutation::SetN(SetN { n: 9 }), &[Some(3)]).await;
 }
 }

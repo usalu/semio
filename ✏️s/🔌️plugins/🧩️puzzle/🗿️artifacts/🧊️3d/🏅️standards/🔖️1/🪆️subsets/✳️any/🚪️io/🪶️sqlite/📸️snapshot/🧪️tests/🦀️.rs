@@ -2,8 +2,8 @@
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_s_artifact_puzzle_3d_model::*;
-use store::pack::snapshot::ArtifactDsl;
-use store::pack::snapshot::ArtifactPack;
+use store::snapshot::ArtifactDsl;
+use store::snapshot::ArtifactPack;
 use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
 
 fn words() -> Vec<u64> {
@@ -82,11 +82,11 @@ fn specimen(word: u64) -> Puzzle3dSnapshot {
 
 #[test]
 fn sqlite_snapshot_puzzle3d_actual_typed_bare_capability_is_present() {
-    assert!(<Puzzle3dSnapshot as ArtifactPack>::sqlite_snapshot_codec().is_some());
+    assert!(<Puzzle3dSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
 }
 #[test]
 fn sqlite_snapshot_puzzle3d_actual_play_bare_capability_is_present() {
-    assert!(<Puzzle3dPlaySnapshot as ArtifactPack>::sqlite_snapshot_codec().is_some());
+    assert!(<Puzzle3dPlaySnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
 }
 #[test]
 fn sqlite_snapshot_puzzle3d_native_typed_text_and_pack_preserve_every_word() {
@@ -194,7 +194,7 @@ fn sqlite_snapshot_puzzle3d_actual_typed_and_play_erased_codecs_keep_all23_domai
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.puzzle.puzzle3d".into(), standard: "1".into(), subset: "*".into() };
     for word in words() {
         let value = specimen(word);
-        for codec in [<Puzzle3dSnapshot as ArtifactPack>::sqlite_snapshot_codec().unwrap(), <Puzzle3dPlaySnapshot as ArtifactPack>::sqlite_snapshot_codec().unwrap()] {
+        for codec in [<Puzzle3dSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap(), <Puzzle3dPlaySnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap()] {
             for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
                 let payload = match encoding {
                     SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(value.encode_pack()),

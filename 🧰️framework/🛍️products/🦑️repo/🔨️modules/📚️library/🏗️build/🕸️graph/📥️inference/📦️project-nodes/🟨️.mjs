@@ -18,19 +18,19 @@ import { createMemoryGovernorV1, graphMemoryBudgetBytesV1, measureMemoryBaseline
 import { createErrorCollectorFromEnvV1 } from "../../🧾️collect-errors/🟨️.mjs";
 import { openProjectFarmV1 } from "./🏊️project-farm/🟨️.mjs";
 import { awaitGrowingV1 } from "./🏊️project-farm/🏊️pool/🟨️.mjs";
-let inferenceCandidates,readBuildGeneratedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, discoverNativeBuildOwnersV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, projectStampPathsV1;
+let closureApiV1, closureHandleOfV1, closureHandleFromRecipeV1, resolveClosureRefsV1, inferenceCandidates,readBuildGeneratedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, discoverNativeBuildOwnersV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, projectStampPathsV1;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
   ({inferenceCandidates,readBuildGeneratedCompileOutputV1}=registry.ownerDiscovery);
   ({ buildPath, POLICY, PROJECT_BASENAME, workspaceDataDirectory } = registry.coordinates);
-  ({ yieldInferenceV1, createScriptInputCache, nativeCommandInputs } = registry.scriptInputs);
+  ({ yieldInferenceV1, createScriptInputCache, nativeCommandInputs, closureApiV1, closureHandleOfV1, closureHandleFromRecipeV1 } = registry.scriptInputs);
   ({ catalogBuildContributionsV1, discoverNativeBuildOwnersV1, projectAssemblyAuthorityV1 } = registry.ownerDiscovery);
   ({ readTaxonomyProjectionV1 } = registry.sourceAnalyses);
   ({ collectPlaygroundCatalog, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1 } = registry.playgroundTargets);
   ({ readToml, withNativePreparation } = registry.nativeManifests);
   ({ cargoTargets, componentBuildTargets, componentCrateRoots, withReleasePipelinePreparation } = registry.componentTargets);
-  ({ projectWithDefaults } = registry.projectAssembly);
+  ({ projectWithDefaults, resolveClosureRefsV1 } = registry.projectAssembly);
   ({ loaded } = registry.bootstrap);
   ({ readBunLockGraph } = registry.bunLock);
   ({ projectStampPathsV1 } = registry.stamps);
@@ -67,7 +67,7 @@ export function settlementOptionsV1(context) {
 
 /** 🧱️ Builds, from plain data, what the inference of one project shares across the projects of a graph construction; a worker process opens the session its parent describes. */
 export function createProjectInferenceEnvironmentV1(session) {
-  const { workspaceRoot, registry, commandInputs, projectsByRoot, componentRoots } = session, context = { workspaceRoot, registry }, scripts = createScriptInputCache(context);
+  const { workspaceRoot, registry, projectsByRoot, componentRoots } = session, context = { workspaceRoot, registry, lateClosures: session.lateClosures === true }, scripts = createScriptInputCache(context), commandInputs = session.commandInputs?.closureRecipe ? closureHandleFromRecipeV1(session.commandInputs.closureRecipe) : session.commandInputs;
   const contractPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
   const contracts = existsSync(contractPath) ? readTaxonomyProjectionV1(contractPath).generatorContracts : {};
   scripts.generatedOutput = path => readBuildGeneratedCompileOutputV1(path, workspaceRoot, contracts, registry);
@@ -103,15 +103,15 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
   const collector = createErrorCollectorFromEnvV1({ workspaceRoot, signal: context.invocation?.control.signal });
   const catalogContributions=await catalogBuildContributionsV1(workspaceRoot,options?.catalogProviders??[]);
   const owners=options?.ownerAdmission?{files:inferenceCandidates(configFiles,workspaceRoot),nativeCache:new Map(),nativeClosures:new Map()}:await discoverNativeBuildOwnersV1(configFiles,workspaceRoot,context),{nativeCache,nativeClosures}=owners;configFiles=owners.files;
-  const rootsByName = new Map(), scripts = createScriptInputCache(context);
+  const late = !options?.ownerAdmission && options?.snapshot === true && typeof options?.onOwnerObservations === "function", rootsByName = new Map(), scripts = createScriptInputCache({ ...context, lateClosures: late });
   const contractPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
   const contracts = existsSync(contractPath) ? readTaxonomyProjectionV1(contractPath).generatorContracts : {};
   scripts.generatedOutput=path=>readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,context.registry);
   if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","running");
-  const commandInputs = !options?.ownerAdmission&&configFiles.some((path) => path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? await nativeCommandInputs(workspaceRoot, scripts) : undefined;
+  const commandInputs = !options?.ownerAdmission&&configFiles.some((path) => path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? await closureApiV1(scripts, workspaceRoot).nativeCommandInputs() : undefined;
   if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","complete");
   const projectAuthority=createHash("sha256").update(JSON.stringify([contracts])).digest("hex");
-  const commandRevision=createHash("sha256").update(JSON.stringify(commandInputs??null)).digest("hex"),registryDigest=createHash("sha256").update(JSON.stringify(context.registry??null)).digest("hex");
+  const commandRevision=createHash("sha256").update(JSON.stringify(closureHandleOfV1(commandInputs)?.key??commandInputs??null)).digest("hex"),registryDigest=createHash("sha256").update(JSON.stringify(options?.ownerAdmission?context.registry??null:context.registry?.catalogProviders?.map(({ownerRoot,sourcePath})=>[ownerRoot,sourcePath])??null)).digest("hex");
   const playgroundCatalog = collectPlaygroundCatalog(configFiles, workspaceRoot,catalogContributions);
 
   const results = (await Promise.all(configFiles
@@ -189,17 +189,19 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
     const root=json.root,nativeRoot=json.metadata?.nativeRoot??root,nativeTargets=Object.entries(activeJson.targets??{}).filter(([,target])=>target.metadata?.semio?.execution?.kind!=="source"),nativeCandidate=existsSync(join(workspaceRoot,nativeRoot,"Cargo.toml"))||nativeTargets.some(([,target])=>target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts")),native=options?.ownerAdmission?buildNativeSourceObservationV1({selectedSource:Object.values(activeJson.targets??{}).some(target=>target.metadata?.semio?.execution?.kind==="source"),selectedNative:nativeCandidate&&nativeTargets.length>0,requestedInputs:selectedInputs.length>0,dependencyInputs:false,inputRole:buildInputSourceRoleV1(Object.keys(activeJson.targets??{}).length>0,false,Object.values(activeJson.targets??{}).map(target=>target.metadata?.semio?.sourceInputObservation))})==="compile":nativeCandidate,pipeline=Object.values(activeJson.targets??{}).some(target=>target.metadata?.semio?.release);
     const assemblyAuthority=native||pipeline?projectAssemblyAuthorityV1(workspaceRoot,native?nativeRoot:undefined,projectsByRoot,pipeline?componentRoots:undefined,nativeCache,nativeClosures):null;
     const authorityMilliseconds=performance.now()-started;
-    const cacheKey=createHash("sha256").update(root).digest("hex").slice(0,24),cachePath=join(workspaceDataDirectory(workspaceRoot),"np",cacheKey+".json"),head=[projectAuthority,registryDigest,native?commandRevision:null,native||pipeline?assemblyAuthority:null];
+    const cacheKey=createHash("sha256").update(root).digest("hex").slice(0,24),cachePath=join(workspaceDataDirectory(workspaceRoot),"np",cacheKey+".json"),head=[projectAuthority,registryDigest,native?commandRevision:null,native||pipeline?assemblyAuthority:null,...(late?["closure-references/4"]:[])];
     result.projects[name]=await tagProjectFailureV1(root,()=>observeProjectInferenceV1({cachePath,key:projectRecordKeyV1(head,root,json,selectedTargets,selectedInputs),owner:root,stamps:projectStampPathsV1({native}),reusable:value=>inferenceInventoryReferencesHoldV1(workspaceRoot,value,context.phaseControl),prepare:farm?()=>farm.prepare({name,root,json,native,pipeline,nativeRoot,selectedInputs,head,cacheKey}):undefined},()=>inferProjectBodyV1(projectEnvironment,{name,root,json,native,pipeline,nativeRoot,selectedTargets,selectedInputs},options?.ownerAdmission)));
-    options?.onOwnerObservations?.(name,projectInferenceObservationsV1(cachePath)??[]);
+    let rows=projectInferenceObservationsV1(cachePath)??[];
+    if(late&&!result.projects[name].unavailable){const resolved=await tagProjectFailureV1(root,()=>resolveClosureRefsV1(result.projects[name],workspaceRoot,scripts));result.projects[name]=resolved.project;rows=[...rows,...resolved.rows];}
+    options?.onOwnerObservations?.(name,rows);
     if(result.projects[name].unavailable){unavailable.set(root,result.projects[name].unavailable);delete result.projects[name];return;}
     result.projects[name].targets={...inactive,...result.projects[name].targets};
   };
   const phases=context.invocation?createGraphPhaseClockV1({publish:async resource=>{context.invocation.control.signal.throwIfAborted();await context.invocation.control.publish({owner:context.invocation.policy.owner,command:"build:projects",stage:"running",activity:{resource,mode:"shared",elapsedMs:0}});},write:writeGraphPhaseRowV1}):undefined;let finished=0;
   await phases?.begin("inference",jobs.length);
-  const farm=options?.ownerAdmission?undefined:openProjectFarmV1({workspaceRoot,context,projects:jobs.length,commandInputs,projectsByRoot,componentRoots,signal:context.invocation?.control.signal,processed:()=>projectIndex});
+  const farm=options?.ownerAdmission?undefined:openProjectFarmV1({workspaceRoot,context,projects:jobs.length,lateClosures:late,commandInputs:closureHandleOfV1(commandInputs)?{closureRecipe:closureHandleOfV1(commandInputs).recipe}:commandInputs,projectsByRoot,componentRoots,signal:context.invocation?.control.signal,processed:()=>projectIndex});
   const limit=Math.min(projectConcurrencyV1(options),jobs.length),governor=limit>0?createMemoryGovernorV1({budgetBytes:graphMemoryBudgetBytesV1(process.env),baselineBytes:measureMemoryBaselineV1(),workers:limit,signal:context.phaseControl?.signal,report:line=>process.stderr.write(line+"\n"),environment:process.env}):undefined;
-  const loop=async()=>{while(!stopped&&cursor<jobs.length){{const job=jobs[cursor++],run=async()=>{if(collector)await collector.guard({project:job.name,root:job.json.root,phase:"project"},()=>inferProject(job));else await inferProject(job);};await (governor?governor.run(run):run());}await phases?.advance("inference",++finished);}};
+  const loop=async()=>{while(!stopped&&cursor<jobs.length){{const job=jobs[cursor++];await governor.run(async()=>{if(collector)await collector.guard({project:job.name,root:job.json.root,phase:"project"},()=>inferProject(job));else await inferProject(job);});}await phases?.advance("inference",++finished);}};
   const workers=Array.from({length:limit},loop);
   farm?.onReady(loops=>{for(let extra=loops-workers.length;extra>0&&!stopped&&cursor<jobs.length;extra--)workers.push(loop());});
   try{await awaitGrowingV1(workers);}catch(error){stopped=true;await Promise.allSettled(workers);throw error;}finally{await farm?.close();}

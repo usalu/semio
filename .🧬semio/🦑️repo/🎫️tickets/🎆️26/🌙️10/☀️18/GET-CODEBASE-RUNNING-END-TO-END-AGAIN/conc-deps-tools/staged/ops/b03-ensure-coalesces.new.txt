@@ -1,1 +1,0 @@
-(store,control)=>installUnlessReadyV1(store,control,recheck,()=>prepareJavascriptDependencies("sync",root,store,control,{kind:"all"})).then(()=>undefined),{ready:recheck});

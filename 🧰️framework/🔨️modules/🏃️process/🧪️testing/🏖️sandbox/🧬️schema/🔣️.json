@@ -15,9 +15,37 @@
     "ports",
     "guard",
     "scan",
-    "rules"
+    "rules",
+    "messages"
    ],
    "properties": {
+    "messages": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "artifactInManagedParent"
+     ],
+     "properties": {
+      "artifactInManagedParent": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "en",
+        "de"
+       ],
+       "properties": {
+        "en": {
+         "type": "string",
+         "minLength": 1
+        },
+        "de": {
+         "type": "string",
+         "minLength": 1
+        }
+       }
+      }
+     }
+    },
     "version": {
      "const": 1
     },
@@ -76,6 +104,8 @@
       "owner",
       "directories",
       "maximumRootLength",
+      "sessionRootCharacters",
+      "idCharacters",
       "heartbeatMilliseconds",
       "staleHeartbeatMilliseconds",
       "graceMilliseconds",
@@ -103,6 +133,18 @@
        "type": "integer",
        "minimum": 40,
        "maximum": 120
+      },
+      "sessionRootCharacters": {
+       "description": "The characters of the session segment `resources.tests.root` of every agent session (the agent-session policy `testsRootCharacters`).",
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 16
+      },
+      "idCharacters": {
+       "description": "The characters of the per-run id segment (4 random bytes in hex).",
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 16
       },
       "heartbeatMilliseconds": {
        "type": "integer",

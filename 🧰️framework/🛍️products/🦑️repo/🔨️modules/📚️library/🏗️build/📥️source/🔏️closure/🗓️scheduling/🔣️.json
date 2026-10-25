@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "domains": [
+    {
+      "id": "leases",
+      "contract": {
+        "en": "Resource leases: who may hold a named resource, in which order and for how long. The bytes an action produces never depend on which holder ran first.",
+        "de": "Ressourcen-Leases: wer eine benannte Ressource in welcher Reihenfolge und wie lange halten darf. Die Bytes, die eine Aktion erzeugt, haengen nie davon ab, welcher Halter zuerst lief."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/"
+      ],
+      "ports": [
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts"
+      ]
+    },
+    {
+      "id": "capacity",
+      "contract": {
+        "en": "Host and compiler capacity: when and how many processes may start. An action produces the same bytes whether it waited for capacity or not.",
+        "de": "Host- und Compiler-Kapazitaet: wann und wie viele Prozesse starten duerfen. Eine Aktion erzeugt dieselben Bytes, ob sie auf Kapazitaet gewartet hat oder nicht."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/",
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/"
+      ],
+      "ports": [
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"
+      ]
+    },
+    {
+      "id": "store-custody",
+      "contract": {
+        "en": "Custody of the repository cache stores and native cache images (open, reserve, collect, retire, ledger) and of the sealed graph generations. It decides where bytes live, never what they are.",
+        "de": "Obhut der Repository-Cache-Speicher und nativen Cache-Images (oeffnen, reservieren, einsammeln, ausmustern, Ledger) und der versiegelten Graph-Generationen. Sie bestimmt, wo Bytes liegen, nie was sie sind."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/"
+      ],
+      "ports": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🟦️.ts"
+      ]
+    },
+    {
+      "id": "process-supervision",
+      "contract": {
+        "en": "Supervision of the process an action runs in: invocation envelope, deadlines, watchdog, termination, recorded process state, agent sessions.",
+        "de": "Ueberwachung des Prozesses, in dem eine Aktion laeuft: Aufruf-Huelle, Fristen, Watchdog, Beendigung, aufgezeichneter Prozesszustand, Agent-Sitzungen."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/🏃️process/🪓️termination/",
+        "🧰️framework/🔨️modules/🏃️process/💾️state/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/💾️state/",
+        "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/"
+      ],
+      "ports": [
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+      ]
+    },
+    {
+      "id": "retry-observation",
+      "contract": {
+        "en": "Bounded retry of file observations that peers change under a running build; it only decides when to read again.",
+        "de": "Begrenzte Wiederholung von Datei-Beobachtungen, die Peers waehrend eines Laufs aendern; sie entscheidet nur, wann erneut gelesen wird."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/"
+      ],
+      "ports": [
+        "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts",
+        "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts"
+      ]
+    },
+    {
+      "id": "progress-reporting",
+      "contract": {
+        "en": "Progress lines and refusal texts shown to humans in English and German; no action output is derived from them.",
+        "de": "Fortschrittszeilen und Ablehnungstexte fuer Menschen auf Englisch und Deutsch; keine Aktionsausgabe wird aus ihnen abgeleitet."
+      },
+      "prefixes": [
+        "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/",
+        "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/",
+        "🧰️framework/🔨️modules/🏃️process/📖️texts/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/"
+      ],
+      "ports": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📖️texts/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/🟦️.ts"
+      ]
+    }
+  ]
+}

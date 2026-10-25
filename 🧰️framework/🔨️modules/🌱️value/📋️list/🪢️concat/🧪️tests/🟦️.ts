@@ -22,5 +22,5 @@ test("owned vector concatenation keeps original row order under denial and cance
   owner.beginClose();while(!owner.terminal){const d=owner.closeDemand();for(const refused of denied(d))expect(owner.closeStep(refused)).toBe(false);owner.closeStep(grant(d));}
   expect(owner.terminal).toBe(true);
  }
- db.close();console.log("[DEBUG] original vector chunks match SQLite ordinals with six cancellation cuts and unfunded custody preservation");
+ db.close();
 });

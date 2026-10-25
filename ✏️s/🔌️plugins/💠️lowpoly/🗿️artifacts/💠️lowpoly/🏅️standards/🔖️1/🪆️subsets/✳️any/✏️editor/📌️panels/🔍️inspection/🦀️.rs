@@ -5,7 +5,8 @@ use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::Lowpoly
 use semio_s_artifact_lowpoly_lowpoly_view::{active_object, utility_params_value, LowpolyView};
 use semio_s_artifact_lowpoly_lowpoly_kit::{lowpoly_action, ui_label, ui_value_map, ui_value_text};
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DOCUMENT_SCHEMA;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{InputKind, Trigger};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;
 use semio_framework_ui_locale::LocalizedLabel;

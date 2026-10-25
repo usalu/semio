@@ -65,6 +65,7 @@ semio-s-artifact-trinity-rewriting-tests-narrows-the-lhs-pattern-to-a-shaft-neig
 testkit = ["semio-s-artifact-trinity-rewriting-model/testkit", "semio-s-artifact-trinity-rewriting-layout/testkit", "semio-s-artifact-trinity-rewriting-inferences/testkit", "semio-s-artifact-trinity-rewriting-schema/testkit", "semio-s-artifact-trinity-rewriting-mut-any/testkit", "semio-s-artifact-trinity-rewriting-operations/testkit", "semio-s-artifact-trinity-rewriting-tests-narrows-the-lhs-pattern-to-a-shaft-neighbour/testkit", "semio-s-artifact-trinity-rewriting-editor/testkit"]
 
 [dev-dependencies]
+semio-framework-plugin-reactor-app = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }

@@ -1,4 +1,4 @@
-//! 🎯️ Float writer: the scalar text sink, the f64 and f32 spellings and the exact-arithmetic digit generator. See [`super`].
+//! 📝️ Float writer: the scalar text sink, the f64 and f32 spellings and the exact-arithmetic digit generator. See [`super`].
 
 use std::cmp::Ordering;
 use std::fmt;
@@ -18,7 +18,7 @@ impl fmt::Write for ScalarText {
     }
 }
 
-/// 🔢️ Writes canonical binary64 JSON directly into admitted first-party or system storage.
+/// 💾️ Writes canonical binary64 JSON directly into admitted first-party or system storage.
 pub fn write_float_to(value: f64, out: &mut impl fmt::Write) -> fmt::Result {
     use fmt::Write as _;
     if !value.is_finite() {
@@ -174,7 +174,7 @@ mod float_format {
             Self::trim(&mut self.0);
         }
 
-        /// ✳️ In-place multiply by `5^exponent`, chunked so every factor still fits a `u32`.
+        /// ✖️ In-place multiply by `5^exponent`, chunked so every factor still fits a `u32`.
         fn mul_pow5(&mut self, mut exponent: u32) {
             while exponent > 0 {
                 let chunk = exponent.min(13);
@@ -333,7 +333,7 @@ mod float_format {
         }
     }
 
-    /// 🎯️ Decomposes a finite, non-zero, non-negative `f64` into its exact
+    /// ❎️ Decomposes a finite, non-zero, non-negative `f64` into its exact
     /// `mantissa * 2^binary_exponent` form (the mantissa carries the implicit leading bit for
     /// normal numbers; subnormals keep the raw 52-bit significand at the fixed minimum exponent).
     fn decompose(magnitude: f64) -> (u64, i32) {

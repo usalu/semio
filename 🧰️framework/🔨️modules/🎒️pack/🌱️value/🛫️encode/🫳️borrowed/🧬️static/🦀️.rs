@@ -231,7 +231,7 @@ impl<T:FieldProjectionSource> BorrowedProjectedPackOperation<T>{
  }
 }
 
-/// 🫳️ Keeps the original source borrowed while the typed capsule owns only its paid scratch.
+/// 📦️ Keeps the original source borrowed while the typed capsule owns only its paid scratch.
 pub struct BorrowedPackSource<'a,T:FieldProjectionSource>{source:&'a T}
 impl<T:FieldProjectionSource> FieldProjectionSource for BorrowedPackSource<'_,T>{
  fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{self.source.projection_view(path)}

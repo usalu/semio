@@ -46,7 +46,7 @@ function stacked(order: (series: Series<Row, string>) => Iterable<number>, offse
   return generator(ROWS);
 }
 
-/** 🥞️ The baselines of one series of a stack, in the probe's key layout. */
+/** 🔑️ The baselines of one series of a stack, in the probe's key layout. */
 function baselines(series: Series<Row, string>[], key: string, prefix: string, side: 0 | 1): Record<string, (number | string)[]> {
   const found = series.find((entry) => entry.key === key)!;
   return { [`${prefix}/${key}/y${side}`]: grid(found.map((point) => point[side])) };
@@ -79,11 +79,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same stack from the compiled probe. */
+      /** 📚️ The same stack from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "order-ascending": {
-      /** 🔮️ d3-shape's stackOrderAscending, with the stacking sequence read off separately. */
+      /** ⛓️ d3-shape's stackOrderAscending, with the stacking sequence read off separately. */
       oracle: () => {
         const series = stacked(stackOrderAscending);
         return {
@@ -94,11 +94,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same stack from the compiled probe. */
+      /** 🧱️ The same stack from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "order-reverse": {
-      /** 🔮️ d3-shape's stackOrderReverse. */
+      /** ⏪️ d3-shape's stackOrderReverse. */
       oracle: () => {
         const series = stacked(stackOrderReverse);
         return {
@@ -109,11 +109,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same stack from the compiled probe. */
+      /** 🥪️ The same stack from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "offset-expand": {
-      /** 🔮️ d3-shape's stackOffsetExpand. */
+      /** ➗️ d3-shape's stackOffsetExpand. */
       oracle: () => {
         const series = stacked(stackOrderNone, stackOffsetExpand);
         return {
@@ -124,11 +124,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same stack from the compiled probe. */
+      /** 🍰️ The same stack from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "offset-silhouette": {
-      /** 🔮️ d3-shape's stackOffsetSilhouette. */
+      /** 🎭️ d3-shape's stackOffsetSilhouette. */
       oracle: () => {
         const series = stacked(stackOrderNone, stackOffsetSilhouette);
         return {
@@ -138,11 +138,11 @@ export default defineTestAdapter({
           },
         };
       },
-      /** 🎯️ The same stack from the compiled probe. */
+      /** 🪜️ The same stack from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "offset-diverging": {
-      /** 🔮️ d3-shape's stackOffsetDiverging over a series that changes sign. */
+      /** 🖊️ d3-shape's stackOffsetDiverging over a series that changes sign. */
       oracle: () => {
         const series = stack<Row>().keys([...SIGNED_KEYS]).offset(stackOffsetDiverging)(SIGNED);
         const projection: Record<string, (number | string)[]> = {};
@@ -152,7 +152,7 @@ export default defineTestAdapter({
         }
         return { projection };
       },
-      /** 🎯️ The same stack from the compiled probe. */
+      /** 🍔️ The same stack from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

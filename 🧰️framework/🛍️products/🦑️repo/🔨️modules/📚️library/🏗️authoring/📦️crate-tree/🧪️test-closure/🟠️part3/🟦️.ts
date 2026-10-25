@@ -2,8 +2,8 @@
 import { identifierSet, prunedUse, useLeafNames } from "../../🌳️module-tree/🟦️.ts";
 import { relativePosix } from "../../📝️render/🟦️.ts";
 import type { useResultState } from "../🔶️result/🟦️.ts";
-import { absolutizeSuperPaths, declaredNames, discoverMounts, hostPrivate, prependAfterInner } from "../🟢️shared/🟦️.ts";
-import type { TestTransformOptions } from "../🟢️shared/🟦️.ts";
+import { absolutizeSuperPaths, declaredNames, discoverMounts, hostPrivate, prependAfterInner } from "../🟢️harness/🟦️.ts";
+import type { TestTransformOptions } from "../🟢️harness/🟦️.ts";
 
 /** 🟡 Runs the effects and registrations of transformTestClosure. */
 export function usePart3({ options, rootFile, result, readText, subtreeText, widenFor, hostGlobCarry, setText, retargetPrivateImportPaths, carryIntoHostGlobModules, repoRoot, flushEdits }: { readonly options: TestTransformOptions; readonly rootFile: string; readonly repoRoot: string } & Pick<ReturnType<typeof useResultState>, "result" | "readText" | "subtreeText" | "widenFor" | "hostGlobCarry" | "setText" | "retargetPrivateImportPaths" | "carryIntoHostGlobModules" | "flushEdits">) {

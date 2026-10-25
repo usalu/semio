@@ -89,7 +89,7 @@
    }
   },
   {
-   "glob": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🦀️rust/🦀️.rs",
+   "glob": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🦀️.rs",
    "kind": "process-funnel",
    "reason": {
     "en": "spawn_command and run_tool are the Rust side of the tool port: registered programs are routed through the registry, every other program starts as given.",

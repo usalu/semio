@@ -21,9 +21,8 @@ import type { ActionDescriptor, UtilityNode } from "@semio-tech/framework";
 import { UtilityTree } from "../../🟦️.tsx";
 import Ajv from "ajv";
 import paletteFixture from "../🧫️fixtures/📐️bounded-palette/🔣️.json";
-import { createShellScope, ShellScopeProvider } from "@semio-tech/ui-react";
+import { UiI18nProvider, createShellScope, ShellScopeProvider } from "@semio-tech/ui-react";
 import { createMemoryStoragePort } from "@semio-tech/framework";
-import { I18nextProvider } from "react-i18next";
 import { SelectionUtilityOptions } from "../../../🛠️ShellHelpers/🪟️window-panes/🪛️utility-bar-options/🟦️.tsx";
 import { within } from "@testing-library/react";
 
@@ -43,7 +42,7 @@ describe("🎛️ Bounded utility palette", () => {
     it(`exposes mutually exclusive, named selection choices in ${locale}`, () => {
       const dispatched: ActionDescriptor[] = [];
       const scope = createShellScope({ storage: createMemoryStoragePort(), initialLocale: locale as "en" | "de" });
-      const view = render(createElement(ShellScopeProvider, { scope, children: createElement(I18nextProvider, { i18n: scope.i18n }, createElement(SelectionUtilityOptions, {
+      const view = render(createElement(ShellScopeProvider, { scope, children: createElement(UiI18nProvider, { instance: scope.i18n }, createElement(SelectionUtilityOptions, {
         activeUtilityId: "selectMarquee", windowId: WINDOW_ID, generation: 13, onAction: action => dispatched.push(action),
       })) }));
       const groups = within(view.container).getAllByRole("radiogroup");

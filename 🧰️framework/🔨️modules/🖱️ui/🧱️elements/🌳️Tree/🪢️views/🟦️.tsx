@@ -120,7 +120,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   );
 });
 
-/** 🌿️ Hoisted data-tree section row (stable component type across Tree re-renders). */
+/** 📑️ Hoisted data-tree section row (stable component type across Tree re-renders). */
 export const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(props: { readonly section: TreeDataSection; readonly isLastSection: boolean }): React.ReactElement {
   const { section, isLastSection } = props;
   const { direction = "down" } = reactHostPort.useContext(TreeContext);

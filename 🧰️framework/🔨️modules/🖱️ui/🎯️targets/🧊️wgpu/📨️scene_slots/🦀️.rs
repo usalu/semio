@@ -1,5 +1,5 @@
 // #region scene_slots
-//! 🎬️ Scene-host bridge: after each layout+paint pass the engine collects every `ComponentScene`/
+//! 🌉️ Scene-host bridge: after each layout+paint pass the engine collects every `ComponentScene`/
 //! `Image` leaf's resolved absolute rect PLUS a borrowed reference to its own stored `UiNode`
 //! payload into a `SceneSlot`, and hands each one to a caller-provided `SceneHost`, which owns the
 //! actual scene/image rendering (world3d via `infinite_world`, canvas2d, vello surfaces, raster
@@ -16,7 +16,7 @@ use semio_framework_ui_theme::geometry::Rect;
 use semio_framework_ui_text::FontAtlas;
 use semio_framework_ui_retained_tree::tree::UiTree;
 
-/// 🎬️ A `SceneSlot`'s borrowed payload — points directly at the leaf's own `UiNode` variant stored
+/// 🎒️ A `SceneSlot`'s borrowed payload — points directly at the leaf's own `UiNode` variant stored
 /// in the retained `UiTree`'s arena, never a clone.
 #[derive(Debug, PartialEq)]
 pub enum SlotContent<'tree> {

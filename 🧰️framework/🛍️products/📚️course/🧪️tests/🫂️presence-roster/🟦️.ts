@@ -62,12 +62,12 @@ function checkedCursor(state: unknown): ValidationIssue[] {
   return issues;
 }
 
-/** 🟢️ A valid presence state of a pseudonymous learner on a run task. */
+/** 📗️ A valid presence state of a pseudonymous learner on a run task. */
 function presence(): Mutable {
   return { tag: TAG, identity: { kind: "pseudonym", handle: "Ada" }, place: { screen: "run", quiz: "physics", task: "units" }, active: true };
 }
 
-/** 👆️ A valid cursor state with pointer and focus. */
+/** 🖱️ A valid cursor state with pointer and focus. */
 function cursor(): Mutable {
   return { tag: TAG, cursor: { anchor: "task:units", x: 0.25, y: 1 }, focus: "card:leaderboard" };
 }

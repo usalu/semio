@@ -1,6 +1,6 @@
 use super::*;
 use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 #[test]
 fn preview_lifecycle_matches_language_neutral_third_party_oracle() {

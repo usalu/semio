@@ -23,9 +23,9 @@ use crate::standards::v1_1::subsets::basic::schema::mutations::support::subtree_
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertBasicElement {
-    pub(crate) parent: NodePath,
-    pub(crate) index: usize,
-    pub(crate) node: SvgNode,
+    pub parent: NodePath,
+    pub index: usize,
+    pub node: SvgNode,
 }
 
 impl<Op> protocol::MutationKind<SvgSnapshot, Op> for InsertBasicElement

@@ -524,7 +524,7 @@ use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 /// the WASM bridge) — `diff().apply()` in one call, now delegating to the derive's real
 /// `Mutation`/`MutationDiff` impls instead of a hand-written match.
 pub fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> protocol::MutationApplyResult<RasterSnapshot> {
-    protocol::apply_diff_cold(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
+    protocol::apply_diff_cold(protocol::ColdMutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
 

@@ -303,7 +303,7 @@ pub fn live_view(app: &CadFixtureApp) -> CadPlayView {
 
 /// 🏛️ `pane`'s model as the mounted app's child store holds it now.
 pub async fn pane_model(app: &CadFixtureApp, pane: CadPaneId) -> semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot {
-    use store::{pack::snapshot::ArtifactPack, SpaceMember};
+    use store::{snapshot::ArtifactPack, SpaceMember, ReferenceSpaceMember};
     let parent = app.snapshot().expect("CAD parent snapshot");
     let child = semio_s_artifact_cad_cad_model::snapshot::cad_pane_model(&parent, pane).unwrap_or_else(|| panic!("{pane:?} pane composes a model child"));
     let member = app.child_store(semio_s_artifact_cad_cad_model::snapshot::cad_pane_model_slot(pane), &child.child_id).await.unwrap_or_else(|| panic!("{pane:?} pane model member is live"));

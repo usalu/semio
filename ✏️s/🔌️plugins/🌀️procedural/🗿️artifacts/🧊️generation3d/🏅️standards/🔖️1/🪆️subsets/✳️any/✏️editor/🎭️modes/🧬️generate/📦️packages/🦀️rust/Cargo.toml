@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-os-flow = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-ui-contract = { workspace = true }

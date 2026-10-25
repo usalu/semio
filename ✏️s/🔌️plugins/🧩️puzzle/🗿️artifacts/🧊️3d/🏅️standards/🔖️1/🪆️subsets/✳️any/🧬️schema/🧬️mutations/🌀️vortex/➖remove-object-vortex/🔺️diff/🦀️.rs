@@ -1,5 +1,6 @@
 //! ✂️ and severs any attraction referencing the removed vortex (full id `object_id:vortex_id`).
 //! 🔺️ Sparse diff builder for `RemoveObjectVortex` — removes one vortex from the owner object's `vortices`
+use protocol::list_delta::RowPatch;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dAttractionsDelta;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectPatch;

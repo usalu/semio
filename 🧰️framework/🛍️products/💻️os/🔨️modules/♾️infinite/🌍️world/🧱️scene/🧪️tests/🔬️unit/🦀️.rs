@@ -484,14 +484,14 @@ fn asset_completed_cursor_advances_one_fixed_slot_per_grant_and_hands_back_exact
 /// straight-RGBA credit. The puzzle3d playground's plan is 2275×2560, or 23 296 000 bytes.
 #[test]
 fn a_reference_underlay_preserves_its_natural_full_quality_dimensions() {
-    let plan = image::DynamicImage::new_rgba8(2275, 2560);
+    let plan = semio_framework_pixels::RasterImage::new(2275, 2560);
     let bounded = bounded_reference_image(plan);
-    assert_eq!((bounded.width(), bounded.height()), (2275, 2560));
-    assert_eq!(bounded.width() as usize * bounded.height() as usize * 4, 23_296_000);
+    assert_eq!((bounded.width, bounded.height), (2275, 2560));
+    assert_eq!(bounded.width as usize * bounded.height as usize * 4, 23_296_000);
     assert!(23_296_000 <= WORLD_REFERENCE_TEXTURE_BYTES);
-    let small = image::DynamicImage::new_rgba8(64, 48);
+    let small = semio_framework_pixels::RasterImage::new(64, 48);
     let bounded = bounded_reference_image(small);
-    assert_eq!((bounded.width(), bounded.height()), (64, 48));
+    assert_eq!((bounded.width, bounded.height), (64, 48));
 }
 
 /// 📥️ `collect_world3d_asset_bytes` answers EVERY sealed page exactly once. It used to re-read page

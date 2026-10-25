@@ -20,13 +20,13 @@ use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_dxf_tag_bin(t: &DxfTag, out: &mut Vec<u8>) {
+pub fn enc_dxf_tag_bin(t: &DxfTag, out: &mut Vec<u8>) {
     store::write_varint_i64(out, t.code as i64);
     write_str_lp(out, &t.value);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_dxf_tag_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTag, String> {
+pub fn dec_dxf_tag_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTag, String> {
     let code = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
     let value = read_str_lp(reader)?;
     Ok(DxfTag { code, value })
@@ -53,7 +53,7 @@ pub fn dec_other_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfOthe
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_dxf_tables_bin(t: &DxfTables, out: &mut Vec<u8>) {
+pub fn enc_dxf_tables_bin(t: &DxfTables, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, t.layers.len() as u64);
     for l in &t.layers {
         enc_layer_bin(l, out);
@@ -69,7 +69,7 @@ pub(crate) fn enc_dxf_tables_bin(t: &DxfTables, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_dxf_tables_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTables, String> {
+pub fn dec_dxf_tables_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTables, String> {
     let lc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut layers = Vec::with_capacity(lc as usize);
     for _ in 0..lc {

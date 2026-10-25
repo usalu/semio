@@ -49,7 +49,7 @@ class MutationLeafRegistrationScript extends BundleScript {
   }
 }
 
-/** 🧱️ Executes closed neutral schema contracts and current physical owner refusals. */
+/** 📜️ Executes closed neutral schema contracts and current physical owner refusals. */
 class NeutralityScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test neutrality accepts no arguments");

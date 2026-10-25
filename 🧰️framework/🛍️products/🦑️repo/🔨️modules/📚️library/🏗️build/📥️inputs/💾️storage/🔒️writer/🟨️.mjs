@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 function writerShardV1(kind,identity){
- if(!["selection","dataset"].includes(kind)||typeof identity!=="string"||!/^[a-f0-9]{64}$/u.test(identity))throw Error("Closed graph namespace writer required");return createHash("sha256").update(kind+":"+identity).digest()[0]%schema.definitions.OptionalLedger.protocol.writerShards;
+ if(!["selection","dataset","canonical"].includes(kind)||typeof identity!=="string"||!(kind==="canonical"?identity==="":/^[a-f0-9]{64}$/u.test(identity)))throw Error("Closed graph namespace writer required");return createHash("sha256").update(kind+":"+identity).digest()[0]%schema.definitions.OptionalLedger.protocol.writerShards;
 }
 
 /** 🧭️ Maps admitted inference namespaces into the existing finite fact-writer catalog. */

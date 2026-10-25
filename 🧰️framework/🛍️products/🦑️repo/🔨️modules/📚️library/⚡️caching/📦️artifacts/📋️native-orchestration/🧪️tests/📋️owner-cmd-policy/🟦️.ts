@@ -4,6 +4,7 @@ import { join, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import type { FunctionDeclaration, IfStatement, Node, Statement } from "typescript";
 import { readRegisteredTestRoute } from "../../../../../🧪️tests/🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
+import {testSandboxEnvironmentV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {cargoExecutionSchemaV1 as cargoExecutionSchema} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import * as toml from "@iarna/toml";
@@ -116,11 +117,11 @@ test("dashboard-selected owner tests allocate their output without manual enviro
   const environmentSource=environmentDeclaration.getText(environmentSyntax).replace(/^export /,"");
   const compilers=[(text:string)=>new Bun.Transpiler({loader:"ts"}).transformSync(text),(text:string)=>ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText];
   for(const compile of compilers){
-    const allocate=new Function("resolve","mkdirSync",compile(environmentSource)+";return repoTestArtifactEnvironment;")(resolve,()=>{});
+    const allocate=new Function("resolve","mkdirSync","testSandboxEnvironmentV1",compile(environmentSource)+";return repoTestArtifactEnvironment;")(resolve,()=>{},testSandboxEnvironmentV1);
     let observed:NodeJS.ProcessEnv|undefined;
-    const run=new Function("process","resolveTestLevel","join","repoTestArtifactEnvironment","runRepositoryTestCommand",compile(`async function execute(context:{repoRoot:string},segments:string[]){${selected.getText(source)}}`)+";return execute;")({env:{},execPath:process.execPath},()=>{},join,(repo:string,route:string)=>allocate(repo,route,{}),async(_command:string,_args:string[],options:{env:NodeJS.ProcessEnv})=>{observed=options.env;});
+    const run=new Function("process","resolveTestLevel","join","repoTestArtifactEnvironment","runRepositoryTestCommand",compile(`async function execute(context:{repoRoot:string},segments:string[]){${selected.getText(source)}}`)+";return execute;")({env:{},execPath:process.execPath},()=>{},join,(repo:string,route:string)=>allocate(repo,route,Object.fromEntries(Object.entries(process.env).filter(([name])=>name!=="SEMIO_TEST_ARTIFACT_DIR"))),async(_command:string,_args:string[],options:{env:NodeJS.ProcessEnv})=>{observed=options.env;});
     await run({repoRoot:root},[corpus.artifactEnvironment.route]);
-    expect(observed?.SEMIO_TEST_ARTIFACT_DIR).toBe(resolve(root,corpus.artifactEnvironment.defaultRelativeRoot,corpus.artifactEnvironment.route));
+    const artifacts=observed?.SEMIO_TEST_ARTIFACT_DIR??"";expect(artifacts.endsWith(join("artifacts",corpus.artifactEnvironment.route))).toBe(true);expect(existsSync(artifacts)).toBe(true);expect(relative(resolve(root,corpus.artifactEnvironment.defaultRelativeRoot),artifacts).startsWith("..")).toBe(true);
   }
 });
 
@@ -153,3 +154,10 @@ test("actual native receiving command refuses a different original caller comman
     expect(actual.stdout, actual.id).not.toContain("foreign acquisition occurred");
   }
 }, 15000);
+
+/** ⏳️ The native child grant covers a fleet-loaded compiler-writer wait plus the compile: at least two hours, within the schema ceiling. */
+test("native owner child grant outlasts a loaded compiler queue", () => {
+  const policy = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🔣️policy.json"), "utf8")) as { child: { maximumElapsedMilliseconds: number } };
+  expect(policy.child.maximumElapsedMilliseconds).toBeGreaterThanOrEqual(2 * 3600000);
+  expect(policy.child.maximumElapsedMilliseconds).toBeLessThanOrEqual(86400000);
+});

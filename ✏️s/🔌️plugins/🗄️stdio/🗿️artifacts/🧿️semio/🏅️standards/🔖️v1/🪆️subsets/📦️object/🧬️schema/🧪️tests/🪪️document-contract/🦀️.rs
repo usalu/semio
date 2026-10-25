@@ -1,7 +1,7 @@
 use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 use {crate::schema::SemioObjectArtifact, crate::schema::diff::SemioObjectDiff, crate::schema::snapshot::SemioObjectSnapshot};
 use protocol::{DiffBinary,DiffText};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 #[semio_framework_async_macros::async_test]
 async fn stdio_document_contract_object_round_trips_exact_children() {

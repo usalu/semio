@@ -17,6 +17,8 @@ site, project = fixture["site"], fixture["project"]
 def sub(text):
     return text.replace("{site}", site).replace("{project}", project)
 
+PRESENTATION = set(json.load(open(os.path.join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json"), encoding="utf8"))["presentationResources"])
+SCHEDULING = tuple(prefix for domain in json.load(open(os.path.join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🗓️scheduling/🔣️.json"), encoding="utf8"))["domains"] for prefix in domain["prefixes"])
 SKIPPED = {"node_modules", "target", "dist", ".git", ".cache"}
 
 def listing():
@@ -239,7 +241,7 @@ for name, spec in fixture["targets"].items():
     for read in spec["reads"]:
         kind = read["kind"]
         if kind == "vitest": reads |= closure(vitest_entries(sub(read["config"])))
-        elif kind == "imports": reads |= closure([sub(e) for e in read["entries"]], types=read.get("types", False))
+        elif kind == "imports": entries = [sub(e) for e in read["entries"]]; reads |= closure(entries + [resolve_relative(e, s) for e in entries for s in read.get("specifiers", [])] if "specifiers" in read else entries, types=read.get("types", False)) | (set(entries) if "specifiers" in read else set())
         elif kind == "workspace-manifests": reads |= set(WORKSPACE_MANIFESTS) | {os.path.dirname(WORKSPACE_MANIFESTS[0]) + "/bun.lock"}
         elif kind == "nearest-tsconfig": reads |= {t for t in (nearest_tsconfig(f) for f in list(reads) if SOURCE.search(f)) if t}
         elif kind == "files": reads |= {f for f in map(sub, read["paths"]) if f in file_set}
@@ -247,7 +249,7 @@ for name, spec in fixture["targets"].items():
             configs, roots = tsconfig_files(sub(read["path"]))
             reads |= configs | closure(roots, types=True)
         elif kind == "rust": crates, _ = rust_crates({k: sub(v) if isinstance(v, str) else v for k, v in read.items()}); reads |= crates
-    reads = {r for r in reads if r in file_set or os.path.exists(os.path.join(workspace, r))}
+    reads = {r for r in reads if (r in file_set or os.path.exists(os.path.join(workspace, r))) and r not in PRESENTATION and not r.startswith(SCHEDULING)}
     generated = {r for r in reads if "/🤖️generated/" in r}
     gap = sorted(r for r in reads - generated if r not in covered)
     result[name] = {"reads": sorted(reads), "generated": sorted(generated), "gap": gap, "declared": sorted(declared)}

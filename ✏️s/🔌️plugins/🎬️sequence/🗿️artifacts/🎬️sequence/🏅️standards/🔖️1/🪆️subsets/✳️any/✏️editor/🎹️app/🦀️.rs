@@ -198,61 +198,30 @@ impl ArtifactEditor for SequencePlayApp {
         Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(SequenceImportJob::new(request, port, media))))
     }
 
-    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        let artifact_route = SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS.contains(&request.tool_id.as_str());
-        let config_route = SEQUENCE_RETAINED_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str());
-        let persistent_route = SEQUENCE_PERSISTENT_TOOL_IDS.contains(&request.tool_id.as_str());
-        let example_route = SEQUENCE_RETAINED_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str());
+    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        let artifact_route = SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS.contains(&original.tool_id.as_str());
+        let config_route = SEQUENCE_RETAINED_CONFIG_TOOL_IDS.contains(&original.tool_id.as_str());
+        let persistent_route = SEQUENCE_PERSISTENT_TOOL_IDS.contains(&original.tool_id.as_str());
+        let example_route = SEQUENCE_RETAINED_EXAMPLE_TOOL_IDS.contains(&original.tool_id.as_str());
         if !artifact_route && !config_route && !persistent_route && !example_route {
-            return Ok(None);
+            return Ok(false);
         }
-        let persistent_admitted = match request.command.as_ref() {
+        let persistent_admitted = match original.command.as_ref() {
             SequenceCommand::NodeGraphEdit(payload) => payload.operations_json.len() <= SEQUENCE_RETAINED_RAW_BYTES,
             SequenceCommand::Reorganize(_) | SequenceCommand::Run(_) => true,
             _ => false,
         };
-        if request.command.command_id() != request.tool_id
-            || (artifact_route && !sequence_retained_artifact_command_admitted(&request.command))
-            || (config_route && !sequence_retained_config_command_admitted(&request.command))
+        if original.command.command_id() != original.tool_id
+            || (artifact_route && !sequence_retained_artifact_command_admitted(&original.command))
+            || (config_route && !sequence_retained_config_command_admitted(&original.command))
             || (persistent_route && !persistent_admitted)
-            || (example_route && !sequence_retained_example_command_admitted(&request.command))
+            || (example_route && !sequence_retained_example_command_admitted(&original.command))
         {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Sequence command does not match its exact retained route or payload envelope"));
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Sequence command does not match its exact retained route or payload envelope").into());
         }
-        let tool_id = request.command.command_id();
-        let operation_context = semio_framework_plugin::AppOperationContext { retained: request.retained,
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id,
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = if persistent_route {
-            Box::new(SequencePersistentWork::new(tool_id, &operation_context))
-        } else if artifact_route {
-            Box::new(SequenceRetainedArtifactWork::new(tool_id, &operation_context))
-        } else if example_route {
-            Box::new(SequenceRetainedExampleWork::new(tool_id, &operation_context))
-        } else {
-            Box::new(SequenceRetainedConfigWork::new(tool_id, &operation_context))
-        };
-        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            SequenceCommand::command_id,
-            SEQUENCE_RETAINED_RAW_BYTES,
-            if persistent_route {
+        let tool_id = original.command.command_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SequenceCommand::command_id, SEQUENCE_RETAINED_RAW_BYTES, if persistent_route {
                 SEQUENCE_PERSISTENT_MAXIMUM_UNITS
             } else if artifact_route {
                 SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS
@@ -260,10 +229,22 @@ impl ArtifactEditor for SequencePlayApp {
                 SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS
             } else {
                 SEQUENCE_RETAINED_MAXIMUM_UNITS
-            },
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+            }, false, |request| { let operation_context = semio_framework_plugin::AppOperationContext { retained: request.retained,
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
+        }; if persistent_route {
+            Box::new(SequencePersistentWork::new(tool_id, &operation_context))
+        } else if artifact_route {
+            Box::new(SequenceRetainedArtifactWork::new(tool_id, &operation_context))
+        } else if example_route {
+            Box::new(SequenceRetainedExampleWork::new(tool_id, &operation_context))
+        } else {
+            Box::new(SequenceRetainedConfigWork::new(tool_id, &operation_context))
+        } })
     }
 
     fn initial_snapshot() -> SequenceSnapshot {

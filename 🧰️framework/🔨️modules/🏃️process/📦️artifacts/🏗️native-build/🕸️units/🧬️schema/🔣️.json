@@ -490,6 +490,12 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "SEMIO_BUILD_MODE": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 }
               }

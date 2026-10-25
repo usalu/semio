@@ -51,7 +51,7 @@ export const curveBasis: VizCurveFactory = (context) => {
   };
 };
 
-/** ✒️ `curveBasisClosed`: the periodic B-spline. */
+/** 📕️ `curveBasisClosed`: the periodic B-spline. */
 export const curveBasisClosed: VizCurveFactory = (context) => {
   const s: BasisState = { x0: Number.NaN, x1: Number.NaN, y0: Number.NaN, y1: Number.NaN, point: 0, line: Number.NaN };
   let x2 = Number.NaN;
@@ -114,7 +114,7 @@ export const curveBasisClosed: VizCurveFactory = (context) => {
   };
 };
 
-/** ✒️ `curveBasisOpen`: the B-spline without the endpoint duplication. */
+/** 🔓️ `curveBasisOpen`: the B-spline without the endpoint duplication. */
 export const curveBasisOpen: VizCurveFactory = (context) => {
   const s: BasisState = { x0: Number.NaN, x1: Number.NaN, y0: Number.NaN, y1: Number.NaN, point: 0, line: Number.NaN };
   return {
@@ -152,7 +152,7 @@ export const curveBasisOpen: VizCurveFactory = (context) => {
   };
 };
 
-/** ✒️ `curveBundle`: the basis spline pulled toward the straight chord by `beta`. */
+/** 📦️ `curveBundle`: the basis spline pulled toward the straight chord by `beta`. */
 export function curveBundleBeta(beta: number): VizCurveFactory {
   if (!(beta > 0)) return curveLinear;
   return (context) => {
@@ -191,6 +191,6 @@ export function curveBundleBeta(beta: number): VizCurveFactory {
   };
 }
 
-/** ✒️ `curveBundle` at d3's default β of 0.85. */
+/** 🎁️ `curveBundle` at d3's default β of 0.85. */
 export const curveBundle = curveBundleBeta(0.85);
 //#endregion 🔖️CurvesBasis

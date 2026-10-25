@@ -37,7 +37,7 @@ pub fn plan(p: &GltfCreateCameraPayload, base: &GltfSnapshot) -> Result<GltfDiff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfCreateCameraPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_camera::DeleteCameraMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -79,7 +79,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for CreateCameraMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<CreateCameraMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<CreateCameraMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::delete_camera::DeleteCameraMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

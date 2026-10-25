@@ -5,14 +5,14 @@ import{fileURLToPath}from"node:url";
 import{join}from"node:path";
 import{heapStats}from"bun:jsc";
 import Ajv from"ajv";
-import{testPythonV1}from"../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import{testPythonV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import fixtureSchema from"./🧬️schema/🔣️.json";
 import fixture from"./🔣️.json";
 import moduleSchema from"../🧬️schema/🔣️.json";
 import*as memory from"../🟨️.mjs";
 
 const MEGABYTE=1048576;
-const oraclePath=fileURLToPath(new URL("./🐍️oracle.py",import.meta.url)),python=testPythonV1();
+const oraclePath=fileURLToPath(new URL("./🐍️.py",import.meta.url)),python=testPythonV1();
 
 /** 🐍️ Runs the independent Python model and returns its JSON answer. */
 function oracle(args:string[]):any{

@@ -7,8 +7,6 @@ const read = (path: string): any => JSON.parse(readFileSync(join(library, path),
 export function writeRustLayerOracle(cwd: string, files: Readonly<Record<string, string>>): void {
   const repo = resolve(library, "../../../../.."), corpus = read("🧪️tests/🧫️fixtures/🧱️rust-source-direction/🔣️.json");
   const write = (path: string, content: string): void => { mkdirSync(dirname(join(cwd, path)), { recursive: true }); writeFileSync(join(cwd, path), content); };
-  const boundary = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs";
-  write(boundary, readFileSync(join(repo, boundary), "utf8"));
   for (const path of ["🔣️taxonomy.json", "🕸️dependencies/🧭️direction/🟦️.ts", "🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs", "🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs", "🗂️workspaces/🟦️bun/🟦️.ts", "🗂️workspaces/🟦️bun/🟨️.cjs", "🗂️workspaces/📦️payload/🟦️.ts", "🗂️workspaces/📦️payload/🟨️.cjs"]) write(`${relative(repo, library)}/${path}`, readFileSync(join(library, path), "utf8"));
   write("nx.json", "{}");
   write("📋️project.json", JSON.stringify({ metadata: { semio: { taxonomy: `${relative(repo, library)}/🔣️taxonomy.json` } } }));

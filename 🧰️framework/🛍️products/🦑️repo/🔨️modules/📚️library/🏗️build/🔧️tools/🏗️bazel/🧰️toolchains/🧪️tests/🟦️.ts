@@ -1,6 +1,7 @@
 /** 🧰️ A task of the Python, .NET or CMake class is keyed by the pin of its toolchain exactly as the neutral contract says, and only such a task is: the adapter's action key moves with the digest for members and never for any other task. */
 import {expect, test} from "bun:test";
 import {createHash, randomUUID} from "node:crypto";
+import {runtimeIdentityV1} from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import {readFile} from "node:fs/promises";
 import {join} from "node:path";
 import Ajv from "ajv";
@@ -44,7 +45,7 @@ test("the adapter's action key takes the native toolchain digest for members onl
   if (!node) throw Error("Bazel fingerprint implementation required");
   const code = ts.transpileModule(node.getText(tree).replace(/^export /u, "") + ";return taskFingerprint;", {compilerOptions: {target: ts.ScriptTarget.ES2022}}).outputText;
   const fingerprint = async (row: (typeof corpus.classes)[number], digest: string) => {
-    const bindings = {createHash, randomUUID, join, bazelCargoClassV1: () => undefined, bazelCargoToolchainDigestV1: async () => "cargo", bazelGoClassV1: () => false, bazelGoToolchainDigestV1: async () => "go", bazelNativeToolchainClassV1: native.bazelNativeToolchainClassV1, bazelNativeToolchainDigestV1: () => digest, process: {...process, env: {}}, bazelTaskInputsV1: () => [], issueBazelTaskEnvironmentV1: () => ({SEMIO_BUILD_MODE: "prototype"}), bazelTaskBaseEnvironmentV1: () => ({}), checkScriptInvocation: () => undefined, bazelSourceIdentityV1: async () => "source", captureOwnedCommandV1: async () => ""};
+    const bindings = {runtimeIdentityV1, createHash, randomUUID, join, bazelCargoClassV1: () => undefined, bazelCargoToolchainDigestV1: async () => "cargo", bazelGoClassV1: () => false, bazelGoToolchainDigestV1: async () => "go", bazelNativeToolchainClassV1: native.bazelNativeToolchainClassV1, bazelNativeToolchainDigestV1: () => digest, process: {...process, env: {}}, bazelTaskInputsV1: () => [], issueBazelTaskEnvironmentV1: () => ({SEMIO_BUILD_MODE: "prototype"}), bazelTaskBaseEnvironmentV1: () => ({}), checkScriptInvocation: () => undefined, bazelSourceIdentityV1: async () => "source", captureOwnedCommandV1: async () => ""};
     const run = Function(...Object.keys(bindings), code)(...Object.values(bindings)), definition = {execution: {kind: row.kind, ...("command" in row ? {command: row.command} : {})}};
     return run("/root", {}, {id: "p:" + row.target, project: row.project, target: row.target, root: row.root, args: [], definition}, ["a.txt"], new Map(), {control: {signal: new AbortController().signal}}, {}, true, "implementation", undefined) as Promise<string>;
   };

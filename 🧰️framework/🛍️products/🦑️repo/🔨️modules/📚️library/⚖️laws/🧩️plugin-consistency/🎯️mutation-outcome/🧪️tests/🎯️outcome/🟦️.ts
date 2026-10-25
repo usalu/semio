@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { testPythonV1 } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import { testPythonV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import { policyOutcomeCodeFileBreaches } from "../../🟦️.ts";
 import corpus from "./🔣️.json" with { type: "json" };
 import corpusSchema from "./🧬️schema/🔣️.json" with { type: "json" };
@@ -16,7 +16,7 @@ const order = (rows: readonly unknown[]) => [...rows].sort((a, b) => { const x =
 const triples = (breaches: readonly Breach[]) => order(breaches.map((b) => [b.id, b.kind, b.priority ?? "", b.line ?? 0]));
 const modelled = (corpus.cases as any[]).filter((row) => row.oracle !== false);
 const model = (() => {
-  const run = spawnSync(testPythonV1() ?? "python3", ["-I", resolve(import.meta.dir, "./🐍️oracle.py"), resolve(import.meta.dir, "./🔣️.json")], { encoding: "utf8" });
+  const run = spawnSync(testPythonV1() ?? "python3", ["-I", resolve(import.meta.dir, "./🐍️.py"), resolve(import.meta.dir, "./🔣️.json")], { encoding: "utf8" });
   expect(run.status, run.stderr).toBe(0);
   return JSON.parse(run.stdout) as Record<string, unknown[]>;
 })();

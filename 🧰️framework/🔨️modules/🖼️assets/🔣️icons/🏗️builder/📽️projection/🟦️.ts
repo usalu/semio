@@ -329,7 +329,7 @@ ${list}
 /** 🔖️ Wire version of the runtime icon pack; the Rust reader `IconPack::VERSION` refuses any other. */
 export const ICON_PACK_VERSION = 1;
 
-/** 🔖️ Renders the emoji shortcode bindings, the runtime icon pack (raw themed and plain SVG sources) and the pack's size and SHA-256 digest (`🔏️digest/`, JSON and Rust constants, what a wasip2 plugin declares its package asset with) from the explicit external emoji snapshot. */
+/** 🖌️ Renders the emoji shortcode bindings, the runtime icon pack (raw themed and plain SVG sources) and the pack's size and SHA-256 digest (`🔏️digest/`, JSON and Rust constants, what a wasip2 plugin declares its package asset with) from the explicit external emoji snapshot. */
 function renderShortcodes(icons: Record<string, string>, iconsDir: string, generatedDir: string): readonly AssetArtifact[] {
   const catalog = Object.keys(icons).sort();
   const snapshotPath = join(iconsDir, "🔣️shortcodes.json");
@@ -363,7 +363,7 @@ export function shortcodeEmoji(code: string): string | undefined {
   return (SHORTCODE_EMOJI as Record<string, string>)[key];
 }
 
-/** 🔍️ True when the shortcode body names a vendored UI catalog icon. */
+/** 📚️ True when the shortcode body names a vendored UI catalog icon. */
 export function shortcodeCatalogKey(code: string): ShortcodeCatalogName | undefined {
   const key = code.trim();
   return (SHORTCODE_CATALOG as readonly string[]).includes(key) ? (key as ShortcodeCatalogName) : undefined;

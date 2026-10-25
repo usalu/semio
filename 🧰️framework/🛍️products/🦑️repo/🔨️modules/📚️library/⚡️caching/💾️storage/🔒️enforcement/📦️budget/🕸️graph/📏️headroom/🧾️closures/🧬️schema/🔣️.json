@@ -226,7 +226,7 @@
         },
         "worker": {
           "const": {
-            "literal": "./👷️read.mjs",
+            "literal": "./👷️closure-read-worker/🟨️.mjs",
             "role": "source",
             "suffix": ".mjs"
           }

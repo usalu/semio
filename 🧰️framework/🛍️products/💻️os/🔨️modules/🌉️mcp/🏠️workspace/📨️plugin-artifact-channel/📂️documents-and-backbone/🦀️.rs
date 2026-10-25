@@ -36,7 +36,7 @@ impl PluginArtifactChannel {
             app_ref,
             actor_label,
             host_driver_policy,
-            host_driver:Arc::new(semio_framework_plugin_host::GuestRelayWakeDriver::new(host_driver_policy)),
+            host_driver:Arc::new(semio_framework_plugin_host::GuestRelayWakeDriver::new(host_driver_policy,semio_framework_job::default_now_us,Box::new(||false)).expect("headless wake driver admission")),
             instances: HashMap::new(),
             pending_exchanges: PendingExchangeRegistry::new(),
             pending_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
@@ -94,7 +94,7 @@ impl PluginArtifactChannel {
         let event = semio_framework::kernel::Event::Message { source: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload };
         let runtime = Arc::clone(&self.runtime);
         let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("document-backbone bind", format!("no open instance {instance}")))?;
-        let turn = semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_ref(&event), headless_command_budget())).map_err(|error| Self::not_wired("document-backbone bind", error))?;
+        let turn = with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_ref(&event), headless_command_budget(), identity))).map_err(|error| Self::not_wired("document-backbone bind", error))?;
         let receipts: Vec<&Vec<u8>> = turn
             .effects
             .iter()
@@ -223,7 +223,7 @@ impl PluginArtifactChannel {
             let events = std::mem::take(&mut owed);
             let runtime = Arc::clone(&self.runtime);
             let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("document-backbone ingress", format!("no open instance {instance}")))?;
-            let turn = match semio_framework_async::block_on(runtime.execute_turn(guest, &events, headless_command_budget())) {
+            let turn = match with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, &events, headless_command_budget(), identity))) {
                 Ok(turn) => turn,
                 Err(error) => {
                     self.discard_instance(instance);

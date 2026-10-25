@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {mkdtempSync,writeFileSync,rmSync,mkdirSync,linkSync} from "node:fs";
 import {join,resolve,relative} from "node:path";
 import Ajv from "ajv";
-import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {scriptCompilerAdmissionControlV1,acquireCompilerCapacityLeaseV1} from "@semio-tech/process/compiler-capacity";
 import {captureOwnedCommandV1} from "@semio-tech/process/execution";
 import {stageArtifacts} from "@semio-tech/process/artifact-publication";

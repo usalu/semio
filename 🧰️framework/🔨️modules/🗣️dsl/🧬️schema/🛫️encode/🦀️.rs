@@ -35,10 +35,10 @@ impl semio_framework_value::retirement::RetireOwned for FieldProjectionFrame{
 #[derive(Clone,Copy,Default)]
 struct FieldProjectionMeasureFrame{kind:u8,length:usize,next:usize,key:bool}
 
-/// 🛫️ Projects one immutable source into its admitted field candidate across caller grants.
+/// ➡️ Projects one immutable source into its admitted field candidate across caller grants.
 pub struct RetainedFieldProjection{source_identity:usize,frames:Vec<FieldProjectionFrame>,path:Vec<usize>,complete:Option<FieldValue>,fault_value:Option<FieldValue>,phase:u8,enter:bool,position:usize,measure_frames:[FieldProjectionMeasureFrame;65],measure_path:[usize;64],measure_depth:usize,measure_enter:bool,measure_started:bool,measure_limit:Option<usize>,measure_complete:Option<usize>,measure_bytes:usize}
 impl RetainedFieldProjection{
-    /// 🪪️ Captures the retained primary source identity without visiting or cloning its payload.
+    /// 🔑️ Captures the retained primary source identity without visiting or cloning its payload.
     pub fn new<T:FieldProjectionSource+?Sized>(source:&T)->Self{Self{source_identity:source.projection_identity(),frames:Vec::new(),path:Vec::new(),complete:None,fault_value:None,phase:0,enter:true,position:0,measure_frames:[FieldProjectionMeasureFrame::default();65],measure_path:[0;64],measure_depth:0,measure_enter:true,measure_started:false,measure_limit:None,measure_complete:None,measure_bytes:0}}
     /// 📊️ Reports completed scalar and structural projection units.
     pub fn position(&self)->usize{self.position}
@@ -177,9 +177,9 @@ pub fn retire_field(value:FieldValue){
 /// 🛡️ Holds intermediate fields until the complete record is committed.
 pub struct EncodedRecord{record:Option<RecordValue>}
 impl EncodedRecord{
-    /// 🛡️ Retains a producer-admitted complete record across physical output failures.
+    /// 🎙️ Retains a producer-admitted complete record across physical output failures.
     pub fn from_record(record:RecordValue)->Self{Self{record:Some(record)}}
-    /// 🔎️ Borrows the guarded record without materializing another field graph.
+    /// 📹️ Borrows the guarded record without materializing another field graph.
     pub fn as_record(&self)->&RecordValue{self.record.as_ref().unwrap()}
     /// 📦️ Admits the complete concrete record slot buffer before allocation.
     pub fn new(count:usize,control:&mut NativeEncodeControl<'_>)->Result<Self,ValueError>{let fields=RecordFields::from_empty_slots(control.allocate_vec(count)?);Ok(Self{record:Some(RecordValue{fields})})}
@@ -196,11 +196,14 @@ pub fn project_list<T:DslField,C:super::DslSequenceView<T>+?Sized>(values:&C,con
 }
 
 /// 🗺️ Projects literal map keys and their typed values before materializing the physical map.
-pub fn project_map<T:DslField>(values:&std::collections::BTreeMap<String,T>,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{
-    control.scoped_stage(|control|{control.begin_stage(values.len())?;let mut output=super::__rt::DecodedFieldOwner::new(control.allocate_vec(values.len())?,|items:Vec<(String,FieldValue)>|{for(_,value)in items{retire_field(value);}});for(key,value)in values{let key=control.copy_text(key)?;let value=control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control)})?;output.as_mut().push((key,value));control.step()?;}Ok(FieldValue::Map(output.take()))})
+pub fn project_map<T:DslField>(values:&std::collections::BTreeMap<String,T>,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{project_entries(values.len(),values.iter(),control)}
+
+/// ⛔️ Projects ordered literal entries of any map owner under the same exact workload and partial-field retirement.
+pub fn project_entries<'a,T:DslField+'a>(length:usize,values:impl Iterator<Item=(&'a String,&'a T)>,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{
+    control.scoped_stage(|control|{control.begin_stage(length)?;let mut output=super::__rt::DecodedFieldOwner::new(control.allocate_vec(length)?,|items:Vec<(String,FieldValue)>|{for(_,value)in items{retire_field(value);}});for(key,value)in values{let key=control.copy_text(key)?;let value=control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control)})?;output.as_mut().push((key,value));control.step()?;}Ok(FieldValue::Map(output.take()))})
 }
 
-/// 🌿️ Projects tagged records with literal owner keywords and known collection progress.
+/// 🧾️ Projects tagged records with literal owner keywords and known collection progress.
 pub fn project_statements<T:DslVariants,C:super::DslSequenceView<T>+?Sized>(values:&C,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{
     control.scoped_stage(|control|{control.begin_stage(values.field_items().len())?;let mut output=super::__rt::DecodedFieldOwner::new(control.allocate_vec(values.field_items().len())?,|items:Vec<(String,RecordValue)>|{for(_,record)in items{for value in record.fields.into_values(){retire_field(value);}}});for value in values.field_items(){output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0)?;value.to_named_record_controlled(control)})?);control.step()?;}Ok(FieldValue::Statements(output.take()))})
 }
@@ -208,7 +211,7 @@ pub fn project_statements<T:DslVariants,C:super::DslSequenceView<T>+?Sized>(valu
 /// 🫳️ Borrows a declared original operation variant without owning a Record payload mirror.
 pub struct VariantProjection<'a,T:crate::BorrowedDslVariants>{source:&'a T}
 impl<'a,T:crate::BorrowedDslVariants> VariantProjection<'a,T>{
-    /// 🌿️ Keeps the exact original variant immutable through canonical emission.
+    /// 🎯️ Keeps the exact original variant immutable through canonical emission.
     pub fn new(source:&'a T)->Self{Self{source}}
 }
 impl<T:crate::BorrowedDslVariants> FieldProjectionSource for VariantProjection<'_,T>{

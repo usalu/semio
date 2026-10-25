@@ -11,7 +11,7 @@ impl GatewayBackend for HeadlessWorkspace {
     fn search_capabilities(&self, query: &str) -> Result<Vec<SearchHit>, GatewayError> {
         let filters = SearchFilters { kind: Vec::new(), owner: None, artifact_kind: None, requires_scope: None, audience: Vec::new() };
         let catalog = self.catalog.current();
-        let hits = crate::search(&catalog, query, &filters);
+        let hits = semio_framework_os_mcp_catalog::search::search(&catalog, query, &filters);
         Ok(hits.into_iter().filter_map(|hit| catalog.get(&hit.capability_id).map(|capability| to_schema_search_hit(capability, hit.score))).collect())
     }
 

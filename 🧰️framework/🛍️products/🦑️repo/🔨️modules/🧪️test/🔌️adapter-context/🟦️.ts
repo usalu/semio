@@ -15,16 +15,16 @@ import type { ResourceLeaseControl } from "@semio-tech/process/leases";
 /** 🧭️ Context one scenario handler receives — its plan slice, resolved fixtures and its work directory. */
 
 
-/** 🧭️ What a scenario handler returns: the raw artifact plus the projection the profile compares. */
+/** ↩️ What a scenario handler returns: the raw artifact plus the projection the profile compares. */
 
 
-/** 🧭️ One implementation's registration for a case: which scenarios it serves, in which roles. */
+/** ✅️ One implementation's registration for a case: which scenarios it serves, in which roles. */
 
 
-/** 🧭️ Declares a TypeScript adapter. The coordinator validates the registration against the feature. */
+/** 📜️ Declares a TypeScript adapter. The coordinator validates the registration against the feature. */
 
 
-/** 🧭️ Checks a registration against the plan: no unknown scenario, no unregistered scenario. */
+/** 🩺️ Checks a registration against the plan: no unknown scenario, no unregistered scenario. */
 export function validateRegistration(plan: TestCasePlan, adapter: TestAdapter, role: TestRole): string[] {
   const problems: string[] = [];
   const planned = new Set(plan.scenarios.flatMap((scenario) => (scenario.outlineOf === undefined ? [scenario.id] : [scenario.id, scenario.outlineOf])));
@@ -44,7 +44,7 @@ export function registeredHandler(adapter: TestAdapter, scenario: Pick<FeatureSc
   return adapter.scenarios[scenario.id]?.[role] ?? (scenario.outlineOf === undefined ? undefined : adapter.scenarios[scenario.outlineOf]?.[role]);
 }
 
-/** 🧭️ Builds the context handed to one scenario handler, wiring fixture resolution and the work dir. */
+/** 🔨️ Builds the context handed to one scenario handler, wiring fixture resolution and the work dir. */
 export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenario: FeatureScenario, role: TestRole, invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): AdapterContext {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);
   const check=()=>requireIssuedResourceControlInvocationV1(phaseControl,invocation);

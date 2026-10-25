@@ -23,7 +23,7 @@ export class KernelOriginalBootstrapStock {
  closeStep(grant:OriginalRetainedGrant):{complete:boolean;spent:OriginalRetainedProgress}{const zero={copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0};if(this.#closed)return{complete:true,spent:zero};if(this.#live.size||grant.maximumItems<1||grant.maximumDepth<1)return{complete:false,spent:zero};this.#closed=true;return{complete:true,spent:{...zero,copiedItems:1}};}
 }
 
-/** 🏛️ Mandatory original owner port supports actual cross-realm admission and receiving. */
+/** 🚀️ Mandatory original owner port supports actual cross-realm admission and receiving. */
 export abstract class OriginalBootstrapOwner {
  abstract admit():Promise<OriginalOperationAdmission>;
  abstract receive(original:OriginalOperationAdmission,receipt:OriginalOperationReceipt):Promise<void>;

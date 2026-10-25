@@ -4,7 +4,7 @@ import { identifierSet } from "../../../🏗️authoring/📦️crate-tree/🌳�
 import { crateTreeWasmCfg } from "../../../🏗️authoring/📦️crate-tree/🗺️plan/📏️measure/🟦️.ts";
 import { renderMirrorFiles } from "../../../🏗️authoring/📦️crate-tree/📝️render/🟦️.ts";
 import { dropBaseUnresolvedNames, unresolvedSubjects } from "../../../🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
-import { declaredNames, hostPrivate } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️shared/🟦️.ts";
+import { declaredNames, hostPrivate } from "../../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟢️harness/🟦️.ts";
 
 describe("artifact crate carve", () => {
   test("prints the cfg of the wasm32 guest target, which the planner scans for code only that target compiles", () => {

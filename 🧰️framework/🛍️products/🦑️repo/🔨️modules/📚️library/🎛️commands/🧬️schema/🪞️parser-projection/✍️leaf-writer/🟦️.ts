@@ -21,7 +21,7 @@ export function importLines(target: string, wanted: ReadonlyMap<string, Readonly
     .join("\n");
 }
 
-/** 🔗️ `source` with `lines` after its leading doc comment (or in front of it when it has none). */
+/** 📥️ `source` with `lines` after its leading doc comment (or in front of it when it has none). */
 export function withImports(source: string, lines: string): string {
   if (lines === "") return source;
   if (source.startsWith("/**")) {
@@ -41,7 +41,7 @@ function dropDuplicateType(source: string, name: string): string {
   return duplicate === null ? source : source.slice(0, duplicate.index) + source.slice(duplicate.index + duplicate[0].length);
 }
 
-/** ✍️ `source` with the projected parser `name` replaced by `text`, in the place it already has. */
+/** 🔤️ `source` with the projected parser `name` replaced by `text`, in the place it already has. */
 export function restateParser(source: string, name: string, text: string, path: string): string {
   const range = parserRange(source, name);
   if (range === undefined) throw new Error(`parse${name} is not a projected function in ${path}`);
@@ -52,7 +52,7 @@ export function restateParser(source: string, name: string, text: string, path: 
 //#region 🔖️Writer
 const HELPER_NAMES = ["Refusal", "Object", "Closed", "Array", "String", "Boolean", "Number", "Integer", "Member", "Constant"];
 
-/** ✍️ The edits of one leaf: collected while the run settles, written by `finish`. A report run (`apply` false) only learns which files it would touch. */
+/** 📝️ The edits of one leaf: collected while the run settles, written by `finish`. A report run (`apply` false) only learns which files it would touch. */
 export class LeafWriter {
   private readonly files: ParserFiles;
   private readonly working = new Map<string, string>();
@@ -96,7 +96,7 @@ export class LeafWriter {
     }
   }
 
-  /** 📍️ Adds a type declaration block to the leaf. */
+  /** ➕️ Adds a type declaration block to the leaf. */
   addType(block: string): void {
     this.touch(this.leaf);
     this.leafBlocks.push(block);
@@ -113,7 +113,7 @@ export class LeafWriter {
     this.note(home, foreign);
   }
 
-  /** 📍️ Replaces a parser in the file that defines it (the leaf when only a re-export names it). */
+  /** 📄️ Replaces a parser in the file that defines it (the leaf when only a re-export names it). */
   restate(name: string, text: string, foreign: Iterable<ParserKey>, closed: boolean): void {
     const file = this.files.definingFile(name) ?? this.leaf;
     this.placed.set(name, file);
@@ -123,7 +123,7 @@ export class LeafWriter {
     this.note(file, foreign);
   }
 
-  /** 📍️ Moves the fresh parsers of the leaf that belong to a component folder into it, verbatim and in the order of the leaf. */
+  /** 🆕️ Moves the fresh parsers of the leaf that belong to a component folder into it, verbatim and in the order of the leaf. */
   distribute(names: Iterable<string>): void {
     for (const name of names) {
       const home = this.files.placementOf(name);
@@ -141,7 +141,7 @@ export class LeafWriter {
     }
   }
 
-  /** 📍️ Writes every edited file (when applying) and returns the repository-relative paths that were or would be touched. */
+  /** 🏁️ Writes every edited file (when applying) and returns the repository-relative paths that were or would be touched. */
   finish(): string[] {
     if (this.parsers.size > 0 && this.helpersMissing()) this.touch(this.leaf);
     if (this.apply && this.touched.size > 0) this.write();

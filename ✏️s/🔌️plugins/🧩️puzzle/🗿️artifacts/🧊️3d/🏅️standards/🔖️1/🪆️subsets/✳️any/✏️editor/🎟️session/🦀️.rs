@@ -16,6 +16,8 @@ use {semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsLink, semio_s_
 use {semio_s_artifact_puzzle_3d_precompute::Puzzle3dCollisionSession, semio_s_artifact_puzzle_3d_precompute::Puzzle3dPrecomputeSession};
 use {semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_labels, semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels};
 use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
+use semio_s_artifact_puzzle_3d_editor_snapshot::{object_scale_json, Puzzle3dKindMeshIndex};
+use std::hash::Hash;
 use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
 use semio_s_artifact_puzzle_3d_model::Puzzle3dEngineCommand;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;

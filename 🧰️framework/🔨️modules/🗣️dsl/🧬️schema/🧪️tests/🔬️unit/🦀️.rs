@@ -821,3 +821,20 @@ fn op_text_of_a_newtype_variant_over_a_keywordless_record_round_trips_with_the_v
     assert_eq!(line, "set-body value=cut", "the variant keyword leads the body");
     assert_eq!(variants_text::parse_op::<Op>(&line).expect("the printed line parses"), op);
 }
+
+#[test]
+fn retained_ordered_map_binds_exactly_like_the_btree_map_oracle() {
+    use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
+    use std::collections::BTreeMap;
+    let rows = [("vortex", 2.5), ("alpha", 1.0), ("object", 0.0)];
+    let oracle: BTreeMap<String, f64> = rows.iter().map(|(key, weight)| (key.to_string(), *weight)).collect();
+    let mut retained = RetainedOrderedMap::<String, f64>::new();
+    for (key, weight) in rows { retained.cold_insert(key.to_string(), weight); }
+    assert_eq!(format!("{:?}", <RetainedOrderedMap<String, f64> as DslField>::shape()), format!("{:?}", <BTreeMap<String, f64> as DslField>::shape()), "same Shape::Map");
+    assert_eq!(format!("{:?}", DslField::to_value(&retained)), format!("{:?}", DslField::to_value(&oracle)), "same key order and values");
+    let restored = <RetainedOrderedMap<String, f64> as DslField>::from_value(&DslField::to_value(&oracle)).expect("a map value binds");
+    assert_eq!(restored.iter().map(|(key, weight)| (key.clone(), *weight)).collect::<Vec<_>>(), oracle.clone().into_iter().collect::<Vec<_>>());
+    assert!(<RetainedOrderedMap<String, f64> as DslField>::from_value(&FieldValue::Bool(true)).is_err(), "a non-map is refused");
+    assert!(matches!(<RetainedOrderedMap<String, f64> as BorrowedDslField>::SHAPE, BorrowedShape::Map(_)));
+    assert_eq!(DslField::projection_key(&retained, &[], 0).expect("first key"), "alpha");
+}

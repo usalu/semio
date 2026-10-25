@@ -6,10 +6,10 @@ import { windowChromeScrollClearanceVar } from "../../🧱️elements/🚧️Win
 /** 📐️ Default unfolded width of window panes and the options rail (token-derived; matches panel default 300px). */
 export const windowMeasuresDefaultWidthPx = domSizePx("layoutPanelRailUiSpacing");
 
-/** 📐️ Minimum unfolded width of the window options rail (token-derived). */
+/** 🔽️ Minimum unfolded width of the window options rail (token-derived). */
 export const windowMeasuresMinWidthPx = domSizePx("layoutPanelMinUiSpacing");
 
-/** 📐️ Maximum unfolded width of the window options rail (token-derived). */
+/** 🔼️ Maximum unfolded width of the window options rail (token-derived). */
 export const windowMeasuresMaxWidthPx = domSizePx("layoutPanelMaxUiSpacing");
 
 /** 🚧️ Block offset that clears a window's floating chrome control row — the single rule for
@@ -21,7 +21,7 @@ export const windowChromeClearedTopOffset = `calc(var(${windowChromeScrollCleara
 
 /** 🪟️ Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
 
-/** 🪟️ Built-in window pane icons — fixed semantic affordances (never fold-direction chevrons). */
+/** 🖼️ Built-in window pane icons — fixed semantic affordances (never fold-direction chevrons). */
 export const WINDOW_PANE_MEASURES_ICON = "settings-2" as const satisfies IconName;
 
 export const WINDOW_PANE_ACTIONS_ICON = "play" as const satisfies IconName;

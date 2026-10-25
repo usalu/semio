@@ -2,12 +2,12 @@ import{retireBuildGraphClosureHeadroomV1}from"./🧾️closures/🟦️.ts";
 export{retireBuildGraphClosureHeadroomV1}from"./🧾️closures/🟦️.ts";
 import {createHash} from "node:crypto";
 import {constants,lstatSync,opendirSync,unlinkSync,type BigIntStats} from "node:fs";
-import {nativeImageSpaceV1,type NativeImageMaintenanceCustodyV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {nativeImageSpaceV1,type NativeImageMaintenanceCustodyV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {open} from "node:fs/promises";
 import {join} from "node:path";
 import {captureOwnedCommandV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {openNativePlatformStorageV1,requireNativeStoragePathV1,requireNativePlatformImageBindingV1,requireNativePlatformImageWriterV1,withNativePlatformImageOperationV1,type NativeImageStorageV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
-import type {NativeFixedPlatformOptionsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
+import {openNativePlatformStorageV1,requireNativeStoragePathV1,requireNativePlatformImageBindingV1,requireNativePlatformImageWriterV1,withNativePlatformImageOperationV1,type NativeImageStorageV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import type {NativeFixedPlatformOptionsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
 import {acquireResourceLease,checkResourceLeaseControl,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
@@ -15,7 +15,7 @@ import {repositoryCacheBudgetV1} from "../../🟦️.ts";
 import {repositoryCachePartitionRootDataV1} from "../../📂️paths/🟦️.ts";
 import {buildGraphPublicationWriterResourceV1} from "../../../../../../🏗️build/📥️inputs/💾️storage/🔒️writer/🟨️.mjs";
 import authoritySchema from "../../../../../../🏗️build/🧬️schema/📥️authority.json" with { type: "json" };
-import { runtimeExecutableForV1 } from "../../../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeExecutableForV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 const protocol=schema.definitions.Protocol.const,authorityKindsV1=authoritySchema.properties.observations.items.properties.kind.enum;
 /** 📋️ Names the required physical floor and whether recovery queues behind concurrent readers or defers to them, without granting cleanup custody. */
 export interface BuildGraphHeadroomRequestV1{readonly minimumAvailableBytes:number;readonly wait:boolean}
@@ -47,7 +47,7 @@ export async function recoverBuildGraphImageHeadroomV1(options:NativeFixedPlatfo
  const request=readBuildGraphHeadroomRequestV1(value),control=options.control;let retiredBytes=0,retiredFiles=0;for(let revalidations=0;;){checkResourceLeaseControl(control);const image=await openNativePlatformStorageV1(options);let failed=false;
  try{
   await image.recheck();checkResourceLeaseControl(control);const initialAvailableBytes=available(image);if(initialAvailableBytes>=request.minimumAvailableBytes)return Object.freeze({acquired:true,availableBytes:initialAvailableBytes,retiredBytes,retiredFiles});
-  const result=await image.withExclusiveMaintenance({version:1,wait:request.wait},async(_port,custody)=>recoverBuildGraphImageHeadroomHeldV1(image,custody,request,retireOptional),request.wait?observation=>observation.availableBytes>=request.minimumAvailableBytes:undefined);
+  const result=await image.withExclusiveMaintenance({version:1,wait:request.wait,...request.wait?{yielding:true as const}:{}},async(_port,custody)=>recoverBuildGraphImageHeadroomHeldV1(image,custody,request,retireOptional),request.wait?observation=>observation.availableBytes>=request.minimumAvailableBytes:undefined);
   checkResourceLeaseControl(control);if(!result.acquired&&"withdrawn"in result&&result.withdrawn===true){if(++revalidations>protocol.maximumRevalidations)throw Error("Concurrent graph capacity keeps changing during guarded admission");continue;}
   return Object.freeze({acquired:result.acquired,availableBytes:result.acquired?result.value.availableBytes:initialAvailableBytes,retiredBytes:retiredBytes+(result.acquired?result.value.retiredBytes:0),retiredFiles:retiredFiles+(result.acquired?result.value.retiredFiles:0)});
  }catch(error){failed=true;throw error;}finally{try{await image.close();}catch(error){if(!failed)throw error;}}
@@ -72,7 +72,7 @@ export async function recoverBuildGraphImageHeadroomHeldV1(image:NativeImageStor
 }
 
 function selectedDirectoryIdentityV1(image:NativeImageStorageV1,directory:string):string{requireNativeStoragePathV1(image.root,directory);const row=lstatSync(directory,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||row.dev!==lstatSync(image.root,{bigint:true}).dev)throw Error("Original selected publication directory required");return[row.dev,row.ino].join(":");}
-/** 🧹️ Retires only idle authenticated selected pairs beneath the genuine canonical image operation and their existing nonwaiting state writers. */
+/** 🔨️ Retires only idle authenticated selected pairs beneath the genuine canonical image operation and their existing nonwaiting state writers. */
 export async function recoverBuildGraphSelectedHeadroomV1(workspace:string,image:NativeImageStorageV1,control:ResourceLeaseControl,value:unknown):Promise<BuildGraphHeadroomResultV1>{
  const request=readBuildGraphHeadroomRequestV1(value);if(request.wait)throw Error("Nonwaiting selected recovery required");const partition=repositoryCacheBudgetV1(workspace).partitions.graph,leaseDirectory=join(repositoryCachePartitionRootDataV1(workspace,"leases"),"data");requireNativePlatformImageBindingV1(image,control,{directory:partition.directory,leaseDirectory,filesystemBytes:partition.filesystemBytes,maximumPhysicalBytes:partition.capacityBytes});if(image.root!==repositoryCachePartitionRootDataV1(workspace,"graph"))throw Error("Exact workspace graph image root required");
  return withNativePlatformImageOperationV1(image,control,async actual=>{

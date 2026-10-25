@@ -20,7 +20,6 @@ fn multiline_editor_matches_neutral_vectors_with_bounded_utf8_history() {
         assert_eq!(editor.value, row["expected"].as_str().unwrap(), "{}", row["name"]);
         assert_eq!(editor.cursor, row["expectedCursor"].as_u64().unwrap() as usize, "{}", row["name"]);
     }
-    println!("[DEBUG] multiline editor neutral cases=13 UTF8=true boundedHistory=true");
 }
 
 #[test]

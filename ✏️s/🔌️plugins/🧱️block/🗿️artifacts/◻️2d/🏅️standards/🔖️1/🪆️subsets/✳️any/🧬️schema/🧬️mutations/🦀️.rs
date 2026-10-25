@@ -137,3 +137,9 @@ pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2d
 /// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
 pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
 //#endregion 🍃️FacetLeaves
+
+extern crate self as semio_s_artifact_block_2d_mutations;
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary_mutations;
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text_mutations;

@@ -13,7 +13,7 @@ use semio_framework_ui_theme::Theme;
 use semio_framework_ui_locale::Label;
 use std::collections::HashMap;
 
-/// 📶️ One progress node; `total: None` is the indeterminate case (`ui_contract::progress_fraction`).
+/// ⏳️ One progress node; `total: None` is the indeterminate case (`ui_contract::progress_fraction`).
 fn progress(completed: f64, total: Option<f64>) -> UiProgressNode {
     UiProgressNode { id: "progress".into(), completed, total, value_text: Label::data("25%"), presence: UiPresence::default(), menu: None }
 }
@@ -55,7 +55,7 @@ async fn progress_track_is_a_size_tiny_bar_across_the_full_width() {
     assert!((fill[3] - track[3]).abs() < f32::EPSILON);
 }
 
-/// 📶️ An indeterminate bar keeps the same track and centres its sweep, matching React's
+/// 🍫️ An indeterminate bar keeps the same track and centres its sweep, matching React's
 /// `mx-auto w-1/3` fill.
 #[semio_framework_async_macros::async_test]
 async fn an_indeterminate_progress_bar_centres_a_fixed_share() {

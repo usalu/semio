@@ -9,6 +9,7 @@ use semio_framework_value::ValueError;
 
 #[path = "🔤️json/🦀️.rs"]
 mod json;
+pub use json::decode_presence_json;
 
 /// 🫴️ A presence format installs its actual original receiving port and preserves all partial native owners.
 pub trait ArtifactPresenceSnapshot: RetireOwned + ToValue {

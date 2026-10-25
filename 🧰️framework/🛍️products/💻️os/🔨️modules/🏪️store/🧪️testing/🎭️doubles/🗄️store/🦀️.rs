@@ -129,7 +129,7 @@ where
         last = store.close_owned_step(turn).expect("test store closes under its exact owner grant");
         assert!(last.progress().fits(turn));
         stalled = if last.progress() == RetainedCloneProgress::default() { stalled + 1 } else { 0 };
-        assert!(stalled < 4096 || std::thread::panicking(), "test store close stalled on a fully funded turn; frontier {demand:?} phase {} displaced {}", store.close_owned_phase_witness(), store.close_displaced_witness());
+        assert!(stalled < 4096 || std::thread::panicking(), "test store close stalled on a fully funded turn; frontier {demand:?} phase {} displaced {} outstanding reads {} returned reads {}", store.close_owned_phase_witness(), store.close_displaced_witness(), store.owners.outstanding_snapshot_read_count(), store.owners.returned_snapshot_read_count());
         if matches!(last, RetainedCloneStep::Complete(_)) { assert!(store.close_owned_terminal_is_empty()); return; }
     }
     panic!("test store did not reach its exact terminal-empty witness; last step {last:?}");
@@ -406,6 +406,13 @@ pub fn fixture_wire_source<M: ArtifactCanonicalJson>(mutation: &M) -> Option<Art
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct FixtureAuthoringFactory<M: 'static>(pub std::marker::PhantomData<fn() -> M>);
 
+/// 🧬️ The catalog identity fixture prepares no semantic replay.
+impl semio_framework_os_store_replay_operation::ArtifactReplayPreparationFactory<DemoSnapshot, DemoMutation> for FixtureAuthoringFactory<DemoMutation> {
+ fn preparation_birth_demand(&self)->semio_framework_value::RetirementDemand{Default::default()}
+ fn begin(&self,request:semio_framework_os_store_replay_operation::ArtifactReplayPreparationRequest<DemoSnapshot,DemoMutation>,_:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_os_store_replay_operation::ArtifactReplayPreparation<DemoSnapshot,DemoMutation>>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,semio_framework_os_store_replay_operation::ArtifactReplayPreparationRequest<DemoSnapshot,DemoMutation>)>{Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"catalog identity fixture prepares no semantic replay"),request))}
+}
+
+
 impl<M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static> ArtifactStoreOneItemPreparationFactory<DemoSnapshot, M> for FixtureAuthoringFactory<M> {
     fn operation_wire_source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> {
         fixture_wire_source(mutation)
@@ -462,18 +469,26 @@ impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for Demo
 pub fn fixture_authoring_birth_demand<M>() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError>
 where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Clone + ToValue + FromValue + OpBinary + OpText + Send + Sync + 'static {
     let base = DocumentStoreOwners::<DemoSnapshot, M>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<DemoSnapshot, M>>()?;
-    let capacity_bytes = base.checked_add(semio_framework_value::factory_arc_birth_bytes::<FixtureAuthoringFactory<M>>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "fixture authoring catalog extent overflow"))?;
+    let capacity_bytes = base.checked_add(semio_framework_value::factory_arc_birth_bytes::<FixtureAuthoringFactory<M>>()).and_then(|bytes| bytes.checked_add(cold_replay_birth_bytes::<M>())).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "fixture authoring catalog extent overflow"))?;
     Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: 1 })
 }
 
 /// 🗃️ Admits the demo member catalog together with its authoring-only semantic authority.
 pub fn fixture_authoring_member_owners<M>(grant: RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, M>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<DemoSnapshot, M>>
 where M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Clone + ToValue + FromValue + OpBinary + OpText + Send + Sync + 'static {
-    let preparation = semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<FixtureAuthoringFactory<M>>(), depth: 1 };
-    DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, M>::new(), Arc::new(FixtureAuthoringFactory::<M>(std::marker::PhantomData)) as Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, M>>))
+    let preparation = semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<FixtureAuthoringFactory<M>>() + cold_replay_birth_bytes::<M>(), depth: 1 };
+    DocumentStoreOwners::admit_source_constructor_with_semantic_preparations(grant, preparation, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, M>::new(), Arc::new(FixtureAuthoringFactory::<M>(std::marker::PhantomData)) as Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, M>>, crate::cold_demo_replay_preparation_factory::<M>()))
 }
 
-/// 🗃️ Completes a demo catalog whose retirement issuers are the caller's own, adding the authoring-only semantic authority.
+/// 🧮️ The original allocations of one cold native replay authority: the preparation factory and its three owned issuers.
+fn cold_replay_birth_bytes<M: Clone + ToValue + FromValue + Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static>() -> usize {
+    semio_framework_value::factory_arc_birth_bytes::<semio_framework_os_store_snapshot_clone::RetainedClonePreparationFactory<DemoSnapshot, M, ColdRetainedCloneEdit<M>>>()
+        + semio_framework_value::factory_arc_birth_bytes::<ColdRetainedCloneEdit<M>>()
+        + semio_framework_value::factory_arc_birth_bytes::<DemoMutationRetirementFactory>()
+        + semio_framework_value::factory_arc_birth_bytes::<DemoSnapshotRetirementFactory>()
+}
+
+/// 🗃️ Completes a demo catalog whose retirement issuers are the caller's own, adding the authoring-only publication authority and the cold native replay authority.
 pub fn fixture_authoring_catalog<F1, F2, F3>(grant: RetainedCloneGrant, snapshots: F1, initial: F2, mutations: F3) -> DocumentStoreOwners<DemoSnapshot, DemoMutation>
 where
     F1: SnapshotRetirementFactory<DemoSnapshot> + semio_framework_value::FactoryPayloadRetirement,
@@ -481,7 +496,7 @@ where
     F3: ArtifactOwnedValueRetirementFactory<DemoMutation> + semio_framework_value::FactoryPayloadRetirement,
 {
     let preparation = semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<DemoAuthoringFactory>(), depth: 1 };
-    complete_test_catalog(DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (snapshots, initial, mutations, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new(), Arc::new(DemoAuthoringFactory) as Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>>)))
+    complete_test_catalog(complete_test_catalog(DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (snapshots, initial, mutations, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new(), Arc::new(DemoAuthoringFactory) as Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>>))).with_replay_preparation(crate::cold_demo_replay_preparation_factory::<DemoMutation>(), physical_test_close_grant()))
 }
 
 

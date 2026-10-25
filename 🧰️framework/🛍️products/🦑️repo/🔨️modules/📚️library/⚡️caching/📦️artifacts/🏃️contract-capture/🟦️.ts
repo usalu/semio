@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { runtimeSpawnSyncV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeSpawnSyncV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🏃️ Captures a bounded subprocess while retaining progress and cancellation. */
 export async function captureArtifactContract(command: string, args: string[], cwd: string, timeoutMs: number): Promise<string> {

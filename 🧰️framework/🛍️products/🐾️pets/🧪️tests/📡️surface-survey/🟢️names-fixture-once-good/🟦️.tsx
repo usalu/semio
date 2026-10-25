@@ -1,7 +1,7 @@
 /** 🟢️ The names fixture once good tests of the 📡️ surface survey suite. */
 import { expect, it, vi } from "vitest";
 import { FLOOR, fixtureId, surfaceId, survey, wallId } from "@semio-tech/pets-react";
-import { card, place, viewport } from "../🟣️shared/🟦️.tsx";
+import { card, place, viewport } from "../🟣️harness/🟦️.tsx";
 
 /** 🔵 Registers the names fixture once good tests of the 📡️ surface survey suite. */
 export function registerNamesFixtureOnceGoodTests(): void {

@@ -45,6 +45,22 @@ func TestRootGuardFlagsResolutionsInsideTheCheckoutOnly(t *testing.T) {
 	}
 }
 
+func TestRootGuardIgnoresTheSandboxItOwnsBelowTheCheckout(t *testing.T) {
+	checkout := t.TempDir()
+	owned := filepath.Join(checkout, ".cache", "tests", "tmp", "sandbox")
+	foreign := filepath.Join(checkout, ".cache", "tests", "tmp", "foreign")
+	guard := sandbox.NewGuard(checkout)
+	guard.Own(owned)
+	guard.Observe(filepath.Join(owned, "nested"))
+	if problems := guard.Report(map[string]string{"workspace root": owned}); len(problems) != 0 {
+		t.Fatalf("the owned sandbox below the checkout was flagged: %v", problems)
+	}
+	guard.Observe(foreign)
+	if problems := guard.Report(map[string]string{"other": foreign}); len(problems) != 2 {
+		t.Fatalf("a path below the checkout that is not owned must still be flagged twice, got %v", problems)
+	}
+}
+
 func TestRootGuardFlagsHeldBindingsInsideTheCheckout(t *testing.T) {
 	checkout := t.TempDir()
 	guard := sandbox.NewGuard(checkout)

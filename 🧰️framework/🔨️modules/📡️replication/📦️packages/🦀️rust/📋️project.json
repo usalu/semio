@@ -595,10 +595,7 @@
     "test-retained-diff-receiving-source": {
       "metadata": {
         "semio": {
-          "workspaceCommand": [
-            "test-retained-diff-receiving",
-            "source"
-          ]
+          "workspaceCommand":["verify","retained-diff-receiving","source"]
         }
       },
       "executor": "repo:script",
@@ -619,10 +616,7 @@
     "test-retained-diff-receiving-native": {
       "metadata": {
         "semio": {
-          "workspaceCommand": [
-            "test-retained-diff-receiving",
-            "native"
-          ]
+          "workspaceCommand":["verify","retained-diff-receiving","native"]
         }
       },
       "executor": "repo:script",

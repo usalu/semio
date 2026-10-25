@@ -105,7 +105,7 @@ pub(super) const ROW_TARGET: SchemaMetadata = SchemaMetadata {
  */
 export type RowTarget = { scope: string, version: number, args: { [key in string]?: UiValue } | null,
 /**
- * ▶️ The verb the row's primary activation fires on this target.
+ * 🏹️ The verb the row's primary activation fires on this target.
  */
 activation: string | null, };"####,
 };

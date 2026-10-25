@@ -8,7 +8,7 @@ import { type ToolDefinition, type ToolRef, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIV
 import { type WindowMeasure } from "@semio-tech/framework-manifest/app-definition-refresh-and-context-menu";
 
 //#region 🧰️ActionUtilities
-/** 🧰️ A resolved utility ready for the utility bar — the TS twin of Rust `DerivedUtilitySpec` in `ui_wgpu`. */
+/** 📕️ A resolved utility ready for the utility bar — the TS twin of Rust `DerivedUtilitySpec` in `ui_wgpu`. */
 export type DerivedUtilitySpec = {
   readonly id: string;
   readonly label: string;
@@ -58,7 +58,7 @@ export function deriveUtilityNodes(controllerId: string, utilities: readonly Der
 }
 
 /**
- * 🎯️ Hand-written twin of Rust `partition_window_measures` (`framework/ui/wgpu/rs/lib.rs`): splits a window's
+ * 🪟️ Hand-written twin of Rust `partition_window_measures` (`framework/ui/wgpu/rs/lib.rs`): splits a window's
  * top-level measures into `general` and `utilityOptions`. A top-level `group` tagged with `activeUtilityId`
  * contributes its **children** to `utilityOptions` only when it equals the window's active utility (the
  * tagged wrapper is routing-only and never rendered), and is dropped from both buckets otherwise. Untagged

@@ -314,7 +314,7 @@ func GetGitIgnoredSet(rootDir string, paths []string) map[string]bool {
 		return make(map[string]bool)
 	}
 	top, _, code := ExecCommand("git", []string{"rev-parse", "--show-toplevel"}, rootDir)
-	if code != 0 || NormalizePath(strings.TrimSpace(top)) != NormalizePath(rootDir) { return make(map[string]bool) }
+	if code != 0 || NormalizePath(CanonicalPath(strings.TrimSpace(top))) != NormalizePath(CanonicalPath(rootDir)) { return make(map[string]bool) }
 	args := append([]string{"-c", "core.quotepath=off", "check-ignore"}, paths...)
 	stdout, _, _ := ExecCommand("git", args, rootDir)
 	ignored := make(map[string]bool)

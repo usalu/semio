@@ -1,4 +1,4 @@
-/** 📚️ Schema documents
+/** 🧬️ Schema documents
  *
  * Reads the catalogued schema documents of the repository, resolves the uncatalogued components they reference, and the JSON-pointer and schema-kind helpers every mutation gate shares.
  */

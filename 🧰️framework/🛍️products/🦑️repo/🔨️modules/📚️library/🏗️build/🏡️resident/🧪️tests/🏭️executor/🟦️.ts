@@ -76,6 +76,8 @@ describe("executor processes",()=>{
   const result=await p.run(p.take()!,{id:1,argv:["refuse"]},collect());
   expect(result).toMatchObject({exit:70,refusal:"authority"});expect(p.refused).toBe(true);expect(p.take()).toBeUndefined();
   await p.close();
+  const keyed=pool();keyed.top();expect(await waitFor(()=>keyed.idleCount()===1,20000)).toBe(true);
+  expect(await keyed.run(keyed.take()!,{id:2,argv:["refuse-key"]},collect())).toMatchObject({exit:70,refusal:"authority"});expect(keyed.refused).toBe(true);await keyed.close();
   const busy=pool({FIXTURE_CUSTODY_FAIL:"1"});busy.top();await sleep(1500);expect(busy.idleCount()).toBe(0);await busy.close();
   const limited=pool({FIXTURE_MAX:"2"});limited.top();expect(await waitFor(()=>limited.idleCount()===1,20000)).toBe(true);
   await limited.run(limited.take()!,{id:1,argv:["echo"]},collect());await limited.run(limited.take()!,{id:2,argv:["echo"]},collect());

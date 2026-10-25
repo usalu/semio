@@ -160,6 +160,6 @@ async fn replace_route_data_missing_target_is_error() {
 async fn create_position_duplicate_id_fatal_never_applies() {
     let base = crate::standards::v1::subsets::any::map_composition::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
     let mutation = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") });
-    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&::semio_framework_os_kernel::ColdMutation::diff(&mutation, &base)).await;
 }
 //#endregion 🔖️OutcomeLaws

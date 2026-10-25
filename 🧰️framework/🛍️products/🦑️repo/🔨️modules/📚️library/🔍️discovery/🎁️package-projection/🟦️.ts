@@ -50,7 +50,7 @@ export function parseCanonicalWgpuPackageCatalog(bytes: string, digest: string, 
   return row;
 }
 
-/** 🔐️ Loads the exact package catalog without following any parent or leaf symlink. */
+/** 📦️ Loads the exact package catalog without following any parent or leaf symlink. */
 export function semanticPackageProjectionCatalog(repoRoot: string, taxonomy: Taxonomy): SemanticPackageProjectionCatalog | null {
   const contract = taxonomy.semanticPackageProjectionContracts["nested-cargo-packages-v1"];
   if (!contract) throw new Error("Nested Cargo package projection contract required");

@@ -1,7 +1,7 @@
 /** 🔶️ The resolvepresentationasseturl maps deck relative tests of the PresentationDeck suite. */
-import type { PdfEmbodiment } from "../../../🎯️targets/⚛️react/🟦️.tsx";
+import type { PdfEmbodiment } from "@semio-tech/presentation-react";
 import { expect, it, beforeEach, afterEach } from "vitest";
-import { FIGURE_WHEEL_ZOOM_MAX, figureBackgroundSizeScrollAxis, figureBackgroundSizeZoomed, figureCoverOverflowAxis, figureCoverScrollContentSize, figureCoverScrollElementStyle, figureCropScrollBackgroundSize, figureEmbodimentScrollEnabled, figureScrollOffsetForBackgroundPosition, figureWheelZoomStep, mediaTeaserActive, pdfAdjacentPage, pdfCanGoToNextPage, pdfCanGoToPreviousPage, pdfCoverScale, pdfEmbodimentInitialPage, pdfPageNavEnabled, pdfScrollCoverScale, resolvePresentationAssetUrl, unmountPresentation } from "../../../🎯️targets/⚛️react/🟦️.tsx";
+import { FIGURE_WHEEL_ZOOM_MAX, figureBackgroundSizeScrollAxis, figureBackgroundSizeZoomed, figureCoverOverflowAxis, figureCoverScrollContentSize, figureCoverScrollElementStyle, figureCropScrollBackgroundSize, figureEmbodimentScrollEnabled, figureScrollOffsetForBackgroundPosition, figureWheelZoomStep, mediaTeaserActive, pdfAdjacentPage, pdfCanGoToNextPage, pdfCanGoToPreviousPage, pdfCoverScale, pdfEmbodimentInitialPage, pdfPageNavEnabled, pdfScrollCoverScale, resolvePresentationAssetUrl, unmountPresentation } from "@semio-tech/presentation-react";
 import { globalsCssSource } from "../../🧰️presentation-deck-helpers/🟦️.tsx";
 
 /** 🔷 Registers the resolvepresentationasseturl maps deck relative tests of the PresentationDeck suite. */

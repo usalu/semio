@@ -1,5 +1,5 @@
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {join,resolve} from "node:path";
@@ -126,9 +126,9 @@ test("tools setup bazel opens only the tools and dependencies partitions and nev
  const storageFile=parse("../🟦️.ts"),setup=declaration(storageFile,"withBazelSetupStorageV1"),full=declaration(storageFile,"withBazelStorageV1");
  expect(opened(setup)).toEqual(fixture.setup.opens);expect(opened(full)).toEqual(fixture.setup.full);
  for(const node of [setup,full])expect(opened(node)).toEqual([...node.getText().matchAll(/withRepositoryCacheStoreV1\(root,"(\w+)"/g)].map(match=>match[1]));
- const entry=parse("../../../../📜️script.ts"),leases=declaration(entry,"runOwnedBuildInLeasesV1"),branches:ts.IfStatement[]=[],visit=(node:ts.Node)=>{if(ts.isIfStatement(node))branches.push(node);ts.forEachChild(node,visit);};visit(leases);
+ const entry=parse("../../../../⌨️command/⚙️runtime/🟦️.ts"),leases=declaration(entry,"runOwnedBuildInLeasesV1"),branches:ts.IfStatement[]=[],visit=(node:ts.Node)=>{if(ts.isIfStatement(node))branches.push(node);ts.forEachChild(node,visit);};visit(leases);
  const tools=branches.find(node=>node.expression.getText()==='command==="tools"')!,guard=branches.find(node=>node.expression.getText().includes("buildOperationRequiresV1"))!;
- expect(tools.getText()).toContain("withBazelSetupStorageV1");expect(tools.getText()).not.toContain("withBazelStorageV1");expect(tools.getText()).not.toContain("ensureBuildEnvironmentV1");
+ expect(tools.getText()).toContain("loadBuildBackendV1");expect(tools.getText()).toContain(".setup(");expect(tools.getText()).not.toContain("withBazelStorageV1");expect(tools.getText()).not.toContain("ensureBuildEnvironmentV1");const backendText=parse("../../🔌️backend/🟦️.ts").getText(),backend=backendText.slice(backendText.indexOf("setup("),Math.min(...["async reset(","async prepareStorage(","async cacheProbe("].map(name=>backendText.indexOf(name)).filter(at=>at>backendText.indexOf("setup("))));expect(backend.length).toBeGreaterThan(0);expect(backend).toContain("withBazelSetupStorageV1");expect(backend).not.toContain("withBazelStorageV1");expect(backend).not.toContain("ensureBuildEnvironmentV1");
  const required=new Map(catalogue.operations.map(row=>[row.name,row.requires]));
  for(const name of fixture.setup.installSkipped)expect(required.get(name),name).toBe("none");
  expect(guard.expression.getText()).toBe('buildOperationRequiresV1(command)==="dependencies"');expect(guard.thenStatement.getText()).toContain("ensureBuildEnvironmentV1");

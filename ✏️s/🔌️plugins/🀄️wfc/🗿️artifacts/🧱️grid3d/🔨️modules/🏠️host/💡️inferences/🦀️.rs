@@ -596,7 +596,7 @@ impl Grid3dInferenceJob {
             Grid3dInferenceJobRun::Yield | Grid3dInferenceJobRun::Staged => Ok(None),
             Grid3dInferenceJobRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
             Grid3dInferenceJobRun::StepRestore => {
-                let result = self.restore.as_mut().expect("restore job").step(context)?;
+                let result = self.restore.as_mut().expect("restore job").step_value(context)?;
                 if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
                     self.restore_done = true;
                     return Ok(None);
@@ -605,7 +605,7 @@ impl Grid3dInferenceJob {
                 Ok(result)
             }
             Grid3dInferenceJobRun::StepChild => {
-                let result = self.child.as_mut().expect("WFC child").step(context)?;
+                let result = self.child.as_mut().expect("WFC child").step_value(context)?;
                 let end = if matches!(result, Some(JobOutcomeBorrow::Complete { .. })) {
                     Some(InferenceChildEnd::Complete)
                 } else {
@@ -789,18 +789,7 @@ impl semio_framework::ToolJobFactory for Grid3dInferenceJobFactory {
         semio_framework::ToolExecutionContract::resumable(16 << 20, MAX_GRID3D_TILES + MAX_GRID3D_RULES + MAX_GRID3D_CELLS, 4_096, MAX_GRID3D_OUTPUT_BYTES, 7_500, 1, 1)
     }
 
-    fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Grid3dInferenceJob::new(operation, payload).map_err(semio_framework::ToolJobFactoryError::new)
-    }
-
-    fn create_job_from_wire(&mut self, operation: semio_framework_job::Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        let payload_text = std::str::from_utf8(payload).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("grid3d-inference-wire-decode:{error}")))?;
-        let mut request: Grid3dInferenceRequest = crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value(payload_text).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("grid3d-inference-wire-decode:{error}")))?;
-        if checkpoint.is_some() {
-            request.checkpoint = checkpoint;
-        }
-        Grid3dInferenceJob::new(operation, request).map_err(semio_framework::ToolJobFactoryError::new)
-    }
+    semio_framework_plugin::retained_command::typed_tool_job_factory_admission!(|operation, payload| Grid3dInferenceJob::new(operation, payload));
 }
 
 /// 💡️ Descriptor for the `s.wfc.grid3d` solve inference — five handcrafted facet leaves.

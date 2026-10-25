@@ -20,7 +20,7 @@ struct Edge {x:f64,y:f64,dx:f64,winding:i32}
 #[derive(Clone,Copy)]
 struct SweepEvent {y:f64,edge:usize,add:bool}
 #[derive(Clone,Copy,PartialEq,Eq)]
-enum Stage {Prepare,Events,Apply,Copy,Sort,Cross,Wind,Span,Finish,Write,Done}
+#[doc(hidden)] pub enum Stage {Prepare,Events,Apply,Copy,Sort,Cross,Wind,Span,Finish,Write,Done}
 const EPS:f64=1e-10;
 const MAX_POINTS:usize=65536;
 const MAX_CONTOURS:usize=65536;
@@ -161,9 +161,3 @@ impl CoverageJob {
 
 semio_framework_value::artifact_retire_leaf!(CoverageRule,CoveragePhase,Edge,SweepEvent,Stage);
 physical_work_retirement!(CoverageRetirement,CoverageJob,&'static str,|_:&str|"Coverage retirement refused its physical grant");
-
-#[cfg(feature = "testkit")]
-#[doc(hidden)]
-pub mod testkit {
-    pub type Stage = super::Stage;
-}

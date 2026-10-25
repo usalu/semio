@@ -28,6 +28,7 @@ fn style(stroke:&StrokeStyle)->Result<StrokeGeometryStyle,PathRasterError> {
 }
 /// 🧱️ Private raster candidate with per-segment/point conversion and bounded geometry/paint grants.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct PathRasterJob {
  width:u32,height:u32,count:usize,transform:[f64;6],tolerance:f64,rule:CoverageRule,inverse:Option<[f64;6]>,
  fill:Option<PreparedFill>,stroke_color:Option<[f64;4]>,style:Option<StrokeGeometryStyle>,source:Vec<PathSegment>,segments:Vec<semio_framework_2d::PathSegment>,flat:Vec<FlatContour>,fill_contours:Vec<Vec<[f64;2]>>,stroke_contours:Vec<StrokeContour>,

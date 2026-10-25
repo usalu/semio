@@ -1,3 +1,4 @@
+import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 import{type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -10,6 +11,7 @@ import {repositoryCachePartitionRootV1} from "../../../../⚡️caching/💾️s
 import type {ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {cacheLedgerV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {resolveRemoteCacheContractV1} from "../../../🌐️remote-cache/🟦️.ts";
 import {bazelRemoteCacheV1,type BazelCredentialHelperV1} from "../🌐️remote-cache/🟦️.ts";
 
@@ -22,7 +24,7 @@ export function requireBazelHostPathsV1(platform:string,layout:Readonly<Record<s
 /** 🛤️ Names every native Bazel cache writer inside its authored finite partition. */
 export function bazelCacheLayoutV1(roots:Readonly<{tools:string;dependencies:string;products:string}>){
  if(Object.values(roots).some(root=>!isAbsolute(root)))throw Error("Absolute Bazel storage roots required");
- const layout={version:1 as const,executable:join(roots.tools,"bazel/bin"),install:join(roots.tools,"bazel/install"),modules:join(roots.dependencies,"bazel/modules"),workspace:join(roots.products,"bazel/workspaces"),outputs:join(roots.products,"bazel/outputs"),actions:join(roots.products,"bazel/actions"),server:join(roots.products,"bazel/outputs/server"),temporary:join(roots.products,"tmp")};if(Object.values(layout).some(value=>typeof value==="string"&&value.length>256))throw Error("Bazel storage path exceeds 256 characters");if(validateJsonSchemaSubset(schema.definitions.StorageLayout,layout,schema).length)throw Error("Closed Bazel cache layout required");requireBazelHostPathsV1(process.platform,layout);return Object.freeze(layout);
+ const layout={version:1 as const,executable:join(roots.tools,"bazel/bin"),install:join(roots.tools,"bazel/install"),modules:join(roots.dependencies,"bazel/modules"),workspace:join(roots.products,"bazel/workspaces"),outputs:join(roots.products,"bazel/outputs"),actions:join(roots.products,"bazel/actions"),pool:join(roots.products,"bazel/pool"),server:join(roots.products,"bazel/outputs/server"),temporary:join(roots.products,"tmp")};if(Object.values(layout).some(value=>typeof value==="string"&&value.length>256))throw Error("Bazel storage path exceeds 256 characters");if(validateJsonSchemaSubset(schema.definitions.StorageLayout,layout,schema).length)throw Error("Closed Bazel cache layout required");requireBazelHostPathsV1(process.platform,layout);return Object.freeze(layout);
 }
 /** 🎟️ Retains authenticated executable, dependency and output backing until all original children settle. */
 export interface BazelStorageV1{readonly tools:RepositoryCacheStoreV1;readonly dependencies:RepositoryCacheStoreV1;readonly products:RepositoryCacheStoreV1;readonly paths:ReturnType<typeof bazelCacheLayoutV1>}
@@ -42,6 +44,15 @@ const cachePolicy=schema.definitions.CachePolicy.const;
 export function bazelDiskCacheMaximumBytesV1(productsMaximumLogicalBytes:number=budget.partitions.products.maximumLogicalBytes):number{
  if(!Number.isSafeInteger(productsMaximumLogicalBytes)||productsMaximumLogicalBytes<1048576)throw Error("Finite products budget required");
  return Math.floor(productsMaximumLogicalBytes*cachePolicy.diskCache.productsShareBasisPoints/10000/1048576)*1048576;
+}
+/** 🌡️ The free space below which the session collector frees packages and output bases of the products image, and the free space it frees up to: the `reclaim` rule the cache ledger declares for the workspaces area. */
+export function bazelWorkspaceReclaimV1():Readonly<{softAvailableBytes:number;targetAvailableBytes:number}>{
+ const rule=cacheLedgerV1().areas.find(area=>area.id==="bazel-workspaces")?.reclaim;if(!rule)throw refuseBuildV1("missing","bazel.workspaces-reclaim-rule-required");return rule;
+}
+/** 📋️ Says who collects the Bazel disk cache and how far: Bazel's own garbage collector inside every persistent server keeps it within its authored share of the products partition and age, so the cache collector only reports the bound. */
+export function bazelDiskCacheReportV1(language:"en"|"de"):string{
+ const megabytes=Math.floor(bazelDiskCacheMaximumBytesV1()/1048576),days=cachePolicy.diskCache.garbageCollectionMaximumAgeDays;
+ return language==="de"?`[bazel] der Disk-Cache wird von Bazels eigenem Garbage-Collector in jedem Server gehalten: höchstens ${megabytes} MB und ${days} Tage`:`[bazel] the disk cache is kept by Bazel's own garbage collector inside every server: at most ${megabytes} MB and ${days} days`;
 }
 /** 🖥️ Names the output base of one session slot: a short ASCII path (slot ids are `s0`, `s1`, ...) whose server serves every command of the slot's one holder, because Bazel restarts a server bound to another workspace directory and serializes commands on one output base. */
 export function bazelServerBaseV1(layout:ReturnType<typeof bazelCacheLayoutV1>,slot:string):string{

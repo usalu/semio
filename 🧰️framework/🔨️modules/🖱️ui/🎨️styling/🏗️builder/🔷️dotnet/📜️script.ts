@@ -1,3 +1,4 @@
+import {countedCompilerCapacityRequestV1} from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { acquireCompilerCapacityLeaseV1, scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildModePolicy, readBuildMode } from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { toolchainIdentityV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
@@ -18,7 +19,7 @@ async function withDotnetState(root: string, invocation: ScriptInvocation, actio
   const state = dotnetState(root), control = scriptCompilerAdmissionControlV1(invocation, "styling:dotnet", buildBudgetMs()), signal = control.signal;
   let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined;
   try {
-    capacity = await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory:readProcessOwnerContextV1(process.env,root).leaseDirectory,control});
+    capacity = await acquireCompilerCapacityLeaseV1({request:countedCompilerCapacityRequestV1(),directory:readProcessOwnerContextV1(process.env,root).leaseDirectory,control});
     const lease = await acquireResourceLease({ directory: readProcessOwnerContextV1(process.env,root).leaseDirectory, resource: `styling-dotnet:${resolve(state)}`, mode: "exclusive", signal, control, onWait: ({ elapsedMs }) => console.log(`Waiting for styling .NET compiler state: ${elapsedMs}ms`) });
     try { signal.throwIfAborted(); await action(state, control.signal, capacity.parallelism,control); } finally { lease.release(); }
   } finally { capacity?.release(); }

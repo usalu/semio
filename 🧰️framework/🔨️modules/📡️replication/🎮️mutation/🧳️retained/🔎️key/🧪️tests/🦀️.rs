@@ -25,7 +25,6 @@ fn retained_key_lookup_matches_neutral_queries_without_key_or_row_clone(){
   let expected=case["expectedIndices"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as usize).collect::<Vec<_>>();
   let actual=match lookup.result().unwrap(){RetainedKeyMatch::Missing=>vec![],RetainedKeyMatch::Unique(index)=>vec![index],RetainedKeyMatch::Duplicate(first,second)=>vec![first,second]};assert_eq!(actual,expected);
   close(&mut lookup);let(_,heap)=observe(||drop(lookup));assert_eq!(heap,(0,0));close_source(&mut key);close_source(&mut rows);
-  eprintln!("[DEBUG] retained key {:?}: original query indices={actual:?}, allocation-free bounded comparison turns={turns}",case["id"]);
  }
 }
 

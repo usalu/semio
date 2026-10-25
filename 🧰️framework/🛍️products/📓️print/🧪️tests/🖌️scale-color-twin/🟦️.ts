@@ -56,7 +56,7 @@ export default defineTestAdapter({
     },
     "diverging-position": {
       oracle: oracle("diverging-position"),
-      /** 🎯️ The twin's diverging scale with the identity interpolator. */
+      /** 🪪️ The twin's diverging scale with the identity interpolator. */
       subject: () => {
         const centred = scaleDiverging([-10, 0, 30], IDENTITY);
         const offset = scaleDiverging([0, 2, 10], IDENTITY);
@@ -65,7 +65,7 @@ export default defineTestAdapter({
     },
     "interpolate-rgb": {
       oracle: oracle("interpolate-rgb"),
-      /** 🎯️ The twin's sRGB interpolator over the same two colour pairs. */
+      /** 🥢️ The twin's sRGB interpolator over the same two colour pairs. */
       subject: () => {
         const projection: Record<string, string[]> = {};
         [0, 0.25, 0.5, 0.75, 1].forEach((position, index) => {

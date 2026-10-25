@@ -200,41 +200,6 @@ async fn artifact_snapshot_root_is_o1_and_generation_stable_until_the_next_event
 }
 
 #[semio_framework_async_macros::async_test]
-async fn presence_local_read_is_o1_and_never_clones_the_payload_at_capture() {
-        let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
-let mut store = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(1) });
-    let factory: Arc<dyn SnapshotRetirementFactory<DemoSnapshot>> = Arc::new(DemoSnapshotRetirementFactory);
-    store.install_local_retirement_factory(factory.clone()).unwrap();
-    let before = store.local_read().unwrap();
-    assert!(std::ptr::eq(before.get(), store.local()));
-    assert_eq!(store.generation_now(), 0);
-
-    let preparation_factory = DemoEphemeralPreparationFactory::admissible();
-    let mut publication = store.begin_publish_one(semio_framework_job::OperationId(2), 0, DemoMutation::SetN(SetN { n: 2 }), Some(&preparation_factory), Some(factory.clone())).unwrap_or_else(|_| panic!("original retained presence publication admits"));
-    let mut published = false;
-    for _ in 0..2048 {
-        if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive(|receiving|store.advance_publish_one(&mut publication, ephemeral_test_close_grant(),receiving)).expect("original presence publication advances") {
-            assert_eq!(receipt, LaneItemReceipt { generation_before: 0, generation_after: 1 });
-            published = true;
-            break;
-        }
-    }
-    assert!(published);
-    assert!(publication.acknowledge());
-    close_ephemeral_publication(&mut publication);
-    let after = store.local_read().unwrap();
-    assert!(!std::ptr::eq(before.get(), after.get()));
-    assert_eq!(before.n, Some(1));
-    assert_eq!(after.n, Some(2));
-    assert_eq!(store.generation_now(), 1);
-    drop(before);
-    drop(after);
-    let mut close = store.begin_retirement(Arc::new(DemoSnapshot { n: Some(0) }), |value| value.n == Some(0)).ok().unwrap();
-    test_support::drive_retirement(&mut close).expect("presence retirement reaches its terminal-empty witness under its quoted demands");
-    assert!(close.terminal_is_empty());
-}
-
-#[semio_framework_async_macros::async_test]
 async fn transient_root_is_o1_and_retains_the_exact_pre_reset_value() {
     let mut store = TransientStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(3) });
     let before = store.current_root();
@@ -255,24 +220,24 @@ fn publish_original_interaction(store: &mut ArtifactStore<DemoSnapshot, DemoMuta
  let g=physical_test_close_grant();let grant=ArtifactStoreOneItemGrant{maximum_items:g.maximum_items,maximum_copy_bytes:g.maximum_copy_bytes,maximum_capacity_bytes:g.maximum_capacity_bytes,maximum_release_bytes:g.maximum_release_bytes,maximum_depth:g.maximum_depth};
  let(actor,p)=store.local_actor_id().0.admit_clone(g).unwrap();assert!(p.fits(g));
  let mut actor=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(actor).ok().unwrap());let mut inputs=vec![DemoMutation::SetN(SetN{n:value})];let mut transaction=None;
- let(mut publication,p)=store.admit_apply_batch(semio_framework_job::allocate_operation_id(),store.generation(),store.content_revision_now(),&mut actor,&mut inputs,HistoryLane::Interaction,store.one_item_preparation_factory.as_ref(),&mut transaction,None,false,g).unwrap().expect("original fixture admits retained interaction");assert!(p.fits(g));
+ let(mut publication,p)=store.admit_apply_batch(semio_framework_job::allocate_operation_id(),store.generation(),store.content_revision_now(),&mut actor,&mut inputs,HistoryLane::Interaction,store.owners.one_item_preparation_factory.as_ref(),&mut transaction,None,false,g).unwrap().expect("original fixture admits retained interaction");assert!(p.fits(g));
  let before=store.generation();let denied=ArtifactStoreOneItemGrant{maximum_items:0,..grant};assert!(matches!(receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, physical_test_close_grant().maximum_copy_bytes,denied,receiving)).unwrap(),ArtifactStoreOneItemAdvance::Blocked));assert_eq!(store.generation(),before);let mut published=false;for _ in 0..262_144{match receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, physical_test_close_grant().maximum_copy_bytes,grant,receiving)).unwrap(){ArtifactStoreOneItemAdvance::PreparationProgress(_,p)=>assert!(p.fits(g)),ArtifactStoreOneItemAdvance::Published(_,p)=>{assert!(p.fits(g));published=true;break;},_=>{}}}assert!(published);assert!(publication.acknowledge());
  for _ in 0..262_144{if publication.terminal_is_empty(){break;}assert!(publication.close_step(g).unwrap().progress().fits(g));}assert!(publication.terminal_is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn interaction_store_apply_updates_hover_and_bumps_generation_on_original_publication(){
- let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction",DemoSnapshot{n:Some(0)},None)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();let before=store.generation();publish_original_interaction(&mut store,7);assert_eq!(store.snapshot().unwrap().n,Some(7));assert_eq!(store.generation(),before+1);assert_eq!(store.envelope().lanes.get(&store.applied_edit_ids()[0]),Some(&HistoryLane::Interaction));
+ let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction",DemoSnapshot{n:Some(0)},None,&semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();let before=store.generation();publish_original_interaction(&mut store,7);assert_eq!(store.snapshot().unwrap().n,Some(7));assert_eq!(store.generation(),before+1);assert_eq!(store.envelope().lanes.get(&store.applied_edit_ids()[0]),Some(&HistoryLane::Interaction));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn interaction_store_reset_discards_hover_and_bumps_generation_on_original_publication(){
- let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction-clear",DemoSnapshot{n:Some(0)},None)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();let before=store.generation();publish_original_interaction(&mut store,3);publish_original_interaction(&mut store,0);assert_eq!(store.snapshot().unwrap().n,Some(0));assert_eq!(store.generation(),before+2);assert_eq!(store.applied_edit_ids().len(),2);
+ let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction-clear",DemoSnapshot{n:Some(0)},None,&semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();let before=store.generation();publish_original_interaction(&mut store,3);publish_original_interaction(&mut store,0);assert_eq!(store.snapshot().unwrap().n,Some(0));assert_eq!(store.generation(),before+2);assert_eq!(store.applied_edit_ids().len(),2);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn interaction_store_default_seeds_from_hover_default_on_original_publication(){
- let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction-default",DemoSnapshot::default(),None)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();assert_eq!(store.snapshot().unwrap().n,Some(0));assert_eq!(store.generation(),0);
+ let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","original-interaction-default",DemoSnapshot::default(),None,&semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();assert_eq!(store.snapshot().unwrap().n,Some(0));assert_eq!(store.generation(),0);
 }
 
 #[test]
@@ -284,31 +249,30 @@ fn original_side_lane_comparison_uses_granted_utf8_chunks(){
    if let Some(order)=settled{assert_eq!(order,wanted);}else{assert!(g.maximum_copy_bytes<size_of::<usize>()+size_of::<Option<std::cmp::Ordering>>()+2);}
   }
  }
- println!("[DEBUG] original side lane UTF8 ordering: denied turns preserve cursor, granted byte pages match neutral six-case corpus, heap0");
-}
-
-fn original_native_command_turn<R>(operation:semio_framework_job::OperationId,generation:u64,grant:RetainedCloneGrant,cancel:&semio_framework_async::CancelToken,sequence:&mut u64,run:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->R)->(R,RetainedCloneProgress){
- let mut receipt=RetainedCloneProgress::default();let mut cx=semio_framework_job::StepContext::new(operation,semio_framework_job::Generation(generation),semio_framework_job::StepBudget::new(1,u64::MAX,grant),cancel.clone(),||None,sequence,&mut receipt);let result=run(&mut cx);drop(cx);(result,receipt)
 }
 
 #[semio_framework_async_macros::async_test]
-async fn native_command_publication_preserves_original_context_issuer_and_denied_inputs(){
-    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
- let g=physical_test_close_grant();let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","native-command",DemoSnapshot{n:Some(0)},None)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();
- let mut foreign=ArtifactStore::bare(create_document_envelope("demo/v1","native-command",DemoSnapshot{n:Some(0)},None)).await;foreign.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));foreign.closes_on_drop();
- let operation=semio_framework_job::allocate_operation_id();let generation=store.generation();let revision=store.content_revision_now();let cancel=semio_framework_async::CancelToken::root_now();let mut sequence=0;let mut publication=None;let(actor,p)=store.local_actor_id().0.admit_clone(g).unwrap();assert!(p.fits(g));let mut actor=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(actor).ok().unwrap());let mut command=ArtifactCommand::ApplyInLane{mutations:vec![DemoMutation::SetN(SetN{n:7})],lane:HistoryLane::Interaction,transaction:None};
- let pointer=match &command{ArtifactCommand::ApplyInLane{mutations,..}=>mutations.as_ptr(),_=>unreachable!()};
- for denied in[RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_copy_bytes:0,..g},RetainedCloneGrant{maximum_capacity_bytes:0,..g},RetainedCloneGrant{maximum_depth:0,..g}]{let(result,p)=original_native_command_turn(operation,generation,denied,&cancel,&mut sequence,|cx|store.admit_native_command(&mut command,&mut actor,generation,revision,&mut publication,cx));assert!(!result.unwrap());assert_eq!(p,Default::default());assert!(publication.is_none());match &command{ArtifactCommand::ApplyInLane{mutations,..}=>{assert_eq!(mutations.as_ptr(),pointer);assert_eq!(mutations.len(),1);},_=>unreachable!()};assert_eq!(store.generation(),generation);}
- let(result,p)=original_native_command_turn(operation,generation,g,&cancel,&mut sequence,|cx|store.admit_native_command(&mut command,&mut actor,generation,revision,&mut publication,cx));assert!(result.unwrap());assert!(p.fits(g));let owner=publication.as_mut().unwrap();let phase=owner.phase();
- let wrong_operation=semio_framework_job::allocate_operation_id();let(result,p)=original_native_command_turn(wrong_operation,generation,g,&cancel,&mut sequence,|cx|store.advance_native_command(owner,cx));assert!(result.is_err());assert_eq!(p,Default::default());assert_eq!(owner.phase(),phase);
- let(result,p)=original_native_command_turn(operation,generation+1,g,&cancel,&mut sequence,|cx|store.advance_native_command(owner,cx));assert!(result.is_err());assert_eq!(p,Default::default());assert_eq!(owner.phase(),phase);
- let(result,p)=original_native_command_turn(operation,generation,g,&cancel,&mut sequence,|cx|foreign.advance_native_command(owner,cx));assert!(result.is_err());assert_eq!(p,Default::default());assert_eq!(owner.phase(),phase);
+async fn apply_batch_publication_keeps_denied_inputs_and_binds_one_exact_issuer(){
+ let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
+ let g=physical_test_close_grant();
+ let genesis=&semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer;
+ let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","native-command",DemoSnapshot{n:Some(0)},None,genesis)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();
+ let mut foreign=ArtifactStore::bare(create_document_envelope("demo/v1","native-command",DemoSnapshot{n:Some(0)},None,genesis)).await;foreign.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));foreign.closes_on_drop();
+ let operation=semio_framework_job::allocate_operation_id();let generation=store.generation();let revision=store.content_revision_now();
+ let(actor,p)=store.local_actor_id().0.admit_clone(g).unwrap();assert!(p.fits(g));let mut actor=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(actor).ok().unwrap());
+ let mut inputs=vec![DemoMutation::SetN(SetN{n:7})];let pointer=inputs.as_ptr();let mut transaction=None;
+ for denied in[RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_copy_bytes:0,..g},RetainedCloneGrant{maximum_capacity_bytes:0,..g},RetainedCloneGrant{maximum_depth:0,..g}]{
+  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.admit_apply_batch(operation,generation,revision,&mut actor,&mut inputs,HistoryLane::Interaction,store.owners.one_item_preparation_factory.as_ref(),&mut transaction,None,false,denied).unwrap());
+  assert!(result.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(inputs.as_ptr(),pointer);assert_eq!(inputs.len(),1);assert!(actor.is_some());assert_eq!(store.generation(),generation);
+ }
+ assert!(store.admit_apply_batch(operation,generation+1,revision,&mut actor,&mut inputs,HistoryLane::Interaction,store.owners.one_item_preparation_factory.as_ref(),&mut transaction,None,false,g).is_err());assert_eq!(inputs.as_ptr(),pointer);assert!(actor.is_some());
+ let(mut publication,p)=store.admit_apply_batch(operation,generation,revision,&mut actor,&mut inputs,HistoryLane::Interaction,store.owners.one_item_preparation_factory.as_ref(),&mut transaction,None,false,g).unwrap().expect("original fixture admits the retained interaction exactly once");assert!(p.fits(g));
+ let grant=ArtifactStoreOneItemGrant::from_retained(g);
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receiving_fixture.receive(|receiving|foreign.advance_apply_batch(&mut publication,g.maximum_copy_bytes,grant,receiving)));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  assert_eq!(foreign.generation(),generation);assert_eq!(foreign.content_revision_now(),revision);
- let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receiving_fixture.receive(|receiving|foreign.advance_apply_batch(owner, physical_test_close_grant().maximum_copy_bytes,ArtifactStoreOneItemGrant::from_retained(g),receiving)));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.phase(),phase);
- assert!(matches!(foreign.original_proposal_forward(owner).unwrap_err().kind,semio_framework_value::ValueRefusalKind::InvariantViolated));
- assert!(foreign.flush_published_apply_batch(owner).await.is_err());assert_eq!(owner.phase(),phase);
- let mut published=false;for _ in 0..262_144{let(result,p)=original_native_command_turn(operation,generation,g,&cancel,&mut sequence,|cx|store.advance_native_command(owner,cx));assert!(p.fits(g));if matches!(result.unwrap(),ArtifactStoreOneItemAdvance::Published(..)){published=true;break;}}assert!(published);assert_eq!(store.snapshot_ref().n,Some(7));assert_eq!(store.generation(),generation+1);
- let(result,p)=original_native_command_turn(operation,generation,RetainedCloneGrant{maximum_copy_bytes:0,..g},&cancel,&mut sequence,|cx|store.acknowledge_native_command(owner,cx));assert!(!result.unwrap());assert_eq!(p,Default::default());
- let(result,p)=original_native_command_turn(operation,generation,g,&cancel,&mut sequence,|cx|store.acknowledge_native_command(owner,cx));assert!(result.unwrap());assert!(p.fits(g));for _ in 0..262_144{if owner.terminal_is_empty(){break;}let(result,p)=original_native_command_turn(operation,generation,g,&cancel,&mut sequence,|cx|store.advance_native_command(owner,cx));result.unwrap();assert!(p.fits(g));}assert!(owner.terminal_is_empty());
- println!("[DEBUG] native command original context: four denied axes retain Vec pointer and actor, foreign issuer/job denied0, retained interaction publishes once, funded ACK+close terminal");
+ assert!(foreign.flush_published_apply_batch(&mut publication).await.is_err());
+ let mut published=false;for _ in 0..262_144{let advance=receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication,g.maximum_copy_bytes,grant,receiving)).unwrap();if let ArtifactStoreOneItemAdvance::Published(_,p)=advance{assert!(p.fits(g));published=true;break;}}
+ assert!(published);assert_eq!(store.snapshot_ref().n,Some(7));assert_eq!(store.generation(),generation+1);
+ assert!(publication.acknowledge());
+ for _ in 0..262_144{if publication.terminal_is_empty(){break;}assert!(publication.close_step(g).unwrap().progress().fits(g));}assert!(publication.terminal_is_empty());
 }

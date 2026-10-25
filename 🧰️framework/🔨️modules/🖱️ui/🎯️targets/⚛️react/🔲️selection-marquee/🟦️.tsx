@@ -46,12 +46,12 @@ export const SELECTION_DRAG_DIRECTION_THRESHOLD_PX = 2;
 
 export type SelectionMarqueeMethod = "lasso" | "rectangle";
 
-/** 🖱️ Crossing selection when the drag ends left of the start (partial overlap). */
+/** ❎️ Crossing selection when the drag ends left of the start (partial overlap). */
 export function marqueeIsCrossing(startX: number, endX: number): boolean {
   return endX < startX;
 }
 
-/** 🖱️ Lasso uses the first horizontal step; rectangle compares start vs end. */
+/** ✖️ Lasso uses the first horizontal step; rectangle compares start vs end. */
 export function marqueeIsCrossingFromPath(path: readonly SelectionMarqueePoint[], method: SelectionMarqueeMethod = "rectangle"): boolean {
   const start = path[0];
   if (!start) return false;
@@ -71,12 +71,12 @@ export function marqueeCoverageFromDrag(startX: number, endX: number): Selection
   return marqueeIsCrossing(startX, endX) ? "partial" : "full";
 }
 
-/** 🖱️ Maps gesture path to marquee coverage (lasso first horizontal step). */
+/** 🧶️ Maps gesture path to marquee coverage (lasso first horizontal step). */
 export function marqueeCoverageFromPath(path: readonly SelectionMarqueePoint[], method: SelectionMarqueeMethod = "rectangle"): SelectionMarqueeCoverage {
   return marqueeIsCrossingFromPath(path, method) ? "partial" : "full";
 }
 
-/** 🖱️ Resolves marquee coverage for rectangle or lasso gestures. */
+/** 🔎️ Resolves marquee coverage for rectangle or lasso gestures. */
 export function marqueeCoverageFromGesture(input: { readonly method: SelectionMarqueeMethod; readonly startX: number; readonly endX: number; readonly path: readonly SelectionMarqueePoint[] }): SelectionMarqueeCoverage {
   if (input.method === "lasso" && input.path.length > 0) {
     return marqueeCoverageFromPath(input.path, "lasso");
@@ -106,7 +106,7 @@ export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolea
   return "replace";
 }
 
-/** 🎯️ Applies a marquee-drag `MergeMode` when committing ids — `"range"` has no meaning without
+/** 🔀️ Applies a marquee-drag `MergeMode` when committing ids — `"range"` has no meaning without
  * an ordered topology here (see `marqueeModeFromModifiers`'s doc), so it falls back to `"replace"`. */
 export function selectionMergeIds(mode: MergeMode, current: readonly string[], incoming: readonly string[]): string[] {
   const currentSet = new Set(current);

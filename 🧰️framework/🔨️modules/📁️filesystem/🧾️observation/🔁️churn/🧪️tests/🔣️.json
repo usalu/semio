@@ -1,0 +1,14 @@
+{
+ "version": 1,
+ "scenarios": [
+  {"id": "clean", "layers": ["read"], "outcomes": ["ok"], "environment": {"LANG": "en_US.UTF-8"}},
+  {"id": "recovers", "layers": ["read"], "outcomes": ["bytes", "vanished", "ok"], "environment": {"LANG": "en_US.UTF-8"}},
+  {"id": "exhausts-read", "layers": ["read"], "outcomes": ["bytes", "bytes", "bytes", "bytes", "bytes", "bytes"], "environment": {"LANG": "en_US.UTF-8"}},
+  {"id": "other-errors-pass-through", "layers": ["snapshot", "read"], "outcomes": ["bytes", "other"], "environment": {"LANG": "en_US.UTF-8"}},
+  {"id": "wider-layer-retries-exhausted-narrow", "layers": ["snapshot", "read"], "outcomes": ["roster", "roster", "roster", "roster", "roster", "roster", "ok"], "environment": {"LANG": "en_US.UTF-8"}},
+  {"id": "total-attempts-are-the-product-of-the-layer-bounds", "layers": ["snapshot", "read"], "outcomes": ["output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output", "output"], "environment": {"LANG": "en_US.UTF-8"}},
+  {"id": "three-layers-recover", "layers": ["build", "snapshot", "read"], "outcomes": ["appeared", "ok"], "environment": {"LANG": "en_US.UTF-8"}},
+  {"id": "german", "layers": ["read"], "outcomes": ["identity", "ok"], "environment": {"LANG": "de_DE.UTF-8"}},
+  {"id": "both-languages-without-choice", "layers": ["read"], "outcomes": ["length", "ok"], "environment": {}}
+ ]
+}

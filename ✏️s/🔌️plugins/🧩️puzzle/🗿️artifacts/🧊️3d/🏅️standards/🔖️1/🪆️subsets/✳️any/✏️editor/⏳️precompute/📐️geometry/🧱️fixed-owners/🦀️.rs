@@ -174,7 +174,7 @@ impl Drop for OwnerReservationLimit {
 
 #[derive(Debug)]
 pub struct FixedOwnerVec<T, const N: usize = FIXED_OWNER_SLOTS> {
-    pages: Vec<Box<[MaybeUninit<T>]>>,
+    pub(super) pages: Vec<Box<[MaybeUninit<T>]>>,
     sealed: bool,
     pub(super) len: usize,
 }
@@ -350,7 +350,7 @@ impl<T, const N: usize> Drop for FixedOwnerVec<T, N> {
 
 #[derive(Debug)]
 pub struct FixedOwnerMap<K, V, const N: usize = FIXED_OWNER_SLOTS, const S: usize = OWNER_SUB_PAGE_UNBOUNDED> {
-    pages: Vec<Box<[Option<(K, V)>]>>,
+    pub(super) pages: Vec<Box<[Option<(K, V)>]>>,
     sealed: bool,
     pub(super) len: usize,
 }

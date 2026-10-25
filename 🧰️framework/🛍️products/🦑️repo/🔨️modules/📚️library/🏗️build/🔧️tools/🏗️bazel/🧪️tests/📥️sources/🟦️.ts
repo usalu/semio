@@ -1,6 +1,6 @@
 /** 🧭️ Contract: Bazel source inputs follow the Nx transitive semantics, stay proportional to the inventory through per-directory filegroups, and refuse dangling task dependencies and unbounded caches with precise reports. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {minimatch} from "minimatch";
 import {mkdirSync,mkdtempSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";

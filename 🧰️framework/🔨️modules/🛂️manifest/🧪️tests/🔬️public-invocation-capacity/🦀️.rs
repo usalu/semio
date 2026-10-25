@@ -49,14 +49,14 @@ async fn the_pager_fills_every_page_without_exceeding_the_bound() {
     assert_eq!(pages.concat(), payload, "a page run must reassemble into its exact payload");
 }
 
-/// ⚖️ LAW: an empty payload still produces one addressed page, so a producer never sends a run of
+/// 📃️ LAW: an empty payload still produces one addressed page, so a producer never sends a run of
 /// zero pages the guest would refuse.
 #[semio_framework_async_macros::async_test]
 async fn an_empty_payload_is_one_empty_page() {
     assert_eq!(public_invocation_string_pages(""), vec![String::new()]);
 }
 
-/// ⚖️ LAW: the cost function charges every character at least what the encoder can write for it, so
+/// 💲️ LAW: the cost function charges every character at least what the encoder can write for it, so
 /// a page cut by it is admitted by `validate_public_json_envelope` under either escaping policy.
 #[semio_framework_async_macros::async_test]
 async fn the_cost_function_never_undercharges_a_character() {

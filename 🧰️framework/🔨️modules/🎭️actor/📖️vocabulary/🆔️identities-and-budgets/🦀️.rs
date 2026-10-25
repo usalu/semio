@@ -101,7 +101,7 @@ impl PackageHash {
 //#endregion 📦️PackageId
 
 //#region 🆔️ActorId
-/// 🆔️ Bit-packed actor identifier: `plugin_ordinal:u16 | kind:u2 | ordinal:u32 | generation:u14`.
+/// 🔢️ Bit-packed actor identifier: `plugin_ordinal:u16 | kind:u2 | ordinal:u32 | generation:u14`.
 /// Generation makes restart-after-trap addressable without id reuse. The kernel re-exports this
 /// type as `RuntimeActorId` (`kernel::ActorId` already names the presence/collab actor — never shadow).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
@@ -283,7 +283,7 @@ impl Lane {
 //#endregion 🛣️Lane
 
 //#region ⚖️Budget
-/// ⚖️ Per-turn resource ceilings enforced host-side. Replaces `PLUGIN_FUEL_BUDGET`.
+/// 💰️ Per-turn resource ceilings enforced host-side. Replaces `PLUGIN_FUEL_BUDGET`.
 #[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::semio_framework_value")]
 pub struct Budget {
@@ -298,7 +298,7 @@ pub struct Budget {
 }
 
 impl Budget {
-    /// ⚖️ Scales a `Throttled { factor }` failure stage onto this budget — fuel/wall/effects/patch
+    /// 🎚️ Scales a `Throttled { factor }` failure stage onto this budget — fuel/wall/effects/patch
     /// bytes shrink; `mailbox_len`/`ui_nodes` ceilings are left alone (they bound queued/committed
     /// state, not this turn's spend).
     pub async fn scaled(self, factor: f32) -> Budget {
@@ -341,7 +341,7 @@ impl Budget {
 }
 
 //#region ⚖️LaneDefaults
-/// ⚖️ Default [`Budget`] per [`Lane`] — Interactive 4ms/2M fuel, UserVisible 16ms, Background 50ms,
+/// 🚦️ Default [`Budget`] per [`Lane`] — Interactive 4ms/2M fuel, UserVisible 16ms, Background 50ms,
 /// Maintenance 200ms (the ladder the design spec fixes explicitly); the remaining ceilings scale
 /// down the same tiers so background/maintenance work can never out-spend memory/UI/mailbox room
 /// an interactive turn would need.

@@ -21,7 +21,7 @@ export type ParseResult<T> = { readonly success: true; readonly data: T } | { re
 /** ⏱️ RFC-3339 instant, the spelling every `*_at` column serialises to. */
 export type Timestamp = string;
 
-/** ⏱️ A `Timestamp` column that is nullable in the DDL. */
+/** ⌛️ A `Timestamp` column that is nullable in the DDL. */
 export type NullableTimestamp = Timestamp | null;
 
 /** 🔤️ A `text` column that is nullable in the DDL. */

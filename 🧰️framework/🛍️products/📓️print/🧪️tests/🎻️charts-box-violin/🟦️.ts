@@ -28,7 +28,7 @@ const grid = (value: number): number => {
   return value === 0 ? 0 : Math.round(value * factor) / factor;
 };
 
-/** 🎯️ Compiles one committed fixture of this case and returns its whole projection. */
+/** 🔨️ Compiles one committed fixture of this case and returns its whole projection. */
 async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection: ProbeProjection }> {
   const records = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://🎻️charts-box-violin/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
@@ -36,7 +36,7 @@ async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection
 // #endregion 🧫️Vectors
 
 // #region 🔮️Oracles
-/** 🔮️ Tukey's five-number summary of one group on d3-array's R-7 quantiles. */
+/** 👥️ Tukey's five-number summary of one group on d3-array's R-7 quantiles. */
 function summary(group: readonly number[]): number[] {
   const sorted = [...group].sort((a, b) => a - b);
   const q1 = quantileSorted(sorted, 0.25)!;
@@ -48,7 +48,7 @@ function summary(group: readonly number[]): number[] {
   return [lower, q1, q2, q3, upper].map(grid);
 }
 
-/** 🔮️ The letter-value pairs of one group at the depths a boxen plot draws. */
+/** 🔤️ The letter-value pairs of one group at the depths a boxen plot draws. */
 function letters(group: readonly number[], depth: number): number[] {
   const sorted = [...group].sort((a, b) => a - b);
   return Array.from({ length: depth }, (_, k) => {
@@ -72,21 +72,21 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await probe(ctx, "quartiles.tex")),
     },
     "whiskers": {
-      /** 🔮️ One Tukey summary per group level, in the level order the table declares. */
+      /** 🎚️ One Tukey summary per group level, in the level order the table declares. */
       oracle: () => ({ projection: { "geometry/box": GROUPS.flatMap((group) => summary(group)) } }),
-      /** 🎯️ The `geometry/box` records the grouped box family emitted. */
+      /** 🗃️ The `geometry/box` records the grouped box family emitted. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/box": (await probe(ctx, "whiskers.tex")).projection["geometry/box"] ?? [] } }),
     },
     "letter": {
-      /** 🔮️ Three letter depths per group, each a quantile pair around the median. */
+      /** 🥢️ Three letter depths per group, each a quantile pair around the median. */
       oracle: () => ({ projection: { "geometry/letter": GROUPS.flatMap((group) => letters(group, 3)) } }),
-      /** 🎯️ The `geometry/letter` records the boxen plot emitted. */
+      /** ✉️ The `geometry/letter` records the boxen plot emitted. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/letter": (await probe(ctx, "letter.tex")).projection["geometry/letter"] ?? [] } }),
     },
     "violin": {
-      /** 🔮️ The same summaries the box family reports, because a boxed violin composes it. */
+      /** 🧾️ The same summaries the box family reports, because a boxed violin composes it. */
       oracle: () => ({ projection: { "geometry/box": GROUPS.flatMap((group) => summary(group)) } }),
-      /** 🎯️ The `geometry/box` records the boxed violin emitted. */
+      /** 🎻️ The `geometry/box` records the boxed violin emitted. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/box": (await probe(ctx, "violin.tex")).projection["geometry/box"] ?? [] } }),
     },
   },

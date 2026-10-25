@@ -4,13 +4,13 @@ import {mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:f
 import {tmpdir} from "node:os";
 import {createRequire} from "node:module";
 import {join} from "node:path";
-import buildPolicy from "../../../../../🏗️build/🔣️policy.json" with {type:"json"};
-import {WORKER_ACTION_KINDS_V1,currentWorkerHostV1,planWorkersV1,readWorkerPolicyV1,workerContractFieldsV1} from "../../../../../🏗️build/👷️workers/🟦️.ts";
+import buildPolicy from "../../../../../📦️packages/🟦️typescript/🏗️build/🔣️policy/🔣️json/🟦️.ts";
+import {WORKER_ACTION_KINDS_V1,currentWorkerHostV1,planWorkersV1,readWorkerPolicyV1,workerContractFieldsV1} from "../../../../../📦️packages/🟦️typescript/🏗️build/👷️workers/🟦️.ts";
 import executors from "../../../../../📦️packages/🟦️typescript/📋️executors.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {nxBatchCapableV1,nxWorkerSettingsV1} from "../🟦️.ts";
 
-const root=join(import.meta.dir,"../../../../../../../../../..").replace(/[\\/]+$/u,""),installed=createRequire(join(root,"package.json"));
+const root=join(import.meta.dir,"../../../../../../../../../..").replace(/[\\/]+$/u,""),installed=createRequire(join(root,".nx/installation/package.json"));
 
 /** 🧬️ Applies dotted-path changes to a copy of the authored worker policy. */
 function changed(changes:Readonly<Record<string,unknown>>){
@@ -44,7 +44,7 @@ test("the batch variable is the one the installed Nx tests and an executor decla
 });
 
 test("the Nx build environment takes an explicit job count first and the neutral plan otherwise, and the worker switch never changes it",async()=>{
- const{nxBuildEnvironmentV1}=await import("../../../📜️script.ts"),planned=String(planWorkersV1(readWorkerPolicyV1(buildPolicy.workers),currentWorkerHostV1(),{}).localJobs);
+ const{nxBuildEnvironmentV1}=await import("../../../../../📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/📜️script/🟦️.ts"),planned=String(planWorkersV1(readWorkerPolicyV1(buildPolicy.workers),currentWorkerHostV1(),{}).localJobs);
  for(const[environment,expected]of [[{},planned],[{SEMIO_BUILD_PARALLEL:"5"},"5"],[{NX_PARALLEL:"3"},"3"],[{SEMIO_BUILD_PARALLEL:"5",NX_PARALLEL:"3"},"5"],[{SEMIO_BUILD_WORKERS:"off"},planned],[{SEMIO_BUILD_WORKERS:"on"},planned]] as const)expect(nxBuildEnvironmentV1(root,environment as NodeJS.ProcessEnv).NX_PARALLEL,JSON.stringify(environment)).toBe(expected);
  expect(nxBuildEnvironmentV1(root,{}).NX_BATCH_MODE).toBeUndefined();
 });

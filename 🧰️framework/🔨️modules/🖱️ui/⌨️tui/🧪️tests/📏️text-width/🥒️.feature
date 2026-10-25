@@ -34,3 +34,9 @@ Feature: Terminal Text Width Model
     When the cell buffer emits terminal glyphs
     Then the glyphs preserve every combining mark with its base
     And their cell widths agree with the independent Unicode library
+
+  Scenario: Cursor boundaries cost one line and equal the independent segmenter
+    Given texts of many lines with emoji joiners, combining marks, carriage returns and flags
+    When the boundary at, before and after every byte offset is looked up
+    Then each equals the unicode-segmentation boundary
+    And a lookup in a megabyte of lines stays within the time of one line

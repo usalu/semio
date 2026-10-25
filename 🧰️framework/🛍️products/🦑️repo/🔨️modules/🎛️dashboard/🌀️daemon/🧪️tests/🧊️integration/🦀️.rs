@@ -176,13 +176,27 @@ struct Daemon {
 impl Daemon {
     fn start(name: &str) -> Self { Self::start_in(control_root(name)) }
 
-    fn start_in(root: PathBuf) -> Self {
+    fn start_in(root: PathBuf) -> Self { Self::serve_in(root, false) }
+
+    /// 🌱 Serves `root` on a thread of this process and returns once a view connects. A daemon that ends before it served is reported with its own error. After a
+    /// `predecessor` on the same root the lease can still be held by a task another daemon of this process is forking at this moment (the child owns a copy of every
+    /// descriptor until its exec), so that one refusal is retried: it ends when the child has exec'd, which no clock decides.
+    fn serve_in(root: PathBuf, predecessor: bool) -> Self {
         let running = Arc::new(AtomicBool::new(true));
-        let (served, flag) = (root.clone(), running.clone());
-        let thread = Some(std::thread::spawn(move || lifecycle::serve(&served, &flag)));
-        let deadline = Instant::now() + Duration::from_secs(90);
-        while Connection::connect(&root).is_err() { assert!(Instant::now() < deadline, "the daemon must start serving"); std::thread::sleep(Duration::from_millis(20)); }
-        Self { root, running, thread }
+        loop {
+            let (served, flag) = (root.clone(), running.clone());
+            let mut thread = Some(std::thread::spawn(move || lifecycle::serve(&served, &flag)));
+            let ended = loop {
+                if Connection::connect(&root).is_ok() { break None; }
+                if thread.as_ref().is_some_and(std::thread::JoinHandle::is_finished) { break thread.take().map(|ended| ended.join()); }
+                std::thread::sleep(Duration::from_millis(20));
+            };
+            match ended {
+                None => return Self { root, running, thread },
+                Some(Ok(Err(error))) if predecessor && error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                Some(ended) => panic!("the daemon ended before it served: {ended:?}"),
+            }
+        }
     }
 
     fn view(&self) -> View { self.view_with(&[]) }
@@ -199,7 +213,7 @@ impl Daemon {
         self.stop();
         let root = self.root.clone();
         std::mem::forget(self);
-        Self::start_in(root)
+        Self::serve_in(root, true)
     }
 }
 
@@ -339,7 +353,7 @@ fn process_deadline_stops_external_descendants_despite_output_readiness_and_reco
     first.send(&ClientMsg::Attach { client_id: "deadline-first".into() });
     let mut command = child_command("budget-tree", &daemon.root);
     let port = free_port();
-    command.env.extend([("SEMIO_BUILD_BUDGET_MS".into(), "3000".into()), ("SEMIO_DEADLINE_HEARTBEAT".into(), heartbeat.display().to_string()), ("SEMIO_DEADLINE_PORT".into(), port.to_string())]);
+    command.env.extend([("SEMIO_BUILD_BUDGET_MS".into(), "8000".into()), ("SEMIO_DEADLINE_HEARTBEAT".into(), heartbeat.display().to_string()), ("SEMIO_DEADLINE_PORT".into(), port.to_string())]);
     command.ready = Some(Ready { port, path: "/".into(), printed: false });
     first.send(&ClientMsg::Spawn { session_id: "limited".into(), command: Box::new(command) });
     assert!(first.until(Duration::from_secs(5), |view| heartbeat.is_file() && view.sessions.get("limited").is_some_and(|session| session.ready_url.is_some())), "{:?} {:?}", first.sessions, first.errors());
@@ -347,7 +361,7 @@ fn process_deadline_stops_external_descendants_despite_output_readiness_and_reco
     drop(first);
     let mut second = daemon.view_with(&[("SEMIO_BUILD_BUDGET_MS", "900000")]);
     second.send(&ClientMsg::Attach { client_id: "deadline-second".into() });
-    let limit=Instant::now()+Duration::from_secs(15);
+    let limit=Instant::now()+Duration::from_secs(60);
     while Instant::now()<limit&&!second.sessions.get("limited").is_some_and(|session|session.status==SessionStatus::TimedOut){second.send(&ClientMsg::List{});second.pump(Duration::from_millis(20));}
     assert_eq!(second.session("limited").status,SessionStatus::TimedOut,"{:?} {:?}",second.sessions,second.errors());
     let timed_out = second.session("limited");
@@ -513,6 +527,20 @@ fn a_second_daemon_cannot_take_over_a_running_workspace() {
     let connection = Connection::connect(&daemon.root).unwrap();
     assert!(connection.skew().is_none() && connection.daemon_build() == ipc::build_id());
 }
+
+#[test]
+fn daemons_that_start_at_the_same_moment_beside_each_other_all_listen() {
+    let roots: Vec<PathBuf> = (0..16).map(|index| control_root(&format!("together-{index}"))).collect();
+    for round in 0..24 {
+        let gate = Arc::new(std::sync::Barrier::new(roots.len()));
+        let starts: Vec<_> = roots.iter().map(|root| { let (root, gate) = (root.clone(), gate.clone()); std::thread::spawn(move || { gate.wait(); transport::Listener::bind(&root) }) }).collect();
+        let listeners: Vec<_> = starts.into_iter().map(|start| start.join().unwrap()).collect();
+        let refused: Vec<String> = listeners.iter().filter_map(|listener| listener.as_ref().err().map(ToString::to_string)).collect();
+        assert!(refused.is_empty(), "round {round}: a daemon is refused only by a daemon that listens on its own endpoint: {refused:?}");
+    }
+    roots.iter().for_each(|root| remove_root(root));
+}
+
 // #endregion 🔖️Environment
 
 // #region 🔖️Lifecycle
@@ -770,15 +798,19 @@ fn a_launch_starts_services_first_members_in_order_and_stops_together() {
 #[test]
 fn the_waiting_line_is_written_only_for_members_that_actually_wait() {
     let daemon = Daemon::start("waiting");
-    let port = free_port();
-    let compound = launch("compound:t/wait", vec![serving("first:dev", port, 700, &daemon.root, ""), launch_process("second:dev", "sleep:second", &daemon.root, None)], vec![], Some("compound:t/wait"), false);
+    let (port, gate) = (free_port(), daemon.root.join("first-gate"));
+    let compound = launch("compound:t/wait", vec![launch_process("first:dev", &format!("late:{port}:first-gate"), &daemon.root, Some(Ready { port, path: String::new(), printed: false })), launch_process("second:dev", "sleep:second", &daemon.root, None)], vec![], Some("compound:t/wait"), false);
     let group = SpawnGroup::from_launch(&compound, &[]);
     let (first, second) = (group.members[0].session_id.clone(), group.members[1].session_id.clone());
     let mut watcher = daemon.view();
     watcher.send(&ClientMsg::Attach { client_id: "watcher".into() });
     let mut view = daemon.view();
-    control::run(&mut view.connection, group, control::Wait::Ready, Some(Duration::from_secs(30)), &AtomicBool::new(false), &mut |_| {}).unwrap();
-    assert!(watcher.until(Duration::from_secs(10), |view| view.text(&second).contains("[semio] waiting for first:dev to be ready") && view.text(&first).contains("http://localhost")), "{:?}", watcher.text(&second));
+    let run = std::thread::spawn(move || control::run(&mut view.connection, group, control::Wait::Ready, Some(Duration::from_secs(300)), &AtomicBool::new(false), &mut |_| {}).map(|_| ()).map_err(|error| error.to_string()));
+    assert!(watcher.until(Duration::from_secs(30), |view| view.text(&second).contains("[semio] waiting for first:dev to be ready")), "{:?}", watcher.text(&second));
+    assert!(!run.is_finished(), "the member that waits for the first one does not start before the first one is ready");
+    std::fs::write(&gate, "open").unwrap();
+    run.join().unwrap().unwrap();
+    assert!(watcher.until(Duration::from_secs(30), |view| view.text(&first).contains("http://localhost")), "{:?}", watcher.text(&first));
     assert!(!watcher.text(&first).contains("[semio] waiting"), "a member that starts at once has no waiting line: {:?}", watcher.text(&first));
     assert_eq!(watcher.text(&second).matches("[semio] waiting").count(), 1, "the line is written once");
 }

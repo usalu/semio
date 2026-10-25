@@ -1,4 +1,4 @@
-//! 🔤️ Font roles and files: the font families, the text font roles and set, the font errors and the native font files with their read errors. See [`super`].
+//! 🎭️ Font roles and files: the font families, the text font roles and set, the font errors and the native font files with their read errors. See [`super`].
 
 use super::*;
 
@@ -138,7 +138,7 @@ pub struct TextFontFiles {
     buffers: Vec<Vec<u8>>,
 }
 
-/// ⚠️ The first font file [`TextFontFiles::read`] could not read.
+/// ❌️ The first font file [`TextFontFiles::read`] could not read.
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Debug)]
 pub struct TextFontReadError {

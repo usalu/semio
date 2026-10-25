@@ -90,9 +90,9 @@
       "en": "[verify canonical-architecture] checking owner-contributed dependency, state and I/O contracts…",
       "de": "[verify canonical-architecture] Verträge der Eigentümer für Abhängigkeiten, Zustand und E/A werden geprüft…"
     },
-    "gates.dependency-cruiser-boundaries": {
-      "en": "[verify] dependency-cruiser boundaries…",
-      "de": "[verify] Modulgrenzen (dependency-cruiser)…"
+    "gates.dependency-direction": {
+      "en": "[verify] dependency direction (taxonomy-owned rules)…",
+      "de": "[verify] Abhängigkeitsrichtung (Regeln der Taxonomie)…"
     },
     "gates.generated-catalog-freshness": {
       "en": "[verify] generated catalog freshness…",

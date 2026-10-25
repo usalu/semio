@@ -17,8 +17,7 @@
         "app:build",
         "--output-style=stream",
         "--configuration=release"
-      ],
-      "javascript": true
+      ]
     },
     {
       "name": "opaque-tail",
@@ -38,8 +37,7 @@
         "--",
         "--tool=bazel",
         "--output=opaque"
-      ],
-      "javascript": true
+      ]
     },
     {
       "name": "tools-version",
@@ -52,8 +50,7 @@
       "main": [
         "nx",
         "--version"
-      ],
-      "javascript": false
+      ]
     },
     {
       "name": "tools-all-bazel",
@@ -67,8 +64,7 @@
       "main": [
         "nx",
         "--version"
-      ],
-      "javascript": false
+      ]
     },
     {
       "name": "reset",
@@ -80,8 +76,7 @@
       "main": [
         "nx",
         "reset"
-      ],
-      "javascript": false
+      ]
     },
     {
       "name": "watch",
@@ -96,7 +91,6 @@
         "run",
         "@semio-tech/framework-os-dev:dev-studio-react-release"
       ],
-      "javascript": true,
       "watch": "@semio-tech/framework-os-dev:activate-studio-react-release"
     },
     {
@@ -107,8 +101,7 @@
         "app:build"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "dependencies",
@@ -118,8 +111,7 @@
         "--all"
       ],
       "mode": "release",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "nx-tools-setup",
@@ -132,8 +124,7 @@
       "main": [
         "nx",
         "--version"
-      ],
-      "javascript": false
+      ]
     },
     {
       "name": "bazel-tools-setup",
@@ -143,8 +134,7 @@
         "setup"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "bazel-tools-setup-bazel",
@@ -154,8 +144,7 @@
         "bazel"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "bazel-reset",
@@ -164,8 +153,7 @@
         "reset"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "capacity-status",
@@ -176,8 +164,7 @@
         "--json"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "capacity-help",
@@ -187,8 +174,7 @@
         "--help"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "capacity-run",
@@ -203,8 +189,7 @@
         "app:build"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "leases-status",
@@ -216,8 +201,7 @@
         "--json"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "remote-execution-status",
@@ -227,8 +211,7 @@
         "status"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "remote-execution-env",
@@ -238,8 +221,7 @@
         "env"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "bazel-capacity",
@@ -250,8 +232,7 @@
         "--json"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "bazel-leases",
@@ -261,8 +242,7 @@
         "status"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "bazel-remote-execution",
@@ -272,8 +252,7 @@
         "status"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     },
     {
       "name": "localized-neutral-control",
@@ -285,8 +264,7 @@
         "status"
       ],
       "mode": "prototype",
-      "main": null,
-      "javascript": false
+      "main": null
     }
   ],
   "childArguments": [

@@ -36,6 +36,7 @@ semio-s-artifact-remodel-remodeling-viewer = { workspace = true }
 semio-s-artifact-remodel-remodeling-write = { workspace = true }
 
 [dev-dependencies]
+semio-framework-plugin-reactor-app = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 base64_codec = { workspace = true }
 number = { workspace = true }

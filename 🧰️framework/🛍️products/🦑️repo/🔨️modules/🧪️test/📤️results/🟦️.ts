@@ -12,7 +12,7 @@ import { type ResultArtifact } from "../🔬️probes/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 📤️Results
-/** 📤️ One executed `(scenario, implementation, role)` — the single shape every native host emits. */
+/** 🧪️ One executed `(scenario, implementation, role)` — the single shape every native host emits. */
 export type TestResult = Readonly<{
   schemaVersion?: 2;
   testId: string;
@@ -42,7 +42,7 @@ export type TestResult = Readonly<{
   diagnostics: readonly { severity: "info" | "warning" | "error"; message: string; detail?: string }[];
 }>;
 
-/** 📤️ Validates one host-emitted record against the owned result schema, returning its problems. */
+/** ✅️ Validates one host-emitted record against the owned result schema, returning its problems. */
 export function validateResult(value: unknown): string[] {
   const problems: string[] = [];
   if (!isPlainObject(value)) return ["result is not an object"];
@@ -55,7 +55,7 @@ export function validateResult(value: unknown): string[] {
   return problems;
 }
 
-/** 📤️ Reads a host's JSONL result stream, rejecting malformed records loudly rather than skipping them. */
+/** 🌊️ Reads a host's JSONL result stream, rejecting malformed records loudly rather than skipping them. */
 export function readResults(absPath: string): { results: TestResult[]; problems: string[] } {
   if (!existsSync(absPath)) return { results: [], problems: [`no result stream at ${absPath}`] };
   const results: TestResult[] = [];

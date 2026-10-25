@@ -1,9 +1,9 @@
-//! ⏱️ Scheduler and scene: the scheduled actor, the decision and turn grant records, the deficit round robin scheduler and the scene snapshot and store. See [`super`].
+//! 🎬️ Scheduler and scene: the scheduled actor, the decision and turn grant records, the deficit round robin scheduler and the scene snapshot and store. See [`super`].
 
 use super::*;
 
 //#region ⏱️Scheduler
-/// ⏱️ One actor's scheduling entry inside [`Scheduler`]: everything the DRR algorithm needs that
+/// 📋️ One actor's scheduling entry inside [`Scheduler`]: everything the DRR algorithm needs that
 /// isn't shared plugin-level bookkeeping.
 #[derive(Clone, Debug)]
 pub(super) struct ScheduledActor {
@@ -31,7 +31,7 @@ impl ScheduledActor {
     }
 }
 
-/// ⏱️ Result of one [`Scheduler::tick`] call: the turns granted this call, and (if nothing ran) the
+/// ✔️ Result of one [`Scheduler::tick`] call: the turns granted this call, and (if nothing ran) the
 /// earliest future timestamp worth ticking again for.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::semio_framework_value")]
@@ -53,7 +53,7 @@ impl Decision {
     }
 }
 
-/// ⏱️ One granted turn: which actor, on which shard, with what (possibly throttle-scaled) budget,
+/// 🎫️ One granted turn: which actor, on which shard, with what (possibly throttle-scaled) budget,
 /// and the envelopes drained from its mailbox for this turn.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::semio_framework_value")]
@@ -91,9 +91,9 @@ impl TurnGrant {
     }
 }
 
-/// ⏱️ How many envelopes a single granted turn drains from its actor's mailbox in one go.
+/// 🔂️ How many envelopes a single granted turn drains from its actor's mailbox in one go.
 
-/// ⏱️ Hierarchical deficit round-robin: level 1 fairness across plugins (packages), level 2 across
+/// ⚖️ Hierarchical deficit round-robin: level 1 fairness across plugins (packages), level 2 across
 /// each plugin's own actors. Without level 1, a plugin with 50 actors would take 50x the share of a
 /// plugin with one. Owns every actor's mailbox — `submit`/`tick`/`complete` are its only entry points.
 #[derive(Clone, Debug, Default)]
@@ -230,7 +230,7 @@ impl Scheduler {
         Decision { run, wake_at }
     }
 
-    /// ⏱️ Level-2 DRR: rotate a per-actor deficit within the candidate set, weighted by lane (and
+    /// 🪜️ Level-2 DRR: rotate a per-actor deficit within the candidate set, weighted by lane (and
     /// throttle). Returns the next actor to grant, if any candidate has enough accrued deficit —
     /// otherwise grants everyone one quantum so the first call in a burst always makes progress.
     async fn pick_level2(&mut self, candidates: &[ActorId]) -> Option<ActorId> {
@@ -264,7 +264,7 @@ impl Scheduler {
 //#endregion ⏱️Scheduler
 
 //#region 🖼️Scene
-/// 🖼️ One committed, immutable frame of a window's UI. `patches` is an opaque pack-encoded
+/// 📸️ One committed, immutable frame of a window's UI. `patches` is an opaque pack-encoded
 /// `Vec<UiPatch>` blob — see the module seam docstring; `node_count` is the host-tracked total used
 /// only for [`Budget::ui_nodes`] quota accounting.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
@@ -293,7 +293,7 @@ impl SceneSnapshot {
     }
 }
 
-/// 🖼️ Per-window scene store: a builder accumulates patches between frame boundaries;
+/// 🗃️ Per-window scene store: a builder accumulates patches between frame boundaries;
 /// [`SceneStore::commit_frame`] publishes a new immutable snapshot once per boundary. If nothing
 /// was pending, the previous snapshot is reused verbatim (same `Arc`, same revision) — the UI
 /// thread never waits on a plugin that missed the deadline.
@@ -319,7 +319,7 @@ impl SceneStore {
         self.current.clone()
     }
 
-    /// 🖼️ Stages one actor's patch for the next commit, enforcing `budget.max_patch_bytes` and
+    /// 🩹️ Stages one actor's patch for the next commit, enforcing `budget.max_patch_bytes` and
     /// `budget.ui_nodes` host-side (no guest trust). Over quota: the node-count contribution is
     /// truncated to the remaining headroom (never counted past the ceiling) and `UiQuota` is
     /// returned so the caller can warn/truncate the typed patch itself.

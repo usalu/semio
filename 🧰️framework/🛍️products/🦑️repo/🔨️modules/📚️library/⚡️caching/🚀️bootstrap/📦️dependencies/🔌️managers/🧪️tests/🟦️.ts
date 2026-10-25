@@ -9,7 +9,7 @@ import {tmpdir} from "node:os";
 import {createHash} from "node:crypto";
 import {dirname,join,relative,sep} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import * as core from "../🟦️.ts";
 import {parseJsoncV1,parseTomlV1} from "../📖️formats/🟦️.ts";
@@ -147,7 +147,7 @@ describe("package manager seam: language-agnostic contract vectors",()=>{
   for(const row of vectors.canonical){expect(core.canonicalJsonV1(row.value)).toBe(row.json);expect(core.sha256HexV1(row.json)).toBe(row.sha256);}
  });
  test("the independent Python oracle re-derives every vector",()=>{
-  const run=spawnSync(testPythonV1()??"python3",["-I",join(here,"🐍️oracle.py"),"check",join(here,"🔣️.json")],{encoding:"utf8"});
+  const run=spawnSync(testPythonV1()??"python3",["-I",join(here,"🐍️.py"),"check",join(here,"🔣️.json")],{encoding:"utf8"});
   expect(run.stderr).toBe("");
   expect(run.stdout).toContain("vectors equal the oracle");
   expect(run.status).toBe(0);

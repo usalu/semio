@@ -45,7 +45,7 @@ export type NativeStorageRebudgetRequestV1=Readonly<{version:1;expectedSequence:
 /** 🗜️ Identifies a real enforcing backing and its complete bounded host allocation. */
 export type NativeStorageBackingV1=Readonly<{identity:string;root:string;maximumPhysicalBytes:number}>;
 
-/** 🌱️ Starts an empty event projection. */
+/** 🧲️ Starts an empty event projection. */
 export function nativeStorageStateV1():NativeStorageStateV1{return{version:1,sequence:0,allocations:[]};}
 
 /** ⚖️ Includes reserved, committed and physically retiring allocations equally. */

@@ -28,7 +28,7 @@ pub fn plan(p: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot) -> Result<GltfDi
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::bind_node_mesh::BindNodeMeshMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();
@@ -73,7 +73,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<GltfSnapshot, Op> for UnbindNodeMeshMutation
 where
-    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<UnbindNodeMeshMutation>,
+    Op: protocol::ColdMutation<GltfSnapshot, ReferenceDiff = GltfDiff> + From<UnbindNodeMeshMutation> + From<crate::standards::v2_0::subsets::any::schema::mutations::bind_node_mesh::BindNodeMeshMutation>,
 {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {

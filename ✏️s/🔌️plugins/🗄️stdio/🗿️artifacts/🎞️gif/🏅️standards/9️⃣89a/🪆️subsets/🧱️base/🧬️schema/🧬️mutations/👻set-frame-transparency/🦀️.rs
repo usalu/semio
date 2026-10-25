@@ -10,8 +10,8 @@ use super::*;
 #[dsl(keyword = "set-frame-transparency")]
 #[value(rename_all = "camelCase")]
 pub struct SetFrameTransparency {
-    pub(crate) index: usize,
-    pub(crate) transparent_index: Option<u8>,
+    pub index: usize,
+    pub transparent_index: Option<u8>,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameTransparency {

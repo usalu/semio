@@ -1,1 +1,0 @@
-  const pointers=readConcurrentPointersV1(store.root),current=new Set(

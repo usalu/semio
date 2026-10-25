@@ -1,3 +1,4 @@
+import type { NativeBuildCallerCapabilitiesV1 } from "./📋️contract/🟦️.ts";
 import type{ResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {requireBuildOrchestrationContextV1,projectBuildOrchestrationCapabilitiesV1} from "./📤️orchestration/🟨️.mjs";
@@ -11,16 +12,13 @@ import {readNativeOwnerCapabilities } from "../../⚡️caching/📦️artifacts
 import type { NativeOwnerCapabilities } from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { checkScriptInvocation, readIssuedScriptProcessEnvelopeV1, scriptProcessEnvironment, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type { BuildExecutionV1, BuildGraphV1 } from "../🕸️graph/🟦️.ts";
+import type { BuildExecutionV1, BuildGraphV1 } from "../🕸️graph/📋️model/🟦️.ts";
 import type { selectBuildTasksV1 } from "../🧭️selection/🟦️.ts";
 import { resolve } from "node:path";
 import {createRequire} from "node:module";
 import {buildOperationArgumentsV1} from "../⚙️operations/🔤️options/🟦️.ts";
 /** 🪶️ Loads the Cargo execution contract only when a native owner command asks for it, so no other command pays for the Cargo test harness, its sandbox and the native build storage. */
 const issueCargoExecutionBackendV1=(...call:Parameters<typeof import("../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts").issueRepositoryCargoExecutionBackendV1>)=>(createRequire(import.meta.url)("../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts") as typeof import("../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts")).issueRepositoryCargoExecutionBackendV1(...call);
-
-/** 🏛️ Declares actual native resources granted to an owned build invocation. */
-export interface NativeBuildCallerCapabilitiesV1 { readonly tool:string; readonly workspaceRoot:string; readonly arguments:readonly string[]; readonly selection:readonly string[]; readonly buildMode:"prototype"|"release"; readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"]}>; readonly launches:readonly (readonly string[])[] }
 
 /** 🎟️ Creates the configured native grant before the build process envelope is issued. */
 export function createNativeBuildCallerCapabilitiesV1(root:string,args:readonly string[],tool:string,environment:NodeJS.ProcessEnv):NativeBuildCallerCapabilitiesV1 {
@@ -71,14 +69,15 @@ function buildTaskEnvironmentV1(root:string,invocation:ScriptInvocation,executio
   }
   const result=scriptProcessEnvironment({...readIssuedScriptProcessEnvelopeV1(invocation),capabilities:selected},{...canonical,SEMIO_BUILD_TOOL:capabilities.tool,SEMIO_WORKSPACE_ROOT:root});
   delete result.SEMIO_SCRIPT_CAPABILITIES;
+  if(orchestration===undefined)delete result.SEMIO_BUILD_GENERATION_PIN;
   if(execution.ownerArguments)result.SEMIO_OWNER_ARGUMENTS=JSON.stringify({version:1,arguments:effective});
   return result;
 }
 
-/** 🪪️ Admits only an already declared Repo request beneath its privately live original. */
+/** 🪪️ Admits only an already declared Repo request beneath its privately live original; the `--parallel` of a host capacity grant is a resource, not part of the declared identity. */
 export function readOwnedBuildInvocationV1(root:string,invocation:ScriptInvocation,args:readonly string[]):NativeBuildCallerCapabilitiesV1{
  const original=readIssuedScriptProcessEnvelopeV1(invocation),capabilities=declaredCapabilitiesV1(original.capabilities as NativeBuildCallerCapabilitiesV1);if(validateJsonSchemaSubset(schema,capabilities).length||resolve(capabilities.workspaceRoot)!==resolve(root)||capabilities.arguments[0]!=="repo")throw Error("Original Repo build caller required");
- const request:string[]=["repo"];let tool=capabilities.tool;const selected:string[]=[];for(let index=0;index<args.length;index++){const argument=args[index]!;if(argument==="--"){selected.push(...args.slice(index));break;}if(argument==="--tool"){tool=args[++index]as typeof tool;continue;}if(argument.startsWith("--tool=")){tool=argument.slice(7)as typeof tool;continue;}if(argument==="--workers"){index++;continue;}if(argument.startsWith("--workers=")){continue;}if(argument==="--graph-policy"){index++;continue;}if(argument.startsWith("--graph-policy=")){continue;}selected.push(argument);}request.push(...buildOperationArgumentsV1(selected));if(tool!==capabilities.tool||!capabilities.launches.some(launch=>JSON.stringify(launch)===JSON.stringify(request)))throw Error("Undeclared original Repo build selection");return capabilities;
+ const request:string[]=["repo"];let tool=capabilities.tool;const selected:string[]=[];for(let index=0;index<args.length;index++){const argument=args[index]!;if(argument==="--"){selected.push(...args.slice(index));break;}if(argument==="--tool"){tool=args[++index]as typeof tool;continue;}if(argument.startsWith("--tool=")){tool=argument.slice(7)as typeof tool;continue;}if(argument==="--workers"){index++;continue;}if(argument.startsWith("--workers=")){continue;}if(argument==="--graph-policy"){index++;continue;}if(argument.startsWith("--graph-policy=")){continue;}selected.push(argument);}request.push(...buildOperationArgumentsV1(selected));const granted=(list:readonly string[]):string[]=>{const kept:string[]=[];for(let position=0;position<list.length;position++){const word=list[position]!;if(word==="--"){kept.push(...list.slice(position));break;}if(word==="--parallel"){position++;continue;}if(word.startsWith("--parallel="))continue;kept.push(word);}return kept;},bare=JSON.stringify(granted(request));if(tool!==capabilities.tool||!capabilities.launches.some(launch=>JSON.stringify(granted(launch))===bare))throw Error("Undeclared original Repo build selection");return capabilities;
 }
 
 /** 🗺️ Plans one selected request into the declared neutral task roster; the composition root injects its planner so the caller never imports a build tool. */

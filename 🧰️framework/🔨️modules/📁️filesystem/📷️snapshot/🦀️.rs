@@ -50,7 +50,7 @@ fn validate_path(path: &str) -> Result<(), SourceProjectionError> {
     Ok(())
 }
 
-/// 📷️ Borrows source authorities and prevents fallback for explicit deletions.
+/// ➡️ Borrows source authorities and prevents fallback for explicit deletions.
 pub struct SourceProjection<'a> { changes: &'a [SourceChange<'a>], by_path: BTreeMap<&'a str, SourceChange<'a>> }
 
 impl<'a> SourceProjection<'a> {

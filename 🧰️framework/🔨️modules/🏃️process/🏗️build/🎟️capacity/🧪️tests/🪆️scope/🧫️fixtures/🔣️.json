@@ -59,18 +59,18 @@
   ],
   "callers": [
     "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🎫️lease/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🟦️.ts",
-    "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🔐️inheritance/👷️child/📜️script.ts",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🔐️inheritance/👷️child/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🔐️inheritance/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🟦️.ts",
-    "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🪆️scope/👷️child/📜️script.ts",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🪆️scope/👷️child/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🪆️scope/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🏗️build/🗃️state/🟦️.ts",
-    "🧰️framework/🔨️modules/🏃️process/🏗️build/🗃️state/🧪️tests/🟦️.ts",
-    "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🏗️build/🧪️tests/🏗️native/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🌊️relay/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎯️recipe/🧪️tests/🟦️.ts",
@@ -79,48 +79,50 @@
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🎟️stage/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🎟️stage/🧪️tests/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🔷️dotnet/📜️script.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧪️tests/🔬️rust-package-commands/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🎚️component-modes/🟦️.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⛓️cpu-last/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🧪️tests/🟦️.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧾️invocation/🧪️tests/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🏗️web-build/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️wasm-outputs/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/🎭️roles/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🦀️rlib-context/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/🟦️.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🏃️execution/🟦️.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🎬️stage/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/💾️storage/🧪️tests/📥️runtime/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🟦️.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🧪️tests/🟦️.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🎬️stage/🟦️.ts"
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🧪️tests/🟦️.ts"
   ],
   "census": {
-    "files": 55,
-    "literalCalls": 95,
+    "files": 52,
+    "literalCalls": 99,
     "rows": [
       {
         "path": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
         "literalCalls": 1,
+        "forwarded": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🎫️lease/🟦️.ts",
+        "literalCalls": 0,
         "forwarded": []
       },
       {
@@ -134,7 +136,7 @@
         "forwarded": []
       },
       {
-        "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🔐️inheritance/👷️child/📜️script.ts",
+        "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🔐️inheritance/👷️child/🟦️.ts",
         "literalCalls": 1,
         "forwarded": []
       },
@@ -154,13 +156,18 @@
         ]
       },
       {
-        "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🪆️scope/👷️child/📜️script.ts",
+        "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🪆️scope/👷️child/🟦️.ts",
         "literalCalls": 8,
         "forwarded": []
       },
       {
         "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🪆️scope/🟦️.ts",
         "literalCalls": 12,
+        "forwarded": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🟦️.ts",
+        "literalCalls": 7,
         "forwarded": []
       },
       {
@@ -184,18 +191,8 @@
         "forwarded": []
       },
       {
-        "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🗃️state/🧪️tests/🟦️.ts",
-        "literalCalls": 0,
-        "forwarded": []
-      },
-      {
-        "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🟦️.ts",
-        "literalCalls": 0,
-        "forwarded": []
-      },
-      {
         "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧪️tests/🏗️native/🟦️.ts",
-        "literalCalls": 5,
+        "literalCalls": 4,
         "forwarded": []
       },
       {
@@ -205,7 +202,7 @@
       },
       {
         "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎯️recipe/🧪️tests/🟦️.ts",
-        "literalCalls": 2,
+        "literalCalls": 1,
         "forwarded": []
       },
       {
@@ -234,6 +231,11 @@
         "forwarded": []
       },
       {
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts",
+        "literalCalls": 1,
+        "forwarded": []
+      },
+      {
         "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🟦️.ts",
         "literalCalls": 1,
         "forwarded": []
@@ -249,22 +251,12 @@
         "forwarded": []
       },
       {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts",
-        "literalCalls": 2,
-        "forwarded": []
-      },
-      {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
-        "literalCalls": 1,
-        "forwarded": []
-      },
-      {
         "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🔷️dotnet/📜️script.ts",
         "literalCalls": 1,
         "forwarded": []
       },
       {
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧪️tests/🔬️rust-package-commands/🟦️.ts",
         "literalCalls": 1,
         "forwarded": []
       },
@@ -274,23 +266,13 @@
         "forwarded": []
       },
       {
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🎚️component-modes/🟦️.ts",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
         "literalCalls": 1,
         "forwarded": []
       },
       {
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
-        "literalCalls": 0,
-        "forwarded": []
-      },
-      {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts",
-        "literalCalls": 0,
-        "forwarded": []
-      },
-      {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts",
-        "literalCalls": 0,
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🎚️component-modes/🟦️.ts",
+        "literalCalls": 1,
         "forwarded": []
       },
       {
@@ -299,13 +281,18 @@
         "forwarded": []
       },
       {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⛓️cpu-last/🟦️.ts",
+        "literalCalls": 0,
+        "forwarded": []
+      },
+      {
         "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🧪️tests/🟦️.ts",
         "literalCalls": 1,
         "forwarded": []
       },
       {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
-        "literalCalls": 3,
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🟦️.ts",
+        "literalCalls": 2,
         "forwarded": []
       },
       {
@@ -324,6 +311,11 @@
         "forwarded": []
       },
       {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧾️invocation/🧪️tests/🟦️.ts",
+        "literalCalls": 0,
+        "forwarded": []
+      },
+      {
         "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
         "literalCalls": 1,
         "forwarded": []
@@ -335,6 +327,16 @@
       },
       {
         "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️wasm-outputs/🟦️.ts",
+        "literalCalls": 1,
+        "forwarded": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts",
+        "literalCalls": 2,
+        "forwarded": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
         "literalCalls": 1,
         "forwarded": []
       },
@@ -364,13 +366,8 @@
         "forwarded": []
       },
       {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🏃️execution/🟦️.ts",
-        "literalCalls": 0,
-        "forwarded": []
-      },
-      {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts",
-        "literalCalls": 0,
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🎬️stage/🟦️.ts",
+        "literalCalls": 1,
         "forwarded": []
       },
       {
@@ -386,21 +383,6 @@
       {
         "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🧪️tests/🟦️.ts",
         "literalCalls": 3,
-        "forwarded": []
-      },
-      {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
-        "literalCalls": 0,
-        "forwarded": []
-      },
-      {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts",
-        "literalCalls": 2,
-        "forwarded": []
-      },
-      {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🎬️stage/🟦️.ts",
-        "literalCalls": 1,
         "forwarded": []
       }
     ],

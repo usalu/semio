@@ -18,9 +18,9 @@ pub fn inverse<Op: From<RotateSelection> + From<MoveNode> + From<ReplaceNodeHand
     let mut steps = Vec::new();
     for node in &selection.nodes {
         if puzzle2d_rotated((node.x, node.y), pivot, sin, cos) != (node.x, node.y) {
-            steps.push(move_node(node.id.clone(), node.x, node.y));
+            steps.push(move_node::move_node::<Op>(node.id.clone(), node.x, node.y));
         }
-        steps.extend(node.handles.iter().filter(|handle| handle.angle + radians != handle.angle).map(|handle| replace_node_handle(node.id.clone(), handle.id.clone(), handle.clone())));
+        steps.extend(node.handles.iter().filter(|handle| handle.angle + radians != handle.angle).map(|handle| replace_node_handle::replace_node_handle::<Op>(node.id.clone(), handle.id.clone(), handle.clone())));
     }
     Ok(steps)
 }

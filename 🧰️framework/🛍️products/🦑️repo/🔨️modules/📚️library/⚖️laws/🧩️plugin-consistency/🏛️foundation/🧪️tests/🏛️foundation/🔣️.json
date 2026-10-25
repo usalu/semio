@@ -34,38 +34,6 @@
    "expect": "d-e"
   },
   {
-   "id": "normalize-legacy-module-with-lib-suffix",
-   "rule": "policyNormalizeRelPath",
-   "args": [
-    "✏️s/🔌️plugins/🔭️alpha/🔨️modules/🔸️render/⚡️implementations/🦀️rust/📦️lib.rs"
-   ],
-   "expect": "alpha/render#lib"
-  },
-  {
-   "id": "normalize-legacy-module-with-distinct-app",
-   "rule": "policyNormalizeRelPath",
-   "args": [
-    "✏️s/🔌️plugins/🔭️alpha/🎛️apps/🔸️ui/🔨️modules/🔸️panel/⚡️implementations/🦀️rust/🦀️.rs"
-   ],
-   "expect": "alpha/ui/panel"
-  },
-  {
-   "id": "normalize-legacy-module-with-app-named-like-the-plugin",
-   "rule": "policyNormalizeRelPath",
-   "args": [
-    "✏️s/🔌️plugins/🔭️alpha/🎛️apps/🔸️alpha/🔨️modules/🔸️panel/⚡️implementations/🦀️rust/🦀️.rs"
-   ],
-   "expect": "alpha/panel"
-  },
-  {
-   "id": "normalize-legacy-framework-module",
-   "rule": "policyNormalizeRelPath",
-   "args": [
-    "🧰️framework/🔨️modules/🔸️x/⚡️implementations/🦀️rust/🦀️.rs"
-   ],
-   "expect": "framework/x"
-  },
-  {
    "id": "normalize-artifact-layout-engine",
    "rule": "policyNormalizeRelPath",
    "args": [

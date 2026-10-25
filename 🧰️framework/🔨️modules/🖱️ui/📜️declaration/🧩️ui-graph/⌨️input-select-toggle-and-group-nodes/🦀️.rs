@@ -1,4 +1,4 @@
-//! ⌨️ Input, select, toggle and group nodes: the input, select item and select, toggle, group and key value nodes. See [`super`].
+//! 📥️ Input, select, toggle and group nodes: the input, select item and select, toggle, group and key value nodes. See [`super`].
 
 use super::*;
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-pv-temperature",
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🌡️change-temperature",
   "semanticKind": "change-pv-system-temperature-coefficient",
   "displayName": "Change Photovoltaic Temperature Coefficient",
   "emoji": "🌡️",

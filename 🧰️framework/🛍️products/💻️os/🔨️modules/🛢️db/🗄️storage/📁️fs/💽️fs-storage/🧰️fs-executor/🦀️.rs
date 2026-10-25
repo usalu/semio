@@ -14,11 +14,11 @@ pub(super) struct FsDbIoExecutor {
     pub(super) backend_terminal: std::sync::atomic::AtomicBool,
 }
 
-struct FsReadState {
+pub(super) struct FsReadState {
     pub(super) operation: u64,
     pub(super) file: std::fs::File,
     pub(super) offset: u64,
-    total: usize,
+    pub(super) total: usize,
     pub(super) fence: Option<EpochFence>,
 }
 

@@ -1,0 +1,8 @@
+{"settleMilliseconds":1500,"cases":[
+{"name":"a failing plan body retires its pass owners first: the plan settles with the body's failure","nested":2,"body":"throw","retire":"before-exit","settles":true},
+{"name":"a failing plan body that rethrows first waits for owners that wait for it: nothing settles","nested":2,"body":"throw","retire":"after-exit","settles":false},
+{"name":"a failing plan body without pass owners settles either way","nested":0,"body":"throw","retire":"after-exit","settles":true},
+{"name":"a single pass owner is enough to park the plan","nested":1,"body":"throw","retire":"after-exit","settles":false},
+{"name":"a returning plan body is ready before its owners retire","nested":3,"body":"return","retire":"after-exit","settles":true},
+{"name":"a returning plan body with early retirement is ready as well","nested":3,"body":"return","retire":"before-exit","settles":true}
+]}

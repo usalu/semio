@@ -178,7 +178,7 @@ impl<'a, T: 'static> Context<'a, T> {
         })
     }
 
-    /// 🔗️ Invokes `listener` whenever `source` notifies via `Context::notify`, for as long as the
+    /// 👁️ Invokes `listener` whenever `source` notifies via `Context::notify`, for as long as the
     /// returned [`Subscription`] is alive and `source` itself has not been released.
     pub fn observe<U: 'static>(&mut self, source: &Entity<U>, mut listener: impl FnMut(&mut T, &mut Context<'_, T>) + 'static) -> Subscription {
         let observer = self.entity.clone();

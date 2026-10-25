@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {mkdtempSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
+import {mkdtempSync,readFileSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import fixture from "./🔣️.json" with {type:"json"};
@@ -23,4 +23,12 @@ for(const row of fixture.cases)test("lease retirement stamp: "+row.name,()=>{
 test("lease retirement stamp: touching makes it fresh",()=>{
  const directory=mkdtempSync(join(tmpdir(),"lease-stamp-")),stamp=join(directory,".retired");
  try{touchLeaseRetirementV1(stamp);expect(leaseRetirementFreshV1(stamp,Date.now())).toBe(true);}finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("lease retirement stamp: the opener sweeps under the ordinary protocol, shortens the interval under pressure and never fails because of the sweep",()=>{
+ const source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),block=source.slice(source.indexOf("async function openRepositoryLeasePartitionV1"),source.indexOf("export async function openRepositoryCachePartitionV1"));
+ expect(block).toContain("sweepResourceLeaseStoreV1(");expect(block).toContain("resourceLeaseRetirementIdlePolicyV1.pressureSweepIntervalMilliseconds");expect(block).toContain("formatResourceLeaseSweepFailureV1");
+ expect(block).not.toContain("withExclusiveMaintenance");expect(block.indexOf("touchLeaseRetirementV1(stamp)")).toBeLessThan(block.indexOf("sweepResourceLeaseStoreV1("));
+ const directory=mkdtempSync(join(tmpdir(),"lease-stamp-")),stamp=join(directory,".retired");
+ try{writeFileSync(stamp,"");const old=new Date(Date.now()-60000);utimesSync(stamp,old,old);expect(leaseRetirementFreshV1(stamp,Date.now())).toBe(true);expect(leaseRetirementFreshV1(stamp,Date.now(),30000)).toBe(false);}finally{rmSync(directory,{recursive:true,force:true});}
 });

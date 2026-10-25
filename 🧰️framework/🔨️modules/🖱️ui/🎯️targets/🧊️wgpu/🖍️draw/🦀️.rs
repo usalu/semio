@@ -8,7 +8,7 @@ pub mod kernel_3d_scene {
     pub use semio_framework_ui_scene_pass::*;
 }
 pub use semio_framework_ui_theme::geometry;
-pub use semio_framework_ui_wgpu_draw_execution::{MeshGpuTable,MeshGpuSourceReturn,RasterKeepSetV1,RasterResidencyLedger,RasterTextureCleanupStep,RasterTextureWitness,MESH_GPU_KEEP_VERSION_CAPACITY};
+pub use semio_framework_ui_wgpu_draw_execution::{MeshGpuTable,MeshGpuSourceReturn,RasterKeepSetV1,RasterResidencyLedger,RasterTextureCleanupStep,RasterTextureWitness,World3dGridUniforms,physical_scissor_rect,physical_viewport_rect,MESH_GPU_KEEP_VERSION_CAPACITY};
 pub use gpu::{GpuContext,PreparedGpuPresentCursor,PreparedGpuReadback};
 
 #[cfg(any(test,feature="testkit"))]

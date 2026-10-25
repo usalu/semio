@@ -1,0 +1,653 @@
+{
+ "version": 1,
+ "indexes": [
+  {
+   "id": "empty",
+   "index": {
+    "version": 1,
+    "owners": [],
+    "rows": [],
+    "classes": []
+   }
+  },
+  {
+   "id": "owners-only",
+   "index": {
+    "version": 1,
+    "owners": [
+     "b",
+     "a",
+     "@env"
+    ],
+    "rows": [],
+    "classes": [
+     {
+      "r": [],
+      "o": [
+       0
+      ]
+     },
+     {
+      "r": [],
+      "o": [
+       1,
+       2
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "shared-facts-and-paths",
+   "index": {
+    "version": 1,
+    "owners": [
+     "x",
+     "y"
+    ],
+    "rows": [
+     {
+      "kind": "exists",
+      "path": "/w/a",
+      "fact": true
+     },
+     {
+      "kind": "exists",
+      "path": "/w/b",
+      "fact": true
+     },
+     {
+      "kind": "exists",
+      "path": "/w/c",
+      "fact": false
+     },
+     {
+      "kind": "lstat",
+      "path": "/w/a",
+      "fact": null
+     }
+    ],
+    "classes": [
+     {
+      "r": [
+       0,
+       1
+      ],
+      "o": [
+       0,
+       1
+      ]
+     },
+     {
+      "r": [
+       2,
+       3
+      ],
+      "o": [
+       1
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "digest-facts",
+   "index": {
+    "version": 1,
+    "owners": [
+     "x"
+    ],
+    "rows": [
+     {
+      "kind": "readdir",
+      "path": "/w/dir",
+      "fact": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "kind": "readdir",
+      "path": "/w/other",
+      "fact": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+     },
+     {
+      "kind": "field",
+      "path": "/w/f",
+      "fact": {
+       "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+       "size": 0
+      }
+     }
+    ],
+    "classes": [
+     {
+      "r": [
+       0,
+       1,
+       2
+      ],
+      "o": [
+       0
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "numbers",
+   "index": {
+    "version": 1,
+    "owners": [
+     "x"
+    ],
+    "rows": [
+     {
+      "kind": "file",
+      "path": "/w/n",
+      "fact": {
+       "zero": 0,
+       "one": 1,
+       "neg": -1,
+       "big": 9007199254740991,
+       "negbig": -9007199254740991,
+       "float": 1792653807536.8682,
+       "half": 0.5,
+       "neg_float": -2.25,
+       "huge": 1.5e+300,
+       "tiny": 1.5e-300,
+       "integral_float": 3.0
+      }
+     }
+    ],
+    "classes": [
+     {
+      "r": [
+       0
+      ],
+      "o": [
+       0
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "unicode-and-emoji",
+   "index": {
+    "version": 1,
+    "owners": [
+     "🚀",
+     "é",
+     "a"
+    ],
+    "rows": [
+     {
+      "kind": "file",
+      "path": "/w/📋️project.json",
+      "fact": {
+       "🚀": "quote\" slash\\ tab\t nl\n",
+       "emoji": "🧰️",
+       "bmp": "ﬁ￿",
+       "astral": "😀"
+      }
+     },
+     {
+      "kind": "file",
+      "path": "/w/￿",
+      "fact": 1
+     },
+     {
+      "kind": "file",
+      "path": "/w/😀",
+      "fact": 2
+     }
+    ],
+    "classes": [
+     {
+      "r": [
+       0,
+       1,
+       2
+      ],
+      "o": [
+       0,
+       1,
+       2
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "proto-key-and-empty-strings",
+   "index": {
+    "version": 1,
+    "owners": [
+     ""
+    ],
+    "rows": [
+     {
+      "kind": "field",
+      "path": "",
+      "fact": {
+       "__proto__": {
+        "x": 1
+       },
+       "": ""
+      }
+     }
+    ],
+    "classes": [
+     {
+      "r": [
+       0
+      ],
+      "o": [
+       0
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "nested",
+   "index": {
+    "version": 1,
+    "owners": [
+     "x"
+    ],
+    "rows": [
+     {
+      "kind": "analysis",
+      "path": "/w/a.ts",
+      "fact": {
+       "nestedObservations": [],
+       "provider": "p",
+       "source": {
+        "ctimeMs": 1792653807536.8682,
+        "ino": 558728385,
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "size": 2366
+       },
+       "list": [
+        [
+         1,
+         2
+        ],
+        [
+         3,
+         [
+          4,
+          [
+           5,
+           null
+          ]
+         ]
+        ],
+        {
+         "k": [
+          true,
+          false
+         ]
+        }
+       ]
+      }
+     }
+    ],
+    "classes": [
+     {
+      "r": [
+       0
+      ],
+      "o": [
+       0
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "unsorted-class-lists",
+   "index": {
+    "version": 1,
+    "owners": [
+     "a",
+     "b",
+     "c"
+    ],
+    "rows": [
+     {
+      "kind": "exists",
+      "path": "/1",
+      "fact": true
+     },
+     {
+      "kind": "exists",
+      "path": "/2",
+      "fact": false
+     },
+     {
+      "kind": "exists",
+      "path": "/3",
+      "fact": true
+     }
+    ],
+    "classes": [
+     {
+      "r": [
+       2,
+       0,
+       1
+      ],
+      "o": [
+       2,
+       0
+      ]
+     },
+     {
+      "r": [
+       1
+      ],
+      "o": [
+       1,
+       2,
+       0
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "depth-64",
+   "index": {
+    "version": 1,
+    "owners": [
+     "x"
+    ],
+    "rows": [
+     {
+      "kind": "field",
+      "path": "/d",
+      "fact": [
+       [
+        [
+         [
+          [
+           [
+            [
+             [
+              [
+               [
+                [
+                 [
+                  [
+                   [
+                    [
+                     [
+                      [
+                       [
+                        [
+                         [
+                          [
+                           [
+                            [
+                             [
+                              [
+                               [
+                                [
+                                 [
+                                  [
+                                   [
+                                    [
+                                     [
+                                      [
+                                       [
+                                        [
+                                         [
+                                          [
+                                           [
+                                            [
+                                             [
+                                              [
+                                               [
+                                                [
+                                                 [
+                                                  [
+                                                   [
+                                                    [
+                                                     [
+                                                      [
+                                                       [
+                                                        [
+                                                         [
+                                                          [
+                                                           [
+                                                            [
+                                                             [
+                                                              [
+                                                               [
+                                                                [
+                                                                 [
+                                                                  [
+                                                                   [
+                                                                    [
+                                                                     [
+                                                                      0
+                                                                     ]
+                                                                    ]
+                                                                   ]
+                                                                  ]
+                                                                 ]
+                                                                ]
+                                                               ]
+                                                              ]
+                                                             ]
+                                                            ]
+                                                           ]
+                                                          ]
+                                                         ]
+                                                        ]
+                                                       ]
+                                                      ]
+                                                     ]
+                                                    ]
+                                                   ]
+                                                  ]
+                                                 ]
+                                                ]
+                                               ]
+                                              ]
+                                             ]
+                                            ]
+                                           ]
+                                          ]
+                                         ]
+                                        ]
+                                       ]
+                                      ]
+                                     ]
+                                    ]
+                                   ]
+                                  ]
+                                 ]
+                                ]
+                               ]
+                              ]
+                             ]
+                            ]
+                           ]
+                          ]
+                         ]
+                        ]
+                       ]
+                      ]
+                     ]
+                    ]
+                   ]
+                  ]
+                 ]
+                ]
+               ]
+              ]
+             ]
+            ]
+           ]
+          ]
+         ]
+        ]
+       ]
+      ]
+     }
+    ],
+    "classes": [
+     {
+      "r": [
+       0
+      ],
+      "o": [
+       0
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "closure-references",
+   "index": {
+    "version": 1,
+    "owners": [
+     "x"
+    ],
+    "rows": [
+     {
+      "kind": "file",
+      "path": "/w/c",
+      "fact": {
+       "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": {
+        "fact": "SEMIO_CARGO_LOCK_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+       }
+      }
+     },
+     {
+      "kind": "closure",
+      "path": "[\"/w\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",[\"some\",[\"/a/\"]]]",
+      "fact": "true"
+     }
+    ],
+    "classes": [
+     {
+      "r": [
+       0,
+       1
+      ],
+      "o": [
+       0
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "refusals": [
+  {
+   "id": "empty-document",
+   "hex": ""
+  },
+  {
+   "id": "bad-magic",
+   "hex": "5346493207020203040200042f772f61030162030163000665786973747300056c73746174000178000179030405060201000000000001000002010100020200020200020204020102"
+  },
+  {
+   "id": "magic-only",
+   "hex": "53464931"
+  },
+  {
+   "id": "truncated",
+   "hex": "5346493107020203040200042f772f61030162030163000665786973747300056c737461740001780001790304050602010000000000010000020101000202000202000202040201"
+  },
+  {
+   "id": "trailing-byte",
+   "hex": "5346493107020203040200042f772f61030162030163000665786973747300056c7374617400017800017903040506020100000000000100000201010002020002020002020402010200"
+  },
+  {
+   "id": "count-beyond-bytes",
+   "hex": "53464931e8070000000000"
+  },
+  {
+   "id": "strings-descending",
+   "hex": "53464931020000000000000162000161"
+  },
+  {
+   "id": "strings-duplicate",
+   "hex": "534649310200000000000001610100"
+  },
+  {
+   "id": "lcp-beyond-previous",
+   "hex": "53464931020000000000000161050162"
+  },
+  {
+   "id": "first-string-nonzero-lcp",
+   "hex": "53464931010000000000010161"
+  },
+  {
+   "id": "string-invalid-utf8",
+   "hex": "534649310100000000000001ff"
+  },
+  {
+   "id": "bad-tag",
+   "hex": "534649310000000100000a"
+  },
+  {
+   "id": "negative-zero",
+   "hex": "534649310000000100000400"
+  },
+  {
+   "id": "overlong-varint",
+   "hex": "534649318080808080808080808000"
+  },
+  {
+   "id": "object-keys-unsorted",
+   "hex": "53464931020000010000000161000162080201000000"
+  },
+  {
+   "id": "string-id-out-of-range",
+   "hex": "534649310000000100000600"
+  },
+  {
+   "id": "row-kind-out-of-range",
+   "hex": "5346493101000001010000017000000000"
+  },
+  {
+   "id": "row-fact-out-of-range",
+   "hex": "534649310101000101000001700000000001"
+  },
+  {
+   "id": "class-owner-out-of-range",
+   "hex": "53464931000000000001000100"
+  },
+  {
+   "id": "class-row-out-of-range",
+   "hex": "53464931000000000001010000"
+  },
+  {
+   "id": "class-negative-id",
+   "hex": "5346493101000100000100016f00000101"
+  },
+  {
+   "id": "nesting-65",
+   "hex": "534649310000000100000701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070107010701070100"
+  },
+  {
+   "id": "truncated-float",
+   "hex": "53464931000000010000050000"
+  },
+  {
+   "id": "float-nan",
+   "hex": "5346493100000001000005000000000000f87f"
+  }
+ ],
+ "sizes": {
+  "owners": 300,
+  "rowsPerOwner": 200,
+  "maximumExpandedBytes": 5500000,
+  "maximumRatio": 0.27
+ }
+}

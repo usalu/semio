@@ -3,7 +3,7 @@ import {join} from "node:path";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import type {DependencyScopeFactsV1} from "../../🟦️.ts";
 import {readJsonFileV1} from "../../🔌️ports/🟦️.ts";
-import type {DoctorProbeV1} from "../🟦️.ts";
+import type {DoctorProbeV1} from "../📋️contract/🟦️.ts";
 import {selectPackageManagerV1} from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 
 const manager=selectPackageManagerV1("javascript"),INPUTS=[...manager.manifestFileNames(),manager.primaryLockName(),...manager.configurationNames("scope")],READY="bindings.json",KEY=/^[a-f0-9]{20}$/u;

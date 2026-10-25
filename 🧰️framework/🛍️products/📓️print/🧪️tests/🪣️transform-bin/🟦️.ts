@@ -53,25 +53,25 @@ export default defineTestAdapter({
     sturges: {
       /** 🔮️ d3-array's bin with its default Sturges threshold count. */
       oracle: () => ({ projection: histogram("sturges") }),
-      /** 🎯️ The same binning from the compiled probe. */
+      /** 🔨️ The same binning from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "count-five": {
-      /** 🔮️ d3-array's bin with a requested count of five. */
+      /** 📬️ d3-array's bin with a requested count of five. */
       oracle: () => ({ projection: histogram("five", 5) }),
-      /** 🎯️ The same binning from the compiled probe. */
+      /** 🧺️ The same binning from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "count-twenty": {
-      /** 🔮️ d3-array's bin with a requested count of twenty. */
+      /** 📮️ d3-array's bin with a requested count of twenty. */
       oracle: () => ({ projection: histogram("twenty", 20) }),
-      /** 🎯️ The same binning from the compiled probe. */
+      /** 🛢️ The same binning from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "explicit-thresholds": {
-      /** 🔮️ d3-array's bin with an explicit threshold list. */
+      /** 📋️ d3-array's bin with an explicit threshold list. */
       oracle: () => ({ projection: histogram("explicit", [4, 6, 8]) }),
-      /** 🎯️ The same binning from the compiled probe. */
+      /** 📦️ The same binning from the compiled probe. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

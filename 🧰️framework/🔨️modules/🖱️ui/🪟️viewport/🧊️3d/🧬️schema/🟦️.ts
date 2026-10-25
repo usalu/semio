@@ -92,7 +92,7 @@ export function parseViewport3dProjectionFramePolicy(value: unknown): Viewport3d
   return projectionEnum(value, ["content", "preserveCamera"] as const);
 }
 
-/** 📥️ Admits all fifteen required projection presets without coercion or foreign fields. */
+/** 📖️ Admits all fifteen required projection presets without coercion or foreign fields. */
 export function parseViewport3dProjectionPreferences(value: unknown): Viewport3dProjectionPreferences {
   const record = viewportRecord(value, [
     "kind",
@@ -206,7 +206,7 @@ function validateAxonometricCorner(angleA: number, angleB: number): void {
   if (!Number.isFinite(product) || product > 1) throw new TypeError("Axonometric corner angles do not define a real camera elevation");
 }
 
-/** 🎯️ Creates the full editable bank without sharing mutable state between windows. */
+/** 🏦️ Creates the full editable bank without sharing mutable state between windows. */
 export function defaultViewport3dProjectionPreferences(): Viewport3dProjectionPreferences {
   return {
     kind: "threePoint",

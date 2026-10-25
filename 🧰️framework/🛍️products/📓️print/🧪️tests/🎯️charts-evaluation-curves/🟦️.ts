@@ -23,7 +23,7 @@ const grid = (value: number): number => {
   return value === 0 ? 0 : Math.round(value * factor) / factor;
 };
 
-/** 🎯️ Compiles one committed fixture of this case and returns its whole projection. */
+/** 🔨️ Compiles one committed fixture of this case and returns its whole projection. */
 async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection: ProbeProjection }> {
   const records = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://🎯️charts-evaluation-curves/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
@@ -31,7 +31,7 @@ async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection
 // #endregion 🧫️Vectors
 
 // #region 🔮️Oracles
-/** 🔮️ The threshold sweep: descending order via d3-array, then the four running counters. */
+/** 🧹️ The threshold sweep: descending order via d3-array, then the four running counters. */
 function sweep() {
   const order = SCORES.map((_, i) => i).sort((a, b) => descending(SCORES[a]!, SCORES[b]!));
   const positives = LABELS.filter((l) => l > 0.5).length;
@@ -58,7 +58,7 @@ function sweep() {
   return { roc, pr, gain, area: grid(area) };
 }
 
-/** 🔮️ The four confusion counts at the median score, in the order the family emits them. */
+/** 🔢️ The four confusion counts at the median score, in the order the family emits them. */
 function confusion(): number[] {
   const sorted = [...SCORES].sort((a, b) => a - b);
   const threshold = quantileSorted(sorted, 0.5)!;
@@ -89,27 +89,27 @@ export default defineTestAdapter({
       subject: async (ctx: AdapterContext) => (await probe(ctx, "roc.tex")),
     },
     "pr": {
-      /** 🔮️ The precision-recall sweep, which has no origin point. */
+      /** 📍️ The precision-recall sweep, which has no origin point. */
       oracle: () => {
         const s = sweep();
         return { projection: { recall: s.pr.x, precision: s.pr.y } };
       },
-      /** 🎯️ The rates `\semio_viz_eval_pr:NN` produced. */
+      /** 📈️ The rates `\semio_viz_eval_pr:NN` produced. */
       subject: async (ctx: AdapterContext) => (await probe(ctx, "pr.tex")),
     },
     "gain": {
-      /** 🔮️ The cumulative-gains sweep over the whole population. */
+      /** 🏆️ The cumulative-gains sweep over the whole population. */
       oracle: () => {
         const s = sweep();
         return { projection: { population: s.gain.x, captured: s.gain.y } };
       },
-      /** 🎯️ The rates `\semio_viz_eval_gain:NN` produced. */
+      /** 💰️ The rates `\semio_viz_eval_gain:NN` produced. */
       subject: async (ctx: AdapterContext) => (await probe(ctx, "gain.tex")),
     },
     "confusion": {
-      /** 🔮️ The four outcome counts at d3-array's median of the score column. */
+      /** 🧮️ The four outcome counts at d3-array's median of the score column. */
       oracle: () => ({ projection: { "geometry/confusion": confusion() } }),
-      /** 🎯️ The `geometry/confusion` record the evaluation family emitted. */
+      /** 🌀️ The `geometry/confusion` record the evaluation family emitted. */
       subject: async (ctx: AdapterContext) => ({ projection: { "geometry/confusion": (await probe(ctx, "confusion.tex")).projection["geometry/confusion"] ?? [] } }),
     },
   },

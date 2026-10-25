@@ -1,4 +1,4 @@
-//! 📝️ Editable history drafts retain replaced inputs and original ordered index scaffolds.
+//! 📙️ Editable history drafts retain replaced inputs and original ordered index scaffolds.
 use super::{HistoryFoldIndex,HistoryFoldIndexIter,InputReplacement,MutationId};
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor, deferred, deferred_birth_bytes_for, sequence, sequence_birth_bytes};
 use semio_framework_value_persistent::list::PagedList;

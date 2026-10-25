@@ -20,6 +20,7 @@ pub(super) fn admit_fixture(source:&mut Option<OriginalJobAdmission>,grant:Retai
  assert_eq!((heap.requested_bytes,heap.released_bytes),(cx.retained_progress().retained_capacity_bytes,cx.retained_progress().released_bytes));result
 }
 
+fn value_kind(failure:&OriginalTurnFailure)->ValueRefusalKind{match &failure.primary{semio_framework_job::OriginalTurnPrimary::Value(error)=>error.kind,_=>panic!("original refusal is a value refusal")}}
 pub(super) fn step_fixture(job:u64,fuel:u64)->Result<JobStep,OriginalTurnFailure>{
  let grant=fixture_grant();let(operation,generation)=fixture_identity();let cancel=root_cancel_token();let mut sequence=0;let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(fuel,u64::MAX,grant),cancel,||Some(1),&mut sequence,&mut receipt);
  let mut decode_callback=|_|true;let mut encode_callback=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut decode_callback);let mut encode=semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut encode_callback);let mut original=IoRunControl::new(&mut decode,&mut encode,grant);let mut snapshot_callback=|_|true;let mut snapshot=SqliteSnapshotControl::new(&mut snapshot_callback,Default::default());
@@ -55,7 +56,7 @@ fn register_fixture(){assert!(register_bounded_job_kind("test.fixed-original",Bo
 
 /// 🧭️ Unknown identity produces an intact typed refusal without a synthetic payload.
 #[test]
-fn step_job_on_an_unknown_id_fails_without_panicking(){assert_eq!(step_fixture(999,WORK_UNITS_EXECUTE).unwrap_err().primary.kind,ValueRefusalKind::InvalidValue)}
+fn step_job_on_an_unknown_id_fails_without_panicking(){assert_eq!(value_kind(&step_fixture(999,WORK_UNITS_EXECUTE).unwrap_err()),ValueRefusalKind::InvalidValue)}
 
 /// 📜️ Every declared normal builtin resolves to a real admission/demand pair.
 #[test]
@@ -67,11 +68,11 @@ fn original_factory_denial_keeps_whole_sources(){register_fixture();let mut sour
 
 /// 🎬️ One registered owner publishes paid progress and closes all source bodies before Done.
 #[test]
-fn a_registered_bounded_kind_advances_one_state_action(){register_fixture();let mut source=source_fixture(9001,"test.fixed-original",b"fixed".to_vec(),None);assert!(admit_fixture(&mut source,fixture_grant()).unwrap());let mut progress=false;for _ in 0..100000{match step_fixture(9001,WORK_UNITS_EXECUTE).unwrap(){JobStep::Running(Some(bytes))=>{assert_eq!(bytes,[1]);progress=true},JobStep::Running(None)=>{},JobStep::Done(bytes)=>{assert!(progress);assert_eq!(bytes,[2]);assert_eq!(step_fixture(9001,1).unwrap_err().primary.kind,ValueRefusalKind::InvalidValue);return},JobStep::Failed(_)=>panic!("registered original fixture failed")}}panic!("registered original fixture did not complete")}
+fn a_registered_bounded_kind_advances_one_state_action(){register_fixture();let mut source=source_fixture(9001,"test.fixed-original",b"fixed".to_vec(),None);assert!(admit_fixture(&mut source,fixture_grant()).unwrap());let mut progress=false;for _ in 0..100000{match step_fixture(9001,WORK_UNITS_EXECUTE).unwrap(){JobStep::Running(Some(bytes))=>{assert_eq!(bytes,[1]);progress=true},JobStep::Running(None)=>{},JobStep::Done(bytes)=>{assert!(progress);assert_eq!(bytes,[2]);assert_eq!(value_kind(&step_fixture(9001,1).unwrap_err()),ValueRefusalKind::InvalidValue);return},JobStep::Failed(_)=>panic!("registered original fixture failed")}}panic!("registered original fixture did not complete")}
 
 /// 📨️ A refused factory keeps its original input through paid typed failure closure.
 #[test]
-fn a_registered_bounded_kind_retains_its_admission_fault(){register_fixture();let mut source=source_fixture(9002,"test.fixed-original",b"refused".to_vec(),Some(vec![3]));assert!(admit_fixture(&mut source,fixture_grant()).unwrap());assert!(matches!(terminal_fixture(9002),JobStep::Failed(_)));assert_eq!(step_fixture(9002,1).unwrap_err().primary.kind,ValueRefusalKind::InvalidValue)}
+fn a_registered_bounded_kind_retains_its_admission_fault(){register_fixture();let mut source=source_fixture(9002,"test.fixed-original",b"refused".to_vec(),Some(vec![3]));assert!(admit_fixture(&mut source,fixture_grant()).unwrap());assert!(matches!(terminal_fixture(9002),JobStep::Failed(_)));assert_eq!(value_kind(&step_fixture(9002,1).unwrap_err()),ValueRefusalKind::InvalidValue)}
 
 /// ⏳️ External pending progress remains a live original owner until explicit cancellation.
 #[test]

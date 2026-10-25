@@ -93,7 +93,8 @@ protocol::list_delta! {
         modification: LayoutPagesModification,
         row: Page,
         patch: PagePatch,
-        key: id
+        list: Vec<Page>,
+        key: String = keyed
     }
 }
 
@@ -106,7 +107,8 @@ protocol::list_delta! {
         modification: LayoutStoriesModification,
         row: TextStory,
         patch: TextStoryPatch,
-        key: id
+        list: Vec<TextStory>,
+        key: String = keyed
     }
 }
 
@@ -119,7 +121,8 @@ protocol::list_delta! {
         modification: LayoutLinksModification,
         row: ImageLink,
         patch: ImageLinkPatch,
-        key: id
+        list: Vec<ImageLink>,
+        key: String = keyed
     }
 }
 
@@ -132,7 +135,8 @@ protocol::list_delta! {
         modification: LayoutParagraphStylesModification,
         row: ParagraphStyle,
         patch: ParagraphStylePatch,
-        key: id
+        list: Vec<ParagraphStyle>,
+        key: String = keyed
     }
 }
 
@@ -145,7 +149,8 @@ protocol::list_delta! {
         modification: LayoutCharacterStylesModification,
         row: CharacterStyle,
         patch: CharacterStylePatch,
-        key: id
+        list: Vec<CharacterStyle>,
+        key: String = keyed
     }
 }
 
@@ -158,7 +163,8 @@ protocol::list_delta! {
         modification: LayoutParentPagesModification,
         row: ParentPage,
         patch: ParentPagePatch,
-        key: id
+        list: Vec<ParentPage>,
+        key: String = keyed
     }
 }
 
@@ -171,7 +177,8 @@ protocol::list_delta! {
         modification: LayoutSpreadsModification,
         row: Spread,
         patch: SpreadPatch,
-        key: id
+        list: Vec<Spread>,
+        key: String = keyed
     }
 }
 
@@ -182,7 +189,13 @@ protocol::plain_list_delta! {
         insertion: PageOverrideInsertion,
         relocation: PageOverrideRelocation,
         row: PageOverride,
-        key: object_id
+        list: Vec<PageOverride>,
+        key: String = keyed
+    }
+}
+impl PageOverridesDelta {
+    pub(super) fn from_row_parts(parts: protocol::list_delta::Parts<PageOverride, protocol::list_delta::NoPatch>) -> Self {
+        Self::from_parts(parts)
     }
 }
 //#endregion 🔖️DeltaHelpers

@@ -105,8 +105,8 @@
     },
     {
       "name": "one byte above the high-water mark the oldest idle incremental directory goes first",
-      "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 199, "nowMs": 1000000, "lanes": [{"id": "a", "bytes": 100, "incrementalBytes": 90, "lastUsedMs": 900000, "live": false}, {"id": "b", "bytes": 100, "incrementalBytes": 90, "lastUsedMs": 950000, "live": false}, {"id": "c", "bytes": 100, "incrementalBytes": 90, "lastUsedMs": 990000, "live": true}], "objects": []},
-      "plan": {"removeLanes": ["a", "b"], "removeIncremental": [], "removeObjects": []}
+      "input": {"capacityBytes": 1000000, "volumeBytes": 1000, "freeBytes": 124, "nowMs": 1000000, "lanes": [{"id": "a", "bytes": 150, "incrementalBytes": 130, "lastUsedMs": 900000, "live": false}, {"id": "b", "bytes": 150, "incrementalBytes": 130, "lastUsedMs": 950000, "live": false}, {"id": "c", "bytes": 100, "incrementalBytes": 90, "lastUsedMs": 990000, "live": true}], "objects": []},
+      "plan": {"removeLanes": [], "removeIncremental": ["a"], "removeObjects": []}
     }
   ],
   "scenario": {

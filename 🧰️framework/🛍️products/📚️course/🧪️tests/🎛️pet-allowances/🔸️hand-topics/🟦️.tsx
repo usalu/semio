@@ -7,7 +7,7 @@ import { CardIcon, ClassificationTaskView, HomeScreen, PetTopic, COURSE_PET_CONT
 import { RunScreen } from "@semio-tech/course-react/modules/run/.tsx";
 import { ResultsScreen } from "@semio-tech/course-react/modules/results/.tsx";
 import { PREFERENCES, text } from "../../🪛️pet-companions-kit/🟦️.tsx";
-import { OPEN_RUN, SHEET, homeAt, idleSession, marked, submittedRun } from "../🟢️shared/🟦️.tsx";
+import { OPEN_RUN, SHEET, homeAt, idleSession, marked, submittedRun } from "../🟢️harness/🟦️.tsx";
 
 /** 🔹 Registers the hand topics tests of the 🐾️ pet companions suite. */
 export function registerHandTopicsTests(): void {

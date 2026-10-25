@@ -204,7 +204,7 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
     lex_with(text, limits, forgiving, &LexOptions::default())
 }
 
-/// 🎛️ P2-M1: same lexer, parameterized by a per-grammar [`LexOptions`] (string quote+escape
+/// ⚙️ P2-M1: same lexer, parameterized by a per-grammar [`LexOptions`] (string quote+escape
 /// modes, comment syntax). `lex` is the fixed-default entry point every pre-M1 caller still uses.
 pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions) -> Result<Vec<SpannedToken>, TextError> {
     limits.check_bytes(text.len())?;
@@ -703,7 +703,7 @@ pub fn token_classes(tokens: &[SpannedToken], keywords: &[&str]) -> Vec<(TokenCl
         })
         .collect()
 }
-/// 🪪️ True iff `s` lexes (strict) as exactly one `Ident` token whose text equals `s` —
+/// 🔑️ True iff `s` lexes (strict) as exactly one `Ident` token whose text equals `s` —
 /// i.e. `s` is safe to print bare (unquoted) wherever `Shape::Text` is expected. Excludes the
 /// reserved literal idents (`_`/`true`/`false`/`null`/`nan`/`inf`) and anything number-shaped
 /// (those lex as `Int`/`Float`/`Placeholder`, not `Ident`, so they're already excluded by

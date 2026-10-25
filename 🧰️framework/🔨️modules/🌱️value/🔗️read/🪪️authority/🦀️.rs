@@ -20,7 +20,7 @@ impl<T:RetireOwned+Sync> Publication for ReadOwnershipRegistry<T> {
     fn has_returned(&self)->bool {self.has_returned()}
 }
 
-/// 🪪️ A sealed erased view and its original typed factory capability close as one managed owner.
+/// 🔏️ A sealed erased view and its original typed factory capability close as one managed owner.
 pub struct ReadAuthority {view:ManuallyDrop<Option<Arc<dyn Publication>>>,#[doc(hidden)] pub owner:FactoryAuthority}
 impl ReadAuthority {
     pub fn terminal_is_empty(&self)->bool {self.view.is_none()&&self.owner.terminal_is_empty()}
@@ -40,7 +40,7 @@ impl ReadAuthority {
     pub fn contains(&self,id:ReadLeaseId)->Result<bool,ValueError> {self.view.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"read authority is closing"))?.contains(id)}
     pub fn occupied_count(&self)->Result<usize,ValueError> {self.view.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"read authority is closing"))?.occupied_count()}
     pub fn has_returned(&self)->bool {self.view.as_ref().is_some_and(|view|view.has_returned())}
-    /// 🪪️ The sealed publication family proves the concrete Arc payload before reconstructing its typed alias.
+    /// 🎫️ The sealed publication family proves the concrete Arc payload before reconstructing its typed alias.
     pub fn issue<T:RetireOwned+Sync>(&self,root:Arc<T>,grant:RetainedCloneGrant)->Result<(ReadLease<T>,RetainedCloneProgress),(ValueError,Arc<T>)> {
         let Some(view)=self.view.as_ref().filter(|view|view.as_any().is::<ReadOwnershipRegistry<T>>())else{return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"read authority has a different concrete root type or is closing"),root));};
         let pointer=Arc::into_raw(Arc::clone(view))as*const ReadOwnershipRegistry<T>;

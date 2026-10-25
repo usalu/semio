@@ -1,7 +1,7 @@
 import {buildBackendIdsV1} from "../../../🔌️backends/🟦️.ts";
 /** 🤹️ Concurrent session conformance: the wait derivation, attribution, criteria, edits, digests and workload admission are checked against language-agnostic fixtures, an independent Python oracle and Bazel's own elapsed time; the runner is exercised with real processes that contend for real leases of the lease module; the command through its ports. */
 import {test,expect} from "bun:test";
-import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
@@ -392,7 +392,7 @@ const stubAdapter={
 const commandPorts=(base:string,copy:string,out:string[],stages:string[],reports:unknown[],over:Partial<IncrementalCommandPortsV1>={}):IncrementalCommandPortsV1=>({
  write:line=>out.push(line),progress:async stage=>{stages.push(stage);},check:()=>{},signal:new AbortController().signal,environment:{SEMIO_LANGUAGE:"en",PATH:process.env.PATH??"/usr/bin",HOME:process.env.HOME??tmpdir()},platform:"linux",tmpdir:()=>"/tmp/t",home:()=>"/home/t",now:()=>Date.now(),
  run:async(_command,args)=>{const rest=args.slice(args.indexOf("repo")+1).filter(argument=>!argument.startsWith("--tool="));if(rest[0]==="graph"){const file=rest[1]!.slice(7);writeFileSync(file,"{}");return file+"\n";}return JSON.stringify({tasks:{roots:[],tasks:{"lib:gen":{id:"lib:gen"}},dependencies:{"lib:gen":[]}}},null,2);},
- report:async(file,value)=>{reports.push([file,value]);},files:async()=>[script],adapter:async()=>stubAdapter as never,nxRecord:directory=>join(directory,"run.json"),exists:async path=>existsSync(path),scratch:async()=>{const directory=join(base,"scratch-run");mkdirSync(directory,{recursive:true});return directory;},...over});
+ report:async(file,value)=>{reports.push([file,value]);},files:async()=>[script],locks:()=>{},adapter:async()=>stubAdapter as never,nxRecord:directory=>join(directory,"run.json"),exists:async path=>existsSync(path),scratch:async()=>{const directory=join(base,"scratch-run");mkdirSync(directory,{recursive:true});return directory;},...over});
 
 test("the command lists, plans and runs the authored workloads through its ports with progress, bilingual output, a report file and a failing exit",async()=>{
  const base=temp("conc-cmd-");

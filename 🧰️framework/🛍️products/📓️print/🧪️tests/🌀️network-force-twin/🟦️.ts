@@ -90,7 +90,7 @@ function oracle(id: string): (ctx: AdapterContext) => AdapterOutcome | Promise<A
 // #endregion 🧫️Vectors
 
 // #region 🎯️Subject
-/** 🎯️ The twin's `VizForceSimulation`, stopped and ticked by hand, with many-body made exact. */
+/** 📍️ The twin's `VizForceSimulation`, stopped and ticked by hand, with many-body made exact. */
 function twinPositions(ctx: AdapterContext): number[] {
   const list = edges(ctx);
   const config = setup(ctx);

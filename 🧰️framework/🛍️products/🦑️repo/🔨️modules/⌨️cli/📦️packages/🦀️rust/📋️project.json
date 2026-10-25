@@ -41,7 +41,8 @@
                 "binary",
                 "proc-macro",
                 "build-script",
-                "build-script-run"
+                "build-script-run",
+                "effective-profile"
               ]
             }
           }
@@ -168,7 +169,8 @@
                 "binary",
                 "proc-macro",
                 "build-script",
-                "build-script-run"
+                "build-script-run",
+                "effective-profile"
               ]
             },
             "binary": "repo"

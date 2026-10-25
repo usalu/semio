@@ -12,13 +12,13 @@ struct State<T> {
     waker: Option<Waker>,
 }
 
-/// 🪢️ Sending half — [`Sender::send`] never blocks: it stores the value for a still-live
+/// 📤️ Sending half — [`Sender::send`] never blocks: it stores the value for a still-live
 /// [`Receiver`], or hands it straight back if the receiver already dropped.
 pub struct Sender<T> {
     state: Arc<Mutex<State<T>>>,
 }
 
-/// 🪢️ Receiving half — a [`Future`] that resolves once [`Sender::send`] runs (or reports
+/// 📩️ Receiving half — a [`Future`] that resolves once [`Sender::send`] runs (or reports
 /// [`RecvError`] if the sender dropped first), plus a non-blocking [`Receiver::try_recv`] for a
 /// caller polling without an executor (the services crate's scope-drain loop).
 pub struct Receiver<T> {
@@ -29,7 +29,7 @@ pub struct Receiver<T> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RecvError;
 
-/// 🚫️ [`Receiver::try_recv`]'s two non-blocking outcomes: nothing sent yet, or the [`Sender`]
+/// ❌️ [`Receiver::try_recv`]'s two non-blocking outcomes: nothing sent yet, or the [`Sender`]
 /// dropped first.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TryRecvError {
@@ -43,7 +43,7 @@ pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
 }
 
 impl<T> Sender<T> {
-    /// 🪢️ `Err(value)` only if the [`Receiver`] already dropped — the value is handed back
+    /// 📮️ `Err(value)` only if the [`Receiver`] already dropped — the value is handed back
     /// unmodified, matching `tokio::sync::oneshot::Sender::send`'s shape.
     pub fn send(self, value: T) -> Result<(), T> {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
@@ -75,7 +75,7 @@ impl<T> Drop for Sender<T> {
 }
 
 impl<T> Receiver<T> {
-    /// 🪢️ Non-blocking, runtime-context-free poll — [`TryRecvError::Empty`] if the [`Sender`]
+    /// 🆓️ Non-blocking, runtime-context-free poll — [`TryRecvError::Empty`] if the [`Sender`]
     /// hasn't sent yet and is still alive, [`TryRecvError::Closed`] if it dropped without
     /// sending.
     pub fn try_recv(&mut self) -> Result<T, TryRecvError> {

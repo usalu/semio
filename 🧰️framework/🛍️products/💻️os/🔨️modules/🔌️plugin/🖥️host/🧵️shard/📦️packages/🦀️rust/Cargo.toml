@@ -58,3 +58,4 @@ semio-framework-plugin-host-process-transport = { path = "../../🚚️process-t
 semio-framework-os-kernel = { workspace = true }
 
 [dev-dependencies]
+semio-framework-async-macros = { workspace = true }

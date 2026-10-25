@@ -42,7 +42,7 @@ impl<K:Ord,V> HistoryFoldIndexInsert<K,V>{
   let(slot,mut progress)=self.commit_with(index,RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-copy,..grant},create)?;
   if progress.copied_items!=0{progress.copied_bytes=copy;}Ok((slot,progress))
  }
- /// 📤️ Pays original row headers before relinquishing an uncommitted insertion.
+ /// ↩️ Pays original row headers before relinquishing an uncommitted insertion.
  pub fn return_original_controlled(&mut self,grant:RetainedCloneGrant)->Option<((K,V),RetainedCloneProgress)>{
   let copy=size_of::<Self>();if grant.maximum_copy_bytes<copy{return None}let(source,mut progress)=self.return_original(grant)?;progress.copied_bytes=copy;Some((source,progress))
  }
@@ -84,14 +84,14 @@ impl<K:Ord,V> HistoryFoldIndexInsert<K,V>{
   if index.nodes[slot].entry.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original matching insertion lost its paid row"))}
   let(key,value)=self.source.take().unwrap();let original=index.nodes[slot].entry.replace((key,create(value)));index.mark_mutation();self.slot=Some(slot);Ok((Some(slot),original,RetainedCloneProgress{copied_items:1,..empty}))
  }
- /// 📏️ Includes the original cursor and inspected node headers in the next actual insertion quote.
+ /// ⏭️ Includes the original cursor and inspected node headers in the next actual insertion quote.
  pub fn next_controlled_demands<W>(&self,index:&HistoryFoldIndex<K,W>,body:usize,compare:impl FnOnce(&K,&K,usize,usize)->Result<semio_framework_value::RetirementDemand,ValueError>)->Result<semio_framework_value::RetirementDemand,ValueError>{
   let header=size_of::<Self>()+if self.next.is_some(){size_of::<FoldIndexNode<K,W>>()}else{0};
   let mut demand=self.next_demands(index,body,compare)?;
   demand.copy_bytes=demand.copy_bytes.checked_add(header).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"controlled insertion quote overflow"))?;
   Ok(demand)
  }
- /// 🔁️ Paid replacement transfers the exact displaced row to the caller rather than dropping its original key.
+ /// ➡️ Paid replacement transfers the exact displaced row to the caller rather than dropping its original key.
  pub fn commit_or_replace_controlled<W>(&mut self,index:&mut HistoryFoldIndex<K,W>,grant:RetainedCloneGrant,create:impl FnOnce(V)->W)->Result<(Option<usize>,Option<(K,W)>,RetainedCloneProgress),ValueError>{
   let copy=self.commit_copy_byte_demand(index)?;
   if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy{return Ok((None,None,Default::default()))}

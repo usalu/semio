@@ -4,7 +4,7 @@ use crate::{standards::v2_0::subsets::any::schema::snapshot::GltfAccessor, stand
 use crate::standards::v2_0::subsets::any::io::text::diff::wire::*;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_asset_diff(d: &GltfAssetDiff) -> String {
+pub fn enc_asset_diff(d: &GltfAssetDiff) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         encode_option(&d.version, |v| enc_str(v)),
@@ -16,7 +16,7 @@ pub(crate) fn enc_asset_diff(d: &GltfAssetDiff) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_asset_diff(s: &str) -> Result<GltfAssetDiff, String> {
+pub fn dec_asset_diff(s: &str) -> Result<GltfAssetDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [version, generator, copyright, min_version, extensions, extras] = parts.as_slice() else {
         return Err(format!("asset diff: expected 6 fields, got {}", parts.len()));
@@ -31,27 +31,27 @@ pub(crate) fn dec_asset_diff(s: &str) -> Result<GltfAssetDiff, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_scene(sc: &GltfScene) -> String {
+pub fn enc_scene(sc: &GltfScene) -> String {
     format!("[{},{},{},{}]", enc_usize_vec(&sc.nodes), encode_option(&sc.name, |v| enc_str(v)), encode_option(&sc.extensions, enc_json), encode_option(&sc.extras, enc_json),)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_scene(s: &str) -> Result<GltfScene, String> {
+pub fn dec_scene(s: &str) -> Result<GltfScene, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [nodes, name, extensions, extras] = parts.as_slice() else { return Err(format!("scene: expected 4 fields, got {}", parts.len())) };
     Ok(GltfScene { nodes: dec_usize_vec(nodes)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_scene_diff(d: &GltfSceneDiff) -> String {
+pub fn enc_scene_diff(d: &GltfSceneDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.nodes, enc_refs_delta), encode_option_option(&d.name, |v| enc_str(v)), encode_option_option(&d.extensions, enc_json), encode_option_option(&d.extras, enc_json),)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_scene_diff(s: &str) -> Result<GltfSceneDiff, String> {
+pub fn dec_scene_diff(s: &str) -> Result<GltfSceneDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [nodes, name, extensions, extras] = parts.as_slice() else { return Err(format!("scene diff: expected 4 fields, got {}", parts.len())) };
     Ok(GltfSceneDiff { nodes: decode_option(nodes, dec_refs_delta)?, name: decode_option_option(name, dec_str)?, extensions: decode_option_option(extensions, dec_json)?, extras: decode_option_option(extras, dec_json)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_node(n: &GltfNode) -> String {
+pub fn enc_node(n: &GltfNode) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         enc_usize_vec(&n.children),
@@ -69,7 +69,7 @@ pub(crate) fn enc_node(n: &GltfNode) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_node(s: &str) -> Result<GltfNode, String> {
+pub fn dec_node(s: &str) -> Result<GltfNode, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [children, mesh, camera, skin, matrix, translation, rotation, scale, weights, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("node: expected 12 fields, got {}", parts.len()));
@@ -90,7 +90,7 @@ pub(crate) fn dec_node(s: &str) -> Result<GltfNode, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_node_diff(d: &GltfNodeDiff) -> String {
+pub fn enc_node_diff(d: &GltfNodeDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option(&d.children, enc_refs_delta),
@@ -108,7 +108,7 @@ pub(crate) fn enc_node_diff(d: &GltfNodeDiff) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_node_diff(s: &str) -> Result<GltfNodeDiff, String> {
+pub fn dec_node_diff(s: &str) -> Result<GltfNodeDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [children, mesh, camera, skin, matrix, translation, rotation, scale, weights, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("node diff: expected 12 fields, got {}", parts.len()));
@@ -129,7 +129,7 @@ pub(crate) fn dec_node_diff(s: &str) -> Result<GltfNodeDiff, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_primitive(p: &GltfPrimitive) -> String {
+pub fn enc_primitive(p: &GltfPrimitive) -> String {
     format!(
         "[{},{},{},{},{},{},{}]",
         enc_attr_pairs(&p.attributes),
@@ -142,7 +142,7 @@ pub(crate) fn enc_primitive(p: &GltfPrimitive) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_primitive(s: &str) -> Result<GltfPrimitive, String> {
+pub fn dec_primitive(s: &str) -> Result<GltfPrimitive, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [attributes, indices, material, mode, targets, extensions, extras] = parts.as_slice() else {
         return Err(format!("primitive: expected 7 fields, got {}", parts.len()));
@@ -158,25 +158,25 @@ pub(crate) fn dec_primitive(s: &str) -> Result<GltfPrimitive, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_primitive_vec(v: &[GltfPrimitive]) -> String {
+pub fn enc_primitive_vec(v: &[GltfPrimitive]) -> String {
     format!("[{}]", v.iter().map(enc_primitive).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_primitive_vec(s: &str) -> Result<Vec<GltfPrimitive>, String> {
+pub fn dec_primitive_vec(s: &str) -> Result<Vec<GltfPrimitive>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_primitive).collect()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_mesh(m: &GltfMesh) -> String {
+pub fn enc_mesh(m: &GltfMesh) -> String {
     format!("[{},{},{},{},{}]", enc_primitive_vec(&m.primitives), enc_f64_slice(&m.weights), encode_option(&m.name, |v| enc_str(v)), encode_option(&m.extensions, enc_json), encode_option(&m.extras, enc_json),)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_mesh(s: &str) -> Result<GltfMesh, String> {
+pub fn dec_mesh(s: &str) -> Result<GltfMesh, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [primitives, weights, name, extensions, extras] = parts.as_slice() else { return Err(format!("mesh: expected 5 fields, got {}", parts.len())) };
     Ok(GltfMesh { primitives: dec_primitive_vec(primitives)?, weights: dec_f64_vec(weights)?, name: decode_option(name, dec_str)?, extensions: decode_option(extensions, dec_json)?, extras: decode_option(extras, dec_json)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_mesh_diff(d: &GltfMeshDiff) -> String {
+pub fn enc_mesh_diff(d: &GltfMeshDiff) -> String {
     format!(
         "[{},{},{},{},{}]",
         encode_option(&d.primitives, |v| enc_collection(v, enc_primitive, enc_primitive_diff)),
@@ -187,7 +187,7 @@ pub(crate) fn enc_mesh_diff(d: &GltfMeshDiff) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_mesh_diff(s: &str) -> Result<GltfMeshDiff, String> {
+pub fn dec_mesh_diff(s: &str) -> Result<GltfMeshDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [primitives, weights, name, extensions, extras] = parts.as_slice() else { return Err(format!("mesh diff: expected 5 fields, got {}", parts.len())) };
     Ok(GltfMeshDiff {
@@ -199,37 +199,37 @@ pub(crate) fn dec_mesh_diff(s: &str) -> Result<GltfMeshDiff, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_sparse_indices(v: &GltfSparseIndices) -> String {
+pub fn enc_sparse_indices(v: &GltfSparseIndices) -> String {
     format!("[{},{},{}]", v.buffer_view, v.byte_offset, enc_component_type(v.component_type))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_sparse_indices(s: &str) -> Result<GltfSparseIndices, String> {
+pub fn dec_sparse_indices(s: &str) -> Result<GltfSparseIndices, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset, component_type] = parts.as_slice() else { return Err(format!("sparse indices: expected 3 fields, got {}", parts.len())) };
     Ok(GltfSparseIndices { buffer_view: parse_usize(buffer_view)?, byte_offset: parse_usize(byte_offset)?, component_type: dec_component_type(component_type)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_sparse_values(v: &GltfSparseValues) -> String {
+pub fn enc_sparse_values(v: &GltfSparseValues) -> String {
     format!("[{},{}]", v.buffer_view, v.byte_offset)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_sparse_values(s: &str) -> Result<GltfSparseValues, String> {
+pub fn dec_sparse_values(s: &str) -> Result<GltfSparseValues, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset] = parts.as_slice() else { return Err(format!("sparse values: expected 2 fields, got {}", parts.len())) };
     Ok(GltfSparseValues { buffer_view: parse_usize(buffer_view)?, byte_offset: parse_usize(byte_offset)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_sparse_accessor(v: &GltfSparseAccessor) -> String {
+pub fn enc_sparse_accessor(v: &GltfSparseAccessor) -> String {
     format!("[{},{},{}]", v.count, enc_sparse_indices(&v.indices), enc_sparse_values(&v.values))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_sparse_accessor(s: &str) -> Result<GltfSparseAccessor, String> {
+pub fn dec_sparse_accessor(s: &str) -> Result<GltfSparseAccessor, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [count, indices, values] = parts.as_slice() else { return Err(format!("sparse accessor: expected 3 fields, got {}", parts.len())) };
     Ok(GltfSparseAccessor { count: parse_usize(count)?, indices: dec_sparse_indices(indices)?, values: dec_sparse_values(values)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_accessor(a: &GltfAccessor) -> String {
+pub fn enc_accessor(a: &GltfAccessor) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option(&a.buffer_view, |v| v.to_string()),
@@ -247,7 +247,7 @@ pub(crate) fn enc_accessor(a: &GltfAccessor) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_accessor(s: &str) -> Result<GltfAccessor, String> {
+pub fn dec_accessor(s: &str) -> Result<GltfAccessor, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset, component_type, normalized, count, kind, max, min, sparse, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("accessor: expected 12 fields, got {}", parts.len()));
@@ -268,7 +268,7 @@ pub(crate) fn dec_accessor(s: &str) -> Result<GltfAccessor, String> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_accessor_diff(d: &GltfAccessorDiff) -> String {
+pub fn enc_accessor_diff(d: &GltfAccessorDiff) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{}]",
         encode_option_option(&d.buffer_view, |v| v.to_string()),
@@ -286,7 +286,7 @@ pub(crate) fn enc_accessor_diff(d: &GltfAccessorDiff) -> String {
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_accessor_diff(s: &str) -> Result<GltfAccessorDiff, String> {
+pub fn dec_accessor_diff(s: &str) -> Result<GltfAccessorDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [buffer_view, byte_offset, component_type, normalized, count, kind, max, min, sparse, name, extensions, extras] = parts.as_slice() else {
         return Err(format!("accessor diff: expected 12 fields, got {}", parts.len()));

@@ -47,9 +47,9 @@ export default defineTestAdapter({
       },
     },
     "family-option-distinctness": {
-      /** 🔮️ The property: no family may register two kinds with one option string. */
+      /** ⚖️ The property: no family may register two kinds with one option string. */
       oracle: () => ({ projection: { collisions: [] as string[] } }),
-      /** 🎯️ What the catalogue actually declares. */
+      /** 📚️ What the catalogue actually declares. */
       subject: () => ({ projection: { collisions: optionCollisions() } }),
     },
   },

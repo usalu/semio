@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { readIssuedScriptProcessEnvelopeV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { withBuildTestInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import { withBuildTestInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import { readGenuineBirthPolicyV1, selectGenuineBirthV1 } from "../../🟦️.ts";
 
 const live = process.env.SEMIO_GENUINE_PROBE === "1";

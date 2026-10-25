@@ -100,7 +100,8 @@
           "const": 1
         },
         "authenticatedPolicyReads": {
-          "const": 1
+          "type": "integer",
+          "minimum": 1
         },
         "constantNamespaceUses": {
           "const": 0

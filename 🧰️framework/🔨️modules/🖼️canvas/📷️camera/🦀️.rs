@@ -78,17 +78,17 @@ pub mod camera {
     /// 🖼️ Screen margin a fit leaves around the content it frames, in viewport pixels per side.
     pub const CONTENT_FIT_PADDING_PX: f64 = ui_styling::metrics::camera::CONTENT_FIT_PADDING_PX;
 
-    /// 🖼️ How much of the content a STORED camera has to already show for that camera to be adopted
+    /// 🎞️ How much of the content a STORED camera has to already show for that camera to be adopted
     /// on a first attach instead of being replaced by a fit.
     pub const CONTENT_FRAMED_MIN_COVERAGE: f64 = ui_styling::metrics::camera::CONTENT_FRAMED_MIN_COVERAGE;
 
-    /// 🖼️ How little of the content has to be left on screen for a graph that CHANGED under a live
+    /// 🎦️ How little of the content has to be left on screen for a graph that CHANGED under a live
     /// camera (an example switch) to be re-fitted. Deliberately far below
     /// {@link CONTENT_FRAMED_MIN_COVERAGE}: a camera the viewer panned themselves is never yanked
     /// back just because a new node landed off screen.
     pub const CONTENT_REFIT_MAX_COVERAGE: f64 = ui_styling::metrics::camera::CONTENT_REFIT_MAX_COVERAGE;
 
-    /// 🖼️ Axis-aligned world bounds of everything a board wants framed.
+    /// 📏️ Axis-aligned world bounds of everything a board wants framed.
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub struct ContentBounds {
         pub min_x: f64,
@@ -118,7 +118,7 @@ pub mod camera {
         ContentBounds { min_x: camera.x - half_w, min_y: camera.y - half_h, max_x: camera.x + half_w, max_y: camera.y + half_h }
     }
 
-    /// 🖼️ Fraction (`0.0..=1.0`) of `content`'s own area a `camera` currently shows. Degenerate
+    /// 🎥️ Fraction (`0.0..=1.0`) of `content`'s own area a `camera` currently shows. Degenerate
     /// content (a single node, a single row) is measured on whichever axes have extent, so a
     /// zero-height graph is not reported as invisible.
     pub fn content_coverage(content: &ContentBounds, camera: &Camera, viewport: &Viewport) -> f64 {
@@ -137,7 +137,7 @@ pub mod camera {
         }
     }
 
-    /// 🖼️ The camera that frames the whole of `content` inside `viewport` with `padding_px` of
+    /// 🎬️ The camera that frames the whole of `content` inside `viewport` with `padding_px` of
     /// screen margin per side. Zoom is clamped to the canvas camera range, so content far larger
     /// than the zoom-out limit is centred rather than silently over-zoomed.
     pub fn fit_camera(content: &ContentBounds, viewport: &Viewport, padding_px: f64) -> Camera {
@@ -151,7 +151,7 @@ pub mod camera {
         Camera { x, y, zoom: clamp_zoom(if zoom.is_finite() { zoom } else { 1.0 }) }
     }
 
-    /// 🖼️ The camera a surface opens on. A stored camera is honoured only when it already frames the
+    /// 🔓️ The camera a surface opens on. A stored camera is honoured only when it already frames the
     /// content it is stored for (`>= min_coverage` of the content's area on screen); otherwise — and
     /// whenever there is no stored camera at all — the content is fitted. Returns `true` in the
     /// second component when the fit won, which is what the caller persists as a viewport gesture.
@@ -208,12 +208,12 @@ pub mod lod {
         }
     }
 
-    /// 🔤️ Fixed screen label px for a LOD band; stays constant while zooming inside the band.
+    /// 🔖️ Fixed screen label px for a LOD band; stays constant while zooming inside the band.
     pub fn band_label_screen_px(band_px: &[f64], band_index: usize, fallback: f64) -> f64 {
         band_px.get(band_index).copied().unwrap_or(fallback)
     }
 
-    /// 🔤️ Lower camera-zoom bound for a LOD band (previous band `max_zoom`, or `zoom_min`).
+    /// 🩹️ Lower camera-zoom bound for a LOD band (previous band `max_zoom`, or `zoom_min`).
     pub fn band_floor_zoom(band_floor_zoom: &[f64], band_index: usize, zoom_min: f64) -> f64 {
         band_floor_zoom.get(band_index).copied().unwrap_or(zoom_min).max(zoom_min)
     }

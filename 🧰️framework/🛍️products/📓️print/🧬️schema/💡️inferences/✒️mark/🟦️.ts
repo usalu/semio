@@ -19,7 +19,7 @@ export type VizPathCommand =
   | { readonly op: "rect"; readonly args: readonly [number, number, number, number] }
   | { readonly op: "closePath"; readonly args: readonly [] };
 
-/** 🖊️ The canvas-shaped sink every curve and shape generator writes into. */
+/** 🛤️ The canvas-shaped sink every curve and shape generator writes into. */
 export type VizPathContext = {
   moveTo(x: number, y: number): void;
   lineTo(x: number, y: number): void;
@@ -31,14 +31,14 @@ export type VizPathContext = {
   closePath(): void;
 };
 
-/** 🖊️ A path context that records every command, so geometry is comparable without rasterising. */
+/** 📹️ A path context that records every command, so geometry is comparable without rasterising. */
 export type VizPathRecorder = VizPathContext & { readonly commands: VizPathCommand[]; toString(): string };
 
 function formatNumber(value: number): string {
   return Number.isInteger(value) ? String(value) : String(Math.round(value * 1e6) / 1e6);
 }
 
-/** 🖊️ Creates a recording path context. */
+/** 🎙️ Creates a recording path context. */
 export function vizPathRecorder(): VizPathRecorder {
   const commands: VizPathCommand[] = [];
   const recorder: VizPathRecorder = {
@@ -58,7 +58,7 @@ export function vizPathRecorder(): VizPathRecorder {
 
 //#endregion 🔖️PathContext
 //#region 🔖️CurveContract
-/** ✒️ A curve interpolator: the state machine `line` and `area` drive point by point. */
+/** 〰️ A curve interpolator: the state machine `line` and `area` drive point by point. */
 export type VizCurve = {
   areaStart(): void;
   areaEnd(): void;
@@ -67,9 +67,9 @@ export type VizCurve = {
   point(x: number, y: number): void;
 };
 
-/** ✒️ A curve factory bound to a path context, exactly d3's `curve(context)` shape. */
+/** 🏭️ A curve factory bound to a path context, exactly d3's `curve(context)` shape. */
 export type VizCurveFactory = (context: VizPathContext) => VizCurve;
 
-/** ✒️ The curve callback that does nothing, for the area start and end of curves without areas. */
+/** 💤️ The curve callback that does nothing, for the area start and end of curves without areas. */
 export function vizCurveNoop(): void {}
 //#endregion 🔖️CurveContract

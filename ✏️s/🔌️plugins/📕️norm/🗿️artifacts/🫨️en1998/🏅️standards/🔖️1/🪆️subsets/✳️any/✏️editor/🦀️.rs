@@ -113,8 +113,8 @@ impl ArtifactEditor for En1998PlayApp {
         En1998BoundedCommandJobFactory::register(registry)
     }
 
-    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        semio_s_plugin_norm_app_surface::build_norm_tool_job::<Self>(request)
+    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        semio_s_plugin_norm_app_surface::build_norm_tool_job::<Self>(request, output, cx)
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {

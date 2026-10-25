@@ -67,7 +67,7 @@ export interface ShardWatchdogRole {
   stopWatchdog(): void;
 }
 
-/** 🧩️ The hub every collaborator receives: the shell identity, the one private state and the sibling roles, reached only at call time. */
+/** 🌎️ The hub every collaborator receives: the shell identity, the one private state and the sibling roles, reached only at call time. */
 export interface ShardClientHubPort<Shell extends ShardClientIdentity = ShardClientIdentity> {
   readonly shell: Shell;
   readonly state: ShardClientState;

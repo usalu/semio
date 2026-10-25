@@ -21,5 +21,4 @@ test("original producer source bindings and retained custody follow the neutral 
  expect(mounted).toContain("cx.is_cancelled()&&(self.original_producer_pending()");
  expect(producer).toContain("binding.matches(cx)");
  expect(producer.indexOf("if let Some(job)=candidate")).toBeLessThan(producer.indexOf("Err(failure)=>return Err(failure)"));
- console.log("[DEBUG] Nine neutral source/custody cases agree with independent Ajv/JSONPatch and the authored Rust source contract");
 });

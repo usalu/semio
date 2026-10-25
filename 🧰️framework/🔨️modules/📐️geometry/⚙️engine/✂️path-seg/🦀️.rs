@@ -1,4 +1,4 @@
-//! ✂️ Path segment of the geometry primitives: the line, quadratic and cubic path segment with its evaluation, subdivision, arc length and tight bounds. See [`super`].
+//! 📂️ Path segment of the geometry primitives: the line, quadratic and cubic path segment with its evaluation, subdivision, arc length and tight bounds. See [`super`].
 
 use super::*;
 
@@ -89,7 +89,7 @@ impl PathSeg {
         }
     }
 
-    /// ✂️ The portion of this segment between parameters `t0` and `t1` (each clamped to
+    /// 🗜️ The portion of this segment between parameters `t0` and `t1` (each clamped to
     /// `[0,1]`), via two De Casteljau splits — matches `kurbo::PathSeg::subsegment`'s semantics
     /// for a `Range<f64>`.
     pub fn subsegment(&self, t0: f64, t1: f64) -> Self {

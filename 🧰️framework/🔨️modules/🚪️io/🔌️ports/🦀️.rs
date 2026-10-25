@@ -28,15 +28,15 @@ pub trait EmbeddedChildCodecV1: Send + Sync {
     fn sqlite_owns_table(&self, table: &str) -> bool;
     /// 📤️ Projects `content` into the child's tables of the parent's database.
     fn sqlite_project(&self, content: &DslValue, writer: &mut RowWriter<'_, '_>) -> Result<(), ValueError>;
-    /// 📥️ Reconstructs the content from the child's tables of the parent's database; `declared_schema` is the parent's composed DDL.
+    /// ♻️ Reconstructs the content from the child's tables of the parent's database; `declared_schema` is the parent's composed DDL.
     fn sqlite_reconstruct(&self, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>, declared_schema: &str) -> Result<DslValue, ValueError>;
     /// 📥️ The external formats `import` reads, by stable lowercase name.
     fn import_formats(&self) -> &'static [&'static str];
-    /// 📤️ The external formats `export` writes, by stable lowercase name.
+    /// 📝️ The external formats `export` writes, by stable lowercase name.
     fn export_formats(&self) -> &'static [&'static str];
-    /// 📥️ Decodes one external document into child content.
+    /// 📬️ Decodes one external document into child content.
     fn import(&self, format: &str, bytes: &[u8]) -> Result<DslValue, String>;
-    /// 📤️ Encodes child content as one external document.
+    /// 📄️ Encodes child content as one external document.
     fn export(&self, format: &str, content: &DslValue) -> Result<Vec<u8>, String>;
 }
 //#endregion 🔖️Codec
@@ -67,7 +67,7 @@ pub struct EmbeddedChildSlotV1 {
 }
 
 impl EmbeddedChildSlotV1 {
-    /// 🧩️ Declares an unbound slot.
+    /// ♾️ Declares an unbound slot.
     pub const fn new(id: &'static str) -> Self {
         Self { id, bound: OnceLock::new() }
     }
@@ -103,7 +103,7 @@ pub struct VectorPoint2 {
     pub y: f64,
 }
 
-/// 📍️ A point in space, used by transforms.
+/// 🪐️ A point in space, used by transforms.
 #[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct VectorPoint3 {
@@ -138,7 +138,7 @@ pub struct VectorRgba {
     pub a: f32,
 }
 
-/// 🧭️ Translation, rotation and scale of a group.
+/// 👥️ Translation, rotation and scale of a group.
 #[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct VectorTransform {
@@ -148,7 +148,7 @@ pub struct VectorTransform {
 }
 
 impl VectorTransform {
-    /// 🧭️ Zero translation, identity rotation, unit scale.
+    /// 🔑️ Zero translation, identity rotation, unit scale.
     pub fn identity() -> Self {
         Self { translation: VectorPoint3::default(), rotation: VectorQuaternion::default(), scale: VectorPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
     }
@@ -201,7 +201,7 @@ impl Default for VectorNode {
     }
 }
 
-/// 🎨️ A named presentation style.
+/// 🖌️ A named presentation style.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct VectorStyle {
@@ -251,7 +251,7 @@ pub struct VectorScene {
 }
 
 impl VectorScene {
-    /// 🏷️ Every text value in depth-first order over the layers, hidden layers included.
+    /// 📖️ Every text value in depth-first order over the layers, hidden layers included.
     pub fn texts(&self) -> Vec<&str> {
         fn collect<'a>(node: &'a VectorNode, out: &mut Vec<&'a str>) {
             match node {
@@ -265,7 +265,7 @@ impl VectorScene {
         out
     }
 
-    /// ✏️ Replaces the text at `index` of [`VectorScene::texts`]; `false` when the scene has no such text.
+    /// 📇️ Replaces the text at `index` of [`VectorScene::texts`]; `false` when the scene has no such text.
     pub fn set_text(&mut self, index: u32, text: &str) -> bool {
         fn replace(node: &mut VectorNode, index: &mut u32, text: &str) -> bool {
             match node {
@@ -295,13 +295,13 @@ pub mod testkit {
     use semio_framework_io_sqlite_snapshot::artifact::Cell;
     use semio_framework_value::{FromValue, ToValue, ValueRefusalKind};
 
-    /// 🪝️ Content equals scene; SQLite carries a marker row only, and there are no external formats.
+    /// ⚖️ Content equals scene; SQLite carries a marker row only, and there are no external formats.
     pub struct VectorSceneCodec;
 
-    /// 🔗️ The one instance to bind.
+    /// 🧪️ The one instance to bind.
     pub static VECTOR_SCENE_CODEC: VectorSceneCodec = VectorSceneCodec;
 
-    /// 🔗️ Binds the testkit codec to a parent's slot; idempotent, so every test of a binary may call it.
+    /// 🪢️ Binds the testkit codec to a parent's slot; idempotent, so every test of a binary may call it.
     pub fn bind(slot: &EmbeddedChildSlotV1) {
         slot.bind(&VECTOR_SCENE_CODEC).expect("the testkit codec binds");
     }

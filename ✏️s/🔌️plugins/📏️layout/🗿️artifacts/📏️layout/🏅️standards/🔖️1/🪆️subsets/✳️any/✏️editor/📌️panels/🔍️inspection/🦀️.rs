@@ -6,7 +6,8 @@ use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_label, ui
 use semio_s_artifact_layout_layout_model::rgba_to_hex;
 use semio_s_artifact_layout_layout_model::{Frame, Page, LAYOUT_DOCUMENT_SCHEMA};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{InputKind, Trigger};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::BuiltNode;

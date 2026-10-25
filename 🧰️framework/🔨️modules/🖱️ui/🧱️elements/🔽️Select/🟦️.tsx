@@ -140,7 +140,7 @@ function useSelectContext(): SelectContextValue {
   return context;
 }
 
-/** 🛑️ Creates an owned preventable event without exporting implementation-specific types. */
+/** 🔔️ Creates an owned preventable event without exporting implementation-specific types. */
 function preventableEvent<TEvent extends Event>(originalEvent?: TEvent): SelectPreventableEvent<TEvent> {
   let prevented = false;
   return {
@@ -241,7 +241,7 @@ function isInsideSelectIsolation(target: EventTarget | null, isolationRoot: HTML
   return isolationRoot === null ? !isInsideActiveScopedDialogIsolation(target) : target instanceof Node && isolationRoot.contains(target);
 }
 
-/** 📍️ Resolves viewport-safe trigger-relative placement with vertical flipping and inline clamping. */
+/** 🗜️ Resolves viewport-safe trigger-relative placement with vertical flipping and inline clamping. */
 export function resolveSelectPlacement(
   trigger: Pick<DOMRect, "top" | "right" | "bottom" | "left" | "width" | "height">,
   content: Pick<DOMRect, "width" | "height">,
@@ -264,7 +264,7 @@ export function resolveSelectPlacement(
   return { side: resolvedSide, left, top: Math.max(collisionPadding, top), availableHeight, triggerWidth: trigger.width, triggerHeight: trigger.height, transformOrigin: resolvedSide === "bottom" ? "center top" : "center bottom" };
 }
 
-/** 📍️ Where a portaled listbox's `left`/`top` are measured from. */
+/** 🖼️ Where a portaled listbox's `left`/`top` are measured from. */
 export interface SelectFrame {
   readonly position: "absolute" | "fixed";
   readonly originLeft: number;
@@ -288,7 +288,7 @@ export function resolveSelectFrame(input: {
   return { position: "fixed", originLeft: 0, originTop: 0, viewportWidth: input.viewport.width, viewportHeight: input.viewport.height };
 }
 
-/** 🧭️ `position: fixed` is trapped by transform, translate, perspective, filter, or paint containment. */
+/** 📌️ `position: fixed` is trapped by transform, translate, perspective, filter, or paint containment. */
 function createsFixedContainingBlock(style: CSSStyleDeclaration): boolean {
   const declared = (name: string) => {
     const value = (style as unknown as Record<string, string>)[name];
@@ -300,7 +300,7 @@ function createsFixedContainingBlock(style: CSSStyleDeclaration): boolean {
   return style.willChange.split(",").some((part) => ["transform", "translate", "scale", "rotate", "perspective", "filter"].includes(part.trim()));
 }
 
-/** 🧭️ Whether `host` or an ancestor is the containing block `position: fixed` would use. */
+/** 🔎️ Whether `host` or an ancestor is the containing block `position: fixed` would use. */
 function hostInsideFixedContainingBlock(host: HTMLElement): boolean {
   let node: HTMLElement | null = host;
   while (node) {
@@ -475,7 +475,7 @@ const SelectValue = React.forwardRef<HTMLSpanElement, SelectValueProps>(function
 // #endregion 🖱️TriggerAndValue
 
 // #region 📍️Content
-/** 🧭️ Moves active-descendant state through the current enabled rendered option set. */
+/** ♟️ Moves active-descendant state through the current enabled rendered option set. */
 function moveActive(context: SelectContextValue, direction: "first" | "last" | "next" | "previous" | "page-next" | "page-previous"): void {
   const content = context.contentRef.current;
   if (!content) return;

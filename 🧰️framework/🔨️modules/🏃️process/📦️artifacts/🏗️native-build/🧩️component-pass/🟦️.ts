@@ -5,7 +5,7 @@ import{withNativeBuildStageCapacityV1,readNativeBuildStageCapacityV1,type Native
 import{admitNativeBuildPipelineV1,admitNativeBuildPlanV1,type NativeBuildPackageV1,type NativeBuildPassV1,type NativeBuildJobV1,type NativeBuildPipelineJobV1,type NativeBuildPipelineV1,type NativeBuildPlanV1,type NativeBuildGenerationKindV1,type NativeBuildGenerationV1}from"./📋️contract/🟦️.ts";
 import {CargoGraphOperationsV1} from "./📥️planning/🟦️.ts";
 import {nativeBuildPrerequisiteOrderV1} from "./📋️prerequisites/🟦️.ts";
-import {CargoInputContinuationTransactionV1} from "../📥️inputs/🤲️continuations/🟦️.ts";
+import {CargoInputContinuationTransactionV1,withNestedInputOwnersRetiredV1} from "../📥️inputs/🤲️continuations/🟦️.ts";
 import type {CompletedCargoCompilationViewV1} from "../🧾️receipt/📦️retention/📥️snapshot/🟦️.ts";
 import compilationSourceSchema from "../../📤️publication/📥️sources/🧬️schema/🔣️.json" with { type: "json" };
 import{withCargoCompilerInputsV1,type CargoCompilerInputsPortV1,type CargoCompilerInputsRequestV1,type CargoCompilerInputsViewV1}from"../📥️inputs/🟦️.ts";
@@ -14,13 +14,15 @@ import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from 
 import {requireNativeStoragePathV1} from "../💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {admitCargoSelectionV1,type CargoSourceBoundaryPolicyV1} from "../📥️source/🎟️admission/🟦️.ts";
 import { checkResourceLeaseControl, requireMaterializedPathV1 } from "../../../🔒️leases/🟦️.ts";
+import { ProgressDeadlineExpiredV1 } from "../../../⏱️budget/🟦️.ts";
+import { noteScriptProcessActivityV1 } from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import type { BuildMode } from "../../../🏗️build/🎚️mode/🟦️.ts";
-import { compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../🏗️build/🎟️capacity/🟦️.ts";
+import { compileUnitsForHostV1, compilerAdmissionBudgetV1, requireGrantedCompileUnitsV1, type CompilerAdmissionControl, type CompilerCapacityFactsV1 } from "../../../🏗️build/🎟️capacity/🟦️.ts";
 import { execFile, spawn, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import {nativeStatfsSyncV1} from "../💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import { homedir } from "node:os";
+import { availableParallelism, homedir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
@@ -31,7 +33,7 @@ import { stageArtifacts } from "../../📤️publication/🟦️.ts";
 import { acquireCargoBuildLeaseV1 } from "../🔒️lease/🟦️.ts";
 import { CargoProvenanceSessionV1, cargoConfigurationArgumentsV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1, sharedProvenanceCustodyV1, type CargoProvenanceStagedV1 } from "../🟦️.ts";
 import { cargoBuildRunLeafV1, cargoProvenanceMerkleRootV1, cargoProvenanceRowsDigestV1, cargoProvenanceSourceV1, cargoUnitIdentityV1, cargoUnitLeafV1, type CargoProvenanceRootsV1, type CargoUnitObservationV1 } from "../🧾️receipt/🟦️.ts";
-import { ADMISSION_POLICY_V1, admissionMemoryBytesV1, buildSchedulerV1, compilerWrapperEnvironmentV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitKeyV1, unitObservationsV1, unitOutputBytesV1, type UnitObservationV1 } from "../🎟️admission/🟦️.ts";
+import { ADMISSION_POLICY_V1, admissionMemoryBytesV1, admissionMemoryShareV1, buildSchedulerV1, compilerWrapperEnvironmentV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitKeyV1, unitObservationsV1, unitOutputBytesV1, type UnitObservationV1 } from "../🎟️admission/🟦️.ts";
 import { createJobserverV1, defaultJobserverStyleV1, type JobSlotV1 } from "../🎰️jobserver/🟦️.ts";
 import { criticalPathV1, startTimelineV1, TELEMETRY_POLICY_V1, writeBuildReportV1, type BuildScriptRunV1, type StageRecordV1 } from "../📈️telemetry/🟦️.ts";
 import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../🗃️stage-cache/🟦️.ts";
@@ -121,10 +123,16 @@ export function nativeBuildPassArgsV1(pass: NativeBuildPassV1): string[] {
   return ["build", "--locked", "--manifest-path", pass.manifest, ...pass.packages.flatMap((row) => ["-p", row.name]), "--lib", "--target", pass.target, "--profile", pass.profile, "--keep-going", "--message-format=json-render-diagnostics"];
 }
 
+/** 🔨️ The declared Cargo input of every pass of a plan, exactly as the registry reader that spans the whole driver admits it: the caller opens that reader BEFORE any compiler writer custody so the lock order stays ascending.
+ * @see ../../../🔒️leases/🧭️order/🔣️policy.json */
+export function nativeBuildPassInputRequestsV1(plan: Pick<NativeBuildPlanV1, "passes">, options: Readonly<{ cwd: string; build: string; target: string; environment: Readonly<Record<string, string | undefined>>; control: CompilerAdmissionControl }>): readonly CargoCompilerInputsRequestV1[] {
+  return plan.passes.map(pass => Object.freeze({ manifest: pass.manifest, cwd: options.cwd, arguments: cargoConfigurationArgumentsV1(nativeBuildPassArgsV1(pass), undefined, options.build), environment: Object.freeze({ ...options.environment, CARGO_TARGET_DIR: options.target, CARGO_BUILD_BUILD_DIR: options.build }), control: options.control }));
+}
+
 /** 📁️ Names finite generation-owned component bytes without granting filesystem custody. */
 export function nativeBuildComponentStagePathV1(generation:Pick<NativeBuildGenerationV1,"root">,pass:Pick<NativeBuildPassV1,"id"|"manifest"|"profile">,row:NativeBuildPackageV1):string{const key=createHash("sha256").update(JSON.stringify([pass.id,pass.manifest,pass.profile,row.name,row.manifest])).digest("hex").slice(0,24);return requireMaterializedPathV1(join(generation.root,"w",key,"component.wasm"));}
 
-/** 🧾️ Names the observation of an actual admitted pass from its exact configured command arguments. */
+/** 🧲️ Names the observation of an actual admitted pass from its exact configured command arguments. */
 export function nativeBuildPassObservationPathV1(generation:Pick<NativeBuildGenerationV1,"report"|"build">,pass:Pick<NativeBuildPassV1,"manifest">,arguments_:readonly string[]):string{
  const key=createHash("sha256").update(JSON.stringify([pass.manifest,arguments_,generation.build])).digest("hex").slice(0,32);return requireMaterializedPathV1(join(generation.report,NATIVE_BUILD_DRIVER_POLICY_V1.provenanceDirectory,`cargo-unit-provenance-release-${key}.json`));
 }
@@ -134,15 +142,15 @@ export function nativeBuildUnitGraphArgsV1(pass: NativeBuildPassV1): string[] {
   return ["build", "--locked", "--manifest-path", pass.manifest, ...pass.packages.flatMap((row) => ["-p", row.name]), "--lib", "--target", pass.target, "--profile", pass.profile, "-Z", "unstable-options", "--unit-graph"];
 }
 
-/** 🕸️ Cargo's unit graph (`--unit-graph`, version 1) as the driver reads it. */
+/** 🦀️ Cargo's unit graph (`--unit-graph`, version 1) as the driver reads it. */
 export type CargoUnitGraphV1 = Readonly<{ version: 1; units: readonly Readonly<{ pkg_id: string; target: Readonly<{ name: string; kind: readonly string[]; crate_types: readonly string[]; src_path: string }>; platform: string | null; mode: string; features: readonly string[]; dependencies: readonly Readonly<{ index: number }>[] }>[]; roots: readonly number[] }>;
 
-/** 🔑️ The identity of one unit-graph node, joinable with {@link announcedUnitIdentityV1}. */
+/** 🪪️ The identity of one unit-graph node, joinable with {@link announcedUnitIdentityV1}. */
 export function unitGraphIdentityV1(unit: CargoUnitGraphV1["units"][number]): string {
   return unit.mode === "run-custom-build" ? JSON.stringify([unit.pkg_id, "run-custom-build", unit.platform]) : cargoUnitIdentityV1({ packageId: unit.pkg_id, target: unit.target.name, kinds: unit.target.kind, platform: unit.platform, features: unit.features });
 }
 
-/** 🔑️ The identity of a unit Cargo announced in a pass for `target`: the platform is the target when its outputs live under the target's directory. */
+/** 🎯️ The identity of a unit Cargo announced in a pass for `target`: the platform is the target when its outputs live under the target's directory. */
 export function announcedUnitIdentityV1(message: Readonly<{ package_id?: unknown; target?: Readonly<{ name?: unknown; kind?: unknown }>; features?: unknown; filenames?: unknown }>, target: string): string {
   const files = Array.isArray(message.filenames) ? message.filenames.map(String) : [];
   return cargoUnitIdentityV1({ packageId: String(message.package_id), target: String(message.target?.name), kinds: Array.isArray(message.target?.kind) ? message.target.kind.map(String) : [], platform: files.some((file) => file.split(sep).includes(target)) ? target : null, features: Array.isArray(message.features) ? message.features.map(String) : [] });
@@ -162,12 +170,12 @@ export type ComponentBatchV1 = Readonly<{ pass: NativeBuildPassV1; parent: strin
 /** 🧬️ The footprint kind of a unit, read from its crate name and crate types: a component final (`cdylib`), a proc-macro, a build script or a library. */
 export type UnitFootprintKindV1 = "library" | "component" | "procMacro" | "buildScript";
 
-/** 🧬️ Classifies one unit by its crate name and crate types (`unitKeyV1`'s `<package>@<crate>|<target>|<profile>|<types>`). */
+/** ⌨️ Classifies one unit by its crate name and crate types (`unitKeyV1`'s `<package>@<crate>|<target>|<profile>|<types>`). */
 export function unitFootprintKindV1(crate: string, crateTypes: readonly string[]): UnitFootprintKindV1 {
   return crateTypes.includes("cdylib") ? "component" : crateTypes.includes("proc-macro") ? "procMacro" : crate.startsWith("build_script_") ? "buildScript" : "library";
 }
 
-/** 📏️ How a batch's unmeasured units are estimated: the `quantile` of every recorded unit of the same kind, or the kind's documented upper bound when none
+/** 👣️ How a batch's unmeasured units are estimated: the `quantile` of every recorded unit of the same kind, or the kind's documented upper bound when none
  * was ever recorded (`Policy.unitFootprintBoundsBytes`). The bounds come from this ticket's measurements: a component closure re-hashed 3 to 4 GB (4.05 GB
  * for process) over roughly 350 units, about 11 MiB per unit, so a library is bounded at 16 MiB (1.5 times that mean, summed over a closure); a component
  * final produced multiple GiB of outputs before codegen-units 16 and 50 to 110 MB of wasm after it, so it is bounded at 2 GiB; proc-macros (host dylibs) at
@@ -175,7 +183,7 @@ export function unitFootprintKindV1(crate: string, crateTypes: readonly string[]
  * @see ../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/📓️2026-10-13-scalable-build-architecture.md */
 export type UnitFootprintPolicyV1 = Readonly<{ quantile: number; bounds: Readonly<Record<UnitFootprintKindV1, number>> }>;
 
-/** 📦️ Splits one pass's components into batches whose joint unit closure is predicted to fit `budgetBytes`, in planned order: a unit's footprint is the
+/** 🎞️ Splits one pass's components into batches whose joint unit closure is predicted to fit `budgetBytes`, in planned order: a unit's footprint is the
  * `quantile` of its own recorded `outputBytes`, else that of every recorded unit of its kind, else its kind's upper bound; shared units count once per batch.
  * A component whose own closure exceeds the budget is a batch of its own; a pass that fits whole keeps its identity, batches are `<pass>-b<n>`.
  * @see ../🎟️admission/🟦️.ts (`unitOutputBytesV1`, the store `units.jsonl`) */
@@ -206,7 +214,7 @@ export function reclaimablePassFilesV1(messages: readonly Readonly<{ package_id?
   return [...new Set(messages.filter((message) => !live.has(announcedUnitIdentityV1(message, target))).flatMap((message) => (Array.isArray(message.filenames) ? message.filenames.map(String) : []).flatMap((file) => [file, file.replace(/\.[^./\\]+$/u, ".d")])))].sort();
 }
 
-/** 🔑️ The identity of a build-script run Cargo announced in a pass for `target`. */
+/** ▶️ The identity of a build-script run Cargo announced in a pass for `target`. */
 export function announcedRunIdentityV1(packageId: string, outDir: string, target: string): string {
   return JSON.stringify([packageId, "run-custom-build", outDir.split(sep).includes(target) ? target : null]);
 }
@@ -249,7 +257,7 @@ export function invocationProvenanceLeavesV1(observed: Readonly<{ units: readonl
   return Object.freeze({ leaves, sources });
 }
 
-/** 🌳️ One component's provenance from the leaves of the observed units its closure holds. */
+/** ⏸️ One component's provenance from the leaves of the observed units its closure holds. */
 export function componentProvenanceFromClosureV1(closure: ReadonlySet<string>, leaves: ReadonlyMap<string, string>, sources: ReadonlyMap<string, readonly (readonly [string, string])[]>): ComponentProvenanceV1 {
   const selected = [...closure].filter((identity) => leaves.has(identity));
   const rows = new Map<string, string>();
@@ -266,7 +274,7 @@ export type NativeBuildCompilationV1=Readonly<{readonly[nativeCompilationBrand]:
 type CompilationScopeV1={live:boolean;accepting:boolean;view:CompletedCargoCompilationViewV1;pending:Set<Promise<unknown>>;failures:unknown[]};
 const nativeCompilationsV1=new WeakMap<NativeBuildCompilationV1,CompilationScopeV1>();
 const compilationPendingMaximumV1=compilationSourceSchema.properties.maximumPendingOperations.const,compilationBytesMaximumV1=compilationSourceSchema.properties.maximumRetainedCompilationBytes.const;
-/** 🧾️ Borrows an actual completed pass while its writer, retained allocation and whole-outcome consumer remain held. */
+/** 🏗️ Borrows an actual completed pass while its writer, retained allocation and whole-outcome consumer remain held. */
 export function withNativeBuildCompilationTaskV1<T>(token:NativeBuildCompilationV1,body:(view:CompletedCargoCompilationViewV1)=>Promise<T>):Promise<T>{
  const scope=nativeCompilationsV1.get(token);if(!scope)throw Error("Actual completed Native pass capture required");const admitted=scope.live&&scope.accepting&&typeof body==="function"&&scope.pending.size<compilationPendingMaximumV1,task=withIssuedResourceOperationV1(scope.view.control,async()=>{await Promise.resolve();if(!admitted)throw Error("Live finite completed Native pass task required");await scope.view.recheck();const value=await body(Object.freeze({...scope.view,files:new Map(scope.view.files)}));await scope.view.recheck();return value;});if(admitted){scope.pending.add(task);void task.then(()=>scope.pending.delete(task),error=>{scope.pending.delete(task);scope.failures.push(error);});}return task;
 }
@@ -288,11 +296,13 @@ export type NativeBuildDriverOptionsV1 = Readonly<{
   maximumObservationBytes?:number;
   retainCompilationBytes?:number;
   consume?: (outcome:NativeBuildOutcomeV1,control:CompilerAdmissionControl)=>Promise<void>;
-  stages?: (component: LinkedComponentV1) => readonly NativeBuildStageV1[];
+  stages?: (component: LinkedComponentV1, driverScope: unknown) => readonly NativeBuildStageV1[];
+  withCapacity?: <T>(compile: (facts: CompilerCapacityFactsV1, control: CompilerAdmissionControl, driverScope: unknown) => Promise<() => Promise<T>>) => Promise<T>;
   jobEnvironment?: (job: NativeBuildJobV1, generation: NativeBuildGenerationV1) => Readonly<Record<string, string>>;
   tokens?: number;
   physicalBytes?: number;
   storageReserveBytes?: number;
+  reclaimStorage?: (request: Readonly<{ needBytes: number }>) => Promise<void>;
   scheduler?: string;
   cargo?: Readonly<{ command: string; args: readonly string[] }>;
   stallMs?: number;
@@ -328,7 +338,7 @@ type ObservedPassV1 = Readonly<{ staged: CargoProvenanceStagedV1; closures: Read
 /** ⏳️ A named completion any job or stage may wait for. */
 type Completion = { promise: Promise<void>; resolve: () => void; reject: (error: unknown) => void; settled: boolean };
 
-/** 🏁️ Installs terminal observation immediately after the actual child is born. */
+/** 💻️ Installs terminal observation immediately after the actual child is born. */
 function nativeBuildChildTerminalV1(child:ChildProcess):Promise<number>{const terminal=new Promise<number>((accept,refuse)=>{let failure:{error:unknown}|undefined;child.once("error",error=>{failure={error};});child.once("close",code=>failure?refuse(failure.error):accept(code??1));});void terminal.catch(()=>{});return terminal;}
 /** 🪢️ Joins the real close and every stream before the enclosing CPU phase can retire. */
 async function finishNativeBuildChildV1(child:ChildProcess,terminal:Promise<number>,streams:readonly Promise<unknown>[],primary:{error:unknown}|undefined,cleanups:readonly(()=>void)[]):Promise<void>{const failures:unknown[]=[];if(child.exitCode===null&&child.signalCode===null)try{terminateOwnedChildTree(child);}catch(error){failures.push(error);}for(const row of await Promise.allSettled([terminal,...streams]))if(row.status==="rejected"&&(!primary||!Object.is(primary.error,row.reason))&&!failures.some(error=>Object.is(error,row.reason)))failures.push(row.reason);for(const cleanup of cleanups)try{cleanup();}catch(error){if(!primary||!Object.is(primary.error,error))failures.push(error);}if(failures.length)throw new AggregateError(primary?[primary.error,...failures]:failures,"Native compiler child and cleanup failed");}
@@ -368,7 +378,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   let deadline: ReturnType<typeof setTimeout> | undefined;
   const watchDeadline = (): void => {
     try { const remaining = checkResourceLeaseControl(options.control); if (remaining !== null) deadline = setTimeout(watchDeadline, Math.min(remaining, 1000)); }
-    catch { if (!signal.aborted) stop(Error("Original native build deadline exhausted")); }
+    catch (error) { if (!signal.aborted) stop(error instanceof ProgressDeadlineExpiredV1 ? error : Error("Original native build deadline exhausted")); }
   };
   if (budget !== 0) watchDeadline();
   const observations:Readonly<{pass:string;path:string}>[]=[],compilations:Readonly<{pass:string;capture:NativeBuildCompilationV1}>[]=[],compilationScopes:CompilationScopeV1[]=[];let observationRosterBytes=2;
@@ -377,8 +387,11 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   let stagesRunning = 0, stagesWaiting = 0, lastMessageMs = Date.now(), stallReason: string | null = null;
   log(`[native-build] ${generation.kind} generation ${generation.root}: ${plan.passes.length} pass(es), ${components.length} component build(s), ${jobs.length} job(s)`);
   let primaryFailed=false,dispose:undefined|(()=>Promise<void>);
+  const buildLeases: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>[] = [];
+  const withCapacity: NonNullable<NativeBuildDriverOptionsV1["withCapacity"]> = options.withCapacity ?? (async compile => { const units = await compileUnitsForHostV1({ environment: options.environment, signal: admission.signal }); return withCompilerCapacityConsumptionV1({ request: units.request, directory: options.leaseDirectory, control: admission, environment: options.environment }, (facts, held) => { requireGrantedCompileUnitsV1(units.decision, facts.parallelism); return compile(facts, held, undefined); }); });
   try {
-  return await withCompilerCapacityConsumptionV1({request:{kind:"whole-host"},directory:options.leaseDirectory,control:admission,environment:options.environment},async(capacity,cpuControl)=>{
+  for (const profile of [...new Set(plan.passes.map(pass => pass.profile))].sort()) { const pass = plan.passes.find(row => row.profile === profile)!; buildLeases.push(await acquireCargoBuildLeaseV1({ directory: options.leaseDirectory, buildDirectory: generation.build, targetDirectory: generation.target, args: nativeBuildPassArgsV1(pass), signal, control: options.control })); }
+  return await withCapacity(async(capacity,cpuControl,driverScope)=>{
   const tokens = Math.min(options.tokens ?? capacity.parallelism, capacity.parallelism);
   options = { ...options, environment: { ...options.environment, SEMIO_COMPILER_PARALLELISM: String(tokens) } };
   const cargoHome = resolve(options.environment.CARGO_HOME ?? join(homedir(), ".cargo")), roots: CargoProvenanceRootsV1 = { repository: options.cwd, build: generation.build, cargoHome };
@@ -388,7 +401,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   const historyPath = unitHistoryPathV1(options.cacheRoot), history = await readUnitHistoryV1(historyPath);
   const jobserver = await createJobserverV1({ version: 1, tokens, style: defaultJobserverStyleV1() }, generation.jobserver);
   let broker:Awaited<ReturnType<typeof startAdmissionBrokerV1>>;
-  try{broker=await startAdmissionBrokerV1({physicalBytes:options.physicalBytes??admissionMemoryBytesV1(),history});}catch(primary){try{jobserver.close();}catch(secondary){throw new AggregateError([primary,secondary],"Native broker initialization and jobserver retirement failed");}throw primary;}
+  try{broker=await startAdmissionBrokerV1({physicalBytes:options.physicalBytes??admissionMemoryShareV1(admissionMemoryBytesV1(),tokens,availableParallelism()),history});}catch(primary){try{jobserver.close();}catch(secondary){throw new AggregateError([primary,secondary],"Native broker initialization and jobserver retirement failed");}throw primary;}
   let timeline:ReturnType<typeof startTimelineV1>;
   try{timeline=startTimelineV1({
     control:cpuControl,
@@ -440,7 +453,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     const terminal=nativeBuildChildTerminalV1(child);children.add(child);
     const stop = (): void => terminateOwnedChildTree(child);
     const tail: string[] = [];
-    const collect = async (stream: NodeJS.ReadableStream): Promise<void> => { for await (const line of createInterface({ input: stream, crlfDelay: Infinity })) { output.write(line); lastMessageMs = Date.now(); tail.push(line); if (tail.length > policy.failureLinesPerUnit) tail.shift(); } };
+    const collect = async (stream: NodeJS.ReadableStream): Promise<void> => { for await (const line of createInterface({ input: stream, crlfDelay: Infinity })) { output.write(line); lastMessageMs = Date.now(); noteScriptProcessActivityV1(); tail.push(line); if (tail.length > policy.failureLinesPerUnit) tail.shift(); } };
     const streams:Promise<void>[]=[];let primary:{error:unknown}|undefined;
     try {
       signal.addEventListener("abort",stop,{once:true});streams.push(collect(child.stdout!),collect(child.stderr!));
@@ -478,7 +491,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   const unitGraphs = new Map(plan.passes.map((pass) => [pass.id, graphOperationsOwner.start(()=>withNativeBuildCargoInputsV1(options,{manifest:pass.manifest,cwd:options.cwd,arguments:cargoConfigurationArgumentsV1(nativeBuildUnitGraphArgsV1(pass),undefined,generation.build),environment:{...options.environment,CARGO_TARGET_DIR:generation.target,CARGO_BUILD_BUILD_DIR:generation.build,CARGO_UNSTABLE_FEATURE_UNIFICATION:"true",CARGO_RESOLVER_FEATURE_UNIFICATION:policy.featureUnification,CARGO_TERM_COLOR:"never"},control:options.control},async inputs=>withRequestedIssuedResourceControlV1(cpuControl,0,async effectControl=>{
     const port = options.cargo ?? { command: "cargo", args: [] };
     check();graphOperationsOwner.check();checkResourceLeaseControl(inputs.control);
-    const request = exec(port.command, [...port.args, ...inputs.arguments], { cwd: options.cwd, signal:effectControl.signal, timeout: compilerAdmissionBudgetV1(effectControl), maxBuffer: 512 * 1024 * 1024, env: scriptResourceProcessEnvironmentV1(effectControl,inputs.environment) });
+    const request = exec(port.command, [...port.args, ...inputs.arguments], { cwd: options.cwd, signal:effectControl.signal, maxBuffer: 512 * 1024 * 1024, env: scriptResourceProcessEnvironmentV1(effectControl,inputs.environment) });
     const terminal=nativeBuildChildTerminalV1(request.child);children.add(request.child);
     let output: Awaited<typeof request>,primary:{error:unknown}|undefined;
     try { output = await request; check();graphOperationsOwner.check();checkResourceLeaseControl(inputs.control); } catch (error) { primary={error};throw error; } finally {try{await finishNativeBuildChildV1(request.child,terminal,[request],primary,[]);}finally{children.delete(request.child);}}
@@ -500,7 +513,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
       await stageArtifacts(dirname(target),relative(options.cwd,resolve(row.manifest)).split(sep).join("/"),new Map([[basename(target),wasm]]),{control,signal:control.signal,leaseDirectory:options.leaseDirectory});
       staged.push(`${row.name}:${pass.profile}`);
     }, completion(`${row.name}:stage`));
-    const declared = options.stages?.(linked) ?? [];
+    const declared = options.stages?.(linked, driverScope) ?? [];
     for(const step of declared){const intent=readNativeBuildStageCapacityV1(step.capacity),name=step.name,after=[...step.after],run=step.run;if(typeof run!=="function")throw Error("Actual declared stage body required");work(row.name,name,[`${row.name}:stage`,...[...after,...plan.stageAfter?.[name]??[]].map(name=>name.includes(":")?name:`${row.name}:${name}`)],(parallelism,control)=>{const environment:Record<string,string|undefined>={...options.environment,SEMIO_BUILD_MODE:profileBuildModeV1(pass.profile),SEMIO_COMPILER_PARALLELISM:String(parallelism),GOMAXPROCS:String(parallelism)};delete environment.MAKEFLAGS;delete environment.CARGO_MAKEFLAGS;delete environment.SEMIO_COMPILER_CAPACITY_HELD;return run(Object.freeze({control,signal:control.signal,parallelism,generation,cache,environment:Object.freeze(environment),log,provenance:()=>componentProvenance(pass,row)}));},completion(`${row.name}:${name}`),intent);}
 
   };
@@ -553,6 +566,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     await options.storage.recheck();
     const predicted = batches.find((row) => row.pass.id === pass.id)!;
     while (availableBytes() < predicted.bytes + reserveBytes && (inflight.size || pendingReclaims.size)) { check(); await Promise.race([...[...inflight.values()].map((row) => row.settled), ...pendingReclaims]); }
+    if (availableBytes() < predicted.bytes + reserveBytes && options.reclaimStorage) { const needBytes = predicted.bytes + reserveBytes - availableBytes(); log(`[native-build] ${pass.id}: ${(needBytes / 1024 ** 2).toFixed(0)} MiB short of its predicted footprint; asking the cache collector to free the incremental sessions no running compiler holds`); await options.reclaimStorage({ needBytes }); check(); }
     if (availableBytes() < predicted.bytes + reserveBytes) throw Error(`Native build storage refused: ${pass.id} needs a predicted ${(predicted.bytes / 1024 ** 2).toFixed(0)} MiB${predicted.measured ? "" : " (unmeasured units estimated by kind)"} plus the ${(reserveBytes / 1024 ** 2).toFixed(0)} MiB reserve, ${(availableBytes() / 1024 ** 2).toFixed(0)} MiB remain after every running batch settled and every unit no remaining pass needs was reclaimed`);
     let release = (): void => undefined;
     inflight.set(pass.id, { bytes: predicted.bytes, settled: new Promise<void>((accept) => { release = accept; }) });
@@ -561,9 +575,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   const runAdmittedPass = (pass: NativeBuildPassV1): Promise<void> => inputContinuations.start(consume=>withNativeBuildCargoInputsV1(options,{manifest:pass.manifest,cwd:options.cwd,arguments:cargoConfigurationArgumentsV1(nativeBuildPassArgsV1(pass),undefined,generation.build),environment:{...options.environment,CARGO_TARGET_DIR:generation.target,CARGO_BUILD_BUILD_DIR:generation.build},control:options.control},consume),async inputs=>withRequestedIssuedResourceControlV1(cpuControl,0,async effectControl=>{
     const args = [...inputs.arguments],signal=effectControl.signal,checkPass=()=>{check();checkResourceLeaseControl(inputs.control);checkResourceLeaseControl(effectControl);}, startMs = Date.now(), units: { message: any; evidence: unknown }[] = [], buildScripts: unknown[] = [], linked = new Map<string, string>();
     const slot = await jobserver.acquire(signal);
-    let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
     try {
-      checkPass();lease = await acquireCargoBuildLeaseV1({ directory: options.leaseDirectory, buildDirectory: generation.build, targetDirectory: generation.target, args, signal, control: effectControl });
       checkPass();
       broker.registerPass({ id: pass.id, profile: pass.profile, target: pass.target });
       const port = options.cargo ?? { command: "cargo", args: [] };
@@ -579,7 +591,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
           (async () => {
             for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) {
               messages.write(line);
-              lastMessageMs = Date.now();
+              lastMessageMs = Date.now();noteScriptProcessActivityV1();
               let message: any;
               try { message = JSON.parse(line); } catch { continue; }
               if (message.reason === "compiler-artifact") {
@@ -630,7 +642,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
         finishedPasses.add(pass.id);
         reclaimPass(pass, units.map((row) => row.message));
       }catch(error){primary={error};throw error;}finally {try{await finishNativeBuildChildV1(child,terminal,streams,primary,logs.map(log=>()=>log.close()));}finally{signal.removeEventListener("abort",stop);children.delete(child);}}
-    } finally { lease?.release(); slot.release(); }
+    } finally { slot.release(); }
   },inputs.control.signal));
   let executionFailed=false;
   try {
@@ -681,10 +693,10 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   };
   for(const id of nativeBuildPrerequisiteOrderV1(jobs)){const job=jobs.find(row=>row.id===id);if(!job)throw Error("Actual prerequisite job required");runJob(job);}
   await Promise.all(jobs.map(job=>completion(`job:${job.id}`).promise));while(pending.size)await Promise.all([...pending]);check();
-  const requests=plan.passes.map(pass=>Object.freeze({manifest:pass.manifest,cwd:options.cwd,arguments:cargoConfigurationArgumentsV1(nativeBuildPassArgsV1(pass),undefined,generation.build),environment:Object.freeze({...options.environment,CARGO_TARGET_DIR:generation.target,CARGO_BUILD_BUILD_DIR:generation.build}),control:options.control}));
+  const requests=nativeBuildPassInputRequestsV1(plan,{cwd:options.cwd,build:generation.build,target:generation.target,environment:options.environment,control:options.control});
   const withPassInputs=options.withPassInputs,first=requests[0];if(!first)throw Error("Actual declared pass input required");
-  let completed:undefined|(()=>Promise<NativeBuildOutcomeV1>);await planContinuations.start(consume=>withCargoCompilerInputsV1(first,withPassInputs?(request,consume)=>withPassInputs(requests,control=>consume(Object.freeze({...request,control}))):undefined,consume),async actual=>{completed=await executePasses(actual.control);});if(!completed)throw Error("Actual completed compiler continuation required");return completed;
+  let completed:undefined|(()=>Promise<NativeBuildOutcomeV1>);await planContinuations.start(consume=>withCargoCompilerInputsV1(first,withPassInputs?(request,consume)=>withPassInputs(requests,control=>consume(Object.freeze({...request,control}))):undefined,consume),async actual=>{completed=await withNestedInputOwnersRetiredV1(inputContinuations,()=>executePasses(actual.control));});if(!completed)throw Error("Actual completed compiler continuation required");return completed;
   });
-  } catch(error){primaryFailed=true;throw error;}finally {for(const scope of compilationScopes)scope.accepting=false;for(const scope of compilationScopes){while(scope.pending.size)await Promise.allSettled([...scope.pending]);scope.live=false;}let cleanupFailed=false,cleanupFailure:unknown;try{await dispose?.();}catch(error){cleanupFailed=true;cleanupFailure=error;}try{await inputContinuations.close();}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}try{if(options.retainCompilationBytes!==undefined)rmSync(join(generation.root,"q"),{recursive:true,force:true});}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}try{await planContinuations.close();}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}finally{if(deadline)clearTimeout(deadline);}if(!primaryFailed&&cleanupFailed)throw cleanupFailure; }
+  } catch(error){primaryFailed=true;throw error;}finally {for(const lease of buildLeases.reverse())try{lease.release();}catch{}for(const scope of compilationScopes)scope.accepting=false;for(const scope of compilationScopes){while(scope.pending.size)await Promise.allSettled([...scope.pending]);scope.live=false;}let cleanupFailed=false,cleanupFailure:unknown;try{await dispose?.();}catch(error){cleanupFailed=true;cleanupFailure=error;}try{await inputContinuations.close();}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}try{if(options.retainCompilationBytes!==undefined)rmSync(join(generation.root,"q"),{recursive:true,force:true});}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}try{await planContinuations.close();}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}finally{if(deadline)clearTimeout(deadline);}if(!primaryFailed&&cleanupFailed)throw cleanupFailure; }
  });
 }

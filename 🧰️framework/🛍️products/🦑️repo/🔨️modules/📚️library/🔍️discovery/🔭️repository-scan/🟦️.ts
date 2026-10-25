@@ -1,16 +1,41 @@
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import type { AreaState, PackageGlueGrammarSpec, PackageMaturity } from "../📜️taxonomy-contracts/🟦️.ts";
 import type { SemanticPackageProjectionCase } from "../📦️package-projection-contracts/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 import { type FixedSourceDispositionDecision, classifyPackageSource, classifyPackageSourceDisposition } from "../🏷️package-source-classification/🟦️.ts";
 import { type DiscoveredOwner, type DiscoveredPackage, type DiscoveryBurndown, type DiscoveryProblem, type DiscoveryScan, type OwnerAccumulator, type PackageLang, type PackageRole, type PackageTarget, fallbackPackageId, isDiscoverySkipDirectory, jsonTable, parseSemioMarker, readdirSafe, scanCache, tomlTableBody, tomlTableValues } from "../🪧️owner-markers/🟦️.ts";
 import { type RegistryCatalogInputView, type RegistryCatalogOwnerIndex, gitlinkBoundaryCache } from "../📇️registry-catalog-inputs/🟦️.ts";
-import { exactContractFilename, fixedContractFilename } from "../🎯️taxonomy-path-matching/🟦️.ts";
+import { exactContractFilename, fixedContractFilename, taxonomyPathPatternMatches } from "../🎯️taxonomy-path-matching/🟦️.ts";
 import { projectionByteCompare } from "../🧱️path-projection-contracts/🟦️.ts";
 import { semanticPackageGenerationAuthority } from "../🎁️package-projection/🟦️.ts";
-import { packageImplementationAdmitted } from "../🧱️package-implementation-admission/🟦️.ts";
+import { declaredEntryDirectories, packageContractTreePatterns, packageDirectoryAdmitted, packageImplementationAdmitted } from "../🧱️package-implementation-admission/🟦️.ts";
 import { fileKindIdForSourcePath, loadCatalogTaxonomy, loadTaxonomy, pathIsExcluded, semanticDirectoryKindId } from "../🔐️taxonomy-authority/🟦️.ts";
+import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+
+/** 👁️ The repository-visible paths of a work tree (tracked, or untracked and not git-ignored) as a membership predicate: ignored build output, caches and installed trees are never authored package content. Outside a git work tree every path is visible. */
+function repositoryVisibility(repoRoot: string): (path: string, directory: boolean) => boolean {
+  const cached = repositoryVisibilityCache.get(repoRoot);
+  if (cached) return cached;
+  let predicate = (): boolean => true;
+  try {
+    const root = realpathSync(resolve(repoRoot));
+    const options = { cwd: root, encoding: "utf8" as const, timeout: 120_000, maxBuffer: 1 << 30, check: true as const };
+    if (realpathSync(runToolSyncV1("git", ["rev-parse", "--show-toplevel"], options).stdout.trim()) === root) {
+      const files = new Set<string>(), directories = new Set<string>();
+      for (const path of runToolSyncV1("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", "ls-files", "-z", "--cached", "--others", "--exclude-standard"], options).stdout.split("\0")) {
+        if (!path) continue;
+        files.add(path.normalize("NFC"));
+        for (let cut = path.lastIndexOf("/"); cut > 0; cut = path.lastIndexOf("/", cut - 1)) directories.add(path.slice(0, cut).normalize("NFC"));
+      }
+      predicate = ((path: string, directory: boolean) => (directory ? directories : files).has(path.normalize("NFC"))) as () => boolean;
+    }
+  } catch {}
+  repositoryVisibilityCache.set(repoRoot, predicate as (path: string, directory: boolean) => boolean);
+  return predicate as (path: string, directory: boolean) => boolean;
+}
+
+const repositoryVisibilityCache = new Map<string, (path: string, directory: boolean) => boolean>();
 
 /** 🏗️ Renders only new generated leaves, excluding authored mappings and their source splices. */
 export function semanticPackageGeneratedLeafPreview(repoRoot: string, packageId: SemanticPackageProjectionCase["id"], taxonomy: Taxonomy = loadTaxonomy()): readonly Readonly<{ path: string; content: string }>[] {
@@ -44,7 +69,7 @@ export function readSemioMarker(manifestPath: string, lang: PackageLang, taxonom
 }
 
 /**
- * 🏷️ Reads an arbitrary OPT-IN sub-table nested under a package's own semio marker table — rust
+ * 📍️ Reads an arbitrary OPT-IN sub-table nested under a package's own semio marker table — rust
  * `[package.metadata.semio.<subKey>]`, TS `package.json`'s `"semio": {"<subKey>": {...}}` — the generic
  * mechanism per-concern consumers use to opt a package INTO extra behavior beyond the bare role/id every
  * marked package already declares via `readSemioMarker` (first consumer: Storybook coverage, see
@@ -72,6 +97,7 @@ export function readSemioMarkerSubTable(manifestPath: string, lang: PackageLang,
 /** 🧹️ Drops the memoized repo scan — call after mutating the tree inside one process (tests, generators). */
 export function clearDiscoveryCache(): void {
   scanCache.clear();
+  repositoryVisibilityCache.clear();
   gitlinkBoundaryCache.clear();
 }
 
@@ -130,6 +156,16 @@ export function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { reado
     problems.push({ kind, path: repoPath, message: `"${repoPath}" ${detail}` });
   };
 
+  const readManifestDocument = (packageRoot: string, contractId: string): unknown => {
+    const filename = exactContractFilename(contractId, taxonomy);
+    if (!filename) return null;
+    try {
+      return JSON.parse(readFileSync(join(packageRoot, filename), "utf8"));
+    } catch {
+      return null;
+    }
+  };
+
   const collectPackageRoles = (packageRoot: string, lang: PackageLang, owner: OwnerAccumulator, entryContractIds: readonly string[]): void => {
     if (catalog) return;
     const rule = taxonomy.packageBoundaryRules[lang];
@@ -153,16 +189,44 @@ export function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { reado
     }
     const allowedKinds = new Set(rule.allowedFileKindIds);
     const allowedDirectories = new Set(rule.allowedDirectoryKindIds);
+    const manifestAdmission = rule.directoryAdmissions.find((row) => row.form === "manifest-declared-entries");
+    const declaredEntries = manifestAdmission ? declaredEntryDirectories(readManifestDocument(packageRoot, manifestAdmission.manifestContractId), manifestAdmission.entryFields) : new Set<string>();
+    const treePatterns = rule.directoryAdmissions.some((row) => row.form === "fixed-contract-trees") ? packageContractTreePatterns(rule.allowedFixedContractIds.flatMap((id) => { const contract = taxonomy.fixedFilenameContracts[id]; return contract ? [contract.pathPattern] : []; }), relative(dirname(dirname(packageRoot)), packageRoot).split("\\").join("/")) : [];
+    const contractTreeBelow = (directory: string): boolean => {
+      if (treePatterns.length === 0) return false;
+      for (const child of readdirSafe(directory)) {
+        if (isDiscoverySkipDirectory(child.name) || child.name.startsWith(".") && child.isDirectory()) continue;
+        const childPath = join(directory, child.name);
+        if (ignoredOutput(childPath) || pathIsExcluded(repoRoot, childPath, taxonomy)) continue;
+        if (child.isDirectory() ? contractTreeBelow(childPath) : child.isFile() && treePatterns.some((pattern) => taxonomyPathPatternMatches(relative(packageRoot, childPath).split("\\").join("/"), pattern))) return true;
+      }
+      return false;
+    };
+    const visible = repositoryVisibility(repoRoot);
+    const ignoredOutput = (path: string): boolean => taxonomy.implementationLeafPolicy.ignoredPathPatterns.some((pattern) => taxonomyPathPatternMatches(rel(path), pattern));
+    const unitBelow = (directory: string): boolean => {
+      const admission = rule.implementationAdmission;
+      if (!admission) return false;
+      const manifest = admission.form === "nested-manifest-unit" ? exactContractFilename(admission.unitManifestContractId, taxonomy) : null;
+      for (const child of readdirSafe(directory)) {
+        if (isDiscoverySkipDirectory(child.name) || child.name.startsWith(".") && child.isDirectory()) continue;
+        const childPath = join(directory, child.name);
+        if (ignoredOutput(childPath) || pathIsExcluded(repoRoot, childPath, taxonomy)) continue;
+        if (child.isDirectory() ? unitBelow(childPath) : child.isFile() && (admission.form === "nested-source-unit" ? fileKindIdForSourcePath(child.name, taxonomy) === admission.unitSourceFileKindId : child.name === manifest)) return true;
+      }
+      return false;
+    };
     const visit = (dir: string): void => {
       if (pathIsExcluded(repoRoot, dir, taxonomy)) return;
       for (const entry of readdirSafe(dir).sort((a, b) => a.name.localeCompare(b.name))) {
         const path = join(dir, entry.name);
-        if (pathIsExcluded(repoRoot, path, taxonomy)) continue;
+        if (pathIsExcluded(repoRoot, path, taxonomy) || ignoredOutput(path) || !visible(rel(path), entry.isDirectory())) continue;
+        if (isDiscoverySkipDirectory(entry.name) || entry.isDirectory() && entry.name.startsWith(".")) continue;
         if (entry.isDirectory()) {
-          if (isDiscoverySkipDirectory(entry.name)) continue;
           if (existsSync(join(path, "CACHEDIR.TAG")) && /cache directory tag created by cargo/iu.test(readFileSync(join(path, "CACHEDIR.TAG"), "utf8"))) continue;
           const directoryKindId = semanticDirectoryKindId(entry.name, taxonomy);
-          if (!directoryKindId || !allowedDirectories.has(directoryKindId)) addPackageProblem(owner, path, "packaging-violation", "is not an allowed semantic package directory.");
+          const relativePath = relative(packageRoot, path).split("\\").join("/");
+          if ((!directoryKindId || !allowedDirectories.has(directoryKindId)) && !packageDirectoryAdmitted(rule.implementationAdmission, rule.directoryAdmissions, { relativePath, unitBelow: rule.implementationAdmission !== null && unitBelow(path), declaredEntryDirectories: declaredEntries, contractTreeBelow: contractTreeBelow(path) })) addPackageProblem(owner, path, "packaging-violation", "is not an allowed semantic package directory.");
           visit(path);
           continue;
         }
@@ -174,12 +238,14 @@ export function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { reado
         const configurableContractIds = entryNames.get(entry.name) ?? [];
         const entryContract = configurableContractIds.length > 0;
         const kindId = fileKindIdForSourcePath(entry.name, taxonomy);
-        if (!kindId || (fixedContractIds.length === 0 && !entryContract && !allowedKinds.has(kindId))) {
+        if (fixedContractIds.length === 0 && !entryContract && (!kindId || !allowedKinds.has(kindId))) {
           addPackageProblem(owner, path, "packaging-violation", "has no exact fixed/configurable contract or allowed file-kind identity.");
           continue;
         }
+        if (!kindId) continue;
         const kind = taxonomy.fileKinds[kindId]!;
-        if (kind.role !== "source") continue;
+        const contractDeclaresBody = [...fixedContractIds, ...configurableContractIds].some((id) => taxonomy.packageSourceDispositions[id]?.grammarId !== undefined);
+        if (kind.role !== "source" && !contractDeclaresBody) continue;
         let content: string;
         try {
           content = readFileSync(path, "utf8");

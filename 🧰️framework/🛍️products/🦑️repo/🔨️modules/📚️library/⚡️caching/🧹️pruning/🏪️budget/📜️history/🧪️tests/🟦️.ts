@@ -4,12 +4,12 @@ import Ajv from "ajv";
 import {readFileSync,existsSync,mkdirSync,mkdtempSync,writeFileSync,rmSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {withIssuedResourceOperationV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {captureOwnedCommandResultV1,captureOwnedCommandV1} from "@semio-tech/process/execution";
 import {openNativeImageStorageV1,retireNativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/image";
 import {acquireNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1,type NativeStoragePortV1} from "@semio-tech/process/artifacts/native-build/storage";
 import {resourceLeasePathV1} from "@semio-tech/process/leases";
-import {openRepositoryCachePartitionV1,repositoryLeaseDirectoryV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import { repositoryLeaseDirectoryV1 } from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"; import { openRepositoryCachePartitionV1 } from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
 import {withCompilerWriterCustodyV1} from "../../../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {repositoryCompilerLayoutV1} from "../../../../💾️storage/🔒️enforcement/🏗️compiler/📍️layout/🟦️.ts";
 import capacitySchema from "../../../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧬️schema/🔣️.json";
@@ -32,7 +32,7 @@ test("closed historical custody corpus distinguishes real exact scope from copie
 
 test("actual authenticated image scope rejects copies and drains accepted work before its owner returns",async()=>{
  await withBuildTestInvocationV1(async invocation=>{
-  const root=resolve(import.meta.dir,"../../../../../../../../../.."),mode=process.env.SEMIO_BUILD_MODE,control=scriptCompilerAdmissionControlV1(invocation,"test:historical-custody",120000),foreign=scriptCompilerAdmissionControlV1(invocation,"test:foreign-historical-control",120000),events:string[]=[];if(mode!=="prototype"&&mode!=="release")throw Error("Exact historical custody test mode required");let leaked:Parameters<typeof history.requireHistoricalCargoMaintenanceV1>[0]|undefined;
+  const root=resolve(import.meta.dir,"../../../../../../../../../.."),mode=process.env.SEMIO_BUILD_MODE,control=scriptCompilerAdmissionControlV1(invocation,"test:historical-custody",0),foreign=scriptCompilerAdmissionControlV1(invocation,"test:foreign-historical-control",120000),events:string[]=[];if(mode!=="prototype"&&mode!=="release")throw Error("Exact historical custody test mode required");let leaked:Parameters<typeof history.requireHistoricalCargoMaintenanceV1>[0]|undefined;
   await history.withHistoricalCargoImageMaintenanceV1(root,invocation,control,{version:1,mode,preview:true},async(image,buildDirectory,targetDirectory,heldControl)=>{
    const exact={workspace:root,invocation,control:heldControl,buildDirectory,relatedDirectories:[targetDirectory],leaseDirectory:join(root,".cache/b/l/m/data"),preview:true,wait:false};leaked=exact;
    const db=new Database(":memory:");try{db.exec("CREATE TABLE results(variant TEXT,accepted INTEGER)");for(const row of fixture.cases){const selected={...exact};switch(row.variant){case"lease":selected.leaseDirectory=join(root,"other");break;case"workspace":selected.workspace=join(root,"other");break;case"build":selected.buildDirectory=join(buildDirectory,"other");break;case"target":selected.relatedDirectories=[join(targetDirectory,"other")];break;case"invocation-copy":selected.invocation={...invocation};break;case"control-copy":selected.control={...heldControl};break;case"foreign-control":selected.control=foreign;break;case"preview":selected.preview=false;break;case"queued":selected.wait=true;break;}let accepted=true,actualRoot:string|undefined;try{actualRoot=history.requireHistoricalCargoMaintenanceV1(selected).root;}catch{accepted=false;}expect(accepted).toBe(row.accepted);if(accepted)expect(actualRoot).toBe(image.root);db.query("INSERT INTO results VALUES(?,?)").run(row.variant,Number(accepted));}expect(db.query("SELECT variant FROM results WHERE accepted != (variant = 'exact')").all()).toEqual([]);}finally{db.close();}

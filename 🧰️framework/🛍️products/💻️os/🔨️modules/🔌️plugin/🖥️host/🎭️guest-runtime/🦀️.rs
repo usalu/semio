@@ -52,6 +52,10 @@ pub use guest_runtimes_and_test_doubles::RecordingRuntime;
 mod original_instance_opening;
 pub use original_instance_opening::GuestActorOpening;
 
+#[path = "💼️job-crossing/🦀️.rs"]
+mod job_crossing;
+pub use job_crossing::{self_issued_budget, JobCrossing, JobFunds};
+
 #[cfg(test)]
 #[path = "../🔁️lifecycle/🧪️tests/🔁️lifecycle/🦀️.rs"]
 mod guest_fault_tests;

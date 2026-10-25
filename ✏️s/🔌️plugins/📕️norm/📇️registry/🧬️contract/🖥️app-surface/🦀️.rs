@@ -27,7 +27,8 @@ pub type NormRetainedCommandResult<M> = Result<Emit<M, NoConfigMutation, semio_f
 use semio_s_plugin_norm_compliance::{cached_report_for, document_revision_key, invalidate_cached_report_for, store_cached_report_for, CheckReport, CheckResult, CheckStatus, ClauseId, NormFamily, NormHost, Quantity, QuantityKind, RemedyBound};
 #[cfg(test)] use semio_s_plugin_norm_compliance::{LocalizedCopy, Remedy};
 use semio_framework::ToolExecutionContract;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
+use semio_framework_plugin::plugin_app_close_prelude::{InputKind};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use semio_framework_ui_contract as ui;
 use semio_framework_plugin::tree_group;
 use semio_framework_plugin::tree_item_desc;

@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "files": {
+    "package.json": "{\"name\":\"fx\",\"workspaces\":[\"*\"]}\n",
+    "project.json": "{}\n",
+    "gen/src/a.txt": "a\n",
+    "gen/script.ts": "//\n",
+    "course/src/b.txt": "b\n",
+    "course/script.ts": "//\n"
+  },
+  "graph": {
+    "version": 1,
+    "projects": {
+      "gen": {
+        "name": "gen",
+        "root": "gen",
+        "targets": {
+          "generate": {
+            "execution": {
+              "kind": "command",
+              "command": "repo ./script.ts generate"
+            },
+            "outputs": [
+              "{projectRoot}/out"
+            ],
+            "inputs": [
+              "{projectRoot}/src/**/*"
+            ],
+            "cache": true,
+            "metadata": {
+              "semio": {
+                "execution": {
+                  "version": 1,
+                  "kind": "source"
+                }
+              }
+            }
+          }
+        }
+      },
+      "course": {
+        "name": "course",
+        "root": "course",
+        "namedInputs": {
+          "default": [
+            "{projectRoot}/**/*",
+            "!{projectRoot}/dist/**"
+          ]
+        },
+        "targets": {
+          "test": {
+            "execution": {
+              "kind": "command",
+              "command": "repo ./script.ts test"
+            },
+            "inputs": [
+              "default"
+            ],
+            "cache": true,
+            "outputs": []
+          },
+          "typecheck": {
+            "execution": {
+              "kind": "command",
+              "command": "repo ./script.ts typecheck"
+            },
+            "dependsOn": [
+              "gen:generate"
+            ],
+            "inputs": [
+              "default",
+              {
+                "dependentTasksOutputFiles": "**/*",
+                "transitive": false
+              }
+            ],
+            "cache": true,
+            "outputs": []
+          }
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "source": "course",
+        "target": "gen",
+        "type": "static"
+      }
+    ]
+  },
+  "request": {
+    "tasks": [
+      "course:typecheck"
+    ],
+    "args": []
+  },
+  "scoped": "gen:generate",
+  "unscoped": "course:typecheck",
+  "scopeId": "executor-command",
+  "identity": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}

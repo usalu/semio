@@ -3,7 +3,7 @@ import {join} from "node:path";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import type {DoctorPolicyV1,GraphFactsV1} from "../../🟦️.ts";
 import {readJsonFileV1} from "../../🔌️ports/🟦️.ts";
-import type {DoctorProbeV1} from "../🟦️.ts";
+import type {DoctorProbeV1} from "../📋️contract/🟦️.ts";
 
 const SOURCE=/\.(ts|mjs|js|json)$/u;
 

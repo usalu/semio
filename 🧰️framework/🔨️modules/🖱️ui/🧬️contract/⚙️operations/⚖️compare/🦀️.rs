@@ -9,7 +9,7 @@ pub struct UiComponentComparisonCursor {
     result: Option<bool>,
 }
 impl UiComponentComparisonCursor {
-    /// ⚖️ The enclosing owner must retain the same immutable operand pair until reset or completion.
+    /// ⏩️ The enclosing owner must retain the same immutable operand pair until reset or completion.
     pub fn advance(&mut self, left: &Component, right: &Component, bytes: usize) -> Result<UiComponentCompareProgress, &'static str> {
         if bytes == 0 {
             return Ok(Default::default());

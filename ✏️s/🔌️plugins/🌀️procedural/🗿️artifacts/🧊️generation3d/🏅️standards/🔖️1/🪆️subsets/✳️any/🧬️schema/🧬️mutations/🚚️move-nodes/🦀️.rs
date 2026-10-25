@@ -1,6 +1,7 @@
 //! 🚚️ `move-nodes` payload — one node-graph drag as intent (the node-graph gesture record of design §13.3): the canvas
 //! offset every addressed widget moves by from its BASE position, so editing the drag in history replays it on any base.
 
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use crate::generation3d_label_items;
 use crate::generation3d_label_number;
@@ -9,8 +10,10 @@ use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️MoveNodes
 /// 🚚️ Moves every addressed widget's canvas position by `(dx, dy)`.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct MoveNodes {
     pub ids: Vec<String>,
     pub dx: f64,

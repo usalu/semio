@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Layout
 
-/// 📐️ Closed spacing scale a renderer resolves against the active theme's spacing ramp — never a raw
+/// 🪐️ Closed spacing scale a renderer resolves against the active theme's spacing ramp — never a raw
 /// `f32`/px. tokens.json's `spacing` table today only names `compact`/`touch` (see [`crate::Density`]);
 /// no full ramp exists there yet, so this scale is the shape this packet's own brief specifies
 /// verbatim (`None,Xs,Sm,Md,Lg,Xl,…`) pending a registrar-added token set — flagged in the packet report.
@@ -28,7 +28,7 @@ pub enum SpaceToken {
     Xxl,
 }
 
-/// 📐️ The ONE spacing ramp every renderer resolves a [`SpaceToken`] against — the multiplier table
+/// 🌌️ The ONE spacing ramp every renderer resolves a [`SpaceToken`] against — the multiplier table
 /// React's own `SPACE_TOKEN_MULTIPLIER`
 /// (`os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx`) carries, times
 /// `ui_styling`'s generated `--ui-spacing` compact step. Renderers call [`SpaceToken::px`]/
@@ -36,18 +36,18 @@ pub enum SpaceToken {
 const SPACE_TOKEN_MULTIPLIER: [f32; 7] = [0.0, 1.0, 2.0, 4.0, 6.0, 8.0, 12.0];
 
 impl SpaceToken {
-    /// 📐️ This token's multiple of the compact `--ui-spacing` step — React's `SPACE_TOKEN_MULTIPLIER`.
+    /// 🪜️ This token's multiple of the compact `--ui-spacing` step — React's `SPACE_TOKEN_MULTIPLIER`.
     pub const fn multiplier(self) -> f32 {
         SPACE_TOKEN_MULTIPLIER[self as usize]
     }
 
-    /// 📐️ This token in logical pixels at the compact reference root, e.g. `Md → 12.8`.
+    /// 🏠️ This token in logical pixels at the compact reference root, e.g. `Md → 12.8`.
     pub fn px(self) -> f32 {
         self.multiplier() * ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX as f32
     }
 }
 
-/// 📐️ A resolved [`EdgeSpace`] in logical pixels — the four independent CSS values React writes as a
+/// 🔗️ A resolved [`EdgeSpace`] in logical pixels — the four independent CSS values React writes as a
 /// `padding`/`inset` shorthand, never one representative side applied to all four.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct EdgePx {
@@ -58,7 +58,7 @@ pub struct EdgePx {
 }
 
 impl EdgeSpace {
-    /// 📐️ Resolves all four sides through [`SpaceToken::px`].
+    /// 🔎️ Resolves all four sides through [`SpaceToken::px`].
     pub fn px(self) -> EdgePx {
         match self {
             Self::All(token) => {
@@ -107,7 +107,7 @@ pub enum Align {
     Baseline,
 }
 
-/// ↔️ Main-axis distribution — the CSS `justify-content` equivalent.
+/// 🏁️ Main-axis distribution — the CSS `justify-content` equivalent.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
@@ -146,7 +146,7 @@ pub enum ScrollAxes {
     Both,
 }
 
-/// 🧭️ A logical 9-point placement, `Start`/`End` rather than `Left`/`Right` so it stays correct under
+/// ⚓️ A logical 9-point placement, `Start`/`End` rather than `Left`/`Right` so it stays correct under
 /// RTL locales without a renderer-side flip (CLAUDE.md's multi-language accessibility mandate).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -164,7 +164,7 @@ pub enum Anchor {
     BottomEnd,
 }
 
-/// 📐️ Per-side padding that costs one [`SpaceToken`] on the wire in the common uniform case, instead
+/// 💲️ Per-side padding that costs one [`SpaceToken`] on the wire in the common uniform case, instead
 /// of four always-present fields — mirrors CSS shorthand's 1/2/4-value forms.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -195,7 +195,7 @@ pub struct StackLayout {
     pub wrap: bool,
 }
 
-/// 🔲️ A two-dimensional track arrangement — expressible by CSS grid or a taffy grid tree.
+/// 🛤️ A two-dimensional track arrangement — expressible by CSS grid or a taffy grid tree.
 pub const UI_GRID_TRACKS: usize = 32;
 pub type UiGridTracks = crate::UiFixedList<GridTrack, UI_GRID_TRACKS>;
 
@@ -222,7 +222,7 @@ impl GridLayout {
     }
 }
 
-/// 🪟️ A positioning context whose children stack on top of one another anchored to the box —
+/// 🔝️ A positioning context whose children stack on top of one another anchored to the box —
 /// modals, popovers, tooltips.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -233,7 +233,7 @@ pub struct OverlayLayout {
     pub dismissible: bool,
 }
 
-/// 🖱️ A viewport clipping its content and permitting overflow scroll on the named axes.
+/// 📜️ A viewport clipping its content and permitting overflow scroll on the named axes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
@@ -268,7 +268,7 @@ pub struct LeafLayout {
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", tag = "kind", rename_all = "camelCase")]
 pub enum LayoutSpec {
-    /// 🍃️ A node that participates in its parent's layout but imposes none of its own.
+    /// 🍁️ A node that participates in its parent's layout but imposes none of its own.
     Leaf(LeafLayout),
     Stack(StackLayout),
     Grid(GridLayout),
@@ -277,7 +277,7 @@ pub enum LayoutSpec {
     Absolute(AbsoluteLayout),
 }
 
-/// 🍃️ A record whose layout was never set must not silently become a container, so the default is the
+/// 📝️ A record whose layout was never set must not silently become a container, so the default is the
 /// terminal one. `#[derive(Default)]` cannot express this — the attribute only accepts unit variants.
 impl Default for LayoutSpec {
     fn default() -> Self {
@@ -300,13 +300,13 @@ pub enum FlowInline {
 }
 
 impl FlowInline {
-    /// ↔️ Whether inline `Start` means the RIGHT edge — the single predicate every mirrored formula
+    /// ▶️ Whether inline `Start` means the RIGHT edge — the single predicate every mirrored formula
     /// branches on, so no call site repeats the comparison React writes as `flow.inline === "rtl"`.
     pub const fn is_rtl(self) -> bool {
         matches!(self, FlowInline::Rtl)
     }
 
-    /// ↔️ `+1.0` under `Ltr`, `-1.0` under `Rtl` — the sign an inline delta (a horizontal scroll, a
+    /// 🖊️ `+1.0` under `Ltr`, `-1.0` under `Rtl` — the sign an inline delta (a horizontal scroll, a
     /// slider's `ArrowRight`) carries once mirrored.
     pub const fn inline_sign(self) -> f32 {
         match self {
@@ -316,7 +316,7 @@ impl FlowInline {
     }
 }
 
-/// 🧭️ Vertical stacking direction — `Up` grows content toward the display centre, which is what a
+/// 🥞️ Vertical stacking direction — `Up` grows content toward the display centre, which is what a
 /// bottom-docked panel does. Twin of React's `FlowBlock`
 /// (`🔨️modules/🧭️flow-direction-context/🟦️.tsx:17`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
@@ -336,7 +336,7 @@ impl FlowBlock {
     }
 }
 
-/// 🧭️ The logical flow a subtree inherits — twin of React's `Flow`
+/// 🌊️ The logical flow a subtree inherits — twin of React's `Flow`
 /// (`🔨️modules/🧭️flow-direction-context/🟦️.tsx:20-23`), whose default is `{ ltr, down }`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -347,17 +347,17 @@ pub struct UiFlow {
 }
 
 impl UiFlow {
-    /// 🧭️ React's `DEFAULT_FLOW` (`🧭️flow-direction-context/🟦️.tsx:35`).
+    /// ⚛️ React's `DEFAULT_FLOW` (`🧭️flow-direction-context/🟦️.tsx:35`).
     pub const DEFAULT: Self = Self { inline: FlowInline::Ltr, block: FlowBlock::Down };
 
-    /// 🧭️ React's `FlowProvider` merge rule (`🧭️flow-direction-context/🟦️.tsx:41-44`): a `None`
+    /// 🔀️ React's `FlowProvider` merge rule (`🧭️flow-direction-context/🟦️.tsx:41-44`): a `None`
     /// override inherits the parent axis, so a provider that sets only `block` keeps the inherited
     /// `inline`.
     pub const fn merged(self, inline: Option<FlowInline>, block: Option<FlowBlock>) -> Self {
         Self { inline: match inline { Some(value) => value, None => self.inline }, block: match block { Some(value) => value, None => self.block } }
     }
 
-    /// 🧭️ React's `flowFromAnchor` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:6859-6860`): the mirrored flow a
+    /// 🎯️ React's `flowFromAnchor` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:6859-6860`): the mirrored flow a
     /// `Panel`/`Pane` grows into. A RIGHT anchor flips inline, a BOTTOM anchor flips block, and a
     /// middle anchor on either axis never mirrors. The one production origin of a non-default flow
     /// on BOTH renderers — flow is dock geometry, not language.
@@ -391,7 +391,7 @@ pub enum WindowStackCorner {
     BottomRight,
 }
 
-/// 🪟️ The window-shell tree: a single recursive, internally-tagged enum replacing the old
+/// 🌲️ The window-shell tree: a single recursive, internally-tagged enum replacing the old
 /// `WindowLayoutWindowNode`/`WindowLayoutStackNode`/`WindowLayoutAxisNode` trio and their
 /// `kind: String` + `#[serde(untagged)]` scheme. `size` stays an `Option<f64>` fraction of the parent
 /// split (a ratio, not a pixel measurement, so it is exempt from the [`SpaceToken`] rule). The
@@ -434,7 +434,7 @@ pub enum WindowLayoutNode {
     },
 }
 
-/// 🪟️ The window-shell root. Moved here from the wgpu target's `WindowLayout` — same name, one
+/// 👑️ The window-shell root. Moved here from the wgpu target's `WindowLayout` — same name, one
 /// recursive `WindowLayoutNode` root instead of the old `WindowLayoutRoot` `Axis`/`Stack` union.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]

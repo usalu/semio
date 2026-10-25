@@ -77,11 +77,11 @@ durationMs: bigint,
  */
 text: unknown, audio?: TutorialAssetSrc,
 /**
- * 🗣️ Web Speech API voice-name hint; ignored once `audio` is set.
+ * 💡️ Web Speech API voice-name hint; ignored once `audio` is set.
  */
 voice?: string,
 /**
- * 🎚️ TTS/audio rate multiplier layered under the player's own playback-rate control.
+ * 🎧️ TTS/audio rate multiplier layered under the player's own playback-rate control.
  */
 rate: number,
 /**
@@ -320,12 +320,12 @@ export type UiStatus = "waiting" | "loading" | "idle" | "finished";"####,
  */
 dimmed?: boolean,
 /**
- * 🖱️ Row-level context-menu address — most rows share one `menu.id` across a tree with the row
+ * 🪜️ Row-level context-menu address — most rows share one `menu.id` across a tree with the row
  * id carried in `args` (e.g. `{"id": row.id}`), rather than minting a unique menu id per row.
  */
 menu?: UiMenuRef,
 /**
- * 🪟️ The materialised slice of this row's logical child list — see `UiTreeWindow`. A row with
+ * 📋️ The materialised slice of this row's logical child list — see `UiTreeWindow`. A row with
  * `window.total > 0` is expandable even while `items` is empty or absent.
  */
 window?: UiTreeWindow,
@@ -345,7 +345,7 @@ tone?: Tone, };"####,
             version: 1,
             typescript: r####"export type UiTreeNode = { sections: Array<UiTreeSectionNode>, presence?: UiPresence, dropAction?: ActionDescriptor, menu?: UiMenuRef,
 /**
- * 🕹️ Binds this rendered tree to an app-declared `InteractionDefinition` domain — the framework
+ * 🪢️ Binds this rendered tree to an app-declared `InteractionDefinition` domain — the framework
  * (not the app) then owns the domain's selection/hover via `interactionSelect`/`interactionHover`,
  * stamped back onto item `presence` by `ui_tree_stamp_presence`. Replaces the deleted per-app
  * `selected_ids`/`highlighted_ids`/`selection_change` wire surface.
@@ -357,7 +357,7 @@ interactionDomain?: string, };"####,
             version: 1,
             typescript: r####"export type UiTreeSectionNode = { id: string, label?: Label, defaultOpen?: boolean, presence?: UiPresence, items: Array<UiTreeItemNode>,
 /**
- * 🪟️ The materialised slice of this section's logical child list — see `UiTreeWindow`.
+ * 🍕️ The materialised slice of this section's logical child list — see `UiTreeWindow`.
  */
 window?: UiTreeWindow, };"####,
         },
@@ -398,7 +398,7 @@ export type UndoMode = { "kind": "none" } | { "kind": "inverse" } | { "kind": "c
  */
 export type UtilityDefinition = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * 🔖️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 label: unknown, iconId: IconName,
 /**
@@ -410,7 +410,7 @@ group?: string, keys?: string,
  */
 cursor?: string, category?: UtilityCategory,
 /**
- * 🚦️ Whether window-scoped actions stay enabled while this utility is active. Defaults to `false`
+ * 🎬️ Whether window-scoped actions stay enabled while this utility is active. Defaults to `false`
  * (matching today's whitelist-based gating where an active utility suppresses the action panel);
  * set `true` for passive view utilities (e.g. cad `cad.play.view.*`) that should not gate actions.
  */
@@ -435,13 +435,13 @@ export type UtilityRef = string;"####,
             version: 1,
             typescript: r####"export type ViewModel = { activeModeId?: string, activeWindowKindId?: string,
 /**
- * 🧰️ Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
+ * ☎️ Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
  * call (`window_id`). On batched `refresh-ui`, the plugin stamps this from
  * `active_utility_by_window_id` per window entry — never from the focused window alone.
  */
 activeUtilityId?: string,
 /**
- * 🧰️ Host-owned active utility per window **instance** (never a document field, never a VCS operation). The shell
+ * 🖥️ Host-owned active utility per window **instance** (never a document field, never a VCS operation). The shell
  * sends the full map on every refresh so plugins can build per-pane scene state; tools stay mode-wide via
  * `active_tool_id`.
  */
@@ -459,17 +459,17 @@ activeToolId?: string,
  */
 panelJson?: string,
 /**
- * 🗣️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
+ * 🌐️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
  * `app_labels!`. Non-optional — the shell always resolves one (see `initUiLocaleSync`/
  * `detectShellLocale`) before the first `render`, so "nobody set the locale" is unrepresentable.
  */
 locale: Locale,
 /**
- * 🗣️ Active terminology id (`Native` default, or an app-declared alternative term set).
+ * 🧲️ Active terminology id (`Native` default, or an app-declared alternative term set).
  */
 terminology: Terminology,
 /**
- * 🪟️ The window instance a `render`/`handle_action` call targets — programs key all per-window
+ * 📞️ The window instance a `render`/`handle_action` call targets — programs key all per-window
  * option state (grid, LOD, selection mode, …) off this, never off `active_window_kind_id`, so that
  * two window instances of the same kind (e.g. split top/perspective panes) never share options.
  */
@@ -480,14 +480,14 @@ windowId?: string,
  */
 windowInstances: Array<ViewWindowInstance>,
 /**
- * 🪟️ Every tree container the host holds state for, flattened over all panel bodies — the ONE
+ * 🌳️ Every tree container the host holds state for, flattened over all panel bodies — the ONE
  * source of truth for which containers are open and which rows are on screen. A guest reads them
  * per body and materialises exactly the named windows; it keeps no expansion state of its own,
  * which is what lets an open container survive a refresh.
  */
 treeWindows: Array<TreeWindowRequest>,
 /**
- * 🪟️ Rows the tallest visible panel body fits, the shared first-paint budget a guest spends in
+ * 🖌️ Rows the tallest visible panel body fits, the shared first-paint budget a guest spends in
  * document order over containers the host has not yet seen.
  */
 treeViewportRows?: number, };"####,
@@ -539,7 +539,7 @@ export type WindowEngagementSlot = { "kind": "none" } | { "kind": "some", "value
             version: 1,
             typescript: r####"export type WindowKindDefinition = { id: string,
 /**
- * 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+ * ✅️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
  */
 label: unknown, bodyKey: string, surfaceKind: SurfaceKind, iconId: IconName,
 /**
@@ -551,7 +551,7 @@ options: WindowOptions,
  */
 actions: Array<ActionDefinition>,
 /**
- * 🧰️ Utilities this window kind accepts — references `AppDefinition.utilities` ids. Empty = no utilities.
+ * 🧩️ Utilities this window kind accepts — references `AppDefinition.utilities` ids. Empty = no utilities.
  */
 utilities: Array<UtilityRef>,
 /**
@@ -559,7 +559,7 @@ utilities: Array<UtilityRef>,
  */
 initialUtilityId?: UtilityRef,
 /**
- * 🕹️ Interaction domains this window kind accepts — references `AppDefinition.interactions` ids.
+ * 🤝️ Interaction domains this window kind accepts — references `AppDefinition.interactions` ids.
  * Empty = no interactions.
  */
 interactions: Array<InteractionRef>, paramsSchema?: string, artifactSnapshotSchema?: string, inputEventSchema?: string, outputSchema?: string, capabilities: Array<CapabilityRequirement>, };"####,
@@ -579,7 +579,7 @@ interactions: Array<InteractionRef>, paramsSchema?: string, artifactSnapshotSche
             version: 1,
             typescript: r####"export type WindowMeasure = { "kind": "select", id: string, label?: string, value: string, items: Array<MeasureSelectItem>, onChange: ActionDescriptor, } | { "kind": "slider", id: string, label?: string, value: number, min: number, max: number, step?: number,
 /**
- * 🎚️ Absolute value on the fixed `[min, max]` range that is already preloaded/ready.
+ * 🔧️ Absolute value on the fixed `[min, max]` range that is already preloaded/ready.
  * Renderers keep `max` stable and draw a highlight from the knob to this extent.
  */
 ready?: number,
@@ -588,7 +588,7 @@ ready?: number,
  */
 loading?: boolean,
 /**
- * 🌀️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
+ * 📏️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
  */
 waiting?: boolean,
 /**
@@ -604,23 +604,23 @@ min?: number,
  */
 max?: number, step?: number,
 /**
- * 🎚️ Absolute value already prepared/committed, drawn as a soft extent behind the entry.
+ * 🌱️ Absolute value already prepared/committed, drawn as a soft extent behind the entry.
  */
 ready?: number,
 /**
- * 🌀️ When true, the measure tree leaf shows a loading ring while work continues.
+ * ⭕️ When true, the measure tree leaf shows a loading ring while work continues.
  */
 loading?: boolean,
 /**
- * 🌀️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
+ * 🌲️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
  */
 waiting?: boolean,
 /**
- * 🚫️ When true, the entry is inert.
+ * ⛔️ When true, the entry is inert.
  */
 disabled?: boolean, onChange: ActionDescriptor, } | { "kind": "toggle", id: string, iconId: IconName, label?: string, pressed: boolean, text?: string, onChange: ActionDescriptor, } | { "kind": "group", id: string, label: string, defaultOpen?: boolean,
 /**
- * 🎯️ When `Some(utility_id)`, this group is *utility-scoped chrome*: the shell surfaces it only while
+ * 🪛️ When `Some(utility_id)`, this group is *utility-scoped chrome*: the shell surfaces it only while
  * `ViewModel.active_utility_id == utility_id`, and renders it in the dedicated "Utility Options" rail
  * beside the utility bar — never in the always-on Measures overlay. When absent, the group is a
  * general measure and stays in the Measures overlay exactly as before. See [`partition_window_measures`].

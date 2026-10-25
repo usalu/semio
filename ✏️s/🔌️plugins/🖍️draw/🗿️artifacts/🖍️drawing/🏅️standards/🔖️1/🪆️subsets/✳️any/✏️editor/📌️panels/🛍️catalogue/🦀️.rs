@@ -12,7 +12,7 @@ use crate::terminology::DrawingPlayLabels;
 use crate::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::DRAWING_BOOLEAN_OPERATIONS;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+use semio_framework_plugin::{Buildable, HasBase};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LabelText;

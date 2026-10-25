@@ -1,6 +1,10 @@
 import {createHash} from "node:crypto";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import policy from "./🔣️policy.json" with {type:"json"};
+import{createRequire}from"node:module";
+
+/** 🛑️ The refusal texts load when a package manager is refused, never at startup: the doctor stays inside its module budget. */
+const refuseBootstrapV1=(...input:Parameters<typeof import("../../📖️texts/🟦️.ts").refuseBootstrapV1>):ReturnType<typeof import("../../📖️texts/🟦️.ts").refuseBootstrapV1>=>(createRequire(import.meta.url)("../../📖️texts/🟦️.ts") as typeof import("../../📖️texts/🟦️.ts")).refuseBootstrapV1(...input);
 
 const protocol=schema.$defs.Protocol.const;
 
@@ -12,7 +16,7 @@ export type ManagerOperationV1="lock"|"sync"|"verify"|"provision"|"install-pinne
 export interface ManagerLockV1{readonly name:string;readonly role:"primary"|"secondary";readonly format:string}
 /** 🧩️ One operation argument: a template, or a group that is emitted only when every placeholder inside it resolves. */
 export type ManagerArgumentV1=string|Readonly<{optional:readonly string[]}>|Readonly<{each:string;arguments:readonly string[]}>;
-/** 🛠️ One operation: its argument templates and the extra flags each named scope appends. */
+/** 📕️ One operation: its argument templates and the extra flags each named scope appends. */
 export interface ManagerOperationSpecV1{readonly arguments:readonly ManagerArgumentV1[];readonly scopes?:Readonly<Record<string,readonly string[]>>;readonly values?:Readonly<Record<string,string>>}
 /** 🔤️ Names the closed set of name transforms a layout may declare. */
 export type TransformV1="identity"|"lowercase"|"go-escape"|"pep-escape";
@@ -42,8 +46,12 @@ export interface LockGraphV1{readonly version:1;readonly format:string;readonly 
 export type LockReaderV1=(text:string)=>Readonly<{packages:readonly LockPackageV1[];members:readonly LockMemberV1[]}>;
 /** 🧭️ What a lock projection needs: the original-to-staged workspace path mapping, the patch identities and the direction. */
 export interface LockProjectionV1{readonly reverse:boolean;readonly mapping:ReadonlyMap<string,string>;readonly patches:readonly Readonly<{name:string;forward:string;reverse:string}>[]}
-/** 🧰️ Optional adapter capabilities beyond reading: the lock as a JSON-like document, and its projection between original and staged workspace paths. */
-export interface LockCapabilitiesV1{readonly document?:(text:string)=>unknown;readonly project?:(text:string,input:LockProjectionV1)=>string}
+/** 🩺️ Names the closed set of ways a lock can disagree with the manifests of its workspace. */
+export type LockDriftKindV1="invalid-lockfile"|"workspace-missing"|"workspace-stale"|"identity-mismatch"|"missing-in-lock"|"stale-in-lock"|"version-mismatch";
+/** 🔐️ One disagreement between a lock and a manifest; `manifest` is the member manifest path relative to the scope root, `section` the manifest table or identity field, `frozen` whether the manager is certain to refuse a frozen install because of it (a disagreement without it is lock noise the next regeneration rewrites). */
+export interface LockDriftV1{readonly kind:LockDriftKindV1;readonly manifest:string;readonly section?:string;readonly dependency?:string;readonly manifestVersion?:string;readonly lockVersion?:string;readonly frozen:boolean}
+/** 🧰️ Optional adapter capabilities beyond reading: the lock as a JSON-like document, its projection between original and staged workspace paths, and its comparison with the member manifests of the scope (keyed by manifest path relative to the scope root). */
+export interface LockCapabilitiesV1{readonly document?:(text:string)=>unknown;readonly project?:(text:string,input:LockProjectionV1)=>string;readonly check?:(document:unknown,manifests:ReadonlyMap<string,unknown>)=>readonly LockDriftV1[]}
 /** 🖥️ The only host facts keys and runtime identity may consume; injected so the core never touches `process`. */
 export interface HostPortV1{readonly platform:string;readonly arch:string;readonly versions:Readonly<Record<string,string|undefined>>;probe?(executable:string,args:readonly string[]):string|undefined}
 /** 📨️ Everything a rendering may vary by; unknown keys are refused. */
@@ -51,7 +59,7 @@ export interface ManagerRequestV1{readonly platform:string;readonly cache?:strin
 /** 🚀️ What a runner executes: no shell, no ambient state. */
 export interface ManagerInvocationV1{readonly executable:string;readonly arguments:readonly string[];readonly directory:string|null}
 /**
- * 🧰️ The interface the rest of the repository sees; adapters differ only in their descriptor and lock reader.
+ * 🦑️ The interface the rest of the repository sees; adapters differ only in their descriptor and lock reader.
  * @see {@link createPackageManagerV1}
  */
 export interface PackageManagerV1{
@@ -61,7 +69,7 @@ export interface PackageManagerV1{
  backend(platform:string):string|undefined;render(operation:ManagerOperationV1,request:ManagerRequestV1):ManagerInvocationV1;
  environment(root:string,ambient:Readonly<Record<string,string|undefined>>,separator?:"/"|"\\",overrides?:Readonly<Record<string,string>>):Readonly<Record<string,string>>;
  runtimeIdentity(host:HostPortV1):string;parseLock(bytes:Uint8Array|string):LockGraphV1;
- parseLockDocument(text:string):unknown;projectLock(text:string,input:LockProjectionV1):string;
+ parseLockDocument(text:string):unknown;projectLock(text:string,input:LockProjectionV1):string;checkLock(text:string,manifests:ReadonlyMap<string,unknown>):readonly LockDriftV1[];
 }
 
 const compare=(left:string,right:string):number=>left<right?-1:left>right?1:0;
@@ -152,6 +160,11 @@ export function createPackageManagerV1(descriptor:ManagerDescriptorV1,reader:Loc
   },
   parseLockDocument(text){if(!capabilities.document)throw Error("Declared lock document reader required: "+descriptor.id);return capabilities.document(text);},
   projectLock(text,input){if(!capabilities.project)throw Error("Declared lock projection required: "+descriptor.id);return capabilities.project(text,input);},
+  checkLock(text,manifests){
+   if(!capabilities.check||!capabilities.document)throw refuseBootstrapV1("missing","dependencies.lock-check-required",{manager:descriptor.id});
+   let document:unknown;try{document=capabilities.document(text);}catch{return Object.freeze([Object.freeze({kind:"invalid-lockfile" as const,manifest:primary.name,frozen:true})]);}
+   return Object.freeze(capabilities.check(document,manifests).map(row=>Object.freeze({...row})));
+  },
   parseLock(bytes){
    if(bytes.length>protocol.maximumLockBytes)throw Error("Bounded lock required: "+descriptor.id);
    const text=typeof bytes==="string"?bytes:new TextDecoder("utf-8",{fatal:true}).decode(bytes),read=reader(text),seen=new Set<string>(),packages:LockPackageV1[]=[];
@@ -210,14 +223,14 @@ export function lockedVersionV1(graph:LockGraphV1,name:string):string|undefined{
 
 /** 🧾️ The sealed proof that one generation was installed and every locked provider found. */
 export interface GenerationReceiptV1{readonly version:1;readonly purpose:"dependency-generation-receipt";readonly ecosystem:string;readonly manager:Readonly<{id:string;runtime:string}>;readonly scope:string;readonly generation:Readonly<{key:string;location:string}>;readonly lock:Readonly<{name:string;sha256:string}>;readonly providers:Readonly<{examined:number}>;readonly sha256:string}
-/** 🧾️ Seals the receipt of one finished generation. */
+/** 🏁️ Seals the receipt of one finished generation. */
 export function sealReceiptV1(manager:PackageManagerV1,input:Readonly<{scope:string;key:string;runtime:string;lock:Readonly<{name:string;sha256:string}>;examined:number}>):GenerationReceiptV1{
  return sealV1({version:1 as const,purpose:protocol.receiptPurpose as "dependency-generation-receipt",ecosystem:manager.ecosystem,manager:{id:manager.id,runtime:input.runtime},scope:input.scope,generation:{key:input.key,location:generationLocationV1(manager,input.key)},lock:input.lock,providers:{examined:input.examined}});
 }
 
-/** 🧭️ One provider a lock pins, with the relative path the manager lays it out at. */
+/** 📌️ One provider a lock pins, with the relative path the manager lays it out at. */
 export interface ExpectedProviderV1{readonly name:string;readonly version:string;readonly entry:string}
-/** 📍️ Computes the layout entry of every locked provider. */
+/** 🔒️ Computes the layout entry of every locked provider. */
 export function expectedProvidersV1(manager:PackageManagerV1,graph:LockGraphV1):readonly ExpectedProviderV1[]{
  const layout=manager.descriptor.installed,transform=transformsV1[layout.nameTransform],escape=(name:string)=>Object.entries(layout.nameEscape).reduce((text,[from,to])=>text.split(from).join(to),transform(name));
  return graph.packages.filter(row=>row.version!==""&&(layout.sourcePrefix===null||row.source?.startsWith(layout.sourcePrefix)===true)).map(row=>({name:row.name,version:row.version,entry:layout.entry.replace(/\{name\}/gu,escape(row.name)).replace(/\{version\}/gu,row.version)}));
@@ -228,7 +241,7 @@ export interface ProviderPortV1{kind(path:string):Promise<"file"|"directory"|"li
 export interface ManagerControlV1{readonly signal?:AbortSignal;advance?(completed:number):Promise<void>|void}
 /** 🚶️ The verdict of a provider walk: complete, or the first missing providers. */
 export type ProviderWalkV1=Readonly<{status:"match";examined:number}>|Readonly<{status:"mismatch";examined:number;missing:readonly ExpectedProviderV1[];truncated:boolean}>;
-/** 🚶️ Verifies that every locked provider exists in the installed layout (existence and layout name, not content). */
+/** ✅️ Verifies that every locked provider exists in the installed layout (existence and layout name, not content). */
 export async function walkProvidersV1(manager:PackageManagerV1,graph:LockGraphV1,port:ProviderPortV1,control:ManagerControlV1={}):Promise<ProviderWalkV1>{
  const layout=manager.descriptor.installed,providers=expectedProvidersV1(manager,graph);
  if(providers.length>protocol.maximumProviders)throw Error("Bounded provider count required");

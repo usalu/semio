@@ -2,7 +2,7 @@ import{readNativeStorageReservationPolicyV1}from"@semio-tech/process/artifacts/n
 import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {serveStorybookArtifactInStorageV1} from "../../🏃️execution/🟦️.ts";
 import {acquireResourceLease} from "@semio-tech/process/leases";
-import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {writeFileSync,readFileSync,existsSync,mkdirSync,rmSync} from "node:fs";
 import {join} from "node:path";
 import {test,expect} from "bun:test";

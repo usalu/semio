@@ -88,7 +88,7 @@ impl Default for DrawNode {
 /// `triples::NamedTripleDiff<String, DrawStyleDiff, DrawStyle>`'s generated `Deserialize` impl
 /// (serde-derive's bound inference for `#[value(default)]` fields on a generic container reaches
 /// every type parameter, not just the immediately-defaulted field's own type).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_style")]
 pub struct DrawStyle {
     pub name: String,
@@ -108,7 +108,7 @@ pub struct DrawStyle {
 /// the diff facet — mirrors gif-frame ordering precedent).
 /// 🩹 `Default` derived for the same reason as `DrawStyle` above (needed as the `T` of
 /// `triples::IndexedTripleDiff<DrawLayerDiff, DrawLayer>`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_layer")]
 pub struct DrawLayer {
     pub id: String,
@@ -142,7 +142,7 @@ impl semio_framework_pack_json::ArtifactCanonicalJsonTree for DrawLayer {
 
 //#region 🔖️Canvas
 /// 🖼️ Document-level viewport/backdrop.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct DrawCanvas {
     pub width: f64,
@@ -163,7 +163,7 @@ pub const STDIO_SEMIODRAWING_DOCUMENT_SCHEMA: &str = "stdio.semio.drawing";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_snapshot")]
 #[artifact_schema(id = "s.stdio.semio.drawing")]
 pub struct SemioDrawingSnapshot {

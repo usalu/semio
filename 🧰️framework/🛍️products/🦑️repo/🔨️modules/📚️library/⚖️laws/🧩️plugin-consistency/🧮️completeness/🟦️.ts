@@ -17,7 +17,7 @@ type PolicyDocumentAppUsage = { scope: string; line: number; appType: string; sn
 
 const POLICY_DOCUMENT_APP_IMPL_RE = /impl\s+DocumentApp\s+for\s+(\w+)\s*\{/g;
 
-/** 🔎️Extracts `type Snapshot = X;` / `type Mutation = Y;` (generic args stripped) from every `impl DocumentApp for … { … }` block in one file's content. */
+/** 📄️Extracts `type Snapshot = X;` / `type Mutation = Y;` (generic args stripped) from every `impl DocumentApp for … { … }` block in one file's content. */
 export function policyDocumentAppUsages(scope: string, content: string): PolicyDocumentAppUsage[] {
   const usages: PolicyDocumentAppUsage[] = [];
   let m: RegExpExecArray | null;
@@ -73,7 +73,7 @@ function policyDslCompleteTypeNames(files: readonly { content: string }[]): { do
 const POLICY_USE_ALIAS_RE = /\b(\w+)\s+as\s+(\w+)\b/g;
 
 /**
- * 🔎️One O(total content) pass building every `RealName as AliasName` rename seen in any `use` item
+ * 🗺️One O(total content) pass building every `RealName as AliasName` rename seen in any `use` item
  * (e.g. `use raster_core::{RasterSnapshot as RasterDocument};`) — a technology's block-kind wrapper
  * commonly re-exports another crate's already-DSL-complete type under a locally-meaningful alias
  * (`forms`'s `PlaybookSpec as FormSpec`, `raster/plugin`'s `RasterSnapshot as RasterDocument`), so a
@@ -147,7 +147,7 @@ export function policyDslCompletenessBreaches(repoRoot: string): BreachRecord[] 
 
 //#region 🔧️PolicyRulePackCompleteness
 /**
- * 📏️pack/ rollout lock-step rule: every `*.rs` file that calls `assert_dsl_round_trip(`/
+ * 🎒️pack/ rollout lock-step rule: every `*.rs` file that calls `assert_dsl_round_trip(`/
  * `assert_document_text_round_trip(` must ALSO call `assert_dsl_pack_equivalence(`/
  * `assert_document_pack_round_trip(` somewhere in the same file — dsl and pack are two projections of
  * the same value model (see `vcs::DocumentPack`'s LAW doc comment), so a technology proving its DSL
@@ -182,7 +182,7 @@ export function policyPackCompletenessBreaches(repoRoot: string): BreachRecord[]
 
 //#region 🔧️PolicyRuleCommandEnvelopeCompleteness
 /**
- * 📏️CW7 command-envelope law rule — mirrors `policyPackCompletenessBreaches`'s shrinking-allowlist
+ * ✉️CW7 command-envelope law rule — mirrors `policyPackCompletenessBreaches`'s shrinking-allowlist
  * pattern one step further: every file that already proves the dsl/pack round-trip laws
  * (`assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(`) must ALSO call
  * `vcs::test_support::assert_command_envelope_round_trip` beside them — a technology's `Edit<Mutation>`
@@ -250,7 +250,7 @@ export function policyDiffCompletenessBreaches(repoRoot: string): BreachRecord[]
 
 //#region 🔧️PolicyRuleGrammarFileCompleteness
 /**
- * 📏️W1 grammar-engine wave rule (design ruling B-R2) — the mirror-image of every other completeness
+ * 📕️W1 grammar-engine wave rule (design ruling B-R2) — the mirror-image of every other completeness
  * rule in this file: instead of scanning for real files that are missing something, this one simply
  * asserts `POLICY_GRAMMAR_FILE_ALLOWLIST` shrinks to empty over time (see that constant's doc comment
  * for the current, deliberately-empty W1 state — no app has committed a `.grammar` file yet, so
@@ -309,7 +309,7 @@ function policyTsFacadeIsScaffoldStub(content: string): boolean {
 }
 
 /**
- * 📏️Structural TS-facade rule (replaces POLICY_TS_FACADE_ALLOWLIST): scaffold stubs are accepted under
+ * 🏗️Structural TS-facade rule (replaces POLICY_TS_FACADE_ALLOWLIST): scaffold stubs are accepted under
  * constitutional non-mutation facets. Mutation representations must be real descriptor-backed mirrors.
  */
 export function policyTsFacadeBreaches(repoRoot: string): BreachRecord[] {
@@ -381,7 +381,7 @@ const POLICY_PROTOCOL_MIGRATION_QUALIFIED_RE = new RegExp(`\\bvcs::(${POLICY_PRO
 const POLICY_PROTOCOL_MIGRATION_USE_BLOCK_RE = /use\s+(?:::)?vcs::\{([^}]*)\}/gs;
 
 /**
- * 📏️CW8 regression-prevention rule: `vcs/rs/lib.rs`'s temporary CW3 `pub use protocol::{Mutation,
+ * 🐛️CW8 regression-prevention rule: `vcs/rs/lib.rs`'s temporary CW3 `pub use protocol::{Mutation,
  * MutationDiff, OpText, MutationMeta, Edit, merge_concurrent_diffs, ReconcileReport,
  * ReconcileSeverity}` shim is deleted — every dependent crate now imports `protocol::` directly (see
  * `policyCommandEnvelopeCompletenessBreaches` above and CW7's import sweep). This rule fires the

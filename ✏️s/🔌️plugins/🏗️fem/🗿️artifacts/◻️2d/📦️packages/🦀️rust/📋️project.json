@@ -217,7 +217,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "test-fixed-dofs",
+            "verify",
+            "fixed-dofs",
             "source"
           ]
         }
@@ -234,7 +235,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "test-fixed-dofs",
+            "verify",
+            "fixed-dofs",
             "native"
           ]
         }

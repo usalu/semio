@@ -28,7 +28,7 @@ impl SetRelationship {
     }
 
     /// 🔗️ The payload that writes `relationship` into `owner` at `index`.
-    pub(crate) fn of(owner: &str, relationship: &OpcRelationship, index: Option<usize>) -> Self {
+    pub fn of(owner: &str, relationship: &OpcRelationship, index: Option<usize>) -> Self {
         Self { owner: owner.to_string(), id: relationship.id.clone(), rel_type: relationship.rel_type.clone(), target: relationship.target.clone(), external: relationship.target_mode == OpcTargetMode::External, index }
     }
 }

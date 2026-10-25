@@ -9,7 +9,8 @@ use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{Trigger};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionId, ActionKind, BuiltNode, PluginAssemblyError, TreeWindows, UiListBuilder, UiMapBuilder, UiText, UiValue, WindowKindDefinition};
 use semio_framework_ui_locale::{Locale, LocalizedLabel};
 

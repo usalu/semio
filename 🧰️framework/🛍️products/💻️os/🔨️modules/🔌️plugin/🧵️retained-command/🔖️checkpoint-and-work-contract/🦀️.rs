@@ -199,6 +199,28 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
     }
 }
 
+/// 📦️ An already boxed work answers every work method through its own vtable, so factories that choose their work dynamically still enter the admitted producers.
+impl<A: ArtifactApp> ArtifactCommandWork<A> for Box<dyn ArtifactCommandWork<A>> {
+    fn tool_id(&self) -> &'static str { (**self).tool_id() }
+    fn receive_original_command(&mut self,command:&mut A::Command,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{(**self).receive_original_command(command,cx)}
+    fn workspace_identity(&self) -> u64 { (**self).workspace_identity() }
+    fn extent(&self, command: &A::Command, snapshot: &A::Snapshot, interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<A>>) -> Option<usize> { (**self).extent(command, snapshot, interaction, context) }
+    fn work_demands(&self, input: &ArtifactCommandInputs<'_, A>, maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> { (**self).work_demands(input, maximum_copy_bytes) }
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> { (**self).step(input, cx) }
+    fn checkpoint_byte(&self, index: usize) -> Option<u8> { (**self).checkpoint_byte(index) }
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> { (**self).restore(checkpoint) }
+    fn terminal_frame_release_bytes(&self)->Option<usize>{(**self).terminal_frame_release_bytes()}
+    fn reports_progress(&self) -> bool { (**self).reports_progress() }
+    fn begin_close(&mut self) { (**self).begin_close() }
+    fn close_step(&mut self, cx:&mut StepContext<'_>) -> Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> { (**self).close_step(cx) }
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{(**self).next_close_copy_byte_demand()}
+    fn next_close_capacity_byte_demand(&self,maximum_copy_bytes:usize)->Result<usize,ValueError>{(**self).next_close_capacity_byte_demand(maximum_copy_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{(**self).next_close_release_byte_demand()}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{(**self).next_close_depth_demand()}
+    fn close_demand_without_owner(&self)->Result<usize,ValueError>{(**self).close_demand_without_owner()}
+    fn terminal_is_empty(&self) -> bool { (**self).terminal_is_empty() }
+}
+
 pub struct BoundedArtifactCommandWork<A: ArtifactApp> {
     pub tool_id: &'static str,
     pub reducer: ArtifactCommandReducer<A>,

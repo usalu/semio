@@ -13,7 +13,7 @@ pub(super) struct RunRange {
 /// 👁️ One entry of a run read in place: its key and, for a put, its value, as ranges of the
 /// run's own pages.
 #[derive(Clone, Copy, Debug)]
-struct RunViewEntry {
+pub(super) struct RunViewEntry {
     pub(super) key: RunRange,
     pub(super) value: Option<RunRange>,
 }

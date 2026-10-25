@@ -1,11 +1,11 @@
-//! 🌳️ Host-runtime vocabulary: scopes, channel policy and the `HostAsyncRuntime` trait.
+//! 🖥️ Host-runtime vocabulary: scopes, channel policy and the `HostAsyncRuntime` trait.
 
 use std::future::Future;
 use std::pin::Pin;
 use super::{CancelToken, OperationContext};
 
 //#region 🌳️Scope
-/// 🌳️ Who a [`Scope`] belongs to. `Service` is a small closed set of well-known host subsystem
+/// 👤️ Who a [`Scope`] belongs to. `Service` is a small closed set of well-known host subsystem
 /// names (e.g. `"timer"`, `"http_pool"`) rather than owned `String` data — an in-process identity,
 /// never wire data, so it carries no serialization derive at all.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -22,7 +22,7 @@ pub enum ScopeOwner {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ScopeId(pub u64);
 
-/// 🌳️ A structured-concurrency scope: every [`HostAsyncRuntime::spawn_scoped`] task belongs to
+/// 🧭️ A structured-concurrency scope: every [`HostAsyncRuntime::spawn_scoped`] task belongs to
 /// exactly one of these, found by [`ScopeHandle::id`]. There is no detached-spawn entry point on
 /// [`HostAsyncRuntime`] — a handle is mandatory. Not `Serialize`: it carries a live [`CancelToken`],
 /// same reasoning as [`OperationContext`].

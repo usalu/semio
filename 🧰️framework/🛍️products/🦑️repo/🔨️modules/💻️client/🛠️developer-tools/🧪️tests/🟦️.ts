@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv/dist/2020";
 import {readFileSync,mkdirSync,mkdtempSync,writeFileSync,symlinkSync} from "node:fs";
 import {join,resolve,dirname} from "node:path";
-import {withBuildTestInvocationV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {withScriptInvocationSignalV1,acknowledgeScriptInvocationSignalStopV1,type ScriptInvocation} from "@semio-tech/process/routing";
 import {createDeveloperProcessV1,createNativeDebuggerSetupHostV1,probeNativeDebuggerV1,type DeveloperProcessIOV1} from "../🏃️process/🟦️.ts";
 import {planDeveloperRequest,parseDeveloperArguments,executeDeveloperRequest,readDeveloperRequest,developerDebuggers} from "../🟦️.ts";
@@ -83,7 +83,7 @@ test("debug argument form admits a literal bounded list without shell parsing",(
 test("debug availability inventory agrees with schema and independent SQLite discovery",async()=>{
  const {Database}=await import("bun:sqlite"),validate=new Ajv({strict:true}).compile({$schema:schema.$schema,...schema.$defs.DebuggerAvailability}),db=new Database(":memory:");
  try{db.exec("create table installed(program text primary key,path text)");for(const row of fixture.debugAvailabilityCases){db.exec("delete from installed");for(const[program,path]of Object.entries(row.installed))db.query("insert into installed values(?,?)").run(program,path as string);const inventory=developerDebuggers(row.platform,program=>row.installed[program]??null);expect(validate(inventory)).toBe(true);expect(inventory.map(({title,...entry})=>entry)).toEqual(row.expected);for(const entry of inventory){const match=db.query("select path from installed where program=?").get(entry.program)as{path:string}|null;expect(entry.installed).toBe(match!==null);expect(entry.path??null).toBe(match?.path??null);expect(Object.keys(entry.title).sort()).toEqual(["de","en"]);}}}finally{db.close();}
- const installed=developerDebuggers(process.platform,program=>Bun.which(program));console.log("[DEBUG] Debugger availability "+JSON.stringify(installed.map(({title,...entry})=>entry)));
+ const installed=developerDebuggers(process.platform,program=>Bun.which(program));
 });
 
 test("debug custody preserves immutable arguments, cancellation and physical workspace bounds",async()=>{
@@ -99,18 +99,18 @@ for(const profile of["node-inspect","python-pdb"] as const)test("debug runtime "
  const arguments_=["value with spaces",'quote"mark',"trailing\\","; $(literal)","🧪"],output:string[]=[];await liveInvocation(15000,async original=>{
   const installed=developerDebuggers(process.platform,program=>Bun.which(program),process.env).find(entry=>entry.profile===profile);expect(installed?.installed,"Required debugger prerequisite unmet: "+profile).toBe(true);
   const request={command:"debug",profile,program,arguments:arguments_};
-  if(profile==="node-inspect"){const controller=new AbortController();await withScriptInvocationSignalV1(original,controller.signal,async cancelled=>{const run=liveRequest(root,request,cancelled,{input:"",output:bytes=>{output.push(Buffer.from(bytes).toString());if(output.join("").includes("Break on start"))controller.abort(Error("Observed real Node inspector pause"));}});try{await expect(run).rejects.toThrow("cancelled");expect(output.join("")).toContain("Debugger attached");expect(output.join("")).toContain("Break on start");}finally{if(controller.signal.aborted)acknowledgeScriptInvocationSignalStopV1(cancelled);}});console.log("[DEBUG] Actual production Node inspector attached, paused and cancelled with its child");}
-  else{await liveRequest(root,request,original,{input:"p 6*7\nc\nq\n",output:bytes=>{output.push(Buffer.from(bytes).toString());}});expect(output.join("")).toMatch(/(?:^|\n)(?:\(Pdb\) )?42\r?(?:\n|$)/u);expect(output.join("")).not.toContain("UnicodeEncodeError");const encoded=/DEBUGGER_ARGV:([^\r\n]+)/u.exec(output.join(""));expect(encoded).not.toBeNull();expect(JSON.parse(encoded![1]!)).toEqual(arguments_);console.log("[DEBUG] Actual production Python Pdb evaluated42 and preserved Unicode arguments");}
+  if(profile==="node-inspect"){const controller=new AbortController();await withScriptInvocationSignalV1(original,controller.signal,async cancelled=>{const run=liveRequest(root,request,cancelled,{input:"",output:bytes=>{output.push(Buffer.from(bytes).toString());if(output.join("").includes("Break on start"))controller.abort(Error("Observed real Node inspector pause"));}});try{await expect(run).rejects.toThrow("cancelled");expect(output.join("")).toContain("Debugger attached");expect(output.join("")).toContain("Break on start");}finally{if(controller.signal.aborted)acknowledgeScriptInvocationSignalStopV1(cancelled);}});}
+  else{await liveRequest(root,request,original,{input:"p 6*7\nc\nq\n",output:bytes=>{output.push(Buffer.from(bytes).toString());}});expect(output.join("")).toMatch(/(?:^|\n)(?:\(Pdb\) )?42\r?(?:\n|$)/u);expect(output.join("")).not.toContain("UnicodeEncodeError");const encoded=/DEBUGGER_ARGV:([^\r\n]+)/u.exec(output.join(""));expect(encoded).not.toBeNull();expect(JSON.parse(encoded![1]!)).toEqual(arguments_);}
  });
 },20000);
 
 const gdbAvailable=Boolean(Bun.which("gdb"))&&(process.platform==="win32"||Boolean(Bun.which("gcc")));
-if(!gdbAvailable)console.log("[DEBUG] Qualified optional GDB runtime unmet: "+JSON.stringify({gdb:Boolean(Bun.which("gdb")),compiler:process.platform==="win32"?"frontend-only":Boolean(Bun.which("gcc"))}));
+
 test.skipIf(!gdbAvailable)(process.platform==="win32"?"debug runtime gdb installed frontend":"debug runtime gdb native breakpoint and arguments",async()=>{
  const output:string[]=[];await liveInvocation(40000,async original=>{
-  if(process.platform==="win32"){const text=await createNativeDebuggerSetupHostV1(root,original).capture({command:"gdb",args:["--nx","--quiet","-batch","-ex","print 6*7"],cwd:root,detached:false},original.control.signal);output.push(text);expect(output.join("")).toMatch(/\$1 = 42/u);console.log("[DEBUG] Windows GDB frontend42 only; native Unicode breakpoint remains unsupported");return;}
+  if(process.platform==="win32"){const text=await createNativeDebuggerSetupHostV1(root,original).capture({command:"gdb",args:["--nx","--quiet","-batch","-ex","print 6*7"],cwd:root,detached:false},original.control.signal);output.push(text);expect(output.join("")).toMatch(/\$1 = 42/u);return;}
   const program="app/debug-native";writeFileSync(livePath(join(root,"app/debug-native.c")),fixture.debugPrograms.native);livePath(join(root,program));await createNativeDebuggerSetupHostV1(root,original).run({command:"gcc",args:["-g","-O0","app/debug-native.c","-o",program],cwd:root,detached:false},original.control.signal);
-  await liveRequest(root,{command:"debug",profile:"gdb",program,arguments:["value with spaces"]},original,{input:"break main\nrun\nprint argc\nprint 6*7\ncontinue\nquit\n",output:bytes=>{output.push(Buffer.from(bytes).toString());}});expect(output.join("")).toMatch(/Breakpoint 1, main/u);expect(output.join("")).toMatch(/\$1 = 2/u);expect(output.join("")).toMatch(/\$2 = 42/u);expect(output.join("")).toContain("DEBUGGER_FIXTURE_OK");console.log("[DEBUG] Actual production GDB hit main, preserved argv, evaluated42 and continued");
+  await liveRequest(root,{command:"debug",profile:"gdb",program,arguments:["value with spaces"]},original,{input:"break main\nrun\nprint argc\nprint 6*7\ncontinue\nquit\n",output:bytes=>{output.push(Buffer.from(bytes).toString());}});expect(output.join("")).toMatch(/Breakpoint 1, main/u);expect(output.join("")).toMatch(/\$1 = 2/u);expect(output.join("")).toMatch(/\$2 = 42/u);expect(output.join("")).toContain("DEBUGGER_FIXTURE_OK");
  });
 },45000);
 
@@ -118,7 +118,7 @@ test("debug runtime lldb native breakpoint and arguments",async()=>{
  const row=fixture.lldbRuntime,output:string[]=[];expect(oracle(row.request)).toBe(true);expect(readDeveloperRequest(row.request)).toEqual(row.request);await liveInvocation(50000,async original=>{
   const host=createNativeDebuggerSetupHostV1(root,original),executable=await probeNativeDebuggerV1(root,original,host);expect(executable,"Required LLDB Python startup42 prerequisite unmet").toBeDefined();const sibling=join(dirname(executable!),process.platform==="win32"?"clang.exe":"clang"),compiler=host.find(sibling)??host.find("clang");expect(compiler,"Required native LLDB fixture compiler prerequisite unmet").toBeTruthy();
   const program=row.request.program+(process.platform==="win32"?".exe":"");writeFileSync(livePath(join(root,"app/debug-native-lldb.c")),fixture.debugPrograms.native);livePath(join(root,program));await host.run({command:compiler!,args:["-g","-O0","app/debug-native-lldb.c","-o",program],cwd:root,detached:false,environment:host.environment},original.control.signal);
-  await liveRequest(root,{...row.request,program},original,{input:row.input,output:bytes=>{output.push(Buffer.from(bytes).toString());}});for(const pattern of row.patterns)expect(output.join("")).toMatch(new RegExp(pattern,"u"));console.log("[DEBUG] Actual production LLDB native breakpoint/argv42/continue/exit passed: "+executable);
+  await liveRequest(root,{...row.request,program},original,{input:row.input,output:bytes=>{output.push(Buffer.from(bytes).toString());}});for(const pattern of row.patterns)expect(output.join("")).toMatch(new RegExp(pattern,"u"));
  });
 },55000);
 
@@ -135,7 +135,7 @@ for(const row of fixture.nativeSetupRefusals)test(`native debugger setup refuses
 
 test("native setup actual dispatch, lifecycle, cancellation and production no-install frontend",async()=>{
  const {SetupDebuggerScript,setupNativeDebugger,createNativeDebuggerSetupHostV1}=await import("../🏃️process/🟦️.ts"),{receiveScriptProcessInvocation,withScriptInvocationSignalV1,acknowledgeScriptInvocationSignalStopV1}=await import("@semio-tech/process/routing");
- await receiveScriptProcessInvocation(process.env,async original=>{
+ await withBuildTestInvocationV1(async original=>{
   const records:any[]=[],host:any={platform:"linux",manager:"apt-get",privilege:"sudo",environment:{},find:(program:string)=>program==="lldb"||program==="/usr/bin/lldb"?"/usr/bin/lldb":null,run:async(plan:any,signal:AbortSignal)=>{expect(signal).toBe(original.control.signal);records.push(plan);},capture:async(plan:any,signal:AbortSignal)=>{expect(signal).toBe(original.control.signal);records.push(plan);return "(lldb) script print(6*7)\n42\n";}};
   await new SetupDebuggerScript(owner,root,original,host).run([]);expect(records).toHaveLength(1);expect(records[0].args).toEqual(schema.$defs.NativeDebuggerSetupPolicy.const.probeArguments);
   records.length=0;host.capture=async()=>{throw Error("frontend unavailable");};host.run=async(plan:any)=>{records.push(plan);throw Error("sudo requires OS authentication");};await expect(new SetupDebuggerScript(owner,root,original,host).run([])).rejects.toThrow();expect(records).toHaveLength(1);expect(records[0].command).toBe("sudo");expect(records[0].args).toEqual(["-n","true"]);
@@ -144,7 +144,7 @@ test("native setup actual dispatch, lifecycle, cancellation and production no-in
    const selection=fixture.nativeSetupCases.find((entry:any)=>entry.name===row.host);let ready=false;const installs:string[]=[],host={...selection,find:(program:string)=>/lldb(?:\.exe)?$/u.test(program)?program:null,capture:async(_plan:any,signal:AbortSignal)=>{expect(signal).toBe(original.control.signal);if(!ready)throw Error("scripting runtime unavailable");return "42\n";},run:async(plan:any,signal:AbortSignal)=>{expect(signal).toBe(original.control.signal);const id=plan.args.includes("Python.Python.3.11")?"python":"lldb";installs.push(id);if(id===row.readyAfter)ready=true;}};const result=await setupNativeDebugger(root,original,host);expect(result.installed,row.name).toBe(true);expect(installs,row.name).toEqual(row.expectedInstallIds);
   }
   const controller=new AbortController();await withScriptInvocationSignalV1(original,controller.signal,async cancelled=>{let effects=0;const host:any={platform:"linux",manager:"apt-get",privilege:"root",environment:{},find:(program:string)=>program==="lldb"||program==="/usr/bin/lldb"?"/usr/bin/lldb":null,capture:async()=>{controller.abort(Error("fixture native setup stop"));throw Error("probe interrupted");},run:async()=>{effects++;throw Error("Cancelled setup must never install");}};await expect(setupNativeDebugger(root,cancelled,host)).rejects.toThrow("fixture native setup stop");expect(effects).toBe(0);acknowledgeScriptInvocationSignalStopV1(cancelled);});
-  const actualHost=createNativeDebuggerSetupHostV1(root,original),actual=await probeNativeDebuggerV1(root,original,actualHost);expect(actual,"Required real no-install LLDB Python startup42 prerequisite unmet").toBeTruthy();console.log("[DEBUG] Production owned LLDB Python startup42 verified without package installation: "+actual);
+  const actualHost=createNativeDebuggerSetupHostV1(root,original),actual=await probeNativeDebuggerV1(root,original,actualHost);expect(actual,"Required real no-install LLDB Python startup42 prerequisite unmet").toBeTruthy();
  });
 },60_000);
 

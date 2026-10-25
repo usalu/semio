@@ -26,7 +26,7 @@ pub use renderer::{
 pub use renderer::{append_svg_document, SvgDocument};
 // #endregion 🔖️Renderer
 
-/// 📐️ First-party intrinsic-dimension reader (`🧰️framework/🔨️modules/📏️intrinsic-size`) — the
+/// 📖️ First-party intrinsic-dimension reader (`🧰️framework/🔨️modules/📏️intrinsic-size`) — the
 /// `wasm32-wasip2` arm of `svg_icon::svg_icon_content_bounds_from_str` uses it instead of `usvg` so that
 /// dimension-only call site stops pulling the SVG pipeline onto the guest component. Native/browser keep the
 /// real `usvg` parse unchanged. Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`,
@@ -39,7 +39,7 @@ use semio_framework_intrinsic_size as intrinsic_size;
 pub mod native_render {
     pub use vello::wgpu::{Device, Queue, TextureView};
     use super::{Color, Scene};
-    /// 🎨️ Owns the private backend interpreter and rasterizer.
+    /// 🖨️ Owns the private backend interpreter and rasterizer.
     pub struct CanvasRasterSession(vello::Renderer);
     impl CanvasRasterSession {
         pub fn new(device: &Device) -> Result<Self, String> {
@@ -74,7 +74,7 @@ impl std::error::Error for CanvasError {}
 
 pub mod theme {
     // #region theme
-    //! 🎨️ Default canvas paint helpers from centralized styling tokens.
+    //! 🖌️ Default canvas paint helpers from centralized styling tokens.
 
     use super::{Color, Rgba8};
     use ui_styling::{appearance::AppearanceName, CANVAS_LIGHT};
@@ -84,22 +84,22 @@ pub mod theme {
         Color::new(rgba)
     }
 
-    /// 🎨️ Shared default clear color for graph board canvases.
+    /// 🕸️ Shared default clear color for graph board canvases.
     pub fn default_raster_clear() -> Color {
         linear_color(CANVAS_LIGHT.raster_clear)
     }
 
-    /// 🎨️ Default themed icon foreground paint.
+    /// ⬛️ Default themed icon foreground paint.
     pub fn default_icon_fg() -> Color {
         linear_color(CANVAS_LIGHT.icon_fg)
     }
 
-    /// 🎨️ Default themed icon background paint.
+    /// ⬜️ Default themed icon background paint.
     pub fn default_icon_bg() -> Color {
         linear_color(CANVAS_LIGHT.icon_bg)
     }
 
-    /// 🎨️ Resolves canvas paints for a theme name.
+    /// 🔎️ Resolves canvas paints for a theme name.
     pub fn canvas_clear_for(theme: AppearanceName) -> Color {
         linear_color(theme.canvas().raster_clear)
     }
@@ -138,7 +138,7 @@ pub mod theme {
         0.2126 * f64::from(r) + 0.7152 * f64::from(g) + 0.0722 * f64::from(b) > 0.5
     }
 
-    /// 🎨️ Checkerboard cell shades for transparent raster layers.
+    /// 🏁️ Checkerboard cell shades for transparent raster layers.
     pub fn checkerboard_shades_for_clear(clear: Color) -> (u8, u8) {
         if clear_is_light(clear) {
             (220, 180)
@@ -156,23 +156,23 @@ pub mod svg_icon;
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 impl SvgDocument {
-    /// 🏷️ Parses icon SVG with bundled emoji font options.
+    /// 📦️ Parses icon SVG with bundled emoji font options.
     pub fn parse_icons(svg: &str) -> Result<Self, CanvasError> {
         let tree = usvg::Tree::from_str(svg, svg_icon::usvg_options_icons()).map_err(|e| CanvasError::SvgParse(e.to_string()))?;
         Ok(Self::from_tree(tree))
     }
 
-    /// 📐️ Visible content bounds in absolute SVG space.
+    /// 📏️ Visible content bounds in absolute SVG space.
     pub fn content_bounds(&self) -> (f64, f64, f64, f64) {
         svg_icon::svg_icon_content_bounds(&self.0)
     }
 
-    /// 🏷️ Renders themed icon paints into a scene.
+    /// 🌗️ Renders themed icon paints into a scene.
     pub fn render_themed(&self, scene: &mut Scene, fg: Color, bg: Color) {
         svg_icon::render_svg_tree_themed(scene, &self.0, fg, bg);
     }
 
-    /// 🏷️ Renders literal SVG paints into a scene.
+    /// 📝️ Renders literal SVG paints into a scene.
     pub fn render_literal(&self, scene: &mut Scene) {
         svg_icon::render_svg_tree_literal(scene, &self.0);
     }

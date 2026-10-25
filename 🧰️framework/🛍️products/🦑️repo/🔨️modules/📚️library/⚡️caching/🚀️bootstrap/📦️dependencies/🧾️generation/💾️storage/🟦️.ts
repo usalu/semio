@@ -2,25 +2,31 @@ import {createHash} from "node:crypto";
 import {lstatSync,readFileSync,readdirSync,statSync,unlinkSync} from "node:fs";
 import {homedir} from "node:os";
 import {join,resolve} from "node:path";
-import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withArtifactRelativeDirectoryV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import type {RepositoryCacheStoreV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {repositoryLeaseDirectoryV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {readBunWorkspaceListingProjectionV1,type BunWorkspaceObservedOwnershipV1} from "../../../../../🗂️workspaces/🟦️bun/🟦️.ts";
-import {javascriptDependencyReadContextV1,javascriptDependencySourceOwnerRuntimeV1,observeJavascriptDependencyBindingsReadV1,readJavascriptDependencyBindingReceiptReadV1,type JavascriptDependencyReadContextV1,type readJavascriptDependencySourceOwnerScopeReadV1} from "../../💾️storage/🟦️.ts";
+import { javascriptDependencyReadContextV1, javascriptDependencySourceOwnerRuntimeV1, observeJavascriptDependencyBindingsReadV1, readJavascriptDependencyBindingReceiptReadV1, type JavascriptDependencyReadContextV1 } from "../../💾️storage/📥️read-context/🟦️.ts";
 import {javascriptInstallSchemaV1 as installSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
 import {concurrentProtocolV1} from "../../🚦️concurrent/🟦️.ts";
 import {requireCurrentFormatStampsV1,staleImplementationOfV1} from "../../../../../🏗️build/🧷️format-stamps/🟨️.mjs";
 import {captureGenerationReceiptV1,confirmGenerationWalkV1,describeGenerationMismatchV1,generationLocationV1,generationProtocolV1 as protocol,generationSha256V1,guardGenerationReplayV1,generationWalkOriginV1,parseGenerationReceiptV1,publishGenerationBestEffortV1,runGenerationWriterV1,verifyGenerationReceiptV1,type GenerationControlV1,type GenerationPublishOutcomeV1,type GenerationReplayResultV1,type GenerationProducerFileV1,type GenerationProducerV1,type GenerationProducerVariableV1,type GenerationReceiptV1,type GenerationRuntimeV1,type GenerationVerifyResultV1} from "../🟦️.ts";
-import { runtimeIdentityV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeIdentityV1 } from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🟦️.ts";
 
 const compareBytes=(left:string,right:string):number=>Buffer.compare(Buffer.from(left),Buffer.from(right));
 const scopeKey=(scope:string)=>generationSha256V1(scope).slice(0,16);
 const evidenceName=/^[a-f0-9]{64}\.(?:frontier|execution)\.ndjson$/u,evidenceSweep=/^[a-f0-9]{64}\.[a-z]+\.ndjson$/u;
 
-/** 🧬️ Is a completed complete walk plus the topology it retained; only such a walk may be published. */
-export type JavascriptDependencyGenerationWalkV1=Awaited<ReturnType<typeof readJavascriptDependencySourceOwnerScopeReadV1>>&Readonly<{observed?:()=>BunWorkspaceObservedOwnershipV1}>;
+/** 🧬️ Is a completed complete walk plus the topology it retained; only such a walk may be published. The receipt reads the walk through this consumer-owned shape, so it never imports the Source-owner reader that produces it. */
+export type JavascriptDependencyGenerationWalkV1=Readonly<{
+ required:readonly string[];sha256:string;
+ projection:Readonly<{recipeSha256:string;owners:Readonly<{sha256:string}>;plans:readonly Readonly<{scope:string;plan:Readonly<{directory:string;bindings:readonly Readonly<{sourceDirectory:string;targetDirectory:string}>[];sources:readonly Readonly<{path:string;kind:"file"|"directory"|"missing";bytes:Buffer;dev:string;ino:string;mode:number}>[]}>}>[]}>;
+ receipts:readonly Readonly<{scope:string;generation:string;fingerprint:string}>[];
+ evidence:Readonly<{scope:string;bindings:readonly (readonly [string,string])[];execution:Readonly<{scopes:readonly Readonly<{scope:string;sha256:string}>[];runtimeSha256:string;observations:readonly Readonly<{path:string;stamp:string|null;anchor:string|null;kind:string;target:string|null;full:boolean}>[]}>}>;
+ observed?:()=>BunWorkspaceObservedOwnershipV1;
+}>;
 /** 🔍️ Is either the exact result of a complete walk, a typed mismatch, or the absence of any receipt. */
 export type JavascriptDependencyGenerationVerifyV1=GenerationVerifyResultV1|Readonly<{status:"absent"}>;
 

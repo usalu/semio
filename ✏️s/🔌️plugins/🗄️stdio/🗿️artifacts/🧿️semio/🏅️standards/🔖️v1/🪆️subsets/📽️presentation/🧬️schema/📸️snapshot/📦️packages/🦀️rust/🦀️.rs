@@ -45,3 +45,12 @@ pub mod schema {
         pub use component::*;
     }
 }
+semio_framework_value::artifact_retire_leaf!(schema::snapshot::SlideFrame);
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SlidePictureImage { asset_id, mime, bytes });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SlideTableCell { blocks });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SlideTableRow { cells });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SlideMaster { id, shapes });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SlideLayout { id, master_id, shapes });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::Slide { id, layout_id, shapes, notes });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioPresentationSnapshot { schema, masters, layouts, slides });
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioPresentationSnapshot);

@@ -1,4 +1,4 @@
-//! 🪟️ `D3d12Backend`: the concrete `ui_render::GraphicsBackend` implementation for Windows.
+//! 🖥️ `D3d12Backend`: the concrete `ui_render::GraphicsBackend` implementation for Windows.
 //!
 //! Milestones reached (see `📓️terra-backend-d3d12-report.md` for the authoritative statement):
 //! device + DXGI flip-model swapchain (3 buffers) + direct command queue + per-frame fence (resize
@@ -96,7 +96,7 @@ pub struct D3d12Backend {
     /// explicitly and issues exactly the barriers needed each frame. See `run_blur_chain`'s doc
     /// comment for the full per-mip state machine.
     scene_state: [D3D12_RESOURCE_STATES; 5],
-    /// 🚧️ `scene_target.blur_scratch()`'s tracked state — one scalar, not per-mip, because every mip
+    /// 📌️ `scene_target.blur_scratch()`'s tracked state — one scalar, not per-mip, because every mip
     /// of `blur_scratch` this crate ever touches is processed identically and left in the same state
     /// every frame (see `run_blur_chain`'s doc comment for why that makes a single scalar sound).
     blur_scratch_state: D3D12_RESOURCE_STATES,
@@ -137,7 +137,7 @@ impl D3d12Backend {
         Ok(Self::from_parts(device, queue, swapchain, size, dpr))
     }
 
-    /// 🧪️ A composition-target swapchain (`IDXGIFactory2::CreateSwapChainForComposition`) with no
+    /// 👻️ A composition-target swapchain (`IDXGIFactory2::CreateSwapChainForComposition`) with no
     /// `HWND` at all — DirectComposition/XAML's own window-free swapchain path, which needs no window
     /// handle and hence no `Win32_UI_WindowsAndMessaging` feature (not declared in this crate's
     /// `Cargo.toml`, and creating a real hidden window for testing would have required it). This
@@ -226,7 +226,7 @@ impl D3d12Backend {
     }
 }
 
-/// 🏗️ Shared by `new`/`new_headless`: device + direct command queue + the DXGI factory both swapchain
+/// 🆕️ Shared by `new`/`new_headless`: device + direct command queue + the DXGI factory both swapchain
 /// constructors need.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn create_device_and_queue() -> Result<(Device, ID3D12CommandQueue, IDXGIFactory2), BackendError> {
@@ -271,7 +271,7 @@ fn create_swapchain_for_hwnd(factory: &IDXGIFactory2, queue: &ID3D12CommandQueue
     swapchain1.cast::<IDXGISwapChain3>().map_err(|_| BackendError::SurfaceLost)
 }
 
-/// 🧪️ Composition swapchains only support `DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL`, not `FLIP_DISCARD`
+/// 🔁️ Composition swapchains only support `DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL`, not `FLIP_DISCARD`
 /// (confirmed by the vendored source's own `DXGI_MSG_IDXGIFactory_CreateSwapChainForComposition_
 /// OnlyFlipSequentialSupported` diagnostic id — a documented DXGI validation message, not something
 /// the binding enforces at compile time, so genuinely worth citing rather than assuming).
@@ -387,7 +387,7 @@ impl D3d12Backend {
         self.encode_2d_batches(quad_address, vector_address, ui_globals_address, backdrop_overlay, width, height);
     }
 
-    /// 🎬️ Pass 2 — mirrors `composite_to_swapchain`/the Metal backend's `encode_composite_pass`: blur
+    /// 🪞️ Pass 2 — mirrors `composite_to_swapchain`/the Metal backend's `encode_composite_pass`: blur
     /// the scene's mip chain, blit it to the real swapchain back buffer, composite every glass region
     /// on top, then paint glass-foreground 2D content (normal then overlay) directly onto the back
     /// buffer, reusing `depth_texture` (no clear — "Load") so it still clips against the same stencil
@@ -441,7 +441,7 @@ impl D3d12Backend {
         }
     }
 
-    /// 🌫️ Ports `run_blur_chain`/the Metal backend's identical method: for each mip `1..SCENE_MIP_LEVELS`,
+    /// ⛓️ Ports `run_blur_chain`/the Metal backend's identical method: for each mip `1..SCENE_MIP_LEVELS`,
     /// copies the previous mip from `scene_target.texture()` into `scene_target.blur_scratch()`
     /// (D3D12, like Metal/wgpu, cannot read and write the same texture within one pass), then renders
     /// a fullscreen 5-tap box downsample from the scratch texture into this mip. After the loop, every
@@ -509,7 +509,7 @@ impl D3d12Backend {
         }
     }
 
-    /// 🪟️ Ports `blit_scene_to_swapchain`: samples mip 0 of the fully-blurred scene chain into the
+    /// ⏪️ Ports `blit_scene_to_swapchain`: samples mip 0 of the fully-blurred scene chain into the
     /// back buffer, clearing it first (this is the frame's real "clear colour" as seen by the user —
     /// the offscreen scene clear earlier is invisible, fully overwritten here).
     fn blit_scene_to_back_buffer(&mut self, back_buffer_index: u32) {
@@ -631,7 +631,7 @@ impl D3d12Backend {
         }
     }
 
-    /// 🖼️ `t0`/`s0` are always the shared glyph atlas; `t1`/`s1` are the shared icon atlas for
+    /// 🪢️ `t0`/`s0` are always the shared glyph atlas; `t1`/`s1` are the shared icon atlas for
     /// `UiQuad` batches, or the batch's specific raster texture for `UiRasterTextured` batches
     /// (`batch.texture`) — mirrors the Metal backend's `bind_ui_textures`.
     fn bind_ui_textures(&mut self, texture: Option<TextureId>) -> D3D12_GPU_DESCRIPTOR_HANDLE {
@@ -794,7 +794,7 @@ impl GraphicsBackend for D3d12Backend {
         self.forced_loss = true;
     }
 
-    /// 🧪️ Reads back the readback buffer `render` populated via a same-frame `CopyTextureRegion` from
+    /// 📖️ Reads back the readback buffer `render` populated via a same-frame `CopyTextureRegion` from
     /// the just-presented back buffer (see `capture_readback`) — row-pitch-unpadded, BGRA-swizzled to
     /// the tightly packed RGBA8 `ReadbackImage` the conformance suite expects, same sRGB-vs-linear
     /// byte-reinterpretation acceptable-for-tolerance caveat the Metal backend's `read_back` documents.
@@ -836,7 +836,7 @@ impl GraphicsBackend for D3d12Backend {
 
 #[cfg(feature = "backend-testing")]
 impl D3d12Backend {
-    /// 🧪️ Copies the just-composited back buffer into a fresh `READBACK`-heap buffer — always
+    /// 📸️ Copies the just-composited back buffer into a fresh `READBACK`-heap buffer — always
     /// reallocated at the current size rather than cached, since this path only ever runs inside the
     /// conformance harness (never a hot path worth optimizing) — mirrors the Metal backend's
     /// `capture_readback`.

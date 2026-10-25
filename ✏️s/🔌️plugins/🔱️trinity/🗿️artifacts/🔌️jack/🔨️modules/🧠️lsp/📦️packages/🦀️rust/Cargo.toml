@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-artifact-trinity-jack-lsp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Jack language server: LSP 3.17 over JSON-RPC for the Jack graph query language, served as JSON text so a browser worker and a native test run the same code."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-graph-dsl = { workspace = true }
+semio-framework-graph-manifest = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+serde_json = { workspace = true }
+
+[[test]]
+name = "jack_lsp_laws"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"

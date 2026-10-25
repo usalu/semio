@@ -1,0 +1,385 @@
+{
+  "version": 1,
+  "directory": "/w/.cache/b/l/m/data",
+  "sequences": [
+    {
+      "id": "driver-before-the-fix",
+      "note": "The component driver took the exclusive compiler writer as its outermost custody and only inside it the registry reader: the registry request waited behind a peer's exclusive registry holder and was refused while the whole machine queued behind the writer.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "rustup:home",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home",
+          "mode": "shared",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": [
+        {
+          "kind": "out-of-order",
+          "held": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "requested": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home"
+        },
+        {
+          "kind": "hold-and-wait",
+          "held": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "requested": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home"
+        }
+      ]
+    },
+    {
+      "id": "driver-after-the-fix",
+      "note": "The registry reader spans the driver and is opened first; the fetch takes the shared writer custody BEFORE its exclusive fetch lease, so the fetch lease is held only while the fetch runs; only then the exclusive driver writer is queued, holding shared leases only.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "rustup:home",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "rustup:generation-shard:24",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "cargo:configuration-view:41",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "cargo:registry-fetch:/w/.cache/rust/fixed/m/cargo/home:-",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        },
+        {
+          "op": "release",
+          "resource": "cargo:registry-fetch:/w/.cache/rust/fixed/m/cargo/home:-"
+        },
+        {
+          "op": "release",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m"
+        },
+        {
+          "op": "acquire",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": []
+    },
+    {
+      "id": "fetch-lease-held-while-waiting-for-the-writer",
+      "note": "The old fetch order: the exclusive fetch lease was taken first and the shared writer custody inside it; an idle cargo wrapper held the fetch lease for 41 minutes while the writer was queued behind a driver.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "cargo:registry-fetch:/w/.cache/rust/fixed/m/cargo/home:-",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "mode": "shared",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": [
+        {
+          "kind": "out-of-order",
+          "held": "cargo:registry-fetch:/w/.cache/rust/fixed/m/cargo/home:-",
+          "requested": "repo:compiler-writer:/w/.cache/rust/fixed/m"
+        },
+        {
+          "kind": "hold-and-wait",
+          "held": "cargo:registry-fetch:/w/.cache/rust/fixed/m/cargo/home:-",
+          "requested": "repo:compiler-writer:/w/.cache/rust/fixed/m"
+        }
+      ]
+    },
+    {
+      "id": "registry-resolution-owned",
+      "note": "A lock or resolve producer holds the exclusive registry lease while it takes the exclusive writer: the declared edge cargo-coordination to image.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "cargo:registry:/w/.cache/rust/fixed/m/cargo/home",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": []
+    },
+    {
+      "id": "typescript-compile-before-the-fix",
+      "note": "The TypeScript compile path took the dependency bindings and the exclusive artifact scratch, and only inside them the whole-host capacity of its bundler: under load the capacity wait passed the grace period and print:check was refused.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "javascript-dependency-bindings:/w",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "artifact-scratch:9ab4",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": [
+        {
+          "kind": "out-of-order",
+          "held": "javascript-dependency-bindings:/w",
+          "requested": "semio.compiler.host-capacity/v1"
+        },
+        {
+          "kind": "hold-and-wait",
+          "held": "artifact-scratch:9ab4",
+          "requested": "semio.compiler.host-capacity/v1"
+        }
+      ]
+    },
+    {
+      "id": "typescript-compile-after-the-fix",
+      "note": "The compile path requests its capacity once, first, and hands it to the bundler: nothing requests capacity beneath the bindings and the scratch.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.cpu/v1/0",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "javascript-dependency-bindings:/w",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "artifact-scratch:9ab4",
+          "mode": "exclusive"
+        }
+      ],
+      "violations": []
+    },
+    {
+      "id": "cargo-launcher-before-the-fix",
+      "note": "The cargo launcher took the counted cpu units first and the shared writer custody inside them: a maintenance request queued in front of the writer made every cpu holder wait for it, and the order guard refused the compile (course17 warm proctor-build, 15 s).",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.cpu/v1/0",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "mode": "shared",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": [
+        {
+          "kind": "hold-and-wait",
+          "held": "semio.compiler.cpu/v1/0",
+          "requested": "repo:compiler-writer:/w/.cache/rust/fixed/m"
+        }
+      ]
+    },
+    {
+      "id": "cargo-launcher-after-the-fix",
+      "note": "The shared writer custody is the outer scope and the counted cpu units are taken last, only around the compiler child: waiting for cores while holding the shared writer is clean.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared",
+          "waitedMilliseconds": 20000
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.cpu/v1/0",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": []
+    },
+    {
+      "id": "cargo-custody-inside-cpu-units",
+      "note": "A build that queued for the exclusive build-directory custody while it already held counted cpu units: the custody holder compiles for minutes and may itself wait for cores, so cores held while queueing for the custody are a hold-and-wait that starves the machine.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.cpu/v1/0",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": [
+        {
+          "kind": "out-of-order",
+          "held": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "requested": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]"
+        },
+        {
+          "kind": "hold-and-wait",
+          "held": "semio.compiler.cpu/v1/0",
+          "requested": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]"
+        }
+      ]
+    },
+    {
+      "id": "cargo-custody-after-the-fix",
+      "note": "The custody is the innermost lease of the build lease: taken after the shared store and profile leases (so a queued maintenance writer cannot close a cycle with it) and before the shared writer and the counted cpu units; waiting for it while holding only shared leases is clean.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "[\"semio.cargo.store-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\"]",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "[\"semio.cargo.build-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        },
+        {
+          "op": "acquire",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared",
+          "waitedMilliseconds": 20000
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.cpu/v1/0",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": []
+    },
+    {
+      "id": "cargo-test-custody-inside-writer",
+      "note": "The Cargo test, lint and exact-law paths took the build lease (and with it the exclusive build-directory custody) inside the callback of the input scope that holds the shared compiler writer: a build that queued for the custody while holding the writer, behind a peer that holds the custody and waits for a queued maintenance writer, closed a cycle of three.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": [
+        {
+          "kind": "out-of-order",
+          "held": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "requested": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]"
+        }
+      ]
+    },
+    {
+      "id": "cargo-test-custody-before-writer",
+      "note": "The same paths after the hoist: the lease is taken before the input scope, the custody first and the shared writer inside it, so no task holds the writer while it queues for a custody.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "[\"semio.cargo.custody-lease/v1\",\"/w/.cache/rust/fixed/m/b/p\",\"prototype\"]",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        },
+        {
+          "op": "acquire",
+          "resource": "repo:compiler-writer:/w/.cache/rust/fixed/m",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.cpu/v1/0",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": []
+    }
+  ]
+}

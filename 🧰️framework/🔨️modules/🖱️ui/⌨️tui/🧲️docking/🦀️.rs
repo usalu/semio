@@ -5,7 +5,7 @@ use crate::geometry::{Pos, Rect};
 /// 📏️ The gutter between tiled stacks: the draggable splitter.
 pub const WINDOW_GAP: u16 = 1;
 
-/// 🧲️ A tab joins a group or creates a sibling on one of its four edges.
+/// ⚓️ A tab joins a group or creates a sibling on one of its four edges.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DockPlacement { Tabs, Corner(WindowStackCorner), Left, Right, Top, Bottom }
 

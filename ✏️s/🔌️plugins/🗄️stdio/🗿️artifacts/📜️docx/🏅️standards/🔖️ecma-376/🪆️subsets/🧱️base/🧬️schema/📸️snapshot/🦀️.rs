@@ -164,6 +164,13 @@ pub struct DocxXmlPart {
     pub document: RetainedXmlDocument,
 }
 
+impl semio_framework_os_kernel::list_delta::Keyed for DocxXmlPart {
+    type Key = String;
+    fn key(&self) -> String {
+        self.path.clone()
+    }
+}
+
 pub const DOCX_MAX_XML_PARTS: usize = 1_048_576;
 pub type DocxXmlParts = PagedList<DocxXmlPart, DOCX_MAX_XML_PARTS>;
 

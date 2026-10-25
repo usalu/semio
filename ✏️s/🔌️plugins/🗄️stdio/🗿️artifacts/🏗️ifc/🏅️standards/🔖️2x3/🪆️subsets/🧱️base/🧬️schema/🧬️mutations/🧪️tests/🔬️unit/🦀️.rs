@@ -147,11 +147,11 @@ async fn exact_native_materializes_logical_edits_and_restores_interior_order() {
     let mut replacement = target.clone();
     replacement.entities[0].0 = "IFCCHANGEDENTITY".into();
     let mutation = Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: replacement, index: None });
-    let changed_outcome = Mutation::diff(&mutation, &imported);
+    let changed_outcome = ::semio_framework_os_kernel::ColdMutation::diff(&mutation, &imported);
     let changed = protocol::apply_diff_cold(changed_outcome.diff(), &imported).expect("valid upsert diff");
     assert_eq!(changed.document.instances[1].id, target.id, "upsert moved an interior entity");
-    let inverse = Mutation::inverse(&mutation, &imported).expect("valid retained mutation inverse fixture").into_iter().next().expect("inverse");
-    let restored_outcome = Mutation::diff(&inverse, &changed);
+    let inverse = ::semio_framework_os_kernel::ColdMutation::inverse(&mutation, &imported).expect("valid retained mutation inverse fixture").into_iter().next().expect("inverse");
+    let restored_outcome = ::semio_framework_os_kernel::ColdMutation::diff(&inverse, &changed);
     let restored = protocol::apply_diff_cold(restored_outcome.diff(), &changed).expect("valid inverse diff");
     assert_eq!(restored, imported);
     assert_exact("interior upsert inverse", &semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&restored).expect("inverse export")).await;

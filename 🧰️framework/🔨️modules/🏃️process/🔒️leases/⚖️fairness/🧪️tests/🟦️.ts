@@ -7,6 +7,7 @@ import Ajv from "ajv";
 import {acquireResourceLease,acquireQueuedResourceLease,upgradeQueuedResourceLease,type ResourceLease,type ResourceLeaseControl} from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
+import {queueMayProceedV1} from "../🟦️.ts";
 import policySchema from "../../⏳️wait/🧬️schema/📜️policy.json";
 import progressSchema from "../../../🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json";
 import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1} from "../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -30,13 +31,13 @@ print('{"role":"reader","runtime":"python","done":true,"acquisitions":%d}'%n,flu
 type Child={process:Bun.Subprocess<"ignore","pipe","pipe">;lines:Record<string,unknown>[];done:Promise<void>};
 const children=new Set<Child>();
 function root():string{const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Explicit ticket generated artifact directory required");const parent=resolve(output);mkdirSync(parent,{recursive:true});return mkdtempSync(join(parent,"lf-"));}
-function spawnChild(command:string[]):Child{
-  const process=Bun.spawn(command,{stdin:"ignore",stdout:"pipe",stderr:"pipe"}),child:Child={process,lines:[],done:undefined as unknown as Promise<void>};
+function spawnChild(command:string[],environment?:Record<string,string>):Child{
+  const process=Bun.spawn(command,{stdin:"ignore",stdout:"pipe",stderr:"pipe",...(environment?{env:{...globalThis.process.env,...environment}}:{})}),child:Child={process,lines:[],done:undefined as unknown as Promise<void>};
   child.done=(async()=>{let text="";const take=()=>{let at=text.indexOf("\n");while(at>=0){const line=text.slice(0,at);text=text.slice(at+1);if(line.startsWith("{"))child.lines.push(JSON.parse(line));at=text.indexOf("\n");}};for await(const chunk of process.stdout){text+=Buffer.from(chunk).toString();take();}await process.exited;text+="\n";take();})();
   children.add(child);return child;
 }
-function participant(runtime:"bun"|"node",config:Record<string,unknown>):Child{
-  return spawnChild([runtime==="bun"?globalThis.process.execPath:"node",worker,JSON.stringify({implementation,holdMilliseconds:0,untilMilliseconds:0,offsetMilliseconds:0,owner:"p"+Math.random().toString(36).slice(2,10),mode:"shared",api:"queued",...config})]);
+function participant(runtime:"bun"|"node",config:Record<string,unknown>,environment?:Record<string,string>):Child{
+  return spawnChild([runtime==="bun"?globalThis.process.execPath:"node",worker,JSON.stringify({implementation,holdMilliseconds:0,untilMilliseconds:0,offsetMilliseconds:0,owner:"p"+Math.random().toString(36).slice(2,10),mode:"shared",api:"queued",...config})],environment);
 }
 async function until(check:()=>boolean,milliseconds:number,what:string):Promise<void>{const end=Date.now()+milliseconds;while(!check()){if(Date.now()>end)throw Error("Timed out waiting for "+what);await Bun.sleep(20);}}
 const queueOf=(directory:string,resource:string)=>join(directory,createHash("sha256").update(resource).digest("hex")+".queue");
@@ -195,3 +196,81 @@ test("a failed upgrade consumes the shared hold and leaves nothing behind",async
     expect(tickets(directory,resource)).toEqual([]);
   }finally{await cleanup(directory);}
 },120000);
+
+const turnOracle=`import json,sys
+d=json.load(open(sys.argv[1]))
+pref=d["turns"]["writerPreferenceMilliseconds"]
+def stands_aside(q,a):
+    if a["mode"]!="exclusive":
+        return False
+    if q["mode"]=="shared":
+        return a["yielding"] or a["ageMilliseconds"]>=pref
+    return a["yielding"] and not q["yielding"]
+def proceeds(q,ahead):
+    blocking=[a for a in ahead if not stands_aside(q,a)]
+    if not blocking:
+        return True
+    if q["sharedCohort"] and all(a["mode"]=="shared" and a["sharedCohort"] for a in blocking):
+        return True
+    return q["mode"]=="shared" and q["holdsShared"] and all(a["mode"]=="shared" for a in blocking)
+print(json.dumps({c["id"]:proceeds(c["requester"],c["ahead"]) for c in d["turns"]["cases"]}))
+`;
+test("the queue turn law: a writer closes the queue for later readers only while it is young and not yielding",async()=>{
+  const fixturePath=fileURLToPath(new URL("./🧫️fixtures/🔣️.json",import.meta.url)),{writerPreferenceMilliseconds,cases}=fixture.turns,now=1_000_000_000_000;
+  const decided=Object.fromEntries(cases.map(row=>[row.id,queueMayProceedV1(row.requester as never,row.ahead.map(ticket=>({pid:ticket.pid,mode:ticket.mode as "shared"|"exclusive",sharedCohort:ticket.sharedCohort,yielding:ticket.yielding,arrivedAtMs:now-ticket.ageMilliseconds})),now,writerPreferenceMilliseconds)])),expected=Object.fromEntries(cases.map(row=>[row.id,row.proceeds]));
+  expect(decided).toEqual(expected);
+  const model=Bun.spawnSync(["python3","-I","-c",turnOracle,fixturePath]);
+  expect(model.exitCode,model.stderr.toString()).toBe(0);
+  expect(JSON.parse(model.stdout.toString())).toEqual(expected);
+  const order=Object.assign({},(await import("../../🧭️order/🔣️policy.json")).default.fairness);
+  expect(order.writerPreferenceMilliseconds).toBe(writerPreferenceMilliseconds);
+});
+
+test("a yielding exclusive request waits for the holders without closing the queue, an ordinary one still closes it",async()=>{
+  const directory=root(),resource="fair-yield";
+  try{
+    const holder=participant("bun",{role:"holder",api:"queued",mode:"shared",directory,resource,holdMilliseconds:6000});
+    await until(()=>holder.lines.some(line=>line.held===true),5000,"shared holder");
+    const yielding=participant("bun",{role:"writer",api:"queued",directory,resource,timeoutMilliseconds:20000,yielding:true});
+    await until(()=>tickets(directory,resource).length===2,5000,"yielding writer ticket");
+    const reader=participant("node",{role:"waiter",api:"queued",directory,resource,timeoutMilliseconds:3000});
+    await reader.done;
+    const outcome=reader.lines.find(line=>line.role==="waiter")!;
+    expect(outcome.outcome,JSON.stringify(outcome)).toBe("acquired");
+    expect(outcome.wallMs as number).toBeLessThan(2500);
+    expect(yielding.lines.some(line=>line.acquiredAfterMs!==undefined)).toBe(false);
+    const ordinary=participant("bun",{role:"writer",api:"queued",directory,resource,timeoutMilliseconds:20000});
+    await until(()=>tickets(directory,resource).length===3,5000,"ordinary writer ticket");
+    const blocked=participant("node",{role:"waiter",api:"queued",directory,resource,timeoutMilliseconds:1500});
+    await blocked.done;
+    expect(blocked.lines.find(line=>line.role==="waiter")!.outcome).toBe("timed-out");
+    await Promise.all([holder.done,yielding.done,ordinary.done]);
+    expect(yielding.lines.find(line=>line.role==="writer")!.acquiredAfterMs as number).toBeGreaterThan(0);
+    expect(tickets(directory,resource)).toEqual([]);
+  }finally{await cleanup(directory);}
+},120000);
+
+test("an ordinary writer that waits for a long holder stops closing the queue for later readers after the writer preference",async()=>{
+ const directory=root(),resource="fair-bounded",policyFile=join(directory,"policy.json"),environment={SEMIO_LEASE_ORDER_POLICY:policyFile};
+ try{
+  const authored=(await import("../../🧭️order/🔣️policy.json")).default;
+  await Bun.write(policyFile,JSON.stringify({...authored,fairness:{...authored.fairness,writerPreferenceMilliseconds:1500}}));
+  const holder=participant("bun",{role:"holder",api:"queued",mode:"shared",directory,resource,holdMilliseconds:7000},environment);
+  await until(()=>holder.lines.some(line=>line.held===true),5000,"shared holder");
+  const writer=participant("bun",{role:"writer",api:"queued",directory,resource,timeoutMilliseconds:30000},environment);
+  await until(()=>tickets(directory,resource).length===2,5000,"ordinary writer ticket");
+  const young=participant("node",{role:"waiter",api:"queued",directory,resource,timeoutMilliseconds:700},environment);
+  await young.done;
+  expect(young.lines.find(line=>line.role==="waiter")!.outcome).toBe("timed-out");
+  await Bun.sleep(1200);
+  const aged=participant("node",{role:"waiter",api:"queued",directory,resource,timeoutMilliseconds:4000},environment);
+  await aged.done;
+  const outcome=aged.lines.find(line=>line.role==="waiter")!;
+  expect(outcome.outcome,JSON.stringify(outcome)).toBe("acquired");
+  expect(writer.lines.some(line=>line.acquiredAfterMs!==undefined)).toBe(false);
+  await Promise.all([holder.done,writer.done]);
+  expect(writer.lines.find(line=>line.role==="writer")!.acquiredAfterMs as number).toBeGreaterThan(1500);
+  expect(tickets(directory,resource)).toEqual([]);
+ }finally{await cleanup(directory);}
+},120000);
+

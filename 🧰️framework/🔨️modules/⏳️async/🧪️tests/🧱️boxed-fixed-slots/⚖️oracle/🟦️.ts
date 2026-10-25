@@ -15,7 +15,7 @@ export type FixedSlotTableBudget = {
   readonly ownerSizeBytes: number;
 };
 
-/** 🧱️ The whole committed budget: the bounded thread stack every listed table's constructor must fit,
+/** 💰️ The whole committed budget: the bounded thread stack every listed table's constructor must fit,
  * the size above which a slot table has to leave the caller's frame, and the tables themselves. */
 export type BoxedFixedSlotsBudget = {
   readonly law: string;

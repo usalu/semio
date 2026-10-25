@@ -1,7 +1,7 @@
 /** 🔸️ The tells survey went stale tests of the 📡️ surface survey suite. */
 import { expect, it, vi } from "vitest";
 import { SURVEY_ATTRIBUTES, watchSurvey } from "@semio-tech/pets-react";
-import { hostWith, ledger, viewport } from "../🟣️shared/🟦️.tsx";
+import { hostWith, ledger, viewport } from "../🟣️harness/🟦️.tsx";
 
 /** 🔹 Registers the tells survey went stale tests of the 📡️ surface survey suite. */
 export function registerTellsSurveyWentStaleTests(): void {

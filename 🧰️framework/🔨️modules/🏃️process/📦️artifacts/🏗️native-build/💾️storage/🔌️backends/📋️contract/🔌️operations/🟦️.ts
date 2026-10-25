@@ -2,12 +2,8 @@ import type {ResourceLeaseControl,ResourceLeaseWriterProofV1} from "../../../../
 import type {AcceptedPhysicalCleanupV1} from "../../../../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
 import type {NativeFixedPlatformOptionsV1} from "../../../🔌️port/🟦️.ts";
 import type {NativeImageBorrowerV1} from "../../../📥️borrower/🟦️.ts";
-import type {NativeStorageChildFundingV1} from "../../../🌱️birth/🟦️.ts";
 import type {NativeStorageChildRequestV1} from "../../../📜️journal/🟦️.ts";
-import type {NativeStorageCleanupV1,NativeStorageReservationV1} from "../../../🟦️.ts";
-import type {NativePlatformRecomputableRetirementV1} from "../../../🌐️platform/🟦️.ts";
-import type {NativeImageCleanupReadV1,NativeImageRetainedCleanupV1,NativeDisposableImageV1} from "../../../🧹️cleanup/♻️retirement/📋️contract/🟦️.ts";
-import type {NativeImageMaintenanceCustodyV1,NativeImageRetirementRequestV1,NativeImageStorageV1,NativeProtectedMaintenanceProviderV1,NativeProtectedParentReadV1} from "../../../🌐️platform/📋️contract/🟦️.ts";
+import type {NativeImageMaintenanceCustodyV1,NativeImageRetirementRequestV1,NativeImageStorageV1,NativePlatformRecomputableRetirementV1,NativeProtectedMaintenanceProviderV1,NativeProtectedParentReadV1,NativeStorageCleanupV1,NativeStorageReservationV1,NativeStorageChildFundingV1,NativeImageCleanupReadV1,NativeImageRetainedCleanupV1,NativeDisposableImageV1} from "../../../📋️contract/🟦️.ts";
 
 /** 📐️ The volume measurements one backend answers for its own backing file and mount root; the neutral helpers dispatch here by the backing file they are asked about. */
 export interface NativeStorageGeometryV1{

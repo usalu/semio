@@ -333,7 +333,7 @@ pub fn graph_edit_with_roles(mut rows: PdfDiff, roles: Option<&PdfIndexedDiff<Pd
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn sequence(first: PdfDiff, second: PdfDiff) -> PdfDiff {
     let mut diff = first;
-    <PdfDiff as MutationDiff<PdfSnapshot>>::absorb(&mut diff, second);
+    <PdfDiff as protocol::ColdMutationDiff<PdfSnapshot>>::absorb(&mut diff, second);
     diff
 }
 

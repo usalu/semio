@@ -1,0 +1,20 @@
+{
+  "launchCases": [
+    {"name": "bare launch", "launch": ["nx", "run", "a:compile"], "bare": ["nx", "run", "a:compile"]},
+    {"name": "joined parallelism", "launch": ["nx", "run", "a:compile", "--parallel=3"], "bare": ["nx", "run", "a:compile"]},
+    {"name": "separated parallelism", "launch": ["nx", "run", "a:compile", "--parallel", "3"], "bare": ["nx", "run", "a:compile"]},
+    {"name": "parallelism before other options", "launch": ["nx", "run", "a:compile", "--parallel=3", "--output-style=stream"], "bare": ["nx", "run", "a:compile", "--output-style=stream"]},
+    {"name": "forwarded tail keeps its parallelism", "launch": ["nx", "run", "a:test", "--parallel=2", "--", "--parallel=9"], "bare": ["nx", "run", "a:test", "--", "--parallel=9"]},
+    {"name": "similar option names stay", "launch": ["nx", "run", "a:compile", "--parallelism=3"], "bare": ["nx", "run", "a:compile", "--parallelism=3"]}
+  ],
+  "declared": [["nx", "run", "a:build"], ["nx", "run", "a:compile"]],
+  "childCases": [
+    {"name": "exact declaration carries the declared launches", "selection": ["nx", "run", "a:compile"], "carries": "declared"},
+    {"name": "granted parallelism joins the declared launches", "selection": ["nx", "run", "a:compile", "--parallel=3"], "carries": "declared-and-selection"},
+    {"name": "separated parallelism joins the declared launches", "selection": ["nx", "run", "a:compile", "--parallel", "3"], "carries": "declared-and-selection"},
+    {"name": "another target is undeclared", "selection": ["nx", "run", "b:compile", "--parallel=3"], "carries": "undeclared"},
+    {"name": "another option is undeclared", "selection": ["nx", "run", "a:compile", "--skip-nx-cache", "--parallel=3"], "carries": "undeclared"},
+    {"name": "a forwarded tail is undeclared", "selection": ["nx", "run", "a:compile", "--", "--parallel=3"], "carries": "undeclared"},
+    {"name": "another command is undeclared", "selection": ["nx", "reset", "--parallel=3"], "carries": "undeclared"}
+  ]
+}

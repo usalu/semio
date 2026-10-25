@@ -11,7 +11,7 @@ import { cleanCollectEmptyFolderRemovals } from "../🔍️empty-folders/🟦️
 import { cleanCollectMarkerOnlyFolderRemovals } from "../🔍️marker-only-folders/🟦️.ts";
 import { cleanProtectedPrefixes, cleanProjectRemovals, CLEAN_PROTECTION_VIEW } from "../🛡️protection/🟦️.ts";
 import { cleanRemovePath, runWorkspaceClean } from "../🗑️removal/🟦️.ts";
-import { runtimeExecutableV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeExecutableV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /**
  * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts, and rustc

@@ -15,6 +15,7 @@ use semio_framework_plugin::MediaClass;
 use semio_framework_plugin::MediaForm;
 use semio_framework_plugin::MediaType;
 use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use semio_framework_pack_json::{parse, Value};
 use std::collections::HashMap;
 use crate::editor::puzzle5d::session::support::{puzzle5d_job_checkpoint, puzzle5d_job_fault, puzzle5d_step_envelope};
@@ -38,6 +39,7 @@ enum Puzzle5dPasteStage {
 
 /// ♻️ The owners one `Puzzle5dPasteJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Puzzle5dPasteOwners {
     pub raw: Vec<u8>,
     pub snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,

@@ -261,7 +261,7 @@ fn sqlite_snapshot_exact_nan_payload_identity_and_exact_owned_dialects() {
             let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:row["artifactKind"].as_str().unwrap().into(),standard:row["standard"].as_str().unwrap().into(),subset:row["subset"].as_str().unwrap().into()};
             assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());
         }
-        assert!(<DwgSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().is_some());
+        assert!(<DwgSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
         let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
         let signed=bits as i64;
         let script=format!("import{{Database}}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));const r=d.query('SELECT CAST(unit1_conversion_ieee754_bits AS TEXT) AS bits,unit1_conversion AS value FROM dwg_header_units').get();if(r.bits!=='{signed}'||r.value!==null)throw Error('exact IEEE identity');await Bun.write(Bun.stdout,d.serialize());d.close();");
@@ -291,7 +291,7 @@ fn sqlite_snapshot_independent_well_formed_sqlite_rejects_invalid_domain_edits()
 fn erased_nan_words(encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding){
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️numbers/🔣️.json")).unwrap();
     let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.dwg".into(),standard:"ac1024".into(),subset:"*".into()};
-    let codec=<DwgSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let codec=<DwgSnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
     for value in fixture["nativeEncodingFloat64Bits"].as_array().unwrap(){
         let bits=u64::from_str_radix(value.as_str().unwrap(),16).unwrap();let mut snapshot=DwgSnapshot::default();snapshot.version="noncanonical".into();snapshot.header.units.unit1_conversion=f64::from_bits(bits);
         let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();

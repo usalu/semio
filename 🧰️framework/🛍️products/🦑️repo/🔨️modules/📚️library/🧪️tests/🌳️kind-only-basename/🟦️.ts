@@ -3,11 +3,13 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, wr
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import Ajv from "ajv";
+import ts from "typescript";
 import fastGlob from "fast-glob";
 import * as TOML from "@iarna/toml";
 import { cargoPackageRootBuildScriptPath } from "../../🔍️discovery/📄️implementation-findings/🟦️.ts";
 import { clearDiscoveryCache, discoverPackageProblems, discoverPackages } from "../../🔍️discovery/🔭️repository-scan/🟦️.ts";
 import { implementationLeafBasenameFinding, taxonomyImplementationFilesystemFindings } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 
 type Finding = Readonly<{ path: string; breachId: string; fileKindId: string | null; expectedBasename: string | null }>;
@@ -19,13 +21,14 @@ type Fixture = Readonly<{
   externalContracts: readonly Readonly<{ id: string; path: string; scope: string }>[];
   files: readonly Readonly<{ path: string; content: string }>[];
   expectedFindings: readonly Finding[];
+  declarationCompanions: readonly Readonly<{ id: string; javascript: string; declaration: string; resolves: boolean; finding: string | null }>[];
   topology: Readonly<{ packagesDirectory: string; targetsDirectory: string; fixturesDirectory: string; packageLanguageDirectories: readonly string[]; semanticExecutionCollections: readonly string[]; obsoleteExecutionCollections: readonly string[] }>;
 }>;
 
 const owner = join(import.meta.dir, "../🧫️fixtures/🌳️kind-only-basename");
 const fixture = JSON.parse(readFileSync(join(owner, "🔣️.json"), "utf8")) as Fixture;
 
-const taxonomy = JSON.parse(readFileSync(join(import.meta.dir, "../../🔣️taxonomy.json"), "utf8")) as Taxonomy;
+const taxonomy: Taxonomy = loadCatalogTaxonomy();
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const sorted = (rows: readonly Finding[]): Finding[] => [...rows].sort((left, right) => Buffer.from(`${left.path}\0${left.breachId}`).compare(Buffer.from(`${right.path}\0${right.breachId}`)));
 
@@ -210,4 +213,22 @@ describe("kind-only implementation leaf taxonomy", () => {
       }
     }
   }, 30_000);
+
+  for (const row of fixture.declarationCompanions) test(`declaration companion: ${row.id}`, () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-declaration-companion-"));
+    try {
+      const directory = join(root, "🧰️owner/🧰️leaf");
+      mkdirSync(directory, { recursive: true });
+      writeFileSync(join(directory, row.javascript), "module.exports = {};\n");
+      writeFileSync(join(directory, row.declaration), "declare const value: {};\nexport = value;\n");
+      writeFileSync(join(directory, "🟦️consumer.ts"), `import value = require("./${row.javascript}");\nexport const resolved: object = value;\n`);
+      const options: ts.CompilerOptions = { strict: true, noEmit: true, module: ts.ModuleKind.NodeNext, moduleResolution: ts.ModuleResolutionKind.NodeNext, allowImportingTsExtensions: false, types: [] };
+      const program = ts.createProgram([join(directory, "🟦️consumer.ts")], options);
+      const unresolved = ts.getPreEmitDiagnostics(program).some((diagnostic) => diagnostic.code === 7016);
+      expect(!unresolved).toBe(row.resolves);
+      expect(implementationLeafBasenameFinding(`🧰️owner/🧰️leaf/${row.declaration}`, taxonomy)?.expectedBasename ?? null).toBe(row.finding);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

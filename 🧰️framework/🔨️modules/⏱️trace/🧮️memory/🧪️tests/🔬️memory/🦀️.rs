@@ -40,7 +40,7 @@ fn the_host_answer_ceiling_is_a_whole_number_of_pages_inside_the_install_headroo
     assert_eq!(guest_host_answer_pages(GUEST_HOST_ANSWER_CEILING_BYTES), GUEST_HOST_ANSWER_CEILING_BYTES / GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES);
 }
 
-/// ⚖️ LAW: paging an answer must not move the oversized allocation somewhere else. A host lowers the
+/// 📃️ LAW: paging an answer must not move the oversized allocation somewhere else. A host lowers the
 /// pages as one EVENT LIST, and that list is itself one contiguous `cabi_realloc` of
 /// `events × <flattened record stride>` — measured at 80 B/event on `wasm32-wasip2`, so a 384 MiB
 /// answer's 6 144 pages ask for 491 520 B in one block and the trap simply moves
@@ -57,7 +57,7 @@ fn a_maximal_answers_own_event_list_still_fits_one_page() {
     );
 }
 
-/// ⚖️ LAW: the contiguous-request ceiling is one guest allocator growth unit — big enough that no
+/// 📈️ LAW: the contiguous-request ceiling is one guest allocator growth unit — big enough that no
 /// ordinary owner trips it, small enough that it is genuinely a bound on the request class a
 /// fragmented, non-shrinkable linear memory refuses first.
 #[test]
@@ -67,7 +67,7 @@ fn the_contiguous_request_ceiling_is_one_guest_growth_unit() {
     assert!(GUEST_LINEAR_MEMORY_MAXIMUM_BYTES % GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES == 0, "the budget is a whole number of guest pages");
 }
 
-/// ⚖️ LAW: the budget is what the linker is actually told. `--max-memory` is uniform across every
+/// 🔗️ LAW: the budget is what the linker is actually told. `--max-memory` is uniform across every
 /// `wasm32-wasip2` plugin in `.cargo/config.toml` (per-plugin rustflags would churn cargo
 /// fingerprints across the shared dep graph). The target's `-zstack-size` reserves the schema's stack.
 #[test]
@@ -84,7 +84,7 @@ fn the_link_arguments_carry_the_declared_budget() {
     );
 }
 
-/// ⚖️ LAW: the install-peak ceiling is a real fraction of the budget with headroom left over, not a
+/// 🍃️ LAW: the install-peak ceiling is a real fraction of the budget with headroom left over, not a
 /// rubber stamp that permits the whole memory.
 #[test]
 fn the_install_peak_ceiling_leaves_headroom_inside_the_budget() {
@@ -97,7 +97,7 @@ fn the_install_peak_ceiling_leaves_headroom_inside_the_budget() {
     assert_eq!(guest_linear_memory_percent(GUEST_LINEAR_MEMORY_MAXIMUM_BYTES), 100);
 }
 
-/// ⚖️ LAW: the witness weighs what it is handed. Reading the counters without the allocator
+/// 🔢️ LAW: the witness weighs what it is handed. Reading the counters without the allocator
 /// installed must still be sound (both are plain atomics), and a reset must arm the peak at the
 /// current retained reading rather than at zero.
 #[test]
@@ -111,7 +111,7 @@ fn the_heap_witness_counters_are_readable_and_resettable() {
     assert!(peak_heap_bytes() >= armed);
 }
 
-/// ⚖️ LAW: the guest reading exists exactly where a single linear memory does.
+/// 📖️ LAW: the guest reading exists exactly where a single linear memory does.
 #[test]
 fn the_guest_reading_is_wasm_only() {
     assert_eq!(guest_linear_memory_bytes().is_some(), cfg!(target_arch = "wasm32"));

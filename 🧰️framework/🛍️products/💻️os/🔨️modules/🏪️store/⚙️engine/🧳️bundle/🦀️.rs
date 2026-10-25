@@ -87,14 +87,14 @@ where
         return Ok(ArtifactStoreOneItemAdvance::Complete);
     }
     if publication.phase == ArtifactStoreOneItemPublicationPhase::Closing {
-        return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        {return Ok(ArtifactStoreOneItemAdvance::Blocked)};
     }
     if publication.phase == ArtifactStoreOneItemPublicationPhase::AwaitingAck {
         return Ok(ArtifactStoreOneItemAdvance::AwaitingAck(publication.receipt.expect("awaiting-ACK publication retains its receipt")));
     }
     if publication.cancel_requested {
         publication.begin_close();
-        return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        {return Ok(ArtifactStoreOneItemAdvance::Blocked)};
     }
     if store.cursor.generation != publication.expected_generation || store.cursor.content_revision != publication.expected_revision {
         publication.fault = Some(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batched publication became stale before commit"));
@@ -103,14 +103,14 @@ where
         return Err(VcsError::ValidationFailed("batched publication became stale before commit".into()));
     }
     if !grant.permits_one() {
-        return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        {return Ok(ArtifactStoreOneItemAdvance::Blocked)};
     }
     let item_grant = ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant };
     match publication.phase {
         ArtifactStoreOneItemPublicationPhase::Preparing => {
             if !publication.source_census_finished {
                 let copy=size_of::<ArtifactStoreOneItemFootprint>()+size_of::<usize>();
-                if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+                if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{{return Ok(ArtifactStoreOneItemAdvance::Blocked)};}
                 match publication.source.as_mut().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its retained census source".into()))?.census_one(publication.lane).map_err(VcsError::ValidationFailed)? {
                     Some(footprint) => { publication.footprint = footprint; publication.source_census_finished = true; },
                     None => { publication.source_census_completed = publication.source_census_completed.saturating_add(1); },
@@ -132,16 +132,16 @@ where
                     if publication.stage.is_none() {
                         return Err(VcsError::ValidationFailed("batched publication staged no edit before its cursor turn".into()));
                     }
-                    let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+                    let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{{return Ok(ArtifactStoreOneItemAdvance::Blocked)};}
                     publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
                     return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
                 }
                 let refused = |error: ValueError| VcsError::ValidationFailed(error.into_message());
                 let demand = publication.source.as_ref().expect("validated batched publication item source").next_begin_demand(publication.lane).map_err(refused)?;
-                if demand.admit(item_grant.retained_grant()).is_err() { return Ok(ArtifactStoreOneItemAdvance::Blocked); }
+                if demand.admit(item_grant.retained_grant()).is_err() { {return Ok(ArtifactStoreOneItemAdvance::Blocked)}; }
                 let original_issuer_copy=size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>()+size_of::<Arc<dyn SnapshotRetirementFactory<P>>>()+size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+SnapshotRead::<P>::capture_copy_byte_demand();
                 let copy=publication.source.as_ref().expect("validated original preparation copy source").next_begin_copy_byte_demand(publication.lane).map_err(refused)?.checked_add(original_issuer_copy).ok_or_else(||VcsError::ValidationFailed("batched preparation original header extent overflow".into()))?;
-                if item_grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+                if item_grant.maximum_copy_bytes<copy{{return Ok(ArtifactStoreOneItemAdvance::Blocked)};}
                 let mutation_retirement=store.owners.mutation_retirement_factory.as_ref().ok_or_else(||VcsError::ValidationFailed("batched preparation lost its installed mutation issuer".into()))?;
                 let snapshot_retirement=store.owners.snapshot_retirement_factory.as_ref().ok_or_else(||VcsError::ValidationFailed("batched preparation lost its installed snapshot issuer".into()))?;
                 let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its live authority".into()))?);

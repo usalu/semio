@@ -8,6 +8,7 @@ use semio_s_artifact_norm_en1997_mut_foundations::remove_footing::RemoveFooting;
 use semio_s_artifact_norm_en1997_mutations::En1997Mutation;
 use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
+use protocol::ColdMutationDiff;
 
 fn base() -> En1997Snapshot {
     let mut base = En1997Snapshot::default();

@@ -49,7 +49,7 @@ fn visit_rows(snapshot:&MdSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueEr
   }},
  }}Ok(())
 }
-fn project(snapshot:&MdSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::extent(control.limits())?;let mut out=RowWriter::new(<MdSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA,control)?;visit_rows(snapshot,&mut out)?;out.finish()}
+fn project(snapshot:&MdSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::extent(control.limits())?;let mut out=RowWriter::new(<MdSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA,control)?;visit_rows(snapshot,&mut out)?;out.finish()}
 
 type Entities<'a>=BTreeMap<i64,&'a SqliteRow>;
 type Children=BTreeMap<i64,Vec<i64>>;

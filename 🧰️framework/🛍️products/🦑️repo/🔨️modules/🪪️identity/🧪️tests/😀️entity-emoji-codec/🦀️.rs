@@ -5,7 +5,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
 //#region 🔖️Vectors
 
-/// 🔤️ Renders a string as a `U+XXXX` sequence so a projection never hides a selector.
+/// 🔢️ Renders a string as a `U+XXXX` sequence so a projection never hides a selector.
 #[cfg(feature = "sut")]
 fn code_points(value: &str) -> String {
     if value.is_empty() {

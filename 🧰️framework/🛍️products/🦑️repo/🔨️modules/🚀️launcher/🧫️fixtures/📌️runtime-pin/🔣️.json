@@ -1,0 +1,1579 @@
+{
+ "registry": {
+  "selected": "bun",
+  "languages": [
+   "en",
+   "de"
+  ],
+  "runtimes": {
+   "bun": {
+    "version": "9.9.9",
+    "executable": {
+     "unix": "bun",
+     "windows": "bun.exe"
+    },
+    "distributions": [
+     {
+      "platform": "darwin",
+      "arch": "arm64",
+      "libc": "any",
+      "archive": "bun-darwin-aarch64.zip",
+      "bytes": 5,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     {
+      "platform": "linux",
+      "arch": "x64",
+      "libc": "gnu",
+      "archive": "bun-linux-x64-baseline.zip",
+      "bytes": 5,
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+     },
+     {
+      "platform": "linux",
+      "arch": "x64",
+      "libc": "musl",
+      "archive": "bun-linux-x64-musl-baseline.zip",
+      "bytes": 5,
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+     },
+     {
+      "platform": "win32",
+      "arch": "x64",
+      "libc": "any",
+      "archive": "bun-windows-x64-baseline.zip",
+      "bytes": 5,
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+     }
+    ]
+   }
+  },
+  "cache": {
+   "environment": "SEMIO_RUNTIME_CACHE",
+   "runtimeEnvironment": "SEMIO_RUNTIME",
+   "toolsPartition": [
+    ".cache",
+    "b",
+    "t",
+    "m"
+   ],
+   "user": [
+    "semio",
+    "runtimes"
+   ]
+  }
+ },
+ "select": [
+  {
+   "id": "mac",
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "archive": "bun-darwin-aarch64.zip"
+  },
+  {
+   "id": "linux",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "archive": "bun-linux-x64-baseline.zip"
+  },
+  {
+   "id": "alpine",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "archive": "bun-linux-x64-musl-baseline.zip"
+  },
+  {
+   "id": "windows",
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "archive": "bun-windows-x64-baseline.zip"
+  },
+  {
+   "id": "linux-arm64-unpinned",
+   "platform": "linux",
+   "arch": "arm64",
+   "musl": false,
+   "archive": null
+  },
+  {
+   "id": "freebsd-unpinned",
+   "platform": "freebsd",
+   "arch": "x64",
+   "musl": false,
+   "archive": null
+  }
+ ],
+ "locate": [
+  {
+   "id": "mac-tools-partition",
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "tools-partition"
+  },
+  {
+   "id": "mac-user-cache",
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "mac-tools-before-user",
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    },
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "tools-partition"
+  },
+  {
+   "id": "mac-nothing",
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "stores": [],
+   "origin": null
+  },
+  {
+   "id": "mac-receipt-for-another-archive",
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "wrong-archive"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "mac-no-receipt",
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "absent"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "mac-size-mismatch-falls-back-to-user",
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "size-mismatch"
+    },
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "mac-receipt-with-matching-size",
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok-sized"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "mac-no-executable",
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "absent",
+     "receipt": "ok"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "mac-not-executable",
+   "platform": "darwin",
+   "arch": "arm64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "plain",
+     "receipt": "ok"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "linux-tools-partition",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "tools-partition"
+  },
+  {
+   "id": "linux-user-cache",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "linux-tools-before-user",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    },
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "tools-partition"
+  },
+  {
+   "id": "linux-nothing",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "stores": [],
+   "origin": null
+  },
+  {
+   "id": "linux-receipt-for-another-archive",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "wrong-archive"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "linux-no-receipt",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "absent"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "linux-size-mismatch-falls-back-to-user",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "size-mismatch"
+    },
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "linux-receipt-with-matching-size",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok-sized"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "linux-no-executable",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "absent",
+     "receipt": "ok"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "linux-not-executable",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "plain",
+     "receipt": "ok"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "alpine-tools-partition",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "tools-partition"
+  },
+  {
+   "id": "alpine-user-cache",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "alpine-tools-before-user",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    },
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "tools-partition"
+  },
+  {
+   "id": "alpine-nothing",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "stores": [],
+   "origin": null
+  },
+  {
+   "id": "alpine-receipt-for-another-archive",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "wrong-archive"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "alpine-no-receipt",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "absent"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "alpine-size-mismatch-falls-back-to-user",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "size-mismatch"
+    },
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "alpine-receipt-with-matching-size",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok-sized"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "alpine-no-executable",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "absent",
+     "receipt": "ok"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "alpine-not-executable",
+   "platform": "linux",
+   "arch": "x64",
+   "musl": true,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "plain",
+     "receipt": "ok"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "windows-tools-partition",
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "tools-partition"
+  },
+  {
+   "id": "windows-user-cache",
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "windows-tools-before-user",
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    },
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "tools-partition"
+  },
+  {
+   "id": "windows-nothing",
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "stores": [],
+   "origin": null
+  },
+  {
+   "id": "windows-receipt-for-another-archive",
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "wrong-archive"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "windows-no-receipt",
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "absent"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "windows-size-mismatch-falls-back-to-user",
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "size-mismatch"
+    },
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "windows-receipt-with-matching-size",
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "user",
+     "executable": "present",
+     "receipt": "ok-sized"
+    }
+   ],
+   "origin": "user-cache"
+  },
+  {
+   "id": "windows-no-executable",
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "absent",
+     "receipt": "ok"
+    }
+   ],
+   "origin": null
+  },
+  {
+   "id": "windows-not-executable",
+   "platform": "win32",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "plain",
+     "receipt": "ok"
+    }
+   ],
+   "origin": "tools-partition"
+  },
+  {
+   "id": "freebsd-unpinned",
+   "platform": "freebsd",
+   "arch": "x64",
+   "musl": false,
+   "stores": [
+    {
+     "store": "tools",
+     "executable": "present",
+     "receipt": "ok"
+    }
+   ],
+   "origin": null
+  }
+ ],
+ "cache": [
+  {
+   "id": "linux-xdg",
+   "platform": "linux",
+   "environment": {
+    "XDG_CACHE_HOME": "/x/cache"
+   },
+   "home": "/home/u",
+   "directory": "/x/cache"
+  },
+  {
+   "id": "linux-home",
+   "platform": "linux",
+   "environment": {},
+   "home": "/home/u",
+   "directory": "/home/u/.cache"
+  },
+  {
+   "id": "linux-nothing",
+   "platform": "linux",
+   "environment": {},
+   "home": "",
+   "directory": null
+  },
+  {
+   "id": "mac-home",
+   "platform": "darwin",
+   "environment": {
+    "XDG_CACHE_HOME": "/ignored"
+   },
+   "home": "/Users/u",
+   "directory": "/Users/u/Library/Caches"
+  },
+  {
+   "id": "windows-local-app-data",
+   "platform": "win32",
+   "environment": {
+    "LocalAppData": "C:\\Users\\u\\AppData\\Local"
+   },
+   "home": "C:\\Users\\u",
+   "directory": "C:\\Users\\u\\AppData\\Local"
+  },
+  {
+   "id": "windows-nothing",
+   "platform": "win32",
+   "environment": {},
+   "home": "C:\\Users\\u",
+   "directory": null
+  }
+ ],
+ "decide": [
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": false,
+   "launcher": false,
+   "depth": 0,
+   "decision": "refuse-missing"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": false,
+   "launcher": false,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": false,
+   "launcher": true,
+   "depth": 0,
+   "decision": "delegate"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": false,
+   "launcher": true,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": true,
+   "launcher": false,
+   "depth": 0,
+   "decision": "reexec"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": true,
+   "launcher": false,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": true,
+   "launcher": true,
+   "depth": 0,
+   "decision": "reexec"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": true,
+   "launcher": true,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": false,
+   "launcher": false,
+   "depth": 0,
+   "decision": "refuse-missing"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": false,
+   "launcher": false,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": false,
+   "launcher": true,
+   "depth": 0,
+   "decision": "delegate"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": false,
+   "launcher": true,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": true,
+   "launcher": false,
+   "depth": 0,
+   "decision": "reexec"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": true,
+   "launcher": false,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": true,
+   "launcher": true,
+   "depth": 0,
+   "decision": "reexec"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": true,
+   "launcher": true,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": false,
+   "launcher": false,
+   "depth": 0,
+   "decision": "refuse-test"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": false,
+   "launcher": false,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": false,
+   "launcher": true,
+   "depth": 0,
+   "decision": "refuse-test"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": false,
+   "launcher": true,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": true,
+   "launcher": false,
+   "depth": 0,
+   "decision": "refuse-test"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": true,
+   "launcher": false,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": true,
+   "launcher": true,
+   "depth": 0,
+   "decision": "refuse-test"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": true,
+   "launcher": true,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": false,
+   "launcher": false,
+   "depth": 0,
+   "decision": "refuse-missing"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": false,
+   "launcher": false,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": false,
+   "launcher": true,
+   "depth": 0,
+   "decision": "delegate"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": false,
+   "launcher": true,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": true,
+   "launcher": false,
+   "depth": 0,
+   "decision": "reexec"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": true,
+   "launcher": false,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": true,
+   "launcher": true,
+   "depth": 0,
+   "decision": "reexec"
+  },
+  {
+   "running": "1.3.14",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": true,
+   "launcher": true,
+   "depth": 1,
+   "decision": "refuse-loop"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": false,
+   "launcher": false,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": false,
+   "launcher": false,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": false,
+   "launcher": true,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": false,
+   "launcher": true,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": true,
+   "launcher": false,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": true,
+   "launcher": false,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": true,
+   "launcher": true,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": false,
+   "located": true,
+   "launcher": true,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": false,
+   "launcher": false,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": false,
+   "launcher": false,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": false,
+   "launcher": true,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": false,
+   "launcher": true,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": true,
+   "launcher": false,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": true,
+   "launcher": false,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": true,
+   "launcher": true,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "run",
+   "commandLine": true,
+   "located": true,
+   "launcher": true,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": false,
+   "launcher": false,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": false,
+   "launcher": false,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": false,
+   "launcher": true,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": false,
+   "launcher": true,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": true,
+   "launcher": false,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": true,
+   "launcher": false,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": true,
+   "launcher": true,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": false,
+   "located": true,
+   "launcher": true,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": false,
+   "launcher": false,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": false,
+   "launcher": false,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": false,
+   "launcher": true,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": false,
+   "launcher": true,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": true,
+   "launcher": false,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": true,
+   "launcher": false,
+   "depth": 1,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": true,
+   "launcher": true,
+   "depth": 0,
+   "decision": "proceed"
+  },
+  {
+   "running": "9.9.9",
+   "pin": "9.9.9",
+   "mode": "test",
+   "commandLine": true,
+   "located": true,
+   "launcher": true,
+   "depth": 1,
+   "decision": "proceed"
+  }
+ ],
+ "split": [
+  {
+   "id": "ms-docs-plain",
+   "line": "prog.exe \"abc\" d e",
+   "expected": [
+    "prog.exe",
+    "abc",
+    "d",
+    "e"
+   ]
+  },
+  {
+   "id": "ms-docs-backslashes-before-quote",
+   "line": "prog.exe a\\\\\\b d\"e f\"g h",
+   "expected": [
+    "prog.exe",
+    "a\\\\\\b",
+    "de fg",
+    "h"
+   ]
+  },
+  {
+   "id": "ms-docs-escaped-quote",
+   "line": "prog.exe a\\\\\\\"b c d",
+   "expected": [
+    "prog.exe",
+    "a\\\"b",
+    "c",
+    "d"
+   ]
+  },
+  {
+   "id": "ms-docs-even-backslashes-open-quote",
+   "line": "prog.exe a\\\\\\\\\"b c\" d e",
+   "expected": [
+    "prog.exe",
+    "a\\\\b c",
+    "d",
+    "e"
+   ]
+  },
+  {
+   "id": "program-in-quotes-keeps-backslashes",
+   "line": "\"C:\\Program Files\\bun.exe\" test ./a.ts",
+   "expected": [
+    "C:\\Program Files\\bun.exe",
+    "test",
+    "./a.ts"
+   ]
+  },
+  {
+   "id": "round-trip-0",
+   "arguments": [
+    "test",
+    "./🧪️tests/🟦️.ts",
+    "--timeout",
+    "30000"
+   ],
+   "line": "prog.exe test ./🧪️tests/🟦️.ts --timeout 30000",
+   "expected": [
+    "prog.exe",
+    "test",
+    "./🧪️tests/🟦️.ts",
+    "--timeout",
+    "30000"
+   ]
+  },
+  {
+   "id": "round-trip-1",
+   "arguments": [
+    "test",
+    "-t",
+    "a name with spaces"
+   ],
+   "line": "prog.exe test -t \"a name with spaces\"",
+   "expected": [
+    "prog.exe",
+    "test",
+    "-t",
+    "a name with spaces"
+   ]
+  },
+  {
+   "id": "round-trip-2",
+   "arguments": [
+    "x",
+    "say \"hi\"",
+    "back\\slash",
+    "trail\\"
+   ],
+   "line": "prog.exe x \"say \\\"hi\\\"\" back\\slash trail\\",
+   "expected": [
+    "prog.exe",
+    "x",
+    "say \"hi\"",
+    "back\\slash",
+    "trail\\"
+   ]
+  },
+  {
+   "id": "round-trip-3",
+   "arguments": [
+    "",
+    "empty before"
+   ],
+   "line": "prog.exe \"\" \"empty before\"",
+   "expected": [
+    "prog.exe",
+    "",
+    "empty before"
+   ]
+  },
+  {
+   "id": "round-trip-4",
+   "arguments": [
+    "tab\tseparated",
+    "multi  space"
+   ],
+   "line": "prog.exe \"tab\tseparated\" \"multi  space\"",
+   "expected": [
+    "prog.exe",
+    "tab\tseparated",
+    "multi  space"
+   ]
+  },
+  {
+   "id": "round-trip-5",
+   "arguments": [
+    "C:\\dir with space\\",
+    "next"
+   ],
+   "line": "prog.exe \"C:\\dir with space\\\\\" next",
+   "expected": [
+    "prog.exe",
+    "C:\\dir with space\\",
+    "next"
+   ]
+  }
+ ],
+ "procargs": [
+  {
+   "id": "three-arguments",
+   "executable": "/Users/u/.bun/bin/bun",
+   "padding": 3,
+   "arguments": [
+    "/Users/u/.bun/bin/bun",
+    "test",
+    "./a.ts"
+   ],
+   "hex": "030000002f55736572732f752f2e62756e2f62696e2f62756e000000002f55736572732f752f2e62756e2f62696e2f62756e0074657374002e2f612e747300504154483d2f7800"
+  },
+  {
+   "id": "no-padding-unicode",
+   "executable": "/b/bun",
+   "padding": 0,
+   "arguments": [
+    "bun",
+    "--smol",
+    "./🧪️tests/🟦️.ts",
+    "a b"
+   ],
+   "hex": "040000002f622f62756e0062756e002d2d736d6f6c002e2ff09fa7aaefb88f74657374732ff09f9fa6efb88f2e74730061206200504154483d2f7800"
+  }
+ ],
+ "cmdline": [
+  {
+   "id": "linux-two",
+   "arguments": [
+    "/usr/bin/bun",
+    "./a.ts"
+   ],
+   "hex": "2f7573722f62696e2f62756e002e2f612e747300"
+  },
+  {
+   "id": "linux-unicode-and-empty",
+   "arguments": [
+    "bun",
+    "test",
+    "./🧪️tests/🟦️.ts",
+    "",
+    "x"
+   ],
+   "hex": "62756e0074657374002e2ff09fa7aaefb88f74657374732ff09f9fa6efb88f2e747300007800"
+  }
+ ]
+}

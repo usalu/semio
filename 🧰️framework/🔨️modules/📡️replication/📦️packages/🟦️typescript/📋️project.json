@@ -135,7 +135,7 @@
     },
     "test-retained-wire-field": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/📜️script.ts",

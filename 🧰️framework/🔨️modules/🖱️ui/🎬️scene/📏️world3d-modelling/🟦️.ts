@@ -44,7 +44,7 @@ export type World3dScalarField = {
 export type World3dPickGranularity = "shape" | "face" | "edge" | "vertex";
 export type World3dPickTargets = { readonly mesh: boolean; readonly face: boolean; readonly edge: boolean; readonly vertex: boolean };
 
-/** ✂️ A section plane through `origin`; geometry on the side `normal` points to is removed. */
+/** 📑️ A section plane through `origin`; geometry on the side `normal` points to is removed. */
 export type World3dSection = { readonly origin: World3dVec3; readonly normal: World3dVec3; readonly cap?: { readonly tone: World3dTone } };
 
 export type World3dSubElementStyle = { readonly hover?: World3dTone; readonly selected?: World3dTone; readonly widthPx?: number };
@@ -137,7 +137,7 @@ function annotation(value: unknown): World3dAnnotation | null {
   return null;
 }
 
-/** 📏️ Total reader of the annotation layer lane: the normalized layer, or `null` for anything the schema or its semantic rules refuse. */
+/** 🥪️ Total reader of the annotation layer lane: the normalized layer, or `null` for anything the schema or its semantic rules refuse. */
 export function parseWorld3dAnnotationLayer(value: unknown): World3dAnnotationLayer | null {
   const entries = record(value, ["title", "items"]);
   if (!entries || !Array.isArray(entries.items) || entries.items.length > WORLD3D_ANNOTATIONS_MAX) return null;
@@ -154,7 +154,7 @@ export function parseWorld3dAnnotationLayer(value: unknown): World3dAnnotationLa
   return title ? { title, items } : { items };
 }
 
-/** 🌡️ Total reader of the scalar field lane: the normalized field, or `null`. */
+/** 📖️ Total reader of the scalar field lane: the normalized field, or `null`. */
 export function parseWorld3dScalarField(value: unknown): World3dScalarField | null {
   const entries = record(value, ["meshId", "domain", "values", "ramp", "range", "legend"]);
   if (!entries) return null;
@@ -234,14 +234,14 @@ export function parseWorld3dModellingOptions(value: unknown): World3dModellingOp
 //#endregion 🔖️Parsing
 
 //#region 🔖️Text
-/** 🌍️ The entry for the active locale (`de`, `de-CH` → German; everything else → English, the first language). */
+/** 🌐️ The entry for the active locale (`de`, `de-CH` → German; everything else → English, the first language). */
 export function resolveWorld3dText(value: World3dText, locale: string): string {
   return locale.toLowerCase().split("-")[0] === "de" ? value.de : value.en;
 }
 //#endregion 🔖️Text
 
 //#region 🔖️Ramps
-/** 🎨️ Equally spaced sRGB stops of each named ramp; colours interpolate linearly per channel. */
+/** 🌈️ Equally spaced sRGB stops of each named ramp; colours interpolate linearly per channel. */
 export const WORLD3D_COLOR_RAMPS: Readonly<Record<World3dColorRamp, readonly string[]>> = {
   viridis: ["#440154", "#3b528b", "#21918c", "#5ec962", "#fde725"],
   inferno: ["#000004", "#57106e", "#bc3754", "#f98e09", "#fcffa4"],
@@ -257,7 +257,7 @@ function toByte(channel: number): number {
   return Math.min(255, Math.max(0, Math.floor(channel * 255 + 0.5)));
 }
 
-/** 🎨️ The ramp colour at `t` (clamped to 0..1) as `[r, g, b]` bytes. */
+/** 🎚️ The ramp colour at `t` (clamped to 0..1) as `[r, g, b]` bytes. */
 export function world3dRampRgb(ramp: World3dColorRamp, t: number): readonly [number, number, number] {
   const stops = RAMP_CHANNELS[ramp];
   const segments = stops.length - 1;
@@ -273,7 +273,7 @@ function hexOf(rgb: readonly number[]): string {
   return `#${rgb.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
 }
 
-/** 🎨️ {@link world3dRampRgb} as `#rrggbb`. */
+/** 🔢️ {@link world3dRampRgb} as `#rrggbb`. */
 export function world3dRampHex(ramp: World3dColorRamp, t: number): string {
   return hexOf(world3dRampRgb(ramp, t));
 }
@@ -282,12 +282,12 @@ function scalarT(field: World3dScalarField, value: number): number {
   return (value - field.range.min) / (field.range.max - field.range.min);
 }
 
-/** 🌡️ The heatmap colour of one value as `#rrggbb`; `null` is the no-data grey. */
+/** 🔥️ The heatmap colour of one value as `#rrggbb`; `null` is the no-data grey. */
 export function world3dScalarColorHex(field: World3dScalarField, value: number | null): string {
   return value === null ? WORLD3D_SCALAR_NO_DATA_HEX : world3dRampHex(field.ramp, scalarT(field, value));
 }
 
-/** 🌡️ Every value of the field as packed `r, g, b` bytes, ready for a vertex or triangle colour attribute. */
+/** 📦️ Every value of the field as packed `r, g, b` bytes, ready for a vertex or triangle colour attribute. */
 export function world3dScalarFieldColorBytes(field: World3dScalarField): Uint8Array {
   const bytes = new Uint8Array(field.values.length * 3);
   const noData = [0x80, 0x80, 0x80];

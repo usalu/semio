@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 📈️Metrics
-/// 📈️ Fixed-size ring of the last 64 per-turn wall-clock samples, for a p95 estimate cheap enough
+/// 🍩️ Fixed-size ring of the last 64 per-turn wall-clock samples, for a p95 estimate cheap enough
 /// to keep on every actor.
 /// 📈️ Ring capacity for [`ActorMetrics`]'s wall-clock sample window — chosen as a plain `usize`
 /// (not a const generic array) because serde's built-in array support tops out at 32 elements.
@@ -14,7 +14,7 @@ const WALL_US_RING_CAPACITY: usize = 64;
 /// pause) must never flip an actor "hot"; only a SUSTAINED pattern does.
 const SATURATION_MIN_TURNS: u64 = 2;
 
-/// 🔥️ [`ActorMetrics::is_saturating`] fires once [`ActorMetrics::wall_us_p95`] reaches this percent
+/// 🌡️ [`ActorMetrics::is_saturating`] fires once [`ActorMetrics::wall_us_p95`] reaches this percent
 /// of the actor's OWN declared [`Budget::wall_ms`] — a p95, not the latest sample, so one fast turn
 /// cannot mask a sustained pattern of near-budget turns.
 const SATURATION_THRESHOLD_PERCENT: u64 = 70;
@@ -100,7 +100,7 @@ impl ActorMetrics {
         samples[idx.min(samples.len() - 1)]
     }
 
-    /// 🔥️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): observed-behaviour
+    /// 🪣️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): observed-behaviour
     /// CPU-saturation signal — purely `record_turn`'s own tracked `wall_us_p95` against `budget`'s
     /// OWN declared `wall_ms` ceiling, never a fixture/profile name (this crate has no such concept
     /// and must not gain one — see the module doc's purity rule). Used by
@@ -185,7 +185,7 @@ impl ShardMetrics {
     }
 }
 
-/// 📈️ Sampled by `Kernel::metrics()`; the host publishes this as bus topic `os.runtime.metrics` at 2Hz.
+/// 📊️ Sampled by `Kernel::metrics()`; the host publishes this as bus topic `os.runtime.metrics` at 2Hz.
 #[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::semio_framework_value")]
 pub struct KernelMetrics {
@@ -238,7 +238,7 @@ impl ActorMetricsSample {
     }
 }
 
-/// 🗒️ One shard's row for the `os.runtime.metrics` publication. `metrics.heartbeat_age_ms` is left at
+/// 🧫️ One shard's row for the `os.runtime.metrics` publication. `metrics.heartbeat_age_ms` is left at
 /// its `Default` (0) by [`Kernel::shard_metrics_samples`] — the pure crate has no clock/transport of
 /// its own (`important.md`'s purity rule), so a host overlays the real value from its own
 /// `ShardTransport::heartbeat()` reading before publishing.
@@ -259,7 +259,7 @@ impl ShardMetricsSample {
     }
 }
 
-/// 🗒️ The exact payload [`KernelMetrics`]'s own doc comment promises: "the host publishes this as bus
+/// 📸️ The exact payload [`KernelMetrics`]'s own doc comment promises: "the host publishes this as bus
 /// topic `os.runtime.metrics` at 2Hz." Built by [`Kernel::runtime_metrics_snapshot`], which takes
 /// `sampled_at_ms` as a parameter rather than reading a clock — the crate core has none (transports
 /// and time are injected, per this crate's own `Cargo.toml` description).
@@ -293,7 +293,7 @@ impl RuntimeMetricsSnapshot {
 /// [`runtime_metrics_due`] currently needs a different cadence.
 pub const RUNTIME_METRICS_PUBLISH_INTERVAL_MS: u64 = 500;
 
-/// ⏱️ Pure cadence gate for a host's `os.runtime.metrics` publish loop — clock injected via `now_ms`
+/// ⏰️ Pure cadence gate for a host's `os.runtime.metrics` publish loop — clock injected via `now_ms`
 /// (never read internally), so a host can drive this off whatever tick source it already has (a
 /// native thread's loop timer, a web `requestAnimationFrame`/`setInterval`). `None` (never published
 /// yet) is always due.

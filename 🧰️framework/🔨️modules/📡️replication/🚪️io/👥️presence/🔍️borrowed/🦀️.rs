@@ -139,7 +139,7 @@ impl<'a> Reader<'a> {
     }
 }
 
-/// 👥️ Validates every original field while exposing only borrowed metadata spans.
+/// ✅️ Validates every original field while exposing only borrowed metadata spans.
 pub fn borrow_presence_metadata(bytes: &[u8]) -> Result<BorrowedPresenceMetadata<'_>, ValueError> {
     if bytes.len() > PRESENCE_PEER_WIRE_LIMITS_V1.maximum_entry_bytes { return Err(limited()); }
     let mut reader = Reader::new(bytes);

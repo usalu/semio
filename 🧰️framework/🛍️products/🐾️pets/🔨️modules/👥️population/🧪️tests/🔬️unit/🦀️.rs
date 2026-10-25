@@ -4,12 +4,12 @@
 //! @see ../../../🎪️stage/🧪️tests/🔬️unit/🦀️.rs — the kit: the troupe, a meadow to stand on, the events and a pet at rest
 
 use super::*;
-use semio_framework_pets_staging_draft::spacing::COMFORT_GAP;
+use semio_framework_pets_staging_draft::spacing::{cast_on, standing, Ground, COMFORT_GAP};
 use semio_framework_pets_staging_draft::draft::{BLINK_HIGH, BLINK_LOW};
 use semio_framework_pets_staging_draft::schedule::arrival_tick;
 use crate::stage::tests::{actor_of, clicked, meadow, rested, run, summoned, surveyed, ticked, troupe, FAR, TROUPE};
 use crate::stage::{advance, frame_of, open_stage};
-use semio_framework_pets_contract::schema::{Hushed, Over, Pointed, Rate, StageEvent, Ticked, Tuned};
+use semio_framework_pets_contract::schema::{Cast, Hushed, Over, Pointed, Rate, StageEvent, Surface, Ticked, Tuned};
 use semio_framework_pets_kinematics::rig::{rest_pose, solve_rig};
 
 #[test]
@@ -41,6 +41,48 @@ fn the_summoned_wait_while_there_is_no_perch() {
     let arrived = advance(&menagerie, waiting, &[surveyed(800.0, 600.0, &[("floor", 0.0, 800.0, 600.0)], &[])]);
     assert_eq!(arrived.actors.len(), 5);
     assert!(arrived.actors.iter().all(|actor| actor.draws == 301 && actor.since == 300));
+}
+
+#[test]
+fn a_species_that_fits_no_ground_does_not_take_it_from_the_others() {
+    let menagerie = troupe();
+    let (pebble, sparky) = ("pebble", "sparky");
+    let wide = menagerie.species.iter().find(|kind| kind.id == pebble).map_or(0.0, |kind| kind.size.width);
+    let slim = menagerie.species.iter().find(|kind| kind.id == sparky).map_or(0.0, |kind| kind.size.width);
+    assert!(slim < wide);
+    let sliver = (slim + wide) / 2.0;
+    for order in [[pebble, sparky], [sparky, pebble]] {
+        let stage = run(&menagerie, advance(&menagerie, open_stage(1), &[surveyed(400.0, 600.0, &[("sliver", 0.0, sliver, 300.0)], &[]), summoned(&order)]), 5 * 64, |_| {});
+        assert_eq!(stage.actors.iter().map(|actor| actor.species.as_str()).collect::<Vec<_>>(), [sparky], "{order:?}");
+        assert_eq!(stage.actors[0].perch.as_deref(), Some("sliver"));
+        assert_eq!(stage.wanted, order);
+    }
+    let none = run(&menagerie, advance(&menagerie, open_stage(1), &[surveyed(400.0, 600.0, &[("sliver", 0.0, slim - 1.0, 300.0)], &[]), summoned(&[pebble, sparky])]), 5 * 64, |_| {});
+    assert!(none.actors.is_empty());
+    assert_eq!(frame_of(&menagerie, &none).wake, None);
+}
+
+#[test]
+fn the_ground_decides_who_stands_together_and_which_species_a_cast_keeps() {
+    let menagerie = troupe();
+    let surfaces = vec![Surface { id: "sliver".into(), x0: 0.0, x1: 40.0, y: 300.0 }];
+    let ground = Ground { surfaces: &surfaces, keepouts: &[], width: 400.0, height: 600.0 };
+    let everyone: Vec<String> = TROUPE.iter().map(|id| id.to_string()).collect();
+    let together: Vec<&str> = standing(&menagerie, ground, &everyone).iter().map(|kind| kind.id.as_str()).collect();
+    assert_eq!(together, ["mossy", "sparky", "misty"]);
+    let cast = Cast { scene: "s".into(), core: vec!["pebble".into(), "mossy".into()], rotation: vec!["thorny".into(), "sparky".into(), "misty".into()] };
+    let seats: Vec<String> = vec!["pebble".into(), "thorny".into()];
+    assert_eq!(cast_on(&menagerie, ground, &cast, &seats, 0, &[], &[]), ["mossy", "sparky"]);
+    assert_eq!(cast_on(&menagerie, ground, &cast, &seats, 1, &[], &[]), ["sparky", "misty"]);
+    assert_eq!(cast_on(&menagerie, ground, &cast, &seats, -1, &[], &[]), ["misty", "mossy"]);
+    let staying: Vec<String> = vec!["misty".into(), "mossy".into()];
+    assert_eq!(cast_on(&menagerie, ground, &cast, &staying, 5, &[], &[]), staying);
+    let shunned: Vec<String> = vec!["mossy".into()];
+    assert_eq!(cast_on(&menagerie, ground, &cast, &seats, 0, &[], &shunned), ["sparky", "misty"]);
+    let held: Vec<String> = vec!["sparky".into(), "pebble".into()];
+    assert_eq!(cast_on(&menagerie, ground, &cast, &staying, 5, &held, &[]), ["sparky", "misty"]);
+    assert_eq!(cast_on(&menagerie, ground, &cast, &seats, 0, &held, &[]), ["sparky", "mossy"]);
+    assert!(cast_on(&menagerie, Ground { surfaces: &[], keepouts: &[], width: 400.0, height: 600.0 }, &cast, &seats, 0, &held, &[]).is_empty());
 }
 
 #[test]

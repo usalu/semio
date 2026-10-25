@@ -66,6 +66,10 @@
     {
       "sourceOwner": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
       "packageName": "@semio-tech/s-spatial-kernel-semio-session"
+    },
+    {
+      "sourceOwner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust",
+      "packageName": "@semio-tech/trinity-jack-lsp"
     }
   ]
 }

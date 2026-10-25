@@ -94,7 +94,7 @@ function cssAnimationNames(value: string): readonly string[] {
   return value.split(",").flatMap((layer) => layer.replace(/!important/g, " ").split(/\s+/).filter((token) => /^[A-Za-z_-][\w-]*$/.test(token) && !nonNames.has(token) && !token.startsWith("--") && !token.startsWith("cubic-bezier") && !token.startsWith("steps")));
 }
 
-/** 🔬️ Reads a stylesheet's animation scope: which custom properties any `@keyframes` animates,
+/** 🎞️ Reads a stylesheet's animation scope: which custom properties any `@keyframes` animates,
  * how each is registered, which rules start those clocks, and which rules paint with them.
  *
  * Exists because the cost of a CSS animation is the size of the style invalidation it causes, not the
@@ -180,7 +180,7 @@ export function analyzeCssAnimationScope(css: string): CssAnimationScope {
 export const CSS_ANIMATION_SCOPE_LAWS = ["no-document-root-clock", "animated-custom-properties-are-non-inherited", "every-paint-owns-its-clock"] as const;
 export type CssAnimationScopeLaw = (typeof CSS_ANIMATION_SCOPE_LAWS)[number];
 
-/** ⚖️ Names which of {@link CSS_ANIMATION_SCOPE_LAWS} a stylesheet's scope breaks, in law order. */
+/** 🚨️ Names which of {@link CSS_ANIMATION_SCOPE_LAWS} a stylesheet's scope breaks, in law order. */
 export function cssAnimationScopeViolations(scope: CssAnimationScope): readonly CssAnimationScopeLaw[] {
   const animated = new Set(scope.animatedCustomProperties);
   const started = new Map<string, Set<string>>();
@@ -193,7 +193,7 @@ export function cssAnimationScopeViolations(scope: CssAnimationScope): readonly 
   return broken;
 }
 
-/** 🖌️ Every paint that does not start the clock its animated property needs, named with the
+/** ⏰️ Every paint that does not start the clock its animated property needs, named with the
  * keyframes it is missing — the actionable half of `every-paint-owns-its-clock`. */
 export function cssAnimationScopeUnclockedPaints(scope: CssAnimationScope): readonly { selector: string; property: string; keyframes: readonly string[] }[] {
   const started = new Map<string, Set<string>>();

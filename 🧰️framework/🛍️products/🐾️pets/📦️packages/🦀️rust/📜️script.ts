@@ -2,7 +2,7 @@
 import {verifyCapturedCargoArtifactsV1} from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-/** 🐾️ `semio-framework-pets` (and the pets crates carved from it) task router: `repo ./📜️script.ts test [quick|long|exhaustive] [args…]` and `repo ./📜️script.ts build [args…]`. */
+/** 🧰️ `semio-framework-pets` (and the pets crates carved from it) task router: `repo ./📜️script.ts test [quick|long|exhaustive] [args…]` and `repo ./📜️script.ts build [args…]`. */
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

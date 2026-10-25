@@ -3,7 +3,7 @@
   "cases": [
     {
       "id": "active-outer-documentation",
-      "source": "#[doc = include_str!(\"input.txt\")]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "source": "#[doc = include_str!(\"input.txt\")]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[TRACE] attribute oracle\"); }\n",
       "files": {
         "input.txt": "owned documentation\n"
       },
@@ -30,7 +30,7 @@
     },
     {
       "id": "active-inner-documentation",
-      "source": "#![doc = include_str!(\"input.txt\")]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "source": "#![doc = include_str!(\"input.txt\")]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[TRACE] attribute oracle\"); }\n",
       "files": {
         "input.txt": "owned documentation\n"
       },
@@ -57,7 +57,7 @@
     },
     {
       "id": "dormant-outer-documentation",
-      "source": "#[cfg_attr(any(), doc = include_str!(\"input.txt\"))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "source": "#[cfg_attr(any(), doc = include_str!(\"input.txt\"))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[TRACE] attribute oracle\"); }\n",
       "files": {
         "input.txt": "owned documentation\n"
       },
@@ -83,7 +83,7 @@
     },
     {
       "id": "dormant-inner-documentation",
-      "source": "#![cfg_attr(any(), doc = include_str!(\"input.txt\"))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "source": "#![cfg_attr(any(), doc = include_str!(\"input.txt\"))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[TRACE] attribute oracle\"); }\n",
       "files": {
         "input.txt": "owned documentation\n"
       },
@@ -109,7 +109,7 @@
     },
     {
       "id": "outer-opaque-attribute",
-      "source": "#[cfg_attr(any(), opaque(include_str!(\"absent.txt\")))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "source": "#[cfg_attr(any(), opaque(include_str!(\"absent.txt\")))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[TRACE] attribute oracle\"); }\n",
       "files": {},
       "nativeInputs": [
         "source.rs"
@@ -121,7 +121,7 @@
     },
     {
       "id": "inner-opaque-attribute",
-      "source": "#![cfg_attr(any(), opaque(include_str!(\"absent.txt\")))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "source": "#![cfg_attr(any(), opaque(include_str!(\"absent.txt\")))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[TRACE] attribute oracle\"); }\n",
       "files": {},
       "nativeInputs": [
         "source.rs"
@@ -133,7 +133,7 @@
     },
     {
       "id": "opaque-documentation-macro",
-      "source": "#[doc = stringify!(include_str!(\"absent.txt\"))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "source": "#[doc = stringify!(include_str!(\"absent.txt\"))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[TRACE] attribute oracle\"); }\n",
       "files": {},
       "nativeInputs": [
         "source.rs"
@@ -145,7 +145,7 @@
     },
     {
       "id": "outer-documentation-string-decoy",
-      "source": "#[doc = \"include_str!(\\\"absent.txt\\\")\"]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "source": "#[doc = \"include_str!(\\\"absent.txt\\\")\"]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[TRACE] attribute oracle\"); }\n",
       "files": {},
       "nativeInputs": [
         "source.rs"
@@ -158,7 +158,7 @@
     },
     {
       "id": "inner-documentation-string-decoy",
-      "source": "#![doc = \"include_str!(\\\"absent.txt\\\")\"]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "source": "#![doc = \"include_str!(\\\"absent.txt\\\")\"]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[TRACE] attribute oracle\"); }\n",
       "files": {},
       "nativeInputs": [
         "source.rs"
@@ -173,7 +173,7 @@
   "featureCases": [
     {
       "id": "crate-associated-type-defaults",
-      "source": "#![feature(associated_type_defaults)]\ntrait Subject { type Item = u8; }\nfn main(){println!(\"[DEBUG] feature oracle\");}",
+      "source": "#![feature(associated_type_defaults)]\ntrait Subject { type Item = u8; }\nfn main(){println!(\"[TRACE] feature oracle\");}",
       "modulePath": [],
       "resolved": true,
       "native": true,

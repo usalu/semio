@@ -130,8 +130,18 @@ protocol::list_delta! {
 
 protocol::plain_list_delta! {
     /// 🧩 Positional row delta of the immutable responses: a response is inserted or removed, never patched.
-    pub FormsResponsesDelta { removal: FormsResponseRemoval, insertion: FormsResponseInsertion, relocation: FormsResponseRelocation, row: FormsResponse, key: id, values_only }
+    pub FormsResponsesDelta { removal: FormsResponseRemoval, insertion: FormsResponseInsertion, relocation: FormsResponseRelocation, row: FormsResponse, list: Vec<FormsResponse>, key: String = by FormsResponsesKeys, values_only }
 }
+
+/// 🔑️ Keys the foreign `FormsResponse` rows of their list delta.
+#[derive(Clone, Debug, PartialEq)]
+pub struct FormsResponsesKeys;
+
+impl protocol::list_delta::KeyOf<FormsResponse> for FormsResponsesKeys {
+    type Key = String;
+    fn key_of(row: &FormsResponse) -> String { row.id.clone() }
+}
+
 
 //#endregion 🔖️DeltaHelpers
 

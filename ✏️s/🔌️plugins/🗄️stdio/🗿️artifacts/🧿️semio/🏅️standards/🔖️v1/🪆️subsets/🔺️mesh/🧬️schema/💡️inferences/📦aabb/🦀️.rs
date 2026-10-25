@@ -36,7 +36,7 @@ use crate::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive};
 /// 📦 One primitive's axis-aligned bounding box. `SemioAabb::default()` (`min`/`max` both the
 /// origin) is the honest "no geometry" value for a primitive with an empty `positions` buffer —
 /// same convention brep's `validationReport` uses an empty `Vec` for "nothing to report".
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SemioAabb {
     pub min: SemioPoint3,

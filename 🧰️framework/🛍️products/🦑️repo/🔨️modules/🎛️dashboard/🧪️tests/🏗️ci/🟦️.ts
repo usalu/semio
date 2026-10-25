@@ -57,7 +57,7 @@ test("every native host runs actual dashboard editing language cold install and 
 test("native CI recovery publishes the owned frontend before ordinary repository commands",()=>{
  const action=document(".github/actions/native-repo/action.yml");expect(action.runs.using).toBe("composite");
  const steps=action.runs.steps as {uses?:string;run?:string;shell?:string;if?:string}[];
- expect(steps[0]!.uses).toBe("./.github/actions/bun-repo");
+ expect(steps[0]!.uses).toBe("./.github/actions/repo-launcher");
  const recoveries=steps.filter(step=>step.run?.includes("repo-mcp:build"));expect(recoveries).toHaveLength(2);
  for(const step of recoveries){expect(step.run).toContain("repo run repo-mcp:build --skip-cache");expect(step.run).toContain("--help");expect(step.run).toContain("GITHUB_PATH");expect(step.run).not.toMatch(/repo dashboard|cargo |rustc |git (?:reset|checkout|clean)/u);expect(step.if).toContain("runner.os");}
  expect(recoveries.map(step=>step.shell)).toEqual(["bash","pwsh"]);
@@ -80,8 +80,8 @@ test("devcontainer CI builds the actual configuration and refuses an unexecuted 
 
 
 test("dashboard CI Source gate is closed and reaches the owned early test branch",()=>{
- const gate=cases.sourceGate,project=JSON.parse(readFileSync(join(root(),gate.owner,"📋️project.json"),"utf8")),target=project.targets[gate.target],script=readFileSync(join(root(),gate.owner,"📜️script.ts"),"utf8").split("class TestScript")[1]!;
- expect(project.name).toBe(gate.project);expect(target.executor).toBe("repo:script");expect(target.cache).toBe(false);expect(target.dependsOn).toEqual([]);expect(target.outputs).toEqual([]);expect(target.inputs).toEqual(gate.inputs);expect(target.options).toEqual({cwd:gate.owner,command:gate.command,forwardAllArgs:false});expect(target.metadata.semio.execution).toEqual({version:1,kind:"source"});expect(target.metadata.semio.sourceInputObservation).toBe("freshness");expect(target.metadata.semio.runtimeSourceEntries).toEqual([gate.entry]);
+ const gate=cases.sourceGate,project=JSON.parse(readFileSync(join(root(),gate.owner,"📋️project.json"),"utf8")),target=project.targets[gate.target],script=readFileSync(join(root(),gate.owner,"../../🛤️task-routes/🟦️.ts"),"utf8").split("class TestScript")[1]!;
+ expect(project.name).toBe(gate.project);expect(target.executor).toBe("repo:script");expect(target.cache).toBe(true);expect(target.dependsOn).toEqual([]);expect(target.outputs).toEqual([]);expect(target.inputs).toEqual(gate.inputs);expect(target.options).toEqual({cwd:gate.owner,command:gate.command,forwardAllArgs:false});expect(target.metadata.semio.execution).toEqual({version:1,kind:"source"});expect(target.metadata.semio.sourceInputObservation).toBe("freshness");expect(target.metadata.semio.runtimeSourceEntries).toEqual([gate.entry]);
  const entry=join(root(),gate.entry.slice("{workspaceRoot}/".length)),literal=relative(join(root(),gate.owner),entry).split(sep).join("/");expect(existsSync(entry)).toBe(true);expect(script).toContain(JSON.stringify(literal));expect(script).toContain('if(segments.length!==1)throw Error("Expected test ci-source");');
  const db=new Database(":memory:");try{expect(db.query("SELECT instr(?1,?2)>0 AND instr(?1,?2)<instr(?1,'await dashboardExecutable(') AS early,(SELECT count(DISTINCT value) FROM json_each(?3)) AS inputs").get(script,'if(segments[0]==="'+gate.selector+'")',JSON.stringify(target.inputs))).toEqual({early:1,inputs:9});}finally{db.close();}
 });

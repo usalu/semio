@@ -136,7 +136,7 @@ fn sqlite_snapshot_exact_owned_coordinates_and_document_identity() {
     let mut wrong=database.clone();wrong.table_mut("ply_document").unwrap().rows[0].values[1]=SqliteValue::Text("different document".into());
     assert!(snapshot.validate_sqlite_snapshot_subset(&accepted,&wrong,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());
     assert!(snapshot.validate_sqlite_snapshot_subset(&accepted,&database,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());
-    assert!(<PlySnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().is_some());
+    assert!(<PlySnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().is_some());
 }
 #[test]
 fn sqlite_snapshot_ply_binary32_payloads_and_lists_survive_independent_sqlite() {
@@ -184,7 +184,7 @@ fn sqlite_snapshot_ply_native_encoding_preflight_bounds_escaped_text_and_cancels
 fn sqlite_snapshot_ply_erased_binary_and_text_keep_owned_schema_exact_ieee_and_intermediate_state(){
  use store::sqlite_snapshot::SnapshotEncoding;
  let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️ieee754/🔣️.json")).unwrap();
- let coordinate=&cases["sqliteDialect"];let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:coordinate["artifactKind"].as_str().unwrap().into(),standard:coordinate["standard"].as_str().unwrap().into(),subset:coordinate["subset"].as_str().unwrap().into()};let codec=<PlySnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+ let coordinate=&cases["sqliteDialect"];let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:coordinate["artifactKind"].as_str().unwrap().into(),standard:coordinate["standard"].as_str().unwrap().into(),subset:coordinate["subset"].as_str().unwrap().into()};let codec=<PlySnapshot as ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::sqlite_snapshot_codec().unwrap();
  for(index,word)in cases["binary64Bits"].as_array().unwrap().iter().enumerate(){let word=u64::from_str_radix(word.as_str().unwrap(),16).unwrap();let mut snapshot=fixture();snapshot.schema="owned PLY state".into();snapshot.elements[0].rows[0].values[0]=PlyValue::Double(f64::from_bits(word));snapshot.elements[0].rows[0].values[1]=PlyValue::Float(f32::from_bits(u32::from_str_radix(cases["binary32Bits"][index].as_str().unwrap(),16).unwrap()));
   let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
   for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema,&dialect,&mut Some(database.clone()),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(restored,database,"native erased snapshot must retain every owned field and IEEE word");}

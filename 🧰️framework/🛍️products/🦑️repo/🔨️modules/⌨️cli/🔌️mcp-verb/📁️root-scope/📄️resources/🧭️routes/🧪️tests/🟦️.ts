@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import schema from "../../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 
 test("MCP resource templates bind one nonempty identity",()=>{

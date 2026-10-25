@@ -34,7 +34,7 @@ function instant(sample: Sample): Date {
   return new Date(Date.UTC(year, month - 1, day, Math.trunc(sample.hour), Math.round((sample.hour % 1) * 60)));
 }
 
-/** 🔮️ suncalc's altitude and azimuth in degrees, azimuth measured from south as the family measures it. */
+/** 🌞️ suncalc's altitude and azimuth in degrees, azimuth measured from south as the family measures it. */
 function solarPosition(sample: Sample): [number, number] {
   const position = SunCalc.getPosition(instant(sample), sample.latitude, sample.longitude);
   return [position.altitude / RADIANS, position.azimuth / RADIANS];

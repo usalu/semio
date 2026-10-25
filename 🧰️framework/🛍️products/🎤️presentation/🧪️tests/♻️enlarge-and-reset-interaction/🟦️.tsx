@@ -3,7 +3,7 @@ import { collectPresentationSlides } from "@semio-tech/presentation";
 import Reveal from "reveal.js";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { act } from "@semio-tech/ui-react/test";
-import { mountPresentation, resetPdfCanvasPort, setPdfCanvasPort, unmountPresentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { mountPresentation, resetPdfCanvasPort, setPdfCanvasPort, unmountPresentation } from "@semio-tech/presentation-react";
 import { globalsCssSource } from "../🧰️presentation-deck-helpers/🟦️.tsx";
 import { mockClientRect, pointerClick, pointerDrag, positionedDeck, testPdfCanvasPort, twoSlideDeck } from "../🧱️interaction-dom-kit/🟦️.ts";
 

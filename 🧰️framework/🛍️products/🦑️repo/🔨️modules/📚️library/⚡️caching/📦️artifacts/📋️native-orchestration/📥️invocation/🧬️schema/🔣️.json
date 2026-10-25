@@ -104,6 +104,12 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 86400000
+        },
+        "idleMilliseconds": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 86400000,
+          "description": "Idle window of the native child: it is stopped after this long without observable progress (child CPU time, child output, declared waits, finished observation steps), never later than maximumElapsedMilliseconds, which stays the nonrenewable ceiling. Absent: the declared class default of native-child."
         }
       }
     },
@@ -175,6 +181,12 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 86400000
+            },
+            "idleMilliseconds": {
+              "type": "integer",
+              "minimum": 60000,
+              "maximum": 86400000,
+              "description": "Idle window of the native child: it is stopped after this long without observable progress (child CPU time, child output, declared waits, finished observation steps), never later than maximumElapsedMilliseconds, which stays the nonrenewable ceiling. Absent: the declared class default of native-child."
             }
           }
         }

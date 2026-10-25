@@ -41,7 +41,7 @@ impl semio_framework_value::FromValue for ArtifactHandle {
 #[derive(semio_framework_value::RetireOwned)]
 pub struct WindowHandle(pub u128);
 
-/// 🌉️ Hand-written, not derived — see [`ArtifactHandle`]'s impl doc directly above (same `u128`
+/// 🧬️ Hand-written, not derived — see [`ArtifactHandle`]'s impl doc directly above (same `u128`
 /// decimal-string mirror).
 impl semio_framework_value::ToValue for WindowHandle {
     fn to_value(&self) -> DslValue {
@@ -68,7 +68,7 @@ pub struct CapabilityToken(pub u128);
 
 semio_framework_value::artifact_retire_leaf!(CapabilityToken);
 
-/// 🌉️ Hand-written, not derived — see [`ArtifactHandle`]'s impl doc above (same `u128`
+/// 🌱️ Hand-written, not derived — see [`ArtifactHandle`]'s impl doc above (same `u128`
 /// decimal-string mirror).
 impl semio_framework_value::ToValue for CapabilityToken {
     fn to_value(&self) -> DslValue {
@@ -103,7 +103,7 @@ pub struct PluginInstanceId(pub String);
 // strings; moving it would be a breaking shape change out of this wave's scope.
 pub use ::replication::{ActorId, ArtifactId, ArtifactVersion, MutationId, SchemaId};
 
-/// 🪪️ Identifies one dispatched invocation — of an action *or* a command; both route through the same
+/// 🆔️ Identifies one dispatched invocation — of an action *or* a command; both route through the same
 /// `KernelMutation`/`UndoGroup` history bookkeeping.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
@@ -336,7 +336,7 @@ pub struct UndoGroup {
     pub invocation_id: InvocationId,
     pub mutations: Vec<MutationId>,
     pub inverse_mutations: Vec<InverseMutation>,
-    /// 🧩️ Cross-document member edits folded into this group's undo (composite dispatch across
+    /// ✏️ Cross-document member edits folded into this group's undo (composite dispatch across
     /// parent + child documents) — additive, empty for every group that isn't composite.
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub member_edits: Vec<EditRef>,
@@ -439,6 +439,20 @@ pub struct Budget {
     pub max_frames: u32,
 }
 
+impl Budget {
+    /// 🎟️ One original first turn whose policy and work fuel equal the supplied grant and fuel and whose absolute deadline is `deadline_ms` after `now_us`.
+    pub fn original(grant: RetainedCloneGrant, fuel: u64, now_us: u64, deadline_ms: u32, max_effects: u32, max_patch_bytes: u32, max_frames: u32) -> Self {
+        let deadline_us = now_us.saturating_add(u64::from(deadline_ms) * 1_000);
+        let work = semio_framework_actor::OriginalActorTurnWork { clock_binding: 1, absolute_deadline_us: deadline_us, fuel };
+        Self { retained: RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work, grant }, retained_policy: grant, work_fuel: fuel, fuel, deadline_us, max_effects, max_patch_bytes, max_frames }
+    }
+
+    /// 📥️ One turn under the supplied original retained input: its grant is the policy, its work carries the absolute deadline, and `fuel` bounds the guest and the work.
+    pub fn from_retained(retained: RetainedTurnInput, fuel: u64, max_effects: u32, max_patch_bytes: u32, max_frames: u32) -> Self {
+        Self { retained, retained_policy: retained.grant, work_fuel: fuel, fuel, deadline_us: retained.work.absolute_deadline_us, max_effects, max_patch_bytes, max_frames }
+    }
+}
+
 //#endregion 🔖️Budget
 //#region 🔖️TurnResult
 
@@ -496,7 +510,7 @@ pub struct CapabilityRequest {
     pub optional: bool,
 }
 
-/// 🎟️ A broker-issued grant answering a `CapabilityRequest` — `📓️design-abi.md` §5.
+/// 📬️ A broker-issued grant answering a `CapabilityRequest` — `📓️design-abi.md` §5.
 /// Named `BrokerCapabilityGrant`, not the design prose's bare `CapabilityGrant`: this file
 /// already has a `CapabilityGrant` (above, `🔖️Capability` region) for the unrelated kernel-level
 /// action/window capability model (`ActionContext.granted_capabilities`), with live consumers
@@ -622,7 +636,7 @@ pub enum FailureAction {
 //#endregion 🔖️Broker
 //#region 🔖️ExtensionActivation
 
-/// 🧩️ Canonical installed-extension descriptor the host queries at plugin-activation time —
+/// 🔌️ Canonical installed-extension descriptor the host queries at plugin-activation time —
 /// `extension-activation` packet (`📌️important.md`): "on plugin activation, the kernel queries
 /// installed descriptors for `extends == plugin_id` and activates each as `ActorKind::Extension`,
 /// pinned to the parent's shard, capabilities scoped to the parent". Deliberately independent of

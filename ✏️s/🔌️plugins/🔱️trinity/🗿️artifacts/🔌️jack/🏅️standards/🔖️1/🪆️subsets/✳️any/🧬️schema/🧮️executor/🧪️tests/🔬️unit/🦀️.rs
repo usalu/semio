@@ -55,7 +55,7 @@ async fn run_match_return_graph() {
     let result = run(&mut g, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b").unwrap();
     assert_eq!(result.kind, QueryResultKind::Graph);
     let fixture = result.graph_snapshot.expect("graph fixture");
-    assert_eq!(fixture.nodes().expect("valid retained Jack child").len(), 2);
+    assert_eq!(fixture.nodes.len(), 2);
     assert_eq!(fixture.edges().expect("valid retained Jack child").len(), 1);
 }
 
@@ -242,7 +242,7 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         assert_eq!(json["rows"], case["rows"]);
         if let Some(node_ids) = case.get("nodeIds") {
             let graph = actual.0.graph_snapshot.as_ref().expect("typed graph result retains its local fixture owner");
-            let mut actual_nodes: Vec<_> = graph.nodes().expect("valid retained Jack child").iter().map(|node| node.id.clone()).collect();
+            let mut actual_nodes: Vec<_> = graph.nodes.iter().map(|node| node.id.clone()).collect();
             let mut actual_edges: Vec<_> = graph.edges().expect("valid retained Jack child").iter().map(|edge| edge.id.clone()).collect();
             actual_nodes.sort();
             actual_edges.sort();

@@ -3,7 +3,7 @@ import { join, relative } from "node:path";
 import { writeGeneratedFileIfChanged } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { renderPrintLatexTokenStylesheet } from "./🟦️.ts";
-import { isMainModuleV1 } from "../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 class GenerateScript extends BundleScript {
   run(args: string[]): void {

@@ -506,7 +506,17 @@ pub fn schema_descriptor(id: &'static str) -> ::semio_framework_schema_registry:
 
     /// 🔒️ Closes the fixture app set under the `dyn_enum_close!` vocabulary without importing it into the fixture itself.
     mod closed_apps {
-        use super::*;
+        use semio_framework_plugin_mounted_owner::MountedOwnerPhaseV1;
+use semio_framework_plugin_decl_app::EphemeralSnapshot;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_decl_app::TransactionPrepareOutcome;
+use semio_framework_plugin_mounted_owner::MountedOwnerTurnV1;
+use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_framework_plugin_window_config::WindowConfigPack;
+use semio_framework_plugin_decl_app::MediaArtifactError;
+use semio_framework_plugin_decl_app::MediaConsumption;
+use std::collections::HashMap;
+use super::*;
         use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, Confidence, DerivedArtifactSpec, sqlite_wire};
 use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};

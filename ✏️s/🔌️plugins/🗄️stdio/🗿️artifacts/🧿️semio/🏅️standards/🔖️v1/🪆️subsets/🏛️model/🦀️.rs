@@ -67,14 +67,3 @@ pub mod viewer {
         }
     }
 }
-
-semio_framework_value::artifact_retire_leaf!(schema::snapshot::SpatialKind);
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SpatialNode { id, kind, name, parent_id, placement });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::Property { key, value });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::PropertySet { name, properties });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioModelElement { id, class, placement, geometry, spatial_id, psets });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::ModelRelation { id, kind, from, to });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioModelSnapshot { schema, spatial, elements, relations });
-
-semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioModelSnapshot);
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioModelSnapshot, schema::mutations::SemioModelMutation);

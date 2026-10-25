@@ -26,7 +26,8 @@ export type DiscoveredCase = Readonly<{
   projectName: string;
 }>;
 
-export const SKIP_DIR_NAMES = new Set(["node_modules", ".git", "target", "dist", "📤️dist", "build", "out", "storybook-static", ".venv", "__pycache__", "obj", "bin", "🗑️generated"]);
+/** 🙈️ Dependency, build and tool-cache directory names no walk enters; `.cache` is the repository-local build and tool store (hundreds of thousands of directories, never authored source). */
+export const SKIP_DIR_NAMES = new Set(["node_modules", ".git", ".cache", "target", "dist", "📤️dist", "build", "out", "storybook-static", ".venv", "__pycache__", "obj", "bin", "🗑️generated"]);
 
 export function walkDirectories(root: string, onDir: (absDir: string, relDir: string) => "enter" | "skip"): void {
   const stack: string[] = [root];
@@ -65,7 +66,7 @@ export function testProjectName(ownerRel: string, caseSlug: string): string {
 }
 
 /**
- * 🔍️ Walks every non-excluded path for `**​/🧪️tests/<case>/component.feature`. The owner is the
+ * 📂️ Walks every non-excluded path for `**​/🧪️tests/<case>/component.feature`. The owner is the
  * directory that holds `🧪️tests`; a case found under `📦️packages/<lang>` is still returned so the
  * taxonomy policy can report it rather than silently dropping the evidence.
  */
@@ -123,7 +124,7 @@ export function testCollectionIndexes(path: string, name: string, taxonomy: Test
   return segments.flatMap((segment, index) => segment === name && segments[index - 1] !== taxonomy.schemaScopeOwnerLevels.moduleMemberDirName ? [index] : []);
 }
 
-/** 🧭️ Keeps source-shaped samples within their actual fixture collection. */
+/** 🧪️ Keeps source-shaped samples within their actual fixture collection. */
 export function testFixtureCollectionIndex(path: string, taxonomy: TestTaxonomy): number {
   return testCollectionIndexes(path, taxonomy.testFixturesDirName, taxonomy)[0] ?? -1;
 }

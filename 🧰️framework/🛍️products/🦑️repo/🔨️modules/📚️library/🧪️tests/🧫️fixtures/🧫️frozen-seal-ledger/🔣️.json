@@ -144,7 +144,7 @@
         "reason": "The repository build interface replaces Nx-specific vocabulary (ticket 2026/10/14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL): the package identity field `nxProjectName` becomes the neutral `projectName` the discovery admission already requires, and the benchmark command in the renderer doc-comment rewrite is spelled through `repo run`. Packages, mappings, consumers and counts are unchanged.",
         "moves": [
           { "from": "nxProjectName", "to": "projectName", "revision": "7af1259dba8" },
-          { "from": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun nx run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n", "to": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `repo run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n", "revision": "7af1259dba8" }
+          { "from": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun nx run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n", "to": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun repo run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n", "revision": "7af1259dba8" }
         ]
       }
     ] },

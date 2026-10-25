@@ -1,4 +1,4 @@
-/** 🕸️ The plugin dependency graph: version pins, validation, load order, dependents, the graph class and the localized dependency fault message.
+/** ⛓️ The plugin dependency graph: version pins, validation, load order, dependents, the graph class and the localized dependency fault message.
  *
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
@@ -54,7 +54,7 @@ export function versionSatisfies(actual: string, pin: VersionPin): boolean {
   return required !== null && version !== null && version.major === required.major && version.minor === required.minor && version.patch === required.patch;
 }
 
-/** 🧯 Validates every node's declared `dependencies` resolve (present, version-satisfying) — does
+/** 🔌️ Validates every node's declared `dependencies` resolve (present, version-satisfying) — does
  * NOT detect cycles (see {@link resolvePluginLoadOrder}, which layers cycle detection on top only
  * once every missing/mismatched edge has already been reported). A node with no `version`, or an edge
  * with no pin (the registry's pre-build view), skips the version check (nothing to compare) rather than
@@ -112,7 +112,7 @@ function findCycleMembers(byId: ReadonlyMap<string, PluginGraphNode>, leftover: 
   return cycle ?? [...leftover].sort();
 }
 
-/** 🔁️ Kahn toposort with lexicographically-smallest-id tie-breaking — mirrors Rust
+/** 📥️ Kahn toposort with lexicographically-smallest-id tie-breaking — mirrors Rust
  * `resolve_load_order` exactly, including the deterministic tie-break. `errors` is non-empty and
  * `order` empty on any missing dependency or version mismatch (reported before a cycle would be,
  * matching the Rust validate-then-sort order) or on a real cycle (members individually named via
@@ -217,7 +217,7 @@ function resolveLocalizedLabel(label: Record<string, string>, locale: ShellLocal
   return label[locale] ?? label.en ?? Object.values(label)[0] ?? "";
 }
 
-/** 🌐️ Turns a {@link PluginGraphError} into a real, localized (English + German) message — the
+/** 💬️ Turns a {@link PluginGraphError} into a real, localized (English + German) message — the
  * dependency-fault UI this ticket requires instead of a bare console error. Callers needing a
  * console-safe fallback can still log the same string; this is the single source of the wording so
  * a boot banner and an in-shell notification never drift apart. */

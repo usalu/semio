@@ -1,4 +1,4 @@
-//! 🎯️ Construction and focus: the `Tui` constructor, frame size and width mode, the focus model and ring, the focus navigation and the cursor, hover and capture queries. See [`super`].
+//! 🏗️ Construction and focus: the `Tui` constructor, frame size and width mode, the focus model and ring, the focus navigation and the cursor, hover and capture queries. See [`super`].
 
 use super::*;
 

@@ -27,6 +27,7 @@ struct StrokeRegion{contours:Vec<Vec<Point>>,points:usize}
 impl Default for StrokeRegion{fn default()->Self{Self{contours:Vec::new(),points:0}}}
 /// 🪵️ Uniform primitive winding and canonical holes admit bounded positive union waves.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct StrokeCanonicalJob{
  retired_children:Vec<BooleanRetirement>,retired_operands:Vec<Vec<BooleanOperand>>,retired_segments:Vec<Vec<semio_framework_2d::PathSegment>>,retired_groups:Vec<Vec<Option<StrokeRegion>>>,source:Vec<Vec<Point>>,current:Vec<Option<StrokeRegion>>,next:Vec<Option<StrokeRegion>>,active:Vec<Option<StrokeRegion>>,combined:Vec<Vec<Point>>,combined_group:usize,
  region:StrokeRegion,child:Option<BooleanJob>,child_retirement:Option<BooleanRetirement>,owned_operands:Vec<BooleanOperand>,segments:Vec<semio_framework_2d::PathSegment>,
@@ -53,10 +54,11 @@ semio_framework_2d::physical_work_retirement!(StrokeCanonicalRetirement,StrokeCa
 semio_framework_2d::physical_work_retirement!(PaintedRegionsCloseJob,PaintedPathRegions,&'static str,|_:&str|"Painted region physical close refused");
 /// 🧱️ Preparation admits borrowed source segments and retains completed children until explicit retirement.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct PaintedPathPrepareJob{
- input:PaintedPathPreparation,style:Option<StrokeGeometryStyle>,segments:Vec<semio_framework_2d::PathSegment>,flat:Vec<FlatContour>,contours:Vec<StrokeContour>,polygons:Vec<Vec<Point>>,
- pub flatten:Option<PathFlattenJob>,flatten_retirement:Option<PathFlattenRetirement>,outline:Option<StrokeOutlineJob>,outline_retirement:Option<StrokeOutlineRetirement>,
- canonical:Option<BooleanJob>,canonical_retirement:Option<BooleanRetirement>,canonical_operands:Vec<BooleanOperand>,canonical_segments:Vec<semio_framework_2d::PathSegment>,stroke_canonical:Option<StrokeCanonicalJob>,stroke_canonical_retirement:Option<StrokeCanonicalRetirement>,raw_points:usize,raw_contours:usize,magnitude:f64,
+ input:PaintedPathPreparation,style:Option<StrokeGeometryStyle>,segments:Vec<semio_framework_2d::PathSegment>,pub flat:Vec<FlatContour>,contours:Vec<StrokeContour>,polygons:Vec<Vec<Point>>,
+ pub flatten:Option<PathFlattenJob>,pub flatten_retirement:Option<PathFlattenRetirement>,pub outline:Option<StrokeOutlineJob>,pub outline_retirement:Option<StrokeOutlineRetirement>,
+ canonical:Option<BooleanJob>,pub canonical_retirement:Option<BooleanRetirement>,canonical_operands:Vec<BooleanOperand>,canonical_segments:Vec<semio_framework_2d::PathSegment>,pub stroke_canonical:Option<StrokeCanonicalJob>,pub stroke_canonical_retirement:Option<StrokeCanonicalRetirement>,raw_points:usize,raw_contours:usize,magnitude:f64,
  pub phase:&'static str,work:u64,next:usize,at:usize,point:usize,regions:Option<PaintedPathRegions>,failure:Option<String>,cancelled:bool,
 }
 impl PaintedPathPrepareJob{
@@ -104,7 +106,7 @@ impl PreparedRegionStamp{
  fn matches(self,live:Self)->bool{self.valid()&&live.valid()&&self==live}
 }
 /// 🎯️ Only cursor metadata survives a turn; completed geometry is borrowed separately per grant.
-pub struct PreparedRegionQueryJob{stamp:PreparedRegionStamp,point:Point,tolerance:f64,phase:&'static str,at:usize,edge:usize,work:u64,winding:i64,boundary:bool,contains:bool,cancelled:bool,failure:Option<&'static str>}
+pub struct PreparedRegionQueryJob{stamp:PreparedRegionStamp,point:Point,tolerance:f64,phase:&'static str,at:usize,edge:usize,pub work:u64,winding:i64,boundary:bool,contains:bool,cancelled:bool,failure:Option<&'static str>}
 impl PreparedRegionQueryJob{
  pub fn new(stamp:PreparedRegionStamp,point:Point,tolerance:f64,required_flatness:f64)->Result<Self,String>{if !stamp.valid()||!point.into_iter().all(valid)||!valid(tolerance)||tolerance<0.0||!precision(required_flatness){return Err("Invalid prepared region query contract".into());}if stamp.flatness>required_flatness{return Err("Prepared region precision is insufficient".into());}Ok(Self{stamp,point,tolerance,phase:"fill",at:0,edge:0,work:0,winding:0,boundary:false,contains:false,cancelled:false,failure:None})}
  fn authority(&self,live:PreparedRegionStamp)->Result<(),String>{if self.cancelled{return Err("Prepared region query cancelled".into());}if let Some(error)=self.failure{return Err(error.into());}if !self.stamp.matches(live){return Err("Prepared region query authority changed".into());}Ok(())}

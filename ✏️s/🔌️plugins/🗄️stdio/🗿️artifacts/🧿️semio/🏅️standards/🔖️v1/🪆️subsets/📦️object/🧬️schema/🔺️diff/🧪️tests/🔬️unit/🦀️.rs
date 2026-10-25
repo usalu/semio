@@ -12,6 +12,7 @@ use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapsh
 use framework_schema::ArtifactSchema;
 #[allow(unused_imports)]
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use crate::schema::diff::*;
 use crate::schema::snapshot::demo_object_snapshot;
 use protocol::{DiffBinary,DiffText};

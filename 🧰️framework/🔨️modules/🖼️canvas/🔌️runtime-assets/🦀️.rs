@@ -40,11 +40,11 @@ impl RuntimeAsset {
         RuntimeAsset::IconPack,
     ];
 
-    /// 📦️ The assets a `wasm32-wasip2` guest uses: the emoji face its SVG icons parse `<text>` glyphs with, the label face and
+    /// 🎁️ The assets a `wasm32-wasip2` guest uses: the emoji face its SVG icons parse `<text>` glyphs with, the label face and
     /// the icon pack. The compiler's other fonts stay unused there because the compiler estimates sizes without glyphs.
     pub const GUEST: [RuntimeAsset; 3] = [RuntimeAsset::CompilerFont(FontRole::Emoji), RuntimeAsset::LabelFont, RuntimeAsset::IconPack];
 
-    /// 🏷️ The asset's file name inside [`RuntimeAsset::repository_directory`] — the identity a host resolves through its own channel.
+    /// 📄️ The asset's file name inside [`RuntimeAsset::repository_directory`] — the identity a host resolves through its own channel.
     pub const fn file_name(self) -> &'static str {
         match self {
             RuntimeAsset::CompilerFont(role) => role.asset_file_name(),
@@ -72,7 +72,7 @@ impl RuntimeAsset {
     }
 }
 
-/// 📦️ The bytes of every runtime asset, borrowed from the host.
+/// 🖥️ The bytes of every runtime asset, borrowed from the host.
 #[derive(Clone, Copy, Debug)]
 pub struct RuntimeAssets<'a> {
     pub fonts: FontSet<'a>,
@@ -89,7 +89,7 @@ impl<'a> RuntimeAssets<'a> {
         }
     }
 
-    /// 🔌️ Builds the set by asking `load` for every asset in [`RuntimeAsset::ALL`] order and stops at the first failure.
+    /// 🔨️ Builds the set by asking `load` for every asset in [`RuntimeAsset::ALL`] order and stops at the first failure.
     pub fn try_from_loader<E>(mut load: impl FnMut(RuntimeAsset) -> Result<&'a [u8], E>) -> Result<Self, E> {
         let fonts = FontSet::try_from_loader(|role| load(RuntimeAsset::CompilerFont(role)))?;
         let label_font = load(RuntimeAsset::LabelFont)?;
@@ -104,13 +104,13 @@ impl<'a> RuntimeAssets<'a> {
 }
 
 impl RuntimeAssets<'static> {
-    /// 📂️ Reads every asset from `<root>/<repository_directory>/<file_name>` and leaks the buffers, so the set lives
+    /// 🏠️ Reads every asset from `<root>/<repository_directory>/<file_name>` and leaks the buffers, so the set lives
     /// for the process. Call it once per process.
     pub fn from_root(root: &Path) -> io::Result<Self> {
         Self::try_from_loader(|asset| read_leaked(&root.join(asset.repository_directory()).join(asset.file_name())))
     }
 
-    /// 📦️ Reads every asset from a staged runtime asset folder, `<root>/<channel>/<file_name>` (what `stage-runtime-assets` writes
+    /// 📁️ Reads every asset from a staged runtime asset folder, `<root>/<channel>/<file_name>` (what `stage-runtime-assets` writes
     /// and a packaged install ships next to its executable), and leaks the buffers. Call it once per process.
     pub fn from_staged_root(root: &Path) -> io::Result<Self> {
         Self::try_from_loader(|asset| read_leaked(&root.join(asset.channel()).join(asset.file_name())))
@@ -151,7 +151,7 @@ impl RuntimeAsset {
     }
 }
 
-/// 📦️ One guest asset as a plugin declares it: the exact name, size and SHA-256 hex the host verifies before delivery.
+/// 📑️ One guest asset as a plugin declares it: the exact name, size and SHA-256 hex the host verifies before delivery.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RuntimeAssetDeclaration {
     pub name: String,
@@ -165,7 +165,7 @@ const GUEST_FONT_DIGESTS: [(RuntimeAsset, u64, &str); 2] =
 #[path = "../../🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🔏️digest/🦀️.rs"]
 mod icon_pack_digest;
 
-/// 📦️ The declarations of [`RuntimeAsset::GUEST`] in that order. The pack's digest is written by the assets builder next to
+/// 🔃️ The declarations of [`RuntimeAsset::GUEST`] in that order. The pack's digest is written by the assets builder next to
 /// the pack, so it cannot drift from the pack a host serves.
 pub fn guest_asset_declarations() -> Vec<RuntimeAssetDeclaration> {
     RuntimeAsset::GUEST
@@ -187,7 +187,7 @@ pub type PackageAssetReader = fn(&str) -> Option<&'static [u8]>;
 static GUEST_READER: OnceLock<PackageAssetReader> = OnceLock::new();
 static GUEST_REFUSED: OnceLock<()> = OnceLock::new();
 
-/// 📥️ Registers the guest's package asset reader, once per process (the first registration stays). Every accessor then
+/// 📖️ Registers the guest's package asset reader, once per process (the first registration stays). Every accessor then
 /// installs the [`RuntimeAsset::GUEST`] assets on first use after the host delivered them; before that they answer `None`,
 /// exactly as on a host that delivers nothing. The compiler fonts stay estimate-only.
 pub fn register_guest_asset_reader(read: PackageAssetReader) {
@@ -241,7 +241,7 @@ struct IconPackDocument {
     plain: HashMap<String, String>,
 }
 
-/// 🧳️ Every vendored SVG source by shortcode id: `themed` (metabolism, recolored by the paint theme) and `plain`
+/// 🎒️ Every vendored SVG source by shortcode id: `themed` (metabolism, recolored by the paint theme) and `plain`
 /// (catalog), exactly the files the assets builder reads.
 #[derive(Debug)]
 pub struct IconPack {
@@ -306,7 +306,7 @@ fn parse_runtime_assets<'a>(assets: &RuntimeAssets<'a>) -> Result<(CompilerFonts
     Ok((fonts, icon_pack))
 }
 
-/// 🔌️ The host's runtime asset port. Install once per process, before the first icon or label resolves. Everything
+/// ⚙️ The host's runtime asset port. Install once per process, before the first icon or label resolves. Everything
 /// is parsed first, so a refused set does not consume the slot.
 pub fn install_runtime_assets(assets: RuntimeAssets<'static>) -> Result<(), RuntimeAssetsInstallError> {
     if INSTALLED.get().is_some() {
@@ -316,7 +316,7 @@ pub fn install_runtime_assets(assets: RuntimeAssets<'static>) -> Result<(), Runt
     INSTALLED.set(Installed { fonts: Some(fonts), emoji_font: assets.fonts.emoji, label_font: assets.label_font, icon_pack }).map_err(|_| RuntimeAssetsInstallError::AlreadyInstalled)
 }
 
-/// 🔌️ [`install_runtime_assets`] for a host that received the seven files by value, in [`RuntimeAsset::ALL`] order
+/// 📩️ [`install_runtime_assets`] for a host that received the seven files by value, in [`RuntimeAsset::ALL`] order
 /// (a browser fetch handed across a wasm-bindgen door); the buffers live for the process.
 pub fn install_runtime_asset_bytes(math: Vec<u8>, serif: Vec<u8>, serif_italic: Vec<u8>, mono: Vec<u8>, emoji: Vec<u8>, label_font: Vec<u8>, icon_pack: Vec<u8>) -> Result<(), RuntimeAssetsInstallError> {
     let leaked = |bytes: Vec<u8>| -> &'static [u8] { Box::leak(bytes.into_boxed_slice()) };
@@ -340,7 +340,7 @@ pub fn compiler_fonts() -> Option<&'static CompilerFonts<'static>> {
     installed().and_then(|installed| installed.fonts.as_ref())
 }
 
-/// 🔤️ `wasm32-wasip2` arm: the compiler estimates sizes without glyphs, so nothing needs installing.
+/// 🔠️ `wasm32-wasip2` arm: the compiler estimates sizes without glyphs, so nothing needs installing.
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub fn compiler_fonts() -> Option<&'static CompilerFonts<'static>> {
     static ESTIMATE_ONLY: CompilerFonts<'static> = CompilerFonts::estimate_only();
@@ -352,12 +352,12 @@ pub fn emoji_font() -> Option<&'static [u8]> {
     installed().map(|installed| installed.emoji_font)
 }
 
-/// 🏷️ The installed label face place-name and editor labels are shaped with; `None` until a host installs it.
+/// ✏️ The installed label face place-name and editor labels are shaped with; `None` until a host installs it.
 pub fn label_font() -> Option<&'static [u8]> {
     installed().map(|installed| installed.label_font)
 }
 
-/// 🧳️ The installed icon pack behind catalog, metabolism and shortcode SVG icons; `None` until a host installs it.
+/// 📚️ The installed icon pack behind catalog, metabolism and shortcode SVG icons; `None` until a host installs it.
 pub fn icon_pack() -> Option<&'static IconPack> {
     installed().map(|installed| &installed.icon_pack)
 }

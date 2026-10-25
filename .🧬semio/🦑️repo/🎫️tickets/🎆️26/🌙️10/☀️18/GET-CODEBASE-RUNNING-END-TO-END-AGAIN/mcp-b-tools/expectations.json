@@ -1,0 +1,43 @@
+{
+  "repo": {
+    "initialize": {
+      "maxMs": 20000,
+      "serverInfoName": "repo",
+      "protocolVersion": "2025-06-18"
+    },
+    "tools": {
+      "min": 20,
+      "required": [
+        "run",
+        "ticket_open",
+        "ticket_close",
+        "show_projects"
+      ]
+    },
+    "resources": {
+      "min": 1,
+      "requiredUris": [
+        "repo://goals"
+      ]
+    },
+    "read": {
+      "uri": "repo://goals",
+      "contentsMin": 1
+    },
+    "stdoutPollution": 0,
+    "structuredContent": "omitted-or-object"
+  },
+  "semio": {
+    "initialize": {
+      "maxMs": 20000,
+      "serverInfoName": "semio",
+      "protocolVersion": "2025-06-18"
+    },
+    "tools": {
+      "min": 1,
+      "required": []
+    },
+    "stdoutPollution": 0,
+    "structuredContent": "omitted-or-object"
+  }
+}

@@ -32,7 +32,7 @@ import { Grid } from "@react-three/drei/core/Grid.js";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
 import { useGLTF } from "@react-three/drei/core/Gltf.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { useTranslation } from "react-i18next";
+import { useUiTranslation } from "@semio-tech/ui/elements/Label";
 import { useHotkeys } from "@semio-tech/ui/modules/control-keybinding-context";
 import { rankFuzzyItems, type FuzzySearchField, type FuzzySearchOptions, type FuzzySearchResult } from "@semio-tech/ui/modules/fuzzy-ranking";
 
@@ -309,12 +309,8 @@ export { OrbitControls as ThreeOrbitControls } from "three/addons/controls/Orbit
 export { ConnectionMode, MiniMap } from "@xyflow/react";
 // #endregion 🎽️XY Flow
 
-// #region 🖋️State Management
-export { assign, createActor, fromCallback, setup, type ActorRefFrom, type AnyActorRef, type SnapshotFrom } from "xstate";
-// #endregion 🖋️State Management
-
 // #region 🗿️I18n
-export { useTranslation };
+export { useUiTranslation as useTranslation };
 // #endregion 🗿️I18n
 
 // #region 🌙️Hotkeys
@@ -331,4 +327,3 @@ export { styleVariants } from "@semio-tech/ui/modules/style-variants";
 export type { StyleCompoundVariant, StyleVariantCompiler, StyleVariantConfiguration, StyleVariantProps, StyleVariantSchema, StyleVariantSelection } from "@semio-tech/ui/modules/style-variants";
 // #endregion 🌨️Styling
 
-export * as ResizablePrimitive from "react-resizable-panels";

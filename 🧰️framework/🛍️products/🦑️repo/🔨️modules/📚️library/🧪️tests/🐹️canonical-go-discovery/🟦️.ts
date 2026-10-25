@@ -4,7 +4,8 @@ import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSy
 import { join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import Ajv from "ajv";
-import { canonicalGoPlan } from "../../🧪️testing/🐹️go-plan/🟦️.ts";
+import { canonicalGoPlan, canonicalGoTestBudgetMsV1 } from "../../🧪️testing/🐹️go-plan/🟦️.ts";
+import { TEST_LEVEL_BUDGET_MS } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 type Vector = Readonly<{
   contract: string;
@@ -188,3 +189,10 @@ test("the library module compiles its root package and leaves its standalone ora
     rmSync(temporary, { recursive: true, force: true });
   }
 }, 60_000);
+
+test("a cold Go compile is preparation, not test time: the wall clock of go:test is the level budget plus the preparation budget, and an authored build budget replaces the preparation share", () => {
+  const level = Number(process.env.SEMIO_TEST_BUDGET_MS ?? TEST_LEVEL_BUDGET_MS[(process.env.SEMIO_TEST_LEVEL as keyof typeof TEST_LEVEL_BUDGET_MS) ?? "fundamental"] ?? TEST_LEVEL_BUDGET_MS.fundamental);
+  expect(canonicalGoTestBudgetMsV1({})).toBe(level + 21_600_000);
+  expect(canonicalGoTestBudgetMsV1({ SEMIO_BUILD_BUDGET_MS: "120000" })).toBe(level + 120_000);
+  expect(canonicalGoTestBudgetMsV1({})).toBeGreaterThan(TEST_LEVEL_BUDGET_MS.exhaustive);
+});

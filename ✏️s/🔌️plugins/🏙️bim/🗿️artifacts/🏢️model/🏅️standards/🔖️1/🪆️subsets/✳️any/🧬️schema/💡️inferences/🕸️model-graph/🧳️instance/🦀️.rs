@@ -15,6 +15,7 @@ use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{InferenceWorkFailure,InferenceError, ColdMutation, Mutation, MutationDiff};
+use protocol::ColdMutationDiff;
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
 use std::borrow::Cow;
 use std::collections::BTreeMap;

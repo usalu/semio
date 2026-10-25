@@ -8,6 +8,6 @@ pub fn set_grid_factor(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
         return;
     };
     ctx.scene.runtime.grid_factor = value;
-    let _ = ctx.host.borrow_mut().set_grid_factor(value);
+    let _ = ctx.host.borrow_mut().style.set_grid_factor(value);
     *ctx.ui_scope = puzzle2d_window_and_measures_scope();
 }

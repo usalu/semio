@@ -1,0 +1,16 @@
+== show4
+graph: no usable generation (identity), building the first one
+graph: generation 366 published, 4018 projects refreshed in 897 s
+graph: fact index of generation 366: 527310 facts of 4019 projects, 36.2 MB expanded (7.1 % of the 512 MB limit), 8.3 MB packed
+== course1
+graph: generation 371 published, 265 projects refreshed in 197 s
+graph: fact index of generation 371: 515616 facts of 4019 projects, 34.2 MB expanded (6.7 % of the 512 MB limit), 7.7 MB packed
+INFO: Elapsed time: 318.807s, Critical Path: 175.65s
+INFO: 8 processes: 1 internal, 7 local.
+INFO: Build completed successfully, 8 total actions
+== print1
+graph: generation 376 published, 268 projects refreshed in 132 s
+graph: fact index of generation 376: 515629 facts of 4019 projects, 34.2 MB expanded (6.7 % of the 512 MB limit), 7.7 MB packed
+INFO: Elapsed time: 2490.380s, Critical Path: 632.19s
+INFO: 18 processes: 1 action cache hit, 2 internal, 16 local.
+INFO: Build completed successfully, 18 total actions

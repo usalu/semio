@@ -2,13 +2,13 @@ import { join } from "node:path";
 import { mkdirSync } from "node:fs";
 import { coverageDir, coverageSlug } from "../../🏃️process/📋️context/🔣️policy/🟦️.ts";
 
-/** 📊️Whether instrumented coverage collection is on — auto-set by [[resolveTestLevel]] at the `exhaustive` level; `SEMIO_COVERAGE=0` opts out. */
+/** 🔛️Whether instrumented coverage collection is on — auto-set by [[resolveTestLevel]] at the `exhaustive` level; `SEMIO_COVERAGE=0` opts out. */
 export function coverageEnabled(): boolean {
   return process.env.SEMIO_COVERAGE === "1";
 }
 
 /**
- * 📊️Central, authoritative exclusion list applied at repo-wide aggregation — generated code, vendored/emitted
+ * 🧶️Central, authoritative exclusion list applied at repo-wide aggregation — generated code, vendored/emitted
  * assets, and paths that are GPU-only or Electron-shell and thus unmeasurable by a headless line-coverage
  * runner. Per-tool excludes (vitest `coverage.exclude`, coverage.py `omit`, …) may mirror this for speed, but
  * this list is what decides what counts toward the repo-wide percentage. Every entry has a reason in
@@ -33,7 +33,7 @@ export const COVERAGE_EXCLUDE_GLOBS: readonly string[] = [
   "**/target/**",
 ];
 
-/** 📊️One-line rationale per [[COVERAGE_EXCLUDE_GLOBS]] entry — printed alongside the coverage summary. */
+/** 🧠️One-line rationale per [[COVERAGE_EXCLUDE_GLOBS]] entry — printed alongside the coverage summary. */
 export const COVERAGE_EXCLUDE_REASONS: Readonly<Record<string, string>> = {
   "**/generated/**": "Emitted lookup tables/codegen output, not hand-authored logic.",
   "framework/module/asset/metabolism/icon/generated/**": "~22k LOC generated icon table.",
@@ -62,27 +62,27 @@ function coverageGlobToRegExp(glob: string): RegExp {
   return new RegExp(`^${escaped}$`);
 }
 
-/** 📊️Whether a repo-relative path (forward-slash, no leading `./`) matches any [[COVERAGE_EXCLUDE_GLOBS]] entry. */
+/** ⏩️Whether a repo-relative path (forward-slash, no leading `./`) matches any [[COVERAGE_EXCLUDE_GLOBS]] entry. */
 export function isCoverageExcluded(relPath: string): boolean {
   const normalized = relPath.replace(/\\/g, "/").replace(/^\.\//, "");
   return COVERAGE_EXCLUDE_GLOBS.some((glob) => coverageGlobToRegExp(glob).test(normalized));
 }
 
-/** 📊️`go test` coverage args, appended alongside `goLevelTestArgs` when [[coverageEnabled]]; the text profile is converted to LCOV via [[goProfileToLcov]] at aggregation. */
+/** 🐹️`go test` coverage args, appended alongside `goLevelTestArgs` when [[coverageEnabled]]; the text profile is converted to LCOV via [[goProfileToLcov]] at aggregation. */
 export function goCoverageArgs(repoRoot: string, moduleLabel: string): string[] {
   if (!coverageEnabled()) return [];
   const file = join(coverageDir(repoRoot, "go"), `${coverageSlug(moduleLabel)}.cover`);
   return ["-covermode=atomic", "-coverpkg=./...", `-coverprofile=${file}`];
 }
 
-/** 📊️pytest coverage args, appended alongside `pytestLevelArgs` when [[coverageEnabled]]; `pytest-cov`'s `lcov` reporter writes LCOV directly, no conversion needed. */
+/** 🐍️pytest coverage args, appended alongside `pytestLevelArgs` when [[coverageEnabled]]; `pytest-cov`'s `lcov` reporter writes LCOV directly, no conversion needed. */
 export function pytestCoverageArgs(repoRoot: string, moduleLabel: string): string[] {
   if (!coverageEnabled()) return [];
   const file = join(coverageDir(repoRoot, "py"), `${coverageSlug(moduleLabel)}.lcov`);
   return ["--cov", `--cov-report=lcov:${file}`];
 }
 
-/** 📊️dotnet test coverage args (coverlet via `--collect`), appended when [[coverageEnabled]]; each project gets its own results-directory subfolder so concurrent projects don't clobber one another's report file. */
+/** 🔷️dotnet test coverage args (coverlet via `--collect`), appended when [[coverageEnabled]]; each project gets its own results-directory subfolder so concurrent projects don't clobber one another's report file. */
 export function dotnetCoverageArgs(repoRoot: string, moduleLabel: string): string[] {
   if (!coverageEnabled()) return [];
   const dir = join(coverageDir(repoRoot, "dotnet"), coverageSlug(moduleLabel));
@@ -114,7 +114,7 @@ export function summarizeCoverage(merged: Map<string, Map<number, number>>): Cov
   return { linesFound, linesHit, pct: linesFound === 0 ? 0 : (linesHit / linesFound) * 100, perFile };
 }
 
-/** 📊️Prints the worst-covered files and hard-fails (`process.exit(1)`) below `thresholdPct`. */
+/** 📓️Prints the worst-covered files and hard-fails (`process.exit(1)`) below `thresholdPct`. */
 export function enforceCoverageThreshold(summary: CoverageSummary, thresholdPct: number, worstCount = 25): void {
   console.log(`[coverage] ${summary.linesHit}/${summary.linesFound} lines (${summary.pct.toFixed(2)}%), threshold ${thresholdPct}%.`);
   if (summary.pct < thresholdPct) {

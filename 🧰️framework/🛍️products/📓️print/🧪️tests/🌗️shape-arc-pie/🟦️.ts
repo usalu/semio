@@ -38,7 +38,7 @@ function tokens(path: string | null): (number | string)[] {
 
 type ArcSpec = Readonly<{ innerRadius: number; outerRadius: number; startAngle: number; endAngle: number; padAngle?: number; padRadius?: number; cornerRadius?: number }>;
 
-/** 🔮️ The generator d3 builds for one arc specification. */
+/** 🏭️ The generator d3 builds for one arc specification. */
 function generator(spec: ArcSpec) {
   let built = arc<unknown>()
     .innerRadius(spec.innerRadius)
@@ -81,7 +81,7 @@ const PIES: Record<string, PieSpec> = {
   "all-zero": { value: [0, 0, 0], startAngle: 0, endAngle: 2 * Math.PI },
 };
 
-/** 🔮️ Start angles first, then end angles, in the data's own order. */
+/** 🏁️ Start angles first, then end angles, in the data's own order. */
 function angles(spec: PieSpec): number[] {
   let layout = pie<number>().startAngle(spec.startAngle).endAngle(spec.endAngle).padAngle(spec.padAngle ?? 0);
   if (spec.sort === "none") layout = layout.sortValues(null);
@@ -106,23 +106,23 @@ export default defineTestAdapter({
       oracle: () => ({
         projection: Object.fromEntries(Object.entries(ARCS).map(([tag, spec]) => [`arc/${tag}`, tokens(generator(spec)(undefined))])),
       }),
-      /** 🎯️ The same specifications through \SemioVizArc, drawing nothing. */
+      /** 🖍️ The same specifications through \SemioVizArc, drawing nothing. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "arc-centroid": {
-      /** 🔮️ d3's own centroid, which ignores padding and corners entirely. */
+      /** 🧲️ d3's own centroid, which ignores padding and corners entirely. */
       oracle: () => ({
         projection: Object.fromEntries(Object.entries(CENTROIDS).map(([tag, spec]) => [`centroid/${tag}`, grid(generator(spec).centroid(undefined))])),
       }),
-      /** 🎯️ \SemioVizArcCentroid after the same arcs. */
+      /** 📍️ \SemioVizArcCentroid after the same arcs. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
     "pie-angles": {
-      /** 🔮️ d3-pie's angles, in the data's order whatever the sort was. */
+      /** 🔃️ d3-pie's angles, in the data's order whatever the sort was. */
       oracle: () => ({
         projection: Object.fromEntries(Object.entries(PIES).map(([tag, spec]) => [`pie/${tag}`, angles(spec)])),
       }),
-      /** 🎯️ \SemioVizPie over the same values. */
+      /** 🥧️ \SemioVizPie over the same values. */
       subject: async (ctx: AdapterContext) => (await subject(ctx)),
     },
   },

@@ -1,4 +1,4 @@
-//! ⚖️ Runtime proof that both shooting editing lanes publish through their store factories: the document lane's paged `mutation_apply_preparation_factory` and the config lane's `config_apply_preparation_factory` each drive a real edit through the canonical sealer to `Prepared` and close under exactly quoted grants.
+//! ⚖️ Runtime proof that both shooting editing lanes publish through their store factories: the document lane's paged `cold_mutation_apply_preparation_factory` and the config lane's `config_apply_preparation_factory` each drive a real edit through the canonical sealer to `Prepared` and close under exactly quoted grants.
 use semio_framework_os_kernel as store;
 use semio_s_artifact_shooting_shooting::editor::shooting::config::{SetCamera, ShootingConfig, ShootingConfigMutation};
 use semio_s_artifact_shooting_shooting::standards::v1::subsets::any::schema::mutations::create_shot::CreateShot;
@@ -21,7 +21,7 @@ fn grant() -> store::os_store::one_item::ArtifactStoreOneItemGrant {
 /// 📄️ A structural document edit reaches `Prepared` through the paged document factory and its inverse deletes the created shot again.
 #[test]
 fn document_lane_create_shot_reaches_prepared_and_closes_under_quoted_grants() {
-    let factory: Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<ShootingSnapshot, ShootingMutation>> = store::mutation_apply_preparation_factory::<ShootingSnapshot, ShootingMutation>();
+    let factory: Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<ShootingSnapshot, ShootingMutation>> = store::cold_mutation_apply_preparation_factory::<ShootingSnapshot, ShootingMutation>();
     let shot = ShootingShot { id: "shot-1".into(), label: "Hero".into(), width: 1280, height: 720, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None };
     let mutation = ShootingMutation::CreateShot(CreateShot { shot: shot.clone(), index: None });
     let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, ShootingSnapshot::default(), mutation, 1 << 16, grant());

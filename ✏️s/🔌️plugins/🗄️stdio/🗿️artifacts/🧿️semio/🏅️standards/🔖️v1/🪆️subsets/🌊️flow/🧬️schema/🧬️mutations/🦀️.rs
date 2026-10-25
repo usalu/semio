@@ -116,7 +116,7 @@ pub fn diff_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlowSn
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
     Ok({
-    Mutation::inverse(mutation, base)?
+    ::semio_framework_os_kernel::ColdMutation::inverse(mutation, base)?
 
     })
 }

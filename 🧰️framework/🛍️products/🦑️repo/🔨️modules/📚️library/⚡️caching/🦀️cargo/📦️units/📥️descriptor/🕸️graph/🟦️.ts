@@ -1,12 +1,12 @@
 import{captureRustUnitInputV1}from"../../📋️plan/🟦️.ts";
 import{rustCompilerExecutionV2}from"../../🏗️compiler/💾️state/📍️layout/🟦️.ts";
-import{projectCargoRlibProfileV1,requireCargoRlibArgumentsV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🟦️.ts";
+import{projectCargoRlibProfileV1,requireCargoRlibArgumentsV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🟦️.ts";
 import compilerSchema from "./🧬️schema/📥️compiler.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {relative,resolve,isAbsolute,sep} from "node:path";
 import {createHash} from "node:crypto";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import type {CargoCompilationGraphV1,CargoCompilationUnitV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🟦️.ts";
+import type {CargoCompilationGraphV1,CargoCompilationUnitV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/🟦️.ts";
 import { readRustUnitV1, type RustUnitV1, type RustUnitInputV1 } from "../../🧬️definition/🟦️.ts";
 /** 🔌️ Supplies actual effective compiler/configuration observations; unsupported planning never invents defaults. */
 export interface CargoRustUnitMaterializationPortV1 {
@@ -27,7 +27,7 @@ export async function materializeCargoRustUnitsV1(graph:CargoCompilationGraphV1,
  checkResourceLeaseControl(control);return{units,unsupported:[...unsupported].map(([unit,refusal])=>({unit,...refusal})).sort((left,right)=>left.unit.localeCompare(right.unit))};
 }
 
-/** 🧷️ Keeps compiler flag token order while admitting equivalent Cargo flag/value syntax. */
+/** 🚩️ Keeps compiler flag token order while admitting equivalent Cargo flag/value syntax. */
 export function normalizeRustCompilerArgumentsV1(arguments_:readonly string[]):string[]{const result:string[]=[];for(let index=0;index<arguments_.length;index++){const value=arguments_[index]!;if(value==="-C"||value==="-Z"||value==="--edition"){const next=arguments_[++index];if(!next||next.startsWith("-"))throw Error("Complete compiler flag value evidence required");result.push(value+(value==="--edition"?"=":"")+next);}else result.push(value);}return result;}
 
 /** 🧵️ Retains actual custom cfg arguments separately from compiler-reported builtin predicates. */

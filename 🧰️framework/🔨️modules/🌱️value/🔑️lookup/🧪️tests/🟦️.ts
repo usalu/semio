@@ -20,6 +20,5 @@ test("exact key cursor agrees with SQLite opaque identity and original denied pa
    expect(owner.found??null).toBe(law.expected);
   }
  }
- console.log("[DEBUG] nine exact UTF8 lookups match independent SQLite binary identity on32/64-bit metadata widths, denied original pages and65537-byte prefixes");
  }finally{database.close();}
 });

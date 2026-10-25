@@ -38,7 +38,7 @@ impl Join {
     }
 }
 
-/// 🖊️ First-party stroke style — plain value fields, no `kurbo::Stroke` wrapper, so
+/// 🖌️ First-party stroke style — plain value fields, no `kurbo::Stroke` wrapper, so
 /// `wasm32-wasip2` never needs `kurbo` to build/measure/dispose one. `to_kurbo` (host-only,
 /// below) rebuilds a real `kurbo::Stroke` only at rasterization time, matching
 /// `kurbo::Stroke::new`'s own field defaults exactly.

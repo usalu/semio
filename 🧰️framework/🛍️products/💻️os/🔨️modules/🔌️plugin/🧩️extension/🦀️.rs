@@ -4,6 +4,11 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as pack;
 
+/// 🧮️ Weighs the allocator events that the paid-receipt laws of this crate's own test binary compare with their receipts.
+#[cfg(test)]
+#[global_allocator]
+static EXTENSION_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 #[path = "../💡️inference/🦀️.rs"]
 pub mod artifact_inference;
 #[path = "📨️invoke/⚠️failure/🦀️.rs"]

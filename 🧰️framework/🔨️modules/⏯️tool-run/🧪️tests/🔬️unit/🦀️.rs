@@ -441,7 +441,7 @@ fn definition_round_trips_through_serde_and_value_and_validates() {
     assert_eq!(invalid.validate(), Err(ToolRunDefinitionError::NoStages));
 }
 
-/// ⚖️ LAW: every `settingsPointers` row resolves to its fixture value over the fixture artifact, exactly as the
+/// 🎛️ LAW: every `settingsPointers` row resolves to its fixture value over the fixture artifact, exactly as the
 /// `serde_json` RFC 6901 implementation (`Value::pointer`, the oracle) resolves it; malformed pointers name nothing.
 #[test]
 fn settings_pointers_resolve_like_the_rfc_6901_oracle() {
@@ -750,7 +750,7 @@ fn tick_codec_enforces_the_tick_byte_cap() {
 }
 //#endregion 🔖️Tick
 
-/// ⚖️ LAW: a writer's pending payload makes a tick on its own, a later payload before `finish` replaces the earlier one,
+/// ✔️ LAW: a writer's pending payload makes a tick on its own, a later payload before `finish` replaces the earlier one,
 /// and `finish` hands it over once.
 #[test]
 fn writer_payload_is_the_latest_and_makes_a_tick() {
@@ -781,7 +781,7 @@ fn start_admission_follows_the_lane_law() {
     }
 }
 
-/// ⚖️ LAW: `panelGroups` — which keys name a run's panel group, and which runs a rendered panel adds for a host to reveal.
+/// 🗝️ LAW: `panelGroups` — which keys name a run's panel group, and which runs a rendered panel adds for a host to reveal.
 #[test]
 fn panel_group_keys_and_reveals_follow_the_fixture() {
     let law = fixture(lifecycle_text());

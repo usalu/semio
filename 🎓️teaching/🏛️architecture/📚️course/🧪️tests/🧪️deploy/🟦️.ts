@@ -16,8 +16,8 @@ import { mkdtempSync, realpathSync, readFileSync, rmSync, statSync, utimesSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { writeAssetArtifacts } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🏗️builder/📦️publication/🟦️.ts";
-import publication from "../../../../../🧰️framework/🔨️modules/🖼️assets/🏗️builder/📦️publication/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
+import { writeAssetArtifacts } from "../../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🏗️builder/📦️publication/🟦️.ts";
+import publication from "../../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🏗️builder/📦️publication/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts" with { type: "json" };
 import { scratch } from "./🧰️deploy-fixtures/🟦️.ts";
 import { registerCancellationAndStagingTests } from "./🛑️cancellation-and-staging/🟦️.ts";
 import { registerDockerContextAndImageTests } from "./🐳️docker-context-and-image/🟦️.ts";

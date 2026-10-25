@@ -127,7 +127,7 @@ fn sqlite_snapshot_terrain_explicit_native_schema_and_row_admission_precedes_wor
   let result=<GisTerrainSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |p|{if p.phase==store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative&&p.completed>0{native_work=true;}true},limited));
   assert!(result.is_err());assert!(!native_work);
   let mut native_work=false;
-  let limited=SqliteDatabaseLimits{max_schema_bytes:<GisTerrainSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA.len()-1,..limits};
+  let limited=SqliteDatabaseLimits{max_schema_bytes:<GisTerrainSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA.len()-1,..limits};
   let result=<GisTerrainSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |p|{if p.phase==store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative&&p.completed>0{native_work=true;}true},limited));
   assert!(result.is_err());assert!(!native_work);
  }

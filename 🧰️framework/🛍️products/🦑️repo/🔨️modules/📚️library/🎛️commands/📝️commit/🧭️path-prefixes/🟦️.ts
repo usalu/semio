@@ -64,7 +64,7 @@ export function assignChangedPathsToBundles(root: string, base: string, head: st
   return assigned;
 }
 
-/** 📂️Prefix set for a bundle: all range paths, inferred roots, and token-matching parents (renames). */
+/** 🔨️Prefix set for a bundle: all range paths, inferred roots, and token-matching parents (renames). */
 export function buildBundlePathPrefixSets(root: string, base: string, head: string, bundles: CommitBundleSection[]): string[][] {
   const assignments = assignChangedPathsToBundles(root, base, head, bundles);
   return bundles.map((bundle, i) => {
@@ -86,14 +86,14 @@ export function buildBundlePathPrefixSets(root: string, base: string, head: stri
   });
 }
 
-/** 📂️Whether a path belongs to a bundle (assigned path prefixes, else label token scoring). */
+/** 🗂️Whether a path belongs to a bundle (assigned path prefixes, else label token scoring). */
 export function pathMatchesBundleIndex(path: string, bundleIndex: number, prefixSets: string[][], bundles: CommitBundleSection[]): boolean {
   const prefixes = prefixSets[bundleIndex] ?? [];
   if (prefixes.length > 0) return pathUnderPrefixes(path, prefixes);
   return assignPathToBundleIndex(bundles, path) === bundleIndex;
 }
 
-/** 📂️Bundle indices that own a numstat row (0 or 1 after validation). */
+/** 🔎️Bundle indices that own a numstat row (0 or 1 after validation). */
 export function resolveBundleIndicesForNumstatRow(pathField: string, prefixSets: string[][], bundles: CommitBundleSection[]): number[] {
   const matched = new Set<number>();
   for (const path of pathsFromNumstatRow(pathField)) {

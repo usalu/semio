@@ -2,7 +2,7 @@
 
 use super::*;
 
-/// 🧮️ Clones bounded bitwise pages or typed rows; only slots before `index` own initialized values until the final paid array move resets that prefix.
+/// 📃️ Clones bounded bitwise pages or typed rows; only slots before `index` own initialized values until the final paid array move resets that prefix.
 pub struct ArrayCursor<T: RetainedClone, const N: usize> {
     slots: [std::mem::MaybeUninit<T>; N],
     pub(super) child: ManuallyDrop<Option<T::Cursor>>,

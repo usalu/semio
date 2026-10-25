@@ -27,7 +27,6 @@ test("original receiving Native route selects the actual generic IO owner mounte
  const {createNativeNxCallerCapabilitiesV1}=await import(resolve(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts"));
  const selected=["run",nativeOwner.project+":"+nativeOwner.target,"--skip-nx-cache","--excludeTaskDependencies"],authority=createNativeNxCallerCapabilitiesV1(root,["nx",...selected],selected,process.env);
  expect(validateCaller(authority)).toBe(true);expect(validateJsonSchemaSubset(callerSchema,authority)).toEqual([]);expect(authority.arguments).toEqual(["nx",...selected]);expect(authority.selection).toEqual(authority.arguments);
- console.error("[DEBUG] Original receiving native route and SQLite select six real mounted OS kernel laws through the owning Nx target and original native caller; actual allocator behavior requires the Native run");
 
 });
 test("original receiving result and terminal child shell have closed independent authority",()=>{

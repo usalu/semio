@@ -3,6 +3,11 @@
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 
+/// 🧮️ Weighs the allocator events that the paid-receipt laws of this crate's own test binary compare with their receipts.
+#[cfg(test)]
+#[global_allocator]
+static RUNTIME_OPS_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 #[path = "🛡️wire-limits/🦀️.rs"]
 pub mod ops_wire_limits;
 #[path = "📄️document/🦀️.rs"]

@@ -1,9 +1,9 @@
-/** 🚚️ The transport of the server product's TypeScript twin: error bodies, blob and app install receipts, the wire and call errors, and the owned transport interface with its fetch implementation.
+/** 🛍️ The transport of the server product's TypeScript twin: error bodies, blob and app install receipts, the wire and call errors, and the owned transport interface with its fetch implementation.
  *
  * @see ../🟦️.ts — the TypeScript twin of the server product's wire contract
  */
 //#region 🔖️Transport
-/** 🧾️ The JSON body every gateway error renders as, so a client never parses a status line. A refusal that passes
+/** 🚥️ The JSON body every gateway error renders as, so a client never parses a status line. A refusal that passes
  * (`throttled`, `overloaded`) names the wait in milliseconds after which the request is worth repeating. A `throttled`
  * refusal names an `allowance` when what is spent is not the address's allowance of requests but a named one the
  * instance counts a class of commands against — those that make it keep something, like a registration: the request

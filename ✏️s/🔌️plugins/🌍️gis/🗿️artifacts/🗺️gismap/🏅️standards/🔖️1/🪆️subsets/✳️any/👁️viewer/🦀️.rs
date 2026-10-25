@@ -175,21 +175,7 @@ impl semio_framework_plugin::ToolJobFactory for GisMapViewCommandJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         gis_map_view_contract()
     }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > GIS_MAP_VIEW_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("the bounded gis map view command rejects an oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: GIS_MAP_VIEW_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for GisMapViewCommandJobFactory {
@@ -278,42 +264,16 @@ impl ArtifactViewer for GisMapViewer {
         registry.register(GisMapViewCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<ViewerApp<Self>>) -> Result<Option<semio_framework_plugin::ToolOperationSpec>, Fault> {
-        if !GIS_MAP_VIEW_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+        if !GIS_MAP_VIEW_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.action_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "the gis map view command does not match its exact registered tool"));
+        if original.command.action_id() != original.tool_id {
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the gis map view command does not match its exact registered tool").into());
         }
-        let tool_id = request.command.action_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, gis_map_view_reduce, gis_map_view_extent));
-        let operation_context = AppOperationContext { retained: request.retained,
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id,
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            GisMapViewCommand::action_id,
-            GIS_MAP_VIEW_RAW_BYTES,
-            GIS_MAP_VIEW_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        let tool_id = original.command.action_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, GisMapViewCommand::action_id, GIS_MAP_VIEW_RAW_BYTES, GIS_MAP_VIEW_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, gis_map_view_reduce, gis_map_view_extent))
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {

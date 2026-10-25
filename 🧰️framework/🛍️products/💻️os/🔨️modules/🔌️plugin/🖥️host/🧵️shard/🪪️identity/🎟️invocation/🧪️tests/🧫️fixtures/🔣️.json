@@ -4,12 +4,6 @@
   "schedulingSource": "caller.resource-budget",
   "retirementRecipient": "original.shard-native-encode",
   "sameOriginalIdentity": true,
-  "sameOriginalRecipient": true,
-  "closedRecipientRefused": true,
-  "refusedHeap": [
-    0,
-    0
-  ],
   "spent": {
     "copiedItems": 0,
     "copiedBytes": 0,
@@ -27,6 +21,11 @@
         "maximumCapacityBytes": 65536,
         "maximumReleaseBytes": 262144,
         "maximumDepth": 64
+      },
+      "work": {
+        "clockBinding": 1171,
+        "absoluteDeadlineUs": 1000000,
+        "fuel": 64
       }
     },
     "budget": {

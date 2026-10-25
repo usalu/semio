@@ -7,12 +7,12 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { I18nextProvider } from "react-i18next";
-import i18next from "i18next";
 import { type StoragePort, createBrowserStoragePort } from "../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { ephemeralBox, ephemeralSet } from "@semio-tech/framework-transient";
 import { type UiLocale } from "../📚️I18n/🟦️.tsx";
 import { createShellI18nInstance } from "../../🌐️i18n/🟦️.ts";
+import { type UiI18nInstance } from "../../🌐️i18n/🔡️instance/🟦️.ts";
+import { UiI18nProvider } from "../📚️I18n/⚛️context/🟦️.ts";
 import { type MergeMode } from "@semio-tech/framework-interaction";
 // #endregion 🔌️Adapters
 
@@ -47,7 +47,7 @@ function createSelectionModeStore(): SelectionModeStore {
   };
 }
 
-/** 🐚️ Per-mounted-`FrameworkOsShell` scope — the seam every document-global mechanism (element
+/** 🧰️ Per-mounted-`FrameworkOsShell` scope — the seam every document-global mechanism (element
  * ids, theming, i18n, keybindings, storage, portals, ...) threads through so several shells can coexist
  * on one page. Populated incrementally: theming/i18n/keyboard fields land with their own waves. */
 export interface ShellScope {
@@ -66,15 +66,15 @@ export interface ShellScope {
   /** 🔎️ `querySelectorAll` scoped to this shell's root, replacing document-wide lookups. */
   queryAll(selector: string): HTMLElement[];
   readonly selection: SelectionModeStore;
-  /** 🥚️ This shell's own i18next instance (see `createShellI18nInstance`) — `useUiTranslation`/`useLabel`
-   * pick it up automatically via the nearest `I18nextProvider` ancestor (`FrameworkOsShell` renders one
+  /** 🥚️ This shell's own translation instance (see `createShellI18nInstance`) — `useUiTranslation`/`useLabel`
+   * pick it up automatically via the nearest {@link UiI18nProvider} ancestor (`ShellScopeProvider` renders one
    * around its subtree), so no call site outside `ShellScope` plumbing itself needs to change. */
-  readonly i18n: typeof i18next;
+  readonly i18n: UiI18nInstance;
 }
 
 const shellScopeAutoIdSeq = ephemeralBox("framework.modules.ui.elements.core.ShellScope.component.tsx.shellScopeAutoIdSeq", 0);
 
-/** 🐚️ Creates a fresh {@link ShellScope}. Call once per shell mount (e.g. from a lazy `useState`
+/** 🆕️ Creates a fresh {@link ShellScope}. Call once per shell mount (e.g. from a lazy `useState`
  * initializer) — the scope's identity must stay stable for the shell instance's lifetime. */
 export function createShellScope(options: { readonly shellId?: string; readonly storage: StoragePort; readonly ownsPage?: boolean; readonly initialLocale: UiLocale }): ShellScope {
   const shellId = options.shellId ?? `shell-${(shellScopeAutoIdSeq.current += 1)}`;
@@ -108,14 +108,14 @@ function pageShellScopeContext(): React.Context<ShellScope | null> {
 
 export const ShellScopeContext = pageShellScopeContext();
 
-/** 🐚️ Also wraps `children` in an `I18nextProvider` bound to `scope.i18n` — the only wiring
- * `useUiTranslation`/`useLabel` (which call plain `useTranslation()`) need to resolve this shell's own
- * translations instead of the shared `uiI18n` singleton; no call site elsewhere changes. */
+/** 🌐️ Also wraps `children` in a {@link UiI18nProvider} bound to `scope.i18n` — the only wiring
+ * `useUiTranslation`/`useLabel` need to resolve this shell's own translations instead of the shared
+ * `uiI18n` instance; no call site elsewhere changes. */
 export function ShellScopeProvider({ scope, children }: { readonly scope: ShellScope; readonly children: React.ReactNode }): React.ReactElement {
-  return React.createElement(ShellScopeContext.Provider, { value: scope }, React.createElement(I18nextProvider, { i18n: scope.i18n }, children));
+  return React.createElement(ShellScopeContext.Provider, { value: scope }, React.createElement(UiI18nProvider, { instance: scope.i18n }, children));
 }
 
-/** 🐚️ Reads the enclosing shell's scope — throws outside a {@link ShellScopeProvider} rather than
+/** 📖️ Reads the enclosing shell's scope — throws outside a {@link ShellScopeProvider} rather than
  * silently falling back to page-global state, so a missing provider fails loudly during development. */
 export function useShellScope(): ShellScope {
   const scope = React.useContext(ShellScopeContext);
@@ -123,13 +123,13 @@ export function useShellScope(): ShellScope {
   return scope;
 }
 
-/** 🐚️ Like {@link useShellScope} but returns `null` outside a provider — for the rare leaf element
+/** ❓️ Like {@link useShellScope} but returns `null` outside a provider — for the rare leaf element
  * usable both inside a shell and standalone (e.g. a docs-site embed of a single component). */
 export function useShellScopeOptional(): ShellScope | null {
   return React.useContext(ShellScopeContext);
 }
 
-/** 🐚️ Falls back to a plain (unnamespaced) browser storage port for the handful of standalone
+/** 🗄️ Falls back to a plain (unnamespaced) browser storage port for the handful of standalone
  * hooks (`useUiTerminology`, `setUiLocale`, …) usable both inside a `ShellScopeProvider` and outside one
  * (a "TS-native product" that hasn't been wrapped yet) — matches pre-scoping behavior for the latter. */
 export function shellScopeStorageOrBrowserFallback(scope: ShellScope | null): StoragePort {
@@ -159,7 +159,7 @@ export function useShellFloatingSurfaceHost(): HTMLElement | null {
 // #endregion 🐚️ShellScope
 
 // #region 🐚️ShellActivity
-/** 🐚️ Which registered shell root most recently received a `pointerdown`/`focusin` — generalizes
+/** 🎯️ Which registered shell root most recently received a `pointerdown`/`focusin` — generalizes
  * the `🪟️WindowChrome` region's `surfaceActiveRoots` tracker (which does the same thing for
  * panel/pane/window activity within ONE page) to the shell level, so a page hosting several mounted
  * shells can tell which one the user is actually interacting with. */
@@ -194,7 +194,7 @@ function installShellActivityListeners(): void {
   document.addEventListener("focusin", onActivity, true);
 }
 
-/** 🐚️ Registers `root` as a candidate "active shell" — called once per mounted `FrameworkOsShell`.
+/** 📌️ Registers `root` as a candidate "active shell" — called once per mounted `FrameworkOsShell`.
  * The first (and, on a single-shell page, only) registered root starts active so keyboard dispatch works
  * immediately, before any pointer/focus activity. Returns an unregister function. */
 export function registerShellActivityRoot(root: HTMLElement): () => void {
@@ -207,13 +207,13 @@ export function registerShellActivityRoot(root: HTMLElement): () => void {
   };
 }
 
-/** 🐚️ The shell root most recently interacted with, among registered roots — `null` before any
+/** 👑️ The shell root most recently interacted with, among registered roots — `null` before any
  * shell has registered. */
 export function activeShellRoot(): HTMLElement | null {
   return activeShellRootValue.current;
 }
 
-/** 🐚️ True when `rootRef.current` is the page's {@link activeShellRoot} — re-renders on activity
+/** ✅️ True when `rootRef.current` is the page's {@link activeShellRoot} — re-renders on activity
  * changes so shell-gated hotkeys (introduction Next/Back/Skip, …) enable/disable with focus instead of
  * reading a stale snapshot once at mount. Outside any registered shell, returns true so single-shell /
  * storybook call sites keep working without an activity root. */
@@ -235,7 +235,7 @@ export function useIsActiveShellRoot(rootRef: { readonly current: HTMLElement | 
 }
 
 /**
- * 🐚️ A `document`-level `keydown` listener gated to one shell: fires `handler` only when the
+ * ⌨️ A `document`-level `keydown` listener gated to one shell: fires `handler` only when the
  * event's target is inside `rootRef.current`, or — for a keystroke that lands on `document`/`body` with
  * nothing focused (the common case for a global hotkey) — when this shell is {@link activeShellRoot}.
  * Replaces the old pattern of an unconditional `window`/`document` keydown listener per shell, under
@@ -264,6 +264,6 @@ export function useShellKeydown(rootRef: { readonly current: HTMLElement | null 
   }, [root, ...deps]);
 }
 
-/** 🐚️ Stable no-op root for {@link useShellKeydown} call sites rendered outside a `ShellScopeProvider` (unit tests, storybook) — the hook's `if (!root) return;` guard makes this permanently inert rather than throwing. */
+/** 🕳️ Stable no-op root for {@link useShellKeydown} call sites rendered outside a `ShellScopeProvider` (unit tests, storybook) — the hook's `if (!root) return;` guard makes this permanently inert rather than throwing. */
 export const NULL_SHELL_ROOT_REF: { readonly current: HTMLElement | null } = { current: null };
 // #endregion 🐚️ShellActivity

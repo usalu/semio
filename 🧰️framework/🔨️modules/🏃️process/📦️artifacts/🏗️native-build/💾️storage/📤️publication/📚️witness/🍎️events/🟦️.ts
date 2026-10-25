@@ -34,8 +34,8 @@ export async function observeNativeVolumeEventServiceV1(root:string,control:Reso
 
 
 import { nativeVolumeEventPreparationSourceV1, nativeVolumeEventPreparationProgramV1 } from "./🍞️bun/🟦️.ts";
-import { runtimeSupportsV1 } from "../../../../../../../⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeNativeSystemV1 } from "../../../../../../../⚙️runtime/🧲️native/🟦️.ts";
+import { runtimeSupportsV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeNativeSystemV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧲️native/🟦️.ts";
 
 /** 🔧️ Builds one closed finite current-thread service child without granting publication authority. */
 export function nativeVolumeEventPreparationCommandV1(device:number):Readonly<{program:string;args:readonly string[];input:string}>{if(process.platform!==schema.definitions.ServicePreparationProtocol.const.platform||!runtimeSupportsV1("ffi")||!Number.isSafeInteger(device)||device<1||device>2147483647)throw Error("Actual representable Darwin device preparation required");return Object.freeze({program:nativeVolumeEventPreparationProgramV1(),args:Object.freeze(["-e","const policy="+JSON.stringify(schema.definitions.ServicePreparationProtocol.const)+";\n"+nativeVolumeEventPreparationSourceV1]),input:JSON.stringify({version:1,device})+"\n"});}

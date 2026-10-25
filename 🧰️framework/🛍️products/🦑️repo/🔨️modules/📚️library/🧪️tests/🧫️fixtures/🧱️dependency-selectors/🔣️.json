@@ -1,0 +1,524 @@
+{
+  "version": 1,
+  "graphCases": [
+    {
+      "id": "circular-flag-reports-one-representative-edge-per-cycle",
+      "files": {
+        "case/a.ts": "import { b } from \"./b\";\nexport const a = () => b;\n",
+        "case/b.ts": "import { a } from \"./a\";\nexport const b = () => a;\n",
+        "case/c.ts": "export const c = 1;\n"
+      },
+      "entries": [
+        "case/a.ts",
+        "case/c.ts"
+      ],
+      "rule": {
+        "name": "no-circular",
+        "severity": "error",
+        "from": {
+          "pathNot": "(^|/)tests/"
+        },
+        "to": {
+          "circular": true,
+          "pathNot": "(^|/)tests/"
+        }
+      },
+      "expected": [
+        [
+          "case/a.ts",
+          "case/b.ts"
+        ]
+      ]
+    },
+    {
+      "id": "three-member-cycle-is-one-reported-cycle",
+      "files": {
+        "case/a.ts": "import \"./b\";\nexport {};\n",
+        "case/b.ts": "import \"./c\";\nexport {};\n",
+        "case/c.ts": "import \"./a\";\nexport {};\n"
+      },
+      "entries": [
+        "case/a.ts"
+      ],
+      "rule": {
+        "name": "no-circular",
+        "severity": "error",
+        "from": {
+          "pathNot": "(^|/)tests/"
+        },
+        "to": {
+          "circular": true,
+          "pathNot": "(^|/)tests/"
+        }
+      },
+      "expected": [
+        [
+          "case/a.ts",
+          "case/b.ts"
+        ]
+      ]
+    },
+    {
+      "id": "cycle-through-an-exempt-test-leaf-is-not-a-production-cycle",
+      "files": {
+        "case/a.ts": "import \"./tests/t\";\nexport {};\n",
+        "case/tests/t.ts": "import \"../a\";\nexport {};\n"
+      },
+      "entries": [
+        "case/a.ts"
+      ],
+      "rule": {
+        "name": "no-circular",
+        "severity": "error",
+        "from": {
+          "pathNot": "(^|/)tests/"
+        },
+        "to": {
+          "circular": true,
+          "pathNot": "(^|/)tests/"
+        }
+      },
+      "expected": []
+    },
+    {
+      "id": "open-from-selector-and-local-dependency-types",
+      "files": {
+        "case/x.ts": "import \"./y\";\nexport {};\n",
+        "case/y.ts": "export const y = 1;\n"
+      },
+      "entries": [
+        "case/x.ts"
+      ],
+      "rule": {
+        "name": "no-local-to-y",
+        "severity": "error",
+        "from": {},
+        "to": {
+          "path": "^case/y",
+          "dependencyTypes": [
+            "local"
+          ],
+          "dependencyTypesNot": [
+            "aliased-workspace"
+          ]
+        }
+      },
+      "expected": [
+        [
+          "case/x.ts",
+          "case/y.ts"
+        ]
+      ]
+    },
+    {
+      "id": "dependency-types-not-exempts-the-listed-type",
+      "files": {
+        "case/x.ts": "import \"./y\";\nexport {};\n",
+        "case/y.ts": "export const y = 1;\n"
+      },
+      "entries": [
+        "case/x.ts"
+      ],
+      "rule": {
+        "name": "no-non-local-to-y",
+        "severity": "error",
+        "from": {},
+        "to": {
+          "path": "^case/y",
+          "dependencyTypesNot": [
+            "local"
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "id": "unlisted-package-is-an-unlisted-dependency-type",
+      "files": {
+        "case/package.json": "{\"type\":\"module\",\"dependencies\":{}}",
+        "case/node_modules/ghost/package.json": "{\"name\":\"ghost\",\"type\":\"module\",\"main\":\"./index.js\"}",
+        "case/node_modules/ghost/index.js": "export const ghost = 1;\n",
+        "case/x.ts": "import { ghost } from \"ghost\";\nexport const x = ghost;\n"
+      },
+      "entries": [
+        "case/x.ts"
+      ],
+      "rule": {
+        "name": "not-to-unlisted",
+        "severity": "error",
+        "from": {},
+        "to": {
+          "dependencyTypes": [
+            "npm-no-pkg",
+            "npm-unknown"
+          ]
+        }
+      },
+      "expected": [
+        [
+          "case/x.ts",
+          "case/node_modules/ghost/index.js"
+        ]
+      ]
+    },
+    {
+      "id": "target-only-path-not-selects-everything-outside-the-allowed-set",
+      "files": {
+        "r/host.ts": "import \"../ok/fine\";\nimport \"../other/stray\";\nimport \"./own\";\nexport {};\n",
+        "r/own.ts": "export const own = 1;\n",
+        "ok/fine.ts": "export const fine = 1;\n",
+        "other/stray.ts": "export const stray = 1;\n"
+      },
+      "entries": [
+        "r/host.ts"
+      ],
+      "rule": {
+        "name": "host-only-allowed",
+        "severity": "error",
+        "from": {
+          "path": "^r/"
+        },
+        "to": {
+          "pathNot": "^r/|^ok/"
+        }
+      },
+      "expected": [
+        [
+          "r/host.ts",
+          "other/stray.ts"
+        ]
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "id": "rule-selecting-nothing",
+      "rule": {
+        "name": "n",
+        "severity": "error",
+        "from": {},
+        "to": {}
+      }
+    },
+    {
+      "id": "non-boolean-circular",
+      "rule": {
+        "name": "n",
+        "severity": "error",
+        "from": {},
+        "to": {
+          "circular": "yes"
+        }
+      }
+    },
+    {
+      "id": "empty-dependency-types",
+      "rule": {
+        "name": "n",
+        "severity": "error",
+        "from": {},
+        "to": {
+          "dependencyTypes": []
+        }
+      }
+    },
+    {
+      "id": "undeclared-selector",
+      "rule": {
+        "name": "n",
+        "severity": "error",
+        "from": {},
+        "to": {
+          "license": "MIT"
+        }
+      }
+    },
+    {
+      "id": "types-on-the-source-side",
+      "rule": {
+        "name": "n",
+        "severity": "error",
+        "from": {
+          "dependencyTypes": [
+            "local"
+          ]
+        },
+        "to": {
+          "path": "^x"
+        }
+      }
+    },
+    {
+      "id": "empty-path-list",
+      "rule": {
+        "name": "n",
+        "severity": "error",
+        "from": {
+          "path": []
+        },
+        "to": {
+          "path": "^x"
+        }
+      }
+    },
+    {
+      "id": "warning-severity",
+      "rule": {
+        "name": "n",
+        "severity": "warn",
+        "from": {},
+        "to": {
+          "path": "^x"
+        }
+      }
+    },
+    {
+      "id": "invalid-pattern",
+      "rule": {
+        "name": "n",
+        "severity": "error",
+        "from": {
+          "path": "("
+        },
+        "to": {
+          "path": "^x"
+        }
+      }
+    }
+  ],
+  "reportCases": [
+    {
+      "id": "declared-build-output-that-is-absent-terminates-the-edge",
+      "exports": {
+        ".": "./dist/main.js",
+        "./view": "./view.ts",
+        "./subsets/base/schema": "./schema.ts"
+      },
+      "modules": [
+        {
+          "source": "pkg/a.ts",
+          "dependencies": [
+            {
+              "module": "@semio-tech/x",
+              "resolved": "@semio-tech/x",
+              "couldNotResolve": true,
+              "followable": false,
+              "dependencyTypes": [
+                "unknown"
+              ],
+              "circular": false
+            }
+          ]
+        },
+        {
+          "source": "pkg/x/view.ts",
+          "dependencies": []
+        },
+        {
+          "source": "pkg/x/schema.ts",
+          "dependencies": []
+        }
+      ],
+      "rule": {
+        "name": "to-base-subset",
+        "severity": "error",
+        "from": {
+          "path": "^pkg/a"
+        },
+        "to": {
+          "path": "subsets/base"
+        }
+      },
+      "accept": true,
+      "edges": []
+    },
+    {
+      "id": "bundler-query-on-a-declared-source-export-is-admitted",
+      "exports": {
+        ".": "./dist/main.js",
+        "./view": "./view.ts",
+        "./subsets/base/schema": "./schema.ts"
+      },
+      "modules": [
+        {
+          "source": "pkg/a.ts",
+          "dependencies": [
+            {
+              "module": "@semio-tech/x/view?worker&url",
+              "resolved": "@semio-tech/x/view?worker&url",
+              "couldNotResolve": true,
+              "followable": false,
+              "dependencyTypes": [
+                "unknown"
+              ],
+              "circular": false
+            }
+          ]
+        },
+        {
+          "source": "pkg/x/view.ts",
+          "dependencies": []
+        },
+        {
+          "source": "pkg/x/schema.ts",
+          "dependencies": []
+        }
+      ],
+      "rule": {
+        "name": "to-base-subset",
+        "severity": "error",
+        "from": {
+          "path": "^pkg/a"
+        },
+        "to": {
+          "path": "subsets/base"
+        }
+      },
+      "accept": true,
+      "edges": []
+    },
+    {
+      "id": "unresolved-declared-source-export-without-query-is-refused",
+      "exports": {
+        ".": "./dist/main.js",
+        "./view": "./view.ts",
+        "./subsets/base/schema": "./schema.ts"
+      },
+      "modules": [
+        {
+          "source": "pkg/a.ts",
+          "dependencies": [
+            {
+              "module": "@semio-tech/x/view",
+              "resolved": "@semio-tech/x/view",
+              "couldNotResolve": true,
+              "followable": false,
+              "dependencyTypes": [
+                "unknown"
+              ],
+              "circular": false
+            }
+          ]
+        },
+        {
+          "source": "pkg/x/view.ts",
+          "dependencies": []
+        },
+        {
+          "source": "pkg/x/schema.ts",
+          "dependencies": []
+        }
+      ],
+      "rule": {
+        "name": "to-base-subset",
+        "severity": "error",
+        "from": {
+          "path": "^pkg/a"
+        },
+        "to": {
+          "path": "subsets/base"
+        }
+      },
+      "accept": false,
+      "edges": []
+    },
+    {
+      "id": "a-package-specifier-never-matches-path-rules-when-the-resolver-resolved-it",
+      "exports": {
+        ".": "./dist/main.js",
+        "./view": "./view.ts",
+        "./subsets/base/schema": "./schema.ts"
+      },
+      "modules": [
+        {
+          "source": "pkg/a.ts",
+          "dependencies": [
+            {
+              "module": "@semio-tech/x/subsets/base/schema",
+              "resolved": "pkg/x/schema.ts",
+              "couldNotResolve": false,
+              "followable": true,
+              "dependencyTypes": [
+                "local"
+              ],
+              "circular": false
+            }
+          ]
+        },
+        {
+          "source": "pkg/x/view.ts",
+          "dependencies": []
+        },
+        {
+          "source": "pkg/x/schema.ts",
+          "dependencies": []
+        }
+      ],
+      "rule": {
+        "name": "to-base-subset",
+        "severity": "error",
+        "from": {
+          "path": "^pkg/a"
+        },
+        "to": {
+          "path": "subsets/base"
+        }
+      },
+      "accept": true,
+      "edges": []
+    },
+    {
+      "id": "the-resolved-path-still-matches-path-rules",
+      "exports": {
+        ".": "./dist/main.js",
+        "./view": "./view.ts",
+        "./subsets/base/schema": "./schema.ts"
+      },
+      "modules": [
+        {
+          "source": "pkg/a.ts",
+          "dependencies": [
+            {
+              "module": "../x/schema",
+              "resolved": "pkg/x/subsets/base/schema.ts",
+              "couldNotResolve": false,
+              "followable": true,
+              "dependencyTypes": [
+                "local"
+              ],
+              "circular": false
+            }
+          ]
+        },
+        {
+          "source": "pkg/x/view.ts",
+          "dependencies": []
+        },
+        {
+          "source": "pkg/x/schema.ts",
+          "dependencies": []
+        }
+      ],
+      "rule": {
+        "name": "to-base-subset",
+        "severity": "error",
+        "from": {
+          "path": "^pkg/a"
+        },
+        "to": {
+          "path": "subsets/base"
+        }
+      },
+      "accept": true,
+      "edges": [
+        [
+          "pkg/a.ts",
+          "pkg/x/subsets/base/schema.ts"
+        ]
+      ],
+      "extraSources": [
+        "pkg/x/subsets/base/schema.ts"
+      ]
+    }
+  ]
+}

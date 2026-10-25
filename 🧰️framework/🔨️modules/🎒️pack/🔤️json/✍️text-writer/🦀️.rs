@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️Writer
-/// ✍️ Writes `value` as compact JSON.
+/// 📝️ Writes `value` as compact JSON.
 // 🚫️async: R9 pure in-memory format, no I/O.
 pub fn to_string(value: &Value) -> String {
     let mut out = String::new();
@@ -11,7 +11,7 @@ pub fn to_string(value: &Value) -> String {
     out
 }
 
-/// ✍️ Writes `value` as 2-space-indented JSON, matching `serde_json::to_string_pretty`'s own
+/// 🪐️ Writes `value` as 2-space-indented JSON, matching `serde_json::to_string_pretty`'s own
 /// layout (`": "` after object keys, one array/object member per line, no trailing newline) — the
 /// `serde_json::to_string_pretty` replacement every human-facing JSON view (an example-document
 /// viewer, an exported fixture, a rule inspector) still needs even after its call site stops
@@ -104,7 +104,7 @@ fn write_value(value: &Value, out: &mut String) {
     }
 }
 
-/// ✍️ Escapes `"`, `\`, and control characters (`\b \f \n \r \t` shorthands, `\u00XX` otherwise);
+/// 🎛️ Escapes `"`, `\`, and control characters (`\b \f \n \r \t` shorthands, `\u00XX` otherwise);
 /// everything else — including non-ASCII — passes through unescaped, matching `serde_json`'s
 /// default (`ensure_ascii`-off) writer.
 fn write_string(text: &str, out: &mut String) {
@@ -142,7 +142,7 @@ fn write_number(number: Number, out: &mut String) {
     }
 }
 
-/// ✍️ `serde_json`'s own (`zmij`-based) fixed/exponential split for `f64`: fixed notation for
+/// 🔧️ `serde_json`'s own (`zmij`-based) fixed/exponential split for `f64`: fixed notation for
 /// `-5 <= exponent <= 15` on the leading-digit decimal exponent, exponential otherwise — traced
 /// by hand from `zmij 1.0.21`'s `write<Float>` (`~/.cargo/registry/…/zmij-1.0.21/src/lib.rs`,
 /// the `(-5..=15).contains(&dec_exp)` guard) and confirmed against the pinned resolved version in

@@ -106,7 +106,7 @@ pub(super) const RUN_VERSION: u8 = 1;
 
 /// 📐️ A run header's parsed fields plus how many bytes of `body` it occupied, so the caller
 /// knows where the entry stream starts.
-struct RunHeader {
+pub(super) struct RunHeader {
     pub(super) entry_count: u64,
 }
 

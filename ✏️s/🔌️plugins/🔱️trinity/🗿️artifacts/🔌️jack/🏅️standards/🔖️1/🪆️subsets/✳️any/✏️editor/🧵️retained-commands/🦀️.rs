@@ -80,21 +80,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     fn execution_contract(&self) -> ToolExecutionContract {
         jack_retained_config_contract()
     }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > JACK_RETAINED_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("Jack retained config command rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: JACK_RETAINED_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ArtifactOwnedToolJobFactory for JackRetainedWindowConfigJobFactory<C> {
@@ -131,21 +117,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     fn execution_contract(&self) -> ToolExecutionContract {
         jack_retained_config_contract()
     }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > JACK_RETAINED_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("Jack retained transient command rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: JACK_RETAINED_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ArtifactOwnedToolJobFactory for JackRetainedTransientJobFactory<C> {
@@ -274,21 +246,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     fn execution_contract(&self) -> ToolExecutionContract {
         jack_retained_document_contract()
     }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > JACK_RETAINED_DOCUMENT_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("Jack retained document command rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: JACK_RETAINED_DOCUMENT_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ArtifactOwnedToolJobFactory for JackRetainedDocumentJobFactory<C> {

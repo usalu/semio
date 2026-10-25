@@ -34,7 +34,7 @@ fn execute<T:RetainedClone+Serialize+DeserializeOwned>(row:&serde_json::Value,po
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
             let denied=[Some(RetainedCloneGrant{maximum_items:0,..grant}),(demand.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant}),(demand.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant}),(demand.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant}),(demand.depth>0).then_some(RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant})];
             for denied in denied.into_iter().flatten(){
-                let(result,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(), policy["maximumCopyBytes"].as_u64().unwrap() as usize, denied));assert_eq!(heap,(0,0),"[DEBUG] denied compound row={} cut={cut:?} turn={turn} demand={demand:?} granted={grant:?} denied={denied:?} result={:?}",row["name"],result.as_ref().map(|step|step.progress()).map_err(|error|(&error.kind,error.message.as_ref())));
+                let(result,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(), policy["maximumCopyBytes"].as_u64().unwrap() as usize, denied));assert_eq!(heap,(0,0),"denied compound row={} cut={cut:?} turn={turn} demand={demand:?} granted={grant:?} denied={denied:?} result={:?}",row["name"],result.as_ref().map(|step|step.progress()).map_err(|error|(&error.kind,error.message.as_ref())));
                 match result{Ok(step)=>assert_eq!(step.progress(),Default::default(),"denied compound row={} cut={cut:?} turn={turn} demand={demand:?} grant={grant:?} denied={denied:?}",row["name"]),Err(error)=>assert_eq!(error.kind,ValueRefusalKind::DepthLimit)}
                 assert_eq!(cursor.advance_demands(source.borrow(),policy["maximumCopyBytes"].as_u64().unwrap()as usize)?,demand,"denied action keeps exact source-bound frontier");
             }
@@ -58,7 +58,6 @@ fn execute<T:RetainedClone+Serialize+DeserializeOwned>(row:&serde_json::Value,po
 fn law<T:RetainedClone+Serialize+DeserializeOwned>(row:&serde_json::Value,policy:&serde_json::Value){
     let(output,turns)=execute::<T>(row,policy,None).unwrap();assert_eq!(output.as_ref(),Some(&row["source"]));
     for cut in 0..=turns+1{let(actual,_)=execute::<T>(row,policy,Some(cut)).unwrap();assert_eq!(actual.is_some(),cut>=turns);}
-    eprintln!("[DEBUG] Compound original clone {} turns={turns} exact next-action quotes, denied axes, Serde output, canceled partial/complete owners terminal",row["name"]);
 }
 
 #[test]

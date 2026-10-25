@@ -225,7 +225,7 @@ impl SceneBuilder {
         }
     }
 
-    /// 〰️ Overlay counterpart of [`Self::push_dashed_line`]; the wgpu target's overlay variant had the
+    /// ➰️ Overlay counterpart of [`Self::push_dashed_line`]; the wgpu target's overlay variant had the
     /// same dropped-future bug against `push_line_overlay`, fixed the same way.
     pub fn push_dashed_line_overlay(&mut self, start: [f32; 2], end: [f32; 2], color: [f32; 4], width: f32, dash: f32, gap: f32) {
         for (sx0, sy0, sx1, sy1) in tessellate::dashed_line_segments(start[0], start[1], end[0], end[1], dash, gap) {

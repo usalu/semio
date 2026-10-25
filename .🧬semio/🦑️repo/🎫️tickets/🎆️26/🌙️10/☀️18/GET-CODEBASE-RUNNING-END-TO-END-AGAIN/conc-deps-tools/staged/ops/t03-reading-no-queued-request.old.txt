@@ -1,1 +1,0 @@
-if(vector.storeOpens)expect(queued).toEqual({version:1,mode:"queued",maximumWaitMilliseconds:schema.$defs.SourceOwnerStoreSyncProtocol.const.maximumQueueWaitMilliseconds});

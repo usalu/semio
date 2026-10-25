@@ -1,41 +1,43 @@
 use super::*;
 
+fn voice() -> Voice { Voice::new(vec![dashboard_labels::labels(Locale::En)], Some(Locale::En)) }
+
 fn words(text: &str) -> Vec<String> { text.split_whitespace().map(str::to_string).collect() }
 
 #[test]
 fn flags_valued_and_bare_words_and_the_tail_after_the_double_dash_are_told_apart() {
-    let arguments = Arguments::parse(&words("hub:dev --param backend=postgres --param=data=x --env A=1 --detach --wait-ready -- --filter name"), &["param", "env"]).unwrap();
+    let arguments = Arguments::parse(&words("hub:dev --param backend=postgres --param=data=x --env A=1 --detach --wait-ready -- --filter name"), &["param", "env"], &voice()).unwrap();
     assert_eq!(arguments.words, ["hub:dev"]);
-    assert_eq!(arguments.pairs("param").unwrap(), [("backend".to_string(), "postgres".to_string()), ("data".to_string(), "x".to_string())]);
-    assert_eq!(arguments.pairs("env").unwrap(), [("A".to_string(), "1".to_string())]);
+    assert_eq!(arguments.pairs("param", &voice()).unwrap(), [("backend".to_string(), "postgres".to_string()), ("data".to_string(), "x".to_string())]);
+    assert_eq!(arguments.pairs("env", &voice()).unwrap(), [("A".to_string(), "1".to_string())]);
     assert!(arguments.has("detach") && arguments.has("wait-ready") && !arguments.has("json"));
     assert_eq!(arguments.rest, ["--filter", "name"]);
 }
 
 #[test]
 fn a_switch_may_stand_before_the_words_without_swallowing_them() {
-    let arguments = Arguments::parse(&words("--json --all test quiz"), &["root"]).unwrap();
+    let arguments = Arguments::parse(&words("--json --all test quiz"), &["root"], &voice()).unwrap();
     assert_eq!(arguments.words, ["test", "quiz"]);
     assert!(arguments.has("json") && arguments.has("all"));
 }
 
 #[test]
 fn malformed_flags_are_refused_with_the_flag_named() {
-    assert!(Arguments::parse(&words("--param"), &["param"]).unwrap_err().contains("--param needs a value"));
-    assert!(Arguments::parse(&words("--detach=yes"), &["param"]).unwrap_err().contains("--detach takes no value"));
-    assert!(Arguments::parse(&words("--env NOPE"), &["env"]).unwrap().pairs("env").unwrap_err().contains("not `key=value`"));
+    assert!(Arguments::parse(&words("--param"), &["param"], &voice()).unwrap_err().contains("--param needs a value"));
+    assert!(Arguments::parse(&words("--detach=yes"), &["param"], &voice()).unwrap_err().contains("--detach takes no value"));
+    assert!(Arguments::parse(&words("--env NOPE"), &["env"], &voice()).unwrap().pairs("env", &voice()).unwrap_err().contains("not `key=value`"));
 }
 
 #[test]
 fn the_request_carries_parameters_extra_environment_and_arguments() {
-    let request = Arguments::parse(&words("x --param a=b --env K=V=W -- t1 t2"), &["param", "env"]).unwrap().request(&|_| None).unwrap();
+    let request = Arguments::parse(&words("x --param a=b --env K=V=W -- t1 t2"), &["param", "env"], &voice()).unwrap().request(&|_| None, &voice()).unwrap();
     assert_eq!(request, Request { parameters: vec![("a".into(), "b".into())], args: vec!["t1".into(), "t2".into()], env: vec![("K".into(), "V=W".into())] });
 }
 
 #[test]
 fn a_bare_parameter_id_switches_a_flag_on_and_is_refused_for_choices_and_text() {
     let kind = |name: &str| match name { "steady" => Some(ParameterKind::Flag), "backend" => Some(ParameterKind::Choice), "listen" => Some(ParameterKind::Text), _ => None };
-    let request = |text: &str| Arguments::parse(&words(text), &["param"]).unwrap().request(&kind);
+    let request = |text: &str| Arguments::parse(&words(text), &["param"], &voice()).unwrap().request(&kind, &voice());
     assert_eq!(request("x --param steady --param backend=pg --param steady2=false").unwrap().parameters, [("steady".to_string(), "true".to_string()), ("backend".into(), "pg".into()), ("steady2".into(), "false".into())]);
     assert_eq!(request("x --param steady=true").unwrap().parameters, [("steady".to_string(), "true".to_string())]);
     assert!(request("x --param backend").unwrap_err().contains("a choice parameter needs a value, write `--param backend=<value>`"));
@@ -104,11 +106,11 @@ fn a_handle_is_a_session_id_a_group_a_command_or_a_unique_part_and_never_a_posit
         session("group-d-4.0", "quiz:dev", SessionStatus::Exited, 40, None),
         session("group-e-5.0", "quiz:dev", SessionStatus::Exited, 50, None),
     ];
-    let ids = |needle: &str| pick(&sessions, needle).map(|picked| picked.sessions.iter().map(|session| session.session_id.clone()).collect::<Vec<_>>());
+    let ids = |needle: &str| pick(&sessions, needle, &voice()).map(|picked| picked.sessions.iter().map(|session| session.session_id.clone()).collect::<Vec<_>>());
     assert_eq!(ids("group-a-1.0").unwrap(), ["group-a-1.0"], "an exact id, even of an ended session");
     assert_eq!(ids("hub:dev").unwrap(), ["group-b-2.0"], "a command id names its live session");
     assert_eq!(ids("quiz:dev").unwrap(), ["group-e-5.0"], "without a live session, its latest");
-    assert_eq!(pick(&sessions, "group-c-3").unwrap().group.as_deref(), Some("group-c-3"));
+    assert_eq!(pick(&sessions, "group-c-3", &voice()).unwrap().group.as_deref(), Some("group-c-3"));
     assert_eq!(ids("group-c-3").unwrap(), ["group-c-3.0", "group-c-3.1"], "a launch id names all its members");
     assert_eq!(ids("compound:w/pair").unwrap(), ["group-c-3.0", "group-c-3.1"], "so does the compound's id");
     assert_eq!(ids("group-d").unwrap(), ["group-d-4.0"], "a unique part of a session id");
@@ -118,8 +120,8 @@ fn a_handle_is_a_session_id_a_group_a_command_or_a_unique_part_and_never_a_posit
     assert!(ids("dev").unwrap_err().contains("matches several commands: hub:dev, quiz:dev"));
     assert!(ids("").is_err());
     let twice = vec![session("a.0", "x:dev", SessionStatus::Running, 1, None), session("b.0", "x:dev", SessionStatus::Running, 2, None)];
-    assert!(pick(&twice, "x:dev").unwrap_err().contains("has 2 live tasks: a.0 (x:dev), b.0 (x:dev)"));
-    assert!(only(&pick(&sessions, "group-c-3").unwrap(), "group-c-3").unwrap_err().contains("names 2 tasks of one launch"));
+    assert!(pick(&twice, "x:dev", &voice()).unwrap_err().contains("has 2 live tasks: a.0 (x:dev), b.0 (x:dev)"));
+    assert!(only(&pick(&sessions, "group-c-3", &voice()).unwrap(), "group-c-3", &voice()).unwrap_err().contains("names 2 tasks of one launch"));
 }
 
 #[test]
@@ -133,7 +135,7 @@ fn a_running_task_reuses_only_the_same_effective_build_tool() {
         let client = pairs(&row["client"]);
         let path = ipc::build_authority::build_policy_path(&root);
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-        std::fs::write(path, serde_json::json!({"version":1,"defaultTool":row["default"]}).to_string()).unwrap();
+        std::fs::write(path, serde_json::json!({"version":1}).to_string()).unwrap();
         ipc::bind_build_tools(&root, ipc::build_tool_environment(&client), std::iter::once(&mut asked)).unwrap();
         std::fs::remove_dir_all(&root).unwrap();
         assert_eq!(asked.selected_build_tool(&root, None), row["tool"].as_str(), "{}", row["name"]);
@@ -152,7 +154,7 @@ fn registry_requirements_reach_the_group_without_losing_selected_tools() {
             let id = entry["id"].as_str().unwrap();
             if let Some(id) = id.strip_prefix("compound:workspace/") { compounds.push(serde_json::json!({"id":id,"members":entry["members"]})); continue; }
             let (project, target) = id.split_once(':').unwrap();
-            projects.push(ProjectFacts { name: project.into(), root: ".".into(), manifest: "📋️project.json".into(), dashboard: None, targets: vec![TargetFacts { name: target.into(), dashboard: Some(serde_json::json!({"env":entry["env"],"requires":entry["requires"]})), ..Default::default() }] });
+            projects.push(ProjectFacts { name: project.into(), root: ".".into(), manifest: "📋️project.json".into(), dashboard: None, targets: vec![TargetFacts { name: target.into(), dashboard: Some(serde_json::json!({"requires":entry["requires"]})), ..Default::default() }] });
         }
         projects.push(ProjectFacts { name:"workspace".into(),root:".".into(),manifest:"📋️project.json".into(),targets:vec![],dashboard:Some(serde_json::json!({"compounds":compounds})) });
         let registry = Registry::build(Path::new("/workspace"), &Facts { projects, ..Default::default() });
@@ -189,4 +191,24 @@ fn workspace_policy_binding_matches_portable_refusals_and_pinned_defaults() {
         if row["duringBatchPolicy"].is_string() { assert_eq!(command.selected_build_tool(&root, None),other.selected_build_tool(&root, None)); }
         std::fs::remove_dir_all(&root).unwrap();
     }
+}
+
+#[test]
+fn a_voice_hands_its_chosen_language_to_the_tasks_and_none_while_no_language_is_chosen() {
+    let german = Voice::new(vec![dashboard_labels::labels(Locale::De)], Some(Locale::De));
+    let both = Voice::new(vec![dashboard_labels::labels(Locale::En), dashboard_labels::labels(Locale::De)], None);
+    assert_eq!(german.task_environment(), [("SEMIO_LANGUAGE".to_string(), "de".to_string())]);
+    assert_eq!(voice().task_environment(), [("SEMIO_LANGUAGE".to_string(), "en".to_string())]);
+    assert!(both.task_environment().is_empty());
+}
+
+#[test]
+fn every_refusal_speaks_the_chosen_language_or_both_joined() {
+    let german = Voice::new(vec![dashboard_labels::labels(Locale::De)], Some(Locale::De));
+    let both = Voice::new(vec![dashboard_labels::labels(Locale::En), dashboard_labels::labels(Locale::De)], None);
+    assert_eq!(Arguments::parse(&words("--param"), &["param"], &german).unwrap_err(), "--param braucht einen Wert");
+    assert_eq!(Arguments::parse(&words("--param"), &["param"], &both).unwrap_err(), "--param needs a value / --param braucht einen Wert");
+    assert!(Arguments::parse(&words("--env NOPE"), &["env"], &german).unwrap().pairs("env", &german).unwrap_err().contains("ist nicht `Schlüssel=Wert`"));
+    assert!(pick(&[], "x", &german).unwrap_err().contains("Keine Aufgabe passt zu \"x\""));
+    assert!(pick(&[], "", &both).unwrap_err().contains(" / Ein Aufgabenname ist leer"));
 }

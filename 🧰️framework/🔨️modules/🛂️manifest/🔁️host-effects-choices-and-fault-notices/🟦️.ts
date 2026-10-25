@@ -10,7 +10,7 @@ import type { PluginManifest } from "../🗣️contributions-and-examples/🟦�
 //#region 🔌️PluginAndAppContract
 //#region PluginRuntime
 //#region 🔁️HostEffectInvocation
-/** 🔁️ The scope a host effect's re-dispatch is addressed in — the fields both invocation shapes need,
+/** 🖥️ The scope a host effect's re-dispatch is addressed in — the fields both invocation shapes need,
  * read off whatever view state the host holds. */
 export type HostEffectDispatchScope = {
   readonly pluginId: string;
@@ -20,7 +20,7 @@ export type HostEffectDispatchScope = {
   readonly windowInstanceId: string;
 };
 
-/** 🔁️ The ONE rule that decides which channel a guest's `dispatchAction` host effect re-enters, and
+/** ☁️ The ONE rule that decides which channel a guest's `dispatchAction` host effect re-enters, and
  * the invocation it re-enters with.
  *
  * ⚖️ An id the app DECLARES as a command re-enters the typed command channel; everything else — every
@@ -50,7 +50,7 @@ export function hostEffectInvocationV1(
   return { kind: "action", invocation };
 }
 
-/** 🔁️ Every command id one app of `manifest` declares — the left-hand side of
+/** 🔑️ Every command id one app of `manifest` declares — the left-hand side of
  * {@link hostEffectInvocationV1}'s rule, read off the manifest a host already holds. */
 export function appCommandIdsV1(manifest: PluginManifest, appId: string): readonly string[] {
   const app = manifest.apps.find((entry) => (entry as { readonly id?: unknown }).id === appId) as { readonly commands?: readonly { readonly id?: unknown }[] } | undefined;
@@ -96,7 +96,7 @@ export function encodeArtifactKindChoice(choice: ArtifactKindChoice): string {
   });
 }
 
-/** 🧵️ Inverse of {@link encodeArtifactKindChoice}. Throws with a message naming the missing/malformed
+/** 🏺️ Inverse of {@link encodeArtifactKindChoice}. Throws with a message naming the missing/malformed
  * field, mirroring Rust `decode_artifact_kind_choice`'s `Result<_, String>` messages. */
 export function decodeArtifactKindChoice(value: string): ArtifactKindChoice {
   const json = JSON.parse(value) as Record<string, unknown>;
@@ -112,13 +112,13 @@ export function decodeArtifactKindChoice(value: string): ArtifactKindChoice {
   return { kindId: json.kindId, schema: json.schema, dialect: { artifactKind: dialect.artifactKind, standard: dialect.standard, subset: dialect.subset }, label: { en: label.en, de: label.de } };
 }
 
-/** 🧵️ Encodes a `SurfaceAppChoice` into its frozen `ActionArgOption.value` JSON shape — must agree
+/** ❄️ Encodes a `SurfaceAppChoice` into its frozen `ActionArgOption.value` JSON shape — must agree
  * byte-for-byte with Rust `encode_surface_app_choice`. */
 export function encodeSurfaceAppChoice(choice: SurfaceAppChoice): string {
   return JSON.stringify({ pluginId: choice.app.pluginId, appId: choice.app.appId, role: choice.role });
 }
 
-/** 🧵️ Inverse of {@link encodeSurfaceAppChoice}. */
+/** ↩️ Inverse of {@link encodeSurfaceAppChoice}. */
 export function decodeSurfaceAppChoice(value: string): SurfaceAppChoice {
   const json = JSON.parse(value) as Record<string, unknown>;
   if (typeof json.pluginId !== "string") throw new Error("surface app choice missing string field pluginId");
@@ -138,7 +138,7 @@ function resolveNativeLabel(label: unknown): { readonly en: string; readonly de:
   return { en: native?.en ?? "", de: native?.de ?? "" };
 }
 
-/** 🗂️ Every artifact-kind choice for the given `roles` — TS twin of Rust `artifact_kind_choices`.
+/** 📦️ Every artifact-kind choice for the given `roles` — TS twin of Rust `artifact_kind_choices`.
  * Every app across `manifests` whose `role` is in `roles` and whose `io.artifactSchema` is non-empty
  * and whose package declares an artifact kind of that schema (on any of its apps — a viewer shares its
  * editor's kind — or on the manifest) contributes one choice per dialect coordinate, labelled with that
@@ -218,7 +218,7 @@ export function validateFaultNotices(notices: readonly FaultNoticeDefinition[]):
   return errors;
 }
 
-/** 🧵️ `text` with each `{name}` replaced by the value `params` names; `null` when one is missing or the text is malformed — TS twin
+/** 📖️ `text` with each `{name}` replaced by the value `params` names; `null` when one is missing or the text is malformed — TS twin
  * of Rust `fill_fault_notice` (a notice is never shown half-filled). */
 export function fillFaultNotice(text: string, params: Readonly<Record<string, string>> | undefined): string | null {
   let filled = "";

@@ -5,13 +5,14 @@ import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
 import {setImmediate} from "node:timers/promises";
 import {type ScriptInvocation} from "../../📥️invocation/🟦️.ts";
+import {createScriptProcessEnvelope,withScriptProcessEnvelope,withScriptInvocationSignalV1} from "../../📥️invocation/🏃️process/🟦️.ts";
 
 const corpus=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 const schema=JSON.parse(readFileSync(new URL("../📥️request/🧬️schema/🔣️.json",import.meta.url),"utf8"));
 
 test("configured compiler policies preserve the selected portable build mode",async()=>{
  const {parseCommandArgumentsV1,resolveCommandConfigurationV1}=await import("../⚙️configuration/🟦️.ts");
- const fixture=JSON.parse(readFileSync(new URL("../../../🏗️build/🎚️mode/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ const fixture=JSON.parse(readFileSync(new URL("../../../🏗️build/🎚️mode/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  const policySchema=JSON.parse(readFileSync(new URL("../../../📦️artifacts/🏗️native-build/🧬️schema/🔣️.json",import.meta.url),"utf8")),oracle=new Ajv({strict:true}).compile(policySchema);
  const configuration=fileURLToPath(new URL("../../../../../⚙️configuration/🏃️process/🔣️.json",import.meta.url));
  const request=parseCommandArgumentsV1(["--config",configuration,"--cwd","📦️packages/🟦️typescript","--",process.execPath]);
@@ -22,12 +23,15 @@ test("configured compiler policies preserve the selected portable build mode",as
   expect(oracle(plan.policy.cargoArtifactPolicy)).toBe(true);
  }
  expect(()=>resolveCommandConfigurationV1(request,{},originalInvocation())).toThrow("Build mode");
- console.log("[DEBUG] configured command compiler policies preserve both schema-owned build modes");
 });
 
 /** 🎟️ Authors each independent neutral test caller before its first process admission. */
 function originalInvocation(controller=new AbortController(), milliseconds=corpus.originalCaller.maximumElapsedMilliseconds, publication:string[]=[]):ScriptInvocation {
  const started=performance.now();return {policy:{version:1,owner:corpus.originalCaller.owner,maximumElapsedMilliseconds:milliseconds},capabilities:{owner:corpus.originalCaller.owner,command:"declared fixture child"},control:{signal:controller.signal,remainingMilliseconds:()=>milliseconds-(performance.now()-started),publish(event){publication.push(event.stage);},async yieldContinuation(){await setImmediate();}}};
+}
+/** 🧪️ Issues an independent neutral test caller through the real Original process owner, with the caller's own cancellation as an additional signal. */
+function withOriginalInvocation<T>(body:(invocation:ScriptInvocation)=>Promise<T>,milliseconds:number=corpus.originalCaller.maximumElapsedMilliseconds,controller?:AbortController):Promise<T>{
+ return withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:corpus.originalCaller.owner,maximumElapsedMilliseconds:milliseconds},{owner:corpus.originalCaller.owner,command:"declared fixture child"},Date.now()),original=>controller?withScriptInvocationSignalV1(original,controller.signal,body):body(original));
 }
 test("variable command requests agree with the independent schema oracle",async()=>{
  const {admitCommandRequestV1}=await import("../🟦️.ts"),oracle=new Ajv({strict:true}).compile(schema),root=process.env.SEMIO_TEST_ARTIFACT_DIR!;
@@ -44,19 +48,24 @@ test("variable configured owners agree with the independent schema and refuse es
 });
 test("actual neutral executions preserve argv output status cancellation and custody",async()=>{
  const {executeCommandV1}=await import("../🟦️.ts"),output=process.env.SEMIO_TEST_ARTIFACT_DIR!;mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"command-law-")),policy={version:1 as const,context:{version:1 as const,cwd:root,cacheRoot:join(root,"cache"),leaseDirectory:join(root,"leases")},budgetMs:5000,maximumOutputBytes:1048576,artifactDirectory:join(root,"captures"),retainArtifacts:true,cargoPolicies:[],vitestPolicy:null,cargoArtifactPolicy:null},events:string[]=[];
- for(const row of corpus.executions){const code=`process.stdout.write(${JSON.stringify(row.stdout)});process.exit(${row.status})`,request={version:1 as const,cwd:root,command:process.execPath,args:["-e",code],manifests:[],preparation:"none" as const},result=await executeCommandV1(request,policy,{environment:process.env,invocation:originalInvocation(),onProgress:event=>events.push(event.phase)}),oracle=Bun.spawnSync(["node","-e",code]);expect(result.status).toBe(oracle.exitCode);expect(result.stdout).toBe(new TextDecoder().decode(oracle.stdout));expect(result.stdout).toBe(row.stdout);expect(result.status).toBe(row.status);expect(readFileSync(result.receiptPath,"utf8")).toContain('"preparation":"none"');}
- const request={version:1 as const,cwd:root,command:process.execPath,args:["-e","setInterval(()=>{},1000)"],manifests:[],preparation:"none" as const},controller=new AbortController(),invocation=originalInvocation(controller),cancellation=setTimeout(()=>controller.abort(),100),cancelled=await executeCommandV1(request,policy,{environment:process.env,invocation,onProgress:event=>events.push(event.phase)});clearTimeout(cancellation);expect(cancelled.reason).toBe("cancelled");expect(events).toContain("started");expect(events).toContain("completed");
- await expect(executeCommandV1({...request,preparation:"required"},policy,{environment:process.env,invocation:originalInvocation(),onProgress:()=>{}})).rejects.toThrow("preparation");
- await expect(executeCommandV1({...request,manifests:[join(root,"Cargo.toml")]},policy,{environment:process.env,invocation:originalInvocation(),onProgress:()=>{}})).rejects.toThrow("Cargo custody");
- const phases:string[]=[];await executeCommandV1({...request,args:["-e","console.log('prepared')"],preparation:"required"},policy,{environment:process.env,invocation:originalInvocation(),onProgress:()=>{},prepare:async value=>{phases.push("prepare");return {version:1,cwd:value.cwd,manifests:value.manifests,release:async()=>{phases.push("release");}};}});expect(phases).toEqual(["prepare","release"]);
- const timeout=await executeCommandV1(request,{...policy,budgetMs:50},{environment:process.env,invocation:originalInvocation(),onProgress:()=>{}});expect(timeout.reason).toBe("timeout");
- const overflow=await executeCommandV1({...request,args:["-e","process.stdout.write('x'.repeat(4096));setInterval(()=>{},1000)"]},{...policy,maximumOutputBytes:512},{environment:process.env,invocation:originalInvocation(),onProgress:()=>{}});expect(overflow.reason).toBe("output-limit");expect(Buffer.byteLength(overflow.stdout)+Buffer.byteLength(overflow.stderr)).toBe(512);
- const retired=await executeCommandV1({...request,args:["-e","console.log('retained receipt')"]},{...policy,retainArtifacts:false},{environment:process.env,invocation:originalInvocation(),onProgress:()=>{}});expect(readFileSync(retired.receiptPath,"utf8")).toContain('"status":0');
+ const request={version:1 as const,cwd:root,command:process.execPath,args:["-e","setInterval(()=>{},1000)"],manifests:[],preparation:"none" as const};
+ await withOriginalInvocation(async invocation=>{
+ for(const row of corpus.executions){const code=`process.stdout.write(${JSON.stringify(row.stdout)});process.exit(${row.status})`,request={version:1 as const,cwd:root,command:process.execPath,args:["-e",code],manifests:[],preparation:"none" as const},result=await executeCommandV1(request,policy,{environment:process.env,invocation,onProgress:event=>events.push(event.phase)}),oracle=Bun.spawnSync(["node","-e",code]);expect(result.status).toBe(oracle.exitCode);expect(result.stdout).toBe(new TextDecoder().decode(oracle.stdout));expect(result.stdout).toBe(row.stdout);expect(result.status).toBe(row.status);expect(readFileSync(result.receiptPath,"utf8")).toContain('"preparation":"none"');}
+ await expect(executeCommandV1({...request,preparation:"required"},policy,{environment:process.env,invocation,onProgress:()=>{}})).rejects.toThrow("preparation");
+ await expect(executeCommandV1({...request,manifests:[join(root,"Cargo.toml")]},policy,{environment:process.env,invocation,onProgress:()=>{}})).rejects.toThrow("Cargo custody");
+ const phases:string[]=[];await executeCommandV1({...request,args:["-e","console.log('prepared')"],preparation:"required"},policy,{environment:process.env,invocation,onProgress:()=>{},prepare:async value=>{phases.push("prepare");return {version:1,cwd:value.cwd,manifests:value.manifests,release:async()=>{phases.push("release");}};}});expect(phases).toEqual(["prepare","release"]);
+ const timeout=await executeCommandV1(request,{...policy,budgetMs:50},{environment:process.env,invocation,onProgress:()=>{}});expect(timeout.reason).toBe("timeout");
+ const overflow=await executeCommandV1({...request,args:["-e","process.stdout.write('x'.repeat(4096));setInterval(()=>{},1000)"]},{...policy,maximumOutputBytes:512},{environment:process.env,invocation,onProgress:()=>{}});expect(overflow.reason).toBe("output-limit");expect(Buffer.byteLength(overflow.stdout)+Buffer.byteLength(overflow.stderr)).toBe(512);
+ const retired=await executeCommandV1({...request,args:["-e","console.log('retained receipt')"]},{...policy,retainArtifacts:false},{environment:process.env,invocation,onProgress:()=>{}});expect(readFileSync(retired.receiptPath,"utf8")).toContain('"status":0');
+ });
+ const controller=new AbortController(),cancellation=setTimeout(()=>controller.abort(),100);let cancelled:Awaited<ReturnType<typeof executeCommandV1>>|undefined,refusal:unknown;try{await withOriginalInvocation(async invocation=>{cancelled=await executeCommandV1(request,policy,{environment:process.env,invocation,onProgress:event=>events.push(event.phase)});},120000,controller);}catch(error){refusal=error;}clearTimeout(cancellation);expect(refusal).toBe(controller.signal.reason);expect(cancelled?.reason).toBe("cancelled");expect(events).toContain("started");expect(events).toContain("completed");
 });
 
 test("configured capture preserves the exact finite caller when the child declares no extra ceiling",async()=>{
- const {executeCommandV1}=await import("../🟦️.ts"),row=corpus.configuredCapture,root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"command-original-")),publication:string[]=[],invocation=originalInvocation(new AbortController(),row.originalMaximumElapsedMilliseconds,publication),input=invocation.control,started=performance.now();
+ const {executeCommandV1}=await import("../🟦️.ts"),row=corpus.configuredCapture,root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"command-original-")),publication:string[]=[],started=performance.now(),write=process.stderr.write.bind(process.stderr);
  const policy={version:1 as const,context:{version:1 as const,cwd:root,cacheRoot:join(root,"cache"),leaseDirectory:join(root,"leases")},budgetMs:row.budgetMs,maximumOutputBytes:row.maximumOutputBytes,artifactDirectory:join(root,"capture"),retainArtifacts:true,cargoPolicies:[],vitestPolicy:null,cargoArtifactPolicy:null};
- const result=await executeCommandV1({version:1,cwd:root,command:process.execPath,args:["--eval","process.stdout.write('ready');setInterval(()=>{},1000)"],manifests:[],preparation:"none"},policy,{invocation,environment:process.env,onProgress:()=>{}});
- expect(result.reason).toBe(row.reason);expect(result.stdout).toBe("ready");expect(invocation.control).toBe(input);expect(invocation.control.remainingMilliseconds()!).toBeLessThanOrEqual(0);expect(publication).toContain("running");expect(performance.now()-started).toBeLessThan(row.maximumObservedMilliseconds);
+ let result:Awaited<ReturnType<typeof executeCommandV1>>|undefined,remaining:number|null|undefined,control:unknown,same=false,exhausted="";
+ process.stderr.write=((chunk:string|Uint8Array,...rest:unknown[])=>{const match=/"stage":"([a-z]+)"/u.exec(String(chunk));if(match)publication.push(match[1]!);return(write as(...parameters:unknown[])=>boolean)(chunk,...rest);})as typeof process.stderr.write;
+ try{await withOriginalInvocation(async invocation=>{control=invocation.control;result=await executeCommandV1({version:1,cwd:root,command:process.execPath,args:["--eval","process.stdout.write('ready');setInterval(()=>{},1000)"],manifests:[],preparation:"none"},policy,{invocation,environment:process.env,onProgress:()=>{}});same=invocation.control===control;remaining=invocation.control.remainingMilliseconds();exhausted=String(invocation.control.signal.reason);},row.originalMaximumElapsedMilliseconds);}catch{}finally{process.stderr.write=write;}
+ expect(result?.reason).toBe(row.reason);expect(result?.stdout).toBe("ready");expect(same).toBe(true);expect(exhausted).toMatch(/deadline exhausted/iu);expect(remaining).toBeLessThanOrEqual(0);expect(publication).toContain("running");expect(performance.now()-started).toBeLessThan(row.maximumObservedMilliseconds);
 });

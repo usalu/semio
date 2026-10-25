@@ -14,7 +14,7 @@ export function bindResidentScopeMatcher(matcher: ResidentScopeMatcher): void {
   if (residentScopeMatcher) throw new Error("Resident scope matcher is already bound");
   residentScopeMatcher = matcher;
 }
-/** 🪪️ Whether `scope` is a genuine resident scope of exactly this owner, activation and lifetime. */
+/** 🔎️ Whether `scope` is a genuine resident scope of exactly this owner, activation and lifetime. */
 export function residentScopeMatches(scope: unknown, owner: object, activation: object, lifetime: object): scope is OwnedUiResidentScope {
   return residentScopeMatcher !== null && residentScopeMatcher(scope, owner, activation, lifetime);
 }

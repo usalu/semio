@@ -1,4 +1,4 @@
-//! 🦴️ Weighted straight skeleton of simple polygons with holes.
+//! 🗝️ Weighted straight skeleton of simple polygons with holes.
 //!
 //! Every input edge moves inward (into the material, to its left) at its own constant `speed` per unit of time; the wavefront
 //! vertices travel along the bisecting velocity that keeps them on both adjacent edge lines, and the skeleton is the trace of those
@@ -70,7 +70,7 @@ pub struct Ring {
 }
 
 impl Ring {
-    /// 🧱️ A ring whose edges all move at `speed` and are tagged with their index in the ring.
+    /// 🗂️ A ring whose edges all move at `speed` and are tagged with their index in the ring.
     pub fn uniform(points: &[Point], speed: f64) -> Self {
         Self { points: points.to_vec(), speeds: vec![speed; points.len()], tags: (0..points.len() as u32).collect() }
     }
@@ -505,7 +505,7 @@ fn prepare(rings: &[Ring], eps: f64) -> Result<Prepared, SkeletonError> {
 //#endregion 🔖️Input
 
 //#region 🔖️Run
-/// 🦴️ The straight skeleton of `rings` (the first is the outer boundary, the rest are holes; either orientation) run to the end.
+/// ⭕️ The straight skeleton of `rings` (the first is the outer boundary, the rest are holes; either orientation) run to the end.
 pub fn straight_skeleton(rings: &[Ring]) -> Result<Skeleton, SkeletonError> {
     straight_skeleton_until(rings, None, &mut || true)
 }

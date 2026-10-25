@@ -1,9 +1,9 @@
 /** 📄️ The presentation react deck, interaction DOM of PDF and figure dispositions: cover scale, enlarged sizing, page navigation and cropped figure enlarge. */
 import { split } from "@semio-tech/presentation";
-import type { Presentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import type { Presentation } from "@semio-tech/presentation-react";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { act } from "@semio-tech/ui-react/test";
-import { SLIDE_INTERACTIVE_ENLARGE_FRAME, mountPresentation, pdfScrollCoverScale, resetPdfCanvasPort, setPdfCanvasPort, unmountPresentation } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { SLIDE_INTERACTIVE_ENLARGE_FRAME, mountPresentation, pdfScrollCoverScale, resetPdfCanvasPort, setPdfCanvasPort, unmountPresentation } from "@semio-tech/presentation-react";
 import { globalsCssSource } from "../🧰️presentation-deck-helpers/🟦️.tsx";
 import { mockClientRect, pointerClick, testPdfCanvasPort, waitForPdfCanvas } from "../🧱️interaction-dom-kit/🟦️.ts";
 

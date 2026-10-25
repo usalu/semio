@@ -1,0 +1,2181 @@
+# stage-clean orphan staged=walkperf-tools/staged/core.ts map=None
+--- /dev/null
++++ b/staged/walkperf-tools/staged/core.ts
+@@ -0,0 +1,215 @@
++import {createHash} from "node:crypto";
++import {lstatSync,readFileSync,readlinkSync,type BigIntStats} from "node:fs";
++import {isAbsolute,join,relative,resolve,sep} from "node:path";
++import {compileJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
++import schema from "./🧬️schema/🔣️.json" with {type:"json"};
++
++const protocol=schema.$defs.Protocol.const,receiptSchema=compileJsonSchemaSubset(schema.$defs.Receipt,schema);
++
++/** 🧾️ Names the closed neutral contract (the schema) every generation receipt, evidence file and verifier follows. */
++export const generationProtocolV1=protocol;
++/** 🚦️ Closes every reason an ordinary command must fall back to the complete ownership and provider walk. */
++export type GenerationMismatchClassV1="receipt-invalid"|"evidence-invalid"|"implementation-changed"|"runtime-changed"|"configuration-changed"|"conditions-open"|"binding-changed"|"ready-changed"|"input-changed"|"manifest-changed"|"membership-changed"|"membership-churn"|"provider-changed"|"unreadable"|"sha-changed";
++/** 🧰️ Carries cancellation and bounded progress for every long verification and capture loop. */
++export interface GenerationControlV1{readonly signal:AbortSignal;check():void;tick(work:number):Promise<void>}
++/** 🏷️ Pins the tool identity that defines which generation a Source can select. */
++export interface GenerationRuntimeV1{readonly bun:string;readonly revision:string;readonly node:string;readonly platform:string;readonly arch:string;readonly sha256:string}
++/** 🔖️ Points at one immutable content-addressed evidence file next to the receipt. */
++export interface GenerationEvidenceV1{readonly name:string;readonly sha256:string;readonly bytes:number;readonly rows:number}
++/** 🗃️ Seals the runtime import closure of the walk and fence entries: the sorted entry list and the content-addressed per-file digest rows. */
++export interface GenerationImplementationV1{readonly entries:readonly string[];readonly evidence:GenerationEvidenceV1}
++/** 🗝️ Names one installer configuration file as every installer level could read it; a missing file is part of the proof. */
++export interface GenerationProducerFileV1{readonly path:string;readonly kind:"missing"|"file"|"other";readonly bytes:number;readonly sha256:string|null}
++/** 🌍️ Names one ambient variable that selects registries, caches or transport, by the digest of its value so credentials never enter a receipt. */
++export interface GenerationProducerVariableV1{readonly name:string;readonly sha256:string}
++/** 🧪️ Collects every producer-side input outside the Source bytes that could change what an installer produces. */
++export interface GenerationProducerV1{readonly files:readonly GenerationProducerFileV1[];readonly environment:readonly GenerationProducerVariableV1[]}
++/** 📑️ Is the sealed, schema-defined proof that a complete walk accepted exactly these observations. */
++export interface GenerationReceiptV1{
++ readonly version:1;readonly purpose:"dependency-generation-receipt";readonly scope:string;readonly implementation:GenerationImplementationV1;readonly runtime:GenerationRuntimeV1;readonly producer:GenerationProducerV1;readonly recipeSha256:string;readonly ownershipSha256:string;readonly required:readonly string[];
++ readonly inputs:readonly Readonly<{scope:string;sources:readonly Readonly<{path:string;kind:"file"|"directory"|"missing";dev:string;ino:string;mode:number;sha256:string|null}>[]}>[];
++ readonly membership:Readonly<{frontier:GenerationEvidenceV1;texts:readonly Readonly<{path:string;sha256:string}>[]}>;
++ readonly bindings:readonly Readonly<{scope:string;pairs:readonly Readonly<{source:string;target:string}>[];observationSha256:string}>[];
++ readonly ready:readonly Readonly<{scope:string;generation:string;location:string;fingerprint:string}>[];
++ readonly execution:Readonly<{evidence:GenerationEvidenceV1;scopes:readonly Readonly<{scope:string;sha256:string}>[];runtimeSha256:string}>;
++ readonly scopeReadSha256:string;readonly sha256:string;
++}
++/** 🌳️ Reports exactly what the ownership walk retained: directory listings, path states and manifest texts. */
++export interface GenerationMembershipV1{readonly root:string;readonly paths:readonly Readonly<{path:string;state:readonly (string|number)[];list?:readonly Readonly<{name:string;kind:string}>[]}>[];readonly texts:readonly Readonly<{path:string;sha256:string}>[]}
++/** 🔭️ Reports one physical observation of the provider walk exactly as it replays them; stamp and anchor are the colon-joined decimal fields named by the protocol. */
++export interface GenerationObservationV1{readonly path:string;readonly stamp:string|null;readonly anchor:string|null;readonly kind:string;readonly target:string|null;readonly full:boolean}
++/** 📥️ Collects everything a completed walk produced; nothing else may enter a receipt. */
++export interface GenerationCaptureInputV1{
++ readonly workspace:string;readonly storeRoot:string;readonly scope:string;readonly startedAtMs:number;readonly implementation:Readonly<{entries:readonly string[];loadedAtMs:number;files:readonly Readonly<{path:string;sha256:string;bytes:number;mtimeNs:string;ctimeNs:string}>[]}>;readonly runtime:GenerationRuntimeV1;readonly producer:GenerationProducerV1;readonly recipeSha256:string;readonly ownershipSha256:string;readonly required:readonly string[];
++ readonly inputs:readonly Readonly<{scope:string;sources:readonly Readonly<{path:string;kind:"file"|"directory"|"missing";dev:string;ino:string;mode:number;bytes:Uint8Array}>[]}>[];
++ readonly membership:GenerationMembershipV1;
++ readonly bindings:readonly Readonly<{scope:string;pairs:readonly Readonly<{sourceDirectory:string;targetDirectory:string}>[];observation:string}>[];
++ readonly ready:readonly Readonly<{scope:string;generation:string;path:string;fingerprint:string}>[];
++ readonly execution:Readonly<{scopes:readonly Readonly<{scope:string;sha256:string}>[];runtimeSha256:string;observations:readonly GenerationObservationV1[]}>;
++ readonly scopeReadSha256:string;readonly control:GenerationControlV1;
++}
++/** 📤️ Is either a sealed receipt with its evidence bytes or a deferral that never publishes unsound facts. */
++export type GenerationCaptureResultV1=Readonly<{status:"captured";receipt:GenerationReceiptV1;files:readonly Readonly<{name:string;bytes:Buffer}>[]}>|Readonly<{status:"deferred";reason:string;path?:string}>;
++/** 🔎️ Is the complete input to one verification; every store specific operation arrives as a port. */
++export interface GenerationVerifyInputV1{
++ readonly workspace:string;readonly storeRoot:string;readonly receipt:GenerationReceiptV1;readonly readEvidence:(name:string,maximumBytes:number)=>Uint8Array;readonly runtime:()=>GenerationRuntimeV1;readonly conditionsClosed:()=>boolean;
++ readonly implementationEntries:readonly string[];readonly implementationFile:(path:string)=>Readonly<{sha256:string;bytes:number}>|undefined;readonly producer:()=>GenerationProducerV1;
++ readonly project:(path:string)=>readonly Readonly<{name:string;kind:string}>[];
++ readonly observeBindings:(scope:string,pairs:readonly Readonly<{sourceDirectory:string;targetDirectory:string}>[])=>string;
++ readonly readReady:(path:string)=>Promise<string>|string;readonly control:GenerationControlV1;
++}
++/** 🟢️ Reproduces the exact result of a complete walk without performing it. */
++export type GenerationVerifyResultV1=Readonly<{status:"match";version:1;required:readonly string[];receipts:readonly Readonly<{scope:string;generation:string;fingerprint:string}>[];sha256:string}>|Readonly<{status:"mismatch";class:GenerationMismatchClassV1;path?:string;detail?:string}>;
++
++/** #️⃣ Digests bytes or text with the one hash every neutral implementation shares. */
++export const generationSha256V1=(data:string|Uint8Array):string=>createHash("sha256").update(data).digest("hex");
++const sortKeys=(value:unknown):unknown=>Array.isArray(value)?value.map(sortKeys):value!==null&&typeof value==="object"?Object.fromEntries(Object.keys(value).sort().map(key=>[key,sortKeys((value as Record<string,unknown>)[key])])):value;
++/** 📐️ Serializes with sorted keys and no whitespace so any language reproduces the same seal. */
++export const generationCanonicalJsonV1=(value:unknown):string=>JSON.stringify(sortKeys(value));
++/** 🔏️ Seals a receipt body with the digest of its canonical form. */
++export function sealGenerationReceiptV1(body:Omit<GenerationReceiptV1,"sha256">):GenerationReceiptV1{return Object.freeze({...body,sha256:generationSha256V1(generationCanonicalJsonV1(body))});}
++/** 🔓️ Admits only a schema-valid, correctly sealed receipt. */
++export function parseGenerationReceiptV1(bytes:Uint8Array):GenerationReceiptV1{
++ if(bytes.length>protocol.maximumReceiptBytes)throw Error("Bounded dependency generation receipt required");
++ const value=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(bytes))as GenerationReceiptV1&Record<string,unknown>,errors=receiptSchema.validate(value);
++ if(errors.length)throw Error("Closed dependency generation receipt required",{cause:errors.slice(0,4)});
++ const{sha256,...body}=value;if(generationSha256V1(generationCanonicalJsonV1(body))!==sha256)throw Error("Sealed dependency generation receipt required");
++ return Object.freeze(value);
++}
++/** 📍️ Names a path as workspace-, store- or absolute-relative so receipts survive no relocation yet stay compact. */
++export function generationLocationV1(path:string,workspace:string,storeRoot:string):string{
++ const within=(root:string)=>{const rel=relative(root,path);return rel===""||rel!==".."&&!rel.startsWith(".."+sep)&&!isAbsolute(rel)?(rel||".").split(sep).join("/"):undefined;},store=within(storeRoot),local=within(workspace);
++ return store!==undefined?"s:"+store:local!==undefined?"w:"+local:"a:"+path;
++}
++/** 🧭️ Resolves a receipt location back to the current physical path. */
++export function generationResolveV1(location:string,workspace:string,storeRoot:string):string{
++ const rest=location.slice(2);if(location[1]!==":"||!rest)throw Error("Closed generation location required");
++ if(location[0]==="s")return resolve(storeRoot,rest);if(location[0]==="w")return resolve(workspace,rest);if(location[0]==="a")return rest;
++ throw Error("Closed generation location required");
++}
++/** 🧮️ Digests a directory listing projection into a short fixed width key. */
++export const generationProjectionDigestV1=(rows:readonly Readonly<{name:string;kind:string}>[]):string=>generationSha256V1(JSON.stringify(rows.map(row=>({name:row.name,kind:row.kind})))).slice(0,protocol.projectionDigestUnits);
++const fields=(facts:BigIntStats,names:readonly string[]):string=>names.map(name=>String(facts[name as keyof BigIntStats])).join(":");
++/** 🪪️ Renders the full physical stamp exactly as the provider walk compares it. */
++export const generationStampV1=(facts:BigIntStats):string=>fields(facts,protocol.stampFields);
++/** ⚓️ Renders the stable identity anchor exactly as the provider walk compares it. */
++export const generationAnchorV1=(facts:BigIntStats):string=>fields(facts,protocol.anchorFields);
++const lstatBig=(path:string):BigIntStats|undefined=>lstatSync(path,{bigint:true,throwIfNoEntry:false});
++const kindLetter=(kind:string):string=>kind==="link"?"l":kind==="directory"?"d":kind==="file"?"f":kind==="missing"?"m":"x";
++const stateKind=(facts:BigIntStats):string=>facts.isSymbolicLink()?"symlink":facts.isDirectory()?"directory":facts.isFile()?"file":"other";
++const stateTuple=(facts:BigIntStats|undefined):string=>JSON.stringify(facts?[stateKind(facts),String(Number(facts.dev)),String(Number(facts.ino)),Number(facts.mode)]:["missing"]);
++const posixRelative=(root:string,path:string):string=>(relative(root,path)||".").split(sep).join("/");
++const encodeRows=(rows:readonly (readonly unknown[])[]):Buffer=>Buffer.from(rows.map(row=>JSON.stringify(row)).join("\n")+(rows.length?"\n":""));
++const decodeRows=(bytes:Uint8Array,expected:GenerationEvidenceV1):(readonly unknown[])[]=>{
++ if(bytes.length!==expected.bytes||generationSha256V1(bytes)!==expected.sha256)throw Error("Sealed generation evidence required");
++ const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes),rows=text.length?text.slice(0,-1).split("\n").map(line=>JSON.parse(line)as unknown[]):[];
++ if(rows.length!==expected.rows||rows.some(row=>!Array.isArray(row)))throw Error("Complete generation evidence rows required");
++ return rows;
++};
++const evidenceOf=(rows:readonly (readonly unknown[])[],suffix:string):Readonly<{evidence:GenerationEvidenceV1;file:Readonly<{name:string;bytes:Buffer}>}>=>{
++ const bytes=encodeRows(rows),sha256=generationSha256V1(bytes);
++ if(rows.length>protocol.maximumRows||bytes.length>protocol.maximumEvidenceBytes)throw Error("Generation evidence capacity exceeded");
++ return Object.freeze({evidence:Object.freeze({name:sha256+suffix,sha256,bytes:bytes.length,rows:rows.length}),file:Object.freeze({name:sha256+suffix,bytes})});
++};
++const compareBytes=(left:string,right:string):number=>Buffer.compare(Buffer.from(left),Buffer.from(right));
++const deferred=(reason:string,path?:string):GenerationCaptureResultV1=>Object.freeze({status:"deferred",reason,...(path===undefined?{}:{path})});
++
++/** 📸️ Freezes a completed walk into a sealed receipt, or defers whenever a timestamp is too young to prove stability. */
++export async function captureGenerationReceiptV1(input:GenerationCaptureInputV1):Promise<GenerationCaptureResultV1>{
++ const{workspace,storeRoot,control,membership}=input,threshold=BigInt(Math.trunc(input.startedAtMs)-protocol.settleMilliseconds)*1000000n;let work=0;
++ const advance=async()=>{if(++work%protocol.checkWork===0)control.check();if(work%protocol.progressWork===0)await control.tick(work);};
++ const frontier:(readonly unknown[])[]=[];
++ for(const row of membership.paths){
++  await advance();const path=posixRelative(workspace,row.path);
++  if(!row.list){frontier.push(["s",path,...row.state]);continue;}
++  const facts=lstatBig(row.path);
++  if(!facts||!facts.isDirectory()||stateTuple(facts)!==JSON.stringify(row.state))return deferred("membership-directory-moved",path);
++  frontier.push(["d",path,String(facts.dev),String(facts.ino),Number(facts.mode),String(facts.mtimeNs),String(facts.ctimeNs),facts.mtimeNs<threshold&&facts.ctimeNs<threshold?1:0,generationProjectionDigestV1(row.list)]);
++ }
++ const observations:(readonly unknown[])[]=[];
++ for(const row of input.execution.observations){
++  await advance();
++  if(row.full&&row.stamp!==null){const parts=row.stamp.split(":");if(BigInt(parts[5]!)>=threshold||BigInt(parts[6]!)>=threshold)return deferred("provider-observation-unsettled",generationLocationV1(row.path,workspace,storeRoot));}
++  observations.push(["o",generationLocationV1(row.path,workspace,storeRoot),kindLetter(row.kind),row.anchor,row.stamp,row.target,row.full?1:0]);
++ }
++ const inputs=input.inputs.map(group=>Object.freeze({scope:group.scope,sources:Object.freeze(group.sources.map(source=>Object.freeze({path:generationLocationV1(source.path,workspace,storeRoot),kind:source.kind,dev:source.dev,ino:source.ino,mode:source.mode,sha256:source.kind==="file"?generationSha256V1(source.bytes):null})))}));
++ const loaded=BigInt(Math.trunc(input.implementation.loadedAtMs)-protocol.settleMilliseconds)*1000000n,unsettled=input.implementation.files.find(file=>BigInt(file.mtimeNs)>=loaded||BigInt(file.ctimeNs)>=loaded);
++ if(unsettled)return deferred("implementation-unsettled",unsettled.path);
++ const closure=[...input.implementation.files].sort((left,right)=>compareBytes(left.path,right.path)).map(file=>["f",file.path,file.sha256,file.bytes]as const);
++ if(closure.length>protocol.implementation.maximumFiles||new Set(closure.map(row=>row[1])).size!==closure.length)throw Error("Bounded unique implementation closure required");
++ const frontierFile=evidenceOf(frontier,protocol.frontierSuffix),executionFile=evidenceOf(observations,protocol.executionSuffix),closureFile=evidenceOf(closure,protocol.implementation.closureSuffix),sha=(text:string)=>generationSha256V1(text);
++ const receipt=sealGenerationReceiptV1({
++  version:1,purpose:"dependency-generation-receipt",scope:input.scope,implementation:{entries:[...input.implementation.entries].sort(compareBytes),evidence:closureFile.evidence},runtime:input.runtime,producer:input.producer,recipeSha256:input.recipeSha256,ownershipSha256:input.ownershipSha256,required:[...input.required],inputs,
++  membership:{frontier:frontierFile.evidence,texts:membership.texts.map(row=>({path:row.path,sha256:row.sha256}))},
++  bindings:input.bindings.map(row=>({scope:row.scope,pairs:row.pairs.map(pair=>({source:generationLocationV1(pair.sourceDirectory,workspace,storeRoot),target:generationLocationV1(pair.targetDirectory,workspace,storeRoot)})),observationSha256:sha(row.observation)})),
++  ready:input.ready.map(row=>({scope:row.scope,generation:row.generation,location:generationLocationV1(row.path,workspace,storeRoot),fingerprint:row.fingerprint})),
++  execution:{evidence:executionFile.evidence,scopes:input.execution.scopes.map(row=>({scope:row.scope,sha256:row.sha256})),runtimeSha256:input.execution.runtimeSha256},scopeReadSha256:input.scopeReadSha256,
++ });
++ const errors=receiptSchema.validate(receipt);if(errors.length)throw Error("Closed dependency generation receipt required",{cause:errors.slice(0,4)});
++ return Object.freeze({status:"captured",receipt,files:Object.freeze([frontierFile.file,executionFile.file,closureFile.file])});
++}
++
++const mismatch=(cls:GenerationMismatchClassV1,path?:string,detail?:string):GenerationVerifyResultV1=>Object.freeze({status:"mismatch",class:cls,...(path===undefined?{}:{path}),...(detail===undefined?{}:{detail})});
++const sameRuntime=(left:GenerationRuntimeV1,right:GenerationRuntimeV1)=>left.bun===right.bun&&left.revision===right.revision&&left.node===right.node&&left.platform===right.platform&&left.arch===right.arch&&left.sha256===right.sha256;
++
++/** 🔬️ Replays a receipt against the live tree in cheapest-first tiers; never throws except on cancellation and never accepts a doubt. */
++export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):Promise<GenerationVerifyResultV1>{
++ const{workspace,storeRoot,receipt,control}=input;let work=0;
++ const advance=async()=>{if(++work%protocol.checkWork===0)control.check();if(work%protocol.progressWork===0)await control.tick(work);};
++ try{
++  control.check();
++  if(generationCanonicalJsonV1([...input.implementationEntries].sort(compareBytes))!==generationCanonicalJsonV1(receipt.implementation.entries))return mismatch("implementation-changed",undefined,"entries");
++  for(const row of decodeRows(input.readEvidence(receipt.implementation.evidence.name,protocol.maximumEvidenceBytes),receipt.implementation.evidence)){
++   await advance();const live=input.implementationFile(row[1]as string);
++   if(row[0]!=="f"||!live||live.sha256!==row[2]||live.bytes!==row[3])return mismatch("implementation-changed",row[1]as string,live?"bytes":"missing");
++  }
++  if(!sameRuntime(input.runtime(),receipt.runtime))return mismatch("runtime-changed");
++  const producer=input.producer(),sealed=generationCanonicalJsonV1(receipt.producer);
++  if(generationCanonicalJsonV1(producer)!==sealed){
++   const known=new Set([...receipt.producer.files.map(row=>generationCanonicalJsonV1(row)),...receipt.producer.environment.map(row=>generationCanonicalJsonV1(row))]),moved=[...producer.files,...producer.environment].find(row=>!known.has(generationCanonicalJsonV1(row)))??[...receipt.producer.files,...receipt.producer.environment][0];
++   return mismatch("configuration-changed",moved?("path"in moved?moved.path:"env:"+moved.name):undefined);
++  }
++  if(!input.conditionsClosed())return mismatch("conditions-open");
++  const observed=new Map<string,string>();
++  for(const row of receipt.bindings){
++   await advance();let text:string;
++   try{text=input.observeBindings(row.scope,row.pairs.map(pair=>({sourceDirectory:generationResolveV1(pair.source,workspace,storeRoot),targetDirectory:generationResolveV1(pair.target,workspace,storeRoot)})));}catch(error){if(control.signal.aborted)throw error;return mismatch("binding-changed",row.scope,String((error as Error)?.message??error).slice(0,200));}
++   if(generationSha256V1(text)!==row.observationSha256)return mismatch("binding-changed",row.scope);observed.set(row.scope,text);
++  }
++  const fingerprints=new Map<string,string>();
++  for(const row of receipt.ready){await advance();let fingerprint:string;try{fingerprint=await input.readReady(generationResolveV1(row.location,workspace,storeRoot));}catch(error){if(control.signal.aborted)throw error;return mismatch("ready-changed",row.scope);}if(fingerprint!==row.fingerprint)return mismatch("ready-changed",row.scope);fingerprints.set(row.scope,fingerprint);}
++  for(const group of receipt.inputs)for(const source of group.sources){
++   await advance();const path=generationResolveV1(source.path,workspace,storeRoot),facts=lstatBig(path);
++   if(source.kind==="missing"){if(facts)return mismatch("input-changed",source.path,"appeared");continue;}
++   if(!facts||facts.isSymbolicLink()||(source.kind==="file"?!facts.isFile():!facts.isDirectory())||String(facts.dev)!==source.dev||String(facts.ino)!==source.ino||Number(facts.mode)!==source.mode)return mismatch("input-changed",source.path,"identity");
++   if(source.kind==="file"){if(facts.size>BigInt(protocol.maximumSourceFileBytes)||generationSha256V1(readFileSync(path))!==source.sha256)return mismatch("input-changed",source.path,"bytes");}
++  }
++  for(const row of receipt.membership.texts){
++   await advance();let text:string;
++   try{text=new TextDecoder("utf-8",{fatal:true}).decode(readFileSync(resolve(workspace,row.path)));}catch(error){if(control.signal.aborted)throw error;return mismatch("manifest-changed",row.path,"unreadable");}
++   if(generationSha256V1(text)!==row.sha256)return mismatch("manifest-changed",row.path,"bytes");
++  }
++  let relisted=0;
++  for(const row of decodeRows(input.readEvidence(receipt.membership.frontier.name,protocol.maximumEvidenceBytes),receipt.membership.frontier)){
++   await advance();const path=resolve(workspace,row[1]as string),facts=lstatBig(path);
++   if(row[0]==="s"){if(stateTuple(facts)!==JSON.stringify(row.slice(2)))return mismatch("membership-changed",row[1]as string,"state");continue;}
++   if(!facts||!facts.isDirectory())return mismatch("membership-changed",row[1]as string,"directory");
++   if(row[7]===1&&String(facts.dev)===row[2]&&String(facts.ino)===row[3]&&Number(facts.mode)===row[4]&&String(facts.mtimeNs)===row[5]&&String(facts.ctimeNs)===row[6])continue;
++   if(++relisted>protocol.maximumRelist)return mismatch("membership-churn",row[1]as string);
++   if(generationProjectionDigestV1(input.project(path))!==row[8])return mismatch("membership-changed",row[1]as string,"listing");
++  }
++  for(const row of decodeRows(input.readEvidence(receipt.execution.evidence.name,protocol.maximumEvidenceBytes),receipt.execution.evidence)){
++   await advance();const path=generationResolveV1(row[1]as string,workspace,storeRoot),facts=lstatBig(path),full=row[6]===1,expected=full?row[4]:row[3];
++   if((facts?(full?generationStampV1(facts):generationAnchorV1(facts)):null)!==expected)return mismatch("provider-changed",row[1]as string,"identity");
++   if(row[2]==="l"&&readlinkSync(path)!==row[5])return mismatch("provider-changed",row[1]as string,"target");
++  }
++  const receipts=receipt.required.map(scope=>{const ready=receipt.ready.find(row=>row.scope===scope);if(!ready)throw Error("Complete ready rows required");return Object.freeze({scope,generation:ready.generation,fingerprint:fingerprints.get(scope)!});}),
++   sha256=generationSha256V1(JSON.stringify([receipts,receipt.required.map(scope=>[scope,observed.get(scope)]),receipt.execution.scopes]));
++  if(sha256!==receipt.scopeReadSha256)return mismatch("sha-changed");
++  control.check();
++  return Object.freeze({status:"match",version:1,required:Object.freeze([...receipt.required]),receipts:Object.freeze(receipts),sha256});
++ }catch(error){
++  if(control.signal.aborted)throw error;
++  return mismatch(/evidence/iu.test(String((error as Error)?.message))?"evidence-invalid":"unreadable",undefined,String((error as Error)?.message??error).slice(0,200));
++ }
++}
+# stage-clean orphan staged=walkperf-tools/staged/fixtures.json map=None
+--- /dev/null
++++ b/staged/walkperf-tools/staged/fixtures.json
+@@ -0,0 +1,786 @@
++{
++ "version": 1,
++ "purpose": "dependency-generation-receipt-fixtures",
++ "rules": {
++  "opaque": [
++   "🗑️generated",
++   "🤖️generated",
++   "node_modules",
++   "target",
++   "dist",
++   "📤️dist",
++   "build",
++   "storybook-static",
++   "temp",
++   "coverage",
++   "__pycache__",
++   "🔌️plugin-modules",
++   "compose"
++  ],
++  "opaquePatterns": [
++   "^target(?:-[a-z0-9]+)*$"
++  ],
++  "walkRoots": [
++   "pkgs"
++  ]
++ },
++ "workspace": {
++  "files": {
++   "package.json": "{\"name\": \"fixture-root\", \"version\": \"0.0.0\", \"semio\": {\"workspace\": {\"schemaVersion\": 1, \"members\": [\"pkgs/*\"], \"owners\": []}}, \"workspaces\": [\"pkgs/a\", \"pkgs/b\", \"pkgs/🧩️widget\"]}",
++   "bun.lock": "{\"lockfileVersion\":1,\"workspaces\":{},\"packages\":{}}",
++   "pkgs/a/package.json": "{\"name\":\"a\",\"version\":\"1.0.0\",\"dependencies\":{\"dep\":\"^1.0.0\"}}",
++   "pkgs/a/src/index.ts": "export const a=1;\n",
++   "pkgs/b/package.json": "{\"name\":\"b\",\"version\":\"1.0.0\"}",
++   "pkgs/🧩️widget/package.json": "{\"name\":\"widget\",\"version\":\"1.0.0\"}",
++   "pkgs/🧩️widget/src/widget.ts": "export {};\n",
++   "store/j/g1/bindings.json": "{\"ready\":true}\n",
++   "store/j/g1/node_modules/dep/package.json": "{\"name\":\"dep\",\"version\":\"1.2.3\"}",
++   "store/j/g1/node_modules/dep/index.js": "module.exports=1;\n",
++   "store/j/g2/node_modules/other/package.json": "{\"name\":\"other\",\"version\":\"1.0.0\"}",
++   "impl/entry.ts": "import {createRequire} from \"node:module\";\nimport {fence} from \"./deep/fence.ts\";\nimport rules from \"./rules.json\" with {type:\"json\"};\nexport const limit=createRequire(import.meta.url)(\"./limit.cjs\");\nexport const run=()=>fence(rules);\n",
++   "impl/deep/fence.ts": "export const fence=(rules:unknown)=>rules;\nexport const later=()=>import(\"./later.ts\");\n",
++   "impl/deep/later.ts": "export const later=1;\n",
++   "impl/limit.cjs": "module.exports=Object.freeze({maximum:4});\n",
++   "impl/rules.json": "{\"limit\":4}\n",
++   "impl/🧬️schema/🔣️.json": "{\"type\":\"object\"}\n",
++   "impl/unrelated.ts": "export const unrelated=true;\n"
++  },
++  "links": {
++   "pkgs/a/node_modules": "@STORE@/j/g1/node_modules",
++   "pkgs/b/node_modules": "@STORE@/j/g2/node_modules",
++   "store/j/g1/node_modules/dep-link": "../../g2/node_modules/other"
++  },
++  "missing": [
++   "node_modules",
++   "bunfig.toml"
++  ],
++  "observed": {
++   "full": [
++    "store/j/g1/node_modules/dep/package.json"
++   ],
++   "anchors": [
++    "store/j/g1/node_modules/dep",
++    "store/j/g1/node_modules",
++    "store/j/g2/node_modules/other",
++    "store/j/g1"
++   ],
++   "links": [
++    "store/j/g1/node_modules/dep-link"
++   ],
++   "missing": [
++    "node_modules",
++    "pkgs/node_modules"
++   ]
++  },
++  "required": [
++   "."
++  ]
++ },
++ "progress": {
++  "directories": 4200
++ },
++ "cases": [
++  {
++   "name": "untouched tree matches",
++   "mutations": [],
++   "expect": "match"
++  },
++  {
++   "name": "directory touched without change matches",
++   "mutations": [
++    {
++     "op": "touch",
++     "path": "pkgs"
++    }
++   ],
++   "expect": "match"
++  },
++  {
++   "name": "irrelevant file added matches",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "pkgs/a/readme.md",
++     "text": "notes"
++    }
++   ],
++   "expect": "match"
++  },
++  {
++   "name": "hidden directory added matches",
++   "mutations": [
++    {
++     "op": "mkdir",
++     "path": "pkgs/.cache"
++    }
++   ],
++   "expect": "match"
++  },
++  {
++   "name": "opaque directory added matches",
++   "mutations": [
++    {
++     "op": "mkdir",
++     "path": "pkgs/a/dist"
++    },
++    {
++     "op": "mkdir",
++     "path": "pkgs/b/target-debug"
++    }
++   ],
++   "expect": "match"
++  },
++  {
++   "name": "source file edited matches",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "pkgs/a/src/index.ts",
++     "text": "export const a=2;\n"
++    }
++   ],
++   "expect": "match"
++  },
++  {
++   "name": "new package falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "pkgs/z/package.json",
++     "text": "{\"name\":\"z\"}"
++    }
++   ],
++   "expect": "mismatch:membership-changed"
++  },
++  {
++   "name": "removed package falls back",
++   "mutations": [
++    {
++     "op": "remove",
++     "path": "pkgs/b"
++    }
++   ],
++   "expect": "mismatch:manifest-changed"
++  },
++  {
++   "name": "package replaced by symlink falls back",
++   "mutations": [
++    {
++     "op": "remove",
++     "path": "pkgs/b"
++    },
++    {
++     "op": "symlink",
++     "path": "pkgs/b",
++     "target": "a"
++    }
++   ],
++   "expect": "mismatch:manifest-changed"
++  },
++  {
++   "name": "source directory removed falls back",
++   "mutations": [
++    {
++     "op": "remove",
++     "path": "pkgs/a/src"
++    }
++   ],
++   "expect": "mismatch:membership-changed"
++  },
++  {
++   "name": "source directory replaced by symlink falls back",
++   "mutations": [
++    {
++     "op": "remove",
++     "path": "pkgs/a/src"
++    },
++    {
++     "op": "symlink",
++     "path": "pkgs/a/src",
++     "target": "../b"
++    }
++   ],
++   "expect": "mismatch:membership-changed"
++  },
++  {
++   "name": "nested package manifest appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "pkgs/a/src/package.json",
++     "text": "{\"name\":\"nested\"}"
++    }
++   ],
++   "expect": "mismatch:membership-changed"
++  },
++  {
++   "name": "member manifest edited falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "pkgs/b/package.json",
++     "text": "{\"name\":\"b\",\"version\":\"2.0.0\"}"
++    }
++   ],
++   "expect": "mismatch:manifest-changed"
++  },
++  {
++   "name": "lock edited falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "bun.lock",
++     "text": "{\"lockfileVersion\":1,\"workspaces\":{},\"packages\":{\"x\":1}}"
++    }
++   ],
++   "expect": "mismatch:input-changed"
++  },
++  {
++   "name": "lock replaced by equal bytes falls back",
++   "mutations": [
++    {
++     "op": "replace",
++     "path": "bun.lock"
++    }
++   ],
++   "expect": "mismatch:input-changed"
++  },
++  {
++   "name": "bunfig appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "bunfig.toml",
++     "text": "[install]\n"
++    }
++   ],
++   "expect": "mismatch:input-changed"
++  },
++  {
++   "name": "binding retargeted falls back",
++   "mutations": [
++    {
++     "op": "remove",
++     "path": "pkgs/a/node_modules"
++    },
++    {
++     "op": "symlink",
++     "path": "pkgs/a/node_modules",
++     "target": "@STORE@/j/g2/node_modules"
++    }
++   ],
++   "expect": "mismatch:binding-changed"
++  },
++  {
++   "name": "binding removed falls back",
++   "mutations": [
++    {
++     "op": "remove",
++     "path": "pkgs/a/node_modules"
++    }
++   ],
++   "expect": "mismatch:binding-changed"
++  },
++  {
++   "name": "ready receipt edited falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "store/j/g1/bindings.json",
++     "text": "{\"ready\":false}\n"
++    }
++   ],
++   "expect": "mismatch:ready-changed"
++  },
++  {
++   "name": "provider manifest edited falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "store/j/g1/node_modules/dep/package.json",
++     "text": "{\"name\":\"dep\",\"version\":\"1.2.4\"}"
++    }
++   ],
++   "expect": "mismatch:provider-changed"
++  },
++  {
++   "name": "ambient fallback appears falls back",
++   "mutations": [
++    {
++     "op": "mkdir",
++     "path": "node_modules"
++    }
++   ],
++   "expect": "mismatch:provider-changed"
++  },
++  {
++   "name": "provider link retargeted falls back",
++   "mutations": [
++    {
++     "op": "remove",
++     "path": "store/j/g1/node_modules/dep-link"
++    },
++    {
++     "op": "symlink",
++     "path": "store/j/g1/node_modules/dep-link",
++     "target": "../../g2/node_modules/other"
++    }
++   ],
++   "expect": "mismatch:provider-changed"
++  },
++  {
++   "name": "evidence tampered falls back",
++   "mutations": [],
++   "expect": "mismatch:evidence-invalid",
++   "tamper": "frontier"
++  },
++  {
++   "name": "execution evidence tampered falls back",
++   "mutations": [],
++   "expect": "mismatch:evidence-invalid",
++   "tamper": "execution"
++  },
++  {
++   "name": "entry list changed falls back",
++   "mutations": [],
++   "expect": "mismatch:implementation-changed",
++   "port": "entries"
++  },
++  {
++   "name": "runtime changed falls back",
++   "mutations": [],
++   "expect": "mismatch:runtime-changed",
++   "port": "runtime"
++  },
++  {
++   "name": "open conditions fall back",
++   "mutations": [],
++   "expect": "mismatch:conditions-open",
++   "port": "conditions"
++  },
++  {
++   "name": "relist budget exceeded falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "pkgs/a/one.txt",
++     "text": "1"
++    },
++    {
++     "op": "write",
++     "path": "pkgs/b/two.txt",
++     "text": "2"
++    }
++   ],
++   "expect": "mismatch:membership-churn",
++   "relist": 1
++  },
++  {
++   "name": "inconsistent seal falls back",
++   "mutations": [],
++   "expect": "mismatch:sha-changed",
++   "reseal": "scopeReadSha256"
++  },
++  {
++   "name": "closure entry edited falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "impl/entry.ts",
++     "text": "import {createRequire} from \"node:module\";\nimport {fence} from \"./deep/fence.ts\";\nimport rules from \"./rules.json\" with {type:\"json\"};\nexport const limit=createRequire(import.meta.url)(\"./limit.cjs\");\nexport const run=()=>fence(rules);\n// changed\n"
++    }
++   ],
++   "expect": "mismatch:implementation-changed"
++  },
++  {
++   "name": "closure transitive import edited falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "impl/deep/fence.ts",
++     "text": "export const fence=(rules:unknown)=>({...rules as object});\nexport const later=()=>import(\"./later.ts\");\n"
++    }
++   ],
++   "expect": "mismatch:implementation-changed"
++  },
++  {
++   "name": "closure dynamic import target edited falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "impl/deep/later.ts",
++     "text": "export const later=2;\n"
++    }
++   ],
++   "expect": "mismatch:implementation-changed"
++  },
++  {
++   "name": "closure commonjs asset edited falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "impl/limit.cjs",
++     "text": "module.exports=Object.freeze({maximum:5});\n"
++    }
++   ],
++   "expect": "mismatch:implementation-changed"
++  },
++  {
++   "name": "closure json asset edited falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "impl/rules.json",
++     "text": "{\"limit\":5}\n"
++    }
++   ],
++   "expect": "mismatch:implementation-changed"
++  },
++  {
++   "name": "closure module-owned schema edited falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "impl/🧬️schema/🔣️.json",
++     "text": "{\"type\":\"array\"}\n"
++    }
++   ],
++   "expect": "mismatch:implementation-changed"
++  },
++  {
++   "name": "closure file removed falls back",
++   "mutations": [
++    {
++     "op": "remove",
++     "path": "impl/deep/later.ts"
++    }
++   ],
++   "expect": "mismatch:implementation-changed"
++  },
++  {
++   "name": "closure file replaced by symlink falls back",
++   "mutations": [
++    {
++     "op": "remove",
++     "path": "impl/deep/later.ts"
++    },
++    {
++     "op": "symlink",
++     "path": "impl/deep/later.ts",
++     "target": "@STORE@/../impl/unrelated.ts"
++    }
++   ],
++   "expect": "mismatch:implementation-changed"
++  },
++  {
++   "name": "closure file rewritten with identical bytes matches",
++   "mutations": [
++    {
++     "op": "replace",
++     "path": "impl/deep/fence.ts"
++    }
++   ],
++   "expect": "match"
++  },
++  {
++   "name": "closure file touched without change matches",
++   "mutations": [
++    {
++     "op": "touch",
++     "path": "impl/rules.json"
++    }
++   ],
++   "expect": "match"
++  },
++  {
++   "name": "file outside the closure edited matches",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "impl/unrelated.ts",
++     "text": "export const unrelated=false;\n"
++    }
++   ],
++   "expect": "match"
++  },
++  {
++   "name": "file added next to the closure matches",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "impl/deep/extra.ts",
++     "text": "export const extra=1;\n"
++    }
++   ],
++   "expect": "match"
++  },
++  {
++   "name": "closure evidence tampered falls back",
++   "mutations": [],
++   "expect": "mismatch:evidence-invalid",
++   "tamper": "closure"
++  },
++  {
++   "name": "bun revision changed falls back",
++   "mutations": [],
++   "expect": "mismatch:runtime-changed",
++   "port": "revision"
++  },
++  {
++   "name": "workspace npmrc appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": ".npmrc",
++     "text": "registry=https://registry.example.test/\n"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "home npmrc appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": ".ambient/home/.npmrc",
++     "text": "//registry.example.test/:_authToken=x\n"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "home bunfig appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": ".ambient/home/.bunfig.toml",
++     "text": "[install]\nregistry = \"https://registry.example.test/\"\n"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "xdg bunfig appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": ".ambient/xdg/.bunfig.toml",
++     "text": "[install]\n"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "home config bunfig appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": ".ambient/home/.config/.bunfig.toml",
++     "text": "[install]\n"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "store home npmrc appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "store/bun-home/.npmrc",
++     "text": "x=1\n"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "store home bunfig appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "store/bun-home/.bunfig.toml",
++     "text": "[install]\n"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "store config bunfig appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": "store/bun-config/.bunfig.toml",
++     "text": "[install]\n"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "home npmrc appearing as a symlink falls back",
++   "mutations": [
++    {
++     "op": "mkdir",
++     "path": ".ambient/home"
++    },
++    {
++     "op": "write",
++     "path": ".ambient/target.txt",
++     "text": "a=1\n"
++    },
++    {
++     "op": "symlink",
++     "path": ".ambient/home/.npmrc",
++     "target": "@STORE@/../.ambient/target.txt"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "install cache directory variable set falls back",
++   "mutations": [
++    {
++     "op": "env",
++     "path": "BUN_INSTALL_CACHE_DIR",
++     "text": "/elsewhere/cache"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "registry variable set falls back",
++   "mutations": [
++    {
++     "op": "env",
++     "path": "NPM_CONFIG_REGISTRY",
++     "text": "https://registry.example.test/"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "lowercase registry variable set falls back",
++   "mutations": [
++    {
++     "op": "env",
++     "path": "npm_config_registry",
++     "text": "https://registry.example.test/"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "bun install variable set falls back",
++   "mutations": [
++    {
++     "op": "env",
++     "path": "BUN_INSTALL",
++     "text": "/elsewhere"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "proxy variable set falls back",
++   "mutations": [
++    {
++     "op": "env",
++     "path": "HTTPS_PROXY",
++     "text": "http://proxy.example.test:3128"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "certificate variable set falls back",
++   "mutations": [
++    {
++     "op": "env",
++     "path": "NODE_EXTRA_CA_CERTS",
++     "text": "/etc/ca.pem"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "ignored user agent variable changed matches",
++   "mutations": [
++    {
++     "op": "env",
++     "path": "NPM_CONFIG_USER_AGENT",
++     "text": "bun/9.9.9 elsewhere"
++    }
++   ],
++   "expect": "match"
++  },
++  {
++   "name": "unrelated variable changed matches",
++   "mutations": [
++    {
++     "op": "env",
++     "path": "PATH",
++     "text": "/opt/bin"
++    }
++   ],
++   "expect": "match"
++  },
++  {
++   "name": "empty home npmrc file appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": ".ambient/home/.npmrc",
++     "text": ""
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  },
++  {
++   "name": "unreadable home npmrc appears falls back",
++   "mutations": [
++    {
++     "op": "write",
++     "path": ".ambient/home/.npmrc",
++     "text": "x=1\n"
++    },
++    {
++     "op": "chmod",
++     "path": ".ambient/home/.npmrc",
++     "text": "000"
++    }
++   ],
++   "expect": "mismatch:configuration-changed"
++  }
++ ],
++ "implementation": {
++  "entries": [
++   "impl/entry.ts"
++  ]
++ },
++ "environment": {
++  "PATH": "/usr/bin",
++  "NPM_CONFIG_USER_AGENT": "bun/1.3.14 fixture",
++  "HOME_DIRECTORY": "unrelated"
++ },
++ "fences": [
++  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
++  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts",
++  "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📐️layout/🟦️.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/🔣️.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts"
++ ],
++ "legacyImplementationFiles": [
++  "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
++  "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
++  "🗂️workspaces/🟦️bun/🟨️.cjs",
++  "🗂️workspaces/🟦️bun/🧬️schema/🔣️.json",
++  "🗂️workspaces/📦️payload/🟨️.cjs",
++  "🗂️workspaces/🟨️.cjs",
++  "🗂️workspaces/🔣️policy.json"
++ ]
++}
+# stage-clean orphan staged=walkperf-tools/staged/glue.ts map=None
+--- /dev/null
++++ b/staged/walkperf-tools/staged/glue.ts
+@@ -0,0 +1,164 @@
++import {createHash} from "node:crypto";
++import {lstatSync,readFileSync,readdirSync,statSync,unlinkSync} from "node:fs";
++import {homedir} from "node:os";
++import {dirname,join,resolve} from "node:path";
++import {fileURLToPath} from "node:url";
++import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
++import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
++import {withArtifactRelativeDirectoryV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
++import type {RepositoryCacheStoreV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
++import {readBunWorkspaceListingProjectionV1,type BunWorkspaceObservedOwnershipV1} from "../../../../../🗂️workspaces/🟦️bun/🟦️.ts";
++import {javascriptDependencyReadContextV1,javascriptDependencySourceOwnerRuntimeV1,observeJavascriptDependencyBindingsReadV1,readJavascriptDependencyBindingReceiptReadV1,type JavascriptDependencyReadContextV1,type readJavascriptDependencySourceOwnerScopeReadV1} from "../../💾️storage/🟦️.ts";
++import installSchema from "../../💾️storage/🧬️schema/📥️install.json" with {type:"json"};
++import {captureGenerationReceiptV1,generationLocationV1,generationProtocolV1 as protocol,generationSha256V1,parseGenerationReceiptV1,verifyGenerationReceiptV1,type GenerationControlV1,type GenerationProducerFileV1,type GenerationProducerV1,type GenerationProducerVariableV1,type GenerationReceiptV1,type GenerationRuntimeV1,type GenerationVerifyResultV1} from "../🟦️.ts";
++
++const repositoryRoot=resolve(dirname(fileURLToPath(import.meta.url)),"../../../../../../../../../.."),compareBytes=(left:string,right:string):number=>Buffer.compare(Buffer.from(left),Buffer.from(right));
++const scopeKey=(scope:string)=>generationSha256V1(scope).slice(0,16);
++const evidenceName=/^[a-f0-9]{64}\.(?:frontier|execution|closure)\.ndjson$/u;
++
++/** 🧬️ Is a completed complete walk plus the topology it retained; only such a walk may be published. */
++export type JavascriptDependencyGenerationWalkV1=Awaited<ReturnType<typeof readJavascriptDependencySourceOwnerScopeReadV1>>&Readonly<{observed?:()=>BunWorkspaceObservedOwnershipV1}>;
++/** 🔍️ Is either the exact result of a complete walk, a typed mismatch, or the absence of any receipt. */
++export type JavascriptDependencyGenerationVerifyV1=GenerationVerifyResultV1|Readonly<{status:"absent"}>;
++
++/** 🧭️ Names what a receipt is sealed against: where the implementation closure lives, which entries span it and which ambient locations the installer environment could read. */
++export interface JavascriptDependencyGenerationSubjectV1{readonly root:string;readonly entries:readonly string[];readonly ambient:JavascriptDependencyGenerationAmbientV1;readonly loadedAtMs:number}
++/** 🧱️ Reads one runtime closure file as the capture hashed it; a symlink, a missing file or anything but an ordinary file counts as changed. */
++export function javascriptDependencyGenerationImplementationFileV1(root:string=repositoryRoot):(path:string)=>Readonly<{sha256:string;bytes:number}>|undefined{
++ return path=>{
++  const full=join(root,path),facts=lstatSync(full,{bigint:true,throwIfNoEntry:false});
++  if(!facts||!facts.isFile()||facts.size>BigInt(protocol.maximumSourceFileBytes))return undefined;
++  try{const bytes=readFileSync(full);return Object.freeze({sha256:generationSha256V1(bytes),bytes:bytes.length});}catch{return undefined;}
++ };
++}
++/** 🔏️ Captures the actual runtime import closure of every walk and fence entry (imports, literal assets, module-owned schemas) through the one reader that closes build implementations. */
++export async function captureJavascriptDependencyGenerationImplementationV1(invocation:ScriptInvocation,subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1(),extraFiles:readonly string[]=protocol.implementation.extraFiles){
++ const {captureBuildSourceClosureV1}=await import("../../../../../🏗️build/📥️source/🔏️closure/🟦️.ts"),files=new Map<string,Readonly<{path:string;sha256:string;bytes:number}>>(),read=javascriptDependencyGenerationImplementationFileV1(subject.root);
++ for(const entry of subject.entries)for(const file of (await captureBuildSourceClosureV1(subject.root,entry,invocation)).files)files.set(file.path,Object.freeze({path:file.path,sha256:file.sha256,bytes:Math.floor(file.base64.length*3/4)-(file.base64.endsWith("==")?2:file.base64.endsWith("=")?1:0)}));
++ for(const extra of extraFiles){const live=read(extra);if(!live)throw Error("Ordinary implementation asset required");files.set(extra,Object.freeze({path:extra,...live}));}
++ const stamped=[...files.values()].sort((left,right)=>compareBytes(left.path,right.path)).map(file=>{const facts=lstatSync(join(subject.root,file.path),{bigint:true});if(!facts.isFile())throw Error("Ordinary implementation Source file required");return Object.freeze({...file,mtimeNs:String(facts.mtimeNs),ctimeNs:String(facts.ctimeNs)});});
++ return Object.freeze({entries:Object.freeze([...subject.entries]),loadedAtMs:subject.loadedAtMs,files:Object.freeze(stamped)});
++}
++/** ⚙️ Reads the live tool identity from the same source the provider walk fingerprints. */
++export function javascriptDependencyGenerationRuntimeV1():GenerationRuntimeV1{
++ return Object.freeze({bun:String(process.versions.bun),revision:String((globalThis as {Bun?:{revision?:string}}).Bun?.revision??""),node:process.versions.node,platform:process.platform,arch:process.arch,sha256:javascriptDependencySourceOwnerRuntimeV1()});
++}
++/** 🌐️ Names where the process finds its home and configuration directories; every field is injectable so laws can run in isolation. */
++export interface JavascriptDependencyGenerationAmbientV1{readonly env:Readonly<Record<string,string|undefined>>;readonly home:string;readonly config:string}
++/** 🔭️ Reads the live ambient locations. */
++export const javascriptDependencyGenerationAmbientV1=():JavascriptDependencyGenerationAmbientV1=>Object.freeze({env:process.env,home:homedir(),config:process.env.XDG_CONFIG_HOME||join(homedir(),protocol.producer.ambientConfigFallback)});
++/** 🎯️ Names the live subject: this checkout's closure entries and the process ambient. */
++export const javascriptDependencyGenerationSubjectV1=():JavascriptDependencyGenerationSubjectV1=>Object.freeze({root:repositoryRoot,entries:protocol.implementation.entries,ambient:javascriptDependencyGenerationAmbientV1(),loadedAtMs:Date.now()-process.uptime()*1000});
++const configFile=(path:string,workspace:string,storeRoot:string):GenerationProducerFileV1=>{
++ const location=generationLocationV1(path,workspace,storeRoot),other=Object.freeze({path:location,kind:"other"as const,bytes:0,sha256:null});
++ try{
++  const facts=statSync(path,{throwIfNoEntry:false});
++  if(!facts)return Object.freeze({path:location,kind:"missing",bytes:0,sha256:null});
++  if(!facts.isFile()||facts.size>protocol.producer.maximumFileBytes)return other;
++  const bytes=readFileSync(path);return Object.freeze({path:location,kind:"file",bytes:bytes.length,sha256:generationSha256V1(bytes)});
++ }catch(error){return (error as NodeJS.ErrnoException).code==="ENOTDIR"?Object.freeze({path:location,kind:"missing",bytes:0,sha256:null}):other;}
++};
++/** 🧪️ Observes every producer-side input outside the Source bytes: installer configuration at each level an installer could read (scope, ambient, Store-fixed) and the ambient variables that select registries, caches or transport. */
++export function observeJavascriptDependencyGenerationProducerV1(workspace:string,storeRoot:string,scopes:readonly string[],ambient:JavascriptDependencyGenerationAmbientV1=javascriptDependencyGenerationAmbientV1()):GenerationProducerV1{
++ const root=resolve(workspace),policy=protocol.producer,paths=new Set<string>();
++ for(const scope of scopes)for(const name of policy.scopeFiles)paths.add(join(resolve(root,scope),name));
++ for(const name of policy.ambientHomeFiles)paths.add(join(ambient.home,name));
++ for(const directory of new Set([ambient.config,join(ambient.home,policy.ambientConfigFallback)]))for(const name of policy.ambientConfigFiles)paths.add(join(directory,name));
++ for(const[role,names]of Object.entries(policy.storeRoleFiles))for(const name of names)paths.add(join(storeRoot,role,name));
++ const files=[...paths].map(path=>configFile(path,root,storeRoot)).sort((left,right)=>compareBytes(left.path,right.path)),ignored=new Set(policy.environmentIgnored),names=new Set(policy.environmentNames),environment:GenerationProducerVariableV1[]=[];
++ for(const[name,value]of Object.entries(ambient.env)){
++  const upper=name.toUpperCase();
++  if(value===undefined||ignored.has(upper))continue;
++  if(names.has(upper)||policy.environmentPrefixes.some(prefix=>upper.startsWith(prefix)))environment.push(Object.freeze({name,sha256:generationSha256V1(value)}));
++ }
++ environment.sort((left,right)=>compareBytes(left.name,right.name));
++ return Object.freeze({files:Object.freeze(files),environment:Object.freeze(environment)});
++}
++/** 🚪️ Repeats the provider walk's refusal of ambient resolution conditions. */
++export const javascriptDependencyGenerationConditionsClosedV1=():boolean=>!(process.env.NODE_OPTIONS||process.env.BUN_OPTIONS||process.execArgv.some(value=>/^--(?:conditions|preserve-symlinks)(?:=|$)/u.test(value)));
++
++const controlOf=(context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl,mode:"shared"|"exclusive",check:()=>void=()=>{}):GenerationControlV1=>{
++ const started=performance.now(),verify=()=>{context.check(control);check();};
++ return Object.freeze({signal:control.signal,check:verify,tick:async(work:number)=>{verify();await control.publish({resource:"dependencies:generation-verify:"+work,mode,elapsedMs:performance.now()-started});await control.yieldContinuation();verify();}});
++};
++const readBounded=(path:string,maximum:number):Buffer=>{const facts=lstatSync(path,{bigint:true});if(!facts.isFile()||facts.size>BigInt(maximum))throw Error("Sealed generation evidence required");return readFileSync(path);};
++const receiptNames=(storeRoot:string,scope:string):string[]=>{
++ const prefix=scopeKey(scope)+".";
++ try{return readdirSync(join(storeRoot,protocol.directory)).filter(name=>name.startsWith(prefix)&&name.endsWith(protocol.receiptSuffix)).sort();}catch{return[];}
++};
++const portsOf=(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl,generation:GenerationControlV1,read:(name:string,maximumBytes:number)=>Uint8Array,receipt:GenerationReceiptV1,subject:JavascriptDependencyGenerationSubjectV1)=>Object.freeze({
++ workspace,storeRoot:context.root,receipt,readEvidence:read,implementationEntries:subject.entries,implementationFile:javascriptDependencyGenerationImplementationFileV1(subject.root),runtime:javascriptDependencyGenerationRuntimeV1,producer:()=>observeJavascriptDependencyGenerationProducerV1(workspace,context.root,receipt.required,subject.ambient),conditionsClosed:javascriptDependencyGenerationConditionsClosedV1,
++ project:(path:string)=>readBunWorkspaceListingProjectionV1(workspace,path),
++ observeBindings:(_scope:string,pairs:readonly Readonly<{sourceDirectory:string;targetDirectory:string}>[])=>observeJavascriptDependencyBindingsReadV1(context,pairs,control),
++ readReady:async(path:string)=>(await readJavascriptDependencyBindingReceiptReadV1(context,path,control)).fingerprint,control:generation,
++});
++
++/** 🪙️ Proves an unchanged generation by stamps and bounded reads under the caller's shared read custody; any doubt returns a typed mismatch for the complete walk. */
++export async function verifyJavascriptDependencyGenerationReceiptV1(workspace:string,context:JavascriptDependencyReadContextV1,control:ResourceLeaseControl,scope:string,subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1()):Promise<JavascriptDependencyGenerationVerifyV1>{
++ const root=resolve(workspace),names=receiptNames(context.root,scope);let last:JavascriptDependencyGenerationVerifyV1={status:"absent"};
++ for(const name of names){
++  context.check(control);let receipt:GenerationReceiptV1;
++  try{receipt=parseGenerationReceiptV1(readBounded(join(context.root,protocol.directory,name),protocol.maximumReceiptBytes));}catch{last=Object.freeze({status:"mismatch",class:"receipt-invalid",path:name});continue;}
++  if(receipt.scope!==scope)continue;
++  const result=await verifyGenerationReceiptV1(portsOf(root,context,control,controlOf(context,control,"shared"),(evidence,maximum)=>{if(!evidenceName.test(evidence))throw Error("Sealed generation evidence required");try{return readBounded(join(context.root,protocol.directory,evidence),maximum);}catch{throw Error("Sealed generation evidence required");}},receipt,subject));
++  if(result.status==="match")return result;last=result;
++ }
++ return last;
++}
++
++const colon=(json:string|null):string|null=>json===null?null:(JSON.parse(json)as string[]).join(":");
++/** 🗺️ Maps one completed walk onto the neutral capture input; nothing outside the walk's own results is consulted. */
++export async function captureJavascriptDependencyGenerationReceiptV1(workspace:string,store:Readonly<{root:string}>,control:GenerationControlV1,walk:JavascriptDependencyGenerationWalkV1,observed:BunWorkspaceObservedOwnershipV1,startedAtMs:number,invocation:ScriptInvocation,subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1()){
++ const root=resolve(workspace),evidence=walk.evidence,plans=new Map(walk.projection.plans.map(row=>[row.scope,row.plan]));
++ return captureGenerationReceiptV1({
++  workspace:root,storeRoot:store.root,scope:evidence.scope,startedAtMs,implementation:await captureJavascriptDependencyGenerationImplementationV1(invocation,subject),runtime:javascriptDependencyGenerationRuntimeV1(),producer:observeJavascriptDependencyGenerationProducerV1(root,store.root,walk.required,subject.ambient),recipeSha256:walk.projection.recipeSha256,ownershipSha256:walk.projection.owners.sha256,required:walk.required,
++  inputs:walk.projection.plans.map(row=>({scope:row.scope,sources:row.plan.sources.map(source=>({path:source.path,kind:source.kind,dev:source.dev,ino:source.ino,mode:source.mode,bytes:source.bytes}))})),
++  membership:observed,
++  bindings:walk.required.map(name=>({scope:name,pairs:plans.get(name)!.bindings,observation:evidence.bindings.find(([scope])=>scope===name)![1]})),
++  ready:walk.receipts.map(row=>({scope:row.scope,generation:row.generation,path:join(plans.get(row.scope)!.directory,"bindings.json"),fingerprint:row.fingerprint})),
++  execution:{scopes:evidence.execution.scopes,runtimeSha256:evidence.execution.runtimeSha256,observations:evidence.execution.observations.map(row=>({path:row.path,stamp:colon(row.stamp),anchor:colon(row.anchor),kind:row.kind,target:row.target,full:row.full}))},
++  scopeReadSha256:walk.sha256,control,
++ });
++}
++
++/** 📮️ Publishes one receipt under the caller's exclusive Store custody after proving it against the live tree; a receipt only saves time, so every failure except cancellation reports why nothing was written. */
++export async function publishJavascriptDependencyGenerationReceiptV1(workspace:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl,checkpoint:()=>void,walk:JavascriptDependencyGenerationWalkV1,startedAtMs:number,observed:BunWorkspaceObservedOwnershipV1|undefined=walk.observed?.(),subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1()):Promise<"published"|"present"|"deferred"|"stale"|"failed"> {
++ try{return await writeJavascriptDependencyGenerationReceiptV1(workspace,store,control,checkpoint,walk,startedAtMs,observed,subject);}
++ catch(error){if(control.signal.aborted)throw error;console.error("[DATA] Store dependency generation receipt failed "+JSON.stringify({version:1,purpose:"current-dependency-generation-receipt-failure",scope:walk.evidence.scope,message:String((error as Error)?.message??error).slice(0,300)}));return "failed";}
++}
++async function writeJavascriptDependencyGenerationReceiptV1(workspace:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl,checkpoint:()=>void,walk:JavascriptDependencyGenerationWalkV1,startedAtMs:number,observed:BunWorkspaceObservedOwnershipV1|undefined,subject:JavascriptDependencyGenerationSubjectV1):Promise<"published"|"present"|"deferred"|"stale"> {
++ if(!observed)throw Error("Retained workspace topology required");
++ const context=await javascriptDependencyReadContextV1(workspace,store),scope=walk.evidence.scope,generation=controlOf(context,control,"exclusive",checkpoint);
++ if((await verifyJavascriptDependencyGenerationReceiptV1(workspace,context,control,scope,subject)).status==="match")return "present";
++ const captured=await captureJavascriptDependencyGenerationReceiptV1(workspace,store,generation,walk,observed,startedAtMs,context.invocation,subject);
++ if(captured.status==="deferred"){console.error("[DATA] Store dependency generation receipt deferred "+JSON.stringify({version:1,purpose:"current-dependency-generation-receipt-deferral",scope,reason:captured.reason,...(captured.path===undefined?{}:{path:captured.path})}));return "deferred";}
++ const files=new Map(captured.files.map(file=>[file.name,file.bytes])),proof=await verifyGenerationReceiptV1(portsOf(resolve(workspace),context,control,generation,name=>{const bytes=files.get(name);if(!bytes)throw Error("Sealed generation evidence required");return bytes;},captured.receipt,subject));
++ if(proof.status!=="match"||proof.sha256!==walk.sha256){console.error("[DATA] Store dependency generation receipt stale "+JSON.stringify({version:1,purpose:"current-dependency-generation-receipt-stale",scope,...(proof.status==="mismatch"?{class:proof.class,...(proof.path===undefined?{}:{path:proof.path})}:{})}));return "stale";}
++ const receiptName=scopeKey(scope)+"."+captured.receipt.sha256+protocol.receiptSuffix,receiptBytes=Buffer.from(JSON.stringify(captured.receipt)+"\n"),all=[...captured.files,{name:receiptName,bytes:receiptBytes}];
++ await withArtifactRelativeDirectoryV1(store.root,checkpoint,async base=>{
++  if(await base.entry(protocol.directory)===null){await base.withNewDirectory(protocol.directory,async child=>{await child.sync();});await base.sync();}
++  await base.withDirectory(protocol.directory,async directory=>{
++   for(const file of all){
++    const existing=await directory.entry(file.name);
++    if(existing){if(existing.kind!=="file"||existing.size!==BigInt(file.bytes.length))throw Error("Existing immutable generation file changed");continue;}
++    await directory.withNewFile(file.name,async handle=>{let offset=0;while(offset<file.bytes.length){checkpoint();offset+=handle.write(file.bytes,offset,Math.min(262144,file.bytes.length-offset),offset);await control.yieldContinuation();}handle.sync();});
++    await directory.sync();
++   }
++  });
++ });
++ retireJavascriptDependencyGenerationFilesV1(store.root,scope);
++ return "published";
++}
++
++/** 🧹️ Removes superseded receipts of one scope and every evidence file no remaining receipt names; failure only costs disk. */
++export function retireJavascriptDependencyGenerationFilesV1(storeRoot:string,scope:string):void{
++ const directory=join(storeRoot,protocol.directory);
++ try{
++  const names=readdirSync(directory),prefix=scopeKey(scope)+".",receipts=names.filter(name=>name.endsWith(protocol.receiptSuffix)),newest=receipts.filter(name=>name.startsWith(prefix)).map(name=>({name,at:lstatSync(join(directory,name)).mtimeMs})).sort((a,b)=>b.at-a.at)[0]?.name,keep=new Set<string>();
++  for(const name of receipts){
++   if(name.startsWith(prefix)&&name!==newest){unlinkSync(join(directory,name));continue;}
++   try{const receipt=parseGenerationReceiptV1(readFileSync(join(directory,name)));keep.add(receipt.membership.frontier.name);keep.add(receipt.execution.evidence.name);keep.add(receipt.implementation.evidence.name);}catch{}
++  }
++  for(const name of names)if(evidenceName.test(name)&&!keep.has(name))unlinkSync(join(directory,name));
++ }catch{}
++}
+# stage-clean orphan staged=walkperf-tools/staged/schema.json map=None
+--- /dev/null
++++ b/staged/walkperf-tools/staged/schema.json
+@@ -0,0 +1,659 @@
++{
++ "$schema": "http://json-schema.org/draft-07/schema#",
++ "$id": "semio:dependencies/generation-receipt/v1",
++ "title": "Dependency generation receipt",
++ "description": "Schema-first contract of the content-addressed receipt that lets ordinary commands prove an unchanged dependency generation by stat and bounded reads, falling back to the complete ownership and provider walk on any mismatch.",
++ "$defs": {
++  "Protocol": {
++   "const": {
++    "version": 1,
++    "purpose": "dependency-generation-receipt",
++    "directory": "generation",
++    "receiptSuffix": ".receipt.json",
++    "frontierSuffix": ".frontier.ndjson",
++    "executionSuffix": ".execution.ndjson",
++    "maximumReceiptBytes": 4194304,
++    "maximumEvidenceBytes": 134217728,
++    "maximumRows": 524288,
++    "maximumSourceFileBytes": 8388608,
++    "maximumRelist": 4096,
++    "settleMilliseconds": 5000,
++    "checkWork": 256,
++    "progressWork": 4096,
++    "stampFields": [
++     "dev",
++     "ino",
++     "mode",
++     "nlink",
++     "size",
++     "mtimeNs",
++     "ctimeNs"
++    ],
++    "anchorFields": [
++     "dev",
++     "ino",
++     "mode"
++    ],
++    "projectionDigestUnits": 32,
++    "implementation": {
++     "entries": [
++      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
++      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts",
++      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🟦️.ts",
++      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
++      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts",
++      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs"
++     ],
++     "extraFiles": [],
++     "closureSuffix": ".closure.ndjson",
++     "maximumFiles": 2048,
++     "reader": "captureBuildSourceClosureV1"
++    },
++    "producer": {
++     "scopeFiles": [
++      ".npmrc"
++     ],
++     "ambientHomeFiles": [
++      ".npmrc",
++      ".bunfig.toml"
++     ],
++     "ambientConfigFiles": [
++      ".bunfig.toml"
++     ],
++     "ambientConfigFallback": ".config",
++     "storeRoleFiles": {
++      "bun-home": [
++       ".npmrc",
++       ".bunfig.toml"
++      ],
++      "bun-config": [
++       ".bunfig.toml"
++      ]
++     },
++     "maximumFileBytes": 1048576,
++     "environmentPrefixes": [
++      "BUN_",
++      "NPM_CONFIG_"
++     ],
++     "environmentNames": [
++      "HTTP_PROXY",
++      "HTTPS_PROXY",
++      "ALL_PROXY",
++      "NO_PROXY",
++      "NODE_EXTRA_CA_CERTS",
++      "NODE_TLS_REJECT_UNAUTHORIZED",
++      "SSL_CERT_FILE",
++      "SSL_CERT_DIR"
++     ],
++     "environmentIgnored": [
++      "NPM_CONFIG_USER_AGENT",
++      "BUN_INSPECT",
++      "BUN_INSPECT_CONNECT_TO",
++      "BUN_INSPECT_NOTIFY"
++     ]
++    },
++    "mismatchClasses": [
++     "receipt-invalid",
++     "evidence-invalid",
++     "implementation-changed",
++     "runtime-changed",
++     "configuration-changed",
++     "conditions-open",
++     "binding-changed",
++     "ready-changed",
++     "input-changed",
++     "manifest-changed",
++     "membership-changed",
++     "membership-churn",
++     "provider-changed",
++     "unreadable",
++     "sha-changed"
++    ],
++    "tiers": [
++     {
++      "name": "implementation",
++      "cost": "O(closure files)",
++      "covers": "every file of the runtime import closure of the walk and fence entries, their module-owned schemas and literal assets, by content digest"
++     },
++     {
++      "name": "runtime",
++      "cost": "O(1)",
++      "covers": "bun version and revision, node version, platform, architecture, installer recipe"
++     },
++     {
++      "name": "producer",
++      "cost": "O(config files)",
++      "covers": "npmrc and bunfig files every installer level could read, and the environment variables that select registries, caches or transport"
++     },
++     {
++      "name": "bindings",
++      "cost": "O(bindings)",
++      "covers": "Source endpoint links, physical generation ancestry, ready receipts"
++     },
++     {
++      "name": "inputs",
++      "cost": "O(manifests)",
++      "covers": "manifests, locks, configuration, patches and their ancestry"
++     },
++     {
++      "name": "membership",
++      "cost": "O(directories)",
++      "covers": "workspace topology by directory stamps with projection-digest relisting"
++     },
++     {
++      "name": "execution",
++      "cost": "O(observations)",
++      "covers": "provider resolution by replaying every recorded physical observation"
++     }
++    ]
++   }
++  },
++  "Sha256": {
++   "type": "string",
++   "pattern": "^[a-f0-9]{64}$"
++  },
++  "Location": {
++   "type": "string",
++   "pattern": "^[wsa]:.+$",
++   "maxLength": 2048
++  },
++  "Scope": {
++   "type": "string",
++   "minLength": 1,
++   "maxLength": 256
++  },
++  "MismatchClass": {
++   "enum": [
++    "receipt-invalid",
++    "evidence-invalid",
++    "implementation-changed",
++    "runtime-changed",
++    "configuration-changed",
++    "conditions-open",
++    "binding-changed",
++    "ready-changed",
++    "input-changed",
++    "manifest-changed",
++    "membership-changed",
++    "membership-churn",
++    "provider-changed",
++    "unreadable",
++    "sha-changed"
++   ]
++  },
++  "Evidence": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "name",
++    "sha256",
++    "bytes",
++    "rows"
++   ],
++   "properties": {
++    "name": {
++     "type": "string",
++     "pattern": "^[a-f0-9]{64}\\.(frontier|execution|closure)\\.ndjson$"
++    },
++    "sha256": {
++     "type": "string",
++     "pattern": "^[a-f0-9]{64}$"
++    },
++    "bytes": {
++     "type": "integer",
++     "minimum": 0
++    },
++    "rows": {
++     "type": "integer",
++     "minimum": 0
++    }
++   }
++  },
++  "Runtime": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "bun",
++    "revision",
++    "node",
++    "platform",
++    "arch",
++    "sha256"
++   ],
++   "properties": {
++    "bun": {
++     "type": "string"
++    },
++    "revision": {
++     "type": "string"
++    },
++    "node": {
++     "type": "string"
++    },
++    "platform": {
++     "type": "string"
++    },
++    "arch": {
++     "type": "string"
++    },
++    "sha256": {
++     "type": "string",
++     "pattern": "^[a-f0-9]{64}$"
++    }
++   }
++  },
++  "Source": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "path",
++    "kind",
++    "dev",
++    "ino",
++    "mode",
++    "sha256"
++   ],
++   "properties": {
++    "path": {
++     "$ref": "#/$defs/Location"
++    },
++    "kind": {
++     "enum": [
++      "file",
++      "directory",
++      "missing"
++     ]
++    },
++    "dev": {
++     "type": "string"
++    },
++    "ino": {
++     "type": "string"
++    },
++    "mode": {
++     "type": "integer",
++     "minimum": 0
++    },
++    "sha256": {
++     "anyOf": [
++      {
++       "type": "string",
++       "pattern": "^[a-f0-9]{64}$"
++      },
++      {
++       "type": "null"
++      }
++     ]
++    }
++   }
++  },
++  "Implementation": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "entries",
++    "evidence"
++   ],
++   "properties": {
++    "entries": {
++     "type": "array",
++     "minItems": 1,
++     "maxItems": 64,
++     "items": {
++      "type": "string",
++      "minLength": 1,
++      "maxLength": 2048
++     }
++    },
++    "evidence": {
++     "$ref": "#/$defs/Evidence"
++    }
++   }
++  },
++  "ProducerFile": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "path",
++    "kind",
++    "bytes",
++    "sha256"
++   ],
++   "properties": {
++    "path": {
++     "$ref": "#/$defs/Location"
++    },
++    "kind": {
++     "enum": [
++      "missing",
++      "file",
++      "other"
++     ]
++    },
++    "bytes": {
++     "type": "integer",
++     "minimum": 0
++    },
++    "sha256": {
++     "anyOf": [
++      {
++       "type": "string",
++       "pattern": "^[a-f0-9]{64}$"
++      },
++      {
++       "type": "null"
++      }
++     ]
++    }
++   }
++  },
++  "ProducerVariable": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "name",
++    "sha256"
++   ],
++   "properties": {
++    "name": {
++     "type": "string",
++     "minLength": 1,
++     "maxLength": 256
++    },
++    "sha256": {
++     "type": "string",
++     "pattern": "^[a-f0-9]{64}$"
++    }
++   }
++  },
++  "Producer": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "files",
++    "environment"
++   ],
++   "properties": {
++    "files": {
++     "type": "array",
++     "maxItems": 4096,
++     "items": {
++      "$ref": "#/$defs/ProducerFile"
++     }
++    },
++    "environment": {
++     "type": "array",
++     "maxItems": 512,
++     "items": {
++      "$ref": "#/$defs/ProducerVariable"
++     }
++    }
++   }
++  },
++  "Input": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "scope",
++    "sources"
++   ],
++   "properties": {
++    "scope": {
++     "$ref": "#/$defs/Scope"
++    },
++    "sources": {
++     "type": "array",
++     "maxItems": 65536,
++     "items": {
++      "$ref": "#/$defs/Source"
++     }
++    }
++   }
++  },
++  "Text": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "path",
++    "sha256"
++   ],
++   "properties": {
++    "path": {
++     "type": "string",
++     "minLength": 1,
++     "maxLength": 2048
++    },
++    "sha256": {
++     "type": "string",
++     "pattern": "^[a-f0-9]{64}$"
++    }
++   }
++  },
++  "Binding": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "scope",
++    "pairs",
++    "observationSha256"
++   ],
++   "properties": {
++    "scope": {
++     "$ref": "#/$defs/Scope"
++    },
++    "pairs": {
++     "type": "array",
++     "maxItems": 4096,
++     "items": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++       "source",
++       "target"
++      ],
++      "properties": {
++       "source": {
++        "$ref": "#/$defs/Location"
++       },
++       "target": {
++        "$ref": "#/$defs/Location"
++       }
++      }
++     }
++    },
++    "observationSha256": {
++     "type": "string",
++     "pattern": "^[a-f0-9]{64}$"
++    }
++   }
++  },
++  "Ready": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "scope",
++    "generation",
++    "location",
++    "fingerprint"
++   ],
++   "properties": {
++    "scope": {
++     "$ref": "#/$defs/Scope"
++    },
++    "generation": {
++     "type": "string",
++     "pattern": "^[a-f0-9]{64}$"
++    },
++    "location": {
++     "$ref": "#/$defs/Location"
++    },
++    "fingerprint": {
++     "type": "string",
++     "minLength": 1,
++     "maxLength": 4096
++    }
++   }
++  },
++  "Receipt": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": [
++    "version",
++    "purpose",
++    "scope",
++    "implementation",
++    "runtime",
++    "producer",
++    "recipeSha256",
++    "ownershipSha256",
++    "required",
++    "inputs",
++    "membership",
++    "bindings",
++    "ready",
++    "execution",
++    "scopeReadSha256",
++    "sha256"
++   ],
++   "properties": {
++    "version": {
++     "const": 1
++    },
++    "purpose": {
++     "const": "dependency-generation-receipt"
++    },
++    "scope": {
++     "$ref": "#/$defs/Scope"
++    },
++    "implementation": {
++     "$ref": "#/$defs/Implementation"
++    },
++    "runtime": {
++     "$ref": "#/$defs/Runtime"
++    },
++    "producer": {
++     "$ref": "#/$defs/Producer"
++    },
++    "recipeSha256": {
++     "type": "string",
++     "pattern": "^[a-f0-9]{64}$"
++    },
++    "ownershipSha256": {
++     "type": "string",
++     "pattern": "^[a-f0-9]{64}$"
++    },
++    "required": {
++     "type": "array",
++     "minItems": 1,
++     "maxItems": 4096,
++     "items": {
++      "$ref": "#/$defs/Scope"
++     }
++    },
++    "inputs": {
++     "type": "array",
++     "minItems": 1,
++     "maxItems": 4096,
++     "items": {
++      "$ref": "#/$defs/Input"
++     }
++    },
++    "membership": {
++     "type": "object",
++     "additionalProperties": false,
++     "required": [
++      "frontier",
++      "texts"
++     ],
++     "properties": {
++      "frontier": {
++       "$ref": "#/$defs/Evidence"
++      },
++      "texts": {
++       "type": "array",
++       "maxItems": 65536,
++       "items": {
++        "$ref": "#/$defs/Text"
++       }
++      }
++     }
++    },
++    "bindings": {
++     "type": "array",
++     "minItems": 1,
++     "maxItems": 4096,
++     "items": {
++      "$ref": "#/$defs/Binding"
++     }
++    },
++    "ready": {
++     "type": "array",
++     "minItems": 1,
++     "maxItems": 4096,
++     "items": {
++      "$ref": "#/$defs/Ready"
++     }
++    },
++    "execution": {
++     "type": "object",
++     "additionalProperties": false,
++     "required": [
++      "evidence",
++      "scopes",
++      "runtimeSha256"
++     ],
++     "properties": {
++      "evidence": {
++       "$ref": "#/$defs/Evidence"
++      },
++      "scopes": {
++       "type": "array",
++       "maxItems": 4096,
++       "items": {
++        "type": "object",
++        "additionalProperties": false,
++        "required": [
++         "scope",
++         "sha256"
++        ],
++        "properties": {
++         "scope": {
++          "$ref": "#/$defs/Scope"
++         },
++         "sha256": {
++          "type": "string",
++          "pattern": "^[a-f0-9]{64}$"
++         }
++        }
++       }
++      },
++      "runtimeSha256": {
++       "type": "string",
++       "pattern": "^[a-f0-9]{64}$"
++      }
++     }
++    },
++    "scopeReadSha256": {
++     "type": "string",
++     "pattern": "^[a-f0-9]{64}$"
++    },
++    "sha256": {
++     "type": "string",
++     "pattern": "^[a-f0-9]{64}$"
++    }
++   }
++  },
++  "FrontierRows": {
++   "description": "Newline-delimited JSON arrays. Directory row: [\"d\",path,dev,ino,mode,mtimeNs,ctimeNs,settled,projectionDigest]. State row: [\"s\",path,kind,dev,ino,mode] or [\"s\",path,\"missing\"]. Paths are posix relative to the workspace.",
++   "type": "array"
++  },
++  "ClosureRows": {
++   "description": "Newline-delimited JSON arrays, one per file of the runtime import closure sorted by UTF-8 path bytes: [\"f\",path,sha256,bytes]. Paths are posix relative to the repository root.",
++   "type": "array"
++  },
++  "ExecutionRows": {
++   "description": "Newline-delimited JSON arrays: [\"o\",location,kind,anchor,stamp,target,full] with kind one of l,d,f,x,m and anchor/stamp as colon-joined decimal fields or null.",
++   "type": "array"
++  }
++ }
++}
+# stage-clean orphan staged=walkperf-tools/staged/test.ts map=None
+--- /dev/null
++++ b/staged/walkperf-tools/staged/test.ts
+@@ -0,0 +1,337 @@
++import {test,expect} from "bun:test";
++import Ajv from "ajv";
++import {build as esbuild} from "esbuild";
++import {createRequire} from "node:module";
++import {chmodSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,readlinkSync,realpathSync,renameSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
++import {spawnSync} from "node:child_process";
++import {tmpdir} from "node:os";
++import {dirname,join,relative,resolve} from "node:path";
++import {captureGenerationReceiptV1,generationAnchorV1,generationCanonicalJsonV1,generationProjectionDigestV1,generationProtocolV1 as protocol,generationSha256V1,generationStampV1,parseGenerationReceiptV1,sealGenerationReceiptV1,verifyGenerationReceiptV1,type GenerationCaptureInputV1,type GenerationControlV1,type GenerationObservationV1,type GenerationReceiptV1,type GenerationRuntimeV1,type GenerationVerifyInputV1} from "../🟦️.ts";
++import schema from "../🧬️schema/🔣️.json" with {type:"json"};
++import fixtures from "./🔣️.json" with {type:"json"};
++import {createNativeBuildCallerCapabilitiesV1} from "../../../../../🏗️build/📥️caller/🟦️.ts";
++import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
++import * as issued from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
++import * as storage from "../../💾️storage/🟦️.ts";
++import * as glue from "../💾️storage/🟦️.ts";
++
++const bun=createRequire(import.meta.url)("../../../../../🗂️workspaces/🟦️bun/🟨️.cjs") as {withCurrentBunWorkspaceOwnershipV1:(root:string,selection:unknown,control:unknown,body:(custody:{observed:()=>GenerationCaptureInputV1["membership"]})=>Promise<unknown>)=>Promise<GenerationCaptureInputV1["membership"]>;readListingProjection:(root:string,path:string)=>readonly Readonly<{name:string;kind:string}>[]};
++const runtime:GenerationRuntimeV1={bun:"0.0.0",revision:"fixture",node:"0.0.0",platform:"fixture",arch:"fixture",sha256:"a".repeat(64)};
++
++type Mutation={op:string;path:string;text?:string;target?:string};
++type Case={name:string;mutations:Mutation[];expect:string;tamper?:string;port?:string;relist?:number;reseal?:string};
++type Ambient={env:Record<string,string|undefined>;home:string;config:string};
++type Subject=glue.JavascriptDependencyGenerationSubjectV1;
++const withOriginal=<T>(body:(original:ScriptInvocation)=>Promise<T>):Promise<T>=>issued.withScriptProcessEnvelope(issued.createScriptProcessEnvelope({version:1,owner:"generation-receipt",maximumElapsedMilliseconds:600000,},createNativeBuildCallerCapabilitiesV1(process.cwd(),["show","projects"],"nx",process.env),Date.now()),body);
++const subjectOf=(root:string,loadedAtMs:number,env:Record<string,string|undefined>={}):Subject=>Object.freeze({root,entries:fixtures.implementation.entries,loadedAtMs,ambient:Object.freeze({env,home:join(root,".ambient/home"),config:join(root,".ambient/xdg")})});
++
++const control=(counter:{ticks:number;checks:number},abort=new AbortController()):GenerationControlV1=>({signal:abort.signal,check:()=>{counter.checks++;abort.signal.throwIfAborted();},tick:async()=>{counter.ticks++;abort.signal.throwIfAborted();}});
++
++function materialize(){
++ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"gr-"))),store=join(root,"store"),place=(value:string)=>value.replaceAll("@STORE@",store);
++ for(const[path,text]of Object.entries(fixtures.workspace.files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}
++ for(const[path,target]of Object.entries(fixtures.workspace.links)){mkdirSync(dirname(join(root,path)),{recursive:true});symlinkSync(place(target),join(root,path));}
++ return{root,store,place};
++}
++const facts=(path:string)=>lstatSync(path,{bigint:true,throwIfNoEntry:false});
++const row=(path:string,full:boolean):GenerationObservationV1=>{const f=facts(path);const kind=!f?"missing":f.isSymbolicLink()?"link":f.isDirectory()?"directory":f.isFile()?"file":"foreign";return{path,kind,anchor:f?generationAnchorV1(f):null,stamp:f?generationStampV1(f):null,target:kind==="link"?readlinkSync(path):null,full:full||kind==="link"};};
++const bindingText=(pairs:readonly {sourceDirectory:string;targetDirectory:string}[])=>JSON.stringify(pairs.map(pair=>{const source=lstatSync(pair.sourceDirectory,{bigint:true});if(!source.isSymbolicLink()||realpathSync(pair.sourceDirectory)!==pair.targetDirectory)throw Error("Current expected JavaScript dependency binding required");const target=lstatSync(pair.targetDirectory,{bigint:true});return[pair.sourceDirectory,String(source.dev),String(source.ino),String(target.dev),String(target.ino)];}));
++const readyFingerprint=(path:string)=>{const f=lstatSync(path,{bigint:true}),bytes=readFileSync(path);return[f.size,f.ino,generationSha256V1(bytes)].join(":");};
++
++async function capture(original:ScriptInvocation,root:string,store:string,startedAtMs:number,subject:Subject=subjectOf(root,startedAtMs),implementation?:Awaited<ReturnType<typeof glue.captureJavascriptDependencyGenerationImplementationV1>>){
++ const walked=await bun.withCurrentBunWorkspaceOwnershipV1(root,{kind:"all"},{signal:new AbortController().signal,advance:async()=>{}},async custody=>custody.observed()),
++  source=(path:string)=>{const f=lstatSync(path);return{path,kind:"file"as const,dev:String(f.dev),ino:String(f.ino),mode:f.mode,bytes:readFileSync(path)};},
++  absent=(path:string)=>({path,kind:"missing"as const,dev:"",ino:"",mode:0,bytes:Buffer.alloc(0)}),
++  directory=(path:string)=>{const f=lstatSync(path);return{path,kind:"directory"as const,dev:String(f.dev),ino:String(f.ino),mode:f.mode,bytes:Buffer.alloc(0)};},
++  pairs=[{sourceDirectory:join(root,"pkgs/a/node_modules"),targetDirectory:join(store,"j/g1/node_modules")}],
++  observed=fixtures.workspace.observed,observations=[...observed.full.map(path=>row(join(root,path),true)),...observed.anchors.map(path=>row(join(root,path),false)),...observed.links.map(path=>row(join(root,path),true)),...observed.missing.map(path=>row(join(root,path),false))],
++  input:GenerationCaptureInputV1={
++   workspace:root,storeRoot:store,scope:".",startedAtMs,implementation:implementation??await glue.captureJavascriptDependencyGenerationImplementationV1(original,subject),runtime,producer:glue.observeJavascriptDependencyGenerationProducerV1(root,store,["."],subject.ambient),recipeSha256:"c".repeat(64),ownershipSha256:"d".repeat(64),required:["."],
++   inputs:[{scope:".",sources:[directory(root),source(join(root,"package.json")),source(join(root,"bun.lock")),absent(join(root,"bunfig.toml"))]}],
++   membership:walked,bindings:[{scope:".",pairs,observation:bindingText(pairs)}],ready:[{scope:".",generation:"e".repeat(64),path:join(store,"j/g1/bindings.json"),fingerprint:readyFingerprint(join(store,"j/g1/bindings.json"))}],
++   execution:{scopes:[{scope:".",sha256:"f".repeat(64)}],runtimeSha256:runtime.sha256,observations},scopeReadSha256:"0".repeat(64),control:control({ticks:0,checks:0}),
++  };
++ const receiptsAndBindings=[{scope:".",generation:"e".repeat(64),fingerprint:input.ready[0]!.fingerprint}],scopeReadSha256=generationSha256V1(JSON.stringify([receiptsAndBindings,[[".",input.bindings[0]!.observation]],input.execution.scopes])),sealed={...input,scopeReadSha256};
++ return{input:sealed,result:await captureGenerationReceiptV1(sealed),walked};
++}
++function verifyInput(root:string,store:string,receipt:GenerationReceiptV1,files:Map<string,Uint8Array>,counter:{ticks:number;checks:number},abort?:AbortController,port?:string,subject:Subject=subjectOf(root,0),implementationRoot:string=root):GenerationVerifyInputV1{
++ return{
++  workspace:root,storeRoot:store,receipt,readEvidence:name=>{const bytes=files.get(name);if(!bytes)throw Error("Sealed generation evidence required");return bytes;},
++  implementationEntries:port==="entries"?[...fixtures.implementation.entries,"impl/other.ts"]:subject.entries,implementationFile:glue.javascriptDependencyGenerationImplementationFileV1(implementationRoot),producer:()=>glue.observeJavascriptDependencyGenerationProducerV1(root,store,receipt.required,subject.ambient),
++  runtime:()=>port==="runtime"?{...runtime,bun:"9.9.9"}:port==="revision"?{...runtime,revision:"other"}:runtime,conditionsClosed:()=>port!=="conditions",
++  project:path=>bun.readListingProjection(root,path),observeBindings:(_scope,pairs)=>bindingText(pairs),readReady:readyFingerprint,control:control(counter,abort),
++ };
++}
++function mutate(root:string,place:(value:string)=>string,mutation:Mutation,env:Record<string,string|undefined>){
++ const path=join(root,mutation.path);
++ if(mutation.op==="env")env[mutation.path]=mutation.text;
++ else if(mutation.op==="write"){mkdirSync(dirname(path),{recursive:true});writeFileSync(path,mutation.text!);}
++ else if(mutation.op==="mkdir")mkdirSync(path,{recursive:true});
++ else if(mutation.op==="remove")rmSync(path,{recursive:true,force:true});
++ else if(mutation.op==="symlink")symlinkSync(place(mutation.target!),path);
++ else if(mutation.op==="chmod")chmodSync(path,parseInt(mutation.text!,8));
++ else if(mutation.op==="touch"){const now=new Date(Date.now()+5000);utimesSync(path,now,now);}
++ else if(mutation.op==="replace"){const bytes=readFileSync(path);writeFileSync(path+".tmp",bytes);renameSync(path+".tmp",path);}
++ else throw Error("Closed mutation required");
++}
++const outcome=(result:{status:string;class?:string})=>result.status==="match"?"match":"mismatch:"+result.class;
++
++test("generation receipt contract: schema closes the mismatch classes the fixtures drive and a third-party validator accepts the sealed receipt",()=>withOriginal(async original=>{
++ const{root,store}=materialize();
++ try{
++  const{result}=await capture(original,root,store,Date.now()+10000);expect(result.status).toBe("captured");if(result.status!=="captured")return;
++  const ajv=new Ajv({strict:false}).addSchema(schema),validate=ajv.getSchema(schema.$id+"#/$defs/Receipt")!;
++  expect(validate(JSON.parse(JSON.stringify(result.receipt))),JSON.stringify(validate.errors)).toBe(true);
++  const reached=new Set(fixtures.cases.map(row=>row.expect.split(":")[1]).filter(Boolean));
++  for(const name of protocol.mismatchClasses)if(!["receipt-invalid","unreadable"].includes(name))expect(reached.has(name),name).toBe(true);
++  expect(new Set(protocol.mismatchClasses).size).toBe(protocol.mismatchClasses.length);
++ }finally{rmSync(root,{recursive:true,force:true});}
++}));
++
++test("generation receipt: every fixture case verifies exactly as declared (match or typed fallback)",()=>withOriginal(async original=>{
++ for(const row of fixtures.cases as Case[]){
++  const{root,store,place}=materialize(),env:Record<string,string|undefined>={...fixtures.environment},subject=subjectOf(root,Date.now()+10000,env);
++  try{
++   const{result}=await capture(original,root,store,Date.now()+10000,subject);expect(result.status,row.name).toBe("captured");if(result.status!=="captured")continue;
++   let receipt=result.receipt;const files=new Map<string,Uint8Array>(result.files.map(file=>[file.name,file.bytes]));
++   if(row.tamper==="frontier"||row.tamper==="execution"||row.tamper==="closure"){const name=row.tamper==="frontier"?receipt.membership.frontier.name:row.tamper==="execution"?receipt.execution.evidence.name:receipt.implementation.evidence.name;files.set(name,Buffer.concat([files.get(name)!,Buffer.from("\n")]));}
++   if(row.reseal==="scopeReadSha256"){const{sha256:_,...body}=receipt;receipt=sealGenerationReceiptV1({...body,scopeReadSha256:"1".repeat(64)});}
++   const before=protocol.maximumRelist;
++   try{
++    if(row.relist)(protocol as {maximumRelist:number}).maximumRelist=row.relist;
++    for(const mutation of row.mutations)mutate(root,place,mutation,env);
++    const counter={ticks:0,checks:0},verdict=await verifyGenerationReceiptV1(verifyInput(root,store,receipt,files,counter,undefined,row.port,subject));
++    expect(outcome(verdict),row.name).toBe(row.expect);
++    if(verdict.status==="match"){expect(verdict.required).toEqual(["."]);expect(verdict.receipts[0]!.fingerprint).toBe(readyFingerprint(join(store,"j/g1/bindings.json")));}
++   }finally{(protocol as {maximumRelist:number}).maximumRelist=before;}
++  }finally{rmSync(root,{recursive:true,force:true});}
++ }
++}),60000);
++
++test("generation receipt: a tampered or schema-invalid receipt is refused before any filesystem read",()=>withOriginal(async original=>{
++ const{root,store}=materialize();
++ try{
++  const{result}=await capture(original,root,store,Date.now()+10000);if(result.status!=="captured")throw Error("captured expected");
++  const text=JSON.stringify(result.receipt),bytes=Buffer.from(text);expect(parseGenerationReceiptV1(bytes).sha256).toBe(result.receipt.sha256);
++  expect(()=>parseGenerationReceiptV1(Buffer.from(text.replace('"fixture"','"fixturf"')))).toThrow("Sealed dependency generation receipt");
++  const{sha256:_,...body}=result.receipt;
++  expect(()=>parseGenerationReceiptV1(Buffer.from(JSON.stringify({...body,version:2,sha256:generationSha256V1(generationCanonicalJsonV1({...body,version:2}))})))).toThrow("Closed dependency generation receipt");
++  expect(()=>parseGenerationReceiptV1(Buffer.from(JSON.stringify({...result.receipt,extra:true})))).toThrow("Closed dependency generation receipt");
++  expect(()=>parseGenerationReceiptV1(Buffer.alloc(protocol.maximumReceiptBytes+1))).toThrow("Bounded dependency generation receipt");
++ }finally{rmSync(root,{recursive:true,force:true});}
++}));
++
++test("generation receipt: capture defers rather than seal an unsettled timestamp",()=>withOriginal(async original=>{
++ const{root,store}=materialize();
++ try{
++  const settledSubject=subjectOf(root,Date.now()+10000),young=await capture(original,root,store,Date.now()-10000,settledSubject);expect(young.result.status).toBe("deferred");
++  const unloaded=await capture(original,root,store,Date.now()+10000,subjectOf(root,Date.now()-10000));expect(unloaded.result).toMatchObject({status:"deferred",reason:"implementation-unsettled"});
++  const settled=await capture(original,root,store,Date.now()+10000);expect(settled.result.status).toBe("captured");
++  const volatile=settled.result.status==="captured"?new TextDecoder().decode(settled.result.files[0]!.bytes).split("\n").filter(Boolean).map(line=>JSON.parse(line)as unknown[]).filter(line=>line[0]==="d"&&line[7]===0):[];expect(volatile).toEqual([]);
++  const mixed=await capture(original,root,store,Date.now(),settledSubject);
++  if(mixed.result.status==="captured"){const rows=new TextDecoder().decode(mixed.result.files[0]!.bytes).split("\n").filter(Boolean).map(line=>JSON.parse(line)as unknown[]);expect(rows.some(line=>line[0]==="d"&&line[7]===0)).toBe(true);}
++ }finally{rmSync(root,{recursive:true,force:true});}
++}));
++
++test("generation receipt: verification honors cancellation and publishes bounded progress",()=>withOriginal(async original=>{
++ const{root,store}=materialize();
++ try{
++  for(let index=0;index<fixtures.progress.directories;index++)mkdirSync(join(root,"pkgs/a/src/d"+index),{recursive:true});
++  const{result}=await capture(original,root,store,Date.now()+10000);if(result.status!=="captured")throw Error("captured expected");
++  const files=new Map<string,Uint8Array>(result.files.map(file=>[file.name,file.bytes])),counter={ticks:0,checks:0},verdict=await verifyGenerationReceiptV1(verifyInput(root,store,result.receipt,files,counter));
++  expect(verdict.status).toBe("match");expect(counter.ticks).toBeGreaterThan(0);expect(counter.checks).toBeGreaterThan(counter.ticks);
++  const abort=new AbortController(),stopper={ticks:0,checks:0},input=verifyInput(root,store,result.receipt,files,stopper,abort);
++  const cancelling:GenerationVerifyInputV1={...input,control:{signal:abort.signal,check:()=>abort.signal.throwIfAborted(),tick:async()=>{abort.abort(Object.freeze({cancel:"fixture"}));abort.signal.throwIfAborted();}}};
++  await expect(verifyGenerationReceiptV1(cancelling)).rejects.toMatchObject({cancel:"fixture"});
++  const failing:GenerationVerifyInputV1={...input,control:{signal:new AbortController().signal,check:()=>{},tick:async()=>{}},project:()=>{throw Error("directory unreadable");}};
++  writeFileSync(join(root,"pkgs/a/touched.txt"),"x");const stale=new Date(Date.now()+60000);utimesSync(join(root,"pkgs/a"),stale,stale);
++  expect(outcome(await verifyGenerationReceiptV1(failing))).toBe("mismatch:unreadable");
++ }finally{rmSync(root,{recursive:true,force:true});}
++}),60000);
++
++const oracle=`
++import hashlib, json, os, re, sys
++root, rules = sys.argv[1], json.loads(sys.argv[2])
++opaque = set(rules["opaque"]); patterns = [re.compile(p) for p in rules["opaquePatterns"]]
++is_opaque = lambda name: name in opaque or any(p.search(name) for p in patterns)
++def kind(entry):
++    if entry.is_symlink(): return "symlink"
++    if entry.is_dir(follow_symlinks=False): return "directory"
++    if entry.is_file(follow_symlinks=False): return "file"
++    return "other"
++out = {}
++def walk(directory):
++    entries = sorted(os.scandir(directory), key=lambda e: e.name.encode("utf-8"))
++    rows = [{"name": e.name, "kind": kind(e)} for e in entries if e.name == "package.json" or (not e.name.startswith(".") and not is_opaque(e.name) and kind(e) in ("symlink", "directory"))]
++    out[os.path.relpath(directory, root)] = hashlib.sha256(json.dumps(rows, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()[:32]
++    for e in entries:
++        if e.name.startswith(".") or is_opaque(e.name): continue
++        if e.is_dir(follow_symlinks=False): walk(os.path.join(directory, e.name))
++for start in rules["walkRoots"]: walk(os.path.join(root, start))
++seal = json.dumps(json.loads(sys.argv[3]), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
++print(json.dumps({"directories": out, "seal": hashlib.sha256(seal.encode("utf-8")).hexdigest()}, ensure_ascii=False))
++`;
++
++test("generation receipt: the frontier and the seal equal an independent Python implementation",()=>withOriginal(async original=>{
++ const{root,store}=materialize();
++ try{
++  const{result,walked}=await capture(original,root,store,Date.now()+10000);if(result.status!=="captured")throw Error("captured expected");
++  const{sha256:_,...body}=result.receipt,run=spawnSync("python3",["-I","-c",oracle,root,JSON.stringify(fixtures.rules),JSON.stringify(body)],{encoding:"utf8"});
++  expect(run.status,run.stderr).toBe(0);
++  const python=JSON.parse(run.stdout)as{directories:Record<string,string>;seal:string},ours=Object.fromEntries(walked.paths.filter(path=>path.list).map(path=>[relative(root,path.path),generationProjectionDigestV1(path.list!)]));
++  expect(ours).toEqual(python.directories);expect(Object.keys(ours).length).toBeGreaterThan(3);expect(python.seal).toBe(result.receipt.sha256);
++  const frontier=new TextDecoder().decode(result.files[0]!.bytes).split("\n").filter(Boolean).map(line=>JSON.parse(line)as unknown[]);
++  expect(Object.fromEntries(frontier.filter(line=>line[0]==="d").map(line=>[line[1],line[8]]))).toEqual(python.directories);
++  expect(walked.texts.map(text=>text.path).sort()).toEqual(["package.json","pkgs/a/package.json","pkgs/b/package.json","pkgs/\u{1F9E9}️widget/package.json"].sort());
++ }finally{rmSync(root,{recursive:true,force:true});}
++}));
++
++test("generation receipt: stamp and anchor equal the provider walk's own formulas and the storage laws stay pinned",()=>{
++ const storage=readFileSync(new URL("../../💾️storage/🟦️.ts",import.meta.url),"utf8"),install=JSON.parse(readFileSync(new URL("../../💾️storage/🧬️schema/📥️install.json",import.meta.url),"utf8"));
++ expect(storage).toContain('keys=["dev","ino","mode","nlink","size","mtimeNs","ctimeNs"]as const');
++ expect(storage).toContain("stamp=(row:BigIntStats)=>JSON.stringify(keys.map(key=>String(row[key])))");
++ expect(storage).toContain("anchor=(row:BigIntStats)=>JSON.stringify(protocol.ancestorFields.map(key=>String(row[key as keyof BigIntStats])))");
++ expect(storage).toContain("if(process.env.NODE_OPTIONS||process.env.BUN_OPTIONS||process.execArgv.some(value=>/^--(?:conditions|preserve-symlinks)(?:=|$)/u.test(value)))throw Error(\"Closed declared execution conditions required\")");
++ expect(install.$defs.SourceOwnerExecutionProtocol.const.ancestorFields).toEqual(protocol.anchorFields);
++ expect(protocol.stampFields).toEqual(["dev","ino","mode","nlink","size","mtimeNs","ctimeNs"]);
++ const f=lstatSync(import.meta.path,{bigint:true}),keys=protocol.stampFields as readonly string[];
++ expect(JSON.stringify(generationStampV1(f).split(":"))).toBe(JSON.stringify(keys.map(key=>String(f[key as keyof typeof f]))));
++ expect(JSON.stringify(generationAnchorV1(f).split(":"))).toBe(JSON.stringify(install.$defs.SourceOwnerExecutionProtocol.const.ancestorFields.map((key:string)=>String(f[key as keyof typeof f]))));
++ const walk=readFileSync(new URL("../../../../../🗂️workspaces/🟦️bun/🟨️.cjs",import.meta.url),"utf8");
++ expect(walk.match(/projectListing\(/gu)!.length).toBe(2);
++ expect(walk.match(/entry\.name === "package\.json"/gu)!.length).toBe(2);
++});
++
++const closureOracle=String.raw`
++import json, os, re, sys
++root, entries = sys.argv[1], json.loads(sys.argv[2])
++literal = re.compile(r"""(["'])(\.{1,2}/[^"'\\\r\n]+\.(?:[cm]?[jt]sx?|json))\1""")
++statement = re.compile(r"""(?:from\s*|import\s*\(\s*|require\(\s*|import\s+)["']([^"']+)["']""")
++seen, pending = set(), list(entries)
++while pending:
++    path = pending.pop()
++    if path in seen or not os.path.isfile(os.path.join(root, path)): continue
++    seen.add(path)
++    directory = os.path.dirname(path)
++    schema_directory = os.path.join(root, directory, "\U0001F9EC\ufe0fschema")
++    if os.path.isdir(schema_directory):
++        for base, _names, filenames in os.walk(schema_directory):
++            pending.extend(os.path.relpath(os.path.join(base, name), root) for name in filenames if name.endswith(".json"))
++    if path.endswith(".json"): continue
++    text = open(os.path.join(root, path), encoding="utf-8", errors="replace").read()
++    for match in literal.finditer(text): pending.append(os.path.normpath(os.path.join(directory, match.group(2))))
++    for specifier in statement.findall(text):
++        if specifier.startswith(".") and re.search(r"\.(?:[cm]?[jt]sx?|json)$", specifier): pending.append(os.path.normpath(os.path.join(directory, specifier)))
++print(json.dumps(sorted(seen)))
++`;
++
++test("generation receipt: the sealed implementation is the actual runtime import closure, a superset of what esbuild and an independent Python reader find, and covers every named fence",()=>withOriginal(async original=>{
++ const root=resolve(import.meta.dir,"../../../../../../../../../.."),subject:Subject={root,entries:protocol.implementation.entries,loadedAtMs:Date.now(),ambient:glue.javascriptDependencyGenerationAmbientV1()};
++ const implementation=await glue.captureJavascriptDependencyGenerationImplementationV1(original,subject),sealed=new Set(implementation.files.map(file=>file.path));
++ expect(implementation.entries).toEqual(protocol.implementation.entries);expect(sealed.size).toBe(implementation.files.length);expect(sealed.size).toBeGreaterThan(100);
++ for(const entry of protocol.implementation.entries){expect(sealed.has(entry),entry).toBe(true);expect(lstatSync(join(root,entry)).isFile(),entry).toBe(true);}
++ for(const file of implementation.files){const bytes=readFileSync(join(root,file.path));expect(file.sha256,file.path).toBe(generationSha256V1(bytes));expect(file.bytes,file.path).toBe(bytes.length);}
++ const bundled=new Set<string>();
++ for(const entry of protocol.implementation.entries){
++  const bundle=await esbuild({absWorkingDir:root,entryPoints:[entry],bundle:true,write:false,metafile:true,platform:"node",logLevel:"silent",external:["bun:*","bun"],packages:"external"});
++  for(const name of Object.keys(bundle.metafile.inputs)){const input=name.replace(/ with \{.*\}$/u,"");if(!input.startsWith("node_modules/")&&!input.includes("/node_modules/"))bundled.add(input);}
++ }
++ expect(bundled.size).toBeGreaterThan(50);
++ expect([...bundled].filter(path=>!sealed.has(path)),"esbuild bundle inputs missing from the sealed closure").toEqual([]);
++ const python=spawnSync("python3",["-I","-c",closureOracle,root,JSON.stringify(protocol.implementation.entries)],{encoding:"utf8",maxBuffer:67108864});expect(python.status,python.stderr).toBe(0);
++ const independent=new Set<string>(JSON.parse(python.stdout));expect([...independent].filter(path=>!sealed.has(path)),"python closure inputs missing from the sealed closure").toEqual([]);
++ const library=resolve(import.meta.dir,"../../../../..");
++ for(const file of fixtures.fences)expect(sealed.has(file),file).toBe(true);
++ for(const file of fixtures.legacyImplementationFiles)expect(sealed.has(relative(root,join(library,file))),file).toBe(true);
++ expect([...sealed].some(path=>path.endsWith("/🧬️schema/🔣️.json"))).toBe(true);
++}),120000);
++
++test("generation receipt: editing any file of the real closure, a fence in an unlisted-by-hand module or an installer configuration forces the complete walk",()=>withOriginal(async original=>{
++ const real=resolve(import.meta.dir,"../../../../../../../../../.."),{root,store}=materialize(),copy=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"gc-")),subject:Subject={root:real,entries:protocol.implementation.entries,loadedAtMs:Date.now()+10000,ambient:subjectOf(root,0).ambient};
++ try{
++  const implementation=await glue.captureJavascriptDependencyGenerationImplementationV1(original,subject);
++  for(const file of implementation.files){mkdirSync(dirname(join(copy,file.path)),{recursive:true});writeFileSync(join(copy,file.path),readFileSync(join(real,file.path)));}
++  const{result}=await capture(original,root,store,Date.now()+10000,subjectOf(root,Date.now()+10000),implementation);expect(result.status).toBe("captured");if(result.status!=="captured")return;
++  const files=new Map<string,Uint8Array>(result.files.map(file=>[file.name,file.bytes])),verify=()=>verifyGenerationReceiptV1(verifyInput(root,store,result.receipt,files,{ticks:0,checks:0},undefined,undefined,subject,copy));
++  expect(outcome(await verify())).toBe("match");
++  const unrelated=join(copy,"unrelated-sibling.ts");writeFileSync(unrelated,"export {};\n");expect(outcome(await verify())).toBe("match");
++  const touched:string[]=[];
++  for(const file of implementation.files){
++   const path=join(copy,file.path),before=readFileSync(path);
++   writeFileSync(path,Buffer.concat([before,Buffer.from(file.path.endsWith(".json")?"\n":"\n//\n")]));
++   const verdict=await verify();touched.push(file.path);
++   expect(outcome(verdict),file.path).toBe("mismatch:implementation-changed");expect((verdict as {path?:string}).path,file.path).toBe(file.path);
++   writeFileSync(path,before);
++  }
++  expect(touched.length).toBe(implementation.files.length);expect(outcome(await verify())).toBe("match");
++  const fence=join(copy,fixtures.fences.find(file=>file.endsWith("📋️contract/🟦️.ts"))!);
++  const text=readFileSync(fence);rmSync(fence);expect(outcome(await verify())).toBe("mismatch:implementation-changed");
++  symlinkSync(join(real,relative(copy,fence)),fence);expect(outcome(await verify())).toBe("mismatch:implementation-changed");rmSync(fence);writeFileSync(fence,text);expect(outcome(await verify())).toBe("match");
++ }finally{rmSync(root,{recursive:true,force:true});rmSync(copy,{recursive:true,force:true});}
++}),240000);
++
++test("generation receipt producer: the observation is sorted, digests values instead of storing them, ignores unrelated variables and follows the installer recipe",()=>{
++ const{root,store}=materialize();
++ try{
++  const secret="https://user:hunter2@registry.example.test/",ambient={env:{NPM_CONFIG_REGISTRY:secret,https_proxy:secret,PATH:"/bin",NPM_CONFIG_USER_AGENT:"x",BUN_INSTALL_CACHE_DIR:""},home:join(root,".ambient/home"),config:join(root,".ambient/xdg")};
++  const observed=glue.observeJavascriptDependencyGenerationProducerV1(root,store,[".","pkgs/a"],ambient);
++  expect(JSON.stringify(observed)).not.toContain("hunter2");
++  expect(observed.environment.map(row=>row.name)).toEqual(["BUN_INSTALL_CACHE_DIR","NPM_CONFIG_REGISTRY","https_proxy"]);
++  expect(observed.environment[1]!.sha256).toBe(generationSha256V1(secret));expect(observed.environment[0]!.sha256).toBe(generationSha256V1(""));
++  const paths=observed.files.map(row=>row.path);
++  for(const needed of["w:.npmrc","w:pkgs/a/.npmrc","s:bun-home/.npmrc","s:bun-home/.bunfig.toml","s:bun-config/.bunfig.toml","w:.ambient/home/.npmrc","w:.ambient/home/.bunfig.toml","w:.ambient/xdg/.bunfig.toml","w:.ambient/home/.config/.bunfig.toml"])expect(paths,needed).toContain(needed);
++  expect(new Set(paths).size).toBe(paths.length);expect(observed.files.every(row=>row.kind==="missing"&&row.sha256===null)).toBe(true);
++  expect([...paths].sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b)))).toEqual(paths);
++  const validate=new Ajv({strict:false}).addSchema(schema).getSchema(schema.$id+"#/$defs/Producer")!;expect(validate(JSON.parse(JSON.stringify(observed))),JSON.stringify(validate.errors)).toBe(true);
++  writeFileSync(join(root,".npmrc"),"a=1\n");const changed=glue.observeJavascriptDependencyGenerationProducerV1(root,store,[".","pkgs/a"],ambient);
++  expect(changed.files.find(row=>row.path==="w:.npmrc")).toEqual({path:"w:.npmrc",kind:"file",bytes:4,sha256:generationSha256V1("a=1\n")});
++  expect(generationCanonicalJsonV1(changed)).not.toBe(generationCanonicalJsonV1(observed));
++ }finally{rmSync(root,{recursive:true,force:true});}
++});
++
++test("generation receipt producer: the observed levels equal what the installer recipe isolates and refuses",()=>{
++ const install=JSON.parse(readFileSync(new URL("../../💾️storage/🧬️schema/📥️install.json",import.meta.url),"utf8")),recipe=install.$defs.ProducerRecipeProtocol.const,source=readFileSync(new URL("../../💾️storage/🟦️.ts",import.meta.url),"utf8");
++ expect(protocol.producer.environmentPrefixes).toEqual(recipe.clearEnvironmentPrefixes);
++ expect(Object.keys(protocol.producer.storeRoleFiles)).toEqual([recipe.home,recipe.config]);
++ expect(protocol.producer.storeRoleFiles[recipe.home as keyof typeof protocol.producer.storeRoleFiles]).toEqual([".npmrc",".bunfig.toml"]);
++ expect(source).toContain('[[installSchema.$defs.ProducerRecipeProtocol.const.home,[".bunfig.toml",".npmrc"]],[installSchema.$defs.ProducerRecipeProtocol.const.config,[".bunfig.toml"]]]');
++ expect(source).toContain("External installer configuration retained");
++ expect(source).toContain("for(const candidate of[path.join(home,\".bunfig.toml\"),path.join(config,\".bunfig.toml\"),path.join(home,\".npmrc\")])");
++ for(const key of recipe.clearEnvironmentKeys)expect(protocol.producer.environmentNames.includes(key),key).toBe(false);
++ expect(new Set(protocol.producer.environmentIgnored.map((name:string)=>name.toUpperCase())).size).toBe(protocol.producer.environmentIgnored.length);
++});
++
++test("generation receipt glue: a captured complete walk verifies under real read custody and every storage fact falls back when it moves",()=>issued.withScriptProcessEnvelope(issued.createScriptProcessEnvelope({version:1,owner:"generation-receipt-glue",maximumElapsedMilliseconds:60000},createNativeBuildCallerCapabilitiesV1(process.cwd(),["show","projects"],"nx",process.env),Date.now()),async original=>{
++ const{root,store}=materialize();
++ try{
++  const generation="e".repeat(64),directory=join(store,"j",generation.slice(0,20)),bindings=join(directory,"bindings.json"),target=join(directory,"node_modules");
++  mkdirSync(target,{recursive:true});writeFileSync(bindings,"{\"ready\":true}\n");mkdirSync(join(root,"pkgs/a"),{recursive:true});rmSync(join(root,"pkgs/a/node_modules"),{force:true});symlinkSync(target,join(root,"pkgs/a/node_modules"));
++  const phase=issued.createIssuedResourceControlV1(original,"dependencies:generation-glue",0),context:storage.JavascriptDependencyReadContextV1=Object.freeze({root:store,invocation:original,control:phase,check:(actual:storage.JavascriptDependencyReadContextV1["control"])=>issued.requireIssuedResourceControlRefinementV1(phase,actual),recheck:async(actual:storage.JavascriptDependencyReadContextV1["control"])=>{issued.requireIssuedResourceControlRefinementV1(phase,actual);}});
++  const pairs=[{sourceDirectory:join(root,"pkgs/a/node_modules"),targetDirectory:target}],observation=storage.observeJavascriptDependencyBindingsReadV1(context,pairs,phase),receipt=await storage.readJavascriptDependencyBindingReceiptReadV1(context,bindings,phase);
++  const walked=await bun.withCurrentBunWorkspaceOwnershipV1(root,{kind:"all"},{signal:new AbortController().signal,advance:async()=>{}},async custody=>custody.observed());
++  const providers=[join(store,"j/g1/node_modules/dep/package.json"),join(store,"j/g1/node_modules/dep"),join(root,"node_modules")].map(path=>{const f=facts(path);return{path,stamp:f?JSON.stringify(protocol.stampFields.map(key=>String(f[key as keyof typeof f]))):null,anchor:f?JSON.stringify(protocol.anchorFields.map(key=>String(f[key as keyof typeof f]))):null,kind:f?f.isDirectory()?"directory":"file":"missing",target:null,full:path.endsWith("package.json")};});
++  const scopes=[{scope:".",sha256:"f".repeat(64)}],receipts=[{scope:".",generation,fingerprint:receipt.fingerprint}],sha256=generationSha256V1(JSON.stringify([receipts,[[".",observation]],scopes]));
++  const f=lstatSync(join(root,"package.json"));
++  const walk={version:1 as const,required:["."],projection:{owners:{sha256:"d".repeat(64)},recipeSha256:"c".repeat(64),plans:[{scope:".",plan:{directory,generation,bindings:pairs,sources:[{path:join(root,"package.json"),kind:"file" as const,dev:String(f.dev),ino:String(f.ino),mode:f.mode,bytes:readFileSync(join(root,"package.json"))}]}}]},receipts,sha256,evidence:{scope:".",execution:{scopes,runtimeSha256:storage.javascriptDependencySourceOwnerRuntimeV1(),observations:providers},bindings:[[".",observation]]},observed:()=>walked};
++  const subject=subjectOf(root,Date.now()+10000),generationControl={signal:phase.signal,check:()=>{},tick:async()=>{}},captured=await glue.captureJavascriptDependencyGenerationReceiptV1(root,{root:store},generationControl,walk as never,walked,Date.now()+10000,original,subject);
++  expect(captured.status).toBe("captured");if(captured.status!=="captured")return;
++  expect(await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject)).toEqual({status:"absent"});
++  const write=()=>{mkdirSync(join(store,protocol.directory),{recursive:true});for(const file of captured.files)writeFileSync(join(store,protocol.directory,file.name),file.bytes);writeFileSync(join(store,protocol.directory,generationSha256V1(".").slice(0,16)+"."+captured.receipt.sha256+protocol.receiptSuffix),JSON.stringify(captured.receipt)+"\n");};
++  write();
++  const match=await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject);expect(match.status).toBe("match");if(match.status==="match"){expect(match.sha256).toBe(sha256);expect(match.receipts).toEqual(receipts);}
++  expect(await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,"other",subject)).toEqual({status:"absent"});
++  writeFileSync(join(root,"package.json"),readFileSync(join(root,"package.json"),"utf8")+" ");
++  expect(await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject)).toMatchObject({status:"mismatch",class:"input-changed"});
++  const second=await glue.captureJavascriptDependencyGenerationReceiptV1(root,{root:store},generationControl,{...walk,projection:{...walk.projection,plans:[{...walk.projection.plans[0]!,plan:{...walk.projection.plans[0]!.plan,sources:[{...walk.projection.plans[0]!.plan.sources[0]!,bytes:readFileSync(join(root,"package.json")),ino:String(lstatSync(join(root,"package.json")).ino)}]}}]}} as never,await bun.withCurrentBunWorkspaceOwnershipV1(root,{kind:"all"},{signal:new AbortController().signal,advance:async()=>{}},async custody=>custody.observed()),Date.now()+10000,original,subject);
++  expect(second.status).toBe("captured");if(second.status!=="captured")return;
++  for(const file of second.files)writeFileSync(join(store,protocol.directory,file.name),file.bytes);writeFileSync(join(store,protocol.directory,generationSha256V1(".").slice(0,16)+"."+second.receipt.sha256+protocol.receiptSuffix),JSON.stringify(second.receipt)+"\n");
++  expect((await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject)).status).toBe("match");
++  const before=readdirSync(join(store,protocol.directory)).length;glue.retireJavascriptDependencyGenerationFilesV1(store,".");const after=readdirSync(join(store,protocol.directory));
++  expect(after.filter(name=>name.endsWith(protocol.receiptSuffix)).length).toBe(1);expect(after.length).toBeLessThan(before);
++  expect((await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject)).status).toBe("match");
++  rmSync(join(store,"j/g1/node_modules/dep/package.json"));writeFileSync(join(store,"j/g1/node_modules/dep/package.json"),"{}");
++  expect(await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject)).toMatchObject({status:"mismatch",class:"provider-changed"});
++  writeFileSync(join(store,protocol.directory,after.find(name=>name.endsWith(protocol.receiptSuffix))!),"{broken");
++  expect(await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject)).toMatchObject({status:"mismatch",class:"receipt-invalid"});
++ }finally{rmSync(root,{recursive:true,force:true});}
++}),60000);

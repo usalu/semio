@@ -1,4 +1,4 @@
-/** 📄️ Reads one bounded native image retirement file through a pinned descriptor and returns its bytes with its identity stamp; the storage core and both retirement backends read receipts and claim sidecars through it, so it sits below all of them. */
+/** 📖️ Reads one bounded native image retirement file through a pinned descriptor and returns its bytes with its identity stamp; the storage core and both retirement backends read receipts and claim sidecars through it, so it sits below all of them. */
 
 import { lstatSync, readFileSync, openSync, closeSync, constants, fstatSync } from "node:fs";
 import { resolve, dirname } from "node:path";

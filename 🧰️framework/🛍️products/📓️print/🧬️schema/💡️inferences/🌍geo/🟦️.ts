@@ -77,14 +77,14 @@ function composeRaw(a: VizRawProjection, b: VizRawProjection): VizRawProjection 
   return forward;
 }
 
-/** 🌐 The three-angle rotation d3 applies before the raw projection. */
+/** 🔄️ The three-angle rotation d3 applies before the raw projection. */
 export function vizRotateRadians(deltaLambda: number, deltaPhi: number, deltaGamma: number): VizRawProjection {
   const l = deltaLambda % TAU;
   if (l) return deltaPhi || deltaGamma ? composeRaw(rotationLambda(l), rotationPhiGamma(deltaPhi, deltaGamma)) : rotationLambda(l);
   return deltaPhi || deltaGamma ? rotationPhiGamma(deltaPhi, deltaGamma) : rotationIdentity;
 }
 
-/** 🌐 Great-circle distance in radians between two `[lon, lat]` points. */
+/** 📏️ Great-circle distance in radians between two `[lon, lat]` points. */
 export function vizGeoDistance(a: VizPoint, b: VizPoint): number {
   const [lon0, lat0] = [a[0] * RADIANS, a[1] * RADIANS];
   const [lon1, lat1] = [b[0] * RADIANS, b[1] * RADIANS];
@@ -101,15 +101,15 @@ export function vizGeoDistance(a: VizPoint, b: VizPoint): number {
 //#endregion 🔖️Spherical
 
 //#region 🔖️RawProjections
-/** 🌐 `equirectangular`. */
+/** 🔲️ `equirectangular`. */
 export const rawEquirectangular = ((lambda: number, phi: number): VizPoint => [lambda, phi]) as VizRawProjection;
 rawEquirectangular.invert = (x: number, y: number) => [x, y];
 
-/** 🌐 `mercator`. */
+/** 🧭️ `mercator`. */
 export const rawMercator = ((lambda: number, phi: number): VizPoint => [lambda, Math.log(Math.tan((HALF_PI + phi) / 2))]) as VizRawProjection;
 rawMercator.invert = (x: number, y: number) => [x, 2 * Math.atan(Math.exp(y)) - HALF_PI];
 
-/** 🌐 `transverse-mercator`. */
+/** 🔃️ `transverse-mercator`. */
 export const rawTransverseMercator = ((lambda: number, phi: number): VizPoint => [Math.log(Math.tan((HALF_PI + phi) / 2)), -lambda]) as VizRawProjection;
 rawTransverseMercator.invert = (x: number, y: number) => [-y, 2 * Math.atan(Math.exp(x)) - HALF_PI];
 
@@ -133,18 +133,18 @@ function azimuthalInvert(angle: (z: number) => number): (x: number, y: number) =
   };
 }
 
-/** 🌐 `azimuthal-equal-area`. */
+/** ⚖️ `azimuthal-equal-area`. */
 export const rawAzimuthalEqualArea = azimuthalRaw((cxcy) => Math.sqrt(2 / (1 + cxcy)));
 rawAzimuthalEqualArea.invert = azimuthalInvert((z) => 2 * asin(z / 2));
 
-/** 🌐 `azimuthal-equidistant`. */
+/** 🎯️ `azimuthal-equidistant`. */
 export const rawAzimuthalEquidistant = azimuthalRaw((c) => {
   const a = acos(c);
   return a && a / Math.sin(a);
 });
 rawAzimuthalEquidistant.invert = azimuthalInvert((z) => z);
 
-/** 🌐 `gnomonic`. */
+/** 🕰️ `gnomonic`. */
 export const rawGnomonic = ((lambda: number, phi: number): VizPoint => {
   const cy = Math.cos(phi);
   const k = Math.cos(lambda) * cy;
@@ -152,11 +152,11 @@ export const rawGnomonic = ((lambda: number, phi: number): VizPoint => {
 }) as VizRawProjection;
 rawGnomonic.invert = azimuthalInvert(Math.atan);
 
-/** 🌐 `orthographic`. */
+/** 🌑️ `orthographic`. */
 export const rawOrthographic = ((lambda: number, phi: number): VizPoint => [Math.cos(phi) * Math.sin(lambda), Math.sin(phi)]) as VizRawProjection;
 rawOrthographic.invert = azimuthalInvert(asin);
 
-/** 🌐 `stereographic`. */
+/** 🔭️ `stereographic`. */
 export const rawStereographic = ((lambda: number, phi: number): VizPoint => {
   const cy = Math.cos(phi);
   const k = 1 + Math.cos(lambda) * cy;
@@ -168,7 +168,7 @@ function tany(y: number): number {
   return Math.tan((HALF_PI + y) / 2);
 }
 
-/** 🌐 `conic-conformal` at two standard parallels, in radians. */
+/** 🔺️ `conic-conformal` at two standard parallels, in radians. */
 export function rawConicConformal(y0: number, y1: number): VizRawProjection {
   const cy0 = Math.cos(y0);
   const n = y0 === y1 ? Math.sin(y0) : Math.log(cy0 / Math.cos(y1)) / Math.log(tany(y1) / tany(y0));
@@ -199,7 +199,7 @@ function rawCylindricalEqualArea(phi0: number): VizRawProjection {
   return forward;
 }
 
-/** 🌐 `conic-equal-area` at two standard parallels, in radians. */
+/** 🍦️ `conic-equal-area` at two standard parallels, in radians. */
 export function rawConicEqualArea(y0: number, y1: number): VizRawProjection {
   const sy0 = Math.sin(y0);
   const n = (sy0 + Math.sin(y1)) / 2;
@@ -220,7 +220,7 @@ export function rawConicEqualArea(y0: number, y1: number): VizRawProjection {
   return forward;
 }
 
-/** 🌐 `conic-equidistant` at two standard parallels, in radians. */
+/** 📐️ `conic-equidistant` at two standard parallels, in radians. */
 export function rawConicEquidistant(y0: number, y1: number): VizRawProjection {
   const cy0 = Math.cos(y0);
   const n = y0 === y1 ? Math.sin(y0) : (cy0 - Math.cos(y1)) / (y1 - y0);
@@ -246,7 +246,7 @@ const EE_A3 = 0.000893;
 const EE_A4 = 0.003796;
 const EE_M = Math.sqrt(3) / 2;
 
-/** 🌐 `equal-earth`. */
+/** 🌎️ `equal-earth`. */
 export const rawEqualEarth = ((lambda: number, phi: number): VizPoint => {
   const l = asin(EE_M * Math.sin(phi));
   const l2 = l * l;
@@ -268,7 +268,7 @@ rawEqualEarth.invert = (x: number, y: number) => {
   return [(EE_M * x * (EE_A1 + 3 * EE_A2 * l2 + l6 * (7 * EE_A3 + 9 * EE_A4 * l2))) / Math.cos(l), asin(Math.sin(l) / EE_M)];
 };
 
-/** 🌐 `natural-earth`. */
+/** 🌿️ `natural-earth`. */
 export const rawNaturalEarth = ((lambda: number, phi: number): VizPoint => {
   const phi2 = phi * phi;
   const phi4 = phi2 * phi2;
@@ -277,7 +277,7 @@ export const rawNaturalEarth = ((lambda: number, phi: number): VizPoint => {
 //#endregion 🔖️RawProjections
 
 //#region 🔖️Projection
-/** 🌐 A projection: the whole rotate → raw → scale/translate pipeline, and its inverse. */
+/** 📽️ A projection: the whole rotate → raw → scale/translate pipeline, and its inverse. */
 export type VizProjection = {
   (point: VizPoint): VizPoint;
   invert(point: VizPoint): VizPoint | null;
@@ -291,10 +291,10 @@ export type VizProjection = {
   withCenter(c: VizPoint): VizProjection;
 };
 
-/** 🌐 Settings of a projection, all of them optional and all documented by their d3 defaults. */
+/** 🎛️ Settings of a projection, all of them optional and all documented by their d3 defaults. */
 export type VizProjectionSettings = { readonly scale?: number; readonly translate?: VizPoint; readonly rotate?: readonly [number, number, number?]; readonly center?: VizPoint; readonly reflectX?: boolean; readonly reflectY?: boolean };
 
-/** 🌐 Wraps a raw projection into the full pipeline, exactly like d3's `projection()`. */
+/** 🎁️ Wraps a raw projection into the full pipeline, exactly like d3's `projection()`. */
 export function vizProjection(raw: VizRawProjection, settings: VizProjectionSettings = {}): VizProjection {
   const k = settings.scale ?? 150;
   const [tx, ty] = settings.translate ?? [480, 250];
@@ -327,10 +327,10 @@ export function vizProjection(raw: VizRawProjection, settings: VizProjectionSett
   return projection;
 }
 
-/** 🌐 Options one of the fourteen registered projections accepts. */
+/** ✅️ Options one of the fourteen registered projections accepts. */
 export type VizProjectionOptions = VizProjectionSettings & { readonly parallels?: readonly [number, number] };
 
-/** 🌐 The default scale, rotation and centre d3 gives each registered projection. */
+/** 🏠️ The default scale, rotation and centre d3 gives each registered projection. */
 const PROJECTION_DEFAULTS: Readonly<Record<VizProjectionKind, VizProjectionSettings & { parallels?: readonly [number, number] }>> = {
   equirectangular: { scale: 152.63 },
   mercator: { scale: 961 / TAU },
@@ -348,7 +348,7 @@ const PROJECTION_DEFAULTS: Readonly<Record<VizProjectionKind, VizProjectionSetti
   "natural-earth": { scale: 175.295 },
 };
 
-/** 🌍 `\SemioVizCoordinate{geographic}`: builds one of the fourteen registered projections. */
+/** ➡️ `\SemioVizCoordinate{geographic}`: builds one of the fourteen registered projections. */
 export function vizGeoProjection(kind: VizProjectionKind, options: VizProjectionOptions = {}): VizProjection {
   const defaults = PROJECTION_DEFAULTS[kind];
   const parallels = options.parallels ?? defaults.parallels ?? [0, 0];
@@ -429,7 +429,7 @@ function eachRing(geometry: VizGeoGeometry, visit: (points: readonly VizPoint[],
   }
 }
 
-/** 🗺️ `\SemioVizGeoPath`: renders a GeoJSON geometry through a projection into path commands.
+/** 🛤️ `\SemioVizGeoPath`: renders a GeoJSON geometry through a projection into path commands.
  * Point geometries are drawn as circles of `pointRadius`, exactly as d3's `geoPath` does. */
 export function vizGeoPath(geometry: VizGeoGeometry, projection: VizProjection, options: { pointRadius?: number } = {}, context?: VizPathContext): VizPathCommand[] {
   const recorder = context === undefined ? vizPathRecorder() : undefined;
@@ -456,7 +456,7 @@ export function vizGeoPath(geometry: VizGeoGeometry, projection: VizProjection, 
   return recorder?.commands ?? [];
 }
 
-/** 🗺️ The planar bounding box of a projected geometry. */
+/** 🗃️ The planar bounding box of a projected geometry. */
 export function vizGeoBounds(geometry: VizGeoGeometry, projection: VizProjection): VizExtent {
   let x0 = Number.POSITIVE_INFINITY;
   let y0 = Number.POSITIVE_INFINITY;
@@ -474,7 +474,7 @@ export function vizGeoBounds(geometry: VizGeoGeometry, projection: VizProjection
   return { x0, y0, x1, y1 };
 }
 
-/** 🗺️ The planar area of a projected geometry, in square figure millimetres. */
+/** ◼️ The planar area of a projected geometry, in square figure millimetres. */
 export function vizGeoArea(geometry: VizGeoGeometry, projection: VizProjection): number {
   let total = 0;
   eachRing(geometry, (points, closed) => {
@@ -491,7 +491,7 @@ export function vizGeoArea(geometry: VizGeoGeometry, projection: VizProjection):
   return Math.abs(total);
 }
 
-/** 🗺️ The planar centroid of a projected geometry. */
+/** 📍️ The planar centroid of a projected geometry. */
 export function vizGeoCentroid(geometry: VizGeoGeometry, projection: VizProjection): VizPoint {
   let cx = 0;
   let cy = 0;
@@ -536,10 +536,10 @@ function stepRange(start: number, stop: number, step: number): number[] {
   return out;
 }
 
-/** 🌐 Options of `\SemioVizGeoGraticule`, with d3's defaults. */
+/** ⚙️ Options of `\SemioVizGeoGraticule`, with d3's defaults. */
 export type VizGraticuleOptions = { readonly extent?: readonly [VizPoint, VizPoint]; readonly step?: readonly [number, number]; readonly stepMajor?: readonly [number, number]; readonly precision?: number };
 
-/** 🌐 The meridian and parallel grid, as a `MultiLineString`. */
+/** 🕸️ The meridian and parallel grid, as a `MultiLineString`. */
 export function vizGraticule(options: VizGraticuleOptions = {}): { readonly type: "MultiLineString"; readonly coordinates: VizPoint[][] } {
   const [[x0, y0], [x1, y1]] = options.extent ?? [
     [-180, -90 + EPSILON],
@@ -571,7 +571,7 @@ export function vizGraticule(options: VizGraticuleOptions = {}): { readonly type
 //#endregion 🔖️Graticule
 
 //#region 🔖️Fit
-/** 🗺️ Rescales and recentres a projection so a geometry exactly fills an extent. */
+/** 🔳️ Rescales and recentres a projection so a geometry exactly fills an extent. */
 export function vizGeoFitExtent(projection: VizProjection, extent: readonly [VizPoint, VizPoint], geometry: VizGeoGeometry, raw: VizRawProjection, settings: VizProjectionSettings = {}): VizProjection {
   const unit = vizProjection(raw, { ...settings, scale: 150, translate: [0, 0] });
   const bounds = vizGeoBounds(geometry, unit);
@@ -584,7 +584,7 @@ export function vizGeoFitExtent(projection: VizProjection, extent: readonly [Viz
   return vizProjection(raw, { ...settings, scale: 150 * k, translate: [x, y] });
 }
 
-/** 🗺️ Fits a geometry into a `width × height` box anchored at the origin. */
+/** ⚓️ Fits a geometry into a `width × height` box anchored at the origin. */
 export function vizGeoFitSize(projection: VizProjection, size: readonly [number, number], geometry: VizGeoGeometry, raw: VizRawProjection, settings: VizProjectionSettings = {}): VizProjection {
   return vizGeoFitExtent(
     projection,

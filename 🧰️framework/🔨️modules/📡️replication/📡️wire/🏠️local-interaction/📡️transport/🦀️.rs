@@ -61,7 +61,7 @@ impl semio_framework_value::FromValue for LocalInteractionQueryCommand {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LocalInteractionQueryRejection { Busy, Closed, GenerationExhausted, SourceFailed }
 
-/// 🌱️ Hand-written, not derived — same reason as `LocalInteractionQueryCommand` above.
+/// 🧰️ Hand-written, not derived — same reason as `LocalInteractionQueryCommand` above.
 impl semio_framework_value::ToValue for LocalInteractionQueryRejection {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::String(
@@ -98,7 +98,7 @@ pub enum LocalInteractionQueryReply {
     Rejected { request_id: u64, code: LocalInteractionQueryRejection },
 }
 
-/// 🌱️ Hand-written, not derived — same reason as `LocalInteractionQueryCommand` above.
+/// 💎️ Hand-written, not derived — same reason as `LocalInteractionQueryCommand` above.
 impl semio_framework_value::ToValue for LocalInteractionQueryReply {
     fn to_value(&self) -> semio_framework_value::DslValue {
         match self {

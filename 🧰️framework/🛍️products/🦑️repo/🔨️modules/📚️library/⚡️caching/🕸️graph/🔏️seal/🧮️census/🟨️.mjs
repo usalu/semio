@@ -10,7 +10,7 @@ const blocks = new Map();
 function blockRows(directory, digest) {
   let rows = blocks.get(digest);
   if (!rows) {
-    const text = brotliDecompressSync(readFileSync(join(directory, digest.slice(0, 24) + ".json"))).toString("utf8");
+    const text = brotliDecompressSync(readFileSync(join(directory, "ob", digest + ".br"))).toString("utf8");
     if (createHash("sha256").update(text).digest("hex") !== digest) throw new Error("Inference block content differs from its name");
     blocks.set(digest, rows = JSON.parse(text));
   }

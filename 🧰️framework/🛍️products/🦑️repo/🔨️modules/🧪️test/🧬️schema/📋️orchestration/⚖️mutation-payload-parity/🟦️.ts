@@ -1,4 +1,4 @@
-/** ⚖️ Mutation payload parity gate
+/** 🚪️ Mutation payload parity gate
  *
  * `schema-mutation-payload-parity`: every mutation leaf and aggregate schema describes the wire its committed fixtures and the `#[derive(Mutations)]` enum witness.
  */
@@ -25,14 +25,14 @@ export type MutationPayloadFindingClass = "invalid" | "undescribed" | "opaque" |
  */
 export type MutationFixtureOutcome = Readonly<{ direction: "positive" | "negative"; invariant: string | null }>;
 
-/** 🚫️ The witness direction of a committed outcome document: `negative` for `{"status": "rejected", "code": "mutation.invariant"}`. */
+/** 📄️ The witness direction of a committed outcome document: `negative` for `{"status": "rejected", "code": "mutation.invariant"}`. */
 export function mutationFixtureOutcome(outcome: unknown): MutationFixtureOutcome {
   const negative = isRecord(outcome) && outcome.status === "rejected" && outcome.code === "mutation.invariant";
   return { direction: negative ? "negative" : "positive", invariant: negative && typeof outcome.invariant === "string" ? outcome.invariant : null };
 }
 
 /**
- * 🚫️ The verdict on a negative witness: clean when its leaf schema rejects it (`invalid`), or when it is schema-valid but its
+ * ❎️ The verdict on a negative witness: clean when its leaf schema rejects it (`invalid`), or when it is schema-valid but its
  * outcome names an invariant the leaf declares in `x-semio-invariant` (`declared`, the ids of `mutationSchemaInvariants`); else
  * one `negative` finding. Never `invalid`.
  */
@@ -122,7 +122,7 @@ export function mutationAggregateBranch(layout: MutationAggregateLayout, wireNam
 export type MutationLeafWrapper = Readonly<{ layout: MutationAggregateLayout; wireName: string }>;
 
 /**
- * 🎁️ The editable leaf payload of one committed fixture, as `payload_value()` yields it: the aggregate wrapper is cut first
+ * 📥️ The editable leaf payload of one committed fixture, as `payload_value()` yields it: the aggregate wrapper is cut first
  * (`mutationLeafPayload`); a wrapped leaf then yields the content of its `payload` variant, and any other variant of it is
  * `inert` (not editable, so no witness of the leaf schema). `refused` when the fixture is not the variant in the layout.
  */
@@ -143,7 +143,7 @@ export function mutationFeatureStep(step: FeatureStep, kind: string): boolean {
 }
 
 /**
- * 🥒️ The wire-form rows of a `🥒️.feature`, read through the harness's own `parseFeature` (the plan every native host receives):
+ * 📖️ The wire-form rows of a `🥒️.feature`, read through the harness's own `parseFeature` (the plan every native host receives):
  * every mutation step (`mutationFeatureStep`) of an expanded scenario whose docstring is a JSON object `{"kind": <leaf kind>,
  * "params": <wire payload>, …}`, at the scenario's line. A Scenario Outline row whose template carries `"kind": "<id>"` and
  * `"params": <params>` is one such step; a round-trip, codec or expectation step carrying the same shape is not a row.
@@ -170,7 +170,7 @@ export function mutationFixtureWire(value: unknown): unknown {
 }
 
 /**
- * ⚖️ The parity checks of one leaf payload schema over the `schema://` document universe, validated by the third-party npm
+ * ✅️ The parity checks of one leaf payload schema over the `schema://` document universe, validated by the third-party npm
  * `jsonschema`: `invalid` (the payload fails its leaf schema), `undescribed` (a payload member no `properties`,
  * `patternProperties` or `additionalProperties` describes, walked through `$ref`, `allOf` and the matching `oneOf`/`anyOf`
  * branch), and `opaque` (an object node of the schema that declares no members at all).
@@ -279,7 +279,7 @@ export function mutationPayloadChecker(documents: ReadonlyMap<string, Record<str
     for (const keyword of ["items", "allOf", "oneOf", "anyOf"]) if (Array.isArray(node[keyword])) (node[keyword] as unknown[]).forEach((_, index) => child(`${keyword}/${index}`));
   };
   const checks = {
-    /** 🔎️ The `invalid` and `undescribed` findings of one normalized leaf payload against the leaf document `id`. */
+    /** 🎒️ The `invalid` and `undescribed` findings of one normalized leaf payload against the leaf document `id`. */
     payload(id: string, instance: unknown): MutationPayloadFinding[] {
       const findings: MutationPayloadFinding[] = [];
       try {
@@ -291,7 +291,7 @@ export function mutationPayloadChecker(documents: ReadonlyMap<string, Record<str
       describe(instance, id, "", "", findings, 0);
       return findings;
     },
-    /** 🧺️ The `aggregate` finding when the aggregate document `id` rejects the whole aggregate wire value of a fixture. */
+    /** ❌️ The `aggregate` finding when the aggregate document `id` rejects the whole aggregate wire value of a fixture. */
     aggregate(id: string, wire: unknown): MutationPayloadFinding[] {
       try {
         const errors = validator.validate(wire, { $ref: id }).errors;
@@ -300,7 +300,7 @@ export function mutationPayloadChecker(documents: ReadonlyMap<string, Record<str
         return [{ class: "aggregate", pointer: "", detail: `${id} does not resolve: ${error instanceof Error ? error.message : String(error)}` }];
       }
     },
-    /** 🧷️ The invariant ids the leaf document `id` declares in `x-semio-invariant`. */
+    /** 🍃️ The invariant ids the leaf document `id` declares in `x-semio-invariant`. */
     invariants(id: string): ReadonlySet<string> {
       return mutationSchemaInvariants(documents.get(id));
     },
@@ -337,7 +337,7 @@ export function mutationPayloadChecker(documents: ReadonlyMap<string, Record<str
 }
 
 /**
- * ⚖️ Reads every committed mutation fixture (`<owner>/🧫️fixtures/🧬️mutations/<leaf>/<case>/🦠️mutation/🔣️.json` and every
+ * 🛠️ Reads every committed mutation fixture (`<owner>/🧫️fixtures/🧬️mutations/<leaf>/<case>/🦠️mutation/🔣️.json` and every
  * other `…fixtures/…/🦠️mutation` or `🧪️tests/…/🦠️mutation` layout), maps it to its leaf (by the leaf directory the fixture path
  * names, else by the variant its payload names), cuts the leaf payload out of the aggregate wire value exactly as
  * `payload_value()` does (the layout read off the aggregate's `#[value(...)]` attribute), splices the leaf schema's root
@@ -570,7 +570,7 @@ export function mutationPayloadParityReport(repoRoot: string, under = ""): Mutat
 }
 
 /**
- * ⚖️ `test schema mutation-payloads` — the `schema-mutation-payload-parity` gate: every committed mutation fixture's leaf payload
+ * ▶️ `test schema mutation-payloads` — the `schema-mutation-payload-parity` gate: every committed mutation fixture's leaf payload
  * validates against, and is fully described by, its leaf payload schema, and no leaf schema holds an opaque object node.
  * `--census` prints the per-plugin table and always exits 0; without it any finding fails.
  *

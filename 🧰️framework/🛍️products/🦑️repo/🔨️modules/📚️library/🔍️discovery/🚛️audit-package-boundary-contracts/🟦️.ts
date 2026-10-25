@@ -12,7 +12,7 @@ export function auditPackageBoundaryContracts(audit: TaxonomyAudit): void {
   }
 
   if (record(taxonomy.packageGlueGrammar, "packageGlueGrammar")) for (const [id, grammar] of Object.entries(taxonomy.packageGlueGrammar)) {
-    if (!["rust", "typescript", "javascript", "go", "python", "dotnet", "c-cpp", "tex"].includes(grammar.analyzer)) problems.push(`packageGlueGrammar[${JSON.stringify(id)}].analyzer is invalid.`);
+    if (!["rust", "typescript", "javascript", "go", "python", "dotnet", "c-cpp", "tex", "css"].includes(grammar.analyzer)) problems.push(`packageGlueGrammar[${JSON.stringify(id)}].analyzer is invalid.`);
     if (!Number.isSafeInteger(grammar.maxDelegationStatements) || grammar.maxDelegationStatements < 0) problems.push(`packageGlueGrammar[${JSON.stringify(id)}].maxDelegationStatements is invalid.`);
     if (!Array.isArray(grammar.allowedRoles) || grammar.allowedRoles.some((role) => !["declaration", "registration", "bootstrap", "thin-delegation"].includes(role))) problems.push(`packageGlueGrammar[${JSON.stringify(id)}].allowedRoles is invalid.`);
   }
@@ -35,6 +35,17 @@ export function auditPackageBoundaryContracts(audit: TaxonomyAudit): void {
         exactKeys(admission, ["form", "unitManifestContractId"], `packageBoundaryRules[${JSON.stringify(ecosystemId)}].implementationAdmission`);
         if (admission.unitManifestContractId !== rule.manifestContractId) problems.push(`packageBoundaryRules[${JSON.stringify(ecosystemId)}].implementationAdmission.unitManifestContractId must be the package manifest contract.`);
       } else problems.push(`packageBoundaryRules[${JSON.stringify(ecosystemId)}].implementationAdmission.form is invalid.`);
+    }
+    const directoryAdmissions = rule.directoryAdmissions;
+    if (directoryAdmissions !== undefined && !Array.isArray(directoryAdmissions)) problems.push(`packageBoundaryRules[${JSON.stringify(ecosystemId)}].directoryAdmissions must be an array.`);
+    else for (const [index, directoryAdmission] of (directoryAdmissions ?? []).entries()) {
+      const label = `packageBoundaryRules[${JSON.stringify(ecosystemId)}].directoryAdmissions[${index}]`;
+      if (directoryAdmission.form === "manifest-declared-entries") {
+        exactKeys(directoryAdmission, ["form", "manifestContractId", "entryFields"], label);
+        if (directoryAdmission.manifestContractId !== rule.manifestContractId) problems.push(`${label}.manifestContractId must be the package manifest contract.`);
+        if (!Array.isArray(directoryAdmission.entryFields) || directoryAdmission.entryFields.length === 0 || directoryAdmission.entryFields.some((field: unknown) => typeof field !== "string" || field === "")) problems.push(`${label}.entryFields must be a non-empty array of manifest field names.`);
+      } else if (directoryAdmission.form === "fixed-contract-trees") exactKeys(directoryAdmission, ["form"], label);
+      else problems.push(`${label}.form is invalid.`);
     }
   }
 
@@ -62,7 +73,7 @@ export function auditPackageBoundaryContracts(audit: TaxonomyAudit): void {
       if (!expected.has(id)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] does not name a source-format fixed/configurable contract.`);
       else if (expected.get(id) !== disposition.contractKind) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].contractKind does not match its registry.`);
       if (!["adapter-source", "tool-metadata"].includes(disposition.disposition)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].disposition is invalid.`);
-      const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config", "vscode-test-configuration": "vscode-test-cli-config" };
+      const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config" };
       const configValidatorOwner = TOOL_CONFIG_VALIDATORS[disposition.validator];
       if (!["package-glue", "command-router", ...Object.keys(TOOL_CONFIG_VALIDATORS)].includes(disposition.validator) || (disposition.disposition === "adapter-source") !== (disposition.validator === "package-glue") || (configValidatorOwner !== undefined && id !== configValidatorOwner)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] disposition/validator pair is invalid.`);
       if (disposition.grammarId !== undefined && !taxonomy.packageGlueGrammar[disposition.grammarId]) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].grammarId is missing.`);

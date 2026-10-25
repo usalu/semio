@@ -12,7 +12,6 @@ test("conditional rooted file publication preserves prior bytes and matches inde
  for(const row of cases){expect(validate(row)).toBe(true);const root=await mkdtemp(join(resolve(output),"publication-")),name="dependencies.json";try{if(row.before==="file")await writeFile(join(root,name),row.prior!);
   await withArtifactRelativeDirectoryV1(root,()=>{},async directory=>{const expected=await directory.captureFilePublication(name,row.maximumBytes),result=await directory.publishFile(expected,Buffer.from(row.bytes));expect(result.authority).toBe(false);expect(result.sha256).toBe(Buffer.from(sha256(Buffer.from(row.bytes))).toString("hex"));expect(await readFile(join(root,name),"utf8")).toBe(row.bytes);if(row.before==="file"){expect(result.retained).not.toBeNull();expect(await readFile(join(root,result.retained!.name),"utf8")).toBe(row.prior!);expect(result.retained!.sha256).toBe(Buffer.from(sha256(Buffer.from(row.prior!))).toString("hex"));}else expect(result.retained).toBeNull();});
  }finally{await rm(root,{recursive:true,force:true});}}
- console.log(`[DEBUG] conditional publication verified ${cases.length} missing and replacement byte cases`);
 },120_000);
 
 test("conditional publication rejects a copied expectation before changing files",async()=>{
@@ -26,5 +25,4 @@ test("conditional file publication refuses hostile source and caller changes bef
   await expect(withArtifactRelativeDirectoryV1(root,()=>{if(stopped)throw Error("Cancelled publication");},async directory=>{const expected=await directory.captureFilePublication(name,row.maximumBytes);if(row.effect==="changed")await writeFile(join(root,name),"external");if(row.effect==="parent")await writeFile(join(root,"external.json"),"external");if(row.effect==="cancel")stopped=true;const input=row.effect==="copied"?{...expected}:row.effect==="expected-proxy"?new Proxy(expected,{}):expected,bytes=row.effect==="bytes-proxy"?new Proxy(Buffer.from(row.bytes),{}):Buffer.from(row.bytes);await directory.publishFile(input,bytes);})).rejects.toThrow();
   if(row.before==="file"||row.before==="hardlink")expect(await readFile(join(root,name),"utf8")).toBe(row.effect==="changed"?"external":row.prior??"");expect((await readdir(root)).every(entry=>[name,"other.json","external.json"].includes(entry))).toBe(true);
  }finally{await rm(root,{recursive:true,force:true});}}
- console.log(`[DEBUG] conditional publication refused ${cases.length} hostile source and caller cases before publication`);
 },120_000);

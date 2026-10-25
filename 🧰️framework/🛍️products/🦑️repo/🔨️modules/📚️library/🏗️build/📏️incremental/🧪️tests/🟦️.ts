@@ -1,7 +1,7 @@
 import {buildBackendIdsV1} from "../../🔌️backends/🟦️.ts";
 /** 🔁️ Incremental build conformance: the evaluation model, verdicts, mutations, observers, runner and command are checked against language-agnostic fixtures, an independent Python oracle, Bazel's own binary (execution log, summary line, `rdeps`) and the installed Nx's own run-record class. */
 import {test,expect} from "bun:test";
-import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,symlinkSync,writeFileSync,lstatSync,readlinkSync} from "node:fs";
@@ -384,10 +384,13 @@ test("the command lists, prepares, plans, runs and discards through its ports wi
  try{
   const live=join(base,"live"),copy=join(base,"copy"),script="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";mkdirSync(join(live,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build"),{recursive:true});writeFileSync(join(live,script),"// cli\n");writeFileSync(join(live,"a.ts"),"a\n");
   const out:string[]=[],stages:string[]=[],log:string[]=[],reports:unknown[]=[],single=slice({version:1,selected:["lib:generate"],tasks:{"lib:generate":{family:"bun-script",cache:true,outputs:true,dependsOn:[],consumes:[],inputs:[]}}});
-  const ports=(over:Partial<IncrementalCommandPortsV1>={}):IncrementalCommandPortsV1=>({write:line=>out.push(line),progress:async stage=>{stages.push(stage);},check:()=>{},signal:new AbortController().signal,environment:{SEMIO_LANGUAGE:"en",SEMIO_X:"1",PATH:"/usr/bin"},platform:"linux",tmpdir:()=>"/tmp/t",home:()=>"/home/t",now:()=>Date.now(),run:stubCli({base},single,log),report:async(file,value)=>{reports.push([file,value]);},files:async()=>[script,"a.ts"],adapter:async()=>({...stubAdapter,planBazelTasksV1:()=>({selected:["lib:generate"],tasks:{"lib:generate":{id:"lib:generate",dependencies:[],definition:{outputs:["o"]}}}}),bazelTaskCoverageV1:()=>({family:"bun-script"}),bazelTaskInputsV1:()=>[]}),nxRecord:directory=>join(directory,"run.json"),exists:async path=>existsSync(path),scratch:async()=>mkdtempSync(join(base,"scratch-")),...over});
+  const ports=(over:Partial<IncrementalCommandPortsV1>={}):IncrementalCommandPortsV1=>({write:line=>out.push(line),progress:async stage=>{stages.push(stage);},check:()=>{},signal:new AbortController().signal,environment:{SEMIO_LANGUAGE:"en",SEMIO_X:"1",PATH:"/usr/bin"},platform:"linux",tmpdir:()=>"/tmp/t",home:()=>"/home/t",now:()=>Date.now(),run:stubCli({base},single,log),report:async(file,value)=>{reports.push([file,value]);},files:async()=>[script,"a.ts"],locks:()=>{},adapter:async()=>({...stubAdapter,planBazelTasksV1:()=>({selected:["lib:generate"],tasks:{"lib:generate":{id:"lib:generate",dependencies:[],definition:{outputs:["o"]}}}}),bazelTaskCoverageV1:()=>({family:"bun-script"}),bazelTaskInputsV1:()=>[]}),nxRecord:directory=>join(directory,"run.json"),exists:async path=>existsSync(path),scratch:async()=>mkdtempSync(join(base,"scratch-")),...over});
   await runIncrementalCommandV1(live,["incremental","list","--lang=de"],ports());
   expect(out.at(-1)).toContain(set.scenarios[0]!.title.de);
   await expect(runIncrementalCommandV1(live,["incremental","run","--root="+copy],ports())).rejects.toThrow("Prepare the disposable root first");
+  stages.length=0;
+  await expect(runIncrementalCommandV1(live,["incremental","prepare","--root="+copy],ports({locks:()=>{throw Error("wasm-bindgen lock drift");},files:async()=>{throw Error("inventory must not be read");}}))).rejects.toThrow("wasm-bindgen lock drift");
+  expect(stages).toEqual([]);expect(existsSync(join(copy,script))).toBe(false);
   await runIncrementalCommandV1(live,["incremental","prepare","--root="+copy],ports());
   expect(existsSync(join(copy,script))).toBe(true);expect(stages.some(stage=>stage.startsWith("clone:"))).toBe(true);
   expect(log.map(line=>line.split(" repo ")[1])).toEqual(["--tool=nx preflight","--tool=nx tools setup all","--tool=nx dependencies sync --all","--tool=nx tools setup all"]);
@@ -504,22 +507,36 @@ test("detaching the mounts of a root that holds none, or does not exist, detache
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 
-test("refreshing a prepared root adds what is missing, replaces what differs and keeps what the bootstrap built, reports progress and stops when cancelled",async()=>{
+test("refreshing a prepared root adds what is missing, replaces what differs, removes what the checkout dropped and keeps what the bootstrap built, reports progress and stops when cancelled",async()=>{
  const base=realpathSync(mkdtempSync(join(tmpdir(),"incr-refresh-")));
  try{
-  const live=join(base,"live"),copy=join(base,"copy");mkdirSync(join(live,"🧰️x"),{recursive:true});
-  writeFileSync(join(live,"🧰️x/same.ts"),"same");writeFileSync(join(live,"🧰️x/changed.ts"),"before");writeFileSync(join(live,"🧰️x/equalsize.ts"),"aaaa");symlinkSync("same.ts",join(live,"🧰️x/link"));
-  const files=["🧰️x/same.ts","🧰️x/changed.ts","🧰️x/equalsize.ts","🧰️x/link"],hooks={signal:new AbortController().signal,progress:async()=>{}};
+  const live=join(base,"live"),copy=join(base,"copy");mkdirSync(join(live,"🧰️x"),{recursive:true});mkdirSync(join(live,"🧰️y/deep"),{recursive:true});
+  writeFileSync(join(live,"🧰️x/same.ts"),"same");writeFileSync(join(live,"🧰️x/changed.ts"),"before");writeFileSync(join(live,"🧰️x/equalsize.ts"),"aaaa");symlinkSync("same.ts",join(live,"🧰️x/link"));writeFileSync(join(live,"🧰️x/moved.ts"),"moved");writeFileSync(join(live,"🧰️y/deep/gone.ts"),"gone");
+  const files=["🧰️x/same.ts","🧰️x/changed.ts","🧰️x/equalsize.ts","🧰️x/link","🧰️x/moved.ts","🧰️y/deep/gone.ts"],hooks={signal:new AbortController().signal,progress:async()=>{}};
   await incrementalCloneV1(live,copy,files,hooks);mkdirSync(join(copy,"node_modules"));writeFileSync(join(copy,"node_modules/built.js"),"built");
-  expect(await incrementalRefreshV1(live,copy,files,hooks)).toEqual({added:0,updated:0});
+  expect(await incrementalRefreshV1(live,copy,files,hooks)).toEqual({added:0,updated:0,removed:0});
   writeFileSync(join(live,"🧰️x/changed.ts"),"after, longer");writeFileSync(join(live,"🧰️x/equalsize.ts"),"bbbb");writeFileSync(join(live,"🧰️x/new.ts"),"new");rmSync(join(live,"🧰️x/link"));symlinkSync("changed.ts",join(live,"🧰️x/link"));
-  const next=[...files,"🧰️x/new.ts"],ticks:string[]=[];
-  expect(await incrementalRefreshV1(live,copy,next,{signal:hooks.signal,progress:async(done,total)=>{ticks.push(`${done}/${total}`);}})).toEqual({added:1,updated:3});
-  expect(ticks.at(-1)).toBe("5/5");
+  mkdirSync(join(live,"🧰️z"));writeFileSync(join(live,"🧰️z/moved.ts"),"moved");rmSync(join(live,"🧰️x/moved.ts"));rmSync(join(live,"🧰️y"),{recursive:true});
+  const next=["🧰️x/same.ts","🧰️x/changed.ts","🧰️x/equalsize.ts","🧰️x/link","🧰️x/new.ts","🧰️z/moved.ts"],ticks:string[]=[];
+  expect(await incrementalRefreshV1(live,copy,next,{signal:hooks.signal,progress:async(done,total)=>{ticks.push(`${done}/${total}`);}})).toEqual({added:2,updated:3,removed:2});
+  expect(ticks.at(-1)).toBe("6/6");
   expect(readFileSync(join(copy,"🧰️x/changed.ts"),"utf8")).toBe("after, longer");expect(readFileSync(join(copy,"🧰️x/equalsize.ts"),"utf8")).toBe("bbbb");expect(readFileSync(join(copy,"🧰️x/new.ts"),"utf8")).toBe("new");expect(readlinkSync(join(copy,"🧰️x/link"))).toBe("changed.ts");expect(readFileSync(join(copy,"node_modules/built.js"),"utf8")).toBe("built");
-  expect(await incrementalRefreshV1(live,copy,next,hooks)).toEqual({added:0,updated:0});
+  expect(readFileSync(join(copy,"🧰️z/moved.ts"),"utf8")).toBe("moved");expect(existsSync(join(copy,"🧰️x/moved.ts"))).toBe(false);expect(existsSync(join(copy,"🧰️y"))).toBe(false);
+  expect(await incrementalRefreshV1(live,copy,next,hooks)).toEqual({added:0,updated:0,removed:0});
   const stop=new AbortController();stop.abort();
   await expect(incrementalRefreshV1(live,copy,next,{signal:stop.signal,progress:async()=>{}})).rejects.toThrow("Cancelled");
   await expect(incrementalRefreshV1(live,join(live,"nested"),next,hooks)).rejects.toThrow("separate from the live checkout");
  }finally{rmSync(base,{recursive:true,force:true});}
 });
+
+test("a prepared root without a recorded inventory is refreshed without removing anything, and records the inventory",async()=>{
+ const base=realpathSync(mkdtempSync(join(tmpdir(),"incr-inventory-")));
+ try{
+  const live=join(base,"live"),copy=join(base,"copy"),hooks={signal:new AbortController().signal,progress:async()=>{}};mkdirSync(join(live,"🧰️x"),{recursive:true});mkdirSync(join(copy,"🧰️x"),{recursive:true});
+  writeFileSync(join(live,"🧰️x/a.ts"),"a");writeFileSync(join(copy,"🧰️x/a.ts"),"a");writeFileSync(join(copy,"🧰️x/unknown.ts"),"unknown");
+  expect(await incrementalRefreshV1(live,copy,["🧰️x/a.ts"],hooks)).toEqual({added:0,updated:0,removed:0});
+  expect(readFileSync(join(copy,"🧰️x/unknown.ts"),"utf8")).toBe("unknown");
+  expect(JSON.parse(readFileSync(join(copy,".semio-incremental-inventory.json"),"utf8"))).toEqual({version:1,files:["🧰️x/a.ts"]});
+ }finally{rmSync(base,{recursive:true,force:true});}
+});
+

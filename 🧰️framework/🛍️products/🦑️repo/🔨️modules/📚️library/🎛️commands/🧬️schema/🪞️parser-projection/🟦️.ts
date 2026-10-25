@@ -52,7 +52,7 @@ const RUST = "🦀️rust";
 /** 🔎️ Why a projected parser no longer equals what the current schema and renderers produce: `self-call` only delegates to itself and never returns, `untyped-map` reads a schema-typed map as an opaque object, `open` equals the projection without the refusal of unknown properties that its schema requires, `unrenderable` has no projection at all, `duplicate` is a second projected definition of a parser another file of the same leaf already defines, `stale` differs in any other way. */
 export type DriftReason = "self-call" | "untyped-map" | "open" | "stale" | "unrenderable" | "duplicate";
 
-/** 🔎️ The drift reasons `restate` can regenerate. */
+/** ♻️ The drift reasons `restate` can regenerate. */
 export type RestateReason = Exclude<DriftReason, "unrenderable" | "duplicate">;
 
 const RESTATE_REASONS: readonly RestateReason[] = ["self-call", "untyped-map", "open", "stale"];
@@ -85,13 +85,13 @@ export interface ProjectionReport {
   readonly touched: readonly string[];
 }
 
-/** 🧭️ The formats projected when none is named. */
+/** ➡️ The formats projected when none is named. */
 export const DEFAULT_FORMATS: readonly string[] = ["🔗️graphql", "🛰️protobuf", TS];
 
-/** 🧭️ The default scope: every plugin and app contract. */
+/** 🏠️ The default scope: every plugin and app contract. */
 export const DEFAULT_SCOPE = "✏️s";
 
-/** 🧭️ The scopes the freshness gate covers. */
+/** ✅️ The scopes the freshness gate covers. */
 export const CHECKED_SCOPES: readonly string[] = ["✏️s", "🌎️hub"];
 
 const VALUE_FLAGS = new Set(["--under", "--formats", "--replace", "--restate", "--distribute"]);
@@ -156,7 +156,7 @@ class Counter {
 
 const sortedKeys = (keys: Iterable<ParserKey>): ParserKey[] => [...keys].sort(codePointOrder);
 
-/** 🧭️ Decides which parsers are emitted: one is emitted only when every parser it calls is declared on disk or emitted in the same pass, so a call can never dangle. */
+/** ⚖️ Decides which parsers are emitted: one is emitted only when every parser it calls is declared on disk or emitted in the same pass, so a call can never dangle. */
 function settle(root: string, plans: ReadonlyMap<string, Plan>, closing: boolean, sources: SourceStore, refused: string[], replaces: (target: string, name: string) => boolean): Set<ParserKey> {
   const candidates = new Map<ParserKey, Entry>();
   for (const [target, plan] of plans) for (const [name, entry] of plan.entries) if (entry.parser !== undefined && entry.typed) candidates.set(parserKey(target, name), entry);
@@ -216,14 +216,14 @@ function settle(root: string, plans: ReadonlyMap<string, Plan>, closing: boolean
 //#region 🔖️Projection
 const rendererOf = (format: string, name: string, definition: Dict, taken: Taken, scope: TypeScope): string | undefined => (format === "🔗️graphql" ? renderGraphql(name, definition, taken) : format === "🛰️protobuf" ? renderProto(name, definition, taken) : renderTsType(name, definition, scope));
 
-/** 🧭️ The module specifier under which the leaf at `from` names the leaf at `to`: the package export for a framework leaf, the relative path otherwise. */
+/** 📦️ The module specifier under which the leaf at `from` names the leaf at `to`: the package export for a framework leaf, the relative path otherwise. */
 function leafSpecifier(from: string, to: string, owner: Owner): string | undefined {
   if (owner.shared) return owner.specifier;
   const path = relative(dirname(from), to).split("\\").join("/");
   return path.startsWith(".") ? path : `./${path}`;
 }
 
-/** 🧭️ What a TypeScript type may follow from one document: an export of this document is named, a pointer into this document is rendered in place, and a whole other document, one of its exports or a pointer into it is named or rendered through `import("<specifier>")`, so the type needs no import statement. */
+/** 📜️ What a TypeScript type may follow from one document: an export of this document is named, a pointer into this document is rendered in place, and a whole other document, one of its exports or a pointer into it is named or rendered through `import("<specifier>")`, so the type needs no import statement. */
 function typeScope(index: ReadonlyMap<string, Owner>, document: Dict | undefined, leaf: string, receiver: string, qualifier?: string): TypeScope {
   const documentId = typeof document?.$id === "string" ? document.$id : undefined;
   const named = (name: string): string => (qualifier === undefined ? name : `import(${jsonString(qualifier, false)}).${name}`);
@@ -253,7 +253,7 @@ function typeScope(index: ReadonlyMap<string, Owner>, document: Dict | undefined
   };
 }
 
-/** 🪞️ Projects the exports of every schema module under `options.under`; `report` only plans, `apply` writes the leaves. */
+/** 📤️ Projects the exports of every schema module under `options.under`; `report` only plans, `apply` writes the leaves. */
 export function projectParsers(options: ProjectionOptions): ProjectionReport {
   const { root, mode, under, formats, closing, replace } = options;
   const catalog = options.catalog ?? new SchemaCatalog(root);
@@ -409,7 +409,7 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
 //#endregion 🔖️Projection
 
 //#region 🔖️Audit
-/** 🔎️ A projected parser that no longer equals what the current schema and renderers produce: `path` is the file that holds it, `leaf` the leaf of its schema document. */
+/** 🌊️ A projected parser that no longer equals what the current schema and renderers produce: `path` is the file that holds it, `leaf` the leaf of its schema document. */
 export interface ParserDrift {
   readonly path: string;
   readonly leaf: string;
@@ -419,7 +419,7 @@ export interface ParserDrift {
   readonly expected: string | undefined;
 }
 
-/** 🔎️ What one audit found: the drifted parsers, and the leaves whose parsers call `<prefix>Closed` without a helper block that defines it. */
+/** 🕵️ What one audit found: the drifted parsers, and the leaves whose parsers call `<prefix>Closed` without a helper block that defines it. */
 export interface ParserAudit {
   readonly drift: ParserDrift[];
   readonly helperless: string[];
@@ -429,7 +429,7 @@ const mapConversions = (text: string): number => text.split("Object.entries(").l
 
 const SELF_CALL = /^export function parse(\w+)\(value: unknown, at = "\$"\): \1 \{\n  return parse\1\(value[^\n]*\n\}\n/gmu;
 
-/** 🔎️ Re-renders every parser below a parser region in the files of each leaf's module tree (the leaf and its parser folders) and lists the ones whose text differs from the projection of the current schema, the ones defined in two files, and the leaves that call `<prefix>Closed` without defining it, or that hold parser regions without a helper block. */
+/** 🍂️ Re-renders every parser below a parser region in the files of each leaf's module tree (the leaf and its parser folders) and lists the ones whose text differs from the projection of the current schema, the ones defined in two files, and the leaves that call `<prefix>Closed` without defining it, or that hold parser regions without a helper block. */
 export function auditLeaves(options: Pick<ProjectionOptions, "root" | "under" | "catalog" | "signal" | "onProgress">): ParserAudit {
   const { root, under } = options;
   const catalog = options.catalog ?? new SchemaCatalog(root);
@@ -486,10 +486,10 @@ export function auditLeaves(options: Pick<ProjectionOptions, "root" | "under" | 
   return { drift, helperless };
 }
 
-/** 🔎️ The drifted parsers of a scope; see `auditLeaves`. */
+/** 🔭️ The drifted parsers of a scope; see `auditLeaves`. */
 export const auditParsers = (options: Pick<ProjectionOptions, "root" | "under" | "catalog" | "signal" | "onProgress">): ParserDrift[] => auditLeaves(options).drift;
 
-/** 🚦️ The freshness verdict of the projection over a scope. */
+/** 🩺️ The freshness verdict of the projection over a scope. */
 export interface ParserCheck {
   readonly pending: readonly string[];
   readonly dangling: readonly string[];
@@ -526,7 +526,7 @@ export function checkParsers(options: Pick<ProjectionOptions, "root" | "signal" 
   return { pending, dangling, helperless, drift, orphans, unowned: found.length - drift.length, ok: pending.length === 0 && dangling.length === 0 && helperless.length === 0 && drift.length === 0 && orphans.length === 0 };
 }
 
-/** 🚦️ The verdict as the gate prints it. */
+/** 📓️ The verdict as the gate prints it. */
 export function renderParserCheck(check: ParserCheck): string {
   const lines = [
     ...check.pending.map((path) => `PENDING ${path}`),

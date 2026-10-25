@@ -50,15 +50,15 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     "wrap-grid": {
-      /** 📐️ The specified panel rectangles: index, x, y, width, height. */
+      /** 🎛️ The specified panel rectangles: index, x, y, width, height. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),
-      /** 🎯️ The rectangles the facet emitted while laying its panels out. */
+      /** 💠️ The rectangles the facet emitted while laying its panels out. */
       subject: async (ctx: AdapterContext) => ({ projection: panels((await subject(ctx, "wrap.tex")).projection["geometry/facet-panel"] ?? [], 5, "panel") }),
     },
     "shared-axes": {
-      /** 📐️ Four axes for a four-panel two-column grid: x on the bottom row, y on the left column. */
+      /** 🪓️ Four axes for a four-panel two-column grid: x on the bottom row, y on the left column. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),
-      /** 🎯️ The number of axis domain lines the panels actually drew. */
+      /** 🧮️ The number of axis domain lines the panels actually drew. */
       subject: async (ctx: AdapterContext) => {
         const domains = (await subject(ctx, "wrap.tex")).projection["geometry/axis-domain"] ?? [];
         return { projection: { axisCount: [domains.length / 4] } };

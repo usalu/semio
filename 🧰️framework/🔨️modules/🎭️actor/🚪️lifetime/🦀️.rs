@@ -399,7 +399,7 @@ pub(crate) mod request_sequence {
         Ok(value)
     }
 
-    /// 🔁️ `ToValue`/`FromValue` analogs of [`serialize`]/[`deserialize`] above — bare-integer wire
+    /// 💎️ `ToValue`/`FromValue` analogs of [`serialize`]/[`deserialize`] above — bare-integer wire
     /// shape (matches [`serde_json`]'s own JSON number, not a decimal string).
     pub fn to_value(value: &u64) -> ::semio_framework_value::DslValue {
         ::semio_framework_value::DslValue::uint(*value)

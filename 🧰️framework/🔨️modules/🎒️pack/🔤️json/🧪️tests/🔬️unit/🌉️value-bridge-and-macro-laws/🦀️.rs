@@ -1,7 +1,7 @@
 /// 🌉️ Value bridge and macro laws of the pack-json companion: the dsl value round trips, the json macro and the serde bridge bytes.
 
 //#region 🔖️ToFromValueBridge
-/// 🌉️ `from_dsl_value`/`to_dsl_value` (`//#region 🔖️DslValueBridge` above) had no direct test
+/// 🔄️ `from_dsl_value`/`to_dsl_value` (`//#region 🔖️DslValueBridge` above) had no direct test
 /// yet — this exercises the structural walk this region's `to_json_string`/`from_json_str`
 /// are built on.
 #[test]

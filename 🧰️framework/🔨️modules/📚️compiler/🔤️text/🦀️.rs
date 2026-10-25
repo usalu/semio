@@ -9,7 +9,7 @@
 use rustybuzz::ttf_parser::{self, GlyphId};
 
 //#region 🔖️Font
-/// 🔤️ One loaded font face.
+/// 📖️ One loaded font face.
 pub struct Font<'a> {
     face: rustybuzz::Face<'a>,
 }
@@ -116,7 +116,7 @@ impl ttf_parser::OutlineBuilder for PathBuilder {
     }
 }
 
-/// ✏️ Extracts `glyph_id`'s outline from `font` as an SVG path `d` string in font design
+/// 📑️ Extracts `glyph_id`'s outline from `font` as an SVG path `d` string in font design
 /// units (Y-up) — `None` for glyphs with no outline (space, or a color/raster-only glyph).
 pub fn outline_glyph_path(font: &Font<'_>, glyph_id: u16) -> Option<String> {
     let mut builder = PathBuilder { d: String::new() };
@@ -126,7 +126,7 @@ pub fn outline_glyph_path(font: &Font<'_>, glyph_id: u16) -> Option<String> {
 //#endregion 🔖️Outline
 
 //#region 🔖️Raster
-/// 🖼️ One extracted color/bitmap glyph — already-encoded image bytes (PNG for the CBDT path
+/// 🎨️ One extracted color/bitmap glyph — already-encoded image bytes (PNG for the CBDT path
 /// this crate's only raster consumer, Noto Color Emoji, uses) plus placement metrics in font design
 /// units at the returned `pixels_per_em` strike.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -209,7 +209,7 @@ pub struct MathConstants {
     pub radical_degree_bottom_raise_percent: i16,
 }
 
-/// 🧮️ Reads `font`'s `MATH` table constants — `None` if the font has no `MATH` table.
+/// 📌️ Reads `font`'s `MATH` table constants — `None` if the font has no `MATH` table.
 pub fn math_constants(font: &Font<'_>) -> Option<MathConstants> {
     let math = font.face.tables().math?;
     let c = math.constants?;
@@ -283,7 +283,7 @@ pub fn math_top_accent_attachment(font: &Font<'_>, glyph_id: u16) -> Option<i16>
     font.face.tables().math?.glyph_info?.top_accent_attachments?.get(GlyphId(glyph_id)).map(|v| v.value)
 }
 
-/// 📏️ One alternate glyph from `MathVariants` — progressively larger/taller stand-ins for a
+/// 🔣️ One alternate glyph from `MathVariants` — progressively larger/taller stand-ins for a
 /// base glyph (e.g. bigger parentheses), ordered smallest-first by the font itself.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct StretchVariant {
@@ -292,7 +292,7 @@ pub struct StretchVariant {
     pub advance: u16,
 }
 
-/// 📏️ `MathVariants.VerticalGlyphCoverage`/`HorizontalGlyphCoverage` for `base_glyph` —
+/// ↕️ `MathVariants.VerticalGlyphCoverage`/`HorizontalGlyphCoverage` for `base_glyph` —
 /// empty if the font declares no variants for it (every current caller then falls back to scaling
 /// the base glyph's own outline).
 pub fn math_stretch_variants(font: &Font<'_>, base_glyph_id: u16, vertical: bool) -> Vec<StretchVariant> {
@@ -303,7 +303,7 @@ pub fn math_stretch_variants(font: &Font<'_>, base_glyph_id: u16, vertical: bool
     construction.variants.into_iter().map(|v| StretchVariant { glyph_id: v.variant_glyph.0, advance: v.advance_measurement }).collect()
 }
 
-/// 📏️ The minimum vertical extent (ascent + descent) `MATH` guarantees for `glyph_id` — used
+/// 🔠️ The minimum vertical extent (ascent + descent) `MATH` guarantees for `glyph_id` — used
 /// to size a placed glyph's box when no shaped run gives us one (e.g. a directly-picked stretch
 /// variant). Falls back to the font's global ascender/descender when the glyph has no per-glyph
 /// vertical extents in `MATH` (`MathVariants` doesn't carry per-glyph bounding boxes, so this uses

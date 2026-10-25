@@ -10,12 +10,12 @@ import { expect, it } from "vitest";
 import schema from "../../../../🛂️proctor/🏗️bootstrap/🧬️schema/🔣️.json" with { type: "json" };
 import fixtures from "../../../../🛂️proctor/🏗️bootstrap/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import { buildProctor, proctorBuildMode, proctorBuildPlan, proctorSourceRoots, TEACHING_WORKSPACE, type ProctorArtifact, type ProctorExecutable } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
-import { pinExecutableArtifact } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
-import { withResourceLeases, checkResourceLeaseControl } from "../../../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { pinExecutableArtifact } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
+import { withResourceLeases, checkResourceLeaseControl } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { createScriptProcessEnvelope, withScriptProcessEnvelope, createIssuedResourceControlV1, createRequestedIssuedResourceControlV1, requireIssuedScriptInvocationV1, requireIssuedResourceControlInvocationV1, requireIssuedResourceControlRefinementV1, scriptInvocationEnvironment, withRequestedIssuedResourceControlV1, type ScriptInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { scriptCompilerAdmissionControlV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import { buildModeEnvironment } from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import { requireNativeStoragePathV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { buildModeEnvironment } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { requireNativeStoragePathV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 
 const validate = new Ajv().compile(schema);
 const validateMode = new Ajv().compile(schema.definitions.ModeSelection);
@@ -61,7 +61,6 @@ it("publishes identical rebuild bytes in a new generation while the old immutabl
         expect(dirname(next).endsWith(digest)).toBe(true);
         expect(readFileSync(old)).toEqual(readFileSync(next));
         expect(readFileSync(next, "utf8")).toBe(fixtures.runtime.bytes);
-        console.log("[DEBUG] Identical proctor rebuild retained its old reader through unique-generation publication");
       });
     });
   } finally { rmSync(root, { recursive: true, force: true }); }
@@ -128,7 +127,6 @@ it("carries the current compiler phase through capture and drains children and b
       await expect(exported!.recheck()).rejects.toThrow("retired");
       await expect(artifact.withExecutable(async () => undefined)).rejects.toThrow("closing");
       expect(new Ajv().compile({ const: fixtures.lifecycle.phases })(phases)).toBe(true);
-      console.log("[DEBUG] Current proctor compiler phase, retained capture, child drain and byte export retirement verified");
     });
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

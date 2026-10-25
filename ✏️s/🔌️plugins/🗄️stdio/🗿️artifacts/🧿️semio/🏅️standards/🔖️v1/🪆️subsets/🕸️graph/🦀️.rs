@@ -91,16 +91,7 @@ pub mod viewer {
     }
 }
 
-semio_framework_value::artifact_retire_leaf!(schema::snapshot::SemioGraphPortKind);
-semio_framework_value::artifact_retire_struct!(schema::snapshot::GraphNodeId { value });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::GraphEdgeId { value });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioGraphPort { name, kind, category, properties });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioGraphNode { id, kind, label, position, width, height, ports, properties });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioGraphEdge { id, source, target, kind, label, source_port, target_port, properties });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioGraphSnapshot { schema, nodes, edges });
 
-semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioGraphSnapshot);
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioGraphSnapshot, schema::mutations::SemioGraphMutation);
 
 #[cfg(test)]
 #[path = "🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"]

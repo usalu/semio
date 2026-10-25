@@ -1,4 +1,4 @@
-/** 📇️ Contract: the dependency inventory reads Cargo, package.json, go.mod, pyproject and csproj manifests of a synthetic repository into one baseline, classifies oracle declarations and audits the Bun lock against manifests; the corpus is language-agnostic, `@iarna/toml` and JSON model the Cargo, pyproject and package.json inventories independently, and `🐍️oracle.py` models Go, .NET, lock audit, classification and the test domain. */
+/** 📇️ Contract: the dependency inventory reads Cargo, package.json, go.mod, pyproject and csproj manifests of a synthetic repository into one baseline, classifies oracle declarations; the corpus is language-agnostic, `@iarna/toml` and JSON model the Cargo, pyproject and package.json inventories independently, and `🐍️.py` models Go, .NET, classification and the test domain. */
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {parse} from "@iarna/toml";
@@ -6,8 +6,8 @@ import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
-import {DEPENDENCY_ECOSYSTEMS,dependencyClassifyOracleEntry,dependencyFreezeCurrentThirdParty,dependencyIsCompositionManifest,dependencyJsLockWorkspaceMismatches,dependencyParseGoModule,dependencyTestDomain} from "../🟦️.ts";
+import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import {DEPENDENCY_ECOSYSTEMS,dependencyClassifyOracleEntry,dependencyFreezeCurrentThirdParty,dependencyIsCompositionManifest,dependencyOracleClaims,dependencyParseGoModule,dependencyTestDomain} from "../🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 
@@ -21,6 +21,14 @@ const materialize=(files:Readonly<Record<string,string|undefined>>):string=>{
 };
 const real=(files:Readonly<Record<string,string|undefined>>):Row[]=>{const root=materialize(files);try{return clean(dependencyFreezeCurrentThirdParty(root));}finally{rmSync(root,{recursive:true,force:true});}};
 const testOwned=(path:string):boolean=>path.startsWith(corpus.taxonomy.testDomainPath+"/")||path.split("/").slice(0,-1).some(part=>Object.values(corpus.taxonomy).includes(part));
+const testClassFeature=(name:string):boolean=>name.split(/[-_]/).some(word=>["test","tests","testing","testkit"].includes(word));
+const testOnlyOptional=(document:Row):Set<string>=>{
+ const features:Record<string,string[]>=document.features??{},live=new Set(Object.keys(features).filter(name=>!testClassFeature(name)));
+ for(let grew=true;grew;){grew=false;for(const name of[...live])for(const item of features[name]!)if(item in features&&!live.has(item)){live.add(item);grew=true;}}
+ const named=(names:string[]):string[]=>names.flatMap(name=>features[name]!.filter(item=>(!(item in features)||item.startsWith("dep:"))&&!item.includes("?/")).map(item=>item.replace(/^dep:/,"").split("/")[0]!));
+ const production=new Set(named([...live])),explicit=new Set(Object.values(features).flat().filter(item=>item.startsWith("dep:")).map(item=>item.slice(4).split("/")[0]!));
+ return new Set(named(Object.keys(features).filter(name=>!live.has(name))).filter(name=>explicit.has(name)&&!production.has(name)));
+};
 const kindOf=(section:string,procMacro:boolean):string=>section==="dev-dependencies"?"test-runner":section==="build-dependencies"||procMacro?"production-build":"production-runtime";
 const internalRust=(name:string,table:any,workspace:Row):boolean=>name.startsWith("semio-")||name.startsWith("semio_")||name==="ports"||/^db(?:_[a-z0-9]+)*$/.test(name)||(typeof table==="object"&&table!==null&&"path" in table)||(typeof table==="object"&&table!==null&&table.workspace===true&&typeof workspace[name]==="object"&&"path" in workspace[name]);
 const versionOf=(table:any,workspace:Row,name:string):string=>{
@@ -38,8 +46,17 @@ const rows=(entries:[string,string,string,string,string][]):Row[]=>{
  for(const row of byKey.values()){row.declarations.sort((a:Row,b:Row)=>a.user.localeCompare(b.user)||a.kind.localeCompare(b.kind)||a.version.localeCompare(b.version));row.kinds.sort();row.users.sort();row.productionReachable=row.kinds.some((kind:string)=>kind==="production-runtime"||kind==="production-build");}
  return[...byKey.values()].sort((a,b)=>a.ecosystem===b.ecosystem?a.name.localeCompare(b.name):a.ecosystem.localeCompare(b.ecosystem));
 };
+const enabledTestFeatures=(files:Readonly<Record<string,string|undefined>>):Set<string>=>{
+ const enabled=new Set<string>();
+ for(const[path,text]of Object.entries(files)){
+  if(!path.endsWith("Cargo.toml")||!text||testOwned(path)||path.split("/").some(part=>["compose","node_modules",".git","target"].includes(part)))continue;
+  const document:Row=parse(text);
+  for(const table of[document.dependencies,...Object.values<Row>(document.target??{}).map(target=>target.dependencies)])for(const[name,value]of Object.entries<any>(table??{}))if(typeof value==="object"&&(value.features??[]).some((feature:string)=>testClassFeature(feature)))enabled.add(value.package??name);
+ }
+ return enabled;
+};
 const modelCargoJsPython=(files:Readonly<Record<string,string|undefined>>):Row[]=>{
- const found:[string,string,string,string,string][]=[],skipped=(path:string)=>path.split("/").some(part=>["compose","node_modules",".git","target"].includes(part)),paths=Object.keys(files).filter(path=>!skipped(path)).sort();
+ const productionEnabled=enabledTestFeatures(files),found:[string,string,string,string,string][]=[],skipped=(path:string)=>path.split("/").some(part=>["compose","node_modules",".git","target"].includes(part)),paths=Object.keys(files).filter(path=>!skipped(path)).sort();
  const workspace:Row={};
  for(const path of paths)if(path==="Cargo.toml")Object.assign(workspace,((files[path]?parse(files[path]!):{})as{workspace?:{dependencies?:Row}}).workspace?.dependencies??{});
  const names=new Set<string>();
@@ -47,9 +64,9 @@ const modelCargoJsPython=(files:Readonly<Record<string,string|undefined>>):Row[]
  for(const path of paths){
   const text=files[path]!;
   if(path.endsWith("Cargo.toml")&&text){
-   const document:Row=parse(text),procMacro=document.lib?.["proc-macro"]===true,tables:[string,Row][]=[];
+   const document:Row=parse(text),procMacro=document.lib?.["proc-macro"]===true,testOnly=document.package?.name!==undefined&&!productionEnabled.has(document.package.name)?testOnlyOptional(document):new Set<string>(),tables:[string,Row][]=[];
    for(const section of["dependencies","dev-dependencies","build-dependencies"]){if(document[section])tables.push([section,document[section]]);for(const target of Object.values<Row>(document.target??{}))if(target[section])tables.push([section,target[section]]);}
-   for(const[section,table]of tables)for(const[name,value]of Object.entries<any>(table))if(!internalRust(name,value,workspace))found.push(["rust",name,versionOf(value,workspace,name),kindOf(section,procMacro&&section==="dependencies"),path]);
+   for(const[section,table]of tables)for(const[name,value]of Object.entries<any>(table))if(!internalRust(name,value,workspace))found.push(["rust",name,versionOf(value,workspace,name),section==="dependencies"&&value?.optional===true&&testOnly.has(name)?"test-runner":kindOf(section,procMacro&&section==="dependencies"),path]);
   }
   if(path.endsWith("package.json")){
    let document:Row;try{document=JSON.parse(text);}catch{continue;}
@@ -73,17 +90,17 @@ for(const row of corpus.freeze){
 }
 for(const row of corpus.freezeErrors)test("freeze fails: "+row.name,()=>{expect(()=>real(row.files)).toThrow(row.message);});
 for(const row of corpus.classify)test("classify: "+row.name,()=>{
- const entry=clean(row.entry);dependencyClassifyOracleEntry(entry,row.oracleIds??undefined,dependencyTestDomain(corpus.taxonomy));expect(entry).toEqual(row.expected);
+ const entry=clean(row.entry);dependencyClassifyOracleEntry(entry,row.oracleIds??undefined,dependencyTestDomain(corpus.taxonomy),corpus.interfaceOwners as Readonly<Record<string,{ecosystem:typeof DEPENDENCY_ECOSYSTEMS[number];directory:string}>>);expect(entry).toEqual(row.expected);
 });
+for(const row of corpus.oracleClaims)test("oracle claims: "+row.name,()=>{expect(dependencyOracleClaims(row.manifest)).toEqual(row.expected as [string,string][]);});
 for(const row of corpus.testDomain)test("test domain: "+row.name,()=>{
  if(row.expected===null)expect(()=>dependencyTestDomain(row.taxonomy)).toThrow("[dependencies]");
  else expect(clean(dependencyTestDomain(row.taxonomy))).toEqual(row.expected);
 });
 for(const row of corpus.composition)test("composition: "+row.path,()=>{expect(dependencyIsCompositionManifest(row.path)).toBe(row.expected);});
 for(const row of corpus.goModule)test("go.mod: "+row.name,()=>{expect(clean(dependencyParseGoModule(row.content))).toEqual(row.expected);});
-for(const row of corpus.lockMismatches)test("lock audit: "+row.name,()=>{expect(clean(dependencyJsLockWorkspaceMismatches(new Map(row.manifests as [string,unknown][]),row.workspaces))).toEqual(row.expected);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

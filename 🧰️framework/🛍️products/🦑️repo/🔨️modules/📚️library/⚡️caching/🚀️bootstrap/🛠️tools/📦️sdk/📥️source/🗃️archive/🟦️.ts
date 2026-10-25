@@ -1,4 +1,4 @@
-import{decodeBoundedArchiveV1,type BoundedArchiveEntryV1,type BoundedArchiveV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🗃️archive/🟦️.ts";
+import{decodeBoundedArchiveV1,type BoundedArchiveEntryV1,type BoundedArchiveV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗃️archive/🟦️.ts";
 import{type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import policy from"./📋️policy.json"with{type:"json"};

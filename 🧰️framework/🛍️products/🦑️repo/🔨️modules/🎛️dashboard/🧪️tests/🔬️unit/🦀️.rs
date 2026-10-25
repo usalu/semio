@@ -1,5 +1,5 @@
-use dashboard_core::args::{parse, ParsedArgs};
-use std::collections::HashMap;
+use crate::invocation;
+use dashboard_core::args::parse;
 use std::path::Path;
 
 /// 🔎️ The verbs a text names: for each line `prefix <verbs>`, the first word split at `|` (and at an escaped one).
@@ -22,13 +22,13 @@ fn literals_after(source: &str, marker: &str, terminator: char) -> Vec<String> {
 
 #[test]
 fn the_dispatch_table_the_usage_text_and_the_readme_verb_table_name_the_same_verbs() {
-    let dispatch = include_str!("../../📦️packages/🦀️rust/🦀️.rs");
+    let dispatch = include_str!("../../🦀️.rs");
     let table = dispatch.split("match parsed.verb.as_str() {").nth(1).and_then(|rest| rest.split("_ => {").next()).unwrap();
     let arms: std::collections::BTreeSet<String> = table.lines().filter_map(|line| line.trim().split(" =>").next().filter(|_| line.contains("=>"))).flat_map(|patterns| patterns.split(" if ").next().unwrap_or_default().split('|').map(|pattern| pattern.trim().trim_matches('"').to_string()).collect::<Vec<_>>()).collect();
     let native: std::collections::BTreeSet<String> = crate::NATIVE_VERBS.iter().map(ToString::to_string).collect();
     assert_eq!(arms, native, "NATIVE_VERBS and the dispatch arms differ");
     let documented: std::collections::BTreeSet<String> = native.iter().filter(|verb| !crate::INTERNAL_VERBS.contains(&verb.as_str()) && verb.as_str() != "dashboard").cloned().collect();
-    assert_eq!(verbs_named(crate::usage::USAGE, "  repo dashboard "), documented, "the usage text and the dispatch table differ");
+    assert_eq!(verbs_named(crate::usage::USAGE_EN, "  repo dashboard "), documented, "the usage text and the dispatch table differ");
     let readme = include_str!("../../README.md");
     let in_table: std::collections::BTreeSet<String> = readme.lines().filter(|line| line.starts_with("| `repo dashboard ")).filter_map(|line| line.strip_prefix("| ")).flat_map(|row| verbs_named(row.trim_start_matches('`'), "repo dashboard ")).collect();
     assert_eq!(in_table, documented, "the README verb table and the dispatch table differ");
@@ -36,7 +36,7 @@ fn the_dispatch_table_the_usage_text_and_the_readme_verb_table_name_the_same_ver
 
 #[test]
 fn every_flag_a_verb_reads_is_in_the_usage_text_the_readme_verb_row_and_the_argument_readers() {
-    let usage = crate::usage::USAGE;
+    let usage = crate::usage::USAGE_EN;
     let readme = include_str!("../../README.md");
     let block = |verb: &str| -> String {
         let lines: Vec<&str> = usage.lines().collect();
@@ -61,7 +61,7 @@ fn every_flag_a_verb_reads_is_in_the_usage_text_the_readme_verb_row_and_the_argu
     read.remove("");
     let listed: std::collections::BTreeSet<String> = crate::usage::FLAGS.iter().filter(|(verb, _)| ["commands", "run", "tasks", "logs", "stop", "restart", "kill", "open"].contains(verb)).flat_map(|(_, flags)| flags.iter().map(ToString::to_string)).collect();
     assert_eq!(read, listed, "the flags the command line reads and the flags FLAGS lists differ");
-    let help = crate::usage::USAGE;
+    let help = crate::usage::USAGE_EN;
     assert!(help.contains("repo dashboard --help"), "{help}");
 }
 
@@ -80,6 +80,14 @@ fn dispatch_reads_bare_and_flag_first_invocations_as_the_dashboard() {
 
 #[test]
 fn unknown_subcommand_returns_usage_without_side_effects() {
-    let parsed = ParsedArgs { verb: "daemon".into(), segments: vec!["unknown".into()], flags: HashMap::new() };
+    let parsed = invocation(&["daemon", "unknown", "--language", "en"].map(String::from));
     assert_eq!(crate::daemon::run(Path::new("."), &parsed), 1);
+}
+
+#[test]
+fn the_language_choice_never_reaches_the_verb_arguments_but_the_tail_after_the_double_dash_stays_verbatim() {
+    let words = |text: &str| text.split_whitespace().map(str::to_string).collect::<Vec<_>>();
+    assert_eq!(crate::without_language(&words("--check --language de x")), words("--check x"));
+    assert_eq!(crate::without_language(&words("a --language=en b")), words("a b"));
+    assert_eq!(crate::without_language(&words("id --detach -- --language de")), words("id --detach -- --language de"));
 }

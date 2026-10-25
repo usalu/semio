@@ -146,7 +146,7 @@ pub struct OutboxEntry {
     pub payload: Vec<u8>,
     /// 📚️ The durable fact, present for event-derived rows and absent for pure effects.
     pub event: Option<EventRecord>,
-    /// ✅️ Whether a publisher has acknowledged this entry.
+    /// 🚚️ Whether a publisher has acknowledged this entry.
     pub delivered: bool,
 }
 
@@ -196,7 +196,7 @@ pub trait AuthorityStore: Send + Sync {
     /// `last_seq + 1`; anything else is a [`StorageError::SequenceGap`] and nothing is written.
     fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> impl Future<Output = Result<u64, StorageError>> + Send;
 
-    /// 🧾️ Makes a batch of turns durable, in order, and answers each turn's fate. A backend that
+    /// 🐙️ Makes a batch of turns durable, in order, and answers each turn's fate. A backend that
     /// can, writes the whole batch as ONE atomic, durable write — every turn answers alike, and a
     /// burst of commands costs one flush instead of one per command; that is what an authority
     /// under load needs, and a durable backend should override this method for it. The provided
@@ -326,11 +326,11 @@ pub fn content_hash(bytes: &[u8]) -> ContentHash {
 /// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait BlobStore: Send + Sync {
-    /// 💾️ Stores `bytes` under `hash`. Storing identical content again succeeds silently;
+    /// 🪣️ Stores `bytes` under `hash`. Storing identical content again succeeds silently;
     /// binding a hash to different bytes is a [`StorageError::Conflict`].
     fn put(&mut self, hash: ContentHash, bytes: &[u8]) -> impl Future<Output = Result<(), StorageError>> + Send;
 
-    /// 📦️ The bytes stored under `hash`, if any.
+    /// 📂️ The bytes stored under `hash`, if any.
     fn get(&self, hash: &ContentHash) -> impl Future<Output = Option<Vec<u8>>> + Send;
 
     /// ❓️ Whether `hash` is already stored — the cheap half of an upload negotiation.
@@ -345,7 +345,7 @@ pub trait BlobStore: Send + Sync {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionRecord {
-    /// 🏷️ The session's identity, as presented by the client on every request.
+    /// 🎁️ The session's identity, as presented by the client on every request.
     pub id: SessionId,
     /// 👤️ Who the session authenticates as.
     pub principal: Principal,

@@ -67,7 +67,7 @@ pub trait RetainedMutationLeafPreparation<P,M:Mutation<P,Diff:RetainedDiff<P>>,L
  fn terminal_is_empty(&self)->bool;
 }
 
-/// 🧳️ Original aliases, typed decision custody and exact inverse child survive cancellation.
+/// ⌨️ Original aliases, typed decision custody and exact inverse child survive cancellation.
 pub struct RetainedMutationOwner<P,M:RetainedMutation<P>>{
  preparation:ManuallyDrop<Option<Box<M::Preparation>>>,
  mutation_source:Option<RetainedCloneBinding>,
@@ -100,7 +100,7 @@ impl<P,M:RetainedMutation<P>> RetainedMutationOwner<P,M>{
   if self.original_source.is_none(){return Ok(scalar(original.binding_copy_bytes()));}
   match self.phase{0=>nested(self.preparation.as_ref().expect("original preparation").decision_demand(mutation,original,body)?),1=>Ok(scalar(size_of::<RetainedMutationDecision<M::Diff>>()+size_of::<Option<M::Diff>>()+size_of::<MutationMessageLedgerRetirement>()+size_of::<u8>())),2=>Ok(scalar(if self.message_index<self.messages.as_ref().expect("original diagnostic ledger").retained_messages().len(){size_of::<semio_framework_diagnostic::Severity>()+size_of::<usize>()+size_of::<bool>()}else{size_of::<M::Diff>()+size_of::<Vec<MutationMessage>>()+size_of::<u8>()+size_of::<bool>()})),_=>unreachable!()}
  }
- /// 📏️ Only an actual admitted central diff preflight permits original inverse preparation.
+ /// 🔏️ Only an actual admitted central diff preflight permits original inverse preparation.
  pub fn inverse_demand(&self,mutation:RetainedCloneRef<'_,M>,admission:&RetainedDiffAdmission<'_,P,M::Diff>,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing||!self.decision_admitted||self.phase<3||self.phase>4{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"inverse lacks admitted original decision"));}
   if !mutation.check_binding(&self.mutation_source)?||!admission.original().check_binding(&self.original_source)?{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"inverse lost original source custody"));}
@@ -165,7 +165,7 @@ pub fn decide_retained_mutation<P,M:RetainedMutation<P>>(owner:&mut RetainedMuta
  let g=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<M::Diff>()-size_of::<u8>()-size_of::<bool>(),..grant};let(messages,_)=ledger.take_messages_controlled(g)?.expect("funded original decision diagnostic transfer");owner.phase=3;owner.decision_admitted=!owner.refusal;
  Ok(if owner.refusal{RetainedMutationDecisionStep::Refused(p,messages)}else{RetainedMutationDecisionStep::Admitted(p,owner.decision.take().expect("original admitted typed diff"),messages)})
 }
-/// ↩️ Exact preflight witness gates read-only inversion of the original semantic operation.
+/// 📖️ Exact preflight witness gates read-only inversion of the original semantic operation.
 pub fn inverse_retained_mutation<P,M:RetainedMutation<P>>(owner:&mut RetainedMutationOwner<P,M>,mutation:RetainedCloneRef<'_,M>,admission:&RetainedDiffAdmission<'_,P,M::Diff>,body:usize,grant:RetainedCloneGrant)->Result<RetainedMutationInverseStep<M>,ValueError>{
  let d=owner.inverse_demand(mutation,admission,body)?;if !retained_mutation_demand_fits(d,grant){return Ok(RetainedMutationInverseStep::Progress(Default::default()));}
  if let Some(p)=admission.diff().bind(&mut owner.diff_source,grant)?{return Ok(RetainedMutationInverseStep::Progress(p));}

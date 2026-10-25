@@ -14,12 +14,12 @@ fn fixture_component() -> std::path::PathBuf {
 }
 
 fn open_budget() -> Budget {
-    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: u64::MAX, deadline_us: semio_framework_job::default_now_us().unwrap() + 8000, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
+    Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, u64::MAX, semio_framework_job::default_now_us().unwrap_or(0), 8, 64, 1 << 20, 64)
 }
 
 
 fn codec_budget() -> Budget {
-    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 8_000_000_000, deadline_us: semio_framework_job::default_now_us().unwrap() + 120000000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+    Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 8_000_000_000, semio_framework_job::default_now_us().unwrap_or(0), 120000, 0, 0, 0)
 }
 
 

@@ -4,6 +4,9 @@ const { ownsPayload } = require("../📦️payload/🟨️.cjs");
 const { createHash } = require("node:crypto");
 const limits = Object.freeze({ ...require("./🧬️schema/🔣️.json").$defs.PhysicalLimits.const });
 const slash = (path) => path.replaceAll("\\", "/");
+const churn = Object.freeze(require("../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🔣️.json").definitions.Protocol.const);
+/** 🧨️ A peer edit of an owner manifest, the ownership policy or the membership while this custody was open: the plain error carries the code, reason, path and layer rank the churn policy declares, so the step that owns the snapshot takes a new one. */
+const edited = (message) => { const split = message.indexOf(": "); return Object.assign(Error(message), { code: churn.concurrentEditCode, reason: /membership|manifests changed/u.test(message) ? "roster" : "bytes", path: split < 0 ? "bun workspace ownership" : message.slice(split + 2).split(";")[0], rank: churn.profiles.snapshot.rank - 1 }); };
 const policySourceFields = Object.freeze([...require("./🧬️schema/🔣️.json").$defs.PhysicalPolicySource.required].sort());
 const {workspaceTestingCollectionRoot: collectionRoot} = require("../🟨️.cjs");
 const opaque = new Set(["🗑️generated", "🤖️generated", "node_modules", "target", "dist", "📤️dist", "build", "storybook-static", "temp", "coverage", "__pycache__", "🔌️plugin-modules", "compose"]);
@@ -58,10 +61,10 @@ function readManifestText(path, budget, maximum = limits.maximumManifestBytes) {
   const descriptor = fs.openSync(path, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
   let failed = false;
   try {
-    if (!sameManifest(before, fs.fstatSync(descriptor, { bigint: true }))) throw Error("Bun current manifest changed during descriptor admission: " + path);
+    if (!sameManifest(before, fs.fstatSync(descriptor, { bigint: true }))) throw edited("Bun current manifest changed during descriptor admission: " + path);
     const bytes = Buffer.alloc(size), probe = Buffer.alloc(1); let offset = 0;
-    while (offset < size) { const count = fs.readSync(descriptor, bytes, offset, Math.min(size - offset, limits.readChunkBytes), offset); if (!count) throw Error("Bun current manifest changed during descriptor read: " + path); offset += count; }
-    if (fs.readSync(descriptor, probe, 0, 1, size) || !sameManifest(before, fs.fstatSync(descriptor, { bigint: true })) || !sameManifest(before, fs.lstatSync(path, { bigint: true }))) throw Error("Bun current manifest changed during descriptor read: " + path);
+    while (offset < size) { const count = fs.readSync(descriptor, bytes, offset, Math.min(size - offset, limits.readChunkBytes), offset); if (!count) throw edited("Bun current manifest changed during descriptor read: " + path); offset += count; }
+    if (fs.readSync(descriptor, probe, 0, 1, size) || !sameManifest(before, fs.fstatSync(descriptor, { bigint: true })) || !sameManifest(before, fs.lstatSync(path, { bigint: true }))) throw edited("Bun current manifest changed during descriptor read: " + path);
     const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     if (budget) { budget.texts.set(path, size); budget.bytes = total; }
     return text;
@@ -196,7 +199,7 @@ function retainOwnershipObservationV1(observations, operation, path, value) {
   let record = observations.paths.get(path);
   const previous = record?.[operation];
   if (previous !== undefined) {
-    if (JSON.stringify(previous) !== JSON.stringify(value)) throw Error("Bun current ownership changed during verification: " + path + "; change=" + JSON.stringify(ownershipChange(operation, path, previous, value)));
+    if (JSON.stringify(previous) !== JSON.stringify(value)) throw edited("Bun current ownership changed during verification: " + path + "; change=" + JSON.stringify(ownershipChange(operation, path, previous, value)));
     return;
   }
   if (operation === "list" && record?.state[0] !== "directory") throw Error("Original Bun directory state observation required");
@@ -300,7 +303,7 @@ function* publicationPlan(owner, selection, verifyPublished) {
     if (verifyPublished && JSON.stringify(patterns) !== JSON.stringify(document.workspaces)) throw Error("Bun published workspace patterns drift: " + scope.manifest);
     scopes.push({ manifest: scope.manifest, beforeSha256: createHash("sha256").update(owner.texts.get(scope.manifest)).digest("hex"), patterns, packages });
   }
-  for (const [path, text] of owner.texts) if ((yield { operation: "readText", path: bounded(owner.root, path) }) !== text) throw Error("Bun current manifest changed during verification: " + path);
+  for (const [path, text] of owner.texts) if ((yield { operation: "readText", path: bounded(owner.root, path) }) !== text) throw edited("Bun current manifest changed during verification: " + path);
   return { version: 1, scopes, packages: membership.packages };
 }
 /** 🔭️ Exposes the exact path states, directory listing projections and manifest digests one ownership computation retained, so a later process can prove the same topology by stamps. */
@@ -383,11 +386,11 @@ async function requireCurrentMembershipV1(owner, control, progress) {
   if (await replayCurrentMembershipV1(owner, control, progress)) return;
   const fresh = Object.assign(context(owner.root), { ownership: owner.ownership, physical: owner.physical }), report = await drainControlledPlanV1(owner.computation(fresh, owner.selection, owner.verifyPublished), nativeOperations(fresh.observations, fresh.root, fresh.physical), control, progress);
   const shape = value => JSON.stringify(Array.isArray(value) ? value.map(scope => scope.manifest) : { scopes: value.scopes.map(({ manifest, patterns, packages }) => ({ manifest, patterns, packages })), packages: value.packages });
-  if (shape(report) !== shape(owner.report)) throw Error("Bun current workspace membership changed during verification");
-  for (const [path, text] of fresh.texts) if (owner.texts.has(path) && owner.texts.get(path) !== text) throw Error("Bun current manifest changed during verification: " + path);
-  if ([...owner.texts.keys()].some(path => !fresh.texts.has(path) && path !== "package.json")) throw Error("Bun current workspace manifests changed during verification");
+  if (shape(report) !== shape(owner.report)) throw edited("Bun current workspace membership changed during verification");
+  for (const [path, text] of fresh.texts) if (owner.texts.has(path) && owner.texts.get(path) !== text) throw edited("Bun current manifest changed during verification: " + path);
+  if ([...owner.texts.keys()].some(path => !fresh.texts.has(path) && path !== "package.json")) throw edited("Bun current workspace manifests changed during verification");
   fresh.texts = new Map([...owner.texts, ...fresh.texts]);
-  if (!await replayCurrentMembershipV1(fresh, control, progress) || !authenticateCurrentMembershipV1(fresh, control)) throw Error("Bun current ownership changed after refreshed continuation");
+  if (!await replayCurrentMembershipV1(fresh, control, progress) || !authenticateCurrentMembershipV1(fresh, control)) throw edited("Bun current ownership changed after refreshed continuation");
   Object.assign(owner.observations, fresh.observations);
   owner.texts = fresh.texts;
 }
@@ -396,11 +399,11 @@ async function currentFence(owner, operations, control, progress) {
   const {ownershipPath,ownershipSource}=owner.ownership;
   const { signal } = control;
   signal.throwIfAborted();
-  if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during publication");
+  if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw edited("Bun current ownership policy changed during publication");
   if (owner.report) await requireCurrentMembershipV1(owner, control, progress);
   for (const [path, text] of owner.texts) {
     signal.throwIfAborted();
-    if (operations.readText(bounded(owner.root, path)) !== text) throw Error("Bun current manifest changed during publication: " + path);
+    if (operations.readText(bounded(owner.root, path)) !== text) throw edited("Bun current manifest changed during publication: " + path);
   }
 }
 /** ⏳️ Advances actual initial and fresh fence plans under one original signal and cumulative progress counter. */
@@ -424,10 +427,10 @@ async function controlledOwnership(ownership, root, selection, control, verifyPu
   const {ownershipPath,ownershipSource}=ownership;
   selection = ownershipSelection(selection);
   if (!control || !(control.signal instanceof AbortSignal) || typeof control.advance !== "function") throw Error("Original Bun workspace control required");
-  if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
+  if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw edited("Bun current ownership policy changed during verification");
   const owner = Object.assign(context(root), { ownership, computation, selection, verifyPublished }), operations = nativeOperations(owner.observations, owner.root, owner.physical), current = { owner, completedOperations: 0 };
   current.report = await drainControlledPlanV1(computation(owner, selection, verifyPublished), operations, control, current);
-  if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
+  if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw edited("Bun current ownership policy changed during verification");
   owner.report = current.report;
   await currentFence(owner, operations, control, current);
   return current;
@@ -440,16 +443,16 @@ async function publishCurrentOwnership(ownership, root, selection, control) {
   const current = await controlledOwnership(ownership, root, selection, control, false), { report, owner } = current, operations = nativeOperations(owner.observations, owner.root, owner.physical);
   const validate = async () => {
     control.signal.throwIfAborted();
-    if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during publication");
+    if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw edited("Bun current ownership policy changed during publication");
     await requireCurrentMembershipV1(owner, control, current);
     await control.advance({ operation: "membership", path: owner.root, completedOperations: ++current.completedOperations });
     control.signal.throwIfAborted();
     for (const [path, text] of owner.texts) {
       control.signal.throwIfAborted(); const target = bounded(root, path);
-      if (operations.readText(target) !== text) throw Error("Bun current manifest changed during publication: " + path);
+      if (operations.readText(target) !== text) throw edited("Bun current manifest changed during publication: " + path);
       await control.advance({ operation: "readText", path: target, completedOperations: ++current.completedOperations });
       control.signal.throwIfAborted();
-      if (operations.readText(target) !== text) throw Error("Bun current manifest changed during publication: " + path);
+      if (operations.readText(target) !== text) throw edited("Bun current manifest changed during publication: " + path);
     }
   };
   for (const scope of report.scopes) {
@@ -487,14 +490,14 @@ async function withCurrentBunWorkspaceOwnershipV1(ownership, root, selection, co
   const guard = () => { if (!live) throw Error("Original Bun readonly callback released"); control.signal.throwIfAborted(); };
   const validate = async () => {
     guard();
-    if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
+    if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw edited("Bun current ownership policy changed during verification");
     await requireCurrentMembershipV1(owner, control, current);
     await control.advance({ operation: "membership", path: owner.root, completedOperations: ++current.completedOperations }); guard();
     for (const [path, text] of owner.texts) {
       guard(); const target = bounded(root, path);
-      if (operations.readText(target) !== text) throw Error("Bun current manifest changed during verification: " + path);
+      if (operations.readText(target) !== text) throw edited("Bun current manifest changed during verification: " + path);
       await control.advance({ operation: "readText", path: target, completedOperations: ++current.completedOperations }); guard();
-      if (operations.readText(target) !== text) throw Error("Bun current manifest changed during verification: " + path);
+      if (operations.readText(target) !== text) throw edited("Bun current manifest changed during verification: " + path);
     }
     guard(); await currentFence(owner, operations, control, current); guard();
   };
@@ -519,7 +522,7 @@ async function withCurrentBunWorkspaceOwnershipV1(ownership, root, selection, co
 async function discoverCurrentBunWorkspaceScopesV1(ownership, root, selection, control) {
   const computation = function* (owner, selected) {
     const scopes = yield* scopesPlan(owner, selected);
-    for (const [path, text] of owner.texts) if ((yield { operation: "readText", path: bounded(owner.root, path) }) !== text) throw Error("Bun current manifest changed during verification: " + path);
+    for (const [path, text] of owner.texts) if ((yield { operation: "readText", path: bounded(owner.root, path) }) !== text) throw edited("Bun current manifest changed during verification: " + path);
     return scopes;
   };
   const current = await controlledOwnership(ownership, root, selection, control, false, computation);
@@ -532,7 +535,7 @@ function createBunWorkspaceOwnershipV1(value) {
   if (Reflect.ownKeys(value).length !== 2 || Object.keys(rows).sort().join() !== policySourceFields.join() || Object.values(rows).some(row => !("value" in row) || !row.enumerable)) throw Error("Closed physical Bun policy Source required");
   const ownershipPath = rows.ownershipPath.value, ownershipSource = rows.ownershipSource.value;
   if (typeof ownershipPath !== "string" || !isAbsolute(ownershipPath) || resolve(ownershipPath) !== ownershipPath || ownershipPath.length > limits.maximumPathUnits || typeof ownershipSource !== "string" || Buffer.byteLength(ownershipSource) > limits.maximumPolicyBytes) throw Error("Finite physical Bun policy Source required");
-  if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun captured ownership policy changed before binding");
+  if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw edited("Bun captured ownership policy changed before binding");
   const ownership = Object.freeze({ ownershipPath, ownershipSource });
   return Object.freeze({...{ exportOwnershipIndexV1, seedOwnershipIndexV1, readListingProjection, withCurrentBunWorkspaceOwnershipV1, withPublishedBunWorkspaceOwnershipV1, discoverCurrentBunWorkspaceScopesV1, parseBunWorkspaceDeclaration, readBunRepositoryMembership, bunRepositoryMembership, bunWorkspacePackages, bunWorkspaceNativePatterns, inspectBunWorkspaceOwnership, publishBunWorkspaceOwnership, discoverBunWorkspaces: root => bunRepositoryMembership(root).scopes, bunRepositoryPackages: root => bunRepositoryMembership(root).packages }, withCurrentBunWorkspaceOwnershipV1:withCurrentBunWorkspaceOwnershipV1.bind(undefined,ownership),withPublishedBunWorkspaceOwnershipV1:withPublishedBunWorkspaceOwnershipV1.bind(undefined,ownership),discoverCurrentBunWorkspaceScopesV1:discoverCurrentBunWorkspaceScopesV1.bind(undefined,ownership),inspectBunWorkspaceOwnership:inspectBunWorkspaceOwnership.bind(undefined,ownership),publishBunWorkspaceOwnership:publishBunWorkspaceOwnership.bind(undefined,ownership)});
 }

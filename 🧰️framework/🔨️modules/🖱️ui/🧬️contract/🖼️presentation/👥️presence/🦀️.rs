@@ -37,7 +37,7 @@ pub enum Activity {
     Finished,
 }
 
-/// 👥️ One OTHER peer's mark on a node — hover/selection dot plus initials chip. Ported faithfully
+/// 🚩️ One OTHER peer's mark on a node — hover/selection dot plus initials chip. Ported faithfully
 /// from the old wgpu target's `UiPeerMark` (contract-freeze §C7.6, ticket 26/08/17/SHARED-PRESENCE-
 /// SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION) — `label` is still the actor id's display form, not
 /// a free-text caption.

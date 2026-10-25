@@ -2,7 +2,7 @@
  * relocated the same way. The route map is injected by a production build as `SEMIO_PLAY_PAGE_ORIGINS`; without it every function is the identity. */
 /// <reference types="vite/client" />
 
-/** 🌐️ CDN page origins keyed by root route. Empty unless a production build injects them. */
+/** 📖️ CDN page origins keyed by root route. Empty unless a production build injects them. */
 export function readPublishedPageOrigins(): Readonly<Record<string, string>> {
   let raw: string | undefined;
   try { raw = import.meta.env.SEMIO_PLAY_PAGE_ORIGINS as string | undefined; } catch { return {}; }
@@ -24,7 +24,7 @@ export function publishedPageUrl(path: string, origins: Readonly<Record<string, 
   return origin === undefined ? path : `${origin.replace(/\/$/, "")}${path}`;
 }
 
-/** 🌐️ Points a same-origin asset request at the CDN page that publishes that route. */
+/** 📍️ Points a same-origin asset request at the CDN page that publishes that route. */
 export function relocatePublishedRequestUrl(url: string, pageOrigin: string, origins: Readonly<Record<string, string>> = readPublishedPageOrigins()): string {
   let path = url;
   if (/^[a-z][a-z0-9+.-]*:/i.test(url)) {
@@ -39,7 +39,7 @@ export function relocatePublishedRequestUrl(url: string, pageOrigin: string, ori
 
 const publishedFetchInstalled = Symbol.for("semio.publishedPageFetch");
 
-/** 🌐️ Sends root-relative and same-origin asset fetches to the page that publishes them. */
+/** 📮️ Sends root-relative and same-origin asset fetches to the page that publishes them. */
 export function installPublishedPageFetch(): void {
   const origins = readPublishedPageOrigins();
   const scope = globalThis as typeof globalThis & { fetch?: typeof fetch; location?: { origin: string } };

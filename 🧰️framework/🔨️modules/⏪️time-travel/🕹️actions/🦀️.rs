@@ -78,7 +78,7 @@ pub const HISTORY_EDIT_ARG_STORE: &str = "store";
 /// 🧭️ The RFC 6901 pointer of one input inside the edited mutation's payload.
 pub const HISTORY_EDIT_ARG_PATH: &str = "path";
 
-/// 🎚️ `historyEditInput`'s new input value, or the item it inserts.
+/// 📥️ `historyEditInput`'s new input value, or the item it inserts.
 pub const HISTORY_EDIT_ARG_VALUE: &str = "value";
 
 /// ✂️ `historyEditInput`'s list edit: absent sets the input at `path`; [`HISTORY_EDIT_INPUT_INSERT`] inserts `value` (absent:
@@ -104,7 +104,7 @@ pub const HISTORY_EDIT_CHOICE_OVERWRITE: &str = "overwrite";
 /// 🗳️ The framework-injected finalize dialog of a history edit.
 pub const HISTORY_EDIT_FINALIZE_DIALOG_ID: &str = "finalizeHistoryEdit";
 
-/// ✏️ The thirteen reserved history-edit verbs, joined to every hosting app roster by [`RESERVED`]: never in the palette, no chords
+/// 📜️ The thirteen reserved history-edit verbs, joined to every hosting app roster by [`RESERVED`]: never in the palette, no chords
 /// (the hosts bind remappable `ui.timeTravel.*` chords), rejected on a viewer, agent-addressable like undo.
 pub fn history_edit_action_definitions() -> Vec<ActionDefinition> {
     let generation = || history_edit_hidden_arg(ActionArgDef::with_schema(HISTORY_EDIT_ARG_GENERATION, LocalizedLabel::native("Generation", "Generation"), ArgSchema::number(Some(0.0), None, Some(1.0), true)));
@@ -216,7 +216,7 @@ fn history_edit_hidden_arg(arg: ActionArgDef) -> ActionArgDef {
     ActionArgDef { presentation: Some(ArgPresentation::Hidden), ..arg }
 }
 
-/// 🗳️ The finalize prompt of a history edit, joined to every hosting app that may edit by [`RESERVED`]: the submit keeps
+/// ❓️ The finalize prompt of a history edit, joined to every hosting app that may edit by [`RESERVED`]: the submit keeps
 /// the edit as a new alternative named by the staged `name` (the opener seeds a localized default), the destructive
 /// choice `overwrite` replaces the inputs in every alternative, and dismissing it goes back to reviewing.
 pub fn history_edit_finalize_dialog() -> DialogDefinition {
@@ -234,12 +234,12 @@ pub fn history_edit_finalize_dialog() -> DialogDefinition {
         )
 }
 
-/// 🧩️ The history-edit dialog roster: the finalize dialog.
+/// 💬️ The history-edit dialog roster: the finalize dialog.
 pub fn history_edit_dialog_definitions() -> Vec<DialogDefinition> {
     vec![history_edit_finalize_dialog()]
 }
 
-/// 🧩️ The history-edit contribution: the thirteen verbs join the app roster, the finalize dialog joins every app that may
+/// 🔌️ The history-edit contribution: the thirteen verbs join the app roster, the finalize dialog joins every app that may
 /// edit.
 pub const RESERVED: ReservedContribution = ReservedContribution::new("historyEdit").with_app_actions(history_edit_action_definitions).with_editor_dialogs(history_edit_dialog_definitions);
 

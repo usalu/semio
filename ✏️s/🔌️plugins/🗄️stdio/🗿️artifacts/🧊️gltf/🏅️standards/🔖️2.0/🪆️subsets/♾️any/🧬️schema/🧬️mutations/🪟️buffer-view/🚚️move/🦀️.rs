@@ -34,7 +34,7 @@ pub fn plan(p: &GltfMoveBufferViewPayload, base: &GltfSnapshot) -> Result<GltfDi
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse<Op>(p: &GltfMoveBufferViewPayload, base: &GltfSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::move_buffer_view::MoveBufferViewMutation>,
 {
     if validate(p, base).is_err() {
         return Vec::new();

@@ -28,7 +28,6 @@ fn check(base:Vec<String>,removed:Vec<usize>,added:Vec<(usize,String)>,expected:
  for(index,row)in authored.borrow().get().iter().enumerate(){assert_eq!(row.text.as_ptr(),authored_pointers[index]);}
  owner.begin_close();let mut close_turns=0;while !owner.terminal_is_empty(){let d=owner.close_demand(4096).unwrap();assert!(d.copy_bytes<=4096);let issued=RetainedCloneGrant{maximum_copy_bytes:4096,..grant(d)};let(step,heap)=crate::observe_retirement_allocations(||owner.close_step(RetainedCloneGrant{maximum_items:0,..issued}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));let(step,heap)=crate::observe_retirement_allocations(||owner.close_step(issued).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));close_turns+=1;assert!(close_turns<limit);}
  assert_eq!(crate::observe_retirement_allocations(||drop(owner)).1,(0,0));close_plan(&mut plan);close_source(&mut authored);drain(post);
- eprintln!("[DEBUG] original indexed collection cut={cut:?} turns={turns} close={close_turns} exact physical receipts, no unchanged row Clone, original/authored payload custody terminal");
 }
 /// 🧪️ Actual native object headers preserve survivor allocations and close exact originals at every neutral frontier.
 #[test]

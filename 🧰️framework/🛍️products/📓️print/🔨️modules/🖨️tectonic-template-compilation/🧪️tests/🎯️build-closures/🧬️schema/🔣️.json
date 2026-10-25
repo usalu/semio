@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://print/build-closures-law/v1",
+  "title": "Print build command closure law",
+  "description": "A language-agnostic law: the command closure of every Print build command contains no test source, no other Print command, no repository tool, graph, Nx, Bazel or Cargo orchestration, no operating-system plugin tree and at most the declared number of files, while the one script provider port its documents are published through stays covered.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "entries",
+    "maximumFiles",
+    "forbidden",
+    "requiredProvider"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "maximumFiles": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "forbidden": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "requiredProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry",
+        "port",
+        "module"
+      ],
+      "properties": {
+        "entry": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        },
+        "module": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

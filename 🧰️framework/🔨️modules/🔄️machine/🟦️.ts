@@ -3,35 +3,35 @@
 export type NodeId = number & { readonly __machineId: "NodeId" };
 export const NodeId = (value: number): NodeId => value as NodeId;
 
-/** 🔢 Dense index of an event kind within a {@link StatechartEvent}'s variant space. */
+/** 🗂️ Dense index of an event kind within a {@link StatechartEvent}'s variant space. */
 export type EventId = number & { readonly __machineId: "EventId" };
 export const EventId = (value: number): EventId => value as EventId;
 
-/** 🔢 Dense index of a transition within a compiled {@link MachineDefinition}. */
+/** 📇️ Dense index of a transition within a compiled {@link MachineDefinition}. */
 export type TransitionId = number & { readonly __machineId: "TransitionId" };
 export const TransitionId = (value: number): TransitionId => value as TransitionId;
 
-/** 🔢 Dense index of a guard function within a compiled {@link MachineDefinition}. */
+/** 🔒️ Dense index of a guard function within a compiled {@link MachineDefinition}. */
 export type GuardId = number & { readonly __machineId: "GuardId" };
 export const GuardId = (value: number): GuardId => value as GuardId;
 
-/** 🔢 Dense index of a reducer/emitter action within a compiled {@link MachineDefinition}. */
+/** 🎬️ Dense index of a reducer/emitter action within a compiled {@link MachineDefinition}. */
 export type ActionId = number & { readonly __machineId: "ActionId" };
 export const ActionId = (value: number): ActionId => value as ActionId;
 
-/** 🔢 Dense index of an `invoke` declaration within a compiled {@link MachineDefinition}. */
+/** 🖥️ Dense index of an `invoke` declaration within a compiled {@link MachineDefinition}. */
 export type InvokeId = number & { readonly __machineId: "InvokeId" };
 export const InvokeId = (value: number): InvokeId => value as InvokeId;
 
-/** 🔢 Dense index of an `after` (delayed transition) timer within a compiled {@link MachineDefinition}. */
+/** ⏲️ Dense index of an `after` (delayed transition) timer within a compiled {@link MachineDefinition}. */
 export type TimerId = number & { readonly __machineId: "TimerId" };
 export const TimerId = (value: number): TimerId => value as TimerId;
 
-/** 🔢 Runtime-assigned identity of a spawned actor. */
+/** 🪪️ Runtime-assigned identity of a spawned actor. */
 export type ActorId = number & { readonly __machineId: "ActorId" };
 export const ActorId = (value: number): ActorId => value as ActorId;
 
-/** 🔢 `NodeId(0)` is always the synthetic root wrapping the whole machine. */
+/** 🏠️ `NodeId(0)` is always the synthetic root wrapping the whole machine. */
 export const ROOT: NodeId = NodeId(0);
 
 //#endregion 🔢️Ids
@@ -123,7 +123,7 @@ export interface MachineSpec {
   readonly Effect: unknown;
 }
 
-/** 🎭 A compiled statechart: consumer-owned types bound to a static {@link MachineDefinition}. Rust's
+/** ⚙️ A compiled statechart: consumer-owned types bound to a static {@link MachineDefinition}. Rust's
  * `Machine` trait is implemented by a marker type whose `definition()` static method the kernel calls
  * implicitly (`M::definition()`); TS has no static dispatch over a type parameter, so every kernel
  * entry point below takes a `Machine<M>` value explicitly instead. */
@@ -134,13 +134,13 @@ export interface Machine<M extends MachineSpec> {
 /** 🧵 Reads context+event, decides whether a guarded transition may fire. Pure — no I/O, no mutation. */
 export type GuardFn<M extends MachineSpec> = (context: M["Context"], event: M["Event"] | undefined) => boolean;
 
-/** 🧵 Mutates context and/or pushes commands; used for entry/exit/transition actions alike. */
+/** 🛠️ Mutates context and/or pushes commands; used for entry/exit/transition actions alike. */
 export type ActionFn<M extends MachineSpec> = (context: M["Context"], event: M["Event"] | undefined, sink: CommandSink<M>) => void;
 
-/** 🧵 Builds the initial context from consumer-supplied input. */
+/** 📥️ Builds the initial context from consumer-supplied input. */
 export type InputFn<M extends MachineSpec> = (input: M["Input"]) => M["Context"];
 
-/** 🧵 Builds the machine's output once the root reaches a fully-final configuration. */
+/** 🖨️ Builds the machine's output once the root reaches a fully-final configuration. */
 export type OutputFn<M extends MachineSpec> = (context: M["Context"]) => M["Output"];
 
 /** 📐 The compiled definition of a machine — dense tables, no string dispatch. */
@@ -164,7 +164,7 @@ export interface MachineDefinition<M extends MachineSpec> {
 /** 🌳 The structural kind of a state node. */
 export type NodeKind = "atomic" | "compound" | "parallel" | "final" | "historyShallow" | "historyDeep";
 
-/** 🌳 One compiled state node. `NodeId(0)` is always the synthetic root, so domain computation
+/** 🔨️ One compiled state node. `NodeId(0)` is always the synthetic root, so domain computation
  * always terminates. */
 export interface NodeDef {
   readonly stableId: string;
@@ -194,7 +194,7 @@ export type Trigger =
  * compound source leave the source itself active. */
 export type TransitionKind = "external" | "internal";
 
-/** 🔀 One compiled transition. Guard/action indices are dense — the tables they index into live on
+/** ➡️ One compiled transition. Guard/action indices are dense — the tables they index into live on
  * {@link MachineDefinition}. */
 export interface TransitionDef {
   readonly source: NodeId;
@@ -220,7 +220,7 @@ export type Command<M extends MachineSpec> =
   | { readonly kind: "schedule"; readonly timer: TimerId; readonly delayMs: number }
   | { readonly kind: "cancelTimer"; readonly timer: TimerId };
 
-/** 🎇 Where a running machine pushes the {@link Command}s it produces. A plain `Command<M>[]` already
+/** ▶️ Where a running machine pushes the {@link Command}s it produces. A plain `Command<M>[]` already
  * satisfies this — `Array.prototype.push` structurally matches. */
 export interface CommandSink<M extends MachineSpec> {
   push(command: Command<M>): void;
@@ -266,14 +266,14 @@ export class Snapshot<M extends MachineSpec> {
     return this.#history.find(([key]) => key === node)?.[1];
   }
 
-  /** 💾 Records (or replaces) the history entry for a `history(...)` node's owner. */
+  /** 📹️ Records (or replaces) the history entry for a `history(...)` node's owner. */
   recordHistory(node: NodeId, value: readonly NodeId[]): void {
     const entry = this.#history.find(([key]) => key === node);
     if (entry) entry[1] = [...value];
     else this.#history.push([node, [...value]]);
   }
 
-  /** 💾 Every recorded history entry, owner-node-id first. */
+  /** 🎙️ Every recorded history entry, owner-node-id first. */
   historyEntries(): ReadonlyArray<readonly [NodeId, readonly NodeId[]]> {
     return this.#history;
   }

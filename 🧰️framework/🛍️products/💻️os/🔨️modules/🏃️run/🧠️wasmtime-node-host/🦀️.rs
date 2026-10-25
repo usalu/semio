@@ -200,6 +200,17 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         *self.plugin_ordinals.entry(plugin_id.to_string()).or_insert(next)
     }
 
+    /// 🎟️ One Run-root actor turn lends the retained input and loan of one activation; the root takes the turn back before the Kernel installs the actor.
+    async fn issue_activation_budget(&mut self)->Result<semio_framework::kernel::Budget,RunError>{
+        while !self.host_driver.admit_root_step().map_err(RunError::Original)?{semio_framework_async::yield_once().await;}
+        let scope=loop{if let Some(scope)=self.host_driver.begin_actor_turn(None).map_err(|error|RunError::Original(error.into()))?{break scope}semio_framework_async::yield_once().await;};
+        let budget=self.host_driver.actor_budget(scope).map_err(|error|RunError::Original(error.into()))?;
+        self.host_driver.dispatch_actor_step(scope,|cx|{cx.consume_fuel(1);Ok(())}).map_err(RunError::Original)?;
+        let receipt=self.host_driver.finish_actor_step(scope).map_err(RunError::Original)?;
+        while !self.host_driver.return_actor_turn(receipt).map_err(RunError::Original)?{semio_framework_async::yield_once().await;}
+        Ok(budget)
+    }
+
     /// 🌱️ The actual Run root lends every opening slice and keeps refused or pending instance custody before Handle publication.
     async fn prepare_service_original(&mut self,plugin_id:&str,compiled:&semio_framework_plugin_host::CompiledHandle)->Result<(semio_framework_plugin_host::GuestInstance,semio_framework_actor::RetainedTurnInput),RunError>{
         use semio_framework_actor::retained_turn::{ActorGuestPhase,OriginalActorInput};
@@ -256,9 +267,8 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// dispatch to `actor`'s own pinned shard → wait for its `ShardOutcome` → `Kernel::complete` —
     /// mirroring `🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️.rs`'s own `KernelThreadState::run_turn` almost line for
     /// line (that file's own doc explains each step; this is the same mechanism, minus UI-surface
-    /// reconciliation, which `run` has no use for). `RUN_TURN_OUTCOME_TIMEOUT`/`NODE_TURN_BUDGET` are
-    /// this host's own constants, same values `load_runtime_recursive` already used for its own
-    /// plugin-service instantiate budget, now shared with the real per-node turn path too.
+    /// reconciliation, which `run` has no use for). Every activation takes its retained input and loan from one Run-root actor turn (`issue_activation_budget`),
+    /// exactly like `prepare_service_original`; `RUN_TURN_OUTCOME_TIMEOUT` bounds the wait for a shard outcome, and a faulted shard outcome retains its actor and ends the turn.
     async fn run_turn(&mut self, actor: RuntimeActorId, events: Vec<Event>) -> Result<semio_framework::kernel::TurnResult, RunError> {
         const RUN_TURN_OUTCOME_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
         let mut envelopes = Vec::with_capacity(events.len().max(1));
@@ -305,6 +315,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                                 status => return Err(RunError::Host(format!("unexpected reactor turn status: {status:?}"))),
                             };
                             turn_result = Some(semio_framework::kernel::TurnResult {
+                                retained_receipt: result.retained_receipt,
                                 ui_patches: semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&result.ui_patches, *reported)
                                     .map_err(|error| RunError::Host(format!("kernel: decode ui patch transport: {error}")))?
                                     .take_owner()
@@ -325,19 +336,6 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                         }
                     }
                     semio_framework_plugin_host::shard::ShardOutcome::Fault { actor: reported, message } => {
-                        let faulted = semio_framework::kernel::TurnResult {
-                            ui_patches: semio_framework::kernel::UiTurnPatches::default(),
-                            effects: Vec::new(),
-                            presence: Vec::new(),
-                            next_wake: None,
-                            status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()),
-                            fuel_used: 0,
-                            command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
-                            cold_pair_ingress: semio_framework::kernel::ColdPairIngressStatus::Idle,
-                            lifecycle_receipt: None,
-                            ui_patch_receipt: None,
-                        };
-                        self.kernel.complete(RuntimeActorId(*reported), faulted, 0, 0, self.now_ms).await.map_err(|error| RunError::Host(format!("kernel fault completion failed: {error:?}")))?;
                         if *reported == actor.0 {
                             fault = Some(message.clone());
                         }
@@ -478,7 +476,8 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         let plugin_ordinal=self.plugin_ordinal(plugin_id);
         let actor=if let Some(original)=&self.service_openings{if original.plugin_ordinal!=plugin_ordinal||original.package_hash!=compiled.package_hash{return Err(RunError::Host("another original service opening still owns the fixed pending slot".into()))}original.actor}else{
             let kind=ActorKind::PluginApp{plugin:PackageId(plugin_id.to_string()),app_id:"<plugin-runtime>".to_string(),instance_id:0};
-            self.kernel.kernel_mut().activate(PackageId(plugin_id.to_string()),plugin_ordinal,kind,Lane::Background,None,ActivationEvent::Manual).await
+            let budget=self.issue_activation_budget().await?;
+            self.kernel.kernel_mut().activate(PackageId(plugin_id.to_string()),plugin_ordinal,kind,Lane::Background,None,ActivationEvent::Manual,budget.retained,semio_framework_actor::OriginalActorTurnLoan{retained_policy:budget.retained_policy,work_fuel:budget.work_fuel,deadline_us:budget.deadline_us}).await
         };
         if self.service_openings.is_none(){
             while !self.host_driver.admit_root_step().map_err(RunError::Original)?{semio_framework_async::yield_once().await;}
@@ -728,7 +727,8 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
         let instance_handle = self.next_handle;
         self.next_handle += 1;
         let kind = ActorKind::PluginApp { plugin: PackageId(plugin_id.to_string()), app_id: app_id.to_string(), instance_id: instance_handle };
-        let actor = self.kernel.activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual, &compiled, &[], &NODE_TURN_BUDGET).await.map_err(activation_refusal_error)?;
+        let budget = self.issue_activation_budget().await?;
+        let actor = self.kernel.activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual, &compiled, &[], &budget).await.map_err(activation_refusal_error)?;
         self.instances.insert(instance_handle, (plugin_id.to_string(), instance_handle));
         self.instance_actors.insert(instance_handle, actor);
         let assets = self.package_assets_for(plugin_id)?;

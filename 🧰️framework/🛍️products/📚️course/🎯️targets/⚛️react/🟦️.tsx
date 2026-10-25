@@ -22,7 +22,7 @@
 //#region 🔁️Reexports
 export { COURSE_BUNDLE_DE } from "./🔨️modules/🌐️i18n/🔡️german-bundle/🟦️.ts";
 export { COURSE_BUNDLE_EN } from "./🔨️modules/🌐️i18n/🔠️english-bundle/🟦️.ts";
-export { COURSE_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, applyLocale, isCourseLocale, localized, preferredLocale, courseText, titled } from "./🔨️modules/🌐️i18n/🟦️.ts";
+export { COURSE_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, applyLocale, courseLocaleLoaded, isCourseLocale, loadCourseLocales, localized, preferredLocale, courseText, titled } from "./🔨️modules/🌐️i18n/🟦️.ts";
 export type { CourseLabelKey, CourseLocale, CourseText } from "./🔨️modules/🌐️i18n/🟦️.ts";
 export { SIGNIFICANT_DIGITS, SI_PREFIXES, ceilSignificant, engineering, floorSignificant, formatClock, formatCount, formatCountdown, formatDate, formatDuration, formatFactor, formatInstant, formatNumber, formatPoints, formatQuantity, formatScore, formatTimes, oneDecimal, parseQuantity, quantityReading, quantitySymbol, quantityUnits, splitGuess, withMinusSign, withUnit } from "./🔨️modules/📏️quantity/🟦️.ts";
 export type { QuantityUnit, Toward } from "./🔨️modules/📏️quantity/🟦️.ts";
@@ -35,7 +35,7 @@ export type { CommandVerdict, HttpRequest, HttpResponse, HttpTransport, ProctorC
 export { Outbox, coalesce, coalescingKey, commandRun } from "./🔨️modules/📮️outbox/🟦️.ts";
 export type { OutboxActivity, OutboxEntry, OutboxOptions, OutboxStatus } from "./🔨️modules/📮️outbox/🟦️.ts";
 export { Deputy, REVISED, materialRevision } from "./🔨️modules/🫡️deputy/🟦️.ts";
-export type { HeldLearner, CourseMaterial } from "./🔨️modules/🫡️deputy/🟦️.ts";
+export type { HeldLearner, CourseMaterial, CourseMaterialSource } from "./🔨️modules/🫡️deputy/🟦️.ts";
 export { DEFAULT_BOARD, EMPTY_TRAIL, HOME_PAGES, TRAIL_LIMIT, boardKey, evolveCourseState, initialCourseState, lastSubmittedRunOf, mergeRunViews, openChallengeOf, openRunOf, overallLeaderboard, runAwards, sameStep, shownLeaderboard, stepAbove, stepAfter, stepBefore } from "./🔨️modules/🧭️session/🧮️state/🟦️.ts";
 export { DEPUTY_PATIENCE_MS, PROJECTION_GRACE_MS } from "./🔨️modules/🧭️session/📋️session-model/🟦️.ts";
 export { CourseSession } from "./🔨️modules/🧭️session/🟦️.ts";
@@ -60,7 +60,7 @@ export type { Announcement, Problem, Segment } from "./🔨️modules/🪟️chr
 export { ClassificationTaskView, classificationHintText } from "./🔨️modules/🗂️classification/🟦️.tsx";
 export { SortingTaskView, ordered, reordered } from "./🔨️modules/↕️sorting/🟦️.tsx";
 export { MatchingTaskView, assignCard } from "./🔨️modules/🃏️matching/🟦️.tsx";
-export { CourseIntroduction, courseIntroduction } from "./🔨️modules/👋️introduction/🟦️.tsx";
+export { COURSE_LANGUAGE_ANCHOR, CourseIntroduction, courseIntroduction } from "./🔨️modules/👋️introduction/🟦️.tsx";
 export { LearnerCard, LearnerPage, SwitchIdentity } from "./🔨️modules/📇️profile/🟦️.tsx";
 export { QuizCardView, QuizPage } from "./🔨️modules/📖️quiz-page/🟦️.tsx";
 export { CHALLENGE_HINTS, CHALLENGE_LABELS, ChallengeChooser, challengeScored } from "./🔨️modules/⛰️challenge/🟦️.tsx";

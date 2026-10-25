@@ -93,7 +93,7 @@ impl From<&LineVertex3> for WorldLineGpuVertex {
     }
 }
 
-/// 🧊️ Byte-identical to `WorldMeshVertexIn`'s per-vertex attributes (locations 0..1).
+/// 📍️ Byte-identical to `WorldMeshVertexIn`'s per-vertex attributes (locations 0..1).
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct World3dGpuVertex {

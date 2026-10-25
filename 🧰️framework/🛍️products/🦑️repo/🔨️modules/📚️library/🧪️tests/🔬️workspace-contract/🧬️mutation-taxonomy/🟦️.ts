@@ -99,7 +99,7 @@ impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for AddTag {
 }
 `;
 
-/** 🚨️ Marker-free collapsed shape (real \`🏛️architect/…/🗑️🧱delete-program-element/🦀️.rs\` structure): free \`pub async fn diff\`/\`pub async fn inverse\` with no \`//#region\` at all and no sibling facet dir — the 266-mutation blind spot the marker-only detector missed. */
+/** 🧫️ Marker-free collapsed shape (real \`🏛️architect/…/🗑️🧱delete-program-element/🦀️.rs\` structure): free \`pub async fn diff\`/\`pub async fn inverse\` with no \`//#region\` at all and no sibling facet dir — the 266-mutation blind spot the marker-only detector missed. */
 const MARKER_FREE_INLINED_MUTATION_DIRECT_LEAF_FIXTURE = `//! 🦠️ ProgramSnapshot mutation — \`delete-program-element\` leaf (delete).
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
@@ -252,12 +252,12 @@ function mutationTransportFixture(): { readonly root: string; readonly taxonomy:
     mkdirSync(join(absolute, ".."), { recursive: true });
     writeFileSync(absolute, content);
   };
-  write("🧰️framework/🚪️io/📝️text/🧬️mutations/🟦️.ts", "export const encodeMutationText = (value: string) => value;\n");
-  write("🧰️framework/🚪️io/💾️binary/🧬️mutations/🟦️.ts", "export const encodeMutationBinary = (value: Uint8Array) => value;\n");
-  write("🧰️framework/🚪️io/🧬️mutations/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
-    { directory: "📝️text", id: "framework.io.mutation-text", kind: "io", responsibility: "frozen mutation text transport", io: { format: "Semio mutation text", direction: "transport" } },
-    { directory: "💾️binary", id: "framework.io.mutation-binary", kind: "io", responsibility: "frozen mutation binary transport", io: { format: "Semio mutation binary", direction: "transport" } },
-  ] } }));
+  const codec = (representation: string, member: string, id: string, format: string, source: string): void => {
+    write(`🧰️framework/🚪️io/${representation}/🧬️mutations/${member}/🟦️.ts`, source);
+    write(`🧰️framework/🚪️io/${representation}/🧬️mutations/🔣️.json`, JSON.stringify({ "x-semio": { kind: "collection", members: [{ directory: member, id, kind: "io", responsibility: `frozen ${format} transport`, io: { format, direction: "transport" } }] } }));
+  };
+  codec("📝️text", "🧾️mutation-text", "framework.io.mutation-text", "Semio mutation text", "export const encodeMutationText = (value: string) => value;\n");
+  codec("💾️binary", "🧾️mutation-binary", "framework.io.mutation-binary", "Semio mutation binary", "export const encodeMutationBinary = (value: Uint8Array) => value;\n");
   return { root, taxonomy };
 }
 
@@ -334,7 +334,7 @@ describe("semantic collection census", () => {
       const census = buildSemanticCensus(fixture.root, {}, fixture.taxonomy);
       expect(census.problems).toEqual([]);
       expect(census.records.map((record) => record.id)).toEqual(["framework.io.mutation-binary", "framework.io.mutation-text"]);
-      const manifestPath = join(fixture.root, "🧰️framework/🚪️io/🧬️mutations/🔣️.json");
+      const manifestPath = join(fixture.root, "🧰️framework/🚪️io/📝️text/🧬️mutations/🔣️.json");
       const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
       manifest["x-semio"].members[0].io.direction = "import";
       writeFileSync(manifestPath, JSON.stringify(manifest));
@@ -407,7 +407,7 @@ describe("semantic collection census", () => {
     const taxonomy = loadTaxonomy();
     expect(artifactFacetPathIsDeclared("🚪️io/📝️text/💡️inferences", taxonomy)).toBe(true);
     expect(artifactFacetPathIsDeclared("🚪️io/💾️binary/💡️inferences", taxonomy)).toBe(true);
-    expect(artifactFacetPathIsDeclared("🚪️io/📝️text/💡️inferences", taxonomy)).toBe(false);
-    expect(artifactFacetPathIsDeclared("🚪️io/💾️binary/💡️inferences", taxonomy)).toBe(false);
+    expect(artifactFacetPathIsDeclared("🧬️schema/💡️inferences/📝️text", taxonomy)).toBe(false);
+    expect(artifactFacetPathIsDeclared("🧬️schema/💡️inferences/💾️binary", taxonomy)).toBe(false);
   });
 });

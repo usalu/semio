@@ -1,7 +1,7 @@
 import "../📄️resources/🧪️tests/🟦️.ts";
 import assert from "node:assert/strict";
-import { SqliteDatabaseV1 as Database } from "../../../../../../../🔨️modules/⚙️runtime/🗃️sqlite/🟦️.ts";
-import { test } from "../../../../../../../🔨️modules/⚙️runtime/🧪️test/🟦️.ts";
+import { SqliteDatabaseV1 as Database } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
+import { test } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧪️test/🟦️.ts";
 import { mkdir, mkdtemp, readdir, readFile, lstat, writeFile } from "node:fs/promises";
 import { join, resolve, dirname } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -13,9 +13,9 @@ import { JSONRPCMessageSchema, ListRootsRequestSchema, type JSONRPCMessage } fro
 import { findWorkspaceRoot, scriptInvocationEnvironment, withRequestedIssuedResourceControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { withOwnedCommandChannelV1, readOwnedCommandChannelLineV1, writeOwnedCommandChannelV1, closeOwnedCommandChannelV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/📥️capture/🟦️.ts";
-import { registerBuildTestLawV1 } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import { registerBuildTestLawV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { captureInstalledFrontendProofV1, assertSameInstalledFrontendProofV1 } from "../../../../📚️library/🧪️testing/📦️installed-frontend/🟦️.ts";
+import { captureInstalledFrontendProofV1, assertSameInstalledFrontendProofV1 } from "../../../../📚️library/📦️packages/🟦️typescript/🧪️testing/📦️installed-frontend/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../../../📚️library/📦️packages/🟦️typescript/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
@@ -28,7 +28,7 @@ const ajv = new Ajv({ strict: false, allErrors: true });
 const resourceAjv = new ResourceAjv({ strict: false, allErrors: true }); resourceAjv.addSchema(resources);
 const resourceValidators = { files: resourceAjv.getSchema(resources.$id + "#/$defs/FilesResource")!, folders: resourceAjv.getSchema(resources.$id + "#/$defs/FoldersResource")! };
 function physical(value: string): string { assert.equal(resolve(value), value); assert.ok(value.length <= policy.maximumPhysicalPathUnits && !value.includes("\0")); return value; }
-function key(value: string | number): string { return typeof value + ":" + value; }
+function key(value: string | number | undefined): string { return typeof value + ":" + value; }
 function content(field: "files" | "folders", text: string): Record<string, string>[] {
   const value = JSON.parse(text), own = field === "files" ? resources.$defs.FilesResource : resources.$defs.FoldersResource;
   assert.deepEqual(validateJsonSchemaSubset(own, value, resources), []);

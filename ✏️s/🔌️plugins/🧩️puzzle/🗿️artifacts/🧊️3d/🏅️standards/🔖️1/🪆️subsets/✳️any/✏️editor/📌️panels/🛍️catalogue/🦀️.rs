@@ -10,6 +10,7 @@
 
 pub use semio_s_artifact_puzzle_3d_editor_snapshot::catalog_entry_label;
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
+use semio_framework_plugin::{Buildable, HasBase};
 use {semio_s_artifact_puzzle_3d_editor_session::ui_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
 
 use semio_framework_pack_json::json;

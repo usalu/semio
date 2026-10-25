@@ -10,17 +10,17 @@
  * `kernel::MEDIA_VIDEO_RENDER_CAPABILITY`. */
 export const MEDIA_VIDEO_RENDER_CAPABILITY = "media.video-render";
 
-/** 🎞️ The schema id every {@link VideoRenderProgram} states — twin of Rust `kernel::VIDEO_RENDER_PROGRAM_SCHEMA`; both drive
+/** 🧬️ The schema id every {@link VideoRenderProgram} states — twin of Rust `kernel::VIDEO_RENDER_PROGRAM_SCHEMA`; both drive
  * `🧫️fixtures/🎞️video-render-program/🔣️.json`. */
 export const VIDEO_RENDER_PROGRAM_SCHEMA = "semio.video-render.program.v1";
 
 /** 📏️ The largest picture edge a program may ask for. */
 export const VIDEO_RENDER_PROGRAM_MAXIMUM_EDGE = 4096;
 
-/** 🎞️ The fastest frame rate a program may ask for. */
+/** ⚡️ The fastest frame rate a program may ask for. */
 export const VIDEO_RENDER_PROGRAM_MAXIMUM_FPS = 120;
 
-/** ⏱️ The most frames one program may render. */
+/** 🔢️ The most frames one program may render. */
 export const VIDEO_RENDER_PROGRAM_MAXIMUM_FRAMES = 36_000;
 
 /** ✏️ One path of the shared table: one verb letter per segment (`M`, `L`, `Q`, `C`, `Z`) over flat `x, y` points. */
@@ -40,13 +40,13 @@ export type VideoRenderTransform = readonly [number, number, number, number, num
 /** 🎨️ Straight RGBA, every channel `0..=1`. */
 export type VideoRenderColor = readonly [number, number, number, number];
 
-/** 🎨️ One paint operation, composited in list order — twin of Rust `kernel::VideoRenderOp` (tagged by `kind`). */
+/** 🖌️ One paint operation, composited in list order — twin of Rust `kernel::VideoRenderOp` (tagged by `kind`). */
 export type VideoRenderOp =
   | { readonly kind: "fill"; readonly path: number; readonly transform: VideoRenderTransform; readonly color: VideoRenderColor }
   | { readonly kind: "stroke"; readonly path: number; readonly transform: VideoRenderTransform; readonly color: VideoRenderColor; readonly width: number }
   | { readonly kind: "image"; readonly image: number; readonly crop: readonly [number, number, number, number]; readonly transform: VideoRenderTransform; readonly opacity: number };
 
-/** 🖼️ One distinct picture. */
+/** 🎬️ One distinct picture. */
 export interface VideoRenderScene {
   readonly ops: readonly VideoRenderOp[];
 }
@@ -57,7 +57,7 @@ export interface VideoRenderRun {
   readonly frames: number;
 }
 
-/** 🎞️ Everything a host needs to render a video — twin of Rust `kernel::VideoRenderProgram`. */
+/** 📹️ Everything a host needs to render a video — twin of Rust `kernel::VideoRenderProgram`. */
 export interface VideoRenderProgram {
   readonly schema: string;
   readonly width: number;
@@ -85,7 +85,7 @@ export function videoRenderDurationMilliseconds(program: VideoRenderProgram): nu
 
 const VIDEO_RENDER_VERB_POINTS: Readonly<Record<string, number>> = { M: 2, L: 2, Q: 4, C: 6, Z: 0 };
 
-/** ✏️ A path's verbs consume exactly its points, start with a move and every coordinate is finite. */
+/** 🛤️ A path's verbs consume exactly its points, start with a move and every coordinate is finite. */
 export function videoRenderPathIsWellFormed(path: VideoRenderPath): boolean {
   let needed = 0;
   for (const [index, verb] of [...path.verbs].entries()) {
@@ -96,7 +96,7 @@ export function videoRenderPathIsWellFormed(path: VideoRenderPath): boolean {
   return needed === path.points.length && path.points.every(Number.isFinite);
 }
 
-/** 🖼️ A same-origin absolute path (never protocol-relative) or an inline `data:image/…` URL — Rust
+/** 🔗️ A same-origin absolute path (never protocol-relative) or an inline `data:image/…` URL — Rust
  * `video_render_image_url_is_admitted`. */
 export function videoRenderImageUrlIsAdmitted(url: string): boolean {
   return (url.startsWith("/") && !url.startsWith("//")) || url.startsWith("data:image/");

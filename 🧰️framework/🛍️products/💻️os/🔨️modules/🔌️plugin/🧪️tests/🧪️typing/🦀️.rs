@@ -5,6 +5,7 @@
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::kernel::ActorId;
 use std::sync::Arc;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::PressLeaf;
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
@@ -57,7 +58,7 @@ fn the_overlay_folds_open_runs_over_an_untouched_committed_document() {
     let clock = HybridLogicalTimestamp { actor: 0, physical_ms: 1_101, logical: 0 };
     runtime
         .presses
-        .send("w2", "s.test@1/*#editor#setCount", &ActorId("actor".into()), "r1", semio_framework_tool_machine::ScrubInput::Tick { gesture: "g".into(), leaves: vec![PressLeaf::Member(SetCount { value: 5 }.into())] }, clock)
+        .send("w2", "s.test@1/*#editor#setCount", &ActorId("actor".into()), "r1", &mut Some(semio_framework_tool_machine::ScrubInput::Tick { gesture: "g".into(), leaves: vec![PressLeaf::Member(SetCount { value: 5 }.into())] }), clock)
         .expect("a tick");
     let (displaced, aborted) = runtime.follow(&head, 1, true);
     assert_eq!((displaced.len(), aborted.len()), (1, 0), "the press's intermediate is displaced, no run conflicts");

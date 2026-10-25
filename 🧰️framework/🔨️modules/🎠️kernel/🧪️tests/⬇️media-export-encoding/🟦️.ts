@@ -57,7 +57,7 @@ function friendlyDownload(encoding: unknown, data: string, filename: string, mim
   return (effect as { readonly downloadMediaExport: { readonly filename: string; readonly mimeType: string; readonly data: string; readonly encoding?: string } }).downloadMediaExport;
 }
 
-/** ⬇️ The whole law, callable without vitest so the nx lane runs it as a plain oracle. */
+/** 🧪️ The whole law, callable without vitest so the nx lane runs it as a plain oracle. */
 export function testMediaExportEncodingContract(): void {
   const fixture = loadFixture();
   assert.equal(fixture.baseEncoding, MEDIA_EXPORT_BASE64_ENCODING, "the fixture names the encoding the contract knows");

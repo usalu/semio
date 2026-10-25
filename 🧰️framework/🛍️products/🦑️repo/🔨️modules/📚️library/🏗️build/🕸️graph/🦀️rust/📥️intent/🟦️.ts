@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
-export type RustBuildFallbackAdapterV1="foreign-source"|"binary"|"proc-macro"|"build-script"|"build-script-run";
-const fallbackAdapters:readonly RustBuildFallbackAdapterV1[]=["foreign-source","binary","proc-macro","build-script","build-script-run"];
+export type RustBuildFallbackAdapterV1="foreign-source"|"binary"|"proc-macro"|"build-script"|"build-script-run"|"effective-profile";
+const fallbackAdapters:readonly RustBuildFallbackAdapterV1[]=["foreign-source","binary","proc-macro","build-script","build-script-run","effective-profile"];
 export interface RustBuildIntentV1 {
  version:1;
  manifest:string;
@@ -21,7 +21,7 @@ export function readRustBuildIntentV1(value:unknown):RustBuildIntentV1{
  if(row.scope==="binary"?!name(row.binary):Object.hasOwn(row,"binary"))return fail();
  if(Object.hasOwn(row,"target")&&!name(row.target)||Object.hasOwn(row,"defaultFeatures")&&typeof row.defaultFeatures!=="boolean")return fail();
  if(Object.hasOwn(row,"features")&&(!Array.isArray(row.features)||row.features.length<1||row.features.length>128||new Set(row.features).size!==row.features.length||row.features.some(feature=>typeof feature!=="string"||feature.length<1||feature.length>128||!/^[A-Za-z0-9_][A-Za-z0-9_./?-]*$/u.test(feature)||/[\u0000-\u0020]/u.test(feature))))return fail();
- if(Object.hasOwn(row,"fallback")){const fallback=row.fallback as Record<string,unknown>;if(!fallback||typeof fallback!=="object"||Array.isArray(fallback)||Object.keys(fallback).sort().join(",")!=="adapters,kind"||fallback.kind!=="bounded-cargo"||!Array.isArray(fallback.adapters)||fallback.adapters.length<1||fallback.adapters.length>5||new Set(fallback.adapters).size!==fallback.adapters.length||fallback.adapters.some(adapter=>!fallbackAdapters.includes(adapter)))return fail();}
+ if(Object.hasOwn(row,"fallback")){const fallback=row.fallback as Record<string,unknown>;if(!fallback||typeof fallback!=="object"||Array.isArray(fallback)||Object.keys(fallback).sort().join(",")!=="adapters,kind"||fallback.kind!=="bounded-cargo"||!Array.isArray(fallback.adapters)||fallback.adapters.length<1||fallback.adapters.length>fallbackAdapters.length||new Set(fallback.adapters).size!==fallback.adapters.length||fallback.adapters.some(adapter=>!fallbackAdapters.includes(adapter)))return fail();}
  return {version:1,manifest:row.manifest,package:row.package as string,scope:row.scope as RustBuildIntentV1["scope"],...(Object.hasOwn(row,"binary")?{binary:row.binary as string}:{}),...(Object.hasOwn(row,"features")?{features:[...row.features as string[]]}:{}),...(Object.hasOwn(row,"defaultFeatures")?{defaultFeatures:row.defaultFeatures as boolean}:{}),...(Object.hasOwn(row,"target")?{target:row.target as string}:{}),...(Object.hasOwn(row,"fallback")?{fallback:{kind:"bounded-cargo" as const,adapters:[...(row.fallback as {adapters:RustBuildFallbackAdapterV1[]}).adapters]}}:{})};
 }
 
@@ -38,7 +38,7 @@ export function qualifyRustBuildFallbackV1(value:RustBuildIntentV1,unsupported:r
  if(!unsupported.length)return;
  if(!value.fallback)throw Error("Selected Rust bounded fallback was not declared");
  const intent=readRustBuildIntentV1(value),allowed=intent.fallback!.adapters,adapters=new Set<RustBuildFallbackAdapterV1>();
- for(const row of unsupported){if(!row.unit||!Array.isArray(row.adapters)||row.adapters.length<1||row.adapters.length>5||new Set(row.adapters).size!==row.adapters.length)throw Error("Typed Rust bounded fallback adapters required");for(const adapter of row.adapters){if(!allowed.includes(adapter as RustBuildFallbackAdapterV1))throw Error("Selected Rust bounded fallback adapter refused: "+adapter);adapters.add(adapter as RustBuildFallbackAdapterV1);}}
+ for(const row of unsupported){if(!row.unit||!Array.isArray(row.adapters)||row.adapters.length<1||row.adapters.length>fallbackAdapters.length||new Set(row.adapters).size!==row.adapters.length)throw Error("Typed Rust bounded fallback adapters required");for(const adapter of row.adapters){if(!allowed.includes(adapter as RustBuildFallbackAdapterV1))throw Error("Selected Rust bounded fallback adapter refused: "+adapter+" (unit "+row.unit+")");adapters.add(adapter as RustBuildFallbackAdapterV1);}}
  return {version:1,intentDigest:createHash("sha256").update(JSON.stringify(intent)).digest("hex"),adapters:[...adapters].sort()};
 }
 

@@ -54,10 +54,10 @@ export type PlatformKeybinding = GeneratedPlatformKeybinding;
 /** 🧰️ The framework-owned action id apps dispatch to activate a utility — mirrors `SET_ACTIVE_UTILITY_ACTION_ID`. */
 export const SET_ACTIVE_UTILITY_ACTION_ID = "setActiveUtility";
 
-/** 🛠️ The framework-owned action id apps dispatch to activate a mode-level tool — mirrors Rust `SET_ACTIVE_TOOL_ACTION_ID`. */
+/** 🔧️ The framework-owned action id apps dispatch to activate a mode-level tool — mirrors Rust `SET_ACTIVE_TOOL_ACTION_ID`. */
 export const SET_ACTIVE_TOOL_ACTION_ID = "setActiveTool";
 
-/** 🕹️ The six framework-owned Interaction action ids (`interaction_action_definitions`), auto-injected
+/** 🖱️ The six framework-owned Interaction action ids (`interaction_action_definitions`), auto-injected
  * into any app that declares at least one `InteractionDefinition` — mirrors `HISTORY_ACTION_IDS`.
  * `interactionSelect`/`interactionHover` are raw dispatch verbs renderers translate clicks/marquee/
  * hover into (never in the palette); the rest are user-facing and drive the per-domain Select controls. */
@@ -91,10 +91,10 @@ export type DialogDefinition = GeneratedDialogDefinition;
 /** 🔀️ Generated from Rust `DialogChoice` — one decision button of a {@link DialogDefinition}. */
 export type DialogChoice = GeneratedDialogChoice;
 
-/** 🔀️ The arg key a {@link DialogChoice} dispatch carries its own id under — mirrors Rust `DIALOG_CHOICE_ARG`. */
+/** ⌨️ The arg key a {@link DialogChoice} dispatch carries its own id under — mirrors Rust `DIALOG_CHOICE_ARG`. */
 export const DIALOG_CHOICE_ARG = "choice";
 
-/** 📤️ The dispatch args of `choice`: the seed context of `effective` (keys no arg of `defs` declares), the args the choice requires, and {@link DIALOG_CHOICE_ARG} naming it — the twin of Rust `DialogChoice::dispatch_args`. */
+/** 💬️ The dispatch args of `choice`: the seed context of `effective` (keys no arg of `defs` declares), the args the choice requires, and {@link DIALOG_CHOICE_ARG} naming it — the twin of Rust `DialogChoice::dispatch_args`. */
 export function dialogChoiceArgs(choice: DialogChoice, defs: readonly ActionArgDef[], effective: Readonly<Record<string, unknown>>): Record<string, unknown> {
   const requires = choice.requires ?? [];
   const kept = Object.entries(effective).filter(([key]) => key !== DIALOG_CHOICE_ARG && (requires.includes(key) || !defs.some((def) => def.id === key)));
@@ -115,7 +115,7 @@ export type ShellBrandLocks = {
   readonly appearance?: string;
 };
 
-/** 🎛️ Shell preferences a brand seeds at boot without pinning them: the value applies on first launch but the in-app switcher stays visible. */
+/** 🎨️ Shell preferences a brand seeds at boot without pinning them: the value applies on first launch but the in-app switcher stays visible. */
 export type ShellBrandDefaults = {
   readonly exampleId?: string;
 };

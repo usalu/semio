@@ -164,7 +164,6 @@ pub mod standards {
                 }
                 #[path = "."]
                 pub mod io {
-                    pub use semio_s_artifact_gis_gismap_gismap::standards::v1::subsets::any::io::*;
                     #[cfg(test)]
                     #[path = "../../../../../../../🚪️io/🧪️tests/🔬️unit/🦀️.rs"]
                     pub mod tests;

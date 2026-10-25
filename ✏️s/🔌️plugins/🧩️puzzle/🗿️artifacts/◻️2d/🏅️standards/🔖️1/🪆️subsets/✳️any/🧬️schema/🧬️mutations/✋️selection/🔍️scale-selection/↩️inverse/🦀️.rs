@@ -18,15 +18,15 @@ pub fn inverse<Op: From<ScaleSelection> + From<MoveNode> + From<MoveTargetRegion
     let mut steps = Vec::new();
     for node in &selection.nodes {
         if cx + (node.x - cx) * factor != node.x || cy + (node.y - cy) * factor != node.y {
-            steps.push(move_node(node.id.clone(), node.x, node.y));
+            steps.push(move_node::move_node::<Op>(node.id.clone(), node.x, node.y));
         }
     }
     for region in &selection.regions {
         if cx + (region.x - cx) * factor != region.x || cy + (region.y - cy) * factor != region.y {
-            steps.push(move_target_region(region.id.clone(), region.x, region.y));
+            steps.push(move_target_region::move_target_region::<Op>(region.id.clone(), region.x, region.y));
         }
         if region.width * factor != region.width || region.height * factor != region.height {
-            steps.push(resize_target_region(region.id.clone(), region.width, region.height));
+            steps.push(resize_target_region::resize_target_region::<Op>(region.id.clone(), region.width, region.height));
         }
     }
     Ok(steps)

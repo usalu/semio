@@ -214,7 +214,8 @@
     "./modules/renderer/engine/testing/interactivity-mounted-engine-surface-lifetime": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧪️testing/🔬️interactivity-mounted-engine-surface-lifetime/🟦️.ts",
     "./modules/renderer/engine/testing/interactivity-mounted-frame-transaction": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧪️testing/🔬️interactivity-mounted-frame-transaction/🟦️.ts",
     "./testing/fixtures/directory/command-receipt-v1.json": "./🧪️testing/🧫️fixtures/📇️directory/🔣️json/command-receipt-v1/🟦️.ts",
-    "./testkit/renderer-host/backbone-codec": "./🧪️testkit/🖥️renderer-host/📡️backbone-codec/🟦️.ts"
+    "./testkit/renderer-host/backbone-codec": "./🧪️testkit/🖥️renderer-host/📡️backbone-codec/🟦️.ts",
+    "./modules/flow/wasm/browser/publication/bootstrap": "./🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🌱️bootstrap/🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/compiler-syntax-rust-ts": "workspace:*",

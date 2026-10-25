@@ -53,7 +53,7 @@ impl Aabb {
         (0..3).map(|k| (self.min[k] - other.max[k]).max(other.min[k] - self.max[k]).max(0.0).powi(2)).sum::<f64>().sqrt()
     }
 
-    /// 🎯️ Centre of the box.
+    /// 🗃️ Centre of the box.
     pub fn centre(&self) -> Xyz {
         scale3(add3(self.min, self.max), 0.5)
     }
@@ -75,7 +75,7 @@ impl Aabb {
     }
 }
 
-/// 📦️ Bounds of all vertices of a mesh; `None` when it has none.
+/// 🔲️ Bounds of all vertices of a mesh; `None` when it has none.
 pub fn mesh_aabb(mesh: &TriMesh) -> Option<Aabb> {
     mesh.bounds().map(|(min, max)| Aabb { min, max })
 }
@@ -134,7 +134,7 @@ impl Bvh {
         Self { nodes, order }
     }
 
-    /// 📦️ Bounds of all triangles; `None` when empty.
+    /// 🔳️ Bounds of all triangles; `None` when empty.
     pub fn bounds(&self) -> Option<Aabb> {
         self.nodes.first().map(|n| n.aabb)
     }
@@ -220,7 +220,7 @@ fn interval(points: &[Xyz], dir: Xyz) -> ((f64, Xyz), (f64, Xyz)) {
     (ends[0], *ends.last().unwrap())
 }
 
-/// 🎯️ All points of the contact between two triangles, or `None` when they do not touch or either is degenerate (twice the area at most `1e-18`).
+/// 📇️ All points of the contact between two triangles, or `None` when they do not touch or either is degenerate (twice the area at most `1e-18`).
 ///
 /// Non-coplanar triangles touch in a segment (two points, equal for a point touch); coplanar overlapping triangles touch in a convex polygon whose vertices are returned (one to six points).
 /// Planes closer than `1e-10` count as coincident.
@@ -352,7 +352,7 @@ fn closest_between_segments(p1: Xyz, q1: Xyz, p2: Xyz, q2: Xyz) -> (Xyz, Xyz) {
     (lerp(p1, q1, s), lerp(p2, q2, t))
 }
 
-/// 📏️ Minimum distance between two triangles and the closest point on each (`0` with the contact-segment midpoint twice when they intersect).
+/// 🔻️ Minimum distance between two triangles and the closest point on each (`0` with the contact-segment midpoint twice when they intersect).
 ///
 /// Disjoint triangles attain the minimum at a vertex-face or an edge-edge pair, so exactly those twelve candidates are compared; degenerate triangles degrade to segments and points.
 pub fn triangle_distance(a: [Xyz; 3], b: [Xyz; 3]) -> (f64, Xyz, Xyz) {
@@ -389,7 +389,7 @@ pub enum ClashKind {
     Clearance,
 }
 
-/// 💥️ One clash between two meshes: `distance` is `-(penetration extent)` for [`ClashKind::Hard`] and the positive gap for [`ClashKind::Clearance`]; `pairs` counts intersecting triangle pairs.
+/// 🕸️ One clash between two meshes: `distance` is `-(penetration extent)` for [`ClashKind::Hard`] and the positive gap for [`ClashKind::Clearance`]; `pairs` counts intersecting triangle pairs.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct MeshClash {
     pub kind: ClashKind,
@@ -530,7 +530,7 @@ fn nearest(a: &Bvh, am: &TriMesh, b: &Bvh, bm: &TriMesh, limit: f64, cancel: &dy
     Ok(found)
 }
 
-/// 💥️ Clash between two meshes with their prebuilt hierarchies; `None` when there is none or when `cancel` returned `true`.
+/// 🪜️ Clash between two meshes with their prebuilt hierarchies; `None` when there is none or when `cancel` returned `true`.
 ///
 /// 1. Every intersecting triangle pair is collected. The intersection set is the contact points of all pairs plus every vertex of either mesh that lies strictly inside the other (so a wall sunk into a slab keeps its embedded end; without it the crossing loop alone is flat). The AABB of that set gives the penetration extent (its smallest axis extent). Hard iff `pairs > 0` and extent `> max(tolerance, 1e-9)` with `distance = -extent`, `point` the box centre and `bounds` that box; touching surfaces within the tolerance yield `None`, also for the clearance check (their distance is `0`).
 /// 2. Without crossing surfaces a +x parity ray from one vertex tests whether either closed mesh lies inside the other; a contained mesh is Hard with its own smallest AABB extent, centre and bounds.

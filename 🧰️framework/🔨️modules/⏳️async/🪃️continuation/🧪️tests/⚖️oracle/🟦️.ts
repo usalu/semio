@@ -85,7 +85,7 @@ export type ContinuationRequestCase = Readonly<{
   cancelAtMs?: number;
 }>;
 
-/** 🧫️ One language-agnostic scheduling law: what was asked for, in what order it must run, and at
+/** ⚖️ One language-agnostic scheduling law: what was asked for, in what order it must run, and at
  * what millisecond the last callback must land. */
 export type ContinuationCase = Readonly<{
   name: string;
@@ -128,7 +128,7 @@ export const runContinuationCase = (testCase: ContinuationCase): ContinuationCas
   return { order, completionMs };
 };
 
-/** ▶️ The same case on the REAL host event loop — the platform's own continuation queue and
+/** 🔁️ The same case on the REAL host event loop — the platform's own continuation queue and
  * `setTimeout`, no virtual clock anywhere. It is the independent oracle for
  * {@link runContinuationCase}: if the browser/node event loop and our virtual model disagree about a
  * declared law, the law is wrong. Resolves once every expected callback has run, or rejects at

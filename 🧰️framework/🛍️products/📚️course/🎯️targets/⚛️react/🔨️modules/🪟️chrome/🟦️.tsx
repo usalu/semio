@@ -137,7 +137,7 @@ export function Glyph(props: { readonly emoji: string; readonly className?: stri
   );
 }
 
-/** 🎯️ What an icon plays for: its host — the element it stands in (marked `data-icon-host`: a chip, a row, a value
+/** 🖥️ What an icon plays for: its host — the element it stands in (marked `data-icon-host`: a chip, a row, a value
  * card, a bin's heading, a task button) or the title chip of its card. Hosts never nest. A pointer that hovers a host
  * (desktop) or a keyboard focus on or inside it loops its icons; a tap on it (tablet, phone) plays them once. */
 export const ICON_HOSTS = '[data-icon-host], [data-slot="course-card-title-chip"]';
@@ -259,7 +259,7 @@ export const TABLE = {
   cell: { role: "cell" },
 } as const;
 
-/** 🗃️ The frame of a table that folds into records in a card narrower than `fold` rem: its container and, should the
+/** 🗄️ The frame of a table that folds into records in a card narrower than `fold` rem: its container and, should the
  * unfolded table still be wider than it, its sideways scroll. */
 export function Records(props: { readonly fold: number; readonly children: ReactNode } & Pick<HTMLAttributes<HTMLDivElement>, "className" | "role" | "tabIndex" | "aria-labelledby" | "aria-describedby">): ReactElement {
   const { fold, children, className, ...rest } = props;
@@ -281,7 +281,7 @@ export interface Segment<T extends string> {
   readonly glyph?: string;
 }
 
-/** 🎚️ A segmented choice: one pressed button per option inside a named group. Every option shows an icon and its
+/** 🍱️ A segmented choice: one pressed button per option inside a named group. Every option shows an icon and its
  * label — a course icon, or the emoji a quiz already carries. A short label still gets a target 24 px wide
  * (WCAG 2.2 SC 2.5.8). */
 export function Segments<T extends string>(props: { readonly label: string; readonly options: readonly Segment<T>[]; readonly value: T | undefined; readonly onChange: (value: T) => void }): ReactElement {
@@ -342,7 +342,7 @@ export interface Problem {
   readonly detail?: string;
 }
 
-/** 🚫️ A {@link Problem} as an alert: the sentence, the technical detail collapsed and marked as English, and what the
+/** 📓️ A {@link Problem} as an alert: the sentence, the technical detail collapsed and marked as English, and what the
  * learner can do about it (`children`). */
 export function ProblemNote(props: { readonly problem: Problem; readonly text: CourseText; readonly id?: string; readonly className?: string; readonly children?: ReactNode }): ReactElement {
   const { problem, text } = props;

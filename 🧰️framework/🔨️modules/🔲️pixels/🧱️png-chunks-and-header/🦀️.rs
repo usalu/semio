@@ -26,7 +26,7 @@ pub(super) fn read_chunks(data: &[u8]) -> Result<Vec<PngChunk<'_>>, String> {
     read_chunks_from(data, 8)
 }
 
-/// 📖️ [`read_chunks`] from an arbitrary chunk boundary `pos` through `IEND`.
+/// 📍️ [`read_chunks`] from an arbitrary chunk boundary `pos` through `IEND`.
 pub(super) fn read_chunks_from(data: &[u8], mut pos: usize) -> Result<Vec<PngChunk<'_>>, String> {
     let mut chunks = Vec::new();
     loop {

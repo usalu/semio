@@ -21,10 +21,10 @@ export async function runTreeRetirementScript(context: Readonly<{ root: string; 
   console.log(`runtime-tree exact native laws:${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
 }
 
-/** 🏃️ Runs the `NativeMeshReceivingSourceScript` command under the caller's roots and invocation. */
+/** 🧲️ Runs the `NativeMeshReceivingSourceScript` command under the caller's roots and invocation. */
 export async function runNativeMeshReceivingSourceScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args:string[]): Promise<void> {if(args.length)throw Error("Native mesh receiving source accepts no arguments");const sources=[resolve(context.root,"../../../🎬️scene/📐️math/📦️resource/📥️receiving/🧪️tests/🟦️.ts"),resolve(context.root,"../../🎭️present/📦️resources/📤️transport/📨️message/🧪️tests/🟦️.ts")];const remaining=context.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Native mesh receiving source requires finite original authority");for(const command of [[resolveTypescriptCompilerV1(context.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun,node",...sources],["test",...sources]])await runOwnedCommand(process.execPath,command,context.repoRoot,"ui-runtime:native-mesh-receiving:source",Math.min(remaining,30000),{signal:context.invocation.control.signal});}
 
-/** 🏃️ Runs the `NativeResourceScript` command under the caller's roots and invocation. */
+/** 📜️ Runs the `NativeResourceScript` command under the caller's roots and invocation. */
 export async function runNativeResourceScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
   if (segments.length) throw Error("Native resource custody requires its exact original selection");
   const left = context.invocation.control.remainingMilliseconds();

@@ -34,7 +34,7 @@ export function schemaModuleDirName(repoRoot: string): string {
 }
 
 /**
- * 🧬️ The one JSON Schema dialect this repository speaks, as the taxonomy states it.
+ * 🦑️ The one JSON Schema dialect this repository speaks, as the taxonomy states it.
  *
  * Restating the dialect string here would make this file a second authority on it: the day the
  * taxonomy moves the tree to another draft, a constant compiled into the harness keeps reporting
@@ -140,16 +140,16 @@ export const SCHEMA_DIAGNOSTIC_CODE_TABLE = {
   "schema-instance-invalid": { emitters: ["harness"], description: "an instance fails structural validation against the export it was bound to" },
 } as const;
 
-/** 🔠️ Every diagnostic in the shared vocabulary, in table order. A distinct code per distinguishable failure. */
+/** 📊️ Every diagnostic in the shared vocabulary, in table order. A distinct code per distinguishable failure. */
 export const SCHEMA_DIAGNOSTIC_CODES = Object.keys(SCHEMA_DIAGNOSTIC_CODE_TABLE) as readonly (keyof typeof SCHEMA_DIAGNOSTIC_CODE_TABLE)[];
 export type SchemaDiagnosticCode = keyof typeof SCHEMA_DIAGNOSTIC_CODE_TABLE;
 
-/** 🏭️ The codes one emitter raises, as a type. `schemaDiagnostic` takes the harness half, so a code
+/** ⚠️ The codes one emitter raises, as a type. `schemaDiagnostic` takes the harness half, so a code
  * only `schema check` can raise is a compile error here rather than a finding no rule produces. */
 export type SchemaDiagnosticCodeEmittedBy<E extends SchemaDiagnosticEmitter> = { [K in SchemaDiagnosticCode]: E extends (typeof SCHEMA_DIAGNOSTIC_CODE_TABLE)[K]["emitters"][number] ? K : never }[SchemaDiagnosticCode];
 export type SchemaHarnessDiagnosticCode = SchemaDiagnosticCodeEmittedBy<"harness">;
 
-/** 🏭️ The codes one emitter raises, at runtime, in table order. */
+/** 🏓️ The codes one emitter raises, at runtime, in table order. */
 export function schemaDiagnosticCodesEmittedBy(emitter: SchemaDiagnosticEmitter): readonly SchemaDiagnosticCode[] {
   return SCHEMA_DIAGNOSTIC_CODES.filter((code) => (SCHEMA_DIAGNOSTIC_CODE_TABLE[code].emitters as readonly string[]).includes(emitter));
 }
@@ -168,7 +168,7 @@ export type SchemaExportResolution = Readonly<{ uriScheme: string; catalogPath: 
 export type SchemaCatalogScope = Readonly<{ path: string; formats: Readonly<Record<string, string>>; exports: Readonly<Record<string, SchemaCatalogExport>>; dependsOn: readonly string[]; hashes?: Readonly<Record<string, string>> }>;
 
 /**
- * 📚️ One export's row: the module-relative file that CARRIES it, and the facet that file belongs to.
+ * 🗂️ One export's row: the module-relative file that CARRIES it, and the facet that file belongs to.
  *
  * A scope's `formats` names the module root only, and 1 006 of the repository's exports are declared
  * in a facet child (`🔺️diff/`, `📸️snapshot/`, `💡️inferences/`, `🧬️mutations/`). Without a per-export
@@ -178,7 +178,7 @@ export type SchemaCatalogScope = Readonly<{ path: string; formats: Readonly<Reco
  */
 export type SchemaCatalogExport = Readonly<{ file: string; facet: string }>;
 
-/** 📚️ The derived catalog: the single place `(scope id, export id, format id)` is answered from. */
+/** 🏺️ The derived catalog: the single place `(scope id, export id, format id)` is answered from. */
 export type SchemaCatalog = Readonly<{ scopes: Readonly<Record<string, SchemaCatalogScope>> }>;
 
 /** 🎯️ One resolved export — the file a consumer actually reads, pinned by digest. */
@@ -203,7 +203,7 @@ export function rawTaxonomy(repoRoot: string): Record<string, unknown> {
 }
 
 /**
- * 🔣️ Reads the `schema://` resolution declaration out of the taxonomy.
+ * 📖️ Reads the `schema://` resolution declaration out of the taxonomy.
  *
  * The catalog's location is VOCABULARY, not a constant restated here: two places that both know
  * where the catalog lives are two places that can disagree about it. When the taxonomy declares
@@ -222,7 +222,7 @@ export function schemaExportResolution(repoRoot: string): { resolution: SchemaEx
   return { resolution: { uriScheme, catalogPath, uriPattern: typeof uriPattern === "string" ? uriPattern : null }, diagnostics: [] };
 }
 
-/** 🔣️ The normative format of the `🧬️data` facet — the one a bare `schema://` URI resolves to. */
+/** 💠️ The normative format of the `🧬️data` facet — the one a bare `schema://` URI resolves to. */
 export function normativeSchemaFormat(repoRoot: string): string {
   const kinds = rawTaxonomy(repoRoot).schemaFacetKinds as Record<string, { normativeFormat?: string }> | undefined;
   const normative = kinds?.["🧬️data"]?.normativeFormat;
@@ -231,7 +231,7 @@ export function normativeSchemaFormat(repoRoot: string): string {
 }
 
 /**
- * 📚️ Reads the derived catalog from the declared path.
+ * 📂️ Reads the derived catalog from the declared path.
  *
  * It is READ, never searched for: an absent catalog is reported as absent. Walking the tree to find
  * "a file that looks like the catalog" would reintroduce, one layer up, exactly the discovery
@@ -314,14 +314,14 @@ export function parseSchemaUri(uri: string, pattern: string | null = null): { sc
   return scope === undefined || exported === undefined ? null : { scope, export: exported, ...(format === undefined ? {} : { format }) };
 }
 
-/** 🔣️ The catalog format key (`🔗️graphql`) a URI format id (`graphql`) names, or `null` when the taxonomy declares no such format. */
+/** 🗝️ The catalog format key (`🔗️graphql`) a URI format id (`graphql`) names, or `null` when the taxonomy declares no such format. */
 export function schemaFormatKey(repoRoot: string, formatId: string): string | null {
   const formatIds = (rawTaxonomy(repoRoot).schemaExportResolution as { formatIds?: Record<string, string> } | undefined)?.formatIds ?? {};
   return Object.entries(formatIds).find(([, id]) => id === formatId)?.[0] ?? null;
 }
 
 /**
- * 🎯️ Resolves `schema://<scope>/<Export>` to the file one format of that export is written in.
+ * 📄️ Resolves `schema://<scope>/<Export>` to the file one format of that export is written in.
  *
  * Each failure gets its OWN code — malformed URI, unknown scope, unknown export, unavailable format,
  * missing file — because "it did not resolve" is not actionable and every one of those five is.
@@ -390,7 +390,7 @@ function isModuleMemberSegment(segments: readonly string[], index: number, modul
 /** 🏛️ One eligibility verdict for a candidate scope owner directory. */
 export type SchemaScopeEligibility = Readonly<{ path: string; eligible: boolean; level: string | null; reason: string }>;
 
-/** 🏛️ The declared owner levels and exclusions, exactly as the taxonomy states them. */
+/** 🪜️ The declared owner levels and exclusions, exactly as the taxonomy states them. */
 export type SchemaScopeOwnerLevels = Readonly<{ facetDirName: string; levels: Readonly<Record<string, { pathPatterns: readonly string[]; reason: string }>>; excludedOwnerPathPatterns: readonly string[]; fixtureOwnerPathPatterns?: readonly string[]; moduleMemberDirName?: string }>;
 
 export function schemaScopeOwnerLevels(repoRoot: string): SchemaScopeOwnerLevels | null {
@@ -448,14 +448,14 @@ export function submodulePaths(repoRoot: string): ReadonlySet<string> {
   return declared;
 }
 
-/** 📚️ The repository-relative file one scope keeps a format in, or null when it declares none. */
+/** 🛤️ The repository-relative file one scope keeps a format in, or null when it declares none. */
 export function schemaScopeFile(scope: SchemaCatalogScope, format: string): string | null {
   const relative = scope.formats[format];
   return typeof relative === "string" && relative.length > 0 ? `${scope.path}/${relative}` : null;
 }
 
 /**
- * 🎯️ The repository-relative file one EXPORT of a scope is written in, for one format.
+ * 🧾️ The repository-relative file one EXPORT of a scope is written in, for one format.
  *
  * The catalog names the export's normative file outright. Every other format is its sibling in the
  * same facet directory — the facet is what decides which document carries the export, and a format is

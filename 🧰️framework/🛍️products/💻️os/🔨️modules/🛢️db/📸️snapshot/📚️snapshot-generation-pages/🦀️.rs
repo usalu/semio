@@ -8,7 +8,8 @@ pub(super) struct SnapshotPageSink {
 }
 
 impl semio_framework_pack_source::PackSink for SnapshotPageSink {
-    async fn write_all(&mut self, bytes: &[u8]) -> Result<(), pack::PackError> {
+    type Error = DbError;
+    async fn write_all(&mut self, bytes: &[u8]) -> Result<(), DbError> {
         let mut cursor = 0;
         while cursor < bytes.len() {
             let written = self.writer.write_fragment(&bytes[cursor..])?;

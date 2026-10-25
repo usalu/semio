@@ -284,24 +284,37 @@ impl InteractiveJob for LayoutImportJob {
 impl ArtifactReservedJob for LayoutImportJob {}
 //#endregion 🎞️ReservedImport
 
-pub(super) fn layout_build_export_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<LayoutPlayApp>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+pub(super) fn layout_build_export_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<LayoutPlayApp>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    use semio_framework_plugin::__value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
     use semio_s_artifact_layout_layout_engine_export::{LayoutExportKind, LayoutExportRequest};
-    let (kind, page_id) = match *request.command {
-        LayoutCommand::ExportPng(payload) => (LayoutExportKind::Png, payload.page_id.or_else(|| Some(blueprint::config::from_snapshot(request.window_config.as_ref()).active_page_id))),
-        LayoutCommand::ExportSvg(payload) => (LayoutExportKind::Svg, payload.page_id.or_else(|| Some(blueprint::config::from_snapshot(request.window_config.as_ref()).active_page_id))),
-        LayoutCommand::ExportPdf(payload) => (LayoutExportKind::Pdf, payload.page_id),
+    let original = request.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original layout export request is absent"))?;
+    let (kind, page_id) = match &*original.command {
+        LayoutCommand::ExportPng(payload) => (LayoutExportKind::Png, payload.page_id.clone().or_else(|| Some(blueprint::config::from_snapshot(original.window_config.as_ref()).active_page_id))),
+        LayoutCommand::ExportSvg(payload) => (LayoutExportKind::Svg, payload.page_id.clone().or_else(|| Some(blueprint::config::from_snapshot(original.window_config.as_ref()).active_page_id))),
+        LayoutCommand::ExportPdf(payload) => (LayoutExportKind::Pdf, payload.page_id.clone()),
         LayoutCommand::ExportPackage(_) => (LayoutExportKind::Package, None),
-        _ => return Ok(None),
+        _ => return Ok(false),
     };
-    if request.tool_id != kind.tool_id() {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "layout export command does not match its exact registered tool"));
+    if original.tool_id != kind.tool_id() {
+        return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "layout export command does not match its exact registered tool").into());
     }
-    let canonical_base_revision_hex = request.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join("");
-    drop(request.output_chunks);
-    let payload = LayoutExportToolPayload {
-        request: LayoutExportRequest { kind, page_id, snapshot: request.snapshot, preflight_json: None, parent_document_id: request.parent_document_id, canonical_base_revision_hex },
-        output_chunks: semio_framework_plugin::app::ArtifactOutputChunks::new(semio_s_artifact_layout_layout_engine_export::MAX_LAYOUT_EXPORT_OUTPUT_BYTES),
-        completion: Some(request.completion),
-    };
-    Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    if original.checkpoint.is_some() || original.input.as_ref().is_some_and(|input| input.declared_bytes() > MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES) {
+        return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "layout export retained ingress rejects a checkpoint or an oversized command").into());
+    }
+    let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: std::mem::size_of::<LayoutExportToolJob>() + std::mem::size_of::<LayoutExportToolPayload>(), release_bytes: 0, depth: 1 };
+    semio_framework::action_bus::admit_original_tool_construction(cx, output, demand, |_| {
+        let mut taken = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original layout export request is absent"))?;
+        let canonical_base_revision_hex = taken.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join("");
+        drop(taken.output_chunks);
+        let payload = LayoutExportToolPayload {
+            request: LayoutExportRequest { kind, page_id, snapshot: taken.snapshot, preflight_json: None, parent_document_id: taken.parent_document_id, canonical_base_revision_hex },
+            output_chunks: semio_framework_plugin::app::ArtifactOutputChunks::new(semio_s_artifact_layout_layout_engine_export::MAX_LAYOUT_EXPORT_OUTPUT_BYTES),
+            completion: Some(taken.completion),
+        };
+        let job = match taken.input.take() {
+            Some(input) => LayoutExportToolJob::from_wire_payload(taken.operation, payload, input).map_err(|error| ValueError::new(ValueRefusalKind::AllocationFailed, error.detail))?,
+            None => LayoutExportToolJob::from_payload(taken.operation, payload),
+        };
+        Ok((semio_framework_plugin::ErasedToolJob::from_owned(Box::new(job)), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: std::mem::size_of::<LayoutExportToolJob>(), ..Default::default() }))
+    })
 }

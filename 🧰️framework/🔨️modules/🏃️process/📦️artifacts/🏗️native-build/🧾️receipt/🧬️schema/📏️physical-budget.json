@@ -2,15 +2,27 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/framework/process/native-build/provenance-physical-budget/v1",
   "title": "Cargo Provenance Physical Observation Budget",
-  "description": "Finite physical observation budget of one completed Cargo invocation: a full release graph digests several hundred MiB of artifacts and tens of thousands of inputs once, copies the retained compiler closure, then rechecks every retained file before publication. Measured for the descriptor emitter closure (about 1 GB read, 126k work units, 757 MB retained): 100-200 s on an idle host, more than 600 s on a host at load 20 with several concurrent Cargo builds; the deadline is the stall ceiling of that phase (cancellation and progress stay live), three times the slowest measurement.",
+  "description": "Finite physical observation budget of one completed Cargo invocation: a full release graph digests several hundred MiB of artifacts and tens of thousands of inputs once, copies the retained compiler closure, then rechecks every retained file before publication. Measured for the descriptor emitter closure (about 1 GB read, 126k work units, 757 MB retained): 100-200 s on an idle host, more than 600 s on a host at load 20 with several concurrent Cargo builds. The time limit of this phase is not declared here: it is the `native-observation` class of the progress-deadline law (budget schema `ProgressDeadlinePolicy`): an idle window renewed by every finished observation step inside a generous maximum derived from the number of component invocations, counting only active observation time (a gap longer than the declared phase gap between two checks, such as a compile that ran for an hour between the control being issued and the final recheck, starts a new phase instead of spending the maximum).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "maxBytes", "maxWork", "chunkBytes", "deadlineMs"],
+  "required": [
+    "version",
+    "maxBytes",
+    "maxWork",
+    "chunkBytes"
+  ],
   "properties": {
-    "version": {"const": 1},
-    "maxBytes": {"const": 17179869184},
-    "maxWork": {"const": 4194304},
-    "chunkBytes": {"const": 1048576},
-    "deadlineMs": {"const": 1800000}
+    "version": {
+      "const": 1
+    },
+    "maxBytes": {
+      "const": 17179869184
+    },
+    "maxWork": {
+      "const": 4194304
+    },
+    "chunkBytes": {
+      "const": 1048576
+    }
   }
 }

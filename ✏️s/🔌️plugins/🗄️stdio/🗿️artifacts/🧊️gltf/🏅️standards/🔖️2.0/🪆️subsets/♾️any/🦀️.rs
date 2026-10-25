@@ -100,7 +100,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<GltfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = protocol::Mutation::diff(&mutation, &self.snapshot);
+            let outcome = protocol::ColdMutation::diff(&mutation, &self.snapshot);
             if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
                 self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.gltf.mutation-rejected", semio_framework_diagnostic::TextSpan::at(1, 1), format!("{:?}", outcome.messages())));
             }

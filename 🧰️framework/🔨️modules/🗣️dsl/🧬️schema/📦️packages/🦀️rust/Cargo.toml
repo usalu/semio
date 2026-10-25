@@ -68,6 +68,10 @@ name = "optional_field"
 path = "../../🧪️tests/🪆️optional-field/🦀️.rs"
 
 [[test]]
+name = "ordered_map_field"
+path = "../../🧪️tests/🗺️ordered-map-field/🦀️.rs"
+
+[[test]]
 name = "typed_receiving"
 path = "../../🫴️receiving/🧪️tests/🦀️.rs"
 

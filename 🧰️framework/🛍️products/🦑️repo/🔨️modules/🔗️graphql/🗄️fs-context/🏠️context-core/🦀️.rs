@@ -1,4 +1,4 @@
-//! 🏠️ Context core of the production context: the filesystem repo context, its construction, accessors, wiring of the ticket, goal and todo aggregates and its readers. See [`super`].
+//! 🏛️ Context core of the production context: the filesystem repo context, its construction, accessors, wiring of the ticket, goal and todo aggregates and its readers. See [`super`].
 
 use super::*;
 

@@ -23,9 +23,9 @@ import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/
 import {requestedCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {buildBudgetMs} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import {buildWasmWebV1,type WasmPackWebBuildOptions,type WasmBuildPolicyV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import { runtimeSupportsV1 } from "../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeParseTomlV1 } from "../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
-import { runtimeWhichV1 } from "../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { runtimeSupportsV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
+import { runtimeWhichV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 /** 📦️ Resolves the caller-selected pinned binding generator. */
 export function resolveWasmBindgenBin(repoRoot = getWorkspaceRoot(), env: NodeJS.ProcessEnv = process.env): string {
   const version = wasmBindgenVersion(readFileSync(join(repoRoot, "Cargo.lock"), "utf8"));
@@ -59,7 +59,7 @@ export function wasmPackEnvironment(repoRoot: string, bindgen: string, env: Node
   return environment;
 }
 
-/** 🧭️ Authors tools and compiler stores from one explicit child environment. */
+/** 🔨️ Authors tools and compiler stores from one explicit child environment. */
 export function repositoryWasmBuildPolicyV1(cwd: string, compilerEnvironment: Readonly<Record<string,string|undefined>> = process.env): WasmBuildPolicyV1 {
   const mode = readBuildMode(compilerEnvironment.SEMIO_BUILD_MODE), root = getWorkspaceRoot(compilerEnvironment), bindgen = resolveWasmBindgenBin(root, compilerEnvironment), environment = wasmPackEnvironment(root, bindgen, compilerEnvironment), local = resolveWorkspaceBin("wasm-pack", cwd);
   const cargo = runtimeParseTomlV1(readFileSync(join(cwd, "Cargo.toml"), "utf8")) as { package?: { name?: string } };

@@ -72,7 +72,7 @@ export function runBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = pro
   runCmd(process.execPath, bunArgsForVite(args), { cwd, env });
 }
 
-/** 🥖️Runs `bunx` synchronously in `cwd`, returning status code. */
+/** 🚥️Runs `bunx` synchronously in `cwd`, returning status code. */
 export function runBunxStatus(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): number {
   const result = spawnSync(process.execPath, bunxCmdArgs(args, cwd), { cwd, env, shell: false, stdio: "inherit" });
   if (result.error) {
@@ -82,13 +82,13 @@ export function runBunxStatus(args: string[], cwd: string, env: NodeJS.ProcessEn
   return result.status ?? 1;
 }
 
-/** 🥖️Runs `bunx` synchronously in `cwd`. */
+/** 🍞️Runs `bunx` synchronously in `cwd`. */
 export function runBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
   const status = runBunxStatus(args, cwd, env);
   if (status !== 0) process.exit(status);
 }
 
-/** 🥖️Spawns `bunx` asynchronously; exits with child code. */
+/** 🆕️Spawns `bunx` asynchronously; exits with child code. */
 export function spawnBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): Promise<void> {
   return spawnPackageCli(process.execPath, bunxCmdArgs(args, cwd), cwd, env);
 }
@@ -108,7 +108,7 @@ function spawnPackageCli(runtime: string, args: string[], cwd: string, env: Node
   });
 }
 
-/** 🥖️Spawns `bun` asynchronously; exits with child code. */
+/** 🐇️Spawns `bun` asynchronously; exits with child code. */
 export function spawnBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
   const child = spawn(process.execPath, bunArgsForVite(args), { cwd, env, shell: false, stdio: "inherit", windowsHide: true });
   child.on("exit", (code) => process.exit(code ?? 0));

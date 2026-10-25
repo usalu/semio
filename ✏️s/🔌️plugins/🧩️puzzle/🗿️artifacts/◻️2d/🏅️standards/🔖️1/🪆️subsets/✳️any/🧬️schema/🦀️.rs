@@ -6,7 +6,9 @@ use semio_framework_value::paged::PagedUtf8;
 
 use ::semio_framework_schema::ArtifactSchema;
 
-pub use semio_s_artifact_puzzle_2d_graph_manifest::standards::v1::subsets::any::schema::graph_manifest;
+pub mod graph_manifest {
+    pub use semio_s_artifact_puzzle_2d_graph_manifest::*;
+}
 
 //#region 🔖️Artifact
 /// 🧬️ puzzle2d document artifact state.

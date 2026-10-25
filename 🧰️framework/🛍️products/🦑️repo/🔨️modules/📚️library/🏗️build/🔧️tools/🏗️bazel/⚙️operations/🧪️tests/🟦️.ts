@@ -12,17 +12,18 @@ import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️module
 import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {bazelBuildCacheToolV1,bazelBuildEventsFileV1,bazelBuildMetricsV1,bazelDryRunPlanV1,bazelEmptyPlanV1,clearBazelDiskCacheV1,clearBazelServerBasesV1,measureBazelDiskCacheV1,readBazelLedgerV1,recordBazelBuildMetricsV1} from "../🟦️.ts";
 import {bazelCacheLayoutV1} from "../../💾️storage/🟦️.ts";
-import {bazelTaskBaseEnvironmentV1,planBazelTasksV1} from "../../📜️script.ts";
+import {planBazelTasksV1} from "../../📜️script.ts";
+import {bazelTaskBaseEnvironmentV1} from "../../🎬️executor/🟦️.ts";
 import type {BazelTaskV1} from "../../📋️task-plan/🟦️.ts";
 import {affectedBuildProjectsV1,selectBuildTasksV1} from "../../../../🧭️selection/🟦️.ts";
 import {buildExecPlanV1} from "../../../../⚙️operations/🟦️.ts";
 import {buildExecEnvironmentV1} from "../../../../⚙️operations/🌱️exec-environment/🟦️.ts";
-import type {BuildGraphV1} from "../../../../🕸️graph/🟦️.ts";
+import type { BuildGraphV1 } from "../../../../🕸️graph/📋️model/🟦️.ts";
 import neutral from "../../../../⚙️operations/🧬️schema/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
-const root=join(import.meta.dir,"../../../../../../../../../..").replace(/[\\/]+$/u,""),installed=createRequire(join(root,"package.json")),posix=process.platform!=="win32";
+const root=join(import.meta.dir,"../../../../../../../../../..").replace(/[\\/]+$/u,""),installed=createRequire(join(root,".nx/installation/package.json")),posix=process.platform!=="win32";
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),compile=(source:{$schema:string;definitions:object},definition:string)=>ajv.compile({$schema:source.$schema,definitions:source.definitions,$ref:`#/definitions/${definition}`});
 const dryRun=compile(neutral,"DryRunPlan"),cacheStatus=compile(neutral,"CacheStatus"),cacheClear=compile(neutral,"CacheClear"),execEnvironment=compile(neutral,"ExecEnvironment");
 

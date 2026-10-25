@@ -13,7 +13,7 @@ export type Controls = { readonly mood: Mood; readonly intensity: number; readon
 /** 🖌️ One specimen as the studio paints it: `paint` draws it at a tick of the gallery's clock for the pointer and the controls, its stage lying at `corner` in the viewport; `end` takes its drawing away. */
 type Painting = { readonly paint: (ticks: number, pointer: Point | null, corner: Point, controls: Controls) => void; readonly end: () => void };
 
-/** 🎬️ The clock of the species view: a stage that entered gets its painting built when it first comes into view, and painted on every animation frame while it is in view. */
+/** ⏰️ The clock of the species view: a stage that entered gets its painting built when it first comes into view, and painted on every animation frame while it is in view. */
 export type Studio = { readonly enter: (stage: Element, build: () => Painting) => () => void };
 
 /** 🎞️ What a specimen shows: its clip (replayed after a pause when it does not loop; the rest pose without one) or, for a state, its look (`look`: the state's overlay clip over the breathing idle loop, `null` for the idle loop alone); the state whose tint it wears, the activity and the footing it names; the emitter whose particles it throws, running with the scene or once per replay; how high its feet are above the ground and the room it needs ahead, behind and above them (pet pixels); the tilt of its drawing over time and the pivot it turns about; the tools it holds and the ladders that stand beside it, over time and from where its feet are; what it leans on, hangs from or pushes (`prop`, with the wall `wall` pixels ahead of the feet, the ledge of a rope's hook at `anchor`); and whether it vanishes in a puff now and then (`poof`). */

@@ -1,0 +1,888 @@
+{
+  "$id": "https://semio.tech/repo/ticket/current-graph-maintenance/v1",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "forbidden": [
+          "SEMIO_SCRIPT_PROCESS_INVOCATION",
+          "SEMIO_SCRIPT_POLICY",
+          "SEMIO_SCRIPT_CAPABILITIES",
+          "SEMIO_BUILD_TOOL",
+          "SEMIO_BUILD_MODE",
+          "SEMIO_BUILD_GRAPH_PATH",
+          "SEMIO_BUILD_GRAPH_DIGEST",
+          "SEMIO_BUILD_REUSE_GRAPH",
+          "SEMIO_SCRIPT_MAX_ELAPSED_MS",
+          "SEMIO_BUILD_INVOCATION_PID",
+          "SEMIO_TASK_PROJECT",
+          "SEMIO_TASK_TARGET",
+          "SEMIO_BAZEL_FIXTURE_PHASE",
+          "SEMIO_BAZEL_INTEGRATION",
+          "SEMIO_BUILD_BUDGET_MS",
+          "SEMIO_CMD_BUDGET_MS",
+          "SEMIO_ORCHESTRATOR_BUDGET_MS",
+          "SEMIO_DAEMON_BUDGET_MS"
+        ],
+        "maximumInputBytes": 1048576,
+        "maximumNames": 64,
+        "maximumNamespaceDepth": 2,
+        "maximumMetadataBytes": 4096,
+        "maximumDescriptorBytes": 2048
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "partition",
+        "file",
+        "count"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "",
+            "--maintenance-source",
+            "--maintenance-strict",
+            "--plan-maintenance",
+            "--maintain",
+            "--maintenance-default-source",
+            "--service-roster",
+            "--maintain-exact",
+            "--maintain-prepared",
+            "--plan-maintenance-streamed",
+            "--maintain-streamed"
+          ]
+        },
+        "partition": {
+          "enum": [
+            null,
+            "nx",
+            "products"
+          ]
+        },
+        "file": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^(native-assets-protected-[1-9][0-9]*|graph-maintenance-command-[1-9][0-9]*)\\.json$",
+              "maxLength": 64
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "mode": {
+              "const": ""
+            },
+            "partition": {
+              "type": "null"
+            },
+            "file": {
+              "type": "null"
+            },
+            "count": {
+              "const": 0
+            }
+          }
+        },
+        {
+          "properties": {
+            "mode": {
+              "enum": [
+                "--maintenance-source",
+                "--maintenance-strict",
+                "--maintenance-default-source"
+              ]
+            },
+            "partition": {
+              "type": "null"
+            },
+            "file": {
+              "type": "null"
+            },
+            "count": {
+              "const": 1
+            }
+          }
+        },
+        {
+          "properties": {
+            "mode": {
+              "enum": [
+                "--plan-maintenance",
+                "--service-roster",
+                "--plan-maintenance-streamed"
+              ]
+            },
+            "partition": {
+              "enum": [
+                "nx",
+                "products"
+              ]
+            },
+            "file": {
+              "type": "string",
+              "pattern": "^native-assets-protected-[1-9][0-9]*\\.json$"
+            },
+            "count": {
+              "const": 3
+            }
+          }
+        },
+        {
+          "properties": {
+            "mode": {
+              "enum": [
+                "--maintain",
+                "--maintain-exact",
+                "--maintain-prepared",
+                "--maintain-streamed"
+              ]
+            },
+            "partition": {
+              "type": "null"
+            },
+            "file": {
+              "type": "string",
+              "pattern": "^graph-maintenance-command-[1-9][0-9]*\\.json$"
+            },
+            "count": {
+              "const": 2
+            }
+          }
+        }
+      ]
+    },
+    "Command": {
+      "oneOf": [
+        {
+          "$ref": "schema://repo.caching/NxGraphCacheOwnerV1#/definitions/CurrentMaintenanceCommand"
+        },
+        {
+          "$ref": "schema://repo.caching/NxGraphCacheOwnerV1#/definitions/CurrentArtifactCommand"
+        },
+        {
+          "$ref": "schema://repo.caching/NxGraphCacheOwnerV1#/definitions/CurrentNativePayloadCommand"
+        }
+      ]
+    },
+    "ProfileBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "stage"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "stage": {
+          "enum": [
+            "body-returned",
+            "issued-settled",
+            "original-settled"
+          ]
+        }
+      }
+    },
+    "ProfileBoundaryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "profile",
+        "delivery",
+        "writes"
+      ],
+      "properties": {
+        "stage": {
+          "enum": [
+            "body-returned",
+            "issued-settled",
+            "original-settled"
+          ]
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "delivery": {
+          "enum": [
+            "normal",
+            "undefined",
+            "frozen"
+          ]
+        },
+        "writes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "PayloadDiagnosticProtocol": {
+      "const": {
+        "maximumEntries": 64,
+        "maximumAllocations": 1,
+        "maximumBytes": 131072
+      }
+    },
+    "PayloadDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "directory",
+        "root",
+        "rootStamp",
+        "entries",
+        "journal",
+        "authority",
+        "publicationRetirementDispatches"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "unqualified-current-domain-payload-data"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "rootStamp": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^(0|[1-9][0-9]*)(:(0|[1-9][0-9]*)){6}$"
+        },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedArtifactPayloadEntry"
+          }
+        },
+        "journal": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "presence"
+              ],
+              "properties": {
+                "presence": {
+                  "const": "absent"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "presence",
+                "journalSha256",
+                "journalBytes",
+                "allocations"
+              ],
+              "properties": {
+                "presence": {
+                  "const": "present"
+                },
+                "journalSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "journalBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "allocations": {
+                  "type": "array",
+                  "maxItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "owner",
+                      "kind",
+                      "bytes",
+                      "phase"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "kind": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "bytes": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      },
+                      "phase": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "authority": {
+          "const": false
+        },
+        "publicationRetirementDispatches": {
+          "const": 0
+        }
+      }
+    },
+    "PayloadDiagnosticCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accepted",
+        "delivery"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "absent",
+            "empty-journal",
+            "current-row",
+            "extra",
+            "too-many",
+            "wrong-root",
+            "wrong-stamp",
+            "empty"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "delivery": {
+          "enum": [
+            "normal",
+            "undefined",
+            "frozen"
+          ]
+        }
+      }
+    },
+    "ImageMetadataSeedCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "seed"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "settled",
+            "reserved-directory",
+            "reserved-file",
+            "reserved-link",
+            "unknown",
+            "missing-image",
+            "missing-root",
+            "reserved-and-unknown"
+          ]
+        },
+        "seed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ImageOperationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allocated",
+        "canonical",
+        "pending",
+        "operation",
+        "role"
+      ],
+      "properties": {
+        "allocated": {
+          "type": "boolean"
+        },
+        "canonical": {
+          "type": "boolean"
+        },
+        "pending": {
+          "type": "boolean"
+        },
+        "operation": {
+          "enum": [
+            "retire-artifact",
+            "retire-empty-image",
+            "publish",
+            "retain-inactive"
+          ]
+        },
+        "role": {
+          "enum": [
+            "namespace",
+            "pool",
+            "graph",
+            "leases"
+          ]
+        }
+      }
+    },
+    "ServiceRosterProtocol": {
+      "const": {
+        "maximumNames": 64,
+        "maximumBytes": 32768,
+        "marker": "no_log"
+      }
+    },
+    "ServiceRoster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "root",
+        "rootStamp",
+        "directory",
+        "presence",
+        "directoryStamp",
+        "entries",
+        "marker",
+        "authority",
+        "publicationRetirementDispatches"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "unqualified-current-volume-service-roster"
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "rootStamp": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^(0|[1-9][0-9]*)(:(0|[1-9][0-9]*)){6}$"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "presence": {
+          "enum": [
+            "absent",
+            "present"
+          ]
+        },
+        "directoryStamp": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256,
+              "pattern": "^(0|[1-9][0-9]*)(:(0|[1-9][0-9]*)){6}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entries": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "kind",
+              "stamp"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              "kind": {
+                "enum": [
+                  "directory",
+                  "file",
+                  "link",
+                  "other"
+                ]
+              },
+              "stamp": {
+                "type": "string",
+                "maxLength": 256,
+                "pattern": "^(0|[1-9][0-9]*)(:(0|[1-9][0-9]*)){6}$"
+              }
+            }
+          }
+        },
+        "marker": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "present",
+            "emptyOrdinary",
+            "sha256"
+          ],
+          "properties": {
+            "present": {
+              "type": "boolean"
+            },
+            "emptyOrdinary": {
+              "type": "boolean"
+            },
+            "sha256": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "authority": {
+          "const": false
+        },
+        "publicationRetirementDispatches": {
+          "const": 0
+        }
+      }
+    },
+    "ServiceRosterCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "accepted",
+        "emptyMarker"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "absent",
+            "empty",
+            "marker",
+            "nonempty-marker",
+            "marker-link",
+            "marker-hardlink",
+            "opaque-file",
+            "opaque-directory",
+            "too-many",
+            "changed-directory",
+            "changed-entry"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "emptyMarker": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ExactDispatchCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "input",
+        "accepted",
+        "policy"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "--maintain",
+            "--maintain-exact"
+          ]
+        },
+        "input": {
+          "enum": [
+            "image",
+            "retire",
+            "artifact",
+            "native",
+            "foreign"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "policy": {
+          "enum": [
+            null,
+            "exact-payload"
+          ]
+        }
+      }
+    },
+    "PreparedEntryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "argv",
+        "platform",
+        "override",
+        "accepted"
+      ],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 4
+        },
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "override": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "SEMIO_SCRIPT_PROCESS_INVOCATION",
+                "SEMIO_SCRIPT_POLICY",
+                "SEMIO_SCRIPT_CAPABILITIES",
+                "SEMIO_BUILD_TOOL",
+                "SEMIO_BUILD_MODE",
+                "SEMIO_BUILD_GRAPH_PATH",
+                "SEMIO_BUILD_GRAPH_DIGEST",
+                "SEMIO_BUILD_REUSE_GRAPH",
+                "SEMIO_SCRIPT_MAX_ELAPSED_MS",
+                "SEMIO_BUILD_INVOCATION_PID",
+                "SEMIO_TASK_PROJECT",
+                "SEMIO_TASK_TARGET",
+                "SEMIO_BAZEL_FIXTURE_PHASE",
+                "SEMIO_BAZEL_INTEGRATION",
+                "SEMIO_BUILD_BUDGET_MS",
+                "SEMIO_CMD_BUDGET_MS",
+                "SEMIO_ORCHESTRATOR_BUDGET_MS",
+                "SEMIO_DAEMON_BUDGET_MS"
+              ]
+            }
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PreparedDispatchCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "input",
+        "accepted"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "input": {
+          "enum": [
+            "image",
+            "retire",
+            "artifact",
+            "native",
+            "foreign"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PreparedCoreCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "policy",
+        "callback",
+        "arity",
+        "operation",
+        "admitted",
+        "purpose"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "policy": {
+          "enum": [
+            null,
+            "exact-payload",
+            "prepared-service",
+            "unknown"
+          ]
+        },
+        "callback": {
+          "type": "boolean"
+        },
+        "arity": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 6
+        },
+        "operation": {
+          "enum": [
+            "publish",
+            "retire"
+          ]
+        },
+        "admitted": {
+          "type": "boolean"
+        },
+        "purpose": {
+          "enum": [
+            null,
+            "current-publication",
+            "current-exact-publication",
+            "current-prepared-publication"
+          ]
+        }
+      }
+    },
+    "PayloadReadReporterCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "delivered"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "valid",
+            "frozen",
+            "undefined",
+            "null",
+            "string",
+            "getter-cause",
+            "proxy-error",
+            "proxy-cause",
+            "getter-field",
+            "extra-field",
+            "wrong-purpose",
+            "overlong-root",
+            "oversize-work",
+            "output-failure"
+          ]
+        },
+        "delivered": {
+          "type": "boolean"
+        }
+      }
+    },
+    "StreamDispatchCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "input",
+        "selector",
+        "accepted"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "--maintain-streamed",
+            "--maintain",
+            "--maintain-exact",
+            "--maintain-prepared"
+          ]
+        },
+        "input": {
+          "enum": [
+            "artifact",
+            "native",
+            "image",
+            "foreign"
+          ]
+        },
+        "selector": {
+          "enum": [
+            "stream",
+            "missing",
+            "foreign"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -99,7 +99,7 @@ pub fn resolve_section_name(root: &std::path::Path, file_path: &str, slug: &str)
     find(&semio_framework_repo_languages::parse_sections(&content, file_path), slug).unwrap_or(fallback)
 }
 
-/// 🔤️ A slug read back as words, twin of `UnSlugify`.
+/// 📖️ A slug read back as words, twin of `UnSlugify`.
 fn semio_framework_repo_workspace_unslugify(slug: &str) -> String {
     slug.split(['-', '_']).filter(|word| !word.is_empty()).map(|word| {
         let mut characters = word.chars();

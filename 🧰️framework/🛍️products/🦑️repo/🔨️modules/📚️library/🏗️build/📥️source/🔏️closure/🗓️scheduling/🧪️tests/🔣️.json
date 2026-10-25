@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "checkoutFromTests": "../../../../../../../../../..",
+  "forgedPolicies": [
+    "duplicate-domain-id",
+    "nested-prefix",
+    "duplicate-prefix",
+    "parent-segment",
+    "port-outside-domain",
+    "port-is-directory",
+    "extra-key",
+    "no-domains",
+    "bad-id"
+  ],
+  "loaderCases": [
+    {
+      "case": "merged",
+      "outcome": "runs",
+      "message": ""
+    },
+    {
+      "case": "edited-overlay",
+      "outcome": "runs",
+      "message": ""
+    },
+    {
+      "case": "missing-overlay",
+      "outcome": "refused",
+      "message": "Closed captured resolution target required"
+    },
+    {
+      "case": "outside-declared-domains",
+      "outcome": "refused",
+      "message": "outside the declared domains"
+    },
+    {
+      "case": "shadows-keyed",
+      "outcome": "refused",
+      "message": "Immutable implementation image changed"
+    },
+    {
+      "case": "other-root",
+      "outcome": "refused",
+      "message": "Closed scheduling overlay required"
+    },
+    {
+      "case": "writable-hardlink",
+      "outcome": "refused",
+      "message": "Bounded scheduling overlay required"
+    }
+  ]
+}

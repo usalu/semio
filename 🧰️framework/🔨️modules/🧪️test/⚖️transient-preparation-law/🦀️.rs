@@ -23,8 +23,10 @@ fn prepare<P: Send + Sync + 'static, M: Send + 'static>(label: &str, bundle: &Wi
         Err(_) => panic!("{label}: the bundle's preparation factory admits the mutation"),
     };
     let mut prepared = false;
+    let mut admitted = |_| true;
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut admitted);
     for _ in 0..1usize << 16 {
-        match preparation.advance(grant()).unwrap_or_else(|error| panic!("{label}: a granted turn prepares: {error}")) {
+        match preparation.advance(grant(), &mut control).unwrap_or_else(|error| panic!("{label}: a granted turn prepares: {error}")) {
             store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(..) => { prepared = true; break; }
             store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(..) | store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked => {}
         }

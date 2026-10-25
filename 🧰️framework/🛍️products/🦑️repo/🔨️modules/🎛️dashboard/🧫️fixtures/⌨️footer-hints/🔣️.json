@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "hints": [
+    {
+      "key": "Ctrl+B",
+      "label": "controls"
+    },
+    {
+      "key": "Enter",
+      "label": "select"
+    },
+    {
+      "key": "Esc",
+      "label": "back"
+    },
+    {
+      "key": "Up",
+      "label": "up"
+    },
+    {
+      "key": "Down",
+      "label": "down"
+    },
+    {
+      "key": "Tab",
+      "label": "任务"
+    }
+  ],
+  "cases": [
+    {
+      "name": "no notice leaves the hints a third-bounded status",
+      "width": 80,
+      "notice": "",
+      "kept": 4
+    },
+    {
+      "name": "a short notice takes its own width plus one cell",
+      "width": 80,
+      "notice": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "kept": 3
+    },
+    {
+      "name": "a long notice is capped at two thirds of the row",
+      "width": 80,
+      "notice": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "kept": 1
+    },
+    {
+      "name": "a longer notice gets no more than the same two thirds",
+      "width": 80,
+      "notice": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "kept": 1
+    },
+    {
+      "name": "wide characters count by their cells",
+      "width": 80,
+      "notice": "任务任务任务任务任务任务任务任务任务任务",
+      "kept": 2
+    },
+    {
+      "name": "a narrow row keeps a third for the status",
+      "width": 40,
+      "notice": "",
+      "kept": 1
+    },
+    {
+      "name": "a row too small for any hint keeps none",
+      "width": 10,
+      "notice": "",
+      "kept": 0
+    },
+    {
+      "name": "an empty row keeps none and does not fail",
+      "width": 0,
+      "notice": "",
+      "kept": 0
+    }
+  ]
+}

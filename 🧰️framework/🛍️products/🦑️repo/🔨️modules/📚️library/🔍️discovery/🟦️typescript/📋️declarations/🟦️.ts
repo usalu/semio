@@ -15,7 +15,7 @@ export interface TypeScriptDeclarationDiagnostic { readonly code: TypeScriptDecl
 export interface TypeScriptDeclarationFacts { readonly completeness: "complete" | "incomplete"; readonly declarations: readonly TypeScriptDeclarationFact[]; readonly aliases: readonly TypeScriptDeclarationAliasFact[]; readonly diagnostics: readonly TypeScriptDeclarationDiagnostic[]; }
 /** 🔤️ Owned tokens keep semantic identifier values separate from physical source spans. */
 interface TypeScriptDeclarationToken { readonly kind: "identifier" | "string" | "number" | "template" | "regex" | "jsx" | "punctuation"; readonly text: string; readonly value: string; readonly start: number; readonly end: number; readonly lineBreakBefore: boolean; readonly interpolated?: boolean; }
-/** 🚧️ A lexical boundary which cannot be proven from the supported grammar. */
+/** 📜️ A lexical boundary which cannot be proven from the supported grammar. */
 class TypeScriptDeclarationRecovery extends Error { constructor(readonly start: number) { super("TypeScript declaration syntax has an unproven recovery suffix"); } }
 /** 🛑️ A proven missing required type at a declaration grammar boundary. */
 class TypeScriptDeclarationSyntaxError extends Error { constructor(readonly span: TypeScriptDeclarationSpan) { super("TypeScript declaration syntax has an invalid token boundary"); } }

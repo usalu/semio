@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Drift": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "manifest", "frozen"],
+      "properties": {
+        "kind": {"enum": ["invalid-lockfile", "workspace-missing", "workspace-stale", "identity-mismatch", "missing-in-lock", "stale-in-lock", "version-mismatch"]},
+        "manifest": {"type": "string", "minLength": 1},
+        "section": {"type": "string"},
+        "dependency": {"type": "string"},
+        "manifestVersion": {"type": "string"},
+        "lockVersion": {"type": "string"},
+        "frozen": {"type": "boolean"}
+      }
+    },
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "scope", "drift", "languages", "expected"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["stale", "refused"]},
+        "scope": {"type": "string", "minLength": 1},
+        "drift": {"type": "array", "items": {"$ref": "#/$defs/Drift"}},
+        "languages": {"type": "array", "minItems": 1, "items": {"enum": ["en", "de"]}},
+        "expected": {"type": "string", "minLength": 1}
+      }
+    },
+    "Scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "files", "expected"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "files": {"type": "object", "additionalProperties": {"type": "string"}},
+        "expected": {
+          "oneOf": [
+            {"type": "object", "additionalProperties": false, "required": ["scopes"], "properties": {"scopes": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["scope", "manifests"], "properties": {"scope": {"type": "string"}, "manifests": {"type": "array", "items": {"type": "string"}}}}}}},
+            {"type": "object", "additionalProperties": false, "required": ["error"], "properties": {"error": {"type": "string"}}}
+          ]
+        }
+      }
+    },
+    "Staged": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "scope", "members", "manifest", "projected", "lock", "expected"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "scope": {"type": "string", "minLength": 1},
+        "members": {"type": "array", "items": {"type": "string"}},
+        "manifest": {"type": "object"},
+        "projected": {"type": "object", "additionalProperties": {"type": "object"}},
+        "lock": {"type": "string"},
+        "expected": {"type": "array", "items": {"$ref": "#/$defs/Drift"}}
+      }
+    },
+    "Frozen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "scope", "stderr", "environment", "expectedContains"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "scope": {"type": "string", "minLength": 1},
+        "stderr": {"type": "string"},
+        "environment": {"type": "object", "additionalProperties": {"type": "string"}},
+        "expectedContains": {"oneOf": [{"type": "null"}, {"type": "array", "minItems": 1, "items": {"type": "string"}}]},
+        "expectedAbsent": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "texts", "scopes", "staged", "frozen"],
+  "properties": {
+    "version": {"const": 1},
+    "texts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/Text"}},
+    "scopes": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/Scope"}},
+    "staged": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/Staged"}},
+    "frozen": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/Frozen"}}
+  }
+}

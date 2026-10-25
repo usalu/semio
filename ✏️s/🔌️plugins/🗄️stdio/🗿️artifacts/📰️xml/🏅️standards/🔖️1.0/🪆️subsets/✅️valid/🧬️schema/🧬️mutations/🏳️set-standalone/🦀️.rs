@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetStandalone {
-    pub(crate) standalone: Option<bool>,
+    pub standalone: Option<bool>,
 }
 
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetStandalone {

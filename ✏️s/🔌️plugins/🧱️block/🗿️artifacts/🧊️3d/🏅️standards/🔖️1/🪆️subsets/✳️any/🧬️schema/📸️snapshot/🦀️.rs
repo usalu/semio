@@ -321,3 +321,12 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
 /// `s.block.block3d@1/*#editor` / `s.block.block3d@1/*#viewer`, exactly the contract §1 grammar.
 pub const BLOCK3D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.block.block3d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
+extern crate self as semio_s_artifact_block_3d_model;
+extern crate semio_framework_pack as pack;
+#[path = "../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
+pub mod binary_snapshot;
+#[path = "../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
+pub mod text_snapshot;
+#[path = "../../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
+pub mod sqlite_snapshot;

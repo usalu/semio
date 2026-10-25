@@ -105,7 +105,7 @@ export const MISCHIEF_QUIZ = "heating";
 /** 🖐️ The attribute of the document element on which the hand shows its cursor: `grab` over a pet it can pick up, `grabbing` while it holds one. */
 export const CURSOR = "data-pet-cursor";
 
-/** ⏱️ How long the first pet may take to show once the home screen is there. On an idle machine it is there within two
+/** 🌅️ How long the first pet may take to show once the home screen is there. On an idle machine it is there within two
  * seconds; the gate runs four browsers against one cold dev server, which first has to transform the lazy chunk. */
 export const APPEAR_MS = 30_000;
 
@@ -208,7 +208,7 @@ export interface Instruments {
   readonly overlaps: (milliseconds: number, slack: number) => Promise<Watched>;
 }
 
-/** 🧰️ In the page: installs the spec's instruments on `window.petWalk`, once per pet layer — `bodies()` (every pet as
+/** 🔩️ In the page: installs the spec's instruments on `window.petWalk`, once per pet layer — `bodies()` (every pet as
  * its depiction shows it, with the box of its body: the size box of its species mapped through the drawing's own
  * transform onto the screen, the axis-aligned box of its four corners), `trails` (per pet, every change of
  * `activity/footing/state` since the instruments were installed, recorded by a mutation observer, so nothing between two
@@ -370,9 +370,39 @@ export async function carry(page: Page, body: Body, to: { readonly x: number; re
   }
 }
 
-/** 🛬️ Waits until the pet `id` stands on a perch again, wholly visible. */
-export async function expectPerched(page: Page, id: string, timeout: number): Promise<void> {
-  await expect.poll(async () => (await bodies(page)).some((body) => body.id === id && body.footing === "perch" && body.opacity > 0.99 && !["hang", "tumble", "fall", "glide"].includes(body.activity)), { message: `${id} stands on a perch again`, timeout }).toBe(true);
+/** ⏱️ How much of the pets' time one look of {@link eventually} lets pass, in milliseconds. */
+export const STAGE_LOOK_MS = 250;
+
+/** 🚦️ In the page: waits until the pets' own clock has run `milliseconds` and answers how long it ran. The clock of the pet layer hands out at most eight ticks (125 ms) per animation frame and drops the rest, so on a loaded host the pets' time falls behind the wall clock; summing the frames the way the pacer does measures the time the pets lived, whatever the host did. */
+export function stagePasses(wait: { readonly milliseconds: number; readonly attribute: string }): Promise<number> {
+  return new Promise((resolve) => {
+    const tempo = Math.min(Math.max(Number(document.documentElement.getAttribute(wait.attribute) ?? "1") || 1, 1 / 8), 8);
+    let ran = 0;
+    let last = performance.now();
+    const next = (time: number): void => {
+      ran += Math.min(Math.max(0, time - last) * tempo, 125);
+      last = Math.max(last, time);
+      if (ran >= wait.milliseconds) resolve(ran);
+      else window.requestAnimationFrame(next);
+    };
+    window.requestAnimationFrame(next);
+  });
+}
+
+/** 👀️ Looks until `done` accepts what `probe` sees, for at most `stageMs` milliseconds of the pets' time ({@link stagePasses}), not of the wall clock: the budget is what an idle host spends in the same wall time, and a loaded host does not shorten it. A wait for something a pet does is declared this way; nothing sleeps. */
+export async function eventually<T>(page: Page, probe: () => Promise<T>, done: (seen: T) => boolean, wait: { readonly stageMs: number; readonly message: string }): Promise<T> {
+  let seen = await probe();
+  for (let ran = 0; !done(seen); ) {
+    expect(ran, `${wait.message} (last seen: ${JSON.stringify(seen)})`).toBeLessThan(wait.stageMs);
+    ran += await page.evaluate(stagePasses, { milliseconds: STAGE_LOOK_MS, attribute: TEMPO });
+    seen = await probe();
+  }
+  return seen;
+}
+
+/** 🛬️ Waits, for `stageMs` milliseconds of the pets' time, until the pet `id` stands on a perch again, wholly visible. */
+export async function expectPerched(page: Page, id: string, stageMs: number): Promise<void> {
+  await eventually(page, async () => (await bodies(page)).some((body) => body.id === id && body.footing === "perch" && body.opacity > 0.99 && !["hang", "tumble", "fall", "glide"].includes(body.activity)), (perched) => perched, { stageMs, message: `${id} stands on a perch again` });
 }
 
 export function castOf(scene: string): Cast {

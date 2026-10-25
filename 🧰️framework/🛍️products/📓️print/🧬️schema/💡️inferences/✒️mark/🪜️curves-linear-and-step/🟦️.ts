@@ -30,7 +30,7 @@ export const curveLinear: VizCurveFactory = (context) => {
   };
 };
 
-/** ✒️ `curveLinearClosed`: a closed polygon through the points. */
+/** 📕️ `curveLinearClosed`: a closed polygon through the points. */
 export const curveLinearClosed: VizCurveFactory = (context) => {
   let point = 0;
   return {
@@ -50,7 +50,7 @@ export const curveLinearClosed: VizCurveFactory = (context) => {
   };
 };
 
-/** ✒️ `curveStep` at a given transition fraction; 0 is step-before, 1 is step-after. */
+/** 👣️ `curveStep` at a given transition fraction; 0 is step-before, 1 is step-after. */
 export function curveStepAt(t: number): VizCurveFactory {
   return (context) => {
     const state: CurveState = { line: Number.NaN, point: 0 };
@@ -96,12 +96,12 @@ export function curveStepAt(t: number): VizCurveFactory {
   };
 }
 
-/** ✒️ `curveStep`, the midpoint transition. */
+/** 🚶️ `curveStep`, the midpoint transition. */
 export const curveStep = curveStepAt(0.5);
 
-/** ✒️ `curveStepBefore`. */
+/** ⏮️ `curveStepBefore`. */
 export const curveStepBefore = curveStepAt(0);
 
-/** ✒️ `curveStepAfter`. */
+/** ⏭️ `curveStepAfter`. */
 export const curveStepAfter = curveStepAt(1);
 //#endregion 🔖️CurvesLinear

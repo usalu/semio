@@ -1,9 +1,9 @@
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../🕸️units/📥️capture/🟦️.ts";
+import {cargoPlanningOutputBytesV1,captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1} from "../📥️source/🎟️admission/🟦️.ts";
 import { compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../🏗️build/🎟️capacity/🟦️.ts";
-import { checkResourceLeaseControl, requireMaterializedPathV1 } from "../../../🔒️leases/🟦️.ts";
+import { checkResourceLeaseControl, watchResourceLeaseControlDeadlineV1, requireMaterializedPathV1 } from "../../../🔒️leases/🟦️.ts";
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { existsSync, rmSync } from "node:fs";
@@ -85,7 +85,7 @@ export function unitArtifactV1(request: Pick<AdmitRequestV1, "outDir" | "crate" 
   return join(resolve(request.outDir), `${request.crate}${request.extraFilename}`);
 }
 
-/** 🔗️ The artifact identities an `--extern` path may name (`lib` prefixes are ambiguous for crates named `lib*`) and its edge kind. */
+/** 🏺️ The artifact identities an `--extern` path may name (`lib` prefixes are ambiguous for crates named `lib*`) and its edge kind. */
 export function externArtifactsV1(path: string): { readonly candidates: readonly string[]; readonly edge: "rmeta" | "full" } {
   const directory = dirname(resolve(path)), stem = basename(path, extname(path));
   return { candidates: [...new Set([join(directory, stem.replace(/^lib/u, "")), join(directory, stem)])], edge: extname(path) === ".rmeta" ? "rmeta" : "full" };
@@ -115,7 +115,7 @@ export function admissionOrderV1<T extends AdmissionWaiterV1>(waiters: readonly 
   return [...waiters].sort((left, right) => right.remainingMs - left.remainingMs || right.predictedBytes - left.predictedBytes || left.arrival - right.arrival);
 }
 
-/** ⚖️ Which ordered waiters start now. A waiter starts while the predicted total fits the budget; the first waiter that does not fit holds a
+/** 🚦️ Which ordered waiters start now. A waiter starts while the predicted total fits the budget; the first waiter that does not fit holds a
  * reservation (EASY backfilling): later waiters only start if they fit and either end before the reservation's shadow time or fit in the memory
  * left beside it. With nothing running the first waiter always starts, so progress never depends on a prediction. A frozen broker starts nothing
  * while anything runs. Returns indices into `ordered`. */
@@ -215,10 +215,15 @@ export function sourceKlocV1(source: string): Promise<number> {
   return cached;
 }
 
+/** 🐧️ The bytes a Unix socket path must stay below on macOS (104) and Linux (108). */
+const SOCKET_PATH_BYTES_V1 = 100;
+
 /** 🔌️ A private broker endpoint: a short Unix socket path (sockets are limited to ~104 bytes) or a Windows named pipe. */
 export function brokerEndpointV1(platform: NodeJS.Platform = process.platform): string {
   const name = `semio-broker-${process.pid}-${randomBytes(6).toString("hex")}`;
-  return platform === "win32" ? `\\\\.\\pipe\\${name}` : join(tmpdir(), `${name}.sock`);
+  if (platform === "win32") return `\\\\.\\pipe\\${name}`;
+  const preferred = join(tmpdir(), `${name}.sock`);
+  return Buffer.byteLength(preferred) < SOCKET_PATH_BYTES_V1 ? preferred : join("/tmp", `${name}.sock`);
 }
 
 /** 🛣️ One registered Cargo pass, so units can be keyed by profile. */
@@ -227,7 +232,7 @@ export type BrokerPassV1 = Readonly<{ id: string; profile: string; target: strin
 /** 📡️ Live broker counters for the timeline and the stall watchdog. */
 export type BrokerStatsV1 = Readonly<{ running: number; waiting: number; frozen: boolean; budgetBytes: number; predictedRunningBytes: number; actualRunningBytes: number; lastActivityMs: number }>;
 
-/** 🎟️ The driver's admission broker. */
+/** 🔏️ The driver's admission broker. */
 export interface AdmissionBrokerV1 {
   readonly endpoint: string;
   registerPass(pass: BrokerPassV1): void;
@@ -239,7 +244,7 @@ export interface AdmissionBrokerV1 {
 
 type Entry = { request: AdmitRequestV1; key: string; profile: string; predictedBytes: number; expectedWallMs: number | null; remainingMs: number; arrival: number; requestMs: number; admittedMs: number; rssBytes: number; socket: Socket };
 
-/** 🎟️ Starts the admission broker: wrappers connect, ask for admission, stream resident memory and report completion.
+/** ▶️ Starts the admission broker: wrappers connect, ask for admission, stream resident memory and report completion.
  * The budget is `physical − reserve − rolling maximum of the driver's other children`; measured overshoot or swap-out freezes admission. */
 export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: number; history: ReadonlyMap<string, readonly UnitObservationV1[]>; endpoint?: string; now?: () => number }>): Promise<AdmissionBrokerV1> {
   const now = options.now ?? Date.now, endpoint = options.endpoint ?? brokerEndpointV1(), passes = new Map<string, BrokerPassV1>();
@@ -344,7 +349,7 @@ export function unitObservationsV1(units: readonly UnitRecordV1[], remainingMs: 
   return units.filter((unit) => unit.exit === 0 && !unit.cache).map((unit) => { const bytes = outputBytes.get(unit.artifact); if (bytes === undefined) throw Error(`Unit output footprint was never measured: ${unit.key}`); return { v: 1 as const, key: unit.key, peakRssBytes: unit.peakRssBytes, outputBytes: bytes, wallMs: Math.max(0, unit.endMs - unit.startMs), cpuMs: unit.userMs + unit.sysMs, remainingMs: Math.max(0, Math.round(remainingMs.get(unit.artifact) ?? 0)), atMs }; });
 }
 
-/** 📏️ The bytes every output of one unit occupies: the files of its output directory named by its artifact stem (`<stem>.*` or `lib<stem>.*`). */
+/** 🖨️ The bytes every output of one unit occupies: the files of its output directory named by its artifact stem (`<stem>.*` or `lib<stem>.*`). */
 export function unitOutputBytesV1(artifact: string, entries: readonly string[], size: (name: string) => number): number {
   const stem = basename(artifact);
   return entries.filter((name) => name.startsWith(stem + ".") || name.startsWith("lib" + stem + ".")).reduce((sum, name) => sum + size(name), 0);
@@ -353,13 +358,13 @@ export function unitOutputBytesV1(artifact: string, entries: readonly string[], 
 /** 🛠️ Compiles the scheduler crate (host, release) and returns its executables by name, examples included on request. */
 export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDirectory: string; buildDirectory: string; environment: Readonly<Record<string, string | undefined>>; examples?: boolean; toolchain?: string; control: CompilerAdmissionControl; storage:NativeStorageReservationV1;sourceBoundary:CargoSourceBoundaryPolicyV1 }>): Promise<ReadonlyMap<string, string>> {
   requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();for(const path of [options.targetDirectory,options.buildDirectory,...["CARGO_HOME","TMPDIR","TMP","TEMP"].map(name=>{const path=options.environment[name];if(!path)throw Error("Bounded scheduler environment required: "+name);return path;})])requireNativeStoragePathV1(options.storage.backing.root,path);
-  const budget = compilerAdmissionBudgetV1(options.control), signal = options.control.signal;
+  compilerAdmissionBudgetV1(options.control);const signal = options.control.signal;
   const manifest = fileURLToPath(new URL("./📦️packages/🦀️rust/Cargo.toml", import.meta.url));
   const receiptFile=join(options.targetDirectory,schedulerReceiptFileV1()),identity=options.toolchain&&!options.examples?schedulerIdentityV1(options.toolchain,options.environment):undefined,held=identity?schedulerReceiptHoldsV1(readSchedulerReceiptV1(receiptFile),identity,manifest):undefined;if(held)return held;
-  const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:"cargo",prefix:[],args:["build","--locked","--release","--manifest-path",manifest,"--bins",...(options.examples?["--examples"]:[])],environment:options.environment,maximumOutputBytes:16777216},options.control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,options.control,actualCargoSourceAdmissionPortV1(options.environment,options.cwd,options.storage));await options.storage.recheck();
+  const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:"cargo",prefix:[],args:["build","--locked","--release","--manifest-path",manifest,"--bins",...(options.examples?["--examples"]:[])],environment:options.environment,maximumOutputBytes:cargoPlanningOutputBytesV1},options.control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,options.control,actualCargoSourceAdmissionPortV1(options.environment,options.cwd,options.storage));await options.storage.recheck();
   const child = spawn("cargo", ["build", "--locked", "--release", "--manifest-path", manifest, "--bins", ...(options.examples ? ["--examples"] : []), "--message-format=json-render-diagnostics"], { cwd: options.cwd, env: { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" }, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
   const cancel = (): void => terminateOwnedChildTree(child);
-  const deadline = budget === 0 ? undefined : setTimeout(cancel, budget);
+  const stopDeadline = watchResourceLeaseControlDeadlineV1(options.control, () => cancel());
   signal.addEventListener("abort", cancel, { once: true });
   const executables = new Map<string, string>(), diagnostics: string[] = [];
   try {
@@ -372,5 +377,5 @@ export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDi
     if (status !== 0 || !executables.has("semio-build-scheduler")) throw Error(`Build scheduler compilation failed (${status}):\n${diagnostics.join("\n")}`);
     if (identity) { const receipt = captureSchedulerReceiptV1(identity, manifest, executables); if (receipt) writeSchedulerReceiptV1(receiptFile, receipt); }
     return executables;
-  } finally { if (deadline) clearTimeout(deadline); signal.removeEventListener("abort", cancel); }
+  } finally { stopDeadline(); signal.removeEventListener("abort", cancel); }
 }

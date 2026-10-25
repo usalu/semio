@@ -1,7 +1,7 @@
 import{test,expect}from"bun:test";
+import{testScratchRootV1}from"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
 import{spawnSync}from"node:child_process";
 import{mkdirSync,mkdtempSync,realpathSync,rmSync}from"node:fs";
-import{tmpdir}from"node:os";
 import{join}from"node:path";
 import fixture from"./🔣️.json"with{type:"json"};
 import imageSchema from"../../../🧬️schema/🔣️.json"with{type:"json"};
@@ -21,7 +21,7 @@ test("hosting mount resolution and refusal over the language-agnostic corpus",()
  expect(()=>nativeImageHostMountOfV1("","/x")).toThrow("Hosting mount");
 });
 test.skipIf(process.platform!=="darwin")("a nested image attaches under an owners-on parent and the flag agrees with the system oracle",()=>{
- const scratch=realpathSync(mkdtempSync(join(process.env.TMPDIR||tmpdir(),"owners-"))),parentMount=join(scratch,"p"),defaultMount=join(scratch,"d"),childMount=join(parentMount,"nx","cache","m"),attached:string[]=[];
+ const scratch=realpathSync(mkdtempSync(join(testScratchRootV1("image-tests"),"owners-"))),parentMount=join(scratch,"p"),defaultMount=join(scratch,"d"),childMount=join(parentMount,"nx","cache","m"),attached:string[]=[];
  const create=(image:string,size="24m")=>expect(run("/usr/bin/hdiutil",["create","-size",size,"-type",imageSchema.definitions.ImageProtocol.const.format,"-nospotlight","-fs",imageSchema.definitions.ImageProtocol.const.filesystem,"-volname","semio",image]).status).toBe(0);
  try{
   mkdirSync(parentMount);mkdirSync(defaultMount);

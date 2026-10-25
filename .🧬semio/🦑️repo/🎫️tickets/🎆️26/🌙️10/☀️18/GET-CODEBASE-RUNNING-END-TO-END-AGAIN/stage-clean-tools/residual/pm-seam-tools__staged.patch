@@ -1,0 +1,3539 @@
+# stage-clean different staged=pm-seam-tools/staged/new/w/142d21ef382c.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🔣️.json
+@@ -1,13 +1,11 @@
+ {
+   "version": 1,
+   "id": "npm",
+-  "label": "npm",
+   "ecosystem": "javascript",
+   "toolchain": "javascript",
+   "executable": "npm",
+   "runtime": {
+     "hostVersionKey": null,
+-    "hostEnvironment": [],
+     "probe": {
+       "arguments": [
+         "--version"
+@@ -92,19 +90,7 @@
+     ],
+     "temporary": "tmp",
+     "home": "home",
+-    "config": "config",
+-    "directoryRoles": [
+-      "npm-cache",
+-      "npm-global",
+-      "npm-bin",
+-      "tmp",
+-      "home",
+-      "config"
+-    ],
+-    "maximumEnvironmentEntries": 512,
+-    "maximumEnvironmentBytes": 65536,
+-    "maximumEnvironmentValueUnits": 32768,
+-    "borrowedProviders": "canonical-owner-declared-version-and-manifest"
++    "config": "config"
+   },
+   "backendKinds": {},
+   "operations": {
+@@ -136,14 +122,6 @@
+         "--cache",
+         "{cache}"
+       ]
+-    },
+-    "install-pinned": {
+-      "arguments": [
+-        "ci",
+-        "--{lifecycle}",
+-        "--cache",
+-        "{cache}"
+-      ]
+     }
+   },
+   "installed": {
+@@ -163,42 +141,8 @@
+       "node-import",
+       "node-require"
+     ],
+-    "strictPrefix": null,
+-    "oracle": "node",
+-    "conditions": {
+-      "node-import": [
+-        "node-addons",
+-        "node",
+-        "import",
+-        "default"
+-      ],
+-      "node-require": [
+-        "node-addons",
+-        "node",
+-        "require",
+-        "default"
+-      ]
+-    }
++    "strictPrefix": null
+   },
+-  "producerInputs": {
+-    "scopeFiles": [
+-      ".npmrc"
+-    ],
+-    "ambientHomeFiles": [
+-      ".npmrc"
+-    ],
+-    "ambientConfigFiles": [],
+-    "ambientConfigFallback": ".config",
+-    "environmentPrefixes": [
+-      "npm_config_",
+-      "NPM_CONFIG_"
+-    ],
+-    "environmentIgnored": [
+-      "NPM_CONFIG_USER_AGENT"
+-    ]
+-  },
+-  "ownedModules": [],
+-  "stagedConfiguration": "",
+   "generationDirectory": "j",
+   "graphComponent": null
+ }
+# stage-clean different staged=pm-seam-tools/staged/new/w/1a3f22cffa70.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🔣️.json
+@@ -39,11 +39,7 @@
+  ],
+  "managers": {
+   "bun": {
+-   "descriptorSha256": "9ef410d19b523b8c2befe7cf881726ddb8f57daf29a5e3fbb5ca2f5b155ff661",
+-   "materialized": {
+-    "install": "6564e8a88fb7e5aae54f8fbf5aa83e3108e3ba12950f1866e5a0a35f16aeb84e",
+-    "generation": "882fbc3fd85195095026174c782da790d6bf85f4656b0db386bdd73225f070f5"
+-   },
++   "descriptorSha256": "672754281eee0966da212b06c8385db48a38cf6c119112ca753071e10e872994",
+    "render": [
+     {
+      "operation": "lock",
+@@ -133,53 +129,6 @@
+      }
+     },
+     {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: bun all"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: bun missing"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+-     }
+-    },
+-    {
+      "operation": "sync",
+      "request": {
+       "platform": "darwin",
+@@ -261,53 +210,6 @@
+      "operation": "sync",
+      "request": {
+       "platform": "linux"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: bun all"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: bun missing"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+      },
+      "expected": {
+       "error": "Complete package manager request required: cache"
+@@ -398,197 +300,6 @@
+      "operation": "verify",
+      "request": {
+       "platform": "linux"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: bun all"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: bun missing"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "darwin",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json"
+-     },
+-     "expected": {
+-      "executable": "bun",
+-      "arguments": [
+-       "install",
+-       "--frozen-lockfile",
+-       "--ignore-scripts",
+-       "--cache-dir",
+-       "/work/cache",
+-       "--backend",
+-       "copyfile"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json"
+-     },
+-     "expected": {
+-      "executable": "bun",
+-      "arguments": [
+-       "install",
+-       "--frozen-lockfile",
+-       "--ignore-scripts",
+-       "--cache-dir",
+-       "/work/cache",
+-       "--backend",
+-       "copyfile"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "win32",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json"
+-     },
+-     "expected": {
+-      "executable": "bun",
+-      "arguments": [
+-       "install",
+-       "--frozen-lockfile",
+-       "--ignore-scripts",
+-       "--cache-dir",
+-       "/work/cache",
+-       "--backend",
+-       "copyfile"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "freebsd",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json"
+-     },
+-     "expected": {
+-      "executable": "bun",
+-      "arguments": [
+-       "install",
+-       "--frozen-lockfile",
+-       "--ignore-scripts",
+-       "--cache-dir",
+-       "/work/cache",
+-       "--backend",
+-       "copyfile"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "linux"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: bun all"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: bun missing"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+      },
+      "expected": {
+       "error": "Complete package manager request required: cache"
+@@ -668,32 +379,6 @@
+       "BUN_INSTALL_GLOBAL_DIR": "C:\\store\\bun-global",
+       "BUN_INSTALL_BIN": "C:\\store\\bun-bin"
+      }
+-    },
+-    {
+-     "root": "/store/root",
+-     "separator": "/",
+-     "ambient": {
+-      "PATH": "/usr/bin"
+-     },
+-     "overrides": {
+-      "EXTRA_VARIABLE": "value",
+-      "HOME": "/override"
+-     },
+-     "expected": {
+-      "PATH": "/usr/bin",
+-      "HOME": "/override",
+-      "USERPROFILE": "/store/root/bun-home",
+-      "XDG_CONFIG_HOME": "/store/root/bun-config",
+-      "XDG_CACHE_HOME": "/store/root/bun-cache",
+-      "TMPDIR": "/store/root/tmp",
+-      "TMP": "/store/root/tmp",
+-      "TEMP": "/store/root/tmp",
+-      "NODE_ENV": "development",
+-      "BUN_INSTALL_CACHE_DIR": "/store/root/bun-cache",
+-      "BUN_INSTALL_GLOBAL_DIR": "/store/root/bun-global",
+-      "BUN_INSTALL_BIN": "/store/root/bun-bin",
+-      "EXTRA_VARIABLE": "value"
+-     }
+     }
+    ],
+    "runtime": [
+@@ -1091,11 +776,7 @@
+    ]
+   },
+   "npm": {
+-   "descriptorSha256": "82b5681a13afdf5a8ec408230c1fcf575f26db751036123ac570a8cc31d724e7",
+-   "materialized": {
+-    "install": "99e5720635351d9276f562575417cc71548135b1e661b58da6edb90de2d092e9",
+-    "generation": "748a0afe682b4425d6da7ca9e9589711e5f66791caa27b108c6753b30cb4f6fc"
+-   },
++   "descriptorSha256": "6a45124e606fc7ba8498e31abdb0d66ce36fae8035aba4a2055fc63a0085964c",
+    "render": [
+     {
+      "operation": "lock",
+@@ -1191,53 +872,6 @@
+      }
+     },
+     {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: npm all"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: npm missing"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+-     }
+-    },
+-    {
+      "operation": "sync",
+      "request": {
+       "platform": "darwin",
+@@ -1321,53 +955,6 @@
+      "operation": "sync",
+      "request": {
+       "platform": "linux"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: npm all"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: npm missing"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+      },
+      "expected": {
+       "error": "Complete package manager request required: cache"
+@@ -1461,185 +1048,6 @@
+      "operation": "verify",
+      "request": {
+       "platform": "linux"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: npm all"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: npm missing"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "darwin",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json"
+-     },
+-     "expected": {
+-      "executable": "npm",
+-      "arguments": [
+-       "ci",
+-       "--ignore-scripts",
+-       "--cache",
+-       "/work/cache"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json"
+-     },
+-     "expected": {
+-      "executable": "npm",
+-      "arguments": [
+-       "ci",
+-       "--ignore-scripts",
+-       "--cache",
+-       "/work/cache"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "win32",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json"
+-     },
+-     "expected": {
+-      "executable": "npm",
+-      "arguments": [
+-       "ci",
+-       "--ignore-scripts",
+-       "--cache",
+-       "/work/cache"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "freebsd",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json"
+-     },
+-     "expected": {
+-      "executable": "npm",
+-      "arguments": [
+-       "ci",
+-       "--ignore-scripts",
+-       "--cache",
+-       "/work/cache"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "linux"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: npm all"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: npm missing"
+-     }
+-    },
+-    {
+-     "operation": "install-pinned",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/package.json",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+      },
+      "expected": {
+       "error": "Complete package manager request required: cache"
+@@ -1717,31 +1125,6 @@
+       "npm_config_cache": "C:\\store\\npm-cache",
+       "npm_config_prefix": "C:\\store\\npm-global"
+      }
+-    },
+-    {
+-     "root": "/store/root",
+-     "separator": "/",
+-     "ambient": {
+-      "PATH": "/usr/bin"
+-     },
+-     "overrides": {
+-      "EXTRA_VARIABLE": "value",
+-      "HOME": "/override"
+-     },
+-     "expected": {
+-      "PATH": "/usr/bin",
+-      "HOME": "/override",
+-      "USERPROFILE": "/store/root/home",
+-      "XDG_CONFIG_HOME": "/store/root/config",
+-      "XDG_CACHE_HOME": "/store/root/npm-cache",
+-      "TMPDIR": "/store/root/tmp",
+-      "TMP": "/store/root/tmp",
+-      "TEMP": "/store/root/tmp",
+-      "NODE_ENV": "development",
+-      "npm_config_cache": "/store/root/npm-cache",
+-      "npm_config_prefix": "/store/root/npm-global",
+-      "EXTRA_VARIABLE": "value"
+-     }
+     }
+    ],
+    "runtime": [
+@@ -1783,7 +1166,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "1a5e8f752fe359ab5e9c3f326c6dc9863d5f154afdd23800a0dae5fec6f3041f"
++     "expected": "0b8e825640dd323f0c38db586aed2e2042d540ae26fdebbc6d70be0c5cc88afa"
+     },
+     {
+      "root": "/work/scope",
+@@ -1809,7 +1192,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "db8cc53c7434ed986185dc6dad7508299c75806dcc551ac1cd99b33c1edc1953"
++     "expected": "5f7e22aae5c6e4df3a3d67051bc730b05ebbd5338a2c9eb317da25c3755bb3d3"
+     },
+     {
+      "root": "/work/scope",
+@@ -1835,7 +1218,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "69542f9a39718eb2ef887f06352904cd164d59180565a1be017b978bf055928b"
++     "expected": "067165d3dc06ba28da8a6ca15925a5cb10bfdb78a5b6ce217fc56dbeaaa81c85"
+     },
+     {
+      "root": "/work/scope",
+@@ -1861,7 +1244,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "0eb6dff7572f882c1a7f9be90cc5fbf6d30c8ca316bf658b38040d8659bb9649"
++     "expected": "2e8a37b88d442cd73a49db7dd356ab0b10046d5a8fa217a7e3a0d140960605b1"
+     },
+     {
+      "root": "/work/scope",
+@@ -1883,7 +1266,7 @@
+        "text": "{\"name\":\"x\"}"
+       }
+      ],
+-     "expected": "87f51be0526502c07d7f612fb3b14909c95c52ed554a4540c51a4d102b7c47d5"
++     "expected": "d6eb5d2aad499aa25dccdf0d6e084f59d3e97895be281b0cb8031ee52f33a4de"
+     }
+    ],
+    "bootstrapKey": [
+@@ -2055,11 +1438,7 @@
+    ]
+   },
+   "cargo": {
+-   "descriptorSha256": "105976f03072f863094fa520e9b901940e34517cb5339433aa133c89263df385",
+-   "materialized": {
+-    "install": "8d89ee890e6bc892ee2f54675bcadd9be2a97e07adf7d7b1f0e3ab280f25bd72",
+-    "generation": "a801a197121e8c52dc8fe43caf811276343453f50159b1c11ff51061b99b66b0"
+-   },
++   "descriptorSha256": "ae1475e11eac6cade8a5914800667b88a1312188a1a20301e0827e4f94d4b217",
+    "render": [
+     {
+      "operation": "lock",
+@@ -2072,8 +1451,7 @@
+      "expected": {
+       "executable": "cargo",
+       "arguments": [
+-       "update",
+-       "--workspace",
++       "generate-lockfile",
+        "--manifest-path",
+        "/work/scope/Cargo.toml"
+       ],
+@@ -2091,8 +1469,7 @@
+      "expected": {
+       "executable": "cargo",
+       "arguments": [
+-       "update",
+-       "--workspace",
++       "generate-lockfile",
+        "--manifest-path",
+        "/work/scope/Cargo.toml"
+       ],
+@@ -2110,8 +1487,7 @@
+      "expected": {
+       "executable": "cargo",
+       "arguments": [
+-       "update",
+-       "--workspace",
++       "generate-lockfile",
+        "--manifest-path",
+        "/work/scope/Cargo.toml"
+       ],
+@@ -2129,8 +1505,7 @@
+      "expected": {
+       "executable": "cargo",
+       "arguments": [
+-       "update",
+-       "--workspace",
++       "generate-lockfile",
+        "--manifest-path",
+        "/work/scope/Cargo.toml"
+       ],
+@@ -2144,60 +1519,6 @@
+      },
+      "expected": {
+       "error": "Complete package manager request required: manifest"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Cargo.toml",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: cargo all"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Cargo.toml",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: cargo missing"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Cargo.toml",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "executable": "cargo",
+-      "arguments": [
+-       "update",
+-       "--workspace",
+-       "--manifest-path",
+-       "/work/scope/Cargo.toml"
+-      ],
+-      "directory": "/work/scope"
+      }
+     },
+     {
+@@ -2283,60 +1604,6 @@
+      },
+      "expected": {
+       "error": "Complete package manager request required: manifest"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Cargo.toml",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: cargo all"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Cargo.toml",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: cargo missing"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Cargo.toml",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "executable": "cargo",
+-      "arguments": [
+-       "fetch",
+-       "--locked",
+-       "--manifest-path",
+-       "/work/scope/Cargo.toml"
+-      ],
+-      "directory": "/work/scope"
+      }
+     },
+     {
+@@ -2430,62 +1697,6 @@
+      },
+      "expected": {
+       "error": "Complete package manager request required: manifest"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Cargo.toml",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: cargo all"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Cargo.toml",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: cargo missing"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Cargo.toml",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "executable": "cargo",
+-      "arguments": [
+-       "metadata",
+-       "--locked",
+-       "--format-version",
+-       "1",
+-       "--manifest-path",
+-       "/work/scope/Cargo.toml"
+-      ],
+-      "directory": "/work/scope"
+      }
+     }
+    ],
+@@ -2557,31 +1768,6 @@
+       "CARGO_TARGET_DIR": "C:\\store\\tmp",
+       "CARGO_NET_OFFLINE": "false"
+      }
+-    },
+-    {
+-     "root": "/store/root",
+-     "separator": "/",
+-     "ambient": {
+-      "PATH": "/usr/bin"
+-     },
+-     "overrides": {
+-      "EXTRA_VARIABLE": "value",
+-      "HOME": "/override"
+-     },
+-     "expected": {
+-      "PATH": "/usr/bin",
+-      "HOME": "/override",
+-      "USERPROFILE": "/store/root/home",
+-      "XDG_CONFIG_HOME": "/store/root/config",
+-      "XDG_CACHE_HOME": "/store/root/cargo-home",
+-      "TMPDIR": "/store/root/tmp",
+-      "TMP": "/store/root/tmp",
+-      "TEMP": "/store/root/tmp",
+-      "CARGO_HOME": "/store/root/cargo-home",
+-      "CARGO_TARGET_DIR": "/store/root/tmp",
+-      "CARGO_NET_OFFLINE": "false",
+-      "EXTRA_VARIABLE": "value"
+-     }
+     }
+    ],
+    "runtime": [
+@@ -2623,7 +1809,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "8813f8e8dcb765b1de8465ba98346f4da986264c1793ee5062d5551f7fab681d"
++     "expected": "196302f7ec10ad24cf13b133a8b915a661118eb5b8ba8f09e27be833311469df"
+     },
+     {
+      "root": "/work/scope",
+@@ -2649,7 +1835,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "da7ddeed70ad3a399202ed30038aa773198717a3245a79e077cb7d82521a02bf"
++     "expected": "34abbd2e22725b6124bb7791d18964c96aab34adfc0df3db487bc39f2da568f4"
+     },
+     {
+      "root": "/work/scope",
+@@ -2675,7 +1861,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "8489e0f472769f7635227736847776908f668b7d245cd823a70b75c81ed15c4a"
++     "expected": "41e29a0905ec22c1dbe42c2466bc740b4557f845969168cf33b8288f61c1839c"
+     },
+     {
+      "root": "/work/scope",
+@@ -2701,7 +1887,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "d4e3cd0eeb769ed69295cc8853ca4f6bcc840433c344a27b639bd72ca3c94ad6"
++     "expected": "8942aa19dc40580bbda9db3b7a948138492b2f98814c212c1d5c5a25d5d510b6"
+     },
+     {
+      "root": "/work/scope",
+@@ -2723,7 +1909,7 @@
+        "text": "{\"name\":\"x\"}"
+       }
+      ],
+-     "expected": "f9bef8d9bb8e6e7c2418b6a8ba0af4f15972e7e7d1c0c641414ef40f52a015fe"
++     "expected": "ed908954a431ad85e03fbcb767f6b4f51977ee865d1cf93eecfaec744ebba930"
+     }
+    ],
+    "bootstrapKey": [
+@@ -2973,11 +2159,7 @@
+    ]
+   },
+   "go": {
+-   "descriptorSha256": "17618359320cecdae7f1bb184df617f4ba58c33fc63dbf0b6d1bb2fd4c32c1fc",
+-   "materialized": {
+-    "install": "e546d702c585b5231d6bf44fb955695a6aeefb6d560078dbd487585144c0d380",
+-    "generation": "f6dfa91211b2b3a4b094795da8a28b881260e9fd6a9318de3d778b928f560a11"
+-   },
++   "descriptorSha256": "ff2aefbbcac1d615e81fb73ec319a5506782d33e46b016f4f50acfc2ed68a77f",
+    "render": [
+     {
+      "operation": "lock",
+@@ -3062,58 +2244,6 @@
+      }
+     },
+     {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/go.mod",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: go all"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/go.mod",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: go missing"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/go.mod",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "executable": "go",
+-      "arguments": [
+-       "mod",
+-       "tidy"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+      "operation": "sync",
+      "request": {
+       "platform": "darwin",
+@@ -3196,58 +2326,6 @@
+      }
+     },
+     {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/go.mod",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: go all"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/go.mod",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: go missing"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/go.mod",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "executable": "go",
+-      "arguments": [
+-       "mod",
+-       "download"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+      "operation": "verify",
+      "request": {
+       "platform": "darwin",
+@@ -3327,58 +2405,6 @@
+        "verify"
+       ],
+       "directory": null
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/go.mod",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: go all"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/go.mod",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: go missing"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/go.mod",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "executable": "go",
+-      "arguments": [
+-       "mod",
+-       "verify"
+-      ],
+-      "directory": "/work/scope"
+      }
+     }
+    ],
+@@ -3455,33 +2481,6 @@
+       "GOTOOLCHAIN": "local",
+       "GOPROXY": "https://proxy.golang.org,direct"
+      }
+-    },
+-    {
+-     "root": "/store/root",
+-     "separator": "/",
+-     "ambient": {
+-      "PATH": "/usr/bin"
+-     },
+-     "overrides": {
+-      "EXTRA_VARIABLE": "value",
+-      "HOME": "/override"
+-     },
+-     "expected": {
+-      "PATH": "/usr/bin",
+-      "HOME": "/override",
+-      "USERPROFILE": "/store/root/home",
+-      "XDG_CONFIG_HOME": "/store/root/config",
+-      "XDG_CACHE_HOME": "/store/root/go-mod-cache",
+-      "TMPDIR": "/store/root/tmp",
+-      "TMP": "/store/root/tmp",
+-      "TEMP": "/store/root/tmp",
+-      "GOMODCACHE": "/store/root/go-mod-cache",
+-      "GOPATH": "/store/root/go-path",
+-      "GOFLAGS": "-mod=readonly",
+-      "GOTOOLCHAIN": "local",
+-      "GOPROXY": "https://proxy.golang.org,direct",
+-      "EXTRA_VARIABLE": "value"
+-     }
+     }
+    ],
+    "runtime": [
+@@ -3523,7 +2522,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "e6771e67afc911a30cb506b49ce6f190b9114d42b4404b463b53b2427d5b8cfc"
++     "expected": "2a82c4f738fb162069276db9d5f2db0a479b44d36ee4082169df42f137325435"
+     },
+     {
+      "root": "/work/scope",
+@@ -3549,7 +2548,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "adef6bf27d3436715876051039729d14ed5f6c0dda17929fb34ca5be1f85dfd1"
++     "expected": "ba530a477f338eaee9a85fdd03e29d16eee5b39af3261c8e01b3162cb60014ea"
+     },
+     {
+      "root": "/work/scope",
+@@ -3575,7 +2574,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "28ddef27aa21320ab197b6f141e52a78dc290e674e3e03d5d938615a80d8f96c"
++     "expected": "84ce7dd0859ce87c880f966431d2b510591569e595162b1742cb0c1b10a07329"
+     },
+     {
+      "root": "/work/scope",
+@@ -3601,7 +2600,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "a6309aac810ef37f974f2a26e16931888dfbba644c92904a0f223b51c770a54b"
++     "expected": "34cf9155c1061d6758f0ddd05202099ed2c7ac078a92d20b4be40b649a7a28af"
+     },
+     {
+      "root": "/work/scope",
+@@ -3623,7 +2622,7 @@
+        "text": "{\"name\":\"x\"}"
+       }
+      ],
+-     "expected": "8135b96683430ad6a0249c6caf61b71bf887a90bcc0b5c10f3e37df9fed54d08"
++     "expected": "49439f104270c58e2f1b4cb7647fdbeb6ea0d6a967f364db0d94ef42ea2cb890"
+     }
+    ],
+    "bootstrapKey": [],
+@@ -3877,11 +2876,7 @@
+    ]
+   },
+   "uv": {
+-   "descriptorSha256": "354461f76dcf33da4945422f9b9a23cdd719940a65b1f116d65d2ec87a1a1f9f",
+-   "materialized": {
+-    "install": "e47c209e3693a38683e5b43f5db740110de0a22f803f3e27bb8ada9727a0fc25",
+-    "generation": "eacd3b825226db79af12772a59660e82ec1ec770d4358554337db1ca89823865"
+-   },
++   "descriptorSha256": "d911d4eafced7890a0288094b9175ac3714e831168194c0d0a2c5f0500a20cfb",
+    "render": [
+     {
+      "operation": "lock",
+@@ -3961,77 +2956,7 @@
+       "platform": "linux"
+      },
+      "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "lock"
+-      ],
+-      "directory": null
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: uv all"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: uv missing"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "lock"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml"
+-     },
+-     "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "lock"
+-      ],
+-      "directory": "/work/scope"
++      "error": "Complete package manager request required: cache"
+      }
+     },
+     {
+@@ -4047,6 +2972,7 @@
+       "arguments": [
+        "sync",
+        "--locked",
++       "--link-mode=clone",
+        "--cache-dir",
+        "/work/cache"
+       ],
+@@ -4066,6 +2992,7 @@
+       "arguments": [
+        "sync",
+        "--locked",
++       "--link-mode=copy",
+        "--cache-dir",
+        "/work/cache"
+       ],
+@@ -4085,6 +3012,7 @@
+       "arguments": [
+        "sync",
+        "--locked",
++       "--link-mode=copy",
+        "--cache-dir",
+        "/work/cache"
+       ],
+@@ -4100,14 +3028,7 @@
+       "manifest": "/work/scope/pyproject.toml"
+      },
+      "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "sync",
+-       "--locked",
+-       "--cache-dir",
+-       "/work/cache"
+-      ],
+-      "directory": "/work/scope"
++      "error": "Complete package manager request required: backend"
+      }
+     },
+     {
+@@ -4116,205 +3037,7 @@
+       "platform": "linux"
+      },
+      "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "sync",
+-       "--locked"
+-      ],
+-      "directory": null
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "sync",
+-       "--locked",
+-       "--cache-dir",
+-       "/work/cache",
+-       "--all-packages",
+-       "--all-groups"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: uv missing"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "sync",
+-       "--locked",
+-       "--project",
+-       ".",
+-       "--group",
+-       "dev",
+-       "--group",
+-       "test"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml"
+-     },
+-     "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "sync",
+-       "--locked"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "provision",
+-     "request": {
+-      "platform": "darwin",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: series"
+-     }
+-    },
+-    {
+-     "operation": "provision",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: series"
+-     }
+-    },
+-    {
+-     "operation": "provision",
+-     "request": {
+-      "platform": "win32",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: series"
+-     }
+-    },
+-    {
+-     "operation": "provision",
+-     "request": {
+-      "platform": "freebsd",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: series"
+-     }
+-    },
+-    {
+-     "operation": "provision",
+-     "request": {
+-      "platform": "linux"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: series"
+-     }
+-    },
+-    {
+-     "operation": "provision",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: series"
+-     }
+-    },
+-    {
+-     "operation": "provision",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: series"
+-     }
+-    },
+-    {
+-     "operation": "provision",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "python",
+-       "install",
+-       "3.14"
+-      ],
+-      "directory": "/work/scope"
++      "error": "Complete package manager request required: cache"
+      }
+     },
+     {
+@@ -4399,95 +3122,22 @@
+       "platform": "linux"
+      },
+      "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "lock",
+-       "--check"
+-      ],
+-      "directory": null
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: uv all"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: uv missing"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "lock",
+-       "--check"
+-      ],
+-      "directory": "/work/scope"
+-     }
+-    },
+-    {
+-     "operation": "verify",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/pyproject.toml"
+-     },
+-     "expected": {
+-      "executable": "uv",
+-      "arguments": [
+-       "lock",
+-       "--check"
+-      ],
+-      "directory": "/work/scope"
++      "error": "Complete package manager request required: cache"
+      }
+     }
+    ],
+    "backend": [
+     {
+      "platform": "darwin",
+-     "expected": null
++     "expected": "clone"
+     },
+     {
+      "platform": "linux",
+-     "expected": null
++     "expected": "copy"
+     },
+     {
+      "platform": "win32",
+-     "expected": null
++     "expected": "copy"
+     },
+     {
+      "platform": "freebsd",
+@@ -4522,9 +3172,6 @@
+       "TEMP": "/store/root/tmp",
+       "UV_CACHE_DIR": "/store/root/uv-cache",
+       "UV_PYTHON_INSTALL_DIR": "/store/root/uv-python",
+-      "UV_PYTHON_PREFERENCE": "only-managed",
+-      "UV_PYTHON_DOWNLOADS": "manual",
+-      "UV_NO_CONFIG": "1",
+       "UV_NO_PROGRESS": "1"
+      }
+     },
+@@ -4545,38 +3192,7 @@
+       "TEMP": "C:\\store\\tmp",
+       "UV_CACHE_DIR": "C:\\store\\uv-cache",
+       "UV_PYTHON_INSTALL_DIR": "C:\\store\\uv-python",
+-      "UV_PYTHON_PREFERENCE": "only-managed",
+-      "UV_PYTHON_DOWNLOADS": "manual",
+-      "UV_NO_CONFIG": "1",
+       "UV_NO_PROGRESS": "1"
+-     }
+-    },
+-    {
+-     "root": "/store/root",
+-     "separator": "/",
+-     "ambient": {
+-      "PATH": "/usr/bin"
+-     },
+-     "overrides": {
+-      "EXTRA_VARIABLE": "value",
+-      "HOME": "/override"
+-     },
+-     "expected": {
+-      "PATH": "/usr/bin",
+-      "HOME": "/override",
+-      "USERPROFILE": "/store/root/home",
+-      "XDG_CONFIG_HOME": "/store/root/config",
+-      "XDG_CACHE_HOME": "/store/root/uv-cache",
+-      "TMPDIR": "/store/root/tmp",
+-      "TMP": "/store/root/tmp",
+-      "TEMP": "/store/root/tmp",
+-      "UV_CACHE_DIR": "/store/root/uv-cache",
+-      "UV_PYTHON_INSTALL_DIR": "/store/root/uv-python",
+-      "UV_PYTHON_PREFERENCE": "only-managed",
+-      "UV_PYTHON_DOWNLOADS": "manual",
+-      "UV_NO_CONFIG": "1",
+-      "UV_NO_PROGRESS": "1",
+-      "EXTRA_VARIABLE": "value"
+      }
+     }
+    ],
+@@ -4619,7 +3235,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "4924135bbd60c3d75e27a2bbd9b3f3caa6e2683a36566c31af2b67af79b75e08"
++     "expected": "580e2817affa9f168d9d0f5de1af1f3af83e06af9e649f18b47e2d4950b93037"
+     },
+     {
+      "root": "/work/scope",
+@@ -4645,7 +3261,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "b46340d9e5e805c82b4d6055405e1f2c97a505253b6729292a73dd7d57789b4c"
++     "expected": "b519c45128964dd6a6609ca23a793c4a31b4a21e251831b51e00bd7ef0a23bcf"
+     },
+     {
+      "root": "/work/scope",
+@@ -4671,7 +3287,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "3178667957a34281f9afb6532dfdc8a175e86972100c2042ac0d6112936824cd"
++     "expected": "e99d974d0e4943d6d4a3ef6f8a24cd55a6cc5dbf3dd7af7d21475041a035ec78"
+     },
+     {
+      "root": "/work/scope",
+@@ -4697,7 +3313,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "feaa8ac726d54243e71cf1fef79b61d26c9786148ce523f3a783da8e479ce4b1"
++     "expected": "51a7a697f3df20c826c78fb3fbf2c215e5a45add8939dabb171b427056f41c00"
+     },
+     {
+      "root": "/work/scope",
+@@ -4719,7 +3335,7 @@
+        "text": "{\"name\":\"x\"}"
+       }
+      ],
+-     "expected": "1c5e71208021f8d9c2c494228f87201ad32ec77e176ca29c08797d40c0e49379"
++     "expected": "74b59a157c7964c45a4504f2436ac34ed519722f1f0269ee656edcc6b5bec210"
+     }
+    ],
+    "bootstrapKey": [
+@@ -4964,11 +3580,7 @@
+    ]
+   },
+   "dotnet": {
+-   "descriptorSha256": "4868a716d49cf424fbf362ec84daf1c65ce0fa0d0cda1346ba4326fbb25ef556",
+-   "materialized": {
+-    "install": "d397eebbc4f7d82ce3e4b1a256066fbaf870dc39617c5c0e38ef4db83751dceb",
+-    "generation": "329c404c01b0da8f11b0baa7e367fe0617b1a9cba9b2e699d616d0f4f8aeeaaf"
+-   },
++   "descriptorSha256": "247144d1459d6610472bf2f3287d0b24520a72ee234ca07434e7234dd7e05ca8",
+    "render": [
+     {
+      "operation": "lock",
+@@ -5060,53 +3672,6 @@
+      }
+     },
+     {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Directory.Packages.props",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: dotnet all"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Directory.Packages.props",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: dotnet missing"
+-     }
+-    },
+-    {
+-     "operation": "lock",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Directory.Packages.props",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+-     }
+-    },
+-    {
+      "operation": "sync",
+      "request": {
+       "platform": "darwin",
+@@ -5193,53 +3758,6 @@
+      },
+      "expected": {
+       "error": "Complete package manager request required: manifest"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Directory.Packages.props",
+-      "scope": "all"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: dotnet all"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "cache": "/work/cache",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Directory.Packages.props",
+-      "scope": "missing"
+-     },
+-     "expected": {
+-      "error": "Declared package manager scope required: dotnet missing"
+-     }
+-    },
+-    {
+-     "operation": "sync",
+-     "request": {
+-      "platform": "linux",
+-      "directory": "/work/scope",
+-      "manifest": "/work/scope/Directory.Packages.props",
+-      "lists": {
+-       "groups": [
+-        "dev",
+-        "test"
+-       ]
+-      },
+-      "settings": {
+-       "project": ".",
+-       "series": "3.14"
+-      }
+-     },
+-     "expected": {
+-      "error": "Complete package manager request required: cache"
+      }
+     }
+    ],
+@@ -5314,32 +3832,6 @@
+       "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+       "DOTNET_NOLOGO": "1"
+      }
+-    },
+-    {
+-     "root": "/store/root",
+-     "separator": "/",
+-     "ambient": {
+-      "PATH": "/usr/bin"
+-     },
+-     "overrides": {
+-      "EXTRA_VARIABLE": "value",
+-      "HOME": "/override"
+-     },
+-     "expected": {
+-      "PATH": "/usr/bin",
+-      "HOME": "/override",
+-      "USERPROFILE": "/store/root/home",
+-      "XDG_CONFIG_HOME": "/store/root/config",
+-      "XDG_CACHE_HOME": "/store/root/nuget-packages",
+-      "TMPDIR": "/store/root/tmp",
+-      "TMP": "/store/root/tmp",
+-      "TEMP": "/store/root/tmp",
+-      "NUGET_PACKAGES": "/store/root/nuget-packages",
+-      "DOTNET_CLI_HOME": "/store/root/home",
+-      "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+-      "DOTNET_NOLOGO": "1",
+-      "EXTRA_VARIABLE": "value"
+-     }
+     }
+    ],
+    "runtime": [
+@@ -5381,7 +3873,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "3746f8b1f1bbd25cb75e29a4d74c16c832eb12ff200c46defefb8832916523a3"
++     "expected": "7d22c4dbf2e2c98b4e3153fd9ebadd94e6efe4b74f50314951f12988569bc75a"
+     },
+     {
+      "root": "/work/scope",
+@@ -5407,7 +3899,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "66e2049cce637045e09b5d080f9b4cc04641a24d2e0d822398f30ae1ba6a21e5"
++     "expected": "2cf0f22d15465944a47e388a7484da0b0adbcd5c18cf9c24e59d7a5015f5fc64"
+     },
+     {
+      "root": "/work/scope",
+@@ -5433,7 +3925,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "2d02cb34f53f79b24b7c6405ceb77f03e98fc7068a73e155337b58b46d65d251"
++     "expected": "0eb8fc82a83dfeeeaf0e00e05bcb89c016fc40e7c36eda432246d903aadb4113"
+     },
+     {
+      "root": "/work/scope",
+@@ -5459,7 +3951,7 @@
+        "text": "locké"
+       }
+      ],
+-     "expected": "970794ec0dbeef01346976bf278b6c1efe97d2302ba0248b578eacce75b5eab9"
++     "expected": "690d7855b4369cce6278bffcf6a935ca09c1fdb4c42c6c58fb8817457fdeb692"
+     },
+     {
+      "root": "/work/scope",
+@@ -5481,7 +3973,7 @@
+        "text": "{\"name\":\"x\"}"
+       }
+      ],
+-     "expected": "2b61bbd845183d8448444df49b87c85cac70daa4947a21d465a84d9251c32b18"
++     "expected": "756e515de5a3f59185d1298ae6e9eb5384d80a3b2b00677e330b39e4ba293a7a"
+     }
+    ],
+    "bootstrapKey": [],
+# stage-clean different staged=pm-seam-tools/staged/new/w/3165162eaeb6.ts map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🟦️.ts
+@@ -1,4 +1,4 @@
+-import {createPackageManagerV1,type LockMemberV1,type LockPackageV1,type LockProjectionV1,type LockReaderV1,type ManagerDescriptorV1} from "../🟦️.ts";
++import {createPackageManagerV1,type LockMemberV1,type LockPackageV1,type LockReaderV1,type ManagerDescriptorV1} from "../🟦️.ts";
+ import descriptor from "./🔣️.json" with {type:"json"};
+ 
+ /** 📦️ Reads the v2/v3 package-lock: the empty key is the root, keys outside `node_modules` are workspace members, `link` rows are aliases. */
+@@ -15,18 +15,5 @@
+  }
+  return {packages,members};
+ };
+-/** 🔁️ Rewrites the workspace member paths of the lock between the original tree and the staged generation. */
+-export function projectPackageLockV1(text:string,input:LockProjectionV1):string{
+- const lock=JSON.parse(text) as any,links=input.reverse?new Map([...input.mapping].map(([source,target])=>[target,source])):input.mapping,rows:Record<string,any>={};
+- for(const [key,row] of Object.entries(lock.packages??{}) as [string,any][]){
+-  if(key===""){rows[key]=row;continue;}
+-  if(key.includes("node_modules/")){if(row.link===true&&typeof row.resolved==="string"){const target=links.get(row.resolved);if(!target){if(input.reverse)throw Error("Locked workspace package lacks original admitted Source");continue;}rows[key]={...row,resolved:target};}else rows[key]=row;continue;}
+-  const target=links.get(key);
+-  if(!target){if(input.reverse)throw Error("Locked workspace package lacks original admitted Source");continue;}
+-  rows[target]=row;
+- }
+- lock.packages=rows;
+- return JSON.stringify(lock,null,2)+"\n";
+-}
+-/** 📦️ The adapter: descriptor data plus the lock reader and its capabilities. */
+-export const npmPackageManagerV1=createPackageManagerV1(descriptor as unknown as ManagerDescriptorV1,readPackageLockV1,{document:text=>JSON.parse(text),project:projectPackageLockV1});
++/** 📦️ The adapter: descriptor data plus the lock reader. */
++export const npmPackageManagerV1=createPackageManagerV1(descriptor as unknown as ManagerDescriptorV1,readPackageLockV1);
+# stage-clean different staged=pm-seam-tools/staged/new/w/46504f1b8f77.py map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🐍️oracle.py
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🐍️oracle.py
+@@ -58,35 +58,17 @@
+ 
+ 
+ def render(d, operation, request):
+-    spec = d["operations"][operation]
+     values = dict(scalars(d["recipe"]))
+-    values.update(spec.get("values") or {})
+     values.update(request.get("settings") or {})
+-    chosen = spec.get("values", {}).get("backend")
+-    if chosen is not None and d["backendKinds"].get(chosen, "alias") == "alias":
+-        return {"error": "Supported non-aliasing install backend required: " + d["id"] + " " + chosen}
+-    values.update({"backend": chosen if chosen is not None else backend(d, request["platform"]), "cache": request.get("cache"), "directory": request.get("directory"), "manifest": request.get("manifest")})
+-    arguments = []
++    values.update({"backend": backend(d, request["platform"]), "cache": request.get("cache"), "directory": request.get("directory"), "manifest": request.get("manifest")})
+     try:
+-        for argument in spec["arguments"]:
+-            if isinstance(argument, str):
+-                arguments.append(expand(argument, values))
+-            elif "each" in argument:
+-                for item in (request.get("lists") or {}).get(argument["each"], []):
+-                    arguments.extend(expand(template, dict(values, item=item)) for template in argument["arguments"])
+-            elif all(values.get(name) is not None for item in argument["optional"] for name in re.findall(r"\{([A-Za-z][A-Za-z0-9]*)\}", item)):
+-                arguments.extend(expand(item, values) for item in argument["optional"])
+-        if request.get("scope") is not None:
+-            flags = (spec.get("scopes") or {}).get(request["scope"])
+-            if flags is None:
+-                return {"error": "Declared package manager scope required: " + d["id"] + " " + request["scope"]}
+-            arguments.extend(expand(item, values) for item in flags)
++        arguments = [expand(t, values) for t in d["operations"][operation]["arguments"]]
+     except KeyError as error:
+         return {"error": "Complete package manager request required: " + error.args[0]}
+     return {"executable": d["executable"], "arguments": arguments, "directory": request.get("directory")}
+ 
+ 
+-def environment(d, root, ambient, separator="/", overrides=None):
++def environment(d, root, ambient, separator="/"):
+     out, recipe = {}, d["recipe"]
+     for name, value in ambient.items():
+         upper = name.upper()
+@@ -96,7 +78,6 @@
+     for name, spec in d["environment"]["set"].items():
+         kind, _, rest = spec.partition(":")
+         out[name] = root + separator + recipe[rest] if kind == "role" else expand(rest, scalars(recipe))
+-    out.update(overrides or {})
+     return out
+ 
+ 
+@@ -284,76 +265,6 @@
+                     names.add(fold(n[:m.start()], layout["fold"]))
+     missing = [p for p in providers if fold(p["entry"], layout["fold"]) not in names]
+     return {"status": "match", "examined": len(providers)} if not missing else {"status": "mismatch", "examined": len(providers), "missing": missing[:64], "truncated": len(missing) > 64}
+-
+-
+-TOKEN = re.compile(r"\{\{([A-Za-z0-9_.]+)(?:\|(re|lower))?\}\}")
+-
+-
+-def schema_view(d):
+-    primary = next(l for l in d["locks"] if l["role"] == "primary")
+-    r, inputs = d["recipe"], d["producerInputs"]
+-    seen = []
+-    for name in inputs["ambientHomeFiles"] + inputs["ambientConfigFiles"]:
+-        s = re.sub(r"\.[A-Za-z0-9]+$", "", re.sub(r"^\.", "", name))
+-        if s not in seen:
+-            seen.append(s)
+-    scope = (d["configurations"]["scope"] or [""])[0]
+-    view = dict(d)
+-    view.update({"lockFile": primary["name"], "scopeConfig": scope, "storeRoleFiles": {r["home"]: inputs["ambientHomeFiles"], r["config"]: inputs["ambientConfigFiles"]},
+-                 "producerFileLabel": " and ".join(seen), "resolutionOracles": [d["resolution"]["oracle"], "typescript", "node", "node-missing", "none"],
+-                 "managerProtocol": {"manager": d["id"], "label": d["label"], "lockFile": primary["name"], "scopeConfig": scope, "generationDirectory": d["generationDirectory"], "strictProfilePrefix": d["resolution"]["strictPrefix"] or "", "hostVersionKey": d["runtime"]["hostVersionKey"] or "", "cacheVariable": next((n for n, s in d["environment"]["set"].items() if s == "role:cache" and n != "XDG_CACHE_HOME"), "")}})
+-    return view
+-
+-
+-def lookup(view, path):
+-    value = view
+-    for key in path.split("."):
+-        value = value[key]
+-    return value
+-
+-
+-def materialize(node, view):
+-    if isinstance(node, str):
+-        def one(m):
+-            value = lookup(view, m.group(1))
+-            return re.sub(r"[.*+?^${}()|\[\]\\]", lambda x: "\\" + x.group(0), value) if m.group(2) == "re" else value.lower() if m.group(2) == "lower" else value
+-        return TOKEN.sub(one, node)
+-    if isinstance(node, list):
+-        return [materialize(x, view) for x in node]
+-    if isinstance(node, dict):
+-        if "$manager" in node:
+-            value = json.loads(json.dumps(lookup(view, node["$manager"])))
+-            if "extend" not in node:
+-                return value
+-            if isinstance(value, list):
+-                return value + [materialize(x, view) for x in node["extend"]]
+-            value.update(materialize(node["extend"], view))
+-            return value
+-        return {k: materialize(v, view) for k, v in node.items()}
+-    return node
+-
+-
+-def is_region(node):
+-    return ("$manager" in node) if isinstance(node, dict) else isinstance(node, str) and TOKEN.search(node) is not None
+-
+-
+-def regions(node, view, path=""):
+-    if is_region(node):
+-        return [[path, materialize(node, view)]]
+-    rows = []
+-    if isinstance(node, list):
+-        for index, item in enumerate(node):
+-            step = "$" + item["$manager"] if isinstance(item, dict) and "$manager" in item else item if is_region(item) else str(index)
+-            rows += regions(item, view, path + "/[" + step + "]")
+-    elif isinstance(node, dict):
+-        for key, value in node.items():
+-            rows += regions(value, view, path + "/" + key)
+-    return rows
+-
+-
+-def schema_bases():
+-    deps = os.path.dirname(MANAGERS)
+-    return {"install": load(os.path.join(deps, "💾️storage", "🧬️schema", "📥️install.json")), "generation": load(os.path.join(deps, "🧾️generation", "🧬️schema", "🔣️.json"))}
+ 
+ 
+ def fixtures():
+@@ -381,22 +292,13 @@
+         out["canonical"].append({"value": value, "json": canonical(value), "sha256": sha(canonical(value))})
+     all_fixtures = fixtures()
+     for name, d in descriptors().items():
+-        view = schema_view(d)
+-        entry = {"descriptorSha256": sha(canonical(d)), "materialized": {key: sha(canonical(regions(base, view))) for key, base in schema_bases().items()}, "render": [], "backend": [], "environment": [], "runtime": [], "key": [], "bootstrapKey": [], "lock": [], "providers": [], "receipt": []}
++        entry = {"descriptorSha256": sha(canonical(d)), "render": [], "backend": [], "environment": [], "runtime": [], "key": [], "bootstrapKey": [], "lock": [], "providers": [], "receipt": []}
+         for operation in d["operations"]:
+             for platform in PLATFORMS:
+                 request = {"platform": platform, "cache": "/work/cache", "directory": "/work/scope", "manifest": "/work/scope/" + d["manifests"][0]}
+                 entry["render"].append({"operation": operation, "request": request, "expected": render(d, operation, request)})
+             partial = {"platform": "linux"}
+             entry["render"].append({"operation": operation, "request": partial, "expected": render(d, operation, partial)})
+-            for scope in ("all", "missing"):
+-                scoped = {"platform": "linux", "cache": "/work/cache", "directory": "/work/scope", "manifest": "/work/scope/" + d["manifests"][0], "scope": scope}
+-                entry["render"].append({"operation": operation, "request": scoped, "expected": render(d, operation, scoped)})
+-            listed = {"platform": "linux", "directory": "/work/scope", "manifest": "/work/scope/" + d["manifests"][0], "lists": {"groups": ["dev", "test"]}, "settings": {"project": ".", "series": "3.14"}}
+-            entry["render"].append({"operation": operation, "request": listed, "expected": render(d, operation, listed)})
+-            lean = {"platform": "linux", "directory": "/work/scope", "manifest": "/work/scope/" + d["manifests"][0]}
+-            if "optional" in json.dumps(d["operations"][operation]):
+-                entry["render"].append({"operation": operation, "request": lean, "expected": render(d, operation, lean)})
+         for platform in PLATFORMS:
+             entry["backend"].append({"platform": platform, "expected": backend(d, platform)})
+         recipe = d["recipe"]
+@@ -405,7 +307,6 @@
+         ambient.update({k: "drop" for k in recipe["clearEnvironmentKeys"]})
+         entry["environment"].append({"root": "/store/root", "separator": "/", "ambient": ambient, "expected": environment(d, "/store/root", ambient)})
+         entry["environment"].append({"root": "C:\\store", "separator": "\\", "ambient": {"Path": "C:\\bin"}, "expected": environment(d, "C:\\store", {"Path": "C:\\bin"}, "\\")})
+-        entry["environment"].append({"root": "/store/root", "separator": "/", "ambient": {"PATH": "/usr/bin"}, "overrides": {"EXTRA_VARIABLE": "value", "HOME": "/override"}, "expected": environment(d, "/store/root", {"PATH": "/usr/bin"}, "/", {"EXTRA_VARIABLE": "value", "HOME": "/override"})})
+         embedded = {"versions": {d["runtime"]["hostVersionKey"]: "9.9.9"}, "probe": None} if d["runtime"]["hostVersionKey"] else None
+         if embedded:
+             entry["runtime"].append(dict(embedded, expected=runtime(d, embedded["versions"], None)))
+# stage-clean different staged=pm-seam-tools/staged/new/w/4cf8678faf72.ts map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🟦️.ts
+@@ -1,5 +1,5 @@
+ import {parseJsoncV1} from "../📖️formats/🟦️.ts";
+-import {createPackageManagerV1,type LockMemberV1,type LockPackageV1,type LockProjectionV1,type LockReaderV1,type ManagerDescriptorV1} from "../🟦️.ts";
++import {createPackageManagerV1,type LockMemberV1,type LockPackageV1,type LockReaderV1,type ManagerDescriptorV1} from "../🟦️.ts";
+ import descriptor from "./🔣️.json" with {type:"json"};
+ 
+ const linkedV1=/^(workspace|file|link|portal):/u;
+@@ -17,19 +17,5 @@
+  }
+  return {packages,members};
+ };
+-/** 🔁️ Rewrites the workspace paths of the lock between the original tree and the staged generation, and the patch identities with them. */
+-export function projectBunLockV1(text:string,input:LockProjectionV1):string{
+- const lock=parseJsoncV1(text) as any,links=input.reverse?new Map([...input.mapping].map(([source,target])=>[target,source])):input.mapping;
+- if(lock.patchedDependencies)lock.patchedDependencies=Object.fromEntries(input.patches.map(row=>[row.name,input.reverse?row.reverse:row.forward]));
+- lock.workspaces=Object.fromEntries(Object.entries(lock.workspaces??{}).filter(([path])=>input.reverse||path===""||links.has(path)).map(([path,value])=>[links.get(path)??path,value]));
+- for(const [key,row] of Object.entries(lock.packages??{}) as [string,any][]){
+-  if(!Array.isArray(row)||typeof row[0]!=="string")continue;
+-  const marker=row[0].indexOf("@workspace:");if(marker<0)continue;
+-  const path=row[0].slice(marker+11),target=links.get(path);
+-  if(!target){if(input.reverse)throw Error("Locked workspace package lacks original admitted Source");delete lock.packages[key];continue;}
+-  row[0]=row[0].slice(0,marker+11)+target;
+- }
+- return JSON.stringify(lock,null,2)+"\n";
+-}
+-/** 🍞️ The adapter: descriptor data plus the lock reader and its capabilities. */
+-export const bunPackageManagerV1=createPackageManagerV1(descriptor as unknown as ManagerDescriptorV1,readBunLockV1,{document:parseJsoncV1,project:projectBunLockV1});
++/** 🍞️ The adapter: descriptor data plus the lock reader. */
++export const bunPackageManagerV1=createPackageManagerV1(descriptor as unknown as ManagerDescriptorV1,readBunLockV1);
+# stage-clean different staged=pm-seam-tools/staged/new/w/5f9b05277bff.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🔣️.json
+@@ -1,13 +1,11 @@
+ {
+   "version": 1,
+   "id": "cargo",
+-  "label": "Cargo",
+   "ecosystem": "rust",
+   "toolchain": "cargo",
+   "executable": "cargo",
+   "runtime": {
+     "hostVersionKey": null,
+-    "hostEnvironment": [],
+     "probe": {
+       "arguments": [
+         "--version"
+@@ -80,26 +78,13 @@
+     ],
+     "temporary": "tmp",
+     "home": "home",
+-    "config": "config",
+-    "directoryRoles": [
+-      "cargo-home",
+-      "cargo-global",
+-      "cargo-bin",
+-      "tmp",
+-      "home",
+-      "config"
+-    ],
+-    "maximumEnvironmentEntries": 512,
+-    "maximumEnvironmentBytes": 65536,
+-    "maximumEnvironmentValueUnits": 32768,
+-    "borrowedProviders": "canonical-owner-declared-version-and-manifest"
++    "config": "config"
+   },
+   "backendKinds": {},
+   "operations": {
+     "lock": {
+       "arguments": [
+-        "update",
+-        "--workspace",
++        "generate-lockfile",
+         "--manifest-path",
+         "{manifest}"
+       ]
+@@ -137,30 +122,8 @@
+   },
+   "resolution": {
+     "profiles": [],
+-    "strictPrefix": null,
+-    "oracle": "none",
+-    "conditions": {}
++    "strictPrefix": null
+   },
+-  "producerInputs": {
+-    "scopeFiles": [
+-      ".cargo/config.toml",
+-      "rust-toolchain.toml"
+-    ],
+-    "ambientHomeFiles": [
+-      ".cargo/config.toml"
+-    ],
+-    "ambientConfigFiles": [],
+-    "ambientConfigFallback": ".config",
+-    "environmentPrefixes": [
+-      "CARGO_",
+-      "RUSTUP_"
+-    ],
+-    "environmentIgnored": []
+-  },
+-  "ownedModules": [
+-    "🗂️workspaces/🦀️cargo"
+-  ],
+-  "stagedConfiguration": "",
+   "generationDirectory": "r",
+   "graphComponent": null
+ }
+# stage-clean different staged=pm-seam-tools/staged/new/w/6394eb6b69b3.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧬️schema/🔣️.json
+@@ -9,9 +9,7 @@
+         "operations": [
+           "lock",
+           "sync",
+-          "verify",
+-          "provision",
+-          "install-pinned"
++          "verify"
+         ],
+         "backendKinds": [
+           "clone",
+@@ -97,12 +95,7 @@
+         "bin",
+         "temporary",
+         "home",
+-        "config",
+-        "directoryRoles",
+-        "maximumEnvironmentEntries",
+-        "maximumEnvironmentBytes",
+-        "maximumEnvironmentValueUnits",
+-        "borrowedProviders"
++        "config"
+       ],
+       "properties": {
+         "version": {
+@@ -155,50 +148,6 @@
+         }
+       }
+     },
+-    "Argument": {
+-      "anyOf": [
+-        {
+-          "$ref": "#/$defs/Template"
+-        },
+-        {
+-          "type": "object",
+-          "additionalProperties": false,
+-          "required": [
+-            "optional"
+-          ],
+-          "properties": {
+-            "optional": {
+-              "type": "array",
+-              "minItems": 1,
+-              "items": {
+-                "$ref": "#/$defs/Template"
+-              }
+-            }
+-          }
+-        },
+-        {
+-          "type": "object",
+-          "additionalProperties": false,
+-          "required": [
+-            "each",
+-            "arguments"
+-          ],
+-          "properties": {
+-            "each": {
+-              "type": "string",
+-              "pattern": "^[a-z][a-z0-9-]{0,31}$"
+-            },
+-            "arguments": {
+-              "type": "array",
+-              "minItems": 1,
+-              "items": {
+-                "$ref": "#/$defs/Template"
+-              }
+-            }
+-          }
+-        }
+-      ]
+-    },
+     "Operation": {
+       "type": "object",
+       "additionalProperties": false,
+@@ -210,22 +159,7 @@
+           "type": "array",
+           "minItems": 1,
+           "items": {
+-            "$ref": "#/$defs/Argument"
+-          }
+-        },
+-        "scopes": {
+-          "type": "object",
+-          "additionalProperties": {
+-            "type": "array",
+-            "items": {
+-              "$ref": "#/$defs/Template"
+-            }
+-          }
+-        },
+-        "values": {
+-          "type": "object",
+-          "additionalProperties": {
+-            "type": "string"
++            "$ref": "#/$defs/Template"
+           }
+         }
+       }
+@@ -236,7 +170,6 @@
+       "required": [
+         "version",
+         "id",
+-        "label",
+         "ecosystem",
+         "toolchain",
+         "executable",
+@@ -251,9 +184,6 @@
+         "operations",
+         "installed",
+         "resolution",
+-        "ownedModules",
+-        "stagedConfiguration",
+-        "producerInputs",
+         "generationDirectory",
+         "graphComponent"
+       ],
+@@ -265,9 +195,6 @@
+           "type": "string",
+           "pattern": "^[a-z][a-z0-9-]{0,31}$"
+         },
+-        "label": {
+-          "$ref": "#/$defs/Name"
+-        },
+         "ecosystem": {
+           "type": "string",
+           "pattern": "^[a-z][a-z0-9-]{0,31}$"
+@@ -284,7 +211,6 @@
+           "additionalProperties": false,
+           "required": [
+             "hostVersionKey",
+-            "hostEnvironment",
+             "probe"
+           ],
+           "properties": {
+@@ -293,14 +219,6 @@
+                 "string",
+                 "null"
+               ]
+-            },
+-            "hostEnvironment": {
+-              "type": "array",
+-              "uniqueItems": true,
+-              "items": {
+-                "type": "string",
+-                "pattern": "^[A-Z][A-Z0-9_]*$"
+-              }
+             },
+             "probe": {
+               "type": "object",
+@@ -467,12 +385,6 @@
+             },
+             "verify": {
+               "$ref": "#/$defs/Operation"
+-            },
+-            "provision": {
+-              "$ref": "#/$defs/Operation"
+-            },
+-            "install-pinned": {
+-              "$ref": "#/$defs/Operation"
+             }
+           }
+         },
+@@ -547,9 +459,7 @@
+           "additionalProperties": false,
+           "required": [
+             "profiles",
+-            "strictPrefix",
+-            "oracle",
+-            "conditions"
++            "strictPrefix"
+           ],
+           "properties": {
+             "profiles": {
+@@ -565,88 +475,6 @@
+                 "string",
+                 "null"
+               ]
+-            },
+-            "oracle": {
+-              "$ref": "#/$defs/Name"
+-            },
+-            "conditions": {
+-              "type": "object",
+-              "additionalProperties": {
+-                "type": "array",
+-                "items": {
+-                  "type": "string",
+-                  "minLength": 1,
+-                  "maxLength": 256
+-                }
+-              }
+-            }
+-          }
+-        },
+-        "ownedModules": {
+-          "type": "array",
+-          "items": {
+-            "type": "string",
+-            "minLength": 1,
+-            "maxLength": 256
+-          }
+-        },
+-        "stagedConfiguration": {
+-          "type": "string"
+-        },
+-        "producerInputs": {
+-          "type": "object",
+-          "additionalProperties": false,
+-          "required": [
+-            "scopeFiles",
+-            "ambientHomeFiles",
+-            "ambientConfigFiles",
+-            "ambientConfigFallback",
+-            "environmentPrefixes",
+-            "environmentIgnored"
+-          ],
+-          "properties": {
+-            "scopeFiles": {
+-              "type": "array",
+-              "items": {
+-                "type": "string",
+-                "minLength": 1,
+-                "maxLength": 256
+-              }
+-            },
+-            "ambientHomeFiles": {
+-              "type": "array",
+-              "items": {
+-                "type": "string",
+-                "minLength": 1,
+-                "maxLength": 256
+-              }
+-            },
+-            "ambientConfigFiles": {
+-              "type": "array",
+-              "items": {
+-                "type": "string",
+-                "minLength": 1,
+-                "maxLength": 256
+-              }
+-            },
+-            "ambientConfigFallback": {
+-              "$ref": "#/$defs/Name"
+-            },
+-            "environmentPrefixes": {
+-              "type": "array",
+-              "items": {
+-                "type": "string",
+-                "minLength": 1,
+-                "maxLength": 256
+-              }
+-            },
+-            "environmentIgnored": {
+-              "type": "array",
+-              "items": {
+-                "type": "string",
+-                "minLength": 1,
+-                "maxLength": 256
+-              }
+             }
+           }
+         },
+@@ -700,18 +528,6 @@
+         },
+         "manifest": {
+           "$ref": "#/$defs/Name"
+-        },
+-        "scope": {
+-          "$ref": "#/$defs/Name"
+-        },
+-        "lists": {
+-          "type": "object",
+-          "additionalProperties": {
+-            "type": "array",
+-            "items": {
+-              "type": "string"
+-            }
+-          }
+         },
+         "settings": {
+           "type": "object",
+# stage-clean different staged=pm-seam-tools/staged/new/w/6824c15fbed9.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🔣️.json
+@@ -1,13 +1,11 @@
+ {
+   "version": 1,
+   "id": "go",
+-  "label": "Go",
+   "ecosystem": "go",
+   "toolchain": "go",
+   "executable": "go",
+   "runtime": {
+     "hostVersionKey": null,
+-    "hostEnvironment": [],
+     "probe": {
+       "arguments": [
+         "version"
+@@ -84,19 +82,7 @@
+     ],
+     "temporary": "tmp",
+     "home": "home",
+-    "config": "config",
+-    "directoryRoles": [
+-      "go-mod-cache",
+-      "go-path",
+-      "go-bin",
+-      "tmp",
+-      "home",
+-      "config"
+-    ],
+-    "maximumEnvironmentEntries": 512,
+-    "maximumEnvironmentBytes": 65536,
+-    "maximumEnvironmentValueUnits": 32768,
+-    "borrowedProviders": "canonical-owner-declared-version-and-manifest"
++    "config": "config"
+   },
+   "backendKinds": {},
+   "operations": {
+@@ -133,27 +119,8 @@
+   },
+   "resolution": {
+     "profiles": [],
+-    "strictPrefix": null,
+-    "oracle": "none",
+-    "conditions": {}
++    "strictPrefix": null
+   },
+-  "producerInputs": {
+-    "scopeFiles": [
+-      "go.work"
+-    ],
+-    "ambientHomeFiles": [],
+-    "ambientConfigFiles": [
+-      "go/env"
+-    ],
+-    "ambientConfigFallback": ".config",
+-    "environmentPrefixes": [
+-      "GO",
+-      "CGO_"
+-    ],
+-    "environmentIgnored": []
+-  },
+-  "ownedModules": [],
+-  "stagedConfiguration": "",
+   "generationDirectory": "g",
+   "graphComponent": null
+ }
+# stage-clean different staged=pm-seam-tools/staged/new/w/68ee01497b65.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🔣️.json
+@@ -1,13 +1,11 @@
+ {
+   "version": 1,
+   "id": "dotnet",
+-  "label": ".NET",
+   "ecosystem": "dotnet",
+   "toolchain": "dotnet",
+   "executable": "dotnet",
+   "runtime": {
+     "hostVersionKey": null,
+-    "hostEnvironment": [],
+     "probe": {
+       "arguments": [
+         "--version"
+@@ -78,19 +76,7 @@
+     ],
+     "temporary": "tmp",
+     "home": "home",
+-    "config": "config",
+-    "directoryRoles": [
+-      "nuget-packages",
+-      "dotnet-global",
+-      "dotnet-bin",
+-      "tmp",
+-      "home",
+-      "config"
+-    ],
+-    "maximumEnvironmentEntries": 512,
+-    "maximumEnvironmentBytes": 65536,
+-    "maximumEnvironmentValueUnits": 32768,
+-    "borrowedProviders": "canonical-owner-declared-version-and-manifest"
++    "config": "config"
+   },
+   "backendKinds": {},
+   "operations": {
+@@ -127,29 +113,8 @@
+   },
+   "resolution": {
+     "profiles": [],
+-    "strictPrefix": null,
+-    "oracle": "none",
+-    "conditions": {}
++    "strictPrefix": null
+   },
+-  "producerInputs": {
+-    "scopeFiles": [
+-      "NuGet.Config",
+-      "nuget.config",
+-      "global.json"
+-    ],
+-    "ambientHomeFiles": [
+-      ".nuget/NuGet/NuGet.Config"
+-    ],
+-    "ambientConfigFiles": [],
+-    "ambientConfigFallback": ".config",
+-    "environmentPrefixes": [
+-      "DOTNET_",
+-      "NUGET_"
+-    ],
+-    "environmentIgnored": []
+-  },
+-  "ownedModules": [],
+-  "stagedConfiguration": "",
+   "generationDirectory": "n",
+   "graphComponent": null
+ }
+# stage-clean different staged=pm-seam-tools/staged/new/w/79c7e5ed0b8c.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/⚖️ratchet/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/⚖️ratchet/🔣️.json
+@@ -1,4 +1,54 @@
+ {
+  "version": 1,
+- "files": {}
++ "files": {
++  "⚡️caching/🌐️vite/🟦️.ts": 3,
++  "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts": 5,
++  "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🟦️.ts": 1,
++  "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts": 1,
++  "⚡️caching/🔣️policy.json": 2,
++  "⚡️caching/🕸️graph/✅️verification/🟦️.ts": 1,
++  "⚡️caching/🕸️graph/🔏️seal/🎯️selection/🟦️.ts": 2,
++  "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts": 1,
++  "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json": 6,
++  "⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/💾️storage/🟦️.ts": 1,
++  "⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🧬️schema/🔣️.json": 5,
++  "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🟦️.ts": 1,
++  "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🟦️.ts": 2,
++  "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🟦️.ts": 1,
++  "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts": 2,
++  "⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🟦️.ts": 3,
++  "⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts": 5,
++  "⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts": 1,
++  "⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts": 2,
++  "⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧬️schema/🔣️.json": 1,
++  "⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🗄️catalog/🟦️.ts": 1,
++  "⚡️caching/🧬️schema/🔣️.json": 1,
++  "🎛️commands/✅️verify/🔷️typescript-project/🟦️.ts": 1,
++  "🎛️commands/📝️commit/📊️metrics/🛤️path-rules/🟦️.ts": 1,
++  "🏃️process/🍞️bun/🟦️.ts": 1,
++  "🏃️process/🟦️.ts": 1,
++  "🏗️build/⚙️operations/🔣️catalog.json": 2,
++  "🏗️build/🏃️execution/🔒️hermetic/🔣️.json": 1,
++  "🏗️build/📏️incremental/📋️scenarios/🔣️.json": 1,
++  "🏗️build/📖️storybook/🏃️execution/🟦️.ts": 2,
++  "🏗️build/📥️inputs/💾️storage/📒️ledger/🟨️.mjs": 1,
++  "🏗️build/📥️inputs/🟨️.mjs": 1,
++  "🏗️build/🔧️tools/🏗️bazel/📜️script.ts": 1,
++  "🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json": 1,
++  "🏗️build/🕸️graph/📥️inference/♻️revision/🟨️.mjs": 2,
++  "🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs": 2,
++  "🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🟨️.mjs": 1,
++  "🏗️build/🕸️graph/📥️inference/🟨️.mjs": 1,
++  "🏗️build/🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs": 1,
++  "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": 4,
++  "🏗️build/🕸️graph/📥️inference/🧶️bun-lock/🟨️.mjs": 2,
++  "🏗️build/🕸️graph/🟦️.ts": 3,
++  "🏗️build/🪞️parity/🔣️rules.json": 3,
++  "📦️packages/🟦️typescript/📋️project.json": 1,
++  "🔣️taxonomy.json": 8,
++  "🕸️dependencies/⚖️truth/🟦️.ts": 4,
++  "🕸️dependencies/📇️inventory/🟦️.ts": 7,
++  "🖼️assets/📽️nested-cargo-package-projection/🔣️.json": 1,
++  "🗂️workspaces/🟦️bun/🟨️.cjs": 2
++ }
+ }
+# stage-clean different staged=pm-seam-tools/staged/new/w/898c48a0ecda.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🔣️.json
+@@ -1,13 +1,11 @@
+ {
+   "version": 1,
+   "id": "uv",
+-  "label": "uv",
+   "ecosystem": "python",
+   "toolchain": "python",
+   "executable": "uv",
+   "runtime": {
+     "hostVersionKey": null,
+-    "hostEnvironment": [],
+     "probe": {
+       "arguments": [
+         "--version"
+@@ -54,16 +52,17 @@
+       "TEMP": "role:temporary",
+       "UV_CACHE_DIR": "role:cache",
+       "UV_PYTHON_INSTALL_DIR": "role:global",
+-      "UV_PYTHON_PREFERENCE": "literal:only-managed",
+-      "UV_PYTHON_DOWNLOADS": "literal:manual",
+-      "UV_NO_CONFIG": "literal:1",
+       "UV_NO_PROGRESS": "literal:1"
+     }
+   },
+   "recipe": {
+     "version": 1,
+     "kind": "python-install-projection",
+-    "backends": {},
++    "backends": {
++      "darwin": "clone",
++      "linux": "copy",
++      "win32": "copy"
++    },
+     "cache": "uv-cache",
+     "global": "uv-python",
+     "bin": "uv-bin",
+@@ -81,81 +80,37 @@
+     ],
+     "temporary": "tmp",
+     "home": "home",
+-    "config": "config",
+-    "directoryRoles": [
+-      "uv-cache",
+-      "uv-python",
+-      "uv-bin",
+-      "tmp",
+-      "home",
+-      "config"
+-    ],
+-    "maximumEnvironmentEntries": 512,
+-    "maximumEnvironmentBytes": 65536,
+-    "maximumEnvironmentValueUnits": 32768,
+-    "borrowedProviders": "canonical-owner-declared-version-and-manifest"
++    "config": "config"
+   },
+-  "backendKinds": {},
++  "backendKinds": {
++    "clone": "clone",
++    "copy": "copy",
++    "hardlink": "alias",
++    "symlink": "alias"
++  },
+   "operations": {
+     "lock": {
+       "arguments": [
+         "lock",
+-        {
+-          "optional": [
+-            "--cache-dir",
+-            "{cache}"
+-          ]
+-        }
++        "--cache-dir",
++        "{cache}"
+       ]
+     },
+     "sync": {
+       "arguments": [
+         "sync",
+         "--locked",
+-        {
+-          "optional": [
+-            "--project",
+-            "{project}"
+-          ]
+-        },
+-        {
+-          "each": "groups",
+-          "arguments": [
+-            "--group",
+-            "{item}"
+-          ]
+-        },
+-        {
+-          "optional": [
+-            "--cache-dir",
+-            "{cache}"
+-          ]
+-        }
+-      ],
+-      "scopes": {
+-        "all": [
+-          "--all-packages",
+-          "--all-groups"
+-        ]
+-      }
+-    },
+-    "provision": {
+-      "arguments": [
+-        "python",
+-        "install",
+-        "{series}"
++        "--link-mode={backend}",
++        "--cache-dir",
++        "{cache}"
+       ]
+     },
+     "verify": {
+       "arguments": [
+         "lock",
+         "--check",
+-        {
+-          "optional": [
+-            "--cache-dir",
+-            "{cache}"
+-          ]
+-        }
++        "--cache-dir",
++        "{cache}"
+       ]
+     }
+   },
+@@ -174,27 +129,8 @@
+   },
+   "resolution": {
+     "profiles": [],
+-    "strictPrefix": null,
+-    "oracle": "none",
+-    "conditions": {}
++    "strictPrefix": null
+   },
+-  "producerInputs": {
+-    "scopeFiles": [
+-      "uv.toml",
+-      ".python-version"
+-    ],
+-    "ambientHomeFiles": [],
+-    "ambientConfigFiles": [
+-      "uv/uv.toml"
+-    ],
+-    "ambientConfigFallback": ".config",
+-    "environmentPrefixes": [
+-      "UV_"
+-    ],
+-    "environmentIgnored": []
+-  },
+-  "ownedModules": [],
+-  "stagedConfiguration": "",
+   "generationDirectory": "p",
+   "graphComponent": null
+ }
+# stage-clean different staged=pm-seam-tools/staged/new/w/c1318bbfafca.ts map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts
+@@ -7,13 +7,9 @@
+ /** 🔌️ Names the closed neutral contract (the schema) every package manager adapter, request, key and receipt follows. */
+ export const packageManagerProtocolV1=protocol;
+ /** 🛠️ Closes the operations every adapter renders: produce the lock, install exactly the lock, check the lock is current. */
+-export type ManagerOperationV1="lock"|"sync"|"verify"|"provision"|"install-pinned";
++export type ManagerOperationV1="lock"|"sync"|"verify";
+ /** 📄️ One lock file a manager owns, with the neutral format id that selects its reader. */
+ export interface ManagerLockV1{readonly name:string;readonly role:"primary"|"secondary";readonly format:string}
+-/** 🧩️ One operation argument: a template, or a group that is emitted only when every placeholder inside it resolves. */
+-export type ManagerArgumentV1=string|Readonly<{optional:readonly string[]}>|Readonly<{each:string;arguments:readonly string[]}>;
+-/** 🛠️ One operation: its argument templates and the extra flags each named scope appends. */
+-export interface ManagerOperationSpecV1{readonly arguments:readonly ManagerArgumentV1[];readonly scopes?:Readonly<Record<string,readonly string[]>>;readonly values?:Readonly<Record<string,string>>}
+ /** 🔤️ Names the closed set of name transforms a layout may declare. */
+ export type TransformV1="identity"|"lowercase"|"go-escape"|"pep-escape";
+ /**
+@@ -21,16 +17,15 @@
+  * @see ./🧬️schema/🔣️.json
+  */
+ export interface ManagerDescriptorV1{
+- readonly version:1;readonly id:string;readonly label:string;readonly ecosystem:string;readonly toolchain:string;readonly executable:string;
+- readonly runtime:Readonly<{hostVersionKey:string|null;hostEnvironment:readonly string[];probe:Readonly<{arguments:readonly string[];pattern:string}>}>;
++ readonly version:1;readonly id:string;readonly ecosystem:string;readonly toolchain:string;readonly executable:string;
++ readonly runtime:Readonly<{hostVersionKey:string|null;probe:Readonly<{arguments:readonly string[];pattern:string}>}>;
+  readonly manifests:readonly string[];readonly manifestIdentity:Readonly<{excludedTopLevelFields:readonly string[];bootstrapFields:readonly string[]}>;
+  readonly locks:readonly ManagerLockV1[];readonly configurations:Readonly<Record<"scope"|"home"|"config",readonly string[]>>;
+  readonly environment:Readonly<{set:Readonly<Record<string,string>>}>;readonly recipe:Readonly<Record<string,unknown>&{backends:Readonly<Record<string,string>>;clearEnvironmentPrefixes:readonly string[];clearEnvironmentKeys:readonly string[]}>;
+  readonly backendKinds:Readonly<Record<string,"clone"|"copy"|"alias">>;
+- readonly operations:Readonly<{lock:ManagerOperationSpecV1;sync:ManagerOperationSpecV1;verify?:ManagerOperationSpecV1;provision?:ManagerOperationSpecV1;"install-pinned"?:ManagerOperationSpecV1}>;
++ readonly operations:Readonly<{lock:Readonly<{arguments:readonly string[]}>;sync:Readonly<{arguments:readonly string[]}>;verify?:Readonly<{arguments:readonly string[]}>}>;
+  readonly installed:Readonly<{containers:readonly string[];entry:string;match:"exact"|"listed";nameTransform:TransformV1;nameEscape:Readonly<Record<string,string>>;fold:TransformV1;suffix:string|null;sourcePrefix:string|null}>;
+- readonly resolution:Readonly<{profiles:readonly string[];strictPrefix:string|null;oracle:string;conditions:Readonly<Record<string,readonly string[]>>}>;
+- readonly producerInputs:Readonly<{scopeFiles:readonly string[];ambientHomeFiles:readonly string[];ambientConfigFiles:readonly string[];ambientConfigFallback:string;environmentPrefixes:readonly string[];environmentIgnored:readonly string[]}>;readonly ownedModules:readonly string[];readonly stagedConfiguration:string;readonly generationDirectory:string;readonly graphComponent:string|null;
++ readonly resolution:Readonly<{profiles:readonly string[];strictPrefix:string|null}>;readonly generationDirectory:string;readonly graphComponent:string|null;
+ }
+ /** 📦️ One locked package in the neutral graph; `key` is the lock's own location so nested duplicates stay distinct. */
+ export interface LockPackageV1{readonly name:string;readonly version:string;readonly key:string;readonly source:string|null;readonly integrity:string|null}
+@@ -40,14 +35,10 @@
+ export interface LockGraphV1{readonly version:1;readonly format:string;readonly packages:readonly LockPackageV1[];readonly members:readonly LockMemberV1[]}
+ /** 📖️ Reads one lock text into unsorted rows; the core sorts and seals them. */
+ export type LockReaderV1=(text:string)=>Readonly<{packages:readonly LockPackageV1[];members:readonly LockMemberV1[]}>;
+-/** 🧭️ What a lock projection needs: the original-to-staged workspace path mapping, the patch identities and the direction. */
+-export interface LockProjectionV1{readonly reverse:boolean;readonly mapping:ReadonlyMap<string,string>;readonly patches:readonly Readonly<{name:string;forward:string;reverse:string}>[]}
+-/** 🧰️ Optional adapter capabilities beyond reading: the lock as a JSON-like document, and its projection between original and staged workspace paths. */
+-export interface LockCapabilitiesV1{readonly document?:(text:string)=>unknown;readonly project?:(text:string,input:LockProjectionV1)=>string}
+ /** 🖥️ The only host facts keys and runtime identity may consume; injected so the core never touches `process`. */
+ export interface HostPortV1{readonly platform:string;readonly arch:string;readonly versions:Readonly<Record<string,string|undefined>>;probe?(executable:string,args:readonly string[]):string|undefined}
+ /** 📨️ Everything a rendering may vary by; unknown keys are refused. */
+-export interface ManagerRequestV1{readonly platform:string;readonly cache?:string;readonly directory?:string;readonly manifest?:string;readonly scope?:string;readonly lists?:Readonly<Record<string,readonly string[]>>;readonly settings?:Readonly<Record<string,string>>}
++export interface ManagerRequestV1{readonly platform:string;readonly cache?:string;readonly directory?:string;readonly manifest?:string;readonly settings?:Readonly<Record<string,string>>}
+ /** 🚀️ What a runner executes: no shell, no ambient state. */
+ export interface ManagerInvocationV1{readonly executable:string;readonly arguments:readonly string[];readonly directory:string|null}
+ /**
+@@ -57,11 +48,10 @@
+ export interface PackageManagerV1{
+  readonly descriptor:ManagerDescriptorV1;readonly id:string;readonly ecosystem:string;
+  primaryLockName():string;lockFileNames():readonly string[];manifestFileNames():readonly string[];configurationNames(role:"scope"|"home"|"config"):readonly string[];
+- resolutionProfiles():readonly string[];recipe():ManagerDescriptorV1["recipe"];generationDirectory():string;hostEnvironment():readonly string[];
++ resolutionProfiles():readonly string[];recipe():ManagerDescriptorV1["recipe"];generationDirectory():string;
+  backend(platform:string):string|undefined;render(operation:ManagerOperationV1,request:ManagerRequestV1):ManagerInvocationV1;
+- environment(root:string,ambient:Readonly<Record<string,string|undefined>>,separator?:"/"|"\\",overrides?:Readonly<Record<string,string>>):Readonly<Record<string,string>>;
++ environment(root:string,ambient:Readonly<Record<string,string|undefined>>,separator?:"/"|"\\"):Readonly<Record<string,string>>;
+  runtimeIdentity(host:HostPortV1):string;parseLock(bytes:Uint8Array|string):LockGraphV1;
+- parseLockDocument(text:string):unknown;projectLock(text:string,input:LockProjectionV1):string;
+ }
+ 
+ const compare=(left:string,right:string):number=>left<right?-1:left>right?1:0;
+@@ -93,7 +83,7 @@
+  * 🏭️ Builds one manager from its descriptor and lock reader; every behavior below is data driven.
+  * @see ./🧪️tests/🐍️oracle.py for the independent implementation the vectors come from.
+  */
+-export function createPackageManagerV1(descriptor:ManagerDescriptorV1,reader:LockReaderV1,capabilities:LockCapabilitiesV1={}):PackageManagerV1{
++export function createPackageManagerV1(descriptor:ManagerDescriptorV1,reader:LockReaderV1):PackageManagerV1{
+  const recipe=descriptor.recipe,primary=descriptor.locks.find(lock=>lock.role==="primary");
+  if(!primary)throw Error("Primary lock required: "+descriptor.id);
+  const backend=(platform:string)=>recipe.backends[platform];
+@@ -107,28 +97,16 @@
+  const manager:PackageManagerV1={
+   descriptor,id:descriptor.id,ecosystem:descriptor.ecosystem,
+   primaryLockName:()=>primary.name,lockFileNames:()=>descriptor.locks.map(lock=>lock.name),manifestFileNames:()=>descriptor.manifests,
+-  configurationNames:role=>descriptor.configurations[role],resolutionProfiles:()=>descriptor.resolution.profiles,recipe:()=>recipe,generationDirectory:()=>descriptor.generationDirectory,hostEnvironment:()=>descriptor.runtime.hostEnvironment,
++  configurationNames:role=>descriptor.configurations[role],resolutionProfiles:()=>descriptor.resolution.profiles,recipe:()=>recipe,generationDirectory:()=>descriptor.generationDirectory,
+   backend:requireBackend,
+   render(operation,request){
+-   const known=new Set(["platform","cache","directory","manifest","scope","lists","settings"]);
++   const known=new Set(["platform","cache","directory","manifest","settings"]);
+    for(const key of Object.keys(request))if(!known.has(key))throw Error("Closed package manager request required: "+key);
+    const spec=descriptor.operations[operation];if(!spec)throw Error("Declared package manager operation required: "+descriptor.id+" "+operation);
+-   const declared=spec.values?.backend,backendName=declared===undefined?requireBackend(request.platform):descriptor.backendKinds[declared]===undefined||protocol.refusedBackendKinds.includes(descriptor.backendKinds[declared]!)?(()=>{throw Error("Supported non-aliasing install backend required: "+descriptor.id+" "+declared);})():declared;
+-   const values:Record<string,string|undefined>={...scalarsV1(recipe),...spec.values,...request.settings,backend:backendName,cache:request.cache,directory:request.directory,manifest:request.manifest};
+-   const rendered:string[]=[];
+-   for(const argument of spec.arguments){
+-    if(typeof argument==="string"){rendered.push(expandV1(argument,values));continue;}
+-    if("each" in argument){
+-     const items=request.lists?.[argument.each]??[];
+-     for(const item of items)rendered.push(...argument.arguments.map(template=>expandV1(template,{...values,item})));
+-     continue;
+-    }
+-    if(argument.optional.every(template=>[...template.matchAll(placeholderV1)].every(match=>values[match[1]!]!==undefined)))rendered.push(...argument.optional.map(template=>expandV1(template,values)));
+-   }
+-   if(request.scope!==undefined){const flags=spec.scopes?.[request.scope];if(!flags)throw Error("Declared package manager scope required: "+descriptor.id+" "+request.scope);rendered.push(...flags.map(template=>expandV1(template,values)));}
+-   return Object.freeze({executable:descriptor.executable,arguments:Object.freeze(rendered),directory:request.directory??null});
+-  },
+-  environment(root,ambient,separator="/",overrides={}){
++   const values={...scalarsV1(recipe),...request.settings,backend:requireBackend(request.platform),cache:request.cache,directory:request.directory,manifest:request.manifest};
++   return Object.freeze({executable:descriptor.executable,arguments:Object.freeze(spec.arguments.map(template=>expandV1(template,values))),directory:request.directory??null});
++  },
++  environment(root,ambient,separator="/"){
+    const output:Record<string,string>={},upperPrefixes=recipe.clearEnvironmentPrefixes,keys=recipe.clearEnvironmentKeys;
+    for(const [name,value] of Object.entries(ambient)){
+     if(value===undefined)continue;
+@@ -141,7 +119,7 @@
+     const [kind,rest]=[spec.slice(0,spec.indexOf(":")),spec.slice(spec.indexOf(":")+1)];
+     output[name]=kind==="role"?root+separator+roleV1(recipe,rest):expandV1(rest,scalars);
+    }
+-   return Object.freeze({...output,...overrides});
++   return Object.freeze(output);
+   },
+   runtimeIdentity(host){
+    const key=descriptor.runtime.hostVersionKey,embedded=key===null?undefined:host.versions[key];
+@@ -150,8 +128,6 @@
+    if(!match?.[1])throw Error("Resolvable package manager runtime required: "+descriptor.id);
+    return match[1];
+   },
+-  parseLockDocument(text){if(!capabilities.document)throw Error("Declared lock document reader required: "+descriptor.id);return capabilities.document(text);},
+-  projectLock(text,input){if(!capabilities.project)throw Error("Declared lock projection required: "+descriptor.id);return capabilities.project(text,input);},
+   parseLock(bytes){
+    if(bytes.length>protocol.maximumLockBytes)throw Error("Bounded lock required: "+descriptor.id);
+    const text=typeof bytes==="string"?bytes:new TextDecoder("utf-8",{fatal:true}).decode(bytes),read=reader(text),seen=new Set<string>(),packages:LockPackageV1[]=[];
+# stage-clean different staged=pm-seam-tools/staged/new/w/dba25ea5de03.ts map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts
+@@ -19,17 +19,8 @@
+ import vectors from "./🔣️.json" with {type:"json"};
+ import fixtures from "./🧫️fixtures/🔣️.json" with {type:"json"};
+ import ratchet from "./⚖️ratchet/🔣️.json" with {type:"json"};
+-import owned from "../🔣️owned.json" with {type:"json"};
+-import catalogDocument from "../🔣️catalog.json" with {type:"json"};
+-import {createRequire} from "node:module";
+-import installBase from "../../💾️storage/🧬️schema/📥️install.json" with {type:"json"};
+-import generationBase from "../../🧾️generation/🧬️schema/🔣️.json" with {type:"json"};
+-import originalInstall from "./🧫️fixtures/📥️install.original.json" with {type:"json"};
+-import originalGeneration from "./🧫️fixtures/🧾️generation.original.json" with {type:"json"};
+-import {managerRegionsV1,materializeSchemaV1,schemaViewV1} from "../🧩️materialize/🟦️.ts";
+-import {projectBunLockV1} from "../🍞️bun/🟦️.ts";
+ import cachingPolicy from "../../../../🔣️policy.json" with {type:"json"};
+-import {javascriptInstallSchemaV1 as installSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
++import installSchema from "../../💾️storage/🧬️schema/📥️install.json" with {type:"json"};
+ 
+ type Json=any;
+ const protocol=core.packageManagerProtocolV1,here=dirname(fileURLToPath(import.meta.url)),managersRoot=dirname(here),libraryRoot=join(here,"..","..","..","..","..");
+@@ -114,7 +105,7 @@
+    }
+   });
+   test(manager.id+" renders the isolated environment",()=>{
+-   for(const row of vector.environment)expect(manager.environment(row.root,row.ambient,row.separator,row.overrides)).toEqual(row.expected);
++   for(const row of vector.environment)expect(manager.environment(row.root,row.ambient,row.separator)).toEqual(row.expected);
+   });
+   test(manager.id+" resolves its runtime identity from the host or its own probe",()=>{
+    for(const row of vector.runtime){
+@@ -293,13 +284,12 @@
+    tokens.add(manager.id);
+    for(const name of [...manager.lockFileNames(),...manager.configurationNames("scope"),...manager.configurationNames("home"),...manager.configurationNames("config")])tokens.add(name);
+    if(manager.descriptor.runtime.hostVersionKey)tokens.add(manager.descriptor.runtime.hostVersionKey);
+-   for(const name of manager.hostEnvironment())tokens.add(name);
+   }
+   return [...tokens].filter(token=>token.length>1);
+  };
+  const mentions=(text:string,token:string)=>new RegExp("(?<![\\w.-])"+token.replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")+"(?![\\w.-])","u").test(text);
+  test("the neutral core, formats and schema name no manager, lock file, configuration file or host runtime",()=>{
+-  for(const file of [join(managersRoot,"🟦️.ts"),join(managersRoot,"📖️formats","🟦️.ts"),join(managersRoot,"🧩️materialize","🟦️.ts"),join(managersRoot,"🧬️schema","🔣️.json")]){
++  for(const file of [join(managersRoot,"🟦️.ts"),join(managersRoot,"📖️formats","🟦️.ts"),join(managersRoot,"🧬️schema","🔣️.json")]){
+    const text=readFileSync(file,"utf8").replace(/"(javascript|rust|go|python|dotnet)"/gu,"");
+    const hits=adapterTokens().filter(token=>!["go"].includes(token)&&mentions(text,token));
+    expect({file:relative(managersRoot,file),hits}).toEqual({file:relative(managersRoot,file),hits:[]});
+@@ -315,111 +305,25 @@
+    expect(importsOf(join(managersRoot,folder,"🟦️.ts")).filter(path=>!allowed.has(path))).toEqual([]);
+   }
+  });
+- test("the bun descriptor materializes the pre-seam values at every manager-specific position of both schema bases, and its recipe keeps the hashed key order",()=>{
+-  const bun=packageManagerRegistryV1.get("bun"),view=schemaViewV1(bun.descriptor),regions=(base:unknown)=>[...managerRegionsV1(base,view)];
+-  const pinnedInstall=originalInstall as unknown as (readonly [string,unknown])[],pinnedGeneration=originalGeneration as unknown as (readonly [string,unknown])[];
+-  const protocolPath="/$defs/ManagerProtocol/const",installRegions=regions(installBase),generationRegions=regions(generationBase);
+-  expect(installRegions.filter(([path])=>path!==protocolPath)).toEqual(pinnedInstall);
+-  expect(generationRegions).toEqual(pinnedGeneration);
+-  expect(installRegions.find(([path])=>path===protocolPath)![1]).toEqual({manager:"bun",label:"Bun",lockFile:"bun.lock",scopeConfig:"bunfig.toml",generationDirectory:"j",strictProfilePrefix:"bun-",hostVersionKey:"bun",cacheVariable:"BUN_INSTALL_CACHE_DIR"});
+-  const recipePath="/$defs/ProducerRecipeProtocol/const",original=pinnedInstall.find(([path])=>path===recipePath)![1];
+-  expect(JSON.stringify(installRegions.find(([path])=>path===recipePath)![1])).toBe(JSON.stringify(original));
+-  expect(JSON.stringify(bun.recipe())).toBe(JSON.stringify(original));
+-  expect(installSchema.$defs.ManagerProtocol.manager).toBe(bun);
+-  expect(installSchema.$defs.ManagerProtocol.const.runtime).toBe(process.versions.bun);
+- });
+- test("every manager materializes both schema bases without a leftover token, and the digests equal the oracle",()=>{
+-  for(const manager of builtInPackageManagersV1){
+-   const view=schemaViewV1(manager.descriptor),install=materializeSchemaV1(installBase,view),generation=materializeSchemaV1(generationBase,view);
+-   for(const [name,value] of [["install",install],["generation",generation]] as const){
+-    expect(JSON.stringify(value),manager.id+" "+name).not.toMatch(/\{\{|\$manager/u);
+-    expect(core.sha256HexV1(core.canonicalJsonV1(managerRegionsV1(name==="install"?installBase:generationBase,view))),manager.id+" "+name).toBe(vectorsOf(manager.id).materialized[name]);
+-   }
+-  }
+-  expect(failure(()=>materializeSchemaV1({a:"{{missing.path}}"},{}))).toContain("Declared manager value required");
+-  expect(failure(()=>materializeSchemaV1({a:"{{recipe}}"},{recipe:{}}))).toContain("Declared manager text required");
+- });
+- test("the bun lock projection equals the pre-seam driver arrow in both directions",()=>{
+-  const original=(text:string,reverse:boolean,mapping:Map<string,string>,patches:Map<string,{source:string;target:string}>,scope:string)=>{
+-   const lock=parseJsoncThirdParty(text) as any,links=reverse?new Map([...mapping].map(([source,target])=>[target,source])):mapping;
+-   if(lock.patchedDependencies)lock.patchedDependencies=Object.fromEntries([...patches].map(([name,row])=>[name,reverse?relative(scope,row.source).split(sep).join("/"):row.target]));
+-   lock.workspaces=Object.fromEntries(Object.entries(lock.workspaces??{}).filter(([path])=>reverse||path===""||links.has(path)).map(([path,value])=>[links.get(path)??path,value]));
+-   for(const[key,row]of Object.entries(lock.packages??{}) as [string,any][]){if(!Array.isArray(row)||typeof row[0]!=="string")continue;const marker=row[0].indexOf("@workspace:");if(marker<0)continue;const path=row[0].slice(marker+11),target=links.get(path);if(!target){if(reverse)throw Error("Locked workspace package lacks original admitted Source");delete lock.packages[key];continue;}row[0]=row[0].slice(0,marker+11)+target;}
+-   return JSON.stringify(lock,null,2)+"\n";
+-  };
+-  const text=(fixtures as Json).bun["tools-excerpt"].text as string,mapping=new Map([["packages/member","w/0"]]),patches=new Map([["left-pad@1.3.0",{source:"patches/left-pad.patch",target:"patches/0.patch"}]]);
+-  const withPatch=text.replace('"packages": {','"patchedDependencies": {\n    "left-pad@1.3.0": "patches/left-pad.patch",\n  },\n  "packages": {');
+-  for(const input of [text,withPatch]){
+-   const projection={reverse:false,mapping,patches:[...patches].map(([name,row])=>({name,forward:row.target,reverse:relative(".",row.source).split(sep).join("/")}))};
+-   const forward=projectBunLockV1(input,projection);
+-   expect(forward).toBe(original(input,false,mapping,patches,"."));
+-   const back=projectBunLockV1(forward,{...projection,reverse:true});
+-   expect(back).toBe(original(forward,true,mapping,patches,"."));
+-  }
+-  expect(failure(()=>projectBunLockV1(text,{reverse:true,mapping:new Map(),patches:[]}))).toContain("Locked workspace package lacks original admitted Source");
+- });
+- test("optional argument groups and scopes render, and an undeclared scope is refused",()=>{
+-  const uv=packageManagerRegistryV1.get("uv");
+-  expect(uv.render("sync",{platform:"linux"}).arguments).toEqual(["sync","--locked"]);
+-  expect(uv.render("sync",{platform:"linux",cache:"/c",scope:"all"}).arguments).toEqual(["sync","--locked","--cache-dir","/c","--all-packages","--all-groups"]);
+-  expect(failure(()=>uv.render("sync",{platform:"linux",scope:"nothing"}))).toContain("Declared package manager scope required");
+-  expect(failure(()=>packageManagerRegistryV1.get("bun").render("sync",{platform:"linux",cache:"/c",scope:"all"}))).toContain("Declared package manager scope required");
+-  expect(packageManagerRegistryV1.get("go").environment("/r",{},"/",{GOWORK:"/w/go.work"}).GOWORK).toBe("/w/go.work");
+- });
+- test("production code outside the adapters and the declared repository data names no package manager lock, configuration, flag or role name (ratchet is zero)",async()=>{
+-  const pattern=/bun\.lock|bun\.lockb|bunfig|--frozen-lockfile|--lockfile-only|BUN_INSTALL|bun-(?:cache|global|bin|home|config|import|require)/gu,skip=new Set(["node_modules","🧪️tests","🧫️fixtures",".git","target","dist",".cache","🔌️managers"]),found:Record<string,number>={};
+-  const modules=builtInPackageManagersV1.flatMap(manager=>manager.descriptor.ownedModules),data=Object.keys(owned.data);
++ test("the bun descriptor equals the live install recipe it will replace",()=>{
++  const bun=packageManagerRegistryV1.get("bun"),recipe=installSchema.$defs.ProducerRecipeProtocol.const;
++  expect(JSON.stringify(bun.recipe())).toBe(JSON.stringify(recipe));
++  expect(bun.primaryLockName()).toBe(installSchema.$defs.SourceOwnerLockProtocol.const.mutableStagePath);
++  expect(bun.resolutionProfiles()).toEqual(Object.keys(installSchema.$defs.SourceOwnerExportsProtocol.const.profiles).filter(name=>name.startsWith(bun.descriptor.resolution.strictPrefix!)));
++  expect(bun.backend("darwin")).toBe(recipe.backends.darwin);
++ });
++ test("production code outside the adapters names no package manager lock, configuration, flag or runtime (ratchet)",async()=>{
++  const pattern=/bun\.lock|bunfig|--frozen-lockfile|--lockfile-only|process\.versions\.bun|Bun\.JSONC/gu,skip=new Set(["node_modules","🧪️tests","🧫️fixtures",".git","target","dist",".cache","🔌️managers"]),found:Record<string,number>={};
+   const walk=async(directory:string)=>{
+    for(const entry of await readdir(directory,{withFileTypes:true})){
+-    const path=join(directory,entry.name),relativePath=relative(libraryRoot,path).split(sep).join("/");
+-    if(entry.isDirectory()){if(!skip.has(entry.name)&&!modules.includes(relativePath))await walk(path);continue;}
+-    if(!/\.(ts|mjs|cjs|json)$/u.test(entry.name)||modules.includes(relativePath)||data.includes(relativePath))continue;
+-    const count=(readFileSync(path,"utf8").match(pattern)??[]).length;
+-    if(count)found[relativePath]=count;
++    if(entry.isDirectory()){if(!skip.has(entry.name))await walk(join(directory,entry.name));continue;}
++    if(!/\.(ts|mjs|cjs|json)$/u.test(entry.name))continue;
++    const path=join(directory,entry.name),text=readFileSync(path,"utf8"),count=(text.match(pattern)??[]).length;
++    if(count)found[relative(libraryRoot,path).split(sep).join("/")]=count;
+    }
+   };
+   await walk(libraryRoot);
+-  expect(found).toEqual({});
+-  expect(ratchet.files).toEqual({});
+- });
+- test("every adapter-owned module exists and every declared repository datum still names the selected manager's files",()=>{
+-  const names=(ecosystem:string)=>{const manager=selectPackageManagerV1(ecosystem,{});return {lock:manager.primaryLockName(),scopeConfig:manager.configurationNames("scope")[0]!};};
+-  for(const manager of builtInPackageManagersV1)for(const module of manager.descriptor.ownedModules)expect(existsSync(join(libraryRoot,module)),module).toBe(true);
+-  for(const [file,row] of Object.entries(owned.data)){
+-   const text=readFileSync(join(libraryRoot,file),"utf8"),selected=names(row.ecosystem);
+-   for(const key of row.names)expect(text.includes(selected[key as "lock"|"scopeConfig"]),file+" "+key).toBe(true);
+-  }
+- });
+- test("the CommonJS accessor and the catalog agree with the registry for every ecosystem and manager",()=>{
+-  const accessor=createRequire(import.meta.url)("../🟨️.cjs");
+-  expect(Object.keys(catalogDocument.adapters).sort()).toEqual(packageManagerRegistryV1.all().map(manager=>manager.id));
+-  for(const manager of packageManagerRegistryV1.all()){
+-   const row=accessor.managerV1(manager.id);
+-   expect(row.primaryLockName).toBe(manager.primaryLockName());expect([...row.lockFileNames]).toEqual([...manager.lockFileNames()]);expect(row.generationDirectory).toBe(manager.generationDirectory());
+-   expect(row.scopeConfigName??null).toBe(manager.configurationNames("scope")[0]??null);expect(row.graphComponent).toBe(manager.descriptor.graphComponent);expect(catalogDocument.adapters[manager.id as keyof typeof catalogDocument.adapters]).toBeDefined();
+-  }
+-  for(const ecosystem of packageManagerRegistryV1.ecosystems()){expect(accessor.selectedManagerV1(ecosystem,{}).id).toBe(selectPackageManagerV1(ecosystem,{}).id);}
+-  expect(accessor.selectedManagerV1("javascript",{SEMIO_PACKAGE_MANAGER_JAVASCRIPT:"npm"}).primaryLockName).toBe("package-lock.json");
+-  expect(accessor.sourceFilesV1().length).toBe(2+1+packageManagerRegistryV1.all().length);
+- });
+- test("the cargo preparation pair runs exactly the commands the cargo manager renders",()=>{
+-  const source=readFileSync(join(libraryRoot,"🗂️workspaces","🦀️cargo","🛠️preparation","🟦️.ts"),"utf8"),cargo=packageManagerRegistryV1.get("cargo");
+-  const literal=(operation:"lock"|"sync")=>JSON.stringify(cargo.render(operation,{platform:process.platform,manifest:"MANIFEST"}).arguments).replace('"MANIFEST"',"manifest");
+-  expect(source).toContain("runner("+literal("lock"));
+-  expect(source).toContain("runner("+literal("sync"));
+- });
+- test("the native dependency synchronisation builds python, rust lock and go commands from the managers, never from tool literals",()=>{
+-  const source=readFileSync(join(libraryRoot,"⚡️caching","🚀️bootstrap","📦️dependencies","🏗️native","🟦️.ts"),"utf8");
+-  expect(source).toContain('render("python"');expect(source).toContain('render("rust", "lock"');expect(source).toContain('render("go", "sync")');
+-  expect(source).not.toMatch(/run\("uv"|run\("go", \["mod"|\["update", "--workspace"/u);
+-  const python=packageManagerRegistryV1.get("uv");
+-  expect(python.render("provision",{platform:"linux",settings:{series:"3.14"}}).arguments).toEqual(["python","install","3.14"]);
+-  expect(python.render("sync",{platform:"linux",settings:{project:"."},lists:{groups:["dev","test"]}}).arguments).toEqual(["sync","--locked","--project",".","--group","dev","--group","test"]);
+-  expect(packageManagerRegistryV1.get("go").render("sync",{platform:"linux"}).arguments).toEqual(["mod","download"]);
+-  expect(packageManagerRegistryV1.get("cargo").render("lock",{platform:"linux",manifest:"M"}).arguments).toEqual(["update","--workspace","--manifest-path","M"]);
+- });
+- test("the pinned tooling install renders the plain frozen install with the copying backend",()=>{
+-  expect(packageManagerRegistryV1.get("bun").render("install-pinned",{platform:"darwin",cache:"/c"}).arguments).toEqual(["install","--frozen-lockfile","--ignore-scripts","--cache-dir","/c","--backend","copyfile"]);
+-  expect(packageManagerRegistryV1.get("npm").render("install-pinned",{platform:"linux",cache:"/c"}).arguments).toEqual(["ci","--ignore-scripts","--cache","/c"]);
+- });
+-});
++  const over=Object.entries(found).filter(([file,count])=>count>((ratchet.files as Record<string,number>)[file]??0));
++  expect(over).toEqual([]);
++ });
++});
+# stage-clean different staged=pm-seam-tools/staged/new/w/f378a2c52640.json map=ref:sha256-global
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🔣️.json
+@@ -1,15 +1,11 @@
+ {
+   "version": 1,
+   "id": "bun",
+-  "label": "Bun",
+   "ecosystem": "javascript",
+   "toolchain": "javascript",
+   "executable": "bun",
+   "runtime": {
+     "hostVersionKey": "bun",
+-    "hostEnvironment": [
+-      "BUN_INSTALL"
+-    ],
+     "probe": {
+       "arguments": [
+         "--version"
+@@ -37,11 +33,6 @@
+       "name": "bun.lock",
+       "role": "primary",
+       "format": "bun-lock"
+-    },
+-    {
+-      "name": "bun.lockb",
+-      "role": "secondary",
+-      "format": "bun-lockb"
+     }
+   ],
+   "configurations": {
+@@ -156,20 +147,6 @@
+         "--cache-dir",
+         "{cache}"
+       ]
+-    },
+-    "install-pinned": {
+-      "arguments": [
+-        "install",
+-        "--frozen-lockfile",
+-        "--{lifecycle}",
+-        "--cache-dir",
+-        "{cache}",
+-        "--backend",
+-        "{backend}"
+-      ],
+-      "values": {
+-        "backend": "copyfile"
+-      }
+     }
+   },
+   "installed": {
+@@ -191,53 +168,8 @@
+       "bun-import",
+       "bun-require"
+     ],
+-    "strictPrefix": "bun-",
+-    "oracle": "bun",
+-    "conditions": {
+-      "bun-import": [
+-        "bun",
+-        "node-addons",
+-        "node",
+-        "import",
+-        "default"
+-      ],
+-      "bun-require": [
+-        "bun",
+-        "node-addons",
+-        "node",
+-        "require",
+-        "default"
+-      ]
+-    }
++    "strictPrefix": "bun-"
+   },
+-  "producerInputs": {
+-    "scopeFiles": [
+-      ".npmrc"
+-    ],
+-    "ambientHomeFiles": [
+-      ".npmrc",
+-      ".bunfig.toml"
+-    ],
+-    "ambientConfigFiles": [
+-      ".bunfig.toml"
+-    ],
+-    "ambientConfigFallback": ".config",
+-    "environmentPrefixes": [
+-      "BUN_",
+-      "NPM_CONFIG_"
+-    ],
+-    "environmentIgnored": [
+-      "NPM_CONFIG_USER_AGENT",
+-      "BUN_INSPECT",
+-      "BUN_INSPECT_CONNECT_TO",
+-      "BUN_INSPECT_NOTIFY"
+-    ]
+-  },
+-  "ownedModules": [
+-    "🏗️build/🕸️graph/📥️inference/🧶️bun-lock/🟨️.mjs",
+-    "🗂️workspaces/🟦️bun"
+-  ],
+-  "stagedConfiguration": "[install]\nlinker = \"isolated\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\n",
+   "generationDirectory": "j",
+   "graphComponent": "bun-lock"
+ }
+# stage-clean orphan staged=pm-seam-tools/staged/new/w/map.json map=None
+--- /dev/null
++++ b/staged/pm-seam-tools/staged/new/w/map.json
+@@ -0,0 +1,26 @@
++{
++ "files": {
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🔣️.json": "f378a2c52640.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🟦️.ts": "4cf8678faf72.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🔣️.json": "898c48a0ecda.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🟦️.ts": "5bc8b73f1d83.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🔣️.json": "6824c15fbed9.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🟦️.ts": "8e32c976d414.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📖️formats/🟦️.ts": "35bb3516dc67.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts": "27ff45c076c2.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🔣️.json": "142d21ef382c.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🟦️.ts": "3165162eaeb6.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔣️policy.json": "26726898b947.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🔣️.json": "68ee01497b65.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🟦️.ts": "db1fb054d413.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts": "c1318bbfafca.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🔣️.json": "5f9b05277bff.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🟦️.ts": "67478970175c.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/⚖️ratchet/🔣️.json": "79c7e5ed0b8c.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🐍️oracle.py": "46504f1b8f77.py",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🔣️.json": "1a3f22cffa70.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts": "dba25ea5de03.ts",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🧫️fixtures/🔣️.json": "810a0e08b495.json",
++  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧬️schema/🔣️.json": "6394eb6b69b3.json"
++ }
++}

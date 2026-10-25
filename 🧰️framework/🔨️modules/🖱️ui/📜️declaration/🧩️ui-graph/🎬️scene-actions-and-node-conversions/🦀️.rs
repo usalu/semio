@@ -100,7 +100,7 @@ pub fn ui_node_to_control(node: &UiNode) -> Option<UiControlNode> {
     }
 }
 
-/** 🎛️ Wraps a {@link UiControlNode} back into its matching {@link UiNode} control variant (inverse of {@link ui_node_to_control}). */
+/** ↩️ Wraps a {@link UiControlNode} back into its matching {@link UiNode} control variant (inverse of {@link ui_node_to_control}). */
 pub fn ui_control_to_node(control: UiControlNode) -> UiNode {
     match control {
         UiControlNode::Input(input) => UiNode::Input(input),

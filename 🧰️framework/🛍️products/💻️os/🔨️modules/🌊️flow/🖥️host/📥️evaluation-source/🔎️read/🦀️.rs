@@ -56,6 +56,7 @@ pub struct FlowCurrentOutput<'a>{identity:&'a str,geometry:bool,revision:[u8;32]
 impl FlowCurrentOutput<'_>{pub fn geometry_handle(&self)->Option<&str>{self.geometry.then_some(self.identity)}pub fn preview_handle(&self)->Option<&str>{(self.geometry&&self.binding[4]==usize::MAX).then_some(self.identity)}pub fn indexed_mesh(&self)->Option<&str>{(!self.geometry).then_some(self.identity)}pub fn revision(&self)->[u8;32]{self.revision}pub fn admits(&self,request:&FlowSourceReadRequest<'_>,revision:[u8;32],operation:u64,generation:u64)->bool{self.binding==request.original_binding()&&self.revision==revision&&self.origin==(operation,generation)}}
 /// 🪪️ A donated preview source keeps the original read and exact channel memory through asynchronous work.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct FlowPreviewSource{read:FlowSourceRead,identity:semio_framework_value_ordered::ordered::SharedOwner<NeuralValue>}
 impl FlowPreviewSource{
  pub fn original_handle(&self)->&str{self.identity.as_atom().and_then(Atom::as_str).unwrap()}
@@ -73,9 +74,12 @@ pub enum FlowSourceReadStep{Working,Ready,Refused(FlowSourceReadFailure)}
 pub enum FlowCurrentOutputRead<'a>{Working,Ready(FlowCurrentOutput<'a>),Refused(FlowSourceReadFailure)}
 
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct ReadSources{infos:Option<ReadLease<HistoryFoldIndex<String,OperatorInfo>>>,baseline:Option<ReadLease<TreeSnapshot>>,channels:Option<ReadLease<EvalChannels>>,source:Option<FlowEvaluationSource>,tree:Option<Tree>,seeds_source:Option<FlowEvaluationSeeds>,seeds:Option<HistoryFoldIndex<String,Dictionary>>,comparison:SourceCompare}
 /// 🔎️ Retains the original query frontier and every alias until explicit funded closure.
 pub struct FlowSourceRead{sources:ManuallyDrop<Option<ReadSources>>,retirement:Option<ControlledRetirement<ReadSources>>,revision:[u8;32],binding:Option<[usize;8]>,snapshot_binding:Option<[usize;4]>,origin:Option<(u64,u64)>,registry_generation:u64,phase:u8,widget:usize,scan:usize,offset:usize,source_info:usize,target_info:usize,source_port:usize,target_port:usize,channel:usize,output:usize,schema:usize,identity:usize,geometry:bool,failure:Option<FlowSourceReadFailure>,closing:bool,progress:RetainedCloneProgress}
+/// 🔒️ A read admission is only ever driven through `&mut self` (its `&self` accessors read plain fields and the retirement custody is never touched concurrently), so sharing the finished owner behind an `Arc` is sound although the custody holds `!Sync` cursors.
+unsafe impl Sync for FlowSourceRead {}
 impl FlowSourceRead{
  pub fn new(revision:[u8;32])->Self{Self{sources:ManuallyDrop::new(Some(ReadSources{infos:None,baseline:None,channels:None,source:Some(FlowEvaluationSource::new()),tree:None,seeds_source:Some(FlowEvaluationSeeds::new()),seeds:None,comparison:SourceCompare::new()})),retirement:None,revision,binding:None,snapshot_binding:None,origin:None,registry_generation:0,phase:0,widget:0,scan:0,offset:0,source_info:0,target_info:0,source_port:0,target_port:0,channel:0,output:0,schema:0,identity:0,geometry:false,failure:None,closing:false,progress:Default::default()}}
  pub fn step_progress(&self)->RetainedCloneProgress{self.progress}

@@ -284,7 +284,7 @@ pub fn database_sync_hello_allocate_vec<T>(ledger: &mut DatabaseSyncHelloBacking
     Ok(owner)
 }
 
-struct DatabaseSyncHelloSnapshotBackingReservation {
+pub(super) struct DatabaseSyncHelloSnapshotBackingReservation {
     pub bytes: usize,
 }
 
@@ -310,7 +310,7 @@ impl DatabaseSyncHelloSnapshotBackingReservation {
 }
 
 #[derive(Clone, Copy)]
-struct DatabaseSyncHelloSnapshotPageReservation {
+pub(super) struct DatabaseSyncHelloSnapshotPageReservation {
     pub(super) items: usize,
     pub(super) bytes: usize,
 }
@@ -370,7 +370,7 @@ pub(super) fn database_sync_hello_retire_string(owner: &mut String) -> bool {
 
 const DATABASE_SYNC_HELLO_SHARED_TEXT_CLOSE_GRANT: semio_framework_value::retained_clone::RetainedCloneGrant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: DATABASE_SYNC_HELLO_MAX_BYTES, maximum_depth: 1 };
 
-fn database_sync_hello_retire_shared_text(owner: &mut semio_framework_value::SharedUtf8) -> bool {
+pub(super) fn database_sync_hello_retire_shared_text(owner: &mut semio_framework_value::SharedUtf8) -> bool {
     if !owner.has_owner() { return false; }
     let grant = DATABASE_SYNC_HELLO_SHARED_TEXT_CLOSE_GRANT;
     if owner.original_allocation_bytes() > grant.maximum_release_bytes { return true; }
@@ -387,7 +387,7 @@ fn database_sync_hello_retire_bytes(owner: &mut Vec<u8>) -> bool {
     true
 }
 
-struct DatabaseSyncHelloEnvelopeClose {
+pub(super) struct DatabaseSyncHelloEnvelopeClose {
     pub(super) owner: Option<protocol::MutationEnvelope>,
 }
 

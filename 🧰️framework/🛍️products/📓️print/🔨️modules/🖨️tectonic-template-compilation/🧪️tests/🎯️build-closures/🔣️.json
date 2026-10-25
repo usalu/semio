@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "entries": [
+    "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts",
+    "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts",
+    "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts",
+    "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/📜️script.ts",
+    "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/📜️script.ts"
+  ],
+  "maximumFiles": 600,
+  "forbidden": [
+    "🧪️tests/",
+    "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts",
+    "🏗️build/📜️script.ts",
+    "⚡️caching/🚀️bootstrap/📜️script.ts",
+    "🏗️build/🕸️graph/",
+    "🏗️build/📥️caller/",
+    "🏗️build/🔧️tools/",
+    "⚡️caching/🦀️cargo/",
+    "🧩️extension-package",
+    "🛍️products/💻️os/",
+    "🕸️wasm-build",
+    "🏗️build/🟦️typescript/🔌️provider"
+  ],
+  "requiredProvider": {
+    "entry": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts",
+    "port": "artifact-staging",
+    "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔌️provider/🟦️.ts"
+  }
+}

@@ -59,7 +59,7 @@ struct RetainedSyncTreeRecord {
 }
 
 #[derive(Clone, Copy)]
-struct RetainedSyncTreeFrame {
+pub struct RetainedSyncTreeFrame {
     record: usize,
     next_item: usize,
     items_pointer: usize,
@@ -74,7 +74,7 @@ enum RetainedInteractiveSyncPhase {
     /// 🔽️ The open popup's row for `cursor.item` has no retained child yet — synthesize it. See
     /// `reconcile::select_item_row` for why production never had one.
     SelectMint,
-    /// 🔽️ A popup that CLOSED (or shrank) still owns synthesized rows — drop them one per step, so
+    /// 📪️ A popup that CLOSED (or shrank) still owns synthesized rows — drop them one per step, so
     /// a closed `Select` leaves no arena node behind exactly as React unmounts `SelectContent`.
     SelectRetire,
     SelectWrite,
@@ -96,7 +96,7 @@ pub struct RetainedInteractiveSyncCursor {
     matched: Option<NodeId>,
     select_width: f32,
     select_height: f32,
-    /// 🔽️ The open popup's collision-resolved top offset, captured once per `Select` bind so every
+    /// 🔝️ The open popup's collision-resolved top offset, captured once per `Select` bind so every
     /// row this sync pass writes lands on the same side of the trigger paint chose.
     select_menu_top: f32,
     select_first_row: usize,
@@ -192,7 +192,7 @@ impl RetainedInteractiveSyncCursor {
     }
 }
 
-/// 🩺️ The ONE fault exit of the retained interactive synchronize walk, stamping the source line that
+/// 🪵️ The ONE fault exit of the retained interactive synchronize walk, stamping the source line that
 /// took it onto the cursor.
 ///
 /// ⚖️ Thirty-four `let … else` arms answer `RetainedInteractiveSyncStep::Fault`, the paint frame turns
@@ -221,7 +221,7 @@ fn retained_sync_tree_skip(cursor: &mut RetainedInteractiveSyncCursor) -> Retain
     RetainedInteractiveSyncStep::Pending
 }
 
-/// 🔽️ A popup row that could not be synthesized (the composite-row ledger is full) is skipped, never
+/// ⏭️ A popup row that could not be synthesized (the composite-row ledger is full) is skipped, never
 /// a fault — the same rule `retained_sync_tree_skip` applies to a declared tree row with no record.
 fn retained_sync_select_skip(cursor: &mut RetainedInteractiveSyncCursor) -> RetainedInteractiveSyncStep {
     cursor.matched = None;
@@ -530,7 +530,7 @@ pub fn select_popup_row_rect(select_w: f32, index: usize, menu_top: f32, theme: 
     semio_framework_ui_select_behavior::select_row_rect(select_w, index, menu_top, theme)
 }
 
-/// 📐️ `select_menu_top` for a retained `Select`, resolving its two viewport inputs from the tree:
+/// 🔎️ `select_menu_top` for a retained `Select`, resolving its two viewport inputs from the tree:
 /// the node's own absolute top and the root's laid-out height. A popup with no room below its
 /// trigger flips above it, exactly as React's `SelectContent` does.
 pub fn select_menu_top_for(tree: &UiTree, id: NodeId, select_h: f32, items: usize, theme: &Theme) -> f32 {

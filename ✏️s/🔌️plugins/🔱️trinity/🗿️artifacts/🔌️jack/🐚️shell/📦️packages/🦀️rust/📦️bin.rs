@@ -1,35 +1,33 @@
-//! 🐚️ Jack query shell for trinity graphs.
+//! 🐚️ Jack query shell for trinity graphs: loads a scene document (`JackQueryGraphSnapshot` JSON: manifest, nodes and edges inline) and answers Jack queries.
 
 extern crate semio_framework_os_kernel as store;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::ast::QueryResult;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::runner::run;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::memory::Graph;
-use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_framework_graph_manifest::PropertyValue;
 use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
-use pack::snapshot::ArtifactDsl;
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity jack shell errors.
 #[derive(Debug)]
 enum TrinityJackShellError {
     ReadFixture { path: String, source: io::Error },
-    Dsl { path: String, source: store::TextError },
     Graph(semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::errors::TrinityRamError),
     Query(String),
     Io(io::Error),
+    Usage,
 }
 
 impl std::fmt::Display for TrinityJackShellError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::ReadFixture { path, source } => write!(formatter, "read {path}: {source}"),
-            Self::Dsl { path, source } => write!(formatter, "parse {path}: {source}"),
             Self::Graph(error) => write!(formatter, "{error}"),
             Self::Query(message) => formatter.write_str(message),
             Self::Io(error) => write!(formatter, "{error}"),
+            Self::Usage => formatter.write_str("usage: semio-s-artifact-trinity-jack-shell <snapshot.json> [query]\nAufruf: semio-s-artifact-trinity-jack-shell <snapshot.json> [Abfrage]"),
         }
     }
 }
@@ -38,10 +36,9 @@ impl std::error::Error for TrinityJackShellError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::ReadFixture { source, .. } => Some(source),
-            Self::Dsl { source, .. } => Some(source),
             Self::Graph(error) => std::error::Error::source(error),
             Self::Io(error) => std::error::Error::source(error),
-            Self::Query(_) => None,
+            Self::Query(_) | Self::Usage => None,
         }
     }
 }
@@ -68,10 +65,11 @@ fn main() {
 
 fn run_main() -> Result<(), TrinityJackShellError> {
     let args: Vec<String> = env::args().collect();
-    let fixture_path = args.get(1).map_or("trinity/example/🔱️nakagin-capsule-tower.trinity", String::as_str);
+    let Some(fixture_path) = args.get(1).map(String::as_str) else {
+        return Err(TrinityJackShellError::Usage);
+    };
     let text = fs::read_to_string(fixture_path).map_err(|source| TrinityJackShellError::ReadFixture { path: fixture_path.to_string(), source })?;
-    let fixture = JackSnapshot::parse_dsl(&text).map_err(|source| TrinityJackShellError::Dsl { path: fixture_path.to_string(), source })?;
-    let mut graph = Graph::from_snapshot(fixture)?;
+    let mut graph = Graph::load_scene_json(&text)?;
     println!("[TRACE] trinity jack shell loaded {} nodes, {} edges from {fixture_path}", graph.nodes.len(), graph.edges.len());
     if args.len() > 2 {
         let query = args[2..].join(" ");

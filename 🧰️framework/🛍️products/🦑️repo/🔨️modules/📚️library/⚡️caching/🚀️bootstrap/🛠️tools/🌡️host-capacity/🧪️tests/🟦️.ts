@@ -16,7 +16,7 @@ test("The plan renders into Nx as its task parallelism and says which fields Nx 
 
 const root=join(import.meta.dir,"../../../../../../../../../..").replace(/[\\/]+$/u,""),live=process.env.SEMIO_NX_INTEGRATION==="1";
 test.skipIf(!live)("The repository's Nx environment takes its parallelism from the grant and real Nx runs exactly that many tasks at once",async()=>{
- const {nxBuildEnvironmentV1}=await import("../../../📜️script.ts");
+ const {nxBuildEnvironmentV1}=await import("../../../../../📦️packages/🟦️typescript/💾️storage/🚀️bootstrap/📜️script/🟦️.ts");
  expect(nxBuildEnvironmentV1(root,{SEMIO_HOST_CAPACITY_PLAN:JSON.stringify(plan),SEMIO_BUILD_PARALLEL:"9"}).NX_PARALLEL).toBe("3");
  const nx=createRequire(join(root,".nx/installation/package.json")).resolve("nx/bin/nx"),workspace=mkdtempSync(join(tmpdir(),"hb-nx-"));
  try{

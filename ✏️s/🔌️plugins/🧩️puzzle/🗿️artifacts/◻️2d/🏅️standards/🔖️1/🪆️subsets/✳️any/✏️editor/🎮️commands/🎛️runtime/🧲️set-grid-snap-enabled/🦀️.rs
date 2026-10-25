@@ -6,6 +6,6 @@ use semio_framework_pack_json::Value;
 pub fn set_grid_snap_enabled(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool()).unwrap_or(false);
     ctx.scene.runtime.grid_snap_enabled = enabled;
-    ctx.host.borrow_mut().set_grid_snap_enabled(enabled);
+    ctx.host.borrow_mut().style.set_grid_snap_enabled(enabled);
     *ctx.ui_scope = puzzle2d_window_and_measures_scope();
 }

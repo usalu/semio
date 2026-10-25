@@ -1,6 +1,13 @@
 //! 🔬️ Probe documents of the headless workspace: ensuring the probe artifact and its apply, undo and redo mutations. See [`super`].
 
 use super::*;
+use store::ReferenceSpaceMember as _;
+
+/// 🪪️ The authoring identity the headless probe documents issue to themselves for one command.
+fn probe_identity() -> semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'static> {
+    let observer: &'static mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'static> = Box::leak(Box::new(|_: semio_framework_value::native_encoding::NativeEncodeProgress| true));
+    semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("headless probe authoring identity admission")
+}
 
 impl HeadlessWorkspace {
     /// 🧪️ Opens (creating on first use) a real `ProbeStore` bound through `ArtifactHost` — real VCS
@@ -15,7 +22,7 @@ impl HeadlessWorkspace {
             Some(probe_store) => probe_store,
             None => {
                 let envelope = store::os_store::document_materialize::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, artifact_id, ProbeSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-                let mut probe_store = ProbeStore::new(envelope).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("constructing probe store for `{artifact_id}`: {error}")))?;
+                let mut probe_store = ProbeStore::new::<store::os_store::ArtifactSnapshotPublication>(envelope, store::ActorId(self.actor_label().into())).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("constructing probe store for `{artifact_id}`: {error}")))?;
                 probe_store.install_document_store_owners_exact(probe_store_owners());
                 let document_key = self.origin.artifact_document_key(artifact_id);
                 let channels = self
@@ -38,7 +45,7 @@ impl HeadlessWorkspace {
         };
         if probe_store.applied_edit_ids().is_empty() {
             probe_store
-                .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], transaction: None })
+                .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], transaction: None }, &mut probe_identity())
                 .await
                 .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("seeding `{artifact_id}`: {error}")))?;
             self.artifact_host.send_key(&self.origin.artifact_document_key(artifact_id), store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
@@ -61,7 +68,7 @@ impl HeadlessWorkspace {
         self.ensure_probe_artifact(artifact_id, semio_framework_value::DslValue::Null).await?;
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("`{artifact_id}` was just ensured open but is missing from open_probes")))?;
-        let dispatched = probe_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(value)], transaction: None }).await;
+        let dispatched = probe_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(value)], transaction: None }, &mut probe_identity()).await;
         let applied_edit_ids = probe_store.applied_edit_ids();
         let head_edit_id = applied_edit_ids.last().cloned().unwrap_or_default();
         let cursor = applied_edit_ids.len().to_string();
@@ -76,7 +83,7 @@ impl HeadlessWorkspace {
     pub async fn undo_probe_mutation(&self, artifact_id: &str) -> Result<semio_framework_value::DslValue, GatewayError> {
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open probe store to undo")))?;
-        let outcome = probe_store.undo().await;
+        let outcome = probe_store.undo(&mut probe_identity()).await;
         let snapshot = probe_store.snapshot();
         self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), probe_store);
         outcome.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("undoing `{artifact_id}`: {error}")))?;
@@ -88,7 +95,7 @@ impl HeadlessWorkspace {
     pub async fn redo_probe_mutation(&self, artifact_id: &str) -> Result<semio_framework_value::DslValue, GatewayError> {
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open probe store to redo")))?;
-        let outcome = probe_store.redo().await;
+        let outcome = probe_store.redo(&mut probe_identity()).await;
         let snapshot = probe_store.snapshot();
         self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), probe_store);
         outcome.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("redoing `{artifact_id}`: {error}")))?;

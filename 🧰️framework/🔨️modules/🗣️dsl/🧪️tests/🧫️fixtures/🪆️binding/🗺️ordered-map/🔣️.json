@@ -1,0 +1,9 @@
+{
+  "field": "weights",
+  "samples": [
+    { "name": "empty", "entries": [] },
+    { "name": "single", "entries": [["a", 1.5]] },
+    { "name": "unordered-insertion", "entries": [["z", 1.0], ["m", 2.5], ["a", 3.0]] },
+    { "name": "crosses-pages", "generate": 40 }
+  ]
+}

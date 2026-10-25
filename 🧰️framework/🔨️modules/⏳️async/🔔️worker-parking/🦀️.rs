@@ -23,7 +23,7 @@ pub struct ParkState {
     closed: bool,
 }
 
-/// 🛌️ Why [`WorkerParking::park`] returned. `Signalled` covers a signal that arrived before the
+/// 📡️ Why [`WorkerParking::park`] returned. `Signalled` covers a signal that arrived before the
 /// worker slept, so the caller rescans without having waited at all.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[doc(hidden)] pub enum ParkWake {
@@ -84,7 +84,7 @@ impl WorkerParking {
         }
     }
 
-    /// ⏰️ An earlier deadline registered by a timer callback running on the worker that is firing
+    /// ⏲️ An earlier deadline registered by a timer callback running on the worker that is firing
     /// the wheel: that worker re-reads the wheel before it parks again, so nobody is woken now. The
     /// move is remembered, because an armed keeper still sleeps on the stale later deadline: the
     /// firing worker hands the new deadline to it before it runs a job or parks as a sleeper.
@@ -120,7 +120,7 @@ impl WorkerParking {
         self.timer.notify_all();
     }
 
-    /// 🛌️ Parks until a signal newer than `observed`, shutdown, or — for the one timer keeper —
+    /// 💤️ Parks until a signal newer than `observed`, shutdown, or — for the one timer keeper —
     /// `timer_due` elapses. `timer_due` is `None` when the wheel holds no deadline.
     pub fn park(&self, observed: u64, timer_due: Option<Duration>) -> ParkWake {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);

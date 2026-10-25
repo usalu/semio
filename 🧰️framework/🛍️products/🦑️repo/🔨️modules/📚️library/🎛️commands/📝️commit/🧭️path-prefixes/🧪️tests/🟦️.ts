@@ -1,9 +1,9 @@
-/** 🧭️ Contract: bundle path prefixes follow the label tokens: a path belongs to the bundle with the most matching tokens (first wins a tie), a bundle owns its assigned paths and their token-carrying parents, and a numstat row resolves to the bundles owning any of its paths; the corpus is language-agnostic and `🐍️oracle.py` replays the commits with the git CLI and recomputes the assignment. */
+/** 🧭️ Contract: bundle path prefixes follow the label tokens: a path belongs to the bundle with the most matching tokens (first wins a tie), a bundle owns its assigned paths and their token-carrying parents, and a numstat row resolves to the bundles owning any of its paths; the corpus is language-agnostic and `🐍️.py` replays the commits with the git CLI and recomputes the assignment. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {afterAll} from "bun:test";
 import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -28,6 +28,6 @@ test("a revision range without label matches or with an unknown base yields no p
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

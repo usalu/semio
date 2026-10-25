@@ -105,7 +105,6 @@ fn semantic_admission_matches_neutral_schema() {
         assert_eq!(RETIRED.with(|count| count.get()), row["retired"].as_u64().unwrap() as usize, "{}", row["id"]);
     }
     shape_law(&fixture, false);
-    println!("[DEBUG] Value semantic admission: six neutral verdicts across named, transparent, tagged and external constructors; semantic refusals retire decoded roots once");
 }
 
 /// 🛡️ Controlled semantic admission has its own checkpoint and cannot bypass a missing controlled hook.
@@ -137,5 +136,4 @@ fn controlled_admission_is_metered_and_refusals_retire_once() {
     let default = DefaultProbe::default_value_controlled(&mut control);
     assert!(!default.is_ok(), "controlled default constructors cannot bypass semantic admission");
     assert_eq!(RETIRED.with(|count| count.get()), fixture["cases"][2]["retired"].as_u64().unwrap() as usize);
-    println!("[DEBUG] Controlled admission covers transparent and enum constructors, honors original cancellation and requires an explicit controlled semantic hook");
 }

@@ -43,7 +43,7 @@ fn action(event:&Event)->&'static str {
     }
 }
 /// 🎛️ Keeps the host responsive while an explicit selection becomes a durable preference event.
-pub(super) fn run<B:TerminalBackend>(term:&mut B,path:&Path,theme:Theme)->Result<Option<Locale>,dashboard_feedback::Failure> {
+pub fn run<B:TerminalBackend>(term:&mut B,path:&Path,theme:Theme)->Result<Option<Locale>,dashboard_feedback::Failure> {
     let mut choice=Choice::default();let mut tui=Tui::new(term.size().unwrap_or(Size{width:80,height:24}),theme);tui.set_width_mode(term.width_mode());
     let root=tui.scene.root();let node=tui.scene.add(root,Node::new(NodeContent::Text(String::new())));
     tui.scene.node_mut(node).set_constraint(Constraint{width:Dimension::Weight(1),height:Dimension::Weight(1),..Default::default()});
@@ -67,7 +67,7 @@ mod tests {
     use super::*;
     #[test]
     fn unresolved_language_requires_explicit_selection_and_cancel_publishes_nothing() {
-        let vectors:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧪️tests/🧫️fixtures/🌐️language/🔣️.json")).unwrap();
+        let vectors:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🌐️language/🔣️.json")).unwrap();
         for row in vectors["selection"].as_array().unwrap(){let mut choice=Choice::default();let mut outcome=Outcome::Pending;for action in row["actions"].as_array().unwrap(){outcome=choice.action(action.as_str().unwrap());}let selected=choice.selected.map(|index|dashboard_preferences::language::declared().choices()[index].language.clone());assert_eq!(serde_json::to_value(selected).unwrap(),row["selected"]);assert_eq!(match outcome {Outcome::Pending=>"pending",Outcome::Accepted(_)=>"accepted",Outcome::Cancelled=>"cancelled"},row["outcome"].as_str().unwrap());}
         assert_eq!(Choice::default().action("enter"),Outcome::Pending);
     }

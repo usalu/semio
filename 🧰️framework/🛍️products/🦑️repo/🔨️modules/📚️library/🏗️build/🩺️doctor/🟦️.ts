@@ -2,8 +2,8 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import policyDocument from "./🔣️policy.json" with {type:"json"};
 import rulesDocument from "./📖️rules/🔣️.json" with {type:"json"};
 import textsDocument from "./📖️texts/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import {isRuntimeExecutableV1} from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {isRuntimeExecutableV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🩺️ The closed constants of the doctor contract: areas, severities and report bounds. */
 export const DOCTOR_PROTOCOL_V1=schema.definitions.Protocol.const;
@@ -40,7 +40,9 @@ export type HostFactsV1=Readonly<{cores:number;totalMegabytes:number;availableMe
 export type PartitionFactsV1=Readonly<{id:string;state:"mounted"|"detached"|"directory"|"absent";capacityBytes:number|null;freeBytes:number|null;imageBytes:number|null;backing:"present"|"missing"|"none";publication:"none"|"intent"|"receipt";publicationAgeSeconds:number|null;image:"ok"|"damaged"|"none"}>;
 export type StorageFactsV1=Readonly<{hostFreeBytes:number|null;hostTotalBytes:number|null;partitions:readonly PartitionFactsV1[]}>;
 export type ToolRowFactsV1=Readonly<{id:string;state:"ok"|"missing"|"drift"|"unprobed";pin:string|null;found:string|null}>;
-export type ToolsFactsV1=Readonly<{rows:readonly ToolRowFactsV1[]}>;
+/** 🔒️ One lockfile a wasm build resolves against: the `wasm-bindgen` crate version it locks (null when unreadable) and the version of the pinned binding generator. */
+export type WasmLockFactsV1=Readonly<{path:string;version:string|null;pinned:string}>;
+export type ToolsFactsV1=Readonly<{rows:readonly ToolRowFactsV1[];wasmLocks?:readonly WasmLockFactsV1[]}>;
 export type HolderFactsV1=Readonly<{resource:string;hash:string;mode:"shared"|"exclusive";pid:number;heldSeconds:number;class:string;owner:string;command:string}>;
 export type WaiterFactsV1=Readonly<{resource:string;hash:string;mode:"shared"|"exclusive";pid:number;waitedSeconds:number;class:string;owner:string;position:number|null;queued:number|null;blockers:readonly number[];command:string}>;
 export type LeasesFactsV1=Readonly<{

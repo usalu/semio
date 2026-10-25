@@ -22,7 +22,7 @@ export interface WindowPaneChromeToggleProps {
   readonly emphasized?: boolean;
 }
 
-/** 🪟️ Pane chrome toggle matching panel toggles: leading semantic icon, label, trailing {@link DragHandle} — never a fold-direction chevron. */
+/** ⏯️ Pane chrome toggle matching panel toggles: leading semantic icon, label, trailing {@link DragHandle} — never a fold-direction chevron. */
 export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ id, icon, label, onClick, disabled, className, dragPointerProps, showDragHandle = true, emphasized = false }) => {
   const inlineText = useControlInlineText(id, label);
   const tooltipText = useControlTooltipText(id, label);

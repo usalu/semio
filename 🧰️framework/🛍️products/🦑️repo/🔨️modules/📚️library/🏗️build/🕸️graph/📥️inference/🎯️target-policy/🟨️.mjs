@@ -25,9 +25,21 @@ export const normalizedTargetName = (name) => name.replace(/^[^A-Za-z0-9]+/u, ""
 /** 🗂️ Resolves the cache class the workspace policy declares for one target name: a row that names the name exactly decides first, then the first row with a matching head, tail or token; a name no row classifies has none and never replays.
  * @see ../../../../⚡️caching/🧬️schema/🔣️.json */
 export function targetClassV1(name, rows = POLICY.targetClasses) {
-  const bare = normalizedTargetName(name);
-  const row = rows.find((row) => row.exact?.includes(bare)) ?? rows.find((row) => row.heads?.some((head) => hasHead(bare, head)) || row.tails?.some((tail) => hasTail(bare, tail)) || row.tokens?.some((token) => hasToken(bare, token)));
+  const row = targetRowV1(normalizedTargetName(name), rows);
   return row && cacheDecisionV1(row.decision.class, row.decision.reason);
+}
+
+const targetRowV1 = (bare, rows) => rows.find((row) => row.exact?.includes(bare)) ?? rows.find((row) => row.heads?.some((head) => hasHead(bare, head)) || row.tails?.some((tail) => hasTail(bare, tail)) || row.tokens?.some((token) => hasToken(bare, token)));
+
+/** 🧪️ Names the input whose negations the row of a target appends to its inputs, so the target reads production sources only; the row is found exactly as its cache class is.
+ * @see ../../../../⚡️caching/🧬️schema/🔣️.json */
+export const targetExclusionsV1 = (name, rows = POLICY.targetClasses) => targetRowV1(normalizedTargetName(name), rows)?.exclusions;
+
+/** 🛡️ Whether one explicit input of a target (a file or glob it names itself, neither a named input nor a dependency group nor a negation) selects a path the exclusions remove: such a target reads that path on purpose, so the exclusions would hide a real read from its key.
+ * @see ../../../../🏗️build/🔣️policy.json */
+export function excludedInputConflictV1(inputs, namedInputs, patterns, matches, projectRoot) {
+  const root = projectRoot === "." ? "" : projectRoot + "/";
+  return inputs.some((input) => typeof input === "string" && !input.startsWith("^") && !input.startsWith("!") && !Object.hasOwn(namedInputs, input) && patterns.some((pattern) => matches(input.replaceAll("{projectRoot}/", root).replaceAll("{workspaceRoot}/", ""), pattern)));
 }
 
 export const cacheableFamily = (name, rows) => targetClassV1(name, rows)?.class === "deterministic";

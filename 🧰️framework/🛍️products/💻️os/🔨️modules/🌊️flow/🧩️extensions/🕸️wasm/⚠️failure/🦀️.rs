@@ -35,6 +35,7 @@ impl OriginalDomainFailure for EvaluationFailure{
 
 /// 🪢️ The original failed producer and its complete close/receipt causes stay in one paid owner.
 #[derive(Debug,semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct EvaluationCloseFailure{pub initial:Option<EvaluationFailure>,pub closure:EvaluationFailure,pub receipt_refusal:Option<ValueError>}
 impl OriginalDomainFailure for EvaluationCloseFailure{
  fn domain_code(&self)->&str{"flowEvaluation.sourceClose"}

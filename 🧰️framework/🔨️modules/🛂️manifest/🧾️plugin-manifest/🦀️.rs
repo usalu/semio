@@ -37,7 +37,7 @@ pub struct PluginManifest {
     #[serde(default)]
     #[value(default)]
     pub capabilities: Vec<CapabilityRequirement>,
-    /// 🗂️ Open plugin contributions — see `TopicContribution`.
+    /// 🔌️ Open plugin contributions — see `TopicContribution`.
     #[serde(default)]
     #[value(default)]
     pub topic_contributions: Vec<TopicContribution>,
@@ -45,7 +45,7 @@ pub struct PluginManifest {
     #[serde(default)]
     #[value(default)]
     pub commands: Vec<CommandDefinition>,
-    /// 🗂️ Plugin-level artifact kinds (library plugins with zero apps declare kinds here).
+    /// 📚️ Plugin-level artifact kinds (library plugins with zero apps declare kinds here).
     #[serde(default)]
     #[value(default)]
     pub artifact_kinds: Vec<ArtifactKindSpec>,
@@ -61,7 +61,7 @@ pub struct PluginManifest {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub dependencies: Vec<PluginDependency>,
-    /// 🗂️ Artifact-kind contributions (mutations/inferences) this plugin contributes onto artifact
+    /// 🏺️ Artifact-kind contributions (mutations/inferences) this plugin contributes onto artifact
     /// kinds it depends on — see `ArtifactContributionDescriptor`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -69,7 +69,7 @@ pub struct PluginManifest {
 }
 
 //#region 🔖️HostResolvedArgs
-/// 🗂️ One artifact-kind choice offered by an `ActionArgControl::ArtifactKind` dialog field —
+/// 🎬️ One artifact-kind choice offered by an `ActionArgControl::ArtifactKind` dialog field —
 /// resolved by the host from its live plugin catalogue (`artifact_kind_choices`) into a plain
 /// `Select { options }` right before the dialog renders. Round-trips through `ActionArgOption.value`
 /// as JSON via `encode_artifact_kind_choice`/`decode_artifact_kind_choice` — the frozen wire shape
@@ -85,7 +85,7 @@ pub struct ArtifactKindChoice {
     pub label: LocalizedLabel,
 }
 
-/// 🎭️ One `(pluginId, appId, role)` choice offered by an `ActionArgControl::SurfaceApp` dialog
+/// 💬️ One `(pluginId, appId, role)` choice offered by an `ActionArgControl::SurfaceApp` dialog
 /// field — resolved by the host against the dialect coordinate found in the dialog's seed argument
 /// named `dialect_arg`. Round-trips through `ActionArgOption.value` as JSON via
 /// `encode_surface_app_choice`/`decode_surface_app_choice`: `{"pluginId":"draw","appId":"s.draw.draw
@@ -116,7 +116,7 @@ pub async fn encode_artifact_kind_choice(choice: &ArtifactKindChoice) -> String 
     ]))
 }
 
-/// 🧵️ Inverse of `encode_artifact_kind_choice`.
+/// ↩️ Inverse of `encode_artifact_kind_choice`.
 pub async fn decode_artifact_kind_choice(value: &str) -> Result<ArtifactKindChoice, String> {
     let json = semio_framework_pack_json::parse(value, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("malformed artifact kind choice JSON: {error}"))?;
     let kind_id = json.get("kindId").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field kindId".to_string())?.to_string();
@@ -131,7 +131,7 @@ pub async fn decode_artifact_kind_choice(value: &str) -> Result<ArtifactKindChoi
     Ok(ArtifactKindChoice { kind_id, schema, dialect, label: LocalizedLabel::native(en, de) })
 }
 
-/// 🧵️ Encodes a `SurfaceAppChoice` into its frozen `ActionArgOption.value` JSON shape.
+/// ❄️ Encodes a `SurfaceAppChoice` into its frozen `ActionArgOption.value` JSON shape.
 pub async fn encode_surface_app_choice(choice: &SurfaceAppChoice) -> String {
     semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
         ("pluginId".to_string(), choice.app.plugin_id.as_str().into()),
@@ -140,7 +140,7 @@ pub async fn encode_surface_app_choice(choice: &SurfaceAppChoice) -> String {
     ]))
 }
 
-/// 🧵️ Inverse of `encode_surface_app_choice`.
+/// 🔙️ Inverse of `encode_surface_app_choice`.
 pub async fn decode_surface_app_choice(value: &str) -> Result<SurfaceAppChoice, String> {
     let json = semio_framework_pack_json::parse(value, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("malformed surface app choice JSON: {error}"))?;
     let plugin_id = json.get("pluginId").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| "surface app choice missing string field pluginId".to_string())?.to_string();
@@ -150,7 +150,7 @@ pub async fn decode_surface_app_choice(value: &str) -> Result<SurfaceAppChoice, 
     Ok(SurfaceAppChoice { app: AppRef { plugin_id, app_id }, role })
 }
 
-/// 🗂️ Every artifact-kind choice for the given `roles` — Rust twin of TS `artifactKindChoices` (law in
+/// 🎁️ Every artifact-kind choice for the given `roles` — Rust twin of TS `artifactKindChoices` (law in
 /// `🧪️tests/🧪️hostresolvedargs/🟦️.ts`): every app across `manifests` whose `role` is in `roles`, whose
 /// `io.artifact_schema` is non-empty and whose package declares a kind of that schema (on any of its apps
 /// — a viewer shares its editor's kind — or on the manifest) contributes one choice per dialect coordinate,
@@ -370,7 +370,7 @@ pub struct AssetDeclaration {
     pub sha256: String,
 }
 
-/// 🗂️ One free-form descriptor-only contribution row, keyed by `id` with an opaque JSON
+/// 📋️ One free-form descriptor-only contribution row, keyed by `id` with an opaque JSON
 /// `payload` — the residual placeholder shape for the two `ContributionSet` categories (`menus`,
 /// `themes`) that still have no real declared-contribution precedent anywhere in the codebase
 /// (E1-describe surveyed every `[package.metadata.semio]` `contributes`/`consumes` tag and every
@@ -418,7 +418,7 @@ pub enum IoEntryDirection {
     Export,
 }
 
-/// 🚪️ One registered IO dialect route — the typed shape for `ContributionSet.io_entries`
+/// ⛔️ One registered IO dialect route — the typed shape for `ContributionSet.io_entries`
 /// (`📓️design-abi.md` §2/§3's absorbed `io-dialects` routing table), an owned mirror of
 /// `io::IoKey`'s `(owner, counterpart, direction)` identity built from the already-in-scope
 /// `ArtifactDialect` (`🚪️io/🧬️schema/🦀️component.rs`) instead of `IoKey`'s seven flat fields —
@@ -449,7 +449,7 @@ pub struct ComposerEntryDescriptor {
     pub reads: Vec<ArtifactDialect>,
 }
 
-/// 🗂️ Everything a package contributes, gathered for static (`describe()`-time) emission —
+/// ⌛️ Everything a package contributes, gathered for static (`describe()`-time) emission —
 /// `📓️design-abi.md` §3. `commands`/`topic_contributions`/`artifact_contributions` reuse this
 /// crate's existing typed models; `panels` reuses `PanelTabDefinition` (already the typed shape
 /// `AppDefinition.panel_tabs` declares, flattened across every app); `inference_services`/
@@ -517,7 +517,7 @@ pub struct ExecutionProtocol {
     pub app_channel_version: u32,
 }
 
-/// 📦️ The static, build-time-emitted description of a plugin or extension package —
+/// 🔨️ The static, build-time-emitted description of a plugin or extension package —
 /// `📓️design-abi.md` §3's `describe()` output (`🛂️.descriptor.semio`/`🔣️.json`).
 /// Nothing constructs or reads one yet in this packet: additive contract only (packet
 /// A2-abi-sdk's builder wiring and E1-describe's emitter/registry `check` gate consume it next).

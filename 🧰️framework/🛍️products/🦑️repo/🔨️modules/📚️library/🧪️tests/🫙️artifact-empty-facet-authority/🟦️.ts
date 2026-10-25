@@ -5,6 +5,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
 import { parse, type ParseError } from "jsonc-parser";
 import * as ts from "typescript";
+import { readRegisteredTestRoute } from "../🔬️typescript-package-commands/🧭️route-context/🟦️.ts";
 import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { semanticArtifactEmptyFacetProjectionAuthority } from "../../🔍️discovery/🗃️owned-file-projection/🟦️.ts";
 import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
@@ -24,11 +25,11 @@ const oracle = JSON.parse(oracleBytes);
 const validateOwner = new Ajv({ strict: true, allErrors: true }).compile(oracle);
 const forms = oracle.oneOf.map((branch: { properties: { ownerForm: { const: string } } }) => branch.properties.ownerForm.const) as string[];
 const taxonomy = loadCatalogTaxonomy();
-const declarationNames = ["memberPatternEmojiVerdicts", "semanticMemberPatternEmojiAdmitted", "canonicalFilenamesForKind", "canonicalFilenameForKind", "canonicalSemanticDirectoryName", "semanticDirectoryKindIds", "semanticDirectoryKindId", "resolveSemanticDirectoryKindId", "semanticArtifactEmptyFacetProjectionAuthority"] as const;
+const declarationNames = ["taxonomyFileKindFilenamesV1", "taxonomySingleFileKindFilenameV1", "memberPatternEmojiVerdicts", "semanticMemberPatternEmojiAdmitted", "canonicalFilenamesForKind", "canonicalFilenameForKind", "canonicalSemanticDirectoryName", "semanticDirectoryKindIds", "semanticDirectoryKindId", "resolveSemanticDirectoryKindId", "semanticArtifactEmptyFacetProjectionAuthority"] as const;
 
 /** 🔬️ Compiles the exact pure authority closure without granting it filesystem access. */
 function independentlyCompiledAuthorities(): readonly (typeof semanticArtifactEmptyFacetProjectionAuthority)[] {
-  const syntaxes = ["🔐️taxonomy-authority", "📂️semantic-directory-kinds", "🗃️owned-file-projection"].map((owner) => {
+  const syntaxes = ["📄️file-kind-query", "🔐️taxonomy-authority", "📂️semantic-directory-kinds", "🗃️owned-file-projection"].map((owner) => {
     const path = join(libraryRoot, "🔍️discovery", owner, "🟦️.ts");
     return ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   });
@@ -111,16 +112,16 @@ test("registers the empty-facet authority through its closed canonical route", a
   expect(project.targets[vector.target]).toBeDefined();
   expect(project.targets[vector.target]).toMatchObject({ executor: "repo:script", cache: vector.cache, options: { cwd: packageRelative, command: `repo ./📜️script.ts test ${vector.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
-  expect(manifest.scripts[vector.target]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${vector.target}`);
-  const path = join(packageRoot, "📜️script.ts"), source = readFileSync(path, "utf8"), syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const declarations = syntax.statements.filter((node) => ts.isClassDeclaration(node) && node.name?.text === "TestScript");
+  expect(manifest.scripts[vector.target]).toBe(`repo run @semio-tech/repo-lib:${vector.target}`);
+  const family = readRegisteredTestRoute(repoRoot, vector.command), syntax = ts.createSourceFile(family.path, family.text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const declarations = syntax.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name !== undefined && node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) === true);
   expect(declarations.length).toBe(1);
-  const code = `${declarations[0]!.getText(syntax)}\nreturn new TestScript();`;
+  const code = `${declarations[0]!.getText(syntax).replace(/^export\s+/u, "")}\nreturn ${declarations[0]!.name!.text};`;
   for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
     const invocations: { executable: string; args: string[]; options: { cwd: string } }[] = [];
-    class FixtureBundle { root = packageRoot; repoRoot = repoRoot; }
-    const router = new Function("BundleScript", "join", "runRepositoryTestCommand", "resolveTestLevel", javascript)(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Empty-facet authority fell through to generic routing"); });
-    await router.run([vector.command]);
+    const fall = () => { throw new Error("Empty-facet authority fell through to generic routing"); };
+    const route = new Function("join", "runRepositoryTestCommand", "repoTestArtifactEnvironment", "TEST_LEVEL_BUDGET_MS", "runTransactionV2", javascript)(join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options: { cwd: options.cwd } }); }, () => ({}), {}, fall);
+    expect(await route({ invocation: {}, repoRoot, root: packageRoot, run: fall }, [vector.command])).toBe(true);
     expect(invocations).toEqual([{ executable: process.execPath, args: ["test", join(repoRoot, vector.source)], options: { cwd: repoRoot } }]);
   }
 });

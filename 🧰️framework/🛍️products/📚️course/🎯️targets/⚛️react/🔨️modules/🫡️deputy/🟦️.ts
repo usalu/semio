@@ -63,6 +63,10 @@ export interface CourseMaterial {
   readonly quizzes: readonly Quiz[];
 }
 
+/** 📥️ Where a site's {@link CourseMaterial} comes from when it is a chunk of its own: fetched while the client already
+ * shows, so the first paint never carries the solutions; the deputy joins the session once it has arrived. */
+export type CourseMaterialSource = () => Promise<CourseMaterial>;
+
 /** 🗃️ What the client holds of its learner: who it is, and the views of it and of its runs. */
 export interface HeldLearner {
   readonly learner: Id;
@@ -90,7 +94,7 @@ function alike(left: unknown, right: unknown): boolean {
   return keys.length === Object.keys(other).length && keys.every((key) => Object.hasOwn(other, key) && alike(one[key], other[key]));
 }
 
-/** 🫡️ The deciders and views of the quiz core over one site's material. */
+/** 🏛️ The deciders and views of the quiz core over one site's material. */
 export class Deputy {
   /** 📖️ The solution-free course of the material: what the client shows until the proctor's own arrives. */
   readonly course: CourseView;

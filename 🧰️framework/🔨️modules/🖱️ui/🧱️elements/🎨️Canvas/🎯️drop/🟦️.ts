@@ -175,7 +175,7 @@ export function modeDockTabsWithInsertPreview(
   return row;
 }
 
-/** 📑️ Tab descriptors shown as insert-preview ghosts for the current drag. */
+/** 👻️ Tab descriptors shown as insert-preview ghosts for the current drag. */
 export function modeDockDragInsertTabs(layout: WindowLayoutNode, drag: ModeDragState, windowTitle: (windowId: string) => string, windowIconId: (windowId: string) => IconName): readonly { id: string; title: string; iconId: IconName }[] {
   if (drag.dragKind === "tab") return [{ id: drag.windowId, title: windowTitle(drag.windowId), iconId: windowIconId(drag.windowId) }];
   const stack = readLayoutAtPath(layout, drag.stackPath);

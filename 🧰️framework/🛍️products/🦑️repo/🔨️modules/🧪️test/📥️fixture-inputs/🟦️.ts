@@ -15,10 +15,10 @@ import { resolveSchemaExport, type SchemaDiagnostic } from "../📐️schema-con
 //#endregion 🔌️Adapters
 
 //#region 🧫️Fixtures
-/** 🧫️ One resolved fixture — explicit scheme, never shadow-based, digest pinned at plan time. */
+/** ⌨️ One resolved fixture — explicit scheme, never shadow-based, digest pinned at plan time. */
 
 
-/** 🧫️ Extracts every `shared://` / `local://` / `asset://` / `schema://` reference appearing anywhere in a feature's text. */
+/** 📘️ Extracts every `shared://` / `local://` / `asset://` / `schema://` reference appearing anywhere in a feature's text. */
 export function testInputUrisIn(feature: ParsedFeature): string[] {
   const haystack = [feature.description, ...feature.background.flatMap((step) => [step.text, step.docString ?? "", ...(step.dataTable ?? []).flat()]), ...feature.scenarios.flatMap((scenario) => scenario.steps.flatMap((step) => [step.text, step.docString ?? "", ...(step.dataTable ?? []).flat()]))].join("\n");
   const uris = new Set<string>();

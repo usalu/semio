@@ -20,7 +20,7 @@ pub(super) enum FillRunOwed {
 
 /// 🎯️ The candidate the search is testing right now.
 #[derive(Clone, Copy, Debug)]
-struct FillRunLive {
+pub(super) struct FillRunLive {
     pub(super) key: u64,
     pub(super) subject: ToolRunTraceSubject,
 }
@@ -38,7 +38,7 @@ pub(super) struct Puzzle2dFillRunOwners {
 
 /// ⏩️ A resumed run silently replays the deterministic search up to the provisional placements it continues.
 #[derive(semio_framework_value::RetireOwned)]
-struct FillRunReplay {
+pub(super) struct FillRunReplay {
     expected: Vec<Vec<u8>>,
     retire: Vec<FillRunPlacementKey>,
     pub(super) target: usize,
@@ -65,7 +65,7 @@ pub struct Puzzle2dFillRunJob {
     pub(super) search: Option<BoardFillJob>,
     pub(super) closing_search: Option<BoardFillJob>,
     pub(super) pending_snapshot: Option<BoardFillSnapshot>,
-    pending_search_serial: u64,
+    pub(super) pending_search_serial: u64,
     pub(super) replay: Option<FillRunReplay>,
     live: Option<FillRunLive>,
     pub(super) next_key: u64,

@@ -24,7 +24,7 @@ pub fn open_vortex_suggestions(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Va
     let effects = ctx
         .brush_suggestions(|link| {
             link.open_menu(&full_id);
-            run_effects(link, ctx.tool_run)
+            run_effects(link, ctx.tool_run.map(semio_framework_plugin::ToolRunView::poll_view))
         })
         .unwrap_or_default();
     ctx.effects.extend(effects);

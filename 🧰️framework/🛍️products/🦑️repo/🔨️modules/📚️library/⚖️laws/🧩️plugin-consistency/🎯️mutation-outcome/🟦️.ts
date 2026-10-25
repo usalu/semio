@@ -12,7 +12,7 @@ import { policyLineOfIndex } from "../../../🔍️discovery/📍️source-coord
 
 import { runToolSyncV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
-/** 📖️The frozen outcome-code vocabulary's language-agnostic document — the one table this gate, the Rust protocol
+/** 🧫️The frozen outcome-code vocabulary's language-agnostic document — the one table this gate, the Rust protocol
  * (`OUTCOME_CODES`, persistence) and the TypeScript twin (`outcomeCodeLevel`) share. */
 const POLICY_OUTCOME_CODE_FIXTURE = "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🧫️outcome-code/🔣️.json";
 
@@ -34,13 +34,13 @@ function policyOutcomeCodeLevel(vocabulary: PolicyOutcomeVocabulary, code: strin
 /** 🗂️What the mutation-outcome-law rules read: git-visible regular source files and the `🧬️mutations` directories above them. */
 type PolicyMutationLawInventory = Readonly<{ files: readonly string[]; mutationsDirs: readonly string[] }>;
 
-/** 🔎️Every position the rules scan: sources, Python oracles, Gherkin specifications and committed `🎯️outcome` documents. */
+/** 📍️Every position the rules scan: sources, Python oracles, Gherkin specifications and committed `🎯️outcome` documents. */
 const POLICY_MUTATION_LAW_PATHSPECS = ["*.rs", "*.ts", "*.tsx", "*.py", "*.feature", "*🎯️outcome/🔣️.json"] as const;
 
 const POLICY_MUTATION_LAW_INVENTORIES = new Map<string, PolicyMutationLawInventory>();
 
 /**
- * 🗂️The mutation-outcome-law gate's ONE repo walk, memoized per root and shared by every rule of this region: git's own inventory of
+ * 🚪️The mutation-outcome-law gate's ONE repo walk, memoized per root and shared by every rule of this region: git's own inventory of
  * tracked and unignored files (`git ls-files -co --exclude-standard`), so ignored build trees are never entered and a
  * symlink is never followed — git lists a link as one path and nothing beneath it. Taxonomy `pathExclusions` (opaque
  * prefixes), `POLICY_SKIP_DIRS` segments and the router itself drop before any filesystem access, and `lstat` keeps regular
@@ -82,7 +82,7 @@ function policyIsCompositeMutationDir(repoRoot: string, mutationRel: string): bo
   return existsSync(join(repoRoot, mutationRel, POLICY_MUTATION_PLAN_DIR, POLICY_RS_COMPONENT_LEAF_NAME));
 }
 
-/** 🔎️`use protocol::MutationOutcome;` or `use protocol::{.., MutationOutcome, ..};` — the import that lets a leaf spell the contract bare. */
+/** 📥️`use protocol::MutationOutcome;` or `use protocol::{.., MutationOutcome, ..};` — the import that lets a leaf spell the contract bare. */
 const POLICY_OUTCOME_IMPORT_RE = /\buse\s+protocol::(?:MutationOutcome\b|\{[^}]*\bMutationOutcome\b[^}]*\})/;
 
 /** 🧾️Whether a `🔺️diff` leaf reports through the frozen contract: `protocol::MutationOutcome<..>` spelled qualified, or bare after importing it from `protocol`. */
@@ -134,42 +134,42 @@ export function policyMutationOutcomeBreaches(repoRoot: string): BreachRecord[] 
   return breaches;
 }
 
-/** 🔎️Rust outcome builders with the level they fix: `MutationOutcome::(error|fatal)(..)` and `MutationMessage::(info|warning|error|fatal)(..)`. */
+/** 🔨️Rust outcome builders with the level they fix: `MutationOutcome::(error|fatal)(..)` and `MutationMessage::(info|warning|error|fatal)(..)`. */
 const POLICY_OUTCOME_RUST_BUILDER_RE = /\b(?:MutationOutcome::(error|fatal)|MutationMessage::(info|warning|error|fatal))\s*\(\s*"([^"]*)"/g;
 
-/** 🔎️The chainable `.info(..)`/`.warning(..)` shorthand — checked only inside a `fn` body that builds a `MutationOutcome`, so an unrelated sink's `.warning(..)`/`tracing::warn!` never matches. */
+/** ⛓️The chainable `.info(..)`/`.warning(..)` shorthand — checked only inside a `fn` body that builds a `MutationOutcome`, so an unrelated sink's `.warning(..)`/`tracing::warn!` never matches. */
 const POLICY_OUTCOME_RUST_CHAIN_RE = /\.(info|warning)\s*\(\s*"([^"]*)"/g;
 
-/** 🔎️The retired `warn` builder spelling: `MutationMessage::warn(..)` anywhere, the chainable `.warn(..)` inside an outcome-building body. */
+/** 🪦️The retired `warn` builder spelling: `MutationMessage::warn(..)` anywhere, the chainable `.warn(..)` inside an outcome-building body. */
 const POLICY_OUTCOME_RUST_RETIRED_BUILDER_RE = /(?:\bMutationMessage::|\.)warn\s*\(/g;
 
-/** 🔎️Apply-time rejections (`MutationOutcome::apply_to` persists them as `Fatal` messages): `MutationApplyError::new("…")`, `MutationApplyError { code: "…" }`. */
+/** ⌛️Apply-time rejections (`MutationOutcome::apply_to` persists them as `Fatal` messages): `MutationApplyError::new("…")`, `MutationApplyError { code: "…" }`. */
 const POLICY_OUTCOME_RUST_APPLY_RE = /\bMutationApplyError(?:::new\s*\(\s*|\s*\{\s*code:\s*)"([^"]*)"/g;
 
-/** 🔎️TypeScript twins: `refuse("<level>", "<code>", ..)` and `{ level: "<level>", code: "mutation.…" }` messages (the retired `warn` spelling is matched so it is reported, never skipped). */
+/** 🛑️TypeScript twins: `refuse("<level>", "<code>", ..)` and `{ level: "<level>", code: "mutation.…" }` messages (the retired `warn` spelling is matched so it is reported, never skipped). */
 const POLICY_OUTCOME_TS_REFUSE_RE = /\brefuse\(\s*"(info|warn|warning|error|fatal)"\s*,\s*"([^"]*)"/g;
 
 const POLICY_OUTCOME_TS_OBJECT_RE = /\blevel:\s*"(info|warn|warning|error|fatal)"\s*,\s*code:\s*"(mutation\.[^"]*)"|\bcode:\s*"(mutation\.[^"]*)"\s*,\s*level:\s*"(info|warn|warning|error|fatal)"/g;
 
-/** 🔎️Python second implementations: `("<level>", "<dotted-code>")` outcome tuples. */
+/** 🐍️Python second implementations: `("<level>", "<dotted-code>")` outcome tuples. */
 const POLICY_OUTCOME_PY_TUPLE_RE = /\(\s*"(info|warn|warning|error|fatal)"\s*,\s*"([a-z0-9]+(?:[.-][a-z0-9]+)+)"\s*\)/g;
 
-/** 🔎️Gherkin outcome messages: `{level: <level>, code: mutation.…}`. */
+/** 📨️Gherkin outcome messages: `{level: <level>, code: mutation.…}`. */
 const POLICY_OUTCOME_FEATURE_MESSAGE_RE = /\blevel:\s*([a-z]+)\s*,\s*code:\s*(mutation\.[a-z0-9][a-z0-9.-]*[a-z0-9])(?![\w.<*-])/g;
 
-/** 🔎️A hand-written Rust level decoder admitting the retired `"warn"` spelling for `Severity::Warning` — the wire name is `warning` only. */
+/** 🎚️A hand-written Rust level decoder admitting the retired `"warn"` spelling for `Severity::Warning` — the wire name is `warning` only. */
 const POLICY_OUTCOME_RUST_LEVEL_ALIAS_RE = /(?:"[a-z]+"\s*\|\s*)*"warn"\s*(?:\|\s*"[a-z]+"\s*)*=>\s*(?:Ok\(|Some\()?(?:[A-Za-z_]\w*::)*Severity::Warning\b/g;
 
-/** 🔎️A complete string literal in the `mutation.` namespace — an outcome code wherever mutation leaves, diffs and oracles spell one. */
+/** ✅️A complete string literal in the `mutation.` namespace — an outcome code wherever mutation leaves, diffs and oracles spell one. */
 const POLICY_OUTCOME_NAMESPACE_LITERAL_RE = /["'`](mutation\.[a-z0-9][a-z0-9.-]*)["'`]/g;
 
-/** 🔎️A `mutation.` token in a Gherkin specification (`mutation.apply.<detail>` placeholders excluded). */
+/** 🎨️A `mutation.` token in a Gherkin specification (`mutation.apply.<detail>` placeholders excluded). */
 const POLICY_OUTCOME_FEATURE_TOKEN_RE = /(?<![\w.-])(mutation\.[a-z0-9][a-z0-9-]*(?:\.[a-z0-9][a-z0-9-]*)*)(?![\w-]|\.[<*])/g;
 
 /** 🔎️Finds `fn <name>(..` openers so the chainable shorthand is scoped to outcome-building bodies. */
 const POLICY_FN_DECL_RE = /\bfn\s+[A-Za-z_]\w*/g;
 
-/** 🔎️Outcome-code positions by domain: mutation leaves, diffs and their oracles. */
+/** 🍃️Outcome-code positions by domain: mutation leaves, diffs and their oracles. */
 const POLICY_OUTCOME_LEAF_SEGMENTS = ["/🧬️mutations/", "/🔺️diff/"] as const;
 
 /** 🧱️Spans of every `fn` body that mentions `MutationOutcome`, found with ONE literal-masked brace pass per file. */
@@ -197,7 +197,7 @@ function policyOutcomeFnBodyMask(content: string): Uint8Array {
 }
 
 /**
- * 📏️Rule 2: every outcome-code position spells a code of the frozen vocabulary (`🎮️mutation/🧫️fixtures/🧫️outcome-code`)
+ * 💬️Rule 2: every outcome-code position spells a code of the frozen vocabulary (`🎮️mutation/🧫️fixtures/🧫️outcome-code`)
  * at the one level it fixes — persistence (`🏪️store` `expected_mutation_message_level`) refuses anything else. Positions:
  * Rust builders and the chainable shorthand inside outcome-building bodies (code + level), `MutationApplyError` codes
  * (`mutation.apply.<detail>`), `mutation.` literals in mutation leaves/diffs (Rust, TypeScript) and Python oracles, the

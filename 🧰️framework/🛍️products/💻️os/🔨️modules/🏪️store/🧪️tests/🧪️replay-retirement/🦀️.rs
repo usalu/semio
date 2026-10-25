@@ -330,11 +330,11 @@ fn exclusive_owned_replay_preserves_refusal_and_immutable_readers_without_step_c
         let forwards = row["operations"].as_array().unwrap().iter().map(|operation| FailClosedOp::of(DemoMutation::SetN(SetN { n: operation["value"].as_i64().unwrap() as i32 }), match operation["fault"].as_str().unwrap() { "none" => Fault::None, "apply" => Fault::Apply, "message" => Fault::Message, _ => unreachable!() })).collect();
         let edit = Edit { id: row["name"].as_str().unwrap().into(), actor: None, line: None, forwards, inverse: Default::default(), mutation_meta: Vec::new(), verb: None, sequence_number: 0, started_at: String::new(), finished_at: None };
         let before = DEMO_PROJECTION_CLONES.with(std::cell::Cell::get);
-        fold_effective_edit::<DemoSnapshot, FailClosedOp>(&mut owned, &edit, "demo/v1", &Default::default(), usize::MAX);
+        fold_effective_edit::<DemoSnapshot, DemoSnapshot, FailClosedOp>(&mut owned, &edit, "demo/v1", &Default::default(), usize::MAX);
         let owned_clones = DEMO_PROJECTION_CLONES.with(std::cell::Cell::get) - before;
         assert_eq!(owned_clones as u64, row["ownedClones"].as_u64().unwrap(), "{}", row["name"]);
         let before = DEMO_PROJECTION_CLONES.with(std::cell::Cell::get);
-        fold_effective_edit::<DemoSnapshot, FailClosedOp>(&mut shared, &edit, "demo/v1", &Default::default(), usize::MAX);
+        fold_effective_edit::<DemoSnapshot, DemoSnapshot, FailClosedOp>(&mut shared, &edit, "demo/v1", &Default::default(), usize::MAX);
         let cold_clones = DEMO_PROJECTION_CLONES.with(std::cell::Cell::get) - before;
         assert_eq!(cold_clones as u64, row["coldClones"].as_u64().unwrap(), "{}", row["name"]);
         assert_eq!(owned.n, shared.n);
@@ -346,6 +346,5 @@ fn exclusive_owned_replay_preserves_refusal_and_immutable_readers_without_step_c
         retire_shared_projection::<DemoSnapshot, FailClosedOp>(reader);
         assert_eq!((tally()[4] - before) as u64, row["terminalOwners"].as_u64().unwrap());
         retire_scratch_edits::<DemoSnapshot, FailClosedOp>([edit]);
-        eprintln!("[DEBUG] owned replay case={} owned_clones={owned_clones} immutable_cold_clones={cold_clones} terminal owners retired", row["name"]);
     }
 }

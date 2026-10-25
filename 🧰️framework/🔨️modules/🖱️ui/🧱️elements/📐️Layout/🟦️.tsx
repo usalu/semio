@@ -39,7 +39,7 @@ export interface LayoutMobilePanelProps {
   /** 🌱️ Per-branch drill-down memory (see {@link progressPanelTabSelection}). */
   pathMemory?: Readonly<Record<string, string>>;
   onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
-  /** 🌱️ Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
+  /** 🌲️ Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
   treeOpenStates?: Readonly<Record<string, boolean>>;
   onTreeOpenStateChange?: (id: string, open: boolean) => void;
   /** ♻️ See {@link PanelProps.treeContentRevision}. */
@@ -47,7 +47,7 @@ export interface LayoutMobilePanelProps {
   className?: string;
 }
 
-/** 📱️ Full-height tabbed panel for Layout's mobile branch. */
+/** 🗂️ Full-height tabbed panel for Layout's mobile branch. */
 const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, treeOpenStates, onTreeOpenStateChange, treeContentRevision, className = "" }) => {
   const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible: true, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange });
   const panelContentRef = reactHostPort.useRef<HTMLDivElement>(null);

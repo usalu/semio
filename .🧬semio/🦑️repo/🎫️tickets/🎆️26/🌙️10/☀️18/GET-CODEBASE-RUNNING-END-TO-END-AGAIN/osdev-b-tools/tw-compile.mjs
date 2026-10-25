@@ -1,0 +1,17 @@
+import { compile } from "@tailwindcss/node";
+import { Scanner } from "@tailwindcss/oxide";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+const file = resolve(process.cwd(), process.argv[2]);
+const t0 = Date.now();
+const compiler = await compile(readFileSync(file, "utf8"), { base: dirname(file), onDependency() {} });
+console.log("[tw] root", JSON.stringify(compiler.root), JSON.stringify(compiler.sources.map((s) => s.base.slice(-40) + " " + s.pattern + " " + s.negated)));
+console.log(`[tw] compile ${Date.now() - t0} ms, sources`, compiler.sources.length);
+const sources = [...compiler.sources, { base: dirname(file), pattern: "**/*", negated: false }];
+const t1 = Date.now();
+const scanner = new Scanner({ sources });
+const candidates = scanner.scan();
+console.log(`[tw] scan ${Date.now() - t1} ms, ${candidates.length} candidates`);
+const t2 = Date.now();
+const css = compiler.build(candidates);
+console.log(`[tw] build ${Date.now() - t2} ms, css ${css.length} bytes, rss ${Math.round(process.memoryUsage().rss / 1e6)} MB`);

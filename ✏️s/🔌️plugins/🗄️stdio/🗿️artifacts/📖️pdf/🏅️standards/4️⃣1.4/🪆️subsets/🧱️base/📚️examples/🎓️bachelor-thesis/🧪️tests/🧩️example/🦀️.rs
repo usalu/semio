@@ -35,7 +35,7 @@ use crate::standards::v1_7::subsets::base::io::PdfBuilderConstruction as PdfBuil
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{DiffBinary,DiffCodec,DiffText, Inference, ColdMutation, Mutation, MutationDiff, OpBinary};
 use semio_framework_plugin::ArtifactBuilder;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn assert_logical_cos_retained(snapshot: &PdfSnapshot) {

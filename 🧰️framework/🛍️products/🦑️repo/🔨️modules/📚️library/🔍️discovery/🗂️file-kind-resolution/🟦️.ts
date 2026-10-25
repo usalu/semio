@@ -18,7 +18,7 @@ export function subsetDirectoryNameForId(subsetsOwnerPath: string, subsetId: str
   return slug.test(subsetId) ? `${taxonomy.subsetDirPrefix ?? "✳️"}${subsetId}` : null;
 }
 
-/** 🪆️ Resolves one physical subset directory identity back to its logical owner-scoped id. */
+/** ⏪️ Resolves one physical subset directory identity back to its logical owner-scoped id. */
 export function subsetIdForDirectoryName(subsetsOwnerPath: string, directoryName: string, taxonomy: Taxonomy = loadTaxonomy()): string | null {
   const owner = subsetsOwnerPath.replaceAll("\\", "/").replace(/\/$/u, "").normalize("NFC");
   const overrides = taxonomy.subsetDirectoryOverrides?.[owner];

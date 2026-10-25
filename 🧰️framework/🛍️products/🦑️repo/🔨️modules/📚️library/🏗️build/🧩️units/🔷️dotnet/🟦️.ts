@@ -10,7 +10,7 @@ export type CsprojFactsV1 = {
   readonly compileIncludes: readonly string[]; readonly compileRemoves: readonly string[]; readonly defaultCompile: boolean;
 };
 const attribute = (tag: string, name: string): string | undefined => new RegExp(`\\b${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, "i").exec(tag)?.slice(2).find(value => value !== undefined);
-/** 🔷️ Reads a project file: SDK, unconditional properties (a property group with a `Condition` is ignored), project and package references, `Compile` includes and removes, and whether the default `**\/*.cs` glob is on. */
+/** 📄️ Reads a project file: SDK, unconditional properties (a property group with a `Condition` is ignored), project and package references, `Compile` includes and removes, and whether the default `**\/*.cs` glob is on. */
 export function parseCsprojV1(text: string): CsprojFactsV1 {
   const clean = text.replace(/<!--[\s\S]*?-->/g, ""), properties: Record<string, string> = {};
   const sdk = attribute(/<Project\b[^>]*>/i.exec(clean)?.[0] ?? "", "Sdk") ?? null;
@@ -33,17 +33,17 @@ export function parseCsprojV1(text: string): CsprojFactsV1 {
 
 const normalize = (path: string): string => {const out: string[] = []; for (const part of path.split("\\").join("/").split("/")) {if (part === "" || part === ".") continue; if (part === "..") out.pop(); else out.push(part);} return out.join("/");};
 const joinPath = (...parts: readonly string[]): string => normalize(parts.filter(part => part !== "").join("/"));
-/** 🔷️ A MSBuild glob (`*`, `?`, `**`) as an expression over normalized workspace paths. */
+/** 🔨️ A MSBuild glob (`*`, `?`, `**`) as an expression over normalized workspace paths. */
 export function msbuildGlobV1(glob: string): RegExp {
   const parts = normalize(glob).split("/"), pieces = parts.map((part, index) => part === "**" ? (index === parts.length - 1 ? ".*" : "(?:[^/]+/)*") : part.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*").replace(/\?/g, "[^/]") + (index === parts.length - 1 ? "" : "/"));
   return new RegExp("^" + pieces.join("") + "$", "u");
 }
 
-/** 🔷️ One planned project. */
+/** ➡️ One planned project. */
 export type DotnetProjectV1 = {readonly csproj: string; readonly directory: string; readonly assemblyName: string; readonly frameworks: readonly string[]; readonly outputType: string; readonly compile: readonly string[]; readonly projectReferences: readonly string[]; readonly packageReferences: readonly string[]; readonly test: boolean};
 export type DotnetWorkspaceSnapshotV1 = {readonly files: readonly string[]; readonly read: (path: string) => string};
 
-/** 🔷️ Plans the unit graph of a .NET workspace: one unit per project file with `interface` edges (reference assembly) between library projects, `implementation` edges from executables and test projects, NuGet packages as exact externals, the SDK in the toolchain identity. Compile items follow MSBuild: the default glob (below the project directory, outside `bin`/`obj` and nested projects) unless disabled, plus explicit includes, minus removes. */
+/** 🕸️ Plans the unit graph of a .NET workspace: one unit per project file with `interface` edges (reference assembly) between library projects, `implementation` edges from executables and test projects, NuGet packages as exact externals, the SDK in the toolchain identity. Compile items follow MSBuild: the default glob (below the project directory, outside `bin`/`obj` and nested projects) unless disabled, plus explicit includes, minus removes. */
 export function planDotnetUnitsV1(snapshot: DotnetWorkspaceSnapshotV1, options: {readonly policy: UnitsPolicyV1; readonly toolchain: string; readonly configuration?: string}): {readonly graph: UnitGraphV1; readonly projects: readonly DotnetProjectV1[]} {
   const configuration = options.configuration ?? "Release", csprojs = sortedCodePointsV1(snapshot.files.filter(path => path.endsWith(".csproj"))), directories = csprojs.map(path => path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "");
   const fileSet = new Set(snapshot.files), projects: (DotnetProjectV1 & {readonly facts: CsprojFactsV1})[] = [];
@@ -104,7 +104,7 @@ const findFiles = (root: string, pattern: RegExp): string[] => {
 };
 /** 🏭️ The process effect of the .NET executor. */
 export type DotnetRunnerV1 = (argv: readonly string[], options: {readonly cwd: string; readonly env: Readonly<Record<string, string>>; readonly signal: AbortSignal}) => Promise<{readonly code: number; readonly output: string}>;
-/** 🏭️ Executes a .NET unit with `dotnet build` into private obj and bin directories (`ProduceReferenceAssembly`, deterministic): the interface digest is the SHA-256 of the reference assembly (metadata of the public surface only, so a private edit leaves it unchanged), the output digest that of the implementation assembly. A test project runs `dotnet test` and its output digest is the verdict. */
+/** 🏗️ Executes a .NET unit with `dotnet build` into private obj and bin directories (`ProduceReferenceAssembly`, deterministic): the interface digest is the SHA-256 of the reference assembly (metadata of the public surface only, so a private edit leaves it unchanged), the output digest that of the implementation assembly. A test project runs `dotnet test` and its output digest is the verdict. */
 export function dotnetUnitExecutorV1(options: {readonly workspace: string; readonly outputRoot: string; readonly run: DotnetRunnerV1}): (request: ExecuteRequestV1) => Promise<ExecuteOutcomeV1> {
   return async request => {
     const {unit} = request, out = join(options.outputRoot, sha256V1(unit.id).slice(0, 24));

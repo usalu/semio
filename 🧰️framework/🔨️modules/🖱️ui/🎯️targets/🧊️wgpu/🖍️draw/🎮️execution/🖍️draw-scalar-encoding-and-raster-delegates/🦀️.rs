@@ -292,22 +292,22 @@ impl GpuContext {
         self.raster_store.stage_gpu_bind_group(&self.roots.device, self.pipelines.globals_buffer(), &self.pipelines.glyph_view(), self.pipelines.glyph_sampler(), admission, view, texture, expected)
     }
 
-    /// 📐️ PHYSICAL surface width in device pixels.
+    /// 💻️ PHYSICAL surface width in device pixels.
     pub fn width(&self) -> u32 {
         self.width
     }
 
-    /// 📐️ PHYSICAL surface height in device pixels.
+    /// 📱️ PHYSICAL surface height in device pixels.
     pub fn height(&self) -> u32 {
         self.height
     }
 
-    /// 📐️ LOGICAL surface width — the unit every draw list, hit test and chrome constant speaks.
+    /// 📏️ LOGICAL surface width — the unit every draw list, hit test and chrome constant speaks.
     pub fn logical_width(&self) -> f32 {
         self.logical_width
     }
 
-    /// 📐️ LOGICAL surface height — the vertical twin of [`Self::logical_width`].
+    /// ↕️ LOGICAL surface height — the vertical twin of [`Self::logical_width`].
     pub fn logical_height(&self) -> f32 {
         self.logical_height
     }

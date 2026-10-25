@@ -1,0 +1,100 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Binary fact index document",
+ "description": "The stored form of the inverted fact index of a graph generation. Document := magic, counts (varint), strings, kinds, owners, facts, rows, classes. Every integer is an unsigned LEB128 varint (at most 9 bytes, at most 2^53-1). strings: stringCount rows of (lcp, suffixLength, suffix bytes), front coded against the previous string, strictly ascending in UTF-8 byte order (= code point order), the first string has lcp 0. kinds and owners: string ids. facts: factCount tagged values. rows: rowCount rows of (kind index, path string id, fact id). classes: classCount rows of (rCount, rCount zigzag deltas, oCount, oCount zigzag deltas), every delta against the previous value of the same list (the first against 0). Value := tag byte followed by its payload; objects list strictly ascending key string ids (canonical key order), a hex tag carries a lowercase 64 digit digest as 32 raw bytes.",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "magic": "SFI1",
+    "maximumDepth": 64,
+    "maximumVarintBytes": 9,
+    "tags": {
+     "null": 0,
+     "false": 1,
+     "true": 2,
+     "uint": 3,
+     "negint": 4,
+     "float": 5,
+     "string": 6,
+     "array": 7,
+     "object": 8,
+     "hex": 9
+    }
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "indexes", "refusals", "sizes"],
+   "properties": {
+    "version": {"const": 1},
+    "indexes": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "index"],
+      "properties": {
+       "id": {"type": "string"},
+       "index": {"$ref": "#/definitions/LogicalIndex"}
+      }
+     }
+    },
+    "refusals": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "hex"],
+      "properties": {
+       "id": {"type": "string"},
+       "hex": {"type": "string", "pattern": "^([a-f0-9]{2})*$"}
+      }
+     }
+    },
+    "sizes": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["owners", "rowsPerOwner", "maximumExpandedBytes", "maximumRatio"],
+     "properties": {
+      "owners": {"type": "integer", "minimum": 1},
+      "rowsPerOwner": {"type": "integer", "minimum": 1},
+      "maximumExpandedBytes": {"type": "integer", "minimum": 1},
+      "maximumRatio": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}
+     }
+    }
+   }
+  },
+  "LogicalIndex": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "owners", "rows", "classes"],
+   "properties": {
+    "version": {"const": 1},
+    "owners": {"type": "array", "items": {"type": "string"}},
+    "rows": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path", "fact"],
+      "properties": {"kind": {"type": "string", "minLength": 1}, "path": {"type": "string"}, "fact": {}}
+     }
+    },
+    "classes": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["r", "o"],
+      "properties": {
+       "r": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+       "o": {"type": "array", "items": {"type": "integer", "minimum": 0}}
+      }
+     }
+    }
+   }
+  }
+ }
+}

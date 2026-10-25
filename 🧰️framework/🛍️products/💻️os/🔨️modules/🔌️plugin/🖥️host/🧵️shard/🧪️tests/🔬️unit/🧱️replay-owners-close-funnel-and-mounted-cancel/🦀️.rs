@@ -10,7 +10,7 @@ async fn replay_failure_and_actor_loss_enter_one_close_funnel_before_reporting()
     let actor = ActorId(74);
     let package = PackageRef { package: PackageId("replay-close-funnel".into()), hash: PackageHash([74; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4_096, 1)).await.expect("mock instantiate");
     let (transport, probe) = LoopbackTransport::paired().await;
     let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
     shard.register(actor, instance);
@@ -21,7 +21,7 @@ async fn replay_failure_and_actor_loss_enter_one_close_funnel_before_reporting()
     let mut seed = MountedReplaySeed::new(actor.0, 24, turn, request, JobPlacement::Inline, kind, input).expect("mounted seed");
     seed.seed.as_mut().expect("fixed seed").kind_pages = JOB_REPLAY_KIND_PAGE_CAPACITY;
     shard.replay_seeds[0] = Some(seed);
-    shard.granted_budgets.insert(actor.0, IssuedShardTurn::new(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
+    shard.granted_budgets.insert(actor.0, IssuedShardTurn::whole(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
     let error = shard.drive_replay_seed().await.expect_err("capture admission must fault");
     assert!(error.to_string().contains("kind page admission refused"));
     let seed = shard.replay_seeds[0].as_ref().expect("faulted seed remains discoverable");
@@ -70,10 +70,10 @@ async fn mounted_replay_rejects_wrong_route_seed_generation_and_worker_before_wo
     shard.replay_seeds[0] = Some(MountedReplaySeed::new(actor.0, job, turn, request, JobPlacement::Inline, kind, input).expect("fixed mounted replay seed"));
 
     let initial_phase = shard.replay_seeds[0].as_ref().expect("mounted seed").phase;
-    shard.granted_budgets.insert(actor.0, IssuedShardTurn::new(semio_framework_actor::Budget { fuel: 0, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
+    shard.granted_budgets.insert(actor.0, IssuedShardTurn::whole(semio_framework_actor::Budget { fuel: 0, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
     assert!(!shard.drive_replay_seed().await.expect("zero fuel refuses unchanged"));
     assert_eq!(shard.replay_seeds[0].as_ref().expect("unchanged seed").phase, initial_phase);
-    shard.granted_budgets.insert(actor.0, IssuedShardTurn::new(semio_framework_actor::Budget { fuel: 1, wall_ms: 0, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
+    shard.granted_budgets.insert(actor.0, IssuedShardTurn::whole(semio_framework_actor::Budget { fuel: 1, wall_ms: 0, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
     assert!(!shard.drive_replay_seed().await.expect("expired deadline refuses unchanged"));
     assert_eq!(shard.replay_seeds[0].as_ref().expect("unchanged seed").phase, initial_phase);
 
@@ -87,13 +87,13 @@ async fn mounted_replay_rejects_wrong_route_seed_generation_and_worker_before_wo
     assert!(shard.begin_replay_seed(actor.0, turn, request, 1, u16::MAX).is_err());
 
     shard.replay_seeds[0].as_mut().expect("mounted seed").phase = ReplaySeedPhase::CaptureInput;
-    shard.granted_budgets.insert(actor.0, IssuedShardTurn::new(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
+    shard.granted_budgets.insert(actor.0, IssuedShardTurn::whole(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
     let stale_started = std::time::Instant::now();
     assert!(shard.drive_replay_seed().await.expect("stale actor starts exact close"));
     assert!(stale_started.elapsed() < std::time::Duration::from_millis(8));
     assert_eq!(shard.replay_seeds[0].as_ref().expect("stale seed remains discoverable").phase, ReplaySeedPhase::Closing);
     while shard.replay_seeds[0].is_some() {
-        shard.granted_budgets.insert(actor.0, IssuedShardTurn::new(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
+        shard.granted_budgets.insert(actor.0, IssuedShardTurn::whole(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
         let started = std::time::Instant::now();
         assert!(shard.drive_replay_seed().await.expect("one close opportunity"));
         assert!(started.elapsed() < std::time::Duration::from_millis(8));
@@ -110,7 +110,7 @@ async fn mounted_cancel_marks_the_exact_replay_seed_for_incremental_close_before
     let job = 13;
     let package = PackageRef { package: PackageId("mounted-replay-cancel".to_string()), hash: PackageHash([17; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
     let turn = test_job_turn(actor, job, 0, 0);
     let kind = "action-bus.cancel".to_string();
     let input = vec![2, 3, 5, 7];
@@ -132,16 +132,17 @@ async fn mounted_cancel_marks_the_exact_replay_seed_for_incremental_close_before
     mock.script_turn(actor, cancel).await;
 
     let budget = fixture_issued_turn(semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance));
-    let granted = budget.budget;
     shard.granted_budgets.insert(actor.0, budget);
     let lane = shard.actor_lane(actor.0);
-    assert!(!shard.execute_turn_for(actor.0, &Event::Wake, granted, lane).await.expect("mounted cancel turn"));
+    shard.enqueue_authority(lane, DeferredAuthority::Event { actor: actor.0, event: Some(Event::Wake) }, 1).expect("mounted cancel wake is deferred");
+    assert_eq!(shard.pump().await.expect("mounted cancel turn"), 1);
+    assert!(!shard.has_lifecycle_retry());
     assert_eq!(mock.cancel_admissions(), 1);
     assert_eq!(mock.step_admissions(), 0, "cancel closes before another guest job step");
     assert_eq!(shard.replay_seeds[0].as_ref().expect("cancelled seed remains discoverable").phase, ReplaySeedPhase::Closing);
     assert!(!shard.running_jobs.contains(&(actor.0, job)));
     while shard.replay_seeds[0].is_some() {
-        shard.granted_budgets.insert(actor.0, IssuedShardTurn::new(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
+        shard.granted_budgets.insert(actor.0, IssuedShardTurn::whole(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }, semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("declared replay authority"));
         let started = std::time::Instant::now();
         assert!(shard.drive_replay_seed().await.expect("one cancelled-owner close opportunity"));
         assert!(started.elapsed() < std::time::Duration::from_millis(8));

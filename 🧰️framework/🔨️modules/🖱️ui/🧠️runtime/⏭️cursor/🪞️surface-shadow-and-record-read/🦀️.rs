@@ -51,7 +51,7 @@ impl SurfaceShadow {
         Self::new(surface)
     }
 
-    /// ♻️ Diffs `tree` against this reconciler's retained state, mutating that state to match and
+    /// 🔁️ Diffs `tree` against this reconciler's retained state, mutating that state to match and
     /// returning the minimal [`ui_contract::UiPatch`] that carries the difference — or `None` when
     /// `tree` is structurally and semantically identical to what was last presented, so an idle surface
     /// produces no wire traffic at all. `base_revision` is the revision the receiver is assumed to be
@@ -248,17 +248,17 @@ impl SurfaceShadow {
         self.document.is_none() && self.native_resources.is_none() && self.native_resource_loans.terminal_is_empty() && self.assembly.terminal_is_empty() && self.ordinals.is_empty() && self.key_index.is_empty()
     }
 
-    /// 📖️ `true` when the canonical root has been sealed.
+    /// 🔏️ `true` when the canonical root has been sealed.
     pub fn has_document(&self) -> bool {
         self.document.is_some()
     }
 
-    /// 📖️ `true` when `lease` aliases this shadow's canonical root.
+    /// 🔎️ `true` when `lease` aliases this shadow's canonical root.
     pub fn document_root_matches(&self, lease: Option<&ui_contract::UiDocumentLease>) -> bool {
         self.document.as_ref().zip(lease).is_some_and(|(current, captured)| current.same_root(captured))
     }
 
-    /// 🪪️ The byte length of the surface identifier this shadow was opened for.
+    /// 📏️ The byte length of the surface identifier this shadow was opened for.
     pub fn surface_identifier_bytes(&self) -> usize {
         self.surface.0.len()
     }

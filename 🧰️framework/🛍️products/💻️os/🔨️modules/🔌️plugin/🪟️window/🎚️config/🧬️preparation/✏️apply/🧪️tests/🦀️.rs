@@ -244,7 +244,7 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
     let mut copy = 1usize;
     loop {
         let grant = RetainedCloneGrant { maximum_copy_bytes: copy, ..wide };
-        if matches!(catch_unwind(AssertUnwindSafe(|| drive::<S, M>(base, &from_json(mutation), body, grant, None))), Ok(Ok(Some(_)))) { return copy; }
+        if matches!(catch_unwind(AssertUnwindSafe(|| drive::<S, M>(base, &from_json(mutation), copy, grant, None))), Ok(Ok(Some(_)))) { return copy; }
         copy *= 2;
         assert!(copy <= 1 << 20, "no copy grant completes the case");
     }

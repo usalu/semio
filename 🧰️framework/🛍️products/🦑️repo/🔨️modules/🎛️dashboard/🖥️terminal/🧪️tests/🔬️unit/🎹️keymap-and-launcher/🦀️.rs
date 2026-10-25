@@ -2,7 +2,7 @@
 
 #[test]
 fn native_leader_bytes_match_the_shared_control_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧪️tests/🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧪️tests/🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
     let bytes: Vec<u8> = fixture["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
     let mut parser = semio_framework_ui_tui_terminal::ansi::AnsiParser::new();
     let mut events = Vec::new();
@@ -13,13 +13,13 @@ fn native_leader_bytes_match_the_shared_control_vectors() {
 
 #[test]
 fn decoded_terminal_keys_resolve_through_the_keymap_exactly_as_written() {
-    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧪️tests/🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧪️tests/🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
     let bytes: Vec<u8> = fixture["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
     let mut parser = semio_framework_ui_tui_terminal::ansi::AnsiParser::new();
     let mut events = Vec::new();
     parser.feed(&bytes, &mut events);
     let keymap = Preferences::default().keymap().0;
-    let specs: Vec<String> = events.iter().filter_map(|event| if let Event::Key(key) = event { super::controls::spec_of(key) } else { None }).map(|spec| spec.to_string()).collect();
+    let specs: Vec<String> = events.iter().filter_map(|event| if let Event::Key(key) = event { dashboard_terminal::testing::spec_of(key) } else { None }).map(|spec| spec.to_string()).collect();
     assert_eq!(specs, ["ctrl+b", "p", "ctrl+r", "Ü", "ctrl+space"]);
     assert!(keymap.is_prefix(&dashboard_preferences::keymap::KeySpec::parse(&specs[0]).unwrap()));
     assert_eq!(keymap.resolve(dashboard_preferences::keymap::Scope::Prefix, &dashboard_preferences::keymap::KeySpec::parse(&specs[1]).unwrap()), Some("show-settings"));
@@ -27,13 +27,13 @@ fn decoded_terminal_keys_resolve_through_the_keymap_exactly_as_written() {
 
 #[test]
 fn terminal_bytes_become_the_keymaps_canonical_spellings() {
-    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧪️tests/🧫️fixtures/⌨️keymap/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧪️tests/🧫️fixtures/⌨️keymap/🔣️.json")).unwrap();
     for row in fixture["terminal"].as_array().unwrap() {
         let bytes: Vec<u8> = row["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
         let mut parser = semio_framework_ui_tui_terminal::ansi::AnsiParser::new();
         let mut events = Vec::new();
         parser.feed(&bytes, &mut events);
-        let specs: Vec<String> = events.iter().filter_map(|event| if let Event::Key(key) = event { super::controls::spec_of(key).map(|spec| spec.to_string()) } else { None }).collect();
+        let specs: Vec<String> = events.iter().filter_map(|event| if let Event::Key(key) = event { dashboard_terminal::testing::spec_of(key).map(|spec| spec.to_string()) } else { None }).collect();
         assert_eq!(specs, [row["spec"].as_str().unwrap().to_string()], "{row}");
     }
 }
@@ -71,12 +71,26 @@ fn starting_from_the_launcher_sends_the_resolved_registry_launch_with_its_task_l
     let (_, command) = &started[0];
     assert_eq!(command.command_id, "@fx/quiz:test");
     assert_eq!((command.label.verb.as_str(), command.label.subject.as_str()), ("test", "quiz"));
-    assert_eq!(command.cmd, "bun");
-    assert_eq!(&command.args[..3], ["repo", "run", "@fx/quiz:test"]);
+    assert_eq!(command.cmd, "repo");
+    assert_eq!(&command.args[..2], ["run", "@fx/quiz:test"]);
     assert!(command.cols > 10 && command.rows > 5, "the terminal starts at the size of its widget: {}x{}", command.cols, command.rows);
     assert!(matches!(dashboard.windows[1].body, Body::Output { .. }));
     assert_eq!(tabs(&dashboard, &mut tui, 1), ["Tasks", "test quiz"]);
     assert_eq!(statuses(&dashboard, &mut tui, 1), [None, Some(Status::Waiting)]);
+}
+
+#[test]
+fn a_task_started_from_the_dashboard_speaks_the_language_the_dashboard_speaks() {
+    for (language, expected) in [("en", "en"), ("de", "de")] {
+        let (mut dashboard, mut tui) = dashboard_with(Preferences { language: Some(language.into()), ..Default::default() });
+        press(&mut dashboard, &mut tui, &[ctrl('b'), key('n')]);
+        press(&mut dashboard, &mut tui, &type_text("quiz test"));
+        press(&mut dashboard, &mut tui, &[named(Key::Enter), named(Key::Enter)]);
+        let started = spawned(&dashboard);
+        assert_eq!(started.len(), 1, "{language}: {:?}", dashboard.link.pending);
+        let spoken: Vec<&str> = started[0].1.env.iter().filter(|(key, _)| key == "SEMIO_LANGUAGE").map(|(_, value)| value.as_str()).collect();
+        assert_eq!(spoken, [expected], "the task of a {language} dashboard is told its language exactly once");
+    }
 }
 
 #[test]
@@ -86,7 +100,7 @@ fn chosen_parameters_and_extra_arguments_reach_the_launch() {
     press(&mut dashboard, &mut tui, &type_text("quiz test"));
     press(&mut dashboard, &mut tui, &[named(Key::Enter)]);
     let Body::Launcher(launcher) = &dashboard.windows[1].body else { panic!("launcher expected") };
-    assert_eq!(launcher.stage(), super::launcher::Stage::Configure);
+    assert_eq!(launcher.stage(), dashboard_launcher::Stage::Configure);
     press(&mut dashboard, &mut tui, &[named(Key::PageUp), named(Key::Down), named(Key::Right)]);
     press(&mut dashboard, &mut tui, &[named(Key::Down), key(' ')]);
     press(&mut dashboard, &mut tui, &[named(Key::Down), key('4')]);
@@ -112,11 +126,11 @@ fn commands_that_change_the_repository_ask_before_they_start() {
     press(&mut dashboard, &mut tui, &type_text("ticket.close"));
     press(&mut dashboard, &mut tui, &[named(Key::Enter), named(Key::Enter)]);
     let Body::Launcher(launcher) = &dashboard.windows[1].body else { panic!("launcher expected") };
-    assert_eq!(launcher.stage(), super::launcher::Stage::Confirm);
+    assert_eq!(launcher.stage(), dashboard_launcher::Stage::Confirm);
     assert!(spawned(&dashboard).is_empty());
     press(&mut dashboard, &mut tui, &[named(Key::Esc)]);
     let Body::Launcher(launcher) = &dashboard.windows[1].body else { panic!("launcher expected") };
-    assert_eq!(launcher.stage(), super::launcher::Stage::Configure);
+    assert_eq!(launcher.stage(), dashboard_launcher::Stage::Configure);
     press(&mut dashboard, &mut tui, &[named(Key::Enter), named(Key::Enter)]);
     assert_eq!(spawned(&dashboard).len(), 1);
 }
@@ -218,7 +232,7 @@ fn the_footer_hints_are_generated_from_the_keymap_in_the_chosen_language() {
 
 #[test]
 fn a_customized_keymap_changes_behavior_and_what_the_footer_says() {
-    let mut preferences = Preferences::default();
+    let mut preferences = Preferences { language: Some("en".into()), ..Default::default() };
     preferences.apply(&Change::parse(r#"{"prefix":"ctrl+a","bindings":{"prefix.split-right":["w"]}}"#).unwrap());
     let (mut dashboard, mut tui) = dashboard_with(preferences);
     press(&mut dashboard, &mut tui, &[ctrl('b'), key('w')]);

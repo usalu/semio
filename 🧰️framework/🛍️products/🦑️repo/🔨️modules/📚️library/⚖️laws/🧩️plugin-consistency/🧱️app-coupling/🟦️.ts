@@ -38,7 +38,7 @@ export function policyCargoArtifactBreaches(repoRoot: string, crates: readonly P
 const POLICY_CARGO_DEP_RE = /^([\w.-]+)\s*=\s*\{[^\n]*?\bpath\s*=\s*"([^"]+)"[^\n]*\}\s*$/gm;
 
 /**
- * 📏️V3 rule: a plugin crate's path-dependencies must not reach into another plugin's crate (blocking)
+ * 🔗️V3 rule: a plugin crate's path-dependencies must not reach into another plugin's crate (blocking)
  * or undocumented domain path (tracked). "Always allowed" used to be a hand-maintained ASCII prefix
  * list (`framework/`, `vcs/`, `protocol/`, …) that never matched this repo's real emoji-prefixed
  * directories (dead in the same way the discoverer below it was) — replaced with the structural check
@@ -123,7 +123,7 @@ function policyDiscoverExampleJsonFiles(repoRoot: string): string[] {
   return found.sort();
 }
 
-/** 📏️dsl/ migration lock-step rule: no example/*.json fixture may exist — every technology's example fixtures moved to its own DSL-text extension (`.puzzle2d`, `.flow`, `.draw`, …); a documented allowlist covers not-yet-migrated technologies. */
+/** 🧫️dsl/ migration lock-step rule: no example/*.json fixture may exist — every technology's example fixtures moved to its own DSL-text extension (`.puzzle2d`, `.flow`, `.draw`, …); a documented allowlist covers not-yet-migrated technologies. */
 export function policyJsonFixtureBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyDiscoverExampleJsonFiles(repoRoot)) {
@@ -144,7 +144,7 @@ export function policyJsonFixtureBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRuleNoJsonFixtures
 
 //#region 🔧️PolicyRuleOpsGrammar
-/** 🔎️Repo-wide `*.ops` file paths (repo-relative). */
+/** 📄️Repo-wide `*.ops` file paths (repo-relative). */
 function policyDiscoverOpsFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -173,7 +173,7 @@ function policyDiscoverOpsFiles(repoRoot: string): string[] {
 const POLICY_OPS_STRUCTURAL_KEYWORDS = ["@doc", "@edit", "@change", "@checkpoint", "@alternative", "@active"];
 
 /**
- * 📏️dsl/ migration lock-step rule: basic `.ops` op-log grammar sanity — one structural `@doc`/`@edit`/
+ * 🔐️dsl/ migration lock-step rule: basic `.ops` op-log grammar sanity — one structural `@doc`/`@edit`/
  * `@change`/`@checkpoint`/`@alternative`/`@active` line, or one 2-space-indented mutation-text (op grammar)
  * line under a preceding `@edit`, per line; never blank. The `.ops` brand is the compact op-log format
  * (not the document `Mutation` trait name). Forward-looking: no `*.ops` fixture exists in the repo yet

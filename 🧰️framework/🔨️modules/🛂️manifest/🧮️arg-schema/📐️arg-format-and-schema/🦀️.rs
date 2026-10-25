@@ -46,7 +46,7 @@ pub enum ArgFormat {
     },
     /// 🔐️ The document's own revision token, as its rendered bindings carry it — see `ActionArgDef::document_revision`.
     DocumentRevision,
-    /// 🔐️ One addressed target's own revision token (a page item, a cell, an entry), as its rendered binding carries it —
+    /// 📃️ One addressed target's own revision token (a page item, a cell, an entry), as its rendered binding carries it —
     /// see `ActionArgDef::target_revision`.
     TargetRevision,
 }
@@ -204,7 +204,7 @@ pub enum ArgSchema {
 }
 
 impl ArgSchema {
-    /// 🎯️ Every entity kind this value names through [`ArgFormat::EntityId`], at any depth.
+    /// 🌱️ Every entity kind this value names through [`ArgFormat::EntityId`], at any depth.
     pub fn entity_kinds(&self) -> Vec<&str> {
         match self {
             ArgSchema::String { format: Some(ArgFormat::EntityId { entity_kind }), .. } => vec![entity_kind.as_str()],

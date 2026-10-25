@@ -168,7 +168,7 @@ function policyGrammarParseabilityBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
- * 📏️`POLICY_PROTOCOL_PARSEABILITY`: same heuristic, for `📡️.protocol.semio` files. Seeded
+ * 📘️`POLICY_PROTOCOL_PARSEABILITY`: same heuristic, for `📡️.protocol.semio` files. Seeded
  * with the current census: json/csv/zip/png/txt/binary OUT; every other stdio standard IN (same
  * `stdio/semio#v1/subsets#object` accidental-pass caveat as the grammar rule above applies here too).
  */
@@ -273,7 +273,7 @@ function policyProtocolParseabilityBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
- * 📏️`POLICY_FIXTURE_HONESTY`: every stdio ARTIFACT's (not per-standard — the demo fixture pair lives
+ * 🧫️`POLICY_FIXTURE_HONESTY`: every stdio ARTIFACT's (not per-standard — the demo fixture pair lives
  * once per artifact dir, shared across a multi-standard artifact like gif 87a/89a) `🗣️.dsl.semio`
  * must start with a genuine `semio stdio.<artifact>`-prefixed preamble line (not a Phase-1-era fake like
  * `{"hello":"stdio.xml","n":1}` with no preamble at all), AND a sibling `🎒️.pack.semio` must
@@ -339,7 +339,7 @@ function policyFixtureHonestyBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
- * 📏️`POLICY_LANGUAGE_REGISTRATION`: every stdio (artifact, standard)'s `⚙️engine::register()` must call
+ * ☎️`POLICY_LANGUAGE_REGISTRATION`: every stdio (artifact, standard)'s `⚙️engine::register()` must call
  * `dsl::register_language` at least 5 times — the full 5-role `LanguageSpec` registration (Document/
  * Ops/Diff/Pack/Spr) every P1-P3 pilot landed, per note's exemplar pattern (see 📖️grammar-recipe.md).
  * Plain grep count on the standard's own `⚙️engine/🦀️.rs`, matching this file's other
@@ -402,7 +402,7 @@ function policyLanguageRegistrationBreaches(repoRoot: string): BreachRecord[] {
 }
 
 /**
- * 📏️`POLICY_STDIO_JSON_TRANSFER_BAN`: no stdio artifact's `ArtifactPack`/`OpBinary`/`DiffCodec` impl
+ * 🔣️`POLICY_STDIO_JSON_TRANSFER_BAN`: no stdio artifact's `ArtifactPack`/`OpBinary`/`DiffCodec` impl
  * block may use `serde_json::to_vec(`/`serde_json::from_slice(` as its transfer mechanism (brace-
  * matched scan of each `impl (...::)?(ArtifactPack|OpBinary|DiffCodec) for ... { ... }` block's own
  * body — deliberately narrower than a whole-file grep, so an artifact's legitimate NATIVE json
@@ -423,7 +423,7 @@ function policyLanguageRegistrationBreaches(repoRoot: string): BreachRecord[] {
  */
 const POLICY_STDIO_JSON_TRANSFER_BAN_TRAIT_RE = /impl(?:<[^>]*>)?\s+(?:[\w:]+::)?(ArtifactPack|OpBinary|DiffCodec)[^{]*for/g;
 
-/** 🔎️First of `ArtifactPack`/`OpBinary`/`DiffCodec` whose own `impl ... for ... { ... }` block body contains a literal `serde_json::to_vec(`/`serde_json::from_slice(` call, or `undefined` if none. */
+/** 📦️First of `ArtifactPack`/`OpBinary`/`DiffCodec` whose own `impl ... for ... { ... }` block body contains a literal `serde_json::to_vec(`/`serde_json::from_slice(` call, or `undefined` if none. */
 function policyStdioJsonTransferTraitHit(content: string): string | undefined {
   POLICY_STDIO_JSON_TRANSFER_BAN_TRAIT_RE.lastIndex = 0;
   let m: RegExpExecArray | null;

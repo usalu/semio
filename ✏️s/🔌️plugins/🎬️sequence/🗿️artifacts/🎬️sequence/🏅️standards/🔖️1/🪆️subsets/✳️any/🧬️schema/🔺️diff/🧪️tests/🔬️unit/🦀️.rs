@@ -7,6 +7,7 @@ use framework_schema::ArtifactSchema;
 use crate::SequenceSnapshot;
 #[allow(unused_imports)]
 use protocol::{ApplyCapability, MutationApplyResult, MutationDiff};
+use protocol::ColdMutationDiff;
 use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::default_snapshot;
 use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law};

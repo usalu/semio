@@ -41,7 +41,6 @@ fn project_owned(count:usize,schema:&str,octet:u8,optional:bool,cut:Option<usize
  assert_eq!(observe_retirement_allocations(||drop(cursor)).1,(0,0));
  for _ in 0..256usize.saturating_add(schema.len()).saturating_add(count.saturating_mul(if optional{32}else{16})){if source.terminal_is_empty(){break;}let d=source.next_close_demand(4096).unwrap();let g=funded(d);assert_eq!(source.next_close_demand(g.maximum_copy_bytes).unwrap(),d);source.close_step(g).unwrap();}
  assert!(source.terminal_is_empty());
- eprintln!("[DEBUG] owned projection bytes={count} cut={cut:?} turns={turns} original stable, exact heap receipts, zero whole-record clones, terminal closure");
 }
 
 #[test]

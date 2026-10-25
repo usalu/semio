@@ -1,6 +1,6 @@
 /** 🔑️ Contract: no per-invocation value (caller envelope, deadline, cwd, ambient environment) reaches a generated Bazel action input, and generator snapshots restore byte-identically, repair edits and refuse a missing declared output. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {createHash} from "node:crypto";
@@ -11,7 +11,7 @@ import corpus from "./🔣️.json";
 import schema from "./🧬️schema.json";
 
 const repo=process.cwd(),library=join(repo,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"),routing=join(repo,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),python=testPythonV1();
-const api=await import(join(library,"🏗️build/🔧️tools/🏗️bazel/📜️script.ts")),{createNativeBuildCallerCapabilitiesV1}=await import(join(library,"🏗️build/📥️caller/🟦️.ts")),{createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResourceControlV1,scriptInvocationEnvironment}=await import(routing);
+const api=await import(join(library,"🏗️build/🔧️tools/🏗️bazel/📜️script.ts")),executorApi=await import(join(library,"🏗️build/🔧️tools/🏗️bazel/🎬️executor/🟦️.ts")),{createNativeBuildCallerCapabilitiesV1}=await import(join(library,"🏗️build/📥️caller/🟦️.ts")),{createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResourceControlV1,scriptInvocationEnvironment}=await import(routing);
 const sha=(text:string)=>createHash("sha256").update(text).digest("hex"),scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"bazel-keys-"));
 const write=(root:string,files:Record<string,string>)=>{for(const[path,text]of Object.entries(files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
 
@@ -57,16 +57,16 @@ test.skipIf(!python)("a generator snapshot restore leaves identical files untouc
  try{
   await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bazel:snapshot-contract",maximumElapsedMilliseconds:120000},createNativeBuildCallerCapabilitiesV1(root,["run","gen:generate"],"bazel",{}),Date.now()),async (original:ScriptInvocation)=>{
    const control=()=>createIssuedResourceControlV1(original,"bazel:snapshot-contract",0);
-   await api.captureBazelSnapshotV1({workspace:root,task:task(corpus.snapshot.outputs)},snapshot,original);
-   const before=facts();await new Promise(accept=>setTimeout(accept,25));await api.restoreBazelSnapshotV1(root,snapshot,original,control());
+   await executorApi.captureBazelSnapshotV1({workspace:root,task:task(corpus.snapshot.outputs)},snapshot,original);
+   const before=facts();await new Promise(accept=>setTimeout(accept,25));await executorApi.restoreBazelSnapshotV1(root,snapshot,original,control());
    expect(facts()).toEqual(before);
    const oracle=Bun.spawnSync([python!,"-I","-c","import hashlib,json,sys\nroot,files=json.loads(sys.stdin.read())\nprint(json.dumps({p:hashlib.sha256(open(root+'/'+p,'rb').read()).hexdigest() for p in files}))"],{stdin:new TextEncoder().encode(JSON.stringify([root,Object.keys(corpus.snapshot.files)])),stdout:"pipe"});
    expect(JSON.parse(oracle.stdout.toString())).toEqual(Object.fromEntries(Object.entries(corpus.snapshot.files).map(([path,text])=>[path,sha(text)])));
-   write(root,corpus.snapshot.edited);await api.restoreBazelSnapshotV1(root,snapshot,original,control());
+   write(root,corpus.snapshot.edited);await executorApi.restoreBazelSnapshotV1(root,snapshot,original,control());
    for(const[path,text]of Object.entries(corpus.snapshot.files))expect(bytes(path)).toBe(text);
-   await expect(api.captureBazelSnapshotV1({workspace:root,task:task([corpus.snapshot.missing])},join(base,"missing"),original)).rejects.toThrow("was not produced");
-   await api.captureBazelSnapshotV1({workspace:root,task:task([corpus.snapshot.missing],true,{semio:{optionalOutputs:true}})},join(base,"optional"),original);
-   await api.captureBazelSnapshotV1({workspace:root,task:task([corpus.snapshot.missing],false)},join(base,"uncached"),original);
+   await expect(executorApi.captureBazelSnapshotV1({workspace:root,task:task([corpus.snapshot.missing])},join(base,"missing"),original)).rejects.toThrow("was not produced");
+   await executorApi.captureBazelSnapshotV1({workspace:root,task:task([corpus.snapshot.missing],true,{semio:{optionalOutputs:true}})},join(base,"optional"),original);
+   await executorApi.captureBazelSnapshotV1({workspace:root,task:task([corpus.snapshot.missing],false)},join(base,"uncached"),original);
   });
  }finally{rmSync(base,{recursive:true,force:true});}
 },120000);

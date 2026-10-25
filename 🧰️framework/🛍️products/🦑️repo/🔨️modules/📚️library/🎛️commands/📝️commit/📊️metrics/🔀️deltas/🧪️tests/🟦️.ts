@@ -1,9 +1,9 @@
-/** 🔀️ Contract: commit metric deltas split numstat into edited, added and removed lines, scope rows by path prefix and language, and reproduce a real git range; the corpus is language-agnostic and `🐍️oracle.py` replays the commits with the git CLI and recomputes the deltas from `git diff --numstat`. */
+/** 🔀️ Contract: commit metric deltas split numstat into edited, added and removed lines, scope rows by path prefix and language, and reproduce a real git range; the corpus is language-agnostic and `🐍️.py` replays the commits with the git CLI and recomputes the deltas from `git diff --numstat`. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {accumulateGitDeltasFromNumstat,accumulateRangeSizeDeltas,accumulateRangeUlocDeltas,gitDeltaLineTotal,gitRangeNumstat,pathUnderPrefixes,pathsFromNumstatRow,splitGitNumstatDelta,sumGitLangDeltas} from "../🟦️.ts";
@@ -44,6 +44,6 @@ test("a real git range reproduces numstat, uloc and byte deltas",()=>{
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

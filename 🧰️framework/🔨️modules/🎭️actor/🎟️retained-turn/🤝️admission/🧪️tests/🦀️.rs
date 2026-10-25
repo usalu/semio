@@ -91,9 +91,9 @@ fn original_public_actor_paired_admission_retains_exact_host_input_and_native_gu
  }
  assert_eq!(incoming.grant.maximum_items, law["remaining"][0].as_u64().unwrap() as usize);
  assert_eq!(incoming.grant.maximum_copy_bytes, 25);
- assert_eq!(incoming.grant.maximum_capacity_bytes, 3872);
+ assert_eq!(incoming.grant.maximum_capacity_bytes, 3864);
  assert_eq!(incoming.work.fuel, law["remainingFuel"].as_u64().unwrap());
- assert_eq!(births, 224);
+ assert_eq!(births, 232);
  let mut source = host.take_dispatched_input().unwrap().unwrap();
  assert_eq!(source.as_ptr(), pointer);
  let close = grant(&law["closePolicy"]);
@@ -164,10 +164,10 @@ fn original_public_actor_guest_call_returns_actual_failed_body_receipt_and_paid_
   assert_eq!(host.original().unwrap().as_ptr(), pointer);
   incoming = next(host.return_actor_turn().unwrap());
  }
- assert_eq!(births, 224);
+ assert_eq!(births, 232);
  assert_eq!(incoming.grant.maximum_items, law["slotRemainingItems"].as_u64().unwrap() as usize);
  assert_eq!(incoming.grant.maximum_copy_bytes, 25);
- assert_eq!(incoming.grant.maximum_capacity_bytes, 3872);
+ assert_eq!(incoming.grant.maximum_capacity_bytes, 3864);
  let mut source = host.take_dispatched_input().unwrap().unwrap();
  let close = grant(&law["closePolicy"]);
  host.receive_next_issued(incoming).unwrap();

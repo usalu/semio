@@ -163,7 +163,7 @@ impl Connection {
         Ok(Self { notifier, outbound, waker, receiver, alive, daemon_pid, daemon_protocol: protocol, daemon_build: build_id, build_tool, root: root.to_path_buf() })
     }
 
-    /// 📎️ Returns the selected tool from the immutable environment actually sent in this connection's hello.
+    /// 🔧️ Returns the selected tool from the immutable environment actually sent in this connection's hello.
     pub fn build_tool(&self) -> Option<&str> { self.build_tool.as_deref() }
 
     /// 🏠️ Returns the exact workspace this connection joined.

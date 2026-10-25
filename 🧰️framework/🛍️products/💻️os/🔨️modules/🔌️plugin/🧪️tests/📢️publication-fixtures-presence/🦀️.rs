@@ -4,7 +4,7 @@ use pack::snapshot::{ArtifactDsl, ArtifactPack};
 use semio_framework_os_kernel::{PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PublicationPresence {
@@ -80,7 +80,11 @@ pub mod mutations;
 pub use crate::publication_fixture::presence::mutations::change_publication_presence::ChangePublicationPresence;
 pub use crate::publication_fixture::presence::mutations::{PublicationPresenceMutation, change_publication_presence};
 
-impl semio_framework_os_kernel::ArtifactPresenceSnapshot for PublicationPresence {}
+impl semio_framework_os_kernel::ArtifactPresenceSnapshot for PublicationPresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+        semio_framework_os_presence_native_snapshot::decode_presence_json(bytes, owner)
+    }
+}
 
 #[cfg(test)]
 mod original_native_laws {

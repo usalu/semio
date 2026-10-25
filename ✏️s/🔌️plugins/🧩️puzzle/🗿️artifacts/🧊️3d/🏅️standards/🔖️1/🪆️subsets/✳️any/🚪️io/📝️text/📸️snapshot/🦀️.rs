@@ -43,7 +43,7 @@ impl pack::snapshot::ArtifactDsl for Puzzle3dSnapshot {
     fn envelope_id() -> &'static str {
         "puzzle.puzzle3d"
     }
-    pub fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,

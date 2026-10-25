@@ -1,9 +1,9 @@
-/** 📜️ Contract: the commit bundle body parser reads emoji scope lines, `🎆️YY🌙️MM☀️DD` day sections and emoji bullets, ignores comments, metrics and sign-offs, and refuses a stray subject, footer, path or malformed bullet with a fixed message; the corpus is language-agnostic and `🐍️oracle.py` is a line-state machine over the same text. */
+/** 📜️ Contract: the commit bundle body parser reads emoji scope lines, `🎆️YY🌙️MM☀️DD` day sections and emoji bullets, ignores comments, metrics and sign-offs, and refuses a stray subject, footer, path or malformed bullet with a fixed message; the corpus is language-agnostic and `🐍️.py` is a line-state machine over the same text. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {commitBundleBodyError,parseCommitBundleBody} from "../🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
@@ -18,6 +18,6 @@ test("every parsed bundle has a date and every day a bullet",()=>{for(const bund
 test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
 test("the independent Python model reaches the same verdicts",()=>{
  if(!python)return;
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️oracle.py"),join(here,"🔣️.json")]);
+ const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
  expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });

@@ -1,6 +1,6 @@
 use super::*;
 use protocol::{ColdMutation, Mutation, MutationDiff};
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 #[test]
 fn preview_state_matches_language_neutral_json_oracle() {

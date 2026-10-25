@@ -19,5 +19,4 @@ test("declared native defaults agree with independent schema default constructio
   expect(source).not.toContain("Box::new");
   expect(source).not.toContain("Default::default()");
   expect(fixture.zeroHeapBirth && fixture.sameOriginalSource).toBe(true);
-  console.log("[DEBUG] native declared defaults match Ajv default insertion, SQLite JSON scalar/list values and the immutable original input");
 });

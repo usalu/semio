@@ -32,7 +32,7 @@ import { usePresenceFollow } from "../👀️follow/🟦️.tsx";
 /** ⏱️ How often the leaderboard is asked for while visible and the proctor answers. */
 export const LEADERBOARD_POLL_MS = 10_000;
 
-/** ⏱️ The longest pause between two polls while the proctor does not answer. */
+/** ⌛️ The longest pause between two polls while the proctor does not answer. */
 export const POLL_BACKOFF_MAX_MS = 300_000;
 
 /** 🔢️ How many rows the leaderboard card shows before the own row. */
@@ -47,10 +47,10 @@ export interface LeaderboardSort {
   readonly direction: "ascending" | "descending";
 }
 
-/** ↕️ The order every table starts in: by rank, the best first. */
+/** 🥇️ The order every table starts in: by rank, the best first. */
 export const RANK_ORDER: LeaderboardSort = { key: "rank", direction: "ascending" };
 
-/** ↕️ The order once the heading of column `key` is chosen: the other way round when the table is in that column's
+/** ⏭️ The order once the heading of column `key` is chosen: the other way round when the table is in that column's
  * order already; else rank and learner ascending and every other column — where more is better — descending. */
 export function nextSort(present: LeaderboardSort, key: LeaderboardKey): LeaderboardSort {
   if (present.key === key) return { key, direction: present.direction === "ascending" ? "descending" : "ascending" };
@@ -76,7 +76,7 @@ function sortValue(row: LeaderboardRow, key: LeaderboardKey, name: (row: Leaderb
   }
 }
 
-/** ↕️ `rows` in the order of `sort`, ties by rank; learner names compare in `locale`. */
+/** 🔃️ `rows` in the order of `sort`, ties by rank; learner names compare in `locale`. */
 export function sortLeaderboard(rows: readonly LeaderboardRow[], sort: LeaderboardSort, name: (row: LeaderboardRow) => string, locale: CourseLocale): readonly LeaderboardRow[] {
   const collator = new Intl.Collator(locale);
   return [...rows].sort((left, right) => {
@@ -178,12 +178,12 @@ const CELL = "px-single py-single align-top";
 const NUMBER = "course-nowrap tabular-nums";
 const EDGE = "border-b border-normal px-single py-single text-left align-top";
 
-/** 🏷️ The name of a category: the emoji and title of its quiz. */
+/** 🔖️ The name of a category: the emoji and title of its quiz. */
 function categoryLabel(quiz: CourseView["quizzes"][number], locale: CourseLocale): string {
   return `${textPresentation(quiz.emoji)} ${localized(quiz.title, locale)}`;
 }
 
-/** 🗂️ The choice of the leaderboard to look at: its period and — with `categories` — its category, every quiz or one. */
+/** 👀️ The choice of the leaderboard to look at: its period and — with `categories` — its category, every quiz or one. */
 function BoardChoices(props: { readonly session: CourseSession; readonly state: CourseState; readonly text: CourseText; readonly locale: CourseLocale; readonly categories?: boolean }): ReactElement {
   const { session, state, text, locale } = props;
   const { board } = state;
@@ -197,7 +197,7 @@ function BoardChoices(props: { readonly session: CourseSession; readonly state: 
   );
 }
 
-/** ↕️ The heading of a column: a button that puts the table in its order, and the other way round when chosen again. */
+/** 🔘️ The heading of a column: a button that puts the table in its order, and the other way round when chosen again. */
 function SortHeading(props: { readonly column: LeaderboardColumn; readonly sort: LeaderboardSort; readonly onSort: (key: LeaderboardKey) => void; readonly text: CourseText; readonly className: string; readonly quiet?: boolean; readonly end?: boolean }): ReactElement {
   const { column, sort } = props;
   const chosen = sort.key === column.key;
@@ -260,7 +260,7 @@ function BoardRow(props: { readonly row: LeaderboardRow; readonly mine: boolean;
   );
 }
 
-/** 🏆️ The leaderboard card at the centre of the overview: the choice of the period, then the top rows of the chosen
+/** 💳️ The leaderboard card at the centre of the overview: the choice of the period, then the top rows of the chosen
  * leaderboard — in the order of the column heading chosen last — a gap, and the own row; the category chosen on the
  * page is named. Its heading and "Full leaderboard" open the leaderboard page (`#board`). */
 export function LeaderboardCard(props: { readonly session: CourseSession; readonly state: CourseState; readonly text: CourseText; readonly locale: CourseLocale; readonly revealed: boolean; readonly onOpen: () => void }): ReactElement {
@@ -379,7 +379,7 @@ function PageRow(props: { readonly row: LeaderboardRow; readonly mine: boolean; 
   );
 }
 
-/** 🏆️ The leaderboard page behind the centre card: the choice of the period and the category, then the chosen
+/** 📃️ The leaderboard page behind the centre card: the choice of the period and the category, then the chosen
  * leaderboard — what it counts, the number of ranked learners, the top learners in one table that sorts by the column
  * heading chosen last, the own row below it when it ranks lower — kept up to date by home's polling, with the others on
  * this page inside it. A column the chosen leaderboard does not show orders nothing: the table is by rank then. */

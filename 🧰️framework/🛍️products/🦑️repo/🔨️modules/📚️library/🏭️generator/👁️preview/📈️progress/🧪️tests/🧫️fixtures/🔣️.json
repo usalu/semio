@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "linePrefix": "[progress] ",
   "policy": {
     "protocol": "physical-file-progress-v1",
     "maxEventBytes": 256,
@@ -172,10 +173,10 @@
     }
   ],
   "foreignStderr": [
-    "[DEBUG] arbitrary text\n",
+    "[progress] arbitrary text\n",
     "error: failure\n",
-    "[DEBUG] {broken}\n",
-    "[DEBUG] {}\n"
+    "[progress] {broken}\n",
+    "[progress] {}\n"
   ],
   "policyCases": [
     {

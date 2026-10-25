@@ -7,7 +7,7 @@ export function modeAxisIsPerpendicularChild(parentKind: "row" | "column", child
   return (parentKind === "row" && child.kind === "column") || (parentKind === "column" && child.kind === "row");
 }
 
-/** ↔ Separator indices and size-weighted fractions for joins inside a perpendicular child axis. */
+/** 📏️ Separator indices and size-weighted fractions for joins inside a perpendicular child axis. */
 export function modePerpendicularJoinSeparators(node: WindowLayoutNode): readonly { index: number; fraction: number }[] {
   if (node.kind !== "row" && node.kind !== "column") return [];
   const count = node.children.length;
@@ -24,7 +24,7 @@ export function modePerpendicularJoinSeparators(node: WindowLayoutNode): readonl
   return joins;
 }
 
-/** ↔ Corner join specs for a main-axis separator that crosses perpendicular child splits. */
+/** 📕️ Corner join specs for a main-axis separator that crosses perpendicular child splits. */
 export function modeJoinCornerSpecsForSeparator(parentPath: ModeLayoutPath, parentKind: "row" | "column", separatorIndex: number, prevChild: WindowLayoutNode, nextChild: WindowLayoutNode): ResizableJoinCornerSpec[] {
   const specs: ResizableJoinCornerSpec[] = [];
   const pushSpecs = (beforeSide: boolean, crossPath: ModeLayoutPath, crossChild: WindowLayoutNode) => {
@@ -50,7 +50,7 @@ export function modeJoinCornerSpecsForSeparator(parentPath: ModeLayoutPath, pare
   return specs;
 }
 
-/** ↔ Corner join specs on a cross-axis separator where it meets a parent split. */
+/** 📖️ Corner join specs on a cross-axis separator where it meets a parent split. */
 export function modeJoinCornerSpecsForCrossSeparator(crossPath: ModeLayoutPath, crossKind: "row" | "column", crossSeparatorIndex: number, parent: { path: ModeLayoutPath; kind: "row" | "column"; panelIndex: number }): ResizableJoinCornerSpec[] {
   if ((parent.kind === "row" && crossKind !== "column") || (parent.kind === "column" && crossKind !== "row")) return [];
   const parentSeparatorIndex = parent.panelIndex === 0 ? parent.panelIndex + 1 : parent.panelIndex;
@@ -69,16 +69,16 @@ export function modeJoinCornerSpecsForCrossSeparator(crossPath: ModeLayoutPath, 
   ];
 }
 
-/** ↔ One perpendicular axis that participates in a corner join. */
+/** ✖️ One perpendicular axis that participates in a corner join. */
 export type ModeJoinCornerCrossAxis = {
   path: ModeLayoutPath;
   separatorIndex: number;
 };
 
-/** ↔ Max fraction delta for two perpendicular joins to count as the same touching corner. */
+/** 🔬️ Max fraction delta for two perpendicular joins to count as the same touching corner. */
 export const MODE_JOIN_CORNER_TOUCH_EPS = 0.0025;
 
-/** ↔ Every perpendicular axis whose join actually touches this corner (same main separator + size fraction), including the dragged cross axis. */
+/** 👥️ Every perpendicular axis whose join actually touches this corner (same main separator + size fraction), including the dragged cross axis. */
 export function resolveJoinCornerPeerCrossAxes(layout: WindowLayoutNode, spec: ResizableJoinCornerSpec): ModeJoinCornerCrossAxis[] {
   const fallback: ModeJoinCornerCrossAxis[] = [{ path: spec.crossAxisPath, separatorIndex: spec.crossSeparatorIndex }];
   const mainNode = spec.mainAxisPath ? readLayoutAtPath(layout, spec.mainAxisPath) : layout;
@@ -102,7 +102,7 @@ export function resolveJoinCornerPeerCrossAxes(layout: WindowLayoutNode, spec: R
   return peers.length > 0 ? peers : fallback;
 }
 
-/** ↔ Percentage delta for one panel pair on an axis separator. */
+/** 🥢️ Percentage delta for one panel pair on an axis separator. */
 export function applyAxisResizeDelta(layout: WindowLayoutNode, axisPath: ModeLayoutPath, separatorIndex: number, deltaPct: number, minPct = 8): WindowLayoutNode {
   if (Math.abs(deltaPct) < 0.001) return layout;
   return updateLayoutAtPath(layout, axisPath, (node) => {
@@ -125,7 +125,7 @@ export function applyAxisResizeDelta(layout: WindowLayoutNode, axisPath: ModeLay
   });
 }
 
-/** ↔ Pointer delta for a corner join on perpendicular row/column axes. */
+/** 🖱️ Pointer delta for a corner join on perpendicular row/column axes. */
 export function resolveJoinCornerResizeDeltas(parentKind: "row" | "column", deltaXPx: number, deltaYPx: number, mainAxisPixelSize: number, crossAxisPixelSize: number): { mainDeltaPct: number; crossDeltaPct: number } {
   if (mainAxisPixelSize <= 0 || crossAxisPixelSize <= 0) return { mainDeltaPct: 0, crossDeltaPct: 0 };
   if (parentKind === "row") {
@@ -140,7 +140,7 @@ export function resolveJoinCornerResizeDeltas(parentKind: "row" | "column", delt
   };
 }
 
-/** ↔ Applies a separator percentage delta to a live resizable group layout. */
+/** 📐️ Applies a separator percentage delta to a live resizable group layout. */
 export function applyAxisGroupLayoutDelta(layout: Record<string, number>, axisPath: ModeLayoutPath, separatorIndex: number, deltaPct: number, minPct = 8): Record<string, number> {
   const leadingId = modeJoinPath(axisPath, separatorIndex - 1);
   const trailingId = modeJoinPath(axisPath, separatorIndex);
@@ -156,14 +156,14 @@ export function applyAxisGroupLayoutDelta(layout: Record<string, number>, axisPa
   };
 }
 
-/** ↔ Resolves persisted percentages for one resizable axis. */
+/** 🗂️ Resolves persisted percentages for one resizable axis. */
 export function modeAxisGroupLayout(layout: WindowLayoutNode, axisPath: ModeLayoutPath): Record<string, number> {
   const node = axisPath ? readLayoutAtPath(layout, axisPath) : layout;
   if (!node || (node.kind !== "row" && node.kind !== "column")) return {};
   return Object.fromEntries(node.children.map((child, index) => [modeJoinPath(axisPath, index), child.size ?? 100 / node.children.length]));
 }
 
-/** ↔ Applies a corner grab delta to the main axis and every peer cross axis at the join. */
+/** 🏁️ Applies a corner grab delta to the main axis and every peer cross axis at the join. */
 export function applyModeJoinCornerResize(layout: WindowLayoutNode, spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number, mainAxisPixelSize: number, crossAxisPixelSize: number): WindowLayoutNode {
   const { mainDeltaPct, crossDeltaPct } = resolveJoinCornerResizeDeltas(spec.parentKind, deltaXPx, deltaYPx, mainAxisPixelSize, crossAxisPixelSize);
   let next = applyAxisResizeDelta(layout, spec.mainAxisPath, spec.mainSeparatorIndex, mainDeltaPct);

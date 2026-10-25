@@ -4,7 +4,7 @@ import { open,lstat } from "node:fs/promises";
 import{withArtifactSourceCaptureV1,artifactCaptureEntriesV1,artifactCaptureDirectoryV1,recheckArtifactCaptureV1,withArtifactCapturedFileV1,commitArtifactCaptureV1,prepareArtifactCaptureCommitV1,drainArtifactCaptureV1,writeArtifactCaptureManifestV1,type ArtifactSourceCaptureV1}from"./📥️sources/📦️capture/🟦️.ts";
 import{withArtifactDescriptorSlotV1}from"./📥️sources/🟦️.ts";
 import{readArtifactPublicationManifestV1,type ArtifactPublicationManifestV1}from"./📋️manifest/🟦️.ts";
-import { setTimeout as delay } from "node:timers/promises";
+import { waitingDelayV1 as delay } from "../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import { basename, dirname, resolve, join, isAbsolute, relative } from "node:path";
 import { acquireResourceLease, captureResourceLeaseWriterProofV1, requireResourceLeaseWriterProofV1, resourceLeasePathV1, checkResourceLeaseControl, type ResourceLeaseControl, type LeaseWait } from "../../🔒️leases/🟦️.ts";
 

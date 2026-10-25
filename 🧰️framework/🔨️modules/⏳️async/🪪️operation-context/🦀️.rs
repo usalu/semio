@@ -18,7 +18,7 @@ pub struct TraceId(pub u64);
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct CapabilityTokenId(pub u64);
 
-/// 🪪️ Carried by every async host operation so cancellation, deadlines, tracing, scheduling
+/// ☁️ Carried by every async host operation so cancellation, deadlines, tracing, scheduling
 /// priority (`lane`, mirroring `🎭️actor::Lane`'s discriminant order — kept as a bare `u8` here so
 /// this crate never depends on the actor crate; [`Lane::from_context_lane`] converts it into this
 /// crate's own [`Lane`] for [`WorkerPool::submit`]) and capability revocation all propagate through

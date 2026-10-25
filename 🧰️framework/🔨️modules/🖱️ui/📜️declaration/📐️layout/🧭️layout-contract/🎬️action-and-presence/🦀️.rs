@@ -1,4 +1,4 @@
-//! 🎬️ Action and presence: the action descriptor, the style spec, the ui state and status, the peer mark and the `UiPresence` with their serde defaults. See [`super`].
+//! 🪝️ Action and presence: the action descriptor, the style spec, the ui state and status, the peer mark and the `UiPresence` with their serde defaults. See [`super`].
 
 use super::*;
 
@@ -51,7 +51,7 @@ pub enum UiState {
     Hidden,
 }
 
-/// 🧭️ The activity lifecycle of a UI element, orthogonal to [`UiState`] and composable with it.
+/// 🚥️ The activity lifecycle of a UI element, orthogonal to [`UiState`] and composable with it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -68,7 +68,7 @@ pub(super) fn is_default<T: Default + PartialEq>(value: &T) -> bool {
     *value == T::default()
 }
 
-/// 🧭️ The shared, compile-time-enforced state model every rendered UI element embeds as a
+/// 🚩️ The shared, compile-time-enforced state model every rendered UI element embeds as a
 /// mandatory `presence` field: `state` × `status` × `hover` × `selected`. All combinations are
 /// visually distinguishable except `state == Hidden`, which makes the rest irrelevant — see
 /// [`UiPresence::visible`]. Defaults to fully inert (`Normal`/`Idle`/`false`/`false`) and is omitted
@@ -96,7 +96,7 @@ pub struct UiPeerMark {
     pub label: String,
 }
 
-/// 🧭️ The shared, compile-time-enforced state model every rendered UI element embeds as a
+/// ⌛️ The shared, compile-time-enforced state model every rendered UI element embeds as a
 /// mandatory `presence` field: `state` × `status` × `hover` × `selected` × own `color` × peer
 /// `marks`. All combinations are visually distinguishable except `state == Hidden`, which makes
 /// the rest irrelevant — see [`UiPresence::visible`]. Defaults to fully inert
@@ -162,7 +162,7 @@ impl UiPresence {
     pub fn with_selected(self, selected: bool) -> Self {
         Self { selected, ..self }
     }
-    /// 🙈️ `Hidden` when `hidden`, else `Normal` — the one-line migration for today's `is_hidden`
+    /// 🫥️ `Hidden` when `hidden`, else `Normal` — the one-line migration for today's `is_hidden`
     /// flags on elements that are genuinely not rendered (not to be confused with a domain "dimmed"
     /// prop, e.g. a tree item's eye-toggle, which must stay visible/clickable).
     pub fn hidden_if(hidden: bool) -> Self {

@@ -74,7 +74,7 @@ pub(crate) mod context {
     /// publishes on (the parent only carries the child's coordinate, design §20.15).
     pub async fn live_spec(app: &MountedPlaybookApp) -> crate::PlaybookSpec {
         use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-        use store::{pack::snapshot::ArtifactPack, SpaceMember};
+        use store::{snapshot::ArtifactPack, SpaceMember};
         let snapshot = app.snapshot().expect("playbook parent projection");
         let bytes = app.child_store("flow", &snapshot.flow.child_id).await.expect("playbook flow child").document_pack_bytes().await.expect("playbook flow child pack");
         let content = SemioFlowSnapshot::decode_pack(&bytes).expect("playbook flow child snapshot");

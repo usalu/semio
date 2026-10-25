@@ -46,7 +46,7 @@ pub struct UiTree {
     presence_notes: Vec<(String, String)>,
 }
 
-/// 🔽️ The ceiling on synthesized composite rows held at once. One open popup at a time is the shell's
+/// 🧱️ The ceiling on synthesized composite rows held at once. One open popup at a time is the shell's
 /// own rule, and `RETAINED_SYNC_COLLECTION_ITEMS` caps a single popup at 256 rows, so this leaves
 /// room for a handful of simultaneously open ones without ever being unbounded.
 pub const UI_COMPOSITE_ROWS: usize = 1_024;
@@ -56,12 +56,12 @@ impl UiTree {
         Self::default()
     }
 
-    /// 👥️ The peers' note on the record keyed `key`, its lines joined, if any peer acts on it.
+    /// 🗒️ The peers' note on the record keyed `key`, its lines joined, if any peer acts on it.
     pub fn presence_note(&self, key: &str) -> Option<&str> {
         self.presence_notes.binary_search_by(|(candidate, _)| candidate.as_str().cmp(key)).ok().map(|index| self.presence_notes[index].1.as_str())
     }
 
-    /// 👥️ Replaces the peers' notes (sorted by key, as [`UiTree::presence_note`] searches them) and marks the root for
+    /// ✏️ Replaces the peers' notes (sorted by key, as [`UiTree::presence_note`] searches them) and marks the root for
     /// repaint when they changed; `true` when they did.
     pub fn set_presence_notes(&mut self, notes: &[(String, String)]) -> bool {
         debug_assert!(notes.windows(2).all(|pair| pair[0].0 < pair[1].0), "presence notes are sorted by key, one entry per key");
@@ -200,12 +200,12 @@ impl UiTree {
         true
     }
 
-    /// 🪟️ Republishes this frame's open-overlay placements (see [`UiTree::overlay_origins`]).
+    /// 📍️ Republishes this frame's open-overlay placements (see [`UiTree::overlay_origins`]).
     pub fn set_overlay_origins(&mut self, origins: Vec<(NodeId, f32, f32)>) {
         self.overlay_origins = origins;
     }
 
-    /// 🪟️ The WALK origin an open overlay root replaces its in-flow parent offset with, so that
+    /// 🧭️ The WALK origin an open overlay root replaces its in-flow parent offset with, so that
     /// adding the node's own accepted layout lands it exactly on its resolved placement. `None` for
     /// every node that is not an open overlay root, which is the in-flow rule unchanged.
     pub fn overlay_walk_origin(&self, id: NodeId) -> Option<(f32, f32)> {
@@ -222,7 +222,7 @@ impl UiTree {
         Some((origin.0 + layout.x - scroll.0, origin.1 + layout.y - scroll.1))
     }
 
-    /** 📐️ One node's ABSOLUTE painted rect: its own accepted layout plus every ancestor's
+    /** 🖌️ One node's ABSOLUTE painted rect: its own accepted layout plus every ancestor's
      * origin, with the accumulation stopping at an OPEN overlay (itself or an ancestor) because
      * everything under a floating surface is positioned against that surface's placement rather than
      * against the document it was authored in. The single geometry answer shared by

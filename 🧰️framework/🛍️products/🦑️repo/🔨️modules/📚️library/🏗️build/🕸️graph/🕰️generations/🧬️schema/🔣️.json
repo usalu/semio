@@ -3,7 +3,7 @@
  "title": "Graph generation store",
  "definitions": {
   "Identity": {
-   "const": "graph-generations-v3"
+   "const": "graph-generations-v4"
   },
   "Policy": {
    "const": {
@@ -35,7 +35,9 @@
     "compactionFloor": 1024,
     "brotliQuality": 5,
     "brotliWindow": 22,
-    "reasonRows": 16
+    "reasonRows": 16,
+    "stampVerification": true,
+    "waitNoticeMilliseconds": 20000
    }
   },
   "Messages": {
@@ -43,12 +45,18 @@
     "en": {
      "current": "graph: serving generation {generation} without verification (graph policy current)",
      "verified": "graph: generation {generation} verified, {checked} facts checked",
-     "waiting": "graph: waiting for the graph build of a peer to finish",
+     "waiting": "graph: waiting for the graph build of a peer ({seconds} s in the queue, generation {generation} was the newest when this command queued)",
+     "covered": "graph: generation {generation} was sealed by a peer after this command began and already covers it, nothing is checked again",
+     "pinned": "graph: generation {generation} pinned by the invoking build serves this command ({count} projects), no queue and no check of the live tree",
      "building": "graph: refreshing {dirty} projects (generation {generation})",
      "published": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s",
+     "indexed": "graph: fact index of generation {generation}: {rows} facts of {owners} projects, {expanded} MB expanded ({percent} % of the {limit} MB limit), {packed} MB packed",
+     "swept": "graph: {removed} superseded observation blocks removed ({megabytes} MB, {headers} records kept their blocks)",
      "closure": "graph: {count} projects of the closure verified, no other project read",
      "cold": "graph: no usable generation ({reason}), building the first one",
      "stale": "graph: serving generation {generation} built by another implementation (graph policy current)",
+     "planned": "graph: {count} projects planned by a child process that has exited",
+     "summary": "graph: {rows} stale facts ({kinds}) leave {projects} projects stale",
      "reason": "graph: {project} is stale: {why}",
      "reasonStamp": "the inference protocol of {inferrer} changed from {recorded} to {current}",
      "reasonInput": "the input file {path} changed",
@@ -67,12 +75,18 @@
     "de": {
      "current": "Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
      "verified": "Graph: Generation {generation} geprüft, {checked} Fakten kontrolliert",
-     "waiting": "Graph: wartet auf den Graph-Aufbau eines anderen Prozesses",
+     "waiting": "Graph: wartet auf den Graph-Aufbau eines anderen Prozesses ({seconds} s in der Warteschlange, Generation {generation} war beim Einreihen die neueste)",
+     "covered": "Graph: Generation {generation} wurde von einem anderen Prozess nach dem Beginn dieses Befehls versiegelt und deckt ihn bereits ab, nichts wird erneut geprüft",
+     "pinned": "Graph: die vom aufrufenden Build angeheftete Generation {generation} bedient diesen Befehl ({count} Projekte), ohne Warteschlange und ohne Prüfung des Arbeitsbaums",
      "building": "Graph: {dirty} Projekte werden erneuert (Generation {generation})",
      "published": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert",
+     "indexed": "Graph: Faktenindex der Generation {generation}: {rows} Fakten von {owners} Projekten, {expanded} MB entpackt ({percent} % der Grenze von {limit} MB), {packed} MB gepackt",
+     "swept": "Graph: {removed} überholte Beobachtungsblöcke entfernt ({megabytes} MB, {headers} Aufzeichnungen behalten ihre Blöcke)",
      "closure": "Graph: {count} Projekte der Hülle geprüft, kein weiteres Projekt gelesen",
      "cold": "Graph: keine brauchbare Generation ({reason}), die erste wird aufgebaut",
      "stale": "Graph: Generation {generation} stammt von einer anderen Implementierung und wird geliefert (Graph-Richtlinie current)",
+     "planned": "Graph: {count} Projekte von einem beendeten Kindprozess geplant",
+     "summary": "Graph: {rows} veraltete Fakten ({kinds}) lassen {projects} Projekte veralten",
      "reason": "Graph: {project} ist veraltet: {why}",
      "reasonStamp": "das Inferenzprotokoll von {inferrer} wechselte von {recorded} zu {current}",
      "reasonInput": "die Eingabedatei {path} hat sich geändert",
@@ -138,6 +152,30 @@
      "type": "string",
      "minLength": 1,
      "maxLength": 256
+    },
+    "verified": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "atMs",
+      "count",
+      "owners"
+     ],
+     "properties": {
+      "atMs": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      },
+      "count": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 65536
+      },
+      "owners": {
+       "type": "string"
+      }
+     }
     }
    }
   },

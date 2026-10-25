@@ -9,7 +9,7 @@ async fn primary_asset_is_nonempty() {
 /// 🌍️ Preserves the entire foreign JSON demo through typed text and independent binary projection.
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_preserves_neutral_document_and_child_identities() {
-    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+    use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧫️fixtures/🪪️document/🔣️.json")).unwrap();
     let snapshot = crate::GisMapSnapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("typed demo parses");
     let decoded = crate::GisMapSnapshot::decode_pack(&snapshot.encode_pack()).expect("typed demo binary decodes");

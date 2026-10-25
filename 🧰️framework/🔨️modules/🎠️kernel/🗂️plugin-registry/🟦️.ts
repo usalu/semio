@@ -44,7 +44,7 @@ export type PluginRegistryEntry = {
   readonly dependencies?: readonly PluginDependency[];
 };
 
-/** 🔗️ Widens a {@link PluginCatalogTarget.dependsOn} plugin-id list (the crate's declared runtime
+/** ⛓️ Widens a {@link PluginCatalogTarget.dependsOn} plugin-id list (the crate's declared runtime
  * dependencies, carried without version info) into `PluginRegistryEntry.dependencies` — each edge
  * carries only its id, so {@link resolvePluginLoadOrder}/{@link validatePluginDependencyGraph}
  * validate presence and detect cycles from the registry's pre-build view, which has no pin to read;
@@ -60,7 +60,7 @@ export function dependsOnToPluginDependencies(dependsOn: readonly string[] | und
  * wire form exactly. */
 export type VersionPin = string;
 
-/** 🔗️ One direct plugin dependency — mirrors Rust `PluginDependency` (`🛂️manifest/🦀️.rs`). A
+/** 🕸️ One direct plugin dependency — mirrors Rust `PluginDependency` (`🛂️manifest/🦀️.rs`). A
  * registry-derived edge carries no `version` (the pre-build view has none to read); a manifest-derived
  * edge carries its exact pin. */
 export type PluginDependency = {

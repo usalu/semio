@@ -1,5 +1,6 @@
 //! 🔺️ Only the authored optical field reaches the existing atomic central applier.
-use crate::{diff::{EnergyModelDiff,GlazingMaterialPatch,ModelPatch,Rows},EnergyModelSnapshot};
+use crate::{diff::{EnergyModelDiff,GlazingMaterialPatch,ModelPatch},EnergyModelSnapshot};
+use crate::diff_patch::Rows;
 /// 🧭️ Validates the source row and optical domain before producing a sparse field patch.
 pub fn diff(payload:&super::ChangeGlazingMaterialInfraredTransmittance,base:&EnergyModelSnapshot)->protocol::MutationOutcome<EnergyModelDiff>{
  let Some(original)=base.model.glazing_materials.iter().find(|row|row.id==payload.id)else{return protocol::MutationOutcome::error("mutation.target-missing",format!("Glazing material {} does not exist.",payload.id.0),[payload.id.0.to_string()]);};

@@ -7,8 +7,8 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetEntryData {
-    pub(crate) name: String,
-    pub(crate) data: Vec<u8>,
+    pub name: String,
+    pub data: Vec<u8>,
 }
 
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for SetEntryData {

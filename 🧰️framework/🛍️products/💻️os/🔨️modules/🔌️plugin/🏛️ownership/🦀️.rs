@@ -287,7 +287,7 @@ impl<T> ArtifactFixedRegistry<T> {
         self.slots.get_mut(index).map(|slot| unsafe { slot.assume_init_mut() })
     }
 
-    #[cfg(test)]
+    /// 🔑️ Inserts one exact owner into its direct-mapped slot, returning the value when the slot is occupied or the backing is not yet admitted.
     pub fn insert(&mut self, id: u64, value: T) -> Result<(), T> {
         if !self.allocation_admitted {
             return Err(value);

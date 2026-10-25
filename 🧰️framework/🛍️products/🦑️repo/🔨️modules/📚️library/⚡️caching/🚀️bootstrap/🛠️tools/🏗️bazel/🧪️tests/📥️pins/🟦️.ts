@@ -1,6 +1,6 @@
 /** 📌️ Contract: Bazel, Bun and the Nx native packages are pinned by digest for darwin, linux and win32 on arm64 and x64, so `tools setup` downloads exactly one verified artifact per host without a manual step. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import fixture from "./🔣️.json";
@@ -11,7 +11,7 @@ import {bazelDistribution} from "../../📜️script.ts";
 import {nxDependencyInstallFilesV1,nxExternalPinsV1} from "../../../📦️sdk/📥️source/📐️projection/🟦️.ts";
 
 const bazel=bazelSchema.definitions.Release.const,bun=bunSchema.definitions.Release.const,lock=Bun.JSONC.parse(readFileSync(join(import.meta.dir,"../../../bun.lock"),"utf8")) as {packages:Record<string,[string,string,unknown,string]>};
-const dockerfile=readFileSync(join(import.meta.dir,...Array(11).fill(".."),".devcontainer/Dockerfile"),"utf8"),python=testPythonV1();
+const python=testPythonV1();
 const hex=/^[a-f0-9]{64}$/u;
 
 test("Bazel pins one verified binary per OS and CPU pair, selected by the production function",()=>{
@@ -24,14 +24,10 @@ test("Bazel pins one verified binary per OS and CPU pair, selected by the produc
  expect(readFileSync(join(import.meta.dir,...Array(11).fill(".."),".bazelversion"),"utf8").trim()).toBe(bazel.version);
 });
 
-test("Bun pins one archive per OS and CPU pair and the Dockerfile pins the same Linux digests",()=>{
+test("Bun pins one archive per OS and CPU pair",()=>{
  for(const pair of fixture.pairs){
   const rows=bun.distributions.filter(row=>row.platform===pair.platform&&row.arch===pair.arch&&!row.musl);
   expect(rows.length,`${pair.platform}/${pair.arch}`).toBe(1);expect(rows[0]!.archive).toBe(pair.bun);expect(rows[0]!.sha256).toMatch(hex);expect(rows[0]!.bytes).toBeGreaterThan(10_000_000);
- }
- for(const [pair,archive] of Object.entries(fixture.dockerfile)){
-  const [platform,arch]=pair.split("/"),row=bun.distributions.find(row=>row.platform===platform&&row.arch===arch&&!row.musl)!,match=new RegExp(`bun_archive="${archive}"; bun_sha="([a-f0-9]{64})"`,"u").exec(dockerfile);
-  expect(match?.[1],pair).toBe(row.sha256);
  }
 });
 

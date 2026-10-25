@@ -91,7 +91,7 @@ use semio_framework_pack_source::{PackSink, PackSource};
         }
     }
 
-    /// 📤️ A write-only file sink opened truncate-on-create; tracks its own write position
+    /// 📄️ A write-only file sink opened truncate-on-create; tracks its own write position
     /// since `std::fs::File` exposes none without a `&mut self` seek.
     pub struct FilePackSink {
         file: std::fs::File,

@@ -1,10 +1,8 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_block_2d_model::binary_snapshot as snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub use semio_s_artifact_block_2d_mutations::binary_mutations as mutations;
 
 #[path = "🔺️diff/🦀️.rs"]
 pub mod diff;

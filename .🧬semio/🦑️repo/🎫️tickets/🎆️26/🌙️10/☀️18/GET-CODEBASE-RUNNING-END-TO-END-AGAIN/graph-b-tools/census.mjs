@@ -1,0 +1,15 @@
+import{readFileSync,writeFileSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";import{join}from"node:path";
+const L="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const inference=await import(join(L,"🏗️build/🕸️graph/📥️inference/🟨️.mjs"));await inference.libraryBootstrap;inference.prepareSourceAnalysesV1();
+const obs=await import(join(L,"🏗️build/👁️observation/🟨️.mjs"));
+const idx=JSON.parse(brotliDecompressSync(readFileSync(process.argv[2])).toString());
+const ownersOf=new Map();idx.classes.forEach(c=>{for(const r of c.r){let s=ownersOf.get(r);if(!s)ownersOf.set(r,s=new Set());for(const o of c.o)s.add(o);}});
+const ms={};const skip=new Set(["field","digest","closure"]);const stale=[];const tally={};
+const todo=idx.rows.map((r,i)=>i).filter(i=>!skip.has(idx.rows[i].kind));
+let next=0;const t0=Date.now();
+await Promise.all(Array.from({length:32},async()=>{while(next<todo.length){const i=todo[next++],r=idx.rows[i];let ok=false;const t1=performance.now();try{ok=await obs.observationsHold([r],1,new Set(),new Set());}catch{ok=false;}const dt=performance.now()-t1;(ms[r.kind]??=[0])[0]+=dt;
+ const t=tally[r.kind]??={n:0,stale:0};t.n++;if(!ok){t.stale++;stale.push({i,kind:r.kind,path:r.path.replace("/Users/ueli/Documents/semio/",""),owners:ownersOf.get(i)?.size??0});}}}));
+stale.sort((a,b)=>b.owners-a.owners);
+writeFileSync(process.argv[3],JSON.stringify({ms,tally,secs:(Date.now()-t0)/1000,stale},null,1));
+const union=new Set();for(const s of stale)for(const o of ownersOf.get(s.i)??[])union.add(o);
+console.log(JSON.stringify(tally),"staleRows",stale.length,"staleOwners",union.size,"of",idx.owners.length);

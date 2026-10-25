@@ -1,0 +1,71 @@
+{
+ "$schema": "./🧬️schema/🔣️.json",
+ "description": "A crate compiled without cfg(test) reads the modules and includes that exist outside cfg(test) (a cfg(test) mount or item is never loaded, a whole #![cfg(test)] file is read but never expanded); the conservative closure reads everything a mount or include names. rustc --emit=dep-info is the independent oracle of both.",
+ "entry": "lib.rs",
+ "files": {
+  "lib.rs": "mod always;\n#[cfg(test)]\nmod unit;\n#[cfg(test)]\n#[path = \"gated/cases.rs\"]\nmod cases;\n#[cfg(all(test, not(target_arch = \"wasm32\")))]\n#[path = \"gated/all.rs\"]\nmod gated_all;\n#[cfg(not(test))]\nmod production_only;\n#[cfg(test)]\nmod inline {\n    pub const FIXTURE: &str = include_str!(\"fixtures/inline.txt\");\n}\nmod nested {\n    #[cfg(test)]\n    mod deep;\n    pub mod live;\n}\nmod test_file;\npub const A: &str = include_str!(\"data/a.txt\");\n#[cfg(test)]\nconst B: &str = include_str!(\"data/b.txt\");\n#[cfg(test)]\nfn helper() -> &'static str {\n    include_str!(\"data/c.txt\")\n}\n",
+  "always.rs": "pub const X: u8 = 1;\n",
+  "unit.rs": "#[test]\nfn unit() {}\n",
+  "gated/cases.rs": "#[test]\nfn cases() {}\n",
+  "gated/all.rs": "#[test]\nfn all() {}\n",
+  "production_only.rs": "pub const Y: u8 = 2;\n",
+  "fixtures/inline.txt": "inline\n",
+  "nested/deep.rs": "#[test]\nfn deep() {}\n",
+  "nested/live.rs": "pub const Z: u8 = 3;\n",
+  "test_file.rs": "#![cfg(test)]\nmod hidden;\nconst D: &str = include_str!(\"data/d.txt\");\n",
+  "test_file/hidden.rs": "#[test]\nfn hidden() {}\n",
+  "data/a.txt": "a\n",
+  "data/b.txt": "b\n",
+  "data/c.txt": "c\n",
+  "data/d.txt": "d\n"
+ },
+ "compiled": [
+  "always.rs",
+  "data/a.txt",
+  "lib.rs",
+  "nested/live.rs",
+  "production_only.rs",
+  "test_file.rs"
+ ],
+ "everything": [
+  "always.rs",
+  "data/a.txt",
+  "data/b.txt",
+  "data/c.txt",
+  "data/d.txt",
+  "fixtures/inline.txt",
+  "gated/all.rs",
+  "gated/cases.rs",
+  "lib.rs",
+  "nested/deep.rs",
+  "nested/live.rs",
+  "production_only.rs",
+  "test_file.rs",
+  "test_file/hidden.rs",
+  "unit.rs"
+ ],
+ "testOnly": [
+  "data/b.txt",
+  "data/c.txt",
+  "data/d.txt",
+  "fixtures/inline.txt",
+  "gated/all.rs",
+  "gated/cases.rs",
+  "nested/deep.rs",
+  "test_file/hidden.rs",
+  "unit.rs"
+ ],
+ "innerAttribute": {
+  "entry": "inner.rs",
+  "files": {
+   "inner.rs": "mod keep {\n    #![cfg(test)]\n    mod deeper;\n}\nmod live;\n",
+   "keep/deeper.rs": "pub const D: u8 = 1;\n",
+   "live.rs": "pub const L: u8 = 2;\n"
+  },
+  "compiled": [
+   "inner.rs",
+   "keep/deeper.rs",
+   "live.rs"
+  ]
+ }
+}

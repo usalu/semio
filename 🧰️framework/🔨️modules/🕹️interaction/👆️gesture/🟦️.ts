@@ -22,7 +22,7 @@
 
 // #region 👆️Gesture
 // #region 🔖️Pointers
-/** 👆️ One live pointer contact, in the surface's own local pixel space (never client space, so a
+/** 🖱️ One live pointer contact, in the surface's own local pixel space (never client space, so a
  * scrolled or transformed host cannot skew the math). */
 export type GesturePointer = {
   readonly pointerId: number;
@@ -30,13 +30,13 @@ export type GesturePointer = {
   readonly y: number;
 };
 
-/** 👆️ Every pointer currently down on one surface, in the order they went down: `[0]` is the primary
+/** 🔽️ Every pointer currently down on one surface, in the order they went down: `[0]` is the primary
  * contact for as long as it lives, so a pinch never flips its own centroid when a third finger lands. */
 export type GesturePointers = {
   readonly pointers: readonly GesturePointer[];
 };
 
-/** 👆️ No contact at all — the TS twin of an empty arena slot. */
+/** 🪫️ No contact at all — the TS twin of an empty arena slot. */
 export const EMPTY_GESTURE_POINTERS: GesturePointers = { pointers: [] };
 
 /** 🔢️ How many simultaneous contacts make a gesture a MULTI-touch gesture rather than a drag. */
@@ -57,7 +57,7 @@ export function appendSelectionDragPoints(points: [number, number][], active: bo
   return active;
 }
 
-/** 👆️ Adds (or re-seats, for a duplicate `pointerdown` the browser may replay) one contact, preserving
+/** ⬇️ Adds (or re-seats, for a duplicate `pointerdown` the browser may replay) one contact, preserving
  * down-order for every pointer already tracked. */
 export const gesturePointerDown = (state: GesturePointers, pointer: GesturePointer): GesturePointers => {
   const index = state.pointers.findIndex((candidate) => candidate.pointerId === pointer.pointerId);
@@ -67,7 +67,7 @@ export const gesturePointerDown = (state: GesturePointers, pointer: GesturePoint
   return { pointers };
 };
 
-/** 👆️ Moves one tracked contact. A move for an untracked `pointerId` is ignored rather than adopted —
+/** 📇️ Moves one tracked contact. A move for an untracked `pointerId` is ignored rather than adopted —
  * a hover move on a touch-capable surface must never fabricate a contact. */
 export const gesturePointerMove = (state: GesturePointers, pointer: GesturePointer): GesturePointers => {
   const index = state.pointers.findIndex((candidate) => candidate.pointerId === pointer.pointerId);
@@ -77,13 +77,13 @@ export const gesturePointerMove = (state: GesturePointers, pointer: GesturePoint
   return { pointers };
 };
 
-/** 👆️ Drops one contact (`pointerup`, `pointercancel`, `lostpointercapture`). Unknown ids are a no-op. */
+/** 📉️ Drops one contact (`pointerup`, `pointercancel`, `lostpointercapture`). Unknown ids are a no-op. */
 export const gesturePointerUp = (state: GesturePointers, pointerId: number): GesturePointers => {
   const pointers = state.pointers.filter((candidate) => candidate.pointerId !== pointerId);
   return pointers.length === state.pointers.length ? state : { pointers };
 };
 
-/** 👆️ Whether at least {@link GESTURE_MULTI_TOUCH_POINTERS} contacts are down — the ONE predicate every
+/** 📱️ Whether at least {@link GESTURE_MULTI_TOUCH_POINTERS} contacts are down — the ONE predicate every
  * host uses to suppress its single-pointer lane (marquee, pick, brush) while a pinch owns the surface. */
 export const gestureIsMultiTouch = (state: GesturePointers): boolean => state.pointers.length >= GESTURE_MULTI_TOUCH_POINTERS;
 // #endregion 🔖️Pointers
@@ -98,7 +98,7 @@ export type PinchFrame = {
   readonly angle: number;
 };
 
-/** 🤏️ What one pinch STEP did, relative to the previous frame: a multiplicative `scale`, a translation
+/** 🪜️ What one pinch STEP did, relative to the previous frame: a multiplicative `scale`, a translation
  * of the centroid in surface pixels, and a signed rotation in radians. */
 export type PinchStep = {
   readonly scale: number;
@@ -109,14 +109,14 @@ export type PinchStep = {
   readonly centroidY: number;
 };
 
-/** 🤏️ A pinch step that changed nothing — the identity every degenerate case collapses to. */
+/** 🪪️ A pinch step that changed nothing — the identity every degenerate case collapses to. */
 export const IDENTITY_PINCH_STEP: PinchStep = { scale: 1, panX: 0, panY: 0, rotation: 0, centroidX: 0, centroidY: 0 };
 
-/** 🤏️ Separations below this many pixels are treated as coincident contacts: dividing by them turns
+/** 📏️ Separations below this many pixels are treated as coincident contacts: dividing by them turns
  * finger jitter into an unbounded zoom jump. */
 export const PINCH_MIN_DISTANCE_PX = 1e-3;
 
-/** 🤏️ The two-finger frame of the FIRST two contacts, or `null` when fewer than two are down. Extra
+/** 🎞️ The two-finger frame of the FIRST two contacts, or `null` when fewer than two are down. Extra
  * fingers are deliberately ignored rather than averaged in, so putting a third finger down mid-pinch
  * does not teleport the anchor. */
 export const pinchFrame = (state: GesturePointers): PinchFrame | null => {
@@ -142,7 +142,7 @@ export const shortestAngleDelta = (from: number, to: number): number => {
 };
 
 /**
- * 🤏️ Diffs two pinch frames into one step.
+ * 👣️ Diffs two pinch frames into one step.
  *
  * `scale` is the separation ratio (>1 = fingers spreading = zoom in), `panX`/`panY` the centroid's
  * travel, `rotation` the shortest signed twist. A frame whose separation collapses below
@@ -163,7 +163,7 @@ export const pinchStep = (previous: PinchFrame, next: PinchFrame): PinchStep => 
 // #endregion 🔖️Pinch
 
 // #region 🔖️Recognizer
-/** 🧭️ What ONE pointer event means for a viewport host, as decided by the shared recognizer:
+/** 🖥️ What ONE pointer event means for a viewport host, as decided by the shared recognizer:
  * - `single` — no multi-touch gesture owns the surface; the host runs its own single-pointer lane.
  * - `pinchBegin` — a second contact just landed; the host abandons its single-pointer gesture (marquee,
  *   drag, capture) exactly once.
@@ -177,7 +177,7 @@ export type GestureVerdict =
   | { readonly kind: "held" }
   | { readonly kind: "pinchEnd" };
 
-/** 🧭️ The recognizer's whole memory: the live contacts, the last two-finger frame, and the LATCH that
+/** 🐘️ The recognizer's whole memory: the live contacts, the last two-finger frame, and the LATCH that
  * keeps a multi-touch gesture owning the surface until every finger has lifted — so the finger left
  * down after the other lifts never resumes the single-pointer lane (no stray marquee, drag or click). */
 export type GestureRecognizerState = {
@@ -186,10 +186,10 @@ export type GestureRecognizerState = {
   readonly latched: boolean;
 };
 
-/** 🧭️ No contact, no gesture. */
+/** 💤️ No contact, no gesture. */
 export const IDLE_GESTURE_RECOGNIZER: GestureRecognizerState = { pointers: EMPTY_GESTURE_POINTERS, frame: null, latched: false };
 
-/** 🧭️ One recognizer step: the next state plus what the host must do with the event. */
+/** ➡️ One recognizer step: the next state plus what the host must do with the event. */
 export type GestureTransition = {
   readonly state: GestureRecognizerState;
   readonly verdict: GestureVerdict;
@@ -199,7 +199,7 @@ const SINGLE_VERDICT: GestureVerdict = { kind: "single" };
 const HELD_VERDICT: GestureVerdict = { kind: "held" };
 const PINCH_END_VERDICT: GestureVerdict = { kind: "pinchEnd" };
 
-/** 🧭️ `pointerdown`: the second contact latches the surface and seeds the pinch frame; a contact landing
+/** 🔒️ `pointerdown`: the second contact latches the surface and seeds the pinch frame; a contact landing
  * while latched re-seeds the frame from the first two contacts so the next step never jumps. */
 export const recognizeGesturePointerDown = (state: GestureRecognizerState, pointer: GesturePointer): GestureTransition => {
   const pointers = gesturePointerDown(state.pointers, pointer);
@@ -209,7 +209,7 @@ export const recognizeGesturePointerDown = (state: GestureRecognizerState, point
   return { state: { pointers, frame, latched: true }, verdict: { kind: "pinchBegin", frame } };
 };
 
-/** 🧭️ `pointermove`: while two or more contacts are down the first two drive one {@link PinchStep}; a
+/** 🚚️ `pointermove`: while two or more contacts are down the first two drive one {@link PinchStep}; a
  * move of an untracked pointer (mouse hover) passes through as `single` unless a gesture is latched. */
 export const recognizeGesturePointerMove = (state: GestureRecognizerState, pointer: GesturePointer): GestureTransition => {
   const pointers = gesturePointerMove(state.pointers, pointer);
@@ -219,7 +219,7 @@ export const recognizeGesturePointerMove = (state: GestureRecognizerState, point
   return { state: { pointers, frame, latched: true }, verdict: { kind: "pinch", step: pinchStep(state.frame, frame) } };
 };
 
-/** 🧭️ `pointerup` / `pointercancel` / `lostpointercapture`: re-seeds the frame from the contacts that
+/** 🔓️ `pointerup` / `pointercancel` / `lostpointercapture`: re-seeds the frame from the contacts that
  * REMAIN (a pinch ending one finger at a time must not snap), and releases the latch with `pinchEnd`
  * only when the last contact lifts. */
 export const recognizeGesturePointerUp = (state: GestureRecognizerState, pointerId: number): GestureTransition => {
@@ -230,7 +230,7 @@ export const recognizeGesturePointerUp = (state: GestureRecognizerState, pointer
 };
 
 /**
- * 🧭️ The ONE gesture recognizer every viewport host holds (`🖥️Board2dHost`, `🌐️World3dHost`, the dag
+ * ⏸️ The ONE gesture recognizer every viewport host holds (`🖥️Board2dHost`, `🌐️World3dHost`, the dag
  * `🕸️NodeGraph` surface, …): a mutable cell around the pure `recognizeGesture*` transitions so a host
  * keeps one field instead of re-assembling pointer set, frame and latch by hand — the hand-assembled
  * copies were exactly where the "remaining finger resumes the single lane" defect lived.
@@ -238,7 +238,7 @@ export const recognizeGesturePointerUp = (state: GestureRecognizerState, pointer
 export class GestureRecognizer {
   #state: GestureRecognizerState = IDLE_GESTURE_RECOGNIZER;
 
-  /** 🧭️ The current recognizer state (read-only snapshot). */
+  /** 📖️ The current recognizer state (read-only snapshot). */
   get state(): GestureRecognizerState {
     return this.#state;
   }
@@ -248,22 +248,22 @@ export class GestureRecognizer {
     return this.#state.pointers.pointers;
   }
 
-  /** 🧭️ Whether a multi-touch gesture currently owns the surface. */
+  /** 🧷️ Whether a multi-touch gesture currently owns the surface. */
   get latched(): boolean {
     return this.#state.latched;
   }
 
-  /** 🧭️ Feeds a `pointerdown`. */
+  /** 🔻️ Feeds a `pointerdown`. */
   down(pointer: GesturePointer): GestureVerdict {
     return this.#apply(recognizeGesturePointerDown(this.#state, pointer));
   }
 
-  /** 🧭️ Feeds a `pointermove`. */
+  /** ↔️ Feeds a `pointermove`. */
   move(pointer: GesturePointer): GestureVerdict {
     return this.#apply(recognizeGesturePointerMove(this.#state, pointer));
   }
 
-  /** 🧭️ Feeds a `pointerup`, `pointercancel` or `lostpointercapture`. */
+  /** 🔼️ Feeds a `pointerup`, `pointercancel` or `lostpointercapture`. */
   up(pointerId: number): GestureVerdict {
     return this.#apply(recognizeGesturePointerUp(this.#state, pointerId));
   }
@@ -282,19 +282,19 @@ export type ZoomBounds = {
   readonly max: number;
 };
 
-/** 🔍️ Clamps `zoom` into `bounds`; a non-finite or non-positive input falls back to `bounds.min`. */
+/** 🗜️ Clamps `zoom` into `bounds`; a non-finite or non-positive input falls back to `bounds.min`. */
 export const clampZoom = (zoom: number, bounds: ZoomBounds): number => {
   if (!Number.isFinite(zoom) || zoom <= 0) return bounds.min;
   return Math.min(bounds.max, Math.max(bounds.min, zoom));
 };
 
-/** 🔍️ How many wheel pixels one doubling of the zoom factor is worth — the conversion constant that
+/** 🔎️ How many wheel pixels one doubling of the zoom factor is worth — the conversion constant that
  * lets a pinch reuse a surface's already-tested wheel zoom path (anchored at a point) instead of
  * growing a second, differently-behaved zoom implementation beside it. */
 export const PINCH_WHEEL_PIXELS_PER_DOUBLING = 200;
 
 /**
- * 🔍️ The wheel `deltaY` (in `DOM_DELTA_PIXEL` units) equivalent to a pinch `scale`.
+ * ⚖️ The wheel `deltaY` (in `DOM_DELTA_PIXEL` units) equivalent to a pinch `scale`.
  *
  * Wheel zoom is exponential in `-deltaY`, so the inverse is a base-2 log: `scale = 2` (fingers doubled
  * their separation) answers `-PINCH_WHEEL_PIXELS_PER_DOUBLING`, i.e. exactly one doubling of zoom IN,
@@ -328,7 +328,7 @@ export const zoomAboutPoint = (
   };
 };
 
-/** 📐️ Applies one whole {@link PinchStep} to a 2D camera with the canonical centred transform
+/** 🎬️ Applies one whole {@link PinchStep} to a 2D camera with the canonical centred transform
  * `screen = (world - camera) * zoom + viewport / 2`: the world point that was under the PREVIOUS centroid
  * (`centroid - pan`) lands under the NEW centroid at the new zoom — the fingers hold the content, so zoom
  * and pan are one exact move, not a zoom followed by an approximate pan. */
@@ -345,7 +345,7 @@ export const applyPinchToCamera = (
   return { x: worldX - (step.centroidX - viewport.w / 2) / nextZoom, y: worldY - (step.centroidY - viewport.h / 2) / nextZoom, zoom: nextZoom };
 };
 
-/** 📐️ {@link applyPinchToCamera} for a surface whose camera is a SCREEN offset,
+/** 🎦️ {@link applyPinchToCamera} for a surface whose camera is a SCREEN offset,
  * `screen = world * zoom + camera` (the ink canvas): the same finger-anchored law in that transform. */
 export const applyPinchToOffsetCamera = (
   camera: { readonly x: number; readonly y: number; readonly zoom: number },
@@ -359,19 +359,19 @@ export const applyPinchToOffsetCamera = (
   return { x: step.centroidX - worldX * nextZoom, y: step.centroidY - worldY * nextZoom, zoom: nextZoom };
 };
 
-/** 🔍️ The multiplicative zoom of ONE wheel notch on a surface whose engine zooms in fixed steps
+/** ⚙️ The multiplicative zoom of ONE wheel notch on a surface whose engine zooms in fixed steps
  * (`in` > 1 per notch toward the viewer, `out` < 1 per notch away). */
 export type ZoomNotchFactors = {
   readonly in: number;
   readonly out: number;
 };
 
-/** 🔍️ Log-space slack for a notch boundary: `ln(0.81)` is two `ln(0.9)` notches, but floating point puts it a
+/** 🪵️ Log-space slack for a notch boundary: `ln(0.81)` is two `ln(0.9)` notches, but floating point puts it a
  * hair above the second boundary, which would silently drop a whole notch of an exact pinch. */
 export const PINCH_NOTCH_LOG_EPSILON = 1e-12;
 
 /**
- * 🔍️ Converts a pinch `scale` into whole wheel notches for a step-quantized zoom engine, carrying the
+ * ♻️ Converts a pinch `scale` into whole wheel notches for a step-quantized zoom engine, carrying the
  * sub-notch remainder in log space so a slow pinch still zooms (the remainder accumulates) and a fast
  * one never overshoots. Positive `notches` zoom in, negative zoom out; `pendingLogScale` is the
  * remainder the host keeps for the next step and resets when the gesture ends.
@@ -398,7 +398,7 @@ export const pinchZoomNotches = (pendingLogScale: number, scale: number, factors
 /** 🛰️ A 3D vector as a plain tuple, so the orbit law stays renderer-neutral (no Three types). */
 export type OrbitVector = readonly [number, number, number];
 
-/** 🛰️ An orbit camera pose: eye, look-at target, world up, and the orthographic zoom factor (`1` for a
+/** 🪐️ An orbit camera pose: eye, look-at target, world up, and the orthographic zoom factor (`1` for a
  * perspective camera, which zooms by distance instead). */
 export type OrbitPose = {
   readonly position: OrbitVector;
@@ -407,7 +407,7 @@ export type OrbitPose = {
   readonly zoom: number;
 };
 
-/** 🛰️ What one surface pixel is worth at the target: a perspective camera needs its vertical field of
+/** 🎯️ What one surface pixel is worth at the target: a perspective camera needs its vertical field of
  * view, an orthographic one its unzoomed frustum height (`top - bottom`). */
 export type OrbitProjection = { readonly kind: "perspective"; readonly fovYRadians: number } | { readonly kind: "orthographic"; readonly frustumHeight: number };
 
@@ -418,7 +418,7 @@ const orbitCross = (a: OrbitVector, b: OrbitVector): OrbitVector => [a[1] * b[2]
 const orbitLength = (a: OrbitVector): number => Math.hypot(a[0], a[1], a[2]);
 
 /**
- * 🛰️ Applies one {@link PinchStep} to an orbit camera: spreading the fingers dollies toward the target
+ * 🎥️ Applies one {@link PinchStep} to an orbit camera: spreading the fingers dollies toward the target
  * (perspective) or raises the zoom factor (orthographic), and the centroid's travel pans target and eye
  * together in the camera plane so the scene under the fingers follows them. The dolly is target-centred,
  * exactly like the two-finger `DOLLY_PAN` it replaces, so a touch user sees the same camera as before.

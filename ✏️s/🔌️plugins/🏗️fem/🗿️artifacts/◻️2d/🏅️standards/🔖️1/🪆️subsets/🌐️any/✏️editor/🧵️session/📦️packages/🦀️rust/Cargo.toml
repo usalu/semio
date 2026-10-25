@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-fem-sparse = { path = "../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d-editor-session-catalog = { path = "../../🪪️session-constants-and-owner-catalog/📦️packages/🦀️rust" }
 semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }

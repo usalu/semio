@@ -126,7 +126,7 @@ export interface CachePolicyInternalsV1 { targetPolicy(name: string, target: any
 const PRECISION_FILE = "🏗️build/📥️inputs/🎯️precision/🔣️.json";
 const BROAD_EVIDENCE = new Set(["whole", "assumed"]);
 
-/** 🎯️ Applies the input precision rule of a target the way the inference does: records its decision and, for a narrowing rule, replaces the broad groups it names by the retained inputs (the derived reads themselves are the engine's, not the law's). */
+/** 🏹️ Applies the input precision rule of a target the way the inference does: records its decision and, for a narrowing rule, replaces the broad groups it names by the retained inputs (the derived reads themselves are the engine's, not the law's). */
 function narrowedTargetV1(document: InputPrecisionDocumentV1 | undefined, project: string, name: string, target: CacheTargetV1): CacheTargetV1 {
   const rule = document && target.cache === true ? selectRuleV1(document, { project, target: name, command: commandOf(target) }) : undefined;
   if (!rule) return target;
@@ -135,7 +135,7 @@ function narrowedTargetV1(document: InputPrecisionDocumentV1 | undefined, projec
   return { ...target, metadata, inputs: [...(target.inputs ?? ["default", "^default"]).filter((input) => !(typeof input === "string" && rule.replaces.includes(input))), ...document!.retained] };
 }
 
-/** 📚️ The cache records of the tracked manifests; `precision` defaults to the repository's own input precision document. */
+/** 🦑️ The cache records of the tracked manifests; `precision` defaults to the repository's own input precision document. */
 export function repositoryCacheRecordsV1(repoRoot: string, internals: CachePolicyInternalsV1, tracked?: readonly string[], precision?: InputPrecisionDocumentV1): CacheRecordV1[] {
   const read = (path: string) => JSON.parse(readFileSync(join(repoRoot, path), "utf8"));
   const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", policy: PolicyV1 = read(`${library}/⚡️caching/🔣️policy.json`), nx = read("nx.json").namedInputs ?? {}, contracts: Record<string, any> = read(`${library}/🔣️taxonomy.json`).generatorContracts;

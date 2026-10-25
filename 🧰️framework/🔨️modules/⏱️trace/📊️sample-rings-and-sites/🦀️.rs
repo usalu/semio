@@ -54,7 +54,7 @@ impl<T: Copy, const N: usize> BoundedRing<T, N> {
 /// precedent this type mirrors.
 pub(super) const SAMPLE_RING_CAPACITY: usize = 64;
 
-/// 📈️ Fixed-capacity ring of the last [`SAMPLE_RING_CAPACITY`] microsecond samples for one labelled
+/// 🍩️ Fixed-capacity ring of the last [`SAMPLE_RING_CAPACITY`] microsecond samples for one labelled
 /// site, with p50/p95/p99 accessors. Mirrors `ActorMetrics::wall_us_ring`/`wall_us_p95`
 /// (`🧰️framework/🔨️modules/🎭️actor/🦀️.rs`) — array-of-`u32` plus sort-on-read, no
 /// dependency on that crate — rather than inventing a different percentile strategy.
@@ -158,7 +158,7 @@ pub(super) fn record_site_sample(site: &'static str, elapsed_us: u64) {
     }
 }
 
-/// 📊️ `(p50, p95, p99)` microseconds recorded for `site`, or `None` if nothing has landed there yet.
+/// 📏️ `(p50, p95, p99)` microseconds recorded for `site`, or `None` if nothing has landed there yet.
 pub fn site_percentiles(site: &str) -> Option<(u32, u32, u32)> {
     let registry = site_registry().try_lock()?;
     registry.iter().flatten().find(|(label, _)| *label == site).map(|(_, ring)| (ring.p50(), ring.p95(), ring.p99()))

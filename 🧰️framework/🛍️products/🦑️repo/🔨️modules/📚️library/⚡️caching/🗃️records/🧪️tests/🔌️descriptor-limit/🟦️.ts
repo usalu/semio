@@ -1,6 +1,6 @@
 /** 🔌️ Contract: reading records from many packs never keeps more descriptors open than the process-wide limit, every record still reads back byte-exact, and the pack indexes agree with Python hashlib. */
 import {expect,test} from "bun:test";
-import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {existsSync,mkdtempSync,readdirSync,readFileSync,readlinkSync,realpathSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";

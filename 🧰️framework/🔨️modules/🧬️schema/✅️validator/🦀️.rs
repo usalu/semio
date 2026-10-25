@@ -180,7 +180,7 @@ impl<'a> Traversal<'a> {
 
 //#region 📋️Validator
 
-/// ✅️ Boundary interface for structural validation of serialized input — application boundary code
+/// 🏗️ Boundary interface for structural validation of serialized input — application boundary code
 /// depends on this, never on a concrete validator type, so the owned draft-07 implementation stays
 /// replaceable and nothing outside this module names a third-party validator.
 pub trait StructuralValidation {
@@ -211,7 +211,7 @@ impl OwnedJsonSchemaValidator {
         Self::compile_with_control(schema_json, &ValidationControl::default()).map(|(validator, _)| validator)
     }
 
-    /// 📊 Compiles with cooperative cancellation and deterministic node progress.
+    /// 🔨️ Compiles with cooperative cancellation and deterministic node progress.
     pub fn compile_with_control(schema_json: &str, control: &ValidationControl) -> Result<(Self, ValidationProgress), SchemaError> {
         Self::compile_with_documents_and_control(schema_json, &[], control)
     }
@@ -221,7 +221,7 @@ impl OwnedJsonSchemaValidator {
         Self::compile_with_documents_and_control(schema_json, documents, &ValidationControl::default()).map(|(validator, _)| validator)
     }
 
-    /// 📊 Cross-document compilation with cooperative cancellation and deterministic node progress.
+    /// 📄️ Cross-document compilation with cooperative cancellation and deterministic node progress.
     pub fn compile_with_documents_and_control(schema_json: &str, documents: &[&str], control: &ValidationControl) -> Result<(Self, ValidationProgress), SchemaError> {
         let schema = parse_json(schema_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SchemaError::Validation(format!("invalid schema JSON: {error}")))?;
         let documents = index_documents(documents)?;
@@ -240,12 +240,12 @@ impl OwnedJsonSchemaValidator {
         Ok(Self { schema: schema.clone(), documents, patterns: std::mem::take(&mut traversal.patterns) })
     }
 
-    /// ✅ Validates one JSON string and reports deterministic traversal progress.
+    /// 🔣️ Validates one JSON string and reports deterministic traversal progress.
     pub fn validate_json(&self, value_json: &str) -> Result<ValidationProgress, SchemaError> {
         self.validate_json_with_control(value_json, &ValidationControl::default())
     }
 
-    /// 📊 Validates with cooperative cancellation and a bounded node traversal.
+    /// 🎛️ Validates with cooperative cancellation and a bounded node traversal.
     pub fn validate_json_with_control(&self, value_json: &str, control: &ValidationControl) -> Result<ValidationProgress, SchemaError> {
         let value = parse_json(value_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SchemaError::Validation(format!("invalid instance JSON: {error}")))?;
         let mut traversal = Traversal::new(control);
@@ -253,7 +253,7 @@ impl OwnedJsonSchemaValidator {
         Ok(traversal.progress())
     }
 
-    /// 🔎 Reports validity without exposing the internal JSON representation.
+    /// 📗️ Reports validity without exposing the internal JSON representation.
     pub fn is_valid_json(&self, value_json: &str) -> bool {
         self.validate_json(value_json).is_ok()
     }
@@ -323,7 +323,7 @@ impl OwnedJsonSchemaValidator {
     pub fn compile_intrinsic_with_documents(schema: &DslValue, documents: &[DslValue]) -> Result<Self, SchemaError> {
         Self::compile_intrinsic_with_documents_and_control(schema, documents, &ValidationControl::default()).map(|(validator, _)| validator)
     }
-    /// 📊️ Compiles intrinsic documents with bounded admission and cooperative cancellation.
+    /// 🔏️ Compiles intrinsic documents with bounded admission and cooperative cancellation.
     pub fn compile_intrinsic_with_documents_and_control(schema: &DslValue, documents: &[DslValue], control: &ValidationControl) -> Result<(Self, ValidationProgress), SchemaError> {
         let mut traversal = Traversal::new(control);
         let schema = intrinsic_json(schema, &mut traversal, 0)?;
@@ -349,7 +349,7 @@ impl OwnedJsonSchemaValidator {
         Ok(traversal.progress())
     }
 
-    /// ✅ Validates an owned JSON value without an intermediate serialized instance.
+    /// 🌱️ Validates an owned JSON value without an intermediate serialized instance.
     pub fn validate_value(&self, value: &Value) -> Result<(), SchemaError> {
         let control = ValidationControl::default();
         let mut traversal = Traversal::new(&control);

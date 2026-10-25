@@ -20,13 +20,13 @@ export interface PresencePlace {
   readonly room: boolean;
 }
 
-/** 💭️ The drafts of the open run on screen: its quiz and the answers per task. */
+/** 📙️ The drafts of the open run on screen: its quiz and the answers per task. */
 export interface PresenceDrafts {
   readonly quiz: string;
   readonly answers: Readonly<Record<string, ThinkingAnswer>>;
 }
 
-/** 🧭️ What the client knows right now: the course and its quizzes, the learner (none before identification), where it
+/** 📥️ What the client knows right now: the course and its quizzes, the learner (none before identification), where it
  * is, whether it is on home (which watches the rooms of every page behind the cards), the drafts of the open run on
  * screen, and whether its tab is visible. */
 export interface CoursePresenceInput {
@@ -70,7 +70,7 @@ const parseCursor = (state: unknown): CursorState | undefined => (cursorProblem(
 const parseThinking = (state: unknown): ThinkingState | undefined => (thinkingProblem(state) === undefined ? (state as ThinkingState) : undefined);
 const parseWatched = (scope: string, state: unknown): WatchedState | undefined => (scope.endsWith(THINKING_SUFFIX) ? parseThinking(state) : parseCursor(state));
 
-/** 📌️ Where a step is in presence terms. Home is the overview, or the page opened over it: a quiz's page is in that
+/** 🪜️ Where a step is in presence terms. Home is the overview, or the page opened over it: a quiz's page is in that
  * quiz, the leaderboard, badges, learner and preferences pages are their places with cursor rooms. A run or its results is in the quiz of the run (the run on screen, with the
  * task of `task`); identity has no cursor room either. `undefined` while a run's quiz is not known yet. */
 export function presencePlace(step: CourseStep, state: Pick<CourseState, "runs" | "course">, task: string | undefined): PresencePlace | undefined {
@@ -121,7 +121,7 @@ export function sheetItemLabels(view: RunView | undefined, locale: CourseLocale)
   return (item) => labels.get(item);
 }
 
-/** 👀️ The rooms home watches besides the one it joined: the room of every page behind the cards (introduction,
+/** 🏠️ The rooms home watches besides the one it joined: the room of every page behind the cards (introduction,
  * leaderboard, badges, learner, preferences, every quiz) and every quiz's thinking room, at most {@link MAX_WATCHED_ROOMS}. */
 export function homeWatchScopes(course: string, quizzes: readonly string[], joined: string | undefined): readonly string[] {
   const pages: readonly Place[] = [{ screen: "introduction" }, { screen: "leaderboard" }, { screen: "badges" }, { screen: "learner" }, { screen: "preferences" }];
@@ -157,7 +157,7 @@ export class CoursePresence {
 
   readonly getSnapshot = (): CoursePresenceSnapshot => this.snapshot;
 
-  /** 🧭️ Joins, switches or leaves rooms for `input`, sets what the place's room watches and shares the presence state
+  /** 🔄️ Joins, switches or leaves rooms for `input`, sets what the place's room watches and shares the presence state
    * and drafts it implies. */
   update(input: CoursePresenceInput): void {
     const { course, self, at, active, drafts, view } = input;

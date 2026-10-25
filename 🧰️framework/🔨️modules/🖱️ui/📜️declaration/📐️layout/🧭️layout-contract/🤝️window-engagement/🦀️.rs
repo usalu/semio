@@ -147,7 +147,7 @@ pub struct WindowEngagement {
     pub possible_engagements: Option<Vec<WindowEngagementPossible>>,
 }
 
-/// 🤝️ Closed replacement for `Option<WindowEngagement>` — makes "this window kind never engages" a
+/// 🔌️ Closed replacement for `Option<WindowEngagement>` — makes "this window kind never engages" a
 /// named variant instead of `None`, so absence is an explicit, typed state rather than an implicit gap.
 /// ⚠️ `WindowEngagement` is a wide variant (nested `Vec`/`Option` fields), making `Some` far
 /// larger than `None` — boxing it would be a breaking public-API change (every construction/match

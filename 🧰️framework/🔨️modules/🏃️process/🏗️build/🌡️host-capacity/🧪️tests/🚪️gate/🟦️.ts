@@ -233,3 +233,50 @@ await withHostCapacityV1({directory,policy,request:{id,operation:"run",priority:
  expect(status.waiters).toEqual([]);
  expect(status.grants).toEqual([]);
 },60000);
+
+test("A grant whose process only waits in queues is lent back so a blocked admission gets through, and it ramps again when the process continues",async()=>{
+ const directory=fresh();let episode=0,skew=0;
+ await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:8000}),observe:async()=>100,waited:()=>episode,children:()=>[],now:()=>Date.now()+skew}),async first=>{
+  let second="pending";const waiting=withHostCapacityV1(options(directory),async()=>{second="admitted";});
+  await sleep(200);expect(second,"while the first grant works, its unrealized ramp keeps the second out").toBe("pending");
+  expect(JSON.parse(readFileSync(join(directory,"grants",`${first.id}.json`),"utf8")).lentSinceMs).toBeUndefined();
+  episode=40000;await sleep(150);expect(JSON.parse(readFileSync(join(directory,"grants",`${first.id}.json`),"utf8")).lentSinceMs,"a wait that began before the grant does not lend it at once").toBeUndefined();skew=40000;await waiting;expect(second).toBe("admitted");
+  const lent=JSON.parse(readFileSync(join(directory,"grants",`${first.id}.json`),"utf8"));expect(typeof lent.lentSinceMs).toBe("number");expect(lent.resumedAtMs).toBeUndefined();
+  const during=await readHostCapacityStatusV1({directory,policy,control:control().value,sample:sampler(()=>({}))});expect(during.evaluation.unrealizedMegabytes).toBe(0);
+  episode=0;await sleep(150);
+  const resumed=JSON.parse(readFileSync(join(directory,"grants",`${first.id}.json`),"utf8"));expect(resumed.lentSinceMs).toBeUndefined();expect(typeof resumed.resumedAtMs).toBe("number");
+  const after=await readHostCapacityStatusV1({directory,policy,control:control().value,sample:sampler(()=>({}))});expect(after.evaluation.unrealizedMegabytes).toBe(8000-100);
+ });
+},30000);
+
+test("A waiting process that still has a child process is not lent, one that lost its children is",async()=>{
+ const directory=fresh();let children:readonly number[]=[4242],skew=0;
+ await withHostCapacityV1(options(directory,{observe:async()=>100,waited:()=>40000,children:()=>children,now:()=>Date.now()+skew}),async handle=>{skew=40000;
+  const read=()=>JSON.parse(readFileSync(join(directory,"grants",`${handle.id}.json`),"utf8"));
+  await sleep(200);expect(read().lentSinceMs).toBeUndefined();
+  children=[];await sleep(200);expect(typeof read().lentSinceMs).toBe("number");
+  children=[4243];await sleep(200);expect(read().lentSinceMs).toBeUndefined();expect(typeof read().resumedAtMs).toBe("number");
+ });
+},30000);
+
+/** 🧪️ A child process that takes a grant and then either waits through the process watchdog's declared waits (`waiting`) or lives on a plain timer (`working`) for four seconds. */
+function lendingChild(directory:string,mode:"waiting"|"working",authored:object):string{
+ const script=join(directory,`lending-${mode}.ts`),gate=JSON.stringify(join(import.meta.dir,"../../🟦️.ts")),watchdog=JSON.stringify(join(import.meta.dir,"../../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts"));
+ writeFileSync(script,`import {withHostCapacityV1} from ${gate};import {waitingDelayV1} from ${watchdog};
+const host={version:1,atMs:Date.now(),platform:"darwin",cores:10,totalMegabytes:32768,availableMegabytes:20000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:10};
+const control={signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined};
+const request={id:"${mode}-aaaaaaaa",operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:1000,perJobMegabytes:0,cpuPerJob:1};
+await withHostCapacityV1({directory:${JSON.stringify(directory)},policy:${JSON.stringify(authored)},request,control,environment:{},write:()=>undefined,sample:async()=>({host:{...host,atMs:Date.now()},swappedOutMegabytes:0}),observe:async()=>100},async()=>{const end=Date.now()+4000;while(Date.now()<end)${mode==="waiting"?"await waitingDelayV1(50);":"await new Promise(done=>setTimeout(done,50));"}});`);
+ return script;
+}
+
+test("In a real process a grant is lent only while the process is inside declared queue waits with no child, and taken back when it stops waiting",async()=>{
+ const directory=fresh(),short=readHostCapacityPolicyV1({...policy,wait:{...policy.wait,lendAfterMilliseconds:1000}});
+ const run=async(mode:"waiting"|"working"):Promise<boolean>=>{
+  const child=spawn(process.execPath,[lendingChild(directory,mode,short)],{stdio:["ignore","inherit","inherit"]}),exited=new Promise<void>(done=>child.on("exit",()=>done())),file=join(directory,"grants",`${mode}-aaaaaaaa.json`);let lent=false;
+  try{for(let attempt=0;attempt<60&&child.exitCode===null;attempt++){await sleep(100);try{if(typeof JSON.parse(readFileSync(file,"utf8")).lentSinceMs==="number"){lent=true;break;}}catch{}}}finally{child.kill();await exited;}
+  return lent;
+ };
+ expect(await run("working"),"a process that works on a plain timer is never lent").toBe(false);
+ expect(await run("waiting"),"a process that only waits is lent after the authored time").toBe(true);
+},60000);

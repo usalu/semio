@@ -168,7 +168,7 @@
     "cancel"
   ],
   "worker": {
-    "literal": "./👷️read.mjs",
+    "literal": "./👷️closure-read-worker/🟨️.mjs",
     "role": "source",
     "suffix": ".mjs"
   },

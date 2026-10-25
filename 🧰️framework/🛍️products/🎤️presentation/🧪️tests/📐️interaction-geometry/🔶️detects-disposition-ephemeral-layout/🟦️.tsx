@@ -1,7 +1,7 @@
 /** 🔶️ The detects disposition ephemeral layout tests of the presentation interaction geometry suite. */
-import type { DispositionPosition } from "../../../🎯️targets/⚛️react/🟦️.tsx";
+import type { DispositionPosition } from "@semio-tech/presentation-react";
 import { expect, it } from "vitest";
-import { clientToSectionFraction, dispositionHasEphemeralLayout, dispositionPlacementContainer, flowDispositionManipulationRect, flowDispositionOffsetStyle, flowPixelOffsetToSectionRect, interactiveDispositionChromeStyle, isFlowPixelOffsetTransform, marqueeSelectionRule, marqueeSelects, normalizeMarquee, pointerNearSlideResetHotspot, rectContains, rectsIntersect, resizeDispositionRect, revealDeckInOverview, slideHasEphemeralLayout, suppressRevealOverviewSlideNavigation, transformFrameStyle, translateDispositionRect } from "../../../🎯️targets/⚛️react/🟦️.tsx";
+import { clientToSectionFraction, dispositionHasEphemeralLayout, dispositionPlacementContainer, flowDispositionManipulationRect, flowDispositionOffsetStyle, flowPixelOffsetToSectionRect, interactiveDispositionChromeStyle, isFlowPixelOffsetTransform, marqueeSelectionRule, marqueeSelects, normalizeMarquee, pointerNearSlideResetHotspot, rectContains, rectsIntersect, resizeDispositionRect, revealDeckInOverview, slideHasEphemeralLayout, suppressRevealOverviewSlideNavigation, transformFrameStyle, translateDispositionRect } from "@semio-tech/presentation-react";
 
 /** 🔷 Registers the detects disposition ephemeral layout tests of the presentation interaction geometry suite. */
 export function registerDetectsDispositionEphemeralLayoutTests(): void {

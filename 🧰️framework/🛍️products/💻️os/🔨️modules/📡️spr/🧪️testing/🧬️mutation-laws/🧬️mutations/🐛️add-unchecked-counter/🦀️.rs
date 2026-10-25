@@ -14,6 +14,9 @@ pub struct AddUncheckedCounter {}
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddUncheckedCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "unchecked-counter", kind: "add-unchecked-counter", record: "AddedUncheckedCounter" };
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add to unchecked counter", "Zum ungeprüften Zähler addieren")
+    }
 
 
 }
@@ -28,9 +31,6 @@ impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddUnche
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add to unchecked counter", "Zum ungeprüften Zähler addieren")
-    }
 }
 //#endregion ⚙️Behavior
 

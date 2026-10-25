@@ -2,7 +2,7 @@
  *
  * @see ../../🎯️targets/⚛️react/🟦️.tsx — the module under test
  */
-import type { AutoAnimateMatcherHost } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import type { AutoAnimateMatcherHost } from "@semio-tech/presentation-react";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,7 +11,7 @@ type TestSource = { readonly directory: string; readonly url: string };
 
 export const source: TestSource = { directory: dirname(fileURLToPath(import.meta.url)), url: import.meta.url };
 
-export const stylesheetRelativePath = "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️.css";
+export const stylesheetRelativePath = "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🎨️.css";
 
 /** 🧵️ Reads a stylesheet with its relative `@import` lines replaced by the imported text, in order. */
 const readStylesheetTree = (path: string): string =>

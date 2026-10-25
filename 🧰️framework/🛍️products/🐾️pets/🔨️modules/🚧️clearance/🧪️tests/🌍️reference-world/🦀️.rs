@@ -1,4 +1,4 @@
-//! 🌍️ The reference world of the clearance unit suite: the rules of the module, and nothing else, keep six to ten pets apart while they walk, hop, glide, fall, land on heads, are dragged and thrown by a hand and lose, shrink and move their perches.
+//! 📘️ The reference world of the clearance unit suite: the rules of the module, and nothing else, keep six to ten pets apart while they walk, hop, glide, fall, land on heads, are dragged and thrown by a hand and lose, shrink and move their perches.
 //!
 //! @see ../../🦀️.rs — the twin under test
 //! @see ../../../🏞️terrain/🦀️.rs — the perches, falls and hops the world moves by

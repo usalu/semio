@@ -101,7 +101,7 @@ impl<const N:usize> crate::retirement::RetireOwned for PagedText<N>{
 }
 impl<const N:usize> Drop for PagedText<N>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"paged semantic text retains actual physical allocations");}}
 
-/// 👓️ Borrows validated original UTF8 storage without flattening its physical ownership.
+/// 👁️ Borrows validated original UTF8 storage without flattening its physical ownership.
 #[derive(Clone,Copy)]
 pub struct TextReadView<'a>{source:TextReadRepresentation<'a>}
 #[derive(Clone,Copy)]
@@ -129,7 +129,7 @@ impl<const N:usize> PagedText<N>{
     pub fn read_view(&self)->Result<TextReadView<'_>,ValueError>{let _=self.borrow()?;Ok(TextReadView{source:TextReadRepresentation::Paged(self)})}
 }
 
-/// 🔤️ A complete text borrow streams validated bytes and Unicode scalars without flattening.
+/// 🌊️ A complete text borrow streams validated bytes and Unicode scalars without flattening.
 pub struct TextReadSpan<'a,const N:usize>{owner:&'a PagedText<N>}
 impl<const N:usize> TextReadSpan<'_,N>{
     pub fn byte_len(&self)->usize{self.owner.byte_len()}
@@ -141,7 +141,7 @@ impl<const N:usize> TextReadSource for TextReadSpan<'_,N>{fn byte_len(&self)->us
 pub struct TextChars<'a,const N:usize>{source:&'a TextReadSpan<'a,N>,position:usize}
 impl<const N:usize> Iterator for TextChars<'_,N>{type Item=char;fn next(&mut self)->Option<char>{if self.position==self.source.byte_len(){None}else{Some(character(&self.source,&mut self.position).expect("validated original paged UTF8"))}}}
 
-/// ✍️ Validated semantic text writes retain their actual prefix under the supplied native authority.
+/// 📤️ Validated semantic text writes retain their actual prefix under the supplied native authority.
 pub trait TextEncodingOutput{fn measure_text_fragment(&mut self,accumulated_bytes:usize,text:&str)->Result<(),ValueError>;fn declare_exact_byte_len(&mut self,bytes:usize)->Result<(),ValueError>;fn refuse_text_producer(&mut self);fn write_text(&mut self,text:&str)->Result<(),ValueError>;}
 struct TextOutput<'a,'b,const N:usize>{bytes:&'a mut PagedList<u8,N>,control:&'a mut crate::NativeEncodeControl<'b>,maximum_payload_bytes:usize,exact_bytes:Option<usize>,refused:bool}
 impl<const N:usize> TextEncodingOutput for TextOutput<'_,'_,N>{
@@ -175,7 +175,7 @@ struct TextFormatOutput<'a>{output:&'a mut dyn TextEncodingOutput,refusal:Option
 impl std::fmt::Write for TextFormatOutput<'_>{
     fn write_str(&mut self,text:&str)->std::fmt::Result{if self.refusal.is_some(){return Err(std::fmt::Error)}match self.output.write_text(text){Ok(())=>Ok(()),Err(error)=>{self.refusal=Some(error);Err(std::fmt::Error)}}}
 }
-/// 🔤️ Streams authored formatting into the real text owner without creating a contiguous String.
+/// 💾️ Streams authored formatting into the real text owner without creating a contiguous String.
 pub fn write_encoding_format(output:&mut dyn TextEncodingOutput,arguments:std::fmt::Arguments<'_>)->Result<(),ValueError>{
     let mut counter=TextExtentCounter{output,bytes:0,refusal:None};let counted=std::fmt::write(&mut counter,arguments);if let Some(error)=counter.refusal{counter.output.refuse_text_producer();return Err(error)}if counted.is_err(){counter.output.refuse_text_producer();return Err(ValueError::new(ValueRefusalKind::InvalidValue,"semantic formatter refused exact extent measurement"))}let bytes=counter.bytes;counter.output.declare_exact_byte_len(bytes)?;
     let mut writer=TextFormatOutput{output,refusal:None};let result=std::fmt::write(&mut writer,arguments);match(writer.refusal,result){(Some(error),_)=>{writer.output.refuse_text_producer();Err(error)},(None,Ok(()))=>Ok(()),(None,Err(_))=>{writer.output.refuse_text_producer();Err(ValueError::new(ValueRefusalKind::InvalidValue,"semantic text formatter refused its output"))}}
@@ -216,7 +216,7 @@ impl<const N:usize> TextEncodingOutput for InlineTextOutput<'_,'_,N>{
     }
 }
 impl<const N:usize> PagedText<N>{
-    /// 🧾 One bound producer fills the intrinsic cell or transfers its bounded prefix into genuine pages.
+    /// 📏️ One bound producer fills the intrinsic cell or transfers its bounded prefix into genuine pages.
     pub fn encode_with_inline(&mut self,inline:&mut InlineTextBuffer,paged_active:&mut bool,maximum_payload_bytes:usize,control:&mut crate::NativeEncodeControl<'_>,producer:impl FnOnce(&mut dyn TextEncodingOutput)->Result<(),ValueError>)->Result<(),ValueError>{
         if self.bytes.allocated_bytes()!=0||self.complete||self.closing||!inline.terminal_is_empty()||inline.complete||*paged_active{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"intrinsic semantic text encoding requires an empty composite owner"))}
         if maximum_payload_bytes>N{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"intrinsic semantic text authority exceeds declared capacity"))}

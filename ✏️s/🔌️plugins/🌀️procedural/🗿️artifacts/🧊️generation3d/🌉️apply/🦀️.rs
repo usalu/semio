@@ -19,7 +19,7 @@ use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 /// rejection joins them as the `Fatal` `mutation.apply.*` message `MutationOutcome::apply_to` would persist — a vocabulary
 /// code is never re-typed as an apply error.
 pub fn apply_generation3d_mutation(projection: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<(), Vec<protocol::MutationMessage>> {
-    let (delta, messages) = protocol::Mutation::diff(mutation, &*projection).into_parts();
+    let (delta, messages) = protocol::ColdMutation::diff(mutation, &*projection).into_parts();
     if messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
         delta.retire_cold();
         return Err(messages);

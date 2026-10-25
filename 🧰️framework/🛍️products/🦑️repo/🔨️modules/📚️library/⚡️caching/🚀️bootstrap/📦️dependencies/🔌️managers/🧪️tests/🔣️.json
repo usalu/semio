@@ -39,10 +39,10 @@
  ],
  "managers": {
   "bun": {
-   "descriptorSha256": "9ef410d19b523b8c2befe7cf881726ddb8f57daf29a5e3fbb5ca2f5b155ff661",
+   "descriptorSha256": "c90cbd0adbd4300b2e2b54342c62f41cd2e0aec5544ba3a6291ba14986fd10a7",
    "materialized": {
     "install": "6564e8a88fb7e5aae54f8fbf5aa83e3108e3ba12950f1866e5a0a35f16aeb84e",
-    "generation": "882fbc3fd85195095026174c782da790d6bf85f4656b0db386bdd73225f070f5"
+    "generation": "d4a96a0c6f5f9c75482affad8421be9bca17dde580d1a15c5f40f865946cc80d"
    },
    "render": [
     {

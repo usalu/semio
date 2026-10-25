@@ -1,0 +1,97 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Verified stamp of a graph generation pointer",
+ "description": "Whether a sealed generation already answers a request that began earlier. A build that publishes a generation stamps the pointer with the time its observation started (`atMs`, epoch milliseconds read before any fact, membership or file of the build was read) and the owners it verified: `owners` is the base64 (standard alphabet, padding) of a bitmap over the owner names of the published manifest in code point order, owner i at byte floor(i / 8), bit i mod 8 counted from the least significant bit, `count` is the number of owners, bits at or beyond `count` are zero. A request that began at `requestedAtMs` is covered for exactly the owners of the stamp when the stamp is not older than the request and the manifest carries the implementation digest of the request; the environment facts are covered with them. A build that reused part of the stamp of its parent stamps the union of the owners with the older of the two times. A metadata refresh keeps the stamp of its parent, an invalidation drops it.",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "maximumOwners": 65536,
+    "bitOrder": "least-significant-first",
+    "alphabet": "base64"
+   }
+  },
+  "Stamp": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["atMs", "count", "owners"],
+   "properties": {
+    "atMs": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "count": {"type": "integer", "minimum": 0, "maximum": 65536},
+    "owners": {"type": "string", "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"}
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "scopes", "merges", "coverage", "refusals"],
+   "properties": {
+    "version": {"const": 1},
+    "scopes": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "owners", "covered"],
+      "properties": {
+       "id": {"type": "string"},
+       "owners": {"type": "array", "items": {"type": "string"}},
+       "covered": {"type": "array", "items": {"type": "string"}}
+      }
+     }
+    },
+    "merges": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "owners", "scope", "observedAtMs", "carried"],
+      "properties": {
+       "id": {"type": "string"},
+       "owners": {"type": "array", "items": {"type": "string"}},
+       "scope": {"anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]},
+       "observedAtMs": {"type": "integer"},
+       "carried": {
+        "anyOf": [
+         {"type": "null"},
+         {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["atMs", "names"],
+          "properties": {"atMs": {"type": "integer"}, "names": {"type": "array", "items": {"type": "string"}}}
+         }
+        ]
+       }
+      }
+     }
+    },
+    "coverage": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "owners", "stamp", "implementation", "requestedImplementation", "requestedAtMs", "needed"],
+      "properties": {
+       "id": {"type": "string"},
+       "owners": {"type": "array", "items": {"type": "string"}},
+       "stamp": {"anyOf": [{"type": "null"}, {"type": "object", "required": ["atMs", "covered"], "additionalProperties": false, "properties": {"atMs": {"type": "integer"}, "covered": {"type": "array", "items": {"type": "string"}}}}]},
+       "implementation": {"type": "string"},
+       "requestedImplementation": {"type": "string"},
+       "requestedAtMs": {"type": "integer"},
+       "needed": {"anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]}
+      }
+     }
+    },
+    "refusals": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "owners", "stamp"],
+      "properties": {"id": {"type": "string"}, "owners": {"type": "array", "items": {"type": "string"}}, "stamp": {}}
+     }
+    }
+   }
+  }
+ }
+}

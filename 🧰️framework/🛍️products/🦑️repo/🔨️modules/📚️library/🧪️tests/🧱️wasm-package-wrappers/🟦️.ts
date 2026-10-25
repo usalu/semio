@@ -129,6 +129,6 @@ describe("stable wasm package wrappers", () => {
     const manifest = json(registration.packagePath);
     expect(project.namedInputs.wasmPackageWrapperSources).toEqual(fixture.inputs);
     expect(project.targets[registration.target]).toMatchObject({ cache: true, inputs: ["wasmPackageWrapperSources"], outputs: [], options: { command: "repo ./📜️script.ts test wasm-package-wrappers" } });
-    expect(manifest.scripts[registration.packageScript]).toBe(`repo --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
+    expect(manifest.scripts[registration.packageScript]).toBe(`repo run @semio-tech/repo-lib:${registration.target}`);
   });
 });

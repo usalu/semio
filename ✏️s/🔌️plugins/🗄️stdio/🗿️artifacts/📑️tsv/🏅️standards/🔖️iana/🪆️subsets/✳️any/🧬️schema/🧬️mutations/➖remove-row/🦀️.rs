@@ -8,7 +8,7 @@ use super::*;
 #[value(rename_all = "camelCase")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveRow {
-    pub(crate) index: usize,
+    pub index: usize,
 }
 
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for RemoveRow {

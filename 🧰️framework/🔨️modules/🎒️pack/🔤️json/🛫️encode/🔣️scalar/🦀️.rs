@@ -11,7 +11,7 @@ pub enum ArtifactCanonicalJsonNode<'a> {
     U64(u64),
     /// 🔤️ An unsigned 64-bit integer spelled as its canonical decimal JSON string, for wires that carry ids beyond 2^53.
     U64Text(u64),
-    /// 🔤️ A signed 64-bit integer spelled as its canonical decimal JSON string, for wires that carry exact signed64 values.
+    /// 📖️ A signed 64-bit integer spelled as its canonical decimal JSON string, for wires that carry exact signed64 values.
     I64Text(i64),
     I128(i128),
     U128(u128),

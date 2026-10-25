@@ -75,7 +75,7 @@ export interface WindowMeasureTreeGroupProps {
   children?: React.ReactNode;
 }
 
-/** 🌳️ Collapsible measure group row (same geometry as {@link ControlTree} folders). */
+/** 🗂️ Collapsible measure group row (same geometry as {@link ControlTree} folders). */
 export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ id, label, defaultOpen = false, headerControl, children }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const { block, inline } = useFlow();
@@ -147,7 +147,7 @@ export interface WindowMeasureTreeLeafProps {
   waiting?: boolean;
 }
 
-/** 🌳️ Measure control leaf aligned like a tree row (icon + label + value or full-width control). */
+/** 🍃️ Measure control leaf aligned like a tree row (icon + label + value or full-width control). */
 export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ label, icon, children, fullWidth = false, loading = false, waiting = false }) => {
   const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);
   const labelNode = label ? (

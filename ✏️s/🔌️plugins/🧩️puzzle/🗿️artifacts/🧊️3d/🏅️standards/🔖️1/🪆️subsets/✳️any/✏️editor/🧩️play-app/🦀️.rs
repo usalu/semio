@@ -3,6 +3,9 @@
 use super::*;
 use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
+use semio_s_artifact_puzzle_3d_editor_session::{puzzle3d_view_session_key, sync_precompute_session, with_puzzle3d_session_for};
+use semio_s_artifact_puzzle_3d_editor_dispatch::puzzle3d_handle_action;
+use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities;
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main;
 use semio_s_artifact_puzzle_3d_editor_panels::artifact;
@@ -113,8 +116,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-        let mut proofs = Puzzle3dRetainedCommandProofs::bounded_first_step_tool_proofs();
-        proofs.extend(Puzzle3dHostConfigurationProofs::bounded_first_step_tool_proofs());
+        let mut proofs = Puzzle3dRetainedCommandProofs::proofs();
+        proofs.extend(Puzzle3dHostConfigurationProofs::proofs());
         proofs
     }
 
@@ -161,14 +164,14 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         let tool_id=original.command.action_id();
         macro_rules! work {
             (|$request:ident| $make:expr) => {
-                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,Puzzle3dCommand::action_id,PUZZLE3D_IMPORT_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,|$request|{let _=&$request;$make})
+                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,Puzzle3dCommand::action_id,PUZZLE3D_IMPORT_RAW_BYTES,semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS,true,|$request|{let _=&$request;$make})
             };
         }
         macro_rules! seed {
             (|$request:ident,$seed:ident| $make:expr) => {{
                 let bytes=original.authoring_seed.len();
                 let demand=semio_framework_value::RetirementDemand{copy_bytes:bytes,capacity_bytes:bytes,depth:1,..Default::default()};
-                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request,output,cx,Puzzle3dCommand::action_id,PUZZLE3D_IMPORT_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,demand,|$request,_|{
+                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request,output,cx,Puzzle3dCommand::action_id,PUZZLE3D_IMPORT_RAW_BYTES,semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS,true,demand,|$request,_|{
                     let $seed=$request.authoring_seed.clone();let capacity=$seed.capacity();
                     Ok(($make,semio_framework_job::RetainedCloneProgress{copied_bytes:bytes,retained_capacity_bytes:capacity,..Default::default()}))
                 })
@@ -178,7 +181,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             (|$request:ident,$instance:ident| $make:expr) => {{
                 let bytes=original.parent_document_id.len();
                 let demand=semio_framework_value::RetirementDemand{copy_bytes:bytes,capacity_bytes:bytes,depth:1,..Default::default()};
-                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request,output,cx,Puzzle3dCommand::action_id,PUZZLE3D_IMPORT_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,demand,|$request,_|{
+                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request,output,cx,Puzzle3dCommand::action_id,PUZZLE3D_IMPORT_RAW_BYTES,semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS,true,demand,|$request,_|{
                     let parent_document_id=$request.parent_document_id.clone();let capacity=parent_document_id.capacity();
                     let $instance=Puzzle3dInstanceBinding{app_instance_id:$request.app_instance_id,parent_document_id,owner:$request.instance_operation_owner.clone()};
                     Ok(($make,semio_framework_job::RetainedCloneProgress{copied_bytes:bytes,retained_capacity_bytes:capacity,..Default::default()}))
@@ -190,7 +193,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
                 let demand = <$owner>::original_birth_demands()?;
                 semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured_scoped(
                     request, output, cx, Puzzle3dCommand::action_id, PUZZLE3D_IMPORT_RAW_BYTES,
-                    crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, true, demand,
+                    semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS, true, demand,
                     |$request, $scope| { let _ = &$request; $make },
                 )
             }};
@@ -241,8 +244,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             "openImportSnapshot" => bound!(|request, instance| Puzzle3dWindowCommandWork::new(tool_id).bound(instance)),
             "importSnapshot" => bound!(|request, instance| Puzzle3dWindowCommandWork::new(tool_id).bound(instance)),
             "addTargetVolume" => bound!(|request, instance| Puzzle3dWindowCommandWork::new(tool_id).bound(instance)),
-            "worldPointerDown" => work!(|request| crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
-            _ => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent)),
+            "worldPointerDown" => work!(|request| semio_s_plugin_puzzle_retained::NoopPuzzleCommandWork::new(tool_id)),
+            _ => work!(|request| semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_reduce::<Self>, semio_s_artifact_puzzle_3d_retained_action::puzzle3d_retained_extent)),
         }
     }
 
@@ -298,7 +301,11 @@ impl ArtifactEditor for Puzzle3dPlayApp {
 
     /// 🎯️ Maps the host's transitional `{action,args}` wire onto Puzzle 3D's closed command
     /// enum until React and wgpu send `OpBinary` command bytes directly.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() {
+            return Err(fault);
+        }
+        let args = args.as_ref();
         let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
         if let Some(flag) = puzzle3d_flag_value_argument(action) {
             args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle3d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
@@ -323,7 +330,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         let runtime = window_ownership::runtime(cfg.snapshot, &window, &window_ownership::Puzzle3dWindowTransient::default(), view_state);
         let window_id = puzzle3d_addressed_window_id(view_state, None, command.window_id(), &runtime.window_ids);
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
-        Ok(with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| app.handle_action_impl(authoring_seed, command, Some(window_id), doc.snapshot, &runtime, view_state, &interaction).0))
+        Ok(with_puzzle3d_session_for(puzzle3d_view_session_key(doc), &runtime, |session| puzzle3d_handle_action::<Self>(session, authoring_seed, command, Some(window_id), doc.snapshot, &runtime, view_state, &interaction).0))
     }
 
     /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
@@ -454,9 +461,10 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> semio_framework_plugin::plugin_app_close_prelude::semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
         let window_transient = window_ownership::transient_from_view(transient);
-        Self::render_body(Some(owner), body_key, doc, cfg, view_state, &window_transient, &Puzzle3dInteractionSnapshot::from_interaction(interaction))
+        Self::render_body(Some(owner), body_key, doc, cfg, view_state, &window_transient, &Puzzle3dInteractionSnapshot::from_interaction(interaction)).map(Some).map_err(Into::into)
     }
 
     /// 🕹️ The context menu reads the AUTHORITATIVE framework-owned selection, not only the
@@ -478,9 +486,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     fn window_engagements(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle3dWindowTransient::default(), Some(view_state));
-        with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| {
+        with_puzzle3d_session_for(puzzle3d_view_session_key(doc), &runtime, |_session| {
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
-            let envelope = app.scene_for(doc.snapshot, &runtime, Some(view_state), window_id);
+            let envelope = main::scene_for(doc.snapshot, &runtime, Some(view_state), window_id);
             HashMap::from([(window_id.to_string(), main::engagement(&envelope, labels, doc.tool_run()))])
         })
     }
@@ -494,9 +502,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     ) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::transient_from_view(transient), Some(view_state));
-        with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| {
+        with_puzzle3d_session_for(puzzle3d_view_session_key(doc), &runtime, |_session| {
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
-            let envelope = app.scene_for(doc.snapshot, &runtime, Some(view_state), window_id);
+            let envelope = main::scene_for(doc.snapshot, &runtime, Some(view_state), window_id);
             HashMap::from([(window_id.to_string(), main::engagement(&envelope, labels, doc.tool_run()))])
         })
     }
@@ -507,10 +515,10 @@ impl ArtifactEditor for Puzzle3dPlayApp {
 
     fn tool_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle3dWindowTransient::default(), Some(view_state));
-        with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| {
+        with_puzzle3d_session_for(puzzle3d_view_session_key(doc), &runtime, |_session| {
             let wid = view_state.window_id.as_deref().unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
-            let envelope = app.scene_for(doc.snapshot, &runtime, Some(view_state), wid);
+            let envelope = main::scene_for(doc.snapshot, &runtime, Some(view_state), wid);
             HashMap::from([(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.tool_run()))])
         })
     }

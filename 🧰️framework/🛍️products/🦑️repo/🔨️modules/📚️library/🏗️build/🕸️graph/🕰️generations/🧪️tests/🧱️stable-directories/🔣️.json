@@ -1,0 +1,24 @@
+{
+ "version": 1,
+ "racyMilliseconds": 2000,
+ "cases": [
+  {
+   "name": "unchanged old directories are stable, moved ones are not",
+   "before": {"capturedAt": 100000, "directories": [[".", 1000, 1], ["a", 2000, 2], ["b", 3000, 3], ["c", 4000, 4], ["gone", 5000, 5]]},
+   "after": {"capturedAt": 200000, "directories": [[".", 1000, 1], ["a", 2500, 2], ["b", 3000, 33], ["c", 4000, 4], ["fresh", 6000, 6]]},
+   "stable": [".", "c"]
+  },
+  {
+   "name": "a directory touched within the racy window of the earlier capture is not proven",
+   "before": {"capturedAt": 10000, "directories": [["a", 8500, 2], ["b", 7999, 3], ["c", 8000, 4]]},
+   "after": {"capturedAt": 20000, "directories": [["a", 8500, 2], ["b", 7999, 3], ["c", 8000, 4]]},
+   "stable": ["b", "c"]
+  },
+  {
+   "name": "no earlier directories prove nothing",
+   "before": {"capturedAt": 10000, "directories": []},
+   "after": {"capturedAt": 20000, "directories": [["a", 1, 2]]},
+   "stable": []
+  }
+ ]
+}

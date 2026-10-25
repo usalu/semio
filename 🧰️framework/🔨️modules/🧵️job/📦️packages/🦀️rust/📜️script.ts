@@ -56,7 +56,7 @@ class OriginalCloseContextScript extends BundleScript {
   }
 }
 
-/** 🧪️ Executes the actual close source custody law under the finite original native caller. */
+/** 🧲️ Executes the actual close source custody law under the finite original native caller. */
 class OriginalCloseContextNativeScript extends BundleScript {
   async run(args:string[]): Promise<void> {
     await runOriginalCloseContextNativeScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);

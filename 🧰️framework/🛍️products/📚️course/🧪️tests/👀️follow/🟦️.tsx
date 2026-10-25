@@ -10,7 +10,7 @@ import { act, cleanup, fireEvent, render, renderHook, screen, within } from "@te
 import { computeAccessibleName } from "dom-accessibility-api";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { evolveFollow, followStep, publicPresenceRun, followedCourseState, usePresenceCapture, usePresenceViewport, type FollowEvent } from "../../🎯️targets/⚛️react/🔨️modules/👀️follow/🟦️.tsx";
+import { evolveFollow, followStep, publicPresenceRun, followedCourseState, usePresenceCapture, usePresenceViewport, type FollowEvent } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/👀️follow/🟦️.tsx";
 import { EMPTY_PRESENCE_VIEW, FOLLOW_DEPARTURE_GRACE_MS, FOLLOW_REJOIN_GRACE_MS, Dialog, FollowProvider, LeaderboardCard, PresenceFooter, PresenceProvider, followedPreferences, initialCourseState, localStore, memoryStorageOrigin, observerSession, courseText, readPreferences, useFollow, type CoursePresenceSnapshot, type CourseSession, type RoomStatus } from "@semio-tech/course-react";
 import { RunScreen } from "@semio-tech/course-react/modules/run/.tsx";
 import type { Leaderboard, LeaderboardRow, Place, PresencePresentation, RunView, Sheet } from "@semio-tech/course";

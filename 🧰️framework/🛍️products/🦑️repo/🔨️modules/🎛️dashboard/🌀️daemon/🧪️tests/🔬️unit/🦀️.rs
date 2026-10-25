@@ -447,6 +447,73 @@ fn a_launch_becomes_one_session_per_process_with_services_first() {
     assert_ne!(SpawnGroup::from_launch(&compound, &[]).group_id, group.group_id, "two starts of the same launch are two groups");
 }
 
+#[cfg(unix)]
+#[test]
+fn a_socket_path_beyond_the_platform_limit_is_refused_before_a_daemon_is_started_for_it() {
+    assert!(lifecycle::usable_endpoint(std::path::Path::new("/tmp/semio-dashboard-501/0123456789abcdef.sock")).is_ok());
+    let deep = std::path::Path::new("/tmp").join("d".repeat(150)).join("0123456789abcdef.sock");
+    let refusal = lifecycle::usable_endpoint(&deep).unwrap_err().to_string();
+    assert!(refusal.contains("unusable") && refusal.contains("SUN_LEN"), "{refusal}");
+}
+
+#[cfg(unix)]
+#[test]
+fn a_socket_path_always_fits_the_platform_by_falling_back_to_a_digest_in_the_short_user_directory() {
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🌀️daemon/🔌️socket/🔣️.json")).unwrap();
+    let (key, fallback) = (vectors["key"].as_str().unwrap(), std::path::Path::new(vectors["fallbackDirectory"].as_str().unwrap()));
+    for platform in ["macos", "linux"] {
+        let capacity = vectors["limits"][platform].as_u64().unwrap() as usize;
+        for case in vectors["cases"].as_array().unwrap() {
+            let runtime = std::path::Path::new(case["runtime"].as_str().unwrap());
+            let chosen = ipc::socket_beneath(runtime, fallback, key, |path| path.as_os_str().len() < capacity);
+            let expected = if case["preferred"][platform].as_bool().unwrap() { runtime.join(format!("{key}.sock")) } else { fallback.join(case["fallbackFile"].as_str().unwrap()) };
+            assert_eq!(chosen, expected, "{platform}: {}", case["name"]);
+            assert!(chosen.as_os_str().len() < capacity, "{platform}: {}", case["name"]);
+        }
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn a_daemon_can_listen_when_its_runtime_directory_is_too_deep_for_a_socket() {
+    use std::os::unix::net::{SocketAddr, UnixListener, UnixStream};
+    let short = std::path::PathBuf::from("/tmp").join(format!("sf{}", std::process::id()));
+    let deep = short.join("d".repeat(120)).join("e".repeat(120));
+    std::fs::create_dir_all(&deep).unwrap();
+    let key = "0123456789abcdef";
+    let fits = |path: &std::path::Path| SocketAddr::from_pathname(path).is_ok();
+    let preferred = deep.join(format!("{key}.sock"));
+    assert!(UnixListener::bind(&preferred).is_err(), "the operating system refuses the preferred path");
+    let chosen = ipc::socket_beneath(&deep, &short, key, fits);
+    assert_eq!(chosen.parent(), Some(short.as_path()));
+    let listener = UnixListener::bind(&chosen).unwrap();
+    let client = std::thread::spawn({ let chosen = chosen.clone(); move || UnixStream::connect(chosen).is_ok() });
+    assert!(listener.accept().is_ok() && client.join().unwrap());
+    assert_eq!(ipc::socket_beneath(&deep, &short, key, fits), chosen, "the same runtime directory names the same socket");
+    assert_ne!(ipc::socket_beneath(&deep.join("other"), &short, key, fits), chosen, "another runtime directory names another socket");
+    let _ = std::fs::remove_dir_all(&short);
+}
+
+#[test]
+fn the_language_of_the_dashboard_reaches_every_process_and_is_not_the_identity_of_a_task() {
+    let hub = launch("hub:dev", vec![process("hub:dev", None)], vec![], None, Stop::Independent);
+    let both = launch("both", vec![process("a:dev", None), process("b:dev", None)], vec![hub], Some("both"), Stop::Together);
+    let german = SpawnGroup::from_launch(&both, &[ipc::task_language("de")]);
+    let english = SpawnGroup::from_launch(&both, &[ipc::task_language("en")]);
+    let silent = SpawnGroup::from_launch(&both, &[]);
+    let spoken = |group: &SpawnGroup| -> Vec<Vec<String>> { group.members.iter().chain(&group.requires).map(|member| member.command.env.iter().filter(|(key, _)| key == "SEMIO_LANGUAGE").map(|(_, value)| value.clone()).collect()).collect() };
+    assert_eq!(spoken(&german), vec![vec!["de".to_string()]; 3]);
+    assert_eq!(spoken(&english), vec![vec!["en".to_string()]; 3]);
+    assert_eq!(spoken(&silent), vec![Vec::<String>::new(); 3], "no chosen language is no environment entry, never a default");
+    for (german, english, silent) in german.members.iter().zip(&english.members).zip(&silent.members).map(|((german, english), silent)| (&german.command, &english.command, &silent.command)) {
+        assert!(german.same_task(english) && english.same_task(silent) && silent.same_task(german), "a DE and an EN dashboard share one running task");
+        assert!(german.validate().is_ok());
+    }
+    let mut other = german.members[0].command.clone();
+    other.env.push(("JOURNEY_MARK".into(), "x".into()));
+    assert!(!german.members[0].command.same_task(&other), "any other declared variable still separates two tasks");
+}
+
 #[test]
 fn a_service_needed_twice_is_started_once() {
     let hub = || launch("hub:dev", vec![process("hub:dev", None)], vec![], None, Stop::Independent);
@@ -593,6 +660,7 @@ fn every_scenario_of_the_daemon_features_is_proved_by_a_test() {
     dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/🚚️transport/🥒️.feature"), &sources, &[
         ("The endpoint name derives from the workspace path", &["endpoint_names_are_stable_across_runs_and_toolchains"]),
         ("A second daemon cannot take over a running workspace", &["a_second_daemon_cannot_take_over_a_running_workspace"]),
+        ("Daemons that start at the same moment all listen", &["daemons_that_start_at_the_same_moment_beside_each_other_all_listen"]),
         ("A connection wakes its owner", &["a_connection_calls_its_notifier_when_a_message_arrives_and_when_its_sends_drain"]),
     ]);
     dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/📜️journal/🥒️.feature"), &sources, &[
@@ -607,6 +675,7 @@ fn every_scenario_of_the_daemon_features_is_proved_by_a_test() {
         ("A task starts in the environment of the view that asked for it", &["a_task_starts_in_the_environment_of_the_view_that_asked_for_it", "a_task_starts_in_the_environment_of_the_client_with_a_terminal", "the_hello_of_a_connection_carries_only_variables_a_task_can_receive"]),
         ("Stopping escalates and killing reports the signal death", &["stopping_escalates_and_killing_reports_the_signal_death"]),
         ("Terminal input is queued and delivered in full", &["terminal_input_is_queued_and_delivered_in_full"]),
+        ("Every Launched Process Owns One Selected Deadline", &["process_deadline_uses_shared_number_semantics_and_never_renews_on_continuations", "process_deadline_stops_external_descendants_despite_output_readiness_and_reconnect", "process_deadline_refuses_invalid_before_spawn_and_leaves_absent_or_zero_unbounded"]),
     ]);
     dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/🕹️control/🥒️.feature"), &sources, &[
         ("A launch starts services first and returns its ready address", &["a_launch_starts_services_first_members_in_order_and_stops_together"]),

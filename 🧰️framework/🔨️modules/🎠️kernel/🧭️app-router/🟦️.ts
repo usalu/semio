@@ -39,7 +39,7 @@ export function surfaceFault(code: string, message: string, scope: FaultScope = 
 export type AppRouterManifest = {
   readonly pluginId: string;
   readonly apps: readonly Record<string, unknown>[];
-  /** 🗂️ This plugin's OWNED artifact kinds — the "owner plugin's surface first" ordering rule and
+  /** 🏺️ This plugin's OWNED artifact kinds — the "owner plugin's surface first" ordering rule and
    * the `surface.missing-owner-surface`/`surface.contribution-not-permitted` checks read this,
    * never an app's own produces/consumes `artifactKinds` (ambiguous once a contributor registers
    * a surface on a kind it doesn't own — contract freeze §2.4 `ArtifactContribution`). */
@@ -62,7 +62,7 @@ function coordinateRoleKey(dialect: ArtifactDialect, role: AppRole): string {
 }
 
 /**
- * 🧭️ TS twin of Rust `AppRouter` (contract freeze §3, C3; reconciled against the real Rust
+ * 🪞️ TS twin of Rust `AppRouter` (contract freeze §3, C3; reconciled against the real Rust
  * `AppRouter`/`AppRouterState` — `💻️os/🔌️plugin/🖥️host/🦀️.rs:1723-1857` — in
  * `📓️w1-d-report.md`). `(dialect, role) -> AppRef[]`, built from every loaded manifest: the owner
  * plugin's entry first, then the rest sorted `pluginId` then `appId` ascending. A duplicate
@@ -172,14 +172,14 @@ export class AppRouter {
     return new AppRouter(entriesByCoordinateRole, dialectsByCoordinate, ownerByArtifactKind, faultByPluginId);
   }
 
-  /** 🧯️ Every excluded plugin's fault, sorted by plugin id — mirrors Rust `AppRouter::plugin_faults`.
+  /** 🔌️ Every excluded plugin's fault, sorted by plugin id — mirrors Rust `AppRouter::plugin_faults`.
    * Empty for a clean catalogue; a shell surfaces these on the plugin's own status so an excluded
    * plugin is never silently dropped. */
   pluginFaults(): readonly Fault[] {
     return [...this.faultByPluginId.keys()].sort().map((pluginId) => this.faultByPluginId.get(pluginId)!);
   }
 
-  /** 🧯️ The fault that excluded `pluginId` from this router, or `undefined` when it routes. */
+  /** 🔎️ The fault that excluded `pluginId` from this router, or `undefined` when it routes. */
   faultFor(pluginId: string): Fault | undefined {
     return this.faultByPluginId.get(pluginId);
   }

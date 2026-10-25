@@ -24,7 +24,7 @@ interface PaneHostContextValue {
 
 const PaneHostContext = reactHostPort.createContext<PaneHostContextValue | undefined>(undefined);
 
-/** 🪟️ The nearest {@link PaneHost}, or `undefined` outside one — {@link Pane} drag-to-reanchor and {@link usePaneSlot} both need it. */
+/** 🏠️ The nearest {@link PaneHost}, or `undefined` outside one — {@link Pane} drag-to-reanchor and {@link usePaneSlot} both need it. */
 export function usePaneHostContext(): PaneHostContextValue | undefined {
   return reactHostPort.useContext(PaneHostContext);
 }
@@ -147,9 +147,9 @@ export interface PaneProps {
   readonly order?: number;
   /** 🛟️ Extra inline inset on this anchor's own edge — see {@link chromePanelSafeArea}. */
   readonly inlineEdgeReservePx?: number;
-  /** 🪟️ Explicit bounds for panes mounted beside, rather than inside, their host context. */
+  /** 🔗️ Explicit bounds for panes mounted beside, rather than inside, their host context. */
   readonly hostRef?: React.RefObject<HTMLElement | null>;
-  /** 🛟️ Minimum displacement-axis clearance from shell panels in CSS pixels. */
+  /** 🕳️ Minimum displacement-axis clearance from shell panels in CSS pixels. */
   readonly chromePanelGapPx?: number;
   readonly zIndex?: 10 | 20 | 30 | 40;
   readonly className?: string;
@@ -162,7 +162,7 @@ const PANE_DEFAULT_MIN_SIZE = 200;
 
 const PANE_DEFAULT_MAX_SIZE = 600;
 
-/** 🪟️ One floating pane inside a {@link PaneHost} — anchored via the exact same {@link anchorPositionStyle}/
+/** ☁️ One floating pane inside a {@link PaneHost} — anchored via the exact same {@link anchorPositionStyle}/
  * {@link flowFromAnchor} math as {@link Panel}, foldable to a chip, optionally width-resizable (inner edge for
  * corners / side-middle; both edges for top/bottom-middle, matching panel grow), and (given `onAnchorChange`)
  * draggable by its handle to any of the eight anchors via {@link nearestAnchor} — dropped anywhere inside the

@@ -36,7 +36,7 @@ function yielded(draft: Draft, index: number, now: Ticks): void {
   }
 }
 
-/** ✋️ The learner — or a deed of the learner (`toss`) — picks an actor up at tick `now`: it lets go of its partner, of its claim and course, of whatever carried it and whatever its gear held ({@link ungear}), and hangs by its scruff (`hangOf` with the species' `grip` as the rod) in the hand (footing `hand`, activity `hang`); where its feet stood when it was picked up from a perch is remembered (`origin`), and the pointer's trail starts anew. Whoever planned to pass where it hangs plans anew ({@link yielded}). */
+/** 🎓️ The learner — or a deed of the learner (`toss`) — picks an actor up at tick `now`: it lets go of its partner, of its claim and course, of whatever carried it and whatever its gear held ({@link ungear}), and hangs by its scruff (`hangOf` with the species' `grip` as the rod) in the hand (footing `hand`, activity `hang`); where its feet stood when it was picked up from a perch is remembered (`origin`), and the pointer's trail starts anew. Whoever planned to pass where it hangs plans anew ({@link yielded}). */
 export function lift(draft: Draft, index: number, now: Ticks): void {
   const body = draft.actors[index]!;
   const kind = draft.kinds[index]!;

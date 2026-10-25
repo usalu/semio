@@ -45,7 +45,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<SemioModelSnapshot, Op> for DragElements
 where
-    Op: protocol::ColdMutation<SemioModelSnapshot, ReferenceDiff = SemioModelDiff> + From<DragElements>,
+    Op: protocol::ColdMutation<SemioModelSnapshot, ReferenceDiff = SemioModelDiff> + From<DragElements> + From<crate::schema::mutations::set_element::SetElement>,
 {
     fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
         if self.offset.iter().any(|component| !component.is_finite()) {

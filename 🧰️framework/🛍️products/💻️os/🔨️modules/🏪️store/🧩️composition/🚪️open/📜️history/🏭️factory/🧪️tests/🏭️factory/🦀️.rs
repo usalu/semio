@@ -1,5 +1,6 @@
 //! 🧪️ Static fixture factories retain the actual paged request without calling open/create.
 
+use semio_framework_value::ErasedSnapshotRetirement as _;
 use semio_framework_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification};
 use semio_framework_os_store_space_member::lifted_store::MemberFactory;
 use semio_framework_os_store_space_member::factory::{MemberFactorySelection, MemberFactorySelectionStep, MemberOpenDeclaration, Phase, SelectedMemberHistoryDictionary, SelectedMemberHistoryInput, SelectedVerifiedMemberHistory};
@@ -197,6 +198,7 @@ fn input(fixture: &Value, dialect: &[String], history: &[u8]) -> VerifiedMemberH
             MemberHistoryInputStep::Pending(_) => {}
             MemberHistoryInputStep::Ready => {
                 let mut original_retained_progress_2 = semio_framework_value::RetainedCloneProgress::default();
+                drop(cx);
                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);
                 return verifier.take_ready(&mut cx).unwrap().unwrap();
             }
@@ -244,11 +246,13 @@ fn run_case<M: MemberFactory>(fixture: &Value, row: &Value, grant: usize) {
         }
     };
     let mut original_retained_progress_4 = semio_framework_value::RetainedCloneProgress::default();
+    drop(cx);
     let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);
     assert!(matches!(owner.step(&mut zero), MemberFactorySelectionStep::Pending(_)));
     assert_eq!(owner.completed, 0);
     let mut error = None;
     let mut terminal = false;
+    drop(zero);
     for _ in 0..10000 {
         let mut original_retained_progress_5 = semio_framework_value::RetainedCloneProgress::default();
         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);
@@ -370,6 +374,7 @@ fn selected(input: VerifiedMemberHistoryInput) -> SelectedMemberHistoryInput<Sem
     let mut original_retained_progress_7 = semio_framework_value::RetainedCloneProgress::default();
     let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_7);
     let mut owner = MemberFactorySelection::<SemioFixture>::begin(input, &cx).unwrap_or_else(|_| panic!("closed factory admission"));
+    drop(cx);
     for _ in 0..10000 {
         let mut original_retained_progress_8 = semio_framework_value::RetainedCloneProgress::default();
         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_8);
@@ -377,6 +382,7 @@ fn selected(input: VerifiedMemberHistoryInput) -> SelectedMemberHistoryInput<Sem
             MemberFactorySelectionStep::Pending(_) => {}
             MemberFactorySelectionStep::Ready => {
                 let mut original_retained_progress_9 = semio_framework_value::RetainedCloneProgress::default();
+                drop(cx);
                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_9);
                 return owner.take_ready(&mut cx).unwrap().unwrap();
             }
@@ -416,6 +422,7 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
             let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_11);
             let mut owner = MemberFactorySelection::<SemioFixture>::begin(input, &cx).unwrap_or_else(|_| panic!("fixture factory admission"));
             let at = row["at"].as_str().unwrap();
+            drop(cx);
             if at != "begin" {
                 for _ in 0..10000 {
                     let mut original_retained_progress_12 = semio_framework_value::RetainedCloneProgress::default();
@@ -444,6 +451,7 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
                 _ => || Some(1),
             };
             let mut original_retained_progress_14 = semio_framework_value::RetainedCloneProgress::default();
+            drop(cx);
             let mut cx = StepContext::new(OperationId(if event == "operation" { 8 } else { 7 }), Generation(if event == "generation" { 12 } else { 11 }), StepBudget::new(7, 999, semio_framework_value::testing::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_14);
             let before = owner.completed;
             let diagnostic;
@@ -488,12 +496,14 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
             assert!(selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut zero).unwrap().is_none());
             assert!(!selected.terminal_is_empty());
             let mut original_retained_progress_17 = semio_framework_value::RetainedCloneProgress::default();
+            drop(zero);
             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_17);
             let mut owner = selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut cx).unwrap().unwrap();
             assert!(selected.terminal_is_empty());
             assert!(matches!(selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut cx), Err(MemberOpenDiagnostic::Stale)));
             let mut error = None;
             let mut terminal = false;
+            drop(cx);
             for _ in 0..20000 {
                 let mut original_retained_progress_18 = semio_framework_value::RetainedCloneProgress::default();
                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_18);
@@ -543,6 +553,7 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_20);
                 dictionary = selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut cx).unwrap();
                 let mut ready = false;
+                drop(cx);
                 for _ in 0..20000 {
                     let mut original_retained_progress_21 = semio_framework_value::RetainedCloneProgress::default();
                     let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_21);

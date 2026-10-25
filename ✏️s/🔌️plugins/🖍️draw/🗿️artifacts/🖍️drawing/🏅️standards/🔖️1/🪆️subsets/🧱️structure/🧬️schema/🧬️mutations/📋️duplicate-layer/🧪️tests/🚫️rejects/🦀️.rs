@@ -94,5 +94,5 @@ async fn declared_outcome_holds() {
 async fn a_present_source_inverse_sums_to_the_negative_diff() {
     let base = DrawingSnapshot { layers: vec![semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect")].into(), ..Default::default() };
     let source = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&semio_s_artifact_draw_drawing_structure::duplicate_layer::mutation::duplicate_layer(source.clone(),vec![semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment{source:source.clone(),target:"duplicate-target".into()}].into()), &base).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&semio_s_artifact_draw_drawing_structure::duplicate_layer::mutation::duplicate_layer::<semio_s_artifact_draw_drawing_mutations::DrawingMutation>(source.clone(),vec![semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment{source:source.clone(),target:"duplicate-target".into()}].into()), &base).await;
 }

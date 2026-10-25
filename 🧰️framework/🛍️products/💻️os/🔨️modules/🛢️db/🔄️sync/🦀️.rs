@@ -51,7 +51,7 @@ pub use replica_sync_protocol::{
 mod hello_admission_and_backing;
 use hello_admission_and_backing::{
     database_sync_hello_clone_string, database_sync_hello_close_pages, database_sync_hello_control, database_sync_hello_envelope_credit, database_sync_hello_input_credit,
-    database_sync_hello_opportunity, database_sync_hello_reserve_snapshot_chunk, database_sync_hello_reserve_snapshot_pages, database_sync_hello_retire_string,
+    database_sync_hello_opportunity, database_sync_hello_reserve_snapshot_chunk, database_sync_hello_reserve_snapshot_pages, database_sync_hello_retire_shared_text, database_sync_hello_retire_string,
     database_sync_hello_turn_exhausted, DatabaseSyncHelloAdmission, DatabaseSyncHelloBackingLedger, DatabaseSyncHelloFrameClose, DatabaseSyncHelloOwners,
     DATABASE_SYNC_HELLO_ADMISSION_SATURATED, DATABASE_SYNC_HELLO_DEADLINE_MS, DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES, DATABASE_SYNC_HELLO_MAX_ITEMS,
     DATABASE_SYNC_HELLO_POLL_TURN_MICROS, DATABASE_SYNC_HELLO_RETRY_LIMIT, DATABASE_SYNC_HELLO_SLOTS, DATABASE_SYNC_HELLO_TAIL_FRAME_ENVELOPES, DATABASE_SYNC_HELLO_TURN_MS,

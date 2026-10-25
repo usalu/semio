@@ -9,9 +9,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "insert-frame")]
 pub struct InsertFrame {
-    pub(crate) index: usize,
+    pub index: usize,
     #[dsl(block)]
-    pub(crate) frame: GifFrame,
+    pub frame: GifFrame,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertFrame {

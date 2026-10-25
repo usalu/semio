@@ -253,6 +253,7 @@ pub enum Puzzle5dClipboardVerb {
 
 /// ♻️ The owners one `Puzzle5dClipboardJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Puzzle5dClipboardOwners {
     pub raw: Vec<u8>,
     pub dsl_text: String,

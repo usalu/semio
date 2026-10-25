@@ -191,7 +191,7 @@ export async function scanCargoBuildUnits(buildDir: string, control: ResourceLea
 
 const sessionLockName = (sessionDirName: string): string => `${sessionDirName.split("-").slice(0, 3).join("-")}.lock`;
 
-/** 📏️ Measures one incremental session (its directory plus its sibling `.lock` file, which rustc keeps alongside even after finalizing). */
+/** ➕️ Measures one incremental session (its directory plus its sibling `.lock` file, which rustc keeps alongside even after finalizing). */
 async function measureSession(crateDir: string, sessionName: string, walk: CacheWalk): Promise<{ bytes: number; recencyMs: number;recencySource?:CacheRecencySourceV1 }> {
   const measured = await measureUnit(join(crateDir, sessionName),walk);
   let lockBytes = 0, lockRecencyMs = 0;
@@ -205,7 +205,7 @@ export interface CargoIncrementalScan {
 }
 
 /**
- * 🗃️ Walks Cargo's shared build-dir for incremental crate dirs: `.../incremental/<crate>-<hash>/`, each holding
+ * 🔨️ Walks Cargo's shared build-dir for incremental crate dirs: `.../incremental/<crate>-<hash>/`, each holding
  * one session per compile as `s-<timestamp>-<id>-working` (in progress) or a finalized `s-<timestamp>-<id>-<svh>`,
  * with a `s-<timestamp>-<id>.lock` file alongside. https://rustc-dev-guide.rust-lang.org/queries/incremental-compilation-in-detail.html
  *
@@ -269,7 +269,7 @@ export async function compactCargoIncrementalSessionsV1(options:Readonly<{buildD
 const CARGO_SENTINEL_NAMES = new Set(["CACHEDIR.TAG"]);
 const isCargoSentinel = (name: string): boolean => CARGO_SENTINEL_NAMES.has(name) || name.startsWith(".cargo-");
 
-/** 🗃️ Walks Cargo's uplifted target-dir; under the new build-dir layout it holds only final deliverable files, so each file is its own unit. */
+/** 🎯️ Walks Cargo's uplifted target-dir; under the new build-dir layout it holds only final deliverable files, so each file is its own unit. */
 export async function scanCargoTargetUnits(targetDir: string, control: ResourceLeaseControl, onUnit?: (unit: CacheUnit) => void): Promise<CacheUnit[]> {
   const walk=new CacheWalk(control,"cache-scan:"+resolve(targetDir),"shared");
   const units: CacheUnit[] = [];

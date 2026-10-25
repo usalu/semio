@@ -149,7 +149,7 @@ pub mod utilities {
     }
 
     //#region 🔖️DeriveUtilityNodes
-    /// 🧰️ A resolved utility ready to be laid out into the utility bar. `framework_core` maps its
+    /// 🛠️ A resolved utility ready to be laid out into the utility bar. `framework_core` maps its
     /// `UtilityDefinition` onto this before calling `derive_utility_nodes` — `ui_wgpu` can't reference
     /// `framework_core::UtilityDefinition` directly (that crate depends on `ui_wgpu`, not the reverse).
     #[derive(Clone, Debug, PartialEq)]
@@ -161,7 +161,7 @@ pub mod utilities {
         pub category: Option<UtilityCategory>,
     }
 
-    /// 🧰 Derives the utility bar `UtilityNode` tree from resolved utilities and the host-owned active utility id.
+    /// 🧬️ Derives the utility bar `UtilityNode` tree from resolved utilities and the host-owned active utility id.
     /// Each utility becomes a `Toggle` whose `pressed` reflects `active_utility_id == Some(id)` and whose
     /// `on_change` dispatches `setActiveUtility { utilityId }` against `controller_id`. Utilities sharing a `group`
     /// collapse into one `Collection` (placed where the group first appears, in utility order); ungrouped
@@ -248,7 +248,7 @@ pub mod role_chrome {
     use serde::{Deserialize, Serialize};
 
     //#region 🔖️ChromeRole
-    /// 👁️✏️ Wire-compatible with Rust `semio_framework::AppRole`/TS `AppRole` — exactly `"viewer"`/
+    /// 🎭️✏️ Wire-compatible with Rust `semio_framework::AppRole`/TS `AppRole` — exactly `"viewer"`/
     /// `"editor"`, contract freeze §1 C1.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "lowercase")]
@@ -297,7 +297,7 @@ pub mod role_chrome {
         }
     }
 
-    /// 🗣️ Context-menu/palette entry — contract freeze §5: en `"Open with…"` / de `"Öffnen mit…"`.
+    /// 🔓️ Context-menu/palette entry — contract freeze §5: en `"Open with…"` / de `"Öffnen mit…"`.
     pub fn open_with_label_text(is_de: bool) -> &'static str {
         if is_de {
             "Öffnen mit…"
@@ -306,7 +306,7 @@ pub mod role_chrome {
         }
     }
 
-    /// 🗣️ "Set as default" toggle — contract freeze §5: en `"Set as default"` / de `"Als Standard
+    /// ⭐️ "Set as default" toggle — contract freeze §5: en `"Set as default"` / de `"Als Standard
     /// festlegen"`.
     pub fn set_as_default_label_text(is_de: bool) -> &'static str {
         if is_de {
@@ -325,7 +325,7 @@ pub mod role_chrome {
     pub const OS_SET_DEFAULT_EDITOR: &str = "os.set-default-editor";
     pub const OS_CLEAR_DEFAULT_APP: &str = "os.clear-default-app";
 
-    /// 🎮️ Contract freeze §5's frozen palette command ids — dispatched by an "Open with…" leaf.
+    /// ❄️ Contract freeze §5's frozen palette command ids — dispatched by an "Open with…" leaf.
     pub const PALETTE_OPEN_ARTIFACT_WITH_VIEWER: &str = "open-artifact-with-viewer";
     pub const PALETTE_OPEN_ARTIFACT_WITH_EDITOR: &str = "open-artifact-with-editor";
 
@@ -430,7 +430,7 @@ pub mod role_chrome {
         utility
     }
 
-    /// 🚫️ Contract freeze §5: "...and disables undo/redo" — forces `disabled: Some(true)` on every
+    /// 🔒️ Contract freeze §5: "...and disables undo/redo" — forces `disabled: Some(true)` on every
     /// `UtilityCategory::History` utility (undo/redo/checkpoint/alternative, `VcsArtifactApp`'s own
     /// history vocabulary) for `ChromeRole::Viewer`; every other utility passes through unchanged.
     /// `UtilityNode` has no `Mutation` category to hide here — that vocabulary lives on

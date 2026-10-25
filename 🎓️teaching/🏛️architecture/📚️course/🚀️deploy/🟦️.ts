@@ -36,7 +36,7 @@ import { courseOriginalBuildModeV1 } from "../🏗️builder/🎚️mode/🟦️
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { requireIssuedScriptInvocationV1, type ScriptInvocation } from "@semio-tech/process/routing";
-import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { type ProctorArtifact } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import { acquireProctor } from "../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
 import course from "../🔣️.json" with { type: "json" };
@@ -92,9 +92,19 @@ export const COURSE_BUNDLE_DIRECTORY = "proctor";
 /** 💾️ The file the bundle carries the proctor image in. */
 export const COURSE_BUNDLE_IMAGE = "proctor-image.tar";
 
-/** 🏋️ What a release of the site may weigh: the entry script and stylesheet compressed as a CDN sends them, and the whole
- * artifact on disk. */
-export const COURSE_SITE_BUDGET = { scriptGzipBytes: 300_000, styleGzipBytes: 60_000, totalBytes: 5_000_000 } as const;
+/** 🏋️ What a release of the site may weigh, from `budget` of `🔣️.json`: the scripts the document runs (the entry chunk,
+ * per {@link CourseSiteTopology}) and the stylesheet compressed as a CDN sends them, and the whole artifact on disk. */
+export const COURSE_SITE_BUDGET = deployment.budget;
+
+/** 🧭️ The release topologies of the site that have an entry chunk to weigh: `publish` is the build for the production
+ * proctor, `rehearsal` any other (the one the end-to-end gate serves against its own proctor). The development
+ * topology serves unbundled modules. */
+export type CourseSiteTopology = keyof typeof COURSE_SITE_BUDGET.scriptGzipBytes;
+
+/** 🎓️ The topology a release baked for `proctorOrigin` is: `publish` for the production proctor, else `rehearsal`. */
+export function courseSiteTopology(proctorOrigin: string): CourseSiteTopology {
+  return proctorOrigin === COURSE_PROCTOR_ORIGIN ? "publish" : "rehearsal";
+}
 
 /** 📑️ `_headers` for CDNs that honour it (Cloudflare Pages, Netlify): every response hardened (the frame ban a `meta`
  * policy cannot carry included), hashed assets immutable, documents revalidated. No two rules set the same header for
@@ -141,7 +151,7 @@ export function deploymentInterruption(parent: AbortSignal): { readonly signal: 
   return { signal: controller.signal, release: () => { controller.abort(); parent.removeEventListener("abort", originalCancelled); process.off("SIGINT", cancel); process.off("SIGTERM", cancel); } };
 }
 
-/** 🪪️ Requires the exact live parent before lending cancellation to a deployment operation. */
+/** ⏹️ Requires the exact live parent before lending cancellation to a deployment operation. */
 export function interruption(invocation: ScriptInvocation): ReturnType<typeof deploymentInterruption> {
   requireIssuedScriptInvocationV1(invocation);
   return deploymentInterruption(invocation.control.signal);

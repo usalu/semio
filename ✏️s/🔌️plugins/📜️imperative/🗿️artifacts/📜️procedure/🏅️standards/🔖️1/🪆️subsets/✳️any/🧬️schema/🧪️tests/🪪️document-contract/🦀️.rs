@@ -3,7 +3,7 @@
 use crate::{ProcedureDiff, ProcedureSnapshot};
 use crate::schema::ProcedureArtifact;
 use semio_framework_test_fixtures::fixture_text;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 #[test]
 fn procedure_document_contract_round_trips_children_and_rejects_foreign_owners() {

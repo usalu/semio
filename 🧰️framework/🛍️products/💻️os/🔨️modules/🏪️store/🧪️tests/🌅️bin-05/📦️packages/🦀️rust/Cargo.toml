@@ -38,6 +38,7 @@ semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️pack
 semio-framework-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-replay = { path = "../../../../🏗️initialization/🔁️replay/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
+semio-framework-os-store-replay-operation = { path = "../../../../🔁️replay/🎮️operation/📦️packages/🦀️rust" }
 semio-framework-os-store-snapshot-clone = { path = "../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-os-store-space = { path = "../../../../📜️space-history/🏠️space/📦️packages/🦀️rust" }
 semio-framework-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }

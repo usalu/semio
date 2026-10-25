@@ -72,3 +72,4 @@ pub mod viewer {
         }
     }
 }
+semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioImageSnapshot, schema::mutations::SemioImageMutation);

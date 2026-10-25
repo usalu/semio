@@ -195,7 +195,7 @@ fn typing_ledger_replays_every_fixture_scenario() {
     }
 }
 
-/// ⚖️ LAW: a run persisted between every two edits is the run that never persisted — the stable-id configuration, the
+/// ✏️ LAW: a run persisted between every two edits is the run that never persisted — the stable-id configuration, the
 /// context rebuilt from the buffer and entries, the idle deadline and the open transaction continue the run unchanged.
 #[test]
 fn a_typing_run_persisted_between_edits_continues_the_same_run() {
@@ -219,7 +219,7 @@ fn a_typing_run_persisted_between_edits_continues_the_same_run() {
     assert!(resumed.persist().is_none(), "a committed run persists nothing");
 }
 
-/// ⚖️ LAW: 200 characters typed in one burst are ONE run — one transaction, one committed edit — however many deliveries carry
+/// ▶️ LAW: 200 characters typed in one burst are ONE run — one transaction, one committed edit — however many deliveries carry
 /// them, so typing never spends the store's fixed 64-slot edit ledger one keystroke at a time.
 #[test]
 fn two_hundred_typed_characters_are_one_run() {

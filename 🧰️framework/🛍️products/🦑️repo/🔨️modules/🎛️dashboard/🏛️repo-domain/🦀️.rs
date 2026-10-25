@@ -550,7 +550,7 @@ pub fn action_key(action: &RepoAction) -> String {
 // #endregion 🔖️Key
 
 // #region 🔖️Command
-/// 🛡️ Executes an owned repo action in a managed process so expensive queries remain cancellable.
+/// ▶️ Executes an owned repo action in a managed process so expensive queries remain cancellable.
 pub fn run_action(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
     match parsed.flag("action").and_then(|value| serde_json::from_str::<RepoAction>(value).ok()) {
         Some(action) => match action.execute_result(root) { Ok(output) => { println!("{output}"); 0 }, Err(error) => { eprintln!("[dashboard] {error}"); 1 } },

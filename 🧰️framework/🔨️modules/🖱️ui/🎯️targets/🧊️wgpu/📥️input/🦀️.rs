@@ -394,7 +394,7 @@ impl<E: Clone> InputState<E> {
         self.hits.retire_step()
     }
 
-    /// 🎯️ The last COMPLETE frame's registry — what `hit_at` scans, and what a host reports.
+    /// 🔚️ The last COMPLETE frame's registry — what `hit_at` scans, and what a host reports.
     pub fn hits(&self) -> &[HitTarget<E>] {
         &self.hits.resolved
     }

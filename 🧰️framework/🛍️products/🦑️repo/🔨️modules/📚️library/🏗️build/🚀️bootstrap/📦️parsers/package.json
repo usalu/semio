@@ -4,8 +4,14 @@
   "private": true,
   "description": "The two parsers the build graph inference loads before any other package exists: the TypeScript compiler API and the TOML reader.",
   "license": "LGPL-3.0-or-later",
-  "dependencies": {
+  "devDependencies": {
     "@iarna/toml": "2.2.5",
     "typescript": "5.9.3"
+  },
+  "exports": {
+    ".": "./🟨️.mjs",
+    "./schema.json": "./🧬️schema/🔣️.json",
+    "./tests/resolution": "./🧪️tests/📥️resolution/🟦️.ts",
+    "./receipt": "./🟦️.ts"
   }
 }

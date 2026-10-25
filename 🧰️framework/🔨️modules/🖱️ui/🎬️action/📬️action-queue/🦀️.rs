@@ -34,7 +34,7 @@ pub enum UiIntentAdmission {
 }
 
 impl BoundedActionQueue {
-    /// 🚦️ Orders and de-duplicates one surface's intents by `seq`, and drops a stale one outright —
+    /// 🔏️ Orders and de-duplicates one surface's intents by `seq`, and drops a stale one outright —
     /// the last gate before a gesture becomes a queued action. `current_revision` is the revision of
     /// the document the intent is being resolved against, not the one it was fired at.
     pub fn admit_intent(&mut self, intent: &UiIntentCommand, current_revision: u64) -> UiIntentAdmission {
@@ -44,7 +44,7 @@ impl BoundedActionQueue {
         self.admit_intent_seq(intent)
     }
 
-    /// 🔁️ The ordering half of [`Self::admit_intent`] alone, for a host that reaches the queue
+    /// 🔃️ The ordering half of [`Self::admit_intent`] alone, for a host that reaches the queue
     /// without the live document in hand — the renderer's own `events::EventRouter::build_intent`
     /// already refused the stale ones against the tree it dispatched them on, which is the same place
     /// React's `Dispatcher` refuses them.

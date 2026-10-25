@@ -33,7 +33,7 @@ function spectrum(signal: readonly number[]): number[] {
   return rows;
 }
 
-/** 🌊️ The biased autocorrelation through `fft.js`: the inverse transform of the zero-padded power spectrum. */
+/** 🔄️ The biased autocorrelation through `fft.js`: the inverse transform of the zero-padded power spectrum. */
 function autocorrelation(signal: readonly number[]): number[] {
   const samples = signal.length;
   const fft = new FFT(2 * samples);
@@ -52,12 +52,12 @@ function autocorrelation(signal: readonly number[]): number[] {
   return rows;
 }
 
-/** 🌊️ The two-tone signal of the feature's first vector, sampled at its own rate. */
+/** 📡️ The two-tone signal of the feature's first vector, sampled at its own rate. */
 function twoTones(samples: number): number[] {
   return Array.from({ length: samples }, (_, index) => Math.sin((2 * Math.PI * 3 * index) / samples) + 0.5 * Math.sin((2 * Math.PI * 7 * index) / samples));
 }
 
-/** 🌊️ The cosine of the feature's third vector, sampled at its own rate. */
+/** 📐️ The cosine of the feature's third vector, sampled at its own rate. */
 function cosine(samples: number, rate: number, frequency: number): number[] {
   return Array.from({ length: samples }, (_, index) => Math.cos((2 * Math.PI * frequency * index) / rate));
 }
@@ -109,7 +109,7 @@ export default defineTestAdapter({
       subject,
     },
     "transfer-function": {
-      /** 🔮️ The closed-form magnitude and phase of the same rational functions. */
+      /** 📕️ The closed-form magnitude and phase of the same rational functions. */
       oracle: () => ({
         projection: {
           "bode/second-order": grid([0.1, 0.5, 1, 2, 10].flatMap((omega) => transfer([1], [1, 0.4, 1], omega))),
@@ -119,7 +119,7 @@ export default defineTestAdapter({
       subject,
     },
     "polynomial-roots": {
-      /** 🔮️ Roots written down in advance, in the ascending order the family sorts them into. */
+      /** 🔃️ Roots written down in advance, in the ascending order the family sorts them into. */
       oracle: () => ({
         projection: {
           "roots/cubic": grid([1, 0, 2, 0, 3, 0]),

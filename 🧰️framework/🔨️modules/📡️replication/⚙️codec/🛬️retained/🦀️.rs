@@ -103,13 +103,13 @@ impl RetainedWireFieldDecode{
  /// 📐️ Observes the same original published backing without source access or new work.
  pub fn output_bytes(&self)->usize{self.output_extent}
  pub fn close_demands(&self)->RetirementDemand{if self.receipt.is_some()||self.phase==3||!self.closing{return Default::default()}RetirementDemand{release_bytes:self.output.as_ref().map_or(0,Vec::capacity),depth:1,..Default::default()}}
- /// 📏️ Quotes physical cancellation custody without mutating this original field's active phase.
+ /// 🔐️ Quotes physical cancellation custody without mutating this original field's active phase.
  pub fn retirement_demands(&self)->RetirementDemand{RetirementDemand{release_bytes:self.output.as_ref().map_or(0,Vec::capacity),depth:usize::from(!self.terminal_is_empty()),..Default::default()}}
  fn validate_source<S:RetainedWireByteSource+?Sized>(&self,source:&S)->Result<(),ValueError>{let identity=source.original_source_identity();if identity.address!=self.original||identity.extent!=self.extent||identity.authority!=self.authority{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original wire source identity or extent changed"))}Ok(())}
  pub fn receipt(&self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt}
  pub fn take_receipt(&mut self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt.take()}
  pub fn is_ready(&self)->bool{!self.closing&&self.phase==2&&self.receipt.is_none()}
- /// 📐️ Quotes only the original next physical frontier; metadata transfers cost zero payload copy.
+ /// ⏭️ Quotes only the original next physical frontier; metadata transfers cost zero payload copy.
  pub fn demands<S:RetainedWireByteSource+?Sized>(&self,source:&S,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>{
   self.validate_source(source)?;
   if self.receipt.is_some()||self.phase==3{return Ok(Default::default())}
@@ -121,7 +121,7 @@ impl RetainedWireFieldDecode{
   let end=start.saturating_add(maximum_copy_bytes.min(4096)).min(self.output_extent);
   Ok(RetirementDemand{copy_bytes:end-start,depth:1,..Default::default()})
  }
- /// 🧵️ Allocates once and copies one actual original prefix per independently supplied turn.
+ /// 🔂️ Allocates once and copies one actual original prefix per independently supplied turn.
  pub fn advance<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,grant:RetainedCloneGrant)->Result<RetainedWireFieldStep,ValueError>{
   self.validate_source(source)?;
   if self.receipt.is_some()||self.closing||self.phase==3{return Ok(RetainedWireFieldStep::Blocked)}
@@ -157,7 +157,7 @@ impl RetainedWireFieldDecode{
   if recipient.is_some()||!self.is_ready()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedWireFieldStep::Blocked)}
   *recipient=self.output.take();self.phase=3;self.receipt=Some((grant,RetainedCloneProgress{copied_items:1,..Default::default()}));Ok(RetainedWireFieldStep::Closed)
  }
- /// 🫴️ Transfers validated original UTF8 into an empty text slot without changing its allocation.
+ /// 📖️ Transfers validated original UTF8 into an empty text slot without changing its allocation.
  pub fn take_text_into(&mut self,recipient:&mut Option<String>,grant:RetainedCloneGrant)->Result<RetainedWireFieldStep,ValueError>{
   if !self.text||recipient.is_some()||!self.is_ready()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedWireFieldStep::Blocked)}
   *recipient=Some(unsafe{String::from_utf8_unchecked(self.output.take().unwrap())});self.phase=3;self.receipt=Some((grant,RetainedCloneProgress{copied_items:1,..Default::default()}));Ok(RetainedWireFieldStep::Closed)

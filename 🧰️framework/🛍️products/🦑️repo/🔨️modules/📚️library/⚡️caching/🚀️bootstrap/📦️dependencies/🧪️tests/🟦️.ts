@@ -1,6 +1,3 @@
-import "../⌨️commands/🧪️tests/🟦️.ts";
-import "../💾️storage/🧪️tests/🌐️platform/🟦️.ts";
-import "../💾️storage/🧪️tests/📤️diagnostics/🟦️.ts";
 import {boundedNxNamespaceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 /** 📦️ Portable locked-install and owner-requested lock refresh command laws. */
 import { expect, test } from "bun:test";

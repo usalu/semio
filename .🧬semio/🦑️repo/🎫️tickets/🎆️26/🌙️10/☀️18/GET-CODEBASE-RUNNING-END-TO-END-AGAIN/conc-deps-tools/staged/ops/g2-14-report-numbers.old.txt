@@ -1,1 +1,0 @@
-const name=event.event==="waiting"?event.resource==="bindings"?"waitingPublish":event.resource==="writer"?"waitingWriter":"waitingBuild":event.event;await writeOwnedCommandOutputV1(process.stdout,concurrentTextV1(language,name,{seconds:Math.round((event.elapsedMs??0)/1000),scope:event.scope??"",epoch:event.epoch??0,count:event.count??0})+"\n",control);

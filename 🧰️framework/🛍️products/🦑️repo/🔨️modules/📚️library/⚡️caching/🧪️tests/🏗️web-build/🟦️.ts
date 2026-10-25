@@ -11,7 +11,7 @@ import { nextPublicationFiles } from "@semio-tech/repo-coordinator/builder/publi
 import bunWorkerSchema from "../../📦️bundle/🟦️bun/🧬️schema/🔣️.json" with { type: "json" };
 import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import bundleSchema from "../../📦️bundle/🧬️schema/🔣️.json" with { type: "json" };
-import { bundleJavaScript, bundleVirtualJavaScript, readBunBundleFiles, withWholeHostCompilerCapacity } from "../../📦️bundle/🟦️.ts";
+import { bundleJavaScript, bundleVirtualJavaScript, readBunBundleFiles, withCountedBunCapacity } from "../../📦️bundle/🟦️.ts";
 import { scriptInvocationEnvironment } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runInNewContext } from "node:vm";
 import { availableParallelism } from "node:os";
@@ -61,7 +61,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
   assert.ok(join(activation.activationSourceFreshnessDirectory(boundedRuntime, fixture.activation.boundedPluginId), fixture.activation.stageFile).length <= 256, "Every mutable source-index staging path must fit the repository path limit");
 
 
-  if (availableParallelism() > 1) await assert.rejects(withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,10_000), async () => { throw Error("Unadmitted Bun compiler started"); }, { SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: "1" }), /complete host worker reservation/);
+  if (availableParallelism() > 1) await assert.rejects(withCountedBunCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,10_000), async () => { throw Error("Unadmitted Bun compiler started"); }, { SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: "1" }), /cannot lend CPUs/);
   for (const row of fixture.modes) {
     const oracle = await resolveConfig({ configFile: false, build: semioViteBuild(undefined, buildModePolicy(row.mode)) }, "build", row.mode);
     for (const key of ["minify", "cssMinify", "sourcemap"] as const) assert.equal(oracle.build[key], row[key]);
@@ -102,7 +102,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
   }
   const largeEntry = join(bunPackage, "large.ts"), largeOracle = join(bunPackage, "large-oracle.js");
   await writeFile(largeEntry, 'export const payload = "' + "q".repeat(fixture.largePrototype.characters) + '"; export const payloadLength = payload.length;');
-  await withWebCompilerFixtureV1(workspace,invocation,phaseControl,"prototype",async(destination,sink)=>withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(sink.control,600_000), async environment => {
+  await withWebCompilerFixtureV1(workspace,invocation,phaseControl,"prototype",async(destination,sink)=>withCountedBunCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(sink.control,600_000), async environment => {
     const largeOutput=sink.output;
     await bundleJavaScript({ workspace, source: largeEntry, destination, mode: "prototype", platform: "node", runtime: "runtime", environment, invocation, signal: sink.control.signal });
     await require("esbuild").build({ entryPoints: [largeEntry], outfile: largeOracle, bundle: true, format: "esm", treeShaking: false, minify: false });
@@ -136,7 +136,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     const request = { version: 1 as const, mode: "prototype" as const, kind: "actor" as const, contents: Array.from({ length: 50_000 }, (_, index) => `export function function${index}(value: number): number { return value + ${index}; }`).join("\n"), runtime: { host: "export const host = 1;", wasi: "export const wasi = 2;" } };
     await assert.rejects(bundleVirtualJavaScript(request, { workspace, invocation, control:createRequestedIssuedResourceControlV1(phaseControl,120000), signal: cancellation.signal, onLine: line => { if (line.includes("[bun-worker] compiling")) { compiling = true; setTimeout(() => cancellation.abort(), 20); } } }));
     assert.equal(compiling, true);
-    await withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,10_000), async () => {});
+    await withCountedBunCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,10_000), async () => {});
     const loadNextConfig = require("next/dist/server/config").default;
     for (const row of fixture.modes) {
       const coordinator = coordinatorBuildPolicy(row.mode, 2), nextRoot = join(temporary, `next-${row.mode}`);
@@ -170,7 +170,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
       assert.notEqual(addresses[0], addresses[1]);
       for (const address of addresses) { const response = await fetch(address); assert.equal(response.status, 200); await response.text(); const entry = await fetch(address + "entry.js"); assert.equal(entry.status, 200); await entry.text(); }
       let warmRequest!: Promise<Response>, warmCompleted = false;
-      await withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,600_000), async () => {
+      await withCountedBunCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,600_000), async () => {
         const cachedResponse = await fetch(addresses[0] + "entry.js", { signal: AbortSignal.any([invocation.control.signal, AbortSignal.timeout(5_000)]) }); assert.equal(cachedResponse.status, 200); await cachedResponse.text();
         await writeFile(join(app, "entry.js"), readFileSync(join(app, "entry.js"), "utf8") + '\nexport const warmedCompilerValue = "warm-update";');
         warmRequest = fetch(addresses[0] + "entry.js?semioWarmUpdate=2", { signal: invocation.control.signal }).then(response => { warmCompleted = true; return response; });

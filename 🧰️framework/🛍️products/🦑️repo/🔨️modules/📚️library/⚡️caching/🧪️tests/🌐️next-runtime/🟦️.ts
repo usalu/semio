@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 import { createServer } from "node:net";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { withWholeHostCompilerCapacity } from "../../📦️bundle/🟦️.ts";
+import { withCountedBunCapacity } from "../../📦️bundle/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -52,7 +52,7 @@ export async function proveNextDevRuntime(workspace: string, output: string, inv
     const html = await initial.text(), assets = [...new Set([...html.matchAll(/(?:src|href)="([^" ]*\/_next\/static\/[^" ]+)"/gu)].map(match => { const asset=match[1];assert.ok(asset!==undefined,"Matched Next static asset capture required");return asset.replaceAll("&amp;", "&"); }))];
     for (const asset of assets) { const response = await fetch(new URL(asset, address), { signal: invocation.control.signal }); assert.equal(response.status, fixture.nextRuntime.status); await response.arrayBuffer(); }
     let cold!: Promise<Response>, coldCompleted = false;
-    await withWholeHostCompilerCapacity(join(workspace, ".cache/b/l/m/data"), scriptCompilerAdmissionControlV1(invocation, "next:idle-probe", 600_000), async () => {
+    await withCountedBunCapacity(join(workspace, ".cache/b/l/m/data"), scriptCompilerAdmissionControlV1(invocation, "next:idle-probe", 600_000), async () => {
       const warm = await fetch(address, { signal: AbortSignal.any([invocation.control.signal, AbortSignal.timeout(5_000)]) }); assert.equal(warm.status, fixture.nextRuntime.status); await warm.text();
       observeCold = true; cold = fetch(address + fixture.nextRuntime.coldPath, { signal: invocation.control.signal }).then(response => { coldCompleted = true; return response; });
       await Promise.race([queued, cold.then(() => { throw Error("Cold route bypassed compiler admission"); }), completed]); assert.equal(coldCompleted, false);
@@ -60,5 +60,5 @@ export async function proveNextDevRuntime(workspace: string, output: string, inv
     const response = await cold; assert.equal(response.status, fixture.nextRuntime.status); assert.equal(await response.text(), fixture.nextRuntime.coldBody);
     await mkdir(output, { recursive: true }); await writeFile(join(output, `next-${mode}-dev-runtime.html`), html);
   } finally { stop.abort(); await completed; }
-  await withWholeHostCompilerCapacity(join(workspace, ".cache/b/l/m/data"), scriptCompilerAdmissionControlV1(invocation, "next:cancel-probe", 600_000), async () => {});
+  await withCountedBunCapacity(join(workspace, ".cache/b/l/m/data"), scriptCompilerAdmissionControlV1(invocation, "next:cancel-probe", 600_000), async () => {});
 }

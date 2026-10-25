@@ -11,13 +11,13 @@ import { useUiDriver } from "../../🧱️elements/🚗️UiDriver/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region ⌨️ControlHotkeyPresentation
-/** ⌨️ Props for an inline control hotkey badge. */
+/** 🏷️ Props for an inline control hotkey badge. */
 export interface ControlHotkeyBadgeProps {
   readonly id?: string;
   readonly allowInline: boolean;
 }
 
-/** ⌨️ Whether an inline hotkey badge should paint for the active driver. */
+/** 👁️ Whether an inline hotkey badge should paint for the active driver. */
 function useControlHotkeyInlineVisible(allowInline: boolean): boolean {
   const driver = useUiDriver();
   if (driver.hotkeys !== "inline") return false;
@@ -28,7 +28,7 @@ function useControlHotkeyInlineVisible(allowInline: boolean): boolean {
 /** ⌨️ Shared inline control-hotkey presentation. */
 const controlHotkeyShortcutClassName = "ms-auto shrink-0 text-xs tracking-widest text-muted-foreground font-mono";
 
-/** ⌨️ Inline kbd badge for a chrome control. */
+/** 🪪️ Inline kbd badge for a chrome control. */
 export function ControlHotkeyBadge({ id, allowInline }: ControlHotkeyBadgeProps) {
   const hotkey = useControlHotkey(id);
   const show = useControlHotkeyInlineVisible(allowInline);

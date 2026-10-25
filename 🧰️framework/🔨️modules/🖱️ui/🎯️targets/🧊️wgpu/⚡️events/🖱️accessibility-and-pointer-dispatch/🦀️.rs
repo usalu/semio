@@ -11,7 +11,7 @@ impl EventRouter {
         self.hovered
     }
 
-    /// 🖱️ What this window's retained content currently holds pointer capture on — read by
+    /// ⏺️ What this window's retained content currently holds pointer capture on — read by
     /// `engine::Ui::window_with_pointer_capture` so a host keeps feeding a live drag its moves.
     pub fn capture(&self) -> Option<(NodeId, CaptureKind)> {
         self.capture.target.map(|(_, node, kind)| (node, kind))

@@ -76,6 +76,7 @@ semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱
 semio-framework-value-derive = { path = "../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-os-directory-client = { path = "../../../../../../📇️directory/🔌️client/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-job-payload = { workspace = true }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dev-dependencies]

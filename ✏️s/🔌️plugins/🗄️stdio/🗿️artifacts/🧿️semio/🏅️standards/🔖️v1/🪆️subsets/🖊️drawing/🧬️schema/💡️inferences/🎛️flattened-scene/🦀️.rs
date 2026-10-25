@@ -28,7 +28,7 @@ use crate::schema::snapshot::{DrawNode, DrawStyle, SemioDrawingSnapshot};
 //#region 🔖️Value
 /// 🖼️ One entity's resolved presentation — world transform + (for `Path`/`Text`) the fully
 /// resolved style value (not merely its name).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct FlattenedNode {
     pub world_transform: SemioTransform,

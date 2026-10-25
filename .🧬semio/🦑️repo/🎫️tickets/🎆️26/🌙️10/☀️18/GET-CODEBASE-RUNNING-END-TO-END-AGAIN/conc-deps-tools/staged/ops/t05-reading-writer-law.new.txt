@@ -1,1 +1,0 @@
-expect(owners.get("withJavascriptDependencyStorageV1")!.getText(file)).toContain('"exclusive"');expect(owners.get("withJavascriptDependencyStorageV1")!.getText(file)).not.toContain("Maintenance");

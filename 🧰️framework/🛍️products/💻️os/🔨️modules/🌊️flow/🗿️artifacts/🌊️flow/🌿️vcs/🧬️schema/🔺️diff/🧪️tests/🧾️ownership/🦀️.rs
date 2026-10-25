@@ -75,7 +75,7 @@ fn a_structural_diff_and_its_inverse_read_the_base_rows() {
     };
     let applied = protocol::apply_diff_cold(&diff, &base).expect("the diff applies");
     assert_eq!(applied, other);
-    let inverse = DiffAlgebra::<FlowHostSnapshot>::inverse(&diff, &base);
+    let inverse = ColdDiffAlgebra::<FlowHostSnapshot>::inverse(&diff, &base);
     let restored = protocol::apply_diff_cold(&inverse, &applied).expect("inverse applies");
     assert_eq!(restored, base);
     assert!(DiffAlgebra::<FlowHostSnapshot>::is_empty(&FlowDiff::default()));

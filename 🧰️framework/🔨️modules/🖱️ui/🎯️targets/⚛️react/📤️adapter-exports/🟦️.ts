@@ -2,6 +2,8 @@ import { resolveColorHex, resolveSemanticColorHex, resolveSpatialAxisColors, the
 import { type IconName, type MetabolismIconName, isMetabolismIconName, resolveMetabolismIconSvgFromTheme } from "@semio-tech/assets";
 import { reactHostPort, type ReactHostPort, sceneHostPort, type SceneHostPort, flowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider, HostThreeCanvas } from "@semio-tech/ui/elements/Ports";
 import { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellFloatingSurfaceHost, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback, registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "@semio-tech/ui/elements/ShellScope";
+import { UiI18nContext, UiI18nProvider, useUiI18nInstance } from "@semio-tech/ui/elements/I18n/context";
+import { type UiI18nInstance, type UiI18nCallOptions, type UiI18nTree } from "@semio-tech/ui/i18n/instance";
 import { ThreeEvent } from "@react-three/fiber";
 import { cn } from "@semio-tech/ui/modules/class-name-composition";
 import { waitingBorderClass, waitingBorderActiveClass, loadingBorderClass, loadingBorderActiveClass, waitingBorderStateClass, loadingBorderStateClass, chromeStatusBorderClass, loadingBorderElementClass, waitingBorderElementClass } from "@semio-tech/ui/modules/status-border-presentation";
@@ -59,6 +61,7 @@ export { sceneHostPort, type SceneHostPort };
 // #region 🔌️PortWiring
 export { flowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider, HostThreeCanvas };
 export { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellFloatingSurfaceHost, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback };
+export { UiI18nContext, UiI18nProvider, useUiI18nInstance, type UiI18nInstance, type UiI18nCallOptions, type UiI18nTree };
 // #endregion 🐚️ShellScope
 
 export { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF };

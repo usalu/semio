@@ -1,0 +1,51 @@
+# stage-clean orphan staged=cargo-pressure-tools/staged/feature.add.txt map=None
+--- /dev/null
++++ b/staged/cargo-pressure-tools/staged/feature.add.txt
+@@ -0,0 +1,18 @@
++
++  Scenario Outline: Storage settlement is requested at unit boundaries instead of per read
++    Given <units> workspace compiler units whose sources read <reads> files each
++    When source boundaries are admitted through a port that settles storage
++    Then storage settlement is requested once before each unit and once after the last unit
++    And no storage settlement happens between the reads of one unit
++    And SQLite independently produces the same event order
++
++    Examples:
++      | units | reads |
++      | 1     | 1     |
++      | 3     | 8     |
++
++  Scenario: Actual storage settlement is throttled
++    Given a settlement interval and a clock
++    When unit boundaries arrive faster than the interval
++    Then the actual port runs at most one durable storage recheck per interval
++    And the completion phase always rechecks
+# stage-clean orphan staged=cargo-pressure-tools/staged/interface.new.txt map=None
+--- /dev/null
++++ b/staged/cargo-pressure-tools/staged/interface.new.txt
+@@ -0,0 +1,2 @@
++export type CargoSourceAdmissionRecheckPhaseV1="unit"|"complete";
++export interface CargoSourceAdmissionPortV1 {cfg(unit:CargoCompilationUnitV1,control:ResourceLeaseControl):Promise<readonly string[]>;read(path:string,control:ResourceLeaseControl,request:CargoSourceReadRequestV1):Promise<Uint8Array|null>;recheck(control:ResourceLeaseControl,phase:CargoSourceAdmissionRecheckPhaseV1):Promise<void>}
+\ No newline at end of file
+# stage-clean orphan staged=cargo-pressure-tools/staged/interface.old.txt map=None
+--- /dev/null
++++ b/staged/cargo-pressure-tools/staged/interface.old.txt
+@@ -0,0 +1 @@
++export interface CargoSourceAdmissionPortV1 {cfg(unit:CargoCompilationUnitV1,control:ResourceLeaseControl):Promise<readonly string[]>;read(path:string,control:ResourceLeaseControl,request:CargoSourceReadRequestV1):Promise<Uint8Array|null>}
+\ No newline at end of file
+# stage-clean orphan staged=cargo-pressure-tools/staged/port.new.txt map=None
+--- /dev/null
++++ b/staged/cargo-pressure-tools/staged/port.new.txt
+@@ -0,0 +1,4 @@
++/** 🚦️ Admits at most one durable storage recheck per interval and always settles the completion phase. */
++export function storageRecheckGateV1(intervalMilliseconds:number,now:()=>number,recheck:()=>Promise<void>):(phase:CargoSourceAdmissionRecheckPhaseV1)=>Promise<void>{let last:number|undefined;return async phase=>{if(phase!=="complete"&&last!==undefined&&now()-last<intervalMilliseconds)return;await recheck();last=now();};}
++/** 🔌️ Observes actual compiler cfg and no-follow source bytes without executing a compilation unit. */
++export function actualCargoSourceAdmissionPortV1(environment:Readonly<Record<string,string|undefined>>,cwd:string,storage:NativeStorageReservationV1,now:()=>number=()=>performance.now()):CargoSourceAdmissionPortV1{const cfgs=new Map<string,Promise<readonly string[]>>(),gate=storageRecheckGateV1(schema.definitions.storageRecheck.const.intervalMilliseconds,now,()=>storage.recheck());return{async recheck(control,phase){requireNativeStorageReservationV1(storage,control);await gate(phase);},async cfg(unit,control){requireNativeStorageReservationV1(storage,control);const args=["--print","cfg",...unit.compilerArguments,...unit.compilerFlags,...unit.features.flatMap(feature=>["--cfg","feature="+JSON.stringify(feature)])];if(unit.platform!==null)args.push("--target",unit.platform);if(unit.kind==="proc-macro")args.push("--crate-type=proc-macro");if(unit.kind==="test")args.push("--test");const key=JSON.stringify(args);let pending=cfgs.get(key);if(!pending){pending=captureOwnedCommandV1("rustc",args,cwd,{control,env:rustCompilerExecutionEnvironmentV1(environment),output:{maximumBytes:1048576,maximumLines:65536}}).then(text=>Object.freeze(text.trim().split("\n").map(value=>value.replace(/=(".*")$/u,(_,quoted)=>"="+JSON.parse(quoted)))));cfgs.set(key,pending);pending.catch(()=>{if(cfgs.get(key)===pending)cfgs.delete(key);});}return[...await pending];},async read(path,control,request){requireNativeStorageReservationV1(storage,control);return readPhysicalCargoSourceV1(path,request,control);}};}
+\ No newline at end of file
+# stage-clean orphan staged=cargo-pressure-tools/staged/port.old.txt map=None
+--- /dev/null
++++ b/staged/cargo-pressure-tools/staged/port.old.txt
+@@ -0,0 +1,2 @@
++/** 🔌️ Observes actual compiler cfg and no-follow source bytes without executing a compilation unit. */
++export function actualCargoSourceAdmissionPortV1(environment:Readonly<Record<string,string|undefined>>,cwd:string,storage:NativeStorageReservationV1):CargoSourceAdmissionPortV1{return{async cfg(unit,control){requireNativeStorageReservationV1(storage,control);await storage.recheck();const args=["--print","cfg",...unit.compilerArguments,...unit.compilerFlags,...unit.features.flatMap(feature=>["--cfg","feature="+JSON.stringify(feature)])];if(unit.platform!==null)args.push("--target",unit.platform);if(unit.kind==="proc-macro")args.push("--crate-type=proc-macro");if(unit.kind==="test")args.push("--test");const text=await captureOwnedCommandV1("rustc",args,cwd,{control,env:rustCompilerExecutionEnvironmentV1(environment),output:{maximumBytes:1048576,maximumLines:65536}});return text.trim().split("\n").map(value=>value.replace(/=(".*")$/u,(_,quoted)=>"="+JSON.parse(quoted)));},async read(path,control,request){requireNativeStorageReservationV1(storage,control);await storage.recheck();const bytes=await readPhysicalCargoSourceV1(path,request,control);await storage.recheck();return bytes;}};}
+\ No newline at end of file

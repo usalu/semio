@@ -20,7 +20,7 @@ pub use ::replication::{next_hover, next_selection, validate_state, HoverInput, 
 
 pub use ::replication::{DomainHover, DomainSelection, DomainTopology, HierarchyProvider, HoverSpec, InteractionOutline, InteractionState, InteractionTarget, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
 
-/// 🕹️ One interaction domain an app declares (e.g. "graph", "mesh", "ast", "world"): the target
+/// 🖱️ One interaction domain an app declares (e.g. "graph", "mesh", "ast", "world"): the target
 /// universe/hierarchy shared by both its hover and selection sub-specs. `AppDefinition.interactions`
 /// holds these; `WindowKindDefinition.interactions` references them via `InteractionRef`.
 // 🌱️ `ui_wgpu::LocalizedLabel`/`IconName` gained `ToValue`/`FromValue` (ticket
@@ -64,7 +64,7 @@ impl InteractionDefinition {
 #[value(rename_all = "camelCase")]
 pub struct GranularityDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+    /// 🔖️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub icon_id: IconName,
 }

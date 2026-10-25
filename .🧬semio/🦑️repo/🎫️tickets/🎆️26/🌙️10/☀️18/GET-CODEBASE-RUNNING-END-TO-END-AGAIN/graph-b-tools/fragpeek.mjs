@@ -1,0 +1,10 @@
+import{readFileSync,readdirSync,statSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";import{join}from"node:path";
+const g="/Users/ueli/Documents/semio/.cache/b/g/m/generations";const[want,target]=process.argv.slice(2);
+const ms=readdirSync(join(g,"m")).map(f=>[f,statSync(join(g,"m",f)).mtimeMs]).sort((a,b)=>b[1]-a[1]);const m=JSON.parse(readFileSync(join(g,"m",ms[0][0])));
+const f=JSON.parse(brotliDecompressSync(readFileSync(join(g,"o",m.owners[want].fragment+".json.br"))).toString());
+const t=f.node.targets[target];console.log(Object.keys(t),Object.keys(f.node));
+const inputs=t.inputs;console.log(inputs.length,JSON.stringify(inputs.slice(0,6)),JSON.stringify(inputs.slice(-4)));
+const kinds={};for(const i of inputs){const k=typeof i==="string"?(i.startsWith("{")?i.split("}")[0]+"}":i.slice(0,12)):Object.keys(i).join(",");kinds[k]=(kinds[k]??0)+1;}console.log(kinds);
+const same=Object.entries(f.node.targets).filter(([,x])=>JSON.stringify(x.inputs)===JSON.stringify(inputs)).length;console.log("targets",Object.keys(f.node.targets).length,"with identical inputs",same);
+const distinct=new Set(Object.values(f.node.targets).map(x=>JSON.stringify(x.inputs))).size;console.log("distinct input lists",distinct);
+console.log("namedInputs",Object.keys(f.node.namedInputs??{}).map(k=>k+":"+f.node.namedInputs[k].length).join(" ").slice(0,600));

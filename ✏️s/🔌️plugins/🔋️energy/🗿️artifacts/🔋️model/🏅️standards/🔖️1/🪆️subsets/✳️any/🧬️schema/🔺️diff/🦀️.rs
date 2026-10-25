@@ -14,7 +14,7 @@ extern crate semio_s_plugin_energy_engine_schedule as schedule;
 extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff_patch::Unchanged;
+use crate::diff_patch::{FieldPatch, Unchanged};
 use crate::snapshot::EnergyModelSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::{ApplyCapability, DiffAlgebra, ColdDiffAlgebra, MutationApplyResult, MutationDiff, ColdMutationDiff};

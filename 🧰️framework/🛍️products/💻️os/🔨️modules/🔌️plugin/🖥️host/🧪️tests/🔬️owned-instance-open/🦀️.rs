@@ -26,11 +26,11 @@ fn package_ref(package_id: &str, bytes: &[u8]) -> PackageRef {
 }
 
 fn open_budget() -> Budget {
-    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: u64::MAX, deadline_ms: 8, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
+    Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, u64::MAX, semio_framework_job::default_now_us().unwrap_or(0), 8, 64, 1 << 20, 64)
 }
 
 fn jit_budget() -> Budget {
-    Budget { deadline_ms: 120_000, ..open_budget() }
+    Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, u64::MAX, semio_framework_job::default_now_us().unwrap_or(0), 120_000, 64, 1 << 20, 64)
 }
 
 fn instance_open_event(app_id: &str, config: Vec<u8>) -> Event {
@@ -53,15 +53,15 @@ async fn a_mid_flight_owned_turn_refuses_new_events_instead_of_dropping_them() {
 
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile(&package_ref("semio:neutral-host-fixture", &bytes), &bytes).await.expect("compile plugin component");
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(3), &[], &open_budget()).await.expect("instantiate plugin actor");
-    let one_instruction = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, ..open_budget() };
+    let one_instruction = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, ..open_budget() };
     assert!(matches!(runtime.execute_turn(&mut instance, &[instance_open_event(FIXTURE_EDITOR_APP, Vec::new())], one_instruction, &mut identity).await, Err(TurnFault::FuelExhausted)));
     assert!(instance.turn_in_flight(), "a fuel-yielded turn is mid-flight");
     let refusal = runtime.execute_turn(&mut instance, &[Event::Wake], open_budget(), &mut identity).await.expect_err("a mid-flight turn must refuse new events");
     assert!(format!("{refusal:?}").contains("mid-flight"), "a mid-flight turn must say so, got {refusal:?}");
-    let resumed = runtime.execute_turn(&mut instance, &[], Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000_000, ..open_budget() }, &mut identity).await;
+    let resumed = runtime.execute_turn(&mut instance, &[], Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000_000, ..open_budget() }, &mut identity).await;
     assert!(matches!(resumed, Err(TurnFault::FuelExhausted | TurnFault::DeadlineExceeded)), "resuming with no events continues the same turn rather than refusing it, got {resumed:?}");
     assert!(instance.turn_in_flight(), "the resumed turn is still the same one");
     semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
@@ -72,14 +72,14 @@ const FIXTURE_ARTIFACT_KIND: &str = "fixture.neutral-host-fixture.counter";
 const MINTED_DOCUMENT_ID: &str = "artifact-0123456789abcdef0123456789abcdef";
 
 fn codec_budget() -> Budget {
-    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 8_000_000_000, deadline_ms: 120_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+    Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 8_000_000_000, semio_framework_job::default_now_us().unwrap_or(0), 120_000, 0, 0, 0)
 }
 
 #[semio_framework_async_macros::async_test]
 async fn owned_codec_genesis_answers_on_a_real_plugin_component() {
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile_component(&bytes).expect("compile plugin component");
     let pair = runtime.codec_genesis(&compiled, FIXTURE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("codec.genesis by document schema");
     assert!(!pair.pack.is_empty() && !pair.spr.is_empty(), "codec.genesis produced an empty pair: pack={} spr={}", pair.pack.len(), pair.spr.len());
@@ -89,7 +89,7 @@ async fn owned_codec_genesis_answers_on_a_real_plugin_component() {
 async fn owned_codec_genesis_answers_by_artifact_kind_too() {
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile_component(&bytes).expect("compile plugin component");
     let by_kind = runtime.codec_genesis(&compiled, FIXTURE_ARTIFACT_KIND, MINTED_DOCUMENT_ID, codec_budget()).await.expect("codec.genesis by artifact kind");
     let by_schema = runtime.codec_genesis(&compiled, FIXTURE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("codec.genesis by document schema");
@@ -100,7 +100,7 @@ async fn owned_codec_genesis_answers_by_artifact_kind_too() {
 async fn owned_codec_pack_schema_hash_answers_on_a_real_plugin_component() {
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile_component(&bytes).expect("compile plugin component");
     let hash = runtime.codec_pack_schema_hash(&compiled, FIXTURE_DOCUMENT_SCHEMA, codec_budget()).await.expect("codec.pack-schema-hash by document schema");
     assert_ne!(hash, [0; 32], "a kind with a structural record specification must not answer the zero fingerprint");
@@ -114,7 +114,7 @@ async fn owned_codec_print_mirror_round_trips_a_genesis_pair() {
 
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile_component(&bytes).expect("compile plugin component");
     let pair = runtime.codec_genesis(&compiled, FIXTURE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("codec.genesis");
     let mirror = runtime.codec_print_mirror(&compiled, FIXTURE_DOCUMENT_SCHEMA, &pair.pack, &pair.spr, codec_budget()).await.expect("codec.print-mirror");
@@ -140,7 +140,7 @@ async fn wasmtime_codec_genesis_answers_the_same_pair_as_the_interpreter() {
     assert!(!jit_pair.pack.is_empty() && !jit_pair.spr.is_empty(), "wasmtime codec.genesis produced an empty pair");
     let hash = jit.codec_pack_schema_hash(&compiled, FIXTURE_DOCUMENT_SCHEMA, &jit_budget()).await.expect("wasmtime codec.pack-schema-hash");
     assert_ne!(hash, [0; 32], "a kind with a structural record specification must not answer the zero fingerprint");
-    let owned = OwnedRuntime::new();
+    let owned = OwnedRuntime::new(semio_framework_job::default_now_us);
     let owned_compiled = owned.compile_component(&bytes).expect("compile plugin component");
     let owned_pair = owned.codec_genesis(&owned_compiled, FIXTURE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("owned codec.genesis");
     assert_eq!(jit_pair, owned_pair, "a pure codec export must answer identically under both runtimes");
@@ -173,7 +173,7 @@ async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, s
     let path=fixture_component();
     let bytes = std::fs::read(&path).map_err(|error| format!("read {}: {error}", path.display()))?;
     let runtime = match which {
-        CodecSweepRuntime::Owned => GuestRuntimes::Owned(OwnedRuntime::new()),
+        CodecSweepRuntime::Owned => GuestRuntimes::Owned(OwnedRuntime::new(semio_framework_job::default_now_us)),
         CodecSweepRuntime::Jit => GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.map_err(|error| format!("engine: {error:?}"))?),
     };
     let budget = match which {
@@ -233,7 +233,7 @@ async fn owned_codec_answers_every_call_on_every_staged_component() {
     assert!(failures.is_empty(), "{swept} staged component rows swept, {} failed:\n{}", failures.len(), failures.join("\n"));
 }
 
-const FIXTURE_CODEC_BUDGET: Budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 4_000_000_000, deadline_ms: 30_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
+fn fixture_codec_budget() -> Budget { Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 4_000_000_000, semio_framework_job::default_now_us().unwrap_or(0), 30_000, 0, 0, 0) }
 
 const FIXTURE_DOCUMENT_SCHEMA: &str = "fixture.neutral-host-fixture.counter";
 
@@ -241,17 +241,17 @@ const FIXTURE_DOCUMENT_SCHEMA: &str = "fixture.neutral-host-fixture.counter";
 async fn owned_codec_genesis_completes_under_the_fixture_budget() {
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile_component(&bytes).expect("compile plugin component");
     let started = std::time::Instant::now();
     let pair = runtime
-        .codec_genesis(&compiled, FIXTURE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, FIXTURE_CODEC_BUDGET)
+        .codec_genesis(&compiled, FIXTURE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, fixture_codec_budget())
         .await
         .unwrap_or_else(|error| panic!("codec.genesis({FIXTURE_DOCUMENT_SCHEMA}) on {} ({} bytes) after {:?}: {error}", path.display(), bytes.len(), started.elapsed()));
     assert!(!pair.pack.is_empty() && !pair.spr.is_empty(), "codec.genesis produced an empty pair: pack={} spr={}", pair.pack.len(), pair.spr.len());
     let hashed = std::time::Instant::now();
     let hash = runtime
-        .codec_pack_schema_hash(&compiled, FIXTURE_DOCUMENT_SCHEMA, FIXTURE_CODEC_BUDGET)
+        .codec_pack_schema_hash(&compiled, FIXTURE_DOCUMENT_SCHEMA, fixture_codec_budget())
         .await
         .unwrap_or_else(|error| panic!("codec.pack-schema-hash({FIXTURE_DOCUMENT_SCHEMA}) after {:?}: {error}", hashed.elapsed()));
     assert_ne!(hash, [0; 32], "a kind with a structural record specification must not answer the zero fingerprint");

@@ -6,7 +6,7 @@
 
 use crate::math::{FontKind, MathBox, PlacedItem};
 use crate::text::Font;
-use base64::Engine;
+use semio_framework_io_base64::base64_standard_encode;
 
 //#region 🔖️Options
 #[derive(Clone, Copy, Debug)]
@@ -74,7 +74,7 @@ fn write_image(out: &mut String, data: &[u8], x: f32, y: f32, width: f32, height
     let py = -y * font_size_pt - height * font_size_pt;
     let pw = width * font_size_pt;
     let ph = height * font_size_pt;
-    let encoded = base64::engine::general_purpose::STANDARD.encode(data);
+    let encoded = base64_standard_encode(data);
     out.push_str(&format!(r#"<image x="{px:.3}" y="{py:.3}" width="{pw:.3}" height="{ph:.3}" href="data:image/png;base64,{encoded}"/>"#));
 }
 

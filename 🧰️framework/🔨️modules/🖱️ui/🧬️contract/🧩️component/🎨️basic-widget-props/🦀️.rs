@@ -63,7 +63,7 @@ pub fn packed_text_leaf(value: &str, attribute_values: impl IntoIterator<Item = 
 }
 
 impl TextProps {
-    /// 🧩️ Inverse of the 33-slice pack: `value` then ascending `data_attributes`.
+    /// 🎒️ Inverse of the 33-slice pack: `value` then ascending `data_attributes`.
     pub fn packed_payload(&self) -> String {
         match &self.data_attributes {
             Some(attributes) => packed_text_leaf(self.value.0.as_str(), attributes.iter().map(|(_, value)| value.as_str())),
@@ -255,7 +255,7 @@ pub struct RingProps {
     pub t: f64,
 }
 
-/// 🖼️ Props for `Component::IconSelect`. `on_change` moved to the record's `bindings`.
+/// 🎴️ Props for `Component::IconSelect`. `on_change` moved to the record's `bindings`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]

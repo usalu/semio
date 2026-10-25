@@ -356,14 +356,14 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
     pub fn advance_original(&mut self,  body:usize, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         self.ownership=RetainedCloneProgress::default();
         if self.cancelled || self.closing || !grant.permits_one() {
-            return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
+            {return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};
         }
         let clone_grant = RetainedCloneGrant { maximum_items: 1, ..grant.retained_grant() };
         match self.phase {
             RetainedClonePreparationPhase::Source => {
                 let bytes=RetainedCloneSource::<P>::borrowed_constructor_capacity_bytes::<SnapshotRead<P>>();
-                if (RetainedCloneBirthDemand{capacity_bytes:bytes,depth:1}).admit(clone_grant).is_err(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-                if clone_grant.maximum_copy_bytes<RetainedCloneSource::<P>::borrowed_constructor_copy_bytes::<SnapshotRead<P>>(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+                if (RetainedCloneBirthDemand{capacity_bytes:bytes,depth:1}).admit(clone_grant).is_err(){{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};}
+                if clone_grant.maximum_copy_bytes<RetainedCloneSource::<P>::borrowed_constructor_copy_bytes::<SnapshotRead<P>>(){{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};}
                 let base=self.pending_base.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its original captured base").with_retained_progress(self.ownership))?;
                 match base.admit_retained_clone_source(clone_grant){
                     Ok((source,progress))=>{self.source=Some(source);self.record_progress(progress)?;self.phase=RetainedClonePreparationPhase::MutationSource;},
@@ -373,8 +373,8 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
             }
             RetainedClonePreparationPhase::MutationSource => {
                 let demand=RetainedCloneSource::<M>::owned_constructor_demand::<SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>>();
-                if demand.admit(clone_grant).is_err(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-                if clone_grant.maximum_copy_bytes<RetainedCloneSource::<M>::constructor_copy_bytes(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+                if demand.admit(clone_grant).is_err(){{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};}
+                if clone_grant.maximum_copy_bytes<RetainedCloneSource::<M>::constructor_copy_bytes(){{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};}
                 let mutation=self.pending_mutation.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its original owned mutation").with_retained_progress(self.ownership))?;
                 let authority=self.pending_mutation_authority.take().unwrap_or_else(||SharedControlledRetirement::lease(Arc::clone(self.authority.as_ref().expect("retained original mutation publication authority"))));
                 match RetainedCloneSource::admit_owned(mutation,authority,clone_grant){
@@ -385,7 +385,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
             }
             RetainedClonePreparationPhase::CloneCursor => {
                 let demand=self.edit.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost native clone birth authority").with_retained_progress(self.ownership))?.snapshot_cursor_birth_demand();
-                let progress=match demand.admit(clone_grant){Ok(progress)=>progress,Err(_)=>return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};
+                let progress=match demand.admit(clone_grant){Ok(progress)=>progress,Err(_)=>{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)}};
                 self.clone_cursor=Some(P::retained_clone_cursor());self.record_progress(progress)?;
 
                 self.phase=RetainedClonePreparationPhase::EditCursor;
@@ -394,7 +394,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
             RetainedClonePreparationPhase::EditCursor => {
                 let edit=self.edit.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its original editor authority").with_retained_progress(self.ownership))?;
                 let demand=edit.begin_demand();
-                if demand.admit(clone_grant).is_err(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+                if demand.admit(clone_grant).is_err(){{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};}
                 let(cursor,progress)=edit.begin(clone_grant)?;
                 self.edit_cursor=Some(cursor);
                 let progress=admit_retained_clone_progress(clone_grant,progress,"snapshot clone native edit constructor")?;
@@ -448,7 +448,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
             }
             RetainedClonePreparationPhase::CaptureForeignStepPresence => {
                 let copy=size_of::<Vec<M>>()+size_of::<bool>()+size_of::<RetainedClonePreparationPhase>();
-                if clone_grant.maximum_copy_bytes<copy||clone_grant.maximum_depth==0{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+                if clone_grant.maximum_copy_bytes<copy||clone_grant.maximum_depth==0{{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};}
                 let cursor=self.edit_cursor.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained edit decision cursor is absent").with_retained_progress(self.ownership))?;
                 self.foreign_step_presence=Some(cursor.foreign_step_presence());self.inverse=Some(cursor.take_inverse().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained edit completed without inverse").with_retained_progress(self.ownership))?);let _=cursor.begin_close();self.phase=RetainedClonePreparationPhase::CloseEdit;
                 self.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;
@@ -477,7 +477,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
                 let step = result?;
                 let seal_checkpoint = match step {
                     ArtifactStoreOneItemPreparationStep::Progress(checkpoint,receipt) | ArtifactStoreOneItemPreparationStep::Prepared(checkpoint,receipt) => {admit_retained_clone_progress(clone_grant,receipt,"retained clone preparation original native seal")?;checkpoint},
-                    ArtifactStoreOneItemPreparationStep::Blocked => return Ok(ArtifactStoreOneItemPreparationStep::Blocked),
+                    ArtifactStoreOneItemPreparationStep::Blocked => {return Ok(ArtifactStoreOneItemPreparationStep::Blocked)},
                 };
                 self.checkpoint = self.merged_seal_checkpoint(seal_checkpoint)?;
                 if matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(..)) {
@@ -487,7 +487,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
             }
             RetainedClonePreparationPhase::RecordForeignStepPresence => {
-                let copy=size_of::<bool>()+size_of::<RetainedClonePreparationPhase>();if clone_grant.maximum_copy_bytes<copy||clone_grant.maximum_depth==0{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+                let copy=size_of::<bool>()+size_of::<RetainedClonePreparationPhase>();if clone_grant.maximum_copy_bytes<copy||clone_grant.maximum_depth==0{{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};}
                 let presence=self.foreign_step_presence.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained edit foreign-step decision is absent").with_retained_progress(self.ownership))?;
                 if !self.sealer.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original sealer is absent before declaration").with_retained_progress(self.ownership))?.record_foreign_step_presence(presence){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared owner is absent before declaration").with_retained_progress(self.ownership));}
                 self.phase=RetainedClonePreparationPhase::Prepared;self.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;

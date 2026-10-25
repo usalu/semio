@@ -21,7 +21,7 @@ export type SessionId = string;
 /** 📱️ A device a session runs on. */
 export type DeviceId = string;
 
-/** 🆔️ Identity of one query submission. */
+/** 🪪️ Identity of one query submission. */
 export type QueryId = string;
 
 /** 📑️ Opaque continuation token for a paged or subscribed read. */
@@ -237,14 +237,14 @@ export interface CommandDescriptor {
   readonly offline: OfflinePolicy;
 }
 
-/** 📇️ What one query kind declares. */
+/** 🔎️ What one query kind declares. */
 export interface QueryDescriptor {
   readonly kind: string;
   readonly version: number;
   readonly projection: string;
 }
 
-/** 🧾️ The declarative half of a server module. */
+/** 📋️ The declarative half of a server module. */
 export interface ModuleManifest {
   readonly id: string;
   readonly commands: readonly CommandDescriptor[];

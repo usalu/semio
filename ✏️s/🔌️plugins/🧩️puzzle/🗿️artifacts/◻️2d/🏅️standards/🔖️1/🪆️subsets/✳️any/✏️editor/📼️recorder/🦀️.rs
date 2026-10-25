@@ -119,7 +119,7 @@ impl Puzzle2dRecorder {
     /// ✍️ Records one concrete kind: its diff on the current document is applied centrally and the kind joins the rows.
     /// A kind the document refuses (an Error or Fatal outcome) or that changes nothing is dropped; answers whether it was kept.
     pub fn record(&mut self, mutation: Puzzle2dMutation) -> bool {
-        let (diff, messages) = Mutation::<Puzzle2dSnapshot>::diff(&mutation, self.working.as_ref()).into_parts();
+        let (diff, messages) = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation, self.working.as_ref()).into_parts();
         let refused = messages.iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error);
         if refused || <Puzzle2dDiff as DiffAlgebra<Puzzle2dSnapshot>>::is_empty(&diff) {
             <Puzzle2dDiff as MutationDiff<Puzzle2dSnapshot>>::retire_cold(diff);

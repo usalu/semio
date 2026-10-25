@@ -5,7 +5,8 @@ use crate::{raster_action, ui_label, ui_value_list, ui_value_map, ui_value_text}
 use semio_s_artifact_raster_raster_model::{find_layer, layer_name, layer_node_id, layer_opacity, layer_blend_mode, layer_transform, layer_visible, layer_locked, layer_protection};
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot as RasterDocument;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{InputKind, Trigger};
+use semio_framework_plugin::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::activation_target;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LabelText;

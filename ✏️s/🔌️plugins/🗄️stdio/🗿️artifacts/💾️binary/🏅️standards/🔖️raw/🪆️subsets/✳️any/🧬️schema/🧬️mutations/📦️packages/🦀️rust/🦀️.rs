@@ -67,16 +67,14 @@ pub mod standards {
                         pub use semio_s_artifact_stdio_binary_snapshot::standards::v_raw::subsets::any::io::binary::snapshot;
                         #[path = "../../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
-                        #[path = "../../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
-                        pub mod diff;
+                        pub use semio_s_artifact_stdio_binary_snapshot::standards::v_raw::subsets::any::io::binary::diff;
                     }
                     #[path = "."]
                     pub mod text {
                         pub use semio_s_artifact_stdio_binary_snapshot::standards::v_raw::subsets::any::io::text::snapshot;
                         #[path = "../../../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
-                        #[path = "../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
-                        pub mod diff;
+                        pub use semio_s_artifact_stdio_binary_snapshot::standards::v_raw::subsets::any::io::text::diff;
                     }
                 }
             }

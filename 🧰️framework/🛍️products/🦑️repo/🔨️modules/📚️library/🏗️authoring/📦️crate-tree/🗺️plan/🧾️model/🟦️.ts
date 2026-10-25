@@ -3,7 +3,7 @@ import type { CarveSlice, ModuleDecl } from "../../🧱️decl-tree/🟦️.ts";
 import type { MirrorImport } from "../../📝️render/🟦️.ts";
 import type { RustModuleNode, RustSourceTree } from "../../🌳️module-tree/🟦️.ts";
 import type { CrateBudget } from "../💰️budget/🟦️.ts";
-import type { TestTransformOptions } from "../../🧪️test-closure/🟢️shared/🟦️.ts";
+import type { TestTransformOptions } from "../../🧪️test-closure/🟢️harness/🟦️.ts";
 
 /** 📐️ Measured closure of one crate in one cfg. */
 export type CrateMeasure = Readonly<{ files: number; bytes: number; lines: number; embedded: number; paths: readonly string[]; sourcePaths: readonly string[]; entries: ReadonlyMap<string, FileMeasure> }>;
@@ -56,7 +56,7 @@ export type ArtifactCratePlan = {
   readonly packing: PackingStats;
 };
 
-/** ✂️ An edit of the artifact root; edits that replace a carved declaration remember it so the facade can weave children into the replacement. */
+/** ✏️ An edit of the artifact root; edits that replace a carved declaration remember it so the facade can weave children into the replacement. */
 export type RootEdit = { readonly start: number; readonly end: number; readonly text: string; readonly anchor?: { readonly eff: readonly string[]; readonly crate: string; readonly visibility: string; readonly component: boolean } };
 
 /** 🧵️ A module whose mount was cut out of its parent because the parent never uses it; the facade exports it at its original path. */

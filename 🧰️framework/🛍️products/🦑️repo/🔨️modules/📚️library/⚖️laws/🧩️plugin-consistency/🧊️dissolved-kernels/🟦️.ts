@@ -12,7 +12,7 @@ import { policyAllRustFiles, policyNormalizeRelPath } from "../🏛️foundation
  * constructor or an `InferredField::{plan,dep_input,compute}` body, never as durable state. */
 const POLICY_DISSOLVED_EPHEMERAL_REP_TYPES = ["HalfedgeMesh", "BrepEngineHost", "DrawingStore", "DrawingEngine", "EngineCache"] as const;
 
-/** 🧊️ Canonical compute ownership and its retained plugin host constructor authority. */
+/** ⚙️ Canonical compute ownership and its retained plugin host constructor authority. */
 const POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS = ["🧰️framework/🔨️modules/◻️2d/🧮️compute", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin"] as const;
 
 /** 🧭️ Constructor authority follows complete workspace-relative directory segments. */
@@ -22,7 +22,7 @@ function policyEngineCacheConstructorOwner(relPath: string): boolean {
   return POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS.some((dir) => normalized === dir || normalized.startsWith(`${dir}/`));
 }
 
-/** 🧊️ Shrink-only. Every entry is a known tier-(d) escape awaiting its dissolution wave. */
+/** 📉️ Shrink-only. Every entry is a known tier-(d) escape awaiting its dissolution wave. */
 const POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST = new Set<string>([
   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs",
   "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🦀️.rs",
@@ -30,7 +30,7 @@ const POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST = new Set<string>([
   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖥️host/🦀️.rs",
 ]);
 
-/** 🧊️ A durable field or static holding an ephemeral representation — measures REACH, not mutability.
+/** ⏸️ A durable field or static holding an ephemeral representation — measures REACH, not mutability.
  *
  * A `static HOST: OnceLock<BrepEngineHost>` is write-once, so every mutability-based rule passes it,
  * and it is still a plugin holding a handle to host-owned engine state for the process lifetime.
@@ -74,7 +74,7 @@ function policyDissolvedRepEscapeBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** 🧊️ `EngineCache` construction belongs to canonical compute or the retained plugin host.
+/** 🚧️ `EngineCache` construction belongs to canonical compute or the retained plugin host.
  * Derived values outside those owners belong in a 💡️inference facet keyed by DepHash;
  * ephemeral working representations are rebuilt through EngineRep. */
 function policyDissolvedEngineCacheScopeBreaches(repoRoot: string): BreachRecord[] {
@@ -97,7 +97,7 @@ function policyDissolvedEngineCacheScopeBreaches(repoRoot: string): BreachRecord
   return breaches;
 }
 
-/** 🧊️ A whole-document-replace triad directory — banned vocabulary with no replacement.
+/** 📁️ A whole-document-replace triad directory — banned vocabulary with no replacement.
  *
  * Whole-document replace is not expressible as an in-history mutation; it goes through
  * `ArtifactStore::reset`, outside history. A directory-level check catches what an identifier grep
@@ -222,14 +222,14 @@ export function policyCanonicalChildKindBreaches(repoRoot: string): BreachRecord
   return breaches;
 }
 
-/** 🧊️ Shrink-only. Confirmed, justified exceptions to the dissolved-kind redefinition ban below, keyed
+/** 🔏️ Shrink-only. Confirmed, justified exceptions to the dissolved-kind redefinition ban below, keyed
  * `<relPath>:<TypeName>` (mirrors `POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST`'s shape). Empty at seed time —
  * the ~25-plugin migration wave that authored this ticket's frozen stdio roster already eliminated
  * every known duplicate of these 18 shapes; this allowlist exists only for a future, deliberately-
  * justified exception, never as a place to launder new debt. */
 const POLICY_DISSOLVED_KIND_REDEFINITION_ALLOWLIST = new Set<string>([]);
 
-/** 🧊️ The 18 canonical stdio `🧿️semio` subset snapshot types (ticket
+/** 📸️ The 18 canonical stdio `🧿️semio` subset snapshot types (ticket
  * 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's frozen roster, `📓️status.md` "ROSTER FROZEN") — the
  * ONE shape each of these content kinds may take repo-wide. */
 const POLICY_DISSOLVED_KIND_CANONICAL_TYPES = [
@@ -292,7 +292,7 @@ export function policyDissolvedKindRedefinitionBreaches(repoRoot: string): Breac
   return breaches;
 }
 
-/** ⚖️Checks canonical artifact and child kinds and prevents duplicate shared content declarations. */
+/** ✅️Checks canonical artifact and child kinds and prevents duplicate shared content declarations. */
 export function policyCompositionBreaches(repoRoot: string): BreachRecord[] {
   return [
     ...policyCanonicalArtifactKindBreaches(repoRoot),

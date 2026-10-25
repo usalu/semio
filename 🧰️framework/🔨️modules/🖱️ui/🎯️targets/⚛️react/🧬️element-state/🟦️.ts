@@ -2,9 +2,9 @@ import { type UiState, type UiStatus, type UiElementState, elementStateAttribute
 import { isElementId } from "@semio-tech/ui/elements/ElementId";
 
 export interface UiElementStateProps {
-  /** @default "normal" */
+  /** 🚦️ Element state. @default "normal" */
   state?: UiState;
-  /** @default "idle" */
+  /** ⏳️ Element status. @default "idle" */
   status?: UiStatus;
   /** 🖱️ Authored render-hovered flag; composes with (never replaces) live CSS `:hover`. @default false */
   hover?: boolean;
@@ -27,7 +27,7 @@ export function useElementState(props: UiElementStateProps): {
 /** 🎉️ Default lifetime of a transient celebration stamp — two burst cycles of --celebrate-border-duration. */
 export const CELEBRATE_STAMP_DURATION_MS = 2400;
 
-/** 🎉️ Imperatively stamps `data-celebrated="true"` on `target` for `durationMs`, then removes it —
+/** 🎯️ Imperatively stamps `data-celebrated="true"` on `target` for `durationMs`, then removes it —
  * the transient counterpart of an authored `state: "celebrating"`. Unmanaged by React (like the
  * introduction engine's `data-introduced` stamp) so re-renders can't clobber it. Returns a cancel
  * function that un-stamps immediately. */
@@ -41,7 +41,7 @@ export function celebrateElement(target: Element, durationMs = CELEBRATE_STAMP_D
   };
 }
 
-/** 🎉️ Imperatively stamps `data-celebrated="true"` on every match of `selector` for `durationMs`,
+/** 🔎️ Imperatively stamps `data-celebrated="true"` on every match of `selector` for `durationMs`,
  * then removes it — the selector form of {@link celebrateElement}. Returns a cancel that un-stamps
  * every match immediately. `root` scopes the search (e.g. a shell's own root) — omitted, searches the
  * whole document as before; matters because element ids/aliases are not guaranteed unique across
@@ -51,7 +51,7 @@ export function celebrateElements(selector: string, durationMs = CELEBRATE_STAMP
   return () => cancels.forEach((cancel) => cancel());
 }
 
-/** 🎉️ Imperatively stamps `data-celebrated="true"` on every mounted UI element id (and every
+/** 🎊️ Imperatively stamps `data-celebrated="true"` on every mounted UI element id (and every
  * element carrying a valid `data-element-alias`) for `durationMs` — the tour-finale counterpart of
  * {@link celebrateElements}. Skips the introduction chrome itself (`ui.introduction.*`) so the
  * dismiss unmount doesn't race the stamp. Returns a cancel that un-stamps every match immediately.

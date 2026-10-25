@@ -27,6 +27,21 @@ pub struct LayoutExportToolJob {
 }
 
 impl LayoutExportToolJob {
+    pub(super) fn from_payload(operation: Operation, payload: LayoutExportToolPayload) -> Self {
+        let kind = payload.request.kind;
+        let name = output_name(&payload.request);
+        let inner = LayoutExportJob::from_admitted(operation, (operation.operation, operation.generation), payload.request, payload.output_chunks);
+        Self { inner: Some(inner), rejected_download: None, pending_download: None, slot: LayoutPublicationSlot::default(), pending_operation: None, pending_request: None, pending_output_chunks: None, completion: payload.completion, kind, name, raw_input: None, raw_bytes: Vec::new(), raw_page_cursor: 0, raw_validated: true, completed: false }
+    }
+
+    pub(super) fn from_wire_payload(operation: Operation, payload: LayoutExportToolPayload, input: RetainedToolWireInput) -> Result<Self, ToolJobFactoryError> {
+        let kind = payload.request.kind;
+        let mut job = Self { inner: None, rejected_download: None, pending_download: None, slot: LayoutPublicationSlot::default(), pending_operation: Some(operation), pending_request: Some(payload.request), pending_output_chunks: Some(payload.output_chunks), completion: payload.completion, kind, name: String::new(), raw_input: None, raw_bytes: Vec::new(), raw_page_cursor: 0, raw_validated: false, completed: false };
+        job.raw_bytes.try_reserve_exact(input.declared_bytes()).map_err(|_| ToolJobFactoryError::new("layout export retained decoder capacity was not admitted"))?;
+        job.raw_input = Some(input);
+        Ok(job)
+    }
+
     fn materialize_decoded_job(&mut self,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation)) -> bool {
         if self.inner.is_some() {
             return true;

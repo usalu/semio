@@ -11,7 +11,7 @@ import { learnerTag } from "@semio-tech/course";
 import { HomeScreen, boardExcerpt, homeCells, homePages, courseText, type CourseSession } from "@semio-tech/course-react";
 import { COURSE, Home, LEARNER, PAGES, PREFERENCES, QUIZZES, STATE, atViewport, boardOf, fixture, pane, stubSession } from "../../🛠️home-grid-kit/🟦️.tsx";
 import followedLayouts from "../../../🧫️fixtures/👀️follow/🔣️.json";
-import { DESKTOP_CELLS_OF_THE_REFERENCE, TABLET_CELLS_OF_THE_REFERENCE, cards } from "../🟣️shared/🟦️.tsx";
+import { DESKTOP_CELLS_OF_THE_REFERENCE, TABLET_CELLS_OF_THE_REFERENCE, cards } from "../🟣️harness/🟦️.tsx";
 
 /** 🔷 Registers the replays language agnostic hierarchy tests of the 🏠️ home overview suite. */
 export function registerReplaysLanguageAgnosticHierarchyTests(): void {

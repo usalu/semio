@@ -5,7 +5,7 @@ use super::*;
 //#region 🔖️Outcome
 impl Dispatcher {
     //#region 🎬️FireApi
-    /// 🎬️ Fires `id`'s binding for `trigger`, if any — building the [`UiIntent`] from the node's own
+    /// 🔥️ Fires `id`'s binding for `trigger`, if any — building the [`UiIntent`] from the node's own
     /// [`ListenerSet`] addressing. `None` if there's no such binding, or if the listener's own captured
     /// revision is already stale against the tree it's being resolved in (see [`is_stale`]).
     fn fire(&mut self, tree: &DispatchTree, id: FrameNodeId, trigger: Trigger, input: Option<UiValue>) -> Option<UiIntent> {
@@ -32,7 +32,7 @@ impl Dispatcher {
         })
     }
 
-    /// 🎬️ Fires a binding on behalf of an already-captured node, additionally rejecting it if the
+    /// 🧯️ Fires a binding on behalf of an already-captured node, additionally rejecting it if the
     /// *capture's own* recorded revision (from when it started, possibly frames ago) is now stale
     /// against the current tree — the case [`fire`] alone cannot catch, since `id`'s own
     /// [`ListenerSet::revision`] is always in sync with the tree that produced it, never with how long

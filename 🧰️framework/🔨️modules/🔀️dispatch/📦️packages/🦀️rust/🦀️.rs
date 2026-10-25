@@ -23,7 +23,7 @@ pub fn dyn_enum(attr: TokenStream, item: TokenStream) -> TokenStream {
     component::expand_dyn_enum_attribute(attr.into(), item.into()).unwrap_or_else(|error| error.to_compile_error()).into()
 }
 
-/// 🗃️ `dyn_enum_close! { enum Members: Trait { Text(TextStore), Sketch(SketchStore) } }` — the enum,
+/// 📪️ `dyn_enum_close! { enum Members: Trait { Text(TextStore), Sketch(SketchStore) } }` — the enum,
 /// its `From<VariantTy>` impls, and the delegating `impl Trait for Members`. Named `dyn_enum_close`,
 /// NOT `dyn_enum` — Rust's macro namespace is flat across attribute/derive/function-like macros, so an
 /// attribute macro and a function-like macro cannot share one name in the same crate (verified: `E0428

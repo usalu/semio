@@ -6,17 +6,21 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
 use semio_framework_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep};
+use semio_framework_value::retained_clone::{RetainedCloneRef, RetainedCloneStep};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::sync::Arc;
 use std::mem::size_of;
 
 const PREFIX: &str = "stdio-semio-mesh-set-vertex";
 
 pub(super) fn route(_prefix: &'static str) -> Option<NativeEditPreparationRoute<SemioMeshSnapshot, SemioMeshMutation>> {
-    Some(NativeEditPreparationRoute::new(MeshVertexEdit::recognizes, Arc::new(app_store::PagedOneItemPreparationFactory::<SemioMeshSnapshot, SemioMeshMutation, MeshVertexEdit>::default())))
+    None
 }
 
 #[derive(Default)]
 pub(super) struct MeshVertexEdit {
+    closing: bool,
     mesh_index: usize,
     primitive_index: usize,
     mesh_matches: usize,
@@ -97,9 +101,31 @@ impl PagedOneItemEdit<SemioMeshSnapshot, SemioMeshMutation> for MeshVertexEdit {
         value.mesh_id.len().checked_add(value.primitive_id.len()).and_then(|bytes| bytes.checked_add(size_of::<usize>() + size_of::<SemioPoint3>())).ok_or_else(|| format!("{PREFIX}-payload-overflow"))
     }
 
-    fn advance(&mut self, post: &mut SemioMeshSnapshot, mutation: &SemioMeshMutation, grant: RetainedCloneGrant) -> Result<PagedOneItemEditStep<SemioMeshMutation>, ValueError> {
+    fn advance_demands(&self, _before: RetainedCloneRef<'_, SemioMeshSnapshot>, _mutation: RetainedCloneRef<'_, SemioMeshMutation>, _post: &SemioMeshSnapshot, _body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand::default())
+    }
+
+    fn advance(&mut self, _before: RetainedCloneRef<'_, SemioMeshSnapshot>, mutation: RetainedCloneRef<'_, SemioMeshMutation>, post: &mut SemioMeshSnapshot, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<SemioMeshMutation>, ValueError> {
+        let mutation = mutation.get();
         let target = Self::target(mutation)?;
         if self.scanned { self.apply(post, target, grant) } else { self.scan(post, target, grant) }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_demands(&self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<SemioMeshMutation>, _body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand::default())
+    }
+
+    fn close_step(&mut self, _mutations: &dyn ArtifactOwnedValueRetirementFactory<SemioMeshMutation>, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        self.closing = true;
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
     }
 }
 

@@ -87,3 +87,10 @@ impl DagOutputCandidates for DagHost{
         Some(DagRefusalView{source:self.graph.handle_key_map.get(&source)?,source_types:self.graph.engine.handles.get(&source).map_or(&[],|handle|handle.value_types.as_slice()),target:self.graph.handle_key_map.get(&target)?,target_types:self.graph.engine.handles.get(&target).map_or(&[],|handle|handle.value_types.as_slice())})
     }
 }
+
+impl DagHost {
+    /// 🔭️ Switches the wheel-zoom level-of-detail state of the viewport and the graph together.
+    pub fn set_wheel_zoom_active(&mut self, active: bool) {
+        dag_set_wheel_zoom_active(&mut self.viewport, &mut self.graph, active)
+    }
+}

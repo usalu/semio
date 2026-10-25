@@ -27,7 +27,7 @@ pub enum Liveness {
     Assertive,
 }
 
-/// ♿️ The accessibility intent every node carries once, resolved correctly by every renderer. No
+/// 📕️ The accessibility intent every node carries once, resolved correctly by every renderer. No
 /// `role` field: the semantic role is implied by [`crate::Component`] — a `Component::Button` is a
 /// button on every renderer, so naming the role again here would just be a second, driftable source
 /// of truth.

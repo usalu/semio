@@ -8,7 +8,7 @@ use ui_render::{BackendError, LossReason};
 
 //#region 🔖️VkError
 
-/// ⚠️ This crate's internal failure set — richer than `ui_render::BackendError` needs at the trait
+/// ❌️ This crate's internal failure set — richer than `ui_render::BackendError` needs at the trait
 /// boundary (mirrors the Metal target's `MetalGraphicsError`/`impl From<MetalGraphicsError> for
 /// BackendError`), so callers construct this where Vulkan-specific detail matters (e.g. which
 /// resource table an unsupported atlas byte density came from) and convert at the `GraphicsBackend`
@@ -46,7 +46,7 @@ impl From<VulkanGraphicsError> for BackendError {
     }
 }
 
-/// ⚠️ Maps a raw `vk::Result` failure code onto the contract's `BackendError`. `SUCCESS`/
+/// 🏷️ Maps a raw `vk::Result` failure code onto the contract's `BackendError`. `SUCCESS`/
 /// `SUBOPTIMAL_KHR` are not failures at the Vulkan level (the latter is handled as a recreation
 /// trigger at the call site, never routed through here) — this function is only ever reached with a
 /// genuine error code.

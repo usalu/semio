@@ -2,13 +2,13 @@
 import { IMPLEMENTATIONS, TEST_MODES, type ComparisonProfile, type FeatureStep, type FeatureScenario, type TestMode, type Implementation } from "../🔌️adapter/🟦️.ts";
 import { TEST_LEVELS, type TestLevel } from "../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 //#region 🥒️Gherkin
-/** 🥒️ One `Given`/`When`/`Then` step. `And`/`But` inherit the previous step's canonical keyword. */
+/** 🪜️ One `Given`/`When`/`Then` step. `And`/`But` inherit the previous step's canonical keyword. */
 
 
-/** 🥒️ One executable scenario, after `Scenario Outline` expansion. */
+/** 📑️ One executable scenario, after `Scenario Outline` expansion. */
 
 
-/** 🥒️ The parsed, language-neutral behavioural contract of one test case. */
+/** 🧪️ The parsed, language-neutral behavioural contract of one test case. */
 export type ParsedFeature = Readonly<{
   name: string;
   description: string;
@@ -57,7 +57,7 @@ function substitute(text: string, row: Readonly<Record<string, string>>): string
 type FeatureBlock = { kind: "none" | "feature" | "background" | "scenario" | "outline"; name: string; tags: string[]; steps: FeatureStep[]; examples: Record<string, string>[]; line: number };
 
 /**
- * 🥒️ Parses the repository's restricted Gherkin profile into one owned plan. The coordinator parses
+ * 📖️ Parses the repository's restricted Gherkin profile into one owned plan. The coordinator parses
  * a feature exactly once and hands every native host the resulting plan — no host re-reads or
  * reinterprets `component.feature`, which is what keeps five languages provably in agreement.
  * @see https://cucumber.io/docs/gherkin/reference/

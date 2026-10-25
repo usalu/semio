@@ -17,7 +17,7 @@ import {readFileSync,writeFileSync,mkdirSync} from "node:fs";
 import {join} from "node:path";
 import {createHash} from "node:crypto";
 import type {PrintFontMetrics,PrintFontPositionTable} from "./📏️metrics/🟦️.ts";
-import { isMainModuleV1 } from "../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🔎️ Derives only the tracked Anta Latin default shaping and advance tables. */
 export function derivePrintSansMetrics(workspace:string):PrintFontMetrics {

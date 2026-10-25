@@ -1,7 +1,7 @@
 /** ⚖️ App channel replication commands: the merge-policy authority, conflict resolution and the document-wide presence roster. */
 
 import type { ConflictResolution, MergePolicy } from "@semio-tech/framework";
-import { conflictResolutionAsU8, mergePolicyAsU8 } from "../../🎠️kernel/🔄️merge-outcome/🟦️.ts";
+import { conflictResolutionAsU8, mergePolicyAsU8 } from "../../🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts";
 import type { ArtifactPresencePeer } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import { encodePresencePeer } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import type { AppFrameValue } from "../../🪢️wire-contracts/🟦️.ts";

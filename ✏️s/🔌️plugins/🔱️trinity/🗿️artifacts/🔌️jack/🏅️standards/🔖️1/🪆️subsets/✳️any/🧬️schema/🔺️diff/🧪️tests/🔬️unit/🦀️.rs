@@ -8,6 +8,7 @@ use ::semio_framework_schema::ArtifactSchema;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 #[allow(unused_imports)]
 use protocol::{DiffAlgebra, MutationDiff};
+use protocol::ColdMutationDiff;
 use crate::standards::v1::subsets::any::schema::diff::*;
 
 #[semio_framework_async_macros::async_test]

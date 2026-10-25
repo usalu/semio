@@ -208,7 +208,7 @@ fn durable_byte_carriers_preserve_octets_under_the_declared_ownership_ceiling() 
         let (view, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| DslField::projection_view(&member, &[6]).unwrap());
         assert!(matches!(view, semio_framework_dsl_record::native_encoding::FieldProjectionView::IntrinsicBytes(octets) if octets.as_ptr() == member.recovery_pack.as_ptr() && octets.len() == bytes.len()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        assert_eq!(<DurableOwnedGroupMemberV1 as ValueFromValue>::from_value(value).unwrap(), member);
+        assert_eq!(<DurableOwnedGroupMemberV1 as semio_framework_value::FromValue>::from_value(value).unwrap(), member);
 let unbound = DurableUnboundOneItemOutcomeV1 {
             schema: DURABLE_OWNED_GROUP_UNBOUND_OUTCOME_SCHEMA_V1.into(),
             recovery_schema: PARENT_RECOVERY_SCHEMA.into(),

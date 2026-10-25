@@ -8,10 +8,6 @@ pub(super) mod input;
 pub(super) mod output;
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn required<'v>(entries:&'v[(String,DslValue)],key:&str,control:&mut NativeDecodeControl<'_>)->Result<&'v DslValue,ValueError>{DslValue::field_controlled(entries,key,control)?.ok_or_else(||invalid("missing Part21 field"))}
-semio_framework_value::artifact_retire_struct!(Part21Decimal{negative,coefficient,scale,exponent});
-semio_framework_value::artifact_retire_struct!(Part21Instance{id,entities});
-semio_framework_value::artifact_retire_struct!(Part21Header{file_description,file_name,file_schema});
-semio_framework_value::artifact_retire_struct!(Part21Document{header,instances});
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

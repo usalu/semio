@@ -9,14 +9,14 @@ import type {RepositoryCachePartitionIdV1} from "../📦️budget/🟦️.ts";
 
 /** 🧵️ Names the stores one long-lived custody session keeps open: cache partitions and, optionally, the compiler workspace of one build configuration. */
 export type RepositoryCustodyRequestV1=Readonly<{workspace:string;invocation:ScriptInvocation;control:ResourceLeaseControl;partitions:readonly RepositoryCachePartitionIdV1[];compiler?:Readonly<{mode:BuildMode;environment:Readonly<Record<string,string|undefined>>}>}>;
-/** 🧵️ Runs many requests inside one retained custody: every nested store open inside `run` reuses the held stores instead of opening and closing the images again. */
+/** 🦑️ Runs many requests inside one retained custody: every nested store open inside `run` reuses the held stores instead of opening and closing the images again. */
 export type RepositoryCustodySessionV1=Readonly<{
  run<T>(request:(control:ResourceLeaseControl)=>Promise<T>,options?:Readonly<{maximumMilliseconds?:number;signal?:AbortSignal}>):Promise<T>;
  close():Promise<void>;
  closed:Promise<void>;
 }>;
 
-/** 🧵️ Opens the requested stores once, in their canonical nesting order, and keeps them (with the same storage, lease and cancellation guarantees as the scoped opens) until `close`; each request runs in a cancellable refinement of the innermost store phase. */
+/** 🔓️ Opens the requested stores once, in their canonical nesting order, and keeps them (with the same storage, lease and cancellation guarantees as the scoped opens) until `close`; each request runs in a cancellable refinement of the innermost store phase. */
 export function openRepositoryCustodySessionV1(request:RepositoryCustodyRequestV1):Promise<RepositoryCustodySessionV1>{
  requireIssuedResourceControlInvocationV1(request.control,request.invocation);
  return new Promise<RepositoryCustodySessionV1>((resolve,reject)=>{

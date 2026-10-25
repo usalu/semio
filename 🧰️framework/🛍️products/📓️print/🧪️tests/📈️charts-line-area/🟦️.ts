@@ -45,7 +45,7 @@ const grid = (value: number): number => {
   return value === 0 ? 0 : Math.round(value * factor) / factor;
 };
 
-/** 🎯️ Every `geometry/path` record of one compiled fixture, in emission order. */
+/** 📂️ Every `geometry/path` record of one compiled fixture, in emission order. */
 async function paths(ctx: AdapterContext, fixture: string): Promise<number[][]> {
   const records = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://📈️charts-line-area/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return roundProbeNumbers(records, DECIMALS)
@@ -55,7 +55,7 @@ async function paths(ctx: AdapterContext, fixture: string): Promise<number[][]> 
 // #endregion 🧫️Vectors
 
 // #region 🔮️Oracles
-/** 🔮️ The vertex list d3-shape's own line generator writes for one curve. */
+/** 📝️ The vertex list d3-shape's own line generator writes for one curve. */
 function vertices(values: readonly number[], curve: CurveFactory, f: Frame): number[] {
   const x = scaleLinear().domain([TIME[0]!, TIME[TIME.length - 1]!]).range([f.x0, f.x1]);
   const y = scaleLinear().domain([0, 10]).range([f.y0, f.y1]);
@@ -68,7 +68,7 @@ function vertices(values: readonly number[], curve: CurveFactory, f: Frame): num
     .map(grid);
 }
 
-/** 🔮️ The layer boundaries d3-shape's stack produces, mapped through the value scale. */
+/** 🥞️ The layer boundaries d3-shape's stack produces, mapped through the value scale. */
 function layerBoundaries(f: Frame): { upper: number[][]; lower: number[][] } {
   const table = TIME.map((_, index) => ({ Alpha: ALPHA[index]!, Beta: BETA[index]! }));
   const series = stack<Record<string, number>>().keys(["Alpha", "Beta"])(table);
@@ -98,11 +98,11 @@ const curveScenario = (fixture: string, curve: CurveFactory) => ({
 export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
-    /** 🔮️/🎯️ d3-shape's curveLinear against the vertices the line family emitted. */
+    /** 📏️/🎯️ d3-shape's curveLinear against the vertices the line family emitted. */
     "linear": curveScenario("linear.tex", curveLinear),
-    /** 🔮️/🎯️ d3-shape's curveStepAfter against the vertices the line family emitted. */
+    /** 🪜️/🎯️ d3-shape's curveStepAfter against the vertices the line family emitted. */
     "step-after": curveScenario("step-after.tex", curveStepAfter),
-    /** 🔮️/🎯️ d3-shape's curveStepBefore against the vertices the line family emitted. */
+    /** 👣️/🎯️ d3-shape's curveStepBefore against the vertices the line family emitted. */
     "step-before": curveScenario("step-before.tex", curveStepBefore),
     "area-stack": {
       /** 🔮️ d3-shape's stack boundaries for both layers. */

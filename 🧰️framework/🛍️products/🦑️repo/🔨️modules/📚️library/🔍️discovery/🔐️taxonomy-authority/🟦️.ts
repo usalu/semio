@@ -67,7 +67,7 @@ export function canonicalFilenamesForKind(kindId: string, taxonomy: Taxonomy = l
   return taxonomyFileKindFilenamesV1(kindId,taxonomy);
 }
 
-/** 📄️ Returns the single canonical filename for a one-extension file kind. */
+/** 🔂️ Returns the single canonical filename for a one-extension file kind. */
 export function canonicalFilenameForKind(kindId: string, taxonomy: Taxonomy = loadTaxonomy()): string {
   return taxonomySingleFileKindFilenameV1(kindId,taxonomy);
 }
@@ -323,7 +323,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   return audit.problems;
 }
 
-/** 🧩️ Renders unchanged frozen adapter bytes only after validating the complete current no-follow package. */
+/** 📺️ Renders unchanged frozen adapter bytes only after validating the complete current no-follow package. */
 export function semanticPackageAdapterPreview(repoRoot: string, packageId: "jcoprobe-guest", taxonomy: Taxonomy = loadTaxonomy()): readonly SemanticPackageAdapter[] {
   const current = parseCurrentJcoPackageDestination(taxonomy.generatorContracts["jco-package-adapter"]?.currentPackageDestination);
   const catalog = semanticPackageProjectionCatalog(repoRoot, taxonomy), frozen = catalog?.packages.find((row) => row.id === packageId);
@@ -452,7 +452,7 @@ export function pathIsExcluded(repoRoot: string, candidate: string, taxonomy: Ta
 
 const opaquePrefixCache = new WeakMap<object, { readonly size: number; readonly prefixes: ReadonlySet<string> }>();
 
-/** 🚫️ The normalized opaque path prefixes of a taxonomy, derived once per exclusion table so a membership test costs one lookup per path segment instead of one pattern rewrite per exclusion. */
+/** 🛤️ The normalized opaque path prefixes of a taxonomy, derived once per exclusion table so a membership test costs one lookup per path segment instead of one pattern rewrite per exclusion. */
 function opaquePrefixes(taxonomy: Taxonomy): ReadonlySet<string> {
   const exclusions = taxonomy.pathExclusions, size = Object.keys(exclusions).length, cached = opaquePrefixCache.get(exclusions);
   if (cached && cached.size === size) return cached.prefixes;

@@ -228,7 +228,7 @@ where
         if matches!(step, RetainedCloneStep::Complete(_)) {
             break cursor.take().expect("retained copy output");
         }
-        assert!(turns < 100_000, "retained copy stalled under {grant:?}; last turn {step:?}");
+        assert!(turns < 100_000, "retained copy stalled under {grant:?}; last turn {step:?}; next demand {:?}", cursor.advance_demands(source.borrow(), body));
     };
     assert!(cursor.advance(source.borrow(), body, grant).is_err());
     close_cursor::<T>(&mut cursor);
@@ -331,12 +331,15 @@ fn utf8_copy_is_boundary_paged_and_source_lease_captures_one_value() {
     let mut external = fixture.immutable_lease.captured.clone();
     let mut retained = retained_source(external.clone());
     let mut cursor = String::retained_clone_cursor();
-    let reserve = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 2, maximum_capacity_bytes: external.len(), maximum_depth: 512, maximum_release_bytes: external.len() };
+    let reserve = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 7, maximum_capacity_bytes: external.len(), maximum_depth: 512, maximum_release_bytes: external.len() };
     cursor.advance(retained.borrow(), 7, bound(reserve)).expect("string alias bind");
     cursor.advance(retained.borrow(), 7, reserve).expect("string reserve");
     cursor.advance(retained.borrow(), 7, reserve).expect("first immutable page");
     external = fixture.immutable_lease.external_after_capture.clone();
+    let mut turns = 0usize;
     let copied = loop {
+        turns += 1;
+        assert!(turns < 10_000, "captured string copy stalled under {reserve:?}");
         if matches!(cursor.advance(retained.borrow(), 7, reserve).expect("captured string copy"), RetainedCloneStep::Complete(_)) {
             break cursor.take().expect("captured string output");
         }

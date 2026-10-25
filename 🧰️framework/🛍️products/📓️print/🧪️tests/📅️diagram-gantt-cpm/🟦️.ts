@@ -31,7 +31,7 @@ function tasks(ctx: AdapterContext): Task[] {
 // #endregion 🧫️Vectors
 
 // #region 🔮️Oracle
-/** 🔮️ An independent critical-path implementation, written from the definitions in the feature:
+/** ❗️ An independent critical-path implementation, written from the definitions in the feature:
  *  forward pass to ES/EF, project end, backward pass to LS/LF, total float as LS − ES. */
 function criticalPath(network: readonly Task[]): number[] {
   const duration = new Map(network.map((task) => [task.id, task.duration]));

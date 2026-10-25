@@ -234,7 +234,7 @@ export function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly Po
 }
 
 /**
- * 📏️Window completeness: every app window declares every required facet explicitly. Empty facets
+ * 🪟️Window completeness: every app window declares every required facet explicitly. Empty facets
  * carry only their tracked marker; components are forbidden at facet level and required on every
  * specific item. Shape, marker, and implementation languages come from shared vocabulary.
  */
@@ -334,7 +334,7 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
 }
 
 /**
- * 📏️Mode completeness: the twin of {@link policyWindowCompletenessBreaches} one level up. A mode is a
+ * 🎚️Mode completeness: the twin of {@link policyWindowCompletenessBreaches} one level up. A mode is a
  * state-owning scope, so it declares every `modeRequiredChildDirs` member explicitly — its `🪟️windows`
  * collection plus its own three state lanes (`🎚️config` persisted-local, `👥️presence`
  * ephemeral-shared, `🫧️transient` ephemeral-local). An empty child is valid and carries only the

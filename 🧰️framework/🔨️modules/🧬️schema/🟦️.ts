@@ -30,7 +30,7 @@ export type ArtifactInferenceDescriptor = {
 //#endregion 🔖️ArtifactInferenceDescriptor
 
 //#region 🔖️GraphQlStatePreamble
-/** 🔗 Shared GraphQL `@state`/`@derived` SDL preamble — TS twin of Rust `GRAPHQL_STATE_PREAMBLE`.
+/** 🕸️ Shared GraphQL `@state`/`@derived` SDL preamble — TS twin of Rust `GRAPHQL_STATE_PREAMBLE`.
  * `@state` names one of the four state lanes; `@derived` is the ORTHOGONAL derivation marker, never
  * a fifth lane — a derived field is computed from a snapshot, so it is not state at all.
  * `Long` is the 64-bit integer lane: GraphQL's built-in `Int` is 32-bit by specification, so a Rust
@@ -62,7 +62,7 @@ export type ChildSlotSpec = {
   readonly many: boolean;
 };
 
-/** 🔎️ Concrete slots constrain serialization; capability slots retain runtime admission ownership. */
+/** ✅️ Concrete slots constrain serialization; capability slots retain runtime admission ownership. */
 export function childSlotAcceptsArtifactKind(selection:ChildSlotSelection,kind:string):boolean{return selection.kind==="capability"||selection.id===kind;}
 
 /** 🔗 One declared LINK slot on an artifact snapshot — TS twin of Rust `LinkSlotSpec`. */
@@ -72,7 +72,7 @@ export type LinkSlotSpec = {
   readonly many: boolean;
 };
 
-/** 🔗 Shared GraphQL SDL fragment for CHILD/LINK slots — TS twin of Rust `GRAPHQL_COMPOSITION_PREAMBLE`. */
+/** 🖇️ Shared GraphQL SDL fragment for CHILD/LINK slots — TS twin of Rust `GRAPHQL_COMPOSITION_PREAMBLE`. */
 export const GRAPHQL_COMPOSITION_PREAMBLE =
   "type ArtifactLink { targetId: String! kind: String! }\n" +
   "directive @child(kind: String, capability: String) on FIELD_DEFINITION\n" +
@@ -80,7 +80,7 @@ export const GRAPHQL_COMPOSITION_PREAMBLE =
 //#endregion 🔖️ArtifactCompositionSpec
 
 //#region 🔖️ArtifactSchemaRegistry
-/** 📚 Runtime registry of {@link ArtifactSchemaDescriptor} values. */
+/** 📋️ Runtime registry of {@link ArtifactSchemaDescriptor} values. */
 export class ArtifactSchemaRegistry {
   readonly #byId = new Map<string, ArtifactSchemaDescriptor>();
 
@@ -102,21 +102,21 @@ export class ArtifactSchemaRegistry {
 //#endregion 🔖️ArtifactSchemaRegistry
 
 //#region 🔖️ArtifactInferenceRegistry
-/** 📚 Runtime registry of {@link ArtifactInferenceDescriptor} values — inference twin of {@link ArtifactSchemaRegistry}. */
+/** 🏺️ Runtime registry of {@link ArtifactInferenceDescriptor} values — inference twin of {@link ArtifactSchemaRegistry}. */
 export class ArtifactInferenceRegistry {
   readonly #byId = new Map<string, ArtifactInferenceDescriptor>();
 
-  /** 📎 Insert or replace a descriptor by inference schema id. */
+  /** ➕️ Insert or replace a descriptor by inference schema id. */
   register(descriptor: ArtifactInferenceDescriptor): void {
     this.#byId.set(descriptor.id, descriptor);
   }
 
-  /** 🔎 Lookup by inference schema id. */
+  /** 🗝️ Lookup by inference schema id. */
   get(id: string): ArtifactInferenceDescriptor | undefined {
     return this.#byId.get(id);
   }
 
-  /** 🚶 Walk every registered descriptor. */
+  /** 🎞️ Walk every registered descriptor. */
   *iter(): IterableIterator<ArtifactInferenceDescriptor> {
     yield* this.#byId.values();
   }
@@ -129,7 +129,7 @@ export class ArtifactInferenceRegistry {
 //#endregion 🔖️ArtifactInferenceRegistry
 
 //#region 🔖️AppSchemaDescriptor
-/** 🧬️ Registered descriptor for one app owner's config + presence schema facets. */
+/** 🎛️ Registered descriptor for one app owner's config + presence schema facets. */
 export type AppSchemaDescriptor = {
   readonly id: string;
   readonly config: FacetLeaves;
@@ -138,26 +138,26 @@ export type AppSchemaDescriptor = {
 //#endregion 🔖️AppSchemaDescriptor
 
 //#region 🔖️AppSchemaRegistry
-/** 📚 Runtime registry of {@link AppSchemaDescriptor} values — app twin of {@link ArtifactSchemaRegistry}. */
+/** ⚙️ Runtime registry of {@link AppSchemaDescriptor} values — app twin of {@link ArtifactSchemaRegistry}. */
 export class AppSchemaRegistry {
   readonly #byId = new Map<string, AppSchemaDescriptor>();
 
-  /** 📎 Insert or replace a descriptor by owner id. */
+  /** 🔄️ Insert or replace a descriptor by owner id. */
   register(descriptor: AppSchemaDescriptor): void {
     this.#byId.set(descriptor.id, descriptor);
   }
 
-  /** 🔎 Lookup by app schema owner id. */
+  /** 📱️ Lookup by app schema owner id. */
   get(id: string): AppSchemaDescriptor | undefined {
     return this.#byId.get(id);
   }
 
-  /** 🚶 Walk every registered descriptor. */
+  /** 🔭️ Walk every registered descriptor. */
   *iter(): IterableIterator<AppSchemaDescriptor> {
     yield* this.#byId.values();
   }
 
-  /** 🔢 Count of registered app schema owner ids. */
+  /** 🔑️ Count of registered app schema owner ids. */
   get size(): number {
     return this.#byId.size;
   }
@@ -170,7 +170,7 @@ export class AppSchemaRegistry {
 //#endregion 🔖️AppSchemaRegistry
 
 //#region 🔖️SchemaExportResolution
-/** 🗂️ The five schema formats a scope publishes — TS twin of Rust `SchemaFormat`, keyed by the ascii
+/** 📮️ The five schema formats a scope publishes — TS twin of Rust `SchemaFormat`, keyed by the ascii
  * id the derived catalog and the `schema://` resolver use. */
 export const SCHEMA_FORMATS = ["rust", "typescript", "graphql", "jsonschema", "protobuf"] as const;
 export type SchemaFormat = (typeof SCHEMA_FORMATS)[number];
@@ -184,7 +184,7 @@ export const SCHEMA_FORMAT_TAXONOMY_KEYS: Readonly<Record<SchemaFormat, string>>
   protobuf: "🛰️protobuf",
 };
 
-/** 🍃 Leaf field each format occupies inside a {@link FacetLeaves}. */
+/** 💠️ Leaf field each format occupies inside a {@link FacetLeaves}. */
 export const SCHEMA_FORMAT_LEAVES: Readonly<Record<SchemaFormat, keyof FacetLeaves>> = {
   rust: "rust",
   typescript: "typescript",
@@ -196,13 +196,13 @@ export const SCHEMA_FORMAT_LEAVES: Readonly<Record<SchemaFormat, keyof FacetLeav
 /** 🔒️ Export ids reserved by the four fixed facets of {@link ArtifactSchemaDescriptor}. */
 export const RESERVED_FACET_EXPORT_IDS = ["artifact", "snapshot", "diff", "mutations"] as const;
 
-/** 🏷️ One named export of a scope — TS twin of Rust `SchemaExport`. */
+/** 📦️ One named export of a scope — TS twin of Rust `SchemaExport`. */
 export type SchemaExport = {
   readonly id: string;
   readonly leaves: FacetLeaves;
 };
 
-/** 🧬️ A scope's named exports — TS twin of Rust `ScopeSchemaExports`, a SIBLING to
+/** 🔤️ A scope's named exports — TS twin of Rust `ScopeSchemaExports`, a SIBLING to
  * {@link ArtifactSchemaDescriptor}'s four fixed facets rather than a field on it. */
 export type ScopeSchemaExports = {
   readonly scope: string;
@@ -228,7 +228,7 @@ export type SchemaExportEntries = {
   readonly entries: readonly SchemaExportEntry[];
 };
 
-/** ⚠️ Why `(scope id, export id, format id)` did not resolve — TS twin of Rust `SchemaResolveError`. */
+/** ❌️ Why `(scope id, export id, format id)` did not resolve — TS twin of Rust `SchemaResolveError`. */
 export type SchemaResolveError =
   | { readonly kind: "unknown-scope"; readonly scope: string }
   | { readonly kind: "unknown-export"; readonly scope: string; readonly export: string }
@@ -244,7 +244,7 @@ export type ValidationDiagnostic = {
 //#endregion 🔖️SchemaExportResolution
 
 //#region 🔖️EntityKindCatalog
-/** 🏷️ One entity kind of the catalog — TS twin of Rust `EntityKind` (the generated `🤖️generated/🏷️entity-kinds/🦀️.rs`
+/** 📖️ One entity kind of the catalog — TS twin of Rust `EntityKind` (the generated `🤖️generated/🏷️entity-kinds/🦀️.rs`
  * projection) and of `🔣️.json#/$defs/EntityKind`. */
 export type EntityKind = {
   readonly id: string;
@@ -278,7 +278,7 @@ function entityKindText(value: unknown, instancePath: string, expression: RegExp
   return value;
 }
 
-/** 🏷️ Parses one {@link EntityKind}, implementing `🔣️.json#/$defs/EntityKind` exactly — string lengths
+/** 🔣️ Parses one {@link EntityKind}, implementing `🔣️.json#/$defs/EntityKind` exactly — string lengths
  * are counted in code points so they agree with a draft-07 validator's `minLength`/`maxLength` on
  * multi-unit emoji, and no property outside the closed object is tolerated. */
 export function parseEntityKind(value: unknown, instancePath = "$"): EntityKind {
@@ -296,7 +296,7 @@ export function parseEntityKind(value: unknown, instancePath = "$"): EntityKind 
   };
 }
 
-/** 📚️ Parses the whole {@link EntityKindCatalog}, adding the two invariants draft-07 cannot express —
+/** 📙️ Parses the whole {@link EntityKindCatalog}, adding the two invariants draft-07 cannot express —
  * `id` and `label` are unique catalog-wide — on top of `minItems`, `uniqueItems` and the item schema. */
 export function parseEntityKindCatalog(value: unknown, instancePath = "$"): EntityKindCatalog {
   if (!Array.isArray(value)) entityKindReject(instancePath, "value is not an array");

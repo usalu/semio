@@ -393,7 +393,7 @@
     },
     "test-producer-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/bun.lock",
@@ -405,8 +405,8 @@
       ],
       "outputs": [],
       "options": {
-        "command": "repo tools exec bun -- test \"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🏗️build/🧪️tests/🟦️.ts\"",
-        "cwd": "{workspaceRoot}",
+        "command": "repo ./📜️script.ts test-producer-source",
+        "cwd": "{projectRoot}",
         "forwardAllArgs": false
       },
       "metadata": {

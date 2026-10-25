@@ -129,3 +129,9 @@ noise, effort and costs are unfavourable. These are illustrative teaching profil
 - Final energy = heating ÷ generation efficiency (old gas boiler 0.8, low-temperature 0.85, condensing 0.9) + hot water
   12.5 ÷ its efficiency + auxiliary energy; heat pumps divide by their seasonal performance factor.
 - Energy prices: gas 12 ct/kWh, heat-pump electricity 30 ct/kWh, other electricity 35 ct/kWh, PV feed-in 8 ct/kWh.
+
+## 🇩🇪️ Deutsch
+
+Die Kursseite für Studierende der Architektur und Technologie trainiert das Gefühl für die Zahlen hinter energieeffizienten Gebäuden. Die Seite `https://architektur-und-technologie.de` bietet den Kurs [`📚️course/🔣️.json`](📚️course/🔣️.json) (Id `architecture`, Titel „Architektur und Technologie“) über den [Proctor](../🛂️proctor) unter `https://semio.iek.uni-hannover.de` an, der Läufe, Punkte, Abzeichen und die Bestenliste festhält.
+
+Entwickeln, prüfen, testen und veröffentlichen läuft über `repo run @teaching/architecture-course:<target>` oder die Dashboard-Befehle (`repo dashboard`, **New Task**). In der Entwicklung leitet Vite auf Port `6061` die Gateway-Routen an den Proctor auf Port `8791` weiter; `repo run @teaching/architecture-course:dev` startet beide zusammen. Voraussetzungen, Ports, Cache und das deutsche Kapitel stehen im [README des Kurses](📚️course/README.md#-deutsch), der Proctor ist im [README des Proctors](../🛂️proctor/README.md#-deutsch) beschrieben. Die Quizzes liegen unter `⚡️energy/<Thema>/❓️quiz/🔣️.json`; Abzeichen, Quellen und Konventionen sind oben (englisch) aufgeführt.

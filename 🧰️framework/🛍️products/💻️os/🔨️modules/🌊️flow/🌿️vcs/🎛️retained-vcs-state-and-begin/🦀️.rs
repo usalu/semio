@@ -3,18 +3,18 @@
 use super::*;
 
 //#region 🌊️RetainedVcs
-pub(super) struct FlowVcsOperation {
-    pub(super) handle: FlowVcsHandle,
-    pub(super) authority: FlowVcsAuthority,
-    pub(super) source: FlowVcsCensus,
-    pub(super) action: Option<FlowVcsAction>,
-    pub(super) rollback_owner: Option<FlowVcsAction>,
-    pub(super) retirement: FlowVcsRetirement,
-    pub(super) cursor: FlowVcsCursor,
-    pub(super) page: Option<FlowVcsPage>,
+pub struct FlowVcsOperation {
+    pub handle: FlowVcsHandle,
+    pub authority: FlowVcsAuthority,
+    pub source: FlowVcsCensus,
+    pub action: Option<FlowVcsAction>,
+    pub rollback_owner: Option<FlowVcsAction>,
+    pub retirement: FlowVcsRetirement,
+    pub cursor: FlowVcsCursor,
+    pub page: Option<FlowVcsPage>,
     pub page_leased: bool,
-    pub(super) delivery_held: bool,
-    pub(super) stage: FlowVcsStage,
+    pub delivery_held: bool,
+    pub stage: FlowVcsStage,
     pub close_phase: u8,
 }
 
@@ -24,19 +24,19 @@ pub struct FlowFixedOwners<T, const N: usize> {
 }
 
 impl<T, const N: usize> FlowFixedOwners<T, N> {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { slots: [const { None }; N], length: 0 }
     }
 
-    pub(super) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.length
     }
 
-    pub(super) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.length == 0
     }
 
-    pub(super) fn is_full(&self) -> bool {
+    pub fn is_full(&self) -> bool {
         self.length == N
     }
 
@@ -44,7 +44,7 @@ impl<T, const N: usize> FlowFixedOwners<T, N> {
         N - self.length
     }
 
-    pub(super) fn push(&mut self, value: T) -> Result<(), T> {
+    pub fn push(&mut self, value: T) -> Result<(), T> {
         if self.is_full() {
             return Err(value);
         }
@@ -53,7 +53,7 @@ impl<T, const N: usize> FlowFixedOwners<T, N> {
         Ok(())
     }
 
-    pub(super) fn pop(&mut self) -> Option<T> {
+    pub fn pop(&mut self) -> Option<T> {
         if self.length == 0 {
             return None;
         }
@@ -61,32 +61,32 @@ impl<T, const N: usize> FlowFixedOwners<T, N> {
         self.slots[self.length].take()
     }
 
-    pub(super) fn last_mut(&mut self) -> Option<&mut T> {
+    pub fn last_mut(&mut self) -> Option<&mut T> {
         self.length.checked_sub(1).and_then(|index| self.slots[index].as_mut())
     }
 
-    pub(super) fn get(&self, index: usize) -> Option<&T> {
+    pub fn get(&self, index: usize) -> Option<&T> {
         (index < self.length).then(|| self.slots[index].as_ref()).flatten()
     }
 
-    pub(super) fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         (index < self.length).then(|| self.slots[index].as_mut()).flatten()
     }
 }
 
-pub(super) struct FlowVcsDocument {
+pub struct FlowVcsDocument {
     pub versions: FlowFixedOwners<FlowHostSnapshot, FLOW_VCS_MAX_HISTORY>,
-    pub(super) active: usize,
-    pub(super) revision: u64,
-    pub(super) parent_revision: u64,
-    pub(super) generation: u64,
-    pub(super) committed_digest: u64,
-    pub(super) edit_owner: Option<u64>,
+    pub active: usize,
+    pub revision: u64,
+    pub parent_revision: u64,
+    pub generation: u64,
+    pub committed_digest: u64,
+    pub edit_owner: Option<u64>,
     pub surface: Option<FlowSurfaceOwner>,
 }
 
 impl FlowVcsDocument {
-    pub(super) fn new(host_snapshot: FlowHostSnapshot, revision: u64, parent_revision: u64) -> Self {
+    pub fn new(host_snapshot: FlowHostSnapshot, revision: u64, parent_revision: u64) -> Self {
         let committed_digest = flow_vcs_host_snapshot_scalar_digest(&host_snapshot);
         let mut versions = FlowFixedOwners::new();
         let _ = versions.push(host_snapshot);
@@ -98,7 +98,7 @@ impl FlowVcsDocument {
     }
 
     /// 🎯️ Installs the successor `protocol::apply_diff_cold` produced as the active version and hands the displaced version back to be retired cold.
-    pub(super) fn install_applied(&mut self, mut next: FlowHostSnapshot) -> FlowHostSnapshot {
+    pub fn install_applied(&mut self, mut next: FlowHostSnapshot) -> FlowHostSnapshot {
         std::mem::swap(self.versions.get_mut(self.active).expect("active Flow VCS document version"), &mut next);
         next
     }
@@ -108,15 +108,15 @@ pub struct FlowRetainedVcs {
     pub session_generation: u32,
     pub document: Option<FlowVcsDocument>,
     pub operations: [Option<FlowVcsOperation>; FLOW_VCS_MAX_OPERATIONS],
-    pub(super) slot_generations: [u32; FLOW_VCS_MAX_OPERATIONS],
-    pub(super) next_operation: u64,
-    pub(super) next_page: u64,
+    pub slot_generations: [u32; FLOW_VCS_MAX_OPERATIONS],
+    pub next_operation: u64,
+    pub next_page: u64,
     pub credits: FlowVcsCredits,
     pub undo: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
     pub redo: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
     pub retired_actions: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
     pub retired_surfaces: FlowFixedOwners<FlowSurfaceOwner, FLOW_VCS_MAX_HISTORY>,
-    pub(super) retirement: FlowVcsRetirement,
+    pub retirement: FlowVcsRetirement,
     pub closing: bool,
 }
 

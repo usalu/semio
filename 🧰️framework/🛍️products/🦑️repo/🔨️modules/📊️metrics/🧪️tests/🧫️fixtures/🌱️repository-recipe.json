@@ -8,6 +8,51 @@
     "email": "grace@semio-tech.com"
   },
   "branch": "⛳️wip",
+  "git": {
+    "environment": {
+      "GIT_ATTR_NOSYSTEM": "1",
+      "GIT_CONFIG_NOSYSTEM": "1",
+      "GIT_MERGE_AUTOEDIT": "no",
+      "GIT_TERMINAL_PROMPT": "0",
+      "TZ": "UTC"
+    },
+    "hostile": {
+      "config": "[commit]\n\tgpgsign = true\n\tcleanup = verbatim\n[tag]\n\tgpgsign = true\n[gpg]\n\tprogram = /nonexistent/gpg\n[core]\n\tautocrlf = true\n\teol = crlf\n\tquotepath = false\n[i18n]\n\tcommitEncoding = latin1\n[merge]\n\tlog = true\n\tff = only\n[log]\n\tmailmap = true\n\tshowSignature = true\n[init]\n\tdefaultBranch = trunk\n[user]\n\tname = Mallory\n\temail = mallory@example.invalid\n[diff]\n\talgorithm = patience\n\tnoprefix = true\n",
+      "environment": {
+        "GIT_AUTHOR_DATE": "0 +1300",
+        "GIT_AUTHOR_NAME": "Mallory",
+        "GIT_COMMITTER_EMAIL": "mallory@example.invalid",
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": "commit.gpgsign",
+        "GIT_CONFIG_VALUE_0": "true",
+        "GIT_DIR": "nonexistent.git",
+        "GIT_EDITOR": "false",
+        "GIT_INDEX_FILE": "nonexistent.index",
+        "TZ": "Pacific/Auckland"
+      }
+    },
+    "config": {
+      "commit.cleanup": "whitespace",
+      "commit.gpgsign": "false",
+      "core.autocrlf": "false",
+      "core.eol": "lf",
+      "core.fsmonitor": "false",
+      "core.quotepath": "true",
+      "core.safecrlf": "false",
+      "diff.algorithm": "myers",
+      "diff.noprefix": "false",
+      "diff.renames": "true",
+      "gc.auto": "0",
+      "i18n.commitEncoding": "utf-8",
+      "i18n.logOutputEncoding": "utf-8",
+      "log.mailmap": "false",
+      "log.showSignature": "false",
+      "merge.log": "false",
+      "merge.verifySignatures": "false",
+      "tag.gpgsign": "false",
+      "user.useConfigOnly": "false"
+    }
+  },
   "commits": [
     {
       "message": "seed the tree",

@@ -7,19 +7,23 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_csv::CsvSnapshot;
 use semio_s_artifact_stdio_md::{schema::snapshot::MdBlock, MdSnapshot};
 
+fn oracle(text: &str) -> json::JsonValue {
+    json::parse(text).expect("independent json-rust oracle")
+}
+
 #[semio_framework_async_macros::async_test]
 async fn sequence_carrier_contracts_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🚪️io/🧪️tests/🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral carrier vectors");
     for row in vectors["cases"].as_array().expect("cases") {
         let fixture = neural_engine::ColdOwner::new(semio_framework_pack_json::from_json_str::<SequenceHostSnapshot>(&row["fixture"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned fixture decoder"));
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&*fixture)).expect("independent fixture oracle"), row["fixture"]);
+        assert_eq!(oracle(&semio_framework_pack_json::to_json_string(&*fixture)), oracle(&row["fixture"].to_string()));
         let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::from_host_snapshot(fixture.into_inner()));
         let payload = export::md::v_commonmark::any::SequenceIntoMd::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("markdown export").value;
         let IoPayload::Binary(bytes) = &payload else { panic!("binary markdown snapshot") };
         let md = <MdSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).expect("markdown snapshot codec");
         let [MdBlock::CodeBlock { info: Some(info), literal }] = md.blocks.as_slice() else { panic!("one JSON code block") };
         assert_eq!(info, "json");
-        assert_eq!(serde_json::from_str::<serde_json::Value>(literal).expect("independent markdown oracle"), row["fixture"]);
+        assert_eq!(oracle(literal), oracle(&row["fixture"].to_string()));
         let restored = neural_engine::ColdOwner::new(import::md::v_commonmark::any::MdIntoSequence::deserialize(&payload).await.expect("markdown import").value);
         assert_eq!(neural_engine::ColdOwner::new(restored.to_host_snapshot()), neural_engine::ColdOwner::new(snapshot.to_host_snapshot()));
         let csv_payload = export::csv::v_rfc4180::any::SequenceIntoCsv::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("csv export").value;
@@ -32,12 +36,12 @@ async fn sequence_carrier_contracts_match_the_json_oracle() {
             assert_eq!(record.fields[0].value, step["id"].as_str().expect("step id"));
             assert_eq!(record.fields[1].value, step["kind"].as_str().expect("step kind"));
             assert!(record.fields[2].quoted);
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&record.fields[2].value).expect("independent params oracle"), step["params"]);
+            assert_eq!(oracle(&record.fields[2].value), oracle(&step["params"].to_string()));
         }
         let inferred = <crate::schema::inferences::SequenceInference as protocol::Inference<SequenceSnapshot>>::infer(&snapshot).expect("valid materialized inference fixture");
-        let inferred_json: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&inferred)).expect("independent inference oracle");
-        assert_eq!(inferred_json["topology"], row["topology"]);
-        let decoded: crate::schema::inferences::SequenceInference = semio_framework_pack_json::from_json_str(&inferred_json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("inference value decoder");
+        let inferred_json = oracle(&semio_framework_pack_json::to_json_string(&inferred));
+        assert_eq!(inferred_json["topology"], oracle(&row["topology"].to_string()));
+        let decoded: crate::schema::inferences::SequenceInference = semio_framework_pack_json::from_json_str(&inferred_json.dump(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("inference value decoder");
         assert_eq!(decoded, inferred);
     }
 }

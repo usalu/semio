@@ -90,8 +90,8 @@ export async function runRuntimeAndPathRoutes(context: TestRouteContext, segment
   }
   if (segments[0] === "native-owner-command-policy") {
     if (segments.length !== 1) throw new Error("Expected test native-owner-command-policy");
-    const source = join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts");
-    await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: context.repoRoot, env: repoTestArtifactEnvironment(context.repoRoot, "native-owner-command-policy") });
+    const directory = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests", sources = ["📋️owner-cmd-policy", "📐️grant"].map(name => join(context.repoRoot, directory, name, "🟦️.ts"));
+    await runRepositoryTestCommand(process.execPath, ["test", ...sources], { cwd: context.repoRoot, env: repoTestArtifactEnvironment(context.repoRoot, "native-owner-command-policy") });
     return true;
   }
   if (segments[0] === "locale-law-ownership") {

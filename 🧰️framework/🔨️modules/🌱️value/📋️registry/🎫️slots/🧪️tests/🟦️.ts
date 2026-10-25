@@ -18,7 +18,6 @@ test("portable slot outputs agree with independent SQLite uniqueness and compare
    else expect(release.run(action.key,action.index!,Number(action.generation)).changes===1).toBe(action.accepted!);
   }
   expect(database.query<{count:number},[]>("SELECT count(*) AS count FROM slots WHERE owner IS NOT NULL").get()!.count).toBe(0);
-  console.log(`[DEBUG] ${law.actions.length} portable exact-slot outputs match independent SQLite unique-key admission and atomic generation release`);
  }finally{database.close();}
 });
 
@@ -43,7 +42,6 @@ test("exact fixed slots preserve colliding keys and reject stale or foreign leas
  expect(actual.size).toBe(0);
  const a=new FixedKeySlots<number>(1),b=new FixedKeySlots<number>(1),own=a.claim(1)!,foreign=b.claim(1)!;
  expect(a.release(1,foreign)).toBe(false);expect(a.lookup(1)).toEqual(own);expect(a.release(1,own)).toBe(true);
- console.log(`[DEBUG] ${law.actions.length} exact slot transitions match an independent Map; stale and foreign releases preserve live owners`);
 });
 
 test("arbitrary claim and release schedules preserve exact fixed capacity",()=>{
@@ -55,5 +53,4 @@ test("arbitrary claim and release schedules preserve exact fixed capacity",()=>{
    expect(actual.size).toBe(oracle.size);for(let id=0;id<16;id++)expect(actual.lookup(id)!==undefined).toBe(oracle.has(id));
   }
  }),{numRuns:100});
- console.log("[DEBUG] 100 generated slot schedules agree with fast-check and independent Set membership");
 });

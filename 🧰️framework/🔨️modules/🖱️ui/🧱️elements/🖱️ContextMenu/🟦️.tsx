@@ -26,12 +26,12 @@ export interface ContextMenuProps {
   children: React.ReactNode;
   /** 🪟️ Title chip on the window-chrome cap row. */
   title: UiLabel;
-  /** 🪟️ Catalog icon shown in the title chip before the title. */
+  /** 🖼️ Catalog icon shown in the title chip before the title. */
   titleIcon?: IconSource;
 }
 
 /**
- * 🧩️ Right-click host: always suppresses the native menu; opens the shared viewport-fixed menu only when `items` is non-empty.
+ * 👆️ Right-click host: always suppresses the native menu; opens the shared viewport-fixed menu only when `items` is non-empty.
  **/
 export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title, titleIcon = "list" }) => {
   const [open, setOpen] = reactHostPort.useState(false);
@@ -69,11 +69,11 @@ export interface ContextMenuControllerProps {
   position: { x: number; y: number } | null;
   items: readonly ContextMenuItem[];
   onOpenChange: (open: boolean) => void;
-  /** 🪟️ Title chip on the window-chrome cap row. */
+  /** 🏷️ Title chip on the window-chrome cap row. */
   title: UiLabel;
-  /** 🪟️ Catalog icon in the title chip. */
+  /** 📚️ Catalog icon in the title chip. */
   titleIcon?: IconSource;
-  /** 🖱️ When false, selecting a row does not dismiss — the row action owns closing (e.g. acceptSuggestion). Outside pointer / Escape still dismiss. Default true. */
+  /** ☑️ When false, selecting a row does not dismiss — the row action owns closing (e.g. acceptSuggestion). Outside pointer / Escape still dismiss. Default true. */
   closeOnSelect?: boolean;
 }
 
@@ -87,7 +87,7 @@ export function contextMenuDigitFromKey(key: string): string | undefined {
   return key.length === 1 && key >= "1" && key <= "9" ? key : undefined;
 }
 
-/** ⌨️ Finds the first enabled top-level row marked `checked`. */
+/** 🔎️ Finds the first enabled top-level row marked `checked`. */
 export function findCheckedContextMenuItem(items: readonly ContextMenuItem[]): ContextMenuItem | undefined {
   const path = findContextMenuCheckedPath(items);
   return path ? contextMenuItemAtPath(items, path) : undefined;

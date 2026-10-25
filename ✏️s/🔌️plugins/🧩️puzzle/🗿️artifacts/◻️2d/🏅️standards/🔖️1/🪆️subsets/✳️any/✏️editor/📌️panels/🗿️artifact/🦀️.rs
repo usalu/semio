@@ -16,7 +16,7 @@ use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::config::PUZZLE2D_PLAY_
 use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::terminology::Puzzle2dLabels;
 use {semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_edges, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_nodes, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::snapshot_target_regions, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_node_display_label, semio_s_artifact_puzzle_2d_interaction::editor::puzzle2d::interaction::ui_label, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dScene, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_TARGET_REGION, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::RowActionPlacement;
-use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_plugin::{Buildable, HasBase};
 
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;

@@ -34,7 +34,7 @@ function exact(proof: Evidence, fragment: object, field: object, builder: object
 function evidenceRelease(proof: Evidence, token: object, release: unknown): boolean { return proof.token === token && proof.release !== null && proof.release === release && (proof.phase === "issued" || proof.phase === "source-consuming" || proof.phase === "source-observing" || proof.phase === "source-detached" || proof.phase === "source-settled"); }
 
 /** 📄️ Exact native field admission is retained by its resident parent before exposure to a caller. */
-/** 📄️ A resident reader as the builder drives it. */
+/** 🏗️ A resident reader as the builder drives it. */
 export interface UiResidentPayloadReaderSeam { advance(grant: UiIndexGrant): OwnedUiOperationPayloadReadStep; terminalIsEmpty(): boolean }
 /** 🧾️ The resident's reader retirement witness, opaque to the builder. */
 export type UiResidentReaderRetirementSeam = object;
@@ -70,7 +70,7 @@ export interface UiResidentPayloadStatics {
   matchesPageRetirement(payload: unknown, page: unknown, proof: unknown): boolean;
   pageLength(payload: unknown, builder: unknown, page: unknown): number | null;
 }
-/** 🪪️ The resident reader retirement witness's brand and phase checks the builder consults. */
+/** 🪧️ The resident reader retirement witness's brand and phase checks the builder consults. */
 export interface UiResidentReaderRetirementStatics {
   matchesBody(proof: unknown, reader: unknown, payload: UiResidentPayloadSeam): boolean;
   matchesDetached(proof: unknown, reader: unknown, payload: UiResidentPayloadSeam): boolean;

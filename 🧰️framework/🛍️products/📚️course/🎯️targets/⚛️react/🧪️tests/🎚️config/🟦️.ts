@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { workspaceTestAliasesV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🟦️.ts";
+import { workspaceTestAliasesV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/📦️workspace-exports/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const target = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -69,7 +69,7 @@ export default defineConfig(async () => ({
     coverage: { include: ["../../🟦️.tsx", "../../🔨️modules/**/🟦️.ts", "../../🔨️modules/**/🟦️.tsx"] },
     passWithNoTests: false,
     css: { include: [/🎨️\.css(?:\?|$)/u] },
-    setupFiles: [resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧹️react-environment/🟦️.ts")],
+    setupFiles: [resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧹️react-environment/🟦️.ts"), resolve(product, "🧪️tests/🌐️preloaded-locales/🟦️.ts")],
   },
 }));
 

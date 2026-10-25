@@ -37,7 +37,7 @@ pub fn convex_hull(points: &[Point]) -> Vec<Point> {
     lower
 }
 
-/// 🔺️ Signed polygon area via the shoelace formula (positive when counter-clockwise).
+/// 🖊️ Signed polygon area via the shoelace formula (positive when counter-clockwise).
 pub fn polygon_area(points: &[Point]) -> f64 {
     if points.len() < 3 {
         return 0.0;

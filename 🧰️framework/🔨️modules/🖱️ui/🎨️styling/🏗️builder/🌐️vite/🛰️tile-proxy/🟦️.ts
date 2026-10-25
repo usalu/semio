@@ -147,7 +147,7 @@ export function createTileProxyMiddleware(route: string, cacheRoot: string, upst
   };
 }
 
-/** 🌐️ Generic dev/preview/build Vite plugin pair for one `tile-proxy` asset spec — replaces the
+/** 🀄️ Generic dev/preview/build Vite plugin pair for one `tile-proxy` asset spec — replaces the
  * owner-authored route and request coordinates into the neutral transport. */
 export function tileProxyVitePlugin(repoRoot: string, spec: TileProxyAssetSpecV1, mode: AssetDeliveryModeV1 = "fetch"): OwnedBuildPlugin[] {
   const admitted = parseTileProxyAssetSpecV1(spec);

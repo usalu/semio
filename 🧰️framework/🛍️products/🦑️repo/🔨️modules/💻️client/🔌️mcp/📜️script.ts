@@ -6,13 +6,13 @@ import { checkScriptInvocation, createIssuedResourceControlV1, requireIssuedReso
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { compilerAdmissionBudgetV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { runOwnedCommand } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { resolveMcpBin } from "../../📚️library/🚨️policy/🖥️cli/🟦️.ts";
+import { resolveMcpBin } from "../../📚️library/📦️packages/🟦️typescript/🚨️policy/🖥️cli/🟦️.ts";
 import { createHash, randomBytes } from "node:crypto";
 import { homedir } from "node:os";
 import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, posix, win32 } from "node:path";
 import installationSchema from "./📥️installation/🧬️schema/🔣️.json" with { type: "json" };
-import { isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
+import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 const installationPolicy = installationSchema.$defs.Protocol.const;
 
@@ -69,7 +69,7 @@ class InstallScript extends BundleScript {
 }
 
 class InstallationTestScript extends BundleScript {
- async run():Promise<void>{const {runRepositoryTestCommand}=await import("../../📚️library/🧪️testing/🎛️repository-command/🟦️.ts");await runRepositoryTestCommand(process.execPath,["test",join(this.root,"📥️installation/🧪️tests/🟦️.ts"),join(this.root,"../../📚️library/🔍️discovery/🐹️go-layout/🧪️tests/🟦️.ts")],{cwd:this.repoRoot});}
+ async run():Promise<void>{const {runRepositoryTestCommand}=await import("../../📚️library/📦️packages/🟦️typescript/🧪️testing/🎛️repository-command/🟦️.ts");await runRepositoryTestCommand(process.execPath,["test",join(this.root,"📥️installation/🧪️tests/🟦️.ts"),join(this.root,"../../📚️library/🔍️discovery/🐹️go-layout/🧪️tests/🟦️.ts")],{cwd:this.repoRoot});}
 }
 
 /** 🔗️Invokes the native installer with the existing authenticated root invocation. */

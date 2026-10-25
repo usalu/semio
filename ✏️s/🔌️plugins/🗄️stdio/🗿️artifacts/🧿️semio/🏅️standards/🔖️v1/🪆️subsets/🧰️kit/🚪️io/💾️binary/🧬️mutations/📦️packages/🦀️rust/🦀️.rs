@@ -11,3 +11,4 @@ extern crate semio_framework_value_derive as value_derive;
 #[path = "🪞️mirror/🦀️.rs"]
 mod mirror;
 pub use mirror::*;
+semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioKitSnapshot, schema::mutations::SemioKitMutation);

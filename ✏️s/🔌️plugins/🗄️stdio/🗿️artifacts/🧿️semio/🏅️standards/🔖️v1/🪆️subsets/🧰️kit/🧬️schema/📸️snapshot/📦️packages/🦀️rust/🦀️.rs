@@ -34,3 +34,9 @@ pub mod schema {
         pub use component::*;
     }
 }
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioKitType { id, name, category });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioKitPiece { id, type_id, transform });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioKitConnection { id, connecting_piece_id, connecting_port, connected_piece_id, connected_port });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioKitDesign { id, name, pieces, connections });
+semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioKitSnapshot { schema, types, designs, objects, models, properties, representations });
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioKitSnapshot);

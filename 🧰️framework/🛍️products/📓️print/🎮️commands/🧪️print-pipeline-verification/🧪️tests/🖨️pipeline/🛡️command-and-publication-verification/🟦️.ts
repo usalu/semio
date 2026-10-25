@@ -26,9 +26,16 @@ export async function verifyPrintFontStaging(context:PrintPipelineVerificationV1
  await withPrintFontsV1(execution,async fonts=>{const{GlobalFonts}=require("@napi-rs/canvas"),keys:unknown[]=[];try{for(const row of catalog){checkResourceLeaseControl(fonts.control);const target=join(fonts.directory,row.texFilename),source=join(productRoot,"🖼️assets/🔤️font",row.directory,row.filename),bytes=await readPrintMaterialFileV1(target,16777216,fonts.control);assert.deepEqual(bytes,await readPrintMaterialFileV1(source,16777216,fonts.control));assert.ok(bytes.byteLength>=12&&[0x00010000,0x4f54544f].includes(new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength).getUint32(0)),row.family);const key=GlobalFonts.registerFromPath(target,"print-held-font-"+row.family);assert.ok(key,row.family);keys.push(key);}await fonts.recheck();}finally{for(const key of keys)GlobalFonts.remove(key);}});
 }
 
-/** 🧱️ Enforces the neutral reviewed source identities independent of graph size and enumeration order. */
-function assertPrintCommandSourceInputs(actual: readonly string[], expected: readonly string[], owner: string): void {
-  assert.deepEqual(actual.map(path => path.replaceAll("\\", "/")).sort(), expected.map(path => path.replaceAll("\\", "/")).sort(), `${owner}: exact reviewed source owners`);
+/** 🧱️ One bundled input of a command graph and the import edges it declares. */
+export type PrintCommandInputsV1 = Readonly<Record<string, { readonly imports: readonly { readonly path: string; readonly external?: boolean }[] }>>;
+/** 🪪️ Names the neutral reviewed source identities of one command graph: the exact print-owned sources and the sorted foreign owner roots the print-owned sources import directly, independent of graph size, enumeration order and the transitive churn of foreign owners. */
+export function printCommandSourceIdentitiesV1(inputs: PrintCommandInputsV1): { readonly sources: readonly string[]; readonly owners: readonly string[] } {
+  const own = "🧰️framework/🛍️products/📓️print/", normal = (path: string) => path.replaceAll("\\", "/"), mine = Object.entries(inputs).filter(([path]) => normal(path).startsWith(own));
+  return { sources: mine.map(([path]) => normal(path)).sort(), owners: [...new Set(mine.flatMap(([, input]) => input.imports).filter(item => !item.external).map(item => normal(item.path)).filter(path => !path.startsWith(own)).map(path => path.split("/").slice(0, 3).join("/")))].sort() };
+}
+/** 🔒️ Enforces the neutral reviewed source identities of one command graph. */
+function assertPrintCommandSourceInputs(actual: PrintCommandInputsV1, expected: ReturnType<typeof printCommandSourceIdentitiesV1>, owner: string): void {
+  assert.deepEqual(printCommandSourceIdentitiesV1(actual), expected, `${owner}: exact reviewed source owners`);
 }
 /** 🪶️ Independently resolves production imports without loading generators or repository tests. */
 export async function verifyPrintCommandBoundaries(context:PrintPipelineVerificationV1): Promise<void> {
@@ -42,17 +49,18 @@ export async function verifyPrintCommandBoundaries(context:PrintPipelineVerifica
     return { entry, result };
   }));
   for (const { entry, result } of graphs) {
-    const files = Object.keys(result.metafile!.inputs);
+    const inputs = result.metafile!.inputs as PrintCommandInputsV1, files = Object.keys(inputs), entryKey = "🧰️framework/🛍️products/📓️print/" + entry;
     for (const forbidden of contract.forbidden) assert.equal(files.some(path => path.includes(forbidden)), false, `${entry} loads ${forbidden}`);
-    const expected: string[] = contract.sourceInputs[entry];
-    assertPrintCommandSourceInputs(files, expected, entry);
-    const validate = new (createRequire(import.meta.url)("ajv").default)().compile({ const: expected.slice().sort() });
-    assert.equal(validate(files.slice().sort()), true, `${entry}: independent source identity oracle`);
+    const expected: ReturnType<typeof printCommandSourceIdentitiesV1> = contract.sourceInputs[entry];
+    assertPrintCommandSourceInputs(inputs, expected, entry);
+    const validate = new (createRequire(import.meta.url)("ajv").default)().compile({ const: expected });
+    assert.equal(validate(printCommandSourceIdentitiesV1(inputs)), true, `${entry}: independent source identity oracle`);
     for (const vector of contract.sourceRefusals) {
-      const candidate = files.slice();
-      candidate.splice(vector.at, vector.remove, ...vector.add);
-      assert.equal(candidate.length - files.length, vector.lengthDelta, `${entry}/${vector.id}: neutral graph cardinality`);
-      assert.equal(validate(candidate.slice().sort()), vector.accepted, `${entry}/${vector.id}: AJV source oracle`);
+      const removed = new Set<string>((vector.remove as string[]).map(path => path === "$entry" ? entryKey : path));
+      const kept = Object.entries(inputs).filter(([path]) => !removed.has(path)).map(([path, input]) => [path, path === entryKey ? { imports: [...input.imports, ...(vector.addImports as string[]).map(path => ({ path }))] } : input] as const);
+      const candidate: PrintCommandInputsV1 = { ...Object.fromEntries(kept), ...Object.fromEntries((vector.addSources as string[]).map(path => [path, { imports: [] }])) };
+      assert.equal(Object.keys(candidate).length - files.length, vector.lengthDelta, `${entry}/${vector.id}: neutral graph cardinality`);
+      assert.equal(validate(printCommandSourceIdentitiesV1(candidate)), vector.accepted, `${entry}/${vector.id}: AJV source oracle`);
       assert.equal(vector.accepted, false, `${entry}/${vector.id}: authored refusal`);
       assert.throws(() => assertPrintCommandSourceInputs(candidate, expected, `${entry}/${vector.id}`), assert.AssertionError);
     }

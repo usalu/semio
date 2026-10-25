@@ -169,7 +169,7 @@ enum ReturnShape {
     FutureOutput(Type),
 }
 
-/// 🔎 Reads a method's return position into a [`ReturnShape`]. Only a bound whose LAST path segment
+/// 📖️ Reads a method's return position into a [`ReturnShape`]. Only a bound whose LAST path segment
 /// is literally `Future` counts (`Future`, `core::future::Future`, `std::future::Future` — there is
 /// no type resolution inside a proc-macro), and only on a method that is not already `async`. An
 /// `impl Future` with no `Output = ..` binding is the one hard rejection: the delegate has no name
@@ -466,7 +466,7 @@ impl Parse for DynEnumVariant {
     }
 }
 
-/// 🪄️ Expands the `dyn_enum!` DSL into the real `enum`, one `impl From<VariantTy>` per variant, and a
+/// ☎️ Expands the `dyn_enum!` DSL into the real `enum`, one `impl From<VariantTy>` per variant, and a
 /// BARE invocation of the trait's captured `__semio_dispatch_<Name>!` macro — deliberately no `use`.
 ///
 /// Emitting `use crate::__semio_dispatch_<Name>;` (a same-crate ABSOLUTE path) here would trip a real,

@@ -1,6 +1,6 @@
 /** 🗄️ Device-local key-value storage port with browser, in-memory and namespaced implementations. */
 
-/** 🗄️ Synchronous string storage a shell persists its device-local configuration through. */
+/** 💾️ Synchronous string storage a shell persists its device-local configuration through. */
 export interface StoragePort {
   get(key: string): string | null;
   set(key: string, value: string): void;

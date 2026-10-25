@@ -98,14 +98,14 @@ export default defineTestAdapter({
     },
     "arc-centroid": {
       oracle: oracle("arc-centroid"),
-      /** 🎯️ The twin's centroid, which ignores padding and corners entirely. */
+      /** 🪞️ The twin's centroid, which ignores padding and corners entirely. */
       subject: () => ({
         projection: Object.fromEntries(Object.entries(CENTROIDS).map(([tag, spec]) => [`centroid/${tag}`, grid(vizArcCentroid(spec))])),
       }),
     },
     "pie-angles": {
       oracle: oracle("pie-angles"),
-      /** 🎯️ The twin's `vizPie`, in the data's order whatever the sort was. */
+      /** 🔃️ The twin's `vizPie`, in the data's order whatever the sort was. */
       subject: () => ({
         projection: Object.fromEntries(Object.entries(PIES).map(([tag, spec]) => [`pie/${tag}`, angles(spec)])),
       }),

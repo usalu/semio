@@ -8,10 +8,10 @@ import type {ExecuteOutcomeV1, ExecuteRequestV1} from "../🏃️engine/🟦️.
 export const stripTexCommentsV1 = (text: string): string => text.split("\n").map(line => line.replace(/(^|[^\\])((?:\\\\)*)%.*$/, "$1$2")).join("\n");
 const normalize = (path: string): string => {const out: string[] = []; for (const part of path.split("\\").join("/").split("/")) {if (part === "" || part === ".") continue; if (part === "..") out.pop(); else out.push(part);} return out.join("/");};
 
-/** 📓️ What a document source refers to. */
+/** 🔗️ What a document source refers to. */
 export type TexReferencesV1 = {readonly inputs: readonly string[]; readonly bibliographies: readonly string[]; readonly graphics: readonly string[]; readonly packages: readonly string[]; readonly classes: readonly string[]; readonly externalDocuments: readonly string[]; readonly isDocument: boolean};
 const braces = (text: string, command: string): string[] => [...text.matchAll(new RegExp(`\\\\${command}\\s*(?:\\[[^\\]]*\\])?\\s*\\{([^{}]*)\\}`, "g"))].map(match => match[1]!.trim());
-/** 📓️ Scans a TeX source for the files it pulls in (`\input`, `\include`, `\subfile`, `\bibliography`, `\addbibresource`, `\includegraphics`, `\usepackage`, `\documentclass`) and for `\externaldocument` (xr) edges. */
+/** 📎️ Scans a TeX source for the files it pulls in (`\input`, `\include`, `\subfile`, `\bibliography`, `\addbibresource`, `\includegraphics`, `\usepackage`, `\documentclass`) and for `\externaldocument` (xr) edges. */
 export function scanTexV1(text: string): TexReferencesV1 {
   const clean = stripTexCommentsV1(text), split = (values: readonly string[]): string[] => values.flatMap(value => value.split(",").map(part => part.trim()).filter(Boolean));
   return {
@@ -20,7 +20,7 @@ export function scanTexV1(text: string): TexReferencesV1 {
   };
 }
 
-/** 📓️ The interface of a document: its auxiliary file reduced to what other documents and later passes read. `\newlabel` and `\bibcite` lines sorted (their order is an artifact of the page flow), `\@writefile{toc|lof|lot}` lines kept in order, `\bibstyle`/`\bibdata` kept; everything else (`\relax`, `\providecommand`, `\gdef`, citation order bookkeeping) dropped. */
+/** 🧹️ The interface of a document: its auxiliary file reduced to what other documents and later passes read. `\newlabel` and `\bibcite` lines sorted (their order is an artifact of the page flow), `\@writefile{toc|lof|lot}` lines kept in order, `\bibstyle`/`\bibdata` kept; everything else (`\relax`, `\providecommand`, `\gdef`, citation order bookkeeping) dropped. */
 export function normalizeTexAuxV1(aux: string): string {
   const labels: string[] = [], cites: string[] = [], rest: string[] = [];
   for (const raw of aux.split("\n")) {
@@ -31,12 +31,12 @@ export function normalizeTexAuxV1(aux: string): string {
   }
   return [...sortedCodePointsV1(labels), ...sortedCodePointsV1(cites), ...rest].join("\n");
 }
-/** 📓️ The interface digest of an auxiliary file. */
+/** 🗂️ The interface digest of an auxiliary file. */
 export const texAuxDigestV1 = (aux: string): string => sha256V1("polyglot-tex-aux-v1\n" + normalizeTexAuxV1(aux));
 
 export type TexWorkspaceSnapshotV1 = {readonly files: readonly string[]; readonly read: (path: string) => string};
 const GRAPHIC_EXTENSIONS = ["", ".pdf", ".png", ".jpg", ".jpeg", ".eps", ".svg"];
-/** 📓️ Plans the unit graph of TeX documents: every file with `\documentclass` is a document unit owning that file; included files, bibliographies, graphics and local packages and classes are inputs, `\externaldocument` becomes an `interface` edge (interface kind `tex-aux`, closure direct: the cross references of the other document's auxiliary file). */
+/** 🗓️ Plans the unit graph of TeX documents: every file with `\documentclass` is a document unit owning that file; included files, bibliographies, graphics and local packages and classes are inputs, `\externaldocument` becomes an `interface` edge (interface kind `tex-aux`, closure direct: the cross references of the other document's auxiliary file). */
 export function planTexUnitsV1(snapshot: TexWorkspaceSnapshotV1, options: {readonly policy: UnitsPolicyV1; readonly toolchain: string}): UnitGraphV1 {
   const files = new Set(snapshot.files), mains = sortedCodePointsV1(snapshot.files.filter(path => path.endsWith(".tex") && scanTexV1(snapshot.read(path)).isDocument));
   const idOf = (main: string): string => "tex:" + main.slice(0, -".tex".length), byStem = new Map(mains.map(main => [main.slice(0, -".tex".length), main] as const));
@@ -65,7 +65,7 @@ export function planTexUnitsV1(snapshot: TexWorkspaceSnapshotV1, options: {reado
 const listFiles = (root: string, extension: string): string[] => {const found: string[] = []; const walk = (directory: string): void => {try {for (const entry of readdirSync(directory, {withFileTypes: true})) {const path = join(directory, entry.name); if (entry.isDirectory()) walk(path); else if (path.endsWith(extension)) found.push(path);}} catch {/* absent */}}; walk(root); return found.sort();};
 /** 🏭️ The process effect of the TeX executor. */
 export type TexRunnerV1 = (argv: readonly string[], options: {readonly cwd: string; readonly env: Readonly<Record<string, string>>; readonly signal: AbortSignal}) => Promise<{readonly code: number; readonly output: string}>;
-/** 🏭️ Executes a document with the pinned `tectonic` (`-X compile`, intermediates kept, deterministic dates): the interface digest is that of the normalized `.aux`, the artifact the normalized auxiliary text other documents read through xr (placed next to the source as `<name>.aux` before the compile), the output digest that of the bibliography `.bbl` when there is one plus the PDF. Not run in this repository's verification: no TeX engine is installed on the verification host. */
+/** 🔨️ Executes a document with the pinned `tectonic` (`-X compile`, intermediates kept, deterministic dates): the interface digest is that of the normalized `.aux`, the artifact the normalized auxiliary text other documents read through xr (placed next to the source as `<name>.aux` before the compile), the output digest that of the bibliography `.bbl` when there is one plus the PDF. Not run in this repository's verification: no TeX engine is installed on the verification host. */
 export function texUnitExecutorV1(options: {readonly workspace: string; readonly outputRoot: string; readonly run: TexRunnerV1}): (request: ExecuteRequestV1) => Promise<ExecuteOutcomeV1> {
   return async request => {
     const {unit} = request, out = join(options.outputRoot, sha256V1(unit.id).slice(0, 24)), started = performance.now();

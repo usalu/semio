@@ -43,14 +43,14 @@ export function policyNoCrdtVocabularyBreaches(repoRoot: string): BreachRecord[]
   return breaches;
 }
 
-/** 🔎️A `fn validate(&self, ..)` override — the exact shape C4/C10 delete from `Mutation`/`MutationKind`/`CompositeMutationKind`. */
+/** ✅️A `fn validate(&self, ..)` override — the exact shape C4/C10 delete from `Mutation`/`MutationKind`/`CompositeMutationKind`. */
 const POLICY_VALIDATE_OVERRIDE_RE = /\bfn\s+validate\s*\(\s*&self\b/g;
 
-/** 🔎️An `impl (protocol::)?(Composite)?MutationKind<..> for X {` block opener, to scope the second half of rule 4. */
+/** 🧱️An `impl (protocol::)?(Composite)?MutationKind<..> for X {` block opener, to scope the second half of rule 4. */
 const POLICY_MUTATION_KIND_IMPL_RE = /\bimpl\b[^\n{]*\b(?:CompositeMutationKind|MutationKind)\s*</g;
 
 /**
- * 📏️Rule 4: no `fn validate(&self, ..)` survives — not inside a `🧬️mutations/**` file, and not inside
+ * 🚫️Rule 4: no `fn validate(&self, ..)` survives — not inside a `🧬️mutations/**` file, and not inside
  * any `impl … MutationKind`/`impl … CompositeMutationKind` block anywhere (hand-written config/presence
  * enums included). Its checks move into the `🔺️diff` leaf as Error/Fatal messages (C4/C10). Note: gltf's
  * `pub fn validate(payload: &P, base: &S) -> Result<(), GltfTopLevelMutationRejection>` is a FREE function
@@ -97,13 +97,13 @@ export function policyNoValidateOverrideBreaches(repoRoot: string): BreachRecord
   return breaches;
 }
 
-/** 🔎️The inventory's source files (`.rs`/`.ts`/`.tsx`) repo-wide — the canonical root router, whose policy literals must not scan themselves, is already out. */
+/** 💡️The inventory's source files (`.rs`/`.ts`/`.tsx`) repo-wide — the canonical root router, whose policy literals must not scan themselves, is already out. */
 
 
 const POLICY_SEVERITY_HINT_STRUCT_RE = /\bSeverity(?:::|\.)Hint\b/g;
 
 /**
- * 📏️Rule 5: zero `Severity::Hint`/`Severity.Hint` (C1 declaration order is now `Info, Warning, Error,
+ * ℹ️Rule 5: zero `Severity::Hint`/`Severity.Hint` (C1 declaration order is now `Info, Warning, Error,
  * Fatal` — `derive(Ord)` IS the level order, Hint was folded into Info repo-wide), and zero bare `"hint"`
  * severity-literal on a line that also mentions "severity"/"level" (scoped to avoid flagging the ordinary
  * English word "hint" used for unrelated UI copy/tooltips).
@@ -153,7 +153,7 @@ export function policySeverityInfoBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** 🔎️The 3 frozen MergePolicy variants (C3) spelled at exactly these 4 surfaces. */
+/** 🔀️The 3 frozen MergePolicy variants (C3) spelled at exactly these 4 surfaces. */
 const POLICY_MERGE_POLICY_VARIANTS = ["LaissezFaire", "Normal", "Vigilant"] as const;
 
 /** 🔡️Idiomatic per-language spelling accepted for each variant — Rust surfaces spell it exactly like the enum (`LaissezFaire`); TS surfaces (kernel types, label contract, i18n bundles) may use either the PascalCase mirror or the camelCase object-key form (`laissezFaire`) that idiomatic TS reaches for. Presence-only, per surface's own convention — this is a mirror-existence check, not a shape check. */
@@ -172,7 +172,7 @@ const POLICY_MERGE_POLICY_SURFACES: readonly { label: string; relPath: string }[
 ];
 
 /**
- * 📏️Rule 6: the three `MergePolicy` variants must be present in all 4 surfaces that spell them (C3/C9),
+ * 🪞️Rule 6: the three `MergePolicy` variants must be present in all 4 surfaces that spell them (C3/C9),
  * each under whatever idiomatic spelling that surface's language uses (`POLICY_MERGE_POLICY_VARIANT_
  * SPELLINGS` — as substrings, this is a mirror-existence check, not a shape check); one breach per surface
  * that is missing at least one variant under any of its spellings, or that no longer exists at all.
@@ -200,10 +200,10 @@ const POLICY_DERIVE_OWNER = "🧰️framework/🛍️products/💻️os/🔨️m
 
 const POLICY_DERIVE_GLUE = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs";
 
-/** 🔎️The glue's one mount of the owner implementation. */
+/** 🧬️The glue's one mount of the owner implementation. */
 const POLICY_DERIVE_GLUE_MOUNT_RE = /#\[path\s*=\s*"\.\.\/\.\.\/🦀️\.rs"\]\s*mod\s+component\s*;/;
 
-/** 📏️Rule 7: the dsl derive macro has ONE implementation — the proc-macro package glue mounts the owner `🦀️.rs` (`#[path = "../../🦀️.rs"] mod component;`) and only forwards to it, so no build shape can run a stale copy of the derive logic. */
+/** 🔩️Rule 7: the dsl derive macro has ONE implementation — the proc-macro package glue mounts the owner `🦀️.rs` (`#[path = "../../🦀️.rs"] mod component;`) and only forwards to it, so no build shape can run a stale copy of the derive logic. */
 export function policyDeriveGlueMountBreaches(repoRoot: string): BreachRecord[] {
   const glue = policyReadFileSafe(repoRoot, POLICY_DERIVE_GLUE);
   if (policyReadFileSafe(repoRoot, POLICY_DERIVE_OWNER) && POLICY_DERIVE_GLUE_MOUNT_RE.test(glue) && !/\bfn\s+expand_/.test(glue)) return [];

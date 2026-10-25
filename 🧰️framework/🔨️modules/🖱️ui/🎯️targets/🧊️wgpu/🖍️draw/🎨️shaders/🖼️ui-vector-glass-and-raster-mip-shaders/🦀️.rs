@@ -279,7 +279,7 @@ return vec4<f32>(rgb, fill_alpha);
 "#;
 // #endregion shaders
 
-/// 🖼️ Generates one filtered authored raster mip through the existing upload owner.
+/// 🔬️ Generates one filtered authored raster mip through the existing upload owner.
 pub const RASTER_MIP_SHADER:&str=r#"
 @group(0) @binding(0) var source:texture_2d<f32>;
 @group(0) @binding(1) var source_sampler:sampler;

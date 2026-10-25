@@ -3,16 +3,16 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readTestSandboxProtocolV1, testPathInsideV1, type TestSandboxProtocolV1 } from "../📐️layout/🟦️.ts";
-import { isHostRuntimeCommandV1, runtimeAdapterNameV1 } from "../../../../⚙️runtime/🏷️identity/🟦️.ts";
-import { runtimeTestPreloadV1 } from "../../../../⚙️runtime/🚀️process/🟦️.ts";
+import { isHostRuntimeCommandV1, runtimeAdapterNameV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import { runtimeTestPreloadV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
 /** 🛡️ Names what the guard refused or observed. */
 export type GuardViolationKindV1 = "checkout-write" | "protected-write" | "kernel-image" | "process-kill" | "fixed-port";
 
-/** 🛡️ One recorded violation. */
+/** 📹️ One recorded violation. */
 export type GuardViolationV1 = Readonly<{ kind: GuardViolationKindV1; function: string; target: string }>;
 
-/** 🛡️ Carries everything a guard decision needs, resolved once per process. */
+/** 🔒️ Carries everything a guard decision needs, resolved once per process. */
 export type GuardContextV1 = Readonly<{
   mode: "report" | "enforce"; checkout: string | undefined; cwd: string; platform: NodeJS.Platform;
   allowed: readonly string[]; sandboxRoots: readonly string[]; protectedPrefixes: readonly string[]; allowedCheckoutPrefixes: readonly string[];
@@ -25,7 +25,7 @@ function variants(path: string): string[] {
   return rows;
 }
 
-/** 🛡️ Builds the guard context from the sandbox environment; undefined when the guard is off or no sandbox exists. */
+/** 🔨️ Builds the guard context from the sandbox environment; undefined when the guard is off or no sandbox exists. */
 export function guardContextFromEnvironmentV1(env: NodeJS.ProcessEnv = process.env, cwd: string = process.cwd(), platform: NodeJS.Platform = process.platform, declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): GuardContextV1 | undefined {
   const names = declared.environment, sandbox = env[names.sandbox], requested = env[names.guard] ?? (sandbox ? declared.guard.defaultMode : "off");
   if (!sandbox || requested === "off" || !declared.guard.modes.includes(requested)) return undefined;
@@ -38,7 +38,7 @@ export function guardContextFromEnvironmentV1(env: NodeJS.ProcessEnv = process.e
   });
 }
 
-/** 🛡️ Decides whether one write target is allowed: only writes inside the real checkout are judged, and only the sandbox and the declared diagnostic prefixes are allowed there, even when the checkout itself lies below a temp directory. */
+/** 📝️ Decides whether one write target is allowed: only writes inside the real checkout are judged, and only the sandbox and the declared diagnostic prefixes are allowed there, even when the checkout itself lies below a temp directory. */
 export function decideWriteV1(context: GuardContextV1, fn: string, target: string): GuardViolationV1 | undefined {
   const absolute = resolve(context.cwd, target), checkout = context.checkout;
   if (!checkout || !variants(checkout).some(root => testPathInsideV1(root, absolute, context.platform))) return undefined;
@@ -49,7 +49,7 @@ export function decideWriteV1(context: GuardContextV1, fn: string, target: strin
   return { kind: context.protectedPrefixes.includes(first) ? "protected-write" : "checkout-write", function: fn, target: absolute };
 }
 
-/** 🛡️ Decides one process spawn: kernel image tools may only touch sandbox paths, and name-based process killers are refused. */
+/** 🆕️ Decides one process spawn: kernel image tools may only touch sandbox paths, and name-based process killers are refused. */
 export function decideSpawnV1(context: GuardContextV1, command: string, args: readonly string[]): GuardViolationV1 | undefined {
   const program = basename(command).replace(/\.exe$/iu, ""), declared = context.declared.guard;
   if (declared.killPrograms.includes(program)) return { kind: "process-kill", function: program, target: args.join(" ") };
@@ -64,14 +64,14 @@ export function decideSpawnV1(context: GuardContextV1, command: string, args: re
   return undefined;
 }
 
-/** 🛡️ Decides one listen: a fixed port is only allowed when this sandbox leased it. */
+/** 👂️ Decides one listen: a fixed port is only allowed when this sandbox leased it. */
 export function decideListenV1(context: GuardContextV1, port: number): GuardViolationV1 | undefined {
   if (!Number.isInteger(port) || port === 0 || port < 1024) return undefined;
   if (context.portsDirectory && context.sandbox && existsSync(join(context.portsDirectory, String(port)))) return undefined;
   return { kind: "fixed-port", function: "listen", target: String(port) };
 }
 
-/** 🛡️ Extracts the written path of one call from its arguments; descriptors and unknown shapes yield nothing. */
+/** 🎯️ Extracts the written path of one call from its arguments; descriptors and unknown shapes yield nothing. */
 export function guardWriteTargetsV1(declared: TestSandboxProtocolV1, fn: string, args: readonly unknown[]): readonly string[] {
   const indexes = (declared.guard.writeTargets as Readonly<Record<string, readonly number[]>>)[fn] ?? (declared.guard.sqliteTargets as Readonly<Record<string, readonly number[]>>)[fn];
   if (!indexes) return [];
@@ -85,14 +85,14 @@ export function guardWriteTargetsV1(declared: TestSandboxProtocolV1, fn: string,
   return rows;
 }
 
-/** 🛡️ Tells whether an open call writes: a flag string with w, a or +, or numeric flags with a write bit. */
+/** 🔓️ Tells whether an open call writes: a flag string with w, a or +, or numeric flags with a write bit. */
 export function guardOpenWritesV1(flags: unknown): boolean {
   if (typeof flags === "string") return /[wa+]/u.test(flags);
   if (typeof flags === "number") return (flags & 3) !== 0 || (flags & 0o100) !== 0;
   return false;
 }
 
-/** 🛡️ Renders the recorded violations of one run as a short grouped summary for the runner, empty when the run was clean. */
+/** 🧾️ Renders the recorded violations of one run as a short grouped summary for the runner, empty when the run was clean. */
 export function summarizeGuardReportV1(text: string, limit = 10): readonly string[] {
   const rows = text.split("\n").filter(line => line !== "").flatMap(line => { try { return [JSON.parse(line) as { kind: string; function: string; target: string; frame?: string }]; } catch { return []; } });
   if (rows.length === 0) return [];
@@ -101,7 +101,7 @@ export function summarizeGuardReportV1(text: string, limit = 10): readonly strin
   return [`[sandbox-guard] ${rows.length} violation(s): ${[...counts].map(([kind, count]) => `${kind}=${count}`).join(" ")}`, ...rows.slice(0, limit).map(row => `[sandbox-guard]   ${row.kind} ${row.function} ${row.target}${row.frame ? "  at " + row.frame : ""}`)];
 }
 
-/** 🛡️ Inserts the guard preload into the test command of the hosting runtime when the guard is active and that runtime's adapter directory holds a preload next to this module; every other command is returned unchanged. */
+/** 🧪️ Inserts the guard preload into the test command of the hosting runtime when the guard is active and that runtime's adapter directory holds a preload next to this module; every other command is returned unchanged. */
 export function guardArgumentsV1(command: string, args: readonly string[], env: NodeJS.ProcessEnv = process.env, declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): readonly string[] {
   const mode = env[declared.environment.guard] ?? declared.guard.defaultMode;
   if (mode === "off" || !isHostRuntimeCommandV1(command)) return args;
@@ -109,7 +109,7 @@ export function guardArgumentsV1(command: string, args: readonly string[], env: 
   return existsSync(preload) ? runtimeTestPreloadV1(args, preload) ?? args : args;
 }
 
-/** 🛡️ Finds the real checkout a test command runs for: the declared environment, else the nearest ancestor holding a `.git` entry or a `.🧬semio` directory. */
+/** 🏠️ Finds the real checkout a test command runs for: the declared environment, else the nearest ancestor holding a `.git` entry or a `.🧬semio` directory. */
 export function testCheckoutRootV1(cwd: string, env: NodeJS.ProcessEnv = process.env, declared: TestSandboxProtocolV1 = readTestSandboxProtocolV1()): string | undefined {
   const given = env[declared.environment.checkout] ?? env.SEMIO_WORKSPACE_ROOT;
   if (given) return resolve(given);

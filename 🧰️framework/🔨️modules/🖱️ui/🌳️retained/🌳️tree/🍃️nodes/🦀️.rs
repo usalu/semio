@@ -1,5 +1,5 @@
 // #region tree
-//! 🌲️ Retained scene-graph: one `UiTree` per window, holding `Node`s in a generational `Arena`
+//! 🎬️ Retained scene-graph: one `UiTree` per window, holding `Node`s in a generational `Arena`
 //! with parent/first-child/last-child/sibling links and dirty-flag propagation. The engine facade
 //! (a later milestone) holds `HashMap<window_id, UiTree>`.
 

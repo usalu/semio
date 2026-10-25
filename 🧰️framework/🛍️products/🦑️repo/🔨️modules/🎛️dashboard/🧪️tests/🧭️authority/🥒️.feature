@@ -119,3 +119,9 @@ Feature: Developer surfaces share neutral command authority
     And authored build, dist, target and nested cache directories are inspected
     And missing inventory roots fail closed
     And the Go toolchain executes both path forms and two inventory scans
+
+  Scenario: A daemon socket path always fits the platform
+    Given a runtime directory of any depth and the sun_path capacity of macOS and Linux
+    When the socket path of a daemon is derived
+    Then it is the runtime path while that fits and otherwise a digest named socket in the short per-user directory
+    And an independent xxh3 names the same digest file

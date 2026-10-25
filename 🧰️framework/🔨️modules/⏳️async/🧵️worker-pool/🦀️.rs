@@ -1,4 +1,4 @@
-//! 🧵️ Worker-pool vocabulary: `Job`, admission errors, `WorkerPoolConfig` and the one process-wide pool accessor.
+//! 🐝️ Worker-pool vocabulary: `Job`, admission errors, `WorkerPoolConfig` and the one process-wide pool accessor.
 
 use std::collections::VecDeque;
 use std::sync::OnceLock;
@@ -65,7 +65,7 @@ pub(super) fn admitted_job_queue() -> VecDeque<Job> {
     queue
 }
 
-/// 🧵️ Construction parameters for [`WorkerPool::new`]. `process_kind` is never inferred — see
+/// 🎛️ Construction parameters for [`WorkerPool::new`]. `process_kind` is never inferred — see
 /// [`ProcessKind`]'s doc — and `interactive_reserve` defaults to "on" for
 /// [`ProcessKind::InteractiveNative`] (admission control active, see [`WorkerPool`]'s doc) and "off"
 /// for [`ProcessKind::HeadlessBatch`] (a headless process has no UI thread to protect, so reserving

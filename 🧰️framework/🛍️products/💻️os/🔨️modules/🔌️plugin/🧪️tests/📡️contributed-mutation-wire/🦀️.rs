@@ -28,7 +28,7 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub(crate) struct WireTestDiff {
+pub struct WireTestDiff {
     pub deltas: Vec<i32>,
 }
 

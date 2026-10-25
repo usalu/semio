@@ -64,12 +64,13 @@
             "required": ["class", "reason"],
             "properties": { "class": { "type": "string" }, "reason": { "type": "string" } }
           },
+          "exclusions": { "description": "The named input whose negations are appended to the inputs of every target of the row, so the target reads production sources only; a target whose own explicit inputs select an excluded path, a precision-bounded target and a workspace-root target keep their full inputs.", "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$" },
           "exact": { "type": "array", "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" }, "uniqueItems": true },
           "heads": { "type": "array", "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" }, "uniqueItems": true },
           "tails": { "type": "array", "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" }, "uniqueItems": true },
           "tokens": { "type": "array", "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" }, "uniqueItems": true }
         },
-        "anyOf": [{ "required": ["exact"] }, { "required": ["heads"] }, { "required": ["tails"] }, { "required": ["tokens"] }]
+        "anyOf": [{ "properties": { "exact": {} }, "required": ["exact"] }, { "properties": { "heads": {} }, "required": ["heads"] }, { "properties": { "tails": {} }, "required": ["tails"] }, { "properties": { "tokens": {} }, "required": ["tokens"] }]
       }
     },
     "continuous": {
